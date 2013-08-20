@@ -250,12 +250,12 @@
       deallocate(rmassz_acoustic)
     endif
 
-    call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass_acoustic,&
+    call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmass_acoustic,&
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,&
                         my_neighbours_ext_mesh)
 
-    call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass_acoustic_interface, &
+    call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmass_acoustic_interface, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,&
                         my_neighbours_ext_mesh)
@@ -284,15 +284,15 @@
     deallocate(rmass)
 
     ! assemble mass matrix
-    call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmassx, &
+    call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmassx, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         my_neighbours_ext_mesh)
-    call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmassy, &
+    call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmassy, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         my_neighbours_ext_mesh)
-    call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmassz, &
+    call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmassz, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         my_neighbours_ext_mesh)
@@ -307,7 +307,7 @@
 
     if(PML_CONDITIONS)then
       if(ACOUSTIC_SIMULATION)then
-        call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass_elastic_interface, &
+        call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmass_elastic_interface, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         my_neighbours_ext_mesh)
@@ -318,7 +318,7 @@
 
     ! ocean load
     if(APPROXIMATE_OCEAN_LOAD ) then
-      call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass_ocean_load, &
+      call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmass_ocean_load, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         my_neighbours_ext_mesh)
@@ -328,12 +328,12 @@
  endif
 
   if(POROELASTIC_SIMULATION) then
-    call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass_solid_poroelastic, &
+    call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmass_solid_poroelastic, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         my_neighbours_ext_mesh)
 
-    call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass_fluid_poroelastic, &
+    call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmass_fluid_poroelastic, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         my_neighbours_ext_mesh)
@@ -852,12 +852,17 @@
     ! elastic domain
     if( ELASTIC_SIMULATION ) then
       rho_kl(:,:,:,:)   = 0._CUSTOM_REAL
-      mu_kl(:,:,:,:)    = 0._CUSTOM_REAL
-      kappa_kl(:,:,:,:) = 0._CUSTOM_REAL
-      cijkl_kl(:,:,:,:,:) = 0._CUSTOM_REAL
 
-      if ( APPROXIMATE_HESS_KL ) &
+      if (ANISOTROPIC_KL) then
+        cijkl_kl(:,:,:,:,:) = 0._CUSTOM_REAL
+      else
+        mu_kl(:,:,:,:)    = 0._CUSTOM_REAL
+        kappa_kl(:,:,:,:) = 0._CUSTOM_REAL
+      endif
+
+      if ( APPROXIMATE_HESS_KL ) then
         hess_kl(:,:,:,:)   = 0._CUSTOM_REAL
+      endif
 
       ! reconstructed/backward elastic wavefields
       b_displ = 0._CUSTOM_REAL
@@ -961,7 +966,7 @@
 
         ! total file size
         filesize = b_reclen_field
-        filesize = filesize*NSTEP
+        filesize = filesize * NSTEP
 
         if (SIMULATION_TYPE == 3) then
           ! opens existing files
@@ -1108,8 +1113,9 @@
         endif
       endif
     else
+      ! num_abs_boundary_faces is zero
       ! needs dummy array
-      b_num_abs_boundary_faces = 1
+      b_num_abs_boundary_faces = 0
       if( ELASTIC_SIMULATION ) then
         allocate(b_absorb_field(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
         if( ier /= 0 ) stop 'error allocating array b_absorb_field'
@@ -1128,7 +1134,7 @@
     endif
   else ! STACEY_ABSORBING_CONDITIONS
     ! needs dummy array
-    b_num_abs_boundary_faces = 1
+    b_num_abs_boundary_faces = 0
     if( ELASTIC_SIMULATION ) then
       allocate(b_absorb_field(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
       if( ier /= 0 ) stop 'error allocating array b_absorb_field'
@@ -1246,100 +1252,94 @@
   ! prepares general fields on GPU
   !§!§ JC JC here we will need to add GPU support for the new C-PML routines
   call prepare_constants_device(Mesh_pointer, &
-                                  NGLLX, NSPEC_AB, NGLOB_AB, &
-                                  xix, xiy, xiz, etax,etay,etaz, gammax, gammay, gammaz, &
-                                  kappastore, mustore,ibool, &
-                                  num_interfaces_ext_mesh, max_nibool_interfaces_ext_mesh, &
-                                  nibool_interfaces_ext_mesh, ibool_interfaces_ext_mesh, &
-                                  hprime_xx, &
-                                  hprimewgll_xx, &
-                                  wgllwgll_xy, wgllwgll_xz, wgllwgll_yz, &
-                                  STACEY_ABSORBING_CONDITIONS, &
-                                  abs_boundary_ispec, abs_boundary_ijk, &
-                                  abs_boundary_normal, &
-                                  abs_boundary_jacobian2Dw, &
-                                  num_abs_boundary_faces, &
-                                  ispec_is_inner, &
-                                  NSOURCES, nsources_local, &
-                                  sourcearrays, islice_selected_source, ispec_selected_source, &
-                                  number_receiver_global, ispec_selected_rec, &
-                                  nrec, nrec_local, &
-                                  SIMULATION_TYPE, &
-                                  USE_MESH_COLORING_GPU, &
-                                  nspec_acoustic,nspec_elastic,&
-                                  my_neighbours_ext_mesh,&
-                                  request_send_vector_ext_mesh,&
-                                  request_recv_vector_ext_mesh,&
-                                  buffer_recv_vector_ext_mesh)
+                                NGLLX, NSPEC_AB, NGLOB_AB, &
+                                xix, xiy, xiz, etax,etay,etaz, gammax, gammay, gammaz, &
+                                kappastore, mustore, &
+                                ibool, &
+                                num_interfaces_ext_mesh, max_nibool_interfaces_ext_mesh, &
+                                nibool_interfaces_ext_mesh, ibool_interfaces_ext_mesh, &
+                                hprime_xx,hprimewgll_xx, &
+                                wgllwgll_xy, wgllwgll_xz, wgllwgll_yz, &
+                                STACEY_ABSORBING_CONDITIONS, &
+                                abs_boundary_ispec, abs_boundary_ijk, &
+                                abs_boundary_normal, &
+                                abs_boundary_jacobian2Dw, &
+                                num_abs_boundary_faces, &
+                                ispec_is_inner, &
+                                NSOURCES, nsources_local, &
+                                sourcearrays, islice_selected_source, ispec_selected_source, &
+                                number_receiver_global, ispec_selected_rec, &
+                                nrec, nrec_local, &
+                                SIMULATION_TYPE, &
+                                USE_MESH_COLORING_GPU, &
+                                nspec_acoustic,nspec_elastic,&
+                                myrank,SAVE_FORWARD)
 
 
   ! prepares fields on GPU for acoustic simulations
   if( ACOUSTIC_SIMULATION ) then
-    call prepare_fields_acoustic_device(Mesh_pointer,rmass_acoustic,rhostore,kappastore, &
-                                  num_phase_ispec_acoustic,phase_ispec_inner_acoustic, &
-                                  ispec_is_acoustic, &
-                                  NOISE_TOMOGRAPHY,num_free_surface_faces, &
-                                  free_surface_ispec,free_surface_ijk, &
-                                  b_reclen_potential,b_absorb_potential, &
-                                  ELASTIC_SIMULATION, num_coupling_ac_el_faces, &
-                                  coupling_ac_el_ispec,coupling_ac_el_ijk, &
-                                  coupling_ac_el_normal,coupling_ac_el_jacobian2Dw, &
-                                  num_colors_outer_acoustic,num_colors_inner_acoustic, &
-                                  num_elem_colors_acoustic)
+    call prepare_fields_acoustic_device(Mesh_pointer, &
+                                rmass_acoustic,rhostore,kappastore, &
+                                num_phase_ispec_acoustic,phase_ispec_inner_acoustic, &
+                                ispec_is_acoustic, &
+                                NOISE_TOMOGRAPHY,num_free_surface_faces, &
+                                free_surface_ispec,free_surface_ijk, &
+                                b_reclen_potential,b_absorb_potential, &
+                                ELASTIC_SIMULATION, num_coupling_ac_el_faces, &
+                                coupling_ac_el_ispec,coupling_ac_el_ijk, &
+                                coupling_ac_el_normal,coupling_ac_el_jacobian2Dw, &
+                                num_colors_outer_acoustic,num_colors_inner_acoustic, &
+                                num_elem_colors_acoustic)
 
     if( SIMULATION_TYPE == 3 ) &
       call prepare_fields_acoustic_adj_dev(Mesh_pointer, &
-                                           APPROXIMATE_HESS_KL)
+                                APPROXIMATE_HESS_KL)
 
   endif
 
   ! prepares fields on GPU for elastic simulations
   !§!§ JC JC here we will need to add GPU support for the new C-PML routines
   if( ELASTIC_SIMULATION ) then
-    call prepare_fields_elastic_device(Mesh_pointer, NDIM*NGLOB_AB, &
-                                  rmassx,rmassy,rmassz, &
-                                  rho_vp,rho_vs, &
-                                  num_phase_ispec_elastic,phase_ispec_inner_elastic, &
-                                  ispec_is_elastic, &
-                                  b_absorb_field,b_reclen_field, &
-                                  SAVE_FORWARD, &
-                                  COMPUTE_AND_STORE_STRAIN, &
-                                  epsilondev_xx,epsilondev_yy,epsilondev_xy, &
-!!!                               epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy, &
-                                  epsilondev_xz,epsilondev_yz, &
-                                  ATTENUATION, &
-                                  size(R_xx), &
-                                  R_xx,R_yy,R_xy,R_xz,R_yz, &
-!!!                               R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, &
-                                  one_minus_sum_beta,factor_common, &
-!!!                                  one_minus_sum_beta_kappa,factor_commonkappa, &
-                                  alphaval,betaval,gammaval, &
-                                  APPROXIMATE_OCEAN_LOAD,rmass_ocean_load, &
-                                  NOISE_TOMOGRAPHY, &
-                                  free_surface_normal,free_surface_ispec,free_surface_ijk, &
-                                  num_free_surface_faces, &
-                                  ACOUSTIC_SIMULATION, &
-                                  num_colors_outer_elastic,num_colors_inner_elastic, &
-                                  num_elem_colors_elastic, &
-                                  ANISOTROPY, &
-                                  c11store,c12store,c13store,c14store,c15store,c16store, &
-                                  c22store,c23store,c24store,c25store,c26store, &
-                                  c33store,c34store,c35store,c36store, &
-                                  c44store,c45store,c46store,c55store,c56store,c66store)
+    call prepare_fields_elastic_device(Mesh_pointer, &
+                                rmassx,rmassy,rmassz, &
+                                rho_vp,rho_vs, &
+                                num_phase_ispec_elastic,phase_ispec_inner_elastic, &
+                                ispec_is_elastic, &
+                                b_absorb_field,b_reclen_field, &
+                                COMPUTE_AND_STORE_STRAIN, &
+                                epsilondev_xx,epsilondev_yy,epsilondev_xy, &
+                                epsilondev_xz,epsilondev_yz, &
+                                ATTENUATION, &
+                                size(R_xx), &
+                                R_xx,R_yy,R_xy,R_xz,R_yz, &
+                                one_minus_sum_beta,factor_common, &
+                                alphaval,betaval,gammaval, &
+                                APPROXIMATE_OCEAN_LOAD,rmass_ocean_load, &
+                                NOISE_TOMOGRAPHY, &
+                                free_surface_normal,free_surface_ispec,free_surface_ijk, &
+                                num_free_surface_faces, &
+                                ACOUSTIC_SIMULATION, &
+                                num_colors_outer_elastic,num_colors_inner_elastic, &
+                                num_elem_colors_elastic, &
+                                ANISOTROPY, &
+                                c11store,c12store,c13store,c14store,c15store,c16store, &
+                                c22store,c23store,c24store,c25store,c26store, &
+                                c33store,c34store,c35store,c36store, &
+                                c44store,c45store,c46store,c55store,c56store,c66store)
 
     if( SIMULATION_TYPE == 3 ) &
-      call prepare_fields_elastic_adj_dev(Mesh_pointer, NDIM*NGLOB_AB, &
-                                  COMPUTE_AND_STORE_STRAIN, &
-                                  epsilon_trace_over_3, &
-                                  b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
-!!!                               b_epsilondev_trace,b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
-                                  b_epsilondev_xz,b_epsilondev_yz, &
-                                  b_epsilon_trace_over_3, &
-                                  ATTENUATION,size(R_xx), &
-                                  b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
-!!!                               b_R_trace,b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
-                                  b_alphaval,b_betaval,b_gammaval, &
-                                  APPROXIMATE_HESS_KL)
+      call prepare_fields_elastic_adj_dev(Mesh_pointer, &
+                                NDIM*NGLOB_AB, &
+                                COMPUTE_AND_STORE_STRAIN, &
+                                epsilon_trace_over_3, &
+                                b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
+                                b_epsilondev_xz,b_epsilondev_yz, &
+                                b_epsilon_trace_over_3, &
+                                ATTENUATION,size(R_xx), &
+                                b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
+                                b_alphaval,b_betaval,b_gammaval, &
+                                ANISOTROPIC_KL, &
+                                APPROXIMATE_HESS_KL)
 
   endif
 
@@ -1348,44 +1348,51 @@
     stop 'todo poroelastic simulations on GPU'
   endif
 
+  ! synchronizes processes
+  !call sync_all()
+
   ! prepares needed receiver array for adjoint runs
   if( SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3 ) &
     call prepare_sim2_or_3_const_device(Mesh_pointer, &
-                                       islice_selected_rec,size(islice_selected_rec), &
-                                       nadj_rec_local,nrec,myrank)
+                                islice_selected_rec,size(islice_selected_rec), &
+                                nadj_rec_local,nrec)
 
   ! prepares fields on GPU for noise simulations
   if ( NOISE_TOMOGRAPHY > 0 ) then
     ! note: noise tomography is only supported for elastic domains so far.
 
     ! copies noise  arrays to GPU
-    call prepare_fields_noise_device(Mesh_pointer, NSPEC_AB, NGLOB_AB, &
-                                  free_surface_ispec, &
-                                  free_surface_ijk, &
-                                  num_free_surface_faces, &
-                                  NOISE_TOMOGRAPHY, &
-                                  NSTEP,noise_sourcearray, &
-                                  normal_x_noise,normal_y_noise,normal_z_noise, &
-                                  mask_noise,free_surface_jacobian2Dw)
+    call prepare_fields_noise_device(Mesh_pointer, &
+                                NSPEC_AB, NGLOB_AB, &
+                                free_surface_ispec, &
+                                free_surface_ijk, &
+                                num_free_surface_faces, &
+                                NOISE_TOMOGRAPHY, &
+                                NSTEP,noise_sourcearray, &
+                                normal_x_noise,normal_y_noise,normal_z_noise, &
+                                mask_noise,free_surface_jacobian2Dw)
 
   endif ! NOISE_TOMOGRAPHY
 
   ! prepares gravity arrays
   if( GRAVITY ) then
     call prepare_fields_gravity_device(Mesh_pointer,GRAVITY, &
-                                    minus_deriv_gravity,minus_g,wgll_cube,&
-                                    ACOUSTIC_SIMULATION,rhostore)
+                                minus_deriv_gravity,minus_g,wgll_cube,&
+                                ACOUSTIC_SIMULATION,rhostore)
   endif
+
+  ! synchronizes processes
+  call sync_all()
 
   ! sends initial data to device
 
   ! puts acoustic initial fields onto GPU
   if( ACOUSTIC_SIMULATION ) then
     call transfer_fields_ac_to_device(NGLOB_AB,potential_acoustic, &
-                          potential_dot_acoustic,potential_dot_dot_acoustic,Mesh_pointer)
+                                      potential_dot_acoustic,potential_dot_dot_acoustic,Mesh_pointer)
     if( SIMULATION_TYPE == 3 ) &
       call transfer_b_fields_ac_to_device(NGLOB_AB,b_potential_acoustic, &
-                          b_potential_dot_acoustic,b_potential_dot_dot_acoustic,Mesh_pointer)
+                                          b_potential_dot_acoustic,b_potential_dot_dot_acoustic,Mesh_pointer)
   endif
 
   ! puts elastic initial fields onto GPU
@@ -1395,6 +1402,9 @@
     if(SIMULATION_TYPE == 3) &
       call transfer_b_fields_to_device(NDIM*NGLOB_AB,b_displ,b_veloc,b_accel,Mesh_pointer)
   endif
+
+  ! synchronizes processes
+  call sync_all()
 
   ! outputs GPU usage to files for all processes
   call output_free_device_memory(myrank)

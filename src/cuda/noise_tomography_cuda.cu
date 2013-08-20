@@ -102,15 +102,15 @@ TRACE("fortranprintd");
 
 // randomize displ for testing
 extern "C"
-void FC_FUNC_(make_displ_rand,MAKE_DISPL_RAND)(long* Mesh_pointer_f,realw* h_displ) {
+void FC_FUNC_(make_displ_rand,MAKE_DISPL_RAND)(long* Mesh_pointer,realw* h_displ) {
 TRACE("make_displ_rand");
 
-  Mesh* mp = (Mesh*)(*Mesh_pointer_f); // get Mesh from fortran integer wrapper
+  Mesh* mp = (Mesh*)(*Mesh_pointer); // get Mesh from fortran integer wrapper
   // realw* displ_rnd = (realw*)malloc(mp->NGLOB_AB*3*sizeof(realw));
   for(int i=0;i<mp->NGLOB_AB*3;i++) {
     h_displ[i] = rand();
   }
-  cudaMemcpy(mp->d_displ,h_displ,mp->NGLOB_AB*3*sizeof(realw),cudaMemcpyHostToDevice);
+  print_CUDA_error_if_any(cudaMemcpy(mp->d_displ,h_displ,mp->NGLOB_AB*3*sizeof(realw),cudaMemcpyHostToDevice),44001);
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -145,18 +145,15 @@ __global__ void transfer_surface_to_host_kernel(int* free_surface_ispec,
 
 extern "C"
 void FC_FUNC_(transfer_surface_to_host,
-              TRANSFER_SURFACE_TO_HOST)(long* Mesh_pointer_f,
+              TRANSFER_SURFACE_TO_HOST)(long* Mesh_pointer,
                                         realw* h_noise_surface_movie) {
 TRACE("transfer_surface_to_host");
 
-  Mesh* mp = (Mesh*)(*Mesh_pointer_f); // get Mesh from fortran integer wrapper
+  Mesh* mp = (Mesh*)(*Mesh_pointer); // get Mesh from fortran integer wrapper
 
-  int num_blocks_x = mp->num_free_surface_faces;
-  int num_blocks_y = 1;
-  while(num_blocks_x > 65535) {
-    num_blocks_x = (int) ceil(num_blocks_x*0.5f);
-    num_blocks_y = num_blocks_y*2;
-  }
+  int num_blocks_x, num_blocks_y;
+  get_blocks_xy(mp->num_free_surface_faces,&num_blocks_x,&num_blocks_y);
+
   dim3 grid(num_blocks_x,num_blocks_y,1);
   dim3 threads(NGLL2,1,1);
 
@@ -167,8 +164,8 @@ TRACE("transfer_surface_to_host");
                                                     mp->d_displ,
                                                     mp->d_noise_surface_movie);
 
-  cudaMemcpy(h_noise_surface_movie,mp->d_noise_surface_movie,
-             3*NGLL2*(mp->num_free_surface_faces)*sizeof(realw),cudaMemcpyDeviceToHost);
+  print_CUDA_error_if_any(cudaMemcpy(h_noise_surface_movie,mp->d_noise_surface_movie,
+                                     3*NGLL2*(mp->num_free_surface_faces)*sizeof(realw),cudaMemcpyDeviceToHost),44002);
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   exit_on_cuda_error("transfer_surface_to_host");
@@ -250,25 +247,22 @@ __global__ void noise_read_add_surface_movie_cuda_kernel(realw* accel, int* iboo
 
 extern "C"
 void FC_FUNC_(noise_read_add_surface_movie_cu,
-              NOISE_READ_ADD_SURFACE_MOVIE_CU)(long* Mesh_pointer_f,
+              NOISE_READ_ADD_SURFACE_MOVIE_CU)(long* Mesh_pointer,
                                                realw* h_noise_surface_movie,
                                                int* NOISE_TOMOGRAPHYf) {
-TRACE("noise_read_add_surface_movie_cu");
+  TRACE("noise_read_add_surface_movie_cu");
 
   // EPIK_TRACER("noise_read_add_surface_movie_cu");
 
-  Mesh* mp = (Mesh*)(*Mesh_pointer_f); //get mesh pointer out of fortran integer container
+  Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
   int NOISE_TOMOGRAPHY = *NOISE_TOMOGRAPHYf;
 
-  cudaMemcpy(mp->d_noise_surface_movie,h_noise_surface_movie,
-             3*NGLL2*(mp->num_free_surface_faces)*sizeof(realw),cudaMemcpyHostToDevice);
+  print_CUDA_error_if_any(cudaMemcpy(mp->d_noise_surface_movie,h_noise_surface_movie,
+                                     3*NGLL2*(mp->num_free_surface_faces)*sizeof(realw),cudaMemcpyHostToDevice),44003);
 
-  int num_blocks_x = mp->num_free_surface_faces;
-  int num_blocks_y = 1;
-  while(num_blocks_x > 65535) {
-    num_blocks_x = (int) ceil(num_blocks_x*0.5f);
-    num_blocks_y = num_blocks_y*2;
-  }
+  int num_blocks_x, num_blocks_y;
+  get_blocks_xy(mp->num_free_surface_faces,&num_blocks_x,&num_blocks_y);
+
   dim3 grid(num_blocks_x,num_blocks_y,1);
   dim3 threads(NGLL2,1,1);
 

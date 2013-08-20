@@ -88,7 +88,7 @@
   enddo
 
   ! adds contributions from different partitions to valence_external_mesh
-  call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob,valence_external_mesh, &
+  call assemble_MPI_scalar_i_blocking(NPROC,nglob,valence_external_mesh, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         my_neighbours_ext_mesh)
@@ -335,7 +335,7 @@
   enddo
 
 ! adds contributions from different partitions to valence_external_mesh
-  call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob,valence_external_mesh, &
+  call assemble_MPI_scalar_i_blocking(NPROC,nglob,valence_external_mesh, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         my_neighbours_ext_mesh)
@@ -738,7 +738,7 @@
   enddo
 
 ! adds contributions from different partitions to valence_external_mesh
-  call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob,valence_external_mesh, &
+  call assemble_MPI_scalar_i_blocking(NPROC,nglob,valence_external_mesh, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         my_neighbours_ext_mesh)

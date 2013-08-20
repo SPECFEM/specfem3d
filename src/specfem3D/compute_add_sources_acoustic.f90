@@ -265,9 +265,10 @@
                ! reads in **sta**.**net**.**LH**.adj files
                adj_source_file = trim(station_name(irec))//'.'//trim(network_name(irec))
                call compute_arrays_adjoint_source(myrank,adj_source_file, &
-                         xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
-                         adj_sourcearray, xigll,yigll,zigll, &
-                         it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC)
+                                                  xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
+                                                  adj_sourcearray, xigll,yigll,zigll, &
+                                                  it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC)
+
                do itime = 1,NTSTEP_BETWEEN_READ_ADJSRC
                  adj_sourcearrays(irec_local,itime,:,:,:,:) = adj_sourcearray(itime,:,:,:,:)
                enddo
@@ -416,6 +417,9 @@ endif
 ! adjoint sources in SU format
   integer,parameter :: nheader=240      ! 240 bytes
 
+  ! checks if anything to do
+  if( SIMULATION_TYPE /= 3 ) return
+
 ! plotting source time function
   if(PRINT_SOURCE_TIME_FUNCTION .and. .not. phase_is_inner ) then
     ! initializes total
@@ -451,7 +455,7 @@ endif
 !           thus indexing is NSTEP - it , instead of NSTEP - it - 1
 
 ! adjoint simulations
-  if (SIMULATION_TYPE == 3 .and. nsources_local > 0) then
+  if( nsources_local > 0 ) then
 
      ! adds acoustic sources
      do isource = 1,NSOURCES
@@ -663,8 +667,7 @@ endif
          ! only implements SIMTYPE=1 and NOISE_TOM=0
          ! write(*,*) "fortran dt = ", dt
          ! change dt -> DT
-         call compute_add_sources_ac_cuda(Mesh_pointer, phase_is_inner, &
-              NSOURCES, stf_pre_compute, myrank)
+         call compute_add_sources_ac_cuda(Mesh_pointer,phase_is_inner,NSOURCES,stf_pre_compute)
       endif
   endif
 
@@ -730,9 +733,10 @@ endif
                ! reads in **sta**.**net**.**LH**.adj files
                adj_source_file = trim(station_name(irec))//'.'//trim(network_name(irec))
                call compute_arrays_adjoint_source(myrank,adj_source_file, &
-                         xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
-                         adj_sourcearray, xigll,yigll,zigll, &
-                         it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC)
+                                                  xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
+                                                  adj_sourcearray, xigll,yigll,zigll, &
+                                                  it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC)
+
                do itime = 1,NTSTEP_BETWEEN_READ_ADJSRC
                  adj_sourcearrays(irec_local,itime,:,:,:,:) = adj_sourcearray(itime,:,:,:,:)
                enddo
@@ -783,7 +787,8 @@ endif
         ! on GPU
         call add_sources_ac_sim_2_or_3_cuda(Mesh_pointer,adj_sourcearrays,phase_is_inner, &
                                            ispec_is_inner,ispec_is_acoustic, &
-                                           ispec_selected_rec,myrank,nrec, &
+                                           ispec_selected_rec, &
+                                           nrec, &
                                            NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC), &
                                            islice_selected_rec,nadj_rec_local, &
                                            NTSTEP_BETWEEN_READ_ADJSRC)
@@ -821,8 +826,7 @@ endif
          enddo
          stf_used_total = stf_used_total + sum(stf_pre_compute(:))
          ! only implements SIMTYPE=3
-         call compute_add_sources_ac_s3_cuda(Mesh_pointer, phase_is_inner, &
-                NSOURCES,stf_pre_compute, myrank)
+         call compute_add_sources_ac_s3_cuda(Mesh_pointer,phase_is_inner,NSOURCES,stf_pre_compute)
       endif
   endif
 

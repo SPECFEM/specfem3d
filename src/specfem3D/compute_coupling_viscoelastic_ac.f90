@@ -295,6 +295,9 @@ end subroutine compute_coupling_viscoelastic_ac
   ! adjoint locals
   real(kind=CUSTOM_REAL) :: b_force_normal_comp
 
+  ! checks if anything to do
+  if (SIMULATION_TYPE /= 3) return
+
   !   initialize the updates
   updated_dof_ocean_load(:) = .false.
 
@@ -323,18 +326,16 @@ end subroutine compute_coupling_viscoelastic_ac
         ! we use the total force which includes the Coriolis term above
 
         ! adjoint simulations
-        if (SIMULATION_TYPE == 3) then
-          b_force_normal_comp = b_accel(1,iglob)*nx / rmassx(iglob) &
-                                + b_accel(2,iglob)*ny / rmassy(iglob) &
-                                + b_accel(3,iglob)*nz / rmassz(iglob)
+        b_force_normal_comp = b_accel(1,iglob)*nx / rmassx(iglob) &
+                              + b_accel(2,iglob)*ny / rmassy(iglob) &
+                              + b_accel(3,iglob)*nz / rmassz(iglob)
 
-          b_accel(1,iglob) = b_accel(1,iglob) &
-            + (rmass_ocean_load(iglob) - rmassx(iglob)) * b_force_normal_comp * nx
-          b_accel(2,iglob) = b_accel(2,iglob) &
-            + (rmass_ocean_load(iglob) - rmassy(iglob)) * b_force_normal_comp * ny
-          b_accel(3,iglob) = b_accel(3,iglob) &
-            + (rmass_ocean_load(iglob) - rmassz(iglob)) * b_force_normal_comp * nz
-        endif !adjoint
+        b_accel(1,iglob) = b_accel(1,iglob) &
+          + (rmass_ocean_load(iglob) - rmassx(iglob)) * b_force_normal_comp * nx
+        b_accel(2,iglob) = b_accel(2,iglob) &
+          + (rmass_ocean_load(iglob) - rmassy(iglob)) * b_force_normal_comp * ny
+        b_accel(3,iglob) = b_accel(3,iglob) &
+          + (rmass_ocean_load(iglob) - rmassz(iglob)) * b_force_normal_comp * nz
 
         ! done with this point
         updated_dof_ocean_load(iglob) = .true.

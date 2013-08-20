@@ -114,7 +114,7 @@
   enddo ! num_abs_boundary_faces
 
   ! adjoint simulations: stores absorbed wavefield part
-  if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD .and. num_abs_boundary_faces > 0 ) then
+  if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD ) then
     ! writes out absorbing boundary value only when second phase is running
     if( phase_is_inner .eqv. .true. ) then
       ! uses fortran routine
@@ -172,7 +172,7 @@
   if( num_abs_boundary_faces == 0 ) return
 
   ! adjoint simulations:
-  if (SIMULATION_TYPE == 3 .and. num_abs_boundary_faces > 0)  then
+  if( SIMULATION_TYPE == 3 ) then
     ! reads in absorbing boundary array when first phase is running
     if( phase_is_inner .eqv. .false. ) then
       ! note: the index NSTEP-it+1 is valid if b_displ is read in after the Newmark scheme
@@ -252,7 +252,7 @@
   if( num_abs_boundary_faces == 0 ) return
 
   ! adjoint simulations:
-  if (SIMULATION_TYPE == 3 .and. num_abs_boundary_faces > 0)  then
+  if( SIMULATION_TYPE == 3 ) then
     ! reads in absorbing boundary array when first phase is running
     if( phase_is_inner .eqv. .false. ) then
       ! note: the index NSTEP-it+1 is valid if b_displ is read in after the Newmark scheme
@@ -266,12 +266,10 @@
   endif !adjoint
 
   ! absorbs absorbing-boundary surface using Sommerfeld condition (vanishing field in the outer-space)
-  if( num_abs_boundary_faces > 0 ) &
-    call compute_stacey_acoustic_cuda(Mesh_pointer, phase_is_inner, &
-                                      SAVE_FORWARD,b_absorb_potential)
+  call compute_stacey_acoustic_cuda(Mesh_pointer, phase_is_inner,b_absorb_potential)
 
   ! adjoint simulations: stores absorbed wavefield part
-  if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD .and. num_abs_boundary_faces > 0 ) then
+  if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD ) then
     ! writes out absorbing boundary value only when second phase is running
     if( phase_is_inner .eqv. .true. ) then
       ! uses fortran routine

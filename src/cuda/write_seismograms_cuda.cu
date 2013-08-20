@@ -43,60 +43,44 @@
 
 /* ----------------------------------------------------------------------------------------------- */
 
+//fortran code snippet...
 /*
-      ! gets global number of that receiver
-    irec = number_receiver_global(irec_local)
+  ! gets global number of that receiver
+  irec = number_receiver_global(irec_local)
 
-    ! gets local receiver interpolators
-    ! (1-D Lagrange interpolators)
-    hxir(:) = hxir_store(irec_local,:)
-    hetar(:) = hetar_store(irec_local,:)
-    hgammar(:) = hgammar_store(irec_local,:)
-
+  ! gets local receiver interpolators
+  ! (1-D Lagrange interpolators)
+  hxir(:) = hxir_store(irec_local,:)
+  hetar(:) = hetar_store(irec_local,:)
+  hgammar(:) = hgammar_store(irec_local,:)
 */
 
 /* ----------------------------------------------------------------------------------------------- */
 
-// Initially sets the blocks_x to be the num_blocks, and adds rows as
-// needed. If an additional row is added, the row length is cut in
-// half. If the block count is odd, there will be 1 too many blocks,
-// which must be managed at runtime with an if statement.
-void get_blocks_xy(int num_blocks,int* num_blocks_x,int* num_blocks_y) {
-  *num_blocks_x = num_blocks;
-  *num_blocks_y = 1;
-  while(*num_blocks_x > 65535) {
-    *num_blocks_x = (int) ceil(*num_blocks_x*0.5f);
-    *num_blocks_y = *num_blocks_y*2;
-  }
-  return;
-}
+// unused...
+/*
+__device__ double my_atomicAdd(double* address, double val) {
 
-/* ----------------------------------------------------------------------------------------------- */
-
-__device__ double atomicAdd(double* address, double val)
-{
-    unsigned long long int* address_as_ull =
-                             (unsigned long long int*)address;
+    unsigned long long int* address_as_ull = (unsigned long long int*)address;
     unsigned long long int old = *address_as_ull, assumed;
-    do {
-        assumed = old;
-old = atomicCAS(address_as_ull, assumed,
-                        __double_as_longlong(val +
-                               __longlong_as_double(assumed)));
+    do{
+      assumed = old;
+      old = atomicCAS(address_as_ull, assumed, __double_as_longlong(val + __longlong_as_double(assumed)));
     } while (assumed != old);
     return __longlong_as_double(old);
 }
+*/
 
 /* ----------------------------------------------------------------------------------------------- */
 
 __global__ void compute_interpolated_dva_plus_seismogram(int nrec_local,
-               realw* displ, realw* veloc, realw* accel,
-               int* ibool,
-               double* hxir, double* hetar, double* hgammar,
-               realw* seismograms_d, realw* seismograms_v, realw* seismograms_a,
-               double* nu,
-               int* number_receiver_global,
-               int* ispec_selected_rec) {
+                                                         realw* displ, realw* veloc, realw* accel,
+                                                         int* ibool,
+                                                         double* hxir, double* hetar, double* hgammar,
+                                                         realw* seismograms_d, realw* seismograms_v, realw* seismograms_a,
+                                                         double* nu,
+                                                         int* number_receiver_global,
+                                                         int* ispec_selected_rec) {
   int irec_local = blockIdx.x + blockIdx.y*gridDim.x;
   int i = threadIdx.x;
   int j = threadIdx.y;
@@ -202,12 +186,13 @@ void FC_FUNC_(transfer_seismograms_el_from_d,
 
 // transfers seismograms from device to host
 
-  TRACE("transfer_seismograms_el_from_d");
+  TRACE("\ttransfer_seismograms_el_from_d");
 
   Mesh* mp = (Mesh*)(*Mesh_pointer_f); // get Mesh from fortran integer wrapper
 
   int num_blocks_x, num_blocks_y;
   get_blocks_xy(*nrec_local,&num_blocks_x,&num_blocks_y);
+
   dim3 grid(num_blocks_x,num_blocks_y);
   dim3 threads(5,5,5);
 
@@ -222,22 +207,23 @@ void FC_FUNC_(transfer_seismograms_el_from_d,
   // cudaEventRecord( start, 0 );
 
   compute_interpolated_dva_plus_seismogram<<<grid,threads,0,mp->compute_stream>>>(*nrec_local,
-                      mp->d_displ,mp->d_veloc,mp->d_accel,
-                      mp->d_ibool,
-                      mp->d_hxir, mp->d_hetar, mp->d_hgammar,
-                      mp->d_seismograms_d,
-                      mp->d_seismograms_v,
-                      mp->d_seismograms_a,
-                      mp->d_nu,
-                      mp->d_number_receiver_global,
-                      mp->d_ispec_selected_rec
-                      );
+                                                                                  mp->d_displ,mp->d_veloc,mp->d_accel,
+                                                                                  mp->d_ibool,
+                                                                                  mp->d_hxir, mp->d_hetar, mp->d_hgammar,
+                                                                                  mp->d_seismograms_d,
+                                                                                  mp->d_seismograms_v,
+                                                                                  mp->d_seismograms_a,
+                                                                                  mp->d_nu,
+                                                                                  mp->d_number_receiver_global,
+                                                                                  mp->d_ispec_selected_rec
+                                                                                  );
 
   // cudaMemcpy(h_debug,d_debug,125*sizeof(double),cudaMemcpyDeviceToHost);
 
-  cudaMemcpy(mp->h_seismograms_d_it,mp->d_seismograms_d,sizeof(realw)*3* *nrec_local,cudaMemcpyDeviceToHost);
-  cudaMemcpy(mp->h_seismograms_v_it,mp->d_seismograms_v,sizeof(realw)*3* *nrec_local,cudaMemcpyDeviceToHost);
-  cudaMemcpy(mp->h_seismograms_a_it,mp->d_seismograms_a,sizeof(realw)*3* *nrec_local,cudaMemcpyDeviceToHost);
+  // (cudaMemcpy implicitly synchronizes all other cuda operations)
+  print_CUDA_error_if_any(cudaMemcpy(mp->h_seismograms_d_it,mp->d_seismograms_d,sizeof(realw)*3* *nrec_local,cudaMemcpyDeviceToHost),72001);
+  print_CUDA_error_if_any(cudaMemcpy(mp->h_seismograms_v_it,mp->d_seismograms_v,sizeof(realw)*3* *nrec_local,cudaMemcpyDeviceToHost),72002);
+  print_CUDA_error_if_any(cudaMemcpy(mp->h_seismograms_a_it,mp->d_seismograms_a,sizeof(realw)*3* *nrec_local,cudaMemcpyDeviceToHost),72003);
 
   // cudaEventRecord( stop, 0 );
   // cudaEventSynchronize( stop );
@@ -286,37 +272,35 @@ __global__ void transfer_stations_fields_from_device_kernel(int* number_receiver
 /* ----------------------------------------------------------------------------------------------- */
 
 void transfer_field_from_device(Mesh* mp, realw* d_field,realw* h_field,
-                                          int* number_receiver_global,
-                                          int* d_ispec_selected,
-                                          int* h_ispec_selected,
-                                          int* ibool) {
+                                int* number_receiver_global,
+                                int* d_ispec_selected,
+                                int* h_ispec_selected,
+                                int* ibool) {
 
-TRACE("transfer_field_from_device");
+TRACE("\ttransfer_field_from_device");
 
   // checks if anything to do
   if( mp->nrec_local == 0 ) return;
 
   int blocksize = NGLL3;
-  int num_blocks_x = mp->nrec_local;
-  int num_blocks_y = 1;
-  while(num_blocks_x > 65535) {
-    num_blocks_x = (int) ceil(num_blocks_x*0.5f);
-    num_blocks_y = num_blocks_y*2;
-  }
+
+  int num_blocks_x, num_blocks_y;
+  get_blocks_xy(mp->nrec_local,&num_blocks_x,&num_blocks_y);
 
   dim3 grid(num_blocks_x,num_blocks_y);
   dim3 threads(blocksize,1,1);
 
   // prepare field transfer array on device
   transfer_stations_fields_from_device_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_number_receiver_global,
-                                                                d_ispec_selected,
-                                                                mp->d_ibool,
-                                                                mp->d_station_seismo_field,
-                                                                d_field,
-                                                                mp->nrec_local);
+                                                                                      d_ispec_selected,
+                                                                                      mp->d_ibool,
+                                                                                      mp->d_station_seismo_field,
+                                                                                      d_field,
+                                                                                      mp->nrec_local);
 
-  cudaMemcpy(mp->h_station_seismo_field,mp->d_station_seismo_field,
-       (3*NGLL3)*(mp->nrec_local)*sizeof(realw),cudaMemcpyDeviceToHost);
+  // (cudaMemcpy implicitly synchronizes all other cuda operations)
+  print_CUDA_error_if_any(cudaMemcpy(mp->h_station_seismo_field,mp->d_station_seismo_field,
+                                    (3*NGLL3)*(mp->nrec_local)*sizeof(realw),cudaMemcpyDeviceToHost),71001);
 
   int irec_local;
   for(irec_local=0;irec_local<mp->nrec_local;irec_local++) {
@@ -422,12 +406,9 @@ TRACE("transfer_field_acoustic_from_device");
 
   // sets up kernel dimensions
   int blocksize = NGLL3;
-  int num_blocks_x = mp->nrec_local;
-  int num_blocks_y = 1;
-  while(num_blocks_x > 65535) {
-    num_blocks_x = (int) ceil(num_blocks_x*0.5f);
-    num_blocks_y = num_blocks_y*2;
-  }
+
+  int num_blocks_x, num_blocks_y;
+  get_blocks_xy(mp->nrec_local,&num_blocks_x,&num_blocks_y);
 
   dim3 grid(num_blocks_x,num_blocks_y);
   dim3 threads(blocksize,1,1);
@@ -444,6 +425,7 @@ TRACE("transfer_field_acoustic_from_device");
   exit_on_cuda_error("transfer_field_acoustic_from_device kernel");
 #endif
 
+  // (cudaMemcpy implicitly synchronizes all other cuda operations)
   print_CUDA_error_if_any(cudaMemcpy(mp->h_station_seismo_potential,mp->d_station_seismo_potential,
                                      mp->nrec_local*NGLL3*sizeof(realw),cudaMemcpyDeviceToHost),55000);
 
@@ -474,8 +456,7 @@ TRACE("transfer_field_acoustic_from_device");
 
 extern "C"
 void FC_FUNC_(transfer_station_ac_from_device,
-              TRANSFER_STATION_AC_FROM_DEVICE)(
-                                                realw* potential_acoustic,
+              TRANSFER_STATION_AC_FROM_DEVICE)(realw* potential_acoustic,
                                                 realw* potential_dot_acoustic,
                                                 realw* potential_dot_dot_acoustic,
                                                 realw* b_potential_acoustic,

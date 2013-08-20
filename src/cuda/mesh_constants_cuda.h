@@ -76,14 +76,6 @@
 // maximum function
 #define MAX(x,y)                    (((x) < (y)) ? (y) : (x))
 
-// utility functions: defined in check_fields_cuda.cu
-double get_time();
-void get_free_memory(double* free_db, double* used_db, double* total_db);
-void print_CUDA_error_if_any(cudaError_t err, int num);
-void pause_for_debugger(int pause);
-void exit_on_cuda_error(char* kernel_name);
-void exit_on_error(char* info);
-
 /* ----------------------------------------------------------------------------------------------- */
 
 // cuda constant arrays
@@ -108,13 +100,6 @@ void exit_on_error(char* info);
 
 /* ----------------------------------------------------------------------------------------------- */
 
-// type of "working" variables: see also CUSTOM_REAL
-// double precision temporary variables leads to 10% performance decrease
-// in Kernel_2_impl (not very much..)
-typedef float realw;
-
-/* ----------------------------------------------------------------------------------------------- */
-
 // (optional) pre-processing directive used in kernels: if defined check that it is also set in src/shared/constants.h:
 // leads up to ~ 5% performance increase
 //#define USE_MESH_COLORING_GPU
@@ -124,7 +109,7 @@ typedef float realw;
 // Texture memory usage:
 // requires CUDA version >= 4.0, see check below
 // Use textures for d_displ and d_accel -- 10% performance boost
-#define USE_TEXTURES_FIELDS
+//#define USE_TEXTURES_FIELDS
 
 // Using texture memory for the hprime-style constants is slower on
 // Fermi generation hardware, but *may* be faster on Kepler
@@ -157,25 +142,56 @@ typedef float realw;
 #define BLOCKSIZE_KERNEL3 128
 #define BLOCKSIZE_TRANSFER 256
 
+// maximum grid dimension in one direction of GPU
+#define MAXIMUM_GRID_DIM 65535
+
 /* ----------------------------------------------------------------------------------------------- */
 
 // indexing
-
 #define INDEX2(xsize,x,y) x + (y)*xsize
 
 #define INDEX3(xsize,ysize,x,y,z) x + xsize*(y + ysize*z)
-//#define INDEX3(xsize,ysize,x,y,z) x + (y)*xsize + (z)*xsize*ysize
 
 #define INDEX4(xsize,ysize,zsize,x,y,z,i) x + xsize*(y + ysize*(z + zsize*i))
-//#define INDEX4(xsize,ysize,zsize,x,y,z,i) x + (y)*xsize + (z)*xsize*ysize + (i)*xsize*ysize*zsize
 
 #define INDEX5(xsize,ysize,zsize,isize,x,y,z,i,j) x + xsize*(y + ysize*(z + zsize*(i + isize*(j))))
-//#define INDEX5(xsize,ysize,zsize,isize,x,y,z,i,j) x + (y)*xsize + (z)*xsize*ysize + (i)*xsize*ysize*zsize + (j)*xsize*ysize*zsize*isize
 
 #define INDEX6(xsize,ysize,zsize,isize,jsize,x,y,z,i,j,k) x + xsize*(y + ysize*(z + zsize*(i + isize*(j + jsize*k))))
 
 #define INDEX4_PADDED(xsize,ysize,zsize,x,y,z,i) x + xsize*(y + ysize*z) + (i)*NGLL3_PADDED
-//#define INDEX4_PADDED(xsize,ysize,zsize,x,y,z,i) x + (y)*xsize + (z)*xsize*ysize + (i)*NGLL3_PADDED
+
+/* ----------------------------------------------------------------------------------------------- */
+
+// custom type declarations
+
+/* ----------------------------------------------------------------------------------------------- */
+
+// type of "working" variables: see also CUSTOM_REAL
+// double precision temporary variables leads to 10% performance decrease
+// in Kernel_2_impl (not very much..)
+typedef float realw;
+
+// textures
+typedef texture<float, cudaTextureType1D, cudaReadModeElementType> realw_texture;
+
+
+/* ----------------------------------------------------------------------------------------------- */
+
+// utility functions: defined in check_fields_cuda.cu
+
+/* ----------------------------------------------------------------------------------------------- */
+
+double get_time();
+void get_free_memory(double* free_db, double* used_db, double* total_db);
+void print_CUDA_error_if_any(cudaError_t err, int num);
+void pause_for_debugger(int pause);
+void exit_on_cuda_error(char* kernel_name);
+void exit_on_error(char* info);
+void synchronize_cuda();
+void synchronize_mpi();
+void get_blocks_xy(int num_blocks,int* num_blocks_x,int* num_blocks_y);
+realw get_device_array_maximum_value(realw* array,int size);
+
 
 /* ----------------------------------------------------------------------------------------------- */
 
@@ -189,11 +205,12 @@ typedef struct mesh_ {
   int NSPEC_AB;
   int NGLOB_AB;
 
+  // mpi process
   int myrank;
-  int NPROC;
 
   // constants
   int simulation_type;
+  int save_forward;
   int use_mesh_coloring_gpu;
   int absorbing_conditions;
   int gravity;
@@ -229,33 +246,25 @@ typedef struct mesh_ {
   realw* d_wgllwgll_xy; realw* d_wgllwgll_xz; realw* d_wgllwgll_yz;
   realw* d_wgll_cube;
 
-#ifdef USE_TEXTURES_CONSTANTS
-  const textureReference* d_hprime_xx_tex_ptr;
-  realw* d_hprime_xx_tex;
-#endif
-
-
   // A buffer for mpi-send/recv, which is duplicated in fortran but is
   // allocated with pinned memory to facilitate asynchronus device <->
   // host memory transfers
   float* h_send_accel_buffer;
   float* h_send_b_accel_buffer;
+
   float* send_buffer;
   float* h_recv_accel_buffer;
   float* h_recv_b_accel_buffer;
   float* recv_buffer;
-  int size_mpi_buffer;
 
-  // buffers and constants for the MPI-send required for async-memcpy
-  // + non-blocking MPI
-  //daniel: check if needed
-  //float* buffer_recv_vector_ext_mesh;
+  int size_mpi_buffer;
+  int size_mpi_buffer_potential;
+
+  // mpi interfaces
   int num_interfaces_ext_mesh;
   int max_nibool_interfaces_ext_mesh;
-  //int* nibool_interfaces_ext_mesh;
-  //int* my_neighbours_ext_mesh;
-  //int* request_send_vector_ext_mesh;
-  //int* request_recv_vector_ext_mesh;
+  int* d_nibool_interfaces_ext_mesh;
+  int* d_ibool_interfaces_ext_mesh;
 
   // overlapped memcpy streams
   cudaStream_t compute_stream;
@@ -270,13 +279,6 @@ typedef struct mesh_ {
   realw* d_displ; realw* d_veloc; realw* d_accel;
   // backward/reconstructed elastic wavefield
   realw* d_b_displ; realw* d_b_veloc; realw* d_b_accel;
-
-#ifdef USE_TEXTURES_FIELDS
-  // Texture references for fast non-coalesced scattered access
-  const textureReference* d_displ_tex_ref_ptr;
-  const textureReference* d_veloc_tex_ref_ptr;
-  const textureReference* d_accel_tex_ref_ptr;
-#endif
 
   // elastic elements
   int* d_ispec_is_elastic;
@@ -296,10 +298,7 @@ typedef struct mesh_ {
 
   // mpi buffer
   realw* d_send_accel_buffer;
-
-  // interfaces
-  int* d_nibool_interfaces_ext_mesh;
-  int* d_ibool_interfaces_ext_mesh;
+  realw* d_b_send_accel_buffer;
 
   //used for absorbing stacey boundaries
   int d_num_abs_boundary_faces;
@@ -426,9 +425,11 @@ typedef struct mesh_ {
   realw* d_b_gammaval;
 
   // sensitivity kernels
+  int anisotropic_kl;
   realw* d_rho_kl;
   realw* d_mu_kl;
   realw* d_kappa_kl;
+  realw* d_cijkl_kl;
 
   // noise sensitivity kernel
   realw* d_Sigma_kl;
@@ -468,6 +469,7 @@ typedef struct mesh_ {
 
   // mpi buffer
   realw* d_send_potential_dot_dot_buffer;
+  realw* d_b_send_potential_dot_dot_buffer;
 
   realw* d_b_absorb_potential;
   int d_b_reclen_potential;

@@ -122,16 +122,18 @@ __global__ void compute_stacey_acoustic_kernel(realw* potential_dot_acoustic,
 
 extern "C"
 void FC_FUNC_(compute_stacey_acoustic_cuda,
-              COMPUTE_STACEY_ACOUSTIC_CUDA)(long* Mesh_pointer_f,
+              COMPUTE_STACEY_ACOUSTIC_CUDA)(long* Mesh_pointer,
                                             int* phase_is_innerf,
-                                            int* SAVE_FORWARDf,
                                             realw* h_b_absorb_potential) {
 TRACE("compute_stacey_acoustic_cuda");
   //double start_time = get_time();
 
-  Mesh* mp = (Mesh*)(*Mesh_pointer_f); //get mesh pointer out of fortran integer container
+  Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
+
+  // checks if anything to do
+  if( mp->d_num_abs_boundary_faces == 0 ) return;
+
   int phase_is_inner          = *phase_is_innerf;
-  int SAVE_FORWARD            = *SAVE_FORWARDf;
 
   // way 1: Elapsed time: 4.385948e-03
   // > NGLLSQUARE==NGLL2==25, but we handle this inside kernel
@@ -141,18 +143,14 @@ TRACE("compute_stacey_acoustic_cuda");
   // > NGLLSQUARE==NGLL2==25, no further check inside kernel
   int blocksize = NGLL2;
 
-  int num_blocks_x = mp->d_num_abs_boundary_faces;
-  int num_blocks_y = 1;
-  while(num_blocks_x > 65535) {
-    num_blocks_x = (int) ceil(num_blocks_x*0.5f);
-    num_blocks_y = num_blocks_y*2;
-  }
+  int num_blocks_x, num_blocks_y;
+  get_blocks_xy(mp->d_num_abs_boundary_faces,&num_blocks_x,&num_blocks_y);
 
   dim3 grid(num_blocks_x,num_blocks_y);
   dim3 threads(blocksize,1,1);
 
   //  adjoint simulations: reads in absorbing boundary
-  if (mp->simulation_type == 3 && mp->d_num_abs_boundary_faces > 0 ){
+  if (mp->simulation_type == 3 ){
     // copies array to GPU
     print_CUDA_error_if_any(cudaMemcpy(mp->d_b_absorb_potential,h_b_absorb_potential,
                                        mp->d_b_reclen_potential,cudaMemcpyHostToDevice),7700);
@@ -170,7 +168,7 @@ TRACE("compute_stacey_acoustic_cuda");
                                                    mp->d_ispec_is_acoustic,
                                                    phase_is_inner,
                                                    mp->simulation_type,
-                                                   SAVE_FORWARD,
+                                                   mp->save_forward,
                                                    mp->d_num_abs_boundary_faces,
                                                    mp->d_b_potential_dot_acoustic,
                                                    mp->d_b_potential_dot_dot_acoustic,
@@ -178,7 +176,8 @@ TRACE("compute_stacey_acoustic_cuda");
                                                    mp->gravity);
 
   //  adjoint simulations: stores absorbed wavefield part
-  if (mp->simulation_type == 1 && SAVE_FORWARD && mp->d_num_abs_boundary_faces > 0 ){
+  if (mp->simulation_type == 1 && mp->save_forward ){
+    // (cudaMemcpy implicitly synchronizes all other cuda operations)
     // copies array to CPU
     print_CUDA_error_if_any(cudaMemcpy(h_b_absorb_potential,mp->d_b_absorb_potential,
                                        mp->d_b_reclen_potential,cudaMemcpyDeviceToHost),7701);

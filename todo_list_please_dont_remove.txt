@@ -323,7 +323,7 @@ dynamic/kinematic faults:
 ------------------------------------------------
 
 + fault_solver_common:
-      - make ordered version of subroutine assemble_MPI_vector_ext_mesh, and use it in subroutine initialize_fault
+      - make ordered version of subroutine assemble_MPI_vector_blocking, and use it in subroutine initialize_fault
 
 + fault_solver_dynamic:
       - many hard-coded ad hoc features need to be set instead as user options

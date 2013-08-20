@@ -122,7 +122,7 @@
   enddo
   ! sums acoustic flags
   if( ACOUSTIC_SIMULATION ) then
-    call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob_dummy,acoustic_flag, &
+    call assemble_MPI_scalar_i_blocking(NPROC,nglob_dummy,acoustic_flag, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy,&
                         my_neighbours_ext_mesh)
@@ -130,7 +130,7 @@
 
   ! sums elastic flags
   if( ELASTIC_SIMULATION ) then
-    call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob_dummy,elastic_flag, &
+    call assemble_MPI_scalar_i_blocking(NPROC,nglob_dummy,elastic_flag, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy,&
                         my_neighbours_ext_mesh)
@@ -138,7 +138,7 @@
 
   ! sums poroelastic flags
   if( POROELASTIC_SIMULATION ) then
-    call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob_dummy,poroelastic_flag, &
+    call assemble_MPI_scalar_i_blocking(NPROC,nglob_dummy,poroelastic_flag, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy,&
                         my_neighbours_ext_mesh)

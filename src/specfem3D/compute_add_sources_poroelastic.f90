@@ -274,9 +274,10 @@
              ! reads in **sta**.**net**.**LH**.adj files
              adj_source_file = trim(station_name(irec))//'.'//trim(network_name(irec))
              call compute_arrays_adjoint_source(myrank,adj_source_file, &
-                       xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
-                       adj_sourcearray, xigll,yigll,zigll, &
-                       it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC)
+                                                xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
+                                                adj_sourcearray, xigll,yigll,zigll, &
+                                                it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC)
+
              do itime = 1,NTSTEP_BETWEEN_READ_ADJSRC
                adj_sourcearrays(irec_local,itime,:,:,:,:) = adj_sourcearray(itime,:,:,:,:)
              enddo

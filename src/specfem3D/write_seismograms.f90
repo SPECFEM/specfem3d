@@ -87,204 +87,204 @@
 
   if(.not. GPU_MODE .or. (GPU_MODE .and. (.not. USE_CUDA_SEISMOGRAMS))) then
 
-  do irec_local = 1,nrec_local
+    do irec_local = 1,nrec_local
 
-    ! gets global number of that receiver
-    irec = number_receiver_global(irec_local)
+      ! gets global number of that receiver
+      irec = number_receiver_global(irec_local)
 
-    ! gets local receiver interpolators
-    ! (1-D Lagrange interpolators)
-    hxir(:) = hxir_store(irec_local,:)
-    hetar(:) = hetar_store(irec_local,:)
-    hgammar(:) = hgammar_store(irec_local,:)
+      ! gets local receiver interpolators
+      ! (1-D Lagrange interpolators)
+      hxir(:) = hxir_store(irec_local,:)
+      hetar(:) = hetar_store(irec_local,:)
+      hgammar(:) = hgammar_store(irec_local,:)
 
-    ! forward simulations
-    select case( SIMULATION_TYPE )
-    case( 1 )
+      ! forward simulations
+      select case( SIMULATION_TYPE )
+      case( 1 )
 
-      ! receiver's spectral element
-      ispec = ispec_selected_rec(irec)
+        ! receiver's spectral element
+        ispec = ispec_selected_rec(irec)
 
-      ! elastic wave field
-      if( ispec_is_elastic(ispec) ) then
-        ! interpolates displ/veloc/accel at receiver locations
-        call compute_interpolated_dva(displ,veloc,accel,NGLOB_AB, &
-                        ispec,NSPEC_AB,ibool, &
-                        xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
-                        hxir,hetar,hgammar, &
-                        dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
-      endif !elastic
+        ! elastic wave field
+        if( ispec_is_elastic(ispec) ) then
+          ! interpolates displ/veloc/accel at receiver locations
+          call compute_interpolated_dva(displ,veloc,accel,NGLOB_AB, &
+                          ispec,NSPEC_AB,ibool, &
+                          xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
+                          hxir,hetar,hgammar, &
+                          dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
+        endif !elastic
 
-      ! acoustic wave field
-      if( ispec_is_acoustic(ispec) ) then
-        ! displacement vector
-        call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
-                        potential_acoustic, displ_element,&
-                        hprime_xx,hprime_yy,hprime_zz, &
-                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        ibool,rhostore,GRAVITY)
-        ! velocity vector
-        call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
-                        potential_dot_acoustic, veloc_element,&
-                        hprime_xx,hprime_yy,hprime_zz, &
-                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        ibool,rhostore,GRAVITY)
+        ! acoustic wave field
+        if( ispec_is_acoustic(ispec) ) then
+          ! displacement vector
+          call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+                          potential_acoustic, displ_element,&
+                          hprime_xx,hprime_yy,hprime_zz, &
+                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                          ibool,rhostore,GRAVITY)
+          ! velocity vector
+          call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+                          potential_dot_acoustic, veloc_element,&
+                          hprime_xx,hprime_yy,hprime_zz, &
+                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                          ibool,rhostore,GRAVITY)
 
-        ! interpolates displ/veloc/pressure at receiver locations
-        call compute_interpolated_dva_ac(displ_element,veloc_element,&
-                        potential_dot_dot_acoustic,potential_dot_acoustic,&
-                        potential_acoustic,NGLOB_AB, &
-                        ispec,NSPEC_AB,ibool, &
-                        xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
-                        hxir,hetar,hgammar, &
-                        dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
-      endif ! acoustic
+          ! interpolates displ/veloc/pressure at receiver locations
+          call compute_interpolated_dva_ac(displ_element,veloc_element,&
+                          potential_dot_dot_acoustic,potential_dot_acoustic,&
+                          potential_acoustic,NGLOB_AB, &
+                          ispec,NSPEC_AB,ibool, &
+                          xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
+                          hxir,hetar,hgammar, &
+                          dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
+        endif ! acoustic
 
-     ! poroelastic wave field
-      if( ispec_is_poroelastic(ispec) ) then
-        ! interpolates displ/veloc/accel at receiver locations
-      !  call compute_interpolated_dva(displw_poroelastic,velocw_poroelastic,accelw_poroelastic,NGLOB_AB, &
-        call compute_interpolated_dva(displs_poroelastic,velocs_poroelastic,accels_poroelastic,NGLOB_AB, &
-                        ispec,NSPEC_AB,ibool, &
-                        xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
-                        hxir,hetar,hgammar, &
-                        dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
-      endif !poroelastic
+       ! poroelastic wave field
+        if( ispec_is_poroelastic(ispec) ) then
+          ! interpolates displ/veloc/accel at receiver locations
+        !  call compute_interpolated_dva(displw_poroelastic,velocw_poroelastic,accelw_poroelastic,NGLOB_AB, &
+          call compute_interpolated_dva(displs_poroelastic,velocs_poroelastic,accels_poroelastic,NGLOB_AB, &
+                          ispec,NSPEC_AB,ibool, &
+                          xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
+                          hxir,hetar,hgammar, &
+                          dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
+        endif !poroelastic
 
-    !adjoint simulations
-    case( 2 )
+      !adjoint simulations
+      case( 2 )
 
-      ! adjoint source is placed at receiver
-      ispec = ispec_selected_source(irec)
+        ! adjoint source is placed at receiver
+        ispec = ispec_selected_source(irec)
 
-      ! elastic wave field
-      if( ispec_is_elastic(ispec) ) then
-        ! interpolates displ/veloc/accel at receiver locations
-        call compute_interpolated_dva(displ,veloc,accel,NGLOB_AB, &
-                        ispec,NSPEC_AB,ibool, &
-                        xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
-                        hxir,hetar,hgammar, &
-                        dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
+        ! elastic wave field
+        if( ispec_is_elastic(ispec) ) then
+          ! interpolates displ/veloc/accel at receiver locations
+          call compute_interpolated_dva(displ,veloc,accel,NGLOB_AB, &
+                          ispec,NSPEC_AB,ibool, &
+                          xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
+                          hxir,hetar,hgammar, &
+                          dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
 
-        ! stores elements displacement field
-        do k = 1,NGLLZ
-          do j = 1,NGLLY
-            do i = 1,NGLLX
-              iglob = ibool(i,j,k,ispec)
-              displ_element(:,i,j,k) = displ(:,iglob)
+          ! stores elements displacement field
+          do k = 1,NGLLZ
+            do j = 1,NGLLY
+              do i = 1,NGLLX
+                iglob = ibool(i,j,k,ispec)
+                displ_element(:,i,j,k) = displ(:,iglob)
+              enddo
             enddo
           enddo
-        enddo
 
-        ! gets derivatives of local receiver interpolators
-        hpxir(:) = hpxir_store(irec_local,:)
-        hpetar(:) = hpetar_store(irec_local,:)
-        hpgammar(:) = hpgammar_store(irec_local,:)
+          ! gets derivatives of local receiver interpolators
+          hpxir(:) = hpxir_store(irec_local,:)
+          hpetar(:) = hpetar_store(irec_local,:)
+          hpgammar(:) = hpgammar_store(irec_local,:)
 
-        ! computes the integrated derivatives of source parameters (M_jk and X_s)
-        call compute_adj_source_frechet(displ_element,Mxx(irec),Myy(irec),Mzz(irec),&
-                      Mxy(irec),Mxz(irec),Myz(irec),eps_s,eps_m_s, &
-                      hxir,hetar,hgammar,hpxir,hpetar,hpgammar, &
-                      hprime_xx,hprime_yy,hprime_zz, &
-                      xix(:,:,:,ispec),xiy(:,:,:,ispec),xiz(:,:,:,ispec), &
-                      etax(:,:,:,ispec),etay(:,:,:,ispec),etaz(:,:,:,ispec), &
-                      gammax(:,:,:,ispec),gammay(:,:,:,ispec),gammaz(:,:,:,ispec))
-
-        stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(irec),hdur_gaussian(irec))
-        stf_deltat = stf * deltat
-        Mxx_der(irec_local) = Mxx_der(irec_local) + eps_s(1,1) * stf_deltat
-        Myy_der(irec_local) = Myy_der(irec_local) + eps_s(2,2) * stf_deltat
-        Mzz_der(irec_local) = Mzz_der(irec_local) + eps_s(3,3) * stf_deltat
-        Mxy_der(irec_local) = Mxy_der(irec_local) + 2 * eps_s(1,2) * stf_deltat
-        Mxz_der(irec_local) = Mxz_der(irec_local) + 2 * eps_s(1,3) * stf_deltat
-        Myz_der(irec_local) = Myz_der(irec_local) + 2 * eps_s(2,3) * stf_deltat
-
-        sloc_der(:,irec_local) = sloc_der(:,irec_local) + eps_m_s(:) * stf_deltat
-      endif ! elastic
-
-      ! acoustic wave field
-      if( ispec_is_acoustic(ispec) ) then
-        ! displacement vector
-        call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
-                        potential_acoustic, displ_element,&
+          ! computes the integrated derivatives of source parameters (M_jk and X_s)
+          call compute_adj_source_frechet(displ_element,Mxx(irec),Myy(irec),Mzz(irec),&
+                        Mxy(irec),Mxz(irec),Myz(irec),eps_s,eps_m_s, &
+                        hxir,hetar,hgammar,hpxir,hpetar,hpgammar, &
                         hprime_xx,hprime_yy,hprime_zz, &
-                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        ibool,rhostore,GRAVITY)
-        ! velocity vector
-        call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
-                        potential_dot_acoustic, veloc_element,&
-                        hprime_xx,hprime_yy,hprime_zz, &
-                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        ibool,rhostore,GRAVITY)
+                        xix(:,:,:,ispec),xiy(:,:,:,ispec),xiz(:,:,:,ispec), &
+                        etax(:,:,:,ispec),etay(:,:,:,ispec),etaz(:,:,:,ispec), &
+                        gammax(:,:,:,ispec),gammay(:,:,:,ispec),gammaz(:,:,:,ispec))
 
-        ! interpolates displ/veloc/pressure at receiver locations
-        call compute_interpolated_dva_ac(displ_element,veloc_element,&
-                        potential_dot_dot_acoustic,potential_dot_acoustic,&
-                        potential_acoustic,NGLOB_AB, &
-                        ispec,NSPEC_AB,ibool, &
-                        xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
-                        hxir,hetar,hgammar, &
-                        dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
-      endif ! acoustic
+          stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(irec),hdur_gaussian(irec))
+          stf_deltat = stf * deltat
+          Mxx_der(irec_local) = Mxx_der(irec_local) + eps_s(1,1) * stf_deltat
+          Myy_der(irec_local) = Myy_der(irec_local) + eps_s(2,2) * stf_deltat
+          Mzz_der(irec_local) = Mzz_der(irec_local) + eps_s(3,3) * stf_deltat
+          Mxy_der(irec_local) = Mxy_der(irec_local) + 2 * eps_s(1,2) * stf_deltat
+          Mxz_der(irec_local) = Mxz_der(irec_local) + 2 * eps_s(1,3) * stf_deltat
+          Myz_der(irec_local) = Myz_der(irec_local) + 2 * eps_s(2,3) * stf_deltat
 
-    !adjoint simulations
-    case( 3 )
+          sloc_der(:,irec_local) = sloc_der(:,irec_local) + eps_m_s(:) * stf_deltat
+        endif ! elastic
 
-      ispec = ispec_selected_rec(irec)
+        ! acoustic wave field
+        if( ispec_is_acoustic(ispec) ) then
+          ! displacement vector
+          call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+                          potential_acoustic, displ_element,&
+                          hprime_xx,hprime_yy,hprime_zz, &
+                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                          ibool,rhostore,GRAVITY)
+          ! velocity vector
+          call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+                          potential_dot_acoustic, veloc_element,&
+                          hprime_xx,hprime_yy,hprime_zz, &
+                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                          ibool,rhostore,GRAVITY)
 
-      ! elastic wave field
-      if( ispec_is_elastic(ispec) ) then
-        ! backward fields: interpolates displ/veloc/accel at receiver locations
-        call compute_interpolated_dva(b_displ,b_veloc,b_accel,NGLOB_ADJOINT,&
-                        ispec,NSPEC_AB,ibool, &
-                        xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
-                        hxir,hetar,hgammar, &
-                        dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
-      endif ! elastic
+          ! interpolates displ/veloc/pressure at receiver locations
+          call compute_interpolated_dva_ac(displ_element,veloc_element,&
+                          potential_dot_dot_acoustic,potential_dot_acoustic,&
+                          potential_acoustic,NGLOB_AB, &
+                          ispec,NSPEC_AB,ibool, &
+                          xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
+                          hxir,hetar,hgammar, &
+                          dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
+        endif ! acoustic
 
-      ! acoustic wave field
-      if( ispec_is_acoustic(ispec) ) then
-        ! backward fields: displacement vector
-        call compute_gradient(ispec,NSPEC_AB,NGLOB_ADJOINT, &
-                        b_potential_acoustic, displ_element,&
-                        hprime_xx,hprime_yy,hprime_zz, &
-                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        ibool,rhostore,GRAVITY)
-        ! backward fields: velocity vector
-        call compute_gradient(ispec,NSPEC_AB,NGLOB_ADJOINT, &
-                        b_potential_dot_acoustic, veloc_element,&
-                        hprime_xx,hprime_yy,hprime_zz, &
-                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        ibool,rhostore,GRAVITY)
+      !adjoint simulations
+      case( 3 )
 
-        ! backward fields: interpolates displ/veloc/pressure at receiver locations
-        call compute_interpolated_dva_ac(displ_element,veloc_element,&
-                        b_potential_dot_dot_acoustic,b_potential_dot_acoustic,&
-                        b_potential_acoustic,NGLOB_ADJOINT, &
-                        ispec,NSPEC_AB,ibool, &
-                        xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
-                        hxir,hetar,hgammar, &
-                        dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
-      endif ! acoustic
+        ispec = ispec_selected_rec(irec)
 
-    end select ! SIMULATION_TYPE
+        ! elastic wave field
+        if( ispec_is_elastic(ispec) ) then
+          ! backward fields: interpolates displ/veloc/accel at receiver locations
+          call compute_interpolated_dva(b_displ,b_veloc,b_accel,NGLOB_ADJOINT,&
+                          ispec,NSPEC_AB,ibool, &
+                          xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
+                          hxir,hetar,hgammar, &
+                          dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
+        endif ! elastic
 
-    ! store North, East and Vertical components
-    ! distinguish between single and double precision for reals
-    if(CUSTOM_REAL == SIZE_REAL) then
-      seismograms_d(:,irec_local,it) = sngl((nu(:,1,irec)*dxd + nu(:,2,irec)*dyd + nu(:,3,irec)*dzd))
-      seismograms_v(:,irec_local,it) = sngl((nu(:,1,irec)*vxd + nu(:,2,irec)*vyd + nu(:,3,irec)*vzd))
-      seismograms_a(:,irec_local,it) = sngl((nu(:,1,irec)*axd + nu(:,2,irec)*ayd + nu(:,3,irec)*azd))
-    else
-      seismograms_d(:,irec_local,it) = (nu(:,1,irec)*dxd + nu(:,2,irec)*dyd + nu(:,3,irec)*dzd)
-      seismograms_v(:,irec_local,it) = (nu(:,1,irec)*vxd + nu(:,2,irec)*vyd + nu(:,3,irec)*vzd)
-      seismograms_a(:,irec_local,it) = (nu(:,1,irec)*axd + nu(:,2,irec)*ayd + nu(:,3,irec)*azd)
-    endif
+        ! acoustic wave field
+        if( ispec_is_acoustic(ispec) ) then
+          ! backward fields: displacement vector
+          call compute_gradient(ispec,NSPEC_AB,NGLOB_ADJOINT, &
+                          b_potential_acoustic, displ_element,&
+                          hprime_xx,hprime_yy,hprime_zz, &
+                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                          ibool,rhostore,GRAVITY)
+          ! backward fields: velocity vector
+          call compute_gradient(ispec,NSPEC_AB,NGLOB_ADJOINT, &
+                          b_potential_dot_acoustic, veloc_element,&
+                          hprime_xx,hprime_yy,hprime_zz, &
+                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                          ibool,rhostore,GRAVITY)
 
-    !adjoint simulations
-    if (SIMULATION_TYPE == 2) seismograms_eps(:,:,irec_local,it) = eps_s(:,:)
+          ! backward fields: interpolates displ/veloc/pressure at receiver locations
+          call compute_interpolated_dva_ac(displ_element,veloc_element,&
+                          b_potential_dot_dot_acoustic,b_potential_dot_acoustic,&
+                          b_potential_acoustic,NGLOB_ADJOINT, &
+                          ispec,NSPEC_AB,ibool, &
+                          xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
+                          hxir,hetar,hgammar, &
+                          dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
+        endif ! acoustic
 
-  enddo ! nrec_local
+      end select ! SIMULATION_TYPE
+
+      ! store North, East and Vertical components
+      ! distinguish between single and double precision for reals
+      if(CUSTOM_REAL == SIZE_REAL) then
+        seismograms_d(:,irec_local,it) = sngl((nu(:,1,irec)*dxd + nu(:,2,irec)*dyd + nu(:,3,irec)*dzd))
+        seismograms_v(:,irec_local,it) = sngl((nu(:,1,irec)*vxd + nu(:,2,irec)*vyd + nu(:,3,irec)*vzd))
+        seismograms_a(:,irec_local,it) = sngl((nu(:,1,irec)*axd + nu(:,2,irec)*ayd + nu(:,3,irec)*azd))
+      else
+        seismograms_d(:,irec_local,it) = (nu(:,1,irec)*dxd + nu(:,2,irec)*dyd + nu(:,3,irec)*dzd)
+        seismograms_v(:,irec_local,it) = (nu(:,1,irec)*vxd + nu(:,2,irec)*vyd + nu(:,3,irec)*vzd)
+        seismograms_a(:,irec_local,it) = (nu(:,1,irec)*axd + nu(:,2,irec)*ayd + nu(:,3,irec)*azd)
+      endif
+
+      !adjoint simulations
+      if (SIMULATION_TYPE == 2) seismograms_eps(:,:,irec_local,it) = eps_s(:,:)
+
+    enddo ! nrec_local
 
   endif
 

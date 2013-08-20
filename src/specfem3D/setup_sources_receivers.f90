@@ -896,7 +896,7 @@
         enddo
 
         ! writes out to VTK file
-        write(IOVTK,*) xmesh,ymesh,zmesh
+        write(IOVTK,'(3e18.6)') xmesh,ymesh,zmesh
       endif
     enddo ! NSOURCES
   endif
@@ -941,7 +941,7 @@
       enddo
 
       ! writes out to VTK file
-      write(IOVTK,*) xmesh,ymesh,zmesh
+      write(IOVTK,'(3e18.6)') xmesh,ymesh,zmesh
     endif
   enddo
 

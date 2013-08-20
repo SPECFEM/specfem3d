@@ -36,6 +36,36 @@
 #include "config.h"
 #include "mesh_constants_cuda.h"
 
+#ifdef USE_TEXTURES_FIELDS
+realw_texture d_potential_tex;
+realw_texture d_potential_dot_dot_tex;
+//backward/reconstructed
+realw_texture d_b_potential_tex;
+realw_texture d_b_potential_dot_dot_tex;
+
+//note: texture variables are implicitly static, and cannot be passed as arguments to cuda kernels;
+//      thus, 1) we thus use if-statements (FORWARD_OR_ADJOINT) to determine from which texture to fetch from
+//            2) we use templates
+//      since if-statements are a bit slower as the variable is only known at runtime, we use option 2)
+
+// templates definitions
+template<int FORWARD_OR_ADJOINT> __device__ float texfetch_potential(int x);
+template<int FORWARD_OR_ADJOINT> __device__ float texfetch_potential_dot_dot(int x);
+
+// templates for texture fetching
+// FORWARD_OR_ADJOINT == 1 <- forward arrays
+template<> __device__ float texfetch_potential<1>(int x) { return tex1Dfetch(d_potential_tex, x); }
+template<> __device__ float texfetch_potential_dot_dot<1>(int x) { return tex1Dfetch(d_potential_dot_dot_tex, x); }
+// FORWARD_OR_ADJOINT == 3 <- backward/reconstructed arrays
+template<> __device__ float texfetch_potential<3>(int x) { return tex1Dfetch(d_b_potential_tex, x); }
+template<> __device__ float texfetch_potential_dot_dot<3>(int x) { return tex1Dfetch(d_b_potential_dot_dot_tex, x); }
+
+#endif
+
+#ifdef USE_TEXTURES_CONSTANTS
+extern realw_texture d_hprime_xx_tex;
+#endif
+
 
 /* ----------------------------------------------------------------------------------------------- */
 
@@ -49,12 +79,17 @@ __global__ void prepare_boundary_potential_on_device(realw* d_potential_dot_dot_
                                                      int* d_ibool_interfaces_ext_mesh) {
 
   int id = threadIdx.x + blockIdx.x*blockDim.x + blockIdx.y*gridDim.x*blockDim.x;
-  int iinterface=0;
+  int ientry,iglob;
 
-  for( iinterface=0; iinterface < num_interfaces_ext_mesh; iinterface++) {
+  for(int iinterface=0; iinterface < num_interfaces_ext_mesh; iinterface++) {
     if(id<d_nibool_interfaces_ext_mesh[iinterface]) {
-      d_send_potential_dot_dot_buffer[(id + max_nibool_interfaces_ext_mesh*iinterface)] =
-        d_potential_dot_dot_acoustic[(d_ibool_interfaces_ext_mesh[id+max_nibool_interfaces_ext_mesh*iinterface]-1)];
+
+      // entry in interface array
+      ientry = id + max_nibool_interfaces_ext_mesh*iinterface;
+      // global index in wavefield
+      iglob = d_ibool_interfaces_ext_mesh[ientry] - 1;
+
+      d_send_potential_dot_dot_buffer[ientry] = d_potential_dot_dot_acoustic[iglob];
     }
   }
 
@@ -66,58 +101,68 @@ __global__ void prepare_boundary_potential_on_device(realw* d_potential_dot_dot_
 // prepares and transfers the inter-element edge-nodes to the host to be MPI'd
 extern "C"
 void FC_FUNC_(transfer_boun_pot_from_device,
-              TRANSFER_BOUN_POT_FROM_DEVICE)(
-                                              int* size,
-                                              long* Mesh_pointer_f,
-                                              realw* potential_dot_dot_acoustic,
-                                              realw* send_potential_dot_dot_buffer,
-                                              int* num_interfaces_ext_mesh,
-                                              int* max_nibool_interfaces_ext_mesh,
-                                              int* nibool_interfaces_ext_mesh,
-                                              int* ibool_interfaces_ext_mesh,
-                                              int* FORWARD_OR_ADJOINT){
+              TRANSFER_BOUN_POT_FROM_DEVICE)(long* Mesh_pointer,
+                                             realw* potential_dot_dot_acoustic,
+                                             realw* send_potential_dot_dot_buffer,
+                                             int* FORWARD_OR_ADJOINT){
 
 TRACE("transfer_boun_pot_from_device");
 
-  Mesh* mp = (Mesh*)(*Mesh_pointer_f); //get mesh pointer out of fortran integer container
+  Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
 
-  if( *num_interfaces_ext_mesh == 0 ) return;
+  // checks if anything to do
+  if( mp->size_mpi_buffer_potential > 0 ){
 
-  int blocksize = BLOCKSIZE_TRANSFER;
-  int size_padded = ((int)ceil(((double)(mp->max_nibool_interfaces_ext_mesh))/((double)blocksize)))*blocksize;
-  int num_blocks_x = size_padded/blocksize;
-  int num_blocks_y = 1;
-  while(num_blocks_x > 65535) {
-    num_blocks_x = (int) ceil(num_blocks_x*0.5f);
-    num_blocks_y = num_blocks_y*2;
-  }
+    int blocksize = BLOCKSIZE_TRANSFER;
+    int size_padded = ((int)ceil(((double)(mp->max_nibool_interfaces_ext_mesh))/((double)blocksize)))*blocksize;
 
-  dim3 grid(num_blocks_x,num_blocks_y);
-  dim3 threads(blocksize,1,1);
+    int num_blocks_x, num_blocks_y;
+    get_blocks_xy(size_padded/blocksize,&num_blocks_x,&num_blocks_y);
 
-  if(*FORWARD_OR_ADJOINT == 1) {
-    prepare_boundary_potential_on_device<<<grid,threads>>>(mp->d_potential_dot_dot_acoustic,
-                                                           mp->d_send_potential_dot_dot_buffer,
-                                                           mp->num_interfaces_ext_mesh,
-                                                           mp->max_nibool_interfaces_ext_mesh,
-                                                           mp->d_nibool_interfaces_ext_mesh,
-                                                           mp->d_ibool_interfaces_ext_mesh);
-  }
-  else if(*FORWARD_OR_ADJOINT == 3) {
-    prepare_boundary_potential_on_device<<<grid,threads>>>(mp->d_b_potential_dot_dot_acoustic,
-                                                           mp->d_send_potential_dot_dot_buffer,
-                                                           mp->num_interfaces_ext_mesh,
-                                                           mp->max_nibool_interfaces_ext_mesh,
-                                                           mp->d_nibool_interfaces_ext_mesh,
-                                                           mp->d_ibool_interfaces_ext_mesh);
+    dim3 grid(num_blocks_x,num_blocks_y);
+    dim3 threads(blocksize,1,1);
+
+    if(*FORWARD_OR_ADJOINT == 1) {
+      prepare_boundary_potential_on_device<<<grid,threads,0,mp->compute_stream>>>(mp->d_potential_dot_dot_acoustic,
+                                                                                   mp->d_send_potential_dot_dot_buffer,
+                                                                                   mp->num_interfaces_ext_mesh,
+                                                                                   mp->max_nibool_interfaces_ext_mesh,
+                                                                                   mp->d_nibool_interfaces_ext_mesh,
+                                                                                   mp->d_ibool_interfaces_ext_mesh);
+
+      // synchronizes
+      //synchronize_cuda();
+      // explicitly waits until previous compute stream finishes
+      // (cudaMemcpy implicitly synchronizes all other cuda operations)
+      cudaStreamSynchronize(mp->compute_stream);
+
+      print_CUDA_error_if_any(cudaMemcpy(send_potential_dot_dot_buffer,mp->d_send_potential_dot_dot_buffer,
+                                         mp->size_mpi_buffer_potential*sizeof(realw),cudaMemcpyDeviceToHost),98000);
+    }
+    else if(*FORWARD_OR_ADJOINT == 3) {
+      // backward/reconstructed wavefield buffer
+      prepare_boundary_potential_on_device<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_potential_dot_dot_acoustic,
+                                                                                   mp->d_b_send_potential_dot_dot_buffer,
+                                                                                   mp->num_interfaces_ext_mesh,
+                                                                                   mp->max_nibool_interfaces_ext_mesh,
+                                                                                   mp->d_nibool_interfaces_ext_mesh,
+                                                                                   mp->d_ibool_interfaces_ext_mesh);
+
+      // synchronizes
+      //synchronize_cuda();
+      // explicitly waits until previous compute stream finishes
+      // (cudaMemcpy implicitly synchronizes all other cuda operations)
+      cudaStreamSynchronize(mp->compute_stream);
+
+      print_CUDA_error_if_any(cudaMemcpy(send_potential_dot_dot_buffer,mp->d_b_send_potential_dot_dot_buffer,
+                                         mp->size_mpi_buffer_potential*sizeof(realw),cudaMemcpyDeviceToHost),98000);
+    }
   }
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   exit_on_cuda_error("after prepare_boundary_potential_on_device");
 #endif
 
-  print_CUDA_error_if_any(cudaMemcpy(send_potential_dot_dot_buffer,mp->d_send_potential_dot_dot_buffer,
-      (mp->max_nibool_interfaces_ext_mesh)*(mp->num_interfaces_ext_mesh)*sizeof(realw),cudaMemcpyDeviceToHost),98000);
 
   // finish timing of kernel+memcpy
   // cudaEventRecord( stop, 0 );
@@ -143,17 +188,21 @@ __global__ void assemble_boundary_potential_on_device(realw* d_potential_dot_dot
                                                       int* d_ibool_interfaces_ext_mesh) {
 
   int id = threadIdx.x + blockIdx.x*blockDim.x + blockIdx.y*gridDim.x*blockDim.x;
-  int iinterface=0;
+  int ientry,iglob;
 
-  for( iinterface=0; iinterface < num_interfaces_ext_mesh; iinterface++) {
+  for( int iinterface=0; iinterface < num_interfaces_ext_mesh; iinterface++) {
     if(id<d_nibool_interfaces_ext_mesh[iinterface]) {
+
+      // entry in interface array
+      ientry = id + max_nibool_interfaces_ext_mesh*iinterface;
+      // global index in wavefield
+      iglob = d_ibool_interfaces_ext_mesh[ientry] - 1;
 
       // for testing atomic operations against not atomic operations (0.1ms vs. 0.04 ms)
       // d_potential_dot_dot_acoustic[3*(d_ibool_interfaces_ext_mesh[id+max_nibool_interfaces_ext_mesh*iinterface]-1)] +=
       // d_send_potential_dot_dot_buffer[3*(id + max_nibool_interfaces_ext_mesh*iinterface)];
 
-      atomicAdd(&d_potential_dot_dot_acoustic[(d_ibool_interfaces_ext_mesh[id+max_nibool_interfaces_ext_mesh*iinterface]-1)],
-                d_send_potential_dot_dot_buffer[(id + max_nibool_interfaces_ext_mesh*iinterface)]);
+      atomicAdd(&d_potential_dot_dot_acoustic[iglob],d_send_potential_dot_dot_buffer[ientry]);
     }
   }
   // ! This step is done via previous function transfer_and_assemble...
@@ -170,19 +219,15 @@ __global__ void assemble_boundary_potential_on_device(realw* d_potential_dot_dot
 
 extern "C"
 void FC_FUNC_(transfer_asmbl_pot_to_device,
-              TRANSFER_ASMBL_POT_TO_DEVICE)(
-                                                long* Mesh_pointer,
-                                                realw* potential_dot_dot_acoustic,
-                                                realw* buffer_recv_scalar_ext_mesh,
-                                                int* num_interfaces_ext_mesh,
-                                                int* max_nibool_interfaces_ext_mesh,
-                                                int* nibool_interfaces_ext_mesh,
-                                                int* ibool_interfaces_ext_mesh,
-                                                int* FORWARD_OR_ADJOINT) {
+              TRANSFER_ASMBL_POT_TO_DEVICE)(long* Mesh_pointer,
+                                            realw* potential_dot_dot_acoustic,
+                                            realw* buffer_recv_scalar_ext_mesh,
+                                            int* FORWARD_OR_ADJOINT) {
 
 TRACE("transfer_asmbl_pot_to_device");
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
+
   //double start_time = get_time();
   // cudaEvent_t start, stop;
   // realw time;
@@ -190,42 +235,48 @@ TRACE("transfer_asmbl_pot_to_device");
   // cudaEventCreate(&stop);
   // cudaEventRecord( start, 0 );
 
-  if( *num_interfaces_ext_mesh == 0 ) return;
+  // checks if anything to do
+  if( mp->size_mpi_buffer_potential > 0 ){
 
-  // copies buffer onto GPU
-  cudaMemcpy(mp->d_send_potential_dot_dot_buffer, buffer_recv_scalar_ext_mesh,
-             (mp->max_nibool_interfaces_ext_mesh)*(mp->num_interfaces_ext_mesh)*sizeof(realw), cudaMemcpyHostToDevice);
+    // assembles on GPU
+    int blocksize = BLOCKSIZE_TRANSFER;
+    int size_padded = ((int)ceil(((double)mp->max_nibool_interfaces_ext_mesh)/((double)blocksize)))*blocksize;
 
-  // assembles on GPU
-  int blocksize = BLOCKSIZE_TRANSFER;
-  int size_padded = ((int)ceil(((double)mp->max_nibool_interfaces_ext_mesh)/((double)blocksize)))*blocksize;
-  int num_blocks_x = size_padded/blocksize;
-  int num_blocks_y = 1;
-  while(num_blocks_x > 65535) {
-    num_blocks_x = (int) ceil(num_blocks_x*0.5f);
-    num_blocks_y = num_blocks_y*2;
-  }
+    int num_blocks_x, num_blocks_y;
+    get_blocks_xy(size_padded/blocksize,&num_blocks_x,&num_blocks_y);
 
-  dim3 grid(num_blocks_x,num_blocks_y);
-  dim3 threads(blocksize,1,1);
+    dim3 grid(num_blocks_x,num_blocks_y);
+    dim3 threads(blocksize,1,1);
 
-  if(*FORWARD_OR_ADJOINT == 1) {
-    //assemble forward field
-    assemble_boundary_potential_on_device<<<grid,threads>>>(mp->d_potential_dot_dot_acoustic,
-                                                          mp->d_send_potential_dot_dot_buffer,
-                                                          mp->num_interfaces_ext_mesh,
-                                                          mp->max_nibool_interfaces_ext_mesh,
-                                                          mp->d_nibool_interfaces_ext_mesh,
-                                                          mp->d_ibool_interfaces_ext_mesh);
-  }
-  else if(*FORWARD_OR_ADJOINT == 3) {
-    //assemble reconstructed/backward field
-    assemble_boundary_potential_on_device<<<grid,threads>>>(mp->d_b_potential_dot_dot_acoustic,
-                                                            mp->d_send_potential_dot_dot_buffer,
-                                                            mp->num_interfaces_ext_mesh,
-                                                            mp->max_nibool_interfaces_ext_mesh,
-                                                            mp->d_nibool_interfaces_ext_mesh,
-                                                            mp->d_ibool_interfaces_ext_mesh);
+    // synchronizes
+    synchronize_cuda();
+
+    if(*FORWARD_OR_ADJOINT == 1) {
+      // copies buffer onto GPU
+      print_CUDA_error_if_any(cudaMemcpy(mp->d_send_potential_dot_dot_buffer, buffer_recv_scalar_ext_mesh,
+                                         mp->size_mpi_buffer_potential*sizeof(realw), cudaMemcpyHostToDevice),98010);
+
+      //assemble forward field
+      assemble_boundary_potential_on_device<<<grid,threads,0,mp->compute_stream>>>(mp->d_potential_dot_dot_acoustic,
+                                                                                    mp->d_send_potential_dot_dot_buffer,
+                                                                                    mp->num_interfaces_ext_mesh,
+                                                                                    mp->max_nibool_interfaces_ext_mesh,
+                                                                                    mp->d_nibool_interfaces_ext_mesh,
+                                                                                    mp->d_ibool_interfaces_ext_mesh);
+    }
+    else if(*FORWARD_OR_ADJOINT == 3) {
+      // copies buffer onto GPU
+      print_CUDA_error_if_any(cudaMemcpy(mp->d_b_send_potential_dot_dot_buffer, buffer_recv_scalar_ext_mesh,
+                                         mp->size_mpi_buffer_potential*sizeof(realw), cudaMemcpyHostToDevice),98011);
+
+      //assemble reconstructed/backward field
+      assemble_boundary_potential_on_device<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_potential_dot_dot_acoustic,
+                                                                                    mp->d_b_send_potential_dot_dot_buffer,
+                                                                                    mp->num_interfaces_ext_mesh,
+                                                                                    mp->max_nibool_interfaces_ext_mesh,
+                                                                                    mp->d_nibool_interfaces_ext_mesh,
+                                                                                    mp->d_ibool_interfaces_ext_mesh);
+    }
   }
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
@@ -244,34 +295,32 @@ TRACE("transfer_asmbl_pot_to_device");
 
 /* ----------------------------------------------------------------------------------------------- */
 
-/* KERNEL 2 */
+// KERNEL 2 - acoustic compute forces kernel
 
 /* ----------------------------------------------------------------------------------------------- */
 
-
-__global__ void Kernel_2_acoustic_impl(int nb_blocks_to_compute,
-                                       int NGLOB, int* d_ibool,
-                                       int* d_phase_ispec_inner_acoustic,
-                                       int num_phase_ispec_acoustic,
-                                       int d_iphase,
-                                       int use_mesh_coloring_gpu,
-                                       realw* d_potential_acoustic, realw* d_potential_dot_dot_acoustic,
-                                       realw* d_xix, realw* d_xiy, realw* d_xiz,
-                                       realw* d_etax, realw* d_etay, realw* d_etaz,
-                                       realw* d_gammax, realw* d_gammay, realw* d_gammaz,
-                                       realw* d_hprime_xx,
-                                       realw* hprimewgll_xx,
-                                       realw* wgllwgll_xy,realw* wgllwgll_xz,realw* wgllwgll_yz,
-                                       realw* d_rhostore,
-                                       int gravity,
-                                       realw* minus_g,
-                                       realw* d_kappastore,
-                                       realw* wgll_cube){
+template<int FORWARD_OR_ADJOINT> __global__ void Kernel_2_acoustic_impl(int nb_blocks_to_compute,
+                                                                         int NGLOB, int* d_ibool,
+                                                                         int* d_phase_ispec_inner_acoustic,
+                                                                         int num_phase_ispec_acoustic,
+                                                                         int d_iphase,
+                                                                         int use_mesh_coloring_gpu,
+                                                                         realw* d_potential_acoustic, realw* d_potential_dot_dot_acoustic,
+                                                                         realw* d_xix, realw* d_xiy, realw* d_xiz,
+                                                                         realw* d_etax, realw* d_etay, realw* d_etaz,
+                                                                         realw* d_gammax, realw* d_gammay, realw* d_gammaz,
+                                                                         realw* d_hprime_xx,
+                                                                         realw* hprimewgll_xx,
+                                                                         realw* wgllwgll_xy,realw* wgllwgll_xz,realw* wgllwgll_yz,
+                                                                         realw* d_rhostore,
+                                                                         int gravity,
+                                                                         realw* minus_g,
+                                                                         realw* d_kappastore,
+                                                                         realw* wgll_cube){
 
   int bx = blockIdx.y*gridDim.x+blockIdx.x;
   int tx = threadIdx.x;
 
-  //const int NGLL3 = NGLL3;
   const int NGLL3_ALIGN = NGLL3_PADDED;
 
   int K = (tx/NGLL2);
@@ -281,6 +330,7 @@ __global__ void Kernel_2_acoustic_impl(int nb_blocks_to_compute,
   int active,offset;
   int iglob = 0;
   int working_element;
+
   realw temp1l,temp2l,temp3l;
   realw xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl;
   realw dpotentialdxl,dpotentialdyl,dpotentialdzl;
@@ -300,6 +350,8 @@ __global__ void Kernel_2_acoustic_impl(int nb_blocks_to_compute,
   __shared__ realw s_temp1[NGLL3];
   __shared__ realw s_temp2[NGLL3];
   __shared__ realw s_temp3[NGLL3];
+
+  __shared__ realw sh_hprime_xx[NGLL2];
 
 // use only NGLL^3 = 125 active threads, plus 3 inactive/ghost threads,
 // because we used memory padding from NGLL^3 = 125 to 128 to get coalescent memory accesses
@@ -321,14 +373,21 @@ __global__ void Kernel_2_acoustic_impl(int nb_blocks_to_compute,
     }
 #endif
 
-    // iglob = d_ibool[working_element*NGLL3_ALIGN + tx]-1;
     iglob = d_ibool[working_element*NGLL3 + tx]-1;
 
-#ifdef USE_TEXTURES
-    s_dummy_loc[tx] = tex1Dfetch(tex_potential_acoustic, iglob);
+#ifdef USE_TEXTURES_FIELDS
+    s_dummy_loc[tx] = texfetch_potential<FORWARD_OR_ADJOINT>(iglob);
 #else
     // changing iglob indexing to match fortran row changes fast style
     s_dummy_loc[tx] = d_potential_acoustic[iglob];
+#endif
+  }
+
+  if (tx < NGLL2) {
+#ifdef USE_TEXTURES_CONSTANTS
+    sh_hprime_xx[tx] = tex1Dfetch(d_hprime_xx_tex,tx);
+#else
+    sh_hprime_xx[tx] = d_hprime_xx[tx];
 #endif
   }
 
@@ -336,8 +395,6 @@ __global__ void Kernel_2_acoustic_impl(int nb_blocks_to_compute,
 // current spectral element) because we need the whole element to be ready in order
 // to be able to compute the matrix products along cut planes of the 3D element below
   __syncthreads();
-
-#ifndef MAKE_KERNEL2_BECOME_STUPID_FOR_TESTS
 
   if (active) {
 
@@ -348,16 +405,16 @@ __global__ void Kernel_2_acoustic_impl(int nb_blocks_to_compute,
     temp3l = 0.f;
 
     for (l=0;l<NGLLX;l++) {
-        hp1 = d_hprime_xx[l*NGLLX+I];
+        hp1 = sh_hprime_xx[l*NGLLX+I];
         offset1 = K*NGLL2+J*NGLLX+l;
         temp1l += s_dummy_loc[offset1]*hp1;
 
         //assumes that hprime_xx = hprime_yy = hprime_zz
-        hp2 = d_hprime_xx[l*NGLLX+J];
+        hp2 = sh_hprime_xx[l*NGLLX+J];
         offset2 = K*NGLL2+l*NGLLX+I;
         temp2l += s_dummy_loc[offset2]*hp2;
 
-        hp3 = d_hprime_xx[l*NGLLX+K];
+        hp3 = sh_hprime_xx[l*NGLLX+K];
         offset3 = l*NGLL2+J*NGLLX+I;
         temp3l += s_dummy_loc[offset3]*hp3;
     }
@@ -504,34 +561,38 @@ __global__ void Kernel_2_acoustic_impl(int nb_blocks_to_compute,
 
     iglob = d_ibool[working_element*NGLL3 + tx]-1;
 
-#ifdef USE_TEXTURES
-    d_potential_dot_dot_acoustic[iglob] = tex1Dfetch(tex_potential_dot_dot_acoustic, iglob)
-                                            + sum_terms;
-#else
-
 #ifdef USE_MESH_COLORING_GPU
     // no atomic operation needed, colors don't share global points between elements
-    d_potential_dot_dot_acoustic[iglob] += sum_terms;
+
+#ifdef USE_TEXTURES_FIELDS
+    d_potential_dot_dot_acoustic[iglob] = texfetch_potential_dot_dot<FORWARD_OR_ADJOINT>(iglob) + sum_terms;
 #else
+    d_potential_dot_dot_acoustic[iglob] += sum_terms;
+#endif // USE_TEXTURES_FIELDS
+
+
+#else  // MESH_COLORING
+
     //mesh coloring
     if( use_mesh_coloring_gpu ){
-
       // no atomic operation needed, colors don't share global points between elements
+#ifdef USE_TEXTURES_FIELDS
+      d_potential_dot_dot_acoustic[iglob] = texfetch_potential_dot_dot<FORWARD_OR_ADJOINT>(iglob) + sum_terms;
+#else
       d_potential_dot_dot_acoustic[iglob] += sum_terms;
+#endif // USE_TEXTURES_FIELDS
 
     }else{
+
+      // for testing purposes only: w/out atomic updates
+      //d_potential_dot_dot_acoustic[iglob]     += sum_terms1;
 
       atomicAdd(&d_potential_dot_dot_acoustic[iglob],sum_terms);
 
     }
-#endif
+#endif // MESH_COLORING
 
-#endif
   }
-
-#else  // of #ifndef MAKE_KERNEL2_BECOME_STUPID_FOR_TESTS
-  d_potential_dot_dot_acoustic[iglob] = 123.123f;
-#endif // of #ifndef MAKE_KERNEL2_BECOME_STUPID_FOR_TESTS
 }
 
 
@@ -539,18 +600,11 @@ __global__ void Kernel_2_acoustic_impl(int nb_blocks_to_compute,
 
 void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
                        int* d_ibool,
-                       realw* d_xix,
-                       realw* d_xiy,
-                       realw* d_xiz,
-                       realw* d_etax,
-                       realw* d_etay,
-                       realw* d_etaz,
-                       realw* d_gammax,
-                       realw* d_gammay,
-                       realw* d_gammaz,
+                       realw* d_xix,realw* d_xiy,realw* d_xiz,
+                       realw* d_etax,realw* d_etay,realw* d_etaz,
+                       realw* d_gammax,realw* d_gammay,realw* d_gammaz,
                        realw* d_rhostore,
-                       realw* d_kappastore)
-{
+                       realw* d_kappastore){
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   exit_on_cuda_error("before acoustic kernel Kernel 2");
@@ -560,16 +614,14 @@ void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
   /* grid_2_x = nb_elem_color; */
   /* nb_elem_color is just how many blocks we are computing now */
 
-  int num_blocks_x = nb_blocks_to_compute;
-  int num_blocks_y = 1;
-  while(num_blocks_x > 65535) {
-    num_blocks_x = (int) ceil(num_blocks_x*0.5f);
-    num_blocks_y = num_blocks_y*2;
-  }
 
-  int threads_2 = NGLL3_PADDED;//BLOCK_SIZE_K2;
-  dim3 grid_2(num_blocks_x,num_blocks_y);
+  int blocksize = NGLL3_PADDED;
 
+  int num_blocks_x, num_blocks_y;
+  get_blocks_xy(nb_blocks_to_compute,&num_blocks_x,&num_blocks_y);
+
+  dim3 grid(num_blocks_x,num_blocks_y);
+  dim3 threads(blocksize,1,1);
 
   // Cuda timing
   // cudaEvent_t start, stop;
@@ -578,28 +630,30 @@ void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
   // cudaEventCreate(&stop);
   // cudaEventRecord( start, 0 );
 
-  Kernel_2_acoustic_impl<<< grid_2, threads_2, 0, 0 >>>(nb_blocks_to_compute,
-                                                        mp->NGLOB_AB,
-                                                        d_ibool,
-                                                        mp->d_phase_ispec_inner_acoustic,
-                                                        mp->num_phase_ispec_acoustic,
-                                                        d_iphase,
-                                                        mp->use_mesh_coloring_gpu,
-                                                        mp->d_potential_acoustic, mp->d_potential_dot_dot_acoustic,
-                                                        d_xix, d_xiy, d_xiz,
-                                                        d_etax, d_etay, d_etaz,
-                                                        d_gammax, d_gammay, d_gammaz,
-                                                        mp->d_hprime_xx,
-                                                        mp->d_hprimewgll_xx,
-                                                        mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
-                                                        d_rhostore,
-                                                        mp->gravity,
-                                                        mp->d_minus_g,
-                                                        d_kappastore,
-                                                        mp->d_wgll_cube);
+  // forward wavefields -> FORWARD_OR_ADJOINT == 1
+  Kernel_2_acoustic_impl<1><<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
+                                                            mp->NGLOB_AB,
+                                                            d_ibool,
+                                                            mp->d_phase_ispec_inner_acoustic,
+                                                            mp->num_phase_ispec_acoustic,
+                                                            d_iphase,
+                                                            mp->use_mesh_coloring_gpu,
+                                                            mp->d_potential_acoustic, mp->d_potential_dot_dot_acoustic,
+                                                            d_xix, d_xiy, d_xiz,
+                                                            d_etax, d_etay, d_etaz,
+                                                            d_gammax, d_gammay, d_gammaz,
+                                                            mp->d_hprime_xx,
+                                                            mp->d_hprimewgll_xx,
+                                                            mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
+                                                            d_rhostore,
+                                                            mp->gravity,
+                                                            mp->d_minus_g,
+                                                            d_kappastore,
+                                                            mp->d_wgll_cube);
 
   if(mp->simulation_type == 3) {
-    Kernel_2_acoustic_impl<<< grid_2, threads_2, 0, 0 >>>(nb_blocks_to_compute,
+    // backward/reconstructed wavefields -> FORWARD_OR_ADJOINT == 3
+    Kernel_2_acoustic_impl<3><<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
                                                           mp->NGLOB_AB,
                                                           d_ibool,
                                                           mp->d_phase_ispec_inner_acoustic,
@@ -627,8 +681,8 @@ void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
   // cudaEventDestroy( stop );
   // printf("Kernel2 Execution Time: %f ms\n",time);
 
-  /* cudaThreadSynchronize(); */
-  /* TRACE("Kernel 2 finished"); */
+  // cudaThreadSynchronize(); //
+  // TRACE("Kernel 2 finished"); //
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   //printf("Tried to start with %dx1 blocks\n",nb_blocks_to_compute);
   exit_on_cuda_error("kernel Kernel_2");
@@ -643,7 +697,7 @@ void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
 
 extern "C"
 void FC_FUNC_(compute_forces_acoustic_cuda,
-              COMPUTE_FORCES_ACOUSTIC_CUDA)(long* Mesh_pointer_f,
+              COMPUTE_FORCES_ACOUSTIC_CUDA)(long* Mesh_pointer,
                                             int* iphase,
                                             int* nspec_outer_acoustic,
                                             int* nspec_inner_acoustic) {
@@ -651,7 +705,7 @@ void FC_FUNC_(compute_forces_acoustic_cuda,
   TRACE("compute_forces_acoustic_cuda");
   //double start_time = get_time();
 
-  Mesh* mp = (Mesh*)(*Mesh_pointer_f); // get Mesh from fortran integer wrapper
+  Mesh* mp = (Mesh*)(*Mesh_pointer); // get Mesh from fortran integer wrapper
 
   int num_elements;
 
@@ -671,7 +725,7 @@ void FC_FUNC_(compute_forces_acoustic_cuda,
 
     int nb_colors,nb_blocks_to_compute;
     int istart;
-    int color_offset,color_offset_nonpadded;
+    int offset,offset_nonpadded;
 
     // sets up color loop
     if( *iphase == 1 ){
@@ -680,16 +734,16 @@ void FC_FUNC_(compute_forces_acoustic_cuda,
       istart = 0;
 
       // array offsets (acoustic elements start after elastic ones)
-      color_offset = mp->nspec_elastic * NGLL3_PADDED;
-      color_offset_nonpadded = mp->nspec_elastic * NGLL3;
+      offset = mp->nspec_elastic * NGLL3_PADDED;
+      offset_nonpadded = mp->nspec_elastic * NGLL3;
     }else{
       // inner element colors (start after outer elements)
       nb_colors = mp->num_colors_outer_acoustic + mp->num_colors_inner_acoustic;
       istart = mp->num_colors_outer_acoustic;
 
       // array offsets (inner elements start after outer ones)
-      color_offset = ( mp->nspec_elastic + (*nspec_outer_acoustic) ) * NGLL3_PADDED;
-      color_offset_nonpadded = ( mp->nspec_elastic + (*nspec_outer_acoustic) ) * NGLL3;
+      offset = ( mp->nspec_elastic + (*nspec_outer_acoustic) ) * NGLL3_PADDED;
+      offset_nonpadded = ( mp->nspec_elastic + (*nspec_outer_acoustic) ) * NGLL3;
     }
 
     // loops over colors
@@ -698,23 +752,17 @@ void FC_FUNC_(compute_forces_acoustic_cuda,
       nb_blocks_to_compute = mp->h_num_elem_colors_acoustic[icolor];
 
       Kernel_2_acoustic(nb_blocks_to_compute,mp,*iphase,
-                         mp->d_ibool + color_offset_nonpadded,
-                         mp->d_xix + color_offset,
-                         mp->d_xiy + color_offset,
-                         mp->d_xiz + color_offset,
-                         mp->d_etax + color_offset,
-                         mp->d_etay + color_offset,
-                         mp->d_etaz + color_offset,
-                         mp->d_gammax + color_offset,
-                         mp->d_gammay + color_offset,
-                         mp->d_gammaz + color_offset,
-                         mp->d_rhostore + color_offset,
-                         mp->d_kappastore + color_offset_nonpadded);
+                         mp->d_ibool + offset_nonpadded,
+                         mp->d_xix + offset,mp->d_xiy + offset,mp->d_xiz + offset,
+                         mp->d_etax + offset,mp->d_etay + offset,mp->d_etaz + offset,
+                         mp->d_gammax + offset,mp->d_gammay + offset,mp->d_gammaz + offset,
+                         mp->d_rhostore + offset,
+                         mp->d_kappastore + offset_nonpadded);
 
       // for padded and aligned arrays
-      color_offset += nb_blocks_to_compute * NGLL3_PADDED;
+      offset += nb_blocks_to_compute * NGLL3_PADDED;
       // for no-aligned arrays
-      color_offset_nonpadded += nb_blocks_to_compute * NGLL3;
+      offset_nonpadded += nb_blocks_to_compute * NGLL3;
     }
 
   }else{
@@ -722,15 +770,9 @@ void FC_FUNC_(compute_forces_acoustic_cuda,
     // no mesh coloring: uses atomic updates
     Kernel_2_acoustic(num_elements, mp, *iphase,
                       mp->d_ibool,
-                      mp->d_xix,
-                      mp->d_xiy,
-                      mp->d_xiz,
-                      mp->d_etax,
-                      mp->d_etay,
-                      mp->d_etaz,
-                      mp->d_gammax,
-                      mp->d_gammay,
-                      mp->d_gammaz,
+                      mp->d_xix,mp->d_xiy,mp->d_xiz,
+                      mp->d_etax,mp->d_etay,mp->d_etaz,
+                      mp->d_gammax,mp->d_gammay,mp->d_gammaz,
                       mp->d_rhostore,
                       mp->d_kappastore);
 
@@ -787,12 +829,12 @@ __global__ void enforce_free_surface_cuda_kernel(
 
 extern "C"
 void FC_FUNC_(acoustic_enforce_free_surf_cuda,
-              ACOUSTIC_ENFORCE_FREE_SURF_CUDA)(long* Mesh_pointer_f,
+              ACOUSTIC_ENFORCE_FREE_SURF_CUDA)(long* Mesh_pointer,
                                                int* ABSORB_INSTEAD_OF_FREE_SURFACE) {
 
 TRACE("acoustic_enforce_free_surf_cuda");
 
-  Mesh* mp = (Mesh*)(*Mesh_pointer_f); //get mesh pointer out of fortran integer container
+  Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
 
   // checks if anything to do
   if( *ABSORB_INSTEAD_OF_FREE_SURFACE == 0 ){
@@ -800,35 +842,31 @@ TRACE("acoustic_enforce_free_surf_cuda");
     // does not absorb free surface, thus we enforce the potential to be zero at surface
 
     // block sizes
-    int num_blocks_x = mp->num_free_surface_faces;
-    int num_blocks_y = 1;
-    while(num_blocks_x > 65535) {
-      num_blocks_x = (int) ceil(num_blocks_x*0.5f);
-      num_blocks_y = num_blocks_y*2;
-    }
+    int num_blocks_x, num_blocks_y;
+    get_blocks_xy(mp->num_free_surface_faces,&num_blocks_x,&num_blocks_y);
+
     dim3 grid(num_blocks_x,num_blocks_y,1);
     dim3 threads(NGLL2,1,1);
 
     // sets potentials to zero at free surface
-    enforce_free_surface_cuda_kernel<<<grid,threads>>>(mp->d_potential_acoustic,
-                                                       mp->d_potential_dot_acoustic,
-                                                       mp->d_potential_dot_dot_acoustic,
-                                                       mp->num_free_surface_faces,
-                                                       mp->d_free_surface_ispec,
-                                                       mp->d_free_surface_ijk,
-                                                       mp->d_ibool,
-                                                       mp->d_ispec_is_acoustic);
+    enforce_free_surface_cuda_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_potential_acoustic,
+                                                                             mp->d_potential_dot_acoustic,
+                                                                             mp->d_potential_dot_dot_acoustic,
+                                                                             mp->num_free_surface_faces,
+                                                                             mp->d_free_surface_ispec,
+                                                                             mp->d_free_surface_ijk,
+                                                                             mp->d_ibool,
+                                                                             mp->d_ispec_is_acoustic);
     // for backward/reconstructed potentials
     if(mp->simulation_type == 3) {
-      enforce_free_surface_cuda_kernel<<<grid,threads>>>(mp->d_b_potential_acoustic,
-                                                         mp->d_b_potential_dot_acoustic,
-                                                         mp->d_b_potential_dot_dot_acoustic,
-                                                         mp->num_free_surface_faces,
-                                                         mp->d_free_surface_ispec,
-                                                         mp->d_free_surface_ijk,
-                                                         mp->d_ibool,
-                                                         mp->d_ispec_is_acoustic);
-
+      enforce_free_surface_cuda_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_potential_acoustic,
+                                                                               mp->d_b_potential_dot_acoustic,
+                                                                               mp->d_b_potential_dot_dot_acoustic,
+                                                                               mp->num_free_surface_faces,
+                                                                               mp->d_free_surface_ispec,
+                                                                               mp->d_free_surface_ijk,
+                                                                               mp->d_ibool,
+                                                                               mp->d_ispec_is_acoustic);
     }
   }
 

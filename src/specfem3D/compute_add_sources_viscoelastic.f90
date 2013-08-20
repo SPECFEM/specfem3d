@@ -102,6 +102,9 @@
   !equivalence (i2head,i4head,r4head)    ! share the same 240-byte-memory
   double precision :: hxir(NGLLX),hpxir(NGLLX),hetar(NGLLY),hpetar(NGLLY),hgammar(NGLLZ),hpgammar(NGLLZ)
 
+  ! some old tests (currently unstable; do not remove them though, we might fix this one day)
+  if (OLD_TEST_TO_FIX_ONE_DAY) return
+
 ! plotting source time function
   if(PRINT_SOURCE_TIME_FUNCTION .and. .not. phase_is_inner ) then
      ! initializes total
@@ -250,9 +253,10 @@
               ! reads in **sta**.**net**.**LH**.adj files
               adj_source_file = trim(station_name(irec))//'.'//trim(network_name(irec))
               call compute_arrays_adjoint_source(myrank,adj_source_file, &
-                    xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
-                    adj_sourcearray, xigll,yigll,zigll, &
-                    it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC)
+                                                 xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
+                                                 adj_sourcearray, xigll,yigll,zigll, &
+                                                 it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC)
+
               do itime = 1,NTSTEP_BETWEEN_READ_ADJSRC
                 adj_sourcearrays(irec_local,itime,:,:,:,:) = adj_sourcearray(itime,:,:,:,:)
               enddo
@@ -355,36 +359,37 @@ endif !adjoint
   endif
 
   ! for noise simulations
-  ! we have two loops indicated by phase_is_inner ("inner elements/points" or "boundary elements/points")
-  ! here, we only add those noise sources once, when we are calculating for boudanry points (phase_is_inner==.false.),
-  ! because boundary points are claculated first!
-  if( .not. phase_is_inner ) then
-    if ( NOISE_TOMOGRAPHY == 1 ) then
-       ! the first step of noise tomography is to use |S(\omega)|^2 as a point force source at one of the receivers.
-       ! hence, instead of a moment tensor 'sourcearrays', a 'noise_sourcearray' for a point force is needed.
-       ! furthermore, the CMTSOLUTION needs to be zero, i.e., no earthquakes.
-       ! now this must be manually set in DATA/CMTSOLUTION, by USERS.
-        call add_source_master_rec_noise(myrank,nrec, &
-               NSTEP,accel,noise_sourcearray, &
-               ibool,islice_selected_rec,ispec_selected_rec, &
-               it,irec_master_noise, &
-               NSPEC_AB,NGLOB_AB)
-    else if ( NOISE_TOMOGRAPHY == 2 ) then
-       ! second step of noise tomography, i.e., read the surface movie saved at every timestep
-       ! use the movie to drive the ensemble forward wavefield
-       call noise_read_add_surface_movie(NGLLSQUARE*num_free_surface_faces,accel, &
-                              normal_x_noise,normal_y_noise,normal_z_noise,mask_noise, &
-                              ibool,noise_surface_movie,NSTEP-it+1,NSPEC_AB,NGLOB_AB, &
-                              num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
-                              free_surface_jacobian2Dw)
-        ! be careful, since ensemble forward sources are reversals of generating wavefield "eta"
-        ! hence the "NSTEP-it+1", i.e., start reading from the last timestep
-        ! note the ensemble forward sources are generally distributed on the surface of the earth
-        ! that's to say, the ensemble forward source is kind of a surface force density, not a body force density
-        ! therefore, we must add it here, before applying the inverse of mass matrix
+  if( NOISE_TOMOGRAPHY > 0 ) then
+    ! we have two loops indicated by phase_is_inner ("inner elements/points" or "boundary elements/points")
+    ! here, we only add those noise sources once, when we are calculating for boudanry points (phase_is_inner==.false.),
+    ! because boundary points are claculated first!
+    if( .not. phase_is_inner ) then
+      if ( NOISE_TOMOGRAPHY == 1 ) then
+         ! the first step of noise tomography is to use |S(\omega)|^2 as a point force source at one of the receivers.
+         ! hence, instead of a moment tensor 'sourcearrays', a 'noise_sourcearray' for a point force is needed.
+         ! furthermore, the CMTSOLUTION needs to be zero, i.e., no earthquakes.
+         ! now this must be manually set in DATA/CMTSOLUTION, by USERS.
+          call add_source_master_rec_noise(myrank,nrec, &
+                 NSTEP,accel,noise_sourcearray, &
+                 ibool,islice_selected_rec,ispec_selected_rec, &
+                 it,irec_master_noise, &
+                 NSPEC_AB,NGLOB_AB)
+      else if ( NOISE_TOMOGRAPHY == 2 ) then
+         ! second step of noise tomography, i.e., read the surface movie saved at every timestep
+         ! use the movie to drive the ensemble forward wavefield
+         call noise_read_add_surface_movie(NGLLSQUARE*num_free_surface_faces,accel, &
+                                normal_x_noise,normal_y_noise,normal_z_noise,mask_noise, &
+                                ibool,noise_surface_movie,NSTEP-it+1,NSPEC_AB,NGLOB_AB, &
+                                num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
+                                free_surface_jacobian2Dw)
+          ! be careful, since ensemble forward sources are reversals of generating wavefield "eta"
+          ! hence the "NSTEP-it+1", i.e., start reading from the last timestep
+          ! note the ensemble forward sources are generally distributed on the surface of the earth
+          ! that's to say, the ensemble forward source is kind of a surface force density, not a body force density
+          ! therefore, we must add it here, before applying the inverse of mass matrix
+      endif
     endif
   endif
-
 
   end subroutine compute_add_sources_viscoelastic
 !
@@ -442,6 +447,9 @@ endif !adjoint
 
 ! adjoint sources in SU format
   integer,parameter :: nheader=240      ! 240 bytes
+
+  ! some old tests (currently unstable; do not remove them though, we might fix this one day)
+  if (OLD_TEST_TO_FIX_ONE_DAY) return
 
 ! plotting source time function
   if(PRINT_SOURCE_TIME_FUNCTION .and. .not. phase_is_inner ) then
@@ -566,23 +574,24 @@ endif !adjoint
   endif
 
   ! for noise simulations
-  ! we have two loops indicated by phase_is_inner ("inner elements/points" or "boundary elements/points")
-  ! here, we only add those noise sources once, when we are calculating for boudanry points (phase_is_inner==.false.),
-  ! because boundary points are claculated first!
-  if( .not. phase_is_inner ) then
-    if ( NOISE_TOMOGRAPHY == 3 ) then
-        ! third step of noise tomography, i.e., read the surface movie saved at every timestep
-        ! use the movie to reconstruct the ensemble forward wavefield
-        ! the ensemble adjoint wavefield is done as usual
-        ! note instead of "NSTEP-it+1", now we us "it", since reconstruction is a reversal of reversal
-        call noise_read_add_surface_movie(NGLLSQUARE*num_free_surface_faces,b_accel, &
-                              normal_x_noise,normal_y_noise,normal_z_noise,mask_noise, &
-                              ibool,noise_surface_movie,it,NSPEC_AB,NGLOB_AB, &
-                              num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
-                              free_surface_jacobian2Dw)
+  if( NOISE_TOMOGRAPHY > 0 ) then
+    ! we have two loops indicated by phase_is_inner ("inner elements/points" or "boundary elements/points")
+    ! here, we only add those noise sources once, when we are calculating for boudanry points (phase_is_inner==.false.),
+    ! because boundary points are claculated first!
+    if( .not. phase_is_inner ) then
+      if ( NOISE_TOMOGRAPHY == 3 ) then
+          ! third step of noise tomography, i.e., read the surface movie saved at every timestep
+          ! use the movie to reconstruct the ensemble forward wavefield
+          ! the ensemble adjoint wavefield is done as usual
+          ! note instead of "NSTEP-it+1", now we us "it", since reconstruction is a reversal of reversal
+          call noise_read_add_surface_movie(NGLLSQUARE*num_free_surface_faces,b_accel, &
+                                normal_x_noise,normal_y_noise,normal_z_noise,mask_noise, &
+                                ibool,noise_surface_movie,it,NSPEC_AB,NGLOB_AB, &
+                                num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
+                                free_surface_jacobian2Dw)
+      endif
     endif
   endif
-
 
   end subroutine compute_add_sources_viscoelastic_bpwf
 
@@ -596,7 +605,8 @@ endif !adjoint
                         ispec_is_elastic,SIMULATION_TYPE,NSTEP, &
                         nrec,islice_selected_rec,ispec_selected_rec, &
                         nadj_rec_local,adj_sourcearrays, &
-                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY,Mesh_pointer)
+                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
+                        Mesh_pointer)
 
   use specfem_par,only: PRINT_SOURCE_TIME_FUNCTION,stf_used_total, &
                         xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
@@ -659,6 +669,9 @@ endif !adjoint
   !equivalence (i2head,i4head,r4head)    ! share the same 240-byte-memory
   double precision :: hxir(NGLLX),hpxir(NGLLX),hetar(NGLLY),hpetar(NGLLY),hgammar(NGLLZ),hpgammar(NGLLZ)
 
+  ! some old tests (currently unstable; do not remove them though, we might fix this one day)
+  if (OLD_TEST_TO_FIX_ONE_DAY) return
+
 ! plotting source time function
   if(PRINT_SOURCE_TIME_FUNCTION .and. .not. phase_is_inner ) then
      ! initializes total
@@ -667,7 +680,6 @@ endif !adjoint
 
   ! forward simulations
   if (SIMULATION_TYPE == 1 .and. NOISE_TOMOGRAPHY == 0 .and. nsources_local > 0) then
-
     if( NSOURCES > 0 ) then
        do isource = 1,NSOURCES
           ! precomputes source time function factor
@@ -692,8 +704,7 @@ endif !adjoint
        ! only implements SIMTYPE=1 and NOISE_TOM=0
        ! write(*,*) "fortran dt = ", dt
        ! change dt -> DT
-       call compute_add_sources_el_cuda(Mesh_pointer, phase_is_inner, &
-                                       NSOURCES, stf_pre_compute, myrank)
+       call compute_add_sources_el_cuda(Mesh_pointer,stf_pre_compute,NSOURCES,phase_is_inner)
     endif
   endif ! forward
 
@@ -723,7 +734,6 @@ endif !adjoint
 
 ! adjoint simulations
   if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
-
     ! adds adjoint source in this partitions
     if( nadj_rec_local > 0 ) then
 
@@ -758,9 +768,10 @@ endif !adjoint
               ! reads in **sta**.**net**.**LH**.adj files
               adj_source_file = trim(station_name(irec))//'.'//trim(network_name(irec))
               call compute_arrays_adjoint_source(myrank,adj_source_file, &
-                    xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
-                    adj_sourcearray, xigll,yigll,zigll, &
-                    it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC)
+                                                 xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
+                                                 adj_sourcearray, xigll,yigll,zigll, &
+                                                 it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC)
+
               do itime = 1,NTSTEP_BETWEEN_READ_ADJSRC
                 adj_sourcearrays(irec_local,itime,:,:,:,:) = adj_sourcearray(itime,:,:,:,:)
               enddo
@@ -822,7 +833,8 @@ endif !adjoint
       if( it < NSTEP ) then
         call add_sources_el_sim_type_2_or_3(Mesh_pointer,adj_sourcearrays,phase_is_inner, &
                                             ispec_is_inner,ispec_is_elastic, &
-                                            ispec_selected_rec,myrank,nrec, &
+                                            ispec_selected_rec, &
+                                            nrec, &
                                             NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC), &
                                             islice_selected_rec,nadj_rec_local, &
                                             NTSTEP_BETWEEN_READ_ADJSRC)
@@ -836,33 +848,30 @@ endif !adjoint
 
 ! adjoint simulations
   if (SIMULATION_TYPE == 3 .and. NOISE_TOMOGRAPHY == 0 .and. nsources_local > 0) then
-
-     if( NSOURCES > 0 ) then
-        do isource = 1,NSOURCES
-           ! precomputes source time function factors
-           if(USE_FORCE_POINT_SOURCE) then
-              if( USE_RICKER_TIME_FUNCTION ) then
-                 stf_pre_compute(isource) = &
-                      comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
-              else
-                 stf_pre_compute(isource) = &
-                      comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_tiny(isource))
-              endif
-           else
-              if( USE_RICKER_TIME_FUNCTION ) then
-                 stf_pre_compute(isource) = &
-                      comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
-              else
-                 stf_pre_compute(isource) = &
-                      comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
-              endif
-           endif
-        enddo
-        ! only implements SIMTYPE=3
-        call compute_add_sources_el_s3_cuda(Mesh_pointer,stf_pre_compute, &
-             NSOURCES,phase_is_inner,myrank)
-
-     endif
+    if( NSOURCES > 0 ) then
+      do isource = 1,NSOURCES
+         ! precomputes source time function factors
+         if(USE_FORCE_POINT_SOURCE) then
+            if( USE_RICKER_TIME_FUNCTION ) then
+               stf_pre_compute(isource) = &
+                    comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
+            else
+               stf_pre_compute(isource) = &
+                    comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_tiny(isource))
+            endif
+         else
+            if( USE_RICKER_TIME_FUNCTION ) then
+               stf_pre_compute(isource) = &
+                    comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
+            else
+               stf_pre_compute(isource) = &
+                    comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+            endif
+         endif
+      enddo
+      ! only implements SIMTYPE=3
+      call compute_add_sources_el_s3_cuda(Mesh_pointer,stf_pre_compute,NSOURCES,phase_is_inner)
+    endif
   endif ! adjoint
 
   ! master prints out source time function to file
@@ -873,35 +882,36 @@ endif !adjoint
   endif
 
   ! for noise simulations
-  ! we have two loops indicated by phase_is_inner ("inner elements/points" or "boundary elements/points")
-  ! here, we only add those noise sources once, when we are calculating for boudanry points (phase_is_inner==.false.),
-  ! because boundary points are claculated first!
-  if( .not. phase_is_inner ) then
-    if ( NOISE_TOMOGRAPHY == 1 ) then
-       ! the first step of noise tomography is to use |S(\omega)|^2 as a point force source at one of the receivers.
-       ! hence, instead of a moment tensor 'sourcearrays', a 'noise_sourcearray' for a point force is needed.
-       ! furthermore, the CMTSOLUTION needs to be zero, i.e., no earthquakes.
-       ! now this must be manually set in DATA/CMTSOLUTION, by USERS.
-       call add_source_master_rec_noise_cu(Mesh_pointer, myrank, it, irec_master_noise, islice_selected_rec)
-    else if ( NOISE_TOMOGRAPHY == 2 ) then
-       ! second step of noise tomography, i.e., read the surface movie saved at every timestep
-       ! use the movie to drive the ensemble forward wavefield
-        call noise_read_add_surface_movie_GPU(noise_surface_movie,NSTEP-it+1,num_free_surface_faces, &
-                                              Mesh_pointer,NOISE_TOMOGRAPHY)
-        ! be careful, since ensemble forward sources are reversals of generating wavefield "eta"
-        ! hence the "NSTEP-it+1", i.e., start reading from the last timestep
-        ! note the ensemble forward sources are generally distributed on the surface of the earth
-        ! that's to say, the ensemble forward source is kind of a surface force density, not a body force density
-        ! therefore, we must add it here, before applying the inverse of mass matrix
-    else if ( NOISE_TOMOGRAPHY == 3 ) then
-        ! third step of noise tomography, i.e., read the surface movie saved at every timestep
-        ! use the movie to reconstruct the ensemble forward wavefield
-        ! the ensemble adjoint wavefield is done as usual
-        ! note instead of "NSTEP-it+1", now we us "it", since reconstruction is a reversal of reversal
-        call noise_read_add_surface_movie_GPU(noise_surface_movie,it,num_free_surface_faces, &
-                                              Mesh_pointer,NOISE_TOMOGRAPHY)
+  if( NOISE_TOMOGRAPHY > 0 ) then
+    ! we have two loops indicated by phase_is_inner ("inner elements/points" or "boundary elements/points")
+    ! here, we only add those noise sources once, when we are calculating for boudanry points (phase_is_inner==.false.),
+    ! because boundary points are claculated first!
+    if( .not. phase_is_inner ) then
+      if ( NOISE_TOMOGRAPHY == 1 ) then
+         ! the first step of noise tomography is to use |S(\omega)|^2 as a point force source at one of the receivers.
+         ! hence, instead of a moment tensor 'sourcearrays', a 'noise_sourcearray' for a point force is needed.
+         ! furthermore, the CMTSOLUTION needs to be zero, i.e., no earthquakes.
+         ! now this must be manually set in DATA/CMTSOLUTION, by USERS.
+         call add_source_master_rec_noise_cu(Mesh_pointer,it,irec_master_noise,islice_selected_rec)
+      else if ( NOISE_TOMOGRAPHY == 2 ) then
+         ! second step of noise tomography, i.e., read the surface movie saved at every timestep
+         ! use the movie to drive the ensemble forward wavefield
+          call noise_read_add_surface_movie_GPU(noise_surface_movie,NSTEP-it+1,num_free_surface_faces, &
+                                                Mesh_pointer,NOISE_TOMOGRAPHY)
+          ! be careful, since ensemble forward sources are reversals of generating wavefield "eta"
+          ! hence the "NSTEP-it+1", i.e., start reading from the last timestep
+          ! note the ensemble forward sources are generally distributed on the surface of the earth
+          ! that's to say, the ensemble forward source is kind of a surface force density, not a body force density
+          ! therefore, we must add it here, before applying the inverse of mass matrix
+      else if ( NOISE_TOMOGRAPHY == 3 ) then
+          ! third step of noise tomography, i.e., read the surface movie saved at every timestep
+          ! use the movie to reconstruct the ensemble forward wavefield
+          ! the ensemble adjoint wavefield is done as usual
+          ! note instead of "NSTEP-it+1", now we us "it", since reconstruction is a reversal of reversal
+          call noise_read_add_surface_movie_GPU(noise_surface_movie,it,num_free_surface_faces, &
+                                                Mesh_pointer,NOISE_TOMOGRAPHY)
+      endif
     endif
   endif
-
 
   end subroutine compute_add_sources_viscoelastic_GPU

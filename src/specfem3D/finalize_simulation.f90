@@ -38,6 +38,7 @@
   implicit none
 
   integer :: irec_local
+  integer :: ier
 
   ! write gravity perturbations
   if (GRAVITY_SIMULATION) call gravity_output()
@@ -45,46 +46,51 @@
   ! save last frame
 
   if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
-     open(unit=27,file=prname(1:len_trim(prname))//'save_forward_arrays.bin',&
-          status='unknown',form='unformatted')
+    open(unit=IOUT,file=prname(1:len_trim(prname))//'save_forward_arrays.bin',&
+          status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) then
+      print*,'error: opening save_forward_arrays.bin'
+      print*,'path: ',prname(1:len_trim(prname))//'save_forward_arrays.bin'
+      call exit_mpi(myrank,'error opening file save_forward_arrays.bin')
+    endif
 
     if( ACOUSTIC_SIMULATION ) then
-      write(27) potential_acoustic
-      write(27) potential_dot_acoustic
-      write(27) potential_dot_dot_acoustic
+      write(IOUT) potential_acoustic
+      write(IOUT) potential_dot_acoustic
+      write(IOUT) potential_dot_dot_acoustic
     endif
 
     if( ELASTIC_SIMULATION ) then
-      write(27) displ
-      write(27) veloc
-      write(27) accel
+      write(IOUT) displ
+      write(IOUT) veloc
+      write(IOUT) accel
 
       if (ATTENUATION) then
-        if(FULL_ATTENUATION_SOLID) write(27) R_trace  !ZN
-        write(27) R_xx
-        write(27) R_yy
-        write(27) R_xy
-        write(27) R_xz
-        write(27) R_yz
-        if(FULL_ATTENUATION_SOLID) write(27) epsilondev_trace !ZN
-        write(27) epsilondev_xx
-        write(27) epsilondev_yy
-        write(27) epsilondev_xy
-        write(27) epsilondev_xz
-        write(27) epsilondev_yz
+        if(FULL_ATTENUATION_SOLID) write(IOUT) R_trace  !ZN
+        write(IOUT) R_xx
+        write(IOUT) R_yy
+        write(IOUT) R_xy
+        write(IOUT) R_xz
+        write(IOUT) R_yz
+        if(FULL_ATTENUATION_SOLID) write(IOUT) epsilondev_trace !ZN
+        write(IOUT) epsilondev_xx
+        write(IOUT) epsilondev_yy
+        write(IOUT) epsilondev_xy
+        write(IOUT) epsilondev_xz
+        write(IOUT) epsilondev_yz
       endif
     endif
 
     if( POROELASTIC_SIMULATION ) then
-      write(27) displs_poroelastic
-      write(27) velocs_poroelastic
-      write(27) accels_poroelastic
-      write(27) displw_poroelastic
-      write(27) velocw_poroelastic
-      write(27) accelw_poroelastic
+      write(IOUT) displs_poroelastic
+      write(IOUT) velocs_poroelastic
+      write(IOUT) accels_poroelastic
+      write(IOUT) displw_poroelastic
+      write(IOUT) velocw_poroelastic
+      write(IOUT) accelw_poroelastic
     endif
 
-    close(27)
+    close(IOUT)
 
 ! adjoint simulations
   else if (SIMULATION_TYPE == 3) then
@@ -123,7 +129,11 @@
       do irec_local = 1, nrec_local
         write(outputname,'(a,i5.5)') OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // &
             '/src_frechet.',number_receiver_global(irec_local)
-        open(unit=27,file=trim(outputname),status='unknown')
+        open(unit=IOUT,file=trim(outputname),status='unknown',iostat=ier)
+        if( ier /= 0 ) then
+          print*,'error opening file: ',trim(outputname)
+          call exit_mpi(myrank,'error opening file src_frechet.**')
+        endif
         !
         ! r -> z, theta -> -y, phi -> x
         !
@@ -133,16 +143,16 @@
         !  Mrt = -Myz
         !  Mrp =  Mxz
         !  Mtp = -Mxy
-        write(27,*) Mzz_der(irec_local)
-        write(27,*) Myy_der(irec_local)
-        write(27,*) Mxx_der(irec_local)
-        write(27,*) -Myz_der(irec_local)
-        write(27,*) Mxz_der(irec_local)
-        write(27,*) -Mxy_der(irec_local)
-        write(27,*) sloc_der(1,irec_local)
-        write(27,*) sloc_der(2,irec_local)
-        write(27,*) sloc_der(3,irec_local)
-        close(27)
+        write(IOUT,*) Mzz_der(irec_local)
+        write(IOUT,*) Myy_der(irec_local)
+        write(IOUT,*) Mxx_der(irec_local)
+        write(IOUT,*) -Myz_der(irec_local)
+        write(IOUT,*) Mxz_der(irec_local)
+        write(IOUT,*) -Mxy_der(irec_local)
+        write(IOUT,*) sloc_der(1,irec_local)
+        write(IOUT,*) sloc_der(2,irec_local)
+        write(IOUT,*) sloc_der(3,irec_local)
+        close(IOUT)
       enddo
     endif
   endif
