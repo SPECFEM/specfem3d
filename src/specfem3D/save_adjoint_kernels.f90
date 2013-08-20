@@ -68,10 +68,10 @@
           enddo ! j
         enddo ! k
     enddo ! ispec
-    open(unit=27,file=prname(1:len_trim(prname))//'weights_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    open(unit=IOUT,file=prname(1:len_trim(prname))//'weights_kernel.bin',status='unknown',form='unformatted',iostat=ier)
     if( ier /= 0 ) stop 'error opening file weights_kernel.bin'
-    write(27) weights_kernel
-    close(27)
+    write(IOUT) weights_kernel
+    close(IOUT)
   endif
 
   ! for noise simulations --- noise strength kernel
@@ -123,25 +123,25 @@
   enddo
 
   ! save kernels to binary files
-  open(unit=27,file=prname(1:len_trim(prname))//'rho_acoustic_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'rho_acoustic_kernel.bin',status='unknown',form='unformatted',iostat=ier)
   if( ier /= 0 ) stop 'error opening file rho_acoustic_kernel.bin'
-  write(27) rho_ac_kl
-  close(27)
+  write(IOUT) rho_ac_kl
+  close(IOUT)
 
-  open(unit=27,file=prname(1:len_trim(prname))//'kappa_acoustic_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'kappa_acoustic_kernel.bin',status='unknown',form='unformatted',iostat=ier)
   if( ier /= 0 ) stop 'error opening file kappa_acoustic_kernel.bin'
-  write(27) kappa_ac_kl
-  close(27)
+  write(IOUT) kappa_ac_kl
+  close(IOUT)
 
-  open(unit=27,file=prname(1:len_trim(prname))//'rhop_acoustic_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'rhop_acoustic_kernel.bin',status='unknown',form='unformatted',iostat=ier)
   if( ier /= 0 ) stop 'error opening file rhop_acoustic_kernel.bin'
-  write(27) rhop_ac_kl
-  close(27)
+  write(IOUT) rhop_ac_kl
+  close(IOUT)
 
-  open(unit=27,file=prname(1:len_trim(prname))//'alpha_acoustic_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'alpha_acoustic_kernel.bin',status='unknown',form='unformatted',iostat=ier)
   if( ier /= 0 ) stop 'error opening file alpha_acoustic_kernel.bin'
-  write(27) alpha_ac_kl
-  close(27)
+  write(IOUT) alpha_ac_kl
+  close(IOUT)
 
   end subroutine save_kernels_acoustic
 
@@ -159,14 +159,47 @@
   ! local parameters
   integer:: ispec,i,j,k,iglob,ier
   real(kind=CUSTOM_REAL) :: rhol,mul,kappal
-  real(kind=CUSTOM_REAL),dimension(21) ::  cijkl_kl_local
 
   ! Transverse isotropic paramters
   real(kind=CUSTOM_REAL) :: A,N,C,L,F,eta
-  real(kind=CUSTOM_REAL), dimension(21) :: an_kl
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT):: &
-    alphav_kl,alphah_kl,betav_kl,betah_kl, &
-    eta_kl
+  real(kind=CUSTOM_REAL), dimension(21) :: cijkl_kl_local
+  real(kind=CUSTOM_REAL), dimension(5) :: an_kl
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: alphav_kl,alphah_kl,betav_kl,betah_kl,eta_kl
+
+  ! temporary isotropic kernels
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: rhop_kl,alpha_kl,beta_kl
+
+  ! allocates temporary transversely isotropic kernels
+  if( ANISOTROPIC_KL ) then
+    if( SAVE_TRANSVERSE_KL ) then
+      allocate(alphav_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+               alphah_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+               betav_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+               betah_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+               eta_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+               stat=ier)
+      if( ier /=0 ) stop 'error allocating arrays alphav_kl,...'
+
+      ! derived kernels
+      ! vp kernel
+      allocate(alpha_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+      if( ier /= 0 ) stop 'error allocating array alpha_kl'
+      ! vs kernel
+      allocate(beta_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+      if( ier /= 0 ) stop 'error allocating array beta_kl'
+    endif
+  else
+    ! derived kernels
+    ! vp kernel
+    allocate(alpha_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array alpha_kl'
+    ! vs kernel
+    allocate(beta_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array beta_kl'
+    ! density prime kernel
+    allocate(rhop_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array rhop_kl'
+  endif
 
   ! finalizes calculation of rhop, beta, alpha kernels
   do ispec = 1, NSPEC_AB
@@ -180,70 +213,67 @@
             iglob = ibool(i,j,k,ispec)
 
             ! Store local material values
-              rhol = rho_vs(i,j,k,ispec)*rho_vs(i,j,k,ispec) / mustore(i,j,k,ispec)
-              mul = mustore(i,j,k,ispec)
-              kappal = kappastore(i,j,k,ispec)
+            rhol = rho_vs(i,j,k,ispec)*rho_vs(i,j,k,ispec) / mustore(i,j,k,ispec)
+            mul = mustore(i,j,k,ispec)
+            kappal = kappastore(i,j,k,ispec)
 
-            if (ANISOTROPIC_KL) then
+            if( ANISOTROPIC_KL ) then
+              if( SAVE_TRANSVERSE_KL ) then
+                cijkl_kl_local(:) = - cijkl_kl(:,i,j,k,ispec)
 
-               cijkl_kl_local = - cijkl_kl(:,i,j,k,ispec)
+                ! Computes parameters for an isotropic model
+                A = kappal + FOUR_THIRDS * mul
+                C = A
+                L = mul
+                N = mul
+                F = kappal - 2._CUSTOM_REAL/3._CUSTOM_REAL * mul
+                eta = 1._CUSTOM_REAL
 
-               if (SAVE_TRANSVERSE_KL) then
+                ! note: cijkl_kl_local() is fully anisotropic C_ij kernel components (non-dimensionalized)
+                !          for GLL point at (i,j,k,ispec)
 
-                 ! Computes parameters for an isotropic model
-                 A = kappal + FOUR_THIRDS * mul
-                 C = A
-                 L = mul
-                 N = mul
-                 F = kappal - 2._CUSTOM_REAL/3._CUSTOM_REAL * mul
-                 eta = 1._CUSTOM_REAL
+                ! Purpose : compute the kernels for the An coeffs (an_kl)
+                ! from the kernels for Cij (cijkl_kl_local)
 
-                 ! note: cijkl_kl_local() is fully anisotropic C_ij kernel components (non-dimensionalized)
-                 !          for GLL point at (i,j,k,ispec)
+                ! Definition of the input array cij_kl :
+                ! cij_kl(1) = C11 ; cij_kl(2) = C12 ; cij_kl(3) = C13
+                ! cij_kl(4) = C14 ; cij_kl(5) = C15 ; cij_kl(6) = C16
+                ! cij_kl(7) = C22 ; cij_kl(8) = C23 ; cij_kl(9) = C24
+                ! cij_kl(10) = C25 ; cij_kl(11) = C26 ; cij_kl(12) = C33
+                ! cij_kl(13) = C34 ; cij_kl(14) = C35 ; cij_kl(15) = C36
+                ! cij_kl(16) = C44 ; cij_kl(17) = C45 ; cij_kl(18) = C46
+                ! cij_kl(19) = C55 ; cij_kl(20) = C56 ; cij_kl(21) = C66
+                ! where the Cij (Voigt's notation) are defined as function of
+                ! the components of the elastic tensor in spherical coordinates
+                ! by eq. (A.1) of Chen & Tromp, GJI 168 (2007)
 
-                 ! Purpose : compute the kernels for the An coeffs (an_kl)
-                 ! from the kernels for Cij (cijkl_kl_local)
+                ! From the relations giving Cij in function of An
+                ! Checked with Min Chen's results (routine build_cij)
 
-                 ! Definition of the input array cij_kl :
-                 ! cij_kl(1) = C11 ; cij_kl(2) = C12 ; cij_kl(3) = C13
-                 ! cij_kl(4) = C14 ; cij_kl(5) = C15 ; cij_kl(6) = C16
-                 ! cij_kl(7) = C22 ; cij_kl(8) = C23 ; cij_kl(9) = C24
-                 ! cij_kl(10) = C25 ; cij_kl(11) = C26 ; cij_kl(12) = C33
-                 ! cij_kl(13) = C34 ; cij_kl(14) = C35 ; cij_kl(15) = C36
-                 ! cij_kl(16) = C44 ; cij_kl(17) = C45 ; cij_kl(18) = C46
-                 ! cij_kl(19) = C55 ; cij_kl(20) = C56 ; cij_kl(21) = C66
-                 ! where the Cij (Voigt's notation) are defined as function of
-                 ! the components of the elastic tensor in spherical coordinates
-                 ! by eq. (A.1) of Chen & Tromp, GJI 168 (2007)
+                an_kl(1) = cijkl_kl_local(1)+cijkl_kl_local(2)+cijkl_kl_local(7)  !A
+                an_kl(2) = cijkl_kl_local(12)                                     !C
+                an_kl(3) = -2*cijkl_kl_local(2)+cijkl_kl_local(21)                !N
+                an_kl(4) = cijkl_kl_local(16)+cijkl_kl_local(19)                  !L
+                an_kl(5) = cijkl_kl_local(3)+cijkl_kl_local(8)                    !F
 
-                 ! From the relations giving Cij in function of An
-                 ! Checked with Min Chen's results (routine build_cij)
+                ! for parameterization: ( alpha_v, alpha_h, beta_v, beta_h, eta, rho )
+                ! K_alpha_v
+                alphav_kl(i,j,k,ispec) = 2.0 * C * an_kl(2)
+                ! K_alpha_h
+                alphah_kl(i,j,k,ispec) = 2.0 * A * an_kl(1) + 2.0 * A * eta * an_kl(5)
+                ! K_beta_v
+                betav_kl(i,j,k,ispec) = 2.0 * L * an_kl(4) - 4.0 * L * eta * an_kl(5)
+                ! K_beta_h
+                betah_kl(i,j,k,ispec) = 2.0 * N * an_kl(3)
+                ! K_eta
+                eta_kl(i,j,k,ispec) = F * an_kl(5)
 
-                 an_kl(1) = cijkl_kl_local(1)+cijkl_kl_local(2)+cijkl_kl_local(7)  !A
-                 an_kl(2) = cijkl_kl_local(12)                                     !C
-                 an_kl(3) = -2*cijkl_kl_local(2)+cijkl_kl_local(21)                !N
-                 an_kl(4) = cijkl_kl_local(16)+cijkl_kl_local(19)                  !L
-                 an_kl(5) = cijkl_kl_local(3)+cijkl_kl_local(8)                    !F
-
-                 ! for parameterization: ( alpha_v, alpha_h, beta_v, beta_h, eta, rho )
-                 ! K_alpha_v
-                 alphav_kl(i,j,k,ispec) = 2*C*an_kl(2)
-                 ! K_alpha_h
-                 alphah_kl(i,j,k,ispec) = 2*A*an_kl(1) + 2*A*eta*an_kl(5)
-                 ! K_beta_v
-                 betav_kl(i,j,k,ispec) = 2*L*an_kl(4) - 4*L*eta*an_kl(5)
-                 ! K_beta_h
-                 betah_kl(i,j,k,ispec) = 2*N*an_kl(3)
-                 ! K_eta
-                 eta_kl(i,j,k,ispec) = F*an_kl(5)
-
-                 ! to check: isotropic kernels from transverse isotropic ones
-                 alpha_kl(i,j,k,ispec) = alphav_kl(i,j,k,ispec) &
+                ! to check: isotropic kernels from transverse isotropic ones
+                alpha_kl(i,j,k,ispec) = alphav_kl(i,j,k,ispec) &
                                                   + alphah_kl(i,j,k,ispec)
-                 beta_kl(i,j,k,ispec) = betav_kl(i,j,k,ispec) &
+                beta_kl(i,j,k,ispec) = betav_kl(i,j,k,ispec) &
                                                   + betah_kl(i,j,k,ispec)
-
-                endif ! SAVE_TRANSVERSE_KL
+              endif ! SAVE_TRANSVERSE_KL
 
             else
 
@@ -283,89 +313,94 @@
 
   enddo
 
-  if (ANISOTROPIC_KL) then
+  if( ANISOTROPIC_KL ) then
+    ! outputs transverse isotropic kernels only
+    if( SAVE_TRANSVERSE_KL ) then
+      ! transverse isotropic kernels
+      ! (alpha_v, alpha_h, beta_v, beta_h, eta, rho ) parameterization
+      open(unit=IOUT,file=trim(prname)//'alphav_kernel.bin',status='unknown',form='unformatted',action='write')
+      write(IOUT) alphav_kl
+      close(IOUT)
+      open(unit=IOUT,file=trim(prname)//'alphah_kernel.bin',status='unknown',form='unformatted',action='write')
+      write(IOUT) alphah_kl
+      close(IOUT)
+      open(unit=IOUT,file=trim(prname)//'betav_kernel.bin',status='unknown',form='unformatted',action='write')
+      write(IOUT) betav_kl
+      close(IOUT)
+      open(unit=IOUT,file=trim(prname)//'betah_kernel.bin',status='unknown',form='unformatted',action='write')
+      write(IOUT) betah_kl
+      close(IOUT)
+      open(unit=IOUT,file=trim(prname)//'eta_kernel.bin',status='unknown',form='unformatted',action='write')
+      write(IOUT) eta_kl
+      close(IOUT)
 
-     ! outputs transverse isotropic kernels only
-     if (SAVE_TRANSVERSE_KL) then
-       ! transverse isotropic kernels
-       ! (alpha_v, alpha_h, beta_v, beta_h, eta, rho ) parameterization
-       open(unit=27,file=trim(prname)//'alphav_kernel.bin',status='unknown',form='unformatted',action='write')
-       write(27) alphav_kl
-       close(27)
-       open(unit=27,file=trim(prname)//'alphah_kernel.bin',status='unknown',form='unformatted',action='write')
-       write(27) alphah_kl
-       close(27)
-       open(unit=27,file=trim(prname)//'betav_kernel.bin',status='unknown',form='unformatted',action='write')
-       write(27) betav_kl
-       close(27)
-       open(unit=27,file=trim(prname)//'betah_kernel.bin',status='unknown',form='unformatted',action='write')
-       write(27) betah_kl
-       close(27)
-       open(unit=27,file=trim(prname)//'eta_kernel.bin',status='unknown',form='unformatted',action='write')
-       write(27) eta_kl
-       close(27)
-
-       ! transverse isotropic test kernels
-       open(unit=27,file=trim(prname)//'alpha_kernel.bin',status='unknown',form='unformatted',action='write')
-       write(27)  alpha_kl
-       close(27)
-       open(unit=27,file=trim(prname)//'beta_kernel.bin',status='unknown',form='unformatted',action='write')
-       write(27)  beta_kl
-       close(27)
-
-     else
-       ! fully anisotropic kernels
-       ! note: the C_ij and density kernels are not for relative perturbations (delta ln( m_i) = delta m_i / m_i),
-       !          but absolute perturbations (delta m_i = m_i - m_0).
-       ! Kappa and mu are for absolute perturbations, can be used to check with purely isotropic versions.
-       open(unit=27,file=trim(prname)//'rho_kernel.bin',status='unknown',form='unformatted',action='write')
-       write(27)  - rho_kl
-       close(27)
-       open(unit=27,file=trim(prname)//'cijkl_kernel.bin',status='unknown',form='unformatted',action='write')
-       write(27) - cijkl_kl
-       close(27)
-
-      endif
-
+      ! transverse isotropic test kernels
+      open(unit=IOUT,file=trim(prname)//'alpha_kernel.bin',status='unknown',form='unformatted',action='write')
+      write(IOUT) alpha_kl
+      close(IOUT)
+      open(unit=IOUT,file=trim(prname)//'beta_kernel.bin',status='unknown',form='unformatted',action='write')
+      write(IOUT) beta_kl
+      close(IOUT)
+    else
+      ! fully anisotropic kernels
+      ! note: the C_ij and density kernels are not for relative perturbations (delta ln( m_i) = delta m_i / m_i),
+      !          but absolute perturbations (delta m_i = m_i - m_0).
+      ! Kappa and mu are for absolute perturbations, can be used to check with purely isotropic versions.
+      open(unit=IOUT,file=trim(prname)//'rho_kernel.bin',status='unknown',form='unformatted',action='write')
+      write(IOUT) - rho_kl
+      close(IOUT)
+      open(unit=IOUT,file=trim(prname)//'cijkl_kernel.bin',status='unknown',form='unformatted',action='write')
+      write(IOUT) - cijkl_kl
+      close(IOUT)
+    endif
   else
-
     ! save kernels to binary files
-    open(unit=27,file=prname(1:len_trim(prname))//'rho_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    open(unit=IOUT,file=prname(1:len_trim(prname))//'rho_kernel.bin',status='unknown',form='unformatted',iostat=ier)
     if( ier /= 0 ) stop 'error opening file rho_kernel.bin'
-    write(27) rho_kl
-    close(27)
+    write(IOUT) rho_kl
+    close(IOUT)
 
-    open(unit=27,file=prname(1:len_trim(prname))//'mu_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    open(unit=IOUT,file=prname(1:len_trim(prname))//'mu_kernel.bin',status='unknown',form='unformatted',iostat=ier)
     if( ier /= 0 ) stop 'error opening file mu_kernel.bin'
-    write(27) mu_kl
-    close(27)
+    write(IOUT) mu_kl
+    close(IOUT)
 
-    open(unit=27,file=prname(1:len_trim(prname))//'kappa_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    open(unit=IOUT,file=prname(1:len_trim(prname))//'kappa_kernel.bin',status='unknown',form='unformatted',iostat=ier)
     if( ier /= 0 ) stop 'error opening file kappa_kernel.bin'
-    write(27) kappa_kl
-    close(27)
+    write(IOUT) kappa_kl
+    close(IOUT)
 
-    open(unit=27,file=prname(1:len_trim(prname))//'rhop_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    open(unit=IOUT,file=prname(1:len_trim(prname))//'rhop_kernel.bin',status='unknown',form='unformatted',iostat=ier)
     if( ier /= 0 ) stop 'error opening file rhop_kernel.bin'
-    write(27) rhop_kl
-    close(27)
+    write(IOUT) rhop_kl
+    close(IOUT)
 
-    open(unit=27,file=prname(1:len_trim(prname))//'beta_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    open(unit=IOUT,file=prname(1:len_trim(prname))//'beta_kernel.bin',status='unknown',form='unformatted',iostat=ier)
     if( ier /= 0 ) stop 'error opening file beta_kernel.bin'
-    write(27) beta_kl
-    close(27)
+    write(IOUT) beta_kl
+    close(IOUT)
 
-    open(unit=27,file=prname(1:len_trim(prname))//'alpha_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    open(unit=IOUT,file=prname(1:len_trim(prname))//'alpha_kernel.bin',status='unknown',form='unformatted',iostat=ier)
     if( ier /= 0 ) stop 'error opening file alpha_kernel.bin'
-    write(27) alpha_kl
-    close(27)
-  endif
+    write(IOUT) alpha_kl
+    close(IOUT)
+  endif ! ANISOTROPIC_KL
 
   if (SAVE_MOHO_MESH) then
-    open(unit=27,file=prname(1:len_trim(prname))//'moho_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    open(unit=IOUT,file=prname(1:len_trim(prname))//'moho_kernel.bin',status='unknown',form='unformatted',iostat=ier)
     if( ier /= 0 ) stop 'error opening file moho_kernel.bin'
-    write(27) moho_kl
-    close(27)
+    write(IOUT) moho_kl
+    close(IOUT)
+  endif
+
+  ! frees temporary arrays
+  if( ANISOTROPIC_KL ) then
+    if( SAVE_TRANSVERSE_KL ) then
+      deallocate(alphav_kl,alphah_kl,betav_kl,betah_kl,eta_kl)
+      deallocate(alpha_kl,beta_kl)
+    endif
+  else
+    deallocate(rhop_kl,alpha_kl,beta_kl)
   endif
 
   end subroutine save_kernels_elastic
@@ -610,98 +645,98 @@
   ! save kernels to binary files
 
   ! primary kernels
-  open(unit=27,file=prname(1:len_trim(prname))//'rhot_primeporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'rhot_primeporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
   if( ier /= 0 ) stop 'error opening file rhot_primeporo_kernel.bin'
-  write(27) rhot_kl
-  close(27)
-  open(unit=27,file=prname(1:len_trim(prname))//'rhof_primeporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+  write(IOUT) rhot_kl
+  close(IOUT)
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'rhof_primeporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
   if( ier /= 0 ) stop 'error opening file rhof_primeporo_kernel.bin'
-  write(27) rhof_kl
-  close(27)
-  open(unit=27,file=prname(1:len_trim(prname))//'sm_primeporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+  write(IOUT) rhof_kl
+  close(IOUT)
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'sm_primeporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
   if( ier /= 0 ) stop 'error opening file sm_primeporo_kernel.bin'
-  write(27) sm_kl
-  close(27)
-  open(unit=27,file=prname(1:len_trim(prname))//'eta_primeporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+  write(IOUT) sm_kl
+  close(IOUT)
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'eta_primeporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
   if( ier /= 0 ) stop 'error opening file eta_primeporo_kernel.bin'
-  write(27) eta_kl
-  close(27)
-  open(unit=27,file=prname(1:len_trim(prname))//'mufr_primeporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+  write(IOUT) eta_kl
+  close(IOUT)
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'mufr_primeporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
   if( ier /= 0 ) stop 'error opening file mufr_primeporo_kernel.bin'
-  write(27) mufr_kl
-  close(27)
-  open(unit=27,file=prname(1:len_trim(prname))//'B_primeporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+  write(IOUT) mufr_kl
+  close(IOUT)
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'B_primeporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
   if( ier /= 0 ) stop 'error opening file B_primeporo_kernel.bin'
-  write(27) B_kl
-  close(27)
-  open(unit=27,file=prname(1:len_trim(prname))//'C_primeporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+  write(IOUT) B_kl
+  close(IOUT)
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'C_primeporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
   if( ier /= 0 ) stop 'error opening file C_primeporo_kernel.bin'
-  write(27) C_kl
-  close(27)
-  open(unit=27,file=prname(1:len_trim(prname))//'M_primeporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+  write(IOUT) C_kl
+  close(IOUT)
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'M_primeporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
   if( ier /= 0 ) stop 'error opening file M_primeporo_kernel.bin'
-  write(27) M_kl
-  close(27)
+  write(IOUT) M_kl
+  close(IOUT)
 
   ! density kernels
-  open(unit=27,file=prname(1:len_trim(prname))//'rhob_densityporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'rhob_densityporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
   if( ier /= 0 ) stop 'error opening file rhob_densityporo_kernel.bin'
-  write(27) rhob_kl
-  close(27)
-  open(unit=27,file=prname(1:len_trim(prname))//'rhofb_densityporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+  write(IOUT) rhob_kl
+  close(IOUT)
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'rhofb_densityporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
   if( ier /= 0 ) stop 'error opening file rhofb_densityporo_kernel.bin'
-  write(27) rhofb_kl
-  close(27)
-  open(unit=27,file=prname(1:len_trim(prname))//'phi_densityporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+  write(IOUT) rhofb_kl
+  close(IOUT)
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'phi_densityporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
   if( ier /= 0 ) stop 'error opening file phi_densityporo_kernel.bin'
-  write(27) phi_kl
-  close(27)
-  open(unit=27,file=prname(1:len_trim(prname))//'mufrb_densityporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+  write(IOUT) phi_kl
+  close(IOUT)
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'mufrb_densityporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
   if( ier /= 0 ) stop 'error opening file mufrb_densityporo_kernel.bin'
-  write(27) mufrb_kl
-  close(27)
-  open(unit=27,file=prname(1:len_trim(prname))//'Bb_densityporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+  write(IOUT) mufrb_kl
+  close(IOUT)
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'Bb_densityporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
   if( ier /= 0 ) stop 'error opening file Bb_densityporo_kernel.bin'
-  write(27) Bb_kl
-  close(27)
-  open(unit=27,file=prname(1:len_trim(prname))//'Cb_densityporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+  write(IOUT) Bb_kl
+  close(IOUT)
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'Cb_densityporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
   if( ier /= 0 ) stop 'error opening file Cb_densityporo_kernel.bin'
-  write(27) Cb_kl
-  close(27)
-  open(unit=27,file=prname(1:len_trim(prname))//'Mb_densityporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+  write(IOUT) Cb_kl
+  close(IOUT)
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'Mb_densityporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
   if( ier /= 0 ) stop 'error opening file Mb_densityporo_kernel.bin'
-  write(27) Mb_kl
-  close(27)
+  write(IOUT) Mb_kl
+  close(IOUT)
 
   ! wavespeed kernels
-  open(unit=27,file=prname(1:len_trim(prname))//'rhobb_waveporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'rhobb_waveporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
   if( ier /= 0 ) stop 'error opening file rhobb_waveporo_kernel.bin'
-  write(27) rhobb_kl
-  close(27)
-  open(unit=27,file=prname(1:len_trim(prname))//'rhofbb_waveporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+  write(IOUT) rhobb_kl
+  close(IOUT)
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'rhofbb_waveporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
   if( ier /= 0 ) stop 'error opening file rhofbb_waveporo_kernel.bin'
-  write(27) rhofbb_kl
-  close(27)
-  open(unit=27,file=prname(1:len_trim(prname))//'phib_waveporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+  write(IOUT) rhofbb_kl
+  close(IOUT)
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'phib_waveporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
   if( ier /= 0 ) stop 'error opening file phib_waveporo_kernel.bin'
-  write(27) phib_kl
-  close(27)
-  open(unit=27,file=prname(1:len_trim(prname))//'cs_waveporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+  write(IOUT) phib_kl
+  close(IOUT)
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'cs_waveporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
   if( ier /= 0 ) stop 'error opening file cs_waveporo_kernel.bin'
-  write(27) cs_kl
-  close(27)
-  open(unit=27,file=prname(1:len_trim(prname))//'cpI_waveporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+  write(IOUT) cs_kl
+  close(IOUT)
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'cpI_waveporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
   if( ier /= 0 ) stop 'error opening file cpI_waveporo_kernel.bin'
-  write(27) cpI_kl
-  close(27)
-  open(unit=27,file=prname(1:len_trim(prname))//'cpII_waveporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+  write(IOUT) cpI_kl
+  close(IOUT)
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'cpII_waveporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
   if( ier /= 0 ) stop 'error opening file cpII_waveporo_kernel.bin'
-  write(27) cpII_kl
-  close(27)
-  open(unit=27,file=prname(1:len_trim(prname))//'ratio_waveporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+  write(IOUT) cpII_kl
+  close(IOUT)
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'ratio_waveporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
   if( ier /= 0 ) stop 'error opening file ratio_waveporo_kernel.bin'
-  write(27) ratio_kl
-  close(27)
+  write(IOUT) ratio_kl
+  close(IOUT)
 
   end subroutine save_kernels_poroelastic
 
@@ -724,11 +759,11 @@
     hess_ac_kl(:,:,:,:) = 2._CUSTOM_REAL * hess_ac_kl(:,:,:,:)
 
     ! stores into file
-    open(unit=27,file=trim(prname)//'hess_acoustic_kernel.bin', &
+    open(unit=IOUT,file=trim(prname)//'hess_acoustic_kernel.bin', &
           status='unknown',form='unformatted',action='write',iostat=ier)
     if( ier /= 0 ) stop 'error opening file hess_acoustic_kernel.bin'
-    write(27) hess_ac_kl
-    close(27)
+    write(IOUT) hess_ac_kl
+    close(IOUT)
   endif
 
   ! elastic domains
@@ -737,11 +772,11 @@
     hess_kl(:,:,:,:) = 2._CUSTOM_REAL * hess_kl(:,:,:,:)
 
     ! stores into file
-    open(unit=27,file=trim(prname)//'hess_kernel.bin', &
+    open(unit=IOUT,file=trim(prname)//'hess_kernel.bin', &
           status='unknown',form='unformatted',action='write',iostat=ier)
     if( ier /= 0 ) stop 'error opening file hess_kernel.bin'
-    write(27) hess_kl
-    close(27)
+    write(IOUT) hess_kl
+    close(IOUT)
   endif
 
   end subroutine save_kernels_hessian

@@ -54,7 +54,6 @@ __global__ void compute_stacey_elastic_kernel(realw* veloc,
                                               int SIMULATION_TYPE,
                                               int SAVE_FORWARD,
                                               int num_abs_boundary_faces,
-                                              realw* b_accel,
                                               realw* b_absorb_field) {
 
   int igll = threadIdx.x; // tx
@@ -110,12 +109,7 @@ __global__ void compute_stacey_elastic_kernel(realw* veloc,
       atomicAdd(&accel[iglob*3+1],-ty*jacobianw);
       atomicAdd(&accel[iglob*3+2],-tz*jacobianw);
 
-      if(SIMULATION_TYPE == 3) {
-        atomicAdd(&b_accel[iglob*3  ],-b_absorb_field[INDEX3(NDIM,NGLL2,0,igll,iface)]);
-        atomicAdd(&b_accel[iglob*3+1],-b_absorb_field[INDEX3(NDIM,NGLL2,1,igll,iface)]);
-        atomicAdd(&b_accel[iglob*3+2],-b_absorb_field[INDEX3(NDIM,NGLL2,2,igll,iface)]);
-      }
-      else if(SAVE_FORWARD && SIMULATION_TYPE == 1) {
+      if(SAVE_FORWARD && SIMULATION_TYPE == 1) {
         b_absorb_field[INDEX3(NDIM,NGLL2,0,igll,iface)] = tx*jacobianw;
         b_absorb_field[INDEX3(NDIM,NGLL2,1,igll,iface)] = ty*jacobianw;
         b_absorb_field[INDEX3(NDIM,NGLL2,2,igll,iface)] = tz*jacobianw;
@@ -127,23 +121,63 @@ __global__ void compute_stacey_elastic_kernel(realw* veloc,
 
 /* ----------------------------------------------------------------------------------------------- */
 
+__global__ void compute_stacey_elastic_sim3_kernel(int* abs_boundary_ispec,
+                                                   int* abs_boundary_ijk,
+                                                   int* ibool,
+                                                   int* ispec_is_inner,
+                                                   int* ispec_is_elastic,
+                                                   int phase_is_inner,
+                                                   int num_abs_boundary_faces,
+                                                   realw* b_accel,
+                                                   realw* b_absorb_field) {
+
+  int igll = threadIdx.x; // tx
+  int iface = blockIdx.x + gridDim.x*blockIdx.y; // bx
+
+  int i,j,k,iglob,ispec;
+
+  // don't compute points outside NGLLSQUARE==NGLL2==25
+  // way 2: no further check needed since blocksize = 25
+  if( iface < num_abs_boundary_faces){
+
+  //if(igll < NGLL2 && iface < num_abs_boundary_faces) {
+
+    // "-1" from index values to convert from Fortran-> C indexing
+    ispec = abs_boundary_ispec[iface]-1;
+
+    if(ispec_is_inner[ispec] == phase_is_inner && ispec_is_elastic[ispec] ) {
+
+      i = abs_boundary_ijk[INDEX3(NDIM,NGLL2,0,igll,iface)]-1;
+      j = abs_boundary_ijk[INDEX3(NDIM,NGLL2,1,igll,iface)]-1;
+      k = abs_boundary_ijk[INDEX3(NDIM,NGLL2,2,igll,iface)]-1;
+
+      iglob = ibool[INDEX4(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
+
+      atomicAdd(&b_accel[iglob*3  ],-b_absorb_field[INDEX3(NDIM,NGLL2,0,igll,iface)]);
+      atomicAdd(&b_accel[iglob*3+1],-b_absorb_field[INDEX3(NDIM,NGLL2,1,igll,iface)]);
+      atomicAdd(&b_accel[iglob*3+2],-b_absorb_field[INDEX3(NDIM,NGLL2,2,igll,iface)]);
+    }
+  } // num_abs_boundary_faces
+
+}
+
+/* ----------------------------------------------------------------------------------------------- */
+
 
 extern "C"
 void FC_FUNC_(compute_stacey_viscoelastic_cuda,
-              COMPUTE_STACEY_VISCOELASTIC_CUDA)(long* Mesh_pointer_f,
+              COMPUTE_STACEY_VISCOELASTIC_CUDA)(long* Mesh_pointer,
                                            int* phase_is_innerf,
-                                           int* SAVE_FORWARDf,
-                                           realw* h_b_absorb_field) {
+                                           realw* b_absorb_field) {
 
-TRACE("compute_stacey_viscoelastic_cuda");
+  TRACE("\tcompute_stacey_viscoelastic_cuda");
 
-  Mesh* mp = (Mesh*)(*Mesh_pointer_f); //get mesh pointer out of fortran integer container
+  Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
 
-  // check
+  // checks if anything to do
   if( mp->d_num_abs_boundary_faces == 0 ) return;
 
   int phase_is_inner    = *phase_is_innerf;
-  int SAVE_FORWARD      = *SAVE_FORWARDf;
 
   // way 1
   // > NGLLSQUARE==NGLL2==25, but we handle this inside kernel
@@ -153,19 +187,15 @@ TRACE("compute_stacey_viscoelastic_cuda");
   // > NGLLSQUARE==NGLL2==25, no further check inside kernel
   int blocksize = NGLL2;
 
-  int num_blocks_x = mp->d_num_abs_boundary_faces;
-  int num_blocks_y = 1;
-  while(num_blocks_x > 65535) {
-    num_blocks_x = (int) ceil(num_blocks_x*0.5f);
-    num_blocks_y = num_blocks_y*2;
-  }
+  int num_blocks_x, num_blocks_y;
+  get_blocks_xy(mp->d_num_abs_boundary_faces,&num_blocks_x,&num_blocks_y);
 
   dim3 grid(num_blocks_x,num_blocks_y);
   dim3 threads(blocksize,1,1);
 
-  if(mp->simulation_type == 3 && mp->d_num_abs_boundary_faces > 0) {
-    // The read is done in fortran
-    print_CUDA_error_if_any(cudaMemcpy(mp->d_b_absorb_field,h_b_absorb_field,
+  if(mp->simulation_type == 3 ) {
+    // reading is done in fortran routine
+    print_CUDA_error_if_any(cudaMemcpy(mp->d_b_absorb_field,b_absorb_field,
                                        mp->d_b_reclen_field,cudaMemcpyHostToDevice),7700);
   }
 
@@ -173,7 +203,7 @@ TRACE("compute_stacey_viscoelastic_cuda");
   exit_on_cuda_error("between cudamemcpy and compute_stacey_elastic_kernel");
 #endif
 
-  compute_stacey_elastic_kernel<<<grid,threads>>>(mp->d_veloc,
+  compute_stacey_elastic_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_veloc,
                                                   mp->d_accel,
                                                   mp->d_abs_boundary_ispec,
                                                   mp->d_abs_boundary_ijk,
@@ -186,10 +216,22 @@ TRACE("compute_stacey_viscoelastic_cuda");
                                                   mp->d_ispec_is_elastic,
                                                   phase_is_inner,
                                                   mp->simulation_type,
-                                                  SAVE_FORWARD,
+                                                  mp->save_forward,
                                                   mp->d_num_abs_boundary_faces,
-                                                  mp->d_b_accel,
                                                   mp->d_b_absorb_field);
+
+  // adjoint simulations
+  if(mp->simulation_type == 3 ){
+    compute_stacey_elastic_sim3_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_abs_boundary_ispec,
+                                                         mp->d_abs_boundary_ijk,
+                                                         mp->d_ibool,
+                                                         mp->d_ispec_is_inner,
+                                                         mp->d_ispec_is_elastic,
+                                                         phase_is_inner,
+                                                         mp->d_num_abs_boundary_faces,
+                                                         mp->d_b_accel,
+                                                         mp->d_b_absorb_field);
+  }
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   exit_on_cuda_error("compute_stacey_elastic_kernel");
@@ -199,11 +241,15 @@ TRACE("compute_stacey_viscoelastic_cuda");
   // if (mp->simulation_type == 1 .and. SAVE_FORWARD .and. num_abs_boundary_faces > 0 ) &
   //   write(IOABS,rec=it) b_reclen_field,b_absorb_field,b_reclen_field
 
-  if(mp->simulation_type == 1 && SAVE_FORWARD && mp->d_num_abs_boundary_faces > 0 ) {
-    print_CUDA_error_if_any(cudaMemcpy(h_b_absorb_field,mp->d_b_absorb_field,
+  if(mp->simulation_type == 1 && mp->save_forward ) {
+    // explicitly wait until compute stream is done
+    // (cudaMemcpy implicitly synchronizes all other cuda operations)
+    cudaStreamSynchronize(mp->compute_stream);
+
+    // copies absorb_field values to CPU
+    print_CUDA_error_if_any(cudaMemcpy(b_absorb_field,mp->d_b_absorb_field,
                                        mp->d_b_reclen_field,cudaMemcpyDeviceToHost),7701);
-    // The write is done in fortran
-    // write_abs_(&fid,(char*)b_absorb_field,&b_reclen_field,&it);
+    // writing is done in fortran routine
   }
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING

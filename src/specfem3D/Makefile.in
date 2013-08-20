@@ -45,14 +45,30 @@ MPI_INC = @MPI_INC@
 @COND_CUDA_TRUE@NVCC = nvcc
 @COND_CUDA_FALSE@NVCC = @CC@
 
+# GPU architecture
 
-@COND_CUDA_TRUE@NVCC_FLAGS_BASE = $(CUDA_INC) $(MPI_INC) $(COND_MPI_CPPFLAGS) 
-@COND_CUDA_TRUE@@COND_CUDA5_TRUE@NVCC_FLAGS = $(NVCC_FLAGS_BASE) -dc -DCUDA -gencode=arch=compute_35,code=sm_35 
-@COND_CUDA_TRUE@@COND_CUDA5_FALSE@NVCC_FLAGS = $(NVCC_FLAGS_BASE) -DCUDA -DUSE_OLDER_CUDA4_GPU -gencode=arch=compute_20,code=sm_20 
+# CUDA architecture / code version
+# Fermi: -gencode=arch=compute_10,code=sm_10 not supported
+# Tesla (default): -gencode=arch=compute_20,code=sm_20
+# Geforce GT 650m: -gencode=arch=compute_30,code=sm_30
+# Kepler (cuda5) : -gencode=arch=compute_35,code=sm_35
+GENCODE_20 = -gencode=arch=compute_20,code=\"sm_20,compute_20\"
+GENCODE_30 = -gencode=arch=compute_30,code=\"sm_30,compute_30\"
+GENCODE_35 = -gencode=arch=compute_35,code=\"sm_35,compute_35\"
+
+# CUDA version 5.x
+@COND_CUDA_TRUE@@COND_CUDA5_TRUE@GENCODE = $(GENCODE_35)
+# CUDA version 4.x
+@COND_CUDA_TRUE@@COND_CUDA5_FALSE@GENCODE = $(GENCODE_20)
+
+# CUDA flags and linking
+@COND_CUDA_TRUE@NVCC_FLAGS_BASE = $(CUDA_INC) $(MPI_INC) $(COND_MPI_CPPFLAGS)
+@COND_CUDA_TRUE@@COND_CUDA5_TRUE@NVCC_FLAGS = $(NVCC_FLAGS_BASE) -dc -DCUDA $(GENCODE)
+@COND_CUDA_TRUE@@COND_CUDA5_FALSE@NVCC_FLAGS = $(NVCC_FLAGS_BASE) -DCUDA -DUSE_OLDER_CUDA4_GPU $(GENCODE)
 
 @COND_CUDA_TRUE@@COND_CUDA5_TRUE@NVCCLINK_BASE = $(NVCC) $(CUDA_INC) $(MPI_INC) $(COND_MPI_CPPFLAGS) -DCUDA
-@COND_CUDA_TRUE@@COND_CUDA5_TRUE@NVCCLINK = $(NVCCLINK_BASE) -dlink -gencode=arch=compute_35,code=sm_35
-@COND_CUDA_TRUE@@COND_CUDA5_FALSE@NVCCLINK = $(NVCCLINK_BASE) -DUSE_OLDER_CUDA4_GPU -gencode=arch=compute_20,code=sm_20
+@COND_CUDA_TRUE@@COND_CUDA5_TRUE@NVCCLINK = $(NVCCLINK_BASE) -dlink $(GENCODE)
+@COND_CUDA_TRUE@@COND_CUDA5_FALSE@NVCCLINK = $(NVCCLINK_BASE) -DUSE_OLDER_CUDA4_GPU $(GENCODE)
 
 @COND_CUDA_FALSE@NVCC_FLAGS = $(MPI_INC) $(COND_MPI_CPPFLAGS)
 @COND_CUDA_FALSE@NVCCLINK = $(NVCC) $(NVCC_FLAGS)
@@ -99,6 +115,8 @@ CPPFLAGS = @CPPFLAGS@ $(COND_MPI_CPPFLAGS)
 AR = ar
 ARFLAGS = cru
 RANLIB = ranlib
+
+#######################################
 
 libspecfem_a_OBJECTS = \
 	$O/assemble_MPI_scalar.shared.o \
@@ -172,10 +190,11 @@ SOLVER_ARRAY_OBJECTS = \
 	$O/specfem3D_par.o \
 	$O/pml_par.o \
 	$O/assemble_MPI_vector.o \
+	$O/check_stability.o \
 	$O/fault_solver_common.o \
 	$O/fault_solver_dynamic.o \
 	$O/fault_solver_kinematic.o \
-        $O/gravity_perturbation.o \
+	$O/gravity_perturbation.o \
 	$O/compute_add_sources_acoustic.o \
 	$O/compute_add_sources_viscoelastic.o \
 	$O/compute_add_sources_poroelastic.o \
@@ -201,6 +220,7 @@ SOLVER_ARRAY_OBJECTS = \
 	$O/compute_stacey_acoustic.o \
 	$O/compute_stacey_viscoelastic.o \
 	$O/compute_stacey_poroelastic.o \
+	$O/compute_total_energy.o \
 	$O/create_color_image.o \
 	$O/detect_mesh_surfaces.o \
 	$O/finalize_simulation.o \
@@ -220,6 +240,7 @@ SOLVER_ARRAY_OBJECTS = \
 	$O/setup_movie_meshes.o \
 	$O/setup_sources_receivers.o \
 	$O/specfem3D.o \
+	$O/update_displacement_scheme.o \
 	$O/write_movie_output.o \
 	$O/write_output_ASCII.o \
 	$O/write_output_SU.o \
@@ -271,6 +292,8 @@ LIBSPECFEM = $L/libspecfem.a
 @COND_PYRE_FALSE@@COND_CUDA_TRUE@XSPECFEM_OBJECTS = $(SOLVER_ARRAY_OBJECTS) $(LIBSPECFEM) $(CUDA_OBJECTS)
 @COND_PYRE_FALSE@@COND_CUDA_FALSE@XSPECFEM_OBJECTS = $(SOLVER_ARRAY_OBJECTS) $(LIBSPECFEM) $(CUDA_STUBS)
 
+#######################################
+
 ####
 #### targets
 ####
@@ -292,6 +315,7 @@ all: clean default
 
 specfem3D: xspecfem3D
 
+#######################################
 
 ####
 #### rules for executables
@@ -343,6 +367,9 @@ clean:
         xcreate_movie_shakemap_AVS_DX_GMT xcombine_vol_data xcombine_surf_data \
         xsmooth_vol_data xmodel_update xsum_kernels
 
+
+#######################################
+
 ###
 ### rule for the archive library
 ###
@@ -351,6 +378,8 @@ $L/libspecfem.a: $(libspecfem_a_OBJECTS)
 	-rm -f $L/libspecfem.a
 	$(AR) $(ARFLAGS) $L/libspecfem.a $(libspecfem_a_OBJECTS)
 	$(RANLIB) $L/libspecfem.a
+
+#######################################
 
 ####
 #### rule to build each .o file below
@@ -372,6 +401,7 @@ $O/%.shared.o: ${SHARED}%.f90 $(SHARED)constants.h
 $O/%.shared.o: ${SHARED}%.F90 $(SHARED)constants.h
 	${FCCOMPILE_CHECK} -c -o $@ $<
 
+#######################################
 
 ###
 ### OpenMP compilation
@@ -380,11 +410,19 @@ $O/%.openmp.o: %.f90 $(SHARED)constants.h
 	${FCCOMPILE_CHECK} -c -o $@ $<
 
 
+#######################################
+
 ###
 ### CUDA compilation
 ###
 $O/%.cuda.o: ${CUDAD}%.cu ../../config.h $(CUDAD)mesh_constants_cuda.h $(CUDAD)prepare_constants_cuda.h
 	$(NVCC) -c $< -o $@ $(NVCC_FLAGS)
+
+$O/%.cudacc.o: ${CUDAD}%.c ../../config.h
+	${CC} -c $(CFLAGS) $(MPI_INC) -o $@ ${CUDAD}$< -I../../
+
+
+#######################################
 
 ###
 ### C compilation
@@ -395,9 +433,8 @@ force_ftz.o: ${SHARED}force_ftz.c ../../config.h
 $O/%.cc.o: ${SHARED}%.c ../../config.h
 	${CC} -c $(CFLAGS) $(MPI_INC) -o $@ ${SHARED}$< -I../../
 
-$O/%.cudacc.o: ${CUDAD}%.c ../../config.h
-	${CC} -c $(CFLAGS) $(MPI_INC) -o $@ ${CUDAD}$< -I../../
 
+#######################################
 
 ###
 ### MPI compilation without optimization
@@ -409,18 +446,23 @@ $O/parallel.o: $(SHARED)constants.h $(SHARED)parallel.f90
 $O/serial.o: $(SHARED)constants.h $(SHARED)serial.f90
 	${FCCOMPILE_CHECK} -c -o $O/serial.o $(SHARED)serial.f90
 
-$O/smooth_vol_data.o: $(SHARED)constants.h $(SHARED)smooth_vol_data.f90
-	${MPIFCCOMPILE_CHECK} -c -o $O/smooth_vol_data.o $(SHARED)smooth_vol_data.f90
 
 
+#######################################
 
 
 ##
 ## kernel summation
 ##
 
+$O/smooth_vol_data.o: $(SHARED)constants.h $(SHARED)smooth_vol_data.f90
+	${MPIFCCOMPILE_CHECK} -c -o $O/smooth_vol_data.o $(SHARED)smooth_vol_data.f90
+
 $O/sum_kernels.o: $(SHARED)constants.h $(SHARED)sum_kernels.f90
 	${MPIFCCOMPILE_CHECK} -c -o $O/sum_kernels.o $(SHARED)sum_kernels.f90
+
+
+#######################################
 
 ##
 ## model update

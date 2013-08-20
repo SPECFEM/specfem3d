@@ -150,19 +150,19 @@ subroutine initialize_fault (bc,IIN_BIN)
     tmp_vec = 0._CUSTOM_REAL
     if (bc%nspec>0) tmp_vec(1,bc%ibulk1) = bc%B
     ! assembles with other MPI processes
-    call assemble_MPI_vector_ext_mesh(NPROC,NGLOB_AB,tmp_vec, &
-       num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-       nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-       my_neighbours_ext_mesh)
+    call assemble_MPI_vector_blocking(NPROC,NGLOB_AB,tmp_vec, &
+                                     num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                     nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                     my_neighbours_ext_mesh)
     if (bc%nspec>0) bc%B = tmp_vec(1,bc%ibulk1)
 
     tmp_vec = 0._CUSTOM_REAL
     if (bc%nspec>0) tmp_vec(:,bc%ibulk1) = nxyz
     ! assembles with other MPI processes
-    call assemble_MPI_vector_ext_mesh(NPROC,NGLOB_AB,tmp_vec, &
-       num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-       nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-       my_neighbours_ext_mesh)
+    call assemble_MPI_vector_blocking(NPROC,NGLOB_AB,tmp_vec, &
+                                     num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                     nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                     my_neighbours_ext_mesh)
     if (bc%nspec>0) nxyz = tmp_vec(:,bc%ibulk1)
 
   endif

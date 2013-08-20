@@ -31,6 +31,18 @@
 
 typedef float realw;  // type of "working" variables
 
+// CUDA version >= 5.0 needed for new symbol addressing and texture binding
+#if CUDA_VERSION < 5000
+  #ifndef USE_OLDER_CUDA4_GPU
+    #define USE_OLDER_CUDA4_GPU
+  #endif
+#else
+  #undef USE_OLDER_CUDA4_GPU
+#endif
+
+#ifdef USE_OLDER_CUDA4_GPU
+#pragma message ("\nCompiling with: USE_OLDER_CUDA4_GPU enabled\n")
+#endif
 
 /* ----------------------------------------------------------------------------------------------- */
 
@@ -278,52 +290,5 @@ void setConst_wgll_cube(realw* array,Mesh* mp)
   }
 
 }
-
-
-/* ----------------------------------------------------------------------------------------------- */
-
-/* CUDA specific things from specfem3D_kernels.cu */
-
-// older TEXTURE usage. For now just acoustic simulations. See usage
-// of USE_TEXTURES_FIELDS elsewhere in code for elastic case
-#ifdef USE_TEXTURES
-
-// declaration of textures
-texture<realw, 1, cudaReadModeElementType> tex_potential_acoustic;
-texture<realw, 1, cudaReadModeElementType> tex_potential_dot_dot_acoustic;
-
-
-  void bindTexturesPotential(realw* d_potential_acoustic)
-  {
-    cudaError_t err;
-
-    cudaChannelFormatDesc channelDescFloat = cudaCreateChannelDesc<realw>();
-
-    err = cudaBindTexture(NULL,tex_potential_acoustic, d_potential_acoustic,
-                          channelDescFloat, NGLOB*sizeof(realw));
-    if (err != cudaSuccess)
-    {
-      fprintf(stderr, "Error in bindTexturesPotential for potential_acoustic: %s\n", cudaGetErrorString(err));
-      exit(1);
-    }
-  }
-
-  void bindTexturesPotential_dot_dot(realw* d_potential_dot_dot_acoustic)
-  {
-    cudaError_t err;
-
-    cudaChannelFormatDesc channelDescFloat = cudaCreateChannelDesc<realw>();
-
-    err = cudaBindTexture(NULL,tex_potential_dot_dot_acoustic, d_potential_dot_dot_acoustic,
-                          channelDescFloat, NGLOB*sizeof(realw));
-    if (err != cudaSuccess)
-    {
-      fprintf(stderr, "Error in bindTexturesPotential_dot_dot for potential_dot_dot_acoustic: %s\n", cudaGetErrorString(err));
-      exit(1);
-    }
-  }
-
-#endif // USE_TEXTURES
-
 
 #endif //CUDA_HEADER_H

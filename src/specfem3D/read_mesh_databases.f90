@@ -436,6 +436,12 @@
 
   ! absorbing boundary surface
   read(27) num_abs_boundary_faces
+
+  ! checks
+  if( num_abs_boundary_faces < 0 ) then
+    print*,'read_mesh_databases: reading in negative num_abs_boundary_faces ',num_abs_boundary_faces,'...resetting to zero'
+    num_abs_boundary_faces = 0
+  endif
   allocate(abs_boundary_ispec(num_abs_boundary_faces), &
           abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces), &
           abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces), &
@@ -696,23 +702,34 @@
   !endif
 
   ! MPI communications
-  allocate(buffer_send_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
-    buffer_recv_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
-    buffer_send_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
-    buffer_recv_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
-    request_send_vector_ext_mesh(num_interfaces_ext_mesh), &
-    request_recv_vector_ext_mesh(num_interfaces_ext_mesh), &
-    request_send_scalar_ext_mesh(num_interfaces_ext_mesh), &
-    request_recv_scalar_ext_mesh(num_interfaces_ext_mesh), &
-    buffer_send_vector_ext_mesh_s(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
-    buffer_recv_vector_ext_mesh_s(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
-    buffer_send_vector_ext_mesh_w(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
-    buffer_recv_vector_ext_mesh_w(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
-    request_send_vector_ext_mesh_s(num_interfaces_ext_mesh), &
-    request_recv_vector_ext_mesh_s(num_interfaces_ext_mesh), &
-    request_send_vector_ext_mesh_w(num_interfaces_ext_mesh), &
-    request_recv_vector_ext_mesh_w(num_interfaces_ext_mesh),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array buffer_send_vector_ext_mesh etc.'
+  if( ACOUSTIC_SIMULATION ) then
+    allocate(buffer_send_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
+             buffer_recv_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
+             request_send_scalar_ext_mesh(num_interfaces_ext_mesh), &
+             request_recv_scalar_ext_mesh(num_interfaces_ext_mesh), &
+             stat=ier)
+    if( ier /= 0 ) stop 'error allocating array buffer_send_scalar_ext_mesh,.. for acoustic simulations'
+  endif
+  if( ELASTIC_SIMULATION ) then
+    allocate(buffer_send_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
+             buffer_recv_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
+             request_send_vector_ext_mesh(num_interfaces_ext_mesh), &
+             request_recv_vector_ext_mesh(num_interfaces_ext_mesh), &
+             stat=ier)
+    if( ier /= 0 ) stop 'error allocating array buffer_send_vector_ext_mesh,.. for elastic simulations'
+  endif
+  if( POROELASTIC_SIMULATION ) then
+    allocate(buffer_send_vector_ext_mesh_s(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
+             buffer_recv_vector_ext_mesh_s(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
+             buffer_send_vector_ext_mesh_w(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
+             buffer_recv_vector_ext_mesh_w(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
+             request_send_vector_ext_mesh_s(num_interfaces_ext_mesh), &
+             request_recv_vector_ext_mesh_s(num_interfaces_ext_mesh), &
+             request_send_vector_ext_mesh_w(num_interfaces_ext_mesh), &
+             request_recv_vector_ext_mesh_w(num_interfaces_ext_mesh), &
+             stat=ier)
+    if( ier /= 0 ) stop 'error allocating array buffer_send_vector_ext_mesh_s,.. for poroelastic simulations'
+  endif
 
   ! gets model dimensions
   minl = minval( xstore )
@@ -800,30 +817,24 @@
     ! density kernel
     allocate(rho_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
     if( ier /= 0 ) stop 'error allocating array rho_kl'
-    ! shear modulus kernel
-    allocate(mu_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array mu_kl'
-    ! compressional modulus kernel
-    allocate(kappa_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array kappa_kl'
 
-    ! anisotropic kernels
-!! DK DK commented this out for now; must be made optional
-!   allocate(cijkl_kl(21,NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-!   if( ier /= 0 ) stop 'error allocating array cijkl_kl'
-!! DK DK added this for now
-    allocate(cijkl_kl(1,1,1,1,1),stat=ier)
-
-    ! derived kernels
-    ! density prime kernel
-    allocate(rhop_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array rhop_kl'
-    ! vp kernel
-    allocate(alpha_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array alpha_kl'
-    ! vs kernel
-    allocate(beta_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array beta_kl'
+    if (ANISOTROPIC_KL) then
+      ! anisotropic kernels
+      allocate(cijkl_kl(21,NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+      if( ier /= 0 ) stop 'error allocating array cijkl_kl'
+      !dummy
+      allocate(mu_kl(1,1,1,1))
+      allocate(kappa_kl(1,1,1,1))
+    else
+      ! shear modulus kernel
+      allocate(mu_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+      if( ier /= 0 ) stop 'error allocating array mu_kl'
+      ! compressional modulus kernel
+      allocate(kappa_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+      if( ier /= 0 ) stop 'error allocating array kappa_kl'
+      !dummy
+      allocate(cijkl_kl(1,1,1,1,1))
+    endif
 
     ! noise source strength kernel
     if (NOISE_TOMOGRAPHY == 3) then
@@ -843,17 +854,17 @@
 
     ! MPI handling
     allocate(b_request_send_vector_ext_mesh(num_interfaces_ext_mesh), &
-      b_request_recv_vector_ext_mesh(num_interfaces_ext_mesh), &
-      b_buffer_send_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
-      b_buffer_recv_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+             b_request_recv_vector_ext_mesh(num_interfaces_ext_mesh), &
+             b_buffer_send_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
+             b_buffer_recv_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
     if( ier /= 0 ) stop 'error allocating array b_request_send_vector_ext_mesh etc.'
 
     ! allocates attenuation solids
     allocate(b_R_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
-            b_R_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
-            b_R_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
-            b_R_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
-            b_R_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS),stat=ier)
+             b_R_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
+             b_R_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
+             b_R_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
+             b_R_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS),stat=ier)
     if( ier /= 0 ) stop 'error allocating array b_R_xx etc.'
 
     ! note: these arrays are needed for attenuation and/or kernel computations

@@ -106,9 +106,9 @@
 !=============================================================================
 
   subroutine compute_arrays_adjoint_source(myrank, adj_source_file, &
-                    xi_receiver,eta_receiver,gamma_receiver, adj_sourcearray, &
-                    xigll,yigll,zigll, &
-                    it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC)
+                                           xi_receiver,eta_receiver,gamma_receiver, adj_sourcearray, &
+                                           xigll,yigll,zigll, &
+                                           it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC)
 
   implicit none
 
@@ -132,7 +132,7 @@
   double precision :: hxir(NGLLX), hpxir(NGLLX), hetar(NGLLY), hpetar(NGLLY), &
         hgammar(NGLLZ), hpgammar(NGLLZ)
 
-  real(kind=CUSTOM_REAL) :: adj_src(NTSTEP_BETWEEN_READ_ADJSRC,NDIM)
+  real(kind=CUSTOM_REAL), dimension(NTSTEP_BETWEEN_READ_ADJSRC,NDIM) :: adj_src
 
   integer icomp, itime, i, j, k, ios, it_start, it_end
   double precision :: junk
@@ -149,8 +149,7 @@
   it_start = NSTEP - it_sub_adj*NTSTEP_BETWEEN_READ_ADJSRC + 1
   it_end   = it_start + NTSTEP_BETWEEN_READ_ADJSRC - 1
 
-  !adj_sourcearray(:,:,:,:,:) = 0.
-  adj_src = 0._CUSTOM_REAL
+  adj_src(:,:) = 0._CUSTOM_REAL
 
   ! loops over components
   do icomp = 1, NDIM

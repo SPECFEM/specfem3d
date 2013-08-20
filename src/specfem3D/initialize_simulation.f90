@@ -137,16 +137,16 @@
   ! reads in numbers of spectral elements and points for the part of the mesh handled by this process
   call create_name_database(prname,myrank,LOCAL_PATH)
   if (OLD_TEST_TO_FIX_ONE_DAY) call create_name_database(dsmname,myrank,TRAC_PATH)  !! VM VM
-  open(unit=27,file=prname(1:len_trim(prname))//'external_mesh.bin',status='old',&
+  open(unit=IIN,file=prname(1:len_trim(prname))//'external_mesh.bin',status='old',&
         action='read',form='unformatted',iostat=ier)
   if( ier /= 0 ) then
     print*,'error: could not open database '
     print*,'path: ',prname(1:len_trim(prname))//'external_mesh.bin'
     call exit_mpi(myrank,'error opening database')
   endif
-  read(27) NSPEC_AB
-  read(27) NGLOB_AB
-  close(27)
+  read(IIN) NSPEC_AB
+  read(IIN) NGLOB_AB
+  close(IIN)
 
   ! attenuation arrays size
   if( ATTENUATION ) then
@@ -401,6 +401,14 @@
     NSPEC_BOUN = NSPEC_AB
   else
     NSPEC_BOUN = 1
+  endif
+
+  ! transversely isotropic kernel flags
+  if( SIMULATION_TYPE == 3 ) then
+    if( SAVE_TRANSVERSE_KL .eqv. .true. .and. ANISOTROPIC_KL .eqv. .false. ) then
+      call exit_mpi(myrank, &
+        'for kernel simulations with SAVE_TRANSVERSE_KL set to .true., please also set ANISOTROPIC_KL to .true. in constants.h')
+    endif
   endif
 
   end subroutine initialize_simulation_adjoint

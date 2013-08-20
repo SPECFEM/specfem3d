@@ -124,7 +124,7 @@ subroutine compute_forces_poroelastic()
 
     else
       ! on GPU
-stop 'GPU for poroelastic simulation not implemented'
+      call exit_MPI(myrank,'GPU for poroelastic simulation not implemented')
     endif ! GPU_MODE
 
 ! adds poroelastic absorbing boundary terms to accelerations (type Stacey conditions)
@@ -259,12 +259,6 @@ stop 'GPU for poroelastic simulation not implemented'
                         b_request_send_vector_ext_meshs,b_request_recv_vector_ext_meshs, &
                         b_request_send_vector_ext_meshw,b_request_recv_vector_ext_meshw)
       endif !adjoint
-
-    !! DK DK May 2009: removed this because now each slice of a CUBIT + SCOTCH mesh
-    !! DK DK May 2009: has a different number of spectral elements and therefore
-    !! DK DK May 2009: only the general non-blocking MPI routines assemble_MPI_vector_ext_mesh_s
-    !! DK DK May 2009: and assemble_MPI_vector_ext_mesh_w above can be used.
-    !! DK DK May 2009: For adjoint runs below (SIMULATION_TYPE == 3) they should be used as well.
 
     endif
   enddo

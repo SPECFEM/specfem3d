@@ -32,8 +32,8 @@
  subroutine memory_eval(NSPEC_AB,NGLOB_AB,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh,&
                         APPROXIMATE_OCEAN_LOAD,memory_size)
 
-   use generate_databases_par, only: PML_CONDITIONS,nspec_cpml
-  use create_regions_mesh_ext_par,only: NSPEC_ANISO,ispec_is_acoustic,ispec_is_elastic
+  use generate_databases_par, only: PML_CONDITIONS,nspec_cpml
+  use create_regions_mesh_ext_par,only: NSPEC_ANISO,ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic
 
   implicit none
 
@@ -46,7 +46,7 @@
   ! output
   double precision, intent(out) :: memory_size
   ! local parameters
-  logical :: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION
+  logical :: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,POROELASTIC_SIMULATION
 
   memory_size = 0.d0
 
@@ -159,6 +159,17 @@
     endif
   endif
 
+  ! elastic arrays
+  call any_all_l( ANY(ispec_is_poroelastic), POROELASTIC_SIMULATION )
+  if( POROELASTIC_SIMULATION ) then
+    ! displs_poroelastic,..
+    memory_size = memory_size + 6.d0*dble(NDIM)*NGLOB_AB*dble(CUSTOM_REAL)
+    ! rmass_solid_poroelastic,..
+    memory_size = memory_size + 2.d0*NGLOB_AB*dble(CUSTOM_REAL)
+    ! rhoarraystore,..
+    memory_size = memory_size + 17.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*NSPEC_AB*dble(CUSTOM_REAL)
+  endif
+
   ! skipping boundary surfaces
   ! skipping free surfaces
   ! skipping acoustic-elastic coupling surfaces
@@ -171,14 +182,26 @@
   memory_size = memory_size + max_nibool_interfaces_ext_mesh*num_interfaces_ext_mesh*dble(SIZE_INTEGER)
 
   ! MPI communications
-  ! buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh
-  memory_size = memory_size + 2.d0*dble(NDIM)*max_nibool_interfaces_ext_mesh*num_interfaces_ext_mesh*dble(CUSTOM_REAL)
+  if( ACOUSTIC_SIMULATION ) then
+    ! buffer_send_scalar_ext_mesh,buffer_recv_scalar_ext_mesh
+    memory_size = memory_size + 2.d0*max_nibool_interfaces_ext_mesh*num_interfaces_ext_mesh*dble(CUSTOM_REAL)
+    ! request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh
+    memory_size = memory_size + 2.d0*num_interfaces_ext_mesh*dble(SIZE_INTEGER)
+  endif
 
-  ! buffer_send_scalar_ext_mesh,buffer_recv_scalar_ext_mesh
-  memory_size = memory_size + 2.d0*max_nibool_interfaces_ext_mesh*num_interfaces_ext_mesh*dble(CUSTOM_REAL)
+  if( ELASTIC_SIMULATION ) then
+    ! buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh
+    memory_size = memory_size + 2.d0*dble(NDIM)*max_nibool_interfaces_ext_mesh*num_interfaces_ext_mesh*dble(CUSTOM_REAL)
+    ! request_send_vector_ext_mesh,request_recv_vector_ext_mesh
+    memory_size = memory_size + 2.d0*num_interfaces_ext_mesh*dble(SIZE_INTEGER)
+  endif
 
-  ! request_send_vector_ext_mesh,request_recv_vector_ext_mesh,request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh
-  memory_size = memory_size + 4.d0*num_interfaces_ext_mesh*dble(SIZE_INTEGER)
+  if( POROELASTIC_SIMULATION ) then
+    ! buffer_send_vector_ext_mesh_s,..
+    memory_size = memory_size + 4.d0*dble(NDIM)*max_nibool_interfaces_ext_mesh*num_interfaces_ext_mesh*dble(CUSTOM_REAL)
+    ! request_send_vector_ext_mesh_s,..
+    memory_size = memory_size + 4.d0*num_interfaces_ext_mesh*dble(SIZE_INTEGER)
+  endif
 
   ! ispec_is_inner
   memory_size = memory_size + NSPEC_AB*dble(SIZE_LOGICAL)

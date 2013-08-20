@@ -88,7 +88,7 @@
   if( num_abs_boundary_faces == 0 ) return
 
 ! adjoint simulations:
-  if (SIMULATION_TYPE == 3 .and. num_abs_boundary_faces > 0)  then
+  if( SIMULATION_TYPE == 3 ) then
     ! reads in absorbing boundary array when first phase is running
     if( phase_is_inner .eqv. .false. ) then
       ! note: the index NSTEP-it+1 is valid if b_displ is read in after the Newmark scheme
@@ -191,7 +191,7 @@
      enddo
 
   ! adjoint simulations: stores absorbed wavefield part
-  if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD .and. num_abs_boundary_faces > 0 ) then
+  if( SIMULATION_TYPE == 1 .and. SAVE_FORWARD ) then
     ! writes out absorbing boundary value only when second phase is running
     if( phase_is_inner .eqv. .true. ) then
       ! uses fortran routine

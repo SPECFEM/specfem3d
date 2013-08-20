@@ -115,7 +115,7 @@
 
 ! to plot total energy curves, for instance to monitor how CPML absorbing layers behave;
 ! should be turned OFF in most cases
-  logical, parameter :: output_energy = .false. ! .true.
+  logical, parameter :: OUTPUT_ENERGY = .false. ! .true.
   integer, parameter :: IOUT_ENERGY = 937  ! file number for the energy file
   integer, parameter :: NTSTEP_BETWEEN_OUTPUT_ENERGY = 10  ! how often we compute energy (which is expensive to compute)
 

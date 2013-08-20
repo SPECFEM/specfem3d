@@ -363,8 +363,7 @@ module specfem_par_elastic
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: b_epsilon_trace_over_3
 
   ! adjoint kernels
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rho_kl, mu_kl, kappa_kl, &
-    rhop_kl, beta_kl, alpha_kl
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rho_kl, mu_kl, kappa_kl
 
   ! anisotropic kernels
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: cijkl_kl

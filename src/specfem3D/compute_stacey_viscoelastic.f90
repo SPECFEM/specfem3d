@@ -101,20 +101,6 @@
   ! checks if anything to do
   if( num_abs_boundary_faces == 0 ) return
 
-! adjoint simulations:
-  if (SIMULATION_TYPE == 3 .and. num_abs_boundary_faces > 0)  then
-    ! reads in absorbing boundary array when first phase is running
-    if( phase_is_inner .eqv. .false. ) then
-      ! note: the index NSTEP-it+1 is valid if b_displ is read in after the Newmark scheme
-      ! uses fortran routine
-      !read(IOABS,rec=NSTEP-it+1) reclen1,b_absorb_field,reclen2
-      !if (reclen1 /= b_reclen_field .or. reclen1 /= reclen2) &
-      !  call exit_mpi(0,'Error reading absorbing contribution b_absorb_field')
-      ! uses c routine for faster reading
-      call read_abs(0,b_absorb_field,b_reclen_field,NSTEP-it+1)
-    endif
-  endif !adjoint
-
   ! absorbs absorbing-boundary surface using Stacey condition (Clayton & Enquist)
   do iface=1,num_abs_boundary_faces
 
@@ -182,7 +168,7 @@
   enddo
 
   ! adjoint simulations: stores absorbed wavefield part
-  if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD .and. num_abs_boundary_faces > 0 ) then
+  if( SIMULATION_TYPE == 1 .and. SAVE_FORWARD ) then
     ! writes out absorbing boundary value only when second phase is running
     if( phase_is_inner .eqv. .true. ) then
       ! uses fortran routine
@@ -214,6 +200,8 @@
                         NSTEP,it,NGLOB_ADJOINT,b_accel, &
                         b_num_abs_boundary_faces,b_reclen_field,b_absorb_field)
 
+  use specfem_par,only: myrank
+
   implicit none
 
   include "constants.h"
@@ -244,51 +232,48 @@
 ! local parameters
   integer :: ispec,iglob,i,j,k,iface,igll
 
+  ! checks
+  if (SIMULATION_TYPE /= 3 ) &
+    call exit_MPI(myrank,'error calling routine compute_stacey_viscoelastic_bpwf() with wrong SIMULATION_TYPE')
+
   ! checks if anything to do
   if( num_abs_boundary_faces == 0 ) return
 
-! adjoint simulations:
-  if (SIMULATION_TYPE == 3 .and. num_abs_boundary_faces > 0)  then
-    ! reads in absorbing boundary array when first phase is running
-    if( phase_is_inner .eqv. .false. ) then
-      ! note: the index NSTEP-it+1 is valid if b_displ is read in after the Newmark scheme
-      ! uses fortran routine
-      !read(IOABS,rec=NSTEP-it+1) reclen1,b_absorb_field,reclen2
-      !if (reclen1 /= b_reclen_field .or. reclen1 /= reclen2) &
-      !  call exit_mpi(0,'Error reading absorbing contribution b_absorb_field')
-      ! uses c routine for faster reading
-      call read_abs(0,b_absorb_field,b_reclen_field,NSTEP-it+1)
-    endif
-  endif !adjoint
+  ! adjoint simulations:
+  ! reads in absorbing boundary array when first phase is running
+  if( phase_is_inner .eqv. .false. ) then
+    ! note: the index NSTEP-it+1 is valid if b_displ is read in after the Newmark scheme
+    ! uses fortran routine
+    !read(IOABS,rec=NSTEP-it+1) reclen1,b_absorb_field,reclen2
+    !if (reclen1 /= b_reclen_field .or. reclen1 /= reclen2) &
+    !  call exit_mpi(0,'Error reading absorbing contribution b_absorb_field')
+    ! uses c routine for faster reading
+    call read_abs(0,b_absorb_field,b_reclen_field,NSTEP-it+1)
+  endif
 
   ! absorbs absorbing-boundary surface using Stacey condition (Clayton & Enquist)
   do iface=1,num_abs_boundary_faces
 
-     ispec = abs_boundary_ispec(iface)
+    ispec = abs_boundary_ispec(iface)
 
-     if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
+    if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
 
-        if( ispec_is_elastic(ispec) ) then
+      if( ispec_is_elastic(ispec) ) then
+        ! reference gll points on boundary face
+        do igll = 1,NGLLSQUARE
+          ! gets local indices for GLL point
+          i = abs_boundary_ijk(1,igll,iface)
+          j = abs_boundary_ijk(2,igll,iface)
+          k = abs_boundary_ijk(3,igll,iface)
 
-           ! reference gll points on boundary face
-           do igll = 1,NGLLSQUARE
+          ! gets velocity
+          iglob=ibool(i,j,k,ispec)
 
-              ! gets local indices for GLL point
-              i = abs_boundary_ijk(1,igll,iface)
-              j = abs_boundary_ijk(2,igll,iface)
-              k = abs_boundary_ijk(3,igll,iface)
-
-              ! gets velocity
-              iglob=ibool(i,j,k,ispec)
-
-              ! adjoint simulations
-              if (SIMULATION_TYPE == 3) then
-                 b_accel(:,iglob) = b_accel(:,iglob) - b_absorb_field(:,igll,iface)
-              endif !adjoint
-
-           enddo
-        endif ! ispec_is_elastic
-     endif ! ispec_is_inner
+          ! adjoint simulations
+          b_accel(:,iglob) = b_accel(:,iglob) - b_absorb_field(:,igll,iface)
+        enddo
+      endif ! ispec_is_elastic
+    endif ! ispec_is_inner
   enddo
 
   end subroutine compute_stacey_viscoelastic_bpwf
@@ -385,7 +370,7 @@
   if( num_abs_boundary_faces == 0 ) return
 
 ! adjoint simulations:
-  if (SIMULATION_TYPE == 3 .and. num_abs_boundary_faces > 0)  then
+  if( SIMULATION_TYPE == 3 ) then
     ! reads in absorbing boundary array when first phase is running
     if( phase_is_inner .eqv. .false. ) then
       ! note: the index NSTEP-it+1 is valid if b_displ is read in after the Newmark scheme
@@ -398,12 +383,10 @@
     endif
   endif !adjoint
 
-  if( num_abs_boundary_faces > 0 ) &
-    call compute_stacey_viscoelastic_cuda(Mesh_pointer,phase_is_inner, &
-                                          SAVE_FORWARD,b_absorb_field)
+  call compute_stacey_viscoelastic_cuda(Mesh_pointer,phase_is_inner,b_absorb_field)
 
   ! adjoint simulations: stores absorbed wavefield part
-  if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD .and. num_abs_boundary_faces > 0 ) then
+  if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD ) then
     ! writes out absorbing boundary value only when second phase is running
     if( phase_is_inner .eqv. .true. ) then
       ! uses fortran routine
