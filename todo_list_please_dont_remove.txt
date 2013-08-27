@@ -49,6 +49,25 @@ doublecheck carefully file memory_eval.f90 in SPECFEM3D_Cartesian (already done 
 and thus new big arrays have been used, in particular for C-PML (but only in the CPML layers for these arrays, not in the rest of the model);
 Thus we should make sure that all these arrays are taken into account in the memory estimate computed in memory_eval.f90.
 
+---------
+
+A bug report received for SPECFEM2D:
+
+Subject: [CIG-SEISMO] only one partition of "model_velocity.dat_output" will be generated in parallel run
+Date: Mon, 12 Aug 2013 18:03:40 +0100
+From: Yingzi Ying
+To: cig-seismo
+
+Dear SPECFEM Developers,
+
+In parallel running of xspecfem2D, only one partition of "model_velocity.dat_output" will be generated.
+Both mpirun and mpiexec executions have been tested.
+The whole mesh can be generated in serial running.
+Just a bug report.
+
+Thanks,
+Yingzi
+
 
 ------------------------------------------------
 CPML :
