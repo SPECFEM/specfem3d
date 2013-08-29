@@ -1,0 +1,16 @@
+
+in file scotch/src/libscotch/common.c change:
+
+    clock_gettime(CLOCK_REALTIME, &tp);
+
+to:
+
+#if defined(_POSIX_TIMERS) && _POSIX_TIMERS > 0
+    clock_gettime(CLOCK_REALTIME, &tp);
+#else
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    tp.tv_sec = tv.tv_sec;
+    tp.tv_nsec = tv.tv_usec * 1000;
+#endif
+
