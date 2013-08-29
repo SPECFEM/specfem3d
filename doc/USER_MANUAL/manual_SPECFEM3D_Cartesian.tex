@@ -398,7 +398,7 @@ IBM machine with the \texttt{xlf} and \texttt{xlc} compilers, using
 \texttt{-q64} is usually sufficient.\\
 
 
-Note that we use CUBIT to create meshes of hexahedra, but other packages
+Note that we use CUBIT (now called Trelis) to create meshes of hexahedra, but other packages
 can be used as well, for instance GiD from \url{http://gid.cimne.upc.es}
 or Gmsh from \url{http://geuz.org/gmsh} \citep{GeRe09}. Even mesh
 creation packages that generate tetrahedra, for instance TetGen from
@@ -2531,8 +2531,8 @@ as the regular \texttt{DATA/STATIONS} file.
 \begin{itemize}
 \item Depending on what type of misfit function is used for the source inversion,
 adjoint sources need to be computed from the original recorded seismograms
-for the selected stations and saved in the \texttt{OUTPUT\_FILES/SEM/}
-directory with the format \texttt{STA.NT.BX?.adj}, where \texttt{STA},
+for the selected stations and saved in a sub-directory called \texttt{SEM/}
+in the root directory of the code, with the format \texttt{STA.NT.BX?.adj}, where \texttt{STA},
 \texttt{NT} are the station name and network code given in the \texttt{DATA/STATIONS\_ADJOINT}
 file, and \texttt{BX?} represents the component name of a particular
 adjoint seismogram. Please note that the band code can change depending
@@ -2654,7 +2654,7 @@ xcreate\_adjsrc\_amplitude~t1~t2~ifile{[}0-5{]}~E/N/Z-ascii-files~{[}baz{]}.
 
 
 With the successful forward simulation and the adjoint source ready
-in the \texttt{OUTPUT\_FILES/SEM/} directory, set \texttt{SIMULATION\_TYPE
+in the \texttt{SEM/} directory, set \texttt{SIMULATION\_TYPE
 = 3} and \texttt{SAVE\_FORWARD = .false.} in the \texttt{Par\_file}
 (you can use \texttt{change\_simulation\_type.pl -b}), and rerun the
 solver.
@@ -3563,9 +3563,9 @@ run\_lsf.bash~-{}-gm-no-shmem~-{}-gm-copy-env~\$current\_pwd/xspecfem3D~~\\
 cd~current\_pwd/~~~\\
 
 
-mkdir~-p~OUTPUT\_FILES/SEM
+mkdir~-p~SEM
 
-cd~OUTPUT\_FILES/SEM/~
+cd~SEM/~
 
 collect\_seismo.pl~../OUTPUT\_FILES/lsf\_machines
 
