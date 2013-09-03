@@ -39,7 +39,7 @@ close(XY);
 
 #print "\n -- $lines[0] -- $lines[1] -- $lines[2] -- $lines[3] -- $lines[4] -- $lines[5] \n";
 
-($xsrc,$ysrc,undef) = split(" ",$lines[5]);
+#($xsrc,$ysrc,undef) = split(" ",$lines[5]);
 $nlines = @lines;
 $nrec = $nlines - $nsrc - 6;
 
@@ -73,8 +73,11 @@ print FILE3 "$lines[0]";
 print FILE3 "Epicenter VTK file\n";
 print FILE3 "$lines[2]";
 print FILE3 "$lines[3]";
-print FILE3 "POINTS      1 float\n";
-print FILE3 "$xsrc $ysrc $zepi";
+print FILE3 "POINTS     $nsrc float\n";
+for ($k=5; $k <= $nsrc+4; $k=$k+1) {
+   ($x,$y,undef) = split("\ ",$lines[$k]);
+   print FILE3 "$x $y $zepi\n";
+}
 close(FILE3);
 
 print "\n-- writing out source.vtk, epicenter.vtk, receiver.vtk in directory $odir --\n";
