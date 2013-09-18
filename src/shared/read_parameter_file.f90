@@ -388,26 +388,35 @@
 !!                            and read with the help of ADIOS.
 !! \param ADIOS_FOR_MESH flag to indicate if the mesh (generate database) is
 !!                       written using ADIOS.
+!! \param ADIOS_FOR_FORWARD_ARRAYS flag to indicate if the solver forward arrays
+!!                                 are written using ADIOS.
+!! \param ADIOS_FOR_KERNELS flag to indicate if the kernels are saved using
+!!                          adios
 !! \author MPBL
-subroutine read_adios_parameters(ADIOS_ENABLED, ADIOS_FOR_DATABASES, &
-                                 ADIOS_FOR_MESH, ADIOS_FOR_KERNELS) 
+subroutine read_adios_parameters(ADIOS_ENABLED, ADIOS_FOR_DATABASES,       &
+                                 ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, &
+                                 ADIOS_FOR_KERNELS) 
   implicit none
   include "constants.h"
   
-  logical, intent(out) :: ADIOS_ENABLED, ADIOS_FOR_DATABASES, &
-                          ADIOS_FOR_MESH, ADIOS_FOR_KERNELS
+  logical, intent(out) :: ADIOS_ENABLED, ADIOS_FOR_DATABASES,       &
+                          ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, &
+                          ADIOS_FOR_KERNELS
 
   ! initialize flags to false
-  ADIOS_ENABLED       = .false.
-  ADIOS_FOR_DATABASES = .false.
-  ADIOS_FOR_MESH      = .false.
-  ADIOS_FOR_KERNELS   = .false.
+  ADIOS_ENABLED            = .false.
+  ADIOS_FOR_DATABASES      = .false.
+  ADIOS_FOR_MESH           = .false.
+  ADIOS_FOR_FORWARD_ARRAYS = .false.
+  ADIOS_FOR_KERNELS        = .false.
   ! opens file Par_file
   call open_parameter_file()
   call read_value_logical(ADIOS_ENABLED, 'solver.ADIOS_ENABLED')
   if (ADIOS_ENABLED) then
     call read_value_logical(ADIOS_FOR_DATABASES, 'solver.ADIOS_FOR_DATABASES')
     call read_value_logical(ADIOS_FOR_MESH, 'solver.ADIOS_FOR_MESH')
+    call read_value_logical(ADIOS_FOR_FORWARD_ARRAYS, &
+                           'solver.ADIOS_FOR_FORWARD_ARRAYS')
     call read_value_logical(ADIOS_FOR_KERNELS, 'solver.ADIOS_FOR_KERNELS')
   endif 
   call close_parameter_file()

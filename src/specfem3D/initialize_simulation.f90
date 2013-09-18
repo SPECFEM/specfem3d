@@ -53,8 +53,9 @@
                         USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
                         PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,FULL_ATTENUATION_SOLID,TRAC_PATH)
 
-  call read_adios_parameters(ADIOS_ENABLED, ADIOS_FOR_DATABASES, &
-                             ADIOS_FOR_MESH, ADIOS_FOR_KERNELS)
+  call read_adios_parameters(ADIOS_ENABLED, ADIOS_FOR_DATABASES,       &
+                             ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, &
+                             ADIOS_FOR_KERNELS)
 
 !! DK DK added this for now (March 2013) because CPML is not yet implemented for USE_DEVILLE_PRODUCTS;
 !! DK DK we will soon add it (in a month or so)

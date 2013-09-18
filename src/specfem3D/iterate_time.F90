@@ -231,76 +231,82 @@
 ! note: this is done here after the Newmark time scheme, otherwise the indexing for sources
 !          and adjoint sources will become more complicated
 !          that is, index it for adjoint sources will match index NSTEP - 1 for backward/reconstructed wavefields
+  if (ADIOS_FOR_FORWARD_ARRAYS) then
+    call read_forward_arrays_adios()
+  else
+    ! reads in wavefields
+    open(unit=IIN,file=trim(prname)//'save_forward_arrays.bin',status='old',&
+          action='read',form='unformatted',iostat=ier)
+    if( ier /= 0 ) then
+      print*,'error: opening save_forward_arrays'
+      print*,'path: ',trim(prname)//'save_forward_arrays.bin'
+      call exit_mpi(myrank,'error open file save_forward_arrays.bin')
+    endif
 
-  ! reads in wavefields
-  open(unit=IIN,file=trim(prname)//'save_forward_arrays.bin',status='old',&
-        action='read',form='unformatted',iostat=ier)
-  if( ier /= 0 ) then
-    print*,'error: opening save_forward_arrays'
-    print*,'path: ',trim(prname)//'save_forward_arrays.bin'
-    call exit_mpi(myrank,'error open file save_forward_arrays.bin')
+    if( ACOUSTIC_SIMULATION ) then
+      read(IIN) b_potential_acoustic
+      read(IIN) b_potential_dot_acoustic
+      read(IIN) b_potential_dot_dot_acoustic
+    endif
+
+    ! elastic wavefields
+    if( ELASTIC_SIMULATION ) then
+      read(IIN) b_displ
+      read(IIN) b_veloc
+      read(IIN) b_accel
+      ! memory variables if attenuation
+      if( ATTENUATION ) then
+        if(FULL_ATTENUATION_SOLID) read(IIN) b_R_trace
+        read(IIN) b_R_xx
+        read(IIN) b_R_yy
+        read(IIN) b_R_xy
+        read(IIN) b_R_xz
+        read(IIN) b_R_yz
+        if(FULL_ATTENUATION_SOLID) read(IIN) b_epsilondev_trace
+        read(IIN) b_epsilondev_xx
+        read(IIN) b_epsilondev_yy
+        read(IIN) b_epsilondev_xy
+        read(IIN) b_epsilondev_xz
+        read(IIN) b_epsilondev_yz
+      endif ! ATTENUATION
+    endif
+
+    ! poroelastic wavefields
+    if( POROELASTIC_SIMULATION ) then
+      read(IIN) b_displs_poroelastic
+      read(IIN) b_velocs_poroelastic
+      read(IIN) b_accels_poroelastic
+      read(IIN) b_displw_poroelastic
+      read(IIN) b_velocw_poroelastic
+      read(IIN) b_accelw_poroelastic
+    endif
+
+    close(IIN)
   endif
 
-  if( ACOUSTIC_SIMULATION ) then
-    read(IIN) b_potential_acoustic
-    read(IIN) b_potential_dot_acoustic
-    read(IIN) b_potential_dot_dot_acoustic
-
+  if(GPU_MODE) then
+    if( ACOUSTIC_SIMULATION ) then
     ! transfers fields onto GPU
-    if(GPU_MODE) then
       call transfer_b_fields_ac_to_device(NGLOB_AB,b_potential_acoustic, &
-                                          b_potential_dot_acoustic, b_potential_dot_dot_acoustic, Mesh_pointer)
+                                          b_potential_dot_acoustic,      &
+                                          b_potential_dot_dot_acoustic,  &
+                                          Mesh_pointer)
     endif
-  endif
-
-  ! elastic wavefields
-  if( ELASTIC_SIMULATION ) then
-    read(IIN) b_displ
-    read(IIN) b_veloc
-    read(IIN) b_accel
-
-    ! puts elastic wavefield to GPU
-    if(GPU_MODE) then
+    ! elastic wavefields
+    if( ELASTIC_SIMULATION ) then
+      ! puts elastic wavefield to GPU
       call transfer_b_fields_to_device(NDIM*NGLOB_AB,b_displ,b_veloc,b_accel,Mesh_pointer)
-    endif
-
-    ! memory variables if attenuation
-    if( ATTENUATION ) then
-      if(FULL_ATTENUATION_SOLID) read(IIN) b_R_trace
-      read(IIN) b_R_xx
-      read(IIN) b_R_yy
-      read(IIN) b_R_xy
-      read(IIN) b_R_xz
-      read(IIN) b_R_yz
-      if(FULL_ATTENUATION_SOLID) read(IIN) b_epsilondev_trace
-      read(IIN) b_epsilondev_xx
-      read(IIN) b_epsilondev_yy
-      read(IIN) b_epsilondev_xy
-      read(IIN) b_epsilondev_xz
-      read(IIN) b_epsilondev_yz
-
-      ! puts elastic attenuation arrays to GPU
-      if(GPU_MODE) then
-          call transfer_b_fields_att_to_device(Mesh_pointer, &
-                    b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
-                    size(b_R_xx), &
-                    b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy,b_epsilondev_xz,b_epsilondev_yz, &
-                    size(b_epsilondev_xx))
+      ! memory variables if attenuation
+      if( ATTENUATION ) then
+        call transfer_b_fields_att_to_device(Mesh_pointer,                    & 
+                           b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz,                & 
+                           size(b_R_xx),                                      & 
+                           b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy,   &
+                           b_epsilondev_xz,b_epsilondev_yz,                   & 
+                           size(b_epsilondev_xx))
       endif
-    endif ! ATTENUATION
+    endif
   endif
-
-  ! poroelastic wavefields
-  if( POROELASTIC_SIMULATION ) then
-    read(IIN) b_displs_poroelastic
-    read(IIN) b_velocs_poroelastic
-    read(IIN) b_accels_poroelastic
-    read(IIN) b_displw_poroelastic
-    read(IIN) b_velocw_poroelastic
-    read(IIN) b_accelw_poroelastic
-  endif
-
-  close(IIN)
 
   end subroutine it_read_forward_arrays
 
