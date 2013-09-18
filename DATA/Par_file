@@ -5,7 +5,7 @@
 SIMULATION_TYPE                 = 3
 # 0 = earthquake simulation,  1/2/3 = three steps in noise simulation
 NOISE_TOMOGRAPHY                = 0
-SAVE_FORWARD                    = .false.
+SAVE_FORWARD                    = .true.
 
 # UTM projection parameters
 UTM_PROJECTION_ZONE             = 11
@@ -15,7 +15,7 @@ SUPPRESS_UTM_PROJECTION         = .false.
 NPROC                           = 4
 
 # time step parameters
-NSTEP                           = 2000
+NSTEP                           = 200
 DT                              = 0.03
 
 # number of nodes for 2D and 3D shape functions for hexahedra

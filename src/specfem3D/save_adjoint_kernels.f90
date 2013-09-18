@@ -40,14 +40,47 @@
 !> Save kernels.
 subroutine save_adjoint_kernels()
 
-  use specfem_par
-  use specfem_par_acoustic
-  use specfem_par_elastic
-  use specfem_par_poroelastic
+  use constants, only: CUSTOM_REAL, SAVE_TRANSVERSE_KL, ANISOTROPIC_KL, &
+                       APPROXIMATE_HESS_KL, NGLLX, NGLLY, NGLLZ
+  use specfem_par, only: LOCAL_PATH, myrank, sigma_kl, NSPEC_AB, &
+                         ADIOS_FOR_KERNELS, NOISE_TOMOGRAPHY, NSPEC_ADJOINT
+  use specfem_par_acoustic, only: ACOUSTIC_SIMULATION
+  use specfem_par_elastic, only: ELASTIC_SIMULATION
+  use specfem_par_poroelastic, only: POROELASTIC_SIMULATION
 
   implicit none
 
+  interface
+    subroutine save_kernels_elastic(adios_handle, alphav_kl, alphah_kl, &
+                                    betav_kl, betah_kl, eta_kl,         &
+                                    rhop_kl, alpha_kl, beta_kl)
+
+      integer(kind=8) :: adios_handle
+      ! FIXME
+      ! Break the CUSTOM_REAL stuff.
+      ! put all this file in a module so interface is implicit
+      ! OR
+      ! redo what was done before SVN revision 22718
+      !
+      ! see other FIXME below (same than see one)
+      real(kind=4), dimension(:,:,:,:), allocatable :: &
+          alphav_kl,alphah_kl,betav_kl,betah_kl, &
+          eta_kl, rhop_kl, alpha_kl, beta_kl
+    end subroutine save_kernels_elastic
+  end interface
+
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: alphav_kl, &
+                                                            alphah_kl, &
+                                                            betav_kl,  &
+                                                            betah_kl,  &
+                                                            eta_kl
+
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: rhop_kl,  &
+                                                            alpha_kl, &
+                                                            beta_kl
+
   integer(kind=8) :: adios_handle
+  integer :: ier
 
   ! flag to save GLL weights
   logical,parameter :: SAVE_WEIGHTS = .false.
@@ -63,7 +96,41 @@ subroutine save_adjoint_kernels()
 
   ! elastic domains
   if( ELASTIC_SIMULATION ) then
-    call save_kernels_elastic(adios_handle)
+    ! allocates temporary transversely isotropic kernels
+    if( ANISOTROPIC_KL ) then
+      if( SAVE_TRANSVERSE_KL ) then
+        allocate(alphav_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+                 alphah_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+                 betav_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+                 betah_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+                 eta_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+                 stat=ier)
+        if( ier /=0 ) stop 'error allocating arrays alphav_kl,...'
+
+        ! derived kernels
+        ! vp kernel
+        allocate(alpha_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+        if( ier /= 0 ) stop 'error allocating array alpha_kl'
+        ! vs kernel
+        allocate(beta_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+        if( ier /= 0 ) stop 'error allocating array beta_kl'
+      endif
+    else
+      ! derived kernels
+      ! vp kernel
+      allocate(alpha_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+      if( ier /= 0 ) stop 'error allocating array alpha_kl'
+      ! vs kernel
+      allocate(beta_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+      if( ier /= 0 ) stop 'error allocating array beta_kl'
+      ! density prime kernel
+      allocate(rhop_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+      if( ier /= 0 ) stop 'error allocating array rhop_kl'
+    endif
+
+    call save_kernels_elastic(adios_handle, alphav_kl, alphah_kl, &
+                              betav_kl, betah_kl, eta_kl,         &
+                              rhop_kl, alpha_kl, beta_kl)
   endif
 
   if( POROELASTIC_SIMULATION ) then
@@ -88,6 +155,18 @@ subroutine save_adjoint_kernels()
 
   if (ADIOS_FOR_KERNELS) then
     call perform_write_adios_kernels(adios_handle)
+  endif
+
+  if (ELASTIC_SIMULATION) then
+    ! frees temporary arrays
+    if( ANISOTROPIC_KL ) then
+      if( SAVE_TRANSVERSE_KL ) then
+        deallocate(alphav_kl,alphah_kl,betav_kl,betah_kl,eta_kl)
+        deallocate(alpha_kl,beta_kl)
+      endif
+    else
+      deallocate(rhop_kl,alpha_kl,beta_kl)
+    endif
   endif
 
 end subroutine save_adjoint_kernels
@@ -194,14 +273,33 @@ end subroutine save_kernels_acoustic
 
 !==============================================================================
 !> Save elastic related kernels
-subroutine save_kernels_elastic(adios_handle)
+subroutine save_kernels_elastic(adios_handle, alphav_kl, alphah_kl, &
+                                betav_kl, betah_kl, eta_kl,         &
+                                rhop_kl, alpha_kl, beta_kl)
 
   use specfem_par
   use specfem_par_elastic
 
   implicit none
 
+  interface
+    subroutine save_kernels_elastic_adios(adios_handle, alphav_kl, alphah_kl, &
+                                          betav_kl, betah_kl, eta_kl,         &
+                                          rhop_kl, alpha_kl, beta_kl)
+
+      integer(kind=8) :: adios_handle
+      ! FIXME
+      ! see other FIXME above.
+      real(kind=4), dimension(:,:,:,:), allocatable :: &
+          alphav_kl,alphah_kl,betav_kl,betah_kl, &
+          eta_kl, rhop_kl, alpha_kl, beta_kl
+    end subroutine save_kernels_elastic_adios
+  end interface
+
   integer(kind=8) :: adios_handle
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
+    alphav_kl,alphah_kl,betav_kl,betah_kl, &
+    eta_kl, rhop_kl, alpha_kl, beta_kl
 
   ! local parameters
   integer:: ispec,i,j,k,iglob,ier
@@ -211,42 +309,7 @@ subroutine save_kernels_elastic(adios_handle)
   real(kind=CUSTOM_REAL) :: A,N,C,L,F,eta
   real(kind=CUSTOM_REAL), dimension(21) :: cijkl_kl_local
   real(kind=CUSTOM_REAL), dimension(5) :: an_kl
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: alphav_kl,alphah_kl,betav_kl,betah_kl,eta_kl
 
-  ! temporary isotropic kernels
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: rhop_kl,alpha_kl,beta_kl
-
-  ! allocates temporary transversely isotropic kernels
-  if( ANISOTROPIC_KL ) then
-    if( SAVE_TRANSVERSE_KL ) then
-      allocate(alphav_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-               alphah_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-               betav_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-               betah_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-               eta_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-               stat=ier)
-      if( ier /=0 ) stop 'error allocating arrays alphav_kl,...'
-
-      ! derived kernels
-      ! vp kernel
-      allocate(alpha_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array alpha_kl'
-      ! vs kernel
-      allocate(beta_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array beta_kl'
-    endif
-  else
-    ! derived kernels
-    ! vp kernel
-    allocate(alpha_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array alpha_kl'
-    ! vs kernel
-    allocate(beta_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array beta_kl'
-    ! density prime kernel
-    allocate(rhop_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array rhop_kl'
-  endif
 
   ! finalizes calculation of rhop, beta, alpha kernels
   do ispec = 1, NSPEC_AB
@@ -361,7 +424,9 @@ subroutine save_kernels_elastic(adios_handle)
   enddo
 
   if (ADIOS_FOR_KERNELS) then
-    call save_kernels_elastic_adios(adios_handle)
+    call save_kernels_elastic_adios(adios_handle, alphav_kl, alphah_kl, &
+                                      betav_kl, betah_kl, eta_kl,       &
+                                      rhop_kl, alpha_kl, beta_kl)
   else
     if (ANISOTROPIC_KL) then
 
@@ -449,15 +514,6 @@ subroutine save_kernels_elastic(adios_handle)
     endif
   endif
 
-  ! frees temporary arrays
-  if( ANISOTROPIC_KL ) then
-    if( SAVE_TRANSVERSE_KL ) then
-      deallocate(alphav_kl,alphah_kl,betav_kl,betah_kl,eta_kl)
-      deallocate(alpha_kl,beta_kl)
-    endif
-  else
-    deallocate(rhop_kl,alpha_kl,beta_kl)
-  endif
 end subroutine save_kernels_elastic
 
 !==============================================================================
