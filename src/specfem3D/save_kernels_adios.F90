@@ -80,7 +80,7 @@ subroutine define_kernel_adios_variables(handle, SAVE_WEIGHTS)
   ! Type inference for define_adios_global_array1D. Avoid additional args.
   real(kind=CUSTOM_REAL), dimension(1,1,1,1) :: dummy_kernel
 
-  output_name = "OUTPUT_FILES/kernels.bp" 
+  output_name = LOCAL_PATH(1:len_trim(LOCAL_PATH))// "/kernels.bp"
   group_name = "SPECFEM3D_KERNELS"
   call MPI_Comm_dup (MPI_COMM_WORLD, comm, ierr)
 
@@ -217,7 +217,7 @@ subroutine define_kernel_adios_variables(handle, SAVE_WEIGHTS)
   ! Open the handle to file containing all the ADIOS variables |
   ! previously defined                                         |
   !------------------------------------------------------------'
-  call adios_open (handle, group_name, outputname, "w", comm, adios_err)
+  call adios_open (handle, group_name, output_name, "w", comm, adios_err)
   call adios_group_size (handle, groupsize, adios_totalsize, adios_err)
 
   call adios_write(handle, "nspec", NSPEC_AB, ier) 
@@ -312,7 +312,7 @@ subroutine save_kernels_elastic_adios(handle, alphav_kl, alphah_kl, &
   integer:: local_dim
 
   ! Transverse isotropic paramters
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:):: &
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
     alphav_kl,alphah_kl,betav_kl,betah_kl, &
     eta_kl, rhop_kl, alpha_kl, beta_kl
 
