@@ -70,7 +70,8 @@
   character(len=256) OUTPUT_FILES,LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
 
   logical :: ADIOS_ENABLED
-  logical :: ADIOS_FOR_DATABASES, ADIOS_FOR_MESH, ADIOS_FOR_KERNELS
+  logical :: ADIOS_FOR_DATABASES, ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, &
+             ADIOS_FOR_KERNELS
 
 ! parameters deduced from parameters read from file
   integer :: NPROC

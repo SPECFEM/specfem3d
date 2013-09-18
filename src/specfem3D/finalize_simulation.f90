@@ -47,51 +47,55 @@
   ! save last frame
 
   if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
-    open(unit=IOUT,file=prname(1:len_trim(prname))//'save_forward_arrays.bin',&
-          status='unknown',form='unformatted',iostat=ier)
-    if( ier /= 0 ) then
-      print*,'error: opening save_forward_arrays.bin'
-      print*,'path: ',prname(1:len_trim(prname))//'save_forward_arrays.bin'
-      call exit_mpi(myrank,'error opening file save_forward_arrays.bin')
-    endif
-
-    if( ACOUSTIC_SIMULATION ) then
-      write(IOUT) potential_acoustic
-      write(IOUT) potential_dot_acoustic
-      write(IOUT) potential_dot_dot_acoustic
-    endif
-
-    if( ELASTIC_SIMULATION ) then
-      write(IOUT) displ
-      write(IOUT) veloc
-      write(IOUT) accel
-
-      if (ATTENUATION) then
-        if(FULL_ATTENUATION_SOLID) write(IOUT) R_trace  !ZN
-        write(IOUT) R_xx
-        write(IOUT) R_yy
-        write(IOUT) R_xy
-        write(IOUT) R_xz
-        write(IOUT) R_yz
-        if(FULL_ATTENUATION_SOLID) write(IOUT) epsilondev_trace !ZN
-        write(IOUT) epsilondev_xx
-        write(IOUT) epsilondev_yy
-        write(IOUT) epsilondev_xy
-        write(IOUT) epsilondev_xz
-        write(IOUT) epsilondev_yz
+    if (ADIOS_FOR_FORWARD_ARRAYS) then
+      call save_forward_arrays_adios()
+    else
+      open(unit=IOUT,file=prname(1:len_trim(prname))//'save_forward_arrays.bin',&
+            status='unknown',form='unformatted',iostat=ier)
+      if( ier /= 0 ) then
+        print*,'error: opening save_forward_arrays.bin'
+        print*,'path: ',prname(1:len_trim(prname))//'save_forward_arrays.bin'
+        call exit_mpi(myrank,'error opening file save_forward_arrays.bin')
       endif
-    endif
 
-    if( POROELASTIC_SIMULATION ) then
-      write(IOUT) displs_poroelastic
-      write(IOUT) velocs_poroelastic
-      write(IOUT) accels_poroelastic
-      write(IOUT) displw_poroelastic
-      write(IOUT) velocw_poroelastic
-      write(IOUT) accelw_poroelastic
-    endif
+      if( ACOUSTIC_SIMULATION ) then
+        write(IOUT) potential_acoustic
+        write(IOUT) potential_dot_acoustic
+        write(IOUT) potential_dot_dot_acoustic
+      endif
 
-    close(IOUT)
+      if( ELASTIC_SIMULATION ) then
+        write(IOUT) displ
+        write(IOUT) veloc
+        write(IOUT) accel
+
+        if (ATTENUATION) then
+          if(FULL_ATTENUATION_SOLID) write(IOUT) R_trace  !ZN
+          write(IOUT) R_xx
+          write(IOUT) R_yy
+          write(IOUT) R_xy
+          write(IOUT) R_xz
+          write(IOUT) R_yz
+          if(FULL_ATTENUATION_SOLID) write(IOUT) epsilondev_trace !ZN
+          write(IOUT) epsilondev_xx
+          write(IOUT) epsilondev_yy
+          write(IOUT) epsilondev_xy
+          write(IOUT) epsilondev_xz
+          write(IOUT) epsilondev_yz
+        endif
+      endif
+
+      if( POROELASTIC_SIMULATION ) then
+        write(IOUT) displs_poroelastic
+        write(IOUT) velocs_poroelastic
+        write(IOUT) accels_poroelastic
+        write(IOUT) displw_poroelastic
+        write(IOUT) velocw_poroelastic
+        write(IOUT) accelw_poroelastic
+      endif
+
+      close(IOUT)
+    endif
 
 ! adjoint simulations
   else if (SIMULATION_TYPE == 3) then

@@ -203,7 +203,8 @@ module specfem_par
   character(len=256) OUTPUT_FILES,LOCAL_PATH,TOMOGRAPHY_PATH,prname,dsmname,TRAC_PATH
 
   logical :: ADIOS_ENABLED
-  logical :: ADIOS_FOR_DATABASES, ADIOS_FOR_MESH, ADIOS_FOR_KERNELS
+  logical :: ADIOS_FOR_DATABASES, ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, &
+             ADIOS_FOR_KERNELS
 
 ! names of the data files for all the processors in MPI
   character(len=256) outputname

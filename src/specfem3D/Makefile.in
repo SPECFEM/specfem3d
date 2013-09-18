@@ -286,6 +286,8 @@ ADIOS_PREOBJECTS = \
 
 ADIOS_OBJECTS= \
 	$O/read_mesh_databases_adios.adios.o \
+	$O/save_forward_arrays_adios.adios.o \
+	$O/read_forward_arrays_adios.adios.o \
 	$O/save_kernels_adios.adios.o
 
 ADIOS_STUBS = \

@@ -2,10 +2,10 @@
 #
 # forward or adjoint simulation
 # 1 = forward, 2 = adjoint, 3 = both simultaneously
-SIMULATION_TYPE                 = 1
+SIMULATION_TYPE                 = 3
 # 0 = earthquake simulation,  1/2/3 = three steps in noise simulation
 NOISE_TOMOGRAPHY                = 0
-SAVE_FORWARD                    = .true.
+SAVE_FORWARD                    = .false.
 
 # UTM projection parameters
 UTM_PROJECTION_ZONE             = 11
@@ -123,4 +123,5 @@ GPU_MODE                        = .false.
 ADIOS_ENABLED                   = .true.
 ADIOS_FOR_DATABASES             = .true.
 ADIOS_FOR_MESH                  = .true.
+ADIOS_FOR_FORWARD_ARRAYS        = .true.
 ADIOS_FOR_KERNELS               = .true.
