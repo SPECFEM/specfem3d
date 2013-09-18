@@ -160,7 +160,7 @@ module specfem_par
   double precision, dimension(:,:), allocatable :: hxir_store,hetar_store,hgammar_store
 
 ! proc numbers for MPI
-  integer :: myrank
+  integer :: myrank, sizeprocs
 
 ! timer MPI
   double precision, external :: wtime
@@ -201,6 +201,9 @@ module specfem_par
   double precision :: LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX
 
   character(len=256) OUTPUT_FILES,LOCAL_PATH,TOMOGRAPHY_PATH,prname,dsmname,TRAC_PATH
+
+  logical :: ADIOS_ENABLED
+  logical :: ADIOS_FOR_DATABASES, ADIOS_FOR_MESH, ADIOS_FOR_KERNELS
 
 ! names of the data files for all the processors in MPI
   character(len=256) outputname
@@ -535,8 +538,8 @@ module specfem_par_poroelastic
   integer, dimension(:), allocatable :: b_request_recv_vector_ext_meshs
   integer, dimension(:), allocatable :: b_request_recv_vector_ext_meshw
 
-end module specfem_par_poroelastic
 
+end module specfem_par_poroelastic
 
 !=====================================================================
 
@@ -593,4 +596,3 @@ module specfem_par_movie
   logical :: MOVIE_SIMULATION
 
 end module specfem_par_movie
-

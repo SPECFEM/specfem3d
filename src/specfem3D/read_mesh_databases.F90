@@ -676,7 +676,6 @@
       if( ier /= 0 ) stop 'error allocating num_elem_colors_elastic array'
     endif
   endif
-
   close(27)
 
   ! outputs total element numbers
@@ -961,60 +960,64 @@
 
     if( SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3 ) then
 
-      ! boundary elements
-      !open(unit=27,file=prname(1:len_trim(prname))//'ibelm_moho.bin',status='unknown',form='unformatted')
-      open(unit=27,file=prname(1:len_trim(prname))//'ibelm_moho.bin',status='old',&
-            form='unformatted',iostat=ier)
-      if( ier /= 0 ) then
-        print*,'error: could not open ibelm_moho '
-        print*,'path: ',prname(1:len_trim(prname))//'ibelm_moho.bin'
-        call exit_mpi(myrank,'error opening ibelm_moho')
+      if (ADIOS_FOR_MESH) then
+        call read_moho_mesh_adjoint_adios()
+      else
+        ! boundary elements
+        !open(unit=27,file=prname(1:len_trim(prname))//'ibelm_moho.bin',status='unknown',form='unformatted')
+        open(unit=27,file=prname(1:len_trim(prname))//'ibelm_moho.bin',status='old',&
+              form='unformatted',iostat=ier)
+        if( ier /= 0 ) then
+          print*,'error: could not open ibelm_moho '
+          print*,'path: ',prname(1:len_trim(prname))//'ibelm_moho.bin'
+          call exit_mpi(myrank,'error opening ibelm_moho')
+        endif
+
+        read(27) NSPEC2D_MOHO
+
+        ! allocates arrays for moho mesh
+        allocate(ibelm_moho_bot(NSPEC2D_MOHO), &
+                ibelm_moho_top(NSPEC2D_MOHO), &
+                normal_moho_top(NDIM,NGLLSQUARE,NSPEC2D_MOHO), &
+                normal_moho_bot(NDIM,NGLLSQUARE,NSPEC2D_MOHO), &
+                ijk_moho_bot(3,NGLLSQUARE,NSPEC2D_MOHO), &
+                ijk_moho_top(3,NGLLSQUARE,NSPEC2D_MOHO),stat=ier)
+        if( ier /= 0 ) stop 'error allocating array ibelm_moho_bot etc.'
+
+        read(27) ibelm_moho_top
+        read(27) ibelm_moho_bot
+        read(27) ijk_moho_top
+        read(27) ijk_moho_bot
+
+        close(27)
+
+        ! normals
+        open(unit=27,file=prname(1:len_trim(prname))//'normal_moho.bin',status='old',&
+              form='unformatted',iostat=ier)
+        if( ier /= 0 ) then
+          print*,'error: could not open normal_moho '
+          print*,'path: ',prname(1:len_trim(prname))//'normal_moho.bin'
+          call exit_mpi(myrank,'error opening normal_moho')
+        endif
+
+        read(27) normal_moho_top
+        read(27) normal_moho_bot
+        close(27)
+
+        ! flags
+        open(unit=27,file=prname(1:len_trim(prname))//'is_moho.bin',status='old',&
+              form='unformatted',iostat=ier)
+        if( ier /= 0 ) then
+          print*,'error: could not open is_moho '
+          print*,'path: ',prname(1:len_trim(prname))//'is_moho.bin'
+          call exit_mpi(myrank,'error opening is_moho')
+        endif
+
+        read(27) is_moho_top
+        read(27) is_moho_bot
+
+        close(27)
       endif
-
-      read(27) NSPEC2D_MOHO
-
-      ! allocates arrays for moho mesh
-      allocate(ibelm_moho_bot(NSPEC2D_MOHO), &
-              ibelm_moho_top(NSPEC2D_MOHO), &
-              normal_moho_top(NDIM,NGLLSQUARE,NSPEC2D_MOHO), &
-              normal_moho_bot(NDIM,NGLLSQUARE,NSPEC2D_MOHO), &
-              ijk_moho_bot(3,NGLLSQUARE,NSPEC2D_MOHO), &
-              ijk_moho_top(3,NGLLSQUARE,NSPEC2D_MOHO),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array ibelm_moho_bot etc.'
-
-      read(27) ibelm_moho_top
-      read(27) ibelm_moho_bot
-      read(27) ijk_moho_top
-      read(27) ijk_moho_bot
-
-      close(27)
-
-      ! normals
-      open(unit=27,file=prname(1:len_trim(prname))//'normal_moho.bin',status='old',&
-            form='unformatted',iostat=ier)
-      if( ier /= 0 ) then
-        print*,'error: could not open normal_moho '
-        print*,'path: ',prname(1:len_trim(prname))//'normal_moho.bin'
-        call exit_mpi(myrank,'error opening normal_moho')
-      endif
-
-      read(27) normal_moho_top
-      read(27) normal_moho_bot
-      close(27)
-
-      ! flags
-      open(unit=27,file=prname(1:len_trim(prname))//'is_moho.bin',status='old',&
-            form='unformatted',iostat=ier)
-      if( ier /= 0 ) then
-        print*,'error: could not open is_moho '
-        print*,'path: ',prname(1:len_trim(prname))//'is_moho.bin'
-        call exit_mpi(myrank,'error opening is_moho')
-      endif
-
-      read(27) is_moho_top
-      read(27) is_moho_bot
-
-      close(27)
 
       ! moho kernel
       allocate( moho_kl(NGLLSQUARE,NSPEC2D_MOHO),stat=ier)

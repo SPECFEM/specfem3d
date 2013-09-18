@@ -476,7 +476,7 @@
 
 ! reads in material parameters from external binary files
 
-  use generate_databases_par,only: IMODEL
+  use generate_databases_par,only: IMODEL, ADIOS_FOR_MESH
 
   use create_regions_mesh_ext_par
 
@@ -498,15 +498,27 @@
     ! note:
     ! import the model from files in SPECFEM format
     ! note that those those files should be saved in LOCAL_PATH
-    call model_gll(myrank,nspec,LOCAL_PATH)
+    if (ADIOS_FOR_MESH) then
+      call model_gll_adios(myrank,nspec,LOCAL_PATH)
+    else
+      call model_gll(myrank,nspec,LOCAL_PATH)
+    endif
 
   case( IMODEL_IPATI )
     ! import the model from modified files in SPECFEM format
-    call model_ipati(myrank,nspec,LOCAL_PATH)
+    if (ADIOS_FOR_MESH) then
+      call model_ipati_adios(myrank,nspec,LOCAL_PATH)
+    else
+      call model_ipati(myrank,nspec,LOCAL_PATH)
+    endif
 
   case( IMODEL_IPATI_WATER )
     ! import the model from modified files in SPECFEM format
-    call model_ipati_water(myrank,nspec,LOCAL_PATH)
+    if (ADIOS_FOR_MESH) then
+      call model_ipati_water_adios(myrank,nspec,LOCAL_PATH)
+    else
+      call model_ipati_water(myrank,nspec,LOCAL_PATH)
+    endif
 
   end select
 

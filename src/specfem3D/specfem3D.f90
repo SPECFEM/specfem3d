@@ -332,12 +332,17 @@
   ! force Flush-To-Zero if available to avoid very slow Gradual Underflow trapping
   call force_ftz()
 
-! reads in parameters
+  ! reads in parameters
   call initialize_simulation()
 
-
-! reads in external mesh
-  call read_mesh_databases()
+  ! reads in external mesh
+  if (ADIOS_FOR_MESH) then
+    call read_mesh_databases_adios()
+  else
+    call read_mesh_databases()
+  endif
+    !call read_mesh_databases()
+    !call read_mesh_databases_adios()
 
 
 ! sets up reference element GLL points/weights/derivatives

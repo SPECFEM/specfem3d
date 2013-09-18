@@ -107,6 +107,10 @@
 ! ignore variable name field (junk) at the beginning of each input line
   logical, parameter :: IGNORE_JUNK = .true.,DONT_IGNORE_JUNK = .false.
 
+  ! size of the ADIOS buffer to use
+  integer, parameter :: ADIOS_BUFFER_SIZE_IN_MB = 200
+  character(len=256), parameter :: ADIOS_TRANSPORT_METHOD = 'MPI'
+
 !!-----------------------------------------------------------
 !!
 !! total energy calculation

@@ -28,6 +28,7 @@
 
   subroutine initialize_simulation()
 
+  use adios_manager_mod
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
@@ -51,6 +52,9 @@
                         USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE, &
                         USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
                         PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,FULL_ATTENUATION_SOLID,TRAC_PATH)
+
+  call read_adios_parameters(ADIOS_ENABLED, ADIOS_FOR_DATABASES, &
+                             ADIOS_FOR_MESH, ADIOS_FOR_KERNELS)
 
 !! DK DK added this for now (March 2013) because CPML is not yet implemented for USE_DEVILLE_PRODUCTS;
 !! DK DK we will soon add it (in a month or so)
@@ -134,19 +138,29 @@
     call flush_IMAIN()
   endif
 
+  if (ADIOS_ENABLED) then
+    call adios_setup()
+  endif
+
   ! reads in numbers of spectral elements and points for the part of the mesh handled by this process
   call create_name_database(prname,myrank,LOCAL_PATH)
   if (OLD_TEST_TO_FIX_ONE_DAY) call create_name_database(dsmname,myrank,TRAC_PATH)  !! VM VM
-  open(unit=IIN,file=prname(1:len_trim(prname))//'external_mesh.bin',status='old',&
-        action='read',form='unformatted',iostat=ier)
-  if( ier /= 0 ) then
-    print*,'error: could not open database '
-    print*,'path: ',prname(1:len_trim(prname))//'external_mesh.bin'
-    call exit_mpi(myrank,'error opening database')
+ 
+
+  if (ADIOS_FOR_MESH) then
+    call read_mesh_for_init(NSPEC_AB, NGLOB_AB)
+  else
+	 open(unit=IIN,file=prname(1:len_trim(prname))//'external_mesh.bin',status='old',&
+          action='read',form='unformatted',iostat=ier)
+    if( ier /= 0 ) then
+      print*,'error: could not open database '
+      print*,'path: ',prname(1:len_trim(prname))//'external_mesh.bin'
+      call exit_mpi(myrank,'error opening database')
+    endif
+    read(IIN) NSPEC_AB
+    read(IIN) NGLOB_AB
+    close(IIN)
   endif
-  read(IIN) NSPEC_AB
-  read(IIN) NGLOB_AB
-  close(IIN)
 
   ! attenuation arrays size
   if( ATTENUATION ) then
@@ -236,7 +250,6 @@
 
   implicit none
 
-  integer :: sizeprocs
   integer :: ier
 
   character(len=256) :: HEADER_FILE
@@ -401,14 +414,6 @@
     NSPEC_BOUN = NSPEC_AB
   else
     NSPEC_BOUN = 1
-  endif
-
-  ! transversely isotropic kernel flags
-  if( SIMULATION_TYPE == 3 ) then
-    if( SAVE_TRANSVERSE_KL .eqv. .true. .and. ANISOTROPIC_KL .eqv. .false. ) then
-      call exit_mpi(myrank, &
-        'for kernel simulations with SAVE_TRANSVERSE_KL set to .true., please also set ANISOTROPIC_KL to .true. in constants.h')
-    endif
   endif
 
   end subroutine initialize_simulation_adjoint

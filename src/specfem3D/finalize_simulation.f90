@@ -28,6 +28,7 @@
 
   subroutine finalize_simulation()
 
+  use adios_manager_mod
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
@@ -264,6 +265,10 @@
   deallocate(ibelm_ymax)
   deallocate(ibelm_bottom)
   deallocate(ibelm_top)
+
+  if (ADIOS_ENABLED) then
+    call adios_cleanup()
+  endif
 
 ! close the main output file
   if(myrank == 0) then
