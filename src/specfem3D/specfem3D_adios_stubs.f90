@@ -69,3 +69,24 @@ subroutine save_kernels_hessian_adios()
 
   call no_adios_err()  
 end subroutine save_kernels_hessian_adios
+
+!------------------------------------------------.
+! Subroutines from save_forward_arrays_adios.F90 |
+!------------------------------------------------'
+
+subroutine save_forward_arrays_adios()
+  use adios_manager_mod
+
+  call no_adios_err()  
+end subroutine save_forward_arrays_adios
+
+!------------------------------------------------.
+! Subroutines from read_forward_arrays_adios.F90 |
+!------------------------------------------------'
+
+subroutine read_forward_arrays_adios()
+  use adios_manager_mod
+
+  call no_adios_err()  
+end subroutine read_forward_arrays_adios
+
