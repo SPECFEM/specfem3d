@@ -345,6 +345,8 @@
   logical PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID
   integer MOVIE_TYPE,IMODEL
   character(len=256) OUTPUT_FILES,LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
+  logical :: ADIOS_ENABLED, ADIOS_FOR_DATABASES, ADIOS_FOR_MESH, &
+             ADIOS_FOR_KERNELS
 
 ! ************** PROGRAM STARTS HERE **************
 
@@ -386,6 +388,9 @@
                         USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE, &
                         USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
                         PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,FULL_ATTENUATION_SOLID,TRAC_PATH)
+
+  call read_adios_parameters(ADIOS_ENABLED, ADIOS_FOR_DATABASES, &
+                             ADIOS_FOR_MESH, ADIOS_FOR_KERNELS)
 
 ! read the mesh parameter file
 ! nullify(subregions,material_properties)
@@ -815,9 +820,11 @@
                          NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
                          NPROC_XI,NPROC_ETA, &
                          NSUBREGIONS,subregions,number_of_layers,ner_layer,NMATERIALS,material_properties, &
-                         myrank,LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK,&
+                         myrank, sizeprocs, &
+                         LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK,&
                          CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
-                         USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
+                        USE_REGULAR_MESH,NDOUBLINGS,ner_doublings, &
+                        ADIOS_ENABLED, ADIOS_FOR_DATABASES)
 
   if(myrank == 0) then
 ! compare to exact theoretical value (bottom is always flat)

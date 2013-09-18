@@ -55,6 +55,13 @@ AC_ARG_WITH([cuda],
 AM_CONDITIONAL([COND_CUDA], [test "$want_cuda" != no])
 AM_CONDITIONAL([COND_CUDA5], [test "$want_cuda" = cuda5])
 
+AC_ARG_WITH([adios],
+    [AC_HELP_STRING([--with-adios],
+        [build ADIOS enabled version @<:@default=no@:>@])],
+    [want_adios="$withval"],
+    [want_adios=no])
+AM_CONDITIONAL([COND_ADIOS], [test "$want_adios" != no])
+
 AC_ARG_WITH([openmp],
     [AS_HELP_STRING([--with-openmp],
         [build OpenMP enabled version @<:@default=no@:>@])],
@@ -350,6 +357,11 @@ LDFLAGS=${ac_save_ldflags}
 
 # influential environment variables
 
+AC_ARG_VAR(ADIOS_INC, [Directory where ADIOS headers are installed])
+AC_ARG_VAR(ADIOS_LIB, [Directory where ADIOS libraries are installed])
+AC_ARG_VAR(MXML_INC, [Directory where MXML headers are installed])
+AC_ARG_VAR(MXML_LIB, [Directory where MXML libraries are installed])
+
 AC_ARG_VAR(USE_BUNDLED_SCOTCH, [Set to 1 to always use the bundled Scotch library])
 AC_ARG_VAR(SCOTCH_DIR, [Directory where Scotch is installed])
 AC_ARG_VAR(SCOTCH_INCLUDEDIR, [Directory where Scotch headers are installed])
@@ -440,6 +452,12 @@ if test "$want_pyre" = yes; then
     CIT_FC_MAIN
 fi
 
+if test "$want_adios" = yes; then
+  CIT_MXML_HEADER
+  CIT_MXML_LIB
+  CIT_ADIOS_LIB
+fi	
+
 if test "$want_cuda" = yes; then
     CIT_CUDA_COMPILER
 fi
@@ -448,6 +466,10 @@ if test "$want_openmp" = yes; then
     CIT_FC_OPENMP_MODULE([$FC],[$FLAGS_CHECK])        
 fi
 
+#mpbl: adding flags to config.h.in through autoheader in order to save them into the adios file.
+configure_flags_str="FC=$FC FCFLAGS=$FLAGS_NO_CHECK" 
+AC_DEFINE_UNQUOTED([CONFIGURE_FLAGS],["${configure_flags_str}"],
+          [configuration flags to be save in the adios output file.])
 
 # Checks for library functions.
 

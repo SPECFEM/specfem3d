@@ -380,3 +380,38 @@
 
   end subroutine read_gpu_mode
 
+!===============================================================================
+!> Read ADIOS related flags from the Par_file
+!! \param ADIOS_ENABLED Main flag to decide if ADIOS is used. If setted to
+!!                      false no other parameter is taken into account.
+!! \param ADIOS_FOR_DATABASES Flag to indicate if the databases are written
+!!                            and read with the help of ADIOS.
+!! \param ADIOS_FOR_MESH flag to indicate if the mesh (generate database) is
+!!                       written using ADIOS.
+!! \author MPBL
+subroutine read_adios_parameters(ADIOS_ENABLED, ADIOS_FOR_DATABASES, &
+                                 ADIOS_FOR_MESH, ADIOS_FOR_KERNELS) 
+  implicit none
+  include "constants.h"
+  
+  logical, intent(out) :: ADIOS_ENABLED, ADIOS_FOR_DATABASES, &
+                          ADIOS_FOR_MESH, ADIOS_FOR_KERNELS
+
+  ! initialize flags to false
+  ADIOS_ENABLED       = .false.
+  ADIOS_FOR_DATABASES = .false.
+  ADIOS_FOR_MESH      = .false.
+  ADIOS_FOR_KERNELS   = .false.
+  ! opens file Par_file
+  call open_parameter_file()
+  call read_value_logical(ADIOS_ENABLED, 'solver.ADIOS_ENABLED')
+  if (ADIOS_ENABLED) then
+    call read_value_logical(ADIOS_FOR_DATABASES, 'solver.ADIOS_FOR_DATABASES')
+    call read_value_logical(ADIOS_FOR_MESH, 'solver.ADIOS_FOR_MESH')
+    call read_value_logical(ADIOS_FOR_KERNELS, 'solver.ADIOS_FOR_KERNELS')
+  endif 
+  call close_parameter_file()
+        
+end subroutine read_adios_parameters
+
+

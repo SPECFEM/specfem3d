@@ -34,11 +34,15 @@ contains
                                NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
                                NPROC_XI,NPROC_ETA, &
                                nsubregions,subregions,nblayers,ner_layer,NMATERIALS,material_properties, &
-                               myrank,LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
+                               myrank, sizeprocs, &
+							   LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
                                CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
-                               USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
+                               USE_REGULAR_MESH,NDOUBLINGS,ner_doublings, &
+                               ADIOS_ENABLED, ADIOS_FOR_DATABASES)
 
     ! create the different regions of the mesh
+  use adios_manager_mod
+  use mpi
 
     implicit none
 
@@ -58,6 +62,7 @@ contains
 
     logical USE_REGULAR_MESH
     logical CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES
+    logical ADIOS_ENABLED, ADIOS_FOR_DATABASES
 
     integer NDOUBLINGS
     integer, dimension(2) :: ner_doublings
@@ -114,7 +119,7 @@ contains
     logical, dimension(:,:), allocatable :: iboun
 
     ! proc numbers for MPI
-    integer myrank
+    integer myrank, sizeprocs
 
     ! variables for creating array ibool (some arrays also used for AVS or DX files)
     integer, dimension(:), allocatable :: iglob,locval
@@ -468,6 +473,11 @@ contains
        call exit_MPI(myrank,'incorrect global ibool numbering')
     endif
 
+    !--- Initialize ADIOS and setup the buffer size
+    if (ADIOS_ENABLED) then
+      call adios_setup()
+    endif
+
     ! outputs mesh file for visualization
     call create_visual_files(CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
                             nspec,nglob, &
@@ -486,6 +496,17 @@ contains
                           nodes_coords(:,1),nodes_coords(:,2),nodes_coords(:,3),ibool, &
                           CREATE_VTK_FILES,prname)
 
+  ! saves mesh as databases file
+  if (ADIOS_FOR_DATABASES) then 
+    call save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
+       nspec,nglob,iproc_xi,iproc_eta, &
+       NPROC_XI,NPROC_ETA,addressing,iMPIcut_xi,iMPIcut_eta,&
+       ibool,nodes_coords,true_material_num, &
+       nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
+       NSPEC2D_BOTTOM,NSPEC2D_TOP, NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
+       ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,&
+       NMATERIALS,material_properties)
+  else
     ! saves mesh as databases file
     call save_databases(prname,nspec,nglob,iproc_xi,iproc_eta, &
                       NPROC_XI,NPROC_ETA,addressing,iMPIcut_xi,iMPIcut_eta,&
@@ -494,6 +515,12 @@ contains
                       NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
                       ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,&
                       NMATERIALS,material_properties)
+  endif
+
+    !--- Clean ADIOS. Make sure everything is already written
+    if (ADIOS_ENABLED) then
+      call adios_cleanup()
+    endif
 
   end subroutine create_regions_mesh
 

@@ -44,8 +44,17 @@ MPILIBS = @MPILIBS@
 FLAGS_CHECK = @FLAGS_CHECK@
 FCFLAGS_f90 = @FCFLAGS_f90@
 
-FCCOMPILE_CHECK =@FCENV@ ${FC} ${FCFLAGS} $(FLAGS_CHECK) -I${SHARED}
-MPIFCCOMPILE_CHECK =@FCENV@ ${MPIFC} ${FCFLAGS} $(FLAGS_CHECK) -I${SHARED}
+# ADIOS
+# with configure: ./configure --with-adios ADIOS_LIB=.. ADIOS_INC=.. MPI_INC=..
+@COND_ADIOS_TRUE@ADIOS_LIBS = -ladiosf -lmxml
+@COND_ADIOS_FALSE@ADIOS_LIBS = 
+
+ADIOS_LIB_LOCATION = @ADIOS_LIB@ @MXML_LIB@
+ADIOS_LINK = $(ADIOS_LIB_LOCATION) $(ADIOS_LIBS)
+ADIOS_INC = @ADIOS_INC@ -I../../setup -I../../ 
+
+FCCOMPILE_CHECK =@FCENV@ ${FC} ${FCFLAGS} $(FLAGS_CHECK) -I${SHARED} ${ADIOS_LINK}
+MPIFCCOMPILE_CHECK =@FCENV@ ${MPIFC} ${FCFLAGS} $(FLAGS_CHECK) -I${SHARED} ${ADIOS_LINK}
 @COND_MPI_TRUE@FCLINK = $(MPIFCCOMPILE_CHECK)
 @COND_MPI_FALSE@FCLINK = $(FCCOMPILE_CHECK)
 
@@ -79,6 +88,7 @@ RANLIB = ranlib
 @COND_PYRE_FALSE@COND_PYRE_OBJECTS = $O/read_value_mesh_parameters.o $O/get_value_parameters.o
 
 libmeshfem_a_OBJECTS = \
+	$O/safe_alloc_mod.shared.o \
 	$O/store_coords.o \
 	$O/read_mesh_parameter_file.o \
 	$O/check_mesh_quality.o \
@@ -107,6 +117,23 @@ libmeshfem_a_OBJECTS = \
 	$O/utm_geo.o \
 	$(EMPTY_MACRO)
 
+# using ADIOS files
+ADIOS_PREOBJECTS= \
+	$O/adios_manager.shared_adios.o  \
+	$O/adios_helpers_definitions.shared_adios.o  \
+	$O/adios_helpers_writers.shared_adios.o  \
+	$O/adios_helpers.shared_adios.o
+ADIOS_OBJECTS= \
+	$O/save_databases_adios.adios.o 
+
+ADIOS_STUBS = \
+	$O/adios_manager_stubs.shared_noadios.o \
+	$O/meshfem3D_adios_stubs.noadios.o
+
+@COND_ADIOS_FALSE@ADIOS_OBJECTS = $(ADIOS_STUBS)
+@COND_ADIOS_FALSE@ADIOS_PREOBJECTS =
+
+
 # objects toggled between the parallel and serial version
 @COND_MPI_TRUE@COND_MPI_OBJECTS = $O/parallel.o
 @COND_MPI_FALSE@COND_MPI_OBJECTS = $O/serial.o
@@ -114,7 +141,7 @@ libmeshfem_a_OBJECTS = \
 LIBMESHFEM = $(COND_PYRE_OBJECTS) $L/libmeshfem.a
 
 # objects for the pure Fortran version
-@COND_PYRE_FALSE@XMESHFEM_OBJECTS = $O/program_meshfem3D.o $(LIBMESHFEM)
+@COND_PYRE_FALSE@XMESHFEM_OBJECTS = $(ADIOS_PREOBJECTS) $O/program_meshfem3D.o $(LIBMESHFEM) $(ADIOS_OBJECTS)
 
 ####
 #### targets
@@ -142,7 +169,7 @@ meshfem3D: xmeshfem3D
 
 # rules for the pure Fortran version
 @COND_PYRE_FALSE@xmeshfem3D: $(XMESHFEM_OBJECTS) $(COND_MPI_OBJECTS)
-@COND_PYRE_FALSE@	${FCLINK} -o ${E}/xmeshfem3D $(XMESHFEM_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS)
+@COND_PYRE_FALSE@	${FCLINK} -o ${E}/xmeshfem3D $(XMESHFEM_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS) ${ADIOS_LIBS} ${O}/safe_alloc_mod.shared.o
 @COND_PYRE_FALSE@
 @COND_PYRE_FALSE@# solver also depends on values from mesher
 
@@ -163,13 +190,42 @@ $L/libmeshfem.a: $(libmeshfem_a_OBJECTS)
 ####
 #### rule to build each .o file below
 ####
+#######################################
 
+###
+### ADIOS compilation
+###
+
+$O/%.adios.o: %.F90 ${SHARED}constants.h
+	${MPIFCCOMPILE_CHECK} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INC) -o $@ $<
+
+$O/%.adios.o: %.f90 ${SHARED}constants.h
+	${MPIFCCOMPILE_CHECK} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INC) -o $@ $<
+
+$O/%.noadios.o: %.F90 
+	${FC} -c -o $@ $<
+
+$O/%.noadios.o: %.f90
+	${FC} -c -o $@ $<
+
+$O/%.shared_noadios.o: ${SHARED}/%.f90 .FORCE
+	${MPIFC} -c -o $@ $<
+
+$O/%.shared_adios.o: ${SHARED}/%.f90 ${SHARED}/constants.h .FORCE
+	${MPIFC} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INC) -o $@ $<
+
+$O/%.shared_adios.o: ${SHARED}/%.F90 ${SHARED}/constants.h .FORCE
+	${MPIFC} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INC) -o $@ $<
+
+.FORCE:
+
+#######################################
 ###
 ### not optimized flags (not dependent on values from mesher anymore)
 ###
 
-$O/%.shared.o: $(SHARED)%.f90 $(SHARED)constants.h
-	${FCCOMPILE_CHECK} -c -o $@ $<
+$O/%.shared.o: $(SHARED)%.f90 $(SHARED)constants.h .FORCE
+	${MPIFCCOMPILE_CHECK} -c -o $@ $<
 
 ###
 ### C compilation
@@ -250,7 +306,7 @@ $O/read_topo_bathy_file.o: ${SHARED}constants.h ${SHARED}/read_topo_bathy_file.f
 	${FCCOMPILE_CHECK} -c -o $O/read_topo_bathy_file.o ${SHARED}/read_topo_bathy_file.f90
 
 $O/create_regions_mesh.o: ${SHARED}constants.h create_regions_mesh.f90
-	${FCCOMPILE_CHECK} -c -o $O/create_regions_mesh.o create_regions_mesh.f90
+	${MPIFCCOMPILE_CHECK} -c -o $O/create_regions_mesh.o create_regions_mesh.f90
 
 $O/create_name_database.o: ${SHARED}constants.h create_name_database.f90
 	${FCCOMPILE_CHECK} -c -o $O/create_name_database.o create_name_database.f90

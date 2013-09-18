@@ -277,6 +277,38 @@ SUM_KERNELS_OBJECTS = \
 	$O/read_value_parameters.shared.o \
 	$(EMPTY_MACRO)
 
+# using ADIOS files
+ADIOS_PREOBJECTS = \
+	$O/adios_manager.shared_adios.o  \
+	$O/adios_helpers_definitions.shared_adios.o \
+	$O/adios_helpers_writers.shared_adios.o \
+	$O/adios_helpers.shared_adios.o
+
+ADIOS_OBJECTS= \
+	$O/read_mesh_databases_adios.adios.o \
+	$O/save_kernels_adios.adios.o
+
+ADIOS_STUBS = \
+	$O/adios_manager_stubs.shared_noadios.o \
+	$O/specfem3D_adios_stubs.noadios.o
+
+#@COND_ADIOS_TRUE@XSPECFEM_OBJECTS_ADIOS = $(ADIOS_PREOBJECTS) $(XSPECFEM_OBJECTS_PRE) $(ADIOS_OBJECTS)
+#@COND_ADIOS_FALSE@XSPECFEM_OBJECTS_ADIOS = $(ADIOS_STUBS) $(XSPECFEM_OBJECTS_PRE)
+@COND_ADIOS_FALSE@ADIOS_OBJECTS = $(ADIOS_STUBS)
+@COND_ADIOS_FALSE@ADIOS_PREOBJECTS=
+
+# ADIOS
+# with configure: ./configure --with-cuda ADIOS_LIB=.. ADIOS_INC=.. MPI_INC=..
+@COND_ADIOS_TRUE@ADIOS_LIBS = -ladiosf -lmxml
+@COND_ADIOS_FALSE@ADIOS_LIBS = 
+
+ADIOS_LIB_LOCATION = @ADIOS_LIB@ @MXML_LIB@
+ADIOS_LINK = $(ADIOS_LIB_LOCATION) $(ADIOS_LIBS)
+ADIOS_INC = @ADIOS_INC@ -I../../setup -I../../ 
+
+#@COND_ADIOS_TRUE@CPPFLAGS = -I../../setup @CPPFLAGS@
+@COND_ADIOS_TRUE@MPIFCCOMPILE_CHECK =@FCENV@ ${MPIFC} ${FCFLAGS} $(ADIOS_INC) $(FLAGS_CHECK)
+@COND_ADIOS_TRUE@MPIFCCOMPILE_NO_CHECK =@FCENV@ ${MPIFC} ${FCFLAGS} $(ADIOS_INC) $(FLAGS_NO_CHECK)
 
 # objects toggled between the parallel and serial version
 @COND_MPI_TRUE@COND_MPI_OBJECTS = $O/parallel.o
@@ -289,8 +321,8 @@ SUM_KERNELS_OBJECTS = \
 LIBSPECFEM = $L/libspecfem.a
 
 # objects for the pure Fortran version
-@COND_PYRE_FALSE@@COND_CUDA_TRUE@XSPECFEM_OBJECTS = $(SOLVER_ARRAY_OBJECTS) $(LIBSPECFEM) $(CUDA_OBJECTS)
-@COND_PYRE_FALSE@@COND_CUDA_FALSE@XSPECFEM_OBJECTS = $(SOLVER_ARRAY_OBJECTS) $(LIBSPECFEM) $(CUDA_STUBS)
+@COND_PYRE_FALSE@@COND_CUDA_TRUE@XSPECFEM_OBJECTS = $(ADIOS_PREOBJECTS) $(SOLVER_ARRAY_OBJECTS) $(LIBSPECFEM) $(CUDA_OBJECTS) $(ADIOS_OBJECTS)
+@COND_PYRE_FALSE@@COND_CUDA_FALSE@XSPECFEM_OBJECTS = $(ADIOS_PREOBJECTS) $(SOLVER_ARRAY_OBJECTS) $(LIBSPECFEM) $(CUDA_STUBS) $(ADIOS_OBJECTS)
 
 #######################################
 
@@ -326,9 +358,9 @@ specfem3D: xspecfem3D
 @COND_PYRE_FALSE@# solver also depends on values from mesher
 @COND_PYRE_FALSE@xspecfem3D: $(XSPECFEM_OBJECTS) $(COND_MPI_OBJECTS) $(COND_OPENMP_OBJECTS)
 @COND_PYRE_FALSE@@COND_CUDA_TRUE@@COND_CUDA5_TRUE@	${NVCCLINK} -o $(CUDA_DEVICE_OBJ) $(CUDA_OBJECTS)
-@COND_PYRE_FALSE@@COND_CUDA_TRUE@@COND_CUDA5_TRUE@	${FCLINK} -o ${E}/xspecfem3D $(XSPECFEM_OBJECTS) $(CUDA_DEVICE_OBJ) $(COND_MPI_OBJECTS) $(MPILIBS) $(COND_OPENMP_OBJECTS) $(OPENMP_LIBS) $(CUDA_LINK)
-@COND_PYRE_FALSE@@COND_CUDA_TRUE@@COND_CUDA5_FALSE@	${FCLINK} -o ${E}/xspecfem3D $(XSPECFEM_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS) $(COND_OPENMP_OBJECTS) $(OPENMP_LIBS) $(CUDA_LINK)
-@COND_PYRE_FALSE@@COND_CUDA_FALSE@	${FCLINK} -o ${E}/xspecfem3D $(XSPECFEM_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS) $(COND_OPENMP_OBJECTS) $(OPENMP_LIBS) $(CUDA_LINK)
+@COND_PYRE_FALSE@@COND_CUDA_TRUE@@COND_CUDA5_TRUE@	${FCLINK} -o ${E}/xspecfem3D $(XSPECFEM_OBJECTS) $(CUDA_DEVICE_OBJ) $(COND_MPI_OBJECTS) $(MPILIBS) $(COND_OPENMP_OBJECTS) $(OPENMP_LIBS) $(CUDA_LINK) $(ADIOS_LINK) $(LDFLAGS)
+@COND_PYRE_FALSE@@COND_CUDA_TRUE@@COND_CUDA5_FALSE@	${FCLINK} -o ${E}/xspecfem3D $(XSPECFEM_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS) $(COND_OPENMP_OBJECTS) $(OPENMP_LIBS) $(CUDA_LINK) $(ADIOS_LINK) $(LDFLAGS)
+@COND_PYRE_FALSE@@COND_CUDA_FALSE@	${FCLINK} -o ${E}/xspecfem3D $(XSPECFEM_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS) $(COND_OPENMP_OBJECTS) $(OPENMP_LIBS) $(CUDA_LINK) $(ADIOS_LINK) $(LDFLAGS)
 @COND_PYRE_FALSE@
 
 convolve_source_timefunction: xconvolve_source_timefunction
@@ -388,7 +420,37 @@ $L/libspecfem.a: $(libspecfem_a_OBJECTS)
 ###
 ### optimized flags (not dependent on values from mesher anymore)
 ###
+#######################################
 
+###
+### ADIOS compilation
+###
+
+$O/%.adios.o: %.F90
+	${MPIFCCOMPILE_CHECK} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INC) -o $@ $<
+
+$O/%.adios.o: %.f90
+	${MPIFCCOMPILE_CHECK} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INC) -o $@ $<
+
+$O/%.noadios.o: %.F90 
+	${FC} -c -o $@ $<
+
+$O/%.noadios.o: %.f90 
+	${FC} -c -o $@ $<
+
+$O/%.shared_noadios.o: ${SHARED}/%.f90 .FORCE
+	${MPIFC} -c -o $@ $<
+
+$O/%.shared_adios.o: ${SHARED}/%.f90 ${SHARED}/constants.h .FORCE
+	${MPIFC} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INC) -o $@ $<
+
+$O/%.shared_adios.o: ${SHARED}/%.F90 ${SHARED}/constants.h .FORCE
+	${MPIFC} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INC) -o $@ $<
+
+# Force adios helpers to be recompiled.
+.FORCE:
+
+#######################################
 $O/%.o: %.f90 $(SHARED)constants.h
 	${FCCOMPILE_CHECK} -c -o $@ $<
 

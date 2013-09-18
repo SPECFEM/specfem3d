@@ -188,6 +188,8 @@
 
   subroutine generate_databases
 
+  use adios_manager_mod
+  use mpi
   use generate_databases_par
 
   implicit none
@@ -233,8 +235,17 @@
     call flush_IMAIN()
   endif
 
+  ! Initialize ADIOS I/O
+  if (ADIOS_ENABLED) then
+    call adios_setup()
+  endif
+
 ! reads Databases files
-  call read_partition_files()
+  if (ADIOS_FOR_DATABASES) then
+    call read_partition_files_adios()
+  else
+    call read_partition_files()
+  endif
 
 ! external mesh creation
   call setup_mesh()
@@ -242,6 +253,9 @@
 ! finalize mesher
   call finalize_databases()
 
+  if (ADIOS_ENABLED) then
+    call adios_cleanup()
+  endif
   end subroutine generate_databases
 
 !
@@ -268,6 +282,9 @@
                         USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE, &
                         USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
                         PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,FULL_ATTENUATION_SOLID,TRAC_PATH)
+
+  call read_adios_parameters(ADIOS_ENABLED, ADIOS_FOR_DATABASES, &
+                             ADIOS_FOR_MESH, ADIOS_FOR_KERNELS)
 
 ! check that the code is running with the requested nb of processes
   if(sizeprocs /= NPROC) then
