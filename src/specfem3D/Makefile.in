@@ -290,14 +290,15 @@ ADIOS_OBJECTS= \
 	$O/read_forward_arrays_adios.adios.o \
 	$O/save_kernels_adios.adios.o
 
+ADIOS_PRESTUBS = \
+	$O/adios_manager_stubs.shared_noadios.o
 ADIOS_STUBS = \
-	$O/adios_manager_stubs.shared_noadios.o \
 	$O/specfem3D_adios_stubs.noadios.o
 
 #@COND_ADIOS_TRUE@XSPECFEM_OBJECTS_ADIOS = $(ADIOS_PREOBJECTS) $(XSPECFEM_OBJECTS_PRE) $(ADIOS_OBJECTS)
 #@COND_ADIOS_FALSE@XSPECFEM_OBJECTS_ADIOS = $(ADIOS_STUBS) $(XSPECFEM_OBJECTS_PRE)
 @COND_ADIOS_FALSE@ADIOS_OBJECTS = $(ADIOS_STUBS)
-@COND_ADIOS_FALSE@ADIOS_PREOBJECTS=
+@COND_ADIOS_FALSE@ADIOS_PREOBJECTS= $(ADIOS_PRESTUBS)
 
 # ADIOS
 # with configure: ./configure --with-cuda ADIOS_LIB=.. ADIOS_INC=.. MPI_INC=..

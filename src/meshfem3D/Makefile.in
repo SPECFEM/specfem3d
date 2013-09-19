@@ -126,12 +126,13 @@ ADIOS_PREOBJECTS= \
 ADIOS_OBJECTS= \
 	$O/save_databases_adios.adios.o 
 
+ADIOS_PRESTUBS = \
+	$O/adios_manager_stubs.shared_noadios.o
 ADIOS_STUBS = \
-	$O/adios_manager_stubs.shared_noadios.o \
 	$O/meshfem3D_adios_stubs.noadios.o
 
 @COND_ADIOS_FALSE@ADIOS_OBJECTS = $(ADIOS_STUBS)
-@COND_ADIOS_FALSE@ADIOS_PREOBJECTS =
+@COND_ADIOS_FALSE@ADIOS_PREOBJECTS = $(ADIOS_PRESTUBS)
 
 
 # objects toggled between the parallel and serial version
