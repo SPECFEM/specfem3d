@@ -146,12 +146,13 @@ ADIOS_OBJECTS= \
 	$O/model_gll_adios.adios.o \
 	$O/model_ipati_adios.adios.o
 
+ADIOS_PRESTUBS = \
+	$O/adios_manager_stubs.shared_noadios.o
 ADIOS_STUBS = \
-	$O/adios_manager_stubs.shared_noadios.o \
 	$O/generate_databases_adios_stubs.noadios.o
 
 @COND_ADIOS_FALSE@ADIOS_OBJECTS = $(ADIOS_STUBS)
-@COND_ADIOS_FALSE@ADIOS_PREOBJECTS =
+@COND_ADIOS_FALSE@ADIOS_PREOBJECTS = $(ADIOS_PRESTUBS)
 
 KEEP_MAIN_PROGRAM_SEPARATE = $O/program_generate_databases.o
 
