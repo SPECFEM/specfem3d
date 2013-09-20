@@ -531,7 +531,7 @@ class mesh(object,mesh_tools):
                 helpstring="#material_domain_id #material_id #rho #vp #vs #Q_mu #anisotropy"
                 txt='%1i %3i %s \n' % (properties[0],properties[1],helpstring)
             else:
-                helpstring=" -->       sintax: #material_domain_id #material_id #rho #vp #vs #Q_mu #anisotropy"
+                helpstring=" -->       syntax: #material_domain_id #material_id #rho #vp #vs #Q_mu #anisotropy"
                 txt='%1i %3i %s %s\n' % (properties[0],properties[1],properties[2],helpstring)
         elif flag < 0:
             if properties[2] == 'tomography':
@@ -539,7 +539,7 @@ class mesh(object,mesh_tools):
             elif properties[2] == 'interface':
                 txt='%1i %3i %s %s %1i %1i\n' % (properties[0],properties[1],properties[2],properties[3],properties[4],properties[5])
             else:
-                helpstring=" -->       sintax: #material_domain_id 'tomography' #file_name "
+                helpstring=" -->       syntax: #material_domain_id 'tomography' #file_name "
                 txt='%1i %3i %s %s \n' % (properties[0],properties[1],properties[2],helpstring)
                 #
         return txt

@@ -720,6 +720,9 @@ which explains in a step-by-step tutorial the workflow for the example.
 Please feel free to contribute your own example to this package by
 contacting the CIG Computational Seismology Mailing List \urlwithparentheses{cig-seismo@geodynamics.org}.
 
+In most cases, to re-create the meshes for the examples given, just type "claro ./block\_mesh.py" or similar 
+from the command line ("claro" is the command to run CUBIT from the command line).
+
 
 \subsection{Exporting the Mesh with \texttt{cubit2specfem3d.py} }
 
@@ -975,6 +978,22 @@ edge).
 These mesh files are needed as input files for the partitioner \texttt{xdecompose\_mesh}
 to load-balance the mesh. Please see the next section for further
 details.
+
+In directory "CUBIT\_GEOCUBIT" we provide two scripts that can help doing the above tasks of exporting a CUBIT mesh
+to SPECFEM3D format automatically for you: "run\_cubit2specfem3d.py" and "run\_boundary\_definition.py".
+Just edit them to indicate the path to your local installation of CUBIT and also the name of the *.cub existing CUBIT mesh file
+that you want to export to SPECFEM3D format. These scripts will do the conversion for you automatically except assigning material properties
+to the different mesh layers. To do so, you will then need to edit the file 
+called "nummaterial\_velocity\_file" that will have just been created and change it from the prototype created:
+
+    0 1 vol1 --> syntax: \#material\_domain\_id \#material\_id \#rho \#vp \#vs \#Q\_kappa \#Q\_mu \#anisotropy
+    0 2 vol2 --> syntax: \#material\_domain\_id \#material\_id \#rho \#vp \#vs \#Q\_kappa \#Q\_mu \#anisotropy
+
+(where "vol1" and "vol2" here represent the volume labels that you have set while creating the mesh in CUBIT)
+to for instance
+
+    2 1 1500 2300 1800 9999.0 9999.0 0
+    2 2 1600 2500 20000 9999.0 9999.0 0
 
 
 \subsubsection*{Checking the mesh quality}
