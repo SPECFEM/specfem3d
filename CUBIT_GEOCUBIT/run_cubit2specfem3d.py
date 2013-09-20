@@ -14,7 +14,7 @@ import cubit2specfem3d
 
 # define the name of the CUBIT file to convert to SPECFEM format in the line below
 #cubit.cmd('open "large_test_cpml.cub"')
-cubit.cmd('open "test_cmpl_2layers.cub"')
+cubit.cmd('open "test_cpml_2layers.cub"')
 
 ###### This is boundary_definition.py of GEOCUBIT
 #..... which extracts the bounding faces and defines them into blocks
