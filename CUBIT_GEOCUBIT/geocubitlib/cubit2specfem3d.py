@@ -501,7 +501,8 @@ class mesh(object,mesh_tools):
             print block_bc_flag
             print material
             print bc
-            print topography
+## DK DK removed that because it gives an error: variable used before being assigned a value
+            #print topography
             print '****************************************'
     def mat_parameter(self,properties): 
         print properties
