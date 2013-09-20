@@ -3,7 +3,9 @@
 import os
 import sys
 
+########################################################################################
 # put the path to your installation of the "bin" directory of the CUBIT package here
+########################################################################################
 sys.path.append("/home/komatits/bin/cubit/bin")
 import cubit
 
@@ -12,8 +14,9 @@ sys.path.append("./geocubitlib")
 import boundary_definition
 import cubit2specfem3d 
 
+########################################################################################
 # define the name of the CUBIT file to convert to SPECFEM format in the line below
-#cubit.cmd('open "large_test_cpml.cub"')
+########################################################################################
 cubit.cmd('open "test_cpml_2layers.cub"')
 
 ###### This is boundary_definition.py of GEOCUBIT
