@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-import boundary_definition
-import cubit2specfem3d 
 import os
 import sys
 
@@ -11,6 +9,8 @@ import cubit
 
 # let us also add the local GEOCUBIT library
 sys.path.append("./geocubitlib")
+import boundary_definition
+import cubit2specfem3d 
 
 # define the name of the CUBIT file to convert to SPECFEM format in the line below
 #cubit.cmd('open "large_test_cpml.cub"')
