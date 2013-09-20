@@ -17,10 +17,8 @@ sys.path.append("./geocubitlib")
 cubit.cmd('open "test_cmpl_2layers.cub"')
 
 ###### This is boundary_definition.py of GEOCUBIT
-
 #..... which extracts the bounding faces and defines them into blocks
-
-reload(boundary_definition)
+#reload(boundary_definition)
 
 # for CUBIT version 14 and higher (now called TRELIS) you may have to change 'face' to 'Face' in the line below
 boundary_definition.entities=['face']
@@ -32,9 +30,7 @@ boundary_definition.define_bc(boundary_definition.entities,parallel=False)
 #### Export to SPECFEM3D format using cubit2specfem3d.py of GEOCUBIT
 
 os.system('mkdir -p MESH')
-
-reload(cubit2specfem3d)
-
+#reload(cubit2specfem3d)
 cubit2specfem3d.export2SPECFEM3D('MESH') 
 
 # all files needed by SCOTCH are now in directory MESH...
