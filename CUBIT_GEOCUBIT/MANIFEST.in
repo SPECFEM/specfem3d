@@ -1,0 +1,22 @@
+include GEOCUBIT.py
+include setup.py
+include geocubitlib/LatLongUTMconversion.py
+include geocubitlib/__init__.py
+include geocubitlib/boundary_check.py
+include geocubitlib/boundary_definition.py
+include geocubitlib/cubit2specfem3d.py
+include geocubitlib/geocubitlib.py
+include geocubitlib/hex_metric.py
+include geocubitlib/start.py
+include geocubitlib/local_volume.py
+include geocubitlib/menu.py
+include geocubitlib/merginglib.py
+include geocubitlib/mesh_volume.py
+include geocubitlib/mpi_geocubit.py
+include geocubitlib/partitioner.py
+include geocubitlib/quality_log.py
+include geocubitlib/read_parameter_cfg.py
+include geocubitlib/select_in_out.py
+include geocubitlib/surfaces.py
+include geocubitlib/volumes.py
+recursive-include example *
