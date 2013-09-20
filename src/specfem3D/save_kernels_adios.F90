@@ -34,8 +34,8 @@
 !==============================================================================
 
 !> \def STRINGIFY_VAR(a)
-!! Macro taking a variable and returning the stringified variable and 
-!! the variable itself. 
+!! Macro taking a variable and returning the stringified variable and
+!! the variable itself.
 !! STRINGIFY_VAR(x) expand as:
 !!   "x", x
 !! x being the variable name inside the code.
@@ -67,7 +67,7 @@ subroutine define_kernel_adios_variables(handle, SAVE_WEIGHTS)
   implicit none
 
   ! Parameters
-  integer(kind=8), intent(INOUT) :: handle 
+  integer(kind=8), intent(INOUT) :: handle
   logical, intent(IN) :: SAVE_WEIGHTS
   ! Variables
   character(len=256) :: output_name, group_name
@@ -96,14 +96,14 @@ subroutine define_kernel_adios_variables(handle, SAVE_WEIGHTS)
 
   nspec_wmax = max_global_values(1)
 
-  call define_adios_scalar(group, groupsize, "", "nspec", NSPEC_AB) 
+  call define_adios_scalar(group, groupsize, "", "nspec", NSPEC_AB)
 
   local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
 
   if( SAVE_WEIGHTS ) then
     call define_adios_global_array1D(group, groupsize, local_dim, &
                                      "", "weights_kernel", dummy_kernel)
-  endif                                   
+  endif
 
   if( ACOUSTIC_SIMULATION ) then
     call define_adios_global_array1D(group, groupsize, local_dim, &
@@ -114,7 +114,7 @@ subroutine define_kernel_adios_variables(handle, SAVE_WEIGHTS)
                                      "", "rhop_ac_kl", dummy_kernel)
     call define_adios_global_array1D(group, groupsize, local_dim, &
                                      "", "alpha_ac_kl", dummy_kernel)
-  endif                                   
+  endif
 
   if( ELASTIC_SIMULATION ) then
     if (ANISOTROPIC_KL) then
@@ -156,8 +156,8 @@ subroutine define_kernel_adios_variables(handle, SAVE_WEIGHTS)
     if (SAVE_MOHO_MESH) then
       call define_adios_global_array1D(group, groupsize, local_dim, &
                                        "", "moho_kl", dummy_kernel)
-    endif                                   
-  endif                                   
+    endif
+  endif
 
   if( POROELASTIC_SIMULATION ) then
     call define_adios_global_array1D(group, groupsize, local_dim, &
@@ -200,7 +200,7 @@ subroutine define_kernel_adios_variables(handle, SAVE_WEIGHTS)
                                      "", "cpII_kl", dummy_kernel)
     call define_adios_global_array1D(group, groupsize, local_dim, &
                                      "", "ratio_kl", dummy_kernel)
-  endif                                   
+  endif
 
   if ( APPROXIMATE_HESS_KL ) then
     if( ACOUSTIC_SIMULATION ) then
@@ -220,22 +220,22 @@ subroutine define_kernel_adios_variables(handle, SAVE_WEIGHTS)
   call adios_open (handle, group_name, output_name, "w", comm, adios_err)
   call adios_group_size (handle, groupsize, adios_totalsize, adios_err)
 
-  call adios_write(handle, "nspec", NSPEC_AB, ier) 
+  call adios_write(handle, "nspec", NSPEC_AB, ier)
 end subroutine define_kernel_adios_variables
 
 !==============================================================================
 !> Perform the actual write of all the kernels variables to file.
-!! \param[IN] adios_handle The handle pointing on the open ADIOS file intended 
+!! \param[IN] adios_handle The handle pointing on the open ADIOS file intended
 !!                         to store kernels.
 !!
 !! \note Obviously this is a general routine that should be extracted and used
 !!       everywhere as the 'adios_handle' argument can be used for any kind of
 !!       ADIOS file.
-!!       The only reason such a routine is defined is to avoid using 
+!!       The only reason such a routine is defined is to avoid using
 !!       ADIOS modules in non ADIOS file, in case the ADIOS library is not
 !!       available on the system.
 subroutine perform_write_adios_kernels(handle)
-  
+
   use adios_write_mod
 
   implicit none
@@ -250,7 +250,7 @@ end subroutine perform_write_adios_kernels
 
 
 !==============================================================================
-!> Save weights for volume integration, 
+!> Save weights for volume integration,
 !! in order to benchmark the kernels with analytical expressions.
 !subroutine save_weights_kernel_adios(weights_kernel)
   !use specfem_par
@@ -263,8 +263,8 @@ end subroutine perform_write_adios_kernels
   !real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: weights_kernel
 
   !!allocate(weights_kernel(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-  
-  !return 
+
+  !return
 !end subroutine save_weights_kernel_adios
 
 !==============================================================================
@@ -282,7 +282,7 @@ subroutine save_kernels_acoustic_adios(handle)
   ! local parameters
   integer:: local_dim
 
-  local_dim = NGLLX * NGLLY * NGLLZ * NSPEC_AB 
+  local_dim = NGLLX * NGLLY * NGLLZ * NSPEC_AB
 
   call write_adios_global_1d_array(handle, myrank, sizeprocs, &
                                    local_dim, STRINGIFY_VAR(rho_ac_kl))
@@ -316,7 +316,7 @@ subroutine save_kernels_elastic_adios(handle, alphav_kl, alphah_kl, &
     alphav_kl,alphah_kl,betav_kl,betah_kl, &
     eta_kl, rhop_kl, alpha_kl, beta_kl
 
-  local_dim = NGLLX * NGLLY * NGLLZ * NSPEC_AB 
+  local_dim = NGLLX * NGLLY * NGLLZ * NSPEC_AB
 
   if (ANISOTROPIC_KL) then
     ! outputs transverse isotropic kernels only
@@ -384,7 +384,7 @@ subroutine save_kernels_poroelastic_adios(handle)
   ! local parameters
   integer :: local_dim
 
-  local_dim = NGLLX * NGLLY * NGLLZ * NSPEC_AB 
+  local_dim = NGLLX * NGLLY * NGLLZ * NSPEC_AB
 
   ! primary kernels
   call write_adios_global_1d_array(handle, myrank, sizeprocs, &
@@ -453,7 +453,7 @@ subroutine save_kernels_hessian_adios(handle)
   integer(kind=8), intent(in) :: handle
   integer :: local_dim
 
-  local_dim = NGLLX * NGLLY * NGLLZ * NSPEC_AB 
+  local_dim = NGLLX * NGLLY * NGLLZ * NSPEC_AB
 
   ! acoustic domains
   if( ACOUSTIC_SIMULATION ) then

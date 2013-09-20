@@ -829,7 +829,7 @@
                         Mesh_pointer, &
                         buffer_recv_scalar_ext_mesh,num_interfaces_ext_mesh, &
                         max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+!                       nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh, &
                         FORWARD_OR_ADJOINT)
 
@@ -852,8 +852,8 @@
   real(kind=CUSTOM_REAL), dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: &
        buffer_recv_scalar_ext_mesh
 
-  integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
-  integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
+! integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
+! integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
   integer, dimension(num_interfaces_ext_mesh) :: request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh
 
   integer :: FORWARD_OR_ADJOINT

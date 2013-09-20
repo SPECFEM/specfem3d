@@ -31,7 +31,7 @@
 !! * Scalar definition
 !! * Global arrays definition
 !!
-!! \author MPBL      
+!! \author MPBL
 !-------------------------------------------------------------------------------
 module adios_helpers_definitions_mod
   implicit none
@@ -46,7 +46,7 @@ module adios_helpers_definitions_mod
   public :: define_adios_global_logical_1d_array
   public :: define_adios_global_array1D
 
-  ! Generic interface to define scalar variables in ADIOS 
+  ! Generic interface to define scalar variables in ADIOS
   interface define_adios_scalar
     module procedure define_adios_double_scalar
     module procedure define_adios_float_scalar
@@ -131,13 +131,13 @@ contains
 
 
 !===============================================================================
-!> Define an ADIOS scalar double precision variable and autoincrement 
+!> Define an ADIOS scalar double precision variable and autoincrement
 !! the adios group size by (8).
 !! \param adios_group The adios group where the variables belongs
 !! \param group_size_inc The inout adios group size to increment
 !!                       with the size of the variable
 !! \param path The logical path structuring the data and containing
-!!             the variable 
+!!             the variable
 !! \param name The variable name in the ADIOS file.
 !! \param var The variable to be defined. Used for type inference. Can be
 !!            ignored.
@@ -162,20 +162,20 @@ subroutine define_adios_double_scalar (adios_group, group_size_inc,  &
   ! Local Variables
   integer(kind=8)                  :: varid ! dummy variable, adios use var name
 
-  ! adios: 6 == real(kind=8) 
+  ! adios: 6 == real(kind=8)
   call adios_define_var (adios_group, name, path, 6,  "", "", "", varid)
   group_size_inc = group_size_inc + 8
 end subroutine define_adios_double_scalar
 
 
 !===============================================================================
-!> Define an ADIOS scalar single precision variable and autoincrement 
+!> Define an ADIOS scalar single precision variable and autoincrement
 !! the adios group size by (8).
 !! \param adios_group The adios group where the variables belongs
 !! \param group_size_inc The inout adios group size to increment
 !!                       with the size of the variable
 !! \param path The logical path structuring the data and containing
-!!             the variable 
+!!             the variable
 !! \param name The variable name in the ADIOS file.
 !! \param var The variable to be defined. Used for type inference. Can be
 !             ignored.
@@ -193,7 +193,7 @@ subroutine define_adios_float_scalar(adios_group, group_size_inc,  &
   ! Local Variables
   integer(kind=8)                  :: varid ! dummy variable, adios use var name
 
-  ! adios: 6 == real(kind=8) 
+  ! adios: 6 == real(kind=8)
   call adios_define_var (adios_group, name, path, 5,  "", "", "", varid)
   group_size_inc = group_size_inc + 4
 end subroutine define_adios_float_scalar
@@ -206,7 +206,7 @@ end subroutine define_adios_float_scalar
 !! \param group_size_inc The inout adios group size to increment
 !!                       with the size of the variable
 !! \param path The logical path structuring the data and containing
-!!             the variable 
+!!             the variable
 !! \param name The variable name in the ADIOS file.
 !! \param var The variable to be defined. Used for type inference. Can be
 !             ignored.
@@ -224,7 +224,7 @@ subroutine define_adios_integer_scalar(adios_group, group_size_inc,  &
   ! Local Variables
   integer(kind=8)                  :: varid ! dummy variable, adios use var name
 
-  ! adios: 2 ~ integer(kind=4) 
+  ! adios: 2 ~ integer(kind=4)
   call adios_define_var (adios_group, name, path, adios_integer,  &
       "", "", "", varid)
   group_size_inc = group_size_inc + 4
@@ -237,7 +237,7 @@ end subroutine define_adios_integer_scalar
 !! \param group_size_inc The inout adios group size to increment
 !!                       with the size of the variable
 !! \param path The logical path structuring the data and containing
-!!             the variable 
+!!             the variable
 !! \param name The variable name in the ADIOS file.
 !! \param var The variable to be defined. Used for type inference. Can be
 !             ignored.
@@ -255,7 +255,7 @@ subroutine define_adios_byte_scalar (adios_group, group_size_inc, &
   ! Local Variables
   integer(kind=8)                  :: varid ! dummy variable, adios use var name
 
-  ! adios: 0 == byte == any_data_type(kind=1) 
+  ! adios: 0 == byte == any_data_type(kind=1)
   call adios_define_var (adios_group, name, path, 0,  "", "", "", varid)
   group_size_inc = group_size_inc + 1
 end subroutine define_adios_byte_scalar
@@ -306,7 +306,7 @@ subroutine define_adios_global_1d_real_generic(adios_group, group_size_inc, &
   integer(kind=8), intent(inout) :: group_size_inc
   ! Variables
   integer(kind=8) :: var_id
-  
+
   ! Define the dimensions of the array. local_dim used as a dummy
   ! variable to call the integer routine.
   call define_adios_global_dims_1d(adios_group, group_size_inc, array_name, &
@@ -341,7 +341,7 @@ subroutine define_adios_global_1d_real_1d(adios_group, group_size_inc, &
   integer, intent(in) :: local_dim
   integer(kind=8), intent(inout) :: group_size_inc
   real, dimension(:), intent(in) :: var
- 
+
   call define_adios_global_1d_real_generic(adios_group, group_size_inc, &
       array_name, local_dim)
 end subroutine define_adios_global_1d_real_1d
@@ -482,7 +482,7 @@ subroutine define_adios_global_1d_double_generic(adios_group, group_size_inc, &
   integer(kind=8), intent(inout) :: group_size_inc
   ! Variables
   integer(kind=8) :: var_id
-  
+
   ! Define the dimensions of the array. local_dim used as a dummy
   ! variable to call the integer routine.
   call define_adios_global_dims_1d(adios_group, group_size_inc, array_name, &
@@ -517,7 +517,7 @@ subroutine define_adios_global_1d_double_1d(adios_group, group_size_inc, &
   integer, intent(in) :: local_dim
   integer(kind=8), intent(inout) :: group_size_inc
   real(kind=8), dimension(:), intent(in) :: var
- 
+
   call define_adios_global_1d_double_generic(adios_group, group_size_inc, &
       array_name, local_dim)
 end subroutine define_adios_global_1d_double_1d
@@ -658,7 +658,7 @@ subroutine define_adios_global_1d_int_generic(adios_group, group_size_inc, &
   integer(kind=8), intent(inout) :: group_size_inc
   ! Variables
   integer(kind=8) :: var_id
-  
+
   ! Define the dimensions of the array. local_dim used as a dummy
   ! variable to call the integer routine.
   call define_adios_global_dims_1d(adios_group, group_size_inc, array_name, &
@@ -693,7 +693,7 @@ subroutine define_adios_global_1d_int_1d(adios_group, group_size_inc, &
   integer, intent(in) :: local_dim
   integer(kind=8), intent(inout) :: group_size_inc
   integer(kind=4), dimension(:), intent(in) :: var
- 
+
   call define_adios_global_1d_int_generic(adios_group, group_size_inc, &
       array_name, local_dim)
 end subroutine define_adios_global_1d_int_1d
@@ -834,7 +834,7 @@ subroutine define_adios_global_1d_long_generic(adios_group, group_size_inc, &
   integer(kind=8), intent(inout) :: group_size_inc
   ! Variables
   integer(kind=8) :: var_id
-  
+
   ! Define the dimensions of the array. local_dim used as a dummy
   ! variable to call the integer routine.
   call define_adios_global_dims_1d(adios_group, group_size_inc, array_name, &
@@ -869,7 +869,7 @@ subroutine define_adios_global_1d_long_1d(adios_group, group_size_inc, &
   integer, intent(in) :: local_dim
   integer(kind=8), intent(inout) :: group_size_inc
   integer(kind=8), dimension(:), intent(in) :: var
- 
+
   call define_adios_global_1d_long_generic(adios_group, group_size_inc, &
       array_name, local_dim)
 end subroutine define_adios_global_1d_long_1d
@@ -1009,15 +1009,15 @@ subroutine define_adios_global_1d_logical_generic(adios_group, group_size_inc, &
   integer(kind=8), intent(inout) :: group_size_inc
   ! Variables
   integer(kind=8) :: var_id
-  
+
   ! Define the dimensions of the array. local_dim used as a dummy
   ! variable to call the integer routine.
   call define_adios_global_dims_1d(adios_group, group_size_inc, array_name, &
       local_dim)
 
   ! The Fortran standard does not specify how variables of LOGICAL type are
-  ! represented, beyond requiring that LOGICAL variables of default kind 
-  ! have the same storage size as default INTEGER and REAL variables. 
+  ! represented, beyond requiring that LOGICAL variables of default kind
+  ! have the same storage size as default INTEGER and REAL variables.
   ! Hence the 'adios_integer' (2) data type to store logical values
   call adios_define_var(adios_group, "array", array_name, 2, &
       array_name // "/local_dim", array_name // "/global_dim", &
@@ -1048,7 +1048,7 @@ subroutine define_adios_global_1d_logical_1d(adios_group, group_size_inc, &
   integer, intent(in) :: local_dim
   integer(kind=8), intent(inout) :: group_size_inc
   logical, dimension(:), intent(in) :: var
- 
+
   call define_adios_global_1d_logical_generic(adios_group, group_size_inc, &
       array_name, local_dim)
 end subroutine define_adios_global_1d_logical_1d

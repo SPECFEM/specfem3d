@@ -28,7 +28,7 @@
 !==============================================================================
 !> Read rho, vp, vs from model_values.bp
 !
-! based on modified GLL mesh output from mesher 
+! based on modified GLL mesh output from mesher
 ! used for iterative inversion procedures
 !
 ! \param myrank rank of the mpi process
@@ -82,7 +82,7 @@ subroutine model_gll_adios(myrank,nspec,LOCAL_PATH)
   call adios_get_scalar(handle, "rho/local_dim", local_dim_rho, ier)
   call adios_get_scalar(handle, "vp/local_dim", local_dim_vp, ier)
   call adios_get_scalar(handle, "vs/local_dim", local_dim_vs, ier)
-  
+
   start(1) = local_dim_rho * myrank
   count_ad(1) = NGLLX * NGLLY * NGLLZ * nspec
   call adios_selection_boundingbox(sel, 1, start, count_ad)

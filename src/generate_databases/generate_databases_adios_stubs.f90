@@ -4,7 +4,7 @@
 !!
 !!  Stubs for ADIOS functions. Avoid link error when not configured with
 !!  ADIOS.
-!!      
+!!
 !! \author MPBL
 !==============================================================================
 
@@ -15,8 +15,8 @@
 subroutine model_gll_adios()
   use adios_manager_mod
 
-  call no_adios_err()  
-end subroutine 
+  call no_adios_err()
+end subroutine
 
 !----------------------------------------.
 ! Subroutines from model_ipati_adios.F90 |
@@ -25,19 +25,19 @@ end subroutine
 subroutine model_ipati_adios()
   use adios_manager_mod
 
-  call no_adios_err()  
-end subroutine model_ipati_adios 
+  call no_adios_err()
+end subroutine model_ipati_adios
 
 subroutine model_ipati_water_adios()
   use adios_manager_mod
 
-  call no_adios_err()  
+  call no_adios_err()
 end subroutine model_ipati_water_adios
 
 subroutine read_model_vp_rho_adios()
   use adios_manager_mod
 
-  call no_adios_err()  
+  call no_adios_err()
 end subroutine read_model_vp_rho_adios
 
 !-------------------------------------------------.
@@ -47,7 +47,7 @@ end subroutine read_model_vp_rho_adios
 subroutine read_partition_files_adios()
   use adios_manager_mod
 
-  call no_adios_err()  
+  call no_adios_err()
 end subroutine read_partition_files_adios
 
 !-----------------------------------------------.
@@ -57,13 +57,13 @@ end subroutine read_partition_files_adios
 subroutine save_arrays_solver_ext_mesh_adios()
   use adios_manager_mod
 
-  call no_adios_err()  
-end subroutine 
+  call no_adios_err()
+end subroutine
 
 subroutine save_arrays_solver_files_adios()
   use adios_manager_mod
 
-  call no_adios_err()  
+  call no_adios_err()
 end subroutine save_arrays_solver_files_adios
 
 !--------------------------------------.
@@ -73,5 +73,5 @@ end subroutine save_arrays_solver_files_adios
 subroutine crm_save_moho_adios()
   use adios_manager_mod
 
-  call no_adios_err()  
+  call no_adios_err()
 end subroutine crm_save_moho_adios

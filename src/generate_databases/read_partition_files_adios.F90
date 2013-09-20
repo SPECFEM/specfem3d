@@ -123,7 +123,7 @@ subroutine read_partition_files_adios()
   call adios_schedule_read(handle, sel, "/nglob", 0, 1, nnodes_ext_mesh, ier)
   call adios_schedule_read(handle, sel, "/nspec", 0, 1, nelmnts_ext_mesh, ier)
   ! read physical properties of the materials
-  ! added poroelastic properties and filled with 0 the last 10 entries 
+  ! added poroelastic properties and filled with 0 the last 10 entries
   ! for elastic/acoustic
   call adios_schedule_read(handle, sel, "/nmaterials", 0, 1, nmat_ext_mesh, ier)
   call adios_schedule_read(handle, sel, "/nundef_materials", 0, 1, &
@@ -140,7 +140,7 @@ subroutine read_partition_files_adios()
   num_interfaces_ext_mesh = 0
   max_interface_size_ext_mesh = 0
   if( NPROC > 1 ) then
-    ! format: #number_of_MPI_interfaces  
+    ! format: #number_of_MPI_interfaces
     !         #maximum_number_of_elements_on_each_interface
     call adios_schedule_read(handle, sel, "/nb_interfaces", 0, 1, &
                              num_interfaces_ext_mesh, ier)
@@ -213,7 +213,7 @@ subroutine read_partition_files_adios()
                            nodes_coords_ext_mesh, ier)
 
   start(1) = local_dim_matpropl* myrank
-  count(1) = 16 * nmat_ext_mesh 
+  count(1) = 16 * nmat_ext_mesh
   sel_num = sel_num+1
   sel => selections(sel_num)
   call adios_selection_boundingbox (sel , 1, start, count)
@@ -222,7 +222,7 @@ subroutine read_partition_files_adios()
                            materials_ext_mesh, ier)
 
   start(1) = local_dim_material_index * myrank
-  count(1) = 2 * nelmnts_ext_mesh 
+  count(1) = 2 * nelmnts_ext_mesh
   sel_num = sel_num+1
   sel => selections(sel_num)
   call adios_selection_boundingbox (sel , 1, start, count)
@@ -230,7 +230,7 @@ subroutine read_partition_files_adios()
                            mat_ext_mesh, ier)
 
   start(1) = local_dim_elmnts_mesh * myrank
-  count(1) = NGNOD * nelmnts_ext_mesh 
+  count(1) = NGNOD * nelmnts_ext_mesh
   sel_num = sel_num+1
   sel => selections(sel_num)
   call adios_selection_boundingbox (sel , 1, start, count)
@@ -246,7 +246,7 @@ subroutine read_partition_files_adios()
                            ibelm_xmin, ier)
 
   start(1) = local_dim_nodes_ibelm_xmin * myrank
-  count(1) = nspec2D_xmin * NGNOD2D 
+  count(1) = nspec2D_xmin * NGNOD2D
   sel_num = sel_num+1
   sel => selections(sel_num)
   call adios_selection_boundingbox (sel , 1, start, count)
@@ -260,7 +260,7 @@ subroutine read_partition_files_adios()
   call adios_schedule_read(handle, sel, "ibelm_xmax/array", 0, 1, &
                            ibelm_xmax, ier)
   start(1) = local_dim_nodes_ibelm_xmax * myrank
-  count(1) = nspec2D_xmax * NGNOD2D 
+  count(1) = nspec2D_xmax * NGNOD2D
   sel_num = sel_num+1
   sel => selections(sel_num)
   call adios_selection_boundingbox (sel , 1, start, count)
@@ -274,7 +274,7 @@ subroutine read_partition_files_adios()
   call adios_schedule_read(handle, sel, "ibelm_ymin/array", 0, 1, &
                            ibelm_ymin, ier)
   start(1) = local_dim_nodes_ibelm_ymin * myrank
-  count(1) = nspec2D_ymin * NGNOD2D 
+  count(1) = nspec2D_ymin * NGNOD2D
   sel_num = sel_num+1
   sel => selections(sel_num)
   call adios_selection_boundingbox (sel , 1, start, count)
@@ -288,7 +288,7 @@ subroutine read_partition_files_adios()
   call adios_schedule_read(handle, sel, "ibelm_ymax/array", 0, 1, &
                            ibelm_ymax, ier)
   start(1) = local_dim_nodes_ibelm_ymax * myrank
-  count(1) = nspec2D_ymax * NGNOD2D 
+  count(1) = nspec2D_ymax * NGNOD2D
   sel_num = sel_num+1
   sel => selections(sel_num)
   call adios_selection_boundingbox (sel , 1, start, count)
@@ -302,7 +302,7 @@ subroutine read_partition_files_adios()
   call adios_schedule_read(handle, sel, "ibelm_bottom/array", 0, 1, &
                            ibelm_bottom, ier)
   start(1) = local_dim_nodes_ibelm_bottom * myrank
-  count(1) = nspec2D_bottom_ext * NGNOD2D 
+  count(1) = nspec2D_bottom_ext * NGNOD2D
   sel_num = sel_num+1
   sel => selections(sel_num)
   call adios_selection_boundingbox (sel , 1, start, count)
@@ -316,7 +316,7 @@ subroutine read_partition_files_adios()
   call adios_schedule_read(handle, sel, "ibelm_top/array", 0, 1, &
                            ibelm_top, ier)
   start(1) = local_dim_nodes_ibelm_top * myrank
-  count(1) = nspec2D_top_ext * NGNOD2D 
+  count(1) = nspec2D_top_ext * NGNOD2D
   sel_num = sel_num+1
   sel => selections(sel_num)
   call adios_selection_boundingbox (sel , 1, start, count)
@@ -324,14 +324,14 @@ subroutine read_partition_files_adios()
                            nodes_ibelm_top, ier)
 
   start(1) = local_dim_neighbours_mesh * myrank
-  count(1) = num_interfaces_ext_mesh 
+  count(1) = num_interfaces_ext_mesh
   sel_num = sel_num+1
   sel => selections(sel_num)
   call adios_selection_boundingbox (sel , 1, start, count)
   call adios_schedule_read(handle, sel, "neighbours_mesh/array", 0, 1, &
                            my_neighbours_ext_mesh, ier)
   start(1) = local_dim_num_elmnts_mesh * myrank
-  count(1) = num_interfaces_ext_mesh 
+  count(1) = num_interfaces_ext_mesh
   sel_num = sel_num+1
   sel => selections(sel_num)
   call adios_selection_boundingbox (sel , 1, start, count)

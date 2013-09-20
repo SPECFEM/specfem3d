@@ -35,7 +35,7 @@
                         num_abs_boundary_faces, &
                         veloc,rho_vp,rho_vs, &
                         ispec_is_elastic,SIMULATION_TYPE,SAVE_FORWARD, &
-                        NSTEP,it, &
+                        it, &
                         b_num_abs_boundary_faces,b_reclen_field,b_absorb_field, &
                         it_dsm,Veloc_dsm_boundary,Tract_dsm_boundary)
 
@@ -68,7 +68,7 @@
 
 ! adjoint simulations
   integer:: SIMULATION_TYPE
-  integer:: NSTEP,it
+  integer:: it
   integer:: b_num_abs_boundary_faces,b_reclen_field
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLSQUARE,b_num_abs_boundary_faces):: b_absorb_field
 

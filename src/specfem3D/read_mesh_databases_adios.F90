@@ -93,32 +93,32 @@ subroutine read_mesh_databases_adios()
   integer(kind=8), pointer :: sel => null()
   integer(kind=8), dimension(1) :: start, count_ad
 
-  integer :: local_dim_ibool, local_dim_x_global, local_dim_y_global,          & 
-             local_dim_z_global, local_dim_xixstore, local_dim_xiystore,       & 
-             local_dim_xizstore, local_dim_etaxstore, local_dim_etaystore,     & 
-             local_dim_etazstore, local_dim_gammaxstore,                       & 
-             local_dim_gammaystore, local_dim_gammazstore,                     & 
-             local_dim_jacobianstore, local_dim_kappastore,                    & 
-             local_dim_mustore, local_dim_rhostore,                            & 
-             local_dim_ispec_is_acoustic, local_dim_ispec_is_elastic,          & 
-             local_dim_ispec_is_poroelastic, local_dim_rmass,                  & 
-             local_dim_rmass_ocean_load, local_dim_rmass_acoustic,             & 
-             local_dim_rmass_acoustic_interface, local_dim_rmass_elastic,      & 
-             local_dim_rmass_elastic_interface, local_dim_rho_vp,              & 
-             local_dim_rho_vs, local_dim_abs_boundary_ispec,                   & 
-             local_dim_abs_boundary_ijk, local_dim_abs_boundary_jacobian2Dw,   & 
-             local_dim_abs_boundary_normal, local_dim_ibelm_xmin,              & 
-             local_dim_ibelm_ymin, local_dim_ibelm_bottom,                     & 
-             local_dim_ibelm_top, local_dim_free_surface_ispec,                & 
-             local_dim_free_surface_ijk, local_dim_free_surface_jacobian2Dw,   & 
-             local_dim_free_surface_normal, local_dim_coupling_ac_el_ispec,    & 
+  integer :: local_dim_ibool, local_dim_x_global, local_dim_y_global,          &
+             local_dim_z_global, local_dim_xixstore, local_dim_xiystore,       &
+             local_dim_xizstore, local_dim_etaxstore, local_dim_etaystore,     &
+             local_dim_etazstore, local_dim_gammaxstore,                       &
+             local_dim_gammaystore, local_dim_gammazstore,                     &
+             local_dim_jacobianstore, local_dim_kappastore,                    &
+             local_dim_mustore, local_dim_rhostore,                            &
+             local_dim_ispec_is_acoustic, local_dim_ispec_is_elastic,          &
+             local_dim_ispec_is_poroelastic, local_dim_rmass,                  &
+             local_dim_rmass_ocean_load, local_dim_rmass_acoustic,             &
+             local_dim_rmass_acoustic_interface, local_dim_rmass_elastic,      &
+             local_dim_rmass_elastic_interface, local_dim_rho_vp,              &
+             local_dim_rho_vs, local_dim_abs_boundary_ispec,                   &
+             local_dim_abs_boundary_ijk, local_dim_abs_boundary_jacobian2Dw,   &
+             local_dim_abs_boundary_normal, local_dim_ibelm_xmin,              &
+             local_dim_ibelm_ymin, local_dim_ibelm_bottom,                     &
+             local_dim_ibelm_top, local_dim_free_surface_ispec,                &
+             local_dim_free_surface_ijk, local_dim_free_surface_jacobian2Dw,   &
+             local_dim_free_surface_normal, local_dim_coupling_ac_el_ispec,    &
              local_dim_coupling_ac_el_ijk,                                     &
-             local_dim_coupling_ac_el_jacobian2Dw,                             & 
-             local_dim_coupling_ac_el_normal, local_dim_my_neighbours_ext_mesh,& 
-             local_dim_nibool_interfaces_ext_mesh,                             & 
-             local_dim_ibool_interfaces_ext_mesh,                              & 
-             local_dim_ispec_is_inner, local_dim_phase_ispec_inner_acoustic,   & 
-             local_dim_phase_ispec_inner_elastic, local_dim_ibelm_xmax,        & 
+             local_dim_coupling_ac_el_jacobian2Dw,                             &
+             local_dim_coupling_ac_el_normal, local_dim_my_neighbours_ext_mesh,&
+             local_dim_nibool_interfaces_ext_mesh,                             &
+             local_dim_ibool_interfaces_ext_mesh,                              &
+             local_dim_ispec_is_inner, local_dim_phase_ispec_inner_acoustic,   &
+             local_dim_phase_ispec_inner_elastic, local_dim_ibelm_xmax,        &
              local_dim_ibelm_ymax, local_dim_rmass_solid_poroelastic,          &
              local_dim_rmass_fluid_poroelastic, local_dim_rhoarraystore,       &
              local_dim_kappaarraystore, local_dim_permstore,                   &
@@ -145,7 +145,7 @@ subroutine read_mesh_databases_adios()
   !-------------------------------------.
   ! Open ADIOS Database file, read mode |
   !-------------------------------------'
-  sel_num = 0             
+  sel_num = 0
 
   database_name = adjustl(LOCAL_PATH)
   database_name = database_name(1:len_trim(database_name)) // "/external_mesh.bp"
@@ -169,7 +169,7 @@ subroutine read_mesh_databases_adios()
   !----------------------------------------------.
   ! Fetch values to compute the simulation type. |
   !----------------------------------------------'
-  sel_num = 0             
+  sel_num = 0
   call adios_get_scalar(handle, "ispec_is_acoustic/local_dim",&
                         local_dim_ispec_is_acoustic,ier)
   call adios_get_scalar(handle, "ispec_is_elastic/local_dim",&
@@ -178,7 +178,7 @@ subroutine read_mesh_databases_adios()
                         local_dim_ispec_is_poroelastic,ier)
 
   start(1) = local_dim_ispec_is_acoustic * myrank
-  count_ad(1) = NSPEC_AB 
+  count_ad(1) = NSPEC_AB
   sel_num = sel_num+1
   sel => selections(sel_num)
   call adios_selection_boundingbox (sel , 1, start, count_ad)
@@ -227,7 +227,7 @@ subroutine read_mesh_databases_adios()
   ! Get scalar values. Might be differents for different processors. |
   ! Hence the selection writeblock.                                  |
   !------------------------------------------------------------------'
-  sel_num = 1             
+  sel_num = 1
   sel => selections(sel_num)
   call adios_selection_writeblock(sel, myrank)
 
@@ -371,7 +371,7 @@ subroutine read_mesh_databases_adios()
                           local_dim_rmass_acoustic,ier)
     call adios_get_scalar(handle, "rmass_acoustic_interface/local_dim",&
                           local_dim_rmass_acoustic_interface,ier)
-  endif 
+  endif
   if( ELASTIC_SIMULATION ) then
     call adios_get_scalar(handle, "rmass/local_dim",&
                           local_dim_rmass,ier)
@@ -389,7 +389,7 @@ subroutine read_mesh_databases_adios()
                           local_dim_rho_vp,ier)
     call adios_get_scalar(handle, "rho_vs/local_dim",&
                           local_dim_rho_vs,ier)
-  endif 
+  endif
   if( POROELASTIC_SIMULATION ) then
     call adios_get_scalar(handle, "rmass_solid_poroelastic/local_dim",&
                           local_dim_rmass_solid_poroelastic,ier)
@@ -413,7 +413,7 @@ subroutine read_mesh_databases_adios()
                           local_dim_rho_vpII,ier)
     call adios_get_scalar(handle, "rho_vsI/local_dim",&
                           local_dim_rho_vsI,ier)
-  endif 
+  endif
   if( PML_CONDITIONS ) then
     if( nspec_cpml > 0 ) then
       call adios_get_scalar(handle, "CPML_regions/local_dim",&
@@ -620,8 +620,8 @@ subroutine read_mesh_databases_adios()
     rmassz_acoustic(:) = 0._CUSTOM_REAL
   endif
 
-  ! this array is needed for acoustic simulations but also for elastic 
-  ! simulations with CPML, thus we now allocate it and read it in all 
+  ! this array is needed for acoustic simulations but also for elastic
+  ! simulations with CPML, thus we now allocate it and read it in all
   ! cases (whether the simulation is acoustic, elastic, or acoustic/elastic)
   allocate(rhostore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if( ier /= 0 ) stop 'error allocating array rhostore'
@@ -710,7 +710,7 @@ subroutine read_mesh_databases_adios()
             c66store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
     if( ier /= 0 ) stop 'error allocating array c11store etc.'
 
-    ! note: currently, they need to be defined, as they are used in the 
+    ! note: currently, they need to be defined, as they are used in the
     !       routine arguments for compute_forces_viscoelastic_Deville()
     allocate(R_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
             R_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
@@ -753,7 +753,7 @@ subroutine read_mesh_databases_adios()
       allocate(rmass_ocean_load(1),stat=ier)
       if( ier /= 0 ) stop 'error allocating dummy array rmass_ocean_load'
     endif
-! TODO    
+! TODO
 #endif
   else
     ! no elastic attenuation & anisotropy
@@ -820,7 +820,7 @@ subroutine read_mesh_databases_adios()
     if(ier /= 0) stop 'error allocating array is_CPML'
 
     ! make sure there are no PMLs by default,
-    ! and then below if NSPEC_CPML > 0 we will need the real flags 
+    ! and then below if NSPEC_CPML > 0 we will need the real flags
     ! for this mesh from the disk
     is_CPML(:) = .false.
 
@@ -856,7 +856,7 @@ subroutine read_mesh_databases_adios()
       endif
     endif
   else
-    ! allocate with a dummy size of zero just to be able to use this array 
+    ! allocate with a dummy size of zero just to be able to use this array
     ! as argument in subroutine calls
     allocate(is_CPML(0),stat=ier)
   endif
@@ -1054,7 +1054,7 @@ subroutine read_mesh_databases_adios()
 
   if( ACOUSTIC_SIMULATION ) then
     start(1) = local_dim_rmass_acoustic * myrank
-    count_ad(1) = NGLOB_AB 
+    count_ad(1) = NGLOB_AB
     sel_num = sel_num+1
     sel => selections(sel_num)
     call adios_selection_boundingbox (sel , 1, start, count_ad)
@@ -1089,7 +1089,7 @@ subroutine read_mesh_databases_adios()
     if( APPROXIMATE_OCEAN_LOAD ) then
       ! ocean mass matrix
       start(1) = local_dim_rmass_ocean_load * myrank
-      count_ad(1) = NGLOB_AB !nglob_ocean 
+      count_ad(1) = NGLOB_AB !nglob_ocean
       sel_num = sel_num+1
       sel => selections(sel_num)
       call adios_selection_boundingbox (sel , 1, start, count_ad)
@@ -1111,7 +1111,7 @@ subroutine read_mesh_databases_adios()
 
   if( POROELASTIC_SIMULATION ) then
     start(1) = local_dim_rmass_solid_poroelastic * myrank
-    count_ad(1) = NGLOB_AB 
+    count_ad(1) = NGLOB_AB
     sel_num = sel_num+1
     sel => selections(sel_num)
     call adios_selection_boundingbox (sel , 1, start, count_ad)
@@ -1135,7 +1135,7 @@ subroutine read_mesh_databases_adios()
     call adios_selection_boundingbox (sel , 1, start, count_ad)
     call adios_schedule_read(handle, sel, "kappaarraystore/array", 0, 1, &
                              kappaarraystore, ier)
-    
+
     start(1) = local_dim_permstore * myrank
     count_ad(1) =  6 * NGLLX * NGLLY * NGLLZ * NSPEC_AB
     sel_num = sel_num+1
@@ -1315,7 +1315,7 @@ subroutine read_mesh_databases_adios()
           endif
           if(ACOUSTIC_SIMULATION) then
             start(1) = local_dim_rmassz_acoustic * myrank
-            count_ad(1) = NGLOB_AB ! == nglob_xy in generate_databse 
+            count_ad(1) = NGLOB_AB ! == nglob_xy in generate_databse
             sel_num = sel_num+1
             sel => selections(sel_num)
             call adios_selection_boundingbox (sel , 1, start, count_ad)
@@ -1331,7 +1331,7 @@ subroutine read_mesh_databases_adios()
   endif
 
   start(1) = local_dim_ibelm_xmin * myrank
-  count_ad(1) = nspec2D_xmin 
+  count_ad(1) = nspec2D_xmin
   sel_num = sel_num+1
   sel => selections(sel_num)
   call adios_selection_boundingbox (sel , 1, start, count_ad)
@@ -1339,7 +1339,7 @@ subroutine read_mesh_databases_adios()
                            ibelm_xmin, ier)
 
   start(1) = local_dim_ibelm_xmax * myrank
-  count_ad(1) = nspec2D_xmax 
+  count_ad(1) = nspec2D_xmax
   sel_num = sel_num+1
   sel => selections(sel_num)
   call adios_selection_boundingbox (sel , 1, start, count_ad)
@@ -1347,7 +1347,7 @@ subroutine read_mesh_databases_adios()
                            ibelm_xmax, ier)
 
   start(1) = local_dim_ibelm_ymin * myrank
-  count_ad(1) = nspec2D_ymin 
+  count_ad(1) = nspec2D_ymin
   sel_num = sel_num+1
   sel => selections(sel_num)
   call adios_selection_boundingbox (sel , 1, start, count_ad)
@@ -1355,7 +1355,7 @@ subroutine read_mesh_databases_adios()
                            ibelm_ymin, ier)
 
   start(1) = local_dim_ibelm_ymax * myrank
-  count_ad(1) = nspec2D_ymax 
+  count_ad(1) = nspec2D_ymax
   sel_num = sel_num+1
   sel => selections(sel_num)
   call adios_selection_boundingbox (sel , 1, start, count_ad)
@@ -1363,7 +1363,7 @@ subroutine read_mesh_databases_adios()
                            ibelm_ymax, ier)
 
   start(1) = local_dim_ibelm_bottom * myrank
-  count_ad(1) = nspec2D_bottom 
+  count_ad(1) = nspec2D_bottom
   sel_num = sel_num+1
   sel => selections(sel_num)
   call adios_selection_boundingbox (sel , 1, start, count_ad)
@@ -1371,7 +1371,7 @@ subroutine read_mesh_databases_adios()
                            ibelm_bottom, ier)
 
   start(1) = local_dim_ibelm_top * myrank
-  count_ad(1) = nspec2D_top 
+  count_ad(1) = nspec2D_top
   sel_num = sel_num+1
   sel => selections(sel_num)
   call adios_selection_boundingbox (sel , 1, start, count_ad)
@@ -1598,7 +1598,7 @@ subroutine read_mesh_databases_adios()
 
   ! inner / outer elements
   start(1) = local_dim_ispec_is_inner * myrank
-  count_ad(1) = NSPEC_AB 
+  count_ad(1) = NSPEC_AB
   sel_num = sel_num+1
   sel => selections(sel_num)
   call adios_selection_boundingbox (sel , 1, start, count_ad)
@@ -1785,7 +1785,7 @@ subroutine read_moho_mesh_adjoint_adios()
   !-------------------------------------.
   ! Open ADIOS Database file, read mode |
   !-------------------------------------'
-  sel_num = 0             
+  sel_num = 0
 
   database_name = adjustl(LOCAL_PATH)
   database_name = database_name(1:len_trim(database_name)) // "/moho.bp"
@@ -1809,7 +1809,7 @@ subroutine read_moho_mesh_adjoint_adios()
   !----------------------------------------------.
   ! Fetch values to compute the simulation type. |
   !----------------------------------------------'
-  sel_num = 0             
+  sel_num = 0
   call adios_get_scalar(handle, "ibelm_moho_bot/local_dim",&
                         local_dim_ibelm_moho_bot ,ier)
   call adios_get_scalar(handle, "ibelm_moho_top/local_dim",&

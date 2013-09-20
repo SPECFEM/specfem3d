@@ -30,7 +30,7 @@
 !==============================================================================
 ! \file save_adjoint_kernels
 !
-! TODO   
+! TODO
 ! * Better doxygen documentation.
 !==============================================================================
 
@@ -136,7 +136,7 @@ subroutine save_adjoint_kernels()
     call save_kernels_poroelastic(adios_handle)
   endif
 
-  ! save weights for volume integration, 
+  ! save weights for volume integration,
   ! in order to benchmark the kernels with analytical expressions
   if( SAVE_WEIGHTS ) then
     call save_weights_kernel()
@@ -171,7 +171,7 @@ subroutine save_adjoint_kernels()
 end subroutine save_adjoint_kernels
 
 !==============================================================================
-!> Save weights for volume integration, 
+!> Save weights for volume integration,
 !! in order to benchmark the kernels with analytical expressions.
 subroutine save_weights_kernel()
   use specfem_par
@@ -201,7 +201,7 @@ subroutine save_weights_kernel()
   if( ier /= 0 ) stop 'error opening file weights_kernel.bin'
   write(IOUT) weights_kernel
   close(IOUT)
-  
+
   deallocate(weights_kernel,stat=ier)
   if( ier /= 0 ) stop 'error allocating array weights_kernel'
 end subroutine save_weights_kernel

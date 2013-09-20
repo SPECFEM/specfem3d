@@ -146,12 +146,12 @@
   ! reads in numbers of spectral elements and points for the part of the mesh handled by this process
   call create_name_database(prname,myrank,LOCAL_PATH)
   if (OLD_TEST_TO_FIX_ONE_DAY) call create_name_database(dsmname,myrank,TRAC_PATH)  !! VM VM
- 
+
 
   if (ADIOS_FOR_MESH) then
     call read_mesh_for_init(NSPEC_AB, NGLOB_AB)
   else
-	 open(unit=IIN,file=prname(1:len_trim(prname))//'external_mesh.bin',status='old',&
+   open(unit=IIN,file=prname(1:len_trim(prname))//'external_mesh.bin',status='old',&
           action='read',form='unformatted',iostat=ier)
     if( ier /= 0 ) then
       print*,'error: could not open database '
