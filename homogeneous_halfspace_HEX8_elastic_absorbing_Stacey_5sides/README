@@ -2,6 +2,12 @@
 README
 ----------------------------------------------------------------------
 
+
+Note: to create the mesh again using CUBIT, just type " claro ./block_mesh.py "
+("claro" is the way of calling CUBIT from the command line)
+
+
+
 This examples creates a homogeneous halfspace, i.e. a single volume block with a
 constant elastic material property, using CUBIT and runs a forward simulation.
 

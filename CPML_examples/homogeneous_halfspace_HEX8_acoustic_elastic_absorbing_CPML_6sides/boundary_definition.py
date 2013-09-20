@@ -1,1 +1,1 @@
-../../../CUBIT/boundary_definition.py
+../../../CUBIT_GEOCUBIT/geocubitlib/boundary_definition.py

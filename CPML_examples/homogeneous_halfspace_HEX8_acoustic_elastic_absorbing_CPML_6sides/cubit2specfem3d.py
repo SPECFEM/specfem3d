@@ -1,1 +1,1 @@
-../../../CUBIT/cubit2specfem3d.py
+../../../CUBIT_GEOCUBIT/geocubitlib/cubit2specfem3d.py
