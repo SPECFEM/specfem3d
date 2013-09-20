@@ -10,8 +10,8 @@ subroutine no_adios_err()
 
   implicit none
 
-  integer :: myrank, code, ier 
-  
+  integer :: myrank, code, ier
+
   call MPI_Comm_rank(MPI_COMM_WORLD, myrank, ier)
   if (myrank == 0) then
     print *, "----------------------------------------------------"
@@ -21,7 +21,7 @@ subroutine no_adios_err()
     print *, "----------------------------------------------------"
   endif
   call MPI_Abort(MPI_COMM_WORLD, code, ier)
-end subroutine 
+end subroutine
 
 !==============================================================================
 !> Initialize ADIOS and setup the xml output file

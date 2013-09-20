@@ -49,7 +49,7 @@ subroutine model_ipati_adios(myrank,nspec,LOCAL_PATH)
   integer :: ier
 
   ! ---------------------------------------------------------------------------
-  ! note: vp not vs structure is available 
+  ! note: vp not vs structure is available
   ! (as is often the case in exploration seismology),
   ! scaling factor
   real, parameter :: SCALING_FACTOR = 1.0/1.8
@@ -195,7 +195,7 @@ subroutine read_model_vp_rho_adios (myrank, nspec, LOCAL_PATH, &
   !------------------------'
   call adios_get_scalar(handle, "rho/local_dim", local_dim_rho, ier)
   call adios_get_scalar(handle, "vp/local_dim", local_dim_vp, ier)
-  
+
   start(1) = local_dim_rho * myrank
   count_ad(1) = NGLLX * NGLLY * NGLLZ * nspec
   call adios_selection_boundingbox(sel, 1, start, count_ad)

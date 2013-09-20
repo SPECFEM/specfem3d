@@ -32,7 +32,7 @@
 
 !==============================================================================
 !> \def STRINGIFY_VAR(a)
-!! Macro taking a variable and returning the stringified variable and 
+!! Macro taking a variable and returning the stringified variable and
 !! the variable itself.
 !! STRINGIFY_VAR(x) expand as:
 !!   "x", x
@@ -62,7 +62,7 @@ subroutine save_forward_arrays_adios()
   integer(kind=8) :: group, handle
   integer(kind=8) :: groupsize, totalsize
   integer :: local_dim
-  
+
   !--- Variables to allreduce - wmax stands for world_max
   integer :: nglob_wmax, nspec_wmax, NSPEC_ATTENUATION_wmax, &
              NSPEC_STRAIN_wmax, NSPEC_ATTENUATION_kappa_wmax, N_SLS_wmax
@@ -103,19 +103,19 @@ subroutine save_forward_arrays_adios()
   !------------------------.
   ! Define ADIOS Variables |
   !------------------------'
-  call define_adios_scalar(group, groupsize, "", STRINGIFY_VAR(ngllx)) 
-  call define_adios_scalar(group, groupsize, "", STRINGIFY_VAR(nglly)) 
-  call define_adios_scalar(group, groupsize, "", STRINGIFY_VAR(ngllz)) 
+  call define_adios_scalar(group, groupsize, "", STRINGIFY_VAR(ngllx))
+  call define_adios_scalar(group, groupsize, "", STRINGIFY_VAR(nglly))
+  call define_adios_scalar(group, groupsize, "", STRINGIFY_VAR(ngllz))
 
-  call define_adios_scalar(group, groupsize, "", "nglob", NGLOB_AB) 
+  call define_adios_scalar(group, groupsize, "", "nglob", NGLOB_AB)
   call define_adios_scalar(group, groupsize, "", &
-                           STRINGIFY_VAR(NSPEC_ATTENUATION_AB)) 
+                           STRINGIFY_VAR(NSPEC_ATTENUATION_AB))
   call define_adios_scalar(group, groupsize, "", &
-                           STRINGIFY_VAR(NSPEC_STRAIN_ONLY)) 
+                           STRINGIFY_VAR(NSPEC_STRAIN_ONLY))
   call define_adios_scalar(group, groupsize, "", &
-                           STRINGIFY_VAR(NSPEC_ATTENUATION_AB_kappa)) 
+                           STRINGIFY_VAR(NSPEC_ATTENUATION_AB_kappa))
   call define_adios_scalar(group, groupsize, "", &
-                           STRINGIFY_VAR(N_SLS)) 
+                           STRINGIFY_VAR(N_SLS))
 
   if( ACOUSTIC_SIMULATION ) then
     local_dim = nglob_wmax
@@ -274,7 +274,7 @@ subroutine save_forward_arrays_adios()
   !----------------------------------.
   ! Perform the actual write to disk |
   !----------------------------------'
-  call adios_set_path(handle, "", ier)                          
+  call adios_set_path(handle, "", ier)
   call adios_close(handle, ier)
 
 end subroutine save_forward_arrays_adios

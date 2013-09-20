@@ -32,7 +32,7 @@
 
 !==============================================================================
 !> \def STRINGIFY_VAR(a)
-!! Macro taking a variable and returning the stringified variable and 
+!! Macro taking a variable and returning the stringified variable and
 !! the variable itself.
 !! STRINGIFY_VAR(x) expand as:
 !!   "x", x
@@ -77,7 +77,7 @@ subroutine crm_save_moho_adios()
   !-----------------------------------------------------------------'
   ! Filling a temporary array to avoid doing allreduces for each var.
   max_global_values(1) = nspec_ab
-  max_global_values(2) = nspec2d_moho 
+  max_global_values(2) = nspec2d_moho
 
   call MPI_Allreduce(MPI_IN_PLACE, max_global_values, num_vars, &
                      MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ier)
@@ -97,8 +97,8 @@ subroutine crm_save_moho_adios()
   !------------------------.
   ! Define ADIOS Variables |
   !------------------------'
-  call define_adios_scalar(group, groupsize, "", "nspec", NSPEC_AB) 
-  call define_adios_scalar(group, groupsize, "", STRINGIFY_VAR(nspec2d_moho)) 
+  call define_adios_scalar(group, groupsize, "", "nspec", NSPEC_AB)
+  call define_adios_scalar(group, groupsize, "", STRINGIFY_VAR(nspec2d_moho))
 
   local_dim = nspec2d_moho_wmax
   call define_adios_global_array1D(group, groupsize, &
@@ -142,15 +142,15 @@ subroutine crm_save_moho_adios()
   !------------------------------------------.
   ! Write previously defined ADIOS variables |
   !------------------------------------------'
-  call adios_write(handle, "nspec", NSPEC_AB, ier) 
-  call adios_write(handle, STRINGIFY_VAR(nspec2d_moho), ier) 
+  call adios_write(handle, "nspec", NSPEC_AB, ier)
+  call adios_write(handle, STRINGIFY_VAR(nspec2d_moho), ier)
 
   local_dim = nspec2d_moho_wmax
   call write_adios_global_1d_array(handle, myrank, sizeprocs, &
                                    local_dim, STRINGIFY_VAR(ibelm_moho_top))
   call write_adios_global_1d_array(handle, myrank, sizeprocs, &
                                    local_dim, STRINGIFY_VAR(ibelm_moho_bot))
-  
+
   local_dim = 3 * NGLLSQUARE * nspec2d_moho_wmax
   call write_adios_global_1d_array(handle, myrank, sizeprocs, &
                                    local_dim, STRINGIFY_VAR(ijk_moho_top))
@@ -172,7 +172,7 @@ subroutine crm_save_moho_adios()
   !----------------------------------.
   ! Perform the actual write to disk |
   !----------------------------------'
-  call adios_set_path(handle, "", ier)                          
+  call adios_set_path(handle, "", ier)
   call adios_close(handle, ier)
 end subroutine crm_save_moho_adios
 

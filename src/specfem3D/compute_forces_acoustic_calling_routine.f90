@@ -594,8 +594,9 @@ subroutine compute_forces_acoustic_GPU()
       call assemble_MPI_scalar_write_cuda(NPROC,NGLOB_AB,potential_dot_dot_acoustic, &
                         Mesh_pointer,&
                         buffer_recv_scalar_ext_mesh, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                        num_interfaces_ext_mesh, &
+                        max_nibool_interfaces_ext_mesh, &
+!                       nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh, &
                         1)
 
@@ -604,8 +605,9 @@ subroutine compute_forces_acoustic_GPU()
         call assemble_MPI_scalar_write_cuda(NPROC,NGLOB_AB,b_potential_dot_dot_acoustic, &
                         Mesh_pointer, &
                         b_buffer_recv_scalar_ext_mesh, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                        num_interfaces_ext_mesh, &
+                        max_nibool_interfaces_ext_mesh, &
+!                       nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         b_request_send_scalar_ext_mesh,b_request_recv_scalar_ext_mesh, &
                         3)
       endif

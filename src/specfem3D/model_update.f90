@@ -92,7 +92,7 @@ program model_update
   logical, dimension(:),allocatable :: mask_ibool
 
   !MPI variables
-  integer :: sizeprocs,  ier
+  integer :: ier
 
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: model_vp, model_vs, model_vp_new, model_vs_new
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: model_dA, model_dB, total_model

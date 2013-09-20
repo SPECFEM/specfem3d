@@ -395,10 +395,10 @@
 !! \author MPBL
 subroutine read_adios_parameters(ADIOS_ENABLED, ADIOS_FOR_DATABASES,       &
                                  ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, &
-                                 ADIOS_FOR_KERNELS) 
+                                 ADIOS_FOR_KERNELS)
   implicit none
   include "constants.h"
-  
+
   logical, intent(out) :: ADIOS_ENABLED, ADIOS_FOR_DATABASES,       &
                           ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, &
                           ADIOS_FOR_KERNELS
@@ -418,9 +418,9 @@ subroutine read_adios_parameters(ADIOS_ENABLED, ADIOS_FOR_DATABASES,       &
     call read_value_logical(ADIOS_FOR_FORWARD_ARRAYS, &
                            'solver.ADIOS_FOR_FORWARD_ARRAYS')
     call read_value_logical(ADIOS_FOR_KERNELS, 'solver.ADIOS_FOR_KERNELS')
-  endif 
+  endif
   call close_parameter_file()
-        
+
 end subroutine read_adios_parameters
 
 

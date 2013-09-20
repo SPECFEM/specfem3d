@@ -34,7 +34,7 @@
 !! \note We do not define function to write scalars variables into adios
 !!       since it is already a single function call.
 !!
-!! \author MPBL      
+!! \author MPBL
 !-------------------------------------------------------------------------------
 module adios_helpers_writers_mod
   implicit none
@@ -154,7 +154,7 @@ end subroutine write_1D_global_array_adios_dims
 !! \param local_dim The number of elements to be writen by each process. Might
 !!                  eventually be padded.
 !! \param path The logical path structuring the data and containing
-!!             the variable 
+!!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
 subroutine write_adios_global_1d_real_1d(adios_handle, myrank, sizeprocs, &
@@ -182,7 +182,7 @@ end subroutine write_adios_global_1d_real_1d
 !! \param local_dim The number of elements to be writen by each process. Might
 !!                  eventually be padded.
 !! \param path The logical path structuring the data and containing
-!!             the variable 
+!!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
 subroutine write_adios_global_1d_real_2d(adios_handle, myrank, sizeprocs, &
@@ -210,7 +210,7 @@ end subroutine write_adios_global_1d_real_2d
 !! \param local_dim The number of elements to be writen by each process. Might
 !!                  eventually be padded.
 !! \param path The logical path structuring the data and containing
-!!             the variable 
+!!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
 subroutine write_adios_global_1d_real_3d(adios_handle, myrank, sizeprocs, &
@@ -238,7 +238,7 @@ end subroutine write_adios_global_1d_real_3d
 !! \param local_dim The number of elements to be writen by each process. Might
 !!                  eventually be padded.
 !! \param path The logical path structuring the data and containing
-!!             the variable 
+!!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
 subroutine write_adios_global_1d_real_4d(adios_handle, myrank, sizeprocs, &
@@ -266,7 +266,7 @@ end subroutine write_adios_global_1d_real_4d
 !! \param local_dim The number of elements to be writen by each process. Might
 !!                  eventually be padded.
 !! \param path The logical path structuring the data and containing
-!!             the variable 
+!!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
 subroutine write_adios_global_1d_real_5d(adios_handle, myrank, sizeprocs, &
@@ -294,7 +294,7 @@ end subroutine write_adios_global_1d_real_5d
 !! \param local_dim The number of elements to be writen by each process. Might
 !!                  eventually be padded.
 !! \param path The logical path structuring the data and containing
-!!             the variable 
+!!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
 subroutine write_adios_global_1d_double_1d(adios_handle, myrank, sizeprocs, &
@@ -322,7 +322,7 @@ end subroutine write_adios_global_1d_double_1d
 !! \param local_dim The number of elements to be writen by each process. Might
 !!                  eventually be padded.
 !! \param path The logical path structuring the data and containing
-!!             the variable 
+!!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
 subroutine write_adios_global_1d_double_2d(adios_handle, myrank, sizeprocs, &
@@ -350,7 +350,7 @@ end subroutine write_adios_global_1d_double_2d
 !! \param local_dim The number of elements to be writen by each process. Might
 !!                  eventually be padded.
 !! \param path The logical path structuring the data and containing
-!!             the variable 
+!!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
 subroutine write_adios_global_1d_double_3d(adios_handle, myrank, sizeprocs, &
@@ -378,7 +378,7 @@ end subroutine write_adios_global_1d_double_3d
 !! \param local_dim The number of elements to be writen by each process. Might
 !!                  eventually be padded.
 !! \param path The logical path structuring the data and containing
-!!             the variable 
+!!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
 subroutine write_adios_global_1d_double_4d(adios_handle, myrank, sizeprocs, &
@@ -406,7 +406,7 @@ end subroutine write_adios_global_1d_double_4d
 !! \param local_dim The number of elements to be writen by each process. Might
 !!                  eventually be padded.
 !! \param path The logical path structuring the data and containing
-!!             the variable 
+!!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
 subroutine write_adios_global_1d_double_5d(adios_handle, myrank, sizeprocs, &
@@ -434,7 +434,7 @@ end subroutine write_adios_global_1d_double_5d
 !! \param local_dim The number of elements to be writen by each process. Might
 !!                  eventually be padded.
 !! \param path The logical path structuring the data and containing
-!!             the variable 
+!!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
 subroutine write_adios_global_1d_integer_1d(adios_handle, myrank, sizeprocs, &
@@ -462,7 +462,7 @@ end subroutine write_adios_global_1d_integer_1d
 !! \param local_dim The number of elements to be writen by each process. Might
 !!                  eventually be padded.
 !! \param path The logical path structuring the data and containing
-!!             the variable 
+!!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
 subroutine write_adios_global_1d_integer_2d(adios_handle, myrank, sizeprocs, &
@@ -490,7 +490,7 @@ end subroutine write_adios_global_1d_integer_2d
 !! \param local_dim The number of elements to be writen by each process. Might
 !!                  eventually be padded.
 !! \param path The logical path structuring the data and containing
-!!             the variable 
+!!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
 subroutine write_adios_global_1d_integer_3d(adios_handle, myrank, sizeprocs, &
@@ -518,7 +518,7 @@ end subroutine write_adios_global_1d_integer_3d
 !! \param local_dim The number of elements to be writen by each process. Might
 !!                  eventually be padded.
 !! \param path The logical path structuring the data and containing
-!!             the variable 
+!!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
 subroutine write_adios_global_1d_integer_4d(adios_handle, myrank, sizeprocs, &
@@ -546,7 +546,7 @@ end subroutine write_adios_global_1d_integer_4d
 !! \param local_dim The number of elements to be writen by each process. Might
 !!                  eventually be padded.
 !! \param path The logical path structuring the data and containing
-!!             the variable 
+!!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
 subroutine write_adios_global_1d_integer_5d(adios_handle, myrank, sizeprocs, &
@@ -574,7 +574,7 @@ end subroutine write_adios_global_1d_integer_5d
 !! \param local_dim The number of elements to be writen by each process. Might
 !!                  eventually be padded.
 !! \param path The logical path structuring the data and containing
-!!             the variable 
+!!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
 subroutine write_adios_global_1d_long_1d(adios_handle, myrank, sizeprocs, &
@@ -602,7 +602,7 @@ end subroutine write_adios_global_1d_long_1d
 !! \param local_dim The number of elements to be writen by each process. Might
 !!                  eventually be padded.
 !! \param path The logical path structuring the data and containing
-!!             the variable 
+!!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
 subroutine write_adios_global_1d_long_2d(adios_handle, myrank, sizeprocs, &
@@ -630,7 +630,7 @@ end subroutine write_adios_global_1d_long_2d
 !! \param local_dim The number of elements to be writen by each process. Might
 !!                  eventually be padded.
 !! \param path The logical path structuring the data and containing
-!!             the variable 
+!!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
 subroutine write_adios_global_1d_long_3d(adios_handle, myrank, sizeprocs, &
@@ -658,7 +658,7 @@ end subroutine write_adios_global_1d_long_3d
 !! \param local_dim The number of elements to be writen by each process. Might
 !!                  eventually be padded.
 !! \param path The logical path structuring the data and containing
-!!             the variable 
+!!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
 subroutine write_adios_global_1d_long_4d(adios_handle, myrank, sizeprocs, &
@@ -686,7 +686,7 @@ end subroutine write_adios_global_1d_long_4d
 !! \param local_dim The number of elements to be writen by each process. Might
 !!                  eventually be padded.
 !! \param path The logical path structuring the data and containing
-!!             the variable 
+!!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
 subroutine write_adios_global_1d_long_5d(adios_handle, myrank, sizeprocs, &
@@ -714,7 +714,7 @@ end subroutine write_adios_global_1d_long_5d
 !! \param local_dim The number of elements to be writen by each process. Might
 !!                  eventually be padded.
 !! \param path The logical path structuring the data and containing
-!!             the variable 
+!!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
 subroutine write_adios_global_1d_logical_1d(adios_handle, myrank, sizeprocs, &
@@ -742,7 +742,7 @@ end subroutine write_adios_global_1d_logical_1d
 !! \param local_dim The number of elements to be writen by each process. Might
 !!                  eventually be padded.
 !! \param path The logical path structuring the data and containing
-!!             the variable 
+!!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
 subroutine write_adios_global_1d_logical_2d(adios_handle, myrank, sizeprocs, &
@@ -770,7 +770,7 @@ end subroutine write_adios_global_1d_logical_2d
 !! \param local_dim The number of elements to be writen by each process. Might
 !!                  eventually be padded.
 !! \param path The logical path structuring the data and containing
-!!             the variable 
+!!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
 subroutine write_adios_global_1d_logical_3d(adios_handle, myrank, sizeprocs, &
@@ -798,7 +798,7 @@ end subroutine write_adios_global_1d_logical_3d
 !! \param local_dim The number of elements to be writen by each process. Might
 !!                  eventually be padded.
 !! \param path The logical path structuring the data and containing
-!!             the variable 
+!!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
 subroutine write_adios_global_1d_logical_4d(adios_handle, myrank, sizeprocs, &
@@ -826,7 +826,7 @@ end subroutine write_adios_global_1d_logical_4d
 !! \param local_dim The number of elements to be writen by each process. Might
 !!                  eventually be padded.
 !! \param path The logical path structuring the data and containing
-!!             the variable 
+!!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
 subroutine write_adios_global_1d_logical_5d(adios_handle, myrank, sizeprocs, &

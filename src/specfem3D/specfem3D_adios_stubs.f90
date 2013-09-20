@@ -4,7 +4,7 @@
 !!
 !!  Stubs for ADIOS functions. Avoid link error when not configured with
 !!  ADIOS.
-!!      
+!!
 !! \author MPBL
 !==============================================================================
 
@@ -15,19 +15,19 @@
 subroutine read_mesh_for_init()
   use adios_manager_mod
 
-  call no_adios_err()  
-end subroutine read_mesh_for_init 
+  call no_adios_err()
+end subroutine read_mesh_for_init
 
 subroutine read_mesh_databases_adios()
   use adios_manager_mod
 
-  call no_adios_err()  
+  call no_adios_err()
 end subroutine read_mesh_databases_adios
 
 subroutine read_moho_mesh_adjoint_adios()
   use adios_manager_mod
 
-  call no_adios_err()  
+  call no_adios_err()
 end subroutine read_moho_mesh_adjoint_adios
 
 !-----------------------------------------.
@@ -37,37 +37,37 @@ end subroutine read_moho_mesh_adjoint_adios
 subroutine define_kernel_adios_variables()
   use adios_manager_mod
 
-  call no_adios_err()  
-end subroutine define_kernel_adios_variables 
+  call no_adios_err()
+end subroutine define_kernel_adios_variables
 
 subroutine perform_write_adios_kernels()
   use adios_manager_mod
 
-  call no_adios_err()  
-end subroutine 
+  call no_adios_err()
+end subroutine
 
 subroutine save_kernels_acoustic_adios()
   use adios_manager_mod
 
-  call no_adios_err()  
-end subroutine 
+  call no_adios_err()
+end subroutine
 
 subroutine save_kernels_elastic_adios()
   use adios_manager_mod
 
-  call no_adios_err()  
-end subroutine 
+  call no_adios_err()
+end subroutine
 
 subroutine save_kernels_poroelastic_adios()
   use adios_manager_mod
 
-  call no_adios_err()  
+  call no_adios_err()
 end subroutine save_kernels_poroelastic_adios
 
 subroutine save_kernels_hessian_adios()
   use adios_manager_mod
 
-  call no_adios_err()  
+  call no_adios_err()
 end subroutine save_kernels_hessian_adios
 
 !------------------------------------------------.
@@ -77,7 +77,7 @@ end subroutine save_kernels_hessian_adios
 subroutine save_forward_arrays_adios()
   use adios_manager_mod
 
-  call no_adios_err()  
+  call no_adios_err()
 end subroutine save_forward_arrays_adios
 
 !------------------------------------------------.
@@ -87,6 +87,6 @@ end subroutine save_forward_arrays_adios
 subroutine read_forward_arrays_adios()
   use adios_manager_mod
 
-  call no_adios_err()  
+  call no_adios_err()
 end subroutine read_forward_arrays_adios
 

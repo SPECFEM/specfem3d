@@ -35,7 +35,7 @@ contains
                                NPROC_XI,NPROC_ETA, &
                                nsubregions,subregions,nblayers,ner_layer,NMATERIALS,material_properties, &
                                myrank, sizeprocs, &
-							   LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
+                 LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
                                CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
                                USE_REGULAR_MESH,NDOUBLINGS,ner_doublings, &
                                ADIOS_ENABLED, ADIOS_FOR_DATABASES)
@@ -497,7 +497,7 @@ contains
                           CREATE_VTK_FILES,prname)
 
   ! saves mesh as databases file
-  if (ADIOS_FOR_DATABASES) then 
+  if (ADIOS_FOR_DATABASES) then
     call save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
        nspec,nglob,iproc_xi,iproc_eta, &
        NPROC_XI,NPROC_ETA,addressing,iMPIcut_xi,iMPIcut_eta,&

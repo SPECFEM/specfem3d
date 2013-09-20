@@ -32,7 +32,7 @@
 !! * Scalar definition
 !! * Global arrays definition
 !!
-!! \author MPBL      
+!! \author MPBL
 !-------------------------------------------------------------------------------
 module adios_helpers_mod
   use adios_helpers_definitions_mod
