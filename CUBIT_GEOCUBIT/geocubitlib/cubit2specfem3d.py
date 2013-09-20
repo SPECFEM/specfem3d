@@ -394,7 +394,10 @@ class mesh(object,mesh_tools):
                   imaterial = 3
                 else :
                   imaterial = 0
-                #
+
+## DK DK added this default value for all parameters to avoid undefined parameters for older meshes in the "examples" directory that do not contain Qkappa
+                vel,vs,rho,qk,qmu,ani=(0,0,0,9999.,9999.,0)
+
                 if nattrib > 1:
                     # material flag:
                     #   positive => material properties,
