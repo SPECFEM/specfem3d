@@ -407,12 +407,14 @@ class mesh(object,mesh_tools):
                             if nattrib >= 4:
                                 rho=cubit.get_block_attribute_value(block,3)
                                 if nattrib >= 5:
-                                    q=cubit.get_block_attribute_value(block,4)
+                                    qk=cubit.get_block_attribute_value(block,4)
+                                    if nattrib >= 6:
+                                        qmu=cubit.get_block_attribute_value(block,4)
                                     # for q to be valid: it must be positive
-                                    if q < 0 :
-                                      print 'error, q value invalid:', q
+                                    if qk < 0 or qmu<0:
+                                      print 'error, q value invalid:', qk,qmu
                                       break                                                   
-                                    if nattrib == 6:
+                                    if nattrib == 7:
                                         ani=cubit.get_block_attribute_value(block,5)
                     elif flag < 0:
                         vel=name
@@ -426,14 +428,14 @@ class mesh(object,mesh_tools):
                 elif  nattrib == 1:
                     flag=cubit.get_block_attribute_value(block,0)
                     print 'only 1 attribute ', name,block,flag
-                    vel,vs,rho,q,ani=(0,0,0,0,0)
+                    vel,vs,rho,qk,qmu,ani=(0,0,0,9999.,9999.,0)
                 else:
                     flag=block
-                    vel,vs,rho,q,ani=(name,0,0,0,0)
+                    vel,vs,rho,qk,qmu,ani=(name,0,0,9999.,9999.,0)
                 block_flag.append(int(flag))
                 block_mat.append(block)
-                if flag > 0 and nattrib != 1:
-                    par=tuple([imaterial,flag,vel,vs,rho,q,ani])
+                if (flag > 0) and nattrib != 1:
+                    par=tuple([imaterial,flag,vel,vs,rho,qk,qmu,ani])
                 elif flag < 0 and nattrib != 1:
                     if kind=='interface':
                         par=tuple([imaterial,flag,kind,name,flag_down,flag_up])
@@ -442,7 +444,7 @@ class mesh(object,mesh_tools):
                 elif flag==0 or nattrib == 1:
                     par=tuple([imaterial,flag,name])
                 material[block]=par
-            elif ty == self.face: #Stacey condition, we need hex here for pml
+            elif ty == self.face:
                 block_bc_flag.append(4)
                 block_bc.append(block)
                 bc[block]=4 #face has connectivity = 4
@@ -474,13 +476,13 @@ class mesh(object,mesh_tools):
             else:
                 print 'nodeset '+name+' not defined'
                 self.receivers=None
-        print block_mat
-        print block_flag
-        print block_bc
-        print block_bc_flag
-        print material
-        print bc
-        print topography_face
+        #print block_mat
+        #print block_flag
+        #print block_bc
+        #print block_bc_flag
+        #print material
+        #print bc
+        #print topography_face
         #
         try:
             self.block_mat=block_mat
@@ -503,9 +505,10 @@ class mesh(object,mesh_tools):
             print '****************************************'
     def mat_parameter(self,properties): 
         print properties
-        #format nummaterials file: #material_domain_id #material_id #rho #vp #vs #Q_mu #anisotropy_flag
+        #format nummaterials file: #material_domain_id #material_id #rho #vp #vs #Q_kappa #Q_mu #anisotropy_flag
         imaterial=properties[0]
         flag=properties[1]
+        print 'prop',flag
         if flag > 0:
             vel=properties[2]
             if properties[2] is None and type(vel) != str:
@@ -518,20 +521,24 @@ class mesh(object,mesh_tools):
                 txt='%1i %3i %20f %20f %20f %1i %1i\n' % (properties[0],properties[1],rho,vel,vel/(3**.5),0,0)     
             elif type(vel) != str and vel != 0.:
                 try: 
-                    q=properties[5]
+                    qmu=properties[6]
                 except:
-                    q=0.
+                    qmu=9999.
+                try: 
+                    qk=properties[5]
+                except:
+                    qk=9999.
                 try:
-                    ani=properties[6]
+                    ani=properties[7]
                 except:
                     ani=0.
                 #print properties[0],properties[3],properties[1],properties[2],q,ani
-                txt='%1i %3i %20f %20f %20f %20f %20f\n' % (properties[0],properties[1],properties[4],properties[2],properties[3],q,ani)
+                txt='%1i %3i %20f %20f %20f %20f %20f\n' % (properties[0],properties[1],properties[4],properties[2],properties[3],qk,qmu,ani)
             elif type(vel) != str and vel != 0.:
-                helpstring="#material_domain_id #material_id #rho #vp #vs #Q_mu #anisotropy"
+                helpstring="#material_domain_id #material_id #rho #vp #vs #Q_kappa #Q_mu #anisotropy"
                 txt='%1i %3i %s \n' % (properties[0],properties[1],helpstring)
             else:
-                helpstring=" -->       syntax: #material_domain_id #material_id #rho #vp #vs #Q_mu #anisotropy"
+                helpstring=" -->       syntax: #material_domain_id #material_id #rho #vp #vs #Q_kappa #Q_mu #anisotropy"
                 txt='%1i %3i %s %s\n' % (properties[0],properties[1],properties[2],helpstring)
         elif flag < 0:
             if properties[2] == 'tomography':
@@ -542,6 +549,7 @@ class mesh(object,mesh_tools):
                 helpstring=" -->       syntax: #material_domain_id 'tomography' #file_name "
                 txt='%1i %3i %s %s \n' % (properties[0],properties[1],properties[2],helpstring)
                 #
+        print txt
         return txt
     def nummaterial_write(self,nummaterial_name):
         print 'Writing '+nummaterial_name+'.....'
@@ -584,6 +592,7 @@ class mesh(object,mesh_tools):
         print '  number of nodes:',str(num_nodes)
         nodecoord.write('%10i\n' % num_nodes)
         #
+        
         for node in node_list:
             x,y,z=cubit.get_nodal_coordinates(node)
             txt=('%10i %20f %20f %20f\n') % (node,x,y,z)
