@@ -102,7 +102,7 @@ Ad = 3
 
 faultA = fault_input(1,Au,Ad)
 
-#  FOR THE BULK (Seismic wave propagation part for SESAME)
+#  FOR THE BULK (Seismic wave propagation part for SPECFEM3D)
 
 ###### This is boundary_definition.py of GEOCUBIT 
 #..... which extracts the bounding faces and defines them into blocks 
@@ -122,9 +122,9 @@ cubit.cmd('block 1 attribute index 3 3464')    # vs
 cubit.cmd('block 1 attribute index 4 2670')   # rho 
 cubit.cmd('block 1 attribute index 5 13')     # Q flag (see constants.h: IATTENUATION_ ... ) 
 
-#### Export to SESAME format using cubit2specfem3d.py of GEOCUBIT 
+#### Export to SPECFEM3D format using cubit2specfem3d.py of GEOCUBIT 
  
-cubit2specfem3d.export2SESAME('MESH')  
+cubit2specfem3d.export2SPECFEM3D('MESH')  
  
 # all files needed by SCOTCH are now in directory MESH 
 

@@ -9,7 +9,7 @@ The 1D model is the standard model used in southern California:
 
 Figures for comparison:
   socal1D_koma2004.png  -- 1D model meshed in SPECFEM3D_BASIN (Komatitsch et al. 2004)
-  socal1D_sesame.png    -- 1D model meshed here
+  socal1D.png    -- 1D model meshed here
 
 The resolution is similar to the the "2 s" accuracy mesh of Komatitsch et al. 2004 (DT = 0.011 s).
 It is the same size region as one slice (out of 168) of model m16 of Tape et al. (2009).
@@ -54,7 +54,7 @@ Option 2: follow instructions below for submitting separate jobs with qsub (or b
      this will create binary mesh files, e.g. "proc000***_external_mesh.bin"
      in directory OUTPUT_FILES/DATABASES_MPI/.
 
-     optional: If you have paraview, load the .vtk files (see socal1D_sesame.png).
+     optional: If you have paraview, load the .vtk files (see socal1D.png).
 
 4. run simulation:
 

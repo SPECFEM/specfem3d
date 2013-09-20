@@ -51,7 +51,7 @@ cubit.cmd('block 1 attribute index 6 0 ')      # anisotropy_flag
 cubit.cmd('export mesh "top.e" dimension 3 overwrite')
 cubit.cmd('save as "meshing.cub" overwrite')
 
-#### Export to SESAME format using cubit2specfem3d.py of GEOCUBIT
+#### Export to SPECFEM3D format using cubit2specfem3d.py of GEOCUBIT
 
 os.system('mkdir -p MESH')
 cubit2specfem3d.export2SPECFEM3D('MESH',hex27=True)

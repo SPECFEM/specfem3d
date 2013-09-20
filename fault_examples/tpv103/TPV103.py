@@ -39,9 +39,9 @@ cubit.cmd('block 2 attribute index 3 3464')
 cubit.cmd('block 2 attribute index 4 2670')
 cubit.cmd('block 2 attribute index 5 13')  
  
-#### Export to SESAME format using cubit2specfem3d.py of GEOCUBIT 
+#### Export to SPECFEM3D format using cubit2specfem3d.py of GEOCUBIT 
  
-cubit2specfem3d.export2SESAME('MESH')  
+cubit2specfem3d.export2SPECFEM3D('MESH')  
 
 Au = [8]   # A_up
 Ad = [3]  # A_down

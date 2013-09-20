@@ -187,10 +187,10 @@ cubit.cmd('save as "meshing.cub" overwrite')
 # cleanup
 os.system('rm -f topo_brick.stl topo_vol.stl topo_vol2.stl')
 
-#### Export to SESAME format using cubit2specfem3d.py of GEOCUBIT
+#### Export to SPECFEM3D format using cubit2specfem3d.py of GEOCUBIT
 
 os.system('mkdir -p MESH')
-cubit2specfem3d.export2SESAME('MESH')
+cubit2specfem3d.export2SPECFEM3D('MESH')
 
 # all files needed by SCOTCH are now in directory MESH
 

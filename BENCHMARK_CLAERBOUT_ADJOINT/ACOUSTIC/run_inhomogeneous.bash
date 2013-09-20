@@ -30,7 +30,7 @@ bin="$PWD/bin"
 DATA="$bin/../DATA"
 OUTPUT_FILES="$bin/../OUTPUT_FILES"
 models="$bin/../models"
-SESAME="$bin/../../../../"
+SPECFEM3D="$bin/../../../../"
 
 
 MPIRUN="mpirun -np $NPROC "
@@ -53,7 +53,7 @@ rm -rf $OUTPUT_FILES $models $bin
 mkdir -p $OUTPUT_FILES/DATABASES_MPI $OUTPUT_FILES $OUTPUT_FILES/SEM/dat $OUTPUT_FILES/SEM/syn
 mkdir -p $models/initial_model $models/target_model $bin
 
-cd $SESAME
+cd $SPECFEM3D
 cp ./src/shared/constants.h ./src/shared/constants.h_backup
 cp ./src/specfem3D/save_adjoint_kernels.f90 ./src/specfem3D/save_adjoint_kernels.f90_backup
 cp ./src/generate_databases/get_model.f90 ./src/generate_databases/get_model.f90_backup
@@ -159,7 +159,7 @@ cp -rp $OUTPUT_FILES $OUTPUT_FILES.syn.adjoint
 
 if [ "$do_setup" == "" ]; then
 
-cd $SESAME
+cd $SPECFEM3D
 mv ./src/generate_databases/get_model.f90_backup ./src/generate_databases/get_model.f90
 mv ./src/specfem3D/save_adjoint_kernels.f90_backup ./src/specfem3D/save_adjoint_kernels.f90
 mv ./src/shared/constants.h_backup ./src/shared/constants.h
