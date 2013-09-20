@@ -514,7 +514,7 @@ subroutine SCEC_write_dataT(dataT)
     write(IOUT,*) "# problem=TPV104" ! WARNING: this should be a user input
     write(IOUT,*) "# author=Surendra Nadh Somala" ! WARNING: this should be a user input
     write(IOUT,1000) time_values(2), time_values(3), time_values(1), time_values(5), time_values(6), time_values(7)
-    write(IOUT,*) "# code=SPECFEM3D_SESAME (split nodes)"
+    write(IOUT,*) "# code=SPECFEM3D_Cartesian (split nodes)"
     write(IOUT,*) "# code_version=1.1"
     write(IOUT,*) "# element_size=100 m  (*5 GLL nodes)" ! WARNING: this should be a user input
     write(IOUT,*) "# time_step=",dataT%dt

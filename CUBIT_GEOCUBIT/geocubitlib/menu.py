@@ -72,7 +72,7 @@ def usage():
          collect a single free mesh cubitfile and refine the hex inside some curve (ex. basin)
          GEOCUBIT.py --collect --meshfiles=[list of files] --curverefining=[list of SAT files]       
          
-         export a cubit mesh file (with blocks defined following the note)  in a SPECFEM3D_SESAME mesh
+         export a cubit mesh file (with blocks defined following the note)  in a SPECFEM3D_Cartesian mesh
          GEOCUBIT.py --export2SPECFEM3D --meshfiles=[filename] (--listblock=block1,block2,..,blockN --listflag=[list of specfem flag, i.e. --listflag=1,2,3,-1])
          
     """

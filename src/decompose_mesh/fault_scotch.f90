@@ -117,7 +117,7 @@ CONTAINS
 
 
 ! ---------------------------------------------------------------------------------------------------
-! Saving nodes_coords to be used in SESAME for ibool_fault_side1 and side2
+! Saving nodes_coords to be used in the solver for ibool_fault_side1 and side2
    subroutine save_nodes_coords(nodes_coords,nnodes)
 
    integer, intent(in) :: nnodes

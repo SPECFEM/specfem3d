@@ -159,7 +159,7 @@
 ! Evolution of the code:
 ! ---------------------
 !
-! MPI v. 2.0 "Sesame" (Spectral ElementS on Any MEsh), November 2010:
+! MPI v. 2.0, November 2010:
 ! Dimitri Komatitsch, Nicolas Le Goff, Roland Martin and Pieyre Le Loher, University of Pau, France,
 ! Daniel Peter, Jeroen Tromp and the Princeton group of developers, Princeton University, USA,
 ! and Emanuele Casarotti, INGV Roma, Italy:

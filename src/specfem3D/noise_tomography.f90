@@ -103,7 +103,7 @@ contains
   !*****************************************************************************************************************
   !******************************** change your noise characteristics below ****************************************
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! noise direction
-  !!!!! here, the noise is assumed to be vertical (SESAME)
+  !!!!! here, the noise is assumed to be vertical
   normal_x_noise_out = 0.0
   normal_y_noise_out = 0.0
   normal_z_noise_out = 1.0
@@ -188,7 +188,7 @@ contains
   !*****************************************************************************************************************
   !******************************** change your noise characteristics below ****************************************
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! noise direction
-  !!!!! here, the noise is assumed to be vertical (SESAME)
+  !!!!! here, the noise is assumed to be vertical
   normal_x_noise_out = 0.0
   normal_y_noise_out = 0.0
   normal_z_noise_out = 1.0

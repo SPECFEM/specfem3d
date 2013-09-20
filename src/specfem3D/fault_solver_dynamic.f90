@@ -949,7 +949,7 @@ subroutine SCEC_Write_RuptureTime(dataXZ,iflt)
   write(IOUT,*) "# problem=TPV104"
   write(IOUT,*) "# author=Surendra Nadh Somala"
   write(IOUT,1000) time_values(2), time_values(3), time_values(1), time_values(5), time_values(6), time_values(7)
-  write(IOUT,*) "# code=SPECFEM3D_SESAME (split nodes)"
+  write(IOUT,*) "# code=SPECFEM3D_Cartesian (split nodes)"
   write(IOUT,*) "# code_version=1.1"
   write(IOUT,*) "# element_size=100 m  (*5 GLL nodes)"
   write(IOUT,*) "# Column #1 = horizontal coordinate, distance along strike (m)"
