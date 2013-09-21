@@ -124,7 +124,7 @@ subroutine check_alloc_err(ier, usr_msg)
                         "': Allocation error. ', A)") myrank, usr_msg
     else
       write(error_unit, "('Process ', i6.6, ': Allocation error. " // &
-                        " No user message specfified.')") myrank
+                        " No user message specified.')") myrank
     endif
     !call exit(ier)
     call MPI_Abort(MPI_COMM_WORLD, ier, mpi_er)
@@ -149,7 +149,7 @@ subroutine check_dealloc_err(ier, usr_msg)
                         "': Deallocation error. ', A)") myrank, usr_msg
     else
       write(error_unit, "('Process ', i6.6, ': Deallocation error. " // &
-                        " No user message specfified.')") myrank
+                        " No user message specified.')") myrank
     endif
     !call exit(ier)
     call MPI_Abort(MPI_COMM_WORLD, ier, mpi_er)
