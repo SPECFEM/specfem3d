@@ -74,9 +74,9 @@ all: default \
 	xcombine_surf_data \
 	xsmooth_vol_data \
 	xsum_kernels \
+	xmodel_update \
 	xcheck_mesh_quality_CUBIT_Abaqus \
 	$(EMPTY_MACRO)
-## DK DK had to remove this because it does not work	xmodel_update \
 
 required: bin lib obj
 
