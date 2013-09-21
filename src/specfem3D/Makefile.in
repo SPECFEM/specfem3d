@@ -392,8 +392,8 @@ xsmooth_vol_data: $O/smooth_vol_data.o $O/read_parameter_file.shared.o $O/read_v
 xsum_kernels: $(SUM_KERNELS_OBJECTS) $(COND_MPI_OBJECTS)
 	${FCLINK} -o  ${E}/xsum_kernels  $(SUM_KERNELS_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS) 
 
-xmodel_update: $(MODEL_UPD_OBJECTS) $(COND_MPI_OBJECTS) $(CUDA_STUBS)
-	${FCLINK} -o  ${E}/xmodel_update  $(MODEL_UPD_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS) $(CUDA_STUBS)
+xmodel_update: $(ADIOS_PREOBJECTS) $(MODEL_UPD_OBJECTS) $(COND_MPI_OBJECTS) $(CUDA_STUBS)
+	${FCLINK} -o  ${E}/xmodel_update  $(ADIOS_OBJECTS) $(MODEL_UPD_OBJECTS) $(ADIOS_PREOBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS) $(CUDA_STUBS)
 
 clean:
 	rm -f $O/* *.o *.gnu *.mod $(OUTPUT)/timestamp* $(OUTPUT)/starttime*txt work.pc* \
