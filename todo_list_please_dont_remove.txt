@@ -4,6 +4,10 @@ To-do list for the different flavors of SPECFEM:
 
 (items listed in no particular order)
 
+- suggestion 44:
+----------------
+From Anne Obermann (ISTerre, Grenoble, France): add an option to record seismograms of div and curl at each receiver instead of (or in addition to) displacement.
+
 - suggestion 43:
 ----------------
 To make the three codes (2D, 3D_Cartesian, 3D_GLOBE) conform strictly to the Fortran standard,
