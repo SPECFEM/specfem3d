@@ -35,7 +35,7 @@ NGNOD                       = 8
 MODEL                           = default
 
 # parameters describing the model
-APPROXIMATE_OCEAN_LOAD                          = .false.
+APPROXIMATE_OCEAN_LOAD          = .false.
 TOPOGRAPHY                      = .false.
 ATTENUATION                     = .false.
 FULL_ATTENUATION_SOLID          = .false.
