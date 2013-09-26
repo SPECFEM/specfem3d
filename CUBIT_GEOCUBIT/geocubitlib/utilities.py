@@ -32,7 +32,14 @@ except:
         pass
 
 
-
+def get_cubit_version():
+    v=cubit.get_version()
+    try:
+        v=float(v[0:4])
+    except:
+        v=float(v[0:2])
+    return v
+    
 
 def snapshot(name=None,i=0,viewnumber=1):
     """
@@ -55,7 +62,38 @@ def snapshot(name=None,i=0,viewnumber=1):
     cubit.cmd(command)
     return i
 
+def cubit_command_check(iproc,command,stop=True):
+    """
+    Run a cubit command, checking if it performs correctly. 
+    If the command fails, it writes the result on a file "error_[processor number]" and stop the meshing process
+    
+    iproc = process number
+    command = cubit command
+    stop = if command fails, stop the meshing process (Default: True)
+    
+    return status variable (0 ok, -1 fail)
+    
+    """
+    er=cubit.get_error_count()
+    cubit.cmd(command)
+    ner=cubit.get_error_count()
+    flag=0
+    if ner > er:
+        text='"Proc: '+str(iproc)+' ERROR '+str(command)+' number of error '+str(er)+'/'+str(ner)+'"'
+        cubitcommand = 'comment '+text
+        cubit.cmd(cubitcommand)
+        f=open('error_'+str(iproc)+'.log','a')
+        f.write("CUBIT ERROR: \n"+text)
+        f.close()
+        if stop: raise Exception("CUBIT ERROR: "+text)
+        flag=-1
+    return flag
+
+    
+    
+
 def cubit_error_stop(iproc,command,ner):
+    """obsolete"""
     er=cubit.get_error_count()
     if er > ner: 
        text='"Proc: '+str(iproc)+' ERROR '+str(command)+' number of error '+str(er)+'/'+str(ner)+'"'
@@ -64,6 +102,7 @@ def cubit_error_stop(iproc,command,ner):
        raise NameError, text
 
 def cubit_error_continue(iproc,command,n_er):
+    """obsolete"""
     er=cubit.get_error_count()
     if  er >= n_er: 
         text='"Proc: '+str(iproc)+' ERROR continue '+str(command)+' number of error '+str(er)+' '+str(n_er)+'"'
@@ -359,14 +398,14 @@ def savegeometry(iproc=0,surf=False,filename=None):
         f.close()
 
 
-def get_v_h_list(vol_id_list):
+def get_v_h_list(vol_id_list,chktop=False):
     """return the lists of the cubit ID of vertical/horizontal surface and vertical/horizontal curves
     where v/h is defined by the distance of the z normal component from the axis direction
     the parameter cfg.tres is the threshold as for example if 
-    normal[2] >= -tres and normal[2] <= tres 
+    -tres <= normal[2] <= tres 
     then the surface is vertical
     #
-    usage: surf_or,surf_vertical,list_curve_or,list_curve_vertical,bottom,top = get_v_h_list(list_vol)
+    usage: surf_or,surf_vertical,list_curve_or,list_curve_vertical,bottom,top = get_v_h_list(list_vol,chktop=False)
     """
     #
     tres=0.3
@@ -387,7 +426,7 @@ def get_v_h_list(vol_id_list):
         for k in lsurf:
             normal=cubit.get_surface_normal(k)
             center_point = cubit.get_center_point("surface", k)
-            if normal[2] >= -1*tres and normal[2] <= tres:
+            if  -1*tres <= normal[2] <= tres:
                surf_vertical.append(k)
                lcurve=cubit.get_relatives("surface",k,"curve")
                list_curve_vertical=list_curve_vertical+list(lcurve)                                                                                                          
@@ -400,6 +439,8 @@ def get_v_h_list(vol_id_list):
             list_curve_vertical.remove(x)
         except:
             pass
+            
+    #find the top and the bottom surfaces
     k=surf_or[0]
     center_point = cubit.get_center_point("surface", k)[2]
     center_point_top=center_point
@@ -414,14 +455,49 @@ def get_v_h_list(vol_id_list):
         elif center_point < center_point_bottom:
             center_point_bottom=center_point
             bottom=k
-    surftop=list(cubit.get_adjacent_surfaces("surface", top))
+    #check that a top surface exists
+    #it assume that the z coord of the center point 
+    if chktop:
+        k=lsurf[0]
+        vertical_centerpoint_top = cubit.get_center_point("surface", k)[2]
+        vertical_zmax_box_top=cubit.get_bounding_box('surface',k)[7]
+        normal_top=cubit.get_surface_normal(k)    
+        top=k        
+        for k in lsurf:
+            vertical_centerpoint = cubit.get_center_point("surface", k)[2]
+            vertical_zmax_box=cubit.get_bounding_box('surface',k)[7]
+            normal=cubit.get_surface_normal(k)
+            check=(vertical_centerpoint >= vertical_centerpoint_top) and (vertical_zmax_box >= vertical_zmax_box_top) and (normal >= normal_top)
+            if check:
+                top=k
+        if top in surf_vertical:
+            surf_vertical.remove(top)
+        if top not in surf_or: 
+            surf_or.append(top)
+    #if more than one surf is on the top, I get all the surfaces that are in touch with top surface but not the vertical surfaces
+    surftop=list(cubit.get_adjacent_surfaces("surface", top)) #top is included in the list
     for s in surf_vertical:
         try:                          
             surftop.remove(s)    
         except:                       
             pass                      
     top=surftop
+    #check that all the surf are Horizontal or vertical
+    surf_all=surf_vertical+surf_or
+    if len(surf_all)!=len(lsurf):
+        print 'not all the surf are horizontal or vertical, check the normals'
+        print 'list of surfaces: ',surf_all
+        print 'list of vertical surface',surf_vertical
+        print 'list of horizontal surface',surf_or        
+
     bottom=[bottom]
     return surf_or,surf_vertical,list_curve_or,list_curve_vertical,bottom,top
 
-
+def list2str(l):
+    if not isinstance(l,list): l=list(l)
+    return ' '.join(str(x) for x in l)
+    
+def highlight(ent,l):
+    txt=list2str(l)
+    txt='highlight '+ent+' '+txt
+    cubit.cmd(txt)

@@ -33,6 +33,86 @@ except:
         print 'error importing cubit, check if cubit is installed'
         pass
 
+import glob
+
+def add_sea_layer(block=1001,optionsea=False):
+    if optionsea:
+            sea=optionsea['sea']
+            seaup=optionsea['seaup']
+            sealevel=optionsea['sealevel']
+            seathres=optionsea['seathres']
+    else:
+            sea=False
+            seaup=False
+            sealevel=False
+            seathres=False
+    
+    ######TODO
+    #add sea hex
+    #change hex absoorbing....
+    block_list=cubit.get_block_id_list()
+    id_block = max(block for block in block_list if block<1000)
+    cubit.cmd('delete block '+str(id_block))
+    #sea
+    command= 'block '+str(id_block)+' hex in node in face in block '+str(block)+' with Z_coord < '+str(seathres)
+    cubit.cmd(command)
+    command = "block "+str(id_block)+" name 'sea'"
+    cubit.cmd(command)
+    if not seaup:
+        id_block+=1
+        command= 'block '+str(id_block)+' hex in node in face in block '+str(block)+' with (Z_coord > '+str(seathres)+' and Z_coord < '+str(sealevel)+')'
+        cubit.cmd(command)
+        command = "block "+str(id_block)+" name 'shwater'"
+        cubit.cmd(command)
+    id_block+=1
+    command= 'block '+str(id_block)+' hex in node in face in block '+str(block)+' with Z_coord >= '+str(sealevel)
+    cubit.cmd(command)
+    command = "block "+str(id_block)+" name 'continent'"
+    cubit.cmd(command)
+    
+    
+def importing_cubfiles(cubfiles):
+    import re
+    rule_st=re.compile("(.+)_[0-9]+\.")
+    rule_ex=re.compile(".+_[0-9]+\.(.+)")
+    rule_int=re.compile(".+_([0-9]+)\.")
+    filenames=glob.glob(cubfiles)
+    try:
+        st = rule_st.findall(filenames[0])[0]
+        ex = rule_ex.findall(filenames[0])[0]
+        listflag=True
+    except:
+        ex=''
+        listflag=False
+    if ex == 'cub':
+        cubflag=True
+    else:
+        cubflag=False
+    list_int=[]
+    fs=[]
+    try:
+        for f in filenames:
+            i=int(rule_int.findall(f)[0])
+            list_int.append(i)
+        list_int.sort()
+        for i,ind in enumerate(list_int):
+            f=st+'_'+str(ind)+'.'+ex
+            fs.append(f)
+    except:
+        pass
+    if listflag:
+        filenames=fs
+    else:
+        pass
+    return len(filenames),list_int,filenames,cubflag
+    
+    
+    
+    
+    
+
+
+
 def refine_closecurve(block=1001,closed_filenames=None,acis=True):
     from utilities import load_curves
     from boundary_definition import build_block_side,define_surf
@@ -150,7 +230,7 @@ def refine_closecurve(block=1001,closed_filenames=None,acis=True):
 
 
 
-def collecting_merging(cpuxmin=0,cpuxmax=1,cpuymin=0,cpuymax=1,cpux=1,cpuy=1,cubfiles=False,ckbound_method1=False,ckbound_method2=False,merge_tolerance=None):
+def collecting_merging(cpuxmin=0,cpuxmax=1,cpuymin=0,cpuymax=1,cpux=1,cpuy=1,cubfiles=False,ckbound_method1=False,ckbound_method2=False,merge_tolerance=None,decimate=False):
     import glob
     import re
     #
@@ -167,49 +247,21 @@ def collecting_merging(cpuxmin=0,cpuxmax=1,cpuymin=0,cpuymax=1,cpux=1,cpuy=1,cub
     xmin,xmax,ymin,ymax,listfull=map_boundary(cpuxmin,cpuxmax,cpuymin,cpuymax,cpux,cpuy)
     #
     if cubfiles:
-        filenames=glob.glob(cubfiles)
-        try:
-            st = rule_st.findall(filenames[0])[0]
-            ex = rule_ex.findall(filenames[0])[0]
-            listflag=True
-        except:
-            ex=''
-            listflag=False
-        
-        if ex == 'cub':
-            cubflag=True
-        else:
-            cubflag=False
-        list_int=[]
-        fs=[]
-        try:
-            for f in filenames:
-                i=int(rule_int.findall(f)[0])
-                list_int.append(i)
-            list_int.sort()
-            for i,ind in enumerate(list_int):
-                f=st+'_'+str(ind)+'.'+ex
-                fs.append(f)
-        except:
-            pass
-        if listflag:
-            filenames=fs
-        else:
-            pass
-        print len(filenames),filenames
+        nf,listip,filenames,cubflag=importing_cubfiles(cubfiles)
     else:
+        nf=0
         filenames=[]
         ip=0
     #
-    if len(filenames) > 0:
-        for filename in filenames[:]:
+    if nf > 0:
+        for ip,filename in zip(listip,filenames):
             try:
-                ip=int(rule_int.findall(filename)[0])
                 if ip in listfull:
                     if cubflag:
                         cubit.cmd('import cubit "'+filename+'"')
                     else:
                         cubit.cmd('import mesh geometry "'+filename+'" block all use nodeset sideset feature_angle 135.00 linear merge')
+                    if decimate: cubit.cmd('refine volume all numsplit 1 bias 1.0 depth 1 ')
                     boundary=check_bc(ip,xmin,xmax,ymin,ymax,cpux,cpuy,cpuxmin,cpuxmax,cpuymin,cpuymax)
                     boundary_dict[ip]=boundary
                     list_vol=list(cubit.parse_cubit_list('volume','all'))
@@ -219,6 +271,7 @@ def collecting_merging(cpuxmin=0,cpuxmax=1,cpuymin=0,cpuymax=1,cpux=1,cpuy=1,cub
                         cubit.cmd(command)
             except:
                 cubit.cmd('import mesh geometry "'+filename+'" block all use nodeset sideset feature_angle 135.00 linear merge')
+                if decimate: cubit.cmd('refine volume all numsplit 1 bias 1.0 depth 1 ')
                 ip=0
                 boundary=check_bc(ip,xmin,xmax,ymin,ymax,cpux,cpuy,cpuxmin,cpuxmax,cpuymin,cpuymax)
                 boundary_dict[ip]=boundary
@@ -229,9 +282,11 @@ def collecting_merging(cpuxmin=0,cpuxmax=1,cpuymin=0,cpuymax=1,cpux=1,cpuy=1,cub
                     cubit.cmd(command)
         cubit.cmd('export mesh "tmp_collect_NOmerging.e" dimension 3 block all overwrite')
     else:
+        if decimate: cubit.cmd('refine volume all numsplit 1 bias 1.0 depth 1 ')
         boundary=check_bc(ip,xmin,xmax,ymin,ymax,cpux,cpuy,cpuxmin,cpuxmax,cpuymin,cpuymax)
     #
     #
+    #print boundary_dict
     block_list=cubit.get_block_id_list()
     for block in block_list:
         ty=cubit.get_block_element_type(block)
@@ -240,7 +295,10 @@ def collecting_merging(cpuxmin=0,cpuxmax=1,cpuymin=0,cpuymax=1,cpux=1,cpuy=1,cub
     #
     #
     print 'chbound',ckbound_method1,ckbound_method2
-    if ckbound_method1 and not ckbound_method2:
+    
+    
+    if ckbound_method1 and not ckbound_method2 and len(filenames) != 1:
+        #use the equivalence method for groups
         if isinstance(merge_tolerance,list):
             tol=merge_tolerance[0]
         elif merge_tolerance:
@@ -281,11 +339,12 @@ def collecting_merging(cpuxmin=0,cpuxmax=1,cpuymin=0,cpuymax=1,cpux=1,cpuy=1,cub
                     idown=ip
                     idiag=ileft
                 #
+                print ip,ileft,idiag,idown
                 if ip != idown:
                     nup=boundary_dict[ip]['nodes_surf_ymin']
                     ndow=boundary_dict[idown]['nodes_surf_ymax']
-                    merge_node(nup,ndow)
-                    
+                    merge_node_ck(nup,ndow)
+                 
                     if idiag != idown:
                         if ip in ymax and ip not in xmin:
                             nlu=boundary_dict[ip]['node_curve_xminymax'] #node in curve chunck left up... r u
@@ -301,15 +360,21 @@ def collecting_merging(cpuxmin=0,cpuxmax=1,cpuymin=0,cpuymax=1,cpux=1,cpuy=1,cub
                         nlu=boundary_dict[ileft]['node_curve_xmaxymin']
                         merge_node_4(nru,nrd,nld,nlu)
                     elif ip in xmin:
-                        nru=boundary_dict[ip]['node_curve_xminymin'] #node in curve chunck right up... r u
-                        nrd=boundary_dict[idown]['node_curve_xminymax']
+                        nlu=boundary_dict[ip]['node_curve_xminymin'] #node in curve chunck right up... r u
+                        nld=boundary_dict[idown]['node_curve_xminymax']
+                        merge_node(nld,nlu)
+                        nru=boundary_dict[ip]['node_curve_xmaxymin'] #node in curve chunck right up... r u
+                        nrd=boundary_dict[idown]['node_curve_xmaxymax']
                         merge_node(nrd,nru)
+                        
+                        
+                        
                         
                 #
                 if ip != ileft:
                     nright=boundary_dict[ip]['nodes_surf_xmin']
                     nleft=boundary_dict[ileft]['nodes_surf_xmax']
-                    merge_node(nright,nleft)
+                    merge_node_ck(nright,nleft)
                     #
                     #
                     if ip in ymin:
@@ -334,7 +399,7 @@ def collecting_merging(cpuxmin=0,cpuxmax=1,cpuymin=0,cpuymax=1,cpux=1,cpuy=1,cub
         n1=cubit.get_group_nodes(group_id_1)
         if len(n1) != 0:
             print 'error, negative jacobian after the equivalence node command, use --merge2 instead of --equivalence/--merge/--merge1'
-    elif ckbound_method2 and not ckbound_method1:
+    elif ckbound_method2 and not ckbound_method1 and len(filenames) != 1:
         if isinstance(merge_tolerance,list):
             tol=merge_tolerance[0]
         elif merge_tolerance:
@@ -428,7 +493,7 @@ def collecting_merging(cpuxmin=0,cpuxmax=1,cpuymin=0,cpuymax=1,cpux=1,cpuy=1,cub
         n1=cubit.get_group_nodes(group_id_1)
         if len(n1) != 0:
             print 'error, negative jacobian after the equivalence node command, check the mesh'
-    elif ckbound_method1 and  ckbound_method2:
+    elif ckbound_method1 and  ckbound_method2 and len(filenames) != 1:
         block_list=cubit.get_block_id_list()
         i=-1
         for block in block_list:
@@ -474,15 +539,27 @@ def collecting_merging(cpuxmin=0,cpuxmax=1,cpuymin=0,cpuymax=1,cpux=1,cpuy=1,cub
         if len(n1) != 0:
             print 'error, negative jacobian after the equivalence node command, use --merge instead of --equivalence'
 
-def collect(cpuxmin=0,cpuxmax=1,cpuymin=0,cpuymax=1,cpux=1,cpuy=1,cubfiles=False,ckbound_method1=False,ckbound_method2=False,merge_tolerance=None,curverefining=False,outfilename='totalmesh_merged',qlog=False,export2SPECFEM3D=False,listblock=None,listflag=None,outdir='.'):
+
+
+
+def collect(cpuxmin=0,cpuxmax=1,cpuymin=0,cpuymax=1,cpux=1,cpuy=1,cubfiles=False,ckbound_method1=False,ckbound_method2=False,merge_tolerance=None,curverefining=False,outfilename='totalmesh_merged',qlog=False,export2SPECFEM3D=False,listblock=None,listflag=None,outdir='.',add_sea=False,decimate=False,cpml=False,cpml_size=False,top_absorbing=False,hex27=False):
     #
-    collecting_merging(cpuxmin,cpuxmax,cpuymin,cpuymax,cpux,cpuy,cubfiles=cubfiles,ckbound_method1=ckbound_method1,ckbound_method2=ckbound_method2,merge_tolerance=merge_tolerance)
+    cubit.cmd('set journal error off')
+    cubit.cmd('set verbose error off')
+    collecting_merging(cpuxmin,cpuxmax,cpuymin,cpuymax,cpux,cpuy,cubfiles=cubfiles,ckbound_method1=ckbound_method1,ckbound_method2=ckbound_method2,merge_tolerance=merge_tolerance,decimate=decimate)
+    cubit.cmd('set journal error on')
+    cubit.cmd('set verbose error on')
     #
     if curverefining:
         block=1001 #topography
         refine_closecurve(block,curverefining,acis=True)
     #
     #
+    if add_sea:
+        block=1001
+        add_sea_layer(block=block)
+
+    
     cubit.cmd('compress all')
     command="export mesh '"+outfilename+".e' block all overwrite xml '"+outfilename+".xml'"
     cubit.cmd(command)
@@ -521,9 +598,9 @@ def collect(cpuxmin=0,cpuxmax=1,cpuymin=0,cpuymax=1,cpux=1,cpuy=1,cubfiles=False
     #
     #
     if export2SPECFEM3D:
-        e2SEM(files=False,listblock=listblock,listflag=listflag,outdir=outdir)
+        e2SEM(files=False,listblock=listblock,listflag=listflag,outdir=outdir,cpml=cpml,cpml_size=cpml_size,top_absorbing=top_absorbing,hex27=hex27)
                                             
-def e2SEM(files=False,listblock=None,listflag=None,outdir='.'):
+def e2SEM(files=False,listblock=None,listflag=None,outdir='.',cpml=False,cpml_size=False,top_absorbing=False,hex27=False):
     import glob
     if files:
         filenames=glob.glob(files)
@@ -547,14 +624,14 @@ def e2SEM(files=False,listblock=None,listflag=None,outdir='.'):
             if 'HEX' in ty:
                 listblock.append(block)
                 #listflag.append(block)
-        listflag=range(1,len(listflag)+1)  
+        listflag=range(1,len(block_list)+1)  
     #       
     for ib,iflag in zip(listblock,listflag):
         cubit.cmd("block "+str(ib)+" attribute count 1")
         cubit.cmd("block "+str(ib)+" attribute index 1 "+ str(iflag)            )
     #
     import cubit2specfem3d
-    cubit2specfem3d.export2SPECFEM3D(outdir)
+    cubit2specfem3d.export2SPECFEM3D(outdir,cpml=cpml,cpml_size=cpml_size,top_absorbing=top_absorbing,hex27=hex27)
 
 def invert_dict(d):
      inv = {}
@@ -600,38 +677,106 @@ def prepare_equivalence(nodes1,nodes2):
     return factor,minvalue,inv_length
 
 
-def merge_node(n1,n2):
+def merge_node_ck(n1,n2):
     factor,minvalue,inv_length=prepare_equivalence(n1,n2)
+    
+    cubit.cmd('set info off')
+    cubit.cmd('set echo off')
+    cubit.cmd('set journal off')
+    cubit.cmd('set error off')
     
     for k in inv_length.keys()[:-1]:
         if len(inv_length[k]) > 0:
             cmd='equivalence node '+' '.join(' '.join(str(n) for n in x) for x in inv_length[k])+' tolerance '+str(k*factor+minvalue/2.)
             cubit.cmd(cmd)
             print 'equivalence '+str(len(inv_length[k]))+' couples of nodes -  tolerance '+str(k*factor+minvalue/2.)
+             
 
+    cubit.cmd('group "checkmerge" add node '+' '.join(str(n) for n in n1)+' '+' '.join(str(n) for n in n2))
+    idg=cubit.get_id_from_name('checkmerge')
+    remainnodes=cubit.get_group_nodes(idg)
+    print 'from '+str(len(n1)+len(n2))+' nodes -> '+str(len(remainnodes)) +' nodes'
+    if len(n1) != len(remainnodes):
+        print 'equivalence '+str(len(remainnodes))+' couples of nodes -  tolerance '+str(minvalue/2.)
+        cubit.cmd('set info on')
+        cubit.cmd('set echo on')
+        cubit.cmd('set journal on')
+        cmd='equivalence node in group '+str(idg)+' tolerance '+str(minvalue/2.)
+        cubit.cmd(cmd)
+        cmd='block 3000 node in group '+str(idg)
+        cubit.cmd(cmd)
+        
+    if len(n1) != len(remainnodes):
+        cubit.cmd('export mesh "error_merging.e" dimension 3 block all overwrite')
+        cubit.cmd('save as "error_merging.cub" dimension 3 block all overwrite')
+        print 'error merging '
+        if False:
+            import sys
+            sys.exit(2)
+    
+    cubit.cmd('delete group checkmerge')
+    cubit.cmd('delete block 3000')
+    
+    cubit.cmd('set info on')
+    cubit.cmd('set echo on')
+    cubit.cmd('set journal on')
+
+
+
+
+def merge_node(n1,n2):
+    factor,minvalue,inv_length=prepare_equivalence(n1,n2)
+
+    cubit.cmd('set info off')
+    cubit.cmd('set echo off')
+    cubit.cmd('set journal off')
+
+
+    for k in inv_length.keys()[:-1]:
+        if len(inv_length[k]) > 0:
+            cmd='equivalence node '+' '.join(' '.join(str(n) for n in x) for x in inv_length[k])+' tolerance '+str(k*factor+minvalue/2.)
+            cubit.cmd(cmd)
+            print 'equivalence '+str(len(inv_length[k]))+' couples of nodes -  tolerance '+str(k*factor+minvalue/2.)
+
+    cubit.cmd('set info on')
+    cubit.cmd('set echo on')
+    cubit.cmd('set journal on')
+
+
+    
+    
 
 def prepare_equivalence_4(nodes1,nodes2,nodes3,nodes4):
     cubit.cmd('set info off')
     cubit.cmd('set echo off')
     cubit.cmd('set journal off')
     length={}
-    for ns in zip(nodes1,nodes2,nodes3,nodes4):
-        cmd='group "tmpn" add edge in node '+' '.join(str(n) for n in ns )
-        cubit.cmd(cmd)
-        ge=cubit.get_id_from_name("tmpn")
-        e1=cubit.get_group_edges(ge)
-        lengthmin=1e9
-        for e in e1:
-            lengthmin=min(lengthmin,cubit.get_mesh_edge_length(e))
-        length[ns]=lengthmin*.5
-        cubit.cmd('delete group '+str(ge))
+    nodes=[nodes1,nodes2,nodes3,nodes4]
+    check=map(len,nodes)
+    checked_nodes=[]
+    for ind,iflag in enumerate(check):
+        if iflag:
+            checked_nodes=checked_nodes+nodes[ind]
+    
+    cmd='group "tmpn" add edge in node '+' '.join(str(n) for n in checked_nodes )
+    cubit.cmd(cmd)
+    ge=cubit.get_id_from_name("tmpn")
+    e1=cubit.get_group_edges(ge)
+    lengthmin=1e9
+    for e in e1:
+        lengthmin=min(lengthmin,cubit.get_mesh_edge_length(e))
+        length[e]=lengthmin*.5
+    cubit.cmd('delete group '+str(ge))
     try:
         minvalue=min(length.values())
         maxvalue=max(length.values())
     except:
-        print nodes1,nodes2,nodes3,nodes4
-        print 'edges ', e1
-        minvalue=100.
+        try:
+            print nodes
+            print 'edges ', e1
+        except:
+            pass
+        minvalue=10.
         maxvalue=2000.
     print 'min lentgh: ',minvalue,'max lentgh: ',maxvalue
     nbin= int((maxvalue/minvalue)/2.)+1
@@ -650,18 +795,51 @@ def prepare_equivalence_4(nodes1,nodes2,nodes3,nodes4):
     cubit.cmd('set journal on')
     return factor,minvalue,inv_length
 
+def ording_z(nodes):
+    def get_z(node):
+        x,y,z = cubit.get_nodal_coordinates(node)
+        return z
+    d = [(get_z(node), node) for node in nodes]
+    d.sort()
+    return [x[1] for x in d] 
 
-def merge_node_4(n1,n2,n3,n4):
-    factor,minvalue,inv_length=prepare_equivalence_4(n1,n2,n3,n4)
-    
-    for k in inv_length.keys()[:-1]:
-        if len(inv_length[k]) > 0:
-            cmd='equivalence node '+' '.join(' '.join(str(n) for n in x) for x in inv_length[k])+' tolerance '+str(k*factor+minvalue/2.)
+def merge_node_4(n1,n2,n3,n4,newmethod=True):
+    if newmethod:
+        print "merge node 4 side"
+        n1o=ording_z(n1)
+        n2o=ording_z(n2)
+        n3o=ording_z(n3)
+        n4o=ording_z(n4)
+        for ln in zip(n1o,n2o,n3o,n4o):
+            cmd='equivalence node '+' '.join(str(n) for n in ln) +' tolerance 10000 '
             cubit.cmd(cmd)
-            print 'equivalence '+str(len(inv_length[k]))+' couples of nodes -  tolerance '+str(k*factor+minvalue/2.)
+        #    
+        #allnodes=n1+n2+n3+n4
+        #print allnodes
+        #for n in allnodes:
+        #    print n
+        #cmd='equivalence node '+' '.join(str(n) for n in allnodes) +' tolerance 10 ' 
+        #cubit.cmd(cmd)
+    else:
+        factor,minvalue,inv_length=prepare_equivalence_4(n1,n2,n3,n4)
+        
+        for k in inv_length.keys()[:-1]:
+            if len(inv_length[k]) > 1:
+                try:
+                    for x in inv_length[k]:
+                        if type(x) is not list:
+                            x=[x]
+                        else:
+                            pass
+                    cmd='equivalence node '+' '.join(' '.join(str(n) for n in x) )+' tolerance '+str(k*factor+minvalue/2.)
+                except:
+                    print k,"***************************************** s"
+                    print inv_length[k]
+                    
+                cubit.cmd(cmd)
+                print 'equivalence '+str(len(inv_length[k]))+' couples of nodes -  tolerance '+str(k*factor+minvalue/2.)
+            if len(inv_length[k]) == 1:
+                cmd='equivalence node '+' '.join(' '.join(str(n) for n in  inv_length[k]))+' tolerance '+str(k*factor+minvalue/2.)
+                cubit.cmd(cmd)
+                print 'equivalence '+str(len(inv_length[k]))+' couples of nodes -  tolerance '+str(k*factor+minvalue/2.)
 
-
-
-
-
-    

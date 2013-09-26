@@ -1,3 +1,26 @@
+#############################################################################
+# boundary_definition.py                                                    
+# this file is part of GEOCUBIT                                             #
+#                                                                           #
+# Created by Emanuele Casarotti                                             #
+# Copyright (c) 2008 Istituto Nazionale di Geofisica e Vulcanologia         #
+#                                                                           #
+#############################################################################
+#                                                                           #
+# GEOCUBIT is free software: you can redistribute it and/or modify          #
+# it under the terms of the GNU General Public License as published by      #
+# the Free Software Foundation, either version 3 of the License, or         #
+# (at your option) any later version.                                       #
+#                                                                           #
+# GEOCUBIT is distributed in the hope that it will be useful,               #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of            #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             #
+# GNU General Public License for more details.                              #
+#                                                                           #
+# You should have received a copy of the GNU General Public License         #
+# along with GEOCUBIT.  If not, see <http://www.gnu.org/licenses/>.         #
+#                                                                           #
+#############################################################################
 try:
     import start as start
     cubit                   = start.start_cubit()
@@ -8,9 +31,7 @@ except:
         print 'error importing cubit, check if cubit is installed'
         pass
 
-def list2str(l):
-    if not isinstance(l,list): l=list(l)
-    return ' '.join(str(x) for x in l)
+from utilities import list2str
 
 
 def map_boundary(cpuxmin=0,cpuxmax=1,cpuymin=0,cpuymax=1,cpux=1,cpuy=1):
@@ -95,13 +116,21 @@ def lateral_boundary_are_absorbing(ip=0,cpuxmin=0,cpuxmax=1,cpuymin=0,cpuymax=1,
 
 def define_surf(ip=0,cpuxmin=0,cpuxmax=1,cpuymin=0,cpuymax=1,cpux=1,cpuy=1):
     """
-    define the surfaces defining the boundaries of the volume
+    define the absorbing surfaces for a layered topological box where boundary are surfaces parallel to the axis.
+    it returns absorbing_surf,absorbing_surf_xmin,absorbing_surf_xmax,absorbing_surf_ymin,absorbing_surf_ymax,absorbing_surf_bottom,topo_surf
+    where
+    absorbing_surf is the list of all the absorbing boundary surf
+    absorbing_surf_xmin is the list of the absorbing boundary surfaces that correnspond to x=xmin
+    ...
+    absorbing_surf_bottom is the list of the absorbing boundary surfaces that correspond to z=zmin
     """
+    from utilities import get_v_h_list
     #
     from sets import Set
     def product(*args, **kwds):
         # product('ABCD', 'xy') --> Ax Ay Bx By Cx Cy Dx Dy
         # product(range(2), repeat=3) --> 000 001 010 011 100 101 110 111
+        # for compatibility with python2.5
         pools = map(tuple, args) * kwds.get('repeat', 1)
         result = [[]]
         for pool in pools:
@@ -123,6 +152,11 @@ def define_surf(ip=0,cpuxmin=0,cpuxmax=1,cpuymin=0,cpuymax=1,cpux=1,cpuy=1):
     ymin_box=cubit.get_total_bounding_box("volume",list_vol)[3]
     ymax_box=cubit.get_total_bounding_box("volume",list_vol)[4]
     list_surf=cubit.parse_cubit_list("surface","all")
+    
+    absorbing_surface_distance_tolerance=0.001
+    topographic_surface_distance_tolerance=0.1
+    topographic_surface_normal_tolerance=0.4
+    
     lv=[]
     for k in list_surf:
         sbox=cubit.get_bounding_box('surface',k)
@@ -140,16 +174,19 @@ def define_surf(ip=0,cpuxmin=0,cpuxmax=1,cpuymin=0,cpuymax=1,cpux=1,cpuy=1):
             dzmin=abs(sbox[6] - zmin_box)/max(abs(sbox[6]),abs(zmin_box))
         normal=cubit.get_surface_normal(k)
         zn=normal[2]
-        if dzmax <= 0.1 and zn > 0.4:
+        if dzmax <= topographic_surface_distance_tolerance and zn > topographic_surface_normal_tolerance:
             top_surf.append(k)
             list_vertex=cubit.get_relatives('surface',k,'vertex')
             for v in list_vertex:
                 valence=cubit.get_valence(v)
                 if valence <= 4: #valence 3 is a corner, 4 is a vertex between 2 volumes, > 4 is a vertex not in the boundaries
                     lv.append(v)
-        elif dzmin <= 0.001 and zn < -0.7:
+        elif dzmin <= 0.001 and zn < -1+topographic_surface_normal_tolerance:
             bottom_surf.append(k)
+    if len(top_surf) ==0: #assuming that one topo surface need to be selected
+            _,_,_,_,_,top_surf=get_v_h_list(list_vol,chktop=False)
     lp=[]
+    labelp=[]
     combs=product(lv,lv)
     for comb in combs:
         v1=comb[0]
@@ -157,19 +194,36 @@ def define_surf(ip=0,cpuxmin=0,cpuxmax=1,cpuymin=0,cpuymax=1,cpux=1,cpuy=1):
         c=Set(cubit.get_relatives("vertex",v1,"curve")) & Set(cubit.get_relatives("vertex",v2,"curve"))
         if len(c) == 1:
             p=cubit.get_center_point("curve",list(c)[0])
-            lp.append(p)
+            labelp.append(list(c)[0])
+    labelps=Set(labelp)
+    for c in labelps:
+        p=cubit.get_center_point("curve",c)
+        lp.append(p)
+    
     for k in list_surf: 
         center_point = cubit.get_center_point("surface", k)
         for p in lp:
-            if abs((center_point[0] - p[0])/p[0]) <= 0.001 and abs((center_point[1] - p[1])/p[1]) <= 0.001:
-                absorbing_surf.append(k)
-                break
+            try:
+                if abs((center_point[0] - p[0])/p[0]) <= absorbing_surface_distance_tolerance and abs((center_point[1] - p[1])/p[1]) <= absorbing_surface_distance_tolerance:
+                    absorbing_surf.append(k)
+                    break
+            except:
+                if -1 <= center_point[0] <= 1 and -1 <= center_point[1] <= 1:
+                    absorbing_surf.append(k)
+                    break
     #
     four_side=True
     if four_side:
-        xmin,ymin,xmax,ymax=define_4side_lateral_surfaces()
-        abs_xmin,abs_xmax,abs_ymin,abs_ymax=lateral_boundary_are_absorbing(ip,cpuxmin,cpuxmax,cpuymin,cpuymax,cpux,cpuy)
-
+        xmintmp,ymintmp,xmaxtmp,ymaxtmp=define_4side_lateral_surfaces()
+        xmin=list(Set(xmintmp)-Set(xmaxtmp))
+        xmax=list(Set(xmaxtmp)-Set(xmintmp))
+        ymin=list(Set(ymintmp)-Set(ymaxtmp))
+        ymax=list(Set(ymaxtmp)-Set(ymintmp))
+        abs_xmintmp,abs_xmaxtmp,abs_ymintmp,abs_ymaxtmp=lateral_boundary_are_absorbing(ip,cpuxmin,cpuxmax,cpuymin,cpuymax,cpux,cpuy)
+        abs_xmin=list(Set(abs_xmintmp)-Set(abs_xmaxtmp))
+        abs_xmax=list(Set(abs_xmaxtmp)-Set(abs_xmintmp))
+        abs_ymin=list(Set(abs_ymintmp)-Set(abs_ymaxtmp))
+        abs_ymax=list(Set(abs_ymaxtmp)-Set(abs_ymintmp))
     return absorbing_surf,abs_xmin,abs_xmax,abs_ymin,abs_ymax,top_surf,bottom_surf,xmin,ymin,xmax,ymax
 
 
@@ -180,9 +234,20 @@ def define_block():
     list_name=map(lambda x: 'vol'+x,map(str,list_vol))
     return list_vol,list_name
 
-def build_block(vol_list,name,id_0=1):
+def build_block(vol_list,name,id_0=1,top_surf=None,optionsea=False):
     #
     from sets import Set
+    if optionsea:
+        sea=optionsea['sea']
+        seaup=optionsea['seaup']
+        sealevel=optionsea['sealevel']
+        seathres=optionsea['seathres']
+    else:
+        sea=False
+        seaup=False
+        sealevel=False
+        seathres=False
+    
     #
     block_list=cubit.get_block_id_list()
     if len(block_list) > 0:
@@ -193,12 +258,34 @@ def build_block(vol_list,name,id_0=1):
         id_block+=1
         v_other=Set(vol_list)-Set([v])
         #command= 'block '+str(id_block)+' hex in node in vol '+str(v)+' except hex in vol '+str(list(v_other))
-        command= 'block '+str(id_block)+' hex in vol '+str(v)+' except hex in vol '+str(list(v_other))
-        print command
-        command = command.replace("["," ").replace("]"," ")
-        cubit.cmd(command) 
-        command = "block "+str(id_block)+" name '"+n+"'"
-        cubit.cmd(command)
+        if sea and v == vol_list[-1]:
+            cubit.cmd('set duplicate block elements off')
+            tsurf_string=" ".join(str(x) for x in top_surf)
+            #sea
+            command= 'block '+str(id_block)+' hex in node in surf '+tsurf_string+' with Z_coord < '+str(seathres)
+            cubit.cmd(command)
+            command = "block "+str(id_block)+" name 'sea"+n+"'"
+            cubit.cmd(command)
+            if not seaup:
+                id_block+=1
+                command= 'block '+str(id_block)+' hex in node in surf '+tsurf_string+' with (Z_coord > '+str(seathres)+' and Z_coord < '+str(sealevel)
+                cubit.cmd(command)
+                command = "block "+str(id_block)+" name 'shwater"+n+"'"
+                cubit.cmd(command)
+            id_block+=1
+            command= 'block '+str(id_block)+' hex in node in surf '+tsurf_string+' with Z_coord >= '+str(sealevel)
+            cubit.cmd(command)
+            command = "block "+str(id_block)+" name 'continent"+n+"'"
+            cubit.cmd(command)
+        else:
+            command= 'block '+str(id_block)+' hex in vol '+str(v)+' except hex in vol '+str(list(v_other))
+            print command
+            command = command.replace("["," ").replace("]"," ")
+            cubit.cmd(command) 
+            command = "block "+str(id_block)+" name '"+n+"'"
+            cubit.cmd(command)
+
+
 
 def build_block_side(surf_list,name,obj='surface',id_0=1):
     id_nodeset=cubit.get_next_nodeset_id()
@@ -246,26 +333,13 @@ def define_bc(*args,**keys):
     cpuy=keys.get("cpuy",1)
     cpuxmax=keys.get("cpuxmax",cpux)
     cpuymax=keys.get("cpuymax",cpuy)
+    optionsea=keys.get("optionsea",False)
     #
     if parallel:
         absorbing_surf,abs_xmin,abs_xmax,abs_ymin,abs_ymax,top_surf,bottom_surf,xmin,ymin,xmax,ymax=define_surf(ip=ip,cpuxmin=cpuxmin,cpuxmax=cpuxmax,cpuymin=cpuymin,cpuymax=cpuymax,cpux=cpux,cpuy=cpuy)
-        #
-        #id_side=cubit.get_next_block_id()
-        #try:
-        #    entities=args[0]
-        #except:
-        #    entities=['face']
-        #for entity in entities:
-        #    build_block_side(top_surf,entity+'_topo',obj=entity,id_0=1) #topo is block 1 so id_0=1
-        #    build_block_side(bottom_surf,entity+'_abs_bottom',obj=entity,id_0=2)
-        #    build_block_side(xmin,entity+'_xmin',obj=entity,id_0=3)
-        #    build_block_side(ymin,entity+'_ymin',obj=entity,id_0=4)
-        #    build_block_side(xmax,entity+'_xmax',obj=entity,id_0=5)
-        #    build_block_side(ymax,entity+'_ymax',obj=entity,id_0=6)
-        #     
         id_0=cubit.get_next_block_id()
         v_list,name_list=define_block()
-        build_block(v_list,name_list,id_0)
+        build_block(v_list,name_list,id_0,top_surf,optionsea=optionsea)
         #
     elif closed:
         surf=define_absorbing_surf_sphere()
@@ -331,14 +405,24 @@ def get_ordered_node_surf(lsurface,icurve):
         icurvestr=str(icurve)
     orient_nodes_surf=[]
     #
-    cubit.cmd('del group sl')
+    #get the nodes on a surface, I don't use the method get_surface_nodes since it has different behavior in cubit12.2 and cubit13.2+
+    k=cubit.get_id_from_name('sl')
+    if k!=0:
+        cubit.cmd('del group sl')
+    else:
+        print 'initializing group sl'
     cubit.cmd("group 'sl' add node in surf "+lsurf)
     group1 = cubit.get_id_from_name("sl")
     nodes_ls =list(cubit.get_group_nodes(group1))
     nnode=len(nodes_ls)
     #
+    #get the nodes on curves
     orient=[]
-    cubit.cmd('del group n1')
+    k=cubit.get_id_from_name('n1')
+    if k!=0:
+        cubit.cmd('del group n1')
+    else:
+        print 'initializing group n1'
     cubit.cmd("group 'n1' add node in curve "+icurvestr)
     x=cubit.get_bounding_box('curve', icurve)
     if x[2]>x[5]:
@@ -392,9 +476,13 @@ def get_ordered_node_surf(lsurface,icurve):
             if length[-1][1] == 3:
                 curve_vertical.append(l)
     #
-    icurve=list2str(curve_vertical)
-    cubit.cmd('del group curve_vertical')
-    cubit.cmd("group 'curve_vertical' add node in curve "+icurve)
+    kcurve=list2str(curve_vertical)
+    k=cubit.get_id_from_name('curve_vertical')
+    if k!=0:
+        cubit.cmd('del group curve_vertical')
+    else:
+        print 'initializing group curve_vertical'
+    cubit.cmd("group 'curve_vertical' add node in curve "+kcurve)
     group1 = cubit.get_id_from_name('curve_vertical')
     nodes_curve = list(cubit.get_group_nodes(group1))
     for n in nodes_curve:
@@ -491,9 +579,11 @@ def check_bc(iproc,xmin,xmax,ymin,ymax,cpux,cpuy,cpuxmin,cpuxmax,cpuymin,cpuymax
     boundary['node_curve_xminymax']=c_xminymax
     boundary['node_curve_xmaxymin']=c_xmaxymin
     boundary['node_curve_xmaxymax']=c_xmaxymax
-    #
-    #
-    #
+    
+    #print boundary['node_curve_xminymin']
+    #print     boundary['node_curve_xminymax']
+    #print     boundary['node_curve_xmaxymin']
+    #print     boundary['node_curve_xmaxymax']
     entities=['face']
     #
     for entity in entities:
@@ -517,14 +607,24 @@ def check_bc(iproc,xmin,xmax,ymin,ymax,cpux,cpuy,cpuxmin,cpuxmax,cpuymin,cpuymax
         block=3 #change here..... must be 1 @@@@@@@@@
         ty=None
         ty=cubit.get_block_element_type(block)
-        if ty != 'HEX8': cubit.cmd('del block '+str(block))
+        if ty=='':
+            pass
+        elif ty == 'HEX8':
+            pass
+        else:
+            cubit.cmd('del block '+str(block))
         build_block_side(top_surf,refname,obj=entity,id_0=1001)
         #
         refname=entity+'_bottom'
         block=4 #change here..... must be 2 @@@@@@@@
         ty=None
         ty=cubit.get_block_element_type(block)
-        if ty != 'HEX8': cubit.cmd('del block '+str(block))
+        if ty=='':
+            pass
+        elif ty == 'HEX8':
+            pass
+        else:
+            cubit.cmd('del block '+str(block))
         build_block_side(bottom_surf,refname,obj=entity,id_0=1002)
     #
     #

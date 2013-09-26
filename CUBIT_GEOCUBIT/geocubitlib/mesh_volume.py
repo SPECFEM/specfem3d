@@ -41,15 +41,22 @@ def mesh(filename=None):
     #
     if cfg.map_meshing_type == 'regularmap':
             mesh_layercake_regularmap(filename=filename)
-            #elif cfg.map_meshing_type == 'partitioner':
-            #        mesh_partitioner()
     else:
         print 'error: map_meshing_type ', cfg.map_meshing_type,' not implemented'
 
 
+### AAA edited 8/28
 def mesh_layercake_regularmap(filename=None):
     import sys,os
     import start as start
+    mpiflag,iproc,numproc,mpi   = start.start_mpi()
+    from utilities import  importgeometry,savemesh,get_v_h_list,cubit_command_check
+    #
+    numpy                       = start.start_numpy()
+    cfg                         = start.start_cfg(filename=filename)
+    from math import sqrt
+    from sets import Set
+
     #
     class cubitvolume:
           def __init__(self,ID,intervalv,centerpoint,dimension):
@@ -66,13 +73,6 @@ def mesh_layercake_regularmap(filename=None):
         return cmp(x.centerpoint,y.centerpoint)
     #
     #
-    mpiflag,iproc,numproc,mpi   = start.start_mpi()
-    from utilities import  importgeometry,savemesh,get_v_h_list
-    #
-    numpy                       = start.start_numpy()
-    cfg                         = start.start_cfg(filename=filename)
-    from math import sqrt
-    from sets import Set
     #
     list_vol=cubit.parse_cubit_list("volume","all")
     if len(list_vol) != 0:
@@ -83,7 +83,7 @@ def mesh_layercake_regularmap(filename=None):
     #
     command = 'composite create curve all'
     cubit.cmd(command)
-    print 'NO CRITICAL ERROR: "No valid composites can be created from the specified curves."  is not critical. \n It means that your model is clean and you don"t need a virtual geometry'
+    print '###"No valid composites can be created from the specified curves."  is NOT a critical ERROR.'
     #
     command = "compress all"
     cubit.cmd(command)
@@ -113,7 +113,8 @@ def mesh_layercake_regularmap(filename=None):
     #
     #
     #interval assignement
-    surf_or,surf_vertical,list_curve_or,list_curve_vertical,bottom,top = get_v_h_list(list_vol)
+    surf_or,surf_vertical,list_curve_or,list_curve_vertical,bottom,top = get_v_h_list(list_vol,chktop=cfg.chktop)
+    print 'vertical surfaces: ',surf_vertical    
     
     for k in surf_vertical:
         command = "surface "+str(k)+" scheme submap"
@@ -121,16 +122,47 @@ def mesh_layercake_regularmap(filename=None):
     for k in surf_or:
         command = "surface "+str(k)+" scheme "+cfg.or_mesh_scheme
         cubit.cmd(command)
-    for k in list_curve_or:
+    #
+    ucurve,vcurve=get_uv_curve(list_curve_or)
+    schemepave=False
+    #
+    ucurve_interval={}
+    for k in ucurve:
         length=cubit.get_curve_length(k)
         interval=int(2*round(.5*length/cfg.size,0))
+        ucurve_interval[k]=interval
         command = "curve "+str(k)+" interval "+str(interval)
         cubit.cmd(command)
         #cubit_error_stop(iproc,command,ner)
         command = "curve "+str(k)+" scheme equal"
         cubit.cmd(command)
         #cubit_error_stop(iproc,command,ner)
-        #
+    if max(ucurve_interval.values()) != min(ucurve_interval.values()):
+        schemepave=True
+        print 'mesh scheme is set to pave'
+        for sk in surf_or:
+            command = "surface "+str(sk)+" scheme pave"
+            cubit.cmd(command)
+    #
+    vcurve_interval={}
+    for k in vcurve:
+        length=cubit.get_curve_length(k)
+        interval=int(2*round(.5*length/cfg.size,0))
+        vcurve_interval[k]=interval
+        command = "curve "+str(k)+" interval "+str(interval)
+        cubit.cmd(command)
+        #cubit_error_stop(iproc,command,ner)
+        command = "curve "+str(k)+" scheme equal"
+        cubit.cmd(command)
+        #cubit_error_stop(iproc,command,ner)
+
+    if max(vcurve_interval.values()) != min(vcurve_interval.values()):
+        print 'mesh scheme is set to pave'
+        schemepave=True
+        for sk in surf_or:
+            command = "surface "+str(sk)+" scheme pave"
+            cubit.cmd(command)
+    #
     for s in surf_vertical:
         lcurve=cubit.get_relatives("surface",s,"curve")
         interval_store=[]
@@ -157,18 +189,30 @@ def mesh_layercake_regularmap(filename=None):
                 command = "curve "+' '.join(str(iv[0]) for iv in interval_store)+" scheme equal"
                 cubit.cmd(command)
                 #cubit_error_stop(iproc,command,ner)
+        command = "surface "+str(s)+" scheme submap"
+        cubit.cmd(command)
+        
     #cubit_error_stop(iproc,command,ner)
     #
     #meshing
-    if cfg.or_mesh_scheme == 'pave':
+    if cfg.or_mesh_scheme == 'pave' or schemepave:
         command='mesh surf '+' '.join(str(t) for t in top)
-        cubit.cmd(command)    
+        status=cubit_command_check(iproc,command,stop=True)
+        #cubit.cmd(command)    
     elif cfg.or_mesh_scheme == 'map':
         command='mesh surf '+' '.join(str(t) for t in bottom)
-        cubit.cmd(command)
+        status=cubit_command_check(iproc,command,stop=True)
+        #cubit.cmd(command)
     for id_volume in range(nvol-1,-1,-1):
         command = "mesh vol "+str(vol[id_volume].ID)
-        cubit.cmd(command)        
+        status=cubit_command_check(iproc,command,stop=False)
+        if not status:
+            for s in surf_vertical:
+                command_surf="mesh surf "+str(s)
+                cubit.cmd(command_surf)
+            command_set_meshvol='volume all redistribute nodes on\nvolume all autosmooth target off\nvolume all scheme Sweep Vector 0 0 -1\nvolume all sweep smooth Auto\n'
+            status=cubit_command_check(iproc,command_set_meshvol,stop=False)
+            status=cubit_command_check(iproc,command,stop=True)    
     
     #
     #smoothing
@@ -216,7 +260,6 @@ def mesh_layercake_regularmap(filename=None):
         cubitcommand= 'del mesh vol '+str(vol[-1].ID)+ ' propagate'
         cubit.cmd(cubitcommand)
         s1=Set(list_curve_vertical)
-        print s1
         command = "group 'list_curve_tmp' add curve "+"in vol "+str(vol[-1].ID)
         cubit.cmd(command)
         group=cubit.get_id_from_name("list_curve_tmp")
@@ -224,9 +267,7 @@ def mesh_layercake_regularmap(filename=None):
         command = "delete group "+ str(group)
         cubit.cmd(command)
         s2=Set(list_curve_tmp)
-        print s2
         lc=list(s1 & s2)
-        print lc
         #
         cubitcommand= 'curve '+' '.join(str(x) for x in lc)+' interval '+str(cfg.actual_vertical_interval_top_layer)
         cubit.cmd(cubitcommand)
@@ -245,7 +286,7 @@ def mesh_layercake_regularmap(filename=None):
     import boundary_definition
     entities=['face']
     print iproc, 'hex block definition...'
-    boundary_definition.define_bc(entities,parallel=True,cpux=cfg.cpux,cpuy=cfg.cpuy,cpuxmin=0,cpuymin=0)
+    boundary_definition.define_bc(entities,parallel=True,cpux=cfg.cpux,cpuy=cfg.cpuy,cpuxmin=0,cpuymin=0,optionsea=False)
     #save mesh
     
     print iproc, 'untangling...'
@@ -261,6 +302,7 @@ def mesh_layercake_regularmap(filename=None):
 def refinement(nvol,vol,filename=None):
     import start as start
     cfg                         = start.start_cfg(filename=filename)
+    from utilities import get_v_h_list
     #
     #vertical refinement
     #for nvol = 3 
@@ -280,14 +322,17 @@ def refinement(nvol,vol,filename=None):
     if cfg.ntripl != 0:
         if len(cfg.refinement_depth) != 0:
             #get the topo surface....
-            surf=cubit.get_relatives('volume',vol[nvol+1-2].ID,'surface')
-            zstore=[-1,-999999999]
-            for s in surf:
-                 c=cubit.get_center_point('surface',s)
-                 z=c[2]
-                 if z > zstore[1]:
-                     zstore=[s,z]
-            tsurf=zstore[0]
+            #surf=cubit.get_relatives('volume',vol[nvol-1].ID,'surface')
+            #zstore=[-1,-999999999]
+            #for s in surf:
+            #     c=cubit.get_center_point('surface',s)
+            #     z=c[2]
+            #     print s,z
+            #     if z > zstore[1]:
+            #         zstore=[s,z]
+            #tsurf=zstore[0]
+            _,_,_,_,_,tsurf = get_v_h_list([vol[nvol-1].ID])
+            tsurf=' '.join(str(x) for x in tsurf)
             for idepth in cfg.refinement_depth:
                  cubitcommand= 'refine node in surf  '+str(tsurf)+' numsplit 1 bias 1.0 depth '+str(idepth)
                  cubit.cmd(cubitcommand)
@@ -313,18 +358,18 @@ def refinement(nvol,vol,filename=None):
                    cubitcommand= 'refine hex in vol  '+txt
                 else:
                    #refinement on the top surface
-                   
-                   surf=cubit.get_relatives('volume',vol[ir-2].ID,'surface')
-                   zstore=[-1,-999999999]
-                   for s in surf:
-                        c=cubit.get_center_point('surface',s)
-                        z=c[2]
-                        if z > zstore[1]:
-                            zstore=[s,z]
+                   _,_,_,_,_,tsurf = get_v_h_list([vol[ir-2].ID])
+                   tsurf=' '.join(str(x) for x in tsurf)
                    idepth=1
-                   cubitcommand= 'refine node in surf '+str(zstore[0])+' numsplit 1 bias 1.0 depth '+str(idepth)
+                   cubitcommand= 'refine node in surf '+str(tsurf)+' numsplit 1 bias 1.0 depth '+str(idepth)
                 cubit.cmd(cubitcommand)
 
+        if not nvol and cfg.volume_type == 'verticalsandwich_volume_ascii_regulargrid_mpiregularmap':
+            # AAA
+            # Volume 2 is always in between the 2nd and 3rd vertical surfaces from the left
+            cubitcommand = "refine node in volume 2 numsplit 1 depth 0"
+            cubit.cmd(cubitcommand)
+            # END AAA
 
 
 
@@ -441,3 +486,36 @@ def refine_inside_curve(curves,ntimes=1,depth=1,block=1,surface=False):
         import sys
         #sys.exit()
 
+def get_uv_curve(list_curve_or):
+    import math
+    import numpy as np
+    klen={}
+    for curve in list_curve_or:
+      vertex_list = cubit.get_relatives("curve", curve, "vertex")
+      coord0=cubit.get_center_point('vertex', vertex_list[0])
+      coord1=cubit.get_center_point('vertex', vertex_list[1])
+      klen[curve]=np.array(coord1)-np.array(coord0)
+    #
+    l0=list_curve_or[0]
+    c0=klen[l0]
+    angles={}
+    angles[l0]=0
+    for curve in list_curve_or[1:]:
+      c1=klen[curve]
+      angletmp=np.dot(c0,c1)/(np.dot(c0,c0)**.5*np.dot(c1,c1)**.5)
+      if -1 < angletmp < 1:
+        angle=math.sin(np.arccos(angletmp))
+      else:
+        angle=0.        
+      angles[curve]=angle
+    a=angles.values()
+    diff=max(a)-min(a)
+    ucurve=[]
+    vcurve=[]
+    for curve in list_curve_or:
+      if -diff < angles[curve] < diff:
+        ucurve.append(curve)
+      else:
+        vcurve.append(curve)
+    #
+    return ucurve,vcurve
