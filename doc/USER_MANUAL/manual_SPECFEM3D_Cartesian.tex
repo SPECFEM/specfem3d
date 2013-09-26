@@ -386,18 +386,6 @@ to insert `\texttt{`TRAP\_FPE=OFF}'' into the generated \texttt{Makefile}
 in order to turn underflow trapping off.\\
 
 
-If you run very large meshes on a relatively small number of processors,
-the memory size needed on each processor might become greater than
-2 gigabytes, which is the upper limit for 32-bit addressing. In this
-case, on some compilers you may need to add \texttt{``-mcmodel=medium}''
-or \texttt{``-mcmodel=medium -shared-intel}'' to the configure options
-of CFLAGS, FCFLAGS and LDFLAGS otherwise the compiler will display
-an error message (for instance \texttt{``relocation truncated to
-fit: R\_X86\_64\_PC32 against .bss''} or something similar); on an
-IBM machine with the \texttt{xlf} and \texttt{xlc} compilers, using
-\texttt{-q64} is usually sufficient.\\
-
-
 Note that we use CUBIT (now called Trelis) to create meshes of hexahedra, but other packages
 can be used as well, for instance GiD from \url{http://gid.cimne.upc.es}
 or Gmsh from \url{http://geuz.org/gmsh} \citep{GeRe09}. Even mesh
