@@ -16,12 +16,12 @@
 /bin/rm -rf *.spl >  /dev/null
 /bin/rm -rf *.brf >  /dev/null
 
-pdflatex manual_SPECFEM3D_Cartesian
+pdflatex --shell-escape manual_SPECFEM3D_Cartesian
 bibtex manual_SPECFEM3D_Cartesian
-pdflatex manual_SPECFEM3D_Cartesian
-pdflatex manual_SPECFEM3D_Cartesian
-pdflatex manual_SPECFEM3D_Cartesian
-pdflatex manual_SPECFEM3D_Cartesian
+pdflatex --shell-escape manual_SPECFEM3D_Cartesian
+pdflatex --shell-escape manual_SPECFEM3D_Cartesian
+pdflatex --shell-escape manual_SPECFEM3D_Cartesian
+pdflatex --shell-escape manual_SPECFEM3D_Cartesian
 
 /bin/rm -rf *.dvi >  /dev/null
 /bin/rm -rf *.log >  /dev/null
