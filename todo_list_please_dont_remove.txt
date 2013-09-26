@@ -4,6 +4,10 @@ To-do list for the different flavors of SPECFEM:
 
 (items listed in no particular order)
 
+- suggestion 46:
+----------------
+In SPECFEM2D, implement the changes described and partially done in SPECFEM2D/UTILS/Ra_Cleave_record_pressure_in_addition_to_displacement to record pressure in addition to displacement at the receivers in the same run. Currently this can only be done by doing the same run twice.
+
 - suggestion 45:
 ----------------
 In SPECFEM3D_GLOBE, fix this known 64-bit issue when -mcmodel=medium -shared-intel is used in order to handle very large static memory size per core
