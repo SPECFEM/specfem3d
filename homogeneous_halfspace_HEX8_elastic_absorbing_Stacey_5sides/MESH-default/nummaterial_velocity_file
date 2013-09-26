@@ -1,1 +1,1 @@
-2   1          2300.000000          2800.000000          1500.000000    9999.00000  9999.00000  0
+0   1 vol4  -->       sintax: #material_domain_id #material_id #rho #vp #vs #Q_kappa #Q_mu #anisotropy

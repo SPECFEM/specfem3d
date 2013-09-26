@@ -52,31 +52,21 @@ step-by-step tutorial:
      > cd examples/homogeneous_halfspace/DATA/
      > cp * ../../../DATA/
 
-
 3. create mesh:
 
-   - from the directory SPECFEM3D/examples/homogeneous_halfspace,
-     open the cubit GUI:
-
-     > claro (or cubit)
-
-     then run meshing script:
-     claro -> Menu "Tools" -> "Play Journal File" ... and select file: "block_mesh.py"
-
+   - see instructions in make_mesh.sh
+   
      if everything goes fine, this creates the ten mesh files in subdirectory MESH/:
-        MESH/absorbing_surface_file_bottom
-        MESH/absorbing_surface_file_xmax
-        MESH/absorbing_surface_file_xmin
-        MESH/absorbing_surface_file_ymax
-        MESH/absorbing_surface_file_ymin
-        MESH/free_surface_file
-        MESH/materials_file
-        MESH/mesh_file
-        MESH/nodes_coords_file
-        MESH/nummaterial_velocity_file
-
-     the cubit graphics window should show a mesh similar to the file homogeneous.png
-
+        absorbing_surface_file_bottom
+        absorbing_surface_file_xmax
+        absorbing_surface_file_xmin
+        absorbing_surface_file_ymax
+        absorbing_surface_file_ymin
+        free_or_absorbing_surface_file_zmax
+        materials_file
+        mesh_file
+        nodes_coords_file
+        nummaterial_velocity_file
 
 4. decompose mesh files:
 
