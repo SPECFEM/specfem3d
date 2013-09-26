@@ -21,13 +21,16 @@ In this case, on some compilers you may need to add -mcmodel=medium (if you do n
 or -mcmodel=medium -shared-intel (if you use the Intel ifort / icc compiler)
 to the configure options of CFLAGS, FCFLAGS and LDFLAGS otherwise the compiler will display an error
 message (for instance 'relocation truncated to fit: R\_X86\_64\_PC32 against .bss' or something similar);
+
 BEWARE that using -mcmodel=medium -shared-intel is known for currently leading to incorrect seismograms,
 at least when flag ATTENUATION is on (and maybe even without), at least in the case of the Intel ifort / icc compiler.
 This likely comes from intrinsic functions such as size() that return and integer8 instead of an integer4, thus leading
 to incorrect results when used in function calls is the -i8 flag is not added to the compiler options;
 however, when adding -i8 the code does not compile because the MPI calls then refuse to compile (they need integer4 as arguments).
+It seems that this problem is triggered when 3D models are used and mostly (only?) when attenuation is on, but not triggered for 1D Earth model benchmarks
+even with attenuation (at least not triggered for EXAMPLES/benchmarks/attenuation_benchmark_GJI_2002_versus_normal_modes), which makes it uneasy to locate.
 Since most current users run the code with less than 2 GB of static memory per core, we have not investigated that problem carefully for now,
-and thus recommend that you do NOT use these compiler flags.
+and thus recommend that you do NOT use these compiler flags until this problem is located and fixed.
 
 - suggestion 44:
 ----------------
