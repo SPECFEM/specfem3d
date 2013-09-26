@@ -1,5 +1,5 @@
 #############################################################################
-# mpi_geocubit.py                                                    
+# sea.py                                                    
 # this file is part of GEOCUBIT                                             #
 #                                                                           #
 # Created by Emanuele Casarotti                                             #
@@ -21,12 +21,20 @@
 # along with GEOCUBIT.  If not, see <http://www.gnu.org/licenses/>.         #
 #                                                                           #
 #############################################################################
-def mpiprint(mpiflag,text):
-    if mpiflag:
-        #import mpi
-        #mpi.synchronizedWrite(text) 
-        #command = "comment '"+text+"'"
-        #cubit.cmd(command)
-        print text
+
+def adjust_sea_layers(zvertex,sealevel,bathymetry,cfg):
+    if cfg.seaup: 
+        if sealevel:
+            vertex=max(cfg.sea_level,vertex-cfg.sea_threshold)    
+        elif bathymetry:
+            #if zvertex > cfg.sea_threshold: zvertex=max(zvertex,cfg.sea_level)+cfg.sea_threshold #move node below the topography of sea_threshold
+            vertex=vertex
     else:
-        print text
+        if sealevel and zvertex < cfg.sea_level:
+            zvertex=cfg.sea_level
+        elif bathymetry:
+            if zvertex > cfg.sea_threshold: zvertex=max(zvertex,cfg.sea_level)+cfg.sea_threshold #move node below the topography of sea_threshold
+    return zvertex
+    
+
+

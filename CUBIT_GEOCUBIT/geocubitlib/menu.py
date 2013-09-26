@@ -68,37 +68,30 @@ def usage():
     
          collect some cubit files and merge in a single free mesh cubitfile
          GEOCUBIT.py --collect   --merge --meshfiles=[list of files] --cpux=N --cpuy=N (--rangecpux=[cpuxmin,cpuxmax], --rangecpuy=[cpuymin,cpuymax])
+
+         collect some cubit files and merge in a single free mesh cubitfile (and decimate!!! (refine by 2))
+         GEOCUBIT.py --collect   --decimate --merge --meshfiles=[list of files] --cpux=N --cpuy=N (--rangecpux=[cpuxmin,cpuxmax], --rangecpuy=[cpuymin,cpuymax])
+
+
          
          collect a single free mesh cubitfile and refine the hex inside some curve (ex. basin)
          GEOCUBIT.py --collect --meshfiles=[list of files] --curverefining=[list of SAT files]       
          
-         export a cubit mesh file (with blocks defined following the note)  in a SPECFEM3D_Cartesian mesh
+         export a cubit mesh file (with blocks defined following the note)  in a SPECFEM3D_SESAME mesh
          GEOCUBIT.py --export2SPECFEM3D --meshfiles=[filename] (--listblock=block1,block2,..,blockN --listflag=[list of specfem flag, i.e. --listflag=1,2,3,-1])
          
     """
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "sjmohbp1", ["SEMoutput=","qlog","mfast","curverefining=","output=","rangecpux=","rangecpuy=","equivalence","listflag=","listblock=","cpux=","cpuy=","exofiles=","partitioner","plane","x1=","x2=","x3=","x4=","unit=","chkcfg","mat=","merge_tolerance=","export2SPECFEM3D=","mesh","chklib","cfg=","job=","basin","help", "id_proc=", "surface=","script","jou","strat","MPI","regulargrid=",'skin=',"build_surface","build_volume","merge1","merge2","merge","collect","meshfiles="])
+    opts, args = getopt.getopt(sys.argv[1:], "sjmohbp1", ["hex27","cpml_size=","top_absorbing","cpml","decimate","addsea","SEMoutput=","qlog","mfast","curverefining=","output=","rangecpux=","rangecpuy=","equivalence","listflag=","listblock=","cpux=","cpuy=","exofiles=","partitioner","plane","x1=","x2=","x3=","x4=","unit=","chkcfg","mat=","merge_tolerance=","export2SPECFEM3D","mesh","chklib","cfg=","job=","basin","help", "id_proc=", "surface=","script","jou","strat","MPI","regulargrid=",'skin=',"build_surface","build_volume","merge1","merge2","merge","collect","meshfiles="])
     print opts, args
-except getopt.GetoptError,errmsg:
-    if str(errmsg) == 'option --export2SPECFEM3D requires argument':
-        for i,xop in enumerate(sys.argv[1:]):
-            if 'export2SPECFEM3D' in xop:
-                sys.argv[i+1]=sys.argv[i+1]+'=.'
-        try:
-            opts, args = getopt.getopt(sys.argv[1:], "sjmohbp1", ["SEMoutput=","qlog","mfast","curverefining=","output=","rangecpux=","rangecpuy=","equivalence","listflag=","listblock=","cpux=","cpuy=","exofiles=","partitioner","plane","x1=","x2=","x3=","x4=","unit=","chkcfg","mat=","merge_tolerance=","export2SPECFEM3D=","mesh","chklib","cfg=","job=","basin","help", "id_proc=", "surface=","script","jou","strat","MPI","regulargrid=",'skin=',"build_surface","build_volume","merge1","merge2","merge","collect","meshfiles="])
-            print opts, args
-        except getopt.GetoptError,errmsg:
-            print str(errmsg)
-            usage()
-            sys.exit(2)
-    else:
-        print str(errmsg)
-        usage()
-        sys.exit()
-except AttributeError:
-    opts=None
-    args=None
-    print opts, args
+except Exception,e:
+    #if 'argv' in e:
+    #    pass
+    #else:
+    #    if '__console__' != __name__: #if you are in the cubitGUI/pythonprompt you don't want usage()
+    #        usage()
+    #        print e
+    sys.exit()
     
 output='totalmesh_merged'
 SPECFEM3D_output_dir='.'
@@ -136,17 +129,35 @@ cpuymin=0
 cpuxmax=None
 cpuymax=None
 curverefining=False
+add_sea=False
+decimate=False
 
-
-
-
+cpml=False
+cpml_size=False
+top_absorbing=False
 
 qlog=False
+hex27=False
 
 
 if opts: 
     for o, value in opts:
         #print o,value
+        if o in ('--hex27'):
+            hex27=True
+        if o in ('--cpml'):
+            cpml=True
+            if '--cpml_size' in o:
+                cpml=True
+                cpml_size=float(value)
+        if o in ('--top_absorbing'):
+            cpml=True
+            top_absorbing=True
+        if '--cpml_size' in o:
+            cpml=True
+            cpml_size=float(value)          
+        if o in ('--decimate'):
+            decimate=True
         if o in ('--partitioner'):
             create_partitioner=True
         if o == ('--surface'):
@@ -209,6 +220,13 @@ if opts:
             sys.exit()
         if o in ("--cfg"):
             cfg_name=value
+            try:
+               if open(cfg_name): pass
+            except IOError,e:
+               print 'error opening ',cfg_name
+               print e
+               import sys
+               sys.exit()
         if o == ('--surface'):
             surface=True
             surface_name=value
@@ -231,12 +249,6 @@ if opts:
             exofiles=value
         if o in ("--export2SPECFEM3D"):
                export2SPECFEM3D=True
-               SPECFEM3D_output_dir=value
-               import os
-               try:
-                   os.makedirs(SPECFEM3D_output_dir)
-               except OSError:
-                   pass
         if o in ("--merge_tolerance") and o != '--merge' and o != '--merge2' and o != '--merge1':
              merge_tolerance=map(float,value.split(','))
         if o in ("--mat"):
@@ -265,8 +277,15 @@ if opts:
             output=value
         if o in ("--curverefining"):
             curverefining=value.split(',')
-        if o in ("SEMoutput"):
+        if o in ("--SEMoutput"):
             SPECFEM3D_output_dir=value
+            import os
+            try:
+                os.makedirs(SPECFEM3D_output_dir)
+            except OSError:
+                pass
+        if o in ("--addsea"):
+            add_sea=True
     print cpuxmax,cpuymax
     if cpuymax:
         pass
@@ -281,6 +300,18 @@ if opts:
     else:
         cpuxmax=1	    
     print cpuxmax,cpuymax
+    
+    if cpml:
+        if not cpml_size:
+            print 'specify the size of the cpml boundaries'
+            import sys
+            sys.exit()
+        elif cpml_size<=0:
+            print 'cpml size negative, please check the parameters'
+            import sys
+            sys.exit()
+    
+    
     if chkcfg==True:        
         import start as start
         cfg=start.start_cfg()
@@ -312,4 +343,5 @@ if opts:
 elif opts == []:
     print __name__
     usage()
-    raise AttributeError('no options')
+    import sys
+    sys.exit()

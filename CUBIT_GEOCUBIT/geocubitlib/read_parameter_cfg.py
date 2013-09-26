@@ -46,7 +46,7 @@ def readcfg(filename=None,importmenu=False,mpiflag=False):
         import sys
         sys.exit()
     #
-    from utilities import geo2utm #here I can use pyproj but I prefere to include a function in pure python in order to avoid an additional installation
+    from utilities import geo2utm,get_cubit_version #here I can use pyproj but I prefere to include a function in pure python in order to avoid an additional installation
     #
     #
     import ConfigParser
@@ -119,6 +119,7 @@ def readcfg(filename=None,importmenu=False,mpiflag=False):
     #CONSTANTS
     dcfg['osystem'] = 'linux'
     dcfg['debug_cfg']=False
+    dcfg['version_cubit']=get_cubit_version()
     dcfg['checkbound']=False
     dcfg['top_partitioner'] = 10000
     dcfg['tres']=0.3 #if n is the vertical component of the normal at a surface pointing horizontally, when -tres < n < tres then the surface is vertical
@@ -157,8 +158,19 @@ def readcfg(filename=None,importmenu=False,mpiflag=False):
     dcfg['filename']=None
     dcfg['actual_vertical_interval_top_layer']=1
     dcfg['coarsening_top_layer']=False
-    
-    
+    dcfg['refineinsidevol']=False
+    dcfg['sea']=False
+    dcfg['seaup']=False
+    dcfg['sea_level']=False
+    dcfg['sea_threshold']=False
+    dcfg['subduction']=True
+    dcfg['subduction_thres']=500
+    dcfg['debugsurface']=False #if true it creates only the surface not the lofted volumes
+    dcfg['lat_orientation']=False
+    dcfg['irregulargridded_surf']=False
+    dcfg['chktop']=False
+    dcfg['smoothing']=False
+    dcfg['ntripl']=0
     
     
     dcfg['nsurf'] = None
@@ -173,7 +185,7 @@ def readcfg(filename=None,importmenu=False,mpiflag=False):
                 dcfg.update(d)
             except:
                 pass
-                
+        
         if dcfg['nsurf']:
            surface_name=[]
            num_x=[]
@@ -242,6 +254,14 @@ def readcfg(filename=None,importmenu=False,mpiflag=False):
         except:
             pass
             
+        if dcfg['sea']:
+            if not dcfg['sea_level']: dcfg['sea_level']=0
+            if not dcfg['sea_threshold']: dcfg['sea_threshold']=-200
+            dcfg['actual_vertical_interval_top_layer']=1
+            dcfg['coarsening_top_layer']=True
+        
+    
+    dcfg['optionsea']={'sea':dcfg['sea'],'seaup':dcfg['seaup'],'sealevel':dcfg['sea_level'],'seathres':dcfg['sea_threshold']}
     cfg=attrdict(dcfg)
     
     if menu:
@@ -312,7 +332,16 @@ def readcfg(filename=None,importmenu=False,mpiflag=False):
     except:
         pass
         
+    try:
+        if isinstance(cfg.iv_interval,int): cfg.iv_interval=[cfg.iv_interval]
+    except:
+        pass
         
+    try:
+        if isinstance(cfg.refinement_depth,int): cfg.refinement_depth=[cfg.refinement_depth]
+    except:
+        pass
+    
     return cfg
 
 

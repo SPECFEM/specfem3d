@@ -37,13 +37,20 @@ def volumes(filename=None):
     import start as start
     print'volume'
     cfg                     = start.start_cfg(filename=filename)
+    print cfg
     #
     if cfg.volume_type == 'layercake_volume_ascii_regulargrid_regularmap':
             layercake_volume_ascii_regulargrid_mpiregularmap(filename=filename)
     elif cfg.volume_type == 'layercake_volume_fromacis_mpiregularmap':
             layercake_volume_fromacis_mpiregularmap(filename=filename)
+    elif cfg.volume_type == 'verticalsandwich_volume_ascii_regulargrid_mpiregularmap':
+            verticalsandwich_volume_ascii_regulargrid_mpiregularmap(filename=None)
+    
 
-def layercake_volume_ascii_regulargrid_mpiregularmap(filename=None):
+
+
+
+def layercake_volume_ascii_regulargrid_mpiregularmap(filename=None,verticalsandwich=False):
     import sys
     import start as start
     #
@@ -52,7 +59,7 @@ def layercake_volume_ascii_regulargrid_mpiregularmap(filename=None):
     numpy                       = start.start_numpy()
     cfg                         = start.start_cfg(filename=filename)                       
     
-    from utilities import geo2utm, savegeometry,savesurf
+    from utilities import geo2utm, savegeometry,savesurf,cubit_command_check
     
     from math import sqrt
     #
@@ -63,21 +70,13 @@ def layercake_volume_ascii_regulargrid_mpiregularmap(filename=None):
     #
     #
     command = "comment '"+"PROC: "+str(iproc)+"/"+str(numproc)+" '"
-    cubit.cmd(command)
-    #fer=open('ERROR_VOLUME_'+str(iproc),'w')
-    
+    cubit_command_check(iproc,command,stop=True)
+    if verticalsandwich: cubit.cmd("comment 'Starting Vertical Sandwich'")
     #
+    #get icpuy,icpux values
     if mpiflag:
-        x_slice=numpy.zeros([numproc],int)
-        y_slice=numpy.zeros([numproc],int)
-        for icpuy in range(0,cfg.nproc_eta): 
-            for icpux in range (0,cfg.nproc_xi):
-                iprocnum=icpuy*cfg.nproc_xi+icpux
-                #print iprocnum,cfg.nproc_xi,icpux,icpuy,cfg.nproc_xi,cfg.nproc_eta
-                x_slice[iprocnum]=icpux
-                y_slice[iprocnum]=icpuy
-        icpux=x_slice[iproc]
-        icpuy=y_slice[iproc]
+        icpux = iproc % cfg.nproc_xi
+        icpuy = int(iproc / cfg.nproc_xi)
     else:
         icpuy=int(cfg.id_proc/cfg.nproc_xi)
         icpux=cfg.id_proc%cfg.nproc_xi
@@ -157,7 +156,7 @@ def layercake_volume_ascii_regulargrid_mpiregularmap(filename=None):
         #print coordx,coordy,nx,ny
     #
     print 'end of building grid '+str(iproc)
-    print 'number of point: ', len(coordx)
+    print 'number of point: ', len(coordx)*len(coordy)
     #
     #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     #for each processor
@@ -180,6 +179,17 @@ def layercake_volume_ascii_regulargrid_mpiregularmap(filename=None):
     #
     #create vertex
     for inz in range(0,cfg.nz):
+        if cfg.sea and inz==cfg.nz-1: #sea layer
+            sealevel=True
+            bathymetry=False
+        elif cfg.sea and inz==cfg.nz-2: #bathymetry layer
+            sealevel=False
+            bathymetry=True
+        else:
+            sealevel=False
+            bathymetry=False
+        print sealevel,bathymetry
+        
         if  cfg.bottomflat and inz == 0: #bottom layer
                 #
                 if cfg.geometry_format == 'ascii':
@@ -262,6 +272,7 @@ def layercake_volume_ascii_regulargrid_mpiregularmap(filename=None):
                     ivx=0
                     for ix in range(nxmin_cpu,nxmax_cpu+1):
                         zvertex=elev[ix,iy,inz]
+                        #zvertex=adjust_sea_layers(zvertex,sealevel,bathymetry,cfg)
                         x_current,y_current=(coordx[ix,iy],coordy[ix,iy])
                         #
                         vertex.append(' Position '+ str( x_current ) +' '+ str( y_current )+' '+ str( zvertex ) )
@@ -323,32 +334,37 @@ def layercake_volume_ascii_regulargrid_mpiregularmap(filename=None):
     #
     #
     #!create volume
-    if  cfg.osystem == 'macosx':
-        pass
-    elif cfg.osystem == 'linux':
-        for inz in range(1,cfg.nz):
+    if not cfg.debugsurface:
+        if  cfg.osystem == 'macosx':
+            pass
+        elif cfg.osystem == 'linux':
+            if cfg.nz == 1:
+                nsurface=2
+            else:
+                nsurface=cfg.nz
+            for inz in range(1,nsurface):
+                ner=cubit.get_error_count()
+                cubitcommand= 'create volume loft surface '+ str( inz+1 )+' '+str( inz )
+                cubit.cmd(cubitcommand)
+                ner2=cubit.get_error_count()
+                isurf=isurf+6
+        if ner == ner2:
+            cubitcommand= 'del surface 1 to '+ str( cfg.nz )
+            cubit.cmd(cubitcommand)
+            list_vol=cubit.parse_cubit_list("volume","all")
+            if len(list_vol) > 1:     
+                cubitcommand= 'imprint volume all'
+                cubit.cmd(cubitcommand)
+                cubitcommand= 'merge all'
+                cubit.cmd(cubitcommand)
             ner=cubit.get_error_count()
-            cubitcommand= 'create volume loft surface '+ str( inz+1 )+' '+str( inz )
-            cubit.cmd(cubitcommand)
-            ner2=cubit.get_error_count()
-            isurf=isurf+6
-    if ner == ner2:
-        cubitcommand= 'del surface 1 to '+ str( cfg.nz )
-        cubit.cmd(cubitcommand)
-        list_vol=cubit.parse_cubit_list("volume","all")
-        if len(list_vol) > 1:     
-            cubitcommand= 'imprint volume all'
-            cubit.cmd(cubitcommand)
-            cubitcommand= 'merge all'
-            cubit.cmd(cubitcommand)
-        ner=cubit.get_error_count()
-        #cubitcommand= 'composite create curve in vol all'
-        #cubit.cmd(cubitcommand)
+            #cubitcommand= 'composite create curve in vol all'
+            #cubit.cmd(cubitcommand)
     savegeometry(iproc,filename=filename)
-    if cfg.geological_imprint:
-        curvesname=[cfg.outlinebasin_curve,cfg.transition_curve,cfg.faulttrace_curve]
-        outdir=cfg.working_dir
-        imprint_topography_with_geological_outline(curvesname,outdir)
+    #if cfg.geological_imprint:
+    #    curvesname=[cfg.outlinebasin_curve,cfg.transition_curve,cfg.faulttrace_curve]
+    #    outdir=cfg.working_dir
+    #    imprint_topography_with_geological_outline(curvesname,outdir)
     #
     #        
     cubit.cmd("set info "+cfg.cubit_info)
@@ -362,7 +378,6 @@ def layercake_volume_fromacis_mpiregularmap(filename=None):
     #
     mpiflag,iproc,numproc,mpi   = start.start_mpi()
     #
-    numpy                       = start.start_numpy()
     cfg                         = start.start_cfg(filename=filename)                       
     #
     from utilities import geo2utm, savegeometry
@@ -409,16 +424,8 @@ def layercake_volume_fromacis_mpiregularmap(filename=None):
         cubit.cmd('move surface all x '+str(xmin)+' y '+str(ymin))
         
     if mpiflag:
-        x_slice=numpy.zeros([numproc],int)
-        y_slice=numpy.zeros([numproc],int)
-        for icpuy in range(0,cfg.nproc_eta): 
-            for icpux in range (0,cfg.nproc_xi):
-                iprocnum=icpuy*cfg.nproc_xi+icpux
-                #print iprocnum,cfg.nproc_xi,icpux,icpuy,cfg.nproc_xi,cfg.nproc_eta
-                x_slice[iprocnum]=icpux
-                y_slice[iprocnum]=icpuy
-        icpux=x_slice[iproc]
-        icpuy=y_slice[iproc]
+        icpux = iproc % cfg.nproc_xi
+        icpuy = int(iproc / cfg.nproc_xi)
     else:
         icpuy=int(cfg.id_proc/cfg.nproc_xi)
         icpux=cfg.id_proc%cfg.nproc_xi
@@ -508,44 +515,45 @@ def layercake_volume_fromacis_mpiregularmap(filename=None):
             cubit.cmd(cubitcommand)
     #
     savegeometry(iproc,filename=filename)
-    if cfg.geological_imprint:
-        curvesname=[cfg.outlinebasin_curve,cfg.transition_curve,cfg.faulttrace_curve]
-        outdir=cfg.working_dir
-        imprint_topography_with_geological_outline(curvesname,outdir)
+    #if cfg.geological_imprint:
+    #    curvesname=[cfg.outlinebasin_curve,cfg.transition_curve,cfg.faulttrace_curve]
+    #    outdir=cfg.working_dir
+    #    imprint_topography_with_geological_outline(curvesname,outdir)
 
 
 
-def imprint_topography_with_geological_outline(curvesname,outdir='.'):
-    import sys,os
-    from sets import Set
-    #
-    from utilities import load_curves,project_curves,get_v_h_list
-    
-    list_vol=cubit.parse_cubit_list("volume","all")
-    surf_or,surf_vertical,list_curve_or,list_curve_vertical,bottom,top=get_v_h_list(list_vol)
-    
-    
-    
-    outlinebasin_curve=load_curves(curvesname[0])
-    transition_curve=load_curves(curvesname[1])
-    faulttrace_curve=load_curves(curvesname[2])
-    
-    curves=[]
-    if outlinebasin_curve: curves=curves+outlinebasin_curve
-    if transition_curve: curves=curves+transition_curve
-    if faulttrace_curve: curves=curves+faulttrace_curve
-    
-    if curves:
-            command='imprint tolerant surface '+str(top)+' with curve '+' '.join(str(x) for x in curves)+'  merge'
-            cubit.cmd(command)
-             
-    
-    command = "merge surf all"
-    cubit.cmd(command)
-    command = "compress vol all"
-    cubit.cmd(command)
-    command = "compress surf all"
-    cubit.cmd(command)
-    command = "save as '"+outdirs+"/"+"imprinted_vol_"+str(iproc)+".cub' overwrite"
-    cubit.cmd(command)    
-
+#def imprint_topography_with_geological_outline(curvesname,outdir='.'):
+#    import sys,os
+#    from sets import Set
+#    #
+#    from utilities import load_curves,project_curves,get_v_h_list
+#    
+#    list_vol=cubit.parse_cubit_list("volume","all")
+#    surf_or,surf_vertical,list_curve_or,list_curve_vertical,bottom,top=get_v_h_list(list_vol)
+#    
+#    
+#    
+#    outlinebasin_curve=load_curves(curvesname[0])
+#    transition_curve=load_curves(curvesname[1])
+#    faulttrace_curve=load_curves(curvesname[2])
+#    
+#    curves=[]
+#    if outlinebasin_curve: curves=curves+outlinebasin_curve
+#    if transition_curve: curves=curves+transition_curve
+#    if faulttrace_curve: curves=curves+faulttrace_curve
+#    
+#    if curves:
+#            command='imprint tolerant surface '+str(top)+' with curve '+' '.join(str(x) for x in curves)+'  merge'
+#            cubit.cmd(command)
+#             
+#    
+#    command = "merge surf all"
+#    cubit.cmd(command)
+#    command = "compress vol all"
+#    cubit.cmd(command)
+#    command = "compress surf all"
+#    cubit.cmd(command)
+#    command = "save as '"+outdirs+"/"+"imprinted_vol_"+str(iproc)+".cub' overwrite"
+#    cubit.cmd(command)    
+#
+#
