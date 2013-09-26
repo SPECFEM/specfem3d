@@ -4,6 +4,27 @@ To-do list for the different flavors of SPECFEM:
 
 (items listed in no particular order)
 
+- suggestion 45:
+----------------
+In SPECFEM3D_GLOBE, fix this known 64-bit issue when -mcmodel=medium -shared-intel is used in order to handle very large static memory size per core
+(the 3D_Cartesian and 2D packages are fine because that compiler option is never used in them):
+
+If you run very large meshes on a relatively small number
+of processors, the static memory size needed on each processor might become
+greater than 2 gigabytes, which is the upper limit for 32-bit addressing
+(dynamic memory allocation is always OK, even beyond the 2 GB limit; only static memory has a problem).
+In this case, on some compilers you may need to add -mcmodel=medium (if you do not use the Intel ifort / icc compiler)
+or -mcmodel=medium -shared-intel (if you use the Intel ifort / icc compiler)
+to the configure options of CFLAGS, FCFLAGS and LDFLAGS otherwise the compiler will display an error
+message (for instance 'relocation truncated to fit: R\_X86\_64\_PC32 against .bss' or something similar);
+BEWARE that using -mcmodel=medium -shared-intel is known for currently leading to incorrect seismograms,
+at least when flag ATTENUATION is on (and maybe even without), at least in the case of the Intel ifort / icc compiler.
+This likely comes from intrinsic functions such as size() that return and integer8 instead of an integer4, thus leading
+to incorrect results when used in function calls is the -i8 flag is not added to the compiler options;
+however, when adding -i8 the code does not compile because the MPI calls then refuse to compile (they need integer4 as arguments).
+Since most current users run the code with less than 2 GB of static memory per core, we have not investigated that problem carefully for now,
+and thus recommend that you do NOT use these compiler flags.
+
 - suggestion 44:
 ----------------
 From Anne Obermann (ISTerre, Grenoble, France): add an option to record seismograms of div and curl at each receiver instead of (or in addition to) displacement.
