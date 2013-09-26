@@ -49,7 +49,7 @@ case $my_FC in
         #
         # Portland PGI
         #
-        DEF_FFLAGS="-fast -Mnobounds -Minline -Mneginfo -Mdclchk -Knoieee -Minform=warn -Mdaz -Mflushz -Mvect -DFORCE_VECTORIZATION" # -mcmodel=medium
+        DEF_FFLAGS="-fast -Mnobounds -Minline -Mneginfo -Mdclchk -Knoieee -Minform=warn -Mdaz -Mflushz -Mvect -DFORCE_VECTORIZATION"
         # -Mbounds
         # -fastsse -tp amd64e -Msmart
         ;;
@@ -62,7 +62,7 @@ case $my_FC in
 # parallel file systems like SFS 3.2 / Lustre 1.8. If omitted
 # I/O throughput lingers at 2.5 MB/s, with it it can increase to ~44 MB/s
 # However it does not make much of a difference on NFS mounted volumes or with SFS 3.1.1 / Lustre 1.6.7.1 
-        DEF_FFLAGS="-O3 -DFORCE_VECTORIZATION -check nobounds -xHost -ftz -assume buffered_io -assume byterecl -align sequence -vec-report0 -std03 -diag-disable 6477 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage" # -mcmodel=medium -shared-intel
+        DEF_FFLAGS="-O3 -DFORCE_VECTORIZATION -check nobounds -xHost -ftz -assume buffered_io -assume byterecl -align sequence -vec-report0 -std03 -diag-disable 6477 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage"
         # useful for debugging...
         # for debugging: change "-O3 -check nobounds -DFORCE_VECTORIZATION" to  "-check all -debug -g -O0 -fp-stack-check -traceback -ftrapuv"
         ;;
@@ -70,7 +70,7 @@ case $my_FC in
         #
         # GNU gfortran
         #
-        DEF_FFLAGS="-std=f2003 -fimplicit-none -frange-check -O2 -DFORCE_VECTORIZATION -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -ffpe-trap=invalid,zero,overflow " # -mcmodel=medium
+        DEF_FFLAGS="-std=f2003 -fimplicit-none -frange-check -O2 -DFORCE_VECTORIZATION -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -ffpe-trap=invalid,zero,overflow"
         # for debugging, add -fbacktrace -fbounds-check -ffpe-trap=overflow,zero  and suppress -DFORCE_VECTORIZATION
         ;;
     g95|*/g95)
