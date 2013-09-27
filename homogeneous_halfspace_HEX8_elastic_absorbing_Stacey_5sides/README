@@ -68,6 +68,15 @@ step-by-step tutorial:
         nodes_coords_file
         nummaterial_velocity_file
 
+     the mesh can be viewed using either cubit or paraview:
+
+     > claro &
+     then open TOTALMESH_MERGED.cub
+
+     > paraview &
+     then open TOTALMESH_MERGED.e
+     (click "Apply", then select "Surface With Edges" in the toolbar)
+
 4. decompose mesh files:
 
    - compile decomposer in directory SPECFEM3D/:
