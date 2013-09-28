@@ -7,7 +7,7 @@ use POSIX;
 sub Usage{
 print STDERR <<END;
 
-Usage:   process_syn_new.pl
+Usage:   process_syn.pl
      -S -m CMTFILE -h -o offset -lStart/End -tTmin/Tmax -f -P n/p
      -i Dir -A amp_factor -p -a STAFILE -s sps -y t0/V0/t1/V1...
      -c -d OutDir -x Ext  synthetics_files
@@ -57,7 +57,7 @@ else{($poles,$pass)=split(/\//,$opt_P);
      if(not defined $pass or $pass<1){$pass=2;}}
 if ($opt_l) {($lmin,$lmax) = split(/\//,$opt_l);} 
 else {$lmin = 0; $lmax = 3600;}
-if ($opt_a and not -f $opt_a) {$opt_a="/opt/seismo/data/STATIONS_new";}
+if ($opt_a and not -f $opt_a) {$opt_a="/opt/seismo/data/STATIONS";}
 if ($opt_o and not $opt_m) {die("Specify centroid time first\n");}
 if ($opt_d and not -d $opt_d) {die("No such directory as $opt_d\n");}
 if ($opt_i and not -d $opt_i) {die("No such directory as $opt_i\n");}
