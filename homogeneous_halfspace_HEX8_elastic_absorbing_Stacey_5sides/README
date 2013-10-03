@@ -2,16 +2,12 @@
 README
 ----------------------------------------------------------------------
 
+This example creates a homogeneous halfspace, i.e. a single volume block with a
+constant elastic material property, using CUBIT, and runs a forward simulation.
 
-Note: to create the mesh again using CUBIT, just type " claro ./block_mesh.py "
-("claro" is the way of calling CUBIT from the command line)
+----------------------------------------------------------------------
 
-
-
-This examples creates a homogeneous halfspace, i.e. a single volume block with a
-constant elastic material property, using CUBIT and runs a forward simulation.
-
-step-by-step tutorial:
+step-by-step tutorial (short version):
 
 0. check that all software is available (or that modules are loaded):
 	openmpi: > which mpirun
@@ -21,6 +17,20 @@ step-by-step tutorial:
      optional:
         gnuplot: > which gnuplot
         xmgrace: > which xmgrace
+
+1. check paths and set paths for meshing with GEOCUBIT
+
+    - From the SPECFEM3D 'base' directory SPECFEM3D/
+      > cd CUBIT_GEOCUBIT
+      > source setpaths.sh
+
+2. run process.sh
+
+----------------------------------------------------------------------
+
+step-by-step tutorial (long version):
+
+0. perform steps 0. and 1. above
 
 1. configure package:
 
@@ -54,6 +64,10 @@ step-by-step tutorial:
 
 3. create mesh:
 
+   - check path, then make mesh
+     > which GEOCUBIT.py
+     > make_mesh.sh
+
    - see instructions in make_mesh.sh
    
      if everything goes fine, this creates the ten mesh files in subdirectory MESH/:
@@ -68,10 +82,12 @@ step-by-step tutorial:
         nodes_coords_file
         nummaterial_velocity_file
 
+     (there will also be several local files generated)
      the mesh can be viewed using either cubit or paraview:
 
      > claro &
      then open TOTALMESH_MERGED.cub
+     optional: type "draw block all" in the cubit command line window
 
      > paraview &
      then open TOTALMESH_MERGED.e
