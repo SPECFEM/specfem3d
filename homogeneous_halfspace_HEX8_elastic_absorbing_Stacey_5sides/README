@@ -17,13 +17,13 @@ step-by-step tutorial (short version -- use pre-saved mesh files):
 
    > ./process.sh >& process.sh.log
 
-   note: by default, the command ./configure in process.sh will use gfortran;
-         you need to change this if you want something else (see 3. below)
-
    This will configure, compile, then run the decomposer, database generation,
    and solver in the local directory. The simulation takes about 15 minutes.
 
-3. see step 9. below to compare seismograms in REF_SEIS/ with those in OUTPUT_FILES/
+  note: by default, the command ./configure in process.sh will use gfortran;
+         you need to change this if you want something else (see 3 below)
+
+3. see step 9 below to compare seismograms in REF_SEIS/ with those in OUTPUT_FILES/
 
 ----------------------------------------------------------------------
 
