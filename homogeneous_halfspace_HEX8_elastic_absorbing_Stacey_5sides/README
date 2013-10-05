@@ -7,9 +7,29 @@ constant elastic material property, using CUBIT, and runs a forward simulation.
 
 ----------------------------------------------------------------------
 
-step-by-step tutorial (short version):
+step-by-step tutorial (short version -- use pre-saved mesh files):
 
-0. check that all software is available (or that modules are loaded):
+1. check that all software is available (or that modules are loaded):
+	openmpi: > which mpirun
+        scotch:  > which gout
+
+2. from the directory SPECFEM3D/examples/homogeneous_halfspace/
+
+   > ./process.sh >& process.sh.log
+
+   note: by default, the command ./configure in process.sh will use gfortran;
+         you need to change this if you want something else (see 3. below)
+
+   This will configure, compile, then run the decomposer, database generation,
+   and solver in the local directory. The simulation takes about 15 minutes.
+
+3. see step 9. below to compare seismograms in REF_SEIS/ with those in OUTPUT_FILES/
+
+----------------------------------------------------------------------
+
+step-by-step tutorial (long version -- generate MESH with GEOCUBIT):
+
+1. check that all software is available (or that modules are loaded):
 	openmpi: > which mpirun
         cubit:   > which cubit
         scotch:  > which gout
@@ -18,21 +38,13 @@ step-by-step tutorial (short version):
         gnuplot: > which gnuplot
         xmgrace: > which xmgrace
 
-1. check paths and set paths for meshing with GEOCUBIT
+2. check paths and set paths for meshing with GEOCUBIT
 
     - From the SPECFEM3D 'base' directory SPECFEM3D/
       > cd CUBIT_GEOCUBIT
       > source setpaths.sh
 
-2. run process.sh
-
-----------------------------------------------------------------------
-
-step-by-step tutorial (long version):
-
-0. perform steps 0. and 1. above
-
-1. configure package:
+3. configure package:
 
    - determine the path for your compiled version of SCOTCH
 
@@ -57,18 +69,16 @@ step-by-step tutorial (long version):
      note: you may need to adjust the commands (e.g., -q or -l)
      note: in this example you do not need go_mesher_pbs.bash and valgrind_go_solver_pbs.bash
 
-2. copy three input files from examples directory into SPECFEM3D/DATA/
+4. copy three input files from examples directory into SPECFEM3D/DATA/
 
      > cd examples/homogeneous_halfspace/DATA/
      > cp * ../../../DATA/
 
-3. create mesh:
+5. create mesh:
 
    - check path, then make mesh
      > which GEOCUBIT.py
      > make_mesh.sh
-
-   - see instructions in make_mesh.sh
    
      if everything goes fine, this creates the ten mesh files in subdirectory MESH/:
         absorbing_surface_file_bottom
@@ -93,7 +103,7 @@ step-by-step tutorial (long version):
      then open TOTALMESH_MERGED.e
      (click "Apply", then select "Surface With Edges" in the toolbar)
 
-4. decompose mesh files:
+6. decompose mesh files:
 
    - compile decomposer in directory SPECFEM3D/:
      > make xdecompose_mesh
@@ -114,7 +124,7 @@ step-by-step tutorial (long version):
      > ./bin/xdecompose_mesh 4 examples/homogeneous_halfspace/MESH/ OUTPUT_FILES/DATABASES_MPI/
 
 
-5. generate databases:
+7. generate databases:
 
    - compile generate_databases in directory SPECFEM3D/:
      > make xgenerate_databases
@@ -130,7 +140,7 @@ step-by-step tutorial (long version):
 
      optional: load vtk files (e.g., vs) into paraview and check them out
 
-6. run simulation:
+8. run simulation:
 
    - compile specfem3D:
      > make xspecfem3D
@@ -144,13 +154,13 @@ step-by-step tutorial (long version):
              and you can track the progress with the timestamp files
              generated in OUTPUT_FILES/
 
-   - the job should take about 30 minutes
+   - the job should take about 15 minutes
    - when the job is complete, you should have 3 sets (semd,semv,sema)
      of 18 (ls -1 *semd | wc) seismogram files in the directory OUTPUT_FILES,
      as well as 3 timestamp****** files
 
 
-7. check with 6 reference seismograms in
+9. check with 6 reference seismograms in
       SPECFEM3D/examples/homogeneous_halfspace/REF_SEIS/
 
    - option 1: from SPECFEM3D/, quick viewing using xmgrace (if available):

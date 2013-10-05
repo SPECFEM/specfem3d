@@ -1,25 +1,10 @@
 #!/bin/bash
-#
-# script runs decomposition,database generation and solver
-# using this example setup
-#
-# prior to running this script, you must create the mesh files
-# in directory MESH/
-# (see section 3.1 "Meshing with CUBIT" in user guide)
-#
-
-###################################################
-
-# number of processes
-NPROC=4
-
-##################################################
 
 echo "running example: `date`"
 currentdir=`pwd`
 
 echo
-echo "(will take about 5 minutes)"
+echo "(will take about 15 minutes)"
 echo
 
 # sets up directory structure in current example directoy
@@ -42,6 +27,8 @@ cp -fr DATA/* ../../DATA/.
 
 cd ../../
 
+# note: ./configure will default to gfortran configuration
+# ./configure FC=ifort MPIFC=mpif90
 ./configure
 make clean
 make all > $currentdir/tmp.log
@@ -63,7 +50,7 @@ cp DATA/STATIONS OUTPUT_FILES/
 # get the number of processors
 NPROC=`grep NPROC DATA/Par_file | cut -d = -f 2`
 
-# decomposes mesh
+# decomposes mesh using the pre-saved mesh files in MESH-default
 echo
 echo "  decomposing mesh..."
 echo
