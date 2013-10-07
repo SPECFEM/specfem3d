@@ -12,9 +12,10 @@
 ###########################################################
 # USER PARAMETERS
 
-## 4 CPUs ( 4  ), walltime 1 hour
+## 4 CPUs, walltime 1 hour
 #PBS -l nodes=1:ppn=4,walltime=1:00:00
-##PBS -q debug
+## queue name will depend on the cluster
+#PBS -q debug
 
 ###########################################################
 
