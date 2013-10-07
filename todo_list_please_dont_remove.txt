@@ -4,6 +4,12 @@ To-do list for the different flavors of SPECFEM:
 
 (items listed in no particular order)
 
+- suggestion 47: (from Craig P Steffen at NCSA)
+----------------
+Make checkpointing/restarting easier to use and not limited to a NUMBER_OF_RUNS > 1;
+i.e. on big machines we should be able to use the existing routines to checkpoint even when NUMBER_OF_RUNS == 1, in case the run fails and needs to be restarted.
+This will be useful on very big machines, in particular in SPECFEM3D_GLOBE.
+
 - suggestion 46:
 ----------------
 In SPECFEM2D, implement the changes described and partially done in SPECFEM2D/UTILS/Ra_Cleave_record_pressure_in_addition_to_displacement to record pressure in addition to displacement at the receivers in the same run. Currently this can only be done by doing the same run twice.
