@@ -34,13 +34,9 @@
 
 # default cuda libraries
 # runtime library -lcudart needed, others are optional -lcuda -lcublas
-@COND_CUDA_TRUE@CUDA_LIBS = -lcudart   
-@COND_CUDA_FALSE@CUDA_LIBS = 
 
-CUDA_LIB_LOCATION = @CUDA_LIB@
-CUDA_LINK = $(CUDA_LIB_LOCATION) $(CUDA_LIBS)
-CUDA_INC = @CUDA_INC@ -I../../
-MPI_INC = @MPI_INC@
+CUDA_LINK = @CUDA_LDFLAGS@ @CUDA_LIBS@
+CUDA_CPPFLAGS = @CUDA_CPPFLAGS@ -I../../
 
 @COND_CUDA_TRUE@NVCC = nvcc
 @COND_CUDA_FALSE@NVCC = @CC@
@@ -62,15 +58,15 @@ GENCODE_35 = -gencode=arch=compute_35,code=\"sm_35,compute_35\"
 @COND_CUDA_TRUE@@COND_CUDA5_FALSE@GENCODE = $(GENCODE_20)
 
 # CUDA flags and linking
-@COND_CUDA_TRUE@NVCC_FLAGS_BASE = $(CUDA_INC) $(MPI_INC) $(COND_MPI_CPPFLAGS)
+@COND_CUDA_TRUE@NVCC_FLAGS_BASE = $(CUDA_CPPFLAGS) $(MPI_INCLUDES) $(COND_MPI_CPPFLAGS)
 @COND_CUDA_TRUE@@COND_CUDA5_TRUE@NVCC_FLAGS = $(NVCC_FLAGS_BASE) -dc -DCUDA $(GENCODE)
 @COND_CUDA_TRUE@@COND_CUDA5_FALSE@NVCC_FLAGS = $(NVCC_FLAGS_BASE) -DCUDA -DUSE_OLDER_CUDA4_GPU $(GENCODE)
 
-@COND_CUDA_TRUE@@COND_CUDA5_TRUE@NVCCLINK_BASE = $(NVCC) $(CUDA_INC) $(MPI_INC) $(COND_MPI_CPPFLAGS) -DCUDA
+@COND_CUDA_TRUE@@COND_CUDA5_TRUE@NVCCLINK_BASE = $(NVCC) $(CUDA_CPPFLAGS) $(MPI_INCLUDES) $(COND_MPI_CPPFLAGS) -DCUDA
 @COND_CUDA_TRUE@@COND_CUDA5_TRUE@NVCCLINK = $(NVCCLINK_BASE) -dlink $(GENCODE)
 @COND_CUDA_TRUE@@COND_CUDA5_FALSE@NVCCLINK = $(NVCCLINK_BASE) -DUSE_OLDER_CUDA4_GPU $(GENCODE)
 
-@COND_CUDA_FALSE@NVCC_FLAGS = $(MPI_INC) $(COND_MPI_CPPFLAGS)
+@COND_CUDA_FALSE@NVCC_FLAGS = $(MPI_INCLUDES) $(COND_MPI_CPPFLAGS)
 @COND_CUDA_FALSE@NVCCLINK = $(NVCC) $(NVCC_FLAGS)
 
 # OpenMP
@@ -301,13 +297,11 @@ ADIOS_STUBS = \
 @COND_ADIOS_FALSE@ADIOS_PREOBJECTS= $(ADIOS_PRESTUBS)
 
 # ADIOS
-# with configure: ./configure --with-cuda ADIOS_LIB=.. ADIOS_INC=.. MPI_INC=..
-@COND_ADIOS_TRUE@ADIOS_LIBS = -ladiosf -lmxml
-@COND_ADIOS_FALSE@ADIOS_LIBS = 
+# with configure: ./configure --with-adios ADIOS_CONFIG=..
 
-ADIOS_LIB_LOCATION = @ADIOS_LIB@ @MXML_LIB@
-ADIOS_LINK = $(ADIOS_LIB_LOCATION) $(ADIOS_LIBS)
-ADIOS_INC = @ADIOS_INC@ -I../../
+MPI_INCLUDES = @MPI_INCLUDES@
+ADIOS_INC = @ADIOS_FCFLAGS@ -I../../
+ADIOS_LINK = @ADIOS_LIBS@
 
 #@COND_ADIOS_TRUE@CPPFLAGS = @CPPFLAGS@
 @COND_ADIOS_TRUE@MPIFCCOMPILE_CHECK =@FCENV@ ${MPIFC} ${FCFLAGS} $(ADIOS_INC) $(FLAGS_CHECK)
@@ -430,10 +424,10 @@ $L/libspecfem.a: $(libspecfem_a_OBJECTS)
 ###
 
 $O/%.adios.o: %.F90
-	${MPIFCCOMPILE_CHECK} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INC) -o $@ $<
+	${MPIFCCOMPILE_CHECK} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INCLUDES) -o $@ $<
 
 $O/%.adios.o: %.f90
-	${MPIFCCOMPILE_CHECK} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INC) -o $@ $<
+	${MPIFCCOMPILE_CHECK} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INCLUDES) -o $@ $<
 
 $O/%.noadios.o: %.F90 
 	${FC} -c -o $@ $<
@@ -445,10 +439,10 @@ $O/%.shared_noadios.o: ${SHARED}/%.f90 .FORCE
 	${MPIFC} -c -o $@ $<
 
 $O/%.shared_adios.o: ${SHARED}/%.f90 ${SHARED}/constants.h .FORCE
-	${MPIFC} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INC) -o $@ $<
+	${MPIFC} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INCLUDES) -o $@ $<
 
 $O/%.shared_adios.o: ${SHARED}/%.F90 ${SHARED}/constants.h .FORCE
-	${MPIFC} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INC) -o $@ $<
+	${MPIFC} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INCLUDES) -o $@ $<
 
 # Force adios helpers to be recompiled.
 .FORCE:
@@ -484,7 +478,7 @@ $O/%.cuda.o: ${CUDAD}%.cu ../../config.h $(CUDAD)mesh_constants_cuda.h $(CUDAD)p
 	$(NVCC) -c $< -o $@ $(NVCC_FLAGS)
 
 $O/%.cudacc.o: ${CUDAD}%.c ../../config.h
-	${CC} -c $(CFLAGS) $(MPI_INC) -o $@ ${CUDAD}$< -I../../
+	${CC} -c $(CFLAGS) $(MPI_INCLUDES) -o $@ ${CUDAD}$< -I../../
 
 
 #######################################
@@ -496,7 +490,7 @@ force_ftz.o: ${SHARED}force_ftz.c ../../config.h
 	${CC} -c $(CPPFLAGS) $(CFLAGS) -I../.. -o $O/force_ftz.o ${SHARED}force_ftz.c
 
 $O/%.cc.o: ${SHARED}%.c ../../config.h
-	${CC} -c $(CFLAGS) $(MPI_INC) -o $@ ${SHARED}$< -I../../
+	${CC} -c $(CFLAGS) $(MPI_INCLUDES) -o $@ ${SHARED}$< -I../../
 
 
 #######################################

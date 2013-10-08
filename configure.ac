@@ -12,6 +12,7 @@ AC_INIT([Specfem 3D], [2.1.0], [jtromp AT princeton.edu], [Specfem3D])
 AC_CONFIG_SRCDIR([README])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_MACRO_DIR([m4])
+m4_include(m4/cit_backports.m4)
 
 AC_CANONICAL_HOST
 
@@ -357,11 +358,6 @@ LDFLAGS=${ac_save_ldflags}
 
 # influential environment variables
 
-AC_ARG_VAR(ADIOS_INC, [Directory where ADIOS headers are installed])
-AC_ARG_VAR(ADIOS_LIB, [Directory where ADIOS libraries are installed])
-AC_ARG_VAR(MXML_INC, [Directory where MXML headers are installed])
-AC_ARG_VAR(MXML_LIB, [Directory where MXML libraries are installed])
-
 AC_ARG_VAR(USE_BUNDLED_SCOTCH, [Set to 1 to always use the bundled Scotch library])
 AC_ARG_VAR(SCOTCH_DIR, [Directory where Scotch is installed])
 AC_ARG_VAR(SCOTCH_INCLUDEDIR, [Directory where Scotch headers are installed])
@@ -370,9 +366,6 @@ AC_ARG_VAR(MPIFC, [MPI Fortran compiler command])
 AC_ARG_VAR(MPILIBS, [extra libraries for linking MPI programs])
 AC_ARG_VAR(MPICC, [MPI C compiler command])
 AC_ARG_VAR(FLAGS_CHECK, [Fortran compiler flags])
-AC_ARG_VAR(CUDA_LIB,[Location of CUDA library libcudart])
-AC_ARG_VAR(CUDA_INC,[Location of CUDA include files])
-AC_ARG_VAR(MPI_INC,[Location of MPI include mpi.h, which is needed by nvcc when compiling cuda files])
 if test x"$MPIFC" = x; then
     MPIFC=mpif90
 fi
@@ -453,13 +446,12 @@ if test "$want_pyre" = yes; then
 fi
 
 if test "$want_adios" = yes; then
-  CIT_MXML_HEADER
-  CIT_MXML_LIB
-  CIT_ADIOS_LIB
+    CIT_ADIOS_CONFIG
 fi	
 
 if test "$want_cuda" = yes; then
-    CIT_CUDA_COMPILER
+    CIT_CUDA_CONFIG
+    CIT_MPI_INCDIR
 fi
 
 if test "$want_openmp" = yes; then
