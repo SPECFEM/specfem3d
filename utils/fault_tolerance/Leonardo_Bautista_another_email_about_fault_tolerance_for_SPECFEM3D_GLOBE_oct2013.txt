@@ -1,0 +1,18 @@
+
+Subject: Re: FTI version of Specfem3D
+Date: Mon, 7 Oct 2013 12:53:19 -0500 (CDT)
+From: Leonardo Bautista Gomez AT mcs.anl.gov
+To: Dimitri Komatitsch
+CC: vicenc beltran at BSC, Franck Cappello, Jesus Labarta at BSC
+
+Hi Dimitri, Hi all,
+
+Here I send you the FTI sources that were used at the time of our project in 2011, it is a very old version.
+
+You can downnload the current version of FTI here: https://gforge.inria.fr/projects/fti/
+
+Please note that FTI has evolved substantially since 2011 and the current API is completely different.
+
+Hope this helps,
+Leo
+
