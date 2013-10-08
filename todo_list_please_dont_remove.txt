@@ -4,6 +4,84 @@ To-do list for the different flavors of SPECFEM:
 
 (items listed in no particular order)
 
+- suggestion 48:
+----------------
+In the new merged CPU / GPU version of SPECFEM3D_GLOBE, fix all these warnings that we get when using the Cray compiler.
+They correspond to Fortran statements that are correct but that induce memory copies in and out of subroutine arguments, which may slow down the code
+(significantly if these calls are used very often i.e. are for instance inside a big loop; not that significantly if the call is used only once;
+however, it would be better / cleaner for the code to compile without a single warning. Here is the full list of Cray warnings (as of the beginning of Oct 2013):
+
+ftn  -eC -eD -ec -en -eI -ea -g -G0  -I./obj -I.  -I. -I./setup -c -o obj/parallel.sharedmpi.o src/shared/parallel.f90
+ftn  -eC -eD -ec -en -eI -ea -g -G0  -I./obj -I.  -I. -I./setup -c -o obj/spline_routines.shared.o src/shared/spline_routines.f90
+ftn  -eC -eD -ec -en -eI -ea -g -G0  -I./obj -I.  -I. -I./setup -c -o obj/write_VTK_file.shared.o src/shared/write_VTK_file.f90
+
+  call gather_all_cr(glob_data(1,:),nglob,store_val_ux_all,nglob,NPROCTOT)
+                              ^                                            
+ftn-1438 crayftn: CAUTION WRITE_VTK_DATA_CR_ALL, File = src/shared/write_VTK_file.f90, Line = 483, Column = 31 
+  This argument produces a copy in and copy out to a temporary variable.
+
+  call gather_all_cr(glob_data(2,:),nglob,store_val_uy_all,nglob,NPROCTOT)
+                              ^                                            
+ftn-1438 crayftn: CAUTION WRITE_VTK_DATA_CR_ALL, File = src/shared/write_VTK_file.f90, Line = 484, Column = 31 
+  This argument produces a copy in and copy out to a temporary variable.
+
+  call gather_all_cr(glob_data(3,:),nglob,store_val_uz_all,nglob,NPROCTOT)
+                              ^                                            
+ftn-1438 crayftn: CAUTION WRITE_VTK_DATA_CR_ALL, File = src/shared/write_VTK_file.f90, Line = 485, Column = 31 
+  This argument produces a copy in and copy out to a temporary variable.
+
+ftn  -eC -eD -ec -en -eI -ea -g -G0  -I./obj -I.  -I. -I./setup -c -o obj/meshfem3D_par.check.o src/meshfem3D/meshfem3D_par.f90
+ftn  -eC -eD -ec -en -eI -ea -g -G0  -I./obj -I.  -I. -I./setup -c -o obj/meshfem3D.check.o src/meshfem3D/meshfem3D.f90
+ftn  -eC -eD -ec -en -eI -ea -g -G0  -I./obj -I.  -I. -I./setup -c -o obj/meshfem3D_models.check.o src/meshfem3D/meshfem3D_models.f90
+ftn  -eC -eD -ec -en -eI -ea -g -G0  -I./obj -I.  -I. -I./setup -c -o obj/add_missing_nodes.check.o src/meshfem3D/add_missing_nodes.f90
+ftn  -eC -eD -ec -en -eI -ea -g -G0  -I./obj -I.  -I. -I./setup -c -o obj/model_aniso_mantle.check.o src/meshfem3D/model_aniso_mantle.f90
+ftn  -eC -eD -ec -en -eI -ea -g -G0  -I./obj -I.  -I. -I./setup -c -o obj/compute_forces_outer_core_noDev.solverstatic.o src/specfem3D/compute_forces_outer_core_noDev.f90
+ftn  -eC -eD -ec -en -eI -ea -g -G0  -I./obj -I.  -I. -I./setup -c -o obj/compute_forces_outer_core_Dev.solverstatic.o src/specfem3D/compute_forces_outer_core_Dev.F90
+ftn  -eC -eD -ec -en -eI -ea -g -G0  -I./obj -I.  -I. -I./setup -c -o obj/compute_kernels.solverstatic.o src/specfem3D/compute_kernels.F90
+ftn  -eC -eD -ec -en -eI -ea -g -G0  -I./obj -I.  -I. -I./setup -c -o obj/compute_seismograms.solverstatic.o src/specfem3D/compute_seismograms.f90
+
+                hxir_store(irec_local,:),hetar_store(irec_local,:),hgammar_store(irec_local,:), &
+                          ^                                                                       
+ftn-1438 crayftn: CAUTION COMPUTE_SEISMOGRAMS_ADJOINT, File = src/specfem3D/compute_seismograms.f90, Line = 276, Column = 27 
+  This argument produces a copy in and copy out to a temporary variable.
+                                                    ^                                             
+ftn-1438 crayftn: CAUTION COMPUTE_SEISMOGRAMS_ADJOINT, File = src/specfem3D/compute_seismograms.f90, Line = 276, Column = 53 
+  This argument produces a copy in and copy out to a temporary variable.
+                                                                                ^                 
+ftn-1438 crayftn: CAUTION COMPUTE_SEISMOGRAMS_ADJOINT, File = src/specfem3D/compute_seismograms.f90, Line = 276, Column = 81 
+  This argument produces a copy in and copy out to a temporary variable.
+
+                hpxir_store(irec_local,:),hpetar_store(irec_local,:),hpgammar_store(irec_local,:), &
+                           ^                                                                         
+ftn-1438 crayftn: CAUTION COMPUTE_SEISMOGRAMS_ADJOINT, File = src/specfem3D/compute_seismograms.f90, Line = 277, Column = 28 
+  This argument produces a copy in and copy out to a temporary variable.
+                                                      ^                                              
+ftn-1438 crayftn: CAUTION COMPUTE_SEISMOGRAMS_ADJOINT, File = src/specfem3D/compute_seismograms.f90, Line = 277, Column = 55 
+  This argument produces a copy in and copy out to a temporary variable.
+                                                                                   ^                 
+ftn-1438 crayftn: CAUTION COMPUTE_SEISMOGRAMS_ADJOINT, File = src/specfem3D/compute_seismograms.f90, Line = 277, Column = 84 
+  This argument produces a copy in and copy out to a temporary variable.
+
+ftn  -eC -eD -ec -en -eI -ea -g -G0  -I./obj -I.  -I. -I./setup -c -o obj/compute_stacey_crust_mantle.solverstatic.o src/specfem3D/compute_stacey_crust_mantle.f90
+ftn  -eC -eD -ec -en -eI -ea -g -G0  -I./obj -I.  -I. -I./setup -c -o obj/compute_stacey_outer_core.solverstatic.o src/specfem3D/compute_stacey_outer_core.f90
+ftn  -eC -eD -ec -en -eI -ea -g -G0  -I./obj -I.  -I. -I./setup -c -o obj/multiply_arrays_source.solverstatic.o src/specfem3D/multiply_arrays_source.f90
+ftn  -eC -eD -ec -en -eI -ea -g -G0  -I./obj -I.  -I. -I./setup -c -o obj/noise_tomography.solverstatic.o src/specfem3D/noise_tomography.f90
+ftn  -eC -eD -ec -en -eI -ea -g -G0  -I./obj -I.  -I. -I./setup -c -o obj/write_output_ASCII.solverstatic.o src/specfem3D/write_output_ASCII.f90
+ftn  -eC -eD -ec -en -eI -ea -g -G0  -I./obj -I.  -I. -I./setup -c -o obj/write_output_SAC.solverstatic.o src/specfem3D/write_output_SAC.f90
+
+      call write_n_real(seismogram_tmp(iorientation,1:seismo_current),seismo_current)
+                                      ^                                               
+ftn-1438 crayftn: CAUTION WRITE_OUTPUT_SAC, File = src/specfem3D/write_output_SAC.f90, Line = 624, Column = 39 
+  This argument produces a copy in and copy out to a temporary variable.
+
+      call write_n_real(real(seismogram_tmp(iorientation,1:seismo_current)),seismo_current)
+                        ^                                                                   
+ftn-1438 crayftn: CAUTION WRITE_OUTPUT_SAC, File = src/specfem3D/write_output_SAC.f90, Line = 626, Column = 25 
+  This argument produces a copy in to a temporary variable.
+
+Cray Fortran : Version 8.1.8 
+
+
 - suggestion 47: (from Craig P Steffen at NCSA)
 ----------------
 Make checkpointing/restarting easier to use and not limited to a NUMBER_OF_RUNS > 1;
