@@ -45,13 +45,11 @@ FLAGS_CHECK = @FLAGS_CHECK@
 FCFLAGS_f90 = @FCFLAGS_f90@
 
 # ADIOS
-# with configure: ./configure --with-adios ADIOS_LIB=.. ADIOS_INC=.. MPI_INC=..
-@COND_ADIOS_TRUE@ADIOS_LIBS = -ladiosf -lmxml
-@COND_ADIOS_FALSE@ADIOS_LIBS = 
+# with configure: ./configure --with-adios ADIOS_CONFIG=..
 
-ADIOS_LIB_LOCATION = @ADIOS_LIB@ @MXML_LIB@
-ADIOS_LINK = $(ADIOS_LIB_LOCATION) $(ADIOS_LIBS)
-ADIOS_INC = @ADIOS_INC@ -I../../
+MPI_INCLUDES = @MPI_INCLUDES@
+ADIOS_INC = @ADIOS_FCFLAGS@ -I../../
+ADIOS_LINK = @ADIOS_LIBS@
 
 FCCOMPILE_CHECK =@FCENV@ ${FC} ${FCFLAGS} $(FLAGS_CHECK) -I${SHARED} ${ADIOS_LINK}
 MPIFCCOMPILE_CHECK =@FCENV@ ${MPIFC} ${FCFLAGS} $(FLAGS_CHECK) -I${SHARED} ${ADIOS_LINK}
@@ -170,7 +168,7 @@ meshfem3D: xmeshfem3D
 
 # rules for the pure Fortran version
 @COND_PYRE_FALSE@xmeshfem3D: $(XMESHFEM_OBJECTS) $(COND_MPI_OBJECTS)
-@COND_PYRE_FALSE@	${FCLINK} -o ${E}/xmeshfem3D $(XMESHFEM_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS) ${ADIOS_LIBS} ${O}/safe_alloc_mod.shared.o
+@COND_PYRE_FALSE@	${FCLINK} -o ${E}/xmeshfem3D $(XMESHFEM_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS) ${ADIOS_LINK} ${O}/safe_alloc_mod.shared.o
 @COND_PYRE_FALSE@
 @COND_PYRE_FALSE@# solver also depends on values from mesher
 
@@ -198,10 +196,10 @@ $L/libmeshfem.a: $(libmeshfem_a_OBJECTS)
 ###
 
 $O/%.adios.o: %.F90 ${SHARED}constants.h
-	${MPIFCCOMPILE_CHECK} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INC) -o $@ $<
+	${MPIFCCOMPILE_CHECK} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INCLUDES) -o $@ $<
 
 $O/%.adios.o: %.f90 ${SHARED}constants.h
-	${MPIFCCOMPILE_CHECK} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INC) -o $@ $<
+	${MPIFCCOMPILE_CHECK} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INCLUDES) -o $@ $<
 
 $O/%.noadios.o: %.F90 
 	${FC} -c -o $@ $<
@@ -213,10 +211,10 @@ $O/%.shared_noadios.o: ${SHARED}/%.f90 .FORCE
 	${MPIFC} -c -o $@ $<
 
 $O/%.shared_adios.o: ${SHARED}/%.f90 ${SHARED}/constants.h .FORCE
-	${MPIFC} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INC) -o $@ $<
+	${MPIFC} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INCLUDES) -o $@ $<
 
 $O/%.shared_adios.o: ${SHARED}/%.F90 ${SHARED}/constants.h .FORCE
-	${MPIFC} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INC) -o $@ $<
+	${MPIFC} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INCLUDES) -o $@ $<
 
 .FORCE:
 
@@ -233,7 +231,7 @@ $O/%.shared.o: $(SHARED)%.f90 $(SHARED)constants.h .FORCE
 ###
 
 $O/%.cc.o: $(SHARED)%.c ../../config.h
-	${CC} -c $(CFLAGS) $(MPI_INC) -o $@ $(SHARED)$< -I../../
+	${CC} -c $(CFLAGS) $(MPI_INCLUDES) -o $@ $(SHARED)$< -I../../
 
 ###
 ### MPI compilation without optimization

@@ -34,6 +34,7 @@ SHARED = ../shared/
 FC = @FC@
 FCFLAGS = #@FCFLAGS@
 MPIFC = @MPIFC@
+MPI_INCLUDES = @MPI_INCLUDES@
 MPILIBS = @MPILIBS@
 FLAGS_CHECK = @FLAGS_CHECK@
 FCFLAGS_f90 = @FCFLAGS_f90@
@@ -121,7 +122,7 @@ $O/%.shared.o: $(SHARED)%.f90 $(SHARED)constants.h
 	${FCCOMPILE_CHECK} -c -o $@ $<
 
 $O/%.cc.o: $(SHARED)%.c ../../config.h
-	${CC} -c $(CFLAGS) $(MPI_INC) -o $@ $(SHARED)$< -I../../
+	${CC} -c $(CFLAGS) $(MPI_INCLUDES) -o $@ $(SHARED)$< -I../../
 
 $O/part_decompose_mesh.o: part_decompose_mesh.f90
 	${FCCOMPILE_CHECK} -c -o $O/part_decompose_mesh.o part_decompose_mesh.f90 $(SCOTCH_INC)
