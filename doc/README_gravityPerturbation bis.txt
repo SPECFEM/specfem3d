@@ -4,10 +4,19 @@ The current file documents the usage of this feature and the related code
 modifications.
 
 
+Theory
+------
+
+The computation of gravity perturbations induced by deformation is based on 
+equation 4 of:
+J. Harms, R. DeSalvo, S. Dorsher and V. Mandic (2009), "Simulation of underground
+gravity gradients from stochastic seismic fields", Phys. Rev. D, 80, 122001
+
+
 Enabling gravity computations
 -----------------------------
 
-Gravity perturbation can be computed for any SPECFEM3D simulation by 
+Gravity perturbation can be computed in any SPECFEM3D simulation by 
 placing a file called "gravity_stations" in the DATA directory, in 
 addition to the regular input files.
 
@@ -15,7 +24,7 @@ addition to the regular input files.
 Input file format
 -----------------
 
-The format of the "gravity_stations" input file is as follows:
+The format of the "gravity_stations" input file is:
 
 n	dt_gap
 x1	y1	z1
@@ -29,6 +38,16 @@ where
           SPECFEM3D simulation
 
 
+Output file format
+-----------------
+
+Time series of gravity are output in files named "OUTPUT_FILES/stat*.grav",
+where * is the station index (one file per station). Their format is four
+columns:
+  t  ax  ay  az 
+(time and acceleration along x, y and z, respectively).
+
+
 Code modifications
 ------------------
 
@@ -39,7 +58,7 @@ in one of the following stages:
  1. during the initialization, 
  2. during the iterative time stepping scheme and 
  3. at the output stage.
-In #1 the code checks for the presence of the input file gravity_stations. 
+In #1 the code checks for the presence of the input file "gravity_stations". 
 If the file exists, the flag "GRAVITY_SIMULATION" is turned on and the 
 subroutines #2 and #3 are invoked.
 
