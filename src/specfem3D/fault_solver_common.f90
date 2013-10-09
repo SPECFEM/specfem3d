@@ -482,10 +482,10 @@ subroutine store_dataT(dataT,d,v,t,itime)
   do i=1,dataT%npoin
     k = dataT%iglob(i)
     dataT%dat(1,itime,i) = d(1,k)
-    dataT%dat(3,itime,i) = v(1,k)
-    dataT%dat(5,itime,i) = t(1,k)/1.0e6_CUSTOM_REAL
-    dataT%dat(2,itime,i) = -d(2,k)
-    dataT%dat(4,itime,i) = -v(2,k)
+    dataT%dat(2,itime,i) = v(1,k)
+    dataT%dat(3,itime,i) = t(1,k)/1.0e6_CUSTOM_REAL
+    dataT%dat(4,itime,i) = -d(2,k)
+    dataT%dat(5,itime,i) = -v(2,k)
     dataT%dat(6,itime,i) = -t(2,k)/1.0e6_CUSTOM_REAL
     dataT%dat(7,itime,i) = t(3,k)/1.0e6_CUSTOM_REAL
   enddo
