@@ -42,8 +42,8 @@ subroutine gravity_init()
   double precision :: Jac3D
   ! coordinates of the control points
   double precision xelm(NGNOD),yelm(NGNOD),zelm(NGNOD)
-  integer ia,iax,iay,iaz
-  integer iaddx(NGNOD),iaddy(NGNOD),iaddz(NGNOD)
+  integer ia
+  integer, dimension(NGNOD) :: iaddx,iaddy,iaddz,iax,iay,iaz
   integer nstep_grav
 
   open(unit=IIN_G,file='../DATA/gravity_stations',status='old',iostat=ier)
@@ -92,53 +92,50 @@ subroutine gravity_init()
 
   call usual_hex_nodes(NGNOD,iaddx,iaddy,iaddz)
 
-  do ispec=1,NSPEC_AB
-     where( rho_vs(:,:,:,ispec) > TINYVAL )
-        vs_elem(:,:,:) = mustore(:,:,:,ispec) / rho_vs(:,:,:,ispec)
-     elsewhere
-        vs_elem(:,:,:) = 0.0
-     endwhere
-
-     rho_elem = rho_vs(:,:,:,ispec)/vs_elem
-
      ! define coordinates of the control points of the element
+  do ia=1,NGNOD
+
+     if(iaddx(ia) == 0) then
+        iax(ia) = 1
+     else if(iaddx(ia) == 1) then
+        iax(ia) = (NGLLX+1)/2
+     else if(iaddx(ia) == 2) then
+        iax(ia) = NGLLX
+     else
+        call exit_MPI(myrank,'incorrect value of iaddx')
+     endif
+
+     if(iaddy(ia) == 0) then
+        iay(ia) = 1
+     else if(iaddy(ia) == 1) then
+        iay(ia) = (NGLLY+1)/2
+     else if(iaddy(ia) == 2) then
+        iay(ia) = NGLLY
+     else
+        call exit_MPI(myrank,'incorrect value of iaddy')
+     endif
+
+     if(iaddz(ia) == 0) then
+        iaz(ia) = 1
+     else if(iaddz(ia) == 1) then
+        iaz(ia) = (NGLLZ+1)/2
+     else if(iaddz(ia) == 2) then
+        iaz(ia) = NGLLZ
+     else
+        call exit_MPI(myrank,'incorrect value of iaddz')
+     endif
+
+  enddo
+
+  do ispec=1,NSPEC_AB
+
+     rho_elem = rho_vs(:,:,:,ispec)*rho_vs(:,:,:,ispec)/mustore(:,:,:,ispec)
+
      do ia=1,NGNOD
-
-        if(iaddx(ia) == 0) then
-           iax = 1
-        else if(iaddx(ia) == 1) then
-           iax = (NGLLX+1)/2
-        else if(iaddx(ia) == 2) then
-           iax = NGLLX
-        else
-           call exit_MPI(myrank,'incorrect value of iaddx')
-        endif
-
-        if(iaddy(ia) == 0) then
-           iay = 1
-        else if(iaddy(ia) == 1) then
-           iay = (NGLLY+1)/2
-        else if(iaddy(ia) == 2) then
-           iay = NGLLY
-        else
-           call exit_MPI(myrank,'incorrect value of iaddy')
-        endif
-
-        if(iaddz(ia) == 0) then
-           iaz = 1
-        else if(iaddz(ia) == 1) then
-           iaz = (NGLLZ+1)/2
-        else if(iaddz(ia) == 2) then
-           iaz = NGLLZ
-        else
-           call exit_MPI(myrank,'incorrect value of iaddz')
-        endif
-
-        iglob = ibool(iax,iay,iaz,ispec)
+        iglob = ibool(iax(ia),iay(ia),iaz(ia),ispec)
         xelm(ia) = dble(xstore(iglob))
         yelm(ia) = dble(ystore(iglob))
         zelm(ia) = dble(zstore(iglob))
-
      enddo
 
      do k = 1,NGLLZ
@@ -150,6 +147,7 @@ subroutine gravity_init()
            enddo
         enddo
      enddo
+
   enddo
 
 end subroutine gravity_init
@@ -329,7 +327,7 @@ end subroutine gravity_timeseries
 
 subroutine gravity_output()
 
-  use specfem_par, only : myrank,NPROC,NSTEP
+  use specfem_par, only : myrank,NPROC,NSTEP,DT
   implicit none
 
   integer :: isample,istat,nstep_grav
@@ -343,7 +341,7 @@ subroutine gravity_output()
      write(sisname,"('../OUTPUT_FILES/stat',I0,'.grav')") istat
      open(unit=IOUT,file=sisname,status='replace')
      do isample = 1,nstep_grav
-        write(IOUT,*) accE(isample,istat),accN(isample,istat),accZ(isample,istat)
+        write(IOUT,*) isample*DT*ntimgap, accE(isample,istat),accN(isample,istat),accZ(isample,istat)
      enddo
      close(IOUT)
   enddo
@@ -353,7 +351,7 @@ subroutine gravity_output()
         write(sisname,"('../OUTPUT_FILES/stat',I0,'.grav')") istat
         open(unit=IOUT,file=sisname,status='replace')
         do isample = 1,nstep_grav
-           write(IOUT,*) accE(isample,istat),accN(isample,istat),accZ(isample,istat)
+           write(IOUT,*) isample*DT*ntimgap, accE(isample,istat),accN(isample,istat),accZ(isample,istat)
         enddo
         close(IOUT)
      enddo
