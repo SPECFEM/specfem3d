@@ -451,7 +451,7 @@ fi
 
 if test "$want_cuda" = yes; then
     CIT_CUDA_CONFIG
-    CIT_MPI_INCDIR
+    CIT_MPI_INCDIR([$MPIFC])
 fi
 
 if test "$want_openmp" = yes; then
