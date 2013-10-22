@@ -54,7 +54,7 @@
   logical, parameter :: APPLY_HEURISTIC_RULE = .true.
 
 ! use inlined products of Deville et al. (2002) to speedup the calculations to compute internal forces
-  logical, parameter :: USE_DEVILLE_PRODUCTS = .true.
+  logical, parameter :: USE_DEVILLE_PRODUCTS = .false.
 
 ! number of GLL points in each direction of an element (degree plus one)
   integer, parameter :: NGLLX = 5
@@ -161,7 +161,6 @@
 !!
 !!-----------------------------------------------------------
   real(kind=CUSTOM_REAL), parameter :: NPOWER = 1.d0
-  real(kind=CUSTOM_REAL), parameter :: K_MAX_PML = 1.d0 ! (Martin and Komatitsch, Geophys. J. Int. 2009)
 
 ! C-PML theoretical reflection coefficient
 ! (INRIA research report section 6.1:  http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf)

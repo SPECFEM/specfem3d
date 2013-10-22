@@ -315,9 +315,6 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob,                   &
     call define_adios_global_array1D(group, groupsize, &
                                      local_dim, "",               &
                                      STRINGIFY_VAR(rmass_acoustic))
-    call define_adios_global_array1D(group, groupsize, &
-                                     local_dim, "",               &
-                                     STRINGIFY_VAR(rmass_acoustic_interface))
   endif
 
   ! elastic
@@ -325,14 +322,7 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob,                   &
     local_dim = nglob_wmax
     call define_adios_global_array1D(group, groupsize, &
                                      local_dim, "", STRINGIFY_VAR(rmass))
-    if(PML_CONDITIONS)then
-       if(ACOUSTIC_SIMULATION)then
-          local_dim = nglob_wmax
-          call define_adios_global_array1D(group, groupsize, &
-                                           local_dim, "",    &
-                                        STRINGIFY_VAR(rmass_elastic_interface))
-       endif
-    endif
+
     if( APPROXIMATE_OCEAN_LOAD) then
       local_dim = nglob_ocean_wmax
       call define_adios_global_array1D(group, groupsize, &
@@ -832,8 +822,6 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob,                   &
     local_dim = nglob_wmax
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(rmass_acoustic))
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(rmass_acoustic_interface))
   endif
 
   ! elastic
@@ -841,14 +829,6 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob,                   &
     local_dim = nglob_wmax
     call write_adios_global_1d_array(handle, myrank, sizeprocs, &
                                      local_dim, STRINGIFY_VAR(rmass))
-    if(PML_CONDITIONS)then
-       if(ACOUSTIC_SIMULATION)then
-          local_dim = nglob_wmax
-          call write_adios_global_1d_array(handle, myrank, sizeprocs, &
-                                           local_dim,                 &
-                                        STRINGIFY_VAR(rmass_elastic_interface))
-       endif
-    endif
     if( APPROXIMATE_OCEAN_LOAD) then
       local_dim = nglob_ocean_wmax
       call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &

@@ -101,8 +101,11 @@
 
   if( .not. GPU_MODE ) then
     ! wavefields on CPU
-
     ! updates (forward) acoustic potentials
+    if(PML_CONDITIONS .and. NSPEC_CPML > 0)then
+      potential_acoustic_old(:) = potential_acoustic(:) + deltatsqover2*4._CUSTOM_REAL*potential_dot_dot_acoustic(:)
+      potential_dot_dot_acoustic_old(:) = potential_dot_dot_acoustic(:)
+    endif
     potential_acoustic(:) = potential_acoustic(:) &
                           + deltat * potential_dot_acoustic(:) &
                           + deltatsqover2 * potential_dot_dot_acoustic(:)
@@ -164,6 +167,9 @@
     ! wavefields on CPU
 
     ! updates elastic displacement and velocity
+    if(PML_CONDITIONS .and. NSPEC_CPML > 0)then
+      displ_old(:,:) = displ(:,:) + deltatsqover2*4._CUSTOM_REAL*accel(:,:)
+    endif
     displ(:,:) = displ(:,:) + deltat*veloc(:,:) + deltatsqover2*accel(:,:)
     veloc(:,:) = veloc(:,:) + deltatover2*accel(:,:)
     if( SIMULATION_TYPE /= 1 ) accel_adj_coupling(:,:) = accel(:,:)

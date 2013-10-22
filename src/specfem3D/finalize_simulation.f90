@@ -70,13 +70,13 @@
         write(IOUT) accel
 
         if (ATTENUATION) then
-          if(FULL_ATTENUATION_SOLID) write(IOUT) R_trace  !ZN
+          if(FULL_ATTENUATION_SOLID) write(IOUT) R_trace  
           write(IOUT) R_xx
           write(IOUT) R_yy
           write(IOUT) R_xy
           write(IOUT) R_xz
           write(IOUT) R_yz
-          if(FULL_ATTENUATION_SOLID) write(IOUT) epsilondev_trace !ZN
+          if(FULL_ATTENUATION_SOLID) write(IOUT) epsilondev_trace 
           write(IOUT) epsilondev_xx
           write(IOUT) epsilondev_yy
           write(IOUT) epsilondev_xy
@@ -199,11 +199,14 @@
      deallocate(k_store_x)
      deallocate(k_store_y)
      deallocate(k_store_z)
-     deallocate(alpha_store)
+     deallocate(alpha_store_x)
+     deallocate(alpha_store_y)
+     deallocate(alpha_store_z)
      deallocate(spec_to_CPML)
      deallocate(CPML_type)
 
      if( ELASTIC_SIMULATION ) then
+       deallocate(displ_old)
        deallocate(PML_dux_dxl)
        deallocate(PML_dux_dyl)
        deallocate(PML_dux_dzl)
@@ -213,15 +216,15 @@
        deallocate(PML_duz_dxl)
        deallocate(PML_duz_dyl)
        deallocate(PML_duz_dzl)
-       deallocate(PML_dux_dxl_new)
-       deallocate(PML_dux_dyl_new)
-       deallocate(PML_dux_dzl_new)
-       deallocate(PML_duy_dxl_new)
-       deallocate(PML_duy_dyl_new)
-       deallocate(PML_duy_dzl_new)
-       deallocate(PML_duz_dxl_new)
-       deallocate(PML_duz_dyl_new)
-       deallocate(PML_duz_dzl_new)
+       deallocate(PML_dux_dxl_old)
+       deallocate(PML_dux_dyl_old)
+       deallocate(PML_dux_dzl_old)
+       deallocate(PML_duy_dxl_old)
+       deallocate(PML_duy_dyl_old)
+       deallocate(PML_duy_dzl_old)
+       deallocate(PML_duz_dxl_old)
+       deallocate(PML_duz_dyl_old)
+       deallocate(PML_duz_dzl_old)
        deallocate(rmemory_dux_dxl_x)
        deallocate(rmemory_dux_dyl_x)
        deallocate(rmemory_dux_dzl_x)
@@ -248,12 +251,13 @@
      endif
 
      if( ACOUSTIC_SIMULATION ) then
+       deallocate(potential_acoustic_old)
        deallocate(PML_dpotential_dxl)
        deallocate(PML_dpotential_dyl)
        deallocate(PML_dpotential_dzl)
-       deallocate(PML_dpotential_dxl_new)
-       deallocate(PML_dpotential_dyl_new)
-       deallocate(PML_dpotential_dzl_new)
+       deallocate(PML_dpotential_dxl_old)
+       deallocate(PML_dpotential_dyl_old)
+       deallocate(PML_dpotential_dzl_old)
        deallocate(rmemory_dpotential_dxl)
        deallocate(rmemory_dpotential_dyl)
        deallocate(rmemory_dpotential_dzl)

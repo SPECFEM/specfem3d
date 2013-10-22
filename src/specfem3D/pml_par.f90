@@ -60,21 +60,24 @@ module pml_par
 
   ! auxiliary parameters arrays
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: K_store_x, K_store_y, K_store_z
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: alpha_store
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: alpha_store_x,alpha_store_y,alpha_store_z
+
+  !store the field of displ + 2 * deltat**2 * accel at time step n-1 for second order convolution scheme
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: displ_old
 
   ! derivatives of ux, uy and uz with respect to x, y and z
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_dux_dxl,PML_dux_dyl,PML_dux_dzl
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_duy_dxl,PML_duy_dyl,PML_duy_dzl
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_duz_dxl,PML_duz_dyl,PML_duz_dzl
 
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_dux_dxl_new,PML_dux_dyl_new,PML_dux_dzl_new
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_duy_dxl_new,PML_duy_dyl_new,PML_duy_dzl_new
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_duz_dxl_new,PML_duz_dyl_new,PML_duz_dzl_new
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_dux_dxl_old,PML_dux_dyl_old,PML_dux_dzl_old
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_duy_dxl_old,PML_duy_dyl_old,PML_duy_dzl_old
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_duz_dxl_old,PML_duz_dyl_old,PML_duz_dzl_old
 
   ! derivatives of potential with respect to x, y and z
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl
 
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old
 
   ! C-PML memory variables
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_dux_dxl_x,rmemory_dux_dyl_x,rmemory_dux_dzl_x
@@ -88,6 +91,12 @@ module pml_par
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rmemory_dux_dxl_z,rmemory_dux_dzl_z
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rmemory_duy_dyl_z,rmemory_duy_dzl_z
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_duz_dxl_z,rmemory_duz_dyl_z,rmemory_duz_dzl_z
+
+  !store the field of displ + 2 * deltat**2 * accel at time step n-1 for second order convolution scheme
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: potential_acoustic_old
+
+  !store the field accel at time step n-1 for second order convolution scheme
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: potential_dot_dot_acoustic_old
 
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_dpotential_dxl
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_dpotential_dyl
@@ -110,6 +119,7 @@ module pml_par
 
   ! C-PML contribution to update displacement on elastic/acoustic interface
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_coupling_el_ac_potential
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_coupling_el_ac_potential_dot_dot
 
   ! --------------------------------------------------------------------------------------------
   ! for adjoint tomography
