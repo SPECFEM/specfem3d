@@ -33,7 +33,7 @@
                                     hprimewgll_xx,hprimewgll_xxT, &
                                     wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                                     kappastore,mustore,jacobian,ibool, &
-                                    ATTENUATION,deltat, &
+                                    ATTENUATION,deltat,PML_CONDITIONS, &
                                     one_minus_sum_beta,factor_common,&
                                     one_minus_sum_beta_kappa,factor_common_kappa,&
                                     alphaval,betaval,gammaval,&
@@ -52,7 +52,7 @@
                                     dsdx_top,dsdx_bot, &
                                     ispec2D_moho_top,ispec2D_moho_bot, &
                                     num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic,&
-                                    phase_ispec_inner_elastic)
+                                    phase_ispec_inner_elastic,backward_simulation)
 
 
 ! computes elastic tensor term
@@ -62,6 +62,19 @@
                       ONE_THIRD,FOUR_THIRDS,m1,m2,IOUT
   use fault_solver_dynamic, only : Kelvin_Voigt_eta
   use specfem_par, only : FULL_ATTENUATION_SOLID
+  use pml_par, only: is_CPML, spec_to_CPML, accel_elastic_CPML,NSPEC_CPML,CPML_regions, &
+                     PML_dux_dxl, PML_dux_dyl, PML_dux_dzl, PML_duy_dxl, PML_duy_dyl, PML_duy_dzl, &
+                     PML_duz_dxl, PML_duz_dyl, PML_duz_dzl, &
+                     PML_dux_dxl_old, PML_dux_dyl_old, PML_dux_dzl_old, &
+                     PML_duy_dxl_old, PML_duy_dyl_old, PML_duy_dzl_old, &
+                     PML_duz_dxl_old, PML_duz_dyl_old, PML_duz_dzl_old, &
+                     rmemory_dux_dxl_x, rmemory_duy_dyl_x, rmemory_duz_dzl_x, &
+                     rmemory_dux_dyl_x, rmemory_dux_dzl_x, rmemory_duz_dxl_x, rmemory_duy_dxl_x, &
+                     rmemory_dux_dxl_y, rmemory_duz_dzl_y, rmemory_duy_dyl_y, &
+                     rmemory_duy_dxl_y, rmemory_duy_dzl_y, rmemory_duz_dyl_y, rmemory_dux_dyl_y, &
+                     rmemory_dux_dxl_z, rmemory_duy_dyl_z, rmemory_duz_dzl_z, &
+                     rmemory_duz_dxl_z, rmemory_duz_dyl_z, rmemory_duy_dzl_z, rmemory_dux_dzl_z, &
+                     rmemory_displ_elastic,displ_old
 
   implicit none
 
@@ -197,6 +210,12 @@
   equivalence(tempy3_att,C2_mxm_m2_m1_5points_att)
   equivalence(tempz3_att,C3_mxm_m2_m1_5points_att)
 
+! C-PML absorbing boundary conditions
+  logical :: PML_CONDITIONS
+  integer :: ispec_CPML
+! CPML adjoint
+  logical :: backward_simulation
+
   ! local attenuation parameters
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: epsilondev_trace_loc,epsilondev_xx_loc, &
        epsilondev_yy_loc, epsilondev_xy_loc, epsilondev_xz_loc, epsilondev_yz_loc
@@ -294,6 +313,21 @@
                  enddo
               enddo
            enddo
+        else if(PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
+           ! do not merge this second line with the first using an ".and." statement
+           ! because array is_CPML() is unallocated when PML_CONDITIONS is false
+           if(is_CPML(ispec)) then  
+              do k=1,NGLLZ
+                 do j=1,NGLLY
+                    do i=1,NGLLX
+                       iglob = ibool(i,j,k,ispec)
+                       dummyx_loc_att(i,j,k) = displ_old(1,iglob)
+                       dummyy_loc_att(i,j,k) = displ_old(2,iglob)
+                       dummyz_loc_att(i,j,k) = displ_old(3,iglob)
+                    enddo
+                 enddo
+              enddo
+           endif         
         endif
 
     ! subroutines adapted from Deville, Fischer and Mund, High-order methods
@@ -346,6 +380,35 @@
                       hprime_xx(i,5)*B3_m1_m2_5points_att(5,j)
               enddo
            enddo
+        else if(PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
+           ! do not merge this second line with the first using an ".and." statement
+           ! because array is_CPML() is unallocated when PML_CONDITIONS is false
+           if(is_CPML(ispec)) then
+              do j=1,m2
+                 do i=1,m1
+                    C1_m1_m2_5points_att(i,j) = &
+                         hprime_xx(i,1)*B1_m1_m2_5points_att(1,j) + &
+                         hprime_xx(i,2)*B1_m1_m2_5points_att(2,j) + &
+                         hprime_xx(i,3)*B1_m1_m2_5points_att(3,j) + &
+                         hprime_xx(i,4)*B1_m1_m2_5points_att(4,j) + &
+                         hprime_xx(i,5)*B1_m1_m2_5points_att(5,j)
+
+                    C2_m1_m2_5points_att(i,j) = &
+                         hprime_xx(i,1)*B2_m1_m2_5points_att(1,j) + &
+                         hprime_xx(i,2)*B2_m1_m2_5points_att(2,j) + &
+                         hprime_xx(i,3)*B2_m1_m2_5points_att(3,j) + &
+                         hprime_xx(i,4)*B2_m1_m2_5points_att(4,j) + &
+                         hprime_xx(i,5)*B2_m1_m2_5points_att(5,j)
+
+                    C3_m1_m2_5points_att(i,j) = &
+                         hprime_xx(i,1)*B3_m1_m2_5points_att(1,j) + &
+                         hprime_xx(i,2)*B3_m1_m2_5points_att(2,j) + &
+                         hprime_xx(i,3)*B3_m1_m2_5points_att(3,j) + &
+                         hprime_xx(i,4)*B3_m1_m2_5points_att(4,j) + &
+                         hprime_xx(i,5)*B3_m1_m2_5points_att(5,j)
+                 enddo
+              enddo
+           endif
         endif
 
         !   call mxm_m1_m1_5points(dummyx_loc(1,1,k),dummyy_loc(1,1,k),dummyz_loc(1,1,k), &
@@ -402,6 +465,39 @@
                  enddo
               enddo
            enddo
+        else if(PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
+           ! do not merge this second line with the first using an ".and." statement
+           ! because array is_CPML() is unallocated when PML_CONDITIONS is false
+           ! temporary variables used for fixing attenuation in a consistent way
+           if(is_CPML(ispec)) then
+              do j=1,m1
+                 do i=1,m1
+                    ! for efficiency it is better to leave this loop on k inside, it leads to slightly faster code
+                    do k = 1,NGLLX
+                       tempx2_att(i,j,k) = &
+                            dummyx_loc_att(i,1,k)*hprime_xxT(1,j) + &
+                            dummyx_loc_att(i,2,k)*hprime_xxT(2,j) + &
+                            dummyx_loc_att(i,3,k)*hprime_xxT(3,j) + &
+                            dummyx_loc_att(i,4,k)*hprime_xxT(4,j) + &
+                            dummyx_loc_att(i,5,k)*hprime_xxT(5,j)
+
+                       tempy2_att(i,j,k) = &
+                            dummyy_loc_att(i,1,k)*hprime_xxT(1,j) + &
+                            dummyy_loc_att(i,2,k)*hprime_xxT(2,j) + &
+                            dummyy_loc_att(i,3,k)*hprime_xxT(3,j) + &
+                            dummyy_loc_att(i,4,k)*hprime_xxT(4,j) + &
+                            dummyy_loc_att(i,5,k)*hprime_xxT(5,j)
+
+                       tempz2_att(i,j,k) = &
+                            dummyz_loc_att(i,1,k)*hprime_xxT(1,j) + &
+                            dummyz_loc_att(i,2,k)*hprime_xxT(2,j) + &
+                            dummyz_loc_att(i,3,k)*hprime_xxT(3,j) + &
+                            dummyz_loc_att(i,4,k)*hprime_xxT(4,j) + &
+                            dummyz_loc_att(i,5,k)*hprime_xxT(5,j)
+                    enddo
+                 enddo
+              enddo
+           endif
         endif
 
         ! call mxm_m2_m1_5points(dummyx_loc,dummyy_loc,dummyz_loc,tempx3,tempy3,tempz3)
@@ -451,6 +547,35 @@
                       A3_mxm_m2_m1_5points_att(i,5)*hprime_xxT(5,j)
               enddo
            enddo
+        else if(PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
+           ! do not merge this second line with the first using an ".and." statement
+           ! because array is_CPML() is unallocated when PML_CONDITIONS is false
+           if(is_CPML(ispec)) then
+              do j=1,m1
+                 do i=1,m2
+                    C1_mxm_m2_m1_5points_att(i,j) = &
+                         A1_mxm_m2_m1_5points_att(i,1)*hprime_xxT(1,j) + &
+                         A1_mxm_m2_m1_5points_att(i,2)*hprime_xxT(2,j) + &
+                         A1_mxm_m2_m1_5points_att(i,3)*hprime_xxT(3,j) + &
+                         A1_mxm_m2_m1_5points_att(i,4)*hprime_xxT(4,j) + &
+                         A1_mxm_m2_m1_5points_att(i,5)*hprime_xxT(5,j)
+
+                    C2_mxm_m2_m1_5points_att(i,j) = &
+                         A2_mxm_m2_m1_5points_att(i,1)*hprime_xxT(1,j) + &
+                         A2_mxm_m2_m1_5points_att(i,2)*hprime_xxT(2,j) + &
+                         A2_mxm_m2_m1_5points_att(i,3)*hprime_xxT(3,j) + &
+                         A2_mxm_m2_m1_5points_att(i,4)*hprime_xxT(4,j) + &
+                         A2_mxm_m2_m1_5points_att(i,5)*hprime_xxT(5,j)
+
+                    C3_mxm_m2_m1_5points_att(i,j) = &
+                         A3_mxm_m2_m1_5points_att(i,1)*hprime_xxT(1,j) + &
+                         A3_mxm_m2_m1_5points_att(i,2)*hprime_xxT(2,j) + &
+                         A3_mxm_m2_m1_5points_att(i,3)*hprime_xxT(3,j) + &
+                         A3_mxm_m2_m1_5points_att(i,4)*hprime_xxT(4,j) + &
+                         A3_mxm_m2_m1_5points_att(i,5)*hprime_xxT(5,j)
+                 enddo
+              enddo
+           endif
         endif
 
         do k=1,NGLLZ
@@ -542,6 +667,43 @@
                  epsilondev_xy_loc(i,j,k) = 0.5 * duxdyl_plus_duydxl_att
                  epsilondev_xz_loc(i,j,k) = 0.5 * duzdxl_plus_duxdzl_att
                  epsilondev_yz_loc(i,j,k) = 0.5 * duzdyl_plus_duydzl_att
+              else if(PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
+                 ! do not merge this second line with the first using an ".and." statement
+                 ! because array is_CPML() is unallocated when PML_CONDITIONS is false
+                 if(is_CPML(ispec)) then
+                    PML_dux_dxl(i,j,k) = duxdxl
+                    PML_dux_dyl(i,j,k) = duxdyl
+                    PML_dux_dzl(i,j,k) = duxdzl
+
+                    PML_duy_dxl(i,j,k) = duydxl
+                    PML_duy_dyl(i,j,k) = duydyl
+                    PML_duy_dzl(i,j,k) = duydzl
+
+                    PML_duz_dxl(i,j,k) = duzdxl
+                    PML_duz_dyl(i,j,k) = duzdyl
+                    PML_duz_dzl(i,j,k) = duzdzl
+
+                    PML_dux_dxl_old(i,j,k) = &
+                       xixl*tempx1_att(i,j,k) + etaxl*tempx2_att(i,j,k) + gammaxl*tempx3_att(i,j,k)
+                    PML_dux_dyl_old(i,j,k) = &
+                       xiyl*tempx1_att(i,j,k) + etayl*tempx2_att(i,j,k) + gammayl*tempx3_att(i,j,k)
+                    PML_dux_dzl_old(i,j,k) = &
+                       xizl*tempx1_att(i,j,k) + etazl*tempx2_att(i,j,k) + gammazl*tempx3_att(i,j,k)
+
+                    PML_duy_dxl_old(i,j,k) = &
+                       xixl*tempy1_att(i,j,k) + etaxl*tempy2_att(i,j,k) + gammaxl*tempy3_att(i,j,k)
+                    PML_duy_dyl_old(i,j,k) = &
+                       xiyl*tempy1_att(i,j,k) + etayl*tempy2_att(i,j,k) + gammayl*tempy3_att(i,j,k)
+                    PML_duy_dzl_old(i,j,k) = &
+                       xizl*tempy1_att(i,j,k) + etazl*tempy2_att(i,j,k) + gammazl*tempy3_att(i,j,k)
+
+                    PML_duz_dxl_old(i,j,k) = &
+                       xixl*tempz1_att(i,j,k) + etaxl*tempz2_att(i,j,k) + gammaxl*tempz3_att(i,j,k)
+                    PML_duz_dyl_old(i,j,k) = &
+                       xiyl*tempz1_att(i,j,k) + etayl*tempz2_att(i,j,k) + gammayl*tempz3_att(i,j,k)
+                    PML_duz_dzl_old(i,j,k) = &
+                       xizl*tempz1_att(i,j,k) + etazl*tempz2_att(i,j,k) + gammazl*tempz3_att(i,j,k)
+                 endif
               else
                  ! computes deviatoric strain attenuation and/or for kernel calculations
                  if (COMPUTE_AND_STORE_STRAIN) then
@@ -725,6 +887,26 @@
           enddo
         enddo
 
+        if (PML_CONDITIONS .and. (.not. backward_simulation)  .and. NSPEC_CPML > 0) then
+           ! do not merge this second line with the first using an ".and." statement
+           ! because array is_CPML() is unallocated when PML_CONDITIONS is false
+           if(is_CPML(ispec)) then
+              ispec_CPML = spec_to_CPML(ispec)
+              ! sets C-PML elastic memory variables to compute stress sigma and form dot product with test vector
+              call pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,tempz1,tempx2,tempy2,tempz2, &
+                                         tempx3,tempy3,tempz3, &
+                                         rmemory_dux_dxl_x, rmemory_duy_dyl_x, rmemory_duz_dzl_x, &
+                                         rmemory_dux_dyl_x, rmemory_dux_dzl_x, rmemory_duz_dxl_x, rmemory_duy_dxl_x, &
+                                         rmemory_dux_dxl_y, rmemory_duz_dzl_y, rmemory_duy_dyl_y, &
+                                         rmemory_duy_dxl_y, rmemory_duy_dzl_y, rmemory_duz_dyl_y, rmemory_dux_dyl_y, &
+                                         rmemory_dux_dxl_z, rmemory_duy_dyl_z, rmemory_duz_dzl_z, &
+                                         rmemory_duz_dxl_z, rmemory_duz_dyl_z, rmemory_duy_dzl_z, rmemory_dux_dzl_z)
+
+              ! calculates contribution from each C-PML element to update acceleration
+              call pml_compute_accel_contribution_elastic(ispec,ispec_CPML,displ,veloc,rmemory_displ_elastic)
+           endif
+        endif
+
     ! subroutines adapted from Deville, Fischer and Mund, High-order methods
     ! for incompressible fluid flow, Cambridge University Press (2002),
     ! pages 386 and 389 and Figure 8.3.1
@@ -868,6 +1050,24 @@
             enddo
           enddo
         enddo
+
+        if (PML_CONDITIONS .and. (.not. backward_simulation)  .and. NSPEC_CPML > 0) then
+          ! do not merge this second line with the first using an ".and." statement
+          ! because array is_CPML() is unallocated when PML_CONDITIONS is false
+          if(is_CPML(ispec)) then
+
+            do k = 1,NGLLZ
+              do j = 1,NGLLY
+                do i = 1,NGLLX
+                  iglob = ibool(i,j,k,ispec)
+                  accel(1,iglob) = accel(1,iglob) - accel_elastic_CPML(1,i,j,k)
+                  accel(2,iglob) = accel(2,iglob) - accel_elastic_CPML(2,i,j,k)
+                  accel(3,iglob) = accel(3,iglob) - accel_elastic_CPML(3,i,j,k)
+               enddo
+             enddo
+           enddo
+         endif
+       endif
 
         ! save deviatoric strain for Runge-Kutta scheme
         if ( COMPUTE_AND_STORE_STRAIN ) then

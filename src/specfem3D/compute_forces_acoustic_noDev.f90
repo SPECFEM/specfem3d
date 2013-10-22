@@ -32,10 +32,9 @@
                         hprime_xx,hprime_yy,hprime_zz, &
                         hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-                        rhostore,jacobian,ibool,deltat, &
+                        rhostore,jacobian,ibool, &
                         num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
-                        phase_ispec_inner_acoustic,ELASTIC_SIMULATION,&
-                        backward_simulation,potential_dot_dot_acoustic_interface)
+                        phase_ispec_inner_acoustic,backward_simulation)
 
 ! computes forces for acoustic elements
 !
@@ -44,11 +43,11 @@
 !
   use specfem_par,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,TINYVAL_SNGL,&
                         PML_CONDITIONS
-  use pml_par, only: is_CPML, spec_to_CPML, &
+  use pml_par, only: is_CPML, spec_to_CPML, NSPEC_CPML, &
                      PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl,&
-                     PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new,&
+                     PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old,&
                      potential_dot_dot_acoustic_CPML,rmemory_dpotential_dxl,rmemory_dpotential_dyl,&
-                     rmemory_dpotential_dzl,rmemory_potential_acoustic
+                     rmemory_dpotential_dzl,rmemory_potential_acoustic,potential_acoustic_old
 
   implicit none
 
@@ -57,9 +56,6 @@
   ! acoustic potentials
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: &
         potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic
-
-! time step
-  real(kind=CUSTOM_REAL) :: deltat
 
   ! arrays with mesh parameters per slice
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
@@ -81,10 +77,6 @@
   integer :: num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic
   integer, dimension(num_phase_ispec_acoustic,2) :: phase_ispec_inner_acoustic
 
-! CPML fluid-solid interface
-  logical :: ELASTIC_SIMULATION
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: potential_dot_dot_acoustic_interface
-
 ! CPML adjoint
   logical :: backward_simulation
 
@@ -94,11 +86,11 @@
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: chi_elem
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: temp1,temp2,temp3
   real(kind=CUSTOM_REAL) :: temp1l,temp2l,temp3l
-  real(kind=CUSTOM_REAL) :: temp1l_new,temp2l_new,temp3l_new
+  real(kind=CUSTOM_REAL) :: temp1l_old,temp2l_old,temp3l_old
 
   real(kind=CUSTOM_REAL) :: xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl
   real(kind=CUSTOM_REAL) :: dpotentialdxl,dpotentialdyl,dpotentialdzl
-  real(kind=CUSTOM_REAL) :: dpotentialdxl_new,dpotentialdyl_new,dpotentialdzl_new
+  real(kind=CUSTOM_REAL) :: dpotentialdxl_old,dpotentialdyl_old,dpotentialdzl_old
   real(kind=CUSTOM_REAL) :: rho_invl
 
   integer :: ispec,iglob,i,j,k,l,ispec_p,num_elements
@@ -143,30 +135,30 @@
             temp3l = temp3l + chi_elem(i,j,l)*hprime_zz(k,l)
           enddo
 
-          if (PML_CONDITIONS .and. (.not. backward_simulation)) then
+          if (PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
              ! do not merge this second line with the first using an ".and." statement
              ! because array is_CPML() is unallocated when PML_CONDITIONS is false
              if(is_CPML(ispec)) then
-                temp1l_new = temp1l
-                temp2l_new = temp2l
-                temp3l_new = temp3l
+                temp1l_old = 0._CUSTOM_REAL
+                temp2l_old = 0._CUSTOM_REAL
+                temp3l_old = 0._CUSTOM_REAL
 
                 do l=1,NGLLX
                    hp1 = hprime_xx(i,l)
                    iglob = ibool(l,j,k,ispec)
-                   temp1l_new = temp1l_new + deltat*potential_dot_acoustic(iglob)*hp1
+                   temp1l_old = temp1l_old + potential_acoustic_old(iglob)*hp1
 !!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
 
 !!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLY
                    hp2 = hprime_yy(j,l)
                    iglob = ibool(i,l,k,ispec)
-                   temp2l_new = temp2l_new + deltat*potential_dot_acoustic(iglob)*hp2
+                   temp2l_old = temp2l_old + potential_acoustic_old(iglob)*hp2
 !!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
 
 !!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLZ
                    hp3 = hprime_zz(k,l)
                    iglob = ibool(i,j,l,ispec)
-                   temp3l_new = temp3l_new + deltat*potential_dot_acoustic(iglob)*hp3
+                   temp3l_old = temp3l_old + potential_acoustic_old(iglob)*hp3
                 enddo
              endif
           endif
@@ -189,23 +181,22 @@
           dpotentialdzl = xizl*temp1l + etazl*temp2l + gammazl*temp3l
 
           ! stores derivatives of ux, uy and uz with respect to x, y and z
-          if (PML_CONDITIONS .and. (.not. backward_simulation)) then
+          if (PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
              ! do not merge this second line with the first using an ".and." statement
              ! because array is_CPML() is unallocated when PML_CONDITIONS is false
              if(is_CPML(ispec)) then
-                ispec_CPML = spec_to_CPML(ispec)
 
                 PML_dpotential_dxl(i,j,k) = dpotentialdxl
                 PML_dpotential_dyl(i,j,k) = dpotentialdyl
                 PML_dpotential_dzl(i,j,k) = dpotentialdzl
 
-                dpotentialdxl_new = xixl*temp1l_new + etaxl*temp2l_new + gammaxl*temp3l_new
-                dpotentialdyl_new = xiyl*temp1l_new + etayl*temp2l_new + gammayl*temp3l_new
-                dpotentialdzl_new = xizl*temp1l_new + etazl*temp2l_new + gammazl*temp3l_new
+                dpotentialdxl_old = xixl*temp1l_old + etaxl*temp2l_old + gammaxl*temp3l_old
+                dpotentialdyl_old = xiyl*temp1l_old + etayl*temp2l_old + gammayl*temp3l_old
+                dpotentialdzl_old = xizl*temp1l_old + etazl*temp2l_old + gammazl*temp3l_old
 
-                PML_dpotential_dxl_new(i,j,k) = dpotentialdxl_new
-                PML_dpotential_dyl_new(i,j,k) = dpotentialdyl_new
-                PML_dpotential_dzl_new(i,j,k) = dpotentialdzl_new
+                PML_dpotential_dxl_old(i,j,k) = dpotentialdxl_old
+                PML_dpotential_dyl_old(i,j,k) = dpotentialdyl_old
+                PML_dpotential_dzl_old(i,j,k) = dpotentialdzl_old
              endif
           endif
 
@@ -224,10 +215,12 @@
       enddo
     enddo
 
-    if (PML_CONDITIONS .and. (.not. backward_simulation)) then
+    if (PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
        ! do not merge this second line with the first using an ".and." statement
        ! because array is_CPML() is unallocated when PML_CONDITIONS is false
        if(is_CPML(ispec)) then
+          ispec_CPML = spec_to_CPML(ispec)
+
           ! sets C-PML elastic memory variables to compute stress sigma and form dot product with test vector
           call pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,temp3,&
                                                      rmemory_dpotential_dxl,rmemory_dpotential_dyl,rmemory_dpotential_dzl)
@@ -261,22 +254,27 @@
 
           potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) - ( temp1l + temp2l + temp3l )
 
-          ! updates potential_dot_dot_acoustic with contribution from each C-PML element
-          if (PML_CONDITIONS .and. (.not. backward_simulation)) then
-             ! do not merge this second line with the first using an ".and." statement
-             ! because array is_CPML() is unallocated when PML_CONDITIONS is false
-             if(is_CPML(ispec)) then
-                if(ELASTIC_SIMULATION)then
-                   potential_dot_dot_acoustic_interface(iglob) = potential_dot_dot_acoustic(iglob)
-                endif
-                potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) - &
-                     potential_dot_dot_acoustic_CPML(i,j,k)
-             endif
-          endif
-
         enddo
       enddo
     enddo
+
+    if (PML_CONDITIONS .and. (.not. backward_simulation)  .and. NSPEC_CPML > 0) then
+      ! do not merge this second line with the first using an ".and." statement
+      ! because array is_CPML() is unallocated when PML_CONDITIONS is false
+      if(is_CPML(ispec)) then
+
+        do k = 1,NGLLZ
+          do j = 1,NGLLY
+            do i = 1,NGLLX
+              iglob = ibool(i,j,k,ispec)
+              potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) - &
+                     potential_dot_dot_acoustic_CPML(i,j,k)
+
+           enddo
+         enddo
+       enddo
+     endif
+   endif
 
   enddo ! end of loop over all spectral elements
 

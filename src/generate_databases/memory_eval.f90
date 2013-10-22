@@ -94,19 +94,19 @@
      ! is_CPML
      memory_size = memory_size + NSPEC_AB*dble(SIZE_LOGICAL)
 
-     ! d_store_x,d_store_y,d_store_z,d_store_x,d_store_y,d_store_z,alpha_store
-     memory_size = memory_size + 7.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*nspec_cpml*dble(CUSTOM_REAL)
+     ! d_store_x,d_store_y,d_store_z,d_store_x,d_store_y,d_store_z,alpha_store_x,alpha_store_y,alpha_store_z
+     memory_size = memory_size + 9.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*nspec_cpml*dble(CUSTOM_REAL)
 
      ! PML_dux_dxl,PML_dux_dyl,PML_dux_dzl,
      ! PML_duy_dxl,PML_duy_dyl,PML_duy_dzl,
      ! PML_duz_dxl,PML_duz_dyl,PML_duz_dzl,
-     ! PML_dux_dxl_new,PML_dux_dyl_new,PML_dux_dzl_new,
-     ! PML_duy_dxl_new,PML_duy_dyl_new,PML_duy_dzl_new,
-     ! PML_duz_dxl_new,PML_duz_dyl_new,PML_duz_dzl_new
+     ! PML_dux_dxl_old,PML_dux_dyl_old,PML_dux_dzl_old,
+     ! PML_duy_dxl_old,PML_duy_dyl_old,PML_duy_dzl_old,
+     ! PML_duz_dxl_old,PML_duz_dyl_old,PML_duz_dzl_old
      memory_size = memory_size + 18.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*nspec_cpml*dble(CUSTOM_REAL)
 
      ! PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl
-     ! PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new
+     ! PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old
      memory_size = memory_size + 6.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*nspec_cpml*dble(CUSTOM_REAL)
 
      ! rmemory_dux_dxl_x,rmemory_dux_dyl_x,rmemory_dux_dzl_x,rmemory_duy_dxl_x,

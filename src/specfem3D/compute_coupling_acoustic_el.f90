@@ -34,23 +34,21 @@
                         coupling_ac_el_jacobian2Dw, &
                         ispec_is_inner,phase_is_inner,&
                         PML_CONDITIONS,spec_to_CPML,is_CPML,&
-                        potential_dot_dot_acoustic_interface,veloc,rmemory_coupling_ac_el_displ,&
-                        SIMULATION_TYPE,backward_simulation,accel_interface)
+                        rmemory_coupling_ac_el_displ,&
+                        SIMULATION_TYPE,backward_simulation)
 
 ! returns the updated pressure array: potential_dot_dot_acoustic
-
+  use pml_par, only: NSPEC_CPML
   implicit none
   include 'constants.h'
 
   integer :: NSPEC_AB,NGLOB_AB
 
 ! displacement and pressure
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displ,veloc
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: potential_dot_dot_acoustic,&
-                                                 potential_dot_dot_acoustic_interface
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displ
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: potential_dot_dot_acoustic
   integer :: SIMULATION_TYPE
   logical :: backward_simulation
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: accel_interface
 
 ! global indexing
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
@@ -98,20 +96,18 @@
         iglob = ibool(i,j,k,ispec)
 
         ! elastic displacement on global point
-        if(PML_CONDITIONS)then
+        if(PML_CONDITIONS .and. NSPEC_CPML > 0)then
            if(.not. backward_simulation)then
                if(is_CPML(ispec))then
                   if(SIMULATION_TYPE == 1)then
                     ispec_CPML = spec_to_CPML(ispec)
                     call pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,i,j,k,&
-                                                      displ_x,displ_y,displ_z,displ,veloc,&
+                                                      displ_x,displ_y,displ_z,displ,&
                                                       num_coupling_ac_el_faces,rmemory_coupling_ac_el_displ)
                   endif
 
                   if(SIMULATION_TYPE == 3)then
-                    displ_x = -accel_interface(1,iglob)
-                    displ_y = -accel_interface(1,iglob)
-                    displ_z = -accel_interface(1,iglob)
+!left blank for change
                   endif
 
                else
@@ -157,13 +153,6 @@
         !          it also means you have to calculate and update this here first before
         !          calculating the coupling on the elastic side for the acceleration...
         potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) + jacobianw*displ_n
-
-        if(PML_CONDITIONS)then
-          if(is_CPML(ispec))then
-            potential_dot_dot_acoustic_interface(iglob) = potential_dot_dot_acoustic_interface(iglob) &
-                                                      + jacobianw*displ_n
-          endif
-        endif
 
       enddo ! igll
 

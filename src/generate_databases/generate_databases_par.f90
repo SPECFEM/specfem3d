@@ -150,7 +150,7 @@
 
   ! auxiliary parameters arrays
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: K_store_x, K_store_y, K_store_z
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: alpha_store
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: alpha_store_x,alpha_store_y,alpha_store_z
 
   ! array recording the points on interface shared by PML and interior computational domain
   logical, dimension(:), allocatable :: mask_ibool_interior_domain
@@ -211,10 +211,6 @@
 ! mass matrix
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass,rmass_acoustic,&
                             rmass_solid_poroelastic,rmass_fluid_poroelastic
-
-! mass matrix for interface
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_acoustic_interface
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_elastic_interface
 
 ! mass matrix contributions
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmassx,rmassy,rmassz

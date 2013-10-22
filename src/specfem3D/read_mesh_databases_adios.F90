@@ -103,8 +103,7 @@ subroutine read_mesh_databases_adios()
              local_dim_ispec_is_acoustic, local_dim_ispec_is_elastic,          &
              local_dim_ispec_is_poroelastic, local_dim_rmass,                  &
              local_dim_rmass_ocean_load, local_dim_rmass_acoustic,             &
-             local_dim_rmass_acoustic_interface, local_dim_rmass_elastic,      &
-             local_dim_rmass_elastic_interface, local_dim_rho_vp,              &
+             local_dim_rmass_elastic,local_dim_rho_vp,                         &
              local_dim_rho_vs, local_dim_abs_boundary_ispec,                   &
              local_dim_abs_boundary_ijk, local_dim_abs_boundary_jacobian2Dw,   &
              local_dim_abs_boundary_normal, local_dim_ibelm_xmin,              &
@@ -369,18 +368,11 @@ subroutine read_mesh_databases_adios()
   if( ACOUSTIC_SIMULATION ) then
     call adios_get_scalar(handle, "rmass_acoustic/local_dim",&
                           local_dim_rmass_acoustic,ier)
-    call adios_get_scalar(handle, "rmass_acoustic_interface/local_dim",&
-                          local_dim_rmass_acoustic_interface,ier)
   endif
   if( ELASTIC_SIMULATION ) then
     call adios_get_scalar(handle, "rmass/local_dim",&
                           local_dim_rmass,ier)
-    if(PML_CONDITIONS)then
-       if(ACOUSTIC_SIMULATION)then
-          call adios_get_scalar(handle, "rmass_elastic_interface/local_dim",&
-                                local_dim_rmass_elastic_interface,ier)
-       endif
-    endif
+
     if( APPROXIMATE_OCEAN_LOAD) then
       call adios_get_scalar(handle, "rmass_ocean_load/local_dim",&
                             local_dim_rmass_ocean_load,ier)
@@ -602,8 +594,6 @@ subroutine read_mesh_databases_adios()
     if( ier /= 0 ) stop 'error allocating array potential_dot_acoustic'
     allocate(potential_dot_dot_acoustic(NGLOB_AB),stat=ier)
     if( ier /= 0 ) stop 'error allocating array potential_dot_dot_acoustic'
-    allocate(potential_dot_dot_acoustic_interface(NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array potential_dot_dot_acoustic_interface'
     if( SIMULATION_TYPE /= 1 ) then
       allocate(potential_acoustic_adj_coupling(NGLOB_AB),stat=ier)
       if( ier /= 0 ) stop 'error allocating array potential_acoustic_adj_coupling'
@@ -611,8 +601,6 @@ subroutine read_mesh_databases_adios()
     ! mass matrix, density
     allocate(rmass_acoustic(NGLOB_AB),stat=ier)
     if( ier /= 0 ) stop 'error allocating array rmass_acoustic'
-    allocate(rmass_acoustic_interface(NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array rmass_acoustic_interface'
 
     ! initializes mass matrix contribution
     allocate(rmassz_acoustic(NGLOB_AB),stat=ier)
@@ -646,29 +634,6 @@ subroutine read_mesh_databases_adios()
 
     ! allocates mass matrix
     allocate(rmass(NGLOB_AB),stat=ier)
-
-    if(PML_CONDITIONS)then
-       if(ACOUSTIC_SIMULATION)then
-          allocate(rmass_elastic_interface(NGLOB_AB),stat=ier)
-          if( ier /= 0 ) stop 'error allocating array rmass_elastic_interface'
-          rmass_elastic_interface(:) = 0._CUSTOM_REAL
-          if(SIMULATION_TYPE == 3)then
-            allocate(accel_interface(NDIM,NGLOB_AB),stat=ier)
-            if( ier /= 0 ) stop 'error allocating array accel_interface'
-            accel_interface(:,:) = 0._CUSTOM_REAL
-          else
-            allocate(accel_interface(NDIM,1),stat=ier)
-            if( ier /= 0 ) stop 'error allocating array accel_interface'
-            accel_interface(:,:) = 0._CUSTOM_REAL
-          endif
-       else
-          allocate(rmass_elastic_interface(1),stat=ier)
-          allocate(accel_interface(NDIM,1),stat=ier)
-       endif
-    else
-      allocate(rmass_elastic_interface(1),stat=ier)
-      allocate(accel_interface(NDIM,1),stat=ier)
-    endif
 
     if( ier /= 0 ) stop 'error allocating array rmass'
     ! initializes mass matrix contributions
@@ -1060,8 +1025,6 @@ subroutine read_mesh_databases_adios()
     call adios_selection_boundingbox (sel , 1, start, count_ad)
     call adios_schedule_read(handle, sel, "rmass_acoustic/array", 0, 1, &
                              rmass_acoustic, ier)
-    call adios_schedule_read(handle, sel, "rmass_acoustic_interface/array", &
-                             0, 1, rmass_acoustic_interface, ier)
   endif
 
   if( ELASTIC_SIMULATION ) then
@@ -1072,19 +1035,6 @@ subroutine read_mesh_databases_adios()
     call adios_selection_boundingbox (sel , 1, start, count_ad)
     call adios_schedule_read(handle, sel, "rmass/array", 0, 1, &
                              rmass, ier)
-
-    if(PML_CONDITIONS)then !need to be optimized
-       if(ACOUSTIC_SIMULATION)then
-          start(1) = local_dim_rmass * myrank
-          count_ad(1) = NGLOB_AB
-          sel_num = sel_num+1
-          sel => selections(sel_num)
-          call adios_selection_boundingbox (sel , 1, start, count_ad)
-          call adios_schedule_read(handle, sel,                           &
-                                   "rmass_elastic_interface/array", 0, 1, &
-                                    rmass_elastic_interface, ier)
-       endif
-    endif
 
     if( APPROXIMATE_OCEAN_LOAD ) then
       ! ocean mass matrix

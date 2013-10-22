@@ -37,7 +37,8 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,displ,veloc,r
 
   use specfem_par, only: NGLOB_AB,it,deltat,wgll_cube,jacobian,ibool,rhostore
   use pml_par, only: CPML_regions,d_store_x,d_store_y,d_store_z,K_store_x,K_store_y,K_store_z,&
-                     alpha_store,NSPEC_CPML,accel_elastic_CPML
+                     alpha_store_x, alpha_store_y, alpha_store_z, &
+                     NSPEC_CPML,accel_elastic_CPML,displ_old
   use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ,CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
                        CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
@@ -48,10 +49,15 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,displ,veloc,r
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3) :: rmemory_displ_elastic
 
   ! local parameters
-  integer :: i,j,k,iglob
+  integer :: i,j,k,iglob,CPML_region_local
+  integer :: singularity_type_4, singularity_type_5
   real(kind=CUSTOM_REAL) :: wgllcube,rhol,jacobianl
-  real(kind=CUSTOM_REAL) :: bb,coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,coef0_3,coef1_3,coef2_3
-  real(kind=CUSTOM_REAL) :: A0,A1,A2,A3,A4,A5,temp_A3! for convolution of acceleration
+  real(kind=CUSTOM_REAL) :: alpha_x,alpha_y,alpha_z,beta_x,beta_y,beta_z,d_x,d_y,d_z,kappa_x,kappa_y,kappa_z
+  real(kind=CUSTOM_REAL) :: coef0_x,coef1_x,coef2_x,coef0_y,coef1_y,coef2_y,coef0_z,coef1_z,coef2_z
+  real(kind=CUSTOM_REAL) :: A_0,A_1,A_2,A_3,A_4,A_5
+  real(kind=CUSTOM_REAL) :: time_nplus1, time_n
+
+  logical,parameter :: FIRST_ORDER_CONVOLUTION = .false.
 
   do k=1,NGLLZ
      do j=1,NGLLY
@@ -61,399 +67,114 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,displ,veloc,r
            iglob = ibool(i,j,k,ispec)
            wgllcube = wgll_cube(i,j,k)
 
-           if( CPML_regions(ispec_CPML) == CPML_X_ONLY ) then
-              !------------------------------------------------------------------------------
-              !---------------------------- X-surface C-PML ---------------------------------
-              !------------------------------------------------------------------------------
+           CPML_region_local = CPML_regions(ispec_CPML)
 
-              bb = alpha_store(i,j,k,ispec_CPML)
-              coef0_1 = exp(-bb * deltat)
+           alpha_x = alpha_store_x(i,j,k,ispec_CPML)
+           alpha_y = alpha_store_y(i,j,k,ispec_CPML)
+           alpha_z = alpha_store_z(i,j,k,ispec_CPML)
 
-              if( abs(bb) > 1.d-5 ) then
-                 coef1_1 = (1.0d0 - exp(-bb * deltat/2.0d0) ) / bb
-                 coef2_1 = (1.0d0 - exp(-bb * deltat/2.0d0) ) * exp(-bb * deltat/2.0d0) / bb
-              else
-                 coef1_1 = deltat/2.0d0
-                 coef2_1 = deltat/2.0d0
-              endif
+           d_x = d_store_x(i,j,k,ispec_CPML)
+           d_y = d_store_y(i,j,k,ispec_CPML)
+           d_z = d_store_z(i,j,k,ispec_CPML)
 
-              rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) &
-                   + (displ(1,iglob) + deltat * veloc(1,iglob)) * coef1_1 + displ(1,iglob) * coef2_1
-              rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) = 0.0
-              rmemory_displ_elastic(1,i,j,k,ispec_CPML,3) = 0.0
+           kappa_x = k_store_x(i,j,k,ispec_CPML)
+           kappa_y = k_store_y(i,j,k,ispec_CPML)
+           kappa_z = k_store_z(i,j,k,ispec_CPML)
 
-              rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) &
-                   + (displ(2,iglob) + deltat * veloc(2,iglob)) * coef1_1 + displ(2,iglob) * coef2_1
-              rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) = 0.0
-              rmemory_displ_elastic(2,i,j,k,ispec_CPML,3) = 0.0
+           beta_x = alpha_x + d_x / kappa_x
+           beta_y = alpha_y + d_y / kappa_y
+           beta_z = alpha_z + d_z / kappa_z
 
-              rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) &
-                   + (displ(3,iglob) + deltat * veloc(3,iglob)) * coef1_1 + displ(3,iglob) * coef2_1
-              rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) = 0.0
-              rmemory_displ_elastic(3,i,j,k,ispec_CPML,3) = 0.0
+           time_nplus1 = (it - 1._CUSTOM_REAL) * deltat
+           time_n = (it - 2._CUSTOM_REAL) * deltat
 
-              !---------------------- A0, A1, A2, A3, A4 and A5 --------------------------
-              A0 = k_store_x(i,j,k,ispec_CPML)
-              A1 = d_store_x(i,j,k,ispec_CPML)
-              A2 = - alpha_store(i,j,k,ispec_CPML) * d_store_x(i,j,k,ispec_CPML)
-              A3 = d_store_x(i,j,k,ispec_CPML) * alpha_store(i,j,k,ispec_CPML) ** 2
-              A4 = 0.d0
-              A5 = 0.d0
+           call l_parameter_computation( &
+               time_nplus1, deltat, &
+               kappa_x, beta_x, alpha_x, &
+               kappa_y, beta_y, alpha_y, &
+               kappa_z, beta_z, alpha_z, &
+               CPML_region_local,  &
+               A_0, A_1, A_2, A_3, A_4, A_5, &
+               coef0_x, coef1_x, coef2_x, &
+               coef0_y, coef1_y, coef2_y, &
+               coef0_z, coef1_z, coef2_z, &
+               singularity_type_4, singularity_type_5, &
+               FIRST_ORDER_CONVOLUTION )
 
-           else if( CPML_regions(ispec_CPML) == CPML_Y_ONLY ) then
-              !------------------------------------------------------------------------------
-              !---------------------------- Y-surface C-PML ---------------------------------
-              !------------------------------------------------------------------------------
+           rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) = coef0_x * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) &
+                + displ(1,iglob) * coef1_x + displ_old(1,iglob) * coef2_x
+           rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) = coef0_x * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) &
+                + displ(2,iglob) * coef1_x + displ_old(2,iglob) * coef2_x
+           rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) = coef0_x * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) &
+                + displ(3,iglob) * coef1_x + displ_old(3,iglob) * coef2_x
 
-              bb = alpha_store(i,j,k,ispec_CPML)
-              coef0_1 = exp(-bb * deltat)
+           if (singularity_type_4 == 0) then
+              rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) = coef0_y * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) &
+                   + displ(1,iglob) * coef1_y + displ_old(1,iglob) * coef2_y
+              rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) = coef0_y * rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) &
+                   + displ(2,iglob) * coef1_y + displ_old(2,iglob) * coef2_y
+              rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) = coef0_y * rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) &
+                   + displ(3,iglob) * coef1_y + displ_old(3,iglob) * coef2_y
+           else if (singularity_type_4 == 1) then
+              rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) = coef0_y * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) &
+                  + displ(1,iglob) * time_nplus1 * coef1_y &
+                  + displ_old(1,iglob) * time_n * coef2_y
+              rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) = coef0_y * rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) &
+                  + displ(2,iglob) * time_nplus1 * coef1_y &
+                  + displ_old(2,iglob) * time_n * coef2_y
+              rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) = coef0_y * rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) &
+                  + displ(3,iglob) * time_nplus1 * coef1_y &
+                  + displ_old(3,iglob) * time_n * coef2_y
+           end if
 
-              if( abs(bb) > 1.d-5 ) then
-                 coef1_1 = (1.0d0 - exp(-bb * deltat/2.0d0) ) / bb
-                 coef2_1 = (1.0d0 - exp(-bb * deltat/2.0d0) ) * exp(-bb * deltat/2.0d0) / bb
-              else
-                 coef1_1 = deltat/2.0d0
-                 coef2_1 = deltat/2.0d0
-              endif
-
-              rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) &
-                   + (displ(1,iglob) + deltat * veloc(1,iglob)) * coef1_1 + displ(1,iglob) * coef2_1
-              rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) = 0.0
-              rmemory_displ_elastic(1,i,j,k,ispec_CPML,3) = 0.0
-
-              rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) &
-                   + (displ(2,iglob) + deltat * veloc(2,iglob)) * coef1_1 + displ(2,iglob) * coef2_1
-              rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) = 0.0
-              rmemory_displ_elastic(2,i,j,k,ispec_CPML,3) = 0.0
-
-              rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) &
-                   + (displ(3,iglob) + deltat * veloc(3,iglob)) * coef1_1 + displ(3,iglob) * coef2_1
-              rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) = 0.0
-              rmemory_displ_elastic(3,i,j,k,ispec_CPML,3) = 0.0
-
-              !---------------------- A0, A1, A2, A3, A4 and A5 --------------------------
-              A0 = k_store_y(i,j,k,ispec_CPML)
-              A1 = d_store_y(i,j,k,ispec_CPML)
-              A2 = - alpha_store(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML)
-              A3 = d_store_y(i,j,k,ispec_CPML) * alpha_store(i,j,k,ispec_CPML) ** 2
-              A4 = 0.d0
-              A5 = 0.d0
-
-           else if( CPML_regions(ispec_CPML) == CPML_Z_ONLY ) then
-              !------------------------------------------------------------------------------
-              !---------------------------- Z-surface C-PML ---------------------------------
-              !------------------------------------------------------------------------------
-
-              bb = alpha_store(i,j,k,ispec_CPML)
-              coef0_1 = exp(-bb * deltat)
-
-              if( abs(bb) > 1.d-5 ) then
-                 coef1_1 = (1.0d0 - exp(-bb * deltat/2.0d0) ) / bb
-                 coef2_1 = (1.0d0 - exp(-bb * deltat/2.0d0) ) * exp(-bb * deltat/2.0d0) / bb
-              else
-                 coef1_1 = deltat/2.0d0
-                 coef2_1 = deltat/2.0d0
-              endif
-
-              rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) &
-                   + (displ(1,iglob) + deltat * veloc(1,iglob)) * coef1_1 + displ(1,iglob) * coef2_1
-              rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) = 0.0
-              rmemory_displ_elastic(1,i,j,k,ispec_CPML,3) = 0.0
-
-              rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) &
-                   + (displ(2,iglob) + deltat * veloc(2,iglob)) * coef1_1 + displ(2,iglob) * coef2_1
-              rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) = 0.0
-              rmemory_displ_elastic(2,i,j,k,ispec_CPML,3) = 0.0
-
-              rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) &
-                   + (displ(3,iglob) + deltat * veloc(3,iglob)) * coef1_1 + displ(3,iglob) * coef2_1
-              rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) = 0.0
-              rmemory_displ_elastic(3,i,j,k,ispec_CPML,3) = 0.0
-
-              !---------------------- A0, A1, A2, A3, A4 and A5 --------------------------
-              A0 = k_store_z(i,j,k,ispec_CPML)
-              A1 = d_store_z(i,j,k,ispec_CPML)
-              A2 = - alpha_store(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
-              A3 = d_store_z(i,j,k,ispec_CPML) * alpha_store(i,j,k,ispec_CPML) ** 2
-              A4 = 0.d0
-              A5 = 0.d0
-
-           else if( CPML_regions(ispec_CPML) == CPML_XY_ONLY ) then
-              !------------------------------------------------------------------------------
-              !---------------------------- XY-edge C-PML -----------------------------------
-              !------------------------------------------------------------------------------
-
-              bb = alpha_store(i,j,k,ispec_CPML)
-              coef0_1 = exp(-bb * deltat)
-
-              if( abs(bb) > 1.d-5 ) then
-                 coef1_1 = (1.0d0 - exp(-bb * deltat/2.0d0) ) / bb
-                 coef2_1 = (1.0d0 - exp(-bb * deltat/2.0d0) ) * exp(-bb * deltat/2.0d0) / bb
-              else
-                 coef1_1 = deltat/2.0d0
-                 coef2_1 = deltat/2.0d0
-              endif
-
-              coef0_2 = coef0_1
-              coef1_2 = coef1_1
-              coef2_2 = coef2_1
-
-              rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) &
-                   + (displ(1,iglob) + deltat * veloc(1,iglob)) * coef1_1 + displ(1,iglob) * coef2_1
-              rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) = coef0_2 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) &
-                   + (displ(1,iglob) + deltat * veloc(1,iglob)) * it*deltat * coef1_2 &
-                   + displ(1,iglob) * it*deltat * coef2_2
-              rmemory_displ_elastic(1,i,j,k,ispec_CPML,3) = 0.0
-
-              rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) &
-                   + (displ(2,iglob) + deltat * veloc(2,iglob)) * coef1_1 + displ(2,iglob) * coef2_1
-              rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) = coef0_2 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) &
-                   + (displ(2,iglob) + deltat * veloc(2,iglob)) * it*deltat * coef1_2 &
-                   + displ(2,iglob) * it*deltat * coef2_2
-              rmemory_displ_elastic(2,i,j,k,ispec_CPML,3) = 0.0
-
-              rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) &
-                   + (displ(3,iglob) + deltat * veloc(3,iglob)) * coef1_1 + displ(3,iglob) * coef2_1
-              rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) = coef0_2 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) &
-                   + (displ(3,iglob) + deltat * veloc(3,iglob)) * it*deltat * coef1_2 &
-                   + displ(3,iglob) * it*deltat * coef2_2
-              rmemory_displ_elastic(3,i,j,k,ispec_CPML,3) = 0.0
-
-              !---------------------- A0, A1, A2, A3, A4 and A5 --------------------------
-              A0 = k_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML)
-              A1 = d_store_y(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) &
-                   + d_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML)
-              A2 = d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) &
-                   - alpha_store(i,j,k,ispec_CPML) * d_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) &
-                   - alpha_store(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML)
-              A3 = -2.0 * alpha_store(i,j,k,ispec_CPML) * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) &
-                   + alpha_store(i,j,k,ispec_CPML)**2 * ( d_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) &
-                   + d_store_y(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) ) + alpha_store(i,j,k,ispec_CPML)**2 &
-                   * it*deltat * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML)
-              A4 = -alpha_store(i,j,k,ispec_CPML)**2 * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML)
-              A5 = 0.0
-
-           else if( CPML_regions(ispec_CPML) == CPML_XZ_ONLY ) then
-              !------------------------------------------------------------------------------
-              !---------------------------- XZ-edge C-PML -----------------------------------
-              !------------------------------------------------------------------------------
-
-              bb = alpha_store(i,j,k,ispec_CPML)
-              coef0_1 = exp(-bb * deltat)
-
-              if( abs(bb) > 1.d-5 ) then
-                 coef1_1 = (1.0d0 - exp(-bb * deltat/2.0d0) ) / bb
-                 coef2_1 = (1.0d0 - exp(-bb * deltat/2.0d0) ) * exp(-bb * deltat/2.0d0) / bb
-              else
-                 coef1_1 = deltat/2.0d0
-                 coef2_1 = deltat/2.0d0
-              endif
-
-              coef0_2 = coef0_1
-              coef1_2 = coef1_1
-              coef2_2 = coef2_1
-
-              rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) &
-                   + (displ(1,iglob) + deltat * veloc(1,iglob)) * coef1_1 + displ(1,iglob) * coef2_1
-              rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) = coef0_2 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) &
-                   + (displ(1,iglob) + deltat * veloc(1,iglob)) * it*deltat * coef1_2 &
-                   + displ(1,iglob) * it*deltat * coef2_2
-              rmemory_displ_elastic(1,i,j,k,ispec_CPML,3)= 0.0
-
-              rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) &
-                   + (displ(2,iglob) + deltat * veloc(2,iglob)) * coef1_1 + displ(2,iglob) * coef2_1
-              rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) = coef0_2 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) &
-                   + (displ(2,iglob) + deltat * veloc(2,iglob)) * it*deltat * coef1_2 &
-                   + displ(2,iglob) * it*deltat * coef2_2
-              rmemory_displ_elastic(2,i,j,k,ispec_CPML,3)= 0.0
-
-              rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) &
-                   + (displ(3,iglob) + deltat * veloc(3,iglob)) * coef1_1 + displ(3,iglob) * coef2_1
-              rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) = coef0_2 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) &
-                   + (displ(3,iglob) + deltat * veloc(3,iglob)) * it*deltat * coef1_2 &
-                   + displ(3,iglob) * it*deltat * coef2_2
-              rmemory_displ_elastic(3,i,j,k,ispec_CPML,3)= 0.0
-
-              !---------------------- A0, A1, A2, A3, A4 and A5 --------------------------
-              A0 = k_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML)
-              A1 = d_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML)&
-                   + d_store_z(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML)
-              A2 = d_store_x(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) &
-                   - alpha_store(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) &
-                   - alpha_store(i,j,k,ispec_CPML) * d_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML)
-              A3 = -2.0 * alpha_store(i,j,k,ispec_CPML) * d_store_x(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) &
-                   + alpha_store(i,j,k,ispec_CPML)**2 * ( d_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) &
-                   + d_store_z(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) ) + alpha_store(i,j,k,ispec_CPML)**2 &
-                   * it*deltat * d_store_x(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
-              A4 = -alpha_store(i,j,k,ispec_CPML)**2 * d_store_x(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
-              A5 = 0.0
-
-           else if( CPML_regions(ispec_CPML) == CPML_YZ_ONLY ) then
-              !------------------------------------------------------------------------------
-              !---------------------------- YZ-edge C-PML -----------------------------------
-              !------------------------------------------------------------------------------
-
-              bb = alpha_store(i,j,k,ispec_CPML)
-              coef0_1 = exp(-bb * deltat)
-
-              if( abs(bb) > 1.d-5 ) then
-                 coef1_1 = (1.0d0 - exp(-bb * deltat/2.0d0) ) / bb
-                 coef2_1 = (1.0d0 - exp(-bb * deltat/2.0d0) ) * exp(-bb * deltat/2.0d0) / bb
-              else
-                 coef1_1 = deltat/2.0d0
-                 coef2_1 = deltat/2.0d0
-              endif
-
-              coef0_2 = coef0_1
-              coef1_2 = coef1_1
-              coef2_2 = coef2_1
-
-              rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) &
-                   + (displ(1,iglob) + deltat * veloc(1,iglob)) * coef1_1 + displ(1,iglob) * coef2_1
-              rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) = coef0_2 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) &
-                   + (displ(1,iglob) + deltat * veloc(1,iglob)) * it*deltat * coef1_2 &
-                   + displ(1,iglob) * it*deltat * coef2_2
-              rmemory_displ_elastic(1,i,j,k,ispec_CPML,3)=0.d0
-
-              rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) &
-                   + (displ(2,iglob) + deltat * veloc(2,iglob)) * coef1_1 + displ(2,iglob) * coef2_1
-              rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) = coef0_2 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) &
-                   + (displ(2,iglob) + deltat * veloc(2,iglob)) * it*deltat * coef1_2 &
-                   + displ(2,iglob) * it*deltat * coef2_2
-              rmemory_displ_elastic(2,i,j,k,ispec_CPML,3)=0.d0
-
-              rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) &
-                   + (displ(3,iglob) + deltat * veloc(3,iglob)) * coef1_1 + displ(3,iglob) * coef2_1
-              rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) = coef0_2 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) &
-                   + (displ(3,iglob) + deltat * veloc(3,iglob)) * it*deltat * coef1_2 &
-                   + displ(3,iglob) * it*deltat * coef2_2
-              rmemory_displ_elastic(3,i,j,k,ispec_CPML,3)=0.d0
-
-              !---------------------- A0, A1, A2, A3, A4 and A5 --------------------------
-              A0 = k_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML)
-              A1 = d_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) &
-                   + d_store_z(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML)
-              A2 = d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) &
-                   - alpha_store(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) &
-                   - alpha_store(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML)
-              A3 = -2.0 * alpha_store(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) &
-                   + alpha_store(i,j,k,ispec_CPML)**2 * ( d_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) &
-                   + d_store_z(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) ) + alpha_store(i,j,k,ispec_CPML)**2 &
-                   * it*deltat * d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
-              A4 = -alpha_store(i,j,k,ispec_CPML)**2 * d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
-              A5 = 0.0
-
-           else if( CPML_regions(ispec_CPML) == CPML_XYZ ) then
-              !------------------------------------------------------------------------------
-              !---------------------------- XYZ-corner C-PML --------------------------------
-              !------------------------------------------------------------------------------
-
-              bb = alpha_store(i,j,k,ispec_CPML)
-              coef0_1 = exp(-bb * deltat)
-
-              if( abs(bb) > 1.d-5 ) then
-                 coef1_1 = (1.0d0 - exp(-bb * deltat/2.0d0) ) / bb
-                 coef2_1 = (1.0d0 - exp(-bb * deltat/2.0d0) ) * exp(-bb * deltat/2.0d0) / bb
-              else
-                 coef1_1 = deltat/2.0d0
-                 coef2_1 = deltat/2.0d0
-              endif
-
-              coef0_2 = coef0_1
-              coef1_2 = coef1_1
-              coef2_2 = coef2_1
-
-              coef0_3 = coef0_1
-              coef1_3 = coef1_1
-              coef2_3 = coef2_1
-
-              rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) &
-                   + (displ(1,iglob) + deltat * veloc(1,iglob)) * coef1_1 + displ(1,iglob) * coef2_1
-              rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) = coef0_2 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) &
-                   + (displ(1,iglob) + deltat * veloc(1,iglob)) * it*deltat * coef1_2 &
-                   + displ(1,iglob) * it*deltat * coef2_2
-              rmemory_displ_elastic(1,i,j,k,ispec_CPML,3) = coef0_3 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,3) &
-                   + (displ(1,iglob) + deltat * veloc(1,iglob)) * (it*deltat)**2 * coef1_3 &
-                   + displ(1,iglob) * (it*deltat)**2 * coef2_3
-
-              rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) &
-                   + (displ(2,iglob) + deltat * veloc(2,iglob)) * coef1_1 + displ(2,iglob) * coef2_1
-              rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) = coef0_2 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) &
-                   + (displ(2,iglob) + deltat * veloc(2,iglob)) * it*deltat * coef1_2 &
-                   + displ(2,iglob) * it*deltat * coef2_2
-              rmemory_displ_elastic(2,i,j,k,ispec_CPML,3) = coef0_3 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,3) &
-                   + (displ(2,iglob) + deltat * veloc(2,iglob)) * (it*deltat)**2 * coef1_3 &
-                   + displ(2,iglob) * (it*deltat)**2 * coef2_3
-
-              rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) &
-                   + (displ(3,iglob) + deltat * veloc(3,iglob)) * coef1_1 + displ(3,iglob) * coef2_1
-              rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) = coef0_2 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) &
-                   + (displ(3,iglob) + deltat * veloc(3,iglob)) * it*deltat * coef1_2 &
-                   + displ(3,iglob) * it*deltat * coef2_2
-              rmemory_displ_elastic(3,i,j,k,ispec_CPML,3) = coef0_3 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,3) &
-                   + (displ(3,iglob) + deltat * veloc(3,iglob)) * (it*deltat)**2 * coef1_3 &
-                   + displ(3,iglob) * (it*deltat)**2 * coef2_3
-
-              !---------------------- A0, A1, A2, A3, A4 and A5 --------------------------
-              A0 = k_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML)
-              A1 = d_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) + &
-                   d_store_y(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) + &
-                   d_store_z(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML)
-              A2 = k_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) + &
-                   k_store_y(i,j,k,ispec_CPML) * d_store_x(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) + &
-                   k_store_z(i,j,k,ispec_CPML) * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) - &
-                   d_store_x(i,j,k,ispec_CPML) * alpha_store(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) * &
-                   k_store_z(i,j,k,ispec_CPML) - d_store_y(i,j,k,ispec_CPML) * alpha_store(i,j,k,ispec_CPML) * &
-                   k_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) - d_store_z(i,j,k,ispec_CPML) * &
-                   alpha_store(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML)
-              temp_A3 = d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) - &
-                   2.0 * alpha_store(i,j,k,ispec_CPML) * ( &
-                   d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) + &
-                   d_store_x(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) + &
-                   d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) &
-                   ) + alpha_store(i,j,k,ispec_CPML)**2 * ( &
-                   d_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) + &
-                   d_store_y(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) + &
-                   d_store_z(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) &
-                   )
-!             temp_A4 = -2.0 * alpha_store(i,j,k,ispec_CPML) * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) * &
-!                  d_store_z(i,j,k,ispec_CPML) + alpha_store(i,j,k,ispec_CPML)**2 * ( &
-!                  d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) + &
-!                  d_store_x(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) + &
-!                  d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) &
-!                  )
-!             temp_A5 = 0.5 * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
-!             A3 = temp_A3 + (it+0.0)*deltat*temp_A4 + ((it+0.0)*deltat)**2*temp_A5
-!             A4 = -temp_A4 -2.0*(it+0.0)*deltat*temp_A5
-!             A5 = temp_A5
-!!! the full experssion of A3,A4,A5 are given by above equation, here we use reduced
-!!! exprssion of A3,A4,A5 in order to stabilized the code.
-
-              A3 = temp_A3
-              A4 = 0.0
-              A5 = 0.0
-
-           endif
+           if (singularity_type_5 == 0) then
+              rmemory_displ_elastic(1,i,j,k,ispec_CPML,3) = coef0_z * rmemory_displ_elastic(1,i,j,k,ispec_CPML,3) &
+                   + displ(1,iglob) * coef1_z + displ_old(1,iglob) * coef2_z
+              rmemory_displ_elastic(2,i,j,k,ispec_CPML,3) = coef0_z * rmemory_displ_elastic(2,i,j,k,ispec_CPML,3) &
+                   + displ(2,iglob) * coef1_z + displ_old(2,iglob) * coef2_z
+              rmemory_displ_elastic(3,i,j,k,ispec_CPML,3) = coef0_z * rmemory_displ_elastic(3,i,j,k,ispec_CPML,3) &
+                   + displ(3,iglob) * coef1_z + displ_old(3,iglob) * coef2_z
+           else if (singularity_type_5 == 1) then
+              rmemory_displ_elastic(1,i,j,k,ispec_CPML,3) = coef0_z * rmemory_displ_elastic(1,i,j,k,ispec_CPML,3) &
+                   + displ(1,iglob) * time_nplus1 * coef1_z &
+                   + displ_old(1,iglob) * time_n * coef2_z
+              rmemory_displ_elastic(2,i,j,k,ispec_CPML,3) = coef0_z * rmemory_displ_elastic(2,i,j,k,ispec_CPML,3) &
+                   + displ(2,iglob) * time_nplus1 * coef1_z &
+                   + displ_old(2,iglob) * time_n * coef2_z
+              rmemory_displ_elastic(3,i,j,k,ispec_CPML,3) = coef0_z * rmemory_displ_elastic(3,i,j,k,ispec_CPML,3) &
+                   + displ(3,iglob) * time_nplus1 * coef1_z &
+                   + displ_old(3,iglob) * time_n * coef2_z
+           else if (singularity_type_5 == 2) then
+              rmemory_displ_elastic(1,i,j,k,ispec_CPML,3) = coef0_z * rmemory_displ_elastic(1,i,j,k,ispec_CPML,3) &
+                   + displ(1,iglob) * time_nplus1**2 * coef1_z &
+                   + displ_old(1,iglob) * time_n**2 * coef2_z
+              rmemory_displ_elastic(2,i,j,k,ispec_CPML,3) = coef0_z * rmemory_displ_elastic(2,i,j,k,ispec_CPML,3) &
+                   + displ(2,iglob) * time_nplus1**2 * coef1_z &
+                   + displ_old(2,iglob) * time_n**2 * coef2_z
+              rmemory_displ_elastic(3,i,j,k,ispec_CPML,3) = coef0_z * rmemory_displ_elastic(3,i,j,k,ispec_CPML,3) &
+                   + displ(3,iglob) * time_nplus1**2 * coef1_z &
+                   + displ_old(3,iglob) * time_n**2 * coef2_z
+           end if
 
            accel_elastic_CPML(1,i,j,k) =  wgllcube * rhol * jacobianl * &
-                ( A1 * veloc(1,iglob) + A2 * displ(1,iglob) + &
-                  A3 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) + &
-                  A4 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) + &
-                  A5 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,3)  &
+                ( A_1 * veloc(1,iglob) + A_2 * displ(1,iglob) + &
+                  A_3 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) + &
+                  A_4 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) + &
+                  A_5 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,3)  &
                 )
 
            accel_elastic_CPML(2,i,j,k) =  wgllcube * rhol * jacobianl * &
-                ( A1 * veloc(2,iglob) + A2 * displ(2,iglob) + &
-                  A3 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) + &
-                  A4 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) + &
-                  A5 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,3)  &
+                ( A_1 * veloc(2,iglob) + A_2 * displ(2,iglob) + &
+                  A_3 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) + &
+                  A_4 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) + &
+                  A_5 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,3)  &
                 )
 
            accel_elastic_CPML(3,i,j,k) =  wgllcube * rhol * jacobianl * &
-                ( A1 * veloc(3,iglob) + A2 * displ(3,iglob) + &
-                  A3 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) + &
-                  A4 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) + &
-                  A5 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,3)  &
+                ( A_1 * veloc(3,iglob) + A_2 * displ(3,iglob) + &
+                  A_3 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) + &
+                  A_4 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) + &
+                  A_5 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,3)  &
                 )
         enddo
      enddo
@@ -464,8 +185,6 @@ end subroutine pml_compute_accel_contribution_elastic
 !
 !=====================================================================
 !
-!
-
 subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_acoustic,&
                                                    potential_dot_acoustic,rmemory_potential_acoustic)
 
@@ -478,7 +197,8 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_ac
 
   use specfem_par, only: NGLOB_AB,it,deltat,wgll_cube,jacobian,ibool,kappastore
   use pml_par, only: CPML_regions,NSPEC_CPML,d_store_x,d_store_y,d_store_z,K_store_x,K_store_y,K_store_z,&
-                     alpha_store, potential_dot_dot_acoustic_CPML
+                     alpha_store_x, alpha_store_y, alpha_store_z, &
+                     NSPEC_CPML,potential_dot_dot_acoustic_CPML,potential_acoustic_old
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
                        CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
@@ -490,10 +210,15 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_ac
 
 
   ! local parameters
-  integer :: i,j,k,iglob
+  integer :: i,j,k,iglob,CPML_region_local
+  integer :: singularity_type_4, singularity_type_5
   real(kind=CUSTOM_REAL) :: wgllcube,kappal_inv,jacobianl
-  real(kind=CUSTOM_REAL) :: bb,coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,coef0_3,coef1_3,coef2_3
-  real(kind=CUSTOM_REAL) :: A0,A1,A2,A3,A4,A5,temp_A3 ! for convolution of acceleration
+  real(kind=CUSTOM_REAL) :: alpha_x,alpha_y,alpha_z,beta_x,beta_y,beta_z,d_x,d_y,d_z,kappa_x,kappa_y,kappa_z
+  real(kind=CUSTOM_REAL) :: coef0_x,coef1_x,coef2_x,coef0_y,coef1_y,coef2_y,coef0_z,coef1_z,coef2_z
+  real(kind=CUSTOM_REAL) :: A_0,A_1,A_2,A_3,A_4,A_5
+  real(kind=CUSTOM_REAL) :: time_nplus1, time_n
+
+  logical,parameter :: FIRST_ORDER_CONVOLUTION = .false.
 
   do k=1,NGLLZ
      do j=1,NGLLY
@@ -503,303 +228,70 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_ac
            iglob = ibool(i,j,k,ispec)
            wgllcube = wgll_cube(i,j,k)
 
-           if( CPML_regions(ispec_CPML) == CPML_X_ONLY ) then
-              !------------------------------------------------------------------------------
-              !---------------------------- X-surface C-PML ---------------------------------
-              !------------------------------------------------------------------------------
+           CPML_region_local = CPML_regions(ispec_CPML)
 
-              bb = alpha_store(i,j,k,ispec_CPML)
-              coef0_1 = exp(-bb * deltat)
+           alpha_x = alpha_store_x(i,j,k,ispec_CPML)
+           alpha_y = alpha_store_y(i,j,k,ispec_CPML)
+           alpha_z = alpha_store_z(i,j,k,ispec_CPML)
 
-              if( abs(bb) > 1.d-5 ) then
-                 coef1_1 = (1.0d0 - exp(-bb * deltat/2.0d0) ) / bb
-                 coef2_1 = (1.0d0 - exp(-bb * deltat/2.0d0) ) * exp(-bb * deltat/2.0d0) / bb
-              else
-                 coef1_1 = deltat/2.0d0
-                 coef2_1 = deltat/2.0d0
-              endif
+           d_x = d_store_x(i,j,k,ispec_CPML)
+           d_y = d_store_y(i,j,k,ispec_CPML)
+           d_z = d_store_z(i,j,k,ispec_CPML)
 
-              rmemory_potential_acoustic(i,j,k,ispec_CPML,1)=coef0_1 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) &
-                   + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * coef1_1 &
-                   + potential_acoustic(iglob) * coef2_1
-              rmemory_potential_acoustic(i,j,k,ispec_CPML,2)=0.0
-              rmemory_potential_acoustic(i,j,k,ispec_CPML,3)=0.0
+           kappa_x = k_store_x(i,j,k,ispec_CPML)
+           kappa_y = k_store_y(i,j,k,ispec_CPML)
+           kappa_z = k_store_z(i,j,k,ispec_CPML)
 
-              !---------------------- A0, A1, A2, A3, A4 and A5 --------------------------
-              A0 = k_store_x(i,j,k,ispec_CPML)
-              A1 = d_store_x(i,j,k,ispec_CPML)
-              A2 = - alpha_store(i,j,k,ispec_CPML) * d_store_x(i,j,k,ispec_CPML)
-              A3 = d_store_x(i,j,k,ispec_CPML) * alpha_store(i,j,k,ispec_CPML) ** 2
-              A4 = 0.d0
-              A5 = 0.d0
+           beta_x = alpha_x + d_x / kappa_x
+           beta_y = alpha_y + d_y / kappa_y
+           beta_z = alpha_z + d_z / kappa_z
 
-           else if( CPML_regions(ispec_CPML) == CPML_Y_ONLY ) then
-              !------------------------------------------------------------------------------
-              !---------------------------- Y-surface C-PML ---------------------------------
-              !------------------------------------------------------------------------------
+           time_nplus1 = (it - 1._CUSTOM_REAL) * deltat
+           time_n = (it - 2._CUSTOM_REAL) * deltat
 
-              bb = alpha_store(i,j,k,ispec_CPML)
-              coef0_1 = exp(-bb * deltat)
+           call l_parameter_computation( &
+               time_nplus1, deltat, &
+               kappa_x, beta_x, alpha_x, &
+               kappa_y, beta_y, alpha_y, &
+               kappa_z, beta_z, alpha_z, &
+               CPML_region_local,  &
+               A_0, A_1, A_2, A_3, A_4, A_5, &
+               coef0_x, coef1_x, coef2_x, &
+               coef0_y, coef1_y, coef2_y, &
+               coef0_z, coef1_z, coef2_z, &
+               singularity_type_4, singularity_type_5, &
+               FIRST_ORDER_CONVOLUTION )
 
-              if( abs(bb) > 1.d-5 ) then
-                 coef1_1 = (1.0d0 - exp(-bb * deltat/2.0d0) ) / bb
-                 coef2_1 = (1.0d0 - exp(-bb * deltat/2.0d0) ) * exp(-bb * deltat/2.0d0) / bb
-              else
-                 coef1_1 = deltat/2.0d0
-                 coef2_1 = deltat/2.0d0
-              endif
+           rmemory_potential_acoustic(i,j,k,ispec_CPML,1) = coef0_x * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) + &
+                  coef1_x * potential_acoustic(iglob) + coef2_x * potential_acoustic_old(iglob)
 
-              rmemory_potential_acoustic(i,j,k,ispec_CPML,1)=coef0_1 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) &
-                    + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * coef1_1 &
-                    + potential_acoustic(iglob) * coef2_1
-              rmemory_potential_acoustic(i,j,k,ispec_CPML,2)=0.0
-              rmemory_potential_acoustic(i,j,k,ispec_CPML,3)=0.0
+           if (singularity_type_4 == 0) then
+             rmemory_potential_acoustic(i,j,k,ispec_CPML,2) = coef0_y * rmemory_potential_acoustic(i,j,k,ispec_CPML,2) + &
+                    coef1_y * potential_acoustic(iglob) + coef2_y * potential_acoustic_old(iglob)
+           else if (singularity_type_4 == 1) then
+             rmemory_potential_acoustic(i,j,k,ispec_CPML,2) = coef0_y * rmemory_potential_acoustic(i,j,k,ispec_CPML,2) + &
+                    coef1_y * time_nplus1 * potential_acoustic(iglob) + &
+                    coef2_y * time_n * potential_acoustic_old(iglob)
+           end if
 
-              !---------------------- A0, A1, A2, A3, A4 and A5 --------------------------
-              A0 = k_store_y(i,j,k,ispec_CPML)
-              A1 = d_store_y(i,j,k,ispec_CPML)
-              A2 = - alpha_store(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML)
-              A3 = d_store_y(i,j,k,ispec_CPML) * alpha_store(i,j,k,ispec_CPML) ** 2
-              A4 = 0.d0
-              A5 = 0.d0
+           if (singularity_type_5 == 0) then
+             rmemory_potential_acoustic(i,j,k,ispec_CPML,3) = coef0_z * rmemory_potential_acoustic(i,j,k,ispec_CPML,3) + &
+                    coef1_z * potential_acoustic(iglob) + coef2_z * potential_acoustic_old(iglob)
+           else if (singularity_type_5 == 1) then
+             rmemory_potential_acoustic(i,j,k,ispec_CPML,3) = coef0_z * rmemory_potential_acoustic(i,j,k,ispec_CPML,3) + &
+                    coef1_z * time_nplus1 * potential_acoustic(iglob) + &
+                    coef2_z * time_n * potential_acoustic_old(iglob)
+           else if (singularity_type_5 == 2) then
+             rmemory_potential_acoustic(i,j,k,ispec_CPML,3) = coef0_z * rmemory_potential_acoustic(i,j,k,ispec_CPML,3) + &
+                    coef1_z * time_nplus1**2 * potential_acoustic(iglob) + &
+                    coef2_z * time_n**2 * potential_acoustic_old(iglob)
+           end if
 
-           else if( CPML_regions(ispec_CPML) == CPML_Z_ONLY ) then
-              !------------------------------------------------------------------------------
-              !---------------------------- Z-surface C-PML ---------------------------------
-              !------------------------------------------------------------------------------
-
-              bb = alpha_store(i,j,k,ispec_CPML)
-              coef0_1 = exp(-bb * deltat)
-
-              if( abs(bb) > 1.d-5 ) then
-                 coef1_1 = (1.0d0 - exp(-bb * deltat/2.0d0) ) / bb
-                 coef2_1 = (1.0d0 - exp(-bb * deltat/2.0d0) ) * exp(-bb * deltat/2.0d0) / bb
-              else
-                 coef1_1 = deltat/2.0d0
-                 coef2_1 = deltat/2.0d0
-              endif
-
-              rmemory_potential_acoustic(i,j,k,ispec_CPML,1)=coef0_1 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) &
-                    + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * coef1_1 &
-                    + potential_acoustic(iglob) * coef2_1
-              rmemory_potential_acoustic(i,j,k,ispec_CPML,2)=0.0
-              rmemory_potential_acoustic(i,j,k,ispec_CPML,3)=0.0
-
-              !---------------------- A0, A1, A2, A3, A4 and A5 --------------------------
-              A0 = k_store_z(i,j,k,ispec_CPML)
-              A1 = d_store_z(i,j,k,ispec_CPML)
-              A2 = - alpha_store(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
-              A3 = d_store_z(i,j,k,ispec_CPML) * alpha_store(i,j,k,ispec_CPML) ** 2
-              A4 = 0.d0
-              A5 = 0.d0
-
-           else if( CPML_regions(ispec_CPML) == CPML_XY_ONLY ) then
-              !------------------------------------------------------------------------------
-              !---------------------------- XY-edge C-PML -----------------------------------
-              !------------------------------------------------------------------------------
-
-              bb = alpha_store(i,j,k,ispec_CPML)
-              coef0_1 = exp(-bb * deltat)
-
-              if( abs(bb) > 1.d-5 ) then
-                 coef1_1 = (1.0d0 - exp(-bb * deltat/2.0d0) ) / bb
-                 coef2_1 = (1.0d0 - exp(-bb * deltat/2.0d0) ) * exp(-bb * deltat/2.0d0) / bb
-              else
-                 coef1_1 = deltat/2.0d0
-                 coef2_1 = deltat/2.0d0
-              endif
-
-              coef0_2 = coef0_1
-              coef1_2 = coef1_1
-              coef2_2 = coef2_1
-
-              rmemory_potential_acoustic(i,j,k,ispec_CPML,1)=coef0_1 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) &
-                    + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * coef1_1 &
-                    + potential_acoustic(iglob) * coef2_1
-              rmemory_potential_acoustic(i,j,k,ispec_CPML,2)=coef0_2 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2) &
-                    + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * it*deltat * coef1_2 &
-                    + potential_acoustic(iglob) * it*deltat * coef2_2
-              rmemory_potential_acoustic(i,j,k,ispec_CPML,3)=0.0
-
-              !---------------------- A0, A1, A2, A3, A4 and A5 --------------------------
-              A0 = k_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML)
-              A1 = d_store_y(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) &
-                   + d_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML)
-              A2 = d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) &
-                   - alpha_store(i,j,k,ispec_CPML) * d_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) &
-                   - alpha_store(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML)
-              A3 = -2.0 * alpha_store(i,j,k,ispec_CPML) * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) + &
-                   alpha_store(i,j,k,ispec_CPML)**2 * ( d_store_x(i,j,k,ispec_CPML)*k_store_y(i,j,k,ispec_CPML) &
-                   + d_store_y(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) ) + alpha_store(i,j,k,ispec_CPML)**2 &
-                   * it*deltat * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML)
-              A4 = -alpha_store(i,j,k,ispec_CPML)**2 * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML)
-              A5 = 0.0
-
-           else if( CPML_regions(ispec_CPML) == CPML_XZ_ONLY ) then
-              !------------------------------------------------------------------------------
-              !---------------------------- XZ-edge C-PML -----------------------------------
-              !------------------------------------------------------------------------------
-
-              bb = alpha_store(i,j,k,ispec_CPML)
-              coef0_1 = exp(-bb * deltat)
-
-              if( abs(bb) > 1.d-5 ) then
-                 coef1_1 = (1.0d0 - exp(-bb * deltat/2.0d0) ) / bb
-                 coef2_1 = (1.0d0 - exp(-bb * deltat/2.0d0) ) * exp(-bb * deltat/2.0d0) / bb
-              else
-                 coef1_1 = deltat/2.0d0
-                 coef2_1 = deltat/2.0d0
-              endif
-
-              coef0_2 = coef0_1
-              coef1_2 = coef1_1
-              coef2_2 = coef2_1
-
-              rmemory_potential_acoustic(i,j,k,ispec_CPML,1)=coef0_1 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) &
-                    + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * coef1_1 &
-                    + potential_acoustic(iglob) * coef2_1
-              rmemory_potential_acoustic(i,j,k,ispec_CPML,2)=coef0_2 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2) &
-                    + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * it*deltat * coef1_2 &
-                    + potential_acoustic(iglob) * it*deltat * coef2_2
-              rmemory_potential_acoustic(i,j,k,ispec_CPML,3)= 0.0
-
-              !---------------------- A0, A1, A2, A3, A4 and A5 --------------------------
-              A0 = k_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML)
-              A1 = d_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML)&
-                   + d_store_z(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML)
-              A2 = d_store_x(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) &
-                   - alpha_store(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) &
-                   - alpha_store(i,j,k,ispec_CPML) * d_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML)
-              A3 = -2.0 * alpha_store(i,j,k,ispec_CPML) * d_store_x(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) &
-                   + alpha_store(i,j,k,ispec_CPML)**2 * ( d_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) &
-                   + d_store_z(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) ) + alpha_store(i,j,k,ispec_CPML)**2 &
-                   * it*deltat * d_store_x(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
-              A4 = -alpha_store(i,j,k,ispec_CPML)**2 * d_store_x(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
-              A5 = 0.0
-
-           else if( CPML_regions(ispec_CPML) == CPML_YZ_ONLY ) then
-              !------------------------------------------------------------------------------
-              !---------------------------- YZ-edge C-PML -----------------------------------
-              !------------------------------------------------------------------------------
-
-              bb = alpha_store(i,j,k,ispec_CPML)
-              coef0_1 = exp(-bb * deltat)
-
-              if( abs(bb) > 1.d-5 ) then
-                 coef1_1 = (1.0d0 - exp(-bb * deltat/2.0d0) ) / bb
-                 coef2_1 = (1.0d0 - exp(-bb * deltat/2.0d0) ) * exp(-bb * deltat/2.0d0) / bb
-              else
-                 coef1_1 = deltat/2.0d0
-                 coef2_1 = deltat/2.0d0
-              endif
-
-              coef0_2 = coef0_1
-              coef1_2 = coef1_1
-              coef2_2 = coef2_1
-
-              rmemory_potential_acoustic(i,j,k,ispec_CPML,1)=coef0_1 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) &
-                    + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * coef1_1 &
-                    + potential_acoustic(iglob) * coef2_1
-              rmemory_potential_acoustic(i,j,k,ispec_CPML,2)=coef0_2 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2) &
-                    + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * it*deltat * coef1_2 &
-                    + potential_acoustic(iglob) * it*deltat * coef2_2
-              rmemory_potential_acoustic(i,j,k,ispec_CPML,3)=0.d0
-
-              !---------------------- A0, A1, A2, A3, A4 and A5 --------------------------
-              A0 = k_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML)
-              A1 = d_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) &
-                   + d_store_z(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML)
-              A2 = d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) &
-                   - alpha_store(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) &
-                   - alpha_store(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML)
-              A3 = -2.0 * alpha_store(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) &
-                   + alpha_store(i,j,k,ispec_CPML)**2 * ( d_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) &
-                   + d_store_z(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) ) + alpha_store(i,j,k,ispec_CPML)**2 &
-                   * it*deltat * d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
-              A4 = -alpha_store(i,j,k,ispec_CPML)**2 * d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
-              A5 = 0.0
-
-           else if( CPML_regions(ispec_CPML) == CPML_XYZ ) then
-              !------------------------------------------------------------------------------
-              !---------------------------- XYZ-corner C-PML --------------------------------
-              !------------------------------------------------------------------------------
-
-              bb = alpha_store(i,j,k,ispec_CPML)
-              coef0_1 = exp(-bb * deltat)
-
-              if( abs(bb) > 1.d-5 ) then
-                 coef1_1 = (1.0d0 - exp(-bb * deltat/2.0d0) ) / bb
-                 coef2_1 = (1.0d0 - exp(-bb * deltat/2.0d0) ) * exp(-bb * deltat/2.0d0) / bb
-              else
-                 coef1_1 = deltat/2.0d0
-                 coef2_1 = deltat/2.0d0
-              endif
-
-              coef0_2 = coef0_1
-              coef1_2 = coef1_1
-              coef2_2 = coef2_1
-
-              coef0_3 = coef0_1
-              coef1_3 = coef1_1
-              coef2_3 = coef2_1
-
-              rmemory_potential_acoustic(i,j,k,ispec_CPML,1)=coef0_1 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) &
-                    + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * coef1_1 &
-                    + potential_acoustic(iglob) * coef2_1
-              rmemory_potential_acoustic(i,j,k,ispec_CPML,2)=coef0_2 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2) &
-                    + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * it*deltat * coef1_2 &
-                    + potential_acoustic(iglob) * it*deltat * coef2_2
-              rmemory_potential_acoustic(i,j,k,ispec_CPML,3)=coef0_3 * rmemory_potential_acoustic(i,j,k,ispec_CPML,3) &
-                    + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * (it*deltat)**2 * coef1_3 &
-                    + potential_acoustic(iglob) * (it*deltat)**2 * coef2_3
-
-              !---------------------- A0, A1, A2, A3, A4 and A5 --------------------------
-              A0 = k_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML)
-              A1 = d_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) + &
-                   d_store_y(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) + &
-                   d_store_z(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML)
-              A2 = k_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) + &
-                   k_store_y(i,j,k,ispec_CPML) * d_store_x(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) + &
-                   k_store_z(i,j,k,ispec_CPML) * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) - &
-                   d_store_x(i,j,k,ispec_CPML) * alpha_store(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) * &
-                   k_store_z(i,j,k,ispec_CPML) - d_store_y(i,j,k,ispec_CPML) * alpha_store(i,j,k,ispec_CPML) * &
-                   k_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) - d_store_z(i,j,k,ispec_CPML) * &
-                   alpha_store(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML)
-              temp_A3 = d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) - &
-                   2.0 * alpha_store(i,j,k,ispec_CPML) * ( &
-                   d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) + &
-                   d_store_x(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) + &
-                   d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) &
-                   ) + alpha_store(i,j,k,ispec_CPML)**2 * ( &
-                   d_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) + &
-                   d_store_y(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) + &
-                   d_store_z(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) &
-                   )
-!             temp_A4 = -2.0 * alpha_store(i,j,k,ispec_CPML) * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) * &
-!                  d_store_z(i,j,k,ispec_CPML) + alpha_store(i,j,k,ispec_CPML)**2 * ( &
-!                  d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) + &
-!                  d_store_x(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) + &
-!                  d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) &
-!                  )
-!             temp_A5 = 0.5 * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
-!             A3 = temp_A3 + it*deltat*temp_A4 + (it*deltat)**2*temp_A5
-!             A4 = -temp_A4 -2.0*it*deltat*temp_A5
-!             A5 = temp_A5
-
-!!! the full experssion of A3,A4,A5 are given by above equation, here we use reduced
-!!! exprssion of A3,A4,A5 in order to stabilized the code.
-
-              A3 = temp_A3
-              A4 = 0.0
-              A5 = 0.0
-
-           endif
-
-           potential_dot_dot_acoustic_CPML(i,j,k) =  wgllcube * kappal_inv *jacobianl * &
-                 ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + &
-                   A3 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1)+ &
-                   A4 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2)+ &
-                   A5 * rmemory_potential_acoustic(i,j,k,ispec_CPML,3)  &
+           potential_dot_dot_acoustic_CPML(i,j,k) =  wgllcube * kappal_inv * jacobianl * &
+                 ( A_1 * potential_dot_acoustic(iglob) + A_2 * potential_acoustic(iglob) + &
+                   A_3 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1)+ &
+                   A_4 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2)+ &
+                   A_5 * rmemory_potential_acoustic(i,j,k,ispec_CPML,3)  &
                  )
         enddo
      enddo
@@ -944,3 +436,464 @@ subroutine read_potential_on_pml_interface(b_potential_dot_dot_acoustic,b_potent
   enddo
 
 end subroutine read_potential_on_pml_interface
+!
+!=====================================================================
+!
+subroutine l_parameter_computation( &
+               time, deltat, &
+               kappa_x, beta_x, alpha_x, &
+               kappa_y, beta_y, alpha_y, &
+               kappa_z, beta_z, alpha_z, &
+               CPML_region_local, &
+               A_0, A_1, A_2, A_3, A_4, A_5, &
+               coef0_x, coef1_x, coef2_x, &
+               coef0_y, coef1_y, coef2_y, &
+               coef0_z, coef1_z, coef2_z, &
+               singularity_type_4, singularity_type_5, &
+               FIRST_ORDER_CONVOLUTION )
+
+  use constants, only: CUSTOM_REAL, CPML_XYZ, &
+                       CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
+                       CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY
+
+  implicit none
+
+  real(kind=CUSTOM_REAL), intent(in) :: time,deltat
+  real(kind=CUSTOM_REAL), intent(in) :: kappa_x,beta_x,alpha_x, &
+                                        kappa_y,beta_y,alpha_y, &
+                                        kappa_z,beta_z,alpha_z
+  integer, intent(in) :: CPML_region_local
+  logical, intent(in) :: FIRST_ORDER_CONVOLUTION
+
+  real(kind=CUSTOM_REAL), intent(out) :: A_0, A_1, A_2, A_3, A_4, A_5
+  real(kind=CUSTOM_REAL), intent(out) :: coef0_x, coef1_x, coef2_x, &
+                                         coef0_y, coef1_y, coef2_y, &
+                                         coef0_z, coef1_z, coef2_z
+  integer, intent(out) :: singularity_type_4, singularity_type_5
+
+  !local variable
+  real(kind=CUSTOM_REAL) :: bar_A_0, bar_A_1, bar_A_2, bar_A_3, bar_A_4, bar_A_5
+  real(kind=CUSTOM_REAL) :: bb, alpha_0, beta_xyz_1, beta_xyz_2, beta_xyz_3
+
+  beta_xyz_1 = beta_x + beta_y + beta_z
+  beta_xyz_2 = beta_x * beta_y + beta_x * beta_z + beta_y * beta_z
+  beta_xyz_3 = beta_x * beta_y * beta_z
+
+  if ( CPML_region_local == CPML_XYZ ) then
+
+     bar_A_0 = kappa_x * kappa_y * kappa_z
+     bar_A_1 = bar_A_0 * (beta_x + beta_y + beta_z - alpha_x - alpha_y - alpha_z)
+     bar_A_2 = bar_A_0 * (beta_x - alpha_x) * (beta_y - alpha_y - alpha_x) &
+             + bar_A_0 * (beta_y - alpha_y) * (beta_z - alpha_z - alpha_y) &
+             + bar_A_0 * (beta_z - alpha_z) * (beta_x - alpha_x - alpha_z)
+
+     A_0 = bar_A_0
+     A_1 = bar_A_1
+     A_2 = bar_A_2
+
+     if ( &
+          abs( alpha_x - alpha_y ) >= 1.e-5_CUSTOM_REAL .AND. &
+          abs( alpha_x - alpha_z ) >= 1.e-5_CUSTOM_REAL .AND. &
+          abs( alpha_y - alpha_z ) >= 1.e-5_CUSTOM_REAL  &
+     ) then
+
+       bar_A_3 = bar_A_0 * alpha_x**2 &
+               * (beta_x - alpha_x) * (beta_y - alpha_x) * (beta_z - alpha_x) &
+               / (alpha_y - alpha_x) / (alpha_z - alpha_x)
+       bar_A_4 = bar_A_0 * alpha_y**2 &
+               * (beta_x - alpha_y) * (beta_y - alpha_y) * (beta_z - alpha_y) &
+               / (alpha_x - alpha_y) / (alpha_z - alpha_y)
+       bar_A_5 = bar_A_0 * alpha_z**2 &
+               * (beta_x - alpha_z) * (beta_y - alpha_z) * (beta_z - alpha_z) &
+               / (alpha_y - alpha_z) / (alpha_x - alpha_z)
+
+       A_3 = bar_A_3
+       A_4 = bar_A_4
+       A_5 = bar_A_5
+
+       singularity_type_4 = 0  ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
+       singularity_type_5 = 0  ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
+
+     else if ( &
+          abs( alpha_x - alpha_y ) < 1.e-5_CUSTOM_REAL .AND. &
+          abs( alpha_x - alpha_z ) >= 1.e-5_CUSTOM_REAL .AND. &
+          abs( alpha_y - alpha_z ) >= 1.e-5_CUSTOM_REAL  &
+     ) then
+
+       alpha_0 = alpha_x
+       bar_A_3 = bar_A_0 * alpha_0 / (alpha_z - alpha_0)**2 * ( &
+               - alpha_0**3 * (4._CUSTOM_REAL * alpha_0 - 5._CUSTOM_REAL * alpha_z) &
+               + alpha_0**2 * (3._CUSTOM_REAL * alpha_0 - 4._CUSTOM_REAL * alpha_z) * beta_xyz_1 &
+               - alpha_0 * (2._CUSTOM_REAL * alpha_0 - 3._CUSTOM_REAL * alpha_z) * beta_xyz_2 &
+               + (alpha_0 - 2._CUSTOM_REAL * alpha_z) * beta_xyz_3 )
+       bar_A_4 = bar_A_0 * alpha_0**2 &
+               * (beta_x - alpha_0) * (beta_y - alpha_0) * (beta_z - alpha_0) &
+               / (alpha_z - alpha_0)
+       bar_A_5 = bar_A_0 * alpha_z**2 &
+               * (beta_x - alpha_z) * (beta_y - alpha_z) * (beta_z - alpha_z) &
+               / (alpha_0 - alpha_z) / (alpha_0 - alpha_z)
+
+       A_3 = bar_A_3 + time * bar_A_4
+       A_4 = - bar_A_4
+       A_5 = bar_A_5
+
+       singularity_type_4 = 1  ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
+       singularity_type_5 = 0  ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
+
+     else if ( &
+          abs( alpha_x - alpha_y ) >= 1.e-5_CUSTOM_REAL .AND. &
+          abs( alpha_x - alpha_z ) < 1.e-5_CUSTOM_REAL .AND. &
+          abs( alpha_y - alpha_z ) >= 1.e-5_CUSTOM_REAL  &
+     ) then
+
+       alpha_0 = alpha_x
+       bar_A_3 = bar_A_0 * alpha_0 / (alpha_y - alpha_0)**2 * ( &
+               - alpha_0**3 * (4._CUSTOM_REAL * alpha_0 - 5._CUSTOM_REAL * alpha_y) &
+               + alpha_0**2 * (3._CUSTOM_REAL * alpha_0 - 4._CUSTOM_REAL * alpha_y) * beta_xyz_1 &
+               - alpha_0 * (2._CUSTOM_REAL * alpha_0 - 3._CUSTOM_REAL * alpha_y) * beta_xyz_2 &
+               + (alpha_0 - 2._CUSTOM_REAL * alpha_y) * beta_xyz_3 )
+       bar_A_4 = bar_A_0 * alpha_y**2 &
+               * (beta_x - alpha_y) * (beta_y - alpha_y) * (beta_z - alpha_y) &
+               / (alpha_0 - alpha_y) / (alpha_0 - alpha_y)
+       bar_A_5 = bar_A_0 * alpha_0**2 &
+               * (beta_x - alpha_0) * (beta_y - alpha_0) * (beta_z - alpha_0) &
+               / (alpha_y - alpha_0)
+
+       A_3 = bar_A_3 + time * bar_A_5
+       A_4 = bar_A_4
+       A_5 = - bar_A_5
+
+       singularity_type_4 = 0
+       singularity_type_5 = 1
+
+     else if ( &
+          abs( alpha_x - alpha_y ) >= 1.e-5_CUSTOM_REAL .AND. &
+          abs( alpha_x - alpha_z ) >= 1.e-5_CUSTOM_REAL .AND. &
+          abs( alpha_y - alpha_z ) < 1.e-5_CUSTOM_REAL  &
+     ) then
+
+       alpha_0 = alpha_y
+       bar_A_3 = bar_A_0 * alpha_x**2 &
+               * (beta_x - alpha_x) * (beta_y - alpha_x) * (beta_z - alpha_x) &
+               / (alpha_0 - alpha_x) / (alpha_0 - alpha_x)
+       bar_A_4 = bar_A_0 * alpha_0 / (alpha_x - alpha_0)**2 * ( &
+               - alpha_0**3 * (4._CUSTOM_REAL * alpha_0 - 5._CUSTOM_REAL * alpha_x) &
+               + alpha_0**2 * (3._CUSTOM_REAL * alpha_0 - 4._CUSTOM_REAL * alpha_x) * beta_xyz_1 &
+               - alpha_0 * (2._CUSTOM_REAL * alpha_0 - 3._CUSTOM_REAL * alpha_x ) * beta_xyz_2 &
+               + (alpha_0 - 2._CUSTOM_REAL * alpha_x) * beta_xyz_3 )
+       bar_A_5 = bar_A_0 * alpha_0**2 &
+               * (beta_x - alpha_0) * (beta_y - alpha_0) * (beta_z - alpha_0) &
+               / (alpha_x - alpha_0)
+
+       A_3 = bar_A_3
+       A_4 = bar_A_4 + time * bar_A_5
+       A_5 = - bar_A_5
+
+       singularity_type_4 = 0
+       singularity_type_5 = 1
+
+     else if ( &
+          abs( alpha_x - alpha_y ) < 1.e-5_CUSTOM_REAL .AND. &
+          abs( alpha_x - alpha_z ) < 1.e-5_CUSTOM_REAL .AND. &
+          abs( alpha_y - alpha_z ) < 1.e-5_CUSTOM_REAL  &
+     ) then
+
+       alpha_0 = alpha_x
+       bar_A_3 = bar_A_0 * ( &
+               - 10._CUSTOM_REAL * alpha_0**3 &
+               +  6._CUSTOM_REAL * alpha_0**2 * beta_xyz_1 &
+               -  3._CUSTOM_REAL * alpha_0 * beta_xyz_2 &
+               + beta_xyz_3 )
+       bar_A_4 = bar_A_0 * alpha_0 * ( &
+                 5._CUSTOM_REAL * alpha_0**3 &
+               - 4._CUSTOM_REAL * alpha_0**2 * beta_xyz_1 &
+               + 3._CUSTOM_REAL * alpha_0 * beta_xyz_2 &
+               - 2._CUSTOM_REAL * beta_xyz_3 )
+       bar_A_5 = bar_A_0 * alpha_0**2 / 2._CUSTOM_REAL &
+               * (beta_x - alpha_0) * (beta_y - alpha_0) * (beta_z - alpha_0)
+
+       A_3 = bar_A_3 + time * bar_A_4 + time**2 * bar_A_5
+       A_4 = - bar_A_4 - 2._CUSTOM_REAL * time * bar_A_5
+       A_5 = bar_A_5
+
+       singularity_type_4 = 1
+       singularity_type_5 = 2
+     end if
+
+  else if ( CPML_region_local == CPML_XY_ONLY ) then
+
+    bar_A_0 = kappa_x * kappa_y
+    bar_A_1 = bar_A_0 * (beta_x + beta_y - alpha_x - alpha_y)
+    bar_A_2 = bar_A_0 * (beta_x - alpha_x) * (beta_y - alpha_y - alpha_x) &
+            - bar_A_0 * (beta_y - alpha_y) * alpha_y
+
+    A_0 = bar_A_0
+    A_1 = bar_A_1
+    A_2 = bar_A_2
+
+    beta_xyz_1 = beta_x + beta_y
+    beta_xyz_2 = beta_x * beta_y
+
+    if ( abs( alpha_x - alpha_y ) >= 1.e-5_CUSTOM_REAL ) then
+
+       bar_A_3 = bar_A_0 * alpha_x**2 &
+               * (beta_x - alpha_x) * (beta_y - alpha_x) &
+               / (alpha_y - alpha_x)
+       bar_A_4 = bar_A_0 * alpha_y**2 &
+               * (beta_x - alpha_y) * (beta_y - alpha_y)  &
+               / (alpha_x - alpha_y)
+       bar_A_5 = 0._CUSTOM_REAL
+
+       A_3 = bar_A_3
+       A_4 = bar_A_4
+       A_5 = bar_A_5
+
+       singularity_type_4 = 0
+       singularity_type_5 = 0
+
+    else if ( abs( alpha_x - alpha_y ) < 1.e-5_CUSTOM_REAL ) then
+
+       alpha_0 = alpha_x
+       bar_A_3 = bar_A_0 * ( &
+               - 4._CUSTOM_REAL * alpha_0**3  &
+               + 3._CUSTOM_REAL * alpha_0**2 * beta_xyz_1 &
+               - 2._CUSTOM_REAL * alpha_0 * beta_xyz_2 )
+
+       bar_A_4 = bar_A_0 * alpha_0**2 * (beta_x - alpha_0) * (beta_y - alpha_0)
+       bar_A_5 = 0._CUSTOM_REAL
+
+       A_3 = bar_A_3 + time * bar_A_4
+       A_4 = -bar_A_4
+       A_5 = bar_A_5
+
+       singularity_type_4 = 1
+       singularity_type_5 = 0
+
+    end if
+
+  else if ( CPML_region_local == CPML_XZ_ONLY ) then
+
+    bar_A_0 = kappa_x * kappa_z
+    bar_A_1 = bar_A_0 * (beta_x + beta_z - alpha_x - alpha_z)
+    bar_A_2 = bar_A_0 * (beta_x - alpha_x) * (beta_z - alpha_z - alpha_x) &
+            - bar_A_0 * (beta_z - alpha_z) * alpha_z
+
+    A_0 = bar_A_0
+    A_1 = bar_A_1
+    A_2 = bar_A_2
+
+    beta_xyz_1 = beta_x + beta_z
+    beta_xyz_2 = beta_x * beta_z
+
+    if ( abs( alpha_x - alpha_z ) >= 1.e-5_CUSTOM_REAL ) then
+
+       bar_A_3 = bar_A_0 * alpha_x**2 &
+               * (beta_x - alpha_x) * (beta_z - alpha_x) &
+               / (alpha_z - alpha_x)
+       bar_A_4 = 0._CUSTOM_REAL
+       bar_A_5 = bar_A_0 * alpha_z**2 &
+               * (beta_x - alpha_z) * (beta_z - alpha_z)  &
+               / (alpha_x - alpha_z)
+
+       A_3 = bar_A_3
+       A_4 = bar_A_4
+       A_5 = bar_A_5
+
+       singularity_type_4 = 0
+       singularity_type_5 = 0
+
+    else if ( abs( alpha_x - alpha_z ) < 1.e-5_CUSTOM_REAL ) then
+
+       alpha_0 = alpha_x
+       bar_A_3 = bar_A_0 * ( &
+               - 4._CUSTOM_REAL * alpha_0**3  &
+               + 3._CUSTOM_REAL * alpha_0**2 * beta_xyz_1 &
+               - 2._CUSTOM_REAL * alpha_0 * beta_xyz_2 )
+       bar_A_4 = 0._CUSTOM_REAL
+       bar_A_5 = bar_A_0 * alpha_0**2 * (beta_x - alpha_0) * (beta_z - alpha_0)
+
+       A_3 = bar_A_3 + time * bar_A_5
+       A_4 = bar_A_4
+       A_5 = -bar_A_5
+
+       singularity_type_4 = 0
+       singularity_type_5 = 1
+
+    end if
+
+  else if ( CPML_region_local == CPML_YZ_ONLY ) then
+
+    bar_A_0 = kappa_y * kappa_z
+    bar_A_1 = bar_A_0 * (beta_y + beta_z - alpha_y - alpha_z)
+    bar_A_2 = bar_A_0 * (beta_y - alpha_y) * (beta_z - alpha_z - alpha_y) &
+            - bar_A_0 * (beta_z - alpha_z) * alpha_z
+
+    A_0 = bar_A_0
+    A_1 = bar_A_1
+    A_2 = bar_A_2
+
+    beta_xyz_1 = beta_y + beta_z
+    beta_xyz_2 = beta_y * beta_z
+
+    if ( abs( alpha_y - alpha_z ) >= 1.e-5_CUSTOM_REAL ) then
+
+       bar_A_3 = 0._CUSTOM_REAL
+       bar_A_4 = bar_A_0 * alpha_y**2 &
+               * (beta_y - alpha_y) * (beta_z - alpha_y) &
+               / (alpha_z - alpha_y)
+       bar_A_5 = bar_A_0 * alpha_z**2 &
+               * (beta_y - alpha_z) * (beta_z - alpha_z)  &
+               / (alpha_y - alpha_z)
+
+       A_3 = bar_A_3
+       A_4 = bar_A_4
+       A_5 = bar_A_5
+
+       singularity_type_4 = 0
+       singularity_type_5 = 0
+
+    else if ( abs( alpha_y - alpha_z ) < 1.e-5_CUSTOM_REAL ) then
+
+       alpha_0 = alpha_y
+       bar_A_3 = 0._CUSTOM_REAL
+       bar_A_4 = bar_A_0 * ( &
+               - 4._CUSTOM_REAL * alpha_0**3  &
+               + 3._CUSTOM_REAL * alpha_0**2 * beta_xyz_1 &
+               - 2._CUSTOM_REAL * alpha_0 * beta_xyz_2 )
+       bar_A_5 = bar_A_0 * alpha_0**2 * (beta_y - alpha_0) * (beta_z - alpha_0)
+
+       A_3 = bar_A_3
+       A_4 = bar_A_4 + time * bar_A_5
+       A_5 = -bar_A_5
+
+       singularity_type_4 = 0
+       singularity_type_5 = 1
+
+    end if
+
+  else if ( CPML_region_local == CPML_X_ONLY ) then
+
+     bar_A_0 = kappa_x
+     bar_A_1 = bar_A_0 * (beta_x - alpha_x)
+     bar_A_2 = - bar_A_0 * alpha_x * (beta_x - alpha_x)
+
+     A_0 = bar_A_0
+     A_1 = bar_A_1
+     A_2 = bar_A_2
+
+     bar_A_3 = bar_A_0 * alpha_x**2 * (beta_x - alpha_x)
+     bar_A_4 = 0._CUSTOM_REAL
+     bar_A_5 = 0._CUSTOM_REAL
+
+     A_3 = bar_A_3
+     A_4 = bar_A_4
+     A_5 = bar_A_5
+
+     singularity_type_4 = 0
+     singularity_type_5 = 0
+
+  else if ( CPML_region_local == CPML_Y_ONLY ) then
+
+     bar_A_0 = kappa_y
+     bar_A_1 = bar_A_0 * (beta_y - alpha_y)
+     bar_A_2 = - bar_A_0 * alpha_y * (beta_y - alpha_y)
+
+     A_0 = bar_A_0
+     A_1 = bar_A_1
+     A_2 = bar_A_2
+
+     bar_A_3 = 0._CUSTOM_REAL
+     bar_A_4 = bar_A_0 * alpha_y**2 * (beta_y - alpha_y)
+     bar_A_5 = 0._CUSTOM_REAL
+
+     A_3 = bar_A_3
+     A_4 = bar_A_4
+     A_5 = bar_A_5
+
+     singularity_type_4 = 0
+     singularity_type_5 = 0
+
+  else if ( CPML_region_local == CPML_Z_ONLY ) then
+
+     bar_A_0 = kappa_z
+     bar_A_1 = bar_A_0 * (beta_z - alpha_z)
+     bar_A_2 = - bar_A_0 * alpha_z * (beta_z - alpha_z)
+
+     A_0 = bar_A_0
+     A_1 = bar_A_1
+     A_2 = bar_A_2
+
+     bar_A_3 = 0._CUSTOM_REAL
+     bar_A_4 = 0._CUSTOM_REAL
+     bar_A_5 = bar_A_0 * alpha_z**2 * (beta_z - alpha_z)
+
+     A_3 = bar_A_3
+     A_4 = bar_A_4
+     A_5 = bar_A_5
+
+     singularity_type_4 = 0
+     singularity_type_5 = 0
+
+  end if
+
+  bb = alpha_x
+  coef0_x = exp(-bb * deltat)
+  if ( abs(bb) >= 1.e-5_CUSTOM_REAL ) then
+     if ( FIRST_ORDER_CONVOLUTION ) then
+        coef1_x = (1._CUSTOM_REAL - exp(-bb * deltat) ) / bb
+        coef2_x = 0._CUSTOM_REAL
+     else
+        coef1_x = (1._CUSTOM_REAL - exp(-bb * deltat/2._CUSTOM_REAL) ) / bb
+        coef2_x = (1._CUSTOM_REAL - exp(-bb * deltat/2._CUSTOM_REAL) ) * exp(-bb * deltat/2._CUSTOM_REAL) / bb
+     end if
+  else
+     if ( FIRST_ORDER_CONVOLUTION ) then
+        coef1_x = deltat
+        coef2_x = 0._CUSTOM_REAL
+     else
+        coef1_x = deltat/2._CUSTOM_REAL
+        coef2_x = deltat/2._CUSTOM_REAL
+     end if
+  endif
+
+  bb = alpha_y
+  coef0_y = exp(-bb * deltat)
+  if ( abs(bb) >= 1.e-5_CUSTOM_REAL ) then
+     if ( FIRST_ORDER_CONVOLUTION ) then
+        coef1_y = (1._CUSTOM_REAL - exp(-bb * deltat) ) / bb
+        coef2_y = 0._CUSTOM_REAL
+     else
+        coef1_y = (1._CUSTOM_REAL - exp(-bb * deltat/2._CUSTOM_REAL) ) / bb
+        coef2_y = (1._CUSTOM_REAL - exp(-bb * deltat/2._CUSTOM_REAL) ) * exp(-bb * deltat/2._CUSTOM_REAL) / bb
+     end if
+  else
+     if ( FIRST_ORDER_CONVOLUTION ) then
+        coef1_y = deltat
+        coef2_y = 0._CUSTOM_REAL
+     else
+        coef1_y = deltat/2._CUSTOM_REAL
+        coef2_y = deltat/2._CUSTOM_REAL
+     end if
+  endif
+
+  bb = alpha_z
+  coef0_z = exp(-bb * deltat)
+  if ( abs(bb) >= 1.e-5_CUSTOM_REAL ) then
+     if ( FIRST_ORDER_CONVOLUTION ) then
+        coef1_z = (1._CUSTOM_REAL - exp(-bb * deltat) ) / bb
+        coef2_z = 0._CUSTOM_REAL
+     else
+        coef1_z = (1._CUSTOM_REAL - exp(-bb * deltat/2._CUSTOM_REAL) ) / bb
+        coef2_z = (1._CUSTOM_REAL - exp(-bb * deltat/2._CUSTOM_REAL) ) * exp(-bb * deltat/2._CUSTOM_REAL) / bb
+     end if
+  else
+     if ( FIRST_ORDER_CONVOLUTION ) then
+        coef1_z = deltat
+        coef2_z = 0._CUSTOM_REAL
+     else
+        coef1_z = deltat/2._CUSTOM_REAL
+        coef2_z = deltat/2._CUSTOM_REAL
+     end if
+  endif
+
+end subroutine l_parameter_computation

@@ -255,17 +255,10 @@
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,&
                         my_neighbours_ext_mesh)
 
-    call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmass_acoustic_interface, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,&
-                        my_neighbours_ext_mesh)
-
     ! fill mass matrix with fictitious non-zero values to make sure it can be inverted globally
     where(rmass_acoustic <= 0._CUSTOM_REAL) rmass_acoustic = 1._CUSTOM_REAL
     rmass_acoustic(:) = 1._CUSTOM_REAL / rmass_acoustic(:)
 
-    where(rmass_acoustic_interface <= 0._CUSTOM_REAL) rmass_acoustic_interface = 1._CUSTOM_REAL
-    rmass_acoustic_interface(:) = 1._CUSTOM_REAL / rmass_acoustic_interface(:)
   endif
 
   if(ELASTIC_SIMULATION) then
@@ -304,17 +297,6 @@
     rmassx(:) = 1._CUSTOM_REAL / rmassx(:)
     rmassy(:) = 1._CUSTOM_REAL / rmassy(:)
     rmassz(:) = 1._CUSTOM_REAL / rmassz(:)
-
-    if(PML_CONDITIONS)then
-      if(ACOUSTIC_SIMULATION)then
-        call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmass_elastic_interface, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbours_ext_mesh)
-        where(rmass_elastic_interface <= 0._CUSTOM_REAL) rmass_elastic_interface = 1._CUSTOM_REAL
-        rmass_elastic_interface(:) = 1._CUSTOM_REAL / rmass_elastic_interface(:)
-      endif
-    endif
 
     ! ocean load
     if(APPROXIMATE_OCEAN_LOAD ) then

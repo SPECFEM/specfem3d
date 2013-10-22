@@ -344,7 +344,6 @@
 
   if( ACOUSTIC_SIMULATION) then
     deallocate(rmass_acoustic)
-    deallocate(rmass_acoustic_interface)
   endif
 
   if( ELASTIC_SIMULATION ) then
@@ -363,17 +362,6 @@
        deallocate(rmassz_acoustic)
      endif
   endif
-
-  if(PML_CONDITIONS)then
-     if( ELASTIC_SIMULATION ) then
-       if(PML_CONDITIONS)then
-         if(ACOUSTIC_SIMULATION)then
-            write(IOUT)rmass_elastic_interface
-         endif
-       endif
-     endif
-  endif
-
 
 end subroutine create_regions_mesh
 

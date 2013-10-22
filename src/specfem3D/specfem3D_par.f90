@@ -320,10 +320,6 @@ module specfem_par_elastic
 ! mass matrix
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass
 
-! PML on fluid-solid interface
-  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: accel_interface
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_elastic_interface
-
 ! Stacey
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmassx,rmassy,rmassz
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rho_vp,rho_vs
@@ -404,12 +400,11 @@ module specfem_par_acoustic
 
 ! potential
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: potential_acoustic,potential_dot_acoustic, &
-                                    potential_dot_dot_acoustic,potential_dot_dot_acoustic_interface
+                                    potential_dot_dot_acoustic
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: potential_acoustic_adj_coupling
 
 ! mass matrix
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_acoustic
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_acoustic_interface
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmassz_acoustic
 
 ! acoustic-elastic coupling surface

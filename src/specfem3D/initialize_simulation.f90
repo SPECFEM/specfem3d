@@ -57,11 +57,13 @@
                              ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, &
                              ADIOS_FOR_KERNELS)
 
-!! DK DK added this for now (March 2013) because CPML is not yet implemented for USE_DEVILLE_PRODUCTS;
+!! DK DK added this for now (March 2013) because CPML is not yet implemented for fluid-solid coupling;
 !! DK DK we will soon add it (in a month or so)
-  if(PML_CONDITIONS .and. USE_DEVILLE_PRODUCTS) &
-    stop 'CPML not implemented for USE_DEVILLE_PRODUCTS for now, set USE_DEVILLE_PRODUCTS to false in constants.h&
-       & and recompile; we will add support for this soon; exiting for now...'
+  if(PML_CONDITIONS .and. ELASTIC_SIMULATION .and. ACOUSTIC_SIMULATION) &
+    stop 'It is still under test for this case'
+  if(PML_CONDITIONS .and. (SAVE_FORWARD .or. SIMULATION_TYPE==3)) &
+    stop 'It is still under test for adjoint simulation'
+
 
   ! GPU_MODE is in par_file
   call read_gpu_mode(GPU_MODE,GRAVITY)
