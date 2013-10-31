@@ -172,6 +172,12 @@ def readcfg(filename=None,importmenu=False,mpiflag=False):
     dcfg['smoothing']=False
     dcfg['ntripl']=0
     
+    if float(dcfg['version_cubit']) >= 13.1:
+        dcfg['volumecreation_method']=None
+    else:
+        dcfg['volumecreation_method']='loft'
+    
+    
     
     dcfg['nsurf'] = None
     if cfgname:

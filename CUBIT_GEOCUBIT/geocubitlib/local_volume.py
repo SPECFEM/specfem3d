@@ -217,7 +217,7 @@ def read_grid(filename=None):
         grdfilename=cfg.filename[inz-bottomsurface]
 
         if cfg.irregulargridded_surf:
-            coordx,coordy,elev_1=process_irregular_surfacefiles(iproc,nx,ny,cfg.xmin,cfg.xmax,cfg.ymin,cfg.ymax,xstep,ystep,grdfile)
+            coordx,coordy,elev_1=process_irregular_surfacefiles(iproc,nx,ny,cfg.xmin,cfg.xmax,cfg.ymin,cfg.ymax,xstep,ystep,grdfilename)
         else:
             coordx,coordy,elev_1=process_surfacefiles(iproc,nx,ny,nstep,grdfilename,cfg.unit,cfg.lat_orientation)
         elev[:,:,inz]=elev_1[:,:]

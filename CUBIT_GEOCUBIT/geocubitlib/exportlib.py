@@ -559,13 +559,22 @@ def collect(cpuxmin=0,cpuxmax=1,cpuymin=0,cpuymax=1,cpux=1,cpuy=1,cubfiles=False
         block=1001
         add_sea_layer(block=block)
 
+    outdir2='/'.join(x for x in outfilename.split('/')[:-1])
+    if outdir2 == '': 
+        outdir2=outdir+'/'
+    else:
+        outdir2=outdir+'/'+outdir2+'/'    
+    
+    import os
+    try:
+        os.makedirs(outdir2)
+    except OSError:
+        pass
     
     cubit.cmd('compress all')
-    command="export mesh '"+outfilename+".e' block all overwrite xml '"+outfilename+".xml'"
+    command="export mesh '"+outdir2+outfilename+".e' block all overwrite xml '"+outdir2+outfilename+".xml'"
     cubit.cmd(command)
-    outdir2='/'.join(x for x in outfilename.split('/')[:-1])
-    if outdir2 == '': outdir2='.'
-    f=open(outdir2+'/'+'blocks.dat','w')
+    f=open(outdir2+'blocks.dat','w')
     blocks=cubit.get_block_id_list()
     #
     for block in blocks:
@@ -583,7 +592,7 @@ def collect(cpuxmin=0,cpuxmax=1,cpuymin=0,cpuymax=1,cpux=1,cpuy=1,cubfiles=False
     cubit.silent_cmd(cmd)
     cubit.cmd('set info echo journ on')
     #
-    command = "save as '"+outfilename+".cub' overwrite"
+    command = "save as '"+outdir2+outfilename+".cub' overwrite"
     cubit.cmd(command)
     #
     print 'end meshing'
@@ -592,7 +601,7 @@ def collect(cpuxmin=0,cpuxmax=1,cpuymin=0,cpuymax=1,cpux=1,cpuy=1,cubfiles=False
     if qlog:
         print '\n\nQUALITY CHECK.... ***************\n\n'
         import quality_log
-        tq=open(outfilename+'.quality','w')
+        tq=open(outdir2+outfilename+'.quality','w')
         max_skewness,min_length=quality_log.quality_log(tq)
     #
     #

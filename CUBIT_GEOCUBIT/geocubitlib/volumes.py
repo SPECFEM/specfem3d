@@ -44,13 +44,53 @@ def volumes(filename=None):
     elif cfg.volume_type == 'layercake_volume_fromacis_mpiregularmap':
             layercake_volume_fromacis_mpiregularmap(filename=filename)
     elif cfg.volume_type == 'verticalsandwich_volume_ascii_regulargrid_mpiregularmap':
-            verticalsandwich_volume_ascii_regulargrid_mpiregularmap(filename=None)
+            layercake_volume_ascii_regulargrid_mpiregularmap(filename=filename,verticalsandwich=True)
+    
+def ordering_surfaces(list_surfaces):
+    list_z=[]
+    for s in list_surfaces:
+        _,_,z=cubit.get_center_point("surface",s)
+        list_z.append(z)
+    ord_list_surfaces=[s for s,z in sorted(zip(list_surfaces,list_z),key=lambda x: (x[1]))]
+    return ord_list_surfaces
+
+
+def onlyvolumes():
+    list_surfaces=cubit.parse_cubit_list("surface","all")
+    ord_list_surfaces=ordering_surfaces(list_surfaces)
+    for s1,s2 in zip(ord_list_surfaces[:-1],ord_list_surfaces[1:]):
+        create_volume(s1,s2,method=None)
+    cubitcommand= 'del surface all'
+    cubit.cmd(cubitcommand)
+    list_vol=cubit.parse_cubit_list("volume","all")
+    if len(list_vol) > 1:     
+        cubitcommand= 'imprint volume all'
+        cubit.cmd(cubitcommand)
+        cubitcommand= 'merge all'
+        cubit.cmd(cubitcommand)
+
+
+def surfaces(filename=None):
+    """create the volumes"""
+    import start as start
+    print'volume'
+    cfg                     = start.start_cfg(filename=filename)
+    print cfg
+    if cfg.volume_type == 'layercake_volume_ascii_regulargrid_regularmap':
+            layercake_volume_ascii_regulargrid_mpiregularmap(filename=filename,onlysurface=True)
+    elif cfg.volume_type == 'layercake_volume_fromacis_mpiregularmap':
+            layercake_volume_fromacis_mpiregularmap(filename=filename,onlysurface=True)
+    elif cfg.volume_type == 'verticalsandwich_volume_ascii_regulargrid_mpiregularmap':
+            layercake_volume_ascii_regulargrid_mpiregularmap(filename=filename,verticalsandwich=True,onlysurface=True)
+    
+    
+    
+    
+    
     
 
 
-
-
-def layercake_volume_ascii_regulargrid_mpiregularmap(filename=None,verticalsandwich=False):
+def layercake_volume_ascii_regulargrid_mpiregularmap(filename=None,verticalsandwich=False,onlysurface=False):
     import sys
     import start as start
     #
@@ -334,22 +374,19 @@ def layercake_volume_ascii_regulargrid_mpiregularmap(filename=None,verticalsandw
     #
     #
     #!create volume
-    if not cfg.debugsurface:
-        if  cfg.osystem == 'macosx':
-            pass
-        elif cfg.osystem == 'linux':
-            if cfg.nz == 1:
-                nsurface=2
-            else:
-                nsurface=cfg.nz
-            for inz in range(1,nsurface):
-                ner=cubit.get_error_count()
-                cubitcommand= 'create volume loft surface '+ str( inz+1 )+' '+str( inz )
-                cubit.cmd(cubitcommand)
-                ner2=cubit.get_error_count()
-                isurf=isurf+6
-        if ner == ner2:
-            cubitcommand= 'del surface 1 to '+ str( cfg.nz )
+    if not onlysurface:
+        if cfg.nz == 1:
+            nsurface=2
+        else:
+            nsurface=cfg.nz
+        for inz in range(1,nsurface):
+            ner=cubit.get_error_count()
+            create_volume(inz,inz+1,method=cfg.volumecreation_method)
+            ner2=cubit.get_error_count()
+        #if ner == ner2 and not cfg.debug_geometry:
+		if ner == ner2:
+            #cubitcommand= 'del surface 1 to '+ str( cfg.nz )
+            cubitcommand= 'del surface all'
             cubit.cmd(cubitcommand)
             list_vol=cubit.parse_cubit_list("volume","all")
             if len(list_vol) > 1:     
@@ -357,7 +394,7 @@ def layercake_volume_ascii_regulargrid_mpiregularmap(filename=None,verticalsandw
                 cubit.cmd(cubitcommand)
                 cubitcommand= 'merge all'
                 cubit.cmd(cubitcommand)
-            ner=cubit.get_error_count()
+            #ner=cubit.get_error_count()
             #cubitcommand= 'composite create curve in vol all'
             #cubit.cmd(cubitcommand)
     savegeometry(iproc,filename=filename)
@@ -491,8 +528,9 @@ def layercake_volume_fromacis_mpiregularmap(filename=None):
     #lofting the volume
     for i,j in zip(list_surf,list_surf[1:]):
         ner=cubit.get_error_count()
-        cubitcommand= 'create volume loft surface '+ str(i)+' '+str(j)
-        cubit.cmd(cubitcommand)
+        create_volume(i,j,method=cfg.volumecreation_method)
+        #cubitcommand= 'create volume loft surface '+ str(i)+' '+str(j)
+        #cubit.cmd(cubitcommand)
         ner2=cubit.get_error_count()
     #
     translate2original(xmin,ymin)
@@ -519,6 +557,53 @@ def layercake_volume_fromacis_mpiregularmap(filename=None):
     #    curvesname=[cfg.outlinebasin_curve,cfg.transition_curve,cfg.faulttrace_curve]
     #    outdir=cfg.working_dir
     #    imprint_topography_with_geological_outline(curvesname,outdir)
+
+
+def hor_distance(c1,c2):
+    p1=cubit.get_center_point("curve", c1)
+    p2=cubit.get_center_point("curve", c2)
+    d=(p1[0]-p2[0])**2+(p1[1]-p2[1])**2
+    return d
+
+
+
+def coupling_curve(lcurve1,lcurve2):
+    """get the couple of curve that we  use to get the skin surface"""
+    import operator
+    couples=[]
+    for c1 in lcurve1:
+        distance=[]
+        for c2 in lcurve2:
+            d=hor_distance(c1,c2)
+            distance.append(d)
+        min_index, min_value = min(enumerate(distance), key=operator.itemgetter(1))
+        couples.append((c1,lcurve2[min_index]))
+    return couples
+
+def create_volume(surf1,surf2,method='loft'):
+    if method == 'loft':
+        cmd='create volume loft surface '+str(surf1)+' '+str(surf2)
+        cubit.cmd(cmd)
+    else:
+        lcurve1=cubit.get_relatives("surface",surf1,"curve")
+        lcurve2=cubit.get_relatives("surface",surf2,"curve")
+        couples=coupling_curve(lcurve1,lcurve2)
+        is_start=cubit.get_last_id('surface')+1
+        for cs in couples:
+            cmd='create surface skin curve '+str(cs[1])+' '+str(cs[0])
+            cubit.cmd(cmd)
+        is_stop=cubit.get_last_id('surface')
+        cmd="create volume surface "+str(surf1)+' '+str(surf2)+' '+str(is_start)+' to '+str(is_stop)+"  heal keep"
+        cubit.cmd(cmd)
+
+
+
+
+
+
+
+
+
 
 
 
