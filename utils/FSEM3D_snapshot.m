@@ -16,8 +16,8 @@
 %			Trup	  rupture time (s)
 %			Tpz	  process zone time, when slip=Dc (s)
 %
-% Jean-Paul Ampuero	ampuero@erdw.ethz.ch modified by 
-% Percy Galvez  percy.galvez@sed.ethz.ch 19/01/2011.
+% Jean-Paul Ampuero	ampuero@erdw.ethz.ch 
+% 19/01/2011: modified by Percy Galvez percy.galvez@sed.ethz.ch 
 %
 % WARNING : Works only for single precision snapshot files.
 
