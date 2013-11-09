@@ -462,9 +462,11 @@ dynamic/kinematic faults:
 
 + fault_solver_dynamic:
       - many hard-coded ad hoc features need to be set instead as user options
+        (e.g. rate-and-state friction)
 
 + rate-and-state friction:
       - make it a user-friendly option (currently a flag in fault_solver)
+      - add documentation
 
 + cubit interface:
       - consolidate python scripts (eliminate redundancy)
