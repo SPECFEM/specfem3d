@@ -8,7 +8,7 @@ It aims to facilitate the meshing process in some common problems in seismic wav
 
 • Mesh of layered volumes with hexahedral.
 
-• Creationofananisotropicmeshsuitableforcaseswheresomealluvialbasin(orslowvelocity zones) are present.
+• Creation of an anisotropic mesh suitable for cases where some alluvial basins (or slow velocity zones) are present.
 
 • It can be used as a serial or parallel process. The parallel meshing capabilities are fun- damental for large geophysical problems (ex. mesh of Southern California using SRTM topography).
 
