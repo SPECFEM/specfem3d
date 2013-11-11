@@ -1,0 +1,3 @@
+[submodule "m4"]
+	path = m4
+	url = https://github.com/geodynamics/autoconf_cig.git
