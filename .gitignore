@@ -1,0 +1,24 @@
+# Configure time
+aclocal.m4
+autom4te.cache
+config.log
+config.status
+config.h
+Makefile
+src/check_mesh_quality_CUBIT_Abaqus/Makefile
+src/decompose_mesh/Makefile
+src/generate_databases/Makefile
+src/meshfem3D/Makefile
+src/shared/constants.h
+src/shared/precision.h
+src/specfem3D/Makefile
+
+# Build time
+bin
+lib
+obj
+src/decompose_mesh/*.mod
+src/generate_databases/*.mod
+src/meshfem3D/*.mod
+src/specfem3D/*.mod
+
