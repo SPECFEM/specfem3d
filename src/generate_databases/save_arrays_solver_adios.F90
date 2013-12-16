@@ -59,7 +59,7 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob,                   &
                                     CPML_regions, is_CPML, nspec_cpml_tot,  &
                                     d_store_x, d_store_y, d_store_z,        &
                                     k_store_x, k_store_y, k_store_z,        &
-                                    alpha_store,                            &
+                               alpha_store_x, alpha_store_y, alpha_store_z, &
                                     nspec2D_xmin, nspec2D_xmax,             &
                                     nspec2D_ymin, nspec2D_ymax,             &
                                     NSPEC2D_BOTTOM, NSPEC2D_TOP,            &
@@ -411,7 +411,13 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob,                   &
                                        local_dim, "", STRINGIFY_VAR(k_store_z))
       call define_adios_global_array1D(group, groupsize, &
                                        local_dim, "",               &
-                                       STRINGIFY_VAR(alpha_store))
+                                       STRINGIFY_VAR(alpha_store_x))
+      call define_adios_global_array1D(group, groupsize, &
+                                       local_dim, "",               &
+                                       STRINGIFY_VAR(alpha_store_y))
+      call define_adios_global_array1D(group, groupsize, &
+                                       local_dim, "",               &
+                                       STRINGIFY_VAR(alpha_store_z))
       ! -----------------------------------------------------------------------
       ! for adjoint tomography
       ! save the array stored the points on interface between PML and interior
@@ -908,7 +914,11 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob,                   &
       call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                        STRINGIFY_VAR(k_store_z))
       call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                       STRINGIFY_VAR(alpha_store))
+                                       STRINGIFY_VAR(alpha_store_x))
+      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
+                                       STRINGIFY_VAR(alpha_store_y))
+      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
+                                       STRINGIFY_VAR(alpha_store_z))
       ! -----------------------------------------------------------------------
       ! for adjoint tomography
       ! save the array stored the points on interface between PML and interior
@@ -1269,7 +1279,12 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob,                   &
      deallocate(k_store_x,stat=ier); if( ier /= 0 ) stop 'error deallocating array d_store_x'
      deallocate(k_store_y,stat=ier); if( ier /= 0 ) stop 'error deallocating array d_store_y'
      deallocate(k_store_z,stat=ier); if( ier /= 0 ) stop 'error deallocating array d_store_z'
-     deallocate(alpha_store,stat=ier); if( ier /= 0 ) stop 'error deallocating array alpha_store'
+     deallocate(alpha_store_x,stat=ier); if( ier /= 0 ) &
+        stop 'error deallocating array alpha_store_x'
+     deallocate(alpha_store_y,stat=ier); if( ier /= 0 ) &
+        stop 'error deallocating array alpha_store_y'
+     deallocate(alpha_store_z,stat=ier); if( ier /= 0 ) &
+        stop 'error deallocating array alpha_store_z'
      if((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3) then
        deallocate(mask_ibool_interior_domain,stat=ier)
        if(ier /= 0) stop 'error deallocating array mask_ibool_interior_domain'
