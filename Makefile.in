@@ -97,6 +97,7 @@ decompose_mesh: xdecompose_mesh
 convolve_source_timefunction: xconvolve_source_timefunction
 create_movie_shakemap_AVS_DX_GMT: xcreate_movie_shakemap_AVS_DX_GMT
 combine_vol_data: xcombine_vol_data
+combine_vol_data_adios: xcombine_vol_data_adios
 combine_surf_data: xcombine_surf_data
 smooth_vol_data: xsmooth_vol_data
 sum_kernels: xsum_kernels
@@ -145,6 +146,9 @@ xcreate_movie_shakemap_AVS_DX_GMT: required
 xcombine_vol_data: required reqspec
 	$(MAKE) -C src/specfem3D xcombine_vol_data
 
+xcombine_vol_data_adios: required reqspec
+	$(MAKE) -C src/specfem3D xcombine_vol_data_adios
+
 xcombine_surf_data: required
 	$(MAKE) -C src/specfem3D xcombine_surf_data
 
@@ -179,6 +183,7 @@ help:
 	@echo "    xconvolve_source_timefunction"
 	@echo "    xcreate_movie_shakemap_AVS_DX_GMT"
 	@echo "    xcombine_vol_data"
+	@echo "    xcombine_vol_data_adios"
 	@echo "    xcombine_surf_data"
 	@echo "    xsmooth_vol_data"
 	@echo "    xsum_kernels"
