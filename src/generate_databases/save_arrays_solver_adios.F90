@@ -1279,12 +1279,12 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob,                   &
      deallocate(k_store_x,stat=ier); if( ier /= 0 ) stop 'error deallocating array d_store_x'
      deallocate(k_store_y,stat=ier); if( ier /= 0 ) stop 'error deallocating array d_store_y'
      deallocate(k_store_z,stat=ier); if( ier /= 0 ) stop 'error deallocating array d_store_z'
-     deallocate(alpha_store_x,stat=ier); if( ier /= 0 ) &
-        stop 'error deallocating array alpha_store_x'
-     deallocate(alpha_store_y,stat=ier); if( ier /= 0 ) &
-        stop 'error deallocating array alpha_store_y'
-     deallocate(alpha_store_z,stat=ier); if( ier /= 0 ) &
-        stop 'error deallocating array alpha_store_z'
+     deallocate(alpha_store_x,stat=ier)
+     if( ier /= 0 ) stop 'error deallocating array alpha_store_x'
+     deallocate(alpha_store_y,stat=ier)
+     if( ier /= 0 ) stop 'error deallocating array alpha_store_y'
+     deallocate(alpha_store_z,stat=ier)
+     if( ier /= 0 ) stop 'error deallocating array alpha_store_z'
      if((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3) then
        deallocate(mask_ibool_interior_domain,stat=ier)
        if(ier /= 0) stop 'error deallocating array mask_ibool_interior_domain'
@@ -1342,7 +1342,6 @@ subroutine save_arrays_solver_files_adios(nspec,nglob,ibool, nspec_wmax, &
     call flush_IMAIN()
   endif
 
-#if 1
   !-----------------------------------.
   ! Setup ADIOS for the current group |
   !-----------------------------------'
@@ -1423,8 +1422,6 @@ subroutine save_arrays_solver_files_adios(nspec,nglob,ibool, nspec_wmax, &
   !----------------------------------'
   call adios_set_path(handle, "", ier)
   call adios_close(handle, ier)
-#endif
-#if 1
   !----------------------------------.
   ! Set up the model values to write |
   !----------------------------------'
@@ -1513,6 +1510,5 @@ subroutine save_arrays_solver_files_adios(nspec,nglob,ibool, nspec_wmax, &
   deallocate(vp_tmp)
   deallocate(vs_tmp)
   deallocate(rho_tmp)
-#endif
 
 end subroutine save_arrays_solver_files_adios
