@@ -57,10 +57,16 @@
 !
 ! works for external, unregular meshes
 
+  use mpi
+  use combine_vol_data_mod
+  use combine_vol_data_adios_mod
+
   use vtk
   implicit none
 
   include 'constants.h'
+
+  integer :: argc
 
   ! data must be of dimension: (NGLLX,NGLLY,NGLLZ,NSPEC_AB)
   double precision,dimension(:,:,:,:),allocatable :: data
@@ -81,7 +87,7 @@
 
   integer :: np, ne, npp, nee, nelement, njunk
 
-  character(len=256) :: sline, arg(6), filename, indir, outdir
+  character(len=256) :: sline, arg(9), filename, indir, outdir
   character(len=256) :: prname, prname_lp
   character(len=256) :: mesh_file,local_data_file
   logical :: HIGH_RESOLUTION_MESH
@@ -103,67 +109,49 @@
   character(len=256) LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
   integer :: IMODEL
 
+  ! ADIOS parameters
+  logical :: ADIOS_ENABLED, ADIOS_FOR_DATABASES, ADIOS_FOR_MESH, &
+             ADIOS_FOR_FORWARD_ARRAYS, ADIOS_FOR_KERNELS
+
+  ! Variables to read ADIOS files
+  integer :: mpier
+  integer :: sizeprocs, sel_num
+  character(len=256) :: var_name , value_file_name, mesh_file_name
+  integer(kind=8) :: value_handle, mesh_handle
+  integer(kind=8), target :: selections(256)
+  integer(kind=8), pointer :: sel
+  integer :: ibool_offset, x_global_offset
+  integer(kind=8), dimension(1) :: start, count_ad
+
+  call MPI_Init(ier)
+  call MPI_Comm_size(MPI_COMM_WORLD, sizeprocs, ier)
+  if (sizeprocs .ne. 1) then
+    print *, "sequential program. Only mpirun -np 1 ..."
+    call MPI_Abort(MPI_COMM_WORLD, ier, mpier)
+  endif
+
 ! checks given arguments
   print *
   print *,'Recombining ParaView data for slices'
   print *
 
-  do i = 1, 6
+  do i = 1, command_argument_count()
     call get_command_argument(i,arg(i))
-    if (i < 6 .and. trim(arg(i)) == '') then
-      print *, 'Usage: '
-      print *, '        xcombine_data start_slice end_slice filename input_dir output_dir high/low-resolution'
-      print *, '    or '
-      print *, '        xcombine_data slice_list filename input_dir output_dir high/low-resolution'
-      print *
-      print *, ' possible filenames are '
-      print *, '   rho_vp, rho_vs, kappastore, mustore, alpha_kernel, etc'
-      print *
-      print *, '   that are stored in the local directory as real(kind=CUSTOM_REAL) filename(NGLLX,NGLLY,NGLLZ,NSPEC_AB)  '
-      print *, '   in filename.bin'
-      print *
-      print *, ' files have been collected in input_dir, output mesh file goes to output_dir '
-      print *, ' give 0 for low resolution and 1 for high resolution'
-      print *
-      stop ' Reenter command line options'
-    endif
   enddo
 
-! get slice list
-  if (trim(arg(6)) == '') then
-    num_node = 0
-    open(unit = 20, file = trim(arg(1)), status = 'unknown',iostat = ios)
-    if (ios /= 0) then
-      print *,'Error opening ',trim(arg(1))
-      stop
-    endif
-    do while ( 1 == 1)
-      read(20,'(a)',iostat=ios) sline
-      if (ios /= 0) exit
-      read(sline,*,iostat=ios) njunk
-      if (ios /= 0) exit
-      num_node = num_node + 1
-      if( num_node > MAX_NUM_NODES ) stop 'error number of slices exceeds MAX_NUM_NODES...'
-      node_list(num_node) = njunk
-    enddo
-    close(20)
-    filename = arg(2)
-    indir= arg(3)
-    outdir = arg(4)
-    read(arg(5),*) ires
+  call read_adios_parameters(ADIOS_ENABLED, ADIOS_FOR_DATABASES,       &
+                             ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, &
+                             ADIOS_FOR_KERNELS)
+
+                             print *, "adios par have been read"
+  if (ADIOS_FOR_MESH) then
+    call read_args_adios(arg, MAX_NUM_NODES, node_list, num_node,   &
+                         var_name, value_file_name, mesh_file_name, &
+                         outdir, ires)
+    filename = var_name
   else
-    read(arg(1),*) proc1
-    read(arg(2),*) proc2
-    do iproc = proc1, proc2
-      it = iproc - proc1 + 1
-      if( it > MAX_NUM_NODES ) stop 'error number of slices exceeds MAX_NUM_NODES...'
-      node_list(it) = iproc
-    enddo
-    num_node = proc2 - proc1 + 1
-    filename = arg(3)
-    indir = arg(4)
-    outdir = arg(5)
-    read(arg(6),*) ires
+    call read_args(arg, MAX_NUM_NODES, node_list, num_node, &
+                   filename, indir, outdir, ires)
   endif
 
   if (ires == 0) then
@@ -186,6 +174,10 @@
                         USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
                         PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,FULL_ATTENUATION_SOLID,TRAC_PATH)
 
+  if (ADIOS_FOR_MESH) then
+    call init_adios(value_file_name, mesh_file_name, value_handle, mesh_handle)
+  endif
+
   print *, 'Slice list: '
   print *, node_list(1:num_node)
 
@@ -207,9 +199,10 @@
   ! counts total number of points (all slices)
   npp = 0
   nee = 0
-  call cvd_count_totals_ext_mesh(num_node,node_list,LOCAL_PATH,&
-                                    npp,nee,HIGH_RESOLUTION_MESH)
 
+  call cvd_count_totals_ext_mesh(num_node,node_list,LOCAL_PATH, &
+                                 npp,nee,HIGH_RESOLUTION_MESH,  &
+                                 mesh_handle, ADIOS_FOR_MESH)
 
   ! writes point and scalar information
   ! loops over slices (process partitions)
@@ -217,55 +210,82 @@
   do it = 1, num_node
 
     iproc = node_list(it)
-
     print *, ' '
     print *, 'Reading slice ', iproc
 
     ! gets number of elements and global points for this partition
-    write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',iproc,'_'
-    open(unit=27,file=prname_lp(1:len_trim(prname_lp))//'external_mesh.bin',&
-          status='old',action='read',form='unformatted',iostat=ios)
-    read(27) NSPEC_AB
-    read(27) NGLOB_AB
+    if (ADIOS_FOR_MESH) then
+      call read_scalars_adios_mesh(mesh_handle, iproc, NGLOB_AB, NSPEC_AB, &
+                                   ibool_offset, x_global_offset)
+    else 
+      write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',iproc,'_'
+      open(unit=27,file=prname_lp(1:len_trim(prname_lp))//'external_mesh.bin',&
+            status='old',action='read',form='unformatted',iostat=ios)
+      read(27) NSPEC_AB
+      read(27) NGLOB_AB
+    endif
 
-    ! ibool file
+    ! ibool and global point arrays file
     allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
     if( ier /= 0 ) stop 'error allocating array ibool'
-    read(27) ibool
-
-    ! global point arrays
     allocate(xstore(NGLOB_AB),ystore(NGLOB_AB),zstore(NGLOB_AB),stat=ier)
     if( ier /= 0 ) stop 'error allocating array xstore etc.'
-    read(27) xstore
-    read(27) ystore
-    read(27) zstore
-    close(27)
 
-
-    ! data file
-    write(prname,'(a,i6.6,a)') trim(indir)//'proc',iproc,'_'
-    local_data_file = trim(prname) // trim(filename) // '.bin'
-    open(unit = 28,file = trim(local_data_file),status='old',&
-          action='read',form ='unformatted',iostat=ios)
-    if (ios /= 0) then
-      print *,'Error opening ',trim(local_data_file)
-      stop
+    if (ADIOS_FOR_MESH) then
+      call read_ibool_adios_mesh(mesh_handle, ibool_offset, &
+                                 NGLLX, NGLLY, NGLLZ, NSPEC_AB, ibool)
+      call read_coordinates_adios_mesh(mesh_handle, x_global_offset,  &
+                                       NGLOB_AB, xstore, ystore, zstore)
+    else
+      read(27) ibool
+      read(27) xstore
+      read(27) ystore
+      read(27) zstore
+      close(27)
     endif
+  
 
     allocate(dat(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
     if( ier /= 0 ) stop 'error allocating dat array'
-
-    ! uses conversion to real values
     if( CUSTOM_REAL == SIZE_DOUBLE ) then
       allocate(data(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
       if( ier /= 0 ) stop 'error allocating data array'
-      read(28) data
+    endif
+
+    if (ADIOS_FOR_MESH) then
+      if( CUSTOM_REAL == SIZE_DOUBLE ) then
+        call read_double_values_adios(value_handle, var_name, ibool_offset, &
+                               NSPEC_AB, data)
+      else
+        call read_float_values_adios(value_handle, var_name, ibool_offset, &
+                               NSPEC_AB, dat)
+      endif
+    else
+      ! data file
+      write(prname,'(a,i6.6,a)') trim(indir)//'proc',iproc,'_'
+      local_data_file = trim(prname) // trim(filename) // '.bin'
+      open(unit = 28,file = trim(local_data_file),status='old',&
+            action='read',form ='unformatted',iostat=ios)
+      if (ios /= 0) then
+        print *,'Error opening ',trim(local_data_file)
+        stop
+      endif
+
+      ! Read either SP or DP floating point numbers.
+      if( CUSTOM_REAL == SIZE_DOUBLE ) then
+        read(28) data
+      else
+        read(28) dat
+      endif
+      close(28)
+    endif
+
+    ! uses conversion to real values
+    if( CUSTOM_REAL == SIZE_DOUBLE ) then
       dat = sngl(data)
       deallocate(data)
-    else
-      read(28) dat
     endif
-    close(28)
+
     print *, trim(local_data_file)
 
     ! writes point coordinates and scalar value to mesh file
@@ -304,19 +324,31 @@
     iproc = node_list(it)
 
     print *, 'Reading slice ', iproc
-    write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',iproc,'_'
 
-    ! gets number of elements and global points for this partition
-    open(unit=27,file=prname_lp(1:len_trim(prname_lp))//'external_mesh.bin',&
-          status='old',action='read',form='unformatted')
-    read(27) NSPEC_AB
-    read(27) NGLOB_AB
+    if (ADIOS_FOR_MESH) then
+      call read_scalars_adios_mesh(mesh_handle, iproc, NGLOB_AB, NSPEC_AB, &
+                                   ibool_offset, x_global_offset)
+    else
+      write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',iproc,'_'
+
+      ! gets number of elements and global points for this partition
+      open(unit=27,file=prname_lp(1:len_trim(prname_lp))//'external_mesh.bin',&
+            status='old',action='read',form='unformatted')
+      read(27) NSPEC_AB
+      read(27) NGLOB_AB
+    endif
 
     ! ibool file
     allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array ibool'
-    read(27) ibool
-    close(27)
+
+    if (ADIOS_FOR_MESH) then
+      call read_ibool_adios_mesh(mesh_handle, ibool_offset, &
+                                 NGLLX, NGLLY, NGLLZ, NSPEC_AB, ibool)
+    else
+      if( ier /= 0 ) stop 'error allocating array ibool'
+      read(27) ibool
+      close(27)
+    endif
 
     ! writes out element corner indices
     if (.not. HIGH_RESOLUTION_MESH) then
@@ -366,6 +398,12 @@
     call close_file()
   endif
 
+  if (ADIOS_FOR_MESH) then
+    call clean_adios(mesh_handle, value_handle)
+  endif
+
+  call MPI_Finalize(ier)
+
   print *, 'Done writing '//trim(mesh_file)
 
   end program combine_paraview_data_ext_mesh
@@ -373,23 +411,24 @@
 
 !=============================================================
 
-
   subroutine cvd_count_totals_ext_mesh(num_node,node_list,LOCAL_PATH,&
-                          npp,nee,HIGH_RESOLUTION_MESH)
-
+                          npp,nee,HIGH_RESOLUTION_MESH, &
+                          mesh_handle,ADIOS_FOR_MESH)
 ! counts total number of points and elements for external meshes in given slice list
 ! returns: total number of elements (nee) and number of points (npp)
 
   use vtk
+  use combine_vol_data_adios_mod
+
   implicit none
   include 'constants.h'
 
   integer,intent(in) :: num_node
   integer,dimension(MAX_NUM_NODES),intent(in) :: node_list
-  character(len=256),intent(in) :: LOCAL_PATH
 
   integer,intent(out) :: npp,nee
   logical,intent(in) :: HIGH_RESOLUTION_MESH
+  character(len=256),intent(in) :: LOCAL_PATH
 
   ! local parameters
   integer, dimension(:,:,:,:),allocatable :: ibool
@@ -399,31 +438,51 @@
   integer :: iglob1, iglob2, iglob3, iglob4, iglob5, iglob6, iglob7, iglob8
   character(len=256) :: prname_lp
 
+  ! Variables for ADIOS
+  integer(kind=8), intent(in) :: mesh_handle
+  logical, intent(in) :: ADIOS_FOR_MESH
+  integer :: sel_num
+  integer(kind=8), target :: selections(256)
+  integer(kind=8), pointer :: sel
+  integer :: ibool_offset, x_global_offset
+  integer(kind=8), dimension(1) :: start, count_ad
 
   ! loops over all slices (process partitions)
   npp = 0
   nee = 0
-  do it = 1, num_node
 
-    ! gets number of elements and points for this slice
-    iproc = node_list(it)
-    write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',iproc,'_'
-    open(unit=27,file=prname_lp(1:len_trim(prname_lp))//'external_mesh.bin',&
-          status='old',action='read',form='unformatted',iostat=ios)
-    if (ios /= 0) then
-      print *,'Error opening: ',prname_lp(1:len_trim(prname_lp))//'external_mesh.bin'
-      stop
+  do it = 1, num_node
+    if (ADIOS_FOR_MESH) then
+      call read_scalars_adios_mesh(mesh_handle, iproc, NGLOB_AB, NSPEC_AB, &
+                                   ibool_offset, x_global_offset)
+    else 
+      ! gets number of elements and points for this slice
+      iproc = node_list(it)
+      write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',iproc,'_'
+      open(unit=27,file=prname_lp(1:len_trim(prname_lp))//'external_mesh.bin',&
+            status='old',action='read',form='unformatted',iostat=ios)
+      if (ios /= 0) then
+        print *,'Error opening: ',prname_lp(1:len_trim(prname_lp))//'external_mesh.bin'
+        stop
+      endif
+
+      read(27) NSPEC_AB
+      read(27) NGLOB_AB
     endif
 
-    read(27) NSPEC_AB
-    read(27) NGLOB_AB
     ! gets ibool
     if( .not. HIGH_RESOLUTION_MESH ) then
       allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
       if( ier /= 0 ) stop 'error allocating array ibool'
-      read(27) ibool
+
+      if (ADIOS_FOR_MESH) then
+        call read_ibool_adios_mesh(mesh_handle, ibool_offset, &
+                                   NGLLX, NGLLY, NGLLZ, NSPEC_AB, ibool)
+      else
+        read(27) ibool
+        close(27)
+      endif
     endif
-    close(27)
 
     ! calculates totals
     if( HIGH_RESOLUTION_MESH ) then
