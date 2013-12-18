@@ -50,6 +50,7 @@ mpiexec -np $NPROC ./xgenerate_databases
 echo "done "
 
 # per instructions in manual, view low-res mesh with these commands
+# [there are other options for viewing the high-res mesh of any partitions]
 # > NPROC=`grep NPROC DATA/Par_file | cut -d = -f 2`
 # > LOCALPATH=`grep LOCAL_PATH DATA/Par_file | cut -d = -f 2`
 # > nmax=$(($NPROC-1))
