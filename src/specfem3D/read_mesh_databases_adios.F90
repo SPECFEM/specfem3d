@@ -126,7 +126,9 @@ subroutine read_mesh_databases_adios()
              local_dim_CPML_regions, local_dim_CPML_to_spec, local_dim_is_CPML,&
              local_dim_d_store_x, local_dim_d_store_y, local_dim_d_store_z,    &
              local_dim_k_store_x, local_dim_k_store_y, local_dim_k_store_z,    &
-             local_dim_alpha_store, local_dim_points_interface_PML_acoustic,   &
+             local_dim_alpha_store_x, local_dim_alpha_store_y,                 &
+             local_dim_alpha_store_z,                                          &
+             local_dim_points_interface_PML_acoustic,                          &
              local_dim_points_interface_PML_elastic,                           &
              local_dim_rmassx, local_dim_rmassy, local_dim_rmassz,             &
              local_dim_rmassz_acoustic, local_dim_coupling_el_po_ispec,        &
@@ -426,8 +428,12 @@ subroutine read_mesh_databases_adios()
                             local_dim_k_store_y, ier)
       call adios_get_scalar(handle, "k_store_z/local_dim",&
                             local_dim_k_store_z, ier)
-      call adios_get_scalar(handle, "alpha_store/local_dim",&
-                            local_dim_alpha_store, ier)
+      call adios_get_scalar(handle, "alpha_store_x/local_dim",&
+                            local_dim_alpha_store_x, ier)
+      call adios_get_scalar(handle, "alpha_store_y/local_dim",&
+                            local_dim_alpha_store_y, ier)
+      call adios_get_scalar(handle, "alpha_store_z/local_dim",&
+                            local_dim_alpha_store_z, ier)
       if((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) &
           .or. SIMULATION_TYPE == 3) then
         if(nglob_interface_PML_acoustic > 0) then
@@ -806,8 +812,12 @@ subroutine read_mesh_databases_adios()
       if(ier /= 0) stop 'error allocating array K_store_y'
       allocate(K_store_z(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
       if(ier /= 0) stop 'error allocating array K_store_z'
-      allocate(alpha_store(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-      if(ier /= 0) stop 'error allocating array alpha_store'
+      allocate(alpha_store_x(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+      if(ier /= 0) stop 'error allocating array alpha_store_x'
+      allocate(alpha_store_y(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+      if(ier /= 0) stop 'error allocating array alpha_store_y'
+      allocate(alpha_store_z(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+      if(ier /= 0) stop 'error allocating array alpha_store_z'
 
       if((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3) then
         if(nglob_interface_PML_acoustic > 0) then
@@ -1152,8 +1162,12 @@ subroutine read_mesh_databases_adios()
                                k_store_y, ier)
       call adios_schedule_read(handle, sel, "k_store_z/array", 0, 1, &
                                k_store_z, ier)
-      call adios_schedule_read(handle, sel, "alpha_store/array", 0, 1, &
-                               alpha_store, ier)
+      call adios_schedule_read(handle, sel, "alpha_store_x/array", 0, 1, &
+                               alpha_store_x, ier)
+      call adios_schedule_read(handle, sel, "alpha_store_y/array", 0, 1, &
+                               alpha_store_y, ier)
+      call adios_schedule_read(handle, sel, "alpha_store_z/array", 0, 1, &
+                               alpha_store_z, ier)
 
       if((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3) then
         if(nglob_interface_PML_acoustic > 0) then

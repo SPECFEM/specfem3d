@@ -363,6 +363,7 @@ specfem3D: xspecfem3D
 convolve_source_timefunction: xconvolve_source_timefunction
 create_movie_shakemap_AVS_DX_GMT: xcreate_movie_shakemap_AVS_DX_GMT
 combine_vol_data: xcombine_vol_data
+combine_vol_data_adios: xcombine_vol_data_adios
 combine_surf_data: xcombine_surf_data
 smooth_vol_data: xsmooth_vol_data
 sum_kernels: xsum_kernels
@@ -376,6 +377,9 @@ xconvolve_source_timefunction: $O/convolve_source_timefunction.shared.o
 
 xcombine_vol_data: $O/combine_vol_data.shared.o $O/write_c_binary.cc.o $O/read_parameter_file.shared.o $O/read_value_parameters.shared.o $O/get_value_parameters.shared.o $O/param_reader.cc.o
 	${FCCOMPILE_CHECK} -o  ${E}/xcombine_vol_data  $O/combine_vol_data.shared.o $O/write_c_binary.cc.o $O/read_parameter_file.shared.o $O/read_value_parameters.shared.o $O/get_value_parameters.shared.o $O/param_reader.cc.o
+
+@COND_ADIOS_TRUE@xcombine_vol_data_adios: $O/combine_vol_data_adios.shared_adios.o $O/write_c_binary.cc.o $O/read_parameter_file.shared.o $O/read_value_parameters.shared.o $O/get_value_parameters.shared.o $O/param_reader.cc.o
+@COND_ADIOS_TRUE@	${MPIFC} -o  ${E}/xcombine_vol_data  $O/combine_vol_data_adios.shared_adios.o $O/write_c_binary.cc.o $O/read_parameter_file.shared.o $O/read_value_parameters.shared.o $O/get_value_parameters.shared.o $O/param_reader.cc.o $(ADIOS_INC) $(ADIOS_LINK) -DUSE_ADIOS
 
 xcombine_surf_data: $O/combine_surf_data.shared.o $O/write_c_binary.cc.o $O/param_reader.cc.o
 	${FCCOMPILE_CHECK} -o  ${E}/xcombine_surf_data  $O/combine_surf_data.shared.o $O/write_c_binary.cc.o $O/param_reader.cc.o
