@@ -145,25 +145,20 @@
 
                              print *, "adios par have been read"
   if (ADIOS_FOR_MESH) then
-    print *, "adios"
     call read_args_adios(arg, MAX_NUM_NODES, node_list, num_node,   &
                          var_name, value_file_name, mesh_file_name, &
                          outdir, ires)
     filename = var_name
   else
-    print *, "no adios"
     call read_args(arg, MAX_NUM_NODES, node_list, num_node, &
                    filename, indir, outdir, ires)
   endif
-  print *, "args have been read."
 
   if (ires == 0) then
     HIGH_RESOLUTION_MESH = .false.
   else
     HIGH_RESOLUTION_MESH = .true.
   endif
-
-print *, "Reading Parameter file..."
 
   ! needs local_path for mesh files
   call read_parameter_file(NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT,NGNOD,NGNOD2D, &
@@ -201,7 +196,6 @@ print *, "Reading Parameter file..."
     call open_file_create(trim(mesh_file)//char(0))
   endif
 
-  print *, "counting points..."
   ! counts total number of points (all slices)
   npp = 0
   nee = 0
