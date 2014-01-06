@@ -226,7 +226,7 @@
           call exit_mpi(myrank,'error opening file '//trim(OUTPUT_FILES)//'/output_list_stations.txt')
 
         do irec=1,nrec
-          write(IOUT_SU,*) x_found(irec),y_found(irec),z_found(irec)
+          write(IOUT_SU,*) station_name(irec),network_name(irec),x_found(irec),y_found(irec),z_found(irec)
         enddo
 
         close(IOUT_SU)
@@ -922,7 +922,7 @@
       call exit_mpi(myrank,'error opening file '//trim(OUTPUT_FILES)//'/output_list_stations.txt')
 
     do irec=1,nrec
-      write(IOUT_SU,*) x_found(irec),y_found(irec),z_found(irec)
+      write(IOUT_SU,*) station_name(irec),network_name(irec),x_found(irec),y_found(irec),z_found(irec)
     enddo
 
     close(IOUT_SU)
