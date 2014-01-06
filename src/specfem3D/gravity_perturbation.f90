@@ -37,7 +37,7 @@ subroutine gravity_init()
 
   integer, parameter :: IIN_G = 367
   integer ier
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ):: rho_elem,vs_elem
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ):: rho_elem
   integer :: i,j,k,iglob,ispec,istat
   double precision :: Jac3D
   ! coordinates of the control points

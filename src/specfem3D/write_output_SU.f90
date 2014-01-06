@@ -46,19 +46,19 @@
   integer :: i,ier
 
   allocate(x_found(nrec),y_found(nrec),z_found(nrec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array x_found y_found z_found'
+  if( ier /= 0 ) stop 'error allocating arrays x_found y_found z_found'
 
   ! reads in station locations from output_list file
-  open(unit=IIN_SU1,file=trim(OUTPUT_FILES)//'/output_list_stations.txt',status='unknown',iostat=ier)
+  open(unit=IIN_SU1,file=trim(OUTPUT_FILES)//'/output_list_stations.txt',status='old',iostat=ier)
   if( ier /= 0 ) stop 'error opening output_list_stations.txt file'
 
   do irec=1,nrec
-   read(IIN_SU1,*) x_found(irec),y_found(irec),z_found(irec)
+   read(IIN_SU1,*) station_name(irec),network_name(irec),x_found(irec),y_found(irec),z_found(irec)
   enddo
   close(IIN_SU1)
 
   ! reads in source locations from output_list file
-  open(unit=IIN_SU1,file=trim(OUTPUT_FILES)//'/output_list_sources.txt',status='unknown',iostat=ier)
+  open(unit=IIN_SU1,file=trim(OUTPUT_FILES)//'/output_list_sources.txt',status='old',iostat=ier)
   if( ier /= 0 ) stop 'error opening output_list_sources.txt file'
 
   read(IIN_SU1,*) x_found_source,y_found_source,z_found_source
