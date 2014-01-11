@@ -157,7 +157,7 @@ LIBMESHFEM = $(COND_PYRE_OBJECTS) $L/libmeshfem.a
 
 default: $(DEFAULT)
 
-all: clean default
+all: default
 
 meshfem3D: xmeshfem3D
 

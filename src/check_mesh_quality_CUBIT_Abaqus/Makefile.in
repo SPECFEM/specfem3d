@@ -53,7 +53,7 @@ DEFAULT =  xcheck_mesh_quality_CUBIT_Abaqus xconvert_skewness_to_angle xmultiply
 
 default: $(DEFAULT)
 
-all: clean default
+all: default
 
 check_mesh_quality_CUBIT_Abaqus: xcheck_mesh_quality_CUBIT_Abaqus
 convert_skewness_to_angle: xconvert_skewness_to_angle

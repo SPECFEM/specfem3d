@@ -357,7 +357,7 @@ LIBSPECFEM = $L/libspecfem.a
 
 default: $(DEFAULT)
 
-all: clean default
+all: default
 
 specfem3D: xspecfem3D
 
@@ -407,7 +407,7 @@ xmodel_update: $(ADIOS_PREOBJECTS) $(MODEL_UPD_OBJECTS) $(COND_MPI_OBJECTS) $(CU
 	${FCLINK} -o  ${E}/xmodel_update  $(ADIOS_OBJECTS) $(MODEL_UPD_OBJECTS) $(ADIOS_PREOBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS) $(CUDA_STUBS)
 
 clean:
-	rm -f $O/* *.o *.gnu *.mod $(OUTPUT)/timestamp* $(OUTPUT)/starttime*txt work.pc* \
+	rm -f $O/* *.o *.gnu *.mod \
         xspecfem3D \
         xconvolve_source_timefunction \
         xcreate_movie_shakemap_AVS_DX_GMT xcombine_vol_data xcombine_surf_data \

@@ -51,8 +51,6 @@ AR = ar
 ARFLAGS = cru
 RANLIB = ranlib
 
-##.PHONY: clean default all generate_databases specfem3D meshfem3D
-
 ####
 #### targets
 ####
@@ -78,8 +76,6 @@ all: default \
 	xcheck_mesh_quality_CUBIT_Abaqus \
 	$(EMPTY_MACRO)
 
-required: bin lib obj
-
 mesh : meshfem3D
 gen : generate_databases
 spec : specfem3D
@@ -99,69 +95,45 @@ sum_kernels: xsum_kernels
 model_update: xmodel_update
 check_mesh_quality_CUBIT_Abaqus: xcheck_mesh_quality_CUBIT_Abaqus
 
-bin:
-	mkdir -p bin
-
-lib:
-	mkdir -p lib
-
-obj:
-	mkdir -p obj
-
-reqmesh:
-	(cd obj; mkdir -p mesh)
-
-reqspec:
-	(cd obj; mkdir -p spec)
-
-reqdec:
-	(cd obj; mkdir -p dec)
-
-reqgen :
-	(cd obj; mkdir -p gen)
-
-reqche :
-	(cd obj; mkdir -p che)
-
-xmeshfem3D:  required reqmesh
+xmeshfem3D:
 	$(MAKE) -C src/meshfem3D
 
-xspecfem3D:  required reqspec
+xspecfem3D:
 	$(MAKE) -C src/specfem3D specfem3D
 
-xgenerate_databases:  required reqgen
+xgenerate_databases:
 	$(MAKE) -C src/generate_databases generate_databases
 
-xdecompose_mesh:  required reqdec
+xdecompose_mesh:
 	$(MAKE) -C src/decompose_mesh
 
-xcreate_movie_shakemap_AVS_DX_GMT: required
+xcreate_movie_shakemap_AVS_DX_GMT:
 	$(MAKE) -C src/specfem3D xcreate_movie_shakemap_AVS_DX_GMT
 
-xcombine_vol_data: required reqspec
+xcombine_vol_data:
 	$(MAKE) -C src/specfem3D xcombine_vol_data
 
-xcombine_surf_data: required
+xcombine_surf_data:
 	$(MAKE) -C src/specfem3D xcombine_surf_data
 
-xconvolve_source_timefunction: required
+xconvolve_source_timefunction:
 	$(MAKE) -C src/specfem3D xconvolve_source_timefunction
 
-xsmooth_vol_data: required reqspec
+xsmooth_vol_data:
 	$(MAKE) -C src/specfem3D xsmooth_vol_data
 
-xsum_kernels: required reqspec
+xsum_kernels:
 	$(MAKE) -C src/specfem3D xsum_kernels
 
-xmodel_update: required reqspec xspecfem3D
+xmodel_update: xspecfem3D
 	$(MAKE) -C src/specfem3D xmodel_update
 
-xcheck_mesh_quality_CUBIT_Abaqus: required reqche
+xcheck_mesh_quality_CUBIT_Abaqus:
 	$(MAKE) -C src/check_mesh_quality_CUBIT_Abaqus
 
 
-clean: required
-	rm -rf bin lib obj src/meshfem3D/*.mod src/decompose_mesh/*.mod src/generate_databases/*.mod src/specfem3D/*.mod
+clean:
+	rm -rf bin/* lib/* obj/*.o obj/*/*.o src/meshfem3D/*.mod src/decompose_mesh/*.mod src/generate_databases/*.mod src/specfem3D/*.mod
 	$(MAKE) -C src/decompose_mesh/scotch/src realclean
 
 help:
@@ -182,4 +154,18 @@ help:
 	@echo "    xmodel_update"
 	@echo "    xcheck_mesh_quality_CUBIT_Abaqus"
 	@echo ""
+
+.PHONY: clean help default all \
+	convolve_source_timefunction xconvolve_source_timefunction \
+	create_movie_shakemap_AVS_DX_GMT xcreate_movie_shakemap_AVS_DX_GMT \
+	combine_vol_data xcombine_vol_data \
+	combine_surf_data xcombine_surf_data \
+	smooth_vol_data xsmooth_vol_data \
+	sum_kernels xsum_kernels \
+	model_update xmodel_update \
+	check_mesh_quality_CUBIT_Abaqus xcheck_mesh_quality_CUBIT_Abaqus \
+	gen generate_databases xgenerate_databases \
+	dec decompose_mesh xdecompose_mesh \
+	mesh meshfem3D xmeshfem3D \
+	spec specfem3D xspecfem3D
 

@@ -78,7 +78,7 @@ DEFAULT = xscotch xdecompose_mesh
 
 default: $(DEFAULT)
 
-all: clean default
+all: default
 
 decompose_mesh: xdecompose_mesh
 
@@ -114,6 +114,7 @@ endif
 
 clean:
 	rm -f $O/*.o *.mod  $E/xdecompose_mesh
+
 ####
 #### rule to build each .o file below
 ####

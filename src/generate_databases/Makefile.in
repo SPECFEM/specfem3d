@@ -179,7 +179,7 @@ LIBGENDATABASES = $L/libgendatabases.a
 
 default: $(DEFAULT)
 
-all: clean default
+all: default
 
 generate_databases: xgenerate_databases
 
@@ -197,7 +197,7 @@ generate_databases: xgenerate_databases
 
 
 clean:
-	rm -f $O/* *.o *.gnu *.mod $(OUTPUT)/timestamp* $(OUTPUT)/starttime*txt work.pc* \
+	rm -f $O/* *.o *.gnu *.mod \
         xgenerate_databases \
         xconvolve_source_timefunction \
         xcreate_movie_shakemap_AVS_DX_GMT xcombine_vol_data xcombine_surf_data
