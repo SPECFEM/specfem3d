@@ -44,49 +44,6 @@ module fault_solver_dynamic
 
   private
 
-!! DK DK moved this to fault_common in order to use it there
-
-! ! outputs(dyn) /inputs (kind) at selected times for all fault nodes:
-! ! strength, state, slip, slip velocity, fault stresses, rupture time, process zone time
-! ! rupture time = first time when slip velocity = threshold V_RUPT (defined below)
-! ! process zone time = first time when slip = Dc
-! type dataXZ_type
-!   real(kind=CUSTOM_REAL), dimension(:), pointer :: stg=>null(), sta=>null(), d1=>null(), d2=>null(), v1=>null(), v2=>null(), &
-!                                                    t1=>null(), t2=>null(), t3=>null(), tRUP=>null(), tPZ=>null()
-!   real(kind=CUSTOM_REAL), dimension(:), pointer :: xcoord=>null(), ycoord=>null(), zcoord=>null()
-!   integer                                       :: npoin=0
-! end type dataXZ_type
-
-! type swf_type
-!   private
-!   integer :: kind
-!   logical :: healing = .false.
-!   real(kind=CUSTOM_REAL), dimension(:), pointer :: Dc=>null(), mus=>null(), mud=>null(), &
-!                                                    theta=>null(), T=>null(), C=>null()
-! end type swf_type
-
-! type rsf_type
-!   private
-!   integer :: StateLaw = 1 ! 1=ageing law, 2=slip law
-!   real(kind=CUSTOM_REAL), dimension(:), pointer :: V0=>null(), f0=>null(), L=>null(), &
-!                                                    V_init=>null(), &
-!                                                    a=>null(), b=>null(), theta=>null(), &
-!                                                    T=>null(), C=>null(), &
-!                                                    fw=>null(), Vw=>null()
-! end type rsf_type
-
-! type, extends (fault_type) :: bc_dynandkinflt_type
-!   private
-!   real(kind=CUSTOM_REAL), dimension(:,:), pointer :: T0=>null()
-!   real(kind=CUSTOM_REAL), dimension(:),   pointer :: MU=>null(), Fload=>null()
-!   integer, dimension(:),   pointer :: npoin_perproc=>null(), poin_offset=>null()
-!   type(dataT_type)        :: dataT
-!   type(dataXZ_type)       :: dataXZ,dataXZ_all
-!   type(swf_type), pointer :: swf => null()
-!   type(rsf_type), pointer :: rsf => null()
-!   logical                 :: allow_opening = .false. ! default : do not allow opening
-! end type bc_dynandkinflt_type
-
   type(bc_dynandkinflt_type), allocatable, save :: faults(:)
 
   !slip velocity threshold for healing

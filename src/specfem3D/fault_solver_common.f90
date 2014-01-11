@@ -36,8 +36,6 @@ module fault_solver_common
 
   implicit none
 
-!!!!! DK DK  private
-
   type fault_type
     integer :: nspec=0, nglob=0
     real(kind=CUSTOM_REAL), dimension(:,:),   pointer :: T=>null(),V=>null(),D=>null(),coord=>null()
@@ -59,7 +57,6 @@ module fault_solver_common
   end type dataXZ_type
 
   type swf_type
-!! DK DK    private
     integer :: kind
     logical :: healing = .false.
     real(kind=CUSTOM_REAL), dimension(:), pointer :: Dc=>null(), mus=>null(), mud=>null(), &
@@ -67,7 +64,6 @@ module fault_solver_common
   end type swf_type
 
   type rsf_type
-!! DK DK    private
     integer :: StateLaw = 1 ! 1=ageing law, 2=slip law
     real(kind=CUSTOM_REAL), dimension(:), pointer :: V0=>null(), f0=>null(), L=>null(), &
                                                      V_init=>null(), &
@@ -87,7 +83,6 @@ module fault_solver_common
   end type dataT_type
 
   type, extends (fault_type) :: bc_dynandkinflt_type
-!!!!!!!! DK DK      private
     real(kind=CUSTOM_REAL), dimension(:,:), pointer :: T0=>null()
     real(kind=CUSTOM_REAL), dimension(:),   pointer :: MU=>null(), Fload=>null()
     integer, dimension(:),   pointer :: npoin_perproc=>null(), poin_offset=>null()
@@ -498,7 +493,6 @@ end subroutine init_dataT
 !---------------------------------------------------------------
 subroutine store_dataT(dataT,d,v,t,itime)
 
-  !use specfem_par, only : myrank
 !! DK DK use type() instead of class() for compatibility with some current compilers
   type(dataT_type), intent(inout) :: dataT
   real(kind=CUSTOM_REAL), dimension(:,:), intent(in) :: d,v,t

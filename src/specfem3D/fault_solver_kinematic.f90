@@ -39,28 +39,6 @@ module fault_solver_kinematic
 
   private
 
-!! DK DK used the "dynamic" version that I moved to "fault_common" instead
-!! DK DK works fine because it has all the elements needed below, plus some others that are then simply unused
-! type dataXZ_type
-!   integer :: npoin=0
-!   real(kind=CUSTOM_REAL), dimension(:), pointer :: d1=>null(), d2=>null(), &
-!                                                    v1=>null(), v2=>null(), &
-!                                                    t1=>null(), t2=>null(), t3=>null(), &
-!                                                    xcoord=>null(), ycoord=>null(), zcoord=>null()
-! end type dataXZ_type
-
-!! DK DK not needed any more, merged into a new "bc_dynandkinflt_type" to avoid having to use the "class" keyword,
-!! DK DK which is currently not supported by many Fortran compilers (and it is crucial for us to keep full portability)
-! type, extends (fault_type) ::  bc_kinflt_type
-!   private
-!   type(dataT_type) :: dataT
-!   type(dataXZ_type) :: dataXZ
-!   real(kind=CUSTOM_REAL) :: kin_dt
-!   integer :: kin_it
-!   real(kind=CUSTOM_REAL), dimension(:,:), pointer :: v_kin_t1,v_kin_t2
-! end type bc_kinflt_type
-
-!! DK DK now use bc_dynandkinflt_type here instead
   type(bc_dynandkinflt_type), allocatable, save :: faults(:)
 
   !Number of time steps defined by the user : NTOUT
@@ -158,7 +136,6 @@ end subroutine BC_KINFLT_init
 
 subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt)
 
-!! DK DK now use bc_dynandkinflt_type here instead
   type(bc_dynandkinflt_type), intent(inout) :: bc
   integer, intent(in)                 :: IIN_BIN,IIN_PAR,NT,iflt
   real(kind=CUSTOM_REAL), intent(in)  :: dt
@@ -227,7 +204,6 @@ subroutine BC_KINFLT_set_single(bc,MxA,V,D,iflt)
   use specfem_par, only:it,NSTEP
 
   real(kind=CUSTOM_REAL), intent(inout) :: MxA(:,:)
-!! DK DK now use bc_dynandkinflt_type here instead
   type(bc_dynandkinflt_type), intent(inout) :: bc
   real(kind=CUSTOM_REAL), intent(in) :: V(:,:),D(:,:)
   integer,intent(in) :: iflt

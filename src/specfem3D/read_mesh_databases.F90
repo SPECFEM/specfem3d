@@ -229,30 +229,6 @@
     read(27,iostat=ier) rho_vs
     if( ier /= 0 ) stop 'error reading in array rho_vs'
 
-!! DK DK rhostore is now allocated and read in all cases (see above)
-!   ! checks if rhostore is available for gravity
-!   if( GRAVITY ) then
-!
-!     if( .not. ACOUSTIC_SIMULATION ) then
-!       ! rho array needed for gravity
-!       allocate(rhostore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-!       if( ier /= 0 ) stop 'error allocating array rhostore'
-!
-!       ! extract rho information from mu = rho * vs * vs and rho_vs = rho * vs
-!       rhostore = 0.0_CUSTOM_REAL
-!       where( mustore > TINYVAL )
-!         rhostore = (rho_vs*rho_vs) / mustore
-!       endwhere
-!
-!       ! note: the construct below leads to a segmentation fault (ifort v11.1). not sure why...
-!       !          (where statement - standard fortran 95)
-!       !where( mustore > TINYVAL )
-!       !  rhostore = (rho_vs*rho_vs) / mustore
-!       !elsewhere
-!       !  rhostore = 0.0_CUSTOM_REAL
-!       !endwhere
-!     endif
-!   endif
   else
     ! no elastic attenuation & anisotropy
     ATTENUATION = .false.
