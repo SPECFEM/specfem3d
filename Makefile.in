@@ -74,6 +74,8 @@ all: default \
 	xsum_kernels \
 	xmodel_update \
 	xcheck_mesh_quality_CUBIT_Abaqus \
+	xconvert_skewness_to_angle \
+	xmultiply_CUBIT_Abaqus_mesh_by_1000 \
 	$(EMPTY_MACRO)
 
 mesh : meshfem3D
@@ -94,6 +96,8 @@ smooth_vol_data: xsmooth_vol_data
 sum_kernels: xsum_kernels
 model_update: xmodel_update
 check_mesh_quality_CUBIT_Abaqus: xcheck_mesh_quality_CUBIT_Abaqus
+convert_skewness_to_angle: xconvert_skewness_to_angle
+multiply_CUBIT_Abaqus_mesh_by_1000: xmultiply_CUBIT_Abaqus_mesh_by_1000
 
 xmeshfem3D:
 	$(MAKE) -C src/meshfem3D
@@ -129,8 +133,13 @@ xmodel_update: xspecfem3D
 	$(MAKE) -C src/specfem3D xmodel_update
 
 xcheck_mesh_quality_CUBIT_Abaqus:
-	$(MAKE) -C src/check_mesh_quality_CUBIT_Abaqus
+	$(MAKE) -C src/check_mesh_quality_CUBIT_Abaqus xcheck_mesh_quality_CUBIT_Abaqus
 
+xconvert_skewness_to_angle:
+	$(MAKE) -C src/check_mesh_quality_CUBIT_Abaqus xconvert_skewness_to_angle
+
+xmultiply_CUBIT_Abaqus_mesh_by_1000:
+	$(MAKE) -C src/check_mesh_quality_CUBIT_Abaqus xmultiply_CUBIT_Abaqus_mesh_by_1000
 
 clean:
 	rm -rf bin/* lib/* obj/*.o obj/*/*.o src/meshfem3D/*.mod src/decompose_mesh/*.mod src/generate_databases/*.mod src/specfem3D/*.mod
@@ -153,6 +162,8 @@ help:
 	@echo "    xsum_kernels"
 	@echo "    xmodel_update"
 	@echo "    xcheck_mesh_quality_CUBIT_Abaqus"
+	@echo "    xconvert_skewness_to_angle"
+	@echo "    xmultiply_CUBIT_Abaqus_mesh_by_1000"
 	@echo ""
 
 .PHONY: clean help default all \
