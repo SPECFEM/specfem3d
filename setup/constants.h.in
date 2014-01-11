@@ -91,9 +91,10 @@
 ! integer, parameter :: IMAIN = ISTANDARD_OUTPUT
 ! I/O unit for source and receiver vtk file
   integer, parameter :: IOVTK = 98
-! I/O unit for absorbing boundary snapshots
-!  integer, parameter :: IOABS = 31
-!  integer, parameter :: IOABS_AC = 32
+! I/O number for absorbing boundary snapshots (opened in C for speed)
+!  Not a Fortran I/O unit! See write_c_binary.c for more information.
+  integer, parameter :: IOABS = 0
+  integer, parameter :: IOABS_AC = 1
 ! I/O unit for plotting source time function
   integer, Parameter :: IOSTF = 71
 ! I/O unit for interface file

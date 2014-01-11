@@ -93,13 +93,8 @@
     ! reads in absorbing boundary array when first phase is running
     if( phase_is_inner .eqv. .false. ) then
       ! note: the index NSTEP-it+1 is valid if b_displ is read in after the Newmark scheme
-      ! uses fortran routine
-      !read(IOABS,rec=NSTEP-it+1) reclen1,b_absorb_field,reclen2
-      !if (reclen1 /= b_reclen_field .or. reclen1 /= reclen2) &
-      !  call exit_mpi(0,'Error reading absorbing contribution b_absorb_field')
-      ! uses c routine for faster reading
-      call read_abs(0,b_absorb_fields,b_reclen_field_poro,NSTEP-it+1)
-      call read_abs(0,b_absorb_fieldw,b_reclen_field_poro,NSTEP-it+1)
+      call read_abs(IOABS,b_absorb_fields,b_reclen_field_poro,NSTEP-it+1)
+      call read_abs(IOABS,b_absorb_fieldw,b_reclen_field_poro,NSTEP-it+1)
     endif
   endif !adjoint
 
@@ -195,11 +190,8 @@
   if( SIMULATION_TYPE == 1 .and. SAVE_FORWARD ) then
     ! writes out absorbing boundary value only when second phase is running
     if( phase_is_inner .eqv. .true. ) then
-      ! uses fortran routine
-      !write(IOABS,rec=it) b_reclen_field,b_absorb_field,b_reclen_field
-      ! uses c routine
-      call write_abs(0,b_absorb_fields,b_reclen_field_poro,it)
-      call write_abs(0,b_absorb_fieldw,b_reclen_field_poro,it)
+      call write_abs(IOABS,b_absorb_fields,b_reclen_field_poro,it)
+      call write_abs(IOABS,b_absorb_fieldw,b_reclen_field_poro,it)
     endif
   endif
 

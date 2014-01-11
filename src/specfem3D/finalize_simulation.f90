@@ -118,8 +118,8 @@
     if( num_abs_boundary_faces > 0 .and. (SIMULATION_TYPE == 3 .or. &
           (SIMULATION_TYPE == 1 .and. SAVE_FORWARD)) ) then
 
-      if( ELASTIC_SIMULATION) call close_file_abs(0) ! close(IOABS)
-      if( ACOUSTIC_SIMULATION) call close_file_abs(1) ! close(IOABS_AC)
+      if (ELASTIC_SIMULATION) call close_file_abs(IOABS)
+      if (ACOUSTIC_SIMULATION) call close_file_abs(IOABS_AC)
 
     endif
   endif

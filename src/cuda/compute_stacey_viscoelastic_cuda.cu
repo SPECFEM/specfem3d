@@ -239,10 +239,6 @@ void FC_FUNC_(compute_stacey_viscoelastic_cuda,
   exit_on_cuda_error("compute_stacey_elastic_kernel");
 #endif
 
-  // ! adjoint simulations: stores absorbed wavefield part
-  // if (mp->simulation_type == 1 .and. SAVE_FORWARD .and. num_abs_boundary_faces > 0 ) &
-  //   write(IOABS,rec=it) b_reclen_field,b_absorb_field,b_reclen_field
-
   if(mp->simulation_type == 1 && mp->save_forward ) {
     // explicitly wait until compute stream is done
     // (cudaMemcpy implicitly synchronizes all other cuda operations)

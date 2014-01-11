@@ -118,10 +118,7 @@
   if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD ) then
     ! writes out absorbing boundary value only when second phase is running
     if( phase_is_inner .eqv. .true. ) then
-      ! uses fortran routine
-      !write(IOABS_AC,rec=it) b_reclen_potential,b_absorb_potential,b_reclen_potential
-      ! uses c routine
-      call write_abs(1,b_absorb_potential,b_reclen_potential,it)
+      call write_abs(IOABS_AC,b_absorb_potential,b_reclen_potential,it)
     endif
   endif
 
@@ -177,12 +174,7 @@
     ! reads in absorbing boundary array when first phase is running
     if( phase_is_inner .eqv. .false. ) then
       ! note: the index NSTEP-it+1 is valid if b_displ is read in after the Newmark scheme
-      ! uses fortran routine
-      !read(IOABS_AC,rec=NSTEP-it+1) reclen1,b_absorb_potential,reclen2
-      !if (reclen1 /= b_reclen_potential .or. reclen1 /= reclen2) &
-      !  call exit_mpi(0,'Error reading absorbing contribution b_absorb_potential')
-      ! uses c routine for faster reading
-      call read_abs(1,b_absorb_potential,b_reclen_potential,NSTEP-it+1)
+      call read_abs(IOABS_AC,b_absorb_potential,b_reclen_potential,NSTEP-it+1)
     endif
   endif !adjoint
 
@@ -257,12 +249,7 @@
     ! reads in absorbing boundary array when first phase is running
     if( phase_is_inner .eqv. .false. ) then
       ! note: the index NSTEP-it+1 is valid if b_displ is read in after the Newmark scheme
-      ! uses fortran routine
-      !read(IOABS_AC,rec=NSTEP-it+1) reclen1,b_absorb_potential,reclen2
-      !if (reclen1 /= b_reclen_potential .or. reclen1 /= reclen2) &
-      !  call exit_mpi(0,'Error reading absorbing contribution b_absorb_potential')
-      ! uses c routine for faster reading
-      call read_abs(1,b_absorb_potential,b_reclen_potential,NSTEP-it+1)
+      call read_abs(IOABS_AC,b_absorb_potential,b_reclen_potential,NSTEP-it+1)
     endif
   endif !adjoint
 
@@ -273,10 +260,7 @@
   if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD ) then
     ! writes out absorbing boundary value only when second phase is running
     if( phase_is_inner .eqv. .true. ) then
-      ! uses fortran routine
-      !write(IOABS_AC,rec=it) b_reclen_potential,b_absorb_potential,b_reclen_potential
-      ! uses c routine
-      call write_abs(1,b_absorb_potential,b_reclen_potential,it)
+      call write_abs(IOABS_AC,b_absorb_potential,b_reclen_potential,it)
     endif
   endif
 
