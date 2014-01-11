@@ -181,11 +181,6 @@ default: $(DEFAULT)
 
 all: clean default
 
-backup:
-	cp *f90 *h README_SPECFEM3D DATA/Par_file* Makefile go_generate_databases* go_mesher* go_solver* mymachines bak
-
-bak: backup
-
 generate_databases: xgenerate_databases
 
 

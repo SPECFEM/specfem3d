@@ -51,7 +51,7 @@ AR = ar
 ARFLAGS = cru
 RANLIB = ranlib
 
-##.PHONY: clean default all backup bak generate_databases specfem3D meshfem3D
+##.PHONY: clean default all generate_databases specfem3D meshfem3D
 
 ####
 #### targets
@@ -79,11 +79,6 @@ all: default \
 	$(EMPTY_MACRO)
 
 required: bin lib obj
-
-backup:
-	cp -rp src DATA Makefile go_generate_databases* go_mesher* go_solver* mymachines bak
-
-bak: backup
 
 mesh : meshfem3D
 gen : generate_databases
