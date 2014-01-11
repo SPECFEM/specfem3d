@@ -1,8 +1,5 @@
 # Configure time
 src/Makefile.inc
-src/libscotch/Makefile.org
-src/libscotchmetis/Makefile.org
-src/scotch/Makefile.org
 
 # Build time
 include/

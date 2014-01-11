@@ -60,18 +60,30 @@ ptscotch			:
 					$(MAKE) CFLAGS="$(CFLAGS) -DSCOTCH_PTSCOTCH" CC="$(CCP)" SCOTCHLIB=ptscotch	\
 					libptscotchparmetis$(LIB)
 
-install				:	scotch
-					-$(CP) metis.h $(includedir)
-					-$(CP) libscotchmetis$(LIB) $(libdir)
+install				:	scotch $(includedir)/metis.h $(libdir)/libscotchmetis$(LIB)
 
-ptinstall			:	ptscotch
-					-$(CP) parmetis.h $(includedir)
-					-$(CP) libptscotchparmetis$(LIB) $(libdir)
+ptinstall			:	ptscotch $(includedir)/parmetis.h $(libdir)/libptscotchparmetis$(LIB)
 
 clean				:
 					-$(RM) *~ *$(OBJ) lib*$(LIB)
 
 realclean			:	clean
+
+##
+##  Installation dependencies.
+##
+
+$(includedir)/metis.h		:	metis.h
+					-$(CP) metis.h $(includedir)
+
+$(libdir)/libscotchmetis$(LIB)	:	libscotchmetis$(LIB)
+					-$(CP) libscotchmetis$(LIB) $(libdir)
+
+$(includedir)/parmetis.h	:	parmetis.h
+					-$(CP) parmetis.h $(includedir)
+
+$(libdir)/libptscotchparmetis$(LIB):	libptscotchparmetis$(LIB)
+					-$(CP) libptscotchparmetis$(LIB) $(libdir)
 
 ##
 ##  Todo list.
