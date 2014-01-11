@@ -232,16 +232,14 @@ $O/%.noadios.o: %.F90
 $O/%.noadios.o: %.f90 
 	${FC} -c -o $@ $<
 
-$O/%.shared_noadios.o: ${SHARED}/%.f90 .FORCE
+$O/%.shared_noadios.o: ${SHARED}/%.f90
 	${FC} -c -o $@ $<
 
-$O/%.shared_adios.o: ${SHARED}/%.f90 ${SHARED}/constants.h .FORCE
+$O/%.shared_adios.o: ${SHARED}/%.f90 ${SHARED}/constants.h
 	${MPIFC} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INCLUDES) -o $@ $<
 
-$O/%.shared_adios.o: ${SHARED}/%.F90 ${SHARED}/constants.h .FORCE
+$O/%.shared_adios.o: ${SHARED}/%.F90 ${SHARED}/constants.h
 	${MPIFC} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INCLUDES) -o $@ $<
-
-.FORCE:
 
 #######################################
 
@@ -252,7 +250,7 @@ $O/%.shared_adios.o: ${SHARED}/%.F90 ${SHARED}/constants.h .FORCE
 $O/%.o: %.f90 $(SHARED)constants.h
 	${FCCOMPILE_CHECK} -c -o $@ $<
 
-$O/%.shared.o: $(SHARED)%.f90 $(SHARED)constants.h .FORCE
+$O/%.shared.o: $(SHARED)%.f90 $(SHARED)constants.h
 	${FCCOMPILE_CHECK} -c -o $@ $<
 
 ###
