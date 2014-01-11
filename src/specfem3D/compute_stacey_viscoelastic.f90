@@ -79,16 +79,10 @@
   real(kind=CUSTOM_REAL) vx,vy,vz,nx,ny,nz,tx,ty,tz,vn,jacobianw
   integer :: ispec,iglob,i,j,k,iface,igll
 
-! VM VM for new method
-!! DK DK for VM VM: this MUST be declared in the main program (i.e. in the calling program) and sent
-!! DK DK to this subroutine as an argument, otherwise it is allocated and deallocated every time the code
-!! DK DK enters this subroutine, thus this will be extremely slow, and also what the array contains
-!! DK DK will be lost between two calls
-!! VM VM I did it
+! for new method
   real(kind=CUSTOM_REAL) :: Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
   real(kind=CUSTOM_REAL) :: Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
 
-!! DK DK for VM VM: I had to add this missing declaration; but then of course now it is declared but undefined / unassigned
   integer :: it_dsm
 
   if (OLD_TEST_TO_FIX_ONE_DAY) then
@@ -285,18 +279,14 @@
   real(kind=CUSTOM_REAL) :: Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
   real(kind=CUSTOM_REAL) :: Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
 
-  !! DK DK why use 5 and not NGLLX here? (I assume 5 means 5 GLL points here?)
-  !! VM VM fixed to NGLLX
   real(kind=CUSTOM_REAL) :: dsm_boundary_tmp(3,Ntime_step_dsm,NGLLX,NGLLY)
 
   it_dsm = 1
-  !write(*,*) 'read dsm files',it_dsm
   do iface=1,num_abs_boundary_faces
 
     igll = 0
-    do j=1,NGLLY  !! DK DK why use 5 and not NGLLY here? (I assume 5 means 5 GLL points here?)
-      do i=1,NGLLX  !! DK DK why use 5 and not NGLLX here? (I assume 5 means 5 GLL points here?)
-                    !! VM VM Correction 5->NGLLX or NGLLY
+    do j=1,NGLLY
+      do i=1,NGLLX
         igll = igll + 1
         read(IIN_veloc_dsm) dsm_boundary_tmp(:,:,i,j)
         Veloc_dsm_boundary(:,:,igll,iface) = dsm_boundary_tmp(:,:,i,j)
@@ -340,16 +330,10 @@
   ! GPU_MODE variables
   integer(kind=8) :: Mesh_pointer
 
-! VM VM for new method
-!! DK DK for VM VM: this MUST be declared in the main program (i.e. in the calling program) and sent
-!! DK DK to this subroutine as an argument, otherwise it is allocated and deallocated every time the code
-!! DK DK enters this subroutine, thus this will be extremely slow, and also what the array contains
-!! DK DK will be lost between two calls
-!! VM VM I did it
+  ! for new method
   real(kind=CUSTOM_REAL) :: Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
   real(kind=CUSTOM_REAL) :: Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
 
-!! DK DK for VM VM: I had to add this missing declaration; but then of course now it is declared but undefined / unassigned
   integer :: it_dsm
 
   if (OLD_TEST_TO_FIX_ONE_DAY) then

@@ -87,7 +87,7 @@ module specfem_par
   integer, dimension(:), allocatable :: free_surface_ispec
   integer :: num_free_surface_faces
 
-! VM for new method
+! for new method
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: Veloc_dsm_boundary,Tract_dsm_boundary
 
 ! attenuation
@@ -103,7 +103,7 @@ module specfem_par
 ! time loop step
   integer :: it
 
-! VM for new  method
+! for new method
   integer :: it_dsm
 
 ! parameters for the source

@@ -54,7 +54,7 @@
   logical USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE,USE_RICKER_TIME_FUNCTION
   logical PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID
 
-  character(len=256) LOCAL_PATH,TOMOGRAPHY_PATH,CMTSOLUTION,FORCESOLUTION,TRAC_PATH ! VM VM adds TRAC_PATH
+  character(len=256) LOCAL_PATH,TOMOGRAPHY_PATH,CMTSOLUTION,FORCESOLUTION,TRAC_PATH
 
 ! local variables
   integer ::ios,icounter,isource,idummy,nproc_eta_old,nproc_xi_old
@@ -174,7 +174,7 @@
   call read_value_logical(PRINT_SOURCE_TIME_FUNCTION, 'solver.PRINT_SOURCE_TIME_FUNCTION')
   if(err_occurred() /= 0) return
 
-  !! VM VM read the traction path directory
+  !! read the traction path directory
   if (OLD_TEST_TO_FIX_ONE_DAY) then
      call read_value_string(TRAC_PATH, 'TRAC_PATH')
      if(err_occurred() /= 0) return
