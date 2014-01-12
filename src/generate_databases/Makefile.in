@@ -171,10 +171,6 @@ LIBGENDATABASES = $L/libgendatabases.a
 # default targets for the pure Fortran version
 @COND_PYRE_FALSE@DEFAULT = \
 @COND_PYRE_FALSE@	generate_databases \
-@COND_PYRE_FALSE@	specfem3D \
-@COND_PYRE_FALSE@	combine_vol_data \
-@COND_PYRE_FALSE@	combine_surf_data \
-@COND_PYRE_FALSE@	convolve_source_timefunction \
 @COND_PYRE_FALSE@	$(EMPTY_MACRO)
 
 default: $(DEFAULT)
@@ -198,9 +194,7 @@ generate_databases: xgenerate_databases
 
 clean:
 	rm -f $O/* *.o *.gnu *.mod \
-        xgenerate_databases \
-        xconvolve_source_timefunction \
-        xcreate_movie_shakemap_AVS_DX_GMT xcombine_vol_data xcombine_surf_data
+        xgenerate_databases
 
 ###
 ### rule for the archive library
