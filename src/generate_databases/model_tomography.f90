@@ -121,7 +121,7 @@
         read(string_read,*) temp_x,temp_y,temp_z
 
         ! determines total maximum number of element records
-        nrec = temp_x*temp_y*temp_z
+        nrec = int(temp_x*temp_y*temp_z)
         nrecord_max = max(nrecord_max,nrec)
 
         call tomo_read_next_line(27,string_read)

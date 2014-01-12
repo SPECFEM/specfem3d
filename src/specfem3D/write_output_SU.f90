@@ -190,16 +190,16 @@
 
   ! time steps
   header2(1)=0  ! dummy
-  header2(2)=NSTEP
+  header2(2)=int(NSTEP, kind=2)
   write(IOUT_SU,rec=(irec_local-1)*60+(irec_local-1)*NSTEP+29) header2
 
   ! time increment
   if( NINT(DT*1.0d6) < 65536 ) then
-    header2(1)=NINT(DT*1.0d6)  ! deltat (unit: 10^{-6} second)
+    header2(1)=NINT(DT*1.0d6, kind=2)  ! deltat (unit: 10^{-6} second)
   else if( NINT(DT*1.0d3) < 65536 ) then
-    header2(1)=NINT(DT*1.0d3)  ! deltat (unit: 10^{-3} second)
+    header2(1)=NINT(DT*1.0d3, kind=2)  ! deltat (unit: 10^{-3} second)
   else
-    header2(1)=NINT(DT)  ! deltat (unit: 10^{0} second)
+    header2(1)=NINT(DT, kind=2)  ! deltat (unit: 10^{0} second)
   endif
   header2(2)=0  ! dummy
   write(IOUT_SU,rec=(irec_local-1)*60+(irec_local-1)*NSTEP+30) header2

@@ -162,14 +162,14 @@
 !! C-PML absorbing boundary conditions
 !!
 !!-----------------------------------------------------------
-  real(kind=CUSTOM_REAL), parameter :: NPOWER = 1.d0
+  real(kind=CUSTOM_REAL), parameter :: NPOWER = 1._CUSTOM_REAL
 
 ! C-PML theoretical reflection coefficient
 ! (INRIA research report section 6.1:  http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf)
-  real(kind=CUSTOM_REAL), parameter :: CPML_Rcoef = 0.001d0
+  real(kind=CUSTOM_REAL), parameter :: CPML_Rcoef = 0.001_CUSTOM_REAL
 
 ! empirical damping modified factor
-  real(kind=CUSTOM_REAL), parameter :: damping_factor = 1.2d0
+  real(kind=CUSTOM_REAL), parameter :: damping_factor = 1.2_CUSTOM_REAL
 
 ! flags for the seven CPML regions
   integer, parameter :: CPML_X_ONLY = 1
@@ -247,9 +247,9 @@
 ! (EXPERIMENTAL feature)
 ! (requires MOVIE_SURFACE set to .true. in Par_file)
   logical, parameter :: PLOT_CROSS_SECTIONS = .false.
-  real(kind=CUSTOM_REAL),parameter :: CROSS_SECTION_X = 67000.0
-  real(kind=CUSTOM_REAL),parameter :: CROSS_SECTION_Y = 65500.0
-  real(kind=CUSTOM_REAL),parameter :: CROSS_SECTION_Z = -30000.0
+  real(kind=CUSTOM_REAL),parameter :: CROSS_SECTION_X = 67000.0_CUSTOM_REAL
+  real(kind=CUSTOM_REAL),parameter :: CROSS_SECTION_Y = 65500.0_CUSTOM_REAL
+  real(kind=CUSTOM_REAL),parameter :: CROSS_SECTION_Z = -30000.0_CUSTOM_REAL
 
 ! plots PNM cross-section image
 ! (EXPERIMENTAL feature)
@@ -405,7 +405,7 @@
 ! to avoid taking into account spurious oscillations in topography model
   double precision, parameter :: MINIMUM_THICKNESS_3D_OCEANS = 10.d0
 ! density of sea water
-  real(kind=CUSTOM_REAL), parameter :: RHO_APPROXIMATE_OCEAN_LOAD = 1020.0
+  real(kind=CUSTOM_REAL), parameter :: RHO_APPROXIMATE_OCEAN_LOAD = 1020.0_CUSTOM_REAL
 
 !!-----------------------------------------------------------
 !!

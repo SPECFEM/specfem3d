@@ -855,7 +855,7 @@
   ! by default: resolution is Q_resolution = 10
   ! converts Qmu to an array integer index:
   ! e.g. Qmu = 150.31 -> Qtmp = 150.31 * 10 = int( 1503.10 ) = 1503
-  Qtmp    = Qmu * dble(AM_S%Q_resolution)
+  Qtmp    = int(Qmu * dble(AM_S%Q_resolution))
 
   ! rounds to corresponding double value:
   ! e.g. Qmu_new = dble( 1503 ) / dble(10) = 150.30

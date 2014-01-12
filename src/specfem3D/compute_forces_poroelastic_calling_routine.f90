@@ -381,7 +381,7 @@ subroutine compute_continuity_disp_po_el(NSPEC_AB,NGLOB_AB,ibool,&
   integer, dimension(NGLOB_AB) :: icount
   integer :: ispec,i,j,k,l,iglob,igll,iface
 
-     icount(:)=ZERO
+  icount(:)=0
 
 ! loops on all coupling faces
   do iface = 1,num_coupling_el_po_faces

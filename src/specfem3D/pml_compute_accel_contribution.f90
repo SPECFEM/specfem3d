@@ -224,7 +224,7 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_ac
   do k=1,NGLLZ
      do j=1,NGLLY
         do i=1,NGLLX
-           kappal_inv = 1.d0 / kappastore(i,j,k,ispec)
+           kappal_inv = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
            jacobianl = jacobian(i,j,k,ispec)
            iglob = ibool(i,j,k,ispec)
            wgllcube = wgll_cube(i,j,k)

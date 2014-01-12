@@ -195,9 +195,9 @@
   real,parameter :: eps = 1.0e-3
 
 
-  i = uc + 1
-  j = vc + 1
-  k = wc + 1
+  i = int(uc) + 1
+  j = int(vc) + 1
+  k = int(wc) + 1
 
   xi = uc + 1 - i
   eta = vc + 1- j

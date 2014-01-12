@@ -725,18 +725,18 @@
           if((vpmax-vpmin)/vpmin > 0.02d0) then
             x1 = (image_color_vp_display(ix,iy)-vpmin)/(vpmax-vpmin)
           else
-            x1 = 0.5d0
+            x1 = 0.5_CUSTOM_REAL
           endif
 
           ! rescale to avoid very dark gray levels
           x1 = x1*0.7 + 0.2
-          if(x1 > 1.d0) x1=1.d0
+          if(x1 > 1.d0) x1=1._CUSTOM_REAL
 
           ! invert scale: white = vpmin, dark gray = vpmax
-          x1 = 1.d0 - x1
+          x1 = 1._CUSTOM_REAL - x1
 
           ! map to [0,255]
-          x1 = x1 * 255.d0
+          x1 = x1 * 255._CUSTOM_REAL
 
           R = nint(x1)
           if(R < 0) R = 0

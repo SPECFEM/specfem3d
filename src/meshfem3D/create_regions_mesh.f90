@@ -320,9 +320,9 @@ contains
                 ! loop on all the corner nodes of this element
                 do ia = 1,NGNOD_EIGHT_CORNERS
                   ! define topological coordinates of this mesh point
-                  ioffset_x = ix + iax*x_superbrick(ibool_superbrick(ia,ispec_superbrick))
-                  ioffset_y = iy + iay*y_superbrick(ibool_superbrick(ia,ispec_superbrick))
-                  ioffset_z = ir + iar*z_superbrick(ibool_superbrick(ia,ispec_superbrick))
+                  ioffset_x = int(ix + iax*x_superbrick(ibool_superbrick(ia,ispec_superbrick)))
+                  ioffset_y = int(iy + iay*y_superbrick(ibool_superbrick(ia,ispec_superbrick)))
+                  ioffset_z = int(ir + iar*z_superbrick(ibool_superbrick(ia,ispec_superbrick)))
 
                   xelm(ia) = xgrid(ioffset_z,ioffset_x,ioffset_y)
                   yelm(ia) = ygrid(ioffset_z,ioffset_x,ioffset_y)

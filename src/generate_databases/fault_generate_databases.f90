@@ -410,11 +410,11 @@ subroutine close_fault(fdb)
   do i=1,fdb%nglob
     K1 = fdb%ibulk1(i)
     K2 = fdb%ibulk2(i)
-    xstore_dummy(K1) = 0.5d0*( xstore_dummy(K1) + xstore_dummy(K2) )
+    xstore_dummy(K1) = 0.5_CUSTOM_REAL*( xstore_dummy(K1) + xstore_dummy(K2) )
     xstore_dummy(K2) = xstore_dummy(K1)
-    ystore_dummy(K1) = 0.5d0*( ystore_dummy(K1) + ystore_dummy(K2) )
+    ystore_dummy(K1) = 0.5_CUSTOM_REAL*( ystore_dummy(K1) + ystore_dummy(K2) )
     ystore_dummy(K2) = ystore_dummy(K1)
-    zstore_dummy(K1) = 0.5d0*( zstore_dummy(K1) + zstore_dummy(K2) )
+    zstore_dummy(K1) = 0.5_CUSTOM_REAL*( zstore_dummy(K1) + zstore_dummy(K2) )
     zstore_dummy(K2) = zstore_dummy(K1)
   enddo
 
