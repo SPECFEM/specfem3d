@@ -170,7 +170,7 @@ LIBGENDATABASES = $L/libgendatabases.a
 
 # default targets for the pure Fortran version
 @COND_PYRE_FALSE@DEFAULT = \
-@COND_PYRE_FALSE@	generate_databases \
+@COND_PYRE_FALSE@	xgenerate_databases \
 @COND_PYRE_FALSE@	$(EMPTY_MACRO)
 
 default: $(DEFAULT)
@@ -178,6 +178,7 @@ default: $(DEFAULT)
 all: default
 
 generate_databases: xgenerate_databases
+xgenerate_databases: $E/xgenerate_databases
 
 
 
@@ -186,15 +187,15 @@ generate_databases: xgenerate_databases
 ####
 
 # rules for the pure Fortran version
-@COND_PYRE_FALSE@xgenerate_databases: $(XGENERATE_DATABASES_OBJECTS) $(COND_MPI_OBJECTS) $(KEEP_MAIN_PROGRAM_SEPARATE)
+@COND_PYRE_FALSE@$E/xgenerate_databases: $(XGENERATE_DATABASES_OBJECTS) $(COND_MPI_OBJECTS) $(KEEP_MAIN_PROGRAM_SEPARATE)
 @COND_PYRE_FALSE@	${FCLINK} -o ${E}/xgenerate_databases $(KEEP_MAIN_PROGRAM_SEPARATE) $(COND_MPI_OBJECTS) $(XGENERATE_DATABASES_OBJECTS) $(MPILIBS) $(ADIOS_LINK)
 @COND_PYRE_FALSE@
 @COND_PYRE_FALSE@# solver also depends on values from mesher
 
 
 clean:
-	rm -f $O/* *.o *.gnu *.mod \
-        xgenerate_databases
+	rm -f $O/* *.gnu *.mod \
+        $E/xgenerate_databases
 
 ###
 ### rule for the archive library

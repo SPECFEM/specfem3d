@@ -81,6 +81,7 @@ default: $(DEFAULT)
 all: default
 
 decompose_mesh: xdecompose_mesh
+xdecompose_mesh: $E/xdecompose_mesh
 
 
 ####
@@ -98,7 +99,7 @@ DEC_OBJECTS = \
         $O/program_decompose_mesh.o
 
 # rules for the pure Fortran version
-@COND_PYRE_FALSE@xdecompose_mesh:: $(DEC_OBJECTS)
+@COND_PYRE_FALSE@$E/xdecompose_mesh: $(DEC_OBJECTS)
 @COND_PYRE_FALSE@	${FCLINK} -o  $E/xdecompose_mesh $(DEC_OBJECTS) $(SCOTCH_INC)  $(SCOTCH_LIBS)
 @COND_PYRE_FALSE@
 

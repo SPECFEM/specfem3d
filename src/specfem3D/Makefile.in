@@ -346,13 +346,13 @@ LIBSPECFEM = $L/libspecfem.a
 
 # default targets for the pure Fortran version
 @COND_PYRE_FALSE@DEFAULT = \
-@COND_PYRE_FALSE@	specfem3D \
-@COND_PYRE_FALSE@	combine_vol_data \
-@COND_PYRE_FALSE@	combine_surf_data \
-@COND_PYRE_FALSE@	convolve_source_timefunction \
-@COND_PYRE_FALSE@	smooth_vol_data \
-@COND_PYRE_FALSE@	sum_kernels \
-@COND_PYRE_FALSE@	model_update \
+@COND_PYRE_FALSE@	xspecfem3D \
+@COND_PYRE_FALSE@	xcombine_vol_data \
+@COND_PYRE_FALSE@	xcombine_surf_data \
+@COND_PYRE_FALSE@	xconvolve_source_timefunction \
+@COND_PYRE_FALSE@	xsmooth_vol_data \
+@COND_PYRE_FALSE@	xsum_kernels \
+@COND_PYRE_FALSE@	xmodel_update \
 @COND_PYRE_FALSE@	$(EMPTY_MACRO)
 
 default: $(DEFAULT)
@@ -360,6 +360,7 @@ default: $(DEFAULT)
 all: default
 
 specfem3D: xspecfem3D
+xspecfem3D: $E/xspecfem3D
 
 #######################################
 
@@ -370,7 +371,7 @@ specfem3D: xspecfem3D
 
 # rules for the pure Fortran version
 @COND_PYRE_FALSE@# solver also depends on values from mesher
-@COND_PYRE_FALSE@xspecfem3D: $(XSPECFEM_OBJECTS) $(COND_MPI_OBJECTS) $(COND_OPENMP_OBJECTS)
+@COND_PYRE_FALSE@$E/xspecfem3D: $(XSPECFEM_OBJECTS) $(COND_MPI_OBJECTS) $(COND_OPENMP_OBJECTS)
 @COND_PYRE_FALSE@@COND_CUDA_TRUE@@COND_CUDA5_TRUE@	${NVCCLINK} -o $(CUDA_DEVICE_OBJ) $(CUDA_OBJECTS)
 @COND_PYRE_FALSE@@COND_CUDA_TRUE@@COND_CUDA5_TRUE@	${FCLINK} -o ${E}/xspecfem3D $(XSPECFEM_OBJECTS) $(CUDA_DEVICE_OBJ) $(COND_MPI_OBJECTS) $(MPILIBS) $(COND_OPENMP_OBJECTS) $(OPENMP_LIBS) $(CUDA_LINK) $(ADIOS_LINK) $(LDFLAGS)
 @COND_PYRE_FALSE@@COND_CUDA_TRUE@@COND_CUDA5_FALSE@	${FCLINK} -o ${E}/xspecfem3D $(XSPECFEM_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS) $(COND_OPENMP_OBJECTS) $(OPENMP_LIBS) $(CUDA_LINK) $(ADIOS_LINK) $(LDFLAGS)
@@ -378,40 +379,47 @@ specfem3D: xspecfem3D
 @COND_PYRE_FALSE@
 
 convolve_source_timefunction: xconvolve_source_timefunction
+xconvolve_source_timefunction: $E/xconvolve_source_timefunction
 create_movie_shakemap_AVS_DX_GMT: xcreate_movie_shakemap_AVS_DX_GMT
+xcreate_movie_shakemap_AVS_DX_GMT: $E/xcreate_movie_shakemap_AVS_DX_GMT
 combine_vol_data: xcombine_vol_data
+xcombine_vol_data: $E/xcombine_vol_data
 combine_surf_data: xcombine_surf_data
+xcombine_surf_data: $E/xcombine_surf_data
 smooth_vol_data: xsmooth_vol_data
+xsmooth_vol_data: $E/xsmooth_vol_data
 sum_kernels: xsum_kernels
+xsum_kernels: $E/xsum_kernels
 model_update: xmodel_update
+xmodel_update: $E/xmodel_update
 
-xconvolve_source_timefunction: $O/convolve_source_timefunction.shared.o
+$E/xconvolve_source_timefunction: $O/convolve_source_timefunction.shared.o
 	${FCCOMPILE_CHECK} -o  ${E}/xconvolve_source_timefunction $O/convolve_source_timefunction.shared.o
 
-@COND_PYRE_FALSE@xcreate_movie_shakemap_AVS_DX_GMT: $O/create_movie_shakemap_AVS_DX_GMT.shared.o $(LIBSPECFEM) $(OUTPUT)/surface_from_mesher.h
+@COND_PYRE_FALSE@$E/xcreate_movie_shakemap_AVS_DX_GMT: $O/create_movie_shakemap_AVS_DX_GMT.shared.o $(LIBSPECFEM) $(OUTPUT)/surface_from_mesher.h
 @COND_PYRE_FALSE@	${FCCOMPILE_CHECK} -o  ${E}/xcreate_movie_shakemap_AVS_DX_GMT $O/create_movie_shakemap_AVS_DX_GMT.shared.o $(LIBSPECFEM) -I$(OUTPUT)
 
-xcombine_vol_data: $(COMBINE_VOL_DATA_OBJECTS) 
+$E/xcombine_vol_data: $(COMBINE_VOL_DATA_OBJECTS)
 	${MPIFCCOMPILE_CHECK} -o  ${E}/xcombine_vol_data $(COMBINE_VOL_DATA_OBJECTS) $(ADIOS_INC) $(ADIOS_LINK)
 
-xcombine_surf_data: $O/combine_surf_data.shared.o $O/write_c_binary.cc.o $O/param_reader.cc.o
+$E/xcombine_surf_data: $O/combine_surf_data.shared.o $O/write_c_binary.cc.o $O/param_reader.cc.o
 	${FCCOMPILE_CHECK} -o  ${E}/xcombine_surf_data  $O/combine_surf_data.shared.o $O/write_c_binary.cc.o $O/param_reader.cc.o
 
-xsmooth_vol_data: $O/smooth_vol_data.o $O/read_parameter_file.shared.o $O/read_value_parameters.shared.o $O/get_value_parameters.shared.o $O/param_reader.cc.o $O/gll_library.shared.o $O/exit_mpi.shared.o $(COND_MPI_OBJECTS)
+$E/xsmooth_vol_data: $O/smooth_vol_data.o $O/read_parameter_file.shared.o $O/read_value_parameters.shared.o $O/get_value_parameters.shared.o $O/param_reader.cc.o $O/gll_library.shared.o $O/exit_mpi.shared.o $(COND_MPI_OBJECTS)
 	${FCLINK} -o  ${E}/xsmooth_vol_data  $O/smooth_vol_data.o $O/read_parameter_file.shared.o $O/read_value_parameters.shared.o $O/get_value_parameters.shared.o $O/param_reader.cc.o $O/gll_library.shared.o $O/exit_mpi.shared.o $(COND_MPI_OBJECTS) $(MPILIBS)
 
-xsum_kernels: $(SUM_KERNELS_OBJECTS) $(COND_MPI_OBJECTS)
+$E/xsum_kernels: $(SUM_KERNELS_OBJECTS) $(COND_MPI_OBJECTS)
 	${FCLINK} -o  ${E}/xsum_kernels  $(SUM_KERNELS_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS) 
 
-xmodel_update: $(ADIOS_PREOBJECTS) $(MODEL_UPD_OBJECTS) $(COND_MPI_OBJECTS) $(CUDA_STUBS)
+$E/xmodel_update: $(ADIOS_PREOBJECTS) $(MODEL_UPD_OBJECTS) $(COND_MPI_OBJECTS) $(CUDA_STUBS)
 	${FCLINK} -o  ${E}/xmodel_update  $(ADIOS_OBJECTS) $(MODEL_UPD_OBJECTS) $(ADIOS_PREOBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS) $(CUDA_STUBS)
 
 clean:
-	rm -f $O/* *.o *.gnu *.mod \
-        xspecfem3D \
-        xconvolve_source_timefunction \
-        xcreate_movie_shakemap_AVS_DX_GMT xcombine_vol_data xcombine_surf_data \
-        xsmooth_vol_data xmodel_update xsum_kernels
+	rm -f $O/* *.gnu *.mod \
+        $E/xspecfem3D \
+        $E/xconvolve_source_timefunction \
+        $E/xcreate_movie_shakemap_AVS_DX_GMT $E/xcombine_vol_data $E/xcombine_surf_data \
+        $E/xsmooth_vol_data $E/xmodel_update $E/xsum_kernels
 
 
 #######################################
