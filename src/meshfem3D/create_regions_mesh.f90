@@ -382,7 +382,7 @@ contains
     enddo
 
     ! sorts xp,yp,zp in lexicographical order (increasing values)
-    call get_global(nspec,xp,yp,zp,iglob,locval,ifseg,nglob,npointot,UTM_X_MIN,UTM_X_MAX)
+    call get_global(npointot,xp,yp,zp,iglob,locval,ifseg,nglob,UTM_X_MIN,UTM_X_MAX)
 
     ! checks nglob range with pre-computed values
     ! note: if mesh squeezes elements such that we can't distinguish two close-by mesh points anymore

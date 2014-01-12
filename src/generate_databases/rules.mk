@@ -52,7 +52,6 @@ generate_databases_OBJECTS = \
 	$O/generate_databases.gen.o \
 	$O/get_absorbing_boundary.gen.o \
 	$O/get_coupling_surfaces.gen.o \
-	$O/get_global.gen.o \
 	$O/get_model.gen.o \
 	$O/get_MPI.gen.o \
 	$O/get_perm_color.gen.o \
@@ -88,6 +87,7 @@ generate_databases_SHARED_OBJECTS = \
 	$O/get_cmt.shared.o \
 	$O/get_element_face.shared.o \
 	$O/get_force.shared.o \
+	$O/get_global.shared.o \
 	$O/get_jacobian_boundaries.shared.o \
 	$O/get_shape2D.shared.o \
 	$O/get_shape3D.shared.o \

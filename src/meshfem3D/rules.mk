@@ -50,7 +50,6 @@ meshfem3D_OBJECTS = \
 	$O/define_subregions_heuristic.mesh.o \
 	$O/define_superbrick.mesh.o \
 	$O/get_flags_boundaries.mesh.o \
-	$O/get_global.mesh.o \
 	$O/get_MPI_cutplanes_eta.mesh.o \
 	$O/get_MPI_cutplanes_xi.mesh.o \
 	$O/get_value_parameters.mesh.o \
@@ -65,6 +64,7 @@ meshfem3D_OBJECTS = \
 
 meshfem3D_SHARED_OBJECTS = \
 	$O/exit_mpi.shared.o \
+	$O/get_global.shared.o \
 	$O/hex_nodes.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \

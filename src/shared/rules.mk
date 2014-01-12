@@ -49,6 +49,7 @@ shared_OBJECTS = \
 	$O/get_cmt.shared.o \
 	$O/get_element_face.shared.o \
 	$O/get_force.shared.o \
+	$O/get_global.shared.o \
 	$O/get_jacobian_boundaries.shared.o \
 	$O/get_shape2D.shared.o \
 	$O/get_shape3D.shared.o \

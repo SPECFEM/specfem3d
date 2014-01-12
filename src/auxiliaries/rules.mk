@@ -199,6 +199,7 @@ auxiliaries_MODULES += combine_vol_data_adios_mod.mod
 ##
 create_movie_shakemap_AVS_DX_GMT_auxiliaries_OBJECTS = \
 	$O/create_movie_shakemap_AVS_DX_GMT.aux.o \
+	$O/get_global.shared.o \
 	$O/get_value_parameters.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \

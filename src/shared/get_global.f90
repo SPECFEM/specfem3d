@@ -25,22 +25,21 @@
 !
 !=====================================================================
 
-  subroutine get_global(nspec,xp,yp,zp,iglob,locval,ifseg,nglob,npointot,UTM_X_MIN,UTM_X_MAX)
+  subroutine get_global(npointot,xp,yp,zp,iglob,locval,ifseg,nglob,UTM_X_MIN,UTM_X_MAX)
 
 ! this routine MUST be in double precision to avoid sensitivity
 ! to roundoff errors in the coordinates of the points
 
 ! non-structured global numbering software provided by Paul F. Fischer
 
-! leave the sorting subroutines in the same source file to allow for inlining
+! leave sorting subroutines in same source file to allow for inlining
 
   implicit none
 
   include "constants.h"
 
-
   integer npointot
-  integer nspec,nglob
+  integer nglob
   integer iglob(npointot),locval(npointot)
   logical ifseg(npointot)
   double precision xp(npointot),yp(npointot),zp(npointot)
@@ -56,31 +55,22 @@
 ! small value for double precision and to avoid sensitivity to roundoff
   double precision SMALLVALTOL
 
- !jpampuero To allow usage of this routine for volume and surface meshes:
- !jpampuero For volumes  NGLLCUBE = NGLLX * NGLLY * NGLLZ
- !jpampuero For surfaces NGLLCUBE = NGLLX * NGLLY
-  integer :: NGLLCUBE_local
-
-  NGLLCUBE_local=npointot/nspec
-! for vectorization of loops
-!  integer, parameter :: NGLLCUBE_NDIM = NGLLCUBE * NDIM
-
 ! define geometrical tolerance based upon typical size of the model
   SMALLVALTOL = 1.d-10 * dabs(UTM_X_MAX - UTM_X_MIN)
 
 ! dynamically allocate arrays
-  allocate(ind(npointot), &
-          ninseg(npointot), &
-          iwork(npointot), &
-          work(npointot),stat=ier)
-  if( ier /= 0 ) stop 'error allocating arrays'
+  allocate(ind(npointot),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array ind'
+  allocate(ninseg(npointot),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array ninseg'
+  allocate(iwork(npointot),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array iwork'
+  allocate(work(npointot),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array work'
 
 ! establish initial pointers
-  do ispec=1,nspec
-    ieoff=NGLLCUBE_local*(ispec-1)
-    do ilocnum=1,NGLLCUBE_local
-      locval(ilocnum+ieoff)=ilocnum+ieoff
-    enddo
+  do ilocnum=1,npointot
+    locval(ilocnum) = ilocnum
   enddo
 
   ifseg(:)=.false.
@@ -208,7 +198,6 @@
    endif
    IND(I)=INDX
   goto 100
-
   end subroutine rank
 
 ! ------------------------------------------------------------------
