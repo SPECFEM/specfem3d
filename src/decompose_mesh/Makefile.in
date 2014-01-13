@@ -103,7 +103,7 @@ DEC_OBJECTS = \
 @COND_PYRE_FALSE@	${FCLINK} -o  $E/xdecompose_mesh $(DEC_OBJECTS) $(SCOTCH_INC)  $(SCOTCH_LIBS)
 @COND_PYRE_FALSE@
 
-
+@SCOTCH_INCLUDEDIR@/scotchf.h: xscotch
 xscotch:
 ifeq (@USE_BUNDLED_SCOTCH@,1)
 	echo "Using bundled Scotch"
@@ -112,9 +112,10 @@ else
 	echo "Not using bundled Scotch"
 endif
 
-
 clean:
 	rm -f $O/*.o *.mod  $E/xdecompose_mesh
+
+.PHONY: xscotch clean
 
 ####
 #### rule to build each .o file below
@@ -132,7 +133,7 @@ $O/part_decompose_mesh.o: part_decompose_mesh.f90
 $O/fault_scotch.o: fault_scotch.f90
 	${FCCOMPILE_CHECK} -c -o $O/fault_scotch.o fault_scotch.f90 $(SCOTCH_INC)
 
-$O/decompose_mesh.o: decompose_mesh.F90 part_decompose_mesh.f90 $O/part_decompose_mesh.o $O/fault_scotch.o
+$O/decompose_mesh.o: decompose_mesh.F90 $O/part_decompose_mesh.o $O/fault_scotch.o @SCOTCH_INCLUDEDIR@/scotchf.h
 	${FCCOMPILE_CHECK} -c -o $O/decompose_mesh.o decompose_mesh.F90 $(SCOTCH_INC)
 
 $O/program_decompose_mesh.o: program_decompose_mesh.f90 $O/part_decompose_mesh.o $O/decompose_mesh.o
