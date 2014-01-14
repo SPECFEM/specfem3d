@@ -42,7 +42,6 @@ contains
 
     ! create the different regions of the mesh
   use adios_manager_mod
-  use mpi
 
     implicit none
 

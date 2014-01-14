@@ -6,13 +6,11 @@ module adios_manager_mod
 contains
 
 subroutine no_adios_err()
-  use mpi
-
   implicit none
 
-  integer :: myrank, code, ier
+  integer :: myrank, code
 
-  call MPI_Comm_rank(MPI_COMM_WORLD, myrank, ier)
+  call world_rank(myrank)
   if (myrank == 0) then
     print *, "----------------------------------------------------"
     print *, "Not configure to be compile with ADIOS."
@@ -20,7 +18,7 @@ subroutine no_adios_err()
     print *, "or reconfigure using --with-adios."
     print *, "----------------------------------------------------"
   endif
-  call MPI_Abort(MPI_COMM_WORLD, code, ier)
+  call stop_all()
 end subroutine
 
 !==============================================================================

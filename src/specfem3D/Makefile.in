@@ -436,7 +436,7 @@ $O/%.noadios.o: %.f90
 	${FC} -c -o $@ $<
 
 $O/%.shared_noadios.o: ${SHARED}/%.f90 .FORCE
-	${MPIFC} -c -o $@ $<
+	${FC} -c -o $@ $<
 
 $O/%.shared_adios.o: ${SHARED}/%.f90 ${SHARED}/constants.h .FORCE
 	${MPIFC} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INCLUDES) -o $@ $<
