@@ -193,6 +193,15 @@ $L/libmeshfem.a: $(libmeshfem_a_OBJECTS)
 #######################################
 
 ###
+### Module dependencies
+###
+
+$O/meshfem3D_adios_stubs.o: $O/adios_manager_stubs.shared_noadios.o
+$O/meshfem3D.o: $O/create_regions_mesh.o $O/read_mesh_parameter_file.o
+$O/save_databases.o: $O/safe_alloc_mod.shared.o $(ADIOS_PREOBJECTS)
+$O/create_regions_mesh.o: $(ADIOS_PREOBJECTS)
+
+###
 ### ADIOS compilation
 ###
 

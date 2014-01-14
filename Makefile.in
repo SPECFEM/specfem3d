@@ -58,9 +58,9 @@ RANLIB = ranlib
 # default targets for the pure Fortran version
 @COND_PYRE_FALSE@DEFAULT = \
 @COND_PYRE_FALSE@	xdecompose_mesh \
-@COND_PYRE_FALSE@	meshfem3D \
-@COND_PYRE_FALSE@	generate_databases \
-@COND_PYRE_FALSE@	specfem3D \
+@COND_PYRE_FALSE@	xmeshfem3D \
+@COND_PYRE_FALSE@	xgenerate_databases \
+@COND_PYRE_FALSE@	xspecfem3D \
 @COND_PYRE_FALSE@	$(EMPTY_MACRO)
 
 
@@ -103,10 +103,10 @@ xmeshfem3D:
 	$(MAKE) -C src/meshfem3D
 
 xspecfem3D:
-	$(MAKE) -C src/specfem3D specfem3D
+	$(MAKE) -C src/specfem3D xspecfem3D
 
 xgenerate_databases:
-	$(MAKE) -C src/generate_databases generate_databases
+	$(MAKE) -C src/generate_databases xgenerate_databases
 
 xdecompose_mesh:
 	$(MAKE) -C src/decompose_mesh

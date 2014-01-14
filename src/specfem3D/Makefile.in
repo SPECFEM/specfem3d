@@ -440,6 +440,74 @@ $L/libspecfem.a: $(libspecfem_a_OBJECTS)
 ####
 
 ###
+### Module dependencies
+###
+
+$O/check_stability.o: $O/specfem3D_par.o
+$O/compute_add_sources_acoustic.o: $O/specfem3D_par.o
+$O/compute_add_sources_poroelastic.o: $O/specfem3D_par.o
+$O/compute_add_sources_viscoelastic.o: $O/specfem3D_par.o
+$O/compute_boundary_kernel.o: $O/specfem3D_par.o
+$O/compute_forces_poroelastic_calling_routine.o: $O/specfem3D_par.o
+$O/compute_forces_poro_fluid_part.o: $O/specfem3D_par.o
+$O/compute_forces_poro_solid_part.o: $O/specfem3D_par.o
+$O/compute_kernels.o: $O/specfem3D_par.o
+$O/compute_stacey_viscoelastic.o: $O/specfem3D_par.o
+$O/create_color_image.o: $O/specfem3D_par.o
+$O/detect_mesh_surfaces.o: $O/specfem3D_par.o
+$O/fault_solver_common.o: $O/specfem3D_par.o
+$O/gravity_perturbation.o: $O/specfem3D_par.o
+$O/locate_source.o: $O/specfem3D_par.o
+$O/model_update.o: $O/specfem3D_par.o
+$O/pml_par.o: $O/specfem3D_par.o
+$O/setup_GLL_points.o: $O/specfem3D_par.o
+$O/setup_movie_meshes.o: $O/specfem3D_par.o
+$O/setup_sources_receivers.o: $O/specfem3D_par.o
+$O/specfem3D.o: $O/specfem3D_par.o
+$O/save_adjoint_kernels.o: $O/specfem3D_par.o
+$O/save_external_bin_m_up.o: $O/specfem3D_par.o
+$O/write_movie_output.o: $O/specfem3D_par.o
+$O/write_output_SU.o: $O/specfem3D_par.o
+$O/write_seismograms.o: $O/specfem3D_par.o
+
+$O/compute_coupling_acoustic_el.o: $O/pml_par.o
+$O/compute_coupling_viscoelastic_ac.o: $O/pml_par.o
+
+$O/compute_forces_acoustic_calling_routine.o: $O/specfem3D_par.o $O/pml_par.o
+$O/compute_forces_acoustic_Dev.o: $O/specfem3D_par.o $O/pml_par.o
+$O/compute_forces_acoustic_noDev.o: $O/specfem3D_par.o $O/pml_par.o
+$O/compute_total_energy.o: $O/specfem3D_par.o $O/pml_par.o
+$O/pml_allocate_arrays.o: $O/specfem3D_par.o $O/pml_par.o
+$O/pml_compute_accel_contribution.o: $O/specfem3D_par.o $O/pml_par.o
+$O/pml_compute_memory_variables.o: $O/specfem3D_par.o $O/pml_par.o
+$O/pml_output_VTKs.o: $O/specfem3D_par.o $O/pml_par.o
+$O/read_forward_arrays_adios.o: $O/specfem3D_par.o $O/pml_par.o
+$O/read_mesh_databases_adios.o: $O/specfem3D_par.o $O/pml_par.o
+$O/read_mesh_databases.o: $O/specfem3D_par.o $O/pml_par.o
+$O/update_displacement_scheme.o: $O/specfem3D_par.o $O/pml_par.o
+
+$O/fault_solver_dynamic.o: $O/specfem3D_par.o $O/fault_solver_common.o
+$O/fault_solver_kinematic.o: $O/specfem3D_par.o $O/fault_solver_common.o
+
+$O/compute_forces_viscoelastic_Dev.o: $O/specfem3D_par.o $O/pml_par.o $O/fault_solver_dynamic.o
+$O/compute_forces_viscoelastic_noDev.o: $O/specfem3D_par.o $O/pml_par.o $O/fault_solver_dynamic.o
+
+$O/compute_forces_viscoelastic_calling_routine.o: $O/specfem3D_par.o $O/pml_par.o $O/fault_solver_dynamic.o $O/fault_solver_kinematic.o
+
+$O/iterate_time.o: $O/specfem3D_par.o $O/gravity_perturbation.o
+
+$O/prepare_timerun.o: $O/specfem3D_par.o $O/pml_par.o $O/fault_solver_dynamic.o $O/fault_solver_kinematic.o $O/gravity_perturbation.o
+
+$O/initialize_simulation.o: $O/specfem3D_par.o $(ADIOS_PRESTUBS)
+$O/save_kernels_adios.o: $O/specfem3D_par.o $(ADIOS_PRESTUBS)
+
+$O/save_forward_arrays_adios.o: $O/specfem3D_par.o $O/pml_par.o $(ADIOS_PRESTUBS)
+
+$O/finalize_simulation.o: $O/specfem3D_par.o $O/pml_par.o $O/gravity_perturbation.o $(ADIOS_PRESTUBS)
+
+$O/specfem3D_adios_stubs.o: $O/adios_manager_stubs.shared_noadios.o
+
+###
 ### optimized flags (not dependent on values from mesher anymore)
 ###
 #######################################
