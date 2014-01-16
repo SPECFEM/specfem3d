@@ -189,7 +189,6 @@
   subroutine generate_databases
 
   use adios_manager_mod
-  use mpi
   use generate_databases_par
 
   implicit none

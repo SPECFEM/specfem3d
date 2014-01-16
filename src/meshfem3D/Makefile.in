@@ -208,7 +208,7 @@ $O/%.noadios.o: %.f90
 	${FC} -c -o $@ $<
 
 $O/%.shared_noadios.o: ${SHARED}/%.f90 .FORCE
-	${MPIFC} -c -o $@ $<
+	${FC} -c -o $@ $<
 
 $O/%.shared_adios.o: ${SHARED}/%.f90 ${SHARED}/constants.h .FORCE
 	${MPIFC} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INCLUDES) -o $@ $<
@@ -224,7 +224,7 @@ $O/%.shared_adios.o: ${SHARED}/%.F90 ${SHARED}/constants.h .FORCE
 ###
 
 $O/%.shared.o: $(SHARED)%.f90 $(SHARED)constants.h .FORCE
-	${MPIFCCOMPILE_CHECK} -c -o $@ $<
+	${FCCOMPILE_CHECK} -c -o $@ $<
 
 ###
 ### C compilation
@@ -305,7 +305,7 @@ $O/read_topo_bathy_file.o: ${SHARED}constants.h ${SHARED}/read_topo_bathy_file.f
 	${FCCOMPILE_CHECK} -c -o $O/read_topo_bathy_file.o ${SHARED}/read_topo_bathy_file.f90
 
 $O/create_regions_mesh.o: ${SHARED}constants.h create_regions_mesh.f90
-	${MPIFCCOMPILE_CHECK} -c -o $O/create_regions_mesh.o create_regions_mesh.f90
+	${FCCOMPILE_CHECK} -c -o $O/create_regions_mesh.o create_regions_mesh.f90
 
 $O/create_name_database.o: ${SHARED}constants.h create_name_database.f90
 	${FCCOMPILE_CHECK} -c -o $O/create_name_database.o create_name_database.f90

@@ -110,15 +110,14 @@ contains
 !>
 subroutine check_alloc_err(ier, usr_msg)
   use iso_fortran_env, only : error_unit
-  use mpi
 
   integer, intent(in) :: ier
   character(len=*), intent(in), optional :: usr_msg
 
-  integer :: myrank, mpi_er
+  integer :: myrank
 
   if(ier /= 0) then
-    call MPI_Comm_rank(MPI_COMM_WORLD, myrank, mpi_er)
+    call world_rank(myrank)
     if (present(usr_msg)) then
       write(error_unit, "('Process ', i6.6, " // &
                         "': Allocation error. ', A)") myrank, usr_msg
@@ -126,8 +125,7 @@ subroutine check_alloc_err(ier, usr_msg)
       write(error_unit, "('Process ', i6.6, ': Allocation error. " // &
                         " No user message specified.')") myrank
     endif
-    !call exit(ier)
-    call MPI_Abort(MPI_COMM_WORLD, ier, mpi_er)
+    call stop_all()
   endif
 end subroutine check_alloc_err
 
@@ -135,15 +133,14 @@ end subroutine check_alloc_err
 !>
 subroutine check_dealloc_err(ier, usr_msg)
   use iso_fortran_env, only : error_unit
-  use mpi
 
   integer, intent(in) :: ier
   character(len=*), intent(in), optional :: usr_msg
 
-  integer :: myrank, mpi_er
+  integer :: myrank
 
   if(ier /= 0) then
-    call MPI_Comm_rank(MPI_COMM_WORLD, myrank, mpi_er)
+    call world_rank(myrank)
     if (present(usr_msg)) then
       write(error_unit, "('Process ', i6.6, " // &
                         "': Deallocation error. ', A)") myrank, usr_msg
@@ -151,8 +148,7 @@ subroutine check_dealloc_err(ier, usr_msg)
       write(error_unit, "('Process ', i6.6, ': Deallocation error. " // &
                         " No user message specified.')") myrank
     endif
-    !call exit(ier)
-    call MPI_Abort(MPI_COMM_WORLD, ier, mpi_er)
+    call stop_all()
   endif
 end subroutine check_dealloc_err
 
