@@ -148,18 +148,19 @@ LIBMESHFEM = $(COND_PYRE_OBJECTS) $L/libmeshfem.a
 
 # default targets for the pure Fortran version
 @COND_PYRE_FALSE@DEFAULT = \
-@COND_PYRE_FALSE@	meshfem3D \
+@COND_PYRE_FALSE@	xmeshfem3D \
 @COND_PYRE_FALSE@	$(EMPTY_MACRO)
 
 # default targets for the Pyrized version
-@COND_PYRE_TRUE@DEFAULT = meshfem3D
+@COND_PYRE_TRUE@DEFAULT = xmeshfem3D
 
 
 default: $(DEFAULT)
 
-all: clean default
+all: default
 
 meshfem3D: xmeshfem3D
+xmeshfem3D: $E/xmeshfem3D
 
 
 ####
@@ -167,7 +168,7 @@ meshfem3D: xmeshfem3D
 ####
 
 # rules for the pure Fortran version
-@COND_PYRE_FALSE@xmeshfem3D: $(XMESHFEM_OBJECTS) $(COND_MPI_OBJECTS)
+@COND_PYRE_FALSE@$E/xmeshfem3D: $(XMESHFEM_OBJECTS) $(COND_MPI_OBJECTS)
 @COND_PYRE_FALSE@	${FCLINK} -o ${E}/xmeshfem3D $(XMESHFEM_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS) ${ADIOS_LINK} ${O}/safe_alloc_mod.shared.o
 @COND_PYRE_FALSE@
 @COND_PYRE_FALSE@# solver also depends on values from mesher
@@ -175,7 +176,7 @@ meshfem3D: xmeshfem3D
 
 
 clean:
-	rm -f $O/* *.o xmeshfem3D
+	rm -f $O/* *.mod $E/xmeshfem3D
 
 ###
 ### rule for the archive library
@@ -190,6 +191,15 @@ $L/libmeshfem.a: $(libmeshfem_a_OBJECTS)
 #### rule to build each .o file below
 ####
 #######################################
+
+###
+### Module dependencies
+###
+
+$O/meshfem3D_adios_stubs.o: $O/adios_manager_stubs.shared_noadios.o
+$O/meshfem3D.o: $O/create_regions_mesh.o $O/read_mesh_parameter_file.o
+$O/save_databases.o: $O/safe_alloc_mod.shared.o $(ADIOS_PREOBJECTS)
+$O/create_regions_mesh.o: $(ADIOS_PREOBJECTS)
 
 ###
 ### ADIOS compilation
@@ -207,23 +217,21 @@ $O/%.noadios.o: %.F90
 $O/%.noadios.o: %.f90
 	${FC} -c -o $@ $<
 
-$O/%.shared_noadios.o: ${SHARED}/%.f90 .FORCE
+$O/%.shared_noadios.o: ${SHARED}/%.f90
 	${FC} -c -o $@ $<
 
-$O/%.shared_adios.o: ${SHARED}/%.f90 ${SHARED}/constants.h .FORCE
+$O/%.shared_adios.o: ${SHARED}/%.f90 ${SHARED}/constants.h
 	${MPIFC} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INCLUDES) -o $@ $<
 
-$O/%.shared_adios.o: ${SHARED}/%.F90 ${SHARED}/constants.h .FORCE
+$O/%.shared_adios.o: ${SHARED}/%.F90 ${SHARED}/constants.h
 	${MPIFC} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INCLUDES) -o $@ $<
-
-.FORCE:
 
 #######################################
 ###
 ### not optimized flags (not dependent on values from mesher anymore)
 ###
 
-$O/%.shared.o: $(SHARED)%.f90 $(SHARED)constants.h .FORCE
+$O/%.shared.o: $(SHARED)%.f90 $(SHARED)constants.h
 	${FCCOMPILE_CHECK} -c -o $@ $<
 
 ###
