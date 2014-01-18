@@ -926,8 +926,8 @@ subroutine read_mesh_databases_adios()
   endif
 
   if( POROELASTIC_SIMULATION ) then
-    if( num_phase_ispec_poroelastic < 0 ) stop 'error poroelastic simulation:'&
-                                       'num_phase_ispec_poroelastic is < zero'
+    if( num_phase_ispec_poroelastic < 0 ) &
+      stop 'error poroelastic simulation:num_phase_ispec_poroelastic is < zero'
     allocate( phase_ispec_inner_poroelastic(num_phase_ispec_poroelastic,2), &
               stat=ier)
     if( ier /= 0 ) stop 'error allocating array phase_ispec_inner_poroelastic'

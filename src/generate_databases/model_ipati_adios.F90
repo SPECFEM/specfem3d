@@ -25,6 +25,8 @@
 !=====================================================================
 
 
+module model_ipati_adios_mod
+contains
 !-----------------------------------------------------------------------------
 !
 ! IPATI
@@ -211,3 +213,5 @@ subroutine read_model_vp_rho_adios (myrank, nspec, LOCAL_PATH, &
   call adios_read_close(handle,ier)
   call adios_read_finalize_method(ADIOS_READ_METHOD_BP, ier)
 end subroutine read_model_vp_rho_adios
+
+end module model_ipati_adios_mod

@@ -66,7 +66,7 @@ subroutine save_forward_arrays_adios()
   !--- Variables to allreduce - wmax stands for world_max
   integer :: nglob_wmax, nspec_wmax, NSPEC_ATTENUATION_wmax, &
              NSPEC_STRAIN_wmax, NSPEC_ATTENUATION_kappa_wmax, N_SLS_wmax
-  integer, parameter :: num_vars = 2
+  integer, parameter :: num_vars = 5
   integer, dimension(num_vars) :: max_global_values
 
   integer :: ier

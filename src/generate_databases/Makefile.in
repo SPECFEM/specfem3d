@@ -221,7 +221,6 @@ $O/fault_generate_databases.o: $O/generate_databases_par.o
 $O/finalize_databases.o: $O/generate_databases_par.o
 $O/get_absorbing_boundary.o: $O/generate_databases_par.o
 $O/get_coupling_surfaces.o: $O/generate_databases_par.o
-$O/get_model.o: $O/generate_databases_par.o
 $O/get_MPI.o: $O/generate_databases_par.o
 $O/memory_eval.o: $O/generate_databases_par.o
 $O/model_1d_cascadia.o: $O/generate_databases_par.o
@@ -248,6 +247,9 @@ $O/model_tomography.o: $O/generate_databases_par.o $O/tomography_par.o
 $O/generate_databases.o: $O/generate_databases_par.o $(ADIOS_PREOBJECTS)
 $O/save_arrays_solver_adios.adios.o: $O/generate_databases_par.o $(ADIOS_PREOBJECTS)
 $O/save_moho_adios.adios.o: $O/generate_databases_par.o $(ADIOS_PREOBJECTS)
+
+@COND_ADIOS_TRUE@$O/get_model.o: $O/generate_databases_par.o $O/model_ipati_adios.adios.o
+@COND_ADIOS_FALSE@$O/get_model.o: $O/generate_databases_par.o $O/generate_databases_adios_stubs.noadios.o
 
 $O/generate_databases_adios_stubs.noadios.o: $(ADIOS_PRESTUBS)
 
