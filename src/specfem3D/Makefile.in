@@ -396,13 +396,13 @@ $E/xconvolve_source_timefunction: $O/convolve_source_timefunction.shared.o
 	${FCCOMPILE_CHECK} -o  ${E}/xconvolve_source_timefunction $O/convolve_source_timefunction.shared.o
 
 @COND_PYRE_FALSE@$E/xcreate_movie_shakemap_AVS_DX_GMT: $O/create_movie_shakemap_AVS_DX_GMT.shared.o $(LIBSPECFEM) $(OUTPUT)/surface_from_mesher.h
-@COND_PYRE_FALSE@	${FCCOMPILE_CHECK} -o  ${E}/xcreate_movie_shakemap_AVS_DX_GMT $O/create_movie_shakemap_AVS_DX_GMT.shared.o $(LIBSPECFEM) -I$(OUTPUT)
+@COND_PYRE_FALSE@	${FCLINK} -o  ${E}/xcreate_movie_shakemap_AVS_DX_GMT $O/create_movie_shakemap_AVS_DX_GMT.shared.o $(LIBSPECFEM) -I$(OUTPUT)
 
-$E/xcombine_vol_data: $(COMBINE_VOL_DATA_OBJECTS)
-	${MPIFCCOMPILE_CHECK} -o  ${E}/xcombine_vol_data $(COMBINE_VOL_DATA_OBJECTS) $(ADIOS_INC) $(ADIOS_LINK)
+$E/xcombine_vol_data: $(COMBINE_VOL_DATA_OBJECTS) $(COND_MPI_OBJECTS)
+	${FCLINK} -o  ${E}/xcombine_vol_data $(COMBINE_VOL_DATA_OBJECTS) $(ADIOS_LINK) $(COND_MPI_OBJECTS) $(MPILIBS)
 
 $E/xcombine_surf_data: $O/combine_surf_data.shared.o $O/write_c_binary.cc.o $O/param_reader.cc.o
-	${FCCOMPILE_CHECK} -o  ${E}/xcombine_surf_data  $O/combine_surf_data.shared.o $O/write_c_binary.cc.o $O/param_reader.cc.o
+	${FCLINK} -o  ${E}/xcombine_surf_data  $O/combine_surf_data.shared.o $O/write_c_binary.cc.o $O/param_reader.cc.o
 
 $E/xsmooth_vol_data: $O/smooth_vol_data.o $O/read_parameter_file.shared.o $O/read_value_parameters.shared.o $O/get_value_parameters.shared.o $O/param_reader.cc.o $O/gll_library.shared.o $O/exit_mpi.shared.o $(COND_MPI_OBJECTS)
 	${FCLINK} -o  ${E}/xsmooth_vol_data  $O/smooth_vol_data.o $O/read_parameter_file.shared.o $O/read_value_parameters.shared.o $O/get_value_parameters.shared.o $O/param_reader.cc.o $O/gll_library.shared.o $O/exit_mpi.shared.o $(COND_MPI_OBJECTS) $(MPILIBS)
@@ -612,10 +612,10 @@ $O/serial.o: $(SHARED)constants.h $(SHARED)serial.f90
 ##
 
 $O/smooth_vol_data.o: $(SHARED)constants.h $(SHARED)smooth_vol_data.f90
-	${MPIFCCOMPILE_CHECK} -c -o $O/smooth_vol_data.o $(SHARED)smooth_vol_data.f90
+	${FCCOMPILE_CHECK} -c -o $O/smooth_vol_data.o $(SHARED)smooth_vol_data.f90
 
 $O/sum_kernels.o: $(SHARED)constants.h $(SHARED)sum_kernels.f90
-	${MPIFCCOMPILE_CHECK} -c -o $O/sum_kernels.o $(SHARED)sum_kernels.f90
+	${FCCOMPILE_CHECK} -c -o $O/sum_kernels.o $(SHARED)sum_kernels.f90
 
 
 #######################################
@@ -625,7 +625,7 @@ $O/sum_kernels.o: $(SHARED)constants.h $(SHARED)sum_kernels.f90
 ##
 
 $O/model_update.o: $(SHARED)constants.h model_update.f90
-	${MPIFCCOMPILE_CHECK} -c -o $O/model_update.o model_update.f90
+	${FCCOMPILE_CHECK} -c -o $O/model_update.o model_update.f90
 
 $O/save_external_bin_m_up.o:  $(SHARED)constants.h save_external_bin_m_up.f90
 	${FCCOMPILE_CHECK} -c -o $O/save_external_bin_m_up.o save_external_bin_m_up.f90

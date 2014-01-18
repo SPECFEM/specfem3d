@@ -60,11 +60,8 @@ program smooth_vol_data
 ! NOTE:  smoothing can be different in vertical & horizontal directions; mesh is in Cartesian geometry.
 !              algorithm uses vertical as Z, horizontal as X/Y direction
 
-  use :: mpi
-
   implicit none
   include "constants.h"
-  include "precision.h"
 
  ! data must be of dimension: (NGLLX,NGLLY,NGLLZ,NSPEC_AB)
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: dat,dat_smooth
@@ -143,12 +140,12 @@ program smooth_vol_data
 !------------------
 
   ! initialize the MPI communicator and start the NPROCTOT MPI processes
-  call MPI_INIT(ier)
-  call MPI_COMM_SIZE(MPI_COMM_WORLD,sizeprocs,ier)
-  call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
+  call init()
+  call world_size(sizeprocs)
+  call world_rank(myrank)
 
   if (myrank == 0) print*,"smooth_vol_data:"
-  call mpi_barrier(MPI_COMM_WORLD,ier)
+  call sync_all()
 
   ! reads arguments
   do i = 1, 5
@@ -237,7 +234,7 @@ program smooth_vol_data
     endif
     call exit_mpi(myrank,'Error total number of slices')
   endif
-  call mpi_barrier(MPI_COMM_WORLD,ier)
+  call sync_all()
 
   ! GLL points weights
   call zwgljd(xigll,wxgll,NGLLX,GAUSSALPHA,GAUSSBETA)
@@ -526,7 +523,7 @@ program smooth_vol_data
   !enddo
 
   ! synchronizes
-  call mpi_barrier(MPI_COMM_WORLD,ier)
+  call sync_all()
 
 
 !----------------------
@@ -735,13 +732,13 @@ program smooth_vol_data
   deallocate(dat_smooth)
 
   ! synchronizes
-  call mpi_barrier(MPI_COMM_WORLD,ier)
+  call sync_all()
 
   ! the maximum value for the smoothed kernel
   norm = max_old
-  call mpi_reduce(norm,max_old,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
+  call max_all_cr(norm, max_old)
   norm = max_new
-  call mpi_reduce(norm,max_new,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
+  call max_all_cr(norm, max_new)
   if( myrank == 0 ) then
     print *
     print *,'  Maximum data value before smoothing = ', max_old
@@ -749,8 +746,8 @@ program smooth_vol_data
     print *
   endif
 
-  ! stop all the MPI processes, and exit
-  call MPI_FINALIZE(ier)
+  ! stop all the processes, and exit
+  call finalize()
 
 end program smooth_vol_data
 

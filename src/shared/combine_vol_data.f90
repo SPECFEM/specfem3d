@@ -57,7 +57,6 @@
 !
 ! works for external, unregular meshes
 
-  use mpi
   use combine_vol_data_mod
   use combine_vol_data_adios_mod
 
@@ -114,7 +113,6 @@
              ADIOS_FOR_FORWARD_ARRAYS, ADIOS_FOR_KERNELS
 
   ! Variables to read ADIOS files
-  integer :: mpier
   integer :: sizeprocs, sel_num
   character(len=256) :: var_name , value_file_name, mesh_file_name
   integer(kind=8) :: value_handle, mesh_handle
@@ -123,11 +121,11 @@
   integer :: ibool_offset, x_global_offset
   integer(kind=8), dimension(1) :: start, count_ad
 
-  call MPI_Init(ier)
-  call MPI_Comm_size(MPI_COMM_WORLD, sizeprocs, ier)
+  call init()
+  call world_size(sizeprocs)
   if (sizeprocs .ne. 1) then
     print *, "sequential program. Only mpirun -np 1 ..."
-    call MPI_Abort(MPI_COMM_WORLD, ier, mpier)
+    call stop_all()
   endif
 
 ! checks given arguments
@@ -402,7 +400,7 @@
     call clean_adios(mesh_handle, value_handle)
   endif
 
-  call MPI_Finalize(ier)
+  call finalize()
 
   print *, 'Done writing '//trim(mesh_file)
 
