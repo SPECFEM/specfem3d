@@ -298,6 +298,9 @@ if test "$want_pyre" = yes; then
 fi
 
 if test "$want_adios" = yes; then
+    if test "$want_mpi" != yes; then
+        AC_MSG_ERROR([Cannot compile with ADIOS but without MPI.])
+    fi
     CIT_ADIOS_CONFIG
 fi	
 
