@@ -167,8 +167,8 @@ subroutine read_scalars_adios_mesh(mesh_handle, iproc, NGLOB_AB, NSPEC_AB, &
   integer :: ier
 
   call adios_selection_writeblock(sel, iproc)
-  call adios_schedule_read(mesh_handle, sel, "/nglob", 0, 1, NGLOB_AB, ier)
-  call adios_schedule_read(mesh_handle, sel, "/nspec", 0, 1, NSPEC_AB, ier)
+  call adios_schedule_read(mesh_handle, sel, "nglob", 0, 1, NGLOB_AB, ier)
+  call adios_schedule_read(mesh_handle, sel, "nspec", 0, 1, NSPEC_AB, ier)
   call adios_schedule_read(mesh_handle, sel, "ibool/offset", 0, 1, &
                            ibool_offset, ier)
   call adios_schedule_read(mesh_handle, sel, "x_global/offset", 0, 1, &

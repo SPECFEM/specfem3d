@@ -121,21 +121,21 @@ subroutine read_partition_files_adios()
   sel_num = sel_num+1
   sel => selections(sel_num)
   call adios_selection_writeblock(sel, myrank)
-  call adios_schedule_read(handle, sel, "/nglob", 0, 1, nnodes_ext_mesh, ier)
-  call adios_schedule_read(handle, sel, "/nspec", 0, 1, nelmnts_ext_mesh, ier)
+  call adios_schedule_read(handle, sel, "nglob", 0, 1, nnodes_ext_mesh, ier)
+  call adios_schedule_read(handle, sel, "nspec", 0, 1, nelmnts_ext_mesh, ier)
   ! read physical properties of the materials
   ! added poroelastic properties and filled with 0 the last 10 entries
   ! for elastic/acoustic
-  call adios_schedule_read(handle, sel, "/nmaterials", 0, 1, nmat_ext_mesh, ier)
-  call adios_schedule_read(handle, sel, "/nundef_materials", 0, 1, &
+  call adios_schedule_read(handle, sel, "nmaterials", 0, 1, nmat_ext_mesh, ier)
+  call adios_schedule_read(handle, sel, "nundef_materials", 0, 1, &
                            nundefMat_ext_mesh, ier)
-  call adios_schedule_read(handle, sel, "/nspec2d_xmin", 0, 1, nspec2D_xmin, ier)
-  call adios_schedule_read(handle, sel, "/nspec2d_xmax", 0, 1, nspec2D_xmax, ier)
-  call adios_schedule_read(handle, sel, "/nspec2d_ymin", 0, 1, nspec2D_ymin, ier)
-  call adios_schedule_read(handle, sel, "/nspec2d_ymax", 0, 1, nspec2D_ymax, ier)
-  call adios_schedule_read(handle, sel, "/nspec2d_bottom", 0, 1, &
+  call adios_schedule_read(handle, sel, "nspec2d_xmin", 0, 1, nspec2D_xmin, ier)
+  call adios_schedule_read(handle, sel, "nspec2d_xmax", 0, 1, nspec2D_xmax, ier)
+  call adios_schedule_read(handle, sel, "nspec2d_ymin", 0, 1, nspec2D_ymin, ier)
+  call adios_schedule_read(handle, sel, "nspec2d_ymax", 0, 1, nspec2D_ymax, ier)
+  call adios_schedule_read(handle, sel, "nspec2d_bottom", 0, 1, &
                            nspec2D_bottom_ext, ier)
-  call adios_schedule_read(handle, sel, "/nspec2d_top", 0, 1, &
+  call adios_schedule_read(handle, sel, "nspec2d_top", 0, 1, &
                            nspec2D_top_ext, ier)
   ! MPI interfaces between different partitions
   num_interfaces_ext_mesh = 0
@@ -143,9 +143,9 @@ subroutine read_partition_files_adios()
   if( NPROC > 1 ) then
     ! format: #number_of_MPI_interfaces
     !         #maximum_number_of_elements_on_each_interface
-    call adios_schedule_read(handle, sel, "/nb_interfaces", 0, 1, &
+    call adios_schedule_read(handle, sel, "nb_interfaces", 0, 1, &
                              num_interfaces_ext_mesh, ier)
-    call adios_schedule_read(handle, sel, "/nspec_interfaces_max", 0, 1, &
+    call adios_schedule_read(handle, sel, "nspec_interfaces_max", 0, 1, &
                              max_interface_size_ext_mesh, ier)
   endif
   ! Perform the read, so we can use the values.
