@@ -7084,6 +7084,9 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 fi
 
 if test "$want_adios" = yes; then
+    if test "$want_mpi" != yes; then
+        as_fn_error $? "Cannot compile with ADIOS but without MPI." "$LINENO" 5
+    fi
 
 
   # Extract the first word of "adios_config", so it can be a program name with args.

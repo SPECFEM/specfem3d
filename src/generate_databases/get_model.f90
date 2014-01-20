@@ -480,6 +480,8 @@
 
   use create_regions_mesh_ext_par
 
+  use model_ipati_adios_mod
+
   implicit none
 
   ! number of spectral elements in each block

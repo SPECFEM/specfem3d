@@ -25,6 +25,8 @@
 !=====================================================================
 
 
+module model_ipati_adios_mod
+contains
 !-----------------------------------------------------------------------------
 !
 ! IPATI
@@ -189,6 +191,7 @@ subroutine read_model_vp_rho_adios (myrank, nspec, LOCAL_PATH, &
   call adios_read_init_method (ADIOS_READ_METHOD_BP, MPI_COMM_WORLD, &
                                "verbose=1", ier)
   call adios_read_open_file (handle, database_name, 0, MPI_COMM_WORLD, ier)
+  if (ier /= 0) call stop_all()
 
   !------------------------.
   ! Get the 'chunks' sizes |
@@ -208,6 +211,9 @@ subroutine read_model_vp_rho_adios (myrank, nspec, LOCAL_PATH, &
   ! Perform read and close the adios file |
   !---------------------------------------'
   call adios_perform_reads(handle, ier)
+  if (ier /= 0) call stop_all()
   call adios_read_close(handle,ier)
   call adios_read_finalize_method(ADIOS_READ_METHOD_BP, ier)
 end subroutine read_model_vp_rho_adios
+
+end module model_ipati_adios_mod

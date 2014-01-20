@@ -89,16 +89,12 @@ end module sum_par
 
 program sum_kernels
 
-  use :: mpi
   use sum_par
   implicit none
 
-  include 'precision.h'
-
-
   character(len=150) :: kernel_list(MAX_NUM_NODES)
   character(len=150) :: sline, kernel_name,prname_lp
-  integer :: nker, myrank, sizeprocs,  ier
+  integer :: nker, myrank, sizeprocs
   integer :: ios
 
   double precision :: DT
@@ -119,16 +115,16 @@ program sum_kernels
 
   ! ============ program starts here =====================
   ! initialize the MPI communicator and start the NPROCTOT MPI processes
-  call MPI_INIT(ier)
-  call MPI_COMM_SIZE(MPI_COMM_WORLD,sizeprocs,ier)
-  call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
+  call init()
+  call world_size(sizeprocs)
+  call world_rank(myrank)
 
   if(myrank==0) then
     write(*,*) 'sum_preconditioned_kernels:'
     write(*,*)
     write(*,*) 'reading kernel list: '
   endif
-  call mpi_barrier(MPI_COMM_WORLD,ier)
+  call sync_all()
 
   ! reads in event list
   nker=0
@@ -175,7 +171,7 @@ program sum_kernels
     endif
     call exit_mpi(myrank,'Error total number of slices')
   endif
-  call mpi_barrier(MPI_COMM_WORLD,ier)
+  call sync_all()
 
   ! reads mesh file
   !
@@ -185,7 +181,7 @@ program sum_kernels
   write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',myrank,'_'//'external_mesh.bin'
   open(unit=27,file=trim(prname_lp),&
           status='old',action='read',form='unformatted',iostat=ios)
-  if( ier /= 0 ) then
+  if( ios /= 0 ) then
     print*,'error: could not open database '
     print*,'path: ',trim(prname_lp)
     call exit_mpi(myrank, 'error reading external mesh file')
@@ -206,7 +202,7 @@ program sum_kernels
   endif
 
   ! synchronizes
-  call mpi_barrier(MPI_COMM_WORLD,ier)
+  call sync_all()
 
   ! sums up kernels
   if( USE_ISO_KERNELS ) then
@@ -258,8 +254,8 @@ program sum_kernels
 
   if(myrank==0) write(*,*) 'done writing all kernels'
 
-  ! stop all the MPI processes, and exit
-  call MPI_FINALIZE(ier)
+  ! stop all the processes, and exit
+  call finalize()
 
 end program sum_kernels
 
@@ -269,15 +265,12 @@ end program sum_kernels
 
 subroutine sum_kernel_pre(kernel_name,kernel_list,nker,myrank)
 
-  use :: mpi
   use sum_par
   implicit none
 
-  include 'precision.h'
-
   real(kind=CUSTOM_REAL) :: norm,norm_sum
   character(len=150) :: kernel_name,kernel_list(MAX_NUM_NODES)
-  integer :: nker,myrank,ier
+  integer :: nker,myrank
 
   ! local parameters
   character(len=150) :: k_file
@@ -327,7 +320,7 @@ subroutine sum_kernel_pre(kernel_name,kernel_list,nker,myrank)
 
     ! outputs norm of kernel
     norm = sum( kernel * kernel )
-    call mpi_reduce(norm,norm_sum,1,CUSTOM_MPI_TYPE,MPI_SUM,0,MPI_COMM_WORLD,ier)
+    call sum_all_cr(norm, norm_sum)
     if( myrank == 0 ) then
       print*,'  norm kernel: ',sqrt(norm_sum)
     endif
@@ -348,7 +341,7 @@ subroutine sum_kernel_pre(kernel_name,kernel_list,nker,myrank)
 
     ! outputs norm of preconditioner
     norm = sum( hess * hess )
-    call mpi_reduce(norm,norm_sum,1,CUSTOM_MPI_TYPE,MPI_SUM,0,MPI_COMM_WORLD,ier)
+    call sum_all_cr(norm, norm_sum)
     if( myrank == 0 ) then
       print*,'  norm preconditioner: ',sqrt(norm_sum)
       print*
@@ -440,11 +433,8 @@ subroutine invert_hess( myrank,hess_matrix )
 ! H_nn = \frac{ \partial^2 \chi }{ \partial \rho_n \partial \rho_n }
 ! on all GLL points, which are indexed (i,j,k,ispec)
 
-  use :: mpi
   use sum_par
   implicit none
-
-  include 'precision.h'
 
   integer :: myrank
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
@@ -452,13 +442,12 @@ subroutine invert_hess( myrank,hess_matrix )
 
   ! local parameters
   real(kind=CUSTOM_REAL) :: maxh,maxh_all
-  integer :: ier
 
   ! maximum value of hessian
   maxh = maxval( abs(hess_matrix) )
 
   ! determines maximum from all slices on master
-  call mpi_allreduce(maxh,maxh_all,1,CUSTOM_MPI_TYPE,MPI_MAX,MPI_COMM_WORLD,ier)
+  call max_all_all_cr(maxh, maxh_all)
 
   ! user output
   if( myrank == 0 ) then

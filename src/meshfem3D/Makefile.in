@@ -48,11 +48,11 @@ FCFLAGS_f90 = @FCFLAGS_f90@
 # with configure: ./configure --with-adios ADIOS_CONFIG=..
 
 MPI_INCLUDES = @MPI_INCLUDES@
-ADIOS_INC = @ADIOS_FCFLAGS@ -I../../
+ADIOS_INC = @ADIOS_FCFLAGS@
 ADIOS_LINK = @ADIOS_LIBS@
 
-FCCOMPILE_CHECK =@FCENV@ ${FC} ${FCFLAGS} $(FLAGS_CHECK) -I${SHARED} ${ADIOS_LINK}
-MPIFCCOMPILE_CHECK =@FCENV@ ${MPIFC} ${FCFLAGS} $(FLAGS_CHECK) -I${SHARED} ${ADIOS_LINK}
+FCCOMPILE_CHECK =@FCENV@ ${FC} ${FCFLAGS} $(FLAGS_CHECK) -I${SHARED} ${ADIOS_INC}
+MPIFCCOMPILE_CHECK =@FCENV@ ${MPIFC} ${FCFLAGS} $(FLAGS_CHECK) -I${SHARED} ${ADIOS_INC}
 @COND_MPI_TRUE@FCLINK = $(MPIFCCOMPILE_CHECK)
 @COND_MPI_FALSE@FCLINK = $(FCCOMPILE_CHECK)
 
@@ -198,33 +198,37 @@ $L/libmeshfem.a: $(libmeshfem_a_OBJECTS)
 
 $O/meshfem3D_adios_stubs.o: $O/adios_manager_stubs.shared_noadios.o
 $O/meshfem3D.o: $O/create_regions_mesh.o $O/read_mesh_parameter_file.o
-$O/save_databases.o: $O/safe_alloc_mod.shared.o $(ADIOS_PREOBJECTS)
+$O/save_databases_adios.adios.o: $O/safe_alloc_mod.shared.o $(ADIOS_PREOBJECTS)
 $O/create_regions_mesh.o: $(ADIOS_PREOBJECTS)
+
+$O/adios_helpers.shared_adios.o: \
+	$O/adios_helpers_definitions.shared_adios.o \
+	$O/adios_helpers_writers.shared_adios.o
 
 ###
 ### ADIOS compilation
 ###
 
 $O/%.adios.o: %.F90 ${SHARED}constants.h
-	${MPIFCCOMPILE_CHECK} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INCLUDES) -o $@ $<
+	${MPIFCCOMPILE_CHECK} -c $(MPI_INCLUDES) -o $@ $<
 
 $O/%.adios.o: %.f90 ${SHARED}constants.h
-	${MPIFCCOMPILE_CHECK} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INCLUDES) -o $@ $<
+	${MPIFCCOMPILE_CHECK} -c $(MPI_INCLUDES) -o $@ $<
 
 $O/%.noadios.o: %.F90 
-	${FC} -c -o $@ $<
+	${FCCOMPILE_CHECK} -c -o $@ $<
 
 $O/%.noadios.o: %.f90
-	${FC} -c -o $@ $<
+	${FCCOMPILE_CHECK} -c -o $@ $<
 
 $O/%.shared_noadios.o: ${SHARED}/%.f90
-	${FC} -c -o $@ $<
+	${FCCOMPILE_CHECK} -c -o $@ $<
 
 $O/%.shared_adios.o: ${SHARED}/%.f90 ${SHARED}/constants.h
-	${MPIFC} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INCLUDES) -o $@ $<
+	${MPIFCCOMPILE_CHECK} -c $(MPI_INCLUDES) -o $@ $<
 
 $O/%.shared_adios.o: ${SHARED}/%.F90 ${SHARED}/constants.h
-	${MPIFC} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INCLUDES) -o $@ $<
+	${MPIFCCOMPILE_CHECK} -c $(MPI_INCLUDES) -o $@ $<
 
 #######################################
 ###

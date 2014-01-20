@@ -298,15 +298,15 @@ ADIOS_STUBS = \
 
 
 @COND_ADIOS_TRUE@COMBINE_VOL_DATA_OBJECTS = \
-	$O/combine_vol_data_adios_impl.shared_adios.o 
+	$O/combine_vol_data_adios_impl.shared_adios.o \
+	$O/combine_vol_data.shared_adios.o
 @COND_ADIOS_FALSE@COMBINE_VOL_DATA_OBJECTS = \
 	$O/adios_manager_stubs.shared_noadios.o \
-	$O/combine_vol_data_adios_stubs.shared_noadios.o 
-
+	$O/combine_vol_data_adios_stubs.shared_noadios.o \
+	$O/combine_vol_data.shared_noadios.o
 
 COMBINE_VOL_DATA_OBJECTS += \
 	$O/combine_vol_data_impl.shared.o \
-	$O/combine_vol_data.shared_adios.o \
 	$O/write_c_binary.cc.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \
@@ -317,12 +317,11 @@ COMBINE_VOL_DATA_OBJECTS += \
 # with configure: ./configure --with-adios ADIOS_CONFIG=..
 
 MPI_INCLUDES = @MPI_INCLUDES@
-ADIOS_INC = @ADIOS_FCFLAGS@ -I../../
+ADIOS_INC = @ADIOS_FCFLAGS@
 ADIOS_LINK = @ADIOS_LIBS@
 
 #@COND_ADIOS_TRUE@CPPFLAGS = @CPPFLAGS@
-@COND_ADIOS_TRUE@MPIFCCOMPILE_CHECK =@FCENV@ ${MPIFC} ${FCFLAGS} $(ADIOS_INC) $(FLAGS_CHECK)
-@COND_ADIOS_TRUE@MPIFCCOMPILE_NO_CHECK =@FCENV@ ${MPIFC} ${FCFLAGS} $(ADIOS_INC) $(FLAGS_NO_CHECK)
+@COND_ADIOS_TRUE@MPIFCCOMPILE_CHECK =@FCENV@ ${MPIFC} ${FCFLAGS} $(ADIOS_INC) $(FLAGS_CHECK) $(COND_OPENMP_FFLAGS) -I$(SHARED)
 
 # objects toggled between the parallel and serial version
 @COND_MPI_TRUE@COND_MPI_OBJECTS = $O/parallel.o
@@ -397,13 +396,13 @@ $E/xconvolve_source_timefunction: $O/convolve_source_timefunction.shared.o
 	${FCCOMPILE_CHECK} -o  ${E}/xconvolve_source_timefunction $O/convolve_source_timefunction.shared.o
 
 @COND_PYRE_FALSE@$E/xcreate_movie_shakemap_AVS_DX_GMT: $O/create_movie_shakemap_AVS_DX_GMT.shared.o $(LIBSPECFEM) $(OUTPUT)/surface_from_mesher.h
-@COND_PYRE_FALSE@	${FCCOMPILE_CHECK} -o  ${E}/xcreate_movie_shakemap_AVS_DX_GMT $O/create_movie_shakemap_AVS_DX_GMT.shared.o $(LIBSPECFEM) -I$(OUTPUT)
+@COND_PYRE_FALSE@	${FCLINK} -o  ${E}/xcreate_movie_shakemap_AVS_DX_GMT $O/create_movie_shakemap_AVS_DX_GMT.shared.o $(LIBSPECFEM) -I$(OUTPUT)
 
-$E/xcombine_vol_data: $(COMBINE_VOL_DATA_OBJECTS)
-	${MPIFCCOMPILE_CHECK} -o  ${E}/xcombine_vol_data $(COMBINE_VOL_DATA_OBJECTS) $(ADIOS_INC) $(ADIOS_LINK)
+$E/xcombine_vol_data: $(COMBINE_VOL_DATA_OBJECTS) $(COND_MPI_OBJECTS)
+	${FCLINK} -o  ${E}/xcombine_vol_data $(COMBINE_VOL_DATA_OBJECTS) $(ADIOS_LINK) $(COND_MPI_OBJECTS) $(MPILIBS)
 
 $E/xcombine_surf_data: $O/combine_surf_data.shared.o $O/write_c_binary.cc.o $O/param_reader.cc.o
-	${FCCOMPILE_CHECK} -o  ${E}/xcombine_surf_data  $O/combine_surf_data.shared.o $O/write_c_binary.cc.o $O/param_reader.cc.o
+	${FCLINK} -o  ${E}/xcombine_surf_data  $O/combine_surf_data.shared.o $O/write_c_binary.cc.o $O/param_reader.cc.o
 
 $E/xsmooth_vol_data: $O/smooth_vol_data.o $O/read_parameter_file.shared.o $O/read_value_parameters.shared.o $O/get_value_parameters.shared.o $O/param_reader.cc.o $O/gll_library.shared.o $O/exit_mpi.shared.o $(COND_MPI_OBJECTS)
 	${FCLINK} -o  ${E}/xsmooth_vol_data  $O/smooth_vol_data.o $O/read_parameter_file.shared.o $O/read_value_parameters.shared.o $O/get_value_parameters.shared.o $O/param_reader.cc.o $O/gll_library.shared.o $O/exit_mpi.shared.o $(COND_MPI_OBJECTS) $(MPILIBS)
@@ -412,7 +411,7 @@ $E/xsum_kernels: $(SUM_KERNELS_OBJECTS) $(COND_MPI_OBJECTS)
 	${FCLINK} -o  ${E}/xsum_kernels  $(SUM_KERNELS_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS) 
 
 $E/xmodel_update: $(ADIOS_PREOBJECTS) $(MODEL_UPD_OBJECTS) $(COND_MPI_OBJECTS) $(CUDA_STUBS)
-	${FCLINK} -o  ${E}/xmodel_update  $(ADIOS_OBJECTS) $(MODEL_UPD_OBJECTS) $(ADIOS_PREOBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS) $(CUDA_STUBS)
+	${FCLINK} -o  ${E}/xmodel_update  $(ADIOS_OBJECTS) $(MODEL_UPD_OBJECTS) $(ADIOS_PREOBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS) $(CUDA_STUBS) $(ADIOS_LINK) $(LDFLAGS)
 
 clean:
 	rm -f $O/* *.gnu *.mod \
@@ -481,8 +480,8 @@ $O/pml_allocate_arrays.o: $O/specfem3D_par.o $O/pml_par.o
 $O/pml_compute_accel_contribution.o: $O/specfem3D_par.o $O/pml_par.o
 $O/pml_compute_memory_variables.o: $O/specfem3D_par.o $O/pml_par.o
 $O/pml_output_VTKs.o: $O/specfem3D_par.o $O/pml_par.o
-$O/read_forward_arrays_adios.o: $O/specfem3D_par.o $O/pml_par.o
-$O/read_mesh_databases_adios.o: $O/specfem3D_par.o $O/pml_par.o
+$O/read_forward_arrays_adios.adios.o: $O/specfem3D_par.o $O/pml_par.o
+$O/read_mesh_databases_adios.adios.o: $O/specfem3D_par.o $O/pml_par.o
 $O/read_mesh_databases.o: $O/specfem3D_par.o $O/pml_par.o
 $O/update_displacement_scheme.o: $O/specfem3D_par.o $O/pml_par.o
 
@@ -498,14 +497,22 @@ $O/iterate_time.o: $O/specfem3D_par.o $O/gravity_perturbation.o
 
 $O/prepare_timerun.o: $O/specfem3D_par.o $O/pml_par.o $O/fault_solver_dynamic.o $O/fault_solver_kinematic.o $O/gravity_perturbation.o
 
-$O/initialize_simulation.o: $O/specfem3D_par.o $(ADIOS_PRESTUBS)
-$O/save_kernels_adios.o: $O/specfem3D_par.o $(ADIOS_PRESTUBS)
+$O/initialize_simulation.o: $O/specfem3D_par.o $(ADIOS_PREOBJECTS)
+$O/save_kernels_adios.adios.o: $O/specfem3D_par.o $(ADIOS_PREOBJECTS)
 
-$O/save_forward_arrays_adios.o: $O/specfem3D_par.o $O/pml_par.o $(ADIOS_PRESTUBS)
+$O/save_forward_arrays_adios.adios.o: $O/specfem3D_par.o $O/pml_par.o $(ADIOS_PREOBJECTS)
 
-$O/finalize_simulation.o: $O/specfem3D_par.o $O/pml_par.o $O/gravity_perturbation.o $(ADIOS_PRESTUBS)
+$O/finalize_simulation.o: $O/specfem3D_par.o $O/pml_par.o $O/gravity_perturbation.o $(ADIOS_PREOBJECTS)
 
-$O/specfem3D_adios_stubs.o: $O/adios_manager_stubs.shared_noadios.o
+$O/specfem3D_adios_stubs.noadios.o: $O/adios_manager_stubs.shared_noadios.o
+
+$O/combine_vol_data_adios_stubs.shared_noadios.o: $O/adios_manager_stubs.shared_noadios.o
+$O/combine_vol_data.shared_adios.o: $O/combine_vol_data_impl.shared.o $O/combine_vol_data_adios_impl.shared_adios.o
+$O/combine_vol_data.shared_noadios.o: $O/combine_vol_data_impl.shared.o $O/combine_vol_data_adios_stubs.shared_noadios.o
+
+$O/adios_helpers.shared_adios.o: \
+	$O/adios_helpers_definitions.shared_adios.o \
+	$O/adios_helpers_writers.shared_adios.o
 
 ###
 ### optimized flags (not dependent on values from mesher anymore)
@@ -517,25 +524,25 @@ $O/specfem3D_adios_stubs.o: $O/adios_manager_stubs.shared_noadios.o
 ###
 
 $O/%.adios.o: %.F90
-	${MPIFCCOMPILE_CHECK} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INCLUDES) -o $@ $<
+	${MPIFCCOMPILE_CHECK} -c $(MPI_INCLUDES) -o $@ $<
 
 $O/%.adios.o: %.f90
-	${MPIFCCOMPILE_CHECK} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INCLUDES) -o $@ $<
+	${MPIFCCOMPILE_CHECK} -c $(MPI_INCLUDES) -o $@ $<
 
 $O/%.noadios.o: %.F90 
-	${FC} -c -o $@ $<
+	${FCCOMPILE_CHECK} -c -o $@ $<
 
 $O/%.noadios.o: %.f90 
-	${FC} -c -o $@ $<
+	${FCCOMPILE_CHECK} -c -o $@ $<
 
 $O/%.shared_noadios.o: ${SHARED}/%.f90
-	${FC} -c -o $@ $<
+	${FCCOMPILE_CHECK} -c -o $@ $<
 
 $O/%.shared_adios.o: ${SHARED}/%.f90 ${SHARED}/constants.h
-	${MPIFC} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INCLUDES) -o $@ $<
+	${MPIFCCOMPILE_CHECK} -c $(MPI_INCLUDES) -o $@ $<
 
 $O/%.shared_adios.o: ${SHARED}/%.F90 ${SHARED}/constants.h
-	${MPIFC} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INCLUDES) -o $@ $<
+	${MPIFCCOMPILE_CHECK} -c $(MPI_INCLUDES) -o $@ $<
 
 #######################################
 $O/%.o: %.f90 $(SHARED)constants.h
@@ -605,10 +612,10 @@ $O/serial.o: $(SHARED)constants.h $(SHARED)serial.f90
 ##
 
 $O/smooth_vol_data.o: $(SHARED)constants.h $(SHARED)smooth_vol_data.f90
-	${MPIFCCOMPILE_CHECK} -c -o $O/smooth_vol_data.o $(SHARED)smooth_vol_data.f90
+	${FCCOMPILE_CHECK} -c -o $O/smooth_vol_data.o $(SHARED)smooth_vol_data.f90
 
 $O/sum_kernels.o: $(SHARED)constants.h $(SHARED)sum_kernels.f90
-	${MPIFCCOMPILE_CHECK} -c -o $O/sum_kernels.o $(SHARED)sum_kernels.f90
+	${FCCOMPILE_CHECK} -c -o $O/sum_kernels.o $(SHARED)sum_kernels.f90
 
 
 #######################################
@@ -618,7 +625,7 @@ $O/sum_kernels.o: $(SHARED)constants.h $(SHARED)sum_kernels.f90
 ##
 
 $O/model_update.o: $(SHARED)constants.h model_update.f90
-	${MPIFCCOMPILE_CHECK} -c -o $O/model_update.o model_update.f90
+	${FCCOMPILE_CHECK} -c -o $O/model_update.o model_update.f90
 
 $O/save_external_bin_m_up.o:  $(SHARED)constants.h save_external_bin_m_up.f90
 	${FCCOMPILE_CHECK} -c -o $O/save_external_bin_m_up.o save_external_bin_m_up.f90
