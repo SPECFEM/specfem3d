@@ -132,8 +132,10 @@ subroutine init_adios(value_file_name, mesh_file_name, &
                               "verbose=1", ier)
   call adios_read_open_file(mesh_handle, trim(mesh_file_name), 0, &
                             MPI_COMM_WORLD, ier)
+  if (ier /= 0) call stop_all()
   call adios_read_open_file(value_handle, trim(value_file_name), 0, &
                             MPI_COMM_WORLD, ier)
+  if (ier /= 0) call stop_all()
 end subroutine init_adios
 
 
@@ -172,6 +174,7 @@ subroutine read_scalars_adios_mesh(mesh_handle, iproc, NGLOB_AB, NSPEC_AB, &
   call adios_schedule_read(mesh_handle, sel, "x_global/offset", 0, 1, &
                            x_global_offset, ier)
   call adios_perform_reads(mesh_handle, ier) 
+  if (ier /= 0) call stop_all()
 end subroutine read_scalars_adios_mesh
 
 
@@ -194,6 +197,7 @@ subroutine read_ibool_adios_mesh(mesh_handle, ibool_offset, &
   call adios_schedule_read(mesh_handle, sel, "ibool/array", 0, 1, &
                            ibool, ier)
   call adios_perform_reads(mesh_handle, ier) 
+  if (ier /= 0) call stop_all()
 end subroutine read_ibool_adios_mesh
 
 
@@ -221,6 +225,7 @@ subroutine read_coordinates_adios_mesh(mesh_handle, x_global_offset,  &
   call adios_schedule_read(mesh_handle, sel, "z_global/array", 0, 1, &
                            zstore, ier)
   call adios_perform_reads(mesh_handle, ier) 
+  if (ier /= 0) call stop_all()
 end subroutine read_coordinates_adios_mesh
 
 
@@ -245,6 +250,7 @@ subroutine read_double_values_adios(value_handle, var_name, ibool_offset, &
   call adios_schedule_read(value_handle, sel, trim(var_name) // "/array", 0, 1, &
                            dat, ier)
   call adios_perform_reads(value_handle, ier) 
+  if (ier /= 0) call stop_all()
 end subroutine read_double_values_adios
 
 
@@ -269,6 +275,7 @@ subroutine read_float_values_adios(value_handle, var_name, ibool_offset, &
   call adios_schedule_read(value_handle, sel, trim(var_name) // "/array", 0, 1, &
                            dat, ier)
   call adios_perform_reads(value_handle, ier) 
+  if (ier /= 0) call stop_all()
 end subroutine read_float_values_adios
 
 end module combine_vol_data_adios_mod

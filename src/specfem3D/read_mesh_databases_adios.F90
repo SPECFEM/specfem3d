@@ -50,6 +50,7 @@ subroutine read_mesh_for_init(nspec, nglob)
   call adios_read_init_method (ADIOS_READ_METHOD_BP, MPI_COMM_WORLD, &
                                "verbose=1", ier)
   call adios_read_open_file (handle, database_name, 0, MPI_COMM_WORLD, ier)
+  if (ier /= 0) call stop_all()
 
   !------------------------------------.
   ! Read variables from the adios file |
@@ -62,6 +63,7 @@ subroutine read_mesh_for_init(nspec, nglob)
   ! Perform the reads and close the adios file |
   !--------------------------------------------'
   call adios_perform_reads(handle, ier)
+  if (ier /= 0) call stop_all()
   call adios_read_close(handle,ier)
   call adios_read_finalize_method(ADIOS_READ_METHOD_BP, ier)
 
@@ -154,6 +156,7 @@ subroutine read_mesh_databases_adios()
   call adios_read_init_method (ADIOS_READ_METHOD_BP, MPI_COMM_WORLD, &
                                "verbose=1", ier)
   call adios_read_open_file (handle, database_name, 0, MPI_COMM_WORLD, ier)
+  if (ier /= 0) call stop_all()
 
   !------------------------------------------------------------------.
   ! Get scalar values. Might be differents for different processors. |
@@ -166,6 +169,7 @@ subroutine read_mesh_databases_adios()
   call adios_schedule_read(handle, sel, "/nspec", 0, 1, NSPEC_AB, ier)
   call adios_schedule_read(handle, sel, "/nglob", 0, 1, NGLOB_AB, ier)
   call adios_perform_reads(handle, ier)
+  if (ier /= 0) call stop_all()
 
   !----------------------------------------------.
   ! Fetch values to compute the simulation type. |
@@ -191,6 +195,7 @@ subroutine read_mesh_databases_adios()
                            ispec_is_poroelastic, ier)
   ! Perform the read, so we can use the values.
   call adios_perform_reads(handle, ier)
+  if (ier /= 0) call stop_all()
   ! number of acoustic elements in this partition
   nspec_acoustic = count(ispec_is_acoustic(:))
   ! all processes will have acoustic_simulation set if any flag is .true.
@@ -328,6 +333,7 @@ subroutine read_mesh_databases_adios()
   endif
   ! Perform the read, so we can use the values.
   call adios_perform_reads(handle, ier)
+  if (ier /= 0) call stop_all()
 
 
   !------------------------.
@@ -1633,6 +1639,7 @@ subroutine read_mesh_databases_adios()
   ! Perform the reads and close the ADIOS 'external_mesh.bp' file |
   !---------------------------------------------------------------'
   call adios_perform_reads(handle, ier)
+  if (ier /= 0) call stop_all()
   call adios_read_close(handle,ier)
   call adios_read_finalize_method(ADIOS_READ_METHOD_BP, ier)
 
@@ -1757,6 +1764,7 @@ subroutine read_moho_mesh_adjoint_adios()
   call adios_read_init_method (ADIOS_READ_METHOD_BP, MPI_COMM_WORLD, &
                                "verbose=1", ier)
   call adios_read_open_file (handle, database_name, 0, MPI_COMM_WORLD, ier)
+  if (ier /= 0) call stop_all()
 
   !------------------------------------------------------------------.
   ! Get scalar values. Might be differents for different processors. |
@@ -1769,6 +1777,7 @@ subroutine read_moho_mesh_adjoint_adios()
   call adios_schedule_read(handle, sel, "/nspec2d_moho", 0, 1, &
                            NSPEC2D_MOHO, ier)
   call adios_perform_reads(handle, ier)
+  if (ier /= 0) call stop_all()
 
   !----------------------------------------------.
   ! Fetch values to compute the simulation type. |
@@ -1872,6 +1881,7 @@ subroutine read_moho_mesh_adjoint_adios()
   ! Perform the reads and close the ADIOS 'external_mesh.bp' file |
   !---------------------------------------------------------------'
   call adios_perform_reads(handle, ier)
+  if (ier /= 0) call stop_all()
   call adios_read_close(handle,ier)
   call adios_read_finalize_method(ADIOS_READ_METHOD_BP, ier)
 
