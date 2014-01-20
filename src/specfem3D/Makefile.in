@@ -317,7 +317,7 @@ COMBINE_VOL_DATA_OBJECTS += \
 # with configure: ./configure --with-adios ADIOS_CONFIG=..
 
 MPI_INCLUDES = @MPI_INCLUDES@
-ADIOS_INC = @ADIOS_FCFLAGS@ -I../../
+ADIOS_INC = @ADIOS_FCFLAGS@
 ADIOS_LINK = @ADIOS_LIBS@
 
 #@COND_ADIOS_TRUE@CPPFLAGS = @CPPFLAGS@
@@ -524,25 +524,25 @@ $O/adios_helpers.shared_adios.o: \
 ###
 
 $O/%.adios.o: %.F90
-	${MPIFCCOMPILE_CHECK} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INCLUDES) -o $@ $<
+	${MPIFCCOMPILE_CHECK} -c $(MPI_INCLUDES) -o $@ $<
 
 $O/%.adios.o: %.f90
-	${MPIFCCOMPILE_CHECK} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INCLUDES) -o $@ $<
+	${MPIFCCOMPILE_CHECK} -c $(MPI_INCLUDES) -o $@ $<
 
 $O/%.noadios.o: %.F90 
-	${FC} -c -o $@ $<
+	${FCCOMPILE_CHECK} -c -o $@ $<
 
 $O/%.noadios.o: %.f90 
-	${FC} -c -o $@ $<
+	${FCCOMPILE_CHECK} -c -o $@ $<
 
 $O/%.shared_noadios.o: ${SHARED}/%.f90
-	${FC} -c -o $@ $<
+	${FCCOMPILE_CHECK} -c -o $@ $<
 
 $O/%.shared_adios.o: ${SHARED}/%.f90 ${SHARED}/constants.h
-	${MPIFC} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INCLUDES) -o $@ $<
+	${MPIFCCOMPILE_CHECK} -c $(MPI_INCLUDES) -o $@ $<
 
 $O/%.shared_adios.o: ${SHARED}/%.F90 ${SHARED}/constants.h
-	${MPIFC} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INCLUDES) -o $@ $<
+	${MPIFCCOMPILE_CHECK} -c $(MPI_INCLUDES) -o $@ $<
 
 #######################################
 $O/%.o: %.f90 $(SHARED)constants.h
