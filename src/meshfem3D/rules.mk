@@ -71,6 +71,7 @@ meshfem3D_SHARED_OBJECTS = \
 	$O/read_topo_bathy_file.shared.o \
 	$O/read_value_parameters.shared.o \
 	$O/safe_alloc_mod.shared.o \
+	$O/sort_array_coordinates.shared.o \
 	$O/utm_geo.shared.o \
 	$(EMPTY_MACRO)
 

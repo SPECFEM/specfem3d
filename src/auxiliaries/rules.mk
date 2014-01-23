@@ -204,6 +204,7 @@ create_movie_shakemap_AVS_DX_GMT_auxiliaries_OBJECTS = \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \
+	$O/sort_array_coordinates.shared.o \
 	$O/utm_geo.shared.o \
 	$(EMPTY_MACRO)
 

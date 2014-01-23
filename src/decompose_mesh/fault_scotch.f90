@@ -297,73 +297,20 @@ CONTAINS
   double precision, intent(in) :: xyz_c(3,nspec)
 
   double precision, dimension(nspec) :: work,xp,yp,zp
-  integer, dimension(nspec) :: ind,ninseg,iwork
+  integer, dimension(nspec) :: ind,ninseg,iwork,ibool,iglob
+  integer :: nglob
   logical :: ifseg(nspec)
-  integer :: ispec,i,j
-  integer :: nseg,ioff,iseg
-  double precision :: SMALLVALTOL
+  double precision :: xtol
 
   xp=xyz_c(1,:)
   yp=xyz_c(2,:)
   zp=xyz_c(3,:)
 
   ! define geometrical tolerance based upon typical size of the model
-  SMALLVALTOL = 1.d-10 * maxval( maxval(xyz_c,2) - minval(xyz_c,2) )
+  xtol = 1.d-10 * maxval( maxval(xyz_c,2) - minval(xyz_c,2) )
 
-  ! establish initial pointers
-  do ispec=1,nspec
-    locval(ispec)=ispec
-  enddo
-
-  ifseg(:)=.false.
-
-  nseg=1
-  ifseg(1)=.true.
-  ninseg(1)=nspec
-
-  do j=1,NDIM
-
-  ! sort within each segment
-    ioff=1
-    do iseg=1,nseg
-      if(j == 1) then
-        call rank(xp(ioff),ind,ninseg(iseg))
-      else if(j == 2) then
-        call rank(yp(ioff),ind,ninseg(iseg))
-      else
-        call rank(zp(ioff),ind,ninseg(iseg))
-      endif
-      call swap_all(locval(ioff),xp(ioff),yp(ioff),zp(ioff),iwork,work,ind,ninseg(iseg))
-      ioff=ioff+ninseg(iseg)
-    enddo
-
-  ! check for jumps in current coordinate
-  ! compare the coordinates of the points within a small tolerance
-    if(j == 1) then
-      do i=2,nspec
-        if(dabs(xp(i)-xp(i-1)) > SMALLVALTOL) ifseg(i)=.true.
-      enddo
-    else if(j == 2) then
-      do i=2,nspec
-        if(dabs(yp(i)-yp(i-1)) > SMALLVALTOL) ifseg(i)=.true.
-      enddo
-    else
-      do i=2,nspec
-        if(dabs(zp(i)-zp(i-1)) > SMALLVALTOL) ifseg(i)=.true.
-      enddo
-    endif
-
-  ! count up number of different segments
-    nseg=0
-    do i=1,nspec
-      if(ifseg(i)) then
-        nseg=nseg+1
-        ninseg(nseg)=1
-      else
-        ninseg(nseg)=ninseg(nseg)+1
-      endif
-    enddo
-  enddo
+  call sort_array_coordinates(nspec,xp,yp,zp,ibool,iglob,locval,ifseg, &
+                              nglob,ind,ninseg,iwork,work,xtol)
 
   end subroutine lex_order
 
@@ -589,109 +536,6 @@ CONTAINS
   enddo
 
   end subroutine write_fault_database
-
-
-! -----------------------------------
-
-! sorting routines put in same file to allow for inlining
-
-  subroutine rank(A,IND,N)
-!
-! Use Heap Sort (Numerical Recipes)
-!
-  implicit none
-
-  integer n
-  double precision A(n)
-  integer IND(n)
-
-  integer i,j,l,ir,indx
-  double precision q
-
-  do j=1,n
-   IND(j)=j
-  enddo
-
-  if (n == 1) return
-
-  L=n/2+1
-  ir=n
-  100 CONTINUE
-   IF (l>1) THEN
-      l=l-1
-      indx=ind(l)
-      q=a(indx)
-   ELSE
-      indx=ind(ir)
-      q=a(indx)
-      ind(ir)=ind(1)
-      ir=ir-1
-      if (ir == 1) then
-         ind(1)=indx
-         return
-      endif
-   endif
-   i=l
-   j=l+l
-  200    CONTINUE
-   IF (J <= IR) THEN
-      IF (J<IR) THEN
-         IF ( A(IND(j))<A(IND(j+1)) ) j=j+1
-      endif
-      IF (q<A(IND(j))) THEN
-         IND(I)=IND(J)
-         I=J
-         J=J+J
-      ELSE
-         J=IR+1
-      endif
-   goto 200
-   endif
-   IND(I)=INDX
-  goto 100
-
-  end subroutine rank
-
-! ------------------------------------------------------------------
-
-  subroutine swap_all(IA,A,B,C,IW,W,ind,n)
-!
-! swap arrays IA, A, B and C according to addressing in array IND
-!
-  implicit none
-
-  integer n
-
-  integer IND(n)
-  integer IA(n),IW(n)
-  double precision A(n),B(n),C(n),W(n)
-
-  integer i
-
-  IW(:) = IA(:)
-  W(:) = A(:)
-
-  do i=1,n
-    IA(i)=IW(ind(i))
-    A(i)=W(ind(i))
-  enddo
-
-  W(:) = B(:)
-
-  do i=1,n
-    B(i)=W(ind(i))
-  enddo
-
-  W(:) = C(:)
-
-  do i=1,n
-    C(i)=W(ind(i))
-  enddo
-
-end subroutine swap_all
-
-! ------------------------------------------------------------------
-
 
 end module fault_scotch
 

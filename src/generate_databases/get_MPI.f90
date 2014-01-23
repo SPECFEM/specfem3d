@@ -135,7 +135,7 @@
          ibool_interfaces_ext_mesh(1:nibool_interfaces_ext_mesh(iinterface),iinterface), &
          reorder_interface_ext_mesh,locval,ifseg, &
          nibool_interfaces_ext_mesh_true(iinterface), &
-         ind_ext_mesh,ninseg_ext_mesh,iwork_ext_mesh,work_ext_mesh)
+         ind_ext_mesh,ninseg_ext_mesh,iwork_ext_mesh,work_ext_mesh,SMALLVAL_TOL)
 
     ! checks that number of MPI points are still the same
     num_points1 = num_points1 + nibool_interfaces_ext_mesh(iinterface)

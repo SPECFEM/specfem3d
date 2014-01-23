@@ -48,7 +48,7 @@
   integer ispec,i,j,ier
   integer ieoff,ilocnum,nseg,ioff,iseg,ig
 
-  integer, dimension(:), allocatable :: ind,ninseg,iwork
+  integer, dimension(:), allocatable :: ind,ninseg,iwork,idummy
   double precision, dimension(:), allocatable :: work
 
 ! geometry tolerance parameter to calculate number of independent grid points
@@ -67,176 +67,20 @@
   if( ier /= 0 ) stop 'error allocating array iwork'
   allocate(work(npointot),stat=ier)
   if( ier /= 0 ) stop 'error allocating array work'
+  allocate(idummy(npointot),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array idummy'
 
-! establish initial pointers
-  do ilocnum=1,npointot
-    locval(ilocnum) = ilocnum
-  enddo
-
-  ifseg(:)=.false.
-
-  nseg=1
-  ifseg(1)=.true.
-  ninseg(1)=npointot
-
-  do j=1,NDIM
-
-! sort within each segment
-    ioff=1
-    do iseg=1,nseg
-      if(j == 1) then
-        call rank(xp(ioff),ind,ninseg(iseg))
-      else if(j == 2) then
-        call rank(yp(ioff),ind,ninseg(iseg))
-      else
-        call rank(zp(ioff),ind,ninseg(iseg))
-      endif
-      call swap_all(locval(ioff),xp(ioff),yp(ioff),zp(ioff),iwork,work,ind,ninseg(iseg))
-      ioff=ioff+ninseg(iseg)
-    enddo
-
-! check for jumps in current coordinate
-! compare the coordinates of the points within a small tolerance
-    if(j == 1) then
-      do i=2,npointot
-        if(dabs(xp(i)-xp(i-1)) > SMALLVALTOL) ifseg(i)=.true.
-      enddo
-    else if(j == 2) then
-      do i=2,npointot
-        if(dabs(yp(i)-yp(i-1)) > SMALLVALTOL) ifseg(i)=.true.
-      enddo
-    else
-      do i=2,npointot
-        if(dabs(zp(i)-zp(i-1)) > SMALLVALTOL) ifseg(i)=.true.
-      enddo
-    endif
-
-! count up number of different segments
-    nseg=0
-    do i=1,npointot
-      if(ifseg(i)) then
-        nseg=nseg+1
-        ninseg(nseg)=1
-      else
-        ninseg(nseg)=ninseg(nseg)+1
-      endif
-    enddo
-  enddo
-
-! assign global node numbers (now sorted lexicographically)
-  ig=0
-  do i=1,npointot
-    if(ifseg(i)) ig=ig+1
-    iglob(locval(i))=ig
-  enddo
-
-  nglob=ig
+  call sort_array_coordinates(npointot,xp,yp,zp,idummy,iglob,locval,ifseg, &
+                              nglob,ind,ninseg,iwork,work,SMALLVALTOL)
 
 ! deallocate arrays
   deallocate(ind)
   deallocate(ninseg)
   deallocate(iwork)
   deallocate(work)
+  deallocate(idummy)
 
   end subroutine get_global
-
-! -----------------------------------
-
-! sorting routines put in same file to allow for inlining
-
-  subroutine rank(A,IND,N)
-!
-! Use Heap Sort (Numerical Recipes)
-!
-  implicit none
-
-  integer n
-  double precision A(n)
-  integer IND(n)
-
-  integer i,j,l,ir,indx
-  double precision q
-
-  do j=1,n
-   IND(j)=j
-  enddo
-
-  if (n == 1) return
-
-  L=n/2+1
-  ir=n
-  100 CONTINUE
-   IF (l>1) THEN
-      l=l-1
-      indx=ind(l)
-      q=a(indx)
-   ELSE
-      indx=ind(ir)
-      q=a(indx)
-      ind(ir)=ind(1)
-      ir=ir-1
-      if (ir == 1) then
-         ind(1)=indx
-         return
-      endif
-   endif
-   i=l
-   j=l+l
-  200    CONTINUE
-   IF (J <= IR) THEN
-      IF (J<IR) THEN
-         IF ( A(IND(j))<A(IND(j+1)) ) j=j+1
-      endif
-      IF (q<A(IND(j))) THEN
-         IND(I)=IND(J)
-         I=J
-         J=J+J
-      ELSE
-         J=IR+1
-      endif
-   goto 200
-   endif
-   IND(I)=INDX
-  goto 100
-  end subroutine rank
-
-! ------------------------------------------------------------------
-
-  subroutine swap_all(IA,A,B,C,IW,W,ind,n)
-!
-! swap arrays IA, A, B and C according to addressing in array IND
-!
-  implicit none
-
-  integer n
-
-  integer IND(n)
-  integer IA(n),IW(n)
-  double precision A(n),B(n),C(n),W(n)
-
-  integer i
-
-  IW(:) = IA(:)
-  W(:) = A(:)
-
-  do i=1,n
-    IA(i)=IW(ind(i))
-    A(i)=W(ind(i))
-  enddo
-
-  W(:) = B(:)
-
-  do i=1,n
-    B(i)=W(ind(i))
-  enddo
-
-  W(:) = C(:)
-
-  do i=1,n
-    C(i)=W(ind(i))
-  enddo
-
-  end subroutine swap_all
 
 ! ------------------------------------------------------------------
 
