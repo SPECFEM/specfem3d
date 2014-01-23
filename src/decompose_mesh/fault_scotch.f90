@@ -296,8 +296,8 @@ CONTAINS
   integer, intent(out) :: locval(nspec)
   double precision, intent(in) :: xyz_c(3,nspec)
 
-  double precision, dimension(nspec) :: work,xp,yp,zp
-  integer, dimension(nspec) :: ind,ninseg,iwork,ibool,iglob
+  double precision, dimension(nspec) :: xp,yp,zp
+  integer, dimension(nspec) :: ninseg,ibool,iglob
   integer :: nglob
   logical :: ifseg(nspec)
   double precision :: xtol
@@ -310,7 +310,7 @@ CONTAINS
   xtol = 1.d-10 * maxval( maxval(xyz_c,2) - minval(xyz_c,2) )
 
   call sort_array_coordinates(nspec,xp,yp,zp,ibool,iglob,locval,ifseg, &
-                              nglob,ind,ninseg,iwork,work,xtol)
+                              nglob,ninseg,xtol)
 
   end subroutine lex_order
 

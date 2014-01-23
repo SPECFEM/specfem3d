@@ -63,14 +63,13 @@
 
   !local parameters
   double precision, dimension(:), allocatable :: xp,yp,zp
-  double precision, dimension(:), allocatable :: work_ext_mesh
 
   integer, dimension(:), allocatable :: locval
   integer, dimension(:), allocatable :: nibool_interfaces_ext_mesh_true
 
   ! for MPI buffers
   integer, dimension(:), allocatable :: reorder_interface_ext_mesh, &
-    ind_ext_mesh,ninseg_ext_mesh,iwork_ext_mesh
+    ninseg_ext_mesh
   logical, dimension(:), allocatable :: ifseg
   integer :: iinterface,ilocnum
   integer :: num_points1, num_points2
@@ -113,14 +112,8 @@
     if( ier /= 0 ) stop 'error allocating array ifseg'
     allocate(reorder_interface_ext_mesh(nibool_interfaces_ext_mesh(iinterface)),stat=ier)
     if( ier /= 0 ) stop 'error allocating array reorder_interface_ext_mesh'
-    allocate(ind_ext_mesh(nibool_interfaces_ext_mesh(iinterface)),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array ind_ext_mesh'
     allocate(ninseg_ext_mesh(nibool_interfaces_ext_mesh(iinterface)),stat=ier)
     if( ier /= 0 ) stop 'error allocating array ninseg_ext_mesh'
-    allocate(iwork_ext_mesh(nibool_interfaces_ext_mesh(iinterface)),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array iwork_ext_mesh'
-    allocate(work_ext_mesh(nibool_interfaces_ext_mesh(iinterface)),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array work_ext_mesh'
 
     ! gets x,y,z coordinates of global points on MPI interface
     do ilocnum = 1, nibool_interfaces_ext_mesh(iinterface)
@@ -135,7 +128,7 @@
          ibool_interfaces_ext_mesh(1:nibool_interfaces_ext_mesh(iinterface),iinterface), &
          reorder_interface_ext_mesh,locval,ifseg, &
          nibool_interfaces_ext_mesh_true(iinterface), &
-         ind_ext_mesh,ninseg_ext_mesh,iwork_ext_mesh,work_ext_mesh,SMALLVAL_TOL)
+         ninseg_ext_mesh,SMALLVAL_TOL)
 
     ! checks that number of MPI points are still the same
     num_points1 = num_points1 + nibool_interfaces_ext_mesh(iinterface)
@@ -153,10 +146,7 @@
     deallocate(locval)
     deallocate(ifseg)
     deallocate(reorder_interface_ext_mesh)
-    deallocate(ind_ext_mesh)
     deallocate(ninseg_ext_mesh)
-    deallocate(iwork_ext_mesh)
-    deallocate(work_ext_mesh)
 
   enddo
 

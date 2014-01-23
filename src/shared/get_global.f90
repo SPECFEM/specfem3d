@@ -48,8 +48,7 @@
   integer ispec,i,j,ier
   integer ieoff,ilocnum,nseg,ioff,iseg,ig
 
-  integer, dimension(:), allocatable :: ind,ninseg,iwork,idummy
-  double precision, dimension(:), allocatable :: work
+  integer, dimension(:), allocatable :: ninseg,idummy
 
 ! geometry tolerance parameter to calculate number of independent grid points
 ! small value for double precision and to avoid sensitivity to roundoff
@@ -59,25 +58,16 @@
   SMALLVALTOL = 1.d-10 * dabs(UTM_X_MAX - UTM_X_MIN)
 
 ! dynamically allocate arrays
-  allocate(ind(npointot),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array ind'
   allocate(ninseg(npointot),stat=ier)
   if( ier /= 0 ) stop 'error allocating array ninseg'
-  allocate(iwork(npointot),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array iwork'
-  allocate(work(npointot),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array work'
   allocate(idummy(npointot),stat=ier)
   if( ier /= 0 ) stop 'error allocating array idummy'
 
   call sort_array_coordinates(npointot,xp,yp,zp,idummy,iglob,locval,ifseg, &
-                              nglob,ind,ninseg,iwork,work,SMALLVALTOL)
+                              nglob,ninseg,SMALLVALTOL)
 
 ! deallocate arrays
-  deallocate(ind)
   deallocate(ninseg)
-  deallocate(iwork)
-  deallocate(work)
   deallocate(idummy)
 
   end subroutine get_global
