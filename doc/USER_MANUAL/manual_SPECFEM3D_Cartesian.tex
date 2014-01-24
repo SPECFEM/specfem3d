@@ -1,3 +1,4 @@
+% !TEX encoding = IsoLatin
 %% LyX 2.0.2 created this file.  For more info, see http://www.lyx.org/.
 %% Do not edit unless you really know what you are doing.
 \documentclass[oneside,english]{book}
@@ -132,10 +133,10 @@ Since then it has been developed and maintained by a development team:
 in alphabetical order, Jean-Paul (Pablo) Ampuero, Piero Basini, Céline
 Blitz, Ebru Bozda\u{g}, Emanuele Casarotti, Joseph Charles, Min Chen,
 Percy Galvez, Dominik Göddeke, Vala Hjörleifsdóttir, Sue Kientz, Dimitri
-Komatitsch, Jesús Labarta, Nicolas Le Goff, Pieyre Le Loher, Qinya
-Liu, Yang Luo, Alessia Maggi, Federica Magnoni, Roland Martin, René
-Matzen, Dennis McRitchie, Matthias Meschede, Peter Messmer, David
-Michéa, Surendra Nadh Somala, Tarje Nissen-Meyer, Daniel Peter, Max
+Komatitsch, Jesús Labarta, Nicolas Le Goff, Pieyre Le Loher, Matthieu
+Lefebvre, Qinya Liu, Yang Luo, Alessia Maggi, Federica Magnoni, Roland
+Martin, René Matzen, Dennis McRitchie, Matthias Meschede, Peter Messmer, 
+David Michéa, Surendra Nadh Somala, Tarje Nissen-Meyer, Daniel Peter, Max
 Rietmann, Elliott Sales de Andrade, Brian Savage, Bernhard Schuberth,
 Anne Sieminski, Leif Strand, Carl Tape, Jeroen Tromp, Jean-Pierre
 Vilotte, Zhinan Xie, Hejun Zhu.\\
@@ -613,6 +614,21 @@ binary file manually rather than in the Makefile:
 Packages such as \texttt{doxywizard} can be used to visualize the
 subroutine calling tree of the source code. \texttt{Doxywizard} is
 a GUI front-end for configuring and running \texttt{doxygen}.
+
+\section{Using the ADIOS library for I/O}
+Regular POSIX I/O can be problematic when dealing with large simulations one large
+clusters (typically more than $10,000$ processes). SPECFEM3D use the ADIOS library~\cite{Liu2013}
+to deal transparently take advantage of advanced paralllel file system features. To enable
+ADIOS, the following steps should be done:
+\begin{enumerate}
+\item Install ADIOS (available from \url{https://www.olcf.ornl.gov/center-projects/adios/}). 
+Make sure that your environment variables reference it. 
+\item You may want to change ADIOS related values in the \texttt{constants.h.in} file.
+The default values probably suit most cases.
+\item Configure using the \texttt{--with-adios} flag.
+\end{enumerate}
+ADIOS is currently only usable for meshfem3D generated mesh (i.e. not for meshes generated
+with CUBTI). Additional control parameters are discussed in section~\ref{cha:Main-Parameter}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -1494,7 +1510,7 @@ model using Olsen's empirical relation (see \citet{OlDaBr03}).
 in Olsen's empirical relation (see \citet{OlDaBr03}).
 \item [{\texttt{PML\_CONDITIONS}}] Set to \texttt{.true.} to turn on C-PML
 boundary conditions for a regional simulation. Both fluids and elastic
-solids are supported.
+solids are supported. Note that xmeshfem3d generated meshes do not support C-PML yet.
 \item [{\texttt{PML\_INSTEAD\_OF\_FREE\_SURFACE}}] Set to \texttt{.true.}
 to turn on C-PML boundary conditions on the top surface instead of
 the usual free surface.
@@ -1617,6 +1633,15 @@ Any other source-time function may then be obtained by convolution.
 information about the source time function in the file \texttt{OUTPUT\_FILES/plot\_source\_time\_function.txt}.
 This feature is only relevant for the solver.
 \item [{\texttt{GPU\_MODE}}] Turn this flag on to use GPUs.
+
+\item [\texttt{ADIOS\_ENABLED}] Turn this flag on to enable ADIOS. If set to \texttt{.false.}, subsequent ADIOS 
+parameters will not be considered.
+\item [\texttt{ADIOS\_FOR\_DATABASES}] Turn this flag on to use ADIOS for xmeshfem3D output and 
+xgenerate\_database input.
+\item [\texttt{ADIOS\_FOR\_MESH}]  Turn this flag on to use ADIOS for generated databases.
+\item [\texttt{ADIOS\_FOR\_FORWARD\_ARRAYS}] Turn this flag on to read and write forward arrays using ADIOS.
+\item [\texttt{ADIOS\_FOR\_KERNELS}] Turn this flag on to produce ADIOS kernels that can later be visualized with the ADIOS version of combine\_vol\_data.
+ 
 \end{description}
 If you use PML, the mesh elements that belong to the PML layers can
 be acoustic or elastic, but not viscoelastic nor poroelastic. Then,
