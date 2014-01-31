@@ -35,7 +35,6 @@
   implicit none
 
   include "constants.h"
-  include "../../OUTPUT_FILES/surface_from_mesher.h"
 
 !-------------------------------------------------------------------------------------------------
 ! user parameters
@@ -51,29 +50,37 @@
   logical, parameter :: NONLINEAR_SCALING = .false.
   real(kind=CUSTOM_REAL), parameter :: POWER_SCALING = 0.13_CUSTOM_REAL
 
+! muting source region
+  logical, parameter :: MUTE_SOURCE = .false.
+  real(kind=CUSTOM_REAL), parameter :: RADIUS_TO_MUTE = 1000._CUSTOM_REAL
+  real(kind=CUSTOM_REAL), parameter :: X_SOURCE_EXT_MESH = -9023.021484375
+  real(kind=CUSTOM_REAL), parameter :: Y_SOURCE_EXT_MESH = 6123.611328125
+  real(kind=CUSTOM_REAL), parameter :: Z_SOURCE_EXT_MESH = 17.96331405639648
+
 !-------------------------------------------------------------------------------------------------
 
-  integer it,it1,it2,ivalue,nspectot_AVS_max,ispec
-  integer iformat,nframes,iframe,inumber,inorm,iscaling_shake
-  integer ibool_number,ibool_number1,ibool_number2,ibool_number3,ibool_number4
+  integer :: it,it1,it2,ivalue,nspectot_AVS_max,ispec
+  integer :: iformat,nframes,iframe,inumber,inorm,iscaling_shake
+  integer :: ibool_number,ibool_number1,ibool_number2,ibool_number3,ibool_number4
 
-  logical USE_OPENDX,USE_AVS,USE_GMT,plot_shaking_map
+  logical :: USE_OPENDX,USE_AVS,USE_GMT,plot_shaking_map
 
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: x,y,z,display
-  real(kind=CUSTOM_REAL) xcoord,ycoord,zcoord
-  real(kind=CUSTOM_REAL) vectorx,vectory,vectorz
+  real(kind=CUSTOM_REAL) :: xcoord,ycoord,zcoord
+  real(kind=CUSTOM_REAL) :: vectorx,vectory,vectorz
 
-  double precision min_field_current,max_field_current,max_absol
+  double precision :: min_field_current,max_field_current,max_absol
 
-  character(len=256) outputname
+  character(len=256) :: outputname
+  character(len=256) :: line
 
-  integer ipoin
+  integer :: ipoin
 
   ! GMT
-  double precision lat,long
+  double precision :: lat,long
 
   ! for sorting routine
-  integer npointot,ilocnum,nglob,i,j,ielm,ieoff,ispecloc
+  integer :: npointot,ilocnum,nglob,i,j,ielm,ieoff,ispecloc
   integer, dimension(:), allocatable :: iglob,loc,ireorder
   logical, dimension(:), allocatable :: ifseg,mask_point
   double precision, dimension(:), allocatable :: xp,yp,zp,xp_save,yp_save,zp_save,field_display
@@ -84,38 +91,27 @@
          store_val_ux,store_val_uy,store_val_uz
 
   ! parameters read from parameter file
-  integer NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE,SIMULATION_TYPE
-  integer NSOURCES,NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY
-  logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
+  integer :: NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE,SIMULATION_TYPE
+  integer :: NSOURCES,NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY
+  logical :: MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
           USE_HIGHRES_FOR_MOVIES,SUPPRESS_UTM_PROJECTION
-  integer NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO,NGNOD,NGNOD2D
-  double precision DT
-  double precision HDUR_MOVIE,OLSEN_ATTENUATION_RATIO,f0_FOR_PML
-  logical ATTENUATION,USE_OLSEN_ATTENUATION, &
+  integer :: NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO,NGNOD,NGNOD2D
+  double precision :: DT
+  double precision :: HDUR_MOVIE,OLSEN_ATTENUATION_RATIO,f0_FOR_PML
+  logical :: ATTENUATION,USE_OLSEN_ATTENUATION, &
           APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,USE_FORCE_POINT_SOURCE
-  logical STACEY_ABSORBING_CONDITIONS,SAVE_FORWARD,STACEY_INSTEAD_OF_FREE_SURFACE
-  logical ANISOTROPY,SAVE_MESH_FILES,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
-  logical PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID
-  character(len=256) OUTPUT_FILES,LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
-  integer NPROC
-  integer ier
-  integer MOVIE_TYPE,IMODEL
-
-!--------------------------------------------
-!!!! NL NL for external meshes
-!--------------------------------------------
-  ! muting source region
-  logical, parameter :: MUTE_SOURCE = .false.
-  real(kind=CUSTOM_REAL), parameter :: RADIUS_TO_MUTE = 1000._CUSTOM_REAL
-  real(kind=CUSTOM_REAL), parameter :: X_SOURCE_EXT_MESH = -9023.021484375
-  real(kind=CUSTOM_REAL), parameter :: Y_SOURCE_EXT_MESH = 6123.611328125
-  real(kind=CUSTOM_REAL), parameter :: Z_SOURCE_EXT_MESH = 17.96331405639648
-!--------------------------------------------
-!!!! NL NL
+  logical :: STACEY_ABSORBING_CONDITIONS,SAVE_FORWARD,STACEY_INSTEAD_OF_FREE_SURFACE
+  logical :: ANISOTROPY,SAVE_MESH_FILES,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
+  logical :: PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID
+  character(len=256) :: OUTPUT_FILES,LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
+  integer :: NPROC
+  integer :: ier
+  integer :: MOVIE_TYPE,IMODEL
 
   ! order of points representing the 2D square element
   integer,dimension(NGNOD2D_FOUR_CORNERS_AVS_DX),parameter :: iorder = (/1,3,2,4/)
 
+  integer :: NSPEC_SURFACE_EXT_MESH
 
 ! ************** PROGRAM STARTS HERE **************
 
@@ -146,6 +142,27 @@
 
   ! only one global array for movie data, but stored for all surfaces defined
   ! in file 'surface_from_mesher.h'
+  open(unit=IIN,file=trim(OUTPUT_FILES)//'surface_from_mesher.h',status='old',action='read',iostat=ier)
+  if( ier /= 0 ) then
+    print*,'error opening file: ',trim(OUTPUT_FILES)//'surface_from_mesher.h'
+    print*
+    print*,'please run xgenerate_databases or xspecfem3D first to create this file, exiting now...'
+    stop 'error opening moviedata header file'
+  endif
+  ! skips first 5 lines
+  do i=1,6
+    read(IIN,'(a256)') line
+  enddo
+  ! line with info, e.g. "integer,parameter :: NSPEC_SURFACE_EXT_MESH = 23855"
+  read(IIN,'(a256)') line
+  close(IIN)
+  ! gets number from substring after = sign
+  i = index(line,'=')
+  if( i == 0 ) stop 'error reading in NSPEC_SURFACE_EXT_MESH from file OUTPUT_FILES/surface_from_mesher.h'
+
+  read(line(i+1:len_trim(line)),* ) NSPEC_SURFACE_EXT_MESH
+
+  ! calculates number of total surface points
   if(USE_HIGHRES_FOR_MOVIES) then
      ilocnum = NSPEC_SURFACE_EXT_MESH*NGLLSQUARE
   else

@@ -34,6 +34,7 @@
                         nadj_rec_local,adj_sourcearrays, &
                         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY)
 
+  use constants
   use specfem_par,only: PRINT_SOURCE_TIME_FUNCTION,stf_used_total, &
                         xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
                         station_name,network_name,adj_source_file, &
@@ -46,9 +47,8 @@
                         nsources_local,USE_FORCE_POINT_SOURCE, &
                         USE_RICKER_TIME_FUNCTION
 
-  implicit none
 
-  include "constants.h"
+  implicit none
 
   integer :: NSPEC_AB,NGLOB_AB
 
@@ -403,6 +403,7 @@ endif !adjoint
                         ispec_is_elastic,SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                         b_accel,NOISE_TOMOGRAPHY)
 
+  use constants
   use specfem_par,only: PRINT_SOURCE_TIME_FUNCTION,stf_used_total, &
                         num_free_surface_faces,free_surface_ispec, &
                         free_surface_ijk,free_surface_jacobian2Dw, &
@@ -412,8 +413,6 @@ endif !adjoint
                         USE_RICKER_TIME_FUNCTION
 
   implicit none
-
-  include "constants.h"
 
   integer :: NSPEC_AB,NGLOB_AB
 
@@ -608,6 +607,7 @@ endif !adjoint
                         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
                         Mesh_pointer)
 
+  use constants
   use specfem_par,only: PRINT_SOURCE_TIME_FUNCTION,stf_used_total, &
                         xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
                         station_name,network_name,adj_source_file, &
@@ -618,8 +618,6 @@ endif !adjoint
                         USE_RICKER_TIME_FUNCTION
 
   implicit none
-
-  include "constants.h"
 
   integer :: NSPEC_AB
 

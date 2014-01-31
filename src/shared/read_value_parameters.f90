@@ -102,11 +102,16 @@
   include 'constants.h'
   integer ierr
   common /param_err_common/ ierr
-  character(len=50) filename
+
+  character(len=250) filename
   filename = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'Par_file'
 
   call param_open(filename, len(filename), ierr);
-  if (ierr /= 0) return
+  if (ierr /= 0) then
+    print*
+    print*,'opening file failed, please check your file path and run-directory.'
+    stop 'error opening Par_file'
+  endif
 
   end subroutine open_parameter_file
 

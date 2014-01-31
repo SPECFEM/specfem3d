@@ -71,7 +71,7 @@
 #endif
 
 // error checking after cuda function calls
-#define ENABLE_VERY_SLOW_ERROR_CHECKING
+//#define ENABLE_VERY_SLOW_ERROR_CHECKING
 
 // maximum function
 #define MAX(x,y)                    (((x) < (y)) ? (y) : (x))

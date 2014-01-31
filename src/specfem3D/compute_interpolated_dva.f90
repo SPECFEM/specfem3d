@@ -33,8 +33,9 @@ subroutine compute_interpolated_dva(displ,veloc,accel,NGLOB_AB, &
 
 ! returns displacement/velocity/acceleration (dxd,..,vxd,..,axd,.. ) at receiver location
 
+  use constants
+
   implicit none
-  include 'constants.h'
 
   double precision,intent(out) :: dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd
 
@@ -129,8 +130,9 @@ subroutine compute_interpolated_dva_ac(displ_element,veloc_element,&
 ! acoustic elements
 ! returns displacement/velocity/pressure (dxd,..,vxd,..,axd,.. ) at receiver location
 
+  use constants
+
   implicit none
-  include 'constants.h'
 
   double precision,intent(out) :: dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd
 

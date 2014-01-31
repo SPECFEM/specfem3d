@@ -186,6 +186,31 @@
 
   end subroutine gather_all_i
 
+
+!
+!----
+!
+
+  subroutine gather_all_singlei(sendbuf, recvbuf, NPROC)
+
+! standard include of the MPI library
+  use :: mpi
+
+  implicit none
+
+  integer NPROC
+  integer :: sendbuf
+  integer, dimension(0:NPROC-1) :: recvbuf
+
+  integer ier
+
+  call MPI_GATHER(sendbuf,1,MPI_INTEGER, &
+                  recvbuf,1,MPI_INTEGER, &
+                  0,MPI_COMM_WORLD,ier)
+
+  end subroutine gather_all_singlei
+
+
 !
 !----
 !
@@ -508,6 +533,34 @@
                   MPI_MAX,0,MPI_COMM_WORLD,ier)
 
   end subroutine max_all_i
+
+
+!
+!----
+!
+
+  subroutine max_allreduce_i(buffer,count)
+
+  use mpi
+
+  implicit none
+
+  integer :: count
+  integer,dimension(count),intent(inout) :: buffer
+
+  ! local parameters
+  integer :: ier
+  integer,dimension(count) :: send
+
+  ! seems not to be supported on all kind of MPI implementations...
+  !call MPI_ALLREDUCE(MPI_IN_PLACE, buffer, count, MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ier)
+
+  send(:) = buffer(:)
+
+  call MPI_ALLREDUCE(send, buffer, count, MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ier)
+  if( ier /= 0 ) stop 'Allreduce to get max values failed.'
+
+  end subroutine max_allreduce_i
 
 !
 !----
@@ -1080,6 +1133,7 @@
   call MPI_SEND(sendbuf,sendcount,CUSTOM_MPI_TYPE,dest,sendtag,MPI_COMM_WORLD,ier)
 
   end subroutine sendv_cr
+
 !
 !----
 !
@@ -1100,3 +1154,37 @@
   call mpi_wait(req,req_mpi_status,ier)
 
   end subroutine wait_req
+
+!
+!----
+!
+
+  subroutine world_get_comm(comm)
+
+  use mpi
+
+  implicit none
+
+  integer,intent(out) :: comm
+
+  comm = MPI_COMM_WORLD
+
+  end subroutine world_get_comm
+
+!
+!----
+!
+
+  subroutine world_duplicate(comm)
+
+  use mpi
+
+  implicit none
+
+  integer,intent(out) :: comm
+  integer :: ier
+
+  call MPI_COMM_DUP(MPI_COMM_WORLD,comm,ier)
+  if( ier /= 0 ) stop 'error duplicating MPI_COMM_WORLD communicator'
+
+  end subroutine world_duplicate

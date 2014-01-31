@@ -480,7 +480,7 @@ subroutine compute_forces_viscoelastic_Dev_sim1(iphase)
 !----------------------------------------------------------------------------------------------
 
 ! OpenMP routine flag for testing & benchmarking forward runs only
-! configure additional flag, e.g.: FLAGS_NO_CHECK="-O3 -DOPENMP_MODE -openmp"
+! configure additional flag, e.g.: FLAGS_CHECK="-O3 -DOPENMP_MODE -openmp"
 
 !----------------------------------------------------------------------------------------------
 #ifdef OPENMP_MODE

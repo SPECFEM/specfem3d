@@ -295,6 +295,10 @@
       print*, 'error generate_databases: number of processors supposed to run on: ',NPROC
       print*, 'error generate_databases: number of MPI processors actually run on: ',sizeprocs
       print*
+      if( NPROC > 1 .and. sizeprocs == 1 ) then
+        print*,'this might be the serial version, please check if you have compiled all executables with MPI support...'
+        print*
+      endif
     endif
     call exit_MPI(myrank,'wrong number of MPI processes')
   endif

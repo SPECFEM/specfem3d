@@ -6,9 +6,10 @@
 
 module gravity_perturbation
 
-  implicit none
 
-  include 'constants.h'
+  use constants
+
+  implicit none
 
   private
 
@@ -158,10 +159,10 @@ end subroutine gravity_init
 
 subroutine recompute_jacobian_gravity(xelm,yelm,zelm,xi,eta,gamma,jacobian)
 
+  use constants
   use specfem_par, only : NGNOD
-  implicit none
 
-  include "constants.h"
+  implicit none
 
   double precision x,y,z
   double precision xi,eta,gamma,jacobian

@@ -53,7 +53,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                         phase_ispec_inner_elastic,backward_simulation)
 
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,N_SLS,SAVE_MOHO_MESH,ONE_THIRD,FOUR_THIRDS
-  use pml_par, only: is_CPML, spec_to_CPML, accel_elastic_CPML,NSPEC_CPML,CPML_regions, &
+  use pml_par, only: is_CPML, spec_to_CPML, accel_elastic_CPML,NSPEC_CPML, &
                      PML_dux_dxl, PML_dux_dyl, PML_dux_dzl, PML_duy_dxl, PML_duy_dyl, PML_duy_dzl, &
                      PML_duz_dxl, PML_duz_dyl, PML_duz_dzl, &
                      PML_dux_dxl_old, PML_dux_dyl_old, PML_dux_dzl_old, &

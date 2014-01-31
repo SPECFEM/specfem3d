@@ -1,7 +1,7 @@
 module fault_scotch
 
   implicit none
-  include "../shared/constants.h"
+  include "constants.h"
   private
 
   type fault_type

@@ -35,14 +35,13 @@
                                   nrec,islice_selected_rec,ispec_selected_rec, &
                                   nadj_rec_local,adj_sourcearrays,NTSTEP_BETWEEN_READ_ADJSRC)
 
+  use constants
   use specfem_par,only: PRINT_SOURCE_TIME_FUNCTION,stf_used_total, &
                         xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
                         station_name,network_name,adj_source_file,nrec_local,number_receiver_global, &
                         pm1_source_encoding,nsources_local,USE_FORCE_POINT_SOURCE, &
                         USE_RICKER_TIME_FUNCTION
   implicit none
-
-  include "constants.h"
 
   integer :: NSPEC_AB,NGLOB_AB
 
@@ -374,12 +373,11 @@ endif
                                   SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                                   b_potential_dot_dot_acoustic)
 
+  use constants
   use specfem_par,only: PRINT_SOURCE_TIME_FUNCTION,stf_used_total, &
                         pm1_source_encoding,nsources_local,USE_FORCE_POINT_SOURCE, &
                         USE_RICKER_TIME_FUNCTION
   implicit none
-
-  include "constants.h"
 
   integer :: NSPEC_AB
 
@@ -573,14 +571,13 @@ endif
                                   nadj_rec_local,adj_sourcearrays, &
                                   NTSTEP_BETWEEN_READ_ADJSRC,Mesh_pointer )
 
+  use constants
   use specfem_par,only: PRINT_SOURCE_TIME_FUNCTION,stf_used_total, &
                         xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
                         station_name,network_name,adj_source_file,nrec_local,number_receiver_global, &
                         nsources_local,USE_FORCE_POINT_SOURCE, &
                         USE_RICKER_TIME_FUNCTION
   implicit none
-
-  include "constants.h"
 
   integer :: NSPEC_AB
 

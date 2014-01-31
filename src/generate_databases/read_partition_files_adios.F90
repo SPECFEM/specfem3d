@@ -29,7 +29,6 @@
 !> Reads in Database.bp file
 subroutine read_partition_files_adios()
 
-  use mpi
   use adios_read_mod
   use generate_databases_par
 
@@ -54,8 +53,11 @@ subroutine read_partition_files_adios()
              local_dim_neighbours_mesh, local_dim_num_elmnts_mesh,    &
              local_dim_interfaces_mesh
 
-  integer :: num_xmin, num_xmax, num_ymin, num_ymax, num_top, num_bottom,num, &
-             num_spec, num_int
+  !statistics
+  !integer :: num_xmin, num_xmax, num_ymin, num_ymax, num_top, num_bottom,num, &
+  !           num_spec, num_int
+
+  integer :: comm
 
   sel_num = 0
 
@@ -65,9 +67,11 @@ subroutine read_partition_files_adios()
   database_name = adjustl(LOCAL_PATH)
   database_name = database_name(1:len_trim(database_name)) // "/Database.bp"
 
-  call adios_read_init_method (ADIOS_READ_METHOD_BP, MPI_COMM_WORLD, &
+  call world_get_comm(comm)
+
+  call adios_read_init_method (ADIOS_READ_METHOD_BP, comm, &
                                "verbose=1", ier)
-  call adios_read_open_file (handle, database_name, 0, MPI_COMM_WORLD, ier)
+  call adios_read_open_file (handle, database_name, 0, comm, ier)
   if (ier /= 0) call stop_all()
 
   !------------------------.

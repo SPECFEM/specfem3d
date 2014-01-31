@@ -344,7 +344,13 @@
      call get_value_string(HEADER_FILE, 'solver.HEADER_FILE', &
           OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))//'/values_from_mesher.h')
 
-     open(unit=IOUT,file=HEADER_FILE,status='old')
+     open(unit=IOUT,file=trim(HEADER_FILE),status='old',iostat=ier)
+     if( ier /= 0 ) then
+       print*,'error opening file: ',trim(HEADER_FILE)
+       print*
+       print*,'please check if xgenerate_databases has been run before this solver, exiting now...'
+       stop 'error opening file values_from_mesher.h'
+     endif
      read(IOUT,NML=MESHER)
      close(IOUT)
 
@@ -353,6 +359,7 @@
         call exit_MPI(myrank,'error in compiled parameters STACEY_INSTEAD_OF_FREE_SURFACE, please recompile solver')
      endif
   endif
+  call sync_all()
 
   ! checks directories
   if( myrank == 0 ) then

@@ -34,9 +34,9 @@
                             SIMULATION_TYPE,SAVE_FORWARD,it,b_reclen_potential, &
                             b_absorb_potential,b_num_abs_boundary_faces)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: NSPEC_AB,NGLOB_AB
 
@@ -137,9 +137,9 @@
                             b_potential_dot_dot_acoustic,b_reclen_potential, &
                             b_absorb_potential,b_num_abs_boundary_faces)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: NSPEC_AB
 
@@ -226,9 +226,9 @@
                             b_reclen_potential,b_absorb_potential, &
                             b_num_abs_boundary_faces,Mesh_pointer)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
 ! potentials
 

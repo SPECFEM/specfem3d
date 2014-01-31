@@ -62,7 +62,7 @@
                       ONE_THIRD,FOUR_THIRDS,m1,m2,IOUT
   use fault_solver_dynamic, only : Kelvin_Voigt_eta
   use specfem_par, only : FULL_ATTENUATION_SOLID
-  use pml_par, only: is_CPML, spec_to_CPML, accel_elastic_CPML,NSPEC_CPML,CPML_regions, &
+  use pml_par, only: is_CPML, spec_to_CPML, accel_elastic_CPML,NSPEC_CPML, &
                      PML_dux_dxl, PML_dux_dyl, PML_dux_dzl, PML_duy_dxl, PML_duy_dyl, PML_duy_dzl, &
                      PML_duz_dxl, PML_duz_dyl, PML_duz_dzl, &
                      PML_dux_dxl_old, PML_dux_dyl_old, PML_dux_dzl_old, &
@@ -316,7 +316,7 @@
         else if(PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
            ! do not merge this second line with the first using an ".and." statement
            ! because array is_CPML() is unallocated when PML_CONDITIONS is false
-           if(is_CPML(ispec)) then  
+           if(is_CPML(ispec)) then
               do k=1,NGLLZ
                  do j=1,NGLLY
                     do i=1,NGLLX
@@ -327,7 +327,7 @@
                     enddo
                  enddo
               enddo
-           endif         
+           endif
         endif
 
     ! subroutines adapted from Deville, Fischer and Mund, High-order methods

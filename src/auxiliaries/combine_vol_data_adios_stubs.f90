@@ -50,7 +50,7 @@ end subroutine read_args_adios
 !=============================================================================
 subroutine init_adios(value_file_name, mesh_file_name, &
                       value_handle, mesh_handle)
-  ! Parameters 
+  ! Parameters
   character(len=*) :: value_file_name, mesh_file_name
   integer(kind=8) :: value_handle, mesh_handle
   call no_adios_err()
@@ -58,7 +58,7 @@ end subroutine init_adios
 
 !=============================================================================
 subroutine clean_adios(value_handle, mesh_handle)
-  ! Parameters 
+  ! Parameters
   integer(kind=8) :: value_handle, mesh_handle
   call no_adios_err()
 end subroutine clean_adios
@@ -98,7 +98,7 @@ end subroutine read_coordinates_adios_mesh
 subroutine read_double_values_adios(value_handle, var_name, ibool_offset, &
                                     NSPEC_AB, dat)
   ! Parameters
-  integer(kind=8) :: value_handle 
+  integer(kind=8) :: value_handle
   character(len=*) :: var_name
   integer :: ibool_offset, NSPEC_AB
   double precision, dimension(:,:,:,:) :: dat
@@ -109,7 +109,7 @@ end subroutine read_double_values_adios
 subroutine read_float_values_adios(value_handle, var_name, ibool_offset, &
                                     NSPEC_AB, dat)
   ! Parameters
-  integer(kind=8) :: value_handle 
+  integer(kind=8) :: value_handle
   character(len=*) :: var_name
   integer :: ibool_offset, NSPEC_AB
   real, dimension(:,:,:,:) :: dat

@@ -26,9 +26,9 @@
 
   double precision function comp_source_time_function(t,hdur)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   double precision t,hdur
 
@@ -46,9 +46,9 @@
 
   double precision function comp_source_time_function_gauss(t,hdur)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   double precision :: t,hdur
   double precision :: hdur_decay
@@ -76,9 +76,9 @@
 
   double precision function comp_source_time_function_rickr(t,f0)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   double precision t,f0
 

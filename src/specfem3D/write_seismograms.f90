@@ -316,6 +316,7 @@
   subroutine write_seismograms_to_file(seismograms,istore)
 
   use constants
+
   use specfem_par,only: &
           myrank,number_receiver_global,station_name,network_name, &
           nrec,nrec_local,islice_selected_rec, &
@@ -479,9 +480,9 @@
               DT,t0,it,NSTEP,SIMULATION_TYPE, &
               myrank,irecord,component,LOCAL_PATH)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: NSTEP,it,SIMULATION_TYPE
   real(kind=CUSTOM_REAL), dimension(NDIM,NSTEP) :: one_seismogram
@@ -548,9 +549,9 @@
   subroutine write_adj_seismograms_to_file(myrank,seismograms,number_receiver_global, &
                nrec_local,it,DT,NSTEP,t0,LOCAL_PATH,istore)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer nrec_local,NSTEP,it,myrank,istore
   integer, dimension(nrec_local) :: number_receiver_global
@@ -643,9 +644,9 @@
   subroutine write_adj_seismograms2_to_file(myrank,seismograms,number_receiver_global, &
                nrec_local,it,DT,NSTEP,t0,LOCAL_PATH)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer nrec_local,NSTEP,it,myrank
   integer, dimension(nrec_local) :: number_receiver_global

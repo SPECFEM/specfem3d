@@ -158,9 +158,10 @@
   subroutine write_SU_header(irec_local,irec,nrec,NSTEP,DT,dx, &
                              x_found,y_found,z_found,x_found_source,y_found_source,z_found_source)
 
-  implicit none
 
-  include "constants.h"
+  use constants
+
+  implicit none
 
   integer :: irec_local,irec,nrec
   integer :: NSTEP

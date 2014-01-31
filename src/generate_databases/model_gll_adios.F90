@@ -36,10 +36,8 @@
 ! \param LOCAL_PATH path where the '.bp' file is located
 subroutine model_gll_adios(myrank,nspec,LOCAL_PATH)
 
-  use mpi
   use adios_read_mod
   use create_regions_mesh_ext_par
-  use generate_databases_par, only: sizeprocs
 
   implicit none
 
@@ -55,6 +53,7 @@ subroutine model_gll_adios(myrank,nspec,LOCAL_PATH)
   integer(kind=8) :: handle, sel
   integer(kind=8), dimension(1) :: start, count_ad
   integer :: local_dim_rho, local_dim_vp, local_dim_vs
+  integer :: comm
 
   ! density
   allocate( rho_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
@@ -72,9 +71,11 @@ subroutine model_gll_adios(myrank,nspec,LOCAL_PATH)
   database_name = adjustl(LOCAL_PATH)
   database_name = database_name(1:len_trim(database_name)) //"/model_values.bp"
 
-  call adios_read_init_method (ADIOS_READ_METHOD_BP, MPI_COMM_WORLD, &
+  call world_get_comm(comm)
+
+  call adios_read_init_method (ADIOS_READ_METHOD_BP, comm, &
                                "verbose=1", ier)
-  call adios_read_open_file (handle, database_name, 0, MPI_COMM_WORLD, ier)
+  call adios_read_open_file (handle, database_name, 0, comm, ier)
   if (ier /= 0) call stop_all()
 
   !------------------------.

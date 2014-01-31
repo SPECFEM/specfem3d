@@ -36,9 +36,9 @@
                  iglob_is_surface_external_mesh,ispec_is_surface_external_mesh, &
                  num_free_surface_faces,free_surface_ispec,free_surface_ijk)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: myrank
   integer :: NSPEC_AB,NGLOB_AB,NGNOD
@@ -997,9 +997,9 @@
                             myrank,filename,filtered_filename,nfilter, &
                             LATITUDE_MIN, LATITUDE_MAX, LONGITUDE_MIN, LONGITUDE_MAX)
 
-  implicit none
+  use constants
 
-  include 'constants.h'
+  implicit none
 
 ! input
   logical :: SUPPRESS_UTM_PROJECTION

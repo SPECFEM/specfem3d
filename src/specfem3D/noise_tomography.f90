@@ -58,8 +58,11 @@ contains
   subroutine noise_distribution_direction(xcoord_in,ycoord_in,zcoord_in, &
                   normal_x_noise_out,normal_y_noise_out,normal_z_noise_out, &
                   mask_noise_out)
+
+  use constants
+
   implicit none
-  include "constants.h"
+
   ! input parameters
   real(kind=CUSTOM_REAL) :: xcoord_in,ycoord_in,zcoord_in
   ! output parameters
@@ -91,8 +94,10 @@ contains
   subroutine noise_distribution_direction_d(xcoord_in,ycoord_in,zcoord_in, &
                                            normal_x_noise_out,normal_y_noise_out,normal_z_noise_out, &
                                            mask_noise_out)
+  use constants
+
   implicit none
-  include "constants.h"
+
   ! input parameters
   real(kind=CUSTOM_REAL) :: xcoord_in,ycoord_in,zcoord_in
   ! output parameters
@@ -127,8 +132,11 @@ contains
   subroutine noise_distribution_dir_non_uni(xcoord_in,ycoord_in,zcoord_in, &
                   normal_x_noise_out,normal_y_noise_out,normal_z_noise_out, &
                   mask_noise_out)
+
+  use constants
+
   implicit none
-  include "constants.h"
+
   ! input parameters
   real(kind=CUSTOM_REAL) :: xcoord_in,ycoord_in,zcoord_in
   ! output parameters
@@ -227,9 +235,12 @@ end module user_noise_distribution
                                    NSPEC_AB_VAL,NGLOB_AB_VAL, &
                                    num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
                                    ispec_is_acoustic)
+
+  use constants
   use user_noise_distribution
+
   implicit none
-  include "constants.h"
+
   ! input parameters
   integer :: myrank, nrec, NSTEP, nmovie_points
   integer :: NSPEC_AB_VAL,NGLOB_AB_VAL
@@ -392,8 +403,11 @@ end module user_noise_distribution
 ! check for consistency of the parameters
   subroutine check_parameters_noise(myrank,NOISE_TOMOGRAPHY,SIMULATION_TYPE,SAVE_FORWARD, &
                                     LOCAL_PATH,NSPEC_TOP,NSTEP)
+
+  use constants
+
   implicit none
-  include "constants.h"
+
   ! input parameters
   integer :: myrank,NOISE_TOMOGRAPHY,SIMULATION_TYPE,NSPEC_TOP,NSTEP
   character(len=256) :: LOCAL_PATH
@@ -489,8 +503,11 @@ end module user_noise_distribution
   subroutine compute_arrays_source_noise(myrank, &
                                          xi_noise,eta_noise,gamma_noise,nu_single,noise_sourcearray, &
                                          xigll,yigll,zigll,NSTEP)
+
+  use constants
+
   implicit none
-  include 'constants.h'
+
   ! input parameters
   integer :: myrank, NSTEP
   double precision, dimension(NGLLX) :: xigll
@@ -583,8 +600,11 @@ end module user_noise_distribution
                                 ibool,islice_selected_rec,ispec_selected_rec, &
                                 it,irec_master_noise, &
                                 NSPEC_AB_VAL,NGLOB_AB_VAL)
+
+  use constants
+
   implicit none
-  include "constants.h"
+
   ! input parameters
   integer :: myrank,nrec,NSTEP,irec_master_noise
   integer :: NSPEC_AB_VAL,NGLOB_AB_VAL
@@ -633,8 +653,11 @@ end module user_noise_distribution
                     NSPEC_AB_VAL,NGLOB_AB_VAL, &
                     num_free_surface_faces,free_surface_ispec,free_surface_ijk,&
                     Mesh_pointer,GPU_MODE)
+
+  use constants
+
   implicit none
-  include "constants.h"
+
   ! input parameters
   integer :: it
   integer :: NSPEC_AB_VAL,NGLOB_AB_VAL
@@ -701,8 +724,11 @@ end module user_noise_distribution
                   ibool,noise_surface_movie,it,NSPEC_AB_VAL,NGLOB_AB_VAL, &
                   num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
                   free_surface_jacobian2Dw)
+
+  use constants
+
   implicit none
-  include "constants.h"
+
   ! input parameters
   integer :: it,nmovie_points
   integer :: NSPEC_AB_VAL,NGLOB_AB_VAL
@@ -777,8 +803,11 @@ end module user_noise_distribution
 ! in step 3, call noise_read_add_surface_movie(..., it ,...)
   subroutine noise_read_add_surface_movie_GPU(noise_surface_movie,it,num_free_surface_faces, &
                                               Mesh_pointer,NOISE_TOMOGRAPHY)
+
+  use constants
+
   implicit none
-  include "constants.h"
+
   ! input parameters
   integer :: it,num_free_surface_faces
 
@@ -823,8 +852,11 @@ end module user_noise_distribution
                           NSPEC_AB_VAL,NGLOB_AB_VAL, &
                           num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
                           GPU_MODE,Mesh_pointer)
+
+  use constants
+
   implicit none
-  include "constants.h"
+
   ! input parameters
   integer :: it
   integer :: nmovie_points
@@ -909,8 +941,11 @@ end module user_noise_distribution
 
 ! step 3: save noise source strength kernel
   subroutine save_kernels_strength_noise(myrank,LOCAL_PATH,Sigma_kl,NSPEC_AB_VAL)
+
+  use constants
+
   implicit none
-  include "constants.h"
+
   ! input parameters
   integer myrank
   integer :: NSPEC_AB_VAL

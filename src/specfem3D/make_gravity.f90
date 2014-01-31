@@ -34,9 +34,9 @@
 ! creates a spline for the gravity profile in PREM
 ! radius and density are non-dimensional
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer:: nspl
   double precision:: rspl(NR),gspl(NR),gspl2(NR)
@@ -172,9 +172,9 @@
                           RICB,RCMB,RTOPDDOUBLEPRIME, &
                           R600,R670,R220,R771,R400,R80,RMOHO,RMIDDLE_CRUST,ROCEAN)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
 ! given a normalized radius x, gives the non-dimensionalized density rho,
 ! speeds vp and vs, and the quality factors Qkappa and Qmu
@@ -347,9 +347,9 @@
                          RICB,RCMB,RTOPDDOUBLEPRIME, &
                          R600,R670,R220,R771,R400,R80,RMOHO,RMIDDLE_CRUST,ROCEAN)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   double precision x,rho,RICB,RCMB,RTOPDDOUBLEPRIME, &
       R600,R670,R220,R771,R400,R80,RMOHO,RMIDDLE_CRUST,ROCEAN

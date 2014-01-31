@@ -351,8 +351,9 @@ subroutine compute_continuity_disp_po_el(NSPEC_AB,NGLOB_AB,ibool,&
 !         assembling the displacements on the elastic-poro boundaries
 !*******************************************************************************
 
+  use constants
+
   implicit none
-  include 'constants.h'
 
   integer :: NSPEC_AB,NGLOB_AB
 

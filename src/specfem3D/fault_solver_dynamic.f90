@@ -114,7 +114,7 @@ subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
 
   open(unit=IIN_PAR,file='../DATA/Par_file_faults',status='old',iostat=ier)
   if( ier /= 0 ) then
-    if (myrank==0) write(IMAIN,*) 'File DATA/Par_file_faults not found: assume no faults'
+    if (myrank==0) write(IMAIN,*) 'no dynamic faults'
     close(IIN_PAR)
     return
   endif
@@ -1030,7 +1030,7 @@ subroutine init_dataXZ(dataXZ,bc)
 
     allocate(bc%npoin_perproc(NPROC))
     bc%npoin_perproc=0
-    call gather_all_i(dataXZ%npoin,1,bc%npoin_perproc,1,NPROC)
+    call gather_all_singlei(dataXZ%npoin,bc%npoin_perproc,NPROC)
 
     allocate(bc%poin_offset(NPROC))
     bc%poin_offset(1)=0

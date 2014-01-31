@@ -77,7 +77,7 @@ program model_update
   integer :: NSPEC, NGLOB
 
   ! for attenuation
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: qmu_attenuation_store  ! attenuation
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: qmu_attenuation_store,qkappa_attenuation_store  ! attenuation
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: dummy_g_1,dummy_g_2,dummy_g_3  !xstore,ystore,zstore
   integer, dimension(:), allocatable :: dummy_l_1,dummy_l_2,dummy_l_3,dummy_l_4,dummy_l_5,dummy_l_6,dummy_l_7,dummy_l_8 !ibool-1
   integer, dimension(:), allocatable :: dummy_num
@@ -135,8 +135,13 @@ program model_update
   ! mass matrices
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_old, rmass_new
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_acoustic_new,rmass_solid_poroelastic_new,rmass_fluid_poroelastic_new
+  real(kind=CUSTOM_REAL),dimension(1) :: tmp_step
 
-
+  ! security check
+  if( ATTENUATION ) then
+    print*,'sorry using ATTENUATION, this routine has qkappa not implemented yet...'
+    stop
+  endif
 
   ! ============ program starts here =====================
   ! initialize the MPI communicator and start the NPROCTOT MPI processes
@@ -550,8 +555,9 @@ program model_update
     print*,'  step length : ',step_length,max
     print*
   endif
-  call bcast_all_cr(step_length, 1)
-
+  tmp_step(1) = step_length
+  call bcast_all_cr(tmp_step, 1)
+  step_length = tmp_step(1)
 
   !---------------------------------------------------------------------------------------------
   ! gradient length
@@ -883,8 +889,10 @@ program model_update
   close(12)
 
   ! store the attenuation flag in qmu_attenuation_store
-  allocate(qmu_attenuation_store(NGLLX,NGLLY,NGLLZ,NSPEC))
+  allocate(qmu_attenuation_store(NGLLX,NGLLY,NGLLZ,NSPEC), &
+           qkappa_attenuation_store(NGLLX,NGLLY,NGLLZ,NSPEC))
   qmu_attenuation_store=0._CUSTOM_REAL
+  qkappa_attenuation_store=0._CUSTOM_REAL
 
   allocate(mask_ibool(NGLOB),stat=ier)
   if( ier /= 0 ) stop 'error allocating mask'
@@ -924,7 +932,7 @@ program model_update
 
   if( ATTENUATION ) then
     call get_attenuation_model(myrank,NSPEC,USE_OLSEN_ATTENUATION,OLSEN_ATTENUATION_RATIO, &
-                          mustore_new,rho_vs_new,kappastore_new,rho_vp_new,qmu_attenuation_store, &
+                          mustore_new,rho_vs_new,kappastore_new,rho_vp_new,qkappa_attenuation_store,qmu_attenuation_store, &
                           ispec_is_elastic,min_resolved_period,prname_new,FULL_ATTENUATION_SOLID)
   endif
 
@@ -1118,7 +1126,8 @@ program model_update
 !===================================================
 
 
-  deallocate(qmu_attenuation_store)
+  deallocate(qmu_attenuation_store,qkappa_attenuation_store)
+
   deallocate(flag_val,mask_ibool)
 
   deallocate(model_vp, model_vs, model_vp_new, model_vs_new, &

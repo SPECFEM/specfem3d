@@ -38,9 +38,11 @@
                         SIMULATION_TYPE,backward_simulation)
 
 ! returns the updated pressure array: potential_dot_dot_acoustic
+
+  use constants
   use pml_par, only: NSPEC_CPML
+
   implicit none
-  include 'constants.h'
 
   integer :: NSPEC_AB,NGLOB_AB
 
