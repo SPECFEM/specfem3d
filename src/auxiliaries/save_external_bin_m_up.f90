@@ -56,6 +56,8 @@
                     c55store,c56store,c66store, &
                     ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic)
 
+  use constants
+
   use specfem_par,only: &
     ispec_is_inner
 
@@ -75,8 +77,6 @@
     nspec_inner_poroelastic,nspec_outer_poroelastic,num_phase_ispec_poroelastic,phase_ispec_inner_poroelastic
 
   implicit none
-
-  include "constants.h"
 
   integer :: nspec,nglob
 

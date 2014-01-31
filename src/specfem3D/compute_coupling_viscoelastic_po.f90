@@ -48,8 +48,9 @@
 
 ! returns the updated accelerations array: accel
 
+  use constants
+
   implicit none
-  include 'constants.h'
 
   integer :: NSPEC_AB,NGLOB_AB
 

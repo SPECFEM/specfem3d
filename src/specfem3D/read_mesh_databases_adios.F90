@@ -29,7 +29,6 @@
 !==============================================================================
 subroutine read_mesh_for_init(nspec, nglob)
 
-  use mpi
   use adios_read_mod
   use specfem_par, only : myrank, LOCAL_PATH
 
@@ -40,6 +39,7 @@ subroutine read_mesh_for_init(nspec, nglob)
   character(len=256) :: database_name
   integer(kind=8) :: handle, sel
   integer         :: ier
+  integer :: comm
 
   !-------------------------------------.
   ! Open ADIOS Database file, read mode |
@@ -47,9 +47,11 @@ subroutine read_mesh_for_init(nspec, nglob)
   database_name = adjustl(LOCAL_PATH)
   database_name = database_name(1:len_trim(database_name)) // "/external_mesh.bp"
 
-  call adios_read_init_method (ADIOS_READ_METHOD_BP, MPI_COMM_WORLD, &
+  call world_get_comm(comm)
+
+  call adios_read_init_method (ADIOS_READ_METHOD_BP, comm, &
                                "verbose=1", ier)
-  call adios_read_open_file (handle, database_name, 0, MPI_COMM_WORLD, ier)
+  call adios_read_open_file (handle, database_name, 0, comm, ier)
   if (ier /= 0) call stop_all()
 
   !------------------------------------.
@@ -72,7 +74,6 @@ end subroutine read_mesh_for_init
 !==============================================================================
 subroutine read_mesh_databases_adios()
 
-  use mpi
   use adios_read_mod
 
   use pml_par
@@ -105,7 +106,7 @@ subroutine read_mesh_databases_adios()
              local_dim_ispec_is_acoustic, local_dim_ispec_is_elastic,          &
              local_dim_ispec_is_poroelastic, local_dim_rmass,                  &
              local_dim_rmass_ocean_load, local_dim_rmass_acoustic,             &
-             local_dim_rmass_elastic,local_dim_rho_vp,                         &
+             local_dim_rho_vp,                                                 &
              local_dim_rho_vs, local_dim_abs_boundary_ispec,                   &
              local_dim_abs_boundary_ijk, local_dim_abs_boundary_jacobian2Dw,   &
              local_dim_abs_boundary_normal, local_dim_ibelm_xmin,              &
@@ -145,6 +146,8 @@ subroutine read_mesh_databases_adios()
              local_dim_coupling_ac_po_jacobian2Dw,                             &
              local_dim_coupling_ac_po_normal
 
+  integer :: comm
+
   !-------------------------------------.
   ! Open ADIOS Database file, read mode |
   !-------------------------------------'
@@ -153,9 +156,11 @@ subroutine read_mesh_databases_adios()
   database_name = adjustl(LOCAL_PATH)
   database_name = database_name(1:len_trim(database_name)) // "/external_mesh.bp"
 
-  call adios_read_init_method (ADIOS_READ_METHOD_BP, MPI_COMM_WORLD, &
+  call world_get_comm(comm)
+
+  call adios_read_init_method (ADIOS_READ_METHOD_BP, comm, &
                                "verbose=1", ier)
-  call adios_read_open_file (handle, database_name, 0, MPI_COMM_WORLD, ier)
+  call adios_read_open_file (handle, database_name, 0, comm, ier)
   if (ier /= 0) call stop_all()
 
   !------------------------------------------------------------------.
@@ -1729,7 +1734,7 @@ end subroutine read_mesh_databases_adios
 !-------------------------------------------------------------------------------
 !> Reads in moho meshes
 subroutine read_moho_mesh_adjoint_adios()
-  use mpi
+
   use adios_read_mod
 
   use specfem_par
@@ -1752,7 +1757,7 @@ subroutine read_moho_mesh_adjoint_adios()
              local_dim_is_moho_bot,     local_dim_is_moho_top
 
   integer :: ier
-
+  integer :: comm
   !-------------------------------------.
   ! Open ADIOS Database file, read mode |
   !-------------------------------------'
@@ -1761,9 +1766,11 @@ subroutine read_moho_mesh_adjoint_adios()
   database_name = adjustl(LOCAL_PATH)
   database_name = database_name(1:len_trim(database_name)) // "/moho.bp"
 
-  call adios_read_init_method (ADIOS_READ_METHOD_BP, MPI_COMM_WORLD, &
+  call world_get_comm(comm)
+
+  call adios_read_init_method (ADIOS_READ_METHOD_BP, comm, &
                                "verbose=1", ier)
-  call adios_read_open_file (handle, database_name, 0, MPI_COMM_WORLD, ier)
+  call adios_read_open_file (handle, database_name, 0, comm, ier)
   if (ier /= 0) call stop_all()
 
   !------------------------------------------------------------------.

@@ -46,7 +46,6 @@
 !==============================================================================
 subroutine save_forward_arrays_adios()
 
-  use mpi
   use adios_helpers_mod
   use specfem_par
   use specfem_par_elastic
@@ -64,12 +63,13 @@ subroutine save_forward_arrays_adios()
   integer :: local_dim
 
   !--- Variables to allreduce - wmax stands for world_max
-  integer :: nglob_wmax, nspec_wmax, NSPEC_ATTENUATION_wmax, &
+  integer :: nglob_wmax, NSPEC_ATTENUATION_wmax, &
              NSPEC_STRAIN_wmax, NSPEC_ATTENUATION_kappa_wmax, N_SLS_wmax
   integer, parameter :: num_vars = 5
   integer, dimension(num_vars) :: max_global_values
 
   integer :: ier
+  integer :: comm
 
   !-----------------------------------------------------------------.
   ! Get maximum value for each variable used to define a local_dim. |
@@ -82,9 +82,10 @@ subroutine save_forward_arrays_adios()
   max_global_values(4) =  NSPEC_ATTENUATION_AB_kappa
   max_global_values(5) =  N_SLS
 
-  call MPI_Allreduce(MPI_IN_PLACE, max_global_values, num_vars, &
-                     MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ier)
-  if( ier /= 0 ) call exit_MPI(myrank,'Allreduce to get max values failed.')
+  !call MPI_Allreduce(MPI_IN_PLACE, max_global_values, num_vars, &
+  !                   MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ier)
+  !if( ier /= 0 ) call exit_MPI(myrank,'Allreduce to get max values failed.')
+  call max_allreduce_i(max_global_values,num_vars)
 
   nglob_wmax                   = max_global_values(1)
   NSPEC_ATTENUATION_wmax       = max_global_values(2)
@@ -187,8 +188,10 @@ subroutine save_forward_arrays_adios()
   !------------------------------------------------------------.
   ! Open an handler to the ADIOS file and setup the group size |
   !------------------------------------------------------------'
+  call world_get_comm(comm)
+
   call adios_open(handle, group_name, output_name, "w", &
-                  MPI_COMM_WORLD, ier);
+                  comm, ier);
   call adios_group_size (handle, groupsize, totalsize, ier)
 
   !------------------------------------------.

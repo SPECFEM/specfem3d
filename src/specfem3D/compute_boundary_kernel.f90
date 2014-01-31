@@ -158,8 +158,9 @@ subroutine compute_boundary_kernel_elem(kernel, mul, kappal, rho_vsl, &
 ! compute the boundary kernel contribution from one side of the boundary
 ! see e.g.: Tromp et al. (2005), eq. (25), or Liu & Tromp (2008), eq. (65)
 
+  use constants
+
   implicit none
-  include 'constants.h'
 
   real(kind=CUSTOM_REAL)  kernel, mul, kappal, rho_vsl
   real(kind=CUSTOM_REAL) :: accel(NDIM), b_displ(NDIM), ds(NDIM,NDIM), b_ds(NDIM,NDIM), norm(NDIM)

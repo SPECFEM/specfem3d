@@ -76,7 +76,7 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob,                   &
                                     STACEY_ABSORBING_CONDITIONS,            &
                                     LOCAL_PATH, myrank, sizeprocs,          &
                                     nspec_ab
-  use mpi
+
   use adios_helpers_mod
   use create_regions_mesh_ext_par
 
@@ -134,6 +134,7 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob,                   &
 
   integer, parameter :: num_vars = 40
   integer, dimension(num_vars) :: max_global_values
+  integer :: comm
 
   !---------------------------.
   ! Setup the values to write |
@@ -195,9 +196,12 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob,                   &
   max_global_values(39) = nspec_ab
   max_global_values(40) = nspec_aniso
 
-  call MPI_Allreduce(MPI_IN_PLACE, max_global_values, num_vars, &
-                     MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ier)
-  if( ier /= 0 ) call exit_MPI(myrank,'Allreduce to get max values failed.')
+  !call MPI_Allreduce(MPI_IN_PLACE, max_global_values, num_vars, &
+  !                   MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ier)
+  !if( ier /= 0 ) call exit_MPI(myrank,'Allreduce to get max values failed.')
+  ! calling wrapper instead to compile without mpi
+  call max_allreduce_i(max_global_values,num_vars)
+
 
   nglob_wmax                          = max_global_values(1)
   nspec_wmax                          = max_global_values(2)
@@ -762,8 +766,10 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob,                   &
   !------------------------------------------------------------.
   ! Open an handler to the ADIOS file and setup the group size |
   !------------------------------------------------------------'
+  call world_get_comm(comm)
+
   call adios_open(handle, group_name, output_name, "w", &
-                  MPI_COMM_WORLD, ier);
+                  comm, ier);
   call adios_group_size (handle, groupsize, totalsize, ier)
 
   !------------------------------------------.
@@ -1309,7 +1315,6 @@ end subroutine save_arrays_solver_ext_mesh_adios
 subroutine save_arrays_solver_files_adios(nspec,nglob,ibool, nspec_wmax, &
                                           nglob_wmax)
 
-  use mpi
   use generate_databases_par, only: myrank, LOCAL_PATH,     &
                                     xstore, ystore, zstore, &
                                     sizeprocs
@@ -1327,7 +1332,6 @@ subroutine save_arrays_solver_files_adios(nspec,nglob,ibool, nspec_wmax, &
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: vp_tmp, &
                                                              vs_tmp, rho_tmp
   integer :: ier
-  integer, dimension(:), allocatable :: iglob_tmp
 
   !--- Local parameters for ADIOS ---
   character(len=256) :: output_name
@@ -1337,10 +1341,15 @@ subroutine save_arrays_solver_files_adios(nspec,nglob,ibool, nspec_wmax, &
   character(len=64), parameter :: group_name_coords  = "SPECFEM3D_MESH_COORDS"
   character(len=64), parameter :: group_name_values = "SPECFEM3D_MODEL_VALUES"
 
+  integer :: comm
+
   if( myrank == 0) then
     write(IMAIN,*) '     saving mesh files for VisIt. ADIOS format'
     call flush_IMAIN()
   endif
+
+  ! gets mpi communicator
+  call world_get_comm(comm)
 
   !-----------------------------------.
   ! Setup ADIOS for the current group |
@@ -1383,8 +1392,9 @@ subroutine save_arrays_solver_files_adios(nspec,nglob,ibool, nspec_wmax, &
   !------------------------------------------------------------.
   ! Open an handler to the ADIOS file and setup the group size |
   !------------------------------------------------------------'
+
   call adios_open(handle, group_name_coords, output_name, "w", &
-                  MPI_COMM_WORLD, ier);
+                  comm, ier);
   call adios_group_size (handle, groupsize, totalsize, ier)
 
   !------------------------------------------.
@@ -1480,7 +1490,7 @@ subroutine save_arrays_solver_files_adios(nspec,nglob,ibool, nspec_wmax, &
   ! Open an handler to the ADIOS file and setup the group size |
   !------------------------------------------------------------'
   call adios_open(handle, group_name_values, output_name, "w", &
-                  MPI_COMM_WORLD, ier);
+                  comm, ier);
   call adios_group_size (handle, groupsize, totalsize, ier)
 
   !------------------------------------------.

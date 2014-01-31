@@ -29,9 +29,9 @@
        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
        hxis,hpxis,hetas,hpetas,hgammas,hpgammas,nspec)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer ispec_selected_source
   integer nspec
@@ -110,9 +110,9 @@
                                            xigll,yigll,zigll, &
                                            it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC)
 
-  implicit none
+  use constants
 
-  include 'constants.h'
+  implicit none
 
 ! input
   integer myrank, NSTEP, it_sub_adj, NTSTEP_BETWEEN_READ_ADJSRC
@@ -204,9 +204,9 @@ end subroutine compute_arrays_adjoint_source
 ! compute array for acoustic source
   subroutine compute_arrays_source_acoustic(sourcearray,hxis,hetas,hgammas,factor_source)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   real(kind=CUSTOM_REAL) :: factor_source
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearray

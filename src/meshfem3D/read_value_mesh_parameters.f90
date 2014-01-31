@@ -214,10 +214,19 @@
 
   subroutine open_parameter_file_mesh
 
+  implicit none
   include "constants.h"
 
+  integer ierr
+
   open(unit=IIN,file=MF_IN_DATA_FILES_PATH(1:len_trim(MF_IN_DATA_FILES_PATH)) &
-       //'Mesh_Par_file',status='old',action='read')
+       //'Mesh_Par_file',status='old',action='read',iostat=ierr)
+  if (ierr /= 0) then
+    print*,'error opening file: ',MF_IN_DATA_FILES_PATH(1:len_trim(MF_IN_DATA_FILES_PATH))
+    print*
+    print*,'please check your file path and run-directory.'
+    stop 'error opening Mesh_Par_file'
+  endif
 
   end subroutine open_parameter_file_mesh
 

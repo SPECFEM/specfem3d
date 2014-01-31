@@ -76,7 +76,7 @@ subroutine BC_KINFLT_init(prname,DTglobal,myrank)
 
   open(unit=IIN_PAR,file='../DATA/Par_file_faults',status='old',iostat=ier)
   if( ier /= 0 ) then
-    if (myrank==0) write(IMAIN,*) 'File DATA/Par_file_faults not found: assume no faults'
+    if (myrank==0) write(IMAIN,*) 'no kinematic faults'
     close(IIN_PAR)
     return
   endif

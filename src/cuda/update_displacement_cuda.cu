@@ -72,8 +72,8 @@ __global__ void UpdateDispVeloc_kernel(realw* displ,
 /* ----------------------------------------------------------------------------------------------- */
 
 extern "C"
-void FC_FUNC_(it_update_displacement_cuda,
-              IT_UPDATE_DISPLACMENT_CUDA)(long* Mesh_pointer,
+void FC_FUNC_(update_displacement_cuda,
+              UPDATE_DISPLACMENT_CUDA)(long* Mesh_pointer,
                                           realw* deltat_F,
                                           realw* deltatsqover2_F,
                                           realw* deltatover2_F,
@@ -81,7 +81,7 @@ void FC_FUNC_(it_update_displacement_cuda,
                                           realw* b_deltatsqover2_F,
                                           realw* b_deltatover2_F) {
 
-  TRACE("\tit_update_displacement_cuda");
+  TRACE("\tupdate_displacement_cuda");
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); // get Mesh from fortran integer wrapper
 
@@ -122,7 +122,7 @@ void FC_FUNC_(it_update_displacement_cuda,
   }
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("it_update_displacement_cuda");
+  exit_on_cuda_error("update_displacement_cuda");
 #endif
 }
 

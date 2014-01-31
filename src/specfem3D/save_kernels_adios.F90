@@ -54,7 +54,6 @@
 !!       file as an argument.
 subroutine define_kernel_adios_variables(handle, SAVE_WEIGHTS)
 
-  use mpi
   use adios_write_mod
 
   use adios_helpers_mod
@@ -72,7 +71,7 @@ subroutine define_kernel_adios_variables(handle, SAVE_WEIGHTS)
   ! Variables
   character(len=256) :: output_name, group_name
   integer(kind=8) :: group, groupsize, adios_totalsize
-  integer :: local_dim, comm, adios_err, ierr
+  integer :: local_dim, comm, adios_err
   !--- Variables to allreduce - wmax stands for world_max
   integer :: nspec_wmax, ier
   integer, parameter :: num_vars = 1
@@ -82,7 +81,8 @@ subroutine define_kernel_adios_variables(handle, SAVE_WEIGHTS)
 
   output_name = LOCAL_PATH(1:len_trim(LOCAL_PATH))// "/kernels.bp"
   group_name = "SPECFEM3D_KERNELS"
-  call MPI_Comm_dup (MPI_COMM_WORLD, comm, ierr)
+
+  call world_duplicate(comm)
 
   groupsize = 0
   call adios_declare_group(group, group_name, "", 0, adios_err)
@@ -90,9 +90,10 @@ subroutine define_kernel_adios_variables(handle, SAVE_WEIGHTS)
 
   max_global_values(1) = NSPEC_AB
 
-  call MPI_Allreduce(MPI_IN_PLACE, max_global_values, num_vars, &
-                     MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ier)
-  if( ier /= 0 ) call exit_MPI(myrank,'Allreduce to get max values failed.')
+  !call MPI_Allreduce(MPI_IN_PLACE, max_global_values, num_vars, &
+  !                   MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ier)
+  !if( ier /= 0 ) call exit_MPI(myrank,'Allreduce to get max values failed.')
+  call max_allreduce_i(max_global_values,num_vars)
 
   nspec_wmax = max_global_values(1)
 

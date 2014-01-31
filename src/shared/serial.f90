@@ -126,6 +126,22 @@
 !----
 !
 
+  subroutine gather_all_singlei(sendbuf, recvbuf, NPROC)
+
+  implicit none
+
+  integer NPROC
+  integer :: sendbuf
+  integer, dimension(0:NPROC-1) :: recvbuf
+
+  recvbuf(0) = sendbuf
+
+  end subroutine gather_all_singlei
+
+!
+!----
+!
+
   subroutine gather_all_dp(sendbuf, sendcnt, recvbuf, recvcount, NPROC)
 
   implicit none
@@ -340,6 +356,22 @@
   recvbuf = sendbuf
 
   end subroutine max_all_i
+
+!
+!----
+!
+
+  subroutine max_allreduce_i(buffer,count)
+
+  implicit none
+
+  integer :: count
+  integer,dimension(count),intent(inout) :: buffer
+
+  ! all values already up-to-date in buffer
+  return
+
+  end subroutine max_allreduce_i
 
 !
 !----
@@ -624,7 +656,11 @@
 
   implicit none
 
-  integer sendbuf,sendcount,dest,sendtag
+  !integer sendbuf,sendcount,dest,sendtag
+  integer dest,sendtag
+  integer sendcount
+  integer,dimension(sendcount):: sendbuf
+  integer ier
 
   stop 'send_i not implemented for serial code'
 
@@ -751,4 +787,32 @@
   integer :: req
 
   end subroutine wait_req
+
+!
+!----
+!
+
+  subroutine world_get_comm(comm)
+
+  implicit none
+
+  integer,intent(out) :: comm
+
+  comm = 0
+
+  end subroutine world_get_comm
+
+!
+!----
+!
+
+  subroutine world_duplicate(comm)
+
+  implicit none
+
+  integer,intent(out) :: comm
+
+  comm = 0
+
+  end subroutine world_duplicate
 

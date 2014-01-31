@@ -208,7 +208,7 @@ subroutine pml_allocate_arrays()
 
   if( ELASTIC_SIMULATION) then
      displ_old(:,:) = 0._CUSTOM_REAL
-  
+
      PML_dux_dxl(:,:,:) = 0._CUSTOM_REAL
      PML_dux_dyl(:,:,:) = 0._CUSTOM_REAL
      PML_dux_dzl(:,:,:) = 0._CUSTOM_REAL

@@ -35,9 +35,9 @@
 
 ! assembles vector field in blocking way, only returns after values have been received and assembled
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: NPROC
   integer :: NGLOB_AB
@@ -137,57 +137,57 @@
 
     ! sends data
 
-    implicit none
+  use constants
 
-    include "constants.h"
+  implicit none
 
-    integer :: NPROC
-    integer :: NGLOB_AB
+  integer :: NPROC
+  integer :: NGLOB_AB
 
-    ! array to assemble
-    real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: array_val
+  ! array to assemble
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: array_val
 
-    integer :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
+  integer :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
 
-    real(kind=CUSTOM_REAL), dimension(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: &
-         buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh
+  real(kind=CUSTOM_REAL), dimension(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: &
+       buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh
 
-    integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh,my_neighbours_ext_mesh
-    integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
-    integer, dimension(num_interfaces_ext_mesh) :: request_send_vector_ext_mesh,request_recv_vector_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh,my_neighbours_ext_mesh
+  integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh) :: request_send_vector_ext_mesh,request_recv_vector_ext_mesh
 
-    integer ipoin,iinterface
+  integer ipoin,iinterface
 
-    ! here we have to assemble all the contributions between partitions using MPI
+  ! here we have to assemble all the contributions between partitions using MPI
 
-    ! assemble only if more than one partition
-    if(NPROC > 1) then
+  ! assemble only if more than one partition
+  if(NPROC > 1) then
 
-       ! partition border copy into the buffer
-       do iinterface = 1, num_interfaces_ext_mesh
-          do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
-             buffer_send_vector_ext_mesh(:,ipoin,iinterface) = &
-                  array_val(:,ibool_interfaces_ext_mesh(ipoin,iinterface))
-          enddo
-       enddo
+     ! partition border copy into the buffer
+     do iinterface = 1, num_interfaces_ext_mesh
+        do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
+           buffer_send_vector_ext_mesh(:,ipoin,iinterface) = &
+                array_val(:,ibool_interfaces_ext_mesh(ipoin,iinterface))
+        enddo
+     enddo
 
-       ! send messages
-       do iinterface = 1, num_interfaces_ext_mesh
-          call isend_cr(buffer_send_vector_ext_mesh(1,1,iinterface), &
-               NDIM*nibool_interfaces_ext_mesh(iinterface), &
-               my_neighbours_ext_mesh(iinterface), &
-               itag, &
-               request_send_vector_ext_mesh(iinterface) &
-               )
-          call irecv_cr(buffer_recv_vector_ext_mesh(1,1,iinterface), &
-               NDIM*nibool_interfaces_ext_mesh(iinterface), &
-               my_neighbours_ext_mesh(iinterface), &
-               itag, &
-               request_recv_vector_ext_mesh(iinterface) &
-               )
-       enddo
+     ! send messages
+     do iinterface = 1, num_interfaces_ext_mesh
+        call isend_cr(buffer_send_vector_ext_mesh(1,1,iinterface), &
+             NDIM*nibool_interfaces_ext_mesh(iinterface), &
+             my_neighbours_ext_mesh(iinterface), &
+             itag, &
+             request_send_vector_ext_mesh(iinterface) &
+             )
+        call irecv_cr(buffer_recv_vector_ext_mesh(1,1,iinterface), &
+             NDIM*nibool_interfaces_ext_mesh(iinterface), &
+             my_neighbours_ext_mesh(iinterface), &
+             itag, &
+             request_recv_vector_ext_mesh(iinterface) &
+             )
+     enddo
 
-    endif
+  endif
 
   end subroutine assemble_MPI_vector_async_send
 
@@ -205,9 +205,9 @@
 !
 !! waits for data to receive and assembles
 !
-!  implicit none
+!  use constants
 !
-!  include "constants.h"
+!  implicit none
 !
 !  integer :: NPROC
 !  integer :: NGLOB_AB
@@ -278,9 +278,9 @@
 !
 ! October 2012 - Surendra Somala and Jean-Paul Ampuero - Caltech Seismolab
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: NPROC
   integer :: NGLOB_AB
@@ -373,9 +373,9 @@
 
 ! sends data
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: NPROC
   integer :: NGLOB_AB
@@ -455,9 +455,9 @@
 
 ! waits for data to receive and assembles
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: NPROC
   integer :: NGLOB_AB
@@ -521,9 +521,9 @@
                                             num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh,&
                                             request_recv_vector_ext_mesh)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: NPROC
   integer(kind=8) :: Mesh_pointer
@@ -577,9 +577,9 @@
 !                                            request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
 !                                            FORWARD_OR_ADJOINT )
 !
-!  implicit none
+!  use constants
 !
-!  include "constants.h"
+!  implicit none
 !
 !  integer :: NPROC
 !  integer :: NGLOB_AB
@@ -644,9 +644,9 @@
 ! sends data
 ! note: array to assemble already filled into buffer_send_vector_ext_mesh array
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: NPROC
 
@@ -699,9 +699,9 @@
 
 ! waits for data to receive and assembles
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: NPROC
   integer :: NGLOB_AB
@@ -773,9 +773,10 @@
 
   ! sends data
   ! note: assembling data already filled into buffer_send_scalar_ext_mesh array
-  implicit none
 
-  include "constants.h"
+  use constants
+
+  implicit none
 
   integer :: NPROC
   integer :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
@@ -835,9 +836,9 @@
 
 ! waits for send/receiver to be completed and assembles contributions
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: NPROC
   integer :: NGLOB_AB

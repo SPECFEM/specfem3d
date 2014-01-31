@@ -460,8 +460,9 @@
 
   ! Modif 09/11/2005
 
+  use constants
+
   implicit none
-  include  "constants.h"
 
   real(kind=CUSTOM_REAL),dimension(21) :: prod
   real(kind=CUSTOM_REAL) :: eps_trace_over_3,b_eps_trace_over_3

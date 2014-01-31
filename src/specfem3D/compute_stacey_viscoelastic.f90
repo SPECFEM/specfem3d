@@ -39,9 +39,9 @@
                         b_num_abs_boundary_faces,b_reclen_field,b_absorb_field, &
                         it_dsm,Veloc_dsm_boundary,Tract_dsm_boundary)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: NSPEC_AB,NGLOB_AB
 
@@ -200,11 +200,10 @@
                         NSTEP,it,NGLOB_ADJOINT,b_accel, &
                         b_num_abs_boundary_faces,b_reclen_field,b_absorb_field)
 
+  use constants
   use specfem_par,only: myrank
 
   implicit none
-
-  include "constants.h"
 
   integer :: NSPEC_AB
 
@@ -282,35 +281,37 @@
 
   subroutine read_dsm_file(Veloc_dsm_boundary,Tract_dsm_boundary,num_abs_boundary_faces,it_dsm)
 
-   implicit none
 
-   include "constants.h"
+  use constants
 
-   integer igll,it_dsm
-   integer iface,num_abs_boundary_faces,i,j
-   real(kind=CUSTOM_REAL) :: Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
-   real(kind=CUSTOM_REAL) :: Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
+  implicit none
 
-!! DK DK why use 5 and not NGLLX here? (I assume 5 means 5 GLL points here?)
-!! VM VM fixed to NGLLX
-   real(kind=CUSTOM_REAL) :: dsm_boundary_tmp(3,Ntime_step_dsm,NGLLX,NGLLY)
 
-   it_dsm = 1
-   !write(*,*) 'read dsm files',it_dsm
-   do iface=1,num_abs_boundary_faces
+  integer igll,it_dsm
+  integer iface,num_abs_boundary_faces,i,j
+  real(kind=CUSTOM_REAL) :: Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
+  real(kind=CUSTOM_REAL) :: Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
 
-      igll = 0
-      do j=1,NGLLY  !! DK DK why use 5 and not NGLLY here? (I assume 5 means 5 GLL points here?)
-        do i=1,NGLLX  !! DK DK why use 5 and not NGLLX here? (I assume 5 means 5 GLL points here?)
-                      !! VM VM Correction 5->NGLLX or NGLLY
-           igll = igll + 1
-           read(IIN_veloc_dsm) dsm_boundary_tmp(:,:,i,j)
-           Veloc_dsm_boundary(:,:,igll,iface) = dsm_boundary_tmp(:,:,i,j)
-           read(IIN_tract_dsm) dsm_boundary_tmp(:,:,i,j)
-           Tract_dsm_boundary(:,:,igll,iface) = dsm_boundary_tmp(:,:,i,j)
-      enddo
+  !! DK DK why use 5 and not NGLLX here? (I assume 5 means 5 GLL points here?)
+  !! VM VM fixed to NGLLX
+  real(kind=CUSTOM_REAL) :: dsm_boundary_tmp(3,Ntime_step_dsm,NGLLX,NGLLY)
+
+  it_dsm = 1
+  !write(*,*) 'read dsm files',it_dsm
+  do iface=1,num_abs_boundary_faces
+
+    igll = 0
+    do j=1,NGLLY  !! DK DK why use 5 and not NGLLY here? (I assume 5 means 5 GLL points here?)
+      do i=1,NGLLX  !! DK DK why use 5 and not NGLLX here? (I assume 5 means 5 GLL points here?)
+                    !! VM VM Correction 5->NGLLX or NGLLY
+         igll = igll + 1
+         read(IIN_veloc_dsm) dsm_boundary_tmp(:,:,i,j)
+         Veloc_dsm_boundary(:,:,igll,iface) = dsm_boundary_tmp(:,:,i,j)
+         read(IIN_tract_dsm) dsm_boundary_tmp(:,:,i,j)
+         Tract_dsm_boundary(:,:,igll,iface) = dsm_boundary_tmp(:,:,i,j)
     enddo
-   enddo
+  enddo
+  enddo
 
   end subroutine read_dsm_file
 
@@ -325,9 +326,9 @@
                         b_num_abs_boundary_faces,b_reclen_field,b_absorb_field, &
                         Mesh_pointer,it_dsm,Veloc_dsm_boundary,Tract_dsm_boundary)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
 ! communication overlap
   logical :: phase_is_inner

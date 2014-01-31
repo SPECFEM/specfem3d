@@ -42,8 +42,9 @@
 ! returns: (1/rho) times gradient vector field (vector_field_element) in specified element
 !             or in gravity case, just gradient vector field
 
+  use constants
+
   implicit none
-  include 'constants.h'
 
   integer,intent(in) :: ispec,NSPEC_AB,NGLOB_AB
 

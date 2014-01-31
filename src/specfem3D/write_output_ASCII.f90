@@ -34,9 +34,9 @@
 ! here would result in a loss of accuracy when one later convolves
 ! the results with the source time function
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: NSTEP,it,SIMULATION_TYPE
 

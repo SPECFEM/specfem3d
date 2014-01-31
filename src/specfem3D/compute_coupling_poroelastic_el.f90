@@ -48,8 +48,9 @@
 
 ! returns the updated accelerations array: accels_poroelatsic (& accelw_poroelastic )
 
+  use constants
+
   implicit none
-  include 'constants.h'
 
   integer :: NSPEC_AB,NGLOB_AB
 

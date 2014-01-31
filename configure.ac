@@ -6,14 +6,20 @@ dnl autoreconf -I m4
 dnl
 dnl You must have recent versions of Autoconf and Automake installed.
 
+############################################################
 
 AC_PREREQ(2.61)
-AC_INIT([Specfem 3D], [2.1.0], [jtromp AT princeton.edu], [Specfem3D])
-AC_CONFIG_SRCDIR([README])
-AC_CONFIG_HEADER([config.h])
+AC_INIT([Specfem3D], [2.1.0], [jtromp AT princeton.edu], [Specfem3D])
+AC_CONFIG_SRCDIR([src/specfem3D/specfem3D.f90])
+
+AC_CONFIG_HEADER([setup/config.h])
+
 AC_CONFIG_MACRO_DIR([m4])
 m4_include(m4/cit_backports.m4)
 
+############################################################
+
+AS_BOX([setting up compilation flags])
 AC_CANONICAL_HOST
 
 # 'configure' options
@@ -25,12 +31,20 @@ AC_ARG_WITH([pyre],
     [want_pyre=no])
 AM_CONDITIONAL([COND_PYRE], [test "$want_pyre" = yes])
 
+###
+### MPI
+###
+
 AC_ARG_WITH([mpi],
     [AS_HELP_STRING([--with-mpi],
         [build parallel version @<:@default=yes@:>@])],
     [want_mpi="$withval"],
     [want_mpi=yes])
 AM_CONDITIONAL([COND_MPI], [test "$want_mpi" = yes])
+
+###
+### precision
+###
 
 AC_ARG_ENABLE([double-precision],
     [AS_HELP_STRING([--enable-double-precision],
@@ -47,14 +61,21 @@ fi
 AC_SUBST([CUSTOM_REAL])
 AC_SUBST([CUSTOM_MPI_TYPE])
 
+###
+### CUDA
+###
+
 AC_ARG_WITH([cuda],
     [AS_HELP_STRING([--with-cuda],
         [build CUDA GPU enabled version @<:@default=no@:>@])],
     [want_cuda="$withval"],
     [want_cuda=no])
-#AM_CONDITIONAL([COND_CUDA], [test "$want_cuda" = yes])
 AM_CONDITIONAL([COND_CUDA], [test "$want_cuda" != no])
 AM_CONDITIONAL([COND_CUDA5], [test "$want_cuda" = cuda5])
+
+###
+### ADIOS
+###
 
 AC_ARG_WITH([adios],
     [AC_HELP_STRING([--with-adios],
@@ -63,6 +84,10 @@ AC_ARG_WITH([adios],
     [want_adios=no])
 AM_CONDITIONAL([COND_ADIOS], [test "$want_adios" != no])
 
+###
+### OPENMP
+###
+
 AC_ARG_WITH([openmp],
     [AS_HELP_STRING([--with-openmp],
         [build OpenMP enabled version @<:@default=no@:>@])],
@@ -70,6 +95,8 @@ AC_ARG_WITH([openmp],
     [want_openmp=no])
 AM_CONDITIONAL([COND_OPENMP], [test "$want_openmp" = yes])
 
+
+############################################################
 
 # Checks for programs.
 
@@ -94,7 +121,7 @@ FFLAGS="$FCFLAGS"
 AC_PROVIDE([AC_PROG_F77])
 AC_SUBST([FCENV])
 
-flags_guess="$SHELL flags.guess"
+flags_guess="$SHELL $srcdir/flags.guess"
 AC_MSG_NOTICE([running $flags_guess])
 flags=`$flags_guess` ||
     AC_MSG_ERROR([$flags_guess failed])
@@ -112,7 +139,10 @@ AC_CHECK_HEADER(emmintrin.h,AC_DEFINE([HAVE_EMMINTRIN],[1],[Define if emmintrin.
 AC_CHECK_HEADER(xmmintrin.h,AC_DEFINE([HAVE_XMMINTRIN],[1],[Define if xmmintrin.h]))
 AC_LANG_POP(C)
 
+############################################################
+
 #checks for Scotch
+AS_BOX([SCOTCH])
 
 export SCOTCH_DIR
 export SCOTCH_LIBDIR
@@ -120,19 +150,19 @@ export SCOTCH_INCLUDEDIR
 export USE_BUNDLED_SCOTCH
 
 AC_ARG_WITH([scotch-dir],
-AS_HELP_STRING([--with-scotch-dir],[define the root path to Scotch (e.g. /opt/scotch/)]),
+AS_HELP_STRING([--with-scotch-dir=DIR],[define the root path to Scotch (e.g. /opt/scotch/)]),
 [
  ac_scotch_dir="$withval";
 ])
 
 AC_ARG_WITH([scotch-includedir],
-AS_HELP_STRING([--with-scotch-includedir],[define the path to the Scotch headers (e.g. /opt/scotch/include)]),
+AS_HELP_STRING([--with-scotch-includedir=DIR],[define the path to the Scotch headers (e.g. /opt/scotch/include)]),
 [
  ac_scotch_include_dir="$withval";
 ])
 
 AC_ARG_WITH([scotch-libdir],
-AS_HELP_STRING([--with-scotch-libdir],[define the path to the Scotch libraries (e.g. /opt/scotch/lib)]),
+AS_HELP_STRING([--with-scotch-libdir=DIR],[define the path to the Scotch libraries (e.g. /opt/scotch/lib)]),
 [
  ac_scotch_lib_dir="$withval";
 ])
@@ -208,33 +238,43 @@ else
 fi
 LDFLAGS=${ac_save_ldflags}
 
+############################################################
 # influential environment variables
 
 AC_ARG_VAR(USE_BUNDLED_SCOTCH, [Set to 1 to always use the bundled Scotch library])
 AC_ARG_VAR(SCOTCH_DIR, [Directory where Scotch is installed])
 AC_ARG_VAR(SCOTCH_INCLUDEDIR, [Directory where Scotch headers are installed])
 AC_ARG_VAR(SCOTCH_LIBDIR, [Directory where Scotch libraries are installed])
+
 AC_ARG_VAR(MPIFC, [MPI Fortran compiler command])
 AC_ARG_VAR(MPILIBS, [extra libraries for linking MPI programs])
 AC_ARG_VAR(MPICC, [MPI C compiler command])
+
 AC_ARG_VAR(FLAGS_CHECK, [Fortran compiler flags])
-if test x"$MPIFC" = x; then
-    MPIFC=mpif90
-fi
-if test x"$MPICC" = x; then
-    MPICC=mpicc
-fi
+
 AC_ARG_VAR(OPENMP_LIB,[Location of extra OpenMP libraries])
 
+# scratch disks
 AC_ARG_VAR(LOCAL_PATH_IS_ALSO_GLOBAL, [files on a local path on each node are also seen as global with same path @<:@default=true@:>@])
-if test x"$LOCAL_PATH_IS_ALSO_GLOBAL" = x; then
+
+############################################################
+
+# tests
+AS_IF([test x"$MPIFC" = x],[
+    MPIFC=mpif90
+])
+AS_IF([test x"$MPICC" = x],[
+    MPICC=mpicc
+])
+AS_IF([test x"$LOCAL_PATH_IS_ALSO_GLOBAL" = x],[
     LOCAL_PATH_IS_ALSO_GLOBAL=true
-fi
+])
+
+
+# python and pyre, this is probably unused...
 
 AC_ARG_VAR(PYTHON, [Python interpreter])
 AC_ARG_VAR(PYTHONPATH, [Python module search path])
-
-
 
 # Checks for Python modules and packages.
 
@@ -279,58 +319,106 @@ if test "$want_pyre" = yes; then
     AC_SUBST(PYTHON_EGG_LDFLAGS)
 fi
 
-
-# Checks for libraries.
-
-
-# Checks for header files.
-
-if test "$want_mpi" = yes; then
-    CIT_FC_MPI_MODULE([mpif.h], [$MPIFC], [$FLAGS_CHECK], [:], [
-        AC_MSG_FAILURE([cannot compile a trivial MPI program using $MPIFC])
-    ])
-fi
-
-# Checks for typedefs, structures, and compiler characteristics.
-
 if test "$want_pyre" = yes; then
     CIT_FC_MAIN
 fi
 
+# Checks for typedefs, structures, and compiler characteristics.
+
+# check fortran modules flag
+
+AS_BOX([module extensions])
+
+AC_FC_MODULE_EXTENSION
+AC_SUBST([FC_MODEXT])
+AC_FC_MODULE_FLAG([], [])
+AC_FC_MODULE_OUTPUT_FLAG([
+	FCFLAGS_f90="$FC_MODOUT./obj $FC_MODINC./obj $FC_MODINC. $FCFLAGS_f90"
+	FC_MODDIR=./obj
+], [
+	FC_MODDIR=.
+])
+AC_SUBST([FC_MODDIR])
+
+
+# Checks for libraries.
+
+### 
+### MPI
+###
+
+if test "$want_mpi" = yes; then
+    AS_BOX([MPI])
+    CIT_FC_MPI_MODULE([mpif.h], [$MPIFC], [$FLAGS_CHECK], [:], [
+        AC_MSG_FAILURE([cannot compile a trivial MPI program using $MPIFC])
+    ])
+    CIT_MPI_INCDIR([$MPIFC])
+fi
+
+
+###
+### ADIOS
+###
+
 if test "$want_adios" = yes; then
+    AS_BOX([ADIOS])
     if test "$want_mpi" != yes; then
         AC_MSG_ERROR([Cannot compile with ADIOS but without MPI.])
     fi
     CIT_ADIOS_CONFIG
 fi	
 
-if test "$want_cuda" = yes; then
+
+###
+### CUDA
+###
+
+if test "$want_cuda" != no; then
+    AS_BOX([CUDA])
+    AC_ARG_VAR(CUDA_FLAGS, [Cuda compiler flags])
     CIT_CUDA_CONFIG
     CIT_MPI_INCDIR([$MPIFC])
 fi
 
+
+###
+### OPENMP
+###
+
 if test "$want_openmp" = yes; then
+    AS_BOX([OPENMP])
     CIT_FC_OPENMP_MODULE([$FC],[$FLAGS_CHECK])        
 fi
 
+############################################################
+
+AS_BOX([setting up default simulation setup])
+
 #mpbl: adding flags to config.h.in through autoheader in order to save them into the adios file.
-configure_flags_str="FC=$FC FCFLAGS=$FLAGS_NO_CHECK" 
+configure_flags_str="FC=$FC FCFLAGS=$FLAGS_CHECK"
 AC_DEFINE_UNQUOTED([CONFIGURE_FLAGS],["${configure_flags_str}"],
           [configuration flags to be save in the adios output file.])
 
-# Checks for library functions.
+# Output results.
 
 AC_CONFIG_FILES([
-	Makefile
-	src/meshfem3D/Makefile
-	src/decompose_mesh/Makefile
-	src/specfem3D/Makefile
-	src/generate_databases/Makefile
-	src/shared/constants.h
-	src/shared/precision.h
-	src/decompose_mesh/scotch/src/Makefile.inc
-	src/check_mesh_quality_CUBIT_Abaqus/Makefile
+    Makefile
+    setup/constants.h
+    setup/precision.h
 ])
+
+AC_CONFIG_FILES([
+	src/decompose_mesh/scotch/src/Makefile.inc
+])
+
+AC_CONFIG_LINKS([
+    DATA/meshfem3D_files:DATA/meshfem3D_files
+])
+
+AC_CONFIG_COMMANDS([bin], [AS_MKDIR_P(bin)])
+AC_CONFIG_COMMANDS([obj], [AS_MKDIR_P(obj)])
+AC_CONFIG_COMMANDS([OUTPUT_FILES], [AS_MKDIR_P(OUTPUT_FILES)])
+
 AC_OUTPUT
 
 #daniel: adding custom lines to config.h.in through autoheader
@@ -339,5 +427,22 @@ AH_BOTTOM([
 /* map fails when output files are > 4GB, which is often the case for GPU simulations */
 // #define USE_MAP_FUNCTION
 ])
+
+dnl FYI, this is not a "result", but AS_ECHO is not available in 2.61, and it
+dnl basically works like a portable echo.
+
+AC_MSG_RESULT([])
+AS_BOX([$PACKAGE_NAME $PACKAGE_VERSION])
+AC_MSG_RESULT([])
+AC_MSG_RESULT([$0 has completed and set up a default configuration to build.])
+AC_MSG_RESULT([])
+AC_MSG_RESULT([You may wish to modify the following files before running a simulation:])
+AC_MSG_RESULT([AS_HELP_STRING([DATA/Par_file],
+                              [Set parameters affecting the simulation.])])
+AC_MSG_RESULT([AS_HELP_STRING([DATA/CMTSOLUTION],
+                              [Set the source parameters before running the solver.])])
+AC_MSG_RESULT([AS_HELP_STRING([DATA/STATIONS],
+                              [Set the receiver stations before running the solver.])])
+AC_MSG_RESULT([])
 
 dnl end of configure.ac
