@@ -25,6 +25,8 @@
 !=====================================================================
 
 
+module model_ipati_adios_mod
+contains
 !-----------------------------------------------------------------------------
 !
 ! IPATI
@@ -34,10 +36,8 @@
 !------------------------------------------------------------------------------
 subroutine model_ipati_adios(myrank,nspec,LOCAL_PATH)
 
-  use mpi
   use adios_read_mod
   use create_regions_mesh_ext_par
-  use generate_databases_par, only: sizeprocs
 
   implicit none
 
@@ -162,10 +162,8 @@ end subroutine model_ipati_water_adios
 subroutine read_model_vp_rho_adios (myrank, nspec, LOCAL_PATH, &
                                     rho_read, vp_read)
 
-  use mpi
   use adios_read_mod
   use create_regions_mesh_ext_par
-  use generate_databases_par, only: sizeprocs
 
   implicit none
 
@@ -179,6 +177,10 @@ subroutine read_model_vp_rho_adios (myrank, nspec, LOCAL_PATH, &
   integer(kind=8), dimension(1) :: start, count_ad
   integer :: local_dim_rho, local_dim_vp
   integer :: ier
+  integer :: comm
+
+  ! gets mpi communicator
+  call world_get_comm(comm)
 
   !-------------------------------------.
   ! Open ADIOS Database file, read mode |
@@ -186,9 +188,10 @@ subroutine read_model_vp_rho_adios (myrank, nspec, LOCAL_PATH, &
   database_name = adjustl(LOCAL_PATH)
   database_name = database_name(1:len_trim(database_name)) //"/model_values.bp"
 
-  call adios_read_init_method (ADIOS_READ_METHOD_BP, MPI_COMM_WORLD, &
+  call adios_read_init_method (ADIOS_READ_METHOD_BP, comm, &
                                "verbose=1", ier)
-  call adios_read_open_file (handle, database_name, 0, MPI_COMM_WORLD, ier)
+  call adios_read_open_file (handle, database_name, 0, comm, ier)
+  if (ier /= 0) call stop_all()
 
   !------------------------.
   ! Get the 'chunks' sizes |
@@ -208,6 +211,9 @@ subroutine read_model_vp_rho_adios (myrank, nspec, LOCAL_PATH, &
   ! Perform read and close the adios file |
   !---------------------------------------'
   call adios_perform_reads(handle, ier)
+  if (ier /= 0) call stop_all()
   call adios_read_close(handle,ier)
   call adios_read_finalize_method(ADIOS_READ_METHOD_BP, ier)
 end subroutine read_model_vp_rho_adios
+
+end module model_ipati_adios_mod

@@ -262,15 +262,33 @@ void output_free_memory(int myrank,char* info_str) {
   FILE* fp;
   char filename[BUFSIZ];
   double free_db,used_db,total_db;
+  int do_output_info;
 
-  get_free_memory(&free_db,&used_db,&total_db);
+  // by default, only master process outputs device infos to avoid file cluttering
+  do_output_info = 0;
+  if( myrank == 0 ){
+    do_output_info = 1;
+    sprintf(filename,"../OUTPUT_FILES/gpu_device_mem_usage.txt");
+  }
+  // debugging
+  if( DEBUG ){
+    do_output_info = 1;
+    sprintf(filename,"../OUTPUT_FILES/gpu_device_mem_usage_proc_%06d.txt",myrank);
+  }
 
-  sprintf(filename,"../OUTPUT_FILES/gpu_memory_usage_proc_%06d.txt",myrank);
-  fp = fopen(filename,"a+");
-  if (fp != NULL){
-    fprintf(fp,"%d: @%s GPU memory usage: used = %f MB, free = %f MB, total = %f MB\n", myrank, info_str,
-            used_db/1024.0/1024.0, free_db/1024.0/1024.0, total_db/1024.0/1024.0);
-    fclose(fp);
+  // outputs to file
+  if( do_output_info ){
+
+    // gets memory usage
+    get_free_memory(&free_db,&used_db,&total_db);
+
+    // file output
+    fp = fopen(filename,"a+");
+    if( fp != NULL ){
+      fprintf(fp,"%d: @%s GPU memory usage: used = %f MB, free = %f MB, total = %f MB\n", myrank, info_str,
+              used_db/1024.0/1024.0, free_db/1024.0/1024.0, total_db/1024.0/1024.0);
+      fclose(fp);
+    }
   }
 }
 

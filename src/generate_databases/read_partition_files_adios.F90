@@ -29,7 +29,6 @@
 !> Reads in Database.bp file
 subroutine read_partition_files_adios()
 
-  use mpi
   use adios_read_mod
   use generate_databases_par
 
@@ -54,8 +53,11 @@ subroutine read_partition_files_adios()
              local_dim_neighbours_mesh, local_dim_num_elmnts_mesh,    &
              local_dim_interfaces_mesh
 
-  integer :: num_xmin, num_xmax, num_ymin, num_ymax, num_top, num_bottom,num, &
-             num_spec, num_int
+  !statistics
+  !integer :: num_xmin, num_xmax, num_ymin, num_ymax, num_top, num_bottom,num, &
+  !           num_spec, num_int
+
+  integer :: comm
 
   sel_num = 0
 
@@ -65,9 +67,12 @@ subroutine read_partition_files_adios()
   database_name = adjustl(LOCAL_PATH)
   database_name = database_name(1:len_trim(database_name)) // "/Database.bp"
 
-  call adios_read_init_method (ADIOS_READ_METHOD_BP, MPI_COMM_WORLD, &
+  call world_get_comm(comm)
+
+  call adios_read_init_method (ADIOS_READ_METHOD_BP, comm, &
                                "verbose=1", ier)
-  call adios_read_open_file (handle, database_name, 0, MPI_COMM_WORLD, ier)
+  call adios_read_open_file (handle, database_name, 0, comm, ier)
+  if (ier /= 0) call stop_all()
 
   !------------------------.
   ! Get the 'chunks' sizes |
@@ -120,21 +125,21 @@ subroutine read_partition_files_adios()
   sel_num = sel_num+1
   sel => selections(sel_num)
   call adios_selection_writeblock(sel, myrank)
-  call adios_schedule_read(handle, sel, "/nglob", 0, 1, nnodes_ext_mesh, ier)
-  call adios_schedule_read(handle, sel, "/nspec", 0, 1, nelmnts_ext_mesh, ier)
+  call adios_schedule_read(handle, sel, "nglob", 0, 1, nnodes_ext_mesh, ier)
+  call adios_schedule_read(handle, sel, "nspec", 0, 1, nelmnts_ext_mesh, ier)
   ! read physical properties of the materials
   ! added poroelastic properties and filled with 0 the last 10 entries
   ! for elastic/acoustic
-  call adios_schedule_read(handle, sel, "/nmaterials", 0, 1, nmat_ext_mesh, ier)
-  call adios_schedule_read(handle, sel, "/nundef_materials", 0, 1, &
+  call adios_schedule_read(handle, sel, "nmaterials", 0, 1, nmat_ext_mesh, ier)
+  call adios_schedule_read(handle, sel, "nundef_materials", 0, 1, &
                            nundefMat_ext_mesh, ier)
-  call adios_schedule_read(handle, sel, "/nspec2d_xmin", 0, 1, nspec2D_xmin, ier)
-  call adios_schedule_read(handle, sel, "/nspec2d_xmax", 0, 1, nspec2D_xmax, ier)
-  call adios_schedule_read(handle, sel, "/nspec2d_ymin", 0, 1, nspec2D_ymin, ier)
-  call adios_schedule_read(handle, sel, "/nspec2d_ymax", 0, 1, nspec2D_ymax, ier)
-  call adios_schedule_read(handle, sel, "/nspec2d_bottom", 0, 1, &
+  call adios_schedule_read(handle, sel, "nspec2d_xmin", 0, 1, nspec2D_xmin, ier)
+  call adios_schedule_read(handle, sel, "nspec2d_xmax", 0, 1, nspec2D_xmax, ier)
+  call adios_schedule_read(handle, sel, "nspec2d_ymin", 0, 1, nspec2D_ymin, ier)
+  call adios_schedule_read(handle, sel, "nspec2d_ymax", 0, 1, nspec2D_ymax, ier)
+  call adios_schedule_read(handle, sel, "nspec2d_bottom", 0, 1, &
                            nspec2D_bottom_ext, ier)
-  call adios_schedule_read(handle, sel, "/nspec2d_top", 0, 1, &
+  call adios_schedule_read(handle, sel, "nspec2d_top", 0, 1, &
                            nspec2D_top_ext, ier)
   ! MPI interfaces between different partitions
   num_interfaces_ext_mesh = 0
@@ -142,13 +147,14 @@ subroutine read_partition_files_adios()
   if( NPROC > 1 ) then
     ! format: #number_of_MPI_interfaces
     !         #maximum_number_of_elements_on_each_interface
-    call adios_schedule_read(handle, sel, "/nb_interfaces", 0, 1, &
+    call adios_schedule_read(handle, sel, "nb_interfaces", 0, 1, &
                              num_interfaces_ext_mesh, ier)
-    call adios_schedule_read(handle, sel, "/nspec_interfaces_max", 0, 1, &
+    call adios_schedule_read(handle, sel, "nspec_interfaces_max", 0, 1, &
                              max_interface_size_ext_mesh, ier)
   endif
   ! Perform the read, so we can use the values.
   call adios_perform_reads(handle, ier)
+  if (ier /= 0) call stop_all()
 
   NSPEC_AB = nelmnts_ext_mesh
   NSPEC2D_BOTTOM = nspec2D_bottom_ext
@@ -346,6 +352,7 @@ subroutine read_partition_files_adios()
                            my_interfaces_ext_mesh, ier)
 
   call adios_perform_reads(handle, ier)
+  if (ier /= 0) call stop_all()
   call adios_read_close(handle,ier)
   call adios_read_finalize_method(ADIOS_READ_METHOD_BP, ier)
 

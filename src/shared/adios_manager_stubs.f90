@@ -8,7 +8,7 @@ contains
 subroutine no_adios_err()
   implicit none
 
-  integer :: myrank, code
+  integer :: myrank
 
   call world_rank(myrank)
   if (myrank == 0) then

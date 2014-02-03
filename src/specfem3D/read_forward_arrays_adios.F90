@@ -29,7 +29,6 @@
 !==============================================================================
 subroutine read_forward_arrays_adios()
 
-  use mpi
   use adios_read_mod
 
   use pml_par
@@ -41,8 +40,7 @@ subroutine read_forward_arrays_adios()
 
   implicit none
 
-  real(kind=CUSTOM_REAL):: minl,maxl,min_all,max_all
-  integer :: ier,inum
+  integer :: ier
 
   character(len=256) :: database_name
   integer(kind=8) :: handle
@@ -77,6 +75,8 @@ subroutine read_forward_arrays_adios()
              local_dim_velocw_poroelastic,            &
              local_dim_accelw_poroelastic
 
+  integer :: comm
+
   !-------------------------------------.
   ! Open ADIOS Database file, read mode |
   !-------------------------------------'
@@ -85,9 +85,12 @@ subroutine read_forward_arrays_adios()
   database_name = adjustl(LOCAL_PATH)
   database_name = database_name(1:len_trim(database_name)) // "/forward_arrays.bp"
 
-  call adios_read_init_method (ADIOS_READ_METHOD_BP, MPI_COMM_WORLD, &
+  call world_get_comm(comm)
+
+  call adios_read_init_method (ADIOS_READ_METHOD_BP, comm, &
                                "verbose=1", ier)
-  call adios_read_open_file (handle, database_name, 0, MPI_COMM_WORLD, ier)
+  call adios_read_open_file (handle, database_name, 0, comm, ier)
+  if (ier /= 0) call stop_all()
 
   !------------------------.
   ! Get the 'chunks' sizes |
@@ -364,6 +367,7 @@ subroutine read_forward_arrays_adios()
   ! Perform the reads and close the ADIOS 'external_mesh.bp' file |
   !---------------------------------------------------------------'
   call adios_perform_reads(handle, ier)
+  if (ier /= 0) call stop_all()
   call adios_read_close(handle,ier)
   call adios_read_finalize_method(ADIOS_READ_METHOD_BP, ier)
 

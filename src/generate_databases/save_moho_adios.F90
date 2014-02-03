@@ -47,7 +47,6 @@
 !> Save Moho informtaion using ADIOS
 subroutine crm_save_moho_adios()
 
-  use mpi
   use adios_helpers_mod
   use generate_databases_par, only : myrank, sizeprocs, LOCAL_PATH, &
                                      NSPEC_AB
@@ -71,6 +70,11 @@ subroutine crm_save_moho_adios()
   integer, parameter :: num_vars = 2
   integer, dimension(num_vars) :: max_global_values
 
+  integer :: comm
+
+  ! gets mpi communicator
+  call world_get_comm(comm)
+
   !-----------------------------------------------------------------.
   ! Get maximum value for each variable used to define a local_dim. |
   ! ADIOS write equally sized chunks for each processor.            |
@@ -79,9 +83,11 @@ subroutine crm_save_moho_adios()
   max_global_values(1) = nspec_ab
   max_global_values(2) = nspec2d_moho
 
-  call MPI_Allreduce(MPI_IN_PLACE, max_global_values, num_vars, &
-                     MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ier)
-  if( ier /= 0 ) call exit_MPI(myrank,'Allreduce to get max values failed.')
+  !call MPI_Allreduce(MPI_IN_PLACE, max_global_values, num_vars, &
+  !                   MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ier)
+  !if( ier /= 0 ) call exit_MPI(myrank,'Allreduce to get max values failed.')
+  ! calling wrapper instead to compile without mpi
+  call max_allreduce_i(max_global_values,num_vars)
 
   nspec_wmax        = max_global_values(1)
   nspec2d_moho_wmax = max_global_values(2)
@@ -136,7 +142,7 @@ subroutine crm_save_moho_adios()
   ! Open an handler to the ADIOS file and setup the group size |
   !------------------------------------------------------------'
   call adios_open(handle, group_name, output_name, "w", &
-                  MPI_COMM_WORLD, ier);
+                  comm, ier);
   call adios_group_size (handle, groupsize, totalsize, ier)
 
   !------------------------------------------.

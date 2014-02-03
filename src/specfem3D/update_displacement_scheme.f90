@@ -203,7 +203,7 @@
 
     ! updates elastic displacement and velocity
     ! Includes SIM_TYPE 1 & 3 (for noise tomography)
-    call it_update_displacement_cuda(Mesh_pointer,deltat,deltatsqover2,deltatover2,b_deltat,b_deltatsqover2,b_deltatover2)
+    call update_displacement_cuda(Mesh_pointer,deltat,deltatsqover2,deltatover2,b_deltat,b_deltatsqover2,b_deltatover2)
   endif ! GPU_MODE
 
   end subroutine update_displacement_elastic

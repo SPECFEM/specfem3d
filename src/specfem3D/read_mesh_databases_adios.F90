@@ -29,7 +29,6 @@
 !==============================================================================
 subroutine read_mesh_for_init(nspec, nglob)
 
-  use mpi
   use adios_read_mod
   use specfem_par, only : myrank, LOCAL_PATH
 
@@ -40,6 +39,7 @@ subroutine read_mesh_for_init(nspec, nglob)
   character(len=256) :: database_name
   integer(kind=8) :: handle, sel
   integer         :: ier
+  integer :: comm
 
   !-------------------------------------.
   ! Open ADIOS Database file, read mode |
@@ -47,21 +47,25 @@ subroutine read_mesh_for_init(nspec, nglob)
   database_name = adjustl(LOCAL_PATH)
   database_name = database_name(1:len_trim(database_name)) // "/external_mesh.bp"
 
-  call adios_read_init_method (ADIOS_READ_METHOD_BP, MPI_COMM_WORLD, &
+  call world_get_comm(comm)
+
+  call adios_read_init_method (ADIOS_READ_METHOD_BP, comm, &
                                "verbose=1", ier)
-  call adios_read_open_file (handle, database_name, 0, MPI_COMM_WORLD, ier)
+  call adios_read_open_file (handle, database_name, 0, comm, ier)
+  if (ier /= 0) call stop_all()
 
   !------------------------------------.
   ! Read variables from the adios file |
   !------------------------------------'
   call adios_selection_writeblock(sel, myrank)
-  call adios_schedule_read(handle, sel, "/nspec", 0, 1, nspec, ier)
-  call adios_schedule_read(handle, sel, "/nglob", 0, 1, nglob, ier)
+  call adios_schedule_read(handle, sel, "nspec", 0, 1, nspec, ier)
+  call adios_schedule_read(handle, sel, "nglob", 0, 1, nglob, ier)
 
   !--------------------------------------------.
   ! Perform the reads and close the adios file |
   !--------------------------------------------'
   call adios_perform_reads(handle, ier)
+  if (ier /= 0) call stop_all()
   call adios_read_close(handle,ier)
   call adios_read_finalize_method(ADIOS_READ_METHOD_BP, ier)
 
@@ -70,7 +74,6 @@ end subroutine read_mesh_for_init
 !==============================================================================
 subroutine read_mesh_databases_adios()
 
-  use mpi
   use adios_read_mod
 
   use pml_par
@@ -103,7 +106,7 @@ subroutine read_mesh_databases_adios()
              local_dim_ispec_is_acoustic, local_dim_ispec_is_elastic,          &
              local_dim_ispec_is_poroelastic, local_dim_rmass,                  &
              local_dim_rmass_ocean_load, local_dim_rmass_acoustic,             &
-             local_dim_rmass_elastic,local_dim_rho_vp,                         &
+             local_dim_rho_vp,                                                 &
              local_dim_rho_vs, local_dim_abs_boundary_ispec,                   &
              local_dim_abs_boundary_ijk, local_dim_abs_boundary_jacobian2Dw,   &
              local_dim_abs_boundary_normal, local_dim_ibelm_xmin,              &
@@ -143,6 +146,8 @@ subroutine read_mesh_databases_adios()
              local_dim_coupling_ac_po_jacobian2Dw,                             &
              local_dim_coupling_ac_po_normal
 
+  integer :: comm
+
   !-------------------------------------.
   ! Open ADIOS Database file, read mode |
   !-------------------------------------'
@@ -151,9 +156,12 @@ subroutine read_mesh_databases_adios()
   database_name = adjustl(LOCAL_PATH)
   database_name = database_name(1:len_trim(database_name)) // "/external_mesh.bp"
 
-  call adios_read_init_method (ADIOS_READ_METHOD_BP, MPI_COMM_WORLD, &
+  call world_get_comm(comm)
+
+  call adios_read_init_method (ADIOS_READ_METHOD_BP, comm, &
                                "verbose=1", ier)
-  call adios_read_open_file (handle, database_name, 0, MPI_COMM_WORLD, ier)
+  call adios_read_open_file (handle, database_name, 0, comm, ier)
+  if (ier /= 0) call stop_all()
 
   !------------------------------------------------------------------.
   ! Get scalar values. Might be differents for different processors. |
@@ -163,9 +171,10 @@ subroutine read_mesh_databases_adios()
   sel_num = sel_num+1
   sel => selections(sel_num)
   call adios_selection_writeblock(sel, myrank)
-  call adios_schedule_read(handle, sel, "/nspec", 0, 1, NSPEC_AB, ier)
-  call adios_schedule_read(handle, sel, "/nglob", 0, 1, NGLOB_AB, ier)
+  call adios_schedule_read(handle, sel, "nspec", 0, 1, NSPEC_AB, ier)
+  call adios_schedule_read(handle, sel, "nglob", 0, 1, NGLOB_AB, ier)
   call adios_perform_reads(handle, ier)
+  if (ier /= 0) call stop_all()
 
   !----------------------------------------------.
   ! Fetch values to compute the simulation type. |
@@ -191,6 +200,7 @@ subroutine read_mesh_databases_adios()
                            ispec_is_poroelastic, ier)
   ! Perform the read, so we can use the values.
   call adios_perform_reads(handle, ier)
+  if (ier /= 0) call stop_all()
   ! number of acoustic elements in this partition
   nspec_acoustic = count(ispec_is_acoustic(:))
   ! all processes will have acoustic_simulation set if any flag is .true.
@@ -234,77 +244,77 @@ subroutine read_mesh_databases_adios()
 
   NSPEC_CPML = 0
   if( PML_CONDITIONS ) then
-    call adios_schedule_read(handle, sel, "/nspec_cpml", 0, 1, nspec_cpml, ier)
-    call adios_schedule_read(handle, sel, "/CPML_width_x", 0, 1, &
+    call adios_schedule_read(handle, sel, "nspec_cpml", 0, 1, nspec_cpml, ier)
+    call adios_schedule_read(handle, sel, "CPML_width_x", 0, 1, &
                              CPML_width_x, ier)
-    call adios_schedule_read(handle, sel, "/CPML_width_y", 0, 1, &
+    call adios_schedule_read(handle, sel, "CPML_width_y", 0, 1, &
                              CPML_width_y, ier)
-    call adios_schedule_read(handle, sel, "/CPML_width_x", 0, 1, &
+    call adios_schedule_read(handle, sel, "CPML_width_x", 0, 1, &
                              CPML_width_z, ier)
     if( nspec_cpml > 0 ) then
       if((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) &
           .or. SIMULATION_TYPE == 3) then
-        call adios_schedule_read(handle, sel, "/nglob_interface_PML_acoustic", &
+        call adios_schedule_read(handle, sel, "nglob_interface_PML_acoustic", &
                                  0, 1, nglob_interface_PML_acoustic, ier)
-        call adios_schedule_read(handle, sel, "/nglob_interface_PML_elastic", &
+        call adios_schedule_read(handle, sel, "nglob_interface_PML_elastic", &
                                  0, 1, nglob_interface_PML_elastic, ier)
       endif
     endif
   endif
 
-  call adios_schedule_read(handle, sel, "/num_abs_boundary_faces", 0, 1, &
+  call adios_schedule_read(handle, sel, "num_abs_boundary_faces", 0, 1, &
                            num_abs_boundary_faces, ier)
 
-  call adios_schedule_read(handle, sel, "/nspec2d_xmin", 0, 1, &
+  call adios_schedule_read(handle, sel, "nspec2d_xmin", 0, 1, &
                            nspec2d_xmin, ier)
-  call adios_schedule_read(handle, sel, "/nspec2d_xmax", 0, 1, &
+  call adios_schedule_read(handle, sel, "nspec2d_xmax", 0, 1, &
                            nspec2d_xmax, ier)
-  call adios_schedule_read(handle, sel, "/nspec2d_ymin", 0, 1, &
+  call adios_schedule_read(handle, sel, "nspec2d_ymin", 0, 1, &
                            nspec2d_ymin, ier)
-  call adios_schedule_read(handle, sel, "/nspec2d_ymax", 0, 1, &
+  call adios_schedule_read(handle, sel, "nspec2d_ymax", 0, 1, &
                            nspec2d_ymax, ier)
-  call adios_schedule_read(handle, sel, "/nspec2d_bottom", 0, 1, &
+  call adios_schedule_read(handle, sel, "nspec2d_bottom", 0, 1, &
                            nspec2d_bottom, ier)
-  call adios_schedule_read(handle, sel, "/nspec2d_top", 0, 1, &
+  call adios_schedule_read(handle, sel, "nspec2d_top", 0, 1, &
                            nspec2d_top, ier)
 
-  call adios_schedule_read(handle, sel, "/num_free_surface_faces", 0, 1, &
+  call adios_schedule_read(handle, sel, "num_free_surface_faces", 0, 1, &
                            num_free_surface_faces, ier)
-  call adios_schedule_read(handle, sel, "/num_coupling_ac_el_faces", 0, 1, &
+  call adios_schedule_read(handle, sel, "num_coupling_ac_el_faces", 0, 1, &
                            num_coupling_ac_el_faces, ier)
-  call adios_schedule_read(handle, sel, "/num_coupling_ac_po_faces", 0, 1, &
+  call adios_schedule_read(handle, sel, "num_coupling_ac_po_faces", 0, 1, &
                            num_coupling_ac_po_faces, ier)
-  call adios_schedule_read(handle, sel, "/num_coupling_el_po_faces", 0, 1, &
+  call adios_schedule_read(handle, sel, "num_coupling_el_po_faces", 0, 1, &
                            num_coupling_el_po_faces, ier)
-  call adios_schedule_read(handle, sel, "/num_interfaces_ext_mesh", 0, 1, &
+  call adios_schedule_read(handle, sel, "num_interfaces_ext_mesh", 0, 1, &
                            num_interfaces_ext_mesh, ier)
-  call adios_schedule_read(handle, sel, "/max_nibool_interfaces_ext_mesh", 0, 1, &
+  call adios_schedule_read(handle, sel, "max_nibool_interfaces_ext_mesh", 0, 1, &
                            max_nibool_interfaces_ext_mesh, ier)
 
   if( ACOUSTIC_SIMULATION ) then
-    call adios_schedule_read(handle, sel, "/nspec_inner_acoustic", 0, 1, &
+    call adios_schedule_read(handle, sel, "nspec_inner_acoustic", 0, 1, &
                              nspec_inner_acoustic, ier)
-    call adios_schedule_read(handle, sel, "/nspec_outer_acoustic", 0, 1, &
+    call adios_schedule_read(handle, sel, "nspec_outer_acoustic", 0, 1, &
                              nspec_outer_acoustic, ier)
-    call adios_schedule_read(handle, sel, "/num_phase_ispec_acoustic", 0, 1, &
+    call adios_schedule_read(handle, sel, "num_phase_ispec_acoustic", 0, 1, &
                              num_phase_ispec_acoustic, ier)
   endif
 
   if( ELASTIC_SIMULATION ) then
-    call adios_schedule_read(handle, sel, "/nspec_inner_elastic", 0, 1, &
+    call adios_schedule_read(handle, sel, "nspec_inner_elastic", 0, 1, &
                              nspec_inner_elastic, ier)
-    call adios_schedule_read(handle, sel, "/nspec_outer_elastic", 0, 1, &
+    call adios_schedule_read(handle, sel, "nspec_outer_elastic", 0, 1, &
                              nspec_outer_elastic, ier)
-    call adios_schedule_read(handle, sel, "/num_phase_ispec_elastic", 0, 1, &
+    call adios_schedule_read(handle, sel, "num_phase_ispec_elastic", 0, 1, &
                              num_phase_ispec_elastic, ier)
   endif
 
   if( POROELASTIC_SIMULATION) then
-    call adios_schedule_read(handle, sel, "/nspec_inner_poroelastic", 0, 1, &
+    call adios_schedule_read(handle, sel, "nspec_inner_poroelastic", 0, 1, &
                              nspec_inner_poroelastic, ier)
-    call adios_schedule_read(handle, sel, "/nspec_outer_poroelastic", 0, 1, &
+    call adios_schedule_read(handle, sel, "nspec_outer_poroelastic", 0, 1, &
                              nspec_outer_poroelastic, ier)
-    call adios_schedule_read(handle, sel, "/num_phase_ispec_poroelastic", 0, 1,&
+    call adios_schedule_read(handle, sel, "num_phase_ispec_poroelastic", 0, 1,&
                              num_phase_ispec_poroelastic, ier)
   endif
 
@@ -314,20 +324,21 @@ subroutine read_mesh_databases_adios()
   num_colors_inner_elastic = 0
   if( USE_MESH_COLORING_GPU ) then
     if( ACOUSTIC_SIMULATION ) then
-      call adios_schedule_read(handle, sel, "/num_colors_outer_acoustic", &
+      call adios_schedule_read(handle, sel, "num_colors_outer_acoustic", &
                                0, 1, num_colors_outer_acoustic, ier)
-      call adios_schedule_read(handle, sel, "/num_colors_outer_acoustic", &
+      call adios_schedule_read(handle, sel, "num_colors_outer_acoustic", &
                                0, 1, num_colors_inner_acoustic, ier)
     endif
     if( ELASTIC_SIMULATION ) then
-      call adios_schedule_read(handle, sel, "/num_colors_outer_elastic", &
+      call adios_schedule_read(handle, sel, "num_colors_outer_elastic", &
                                0, 1, num_colors_outer_elastic, ier)
-      call adios_schedule_read(handle, sel, "/num_colors_outer_elastic", &
+      call adios_schedule_read(handle, sel, "num_colors_outer_elastic", &
                                0, 1, num_colors_inner_elastic, ier)
     endif
   endif
   ! Perform the read, so we can use the values.
   call adios_perform_reads(handle, ier)
+  if (ier /= 0) call stop_all()
 
 
   !------------------------.
@@ -926,8 +937,8 @@ subroutine read_mesh_databases_adios()
   endif
 
   if( POROELASTIC_SIMULATION ) then
-    if( num_phase_ispec_poroelastic < 0 ) stop 'error poroelastic simulation:'&
-                                       'num_phase_ispec_poroelastic is < zero'
+    if( num_phase_ispec_poroelastic < 0 ) &
+      stop 'error poroelastic simulation:num_phase_ispec_poroelastic is < zero'
     allocate( phase_ispec_inner_poroelastic(num_phase_ispec_poroelastic,2), &
               stat=ier)
     if( ier /= 0 ) stop 'error allocating array phase_ispec_inner_poroelastic'
@@ -1633,6 +1644,7 @@ subroutine read_mesh_databases_adios()
   ! Perform the reads and close the ADIOS 'external_mesh.bp' file |
   !---------------------------------------------------------------'
   call adios_perform_reads(handle, ier)
+  if (ier /= 0) call stop_all()
   call adios_read_close(handle,ier)
   call adios_read_finalize_method(ADIOS_READ_METHOD_BP, ier)
 
@@ -1722,7 +1734,7 @@ end subroutine read_mesh_databases_adios
 !-------------------------------------------------------------------------------
 !> Reads in moho meshes
 subroutine read_moho_mesh_adjoint_adios()
-  use mpi
+
   use adios_read_mod
 
   use specfem_par
@@ -1745,7 +1757,7 @@ subroutine read_moho_mesh_adjoint_adios()
              local_dim_is_moho_bot,     local_dim_is_moho_top
 
   integer :: ier
-
+  integer :: comm
   !-------------------------------------.
   ! Open ADIOS Database file, read mode |
   !-------------------------------------'
@@ -1754,9 +1766,12 @@ subroutine read_moho_mesh_adjoint_adios()
   database_name = adjustl(LOCAL_PATH)
   database_name = database_name(1:len_trim(database_name)) // "/moho.bp"
 
-  call adios_read_init_method (ADIOS_READ_METHOD_BP, MPI_COMM_WORLD, &
+  call world_get_comm(comm)
+
+  call adios_read_init_method (ADIOS_READ_METHOD_BP, comm, &
                                "verbose=1", ier)
-  call adios_read_open_file (handle, database_name, 0, MPI_COMM_WORLD, ier)
+  call adios_read_open_file (handle, database_name, 0, comm, ier)
+  if (ier /= 0) call stop_all()
 
   !------------------------------------------------------------------.
   ! Get scalar values. Might be differents for different processors. |
@@ -1766,9 +1781,10 @@ subroutine read_moho_mesh_adjoint_adios()
   sel_num = sel_num+1
   sel => selections(sel_num)
   call adios_selection_writeblock(sel, myrank)
-  call adios_schedule_read(handle, sel, "/nspec2d_moho", 0, 1, &
+  call adios_schedule_read(handle, sel, "nspec2d_moho", 0, 1, &
                            NSPEC2D_MOHO, ier)
   call adios_perform_reads(handle, ier)
+  if (ier /= 0) call stop_all()
 
   !----------------------------------------------.
   ! Fetch values to compute the simulation type. |
@@ -1872,6 +1888,7 @@ subroutine read_moho_mesh_adjoint_adios()
   ! Perform the reads and close the ADIOS 'external_mesh.bp' file |
   !---------------------------------------------------------------'
   call adios_perform_reads(handle, ier)
+  if (ier /= 0) call stop_all()
   call adios_read_close(handle,ier)
   call adios_read_finalize_method(ADIOS_READ_METHOD_BP, ier)
 

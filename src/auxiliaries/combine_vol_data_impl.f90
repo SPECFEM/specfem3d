@@ -29,7 +29,7 @@ module combine_vol_data_mod
 contains
 
 !=============================================================================
-!> Print help message. 
+!> Print help message.
 subroutine print_usage()
   print *, 'Usage: '
   print *, '   xcombine_data start_slice end_slice filename input_dir ' // &

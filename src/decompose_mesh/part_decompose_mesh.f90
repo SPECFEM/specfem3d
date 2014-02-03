@@ -28,7 +28,7 @@ module part_decompose_mesh
 
   implicit none
 
-  include "../shared/constants.h"
+  include "constants.h"
 
 ! useful kind types for short integer (4 bytes) and long integers (8 bytes)
   integer, parameter :: short = 4, long = 8

@@ -1,0 +1,153 @@
+#=====================================================================
+#
+#               S p e c f e m 3 D  V e r s i o n  2 . 1
+#               ---------------------------------------
+#
+#          Main authors: Dimitri Komatitsch and Jeroen Tromp
+#    Princeton University, USA and University of Pau / CNRS / INRIA
+# (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+#                            April 2011
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+#=====================================================================
+
+## compilation directories
+S := ${S_TOP}/src/shared
+$(shared_OBJECTS): S = ${S_TOP}/src/shared
+
+#######################################
+
+shared_TARGETS = \
+	$(shared_OBJECTS) \
+	$(EMPTY_MACRO)
+
+
+shared_OBJECTS = \
+	$O/assemble_MPI_scalar.shared.o \
+	$O/check_mesh_resolution.shared.o \
+	$O/create_name_database.shared.o \
+	$O/create_serial_name_database.shared.o \
+	$O/define_derivation_matrices.shared.o \
+	$O/detect_surface.shared.o \
+	$O/exit_mpi.shared.o \
+	$O/force_ftz.cc.o \
+	$O/get_attenuation_model.shared.o \
+	$O/get_cmt.shared.o \
+	$O/get_element_face.shared.o \
+	$O/get_force.shared.o \
+	$O/get_jacobian_boundaries.shared.o \
+	$O/get_shape2D.shared.o \
+	$O/get_shape3D.shared.o \
+	$O/get_value_parameters.shared.o \
+	$O/gll_library.shared.o \
+	$O/hex_nodes.shared.o \
+	$O/lagrange_poly.shared.o \
+	$O/netlib_specfun_erf.shared.o \
+	$O/param_reader.cc.o \
+	$O/prepare_assemble_MPI.shared.o \
+	$O/read_parameter_file.shared.o \
+	$O/read_topo_bathy_file.shared.o \
+	$O/read_value_parameters.shared.o \
+	$O/recompute_jacobian.shared.o \
+	$O/save_alloc_mod.shared.o \
+	$O/save_header_file.shared.o \
+	$O/sort_array_coordinates.shared.o \
+	$O/utm_geo.shared.o \
+	$O/write_c_binary.cc.o \
+	$O/write_VTK_data.shared.o \
+	$(EMPTY_MACRO)
+
+###
+### MPI
+###
+shared_OBJECTS += $(COND_MPI_OBJECTS)
+
+
+###
+### ADIOS
+###
+
+adios_shared_OBJECTS = \
+	$O/adios_helpers_definitions.shared_adios_module.o \
+	$O/adios_helpers_writers.shared_adios_module.o \
+	$O/adios_helpers.shared_adios.o \
+	$O/adios_manager.shared_adios.o \
+	$(EMPTY_MACRO)
+
+adios_shared_MODULES = \
+	$(FC_MODDIR)/adios_helpers_definitions_mod.$(FC_MODEXT) \
+	$(FC_MODDIR)/adios_helpers_mod.$(FC_MODEXT) \
+	$(FC_MODDIR)/adios_helpers_writers_mod.$(FC_MODEXT) \
+	$(EMPTY_MACRO)
+
+adios_shared_STUBS = \
+	$O/adios_manager_stubs.cc.o \
+	$(EMPTY_MACRO)
+
+ifeq ($(ADIOS),yes)
+shared_OBJECTS += $(adios_shared_OBJECTS)
+shared_MODULES += $(adios_shared_MODULES)
+else
+shared_OBJECTS += $(adios_shared_STUBS)
+endif
+
+#######################################
+
+####
+#### rule for each .o file below
+####
+
+##
+## shared
+##
+
+$O/%.shared_module.o: $S/%.f90 ${SETUP}/constants.h
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+$O/%.shared.o: $S/%.f90
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+$O/%.shared.o: $S/%.F90
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+$O/%.sharedmpi.o: $S/%.f90
+	${MPIFCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+
+##
+## adios
+##
+
+$O/%.shared_adios_module.o: $S/%.f90
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+$O/%.shared_adios.o: $S/%.f90 $O/adios_helpers_writers.shared_adios_module.o $O/adios_helpers_definitions.shared_adios_module.o ${SETUP}/constants.h
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+$O/%.shared_adios.o: $S/%.F90 $O/adios_helpers_writers.shared_adios_module.o $O/adios_helpers_definitions.shared_adios_module.o ${SETUP}/constants.h
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+$O/%.shared_noadios.o: $S/%.f90
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+
+##
+## C compilation
+##
+
+$O/%.cc.o: $S/%.c ${SETUP}/config.h
+	${CC} -c $(CPPFLAGS) $(CFLAGS) -o $@ $<
+

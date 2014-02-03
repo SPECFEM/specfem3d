@@ -113,7 +113,7 @@
       if( ier /= 0 ) stop 'error allocating arrays for lowres movie'
     endif
   endif
-  call gather_all_i(nfaces_surface_ext_mesh,1,nfaces_perproc_surface_ext_mesh,1,NPROC)
+  call gather_all_singlei(nfaces_surface_ext_mesh,nfaces_perproc_surface_ext_mesh,NPROC)
 
   ! array offsets
   faces_surface_offset_ext_mesh(1) = 0

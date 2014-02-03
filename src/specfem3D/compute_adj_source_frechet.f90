@@ -31,9 +31,9 @@
            hxir,hetar,hgammar,hpxir,hpetar,hpgammar, hprime_xx,hprime_yy,hprime_zz, &
            xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz)
 
-  implicit none
+  use constants
 
-  include 'constants.h'
+  implicit none
 
   ! input
   real(kind=CUSTOM_REAL) :: displ_s(NDIM,NGLLX,NGLLY,NGLLZ)

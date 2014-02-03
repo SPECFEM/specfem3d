@@ -40,9 +40,9 @@
                         b_num_abs_boundary_faces,b_reclen_field_poro,b_absorb_fields, &
                         b_absorb_fieldw)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: NSPEC_AB,NGLOB_AB
 

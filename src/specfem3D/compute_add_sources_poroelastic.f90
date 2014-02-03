@@ -38,14 +38,13 @@
                         nadj_rec_local,adj_sourcearrays,b_accels,b_accelw, &
                         NTSTEP_BETWEEN_READ_ADJSRC )
 
+  use constants
   use specfem_par,only: PRINT_SOURCE_TIME_FUNCTION,stf_used_total, &
                         xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
                         station_name,network_name,adj_source_file,hdur_tiny, &
                         USE_RICKER_TIME_FUNCTION,USE_FORCE_POINT_SOURCE
 
   implicit none
-
-  include "constants.h"
 
   integer :: NSPEC_AB,NGLOB_AB
 

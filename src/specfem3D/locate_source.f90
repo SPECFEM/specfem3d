@@ -39,12 +39,12 @@
                  ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic, &
                  num_free_surface_faces,free_surface_ispec,free_surface_ijk)
 
+  use constants
+
   use specfem_par,only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION,factor_force_source, &
        comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP
 
   implicit none
-
-  include "constants.h"
 
   integer NPROC,UTM_PROJECTION_ZONE
   integer NSPEC_AB,NGLOB_AB,NSOURCES,NGNOD

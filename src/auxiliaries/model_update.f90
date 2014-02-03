@@ -27,14 +27,11 @@
 
 program model_update
 
-  use :: mpi
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
   use specfem_par_poroelastic
   implicit none
-
-  include 'precision.h'
 
   ! ======================================================
   ! USER PARAMETERS
@@ -80,7 +77,7 @@ program model_update
   integer :: NSPEC, NGLOB
 
   ! for attenuation
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: qmu_attenuation_store  ! attenuation
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: qmu_attenuation_store,qkappa_attenuation_store  ! attenuation
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: dummy_g_1,dummy_g_2,dummy_g_3  !xstore,ystore,zstore
   integer, dimension(:), allocatable :: dummy_l_1,dummy_l_2,dummy_l_3,dummy_l_4,dummy_l_5,dummy_l_6,dummy_l_7,dummy_l_8 !ibool-1
   integer, dimension(:), allocatable :: dummy_num
@@ -138,15 +135,19 @@ program model_update
   ! mass matrices
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_old, rmass_new
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_acoustic_new,rmass_solid_poroelastic_new,rmass_fluid_poroelastic_new
+  real(kind=CUSTOM_REAL),dimension(1) :: tmp_step
 
-
+  ! security check
+  if( ATTENUATION ) then
+    print*,'sorry using ATTENUATION, this routine has qkappa not implemented yet...'
+    stop
+  endif
 
   ! ============ program starts here =====================
   ! initialize the MPI communicator and start the NPROCTOT MPI processes
-  call MPI_INIT(ier)
-  call MPI_COMM_SIZE(MPI_COMM_WORLD,sizeprocs,ier)
-  call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
-
+  call init()
+  call world_size(sizeprocs)
+  call world_rank(myrank)
 
   ! subjective step length to multiply to the gradient
   ! e.g. step_fac = 0.03
@@ -304,12 +305,12 @@ program model_update
   ! compute minmax values of current model
   ! NOTE: mpi_reduce operates on the values from all procs,
   !       but the reduced value only exists on the root proc.
-  call mpi_reduce(minval(model_vs(:,:,:,1:nspec)), vsmin_before, 1, CUSTOM_MPI_TYPE, MPI_MIN, 0, MPI_COMM_WORLD,ier)
-  call mpi_reduce(maxval(model_vs(:,:,:,1:nspec)), vsmax_before, 1, CUSTOM_MPI_TYPE, MPI_MAX, 0, MPI_COMM_WORLD,ier)
-  call mpi_reduce(minval(model_vp(:,:,:,1:nspec)), vpmin_before, 1, CUSTOM_MPI_TYPE, MPI_MIN, 0, MPI_COMM_WORLD,ier)
-  call mpi_reduce(maxval(model_vp(:,:,:,1:nspec)), vpmax_before, 1, CUSTOM_MPI_TYPE, MPI_MAX, 0, MPI_COMM_WORLD,ier)
-  call mpi_reduce(minval(model_rho(:,:,:,1:nspec)), rhomin_before,1,CUSTOM_MPI_TYPE, MPI_MIN, 0, MPI_COMM_WORLD,ier)
-  call mpi_reduce(maxval(model_rho(:,:,:,1:nspec)), rhomax_before,1,CUSTOM_MPI_TYPE, MPI_MAX, 0, MPI_COMM_WORLD,ier)
+  call min_all_cr(minval(model_vs(:,:,:,1:nspec)), vsmin_before)
+  call max_all_cr(maxval(model_vs(:,:,:,1:nspec)), vsmax_before)
+  call min_all_cr(minval(model_vp(:,:,:,1:nspec)), vpmin_before)
+  call max_all_cr(maxval(model_vp(:,:,:,1:nspec)), vpmax_before)
+  call min_all_cr(minval(model_rho(:,:,:,1:nspec)), rhomin_before)
+  call max_all_cr(maxval(model_rho(:,:,:,1:nspec)), rhomax_before)
 
 
   if( PRINT_OUT_FILES ) then
@@ -353,12 +354,12 @@ program model_update
      enddo
 
      ! compute minmax values of the thresholded current model
-     call mpi_reduce(minval(model_vs(:,:,:,1:nspec)), vsmin_after, 1, CUSTOM_MPI_TYPE, MPI_MIN, 0, MPI_COMM_WORLD,ier)
-     call mpi_reduce(maxval(model_vs(:,:,:,1:nspec)), vsmax_after, 1, CUSTOM_MPI_TYPE, MPI_MAX, 0, MPI_COMM_WORLD,ier)
-     call mpi_reduce(minval(model_vp(:,:,:,1:nspec)), vpmin_after, 1, CUSTOM_MPI_TYPE, MPI_MIN, 0, MPI_COMM_WORLD,ier)
-     call mpi_reduce(maxval(model_vp(:,:,:,1:nspec)), vpmax_after, 1, CUSTOM_MPI_TYPE, MPI_MAX, 0, MPI_COMM_WORLD,ier)
-!      call mpi_reduce(minval(model_rho(:,:,:,1:nspec)), rhomin_after,1,CUSTOM_MPI_TYPE, MPI_MIN, 0, MPI_COMM_WORLD,ier)
-!      call mpi_reduce(maxval(model_rho(:,:,:,1:nspec)), rhomax_after,1,CUSTOM_MPI_TYPE, MPI_MAX, 0, MPI_COMM_WORLD,ier)
+     call min_all_cr(minval(model_vs(:,:,:,1:nspec)), vsmin_after)
+     call max_all_cr(maxval(model_vs(:,:,:,1:nspec)), vsmax_after)
+     call min_all_cr(minval(model_vp(:,:,:,1:nspec)), vpmin_after)
+     call max_all_cr(maxval(model_vp(:,:,:,1:nspec)), vpmax_after)
+!      call min_all_cr(minval(model_rho(:,:,:,1:nspec)), rhomin_after)
+!      call max_all_cr(maxval(model_rho(:,:,:,1:nspec)), rhomax_after)
 
 
     if( PRINT_OUT_FILES ) then
@@ -463,13 +464,12 @@ program model_update
   endif
 
   ! statistics
-  call mpi_reduce(minval(kernel_a),min_vp_k,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
-  call mpi_reduce(maxval(kernel_a),max_vp_k,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
-  call mpi_reduce(minval(kernel_b),min_vs_k,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
-  call mpi_reduce(maxval(kernel_b),max_vs_k,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
-  call mpi_reduce(minval(kernel_rho),min_rho_k,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
-  call mpi_reduce(maxval(kernel_rho),max_rho_k,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
-
+  call min_all_cr(minval(kernel_a), min_vp_k)
+  call max_all_cr(maxval(kernel_a), max_vp_k)
+  call min_all_cr(minval(kernel_b), min_vs_k)
+  call max_all_cr(maxval(kernel_b), max_vs_k)
+  call min_all_cr(minval(kernel_rho), min_rho_k)
+  call max_all_cr(maxval(kernel_rho), max_rho_k)
 
   if( PRINT_OUT_FILES ) then
    if (myrank == 0) then
@@ -514,13 +514,12 @@ program model_update
   enddo
 
   ! statistics
-  call mpi_reduce(minval(model_dA),min_vp_g,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
-  call mpi_reduce(maxval(model_dA),max_vp_g,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
-  call mpi_reduce(minval(model_dB),min_vs_g,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
-  call mpi_reduce(maxval(model_dB),max_vs_g,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
-  call mpi_reduce(minval(model_dR),min_rho_g,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
-  call mpi_reduce(maxval(model_dR),max_rho_g,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
-
+  call min_all_cr(minval(model_dA), min_vp_g)
+  call max_all_cr(maxval(model_dA), max_vp_g)
+  call min_all_cr(minval(model_dB), min_vs_g)
+  call max_all_cr(maxval(model_dB), max_vs_g)
+  call min_all_cr(minval(model_dR), min_rho_g)
+  call max_all_cr(maxval(model_dR), max_rho_g)
 
   if( PRINT_OUT_FILES ) then
    if (myrank == 0) then
@@ -556,8 +555,9 @@ program model_update
     print*,'  step length : ',step_length,max
     print*
   endif
-  call mpi_bcast(step_length,1,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
-
+  tmp_step(1) = step_length
+  call bcast_all_cr(tmp_step, 1)
+  step_length = tmp_step(1)
 
   !---------------------------------------------------------------------------------------------
   ! gradient length
@@ -571,10 +571,9 @@ program model_update
   max_rho = sqrt(max_rho)
 
   ! statistics
-  call mpi_reduce(max_vp,vp_sum,1,CUSTOM_MPI_TYPE,MPI_SUM,0,MPI_COMM_WORLD,ier)
-  call mpi_reduce(max_vs,vs_sum,1,CUSTOM_MPI_TYPE,MPI_SUM,0,MPI_COMM_WORLD,ier)
-  call mpi_reduce(max_rho,rho_sum,1,CUSTOM_MPI_TYPE,MPI_SUM,0,MPI_COMM_WORLD,ier)
-
+  call sum_all_cr(max_vp, vp_sum)
+  call sum_all_cr(max_vs, vs_sum)
+  call sum_all_cr(max_rho, rho_sum)
 
   if( PRINT_OUT_FILES ) then
    if (myrank == 0) then
@@ -604,12 +603,12 @@ program model_update
 
 
   ! statistics
-  call mpi_reduce(minval(model_dA),min_vp,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
-  call mpi_reduce(maxval(model_dA),max_vp,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
-  call mpi_reduce(minval(model_dB),min_vs,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
-  call mpi_reduce(maxval(model_dB),max_vs,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
-  call mpi_reduce(minval(model_dR),min_rho,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
-  call mpi_reduce(maxval(model_dR),max_rho,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
+  call min_all_cr(minval(model_dA), min_vp)
+  call max_all_cr(maxval(model_dA), max_vp)
+  call min_all_cr(minval(model_dB), min_vs)
+  call max_all_cr(maxval(model_dB), max_vs)
+  call min_all_cr(minval(model_dR), min_rho)
+  call max_all_cr(maxval(model_dR), max_rho)
 
 
   if( PRINT_OUT_FILES ) then
@@ -655,15 +654,14 @@ program model_update
   model_rho_new = 0._CUSTOM_REAL
   model_rho_new = model_rho * exp( model_dR )
 
-  ! statistcs
+  ! statistics
   ! compute minmax values of new model
-  call mpi_reduce(minval(model_vs_new(:,:,:,1:nspec)), vsmin_new_before, 1, CUSTOM_MPI_TYPE, MPI_MIN, 0, MPI_COMM_WORLD,ier)
-  call mpi_reduce(maxval(model_vs_new(:,:,:,1:nspec)), vsmax_new_before, 1, CUSTOM_MPI_TYPE, MPI_MAX, 0, MPI_COMM_WORLD,ier)
-  call mpi_reduce(minval(model_vp_new(:,:,:,1:nspec)), vpmin_new_before, 1, CUSTOM_MPI_TYPE, MPI_MIN, 0, MPI_COMM_WORLD,ier)
-  call mpi_reduce(maxval(model_vp_new(:,:,:,1:nspec)), vpmax_new_before, 1, CUSTOM_MPI_TYPE, MPI_MAX, 0, MPI_COMM_WORLD,ier)
-  call mpi_reduce(minval(model_rho_new(:,:,:,1:nspec)),rhomin_new_before,1, CUSTOM_MPI_TYPE, MPI_MIN, 0, MPI_COMM_WORLD,ier)
-  call mpi_reduce(maxval(model_rho_new(:,:,:,1:nspec)),rhomax_new_before,1, CUSTOM_MPI_TYPE, MPI_MAX, 0, MPI_COMM_WORLD,ier)
-
+  call min_all_cr(minval(model_vs_new(:,:,:,1:nspec)), vsmin_new_before)
+  call max_all_cr(maxval(model_vs_new(:,:,:,1:nspec)), vsmax_new_before)
+  call min_all_cr(minval(model_vp_new(:,:,:,1:nspec)), vpmin_new_before)
+  call max_all_cr(maxval(model_vp_new(:,:,:,1:nspec)), vpmax_new_before)
+  call min_all_cr(minval(model_rho_new(:,:,:,1:nspec)), rhomin_new_before)
+  call max_all_cr(maxval(model_rho_new(:,:,:,1:nspec)), rhomax_new_before)
 
   if( PRINT_OUT_FILES ) then
 !    if (myrank == 0) then
@@ -711,12 +709,12 @@ program model_update
 
   ! write out new models and their global minmax values
   ! compute minmax values of new model
-  call mpi_reduce(minval(model_vs_new(:,:,:,1:nspec)), vsmin_new_after, 1, CUSTOM_MPI_TYPE, MPI_MIN, 0, MPI_COMM_WORLD,ier)
-  call mpi_reduce(maxval(model_vs_new(:,:,:,1:nspec)), vsmax_new_after, 1, CUSTOM_MPI_TYPE, MPI_MAX, 0, MPI_COMM_WORLD,ier)
-  call mpi_reduce(minval(model_vp_new(:,:,:,1:nspec)), vpmin_new_after, 1, CUSTOM_MPI_TYPE, MPI_MIN, 0, MPI_COMM_WORLD,ier)
-  call mpi_reduce(maxval(model_vp_new(:,:,:,1:nspec)), vpmax_new_after, 1, CUSTOM_MPI_TYPE, MPI_MAX, 0, MPI_COMM_WORLD,ier)
-  call mpi_reduce(minval(model_rho_new(:,:,:,1:nspec)), rhomin_new_after,1,CUSTOM_MPI_TYPE, MPI_MIN, 0, MPI_COMM_WORLD,ier)
-  call mpi_reduce(maxval(model_rho_new(:,:,:,1:nspec)), rhomax_new_after,1,CUSTOM_MPI_TYPE, MPI_MAX, 0, MPI_COMM_WORLD,ier)
+  call min_all_cr(minval(model_vs_new(:,:,:,1:nspec)), vsmin_new_after)
+  call max_all_cr(maxval(model_vs_new(:,:,:,1:nspec)), vsmax_new_after)
+  call min_all_cr(minval(model_vp_new(:,:,:,1:nspec)), vpmin_new_after)
+  call max_all_cr(maxval(model_vp_new(:,:,:,1:nspec)), vpmax_new_after)
+  call min_all_cr(minval(model_rho_new(:,:,:,1:nspec)), rhomin_new_after)
+  call max_all_cr(maxval(model_rho_new(:,:,:,1:nspec)), rhomax_new_after)
 
 
   ! this should only be different if using MINMAX_THRESHOLD_NEW
@@ -891,8 +889,10 @@ program model_update
   close(12)
 
   ! store the attenuation flag in qmu_attenuation_store
-  allocate(qmu_attenuation_store(NGLLX,NGLLY,NGLLZ,NSPEC))
+  allocate(qmu_attenuation_store(NGLLX,NGLLY,NGLLZ,NSPEC), &
+           qkappa_attenuation_store(NGLLX,NGLLY,NGLLZ,NSPEC))
   qmu_attenuation_store=0._CUSTOM_REAL
+  qkappa_attenuation_store=0._CUSTOM_REAL
 
   allocate(mask_ibool(NGLOB),stat=ier)
   if( ier /= 0 ) stop 'error allocating mask'
@@ -932,7 +932,7 @@ program model_update
 
   if( ATTENUATION ) then
     call get_attenuation_model(myrank,NSPEC,USE_OLSEN_ATTENUATION,OLSEN_ATTENUATION_RATIO, &
-                          mustore_new,rho_vs_new,kappastore_new,rho_vp_new,qmu_attenuation_store, &
+                          mustore_new,rho_vs_new,kappastore_new,rho_vp_new,qkappa_attenuation_store,qmu_attenuation_store, &
                           ispec_is_elastic,min_resolved_period,prname_new,FULL_ATTENUATION_SOLID)
   endif
 
@@ -1030,8 +1030,8 @@ program model_update
   open(12,file=trim(m_file),form='unformatted',action='write')
   write(12) model_vp_rel(:,:,:,1:nspec)
   close(12)
-  call mpi_reduce(maxval(model_vp_rel),max_vp,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
-  call mpi_reduce(minval(model_vp_rel),min_vp,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
+  call min_all_cr(minval(model_vp_rel), min_vp)
+  call max_all_cr(maxval(model_vp_rel), max_vp)
 
   ! relative S model perturbations
   where ( model_vs > 1.e-10 ) model_vs_rel = ( model_vs_new - model_vs) / model_vs
@@ -1039,8 +1039,8 @@ program model_update
   open(12,file=trim(m_file),form='unformatted',action='write')
   write(12) model_vs_rel(:,:,:,1:nspec)
   close(12)
-  call mpi_reduce(maxval(model_vs_rel),max_vs,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
-  call mpi_reduce(minval(model_vs_rel),min_vs,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
+  call min_all_cr(minval(model_vs_rel), min_vs)
+  call max_all_cr(maxval(model_vs_rel), max_vs)
 
   ! relative rho model perturbations
 !   where ( model_rho > 1.e-10 ) model_rho_rel = ( model_rho_new - model_rho) / model_rho
@@ -1048,8 +1048,8 @@ program model_update
 !   open(12,file=trim(m_file),form='unformatted',action='write')
 !   write(12) model_rho_rel(:,:,:,1:nspec)
 !   close(12)
-!   call mpi_reduce(maxval(model_rho_rel),max_rho,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
-!   call mpi_reduce(minval(model_rho_rel),min_rho,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
+!   call min_all_cr(minval(model_rho_rel), min_rho)
+!   call max_all_cr(maxval(model_rho_rel), max_rho)
 
 
   if( PRINT_OUT_FILES ) then
@@ -1126,7 +1126,8 @@ program model_update
 !===================================================
 
 
-  deallocate(qmu_attenuation_store)
+  deallocate(qmu_attenuation_store,qkappa_attenuation_store)
+
   deallocate(flag_val,mask_ibool)
 
   deallocate(model_vp, model_vs, model_vp_new, model_vs_new, &
@@ -1144,7 +1145,7 @@ program model_update
 
   !-----------------------------------------------------
 
-  ! stop all the MPI processes, and exit
-  call MPI_FINALIZE(ier)
+  ! stop all the processes, and exit
+  call finalize()
 
 end program model_update

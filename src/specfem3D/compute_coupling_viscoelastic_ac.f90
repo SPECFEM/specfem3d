@@ -34,15 +34,15 @@
                         coupling_ac_el_jacobian2Dw, &
                         ispec_is_inner,phase_is_inner,&
                         PML_CONDITIONS,&
-                        SIMULATION_TYPE,backward_simulation,&                        
+                        SIMULATION_TYPE,backward_simulation,&
                         potential_acoustic)
 
 ! returns the updated acceleration array: accel
 
+  use constants
   use pml_par,only : rmemory_coupling_el_ac_potential,rmemory_coupling_el_ac_potential_dot_dot,is_CPML,spec_to_CPML,&
                      potential_acoustic_old,potential_dot_dot_acoustic_old,NSPEC_CPML
   implicit none
-  include 'constants.h'
 
   integer :: NSPEC_AB,NGLOB_AB,SIMULATION_TYPE
   logical :: backward_simulation
@@ -173,9 +173,9 @@ end subroutine compute_coupling_viscoelastic_ac
 ! approximates ocean-bottom continuity of pressure & displacement for longer period waves (> ~20s ),
 ! assuming incompressible fluid column above bathymetry ocean bottom
 
-  implicit none
+  use constants
 
-  include 'constants.h'
+  implicit none
 
   integer :: NSPEC_AB,NGLOB_AB
 
@@ -258,9 +258,9 @@ end subroutine compute_coupling_viscoelastic_ac
 ! approximates ocean-bottom continuity of pressure & displacement for longer period waves (> ~20s ),
 ! assuming incompressible fluid column above bathymetry ocean bottom
 
-  implicit none
+  use constants
 
-  include 'constants.h'
+  implicit none
 
   integer :: NSPEC_AB,NGLOB_AB
 

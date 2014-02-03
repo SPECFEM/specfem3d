@@ -24,7 +24,7 @@
 !
 !=====================================================================
 
-  module vtk
+  module combine_vtk
     !-------------------------------------------------------------
     ! USER PARAMETER
 
@@ -39,13 +39,13 @@
     ! maximum number of slices
     integer,parameter :: MAX_NUM_NODES = 600
 
-  end module vtk
+  end module combine_vtk
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-  program combine_paraview_data_ext_mesh
+  program combine_vol_data
 
 ! puts the output of SPECFEM3D into '***.mesh' format,
 ! which can be converted via mesh2vtu into ParaView format.
@@ -57,16 +57,13 @@
 !
 ! works for external, unregular meshes
 
-  use mpi
   use combine_vol_data_mod
   use combine_vol_data_adios_mod
 
-  use vtk
+  use combine_vtk
   implicit none
 
   include 'constants.h'
-
-  integer :: argc
 
   ! data must be of dimension: (NGLLX,NGLLY,NGLLZ,NSPEC_AB)
   double precision,dimension(:,:,:,:),allocatable :: data
@@ -81,13 +78,13 @@
   integer :: numpoin
 
   integer :: i, ios, it, ier
-  integer :: iproc, proc1, proc2, num_node
+  integer :: iproc, num_node
 
   integer,dimension(MAX_NUM_NODES) :: node_list
 
-  integer :: np, ne, npp, nee, nelement, njunk
+  integer :: np, ne, npp, nee, nelement
 
-  character(len=256) :: sline, arg(9), filename, indir, outdir
+  character(len=256) :: arg(9), filename, indir, outdir
   character(len=256) :: prname, prname_lp
   character(len=256) :: mesh_file,local_data_file
   logical :: HIGH_RESOLUTION_MESH
@@ -114,20 +111,16 @@
              ADIOS_FOR_FORWARD_ARRAYS, ADIOS_FOR_KERNELS
 
   ! Variables to read ADIOS files
-  integer :: mpier
-  integer :: sizeprocs, sel_num
+  integer :: sizeprocs
   character(len=256) :: var_name , value_file_name, mesh_file_name
   integer(kind=8) :: value_handle, mesh_handle
-  integer(kind=8), target :: selections(256)
-  integer(kind=8), pointer :: sel
   integer :: ibool_offset, x_global_offset
-  integer(kind=8), dimension(1) :: start, count_ad
 
-  call MPI_Init(ier)
-  call MPI_Comm_size(MPI_COMM_WORLD, sizeprocs, ier)
+  call init()
+  call world_size(sizeprocs)
   if (sizeprocs .ne. 1) then
     print *, "sequential program. Only mpirun -np 1 ..."
-    call MPI_Abort(MPI_COMM_WORLD, ier, mpier)
+    call stop_all()
   endif
 
 ! checks given arguments
@@ -217,7 +210,7 @@
     if (ADIOS_FOR_MESH) then
       call read_scalars_adios_mesh(mesh_handle, iproc, NGLOB_AB, NSPEC_AB, &
                                    ibool_offset, x_global_offset)
-    else 
+    else
       write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',iproc,'_'
       open(unit=27,file=prname_lp(1:len_trim(prname_lp))//'external_mesh.bin',&
             status='old',action='read',form='unformatted',iostat=ios)
@@ -243,7 +236,7 @@
       read(27) zstore
       close(27)
     endif
-  
+
 
     allocate(dat(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
     if( ier /= 0 ) stop 'error allocating dat array'
@@ -402,11 +395,11 @@
     call clean_adios(mesh_handle, value_handle)
   endif
 
-  call MPI_Finalize(ier)
+  call finalize()
 
   print *, 'Done writing '//trim(mesh_file)
 
-  end program combine_paraview_data_ext_mesh
+  end program combine_vol_data
 
 
 !=============================================================
@@ -417,7 +410,7 @@
 ! counts total number of points and elements for external meshes in given slice list
 ! returns: total number of elements (nee) and number of points (npp)
 
-  use vtk
+  use combine_vtk
   use combine_vol_data_adios_mod
 
   implicit none
@@ -441,11 +434,7 @@
   ! Variables for ADIOS
   integer(kind=8), intent(in) :: mesh_handle
   logical, intent(in) :: ADIOS_FOR_MESH
-  integer :: sel_num
-  integer(kind=8), target :: selections(256)
-  integer(kind=8), pointer :: sel
   integer :: ibool_offset, x_global_offset
-  integer(kind=8), dimension(1) :: start, count_ad
 
   ! loops over all slices (process partitions)
   npp = 0
@@ -455,7 +444,7 @@
     if (ADIOS_FOR_MESH) then
       call read_scalars_adios_mesh(mesh_handle, iproc, NGLOB_AB, NSPEC_AB, &
                                    ibool_offset, x_global_offset)
-    else 
+    else
       ! gets number of elements and points for this slice
       iproc = node_list(it)
       write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',iproc,'_'
@@ -544,7 +533,7 @@
                                it,npp,numpoin,np)
 
 ! writes out locations of spectral element corners only
-  use vtk
+  use combine_vtk
   implicit none
   include 'constants.h'
 
@@ -729,7 +718,7 @@
                                   it,npp,numpoin,np)
 
 ! writes out locations of all GLL points of spectral elements
-  use vtk
+  use combine_vtk
   implicit none
   include 'constants.h'
 
@@ -798,7 +787,7 @@
   subroutine cvd_write_corner_elements(NSPEC_AB,NGLOB_AB,ibool,&
                                       np,nelement,it,nee,numpoin)
 
-  use vtk
+  use combine_vtk
   implicit none
   include 'constants.h'
 
@@ -925,7 +914,7 @@
                                     np,nelement,it,nee,numpoin)
 
 ! writes out indices of elements given by GLL points
-  use vtk
+  use combine_vtk
   implicit none
   include 'constants.h'
 

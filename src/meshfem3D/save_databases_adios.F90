@@ -53,7 +53,6 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
    ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,&
    NMATERIALS,material_properties)
 
-  use mpi
   use adios_helpers_mod
   use safe_alloc_mod
 
@@ -101,7 +100,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   ! second dimension : #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id
   double precision , dimension(NMATERIALS,6) ::  material_properties
   double precision , dimension(16,NMATERIALS) :: matpropl
-  integer :: i,ispec,iglob,ier
+  integer :: i,ispec,ier
   ! dummy_nspec_cpml is used here to match the read instructions
   ! in generate_databases/read_partition_files.f90
   integer :: dummy_nspec_cpml
@@ -110,7 +109,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   character(len=256) LOCAL_PATH
 
   ! for MPI interfaces
-  integer ::  nb_interfaces,nspec_interfaces_max,idoubl
+  integer ::  nb_interfaces,nspec_interfaces_max
   logical, dimension(8) ::  interfaces
   integer, dimension(8) ::  nspec_interface
 
@@ -123,7 +122,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   character(len=64), parameter :: group_name  = "SPECFEM3D_DATABASES"
   integer(kind=8) :: group, handle
   integer(kind=8) :: groupsize, totalsize
-  integer :: local_dim, global_dim, offset, varid
+  integer :: local_dim
 
   !--- Variables to allreduce - wmax stands for world_max
   integer :: nglob_wmax, nspec_wmax, nmaterials_wmax, &
@@ -142,6 +141,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   integer, dimension(:,:,:), allocatable :: interfaces_mesh
   integer, dimension(:,:), allocatable :: elmnts_mesh
   integer :: interface_num, ispec_interface
+  integer :: comm
 
   !---------------------------.
   ! Setup the values to write |
@@ -488,9 +488,10 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   max_global_values(10) = nb_interfaces
   max_global_values(11) = nspec_interfaces_max
 
-  call MPI_Allreduce(MPI_IN_PLACE, max_global_values, num_vars, &
-                     MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ier)
-  if( ier /= 0 ) call exit_MPI(myrank,'Allreduce to get max values failed.')
+  !call MPI_Allreduce(MPI_IN_PLACE, max_global_values, num_vars, &
+  !                   MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ier)
+  !if( ier /= 0 ) call exit_MPI(myrank,'Allreduce to get max values failed.')
+  call max_allreduce_i(max_global_values,num_vars)
 
   nglob_wmax          = max_global_values(1)
   nspec_wmax          = max_global_values(2)
@@ -606,8 +607,10 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   !------------------------------------------------------------.
   ! Open an handler to the ADIOS file and setup the group size |
   !------------------------------------------------------------'
+  call world_get_comm(comm)
+
   call adios_open(handle, group_name, output_name, "w", &
-                  MPI_COMM_WORLD, ier);
+                  comm, ier);
   call adios_group_size (handle, groupsize, totalsize, ier)
 
   !------------------------------------------.

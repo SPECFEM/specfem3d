@@ -316,7 +316,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
 
                     ! gets damping profile at the C-PML element's GLL point
                     d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
-                    alpha_x = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist) 
+                    alpha_x = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
                     K_x = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
 
                     ! avoid d_x to be less than zero

@@ -26,147 +26,277 @@
 #
 # United States Government Sponsorship Acknowledged.
 #
-
 # @configure_input@
+#######################################
 
 FC = @FC@
 FCFLAGS = #@FCFLAGS@
 MPIFC = @MPIFC@
 MPILIBS = @MPILIBS@
-FLAGS_CHECK = @FLAGS_CHECK@
-FCFLAGS_f90 = @FCFLAGS_f90@
 
-FCCOMPILE_CHECK =@FCENV@ ${FC} ${FCFLAGS} $(FLAGS_CHECK)
-MPIFCCOMPILE_CHECK =@FCENV@ ${MPIFC} ${FCFLAGS} $(FLAGS_CHECK)
-@COND_MPI_TRUE@FCLINK = $(MPIFCCOMPILE_CHECK)
-@COND_MPI_FALSE@FCLINK = $(FCCOMPILE_CHECK)
+FLAGS_CHECK = @FLAGS_CHECK@
+
+FCFLAGS_f90 = @FCFLAGS_f90@ -I${SETUP}
+
+FC_MODEXT = @FC_MODEXT@
+FC_MODDIR = @FC_MODDIR@
+
+FCCOMPILE_CHECK =@FCENV@ ${FC} ${FCFLAGS} $(FLAGS_CHECK) $(COND_OPENMP_FFLAGS)
+
+MPIFCCOMPILE_CHECK =@FCENV@ ${MPIFC} ${FCFLAGS} $(FLAGS_CHECK) $(COND_OPENMP_FFLAGS)
 
 CC = @CC@
 CFLAGS = @CFLAGS@ $(CPPFLAGS)
-CPPFLAGS = @CPPFLAGS@ $(COND_MPI_CPPFLAGS)
+CPPFLAGS = -I${SETUP} @CPPFLAGS@ $(COND_MPI_CPPFLAGS)
+
+# all linker flags
+MPILIBS += @LDFLAGS@ @LIBS@
+
+#######################################
+####
+#### MPI
+####
+#######################################
+
+@COND_MPI_TRUE@MPI = yes
+@COND_MPI_FALSE@MPI = no
+
+@COND_MPI_TRUE@FCLINK = $(MPIFCCOMPILE_CHECK)
+@COND_MPI_FALSE@FCLINK = $(FCCOMPILE_CHECK)
+
 @COND_MPI_TRUE@COND_MPI_CPPFLAGS = -DWITH_MPI
 @COND_MPI_FALSE@COND_MPI_CPPFLAGS =
 
-AR = ar
-ARFLAGS = cru
-RANLIB = ranlib
+# objects toggled between the parallel and serial version
+@COND_MPI_TRUE@COND_MPI_OBJECTS = $O/parallel.sharedmpi.o
+@COND_MPI_FALSE@COND_MPI_OBJECTS = $O/serial.shared.o
 
+MPI_INCLUDES = @MPI_INCLUDES@
+
+#######################################
+####
+#### SCOTCH
+####
+#######################################
+
+SCOTCH_BUNDLED = @USE_BUNDLED_SCOTCH@
+
+
+ifeq (${SCOTCH_BUNDLED},1)
+SCOTCH_DIR = @top_builddir@/src/decompose_mesh/@SCOTCH_DIR@
+SCOTCH_INCDIR = @top_builddir@/src/decompose_mesh/@SCOTCH_INCLUDEDIR@
+SCOTCH_LIBDIR = @top_builddir@/src/decompose_mesh/@SCOTCH_LIBDIR@
+else
+SCOTCH_DIR = @SCOTCH_DIR@
+SCOTCH_INCDIR = @SCOTCH_INCLUDEDIR@
+SCOTCH_LIBDIR = @SCOTCH_LIBDIR@
+endif
+
+SCOTCH_INC = -I${SCOTCH_INCDIR}
+SCOTCH_LIBS = -L${SCOTCH_LIBDIR} -lscotch -lscotcherr
+
+### added support for METIS as well, thus uncomment the line below and compile METIS if you want to use it instead of SCOTCH
+#SCOTCH_LIBS = -L@SCOTCH_LIBDIR@ -lscotch -lscotcherr -L./src/decompose_mesh/metis-4.0.3 -L./metis-4.0.3 -lmetis
+
+
+#######################################
+####
+#### CUDA
+#### with configure: ./configure --with-cuda=cuda5 CUDA_FLAGS=.. CUDA_LIB=.. CUDA_INC=.. MPI_INC=.. ..
+####
+#######################################
+
+@COND_CUDA_TRUE@CUDA = yes
+@COND_CUDA_FALSE@CUDA = no
+
+@COND_CUDA5_TRUE@CUDA5 = yes
+@COND_CUDA5_FALSE@CUDA5 = no
+
+# default cuda libraries
+# runtime library -lcudart needed, others are optional -lcuda -lcublas
+
+CUDA_FLAGS = @CUDA_FLAGS@
+CUDA_INC = @CUDA_CPPFLAGS@ -I${SETUP}
+CUDA_LINK = @CUDA_LDFLAGS@ @CUDA_LIBS@
+
+@COND_CUDA_TRUE@NVCC = nvcc
+@COND_CUDA_FALSE@NVCC = @CC@
+
+# GPU architecture
+
+# CUDA architecture / code version
+# Fermi: -gencode=arch=compute_10,code=sm_10 not supported
+# Tesla (default): -gencode=arch=compute_20,code=sm_20
+# Geforce GT 650m: -gencode=arch=compute_30,code=sm_30
+# Kepler (cuda5) : -gencode=arch=compute_35,code=sm_35
+GENCODE_20 = -gencode=arch=compute_20,code=\"sm_20,compute_20\"
+GENCODE_30 = -gencode=arch=compute_30,code=\"sm_30,compute_30\"
+GENCODE_35 = -gencode=arch=compute_35,code=\"sm_35,compute_35\"
+
+# CUDA version 5.x
+@COND_CUDA_TRUE@@COND_CUDA5_TRUE@GENCODE = $(GENCODE_35)
+# CUDA version 4.x
+@COND_CUDA_TRUE@@COND_CUDA5_FALSE@GENCODE = $(GENCODE_20)
+
+# CUDA flags and linking
+@COND_CUDA_TRUE@NVCC_FLAGS_BASE = $(CUDA_FLAGS) $(CUDA_INC) $(MPI_INCLUDES) $(COND_MPI_CPPFLAGS)
+@COND_CUDA_TRUE@@COND_CUDA5_TRUE@NVCC_FLAGS = $(NVCC_FLAGS_BASE) -dc -DCUDA $(GENCODE)
+@COND_CUDA_TRUE@@COND_CUDA5_FALSE@NVCC_FLAGS = $(NVCC_FLAGS_BASE) -DCUDA -DUSE_OLDER_CUDA4_GPU $(GENCODE)
+
+@COND_CUDA_TRUE@@COND_CUDA5_TRUE@NVCCLINK_BASE = $(NVCC) $(CUDA_INC) $(MPI_INCLUDES) $(COND_MPI_CPPFLAGS) -DCUDA
+@COND_CUDA_TRUE@@COND_CUDA5_TRUE@NVCCLINK = $(NVCCLINK_BASE) -dlink $(GENCODE)
+@COND_CUDA_TRUE@@COND_CUDA5_FALSE@NVCCLINK = $(NVCCLINK_BASE) -DUSE_OLDER_CUDA4_GPU $(GENCODE)
+
+@COND_CUDA_FALSE@NVCC_FLAGS = $(MPI_INCLUDES) $(COND_MPI_CPPFLAGS)
+@COND_CUDA_FALSE@NVCCLINK = $(NVCC) $(NVCC_FLAGS)
+
+
+#######################################
+####
+#### OpenMP
+#### with configure: ./configure --with-openmp FLAGS_CHECK="-openmp .." OPENMP_LIB=..
+####
+#######################################
+
+@COND_OPENMP_TRUE@OPENMP = yes
+@COND_OPENMP_FALSE@OPENMP = no
+
+@COND_OPENMP_TRUE@OPENMP_LIBS = $(OPENMP_LIB)
+@COND_OPENMP_FALSE@OPENMP_LIBS = 
+@COND_OPENMP_TRUE@COND_OPENMP_FFLAGS = -DOPENMP_MODE
+@COND_OPENMP_FALSE@COND_OPENMP_FFLAGS =
+
+# objects toggled between openmp and non-openmp version
+@COND_OPENMP_TRUE@COND_OPENMP_OBJECTS = $O/older_not_maintained_compute_forces_viscoelastic_Dev_openmp.openmp.o
+@COND_OPENMP_FALSE@COND_OPENMP_OBJECTS =
+
+
+#######################################
+####
+#### ADIOS
+#### with configure: ./configure --with-adios ADIOS_CONFIG=..
+####
+#######################################
+
+@COND_ADIOS_TRUE@ADIOS = yes
+@COND_ADIOS_FALSE@ADIOS = no
+
+ADIOS_INC = @ADIOS_FCFLAGS@
+ADIOS_LINK = @ADIOS_LIBS@
+
+FCFLAGS_f90 += $(ADIOS_INC)
+MPILIBS += $(ADIOS_LINK)
+
+
+#######################################
+####
+#### directories
+####
+#######################################
+
+## compilation directories
+# B : build directory
+B = @top_builddir@
+# E : executables directory
+E = $B/bin
+# O : objects directory
+O = $B/obj
+# L : libraries directory
+L = $B/lib
+# setup file directory
+SETUP = $B/setup
+# output file directory
+OUTPUT = $B/OUTPUT_FILES
+# S_TOP : source file root directory
+S_TOP = @top_srcdir@
+
+
+#######################################
 ####
 #### targets
 ####
+#######################################
+
+# code subdirectories
+SUBDIRS = \
+	auxiliaries \
+	check_mesh_quality_CUBIT_Abaqus \
+	cuda \
+	decompose_mesh \
+	generate_databases \
+	meshfem3D \
+	shared \
+	specfem3D \
+	$(EMPTY_MACRO)
 
 # default targets for the pure Fortran version
-@COND_PYRE_FALSE@DEFAULT = \
-@COND_PYRE_FALSE@	xdecompose_mesh \
-@COND_PYRE_FALSE@	xmeshfem3D \
-@COND_PYRE_FALSE@	xgenerate_databases \
-@COND_PYRE_FALSE@	xspecfem3D \
-@COND_PYRE_FALSE@	$(EMPTY_MACRO)
+DEFAULT = \
+	xdecompose_mesh \
+	xmeshfem3D \
+	xgenerate_databases \
+	xspecfem3D \
+	$(EMPTY_MACRO)
 
 
 default: $(DEFAULT)
 
 all: default \
-	xconvolve_source_timefunction \
-	xcombine_vol_data \
 	xcombine_surf_data \
+	xcombine_vol_data \
+	xconvolve_source_timefunction \
+	xcreate_movie_shakemap_AVS_DX_GMT \
+	xmodel_update \
 	xsmooth_vol_data \
 	xsum_kernels \
-	xmodel_update \
 	xcheck_mesh_quality_CUBIT_Abaqus \
 	xconvert_skewness_to_angle \
 	xmultiply_CUBIT_Abaqus_mesh_by_1000 \
 	$(EMPTY_MACRO)
 
-mesh : meshfem3D
-gen : generate_databases
-spec : specfem3D
-dec : decompose_mesh
+backup:
+	cp -rp src setup DATA/Par_file* Makefile bak
 
-generate_databases: xgenerate_databases
-specfem3D: xspecfem3D
-meshfem3D: xmeshfem3D
-decompose_mesh: xdecompose_mesh
-convolve_source_timefunction: xconvolve_source_timefunction
-create_movie_shakemap_AVS_DX_GMT: xcreate_movie_shakemap_AVS_DX_GMT
-combine_vol_data: xcombine_vol_data
-combine_vol_data_adios: xcombine_vol_data_adios
-combine_surf_data: xcombine_surf_data
-smooth_vol_data: xsmooth_vol_data
-sum_kernels: xsum_kernels
-model_update: xmodel_update
-check_mesh_quality_CUBIT_Abaqus: xcheck_mesh_quality_CUBIT_Abaqus
-convert_skewness_to_angle: xconvert_skewness_to_angle
-multiply_CUBIT_Abaqus_mesh_by_1000: xmultiply_CUBIT_Abaqus_mesh_by_1000
-
-xmeshfem3D:
-	$(MAKE) -C src/meshfem3D
-
-xspecfem3D:
-	$(MAKE) -C src/specfem3D xspecfem3D
-
-xgenerate_databases:
-	$(MAKE) -C src/generate_databases xgenerate_databases
-
-xdecompose_mesh:
-	$(MAKE) -C src/decompose_mesh
-
-xcreate_movie_shakemap_AVS_DX_GMT:
-	$(MAKE) -C src/specfem3D xcreate_movie_shakemap_AVS_DX_GMT
-
-xcombine_vol_data:
-	$(MAKE) -C src/specfem3D xcombine_vol_data
-
-xcombine_surf_data:
-	$(MAKE) -C src/specfem3D xcombine_surf_data
-
-xconvolve_source_timefunction:
-	$(MAKE) -C src/specfem3D xconvolve_source_timefunction
-
-xsmooth_vol_data:
-	$(MAKE) -C src/specfem3D xsmooth_vol_data
-
-xsum_kernels:
-	$(MAKE) -C src/specfem3D xsum_kernels
-
-xmodel_update: xspecfem3D
-	$(MAKE) -C src/specfem3D xmodel_update
-
-xcheck_mesh_quality_CUBIT_Abaqus:
-	$(MAKE) -C src/check_mesh_quality_CUBIT_Abaqus xcheck_mesh_quality_CUBIT_Abaqus
-
-xconvert_skewness_to_angle:
-	$(MAKE) -C src/check_mesh_quality_CUBIT_Abaqus xconvert_skewness_to_angle
-
-xmultiply_CUBIT_Abaqus_mesh_by_1000:
-	$(MAKE) -C src/check_mesh_quality_CUBIT_Abaqus xmultiply_CUBIT_Abaqus_mesh_by_1000
-
+ifdef CLEAN
 clean:
+	@echo "cleaning by CLEAN defined"
+	-rm -f $(foreach dir, $(CLEAN), $($(dir)_OBJECTS) $($(dir)_MODULES) $($(dir)_SHARED_OBJECTS) $($(dir)_TARGETS)) $O/*
+else
+clean:
+	@echo "cleaning by CLEAN not defined"
+	-rm -f $(foreach dir, $(SUBDIRS), $($(dir)_OBJECTS) $($(dir)_MODULES) $($(dir)_TARGETS)) $O/*
+endif
+
+realclean:
+ifeq (${SCOTCH_BUNDLED},1)
+	@echo "cleaning bundled Scotch in directory: ${SCOTCH_DIR}/src"
+	$(MAKE) -C ${SCOTCH_DIR}/src realclean
+endif
 	rm -rf bin/* lib/* obj/*.o obj/*/*.o src/meshfem3D/*.mod src/decompose_mesh/*.mod src/generate_databases/*.mod src/specfem3D/*.mod
-	$(MAKE) -C src/decompose_mesh/scotch/src realclean
 
 help:
 	@echo "usage: make [executable]"
 	@echo ""
-	@echo "supported executables:"
+	@echo "supported main executables:"
+	@echo "    xdecompose_mesh"
+	@echo "    xmeshfem3D"
 	@echo "    xgenerate_databases"
 	@echo "    xspecfem3D"
-	@echo "    xmeshfem3D"
-	@echo "    xdecompose_mesh"
+	@echo ""
+	@echo "supported additional executables:"
+	@echo "    xcombine_surf_data"
+	@echo "    xcombine_vol_data"
 	@echo "    xconvolve_source_timefunction"
 	@echo "    xcreate_movie_shakemap_AVS_DX_GMT"
-	@echo "    xcombine_vol_data"
-	@echo "    xcombine_vol_data_adios"
-	@echo "    xcombine_surf_data"
+	@echo "    xmodel_update"
 	@echo "    xsmooth_vol_data"
 	@echo "    xsum_kernels"
-	@echo "    xmodel_update"
 	@echo "    xcheck_mesh_quality_CUBIT_Abaqus"
 	@echo "    xconvert_skewness_to_angle"
 	@echo "    xmultiply_CUBIT_Abaqus_mesh_by_1000"
 	@echo ""
 
-.PHONY: clean help default all \
+.PHONY: clean realclean \
+	help default all \
 	convolve_source_timefunction xconvolve_source_timefunction \
 	create_movie_shakemap_AVS_DX_GMT xcreate_movie_shakemap_AVS_DX_GMT \
 	combine_vol_data xcombine_vol_data \
@@ -179,4 +309,45 @@ help:
 	dec decompose_mesh xdecompose_mesh \
 	mesh meshfem3D xmeshfem3D \
 	spec specfem3D xspecfem3D
+
+.PHONY: all default backup clean realclean help
+
+#######################################
+
+
+# Get dependencies and rules for building stuff
+include $(patsubst %, ${S_TOP}/src/%/rules.mk, $(SUBDIRS))
+
+#######################################
+
+##
+## Shortcuts
+##
+
+# Shortcut for: <prog>/<xprog> -> bin/<xprog>
+define target_shortcut
+$(patsubst $E/%, %, $(1)): $(1)
+.PHONY: $(patsubst $E/%, %, $(1))
+$(patsubst $E/x%, %, $(1)): $(1)
+.PHONY: $(patsubst $E/x%, %, $(1))
+endef
+
+# Shortcut for: dir -> src/dir/<targets in here>
+define shortcut
+$(1): $($(1)_TARGETS)
+.PHONY: $(1)
+$$(foreach target, $$(filter $E/%,$$($(1)_TARGETS)), $$(eval $$(call target_shortcut,$$(target))))
+endef
+
+$(foreach dir, $(SUBDIRS), $(eval $(call shortcut,$(dir))))
+
+
+# Other old shortcuts
+
+bak: backup
+mesh : $E/xmeshfem3D
+gen : $E/xgenerate_databases
+spec : $E/xspecfem3D
+dec : $E/xdecompose_mesh
+.PHONY: bak mesh gen spec dec
 

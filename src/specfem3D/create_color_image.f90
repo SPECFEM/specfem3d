@@ -128,7 +128,6 @@
   !character(len=256) :: vtkfilename
   integer :: zoom_factor = 4
   logical :: zoom
-  integer, dimension(1) :: tmp_pixel_loc
   integer, dimension(1,0:NPROC-1) :: tmp_pixel_per_proc
 
   ! checks image type
@@ -394,8 +393,7 @@
   allocate(nb_pixel_per_proc(0:NPROC-1),stat=ier)
   if( ier /= 0 ) stop 'error allocating array nb_pixel_per_proc'
 
-  tmp_pixel_loc(1) = nb_pixel_loc
-  call gather_all_i(tmp_pixel_loc,1,tmp_pixel_per_proc,1,NPROC)
+  call gather_all_singlei(nb_pixel_loc,tmp_pixel_per_proc,NPROC)
   nb_pixel_per_proc(:) = tmp_pixel_per_proc(1,:)
 
   ! allocates receiving array

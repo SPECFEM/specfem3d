@@ -25,13 +25,12 @@
 !=====================================================================
 
 module combine_vol_data_adios_mod
-  use mpi
   use adios_read_mod
   implicit none
 contains
 
 !=============================================================================
-!> Print help message. 
+!> Print help message.
 subroutine print_usage_adios()
   print *, 'Usage: '
   print *, '   xcombine_data start_slice end_slice varname var_file ' // &
@@ -118,30 +117,36 @@ end subroutine read_args_adios
 
 
 !=============================================================================
-!> Open ADIOS value and mesh files, read mode 
+!> Open ADIOS value and mesh files, read mode
 subroutine init_adios(value_file_name, mesh_file_name, &
                       value_handle, mesh_handle)
   implicit none
-  ! Parameters 
+  ! Parameters
   character(len=*), intent(in) :: value_file_name, mesh_file_name
   integer(kind=8), intent(out) :: value_handle, mesh_handle
   ! Variables
   integer :: ier
+  integer :: comm
 
-  call adios_read_init_method(ADIOS_READ_METHOD_BP, MPI_COMM_WORLD, &
+  call world_get_comm(comm)
+
+  call adios_read_init_method(ADIOS_READ_METHOD_BP, comm, &
                               "verbose=1", ier)
   call adios_read_open_file(mesh_handle, trim(mesh_file_name), 0, &
-                            MPI_COMM_WORLD, ier)
+                            comm, ier)
+  if (ier /= 0) call stop_all()
   call adios_read_open_file(value_handle, trim(value_file_name), 0, &
-                            MPI_COMM_WORLD, ier)
+                            comm, ier)
+  if (ier /= 0) call stop_all()
+
 end subroutine init_adios
 
 
 !=============================================================================
-!> Open ADIOS value and mesh files, read mode 
+!> Open ADIOS value and mesh files, read mode
 subroutine clean_adios(value_handle, mesh_handle)
   implicit none
-  ! Parameters 
+  ! Parameters
   integer(kind=8), intent(in) :: value_handle, mesh_handle
   ! Variables
   integer :: ier
@@ -165,13 +170,14 @@ subroutine read_scalars_adios_mesh(mesh_handle, iproc, NGLOB_AB, NSPEC_AB, &
   integer :: ier
 
   call adios_selection_writeblock(sel, iproc)
-  call adios_schedule_read(mesh_handle, sel, "/nglob", 0, 1, NGLOB_AB, ier)
-  call adios_schedule_read(mesh_handle, sel, "/nspec", 0, 1, NSPEC_AB, ier)
+  call adios_schedule_read(mesh_handle, sel, "nglob", 0, 1, NGLOB_AB, ier)
+  call adios_schedule_read(mesh_handle, sel, "nspec", 0, 1, NSPEC_AB, ier)
   call adios_schedule_read(mesh_handle, sel, "ibool/offset", 0, 1, &
                            ibool_offset, ier)
   call adios_schedule_read(mesh_handle, sel, "x_global/offset", 0, 1, &
                            x_global_offset, ier)
-  call adios_perform_reads(mesh_handle, ier) 
+  call adios_perform_reads(mesh_handle, ier)
+  if (ier /= 0) call stop_all()
 end subroutine read_scalars_adios_mesh
 
 
@@ -193,7 +199,8 @@ subroutine read_ibool_adios_mesh(mesh_handle, ibool_offset, &
   call adios_selection_boundingbox (sel , 1, start, count_ad)
   call adios_schedule_read(mesh_handle, sel, "ibool/array", 0, 1, &
                            ibool, ier)
-  call adios_perform_reads(mesh_handle, ier) 
+  call adios_perform_reads(mesh_handle, ier)
+  if (ier /= 0) call stop_all()
 end subroutine read_ibool_adios_mesh
 
 
@@ -212,7 +219,7 @@ subroutine read_coordinates_adios_mesh(mesh_handle, x_global_offset,  &
   integer :: ier
 
   start(1) = x_global_offset
-  count_ad(1) = NGLOB_AB 
+  count_ad(1) = NGLOB_AB
   call adios_selection_boundingbox (sel , 1, start, count_ad)
   call adios_schedule_read(mesh_handle, sel, "x_global/array", 0, 1, &
                            xstore, ier)
@@ -220,7 +227,8 @@ subroutine read_coordinates_adios_mesh(mesh_handle, x_global_offset,  &
                            ystore, ier)
   call adios_schedule_read(mesh_handle, sel, "z_global/array", 0, 1, &
                            zstore, ier)
-  call adios_perform_reads(mesh_handle, ier) 
+  call adios_perform_reads(mesh_handle, ier)
+  if (ier /= 0) call stop_all()
 end subroutine read_coordinates_adios_mesh
 
 
@@ -230,7 +238,7 @@ subroutine read_double_values_adios(value_handle, var_name, ibool_offset, &
   implicit none
   include 'constants.h'
   ! Parameters
-  integer(kind=8), intent(in) :: value_handle 
+  integer(kind=8), intent(in) :: value_handle
   character(len=*), intent(in) :: var_name
   integer, intent(in) :: ibool_offset, NSPEC_AB
   double precision, dimension(:,:,:,:), intent(inout) :: dat
@@ -244,7 +252,8 @@ subroutine read_double_values_adios(value_handle, var_name, ibool_offset, &
   call adios_selection_boundingbox (sel , 1, start, count_ad)
   call adios_schedule_read(value_handle, sel, trim(var_name) // "/array", 0, 1, &
                            dat, ier)
-  call adios_perform_reads(value_handle, ier) 
+  call adios_perform_reads(value_handle, ier)
+  if (ier /= 0) call stop_all()
 end subroutine read_double_values_adios
 
 
@@ -254,7 +263,7 @@ subroutine read_float_values_adios(value_handle, var_name, ibool_offset, &
   implicit none
   include 'constants.h'
   ! Parameters
-  integer(kind=8), intent(in) :: value_handle 
+  integer(kind=8), intent(in) :: value_handle
   character(len=*), intent(in) :: var_name
   integer, intent(in) :: ibool_offset, NSPEC_AB
   real, dimension(:,:,:,:), intent(inout) :: dat
@@ -268,7 +277,8 @@ subroutine read_float_values_adios(value_handle, var_name, ibool_offset, &
   call adios_selection_boundingbox (sel , 1, start, count_ad)
   call adios_schedule_read(value_handle, sel, trim(var_name) // "/array", 0, 1, &
                            dat, ier)
-  call adios_perform_reads(value_handle, ier) 
+  call adios_perform_reads(value_handle, ier)
+  if (ier /= 0) call stop_all()
 end subroutine read_float_values_adios
 
 end module combine_vol_data_adios_mod
