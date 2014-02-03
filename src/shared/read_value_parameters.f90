@@ -31,7 +31,7 @@
 
   integer value_to_read
   character(len=*) name
-  character(len=100) string_read
+  character(len=512) string_read
   integer ierr
   common /param_err_common/ ierr
 
@@ -49,7 +49,7 @@
 
   double precision value_to_read
   character(len=*) name
-  character(len=100) string_read
+  character(len=512) string_read
   integer ierr
   common /param_err_common/ ierr
 
@@ -67,7 +67,7 @@
 
   logical value_to_read
   character(len=*) name
-  character(len=100) string_read
+  character(len=512) string_read
   integer ierr
   common /param_err_common/ ierr
 
@@ -85,7 +85,7 @@
 
   character(len=*) value_to_read
   character(len=*) name
-  character(len=100) string_read
+  character(len=512) string_read
   integer ierr
   common /param_err_common/ ierr
 
@@ -102,7 +102,7 @@
   include 'constants.h'
   integer ierr
   common /param_err_common/ ierr
-  character(len=50) filename
+  character(len=512) filename
   filename = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'Par_file'
 
   call param_open(filename, len(filename), ierr);
