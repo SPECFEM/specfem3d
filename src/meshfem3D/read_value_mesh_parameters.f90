@@ -34,7 +34,7 @@
   integer iunit
   integer value_to_read
   character(len=*) name
-  character(len=100) string_read
+  character(len=512) string_read
 
   call unused_string(name)
 
@@ -53,7 +53,7 @@
   integer iunit
   double precision value_to_read
   character(len=*) name
-  character(len=100) string_read
+  character(len=512) string_read
 
   call unused_string(name)
 
@@ -72,7 +72,7 @@
   logical value_to_read
   integer iunit
   character(len=*) name
-  character(len=100) string_read
+  character(len=512) string_read
 
   call unused_string(name)
 
@@ -91,7 +91,7 @@
   integer iunit
   character(len=*) value_to_read
   character(len=*) name
-  character(len=100) string_read
+  character(len=512) string_read
 
   call unused_string(name)
 
@@ -116,7 +116,7 @@
   double precision orig_x_interface,orig_y_interface
   double precision spacing_x_interface,spacing_y_interface
   character(len=50)  interface_top_file
-  character(len=100) string_read
+  character(len=512) string_read
 
   call read_next_line(iunit,DONT_IGNORE_JUNK,string_read)
   read(string_read,*) SUPPRESS_UTM_PROJECTION,npx_interface,npy_interface,&
@@ -135,7 +135,7 @@
   integer iunit
   integer i
   double precision rho,vp,vs,Q_flag,anisotropy_flag,domain_id
-  character(len=100) string_read
+  character(len=512) string_read
 
   call read_next_line(iunit,DONT_IGNORE_JUNK,string_read)
   read(string_read,*)  i,rho,vp,vs,Q_flag,anisotropy_flag,domain_id
@@ -154,7 +154,7 @@
   integer iunit
   integer ix_beg_region,ix_end_region,iy_beg_region,iy_end_region
   integer iz_beg_region,iz_end_region,imaterial_number
-  character(len=100) string_read
+  character(len=512) string_read
 
   call read_next_line(iunit,DONT_IGNORE_JUNK,string_read)
   read(string_read,*) ix_beg_region,ix_end_region,iy_beg_region,iy_end_region,&
@@ -172,11 +172,11 @@
 
 
   logical suppress_junk
-  character(len=100) string_read
+  character(len=512) string_read
   integer index_equal_sign,ios,iunit
 
   do
-    read(unit=iunit,fmt="(a100)",iostat=ios) string_read
+    read(unit=iunit,fmt="(a512)",iostat=ios) string_read
     if(ios /= 0) stop 'error while reading parameter file'
 
 ! suppress leading white spaces, if any

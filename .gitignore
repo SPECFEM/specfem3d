@@ -22,3 +22,13 @@ src/generate_databases/*.mod
 src/meshfem3D/*.mod
 src/specfem3D/*.mod
 
+manual_SPECFEM3D_Cartesian.aux
+manual_SPECFEM3D_Cartesian.bbl
+doc/USER_MANUAL/manual_SPECFEM3D_Cartesian.blg
+doc/USER_MANUAL/manual_SPECFEM3D_Cartesian.brf
+doc/USER_MANUAL/manual_SPECFEM3D_Cartesian.log
+doc/USER_MANUAL/manual_SPECFEM3D_Cartesian.out
+doc/USER_MANUAL/manual_SPECFEM3D_Cartesian.synctex.gz
+doc/USER_MANUAL/manual_SPECFEM3D_Cartesian.toc
+doc/USER_MANUAL/Schedule
+Makefile.org
