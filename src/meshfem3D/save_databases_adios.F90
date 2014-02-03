@@ -488,9 +488,6 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   max_global_values(10) = nb_interfaces
   max_global_values(11) = nspec_interfaces_max
 
-  !call MPI_Allreduce(MPI_IN_PLACE, max_global_values, num_vars, &
-  !                   MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ier)
-  !if( ier /= 0 ) call exit_MPI(myrank,'Allreduce to get max values failed.')
   call max_allreduce_i(max_global_values,num_vars)
 
   nglob_wmax          = max_global_values(1)

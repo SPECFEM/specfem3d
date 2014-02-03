@@ -81,11 +81,10 @@ MPI_INCLUDES = @MPI_INCLUDES@
 
 SCOTCH_BUNDLED = @USE_BUNDLED_SCOTCH@
 
-
 ifeq (${SCOTCH_BUNDLED},1)
-SCOTCH_DIR = @top_builddir@/src/decompose_mesh/@SCOTCH_DIR@
-SCOTCH_INCDIR = @top_builddir@/src/decompose_mesh/@SCOTCH_INCLUDEDIR@
-SCOTCH_LIBDIR = @top_builddir@/src/decompose_mesh/@SCOTCH_LIBDIR@
+SCOTCH_DIR = @top_srcdir@/src/decompose_mesh/@SCOTCH_DIR@
+SCOTCH_INCDIR = @top_srcdir@/src/decompose_mesh/@SCOTCH_INCLUDEDIR@
+SCOTCH_LIBDIR = @top_srcdir@/src/decompose_mesh/@SCOTCH_LIBDIR@
 else
 SCOTCH_DIR = @SCOTCH_DIR@
 SCOTCH_INCDIR = @SCOTCH_INCLUDEDIR@
@@ -266,12 +265,12 @@ clean:
 	-rm -f $(foreach dir, $(SUBDIRS), $($(dir)_OBJECTS) $($(dir)_MODULES) $($(dir)_TARGETS)) $O/*
 endif
 
-realclean:
+realclean: clean
 ifeq (${SCOTCH_BUNDLED},1)
 	@echo "cleaning bundled Scotch in directory: ${SCOTCH_DIR}/src"
 	$(MAKE) -C ${SCOTCH_DIR}/src realclean
 endif
-	rm -rf bin/* lib/* obj/*.o obj/*/*.o src/meshfem3D/*.mod src/decompose_mesh/*.mod src/generate_databases/*.mod src/specfem3D/*.mod
+	rm -rf $E/* $O/* $L/*
 
 help:
 	@echo "usage: make [executable]"

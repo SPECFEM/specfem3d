@@ -196,12 +196,8 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob,                   &
   max_global_values(39) = nspec_ab
   max_global_values(40) = nspec_aniso
 
-  !call MPI_Allreduce(MPI_IN_PLACE, max_global_values, num_vars, &
-  !                   MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ier)
-  !if( ier /= 0 ) call exit_MPI(myrank,'Allreduce to get max values failed.')
   ! calling wrapper instead to compile without mpi
   call max_allreduce_i(max_global_values,num_vars)
-
 
   nglob_wmax                          = max_global_values(1)
   nspec_wmax                          = max_global_values(2)

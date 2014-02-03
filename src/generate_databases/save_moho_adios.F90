@@ -83,9 +83,6 @@ subroutine crm_save_moho_adios()
   max_global_values(1) = nspec_ab
   max_global_values(2) = nspec2d_moho
 
-  !call MPI_Allreduce(MPI_IN_PLACE, max_global_values, num_vars, &
-  !                   MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ier)
-  !if( ier /= 0 ) call exit_MPI(myrank,'Allreduce to get max values failed.')
   ! calling wrapper instead to compile without mpi
   call max_allreduce_i(max_global_values,num_vars)
 

@@ -82,9 +82,6 @@ subroutine save_forward_arrays_adios()
   max_global_values(4) =  NSPEC_ATTENUATION_AB_kappa
   max_global_values(5) =  N_SLS
 
-  !call MPI_Allreduce(MPI_IN_PLACE, max_global_values, num_vars, &
-  !                   MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ier)
-  !if( ier /= 0 ) call exit_MPI(myrank,'Allreduce to get max values failed.')
   call max_allreduce_i(max_global_values,num_vars)
 
   nglob_wmax                   = max_global_values(1)
