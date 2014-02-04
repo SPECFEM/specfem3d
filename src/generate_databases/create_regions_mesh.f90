@@ -442,8 +442,6 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
   allocate(rhostore(NGLLX,NGLLY,NGLLZ,nspec), &
            kappastore(NGLLX,NGLLY,NGLLZ,nspec), &
            mustore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-          !vpstore(NGLLX,NGLLY,NGLLZ,nspec), &
-          !vsstore(NGLLX,NGLLY,NGLLZ,nspec),
   if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
 ! array with poroelastic model
@@ -570,11 +568,6 @@ subroutine crm_ext_setup_jacobian(myrank, &
   call zwgljd(yigll,wygll,NGLLY,GAUSSALPHA,GAUSSBETA)
   call zwgljd(zigll,wzgll,NGLLZ,GAUSSALPHA,GAUSSBETA)
 
-! if number of points is odd, the middle abscissa is exactly zero
-  if(mod(NGLLX,2) /= 0) xigll((NGLLX-1)/2+1) = ZERO
-  if(mod(NGLLY,2) /= 0) yigll((NGLLY-1)/2+1) = ZERO
-  if(mod(NGLLZ,2) /= 0) zigll((NGLLZ-1)/2+1) = ZERO
-
 ! get the 3-D shape functions
   call get_shape3D(myrank,shape3D,dershape3D,xigll,yigll,zigll,NGNOD)
 
@@ -616,10 +609,10 @@ subroutine crm_ext_setup_jacobian(myrank, &
     ! CUBIT should provide a mesh ordering such that the 3D jacobian is defined
     ! (otherwise mesh would be degenerated)
     call calc_jacobian(myrank,xixstore,xiystore,xizstore, &
-                      etaxstore,etaystore,etazstore, &
-                      gammaxstore,gammaystore,gammazstore,jacobianstore, &
-                      xstore,ystore,zstore, &
-                      xelm,yelm,zelm,shape3D,dershape3D,ispec,nspec)
+                       etaxstore,etaystore,etazstore, &
+                       gammaxstore,gammaystore,gammazstore,jacobianstore, &
+                       xstore,ystore,zstore, &
+                       xelm,yelm,zelm,shape3D,dershape3D,ispec,nspec)
 
   enddo
 
@@ -662,10 +655,10 @@ subroutine crm_ext_setup_indexing(ibool, &
 
 ! allocate memory for arrays
   allocate(locval(npointot), &
-          ifseg(npointot), &
-          xp(npointot), &
-          yp(npointot), &
-          zp(npointot),stat=ier)
+           ifseg(npointot), &
+           xp(npointot), &
+           yp(npointot), &
+           zp(npointot),stat=ier)
   if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
 ! creates temporary global point arrays
@@ -707,8 +700,8 @@ subroutine crm_ext_setup_indexing(ibool, &
 ! unique global point locations
   nglob_dummy = nglob
   allocate(xstore_dummy(nglob_dummy), &
-          ystore_dummy(nglob_dummy), &
-          zstore_dummy(nglob_dummy),stat=ier)
+           ystore_dummy(nglob_dummy), &
+           zstore_dummy(nglob_dummy),stat=ier)
   if(ier /= 0) stop 'error in allocate'
   do ispec = 1, nspec
      do k = 1, NGLLZ

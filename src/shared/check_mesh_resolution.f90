@@ -62,7 +62,7 @@
   integer :: myrank
   integer :: NSPEC_AB_global_min,NSPEC_AB_global_max,NSPEC_AB_global_sum
   integer :: NGLOB_AB_global_min,NGLOB_AB_global_max,NGLOB_AB_global_sum
-  integer :: ispec !,sizeprocs
+  integer :: ispec
 
   !********************************************************************************
 
@@ -81,6 +81,13 @@
   real(kind=CUSTOM_REAL),dimension(:),allocatable :: tmp1,tmp2
   integer:: ier
   character(len=256) :: filename,prname
+
+  ! timing
+  double precision, external :: wtime
+  double precision :: time_start,tCPU
+
+  ! timing gets MPI starting time
+  time_start = wtime()
 
   ! initializations
   if( DT <= 0.0d0) then
@@ -169,7 +176,7 @@
 
     ! determines minimum/maximum velocities within this element
     call get_vpvs_minmax(vpmin,vpmax,vsmin,vsmax,ispec,has_vs_zero, &
-                        NSPEC_AB,kappastore,mustore,rho_vp,rho_vs)
+                         NSPEC_AB,kappastore,mustore,rho_vp,rho_vs)
 
     ! min/max for whole cpu partition
     vpmin_glob = min(vpmin_glob, vpmin)
@@ -178,44 +185,12 @@
     vsmin_glob = min(vsmin_glob, vsmin)
     vsmax_glob = max(vsmax_glob, vsmax)
 
-    ! computes minimum and maximum distance of neighbor GLL points in this grid cell
-    call get_GLL_minmaxdistance(distance_min,distance_max,ispec, &
-                          NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
-
-    distance_min_glob = min(distance_min_glob, distance_min)
-    distance_max_glob = max(distance_max_glob, distance_max)
-
-    x_min_glob = minval(xstore)
-    x_max_glob = maxval(xstore)
-
-    y_min_glob = minval(ystore)
-    y_max_glob = maxval(ystore)
-
-    z_min_glob = minval(zstore)
-    z_max_glob = maxval(zstore)
-
     ! computes minimum and maximum size of this grid cell
     call get_elem_minmaxsize(elemsize_min,elemsize_max,ispec, &
-                          NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
+                             NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
 
     elemsize_min_glob = min(elemsize_min_glob, elemsize_min)
     elemsize_max_glob = max(elemsize_max_glob, elemsize_max)
-
-    ! courant number
-    ! based on minimum GLL point distance and maximum velocity
-    ! i.e. on the maximum ratio of ( velocity / gridsize )
-    if( DT_PRESENT ) then
-      cmax = max(vpmax,vsmax) * DT / distance_min
-      cmax_glob = max(cmax_glob,cmax)
-
-      ! debug: for vtk output
-      if( SAVE_MESH_FILES ) tmp1(ispec) = cmax
-    endif
-
-
-    ! suggested timestep
-    dt_suggested = COURANT_SUGGESTED * distance_min / max( vpmax,vsmax )
-    dt_suggested_glob = min( dt_suggested_glob, dt_suggested)
 
     ! estimation of minimum period resolved
     ! based on average GLL distance within element and minimum velocity
@@ -240,6 +215,31 @@
     ! old: based on GLL distance, i.e. on maximum ratio ( gridspacing / velocity )
     !pmax = distance_max / min( vpmin,vsmin ) * NELEM_PER_WAVELENGTH
     !pmax_glob = max(pmax_glob,pmax)
+
+    ! computes minimum and maximum distance of neighbor GLL points in this grid cell
+    ! exact way (expensive)
+    call get_GLL_minmaxdistance(distance_min,distance_max,ispec, &
+                                NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
+    ! approximate way (based on theoretical GLL point spacing)
+
+    distance_min_glob = min(distance_min_glob, distance_min)
+    distance_max_glob = max(distance_max_glob, distance_max)
+
+    ! courant number
+    ! based on minimum GLL point distance and maximum velocity
+    ! i.e. on the maximum ratio of ( velocity / gridsize )
+    if( DT_PRESENT ) then
+      cmax = max(vpmax,vsmax) * DT / distance_min
+      cmax_glob = max(cmax_glob,cmax)
+
+      ! debug: for vtk output
+      if( SAVE_MESH_FILES ) tmp1(ispec) = cmax
+    endif
+
+    ! suggested timestep
+    dt_suggested = COURANT_SUGGESTED * distance_min / max( vpmax,vsmax )
+    dt_suggested_glob = min( dt_suggested_glob, dt_suggested)
+
 
     ! debug: for vtk output
     if( SAVE_MESH_FILES ) tmp2(ispec) = pmax
@@ -276,7 +276,7 @@
     endif
   endif
 
-! outputs infos
+  ! outputs infos
   if ( myrank == 0 ) then
     write(IMAIN,*)
     write(IMAIN,*) '********'
@@ -315,6 +315,16 @@
     endif
   endif
 
+  ! model dimensions
+  x_min_glob = minval(xstore)
+  x_max_glob = maxval(xstore)
+
+  y_min_glob = minval(ystore)
+  y_max_glob = maxval(ystore)
+
+  z_min_glob = minval(zstore)
+  z_max_glob = maxval(zstore)
+
   ! min and max dimensions of the model
   x_min = x_min_glob
   x_max = x_max_glob
@@ -339,16 +349,14 @@
   dt_suggested = dt_suggested_glob
   call min_all_cr(dt_suggested,dt_suggested_glob)
 
-! determines global min/max values from all cpu partitions
+  ! determines global min/max values from all cpu partitions
   if( DT_PRESENT ) then
     ! courant number
     cmax = cmax_glob
     call max_all_cr(cmax,cmax_glob)
   endif
 
-  !call world_size(sizeprocs)
-
-! outputs infos
+  ! outputs infos
   if ( myrank == 0 ) then
     write(IMAIN,*) '*********************************************'
     write(IMAIN,*) '*** Verification of simulation parameters ***'
@@ -394,6 +402,14 @@
   tmp_val(1) = min_resolved_period
   call bcast_all_cr(tmp_val,1)
   min_resolved_period = tmp_val(1)
+
+  ! timing
+  tCPU = wtime() - time_start
+  if( myrank == 0 ) then
+    write(IMAIN,*) "Elapsed time for checking mesh resolution in seconds = ", tCPU
+    ! flushes file buffer for main output file (IMAIN)
+    call flush_IMAIN()
+  endif
 
   ! debug: for vtk output
   if( SAVE_MESH_FILES ) then
@@ -467,7 +483,7 @@
   integer :: myrank
   integer :: NSPEC_AB_global_min,NSPEC_AB_global_max,NSPEC_AB_global_sum
   integer :: NGLOB_AB_global_min,NGLOB_AB_global_max,NGLOB_AB_global_sum
-  integer :: ispec !,sizeprocs
+  integer :: ispec
 
   !********************************************************************************
 
@@ -704,8 +720,6 @@
   call min_all_i(NGLOB_AB,NGLOB_AB_global_min)
   call max_all_i(NGLOB_AB,NGLOB_AB_global_max)
   call sum_all_i(NGLOB_AB,NGLOB_AB_global_sum)
-
-  !call world_size(sizeprocs)
 
 ! outputs infos
   if ( myrank == 0 ) then

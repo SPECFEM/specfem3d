@@ -81,21 +81,15 @@ MPI_INCLUDES = @MPI_INCLUDES@
 
 SCOTCH_BUNDLED = @USE_BUNDLED_SCOTCH@
 
-ifeq (${SCOTCH_BUNDLED},1)
-SCOTCH_DIR = @top_srcdir@/src/decompose_mesh/@SCOTCH_DIR@
-SCOTCH_INCDIR = @top_srcdir@/src/decompose_mesh/@SCOTCH_INCLUDEDIR@
-SCOTCH_LIBDIR = @top_srcdir@/src/decompose_mesh/@SCOTCH_LIBDIR@
-else
 SCOTCH_DIR = @SCOTCH_DIR@
 SCOTCH_INCDIR = @SCOTCH_INCLUDEDIR@
 SCOTCH_LIBDIR = @SCOTCH_LIBDIR@
-endif
 
 SCOTCH_INC = -I${SCOTCH_INCDIR}
 SCOTCH_LIBS = -L${SCOTCH_LIBDIR} -lscotch -lscotcherr
 
 ### added support for METIS as well, thus uncomment the line below and compile METIS if you want to use it instead of SCOTCH
-#SCOTCH_LIBS = -L@SCOTCH_LIBDIR@ -lscotch -lscotcherr -L./src/decompose_mesh/metis-4.0.3 -L./metis-4.0.3 -lmetis
+#SCOTCH_LIBS = -L${SCOTCH_LIBDIR} -lscotch -lscotcherr -L./src/decompose_mesh/metis-4.0.3 -L./metis-4.0.3 -lmetis
 
 
 #######################################

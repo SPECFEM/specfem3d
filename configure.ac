@@ -120,6 +120,7 @@ F77="$FC"
 FFLAGS="$FCFLAGS"
 AC_PROVIDE([AC_PROG_F77])
 AC_SUBST([FCENV])
+AC_SUBST(srcdir)
 
 flags_guess="$SHELL $srcdir/flags.guess"
 AC_MSG_NOTICE([running $flags_guess])
@@ -138,6 +139,7 @@ AC_LANG_PUSH(C)
 AC_CHECK_HEADER(emmintrin.h,AC_DEFINE([HAVE_EMMINTRIN],[1],[Define if emmintrin.h]))
 AC_CHECK_HEADER(xmmintrin.h,AC_DEFINE([HAVE_XMMINTRIN],[1],[Define if xmmintrin.h]))
 AC_LANG_POP(C)
+
 
 ############################################################
 
@@ -232,9 +234,10 @@ else
  # uses bundled scotch: current version pointed to by symbolic link scotch/
  USE_BUNDLED_SCOTCH=1
 
- SCOTCH_DIR="scotch"
+ SCOTCH_DIR="$srcdir/src/decompose_mesh/scotch"
  SCOTCH_LIBDIR="${SCOTCH_DIR}/lib"
  SCOTCH_INCLUDEDIR="${SCOTCH_DIR}/include"
+
 fi
 LDFLAGS=${ac_save_ldflags}
 
@@ -269,7 +272,6 @@ AS_IF([test x"$MPICC" = x],[
 AS_IF([test x"$LOCAL_PATH_IS_ALSO_GLOBAL" = x],[
     LOCAL_PATH_IS_ALSO_GLOBAL=true
 ])
-
 
 # python and pyre, this is probably unused...
 
@@ -407,17 +409,17 @@ AC_CONFIG_FILES([
     setup/precision.h
 ])
 
-AC_CONFIG_FILES([
-	src/decompose_mesh/scotch/src/Makefile.inc
-])
-
-AC_CONFIG_LINKS([
-    DATA/meshfem3D_files:DATA/meshfem3D_files
-])
+if test "$USE_BUNDLED_SCOTCH" = 1; then
+  AC_CONFIG_FILES([
+	  ${SCOTCH_DIR}/src/Makefile.inc
+  ])
+fi
 
 AC_CONFIG_COMMANDS([bin], [AS_MKDIR_P(bin)])
 AC_CONFIG_COMMANDS([obj], [AS_MKDIR_P(obj)])
+AC_CONFIG_COMMANDS([DATA], [AS_MKDIR_P(DATA)])
 AC_CONFIG_COMMANDS([OUTPUT_FILES], [AS_MKDIR_P(OUTPUT_FILES)])
+AC_CONFIG_COMMANDS([DATABASES_MPI], [AS_MKDIR_P(OUTPUT_FILES/DATABASES_MPI)])
 
 AC_OUTPUT
 

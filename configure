@@ -677,6 +677,7 @@ CPPFLAGS
 CFLAGS
 CC
 FCLIBS
+srcdir
 FCENV
 OBJEXT
 EXEEXT
@@ -3729,6 +3730,7 @@ FFLAGS="$FCFLAGS"
 
 
 
+
 flags_guess="$SHELL $srcdir/flags.guess"
 { $as_echo "$as_me:${as_lineno-$LINENO}: running $flags_guess" >&5
 $as_echo "$as_me: running $flags_guess" >&6;}
@@ -6120,6 +6122,7 @@ ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest
 ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
 
+
 ############################################################
 
 #checks for Scotch
@@ -6820,9 +6823,10 @@ ac_compiler_gnu=$ac_cv_fc_compiler_gnu
  # uses bundled scotch: current version pointed to by symbolic link scotch/
  USE_BUNDLED_SCOTCH=1
 
- SCOTCH_DIR="scotch"
+ SCOTCH_DIR="$srcdir/src/decompose_mesh/scotch"
  SCOTCH_LIBDIR="${SCOTCH_DIR}/lib"
  SCOTCH_INCLUDEDIR="${SCOTCH_DIR}/include"
+
 fi
 LDFLAGS=${ac_save_ldflags}
 
@@ -6863,7 +6867,6 @@ if test x"$LOCAL_PATH_IS_ALSO_GLOBAL" = x; then :
     LOCAL_PATH_IS_ALSO_GLOBAL=true
 
 fi
-
 
 # python and pyre, this is probably unused...
 
@@ -8235,17 +8238,20 @@ _ACEOF
 ac_config_files="$ac_config_files Makefile setup/constants.h setup/precision.h"
 
 
-ac_config_files="$ac_config_files src/decompose_mesh/scotch/src/Makefile.inc"
+if test "$USE_BUNDLED_SCOTCH" = 1; then
+  ac_config_files="$ac_config_files ${SCOTCH_DIR}/src/Makefile.inc"
 
-
-ac_config_links="$ac_config_links DATA/meshfem3D_files:DATA/meshfem3D_files"
-
+fi
 
 ac_config_commands="$ac_config_commands bin"
 
 ac_config_commands="$ac_config_commands obj"
 
+ac_config_commands="$ac_config_commands DATA"
+
 ac_config_commands="$ac_config_commands OUTPUT_FILES"
+
+ac_config_commands="$ac_config_commands DATABASES_MPI"
 
 
 cat >confcache <<\_ACEOF
@@ -8811,7 +8817,6 @@ cat >>$CONFIG_STATUS <<_ACEOF || ac_write_fail=1
 # Files that config.status was made for.
 config_files="$ac_config_files"
 config_headers="$ac_config_headers"
-config_links="$ac_config_links"
 config_commands="$ac_config_commands"
 
 _ACEOF
@@ -8841,9 +8846,6 @@ $config_files
 
 Configuration headers:
 $config_headers
-
-Configuration links:
-$config_links
 
 Configuration commands:
 $config_commands
@@ -8979,11 +8981,12 @@ do
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "setup/constants.h") CONFIG_FILES="$CONFIG_FILES setup/constants.h" ;;
     "setup/precision.h") CONFIG_FILES="$CONFIG_FILES setup/precision.h" ;;
-    "src/decompose_mesh/scotch/src/Makefile.inc") CONFIG_FILES="$CONFIG_FILES src/decompose_mesh/scotch/src/Makefile.inc" ;;
-    "DATA/meshfem3D_files") CONFIG_LINKS="$CONFIG_LINKS DATA/meshfem3D_files:DATA/meshfem3D_files" ;;
+    "${SCOTCH_DIR}/src/Makefile.inc") CONFIG_FILES="$CONFIG_FILES ${SCOTCH_DIR}/src/Makefile.inc" ;;
     "bin") CONFIG_COMMANDS="$CONFIG_COMMANDS bin" ;;
     "obj") CONFIG_COMMANDS="$CONFIG_COMMANDS obj" ;;
+    "DATA") CONFIG_COMMANDS="$CONFIG_COMMANDS DATA" ;;
     "OUTPUT_FILES") CONFIG_COMMANDS="$CONFIG_COMMANDS OUTPUT_FILES" ;;
+    "DATABASES_MPI") CONFIG_COMMANDS="$CONFIG_COMMANDS DATABASES_MPI" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac
@@ -8997,7 +9000,6 @@ done
 if $ac_need_defaults; then
   test "${CONFIG_FILES+set}" = set || CONFIG_FILES=$config_files
   test "${CONFIG_HEADERS+set}" = set || CONFIG_HEADERS=$config_headers
-  test "${CONFIG_LINKS+set}" = set || CONFIG_LINKS=$config_links
   test "${CONFIG_COMMANDS+set}" = set || CONFIG_COMMANDS=$config_commands
 fi
 
@@ -9295,7 +9297,7 @@ cat >>$CONFIG_STATUS <<\_ACEOF || ac_write_fail=1
 fi # test -n "$CONFIG_HEADERS"
 
 
-eval set X "  :F $CONFIG_FILES  :H $CONFIG_HEADERS  :L $CONFIG_LINKS  :C $CONFIG_COMMANDS"
+eval set X "  :F $CONFIG_FILES  :H $CONFIG_HEADERS    :C $CONFIG_COMMANDS"
 shift
 for ac_tag
 do
@@ -9527,38 +9529,7 @@ $as_echo "$as_me: $ac_file is unchanged" >&6;}
       || as_fn_error $? "could not create -" "$LINENO" 5
   fi
  ;;
-  :L)
-  #
-  # CONFIG_LINK
-  #
 
-  if test "$ac_source" = "$ac_file" && test "$srcdir" = '.'; then
-    :
-  else
-    # Prefer the file from the source tree if names are identical.
-    if test "$ac_source" = "$ac_file" || test ! -r "$ac_source"; then
-      ac_source=$srcdir/$ac_source
-    fi
-
-    { $as_echo "$as_me:${as_lineno-$LINENO}: linking $ac_source to $ac_file" >&5
-$as_echo "$as_me: linking $ac_source to $ac_file" >&6;}
-
-    if test ! -r "$ac_source"; then
-      as_fn_error $? "$ac_source: file not found" "$LINENO" 5
-    fi
-    rm -f "$ac_file"
-
-    # Try a relative symlink, then a hard link, then a copy.
-    case $ac_source in
-    [\\/$]* | ?:[\\/]* ) ac_rel_source=$ac_source ;;
-	*) ac_rel_source=$ac_top_build_prefix$ac_source ;;
-    esac
-    ln -s "$ac_rel_source" "$ac_file" 2>/dev/null ||
-      ln "$ac_source" "$ac_file" 2>/dev/null ||
-      cp -p "$ac_source" "$ac_file" ||
-      as_fn_error $? "cannot link or copy $ac_source to $ac_file" "$LINENO" 5
-  fi
- ;;
   :C)  { $as_echo "$as_me:${as_lineno-$LINENO}: executing $ac_file commands" >&5
 $as_echo "$as_me: executing $ac_file commands" >&6;}
  ;;
@@ -9568,7 +9539,9 @@ $as_echo "$as_me: executing $ac_file commands" >&6;}
   case $ac_file$ac_mode in
     "bin":C) as_dir=bin; as_fn_mkdir_p ;;
     "obj":C) as_dir=obj; as_fn_mkdir_p ;;
+    "DATA":C) as_dir=DATA; as_fn_mkdir_p ;;
     "OUTPUT_FILES":C) as_dir=OUTPUT_FILES; as_fn_mkdir_p ;;
+    "DATABASES_MPI":C) as_dir=OUTPUT_FILES/DATABASES_MPI; as_fn_mkdir_p ;;
 
   esac
 done # for ac_tag
