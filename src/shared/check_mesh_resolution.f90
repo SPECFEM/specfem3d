@@ -217,10 +217,8 @@
     !pmax_glob = max(pmax_glob,pmax)
 
     ! computes minimum and maximum distance of neighbor GLL points in this grid cell
-    ! exact way (expensive)
     call get_GLL_minmaxdistance(distance_min,distance_max,ispec, &
                                 NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
-    ! approximate way (based on theoretical GLL point spacing)
 
     distance_min_glob = min(distance_min_glob, distance_min)
     distance_max_glob = max(distance_max_glob, distance_max)
@@ -239,7 +237,6 @@
     ! suggested timestep
     dt_suggested = COURANT_SUGGESTED * distance_min / max( vpmax,vsmax )
     dt_suggested_glob = min( dt_suggested_glob, dt_suggested)
-
 
     ! debug: for vtk output
     if( SAVE_MESH_FILES ) tmp2(ispec) = pmax
@@ -504,6 +501,13 @@
   integer:: ier
   character(len=256) :: filename,prname
 
+  ! timing
+  double precision, external :: wtime
+  double precision :: time_start,tCPU
+
+  ! timing gets MPI starting time
+  time_start = wtime()
+
   ! initializations
   if( DT <= 0.0d0) then
     DT_PRESENT = .false.
@@ -561,35 +565,12 @@
     vsmin_glob = min ( vsmin_glob, vsmin)
     vsmax_glob = max ( vsmax_glob, vsmax)
 
-    ! computes minimum and maximum distance of neighbor GLL points in this grid cell
-    call get_GLL_minmaxdistance(distance_min,distance_max,ispec, &
-                          NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
-
-    distance_min_glob = min( distance_min_glob, distance_min)
-    distance_max_glob = max( distance_max_glob, distance_max)
-
     ! computes minimum and maximum size of this grid cell
     call get_elem_minmaxsize(elemsize_min,elemsize_max,ispec, &
                           NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
 
     elemsize_min_glob = min( elemsize_min_glob, elemsize_min)
     elemsize_max_glob = max( elemsize_max_glob, elemsize_max)
-
-    ! courant number
-    ! based on minimum GLL point distance and maximum velocity
-    ! i.e. on the maximum ratio of ( velocity / gridsize )
-    if( DT_PRESENT ) then
-      cmax = max( vpmax,vp2max,vsmax ) * DT / distance_min
-      cmax_glob = max(cmax_glob,cmax)
-
-      ! debug: for vtk output
-      if( SAVE_MESH_FILES ) tmp1(ispec) = cmax
-
-    endif
-
-    ! suggested timestep
-    dt_suggested = COURANT_SUGGESTED * distance_min / max( vpmax,vp2max,vsmax )
-    dt_suggested_glob = min( dt_suggested_glob, dt_suggested)
 
     ! estimation of minimum period resolved
     ! based on average GLL distance within element and minimum velocity
@@ -618,6 +599,29 @@
     ! old: based on GLL distance, i.e. on maximum ratio ( gridspacing / velocity )
     !pmax = distance_max / min( vpmin,vsmin ) * NELEM_PER_WAVELENGTH
     !pmax_glob = max(pmax_glob,pmax)
+
+    ! computes minimum and maximum distance of neighbor GLL points in this grid cell
+    call get_GLL_minmaxdistance(distance_min,distance_max,ispec, &
+                          NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
+
+    distance_min_glob = min( distance_min_glob, distance_min)
+    distance_max_glob = max( distance_max_glob, distance_max)
+
+    ! courant number
+    ! based on minimum GLL point distance and maximum velocity
+    ! i.e. on the maximum ratio of ( velocity / gridsize )
+    if( DT_PRESENT ) then
+      cmax = max( vpmax,vp2max,vsmax ) * DT / distance_min
+      cmax_glob = max(cmax_glob,cmax)
+
+      ! debug: for vtk output
+      if( SAVE_MESH_FILES ) tmp1(ispec) = cmax
+
+    endif
+
+    ! suggested timestep
+    dt_suggested = COURANT_SUGGESTED * distance_min / max( vpmax,vp2max,vsmax )
+    dt_suggested_glob = min( dt_suggested_glob, dt_suggested)
 
     ! debug: for vtk output
     if( SAVE_MESH_FILES ) tmp2(ispec) = pmax
@@ -782,6 +786,14 @@
   call bcast_all_cr(tmp_val,1)
   min_resolved_period = tmp_val(1)
 
+  ! timing
+  tCPU = wtime() - time_start
+  if( myrank == 0 ) then
+    write(IMAIN,*) "Elapsed time for checking mesh resolution in seconds = ", tCPU
+    ! flushes file buffer for main output file (IMAIN)
+    call flush_IMAIN()
+  endif
+
   ! debug: for vtk output
   if( SAVE_MESH_FILES ) then
     call create_name_database(prname,myrank,LOCAL_PATH)
@@ -808,7 +820,95 @@
 
 
   subroutine get_vpvs_minmax(vpmin,vpmax,vsmin,vsmax,ispec,has_vs_zero, &
-                            NSPEC_AB,kappastore,mustore,rho_vp,rho_vs)
+                             NSPEC_AB,kappastore,mustore,rho_vp,rho_vs)
+
+! calculates the min/max size of the specified element (ispec) for acoustic / elastic domains
+
+  implicit none
+
+  include "constants.h"
+
+  real(kind=CUSTOM_REAL) :: vpmin,vpmax,vsmin,vsmax
+
+  integer :: ispec
+  logical :: has_vs_zero
+
+  integer :: NSPEC_AB
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
+    kappastore,mustore,rho_vp,rho_vs
+
+  ! local parameters
+  real(kind=CUSTOM_REAL) :: vp,vs
+  integer :: i,j,k
+  integer :: incrx,incry,incrz
+
+  ! element looping
+  ! note: the mesh resolution check is only approximative, it is thus sufficient to check only a few element points
+  logical,parameter :: MIDPOINT_CHECK_ONLY = .true.
+
+  ! initializes
+  vpmin = HUGEVAL
+  vpmax = -HUGEVAL
+  vsmin = HUGEVAL
+  vsmax = -HUGEVAL
+
+  ! looping increments
+  if( MIDPOINT_CHECK_ONLY ) then
+    ! only corners and midpoints
+    incrx = NGLLX/2
+    incry = NGLLY/2
+    incrz = NGLLZ/2
+  else
+    ! all gll points
+    incrx = 1
+    incry = 1
+    incrz = 1
+  endif
+
+  ! loops over gll points
+  ! (avoids temporary 3d arrays)
+  do k=1,NGLLZ,incrz
+    do j=1,NGLLY,incry
+      do i=1,NGLLX,incrx
+
+        ! vp
+        if( rho_vp(i,j,k,ispec) > TINYVAL ) then
+          vp = (FOUR_THIRDS * mustore(i,j,k,ispec) + kappastore(i,j,k,ispec)) / rho_vp(i,j,k,ispec)
+        else
+          vp = 0.0_CUSTOM_REAL
+        endif
+        ! min/max
+        if( vp < vpmin ) vpmin = vp
+        if( vp > vpmax ) vpmax = vp
+
+        ! vs
+        if( rho_vs(i,j,k,ispec) > TINYVAL ) then
+          vs = mustore(i,j,k,ispec) / rho_vs(i,j,k,ispec)
+        else
+          vs = 0.0_CUSTOM_REAL
+        endif
+        ! ignore fluid regions with Vs = 0
+        if( vs > TINYVAL ) then
+          if( vs < vsmin ) vsmin = vs
+        else
+          has_vs_zero = .true.
+        endif
+        if( vs > vsmax ) vsmax = vs
+
+      enddo
+    enddo
+  enddo
+
+  end subroutine get_vpvs_minmax
+
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+
+  subroutine get_vpvs_minmax_alt(vpmin,vpmax,vsmin,vsmax,ispec,has_vs_zero, &
+                                 NSPEC_AB,kappastore,mustore,rho_vp,rho_vs)
 
 ! calculates the min/max size of the specified element (ispec) for acoustic / elastic domains
 
@@ -840,7 +940,7 @@
     vp_elem(:,:,:) = (FOUR_THIRDS * mustore(:,:,:,ispec) &
                     + kappastore(:,:,:,ispec)) / rho_vp(:,:,:,ispec)
   elsewhere
-    vp_elem(:,:,:) = 0.0
+    vp_elem(:,:,:) = 0.0_CUSTOM_REAL
   endwhere
 
   val_min = minval(vp_elem(:,:,:))
@@ -853,7 +953,7 @@
   where( rho_vs(:,:,:,ispec) > TINYVAL )
     vs_elem(:,:,:) = mustore(:,:,:,ispec) / rho_vs(:,:,:,ispec)
   elsewhere
-    vs_elem(:,:,:) = 0.0
+    vs_elem(:,:,:) = 0.0_CUSTOM_REAL
   endwhere
 
   val_min = minval(vs_elem(:,:,:))
@@ -867,7 +967,7 @@
   endif
   vsmax = max(vsmax,val_max(1))
 
-  end subroutine get_vpvs_minmax
+  end subroutine get_vpvs_minmax_alt
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -989,53 +1089,57 @@
 
   ! local parameters
   real(kind=CUSTOM_REAL) :: dist
-  integer :: i,j,k,iglob_a,iglob_b
+  real(kind=CUSTOM_REAL) :: x1,x2,y1,y2,z1,z2
+  integer :: i,j,k,iglob1,iglob2
 
   ! initializes
   distance_min = HUGEVAL
   distance_max = -HUGEVAL
 
-  ! loops over all GLL points along X
-  do k=1,NGLLZ
-    do j=1,NGLLY
+  ! loops over all GLL points
+  ! (combines directions to speed up calculations)
+  do k=1,NGLLZ-1
+    do j=1,NGLLY-1
       do i=1,NGLLX-1
-        iglob_a = ibool(i  ,j,k,ispec)
-        iglob_b = ibool(i+1,j,k,ispec)
-        dist =       ( xstore(iglob_a) - xstore(iglob_b) )**2 &
-                   + ( ystore(iglob_a) - ystore(iglob_b) )**2 &
-                   + ( zstore(iglob_a) - zstore(iglob_b) )**2
-        if( dist < distance_min) distance_min = dist
-        if( dist > distance_max) distance_max = dist
-      enddo
-    enddo
-  enddo
+        ! reference point
+        iglob1 = ibool(i,j,k,ispec)
+        x1 = xstore(iglob1)
+        y1 = ystore(iglob1)
+        z1 = zstore(iglob1)
 
-  ! loops over all GLL points along Y
-  do k=1,NGLLZ
-    do i=1,NGLLX
-      do j=1,NGLLY-1
-        iglob_a = ibool(i,j  ,k,ispec)
-        iglob_b = ibool(i,j+1,k,ispec)
-        dist =       ( xstore(iglob_a) - xstore(iglob_b) )**2 &
-                   + ( ystore(iglob_a) - ystore(iglob_b) )**2 &
-                   + ( zstore(iglob_a) - zstore(iglob_b) )**2
-        if( dist < distance_min) distance_min = dist
-        if( dist > distance_max) distance_max = dist
-      enddo
-    enddo
-  enddo
+        ! along X
+        iglob2 = ibool(i+1,j,k,ispec)
+        x2 = xstore(iglob2)
+        y2 = ystore(iglob2)
+        z2 = zstore(iglob2)
 
-  ! loops over all GLL points along Z
-  do i=1,NGLLX
-    do j=1,NGLLY
-      do k=1,NGLLZ-1
-        iglob_a = ibool(i,j,k  ,ispec)
-        iglob_b = ibool(i,j,k+1,ispec)
-        dist =       ( xstore(iglob_a) - xstore(iglob_b) )**2 &
-                   + ( ystore(iglob_a) - ystore(iglob_b) )**2 &
-                   + ( zstore(iglob_a) - zstore(iglob_b) )**2
+        dist = (x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2)
+
         if( dist < distance_min) distance_min = dist
         if( dist > distance_max) distance_max = dist
+
+        ! along Y
+        iglob2 = ibool(i,j+1,k,ispec)
+        x2 = xstore(iglob2)
+        y2 = ystore(iglob2)
+        z2 = zstore(iglob2)
+
+        dist = (x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2)
+
+        if( dist < distance_min) distance_min = dist
+        if( dist > distance_max) distance_max = dist
+
+        ! along Z
+        iglob2 = ibool(i,j,k+1,ispec)
+        x2 = xstore(iglob2)
+        y2 = ystore(iglob2)
+        z2 = zstore(iglob2)
+
+        dist = (x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2)
+
+        if( dist < distance_min) distance_min = dist
+        if( dist > distance_max) distance_max = dist
+
       enddo
     enddo
   enddo
@@ -1069,8 +1173,10 @@
 
   ! local parameters
   real(kind=CUSTOM_REAL) :: dist
+  real(kind=CUSTOM_REAL) :: x1,x2,y1,y2,z1,z2
   integer :: i,j,k
-  integer :: i1,i2,j1,j2,k1,k2,ibool1,ibool2
+  integer :: i1,i2,j1,j2,k1,k2
+  integer :: iglob1,iglob2
 
   ! initializes
   elemsize_min = HUGEVAL
@@ -1079,13 +1185,21 @@
   ! loops over the four edges that are along X
   i1 = 1
   i2 = NGLLX
-  do j = 1, NGLLY, NGLLY-1
-    do k = 1, NGLLZ, NGLLZ-1
-      ibool1 = ibool(i1,j,k,ispec)
-      ibool2 = ibool(i2,j,k,ispec)
-      dist =      (xstore(ibool1) - xstore(ibool2))**2 &
-                + (ystore(ibool1) - ystore(ibool2))**2 &
-                + (zstore(ibool1) - zstore(ibool2))**2
+  do k = 1, NGLLZ, NGLLZ-1
+    do j = 1, NGLLY, NGLLY-1
+      iglob1 = ibool(i1,j,k,ispec)
+      iglob2 = ibool(i2,j,k,ispec)
+
+      x1 = xstore(iglob1)
+      y1 = ystore(iglob1)
+      z1 = zstore(iglob1)
+
+      x2 = xstore(iglob2)
+      y2 = ystore(iglob2)
+      z2 = zstore(iglob2)
+
+      dist = (x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2)
+
       if(dist < elemsize_min) elemsize_min = dist
       if(dist > elemsize_max) elemsize_max = dist
     enddo
@@ -1094,13 +1208,21 @@
   ! loops over the four edges that are along Y
   j1 = 1
   j2 = NGLLY
-  do i = 1, NGLLX, NGLLX-1
-    do k = 1, NGLLZ, NGLLZ-1
-      ibool1 = ibool(i,j1,k,ispec)
-      ibool2 = ibool(i,j2,k,ispec)
-      dist =      (xstore(ibool1) - xstore(ibool2))**2 &
-                + (ystore(ibool1) - ystore(ibool2))**2 &
-                + (zstore(ibool1) - zstore(ibool2))**2
+  do k = 1, NGLLZ, NGLLZ-1
+    do i = 1, NGLLX, NGLLX-1
+      iglob1 = ibool(i,j1,k,ispec)
+      iglob2 = ibool(i,j2,k,ispec)
+
+      x1 = xstore(iglob1)
+      y1 = ystore(iglob1)
+      z1 = zstore(iglob1)
+
+      x2 = xstore(iglob2)
+      y2 = ystore(iglob2)
+      z2 = zstore(iglob2)
+
+      dist = (x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2)
+
       if(dist < elemsize_min) elemsize_min = dist
       if(dist > elemsize_max) elemsize_max = dist
     enddo
@@ -1109,13 +1231,21 @@
   ! loops over the four edges that are along Z
   k1 = 1
   k2 = NGLLZ
-  do i = 1, NGLLX, NGLLX-1
-    do j = 1, NGLLY, NGLLY-1
-      ibool1 = ibool(i,j,k1,ispec)
-      ibool2 = ibool(i,j,k2,ispec)
-      dist =      (xstore(ibool1) - xstore(ibool2))**2 &
-                + (ystore(ibool1) - ystore(ibool2))**2 &
-                + (zstore(ibool1) - zstore(ibool2))**2
+  do j = 1, NGLLY, NGLLY-1
+    do i = 1, NGLLX, NGLLX-1
+      iglob1 = ibool(i,j,k1,ispec)
+      iglob2 = ibool(i,j,k2,ispec)
+
+      x1 = xstore(iglob1)
+      y1 = ystore(iglob1)
+      z1 = zstore(iglob1)
+
+      x2 = xstore(iglob2)
+      y2 = ystore(iglob2)
+      z2 = zstore(iglob2)
+
+      dist = (x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2)
+
       if(dist < elemsize_min) elemsize_min = dist
       if(dist > elemsize_max) elemsize_max = dist
     enddo
