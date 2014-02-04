@@ -76,20 +76,23 @@
         xxi = xxi + dershape3D(1,ia,i,j,k)*xelm(ia)
         xeta = xeta + dershape3D(2,ia,i,j,k)*xelm(ia)
         xgamma = xgamma + dershape3D(3,ia,i,j,k)*xelm(ia)
+
         yxi = yxi + dershape3D(1,ia,i,j,k)*yelm(ia)
         yeta = yeta + dershape3D(2,ia,i,j,k)*yelm(ia)
         ygamma = ygamma + dershape3D(3,ia,i,j,k)*yelm(ia)
+
         zxi = zxi + dershape3D(1,ia,i,j,k)*zelm(ia)
         zeta = zeta + dershape3D(2,ia,i,j,k)*zelm(ia)
         zgamma = zgamma + dershape3D(3,ia,i,j,k)*zelm(ia)
+
         xmesh = xmesh + shape3D(ia,i,j,k)*xelm(ia)
         ymesh = ymesh + shape3D(ia,i,j,k)*yelm(ia)
         zmesh = zmesh + shape3D(ia,i,j,k)*zelm(ia)
       enddo
 
       jacobian = xxi*(yeta*zgamma-ygamma*zeta) - &
-             xeta*(yxi*zgamma-ygamma*zxi) + &
-             xgamma*(yxi*zeta-yeta*zxi)
+                 xeta*(yxi*zgamma-ygamma*zxi) + &
+                 xgamma*(yxi*zeta-yeta*zxi)
 
 ! check that the Jacobian transform is invertible, i.e. that the Jacobian never becomes negative or null
       if(jacobian <= ZERO) call exit_MPI(myrank,'error: negative or null 3D Jacobian found')

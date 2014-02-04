@@ -304,13 +304,13 @@
     do j=1,NGLLY  !! DK DK why use 5 and not NGLLY here? (I assume 5 means 5 GLL points here?)
       do i=1,NGLLX  !! DK DK why use 5 and not NGLLX here? (I assume 5 means 5 GLL points here?)
                     !! VM VM Correction 5->NGLLX or NGLLY
-         igll = igll + 1
-         read(IIN_veloc_dsm) dsm_boundary_tmp(:,:,i,j)
-         Veloc_dsm_boundary(:,:,igll,iface) = dsm_boundary_tmp(:,:,i,j)
-         read(IIN_tract_dsm) dsm_boundary_tmp(:,:,i,j)
-         Tract_dsm_boundary(:,:,igll,iface) = dsm_boundary_tmp(:,:,i,j)
+        igll = igll + 1
+        read(IIN_veloc_dsm) dsm_boundary_tmp(:,:,i,j)
+        Veloc_dsm_boundary(:,:,igll,iface) = dsm_boundary_tmp(:,:,i,j)
+        read(IIN_tract_dsm) dsm_boundary_tmp(:,:,i,j)
+        Tract_dsm_boundary(:,:,igll,iface) = dsm_boundary_tmp(:,:,i,j)
+      enddo
     enddo
-  enddo
   enddo
 
   end subroutine read_dsm_file

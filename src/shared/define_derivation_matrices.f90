@@ -58,11 +58,6 @@
   call zwgljd(yigll,wygll,NGLLY,GAUSSALPHA,GAUSSBETA)
   call zwgljd(zigll,wzgll,NGLLZ,GAUSSALPHA,GAUSSBETA)
 
-! if number of points is odd, the middle abscissa is exactly ZERO
-  if(mod(NGLLX,2) /= 0) xigll((NGLLX-1)/2+1) = ZERO
-  if(mod(NGLLY,2) /= 0) yigll((NGLLY-1)/2+1) = ZERO
-  if(mod(NGLLZ,2) /= 0) zigll((NGLLZ-1)/2+1) = ZERO
-
 ! distinguish between single and double precision for reals
   if(CUSTOM_REAL == SIZE_REAL) then
 

@@ -149,7 +149,7 @@
     print*,'please run xgenerate_databases or xspecfem3D first to create this file, exiting now...'
     stop 'error opening moviedata header file'
   endif
-  ! skips first 5 lines
+  ! skips first few lines
   do i=1,6
     read(IIN,'(a256)') line
   enddo

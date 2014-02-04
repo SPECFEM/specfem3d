@@ -239,7 +239,7 @@ void FC_FUNC_(initialize_cuda_device,
     fprintf(stderr,"Compute capability should be at least 1.3, exiting...\n");
     exit_on_error("CUDA Compute capability major number should be at least 1.3\n");
   }
-  
+
   // we use pinned memory for asynchronous copy
   if( ! deviceProp.canMapHostMemory){
     fprintf(stderr,"Device capability should allow to map host memory, exiting...\n");

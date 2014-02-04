@@ -90,9 +90,6 @@ subroutine define_kernel_adios_variables(handle, SAVE_WEIGHTS)
 
   max_global_values(1) = NSPEC_AB
 
-  !call MPI_Allreduce(MPI_IN_PLACE, max_global_values, num_vars, &
-  !                   MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ier)
-  !if( ier /= 0 ) call exit_MPI(myrank,'Allreduce to get max values failed.')
   call max_allreduce_i(max_global_values,num_vars)
 
   nspec_wmax = max_global_values(1)

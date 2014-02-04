@@ -731,28 +731,39 @@ module decompose_mesh
 
   subroutine check_valence
 
+    implicit none
+
+    ! allocates temporary arrays
     allocate(mask_nodes_elmnts(nnodes),stat=ier)
     if( ier /= 0 ) stop 'error allocating array mask_nodes_elmnts'
     allocate(used_nodes_elmnts(nnodes),stat=ier)
     if( ier /= 0 ) stop 'error allocating array used_nodes_elmnts'
+
     mask_nodes_elmnts(:) = .false.
     used_nodes_elmnts(:) = 0
+
     do ispec = 1, nspec
       do inode = 1, NGNOD
         mask_nodes_elmnts(elmnts(inode,ispec)) = .true.
         used_nodes_elmnts(elmnts(inode,ispec)) = used_nodes_elmnts(elmnts(inode,ispec)) + 1
       enddo
     enddo
+
     print *, 'node valence:'
     print *, '  min = ',minval(used_nodes_elmnts(:)),' max = ', maxval(used_nodes_elmnts(:))
+
     do inode = 1, nnodes
       if (.not. mask_nodes_elmnts(inode)) then
         stop 'ERROR: found some unused nodes (weird, but not necessarily fatal; your mesher may have created extra nodes).'
       endif
     enddo
 
-! max number of elements that contain the same node
+    ! max number of elements that contain the same node
     nsize = maxval(used_nodes_elmnts(:))
+
+    ! frees temporary arrays
+    deallocate(mask_nodes_elmnts)
+    deallocate(used_nodes_elmnts)
 
 ! majoration (overestimate) of the maximum number of neighbours per element
 !! DK DK nfaces is a constant equal to 6 (number of faces of a cube).
