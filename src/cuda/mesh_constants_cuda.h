@@ -71,6 +71,7 @@
 #endif
 
 // error checking after cuda function calls
+// (note: this synchronizes many calls, thus e.g. no asynchronuous memcpy possible)
 //#define ENABLE_VERY_SLOW_ERROR_CHECKING
 
 // maximum function
@@ -134,6 +135,28 @@
 // leads up to ~1% performance increase
 //#define MANUALLY_UNROLLED_LOOPS
 
+// compiler specifications
+// (optional) use launch_bounds specification to increase compiler optimization
+//
+// note: main kernel is Kernel_2_***_impl() which is limited by shared memory usage to 8 active blocks
+//       while register usage might use up to 9 blocks
+//
+// performance statistics: kernel Kernel_2_noatt_impl():
+//       shared memory per block = 6100    for Kepler: total = 49152 -> limits active blocks to 8
+//       registers per thread    = 53
+//       registers per block     = 7168                total = 65536 -> limits active blocks to 9
+//
+// performance statistics: kernel Kernel_2_att_impl():
+//       shared memory per block = 6100    for Kepler: total = 49152 -> limits active blocks to 8
+//       registers per thread    = 59
+//       registers per block     = 8192                total = 65536 -> limits active blocks to 8
+//
+//
+// (depending on GPU type, register spilling might slow down the performance)
+// (uncomment if desired)
+//#define USE_LAUNCH_BOUNDS
+//#define LAUNCH_MIN_BLOCKS 8
+
 /* ----------------------------------------------------------------------------------------------- */
 
 // cuda kernel block size for updating displacements/potential (newmark time scheme)
@@ -149,13 +172,9 @@
 
 // indexing
 #define INDEX2(xsize,x,y) x + (y)*xsize
-
 #define INDEX3(xsize,ysize,x,y,z) x + xsize*(y + ysize*z)
-
 #define INDEX4(xsize,ysize,zsize,x,y,z,i) x + xsize*(y + ysize*(z + zsize*i))
-
 #define INDEX5(xsize,ysize,zsize,isize,x,y,z,i,j) x + xsize*(y + ysize*(z + zsize*(i + isize*(j))))
-
 #define INDEX6(xsize,ysize,zsize,isize,jsize,x,y,z,i,j,k) x + xsize*(y + ysize*(z + zsize*(i + isize*(j + jsize*k))))
 
 #define INDEX4_PADDED(xsize,ysize,zsize,x,y,z,i) x + xsize*(y + ysize*z) + (i)*NGLL3_PADDED
@@ -173,6 +192,16 @@ typedef float realw;
 
 // textures
 typedef texture<float, cudaTextureType1D, cudaReadModeElementType> realw_texture;
+
+// restricted pointers: improves performance on Kepler ~ 10%
+// see: http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#restrict
+typedef const float* __restrict__ realw_const_p;
+// otherwise use:
+//typedef const float* realw_const_p;
+
+typedef float* __restrict__ realw_p;
+// otherwise use:
+//typedef float* realw_p;
 
 
 /* ----------------------------------------------------------------------------------------------- */

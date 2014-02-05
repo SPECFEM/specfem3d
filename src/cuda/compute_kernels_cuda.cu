@@ -299,13 +299,13 @@ __global__ void compute_kernels_strength_noise_cuda_kernel(realw* displ,
     int j = free_surface_ijk[INDEX3(NDIM,NGLL2,1,igll,iface)] - 1;
     int k = free_surface_ijk[INDEX3(NDIM,NGLL2,2,igll,iface)] - 1;
 
-    int iglob = ibool[INDEX4(5,5,5,i,j,k,ispec)] - 1 ;
+    int iglob = ibool[INDEX4(NGLLX,NGLLX,NGLLX,i,j,k,ispec)] - 1 ;
 
     realw eta = ( noise_surface_movie[INDEX3(NDIM,NGLL2,0,igll,iface)]*normal_x_noise[ipoin]+
                  noise_surface_movie[INDEX3(NDIM,NGLL2,1,igll,iface)]*normal_y_noise[ipoin]+
                  noise_surface_movie[INDEX3(NDIM,NGLL2,2,igll,iface)]*normal_z_noise[ipoin]);
 
-    Sigma_kl[INDEX4(5,5,5,i,j,k,ispec)] += deltat*eta*(normal_x_noise[ipoin]*displ[3*iglob]+
+    Sigma_kl[INDEX4(NGLLX,NGLLX,NGLLX,i,j,k,ispec)] += deltat*eta*(normal_x_noise[ipoin]*displ[3*iglob]+
                                                        normal_y_noise[ipoin]*displ[1+3*iglob]+
                                                        normal_z_noise[ipoin]*displ[2+3*iglob]);
   }

@@ -75,14 +75,11 @@ __global__ void compute_add_sources_kernel(realw* accel,
       if(ispec_is_inner[ispec] == phase_is_inner && ispec_is_elastic[ispec] ) {
 
         stf = (realw) stf_pre_compute[isource];
-        iglob = ibool[INDEX4(5,5,5,i,j,k,ispec)]-1;
+        iglob = ibool[INDEX4(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
 
-        atomicAdd(&accel[iglob*3],
-                  sourcearrays[INDEX5(NSOURCES, 3, 5, 5,isource, 0, i,j,k)]*stf);
-        atomicAdd(&accel[iglob*3+1],
-                  sourcearrays[INDEX5(NSOURCES, 3, 5, 5,isource, 1, i,j,k)]*stf);
-        atomicAdd(&accel[iglob*3+2],
-                  sourcearrays[INDEX5(NSOURCES, 3, 5, 5,isource, 2, i,j,k)]*stf);
+        atomicAdd(&accel[iglob*3],sourcearrays[INDEX5(NSOURCES,NDIM,NGLLX,NGLLX,isource, 0,i,j,k)]*stf);
+        atomicAdd(&accel[iglob*3+1],sourcearrays[INDEX5(NSOURCES,NDIM,NGLLX,NGLLX,isource, 1,i,j,k)]*stf);
+        atomicAdd(&accel[iglob*3+2],sourcearrays[INDEX5(NSOURCES,NDIM,NGLLX,NGLLX,isource, 2,i,j,k)]*stf);
       }
     }
   }
@@ -269,23 +266,12 @@ __global__ void add_sources_el_SIM_TYPE_2_OR_3_kernel(realw* accel,
         int i = threadIdx.x;
         int j = threadIdx.y;
         int k = threadIdx.z;
-        int iglob = ibool[INDEX4(5,5,5,i,j,k,ispec)]-1;
+        int iglob = ibool[INDEX4(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
 
         // atomic operations are absolutely necessary for correctness!
-        atomicAdd(&accel[3*iglob],adj_sourcearrays[INDEX5(5,5,5,3,
-                                                              i,j,k,
-                                                              0,
-                                                              irec_local)]);
-
-        atomicAdd(&accel[1+3*iglob], adj_sourcearrays[INDEX5(5,5,5,3,
-                                                             i,j,k,
-                                                             1,
-                                                             irec_local)]);
-
-        atomicAdd(&accel[2+3*iglob],adj_sourcearrays[INDEX5(5,5,5,3,
-                                                            i,j,k,
-                                                            2,
-                                                            irec_local)]);
+        atomicAdd(&accel[3*iglob],adj_sourcearrays[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,0,irec_local)]);
+        atomicAdd(&accel[1+3*iglob], adj_sourcearrays[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,1,irec_local)]);
+        atomicAdd(&accel[2+3*iglob],adj_sourcearrays[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,2,irec_local)]);
       }
     } // ispec_is_elastic
   }
@@ -324,47 +310,46 @@ void FC_FUNC_(add_sources_el_sim_type_2_or_3,
   // build slice of adj_sourcearrays because full array is *very* large.
   // note: this extracts array values for local adjoint sources at given time step "time_index"
   //          from large adj_sourcearrays array into h_adj_sourcearrays_slice
-  int ispec,i,j,k;
-  int irec_local = 0;
+  int ispec,i,j,k,irec_local,it_index;
+
+  it_index = (*time_index) - 1;
+  irec_local = 0;
+  
   for(int irec = 0; irec < *nrec; irec++) {
     if(mp->myrank == h_islice_selected_rec[irec]) {
-      irec_local++;
-
       // takes only elastic sources
       ispec = h_ispec_selected_rec[irec] - 1;
 
+      // only for elastic elements
       if( h_ispec_is_elastic[ispec] ){
 
         if( h_ispec_is_inner[ispec] == *phase_is_inner) {
-          for(k=0;k<5;k++) {
-            for(j=0;j<5;j++) {
-              for(i=0;i<5;i++) {
+          for(k=0;k<NGLLX;k++) {
+            for(j=0;j<NGLLX;j++) {
+              for(i=0;i<NGLLX;i++) {
 
-                mp->h_adj_sourcearrays_slice[INDEX5(5,5,5,3,i,j,k,0,irec_local-1)]
+                mp->h_adj_sourcearrays_slice[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,0,irec_local)]
                         = h_adj_sourcearrays[INDEX6(*nadj_rec_local,
-                                                    *NTSTEP_BETWEEN_READ_ADJSRC,
-                                                    3,5,5,
-                                                    irec_local-1,(*time_index)-1,
-                                                    0,i,j,k)];
+                                                    *NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLX,
+                                                    irec_local,it_index,0,i,j,k)];
 
-                mp->h_adj_sourcearrays_slice[INDEX5(5,5,5,3,i,j,k,1,irec_local-1)]
+                mp->h_adj_sourcearrays_slice[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,1,irec_local)]
                         = h_adj_sourcearrays[INDEX6(*nadj_rec_local,
-                                                    *NTSTEP_BETWEEN_READ_ADJSRC,
-                                                    3,5,5,
-                                                    irec_local-1,(*time_index)-1,
-                                                    1,i,j,k)];
+                                                    *NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLX,
+                                                    irec_local,it_index,1,i,j,k)];
 
-                mp->h_adj_sourcearrays_slice[INDEX5(5,5,5,3,i,j,k,2,irec_local-1)]
+                mp->h_adj_sourcearrays_slice[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,2,irec_local)]
                         = h_adj_sourcearrays[INDEX6(*nadj_rec_local,
-                                                    *NTSTEP_BETWEEN_READ_ADJSRC,
-                                                    3,5,5,
-                                                    irec_local-1,(*time_index)-1,
-                                                    2,i,j,k)];
+                                                    *NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLX,
+                                                    irec_local,it_index,2,i,j,k)];
               }
             }
           }
         } // phase_is_inner
       } // h_ispec_is_elastic
+
+      // increases local receivers counter
+      irec_local++;
     }
   }
   // check all local sources were added
