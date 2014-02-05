@@ -129,12 +129,9 @@ TRACE("\ttransfer_boun_accel_from_device");
     dim3 grid(num_blocks_x,num_blocks_y);
     dim3 threads(blocksize,1,1);
 
-    //timing for memory xfer
-    // cudaEvent_t start, stop;
-    // realw time;
-    // cudaEventCreate(&start);
-    // cudaEventCreate(&stop);
-    // cudaEventRecord( start, 0 );
+    // Cuda timing
+    //cudaEvent_t start, stop;
+    //start_timing_cuda(&start,&stop);
 
     if(*FORWARD_OR_ADJOINT == 1) {
       prepare_boundary_accel_on_device<<<grid,threads,0,mp->compute_stream>>>(mp->d_accel,mp->d_send_accel_buffer,
@@ -170,13 +167,9 @@ TRACE("\ttransfer_boun_accel_from_device");
                               mp->size_mpi_buffer*sizeof(realw),cudaMemcpyDeviceToHost),97002);
     }
 
+    // Cuda timing
     // finish timing of kernel+memcpy
-    // cudaEventRecord( stop, 0 );
-    // cudaEventSynchronize( stop );
-    // cudaEventElapsedTime( &time, start, stop );
-    // cudaEventDestroy( start );
-    // cudaEventDestroy( stop );
-    // printf("boundary xfer d->h Time: %f ms\n",time);
+    //stop_timing_cuda(&start,&stop,"prepare_boundary_accel_on_device");
   }
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
@@ -677,770 +670,6 @@ __device__ void compute_element_gravity(int tx,int working_element,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-// KERNEL 2
-//
-// for elastic domains
-
-/* ----------------------------------------------------------------------------------------------- */
-
-/*
-
-// unused
-// original elastic kernel, please leave this code here for reference...
-
-__global__ void Kernel_2_impl(int nb_blocks_to_compute,
-                              int NGLOB,
-                              int* d_ibool,
-                              int* d_phase_ispec_inner_elastic, int num_phase_ispec_elastic,
-                              int d_iphase,
-                              int use_mesh_coloring_gpu,
-                              realw d_deltat,
-                              realw* d_displ,realw* d_veloc,realw* d_accel,
-                              realw* d_xix, realw* d_xiy, realw* d_xiz,
-                              realw* d_etax, realw* d_etay, realw* d_etaz,
-                              realw* d_gammax, realw* d_gammay, realw* d_gammaz,
-                              realw* d_hprime_xx,
-                              realw* d_hprimewgll_xx,
-                              realw* d_wgllwgll_xy,realw* d_wgllwgll_xz,realw* d_wgllwgll_yz,
-                              realw* d_kappav, realw* d_muv,
-                              int COMPUTE_AND_STORE_STRAIN,
-                              realw* epsilondev_xx,realw* epsilondev_yy,realw* epsilondev_xy,
-                              realw* epsilondev_xz,realw* epsilondev_yz,
-                              realw* epsilon_trace_over_3,
-                              int SIMULATION_TYPE,
-                              int ATTENUATION,
-                              int NSPEC,
-                              realw* one_minus_sum_beta,realw* factor_common,
-                              realw* R_xx, realw* R_yy, realw* R_xy, realw* R_xz, realw* R_yz,
-                              realw* alphaval,realw* betaval,realw* gammaval,
-                              int ANISOTROPY,
-                              realw* d_c11store,realw* d_c12store,realw* d_c13store,
-                              realw* d_c14store,realw* d_c15store,realw* d_c16store,
-                              realw* d_c22store,realw* d_c23store,realw* d_c24store,
-                              realw* d_c25store,realw* d_c26store,realw* d_c33store,
-                              realw* d_c34store,realw* d_c35store,realw* d_c36store,
-                              realw* d_c44store,realw* d_c45store,realw* d_c46store,
-                              realw* d_c55store,realw* d_c56store,realw* d_c66store,
-                              int gravity,
-                              realw* d_minus_g,
-                              realw* d_minus_deriv_gravity,
-                              realw* d_rhostore,
-                              realw* wgll_cube){
-
-  int bx = blockIdx.y*gridDim.x + blockIdx.x;
-  int tx = threadIdx.x;
-
-  const int NGLL3_ALIGN = NGLL3_PADDED;
-
-  int K = (tx/NGLL2);
-  int J = ((tx-K*NGLL2)/NGLLX);
-  int I = (tx-K*NGLL2-J*NGLLX);
-
-  int active,offset;
-  int iglob = 0;
-  int working_element;
-
-  realw tempx1l,tempx2l,tempx3l,tempy1l,tempy2l,tempy3l,tempz1l,tempz2l,tempz3l;
-  realw xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl;
-  realw duxdxl,duxdyl,duxdzl,duydxl,duydyl,duydzl,duzdxl,duzdyl,duzdzl;
-  realw duxdxl_plus_duydyl,duxdxl_plus_duzdzl,duydyl_plus_duzdzl;
-  realw duxdyl_plus_duydxl,duzdxl_plus_duxdzl,duzdyl_plus_duydzl;
-
-  realw tempx1l_att,tempx2l_att,tempx3l_att,tempy1l_att,tempy2l_att,tempy3l_att,tempz1l_att,tempz2l_att,tempz3l_att;
-  realw duxdxl_att,duxdyl_att,duxdzl_att,duydxl_att,duydyl_att,duydzl_att,duzdxl_att,duzdyl_att,duzdzl_att;
-  realw duxdyl_plus_duydxl_att,duzdxl_plus_duxdzl_att,duzdyl_plus_duydzl_att;
-
-  realw fac1,fac2,fac3,lambdal,mul,lambdalplus2mul,kappal;
-  realw sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz;
-  realw epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc,epsilondev_xz_loc,epsilondev_yz_loc;
-
-  realw c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66;
-  realw sum_terms1,sum_terms2,sum_terms3;
-
-  // gravity variables
-  realw sigma_yx,sigma_zx,sigma_zy;
-  realw rho_s_H1,rho_s_H2,rho_s_H3;
-
-#ifndef MANUALLY_UNROLLED_LOOPS
-  int l;
-  realw hp1,hp2,hp3;
-#endif
-
-  __shared__ realw s_dummyx_loc[NGLL3];
-  __shared__ realw s_dummyy_loc[NGLL3];
-  __shared__ realw s_dummyz_loc[NGLL3];
-
-  __shared__ realw s_dummyx_loc_att[NGLL3];
-  __shared__ realw s_dummyy_loc_att[NGLL3];
-  __shared__ realw s_dummyz_loc_att[NGLL3];
-
-  __shared__ realw s_tempx1[NGLL3];
-  __shared__ realw s_tempx2[NGLL3];
-  __shared__ realw s_tempx3[NGLL3];
-  __shared__ realw s_tempy1[NGLL3];
-  __shared__ realw s_tempy2[NGLL3];
-  __shared__ realw s_tempy3[NGLL3];
-  __shared__ realw s_tempz1[NGLL3];
-  __shared__ realw s_tempz2[NGLL3];
-  __shared__ realw s_tempz3[NGLL3];
-
-  __shared__ realw sh_hprime_xx[NGLL2];
-
-// use only NGLL^3 = 125 active threads, plus 3 inactive/ghost threads,
-// because we used memory padding from NGLL^3 = 125 to 128 to get coalescent memory accesses
-  active = (tx < NGLL3 && bx < nb_blocks_to_compute) ? 1:0;
-
-// copy from global memory to shared memory
-// each thread writes one of the NGLL^3 = 125 data points
-  if (active) {
-
-#ifdef USE_MESH_COLORING_GPU
-    working_element = bx;
-#else
-    //mesh coloring
-    if( use_mesh_coloring_gpu ){
-      working_element = bx;
-    }else{
-      // iphase-1 and working_element-1 for Fortran->C array conventions
-      working_element = d_phase_ispec_inner_elastic[bx + num_phase_ispec_elastic*(d_iphase-1)]-1;
-    }
-#endif
-
-    iglob = d_ibool[working_element*NGLL3 + tx]-1;
-
-#ifdef USE_TEXTURES_FIELDS
-    s_dummyx_loc[tx] = tex1Dfetch(d_displ_tex, iglob*3);
-    s_dummyy_loc[tx] = tex1Dfetch(d_displ_tex, iglob*3 + 1);
-    s_dummyz_loc[tx] = tex1Dfetch(d_displ_tex, iglob*3 + 2);
-#else
-    // changing iglob indexing to match fortran row changes fast style
-    s_dummyx_loc[tx] = d_displ[iglob*3];
-    s_dummyy_loc[tx] = d_displ[iglob*3 + 1];
-    s_dummyz_loc[tx] = d_displ[iglob*3 + 2];
-#endif
-  }
-
-  // JC JC here we will need to add GPU support for the new C-PML routines
-  if(ATTENUATION){
-    // use first order Taylor expansion of displacement for local storage of stresses
-    // at this current time step, to fix attenuation in a consistent way
-#ifdef USE_TEXTURES_FIELDS
-    s_dummyx_loc_att[tx] = s_dummyx_loc[tx] + d_deltat * tex1Dfetch(d_veloc_tex, iglob);
-    s_dummyy_loc_att[tx] = s_dummyy_loc[tx] + d_deltat * tex1Dfetch(d_veloc_tex, iglob + NGLOB);
-    s_dummyz_loc_att[tx] = s_dummyz_loc[tx] + d_deltat * tex1Dfetch(d_veloc_tex, iglob + 2*NGLOB);
-#else
-    s_dummyx_loc_att[tx] = s_dummyx_loc[tx] + d_deltat * d_veloc[iglob*3];
-    s_dummyy_loc_att[tx] = s_dummyy_loc[tx] + d_deltat * d_veloc[iglob*3 + 1];
-    s_dummyz_loc_att[tx] = s_dummyz_loc[tx] + d_deltat * d_veloc[iglob*3 + 2];
-#endif
-  }
-
-  if (tx < NGLL2) {
-    #ifdef USE_TEXTURES_CONSTANTS
-    sh_hprime_xx[tx] = tex1Dfetch(d_hprime_xx_tex,tx);
-    #else
-    sh_hprime_xx[tx] = d_hprime_xx[tx];
-    #endif
-  }
-
-// synchronize all the threads (one thread for each of the NGLL grid points of the
-// current spectral element) because we need the whole element to be ready in order
-// to be able to compute the matrix products along cut planes of the 3D element below
-  __syncthreads();
-
-  if (active) {
-
-#ifndef MANUALLY_UNROLLED_LOOPS
-
-    tempx1l = 0.f;
-    tempx2l = 0.f;
-    tempx3l = 0.f;
-
-    tempy1l = 0.f;
-    tempy2l = 0.f;
-    tempy3l = 0.f;
-
-    tempz1l = 0.f;
-    tempz2l = 0.f;
-    tempz3l = 0.f;
-
-    for (l=0;l<NGLLX;l++) {
-        hp1 = sh_hprime_xx[l*NGLLX+I];
-        offset = K*NGLL2+J*NGLLX+l;
-        tempx1l += s_dummyx_loc[offset]*hp1;
-        tempy1l += s_dummyy_loc[offset]*hp1;
-        tempz1l += s_dummyz_loc[offset]*hp1;
-
-        //assumes that hprime_xx = hprime_yy = hprime_zz
-        hp2 = sh_hprime_xx[l*NGLLX+J];
-        offset = K*NGLL2+l*NGLLX+I;
-        tempx2l += s_dummyx_loc[offset]*hp2;
-        tempy2l += s_dummyy_loc[offset]*hp2;
-        tempz2l += s_dummyz_loc[offset]*hp2;
-
-        hp3 = sh_hprime_xx[l*NGLLX+K];
-        offset = l*NGLL2+J*NGLLX+I;
-        tempx3l += s_dummyx_loc[offset]*hp3;
-        tempy3l += s_dummyy_loc[offset]*hp3;
-        tempz3l += s_dummyz_loc[offset]*hp3;
-
-    }
-
-    // JC JC here we will need to add GPU support for the new C-PML routines
-    if( ATTENUATION){
-      // temporary variables used for fixing attenuation in a consistent way
-
-      tempx1l_att = 0.f;
-      tempx2l_att = 0.f;
-      tempx3l_att = 0.f;
-
-      tempy1l_att = 0.f;
-      tempy2l_att = 0.f;
-      tempy3l_att = 0.f;
-
-      tempz1l_att = 0.f;
-      tempz2l_att = 0.f;
-      tempz3l_att = 0.f;
-
-      for (l=0;l<NGLLX;l++) {
-  hp1 = sh_hprime_xx[l*NGLLX+I];
-  offset = K*NGLL2+J*NGLLX+l;
-  tempx1l_att += s_dummyx_loc_att[offset]*hp1;
-  tempy1l_att += s_dummyy_loc_att[offset]*hp1;
-  tempz1l_att += s_dummyz_loc_att[offset]*hp1;
-
-  hp2 = sh_hprime_xx[l*NGLLX+J];
-  offset = K*NGLL2+l*NGLLX+I;
-  tempx2l_att += s_dummyx_loc_att[offset]*hp2;
-  tempy2l_att += s_dummyy_loc_att[offset]*hp2;
-  tempz2l_att += s_dummyz_loc_att[offset]*hp2;
-
-  hp3 = sh_hprime_xx[l*NGLLX+K];
-  offset = l*NGLL2+J*NGLLX+I;
-  tempx3l_att += s_dummyx_loc_att[offset]*hp3;
-  tempy3l_att += s_dummyy_loc_att[offset]*hp3;
-  tempz3l_att += s_dummyz_loc_att[offset]*hp3;
-
-      }
-    }
-
-#else
-
-    tempx1l = s_dummyx_loc[K*NGLL2+J*NGLLX]*d_hprime_xx[I]
-            + s_dummyx_loc[K*NGLL2+J*NGLLX+1]*d_hprime_xx[NGLLX+I]
-            + s_dummyx_loc[K*NGLL2+J*NGLLX+2]*d_hprime_xx[2*NGLLX+I]
-            + s_dummyx_loc[K*NGLL2+J*NGLLX+3]*d_hprime_xx[3*NGLLX+I]
-            + s_dummyx_loc[K*NGLL2+J*NGLLX+4]*d_hprime_xx[4*NGLLX+I];
-
-    tempy1l = s_dummyy_loc[K*NGLL2+J*NGLLX]*d_hprime_xx[I]
-            + s_dummyy_loc[K*NGLL2+J*NGLLX+1]*d_hprime_xx[NGLLX+I]
-            + s_dummyy_loc[K*NGLL2+J*NGLLX+2]*d_hprime_xx[2*NGLLX+I]
-            + s_dummyy_loc[K*NGLL2+J*NGLLX+3]*d_hprime_xx[3*NGLLX+I]
-            + s_dummyy_loc[K*NGLL2+J*NGLLX+4]*d_hprime_xx[4*NGLLX+I];
-
-    tempz1l = s_dummyz_loc[K*NGLL2+J*NGLLX]*d_hprime_xx[I]
-            + s_dummyz_loc[K*NGLL2+J*NGLLX+1]*d_hprime_xx[NGLLX+I]
-            + s_dummyz_loc[K*NGLL2+J*NGLLX+2]*d_hprime_xx[2*NGLLX+I]
-            + s_dummyz_loc[K*NGLL2+J*NGLLX+3]*d_hprime_xx[3*NGLLX+I]
-            + s_dummyz_loc[K*NGLL2+J*NGLLX+4]*d_hprime_xx[4*NGLLX+I];
-
-    tempx2l = s_dummyx_loc[K*NGLL2+I]*d_hprime_xx[J]
-            + s_dummyx_loc[K*NGLL2+NGLLX+I]*d_hprime_xx[NGLLX+J]
-            + s_dummyx_loc[K*NGLL2+2*NGLLX+I]*d_hprime_xx[2*NGLLX+J]
-            + s_dummyx_loc[K*NGLL2+3*NGLLX+I]*d_hprime_xx[3*NGLLX+J]
-            + s_dummyx_loc[K*NGLL2+4*NGLLX+I]*d_hprime_xx[4*NGLLX+J];
-
-    tempy2l = s_dummyy_loc[K*NGLL2+I]*d_hprime_xx[J]
-            + s_dummyy_loc[K*NGLL2+NGLLX+I]*d_hprime_xx[NGLLX+J]
-            + s_dummyy_loc[K*NGLL2+2*NGLLX+I]*d_hprime_xx[2*NGLLX+J]
-            + s_dummyy_loc[K*NGLL2+3*NGLLX+I]*d_hprime_xx[3*NGLLX+J]
-            + s_dummyy_loc[K*NGLL2+4*NGLLX+I]*d_hprime_xx[4*NGLLX+J];
-
-    tempz2l = s_dummyz_loc[K*NGLL2+I]*d_hprime_xx[J]
-            + s_dummyz_loc[K*NGLL2+NGLLX+I]*d_hprime_xx[NGLLX+J]
-            + s_dummyz_loc[K*NGLL2+2*NGLLX+I]*d_hprime_xx[2*NGLLX+J]
-            + s_dummyz_loc[K*NGLL2+3*NGLLX+I]*d_hprime_xx[3*NGLLX+J]
-            + s_dummyz_loc[K*NGLL2+4*NGLLX+I]*d_hprime_xx[4*NGLLX+J];
-
-    tempx3l = s_dummyx_loc[J*NGLLX+I]*d_hprime_xx[K]
-            + s_dummyx_loc[NGLL2+J*NGLLX+I]*d_hprime_xx[NGLLX+K]
-            + s_dummyx_loc[2*NGLL2+J*NGLLX+I]*d_hprime_xx[2*NGLLX+K]
-            + s_dummyx_loc[3*NGLL2+J*NGLLX+I]*d_hprime_xx[3*NGLLX+K]
-            + s_dummyx_loc[4*NGLL2+J*NGLLX+I]*d_hprime_xx[4*NGLLX+K];
-
-    tempy3l = s_dummyy_loc[J*NGLLX+I]*d_hprime_xx[K]
-            + s_dummyy_loc[NGLL2+J*NGLLX+I]*d_hprime_xx[NGLLX+K]
-            + s_dummyy_loc[2*NGLL2+J*NGLLX+I]*d_hprime_xx[2*NGLLX+K]
-            + s_dummyy_loc[3*NGLL2+J*NGLLX+I]*d_hprime_xx[3*NGLLX+K]
-            + s_dummyy_loc[4*NGLL2+J*NGLLX+I]*d_hprime_xx[4*NGLLX+K];
-
-    tempz3l = s_dummyz_loc[J*NGLLX+I]*d_hprime_xx[K]
-            + s_dummyz_loc[NGLL2+J*NGLLX+I]*d_hprime_xx[NGLLX+K]
-            + s_dummyz_loc[2*NGLL2+J*NGLLX+I]*d_hprime_xx[2*NGLLX+K]
-            + s_dummyz_loc[3*NGLL2+J*NGLLX+I]*d_hprime_xx[3*NGLLX+K]
-            + s_dummyz_loc[4*NGLL2+J*NGLLX+I]*d_hprime_xx[4*NGLLX+K];
-
-    // JC JC here we will need to add GPU support for the new C-PML routines
-    if( ATTENUATION){
-      // temporary variables used for fixing attenuation in a consistent way
-
-      tempx1l_att = s_dummyx_loc_att[K*NGLL2+J*NGLLX]*d_hprime_xx[I]
-  + s_dummyx_loc_att[K*NGLL2+J*NGLLX+1]*d_hprime_xx[NGLLX+I]
-  + s_dummyx_loc_att[K*NGLL2+J*NGLLX+2]*d_hprime_xx[2*NGLLX+I]
-  + s_dummyx_loc_att[K*NGLL2+J*NGLLX+3]*d_hprime_xx[3*NGLLX+I]
-  + s_dummyx_loc_att[K*NGLL2+J*NGLLX+4]*d_hprime_xx[4*NGLLX+I];
-
-      tempy1l_att = s_dummyy_loc_att[K*NGLL2+J*NGLLX]*d_hprime_xx[I]
-  + s_dummyy_loc_att[K*NGLL2+J*NGLLX+1]*d_hprime_xx[NGLLX+I]
-  + s_dummyy_loc_att[K*NGLL2+J*NGLLX+2]*d_hprime_xx[2*NGLLX+I]
-  + s_dummyy_loc_att[K*NGLL2+J*NGLLX+3]*d_hprime_xx[3*NGLLX+I]
-  + s_dummyy_loc_att[K*NGLL2+J*NGLLX+4]*d_hprime_xx[4*NGLLX+I];
-
-      tempz1l_att = s_dummyz_loc_att[K*NGLL2+J*NGLLX]*d_hprime_xx[I]
-  + s_dummyz_loc_att[K*NGLL2+J*NGLLX+1]*d_hprime_xx[NGLLX+I]
-  + s_dummyz_loc_att[K*NGLL2+J*NGLLX+2]*d_hprime_xx[2*NGLLX+I]
-  + s_dummyz_loc_att[K*NGLL2+J*NGLLX+3]*d_hprime_xx[3*NGLLX+I]
-  + s_dummyz_loc_att[K*NGLL2+J*NGLLX+4]*d_hprime_xx[4*NGLLX+I];
-
-      tempx2l_att = s_dummyx_loc_att[K*NGLL2+I]*d_hprime_xx[J]
-  + s_dummyx_loc_att[K*NGLL2+NGLLX+I]*d_hprime_xx[NGLLX+J]
-  + s_dummyx_loc_att[K*NGLL2+2*NGLLX+I]*d_hprime_xx[2*NGLLX+J]
-  + s_dummyx_loc_att[K*NGLL2+3*NGLLX+I]*d_hprime_xx[3*NGLLX+J]
-  + s_dummyx_loc_att[K*NGLL2+4*NGLLX+I]*d_hprime_xx[4*NGLLX+J];
-
-      tempy2l_att = s_dummyy_loc_att[K*NGLL2+I]*d_hprime_xx[J]
-  + s_dummyy_loc_att[K*NGLL2+NGLLX+I]*d_hprime_xx[NGLLX+J]
-  + s_dummyy_loc_att[K*NGLL2+2*NGLLX+I]*d_hprime_xx[2*NGLLX+J]
-  + s_dummyy_loc_att[K*NGLL2+3*NGLLX+I]*d_hprime_xx[3*NGLLX+J]
-  + s_dummyy_loc_att[K*NGLL2+4*NGLLX+I]*d_hprime_xx[4*NGLLX+J];
-
-      tempz2l_att = s_dummyz_loc_att[K*NGLL2+I]*d_hprime_xx[J]
-  + s_dummyz_loc_att[K*NGLL2+NGLLX+I]*d_hprime_xx[NGLLX+J]
-  + s_dummyz_loc_att[K*NGLL2+2*NGLLX+I]*d_hprime_xx[2*NGLLX+J]
-  + s_dummyz_loc_att[K*NGLL2+3*NGLLX+I]*d_hprime_xx[3*NGLLX+J]
-  + s_dummyz_loc_att[K*NGLL2+4*NGLLX+I]*d_hprime_xx[4*NGLLX+J];
-
-      tempx3l_att = s_dummyx_loc_att[J*NGLLX+I]*d_hprime_xx[K]
-  + s_dummyx_loc_att[NGLL2+J*NGLLX+I]*d_hprime_xx[NGLLX+K]
-  + s_dummyx_loc_att[2*NGLL2+J*NGLLX+I]*d_hprime_xx[2*NGLLX+K]
-  + s_dummyx_loc_att[3*NGLL2+J*NGLLX+I]*d_hprime_xx[3*NGLLX+K]
-  + s_dummyx_loc_att[4*NGLL2+J*NGLLX+I]*d_hprime_xx[4*NGLLX+K];
-
-      tempy3l_att = s_dummyy_loc_att[J*NGLLX+I]*d_hprime_xx[K]
-  + s_dummyy_loc_att[NGLL2+J*NGLLX+I]*d_hprime_xx[NGLLX+K]
-  + s_dummyy_loc_att[2*NGLL2+J*NGLLX+I]*d_hprime_xx[2*NGLLX+K]
-  + s_dummyy_loc_att[3*NGLL2+J*NGLLX+I]*d_hprime_xx[3*NGLLX+K]
-  + s_dummyy_loc_att[4*NGLL2+J*NGLLX+I]*d_hprime_xx[4*NGLLX+K];
-
-      tempz3l_att = s_dummyz_loc_att[J*NGLLX+I]*d_hprime_xx[K]
-  + s_dummyz_loc_att[NGLL2+J*NGLLX+I]*d_hprime_xx[NGLLX+K]
-  + s_dummyz_loc_att[2*NGLL2+J*NGLLX+I]*d_hprime_xx[2*NGLLX+K]
-  + s_dummyz_loc_att[3*NGLL2+J*NGLLX+I]*d_hprime_xx[3*NGLLX+K]
-  + s_dummyz_loc_att[4*NGLL2+J*NGLLX+I]*d_hprime_xx[4*NGLLX+K];
-    }
-
-#endif
-
-// compute derivatives of ux, uy and uz with respect to x, y and z
-    offset = working_element*NGLL3_ALIGN + tx;
-
-    xixl = d_xix[offset];
-    xiyl = d_xiy[offset];
-    xizl = d_xiz[offset];
-    etaxl = d_etax[offset];
-    etayl = d_etay[offset];
-    etazl = d_etaz[offset];
-    gammaxl = d_gammax[offset];
-    gammayl = d_gammay[offset];
-    gammazl = d_gammaz[offset];
-
-    duxdxl = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l;
-    duxdyl = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l;
-    duxdzl = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l;
-
-    duydxl = xixl*tempy1l + etaxl*tempy2l + gammaxl*tempy3l;
-    duydyl = xiyl*tempy1l + etayl*tempy2l + gammayl*tempy3l;
-    duydzl = xizl*tempy1l + etazl*tempy2l + gammazl*tempy3l;
-
-    duzdxl = xixl*tempz1l + etaxl*tempz2l + gammaxl*tempz3l;
-    duzdyl = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l;
-    duzdzl = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l;
-
-    // JC JC here we will need to add GPU support for the new C-PML routines
-
-    // precompute some sums to save CPU time
-    duxdxl_plus_duydyl = duxdxl + duydyl;
-    duxdxl_plus_duzdzl = duxdxl + duzdzl;
-    duydyl_plus_duzdzl = duydyl + duzdzl;
-    duxdyl_plus_duydxl = duxdyl + duydxl;
-    duzdxl_plus_duxdzl = duzdxl + duxdzl;
-    duzdyl_plus_duydzl = duzdyl + duydzl;
-
-    // JC JC here we will need to add GPU support for the new C-PML routines
-    if( ATTENUATION){
-      // temporary variables used for fixing attenuation in a consistent way
-
-      duxdxl_att = xixl*tempx1l_att + etaxl*tempx2l_att + gammaxl*tempx3l_att;
-      duxdyl_att = xiyl*tempx1l_att + etayl*tempx2l_att + gammayl*tempx3l_att;
-      duxdzl_att = xizl*tempx1l_att + etazl*tempx2l_att + gammazl*tempx3l_att;
-
-      duydxl_att = xixl*tempy1l_att + etaxl*tempy2l_att + gammaxl*tempy3l_att;
-      duydyl_att = xiyl*tempy1l_att + etayl*tempy2l_att + gammayl*tempy3l_att;
-      duydzl_att = xizl*tempy1l_att + etazl*tempy2l_att + gammazl*tempy3l_att;
-
-      duzdxl_att = xixl*tempz1l_att + etaxl*tempz2l_att + gammaxl*tempz3l_att;
-      duzdyl_att = xiyl*tempz1l_att + etayl*tempz2l_att + gammayl*tempz3l_att;
-      duzdzl_att = xizl*tempz1l_att + etazl*tempz2l_att + gammazl*tempz3l_att;
-
-      // precompute some sums to save CPU time
-      duxdyl_plus_duydxl_att = duxdyl_att + duydxl_att;
-      duzdxl_plus_duxdzl_att = duzdxl_att + duxdzl_att;
-      duzdyl_plus_duydzl_att = duzdyl_att + duydzl_att;
-
-      // computes deviatoric strain attenuation and/or for kernel calculations
-      if(COMPUTE_AND_STORE_STRAIN) {
-  realw templ = 0.33333333333333333333f * (duxdxl_att + duydyl_att + duzdzl_att); // 1./3. = 0.33333
-
-  // local storage: stresses at this current time step
-  epsilondev_xx_loc = duxdxl_att - templ;
-  epsilondev_yy_loc = duydyl_att - templ;
-  epsilondev_xy_loc = 0.5f * duxdyl_plus_duydxl_att;
-  epsilondev_xz_loc = 0.5f * duzdxl_plus_duxdzl_att;
-  epsilondev_yz_loc = 0.5f * duzdyl_plus_duydzl_att;
-
-  if(SIMULATION_TYPE == 3) {
-    epsilon_trace_over_3[tx + working_element*NGLL3] = templ;
-  }
-
-  // JC JC here we will need to add GPU support for the new C-PML routines
-      }
-    }else{
-      // computes deviatoric strain attenuation and/or for kernel calculations
-      if(COMPUTE_AND_STORE_STRAIN) {
-  realw templ = 0.33333333333333333333f * (duxdxl + duydyl + duzdzl); // 1./3. = 0.33333
-
-  //  epsilondev_xx[offset] = duxdxl - templ;
-  //  epsilondev_yy[offset] = duydyl - templ;
-  //  epsilondev_xy[offset] = 0.5f * duxdyl_plus_duydxl;
-  //  epsilondev_xz[offset] = 0.5f * duzdxl_plus_duxdzl;
-  //  epsilondev_yz[offset] = 0.5f * duzdyl_plus_duydzl;
-
-  // local storage: stresses at this current time step
-  epsilondev_xx_loc = duxdxl - templ;
-  epsilondev_yy_loc = duydyl - templ;
-  epsilondev_xy_loc = 0.5f * duxdyl_plus_duydxl;
-  epsilondev_xz_loc = 0.5f * duzdxl_plus_duxdzl;
-  epsilondev_yz_loc = 0.5f * duzdyl_plus_duydzl;
-
-  if(SIMULATION_TYPE == 3) {
-    epsilon_trace_over_3[tx + working_element*NGLL3] = templ;
-  }
-      }
-    }
-
-    // compute elements with an elastic isotropic rheology
-    kappal = d_kappav[offset];
-    mul = d_muv[offset];
-
-    // attenuation
-    if(ATTENUATION){
-      // use unrelaxed parameters if attenuation
-      mul  = mul * one_minus_sum_beta[tx+working_element*NGLL3]; // (i,j,k,ispec)
-    }
-
-    // full anisotropic case, stress calculations
-    if(ANISOTROPY){
-
-      c11 = d_c11store[offset];
-      c12 = d_c12store[offset];
-      c13 = d_c13store[offset];
-      c14 = d_c14store[offset];
-      c15 = d_c15store[offset];
-      c16 = d_c16store[offset];
-      c22 = d_c22store[offset];
-      c23 = d_c23store[offset];
-      c24 = d_c24store[offset];
-      c25 = d_c25store[offset];
-      c26 = d_c26store[offset];
-      c33 = d_c33store[offset];
-      c34 = d_c34store[offset];
-      c35 = d_c35store[offset];
-      c36 = d_c36store[offset];
-      c44 = d_c44store[offset];
-      c45 = d_c45store[offset];
-      c46 = d_c46store[offset];
-      c55 = d_c55store[offset];
-      c56 = d_c56store[offset];
-      c66 = d_c66store[offset];
-
-      sigma_xx = c11*duxdxl + c16*duxdyl_plus_duydxl + c12*duydyl +
-                 c15*duzdxl_plus_duxdzl + c14*duzdyl_plus_duydzl + c13*duzdzl;
-      sigma_yy = c12*duxdxl + c26*duxdyl_plus_duydxl + c22*duydyl +
-                 c25*duzdxl_plus_duxdzl + c24*duzdyl_plus_duydzl + c23*duzdzl;
-      sigma_zz = c13*duxdxl + c36*duxdyl_plus_duydxl + c23*duydyl +
-                 c35*duzdxl_plus_duxdzl + c34*duzdyl_plus_duydzl + c33*duzdzl;
-      sigma_xy = c16*duxdxl + c66*duxdyl_plus_duydxl + c26*duydyl +
-                 c56*duzdxl_plus_duxdzl + c46*duzdyl_plus_duydzl + c36*duzdzl;
-      sigma_xz = c15*duxdxl + c56*duxdyl_plus_duydxl + c25*duydyl +
-                 c55*duzdxl_plus_duxdzl + c45*duzdyl_plus_duydzl + c35*duzdzl;
-      sigma_yz = c14*duxdxl + c46*duxdyl_plus_duydxl + c24*duydyl +
-                 c45*duzdxl_plus_duxdzl + c44*duzdyl_plus_duydzl + c34*duzdzl;
-
-    }else{
-
-      // isotropic case
-
-      lambdalplus2mul = kappal + 1.33333333333333333333f * mul;  // 4./3. = 1.3333333
-      lambdal = lambdalplus2mul - 2.0f * mul;
-
-      // compute the six components of the stress tensor sigma
-      sigma_xx = lambdalplus2mul*duxdxl + lambdal*duydyl_plus_duzdzl;
-      sigma_yy = lambdalplus2mul*duydyl + lambdal*duxdxl_plus_duzdzl;
-      sigma_zz = lambdalplus2mul*duzdzl + lambdal*duxdxl_plus_duydyl;
-
-      sigma_xy = mul*duxdyl_plus_duydxl;
-      sigma_xz = mul*duzdxl_plus_duxdzl;
-      sigma_yz = mul*duzdyl_plus_duydzl;
-    }
-
-    if(ATTENUATION){
-      // subtracts memory variables if attenuation
-      compute_element_att_stress(tx,working_element,NSPEC,
-                                 R_xx,R_yy,R_xy,R_xz,R_yz,
-                                 &sigma_xx,&sigma_yy,&sigma_zz,&sigma_xy,&sigma_xz,&sigma_yz);
-    }
-
-    jacobianl = 1.0f / (xixl*(etayl*gammazl-etazl*gammayl)-xiyl*(etaxl*gammazl-etazl*gammaxl)+xizl*(etaxl*gammayl-etayl*gammaxl));
-
-    // define symmetric components (needed for non-symmetric dot product and sigma for gravity)
-    sigma_yx = sigma_xy;
-    sigma_zx = sigma_xz;
-    sigma_zy = sigma_yz;
-
-    if( gravity ){
-      //  computes non-symmetric terms for gravity
-      compute_element_gravity(tx,working_element,d_ibool,d_minus_g,d_minus_deriv_gravity,
-                              d_rhostore,wgll_cube,jacobianl,
-                              s_dummyx_loc,s_dummyy_loc,s_dummyz_loc,
-                              &sigma_xx,&sigma_yy,&sigma_xz,&sigma_yz,
-                              &rho_s_H1,&rho_s_H2,&rho_s_H3);
-    }
-
-    // form dot product with test vector, non-symmetric form
-    s_tempx1[tx] = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl);
-    s_tempy1[tx] = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_zy*xizl);
-    s_tempz1[tx] = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl);
-
-    s_tempx2[tx] = jacobianl * (sigma_xx*etaxl + sigma_yx*etayl + sigma_zx*etazl);
-    s_tempy2[tx] = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_zy*etazl);
-    s_tempz2[tx] = jacobianl * (sigma_xz*etaxl + sigma_yz*etayl + sigma_zz*etazl);
-
-    s_tempx3[tx] = jacobianl * (sigma_xx*gammaxl + sigma_yx*gammayl + sigma_zx*gammazl);
-    s_tempy3[tx] = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_zy*gammazl);
-    s_tempz3[tx] = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl);
-
-  }
-
-// synchronize all the threads (one thread for each of the NGLL grid points of the
-// current spectral element) because we need the whole element to be ready in order
-// to be able to compute the matrix products along cut planes of the 3D element below
-  __syncthreads();
-
-  // JC JC here we will need to add GPU support for the new C-PML routines
-
-  if (active) {
-
-#ifndef MANUALLY_UNROLLED_LOOPS
-
-    tempx1l = 0.f;
-    tempy1l = 0.f;
-    tempz1l = 0.f;
-
-    tempx2l = 0.f;
-    tempy2l = 0.f;
-    tempz2l = 0.f;
-
-    tempx3l = 0.f;
-    tempy3l = 0.f;
-    tempz3l = 0.f;
-
-    for (l=0;l<NGLLX;l++) {
-
-      fac1 = d_hprimewgll_xx[I*NGLLX+l];
-      offset = K*NGLL2+J*NGLLX+l;
-      tempx1l += s_tempx1[offset]*fac1;
-      tempy1l += s_tempy1[offset]*fac1;
-      tempz1l += s_tempz1[offset]*fac1;
-
-      // assumes hprimewgll_xx == hprimewgll_yy == hprimewgll_zz
-      fac2 = d_hprimewgll_xx[J*NGLLX+l];
-      offset = K*NGLL2+l*NGLLX+I;
-      tempx2l += s_tempx2[offset]*fac2;
-      tempy2l += s_tempy2[offset]*fac2;
-      tempz2l += s_tempz2[offset]*fac2;
-
-      fac3 = d_hprimewgll_xx[K*NGLLX+l];
-      offset = l*NGLL2+J*NGLLX+I;
-      tempx3l += s_tempx3[offset]*fac3;
-      tempy3l += s_tempy3[offset]*fac3;
-      tempz3l += s_tempz3[offset]*fac3;
-
-    }
-#else
-
-    tempx1l = s_tempx1[K*NGLL2+J*NGLLX]*d_hprimewgll_xx[I*NGLLX]
-            + s_tempx1[K*NGLL2+J*NGLLX+1]*d_hprimewgll_xx[I*NGLLX+1]
-            + s_tempx1[K*NGLL2+J*NGLLX+2]*d_hprimewgll_xx[I*NGLLX+2]
-            + s_tempx1[K*NGLL2+J*NGLLX+3]*d_hprimewgll_xx[I*NGLLX+3]
-            + s_tempx1[K*NGLL2+J*NGLLX+4]*d_hprimewgll_xx[I*NGLLX+4];
-
-    tempy1l = s_tempy1[K*NGLL2+J*NGLLX]*d_hprimewgll_xx[I*NGLLX]
-            + s_tempy1[K*NGLL2+J*NGLLX+1]*d_hprimewgll_xx[I*NGLLX+1]
-            + s_tempy1[K*NGLL2+J*NGLLX+2]*d_hprimewgll_xx[I*NGLLX+2]
-            + s_tempy1[K*NGLL2+J*NGLLX+3]*d_hprimewgll_xx[I*NGLLX+3]
-            + s_tempy1[K*NGLL2+J*NGLLX+4]*d_hprimewgll_xx[I*NGLLX+4];
-
-    tempz1l = s_tempz1[K*NGLL2+J*NGLLX]*d_hprimewgll_xx[I*NGLLX]
-            + s_tempz1[K*NGLL2+J*NGLLX+1]*d_hprimewgll_xx[I*NGLLX+1]
-            + s_tempz1[K*NGLL2+J*NGLLX+2]*d_hprimewgll_xx[I*NGLLX+2]
-            + s_tempz1[K*NGLL2+J*NGLLX+3]*d_hprimewgll_xx[I*NGLLX+3]
-            + s_tempz1[K*NGLL2+J*NGLLX+4]*d_hprimewgll_xx[I*NGLLX+4];
-
-    tempx2l = s_tempx2[K*NGLL2+I]*d_hprimewgll_xx[J*NGLLX]
-            + s_tempx2[K*NGLL2+NGLLX+I]*d_hprimewgll_xx[J*NGLLX+1]
-            + s_tempx2[K*NGLL2+2*NGLLX+I]*d_hprimewgll_xx[J*NGLLX+2]
-            + s_tempx2[K*NGLL2+3*NGLLX+I]*d_hprimewgll_xx[J*NGLLX+3]
-            + s_tempx2[K*NGLL2+4*NGLLX+I]*d_hprimewgll_xx[J*NGLLX+4];
-
-    tempy2l = s_tempy2[K*NGLL2+I]*d_hprimewgll_xx[J*NGLLX]
-            + s_tempy2[K*NGLL2+NGLLX+I]*d_hprimewgll_xx[J*NGLLX+1]
-            + s_tempy2[K*NGLL2+2*NGLLX+I]*d_hprimewgll_xx[J*NGLLX+2]
-            + s_tempy2[K*NGLL2+3*NGLLX+I]*d_hprimewgll_xx[J*NGLLX+3]
-            + s_tempy2[K*NGLL2+4*NGLLX+I]*d_hprimewgll_xx[J*NGLLX+4];
-
-    tempz2l = s_tempz2[K*NGLL2+I]*d_hprimewgll_xx[J*NGLLX]
-            + s_tempz2[K*NGLL2+NGLLX+I]*d_hprimewgll_xx[J*NGLLX+1]
-            + s_tempz2[K*NGLL2+2*NGLLX+I]*d_hprimewgll_xx[J*NGLLX+2]
-            + s_tempz2[K*NGLL2+3*NGLLX+I]*d_hprimewgll_xx[J*NGLLX+3]
-            + s_tempz2[K*NGLL2+4*NGLLX+I]*d_hprimewgll_xx[J*NGLLX+4];
-
-    tempx3l = s_tempx3[J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX]
-            + s_tempx3[NGLL2+J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX+1]
-            + s_tempx3[2*NGLL2+J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX+2]
-            + s_tempx3[3*NGLL2+J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX+3]
-            + s_tempx3[4*NGLL2+J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX+4];
-
-    tempy3l = s_tempy3[J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX]
-            + s_tempy3[NGLL2+J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX+1]
-            + s_tempy3[2*NGLL2+J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX+2]
-            + s_tempy3[3*NGLL2+J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX+3]
-            + s_tempy3[4*NGLL2+J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX+4];
-
-    tempz3l = s_tempz3[J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX]
-            + s_tempz3[NGLL2+J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX+1]
-            + s_tempz3[2*NGLL2+J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX+2]
-            + s_tempz3[3*NGLL2+J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX+3]
-            + s_tempz3[4*NGLL2+J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX+4];
-
-#endif
-
-    fac1 = d_wgllwgll_yz[K*NGLLX+J];
-    fac2 = d_wgllwgll_xz[K*NGLLX+I];
-    fac3 = d_wgllwgll_xy[J*NGLLX+I];
-
-    sum_terms1 = - (fac1*tempx1l + fac2*tempx2l + fac3*tempx3l);
-    sum_terms2 = - (fac1*tempy1l + fac2*tempy2l + fac3*tempy3l);
-    sum_terms3 = - (fac1*tempz1l + fac2*tempz2l + fac3*tempz3l);
-
-    // adds gravity term
-    if( gravity ){
-      sum_terms1 += rho_s_H1;
-      sum_terms2 += rho_s_H2;
-      sum_terms3 += rho_s_H3;
-    }
-
-
-#ifdef USE_MESH_COLORING_GPU
-    // no atomic operation needed, colors don't share global points between elements
-
-#ifdef USE_TEXTURES_FIELDS
-    d_accel[iglob*3]     = tex1Dfetch(d_accel_tex, iglob*3) + sum_terms1;
-    d_accel[iglob*3 + 1] = tex1Dfetch(d_accel_tex, iglob*3 + 1) + sum_terms2;
-    d_accel[iglob*3 + 2] = tex1Dfetch(d_accel_tex, iglob*3 + 2) + sum_terms3;
-#else
-    d_accel[iglob*3]     += sum_terms1;
-    d_accel[iglob*3 + 1] += sum_terms2;
-    d_accel[iglob*3 + 2] += sum_terms3;
-#endif // USE_TEXTURES_FIELDS
-
-    // JC JC here we will need to add GPU support for the new C-PML routines
-
-#else // MESH_COLORING
-
-    //mesh coloring
-    if( use_mesh_coloring_gpu ){
-
-      // no atomic operation needed, colors don't share global points between elements
-#ifdef USE_TEXTURES_FIELDS
-      d_accel[iglob*3]     = tex1Dfetch(d_accel_tex, iglob*3) + sum_terms1;
-      d_accel[iglob*3 + 1] = tex1Dfetch(d_accel_tex, iglob*3 + 1) + sum_terms2;
-      d_accel[iglob*3 + 2] = tex1Dfetch(d_accel_tex, iglob*3 + 2) + sum_terms3;
-#else
-      d_accel[iglob*3]     += sum_terms1;
-      d_accel[iglob*3 + 1] += sum_terms2;
-      d_accel[iglob*3 + 2] += sum_terms3;
-#endif // USE_TEXTURES_FIELDS
-
-    }
-    else {
-
-      // for testing purposes only: w/out atomic updates
-      //d_accel[iglob*3] -= (0.00000001f*tempx1l + 0.00000001f*tempx2l + 0.00000001f*tempx3l);
-      //d_accel[iglob*3 + 1] -= (0.00000001f*tempy1l + 0.00000001f*tempy2l + 0.00000001f*tempy3l);
-      //d_accel[iglob*3 + 2] -= (0.00000001f*tempz1l + 0.00000001f*tempz2l + 0.00000001f*tempz3l);
-
-      atomicAdd(&d_accel[iglob*3], sum_terms1);
-      atomicAdd(&d_accel[iglob*3+1], sum_terms2);
-      atomicAdd(&d_accel[iglob*3+2], sum_terms3);
-
-    } // if(use_mesh_coloring_gpu)
-
-#endif // MESH_COLORING
-
-
-    // update memory variables based upon the Runge-Kutta scheme
-    if( ATTENUATION ){
-      compute_element_att_memory(tx,working_element,NSPEC,
-                                d_muv,
-                                factor_common,alphaval,betaval,gammaval,
-                                R_xx,R_yy,R_xy,R_xz,R_yz,
-                                epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz,
-                                epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc,epsilondev_xz_loc,epsilondev_yz_loc);
-    }
-
-    // save deviatoric strain for Runge-Kutta scheme
-    if( COMPUTE_AND_STORE_STRAIN ){
-      int ijk_ispec = tx + working_element*NGLL3;
-
-      // fortran: epsilondev_xx(:,:,:,ispec) = epsilondev_xx_loc(:,:,:)
-      epsilondev_xx[ijk_ispec] = epsilondev_xx_loc;
-      epsilondev_yy[ijk_ispec] = epsilondev_yy_loc;
-      epsilondev_xy[ijk_ispec] = epsilondev_xy_loc;
-      epsilondev_xz[ijk_ispec] = epsilondev_xz_loc;
-      epsilondev_yz[ijk_ispec] = epsilondev_yz_loc;
-    }
-
-  } // if(active)
-
-  // JC JC here we will need to add GPU support for the new C-PML routines
-
-} // kernel_2_impl()
-
-*/
-
-/* ----------------------------------------------------------------------------------------------- */
-
-
 // loads displacement into shared memory for element
 
 template<int FORWARD_OR_ADJOINT>
@@ -1497,6 +726,13 @@ __device__ void load_shared_memory_hprimewgll(const int* tx,
   // weighted hprime
   sh_hprimewgll_xx[(*tx)] = d_hprimewgll_xx[(*tx)];
 }
+
+
+/* ----------------------------------------------------------------------------------------------- */
+
+// KERNEL 2
+//
+// for elastic domains
 
 /* ----------------------------------------------------------------------------------------------- */
 
@@ -1763,6 +999,10 @@ Kernel_2_noatt_impl(int nb_blocks_to_compute,
     gammayl = d_gammay[offset];
     gammazl = d_gammaz[offset];
 
+    jacobianl = 1.0f / (xixl*(etayl*gammazl-etazl*gammayl)
+                       -xiyl*(etaxl*gammazl-etazl*gammaxl)
+                       +xizl*(etaxl*gammayl-etayl*gammaxl));
+
     duxdxl = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l;
     duxdyl = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l;
     duxdzl = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l;
@@ -1860,10 +1100,6 @@ Kernel_2_noatt_impl(int nb_blocks_to_compute,
       sigma_xz = mul*duzdxl_plus_duxdzl;
       sigma_yz = mul*duzdyl_plus_duydzl;
     }
-
-    jacobianl = 1.0f / (xixl*(etayl*gammazl-etazl*gammayl)
-                       -xiyl*(etaxl*gammazl-etazl*gammaxl)
-                       +xizl*(etaxl*gammayl-etayl*gammaxl));
 
     // define symmetric components (needed for non-symmetric dot product and sigma for gravity)
     sigma_yx = sigma_xy;
@@ -2435,6 +1671,10 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
     gammayl = d_gammay[offset];
     gammazl = d_gammaz[offset];
 
+    jacobianl = 1.0f / (xixl*(etayl*gammazl-etazl*gammayl)
+                       -xiyl*(etaxl*gammazl-etazl*gammaxl)
+                       +xizl*(etaxl*gammayl-etayl*gammaxl));
+
     duxdxl = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l;
     duxdyl = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l;
     duxdzl = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l;
@@ -2558,10 +1798,6 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
     compute_element_att_stress(tx,working_element,NSPEC,
                                R_xx,R_yy,R_xy,R_xz,R_yz,
                                &sigma_xx,&sigma_yy,&sigma_zz,&sigma_xy,&sigma_xz,&sigma_yz);
-
-    jacobianl = 1.0f / (xixl*(etayl*gammazl-etazl*gammayl)
-                       -xiyl*(etaxl*gammazl-etazl*gammaxl)
-                       +xizl*(etaxl*gammayl-etayl*gammaxl));
 
     // define symmetric components (needed for non-symmetric dot product and sigma for gravity)
     sigma_yx = sigma_xy;
@@ -2829,11 +2065,8 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
   dim3 threads(blocksize,1,1);
 
   // Cuda timing
-  // cudaEvent_t start, stop;
-  // realw time;
-  // cudaEventCreate(&start);
-  // cudaEventCreate(&stop);
-  // cudaEventRecord( start, 0 );
+  //cudaEvent_t start, stop;
+  //start_timing_cuda(&start,&stop);
 
   if( ATTENUATION ){
     // debug
@@ -3005,15 +2238,14 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                      mp->d_wgll_cube );
     }
   }
-  // cudaEventRecord( stop, 0 );
-  // cudaEventSynchronize( stop );
-  // cudaEventElapsedTime( &time, start, stop );
-  // cudaEventDestroy( start );
-  // cudaEventDestroy( stop );
-  // printf("Kernel2 Execution Time: %f ms\n",time);
 
-  // cudaThreadSynchronize(); //
-  // LOG("Kernel 2 finished"); //
+  // Cuda timing
+  //if( ATTENUATION ){
+  //  stop_timing_cuda(&start,&stop,"Kernel_2_att_impl");
+  //}else{
+  //  stop_timing_cuda(&start,&stop,"Kernel_2_noatt_impl");
+  //}
+  
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   exit_on_cuda_error("Kernel_2_impl");
 #endif

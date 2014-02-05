@@ -218,6 +218,8 @@ void exit_on_cuda_error(char* kernel_name);
 void exit_on_error(char* info);
 void synchronize_cuda();
 void synchronize_mpi();
+void start_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop);
+void stop_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop, char* info_str);
 void get_blocks_xy(int num_blocks,int* num_blocks_x,int* num_blocks_y);
 realw get_device_array_maximum_value(realw* array,int size);
 

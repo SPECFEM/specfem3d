@@ -228,12 +228,9 @@ TRACE("transfer_asmbl_pot_to_device");
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
 
-  //double start_time = get_time();
-  // cudaEvent_t start, stop;
-  // realw time;
-  // cudaEventCreate(&start);
-  // cudaEventCreate(&stop);
-  // cudaEventRecord( start, 0 );
+  // Cuda timing
+  //cudaEvent_t start, stop;
+  //start_timing_cuda(&start,&stop);
 
   // checks if anything to do
   if( mp->size_mpi_buffer_potential > 0 ){
@@ -279,15 +276,10 @@ TRACE("transfer_asmbl_pot_to_device");
     }
   }
 
+  // Cuda timing
+  //stop_timing_cuda(&start,&stop,"assemble_boundary_potential_on_device");
+
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  // cudaEventRecord( stop, 0 );
-  // cudaEventSynchronize( stop );
-  // cudaEventElapsedTime( &time, start, stop );
-  // cudaEventDestroy( start );
-  // cudaEventDestroy( stop );
-  // printf("Boundary Assemble Kernel Execution Time: %f ms\n",time);
-  //double end_time = get_time();
-  //printf("Elapsed time: %e\n",end_time-start_time);
   exit_on_cuda_error("transfer_asmbl_pot_to_device");
 #endif
 }
@@ -599,10 +591,9 @@ void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
   exit_on_cuda_error("before acoustic kernel Kernel 2");
 #endif
 
-  /* if the grid can handle the number of blocks, we let it be 1D */
-  /* grid_2_x = nb_elem_color; */
-  /* nb_elem_color is just how many blocks we are computing now */
-
+  // if the grid can handle the number of blocks, we let it be 1D
+  // grid_2_x = nb_elem_color;
+  // nb_elem_color is just how many blocks we are computing now
 
   int blocksize = NGLL3_PADDED;
 
@@ -613,11 +604,8 @@ void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
   dim3 threads(blocksize,1,1);
 
   // Cuda timing
-  // cudaEvent_t start, stop;
-  // realw time;
-  // cudaEventCreate(&start);
-  // cudaEventCreate(&stop);
-  // cudaEventRecord( start, 0 );
+  //cudaEvent_t start, stop;
+  //start_timing_cuda(&start,&stop);
 
   // forward wavefields -> FORWARD_OR_ADJOINT == 1
   Kernel_2_acoustic_impl<1><<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
@@ -663,17 +651,10 @@ void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
                                                           mp->d_wgll_cube);
   }
 
-  // cudaEventRecord( stop, 0 );
-  // cudaEventSynchronize( stop );
-  // cudaEventElapsedTime( &time, start, stop );
-  // cudaEventDestroy( start );
-  // cudaEventDestroy( stop );
-  // printf("Kernel2 Execution Time: %f ms\n",time);
+  // Cuda timing
+  //stop_timing_cuda(&start,&stop,"Kernel_2_acoustic_impl");
 
-  // cudaThreadSynchronize(); //
-  // TRACE("Kernel 2 finished"); //
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  //printf("Tried to start with %dx1 blocks\n",nb_blocks_to_compute);
   exit_on_cuda_error("kernel Kernel_2");
 #endif
 }
