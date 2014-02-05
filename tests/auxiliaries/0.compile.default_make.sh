@@ -1,9 +1,6 @@
 #!/bin/bash
 testdir=`pwd`
 
-# executable
-var=xdecompose_mesh
-
 #checks if ROOT valid
 if [ -z "${ROOT}" ]; then export ROOT=../../ ; fi
 
@@ -28,16 +25,17 @@ rm -rf ./bin ./obj ./setup ./OUTPUT_FILES
 $srcdir/configure >> $testdir/results.log 2>&1
 
 # single compilation
-echo "compilation: $var" >> $testdir/results.log
+echo "compilation: auxiliaries" >> $testdir/results.log
 make clean >> $testdir/results.log 2>&1
-make -j 4 $var >> $testdir/results.log 2>&1
+
+make -j 4 aux >> $testdir/results.log 2>&1
 
 # check
-if [ ! -e bin/$var ]; then
-  echo "compilation of $var failed, please check..." >> $testdir/results.log
+if [ ! -e bin/xsum_kernels ]; then
+  echo "compilation of auxiliaries failed, please check..." >> $testdir/results.log
   exit 1
 else
-  echo "binary exists: $var" >> $testdir/results.log
+  echo "binary exists: xsum_kernels" >> $testdir/results.log
 fi
 
 #cleanup

@@ -15,5 +15,5 @@ OBJECTS = \
 	$(EMPTY_MACRO)
 
 test_read:
-	${FC} -o ./bin/test_read test_read.f90 -I./obj $(OBJECTS) $(SCOTCH_LIBS)
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -o ./bin/test_read test_read.f90 -I./obj $(OBJECTS) $(SCOTCH_LIBS)
 
