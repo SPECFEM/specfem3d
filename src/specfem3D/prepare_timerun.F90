@@ -118,10 +118,11 @@
 
     !daniel debug: total time estimation
     !  average time per element per time step:
-    !     elastic elements    ~ dt = 1.40789368e-05 s
+    !     elastic elements    ~ dt = 1.17e-05 s (intel xeon 2.6GHz, stand 2013)
+    !                              = 3.18e-07 s (Kepler K20x, stand 2013)
     !
     !  total time per time step:
-    !     T_total = dt * nspec
+    !     T_total = dt * nspec_total
     !
     !  total time using nproc processes (slices) for NSTEP time steps:
     !     T_simulation = T_total * NSTEP / nproc

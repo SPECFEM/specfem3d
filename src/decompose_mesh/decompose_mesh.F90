@@ -779,6 +779,9 @@ module decompose_mesh
       stop 'ERROR: sup_neighbour is too large'
     endif
 
+    ! checks that no underestimation
+    if( sup_neighbour < nsize) sup_neighbour = nsize
+
     print *, '  nsize = ',nsize, 'sup_neighbour = ', sup_neighbour
 
   end subroutine check_valence
@@ -962,11 +965,12 @@ module decompose_mesh
 !! DK DK added this because poroelastic repartitioning routine of Christina Morency is currently broken
 ! implement mesh repartitioning of poroelastic-elastic interface
 ! (the risk being to break the nice load balancing created by the domain decomposer for high-performance computing)
-    if(PORO_INTERFACE_REPARTITIONING) &
+    if(PORO_INTERFACE_REPARTITIONING) then
       call poro_elastic_repartitioning (nspec, nnodes, elmnts, &
                        count_def_mat, num_material , mat_prop, &
                        sup_neighbour, nsize, &
                        nparts, part, NGNOD)
+    endif
 
     deallocate(num_material)
 

@@ -41,7 +41,7 @@
     call compute_kernels_el()
   endif
 
-  ! elastic simulations
+  ! acoustic simulations
   if( ACOUSTIC_SIMULATION ) then
     call compute_kernels_ac()
   endif
@@ -65,7 +65,7 @@
 
   subroutine compute_kernels_el()
 
-! kernel calculations
+! elastic kernel calculations
 ! see e.g. Tromp et al. (2005)
 
   use specfem_par
@@ -183,7 +183,7 @@
 
   subroutine compute_kernels_ac()
 
-! kernel calculations
+! acoustic kernel calculations
 ! see e.g. Tromp et al. (2005)
 
   use specfem_par
@@ -234,7 +234,9 @@
             ! density kernel
             rhol = rhostore(i,j,k,ispec)
             rho_ac_kl(i,j,k,ispec) =  rho_ac_kl(i,j,k,ispec) &
-                      + deltat * rhol * dot_product(accel_elm(:,i,j,k), b_displ_elm(:,i,j,k))
+                      + deltat * rhol * (accel_elm(1,i,j,k) * b_displ_elm(1,i,j,k) &
+                                       + accel_elm(2,i,j,k) * b_displ_elm(2,i,j,k) &
+                                       + accel_elm(3,i,j,k) * b_displ_elm(3,i,j,k))
 
             ! bulk modulus kernel
             kappal = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
@@ -487,19 +489,16 @@
   ! Computing the 21 strain products without assuming eps(i)*b_eps(j) = eps(j)*b_eps(i)
   p=1
   do i=1,6
-       do j=i,6
-       prod(p)=eps(i)*b_eps(j)
-       if(j>i) then
-            prod(p)=prod(p)+eps(j)*b_eps(i)
-            if(j>3 .and. i<4) prod(p)=prod(p)*2
-       endif
-       if(i>3) prod(p)=prod(p)*4
-       p=p+1
-       enddo
+    do j=i,6
+      prod(p)=eps(i)*b_eps(j)
+      if(j>i) then
+        prod(p)=prod(p)+eps(j)*b_eps(i)
+        if(j>3 .and. i<4) prod(p)=prod(p)*2
+      endif
+      if(i>3) prod(p)=prod(p)*4
+      p=p+1
+    enddo
   enddo
 
   end subroutine compute_strain_product
-
-!
-!-------------------------------------------------------------------------------------------------
 

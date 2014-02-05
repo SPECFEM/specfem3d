@@ -73,10 +73,10 @@ extern realw_texture d_hprime_xx_tex;
 // is followed by a memcpy and MPI operations
 __global__ void prepare_boundary_potential_on_device(realw* d_potential_dot_dot_acoustic,
                                                      realw* d_send_potential_dot_dot_buffer,
-                                                     int num_interfaces_ext_mesh,
-                                                     int max_nibool_interfaces_ext_mesh,
-                                                     int* d_nibool_interfaces_ext_mesh,
-                                                     int* d_ibool_interfaces_ext_mesh) {
+                                                     const int num_interfaces_ext_mesh,
+                                                     const int max_nibool_interfaces_ext_mesh,
+                                                     const int* d_nibool_interfaces_ext_mesh,
+                                                     const int* d_ibool_interfaces_ext_mesh) {
 
   int id = threadIdx.x + blockIdx.x*blockDim.x + blockIdx.y*gridDim.x*blockDim.x;
   int ientry,iglob;
@@ -104,7 +104,7 @@ void FC_FUNC_(transfer_boun_pot_from_device,
               TRANSFER_BOUN_POT_FROM_DEVICE)(long* Mesh_pointer,
                                              realw* potential_dot_dot_acoustic,
                                              realw* send_potential_dot_dot_buffer,
-                                             int* FORWARD_OR_ADJOINT){
+                                             const int* FORWARD_OR_ADJOINT){
 
 TRACE("transfer_boun_pot_from_device");
 
@@ -182,10 +182,10 @@ TRACE("transfer_boun_pot_from_device");
 
 __global__ void assemble_boundary_potential_on_device(realw* d_potential_dot_dot_acoustic,
                                                       realw* d_send_potential_dot_dot_buffer,
-                                                      int num_interfaces_ext_mesh,
-                                                      int max_nibool_interfaces_ext_mesh,
-                                                      int* d_nibool_interfaces_ext_mesh,
-                                                      int* d_ibool_interfaces_ext_mesh) {
+                                                      const int num_interfaces_ext_mesh,
+                                                      const int max_nibool_interfaces_ext_mesh,
+                                                      const int* d_nibool_interfaces_ext_mesh,
+                                                      const int* d_ibool_interfaces_ext_mesh) {
 
   int id = threadIdx.x + blockIdx.x*blockDim.x + blockIdx.y*gridDim.x*blockDim.x;
   int ientry,iglob;
@@ -222,7 +222,7 @@ void FC_FUNC_(transfer_asmbl_pot_to_device,
               TRANSFER_ASMBL_POT_TO_DEVICE)(long* Mesh_pointer,
                                             realw* potential_dot_dot_acoustic,
                                             realw* buffer_recv_scalar_ext_mesh,
-                                            int* FORWARD_OR_ADJOINT) {
+                                            const int* FORWARD_OR_ADJOINT) {
 
 TRACE("transfer_asmbl_pot_to_device");
 
@@ -299,50 +299,51 @@ TRACE("transfer_asmbl_pot_to_device");
 
 /* ----------------------------------------------------------------------------------------------- */
 
-template<int FORWARD_OR_ADJOINT> __global__ void Kernel_2_acoustic_impl(int nb_blocks_to_compute,
-                                                                         int NGLOB, int* d_ibool,
-                                                                         int* d_phase_ispec_inner_acoustic,
-                                                                         int num_phase_ispec_acoustic,
-                                                                         int d_iphase,
-                                                                         int use_mesh_coloring_gpu,
-                                                                         realw* d_potential_acoustic, realw* d_potential_dot_dot_acoustic,
-                                                                         realw* d_xix, realw* d_xiy, realw* d_xiz,
-                                                                         realw* d_etax, realw* d_etay, realw* d_etaz,
-                                                                         realw* d_gammax, realw* d_gammay, realw* d_gammaz,
-                                                                         realw* d_hprime_xx,
-                                                                         realw* hprimewgll_xx,
-                                                                         realw* wgllwgll_xy,realw* wgllwgll_xz,realw* wgllwgll_yz,
-                                                                         realw* d_rhostore,
-                                                                         int gravity,
-                                                                         realw* minus_g,
-                                                                         realw* d_kappastore,
-                                                                         realw* wgll_cube){
+template<int FORWARD_OR_ADJOINT> __global__ void
+Kernel_2_acoustic_impl(int nb_blocks_to_compute,
+                       const int NGLOB,
+                       const int* d_ibool,
+                       const int* d_phase_ispec_inner_acoustic,
+                       const int num_phase_ispec_acoustic,
+                       const int d_iphase,
+                       const int use_mesh_coloring_gpu,
+                       realw_const_p d_potential_acoustic,
+                       realw_p d_potential_dot_dot_acoustic,
+                       realw_const_p d_xix,realw_const_p d_xiy,realw_const_p d_xiz,
+                       realw_const_p d_etax,realw_const_p d_etay,realw_const_p d_etaz,
+                       realw_const_p d_gammax,realw_const_p d_gammay,realw_const_p d_gammaz,
+                       realw_const_p d_hprime_xx,
+                       realw_const_p hprimewgll_xx,
+                       realw_const_p wgllwgll_xy,realw_const_p wgllwgll_xz,realw_const_p wgllwgll_yz,
+                       realw_const_p d_rhostore,
+                       const int gravity,
+                       realw_const_p minus_g,
+                       realw_const_p d_kappastore,
+                       realw_const_p wgll_cube){
 
   int bx = blockIdx.y*gridDim.x+blockIdx.x;
   int tx = threadIdx.x;
-
-  const int NGLL3_ALIGN = NGLL3_PADDED;
 
   int K = (tx/NGLL2);
   int J = ((tx-K*NGLL2)/NGLLX);
   int I = (tx-K*NGLL2-J*NGLLX);
 
-  int active,offset;
-  int iglob = 0;
+  unsigned short int active;
+  int iglob,offset;
   int working_element;
 
   realw temp1l,temp2l,temp3l;
   realw xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl;
+
   realw dpotentialdxl,dpotentialdyl,dpotentialdzl;
   realw fac1,fac2,fac3;
   realw rho_invl,kappa_invl;
+
   realw sum_terms;
   realw gravity_term;
 
 #ifndef MANUALLY_UNROLLED_LOOPS
   int l;
-  int offset1,offset2,offset3;
-  realw hp1,hp2,hp3;
 #endif
 
   __shared__ realw s_dummy_loc[NGLL3];
@@ -372,7 +373,10 @@ template<int FORWARD_OR_ADJOINT> __global__ void Kernel_2_acoustic_impl(int nb_b
       working_element = d_phase_ispec_inner_acoustic[bx + num_phase_ispec_acoustic*(d_iphase-1)]-1;
     }
 #endif
-
+    // local padded index
+    offset = working_element*NGLL3_PADDED + tx;
+    
+    // global index
     iglob = d_ibool[working_element*NGLL3 + tx]-1;
 
 #ifdef USE_TEXTURES_FIELDS
@@ -405,21 +409,17 @@ template<int FORWARD_OR_ADJOINT> __global__ void Kernel_2_acoustic_impl(int nb_b
     temp3l = 0.f;
 
     for (l=0;l<NGLLX;l++) {
-        hp1 = sh_hprime_xx[l*NGLLX+I];
-        offset1 = K*NGLL2+J*NGLLX+l;
-        temp1l += s_dummy_loc[offset1]*hp1;
+      //assumes that hprime_xx = hprime_yy = hprime_zz
+      fac1 = sh_hprime_xx[l*NGLLX+I];
+      temp1l += s_dummy_loc[K*NGLL2+J*NGLLX+l]*fac1;
 
-        //assumes that hprime_xx = hprime_yy = hprime_zz
-        hp2 = sh_hprime_xx[l*NGLLX+J];
-        offset2 = K*NGLL2+l*NGLLX+I;
-        temp2l += s_dummy_loc[offset2]*hp2;
+      fac2 = sh_hprime_xx[l*NGLLX+J];
+      temp2l += s_dummy_loc[K*NGLL2+l*NGLLX+I]*fac2;
 
-        hp3 = sh_hprime_xx[l*NGLLX+K];
-        offset3 = l*NGLL2+J*NGLLX+I;
-        temp3l += s_dummy_loc[offset3]*hp3;
+      fac3 = sh_hprime_xx[l*NGLLX+K];
+      temp3l += s_dummy_loc[l*NGLL2+J*NGLLX+I]*fac3;
     }
 #else
-
     temp1l = s_dummy_loc[K*NGLL2+J*NGLLX]*d_hprime_xx[I]
             + s_dummy_loc[K*NGLL2+J*NGLLX+1]*d_hprime_xx[NGLLX+I]
             + s_dummy_loc[K*NGLL2+J*NGLLX+2]*d_hprime_xx[2*NGLLX+I]
@@ -437,12 +437,9 @@ template<int FORWARD_OR_ADJOINT> __global__ void Kernel_2_acoustic_impl(int nb_b
             + s_dummy_loc[2*NGLL2+J*NGLLX+I]*d_hprime_xx[2*NGLLX+K]
             + s_dummy_loc[3*NGLL2+J*NGLLX+I]*d_hprime_xx[3*NGLLX+K]
             + s_dummy_loc[4*NGLL2+J*NGLLX+I]*d_hprime_xx[4*NGLLX+K];
-
 #endif
 
     // compute derivatives of ux, uy and uz with respect to x, y and z
-    offset = working_element*NGLL3_ALIGN + tx;
-
     xixl = d_xix[offset];
     xiyl = d_xiy[offset];
     xizl = d_xiz[offset];
@@ -514,18 +511,15 @@ template<int FORWARD_OR_ADJOINT> __global__ void Kernel_2_acoustic_impl(int nb_b
     temp3l = 0.f;
 
     for (l=0;l<NGLLX;l++) {
-        fac1 = hprimewgll_xx[I*NGLLX+l];
-        offset1 = K*NGLL2+J*NGLLX+l;
-        temp1l += s_temp1[offset1]*fac1;
+      //assumes hprimewgll_xx = hprimewgll_yy = hprimewgll_zz
+      fac1 = hprimewgll_xx[I*NGLLX+l];
+      temp1l += s_temp1[K*NGLL2+J*NGLLX+l]*fac1;
 
-        //assumes hprimewgll_xx = hprimewgll_yy = hprimewgll_zz
-        fac2 = hprimewgll_xx[J*NGLLX+l];
-        offset2 = K*NGLL2+l*NGLLX+I;
-        temp2l += s_temp2[offset2]*fac2;
+      fac2 = hprimewgll_xx[J*NGLLX+l];
+      temp2l += s_temp2[K*NGLL2+l*NGLLX+I]*fac2;
 
-        fac3 = hprimewgll_xx[K*NGLLX+l];
-        offset3 = l*NGLL2+J*NGLLX+I;
-        temp3l += s_temp3[offset3]*fac3;
+      fac3 = hprimewgll_xx[K*NGLLX+l];
+      temp3l += s_temp3[l*NGLL2+J*NGLLX+I]*fac3;
     }
 #else
 
@@ -583,12 +577,7 @@ template<int FORWARD_OR_ADJOINT> __global__ void Kernel_2_acoustic_impl(int nb_b
 #endif // USE_TEXTURES_FIELDS
 
     }else{
-
-      // for testing purposes only: w/out atomic updates
-      //d_potential_dot_dot_acoustic[iglob]     += sum_terms1;
-
       atomicAdd(&d_potential_dot_dot_acoustic[iglob],sum_terms);
-
     }
 #endif // MESH_COLORING
 
@@ -789,14 +778,14 @@ void FC_FUNC_(compute_forces_acoustic_cuda,
 
 
 __global__ void enforce_free_surface_cuda_kernel(
-                                       realw* potential_acoustic,
-                                       realw* potential_dot_acoustic,
-                                       realw* potential_dot_dot_acoustic,
-                                       int num_free_surface_faces,
-                                       int* free_surface_ispec,
-                                       int* free_surface_ijk,
-                                       int* ibool,
-                                       int* ispec_is_acoustic) {
+                                       realw_p potential_acoustic,
+                                       realw_p potential_dot_acoustic,
+                                       realw_p potential_dot_dot_acoustic,
+                                       const int num_free_surface_faces,
+                                       const int* free_surface_ispec,
+                                       const int* free_surface_ijk,
+                                       const int* ibool,
+                                       const int* ispec_is_acoustic) {
   // gets spectral element face id
   int iface = blockIdx.x + gridDim.x*blockIdx.y;
 
@@ -815,7 +804,7 @@ __global__ void enforce_free_surface_cuda_kernel(
       int j = free_surface_ijk[INDEX3(NDIM,NGLL2,1,igll,iface)] - 1;
       int k = free_surface_ijk[INDEX3(NDIM,NGLL2,2,igll,iface)] - 1;
 
-      int iglob = ibool[INDEX4(5,5,5,i,j,k,ispec)] - 1;
+      int iglob = ibool[INDEX4(NGLLX,NGLLX,NGLLX,i,j,k,ispec)] - 1;
 
       // sets potentials to zero at free surface
       potential_acoustic[iglob] = 0;

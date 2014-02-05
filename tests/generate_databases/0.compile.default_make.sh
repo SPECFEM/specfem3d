@@ -1,6 +1,9 @@
 #!/bin/bash
 testdir=`pwd`
 
+# executable
+var=xgenerate_databases
+
 #checks if ROOT valid
 if [ -z "${ROOT}" ]; then export ROOT=../../ ; fi
 
@@ -25,10 +28,8 @@ rm -rf ./bin ./obj ./setup ./OUTPUT_FILES
 $srcdir/configure >> $testdir/results.log 2>&1
 
 # single compilation
-echo "compilation: xdecompose_mesh" >> $testdir/results.log
+echo "compilation: $var" >> $testdir/results.log
 make clean >> $testdir/results.log 2>&1
-
-var=xgenerate_databases
 make -j 4 $var >> $testdir/results.log 2>&1
 
 # check

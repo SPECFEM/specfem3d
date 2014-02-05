@@ -2,7 +2,7 @@
 include Makefile
 
 # test target
-default: test_valence
+default: test_partitioning
 
 OBJECTS = \
 	./obj/decompose_mesh.dec.o \
@@ -14,6 +14,6 @@ OBJECTS = \
 	./obj/read_value_parameters.shared.o \
 	$(EMPTY_MACRO)
 
-test_valence:
-	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -o ./bin/test_valence test_valence.f90 -I./obj $(OBJECTS) $(SCOTCH_LIBS)
+test_partitioning:
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -o ./bin/test_partitioning test_partitioning.f90 -I./obj $(OBJECTS) $(SCOTCH_LIBS)
 

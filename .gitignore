@@ -5,13 +5,8 @@ config.log
 config.status
 config.h
 Makefile
-src/check_mesh_quality_CUBIT_Abaqus/Makefile
-src/decompose_mesh/Makefile
-src/generate_databases/Makefile
-src/meshfem3D/Makefile
-src/shared/constants.h
-src/shared/precision.h
-src/specfem3D/Makefile
+setup/constants.h
+setup/precision.h
 
 # Build time
 bin
@@ -22,6 +17,10 @@ src/generate_databases/*.mod
 src/meshfem3D/*.mod
 src/specfem3D/*.mod
 
+# sources
+src/cuda/specfem3D_gpu_cuda_method_stubs.c.bak
+
+# documentation
 manual_SPECFEM3D_Cartesian.aux
 manual_SPECFEM3D_Cartesian.bbl
 doc/USER_MANUAL/manual_SPECFEM3D_Cartesian.blg
