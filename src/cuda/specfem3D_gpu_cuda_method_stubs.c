@@ -178,13 +178,13 @@ void FC_FUNC_(transfer_boun_pot_from_device,
               TRANSFER_BOUN_POT_FROM_DEVICE)(long* Mesh_pointer,
                                              realw* potential_dot_dot_acoustic,
                                              realw* send_potential_dot_dot_buffer,
-                                             int* FORWARD_OR_ADJOINT){}
+                                             const int* FORWARD_OR_ADJOINT){}
 
 void FC_FUNC_(transfer_asmbl_pot_to_device,
               TRANSFER_ASMBL_POT_TO_DEVICE)(long* Mesh_pointer,
                                             realw* potential_dot_dot_acoustic,
                                             realw* buffer_recv_scalar_ext_mesh,
-                                            int* FORWARD_OR_ADJOINT) {}
+                                            const int* FORWARD_OR_ADJOINT) {}
 
 void FC_FUNC_(compute_forces_acoustic_cuda,
               COMPUTE_FORCES_ACOUSTIC_CUDA)(long* Mesh_pointer,
@@ -205,26 +205,26 @@ void FC_FUNC_(transfer_boun_accel_from_device,
               TRANSFER_BOUN_ACCEL_FROM_DEVICE)(long* Mesh_pointer,
                                                realw* accel,
                                                realw* send_accel_buffer,
-                                               int* FORWARD_OR_ADJOINT){}
+                                               const int* FORWARD_OR_ADJOINT){}
 
 void FC_FUNC_(transfer_boundary_from_device_a,
               TRANSFER_BOUNDARY_FROM_DEVICE_A)(long* Mesh_pointer,
-                                               int* nspec_outer_elastic) {}
+                                               const int* nspec_outer_elastic) {}
 
 void FC_FUNC_(transfer_boundary_to_device_a,
               TRANSFER_BOUNDARY_TO_DEVICE_A)(long* Mesh_pointer,
                                              realw* buffer_recv_vector_ext_mesh,
-                                             int* num_interfaces_ext_mesh,
-                                             int* max_nibool_interfaces_ext_mesh) {}
+                                             const int* num_interfaces_ext_mesh,
+                                             const int* max_nibool_interfaces_ext_mesh) {}
 
 void FC_FUNC_(transfer_asmbl_accel_to_device,
               TRANSFER_ASMBL_ACCEL_TO_DEVICE)(long* Mesh_pointer, realw* accel,
-                                                    realw* buffer_recv_vector_ext_mesh,
-                                                    int* num_interfaces_ext_mesh,
-                                                    int* max_nibool_interfaces_ext_mesh,
-                                                    int* nibool_interfaces_ext_mesh,
-                                                    int* ibool_interfaces_ext_mesh,
-                                                    int* FORWARD_OR_ADJOINT) {}
+                                              realw* buffer_recv_vector_ext_mesh,
+                                              const int* num_interfaces_ext_mesh,
+                                              const int* max_nibool_interfaces_ext_mesh,
+                                              const int* nibool_interfaces_ext_mesh,
+                                              const int* ibool_interfaces_ext_mesh,
+                                              const int* FORWARD_OR_ADJOINT) {}
 
 //void FC_FUNC_(assemble_accel_on_device,
 //              ASSEMBLE_ACCEL_on_DEVICE)(long* Mesh_pointer, realw* accel,
@@ -674,7 +674,7 @@ void FC_FUNC_(transfer_station_el_from_device,
                                                    realw* b_displ, realw* b_veloc, realw* b_accel,
                                                    long* Mesh_pointer_f,int* number_receiver_global,
                                                    int* ispec_selected_rec,int* ispec_selected_source,
-                                                   int* ibool) {}
+                                                   int* h_ibool) {}
 
 void FC_FUNC_(transfer_station_ac_from_device,
               TRANSFER_STATION_AC_FROM_DEVICE)(realw* potential_acoustic,
@@ -687,5 +687,5 @@ void FC_FUNC_(transfer_station_ac_from_device,
                                                 int* number_receiver_global,
                                                 int* ispec_selected_rec,
                                                 int* ispec_selected_source,
-                                                int* ibool) {}
+                                                int* h_ibool) {}
 

@@ -228,12 +228,9 @@ TRACE("transfer_asmbl_pot_to_device");
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
 
-  //double start_time = get_time();
-  // cudaEvent_t start, stop;
-  // realw time;
-  // cudaEventCreate(&start);
-  // cudaEventCreate(&stop);
-  // cudaEventRecord( start, 0 );
+  // Cuda timing
+  //cudaEvent_t start, stop;
+  //start_timing_cuda(&start,&stop);
 
   // checks if anything to do
   if( mp->size_mpi_buffer_potential > 0 ){
@@ -279,15 +276,10 @@ TRACE("transfer_asmbl_pot_to_device");
     }
   }
 
+  // Cuda timing
+  //stop_timing_cuda(&start,&stop,"assemble_boundary_potential_on_device");
+
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  // cudaEventRecord( stop, 0 );
-  // cudaEventSynchronize( stop );
-  // cudaEventElapsedTime( &time, start, stop );
-  // cudaEventDestroy( start );
-  // cudaEventDestroy( stop );
-  // printf("Boundary Assemble Kernel Execution Time: %f ms\n",time);
-  //double end_time = get_time();
-  //printf("Elapsed time: %e\n",end_time-start_time);
   exit_on_cuda_error("transfer_asmbl_pot_to_device");
 #endif
 }
@@ -375,9 +367,9 @@ Kernel_2_acoustic_impl(int nb_blocks_to_compute,
 #endif
     // local padded index
     offset = working_element*NGLL3_PADDED + tx;
-    
+
     // global index
-    iglob = d_ibool[working_element*NGLL3 + tx]-1;
+    iglob = d_ibool[offset] - 1;
 
 #ifdef USE_TEXTURES_FIELDS
     s_dummy_loc[tx] = texfetch_potential<FORWARD_OR_ADJOINT>(iglob);
@@ -466,7 +458,6 @@ Kernel_2_acoustic_impl(int nb_blocks_to_compute,
       // gravity term: 1/kappa grad(chi) * g
       // assumes that g only acts in (negative) z-direction
       kappa_invl = 1.f / d_kappastore[working_element*NGLL3 + tx];
-      iglob = d_ibool[working_element*NGLL3 + tx]-1;
 
       // daniel: TODO - check gravity
 //      if( kappa_invl <= 0.0f ){
@@ -553,8 +544,6 @@ Kernel_2_acoustic_impl(int nb_blocks_to_compute,
     sum_terms = -(fac1*temp1l + fac2*temp2l + fac3*temp3l);
     if( gravity ) sum_terms += gravity_term;
 
-    iglob = d_ibool[working_element*NGLL3 + tx]-1;
-
 #ifdef USE_MESH_COLORING_GPU
     // no atomic operation needed, colors don't share global points between elements
 
@@ -599,10 +588,9 @@ void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
   exit_on_cuda_error("before acoustic kernel Kernel 2");
 #endif
 
-  /* if the grid can handle the number of blocks, we let it be 1D */
-  /* grid_2_x = nb_elem_color; */
-  /* nb_elem_color is just how many blocks we are computing now */
-
+  // if the grid can handle the number of blocks, we let it be 1D
+  // grid_2_x = nb_elem_color;
+  // nb_elem_color is just how many blocks we are computing now
 
   int blocksize = NGLL3_PADDED;
 
@@ -613,11 +601,8 @@ void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
   dim3 threads(blocksize,1,1);
 
   // Cuda timing
-  // cudaEvent_t start, stop;
-  // realw time;
-  // cudaEventCreate(&start);
-  // cudaEventCreate(&stop);
-  // cudaEventRecord( start, 0 );
+  //cudaEvent_t start, stop;
+  //start_timing_cuda(&start,&stop);
 
   // forward wavefields -> FORWARD_OR_ADJOINT == 1
   Kernel_2_acoustic_impl<1><<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
@@ -663,17 +648,10 @@ void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
                                                           mp->d_wgll_cube);
   }
 
-  // cudaEventRecord( stop, 0 );
-  // cudaEventSynchronize( stop );
-  // cudaEventElapsedTime( &time, start, stop );
-  // cudaEventDestroy( start );
-  // cudaEventDestroy( stop );
-  // printf("Kernel2 Execution Time: %f ms\n",time);
+  // Cuda timing
+  //stop_timing_cuda(&start,&stop,"Kernel_2_acoustic_impl");
 
-  // cudaThreadSynchronize(); //
-  // TRACE("Kernel 2 finished"); //
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  //printf("Tried to start with %dx1 blocks\n",nb_blocks_to_compute);
   exit_on_cuda_error("kernel Kernel_2");
 #endif
 }
@@ -784,7 +762,7 @@ __global__ void enforce_free_surface_cuda_kernel(
                                        const int num_free_surface_faces,
                                        const int* free_surface_ispec,
                                        const int* free_surface_ijk,
-                                       const int* ibool,
+                                       const int* d_ibool,
                                        const int* ispec_is_acoustic) {
   // gets spectral element face id
   int iface = blockIdx.x + gridDim.x*blockIdx.y;
@@ -804,7 +782,7 @@ __global__ void enforce_free_surface_cuda_kernel(
       int j = free_surface_ijk[INDEX3(NDIM,NGLL2,1,igll,iface)] - 1;
       int k = free_surface_ijk[INDEX3(NDIM,NGLL2,2,igll,iface)] - 1;
 
-      int iglob = ibool[INDEX4(NGLLX,NGLLX,NGLLX,i,j,k,ispec)] - 1;
+      int iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)] - 1;
 
       // sets potentials to zero at free surface
       potential_acoustic[iglob] = 0;

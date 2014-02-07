@@ -50,7 +50,7 @@ __global__ void compute_coupling_acoustic_el_kernel(realw* displ,
                                                     int* coupling_ac_el_ijk,
                                                     realw* coupling_ac_el_normal,
                                                     realw* coupling_ac_el_jacobian2Dw,
-                                                    int* ibool,
+                                                    int* d_ibool,
                                                     int* ispec_is_inner,
                                                     int phase_is_inner) {
 
@@ -76,7 +76,8 @@ __global__ void compute_coupling_acoustic_el_kernel(realw* displ,
       i = coupling_ac_el_ijk[INDEX3(NDIM,NGLL2,0,igll,iface)] - 1;
       j = coupling_ac_el_ijk[INDEX3(NDIM,NGLL2,1,igll,iface)] - 1;
       k = coupling_ac_el_ijk[INDEX3(NDIM,NGLL2,2,igll,iface)] - 1;
-      iglob = ibool[INDEX4(5,5,5,i,j,k,ispec)] - 1;
+
+      iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)] - 1;
 
       // elastic displacement on global point
       displ_x = displ[iglob*3] ; // (1,iglob)
@@ -182,7 +183,7 @@ __global__ void compute_coupling_elastic_ac_kernel(realw* potential_dot_dot_acou
                                                     int* coupling_ac_el_ijk,
                                                     realw* coupling_ac_el_normal,
                                                     realw* coupling_ac_el_jacobian2Dw,
-                                                    int* ibool,
+                                                    int* d_ibool,
                                                     int* ispec_is_inner,
                                                     int phase_is_inner,
                                                     int gravity,
@@ -213,7 +214,8 @@ __global__ void compute_coupling_elastic_ac_kernel(realw* potential_dot_dot_acou
       i = coupling_ac_el_ijk[INDEX3(NDIM,NGLL2,0,igll,iface)] - 1;
       j = coupling_ac_el_ijk[INDEX3(NDIM,NGLL2,1,igll,iface)] - 1;
       k = coupling_ac_el_ijk[INDEX3(NDIM,NGLL2,2,igll,iface)] - 1;
-      iglob = ibool[INDEX4(5,5,5,i,j,k,ispec)] - 1;
+
+      iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)] - 1;
 
       // gets associated normal on GLL point
       // note: normal points away from acoustic element
@@ -347,7 +349,7 @@ __global__ void compute_coupling_ocean_cuda_kernel(realw* accel,
                                                int* free_surface_ispec,
                                                int* free_surface_ijk,
                                                realw* free_surface_normal,
-                                               int* ibool,
+                                               int* d_ibool,
                                                int* updated_dof_ocean_load) {
   // gets spectral element face id
   int igll = threadIdx.x ;  //  threadIdx.y*blockDim.x will be always = 0 for thread block (25,1,1)
@@ -366,7 +368,7 @@ __global__ void compute_coupling_ocean_cuda_kernel(realw* accel,
     int j = free_surface_ijk[INDEX3(NDIM,NGLL2,1,igll,iface)] - 1;
     int k = free_surface_ijk[INDEX3(NDIM,NGLL2,2,igll,iface)] - 1;
 
-    int iglob = ibool[INDEX4(5,5,5,i,j,k,ispec)] - 1;
+    int iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)] - 1;
 
     //if(igll == 0 ) printf("igll %d %d %d %d\n",igll,i,j,k,iglob);
 

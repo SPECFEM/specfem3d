@@ -193,6 +193,10 @@ void print_CUDA_error_if_any(cudaError_t err, int num) {
 
 /* ----------------------------------------------------------------------------------------------- */
 
+// CUDA synchronization
+
+/* ----------------------------------------------------------------------------------------------- */
+
 void synchronize_cuda(){
 #if CUDA_VERSION >= 4000
     cudaDeviceSynchronize();
@@ -211,6 +215,37 @@ void synchronize_mpi(){
 
 /* ----------------------------------------------------------------------------------------------- */
 
+// Timing helper functions
+
+/* ----------------------------------------------------------------------------------------------- */
+
+void start_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop){
+  // creates & starts event
+  cudaEventCreate(start);
+  cudaEventCreate(stop);
+  cudaEventRecord( *start, 0 );
+}
+
+/* ----------------------------------------------------------------------------------------------- */
+
+void stop_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop, char* info_str){
+  realw time;
+  // stops events
+  cudaEventRecord( *stop, 0 );
+  cudaEventSynchronize( *stop );
+  cudaEventElapsedTime( &time, *start, *stop );
+  cudaEventDestroy( *start );
+  cudaEventDestroy( *stop );
+  // user output
+  printf("%s: Execution Time = %f ms\n",info_str,time);
+}
+
+
+/* ----------------------------------------------------------------------------------------------- */
+
+// CUDA kernel setup functions
+
+/* ----------------------------------------------------------------------------------------------- */
 
 void get_blocks_xy(int num_blocks,int* num_blocks_x,int* num_blocks_y) {
 
@@ -230,6 +265,9 @@ void get_blocks_xy(int num_blocks,int* num_blocks_x,int* num_blocks_y) {
   return;
 }
 
+/* ----------------------------------------------------------------------------------------------- */
+
+// GPU device memory functions
 
 /* ----------------------------------------------------------------------------------------------- */
 

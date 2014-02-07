@@ -45,7 +45,7 @@ __global__ void compute_stacey_elastic_kernel(realw* veloc,
                                               int* abs_boundary_ijk,
                                               realw* abs_boundary_normal,
                                               realw* abs_boundary_jacobian2Dw,
-                                              int* ibool,
+                                              int* d_ibool,
                                               realw* rho_vp,
                                               realw* rho_vs,
                                               int* ispec_is_inner,
@@ -80,7 +80,8 @@ __global__ void compute_stacey_elastic_kernel(realw* veloc,
       i = abs_boundary_ijk[INDEX3(NDIM,NGLL2,0,igll,iface)]-1;
       j = abs_boundary_ijk[INDEX3(NDIM,NGLL2,1,igll,iface)]-1;
       k = abs_boundary_ijk[INDEX3(NDIM,NGLL2,2,igll,iface)]-1;
-      iglob = ibool[INDEX4(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
+
+      iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
 
       // gets associated velocity
 
@@ -123,7 +124,7 @@ __global__ void compute_stacey_elastic_kernel(realw* veloc,
 
 __global__ void compute_stacey_elastic_sim3_kernel(int* abs_boundary_ispec,
                                                    int* abs_boundary_ijk,
-                                                   int* ibool,
+                                                   int* d_ibool,
                                                    int* ispec_is_inner,
                                                    int* ispec_is_elastic,
                                                    int phase_is_inner,
@@ -151,7 +152,7 @@ __global__ void compute_stacey_elastic_sim3_kernel(int* abs_boundary_ispec,
       j = abs_boundary_ijk[INDEX3(NDIM,NGLL2,1,igll,iface)]-1;
       k = abs_boundary_ijk[INDEX3(NDIM,NGLL2,2,igll,iface)]-1;
 
-      iglob = ibool[INDEX4(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
+      iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
 
       atomicAdd(&b_accel[iglob*3  ],-b_absorb_field[INDEX3(NDIM,NGLL2,0,igll,iface)]);
       atomicAdd(&b_accel[iglob*3+1],-b_absorb_field[INDEX3(NDIM,NGLL2,1,igll,iface)]);

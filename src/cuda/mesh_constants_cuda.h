@@ -154,8 +154,8 @@
 //
 // (depending on GPU type, register spilling might slow down the performance)
 // (uncomment if desired)
-//#define USE_LAUNCH_BOUNDS
-//#define LAUNCH_MIN_BLOCKS 8
+#define USE_LAUNCH_BOUNDS
+#define LAUNCH_MIN_BLOCKS 8
 
 /* ----------------------------------------------------------------------------------------------- */
 
@@ -195,14 +195,23 @@ typedef texture<float, cudaTextureType1D, cudaReadModeElementType> realw_texture
 
 // restricted pointers: improves performance on Kepler ~ 10%
 // see: http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#restrict
-typedef const float* __restrict__ realw_const_p;
+typedef const realw* __restrict__ realw_const_p;
 // otherwise use:
-//typedef const float* realw_const_p;
+//typedef const realw* realw_const_p;
 
-typedef float* __restrict__ realw_p;
+typedef realw* __restrict__ realw_p;
 // otherwise use:
-//typedef float* realw_p;
+//typedef realw* realw_p;
 
+// wrapper for global memory load function
+// usage:  val = get_global_cr( &A[index] );
+#if __CUDA_ARCH__ >= 350
+// Device has ldg
+__device__ __forceinline__ realw get_global_cr(realw_const_p ptr) { return __ldg(ptr); }
+#else
+//Device does not, fall back.
+__device__ __forceinline__ realw get_global_cr(realw_const_p ptr) { return (*ptr); }
+#endif
 
 /* ----------------------------------------------------------------------------------------------- */
 
@@ -218,6 +227,8 @@ void exit_on_cuda_error(char* kernel_name);
 void exit_on_error(char* info);
 void synchronize_cuda();
 void synchronize_mpi();
+void start_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop);
+void stop_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop, char* info_str);
 void get_blocks_xy(int num_blocks,int* num_blocks_x,int* num_blocks_y);
 realw get_device_array_maximum_value(realw* array,int size);
 

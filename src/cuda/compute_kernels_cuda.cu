@@ -46,7 +46,7 @@
 /* ----------------------------------------------------------------------------------------------- */
 
 __global__ void compute_kernels_ani_cudakernel(int* ispec_is_elastic,
-                                           int* ibool,
+                                           int* d_ibool,
                                            realw* accel,
                                            realw* b_displ,
                                            realw* epsilondev_xx,realw* epsilondev_yy,realw* epsilondev_xy,
@@ -78,7 +78,7 @@ __global__ void compute_kernels_ani_cudakernel(int* ispec_is_elastic,
 
     // elastic elements only
     if( ispec_is_elastic[ispec] ) {
-      int iglob = ibool[ijk_ispec] - 1 ;
+      int iglob = d_ibool[ijk + NGLL3_PADDED*ispec] - 1;
 
       // anisotropic kernels:
       // density kernel
@@ -151,7 +151,7 @@ __global__ void compute_kernels_ani_cudakernel(int* ispec_is_elastic,
 /* ----------------------------------------------------------------------------------------------- */
 
 __global__ void compute_kernels_cudakernel(int* ispec_is_elastic,
-                                           int* ibool,
+                                           int* d_ibool,
                                            realw* accel,
                                            realw* b_displ,
                                            realw* epsilondev_xx,realw* epsilondev_yy,realw* epsilondev_xy,
@@ -175,7 +175,7 @@ __global__ void compute_kernels_cudakernel(int* ispec_is_elastic,
 
     // elastic elements only
     if( ispec_is_elastic[ispec] ) {
-      int iglob = ibool[ijk_ispec] - 1 ;
+      int iglob = d_ibool[ijk + NGLL3_PADDED*ispec] - 1 ;
 
       // isotropic kernels:
       // density kernel
@@ -279,7 +279,7 @@ void FC_FUNC_(compute_kernels_elastic_cuda,
 __global__ void compute_kernels_strength_noise_cuda_kernel(realw* displ,
                                                            int* free_surface_ispec,
                                                            int* free_surface_ijk,
-                                                           int* ibool,
+                                                           int* d_ibool,
                                                            realw* noise_surface_movie,
                                                            realw* normal_x_noise,
                                                            realw* normal_y_noise,
@@ -295,11 +295,11 @@ __global__ void compute_kernels_strength_noise_cuda_kernel(realw* displ,
 
     int ispec = free_surface_ispec[iface]-1;
 
-    int i = free_surface_ijk[INDEX3(NDIM,NGLL2,0,igll,iface)] - 1 ;
+    int i = free_surface_ijk[INDEX3(NDIM,NGLL2,0,igll,iface)] - 1;
     int j = free_surface_ijk[INDEX3(NDIM,NGLL2,1,igll,iface)] - 1;
     int k = free_surface_ijk[INDEX3(NDIM,NGLL2,2,igll,iface)] - 1;
 
-    int iglob = ibool[INDEX4(NGLLX,NGLLX,NGLLX,i,j,k,ispec)] - 1 ;
+    int iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)] - 1;
 
     realw eta = ( noise_surface_movie[INDEX3(NDIM,NGLL2,0,igll,iface)]*normal_x_noise[ipoin]+
                  noise_surface_movie[INDEX3(NDIM,NGLL2,1,igll,iface)]*normal_y_noise[ipoin]+
@@ -439,7 +439,7 @@ __device__ void compute_gradient_kernel(int ijk,
 
 
 __global__ void compute_kernels_acoustic_kernel(int* ispec_is_acoustic,
-                                                int* ibool,
+                                                int* d_ibool,
                                                 realw* rhostore,
                                                 realw* kappastore,
                                                 realw* d_hprime_xx,
@@ -476,7 +476,7 @@ __global__ void compute_kernels_acoustic_kernel(int* ispec_is_acoustic,
       active = 1;
 
       // copy field values
-      iglob = ibool[ijk_ispec] - 1;
+      iglob = d_ibool[ijk_ispec_padded] - 1;
       scalar_field_displ[ijk] = b_potential_acoustic[iglob];
       scalar_field_accel[ijk] = potential_dot_dot_acoustic[iglob];
     }
@@ -567,7 +567,7 @@ TRACE("compute_kernels_acoustic_cuda");
 /* ----------------------------------------------------------------------------------------------- */
 
 __global__ void compute_kernels_hess_el_cudakernel(int* ispec_is_elastic,
-                                                   int* ibool,
+                                                   int* d_ibool,
                                                    realw* accel,
                                                    realw* b_accel,
                                                    realw* hess_kl,
@@ -576,19 +576,18 @@ __global__ void compute_kernels_hess_el_cudakernel(int* ispec_is_elastic,
 
   int ispec = blockIdx.x + blockIdx.y*gridDim.x;
   int ijk = threadIdx.x;
-  int ijk_ispec = ijk + NGLL3*ispec;
 
   // handles case when there is 1 extra block (due to rectangular grid)
   if(ispec < NSPEC_AB) {
 
     // elastic elements only
     if( ispec_is_elastic[ispec] ) {
-      int iglob = ibool[ijk_ispec] - 1 ;
+      int iglob = d_ibool[ijk + NGLL3_PADDED*ispec] - 1;
 
       // approximate hessian
-      hess_kl[ijk_ispec] += deltat * (accel[3*iglob]*b_accel[3*iglob]+
-                                      accel[3*iglob+1]*b_accel[3*iglob+1]+
-                                      accel[3*iglob+2]*b_accel[3*iglob+2]);
+      hess_kl[ijk + NGLL3*ispec] += deltat * (accel[3*iglob]*b_accel[3*iglob]+
+                                              accel[3*iglob+1]*b_accel[3*iglob+1]+
+                                              accel[3*iglob+2]*b_accel[3*iglob+2]);
     }
   }
 }
@@ -596,7 +595,7 @@ __global__ void compute_kernels_hess_el_cudakernel(int* ispec_is_elastic,
 /* ----------------------------------------------------------------------------------------------- */
 
 __global__ void compute_kernels_hess_ac_cudakernel(int* ispec_is_acoustic,
-                                                   int* ibool,
+                                                   int* d_ibool,
                                                    realw* potential_dot_dot_acoustic,
                                                    realw* b_potential_dot_dot_acoustic,
                                                    realw* rhostore,
@@ -611,7 +610,6 @@ __global__ void compute_kernels_hess_ac_cudakernel(int* ispec_is_acoustic,
 
   int ispec = blockIdx.x + blockIdx.y*gridDim.x;
   int ijk = threadIdx.x;
-  int ijk_ispec = ijk + NGLL3*ispec;
   int ijk_ispec_padded = ijk + NGLL3_PADDED*ispec;
   int iglob;
 
@@ -629,7 +627,7 @@ __global__ void compute_kernels_hess_ac_cudakernel(int* ispec_is_acoustic,
       active = 1;
 
       // global indices
-      iglob = ibool[ijk_ispec] - 1 ;
+      iglob = d_ibool[ijk_ispec_padded] - 1;
 
       // copy field values
       scalar_field_accel[ijk] = potential_dot_dot_acoustic[iglob];
@@ -662,9 +660,9 @@ __global__ void compute_kernels_hess_ac_cudakernel(int* ispec_is_acoustic,
                             d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,
                             rhol,gravity);
     // approximates hessian
-    hess_kl[ijk_ispec] += deltat * (accel_elm[0]*b_accel_elm[0] +
-                                    accel_elm[1]*b_accel_elm[1] +
-                                    accel_elm[2]*b_accel_elm[2]);
+    hess_kl[ijk + NGLL3*ispec] += deltat * (accel_elm[0]*b_accel_elm[0] +
+                                            accel_elm[1]*b_accel_elm[1] +
+                                            accel_elm[2]*b_accel_elm[2]);
 
   } // active
 }

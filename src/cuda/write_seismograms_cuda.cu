@@ -75,7 +75,7 @@ __device__ double my_atomicAdd(double* address, double val) {
 
 __global__ void compute_interpolated_dva_plus_seismogram(int nrec_local,
                                                          realw* displ, realw* veloc, realw* accel,
-                                                         int* ibool,
+                                                         int* d_ibool,
                                                          double* hxir, double* hetar, double* hgammar,
                                                          realw* seismograms_d, realw* seismograms_v, realw* seismograms_a,
                                                          double* nu,
@@ -104,7 +104,9 @@ __global__ void compute_interpolated_dva_plus_seismogram(int nrec_local,
   if(irec_local < nrec_local) {
     int irec = number_receiver_global[irec_local]-1;
     int ispec = ispec_selected_rec[irec]-1;
-    int iglob = ibool[ijk+125*ispec]-1;
+
+    int iglob = d_ibool[ijk+NGLL3_PADDED*ispec]-1;
+
     double hlagrange = hxir[irec_local + nrec_local*i]*hetar[irec_local + nrec_local*j]*hgammar[irec_local + nrec_local*k];
     sh_dxd[ijk] = hlagrange*displ[0+3*iglob];
     sh_dyd[ijk] = hlagrange*displ[1+3*iglob];
@@ -252,7 +254,7 @@ void FC_FUNC_(transfer_seismograms_el_from_d,
 
 __global__ void transfer_stations_fields_from_device_kernel(int* number_receiver_global,
                                                             int* ispec_selected_rec,
-                                                            int* ibool,
+                                                            int* d_ibool,
                                                             realw* station_seismo_field,
                                                             realw* desired_field,
                                                             int nrec_local) {
@@ -260,7 +262,8 @@ __global__ void transfer_stations_fields_from_device_kernel(int* number_receiver
   if(blockID<nrec_local) {
     int irec = number_receiver_global[blockID]-1;
     int ispec = ispec_selected_rec[irec]-1;
-    int iglob = ibool[threadIdx.x + NGLL3*ispec]-1;
+
+    int iglob = d_ibool[threadIdx.x + NGLL3_PADDED*ispec]-1;
 
     station_seismo_field[3*NGLL3*blockID + 3*threadIdx.x+0] = desired_field[3*iglob];
     station_seismo_field[3*NGLL3*blockID + 3*threadIdx.x+1] = desired_field[3*iglob+1];
@@ -275,7 +278,7 @@ void transfer_field_from_device(Mesh* mp, realw* d_field,realw* h_field,
                                 int* number_receiver_global,
                                 int* d_ispec_selected,
                                 int* h_ispec_selected,
-                                int* ibool) {
+                                int* h_ibool) {
 
 TRACE("\ttransfer_field_from_device");
 
@@ -308,7 +311,7 @@ TRACE("\ttransfer_field_from_device");
     int ispec = h_ispec_selected[irec] - 1;
 
     for(int i=0;i<NGLL3;i++) {
-      int iglob = ibool[i+NGLL3*ispec] - 1;
+      int iglob = h_ibool[i+NGLL3*ispec] - 1;
       h_field[0+3*iglob] = mp->h_station_seismo_field[0+3*i+irec_local*NGLL3*3];
       h_field[1+3*iglob] = mp->h_station_seismo_field[1+3*i+irec_local*NGLL3*3];
       h_field[2+3*iglob] = mp->h_station_seismo_field[2+3*i+irec_local*NGLL3*3];
@@ -328,7 +331,7 @@ void FC_FUNC_(transfer_station_el_from_device,
                                                    realw* b_displ, realw* b_veloc, realw* b_accel,
                                                    long* Mesh_pointer_f,int* number_receiver_global,
                                                    int* ispec_selected_rec,int* ispec_selected_source,
-                                                   int* ibool) {
+                                                   int* h_ibool) {
 TRACE("transfer_station_el_from_device");
 
   Mesh* mp = (Mesh*)(*Mesh_pointer_f); // get Mesh from fortran integer wrapper
@@ -338,27 +341,27 @@ TRACE("transfer_station_el_from_device");
 
   if(mp->simulation_type == 1) {
     transfer_field_from_device(mp,mp->d_displ,displ, number_receiver_global,
-             mp->d_ispec_selected_rec, ispec_selected_rec, ibool);
+             mp->d_ispec_selected_rec, ispec_selected_rec, h_ibool);
     transfer_field_from_device(mp,mp->d_veloc,veloc, number_receiver_global,
-             mp->d_ispec_selected_rec, ispec_selected_rec, ibool);
+             mp->d_ispec_selected_rec, ispec_selected_rec, h_ibool);
     transfer_field_from_device(mp,mp->d_accel,accel, number_receiver_global,
-             mp->d_ispec_selected_rec, ispec_selected_rec, ibool);
+             mp->d_ispec_selected_rec, ispec_selected_rec, h_ibool);
   }
   else if(mp->simulation_type == 2) {
     transfer_field_from_device(mp,mp->d_displ,displ, number_receiver_global,
-             mp->d_ispec_selected_source, ispec_selected_source, ibool);
+             mp->d_ispec_selected_source, ispec_selected_source, h_ibool);
     transfer_field_from_device(mp,mp->d_veloc,veloc, number_receiver_global,
-             mp->d_ispec_selected_source, ispec_selected_source, ibool);
+             mp->d_ispec_selected_source, ispec_selected_source, h_ibool);
     transfer_field_from_device(mp,mp->d_accel,accel, number_receiver_global,
-             mp->d_ispec_selected_source, ispec_selected_source, ibool);
+             mp->d_ispec_selected_source, ispec_selected_source, h_ibool);
   }
   else if(mp->simulation_type == 3) {
     transfer_field_from_device(mp,mp->d_b_displ,b_displ, number_receiver_global,
-             mp->d_ispec_selected_rec, ispec_selected_rec, ibool);
+             mp->d_ispec_selected_rec, ispec_selected_rec, h_ibool);
     transfer_field_from_device(mp,mp->d_b_veloc,b_veloc, number_receiver_global,
-             mp->d_ispec_selected_rec, ispec_selected_rec, ibool);
+             mp->d_ispec_selected_rec, ispec_selected_rec, h_ibool);
     transfer_field_from_device(mp,mp->d_b_accel,b_accel, number_receiver_global,
-             mp->d_ispec_selected_rec, ispec_selected_rec, ibool);
+             mp->d_ispec_selected_rec, ispec_selected_rec, h_ibool);
   }
 
 }
@@ -371,7 +374,7 @@ TRACE("transfer_station_el_from_device");
 
 __global__ void transfer_stations_fields_acoustic_from_device_kernel(int* number_receiver_global,
                                                                      int* ispec_selected_rec,
-                                                                     int* ibool,
+                                                                     int* d_ibool,
                                                                      realw* station_seismo_potential,
                                                                      realw* desired_potential) {
 
@@ -380,7 +383,8 @@ __global__ void transfer_stations_fields_acoustic_from_device_kernel(int* number
 
   int irec = number_receiver_global[blockID]-1;
   int ispec = ispec_selected_rec[irec]-1;
-  int iglob = ibool[threadIdx.x + NGLL3*ispec]-1;
+
+  int iglob = d_ibool[threadIdx.x + NGLL3_PADDED*ispec]-1;
 
   //if(threadIdx.x == 0 ) printf("node acoustic: %i %i %i %i %i %e \n",blockID,nodeID,irec,ispec,iglob,desired_potential[iglob]);
 
@@ -395,7 +399,7 @@ void transfer_field_acoustic_from_device(Mesh* mp,
                                          int* number_receiver_global,
                                          int* d_ispec_selected,
                                          int* h_ispec_selected,
-                                         int* ibool) {
+                                         int* h_ibool) {
 
 TRACE("transfer_field_acoustic_from_device");
 
@@ -438,7 +442,7 @@ TRACE("transfer_field_acoustic_from_device");
     // copy element values
     // note: iglob may vary and can be irregularly accessing the h_potential array
     for(j=0; j < NGLL3; j++){
-      iglob = ibool[j+NGLL3*ispec]-1;
+      iglob = h_ibool[j+NGLL3*ispec]-1;
       h_potential[iglob] = mp->h_station_seismo_potential[j+irec_local*NGLL3];
     }
 
@@ -466,7 +470,7 @@ void FC_FUNC_(transfer_station_ac_from_device,
                                                 int* number_receiver_global,
                                                 int* ispec_selected_rec,
                                                 int* ispec_selected_source,
-                                                int* ibool) {
+                                                int* h_ibool) {
 
 TRACE("transfer_station_ac_from_device");
   //double start_time = get_time();
@@ -479,35 +483,35 @@ TRACE("transfer_station_ac_from_device");
   if(mp->simulation_type == 1) {
     transfer_field_acoustic_from_device(mp,mp->d_potential_acoustic,potential_acoustic,
                                         number_receiver_global,
-                                        mp->d_ispec_selected_rec, ispec_selected_rec, ibool);
+                                        mp->d_ispec_selected_rec, ispec_selected_rec, h_ibool);
     transfer_field_acoustic_from_device(mp,mp->d_potential_dot_acoustic,potential_dot_acoustic,
                                         number_receiver_global,
-                                        mp->d_ispec_selected_rec, ispec_selected_rec, ibool);
+                                        mp->d_ispec_selected_rec, ispec_selected_rec, h_ibool);
     transfer_field_acoustic_from_device(mp,mp->d_potential_dot_dot_acoustic,potential_dot_dot_acoustic,
                                         number_receiver_global,
-                                        mp->d_ispec_selected_rec, ispec_selected_rec, ibool);
+                                        mp->d_ispec_selected_rec, ispec_selected_rec, h_ibool);
   }
   else if(mp->simulation_type == 2) {
     transfer_field_acoustic_from_device(mp,mp->d_potential_acoustic,potential_acoustic,
                                         number_receiver_global,
-                                        mp->d_ispec_selected_source, ispec_selected_source, ibool);
+                                        mp->d_ispec_selected_source, ispec_selected_source, h_ibool);
     transfer_field_acoustic_from_device(mp,mp->d_potential_dot_acoustic,potential_dot_acoustic,
                                         number_receiver_global,
-                                        mp->d_ispec_selected_source, ispec_selected_source, ibool);
+                                        mp->d_ispec_selected_source, ispec_selected_source, h_ibool);
     transfer_field_acoustic_from_device(mp,mp->d_potential_dot_dot_acoustic,potential_dot_dot_acoustic,
                                         number_receiver_global,
-                                        mp->d_ispec_selected_source, ispec_selected_source, ibool);
+                                        mp->d_ispec_selected_source, ispec_selected_source, h_ibool);
   }
   else if(mp->simulation_type == 3) {
     transfer_field_acoustic_from_device(mp,mp->d_b_potential_acoustic,b_potential_acoustic,
                                         number_receiver_global,
-                                        mp->d_ispec_selected_rec, ispec_selected_rec, ibool);
+                                        mp->d_ispec_selected_rec, ispec_selected_rec, h_ibool);
     transfer_field_acoustic_from_device(mp,mp->d_b_potential_dot_acoustic,b_potential_dot_acoustic,
                                         number_receiver_global,
-                                        mp->d_ispec_selected_rec, ispec_selected_rec, ibool);
+                                        mp->d_ispec_selected_rec, ispec_selected_rec, h_ibool);
     transfer_field_acoustic_from_device(mp,mp->d_b_potential_dot_dot_acoustic,b_potential_dot_dot_acoustic,
                                         number_receiver_global,
-                                        mp->d_ispec_selected_rec, ispec_selected_rec, ibool);
+                                        mp->d_ispec_selected_rec, ispec_selected_rec, h_ibool);
   }
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING

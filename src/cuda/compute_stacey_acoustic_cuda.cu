@@ -44,7 +44,7 @@ __global__ void compute_stacey_acoustic_kernel(realw* potential_dot_acoustic,
                                                int* abs_boundary_ispec,
                                                int* abs_boundary_ijk,
                                                realw* abs_boundary_jacobian2Dw,
-                                               int* ibool,
+                                               int* d_ibool,
                                                realw* rhostore,
                                                realw* kappastore,
                                                int* ispec_is_inner,
@@ -80,7 +80,8 @@ __global__ void compute_stacey_acoustic_kernel(realw* potential_dot_acoustic,
       i = abs_boundary_ijk[INDEX3(NDIM,NGLL2,0,igll,iface)]-1;
       j = abs_boundary_ijk[INDEX3(NDIM,NGLL2,1,igll,iface)]-1;
       k = abs_boundary_ijk[INDEX3(NDIM,NGLL2,2,igll,iface)]-1;
-      iglob = ibool[INDEX4(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
+
+      iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
 
       // determines bulk sound speed
       rhol = rhostore[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)];
