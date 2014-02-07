@@ -118,7 +118,7 @@ TRACE("make_displ_rand");
 __global__ void transfer_surface_to_host_kernel(int* free_surface_ispec,
                                                 int* free_surface_ijk,
                                                 int num_free_surface_faces,
-                                                int* ibool,
+                                                int* d_ibool,
                                                 realw* displ,
                                                 realw* noise_surface_movie) {
   int igll = threadIdx.x;
@@ -133,7 +133,7 @@ __global__ void transfer_surface_to_host_kernel(int* free_surface_ispec,
     int j = free_surface_ijk[INDEX3(NDIM,NGLL2,1,igll,iface)]-1;
     int k = free_surface_ijk[INDEX3(NDIM,NGLL2,2,igll,iface)]-1;
 
-    int iglob = ibool[INDEX4(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
+    int iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
 
     noise_surface_movie[INDEX3(NDIM,NGLL2,0,igll,iface)] = displ[iglob*3];
     noise_surface_movie[INDEX3(NDIM,NGLL2,1,igll,iface)] = displ[iglob*3+1];
@@ -174,7 +174,7 @@ TRACE("transfer_surface_to_host");
 
 /* ----------------------------------------------------------------------------------------------- */
 
-__global__ void noise_read_add_surface_movie_cuda_kernel(realw* accel, int* ibool,
+__global__ void noise_read_add_surface_movie_cuda_kernel(realw* accel, int* d_ibool,
                                                          int* free_surface_ispec,
                                                          int* free_surface_ijk,
                                                          int num_free_surface_faces,
@@ -198,7 +198,7 @@ __global__ void noise_read_add_surface_movie_cuda_kernel(realw* accel, int* iboo
     int j=free_surface_ijk[INDEX3(NDIM,NGLL2,1,igll,iface)]-1;
     int k=free_surface_ijk[INDEX3(NDIM,NGLL2,2,igll,iface)]-1;
 
-    int iglob = ibool[INDEX4(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
+    int iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
 
     realw normal_x = normal_x_noise[ipoin];
     realw normal_y = normal_y_noise[ipoin];

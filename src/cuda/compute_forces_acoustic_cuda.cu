@@ -367,9 +367,9 @@ Kernel_2_acoustic_impl(int nb_blocks_to_compute,
 #endif
     // local padded index
     offset = working_element*NGLL3_PADDED + tx;
-    
+
     // global index
-    iglob = d_ibool[working_element*NGLL3 + tx]-1;
+    iglob = d_ibool[offset] - 1;
 
 #ifdef USE_TEXTURES_FIELDS
     s_dummy_loc[tx] = texfetch_potential<FORWARD_OR_ADJOINT>(iglob);
@@ -458,7 +458,6 @@ Kernel_2_acoustic_impl(int nb_blocks_to_compute,
       // gravity term: 1/kappa grad(chi) * g
       // assumes that g only acts in (negative) z-direction
       kappa_invl = 1.f / d_kappastore[working_element*NGLL3 + tx];
-      iglob = d_ibool[working_element*NGLL3 + tx]-1;
 
       // daniel: TODO - check gravity
 //      if( kappa_invl <= 0.0f ){
@@ -544,8 +543,6 @@ Kernel_2_acoustic_impl(int nb_blocks_to_compute,
 
     sum_terms = -(fac1*temp1l + fac2*temp2l + fac3*temp3l);
     if( gravity ) sum_terms += gravity_term;
-
-    iglob = d_ibool[working_element*NGLL3 + tx]-1;
 
 #ifdef USE_MESH_COLORING_GPU
     // no atomic operation needed, colors don't share global points between elements
@@ -765,7 +762,7 @@ __global__ void enforce_free_surface_cuda_kernel(
                                        const int num_free_surface_faces,
                                        const int* free_surface_ispec,
                                        const int* free_surface_ijk,
-                                       const int* ibool,
+                                       const int* d_ibool,
                                        const int* ispec_is_acoustic) {
   // gets spectral element face id
   int iface = blockIdx.x + gridDim.x*blockIdx.y;
@@ -785,7 +782,7 @@ __global__ void enforce_free_surface_cuda_kernel(
       int j = free_surface_ijk[INDEX3(NDIM,NGLL2,1,igll,iface)] - 1;
       int k = free_surface_ijk[INDEX3(NDIM,NGLL2,2,igll,iface)] - 1;
 
-      int iglob = ibool[INDEX4(NGLLX,NGLLX,NGLLX,i,j,k,ispec)] - 1;
+      int iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)] - 1;
 
       // sets potentials to zero at free surface
       potential_acoustic[iglob] = 0;

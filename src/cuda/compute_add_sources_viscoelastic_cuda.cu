@@ -47,7 +47,7 @@
 /* ----------------------------------------------------------------------------------------------- */
 
 __global__ void compute_add_sources_kernel(realw* accel,
-                                           int* ibool,
+                                           int* d_ibool,
                                            int* ispec_is_inner,
                                            int phase_is_inner,
                                            realw* sourcearrays,
@@ -75,7 +75,7 @@ __global__ void compute_add_sources_kernel(realw* accel,
       if(ispec_is_inner[ispec] == phase_is_inner && ispec_is_elastic[ispec] ) {
 
         stf = (realw) stf_pre_compute[isource];
-        iglob = ibool[INDEX4(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
+        iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
 
         atomicAdd(&accel[iglob*3],sourcearrays[INDEX5(NSOURCES,NDIM,NGLLX,NGLLX,isource, 0,i,j,k)]*stf);
         atomicAdd(&accel[iglob*3+1],sourcearrays[INDEX5(NSOURCES,NDIM,NGLLX,NGLLX,isource, 1,i,j,k)]*stf);
@@ -183,14 +183,14 @@ void FC_FUNC_(compute_add_sources_el_s3_cuda,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-__global__ void add_source_master_rec_noise_cuda_kernel(int* ibool,
+__global__ void add_source_master_rec_noise_cuda_kernel(int* d_ibool,
                                                         int* ispec_selected_rec,
                                                         int irec_master_noise,
                                                         realw* accel,
                                                         realw* noise_sourcearray,
                                                         int it) {
   int tx = threadIdx.x;
-  int iglob = ibool[tx + NGLL3*(ispec_selected_rec[irec_master_noise-1]-1)]-1;
+  int iglob = d_ibool[tx + NGLL3_PADDED*(ispec_selected_rec[irec_master_noise-1]-1)]-1;
 
   // not sure if we need atomic operations but just in case...
   // accel[3*iglob] += noise_sourcearray[3*tx + 3*125*it];
@@ -245,7 +245,7 @@ TRACE("\tadd_source_master_rec_noise_cu");
 __global__ void add_sources_el_SIM_TYPE_2_OR_3_kernel(realw* accel,
                                                      int nrec,
                                                      realw* adj_sourcearrays,
-                                                     int* ibool,
+                                                     int* d_ibool,
                                                      int* ispec_is_inner,
                                                      int* ispec_is_elastic,
                                                      int* ispec_selected_rec,
@@ -266,7 +266,7 @@ __global__ void add_sources_el_SIM_TYPE_2_OR_3_kernel(realw* accel,
         int i = threadIdx.x;
         int j = threadIdx.y;
         int k = threadIdx.z;
-        int iglob = ibool[INDEX4(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
+        int iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
 
         // atomic operations are absolutely necessary for correctness!
         atomicAdd(&accel[3*iglob],adj_sourcearrays[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,0,irec_local)]);
@@ -314,7 +314,7 @@ void FC_FUNC_(add_sources_el_sim_type_2_or_3,
 
   it_index = (*time_index) - 1;
   irec_local = 0;
-  
+
   for(int irec = 0; irec < *nrec; irec++) {
     if(mp->myrank == h_islice_selected_rec[irec]) {
       // takes only elastic sources

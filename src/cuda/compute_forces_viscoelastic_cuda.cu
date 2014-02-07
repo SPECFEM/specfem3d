@@ -394,12 +394,6 @@ TRACE("\ttransfer_asmbl_accel_to_device");
 //  //double start_time = get_time();
 //  dim3 grid(num_blocks_x,num_blocks_y);
 //  dim3 threads(blocksize,1,1);
-//  // cudaEvent_t start, stop;
-//  // realw time;
-//  // cudaEventCreate(&start);
-//  // cudaEventCreate(&stop);
-//  // cudaEventRecord( start, 0 );
-//
 //
 //  // ***************************************************************************
 //  // Wait until previous copy stream finishes. We assemble while other compute kernels execute.
@@ -421,15 +415,7 @@ TRACE("\ttransfer_asmbl_accel_to_device");
 //                                                        mp->d_ibool_interfaces_ext_mesh);
 //  }
 //
-//  // cudaEventRecord( stop, 0 );
-//  // cudaEventSynchronize( stop );
-//  // cudaEventElapsedTime( &time, start, stop );
-//  // cudaEventDestroy( start );
-//  // cudaEventDestroy( stop );
-//  // printf("Boundary Assemble Kernel Execution Time: %f ms\n",time);
 //#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-//  //double end_time = get_time();
-//  //printf("Elapsed time: %e\n",end_time-start_time);
 //  exit_on_cuda_error("assemble_accel_on_device");
 //#endif
 //}
@@ -442,31 +428,6 @@ TRACE("\ttransfer_asmbl_accel_to_device");
 
 /* ----------------------------------------------------------------------------------------------- */
 
-/* ----------------------------------------------------------------------------------------------- */
-
-//__global__ void Kernel_test(realw* d_debug_output,int* d_phase_ispec_inner_elastic,
-//                            int num_phase_ispec_elastic, int d_iphase, int* d_ibool) {
-//  int bx = blockIdx.x;
-//  int tx = threadIdx.x;
-//  int working_element;
-//  //int ispec;
-//  //int NGLL3_ALIGN = 128;
-//  if(tx==0 && bx==0) {
-//
-//    d_debug_output[0] = 420.0;
-//
-//    d_debug_output[2] = num_phase_ispec_elastic;
-//    d_debug_output[3] = d_iphase;
-//    working_element = d_phase_ispec_inner_elastic[bx + num_phase_ispec_elastic*(d_iphase-1)]-1;
-//    d_debug_output[4] = working_element;
-//    d_debug_output[5] = d_phase_ispec_inner_elastic[0];
-//    /* d_debug_output[1] = d_ibool[working_element*NGLL3_ALIGN + tx]-1; */
-//  }
-//  /* d_debug_output[1+tx+128*bx] = 69.0; */
-//
-//}
-
-/* ----------------------------------------------------------------------------------------------- */
 
 // updates stress
 
@@ -483,15 +444,15 @@ __device__ void compute_element_att_stress(int tx,int working_element,const int 
     // index
     offset_sls = tx + NGLL3*(working_element + NSPEC*i_sls);
 
-    R_xx_val = R_xx[offset_sls]; //(i,j,k,ispec,i_sls)
-    R_yy_val = R_yy[offset_sls];
+    R_xx_val = get_global_cr( &R_xx[offset_sls] ); //(i,j,k,ispec,i_sls)
+    R_yy_val = get_global_cr( &R_yy[offset_sls] );
 
     *sigma_xx = *sigma_xx - R_xx_val;
     *sigma_yy = *sigma_yy - R_yy_val;
     *sigma_zz = *sigma_zz + R_xx_val + R_yy_val;
-    *sigma_xy = *sigma_xy - R_xy[offset_sls];
-    *sigma_xz = *sigma_xz - R_xz[offset_sls];
-    *sigma_yz = *sigma_yz - R_yz[offset_sls];
+    *sigma_xy = *sigma_xy - get_global_cr( &R_xy[offset_sls] );
+    *sigma_xz = *sigma_xz - get_global_cr( &R_xz[offset_sls] );
+    *sigma_yz = *sigma_yz - get_global_cr( &R_yz[offset_sls] );
   }
   return;
 }
@@ -516,13 +477,17 @@ __device__ void compute_element_att_memory(int tx,int working_element,const int 
   int offset_sls,offset_align,offset_common;
   realw mul;
   realw alphaval_loc,betaval_loc,gammaval_loc;
-  realw factor_loc,Sn,Snp1;
+  realw factor_loc;
+
+  realw rxxl,ryyl,rxyl,rxzl,ryzl;
+  realw Sn_xx,Sn_yy,Sn_xy,Sn_xz,Sn_yz;
+  realw Snp1_xx,Snp1_yy,Snp1_xy,Snp1_xz,Snp1_yz;
 
   // indices
   offset_align = tx + NGLL3_PADDED * working_element;
   ijk_ispec = tx + NGLL3 * working_element;
 
-  mul = d_muv[offset_align];
+  mul = get_global_cr( &d_muv[offset_align] );
 
   // use Runge-Kutta scheme to march in time
   for(i_sls = 0; i_sls < N_SLS; i_sls++){
@@ -531,43 +496,48 @@ __device__ void compute_element_att_memory(int tx,int working_element,const int 
     offset_common = i_sls + N_SLS*(tx + NGLL3*working_element); // (i_sls,i,j,k,ispec)
     offset_sls = tx + NGLL3*(working_element + NSPEC*i_sls);   // (i,j,k,ispec,i_sls)
 
-    factor_loc = mul * factor_common[offset_common]; //mustore(i,j,k,ispec) * factor_common(i_sls,i,j,k,ispec)
+    factor_loc = mul * get_global_cr( &factor_common[offset_common] ); //mustore(i,j,k,ispec) * factor_common(i_sls,i,j,k,ispec)
 
     alphaval_loc = alphaval[i_sls]; // (i_sls)
     betaval_loc = betaval[i_sls];
     gammaval_loc = gammaval[i_sls];
 
     // term in xx
-    Sn   = factor_loc * epsilondev_xx[ijk_ispec]; //(i,j,k,ispec)
-    Snp1   = factor_loc * epsilondev_xx_loc; //(i,j,k)
+    Sn_xx   = factor_loc * get_global_cr( &epsilondev_xx[ijk_ispec] ); //(i,j,k,ispec)
+    Snp1_xx   = factor_loc * epsilondev_xx_loc; //(i,j,k)
 
-    //R_xx(i,j,k,ispec,i_sls) = alphaval_loc * R_xx(i,j,k,ispec,i_sls) +
-    //                          betaval_loc * Sn + gammaval_loc * Snp1;
-
-    R_xx[offset_sls] = alphaval_loc * R_xx[offset_sls] +
-                       betaval_loc * Sn + gammaval_loc * Snp1;
+    rxxl = get_global_cr( &R_xx[offset_sls] );
+    R_xx[offset_sls] = alphaval_loc * rxxl + betaval_loc * Sn_xx + gammaval_loc * Snp1_xx;
 
     // term in yy
-    Sn   = factor_loc * epsilondev_yy[ijk_ispec];
-    Snp1   = factor_loc * epsilondev_yy_loc;
-    R_yy[offset_sls] = alphaval_loc * R_yy[offset_sls] +
-                        betaval_loc * Sn + gammaval_loc * Snp1;
+    Sn_yy   = factor_loc * get_global_cr( &epsilondev_yy[ijk_ispec] );
+    Snp1_yy   = factor_loc * epsilondev_yy_loc;
+
+    ryyl = get_global_cr( &R_yy[offset_sls] );
+    R_yy[offset_sls] = alphaval_loc * ryyl + betaval_loc * Sn_yy + gammaval_loc * Snp1_yy;
+
     // term in zz not computed since zero trace
     // term in xy
-    Sn   = factor_loc * epsilondev_xy[ijk_ispec];
-    Snp1   = factor_loc * epsilondev_xy_loc;
-    R_xy[offset_sls] = alphaval_loc * R_xy[offset_sls] +
-                        betaval_loc * Sn + gammaval_loc * Snp1;
+    Sn_xy   = factor_loc * get_global_cr( &epsilondev_xy[ijk_ispec] );
+    Snp1_xy   = factor_loc * epsilondev_xy_loc;
+
+    rxyl = get_global_cr( &R_xy[offset_sls] );
+    R_xy[offset_sls] = alphaval_loc * rxyl + betaval_loc * Sn_xy + gammaval_loc * Snp1_xy;
+
     // term in xz
-    Sn   = factor_loc * epsilondev_xz[ijk_ispec];
-    Snp1   = factor_loc * epsilondev_xz_loc;
-    R_xz[offset_sls] = alphaval_loc * R_xz[offset_sls] +
-                        betaval_loc * Sn + gammaval_loc * Snp1;
+    Sn_xz   = factor_loc * get_global_cr( &epsilondev_xz[ijk_ispec] );
+    Snp1_xz   = factor_loc * epsilondev_xz_loc;
+
+    rxzl = get_global_cr( &R_xz[offset_sls] );
+    R_xz[offset_sls] = alphaval_loc * rxzl + betaval_loc * Sn_xz + gammaval_loc * Snp1_xz;
+
     // term in yz
-    Sn   = factor_loc * epsilondev_yz[ijk_ispec];
-    Snp1   = factor_loc * epsilondev_yz_loc;
-    R_yz[offset_sls] = alphaval_loc * R_yz[offset_sls] +
-                        betaval_loc * Sn + gammaval_loc * Snp1;
+    Sn_yz   = factor_loc * get_global_cr( &epsilondev_yz[ijk_ispec] );
+    Snp1_yz   = factor_loc * epsilondev_yz_loc;
+
+    ryzl = get_global_cr( &R_yz[offset_sls] );
+    R_yz[offset_sls] = alphaval_loc * ryzl + betaval_loc * Sn_yz + gammaval_loc * Snp1_yz;
+
   }
   return;
 }
@@ -577,7 +547,7 @@ __device__ void compute_element_att_memory(int tx,int working_element,const int 
 // pre-computes gravity term
 
 __device__ void compute_element_gravity(int tx,int working_element,
-                                        const int* d_ibool,
+                                        const int* iglob,
                                         realw_const_p d_minus_g,
                                         realw_const_p d_minus_deriv_gravity,
                                         realw_const_p d_rhostore,
@@ -594,7 +564,6 @@ __device__ void compute_element_gravity(int tx,int working_element,
                                         realw* rho_s_H2,
                                         realw* rho_s_H3){
 
-  int iglob;
   realw minus_g,minus_dg;
   realw rhol;
   realw gzl; // gxl,gyl,
@@ -605,10 +574,8 @@ __device__ void compute_element_gravity(int tx,int working_element,
   // compute non-symmetric terms for gravity
 
   // get g, rho and dg/dr=dg
-  iglob = d_ibool[working_element*NGLL3 + tx]-1;
-
-  minus_g = d_minus_g[iglob];
-  minus_dg = d_minus_deriv_gravity[iglob];
+  minus_g = d_minus_g[*iglob];
+  minus_dg = d_minus_deriv_gravity[*iglob];
 
   // Cartesian components of the gravitational acceleration
   //gxl = 0.f;
@@ -625,7 +592,7 @@ __device__ void compute_element_gravity(int tx,int working_element,
   //Hxzl = 0.f;
   //Hyzl = 0.f;
 
-  rhol = d_rhostore[working_element*NGLL3_PADDED + tx];
+  rhol = get_global_cr( &d_rhostore[working_element*NGLL3_PADDED + tx] );
 
   // get displacement and multiply by density to compute G tensor
   // G = rho [ sg - (s * g) I  ]
@@ -759,7 +726,6 @@ Kernel_2_noatt_impl(int nb_blocks_to_compute,
                     const int d_iphase,
                     const int use_mesh_coloring_gpu,
                     realw_const_p d_displ,
-                    realw_const_p d_veloc,
                     realw_p d_accel,
                     realw_const_p d_xix,realw_const_p d_xiy,realw_const_p d_xiz,
                     realw_const_p d_etax,realw_const_p d_etay,realw_const_p d_etaz,
@@ -814,7 +780,7 @@ Kernel_2_noatt_impl(int nb_blocks_to_compute,
   realw duxdxl_plus_duydyl,duxdxl_plus_duzdzl,duydyl_plus_duzdzl;
   realw duxdyl_plus_duydxl,duzdxl_plus_duxdzl,duzdyl_plus_duydzl;
   realw templ;
-  
+
   realw fac1,fac2,fac3;
   realw lambdal,mul,lambdalplus2mul,kappal;
 
@@ -851,7 +817,7 @@ Kernel_2_noatt_impl(int nb_blocks_to_compute,
   __shared__ realw s_dummyx_loc[NGLL3];
   __shared__ realw s_dummyy_loc[NGLL3];
   __shared__ realw s_dummyz_loc[NGLL3];
-  
+
   // use only NGLL^3 = 125 active threads, plus 3 inactive/ghost threads,
   // because we used memory padding from NGLL^3 = 125 to 128 to get coalescent memory accesses
   active = (tx < NGLL3 && bx < nb_blocks_to_compute) ? 1:0;
@@ -875,7 +841,7 @@ Kernel_2_noatt_impl(int nb_blocks_to_compute,
     offset = working_element*NGLL3_PADDED + tx;
 
     // global index
-    iglob = d_ibool[working_element*NGLL3 + tx]-1;
+    iglob = d_ibool[offset] - 1 ;
 
     // copy displacement from global memory to shared memory
     load_shared_memory_displ<FORWARD_OR_ADJOINT>(&tx,&iglob,d_displ,s_dummyx_loc,s_dummyy_loc,s_dummyz_loc);
@@ -989,15 +955,15 @@ Kernel_2_noatt_impl(int nb_blocks_to_compute,
 #endif
 
     // compute derivatives of ux, uy and uz with respect to x, y and z
-    xixl = d_xix[offset];
-    xiyl = d_xiy[offset];
-    xizl = d_xiz[offset];
-    etaxl = d_etax[offset];
-    etayl = d_etay[offset];
-    etazl = d_etaz[offset];
-    gammaxl = d_gammax[offset];
-    gammayl = d_gammay[offset];
-    gammazl = d_gammaz[offset];
+    xixl = get_global_cr( &d_xix[offset] );
+    xiyl = get_global_cr( &d_xiy[offset] );
+    xizl = get_global_cr( &d_xiz[offset] );
+    etaxl = get_global_cr( &d_etax[offset] );
+    etayl = get_global_cr( &d_etay[offset] );
+    etazl = get_global_cr( &d_etaz[offset] );
+    gammaxl = get_global_cr( &d_gammax[offset] );
+    gammayl = get_global_cr( &d_gammay[offset] );
+    gammazl = get_global_cr( &d_gammaz[offset] );
 
     jacobianl = 1.0f / (xixl*(etayl*gammazl-etazl*gammayl)
                        -xiyl*(etaxl*gammazl-etazl*gammaxl)
@@ -1085,8 +1051,8 @@ Kernel_2_noatt_impl(int nb_blocks_to_compute,
       // isotropic case
 
       // compute elements with an elastic isotropic rheology
-      kappal = d_kappav[offset];
-      mul = d_muv[offset];
+      kappal = get_global_cr( &d_kappav[offset] );
+      mul = get_global_cr( &d_muv[offset] );
 
       lambdalplus2mul = kappal + 1.33333333333333333333f * mul;  // 4./3. = 1.3333333
       lambdal = lambdalplus2mul - 2.0f * mul;
@@ -1108,13 +1074,13 @@ Kernel_2_noatt_impl(int nb_blocks_to_compute,
 
     if( gravity ){
       //  computes non-symmetric terms for gravity
-      compute_element_gravity(tx,working_element,d_ibool,d_minus_g,d_minus_deriv_gravity,
+      compute_element_gravity(tx,working_element,&iglob,d_minus_g,d_minus_deriv_gravity,
                               d_rhostore,wgll_cube,jacobianl,
                               s_dummyx_loc,s_dummyy_loc,s_dummyz_loc,
                               &sigma_xx,&sigma_yy,&sigma_xz,&sigma_yz,
                               &rho_s_H1,&rho_s_H2,&rho_s_H3);
     }
-    
+
     // form dot product with test vector, non-symmetric form
     s_tempx1[tx] = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl);
     s_tempy1[tx] = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_zy*xizl);
@@ -1234,9 +1200,9 @@ Kernel_2_noatt_impl(int nb_blocks_to_compute,
             + s_tempz3[4*NGLL2+J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX+4];
 #endif
 
-    fac1 = d_wgllwgll_yz[K*NGLLX+J];
-    fac2 = d_wgllwgll_xz[K*NGLLX+I];
-    fac3 = d_wgllwgll_xy[J*NGLLX+I];
+    fac1 = get_global_cr( &d_wgllwgll_yz[K*NGLLX+J] );
+    fac2 = get_global_cr( &d_wgllwgll_xz[K*NGLLX+I] );
+    fac3 = get_global_cr( &d_wgllwgll_xy[J*NGLLX+I] );
 
     sum_terms1 = - (fac1*tempx1l + fac2*tempx2l + fac3*tempx3l);
     sum_terms2 = - (fac1*tempy1l + fac2*tempy2l + fac3*tempy3l);
@@ -1378,7 +1344,7 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
   realw duxdxl_plus_duydyl,duxdxl_plus_duzdzl,duydyl_plus_duzdzl;
   realw duxdyl_plus_duydxl,duzdxl_plus_duxdzl,duzdyl_plus_duydzl;
   realw templ;
-  
+
   realw tempx1l_att,tempx2l_att,tempx3l_att,tempy1l_att,tempy2l_att,tempy3l_att,tempz1l_att,tempz2l_att,tempz3l_att;
   realw duxdxl_att,duxdyl_att,duxdzl_att,duydxl_att,duydyl_att,duydzl_att,duzdxl_att,duzdyl_att,duzdzl_att;
   realw duxdyl_plus_duydxl_att,duzdxl_plus_duxdzl_att,duzdyl_plus_duydzl_att;
@@ -1423,7 +1389,7 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
   realw* s_dummyx_loc_att = (realw*) s_tempx1;
   realw* s_dummyy_loc_att = (realw*) s_tempx2;
   realw* s_dummyz_loc_att = (realw*) s_tempx3;
-  
+
   // use only NGLL^3 = 125 active threads, plus 3 inactive/ghost threads,
   // because we used memory padding from NGLL^3 = 125 to 128 to get coalescent memory accesses
   active = (tx < NGLL3 && bx < nb_blocks_to_compute) ? 1:0;
@@ -1447,7 +1413,7 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
     offset = working_element*NGLL3_PADDED + tx;
 
     // global index
-    iglob = d_ibool[working_element*NGLL3 + tx]-1;
+    iglob = d_ibool[offset] - 1;
 
     // copy displacement from global memory to shared memory
     load_shared_memory_displ<FORWARD_OR_ADJOINT>(&tx,&iglob,d_displ,s_dummyx_loc,s_dummyy_loc,s_dummyz_loc);
@@ -1661,15 +1627,15 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
 #endif
 
     // compute derivatives of ux, uy and uz with respect to x, y and z
-    xixl = d_xix[offset];
-    xiyl = d_xiy[offset];
-    xizl = d_xiz[offset];
-    etaxl = d_etax[offset];
-    etayl = d_etay[offset];
-    etazl = d_etaz[offset];
-    gammaxl = d_gammax[offset];
-    gammayl = d_gammay[offset];
-    gammazl = d_gammaz[offset];
+    xixl = get_global_cr( &d_xix[offset] );
+    xiyl = get_global_cr( &d_xiy[offset] );
+    xizl = get_global_cr( &d_xiz[offset] );
+    etaxl = get_global_cr( &d_etax[offset] );
+    etayl = get_global_cr( &d_etay[offset] );
+    etazl = get_global_cr( &d_etaz[offset] );
+    gammaxl = get_global_cr( &d_gammax[offset] );
+    gammayl = get_global_cr( &d_gammay[offset] );
+    gammazl = get_global_cr( &d_gammaz[offset] );
 
     jacobianl = 1.0f / (xixl*(etayl*gammazl-etazl*gammayl)
                        -xiyl*(etaxl*gammazl-etazl*gammaxl)
@@ -1773,12 +1739,12 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
       // isotropic case
 
       // compute elements with an elastic isotropic rheology
-      kappal = d_kappav[offset];
-      mul = d_muv[offset];
+      kappal = get_global_cr( &d_kappav[offset] );
+      mul = get_global_cr( &d_muv[offset] );
 
       // attenuation
       // use unrelaxed parameters if attenuation
-      mul  = mul * one_minus_sum_beta[tx+working_element*NGLL3]; // (i,j,k,ispec)
+      mul  = mul * get_global_cr( &one_minus_sum_beta[tx+working_element*NGLL3] ); // (i,j,k,ispec)
 
       lambdalplus2mul = kappal + 1.33333333333333333333f * mul;  // 4./3. = 1.3333333
       lambdal = lambdalplus2mul - 2.0f * mul;
@@ -1806,7 +1772,7 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
 
     if( gravity ){
       //  computes non-symmetric terms for gravity
-      compute_element_gravity(tx,working_element,d_ibool,d_minus_g,d_minus_deriv_gravity,
+      compute_element_gravity(tx,working_element,&iglob,d_minus_g,d_minus_deriv_gravity,
                               d_rhostore,wgll_cube,jacobianl,
                               s_dummyx_loc,s_dummyy_loc,s_dummyz_loc,
                               &sigma_xx,&sigma_yy,&sigma_xz,&sigma_yz,
@@ -1816,7 +1782,7 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
 
   //note: due to re-assignement of s_dummyx_loc_att,..,we need to sync before updating s_tempx1...
   __syncthreads();
-  
+
   if( active ){
     // form dot product with test vector, non-symmetric form
     s_tempx1[tx] = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl);
@@ -2052,9 +2018,9 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
   exit_on_cuda_error("before kernel Kernel 2");
 #endif
 
-  /* if the grid can handle the number of blocks, we let it be 1D */
-  /* grid_2_x = nb_elem_color; */
-  /* nb_elem_color is just how many blocks we are computing now */
+  // if the grid can handle the number of blocks, we let it be 1D
+  // grid_2_x = nb_elem_color;
+  // nb_elem_color is just how many blocks we are computing now
 
   int blocksize = NGLL3_PADDED;
 
@@ -2069,9 +2035,6 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
   //start_timing_cuda(&start,&stop);
 
   if( ATTENUATION ){
-    // debug
-    //printf("Running Kernel_2 with attenuation\n");
-
     // compute kernels with attenuation
     // forward wavefields -> FORWARD_OR_ADJOINT == 1
     Kernel_2_att_impl<1><<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
@@ -2155,9 +2118,6 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                    mp->d_wgll_cube);
     }
   }else{
-    // debug
-    //printf("Running Kernel_2 without attenuation\n");
-
     // compute kernels without attenuation
     // forward wavefields -> FORWARD_OR_ADJOINT == 1
     Kernel_2_noatt_impl<1><<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
@@ -2166,7 +2126,8 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                   mp->d_phase_ispec_inner_elastic,mp->num_phase_ispec_elastic,
                                                                   d_iphase,
                                                                   mp->use_mesh_coloring_gpu,
-                                                                  mp->d_displ,mp->d_veloc,mp->d_accel,
+                                                                  mp->d_displ,
+                                                                  mp->d_accel,
                                                                   d_xix, d_xiy, d_xiz,
                                                                   d_etax, d_etay, d_etaz,
                                                                   d_gammax, d_gammay, d_gammaz,
@@ -2206,7 +2167,8 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                      mp->d_phase_ispec_inner_elastic,mp->num_phase_ispec_elastic,
                                                                      d_iphase,
                                                                      mp->use_mesh_coloring_gpu,
-                                                                     mp->d_b_displ,mp->d_b_veloc,mp->d_b_accel,
+                                                                     mp->d_b_displ,
+                                                                     mp->d_b_accel,
                                                                      d_xix, d_xiy, d_xiz,
                                                                      d_etax, d_etay, d_etaz,
                                                                      d_gammax, d_gammay, d_gammaz,
@@ -2245,7 +2207,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
   //}else{
   //  stop_timing_cuda(&start,&stop,"Kernel_2_noatt_impl");
   //}
-  
+
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   exit_on_cuda_error("Kernel_2_impl");
 #endif
@@ -2326,7 +2288,7 @@ void FC_FUNC_(compute_forces_viscoelastic_cuda,
       Kernel_2(nb_blocks_to_compute,mp,*iphase,*deltat,
                *COMPUTE_AND_STORE_STRAIN,
                *ATTENUATION,*ANISOTROPY,
-               mp->d_ibool + offset_nonpadded,
+               mp->d_ibool + offset,
                mp->d_xix + offset,mp->d_xiy + offset,mp->d_xiz + offset,
                mp->d_etax + offset,mp->d_etay + offset,mp->d_etaz + offset,
                mp->d_gammax + offset,mp->d_gammay + offset,mp->d_gammaz + offset,

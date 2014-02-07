@@ -46,7 +46,7 @@
 /* ----------------------------------------------------------------------------------------------- */
 
 __global__ void compute_add_sources_acoustic_kernel(realw* potential_dot_dot_acoustic,
-                                                    int* ibool,
+                                                    int* d_ibool,
                                                     int* ispec_is_inner,
                                                     int phase_is_inner,
                                                     realw* sourcearrays,
@@ -74,7 +74,7 @@ __global__ void compute_add_sources_acoustic_kernel(realw* potential_dot_dot_aco
 
       if(ispec_is_inner[ispec] == phase_is_inner && ispec_is_acoustic[ispec] ) {
 
-        iglob = ibool[INDEX4(NGLLX,NGLLX,NGLLX,i,j,k,ispec)] - 1;
+        iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)] - 1;
 
         stf = (realw) stf_pre_compute[isource];
         kappal = kappastore[INDEX4(NGLLX,NGLLX,NGLLX,i,j,k,ispec)];
@@ -195,7 +195,7 @@ void FC_FUNC_(compute_add_sources_ac_s3_cuda,
 __global__ void add_sources_ac_SIM_TYPE_2_OR_3_kernel(realw* potential_dot_dot_acoustic,
                                                       int nrec,
                                                       realw* adj_sourcearrays,
-                                                      int* ibool,
+                                                      int* d_ibool,
                                                       int* ispec_is_inner,
                                                       int* ispec_is_acoustic,
                                                       int* ispec_selected_rec,
@@ -220,7 +220,7 @@ __global__ void add_sources_ac_SIM_TYPE_2_OR_3_kernel(realw* potential_dot_dot_a
         int j = threadIdx.y;
         int k = threadIdx.z;
 
-        int iglob = ibool[INDEX4(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
+        int iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
 
         //kappal = kappastore[INDEX4(5,5,5,i,j,k,ispec)];
 
@@ -286,7 +286,7 @@ void FC_FUNC_(add_sources_ac_sim_2_or_3_cuda,
 
   it_index = (*time_index) - 1;
   irec_local = 0;
-  
+
   for(int irec = 0; irec < *nrec; irec++) {
     if(mp->myrank == h_islice_selected_rec[irec]) {
       // takes only acoustic sources
@@ -318,7 +318,7 @@ void FC_FUNC_(add_sources_ac_sim_2_or_3_cuda,
           }
         } // phase_is_inner
       } // h_ispec_is_acoustic
-      
+
       // increases local receivers counter
       irec_local++;
     }

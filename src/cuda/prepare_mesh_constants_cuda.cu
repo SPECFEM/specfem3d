@@ -215,7 +215,7 @@ void FC_FUNC_(prepare_constants_device,
   print_CUDA_error_if_any(cudaMalloc((void**) &mp->d_muv, size_padded*sizeof(realw)),1011);
 
   // transfer constant element data with padding
-  /* 
+  /*
   // way 1: slow...
   for(int i=0;i < mp->NSPEC_AB;i++) {
     print_CUDA_error_if_any(cudaMemcpy(mp->d_xix + i*NGLL3_PADDED, &h_xix[i*NGLL3],
@@ -277,8 +277,12 @@ void FC_FUNC_(prepare_constants_device,
                                        h_muv, NGLL3*sizeof(realw), NGLL3*sizeof(realw),
                                        mp->NSPEC_AB, cudaMemcpyHostToDevice),1511);
 
-  // global indexing
-  copy_todevice_int((void**)&mp->d_ibool,h_ibool,NGLL3*(mp->NSPEC_AB));
+  // global indexing (padded)
+  print_CUDA_error_if_any(cudaMalloc((void**) &mp->d_ibool, size_padded*sizeof(int)),1600);
+  print_CUDA_error_if_any(cudaMemcpy2D(mp->d_ibool, NGLL3_PADDED*sizeof(int),
+                                       h_ibool, NGLL3*sizeof(int), NGLL3*sizeof(int),
+                                       mp->NSPEC_AB, cudaMemcpyHostToDevice),1601);
+
 
   // prepare interprocess-edge exchange information
   mp->num_interfaces_ext_mesh = *num_interfaces_ext_mesh;
@@ -941,7 +945,7 @@ void FC_FUNC_(prepare_fields_elastic_device,
                                          mp->NSPEC_AB, cudaMemcpyHostToDevice),4800);
 
 
-    
+
   }
 
   // ocean load approximation
@@ -1317,7 +1321,7 @@ void FC_FUNC_(prepare_fields_gravity_device,
       print_CUDA_error_if_any(cudaMemcpy2D(mp->d_rhostore, NGLL3_PADDED*sizeof(realw),
                                            rhostore, NGLL3*sizeof(realw), NGLL3*sizeof(realw),
                                            mp->NSPEC_AB, cudaMemcpyHostToDevice),4800);
-      
+
     }
   }
 

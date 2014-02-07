@@ -4,7 +4,7 @@ autom4te.cache
 config.log
 config.status
 config.h
-Makefile
+./Makefile
 setup/constants.h
 setup/precision.h
 
