@@ -187,6 +187,7 @@ combine_vol_data_auxiliaries_OBJECTS += \
 	$O/combine_vol_data_adios_impl.aux_adios.o
 else
 combine_vol_data_auxiliaries_OBJECTS += \
+	$O/bypass_implicit_interface.aux_noadios.o \
 	$O/adios_manager_stubs.shared_noadios.o \
 	$O/combine_vol_data_adios_stubs.aux_noadios.o
 endif
@@ -271,7 +272,7 @@ $O/adios_helpers.shared_adios.o: \
 	$O/adios_helpers_definitions.shared_adios.o \
 	$O/adios_helpers_writers.shared_adios.o
 else
-$O/combine_vol_data.aux.o: $O/combine_vol_data_impl.aux.o $O/combine_vol_data_adios_stubs.aux_noadios.o
+$O/combine_vol_data.aux.o: $O/combine_vol_data_impl.aux.o $O/combine_vol_data_adios_stubs.aux_noadios.o $O/bypass_implicit_interface.aux_noadios.o
 endif
 
 
