@@ -162,7 +162,10 @@
   integer, dimension(:), allocatable  :: ibelm_moho
   integer, dimension(:,:), allocatable  :: nodes_ibelm_moho
 
-  integer :: nglob_total,nspec_total
+  integer :: nspec_total
+! this can overflow if more than 2 Gigapoints in the whole mesh, thus replaced with double precision version
+! integer :: nglob_total
+  double precision :: nglob_total
 
   logical,dimension(:),allocatable :: ispec_is_surface_external_mesh,iglob_is_surface_external_mesh
   integer :: nfaces_surface_ext_mesh,nfaces_surface_glob_ext_mesh

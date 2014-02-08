@@ -25,7 +25,6 @@
 !=====================================================================
 !
 
-
   subroutine finalize_databases
 
 ! checks user input parameters
@@ -36,8 +35,12 @@
   integer :: i
 
 ! print number of points and elements in the mesh
-  call sum_all_i(NGLOB_AB,nglob_total)
   call sum_all_i(NSPEC_AB,nspec_total)
+
+! this can overflow if more than 2 Gigapoints in the whole mesh, thus replaced with double precision version
+! call sum_all_i(NGLOB_AB,nglob_total)
+  call sum_all_dp(dble(NGLOB_AB),nglob_total)
+
   call sync_all()
   if(myrank == 0) then
     write(IMAIN,*)
@@ -48,8 +51,12 @@
     write(IMAIN,*) 'total number of points in each slice: ',NGLOB_AB
     write(IMAIN,*)
     write(IMAIN,*) 'total number of elements in entire mesh: ',nspec_total
+! the float() statement below are for the case of more than 2 Gigapoints per mesh, in which
+! case and integer(kind=4) counter would overflow and display an incorrect negative value;
+! converting it to float fixes the problem (but then prints some extra decimals equal to zero).
+! Another option would be to declare the sum as integer(kind=8) and then print it.
     write(IMAIN,*) 'total number of points in entire mesh: ',nglob_total
-    write(IMAIN,*) 'total number of DOFs in entire mesh: ',nglob_total*NDIM
+    write(IMAIN,*) 'total number of DOFs in entire mesh: ',nglob_total*dble(NDIM)
     write(IMAIN,*)
     write(IMAIN,*) 'total number of time steps in the solver will be: ',NSTEP
     write(IMAIN,*)

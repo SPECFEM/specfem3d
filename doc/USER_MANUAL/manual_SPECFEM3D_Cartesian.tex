@@ -425,6 +425,11 @@ that you use the Intel icc C compiler to compile Scotch, i.e., use:
 \begin{lyxcode}
 ./configure~CC=icc~FC=ifort~MPIFC=mpif90
 \end{lyxcode}
+
+When compiling the SCOTCH source code, if you get a message such as: "ld: cannot find -lz",
+the Zlib compression development library is probably missing on your machine and you will need to install it or ask your system administrator to 
+do so. On Linux machines the package is often called "zlib1g-dev" or similar. (thus "sudo apt-get install zlib1g-dev" would install it)
+
 To compile a serial version of the code for small meshes that fits
 on one compute node and can therefore be run serially, run \texttt{configure}
 with the \texttt{-{}-without-mpi} option to suppress all calls to
