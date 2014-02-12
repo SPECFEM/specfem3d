@@ -93,9 +93,12 @@ void FC_FUNC_(initialize_cuda_device,
   // Gets number of GPU devices
   device_count = 0;
   cudaGetDeviceCount(&device_count);
-
-  // checks if command failed
-  exit_on_cuda_error("CUDA runtime error: cudaGetDeviceCount failed\ncheck if driver and runtime libraries work together\nexiting...\n");
+  // Do not check if command failed: 
+  // `exit_on_cuda_error` call cudaDevice/ThreadSynchronize. If multiple 
+  // MPI tasks access multiple GPUs per node, they will try to synchronize
+  // GPU 0 and depending on the order of the calls error will be raised
+  // when setting the device number. If MPS is enabled, some GPUs will silently
+  // not be used.
 
   // returns device count to fortran
   if (device_count == 0) exit_on_error("CUDA runtime error: there is no device supporting CUDA\n");
