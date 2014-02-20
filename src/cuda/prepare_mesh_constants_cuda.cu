@@ -1408,9 +1408,11 @@ TRACE("prepare_cleanup_device");
   }
 
   // interfaces
-  cudaFree(mp->d_nibool_interfaces_ext_mesh);
-  cudaFree(mp->d_ibool_interfaces_ext_mesh);
-
+  if( mp->num_interfaces_ext_mesh > 0 ){
+    cudaFree(mp->d_nibool_interfaces_ext_mesh);
+    cudaFree(mp->d_ibool_interfaces_ext_mesh);
+  }
+  
   // global indexing
   cudaFree(mp->d_ispec_is_inner);
   cudaFree(mp->d_ibool);

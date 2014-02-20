@@ -137,7 +137,11 @@
 
 // compiler specifications
 // (optional) use launch_bounds specification to increase compiler optimization
-//
+// (depending on GPU type, register spilling might slow down the performance)
+// (uncomment if desired)
+#define USE_LAUNCH_BOUNDS
+
+// elastic kernel
 // note: main kernel is Kernel_2_***_impl() which is limited by shared memory usage to 8 active blocks
 //       while register usage might use up to 9 blocks
 //
@@ -150,12 +154,16 @@
 //       shared memory per block = 6100    for Kepler: total = 49152 -> limits active blocks to 8
 //       registers per thread    = 59
 //       registers per block     = 8192                total = 65536 -> limits active blocks to 8
-//
-//
-// (depending on GPU type, register spilling might slow down the performance)
-// (uncomment if desired)
-#define USE_LAUNCH_BOUNDS
 #define LAUNCH_MIN_BLOCKS 8
+
+// acoustic kernel
+// performance statistics: kernel Kernel_2_acoustic_impl():
+//       shared memory per block = 2200    for Kepler: -> limits active blocks to 16 (maximum possible)
+//       registers per thread    = 40
+//       registers per block     = 5120                -> limits active blocks to 12
+// note: for K20x, using a minimum of 16 blocks leads to register spilling.
+//       this slows down the kernel by ~ 4%
+#define LAUNCH_MIN_BLOCKS_ACOUSTIC 12
 
 /* ----------------------------------------------------------------------------------------------- */
 
