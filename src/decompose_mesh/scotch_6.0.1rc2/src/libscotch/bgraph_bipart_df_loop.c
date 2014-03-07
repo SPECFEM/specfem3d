@@ -314,7 +314,9 @@ BgraphBipartDfThread * restrict thrdptr)          /* Thread-dependent data */
     }
 #endif /* BGRAPHBIPARTDFLOOPTHREAD */
   }
+#if !defined BGRAPHBIPARTDFLOOPTHREAD
 abort : ;
+#endif /* BGRAPHBIPARTDFLOOPTHREAD */
 
   for (vertnum = vertbas; vertnum < vertnnd; vertnum ++) /* Update part according to diffusion state */
     parttax[vertnum] = (difotax[vertnum] <= 0.0F) ? 0 : 1;
