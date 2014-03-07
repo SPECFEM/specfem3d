@@ -382,7 +382,7 @@ endloop1 : ;
       else
         diffval -= migrval;
       diffval = diffval / (velstax[vertnum] * crloval);
-      if (isnan (diffval)) {                      /* If overflow occured */
+      if (isnan (diffval)) {                      /* If overflow occurred */
 #ifdef SCOTCH_DEBUG_KGRAPH2
         errorPrintW (STRINGIFY (KGRAPHMAPDFLOOPNAME) ": overflow (1)");
 #endif /* SCOTCH_DEBUG_KGRAPH2 */
@@ -476,7 +476,7 @@ endloop2 : ;
 
       if (diffval <= 0.0F)                        /* Amount of liquid cannot be negative   */
         diffval = 0.0F;
-      if (isnan (diffval)) {                      /* If overflow occured */
+      if (isnan (diffval)) {                      /* If overflow occurred */
 #ifdef SCOTCH_DEBUG_KGRAPH2
         errorPrintW (STRINGIFY (KGRAPHMAPDFLOOPNAME) ": overflow (2)");
 #endif /* SCOTCH_DEBUG_KGRAPH2 */
@@ -495,7 +495,9 @@ endloop2 : ;
     difttax = (KgraphMapDfVertex *) difntax;      /* Swap old and new diffusion arrays          */
     difntax = (KgraphMapDfVertex *) difotax;      /* Casts to prevent IBM compiler from yelling */
     difotax = (KgraphMapDfVertex *) difttax;
-abort1 : ;                                        /* If overflow occured, resume here */
+#ifdef KGRAPHMAPDFLOOPTHREAD
+abort1 : ;                                        /* If overflow occurred, resume here */
+#endif
 #ifdef KGRAPHMAPDFLOOPTHREAD
     threadBarrier (thrdptr);
 
@@ -503,7 +505,9 @@ abort1 : ;                                        /* If overflow occured, resume
       break;
 #endif /* KGRAPHMAPDFLOOPTHREAD */
   }
+#if !defined KGRAPHMAPDFLOOPTHREAD
 abort2 : ;
+#endif
 
   for (vertnum = vertbas; vertnum < vertnnd; vertnum ++) /* Set new part distribution of local vertices */
     parttax[vertnum] = difntax[vertnum].partval;
