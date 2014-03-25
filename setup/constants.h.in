@@ -185,9 +185,9 @@
 !!-----------------------------------------------------------
 
 ! paths for inputs and outputs files
-  character(len=256), parameter :: IN_DATA_FILES_PATH = '../DATA/'
-  character(len=256), parameter :: MF_IN_DATA_FILES_PATH = '../DATA/meshfem3D_files/'
-  character(len=256), parameter :: OUTPUT_FILES_PATH = '../OUTPUT_FILES/'
+  character(len=256), parameter :: IN_DATA_FILES_PATH = './DATA/'
+  character(len=256), parameter :: MF_IN_DATA_FILES_PATH = './DATA/meshfem3D_files/'
+  character(len=256), parameter :: OUTPUT_FILES_PATH = './OUTPUT_FILES/'
 
 
 ! ---------------------------------------------------------------------------------------
@@ -207,7 +207,7 @@
 ! the scratch disk to save the state variables saved in the forward
 ! simulation, this can be a global scratch disk in case you run out of
 ! space on the local scratch disk, e.g. '/ibrixfs1/scratch/lqy/DATABASES_MPI_Q/'
-  character(len=256), parameter :: LOCAL_PATH_Q = '../OUTPUT_FILES/DATABASES_MPI'
+  character(len=256), parameter :: LOCAL_PATH_Q = './OUTPUT_FILES/DATABASES_MPI'
 
 !------------------------------------------------------
 ! nlegoff -- Variables that should be read/computed elsewhere.
