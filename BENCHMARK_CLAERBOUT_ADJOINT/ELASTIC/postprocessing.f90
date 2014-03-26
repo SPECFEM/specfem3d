@@ -39,7 +39,7 @@ program random_model
     print*,'  ',trim(prname)
 
     ! nspec & nglob
-    open(unit=IOUT,file='../OUTPUT_FILES/DATABASES_MPI/'//trim(adjustl(prname))//'external_mesh.bin',status='old',action='read',form='unformatted',iostat=ier)
+    open(unit=IOUT,file='./OUTPUT_FILES/DATABASES_MPI/'//trim(adjustl(prname))//'external_mesh.bin',status='old',action='read',form='unformatted',iostat=ier)
     if( ier /= 0 ) stop 'error opening database proc######_external_mesh.bin'
     read(IOUT) nspec
     read(IOUT) nglob
@@ -47,53 +47,53 @@ program random_model
 
     ! weights
     allocate(weights(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if( ier /= 0 ) stop 'error allocating array weights'
-    open(unit=IOUT,file='../OUTPUT_FILES/DATABASES_MPI/'//trim(adjustl(prname))//'weights_kernel.bin',status='old',action='read',form='unformatted',iostat=ier)
+    open(unit=IOUT,file='./OUTPUT_FILES/DATABASES_MPI/'//trim(adjustl(prname))//'weights_kernel.bin',status='old',action='read',form='unformatted',iostat=ier)
     read(IOUT) weights
     close(IOUT)
 
     ! kernels
     allocate(krhop(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if( ier /= 0 ) stop 'error allocating array krhop'
-    open(unit=IOUT,file='../OUTPUT_FILES/DATABASES_MPI/'//trim(adjustl(prname))//'rhop_kernel.bin',status='old',action='read',form='unformatted',iostat=ier)
+    open(unit=IOUT,file='./OUTPUT_FILES/DATABASES_MPI/'//trim(adjustl(prname))//'rhop_kernel.bin',status='old',action='read',form='unformatted',iostat=ier)
     read(IOUT) krhop
     close(IOUT)
 
     allocate(kalpha(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if( ier /= 0 ) stop 'error allocating array kalpha'
-    open(unit=IOUT,file='../OUTPUT_FILES/DATABASES_MPI/'//trim(adjustl(prname))//'alpha_kernel.bin',status='old',action='read',form='unformatted',iostat=ier)
+    open(unit=IOUT,file='./OUTPUT_FILES/DATABASES_MPI/'//trim(adjustl(prname))//'alpha_kernel.bin',status='old',action='read',form='unformatted',iostat=ier)
     read(IOUT) kalpha
     close(IOUT)
 
     allocate(kbeta(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if( ier /= 0 ) stop 'error allocating array kbeta'
-    open(unit=IOUT,file='../OUTPUT_FILES/DATABASES_MPI/'//trim(adjustl(prname))//'beta_kernel.bin',status='old',action='read',form='unformatted',iostat=ier)
+    open(unit=IOUT,file='./OUTPUT_FILES/DATABASES_MPI/'//trim(adjustl(prname))//'beta_kernel.bin',status='old',action='read',form='unformatted',iostat=ier)
     read(IOUT) kbeta
     close(IOUT)
 
     ! rho
     allocate(rho(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if( ier /= 0 ) stop 'error allocating array rho'
     allocate(rho0(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if( ier /= 0 ) stop 'error allocating array rho0'
-    open(unit=IOUT,file='../models/target_model/'//trim(adjustl(prname))//'rho.bin',status='old',action='read',form='unformatted')
+    open(unit=IOUT,file='./models/target_model/'//trim(adjustl(prname))//'rho.bin',status='old',action='read',form='unformatted')
     read(IOUT) rho
     close(IOUT)
-    open(unit=IOUT,file='../models/initial_model/'//trim(adjustl(prname))//'rho.bin',status='old',action='read',form='unformatted')
+    open(unit=IOUT,file='./models/initial_model/'//trim(adjustl(prname))//'rho.bin',status='old',action='read',form='unformatted')
     read(IOUT) rho0
     close(IOUT)
 
     ! vp
     allocate(vp(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if( ier /= 0 ) stop 'error allocating array vp'
     allocate(vp0(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if( ier /= 0 ) stop 'error allocating array vp0'
-    open(unit=IOUT,file='../models/target_model/'//trim(adjustl(prname))//'vp.bin',status='old',action='read',form='unformatted')
+    open(unit=IOUT,file='./models/target_model/'//trim(adjustl(prname))//'vp.bin',status='old',action='read',form='unformatted')
     read(IOUT) vp
     close(IOUT)
-    open(unit=IOUT,file='../models/initial_model/'//trim(adjustl(prname))//'vp.bin',status='old',action='read',form='unformatted')
+    open(unit=IOUT,file='./models/initial_model/'//trim(adjustl(prname))//'vp.bin',status='old',action='read',form='unformatted')
     read(IOUT) vp0
     close(IOUT)
 
     ! vs
     allocate(vs(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if( ier /= 0 ) stop 'error allocating array vs'
     allocate(vs0(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if( ier /= 0 ) stop 'error allocating array vs0'
-    open(unit=IOUT,file='../models/target_model/'//trim(adjustl(prname))//'vs.bin',status='old',action='read',form='unformatted')
+    open(unit=IOUT,file='./models/target_model/'//trim(adjustl(prname))//'vs.bin',status='old',action='read',form='unformatted')
     read(IOUT) vs
     close(IOUT)
-    open(unit=IOUT,file='../models/initial_model/'//trim(adjustl(prname))//'vs.bin',status='old',action='read',form='unformatted')
+    open(unit=IOUT,file='./models/initial_model/'//trim(adjustl(prname))//'vs.bin',status='old',action='read',form='unformatted')
     read(IOUT) vs0
     close(IOUT)
 
@@ -109,7 +109,7 @@ program random_model
     !!! calculate inner product in data space --- <F dm, F dm>
     write(procname,"(i4)") myrank
     filename=trim(adjustl(procname))//"_dx_SU"
-    open(111,file="../OUTPUT_FILES/SEM/"//trim(adjustl(filename))//".adj",access='direct',recl=240+4*NSTEP,iostat = ios)
+    open(111,file="./OUTPUT_FILES/SEM/"//trim(adjustl(filename))//".adj",access='direct',recl=240+4*NSTEP,iostat = ios)
     if( ios /= 0 ) stop 'error opening adjoint trace'
     print*,'  ',trim(adjustl(filename))//".adj"
 
@@ -128,7 +128,7 @@ program random_model
     irec_total = irec_total + 1
 
     filename=trim(adjustl(procname))//"_dy_SU"
-    open(111,file="../OUTPUT_FILES/SEM/"//trim(adjustl(filename))//".adj",access='direct',recl=240+4*NSTEP,iostat = ios)
+    open(111,file="./OUTPUT_FILES/SEM/"//trim(adjustl(filename))//".adj",access='direct',recl=240+4*NSTEP,iostat = ios)
     if( ios /= 0 ) stop 'error opening adjoint trace'
     print*,'  ',trim(adjustl(filename))//".adj"
 
@@ -146,7 +146,7 @@ program random_model
     close(111)
 
     filename=trim(adjustl(procname))//"_dz_SU"
-    open(111,file="../OUTPUT_FILES/SEM/"//trim(adjustl(filename))//".adj",access='direct',recl=240+4*NSTEP,iostat = ios)
+    open(111,file="./OUTPUT_FILES/SEM/"//trim(adjustl(filename))//".adj",access='direct',recl=240+4*NSTEP,iostat = ios)
     if( ios /= 0 ) stop 'error opening adjoint trace'
     print*,'  ',trim(adjustl(filename))//".adj"
 

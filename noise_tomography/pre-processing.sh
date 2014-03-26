@@ -65,6 +65,7 @@ ifort adj_traveltime_filter.f90 > tmp.log
 ln -s ../../../bin/xgenerate_databases
 ln -s ../../../bin/xspecfem3D
 ln -s ../../../bin/xcombine_vol_data
+cd ..
 
 #****************************************************************************************************************************************************
 #////////////////////////////// SIMULATION IS STARTING //////////////////////////////////////////////////////////////////////////////////////////////
@@ -88,12 +89,12 @@ cp $OUTPUT_FILES/NOISE_TOMOGRAPHY/irec_master_noise_contribution1  $OUTPUT_FILES
 
 # step 1 of noise simulation
 cp $DATA/Par_file_step1                         $DATA/Par_file
-mpirun -np 4 ./xgenerate_databases
-mpirun -np 4 ./xspecfem3D
+mpirun -np 4 ./bin/xgenerate_databases
+mpirun -np 4 ./bin/xspecfem3D
 
 # step 2 of noise simulation
 cp $DATA/Par_file_step2                         $DATA/Par_file
-mpirun -np 4 ./xspecfem3D
+mpirun -np 4 ./bin/xspecfem3D
 mv $OUTPUT_FILES/X2.DB.BXZ.semd             $OUTPUT_FILES/SEM/
 
 # calculating adjoint source
@@ -115,7 +116,7 @@ awk '{print $1,0.0}' $OUTPUT_FILES/SEM/X2.DB.BXZ.adj > $OUTPUT_FILES/SEM/X1.DB.B
 
 # step 3 of noise simulation
 cp $DATA/Par_file_step3                         $DATA/Par_file
-mpirun -np 4 ./xspecfem3D
+mpirun -np 4 ./bin/xspecfem3D
 
 # store kernels
 cp $OUTPUT_FILES/DATABASES_MPI/*kernel*                  $OUTPUT_FILES/NOISE_TOMOGRAPHY/1st/
@@ -123,11 +124,11 @@ cp $OUTPUT_FILES/DATABASES_MPI/*kernel*                  $OUTPUT_FILES/NOISE_TOM
 # visualization (refer to other examples, if you don't know the visualization process very well)
 # note that "xcombine_vol_data" is compiled by "make combine_vol_data"
 # this program generates a file "$OUTPUT_FILES/$kernel.mesh"
-./xcombine_vol_data 0 3 $kernel $OUTPUT_FILES/DATABASES_MPI/  $OUTPUT_FILES/ 1
+./bin/xcombine_vol_data 0 3 $kernel $OUTPUT_FILES/DATABASES_MPI/  $OUTPUT_FILES/ 1
 # you may need to install "mesh2vtu" package first, before you can use "mesh2vtu.pl"
 # convert "$OUTPUT_FILES/$kernel.mesh" to "$OUTPUT_FILES/NOISE_TOMOGRAPHY/1st_$kernel.vtu"
 # which can be loaded and visualized in Paraview
-mesh2vtu.pl -i $OUTPUT_FILES/$kernel.mesh -o $OUTPUT_FILES/NOISE_TOMOGRAPHY/1st_$kernel.vtu
+./bin/mesh2vtu.pl -i $OUTPUT_FILES/$kernel.mesh -o $OUTPUT_FILES/NOISE_TOMOGRAPHY/1st_$kernel.vtu
 
 # at the end of this part, we obtain the 1st contribution of the noise sensitivity kernel, stored as:
 # $OUTPUT_FILES/NOISE_TOMOGRAPHY/1st_$kernel.vtu
@@ -146,11 +147,11 @@ cp $OUTPUT_FILES/NOISE_TOMOGRAPHY/irec_master_noise_contribution2  $OUTPUT_FILES
 
 # step 1 of noise simulation
 cp $DATA/Par_file_step1                         $DATA/Par_file
-mpirun -np 4 ./xspecfem3D
+mpirun -np 4 ./bin/xspecfem3D
 
 # step 2 of noise simulation
 cp $DATA/Par_file_step2                         $DATA/Par_file
-mpirun -np 4 ./xspecfem3D
+mpirun -np 4 ./bin/xspecfem3D
 
 # calculating adjoint source
 # since it's 2nd contribution, we inject adjoint source 2 at receiver 1
@@ -168,18 +169,18 @@ awk '{print $1,0.0}' $OUTPUT_FILES/SEM/X1.DB.BXZ.adj > $OUTPUT_FILES/SEM/X2.DB.B
 
 # step 3 of noise simulation
 cp $DATA/Par_file_step3                         $DATA/Par_file
-mpirun -np 4 ./xspecfem3D
+mpirun -np 4 ./bin/xspecfem3D
 
 # store kernels
 cp $OUTPUT_FILES/DATABASES_MPI/*kernel*                  $OUTPUT_FILES/NOISE_TOMOGRAPHY/2nd/
 
 # visualization (refer to other examples, if you don't know the visualization process very well)
 # this program generates a file "$OUTPUT_FILES/$kernel.mesh"
-./xcombine_vol_data 0 3 $kernel $OUTPUT_FILES/DATABASES_MPI/  $OUTPUT_FILES/ 1
+./bin/xcombine_vol_data 0 3 $kernel $OUTPUT_FILES/DATABASES_MPI/  $OUTPUT_FILES/ 1
 # you may need to install "mesh2vtu" package first, before you can use "mesh2vtu.pl"
 # convert "$OUTPUT_FILES/$kernel.mesh" to "$OUTPUT_FILES/NOISE_TOMOGRAPHY/1st_$kernel.vtu"
 # which can be loaded and visualized in Paraview
-mesh2vtu.pl -i $OUTPUT_FILES/$kernel.mesh -o $OUTPUT_FILES/NOISE_TOMOGRAPHY/2nd_$kernel.vtu
+./bin/mesh2vtu.pl -i $OUTPUT_FILES/$kernel.mesh -o $OUTPUT_FILES/NOISE_TOMOGRAPHY/2nd_$kernel.vtu
 
 # at the end of this part, we obtain the 2nd contribution of the noise sensitivity kernel, stored as:
 # $OUTPUT_FILES/NOISE_TOMOGRAPHY/2nd_$kernel.vtu

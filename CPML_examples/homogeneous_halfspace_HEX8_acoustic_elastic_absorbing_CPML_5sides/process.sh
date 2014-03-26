@@ -64,20 +64,19 @@ cp DATA/STATIONS OUTPUT_FILES/
 echo
 echo "  decomposing mesh..."
 echo
-cd bin/
-./xdecompose_mesh $NPROC ../MESH-default ../OUTPUT_FILES/DATABASES_MPI/
+./bin/xdecompose_mesh $NPROC ./MESH-default ./OUTPUT_FILES/DATABASES_MPI/
 
 # runs database generation
 echo
 echo "  running database generation..."
 echo
-mpirun -np $NPROC ./xgenerate_databases
+mpirun -np $NPROC ./bin/xgenerate_databases
 
 # runs simulation
 echo
 echo "  running solver..."
 echo
-mpirun -np $NPROC ./xspecfem3D
+mpirun -np $NPROC ./bin/xspecfem3D
 cd ../
 
 echo

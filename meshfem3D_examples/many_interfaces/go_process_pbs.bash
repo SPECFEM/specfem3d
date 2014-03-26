@@ -60,9 +60,7 @@ numnodes=$NPROC
 echo
 echo "  meshing..."
 echo
-cd bin/
-mpiexec -np $numnodes ./xmeshfem3D
-cd ../
+mpiexec -np $numnodes ./bin/xmeshfem3D
 mv OUTPUT_FILES/output_mesher.txt OUTPUT_FILES/output_meshfem3D.txt
 
 # stores setup
@@ -75,17 +73,13 @@ cp DATA/STATIONS OUTPUT_FILES/
 echo
 echo "  running database generation..."
 echo
-cd bin/
-mpiexec -np $numnodes ./xgenerate_databases
-cd ../
+mpiexec -np $numnodes ./bin/xgenerate_databases
 
 # runs simulation
 echo
 echo "  running solver..."
 echo
-cd bin/
-mpiexec -np $numnodes ./xspecfem3D
-cd ../
+mpiexec -np $numnodes ./bin/xspecfem3D
 
 echo
 echo "see results in directory: OUTPUT_FILES/"

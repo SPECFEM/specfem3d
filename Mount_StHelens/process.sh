@@ -61,17 +61,13 @@ cp DATA/STATIONS OUTPUT_FILES/
 echo
 echo "  running database generation..."
 echo
-cd bin/
-mpirun -np $NPROC ./xgenerate_databases
-cd ../
+mpirun -np $NPROC ./bin/xgenerate_databases
 
 # runs simulation
 echo
 echo "  running solver..."
 echo
-cd bin/
-mpirun -np $NPROC ./xspecfem3D
-cd ../
+mpirun -np $NPROC ./bin/xspecfem3D
 
 echo
 echo "see results in directory: OUTPUT_FILES/"

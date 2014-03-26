@@ -64,7 +64,6 @@ cp DATA/STATIONS OUTPUT_FILES/
 echo
 echo "  decomposing mesh..."
 echo
-cd bin/
 ./xdecompose_mesh $NPROC ../MESH-default ../OUTPUT_FILES/DATABASES_MPI/
 
 # runs database generation
