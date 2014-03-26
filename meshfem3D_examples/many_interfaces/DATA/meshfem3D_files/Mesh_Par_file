@@ -35,7 +35,7 @@ CREATE_DX_FILES                 = .false.
 CREATE_VTK_FILES                = .false.
 
 # path to store the databases files
-LOCAL_PATH                      = ../OUTPUT_FILES/DATABASES_MPI
+LOCAL_PATH                      = ./OUTPUT_FILES/DATABASES_MPI
 
 # number of materials
 NMATERIALS                      = 4

@@ -43,7 +43,7 @@ ANISOTROPY                      = .false.
 GRAVITY                         = .false.
 
 # path for external tomographic models files
-TOMOGRAPHY_PATH                 = ../DATA/tomo_files/
+TOMOGRAPHY_PATH                 = ./DATA/tomo_files/
 
 # Olsen's constant for Q_mu = constant * v_s attenuation rule
 USE_OLSEN_ATTENUATION           = .false.
@@ -84,7 +84,7 @@ HDUR_MOVIE                      = 0.0
 SAVE_MESH_FILES                 = .true.
 
 # path to store the local database file on each node
-LOCAL_PATH                      = ../OUTPUT_FILES/DATABASES_MPI
+LOCAL_PATH                      = ./OUTPUT_FILES/DATABASES_MPI
 
 # interval at which we output time step info and max of norm of displacement
 NTSTEP_BETWEEN_OUTPUT_INFO      = 100
