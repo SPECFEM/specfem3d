@@ -23,19 +23,19 @@ mkdir OUTPUT_FILES/DATABASES_MPI
 echo
 echo "running mesher..."
 echo
-mpirun -machinefile /home/cluster_maintenance/mymachines -np $NPROC ./bin/xmeshfem3D
+mpirun -np $NPROC ./bin/xmeshfem3D
 
 # runs database generation
 echo
 echo "running database generation..."
 echo
-mpirun -machinefile /home/cluster_maintenance/mymachines -np $NPROC ./bin/xgenerate_databases
+mpirun -np $NPROC ./bin/xgenerate_databases
 
 # runs simulation
 echo
 echo "  running solver..."
 echo
-mpirun -machinefile /home/cluster_maintenance/mymachines -np $NPROC ./bin/xspecfem3D
+mpirun -np $NPROC ./bin/xspecfem3D
 
 echo
 echo "see results in directory: OUTPUT_FILES/"
