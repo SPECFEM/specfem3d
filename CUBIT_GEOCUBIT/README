@@ -2,6 +2,7 @@ GEOCUBIT
 
 GeoCubit is a Python library wrapping around the Cubit Python Interface.
 Main author: Emanuele Casarotti, INGV, Roma, Italy.
+Copyright (c) 2011 Istituto Nazionale di Geofisica e Vulcanologia.
 Improvements by: Elliott Sales de Andrade, Department of Physics, University of Toronto, Canada.
 
 !
