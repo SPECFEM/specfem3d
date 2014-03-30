@@ -20,7 +20,8 @@ Improvements by: Elliott Sales de Andrade, Department of Physics, University of 
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 ! 
 
-It aims to facilitate the meshing process in some common problems in seismic wave propagation. In particular, it is focused on the meshing requests of Specfem3D and it is helpful for such tedious tasks as:
+It aims at facilitating the meshing process in some common problems encountered in seismic or more generally acoustic wave propagation.
+In particular, it is focused on the meshing requests of Specfem3D and it is helpful for such tedious tasks as:
 
 • Creation of geophysical surfaces and volumes (ex. topography).
 
@@ -32,5 +33,5 @@ It aims to facilitate the meshing process in some common problems in seismic wav
 
 GeoCubit can be used inside the graphical interface of Cubit (i.e. as a Python object in the script tab) or as Unix command.
 
-see Cubit (now also sold as "Trelis") here [cubit.sandia.gov]
+See also Cubit (now also sold as "Trelis") here [cubit.sandia.gov]
 
