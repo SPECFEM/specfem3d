@@ -46,6 +46,10 @@
 /*   * The FTZ bit (bit 15) in the MXCSR register must be masked (value = 1). */
 /*   * The underflow exception (bit 11) needs to be masked (value = 1). */
 
+/* This routine is not strictly necessary for SPECFEM, thus if it does not compile on your system
+   (since it calls some low-level system routines) just suppress all the lines below (i.e. make it an empty file)
+   and comment out the call to force_ftz() in the main SPECFEM program */
+
 #include "config.h"
 
 #define FTZ_BIT 15
