@@ -54,8 +54,8 @@
 !----
 !
 
-  subroutine sync_all()
-  end subroutine sync_all
+  subroutine synchronize_all()
+  end subroutine synchronize_all
 
 !
 !----

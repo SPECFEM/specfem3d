@@ -40,11 +40,11 @@
 
   integer :: i,j,N_j,number_remove,nlines
 
-  double precision :: alpha,dt,tau_j,source,exponent,t1,t2,displ1,displ2,gamma,height,half_duration_triangle
+  double precision :: alpha,dt,tau_j,source,exponentval,t1,t2,displ1,displ2,gamma,height,half_duration_triangle
 
   logical :: triangle
 
-  double precision, dimension(:), allocatable :: time,sem,sem_fil
+  double precision, dimension(:), allocatable :: timeval,sem,sem_fil
 
 ! read file with number of lines in input
   open(unit=33,file='input_convolve_code.txt',status='old',action='read')
@@ -54,18 +54,18 @@
   close(33)
 
 ! allocate arrays
-  allocate(time(nlines),sem(nlines),sem_fil(nlines))
+  allocate(timeval(nlines),sem(nlines),sem_fil(nlines))
 
 ! read the input seismogram
   do i = 1,nlines
-    read(5,*) time(i),sem(i)
+    read(5,*) timeval(i),sem(i)
   enddo
 
 ! define a Gaussian with the right exponent to mimic a triangle of equivalent half duration
   alpha = SOURCE_DECAY_MIMIC_TRIANGLE/half_duration_triangle
 
 ! compute the time step
-  dt = time(2) - time(1)
+  dt = timeval(2) - timeval(1)
 
 ! number of integers for which the source wavelet is different from zero
   if(triangle) then
@@ -108,9 +108,9 @@
       else
 
 ! convolve with a Gaussian
-        exponent = alpha**2 * tau_j**2
-        if(exponent < 50.d0) then
-          source = alpha*exp(-exponent)/sqrt(PI)
+        exponentval = alpha**2 * tau_j**2
+        if(exponentval < 50.d0) then
+          source = alpha*exp(-exponentval)/sqrt(PI)
         else
           source = 0.d0
         endif
@@ -127,7 +127,7 @@
 ! compute number of samples to remove from end of seismograms
   number_remove = N_j + 1
   do i=1,nlines - number_remove
-    write(*,*) sngl(time(i)),' ',sngl(sem_fil(i))
+    write(*,*) sngl(timeval(i)),' ',sngl(sem_fil(i))
   enddo
 
   end program convolve_source_time_function

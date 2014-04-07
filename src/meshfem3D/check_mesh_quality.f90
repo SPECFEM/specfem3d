@@ -200,7 +200,7 @@
 
   enddo
 
-  call sync_all()
+  call synchronize_all()
 
   call min_all_dp(distance_min,distance_min_MPI)
   call max_all_dp(distance_max,distance_max_MPI)

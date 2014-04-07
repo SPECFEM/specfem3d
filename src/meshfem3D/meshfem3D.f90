@@ -801,7 +801,7 @@
   npointot = nspec * NGLLCUBE_M
 
 ! make sure everybody is synchronized
-  call sync_all()
+  call synchronize_all()
 
 ! use dynamic allocation to allocate memory for arrays
   allocate(ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec),stat=ier)
@@ -833,7 +833,7 @@
   endif
 
 ! make sure everybody is synchronized
-  call sync_all()
+  call synchronize_all()
 
 !--- print number of points and elements in the mesh
 
@@ -882,7 +882,7 @@
   endif
 
 ! synchronize all the processes to make sure everybody has finished
-  call sync_all()
+  call synchronize_all()
 
   end subroutine meshfem3D
 

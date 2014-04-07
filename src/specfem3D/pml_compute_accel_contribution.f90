@@ -125,7 +125,7 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,displ,veloc,r
               rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) = coef0_y * rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) &
                   + displ(3,iglob) * time_nplus1 * coef1_y &
                   + displ_old(3,iglob) * time_n * coef2_y
-           end if
+           endif
 
            if (singularity_type_5 == 0) then
               rmemory_displ_elastic(1,i,j,k,ispec_CPML,3) = coef0_z * rmemory_displ_elastic(1,i,j,k,ispec_CPML,3) &
@@ -154,7 +154,7 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,displ,veloc,r
               rmemory_displ_elastic(3,i,j,k,ispec_CPML,3) = coef0_z * rmemory_displ_elastic(3,i,j,k,ispec_CPML,3) &
                    + displ(3,iglob) * time_nplus1**2 * coef1_z &
                    + displ_old(3,iglob) * time_n**2 * coef2_z
-           end if
+           endif
 
            accel_elastic_CPML(1,i,j,k) =  wgllcube * rhol * jacobianl * &
                 ( A_1 * veloc(1,iglob) + A_2 * displ(1,iglob) + &
@@ -272,7 +272,7 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_ac
              rmemory_potential_acoustic(i,j,k,ispec_CPML,2) = coef0_y * rmemory_potential_acoustic(i,j,k,ispec_CPML,2) + &
                     coef1_y * time_nplus1 * potential_acoustic(iglob) + &
                     coef2_y * time_n * potential_acoustic_old(iglob)
-           end if
+           endif
 
            if (singularity_type_5 == 0) then
              rmemory_potential_acoustic(i,j,k,ispec_CPML,3) = coef0_z * rmemory_potential_acoustic(i,j,k,ispec_CPML,3) + &
@@ -285,7 +285,7 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_ac
              rmemory_potential_acoustic(i,j,k,ispec_CPML,3) = coef0_z * rmemory_potential_acoustic(i,j,k,ispec_CPML,3) + &
                     coef1_z * time_nplus1**2 * potential_acoustic(iglob) + &
                     coef2_z * time_n**2 * potential_acoustic_old(iglob)
-           end if
+           endif
 
            potential_dot_dot_acoustic_CPML(i,j,k) =  wgllcube * kappal_inv * jacobianl * &
                  ( A_1 * potential_dot_acoustic(iglob) + A_2 * potential_acoustic(iglob) + &
@@ -440,7 +440,7 @@ end subroutine read_potential_on_pml_interface
 !=====================================================================
 !
 subroutine l_parameter_computation( &
-               time, deltat, &
+               timeval, deltat, &
                kappa_x, beta_x, alpha_x, &
                kappa_y, beta_y, alpha_y, &
                kappa_z, beta_z, alpha_z, &
@@ -458,7 +458,7 @@ subroutine l_parameter_computation( &
 
   implicit none
 
-  real(kind=CUSTOM_REAL), intent(in) :: time,deltat
+  real(kind=CUSTOM_REAL), intent(in) :: timeval,deltat
   real(kind=CUSTOM_REAL), intent(in) :: kappa_x,beta_x,alpha_x, &
                                         kappa_y,beta_y,alpha_y, &
                                         kappa_z,beta_z,alpha_z
@@ -533,7 +533,7 @@ subroutine l_parameter_computation( &
                * (beta_x - alpha_z) * (beta_y - alpha_z) * (beta_z - alpha_z) &
                / (alpha_0 - alpha_z) / (alpha_0 - alpha_z)
 
-       A_3 = bar_A_3 + time * bar_A_4
+       A_3 = bar_A_3 + timeval * bar_A_4
        A_4 = - bar_A_4
        A_5 = bar_A_5
 
@@ -559,7 +559,7 @@ subroutine l_parameter_computation( &
                * (beta_x - alpha_0) * (beta_y - alpha_0) * (beta_z - alpha_0) &
                / (alpha_y - alpha_0)
 
-       A_3 = bar_A_3 + time * bar_A_5
+       A_3 = bar_A_3 + timeval * bar_A_5
        A_4 = bar_A_4
        A_5 = - bar_A_5
 
@@ -586,7 +586,7 @@ subroutine l_parameter_computation( &
                / (alpha_x - alpha_0)
 
        A_3 = bar_A_3
-       A_4 = bar_A_4 + time * bar_A_5
+       A_4 = bar_A_4 + timeval * bar_A_5
        A_5 = - bar_A_5
 
        singularity_type_4 = 0
@@ -612,13 +612,13 @@ subroutine l_parameter_computation( &
        bar_A_5 = bar_A_0 * alpha_0**2 / 2._CUSTOM_REAL &
                * (beta_x - alpha_0) * (beta_y - alpha_0) * (beta_z - alpha_0)
 
-       A_3 = bar_A_3 + time * bar_A_4 + time**2 * bar_A_5
-       A_4 = - bar_A_4 - 2._CUSTOM_REAL * time * bar_A_5
+       A_3 = bar_A_3 + timeval * bar_A_4 + timeval**2 * bar_A_5
+       A_4 = - bar_A_4 - 2._CUSTOM_REAL * timeval * bar_A_5
        A_5 = bar_A_5
 
        singularity_type_4 = 1
        singularity_type_5 = 2
-     end if
+     endif
 
   else if ( CPML_region_local == CPML_XY_ONLY ) then
 
@@ -662,14 +662,14 @@ subroutine l_parameter_computation( &
        bar_A_4 = bar_A_0 * alpha_0**2 * (beta_x - alpha_0) * (beta_y - alpha_0)
        bar_A_5 = 0._CUSTOM_REAL
 
-       A_3 = bar_A_3 + time * bar_A_4
+       A_3 = bar_A_3 + timeval * bar_A_4
        A_4 = -bar_A_4
        A_5 = bar_A_5
 
        singularity_type_4 = 1
        singularity_type_5 = 0
 
-    end if
+    endif
 
   else if ( CPML_region_local == CPML_XZ_ONLY ) then
 
@@ -712,14 +712,14 @@ subroutine l_parameter_computation( &
        bar_A_4 = 0._CUSTOM_REAL
        bar_A_5 = bar_A_0 * alpha_0**2 * (beta_x - alpha_0) * (beta_z - alpha_0)
 
-       A_3 = bar_A_3 + time * bar_A_5
+       A_3 = bar_A_3 + timeval * bar_A_5
        A_4 = bar_A_4
        A_5 = -bar_A_5
 
        singularity_type_4 = 0
        singularity_type_5 = 1
 
-    end if
+    endif
 
   else if ( CPML_region_local == CPML_YZ_ONLY ) then
 
@@ -763,13 +763,13 @@ subroutine l_parameter_computation( &
        bar_A_5 = bar_A_0 * alpha_0**2 * (beta_y - alpha_0) * (beta_z - alpha_0)
 
        A_3 = bar_A_3
-       A_4 = bar_A_4 + time * bar_A_5
+       A_4 = bar_A_4 + timeval * bar_A_5
        A_5 = -bar_A_5
 
        singularity_type_4 = 0
        singularity_type_5 = 1
 
-    end if
+    endif
 
   else if ( CPML_region_local == CPML_X_ONLY ) then
 
@@ -834,7 +834,7 @@ subroutine l_parameter_computation( &
      singularity_type_4 = 0
      singularity_type_5 = 0
 
-  end if
+  endif
 
   bb = alpha_x
   coef0_x = exp(-bb * deltat)
@@ -845,7 +845,7 @@ subroutine l_parameter_computation( &
      else
         coef1_x = (1._CUSTOM_REAL - exp(-bb * deltat/2._CUSTOM_REAL) ) / bb
         coef2_x = (1._CUSTOM_REAL - exp(-bb * deltat/2._CUSTOM_REAL) ) * exp(-bb * deltat/2._CUSTOM_REAL) / bb
-     end if
+     endif
   else
      if ( FIRST_ORDER_CONVOLUTION ) then
         coef1_x = deltat
@@ -853,7 +853,7 @@ subroutine l_parameter_computation( &
      else
         coef1_x = deltat/2._CUSTOM_REAL
         coef2_x = deltat/2._CUSTOM_REAL
-     end if
+     endif
   endif
 
   bb = alpha_y
@@ -865,7 +865,7 @@ subroutine l_parameter_computation( &
      else
         coef1_y = (1._CUSTOM_REAL - exp(-bb * deltat/2._CUSTOM_REAL) ) / bb
         coef2_y = (1._CUSTOM_REAL - exp(-bb * deltat/2._CUSTOM_REAL) ) * exp(-bb * deltat/2._CUSTOM_REAL) / bb
-     end if
+     endif
   else
      if ( FIRST_ORDER_CONVOLUTION ) then
         coef1_y = deltat
@@ -873,7 +873,7 @@ subroutine l_parameter_computation( &
      else
         coef1_y = deltat/2._CUSTOM_REAL
         coef2_y = deltat/2._CUSTOM_REAL
-     end if
+     endif
   endif
 
   bb = alpha_z
@@ -885,7 +885,7 @@ subroutine l_parameter_computation( &
      else
         coef1_z = (1._CUSTOM_REAL - exp(-bb * deltat/2._CUSTOM_REAL) ) / bb
         coef2_z = (1._CUSTOM_REAL - exp(-bb * deltat/2._CUSTOM_REAL) ) * exp(-bb * deltat/2._CUSTOM_REAL) / bb
-     end if
+     endif
   else
      if ( FIRST_ORDER_CONVOLUTION ) then
         coef1_z = deltat
@@ -893,7 +893,7 @@ subroutine l_parameter_computation( &
      else
         coef1_z = deltat/2._CUSTOM_REAL
         coef2_z = deltat/2._CUSTOM_REAL
-     end if
+     endif
   endif
 
 end subroutine l_parameter_computation

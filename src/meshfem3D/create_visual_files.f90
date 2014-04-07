@@ -164,7 +164,7 @@
 
   endif
 
-  call sync_all()
+  call synchronize_all()
 
   end subroutine create_visual_files
 

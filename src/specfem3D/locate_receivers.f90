@@ -239,7 +239,7 @@
       call bcast_all_dp(eta_receiver,nrec)
       call bcast_all_dp(gamma_receiver,nrec)
       call bcast_all_dp(nu,NDIM*NDIM*nrec)
-      call sync_all()
+      call synchronize_all()
       ! user output
       if( myrank == 0 ) then
         ! elapsed time since beginning of mesh generation
@@ -780,7 +780,7 @@
   endif ! of if (.not. FASTER_RECEIVERS_POINTS_ONLY)
 
   ! synchronize all the processes to make sure all the estimates are available
-  call sync_all()
+  call synchronize_all()
   ! for MPI version, gather information from all the nodes
   if (myrank/=0) then ! gather information from other processors (one at a time)
      call send_i(ispec_selected_rec, nrec,0,0)
@@ -985,7 +985,7 @@
   deallocate(final_distance_all)
 
   ! synchronize all the processes to make sure everybody has finished
-  call sync_all()
+  call synchronize_all()
 
   end subroutine locate_receivers
 

@@ -59,7 +59,7 @@ program combine_surf_data
   integer,dimension(:),allocatable :: num_ibool
 
   logical :: HIGH_RESOLUTION_MESH,  FILE_ARRAY_IS_3D
-  integer :: ires, nspec_surf, npoint1, npoint2, ispec_surf, inx, iny, idim, ier
+  integer :: ires, nspec_surf, npoint1, npoint2, ispec_surf, inx, iny, idimval, ier
   integer,dimension(:), allocatable ::  ibelm_surf
 
 
@@ -99,7 +99,7 @@ program combine_surf_data
     indir= arg(4)
     outdir = arg(5)
     read(arg(6),*) ires
-    read(arg(7),*) idim
+    read(arg(7),*) idimval
   else
     read(arg(1),*) proc1
     read(arg(2),*) proc2
@@ -112,7 +112,7 @@ program combine_surf_data
     indir = arg(5)
     outdir = arg(6)
     read(arg(7),*) ires
-    read(arg(8),*) idim
+    read(arg(8),*) idimval
   endif
 
   if (ires == 0) then
@@ -125,7 +125,7 @@ program combine_surf_data
     iny = 1
   endif
 
-  if (idim == 0) then
+  if (idimval == 0) then
     FILE_ARRAY_IS_3D = .false.
   else
     FILE_ARRAY_IS_3D = .true.

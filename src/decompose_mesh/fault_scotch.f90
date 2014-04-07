@@ -263,10 +263,10 @@ CONTAINS
   end subroutine reorder_fault_elements_single
 
 ! ---------------------------------------------------------------------------------------------------
-  subroutine lex_order(xyz_c,loc,nspec)
+  subroutine lex_order(xyz_c,locval,nspec)
 
   integer, intent(in) :: nspec
-  integer, intent(out) :: loc(nspec)
+  integer, intent(out) :: locval(nspec)
   double precision, intent(in) :: xyz_c(3,nspec)
 
   double precision, dimension(nspec) :: work,xp,yp,zp
@@ -285,7 +285,7 @@ CONTAINS
 
   ! establish initial pointers
   do ispec=1,nspec
-    loc(ispec)=ispec
+    locval(ispec)=ispec
   enddo
 
   ifseg(:)=.false.
@@ -306,7 +306,7 @@ CONTAINS
       else
         call rank(zp(ioff),ind,ninseg(iseg))
       endif
-      call swap_all(loc(ioff),xp(ioff),yp(ioff),zp(ioff),iwork,work,ind,ninseg(iseg))
+      call swap_all(locval(ioff),xp(ioff),yp(ioff),zp(ioff),iwork,work,ind,ninseg(iseg))
       ioff=ioff+ninseg(iseg)
     enddo
 

@@ -57,7 +57,7 @@
   endif
 
   ! synchronizes processes
-  call sync_all()
+  call synchronize_all()
 
   end subroutine setup_sources_receivers
 
@@ -347,7 +347,7 @@
            LATITUDE_MIN, LATITUDE_MAX, LONGITUDE_MIN, LONGITUDE_MAX)
 
     if(nrec < 1) call exit_MPI(myrank,'need at least one receiver')
-    call sync_all()
+    call synchronize_all()
 
   else
     call get_value_string(rec_filename, 'solver.STATIONS', &
@@ -357,7 +357,7 @@
     call station_filter(SUPPRESS_UTM_PROJECTION,UTM_PROJECTION_ZONE,myrank,rec_filename,filtered_rec_filename,nrec, &
            LATITUDE_MIN, LATITUDE_MAX, LONGITUDE_MIN, LONGITUDE_MAX)
     if (nrec < 1) call exit_MPI(myrank, 'adjoint simulation needs at least one receiver')
-    call sync_all()
+    call synchronize_all()
   endif
 
   if(myrank == 0) then

@@ -497,7 +497,7 @@
   ! VTK file output
   if( DEBUG ) then
 
-    call sync_all()
+    call synchronize_all()
     if( myrank == 0) then
       write(IMAIN,*) '     saving debugging mesh files'
       call flush_IMAIN()

@@ -118,7 +118,7 @@
 
   call init()
   call world_size(sizeprocs)
-  if (sizeprocs .ne. 1) then
+  if (sizeprocs /= 1) then
     print *, "sequential program. Only mpirun -np 1 ..."
     call stop_all()
   endif

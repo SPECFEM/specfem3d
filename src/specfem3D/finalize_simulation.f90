@@ -287,6 +287,6 @@
   endif
 
 ! synchronize all the processes to make sure everybody has finished
-  call sync_all()
+  call synchronize_all()
 
   end subroutine finalize_simulation

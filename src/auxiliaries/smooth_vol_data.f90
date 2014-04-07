@@ -145,7 +145,7 @@ program smooth_vol_data
   call world_rank(myrank)
 
   if (myrank == 0) print*,"smooth_vol_data:"
-  call sync_all()
+  call synchronize_all()
 
   ! reads arguments
   do i = 1, 5
@@ -234,7 +234,7 @@ program smooth_vol_data
     endif
     call exit_mpi(myrank,'Error total number of slices')
   endif
-  call sync_all()
+  call synchronize_all()
 
   ! GLL points weights
   call zwgljd(xigll,wxgll,NGLLX,GAUSSALPHA,GAUSSBETA)
@@ -523,7 +523,7 @@ program smooth_vol_data
   !enddo
 
   ! synchronizes
-  call sync_all()
+  call synchronize_all()
 
 
 !----------------------
@@ -732,7 +732,7 @@ program smooth_vol_data
   deallocate(dat_smooth)
 
   ! synchronizes
-  call sync_all()
+  call synchronize_all()
 
   ! the maximum value for the smoothed kernel
   norm = max_old

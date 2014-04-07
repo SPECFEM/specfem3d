@@ -124,7 +124,7 @@
   integer,dimension(:),allocatable :: iglob_coord,ispec_coord
   logical,dimension(:),allocatable:: ispec_is_image_surface,iglob_is_image_surface
   integer :: num_iglob_image_surface
-  integer :: count,loc(1),irank
+  integer :: countval,locval(1),irank
   !character(len=256) :: vtkfilename
   integer :: zoom_factor = 4
   logical :: zoom
@@ -171,7 +171,7 @@
            ispec_coord(num_iglob_image_surface),stat=ier )
   if( ier /= 0 ) call exit_mpi(myrank,'error allocating xyz image coordinates')
 
-  count=0
+  countval=0
   do ispec=1,NSPEC_AB
     if( ispec_is_image_surface(ispec) ) then
       do k=1,NGLLZ
@@ -179,16 +179,16 @@
           do i=1,NGLLX
             iglob = ibool(i,j,k,ispec)
             if( iglob_is_image_surface(iglob) ) then
-              count = count+1
+              countval = countval + 1
               ! coordinates with respect to horizontal and vertical direction
-              xcoord(count)= xstore(iglob)*section_hdirx &
+              xcoord(countval)= xstore(iglob)*section_hdirx &
                                 + ystore(iglob)*section_hdiry &
                                 + zstore(iglob)*section_hdirz
-              zcoord(count)= xstore(iglob)*section_vdirx &
+              zcoord(countval)= xstore(iglob)*section_vdirx &
                                 + ystore(iglob)*section_vdiry &
                                 + zstore(iglob)*section_vdirz
-              iglob_coord(count) = iglob
-              ispec_coord(count) = ispec
+              iglob_coord(countval) = iglob
+              ispec_coord(countval) = ispec
 
               ! reset iglob flag
               iglob_is_image_surface(iglob) = .false.
@@ -199,7 +199,7 @@
     endif
   enddo
 
-  if( count /= num_iglob_image_surface) call exit_mpi(myrank,'error image point number')
+  if( countval /= num_iglob_image_surface) call exit_mpi(myrank,'error image point number')
 
   ! horizontal size of the image
   xmin_color_image_loc = minval( xcoord(:) )
@@ -354,8 +354,8 @@
     ! selects entries
     do i=1,NX_IMAGE_color
       ! note: minimum location will be between 1 and NPROC
-      loc = minloc(dist_pixel_recv(i,:))
-      irank = loc(1) - 1
+      locval = minloc(dist_pixel_recv(i,:))
+      irank = locval(1) - 1
       ! store only own best points
       if( irank == myrank .and. dist_pixel_recv(i,irank) < HUGEVAL) then
         ! increases count

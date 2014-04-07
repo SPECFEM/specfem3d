@@ -516,32 +516,32 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob,                   &
   call define_adios_scalar(group, groupsize, "", STRINGIFY_VAR(nspec2d_bottom))
   call define_adios_scalar(group, groupsize, "", STRINGIFY_VAR(nspec2d_top))
 
-  if (nspec2d_xmin .ne. 0) then
+  if (nspec2d_xmin /= 0) then
     local_dim = nspec2d_xmin_wmax
     call define_adios_global_array1D(group, groupsize, local_dim, &
                                      "", STRINGIFY_VAR(ibelm_xmin))
   endif
-  if (nspec2d_xmax .ne. 0) then
+  if (nspec2d_xmax /= 0) then
     local_dim = nspec2d_xmax_wmax
     call define_adios_global_array1D(group, groupsize, local_dim, &
                                      "", STRINGIFY_VAR(ibelm_xmax))
   endif
-  if (nspec2d_ymin .ne. 0) then
+  if (nspec2d_ymin /= 0) then
     local_dim = nspec2d_ymin_wmax
     call define_adios_global_array1D(group, groupsize, local_dim, &
                                      "", STRINGIFY_VAR(ibelm_ymin))
   endif
-  if (nspec2d_ymax .ne. 0) then
+  if (nspec2d_ymax /= 0) then
     local_dim = nspec2d_ymax_wmax
     call define_adios_global_array1D(group, groupsize, local_dim, &
                                      "", STRINGIFY_VAR(ibelm_ymax))
   endif
-  if (nspec2d_bottom .ne. 0) then
+  if (nspec2d_bottom /= 0) then
     local_dim = nspec2d_bottom_wmax
     call define_adios_global_array1D(group, groupsize, local_dim, &
                                      "", STRINGIFY_VAR(ibelm_bottom))
   endif
-  if (nspec2d_top .ne. 0) then
+  if (nspec2d_top /= 0) then
     local_dim = nspec2d_top_wmax
     call define_adios_global_array1D(group, groupsize, local_dim, &
                                      "", STRINGIFY_VAR(ibelm_top))
@@ -1018,32 +1018,32 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob,                   &
   call adios_write(handle, STRINGIFY_VAR(nspec2d_bottom), ier)
   call adios_write(handle, STRINGIFY_VAR(nspec2d_top), ier)
 
-  if (nspec2d_xmin .ne. 0) then
+  if (nspec2d_xmin /= 0) then
       local_dim = nspec2d_xmin_wmax
       call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                        STRINGIFY_VAR(ibelm_xmin))
   endif
-  if (nspec2d_xmax .ne. 0) then
+  if (nspec2d_xmax /= 0) then
     local_dim = nspec2d_xmax_wmax
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(ibelm_xmax))
   endif
-  if (nspec2d_ymin .ne. 0) then
+  if (nspec2d_ymin /= 0) then
     local_dim = nspec2d_ymin_wmax
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(ibelm_ymin))
   endif
-  if (nspec2d_ymax .ne. 0) then
+  if (nspec2d_ymax /= 0) then
     local_dim = nspec2d_ymax_wmax
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(ibelm_ymax))
   endif
-  if (nspec2d_bottom .ne. 0) then
+  if (nspec2d_bottom /= 0) then
     local_dim = nspec2d_bottom_wmax
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(ibelm_bottom))
   endif
-  if (nspec2d_top .ne. 0) then
+  if (nspec2d_top /= 0) then
     local_dim = nspec2d_top_wmax
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(ibelm_top))

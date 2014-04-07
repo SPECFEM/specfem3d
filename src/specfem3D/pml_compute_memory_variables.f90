@@ -145,7 +145,7 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                      + PML_duy_dxl(i,j,k) * coef1_2 + PML_duy_dxl_old(i,j,k) * coef2_2
               rmemory_duz_dxl_z(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,2) &
                      + PML_duz_dxl(i,j,k) * coef1_2 + PML_duz_dxl_old(i,j,k) * coef2_2
-            elseif(singularity_type_2 == 1)then
+            else if(singularity_type_2 == 1)then
               rmemory_dux_dxl_x(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,2) &
                      + PML_dux_dxl(i,j,k) * time_nplus1 * coef1_2 + PML_dux_dxl_old(i,j,k) * time_n * coef2_2
               rmemory_duy_dxl_y(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duy_dxl_y(i,j,k,ispec_CPML,2) &
@@ -163,14 +163,14 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                      + PML_duy_dxl(i,j,k) * coef1_3 + PML_duy_dxl_old(i,j,k) * coef2_3
               rmemory_duz_dxl_z(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,3) &
                      + PML_duz_dxl(i,j,k) * coef1_3 + PML_duz_dxl_old(i,j,k) * coef2_3
-            elseif(singularity_type_3 == 1)then
+            else if(singularity_type_3 == 1)then
               rmemory_dux_dxl_x(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,3) &
                      + PML_dux_dxl(i,j,k) * time_nplus1 * coef1_3 + PML_dux_dxl_old(i,j,k) * time_n * coef2_3
               rmemory_duy_dxl_y(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duy_dxl_y(i,j,k,ispec_CPML,3) &
                      + PML_duy_dxl(i,j,k) * time_nplus1 * coef1_3 + PML_duy_dxl_old(i,j,k) * time_n * coef2_3
               rmemory_duz_dxl_z(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,3) &
                      + PML_duz_dxl(i,j,k) * time_nplus1 * coef1_3 + PML_duz_dxl_old(i,j,k) * time_n * coef2_3
-            elseif(singularity_type_3 == 2)then
+            else if(singularity_type_3 == 2)then
               rmemory_dux_dxl_x(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,3) &
                      + PML_dux_dxl(i,j,k) * time_nplus1**2 * coef1_3 + PML_dux_dxl_old(i,j,k) * time_n**2 * coef2_3
               rmemory_duy_dxl_y(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duy_dxl_y(i,j,k,ispec_CPML,3) &
@@ -202,7 +202,7 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                      + PML_duy_dyl(i,j,k) * coef1_2 + PML_duy_dyl_old(i,j,k) * coef2_2
               rmemory_duz_dyl_z(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,2) &
                      + PML_duz_dyl(i,j,k) * coef1_2 + PML_duz_dyl_old(i,j,k) * coef2_2
-            elseif(singularity_type_2 == 1)then
+            else if(singularity_type_2 == 1)then
               rmemory_dux_dyl_x(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,2) &
                      + PML_dux_dyl(i,j,k) * time_nplus1 * coef1_2 + PML_dux_dyl_old(i,j,k) * time_n * coef2_2
               rmemory_duy_dyl_y(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duy_dyl_y(i,j,k,ispec_CPML,2) &
@@ -220,14 +220,14 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                      + PML_duy_dyl(i,j,k) * coef1_3 + PML_duy_dyl_old(i,j,k) * coef2_3
               rmemory_duz_dyl_z(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,3) &
                      + PML_duz_dyl(i,j,k) * coef1_3 + PML_duz_dyl_old(i,j,k) * coef2_3
-            elseif(singularity_type_3 == 1)then
+            else if(singularity_type_3 == 1)then
               rmemory_dux_dyl_x(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,3) &
                      + PML_dux_dyl(i,j,k) * time_nplus1 * coef1_3 + PML_dux_dyl_old(i,j,k) * time_n * coef2_3
               rmemory_duy_dyl_y(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duy_dyl_y(i,j,k,ispec_CPML,3) &
                      + PML_duy_dyl(i,j,k) * time_nplus1 * coef1_3 + PML_duy_dyl_old(i,j,k) * time_n * coef2_3
               rmemory_duz_dyl_z(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,3) &
                      + PML_duz_dyl(i,j,k) * time_nplus1 * coef1_3 + PML_duz_dyl_old(i,j,k) * time_n * coef2_3
-            elseif(singularity_type_3 == 2)then
+            else if(singularity_type_3 == 2)then
               rmemory_dux_dyl_x(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,3) &
                      + PML_dux_dyl(i,j,k) * time_nplus1**2 * coef1_3 + PML_dux_dyl_old(i,j,k) * time_n**2 * coef2_3
               rmemory_duy_dyl_y(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duy_dyl_y(i,j,k,ispec_CPML,3) &
@@ -259,7 +259,7 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                      + PML_duy_dzl(i,j,k) * coef1_2 + PML_duy_dzl_old(i,j,k) * coef2_2
               rmemory_duz_dzl_z(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,2) &
                      + PML_duz_dzl(i,j,k) * coef1_2 + PML_duz_dzl_old(i,j,k) * coef2_2
-            elseif(singularity_type_2 == 1) then
+            else if(singularity_type_2 == 1) then
               rmemory_dux_dzl_x(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,2) &
                      + PML_dux_dzl(i,j,k) * time_nplus1 * coef1_2 + PML_dux_dzl_old(i,j,k) * time_n * coef2_2
               rmemory_duy_dzl_y(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duy_dzl_y(i,j,k,ispec_CPML,2) &
@@ -277,14 +277,14 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                      + PML_duy_dzl(i,j,k) * coef1_3 + PML_duy_dzl_old(i,j,k) * coef2_3
               rmemory_duz_dzl_z(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,3) &
                      + PML_duz_dzl(i,j,k) * coef1_3 + PML_duz_dzl_old(i,j,k) * coef2_3
-            elseif(singularity_type_3 == 1) then
+            else if(singularity_type_3 == 1) then
               rmemory_dux_dzl_x(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,3) &
                      + PML_dux_dzl(i,j,k) * time_nplus1 * coef1_3 + PML_dux_dzl_old(i,j,k) * time_n * coef2_3
               rmemory_duy_dzl_y(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duy_dzl_y(i,j,k,ispec_CPML,3) &
                      + PML_duy_dzl(i,j,k) * time_nplus1 * coef1_3 + PML_duy_dzl_old(i,j,k) * time_n * coef2_3
               rmemory_duz_dzl_z(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,3) &
                      + PML_duz_dzl(i,j,k) * time_nplus1 * coef1_3 + PML_duz_dzl_old(i,j,k) * time_n * coef2_3
-            elseif(singularity_type_3 == 2) then
+            else if(singularity_type_3 == 2) then
               rmemory_dux_dzl_x(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,3) &
                      + PML_dux_dzl(i,j,k) * time_nplus1**2 * coef1_3 + PML_dux_dzl_old(i,j,k) * time_n**2 * coef2_3
               rmemory_duy_dzl_y(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duy_dzl_y(i,j,k,ispec_CPML,3) &
@@ -509,7 +509,7 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
             if(singularity_type_2 == 0)then
               rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) + &
                      coef1_2 * PML_dpotential_dxl(i,j,k) + coef2_2 * PML_dpotential_dxl_old(i,j,k)
-            elseif(singularity_type_2 == 1)then
+            else if(singularity_type_2 == 1)then
               rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) + &
                      coef1_2 * time_nplus1 * PML_dpotential_dxl(i,j,k) + &
                      coef2_2 * time_n * PML_dpotential_dxl_old(i,j,k)
@@ -520,11 +520,11 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
             if(singularity_type_3 == 0)then
               rmemory_dpotential_dxl(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,3) + &
                      coef1_3 * PML_dpotential_dxl(i,j,k) + coef2_3 * PML_dpotential_dxl_old(i,j,k)
-            elseif(singularity_type_3 == 1)then
+            else if(singularity_type_3 == 1)then
               rmemory_dpotential_dxl(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,3) + &
                      coef1_3 * time_nplus1 * PML_dpotential_dxl(i,j,k) + &
                      coef2_3 * time_n * PML_dpotential_dxl_old(i,j,k)
-            elseif(singularity_type_3 == 2)then
+            else if(singularity_type_3 == 2)then
               rmemory_dpotential_dxl(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,3) + &
                      coef1_3 * time_nplus1**2 * PML_dpotential_dxl(i,j,k) + &
                      coef2_3 * time_n**2 * PML_dpotential_dxl_old(i,j,k)
@@ -545,7 +545,7 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
             if(singularity_type_2 == 0)then
               rmemory_dpotential_dyl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,2) + &
                      coef1_2 * PML_dpotential_dyl(i,j,k) + coef2_2 * PML_dpotential_dyl_old(i,j,k)
-            elseif(singularity_type_2 == 1)then
+            else if(singularity_type_2 == 1)then
               rmemory_dpotential_dyl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,2) + &
                      coef1_2 * time_nplus1 * PML_dpotential_dyl(i,j,k) + &
                      coef2_2 * time_n * PML_dpotential_dyl_old(i,j,k)
@@ -556,11 +556,11 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
             if(singularity_type_3 == 0)then
               rmemory_dpotential_dyl(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,3) + &
                      coef1_3 * PML_dpotential_dyl(i,j,k) + coef2_3 * PML_dpotential_dyl_old(i,j,k)
-            elseif(singularity_type_3 == 1)then
+            else if(singularity_type_3 == 1)then
               rmemory_dpotential_dyl(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,3) + &
                      coef1_3 * time_nplus1 * PML_dpotential_dyl(i,j,k) + &
                      coef2_3 * time_n * PML_dpotential_dyl_old(i,j,k)
-            elseif(singularity_type_3 == 2)then
+            else if(singularity_type_3 == 2)then
               rmemory_dpotential_dyl(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,3) + &
                      coef1_3 * time_nplus1**2 * PML_dpotential_dyl(i,j,k) + &
                      coef2_3 * time_n**2 * PML_dpotential_dyl_old(i,j,k)
@@ -581,7 +581,7 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
             if(singularity_type_2 == 0)then
               rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) + &
                      coef1_2 * PML_dpotential_dzl(i,j,k) + coef2_2 * PML_dpotential_dzl_old(i,j,k)
-            elseif(singularity_type_2 == 1)then
+            else if(singularity_type_2 == 1)then
               rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) + &
                      coef1_2 * time_nplus1 * PML_dpotential_dzl(i,j,k) + &
                      coef2_2 * time_n * PML_dpotential_dzl_old(i,j,k)
@@ -592,11 +592,11 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
             if(singularity_type_3 == 0)then
               rmemory_dpotential_dzl(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,3) + &
                      coef1_3 * PML_dpotential_dzl(i,j,k) + coef2_3 * PML_dpotential_dzl_old(i,j,k)
-            elseif(singularity_type_3 == 1)then
+            else if(singularity_type_3 == 1)then
               rmemory_dpotential_dzl(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,3) + &
                      coef1_3 * time_nplus1 * PML_dpotential_dzl(i,j,k) + &
                      coef2_3 * time_n * PML_dpotential_dzl_old(i,j,k)
-            elseif(singularity_type_3 == 2)then
+            else if(singularity_type_3 == 2)then
               rmemory_dpotential_dzl(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,3) + &
                      coef1_3 * time_nplus1**2 * PML_dpotential_dzl(i,j,k) + &
                      coef2_3 * time_n**2 * PML_dpotential_dzl_old(i,j,k)
@@ -804,7 +804,7 @@ end subroutine pml_compute_memory_variables_elastic_acoustic
 !
 !=====================================================================
 !
-subroutine lijk_parameter_computation(time,deltat,kappa_x,beta_x,alpha_x,kappa_y,beta_y,alpha_y,kappa_z,beta_z,alpha_z, &
+subroutine lijk_parameter_computation(timeval,deltat,kappa_x,beta_x,alpha_x,kappa_y,beta_y,alpha_y,kappa_z,beta_z,alpha_z, &
                                       CPML_region_local,index_ijk,A_0,A_1,A_2,A_3,&
                                       coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,&
                                       coef0_3,coef1_3,coef2_3,singularity_type_2,singularity_type_3)
@@ -814,7 +814,7 @@ subroutine lijk_parameter_computation(time,deltat,kappa_x,beta_x,alpha_x,kappa_y
 
   implicit none
 
-  real(kind=CUSTOM_REAL), intent(in) :: time,deltat
+  real(kind=CUSTOM_REAL), intent(in) :: timeval,deltat
   real(kind=CUSTOM_REAL), intent(in) :: kappa_x,beta_x,alpha_x, &
                                         kappa_y,beta_y,alpha_y, &
                                         kappa_z,beta_z,alpha_z
@@ -841,7 +841,7 @@ subroutine lijk_parameter_computation(time,deltat,kappa_x,beta_x,alpha_x,kappa_y
     CPML_XZ_ONLY_TEMP = CPML_XZ_ONLY
     CPML_YZ_ONLY_TEMP = CPML_YZ_ONLY
     CPML_XYZ_TEMP = CPML_XYZ
-  elseif(index_ijk == 132)then
+  else if(index_ijk == 132)then
     CPML_X_ONLY_TEMP = CPML_X_ONLY
     CPML_Y_ONLY_TEMP = CPML_Z_ONLY
     CPML_Z_ONLY_TEMP = CPML_Y_ONLY
@@ -849,7 +849,7 @@ subroutine lijk_parameter_computation(time,deltat,kappa_x,beta_x,alpha_x,kappa_y
     CPML_XZ_ONLY_TEMP = CPML_XY_ONLY
     CPML_YZ_ONLY_TEMP = CPML_YZ_ONLY
     CPML_XYZ_TEMP = CPML_XYZ
-  elseif(index_ijk == 231)then
+  else if(index_ijk == 231)then
     CPML_X_ONLY_TEMP = CPML_Z_ONLY
     CPML_Y_ONLY_TEMP = CPML_Y_ONLY
     CPML_Z_ONLY_TEMP = CPML_X_ONLY
@@ -883,7 +883,7 @@ subroutine lijk_parameter_computation(time,deltat,kappa_x,beta_x,alpha_x,kappa_y
       singularity_type_2 = 0  ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
       singularity_type_3 = 0  ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
 
-    elseif(abs(alpha_x-alpha_y) < 1.e-5_CUSTOM_REAL .and. abs(alpha_x-beta_z) >= 1.e-5_CUSTOM_REAL &
+    else if(abs(alpha_x-alpha_y) < 1.e-5_CUSTOM_REAL .and. abs(alpha_x-beta_z) >= 1.e-5_CUSTOM_REAL &
           .and. abs(alpha_y-beta_z) >= 1.e-5_CUSTOM_REAL)then
       !----------------A1,2,3-------------------------
       alpha_0 = max(alpha_x,alpha_y)
@@ -898,14 +898,14 @@ subroutine lijk_parameter_computation(time,deltat,kappa_x,beta_x,alpha_x,kappa_y
       bar_A_3 = - bar_A_0 * (beta_z - alpha_z) * (beta_z-beta_x) * (beta_z-beta_y) / &
                 ((beta_z-alpha_0) * (beta_z-alpha_0))
 
-      A_1 = bar_A_1 + time * bar_A_2
+      A_1 = bar_A_1 + timeval * bar_A_2
       A_2 = - bar_A_2
       A_3 = bar_A_3
 
       singularity_type_2 = 1 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
       singularity_type_3 = 0 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
 
-    elseif(abs(alpha_x-alpha_y) >= 1.e-5_CUSTOM_REAL .and. abs(alpha_x-beta_z) < 1.e-5_CUSTOM_REAL &
+    else if(abs(alpha_x-alpha_y) >= 1.e-5_CUSTOM_REAL .and. abs(alpha_x-beta_z) < 1.e-5_CUSTOM_REAL &
           .and. abs(alpha_y-beta_z) >= 1.e-5_CUSTOM_REAL)then
       !----------------A1,2,3-------------------------
       alpha_0 = max(alpha_x,beta_z)
@@ -920,14 +920,14 @@ subroutine lijk_parameter_computation(time,deltat,kappa_x,beta_x,alpha_x,kappa_y
       bar_A_3 = bar_A_0 * (alpha_0 - alpha_z) * (alpha_0-beta_x) * (alpha_0-beta_y) / &
                 (alpha_0-alpha_y)
 
-      A_1 = bar_A_1 + time * bar_A_3
+      A_1 = bar_A_1 + timeval * bar_A_3
       A_2 = bar_A_2
       A_3 = -bar_A_3
 
       singularity_type_2 = 0 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
       singularity_type_3 = 1 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
 
-    elseif(abs(alpha_x-alpha_y) >= 1.e-5_CUSTOM_REAL .and. abs(alpha_x-beta_z) >= 1.e-5_CUSTOM_REAL &
+    else if(abs(alpha_x-alpha_y) >= 1.e-5_CUSTOM_REAL .and. abs(alpha_x-beta_z) >= 1.e-5_CUSTOM_REAL &
           .and. abs(alpha_y-beta_z) < 1.e-5_CUSTOM_REAL)then
       !----------------A1,2,3-------------------------
       alpha_0 = max(alpha_y,beta_z)
@@ -943,13 +943,13 @@ subroutine lijk_parameter_computation(time,deltat,kappa_x,beta_x,alpha_x,kappa_y
                 (alpha_0-alpha_x)
 
       A_1 = bar_A_1
-      A_2 = bar_A_2 + time * bar_A_3
+      A_2 = bar_A_2 + timeval * bar_A_3
       A_3 = - bar_A_3
 
       singularity_type_2 = 0 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
       singularity_type_3 = 1 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
 
-    elseif(abs(alpha_x-alpha_y) < 1.e-5_CUSTOM_REAL .and. abs(alpha_x-beta_z) < 1.e-5_CUSTOM_REAL &
+    else if(abs(alpha_x-alpha_y) < 1.e-5_CUSTOM_REAL .and. abs(alpha_x-beta_z) < 1.e-5_CUSTOM_REAL &
           .and. abs(alpha_y-beta_z) < 1.e-5_CUSTOM_REAL)then
       !----------------A1,2,3-------------------------
       alpha_0 = max(alpha_x,alpha_y,beta_z)
@@ -959,8 +959,8 @@ subroutine lijk_parameter_computation(time,deltat,kappa_x,beta_x,alpha_x,kappa_y
                 -2._CUSTOM_REAL * alpha_0 * (alpha_z + beta_x + beta_y))
       bar_A_3 = bar_A_0 * (-0.5_CUSTOM_REAL) * (alpha_0 - alpha_z) * (alpha_0-beta_x) * (alpha_0-beta_y)
 
-      A_1 = bar_A_1 + time * bar_A_2 + time**2 * bar_A_3
-      A_2 = - bar_A_2 - 2._CUSTOM_REAL * time * bar_A_3
+      A_1 = bar_A_1 + timeval * bar_A_2 + timeval**2 * bar_A_3
+      A_2 = - bar_A_2 - 2._CUSTOM_REAL * timeval * bar_A_3
       A_3 = bar_A_3
 
       singularity_type_2 = 1 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
@@ -969,7 +969,7 @@ subroutine lijk_parameter_computation(time,deltat,kappa_x,beta_x,alpha_x,kappa_y
     else
       stop 'error in lijk_parameter_computation'
     endif
-  elseif(CPML_region_local == CPML_YZ_ONLY_TEMP)then
+  else if(CPML_region_local == CPML_YZ_ONLY_TEMP)then
   !----------------A0-------------------------
     bar_A_0 = kappa_y / kappa_z
     A_0 = bar_A_0
@@ -990,7 +990,7 @@ subroutine lijk_parameter_computation(time,deltat,kappa_x,beta_x,alpha_x,kappa_y
       singularity_type_2 = 0 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
       singularity_type_3 = 0 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
 
-    elseif( abs(alpha_y-beta_z) < 1.e-5_CUSTOM_REAL)then
+    else if( abs(alpha_y-beta_z) < 1.e-5_CUSTOM_REAL)then
       !----------------A1,2,3-------------------------
       alpha_0 = max(alpha_y,beta_z)
 
@@ -999,7 +999,7 @@ subroutine lijk_parameter_computation(time,deltat,kappa_x,beta_x,alpha_x,kappa_y
       bar_A_3 = bar_A_0 * (alpha_0 - alpha_z) * (alpha_0-beta_y)
 
       A_1 = bar_A_1
-      A_2 = bar_A_2 + time * bar_A_3
+      A_2 = bar_A_2 + timeval * bar_A_3
       A_3 = - bar_A_3
 
       singularity_type_2 = 0 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
@@ -1008,7 +1008,7 @@ subroutine lijk_parameter_computation(time,deltat,kappa_x,beta_x,alpha_x,kappa_y
     else
       stop 'error in lijk_parameter_computation'
     endif
-  elseif(CPML_region_local == CPML_XZ_ONLY_TEMP)then
+  else if(CPML_region_local == CPML_XZ_ONLY_TEMP)then
   !----------------A0-------------------------
     bar_A_0 = kappa_x / kappa_z
     A_0 = bar_A_0
@@ -1029,7 +1029,7 @@ subroutine lijk_parameter_computation(time,deltat,kappa_x,beta_x,alpha_x,kappa_y
       singularity_type_2 = 0 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
       singularity_type_3 = 0 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
 
-    elseif(abs(alpha_x-beta_z) < 1.e-5_CUSTOM_REAL)then
+    else if(abs(alpha_x-beta_z) < 1.e-5_CUSTOM_REAL)then
       !----------------A1,2,3-------------------------
       alpha_0 = max(alpha_x,beta_z)
 
@@ -1037,7 +1037,7 @@ subroutine lijk_parameter_computation(time,deltat,kappa_x,beta_x,alpha_x,kappa_y
       bar_A_2 = 0._CUSTOM_REAL
       bar_A_3 = bar_A_0 * (alpha_0 - alpha_z) * (alpha_0-beta_x)
 
-      A_1 = bar_A_1 + time * bar_A_3
+      A_1 = bar_A_1 + timeval * bar_A_3
       A_2 = bar_A_2
       A_3 = -bar_A_3
 
@@ -1048,7 +1048,7 @@ subroutine lijk_parameter_computation(time,deltat,kappa_x,beta_x,alpha_x,kappa_y
       stop 'error in lijk_parameter_computation'
     endif
 
-  elseif(CPML_region_local == CPML_XY_ONLY_TEMP)then
+  else if(CPML_region_local == CPML_XY_ONLY_TEMP)then
   !----------------A0-------------------------
     bar_A_0 = kappa_x * kappa_y
     A_0 = bar_A_0
@@ -1069,7 +1069,7 @@ subroutine lijk_parameter_computation(time,deltat,kappa_x,beta_x,alpha_x,kappa_y
       singularity_type_2 = 0 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
       singularity_type_3 = 0 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
 
-    elseif(abs(alpha_x-alpha_y) < 1.e-5_CUSTOM_REAL)then
+    else if(abs(alpha_x-alpha_y) < 1.e-5_CUSTOM_REAL)then
       !----------------A1,2,3-------------------------
       alpha_0 = max(alpha_x,alpha_y)
 
@@ -1077,7 +1077,7 @@ subroutine lijk_parameter_computation(time,deltat,kappa_x,beta_x,alpha_x,kappa_y
       bar_A_2 = bar_A_0 * (alpha_0 - beta_x) * (alpha_0 - beta_y)
       bar_A_3 = 0._CUSTOM_REAL
 
-      A_1 = bar_A_1 + time * bar_A_2
+      A_1 = bar_A_1 + timeval * bar_A_2
       A_2 = - bar_A_2
       A_3 = bar_A_3
 
@@ -1087,7 +1087,7 @@ subroutine lijk_parameter_computation(time,deltat,kappa_x,beta_x,alpha_x,kappa_y
     else
       stop 'error in lijk_parameter_computation'
     endif
-  elseif(CPML_region_local == CPML_X_ONLY_TEMP)then
+  else if(CPML_region_local == CPML_X_ONLY_TEMP)then
   !----------------A0-------------------------
     bar_A_0 = kappa_x
     A_0 = bar_A_0
@@ -1103,7 +1103,7 @@ subroutine lijk_parameter_computation(time,deltat,kappa_x,beta_x,alpha_x,kappa_y
     singularity_type_2 = 0 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
     singularity_type_3 = 0 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
 
-  elseif(CPML_region_local == CPML_Y_ONLY_TEMP)then
+  else if(CPML_region_local == CPML_Y_ONLY_TEMP)then
   !----------------A0-------------------------
     bar_A_0 = kappa_y
     A_0 = bar_A_0
@@ -1119,7 +1119,7 @@ subroutine lijk_parameter_computation(time,deltat,kappa_x,beta_x,alpha_x,kappa_y
     singularity_type_2 = 0 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
     singularity_type_3 = 0 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
 
-  elseif(CPML_region_local == CPML_Z_ONLY_TEMP)then
+  else if(CPML_region_local == CPML_Z_ONLY_TEMP)then
   !----------------A0-------------------------
     bar_A_0 = 1._CUSTOM_REAL / kappa_z
     A_0 = bar_A_0
@@ -1147,7 +1147,7 @@ subroutine lijk_parameter_computation(time,deltat,kappa_x,beta_x,alpha_x,kappa_y
      else
         coef1_1 = ( 1._CUSTOM_REAL - exp(- bb * deltat / 2._CUSTOM_REAL) ) / bb
         coef2_1 = ( 1._CUSTOM_REAL - exp(- bb * deltat / 2._CUSTOM_REAL) ) * exp(- bb * deltat / 2._CUSTOM_REAL) / bb
-     end if
+     endif
   else
      if ( FIRST_ORDER_CONVOLUTION ) then
         coef1_1 = deltat
@@ -1155,7 +1155,7 @@ subroutine lijk_parameter_computation(time,deltat,kappa_x,beta_x,alpha_x,kappa_y
      else
         coef1_1 = deltat / 2._CUSTOM_REAL
         coef2_1 = deltat / 2._CUSTOM_REAL
-     end if
+     endif
   endif
 
   bb = alpha_y
@@ -1167,7 +1167,7 @@ subroutine lijk_parameter_computation(time,deltat,kappa_x,beta_x,alpha_x,kappa_y
      else
         coef1_2 = ( 1._CUSTOM_REAL - exp(- bb * deltat / 2._CUSTOM_REAL) ) / bb
         coef2_2 = ( 1._CUSTOM_REAL - exp(- bb * deltat / 2._CUSTOM_REAL) ) * exp(- bb * deltat / 2._CUSTOM_REAL) / bb
-     end if
+     endif
   else
      if ( FIRST_ORDER_CONVOLUTION ) then
         coef1_2 = deltat
@@ -1175,7 +1175,7 @@ subroutine lijk_parameter_computation(time,deltat,kappa_x,beta_x,alpha_x,kappa_y
      else
         coef1_2 = deltat / 2._CUSTOM_REAL
         coef2_2 = deltat / 2._CUSTOM_REAL
-     end if
+     endif
   endif
 
   bb = beta_z
@@ -1187,7 +1187,7 @@ subroutine lijk_parameter_computation(time,deltat,kappa_x,beta_x,alpha_x,kappa_y
      else
         coef1_3 = ( 1._CUSTOM_REAL - exp(- bb * deltat / 2._CUSTOM_REAL) ) / bb
         coef2_3 = ( 1._CUSTOM_REAL - exp(- bb * deltat / 2._CUSTOM_REAL) ) * exp(- bb * deltat / 2._CUSTOM_REAL) / bb
-     end if
+     endif
   else
      if ( FIRST_ORDER_CONVOLUTION ) then
         coef1_3 = deltat
@@ -1195,7 +1195,7 @@ subroutine lijk_parameter_computation(time,deltat,kappa_x,beta_x,alpha_x,kappa_y
      else
         coef1_3 = deltat / 2._CUSTOM_REAL
         coef2_3 = deltat / 2._CUSTOM_REAL
-     end if
+     endif
   endif
 
 end subroutine lijk_parameter_computation
@@ -1228,37 +1228,37 @@ subroutine lx_parameter_computation(deltat,kappa_x,beta_x,alpha_x, &
   !----------------A1-------------------------
     A_1 = - A_0 * (alpha_x - beta_x)
 
-  elseif(CPML_region_local == CPML_YZ_ONLY)then
+  else if(CPML_region_local == CPML_YZ_ONLY)then
   !----------------A0-------------------------
     A_0 = 1._CUSTOM_REAL
   !----------------A1-------------------------
     A_1 = 0._CUSTOM_REAL
 
-  elseif(CPML_region_local == CPML_XZ_ONLY)then
+  else if(CPML_region_local == CPML_XZ_ONLY)then
   !----------------A0-------------------------
     A_0 = kappa_x
   !----------------A1-------------------------
     A_1 = - A_0 * (alpha_x - beta_x)
 
-  elseif(CPML_region_local == CPML_XY_ONLY)then
+  else if(CPML_region_local == CPML_XY_ONLY)then
   !----------------A0-------------------------
     A_0 = kappa_x
   !----------------A1-------------------------
     A_1 = - A_0 * (alpha_x - beta_x)
 
-  elseif(CPML_region_local == CPML_X_ONLY)then
+  else if(CPML_region_local == CPML_X_ONLY)then
   !----------------A0-------------------------
     A_0 = kappa_x
   !----------------A1-------------------------
     A_1 = - A_0 * (alpha_x - beta_x)
 
-  elseif(CPML_region_local == CPML_Y_ONLY)then
+  else if(CPML_region_local == CPML_Y_ONLY)then
   !----------------A0-------------------------
     A_0 = 1._CUSTOM_REAL
   !----------------A1-------------------------
     A_1 = 0._CUSTOM_REAL
 
-  elseif(CPML_region_local == CPML_Z_ONLY)then
+  else if(CPML_region_local == CPML_Z_ONLY)then
   !----------------A0-------------------------
     A_0 = 1._CUSTOM_REAL
   !----------------A1-------------------------
@@ -1306,37 +1306,37 @@ subroutine ly_parameter_computation(deltat,kappa_y,beta_y,alpha_y, &
   !----------------A1-------------------------
     A_1 = - A_0 * (alpha_y - beta_y)
 
-  elseif(CPML_region_local == CPML_YZ_ONLY)then
+  else if(CPML_region_local == CPML_YZ_ONLY)then
   !----------------A0-------------------------
     A_0 = kappa_y
   !----------------A1-------------------------
     A_1 = - A_0 * (alpha_y - beta_y)
 
-  elseif(CPML_region_local == CPML_XZ_ONLY)then
+  else if(CPML_region_local == CPML_XZ_ONLY)then
   !----------------A0-------------------------
     A_0 = 1._CUSTOM_REAL
   !----------------A1-------------------------
     A_1 = 0._CUSTOM_REAL
 
-  elseif(CPML_region_local == CPML_XY_ONLY)then
+  else if(CPML_region_local == CPML_XY_ONLY)then
   !----------------A0-------------------------
     A_0 = kappa_y
   !----------------A1-------------------------
     A_1 = - A_0 * (alpha_y - beta_y)
 
-  elseif(CPML_region_local == CPML_X_ONLY)then
+  else if(CPML_region_local == CPML_X_ONLY)then
   !----------------A0-------------------------
     A_0 = 1._CUSTOM_REAL
   !----------------A1-------------------------
     A_1 = 0._CUSTOM_REAL
 
-  elseif(CPML_region_local == CPML_Y_ONLY)then
+  else if(CPML_region_local == CPML_Y_ONLY)then
   !----------------A0-------------------------
     A_0 = kappa_y
   !----------------A1-------------------------
     A_1 = - A_0 * (alpha_y - beta_y)
 
-  elseif(CPML_region_local == CPML_Z_ONLY)then
+  else if(CPML_region_local == CPML_Z_ONLY)then
   !----------------A0-------------------------
     A_0 = 1._CUSTOM_REAL
   !----------------A1-------------------------
@@ -1388,37 +1388,37 @@ subroutine lz_parameter_computation(deltat,kappa_z,beta_z,alpha_z, &
   !----------------A1-------------------------
     A_1 = - A_0 * (alpha_z - beta_z)
 
-  elseif(CPML_region_local == CPML_YZ_ONLY)then
+  else if(CPML_region_local == CPML_YZ_ONLY)then
   !----------------A0-------------------------
     A_0 = kappa_z
   !----------------A1-------------------------
     A_1 = - A_0 * (alpha_z - beta_z)
 
-  elseif(CPML_region_local == CPML_XZ_ONLY)then
+  else if(CPML_region_local == CPML_XZ_ONLY)then
   !----------------A0-------------------------
     A_0 = kappa_z
   !----------------A1-------------------------
     A_1 = - A_0 * (alpha_z - beta_z)
 
-  elseif(CPML_region_local == CPML_XY_ONLY)then
+  else if(CPML_region_local == CPML_XY_ONLY)then
   !----------------A0-------------------------
     A_0 = 1._CUSTOM_REAL
   !----------------A1-------------------------
     A_1 = 0._CUSTOM_REAL
 
-  elseif(CPML_region_local == CPML_X_ONLY)then
+  else if(CPML_region_local == CPML_X_ONLY)then
   !----------------A0-------------------------
     A_0 = 1._CUSTOM_REAL
   !----------------A1-------------------------
     A_1 = 0._CUSTOM_REAL
 
-  elseif(CPML_region_local == CPML_Y_ONLY)then
+  else if(CPML_region_local == CPML_Y_ONLY)then
   !----------------A0-------------------------
     A_0 = 1._CUSTOM_REAL
   !----------------A1-------------------------
     A_1 = 0._CUSTOM_REAL
 
-  elseif(CPML_region_local == CPML_Z_ONLY)then
+  else if(CPML_region_local == CPML_Z_ONLY)then
   !----------------A0-------------------------
     A_0 = kappa_z
   !----------------A1-------------------------
@@ -1441,7 +1441,7 @@ end subroutine lz_parameter_computation
 !
 !=====================================================================
 !
-subroutine lxy_interface_parameter_computation(time,deltat,kappa_x,beta_x,alpha_x,kappa_y,beta_y,alpha_y, &
+subroutine lxy_interface_parameter_computation(timeval,deltat,kappa_x,beta_x,alpha_x,kappa_y,beta_y,alpha_y, &
                                       CPML_region_local,index_ijk,A_0,A_1,A_2,&
                                       coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,&
                                       singularity_type_2)
@@ -1451,7 +1451,7 @@ subroutine lxy_interface_parameter_computation(time,deltat,kappa_x,beta_x,alpha_
 
   implicit none
 
-  real(kind=CUSTOM_REAL), intent(in) :: time,deltat
+  real(kind=CUSTOM_REAL), intent(in) :: timeval,deltat
   real(kind=CUSTOM_REAL), intent(in) :: kappa_x,beta_x,alpha_x, &
                                         kappa_y,beta_y,alpha_y
   integer, intent(in) :: CPML_region_local,index_ijk
@@ -1498,14 +1498,14 @@ subroutine lxy_interface_parameter_computation(time,deltat,kappa_x,beta_x,alpha_
 
       singularity_type_2 = 0 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
 
-    elseif(abs(alpha_x-alpha_y) < 1.e-5_CUSTOM_REAL)then
+    else if(abs(alpha_x-alpha_y) < 1.e-5_CUSTOM_REAL)then
       !----------------A1,2-------------------------
       alpha_0 = max(alpha_x,alpha_y)
 
       bar_A_1 = bar_A_0 * (-2._CUSTOM_REAL * alpha_0 + (beta_x + beta_y))
       bar_A_2 = bar_A_0 * (alpha_0 - beta_x) * (alpha_0 - beta_y)
 
-      A_1 = bar_A_1 + time * bar_A_2
+      A_1 = bar_A_1 + timeval * bar_A_2
       A_2 = - bar_A_2
 
       singularity_type_2 = 1 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
@@ -1513,7 +1513,7 @@ subroutine lxy_interface_parameter_computation(time,deltat,kappa_x,beta_x,alpha_
     else
       stop 'error in lxy_interface_parameter_computation'
     endif
-  elseif(CPML_region_local == CPML_YZ_ONLY_TEMP)then
+  else if(CPML_region_local == CPML_YZ_ONLY_TEMP)then
   !----------------A0-------------------------
     bar_A_0 = kappa_y
     A_0 = bar_A_0
@@ -1526,7 +1526,7 @@ subroutine lxy_interface_parameter_computation(time,deltat,kappa_x,beta_x,alpha_
 
     singularity_type_2 = 0 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
 
-  elseif(CPML_region_local == CPML_XZ_ONLY_TEMP)then
+  else if(CPML_region_local == CPML_XZ_ONLY_TEMP)then
 
   !----------------A0-------------------------
     bar_A_0 = kappa_x
@@ -1540,7 +1540,7 @@ subroutine lxy_interface_parameter_computation(time,deltat,kappa_x,beta_x,alpha_
 
     singularity_type_2 = 0 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
 
-  elseif(CPML_region_local == CPML_XY_ONLY_TEMP)then
+  else if(CPML_region_local == CPML_XY_ONLY_TEMP)then
   !----------------A0-------------------------
     bar_A_0 = kappa_x * kappa_y
     A_0 = bar_A_0
@@ -1558,14 +1558,14 @@ subroutine lxy_interface_parameter_computation(time,deltat,kappa_x,beta_x,alpha_
 
       singularity_type_2 = 0 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
 
-    elseif(abs(alpha_x-alpha_y) < 1.e-5_CUSTOM_REAL)then
+    else if(abs(alpha_x-alpha_y) < 1.e-5_CUSTOM_REAL)then
       !----------------A1,2,3-------------------------
       alpha_0 = max(alpha_x,alpha_y)
 
       bar_A_1 = bar_A_0 * (-2._CUSTOM_REAL * alpha_0 + (beta_x + beta_y))
       bar_A_2 = bar_A_0 * (alpha_0 - beta_x) * (alpha_0 - beta_y)
 
-      A_1 = bar_A_1 + time * bar_A_2
+      A_1 = bar_A_1 + timeval * bar_A_2
       A_2 = - bar_A_2
 
       singularity_type_2 = 1 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
@@ -1573,7 +1573,7 @@ subroutine lxy_interface_parameter_computation(time,deltat,kappa_x,beta_x,alpha_
     else
       stop 'error in lxy_interface_parameter_computation'
     endif
-  elseif(CPML_region_local == CPML_X_ONLY_TEMP)then
+  else if(CPML_region_local == CPML_X_ONLY_TEMP)then
   !----------------A0-------------------------
     bar_A_0 = kappa_x
     A_0 = bar_A_0
@@ -1586,7 +1586,7 @@ subroutine lxy_interface_parameter_computation(time,deltat,kappa_x,beta_x,alpha_
 
     singularity_type_2 = 0 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
 
-  elseif(CPML_region_local == CPML_Y_ONLY_TEMP)then
+  else if(CPML_region_local == CPML_Y_ONLY_TEMP)then
   !----------------A0-------------------------
     bar_A_0 = kappa_y
     A_0 = bar_A_0
@@ -1599,7 +1599,7 @@ subroutine lxy_interface_parameter_computation(time,deltat,kappa_x,beta_x,alpha_
 
     singularity_type_2 = 0 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
 
-  elseif(CPML_region_local == CPML_Z_ONLY_TEMP)then
+  else if(CPML_region_local == CPML_Z_ONLY_TEMP)then
   !----------------A0-------------------------
     bar_A_0 = 1._CUSTOM_REAL
     A_0 = bar_A_0
@@ -1627,7 +1627,7 @@ subroutine lxy_interface_parameter_computation(time,deltat,kappa_x,beta_x,alpha_
      else
         coef1_1 = ( 1._CUSTOM_REAL - exp(- bb * deltat / 2._CUSTOM_REAL) ) / bb
         coef2_1 = ( 1._CUSTOM_REAL - exp(- bb * deltat / 2._CUSTOM_REAL) ) * exp(- bb * deltat / 2._CUSTOM_REAL) / bb
-     end if
+     endif
   else
      if ( FIRST_ORDER_CONVOLUTION ) then
         coef1_1 = deltat
@@ -1635,7 +1635,7 @@ subroutine lxy_interface_parameter_computation(time,deltat,kappa_x,beta_x,alpha_
      else
         coef1_1 = deltat / 2._CUSTOM_REAL
         coef2_1 = deltat / 2._CUSTOM_REAL
-     end if
+     endif
   endif
 
   bb = alpha_y
@@ -1647,7 +1647,7 @@ subroutine lxy_interface_parameter_computation(time,deltat,kappa_x,beta_x,alpha_
      else
         coef1_2 = ( 1._CUSTOM_REAL - exp(- bb * deltat / 2._CUSTOM_REAL) ) / bb
         coef2_2 = ( 1._CUSTOM_REAL - exp(- bb * deltat / 2._CUSTOM_REAL) ) * exp(- bb * deltat / 2._CUSTOM_REAL) / bb
-     end if
+     endif
   else
      if ( FIRST_ORDER_CONVOLUTION ) then
         coef1_2 = deltat
@@ -1655,7 +1655,7 @@ subroutine lxy_interface_parameter_computation(time,deltat,kappa_x,beta_x,alpha_
      else
         coef1_2 = deltat / 2._CUSTOM_REAL
         coef2_2 = deltat / 2._CUSTOM_REAL
-     end if
+     endif
   endif
 
 end subroutine lxy_interface_parameter_computation

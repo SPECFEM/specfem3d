@@ -62,7 +62,7 @@ subroutine adios_cleanup()
   integer :: adios_err
 
   call world_rank(myrank)
-  call sync_all()
+  call synchronize_all()
 
   call adios_finalize (myrank, adios_err)
 

@@ -324,20 +324,20 @@ subroutine init_2d_distribution(a,coord,iin,n)
   integer, intent(in) :: iin,n
 
   real(kind=CUSTOM_REAL) :: b(size(a))
-  character(len=20) :: shape
+  character(len=20) :: shapeval
   real(kind=CUSTOM_REAL) :: val,valh, xc, yc, zc, r, l, lx,ly,lz
   real(kind=CUSTOM_REAL) :: r1(size(a))
   integer :: i
   real(kind=CUSTOM_REAL) :: SMALLVAL
 
-  NAMELIST / DIST2D / shape, val,valh, xc, yc, zc, r, l, lx,ly,lz
+  NAMELIST / DIST2D / shapeval, val,valh, xc, yc, zc, r, l, lx,ly,lz
 
   SMALLVAL = 1.e-10_CUSTOM_REAL
 
   if (n==0) return
 
   do i=1,n
-    shape = ''
+    shapeval = ''
     val  = 0e0_CUSTOM_REAL
     valh = 0e0_CUSTOM_REAL
     xc = 0e0_CUSTOM_REAL
@@ -350,8 +350,13 @@ subroutine init_2d_distribution(a,coord,iin,n)
     lz = 0e0_CUSTOM_REAL
 
     read(iin,DIST2D)
-    select case(shape)
+    select case(shapeval)
     case ('circle')
+!! DK DK: beware: function or procedure arguments that contain a calculation produce a memory copy
+!! DK DK: created by the compiler; The code is fine, but the hidden copy may slow it down.
+!! DK DK: here is the warning from the Cray compiler:
+!! DK DK: ftn-1438 crayftn: CAUTION INIT_2D_DISTRIBUTION, File = src/specfem3D/fault_solver_dynamic.f90, Line = 355, Column = 24
+!! DK DK: This argument produces a copy in to a temporary variable.
       b = heaviside( r - sqrt((coord(1,:)-xc)**2 + (coord(2,:)-yc)**2 + (coord(3,:)-zc)**2 ) ) *val
     case ('circle-exp')
       r1 = sqrt((coord(1,:)-xc)**2 + (coord(2,:)-yc)**2 + (coord(3,:)-zc)**2 )
@@ -361,8 +366,12 @@ subroutine init_2d_distribution(a,coord,iin,n)
         b =0._CUSTOM_REAL
       endwhere
     case ('ellipse')
+!! DK DK: beware: function or procedure arguments that contain a calculation produce a memory copy
+!! DK DK: created by the compiler; The code is fine, but the hidden copy may slow it down.
       b = heaviside( 1e0_CUSTOM_REAL - sqrt( (coord(1,:)-xc)**2/lx**2 + (coord(2,:)-yc)**2/ly**2 + (coord(3,:)-zc)**2/lz**2 ) ) *val
     case ('square')
+!! DK DK: beware: function or procedure arguments that contain a calculation produce a memory copy
+!! DK DK: created by the compiler; The code is fine, but the hidden copy may slow it down.
       b = heaviside((l/2._CUSTOM_REAL)-abs(coord(1,:)-xc)+SMALLVAL)  * &
            heaviside((l/2._CUSTOM_REAL)-abs(coord(2,:)-yc)+SMALLVAL) * &
            heaviside((l/2._CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL) * &
@@ -439,7 +448,7 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
   real(kind=CUSTOM_REAL), dimension(bc%nglob) :: strength,tStick,tnew, &
                                                  theta_old, theta_new, dc, &
                                                  Vf_old,Vf_new,TxExt
-  real(kind=CUSTOM_REAL) :: half_dt,TLoad,DTau0,GLoad,time
+  real(kind=CUSTOM_REAL) :: half_dt,TLoad,DTau0,GLoad,timeval
   integer :: i
 
   if (bc%nspec > 0) then !Surendra : for parallel faults
@@ -482,9 +491,9 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
       TxExt = 0._CUSTOM_REAL
       TLoad = 1.0_CUSTOM_REAL
       DTau0 = 25e6_CUSTOM_REAL
-      time = it*bc%dt !time will never be zero. it starts from 1
-      if (time <= TLoad) then
-        GLoad = exp( (time-TLoad)*(time-Tload) / (time*(time-2.0_CUSTOM_REAL*TLoad)) )
+      timeval = it*bc%dt !time will never be zero. it starts from 1
+      if (timeval <= TLoad) then
+        GLoad = exp( (timeval-TLoad)*(timeval-Tload) / (timeval*(timeval-2.0_CUSTOM_REAL*TLoad)) )
       else
         GLoad = 1.0_CUSTOM_REAL
       endif
@@ -504,7 +513,7 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
       bc%MU = swf_mu(bc%swf)
 
       ! combined with time-weakening for nucleation
-      !  if (associated(bc%twf)) bc%MU = min( bc%MU, twf_mu(bc%twf,bc%coord,time) )
+      !  if (associated(bc%twf)) bc%MU = min( bc%MU, twf_mu(bc%twf,bc%coord,timeval) )
       if (TPV16) then
         where (bc%swf%T <= it*bc%dt) bc%MU = bc%swf%mud
       endif
@@ -1067,11 +1076,11 @@ subroutine gather_dataXZ(bc)
 end subroutine gather_dataXZ
 
 !---------------------------------------------------------------
-subroutine store_dataXZ(dataXZ,stg,dold,dnew,dc,vold,vnew,time,dt)
+subroutine store_dataXZ(dataXZ,stg,dold,dnew,dc,vold,vnew,timeval,dt)
 
   type(dataXZ_type), intent(inout) :: dataXZ
   real(kind=CUSTOM_REAL), dimension(:), intent(in) :: stg,dold,dnew,dc,vold,vnew
-  real(kind=CUSTOM_REAL), intent(in) :: time,dt
+  real(kind=CUSTOM_REAL), intent(in) :: timeval,dt
 
   integer :: i
 
@@ -1083,14 +1092,14 @@ subroutine store_dataXZ(dataXZ,stg,dold,dnew,dc,vold,vnew,time,dt)
     ! with linear time interpolation
     if (dataXZ%tPZ(i)==0e0_CUSTOM_REAL) then
       if (dold(i)<=dc(i) .and. dnew(i) >= dc(i)) then
-        dataXZ%tPZ(i) = time-dt*(dnew(i)-dc(i))/(dnew(i)-dold(i))
+        dataXZ%tPZ(i) = timeval-dt*(dnew(i)-dc(i))/(dnew(i)-dold(i))
       endif
     endif
 
     ! rupture time = first time when slip velocity = V_RUPT
     ! with linear time interpolation
     if (dataXZ%tRUP(i)==0e0_CUSTOM_REAL) then
-      if (vold(i)<=V_RUPT .and. vnew(i)>=V_RUPT) dataXZ%tRUP(i)= time-dt*(vnew(i)-V_RUPT)/(vnew(i)-vold(i))
+      if (vold(i)<=V_RUPT .and. vnew(i)>=V_RUPT) dataXZ%tRUP(i)= timeval-dt*(vnew(i)-V_RUPT)/(vnew(i)-vold(i))
     endif
 
   enddo
