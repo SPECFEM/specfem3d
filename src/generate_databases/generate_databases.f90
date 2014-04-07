@@ -446,7 +446,7 @@
   endif
 
 ! makes sure processes are synchronized
-  call sync_all()
+  call synchronize_all()
 
   end subroutine gd_read_parameters
 

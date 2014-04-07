@@ -126,6 +126,10 @@ subroutine compute_forces_viscoelastic()
            ! handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
            ! adoint definition: pressure^\dagger=potential^\dagger
            call compute_coupling_viscoelastic_ac(NSPEC_AB,NGLOB_AB, &
+!! DK DK: beware: function or procedure arguments that contain a calculation produce a memory copy
+!! DK DK: created by the compiler; The code is fine, but the hidden copy may slow it down.
+!! DK DK: here is the warning from the Cray compiler:
+!! DK DK: ftn-1438 crayftn: This argument produces a copy in to a temporary variable.
                               ibool,accel,-potential_acoustic, &
                               num_coupling_ac_el_faces, &
                               coupling_ac_el_ispec,coupling_ac_el_ijk, &

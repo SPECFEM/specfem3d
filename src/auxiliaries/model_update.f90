@@ -124,7 +124,7 @@ program model_update
   !gradients in direction of steepest descent (= - kernels)
   real(kind=CUSTOM_REAL) :: min_vs_g, max_vs_g, min_vp_g, max_vp_g, min_rho_g, max_rho_g
   real(kind=CUSTOM_REAL) :: min_vp,min_vs,max_vp,max_vs,min_rho,max_rho, &
-                            max,minmax(4),vs_sum,vp_sum,rho_sum
+                            maxvalue,minmax(4),vs_sum,vp_sum,rho_sum
 
   integer :: i,j,k,ispec
 
@@ -165,12 +165,12 @@ program model_update
     call exit_MPI(myrank,'error step factor')
   endif
 
-  call sync_all()
+  call synchronize_all()
 
   ! reads in parameters and checks for some inconsistencies
   call initialize_simulation()
 
-  call sync_all()
+  call synchronize_all()
 
   ! reads in external mesh
   call read_mesh_databases()
@@ -188,7 +188,7 @@ program model_update
     print*,'NGLOB            ', NGLOB
   endif
 
-  call sync_all()
+  call synchronize_all()
 
   !! allocation
   ! model and kernel variables
@@ -549,10 +549,10 @@ program model_update
     minmax(3) = abs(min_vp_g)
     minmax(4) = abs(max_vp_g)
 
-    max = maxval(minmax)
-    step_length = step_fac/max
+    maxvalue = maxval(minmax)
+    step_length = step_fac/maxvalue
 
-    print*,'  step length : ',step_length,max
+    print*,'  step length : ',step_length,maxvalue
     print*
   endif
   tmp_step(1) = step_length
@@ -788,12 +788,12 @@ program model_update
   rmass_old = 0._CUSTOM_REAL
   rmass_old = rmass
 
-  call sync_all()
+  call synchronize_all()
 
   ! create mass matrix ONLY for the elastic case
   allocate(rmass_new(NGLOB))
 
-  call sync_all()
+  call synchronize_all()
 
   if( myrank == 0) then
     print*, '  ...creating mass matrix '
@@ -832,7 +832,7 @@ program model_update
   enddo ! nspec
 
 
-  call sync_all()
+  call synchronize_all()
 
   ! dummy allocations, arrays are not needed since the update here only works for elastic models
   allocate(rmass_acoustic_new(NGLOB))
@@ -913,7 +913,7 @@ program model_update
   enddo
 
 
-  call sync_all()
+  call synchronize_all()
 
   ! calculate min_resolved_period needed for attenuation model
   call check_mesh_resolution(myrank,NSPEC,NGLOB,ibool,&
@@ -922,7 +922,7 @@ program model_update
                             -1.0d0, model_speed_max,min_resolved_period, &
                             LOCAL_PATH,SAVE_MESH_FILES )
 
-  call sync_all()
+  call synchronize_all()
 
   ! saves binary mesh files for attenuation for the NEW model
   call create_name_database(prname_new,myrank,LOCAL_PATH_NEW)
@@ -938,7 +938,7 @@ program model_update
 
   !----------------------------
 
-  call sync_all()
+  call synchronize_all()
 
   if( myrank == 0 ) then
     print*,'external_mesh.bin new: ', prname_new

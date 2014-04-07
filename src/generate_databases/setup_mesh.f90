@@ -56,7 +56,7 @@
   max_memory_size = max_memory_size_request
 
 ! make sure everybody is synchronized
-  call sync_all()
+  call synchronize_all()
 
 ! main working routine to create all the regions of the mesh
   if(myrank == 0) then
@@ -94,6 +94,6 @@
   deallocate(xstore,ystore,zstore)
 
 ! make sure everybody is synchronized
-  call sync_all()
+  call synchronize_all()
 
   end subroutine setup_mesh

@@ -656,7 +656,7 @@
 
 
   integer irec,irec_local
-  integer idim,jdim,irecord,isample
+  integer idimval,jdimval,irecord,isample
 
   character(len=4) chn
   character(len=1) component
@@ -672,20 +672,20 @@
     ! save three components of displacement vector
     irecord = 1
 
-    do idim = 1, 3
-      do jdim = idim, 3
+    do idimval = 1, 3
+      do jdimval = idimval, 3
 
-        if(idim == 1 .and. jdim == 1) then
+        if(idimval == 1 .and. jdimval == 1) then
           chn = 'SNN'
-        else if(idim == 1 .and. jdim == 2) then
+        else if(idimval == 1 .and. jdimval == 2) then
           chn = 'SEN'
-        else if(idim == 1 .and. jdim == 3) then
+        else if(idimval == 1 .and. jdimval == 3) then
           chn = 'SEZ'
-        else if(idim == 2 .and. jdim == 2) then
+        else if(idimval == 2 .and. jdimval == 2) then
           chn = 'SEE'
-        else if(idim == 2 .and. jdim == 3) then
+        else if(idimval == 2 .and. jdimval == 3) then
           chn = 'SNZ'
-        else if(idim == 3 .and. jdim == 3) then
+        else if(idimval == 3 .and. jdimval == 3) then
           chn = 'SZZ'
         else
           call exit_MPI(myrank,'incorrect channel value')
@@ -719,9 +719,9 @@
           if(irecord == 1) then
             ! distinguish between single and double precision for reals
             if(CUSTOM_REAL == SIZE_REAL) then
-              write(IOUT,*) sngl(dble(isample-1)*DT - t0),' ',seismograms(jdim,idim,irec_local,isample)
+              write(IOUT,*) sngl(dble(isample-1)*DT - t0),' ',seismograms(jdimval,idimval,irec_local,isample)
             else
-              write(IOUT,*) dble(isample-1)*DT - t0,' ',seismograms(jdim,idim,irec_local,isample)
+              write(IOUT,*) dble(isample-1)*DT - t0,' ',seismograms(jdimval,idimval,irec_local,isample)
             endif
           else
             call exit_MPI(myrank,'incorrect record label')
@@ -730,8 +730,8 @@
 
         close(IOUT)
 
-      enddo ! jdim
-    enddo ! idim
+      enddo ! jdimval
+    enddo ! idimval
   enddo ! irec_local
 
   end subroutine write_adj_seismograms2_to_file

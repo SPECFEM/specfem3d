@@ -64,7 +64,7 @@
   real(kind=CUSTOM_REAL) :: model_speed_max,min_resolved_period
 
 ! initializes arrays
-  call sync_all()
+  call synchronize_all()
   if( myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) '  ...allocating arrays '
@@ -80,7 +80,7 @@
 ! fills location and weights for Gauss-Lobatto-Legendre points, shape and derivations,
 ! returns jacobianstore,xixstore,...gammazstore
 ! and GLL-point locations in xstore,ystore,zstore
-  call sync_all()
+  call synchronize_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...setting up jacobian '
     call flush_IMAIN()
@@ -100,7 +100,7 @@
 
 
 ! creates ibool index array for projection from local to global points
-  call sync_all()
+  call synchronize_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...indexing global points'
     call flush_IMAIN()
@@ -117,7 +117,7 @@
 
   if (ANY_FAULT) then
    ! recalculate *store with faults closed
-    call sync_all()
+    call synchronize_all()
     if (myrank == 0) then
       write(IMAIN,*) '  ... resetting up jacobian in fault domains'
       call flush_IMAIN()
@@ -134,7 +134,7 @@
 
 
 ! sets up MPI interfaces between partitions
-  call sync_all()
+  call synchronize_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...preparing MPI interfaces '
     call flush_IMAIN()
@@ -150,7 +150,7 @@
 
   !SURENDRA (setting up parallel fault)
   if (PARALLEL_FAULT .AND. ANY_FAULT) then
-    call sync_all()
+    call synchronize_all()
     !at this point (xyz)store_dummy are still open
     call fault_setup (ibool,nnodes_ext_mesh,nodes_coords_ext_mesh, &
                     xstore,ystore,zstore,nspec,nglob,myrank)
@@ -159,7 +159,7 @@
 
 
 ! sets up absorbing/free surface boundaries
-  call sync_all()
+  call synchronize_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...setting up absorbing boundaries '
     call flush_IMAIN()
@@ -174,7 +174,7 @@
 
 ! sets up up Moho surface
   if( SAVE_MOHO_MESH ) then
-    call sync_all()
+    call synchronize_all()
     if( myrank == 0) then
       write(IMAIN,*) '  ...setting up Moho surface'
       call flush_IMAIN()
@@ -185,7 +185,7 @@
   endif
 
 ! sets material velocities
-  call sync_all()
+  call synchronize_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...determining velocity model'
     call flush_IMAIN()
@@ -193,7 +193,7 @@
   call get_model(myrank)
 
 ! sets up acoustic-elastic-poroelastic coupling surfaces
-  call sync_all()
+  call synchronize_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...detecting acoustic-elastic-poroelastic surfaces '
     call flush_IMAIN()
@@ -205,7 +205,7 @@
                         my_neighbours_ext_mesh)
 
 ! locates inner and outer elements
-  call sync_all()
+  call synchronize_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...element inner/outer separation '
     call flush_IMAIN()
@@ -216,7 +216,7 @@
                                     ibool,SAVE_MESH_FILES)
 
 ! colors mesh if requested
-  call sync_all()
+  call synchronize_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...element mesh coloring '
     call flush_IMAIN()
@@ -224,11 +224,11 @@
   call setup_color_perm(myrank,nspec,nglob,ibool,ANISOTROPY,SAVE_MESH_FILES)
 
 ! overwrites material parameters from external binary files
-  call sync_all()
+  call synchronize_all()
   call get_model_binaries(myrank,nspec,LOCAL_PATH)
 
 ! calculates damping profiles and auxiliary coefficients on all C-PML points
-  call sync_all()
+  call synchronize_all()
   if( PML_CONDITIONS ) then
      if( myrank == 0) then
         write(IMAIN,*) '  ...creating C-PML damping profiles '
@@ -238,7 +238,7 @@
   endif
 
 ! creates mass matrix
-  call sync_all()
+  call synchronize_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...creating mass matrix '
     call flush_IMAIN()
@@ -246,7 +246,7 @@
   call create_mass_matrices(nglob_dummy,nspec,ibool,PML_CONDITIONS,STACEY_ABSORBING_CONDITIONS)
 
 ! saves the binary mesh files
-  call sync_all()
+  call synchronize_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...saving databases'
     call flush_IMAIN()
@@ -270,7 +270,7 @@
 
 ! saves faults
   if( ANY_FAULT ) then
-    call sync_all()
+    call synchronize_all()
     if( myrank == 0) then
       write(IMAIN,*) '  ...saving fault databases'
       call flush_IMAIN()
@@ -281,7 +281,7 @@
 
 ! saves moho surface
   if( SAVE_MOHO_MESH ) then
-    call sync_all()
+    call synchronize_all()
     if( myrank == 0) then
       write(IMAIN,*) '  ...saving Moho surfaces'
       call flush_IMAIN()
@@ -290,13 +290,13 @@
   endif
 
 ! computes the approximate amount of memory needed to run the solver
-  call sync_all()
+  call synchronize_all()
   call memory_eval(nspec,nglob_dummy,maxval(nibool_interfaces_ext_mesh),num_interfaces_ext_mesh, &
                   APPROXIMATE_OCEAN_LOAD,memory_size)
   call max_all_dp(memory_size, max_memory_size)
 
 ! checks the mesh, stability and resolved period
-  call sync_all()
+  call synchronize_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...checking mesh resolution'
     call flush_IMAIN()
@@ -319,7 +319,7 @@
 
 ! saves binary mesh files for attenuation
   if( ATTENUATION ) then
-    call sync_all()
+    call synchronize_all()
     if( myrank == 0) then
       write(IMAIN,*) '  ...saving attenuation databases'
       call flush_IMAIN()

@@ -387,6 +387,6 @@ subroutine read_partition_files_adios()
     !write(IMAIN,*) '    bottom,top: ',num_bottom,num_top
     !write(IMAIN,*) '  number of MPI partition interfaces: ',num_int
   !endif
-  !call sync_all()
+  !call synchronize_all()
 
 end subroutine read_partition_files_adios

@@ -273,7 +273,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
      write(IMAIN,*)
   endif
 
-  call sync_all()
+  call synchronize_all()
 
   ! loops over all C-PML elements
   do ispec_CPML=1,nspec_cpml

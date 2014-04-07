@@ -75,7 +75,7 @@
   integer :: num_points1, num_points2
 
   ! assembly test
-  integer :: i,j,k,ispec,iglob,count,inum,ier
+  integer :: i,j,k,ispec,iglob,countval,inum,ier
   integer :: max_nibool_interfaces_ext_mesh
   integer,dimension(:),allocatable :: test_flag
   real(kind=CUSTOM_REAL), dimension(:),allocatable :: test_flag_cr
@@ -173,7 +173,7 @@
   if( ier /= 0 ) stop 'error allocating array test_flag etc.'
   test_flag(:) = 0
   test_flag_cr(:) = 0._CUSTOM_REAL
-  count = 0
+  countval = 0
   do ispec = 1, nspec
     ! sets flags on global points
     do k = 1, NGLLZ
@@ -183,7 +183,7 @@
           iglob = ibool(i,j,k,ispec)
 
           ! counts number of unique global points to set
-          if( test_flag(iglob) == 0 ) count = count+1
+          if( test_flag(iglob) == 0 ) countval = countval + 1
 
           ! sets identifier
           test_flag(iglob) = myrank + 1
@@ -192,7 +192,7 @@
       enddo
     enddo
   enddo
-  call sync_all()
+  call synchronize_all()
 
   ! collects contributions from different MPI partitions
   ! sets up MPI communications
@@ -200,15 +200,15 @@
   allocate(ibool_interfaces_dummy(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
   if( ier /= 0 ) stop 'error allocating array ibool_interfaces_dummy'
 
-  count = 0
+  countval = 0
   do iinterface = 1, num_interfaces_ext_mesh
      ibool_interfaces_dummy(:,iinterface) = &
       ibool_interfaces_ext_mesh(1:max_nibool_interfaces_ext_mesh,iinterface)
-     count = count + nibool_interfaces_ext_mesh(iinterface)
+     countval = countval + nibool_interfaces_ext_mesh(iinterface)
   enddo
-  call sync_all()
+  call synchronize_all()
 
-  call sum_all_i(count,iglob)
+  call sum_all_i(countval,iglob)
   if( myrank == 0 ) then
     if( iglob /= ilocnum ) call exit_mpi(myrank,'error total global MPI interface points')
   endif

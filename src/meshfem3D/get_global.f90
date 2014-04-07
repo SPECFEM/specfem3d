@@ -24,7 +24,7 @@
 !
 !=====================================================================
 
-  subroutine get_global(nspec,xp,yp,zp,iglob,loc,ifseg,nglob,npointot,UTM_X_MIN,UTM_X_MAX)
+  subroutine get_global(nspec,xp,yp,zp,iglob,locval,ifseg,nglob,npointot,UTM_X_MIN,UTM_X_MAX)
 
 ! this routine MUST be in double precision to avoid sensitivity
 ! to roundoff errors in the coordinates of the points
@@ -40,7 +40,7 @@
 
   integer npointot
   integer nspec,nglob
-  integer iglob(npointot),loc(npointot)
+  integer iglob(npointot),locval(npointot)
   logical ifseg(npointot)
   double precision xp(npointot),yp(npointot),zp(npointot)
   double precision UTM_X_MIN,UTM_X_MAX
@@ -72,7 +72,7 @@
   do ispec=1,nspec
     ieoff=NGLLCUBE_M*(ispec-1)
     do ilocnum=1,NGLLCUBE_M
-      loc(ilocnum+ieoff)=ilocnum+ieoff
+      locval(ilocnum+ieoff)=ilocnum+ieoff
     enddo
   enddo
 
@@ -94,7 +94,7 @@
     else
       call rank(zp(ioff),ind,ninseg(iseg))
     endif
-    call swap_all(loc(ioff),xp(ioff),yp(ioff),zp(ioff),iwork,work,ind,ninseg(iseg))
+    call swap_all(locval(ioff),xp(ioff),yp(ioff),zp(ioff),iwork,work,ind,ninseg(iseg))
     ioff=ioff+ninseg(iseg)
   enddo
 
@@ -130,7 +130,7 @@
   ig=0
   do i=1,npointot
     if(ifseg(i)) ig=ig+1
-    iglob(loc(i))=ig
+    iglob(locval(i))=ig
   enddo
 
   nglob=ig

@@ -78,10 +78,10 @@
 
   ! face corner locations
   real(kind=CUSTOM_REAL),dimension(NGNOD2D_FOUR_CORNERS) :: xcoord,ycoord,zcoord
-  integer  :: ispec,ispec2D,icorner,itop,iabs,iface,igll,i,j,igllfree,ifree
+  integer  :: ispec,ispec2D,icorner,itop,iabsval,iface,igll,i,j,igllfree,ifree
 
   ! abs face counter
-  iabs = 0
+  iabsval = 0
 
   ! xmin
   ijk_face(:,:,:) = 0
@@ -129,17 +129,17 @@
     enddo
 
     ! sets face infos
-    iabs = iabs + 1
-    abs_boundary_ispec(iabs) = ispec
+    iabsval = iabsval + 1
+    abs_boundary_ispec(iabsval) = ispec
 
     ! gll points -- assuming NGLLX = NGLLY = NGLLZ
     igll = 0
     do j=1,NGLLZ
       do i=1,NGLLX
         igll = igll+1
-        abs_boundary_ijk(:,igll,iabs) = ijk_face(:,i,j)
-        abs_boundary_jacobian2Dw(igll,iabs) = jacobian2Dw_face(i,j)
-        abs_boundary_normal(:,igll,iabs) = normal_face(:,i,j)
+        abs_boundary_ijk(:,igll,iabsval) = ijk_face(:,i,j)
+        abs_boundary_jacobian2Dw(igll,iabsval) = jacobian2Dw_face(i,j)
+        abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
       enddo
     enddo
 
@@ -191,17 +191,17 @@
     enddo
 
     ! sets face infos
-    iabs = iabs + 1
-    abs_boundary_ispec(iabs) = ispec
+    iabsval = iabsval + 1
+    abs_boundary_ispec(iabsval) = ispec
 
     ! gll points -- assuming NGLLX = NGLLY = NGLLZ
     igll = 0
     do j=1,NGLLZ
       do i=1,NGLLX
         igll = igll+1
-        abs_boundary_ijk(:,igll,iabs) = ijk_face(:,i,j)
-        abs_boundary_jacobian2Dw(igll,iabs) = jacobian2Dw_face(i,j)
-        abs_boundary_normal(:,igll,iabs) = normal_face(:,i,j)
+        abs_boundary_ijk(:,igll,iabsval) = ijk_face(:,i,j)
+        abs_boundary_jacobian2Dw(igll,iabsval) = jacobian2Dw_face(i,j)
+        abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
       enddo
     enddo
 
@@ -253,17 +253,17 @@
     enddo
 
     ! sets face infos
-    iabs = iabs + 1
-    abs_boundary_ispec(iabs) = ispec
+    iabsval = iabsval + 1
+    abs_boundary_ispec(iabsval) = ispec
 
     ! gll points -- assuming NGLLX = NGLLY = NGLLZ
     igll = 0
     do j=1,NGLLZ
       do i=1,NGLLY
         igll = igll+1
-        abs_boundary_ijk(:,igll,iabs) = ijk_face(:,i,j)
-        abs_boundary_jacobian2Dw(igll,iabs) = jacobian2Dw_face(i,j)
-        abs_boundary_normal(:,igll,iabs) = normal_face(:,i,j)
+        abs_boundary_ijk(:,igll,iabsval) = ijk_face(:,i,j)
+        abs_boundary_jacobian2Dw(igll,iabsval) = jacobian2Dw_face(i,j)
+        abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
       enddo
     enddo
 
@@ -315,17 +315,17 @@
     enddo
 
     ! sets face infos
-    iabs = iabs + 1
-    abs_boundary_ispec(iabs) = ispec
+    iabsval = iabsval + 1
+    abs_boundary_ispec(iabsval) = ispec
 
     ! gll points -- assuming NGLLX = NGLLY = NGLLZ
     igll = 0
     do j=1,NGLLY
       do i=1,NGLLX
         igll = igll+1
-        abs_boundary_ijk(:,igll,iabs) = ijk_face(:,i,j)
-        abs_boundary_jacobian2Dw(igll,iabs) = jacobian2Dw_face(i,j)
-        abs_boundary_normal(:,igll,iabs) = normal_face(:,i,j)
+        abs_boundary_ijk(:,igll,iabsval) = ijk_face(:,i,j)
+        abs_boundary_jacobian2Dw(igll,iabsval) = jacobian2Dw_face(i,j)
+        abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
       enddo
     enddo
 
@@ -377,17 +377,17 @@
     enddo
 
     ! sets face infos
-    iabs = iabs + 1
-    abs_boundary_ispec(iabs) = ispec
+    iabsval = iabsval + 1
+    abs_boundary_ispec(iabsval) = ispec
 
     ! gll points -- assuming NGLLX = NGLLY = NGLLZ
     igll = 0
     do j=1,NGLLY
       do i=1,NGLLX
         igll = igll+1
-        abs_boundary_ijk(:,igll,iabs) = ijk_face(:,i,j)
-        abs_boundary_jacobian2Dw(igll,iabs) = jacobian2Dw_face(i,j)
-        abs_boundary_normal(:,igll,iabs) = normal_face(:,i,j)
+        abs_boundary_ijk(:,igll,iabsval) = ijk_face(:,i,j)
+        abs_boundary_jacobian2Dw(igll,iabsval) = jacobian2Dw_face(i,j)
+        abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
       enddo
     enddo
 
@@ -479,17 +479,17 @@
          enddo
 
          ! adds face infos to absorbing boundary surface
-         iabs = iabs + 1
-         abs_boundary_ispec(iabs) = ispec
+         iabsval = iabsval + 1
+         abs_boundary_ispec(iabsval) = ispec
 
          ! gll points -- assuming NGLLX = NGLLY = NGLLZ
          igll = 0
          do j=1,NGLLY
            do i=1,NGLLX
              igll = igll+1
-             abs_boundary_ijk(:,igll,iabs) = ijk_face(:,i,j)
-             abs_boundary_jacobian2Dw(igll,iabs) = jacobian2Dw_face(i,j)
-             abs_boundary_normal(:,igll,iabs) = normal_face(:,i,j)
+             abs_boundary_ijk(:,igll,iabsval) = ijk_face(:,i,j)
+             abs_boundary_jacobian2Dw(igll,iabsval) = jacobian2Dw_face(i,j)
+             abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
            enddo
          enddo
        endif
@@ -531,17 +531,17 @@
          enddo
 
          ! adds face infos to absorbing boundary surface
-         iabs = iabs + 1
-         abs_boundary_ispec(iabs) = ispec
+         iabsval = iabsval + 1
+         abs_boundary_ispec(iabsval) = ispec
 
          ! gll points -- assuming NGLLX = NGLLY = NGLLZ
          igll = 0
          do j=1,NGLLY
            do i=1,NGLLX
              igll = igll+1
-             abs_boundary_ijk(:,igll,iabs) = ijk_face(:,i,j)
-             abs_boundary_jacobian2Dw(igll,iabs) = jacobian2Dw_face(i,j)
-             abs_boundary_normal(:,igll,iabs) = normal_face(:,i,j)
+             abs_boundary_ijk(:,igll,iabsval) = ijk_face(:,i,j)
+             abs_boundary_jacobian2Dw(igll,iabsval) = jacobian2Dw_face(i,j)
+             abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
            enddo
          enddo
        endif
@@ -572,17 +572,17 @@
     stop 'error number of free surface faces'
   endif
 
-  if( iabs /= num_abs_boundary_faces ) then
-    print*,'error number of absorbing faces:',iabs,num_abs_boundary_faces
+  if( iabsval /= num_abs_boundary_faces ) then
+    print*,'error number of absorbing faces:',iabsval,num_abs_boundary_faces
     stop 'error number of absorbing faces'
   endif
 
   call sum_all_i(num_free_surface_faces,itop)
-  call sum_all_i(num_abs_boundary_faces,iabs)
+  call sum_all_i(num_abs_boundary_faces,iabsval)
   if( myrank == 0 ) then
     write(IMAIN,*) '     absorbing boundary:'
     write(IMAIN,*) '     total number of free faces = ',itop
-    write(IMAIN,*) '     total number of faces = ',iabs
+    write(IMAIN,*) '     total number of faces = ',iabsval
     if((PML_CONDITIONS .and. PML_INSTEAD_OF_FREE_SURFACE) .or. &
        (STACEY_ABSORBING_CONDITIONS .and. STACEY_INSTEAD_OF_FREE_SURFACE)) then
        write(IMAIN,*) '     absorbing boundary includes free surface (i.e., top surface converted from free to absorbing)'

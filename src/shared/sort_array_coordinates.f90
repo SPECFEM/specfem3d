@@ -26,7 +26,7 @@
 
 ! subroutines to sort MPI buffers to assemble between chunks
 
-  subroutine sort_array_coordinates(npointot,x,y,z,ibool,iglob,loc,ifseg, &
+  subroutine sort_array_coordinates(npointot,x,y,z,ibool,iglob,locval,ifseg, &
                                     nglob,ind,ninseg,iwork,work)
 
 ! this routine MUST be in double precision to avoid sensitivity
@@ -40,7 +40,7 @@
 
   integer npointot,nglob
 
-  integer ibool(npointot),iglob(npointot),loc(npointot)
+  integer ibool(npointot),iglob(npointot),locval(npointot)
   integer ind(npointot),ninseg(npointot)
   logical ifseg(npointot)
   double precision x(npointot),y(npointot),z(npointot)
@@ -53,7 +53,7 @@
 
 ! establish initial pointers
   do ipoin=1,npointot
-    loc(ipoin)=ipoin
+    locval(ipoin)=ipoin
   enddo
 
 ! define a tolerance, normalized radius is 1., so let's use a small value
@@ -84,7 +84,7 @@
 
     endif
 
-    call swap_all_buffers(ibool(ioff),loc(ioff), &
+    call swap_all_buffers(ibool(ioff),locval(ioff), &
             x(ioff),y(ioff),z(ioff),iwork,work,ind,ninseg(iseg))
 
     ioff=ioff+ninseg(iseg)
@@ -121,7 +121,7 @@
   ig=0
   do i=1,npointot
     if(ifseg(i)) ig=ig+1
-    iglob(loc(i))=ig
+    iglob(locval(i))=ig
   enddo
 
   nglob=ig

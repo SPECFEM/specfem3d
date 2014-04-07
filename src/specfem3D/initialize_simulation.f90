@@ -359,7 +359,7 @@
         call exit_MPI(myrank,'error in compiled parameters STACEY_INSTEAD_OF_FREE_SURFACE, please recompile solver')
      endif
   endif
-  call sync_all()
+  call synchronize_all()
 
   ! checks directories
   if( myrank == 0 ) then
@@ -472,7 +472,7 @@
   call initialize_cuda_device(myrank,ncuda_devices)
 
   ! collects min/max of local devices found for statistics
-  call sync_all()
+  call synchronize_all()
   call min_all_i(ncuda_devices,ncuda_devices_min)
   call max_all_i(ncuda_devices,ncuda_devices_max)
 

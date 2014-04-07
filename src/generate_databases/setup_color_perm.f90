@@ -96,7 +96,7 @@
       call exit_MPI(myrank, 'maxval(perm) should be max(num_phase_ispec_..)')
 
     ! sorts array according to permutation
-    call sync_all()
+    call synchronize_all()
     if(myrank == 0) then
       write(IMAIN,*) '     mesh permutation:'
     endif

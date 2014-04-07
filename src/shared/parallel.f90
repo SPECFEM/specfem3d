@@ -63,7 +63,7 @@
 !----
 !
 
-  subroutine sync_all()
+  subroutine synchronize_all()
 
 ! standard include of the MPI library
   use :: mpi
@@ -74,25 +74,25 @@
 
   call MPI_BARRIER(MPI_COMM_WORLD,ier)
 
-  end subroutine sync_all
+  end subroutine synchronize_all
 
 !
 !----
 !
 
-  subroutine bcast_all_i(buffer, count)
+  subroutine bcast_all_i(buffer, countval)
 
 ! standard include of the MPI library
   use :: mpi
 
   implicit none
 
-  integer count
-  integer, dimension(count) :: buffer
+  integer countval
+  integer, dimension(countval) :: buffer
 
   integer ier
 
-  call MPI_BCAST(buffer,count,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
+  call MPI_BCAST(buffer,countval,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
 
   end subroutine bcast_all_i
 
@@ -100,7 +100,7 @@
 !----
 !
 
-  subroutine bcast_all_cr(buffer, count)
+  subroutine bcast_all_cr(buffer, countval)
 
 ! standard include of the MPI library
   use :: mpi
@@ -110,12 +110,12 @@
   include "constants.h"
   include "precision.h"
 
-  integer count
-  real(kind=CUSTOM_REAL), dimension(count) :: buffer
+  integer countval
+  real(kind=CUSTOM_REAL), dimension(countval) :: buffer
 
   integer ier
 
-  call MPI_BCAST(buffer,count,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
+  call MPI_BCAST(buffer,countval,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
 
   end subroutine bcast_all_cr
 
@@ -123,19 +123,19 @@
 !----
 !
 
-  subroutine bcast_all_dp(buffer, count)
+  subroutine bcast_all_dp(buffer, countval)
 
 ! standard include of the MPI library
   use :: mpi
 
   implicit none
 
-  integer count
-  double precision, dimension(count) :: buffer
+  integer countval
+  double precision, dimension(countval) :: buffer
 
   integer ier
 
-  call MPI_BCAST(buffer,count,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
+  call MPI_BCAST(buffer,countval,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
 
   end subroutine bcast_all_dp
 
@@ -143,7 +143,7 @@
 !----
 !
 
-  subroutine bcast_all_r(buffer, count)
+  subroutine bcast_all_r(buffer, countval)
 
 ! standard include of the MPI library
   use :: mpi
@@ -153,12 +153,12 @@
   include "constants.h"
   include "precision.h"
 
-  integer count
-  real, dimension(count) :: buffer
+  integer countval
+  real, dimension(countval) :: buffer
 
   integer ier
 
-  call MPI_BCAST(buffer,count,MPI_REAL,0,MPI_COMM_WORLD,ier)
+  call MPI_BCAST(buffer,countval,MPI_REAL,0,MPI_COMM_WORLD,ier)
 
   end subroutine bcast_all_r
 
@@ -352,17 +352,17 @@
 !----
 !
 
-  subroutine world_size(size)
+  subroutine world_size(sizeval)
 
 ! standard include of the MPI library
   use :: mpi
 
   implicit none
 
-  integer size
+  integer sizeval
   integer ier
 
-  call MPI_COMM_SIZE(MPI_COMM_WORLD,size,ier)
+  call MPI_COMM_SIZE(MPI_COMM_WORLD,sizeval,ier)
 
   end subroutine world_size
 
@@ -539,25 +539,25 @@
 !----
 !
 
-  subroutine max_allreduce_i(buffer,count)
+  subroutine max_allreduce_i(buffer,countval)
 
   use mpi
 
   implicit none
 
-  integer :: count
-  integer,dimension(count),intent(inout) :: buffer
+  integer :: countval
+  integer,dimension(countval),intent(inout) :: buffer
 
   ! local parameters
   integer :: ier
-  integer,dimension(count) :: send
+  integer,dimension(countval) :: send
 
   ! seems not to be supported on all kind of MPI implementations...
-  !call MPI_ALLREDUCE(MPI_IN_PLACE, buffer, count, MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ier)
+  !call MPI_ALLREDUCE(MPI_IN_PLACE, buffer, countval, MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ier)
 
   send(:) = buffer(:)
 
-  call MPI_ALLREDUCE(send, buffer, count, MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ier)
+  call MPI_ALLREDUCE(send, buffer, countval, MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ier)
   if( ier /= 0 ) stop 'Allreduce to get max values failed.'
 
   end subroutine max_allreduce_i

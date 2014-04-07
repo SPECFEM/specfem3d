@@ -124,7 +124,7 @@ program sum_kernels
     write(*,*)
     write(*,*) 'reading kernel list: '
   endif
-  call sync_all()
+  call synchronize_all()
 
   ! reads in event list
   nker=0
@@ -171,7 +171,7 @@ program sum_kernels
     endif
     call exit_mpi(myrank,'Error total number of slices')
   endif
-  call sync_all()
+  call synchronize_all()
 
   ! reads mesh file
   !
@@ -202,7 +202,7 @@ program sum_kernels
   endif
 
   ! synchronizes
-  call sync_all()
+  call synchronize_all()
 
   ! sums up kernels
   if( USE_ISO_KERNELS ) then

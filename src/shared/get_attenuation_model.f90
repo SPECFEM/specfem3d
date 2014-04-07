@@ -657,7 +657,7 @@
   ! local parameters
   double precision :: f1, f2
   double precision :: exp1, exp2
-  double precision :: dexp
+  double precision :: dexpval
   integer :: i
   double precision, parameter :: PI = 3.14159265358979d0
 
@@ -670,9 +670,9 @@
   exp2 = log10(f2)
 
   ! equally spaced in log10 frequency
-  dexp = (exp2-exp1) / ((nsls*1.0d0) - 1)
+  dexpval = (exp2-exp1) / ((nsls*1.0d0) - 1)
   do i = 1,nsls
-     tau_s(i) = 1.0 / (PI * 2.0d0 * 10**(exp1 + (i - 1)* 1.0d0 *dexp))
+     tau_s(i) = 1.0 / (PI * 2.0d0 * 10**(exp1 + (i - 1)* 1.0d0 *dexpval))
   enddo
 
   end subroutine get_attenuation_tau_sigma
@@ -914,7 +914,7 @@
 
   ! Internal
   integer i, iterations, err,prnt
-  double precision f1, f2, exp1,exp2, min_value !, dexp
+  double precision f1, f2, exp1,exp2, min_value !, dexpval
   integer, parameter :: nf = 100
   double precision, dimension(nf) :: f
   double precision, parameter :: PI = 3.14159265358979d0
@@ -951,9 +951,9 @@
   enddo
 
   ! Set the Tau_sigma (tau_s) to be equally spaced in log10 frequency
-!  dexp = (exp2-exp1) / ((n*1.0d0) - 1)
+!  dexpval = (exp2-exp1) / ((n*1.0d0) - 1)
 !  do i = 1,n
-!     tau_s(i) = 1.0 / (PI * 2.0d0 * 10**(exp1 + (i - 1)* 1.0d0 *dexp))
+!     tau_s(i) = 1.0 / (PI * 2.0d0 * 10**(exp1 + (i - 1)* 1.0d0 *dexpval))
 !  enddo
 
 

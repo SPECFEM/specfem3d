@@ -130,7 +130,7 @@
   endif
 
   ! synchronize all the processes
-  call sync_all()
+  call synchronize_all()
 
   end subroutine prepare_timerun
 
@@ -240,7 +240,7 @@
 
   ! synchronize all the processes before assembling the mass matrix
   ! to make sure all the nodes have finished to read their databases
-  call sync_all()
+  call synchronize_all()
 
   ! the mass matrix needs to be assembled with MPI here once and for all
   if(ACOUSTIC_SIMULATION) then
@@ -727,7 +727,7 @@
       write(IMAIN,*)
       call flush_IMAIN()
     endif
-    call sync_all()
+    call synchronize_all()
 
     ! checks that 8-node mesh elements are used (27-node elements are not supported)
     if( NGNOD /= NGNOD_EIGHT_CORNERS) &
@@ -1332,7 +1332,7 @@
   endif
 
   ! synchronizes processes
-  !call sync_all()
+  !call synchronize_all()
 
   ! prepares needed receiver array for adjoint runs
   if( SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3 ) &
@@ -1365,7 +1365,7 @@
   endif
 
   ! synchronizes processes
-  call sync_all()
+  call synchronize_all()
 
   ! sends initial data to device
 
@@ -1387,7 +1387,7 @@
   endif
 
   ! synchronizes processes
-  call sync_all()
+  call synchronize_all()
 
   ! outputs GPU usage to files for all processes
   call output_free_device_memory(myrank)

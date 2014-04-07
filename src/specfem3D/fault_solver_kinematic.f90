@@ -208,7 +208,7 @@ subroutine BC_KINFLT_set_single(bc,MxA,V,D,iflt)
   real(kind=CUSTOM_REAL), dimension(3,bc%nglob) :: T
   real(kind=CUSTOM_REAL), dimension(3,bc%nglob) :: dD,dV,dA,dV_free
   real(kind=CUSTOM_REAL) :: t1,t2
-  real(kind=CUSTOM_REAL) :: half_dt,time
+  real(kind=CUSTOM_REAL) :: half_dt,timeval
 
   if (bc%nspec > 0) then !Surendra : for parallel faults
 
@@ -226,7 +226,7 @@ subroutine BC_KINFLT_set_single(bc,MxA,V,D,iflt)
     dA = rotate(bc,dA,1)
 
     ! Time marching
-    time = it*bc%dt
+    timeval = it*bc%dt
     ! Slip_rate step "it_kin"
     it_kin = bc%kin_it*nint(bc%kin_dt/bc%dt)
     ! (nint : fortran round (nearest whole number) ,
@@ -266,8 +266,8 @@ subroutine BC_KINFLT_set_single(bc,MxA,V,D,iflt)
     ! bc%V : Imposed a priori and read from slip rate snapshots (from time reversal)
     !        Linear interpolation between consecutive kinematic time steps.
     !        V will be given at each time step.
-    bc%V(1,:) = ( (t2 - time)*bc%v_kin_t1(1,:) + (time - t1)*bc%v_kin_t2(1,:) )/ bc%kin_dt
-    bc%V(2,:) = ( (t2 - time)*bc%v_kin_t1(2,:) + (time - t1)*bc%v_kin_t2(2,:) )/ bc%kin_dt
+    bc%V(1,:) = ( (t2 - timeval)*bc%v_kin_t1(1,:) + (timeval - t1)*bc%v_kin_t2(1,:) )/ bc%kin_dt
+    bc%V(2,:) = ( (t2 - timeval)*bc%v_kin_t1(2,:) + (timeval - t1)*bc%v_kin_t2(2,:) )/ bc%kin_dt
 
     !dV_free = dV_predictor + (dt/2)*dA_free
     dV_free(1,:) = dV(1,:) + half_dt*dA(1,:)

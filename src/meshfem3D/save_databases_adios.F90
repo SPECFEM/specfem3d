@@ -660,7 +660,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   local_dim = nspec2d_xmin_wmax
   call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                    STRINGIFY_VAR(ibelm_xmin))
-  if (nspec2d_xmin .ne. 0) then
+  if (nspec2d_xmin /= 0) then
     local_dim = NGNOD2D * nspec2d_xmin_wmax
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(nodes_ibelm_xmin))
@@ -668,7 +668,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   local_dim = nspec2d_xmax_wmax
   call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                    STRINGIFY_VAR(ibelm_xmax))
-  if (nspec2d_xmax .ne. 0) then
+  if (nspec2d_xmax /= 0) then
     local_dim = NGNOD2D * nspec2d_xmax_wmax
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(nodes_ibelm_xmax))
@@ -676,7 +676,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   local_dim = nspec2d_ymin_wmax
   call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                    STRINGIFY_VAR(ibelm_ymin))
-  if (nspec2d_ymin .ne. 0) then
+  if (nspec2d_ymin /= 0) then
     local_dim = NGNOD2D * nspec2d_ymin_wmax
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(nodes_ibelm_ymin))
@@ -684,7 +684,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   local_dim = nspec2d_ymax_wmax
   call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                    STRINGIFY_VAR(ibelm_ymax))
-  if (nspec2d_ymax .ne. 0) then
+  if (nspec2d_ymax /= 0) then
   local_dim = NGNOD2D * nspec2d_ymax_wmax
   call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                    STRINGIFY_VAR(nodes_ibelm_ymax))
@@ -692,7 +692,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   local_dim = nspec2d_bottom_wmax
   call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                    STRINGIFY_VAR(ibelm_bottom))
-  if (nspec2d_bottom .ne. 0) then
+  if (nspec2d_bottom /= 0) then
     local_dim = NGNOD2D * nspec2d_bottom_wmax
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(nodes_ibelm_bottom))
@@ -700,7 +700,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   local_dim = nspec2d_top_wmax
   call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                    STRINGIFY_VAR(ibelm_top))
-  if (nspec2d_top .ne. 0) then
+  if (nspec2d_top /= 0) then
     local_dim = NGNOD2D * nspec2d_top_wmax
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(nodes_ibelm_top))
