@@ -31,8 +31,7 @@
 
   subroutine stop_all()
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -50,8 +49,7 @@
 
   double precision function wtime()
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -65,8 +63,7 @@
 
   subroutine synchronize_all()
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -82,8 +79,7 @@
 
   subroutine bcast_all_i(buffer, countval)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -102,8 +98,7 @@
 
   subroutine bcast_all_cr(buffer, countval)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -125,8 +120,7 @@
 
   subroutine bcast_all_dp(buffer, countval)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -145,8 +139,7 @@
 
   subroutine bcast_all_r(buffer, countval)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -169,8 +162,7 @@
 
   subroutine gather_all_i(sendbuf, sendcnt, recvbuf, recvcount, NPROC)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -193,8 +185,7 @@
 
   subroutine gather_all_singlei(sendbuf, recvbuf, NPROC)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -217,8 +208,7 @@
 
   subroutine gather_all_dp(sendbuf, sendcnt, recvbuf, recvcount, NPROC)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -240,8 +230,7 @@
 
   subroutine gather_all_cr(sendbuf, sendcnt, recvbuf, recvcount, NPROC)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -266,8 +255,7 @@
 
   subroutine gather_all_all_cr(sendbuf, recvbuf, counts, NPROC)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -291,8 +279,7 @@
 
   subroutine gatherv_all_cr(sendbuf, sendcnt, recvbuf, recvcount, recvoffset,recvcounttot, NPROC)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -318,8 +305,7 @@
 
   subroutine init()
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -336,8 +322,7 @@
 
   subroutine finalize()
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -354,8 +339,7 @@
 
   subroutine world_size(sizeval)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -372,8 +356,7 @@
 
   subroutine world_rank(rank)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -390,8 +373,7 @@
 
   subroutine min_all_dp(sendbuf, recvbuf)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -409,8 +391,7 @@
 
   subroutine max_all_dp(sendbuf, recvbuf)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -428,8 +409,7 @@
 
   subroutine max_all_cr(sendbuf, recvbuf)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -450,8 +430,7 @@
 
   subroutine min_all_cr(sendbuf, recvbuf)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -473,8 +452,7 @@
 
   subroutine min_all_all_cr(sendbuf, recvbuf)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -496,8 +474,7 @@
 !
 !  subroutine min_all_all_dp(sendbuf, recvbuf)
 !
-!! standard include of the MPI library
-!  use :: mpi
+!  use mpi
 !
 !  implicit none
 !
@@ -518,8 +495,7 @@
 
   subroutine max_all_i(sendbuf, recvbuf)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -568,8 +544,7 @@
 
   subroutine max_all_all_cr(sendbuf, recvbuf)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -592,8 +567,7 @@
 
   subroutine max_all_all_dp(sendbuf, recvbuf)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -615,8 +589,7 @@
 
   subroutine min_all_i(sendbuf, recvbuf)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -637,8 +610,7 @@
 
   subroutine maxloc_all_dp(sendbuf, recvbuf)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -658,8 +630,7 @@
 
   subroutine sum_all_dp(sendbuf, recvbuf)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -677,8 +648,7 @@
 
   subroutine sum_all_cr(sendbuf, recvbuf)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -699,8 +669,7 @@
 
   subroutine sum_all_all_cr(sendbuf, recvbuf)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -721,8 +690,7 @@
 
   subroutine sum_all_i(sendbuf, recvbuf)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -740,8 +708,7 @@
 
   subroutine sum_all_all_i(sendbuf, recvbuf)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -759,8 +726,7 @@
 
   subroutine any_all_l(sendbuf, recvbuf)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -779,8 +745,7 @@
   subroutine sendrecv_all_cr(sendbuf, sendcount, dest, sendtag, &
                              recvbuf, recvcount, source, recvtag)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -808,8 +773,7 @@
 
   integer function proc_null()
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -823,8 +787,7 @@
 
   subroutine isend_cr(sendbuf, sendcount, dest, sendtag, req)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -847,8 +810,7 @@
 
   subroutine irecv_cr(recvbuf, recvcount, dest, recvtag, req)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -871,8 +833,7 @@
 
   subroutine isend_i(sendbuf, sendcount, dest, sendtag, req)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -895,8 +856,7 @@
 
   subroutine irecv_i(recvbuf, recvcount, dest, recvtag, req)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -919,8 +879,7 @@
 
   subroutine recv_i(recvbuf, recvcount, dest, recvtag )
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -941,8 +900,7 @@
 
   subroutine recvv_cr(recvbuf, recvcount, dest, recvtag )
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -966,8 +924,7 @@
 
   subroutine send_i(sendbuf, sendcount, dest, sendtag)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -988,8 +945,7 @@
 
   subroutine send_i_t(sendbuf,sendcount,dest)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -1009,8 +965,7 @@
 
   subroutine recv_i_t(recvbuf,recvcount,source)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -1033,8 +988,7 @@
 !
 !  subroutine send_dp_t(sendbuf,sendcount,dest)
 !
-!! standard include of the MPI library
-!  use :: mpi
+!  use mpi
 !
 !  implicit none
 !
@@ -1053,8 +1007,7 @@
 !
 !  subroutine recv_dp_t(recvbuf,recvcount,source)
 !
-!! standard include of the MPI library
-!  use :: mpi
+!  use mpi
 !
 !  implicit none
 !
@@ -1077,8 +1030,7 @@
 
   subroutine send_dp(sendbuf, sendcount, dest, sendtag)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -1097,8 +1049,7 @@
 
   subroutine recv_dp(recvbuf, recvcount, dest, recvtag)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -1118,8 +1069,7 @@
 
   subroutine sendv_cr(sendbuf, sendcount, dest, sendtag)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 
@@ -1140,8 +1090,7 @@
 
   subroutine wait_req(req)
 
-! standard include of the MPI library
-  use :: mpi
+  use mpi
 
   implicit none
 

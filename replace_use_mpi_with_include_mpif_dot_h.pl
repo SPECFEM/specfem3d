@@ -61,8 +61,12 @@
 # read the whole input file
       $whole_file = <FILE_INPUT>;
 
-# make the replacement
-      $whole_file =~ s/\n\s*use mpi\s*\n*\s*implicit none\s*\n/\n\n  implicit none\n\n  include 'mpif.h'\n\n/og;
+# make the replacement (we look for "use mpi", "use:: mpi", "use :: mpi" etc.; we also handle the case of a #endif for the preprocessor between the two lines)
+      $whole_file =~ s/\n\s*use\s*mpi\s*\n*\s*implicit\s*none\s*\n/\n\n  implicit none\n\n  include 'mpif.h'\n\n/og;
+      $whole_file =~ s/\n\s*use\s*::\s*mpi\s*\n*\s*implicit\s*none\s*\n/\n\n  implicit none\n\n  include 'mpif.h'\n\n/og;
+
+      $whole_file =~ s/\n\s*use\s*mpi\s*\n*\s*#endif\s*\n*\s*implicit\s*none\s*\n/\n\n#endif\n\n  implicit none\n\n  include 'mpif.h'\n\n/og;
+      $whole_file =~ s/\n\s*use\s*::\s*mpi\s*\n*\s*#endif\s*\n*\s*implicit\s*none\s*\n/\n\n#endif\n\n  implicit none\n\n  include 'mpif.h'\n\n/og;
 
       print FILEF90 "$whole_file";
 
