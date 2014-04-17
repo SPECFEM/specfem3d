@@ -60,8 +60,11 @@ program smooth_vol_data
 ! NOTE:  smoothing can be different in vertical & horizontal directions; mesh is in Cartesian geometry.
 !              algorithm uses vertical as Z, horizontal as X/Y direction
 
+  use :: mpi
+
   implicit none
   include "constants.h"
+  include "precision.h"
 
  ! data must be of dimension: (NGLLX,NGLLY,NGLLZ,NSPEC_AB)
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: dat,dat_smooth
@@ -85,6 +88,8 @@ program smooth_vol_data
 
   integer :: NSPEC_AB, NGLOB_AB
   integer :: NSPEC_N, NGLOB_N
+  integer :: NSPEC2D_BOTTOM, NSPEC2D_TOP
+  integer :: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax
 
   integer :: i,j,k,ios,it,iglob,ier,ispec2,ispec
   integer :: iproc, node_list(300)
@@ -136,16 +141,16 @@ program smooth_vol_data
 
   logical :: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,POROELASTIC_SIMULATION
   integer :: idummy_a
-  integer :: myrank,sizeprocs
+  integer :: myrank,sizeprocs,rcl
 !------------------
 
   ! initialize the MPI communicator and start the NPROCTOT MPI processes
-  call init()
-  call world_size(sizeprocs)
-  call world_rank(myrank)
+  call MPI_INIT(ier)
+  call MPI_COMM_SIZE(MPI_COMM_WORLD,sizeprocs,ier)
+  call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
 
   if (myrank == 0) print*,"smooth_vol_data:"
-  call synchronize_all()
+  call mpi_barrier(MPI_COMM_WORLD,ier)
 
   ! reads arguments
   do i = 1, 5
@@ -204,8 +209,6 @@ program smooth_vol_data
     print*,"  smoothing sigma_h , sigma_v: ",sigma_h,sigma_v
     ! scalelength: approximately S ~ sigma * sqrt(8.0) for a gaussian smoothing
     print*,"  smoothing scalelengths horizontal, vertical : ",sigma_h*sqrt(8.0),sigma_v*sqrt(8.0)
-    print*,"  in dir : ",trim(indir)
-    print*,"  out dir: ",trim(outdir)
   endif
 
   ! needs local_path for mesh files
@@ -222,6 +225,7 @@ program smooth_vol_data
                         USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
                         PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,FULL_ATTENUATION_SOLID,TRAC_PATH)
 
+
   ! checks if number of MPI process as specified
   if (sizeprocs /= NPROC) then
     if( myrank == 0 ) then
@@ -234,7 +238,7 @@ program smooth_vol_data
     endif
     call exit_mpi(myrank,'Error total number of slices')
   endif
-  call synchronize_all()
+  call mpi_barrier(MPI_COMM_WORLD,ier)
 
   ! GLL points weights
   call zwgljd(xigll,wxgll,NGLLX,GAUSSALPHA,GAUSSBETA)
@@ -270,7 +274,6 @@ program smooth_vol_data
           status='old',action='read',form='unformatted',iostat=ios)
   if( ier /= 0 ) then
     print*,'error: could not open database '
-    print*,'path: ',trim(prname_lp)
     call exit_mpi(myrank, 'error reading external mesh file')
   endif
 
@@ -330,17 +333,21 @@ program smooth_vol_data
   ! acoustic
   if( ACOUSTIC_SIMULATION ) then
     read(27) dummy_1 ! rmass_acoustic
-    read(27) dummy ! rhostore
   endif
+
+  read(27) dummy ! rhostore
 
   ! elastic
   if( ELASTIC_SIMULATION ) then
+
     read(27) dummy_1 ! rmass
     if( APPROXIMATE_OCEAN_LOAD ) then
       read(27) dummy_1 ! rmass_ocean_load
     endif
+
     read(27) dummy ! rho_vp
     read(27) dummy ! rho_vs
+
   endif
 
   ! poroelastic
@@ -377,6 +384,7 @@ program smooth_vol_data
 
   ! absorbing boundary surface
   read(27) idummy_a ! num_abs_boundary_faces
+
   if( idummy_a > 0 ) then
     allocate(idummy(idummy_a), &
             idummy_3(3,NGLLSQUARE,idummy_a), &
@@ -390,8 +398,56 @@ program smooth_vol_data
     deallocate( idummy,idummy_3,dummy_2,dummy_3)
   endif
 
+  if (PML_CONDITIONS) then
+    ! not yet implemented
+  else
+    if( STACEY_ABSORBING_CONDITIONS ) then
+      ! store mass matrix contributions
+      if(ELASTIC_SIMULATION ) then
+
+        allocate(dummy_1(nglob_ab))
+        read(27) dummy_1 ! rmassx
+        read(27) dummy_1 ! rmassy
+        read(27) dummy_1 ! rmassz
+        deallocate(dummy_1)
+      endif
+      if(ACOUSTIC_SIMULATION) then
+        allocate(dummy_1(nglob_ab))
+        read(27) dummy_1 ! rmassz_acoustic
+        deallocate(dummy_1)
+      endif
+    endif
+  endif
+
+  read(27) nspec2D_xmin
+  read(27) nspec2D_xmax
+  read(27) nspec2D_ymin
+  read(27) nspec2D_ymax
+  read(27) NSPEC2D_BOTTOM
+  read(27) NSPEC2D_TOP
+
+  allocate(idummy(nspec2d_xmin))
+  read(27) idummy
+  deallocate(idummy)
+  allocate(idummy(nspec2d_xmax))
+  read(27) idummy
+  deallocate(idummy)
+  allocate(idummy(nspec2d_ymin))
+  read(27) idummy
+  deallocate(idummy)
+  allocate(idummy(nspec2d_ymax))
+  read(27) idummy
+  deallocate(idummy)
+  allocate(idummy(NSPEC2D_BOTTOM))
+  read(27) idummy ! ibelm_bottom
+  deallocate(idummy)
+  allocate(idummy(NSPEC2D_TOP))
+  read(27) idummy ! ibelm_top
+  deallocate(idummy)
+
   ! free surface
   read(27) idummy_a ! num_free_surface_faces
+
   if( idummy_a > 0 ) then
     allocate(idummy(idummy_a), &
             idummy_3(3,NGLLSQUARE,idummy_a), &
@@ -508,22 +564,8 @@ program smooth_vol_data
   ! adds this partition itself
   node_list(num_interfaces_ext_mesh+1) = myrank
 
-  ! user output
-  if(myrank == 0) then
-    print*
-    print*,'  rank:',myrank,'  smoothing slices'
-    print*,node_list(1:num_interfaces_ext_mesh+1)
-  endif
-  !do i=0,sizeprocs-1
-  !  if( myrank == i ) then
-  !    print*,'rank:',myrank,'  smoothing slices'
-  !    print*,node_list(1:num_interfaces_ext_mesh+1)
-  !    print*
-  !  endif
-  !enddo
-
   ! synchronizes
-  call synchronize_all()
+  call mpi_barrier(MPI_COMM_WORLD,ier)
 
 
 !----------------------
@@ -545,7 +587,6 @@ program smooth_vol_data
 
     ! gets number of elements and global points for this partition
     write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',iproc,'_'//'external_mesh.bin'
-    !if( myrank == 0 ) print*,trim(prname_lp)
 
     open(unit=27,file=trim(prname_lp),&
             status='old',action='read',form='unformatted',iostat=ios)
@@ -615,7 +656,6 @@ program smooth_vol_data
     ! data file
     write(prname,'(a,i6.6,a)') trim(indir)//'proc',iproc,'_'
     local_data_file = trim(prname) // trim(filename) // '.bin'
-    !if( myrank == 0 ) print*,trim(local_data_file)
 
     open(unit = 28,file = trim(local_data_file),status='old',&
           action='read',form ='unformatted',iostat=ios)
@@ -732,13 +772,13 @@ program smooth_vol_data
   deallocate(dat_smooth)
 
   ! synchronizes
-  call synchronize_all()
+  call mpi_barrier(MPI_COMM_WORLD,ier)
 
   ! the maximum value for the smoothed kernel
   norm = max_old
-  call max_all_cr(norm, max_old)
+  call mpi_reduce(norm,max_old,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
   norm = max_new
-  call max_all_cr(norm, max_new)
+  call mpi_reduce(norm,max_new,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
   if( myrank == 0 ) then
     print *
     print *,'  Maximum data value before smoothing = ', max_old
@@ -746,8 +786,8 @@ program smooth_vol_data
     print *
   endif
 
-  ! stop all the processes, and exit
-  call finalize()
+  ! stop all the MPI processes, and exit
+  call MPI_FINALIZE(ier)
 
 end program smooth_vol_data
 
