@@ -2,7 +2,7 @@
 #PBS -S /bin/bash
 
 ## job name and output file
-#PBS -N go_database
+#PBS -N go_decomposer
 #PBS -j oe
 #PBS -o OUTPUT_FILES/$PBS_JOBID.o
 
@@ -12,8 +12,8 @@
 ###########################################################
 # USER PARAMETERS
 
-## 4 CPUs, walltime 1 hour
-#PBS -l nodes=1:ppn=4,walltime=1:00:00
+## 1 CPU, walltime 1 hour
+#PBS -l nodes=1:ppn=1,walltime=1:00:00
 ## queue name will depend on the cluster
 #PBS -q debug
 
@@ -26,24 +26,16 @@ cd $PBS_O_WORKDIR
 # compute total number of nodes needed
 NPROC=`grep NPROC DATA/Par_file | cut -d = -f 2`
 
-mkdir -p OUTPUT_FILES
+# path to database files for mesh (relative to bin/)
+LOCALPATH=`grep LOCAL_PATH DATA/Par_file | cut -d = -f 2`
 
-# backup files used for this simulation
-cp go_generate_databases_pbs.bash OUTPUT_FILES/
-cp DATA/Par_file OUTPUT_FILES/
+nmax=$(($NPROC-1))
 
-# save a complete copy of source files
-#rm -rf OUTPUT_FILES/src
-#cp -rp ./src OUTPUT_FILES/
+make xcombine_vol_data
 
-# obtain job information
-cat $PBS_NODEFILE > OUTPUT_FILES/compute_nodes
-echo "$PBS_JOBID" > OUTPUT_FILES/jobid
+# model variable is vs; output file will be vs.vtk
+./bin/xcombine_vol_data 0 $nmax vs $LOCALPATH/ $LOCALPATH 0
 
-echo starting MPI mesher on $NPROC processors
-echo " "
-
-sleep 2
-mpiexec -np $NPROC ./bin/xgenerate_databases
+cp go_combine_vol_data_pbs.bash OUTPUT_FILES/
 
 echo "done "
