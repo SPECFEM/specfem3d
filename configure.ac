@@ -351,9 +351,9 @@ AC_SUBST([FC_MODDIR])
 
 if test "$want_mpi" = yes; then
     AS_BOX([MPI])
-    CIT_FC_MPI_MODULE([mpif.h], [$MPIFC], [$FLAGS_CHECK], [:], [
-        AC_MSG_FAILURE([cannot compile a trivial MPI program using $MPIFC])
-    ])
+#     CIT_FC_MPI_MODULE([mpif.h], [$MPIFC], [$FLAGS_CHECK], [:], [
+#         AC_MSG_FAILURE([cannot compile a trivial MPI program using $MPIFC])
+#     ])
     CIT_MPI_INCDIR([$MPIFC])
 fi
 
