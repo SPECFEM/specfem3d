@@ -15,12 +15,12 @@ step-by-step tutorial (short version -- use pre-saved mesh files):
 
 2. from the directory SPECFEM3D/examples/homogeneous_halfspace/
 
-   > ./process.sh >& process.sh.log
+   > ./run_this_example.sh >& run_this_example.sh.log
 
    This will configure, compile, then run the decomposer, database generation,
    and solver in the local directory. The simulation takes about 15 minutes.
 
-  note: by default, the command ./configure in process.sh will use gfortran;
+  note: by default, the command ./configure in run_this_example.sh will use gfortran;
          you need to change this if you want something else (see 3 below)
 
 3. see step 9 below to compare seismograms in REF_SEIS/ with those in OUTPUT_FILES/
@@ -73,6 +73,7 @@ step-by-step tutorial (long version -- generate MESH with GEOCUBIT):
 
      > cd examples/homogeneous_halfspace/DATA/
      > cp * ../../../DATA/
+     > cd ..
 
 5. create mesh:
 
@@ -123,7 +124,6 @@ step-by-step tutorial (long version -- generate MESH with GEOCUBIT):
 
      > ./bin/xdecompose_mesh 4 examples/homogeneous_halfspace/MESH/ OUTPUT_FILES/DATABASES_MPI/
 
-
 7. generate databases:
 
    - compile generate_databases in directory SPECFEM3D/:
@@ -138,7 +138,10 @@ step-by-step tutorial (long version -- generate MESH with GEOCUBIT):
      this will create binary mesh files, e.g. "proc000***_external_mesh.bin"
      in directory OUTPUT_FILES/DATABASES_MPI/.
 
-     optional: load vtk files (e.g., vs) into paraview and check them out
+     optional 1: load vtk files (e.g., vs) into paraview and check them out
+     optional 2: if you want to view the mesh as a single file, you can merge using
+
+     > qsub go_combine_vol_database_pbs.bash
 
 8. run simulation:
 
