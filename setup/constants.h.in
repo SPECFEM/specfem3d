@@ -51,9 +51,6 @@
 ! if running on a Beowulf, also modify name of nodes in filter_machine_file.f90
   logical, parameter :: LOCAL_PATH_IS_ALSO_GLOBAL = .@LOCAL_PATH_IS_ALSO_GLOBAL@.
 
-! apply heuristic rule to modify doubling regions to balance angles
-  logical, parameter :: APPLY_HEURISTIC_RULE = .true.
-
 ! use inlined products of Deville et al. (2002) to speedup the calculations to compute internal forces
   logical, parameter :: USE_DEVILLE_PRODUCTS = .false.
 
@@ -97,10 +94,8 @@
   integer, parameter :: IOABS_AC = 1
 ! I/O unit for plotting source time function
   integer, Parameter :: IOSTF = 71
-! I/O unit for interface file
-  integer, parameter :: IIN_INTERFACES = 43
 ! I/O unit for noise simulations
-  integer, parameter :: IIN_NOISE = 44,IOUT_NOISE = 45
+  integer, parameter :: IIN_NOISE = 44, IOUT_NOISE = 45
 ! I/O unit for SU formatted seismograms
   integer, parameter :: IOUT_SU = 46
 ! I/O unit for SU formatted adjoint sources
@@ -167,9 +162,6 @@
 ! C-PML theoretical reflection coefficient
 ! (INRIA research report section 6.1:  http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf)
   real(kind=CUSTOM_REAL), parameter :: CPML_Rcoef = 0.001_CUSTOM_REAL
-
-! empirical damping modified factor
-  real(kind=CUSTOM_REAL), parameter :: damping_factor = 1.2_CUSTOM_REAL
 
 ! flags for the seven CPML regions
   integer, parameter :: CPML_X_ONLY = 1
@@ -416,8 +408,6 @@
   double precision, parameter :: GRAV = 6.6723d-11
 ! number of layers in PREM
   integer, parameter :: NR = 640
-! for lookup table for gravity every 100 m in radial direction of Earth model
-  integer, parameter :: NRAD_GRAVITY = 70000
 ! R_EARTH is the radius of the bottom of the oceans (radius of Earth in m)
   double precision, parameter :: R_EARTH = 6371000.d0
 ! same radius in km

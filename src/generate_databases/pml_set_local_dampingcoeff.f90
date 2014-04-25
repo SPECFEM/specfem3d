@@ -35,7 +35,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                                     K_store_x,K_store_y,K_store_z,alpha_store_x,alpha_store_y,alpha_store_z,CPML_to_spec, &
                                     CPML_width_x,CPML_width_y,CPML_width_z,NPOWER,&
                                     CUSTOM_REAL,SIZE_REAL,NGLLX,NGLLY,NGLLZ,nspec_cpml,PML_INSTEAD_OF_FREE_SURFACE, &
-                                    IMAIN,FOUR_THIRDS,CPML_REGIONS,f0_FOR_PML,PI, &
+                                    IMAIN,CPML_REGIONS,f0_FOR_PML,PI, &
                                     CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ,&
                                     SIMULATION_TYPE,SAVE_FORWARD,nspec => NSPEC_AB,is_CPML,&
                                     mask_ibool_interior_domain,nglob_interface_PML_acoustic,points_interface_PML_acoustic,&
@@ -1471,7 +1471,7 @@ function pml_damping_profile_l(myrank,iglob,dist,vp,delta)
   !   vp:    P-velocity
   !   delta: thickness of the C-PML layer
 
-  use generate_databases_par, only: CUSTOM_REAL,NPOWER,CPML_Rcoef,damping_factor
+  use generate_databases_par, only: CUSTOM_REAL,NPOWER,CPML_Rcoef
 
   implicit none
 

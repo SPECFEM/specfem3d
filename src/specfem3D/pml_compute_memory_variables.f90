@@ -52,8 +52,7 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                      PML_dux_dxl_old, PML_dux_dyl_old, PML_dux_dzl_old, &
                      PML_duy_dxl_old, PML_duy_dyl_old, PML_duy_dzl_old, &
                      PML_duz_dxl_old, PML_duz_dyl_old, PML_duz_dzl_old
-  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS, &
-                       CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS
 
   implicit none
 
@@ -430,8 +429,7 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
                      PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl,&
                      PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old
 
-  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS,USE_DEVILLE_PRODUCTS, &
-                       CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,USE_DEVILLE_PRODUCTS
 
   implicit none
 
@@ -643,8 +641,7 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
   use specfem_par, only: NGLOB_AB,it,deltat
   use pml_par,only : CPML_regions,k_store_x,k_store_y,k_store_z,d_store_x,d_store_y,d_store_z,&
                      alpha_store_x,alpha_store_y,alpha_store_z,displ_old
-  use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ,&
-                       CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
+  use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ
 
   implicit none
 
@@ -746,8 +743,7 @@ subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,
   use specfem_par, only: NGLOB_AB,it,deltat
   use pml_par,only : CPML_regions,k_store_x,k_store_y,k_store_z,d_store_x,d_store_y,d_store_z,&
                      alpha_store_x,alpha_store_y,alpha_store_z
-  use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ,&
-                       CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
+  use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ
 
   implicit none
 

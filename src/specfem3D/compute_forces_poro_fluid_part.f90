@@ -44,8 +44,7 @@
 ! compute forces for the fluid poroelastic part
 
   use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM, &
-                      N_SLS, &
-                      ONE_THIRD,FOUR_THIRDS
+                      ONE_THIRD
 
   implicit none
 

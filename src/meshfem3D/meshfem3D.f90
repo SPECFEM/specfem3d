@@ -785,8 +785,6 @@
 
   enddo
 
-  close(IIN_INTERFACES)
-
   if(myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) '**************************'

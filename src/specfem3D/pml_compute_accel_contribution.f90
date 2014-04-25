@@ -40,8 +40,7 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,displ,veloc,r
   use pml_par, only: CPML_regions,d_store_x,d_store_y,d_store_z,K_store_x,K_store_y,K_store_z,&
                      alpha_store_x, alpha_store_y, alpha_store_z, &
                      NSPEC_CPML,accel_elastic_CPML,displ_old
-  use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ,CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
-                       CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
+  use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ
 
   implicit none
 
@@ -200,8 +199,7 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_ac
   use pml_par, only: CPML_regions,NSPEC_CPML,d_store_x,d_store_y,d_store_z,K_store_x,K_store_y,K_store_z,&
                      alpha_store_x, alpha_store_y, alpha_store_z, &
                      NSPEC_CPML,potential_dot_dot_acoustic_CPML,potential_acoustic_old
-  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
-                       CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
 
   implicit none
 
