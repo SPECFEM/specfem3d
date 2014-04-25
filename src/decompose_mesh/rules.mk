@@ -37,8 +37,8 @@ $(decompose_mesh_OBJECTS): S = ${S_TOP}/src/decompose_mesh
 
 # default targets for the Pyrized version
 decompose_mesh_TARGETS = \
-  $E/xscotch \
-  $E/xdecompose_mesh \
+	$E/xscotch \
+	$E/xdecompose_mesh \
 	$(EMPTY_MACRO)
 
 decompose_mesh_OBJECTS = \
@@ -48,6 +48,12 @@ decompose_mesh_OBJECTS = \
 	$O/program_decompose_mesh.dec.o \
 	$(EMPTY_MACRO)
 
+decompose_mesh_MODULES = \
+	$(FC_MODDIR)/decompose_mesh.$(FC_MODEXT) \
+	$(FC_MODDIR)/fault_scotch.$(FC_MODEXT) \
+	$(FC_MODDIR)/part_decompose_mesh.$(FC_MODEXT) \
+	$(EMPTY_MACRO)
+
 decompose_mesh_SHARED_OBJECTS = \
 	$O/get_value_parameters.shared.o \
 	$O/param_reader.cc.o \
@@ -55,7 +61,6 @@ decompose_mesh_SHARED_OBJECTS = \
 	$O/read_value_parameters.shared.o \
 	$O/sort_array_coordinates.shared.o \
 	$(EMPTY_MACRO)
-
 
 
 #######################################

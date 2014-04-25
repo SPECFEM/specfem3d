@@ -106,9 +106,9 @@ adios_model_upd_auxiliaries_OBJECTS= \
 	$O/read_forward_arrays_adios.spec_adios.o
 
 adios_model_upd_auxiliaries_SHARED_OBJECTS = \
-	$O/adios_manager.shared_adios.o  \
-	$O/adios_helpers_definitions.shared_adios.o \
-	$O/adios_helpers_writers.shared_adios.o \
+	$O/adios_manager.shared_adios.o \
+	$O/adios_helpers_definitions.shared_adios_module.o \
+	$O/adios_helpers_writers.shared_adios_module.o \
 	$O/adios_helpers.shared_adios.o
 
 adios_model_upd_auxiliaries_STUBS = \
@@ -272,8 +272,8 @@ $O/combine_vol_data_adios_stubs.aux_noadios.o: $O/adios_manager_stubs.shared_noa
 ifeq ($(ADIOS),yes)
 $O/combine_vol_data.aux.o: $O/combine_vol_data_impl.aux.o $O/combine_vol_data_adios_impl.aux_adios.o
 $O/adios_helpers.shared_adios.o: \
-	$O/adios_helpers_definitions.shared_adios.o \
-	$O/adios_helpers_writers.shared_adios.o
+	$O/adios_helpers_definitions.shared_adios_module.o \
+	$O/adios_helpers_writers.shared_adios_module.o
 else
 $O/combine_vol_data.aux.o: $O/combine_vol_data_impl.aux.o $O/combine_vol_data_adios_stubs.aux_noadios.o $O/bypass_implicit_interface.aux_noadios.o
 endif

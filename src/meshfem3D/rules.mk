@@ -62,6 +62,11 @@ meshfem3D_OBJECTS = \
 	$O/store_coords.mesh.o \
 	$(EMPTY_MACRO)
 
+meshfem3D_MODULES = \
+	$(FC_MODDIR)/createregmesh.$(FC_MODEXT) \
+	$(FC_MODDIR)/readparfile.$(FC_MODEXT) \
+	$(EMPTY_MACRO)
+
 meshfem3D_SHARED_OBJECTS = \
 	$O/exit_mpi.shared.o \
 	$O/get_global.shared.o \
@@ -78,9 +83,9 @@ meshfem3D_SHARED_OBJECTS = \
 
 # using ADIOS files
 adios_meshfem3D_PREOBJECTS= \
-	$O/adios_manager.shared_adios.o  \
-	$O/adios_helpers_definitions.shared_adios.o  \
-	$O/adios_helpers_writers.shared_adios.o  \
+	$O/adios_manager.shared_adios.o \
+	$O/adios_helpers_definitions.shared_adios_module.o \
+	$O/adios_helpers_writers.shared_adios_module.o \
 	$O/adios_helpers.shared_adios.o
 
 adios_meshfem3D_OBJECTS= \
@@ -140,8 +145,8 @@ $O/save_databases_adios.mesh_adios.o: $O/safe_alloc_mod.shared.o $(adios_meshfem
 $O/create_regions_mesh.mesh.o: $(adios_meshfem3D_PREOBJECTS)
 
 $O/adios_helpers.shared_adios.o: \
-	$O/adios_helpers_definitions.shared_adios.o \
-	$O/adios_helpers_writers.shared_adios.o
+	$O/adios_helpers_definitions.shared_adios_module.o \
+	$O/adios_helpers_writers.shared_adios_module.o
 
 
 ####

@@ -64,13 +64,19 @@ shared_OBJECTS = \
 	$O/read_topo_bathy_file.shared.o \
 	$O/read_value_parameters.shared.o \
 	$O/recompute_jacobian.shared.o \
-	$O/save_alloc_mod.shared.o \
+	$O/safe_alloc_mod.shared.o \
 	$O/save_header_file.shared.o \
 	$O/sort_array_coordinates.shared.o \
 	$O/utm_geo.shared.o \
 	$O/write_c_binary.cc.o \
 	$O/write_VTK_data.shared.o \
 	$(EMPTY_MACRO)
+
+
+shared_MODULES = \
+	$(FC_MODDIR)/safe_alloc_mod.$(FC_MODEXT) \
+	$(EMPTY_MACRO)
+
 
 ###
 ### MPI
@@ -93,17 +99,23 @@ adios_shared_MODULES = \
 	$(FC_MODDIR)/adios_helpers_definitions_mod.$(FC_MODEXT) \
 	$(FC_MODDIR)/adios_helpers_mod.$(FC_MODEXT) \
 	$(FC_MODDIR)/adios_helpers_writers_mod.$(FC_MODEXT) \
+	$(FC_MODDIR)/adios_manager_mod.$(FC_MODEXT) \
 	$(EMPTY_MACRO)
 
-adios_shared_STUBS = \
-	$O/adios_manager_stubs.cc.o \
+adios_shared_STUB_OBJECTS = \
+	$O/adios_manager_stubs.shared_noadios.o \
+	$(EMPTY_MACRO)
+
+adios_shared_STUB_MODULES = \
+	$(FC_MODDIR)/adios_manager_mod.$(FC_MODEXT) \
 	$(EMPTY_MACRO)
 
 ifeq ($(ADIOS),yes)
 shared_OBJECTS += $(adios_shared_OBJECTS)
 shared_MODULES += $(adios_shared_MODULES)
 else
-shared_OBJECTS += $(adios_shared_STUBS)
+shared_OBJECTS += $(adios_shared_STUB_OBJECTS)
+shared_MODULES += $(adios_shared_STUB_MODULES)
 endif
 
 #######################################

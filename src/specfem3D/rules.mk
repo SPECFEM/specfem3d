@@ -145,11 +145,20 @@ specfem3D_SHARED_OBJECTS = \
 
 specfem3D_MODULES = \
 	$(FC_MODDIR)/constants.$(FC_MODEXT) \
+	$(FC_MODDIR)/fault_solver_common.$(FC_MODEXT) \
+	$(FC_MODDIR)/fault_solver_dynamic.$(FC_MODEXT) \
+	$(FC_MODDIR)/fault_solver_kinematic.$(FC_MODEXT) \
+	$(FC_MODDIR)/gravity_perturbation.$(FC_MODEXT) \
+	$(FC_MODDIR)/image_pnm_par.$(FC_MODEXT) \
+	$(FC_MODDIR)/pml_par.$(FC_MODEXT) \
 	$(FC_MODDIR)/specfem_par.$(FC_MODEXT) \
-	$(FC_MODDIR)/specfem_par_elastic.$(FC_MODEXT) \
 	$(FC_MODDIR)/specfem_par_acoustic.$(FC_MODEXT) \
+	$(FC_MODDIR)/specfem_par_elastic.$(FC_MODEXT) \
+	$(FC_MODDIR)/specfem_par_poroelastic.$(FC_MODEXT) \
 	$(FC_MODDIR)/specfem_par_movie.$(FC_MODEXT) \
+	$(FC_MODDIR)/user_noise_distribution.$(FC_MODEXT) \
 	$(EMPTY_MACRO)
+
 
 ### 
 ### MPI
@@ -213,9 +222,9 @@ adios_specfem3D_OBJECTS= \
 	$O/save_kernels_adios.spec_adios.o
 
 adios_specfem3D_PREOBJECTS = \
-	$O/adios_manager.shared_adios.o  \
-	$O/adios_helpers_definitions.shared_adios.o \
-	$O/adios_helpers_writers.shared_adios.o \
+	$O/adios_manager.shared_adios.o \
+	$O/adios_helpers_definitions.shared_adios_module.o \
+	$O/adios_helpers_writers.shared_adios_module.o \
 	$O/adios_helpers.shared_adios.o
 
 adios_specfem3D_STUBS = \
@@ -356,8 +365,8 @@ $O/save_forward_arrays_adios.spec_adios.o: $O/specfem3D_par.spec.o $O/pml_par.sp
 $O/finalize_simulation.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o $O/gravity_perturbation.spec.o $(adios_specfem3D_PREOBJECTS)
 $O/specfem3D_adios_stubs.spec_noadios.o: $O/adios_manager_stubs.shared_noadios.o
 $O/adios_helpers.shared_adios.o: \
-	$O/adios_helpers_definitions.shared_adios.o \
-	$O/adios_helpers_writers.shared_adios.o
+	$O/adios_helpers_definitions.shared_adios_module.o \
+	$O/adios_helpers_writers.shared_adios_module.o
 
 
 ####
