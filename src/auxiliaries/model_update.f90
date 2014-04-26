@@ -36,21 +36,17 @@ program model_update
   ! ======================================================
   ! USER PARAMETERS
 
-  ! root file directory
-  character (len=256), parameter :: &
-    ROOT_PATH = '/lscratch/users/magnoni/SPECFEM3D/trunk_update/OUTPUT_FILES'
-
   ! directory where the mesh files for the NEW model will be written
   character (len=256), parameter :: &
-    LOCAL_PATH_NEW = trim(ROOT_PATH)//'/'//'DATABASES_MPI/mesh_files_m01'
+    LOCAL_PATH_NEW = trim(LOCAL_PATH_Q)//'/mesh_files_m01'
 
   ! directory where the output files of model_update will be written
   character (len=256), parameter :: &
-    OUTPUT_MODEL_UPD = trim(ROOT_PATH)//'/'//'OUTPUT_FILES_MODEL_UPD'
+    OUTPUT_MODEL_UPD = trim(OUTPUT_FILES_PATH)//'/OUTPUT_FILES_MODEL_UPD'
 
   ! directory where the summed and smoothed input kernels are linked
   character (len=256), parameter :: &
-    INPUT_KERNELS = trim(ROOT_PATH)//'/'//'DATABASES_MPI/sum_smooth_kern'
+    INPUT_KERNELS = trim(LOCAL_PATH_Q)//'/sum_smooth_kern'
 
   ! by default, this algorithm uses (bulk,bulk_beta,rho) kernels to update vp,vs,rho
   ! if you prefer using (alpha,beta,rho) kernels, set this flag to true

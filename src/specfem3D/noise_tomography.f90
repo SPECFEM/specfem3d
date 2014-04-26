@@ -383,7 +383,7 @@ end module user_noise_distribution
 !!  ! create_movie_AVS_DX.f90 needs to be modified in order to do that,
 !!  ! i.e., instead of showing the normal component, change it to either x, y or z component, or the norm.
 !!    if(myrank == 0) then
-!!        open(unit=IOUT_NOISE,file='OUTPUT_FILES/mask_noise',status='unknown',form='unformatted',action='write')
+!!        open(unit=IOUT_NOISE,file=trim(OUTPUT_FILES_PATH)//'/mask_noise',status='unknown',form='unformatted',action='write')
 !!        write(IOUT_NOISE) store_val_x_all
 !!        write(IOUT_NOISE) store_val_y_all
 !!        write(IOUT_NOISE) store_val_z_all
