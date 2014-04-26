@@ -37,6 +37,7 @@
 #endif
 
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
+#define LOCAL_PATH_Q "./OUTPUT_FILES/DATABASES_MPI/"
 
 
 void save_to_max_surface_file_(float* maxval) {
@@ -96,7 +97,7 @@ void get_max_from_surface_file_(int* nodes_per_iterationf,int* NSTEP) {
 #else
   procid = 0;
 #endif
-  sprintf(filename,"/scratch/eiger/rietmann/SPECFEM3D_AIGLE/OUTPUT_FILES/DATABASES_MPI/proc%06d_surface_movie",procid);
+  sprintf(filename,LOCAL_PATH_Q"/proc%06d_surface_movie",procid);
 
   FILE* fp; int it;
   printf("Opening %s for analysis\n",filename);
@@ -176,8 +177,8 @@ void compare_two_vectors_(int* sizef,float* vector1,float* vector2,int* num_erro
 
 void compare_surface_files_(int* bytes_per_iteration, int* number_of_iterations) {
 
-  char* cpu_file = "/scratch/eiger/rietmann/SPECFEM3D/OUTPUT_FILES/DATABASES_MPI/cpu_proc000001_surface_movie";
-  char* gpu_file = "/scratch/eiger/rietmann/SPECFEM3D/OUTPUT_FILES/DATABASES_MPI/cpu_v2_proc000001_surface_movie";
+  char* cpu_file = LOCAL_PATH_Q"/cpu_proc000001_surface_movie";
+  char* gpu_file = LOCAL_PATH_Q"/cpu_v2_proc000001_surface_movie";
 
   FILE* fp_cpu;
   fp_cpu = fopen(cpu_file,"rb");
