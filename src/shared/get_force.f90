@@ -64,8 +64,7 @@
 !
 !---- read info
 !
-  call get_value_string(FORCESOLUTION, 'solver.FORCESOLUTION', &
-       IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'FORCESOLUTION')
+  FORCESOLUTION = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'FORCESOLUTION'
 
   open(unit=1,file=trim(FORCESOLUTION),status='old',action='read')
 

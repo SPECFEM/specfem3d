@@ -139,8 +139,6 @@
 
   double precision, dimension(6,NSOURCES) ::  moment_tensor
 
-  character(len=256) OUTPUT_FILES
-
   double precision, dimension(NSOURCES) :: x_found_source,y_found_source,z_found_source
   double precision, dimension(NSOURCES) :: elevation
   double precision distmin
@@ -163,9 +161,6 @@
   integer, dimension(NGATHER_SOURCES,0:NPROC-1) :: idomain_all
 
   !-----------------------------------------------------------------------------------
-
-  ! get the base pathname for output files
-  call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)))
 
   ! read all the sources (note: each process reads the source file)
   if (USE_FORCE_POINT_SOURCE) then
@@ -909,7 +904,7 @@
     call flush_IMAIN()
 
     ! output source information to a file so that we can load it and write to SU headers later
-    open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/output_list_sources.txt',status='unknown')
+    open(unit=IOUT_SU,file=trim(OUTPUT_FILES_PATH)//'/output_list_sources.txt',status='unknown')
     do isource=1,NSOURCES
       write(IOUT_SU,*) x_found_source(isource),y_found_source(isource),z_found_source(isource)
     enddo

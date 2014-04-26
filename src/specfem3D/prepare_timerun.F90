@@ -447,7 +447,7 @@
         write(plot_file,"('/plot_source_time_function',i2,'.txt')") NSOURCES
       endif
     endif
-    open(unit=IOSTF,file=trim(OUTPUT_FILES)//plot_file,status='unknown',iostat=ier)
+    open(unit=IOSTF,file=trim(OUTPUT_FILES_PATH)//plot_file,status='unknown',iostat=ier)
     if( ier /= 0 ) call exit_mpi(myrank,'error opening plot_source_time_function file')
   endif
 

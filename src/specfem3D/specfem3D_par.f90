@@ -201,7 +201,7 @@ module specfem_par
   integer :: NPROC_XI,NPROC_ETA
   double precision :: LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX
 
-  character(len=256) OUTPUT_FILES,LOCAL_PATH,TOMOGRAPHY_PATH,prname,dsmname,TRAC_PATH
+  character(len=256) LOCAL_PATH,TOMOGRAPHY_PATH,prname,dsmname,TRAC_PATH
 
   logical :: ADIOS_ENABLED
   logical :: ADIOS_FOR_DATABASES, ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, &

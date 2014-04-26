@@ -66,8 +66,7 @@
 !
 !---- read hypocenter info
 !
-  call get_value_string(CMTSOLUTION, 'solver.CMTSOLUTION', &
-       IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'CMTSOLUTION')
+  CMTSOLUTION = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'CMTSOLUTION'
 
   open(unit=1,file=CMTSOLUTION,status='old',action='read')
 

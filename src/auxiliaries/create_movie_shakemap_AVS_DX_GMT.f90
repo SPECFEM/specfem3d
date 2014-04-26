@@ -104,7 +104,7 @@
   logical :: STACEY_ABSORBING_CONDITIONS,SAVE_FORWARD,STACEY_INSTEAD_OF_FREE_SURFACE
   logical :: ANISOTROPY,SAVE_MESH_FILES,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
   logical :: PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID
-  character(len=256) :: OUTPUT_FILES,LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
+  character(len=256) :: LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
   integer :: NPROC
   integer :: ier
   integer :: MOVIE_TYPE,IMODEL
@@ -138,14 +138,11 @@
         USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
         PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,FULL_ATTENUATION_SOLID,TRAC_PATH)
 
-  ! get the base pathname for output files
-  call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)))
-
   ! only one global array for movie data, but stored for all surfaces defined
   ! in file 'surface_from_mesher.h'
-  open(unit=IIN,file=trim(OUTPUT_FILES)//'surface_from_mesher.h',status='old',action='read',iostat=ier)
+  open(unit=IIN,file=trim(OUTPUT_FILES_PATH)//'surface_from_mesher.h',status='old',action='read',iostat=ier)
   if( ier /= 0 ) then
-    print*,'error opening file: ',trim(OUTPUT_FILES)//'surface_from_mesher.h'
+    print*,'error opening file: ',trim(OUTPUT_FILES_PATH)//'surface_from_mesher.h'
     print*
     print*,'please run xgenerate_databases or xspecfem3D first to create this file, exiting now...'
     stop 'error opening moviedata header file'
@@ -336,10 +333,10 @@
       else
         write(outputname,"('/moviedata',i6.6)") it
       endif
-      open(unit=IOUT,file=trim(OUTPUT_FILES)//trim(outputname),status='old', &
+      open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//trim(outputname),status='old', &
             action='read',form='unformatted',iostat=ier)
       if( ier /= 0 ) then
-        print*,'error: ',trim(OUTPUT_FILES)//trim(outputname)
+        print*,'error: ',trim(OUTPUT_FILES_PATH)//trim(outputname)
         stop 'error opening moviedata file'
       endif
 
@@ -641,15 +638,15 @@
 
         if(USE_OPENDX) then
           write(outputname,"('/DX_shaking_map.dx')")
-          open(unit=11,file=trim(OUTPUT_FILES)//outputname,status='unknown')
+          open(unit=11,file=trim(OUTPUT_FILES_PATH)//outputname,status='unknown')
           write(11,*) 'object 1 class array type float rank 1 shape 3 items ',nglob,' data follows'
         else if(USE_AVS) then
           write(outputname,"('/AVS_shaking_map.inp')")
-          open(unit=11,file=trim(OUTPUT_FILES)//outputname,status='unknown')
+          open(unit=11,file=trim(OUTPUT_FILES_PATH)//outputname,status='unknown')
           write(11,*) nglob,' ',nspectot_AVS_max,' 1 0 0'
        else if(USE_GMT) then
           write(outputname,"('/gmt_shaking_map.xyz')")
-          open(unit=11,file=trim(OUTPUT_FILES)//outputname,status='unknown')
+          open(unit=11,file=trim(OUTPUT_FILES_PATH)//outputname,status='unknown')
         else
           stop 'wrong output format selected'
         endif
@@ -658,15 +655,15 @@
 
         if(USE_OPENDX) then
           write(outputname,"('/DX_movie_',i6.6,'.dx')") ivalue
-          open(unit=11,file=trim(OUTPUT_FILES)//outputname,status='unknown')
+          open(unit=11,file=trim(OUTPUT_FILES_PATH)//outputname,status='unknown')
           write(11,*) 'object 1 class array type float rank 1 shape 3 items ',nglob,' data follows'
         else if(USE_AVS) then
           write(outputname,"('/AVS_movie_',i6.6,'.inp')") ivalue
-          open(unit=11,file=trim(OUTPUT_FILES)//outputname,status='unknown')
+          open(unit=11,file=trim(OUTPUT_FILES_PATH)//outputname,status='unknown')
           write(11,*) nglob,' ',nspectot_AVS_max,' 1 0 0'
        else if(USE_GMT) then
           write(outputname,"('/gmt_movie_',i6.6,'.xyz')") ivalue
-          open(unit=11,file=trim(OUTPUT_FILES)//outputname,status='unknown')
+          open(unit=11,file=trim(OUTPUT_FILES_PATH)//outputname,status='unknown')
         else
           stop 'wrong output format selected'
         endif
@@ -795,9 +792,9 @@ enddo ! it
   print *
   print *,'done creating movie or shaking map'
   print *
-  if(USE_OPENDX) print *,'DX files are stored in ', trim(OUTPUT_FILES), '/DX_*.dx'
-  if(USE_AVS) print *,'AVS files are stored in ', trim(OUTPUT_FILES), '/AVS_*.inp'
-  if(USE_GMT) print *,'GMT files are stored in ', trim(OUTPUT_FILES), '/gmt_*.xyz'
+  if (USE_OPENDX) print *, 'DX files are stored in ', trim(OUTPUT_FILES_PATH), '/DX_*.dx'
+  if (USE_AVS) print *, 'AVS files are stored in ', trim(OUTPUT_FILES_PATH), '/AVS_*.inp'
+  if (USE_GMT) print *, 'GMT files are stored in ', trim(OUTPUT_FILES_PATH), '/gmt_*.xyz'
   print *
 
   deallocate(store_val_x)

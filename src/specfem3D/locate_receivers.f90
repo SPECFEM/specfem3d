@@ -141,7 +141,6 @@
   integer, allocatable, dimension(:) :: ispec_selected_rec_all
 
   integer :: ier
-  character(len=256) OUTPUT_FILES
 
   real(kind=CUSTOM_REAL) :: xmin,xmax,ymin,ymax,zmin,zmax
   real(kind=CUSTOM_REAL) :: xmin_ELE,xmax_ELE,ymin_ELE,ymax_ELE,zmin_ELE,zmax_ELE
@@ -190,13 +189,10 @@
   open(unit=IIN,file=trim(rec_filename),status='old',action='read',iostat=ios)
   if (ios /= 0) call exit_mpi(myrank,'error opening file '//trim(rec_filename))
 
-  ! get the base pathname for output files
-  call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)))
-
   ! checks if station locations already available
   if( SU_FORMAT ) then
     ! checks if file with station infos located from previous run exists
-    INQUIRE(file=trim(OUTPUT_FILES)//'/SU_stations_info.bin',exist=SU_station_file_exists)
+    INQUIRE(file=trim(OUTPUT_FILES_PATH)//'/SU_stations_info.bin',exist=SU_station_file_exists)
     if ( SU_station_file_exists ) then
       ! all processes read in stations names from STATIONS file
       do irec=1,nrec
@@ -206,7 +202,7 @@
       close(IIN)
       ! master reads in available station information
       if( myrank == 0 ) then
-        open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/SU_stations_info.bin', &
+        open(unit=IOUT_SU,file=trim(OUTPUT_FILES_PATH)//'/SU_stations_info.bin', &
               status='old',action='read',form='unformatted',iostat=ios)
         if (ios /= 0) call exit_mpi(myrank,'error opening file '//trim(rec_filename))
 
@@ -221,10 +217,10 @@
         read(IOUT_SU) nu
         close(IOUT_SU)
         ! write the locations of stations, so that we can load them and write them to SU headers later
-        open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/output_list_stations.txt', &
+        open(unit=IOUT_SU,file=trim(OUTPUT_FILES_PATH)//'/output_list_stations.txt', &
               status='unknown',action='write',iostat=ios)
         if( ios /= 0 ) &
-          call exit_mpi(myrank,'error opening file '//trim(OUTPUT_FILES)//'/output_list_stations.txt')
+          call exit_mpi(myrank,'error opening file '//trim(OUTPUT_FILES_PATH)//'/output_list_stations.txt')
 
         do irec=1,nrec
           write(IOUT_SU,*) station_name(irec),network_name(irec),x_found(irec),y_found(irec),z_found(irec)
@@ -917,10 +913,10 @@
     endif
 
     ! write the locations of stations, so that we can load them and write them to SU headers later
-    open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/output_list_stations.txt', &
+    open(unit=IOUT_SU,file=trim(OUTPUT_FILES_PATH)//'/output_list_stations.txt', &
               status='unknown',action='write',iostat=ios)
     if( ios /= 0 ) &
-      call exit_mpi(myrank,'error opening file '//trim(OUTPUT_FILES)//'/output_list_stations.txt')
+      call exit_mpi(myrank,'error opening file '//trim(OUTPUT_FILES_PATH)//'/output_list_stations.txt')
 
     do irec=1,nrec
       write(IOUT_SU,*) station_name(irec),network_name(irec),x_found(irec),y_found(irec),z_found(irec)
@@ -930,7 +926,7 @@
 
     ! stores station infos for later runs
     if( SU_FORMAT ) then
-      open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/SU_stations_info.bin', &
+      open(unit=IOUT_SU,file=trim(OUTPUT_FILES_PATH)//'/SU_stations_info.bin', &
             status='unknown',action='write',form='unformatted',iostat=ios)
       if( ios == 0 ) then
         write(IOUT_SU) islice_selected_rec,ispec_selected_rec

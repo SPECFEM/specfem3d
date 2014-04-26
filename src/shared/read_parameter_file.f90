@@ -217,8 +217,7 @@
   if( USE_FORCE_POINT_SOURCE ) then
      ! compute the total number of sources in the FORCESOLUTION file
      ! there are NLINES_PER_FORCESOLUTION_SOURCE lines per source in that file
-     call get_value_string(FORCESOLUTION, 'solver.FORCESOLUTION',&
-          IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'FORCESOLUTION')
+     FORCESOLUTION = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'FORCESOLUTION'
 
      open(unit=21,file=trim(FORCESOLUTION),iostat=ios,status='old',action='read')
      if(ios /= 0) stop 'error opening FORCESOLUTION file'
@@ -239,8 +238,7 @@
   else
      ! compute the total number of sources in the CMTSOLUTION file
      ! there are NLINES_PER_CMTSOLUTION_SOURCE lines per source in that file
-     call get_value_string(CMTSOLUTION, 'solver.CMTSOLUTION',&
-          IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'CMTSOLUTION')
+     CMTSOLUTION = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'CMTSOLUTION'
 
      open(unit=21,file=trim(CMTSOLUTION),iostat=ios,status='old',action='read')
      if(ios /= 0) stop 'error opening CMTSOLUTION file'

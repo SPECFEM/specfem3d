@@ -52,7 +52,6 @@ meshfem3D_OBJECTS = \
 	$O/get_flags_boundaries.mesh.o \
 	$O/get_MPI_cutplanes_eta.mesh.o \
 	$O/get_MPI_cutplanes_xi.mesh.o \
-	$O/get_value_parameters.mesh.o \
 	$O/meshfem3D.mesh.o \
 	$O/program_meshfem3D.mesh.o \
 	$O/read_mesh_parameter_file.mesh.o \

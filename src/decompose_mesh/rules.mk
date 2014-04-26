@@ -55,7 +55,6 @@ decompose_mesh_MODULES = \
 	$(EMPTY_MACRO)
 
 decompose_mesh_SHARED_OBJECTS = \
-	$O/get_value_parameters.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \

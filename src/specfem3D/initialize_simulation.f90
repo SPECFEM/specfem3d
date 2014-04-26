@@ -69,9 +69,6 @@
   ! GPU_MODE is in par_file
   call read_gpu_mode(GPU_MODE,GRAVITY)
 
-  ! get the base pathname for output files
-  call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)))
-
   ! myrank is the rank of each process, between 0 and NPROC-1.
   ! as usual in MPI, process 0 is in charge of coordinating everything
   ! and also takes care of the main output
@@ -82,7 +79,7 @@
 
   ! open main output file, only written to by process 0
   if(myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
-    open(unit=IMAIN,file=trim(OUTPUT_FILES)//'/output_solver.txt',status='unknown')
+    open(unit=IMAIN,file=trim(OUTPUT_FILES_PATH)//'/output_solver.txt',status='unknown')
   ! user output
   if(myrank == 0) then
     write(IMAIN,*)
@@ -342,8 +339,7 @@
 
   ! check that the code has been compiled with the right values
   if( myrank == 0 ) then
-     call get_value_string(HEADER_FILE, 'solver.HEADER_FILE', &
-          OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))//'/values_from_mesher.h')
+     HEADER_FILE = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))//'/values_from_mesher.h'
 
      open(unit=IOUT,file=trim(HEADER_FILE),status='old',iostat=ier)
      if( ier /= 0 ) then
@@ -365,12 +361,11 @@
   ! checks directories
   if( myrank == 0 ) then
     ! tests if OUTPUT_FILES directory exists
-    call get_value_string(dummystring, 'OUTPUT_FILES', OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)))
     ! note: inquire behaves differently when using intel ifort or gfortran compilers
     !INQUIRE( FILE = dummystring(1:len_trim(dummystring))//'/.', EXIST = exists )
-    open(IOUT,file=trim(dummystring)//'/dummy.txt',status='unknown',iostat=ier)
+    open(IOUT,file=trim(OUTPUT_FILES_PATH)//'/dummy.txt',status='unknown',iostat=ier)
     if( ier /= 0 ) then
-      print*,"OUTPUT_FILES directory does not work: ",trim(dummystring)
+      print*,"OUTPUT_FILES directory does not work: ",trim(OUTPUT_FILES_PATH)
       call exit_MPI(myrank,'error OUTPUT_FILES directory')
     endif
     close(IOUT,status='delete')

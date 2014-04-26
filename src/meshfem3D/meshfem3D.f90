@@ -345,7 +345,7 @@
   logical ANISOTROPY,SAVE_MESH_FILES,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
   logical PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID
   integer MOVIE_TYPE,IMODEL
-  character(len=256) OUTPUT_FILES,LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
+  character(len=256) LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
   logical :: ADIOS_ENABLED, ADIOS_FOR_DATABASES, ADIOS_FOR_MESH, &
              ADIOS_FOR_FORWARD_ARRAYS, ADIOS_FOR_KERNELS
 
@@ -358,12 +358,9 @@
   call world_size(sizeprocs)
   call world_rank(myrank)
 
-! get the base pathname for output files
-  call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)))
-
 ! open main output file, only written to by process 0
   if(myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
-    open(unit=IMAIN,file=trim(OUTPUT_FILES)//'/output_mesher.txt',status='unknown')
+    open(unit=IMAIN,file=trim(OUTPUT_FILES_PATH)//'/output_mesher.txt',status='unknown')
 
 ! get MPI starting time
   time_start = wtime()

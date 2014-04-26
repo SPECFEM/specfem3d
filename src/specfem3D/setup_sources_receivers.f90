@@ -340,10 +340,8 @@
 
 ! reads in station file
   if (SIMULATION_TYPE == 1) then
-    call get_value_string(rec_filename, 'solver.STATIONS', &
-          IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'STATIONS')
-    call get_value_string(filtered_rec_filename, 'solver.STATIONS_FILTERED', &
-         IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'STATIONS_FILTERED')
+    rec_filename = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'STATIONS'
+    filtered_rec_filename = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'STATIONS_FILTERED'
     call station_filter(SUPPRESS_UTM_PROJECTION,UTM_PROJECTION_ZONE,myrank,rec_filename,filtered_rec_filename,nrec, &
            LATITUDE_MIN, LATITUDE_MAX, LONGITUDE_MIN, LONGITUDE_MAX)
 
@@ -351,10 +349,8 @@
     call synchronize_all()
 
   else
-    call get_value_string(rec_filename, 'solver.STATIONS', &
-         IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'STATIONS_ADJOINT')
-    call get_value_string(filtered_rec_filename, 'solver.STATIONS_FILTERED', &
-         IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'STATIONS_ADJOINT_FILTERED')
+    rec_filename = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'STATIONS_ADJOINT'
+    filtered_rec_filename = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'STATIONS_ADJOINT_FILTERED'
     call station_filter(SUPPRESS_UTM_PROJECTION,UTM_PROJECTION_ZONE,myrank,rec_filename,filtered_rec_filename,nrec, &
            LATITUDE_MIN, LATITUDE_MAX, LONGITUDE_MIN, LONGITUDE_MAX)
     if (nrec < 1) call exit_MPI(myrank, 'adjoint simulation needs at least one receiver')
@@ -843,7 +839,7 @@
 
   if (myrank == 0) then
     ! vtk file
-    open(IOVTK,file=trim(OUTPUT_FILES)//'/sr.vtk',status='unknown',iostat=ier)
+    open(IOVTK,file=trim(OUTPUT_FILES_PATH)//'/sr.vtk',status='unknown',iostat=ier)
     if( ier /= 0 ) stop 'error opening sr.vtk file'
     ! vtk header
     write(IOVTK,'(a)') '# vtk DataFile Version 2.0'
@@ -954,8 +950,8 @@
     ! creates additional receiver and source files
     if( SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
       ! extracts receiver locations
-      filename = trim(OUTPUT_FILES)//'/sr.vtk'
-      filename_new = trim(OUTPUT_FILES)//'/receiver.vtk'
+      filename = trim(OUTPUT_FILES_PATH)//'/sr.vtk'
+      filename_new = trim(OUTPUT_FILES_PATH)//'/receiver.vtk'
 
       ! vtk file for receivers only
       write(system_command, &
@@ -963,7 +959,7 @@
       "'",'"',nrec,'"',NSOURCES,"'",trim(filename),trim(filename_new)
 
       ! extracts source locations
-      filename_new = trim(OUTPUT_FILES)//'/source.vtk'
+      filename_new = trim(OUTPUT_FILES_PATH)//'/source.vtk'
 
       write(system_command1, &
   "('awk ',a1,'{if(NR<5) print $0;if(NR==5)print ',a1,'POINTS',i6,' float',a1,';')") &

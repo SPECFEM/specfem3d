@@ -53,7 +53,6 @@ shared_OBJECTS = \
 	$O/get_jacobian_boundaries.shared.o \
 	$O/get_shape2D.shared.o \
 	$O/get_shape3D.shared.o \
-	$O/get_value_parameters.shared.o \
 	$O/gll_library.shared.o \
 	$O/hex_nodes.shared.o \
 	$O/lagrange_poly.shared.o \
