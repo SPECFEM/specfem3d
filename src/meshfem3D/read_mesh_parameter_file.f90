@@ -184,21 +184,21 @@ contains
   allocate(subregions(NSUBREGIONS,7),stat=ierr)
   if(ierr /= 0) print*,"Allocation error of subregions"
   do ireg =1,NSUBREGIONS
-     call read_region_parameters(IIN,ix_beg_region,ix_end_region,iy_beg_region,iy_end_region,&
-          iz_beg_region,iz_end_region,imaterial_number)
-     if(ix_beg_region < 1) stop 'XI coordinate of region negative!'
-     if(ix_end_region > NEX_XI) stop 'XI coordinate of region too high!'
-     if(iy_beg_region < 1) stop 'ETA coordinate of region negative!'
-     if(iy_end_region > NEX_ETA) stop 'ETA coordinate of region too high!'
-     if(iz_beg_region < 1) stop 'Z coordinate of region negative!'
+    call read_region_parameters(IIN,ix_beg_region,ix_end_region,iy_beg_region,iy_end_region,&
+         iz_beg_region,iz_end_region,imaterial_number)
+    if (ix_beg_region < 1) stop 'XI coordinate of region negative!'
+    if (ix_end_region > NEX_XI) stop 'XI coordinate of region too high!'
+    if (iy_beg_region < 1) stop 'ETA coordinate of region negative!'
+    if (iy_end_region > NEX_ETA) stop 'ETA coordinate of region too high!'
+    if (iz_beg_region < 1) stop 'Z coordinate of region negative!'
 
-     subregions(ireg,1) = ix_beg_region
-     subregions(ireg,2) = ix_end_region
-     subregions(ireg,3) = iy_beg_region
-     subregions(ireg,4) = iy_end_region
-     subregions(ireg,5) = iz_beg_region
-     subregions(ireg,6) = iz_end_region
-     subregions(ireg,7) = imaterial_number
+    subregions(ireg,1) = ix_beg_region
+    subregions(ireg,2) = ix_end_region
+    subregions(ireg,3) = iy_beg_region
+    subregions(ireg,4) = iy_end_region
+    subregions(ireg,5) = iz_beg_region
+    subregions(ireg,6) = iz_end_region
+    subregions(ireg,7) = imaterial_number
   enddo
 
 ! close parameter file

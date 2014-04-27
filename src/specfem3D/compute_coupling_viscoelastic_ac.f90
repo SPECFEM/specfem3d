@@ -126,7 +126,7 @@
             endif
           endif
         else
-           pressure = - potential_dot_dot_acoustic(iglob)
+          pressure = - potential_dot_dot_acoustic(iglob)
         endif
 
         ! gets associated normal on GLL point

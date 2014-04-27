@@ -67,10 +67,10 @@
 
   ! directory to store seismograms
   if( USE_OUTPUT_FILES_PATH ) then
-   final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'
+    final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'
   else
-   ! create full final local path
-   final_LOCAL_PATH = trim(adjustl(LOCAL_PATH)) // '/'
+    ! create full final local path
+    final_LOCAL_PATH = trim(adjustl(LOCAL_PATH)) // '/'
   endif
   write(procname,"(i4)") myrank
 
@@ -79,7 +79,7 @@
 
   ! write seismograms (dx)
   open(unit=IOUT_SU, file=trim(adjustl(final_LOCAL_PATH))//trim(adjustl(procname))//'_dx_SU' ,&
-      status='unknown', access='direct', recl=4, iostat=ier)
+       status='unknown', access='direct', recl=4, iostat=ier)
 
   if( ier /= 0 ) stop 'error opening ***_dx_SU file'
 
@@ -89,7 +89,6 @@
   else
     dx = 0.0
   endif
-
 
   do irec_local = 1,nrec_local
     irec = number_receiver_global(irec_local)
@@ -109,7 +108,7 @@
 
   ! write seismograms (dy)
   open(unit=IOUT_SU, file=trim(adjustl(final_LOCAL_PATH))//trim(adjustl(procname))//'_dy_SU' ,&
-      status='unknown', access='direct', recl=4, iostat=ier)
+       status='unknown', access='direct', recl=4, iostat=ier)
 
   if( ier /= 0 ) stop 'error opening ***_dy_SU file'
 
@@ -130,7 +129,7 @@
 
   ! write seismograms (dz)
   open(unit=IOUT_SU, file=trim(adjustl(final_LOCAL_PATH))//trim(adjustl(procname))//'_dz_SU' ,&
-      status='unknown', access='direct', recl=4, iostat=ier)
+       status='unknown', access='direct', recl=4, iostat=ier)
 
   if( ier /= 0 ) stop 'error opening ***_dz_SU file'
 

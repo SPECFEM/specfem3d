@@ -106,7 +106,7 @@
 
           ! adjoint simulations
           if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
-              b_absorb_potential(igll,iface) = absorbl
+            b_absorb_potential(igll,iface) = absorbl
           endif !adjoint
 
          enddo
@@ -200,11 +200,11 @@
 
           ! adjoint simulations
           if(SIMULATION_TYPE == 3) then
-             b_potential_dot_dot_acoustic(iglob) = b_potential_dot_dot_acoustic(iglob) &
-                                                    - b_absorb_potential(igll,iface)
+            b_potential_dot_dot_acoustic(iglob) = b_potential_dot_dot_acoustic(iglob) &
+                                                - b_absorb_potential(igll,iface)
           endif !adjoint
 
-         enddo
+        enddo
       endif ! ispec_is_acoustic
     endif ! ispec_is_inner
   enddo ! num_abs_boundary_faces

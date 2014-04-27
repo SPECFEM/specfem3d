@@ -83,68 +83,68 @@
     do ispec = 1, NSPEC_AB
 
       ! elastic domains
-      if( ispec_is_elastic(ispec) ) then
+      if (ispec_is_elastic(ispec)) then
 
-         do k = 1, NGLLZ
-            do j = 1, NGLLY
-               do i = 1, NGLLX
-                  iglob = ibool(i,j,k,ispec)
+        do k = 1, NGLLZ
+          do j = 1, NGLLY
+            do i = 1, NGLLX
+              iglob = ibool(i,j,k,ispec)
 
-                  epsilondev_loc(1) = epsilondev_xx(i,j,k,ispec)
-                  epsilondev_loc(2) = epsilondev_yy(i,j,k,ispec)
-                  epsilondev_loc(3) = epsilondev_xy(i,j,k,ispec)
-                  epsilondev_loc(4) = epsilondev_xz(i,j,k,ispec)
-                  epsilondev_loc(5) = epsilondev_yz(i,j,k,ispec)
+              epsilondev_loc(1) = epsilondev_xx(i,j,k,ispec)
+              epsilondev_loc(2) = epsilondev_yy(i,j,k,ispec)
+              epsilondev_loc(3) = epsilondev_xy(i,j,k,ispec)
+              epsilondev_loc(4) = epsilondev_xz(i,j,k,ispec)
+              epsilondev_loc(5) = epsilondev_yz(i,j,k,ispec)
 
-                  b_epsilondev_loc(1) = b_epsilondev_xx(i,j,k,ispec)
-                  b_epsilondev_loc(2) = b_epsilondev_yy(i,j,k,ispec)
-                  b_epsilondev_loc(3) = b_epsilondev_xy(i,j,k,ispec)
-                  b_epsilondev_loc(4) = b_epsilondev_xz(i,j,k,ispec)
-                  b_epsilondev_loc(5) = b_epsilondev_yz(i,j,k,ispec)
+              b_epsilondev_loc(1) = b_epsilondev_xx(i,j,k,ispec)
+              b_epsilondev_loc(2) = b_epsilondev_yy(i,j,k,ispec)
+              b_epsilondev_loc(3) = b_epsilondev_xy(i,j,k,ispec)
+              b_epsilondev_loc(4) = b_epsilondev_xz(i,j,k,ispec)
+              b_epsilondev_loc(5) = b_epsilondev_yz(i,j,k,ispec)
 
-                  rho_kl(i,j,k,ispec) =  rho_kl(i,j,k,ispec) &
-                    + deltat * dot_product(accel(:,iglob), b_displ(:,iglob))
+              rho_kl(i,j,k,ispec) =  rho_kl(i,j,k,ispec) &
+                + deltat * dot_product(accel(:,iglob), b_displ(:,iglob))
 
-                  ! For anisotropic kernels
-                  if (ANISOTROPIC_KL) then
+              ! For anisotropic kernels
+              if (ANISOTROPIC_KL) then
 
-                    call compute_strain_product(prod,epsilon_trace_over_3(i,j,k,ispec),epsilondev_loc, &
-                                                    b_epsilon_trace_over_3(i,j,k,ispec),b_epsilondev_loc)
-                    cijkl_kl(:,i,j,k,ispec) = cijkl_kl(:,i,j,k,ispec) + deltat * prod(:)
+                call compute_strain_product(prod,epsilon_trace_over_3(i,j,k,ispec),epsilondev_loc, &
+                                                b_epsilon_trace_over_3(i,j,k,ispec),b_epsilondev_loc)
+                cijkl_kl(:,i,j,k,ispec) = cijkl_kl(:,i,j,k,ispec) + deltat * prod(:)
 
-                  else
+              else
 
-                    ! isotropic kernels
-                    ! note: takes displacement from backward/reconstructed (forward) field b_displ
-                    !          and acceleration from adjoint field accel (containing adjoint sources)
-                    !
-                    !          and acceleration from adjoint field accel (containing adjoint sources)
-                    !
-                    ! note: : time integral summation uses deltat
-                    !
-                    ! compare with Tromp et al. (2005), eq. (14), which takes adjoint displacement
-                    ! and forward acceleration, that is the symmetric form of what is calculated here
-                    ! however, this kernel expression is symmetric with regards
-                    ! to interchange adjoint - forward field
+                ! isotropic kernels
+                ! note: takes displacement from backward/reconstructed (forward) field b_displ
+                !          and acceleration from adjoint field accel (containing adjoint sources)
+                !
+                !          and acceleration from adjoint field accel (containing adjoint sources)
+                !
+                ! note: : time integral summation uses deltat
+                !
+                ! compare with Tromp et al. (2005), eq. (14), which takes adjoint displacement
+                ! and forward acceleration, that is the symmetric form of what is calculated here
+                ! however, this kernel expression is symmetric with regards
+                ! to interchange adjoint - forward field
 
-                    ! kernel for shear modulus, see e.g. Tromp et al. (2005), equation (17)
-                    ! note: multiplication with 2*mu(x) will be done after the time loop
+                ! kernel for shear modulus, see e.g. Tromp et al. (2005), equation (17)
+                ! note: multiplication with 2*mu(x) will be done after the time loop
 
-                    mu_kl(i,j,k,ispec) =  mu_kl(i,j,k,ispec) &
-                         + deltat * (epsilondev_loc(1)*b_epsilondev_loc(1) + epsilondev_loc(2)*b_epsilondev_loc(2) &
-                         + (epsilondev_loc(1)+epsilondev_loc(2)) * (b_epsilondev_loc(1)+b_epsilondev_loc(2)) &
-                         + 2 * (epsilondev_loc(3)*b_epsilondev_loc(3) + epsilondev_loc(4)*b_epsilondev_loc(4) + &
-                         epsilondev_loc(5)*b_epsilondev_loc(5)) )
+                mu_kl(i,j,k,ispec) =  mu_kl(i,j,k,ispec) &
+                     + deltat * (epsilondev_loc(1)*b_epsilondev_loc(1) + epsilondev_loc(2)*b_epsilondev_loc(2) &
+                     + (epsilondev_loc(1)+epsilondev_loc(2)) * (b_epsilondev_loc(1)+b_epsilondev_loc(2)) &
+                     + 2 * (epsilondev_loc(3)*b_epsilondev_loc(3) + epsilondev_loc(4)*b_epsilondev_loc(4) + &
+                     epsilondev_loc(5)*b_epsilondev_loc(5)) )
 
-                    ! kernel for bulk modulus, see e.g. Tromp et al. (2005), equation (18)
-                    ! note: multiplication with kappa(x) will be done after the time loop
-                    kappa_kl(i,j,k,ispec) = kappa_kl(i,j,k,ispec) &
-                         + deltat * (9 * epsilon_trace_over_3(i,j,k,ispec) &
-                         * b_epsilon_trace_over_3(i,j,k,ispec))
-                  endif
-               enddo
+                ! kernel for bulk modulus, see e.g. Tromp et al. (2005), equation (18)
+                ! note: multiplication with kappa(x) will be done after the time loop
+                kappa_kl(i,j,k,ispec) = kappa_kl(i,j,k,ispec) &
+                     + deltat * (9 * epsilon_trace_over_3(i,j,k,ispec) &
+                     * b_epsilon_trace_over_3(i,j,k,ispec))
+              endif
             enddo
-         enddo
+          enddo
+        enddo
       endif !ispec_is_elastic
 
     enddo
@@ -153,7 +153,6 @@
     ! updates kernels on GPU
     call compute_kernels_elastic_cuda(Mesh_pointer,deltat)
   endif
-
 
   ! moho kernel
   if( SAVE_MOHO_MESH ) then
@@ -279,77 +278,77 @@
       ! poroelastic domains
       if( ispec_is_poroelastic(ispec) ) then
 
-         do k = 1, NGLLZ
-            do j = 1, NGLLY
-               do i = 1, NGLLX
-                  iglob = ibool(i,j,k,ispec)
+        do k = 1, NGLLZ
+          do j = 1, NGLLY
+            do i = 1, NGLLX
+              iglob = ibool(i,j,k,ispec)
 
-                  ! 8 isotropic kernels
-                  ! note: takes displacement from backward/reconstructed
-                  ! (forward) field b_displ
-                  !          and acceleration from adjoint field accel
-                  !          (containing adjoint sources)
-                  !
-                  ! note: : time integral summation uses deltat
-                  ! 3 density kernels, see Morency et al. (2009),
-                  ! equations (39)-(41)
-                  rhot_kl(i,j,k,ispec) =  rhot_kl(i,j,k,ispec) &
-                       + deltat * dot_product(accels_poroelastic(:,iglob), b_displs_poroelastic(:,iglob))
+              ! 8 isotropic kernels
+              ! note: takes displacement from backward/reconstructed
+              ! (forward) field b_displ
+              !          and acceleration from adjoint field accel
+              !          (containing adjoint sources)
+              !
+              ! note: : time integral summation uses deltat
+              ! 3 density kernels, see Morency et al. (2009),
+              ! equations (39)-(41)
+              rhot_kl(i,j,k,ispec) =  rhot_kl(i,j,k,ispec) &
+                   + deltat * dot_product(accels_poroelastic(:,iglob), b_displs_poroelastic(:,iglob))
 
-                  rhof_kl(i,j,k,ispec) =  rhof_kl(i,j,k,ispec) &
-                       + deltat * ( dot_product(accelw_poroelastic(:,iglob), b_displs_poroelastic(:,iglob)) &
-                       + dot_product(accels_poroelastic(:,iglob), b_displw_poroelastic(:,iglob)) )
+              rhof_kl(i,j,k,ispec) =  rhof_kl(i,j,k,ispec) &
+                   + deltat * ( dot_product(accelw_poroelastic(:,iglob), b_displs_poroelastic(:,iglob)) &
+                   + dot_product(accels_poroelastic(:,iglob), b_displw_poroelastic(:,iglob)) )
 
-                  sm_kl(i,j,k,ispec) =  sm_kl(i,j,k,ispec) &
-                       + deltat * dot_product(accelw_poroelastic(:,iglob), b_displw_poroelastic(:,iglob))
+              sm_kl(i,j,k,ispec) =  sm_kl(i,j,k,ispec) &
+                   + deltat * dot_product(accelw_poroelastic(:,iglob), b_displw_poroelastic(:,iglob))
 
-                  ! kernel for viscous damping, see e.g. Morency et al. (2009),
-                  ! equation (42)
-                  eta_kl(i,j,k,ispec) =  eta_kl(i,j,k,ispec) &
-                       + deltat * dot_product(velocw_poroelastic(:,iglob), b_displw_poroelastic(:,iglob))
+              ! kernel for viscous damping, see e.g. Morency et al. (2009),
+              ! equation (42)
+              eta_kl(i,j,k,ispec) =  eta_kl(i,j,k,ispec) &
+                   + deltat * dot_product(velocw_poroelastic(:,iglob), b_displw_poroelastic(:,iglob))
 
-                  ! kernel for frame shear modulus, see e.g. Morency et al. (2009),
-                  ! equation (46)
-                  ! note: multiplication with 2*mufr(x) will be done after the
-                  ! time loop
-                  epsilonsdev_loc(1) = epsilonsdev_xx(i,j,k,ispec)
-                  epsilonsdev_loc(2) = epsilonsdev_yy(i,j,k,ispec)
-                  epsilonsdev_loc(3) = epsilonsdev_xy(i,j,k,ispec)
-                  epsilonsdev_loc(4) = epsilonsdev_xz(i,j,k,ispec)
-                  epsilonsdev_loc(5) = epsilonsdev_yz(i,j,k,ispec)
+              ! kernel for frame shear modulus, see e.g. Morency et al. (2009),
+              ! equation (46)
+              ! note: multiplication with 2*mufr(x) will be done after the
+              ! time loop
+              epsilonsdev_loc(1) = epsilonsdev_xx(i,j,k,ispec)
+              epsilonsdev_loc(2) = epsilonsdev_yy(i,j,k,ispec)
+              epsilonsdev_loc(3) = epsilonsdev_xy(i,j,k,ispec)
+              epsilonsdev_loc(4) = epsilonsdev_xz(i,j,k,ispec)
+              epsilonsdev_loc(5) = epsilonsdev_yz(i,j,k,ispec)
 
-                  b_epsilonsdev_loc(1) = b_epsilonsdev_xx(i,j,k,ispec)
-                  b_epsilonsdev_loc(2) = b_epsilonsdev_yy(i,j,k,ispec)
-                  b_epsilonsdev_loc(3) = b_epsilonsdev_xy(i,j,k,ispec)
-                  b_epsilonsdev_loc(4) = b_epsilonsdev_xz(i,j,k,ispec)
-                  b_epsilonsdev_loc(5) = b_epsilonsdev_yz(i,j,k,ispec)
+              b_epsilonsdev_loc(1) = b_epsilonsdev_xx(i,j,k,ispec)
+              b_epsilonsdev_loc(2) = b_epsilonsdev_yy(i,j,k,ispec)
+              b_epsilonsdev_loc(3) = b_epsilonsdev_xy(i,j,k,ispec)
+              b_epsilonsdev_loc(4) = b_epsilonsdev_xz(i,j,k,ispec)
+              b_epsilonsdev_loc(5) = b_epsilonsdev_yz(i,j,k,ispec)
 
-                  mufr_kl(i,j,k,ispec) =  mufr_kl(i,j,k,ispec) &
-                       + deltat * (epsilonsdev_loc(1)*b_epsilonsdev_loc(1) + epsilonsdev_loc(2)*b_epsilonsdev_loc(2) &
-                       + (epsilonsdev_loc(1)+epsilonsdev_loc(2)) * (b_epsilonsdev_loc(1)+b_epsilonsdev_loc(2)) &
-                       + 2 * (epsilonsdev_loc(3)*b_epsilonsdev_loc(3) + epsilonsdev_loc(4)*b_epsilonsdev_loc(4) + &
-                       epsilonsdev_loc(5)*b_epsilonsdev_loc(5)) )
+              mufr_kl(i,j,k,ispec) =  mufr_kl(i,j,k,ispec) &
+                   + deltat * (epsilonsdev_loc(1)*b_epsilonsdev_loc(1) + epsilonsdev_loc(2)*b_epsilonsdev_loc(2) &
+                   + (epsilonsdev_loc(1)+epsilonsdev_loc(2)) * (b_epsilonsdev_loc(1)+b_epsilonsdev_loc(2)) &
+                   + 2 * (epsilonsdev_loc(3)*b_epsilonsdev_loc(3) + epsilonsdev_loc(4)*b_epsilonsdev_loc(4) + &
+                   epsilonsdev_loc(5)*b_epsilonsdev_loc(5)) )
 
-                  ! 3 kernels for the bulk moduli, see e.g. Morency et al. (2009),
-                  ! equations (43)-(45)
-                  ! note: multiplication by respective moduli will be done after the
-                  ! time loop
-                  B_kl(i,j,k,ispec) = B_kl(i,j,k,ispec) &
-                       + deltat * (9 * epsilons_trace_over_3(i,j,k,ispec) &
-                       * b_epsilons_trace_over_3(i,j,k,ispec))
+              ! 3 kernels for the bulk moduli, see e.g. Morency et al. (2009),
+              ! equations (43)-(45)
+              ! note: multiplication by respective moduli will be done after the
+              ! time loop
+              B_kl(i,j,k,ispec) = B_kl(i,j,k,ispec) &
+                   + deltat * (9 * epsilons_trace_over_3(i,j,k,ispec) &
+                   * b_epsilons_trace_over_3(i,j,k,ispec))
 
-                  C_kl(i,j,k,ispec) = C_kl(i,j,k,ispec) &
-                       + deltat * (9 * epsilons_trace_over_3(i,j,k,ispec) &
-                       * b_epsilonw_trace_over_3(i,j,k,ispec) &
-                       + 9 * epsilonw_trace_over_3(i,j,k,ispec) &
-                       * b_epsilons_trace_over_3(i,j,k,ispec) )
+              C_kl(i,j,k,ispec) = C_kl(i,j,k,ispec) &
+                   + deltat * (9 * epsilons_trace_over_3(i,j,k,ispec) &
+                   * b_epsilonw_trace_over_3(i,j,k,ispec) &
+                   + 9 * epsilonw_trace_over_3(i,j,k,ispec) &
+                   * b_epsilons_trace_over_3(i,j,k,ispec) )
 
-                  M_kl(i,j,k,ispec) = M_kl(i,j,k,ispec) &
-                       + deltat * (9 * epsilonw_trace_over_3(i,j,k,ispec) &
-                       * b_epsilonw_trace_over_3(i,j,k,ispec))
-               enddo
+              M_kl(i,j,k,ispec) = M_kl(i,j,k,ispec) &
+                   + deltat * (9 * epsilonw_trace_over_3(i,j,k,ispec) &
+                   * b_epsilonw_trace_over_3(i,j,k,ispec))
             enddo
-         enddo
+          enddo
+        enddo
       endif !ispec_is_poroelastic
 
     enddo

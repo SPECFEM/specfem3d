@@ -38,7 +38,7 @@
 
 ! check that the parameter file is correct
   if(NGNOD /= 8 .and. NGNOD /= 27) &
-       stop 'volume elements should have 8 or 27 control nodes'
+    stop 'volume elements should have 8 or 27 control nodes'
 
 ! corner nodes
   iaddx(1)=0

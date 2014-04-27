@@ -86,11 +86,11 @@
   integer :: it_dsm
 
   if (OLD_TEST_TO_FIX_ONE_DAY) then
-     if ( phase_is_inner .eqv. .false. ) then
-        if (mod(it_dsm,Ntime_step_dsm+1) == 0 .or. it == 1) then
-           call read_dsm_file(Veloc_dsm_boundary,Tract_dsm_boundary,num_abs_boundary_faces,it_dsm)
-        endif
-     endif
+    if (phase_is_inner .eqv. .false.) then
+      if (mod(it_dsm,Ntime_step_dsm+1) == 0 .or. it == 1) then
+        call read_dsm_file(Veloc_dsm_boundary,Tract_dsm_boundary,num_abs_boundary_faces,it_dsm)
+      endif
+    endif
   endif
 
   ! checks if anything to do
@@ -99,67 +99,67 @@
   ! absorbs absorbing-boundary surface using Stacey condition (Clayton & Enquist)
   do iface=1,num_abs_boundary_faces
 
-     ispec = abs_boundary_ispec(iface)
+    ispec = abs_boundary_ispec(iface)
 
-     if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
+    if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
 
-        if( ispec_is_elastic(ispec) ) then
+      if (ispec_is_elastic(ispec)) then
 
-           ! reference gll points on boundary face
-           do igll = 1,NGLLSQUARE
+        ! reference gll points on boundary face
+        do igll = 1,NGLLSQUARE
 
-              ! gets local indices for GLL point
-              i = abs_boundary_ijk(1,igll,iface)
-              j = abs_boundary_ijk(2,igll,iface)
-              k = abs_boundary_ijk(3,igll,iface)
+          ! gets local indices for GLL point
+          i = abs_boundary_ijk(1,igll,iface)
+          j = abs_boundary_ijk(2,igll,iface)
+          k = abs_boundary_ijk(3,igll,iface)
 
-              ! gets velocity
-              iglob=ibool(i,j,k,ispec)
-              vx=veloc(1,iglob)
-              vy=veloc(2,iglob)
-              vz=veloc(3,iglob)
-              if (OLD_TEST_TO_FIX_ONE_DAY) then
-                  vx = vx - Veloc_dsm_boundary(1,it_dsm,igll,iface)
-                  vy = vy - Veloc_dsm_boundary(2,it_dsm,igll,iface)
-                  vz = vz - Veloc_dsm_boundary(3,it_dsm,igll,iface)
-              endif
-              ! gets associated normal
-              nx = abs_boundary_normal(1,igll,iface)
-              ny = abs_boundary_normal(2,igll,iface)
-              nz = abs_boundary_normal(3,igll,iface)
+          ! gets velocity
+          iglob=ibool(i,j,k,ispec)
+          vx=veloc(1,iglob)
+          vy=veloc(2,iglob)
+          vz=veloc(3,iglob)
+          if (OLD_TEST_TO_FIX_ONE_DAY) then
+            vx = vx - Veloc_dsm_boundary(1,it_dsm,igll,iface)
+            vy = vy - Veloc_dsm_boundary(2,it_dsm,igll,iface)
+            vz = vz - Veloc_dsm_boundary(3,it_dsm,igll,iface)
+          endif
+          ! gets associated normal
+          nx = abs_boundary_normal(1,igll,iface)
+          ny = abs_boundary_normal(2,igll,iface)
+          nz = abs_boundary_normal(3,igll,iface)
 
-              ! velocity component in normal direction (normal points out of element)
-              vn = vx*nx + vy*ny + vz*nz
+          ! velocity component in normal direction (normal points out of element)
+          vn = vx*nx + vy*ny + vz*nz
 
-              ! stacey term: velocity vector component * vp * rho in normal direction + vs * rho component tangential to it
-              tx = rho_vp(i,j,k,ispec)*vn*nx + rho_vs(i,j,k,ispec)*(vx-vn*nx)
-              ty = rho_vp(i,j,k,ispec)*vn*ny + rho_vs(i,j,k,ispec)*(vy-vn*ny)
-              tz = rho_vp(i,j,k,ispec)*vn*nz + rho_vs(i,j,k,ispec)*(vz-vn*nz)
+          ! stacey term: velocity vector component * vp * rho in normal direction + vs * rho component tangential to it
+          tx = rho_vp(i,j,k,ispec)*vn*nx + rho_vs(i,j,k,ispec)*(vx-vn*nx)
+          ty = rho_vp(i,j,k,ispec)*vn*ny + rho_vs(i,j,k,ispec)*(vy-vn*ny)
+          tz = rho_vp(i,j,k,ispec)*vn*nz + rho_vs(i,j,k,ispec)*(vz-vn*nz)
 
-              if (OLD_TEST_TO_FIX_ONE_DAY) then
-                  tx = tx -Tract_dsm_boundary(1,it_dsm,igll,iface)
-                  ty = ty -Tract_dsm_boundary(2,it_dsm,igll,iface)
-                  tz = tz -Tract_dsm_boundary(3,it_dsm,igll,iface)
-              endif
+          if (OLD_TEST_TO_FIX_ONE_DAY) then
+            tx = tx -Tract_dsm_boundary(1,it_dsm,igll,iface)
+            ty = ty -Tract_dsm_boundary(2,it_dsm,igll,iface)
+            tz = tz -Tract_dsm_boundary(3,it_dsm,igll,iface)
+          endif
 
-              ! gets associated, weighted jacobian
-              jacobianw = abs_boundary_jacobian2Dw(igll,iface)
+          ! gets associated, weighted jacobian
+          jacobianw = abs_boundary_jacobian2Dw(igll,iface)
 
-              ! adds stacey term (weak form)
-              accel(1,iglob) = accel(1,iglob) - tx*jacobianw
-              accel(2,iglob) = accel(2,iglob) - ty*jacobianw
-              accel(3,iglob) = accel(3,iglob) - tz*jacobianw
+          ! adds stacey term (weak form)
+          accel(1,iglob) = accel(1,iglob) - tx*jacobianw
+          accel(2,iglob) = accel(2,iglob) - ty*jacobianw
+          accel(3,iglob) = accel(3,iglob) - tz*jacobianw
 
-              ! adjoint simulations
-              if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
-                 b_absorb_field(1,igll,iface) = tx*jacobianw
-                 b_absorb_field(2,igll,iface) = ty*jacobianw
-                 b_absorb_field(3,igll,iface) = tz*jacobianw
-              endif !adjoint
+          ! adjoint simulations
+          if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
+            b_absorb_field(1,igll,iface) = tx*jacobianw
+            b_absorb_field(2,igll,iface) = ty*jacobianw
+            b_absorb_field(3,igll,iface) = tz*jacobianw
+          endif !adjoint
 
-           enddo
-        endif ! ispec_is_elastic
-     endif ! ispec_is_inner
+        enddo
+      endif ! ispec_is_elastic
+    endif ! ispec_is_inner
   enddo
 
   ! adjoint simulations: stores absorbed wavefield part
@@ -171,9 +171,9 @@
   endif
 
   if (OLD_TEST_TO_FIX_ONE_DAY) then
-     if (phase_is_inner .eqv. .true.) then
-        it_dsm = it_dsm + 1
-     endif
+    if (phase_is_inner .eqv. .true.) then
+      it_dsm = it_dsm + 1
+    endif
   endif
 
   end subroutine compute_stacey_viscoelastic
@@ -337,11 +337,11 @@
   integer :: it_dsm
 
   if (OLD_TEST_TO_FIX_ONE_DAY) then
-     if ( phase_is_inner .eqv. .false. ) then
-        if (mod(it_dsm,Ntime_step_dsm+1) == 0 .or. it == 1) then
-           call read_dsm_file(Veloc_dsm_boundary,Tract_dsm_boundary,num_abs_boundary_faces,it_dsm)
-        endif
-     endif
+    if (phase_is_inner .eqv. .false.) then
+      if (mod(it_dsm,Ntime_step_dsm+1) == 0 .or. it == 1) then
+        call read_dsm_file(Veloc_dsm_boundary,Tract_dsm_boundary,num_abs_boundary_faces,it_dsm)
+      endif
+    endif
   endif
 
   ! checks if anything to do
@@ -367,9 +367,9 @@
   endif
 
   if (OLD_TEST_TO_FIX_ONE_DAY) then
-     if (phase_is_inner .eqv. .true.) then
-        it_dsm = it_dsm + 1
-     endif
+    if (phase_is_inner .eqv. .true.) then
+      it_dsm = it_dsm + 1
+    endif
   endif
 
   end subroutine compute_stacey_viscoelastic_GPU

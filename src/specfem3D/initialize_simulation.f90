@@ -147,12 +147,11 @@
   call create_name_database(prname,myrank,LOCAL_PATH)
   if (OLD_TEST_TO_FIX_ONE_DAY) call create_name_database(dsmname,myrank,TRAC_PATH)
 
-
   if (ADIOS_FOR_MESH) then
     call read_mesh_for_init(NSPEC_AB, NGLOB_AB)
   else
-   open(unit=IIN,file=prname(1:len_trim(prname))//'external_mesh.bin',status='old',&
-          action='read',form='unformatted',iostat=ier)
+    open(unit=IIN,file=prname(1:len_trim(prname))//'external_mesh.bin',status='old',&
+         action='read',form='unformatted',iostat=ier)
     if( ier /= 0 ) then
       print*,'error: could not open database '
       print*,'path: ',prname(1:len_trim(prname))//'external_mesh.bin'
@@ -197,33 +196,33 @@
 
   ! allocate arrays for storing the databases
   allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-          xix(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-          xiy(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-          xiz(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-          etax(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-          etay(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-          etaz(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-          gammax(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-          gammay(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-          gammaz(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-          jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+           xix(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+           xiy(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+           xiz(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+           etax(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+           etay(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+           etaz(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+           gammax(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+           gammay(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+           gammaz(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+           jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if( ier /= 0 ) stop 'error allocating arrays for databases'
 
   ! mesh node locations
   allocate(xstore(NGLOB_AB), &
-          ystore(NGLOB_AB), &
-          zstore(NGLOB_AB),stat=ier)
+           ystore(NGLOB_AB), &
+           zstore(NGLOB_AB),stat=ier)
   if( ier /= 0 ) stop 'error allocating arrays for mesh nodes'
 
   ! material properties
   allocate(kappastore(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-          mustore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+           mustore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if( ier /= 0 ) stop 'error allocating arrays for material properties'
 
   ! material flags
   allocate(ispec_is_acoustic(NSPEC_AB), &
-          ispec_is_elastic(NSPEC_AB), &
-          ispec_is_poroelastic(NSPEC_AB),stat=ier)
+           ispec_is_elastic(NSPEC_AB), &
+           ispec_is_poroelastic(NSPEC_AB),stat=ier)
   if( ier /= 0 ) stop 'error allocating arrays for material flags'
   ispec_is_acoustic(:) = .false.
   ispec_is_elastic(:) = .false.
@@ -280,7 +279,7 @@
 
   ! check simulation type
   if (SIMULATION_TYPE /= 1 .and. SIMULATION_TYPE /= 2 .and. SIMULATION_TYPE /= 3) &
-        call exit_mpi(myrank,'SIMULATION_TYPE can only be 1, 2, or 3')
+    call exit_mpi(myrank,'SIMULATION_TYPE can only be 1, 2, or 3')
 
   ! check that optimized routines from Deville et al. (2002) can be used
   if(USE_DEVILLE_PRODUCTS) then
@@ -294,67 +293,67 @@
 
   ! absorbing surfaces
   if( STACEY_ABSORBING_CONDITIONS ) then
-     ! for arbitrary orientation of elements, which face belongs to xmin,xmax,etc... -
-     ! does it makes sense to have different NGLLX,NGLLY,NGLLZ?
-     ! there is a problem with absorbing boundaries for faces with different NGLLX,NGLLY,NGLLZ values
-     ! just to be sure for now..
-     if( NGLLX /= NGLLY .and. NGLLY /= NGLLZ ) &
-          stop 'STACEY_ABSORBING_CONDITIONS must have NGLLX = NGLLY = NGLLZ'
-     if( PML_CONDITIONS ) then
-        print*, 'please modify Par_file and recompile solver'
-        stop 'STACEY_ABSORBING_CONDITIONS and PML_CONDITIONS are both set to .true.'
-     else if( PML_INSTEAD_OF_FREE_SURFACE ) then
-        print*, 'please modify Par_file and recompile solver'
-        stop 'PML_INSTEAD_OF_FREE_SURFACE = .true. is incompatible with STACEY_ABSORBING_CONDITIONS = .true.'
-     endif
+    ! for arbitrary orientation of elements, which face belongs to xmin,xmax,etc... -
+    ! does it makes sense to have different NGLLX,NGLLY,NGLLZ?
+    ! there is a problem with absorbing boundaries for faces with different NGLLX,NGLLY,NGLLZ values
+    ! just to be sure for now..
+    if (NGLLX /= NGLLY .and. NGLLY /= NGLLZ) &
+      stop 'STACEY_ABSORBING_CONDITIONS must have NGLLX = NGLLY = NGLLZ'
+    if (PML_CONDITIONS) then
+      print*, 'please modify Par_file and recompile solver'
+      stop 'STACEY_ABSORBING_CONDITIONS and PML_CONDITIONS are both set to .true.'
+    else if (PML_INSTEAD_OF_FREE_SURFACE) then
+      print*, 'please modify Par_file and recompile solver'
+      stop 'PML_INSTEAD_OF_FREE_SURFACE = .true. is incompatible with STACEY_ABSORBING_CONDITIONS = .true.'
+    endif
   else
-     if( STACEY_INSTEAD_OF_FREE_SURFACE ) then
-        print*, 'please modify Par_file and recompile solver'
-        stop 'STACEY_ABSORBING_CONDITIONS must be activated when STACEY_INSTEAD_OF_FREE_SURFACE is set to .true.'
-     endif
+    if (STACEY_INSTEAD_OF_FREE_SURFACE) then
+      print*, 'please modify Par_file and recompile solver'
+      stop 'STACEY_ABSORBING_CONDITIONS must be activated when STACEY_INSTEAD_OF_FREE_SURFACE is set to .true.'
+    endif
   endif
 
   if( PML_CONDITIONS ) then
-     if( STACEY_INSTEAD_OF_FREE_SURFACE ) then
-        print*, 'please modify Par_file and recompile solver'
-        stop 'STACEY_INSTEAD_OF_FREE_SURFACE = .true. is incompatible with PML_CONDITIONS = .true.'
-     else if( .not. SUPPRESS_UTM_PROJECTION ) then
-        print*, 'please modify Par_file and recompile solver'
-        stop 'SUPPRESS_UTM_PROJECTION must be activated when PML_CONDITIONS is set to .true.'
-     endif
+    if (STACEY_INSTEAD_OF_FREE_SURFACE) then
+      print*, 'please modify Par_file and recompile solver'
+      stop 'STACEY_INSTEAD_OF_FREE_SURFACE = .true. is incompatible with PML_CONDITIONS = .true.'
+    else if (.not. SUPPRESS_UTM_PROJECTION) then
+      print*, 'please modify Par_file and recompile solver'
+      stop 'SUPPRESS_UTM_PROJECTION must be activated when PML_CONDITIONS is set to .true.'
+    endif
   else
-     if( PML_INSTEAD_OF_FREE_SURFACE ) &
-          stop 'PML_CONDITIONS must be activated when PML_INSTEAD_OF_FREE_SURFACE is set to .true.'
+    if (PML_INSTEAD_OF_FREE_SURFACE) &
+      stop 'PML_CONDITIONS must be activated when PML_INSTEAD_OF_FREE_SURFACE is set to .true.'
   endif
 
   if( STACEY_INSTEAD_OF_FREE_SURFACE .and. PML_INSTEAD_OF_FREE_SURFACE ) then
-     print*, 'please modify Par_file and recompile solver'
-     stop 'error: STACEY_INSTEAD_OF_FREE_SURFACE and PML_INSTEAD_OF_FREE_SURFACE are both set to .true.'
+    print*, 'please modify Par_file and recompile solver'
+    stop 'error: STACEY_INSTEAD_OF_FREE_SURFACE and PML_INSTEAD_OF_FREE_SURFACE are both set to .true.'
   endif
 
   ! checks the MOVIE_TYPE parameter
   if( MOVIE_TYPE /= 1 .and. MOVIE_TYPE /= 2 ) then
-     stop 'error: MOVIE_TYPE must be either 1 or 2! Please modify Par_file and recompile solver'
+    stop 'error: MOVIE_TYPE must be either 1 or 2! Please modify Par_file and recompile solver'
   endif
 
   ! check that the code has been compiled with the right values
   if( myrank == 0 ) then
-     HEADER_FILE = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))//'/values_from_mesher.h'
+    HEADER_FILE = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))//'/values_from_mesher.h'
 
-     open(unit=IOUT,file=trim(HEADER_FILE),status='old',iostat=ier)
-     if( ier /= 0 ) then
-       print*,'error opening file: ',trim(HEADER_FILE)
-       print*
-       print*,'please check if xgenerate_databases has been run before this solver, exiting now...'
-       stop 'error opening file values_from_mesher.h'
-     endif
-     read(IOUT,NML=MESHER)
-     close(IOUT)
+    open(unit=IOUT,file=trim(HEADER_FILE),status='old',iostat=ier)
+    if (ier /= 0) then
+      print*,'error opening file: ',trim(HEADER_FILE)
+      print*
+      print*,'please check if xgenerate_databases has been run before this solver, exiting now...'
+      stop 'error opening file values_from_mesher.h'
+    endif
+    read(IOUT,NML=MESHER)
+    close(IOUT)
 
-     if (STACEY_INSTEAD_OF_FREE_SURFACE .NEQV. ABSORB_FREE_SURFACE_VAL) then
-        write(IMAIN,*) 'STACEY_INSTEAD_OF_FREE_SURFACE:',STACEY_INSTEAD_OF_FREE_SURFACE,ABSORB_FREE_SURFACE_VAL
-        call exit_MPI(myrank,'error in compiled parameters STACEY_INSTEAD_OF_FREE_SURFACE, please recompile solver')
-     endif
+    if (STACEY_INSTEAD_OF_FREE_SURFACE .NEQV. ABSORB_FREE_SURFACE_VAL) then
+      write(IMAIN,*) 'STACEY_INSTEAD_OF_FREE_SURFACE:',STACEY_INSTEAD_OF_FREE_SURFACE,ABSORB_FREE_SURFACE_VAL
+      call exit_MPI(myrank,'error in compiled parameters STACEY_INSTEAD_OF_FREE_SURFACE, please recompile solver')
+    endif
   endif
   call synchronize_all()
 

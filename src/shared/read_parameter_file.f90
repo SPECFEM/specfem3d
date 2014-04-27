@@ -172,8 +172,8 @@
 
   !! read the traction path directory
   if (OLD_TEST_TO_FIX_ONE_DAY) then
-     call read_value_string(TRAC_PATH, 'TRAC_PATH')
-     if(err_occurred() /= 0) return
+    call read_value_string(TRAC_PATH, 'TRAC_PATH')
+    if(err_occurred() /= 0) return
   endif
 
   ! close parameter file
@@ -186,9 +186,9 @@
   ! for noise simulations, we need to save movies at the surface (where the noise is generated)
   ! and thus we force MOVIE_SURFACE to be .true., in order to use variables defined for surface movies later
   if( NOISE_TOMOGRAPHY /= 0 ) then
-     MOVIE_TYPE = 1
-     MOVIE_SURFACE = .true.
-     USE_HIGHRES_FOR_MOVIES = .true.     ! we need to save surface movie everywhere, i.e. at all GLL points on the surface
+    MOVIE_TYPE = 1
+    MOVIE_SURFACE = .true.
+    USE_HIGHRES_FOR_MOVIES = .true.     ! we need to save surface movie everywhere, i.e. at all GLL points on the surface
   endif
 
   ! the default value of NTSTEP_BETWEEN_READ_ADJSRC (0) is to read the whole trace at the same time
@@ -196,88 +196,88 @@
 
   ! total times steps must be dividable by adjoint source chunks/blocks
   if ( mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) /= 0 ) then
-     print*,'When NOISE_TOMOGRAPHY is not equal to zero, ACTUAL_NSTEP=2*NSTEP-1'
-     stop 'error: mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) must be zero! Please modify Par_file and recompile solver'
+    print*,'When NOISE_TOMOGRAPHY is not equal to zero, ACTUAL_NSTEP=2*NSTEP-1'
+    stop 'error: mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) must be zero! Please modify Par_file and recompile solver'
   endif
 
   ! checks number of nodes for 2D and 3D shape functions for quadrilaterals and hexahedra
   ! curvature (i.e. HEX27 elements) is not handled by our internal mesher, for that use Gmsh (CUBIT does not handle it either)
   if( NGNOD == 8 ) then
-     NGNOD2D = 4
+    NGNOD2D = 4
   else if( NGNOD == 27 ) then
-     NGNOD2D = 9
+    NGNOD2D = 9
   else if( NGNOD /= 8 .and. NGNOD /= 27 ) then
-     stop 'elements should have 8 or 27 control nodes, please modify NGNOD in Par_file and recompile solver'
+    stop 'elements should have 8 or 27 control nodes, please modify NGNOD in Par_file and recompile solver'
   endif
 
   if( USE_FORCE_POINT_SOURCE ) then
-     ! compute the total number of sources in the FORCESOLUTION file
-     ! there are NLINES_PER_FORCESOLUTION_SOURCE lines per source in that file
-     FORCESOLUTION = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'FORCESOLUTION'
+    ! compute the total number of sources in the FORCESOLUTION file
+    ! there are NLINES_PER_FORCESOLUTION_SOURCE lines per source in that file
+    FORCESOLUTION = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'FORCESOLUTION'
 
-     open(unit=21,file=trim(FORCESOLUTION),iostat=ios,status='old',action='read')
-     if(ios /= 0) stop 'error opening FORCESOLUTION file'
+    open(unit=21,file=trim(FORCESOLUTION),iostat=ios,status='old',action='read')
+    if (ios /= 0) stop 'error opening FORCESOLUTION file'
 
-     icounter = 0
-     do while(ios == 0)
-        read(21,"(a)",iostat=ios) dummystring
-        if(ios == 0) icounter = icounter + 1
-     enddo
-     close(21)
+    icounter = 0
+    do while(ios == 0)
+      read(21,"(a)",iostat=ios) dummystring
+      if (ios == 0) icounter = icounter + 1
+    enddo
+    close(21)
 
-     if( mod(icounter,NLINES_PER_FORCESOLUTION_SOURCE) /= 0 ) &
-          stop 'error: total number of lines in FORCESOLUTION file should be a multiple of NLINES_PER_FORCESOLUTION_SOURCE'
+    if (mod(icounter,NLINES_PER_FORCESOLUTION_SOURCE) /= 0 ) &
+      stop 'error: total number of lines in FORCESOLUTION file should be a multiple of NLINES_PER_FORCESOLUTION_SOURCE'
 
-     NSOURCES = icounter / NLINES_PER_FORCESOLUTION_SOURCE
-     if(NSOURCES < 1) stop 'error: need at least one source in FORCESOLUTION file'
+    NSOURCES = icounter / NLINES_PER_FORCESOLUTION_SOURCE
+    if (NSOURCES < 1) stop 'error: need at least one source in FORCESOLUTION file'
 
   else
-     ! compute the total number of sources in the CMTSOLUTION file
-     ! there are NLINES_PER_CMTSOLUTION_SOURCE lines per source in that file
-     CMTSOLUTION = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'CMTSOLUTION'
+    ! compute the total number of sources in the CMTSOLUTION file
+    ! there are NLINES_PER_CMTSOLUTION_SOURCE lines per source in that file
+    CMTSOLUTION = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'CMTSOLUTION'
 
-     open(unit=21,file=trim(CMTSOLUTION),iostat=ios,status='old',action='read')
-     if(ios /= 0) stop 'error opening CMTSOLUTION file'
+    open(unit=21,file=trim(CMTSOLUTION),iostat=ios,status='old',action='read')
+    if (ios /= 0) stop 'error opening CMTSOLUTION file'
 
-     icounter = 0
-     do while(ios == 0)
-        read(21,"(a)",iostat=ios) dummystring
-        if(ios == 0) icounter = icounter + 1
-     enddo
-     close(21)
+    icounter = 0
+    do while(ios == 0)
+      read(21,"(a)",iostat=ios) dummystring
+      if (ios == 0) icounter = icounter + 1
+    enddo
+    close(21)
 
-     if(mod(icounter,NLINES_PER_CMTSOLUTION_SOURCE) /= 0) &
-          stop 'error: total number of lines in CMTSOLUTION file should be a multiple of NLINES_PER_CMTSOLUTION_SOURCE'
+    if (mod(icounter,NLINES_PER_CMTSOLUTION_SOURCE) /= 0) &
+      stop 'error: total number of lines in CMTSOLUTION file should be a multiple of NLINES_PER_CMTSOLUTION_SOURCE'
 
-     NSOURCES = icounter / NLINES_PER_CMTSOLUTION_SOURCE
-     if(NSOURCES < 1) stop 'error: need at least one source in CMTSOLUTION file'
+    NSOURCES = icounter / NLINES_PER_CMTSOLUTION_SOURCE
+    if (NSOURCES < 1) stop 'error: need at least one source in CMTSOLUTION file'
 
-     ! compute the minimum value of hdur in CMTSOLUTION file
-     open(unit=21,file=trim(CMTSOLUTION),status='old',action='read')
-     minval_hdur = HUGEVAL
-     do isource = 1,NSOURCES
+    ! compute the minimum value of hdur in CMTSOLUTION file
+    open(unit=21,file=trim(CMTSOLUTION),status='old',action='read')
+    minval_hdur = HUGEVAL
+    do isource = 1,NSOURCES
 
-        ! skip other information
-        do idummy = 1,3
-           read(21,"(a)") dummystring
-        enddo
-
-        ! read half duration and compute minimum
+      ! skip other information
+      do idummy = 1,3
         read(21,"(a)") dummystring
-        read(dummystring(15:len_trim(dummystring)),*) hdur
-        minval_hdur = min(minval_hdur,hdur)
+      enddo
 
-        ! skip other information
-        do idummy = 1,9
-           read(21,"(a)") dummystring
-        enddo
+      ! read half duration and compute minimum
+      read(21,"(a)") dummystring
+      read(dummystring(15:len_trim(dummystring)),*) hdur
+      minval_hdur = min(minval_hdur,hdur)
 
-     enddo
-     close(21)
+      ! skip other information
+      do idummy = 1,9
+        read(21,"(a)") dummystring
+      enddo
 
-     ! one cannot use a Heaviside source for the movies
-     if( (MOVIE_SURFACE .or. MOVIE_VOLUME) .and. sqrt(minval_hdur**2 + HDUR_MOVIE**2) < TINYVAL ) &
-          stop 'error: hdur too small for movie creation, movies do not make sense for Heaviside source'
+    enddo
+    close(21)
+
+    ! one cannot use a Heaviside source for the movies
+    if ((MOVIE_SURFACE .or. MOVIE_VOLUME) .and. sqrt(minval_hdur**2 + HDUR_MOVIE**2) < TINYVAL) &
+      stop 'error: hdur too small for movie creation, movies do not make sense for Heaviside source'
   endif
 
   ! converts all string characters to lowercase
@@ -333,7 +333,7 @@
   ! check
   if( IMODEL == IMODEL_IPATI .or. IMODEL == IMODEL_IPATI_WATER ) then
     if( USE_RICKER_TIME_FUNCTION .eqv. .false. ) &
-         stop 'error: please set USE_RICKER_TIME_FUNCTION to .true. in Par_file and recompile solver'
+      stop 'error: please set USE_RICKER_TIME_FUNCTION to .true. in Par_file and recompile solver'
   endif
 
 

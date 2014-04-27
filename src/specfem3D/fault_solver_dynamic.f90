@@ -844,15 +844,15 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
 
   enddo
 
- ! WARNING: The line below scratches an earlier initialization of theta through theta_init
- !          We should implement it as an option for the user
+  ! WARNING: The line below scratches an earlier initialization of theta through theta_init
+  !          We should implement it as an option for the user
   if(f%stateLaw == 1) then
-     f%theta = f%L/f%V0 &
-               * exp( ( f%a * log(TWO*sinh(-sqrt(T0(1,:)**2+T0(2,:)**2)/T0(3,:)/f%a)) &
-                        - f%f0 - f%a*log(f%V_init/f%V0) ) &
-                      / f%b )
+    f%theta = f%L/f%V0 &
+              * exp( ( f%a * log(TWO*sinh(-sqrt(T0(1,:)**2+T0(2,:)**2)/T0(3,:)/f%a)) &
+                       - f%f0 - f%a*log(f%V_init/f%V0) ) &
+                     / f%b )
   else
-     f%theta =  f%a * log(TWO*f%V0/f%V_init * sinh(-sqrt(T0(1,:)**2+T0(2,:)**2)/T0(3,:)/f%a))
+    f%theta =  f%a * log(TWO*f%V0/f%V_init * sinh(-sqrt(T0(1,:)**2+T0(2,:)**2)/T0(3,:)/f%a))
   endif
 
  ! WARNING : ad hoc for SCEC benchmark TPV10x
@@ -863,7 +863,7 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
   nucFload = Fload
   call init_2d_distribution(nucFload,coord,IIN_PAR,nFload)
 
- ! WARNING: the line below is only valid for pure strike-slip faulting
+  ! WARNING: the line below is only valid for pure strike-slip faulting
   V(1,:) = f%V_init
 
 end subroutine rsf_init
@@ -906,14 +906,14 @@ subroutine rsf_update_state(V,dt,f)
   ! slip law : by default use strong rate-weakening
   else
 !    f%theta = f%L/V * (f%theta*V/f%L)**(exp(-vDtL))
-     where(V /= 0._CUSTOM_REAL)
-        fLV = f%f0 - (f%b - f%a)*log(V/f%V0)
-        f_ss = f%fw + (fLV - f%fw)/(ONE + (V/f%Vw)**8)**0.125
-        xi_ss = f%a * log( TWO*f%V0/V * sinh(f_ss/f%a) )
-        f%theta = xi_ss + (f%theta - xi_ss) * exp(-vDtL)
-     elsewhere
-        f%theta = f%theta
-     endwhere
+    where(V /= 0._CUSTOM_REAL)
+      fLV = f%f0 - (f%b - f%a)*log(V/f%V0)
+      f_ss = f%fw + (fLV - f%fw)/(ONE + (V/f%Vw)**8)**0.125
+      xi_ss = f%a * log( TWO*f%V0/V * sinh(f_ss/f%a) )
+      f%theta = xi_ss + (f%theta - xi_ss) * exp(-vDtL)
+    elsewhere
+      f%theta = f%theta
+    endwhere
   endif
 
 end subroutine rsf_update_state
@@ -1287,9 +1287,9 @@ subroutine funcd(x,fn,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
   integer :: statelaw
 
   if(statelaw == 1) then
-     arg = exp((f0+dble(b)*log(V0*theta/L))/a)/TWO/V0
+    arg = exp((f0+dble(b)*log(V0*theta/L))/a)/TWO/V0
   else
-     arg = exp(theta/a)/TWO/V0
+    arg = exp(theta/a)/TWO/V0
   endif
   fn = tStick - Z*x - a*Seff*asinh_slatec(x*arg)
   df = -Z - a*Seff/sqrt(ONE + (x*arg)**2)*arg

@@ -49,9 +49,9 @@
   NAMELIST/MESHER/ABSORB_FREE_SURFACE_VAL
 
   if (STACEY_INSTEAD_OF_FREE_SURFACE) then
-      ABSORB_FREE_SURFACE_VAL = .true.
+    ABSORB_FREE_SURFACE_VAL = .true.
   else
-      ABSORB_FREE_SURFACE_VAL = .false.
+    ABSORB_FREE_SURFACE_VAL = .false.
   endif
 
 ! copy number of elements and points in an include file for the solver

@@ -164,29 +164,29 @@
   ! assemble only if more than one partition
   if(NPROC > 1) then
 
-     ! partition border copy into the buffer
-     do iinterface = 1, num_interfaces_ext_mesh
-        do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
-           buffer_send_vector_ext_mesh(:,ipoin,iinterface) = &
-                array_val(:,ibool_interfaces_ext_mesh(ipoin,iinterface))
-        enddo
-     enddo
+    ! partition border copy into the buffer
+    do iinterface = 1, num_interfaces_ext_mesh
+      do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
+        buffer_send_vector_ext_mesh(:,ipoin,iinterface) = &
+             array_val(:,ibool_interfaces_ext_mesh(ipoin,iinterface))
+      enddo
+    enddo
 
-     ! send messages
-     do iinterface = 1, num_interfaces_ext_mesh
-        call isend_cr(buffer_send_vector_ext_mesh(1,1,iinterface), &
-             NDIM*nibool_interfaces_ext_mesh(iinterface), &
-             my_neighbours_ext_mesh(iinterface), &
-             itag, &
-             request_send_vector_ext_mesh(iinterface) &
-             )
-        call irecv_cr(buffer_recv_vector_ext_mesh(1,1,iinterface), &
-             NDIM*nibool_interfaces_ext_mesh(iinterface), &
-             my_neighbours_ext_mesh(iinterface), &
-             itag, &
-             request_recv_vector_ext_mesh(iinterface) &
-             )
-     enddo
+    ! send messages
+    do iinterface = 1, num_interfaces_ext_mesh
+      call isend_cr(buffer_send_vector_ext_mesh(1,1,iinterface), &
+           NDIM*nibool_interfaces_ext_mesh(iinterface), &
+           my_neighbours_ext_mesh(iinterface), &
+           itag, &
+           request_send_vector_ext_mesh(iinterface) &
+           )
+      call irecv_cr(buffer_recv_vector_ext_mesh(1,1,iinterface), &
+           NDIM*nibool_interfaces_ext_mesh(iinterface), &
+           my_neighbours_ext_mesh(iinterface), &
+           itag, &
+           request_recv_vector_ext_mesh(iinterface) &
+           )
+    enddo
 
   endif
 
@@ -338,42 +338,42 @@
   if(NPROC > 1) then
 
 ! partition border copy into the buffer
-  do iinterface = 1, num_interfaces_ext_mesh
-    do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
-      buffer_send_vector_ext_mesh_s(:,ipoin,iinterface) = array_val1(:,ibool_interfaces_ext_mesh(ipoin,iinterface))
-      buffer_send_vector_ext_mesh_w(:,ipoin,iinterface) = array_val2(:,ibool_interfaces_ext_mesh(ipoin,iinterface))
+    do iinterface = 1, num_interfaces_ext_mesh
+      do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
+        buffer_send_vector_ext_mesh_s(:,ipoin,iinterface) = array_val1(:,ibool_interfaces_ext_mesh(ipoin,iinterface))
+        buffer_send_vector_ext_mesh_w(:,ipoin,iinterface) = array_val2(:,ibool_interfaces_ext_mesh(ipoin,iinterface))
+      enddo
     enddo
-  enddo
 
 ! send messages
-  do iinterface = 1, num_interfaces_ext_mesh
+    do iinterface = 1, num_interfaces_ext_mesh
 !val1
-    call isend_cr(buffer_send_vector_ext_mesh_s(1,1,iinterface), &
-         NDIM*nibool_interfaces_ext_mesh(iinterface), &
-         my_neighbours_ext_mesh(iinterface), &
-         itag, &
-         request_send_vector_ext_mesh_s(iinterface) &
-         )
-    call irecv_cr(buffer_recv_vector_ext_mesh_s(1,1,iinterface), &
-         NDIM*nibool_interfaces_ext_mesh(iinterface), &
-         my_neighbours_ext_mesh(iinterface), &
-         itag, &
-         request_recv_vector_ext_mesh_s(iinterface) &
-         )
+      call isend_cr(buffer_send_vector_ext_mesh_s(1,1,iinterface), &
+           NDIM*nibool_interfaces_ext_mesh(iinterface), &
+           my_neighbours_ext_mesh(iinterface), &
+           itag, &
+           request_send_vector_ext_mesh_s(iinterface) &
+           )
+      call irecv_cr(buffer_recv_vector_ext_mesh_s(1,1,iinterface), &
+           NDIM*nibool_interfaces_ext_mesh(iinterface), &
+           my_neighbours_ext_mesh(iinterface), &
+           itag, &
+           request_recv_vector_ext_mesh_s(iinterface) &
+           )
 !val2
-    call isend_cr(buffer_send_vector_ext_mesh_w(1,1,iinterface), &
-         NDIM*nibool_interfaces_ext_mesh(iinterface), &
-         my_neighbours_ext_mesh(iinterface), &
-         itag, &
-         request_send_vector_ext_mesh_w(iinterface) &
-         )
-    call irecv_cr(buffer_recv_vector_ext_mesh_w(1,1,iinterface), &
-         NDIM*nibool_interfaces_ext_mesh(iinterface), &
-         my_neighbours_ext_mesh(iinterface), &
-         itag, &
-         request_recv_vector_ext_mesh_w(iinterface) &
-         )
-  enddo
+      call isend_cr(buffer_send_vector_ext_mesh_w(1,1,iinterface), &
+           NDIM*nibool_interfaces_ext_mesh(iinterface), &
+           my_neighbours_ext_mesh(iinterface), &
+           itag, &
+           request_send_vector_ext_mesh_w(iinterface) &
+           )
+      call irecv_cr(buffer_recv_vector_ext_mesh_w(1,1,iinterface), &
+           NDIM*nibool_interfaces_ext_mesh(iinterface), &
+           my_neighbours_ext_mesh(iinterface), &
+           itag, &
+           request_recv_vector_ext_mesh_w(iinterface) &
+           )
+    enddo
 
   endif
 
@@ -540,19 +540,19 @@
   ! send only if more than one partition
   if(NPROC > 1) then
 
-     ! send messages
-     do iinterface = 1, num_interfaces_ext_mesh
-        call isend_cr(buffer_send_vector_ext_mesh(1,1,iinterface), &
-                       NDIM*nibool_interfaces_ext_mesh(iinterface), &
-                       my_neighbours_ext_mesh(iinterface), &
-                       itag, &
-                       request_send_vector_ext_mesh(iinterface) )
-        call irecv_cr(buffer_recv_vector_ext_mesh(1,1,iinterface), &
-                       NDIM*nibool_interfaces_ext_mesh(iinterface), &
-                       my_neighbours_ext_mesh(iinterface), &
-                       itag, &
-                       request_recv_vector_ext_mesh(iinterface) )
-     enddo
+    ! send messages
+    do iinterface = 1, num_interfaces_ext_mesh
+      call isend_cr(buffer_send_vector_ext_mesh(1,1,iinterface), &
+                     NDIM*nibool_interfaces_ext_mesh(iinterface), &
+                     my_neighbours_ext_mesh(iinterface), &
+                     itag, &
+                     request_send_vector_ext_mesh(iinterface) )
+      call irecv_cr(buffer_recv_vector_ext_mesh(1,1,iinterface), &
+                     NDIM*nibool_interfaces_ext_mesh(iinterface), &
+                     my_neighbours_ext_mesh(iinterface), &
+                     itag, &
+                     request_recv_vector_ext_mesh(iinterface) )
+    enddo
 
   endif
 

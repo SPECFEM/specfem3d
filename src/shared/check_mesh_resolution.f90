@@ -591,9 +591,9 @@
     !          there is no such sharp cut-off period for valid synthetics.
     !          seismograms become just more and more inaccurate for periods shorter than this estimate.
     if (has_vp2_zero) then
-        pmax = avg_distance / min( vpmin,vsmin ) * NPTS_PER_WAVELENGTH
+      pmax = avg_distance / min( vpmin,vsmin ) * NPTS_PER_WAVELENGTH
     else
-        pmax = avg_distance / min( vpmin,vp2min,vsmin ) * NPTS_PER_WAVELENGTH
+      pmax = avg_distance / min( vpmin,vp2min,vsmin ) * NPTS_PER_WAVELENGTH
     endif
     pmax_glob = max(pmax_glob,pmax)
 
@@ -1038,9 +1038,9 @@
 
   ! ignore non porous region with vp2 = 0
   if( val_min(1) > 0.0001 ) then
-      vp2min = min(vp2min,val_min(1))
+    vp2min = min(vp2min,val_min(1))
   else
-      has_vp2_zero = .true.
+    has_vp2_zero = .true.
   endif
   vp2max = max(vp2max,val_max(1))
 

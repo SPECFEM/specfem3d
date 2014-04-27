@@ -189,13 +189,13 @@ subroutine save_weights_kernel()
   allocate(weights_kernel(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if( ier /= 0 ) stop 'error allocating array weights_kernel'
   do ispec = 1, NSPEC_AB
-      do k = 1, NGLLZ
-        do j = 1, NGLLY
-          do i = 1, NGLLX
-            weights_kernel(i,j,k,ispec) = wxgll(i) * wygll(j) * wzgll(k) * jacobian(i,j,k,ispec)
-          enddo ! i
-        enddo ! j
-      enddo ! k
+    do k = 1, NGLLZ
+      do j = 1, NGLLY
+        do i = 1, NGLLX
+          weights_kernel(i,j,k,ispec) = wxgll(i) * wygll(j) * wzgll(k) * jacobian(i,j,k,ispec)
+        enddo ! i
+      enddo ! j
+    enddo ! k
   enddo ! ispec
 
   open(unit=IOUT,file=prname(1:len_trim(prname))//'weights_kernel.bin',status='unknown',form='unformatted',iostat=ier)
@@ -430,47 +430,47 @@ subroutine save_kernels_elastic(adios_handle, alphav_kl, alphah_kl, &
   else
     if (ANISOTROPIC_KL) then
 
-       ! outputs transverse isotropic kernels only
-       if (SAVE_TRANSVERSE_KL) then
-         ! transverse isotropic kernels
-         ! (alpha_v, alpha_h, beta_v, beta_h, eta, rho ) parameterization
-         open(unit=IOUT,file=trim(prname)//'alphav_kernel.bin',status='unknown',form='unformatted',action='write')
-         write(IOUT) alphav_kl
-         close(IOUT)
-         open(unit=IOUT,file=trim(prname)//'alphah_kernel.bin',status='unknown',form='unformatted',action='write')
-         write(IOUT) alphah_kl
-         close(IOUT)
-         open(unit=IOUT,file=trim(prname)//'betav_kernel.bin',status='unknown',form='unformatted',action='write')
-         write(IOUT) betav_kl
-         close(IOUT)
-         open(unit=IOUT,file=trim(prname)//'betah_kernel.bin',status='unknown',form='unformatted',action='write')
-         write(IOUT) betah_kl
-         close(IOUT)
-         open(unit=IOUT,file=trim(prname)//'eta_kernel.bin',status='unknown',form='unformatted',action='write')
-         write(IOUT) eta_kl
-         close(IOUT)
+      ! outputs transverse isotropic kernels only
+      if (SAVE_TRANSVERSE_KL) then
+        ! transverse isotropic kernels
+        ! (alpha_v, alpha_h, beta_v, beta_h, eta, rho ) parameterization
+        open(unit=IOUT,file=trim(prname)//'alphav_kernel.bin',status='unknown',form='unformatted',action='write')
+        write(IOUT) alphav_kl
+        close(IOUT)
+        open(unit=IOUT,file=trim(prname)//'alphah_kernel.bin',status='unknown',form='unformatted',action='write')
+        write(IOUT) alphah_kl
+        close(IOUT)
+        open(unit=IOUT,file=trim(prname)//'betav_kernel.bin',status='unknown',form='unformatted',action='write')
+        write(IOUT) betav_kl
+        close(IOUT)
+        open(unit=IOUT,file=trim(prname)//'betah_kernel.bin',status='unknown',form='unformatted',action='write')
+        write(IOUT) betah_kl
+        close(IOUT)
+        open(unit=IOUT,file=trim(prname)//'eta_kernel.bin',status='unknown',form='unformatted',action='write')
+        write(IOUT) eta_kl
+        close(IOUT)
 
-         ! transverse isotropic test kernels
-         open(unit=IOUT,file=trim(prname)//'alpha_kernel.bin',status='unknown',form='unformatted',action='write')
-         write(IOUT)  alpha_kl
-         close(IOUT)
-         open(unit=IOUT,file=trim(prname)//'beta_kernel.bin',status='unknown',form='unformatted',action='write')
-         write(IOUT)  beta_kl
-         close(IOUT)
+        ! transverse isotropic test kernels
+        open(unit=IOUT,file=trim(prname)//'alpha_kernel.bin',status='unknown',form='unformatted',action='write')
+        write(IOUT)  alpha_kl
+        close(IOUT)
+        open(unit=IOUT,file=trim(prname)//'beta_kernel.bin',status='unknown',form='unformatted',action='write')
+        write(IOUT)  beta_kl
+        close(IOUT)
 
-       else
-         ! fully anisotropic kernels
-         ! note: the C_ij and density kernels are not for relative perturbations (delta ln( m_i) = delta m_i / m_i),
-         !          but absolute perturbations (delta m_i = m_i - m_0).
-         ! Kappa and mu are for absolute perturbations, can be used to check with purely isotropic versions.
-         open(unit=IOUT,file=trim(prname)//'rho_kernel.bin',status='unknown',form='unformatted',action='write')
-         write(IOUT)  - rho_kl
-         close(IOUT)
-         open(unit=IOUT,file=trim(prname)//'cijkl_kernel.bin',status='unknown',form='unformatted',action='write')
-         write(IOUT) - cijkl_kl
-         close(IOUT)
+      else
+        ! fully anisotropic kernels
+        ! note: the C_ij and density kernels are not for relative perturbations (delta ln( m_i) = delta m_i / m_i),
+        !          but absolute perturbations (delta m_i = m_i - m_0).
+        ! Kappa and mu are for absolute perturbations, can be used to check with purely isotropic versions.
+        open(unit=IOUT,file=trim(prname)//'rho_kernel.bin',status='unknown',form='unformatted',action='write')
+        write(IOUT)  - rho_kl
+        close(IOUT)
+        open(unit=IOUT,file=trim(prname)//'cijkl_kernel.bin',status='unknown',form='unformatted',action='write')
+        write(IOUT) - cijkl_kl
+        close(IOUT)
 
-        endif
+      endif
 
     else
 
@@ -888,7 +888,7 @@ subroutine save_kernels_hessian(adios_handle)
     if( ACOUSTIC_SIMULATION ) then
       ! stores into file
       open(unit=IOUT,file=trim(prname)//'hess_acoustic_kernel.bin', &
-            status='unknown',form='unformatted',action='write',iostat=ier)
+           status='unknown',form='unformatted',action='write',iostat=ier)
       if( ier /= 0 ) stop 'error opening file hess_acoustic_kernel.bin'
       write(IOUT) hess_ac_kl
       close(IOUT)
@@ -898,7 +898,7 @@ subroutine save_kernels_hessian(adios_handle)
     if( ELASTIC_SIMULATION ) then
       ! stores into file
       open(unit=IOUT,file=trim(prname)//'hess_kernel.bin', &
-            status='unknown',form='unformatted',action='write',iostat=ier)
+           status='unknown',form='unformatted',action='write',iostat=ier)
       if( ier /= 0 ) stop 'error opening file hess_kernel.bin'
       write(IOUT) hess_kl
       close(IOUT)

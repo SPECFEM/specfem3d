@@ -57,19 +57,19 @@
 
   ! opens seismogram file
   if(SEISMOGRAMS_BINARY)then
-     ! allocate trace
-     nt_s = min(it,NSTEP)
-     allocate(tr(nt_s),stat=ier)
-     if( ier /= 0 ) stop 'error allocating array tr'
+    ! allocate trace
+    nt_s = min(it,NSTEP)
+    allocate(tr(nt_s),stat=ier)
+    if (ier /= 0) stop 'error allocating array tr'
 
-     ! binary format case
-     open(unit=IOUT, file=final_LOCAL_PATH(1:len_trim(final_LOCAL_PATH))//&
-          sisname(1:len_trim(sisname)), form='unformatted', access='direct', recl=4*(nt_s))
-     tr(:)=0
+    ! binary format case
+    open(unit=IOUT, file=final_LOCAL_PATH(1:len_trim(final_LOCAL_PATH))//&
+         sisname(1:len_trim(sisname)), form='unformatted', access='direct', recl=4*(nt_s))
+    tr(:)=0
   else
-     ! ASCII format case
-     open(unit=IOUT,file=final_LOCAL_PATH(1:len_trim(final_LOCAL_PATH))//&
-          sisname(1:len_trim(sisname)),status='unknown')
+    ! ASCII format case
+    open(unit=IOUT,file=final_LOCAL_PATH(1:len_trim(final_LOCAL_PATH))//&
+         sisname(1:len_trim(sisname)),status='unknown')
   endif
 
   ! make sure we never write more than the maximum number of time steps
@@ -99,13 +99,13 @@
       endif
 
       if(SEISMOGRAMS_BINARY) then
-         ! binary format case
-         !tr(isample)=seismograms(iorientation,irec_local,isample)
-         tr(isample) = one_seismogram(iorientation,isample)
+        ! binary format case
+        !tr(isample)=seismograms(iorientation,irec_local,isample)
+        tr(isample) = one_seismogram(iorientation,isample)
       else
-         ! ASCII format case
-         !write(IOUT,*) time_t,' ',seismograms(iorientation,irec_local,isample)
-         write(IOUT,*) time_t,' ',one_seismogram(iorientation,isample)
+        ! ASCII format case
+        !write(IOUT,*) time_t,' ',seismograms(iorientation,irec_local,isample)
+        write(IOUT,*) time_t,' ',one_seismogram(iorientation,isample)
       endif
 
     else

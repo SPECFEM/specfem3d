@@ -418,27 +418,27 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
 
   if (PARALLEL_FAULT) then
 
-   ! For each output point, find the processor that contains the nearest node
+    ! For each output point, find the processor that contains the nearest node
     allocate(iproc(dataT%npoin))
     allocate(iglob_all(dataT%npoin,0:NPROC-1))
     allocate(dist_all(dataT%npoin,0:NPROC-1))
     call gather_all_i(dataT%iglob,dataT%npoin,iglob_all,dataT%npoin,NPROC)
     call gather_all_cr(dist_loc,dataT%npoin,dist_all,dataT%npoin,NPROC)
     if (myrank==0) then
-     ! NOTE: output points lying at an interface between procs are assigned to a unique proc
+      ! NOTE: output points lying at an interface between procs are assigned to a unique proc
       iproc = minloc(dist_all,2) - 1
       do ipoin = 1,dataT%npoin
-         dataT%iglob(ipoin) = iglob_all(ipoin,iproc(ipoin))
+        dataT%iglob(ipoin) = iglob_all(ipoin,iproc(ipoin))
       enddo
     endif
     call bcast_all_i(iproc,dataT%npoin)
     call bcast_all_i(dataT%iglob,dataT%npoin)
 
-   ! Number of output points contained in the current processor
+    ! Number of output points contained in the current processor
     npoin_local = count( iproc == myrank )
 
     if (npoin_local>0) then
-     ! Make a list of output points contained in the current processor
+      ! Make a list of output points contained in the current processor
       allocate(glob_indx(npoin_local))
       ipoin_local = 0
       do ipoin = 1,dataT%npoin
@@ -447,7 +447,7 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
           glob_indx(ipoin_local) = ipoin
         endif
       enddo
-     ! Consolidate the output information (remove output points outside current proc)
+      ! Consolidate the output information (remove output points outside current proc)
       allocate(iglob_tmp(dataT%npoin))
       allocate(name_tmp(dataT%npoin))
       iglob_tmp = dataT%iglob
