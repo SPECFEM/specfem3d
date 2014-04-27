@@ -28,10 +28,7 @@
 ! where it smooths files with a given input kernel name:
 !
 ! compile with:
-!     mpif90 -o bin/xsmooth_vol_data -Wall src/shared/smooth_vol_data.f90 \
-!               obj/spec/gll_library.o obj/spec/read_parameter_file.o obj/spec/read_value_parameters.o \
-!               obj/spec/get_value_parameters.o obj/spec/param_reader.o obj/spec/parallel.o obj/spec/exit_mpi.o
-!     or
+!
 !     make xsmooth_vol_data
 !
 ! Usage:
