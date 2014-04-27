@@ -634,7 +634,7 @@ subroutine fault_save_arrays(prname)
     size_Kelvin_Voigt = 0
   endif
   write(IOUT) size_Kelvin_Voigt
-  if (size_Kelvin_Voigt /= 0) Write(IOUT) Kelvin_Voigt_eta
+  if (size_Kelvin_Voigt /= 0) write(IOUT) Kelvin_Voigt_eta
   close(IOUT)
 
 ! saves mesh file proc***_fault_db.bin

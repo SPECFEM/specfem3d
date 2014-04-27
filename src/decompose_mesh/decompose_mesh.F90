@@ -1103,7 +1103,7 @@ module decompose_mesh
             CPML_regions, is_CPML, glob2loc_elmnts, part)
 
        ! gets number of MPI interfaces
-       call Write_interfaces_database(IIN_database, tab_interfaces, tab_size_interfaces, ipart, ninterfaces, &
+       call write_interfaces_database(IIN_database, tab_interfaces, tab_size_interfaces, ipart, ninterfaces, &
                                   my_ninterface, my_interfaces, my_nb_interfaces, &
                                   glob2loc_elmnts, glob2loc_nodes_nparts, glob2loc_nodes_parts, &
                                   glob2loc_nodes, 1, nparts)
@@ -1116,7 +1116,7 @@ module decompose_mesh
         write(IIN_database) my_ninterface, maxval(my_nb_interfaces)
        endif
 
-       call Write_interfaces_database(IIN_database, tab_interfaces, tab_size_interfaces, ipart, ninterfaces, &
+       call write_interfaces_database(IIN_database, tab_interfaces, tab_size_interfaces, ipart, ninterfaces, &
                                   my_ninterface, my_interfaces, my_nb_interfaces, &
                                   glob2loc_elmnts, glob2loc_nodes_nparts, glob2loc_nodes_parts, &
                                   glob2loc_nodes, 2, nparts)

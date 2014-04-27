@@ -188,7 +188,7 @@
   ! checks if station locations already available
   if( SU_FORMAT ) then
     ! checks if file with station infos located from previous run exists
-    INQUIRE(file=trim(OUTPUT_FILES_PATH)//'/SU_stations_info.bin',exist=SU_station_file_exists)
+    inquire(file=trim(OUTPUT_FILES_PATH)//'/SU_stations_info.bin',exist=SU_station_file_exists)
     if ( SU_station_file_exists ) then
       ! all processes read in stations names from STATIONS file
       do irec=1,nrec

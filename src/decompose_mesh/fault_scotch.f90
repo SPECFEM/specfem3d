@@ -58,7 +58,7 @@ module fault_scotch
 CONTAINS
 !==========================================================================================
 
-  Subroutine read_fault_files(localpath_name)
+  subroutine read_fault_files(localpath_name)
 
   character(len=256),intent(in) :: localpath_name
   integer :: nbfaults, iflt, ier
@@ -87,7 +87,7 @@ CONTAINS
 
 !---------------------------------------------------------------------------------------------------
 
-  Subroutine read_single_fault_file(f,ifault,localpath_name)
+  subroutine read_single_fault_file(f,ifault,localpath_name)
 
   type(fault_type), intent(inout) :: f
   character(len=256),intent(in) :: localpath_name
@@ -140,7 +140,7 @@ CONTAINS
 
   close(101)
 
-  end Subroutine read_single_fault_file
+  end subroutine read_single_fault_file
 
 
 ! ---------------------------------------------------------------------------------------------------

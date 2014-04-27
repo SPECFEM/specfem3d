@@ -434,7 +434,7 @@ contains
        enddo
     endif
 
-  end subroutine Write_glob2loc_nodes_database
+  end subroutine write_glob2loc_nodes_database
 
 
   !--------------------------------------------------

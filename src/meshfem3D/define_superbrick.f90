@@ -1216,8 +1216,8 @@
   logical, dimension(NSPEC_DOUBLING_SUPERBRICK,6) :: iboun_sb
   integer :: case_num
 
-  SELECT CASE (case_num)
-      CASE (1)
+  select case (case_num)
+      case (1)
           x_superbrick(1) = 1.d0 / 2.d0
           y_superbrick(1) = 1.d0
           z_superbrick(1) = 2.d0
@@ -1423,7 +1423,7 @@
           iboun_sb(8,3) = .true.
           iboun_sb(8,4) = .true.
           iboun_sb(8,5) = .true.
-      CASE (2)
+      case (2)
           x_superbrick(1) = 1.d0 / 2.d0
           y_superbrick(1) = 0.d0
           z_superbrick(1) = 2.d0
@@ -1629,7 +1629,7 @@
           iboun_sb(8,3) = .true.
           iboun_sb(8,4) = .true.
           iboun_sb(8,5) = .true.
-      CASE (3)
+      case (3)
           x_superbrick(1) = 1.d0 / 2.d0
           y_superbrick(1) = 1.d0
           z_superbrick(1) = 2.d0
@@ -1835,7 +1835,7 @@
           iboun_sb(8,3) = .true.
           iboun_sb(8,4) = .true.
           iboun_sb(8,5) = .true.
-      CASE (4)
+      case (4)
           x_superbrick(1) = 1.d0 / 2.d0
           y_superbrick(1) = 0.d0
           z_superbrick(1) = 2.d0
@@ -2041,7 +2041,7 @@
           iboun_sb(8,3) = .true.
           iboun_sb(8,4) = .true.
           iboun_sb(8,5) = .true.
-  END SELECT
+  end select
 
   end subroutine define_basic_doubling_brick
 
