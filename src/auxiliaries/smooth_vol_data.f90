@@ -60,11 +60,8 @@ program smooth_vol_data
 ! NOTE:  smoothing can be different in vertical & horizontal directions; mesh is in Cartesian geometry.
 !              algorithm uses vertical as Z, horizontal as X/Y direction
 
-!!!! DK DK this breaks the build system, use routines in src/shared/parallel.f90 instead  use :: mpi
-
   implicit none
   include "constants.h"
-  include "precision.h"
 
  ! data must be of dimension: (NGLLX,NGLLY,NGLLZ,NSPEC_AB)
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: dat,dat_smooth
@@ -141,18 +138,16 @@ program smooth_vol_data
 
   logical :: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,POROELASTIC_SIMULATION
   integer :: idummy_a
-  integer :: myrank,sizeprocs,rcl
+  integer :: myrank,sizeprocs
 !------------------
 
-  stop 'DK DK program src/auxiliaries/smooth_vol_data.f90 currently does not work because some modifications broke the build system'
-
   ! initialize the MPI communicator and start the NPROCTOT MPI processes
-!!!! DK DK this breaks the build system, use routines in src/shared/parallel.f90 instead  call MPI_INIT(ier)
-!!!! DK DK this breaks the build system, use routines in src/shared/parallel.f90 instead  call MPI_COMM_SIZE(MPI_COMM_WORLD,sizeprocs,ier)
-!!!! DK DK this breaks the build system, use routines in src/shared/parallel.f90 instead  call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
+  call init()
+  call world_size(sizeprocs)
+  call world_rank(myrank)
 
   if (myrank == 0) print*,"smooth_vol_data:"
-!!!! DK DK this breaks the build system, use routines in src/shared/parallel.f90 instead  call mpi_barrier(MPI_COMM_WORLD,ier)
+  call synchronize_all()
 
   ! reads arguments
   do i = 1, 5
@@ -211,6 +206,8 @@ program smooth_vol_data
     print*,"  smoothing sigma_h , sigma_v: ",sigma_h,sigma_v
     ! scalelength: approximately S ~ sigma * sqrt(8.0) for a gaussian smoothing
     print*,"  smoothing scalelengths horizontal, vertical : ",sigma_h*sqrt(8.0),sigma_v*sqrt(8.0)
+    print*,"  in dir : ",trim(indir)
+    print*,"  out dir: ",trim(outdir)
   endif
 
   ! needs local_path for mesh files
@@ -240,7 +237,7 @@ program smooth_vol_data
     endif
     call exit_mpi(myrank,'Error total number of slices')
   endif
-!!!! DK DK this breaks the build system, use routines in src/shared/parallel.f90 instead  call mpi_barrier(MPI_COMM_WORLD,ier)
+  call synchronize_all()
 
   ! GLL points weights
   call zwgljd(xigll,wxgll,NGLLX,GAUSSALPHA,GAUSSBETA)
@@ -566,8 +563,23 @@ program smooth_vol_data
   ! adds this partition itself
   node_list(num_interfaces_ext_mesh+1) = myrank
 
+  ! user output
+  if(myrank == 0) then
+  print*
+  print*,'  rank:',myrank,'  smoothing slices'
+  print*,node_list(1:num_interfaces_ext_mesh+1)
+  endif
+
+  !do i=0,sizeprocs-1
+  !  if( myrank == i ) then
+  !    print*,'rank:',myrank,'  smoothing slices'
+  !    print*,node_list(1:num_interfaces_ext_mesh+1)
+  !    print*
+  !  endif
+  !enddo
+
   ! synchronizes
-!!!! DK DK this breaks the build system, use routines in src/shared/parallel.f90 instead  call mpi_barrier(MPI_COMM_WORLD,ier)
+  call synchronize_all()
 
 
 !----------------------
@@ -774,13 +786,13 @@ program smooth_vol_data
   deallocate(dat_smooth)
 
   ! synchronizes
-!!!! DK DK this breaks the build system, use routines in src/shared/parallel.f90 instead  call mpi_barrier(MPI_COMM_WORLD,ier)
+  call synchronize_all()
 
   ! the maximum value for the smoothed kernel
   norm = max_old
-!!!! DK DK this breaks the build system, use routines in src/shared/parallel.f90 instead  call mpi_reduce(norm,max_old,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
+  call max_all_cr(norm, max_old)
   norm = max_new
-!!!! DK DK this breaks the build system, use routines in src/shared/parallel.f90 instead  call mpi_reduce(norm,max_new,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
+  call max_all_cr(norm, max_new)
   if( myrank == 0 ) then
     print *
     print *,'  Maximum data value before smoothing = ', max_old
@@ -788,8 +800,8 @@ program smooth_vol_data
     print *
   endif
 
-  ! stop all the MPI processes, and exit
-!!!! DK DK this breaks the build system, use routines in src/shared/parallel.f90 instead  call MPI_FINALIZE(ier)
+  ! stop all the processes and exit
+  call finalize()
 
 end program smooth_vol_data
 
