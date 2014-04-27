@@ -517,7 +517,6 @@
   integer :: irec
   integer :: i,j,k
   integer :: icomp,itime,nadj_files_found,nadj_files_found_tot,ier
-!  integer :: iglob
 
   character(len=3),dimension(NDIM) :: comp
   character(len=256) :: filename

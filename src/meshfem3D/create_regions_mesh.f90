@@ -68,7 +68,6 @@ contains
     integer, dimension(2) :: ner_doublings
 
     double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK
-    !double precision horiz_size,vert_size
 
     integer addressing(0:NPROC_XI-1,0:NPROC_ETA-1)
 
@@ -84,7 +83,6 @@ contains
     character(len=256) :: LOCAL_PATH
 
     ! auxiliary variables to generate the mesh
-    !  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: nodes_coords
     double precision, dimension(:,:), allocatable :: nodes_coords
     integer ix,iy,ir,ir1,ir2,dir
     integer ix1,ix2,dix,iy1,iy2,diy
@@ -93,7 +91,6 @@ contains
     integer imaterial_number
     integer, dimension(nspec) :: true_material_num
     integer, dimension(:,:,:), allocatable :: material_num
-    !integer material_num(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA)
 
     !  definition of the different regions of the model in the mesh (nx,ny,nz)
     !  #1 #2 : nx_begining,nx_end

@@ -133,10 +133,6 @@
   if(err_occurred() /= 0) return
   call read_value_double_precision(f0_FOR_PML, 'model.f0_FOR_PML')
   if(err_occurred() /= 0) return
-  !call read_value_logical(ROTATE_PML_ACTIVATE, 'solver.ROTATE_PML_ACTIVATE')
-  !if(err_occurred() /= 0) return
-  !call read_value_double_precision(ROTATE_PML_ANGLE, 'solver.ROTATE_PML_ANGLE')
-  !if(err_occurred() /= 0) return
   call read_value_logical(STACEY_ABSORBING_CONDITIONS, 'solver.STACEY_ABSORBING_CONDITIONS')
   if(err_occurred() /= 0) return
   call read_value_logical(STACEY_INSTEAD_OF_FREE_SURFACE, 'model.STACEY_INSTEAD_OF_FREE_SURFACE')

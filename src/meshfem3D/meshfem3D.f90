@@ -298,7 +298,7 @@
 
 ! interfaces parameters
   logical SUPPRESS_UTM_PROJECTION_BOTTOM,SUPPRESS_UTM_PROJECTION_TOP
-  integer ilayer,interface_current ! ipoint_current
+  integer ilayer,interface_current
   integer number_of_interfaces,number_of_layers
   integer max_npx_interface,max_npy_interface
   integer npx_interface_bottom,npy_interface_bottom

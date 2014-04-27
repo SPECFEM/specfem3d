@@ -194,8 +194,6 @@ subroutine recompute_jacobian_gravity(xelm,yelm,zelm,xi,eta,gamma,jacobian)
   double precision x,y,z
   double precision xi,eta,gamma,jacobian
 
-!  integer NGNOD
-
 ! coordinates of the control points
   double precision xelm(NGNOD),yelm(NGNOD),zelm(NGNOD)
 
@@ -218,7 +216,6 @@ subroutine recompute_jacobian_gravity(xelm,yelm,zelm,xi,eta,gamma,jacobian)
 ! check that the parameter file is correct
   if(NGNOD /= 8 ) &
        stop 'elements should have 8  control nodes'
-!  if(NGNOD == 8) then
 
 ! ***
 ! *** create the 3D shape functions and the Jacobian for an 8-node element

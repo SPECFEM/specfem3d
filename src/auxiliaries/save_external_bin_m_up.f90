@@ -120,8 +120,8 @@
   integer :: num_interfaces_ext_mesh
   integer, dimension(num_interfaces_ext_mesh) :: my_neighbours_ext_mesh
   integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
-  integer :: max_nibool_interfaces_ext_mesh  !magnoni
-  integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh  !magnoni
+  integer :: max_nibool_interfaces_ext_mesh
+  integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
 
 
 ! file name
@@ -263,7 +263,7 @@
     write(IOUT) max_nibool_interfaces_ext_mesh
     write(IOUT) my_neighbours_ext_mesh
     write(IOUT) nibool_interfaces_ext_mesh
-    write(IOUT) ibool_interfaces_ext_mesh   !magnoni
+    write(IOUT) ibool_interfaces_ext_mesh
   endif
 
 ! anisotropy
@@ -415,19 +415,6 @@
     call write_VTK_data_gll_cr(nspec,nglob, &
                         xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
                         qmu_attenuation_store,filename)
-
-!     !magnoni
-!     !check
-!
-!       !jacobian
-!       filename = prname(1:len_trim(prname))//'jacobian'
-!       call write_VTK_data_gll_cr(nspec,nglob, &
-!                           xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-!                           jacobianstore,filename)
-!
-!     !check
-!     !magnoni
-
 
     ! VTK file output
     ! acoustic-elastic domains

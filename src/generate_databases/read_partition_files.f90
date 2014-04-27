@@ -39,7 +39,6 @@
   integer :: num_cpml
   integer :: num_moho
   integer :: i,j
-  !character(len=128) :: line
 
 ! read databases about external mesh simulation
 ! global node coordinates

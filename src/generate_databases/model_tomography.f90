@@ -229,29 +229,24 @@ end subroutine init_tomography_files
         ! reads in model dimensions
         call tomo_read_next_line(27,string_read)
         read(string_read,*) ORIG_X(imat), ORIG_Y(imat), ORIG_Z(imat), END_X, END_Y, END_Z
-        !read(27,*) ORIG_X, ORIG_Y, ORIG_Z, END_X, END_Y, END_Z
 
         call tomo_read_next_line(27,string_read)
         read(string_read,*) SPACING_X(imat), SPACING_Y(imat), SPACING_Z(imat)
-        !read(27,*) SPACING_X, SPACING_Y, SPACING_Z
 
         ! reads in models entries
         call tomo_read_next_line(27,string_read)
         read(string_read,*) NX(imat), NY(imat), NZ(imat)
-        !read(27,*) NX, NY, NZ
 
         ! reads in models min/max statistics
         call tomo_read_next_line(27,string_read)
         read(string_read,*) VP_MIN(imat), VP_MAX(imat), &
              VS_MIN(imat), VS_MAX(imat), &
              RHO_MIN(imat), RHO_MAX(imat)
-        !read(27,*) VP_MIN, VP_MAX, VS_MIN, VS_MAX, RHO_MIN, RHO_MAX
 
         ! total number of element records
         nrecord(imat) = NX(imat)*NY(imat)*NZ(imat)
 
         ! first record
-        !read(27,*) x_tomo,y_tomo,z_tomo,vp_tomo,vs_tomo,rho_tomo
         call tomo_read_next_line(27,string_read)
         read(string_read,*) x_tomo,y_tomo,z_tomo,vp_tomo,vs_tomo,rho_tomo
 

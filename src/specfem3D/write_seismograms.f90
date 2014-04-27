@@ -144,7 +144,6 @@
        ! poroelastic wave field
         if( ispec_is_poroelastic(ispec) ) then
           ! interpolates displ/veloc/accel at receiver locations
-        !  call compute_interpolated_dva(displw_poroelastic,velocw_poroelastic,accelw_poroelastic,NGLOB_AB, &
           call compute_interpolated_dva(displs_poroelastic,velocs_poroelastic,accels_poroelastic,NGLOB_AB, &
                           ispec,NSPEC_AB,ibool, &
                           xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &

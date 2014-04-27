@@ -75,7 +75,7 @@
   implicit none
   ! local parameters
   integer :: i,j,k,ispec,iglob
-  real(kind=CUSTOM_REAL),dimension(21) :: prod !, cijkl_kl_local
+  real(kind=CUSTOM_REAL),dimension(21) :: prod
   real(kind=CUSTOM_REAL), dimension(5) :: epsilondev_loc,b_epsilondev_loc
 
   if( .not. GPU_MODE ) then

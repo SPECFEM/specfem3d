@@ -493,7 +493,6 @@ CONTAINS
       print *, 'Fatal error: Number of fault elements do not coincide. Abort.'
       stop
     endif
-    !write(IIN_database,*) nspec_fault_1
     write(IIN_database) nspec_fault_1
 
    ! if no fault element in this partition, move to next fault
@@ -511,7 +510,6 @@ CONTAINS
             endif
           enddo
         enddo
-        !write(IIN_database,*) glob2loc_elmnts(e-1)+1, loc_nodes
         write(IIN_database) glob2loc_elmnts(e-1)+1, loc_nodes
       endif
     enddo
@@ -528,7 +526,6 @@ CONTAINS
             endif
           enddo
         enddo
-        !write(IIN_database,*) glob2loc_elmnts(e-1)+1, loc_nodes
         write(IIN_database) glob2loc_elmnts(e-1)+1, loc_nodes
       endif
     enddo

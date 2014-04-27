@@ -262,11 +262,6 @@ end module user_noise_distribution
 
   logical, dimension(NSPEC_AB_VAL) :: ispec_is_acoustic
 
-  !from global code...
-  !integer, dimension(NSPEC2D_TOP_VAL) :: ibelm_top ! equals free_surface_ispec
-  !integer :: NSPEC2D_TOP_VAL ! equals num_free_surface_faces
-  !integer :: nspec_top ! equals num_free_surface_faces
-
   ! output parameters
   integer :: irec_master_noise
   real(kind=CUSTOM_REAL) :: noise_sourcearray(NDIM,NGLLX,NGLLY,NGLLZ,NSTEP)
@@ -309,11 +304,6 @@ end module user_noise_distribution
   ! noise distribution and noise direction
   ipoin = 0
 
-  !from global code, carefull: ngllz must not be face on top...
-  !  do ispec2D = 1, nspec_top
-  !    ispec = ibelm_top(ispec2D)
-  !    k = NGLLZ
-
   ! loops over surface points
   ! puts noise distrubution and direction onto the surface points
   do iface = 1, num_free_surface_faces
@@ -347,53 +337,6 @@ end module user_noise_distribution
     enddo
 
   enddo
-
-
-
-!!  !!!BEGIN!!! save mask_noise for check, a file called "mask_noise" is saved in "./OUTPUT_FIELS/"
-!!    ipoin = 0
-!!      do ispec2D = 1, nspec_top ! NSPEC2D_TOP(IREGION)
-!!          ispec = ibelm_top(ispec2D)
-!!          k = NGLLZ
-!!        ! loop on all the points inside the element
-!!          do j = 1,NGLLY,NIT
-!!             do i = 1,NGLLX,NIT
-!!                ipoin = ipoin + 1
-!!                iglob = ibool(i,j,k,ispec)
-!!                store_val_x(ipoin) = xstore(iglob)
-!!                store_val_y(ipoin) = ystore(iglob)
-!!                store_val_z(ipoin) = zstore(iglob)
-!!                store_val_ux(ipoin) = mask_noise(ipoin)
-!!                store_val_uy(ipoin) = mask_noise(ipoin)
-!!                store_val_uz(ipoin) = mask_noise(ipoin)
-!!             enddo
-!!          enddo
-!!      enddo
-!!
-!!  ! gather info on master proc
-!!      ispec = nmovie_points
-!!      call MPI_GATHER(store_val_x,ispec,CUSTOM_MPI_TYPE,store_val_x_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
-!!      call MPI_GATHER(store_val_y,ispec,CUSTOM_MPI_TYPE,store_val_y_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
-!!      call MPI_GATHER(store_val_z,ispec,CUSTOM_MPI_TYPE,store_val_z_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
-!!      call MPI_GATHER(store_val_ux,ispec,CUSTOM_MPI_TYPE,store_val_ux_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
-!!      call MPI_GATHER(store_val_uy,ispec,CUSTOM_MPI_TYPE,store_val_uy_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
-!!      call MPI_GATHER(store_val_uz,ispec,CUSTOM_MPI_TYPE,store_val_uz_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
-!!
-!!  ! save maks_noise data to disk in home directory
-!!  ! this file can be viewed the same way as surface movie data (xcreate_movie_AVS_DX)
-!!  ! create_movie_AVS_DX.f90 needs to be modified in order to do that,
-!!  ! i.e., instead of showing the normal component, change it to either x, y or z component, or the norm.
-!!    if(myrank == 0) then
-!!        open(unit=IOUT_NOISE,file=trim(OUTPUT_FILES_PATH)//'/mask_noise',status='unknown',form='unformatted',action='write')
-!!        write(IOUT_NOISE) store_val_x_all
-!!        write(IOUT_NOISE) store_val_y_all
-!!        write(IOUT_NOISE) store_val_z_all
-!!        write(IOUT_NOISE) store_val_ux_all
-!!        write(IOUT_NOISE) store_val_uy_all
-!!        write(IOUT_NOISE) store_val_uz_all
-!!        close(IOUT_NOISE)
-!!     endif
-!!  !!!END!!! save mask_noise for check, a file called "mask_noise" is saved in "./OUTPUT_FIELS/"
 
   end subroutine read_parameters_noise
 
@@ -669,12 +612,6 @@ end module user_noise_distribution
   integer, dimension(num_free_surface_faces) :: free_surface_ispec
   integer, dimension(3,NGLLSQUARE,num_free_surface_faces) :: free_surface_ijk
 
-  !from global code...
-  !integer :: nspec_top ! equals num_free_surface_faces
-  !integer :: NSPEC2D_TOP_VAL ! equals num_free_surface_faces
-  !integer, dimension(NSPEC2D_TOP_VAL) :: ibelm_top ! equals free_surface_ispec
-  !integer :: ispec2D ! equals iface
-
   ! local parameters
   integer :: ispec,i,j,k,iglob,iface,igll
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLSQUARE,num_free_surface_faces) :: noise_surface_movie
@@ -742,14 +679,6 @@ end module user_noise_distribution
   integer, dimension(3,NGLLSQUARE,num_free_surface_faces) :: free_surface_ijk
   real(kind=CUSTOM_REAL) :: free_surface_jacobian2Dw(NGLLSQUARE,num_free_surface_faces)
 
-  ! from global code...
-  !integer :: nspec_top ! equals num_free_surface_faces
-  !integer :: NSPEC2D_TOP_VAL ! equal num_free_surface_faces
-  !integer, dimension(NSPEC2D_TOP_VAL) :: ibelm_top ! equals free_surface_ispec
-  !real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NSPEC2D_TOP_VAL) :: jacobian2D_top
-                    ! equals to:                   free_surface_jacobian2Dw including weights wgllwgll
-  !real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY) :: wgllwgll_xy
-
   ! local parameters
   integer :: ipoin,ispec,i,j,k,iglob,iface,igll
   real(kind=CUSTOM_REAL) :: eta
@@ -812,14 +741,6 @@ end module user_noise_distribution
   ! input parameters
   integer :: it,num_free_surface_faces
 
-  ! from global code...
-  !integer :: nspec_top ! equals num_free_surface_faces
-  !integer :: NSPEC2D_TOP_VAL ! equal num_free_surface_faces
-  !integer, dimension(NSPEC2D_TOP_VAL) :: ibelm_top ! equals free_surface_ispec
-  !real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NSPEC2D_TOP_VAL) :: jacobian2D_top
-                    ! equals to:                   free_surface_jacobian2Dw including weights wgllwgll
-  !real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY) :: wgllwgll_xy
-
   ! local parameters
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLLSQUARE,num_free_surface_faces) :: noise_surface_movie
 
@@ -871,11 +792,6 @@ end module user_noise_distribution
   integer :: num_free_surface_faces
   integer, dimension(num_free_surface_faces) :: free_surface_ispec
   integer, dimension(3,NGLLSQUARE,num_free_surface_faces) :: free_surface_ijk
-
-  ! from global code...
-  !integer :: nspec_top ! equals num_free_surface_faces
-  !integer :: NSPEC2D_TOP_VAL ! equals num_free_surface_faces
-  !integer, dimension(NSPEC2D_TOP_VAL) :: ibelm_top ! equals free_surface_ispec
 
   ! output parameters
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL) :: Sigma_kl

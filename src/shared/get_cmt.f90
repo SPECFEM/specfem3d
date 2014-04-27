@@ -88,7 +88,6 @@
 
     ! read time shift
     read(1,"(a)") string
-    !read(string(12:len_trim(string)),*) tshift_cmt(isource)
     read(string(12:len_trim(string)),*) t_shift(isource)
 
     ! read half duration

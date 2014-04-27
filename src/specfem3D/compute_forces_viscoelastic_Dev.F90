@@ -334,7 +334,6 @@
     ! subroutines adapted from Deville, Fischer and Mund, High-order methods
     ! for incompressible fluid flow, Cambridge University Press (2002),
     ! pages 386 and 389 and Figure 8.3.1
-        ! call mxm_m1_m2_5points(hprime_xx,dummyx_loc,dummyy_loc,dummyz_loc,tempx1,tempy1,tempz1)
         do j=1,m2
           do i=1,m1
             C1_m1_m2_5points(i,j) = hprime_xx(i,1)*B1_m1_m2_5points(1,j) + &
@@ -412,8 +411,6 @@
            endif
         endif
 
-        !   call mxm_m1_m1_5points(dummyx_loc(1,1,k),dummyy_loc(1,1,k),dummyz_loc(1,1,k), &
-        !          hprime_xxT,tempx2(1,1,k),tempy2(1,1,k),tempz2(1,1,k))
         do j=1,m1
           do i=1,m1
             ! for efficiency it is better to leave this loop on k inside, it leads to slightly faster code
@@ -501,7 +498,6 @@
            endif
         endif
 
-        ! call mxm_m2_m1_5points(dummyx_loc,dummyy_loc,dummyz_loc,tempx3,tempy3,tempz3)
         do j=1,m1
           do i=1,m2
             C1_mxm_m2_m1_5points(i,j) = A1_mxm_m2_m1_5points(i,1)*hprime_xxT(1,j) + &
@@ -911,7 +907,6 @@
     ! subroutines adapted from Deville, Fischer and Mund, High-order methods
     ! for incompressible fluid flow, Cambridge University Press (2002),
     ! pages 386 and 389 and Figure 8.3.1
-        ! call mxm_m1_m2_5points(hprimewgll_xxT,tempx1,tempy1,tempz1,newtempx1,newtempy1,newtempz1)
         do j=1,m2
           do i=1,m1
             E1_m1_m2_5points(i,j) = hprimewgll_xxT(i,1)*C1_m1_m2_5points(1,j) + &
@@ -932,8 +927,6 @@
           enddo
         enddo
 
-        !   call mxm_m1_m1_5points(tempx2(1,1,k),tempy2(1,1,k),tempz2(1,1,k), &
-        !         hprimewgll_xx,newtempx2(1,1,k),newtempy2(1,1,k),newtempz2(1,1,k))
         do i=1,m1
           do j=1,m1
             ! for efficiency it is better to leave this loop on k inside, it leads to slightly faster code
@@ -957,7 +950,6 @@
           enddo
         enddo
 
-        ! call mxm_m2_m1_5points(tempx3,tempy3,tempz3,hprimewgll_xx,newtempx3,newtempy3,newtempz3)
         do j=1,m1
           do i=1,m2
             E1_mxm_m2_m1_5points(i,j) = C1_mxm_m2_m1_5points(i,1)*hprimewgll_xx(1,j) + &

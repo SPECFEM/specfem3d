@@ -302,21 +302,15 @@
 
   ! local parameters
   double precision             :: r0,r,x_prem
-  !double precision             :: ro_prem,vp_prem,vs_prem
-  !character(len=3), intent(in) :: param !rho, vs,vp
 
   r0=sqrt(xloc**2+yloc**2+zloc**2)
-  !  print*,'xloc,yloc,zloc,r0,idom',xloc,yloc,zloc,r0,idom
   r=r0/1000.
 
   x_prem=r/6371.     ! Radius (normalized to x(surface)=1 )
-  !  print*,'x_prem',x_prem
   IF(idom==1)THEN        ! upper crustal layer
-     !print*,'I am in domain 1'
      ro_prem=2.6
      vp_prem=5.8
      vs_prem=3.2
-  !    print*,'ro,vp,vs form domain 1',ro_prem,vp_prem,vs_prem
   else if(idom==2)THEN
      ro_prem=2.9                       ! lower crustal layer
      vp_prem=6.8

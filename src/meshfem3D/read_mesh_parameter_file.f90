@@ -57,9 +57,8 @@ contains
 ! local variables
   integer NEX_MAX
 
-  double precision DEPTH_BLOCK_KM!,RECORD_LENGTH_IN_SECONDS,hdur,minval_hdur
+  double precision DEPTH_BLOCK_KM
 
-!  character(len=256) dummystring
   integer ierr
   integer, external :: err_occurred_mesh
 

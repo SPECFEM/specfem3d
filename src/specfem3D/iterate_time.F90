@@ -375,9 +375,7 @@
           ! attenuation arrays
           call transfer_b_fields_att_to_device(Mesh_pointer, &
                   b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz,size(b_R_xx), &
-!!!               b_R_trace,b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz,size(b_R_xx), &
                   b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy,b_epsilondev_xz,b_epsilondev_yz, &
-!!!               b_epsilondev_trace,b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy,b_epsilondev_xz,b_epsilondev_yz, &
                   size(b_epsilondev_xx))
         endif
       endif
@@ -422,9 +420,7 @@
           ! attenuation arrays
           call transfer_fields_att_from_device(Mesh_pointer, &
                      R_xx,R_yy,R_xy,R_xz,R_yz,size(R_xx), &
-!!!                  R_trace,R_xx,R_yy,R_xy,R_xz,R_yz,size(R_xx), &
                      epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
-!!!                  epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
                      size(epsilondev_xx))
         endif
 
@@ -517,9 +513,7 @@
       if (ATTENUATION) &
         call transfer_fields_att_from_device(Mesh_pointer, &
                     R_xx,R_yy,R_xy,R_xz,R_yz,size(R_xx), &
-!!!                 R_trace,R_xx,R_yy,R_xy,R_xz,R_yz,size(R_xx), &
                     epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
-!!!                 epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
                     size(epsilondev_xx))
 
     endif

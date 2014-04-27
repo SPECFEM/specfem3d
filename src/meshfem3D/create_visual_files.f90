@@ -58,11 +58,9 @@
 
      open(unit=64,file=prname(1:len_trim(prname))//'mesh.INP',status='unknown',action='write',form='formatted')
      write(64,'(a8)') '*HEADING'
-!     write(64,'(a52)') 'cubit(mesh): 04/17/2009: 18:11:24'
      write(64,'(a27)') 'SPECFEM3D meshfem3D(mesh): '
      write(64,'(a5)') '*NODE'
      do i=1,nglob
-!        write(64,*) i,',',nodes_coords(i,1),',',nodes_coords(i,2),',',nodes_coords(i,3)
          write(64,'(i10,3(a,e15.6))') i,',',nodes_coords(i,1),',',nodes_coords(i,2),',',nodes_coords(i,3)
      enddo
      write(64,'(a31)') '*ELEMENT, TYPE=C3D8R, ELSET=EB1'

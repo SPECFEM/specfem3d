@@ -48,7 +48,6 @@
 
   ! file name
   character(len=256) :: prname_file
-  !character(len=2), optional, intent(in) :: str_id
 
   ! local parameters
   integer :: ispec,i
@@ -83,11 +82,6 @@
   write(IOVTK,*) ""
 
   write(IOVTK,'(a,i12)') "CELL_DATA ",nspec
-  !if( present( str_id ) ) then
-  !  write(IOVTK,'(a)') "SCALARS elem_flag_"//str_id//" integer"
-  !else
-  !  write(IOVTK,'(a)') "SCALARS elem_flag integer"
-  !endif
   write(IOVTK,'(a)') "SCALARS elem_flag integer"
   write(IOVTK,'(a)') "LOOKUP_TABLE default"
   do ispec = 1,nspec
@@ -536,11 +530,6 @@
   write(IOVTK,*) ""
 
   write(IOVTK,'(a,i12)') "CELL_DATA ",nspec
-  !if( present( str_id ) ) then
-  !  write(IOVTK,'(a)') "SCALARS elem_flag_"//str_id//" integer"
-  !else
-  !  write(IOVTK,'(a)') "SCALARS elem_flag integer"
-  !endif
   write(IOVTK,'(a)') "SCALARS elem_val float"
   write(IOVTK,'(a)') "LOOKUP_TABLE default"
   do ispec = 1,nspec

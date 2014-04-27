@@ -54,11 +54,7 @@
 
 ! adjoint simulations
   integer :: SIMULATION_TYPE
-  !integer :: NSPEC_BOUN
   integer :: NSPEC_ADJOINT
-! adjoint wavefields
-!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT) :: &
-!    mufr_kl, B_kl
 
 ! displacement and acceleration
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displs_poroelastic,accels_poroelastic
@@ -103,8 +99,6 @@
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &
     tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3, &
     tempx1p,tempx2p,tempx3p,tempy1p,tempy2p,tempy3p,tempz1p,tempz2p,tempz3p
-!    b_tempx1,b_tempx2,b_tempx3,b_tempy1,b_tempy2,b_tempy3,b_tempz1,b_tempz2,b_tempz3, &
-!    b_tempx1p,b_tempx2p,b_tempx3p,b_tempy1p,b_tempy2p,b_tempy3p,b_tempz1p,b_tempz2p,b_tempz3p
 
   real(kind=CUSTOM_REAL) :: duxdxl,duydxl,duzdxl,duxdyl,duydyl,duzdyl,duxdzl,duydzl,duzdzl
   real(kind=CUSTOM_REAL) :: dwxdxl,dwydxl,dwzdxl,dwxdyl,dwydyl,dwzdyl,dwxdzl,dwydzl,dwzdzl
@@ -120,27 +114,16 @@
   real(kind=CUSTOM_REAL) tempy1ls,tempy2ls,tempy3ls,tempy1lw,tempy2lw,tempy3lw
   real(kind=CUSTOM_REAL) tempz1ls,tempz2ls,tempz3ls,tempz1lw,tempz2lw,tempz3lw
 
-!  real(kind=CUSTOM_REAL) :: b_dux_dxl,b_duz_dxl,b_dux_dzl,b_duz_dzl
-!  real(kind=CUSTOM_REAL) :: dsxx,dsxy,dsxz,dsyy,dsyz,dszz
-!  real(kind=CUSTOM_REAL) :: b_dsxx,b_dsxy,b_dsxz,b_dsyy,b_dsyz,b_dszz
-!  real(kind=CUSTOM_REAL) :: b_dwx_dxl,b_dwz_dxl,b_dwx_dzl,b_dwz_dzl
-!  real(kind=CUSTOM_REAL) :: dwxx,dwxy,dwxz,dwyy,dwyz,dwzz
-!  real(kind=CUSTOM_REAL) :: b_dwxx,b_dwxy,b_dwxz,b_dwyy,b_dwyz,b_dwzz
   real(kind=CUSTOM_REAL) :: sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz,sigma_yx,sigma_zx,sigma_zy
   real(kind=CUSTOM_REAL) :: sigmap
-!  real(kind=CUSTOM_REAL) :: b_sigma_xx,b_sigma_yy,b_sigma_zz,b_sigma_xy,b_sigma_xz,b_sigma_yz
-!  real(kind=CUSTOM_REAL) :: b_sigmap
-!  real(kind=CUSTOM_REAL) :: nx,nz,vx,vz,vn,vxf,vzf,vnf,rho_vpI,rho_vpII,rho_vs,tx,tz,weight,xxi,zxi,xgamma,zgamma,jacobian1D
 
 ! viscous attenuation (poroelastic media)
   real(kind=CUSTOM_REAL), dimension(6) :: bl_relaxed
-
 
 ! Jacobian matrix and determinant
   real(kind=CUSTOM_REAL) ::  xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl
 
 ! material properties of the poroelastic medium
-!  real(kind=CUSTOM_REAL) :: mul_unrelaxed,lambdal_unrelaxed,lambdalplus2mul_unrelaxed
   real(kind=CUSTOM_REAL) :: kappal_s,rhol_s
   real(kind=CUSTOM_REAL) :: etal_f,kappal_f,rhol_f
   real(kind=CUSTOM_REAL) :: mul_fr,kappal_fr,phil,tortl,viscodampx,viscodampy,viscodampz
@@ -149,16 +132,6 @@
   real(kind=CUSTOM_REAL) :: D_biot,H_biot,C_biot,M_biot,rhol_bar
 
   real(kind=CUSTOM_REAL) :: mul_G,lambdal_G,lambdalplus2mul_G
-!  real(kind=CUSTOM_REAL) :: cpIsquare,cpIIsquare,cssquare,cpIl,cpIIl,csl
-
-! for attenuation
-!  real(kind=CUSTOM_REAL) :: Un,Unp1,tauinv,Sn,Snp1,theta_n,theta_np1,tauinvsquare,tauinvcube,tauinvUn
-
-
-! compute Grad(displs_poroelastic) at time step n for attenuation
-!  if(TURN_ATTENUATION_ON) call compute_gradient_attenuation(displs_poroelastic,dux_dxl_n,duz_dxl_n, &
-!      dux_dzl_n,duz_dzl_n,xix,xiz,gammax,gammaz,ibool,poroelastic,hprime_xx,hprime_zz,nspec,npoin)
-
 
   if( iphase == 1 ) then
     num_elements = nspec_outer_poroelastic

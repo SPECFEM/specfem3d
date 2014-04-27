@@ -87,7 +87,6 @@
   integer ios
 
   double precision,dimension(1) :: altitude_rec,distmin_ele
-  !double precision,dimension(4) :: elevation_node,dist_node
   double precision,dimension(NPROC) :: distmin_ele_all,elevation_all
 
   real(kind=CUSTOM_REAL) :: xloc,yloc,loc_ele,loc_distmin
@@ -110,9 +109,7 @@
   integer irec
   integer i,j,k,ispec,iglob
   integer imin,imax,jmin,jmax,kmin,kmax
-  !integer iface,inode,igll,jgll,kgll
 
-!  integer iselected,jselected,iface_selected,iadjust,jadjust
   integer iproc(1)
 
   ! topology of the control points of the surface element
@@ -132,7 +129,6 @@
 
   ! receiver information
   ! station information for writing the seismograms
-!  integer :: iglob_selected
   double precision, allocatable, dimension(:) :: stlat,stlon,stele,stbur,stutm_x,stutm_y,elevation
   double precision, allocatable, dimension(:) :: x_found_all,y_found_all,z_found_all
   double precision, dimension(:), allocatable :: final_distance_all
@@ -1061,7 +1057,6 @@
       read(IIN,"(a256)",iostat = ios) dummystring
       if( ios /= 0 ) exit
 
-      !read(IIN,*) station_name,network_name,stlat,stlon,stele,stbur
       if( len_trim(dummystring) > 0 ) then
         dummystring = trim(dummystring)
         read(dummystring, *) station_name, network_name, stlat, stlon, stele, stbur
