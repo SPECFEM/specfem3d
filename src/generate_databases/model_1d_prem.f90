@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -356,7 +357,7 @@
      ro_prem=13.0885-8.8381*x_prem**2
      vp_prem=11.2622-6.3640*x_prem**2
      vs_prem=3.6678-4.4475*x_prem**2
-  ENDIF
+  endif
 
   !    print*,'ro,vp,vs passed from routine and not multiplied',ro_prem,vp_prem,vs_prem
 

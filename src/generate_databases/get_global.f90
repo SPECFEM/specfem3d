@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -188,23 +189,23 @@
          ind(1)=indx
          return
       endif
-   ENDIF
+   endif
    i=l
    j=l+l
   200    CONTINUE
    IF (J <= IR) THEN
       IF (J<IR) THEN
          IF ( A(IND(j))<A(IND(j+1)) ) j=j+1
-      ENDIF
+      endif
       IF (q<A(IND(j))) THEN
          IND(I)=IND(J)
          I=J
          J=J+J
       ELSE
          J=IR+1
-      ENDIF
+      endif
    goto 200
-   ENDIF
+   endif
    IND(I)=INDX
   goto 100
 
