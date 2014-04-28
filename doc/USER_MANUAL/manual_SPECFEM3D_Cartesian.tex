@@ -199,7 +199,7 @@ It has very good accuracy and convergence properties \citep{MaPa89,SePr94,DeFiMu
 The spectral element approach admits spectral rates of convergence
 and allows exploiting $hp$-convergence schemes. It is also very well
 suited to parallel implementation on very large supercomputers \citep{KoTsChTr03,TsKoChTr03,KoLaMi08a,CaKoLaTiMiLeSnTr08,KoViCh10}
-as well as on clusters of GPU accelerating graphics cards \citep{KoMiEr09,KoErGoMi10,Kom11}.
+as well as on clusters of GPU accelerating graphics cards \citep{Kom11,MiKo10,KoMiEr09,KoErGoMi10}.
 Tensor products inside each element can be optimized to reach very
 high efficiency \citep{DeFiMu02}, and mesh point and element numbering
 can be optimized to reduce processor cache misses and improve cache
@@ -257,11 +257,14 @@ of the `Jaguar' Cray XT5 system at Oak Ridge National Laboratories
 (USA) \citep{CaKoLaTiMiLeSnTr08}. It also won the BULL Joseph Fourier
 supercomputing award in 2010.\\
 
+It reached the sustained one petaflop performance level for the first time in February 2013
+on the Blue Waters Cray supercomputer at the National Center for Supercomputing Applications (NCSA), located at the University of Illinois at Urbana-Champaign (USA).\\
+
 
 This new release of the code (version 2.1) includes Convolution or
 Auxiliary Differential Equation Perfectly Matched absorbing Layers
 (C-PML or ADE-PML) \citep{MaKoEz08,MaKoGe08,MaKo09,MaKoGeBr10,KoMa07}.
-It also includes support for GPU graphics card acceleration \citep{KoMiEr09,KoErGoMi10,MiKo10,Kom11}.\\
+It also includes support for GPU graphics card acceleration \citep{Kom11,MiKo10,KoMiEr09,KoErGoMi10}.\\
 
 
 The next release of the code will use the PT-SCOTCH parallel and threaded
@@ -289,7 +292,7 @@ and excellent scaling up to 150,000 processor cores is shown for instance
 in \citet{CaKoLaTiMiLeSnTr08,KoLaMi08a,MaKoBlLe08,KoErGoMi10,Kom11},
 \item [{GPU computing}] ~\\
  Computing on GPU graphics cards for acoustic or seismic wave propagation
-applications is described in detail in \citet{KoMiEr09,KoErGoMi10,MiKo10,Kom11}.
+applications is described in detail in \citet{Kom11,MiKo10,KoMiEr09,KoErGoMi10}.
 \end{description}
 \noindent If you use this new version 2.1, which has non blocking
 MPI for much better performance for medium or large runs, please cite
@@ -334,13 +337,10 @@ Marie Curie program.
 
 \chapter{\label{cha:Getting-Started}Getting Started}
 
-The SPECFEM3D Cartesian software package comes in a gzipped tar ball.
-In the directory in which you want to install the package, type
+To download the SPECFEM3D\_Cartesian software package, type this:
 \begin{lyxcode}
-{\small tar~-zxvf~SPECFEM3D\_V2.1.0\_Cartesian.tar.gz}{\small \par}
+git clone --recursive --branch devel https://github.com/geodynamics/specfem3d.git
 \end{lyxcode}
-The directory \texttt{\small SPECFEM3D/}{\small{} will then contain
-the source code.}\\
 {\small \par}
 
 We recommend that you add {\texttt{ulimit -S -s unlimited}} to your
@@ -4047,9 +4047,7 @@ The best single file to read is probably: \verb+ADJOINT_TOMO/iterate_adj/cluster
 \chapter*{\label{cha:Bug-Reports-and}Bug Reports and Suggestions for Improvements}
 
 To report bugs or suggest improvements to the code, please send an
-e-mail to the CIG Computational Seismology Mailing List \urlwithparentheses{cig-seismo@geodynamics.org}
-or Jeroen Tromp \urlwithparentheses{jtromp-AT-princeton.edu}, and/or
-use our online bug tracking system Roundup \urlwithparentheses{www.geodynamics.org/roundup}.
+e-mail to the CIG Computational Seismology Mailing List \urlwithparentheses{cig-seismo@geodynamics.org}.
 
 \addcontentsline{toc}{chapter}{Notes \& Acknowledgments}
 
@@ -4075,7 +4073,6 @@ is a trademark of Advanced Visualization Systems, and ParaView \urlwithparenthes
 is an open-source visualization platform.
 
 Please e-mail your feedback, questions, comments, and suggestions
-to Jeroen Tromp \urlwithparentheses{jtromp-AT-princeton.edu} or
 to the CIG Computational Seismology Mailing List \urlwithparentheses{cig-seismo@geodynamics.org}.
 
 \addcontentsline{toc}{chapter}{Copyright}
@@ -4085,10 +4082,9 @@ to the CIG Computational Seismology Mailing List \urlwithparentheses{cig-seismo@
 
 Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 
-Princeton University, USA, and CNRS / INRIA / University of Pau, France
+Princeton University, USA, and CNRS / University of Marseille, France
 
-$\copyright$ Princeton University and CNRS / INRIA / University of
-Pau, July 2012
+$\copyright$ Princeton University and CNRS / University of Marseille, July 2012
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published
