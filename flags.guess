@@ -71,7 +71,7 @@ case $my_FC in
         # GNU gfortran
         #
         DEF_FFLAGS="-std=f2003 -fimplicit-none -frange-check -O2 -DFORCE_VECTORIZATION -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -ffpe-trap=invalid,zero,overflow"
-        # for debugging, add -fbacktrace -fbounds-check -ffpe-trap=overflow,zero  and suppress -DFORCE_VECTORIZATION
+        # for debugging, add -ggdb -fbacktrace -fbounds-check -ffpe-trap=overflow,zero  and suppress -DFORCE_VECTORIZATION
         ;;
     g95|*/g95)
         #
