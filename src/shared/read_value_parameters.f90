@@ -26,7 +26,8 @@
 !=====================================================================
 
 ! read values from parameter file, ignoring white lines and comments
-  subroutine read_value_integer(value_to_read, name)
+
+  subroutine read_value_integer(value_to_read, name, ierr)
 
   implicit none
 
@@ -34,17 +35,16 @@
   character(len=*) name
   character(len=512) string_read
   integer ierr
-  common /param_err_common/ ierr
 
   call param_read(string_read, len(string_read), name, len(name), ierr)
   if (ierr /= 0) return
-  read(string_read,*) value_to_read
+  read(string_read,*,iostat=ierr) value_to_read
 
   end subroutine read_value_integer
 
 !--------------------
 
-  subroutine read_value_double_precision(value_to_read, name)
+  subroutine read_value_double_precision(value_to_read, name, ierr)
 
   implicit none
 
@@ -52,17 +52,16 @@
   character(len=*) name
   character(len=512) string_read
   integer ierr
-  common /param_err_common/ ierr
 
   call param_read(string_read, len(string_read), name, len(name), ierr)
   if (ierr /= 0) return
-  read(string_read,*) value_to_read
+  read(string_read,*,iostat=ierr) value_to_read
 
   end subroutine read_value_double_precision
 
 !--------------------
 
-  subroutine read_value_logical(value_to_read, name)
+  subroutine read_value_logical(value_to_read, name, ierr)
 
   implicit none
 
@@ -70,17 +69,16 @@
   character(len=*) name
   character(len=512) string_read
   integer ierr
-  common /param_err_common/ ierr
 
   call param_read(string_read, len(string_read), name, len(name), ierr)
   if (ierr /= 0) return
-  read(string_read,*) value_to_read
+  read(string_read,*,iostat=ierr) value_to_read
 
   end subroutine read_value_logical
 
 !--------------------
 
-  subroutine read_value_string(value_to_read, name)
+  subroutine read_value_string(value_to_read, name, ierr)
 
   implicit none
 
@@ -88,7 +86,6 @@
   character(len=*) name
   character(len=512) string_read
   integer ierr
-  common /param_err_common/ ierr
 
   call param_read(string_read, len(string_read), name, len(name), ierr)
   if (ierr /= 0) return
@@ -98,15 +95,14 @@
 
 !--------------------
 
-  subroutine open_parameter_file()
+  subroutine open_parameter_file(ierr)
 
   include 'constants.h'
   integer ierr
-  common /param_err_common/ ierr
   character(len=512) filename
   filename = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'Par_file'
 
-  call param_open(filename, len(filename), ierr);
+  call param_open(filename, len(filename), ierr)
   if (ierr /= 0) then
     print*
     print*,'opening file failed, please check your file path and run-directory.'
@@ -117,20 +113,8 @@
 
 !--------------------
 
-  subroutine close_parameter_file()
+  subroutine close_parameter_file
 
-  call param_close();
+  call param_close()
 
   end subroutine close_parameter_file
-
-!--------------------
-
-  integer function err_occurred()
-
-  integer ierr
-  common /param_err_common/ ierr
-
-  err_occurred = ierr
-
-  end function err_occurred
-
