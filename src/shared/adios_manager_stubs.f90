@@ -40,8 +40,8 @@ subroutine no_adios_err()
   call world_rank(myrank)
   if (myrank == 0) then
     print *, "----------------------------------------------------"
-    print *, "Not configure to be compile with ADIOS."
-    print *, "Check your par_file and set ADIOS_ENABLED to .false."
+    print *, "Not configured to compile or run with ADIOS."
+    print *, "Check your Par_file and set ADIOS_ENABLED to .false."
     print *, "or reconfigure using --with-adios."
     print *, "----------------------------------------------------"
   endif
