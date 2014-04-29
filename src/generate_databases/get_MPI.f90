@@ -65,7 +65,7 @@
   double precision, dimension(:), allocatable :: xp,yp,zp
 
   integer, dimension(:), allocatable :: locval
-  integer, dimension(:), allocatable :: nibool_interfaces_ext_mesh_true
+  integer :: nibool_interfaces_ext_mesh_true
 
   ! for MPI buffers
   integer, dimension(:), allocatable :: reorder_interface_ext_mesh, &
@@ -91,9 +91,6 @@
                             my_nelmnts_neighbours_ext_mesh, my_interfaces_ext_mesh, &
                             ibool_interfaces_ext_mesh, &
                             nibool_interfaces_ext_mesh,NGNOD )
-
-  allocate(nibool_interfaces_ext_mesh_true(num_interfaces_ext_mesh),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array nibool_interfaces_ext_mesh_true'
 
   ! sorts ibool comm buffers lexicographically for all MPI interfaces
   num_points1 = 0
@@ -123,16 +120,16 @@
     enddo
 
     ! sorts (lexicographically?) ibool_interfaces_ext_mesh and updates value
-    ! of total number of points nibool_interfaces_ext_mesh_true(iinterface)
+    ! of total number of points nibool_interfaces_ext_mesh_true
     call sort_array_coordinates(nibool_interfaces_ext_mesh(iinterface),xp,yp,zp, &
          ibool_interfaces_ext_mesh(1:nibool_interfaces_ext_mesh(iinterface),iinterface), &
          reorder_interface_ext_mesh,locval,ifseg, &
-         nibool_interfaces_ext_mesh_true(iinterface), &
+         nibool_interfaces_ext_mesh_true, &
          ninseg_ext_mesh,SMALLVAL_TOL)
 
     ! checks that number of MPI points are still the same
     num_points1 = num_points1 + nibool_interfaces_ext_mesh(iinterface)
-    num_points2 = num_points2 + nibool_interfaces_ext_mesh_true(iinterface)
+    num_points2 = num_points2 + nibool_interfaces_ext_mesh_true
     if( num_points1 /= num_points2 ) then
       write(*,*) 'error sorting MPI interface points:',myrank
       write(*,*) '   interface:',iinterface,num_points1,num_points2
@@ -149,9 +146,6 @@
     deallocate(ninseg_ext_mesh)
 
   enddo
-
-  ! cleanup
-  deallocate(nibool_interfaces_ext_mesh_true)
 
   ! outputs total number of MPI interface points
   call sum_all_i(num_points2,ilocnum)
