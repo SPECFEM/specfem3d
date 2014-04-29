@@ -102,7 +102,6 @@ CONTAINS
 
   filename = localpath_name(1:len_trim(localpath_name))//'/fault_file_'//&
              NTchar(1:len_trim(NTchar))//'.dat'
-  filename = adjustl(filename)
   ! reads fault elements and nodes
  ! File format:
  ! Line 1:

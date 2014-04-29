@@ -70,15 +70,16 @@
     final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'
   else
     ! create full final local path
-    final_LOCAL_PATH = trim(adjustl(LOCAL_PATH)) // '/'
+    final_LOCAL_PATH = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // '/'
   endif
   write(procname,"(i4)") myrank
+  procname = adjustl(procname)
 
   allocate(rtmpseis(NSTEP),stat=ier)
   if( ier /= 0 ) stop 'error allocating rtmpseis array'
 
   ! write seismograms (dx)
-  open(unit=IOUT_SU, file=trim(adjustl(final_LOCAL_PATH))//trim(adjustl(procname))//'_dx_SU' ,&
+  open(unit=IOUT_SU, file=trim(final_LOCAL_PATH)//trim(procname)//'_dx_SU' ,&
        status='unknown', access='direct', recl=4, iostat=ier)
 
   if( ier /= 0 ) stop 'error opening ***_dx_SU file'
@@ -107,7 +108,7 @@
   close(IOUT_SU)
 
   ! write seismograms (dy)
-  open(unit=IOUT_SU, file=trim(adjustl(final_LOCAL_PATH))//trim(adjustl(procname))//'_dy_SU' ,&
+  open(unit=IOUT_SU, file=trim(final_LOCAL_PATH)//trim(procname)//'_dy_SU' ,&
        status='unknown', access='direct', recl=4, iostat=ier)
 
   if( ier /= 0 ) stop 'error opening ***_dy_SU file'
@@ -128,7 +129,7 @@
   close(IOUT_SU)
 
   ! write seismograms (dz)
-  open(unit=IOUT_SU, file=trim(adjustl(final_LOCAL_PATH))//trim(adjustl(procname))//'_dz_SU' ,&
+  open(unit=IOUT_SU, file=trim(final_LOCAL_PATH)//trim(procname)//'_dz_SU' ,&
        status='unknown', access='direct', recl=4, iostat=ier)
 
   if( ier /= 0 ) stop 'error opening ***_dz_SU file'

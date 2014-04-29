@@ -499,7 +499,7 @@
   ! local parameters
   integer iorientation
   integer length_station_name,length_network_name
-  character(len=256) sisname,clean_LOCAL_PATH,final_LOCAL_PATH
+  character(len=256) sisname,final_LOCAL_PATH
   character(len=3) channel
 
   ! loops over each seismogram component
@@ -527,10 +527,8 @@
     if( USE_OUTPUT_FILES_PATH ) then
       final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'
     else
-      ! suppress white spaces if any
-      clean_LOCAL_PATH = adjustl(LOCAL_PATH)
       ! create full final local path
-      final_LOCAL_PATH = clean_LOCAL_PATH(1:len_trim(clean_LOCAL_PATH)) // '/'
+      final_LOCAL_PATH = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // '/'
     endif
 
     ! ASCII output format
@@ -565,7 +563,7 @@
 
   character(len=3) channel
   character(len=1) component
-  character(len=256) sisname,clean_LOCAL_PATH,final_LOCAL_PATH
+  character(len=256) sisname,final_LOCAL_PATH
 
 ! save displacement, velocity or acceleration
   if(istore == 1) then
@@ -600,10 +598,8 @@
       if( USE_OUTPUT_FILES_PATH ) then
         final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'
       else
-        ! suppress white spaces if any
-        clean_LOCAL_PATH = adjustl(LOCAL_PATH)
         ! create full final local path
-        final_LOCAL_PATH = clean_LOCAL_PATH(1:len_trim(clean_LOCAL_PATH)) // '/'
+        final_LOCAL_PATH = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // '/'
       endif
 
 
@@ -660,7 +656,7 @@
 
   character(len=4) chn
   character(len=1) component
-  character(len=256) sisname,clean_LOCAL_PATH,final_LOCAL_PATH
+  character(len=256) sisname,final_LOCAL_PATH
 
   component = 'd'
 
@@ -700,10 +696,8 @@
         if( USE_OUTPUT_FILES_PATH ) then
           final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'
         else
-          ! suppress white spaces if any
-          clean_LOCAL_PATH = adjustl(LOCAL_PATH)
           ! create full final local path
-          final_LOCAL_PATH = clean_LOCAL_PATH(1:len_trim(clean_LOCAL_PATH)) // '/'
+          final_LOCAL_PATH = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // '/'
         endif
 
         ! save seismograms in text format with no subsampling.

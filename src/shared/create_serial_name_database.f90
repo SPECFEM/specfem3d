@@ -77,11 +77,8 @@
 ! on shared-memory machines, global path is the same as local path
   else
 
-! suppress white spaces if any
-    clean_LOCAL_PATH = adjustl(LOCAL_PATH)
-
 ! create full name with path
-    prname = clean_LOCAL_PATH(1:len_trim(clean_LOCAL_PATH)) // procname
+    prname = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // procname
 
   endif
 

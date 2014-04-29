@@ -361,7 +361,7 @@
   if( myrank == 0 ) then
     ! tests if OUTPUT_FILES directory exists
     ! note: inquire behaves differently when using intel ifort or gfortran compilers
-    !INQUIRE( FILE = dummystring(1:len_trim(dummystring))//'/.', EXIST = exists )
+    !INQUIRE( FILE = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))//'/.', EXIST = exists )
     open(IOUT,file=trim(OUTPUT_FILES_PATH)//'/dummy.txt',status='unknown',iostat=ier)
     if( ier /= 0 ) then
       print*,"OUTPUT_FILES directory does not work: ",trim(OUTPUT_FILES_PATH)
@@ -370,11 +370,10 @@
     close(IOUT,status='delete')
 
     ! tests if LOCAL_PATH directory exists
-    dummystring = adjustl(LOCAL_PATH)
-    !INQUIRE( FILE = dummystring(1:len_trim(dummystring))//'/.', EXIST = exists )
-    open(IOUT,file=trim(dummystring)//'/dummy.txt',status='unknown',iostat=ier)
+    !INQUIRE( FILE = LOCAL_PATH(1:len_trim(LOCAL_PATH))//'/.', EXIST = exists )
+    open(IOUT,file=trim(LOCAL_PATH)//'/dummy.txt',status='unknown',iostat=ier)
     if( ier /= 0 ) then
-      print*,"LOCAL_PATH directory does not work: ",trim(dummystring)
+      print*,"LOCAL_PATH directory does not work: ",trim(LOCAL_PATH)
       call exit_MPI(myrank,'error LOCAL_PATH directory')
     endif
     close(IOUT,status='delete')

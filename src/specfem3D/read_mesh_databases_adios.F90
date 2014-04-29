@@ -45,8 +45,7 @@ subroutine read_mesh_for_init(nspec, nglob)
   !-------------------------------------.
   ! Open ADIOS Database file, read mode |
   !-------------------------------------'
-  database_name = adjustl(LOCAL_PATH)
-  database_name = database_name(1:len_trim(database_name)) // "/external_mesh.bp"
+  database_name = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // "/external_mesh.bp"
 
   call world_get_comm(comm)
 
@@ -154,8 +153,7 @@ subroutine read_mesh_databases_adios()
   !-------------------------------------'
   sel_num = 0
 
-  database_name = adjustl(LOCAL_PATH)
-  database_name = database_name(1:len_trim(database_name)) // "/external_mesh.bp"
+  database_name = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // "/external_mesh.bp"
 
   call world_get_comm(comm)
 
@@ -1761,8 +1759,7 @@ subroutine read_moho_mesh_adjoint_adios()
   !-------------------------------------'
   sel_num = 0
 
-  database_name = adjustl(LOCAL_PATH)
-  database_name = database_name(1:len_trim(database_name)) // "/moho.bp"
+  database_name = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // "/moho.bp"
 
   call world_get_comm(comm)
 
