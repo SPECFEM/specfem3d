@@ -43,7 +43,6 @@ meshfem3D_TARGETS = \
 meshfem3D_OBJECTS = \
 	$O/check_mesh_quality.mesh.o \
 	$O/compute_parameters.mesh.o \
-	$O/create_name_database.mesh.o \
 	$O/create_regions_mesh.mesh.o \
 	$O/create_visual_files.mesh.o \
 	$O/define_subregions.mesh.o \
@@ -67,6 +66,7 @@ meshfem3D_MODULES = \
 	$(EMPTY_MACRO)
 
 meshfem3D_SHARED_OBJECTS = \
+	$O/create_name_database.shared.o \
 	$O/exit_mpi.shared.o \
 	$O/get_global.shared.o \
 	$O/hex_nodes.shared.o \
