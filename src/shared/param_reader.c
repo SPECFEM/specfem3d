@@ -118,7 +118,6 @@ FC_FUNC_(param_read,PARAM_READ)(char * string_read, int * string_read_len, char 
 {
   char * namecopy;
   char * blank;
-  char * namecopy2;
   int status;
   regex_t compiled_pattern;
   char line[LINE_MAX];
@@ -132,13 +131,6 @@ FC_FUNC_(param_read,PARAM_READ)(char * string_read, int * string_read_len, char 
   blank = strchr(namecopy, ' ');
   if (blank != NULL) {
     namecopy[blank - namecopy] = '\0';
-  }
-  // Then get rid of any dot-terminated prefix.
-  namecopy2 = strchr(namecopy, '.');
-  if (namecopy2 != NULL) {
-    namecopy2 += 1;
-  } else {
-    namecopy2 = namecopy;
   }
   /* Regular expression for parsing lines from param file.
    ** Good luck reading this regular expression.  Basically, the lines of
@@ -189,7 +181,7 @@ FC_FUNC_(param_read,PARAM_READ)(char * string_read, int * string_read_len, char 
     // If we have a match, extract the keyword from the line.
     keyword = strndup(line+parameter[1].rm_so, parameter[1].rm_eo-parameter[1].rm_so);
     // If the keyword is not the one we're looking for, check the next line.
-    if (strcmp(keyword, namecopy2) != 0) {
+    if (strcmp(keyword, namecopy) != 0) {
       free(keyword);
       continue;
     }
@@ -200,7 +192,6 @@ FC_FUNC_(param_read,PARAM_READ)(char * string_read, int * string_read_len, char 
     // Clear out the return string with blanks, copy the value into it, and return.
     memset(string_read, ' ', *string_read_len);
     strncpy(string_read, value, strlen(value));
-    // printf("'%s'='%s'\n", namecopy2, value);
     free(value);
     free(namecopy);
     *ierr = 0;

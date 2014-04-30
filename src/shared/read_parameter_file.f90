@@ -68,28 +68,28 @@
   call open_parameter_file(ierr)
 
   ! reads in parameters
-  call read_value_integer(SIMULATION_TYPE, 'solver.SIMULATION_TYPE', ierr)
+  call read_value_integer(SIMULATION_TYPE, 'SIMULATION_TYPE', ierr)
   if (ierr /= 0) return
-  call read_value_integer(NOISE_TOMOGRAPHY, 'solver.NOISE_TOMOGRAPHY', ierr)
+  call read_value_integer(NOISE_TOMOGRAPHY, 'NOISE_TOMOGRAPHY', ierr)
   if (ierr /= 0) return
-  call read_value_logical(SAVE_FORWARD, 'solver.SAVE_FORWARD', ierr)
+  call read_value_logical(SAVE_FORWARD, 'SAVE_FORWARD', ierr)
   if (ierr /= 0) return
-  call read_value_integer(UTM_PROJECTION_ZONE, 'mesher.UTM_PROJECTION_ZONE', ierr)
+  call read_value_integer(UTM_PROJECTION_ZONE, 'UTM_PROJECTION_ZONE', ierr)
   if (ierr /= 0) return
-  call read_value_logical(SUPPRESS_UTM_PROJECTION, 'mesher.SUPPRESS_UTM_PROJECTION', ierr)
+  call read_value_logical(SUPPRESS_UTM_PROJECTION, 'SUPPRESS_UTM_PROJECTION', ierr)
   if (ierr /= 0) return
   ! total number of processors
-  call read_value_integer(NPROC, 'mesher.NPROC', ierr)
+  call read_value_integer(NPROC, 'NPROC', ierr)
   if (ierr /= 0) then
     ! checks if it's using an old Par_file format
-    call read_value_integer(nproc_eta_old, 'mesher.NPROC_ETA', ierr)
+    call read_value_integer(nproc_eta_old, 'NPROC_ETA', ierr)
     if (ierr /= 0) then
       print*,'please specify the number of processes in Par_file as:'
       print*,'NPROC           =    <my_number_of_desired_processes> '
       return
     endif
     ! checks if it's using an old Par_file format
-    call read_value_integer(nproc_xi_old, 'mesher.NPROC_XI', ierr)
+    call read_value_integer(nproc_xi_old, 'NPROC_XI', ierr)
     if (ierr /= 0) then
       print*,'please specify the number of processes in Par_file as:'
       print*,'NPROC           =    <my_number_of_desired_processes> '
@@ -97,76 +97,76 @@
     endif
     NPROC = nproc_eta_old * nproc_xi_old
   endif
-  call read_value_integer(NSTEP, 'solver.NSTEP', ierr)
+  call read_value_integer(NSTEP, 'NSTEP', ierr)
   if (ierr /= 0) return
-  call read_value_double_precision(DT, 'solver.DT', ierr)
+  call read_value_double_precision(DT, 'DT', ierr)
   if (ierr /= 0) return
 
   ! number of nodes for 2D and 3D shape functions for quadrilaterals and hexahedra
-  call read_value_integer(NGNOD, 'solver.NGNOD', ierr)
+  call read_value_integer(NGNOD, 'NGNOD', ierr)
   if (ierr /= 0) return
 
   ! define the velocity model
-  call read_value_string(MODEL, 'model.MODEL', ierr)
+  call read_value_string(MODEL, 'MODEL', ierr)
   if (ierr /= 0) stop 'an error occurred while reading the parameter file: MODEL'
 
-  call read_value_logical(APPROXIMATE_OCEAN_LOAD, 'model.APPROXIMATE_OCEAN_LOAD', ierr)
+  call read_value_logical(APPROXIMATE_OCEAN_LOAD, 'APPROXIMATE_OCEAN_LOAD', ierr)
   if (ierr /= 0) return
-  call read_value_logical(TOPOGRAPHY, 'model.TOPOGRAPHY', ierr)
+  call read_value_logical(TOPOGRAPHY, 'TOPOGRAPHY', ierr)
   if (ierr /= 0) return
-  call read_value_logical(ATTENUATION, 'model.ATTENUATION', ierr)
+  call read_value_logical(ATTENUATION, 'ATTENUATION', ierr)
   if (ierr /= 0) return
-  call read_value_logical(FULL_ATTENUATION_SOLID, 'model.FULL_ATTENUATION_SOLID', ierr)
+  call read_value_logical(FULL_ATTENUATION_SOLID, 'FULL_ATTENUATION_SOLID', ierr)
   if (ierr /= 0) return
-  call read_value_logical(ANISOTROPY, 'model.ANISOTROPY', ierr)
+  call read_value_logical(ANISOTROPY, 'ANISOTROPY', ierr)
   if (ierr /= 0) return
   call read_value_string(TOMOGRAPHY_PATH, 'TOMOGRAPHY_PATH', ierr)
   if (ierr /= 0) return
-  call read_value_logical(USE_OLSEN_ATTENUATION, 'model.USE_OLSEN_ATTENUATION', ierr)
+  call read_value_logical(USE_OLSEN_ATTENUATION, 'USE_OLSEN_ATTENUATION', ierr)
   if (ierr /= 0) return
-  call read_value_double_precision(OLSEN_ATTENUATION_RATIO, 'model.OLSEN_ATTENUATION_RATIO', ierr)
+  call read_value_double_precision(OLSEN_ATTENUATION_RATIO, 'OLSEN_ATTENUATION_RATIO', ierr)
   if (ierr /= 0) return
-  call read_value_logical(PML_CONDITIONS, 'solver.PML_CONDITIONS', ierr)
+  call read_value_logical(PML_CONDITIONS, 'PML_CONDITIONS', ierr)
   if (ierr /= 0) return
-  call read_value_logical(PML_INSTEAD_OF_FREE_SURFACE, 'model.PML_INSTEAD_OF_FREE_SURFACE', ierr)
+  call read_value_logical(PML_INSTEAD_OF_FREE_SURFACE, 'PML_INSTEAD_OF_FREE_SURFACE', ierr)
   if (ierr /= 0) return
-  call read_value_double_precision(f0_FOR_PML, 'model.f0_FOR_PML', ierr)
+  call read_value_double_precision(f0_FOR_PML, 'f0_FOR_PML', ierr)
   if (ierr /= 0) return
-  call read_value_logical(STACEY_ABSORBING_CONDITIONS, 'solver.STACEY_ABSORBING_CONDITIONS', ierr)
+  call read_value_logical(STACEY_ABSORBING_CONDITIONS, 'STACEY_ABSORBING_CONDITIONS', ierr)
   if (ierr /= 0) return
-  call read_value_logical(STACEY_INSTEAD_OF_FREE_SURFACE, 'model.STACEY_INSTEAD_OF_FREE_SURFACE', ierr)
+  call read_value_logical(STACEY_INSTEAD_OF_FREE_SURFACE, 'STACEY_INSTEAD_OF_FREE_SURFACE', ierr)
   if (ierr /= 0) return
-  call read_value_logical(CREATE_SHAKEMAP, 'solver.CREATE_SHAKEMAP', ierr)
+  call read_value_logical(CREATE_SHAKEMAP, 'CREATE_SHAKEMAP', ierr)
   if (ierr /= 0) return
-  call read_value_logical(MOVIE_SURFACE, 'solver.MOVIE_SURFACE', ierr)
+  call read_value_logical(MOVIE_SURFACE, 'MOVIE_SURFACE', ierr)
   if (ierr /= 0) return
-  call read_value_integer(MOVIE_TYPE, 'solver.MOVIE_TYPE', ierr)
+  call read_value_integer(MOVIE_TYPE, 'MOVIE_TYPE', ierr)
   if (ierr /= 0) return
-  call read_value_logical(MOVIE_VOLUME, 'solver.MOVIE_VOLUME', ierr)
+  call read_value_logical(MOVIE_VOLUME, 'MOVIE_VOLUME', ierr)
   if (ierr /= 0) return
-  call read_value_logical(SAVE_DISPLACEMENT, 'solver.SAVE_DISPLACEMENT', ierr)
+  call read_value_logical(SAVE_DISPLACEMENT, 'SAVE_DISPLACEMENT', ierr)
   if (ierr /= 0) return
-  call read_value_logical(USE_HIGHRES_FOR_MOVIES, 'solver.USE_HIGHRES_FOR_MOVIES', ierr)
+  call read_value_logical(USE_HIGHRES_FOR_MOVIES, 'USE_HIGHRES_FOR_MOVIES', ierr)
   if (ierr /= 0) return
-  call read_value_integer(NTSTEP_BETWEEN_FRAMES, 'solver.NTSTEP_BETWEEN_FRAMES', ierr)
+  call read_value_integer(NTSTEP_BETWEEN_FRAMES, 'NTSTEP_BETWEEN_FRAMES', ierr)
   if (ierr /= 0) return
-  call read_value_double_precision(HDUR_MOVIE, 'solver.HDUR_MOVIE', ierr)
+  call read_value_double_precision(HDUR_MOVIE, 'HDUR_MOVIE', ierr)
   if (ierr /= 0) return
-  call read_value_logical(SAVE_MESH_FILES, 'mesher.SAVE_MESH_FILES', ierr)
+  call read_value_logical(SAVE_MESH_FILES, 'SAVE_MESH_FILES', ierr)
   if (ierr /= 0) return
   call read_value_string(LOCAL_PATH, 'LOCAL_PATH', ierr)
   if (ierr /= 0) return
-  call read_value_integer(NTSTEP_BETWEEN_OUTPUT_INFO, 'solver.NTSTEP_BETWEEN_OUTPUT_INFO', ierr)
+  call read_value_integer(NTSTEP_BETWEEN_OUTPUT_INFO, 'NTSTEP_BETWEEN_OUTPUT_INFO', ierr)
   if (ierr /= 0) return
-  call read_value_integer(NTSTEP_BETWEEN_OUTPUT_SEISMOS, 'solver.NTSTEP_BETWEEN_OUTPUT_SEISMOS', ierr)
+  call read_value_integer(NTSTEP_BETWEEN_OUTPUT_SEISMOS, 'NTSTEP_BETWEEN_OUTPUT_SEISMOS', ierr)
   if (ierr /= 0) return
-  call read_value_integer(NTSTEP_BETWEEN_READ_ADJSRC, 'solver.NTSTEP_BETWEEN_READ_ADJSRC', ierr)
+  call read_value_integer(NTSTEP_BETWEEN_READ_ADJSRC, 'NTSTEP_BETWEEN_READ_ADJSRC', ierr)
   if (ierr /= 0) return
-  call read_value_logical(USE_FORCE_POINT_SOURCE, 'solver.USE_FORCE_POINT_SOURCE', ierr)
+  call read_value_logical(USE_FORCE_POINT_SOURCE, 'USE_FORCE_POINT_SOURCE', ierr)
   if (ierr /= 0) return
-  call read_value_logical(USE_RICKER_TIME_FUNCTION, 'solver.USE_RICKER_TIME_FUNCTION', ierr)
+  call read_value_logical(USE_RICKER_TIME_FUNCTION, 'USE_RICKER_TIME_FUNCTION', ierr)
   if (ierr /= 0) return
-  call read_value_logical(PRINT_SOURCE_TIME_FUNCTION, 'solver.PRINT_SOURCE_TIME_FUNCTION', ierr)
+  call read_value_logical(PRINT_SOURCE_TIME_FUNCTION, 'PRINT_SOURCE_TIME_FUNCTION', ierr)
   if (ierr /= 0) return
 
   !! read the traction path directory
@@ -369,8 +369,8 @@
   ! opens file Par_file
   call open_parameter_file(ierr)
 
-  call read_value_logical(GPU_MODE, 'solver.GPU_MODE', ierr)
-  call read_value_logical(GRAVITY, 'solver.GRAVITY', ierr)
+  call read_value_logical(GPU_MODE, 'GPU_MODE', ierr)
+  call read_value_logical(GRAVITY, 'GRAVITY', ierr)
 
   ! close parameter file
   call close_parameter_file()
@@ -410,13 +410,13 @@ subroutine read_adios_parameters(ADIOS_ENABLED, ADIOS_FOR_DATABASES,       &
   ADIOS_FOR_KERNELS        = .false.
   ! opens file Par_file
   call open_parameter_file(ierr)
-  call read_value_logical(ADIOS_ENABLED, 'solver.ADIOS_ENABLED', ierr)
+  call read_value_logical(ADIOS_ENABLED, 'ADIOS_ENABLED', ierr)
   if (ierr == 0 .and. ADIOS_ENABLED) then
-    call read_value_logical(ADIOS_FOR_DATABASES, 'solver.ADIOS_FOR_DATABASES', ierr)
-    call read_value_logical(ADIOS_FOR_MESH, 'solver.ADIOS_FOR_MESH', ierr)
+    call read_value_logical(ADIOS_FOR_DATABASES, 'ADIOS_FOR_DATABASES', ierr)
+    call read_value_logical(ADIOS_FOR_MESH, 'ADIOS_FOR_MESH', ierr)
     call read_value_logical(ADIOS_FOR_FORWARD_ARRAYS, &
-                           'solver.ADIOS_FOR_FORWARD_ARRAYS', ierr)
-    call read_value_logical(ADIOS_FOR_KERNELS, 'solver.ADIOS_FOR_KERNELS', ierr)
+                           'ADIOS_FOR_FORWARD_ARRAYS', ierr)
+    call read_value_logical(ADIOS_FOR_KERNELS, 'ADIOS_FOR_KERNELS', ierr)
   endif
   call close_parameter_file()
 
