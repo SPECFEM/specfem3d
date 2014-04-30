@@ -42,8 +42,7 @@
 ! note that pressure is defined as:
 !     p = - Chi_dot_dot
 !
-  use specfem_par,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,TINYVAL_SNGL,&
-                        PML_CONDITIONS
+  use specfem_par,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,PML_CONDITIONS
   use pml_par, only: is_CPML, spec_to_CPML, NSPEC_CPML, &
                      PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl,&
                      PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old,&

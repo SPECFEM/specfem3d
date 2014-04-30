@@ -446,9 +446,6 @@
   real(kind=CUSTOM_REAL) stf_used,stf_used_total_all,time_source
   integer :: isource,iglob,i,j,k,ispec
 
-! adjoint sources in SU format
-  integer,parameter :: nheader=240      ! 240 bytes
-
   ! some old tests (currently unstable; do not remove them though, we might fix this one day)
   if (OLD_TEST_TO_FIX_ONE_DAY) return
 

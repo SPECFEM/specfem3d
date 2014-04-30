@@ -411,7 +411,7 @@ subroutine read_potential_on_pml_interface(b_potential_dot_dot_acoustic,b_potent
 
   use specfem_par, only: NGLOB_AB,ibool,NSTEP,it
   use pml_par, only: NSPEC_CPML,CPML_to_spec
-  use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
   implicit none
 
   integer, intent(in) :: nglob_interface_PML_acoustic,b_reclen_PML_potential

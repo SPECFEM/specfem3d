@@ -414,9 +414,6 @@
   real(kind=CUSTOM_REAL) stf_used,stf_used_total_all,time_source
   integer :: isource,iglob,ispec,i,j,k
 
-! adjoint sources in SU format
-  integer,parameter :: nheader=240      ! 240 bytes
-
   ! checks if anything to do
   if( SIMULATION_TYPE /= 3 ) return
 

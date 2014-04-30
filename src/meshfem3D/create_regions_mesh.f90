@@ -160,8 +160,6 @@ contains
     integer, dimension(NGNOD_EIGHT_CORNERS,NSPEC_DOUBLING_SUPERBRICK) :: ibool_superbrick
     double precision, dimension(NGLOB_DOUBLING_SUPERBRICK) :: x_superbrick,y_superbrick,z_superbrick
 
-    logical, parameter :: DEBUG = .true.
-
     ! **************
 
     ! create the name for the database of the current slide and region

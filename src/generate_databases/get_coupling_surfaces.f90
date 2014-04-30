@@ -427,9 +427,6 @@
              reshape( (/ iface1_corner_ijk,iface2_corner_ijk, &
                  iface3_corner_ijk,iface4_corner_ijk, &
                  iface5_corner_ijk,iface6_corner_ijk /),(/3,4,6/))   ! all faces
-  ! midpoint indices for each face (xmin,xmax,ymin,ymax,zmin,zmax)
-  integer,dimension(3,6),parameter :: iface_all_midpointijk = &
-             reshape( (/ 1,2,2, NGLLX,2,2, 2,1,2, 2,NGLLY,2, 2,2,1, 2,2,NGLLZ  /),(/3,6/))   ! top
 
   ! allocates temporary arrays
   allocate(tmp_normal(NDIM,NGLLSQUARE,nspec*6),stat=ier)
@@ -594,9 +591,6 @@
              reshape( (/ iface1_corner_ijk,iface2_corner_ijk, &
                  iface3_corner_ijk,iface4_corner_ijk, &
                  iface5_corner_ijk,iface6_corner_ijk /),(/3,4,6/))   ! all faces
-  ! midpoint indices for each face (xmin,xmax,ymin,ymax,zmin,zmax)
-  integer,dimension(3,6),parameter :: iface_all_midpointijk = &
-             reshape( (/ 1,2,2, NGLLX,2,2, 2,1,2, 2,NGLLY,2, 2,2,1, 2,2,NGLLZ  /),(/3,6/))   ! top
 
 ! allocates temporary arrays
   allocate(tmp_normal(NDIM,NGLLSQUARE,nspec*6),stat=ier)

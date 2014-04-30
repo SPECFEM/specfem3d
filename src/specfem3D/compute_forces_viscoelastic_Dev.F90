@@ -60,7 +60,7 @@
 
   use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM, &
                       N_SLS,SAVE_MOHO_MESH, &
-                      ONE_THIRD,FOUR_THIRDS,m1,m2,IOUT
+                      ONE_THIRD,FOUR_THIRDS,m1,m2
   use fault_solver_dynamic, only : Kelvin_Voigt_eta
   use specfem_par, only : FULL_ATTENUATION_SOLID
   use pml_par, only: is_CPML, spec_to_CPML, accel_elastic_CPML,NSPEC_CPML, &

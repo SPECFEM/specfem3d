@@ -742,7 +742,7 @@ subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,
   use specfem_par, only: NGLOB_AB,it,deltat
   use pml_par,only : CPML_regions,k_store_x,k_store_y,k_store_z,d_store_x,d_store_y,d_store_z,&
                      alpha_store_x,alpha_store_y,alpha_store_z
-  use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
 
   implicit none
 
