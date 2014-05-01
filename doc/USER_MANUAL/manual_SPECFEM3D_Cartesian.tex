@@ -387,6 +387,12 @@ On SGI systems, \texttt{flags.guess} automatically informs \texttt{configure}
 to insert `\texttt{`TRAP\_FPE=OFF}'' into the generated \texttt{Makefile}
 in order to turn underflow trapping off.\\
 
+You can add -DFORCE\_VECTORIZATION to the compiler options in \texttt{flags.guess} (for all compilers, except for IBM for which the syntax is -WF,-DFORCE\_VECTORIZATION )
+to speed up the code in the fluid (acoustic) parts (only; FORCE\_VECTORIZATION support for elastic parts has been discontinued in the source code).
+This works fine if (and only if) your computer always allocates a contiguous memory block for each allocatable array;
+this is the case for most machines and most compilers, but not all. For more details see https://github.com/geodynamics/specfem3d/issues/81 .
+To check if that option works fine on your machine, run the code with and without it for a model containing a significant fluid layer
+(or entirely fluid) and make sure the seismograms are identical.\\
 
 Note that we use CUBIT (now called Trelis) to create meshes of hexahedra, but other packages
 can be used as well, for instance GiD from \url{http://gid.cimne.upc.es}
