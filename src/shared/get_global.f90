@@ -45,8 +45,7 @@
   double precision xp(npointot),yp(npointot),zp(npointot)
   double precision UTM_X_MIN,UTM_X_MAX
 
-  integer ispec,i,j,ier
-  integer ieoff,ilocnum,nseg,ioff,iseg,ig
+  integer :: ier
 
   integer, dimension(:), allocatable :: ninseg,idummy
 
@@ -79,7 +78,12 @@
 
 !
 !- we can create a new indirect addressing to reduce cache misses
-! (put into this subroutine but compiler keeps on complaining that it can't vectorize loops...)
+! (put into this subroutine but compiler keeps on complaining that it cannot vectorize loops...)
+!! DK DK
+!! DK DK answer from Dimitri, April 2014: that is normal because the nested loops have a dependency
+!! DK DK (they can write to the same memory location through the mask_ibool() array) and thus
+!! DK DK they cannot be vectorized. Thus the compiler is right.
+!! DK DK
 
   implicit none
 
@@ -126,3 +130,4 @@
   deallocate(mask_ibool,stat=ier); if(ier /= 0) stop 'error in deallocate'
 
   end subroutine get_global_indirect_addressing
+
