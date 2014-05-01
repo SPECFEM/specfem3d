@@ -76,10 +76,10 @@ xdecompose_mesh: $E/xdecompose_mesh
 scotch: xscotch
 xscotch: $E/xscotch
 
-${SCOTCH_DIR}/scotchf.h: xscotch
+${SCOTCH_DIR}/include/scotchf.h: xscotch
 
 # rules for the pure Fortran version
-$E/xdecompose_mesh: ${SCOTCH_DIR}/scotchf.h $(decompose_mesh_SHARED_OBJECTS) $(decompose_mesh_OBJECTS)
+$E/xdecompose_mesh: ${SCOTCH_DIR}/include/scotchf.h $(decompose_mesh_SHARED_OBJECTS) $(decompose_mesh_OBJECTS)
 	${FCLINK} -o  $E/xdecompose_mesh $(decompose_mesh_SHARED_OBJECTS) $(decompose_mesh_OBJECTS) $(SCOTCH_LIBS)
 
 # scotch
@@ -99,7 +99,7 @@ endif
 ### Module dependencies
 ###
 
-$O/decompose_mesh.dec.o: $O/part_decompose_mesh.dec.o $O/fault_scotch.dec.o ${SCOTCH_DIR}/scotchf.h
+$O/decompose_mesh.dec.o: $O/part_decompose_mesh.dec.o $O/fault_scotch.dec.o ${SCOTCH_DIR}/include/scotchf.h
 $O/program_decompose_mesh.dec.o: $O/decompose_mesh.dec.o
 
 
