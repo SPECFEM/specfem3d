@@ -107,7 +107,6 @@
     integer ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir
     integer iax,iay,iar
     integer nblayers
-    !integer num_material
     integer ndoublings
 
 ! topology of the elements

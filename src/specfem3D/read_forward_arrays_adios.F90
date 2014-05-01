@@ -83,8 +83,7 @@ subroutine read_forward_arrays_adios()
   !-------------------------------------'
   sel_num = 0
 
-  database_name = adjustl(LOCAL_PATH)
-  database_name = database_name(1:len_trim(database_name)) // "/forward_arrays.bp"
+  database_name = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // "/forward_arrays.bp"
 
   call world_get_comm(comm)
 

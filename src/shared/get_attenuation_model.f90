@@ -504,7 +504,7 @@
   ! sum of coefficients beta
   one_minus_sum_beta = 1.0d0
   do i = 1,N_SLS
-     one_minus_sum_beta = one_minus_sum_beta - beta(i)
+    one_minus_sum_beta = one_minus_sum_beta - beta(i)
   enddo
 
   end subroutine get_attenuation_property_values
@@ -576,10 +576,10 @@
 
   !--- check that the correction factor is close to one
   if(scale_factor < 0.7 .or. scale_factor > 1.3) then
-     write(*,*) "error : in get_attenuation_scale_factor() "
-     write(*,*) "  scale factor: ", scale_factor, " should be between 0.7 and 1.3"
-     write(*,*) "  please check your reference frequency ATTENUATION_f0_REFERENCE in constants.h"
-     call exit_MPI(myrank,'incorrect correction factor in attenuation model')
+    write(*,*) "error : in get_attenuation_scale_factor() "
+    write(*,*) "  scale factor: ", scale_factor, " should be between 0.7 and 1.3"
+    write(*,*) "  please check your reference frequency ATTENUATION_f0_REFERENCE in constants.h"
+    call exit_MPI(myrank,'incorrect correction factor in attenuation model')
   endif
 
   end subroutine get_attenuation_scale_factor
@@ -673,7 +673,7 @@
   ! equally spaced in log10 frequency
   dexpval = (exp2-exp1) / ((nsls*1.0d0) - 1)
   do i = 1,nsls
-     tau_s(i) = 1.0 / (PI * 2.0d0 * 10**(exp1 + (i - 1)* 1.0d0 *dexpval))
+    tau_s(i) = 1.0 / (PI * 2.0d0 * 10**(exp1 + (i - 1)* 1.0d0 *dexpval))
   enddo
 
   end subroutine get_attenuation_tau_sigma
@@ -835,16 +835,16 @@
   endif
 
   if(Qmu < 0.0d0 .OR. Qmu > AM_S%Q_max) then
-     write(IMAIN,*) 'Error attenuation_storage()'
-     write(IMAIN,*) 'Attenuation Value out of Range: ', Qmu
-     write(IMAIN,*) 'Attenuation Value out of Range: Min, Max ', 0, AM_S%Q_max
-     call exit_MPI(0, 'Attenuation Value out of Range')
+    write(IMAIN,*) 'Error attenuation_storage()'
+    write(IMAIN,*) 'Attenuation Value out of Range: ', Qmu
+    write(IMAIN,*) 'Attenuation Value out of Range: Min, Max ', 0, AM_S%Q_max
+    call exit_MPI(0, 'Attenuation Value out of Range')
   endif
 
   if(rw > 0 .AND. Qmu <= ZERO_TOL) then
-     Qmu = 0.0d0;
-     tau_eps(:) = 0.0d0;
-     return
+    Qmu = 0.0d0;
+    tau_eps(:) = 0.0d0;
+    return
   endif
   ! Generate index for Storage Array
   ! and Recast Qmu using this index
@@ -855,7 +855,7 @@
   ! by default: resolution is Q_resolution = 10
   ! converts Qmu to an array integer index:
   ! e.g. Qmu = 150.31 -> Qtmp = 150.31 * 10 = int( 1503.10 ) = 1503
-  Qtmp    = Qmu * dble(AM_S%Q_resolution)
+  Qtmp    = int(Qmu * dble(AM_S%Q_resolution))
 
   ! rounds to corresponding double value:
   ! e.g. Qmu_new = dble( 1503 ) / dble(10) = 150.30
@@ -863,21 +863,21 @@
   Qmu_new = dble(Qtmp) / dble(AM_S%Q_resolution)
 
   if(rw > 0) then
-     ! READ
-     if(AM_S%Qmu_storage(Qtmp) > 0) then
-        ! READ SUCCESSFUL
-        tau_eps(:)   = AM_S%tau_eps_storage(:, Qtmp)
-        Qmu        = AM_S%Qmu_storage(Qtmp)
-        rw = 1
-     else
-        ! READ NOT SUCCESSFUL
-        rw = -1
-     endif
+    ! READ
+    if(AM_S%Qmu_storage(Qtmp) > 0) then
+      ! READ SUCCESSFUL
+      tau_eps(:)   = AM_S%tau_eps_storage(:, Qtmp)
+      Qmu        = AM_S%Qmu_storage(Qtmp)
+      rw = 1
+    else
+      ! READ NOT SUCCESSFUL
+      rw = -1
+    endif
   else
-     ! WRITE SUCCESSFUL
-     AM_S%tau_eps_storage(:,Qtmp)    = tau_eps(:)
-     AM_S%Qmu_storage(Qtmp)        = Qmu
-     rw = 1
+    ! WRITE SUCCESSFUL
+    AM_S%tau_eps_storage(:,Qtmp)    = tau_eps(:)
+    AM_S%Qmu_storage(Qtmp)        = Qmu
+    rw = 1
   endif
 
   end subroutine model_attenuation_storage
@@ -948,7 +948,7 @@
   ! Determine the Frequencies at which to compare solutions
   !   The frequencies should be equally spaced in log10 frequency
   do i = 1,nf
-     f(i) = exp1 + ((i-1)*1.0d0 * (exp2-exp1) / ((nf-1)*1.0d0))
+    f(i) = exp1 + ((i-1)*1.0d0 * (exp2-exp1) / ((nf-1)*1.0d0))
   enddo
 
   ! Set the Tau_sigma (tau_s) to be equally spaced in log10 frequency
@@ -966,17 +966,17 @@
   !    if we assume tau_eps =~ tau_s
   !    we get the equation below
   do i = 1,n
-     tau_eps(i) = tau_s(i) + (tau_s(i) * 2.0d0/Q_real)
+    tau_eps(i) = tau_s(i) + (tau_s(i) * 2.0d0/Q_real)
   enddo
 
   ! Run a simplex search to determine the optimum values of tau_eps
   call fminsearch(attenuation_eval, tau_eps, n, iterations, min_value, prnt, err,AS_V)
   if(err > 0) then
-     write(*,*)'Search did not converge for an attenuation of ', Q_real
-     write(*,*)'    Iterations: ', iterations
-     write(*,*)'    Min Value:  ', min_value
-     write(*,*)'    Aborting program'
-     call exit_MPI(0,'attenuation_simplex: Search for Strain relaxation times did not converge')
+    write(*,*)'Search did not converge for an attenuation of ', Q_real
+    write(*,*)'    Iterations: ', iterations
+    write(*,*)'    Min Value:  ', min_value
+    write(*,*)'    Aborting program'
+    call exit_MPI(0,'attenuation_simplex: Search for Strain relaxation times did not converge')
   endif
 
   !deallocate(f)
@@ -1096,8 +1096,8 @@
   attenuation_eval = 0.0d0
   iQ2 = AS_V%iQ**2
   do i = 1,AS_V%nf
-     xi = sqrt(( ( (tan_delta(i) - AS_V%iQ) ** 2 ) / iQ2 ))
-     attenuation_eval = attenuation_eval + xi
+    xi = sqrt(( ( (tan_delta(i) - AS_V%iQ) ** 2 ) / iQ2 ))
+    attenuation_eval = attenuation_eval + xi
   enddo
 
   end function attenuation_eval
@@ -1154,14 +1154,14 @@
   A(:) = 1.0d0 -  nsls*1.0d0
   B(:) = 0.0d0
   do i = 1,nf
-     w = 2.0d0 * PI * 10**f(i)
-     do j = 1,nsls
-        !        write(*,*)j,tau_s(j),tau_eps(j)
-        demon = 1.0d0 + w**2 * tau_s(j)**2
-        A(i) = A(i) + ((1.0d0 + (w**2 * tau_eps(j) * tau_s(j)))/ demon)
-        B(i) = B(i) + ((w * (tau_eps(j) - tau_s(j))) / demon)
-     enddo
-      !     write(*,*)A(i),B(i),10**f(i)
+    w = 2.0d0 * PI * 10**f(i)
+    do j = 1,nsls
+      !        write(*,*)j,tau_s(j),tau_eps(j)
+      demon = 1.0d0 + w**2 * tau_s(j)**2
+      A(i) = A(i) + ((1.0d0 + (w**2 * tau_eps(j) * tau_s(j)))/ demon)
+      B(i) = B(i) + ((w * (tau_eps(j) - tau_s(j))) / demon)
+    enddo
+     !     write(*,*)A(i),B(i),10**f(i)
   enddo
 
   end subroutine attenuation_maxwell

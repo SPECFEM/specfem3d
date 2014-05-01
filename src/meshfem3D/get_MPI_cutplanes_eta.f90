@@ -66,8 +66,8 @@
 
 ! theoretical number of surface elements in the buffers
 ! cut planes along eta=constant correspond to XI faces
-      nspec2Dtheor1 = NSPEC2D_A_XI
-      nspec2Dtheor2 = NSPEC2D_B_XI
+  nspec2Dtheor1 = NSPEC2D_A_XI
+  nspec2Dtheor2 = NSPEC2D_B_XI
 
 ! write the MPI buffers for the left and right edges of the slice
 ! and the position of the points to check that the buffers are fine
@@ -89,28 +89,28 @@
   ispecc1=0
 
   do ispec=1,nspec
-  if(iMPIcut_eta(1,ispec)) then
+    if (iMPIcut_eta(1,ispec)) then
 
-    ispecc1=ispecc1+1
+      ispecc1=ispecc1+1
 
-! loop on all the points in that 2-D element, including edges
-  iy = 1
-  do ix=1,NGLLX_M
-      do iz=1,NGLLZ_M
+      ! loop on all the points in that 2-D element, including edges
+      iy = 1
+      do ix=1,NGLLX_M
+        do iz=1,NGLLZ_M
 
-! select point, if not already selected
-  if(.not. mask_ibool(ibool(ix,iy,iz,ispec))) then
-      mask_ibool(ibool(ix,iy,iz,ispec)) = .true.
-      npoin2D_eta = npoin2D_eta + 1
+          ! select point, if not already selected
+          if (.not. mask_ibool(ibool(ix,iy,iz,ispec))) then
+            mask_ibool(ibool(ix,iy,iz,ispec)) = .true.
+            npoin2D_eta = npoin2D_eta + 1
 
-      write(10,*) ibool(ix,iy,iz,ispec),xstore(ix,iy,iz,ispec), &
-              ystore(ix,iy,iz,ispec),zstore(ix,iy,iz,ispec)
-  endif
+            write(10,*) ibool(ix,iy,iz,ispec),xstore(ix,iy,iz,ispec), &
+                        ystore(ix,iy,iz,ispec),zstore(ix,iy,iz,ispec)
+          endif
 
+        enddo
       enddo
-  enddo
 
-  endif
+    endif
   enddo
 
 ! put flag to indicate end of the list of points
@@ -142,28 +142,28 @@
   ispecc2=0
 
   do ispec=1,nspec
-  if(iMPIcut_eta(2,ispec)) then
+    if (iMPIcut_eta(2,ispec)) then
 
-    ispecc2=ispecc2+1
+      ispecc2=ispecc2+1
 
-! loop on all the points in that 2-D element, including edges
-  iy = NGLLY_M
-  do ix=1,NGLLX_M
-      do iz=1,NGLLZ_M
+      ! loop on all the points in that 2-D element, including edges
+      iy = NGLLY_M
+      do ix=1,NGLLX_M
+        do iz=1,NGLLZ_M
 
-! select point, if not already selected
-  if(.not. mask_ibool(ibool(ix,iy,iz,ispec))) then
-      mask_ibool(ibool(ix,iy,iz,ispec)) = .true.
-      npoin2D_eta = npoin2D_eta + 1
+          ! select point, if not already selected
+          if (.not. mask_ibool(ibool(ix,iy,iz,ispec))) then
+            mask_ibool(ibool(ix,iy,iz,ispec)) = .true.
+            npoin2D_eta = npoin2D_eta + 1
 
-      write(10,*) ibool(ix,iy,iz,ispec),xstore(ix,iy,iz,ispec), &
-              ystore(ix,iy,iz,ispec),zstore(ix,iy,iz,ispec)
-  endif
+            write(10,*) ibool(ix,iy,iz,ispec),xstore(ix,iy,iz,ispec), &
+                        ystore(ix,iy,iz,ispec),zstore(ix,iy,iz,ispec)
+          endif
 
+        enddo
       enddo
-  enddo
 
-  endif
+    endif
   enddo
 
 ! put flag to indicate end of the list of points

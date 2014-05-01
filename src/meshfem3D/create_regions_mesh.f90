@@ -68,7 +68,6 @@ contains
     integer, dimension(2) :: ner_doublings
 
     double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK
-    !double precision horiz_size,vert_size
 
     integer addressing(0:NPROC_XI-1,0:NPROC_ETA-1)
 
@@ -84,7 +83,6 @@ contains
     character(len=256) :: LOCAL_PATH
 
     ! auxiliary variables to generate the mesh
-    !  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: nodes_coords
     double precision, dimension(:,:), allocatable :: nodes_coords
     integer ix,iy,ir,ir1,ir2,dir
     integer ix1,ix2,dix,iy1,iy2,diy
@@ -93,7 +91,6 @@ contains
     integer imaterial_number
     integer, dimension(nspec) :: true_material_num
     integer, dimension(:,:,:), allocatable :: material_num
-    !integer material_num(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA)
 
     !  definition of the different regions of the model in the mesh (nx,ny,nz)
     !  #1 #2 : nx_begining,nx_end
@@ -162,8 +159,6 @@ contains
     logical, dimension(NSPEC_DOUBLING_SUPERBRICK,6) :: iboun_sb
     integer, dimension(NGNOD_EIGHT_CORNERS,NSPEC_DOUBLING_SUPERBRICK) :: ibool_superbrick
     double precision, dimension(NGLOB_DOUBLING_SUPERBRICK) :: x_superbrick,y_superbrick,z_superbrick
-
-    logical, parameter :: DEBUG = .true.
 
     ! **************
 
@@ -320,9 +315,9 @@ contains
                 ! loop on all the corner nodes of this element
                 do ia = 1,NGNOD_EIGHT_CORNERS
                   ! define topological coordinates of this mesh point
-                  ioffset_x = ix + iax*x_superbrick(ibool_superbrick(ia,ispec_superbrick))
-                  ioffset_y = iy + iay*y_superbrick(ibool_superbrick(ia,ispec_superbrick))
-                  ioffset_z = ir + iar*z_superbrick(ibool_superbrick(ia,ispec_superbrick))
+                  ioffset_x = int(ix + iax*x_superbrick(ibool_superbrick(ia,ispec_superbrick)))
+                  ioffset_y = int(iy + iay*y_superbrick(ibool_superbrick(ia,ispec_superbrick)))
+                  ioffset_z = int(ir + iar*z_superbrick(ibool_superbrick(ia,ispec_superbrick)))
 
                   xelm(ia) = xgrid(ioffset_z,ioffset_x,ioffset_y)
                   yelm(ia) = ygrid(ioffset_z,ioffset_x,ioffset_y)
@@ -382,7 +377,7 @@ contains
     enddo
 
     ! sorts xp,yp,zp in lexicographical order (increasing values)
-    call get_global(nspec,xp,yp,zp,iglob,locval,ifseg,nglob,npointot,UTM_X_MIN,UTM_X_MAX)
+    call get_global(npointot,xp,yp,zp,iglob,locval,ifseg,nglob,UTM_X_MIN,UTM_X_MAX)
 
     ! checks nglob range with pre-computed values
     ! note: if mesh squeezes elements such that we can't distinguish two close-by mesh points anymore

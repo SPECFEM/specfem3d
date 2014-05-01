@@ -63,14 +63,13 @@
 
   !local parameters
   double precision, dimension(:), allocatable :: xp,yp,zp
-  double precision, dimension(:), allocatable :: work_ext_mesh
 
   integer, dimension(:), allocatable :: locval
-  integer, dimension(:), allocatable :: nibool_interfaces_ext_mesh_true
+  integer :: nibool_interfaces_ext_mesh_true
 
   ! for MPI buffers
   integer, dimension(:), allocatable :: reorder_interface_ext_mesh, &
-    ind_ext_mesh,ninseg_ext_mesh,iwork_ext_mesh
+    ninseg_ext_mesh
   logical, dimension(:), allocatable :: ifseg
   integer :: iinterface,ilocnum
   integer :: num_points1, num_points2
@@ -93,9 +92,6 @@
                             ibool_interfaces_ext_mesh, &
                             nibool_interfaces_ext_mesh,NGNOD )
 
-  allocate(nibool_interfaces_ext_mesh_true(num_interfaces_ext_mesh),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array nibool_interfaces_ext_mesh_true'
-
   ! sorts ibool comm buffers lexicographically for all MPI interfaces
   num_points1 = 0
   num_points2 = 0
@@ -113,14 +109,8 @@
     if( ier /= 0 ) stop 'error allocating array ifseg'
     allocate(reorder_interface_ext_mesh(nibool_interfaces_ext_mesh(iinterface)),stat=ier)
     if( ier /= 0 ) stop 'error allocating array reorder_interface_ext_mesh'
-    allocate(ind_ext_mesh(nibool_interfaces_ext_mesh(iinterface)),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array ind_ext_mesh'
     allocate(ninseg_ext_mesh(nibool_interfaces_ext_mesh(iinterface)),stat=ier)
     if( ier /= 0 ) stop 'error allocating array ninseg_ext_mesh'
-    allocate(iwork_ext_mesh(nibool_interfaces_ext_mesh(iinterface)),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array iwork_ext_mesh'
-    allocate(work_ext_mesh(nibool_interfaces_ext_mesh(iinterface)),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array work_ext_mesh'
 
     ! gets x,y,z coordinates of global points on MPI interface
     do ilocnum = 1, nibool_interfaces_ext_mesh(iinterface)
@@ -130,16 +120,16 @@
     enddo
 
     ! sorts (lexicographically?) ibool_interfaces_ext_mesh and updates value
-    ! of total number of points nibool_interfaces_ext_mesh_true(iinterface)
+    ! of total number of points nibool_interfaces_ext_mesh_true
     call sort_array_coordinates(nibool_interfaces_ext_mesh(iinterface),xp,yp,zp, &
          ibool_interfaces_ext_mesh(1:nibool_interfaces_ext_mesh(iinterface),iinterface), &
          reorder_interface_ext_mesh,locval,ifseg, &
-         nibool_interfaces_ext_mesh_true(iinterface), &
-         ind_ext_mesh,ninseg_ext_mesh,iwork_ext_mesh,work_ext_mesh)
+         nibool_interfaces_ext_mesh_true, &
+         ninseg_ext_mesh,SMALLVAL_TOL)
 
     ! checks that number of MPI points are still the same
     num_points1 = num_points1 + nibool_interfaces_ext_mesh(iinterface)
-    num_points2 = num_points2 + nibool_interfaces_ext_mesh_true(iinterface)
+    num_points2 = num_points2 + nibool_interfaces_ext_mesh_true
     if( num_points1 /= num_points2 ) then
       write(*,*) 'error sorting MPI interface points:',myrank
       write(*,*) '   interface:',iinterface,num_points1,num_points2
@@ -153,15 +143,9 @@
     deallocate(locval)
     deallocate(ifseg)
     deallocate(reorder_interface_ext_mesh)
-    deallocate(ind_ext_mesh)
     deallocate(ninseg_ext_mesh)
-    deallocate(iwork_ext_mesh)
-    deallocate(work_ext_mesh)
 
   enddo
-
-  ! cleanup
-  deallocate(nibool_interfaces_ext_mesh_true)
 
   ! outputs total number of MPI interface points
   call sum_all_i(num_points2,ilocnum)

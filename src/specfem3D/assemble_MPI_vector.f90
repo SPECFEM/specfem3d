@@ -164,97 +164,33 @@
   ! assemble only if more than one partition
   if(NPROC > 1) then
 
-     ! partition border copy into the buffer
-     do iinterface = 1, num_interfaces_ext_mesh
-        do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
-           buffer_send_vector_ext_mesh(:,ipoin,iinterface) = &
-                array_val(:,ibool_interfaces_ext_mesh(ipoin,iinterface))
-        enddo
-     enddo
+    ! partition border copy into the buffer
+    do iinterface = 1, num_interfaces_ext_mesh
+      do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
+        buffer_send_vector_ext_mesh(:,ipoin,iinterface) = &
+             array_val(:,ibool_interfaces_ext_mesh(ipoin,iinterface))
+      enddo
+    enddo
 
-     ! send messages
-     do iinterface = 1, num_interfaces_ext_mesh
-        call isend_cr(buffer_send_vector_ext_mesh(1,1,iinterface), &
-             NDIM*nibool_interfaces_ext_mesh(iinterface), &
-             my_neighbours_ext_mesh(iinterface), &
-             itag, &
-             request_send_vector_ext_mesh(iinterface) &
-             )
-        call irecv_cr(buffer_recv_vector_ext_mesh(1,1,iinterface), &
-             NDIM*nibool_interfaces_ext_mesh(iinterface), &
-             my_neighbours_ext_mesh(iinterface), &
-             itag, &
-             request_recv_vector_ext_mesh(iinterface) &
-             )
-     enddo
+    ! send messages
+    do iinterface = 1, num_interfaces_ext_mesh
+      call isend_cr(buffer_send_vector_ext_mesh(1,1,iinterface), &
+           NDIM*nibool_interfaces_ext_mesh(iinterface), &
+           my_neighbours_ext_mesh(iinterface), &
+           itag, &
+           request_send_vector_ext_mesh(iinterface) &
+           )
+      call irecv_cr(buffer_recv_vector_ext_mesh(1,1,iinterface), &
+           NDIM*nibool_interfaces_ext_mesh(iinterface), &
+           my_neighbours_ext_mesh(iinterface), &
+           itag, &
+           request_recv_vector_ext_mesh(iinterface) &
+           )
+    enddo
 
   endif
 
   end subroutine assemble_MPI_vector_async_send
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-! unused, new ordered routine is used now...
-!
-!  subroutine assemble_MPI_vector_async_recv(NPROC,NGLOB_AB,array_val, &
-!                                            buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
-!                                            max_nibool_interfaces_ext_mesh, &
-!                                            nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-!                                            request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
-!
-!! waits for data to receive and assembles
-!
-!  use constants
-!
-!  implicit none
-!
-!  integer :: NPROC
-!  integer :: NGLOB_AB
-!
-!! array to assemble
-!  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: array_val
-!
-!  integer :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
-!
-!  real(kind=CUSTOM_REAL), dimension(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: &
-!       buffer_recv_vector_ext_mesh
-!
-!  integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
-!  integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
-!  integer, dimension(num_interfaces_ext_mesh) :: request_send_vector_ext_mesh,request_recv_vector_ext_mesh
-!
-!  integer ipoin,iinterface
-!
-!! here we have to assemble all the contributions between partitions using MPI
-!
-!! assemble only if more than one partition
-!  if(NPROC > 1) then
-!
-!! wait for communications completion (recv)
-!  do iinterface = 1, num_interfaces_ext_mesh
-!    call wait_req(request_recv_vector_ext_mesh(iinterface))
-!  enddo
-!
-!! adding contributions of neighbours
-!  do iinterface = 1, num_interfaces_ext_mesh
-!    do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
-!      array_val(:,ibool_interfaces_ext_mesh(ipoin,iinterface)) = &
-!           array_val(:,ibool_interfaces_ext_mesh(ipoin,iinterface)) + buffer_recv_vector_ext_mesh(:,ipoin,iinterface)
-!    enddo
-!  enddo
-!
-!! wait for communications completion (send)
-!  do iinterface = 1, num_interfaces_ext_mesh
-!    call wait_req(request_send_vector_ext_mesh(iinterface))
-!  enddo
-!
-!  endif
-!
-!  end subroutine assemble_MPI_vector_async_recv
-!
-!
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -402,42 +338,42 @@
   if(NPROC > 1) then
 
 ! partition border copy into the buffer
-  do iinterface = 1, num_interfaces_ext_mesh
-    do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
-      buffer_send_vector_ext_mesh_s(:,ipoin,iinterface) = array_val1(:,ibool_interfaces_ext_mesh(ipoin,iinterface))
-      buffer_send_vector_ext_mesh_w(:,ipoin,iinterface) = array_val2(:,ibool_interfaces_ext_mesh(ipoin,iinterface))
+    do iinterface = 1, num_interfaces_ext_mesh
+      do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
+        buffer_send_vector_ext_mesh_s(:,ipoin,iinterface) = array_val1(:,ibool_interfaces_ext_mesh(ipoin,iinterface))
+        buffer_send_vector_ext_mesh_w(:,ipoin,iinterface) = array_val2(:,ibool_interfaces_ext_mesh(ipoin,iinterface))
+      enddo
     enddo
-  enddo
 
 ! send messages
-  do iinterface = 1, num_interfaces_ext_mesh
+    do iinterface = 1, num_interfaces_ext_mesh
 !val1
-    call isend_cr(buffer_send_vector_ext_mesh_s(1,1,iinterface), &
-         NDIM*nibool_interfaces_ext_mesh(iinterface), &
-         my_neighbours_ext_mesh(iinterface), &
-         itag, &
-         request_send_vector_ext_mesh_s(iinterface) &
-         )
-    call irecv_cr(buffer_recv_vector_ext_mesh_s(1,1,iinterface), &
-         NDIM*nibool_interfaces_ext_mesh(iinterface), &
-         my_neighbours_ext_mesh(iinterface), &
-         itag, &
-         request_recv_vector_ext_mesh_s(iinterface) &
-         )
+      call isend_cr(buffer_send_vector_ext_mesh_s(1,1,iinterface), &
+           NDIM*nibool_interfaces_ext_mesh(iinterface), &
+           my_neighbours_ext_mesh(iinterface), &
+           itag, &
+           request_send_vector_ext_mesh_s(iinterface) &
+           )
+      call irecv_cr(buffer_recv_vector_ext_mesh_s(1,1,iinterface), &
+           NDIM*nibool_interfaces_ext_mesh(iinterface), &
+           my_neighbours_ext_mesh(iinterface), &
+           itag, &
+           request_recv_vector_ext_mesh_s(iinterface) &
+           )
 !val2
-    call isend_cr(buffer_send_vector_ext_mesh_w(1,1,iinterface), &
-         NDIM*nibool_interfaces_ext_mesh(iinterface), &
-         my_neighbours_ext_mesh(iinterface), &
-         itag, &
-         request_send_vector_ext_mesh_w(iinterface) &
-         )
-    call irecv_cr(buffer_recv_vector_ext_mesh_w(1,1,iinterface), &
-         NDIM*nibool_interfaces_ext_mesh(iinterface), &
-         my_neighbours_ext_mesh(iinterface), &
-         itag, &
-         request_recv_vector_ext_mesh_w(iinterface) &
-         )
-  enddo
+      call isend_cr(buffer_send_vector_ext_mesh_w(1,1,iinterface), &
+           NDIM*nibool_interfaces_ext_mesh(iinterface), &
+           my_neighbours_ext_mesh(iinterface), &
+           itag, &
+           request_send_vector_ext_mesh_w(iinterface) &
+           )
+      call irecv_cr(buffer_recv_vector_ext_mesh_w(1,1,iinterface), &
+           NDIM*nibool_interfaces_ext_mesh(iinterface), &
+           my_neighbours_ext_mesh(iinterface), &
+           itag, &
+           request_recv_vector_ext_mesh_w(iinterface) &
+           )
+    enddo
 
   endif
 
@@ -570,70 +506,6 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-! not used...
-!  subroutine assemble_MPI_vector_write_cuda_no_transfer(NPROC,NGLOB_AB,array_val, Mesh_pointer, &
-!                                            buffer_recv_vector_ext_mesh, &
-!                                            num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-!                                            nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-!                                            request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
-!                                            FORWARD_OR_ADJOINT )
-!
-!  use constants
-!
-!  implicit none
-!
-!  integer :: NPROC
-!  integer :: NGLOB_AB
-!  integer(kind=8) :: Mesh_pointer
-!  ! array to assemble
-!  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: array_val
-!
-!  integer :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
-!
-!  real(kind=CUSTOM_REAL), dimension(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: &
-!       buffer_recv_vector_ext_mesh
-!
-!  integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
-!  integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
-!  integer, dimension(num_interfaces_ext_mesh) :: request_send_vector_ext_mesh
-!  !integer, dimension(num_interfaces_ext_mesh) :: request_recv_vector_ext_mesh
-!
-!  integer :: FORWARD_OR_ADJOINT
-!
-!  ! local parameters
-!  integer :: iinterface
-!
-!  ! here we have to assemble all the contributions between partitions using MPI
-!
-!  ! assemble only if more than one partition
-!  if(NPROC > 1) then
-!
-!     ! adding contributions of neighbours
-!     call assemble_accel_on_device(Mesh_pointer, array_val, buffer_recv_vector_ext_mesh, &
-!          num_interfaces_ext_mesh, max_nibool_interfaces_ext_mesh, &
-!          nibool_interfaces_ext_mesh,&
-!          ibool_interfaces_ext_mesh,FORWARD_OR_ADJOINT)
-!
-!     ! This step is done via previous function transfer_and_assemble...
-!     ! do iinterface = 1, num_interfaces_ext_mesh
-!     !   do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
-!     !     array_val(:,ibool_interfaces_ext_mesh(ipoin,iinterface)) = &
-!     !          array_val(:,ibool_interfaces_ext_mesh(ipoin,iinterface)) + buffer_recv_vector_ext_mesh(:,ipoin,iinterface)
-!     !   enddo
-!     ! enddo
-!
-!     ! wait for communications completion (send)
-!     do iinterface = 1, num_interfaces_ext_mesh
-!        call wait_req(request_send_vector_ext_mesh(iinterface))
-!     enddo
-!  endif
-!
-!  end subroutine assemble_MPI_vector_write_cuda_no_transfer
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
 
   subroutine assemble_MPI_vector_send_cuda(NPROC, &
                                           buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
@@ -668,19 +540,19 @@
   ! send only if more than one partition
   if(NPROC > 1) then
 
-     ! send messages
-     do iinterface = 1, num_interfaces_ext_mesh
-        call isend_cr(buffer_send_vector_ext_mesh(1,1,iinterface), &
-                       NDIM*nibool_interfaces_ext_mesh(iinterface), &
-                       my_neighbours_ext_mesh(iinterface), &
-                       itag, &
-                       request_send_vector_ext_mesh(iinterface) )
-        call irecv_cr(buffer_recv_vector_ext_mesh(1,1,iinterface), &
-                       NDIM*nibool_interfaces_ext_mesh(iinterface), &
-                       my_neighbours_ext_mesh(iinterface), &
-                       itag, &
-                       request_recv_vector_ext_mesh(iinterface) )
-     enddo
+    ! send messages
+    do iinterface = 1, num_interfaces_ext_mesh
+      call isend_cr(buffer_send_vector_ext_mesh(1,1,iinterface), &
+                     NDIM*nibool_interfaces_ext_mesh(iinterface), &
+                     my_neighbours_ext_mesh(iinterface), &
+                     itag, &
+                     request_send_vector_ext_mesh(iinterface) )
+      call irecv_cr(buffer_recv_vector_ext_mesh(1,1,iinterface), &
+                     NDIM*nibool_interfaces_ext_mesh(iinterface), &
+                     my_neighbours_ext_mesh(iinterface), &
+                     itag, &
+                     request_recv_vector_ext_mesh(iinterface) )
+    enddo
 
   endif
 

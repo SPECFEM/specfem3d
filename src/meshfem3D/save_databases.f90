@@ -100,7 +100,6 @@
   ! Materials properties
    write(IIN_database) NMATERIALS, 0
    do idoubl = 1,NMATERIALS
-      !write(IIN_database,*) material_properties(idoubl,:)
       matpropl(:) = 0.d0
       matpropl(1:6) = material_properties(idoubl,1:6)
       ! pad dummy zeros to fill up 16 entries (poroelastic medium not allowed)
@@ -110,9 +109,6 @@
 
   write(IIN_database) nspec
   do ispec=1,nspec
-      !write(IIN_database,'(11i14)') ispec,true_material_num(ispec),1,ibool(1,1,1,ispec),ibool(2,1,1,ispec),&
-      !     ibool(2,2,1,ispec),ibool(1,2,1,ispec),ibool(1,1,2,ispec),&
-      !     ibool(2,1,2,ispec),ibool(2,2,2,ispec),ibool(1,2,2,ispec)
       write(IIN_database) ispec,true_material_num(ispec),1,ibool(1,1,1,ispec),ibool(2,1,1,ispec),&
            ibool(2,2,1,ispec),ibool(1,2,1,ispec),ibool(1,1,2,ispec),&
            ibool(2,1,2,ispec),ibool(2,2,2,ispec),ibool(1,2,2,ispec)

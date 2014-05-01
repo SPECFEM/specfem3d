@@ -43,17 +43,14 @@ meshfem3D_TARGETS = \
 meshfem3D_OBJECTS = \
 	$O/check_mesh_quality.mesh.o \
 	$O/compute_parameters.mesh.o \
-	$O/create_name_database.mesh.o \
 	$O/create_regions_mesh.mesh.o \
 	$O/create_visual_files.mesh.o \
 	$O/define_subregions.mesh.o \
 	$O/define_subregions_heuristic.mesh.o \
 	$O/define_superbrick.mesh.o \
 	$O/get_flags_boundaries.mesh.o \
-	$O/get_global.mesh.o \
 	$O/get_MPI_cutplanes_eta.mesh.o \
 	$O/get_MPI_cutplanes_xi.mesh.o \
-	$O/get_value_parameters.mesh.o \
 	$O/meshfem3D.mesh.o \
 	$O/program_meshfem3D.mesh.o \
 	$O/read_mesh_parameter_file.mesh.o \
@@ -63,23 +60,31 @@ meshfem3D_OBJECTS = \
 	$O/store_coords.mesh.o \
 	$(EMPTY_MACRO)
 
+meshfem3D_MODULES = \
+	$(FC_MODDIR)/createregmesh.$(FC_MODEXT) \
+	$(FC_MODDIR)/readparfile.$(FC_MODEXT) \
+	$(EMPTY_MACRO)
+
 meshfem3D_SHARED_OBJECTS = \
+	$O/create_name_database.shared.o \
 	$O/exit_mpi.shared.o \
+	$O/get_global.shared.o \
 	$O/hex_nodes.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_topo_bathy_file.shared.o \
 	$O/read_value_parameters.shared.o \
 	$O/safe_alloc_mod.shared.o \
+	$O/sort_array_coordinates.shared.o \
 	$O/utm_geo.shared.o \
 	$(EMPTY_MACRO)
 
 
 # using ADIOS files
 adios_meshfem3D_PREOBJECTS= \
-	$O/adios_manager.shared_adios.o  \
-	$O/adios_helpers_definitions.shared_adios.o  \
-	$O/adios_helpers_writers.shared_adios.o  \
+	$O/adios_manager.shared_adios.o \
+	$O/adios_helpers_definitions.shared_adios_module.o \
+	$O/adios_helpers_writers.shared_adios_module.o \
 	$O/adios_helpers.shared_adios.o
 
 adios_meshfem3D_OBJECTS= \
@@ -139,8 +144,8 @@ $O/save_databases_adios.mesh_adios.o: $O/safe_alloc_mod.shared.o $(adios_meshfem
 $O/create_regions_mesh.mesh.o: $(adios_meshfem3D_PREOBJECTS)
 
 $O/adios_helpers.shared_adios.o: \
-	$O/adios_helpers_definitions.shared_adios.o \
-	$O/adios_helpers_writers.shared_adios.o
+	$O/adios_helpers_definitions.shared_adios_module.o \
+	$O/adios_helpers_writers.shared_adios_module.o
 
 
 ####

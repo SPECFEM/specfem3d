@@ -1,3 +1,30 @@
+!=====================================================================
+!
+!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               ---------------------------------------
+!
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
+!
+! This program is free software; you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation; either version 2 of the License, or
+! (at your option) any later version.
+!
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+!
+! You should have received a copy of the GNU General Public License along
+! with this program; if not, write to the Free Software Foundation, Inc.,
+! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+!
+!=====================================================================
+
 ! Base module for kinematic and dynamic fault solvers
 !
 ! Authors:
@@ -8,8 +35,6 @@ module fault_solver_common
   use constants
 
   implicit none
-
-!!!!! DK DK  private
 
   type fault_type
     integer :: nspec=0, nglob=0
@@ -32,7 +57,6 @@ module fault_solver_common
   end type dataXZ_type
 
   type swf_type
-!! DK DK    private
     integer :: kind
     logical :: healing = .false.
     real(kind=CUSTOM_REAL), dimension(:), pointer :: Dc=>null(), mus=>null(), mud=>null(), &
@@ -40,7 +64,6 @@ module fault_solver_common
   end type swf_type
 
   type rsf_type
-!! DK DK    private
     integer :: StateLaw = 1 ! 1=ageing law, 2=slip law
     real(kind=CUSTOM_REAL), dimension(:), pointer :: V0=>null(), f0=>null(), L=>null(), &
                                                      V_init=>null(), &
@@ -60,7 +83,6 @@ module fault_solver_common
   end type dataT_type
 
   type, extends (fault_type) :: bc_dynandkinflt_type
-!!!!!!!! DK DK      private
     real(kind=CUSTOM_REAL), dimension(:,:), pointer :: T0=>null()
     real(kind=CUSTOM_REAL), dimension(:),   pointer :: MU=>null(), Fload=>null()
     integer, dimension(:),   pointer :: npoin_perproc=>null(), poin_offset=>null()
@@ -396,27 +418,27 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
 
   if (PARALLEL_FAULT) then
 
-   ! For each output point, find the processor that contains the nearest node
+    ! For each output point, find the processor that contains the nearest node
     allocate(iproc(dataT%npoin))
     allocate(iglob_all(dataT%npoin,0:NPROC-1))
     allocate(dist_all(dataT%npoin,0:NPROC-1))
     call gather_all_i(dataT%iglob,dataT%npoin,iglob_all,dataT%npoin,NPROC)
     call gather_all_cr(dist_loc,dataT%npoin,dist_all,dataT%npoin,NPROC)
     if (myrank==0) then
-     ! NOTE: output points lying at an interface between procs are assigned to a unique proc
+      ! NOTE: output points lying at an interface between procs are assigned to a unique proc
       iproc = minloc(dist_all,2) - 1
       do ipoin = 1,dataT%npoin
-         dataT%iglob(ipoin) = iglob_all(ipoin,iproc(ipoin))
+        dataT%iglob(ipoin) = iglob_all(ipoin,iproc(ipoin))
       enddo
     endif
     call bcast_all_i(iproc,dataT%npoin)
     call bcast_all_i(dataT%iglob,dataT%npoin)
 
-   ! Number of output points contained in the current processor
+    ! Number of output points contained in the current processor
     npoin_local = count( iproc == myrank )
 
     if (npoin_local>0) then
-     ! Make a list of output points contained in the current processor
+      ! Make a list of output points contained in the current processor
       allocate(glob_indx(npoin_local))
       ipoin_local = 0
       do ipoin = 1,dataT%npoin
@@ -425,7 +447,7 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
           glob_indx(ipoin_local) = ipoin
         endif
       enddo
-     ! Consolidate the output information (remove output points outside current proc)
+      ! Consolidate the output information (remove output points outside current proc)
       allocate(iglob_tmp(dataT%npoin))
       allocate(name_tmp(dataT%npoin))
       iglob_tmp = dataT%iglob
@@ -471,7 +493,6 @@ end subroutine init_dataT
 !---------------------------------------------------------------
 subroutine store_dataT(dataT,d,v,t,itime)
 
-  !use specfem_par, only : myrank
 !! DK DK use type() instead of class() for compatibility with some current compilers
   type(dataT_type), intent(inout) :: dataT
   real(kind=CUSTOM_REAL), dimension(:,:), intent(in) :: d,v,t

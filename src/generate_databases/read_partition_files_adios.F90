@@ -65,8 +65,7 @@ subroutine read_partition_files_adios()
   !-------------------------------------.
   ! Open ADIOS Database file, read mode |
   !-------------------------------------'
-  database_name = adjustl(LOCAL_PATH)
-  database_name = database_name(1:len_trim(database_name)) // "/Database.bp"
+  database_name = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // "/Database.bp"
 
   call world_get_comm(comm)
 

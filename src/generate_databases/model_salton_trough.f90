@@ -89,14 +89,10 @@
 
   ! local parameter
   integer :: ios, reclen
-  character(len=256) SALTON_SEA_MODEL_FILE
+  character(len=*), parameter :: SALTON_SEA_MODEL_FILE = 'DATA/st_3D_block_harvard/regrid3_vel_p.bin'
 
   ! array length
   reclen=(GOCAD_ST_NU * GOCAD_ST_NV * GOCAD_ST_NW) * 4
-
-  ! file name
-  call get_value_string(SALTON_SEA_MODEL_FILE,'model.SALTON_SEA_MODEL_FILE', &
-                       'DATA/st_3D_block_harvard/regrid3_vel_p.bin')
 
   ! reads in file values
   open(11,file=trim(SALTON_SEA_MODEL_FILE), &
@@ -195,9 +191,9 @@
   real,parameter :: eps = 1.0e-3
 
 
-  i = uc + 1
-  j = vc + 1
-  k = wc + 1
+  i = int(uc) + 1
+  j = int(vc) + 1
+  k = int(wc) + 1
 
   xi = uc + 1 - i
   eta = vc + 1- j

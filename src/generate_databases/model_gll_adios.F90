@@ -69,8 +69,7 @@ subroutine model_gll_adios(myrank,nspec,LOCAL_PATH)
   !-------------------------------------.
   ! Open ADIOS Database file, read mode |
   !-------------------------------------'
-  database_name = adjustl(LOCAL_PATH)
-  database_name = database_name(1:len_trim(database_name)) //"/model_values.bp"
+  database_name = LOCAL_PATH(1:len_trim(LOCAL_PATH)) //"/model_values.bp"
 
   call world_get_comm(comm)
 

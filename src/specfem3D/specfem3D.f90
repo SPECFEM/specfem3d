@@ -342,8 +342,6 @@
   else
     call read_mesh_databases()
   endif
-    !call read_mesh_databases()
-    !call read_mesh_databases_adios()
 
 
 ! sets up reference element GLL points/weights/derivatives

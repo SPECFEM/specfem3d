@@ -73,13 +73,13 @@
   call prepare_timerun_gravity()
 
   ! prepares C-PML arrays
-  if( PML_CONDITIONS ) then
-    if( SIMULATION_TYPE /= 1 )  then
-       stop 'error: C-PML for adjoint simulations not supported yet'
+  if (PML_CONDITIONS) then
+    if (SIMULATION_TYPE /= 1)  then
+      stop 'error: C-PML for adjoint simulations not supported yet'
     else if( GPU_MODE ) then
-       stop 'error: C-PML only supported in CPU mode'
+      stop 'error: C-PML only supported in CPU mode'
     else
-       call prepare_timerun_pml()
+      call prepare_timerun_pml()
     endif
   endif
   ! dummy allocation with a size of 1 for all the PML arrays that have not yet been allocated
@@ -93,7 +93,7 @@
   call prepare_timerun_noise()
 
   ! prepares GPU arrays
-  if( GPU_MODE ) call prepare_timerun_GPU()
+  if (GPU_MODE) call prepare_timerun_GPU()
 
 #ifdef OPENMP_MODE
   ! prepares arrays for OpenMP
@@ -101,7 +101,7 @@
 #endif
 
   ! elapsed time since beginning of preparation
-  if(myrank == 0) then
+  if (myrank == 0) then
     tCPU = wtime() - time_start
     write(IMAIN,*)
     write(IMAIN,*) 'Elapsed time for preparing timerun in seconds = ',tCPU
@@ -150,14 +150,14 @@
   implicit none
 
   ! flag for any movie simulation
-  if( MOVIE_SURFACE .or. CREATE_SHAKEMAP .or. MOVIE_VOLUME .or. PNM_IMAGE ) then
+  if (MOVIE_SURFACE .or. CREATE_SHAKEMAP .or. MOVIE_VOLUME .or. PNM_IMAGE) then
     MOVIE_SIMULATION = .true.
   else
     MOVIE_SIMULATION = .false.
   endif
 
   ! user info
-  if(myrank == 0) then
+  if (myrank == 0) then
 
     write(IMAIN,*)
     if(ATTENUATION) then
@@ -309,7 +309,7 @@
       where(rmass_ocean_load <= 0._CUSTOM_REAL) rmass_ocean_load = 1._CUSTOM_REAL
       rmass_ocean_load(:) = 1._CUSTOM_REAL / rmass_ocean_load(:)
     endif
- endif
+  endif
 
   if(POROELASTIC_SIMULATION) then
     call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmass_solid_poroelastic, &
@@ -441,13 +441,13 @@
     if(NSOURCES == 1) then
       plot_file = '/plot_source_time_function.txt'
     else
-     if(NSOURCES < 10) then
+      if (NSOURCES < 10) then
         write(plot_file,"('/plot_source_time_function',i1,'.txt')") NSOURCES
       else
         write(plot_file,"('/plot_source_time_function',i2,'.txt')") NSOURCES
       endif
     endif
-    open(unit=IOSTF,file=trim(OUTPUT_FILES)//plot_file,status='unknown',iostat=ier)
+    open(unit=IOSTF,file=trim(OUTPUT_FILES_PATH)//plot_file,status='unknown',iostat=ier)
     if( ier /= 0 ) call exit_mpi(myrank,'error opening plot_source_time_function file')
   endif
 
@@ -704,84 +704,84 @@
 
   subroutine prepare_timerun_pml()
 
-    use pml_par
-    use specfem_par, only: NSPEC_AB,NGNOD,myrank
-    use constants, only: IMAIN,NGNOD_EIGHT_CORNERS
+  use pml_par
+  use specfem_par, only: NSPEC_AB,NGNOD,myrank
+  use constants, only: IMAIN,NGNOD_EIGHT_CORNERS
 
-    implicit none
+  implicit none
 
-    ! local parameters
-    integer :: ispec,ispec_CPML,NSPEC_CPML_GLOBAL
+  ! local parameters
+  integer :: ispec,ispec_CPML,NSPEC_CPML_GLOBAL
 
-    call sum_all_i(NSPEC_CPML,NSPEC_CPML_GLOBAL)
+  call sum_all_i(NSPEC_CPML,NSPEC_CPML_GLOBAL)
 
-    ! user output
-    if( myrank == 0 ) then
-      write(IMAIN,*)
-      write(IMAIN,*) 'incorporating C-PML  '
-      write(IMAIN,*)
-      write(IMAIN,*) 'number of C-PML spectral elements in the global mesh: ', NSPEC_CPML_GLOBAL
-      write(IMAIN,*)
-      write(IMAIN,*) 'thickness of C-PML layer in X direction: ', CPML_width_x
-      write(IMAIN,*) 'thickness of C-PML layer in Y direction: ', CPML_width_y
-      write(IMAIN,*) 'thickness of C-PML layer in Z direction: ', CPML_width_z
-      write(IMAIN,*)
-      call flush_IMAIN()
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*)
+    write(IMAIN,*) 'incorporating C-PML  '
+    write(IMAIN,*)
+    write(IMAIN,*) 'number of C-PML spectral elements in the global mesh: ', NSPEC_CPML_GLOBAL
+    write(IMAIN,*)
+    write(IMAIN,*) 'thickness of C-PML layer in X direction: ', CPML_width_x
+    write(IMAIN,*) 'thickness of C-PML layer in Y direction: ', CPML_width_y
+    write(IMAIN,*) 'thickness of C-PML layer in Z direction: ', CPML_width_z
+    write(IMAIN,*)
+    call flush_IMAIN()
+  endif
+  call synchronize_all()
+
+  ! checks that 8-node mesh elements are used (27-node elements are not supported)
+  if (NGNOD /= NGNOD_EIGHT_CORNERS) &
+    stop 'error: the C-PML code works for 8-node bricks only; should be made more general'
+
+  ! allocates and initializes C-PML arrays
+  if (NSPEC_CPML > 0) call pml_allocate_arrays()
+  ! dummy allocation with a size of 1 for all the PML arrays that have not yet been allocated
+  ! in order to be able to use these arrays as arguments in subroutine calls
+  call pml_allocate_arrays_dummy()
+
+  ! defines C-PML spectral elements local indexing
+  ispec_CPML = 0
+  do ispec=1,NSPEC_AB
+    if (is_CPML(ispec)) then
+      ispec_CPML = ispec_CPML + 1
+      spec_to_CPML(ispec) = ispec_CPML
     endif
-    call synchronize_all()
+  enddo
 
-    ! checks that 8-node mesh elements are used (27-node elements are not supported)
-    if( NGNOD /= NGNOD_EIGHT_CORNERS) &
-         stop 'error: the C-PML code works for 8-node bricks only; should be made more general'
+  ! defines C-PML element type array: 1 = face, 2 = edge, 3 = corner
+  do ispec_CPML=1,NSPEC_CPML
 
-    ! allocates and initializes C-PML arrays
-    if( NSPEC_CPML > 0 ) call pml_allocate_arrays()
-    ! dummy allocation with a size of 1 for all the PML arrays that have not yet been allocated
-    ! in order to be able to use these arrays as arguments in subroutine calls
-    call pml_allocate_arrays_dummy()
+    ! X_surface C-PML
+    if (CPML_regions(ispec_CPML) == 1) then
+      CPML_type(ispec_CPML) = 1
 
-    ! defines C-PML spectral elements local indexing
-    ispec_CPML = 0
-    do ispec=1,NSPEC_AB
-       if( is_CPML(ispec) ) then
-          ispec_CPML = ispec_CPML + 1
-          spec_to_CPML(ispec) = ispec_CPML
-       endif
-    enddo
+    ! Y_surface C-PML
+    else if (CPML_regions(ispec_CPML) == 2) then
+      CPML_type(ispec_CPML) = 1
 
-    ! defines C-PML element type array: 1 = face, 2 = edge, 3 = corner
-    do ispec_CPML=1,NSPEC_CPML
+    ! Z_surface C-PML
+    else if (CPML_regions(ispec_CPML) == 3) then
+      CPML_type(ispec_CPML) = 1
 
-       ! X_surface C-PML
-       if( CPML_regions(ispec_CPML) == 1 ) then
-          CPML_type(ispec_CPML) = 1
+    ! XY_edge C-PML
+    else if (CPML_regions(ispec_CPML) == 4) then
+      CPML_type(ispec_CPML) = 2
 
-       ! Y_surface C-PML
-       else if( CPML_regions(ispec_CPML) == 2 ) then
-          CPML_type(ispec_CPML) = 1
+    ! XZ_edge C-PML
+    else if (CPML_regions(ispec_CPML) == 5) then
+      CPML_type(ispec_CPML) = 2
 
-       ! Z_surface C-PML
-       else if( CPML_regions(ispec_CPML) == 3 ) then
-          CPML_type(ispec_CPML) = 1
+    ! YZ_edge C-PML
+    else if (CPML_regions(ispec_CPML) == 6) then
+      CPML_type(ispec_CPML) = 2
 
-       ! XY_edge C-PML
-       else if( CPML_regions(ispec_CPML) == 4 ) then
-          CPML_type(ispec_CPML) = 2
+    ! XYZ_corner C-PML
+    else if (CPML_regions(ispec_CPML) == 7) then
+      CPML_type(ispec_CPML) = 3
+    endif
 
-       ! XZ_edge C-PML
-       else if( CPML_regions(ispec_CPML) == 5 ) then
-          CPML_type(ispec_CPML) = 2
-
-       ! YZ_edge C-PML
-       else if( CPML_regions(ispec_CPML) == 6 ) then
-          CPML_type(ispec_CPML) = 2
-
-       ! XYZ_corner C-PML
-       else if( CPML_regions(ispec_CPML) == 7 ) then
-          CPML_type(ispec_CPML) = 3
-       endif
-
-    enddo
+  enddo
 
   end subroutine prepare_timerun_pml
 
@@ -856,18 +856,18 @@
 
       ! memory variables if attenuation
       if( ATTENUATION ) then
-         b_R_trace = 0._CUSTOM_REAL
-         b_R_xx = 0._CUSTOM_REAL
-         b_R_yy = 0._CUSTOM_REAL
-         b_R_xy = 0._CUSTOM_REAL
-         b_R_xz = 0._CUSTOM_REAL
-         b_R_yz = 0._CUSTOM_REAL
-         b_epsilondev_trace = 0._CUSTOM_REAL
-         b_epsilondev_xx = 0._CUSTOM_REAL
-         b_epsilondev_yy = 0._CUSTOM_REAL
-         b_epsilondev_xy = 0._CUSTOM_REAL
-         b_epsilondev_xz = 0._CUSTOM_REAL
-         b_epsilondev_yz = 0._CUSTOM_REAL
+        b_R_trace = 0._CUSTOM_REAL
+        b_R_xx = 0._CUSTOM_REAL
+        b_R_yy = 0._CUSTOM_REAL
+        b_R_xy = 0._CUSTOM_REAL
+        b_R_xz = 0._CUSTOM_REAL
+        b_R_yz = 0._CUSTOM_REAL
+        b_epsilondev_trace = 0._CUSTOM_REAL
+        b_epsilondev_xx = 0._CUSTOM_REAL
+        b_epsilondev_yy = 0._CUSTOM_REAL
+        b_epsilondev_xy = 0._CUSTOM_REAL
+        b_epsilondev_xz = 0._CUSTOM_REAL
+        b_epsilondev_yz = 0._CUSTOM_REAL
       endif
 
     endif
@@ -954,29 +954,14 @@
 
         if (SIMULATION_TYPE == 3) then
           ! opens existing files
-
-          ! uses fortran routines for reading
-          !open(unit=IOABS,file=trim(prname)//'absorb_field.bin',status='old',&
-          !      action='read',form='unformatted',access='direct', &
-          !      recl=b_reclen_field+2*4,iostat=ier )
-          !if( ier /= 0 ) call exit_mpi(myrank,'error opening proc***_absorb_field.bin file')
-          ! uses c routines for faster reading
-          call open_file_abs_r(0,trim(prname)//'absorb_field.bin', &
+          call open_file_abs_r(IOABS,trim(prname)//'absorb_field.bin', &
                               len_trim(trim(prname)//'absorb_field.bin'), &
                               filesize)
-
         else
           ! opens new file
-          ! uses fortran routines for writing
-          !open(unit=IOABS,file=trim(prname)//'absorb_field.bin',status='unknown',&
-          !      form='unformatted',access='direct',&
-          !      recl=b_reclen_field+2*4,iostat=ier )
-          !if( ier /= 0 ) call exit_mpi(myrank,'error opening proc***_absorb_field.bin file')
-          ! uses c routines for faster writing (file index 0 for acoutic domain file)
-          call open_file_abs_w(0,trim(prname)//'absorb_field.bin', &
+          call open_file_abs_w(IOABS,trim(prname)//'absorb_field.bin', &
                               len_trim(trim(prname)//'absorb_field.bin'), &
                               filesize)
-
         endif
       endif
 
@@ -1011,29 +996,14 @@
 
         if (SIMULATION_TYPE == 3) then
           ! opens existing files
-          ! uses fortran routines for reading
-          !open(unit=IOABS_AC,file=trim(prname)//'absorb_potential.bin',status='old',&
-          !      action='read',form='unformatted',access='direct', &
-          !      recl=b_reclen_potential+2*4,iostat=ier )
-          !if( ier /= 0 ) call exit_mpi(myrank,'error opening proc***_absorb_potential.bin file')
-
-          ! uses c routines for faster reading
-          call open_file_abs_r(1,trim(prname)//'absorb_potential.bin', &
+          call open_file_abs_r(IOABS_AC,trim(prname)//'absorb_potential.bin', &
                               len_trim(trim(prname)//'absorb_potential.bin'), &
                               filesize)
-
         else
           ! opens new file
-          ! uses fortran routines for writing
-          !open(unit=IOABS_AC,file=trim(prname)//'absorb_potential.bin',status='unknown',&
-          !      form='unformatted',access='direct',&
-          !      recl=b_reclen_potential+2*4,iostat=ier )
-          !if( ier /= 0 ) call exit_mpi(myrank,'error opening proc***_absorb_potential.bin file')
-          ! uses c routines for faster writing (file index 1 for acoutic domain file)
-          call open_file_abs_w(1,trim(prname)//'absorb_potential.bin', &
+          call open_file_abs_w(IOABS_AC,trim(prname)//'absorb_potential.bin', &
                               len_trim(trim(prname)//'absorb_potential.bin'), &
                               filesize)
-
         endif
       endif
 
@@ -1062,38 +1032,20 @@
 
         if (SIMULATION_TYPE == 3) then
           ! opens existing files
-
-          ! uses fortran routines for reading
-          !open(unit=IOABS,file=trim(prname)//'absorb_field.bin',status='old',&
-          !      action='read',form='unformatted',access='direct', &
-          !      recl=b_reclen_field+2*4,iostat=ier )
-          !if( ier /= 0 ) call exit_mpi(myrank,'error opening
-          !proc***_absorb_field.bin file')
-          ! uses c routines for faster reading
-          call open_file_abs_r(0,trim(prname)//'absorb_fields.bin', &
+          call open_file_abs_r(IOABS,trim(prname)//'absorb_fields.bin', &
                               len_trim(trim(prname)//'absorb_fields.bin'), &
                               filesize)
-          call open_file_abs_r(0,trim(prname)//'absorb_fieldw.bin', &
+          call open_file_abs_r(IOABS,trim(prname)//'absorb_fieldw.bin', &
                               len_trim(trim(prname)//'absorb_fieldw.bin'), &
                               filesize)
-
         else
           ! opens new file
-          ! uses fortran routines for writing
-          !open(unit=IOABS,file=trim(prname)//'absorb_field.bin',status='unknown',&
-          !      form='unformatted',access='direct',&
-          !      recl=b_reclen_field+2*4,iostat=ier )
-          !if( ier /= 0 ) call exit_mpi(myrank,'error opening
-          !proc***_absorb_field.bin file')
-          ! uses c routines for faster writing (file index 0 for acoutic domain
-          ! file)
-          call open_file_abs_w(0,trim(prname)//'absorb_fields.bin', &
+          call open_file_abs_w(IOABS,trim(prname)//'absorb_fields.bin', &
                               len_trim(trim(prname)//'absorb_fields.bin'), &
                               filesize)
-          call open_file_abs_w(0,trim(prname)//'absorb_fieldw.bin', &
+          call open_file_abs_w(IOABS,trim(prname)//'absorb_fieldw.bin', &
                               len_trim(trim(prname)//'absorb_fieldw.bin'), &
                               filesize)
-
         endif
       endif
     else
@@ -1136,7 +1088,6 @@
     endif
   endif
 
-
   end subroutine prepare_timerun_adjoint
 
 !
@@ -1163,8 +1114,8 @@
 
     ! checks if free surface is defined
     if( num_free_surface_faces == 0 ) then
-       write(*,*) myrank, " doesn't have a free_surface_face"
-       ! stop 'error: noise simulations need a free surface'
+      write(*,*) myrank, " doesn't have a free_surface_face"
+      ! stop 'error: noise simulations need a free surface'
     endif
 
     ! allocates arrays

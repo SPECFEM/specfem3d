@@ -1,36 +1,34 @@
 /*
-!=====================================================================
-!
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
-!               ---------------------------------------
-!
+ !=====================================================================
+ !
+ !               S p e c f e m 3 D  V e r s i o n  2 . 1
+ !               ---------------------------------------
+ !
  !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
  !                        Princeton University, USA
  !                and CNRS / University of Marseille, France
  !                 (there are currently many more authors!)
  ! (c) Princeton University and CNRS / University of Marseille, July 2012
-!
-! This program is free software; you can redistribute it and/or modify
-! it under the terms of the GNU General Public License as published by
-! the Free Software Foundation; either version 2 of the License, or
-! (at your option) any later version.
-!
-! This program is distributed in the hope that it will be useful,
-! but WITHOUT ANY WARRANTY; without even the implied warranty of
-! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-! GNU General Public License for more details.
-!
-! You should have received a copy of the GNU General Public License along
-! with this program; if not, write to the Free Software Foundation, Inc.,
-! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-!
-!=====================================================================
+ !
+ ! This program is free software; you can redistribute it and/or modify
+ ! it under the terms of the GNU General Public License as published by
+ ! the Free Software Foundation; either version 2 of the License, or
+ ! (at your option) any later version.
+ !
+ ! This program is distributed in the hope that it will be useful,
+ ! but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ ! GNU General Public License for more details.
+ !
+ ! You should have received a copy of the GNU General Public License along
+ ! with this program; if not, write to the Free Software Foundation, Inc.,
+ ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ !
+ !=====================================================================
  */
 
 // for large files
 #define _FILE_OFFSET_BITS  64
-
-// after Brian's function
 
 #include "config.h"
 #include <stdio.h>
@@ -44,7 +42,6 @@ static int fd;
 
 void
 FC_FUNC_(open_file_create,OPEN_FILE)(char *file) {
-  /*    fprintf(stderr, "Opening file: %s\n", file); */
   fd = open(file, O_WRONLY | O_CREAT | O_TRUNC, 0644);
   if(fd == -1) {
     fprintf(stderr, "Error opening file: %s exiting\n", file);
@@ -54,7 +51,6 @@ FC_FUNC_(open_file_create,OPEN_FILE)(char *file) {
 
 void
 FC_FUNC_(open_file_append,OPEN_FILE)(char *file) {
-  /*    fprintf(stderr, "Opening file: %s\n", file); */
   fd = open(file, O_WRONLY | O_CREAT | O_APPEND, 0644);
   if(fd == -1) {
     fprintf(stderr, "Error opening file: %s exiting\n", file);
@@ -64,7 +60,6 @@ FC_FUNC_(open_file_append,OPEN_FILE)(char *file) {
 
 void
 FC_FUNC_(close_file,CLOSE_FILE)() {
-  /*    fprintf(stderr, "Closing file\n"); */
   close(fd);
 }
 
@@ -78,7 +73,6 @@ FC_FUNC_(write_real,WRITE_REAL)(float *z) {
   int dummy_unused_variable = write(fd, z, sizeof(float));
 }
 
-/* BS BS begin. Added section for writing SAC binary data*/
 void
 FC_FUNC_(write_n_real,WRITE_N_REAL)(float *z,int *n) {
   int dummy_unused_variable = write(fd, z, *n*sizeof(float));
@@ -89,11 +83,8 @@ FC_FUNC_(write_character,WRITE_CHARACTER)(char *z, int *lchar) {
   int dummy_unused_variable = write(fd, z, *lchar*sizeof(char));
 }
 
-// LQY -- added for combine_vol/surf_data to write multiple binary files simultaneously --
-
 void
 FC_FUNC_(open_file_fd,OPEN_FILE_FD)(char *file, int *pfd) {
-  /*    fprintf(stderr, "Opening file: %s\n", file); */
   *pfd = open(file, O_WRONLY | O_CREAT, 0644);
   if(*pfd == -1) {
     fprintf(stderr, "Error opening file: %s exiting\n", file);
@@ -103,7 +94,6 @@ FC_FUNC_(open_file_fd,OPEN_FILE_FD)(char *file, int *pfd) {
 
 void
 FC_FUNC_(close_file_fd,CLOSE_FILE_FD)(int *pfd) {
-  /*    fprintf(stderr, "Closing file\n"); */
   close(*pfd);
 }
 
@@ -117,7 +107,6 @@ FC_FUNC_(write_real_fd,WRITE_REAL_FD)(int *pfd, float *z) {
   int dummy_unused_variable = write(*pfd, z, sizeof(float));
 }
 
-/* BS BS begin. Added section for writing SAC binary data*/
 void
 FC_FUNC_(write_n_real_fd,WRITE_N_REAL_FD)(int *pfd, float *z,int *n) {
   int dummy_unused_variable = write(*pfd, z, *n*sizeof(float));
@@ -171,10 +160,7 @@ static FILE * fp_abs[ABS_FILEID];
 static char * work_buffer[ABS_FILEID];
 
 
-//void
-//FC_FUNC_(open_file_abs_r_fbin,OPEN_FILE_ABS_R_FBIN)(int *fid, char *filename,int *length, int *filesize){
 void open_file_abs_r_fbin(int *fid, char *filename,int *length, long long *filesize){
-
 // opens file for read access
 
 //This sequence assigns the MAX_B array work_buffer to the file pointer
@@ -215,10 +201,7 @@ void open_file_abs_r_fbin(int *fid, char *filename,int *length, long long *files
   free(fncopy);
 }
 
-//void
-//FC_FUNC_(open_file_abs_w_fbin,OPEN_FILE_ABS_W_FBIN)(int *fid, char *filename, int *length, int *filesize){
 void open_file_abs_w_fbin(int *fid, char *filename, int *length, long long *filesize){
-
 // opens file for write access
 
   //This sequence assigns the MAX_B array work_buffer to the file pointer
@@ -257,73 +240,51 @@ void open_file_abs_w_fbin(int *fid, char *filename, int *length, long long *file
   fp_abs[*fid] = ft;
 
   free(fncopy);
-
 }
 
-//void
-//FC_FUNC_(close_file_abs_fbin,CLOSE_FILE_ABS_FBIN)(int * fid){
 void close_file_abs_fbin(int * fid){
-
 // closes file
 
   fclose(fp_abs[*fid]);
 
   free(work_buffer[*fid]);
-
 }
 
-//void
-//FC_FUNC_(write_abs_fbin,WRITE_ABS_FBIN)(int *fid, void *buffer, int *length, int *index){
 void write_abs_fbin(int *fid, char *buffer, int *length, int *index){
-
 // writes binary file data in chunks of MAX_B
 
   FILE *ft;
   int itemlen,remlen,donelen,ret;
-// DK DK fixed the warning we got when compiling with Intel icc
-// DK DK solution found at http://osdir.com/ml/network.quagga.devel/2004-09/msg00090.html
-// DK DK  void *buf;
-  char *buf = NULL;
 
   // file pointer
   ft = fp_abs[*fid];
 
   donelen = 0;
   remlen = *length;
-  buf = buffer;
   ret = 0;
 
   // writes items of maximum MAX_B to the file
   while (remlen > 0){
 
     itemlen = MIN(remlen,MAX_B);
-    ret = fwrite(buf,1,itemlen,ft);
+    ret = fwrite(buffer,1,itemlen,ft);
     if (ret > 0){
       donelen = donelen + ret;
       remlen = remlen - MAX_B;
-      // this shifts the pointer position, thus is used in arithmetic, compilers might warn about this...
-      buf += MAX_B;
+      buffer += MAX_B;
     }
     else{
       remlen = 0;
     }
   }
-
 }
 
-//void
-//FC_FUNC_(read_abs_fbin,READ_ABS_FBIN)(int *fid, void *buffer, int *length, int *index){
 void read_abs_fbin(int *fid, char *buffer, int *length, int *index){
-
 // reads binary file data in chunks of MAX_B
 
   FILE *ft;
   int ret,itemlen,remlen,donelen;
   long long pos;
-// DK DK fixed the warning we got when compiling with Intel icc
-// DK DK solution found at http://osdir.com/ml/network.quagga.devel/2004-09/msg00090.html
-// DK DK  void *buf;
-  char *buf = NULL;
 
   // file pointer
   ft = fp_abs[*fid];
@@ -339,7 +300,6 @@ void read_abs_fbin(int *fid, char *buffer, int *length, int *index){
 
   donelen = 0;
   remlen = *length;
-  buf = buffer;
   ret = 0;
 
   // reads items of maximum MAX_B to the file
@@ -349,21 +309,19 @@ void read_abs_fbin(int *fid, char *buffer, int *length, int *index){
     if (ferror(ft) || feof(ft)) return;
 
     itemlen = MIN(remlen,MAX_B);
-    ret = fread(buf,1,itemlen,ft);
+    ret = fread(buffer,1,itemlen,ft);
 
     if (ferror(ft) || feof(ft)) return;
 
     if (ret > 0){
       donelen = donelen + ret;
       remlen = remlen - MAX_B;
-      // this shifts the pointer position, thus is used in arithmetic, compilers might warn about this...
-      buf += MAX_B;
+      buffer += MAX_B;
     }
     else{
       remlen = 0;
     }
   }
-
 }
 
 
@@ -405,12 +363,8 @@ static int map_fd_abs[ABS_FILEID];
 // file sizes
 static long long filesize_abs[ABS_FILEID];
 
-//void
-//FC_FUNC_(open_file_abs_w_map,OPEN_FILE_ABS_W_MAP)(int *fid, char *filename, int *length, int *filesize){
 void open_file_abs_w_map(int *fid, char *filename, int *length, long long *filesize){
-
 // opens file for write access
-
   int ft;
   int result;
   char *map;
@@ -457,9 +411,6 @@ void open_file_abs_w_map(int *fid, char *filename, int *length, long long *files
     exit(EXIT_FAILURE);
   }
 
-  //printf("file length: %d \n",filesize_abs[*fid]);
-
-
   /* Something needs to be written at the end of the file to
    * have the file actually have the new size.
    * Just writing an empty string at the current file position will do.
@@ -487,15 +438,9 @@ void open_file_abs_w_map(int *fid, char *filename, int *length, long long *files
   }
 
   map_abs[*fid] = map;
-
-  //printf("file map: %d\n",*fid);
-
 }
 
-//void
-//FC_FUNC_(open_file_abs_r_map,OPEN_FILE_ABS_R_MAP)(int *fid, char *filename,int *length, int *filesize){
 void open_file_abs_r_map(int *fid, char *filename,int *length, long long *filesize){
-
   // opens file for read access
   char * fncopy;
   char * blank;
@@ -514,7 +459,6 @@ void open_file_abs_r_map(int *fid, char *filename,int *length, long long *filesi
   if (blank != NULL) {
     fncopy[blank - fncopy] = '\0';
   }
-
 
   ft = open(fncopy, O_RDONLY);
   if (ft == -1) {
@@ -537,17 +481,10 @@ void open_file_abs_r_map(int *fid, char *filename,int *length, long long *filesi
   }
 
   map_abs[*fid] = map;
-
-  //printf("file length r: %d \n",filesize_abs[*fid]);
-  //printf("file map r: %d\n",*fid);
-
 }
 
 
-//void
-//FC_FUNC_(close_file_abs_map,CLOSE_FILE_ABS_MAP)(int * fid){
 void close_file_abs_map(int * fid){
-
   /* Don't forget to free the mmapped memory
    */
   if (munmap(map_abs[*fid], filesize_abs[*fid]) == -1) {
@@ -561,10 +498,7 @@ void close_file_abs_map(int * fid){
 }
 
 
-//void
-//FC_FUNC_(write_abs_map,WRITE_ABS_MAP)(int *fid, char *buffer, int *length , int *index){
 void write_abs_map(int *fid, char *buffer, int *length , int *index){
-
   char *map;
   long long offset;
 
@@ -574,14 +508,10 @@ void write_abs_map(int *fid, char *buffer, int *length , int *index){
   offset =  ((long long)*index -1 ) * (*length) ;
 
   // copies buffer to map
-  memcpy( &map[offset], buffer ,*length );
-
+  memcpy( &map[offset], buffer, *length );
 }
 
-//void
-//FC_FUNC_(read_abs_map,READ_ABS_MAP)(int *fid, char *buffer, int *length , int *index){
 void read_abs_map(int *fid, char *buffer, int *length , int *index){
-
   char *map;
   long long offset;
 
@@ -592,7 +522,6 @@ void read_abs_map(int *fid, char *buffer, int *length , int *index){
 
   // copies map to buffer
   memcpy( buffer, &map[offset], *length );
-
 }
 
 

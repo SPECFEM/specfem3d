@@ -52,9 +52,9 @@ subroutine pml_output_VTKs()
   temp_CPML_regions(:) = 0
 
   do ispec_CPML=1,nspec_cpml
-     ispec = CPML_to_spec(ispec_CPML)
+    ispec = CPML_to_spec(ispec_CPML)
 
-     temp_CPML_regions(ispec) = CPML_regions(ispec_CPML)
+    temp_CPML_regions(ispec) = CPML_regions(ispec_CPML)
   enddo
 
   if(myrank == 0) write(IMAIN,*) 'Generating CPML_regions VTK file'
@@ -77,11 +77,11 @@ subroutine pml_output_VTKs()
   temp_d_store_z(:,:,:,:) = 0._CUSTOM_REAL
 
   do ispec_CPML=1,nspec_cpml
-     ispec = CPML_to_spec(ispec_CPML)
+    ispec = CPML_to_spec(ispec_CPML)
 
-     temp_d_store_x(:,:,:,ispec) = d_store_x(:,:,:,ispec_CPML)
-     temp_d_store_y(:,:,:,ispec) = d_store_y(:,:,:,ispec_CPML)
-     temp_d_store_z(:,:,:,ispec) = d_store_z(:,:,:,ispec_CPML)
+    temp_d_store_x(:,:,:,ispec) = d_store_x(:,:,:,ispec_CPML)
+    temp_d_store_y(:,:,:,ispec) = d_store_y(:,:,:,ispec_CPML)
+    temp_d_store_z(:,:,:,ispec) = d_store_z(:,:,:,ispec_CPML)
   enddo
 
   if(myrank == 0) write(IMAIN,*) 'Generating CPML_damping_dx, CPML_damping_dy and CPML_damping_dz VTK files'

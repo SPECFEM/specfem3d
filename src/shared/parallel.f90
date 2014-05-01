@@ -757,14 +757,11 @@
   real(kind=CUSTOM_REAL), dimension(sendcount) :: sendbuf
   real(kind=CUSTOM_REAL), dimension(recvcount) :: recvbuf
 
-! MPI status of messages to be received
-  integer msg_status(MPI_STATUS_SIZE)
-
   integer ier
 
   call MPI_SENDRECV(sendbuf,sendcount,CUSTOM_MPI_TYPE,dest,sendtag, &
                     recvbuf,recvcount,CUSTOM_MPI_TYPE,source,recvtag, &
-                    MPI_COMM_WORLD,msg_status,ier)
+                    MPI_COMM_WORLD,MPI_STATUS_IGNORE,ier)
 
   end subroutine sendrecv_all_cr
 
@@ -888,10 +885,10 @@
   integer recvcount
   !integer recvbuf
   integer,dimension(recvcount):: recvbuf
-  integer req(MPI_STATUS_SIZE)
   integer ier
 
-  call MPI_RECV(recvbuf,recvcount,MPI_INTEGER,dest,recvtag,MPI_COMM_WORLD,req,ier)
+  call MPI_RECV(recvbuf,recvcount,MPI_INTEGER,dest,recvtag, &
+                MPI_COMM_WORLD,MPI_STATUS_IGNORE,ier)
 
   end subroutine recv_i
 
@@ -910,11 +907,10 @@
 
   integer recvcount,dest,recvtag
   real(kind=CUSTOM_REAL),dimension(recvcount) :: recvbuf
-  integer req(MPI_STATUS_SIZE)
   integer ier
 
-  call MPI_RECV(recvbuf,recvcount,CUSTOM_MPI_TYPE,dest,recvtag,MPI_COMM_WORLD,req,ier)
-
+  call MPI_RECV(recvbuf,recvcount,CUSTOM_MPI_TYPE,dest,recvtag, &
+                MPI_COMM_WORLD,MPI_STATUS_IGNORE,ier)
 
   end subroutine recvv_cr
 
@@ -974,11 +970,8 @@
   integer :: tag = 100
   integer, dimension(recvcount) :: recvbuf
 
-  ! MPI status of messages to be received
-  integer msg_status(MPI_STATUS_SIZE)
-
   call MPI_RECV(recvbuf,recvcount,MPI_INTEGER,source,tag, &
-       MPI_COMM_WORLD,msg_status,ier)
+                MPI_COMM_WORLD,MPI_STATUS_IGNORE,ier)
 
   end subroutine recv_i_t
 
@@ -1016,11 +1009,8 @@
 !  integer :: tag = 100
 !  double precision, dimension(recvcount) :: recvbuf
 !
-!  ! MPI status of messages to be received
-!  integer msg_status(MPI_STATUS_SIZE)
-!
 !  call MPI_RECV(recvbuf,recvcount,MPI_DOUBLE_PRECISION,source,tag, &
-!       MPI_COMM_WORLD,msg_status,ier)
+!                MPI_COMM_WORLD,MPI_STATUS_IGNORE,ier)
 !
 !  end subroutine recv_dp_t
 !
@@ -1057,10 +1047,10 @@
   integer dest,recvtag
   integer recvcount
   double precision,dimension(recvcount):: recvbuf
-  integer req(MPI_STATUS_SIZE)
   integer ier
 
-  call MPI_RECV(recvbuf,recvcount,MPI_DOUBLE_PRECISION,dest,recvtag,MPI_COMM_WORLD,req,ier)
+  call MPI_RECV(recvbuf,recvcount,MPI_DOUBLE_PRECISION,dest,recvtag, &
+                MPI_COMM_WORLD,MPI_STATUS_IGNORE,ier)
 
   end subroutine recv_dp
 
@@ -1097,11 +1087,9 @@
 
   integer :: req
 
-  integer, dimension(MPI_STATUS_SIZE) :: req_mpi_status
-
   integer :: ier
 
-  call mpi_wait(req,req_mpi_status,ier)
+  call mpi_wait(req,MPI_STATUS_IGNORE,ier)
 
   end subroutine wait_req
 

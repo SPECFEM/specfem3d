@@ -1,31 +1,31 @@
 /*
-!=====================================================================
-!
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
-!               ---------------------------------------
-!
+ !=====================================================================
+ !
+ !               S p e c f e m 3 D  V e r s i o n  2 . 1
+ !               ---------------------------------------
+ !
  !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
  !                        Princeton University, USA
  !                and CNRS / University of Marseille, France
  !                 (there are currently many more authors!)
  ! (c) Princeton University and CNRS / University of Marseille, July 2012
-!
-! This program is free software; you can redistribute it and/or modify
-! it under the terms of the GNU General Public License as published by
-! the Free Software Foundation; either version 2 of the License, or
-! (at your option) any later version.
-!
-! This program is distributed in the hope that it will be useful,
-! but WITHOUT ANY WARRANTY; without even the implied warranty of
-! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-! GNU General Public License for more details.
-!
-! You should have received a copy of the GNU General Public License along
-! with this program; if not, write to the Free Software Foundation, Inc.,
-! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-!
-!=====================================================================
-*/
+ !
+ ! This program is free software; you can redistribute it and/or modify
+ ! it under the terms of the GNU General Public License as published by
+ ! the Free Software Foundation; either version 2 of the License, or
+ ! (at your option) any later version.
+ !
+ ! This program is distributed in the hope that it will be useful,
+ ! but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ ! GNU General Public License for more details.
+ !
+ ! You should have received a copy of the GNU General Public License along
+ ! with this program; if not, write to the Free Software Foundation, Inc.,
+ ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ !
+ !=====================================================================
+ */
 
 /*
 
@@ -45,8 +45,7 @@ by Dennis McRitchie (Princeton University, USA)
  any problems on that account. There are no wrapper functions used: just
  the C routine called directly from a Fortran routine. Also, regarding
  the use of C, I assumed this would not be a problem since there are
- already six C files that make up part of the build (though they all are
- related to the pyre-framework).
+ already a few C files that make up part of the build.
  ..
 */
 
@@ -105,6 +104,7 @@ FC_FUNC_(param_open,PARAM_OPEN)(char * filename, int * length, int * ierr)
     return;
   }
   free(fncopy);
+  *ierr = 0;
 }
 
 void
@@ -118,7 +118,6 @@ FC_FUNC_(param_read,PARAM_READ)(char * string_read, int * string_read_len, char 
 {
   char * namecopy;
   char * blank;
-  char * namecopy2;
   int status;
   regex_t compiled_pattern;
   char line[LINE_MAX];
@@ -132,13 +131,6 @@ FC_FUNC_(param_read,PARAM_READ)(char * string_read, int * string_read_len, char 
   blank = strchr(namecopy, ' ');
   if (blank != NULL) {
     namecopy[blank - namecopy] = '\0';
-  }
-  // Then get rid of any dot-terminated prefix.
-  namecopy2 = strchr(namecopy, '.');
-  if (namecopy2 != NULL) {
-    namecopy2 += 1;
-  } else {
-    namecopy2 = namecopy;
   }
   /* Regular expression for parsing lines from param file.
    ** Good luck reading this regular expression.  Basically, the lines of
@@ -189,7 +181,7 @@ FC_FUNC_(param_read,PARAM_READ)(char * string_read, int * string_read_len, char 
     // If we have a match, extract the keyword from the line.
     keyword = strndup(line+parameter[1].rm_so, parameter[1].rm_eo-parameter[1].rm_so);
     // If the keyword is not the one we're looking for, check the next line.
-    if (strcmp(keyword, namecopy2) != 0) {
+    if (strcmp(keyword, namecopy) != 0) {
       free(keyword);
       continue;
     }
@@ -200,7 +192,6 @@ FC_FUNC_(param_read,PARAM_READ)(char * string_read, int * string_read_len, char 
     // Clear out the return string with blanks, copy the value into it, and return.
     memset(string_read, ' ', *string_read_len);
     strncpy(string_read, value, strlen(value));
-    // printf("'%s'='%s'\n", namecopy2, value);
     free(value);
     free(namecopy);
     *ierr = 0;

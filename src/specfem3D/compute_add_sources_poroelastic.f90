@@ -127,9 +127,9 @@
 !              endif
 
               if( USE_RICKER_TIME_FUNCTION ) then
-                 stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+                stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
               else
-                 stf = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_tiny(isource))
+                stf = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_tiny(isource))
               endif
 
               ! add the inclined force source array
@@ -137,9 +137,9 @@
 
               ! distinguish between single and double precision for reals
               if(CUSTOM_REAL == SIZE_REAL) then
-                 stf_used = sngl(stf)
+                stf_used = sngl(stf)
               else
-                 stf_used = stf
+                stf_used = stf
               endif
 
               do k=1,NGLLZ
@@ -240,104 +240,105 @@
     ! adds adjoint source in this partitions
     if( nadj_rec_local > 0 ) then
 
-    ! add adjoint source following elastic block by block consideration
-    ! read in adjoint sources block by block (for memory consideration)
-    ! e.g., in exploration experiments, both the number of receivers (nrec) and
-    ! the number of time steps (NSTEP) are huge,
-    ! which may cause problems since we have a large array:
-    !   adj_sourcearrays(nadj_rec_local,NSTEP,NDIM,NGLLX,NGLLY,NGLLZ)
+      ! add adjoint source following elastic block by block consideration
+      ! read in adjoint sources block by block (for memory consideration)
+      ! e.g., in exploration experiments, both the number of receivers (nrec) and
+      ! the number of time steps (NSTEP) are huge,
+      ! which may cause problems since we have a large array:
+      !   adj_sourcearrays(nadj_rec_local,NSTEP,NDIM,NGLLX,NGLLY,NGLLZ)
 
-    ! figure out if we need to read in a chunk of the adjoint source at this
-    ! timestep
-    it_sub_adj = ceiling( dble(it)/dble(NTSTEP_BETWEEN_READ_ADJSRC) ) !chunk_number
-    ibool_read_adj_arrays = (((mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC) == 0)) .and.  (nadj_rec_local > 0))
+      ! figure out if we need to read in a chunk of the adjoint source at this
+      ! timestep
+      it_sub_adj = ceiling( dble(it)/dble(NTSTEP_BETWEEN_READ_ADJSRC) ) !chunk_number
+      ibool_read_adj_arrays = (((mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC) == 0)) .and.  (nadj_rec_local > 0))
 
-    ! needs to read in a new chunk/block of the adjoint source
-    ! note that for each partition, we divide it into two parts --- boundaries
-    ! and interior --- indicated by 'phase_is_inner'
-    ! we first do calculations for the boudaries, and then start communication
-    ! with other partitions while calculate for the inner part
-    ! this must be done carefully, otherwise the adjoint sources may be added
-    ! twice
-    if (ibool_read_adj_arrays .and. (.not. phase_is_inner)) then
+      ! needs to read in a new chunk/block of the adjoint source
+      ! note that for each partition, we divide it into two parts --- boundaries
+      ! and interior --- indicated by 'phase_is_inner'
+      ! we first do calculations for the boudaries, and then start communication
+      ! with other partitions while calculate for the inner part
+      ! this must be done carefully, otherwise the adjoint sources may be added
+      ! twice
+      if (ibool_read_adj_arrays .and. (.not. phase_is_inner)) then
 
-      ! allocates temporary source array
-      allocate(adj_sourcearray(NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array adj_sourcearray'
+        ! allocates temporary source array
+        allocate(adj_sourcearray(NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
+        if (ier /= 0) stop 'error allocating array adj_sourcearray'
 
-         !!! read ascii adjoint sources
-         irec_local = 0
-         do irec = 1, nrec
-           ! compute source arrays
-           if (myrank == islice_selected_rec(irec)) then
-             irec_local = irec_local + 1
-             ! reads in **sta**.**net**.**LH**.adj files
-             adj_source_file = trim(station_name(irec))//'.'//trim(network_name(irec))
-             call compute_arrays_adjoint_source(myrank,adj_source_file, &
-                                                xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
-                                                adj_sourcearray, xigll,yigll,zigll, &
-                                                it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC)
+        !!! read ascii adjoint sources
+        irec_local = 0
+        do irec = 1, nrec
+          ! compute source arrays
+          if (myrank == islice_selected_rec(irec)) then
+            irec_local = irec_local + 1
+            ! reads in **sta**.**net**.**LH**.adj files
+            adj_source_file = trim(station_name(irec))//'.'//trim(network_name(irec))
+            call compute_arrays_adjoint_source(myrank,adj_source_file, &
+                                               xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
+                                               adj_sourcearray, xigll,yigll,zigll, &
+                                               it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC)
 
-             do itime = 1,NTSTEP_BETWEEN_READ_ADJSRC
-               adj_sourcearrays(irec_local,itime,:,:,:,:) = adj_sourcearray(itime,:,:,:,:)
-             enddo
-
-           endif
-         enddo
-
-      deallocate(adj_sourcearray)
-
-    endif ! if(ibool_read_adj_arrays)
-
-    if( it < NSTEP ) then
-
-      ! receivers act as sources
-      irec_local = 0
-      do irec = 1,nrec
-
-        ! add the source (only if this proc carries the source)
-        if (myrank == islice_selected_rec(irec)) then
-          irec_local = irec_local + 1
-
-              ispec = ispec_selected_rec(irec)
-              if( ispec_is_poroelastic(ispec) ) then
-
-          ! checks if element is in phase_is_inner run
-          if (ispec_is_inner(ispec_selected_rec(irec)) .eqv. phase_is_inner) then
-
-            ! adds source array
-            do k = 1,NGLLZ
-              do j = 1,NGLLY
-                do i = 1,NGLLX
-                  iglob = ibool(i,j,k,ispec_selected_rec(irec))
-              ! get poroelastic parameters of current local GLL
-              phil = phistore(i,j,k,ispec_selected_rec(irec))
-              rhol_s = rhoarraystore(1,i,j,k,ispec_selected_rec(irec))
-              rhol_f = rhoarraystore(2,i,j,k,ispec_selected_rec(irec))
-              rhol_bar =  (1._CUSTOM_REAL - phil)*rhol_s + phil*rhol_f
-! adjoint source is in the solid phase only since this is the only measurement
-! available
-! solid phase
-                  accels(:,iglob) = accels(:,iglob)  &
-                       + adj_sourcearrays(irec_local, &
-                          NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC), &
-                          :,i,j,k)
-!
-! fluid phase
-                  accelw(:,iglob) = accelw(:,iglob)  &
-                       - rhol_f/rhol_bar * adj_sourcearrays(irec_local, &
-                          NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC), &
-                          :,i,j,k)
-                enddo
-              enddo
+            do itime = 1,NTSTEP_BETWEEN_READ_ADJSRC
+              adj_sourcearrays(irec_local,itime,:,:,:,:) = adj_sourcearray(itime,:,:,:,:)
             enddo
 
-          endif ! phase_is_inner
-              endif ! ispec_is_poroelastic
-        endif
-      enddo ! nrec
+          endif
+        enddo
 
-    endif ! it
+        deallocate(adj_sourcearray)
+
+      endif ! if(ibool_read_adj_arrays)
+
+      if (it < NSTEP) then
+
+        ! receivers act as sources
+        irec_local = 0
+        do irec = 1,nrec
+
+          ! add the source (only if this proc carries the source)
+          if (myrank == islice_selected_rec(irec)) then
+            irec_local = irec_local + 1
+
+            ispec = ispec_selected_rec(irec)
+            if (ispec_is_poroelastic(ispec)) then
+
+              ! checks if element is in phase_is_inner run
+              if (ispec_is_inner(ispec_selected_rec(irec)) .eqv. phase_is_inner) then
+
+                ! adds source array
+                do k = 1,NGLLZ
+                  do j = 1,NGLLY
+                    do i = 1,NGLLX
+                      iglob = ibool(i,j,k,ispec_selected_rec(irec))
+                      ! get poroelastic parameters of current local GLL
+                      phil = phistore(i,j,k,ispec_selected_rec(irec))
+                      rhol_s = rhoarraystore(1,i,j,k,ispec_selected_rec(irec))
+                      rhol_f = rhoarraystore(2,i,j,k,ispec_selected_rec(irec))
+                      rhol_bar =  (1._CUSTOM_REAL - phil)*rhol_s + phil*rhol_f
+                      ! adjoint source is in the solid phase only since this is the only measurement
+                      ! available
+
+                      ! solid phase
+                      accels(:,iglob) = accels(:,iglob)  &
+                           + adj_sourcearrays(irec_local, &
+                              NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC), &
+                              :,i,j,k)
+                      !
+                      ! fluid phase
+                      accelw(:,iglob) = accelw(:,iglob)  &
+                           - rhol_f/rhol_bar * adj_sourcearrays(irec_local, &
+                              NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC), &
+                              :,i,j,k)
+                    enddo
+                  enddo
+                enddo
+
+              endif ! phase_is_inner
+            endif ! ispec_is_poroelastic
+          endif
+        enddo ! nrec
+
+      endif ! it
     endif ! nadj_rec_local
   endif !adjoint : if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
 
@@ -370,9 +371,9 @@
                !endif
 
                if( USE_RICKER_TIME_FUNCTION ) then
-                  stf = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
+                 stf = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
                else
-                  stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_tiny(isource))
+                 stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_tiny(isource))
                endif
 
                ! add the inclined force source array
@@ -381,9 +382,9 @@
 
                ! distinguish between single and double precision for reals
                if(CUSTOM_REAL == SIZE_REAL) then
-                  stf_used = sngl(stf)
+                 stf_used = sngl(stf)
                else
-                  stf_used = stf
+                 stf_used = stf
                endif
 
                do k=1,NGLLZ
@@ -462,6 +463,5 @@
     call sum_all_cr(stf_used_total,stf_used_total_all)
     if( myrank == 0 ) write(IOSTF,*) time_source,stf_used_total_all
   endif
-
 
   end subroutine compute_add_sources_poroelastic

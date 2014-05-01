@@ -1,3 +1,30 @@
+!=====================================================================
+!
+!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               ---------------------------------------
+!
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
+!
+! This program is free software; you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation; either version 2 of the License, or
+! (at your option) any later version.
+!
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+!
+! You should have received a copy of the GNU General Public License along
+! with this program; if not, write to the Free Software Foundation, Inc.,
+! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+!
+!=====================================================================
+
 ! This module implements dynamic faults: spontaneous rupture with prescribed
 ! friction laws (slip-weakening or rate-and-state) and heterogeneous initial conditions
 !
@@ -16,49 +43,6 @@ module fault_solver_dynamic
   implicit none
 
   private
-
-!! DK DK moved this to fault_common in order to use it there
-
-! ! outputs(dyn) /inputs (kind) at selected times for all fault nodes:
-! ! strength, state, slip, slip velocity, fault stresses, rupture time, process zone time
-! ! rupture time = first time when slip velocity = threshold V_RUPT (defined below)
-! ! process zone time = first time when slip = Dc
-! type dataXZ_type
-!   real(kind=CUSTOM_REAL), dimension(:), pointer :: stg=>null(), sta=>null(), d1=>null(), d2=>null(), v1=>null(), v2=>null(), &
-!                                                    t1=>null(), t2=>null(), t3=>null(), tRUP=>null(), tPZ=>null()
-!   real(kind=CUSTOM_REAL), dimension(:), pointer :: xcoord=>null(), ycoord=>null(), zcoord=>null()
-!   integer                                       :: npoin=0
-! end type dataXZ_type
-
-! type swf_type
-!   private
-!   integer :: kind
-!   logical :: healing = .false.
-!   real(kind=CUSTOM_REAL), dimension(:), pointer :: Dc=>null(), mus=>null(), mud=>null(), &
-!                                                    theta=>null(), T=>null(), C=>null()
-! end type swf_type
-
-! type rsf_type
-!   private
-!   integer :: StateLaw = 1 ! 1=ageing law, 2=slip law
-!   real(kind=CUSTOM_REAL), dimension(:), pointer :: V0=>null(), f0=>null(), L=>null(), &
-!                                                    V_init=>null(), &
-!                                                    a=>null(), b=>null(), theta=>null(), &
-!                                                    T=>null(), C=>null(), &
-!                                                    fw=>null(), Vw=>null()
-! end type rsf_type
-
-! type, extends (fault_type) :: bc_dynandkinflt_type
-!   private
-!   real(kind=CUSTOM_REAL), dimension(:,:), pointer :: T0=>null()
-!   real(kind=CUSTOM_REAL), dimension(:),   pointer :: MU=>null(), Fload=>null()
-!   integer, dimension(:),   pointer :: npoin_perproc=>null(), poin_offset=>null()
-!   type(dataT_type)        :: dataT
-!   type(dataXZ_type)       :: dataXZ,dataXZ_all
-!   type(swf_type), pointer :: swf => null()
-!   type(rsf_type), pointer :: rsf => null()
-!   logical                 :: allow_opening = .false. ! default : do not allow opening
-! end type bc_dynandkinflt_type
 
   type(bc_dynandkinflt_type), allocatable, save :: faults(:)
 
@@ -860,15 +844,15 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
 
   enddo
 
- ! WARNING: The line below scratches an earlier initialization of theta through theta_init
- !          We should implement it as an option for the user
+  ! WARNING: The line below scratches an earlier initialization of theta through theta_init
+  !          We should implement it as an option for the user
   if(f%stateLaw == 1) then
-     f%theta = f%L/f%V0 &
-               * exp( ( f%a * log(TWO*sinh(-sqrt(T0(1,:)**2+T0(2,:)**2)/T0(3,:)/f%a)) &
-                        - f%f0 - f%a*log(f%V_init/f%V0) ) &
-                      / f%b )
+    f%theta = f%L/f%V0 &
+              * exp( ( f%a * log(TWO*sinh(-sqrt(T0(1,:)**2+T0(2,:)**2)/T0(3,:)/f%a)) &
+                       - f%f0 - f%a*log(f%V_init/f%V0) ) &
+                     / f%b )
   else
-     f%theta =  f%a * log(TWO*f%V0/f%V_init * sinh(-sqrt(T0(1,:)**2+T0(2,:)**2)/T0(3,:)/f%a))
+    f%theta =  f%a * log(TWO*f%V0/f%V_init * sinh(-sqrt(T0(1,:)**2+T0(2,:)**2)/T0(3,:)/f%a))
   endif
 
  ! WARNING : ad hoc for SCEC benchmark TPV10x
@@ -879,7 +863,7 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
   nucFload = Fload
   call init_2d_distribution(nucFload,coord,IIN_PAR,nFload)
 
- ! WARNING: the line below is only valid for pure strike-slip faulting
+  ! WARNING: the line below is only valid for pure strike-slip faulting
   V(1,:) = f%V_init
 
 end subroutine rsf_init
@@ -922,14 +906,14 @@ subroutine rsf_update_state(V,dt,f)
   ! slip law : by default use strong rate-weakening
   else
 !    f%theta = f%L/V * (f%theta*V/f%L)**(exp(-vDtL))
-     where(V /= 0._CUSTOM_REAL)
-        fLV = f%f0 - (f%b - f%a)*log(V/f%V0)
-        f_ss = f%fw + (fLV - f%fw)/(ONE + (V/f%Vw)**8)**0.125
-        xi_ss = f%a * log( TWO*f%V0/V * sinh(f_ss/f%a) )
-        f%theta = xi_ss + (f%theta - xi_ss) * exp(-vDtL)
-     elsewhere
-        f%theta = f%theta
-     endwhere
+    where(V /= 0._CUSTOM_REAL)
+      fLV = f%f0 - (f%b - f%a)*log(V/f%V0)
+      f_ss = f%fw + (fLV - f%fw)/(ONE + (V/f%Vw)**8)**0.125
+      xi_ss = f%a * log( TWO*f%V0/V * sinh(f_ss/f%a) )
+      f%theta = xi_ss + (f%theta - xi_ss) * exp(-vDtL)
+    elsewhere
+      f%theta = f%theta
+    endwhere
   endif
 
 end subroutine rsf_update_state
@@ -1303,9 +1287,9 @@ subroutine funcd(x,fn,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
   integer :: statelaw
 
   if(statelaw == 1) then
-     arg = exp((f0+dble(b)*log(V0*theta/L))/a)/TWO/V0
+    arg = exp((f0+dble(b)*log(V0*theta/L))/a)/TWO/V0
   else
-     arg = exp(theta/a)/TWO/V0
+    arg = exp(theta/a)/TWO/V0
   endif
   fn = tStick - Z*x - a*Seff*asinh_slatec(x*arg)
   df = -Z - a*Seff/sqrt(ONE + (x*arg)**2)*arg

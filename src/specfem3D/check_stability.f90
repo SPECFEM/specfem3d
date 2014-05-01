@@ -225,7 +225,7 @@
 
     ! write time stamp file to give information about progression of simulation
     write(outputname,"('/timestamp',i6.6)") it
-    open(unit=IOUT,file=trim(OUTPUT_FILES)//outputname,status='unknown')
+    open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//outputname,status='unknown')
     write(IOUT,*) 'Time step # ',it
     write(IOUT,*) 'Time: ',sngl((it-1)*DT-t0),' seconds'
     write(IOUT,*) 'Elapsed time in seconds = ',tCPU

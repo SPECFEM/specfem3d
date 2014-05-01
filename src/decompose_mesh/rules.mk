@@ -37,8 +37,8 @@ $(decompose_mesh_OBJECTS): S = ${S_TOP}/src/decompose_mesh
 
 # default targets for the Pyrized version
 decompose_mesh_TARGETS = \
-  $E/xscotch \
-  $E/xdecompose_mesh \
+	$E/xscotch \
+	$E/xdecompose_mesh \
 	$(EMPTY_MACRO)
 
 decompose_mesh_OBJECTS = \
@@ -48,13 +48,18 @@ decompose_mesh_OBJECTS = \
 	$O/program_decompose_mesh.dec.o \
 	$(EMPTY_MACRO)
 
+decompose_mesh_MODULES = \
+	$(FC_MODDIR)/decompose_mesh.$(FC_MODEXT) \
+	$(FC_MODDIR)/fault_scotch.$(FC_MODEXT) \
+	$(FC_MODDIR)/part_decompose_mesh.$(FC_MODEXT) \
+	$(EMPTY_MACRO)
+
 decompose_mesh_SHARED_OBJECTS = \
-	$O/get_value_parameters.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \
+	$O/sort_array_coordinates.shared.o \
 	$(EMPTY_MACRO)
-
 
 
 #######################################
@@ -71,10 +76,10 @@ xdecompose_mesh: $E/xdecompose_mesh
 scotch: xscotch
 xscotch: $E/xscotch
 
-${SCOTCH_DIR}/scotchf.h: xscotch
+${SCOTCH_DIR}/include/scotchf.h: xscotch
 
 # rules for the pure Fortran version
-$E/xdecompose_mesh: ${SCOTCH_DIR}/scotchf.h $(decompose_mesh_SHARED_OBJECTS) $(decompose_mesh_OBJECTS)
+$E/xdecompose_mesh: ${SCOTCH_DIR}/include/scotchf.h $(decompose_mesh_SHARED_OBJECTS) $(decompose_mesh_OBJECTS)
 	${FCLINK} -o  $E/xdecompose_mesh $(decompose_mesh_SHARED_OBJECTS) $(decompose_mesh_OBJECTS) $(SCOTCH_LIBS)
 
 # scotch
@@ -94,7 +99,7 @@ endif
 ### Module dependencies
 ###
 
-$O/decompose_mesh.dec.o: $O/part_decompose_mesh.dec.o $O/fault_scotch.dec.o ${SCOTCH_DIR}/scotchf.h
+$O/decompose_mesh.dec.o: $O/part_decompose_mesh.dec.o $O/fault_scotch.dec.o ${SCOTCH_DIR}/include/scotchf.h
 $O/program_decompose_mesh.dec.o: $O/decompose_mesh.dec.o
 
 

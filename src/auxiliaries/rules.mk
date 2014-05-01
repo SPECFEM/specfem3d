@@ -57,7 +57,6 @@ auxiliaries_SHARED_OBJECTS = \
 	$O/check_mesh_resolution.shared.o \
 	$O/create_name_database.shared.o \
 	$O/exit_mpi.shared.o \
-	$O/get_value_parameters.shared.o \
 	$O/get_attenuation_model.shared.o \
 	$O/gll_library.shared.o \
 	$O/param_reader.cc.o \
@@ -83,7 +82,6 @@ model_upd_auxiliaries_OBJECTS = \
 	$O/check_mesh_resolution.shared.o \
 	$O/create_name_database.shared.o \
 	$O/exit_mpi.shared.o \
-	$O/get_value_parameters.shared.o \
 	$O/get_attenuation_model.shared.o \
 	$O/gll_library.shared.o \
 	$O/initialize_simulation.spec.o \
@@ -106,9 +104,9 @@ adios_model_upd_auxiliaries_OBJECTS= \
 	$O/read_forward_arrays_adios.spec_adios.o
 
 adios_model_upd_auxiliaries_SHARED_OBJECTS = \
-	$O/adios_manager.shared_adios.o  \
-	$O/adios_helpers_definitions.shared_adios.o \
-	$O/adios_helpers_writers.shared_adios.o \
+	$O/adios_manager.shared_adios.o \
+	$O/adios_helpers_definitions.shared_adios_module.o \
+	$O/adios_helpers_writers.shared_adios_module.o \
 	$O/adios_helpers.shared_adios.o
 
 adios_model_upd_auxiliaries_STUBS = \
@@ -131,7 +129,6 @@ endif
 sum_kernels_auxiliaries_OBJECTS = \
 	$O/sum_kernels.aux.o \
 	$O/exit_mpi.shared.o \
-	$O/get_value_parameters.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \
@@ -146,7 +143,6 @@ sum_kernels_auxiliaries_OBJECTS += $(COND_MPI_OBJECTS)
 smooth_vol_data_auxiliaries_OBJECTS = \
 	$O/smooth_vol_data.aux.o \
 	$O/exit_mpi.shared.o \
-	$O/get_value_parameters.shared.o \
 	$O/gll_library.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
@@ -172,7 +168,6 @@ combine_surf_data_auxiliaries_OBJECTS = \
 combine_vol_data_auxiliaries_OBJECTS = \
 	$O/combine_vol_data.aux.o \
 	$O/combine_vol_data_impl.aux.o \
-	$O/get_value_parameters.shared.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \
 	$O/param_reader.cc.o \
@@ -199,10 +194,11 @@ auxiliaries_MODULES += combine_vol_data_adios_mod.mod
 ##
 create_movie_shakemap_AVS_DX_GMT_auxiliaries_OBJECTS = \
 	$O/create_movie_shakemap_AVS_DX_GMT.aux.o \
-	$O/get_value_parameters.shared.o \
+	$O/get_global.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \
+	$O/sort_array_coordinates.shared.o \
 	$O/utm_geo.shared.o \
 	$(EMPTY_MACRO)
 
@@ -270,8 +266,8 @@ $O/combine_vol_data_adios_stubs.aux_noadios.o: $O/adios_manager_stubs.shared_noa
 ifeq ($(ADIOS),yes)
 $O/combine_vol_data.aux.o: $O/combine_vol_data_impl.aux.o $O/combine_vol_data_adios_impl.aux_adios.o
 $O/adios_helpers.shared_adios.o: \
-	$O/adios_helpers_definitions.shared_adios.o \
-	$O/adios_helpers_writers.shared_adios.o
+	$O/adios_helpers_definitions.shared_adios_module.o \
+	$O/adios_helpers_writers.shared_adios_module.o
 else
 $O/combine_vol_data.aux.o: $O/combine_vol_data_impl.aux.o $O/combine_vol_data_adios_stubs.aux_noadios.o $O/bypass_implicit_interface.aux_noadios.o
 endif

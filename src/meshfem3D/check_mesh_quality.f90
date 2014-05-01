@@ -84,11 +84,6 @@
   integer :: iclass
   double precision :: current_percent,total_percent
 
-  ! to export elements that have a certain skewness range to OpenDX
-  !integer :: ntotspecAVS_DX
-  !logical :: USE_OPENDX
-
-  !character(len=256):: line
   integer,dimension(1) :: tmp_ispec_max_skewness,tmp_ispec_max_skewness_MPI
 
   ! debug: for vtk output
@@ -569,8 +564,6 @@
 
   ! compute edge aspect ratio
   edge_aspect_ratio = distmax / distmin
-
-  !stability = delta_t * VP_MAX / (distmin * percent_GLL(true_NGLLX))
 
   dt_suggested = ((1.d0 - 0.02d0)*0.48d0) * (distmin * percent_GLL(true_NGLLX)) / VP_MAX
   stability = dt_suggested * VP_MAX / (distmin * percent_GLL(true_NGLLX))

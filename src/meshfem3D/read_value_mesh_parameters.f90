@@ -27,76 +27,88 @@
 
 ! read values from parameter file, ignoring white lines and comments
 
-  subroutine read_value_integer_mesh(iunit,ignore_junk,value_to_read, name)
+  subroutine read_value_integer_mesh(iunit,ignore_junk,value_to_read, name, ierr)
 
   implicit none
 
   logical ignore_junk
   integer iunit
   integer value_to_read
+  integer ierr
   character(len=*) name
   character(len=512) string_read
 
   call unused_string(name)
+  ierr = 0
 
-  call read_next_line(iunit,ignore_junk,string_read)
-  read(string_read,*) value_to_read
+  call read_next_line(iunit,ignore_junk,string_read,ierr)
+  if (ierr /= 0) return
+  read(string_read,*,iostat=ierr) value_to_read
 
   end subroutine read_value_integer_mesh
 
 !--------------------
 
-  subroutine read_value_dble_precision_mesh(iunit,ignore_junk,value_to_read, name)
+  subroutine read_value_dble_precision_mesh(iunit,ignore_junk,value_to_read, name, ierr)
 
   implicit none
 
   logical ignore_junk
   integer iunit
   double precision value_to_read
+  integer ierr
   character(len=*) name
   character(len=512) string_read
 
   call unused_string(name)
+  ierr = 0
 
-  call read_next_line(iunit,ignore_junk,string_read)
-  read(string_read,*) value_to_read
+  call read_next_line(iunit,ignore_junk,string_read,ierr)
+  if (ierr /= 0) return
+  read(string_read,*,iostat=ierr) value_to_read
 
   end subroutine read_value_dble_precision_mesh
 
 !--------------------
 
-  subroutine read_value_logical_mesh(iunit,ignore_junk,value_to_read, name)
+  subroutine read_value_logical_mesh(iunit,ignore_junk,value_to_read, name, ierr)
 
   implicit none
 
   logical ignore_junk
   logical value_to_read
   integer iunit
+  integer ierr
   character(len=*) name
   character(len=512) string_read
 
   call unused_string(name)
+  ierr = 0
 
-  call read_next_line(iunit,ignore_junk,string_read)
-  read(string_read,*) value_to_read
+  call read_next_line(iunit,ignore_junk,string_read,ierr)
+  if (ierr /= 0) return
+  read(string_read,*,iostat=ierr) value_to_read
 
   end subroutine read_value_logical_mesh
 
 !--------------------
 
-  subroutine read_value_string_mesh(iunit,ignore_junk,value_to_read, name)
+  subroutine read_value_string_mesh(iunit,ignore_junk,value_to_read, name, ierr)
 
   implicit none
 
   logical ignore_junk
   integer iunit
   character(len=*) value_to_read
+  integer ierr
   character(len=*) name
   character(len=512) string_read
 
   call unused_string(name)
+  ierr = 0
 
-  call read_next_line(iunit,ignore_junk,string_read)
+  call read_next_line(iunit,ignore_junk,string_read,ierr)
+  if (ierr /= 0) return
   value_to_read = string_read
 
   end subroutine read_value_string_mesh
@@ -105,7 +117,7 @@
 
   subroutine read_interface_parameters(iunit,SUPPRESS_UTM_PROJECTION,interface_top_file, &
        npx_interface,npy_interface,&
-       orig_x_interface,orig_y_interface,spacing_x_interface,spacing_y_interface)
+       orig_x_interface,orig_y_interface,spacing_x_interface,spacing_y_interface,ierr)
 
   implicit none
 
@@ -113,21 +125,24 @@
 
   logical SUPPRESS_UTM_PROJECTION
   integer iunit
+  integer ierr
   integer npx_interface,npy_interface
   double precision orig_x_interface,orig_y_interface
   double precision spacing_x_interface,spacing_y_interface
   character(len=50)  interface_top_file
   character(len=512) string_read
 
-  call read_next_line(iunit,DONT_IGNORE_JUNK,string_read)
-  read(string_read,*) SUPPRESS_UTM_PROJECTION,npx_interface,npy_interface,&
+  ierr = 0
+  call read_next_line(iunit,DONT_IGNORE_JUNK,string_read,ierr)
+  if (ierr /= 0) return
+  read(string_read,*,iostat=ierr) SUPPRESS_UTM_PROJECTION,npx_interface,npy_interface,&
              orig_x_interface,orig_y_interface,spacing_x_interface,spacing_y_interface
-  call read_value_string_mesh(iunit,DONT_IGNORE_JUNK,interface_top_file,'INTERFACE_TOP')
+  call read_value_string_mesh(iunit,DONT_IGNORE_JUNK,interface_top_file,'INTERFACE_TOP',ierr)
   end subroutine read_interface_parameters
 
 !--------------------
 
-  subroutine read_material_parameters(iunit,i,rho,vp,vs,Q_flag,anisotropy_flag,domain_id)
+  subroutine read_material_parameters(iunit,i,rho,vp,vs,Q_flag,anisotropy_flag,domain_id, ierr)
 
   implicit none
 
@@ -135,47 +150,54 @@
 
   integer iunit
   integer i
+  integer ierr
   double precision rho,vp,vs,Q_flag,anisotropy_flag,domain_id
   character(len=512) string_read
 
-  call read_next_line(iunit,DONT_IGNORE_JUNK,string_read)
-  read(string_read,*)  i,rho,vp,vs,Q_flag,anisotropy_flag,domain_id
+  ierr = 0
+  call read_next_line(iunit,DONT_IGNORE_JUNK,string_read,ierr)
+  if (ierr /= 0) return
+  read(string_read,*,iostat=ierr) i,rho,vp,vs,Q_flag,anisotropy_flag,domain_id
 
   end subroutine read_material_parameters
 
 !--------------------
 
   subroutine read_region_parameters(iunit,ix_beg_region,ix_end_region,iy_beg_region,iy_end_region,&
-          iz_beg_region,iz_end_region,imaterial_number)
+          iz_beg_region,iz_end_region,imaterial_number, ierr)
 
   implicit none
 
   include "constants.h"
 
   integer iunit
+  integer ierr
   integer ix_beg_region,ix_end_region,iy_beg_region,iy_end_region
   integer iz_beg_region,iz_end_region,imaterial_number
   character(len=512) string_read
 
-  call read_next_line(iunit,DONT_IGNORE_JUNK,string_read)
-  read(string_read,*) ix_beg_region,ix_end_region,iy_beg_region,iy_end_region,&
+  ierr = 0
+  call read_next_line(iunit,DONT_IGNORE_JUNK,string_read,ierr)
+  if (ierr /= 0) return
+  read(string_read,*,iostat=ierr) ix_beg_region,ix_end_region,iy_beg_region,iy_end_region,&
           iz_beg_region,iz_end_region,imaterial_number
 
   end subroutine read_region_parameters
 
 !--------------------
 
-  subroutine read_next_line(iunit,suppress_junk,string_read)
+  subroutine read_next_line(iunit,suppress_junk,string_read, ierr)
 
   implicit none
 
   include "constants.h"
 
-
+  integer ierr
   logical suppress_junk
   character(len=512) string_read
   integer index_equal_sign,ios,iunit
 
+  ierr = 0
   do
     read(unit=iunit,fmt="(a512)",iostat=ios) string_read
     if(ios /= 0) stop 'error while reading parameter file'
@@ -240,14 +262,6 @@
   close(IIN)
 
   end subroutine close_parameter_file_mesh
-
-!--------------------
-
-  integer function err_occurred_mesh()
-
-  err_occurred_mesh = 0
-
-  end function err_occurred_mesh
 
 !--------------------
 

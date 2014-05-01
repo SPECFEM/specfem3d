@@ -46,7 +46,7 @@
 ! info about external mesh simulation
   call create_name_database(prname,myrank,LOCAL_PATH)
   open(unit=27,file=prname(1:len_trim(prname))//'external_mesh.bin',status='old',&
-      action='read',form='unformatted',iostat=ier)
+       action='read',form='unformatted',iostat=ier)
   if( ier /= 0 ) then
     print*,'error: could not open database '
     print*,'path: ',prname(1:len_trim(prname))//'external_mesh.bin'
@@ -152,43 +152,43 @@
     allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
     if( ier /= 0 ) stop 'error allocating array rho_vs'
     allocate(c11store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c12store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c13store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c14store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c15store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c16store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c22store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c23store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c24store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c25store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c26store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c33store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c34store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c35store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c36store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c44store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c45store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c46store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c55store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c56store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c66store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
+             c12store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+             c13store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+             c14store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+             c15store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+             c16store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+             c22store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+             c23store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+             c24store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+             c25store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+             c26store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+             c33store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+             c34store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+             c35store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+             c36store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+             c44store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+             c45store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+             c46store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+             c55store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+             c56store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+             c66store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
     if( ier /= 0 ) stop 'error allocating array c11store etc.'
 
     ! note: currently, they need to be defined, as they are used in the routine arguments
     !          for compute_forces_viscoelastic_Deville()
     allocate(R_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
-            R_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
-            R_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
-            R_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
-            R_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS),stat=ier)
+             R_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
+             R_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
+             R_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
+             R_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS),stat=ier)
     if( ier /= 0 ) stop 'error allocating array R_xx etc.'
 
     ! needed for attenuation and/or kernel computations
     allocate(epsilondev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY), &
-            epsilondev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY), &
-            epsilondev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY), &
-            epsilondev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY), &
-            epsilondev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY),stat=ier)
+             epsilondev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY), &
+             epsilondev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY), &
+             epsilondev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY), &
+             epsilondev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY),stat=ier)
     if( ier /= 0 ) stop 'error allocating array epsilondev_xx etc.'
 
     allocate(R_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa,N_SLS),&
@@ -201,7 +201,7 @@
 
     ! needed for attenuation
     allocate(one_minus_sum_beta(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB), &
-            factor_common(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
+             factor_common(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
     if( ier /= 0 ) stop 'error allocating array one_minus_sum_beta etc.'
 
     allocate(one_minus_sum_beta_kappa(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa), &
@@ -229,30 +229,6 @@
     read(27,iostat=ier) rho_vs
     if( ier /= 0 ) stop 'error reading in array rho_vs'
 
-!! DK DK rhostore is now allocated and read in all cases (see above)
-!   ! checks if rhostore is available for gravity
-!   if( GRAVITY ) then
-!
-!     if( .not. ACOUSTIC_SIMULATION ) then
-!       ! rho array needed for gravity
-!       allocate(rhostore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-!       if( ier /= 0 ) stop 'error allocating array rhostore'
-!
-!       ! extract rho information from mu = rho * vs * vs and rho_vs = rho * vs
-!       rhostore = 0.0_CUSTOM_REAL
-!       where( mustore > TINYVAL )
-!         rhostore = (rho_vs*rho_vs) / mustore
-!       endwhere
-!
-!       ! note: the construct below leads to a segmentation fault (ifort v11.1). not sure why...
-!       !          (where statement - standard fortran 95)
-!       !where( mustore > TINYVAL )
-!       !  rhostore = (rho_vs*rho_vs) / mustore
-!       !elsewhere
-!       !  rhostore = 0.0_CUSTOM_REAL
-!       !endwhere
-!     endif
-!   endif
   else
     ! no elastic attenuation & anisotropy
     ATTENUATION = .false.
@@ -297,19 +273,19 @@
 
     ! needed for kernel computations
     allocate(epsilonsdev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            epsilonsdev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            epsilonsdev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            epsilonsdev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            epsilonsdev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            epsilonwdev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            epsilonwdev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            epsilonwdev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            epsilonwdev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            epsilonwdev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+             epsilonsdev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             epsilonsdev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             epsilonsdev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             epsilonsdev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             epsilonwdev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             epsilonwdev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             epsilonwdev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             epsilonwdev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             epsilonwdev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
     if( ier /= 0 ) stop 'error allocating array epsilonsdev_xx etc.'
 
     allocate(epsilons_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            epsilonw_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+             epsilonw_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
     if( ier /= 0 ) stop 'error allocating array epsilons_trace_over_3 etc.'
 
 
@@ -330,8 +306,8 @@
   if( (.not. ACOUSTIC_SIMULATION ) .and. &
      (.not. ELASTIC_SIMULATION ) .and. &
      (.not. POROELASTIC_SIMULATION ) ) then
-     close(27)
-     call exit_mpi(myrank,'error no simulation type defined')
+    close(27)
+    call exit_mpi(myrank,'error no simulation type defined')
   endif
 
   ! C-PML absorbing boundary conditions
@@ -415,51 +391,49 @@
     num_abs_boundary_faces = 0
   endif
   allocate(abs_boundary_ispec(num_abs_boundary_faces), &
-          abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces), &
-          abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces), &
-          abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
+           abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces), &
+           abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces), &
+           abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
   if( ier /= 0 ) stop 'error allocating array abs_boundary_ispec etc.'
 
   if (OLD_TEST_TO_FIX_ONE_DAY) then
-     ! VM for new method
-!! DK DK for VM VM: these two arrays are undeclared, thus I comment them out for now otherwise the code does not compile
-!! VM VM : I already declared these two array in the specfem_par module
-     allocate(Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
-     allocate(Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
-     open(unit=IIN_veloc_dsm,file=dsmname(1:len_trim(dsmname))//'vel.bin',status='old', &
-          action='read',form='unformatted',iostat=ier)
-     open(unit=IIN_tract_dsm,file=dsmname(1:len_trim(dsmname))//'tract.bin',status='old', &
-          action='read',form='unformatted',iostat=ier)
+    ! for new method
+    allocate(Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
+    allocate(Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
+    open(unit=IIN_veloc_dsm,file=dsmname(1:len_trim(dsmname))//'vel.bin',status='old', &
+         action='read',form='unformatted',iostat=ier)
+    open(unit=IIN_tract_dsm,file=dsmname(1:len_trim(dsmname))//'tract.bin',status='old', &
+         action='read',form='unformatted',iostat=ier)
   else
-     allocate(Veloc_dsm_boundary(1,1,1,1))
-     allocate(Tract_dsm_boundary(1,1,1,1))
+    allocate(Veloc_dsm_boundary(1,1,1,1))
+    allocate(Tract_dsm_boundary(1,1,1,1))
   endif
 
   if(PML_CONDITIONS)then
-     if( num_abs_boundary_faces > 0 ) then
-       read(27) abs_boundary_ispec
-       read(27) abs_boundary_ijk
-       read(27) abs_boundary_jacobian2Dw
-       read(27) abs_boundary_normal
-     endif
+    if (num_abs_boundary_faces > 0) then
+      read(27) abs_boundary_ispec
+      read(27) abs_boundary_ijk
+      read(27) abs_boundary_jacobian2Dw
+      read(27) abs_boundary_normal
+    endif
   else
-     if( num_abs_boundary_faces > 0 ) then
-       read(27) abs_boundary_ispec
-       read(27) abs_boundary_ijk
-       read(27) abs_boundary_jacobian2Dw
-       read(27) abs_boundary_normal
-       if( STACEY_ABSORBING_CONDITIONS ) then
-          ! store mass matrix contributions
-          if(ELASTIC_SIMULATION) then
-           read(27) rmassx
-           read(27) rmassy
-           read(27) rmassz
-          endif
-          if(ACOUSTIC_SIMULATION) then
-           read(27) rmassz_acoustic
-          endif
-       endif
-     endif
+    if (num_abs_boundary_faces > 0) then
+      read(27) abs_boundary_ispec
+      read(27) abs_boundary_ijk
+      read(27) abs_boundary_jacobian2Dw
+      read(27) abs_boundary_normal
+      if (STACEY_ABSORBING_CONDITIONS) then
+        ! store mass matrix contributions
+        if (ELASTIC_SIMULATION) then
+          read(27) rmassx
+          read(27) rmassy
+          read(27) rmassz
+        endif
+        if (ACOUSTIC_SIMULATION) then
+          read(27) rmassz_acoustic
+        endif
+      endif
+    endif
   endif
 
   read(27) nspec2D_xmin
@@ -470,8 +444,8 @@
   read(27) NSPEC2D_TOP
 
   allocate(ibelm_xmin(nspec2D_xmin),ibelm_xmax(nspec2D_xmax), &
-       ibelm_ymin(nspec2D_ymin),ibelm_ymax(nspec2D_ymax), &
-       ibelm_bottom(NSPEC2D_BOTTOM),ibelm_top(NSPEC2D_TOP),stat=ier)
+           ibelm_ymin(nspec2D_ymin),ibelm_ymax(nspec2D_ymax), &
+           ibelm_bottom(NSPEC2D_BOTTOM),ibelm_top(NSPEC2D_TOP),stat=ier)
   if(ier /= 0) stop 'error allocating arrays ibelm_xmin,ibelm_xmax etc.'
   read(27) ibelm_xmin
   read(27) ibelm_xmax
@@ -483,9 +457,9 @@
   ! free surface
   read(27) num_free_surface_faces
   allocate(free_surface_ispec(num_free_surface_faces), &
-          free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces), &
-          free_surface_jacobian2Dw(NGLLSQUARE,num_free_surface_faces), &
-          free_surface_normal(NDIM,NGLLSQUARE,num_free_surface_faces),stat=ier)
+           free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces), &
+           free_surface_jacobian2Dw(NGLLSQUARE,num_free_surface_faces), &
+           free_surface_normal(NDIM,NGLLSQUARE,num_free_surface_faces),stat=ier)
   if(ier /= 0) stop 'error allocating arrays free_surface_ispec etc.'
   if( num_free_surface_faces > 0 ) then
     read(27) free_surface_ispec
@@ -497,9 +471,9 @@
   ! acoustic-elastic coupling surface
   read(27) num_coupling_ac_el_faces
   allocate(coupling_ac_el_normal(NDIM,NGLLSQUARE,num_coupling_ac_el_faces), &
-          coupling_ac_el_jacobian2Dw(NGLLSQUARE,num_coupling_ac_el_faces), &
-          coupling_ac_el_ijk(3,NGLLSQUARE,num_coupling_ac_el_faces), &
-          coupling_ac_el_ispec(num_coupling_ac_el_faces),stat=ier)
+           coupling_ac_el_jacobian2Dw(NGLLSQUARE,num_coupling_ac_el_faces), &
+           coupling_ac_el_ijk(3,NGLLSQUARE,num_coupling_ac_el_faces), &
+           coupling_ac_el_ispec(num_coupling_ac_el_faces),stat=ier)
   if( ier /= 0 ) stop 'error allocating array coupling_ac_el_normal etc.'
   if( num_coupling_ac_el_faces > 0 ) then
     read(27) coupling_ac_el_ispec
@@ -511,9 +485,9 @@
   ! acoustic-poroelastic coupling surface
   read(27) num_coupling_ac_po_faces
   allocate(coupling_ac_po_normal(NDIM,NGLLSQUARE,num_coupling_ac_po_faces), &
-          coupling_ac_po_jacobian2Dw(NGLLSQUARE,num_coupling_ac_po_faces), &
-          coupling_ac_po_ijk(3,NGLLSQUARE,num_coupling_ac_po_faces), &
-          coupling_ac_po_ispec(num_coupling_ac_po_faces),stat=ier)
+           coupling_ac_po_jacobian2Dw(NGLLSQUARE,num_coupling_ac_po_faces), &
+           coupling_ac_po_ijk(3,NGLLSQUARE,num_coupling_ac_po_faces), &
+           coupling_ac_po_ispec(num_coupling_ac_po_faces),stat=ier)
   if( ier /= 0 ) stop 'error allocating array coupling_ac_po_normal etc.'
   if( num_coupling_ac_po_faces > 0 ) then
     read(27) coupling_ac_po_ispec
@@ -525,11 +499,11 @@
   ! elastic-poroelastic coupling surface
   read(27) num_coupling_el_po_faces
   allocate(coupling_el_po_normal(NDIM,NGLLSQUARE,num_coupling_el_po_faces), &
-          coupling_el_po_jacobian2Dw(NGLLSQUARE,num_coupling_el_po_faces), &
-          coupling_el_po_ijk(3,NGLLSQUARE,num_coupling_el_po_faces), &
-          coupling_po_el_ijk(3,NGLLSQUARE,num_coupling_el_po_faces), &
-          coupling_el_po_ispec(num_coupling_el_po_faces), &
-          coupling_po_el_ispec(num_coupling_el_po_faces),stat=ier)
+           coupling_el_po_jacobian2Dw(NGLLSQUARE,num_coupling_el_po_faces), &
+           coupling_el_po_ijk(3,NGLLSQUARE,num_coupling_el_po_faces), &
+           coupling_po_el_ijk(3,NGLLSQUARE,num_coupling_el_po_faces), &
+           coupling_el_po_ispec(num_coupling_el_po_faces), &
+           coupling_po_el_ispec(num_coupling_el_po_faces),stat=ier)
   if( ier /= 0 ) stop 'error allocating array coupling_el_po_normal etc.'
   if( num_coupling_el_po_faces > 0 ) then
     read(27) coupling_el_po_ispec
@@ -543,7 +517,7 @@
   ! MPI interfaces
   read(27) num_interfaces_ext_mesh
   allocate(my_neighbours_ext_mesh(num_interfaces_ext_mesh), &
-          nibool_interfaces_ext_mesh(num_interfaces_ext_mesh),stat=ier)
+           nibool_interfaces_ext_mesh(num_interfaces_ext_mesh),stat=ier)
   if( ier /= 0 ) stop 'error allocating array my_neighbours_ext_mesh etc.'
   if( num_interfaces_ext_mesh > 0 ) then
     read(27) max_nibool_interfaces_ext_mesh
@@ -720,10 +694,10 @@
   ! checks courant criteria on mesh
   if( ELASTIC_SIMULATION ) then
     call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB, &
-                              ibool,xstore,ystore,zstore, &
-                              kappastore,mustore,rho_vp,rho_vs, &
-                              DT,model_speed_max,min_resolved_period, &
-                              LOCAL_PATH,SAVE_MESH_FILES)
+                               ibool,xstore,ystore,zstore, &
+                               kappastore,mustore,rho_vp,rho_vs, &
+                               DT,model_speed_max,min_resolved_period, &
+                               LOCAL_PATH,SAVE_MESH_FILES)
 
   else if( POROELASTIC_SIMULATION ) then
     allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
@@ -743,10 +717,10 @@
     rho_vp = sqrt( kappastore / rhostore ) * rhostore
     rho_vs = 0.0_CUSTOM_REAL
     call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB, &
-                              ibool,xstore,ystore,zstore, &
-                              kappastore,mustore,rho_vp,rho_vs, &
-                              DT,model_speed_max,min_resolved_period, &
-                              LOCAL_PATH,SAVE_MESH_FILES)
+                               ibool,xstore,ystore,zstore, &
+                               kappastore,mustore,rho_vp,rho_vs, &
+                               DT,model_speed_max,min_resolved_period, &
+                               LOCAL_PATH,SAVE_MESH_FILES)
     deallocate(rho_vp,rho_vs)
   endif
 
@@ -840,10 +814,10 @@
 
     ! note: these arrays are needed for attenuation and/or kernel computations
     allocate(b_epsilondev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY), &
-            b_epsilondev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY), &
-            b_epsilondev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY), &
-            b_epsilondev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY), &
-            b_epsilondev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY),stat=ier)
+             b_epsilondev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY), &
+             b_epsilondev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY), &
+             b_epsilondev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY), &
+             b_epsilondev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY),stat=ier)
     if( ier /= 0 ) stop 'error allocating array b_epsilon_dev_xx etc.'
     ! needed for kernel computations
     allocate(b_epsilon_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
@@ -871,15 +845,15 @@
 
     ! backward potentials
     allocate(b_potential_acoustic(NGLOB_ADJOINT), &
-            b_potential_dot_acoustic(NGLOB_ADJOINT), &
-            b_potential_dot_dot_acoustic(NGLOB_ADJOINT),stat=ier)
+             b_potential_dot_acoustic(NGLOB_ADJOINT), &
+             b_potential_dot_dot_acoustic(NGLOB_ADJOINT),stat=ier)
     if( ier /= 0 ) stop 'error allocating array b_potential_acoustic etc.'
 
     ! kernels
     allocate(rho_ac_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            rhop_ac_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            kappa_ac_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            alpha_ac_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+             rhop_ac_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             kappa_ac_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             alpha_ac_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
     if( ier /= 0 ) stop 'error allocating array rho_ac_kl etc.'
 
     ! preconditioner
@@ -894,31 +868,31 @@
 
     ! MPI handling
     allocate(b_request_send_scalar_ext_mesh(num_interfaces_ext_mesh), &
-      b_request_recv_scalar_ext_mesh(num_interfaces_ext_mesh), &
-      b_buffer_send_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
-      b_buffer_recv_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+             b_request_recv_scalar_ext_mesh(num_interfaces_ext_mesh), &
+             b_buffer_send_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
+             b_buffer_recv_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
     if( ier /= 0 ) stop 'error allocating array b_request_send_scalar_ext_mesh'
 
   else
 
     ! backward potentials
     allocate(b_potential_acoustic(1), &
-            b_potential_dot_acoustic(1), &
-            b_potential_dot_dot_acoustic(1),stat=ier)
+             b_potential_dot_acoustic(1), &
+             b_potential_dot_dot_acoustic(1),stat=ier)
     if( ier /= 0 ) stop 'error allocating dummy array b_potential_acoustic etc.'
 
     ! kernels
     allocate(rho_ac_kl(1,1,1,1), &
-            rhop_ac_kl(1,1,1,1), &
-            kappa_ac_kl(1,1,1,1), &
-            alpha_ac_kl(1,1,1,1),stat=ier)
+             rhop_ac_kl(1,1,1,1), &
+             kappa_ac_kl(1,1,1,1), &
+             alpha_ac_kl(1,1,1,1),stat=ier)
     if( ier /= 0 ) stop 'error allocating dummy array rho_ac_kl etc.'
 
     ! MPI handling
     allocate(b_request_send_scalar_ext_mesh(1), &
-            b_request_recv_scalar_ext_mesh(1), &
-            b_buffer_send_scalar_ext_mesh(1,1), &
-            b_buffer_recv_scalar_ext_mesh(1,1),stat=ier)
+             b_request_recv_scalar_ext_mesh(1), &
+             b_buffer_send_scalar_ext_mesh(1,1), &
+             b_buffer_recv_scalar_ext_mesh(1,1),stat=ier)
     if( ier /= 0 ) stop 'error allocating dummy array b_request_send_scalar_ext_mesh etc.'
 
   endif
@@ -938,7 +912,7 @@
         ! boundary elements
         !open(unit=27,file=prname(1:len_trim(prname))//'ibelm_moho.bin',status='unknown',form='unformatted')
         open(unit=27,file=prname(1:len_trim(prname))//'ibelm_moho.bin',status='old',&
-              form='unformatted',iostat=ier)
+             form='unformatted',iostat=ier)
         if( ier /= 0 ) then
           print*,'error: could not open ibelm_moho '
           print*,'path: ',prname(1:len_trim(prname))//'ibelm_moho.bin'
@@ -949,11 +923,11 @@
 
         ! allocates arrays for moho mesh
         allocate(ibelm_moho_bot(NSPEC2D_MOHO), &
-                ibelm_moho_top(NSPEC2D_MOHO), &
-                normal_moho_top(NDIM,NGLLSQUARE,NSPEC2D_MOHO), &
-                normal_moho_bot(NDIM,NGLLSQUARE,NSPEC2D_MOHO), &
-                ijk_moho_bot(3,NGLLSQUARE,NSPEC2D_MOHO), &
-                ijk_moho_top(3,NGLLSQUARE,NSPEC2D_MOHO),stat=ier)
+                 ibelm_moho_top(NSPEC2D_MOHO), &
+                 normal_moho_top(NDIM,NGLLSQUARE,NSPEC2D_MOHO), &
+                 normal_moho_bot(NDIM,NGLLSQUARE,NSPEC2D_MOHO), &
+                 ijk_moho_bot(3,NGLLSQUARE,NSPEC2D_MOHO), &
+                 ijk_moho_top(3,NGLLSQUARE,NSPEC2D_MOHO),stat=ier)
         if( ier /= 0 ) stop 'error allocating array ibelm_moho_bot etc.'
 
         read(27) ibelm_moho_top
@@ -965,7 +939,7 @@
 
         ! normals
         open(unit=27,file=prname(1:len_trim(prname))//'normal_moho.bin',status='old',&
-              form='unformatted',iostat=ier)
+             form='unformatted',iostat=ier)
         if( ier /= 0 ) then
           print*,'error: could not open normal_moho '
           print*,'path: ',prname(1:len_trim(prname))//'normal_moho.bin'
@@ -978,7 +952,7 @@
 
         ! flags
         open(unit=27,file=prname(1:len_trim(prname))//'is_moho.bin',status='old',&
-              form='unformatted',iostat=ier)
+             form='unformatted',iostat=ier)
         if( ier /= 0 ) then
           print*,'error: could not open is_moho '
           print*,'path: ',prname(1:len_trim(prname))//'is_moho.bin'
@@ -1001,7 +975,7 @@
     endif
 
     ! always needed to be allocated for routine arguments
-    allocate( dsdx_top(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO), &
+    allocate(dsdx_top(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO), &
              dsdx_bot(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO), &
              b_dsdx_top(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO), &
              b_dsdx_bot(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO),stat=ier)
@@ -1028,69 +1002,69 @@
 
     ! primary, isotropic kernels
     allocate(rhot_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            rhof_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            sm_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            eta_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), stat=ier)
+             rhof_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             sm_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             eta_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), stat=ier)
     if( ier /= 0 ) stop 'error allocating array rhot_kl etc.'
     allocate(mufr_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
     if( ier /= 0 ) stop 'error allocating array mufr_kl'
     allocate(B_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            C_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            M_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), stat=ier)
+             C_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             M_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), stat=ier)
     if( ier /= 0 ) stop 'error allocating array B_kl etc.'
 
     ! density, isotropic kernels
     allocate(rhob_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            rhofb_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            phi_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), stat=ier)
+             rhofb_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             phi_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), stat=ier)
     if( ier /= 0 ) stop 'error allocating array rhob_kl etc.'
     allocate(mufrb_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
     if( ier /= 0 ) stop 'error allocating array mufrb_kl'
     allocate(Bb_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            Cb_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            Mb_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), stat=ier)
+             Cb_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             Mb_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), stat=ier)
     if( ier /= 0 ) stop 'error allocating array Bb_kl etc.'
 
     ! wavespeed, isotropic kernels
     allocate(rhobb_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            rhofbb_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            phib_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            ratio_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), stat=ier)
+             rhofbb_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             phib_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             ratio_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), stat=ier)
     if( ier /= 0 ) stop 'error allocating array rhobb_kl etc.'
     allocate(cs_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
     if( ier /= 0 ) stop 'error allocating array cs_kl'
     allocate(cpI_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            cpII_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), stat=ier)
+             cpII_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), stat=ier)
     if( ier /= 0 ) stop 'error allocating array cpI_kl etc.'
 
     ! MPI handling
     allocate(b_request_send_vector_ext_meshs(num_interfaces_ext_mesh), &
-      b_request_recv_vector_ext_meshs(num_interfaces_ext_mesh), &
-      b_buffer_send_vector_ext_meshs(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
-      b_buffer_recv_vector_ext_meshs(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+             b_request_recv_vector_ext_meshs(num_interfaces_ext_mesh), &
+             b_buffer_send_vector_ext_meshs(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
+             b_buffer_recv_vector_ext_meshs(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
     if( ier /= 0 ) stop 'error allocating array b_request_send_vector_ext_meshs etc.'
 
     allocate(b_request_send_vector_ext_meshw(num_interfaces_ext_mesh), &
-      b_request_recv_vector_ext_meshw(num_interfaces_ext_mesh), &
-      b_buffer_send_vector_ext_meshw(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
-      b_buffer_recv_vector_ext_meshw(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+             b_request_recv_vector_ext_meshw(num_interfaces_ext_mesh), &
+             b_buffer_send_vector_ext_meshw(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
+             b_buffer_recv_vector_ext_meshw(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
     if( ier /= 0 ) stop 'error allocating array b_request_send_vector_ext_meshw etc.'
 
     ! arrays needed for kernel computations
     allocate(b_epsilonsdev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            b_epsilonsdev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            b_epsilonsdev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            b_epsilonsdev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            b_epsilonsdev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            b_epsilonwdev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            b_epsilonwdev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            b_epsilonwdev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            b_epsilonwdev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            b_epsilonwdev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+             b_epsilonsdev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             b_epsilonsdev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             b_epsilonsdev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             b_epsilonsdev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             b_epsilonwdev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             b_epsilonwdev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             b_epsilonwdev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             b_epsilonwdev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             b_epsilonwdev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
     if( ier /= 0 ) stop 'error allocating array b_epsilonsdev_xx etc.'
 
     allocate(b_epsilons_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            b_epsilonw_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+             b_epsilonw_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
     if( ier /= 0 ) stop 'error allocating array b_epsilons_trace_over_3 etc.'
 
   else ! dummy arrays
@@ -1114,39 +1088,39 @@
 
     ! primary, isotropic kernels
     allocate(rhot_kl(1,1,1,1), &
-            rhof_kl(1,1,1,1), &
-            sm_kl(1,1,1,1), &
-            eta_kl(1,1,1,1), stat=ier)
+             rhof_kl(1,1,1,1), &
+             sm_kl(1,1,1,1), &
+             eta_kl(1,1,1,1), stat=ier)
     if( ier /= 0 ) stop 'error allocating dummy array rhot_kl etc.'
     allocate(mufr_kl(1,1,1,1),stat=ier)
     if( ier /= 0 ) stop 'error allocating dummy array mufr_kl'
     allocate(B_kl(1,1,1,1), &
-            C_kl(1,1,1,1), &
-            M_kl(1,1,1,1), stat=ier)
+             C_kl(1,1,1,1), &
+             M_kl(1,1,1,1), stat=ier)
     if( ier /= 0 ) stop 'error allocating dummy array B_kl etc.'
 
     ! density, isotropic kernels
     allocate(rhob_kl(1,1,1,1), &
-            rhofb_kl(1,1,1,1), &
-            phi_kl(1,1,1,1), stat=ier)
+             rhofb_kl(1,1,1,1), &
+             phi_kl(1,1,1,1), stat=ier)
     if( ier /= 0 ) stop 'error allocating dummy array rhob_kl etc.'
     allocate(mufrb_kl(1,1,1,1),stat=ier)
     if( ier /= 0 ) stop 'error allocating dummy array mufrb_kl'
     allocate(Bb_kl(1,1,1,1), &
-            Cb_kl(1,1,1,1), &
-            Mb_kl(1,1,1,1), stat=ier)
+             Cb_kl(1,1,1,1), &
+             Mb_kl(1,1,1,1), stat=ier)
     if( ier /= 0 ) stop 'error allocating dummy array Bb_kl etc.'
 
     ! wavespeed, isotropic kernels
     allocate(rhobb_kl(1,1,1,1), &
-            rhofbb_kl(1,1,1,1), &
-            phib_kl(1,1,1,1), &
-            ratio_kl(1,1,1,1), stat=ier)
+             rhofbb_kl(1,1,1,1), &
+             phib_kl(1,1,1,1), &
+             ratio_kl(1,1,1,1), stat=ier)
     if( ier /= 0 ) stop 'error allocating dummy array rhobb_kl etc.'
     allocate(cs_kl(1,1,1,1),stat=ier)
     if( ier /= 0 ) stop 'error allocating dummy array cs_kl'
     allocate(cpI_kl(1,1,1,1), &
-            cpII_kl(1,1,1,1), stat=ier)
+             cpII_kl(1,1,1,1), stat=ier)
     if( ier /= 0 ) stop 'error allocating dummy array cpI_kl etc.'
 
   endif

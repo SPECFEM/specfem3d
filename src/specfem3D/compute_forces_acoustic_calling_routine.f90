@@ -107,13 +107,13 @@ subroutine compute_forces_acoustic()
 
     ! ! Stacey absorbing boundary conditions
     if(STACEY_ABSORBING_CONDITIONS) then
-       call compute_stacey_acoustic(NSPEC_AB,NGLOB_AB, &
-                         potential_dot_dot_acoustic,potential_dot_acoustic, &
-                         ibool,ispec_is_inner,phase_is_inner, &
-                         abs_boundary_jacobian2Dw,abs_boundary_ijk,abs_boundary_ispec, &
-                         num_abs_boundary_faces,rhostore,kappastore,ispec_is_acoustic, &
-                         SIMULATION_TYPE,SAVE_FORWARD,it,b_reclen_potential, &
-                         b_absorb_potential,b_num_abs_boundary_faces)
+      call compute_stacey_acoustic(NSPEC_AB,NGLOB_AB, &
+                        potential_dot_dot_acoustic,potential_dot_acoustic, &
+                        ibool,ispec_is_inner,phase_is_inner, &
+                        abs_boundary_jacobian2Dw,abs_boundary_ijk,abs_boundary_ispec, &
+                        num_abs_boundary_faces,rhostore,kappastore,ispec_is_acoustic, &
+                        SIMULATION_TYPE,SAVE_FORWARD,it,b_reclen_potential, &
+                        b_absorb_potential,b_num_abs_boundary_faces)
     endif
 
     ! elastic coupling

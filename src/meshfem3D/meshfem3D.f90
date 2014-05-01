@@ -298,7 +298,7 @@
 
 ! interfaces parameters
   logical SUPPRESS_UTM_PROJECTION_BOTTOM,SUPPRESS_UTM_PROJECTION_TOP
-  integer ilayer,interface_current ! ipoint_current
+  integer ilayer,interface_current
   integer number_of_interfaces,number_of_layers
   integer max_npx_interface,max_npy_interface
   integer npx_interface_bottom,npy_interface_bottom
@@ -345,7 +345,7 @@
   logical ANISOTROPY,SAVE_MESH_FILES,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
   logical PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID
   integer MOVIE_TYPE,IMODEL
-  character(len=256) OUTPUT_FILES,LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
+  character(len=256) LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
   logical :: ADIOS_ENABLED, ADIOS_FOR_DATABASES, ADIOS_FOR_MESH, &
              ADIOS_FOR_FORWARD_ARRAYS, ADIOS_FOR_KERNELS
 
@@ -358,12 +358,9 @@
   call world_size(sizeprocs)
   call world_rank(myrank)
 
-! get the base pathname for output files
-  call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)))
-
 ! open main output file, only written to by process 0
   if(myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
-    open(unit=IMAIN,file=trim(OUTPUT_FILES)//'/output_mesher.txt',status='unknown')
+    open(unit=IMAIN,file=trim(OUTPUT_FILES_PATH)//'/output_mesher.txt',status='unknown')
 
 ! get MPI starting time
   time_start = wtime()
@@ -421,14 +418,15 @@
   max_npy_interface  = -1
 
 ! read number of interfaces
-  call read_value_integer_mesh(IIN,DONT_IGNORE_JUNK,number_of_interfaces,'NINTERFACES')
+  call read_value_integer_mesh(IIN,DONT_IGNORE_JUNK,number_of_interfaces,'NINTERFACES', ier)
   if(number_of_interfaces < 1) stop 'error: not enough interfaces (minimum is 1, for topography)'
 
 ! loop on all the interfaces
   do interface_current = 1,number_of_interfaces
     call read_interface_parameters(IIN,SUPPRESS_UTM_PROJECTION_BOTTOM,interface_top_file, &
           npx_interface_bottom,npy_interface_bottom,&
-          orig_x_interface_bottom,orig_y_interface_bottom,spacing_x_interface_bottom,spacing_y_interface_bottom)
+          orig_x_interface_bottom,orig_y_interface_bottom,&
+          spacing_x_interface_bottom,spacing_y_interface_bottom,ier)
 
     max_npx_interface = max(npx_interface_bottom,max_npx_interface)
     max_npy_interface = max(npy_interface_bottom,max_npy_interface)
@@ -446,7 +444,7 @@
   do ilayer = 1,number_of_layers
 
 ! read number of spectral elements in vertical direction in this layer
-    call read_value_integer_mesh(IIN,DONT_IGNORE_JUNK,ner_layer(ilayer),'NER_LAYER')
+    call read_value_integer_mesh(IIN,DONT_IGNORE_JUNK,ner_layer(ilayer),'NER_LAYER', ier)
     if(ner_layer(ilayer) < 1) stop 'not enough spectral elements along Z in layer (minimum is 1)'
 
   enddo
@@ -640,7 +638,7 @@
   if( ier /= 0 ) stop 'error allocating array interface_top'
 
   ! read number of interfaces
-  call read_value_integer_mesh(IIN,DONT_IGNORE_JUNK,number_of_interfaces,'NINTERFACES')
+  call read_value_integer_mesh(IIN,DONT_IGNORE_JUNK,number_of_interfaces,'NINTERFACES', ier)
 
   SUPPRESS_UTM_PROJECTION_BOTTOM = SUPPRESS_UTM_PROJECTION
   npx_interface_bottom = 2
@@ -658,7 +656,8 @@
     ! read top interface
     call read_interface_parameters(IIN,SUPPRESS_UTM_PROJECTION_TOP,interface_top_file,&
          npx_interface_top,npy_interface_top,&
-         orig_x_interface_top,orig_y_interface_top,spacing_x_interface_top,spacing_y_interface_top)
+         orig_x_interface_top,orig_y_interface_top,&
+         spacing_x_interface_top,spacing_y_interface_top,ier)
 
     !npoints_interface_top = npx_interface_top * npy_interface
     ! loop on all the points describing this interface
@@ -666,7 +665,7 @@
          //interface_top_file,status='old')
     do iy=1,npy_interface_top
       do ix=1,npx_interface_top
-        call read_value_dble_precision_mesh(45,DONT_IGNORE_JUNK,interface_top(ix,iy),'Z_INTERFACE_TOP')
+        call read_value_dble_precision_mesh(45,DONT_IGNORE_JUNK,interface_top(ix,iy),'Z_INTERFACE_TOP',ier)
       enddo
     enddo
     close(45)
@@ -784,8 +783,6 @@
     interface_bottom(:,:) = interface_top(:,:)
 
   enddo
-
-  close(IIN_INTERFACES)
 
   if(myrank == 0) then
     write(IMAIN,*)

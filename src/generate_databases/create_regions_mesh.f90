@@ -685,7 +685,7 @@ subroutine crm_ext_setup_indexing(ibool, &
   enddo
 
 ! gets ibool indexing from local (GLL points) to global points
-  call get_global(nspec,xp,yp,zp,ibool,locval,ifseg,nglob,npointot, &
+  call get_global(npointot,xp,yp,zp,ibool,locval,ifseg,nglob, &
        minval(nodes_coords_ext_mesh(1,:)),maxval(nodes_coords_ext_mesh(1,:)))
 
 !- we can create a new indirect addressing to reduce cache misses

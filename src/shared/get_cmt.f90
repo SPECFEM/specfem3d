@@ -66,8 +66,7 @@
 !
 !---- read hypocenter info
 !
-  call get_value_string(CMTSOLUTION, 'solver.CMTSOLUTION', &
-       IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'CMTSOLUTION')
+  CMTSOLUTION = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'CMTSOLUTION'
 
   open(unit=1,file=CMTSOLUTION,status='old',action='read')
 
@@ -89,7 +88,6 @@
 
     ! read time shift
     read(1,"(a)") string
-    !read(string(12:len_trim(string)),*) tshift_cmt(isource)
     read(string(12:len_trim(string)),*) t_shift(isource)
 
     ! read half duration

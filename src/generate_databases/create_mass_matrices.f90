@@ -717,7 +717,7 @@
              do j=1,NGLLY
                 do i=1,NGLLX
                    ! defines the material coefficient associated to the domain
-                   mat_coef = 1.d0 / kappastore(i,j,k,ispec)
+                   mat_coef = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
                    iglob = ibool(i,j,k,ispec)
                    weight = wxgll(i)*wygll(j)*wzgll(k)
                    jacobianl = jacobianstore(i,j,k,ispec)
@@ -746,7 +746,7 @@
                 do j=1,NGLLY
                    do i=1,NGLLX
                       ! defines the material coefficient associated to the domain
-                      mat_coef = 1.d0 / kappastore(i,j,k,ispec)
+                      mat_coef = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
                       iglob = ibool(i,j,k,ispec)
                       weight = wxgll(i)*wygll(j)*wzgll(k)
                       jacobianl = jacobianstore(i,j,k,ispec)
@@ -770,7 +770,7 @@
                 do j=1,NGLLY
                    do i=1,NGLLX
                       ! defines the material coefficient associated to the domain
-                      mat_coef = 1.d0 / kappastore(i,j,k,ispec)
+                      mat_coef = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
                       iglob = ibool(i,j,k,ispec)
                       weight = wxgll(i)*wygll(j)*wzgll(k)
                       jacobianl = jacobianstore(i,j,k,ispec)
@@ -794,7 +794,7 @@
                 do j=1,NGLLY
                    do i=1,NGLLX
                       ! defines the material coefficient associated to the domain
-                      mat_coef = 1.d0 / kappastore(i,j,k,ispec)
+                      mat_coef = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
                       iglob = ibool(i,j,k,ispec)
                       weight = wxgll(i)*wygll(j)*wzgll(k)
                       jacobianl = jacobianstore(i,j,k,ispec)
@@ -818,7 +818,7 @@
                 do j=1,NGLLY
                    do i=1,NGLLX
                       ! defines the material coefficient associated to the domain
-                      mat_coef = 1.d0 / kappastore(i,j,k,ispec)
+                      mat_coef = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
                       iglob = ibool(i,j,k,ispec)
                       weight = wxgll(i)*wygll(j)*wzgll(k)
                       jacobianl = jacobianstore(i,j,k,ispec)
@@ -846,7 +846,7 @@
                 do j=1,NGLLY
                    do i=1,NGLLX
                       ! defines the material coefficient associated to the domain
-                      mat_coef = 1.d0 / kappastore(i,j,k,ispec)
+                      mat_coef = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
                       iglob = ibool(i,j,k,ispec)
                       weight = wxgll(i)*wygll(j)*wzgll(k)
                       jacobianl = jacobianstore(i,j,k,ispec)
@@ -874,7 +874,7 @@
                 do j=1,NGLLY
                    do i=1,NGLLX
                       ! defines the material coefficient associated to the domain
-                      mat_coef = 1.d0 / kappastore(i,j,k,ispec)
+                      mat_coef = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
                       iglob = ibool(i,j,k,ispec)
                       weight = wxgll(i)*wygll(j)*wzgll(k)
                       jacobianl = jacobianstore(i,j,k,ispec)
@@ -902,7 +902,7 @@
                 do j=1,NGLLY
                    do i=1,NGLLX
                       ! defines the material coefficient associated to the domain
-                      mat_coef = 1.d0 / kappastore(i,j,k,ispec)
+                      mat_coef = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
                       iglob = ibool(i,j,k,ispec)
                       weight = wxgll(i)*wygll(j)*wzgll(k)
                       jacobianl = jacobianstore(i,j,k,ispec)

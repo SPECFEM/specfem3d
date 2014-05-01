@@ -104,7 +104,7 @@
   logical :: STACEY_ABSORBING_CONDITIONS,SAVE_FORWARD,STACEY_INSTEAD_OF_FREE_SURFACE
   logical :: ANISOTROPY,SAVE_MESH_FILES,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
   logical :: PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID
-  character(len=256) :: OUTPUT_FILES,LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
+  character(len=256) :: LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
   integer :: NPROC
   integer :: ier
   integer :: MOVIE_TYPE,IMODEL
@@ -138,14 +138,11 @@
         USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
         PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,FULL_ATTENUATION_SOLID,TRAC_PATH)
 
-  ! get the base pathname for output files
-  call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)))
-
   ! only one global array for movie data, but stored for all surfaces defined
   ! in file 'surface_from_mesher.h'
-  open(unit=IIN,file=trim(OUTPUT_FILES)//'surface_from_mesher.h',status='old',action='read',iostat=ier)
+  open(unit=IIN,file=trim(OUTPUT_FILES_PATH)//'surface_from_mesher.h',status='old',action='read',iostat=ier)
   if( ier /= 0 ) then
-    print*,'error opening file: ',trim(OUTPUT_FILES)//'surface_from_mesher.h'
+    print*,'error opening file: ',trim(OUTPUT_FILES_PATH)//'surface_from_mesher.h'
     print*
     print*,'please run xgenerate_databases or xspecfem3D first to create this file, exiting now...'
     stop 'error opening moviedata header file'
@@ -336,10 +333,10 @@
       else
         write(outputname,"('/moviedata',i6.6)") it
       endif
-      open(unit=IOUT,file=trim(OUTPUT_FILES)//trim(outputname),status='old', &
+      open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//trim(outputname),status='old', &
             action='read',form='unformatted',iostat=ier)
       if( ier /= 0 ) then
-        print*,'error: ',trim(OUTPUT_FILES)//trim(outputname)
+        print*,'error: ',trim(OUTPUT_FILES_PATH)//trim(outputname)
         stop 'error opening moviedata file'
       endif
 
@@ -539,7 +536,7 @@
 
       ! sort the list based upon coordinates to get rid of multiples
       print *,'sorting list of points'
-      call get_global_AVS(nspectot_AVS_max,xp,yp,zp,iglob,locval,ifseg,nglob,npointot, &
+      call get_global(npointot,xp,yp,zp,iglob,locval,ifseg,nglob, &
            dble(minval(store_val_x(:))),dble(maxval(store_val_x(:))))
 
       ! print total number of points found
@@ -641,15 +638,15 @@
 
         if(USE_OPENDX) then
           write(outputname,"('/DX_shaking_map.dx')")
-          open(unit=11,file=trim(OUTPUT_FILES)//outputname,status='unknown')
+          open(unit=11,file=trim(OUTPUT_FILES_PATH)//outputname,status='unknown')
           write(11,*) 'object 1 class array type float rank 1 shape 3 items ',nglob,' data follows'
         else if(USE_AVS) then
           write(outputname,"('/AVS_shaking_map.inp')")
-          open(unit=11,file=trim(OUTPUT_FILES)//outputname,status='unknown')
+          open(unit=11,file=trim(OUTPUT_FILES_PATH)//outputname,status='unknown')
           write(11,*) nglob,' ',nspectot_AVS_max,' 1 0 0'
        else if(USE_GMT) then
           write(outputname,"('/gmt_shaking_map.xyz')")
-          open(unit=11,file=trim(OUTPUT_FILES)//outputname,status='unknown')
+          open(unit=11,file=trim(OUTPUT_FILES_PATH)//outputname,status='unknown')
         else
           stop 'wrong output format selected'
         endif
@@ -658,15 +655,15 @@
 
         if(USE_OPENDX) then
           write(outputname,"('/DX_movie_',i6.6,'.dx')") ivalue
-          open(unit=11,file=trim(OUTPUT_FILES)//outputname,status='unknown')
+          open(unit=11,file=trim(OUTPUT_FILES_PATH)//outputname,status='unknown')
           write(11,*) 'object 1 class array type float rank 1 shape 3 items ',nglob,' data follows'
         else if(USE_AVS) then
           write(outputname,"('/AVS_movie_',i6.6,'.inp')") ivalue
-          open(unit=11,file=trim(OUTPUT_FILES)//outputname,status='unknown')
+          open(unit=11,file=trim(OUTPUT_FILES_PATH)//outputname,status='unknown')
           write(11,*) nglob,' ',nspectot_AVS_max,' 1 0 0'
        else if(USE_GMT) then
           write(outputname,"('/gmt_movie_',i6.6,'.xyz')") ivalue
-          open(unit=11,file=trim(OUTPUT_FILES)//outputname,status='unknown')
+          open(unit=11,file=trim(OUTPUT_FILES_PATH)//outputname,status='unknown')
         else
           stop 'wrong output format selected'
         endif
@@ -795,9 +792,9 @@ enddo ! it
   print *
   print *,'done creating movie or shaking map'
   print *
-  if(USE_OPENDX) print *,'DX files are stored in ', trim(OUTPUT_FILES), '/DX_*.dx'
-  if(USE_AVS) print *,'AVS files are stored in ', trim(OUTPUT_FILES), '/AVS_*.inp'
-  if(USE_GMT) print *,'GMT files are stored in ', trim(OUTPUT_FILES), '/gmt_*.xyz'
+  if (USE_OPENDX) print *, 'DX files are stored in ', trim(OUTPUT_FILES_PATH), '/DX_*.dx'
+  if (USE_AVS) print *, 'AVS files are stored in ', trim(OUTPUT_FILES_PATH), '/AVS_*.inp'
+  if (USE_GMT) print *, 'GMT files are stored in ', trim(OUTPUT_FILES_PATH), '/gmt_*.xyz'
   print *
 
   deallocate(store_val_x)
@@ -824,223 +821,4 @@ enddo ! it
   endif
 
   end program create_movie_shakemap
-
-!
-!=====================================================================
-!
-
-  subroutine get_global_AVS(nspec,xp,yp,zp,iglob,locval,ifseg,nglob,npointot,UTM_X_MIN,UTM_X_MAX)
-
-! this routine MUST be in double precision to avoid sensitivity
-! to roundoff errors in the coordinates of the points
-
-! leave sorting subroutines in same source file to allow for inlining
-
-  implicit none
-
-  include "constants.h"
-
-! geometry tolerance parameter to calculate number of independent grid points
-! small value for double precision and to avoid sensitivity to roundoff
-  double precision SMALLVALTOL
-
-  integer npointot
-  integer iglob(npointot),locval(npointot)
-  logical ifseg(npointot)
-  double precision xp(npointot),yp(npointot),zp(npointot)
-  integer nspec,nglob
-
-  integer ispec,i,j,ier
-  integer ieoff,ilocnum,nseg,ioff,iseg,ig
-
-  integer, dimension(:), allocatable :: ind,ninseg,iwork
-  double precision, dimension(:), allocatable :: work
-
-  double precision UTM_X_MIN,UTM_X_MAX
-
-! define geometrical tolerance based upon typical size of the model
-    SMALLVALTOL = 1.d-10 * dabs(UTM_X_MAX - UTM_X_MIN)
-    print *, 'UTM_X_MAX', UTM_X_MAX
-    print *, 'UTM_X_MIN', UTM_X_MIN
-    print *, 'SMALLVALTOL', SMALLVALTOL
-
-! dynamically allocate arrays
-  allocate(ind(npointot), &
-          ninseg(npointot), &
-          iwork(npointot), &
-          work(npointot),stat=ier)
-  if( ier /= 0 ) stop 'error allocating arrays ind etc.'
-
-! establish initial pointers
-  do ispec=1,nspec
-    ieoff=NGNOD2D_FOUR_CORNERS_AVS_DX*(ispec-1)
-    do ilocnum=1,NGNOD2D_FOUR_CORNERS_AVS_DX
-      locval(ilocnum+ieoff)=ilocnum+ieoff
-    enddo
-  enddo
-
-  ifseg(:)=.false.
-
-  nseg=1
-  ifseg(1)=.true.
-  ninseg(1)=npointot
-
-  do j=1,NDIM
-
-! sort within each segment
-  ioff=1
-  do iseg=1,nseg
-    if(j == 1) then
-      call rank(xp(ioff),ind,ninseg(iseg))
-    else if(j == 2) then
-      call rank(yp(ioff),ind,ninseg(iseg))
-    else
-      call rank(zp(ioff),ind,ninseg(iseg))
-    endif
-    call swap_all(locval(ioff),xp(ioff),yp(ioff),zp(ioff),iwork,work,ind,ninseg(iseg))
-    ioff=ioff+ninseg(iseg)
-  enddo
-
-! check for jumps in current coordinate
-! compare the coordinates of the points within a small tolerance
-  if(j == 1) then
-    do i=2,npointot
-      if(dabs(xp(i)-xp(i-1)) > SMALLVALTOL) ifseg(i)=.true.
-    enddo
-  else if(j == 2) then
-    do i=2,npointot
-      if(dabs(yp(i)-yp(i-1)) > SMALLVALTOL) ifseg(i)=.true.
-    enddo
-  else
-    do i=2,npointot
-      if(dabs(zp(i)-zp(i-1)) > SMALLVALTOL) ifseg(i)=.true.
-    enddo
-  endif
-
-! count up number of different segments
-  nseg=0
-  do i=1,npointot
-    if(ifseg(i)) then
-      nseg=nseg+1
-      ninseg(nseg)=1
-    else
-      ninseg(nseg)=ninseg(nseg)+1
-    endif
-  enddo
-  enddo
-
-! assign global node numbers (now sorted lexicographically)
-  ig=0
-  do i=1,npointot
-    if(ifseg(i)) ig=ig+1
-    iglob(locval(i))=ig
-  enddo
-
-  nglob=ig
-
-! deallocate arrays
-  deallocate(ind)
-  deallocate(ninseg)
-  deallocate(iwork)
-  deallocate(work)
-
-  end subroutine get_global_AVS
-
-! -----------------------------------
-
-! sorting routines put in same file to allow for inlining
-
-  subroutine rank(A,IND,N)
-!
-! Use Heap Sort (Numerical Recipes)
-!
-  implicit none
-
-  integer n
-  double precision A(n)
-  integer IND(n)
-
-  integer i,j,l,ir,indx
-  double precision q
-
-  do j=1,n
-   IND(j)=j
-  enddo
-
-  if (n == 1) return
-
-  L=n/2+1
-  ir=n
-  100 CONTINUE
-   IF (l>1) THEN
-      l=l-1
-      indx=ind(l)
-      q=a(indx)
-   ELSE
-      indx=ind(ir)
-      q=a(indx)
-      ind(ir)=ind(1)
-      ir=ir-1
-      if (ir == 1) then
-         ind(1)=indx
-         return
-      endif
-   endif
-   i=l
-   j=l+l
-  200    CONTINUE
-   IF (J <= IR) THEN
-      IF (J<IR) THEN
-         IF ( A(IND(j))<A(IND(j+1)) ) j=j+1
-      endif
-      IF (q<A(IND(j))) THEN
-         IND(I)=IND(J)
-         I=J
-         J=J+J
-      ELSE
-         J=IR+1
-      endif
-   goto 200
-   endif
-   IND(I)=INDX
-  goto 100
-  end subroutine rank
-
-! ------------------------------------------------------------------
-
-  subroutine swap_all(IA,A,B,C,IW,W,ind,n)
-!
-! swap arrays IA, A, B and C according to addressing in array IND
-!
-  implicit none
-
-  integer n
-
-  integer IND(n)
-  integer IA(n),IW(n)
-  double precision A(n),B(n),C(n),W(n)
-
-  integer i
-
-  IW(:) = IA(:)
-  W(:) = A(:)
-
-  do i=1,n
-    IA(i)=IW(ind(i))
-    A(i)=W(ind(i))
-  enddo
-
-  W(:) = B(:)
-
-  do i=1,n
-    B(i)=W(ind(i))
-  enddo
-
-  W(:) = C(:)
-
-  do i=1,n
-    C(i)=W(ind(i))
-  enddo
-
-  end subroutine swap_all
 

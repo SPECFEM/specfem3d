@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                            November 2010
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -120,8 +121,8 @@
   integer :: num_interfaces_ext_mesh
   integer, dimension(num_interfaces_ext_mesh) :: my_neighbours_ext_mesh
   integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
-  integer :: max_nibool_interfaces_ext_mesh  !magnoni
-  integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh  !magnoni
+  integer :: max_nibool_interfaces_ext_mesh
+  integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
 
 
 ! file name
@@ -263,7 +264,7 @@
     write(IOUT) max_nibool_interfaces_ext_mesh
     write(IOUT) my_neighbours_ext_mesh
     write(IOUT) nibool_interfaces_ext_mesh
-    write(IOUT) ibool_interfaces_ext_mesh   !magnoni
+    write(IOUT) ibool_interfaces_ext_mesh
   endif
 
 ! anisotropy
@@ -415,19 +416,6 @@
     call write_VTK_data_gll_cr(nspec,nglob, &
                         xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
                         qmu_attenuation_store,filename)
-
-!     !magnoni
-!     !check
-!
-!       !jacobian
-!       filename = prname(1:len_trim(prname))//'jacobian'
-!       call write_VTK_data_gll_cr(nspec,nglob, &
-!                           xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-!                           jacobianstore,filename)
-!
-!     !check
-!     !magnoni
-
 
     ! VTK file output
     ! acoustic-elastic domains

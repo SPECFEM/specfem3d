@@ -52,8 +52,7 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                      PML_dux_dxl_old, PML_dux_dyl_old, PML_dux_dzl_old, &
                      PML_duy_dxl_old, PML_duy_dyl_old, PML_duy_dzl_old, &
                      PML_duz_dxl_old, PML_duz_dyl_old, PML_duz_dzl_old
-  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS, &
-                       CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS
 
   implicit none
 
@@ -94,317 +93,317 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
   CPML_region_local = CPML_regions(ispec_CPML)
 
   do k=1,NGLLZ
-     do j=1,NGLLY
-         do i=1,NGLLX
-            kappal = kappastore(i,j,k,ispec)
-            mul = mustore(i,j,k,ispec)
-            lambdalplus2mul = kappal + FOUR_THIRDS * mul
-            lambdal = lambdalplus2mul - 2.0_CUSTOM_REAL*mul
-            xixl = xix(i,j,k,ispec)
-            xiyl = xiy(i,j,k,ispec)
-            xizl = xiz(i,j,k,ispec)
-            etaxl = etax(i,j,k,ispec)
-            etayl = etay(i,j,k,ispec)
-            etazl = etaz(i,j,k,ispec)
-            gammaxl = gammax(i,j,k,ispec)
-            gammayl = gammay(i,j,k,ispec)
-            gammazl = gammaz(i,j,k,ispec)
-            jacobianl = jacobian(i,j,k,ispec)
+    do j=1,NGLLY
+      do i=1,NGLLX
+        kappal = kappastore(i,j,k,ispec)
+        mul = mustore(i,j,k,ispec)
+        lambdalplus2mul = kappal + FOUR_THIRDS * mul
+        lambdal = lambdalplus2mul - 2.0_CUSTOM_REAL*mul
+        xixl = xix(i,j,k,ispec)
+        xiyl = xiy(i,j,k,ispec)
+        xizl = xiz(i,j,k,ispec)
+        etaxl = etax(i,j,k,ispec)
+        etayl = etay(i,j,k,ispec)
+        etazl = etaz(i,j,k,ispec)
+        gammaxl = gammax(i,j,k,ispec)
+        gammayl = gammay(i,j,k,ispec)
+        gammazl = gammaz(i,j,k,ispec)
+        jacobianl = jacobian(i,j,k,ispec)
 
-            kappa_x = k_store_x(i,j,k,ispec_CPML)
-            kappa_y = k_store_y(i,j,k,ispec_CPML)
-            kappa_z = k_store_z(i,j,k,ispec_CPML)
-            d_x = d_store_x(i,j,k,ispec_CPML)
-            d_y = d_store_y(i,j,k,ispec_CPML)
-            d_z = d_store_z(i,j,k,ispec_CPML)
-            alpha_x = alpha_store_x(i,j,k,ispec_CPML)
-            alpha_y = alpha_store_y(i,j,k,ispec_CPML)
-            alpha_z = alpha_store_z(i,j,k,ispec_CPML)
-            beta_x = alpha_x + d_x / kappa_x
-            beta_y = alpha_y + d_y / kappa_y
-            beta_z = alpha_z + d_z / kappa_z
-            time_nplus1 = (it-1.0_CUSTOM_REAL) * deltat
-            time_n = (it-2.0_CUSTOM_REAL) * deltat
+        kappa_x = k_store_x(i,j,k,ispec_CPML)
+        kappa_y = k_store_y(i,j,k,ispec_CPML)
+        kappa_z = k_store_z(i,j,k,ispec_CPML)
+        d_x = d_store_x(i,j,k,ispec_CPML)
+        d_y = d_store_y(i,j,k,ispec_CPML)
+        d_z = d_store_z(i,j,k,ispec_CPML)
+        alpha_x = alpha_store_x(i,j,k,ispec_CPML)
+        alpha_y = alpha_store_y(i,j,k,ispec_CPML)
+        alpha_z = alpha_store_z(i,j,k,ispec_CPML)
+        beta_x = alpha_x + d_x / kappa_x
+        beta_y = alpha_y + d_y / kappa_y
+        beta_z = alpha_z + d_z / kappa_z
+        time_nplus1 = (it-1.0_CUSTOM_REAL) * deltat
+        time_n = (it-2.0_CUSTOM_REAL) * deltat
 
-            !---------------------- A6, A7, A8, A9 --------------------------
-            call lijk_parameter_computation(time_nplus1,deltat,&
-                                           kappa_z,beta_z,alpha_z,kappa_y,beta_y,alpha_y,kappa_x,beta_x,alpha_x,&
-                                           CPML_region_local,231,A6,A7,A8,A9,&
-                                           coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,&
-                                           coef0_3,coef1_3,coef2_3,singularity_type_2,singularity_type_3)
-            rmemory_dux_dxl_x(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,1) &
-                   + PML_dux_dxl(i,j,k) * coef1_1 + PML_dux_dxl_old(i,j,k) * coef2_1
-            rmemory_duy_dxl_y(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_duy_dxl_y(i,j,k,ispec_CPML,1) &
-                   + PML_duy_dxl(i,j,k) * coef1_1 + PML_duy_dxl_old(i,j,k) * coef2_1
-            rmemory_duz_dxl_z(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,1) &
-                   + PML_duz_dxl(i,j,k) * coef1_1 + PML_duz_dxl_old(i,j,k) * coef2_1
+        !---------------------- A6, A7, A8, A9 --------------------------
+        call lijk_parameter_computation(time_nplus1,deltat,&
+                                        kappa_z,beta_z,alpha_z,kappa_y,beta_y,alpha_y,kappa_x,beta_x,alpha_x,&
+                                        CPML_region_local,231,A6,A7,A8,A9,&
+                                        coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,&
+                                        coef0_3,coef1_3,coef2_3,singularity_type_2,singularity_type_3)
+        rmemory_dux_dxl_x(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,1) &
+               + PML_dux_dxl(i,j,k) * coef1_1 + PML_dux_dxl_old(i,j,k) * coef2_1
+        rmemory_duy_dxl_y(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_duy_dxl_y(i,j,k,ispec_CPML,1) &
+               + PML_duy_dxl(i,j,k) * coef1_1 + PML_duy_dxl_old(i,j,k) * coef2_1
+        rmemory_duz_dxl_z(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,1) &
+               + PML_duz_dxl(i,j,k) * coef1_1 + PML_duz_dxl_old(i,j,k) * coef2_1
 
-            if(singularity_type_2 == 0)then
-              rmemory_dux_dxl_x(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,2) &
-                     + PML_dux_dxl(i,j,k) * coef1_2 + PML_dux_dxl_old(i,j,k) * coef2_2
-              rmemory_duy_dxl_y(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duy_dxl_y(i,j,k,ispec_CPML,2) &
-                     + PML_duy_dxl(i,j,k) * coef1_2 + PML_duy_dxl_old(i,j,k) * coef2_2
-              rmemory_duz_dxl_z(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,2) &
-                     + PML_duz_dxl(i,j,k) * coef1_2 + PML_duz_dxl_old(i,j,k) * coef2_2
-            else if(singularity_type_2 == 1)then
-              rmemory_dux_dxl_x(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,2) &
-                     + PML_dux_dxl(i,j,k) * time_nplus1 * coef1_2 + PML_dux_dxl_old(i,j,k) * time_n * coef2_2
-              rmemory_duy_dxl_y(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duy_dxl_y(i,j,k,ispec_CPML,2) &
-                     + PML_duy_dxl(i,j,k) * time_nplus1 * coef1_2 + PML_duy_dxl_old(i,j,k) * time_n * coef2_2
-              rmemory_duz_dxl_z(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,2) &
-                     + PML_duz_dxl(i,j,k) * time_nplus1 * coef1_2 + PML_duz_dxl_old(i,j,k) * time_n * coef2_2
-            else
-              stop 'error in singularity_type_2 computation in elastic part'
-            endif
+        if (singularity_type_2 == 0) then
+          rmemory_dux_dxl_x(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,2) &
+                 + PML_dux_dxl(i,j,k) * coef1_2 + PML_dux_dxl_old(i,j,k) * coef2_2
+          rmemory_duy_dxl_y(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duy_dxl_y(i,j,k,ispec_CPML,2) &
+                 + PML_duy_dxl(i,j,k) * coef1_2 + PML_duy_dxl_old(i,j,k) * coef2_2
+          rmemory_duz_dxl_z(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,2) &
+                 + PML_duz_dxl(i,j,k) * coef1_2 + PML_duz_dxl_old(i,j,k) * coef2_2
+        else if (singularity_type_2 == 1) then
+          rmemory_dux_dxl_x(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,2) &
+                 + PML_dux_dxl(i,j,k) * time_nplus1 * coef1_2 + PML_dux_dxl_old(i,j,k) * time_n * coef2_2
+          rmemory_duy_dxl_y(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duy_dxl_y(i,j,k,ispec_CPML,2) &
+                 + PML_duy_dxl(i,j,k) * time_nplus1 * coef1_2 + PML_duy_dxl_old(i,j,k) * time_n * coef2_2
+          rmemory_duz_dxl_z(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,2) &
+                 + PML_duz_dxl(i,j,k) * time_nplus1 * coef1_2 + PML_duz_dxl_old(i,j,k) * time_n * coef2_2
+        else
+          stop 'error in singularity_type_2 computation in elastic part'
+        endif
 
-            if(singularity_type_3 == 0)then
-              rmemory_dux_dxl_x(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,3) &
-                     + PML_dux_dxl(i,j,k) * coef1_3 + PML_dux_dxl_old(i,j,k) * coef2_3
-              rmemory_duy_dxl_y(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duy_dxl_y(i,j,k,ispec_CPML,3) &
-                     + PML_duy_dxl(i,j,k) * coef1_3 + PML_duy_dxl_old(i,j,k) * coef2_3
-              rmemory_duz_dxl_z(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,3) &
-                     + PML_duz_dxl(i,j,k) * coef1_3 + PML_duz_dxl_old(i,j,k) * coef2_3
-            else if(singularity_type_3 == 1)then
-              rmemory_dux_dxl_x(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,3) &
-                     + PML_dux_dxl(i,j,k) * time_nplus1 * coef1_3 + PML_dux_dxl_old(i,j,k) * time_n * coef2_3
-              rmemory_duy_dxl_y(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duy_dxl_y(i,j,k,ispec_CPML,3) &
-                     + PML_duy_dxl(i,j,k) * time_nplus1 * coef1_3 + PML_duy_dxl_old(i,j,k) * time_n * coef2_3
-              rmemory_duz_dxl_z(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,3) &
-                     + PML_duz_dxl(i,j,k) * time_nplus1 * coef1_3 + PML_duz_dxl_old(i,j,k) * time_n * coef2_3
-            else if(singularity_type_3 == 2)then
-              rmemory_dux_dxl_x(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,3) &
-                     + PML_dux_dxl(i,j,k) * time_nplus1**2 * coef1_3 + PML_dux_dxl_old(i,j,k) * time_n**2 * coef2_3
-              rmemory_duy_dxl_y(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duy_dxl_y(i,j,k,ispec_CPML,3) &
-                     + PML_duy_dxl(i,j,k) * time_nplus1**2 * coef1_3 + PML_duy_dxl_old(i,j,k) * time_n**2 * coef2_3
-              rmemory_duz_dxl_z(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,3) &
-                     + PML_duz_dxl(i,j,k) * time_nplus1**2 * coef1_3 + PML_duz_dxl_old(i,j,k) * time_n**2 * coef2_3
-            else
-              stop 'error in singularity_type_3 computation in elastic part'
-            endif
+        if (singularity_type_3 == 0) then
+          rmemory_dux_dxl_x(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,3) &
+                 + PML_dux_dxl(i,j,k) * coef1_3 + PML_dux_dxl_old(i,j,k) * coef2_3
+          rmemory_duy_dxl_y(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duy_dxl_y(i,j,k,ispec_CPML,3) &
+                 + PML_duy_dxl(i,j,k) * coef1_3 + PML_duy_dxl_old(i,j,k) * coef2_3
+          rmemory_duz_dxl_z(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,3) &
+                 + PML_duz_dxl(i,j,k) * coef1_3 + PML_duz_dxl_old(i,j,k) * coef2_3
+        else if (singularity_type_3 == 1) then
+          rmemory_dux_dxl_x(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,3) &
+                 + PML_dux_dxl(i,j,k) * time_nplus1 * coef1_3 + PML_dux_dxl_old(i,j,k) * time_n * coef2_3
+          rmemory_duy_dxl_y(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duy_dxl_y(i,j,k,ispec_CPML,3) &
+                 + PML_duy_dxl(i,j,k) * time_nplus1 * coef1_3 + PML_duy_dxl_old(i,j,k) * time_n * coef2_3
+          rmemory_duz_dxl_z(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,3) &
+                 + PML_duz_dxl(i,j,k) * time_nplus1 * coef1_3 + PML_duz_dxl_old(i,j,k) * time_n * coef2_3
+        else if (singularity_type_3 == 2) then
+          rmemory_dux_dxl_x(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,3) &
+                 + PML_dux_dxl(i,j,k) * time_nplus1**2 * coef1_3 + PML_dux_dxl_old(i,j,k) * time_n**2 * coef2_3
+          rmemory_duy_dxl_y(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duy_dxl_y(i,j,k,ispec_CPML,3) &
+                 + PML_duy_dxl(i,j,k) * time_nplus1**2 * coef1_3 + PML_duy_dxl_old(i,j,k) * time_n**2 * coef2_3
+          rmemory_duz_dxl_z(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,3) &
+                 + PML_duz_dxl(i,j,k) * time_nplus1**2 * coef1_3 + PML_duz_dxl_old(i,j,k) * time_n**2 * coef2_3
+        else
+          stop 'error in singularity_type_3 computation in elastic part'
+        endif
 
 
-            !---------------------- A10,A11,A12,A13 --------------------------
-            call lijk_parameter_computation(time_nplus1,deltat,&
-                                           kappa_x,beta_x,alpha_x,kappa_z,beta_z,alpha_z,kappa_y,beta_y,alpha_y,&
-                                           CPML_region_local,132,A10,A11,A12,A13,&
-                                           coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,&
-                                           coef0_3,coef1_3,coef2_3,singularity_type_2,singularity_type_3)
-            rmemory_dux_dyl_x(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,1) &
-                   + PML_dux_dyl(i,j,k) * coef1_1 + PML_dux_dyl_old(i,j,k) * coef2_1
-            rmemory_duy_dyl_y(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_duy_dyl_y(i,j,k,ispec_CPML,1) &
-                   + PML_duy_dyl(i,j,k) * coef1_1 + PML_duy_dyl_old(i,j,k) * coef2_1
-            rmemory_duz_dyl_z(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,1) &
-                   + PML_duz_dyl(i,j,k) * coef1_1 + PML_duz_dyl_old(i,j,k) * coef2_1
+        !---------------------- A10,A11,A12,A13 --------------------------
+        call lijk_parameter_computation(time_nplus1,deltat,&
+                                        kappa_x,beta_x,alpha_x,kappa_z,beta_z,alpha_z,kappa_y,beta_y,alpha_y,&
+                                        CPML_region_local,132,A10,A11,A12,A13,&
+                                        coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,&
+                                        coef0_3,coef1_3,coef2_3,singularity_type_2,singularity_type_3)
+        rmemory_dux_dyl_x(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,1) &
+               + PML_dux_dyl(i,j,k) * coef1_1 + PML_dux_dyl_old(i,j,k) * coef2_1
+        rmemory_duy_dyl_y(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_duy_dyl_y(i,j,k,ispec_CPML,1) &
+               + PML_duy_dyl(i,j,k) * coef1_1 + PML_duy_dyl_old(i,j,k) * coef2_1
+        rmemory_duz_dyl_z(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,1) &
+               + PML_duz_dyl(i,j,k) * coef1_1 + PML_duz_dyl_old(i,j,k) * coef2_1
 
-            if(singularity_type_2 == 0) then
-              rmemory_dux_dyl_x(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,2) &
-                     + PML_dux_dyl(i,j,k) * coef1_2 + PML_dux_dyl_old(i,j,k) * coef2_2
-              rmemory_duy_dyl_y(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duy_dyl_y(i,j,k,ispec_CPML,2) &
-                     + PML_duy_dyl(i,j,k) * coef1_2 + PML_duy_dyl_old(i,j,k) * coef2_2
-              rmemory_duz_dyl_z(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,2) &
-                     + PML_duz_dyl(i,j,k) * coef1_2 + PML_duz_dyl_old(i,j,k) * coef2_2
-            else if(singularity_type_2 == 1)then
-              rmemory_dux_dyl_x(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,2) &
-                     + PML_dux_dyl(i,j,k) * time_nplus1 * coef1_2 + PML_dux_dyl_old(i,j,k) * time_n * coef2_2
-              rmemory_duy_dyl_y(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duy_dyl_y(i,j,k,ispec_CPML,2) &
-                     + PML_duy_dyl(i,j,k) * time_nplus1 * coef1_2 + PML_duy_dyl_old(i,j,k) * time_n * coef2_2
-              rmemory_duz_dyl_z(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,2) &
-                     + PML_duz_dyl(i,j,k) * time_nplus1 * coef1_2 + PML_duz_dyl_old(i,j,k) * time_n * coef2_2
-            else
-              stop 'error in singularity_type_2 computation in elastic part'
-            endif
+        if (singularity_type_2 == 0) then
+          rmemory_dux_dyl_x(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,2) &
+                 + PML_dux_dyl(i,j,k) * coef1_2 + PML_dux_dyl_old(i,j,k) * coef2_2
+          rmemory_duy_dyl_y(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duy_dyl_y(i,j,k,ispec_CPML,2) &
+                 + PML_duy_dyl(i,j,k) * coef1_2 + PML_duy_dyl_old(i,j,k) * coef2_2
+          rmemory_duz_dyl_z(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,2) &
+                 + PML_duz_dyl(i,j,k) * coef1_2 + PML_duz_dyl_old(i,j,k) * coef2_2
+        else if (singularity_type_2 == 1) then
+          rmemory_dux_dyl_x(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,2) &
+                 + PML_dux_dyl(i,j,k) * time_nplus1 * coef1_2 + PML_dux_dyl_old(i,j,k) * time_n * coef2_2
+          rmemory_duy_dyl_y(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duy_dyl_y(i,j,k,ispec_CPML,2) &
+                 + PML_duy_dyl(i,j,k) * time_nplus1 * coef1_2 + PML_duy_dyl_old(i,j,k) * time_n * coef2_2
+          rmemory_duz_dyl_z(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,2) &
+                 + PML_duz_dyl(i,j,k) * time_nplus1 * coef1_2 + PML_duz_dyl_old(i,j,k) * time_n * coef2_2
+        else
+          stop 'error in singularity_type_2 computation in elastic part'
+        endif
 
-            if(singularity_type_3 == 0) then
-              rmemory_dux_dyl_x(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,3) &
-                     + PML_dux_dyl(i,j,k) * coef1_3 + PML_dux_dyl_old(i,j,k) * coef2_3
-              rmemory_duy_dyl_y(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duy_dyl_y(i,j,k,ispec_CPML,3) &
-                     + PML_duy_dyl(i,j,k) * coef1_3 + PML_duy_dyl_old(i,j,k) * coef2_3
-              rmemory_duz_dyl_z(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,3) &
-                     + PML_duz_dyl(i,j,k) * coef1_3 + PML_duz_dyl_old(i,j,k) * coef2_3
-            else if(singularity_type_3 == 1)then
-              rmemory_dux_dyl_x(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,3) &
-                     + PML_dux_dyl(i,j,k) * time_nplus1 * coef1_3 + PML_dux_dyl_old(i,j,k) * time_n * coef2_3
-              rmemory_duy_dyl_y(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duy_dyl_y(i,j,k,ispec_CPML,3) &
-                     + PML_duy_dyl(i,j,k) * time_nplus1 * coef1_3 + PML_duy_dyl_old(i,j,k) * time_n * coef2_3
-              rmemory_duz_dyl_z(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,3) &
-                     + PML_duz_dyl(i,j,k) * time_nplus1 * coef1_3 + PML_duz_dyl_old(i,j,k) * time_n * coef2_3
-            else if(singularity_type_3 == 2)then
-              rmemory_dux_dyl_x(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,3) &
-                     + PML_dux_dyl(i,j,k) * time_nplus1**2 * coef1_3 + PML_dux_dyl_old(i,j,k) * time_n**2 * coef2_3
-              rmemory_duy_dyl_y(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duy_dyl_y(i,j,k,ispec_CPML,3) &
-                     + PML_duy_dyl(i,j,k) * time_nplus1**2 * coef1_3 + PML_duy_dyl_old(i,j,k) * time_n**2 * coef2_3
-              rmemory_duz_dyl_z(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,3) &
-                      + PML_duz_dyl(i,j,k) * time_nplus1**2 * coef1_3 + PML_duz_dyl_old(i,j,k) * time_n**2 * coef2_3
-            else
-              stop 'error in singularity_type_3 computation in elastic part'
-            endif
+        if (singularity_type_3 == 0) then
+          rmemory_dux_dyl_x(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,3) &
+                 + PML_dux_dyl(i,j,k) * coef1_3 + PML_dux_dyl_old(i,j,k) * coef2_3
+          rmemory_duy_dyl_y(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duy_dyl_y(i,j,k,ispec_CPML,3) &
+                 + PML_duy_dyl(i,j,k) * coef1_3 + PML_duy_dyl_old(i,j,k) * coef2_3
+          rmemory_duz_dyl_z(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,3) &
+                 + PML_duz_dyl(i,j,k) * coef1_3 + PML_duz_dyl_old(i,j,k) * coef2_3
+        else if (singularity_type_3 == 1) then
+          rmemory_dux_dyl_x(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,3) &
+                 + PML_dux_dyl(i,j,k) * time_nplus1 * coef1_3 + PML_dux_dyl_old(i,j,k) * time_n * coef2_3
+          rmemory_duy_dyl_y(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duy_dyl_y(i,j,k,ispec_CPML,3) &
+                 + PML_duy_dyl(i,j,k) * time_nplus1 * coef1_3 + PML_duy_dyl_old(i,j,k) * time_n * coef2_3
+          rmemory_duz_dyl_z(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,3) &
+                 + PML_duz_dyl(i,j,k) * time_nplus1 * coef1_3 + PML_duz_dyl_old(i,j,k) * time_n * coef2_3
+        else if (singularity_type_3 == 2) then
+          rmemory_dux_dyl_x(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,3) &
+                 + PML_dux_dyl(i,j,k) * time_nplus1**2 * coef1_3 + PML_dux_dyl_old(i,j,k) * time_n**2 * coef2_3
+          rmemory_duy_dyl_y(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duy_dyl_y(i,j,k,ispec_CPML,3) &
+                 + PML_duy_dyl(i,j,k) * time_nplus1**2 * coef1_3 + PML_duy_dyl_old(i,j,k) * time_n**2 * coef2_3
+          rmemory_duz_dyl_z(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,3) &
+                  + PML_duz_dyl(i,j,k) * time_nplus1**2 * coef1_3 + PML_duz_dyl_old(i,j,k) * time_n**2 * coef2_3
+        else
+          stop 'error in singularity_type_3 computation in elastic part'
+        endif
 
-            !---------------------- A14,A15,A16,A17 --------------------------
-            call lijk_parameter_computation(time_nplus1,deltat,&
-                                           kappa_x,beta_x,alpha_x,kappa_y,beta_y,alpha_y,kappa_z,beta_z,alpha_z,&
-                                           CPML_region_local,123,A14,A15,A16,A17,&
-                                           coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,&
-                                           coef0_3,coef1_3,coef2_3,singularity_type_2,singularity_type_3)
+        !---------------------- A14,A15,A16,A17 --------------------------
+        call lijk_parameter_computation(time_nplus1,deltat,&
+                                        kappa_x,beta_x,alpha_x,kappa_y,beta_y,alpha_y,kappa_z,beta_z,alpha_z,&
+                                        CPML_region_local,123,A14,A15,A16,A17,&
+                                        coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,&
+                                        coef0_3,coef1_3,coef2_3,singularity_type_2,singularity_type_3)
 
-            rmemory_dux_dzl_x(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,1) &
-                   + PML_dux_dzl(i,j,k) * coef1_1 + PML_dux_dzl_old(i,j,k) * coef2_1
-            rmemory_duy_dzl_y(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_duy_dzl_y(i,j,k,ispec_CPML,1) &
-                   + PML_duy_dzl(i,j,k) * coef1_1 + PML_duy_dzl_old(i,j,k) * coef2_1
-            rmemory_duz_dzl_z(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,1) &
-                   + PML_duz_dzl(i,j,k) * coef1_1 + PML_duz_dzl_old(i,j,k) * coef2_1
+        rmemory_dux_dzl_x(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,1) &
+               + PML_dux_dzl(i,j,k) * coef1_1 + PML_dux_dzl_old(i,j,k) * coef2_1
+        rmemory_duy_dzl_y(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_duy_dzl_y(i,j,k,ispec_CPML,1) &
+               + PML_duy_dzl(i,j,k) * coef1_1 + PML_duy_dzl_old(i,j,k) * coef2_1
+        rmemory_duz_dzl_z(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,1) &
+               + PML_duz_dzl(i,j,k) * coef1_1 + PML_duz_dzl_old(i,j,k) * coef2_1
 
-            if(singularity_type_2 == 0) then
-              rmemory_dux_dzl_x(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,2) &
-                     + PML_dux_dzl(i,j,k) * coef1_2 + PML_dux_dzl_old(i,j,k) * coef2_2
-              rmemory_duy_dzl_y(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duy_dzl_y(i,j,k,ispec_CPML,2) &
-                     + PML_duy_dzl(i,j,k) * coef1_2 + PML_duy_dzl_old(i,j,k) * coef2_2
-              rmemory_duz_dzl_z(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,2) &
-                     + PML_duz_dzl(i,j,k) * coef1_2 + PML_duz_dzl_old(i,j,k) * coef2_2
-            else if(singularity_type_2 == 1) then
-              rmemory_dux_dzl_x(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,2) &
-                     + PML_dux_dzl(i,j,k) * time_nplus1 * coef1_2 + PML_dux_dzl_old(i,j,k) * time_n * coef2_2
-              rmemory_duy_dzl_y(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duy_dzl_y(i,j,k,ispec_CPML,2) &
-                     + PML_duy_dzl(i,j,k) * time_nplus1 * coef1_2 + PML_duy_dzl_old(i,j,k) * time_n * coef2_2
-              rmemory_duz_dzl_z(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,2) &
-                     + PML_duz_dzl(i,j,k) * time_nplus1 * coef1_2 + PML_duz_dzl_old(i,j,k) * time_n * coef2_2
-            else
-              stop 'error in singularity_type_2 computation in elastic part'
-            endif
+        if (singularity_type_2 == 0) then
+          rmemory_dux_dzl_x(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,2) &
+                 + PML_dux_dzl(i,j,k) * coef1_2 + PML_dux_dzl_old(i,j,k) * coef2_2
+          rmemory_duy_dzl_y(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duy_dzl_y(i,j,k,ispec_CPML,2) &
+                 + PML_duy_dzl(i,j,k) * coef1_2 + PML_duy_dzl_old(i,j,k) * coef2_2
+          rmemory_duz_dzl_z(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,2) &
+                 + PML_duz_dzl(i,j,k) * coef1_2 + PML_duz_dzl_old(i,j,k) * coef2_2
+        else if (singularity_type_2 == 1) then
+          rmemory_dux_dzl_x(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,2) &
+                 + PML_dux_dzl(i,j,k) * time_nplus1 * coef1_2 + PML_dux_dzl_old(i,j,k) * time_n * coef2_2
+          rmemory_duy_dzl_y(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duy_dzl_y(i,j,k,ispec_CPML,2) &
+                 + PML_duy_dzl(i,j,k) * time_nplus1 * coef1_2 + PML_duy_dzl_old(i,j,k) * time_n * coef2_2
+          rmemory_duz_dzl_z(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,2) &
+                 + PML_duz_dzl(i,j,k) * time_nplus1 * coef1_2 + PML_duz_dzl_old(i,j,k) * time_n * coef2_2
+        else
+          stop 'error in singularity_type_2 computation in elastic part'
+        endif
 
-            if(singularity_type_3 == 0) then
-              rmemory_dux_dzl_x(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,3) &
-                     + PML_dux_dzl(i,j,k) * coef1_3 + PML_dux_dzl_old(i,j,k) * coef2_3
-              rmemory_duy_dzl_y(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duy_dzl_y(i,j,k,ispec_CPML,3) &
-                     + PML_duy_dzl(i,j,k) * coef1_3 + PML_duy_dzl_old(i,j,k) * coef2_3
-              rmemory_duz_dzl_z(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,3) &
-                     + PML_duz_dzl(i,j,k) * coef1_3 + PML_duz_dzl_old(i,j,k) * coef2_3
-            else if(singularity_type_3 == 1) then
-              rmemory_dux_dzl_x(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,3) &
-                     + PML_dux_dzl(i,j,k) * time_nplus1 * coef1_3 + PML_dux_dzl_old(i,j,k) * time_n * coef2_3
-              rmemory_duy_dzl_y(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duy_dzl_y(i,j,k,ispec_CPML,3) &
-                     + PML_duy_dzl(i,j,k) * time_nplus1 * coef1_3 + PML_duy_dzl_old(i,j,k) * time_n * coef2_3
-              rmemory_duz_dzl_z(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,3) &
-                     + PML_duz_dzl(i,j,k) * time_nplus1 * coef1_3 + PML_duz_dzl_old(i,j,k) * time_n * coef2_3
-            else if(singularity_type_3 == 2) then
-              rmemory_dux_dzl_x(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,3) &
-                     + PML_dux_dzl(i,j,k) * time_nplus1**2 * coef1_3 + PML_dux_dzl_old(i,j,k) * time_n**2 * coef2_3
-              rmemory_duy_dzl_y(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duy_dzl_y(i,j,k,ispec_CPML,3) &
-                     + PML_duy_dzl(i,j,k) * time_nplus1**2 * coef1_3 + PML_duy_dzl_old(i,j,k) * time_n**2 * coef2_3
-              rmemory_duz_dzl_z(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,3) &
-                     + PML_duz_dzl(i,j,k) * time_nplus1**2 * coef1_3 + PML_duz_dzl_old(i,j,k) * time_n**2 * coef2_3
-            else
-              stop 'error in singularity_type_3 computation in elastic part'
-            endif
+        if (singularity_type_3 == 0) then
+          rmemory_dux_dzl_x(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,3) &
+                 + PML_dux_dzl(i,j,k) * coef1_3 + PML_dux_dzl_old(i,j,k) * coef2_3
+          rmemory_duy_dzl_y(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duy_dzl_y(i,j,k,ispec_CPML,3) &
+                 + PML_duy_dzl(i,j,k) * coef1_3 + PML_duy_dzl_old(i,j,k) * coef2_3
+          rmemory_duz_dzl_z(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,3) &
+                 + PML_duz_dzl(i,j,k) * coef1_3 + PML_duz_dzl_old(i,j,k) * coef2_3
+        else if (singularity_type_3 == 1) then
+          rmemory_dux_dzl_x(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,3) &
+                 + PML_dux_dzl(i,j,k) * time_nplus1 * coef1_3 + PML_dux_dzl_old(i,j,k) * time_n * coef2_3
+          rmemory_duy_dzl_y(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duy_dzl_y(i,j,k,ispec_CPML,3) &
+                 + PML_duy_dzl(i,j,k) * time_nplus1 * coef1_3 + PML_duy_dzl_old(i,j,k) * time_n * coef2_3
+          rmemory_duz_dzl_z(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,3) &
+                 + PML_duz_dzl(i,j,k) * time_nplus1 * coef1_3 + PML_duz_dzl_old(i,j,k) * time_n * coef2_3
+        else if (singularity_type_3 == 2) then
+          rmemory_dux_dzl_x(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,3) &
+                 + PML_dux_dzl(i,j,k) * time_nplus1**2 * coef1_3 + PML_dux_dzl_old(i,j,k) * time_n**2 * coef2_3
+          rmemory_duy_dzl_y(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duy_dzl_y(i,j,k,ispec_CPML,3) &
+                 + PML_duy_dzl(i,j,k) * time_nplus1**2 * coef1_3 + PML_duy_dzl_old(i,j,k) * time_n**2 * coef2_3
+          rmemory_duz_dzl_z(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,3) &
+                 + PML_duz_dzl(i,j,k) * time_nplus1**2 * coef1_3 + PML_duz_dzl_old(i,j,k) * time_n**2 * coef2_3
+        else
+          stop 'error in singularity_type_3 computation in elastic part'
+        endif
 
-            !---------------------- A18 and A19 --------------------------
-            call lx_parameter_computation(deltat,kappa_x,beta_x,alpha_x,&
-                                          CPML_region_local,A18,A19,&
-                                          coef0_1,coef1_1,coef2_1)
-            rmemory_duz_dzl_y(i,j,k,ispec_CPML) = coef0_1 * rmemory_duz_dzl_y(i,j,k,ispec_CPML) &
-                   + PML_duz_dzl(i,j,k) * coef1_1 + PML_duz_dzl_old(i,j,k) * coef2_1
+        !---------------------- A18 and A19 --------------------------
+        call lx_parameter_computation(deltat,kappa_x,beta_x,alpha_x,&
+                                      CPML_region_local,A18,A19,&
+                                      coef0_1,coef1_1,coef2_1)
+        rmemory_duz_dzl_y(i,j,k,ispec_CPML) = coef0_1 * rmemory_duz_dzl_y(i,j,k,ispec_CPML) &
+               + PML_duz_dzl(i,j,k) * coef1_1 + PML_duz_dzl_old(i,j,k) * coef2_1
 
-            rmemory_duz_dyl_y(i,j,k,ispec_CPML) = coef0_1 * rmemory_duz_dyl_y(i,j,k,ispec_CPML) &
-                   + PML_duz_dyl(i,j,k) * coef1_1 + PML_duz_dyl_old(i,j,k) * coef2_1
+        rmemory_duz_dyl_y(i,j,k,ispec_CPML) = coef0_1 * rmemory_duz_dyl_y(i,j,k,ispec_CPML) &
+               + PML_duz_dyl(i,j,k) * coef1_1 + PML_duz_dyl_old(i,j,k) * coef2_1
 
-            rmemory_duy_dzl_z(i,j,k,ispec_CPML) = coef0_1 * rmemory_duy_dzl_z(i,j,k,ispec_CPML) &
-                   + PML_duy_dzl(i,j,k) * coef1_1 + PML_duy_dzl_old(i,j,k) * coef2_1
+        rmemory_duy_dzl_z(i,j,k,ispec_CPML) = coef0_1 * rmemory_duy_dzl_z(i,j,k,ispec_CPML) &
+               + PML_duy_dzl(i,j,k) * coef1_1 + PML_duy_dzl_old(i,j,k) * coef2_1
 
-            rmemory_duy_dyl_z(i,j,k,ispec_CPML) = coef0_1 * rmemory_duy_dyl_z(i,j,k,ispec_CPML) &
-                   + PML_duy_dyl(i,j,k) * coef1_1 + PML_duy_dyl_old(i,j,k) * coef2_1
+        rmemory_duy_dyl_z(i,j,k,ispec_CPML) = coef0_1 * rmemory_duy_dyl_z(i,j,k,ispec_CPML) &
+               + PML_duy_dyl(i,j,k) * coef1_1 + PML_duy_dyl_old(i,j,k) * coef2_1
 
-            !---------------------- A20 and A21 --------------------------
-            call ly_parameter_computation(deltat,kappa_y,beta_y,alpha_y, &
-                                            CPML_region_local,A20,A21,&
-                                            coef0_1,coef1_1,coef2_1)
-            rmemory_duz_dzl_x(i,j,k,ispec_CPML) = coef0_1 * rmemory_duz_dzl_x(i,j,k,ispec_CPML) &
-                   + PML_duz_dzl(i,j,k) * coef1_1 + PML_duz_dzl_old(i,j,k) * coef2_1
+        !---------------------- A20 and A21 --------------------------
+        call ly_parameter_computation(deltat,kappa_y,beta_y,alpha_y, &
+                                      CPML_region_local,A20,A21,&
+                                      coef0_1,coef1_1,coef2_1)
+        rmemory_duz_dzl_x(i,j,k,ispec_CPML) = coef0_1 * rmemory_duz_dzl_x(i,j,k,ispec_CPML) &
+               + PML_duz_dzl(i,j,k) * coef1_1 + PML_duz_dzl_old(i,j,k) * coef2_1
 
-            rmemory_duz_dxl_x(i,j,k,ispec_CPML) = coef0_1 * rmemory_duz_dxl_x(i,j,k,ispec_CPML) &
-                   + PML_duz_dxl(i,j,k) * coef1_1 + PML_duz_dxl_old(i,j,k) * coef2_1
+        rmemory_duz_dxl_x(i,j,k,ispec_CPML) = coef0_1 * rmemory_duz_dxl_x(i,j,k,ispec_CPML) &
+               + PML_duz_dxl(i,j,k) * coef1_1 + PML_duz_dxl_old(i,j,k) * coef2_1
 
-            rmemory_dux_dzl_z(i,j,k,ispec_CPML) = coef0_1 * rmemory_dux_dzl_z(i,j,k,ispec_CPML) &
-                   + PML_dux_dzl(i,j,k) * coef1_1 + PML_dux_dzl_old(i,j,k) * coef2_1
+        rmemory_dux_dzl_z(i,j,k,ispec_CPML) = coef0_1 * rmemory_dux_dzl_z(i,j,k,ispec_CPML) &
+               + PML_dux_dzl(i,j,k) * coef1_1 + PML_dux_dzl_old(i,j,k) * coef2_1
 
-            rmemory_dux_dxl_z(i,j,k,ispec_CPML) = coef0_1 * rmemory_dux_dxl_z(i,j,k,ispec_CPML) &
-                   + PML_dux_dxl(i,j,k) * coef1_1 + PML_dux_dxl_old(i,j,k) * coef2_1
+        rmemory_dux_dxl_z(i,j,k,ispec_CPML) = coef0_1 * rmemory_dux_dxl_z(i,j,k,ispec_CPML) &
+               + PML_dux_dxl(i,j,k) * coef1_1 + PML_dux_dxl_old(i,j,k) * coef2_1
 
-            !---------------------- A22 and A23 --------------------------
-            call lz_parameter_computation(deltat,kappa_z,beta_z,alpha_z, &
-                                            CPML_region_local,A22,A23,&
-                                            coef0_1,coef1_1,coef2_1)
-            rmemory_duy_dyl_x(i,j,k,ispec_CPML) = coef0_1 * rmemory_duy_dyl_x(i,j,k,ispec_CPML) &
-                   + PML_duy_dyl(i,j,k) * coef1_1 + PML_duy_dyl_old(i,j,k) * coef2_1
+        !---------------------- A22 and A23 --------------------------
+        call lz_parameter_computation(deltat,kappa_z,beta_z,alpha_z, &
+                                      CPML_region_local,A22,A23,&
+                                      coef0_1,coef1_1,coef2_1)
+        rmemory_duy_dyl_x(i,j,k,ispec_CPML) = coef0_1 * rmemory_duy_dyl_x(i,j,k,ispec_CPML) &
+               + PML_duy_dyl(i,j,k) * coef1_1 + PML_duy_dyl_old(i,j,k) * coef2_1
 
-            rmemory_duy_dxl_x(i,j,k,ispec_CPML) = coef0_1 * rmemory_duy_dxl_x(i,j,k,ispec_CPML) &
-                   + PML_duy_dxl(i,j,k) * coef1_1 + PML_duy_dxl_old(i,j,k) * coef2_1
+        rmemory_duy_dxl_x(i,j,k,ispec_CPML) = coef0_1 * rmemory_duy_dxl_x(i,j,k,ispec_CPML) &
+               + PML_duy_dxl(i,j,k) * coef1_1 + PML_duy_dxl_old(i,j,k) * coef2_1
 
-            rmemory_dux_dyl_y(i,j,k,ispec_CPML) = coef0_1 * rmemory_dux_dyl_y(i,j,k,ispec_CPML) &
-                   + PML_dux_dyl(i,j,k) * coef1_1 + PML_dux_dyl_old(i,j,k) * coef2_1
+        rmemory_dux_dyl_y(i,j,k,ispec_CPML) = coef0_1 * rmemory_dux_dyl_y(i,j,k,ispec_CPML) &
+               + PML_dux_dyl(i,j,k) * coef1_1 + PML_dux_dyl_old(i,j,k) * coef2_1
 
-            rmemory_dux_dxl_y(i,j,k,ispec_CPML) = coef0_1 * rmemory_dux_dxl_y(i,j,k,ispec_CPML) &
-                   + PML_dux_dxl(i,j,k) * coef1_1 + PML_dux_dxl_old(i,j,k) * coef2_1
+        rmemory_dux_dxl_y(i,j,k,ispec_CPML) = coef0_1 * rmemory_dux_dxl_y(i,j,k,ispec_CPML) &
+               + PML_dux_dxl(i,j,k) * coef1_1 + PML_dux_dxl_old(i,j,k) * coef2_1
 
-            duxdxl_x = A6 * PML_dux_dxl(i,j,k) + A7 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,1) &
-                     + A8 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,2) + A9 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,3)
-            duxdyl_x = A10 * PML_dux_dyl(i,j,k) + A11 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,1) &
-                       + A12 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,2) + A13 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,3)
-            duxdzl_x = A14 * PML_dux_dzl(i,j,k) + A15 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,1) &
-                     + A16 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,2) + A17 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,3)
-            duzdzl_x = A20 * PML_duz_dzl(i,j,k) + A21 * rmemory_duz_dzl_x(i,j,k,ispec_CPML)
-            duzdxl_x = A20 * PML_duz_dxl(i,j,k) + A21 * rmemory_duz_dxl_x(i,j,k,ispec_CPML)
-            duydyl_x = A22 * PML_duy_dyl(i,j,k) + A23 * rmemory_duy_dyl_x(i,j,k,ispec_CPML)
-            duydxl_x = A22 * PML_duy_dxl(i,j,k) + A23 * rmemory_duy_dxl_x(i,j,k,ispec_CPML)
+        duxdxl_x = A6 * PML_dux_dxl(i,j,k) + A7 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,1) &
+                 + A8 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,2) + A9 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,3)
+        duxdyl_x = A10 * PML_dux_dyl(i,j,k) + A11 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,1) &
+                   + A12 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,2) + A13 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,3)
+        duxdzl_x = A14 * PML_dux_dzl(i,j,k) + A15 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,1) &
+                 + A16 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,2) + A17 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,3)
+        duzdzl_x = A20 * PML_duz_dzl(i,j,k) + A21 * rmemory_duz_dzl_x(i,j,k,ispec_CPML)
+        duzdxl_x = A20 * PML_duz_dxl(i,j,k) + A21 * rmemory_duz_dxl_x(i,j,k,ispec_CPML)
+        duydyl_x = A22 * PML_duy_dyl(i,j,k) + A23 * rmemory_duy_dyl_x(i,j,k,ispec_CPML)
+        duydxl_x = A22 * PML_duy_dxl(i,j,k) + A23 * rmemory_duy_dxl_x(i,j,k,ispec_CPML)
 
-            duydxl_y = A6 * PML_duy_dxl(i,j,k) + A7 * rmemory_duy_dxl_y(i,j,k,ispec_CPML,1) &
-                     + A8 * rmemory_duy_dxl_y(i,j,k,ispec_CPML,2) + A9 * rmemory_duy_dxl_y(i,j,k,ispec_CPML,3)
-            duydyl_y = A10 * PML_duy_dyl(i,j,k) + A11 * rmemory_duy_dyl_y(i,j,k,ispec_CPML,1) &
-                     + A12 * rmemory_duy_dyl_y(i,j,k,ispec_CPML,2) + A13 * rmemory_duy_dyl_y(i,j,k,ispec_CPML,3)
-            duydzl_y = A14 * PML_duy_dzl(i,j,k) + A15 * rmemory_duy_dzl_y(i,j,k,ispec_CPML,1) &
-                     + A16 * rmemory_duy_dzl_y(i,j,k,ispec_CPML,2) + A17 * rmemory_duy_dzl_y(i,j,k,ispec_CPML,3)
-            duzdzl_y = A18 * PML_duz_dzl(i,j,k) + A19 * rmemory_duz_dzl_y(i,j,k,ispec_CPML)
-            duzdyl_y = A18 * PML_duz_dyl(i,j,k) + A19 * rmemory_duz_dyl_y(i,j,k,ispec_CPML)
-            duxdyl_y = A22 * PML_dux_dyl(i,j,k) + A23 * rmemory_dux_dyl_y(i,j,k,ispec_CPML)
-            duxdxl_y = A22 * PML_dux_dxl(i,j,k) + A23 * rmemory_dux_dxl_y(i,j,k,ispec_CPML)
+        duydxl_y = A6 * PML_duy_dxl(i,j,k) + A7 * rmemory_duy_dxl_y(i,j,k,ispec_CPML,1) &
+                 + A8 * rmemory_duy_dxl_y(i,j,k,ispec_CPML,2) + A9 * rmemory_duy_dxl_y(i,j,k,ispec_CPML,3)
+        duydyl_y = A10 * PML_duy_dyl(i,j,k) + A11 * rmemory_duy_dyl_y(i,j,k,ispec_CPML,1) &
+                 + A12 * rmemory_duy_dyl_y(i,j,k,ispec_CPML,2) + A13 * rmemory_duy_dyl_y(i,j,k,ispec_CPML,3)
+        duydzl_y = A14 * PML_duy_dzl(i,j,k) + A15 * rmemory_duy_dzl_y(i,j,k,ispec_CPML,1) &
+                 + A16 * rmemory_duy_dzl_y(i,j,k,ispec_CPML,2) + A17 * rmemory_duy_dzl_y(i,j,k,ispec_CPML,3)
+        duzdzl_y = A18 * PML_duz_dzl(i,j,k) + A19 * rmemory_duz_dzl_y(i,j,k,ispec_CPML)
+        duzdyl_y = A18 * PML_duz_dyl(i,j,k) + A19 * rmemory_duz_dyl_y(i,j,k,ispec_CPML)
+        duxdyl_y = A22 * PML_dux_dyl(i,j,k) + A23 * rmemory_dux_dyl_y(i,j,k,ispec_CPML)
+        duxdxl_y = A22 * PML_dux_dxl(i,j,k) + A23 * rmemory_dux_dxl_y(i,j,k,ispec_CPML)
 
-            duzdxl_z = A6 * PML_duz_dxl(i,j,k) + A7 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,1) &
-                     + A8 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,2) + A9 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,3)
-            duzdyl_z = A10 * PML_duz_dyl(i,j,k) + A11 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,1) &
-                     + A12 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,2) + A13 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,3)
-            duzdzl_z = A14 * PML_duz_dzl(i,j,k) + A15 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,1) &
-                     + A16 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,2) + A17 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,3)
-            duydzl_z = A18 * PML_duy_dzl(i,j,k) + A19 * rmemory_duy_dzl_z(i,j,k,ispec_CPML)
-            duydyl_z = A18 * PML_duy_dyl(i,j,k) + A19 * rmemory_duy_dyl_z(i,j,k,ispec_CPML)
-            duxdzl_z = A20 * PML_dux_dzl(i,j,k) + A21 * rmemory_dux_dzl_z(i,j,k,ispec_CPML)
-            duxdxl_z = A20 * PML_dux_dxl(i,j,k) + A21 * rmemory_dux_dxl_z(i,j,k,ispec_CPML)
+        duzdxl_z = A6 * PML_duz_dxl(i,j,k) + A7 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,1) &
+                 + A8 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,2) + A9 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,3)
+        duzdyl_z = A10 * PML_duz_dyl(i,j,k) + A11 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,1) &
+                 + A12 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,2) + A13 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,3)
+        duzdzl_z = A14 * PML_duz_dzl(i,j,k) + A15 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,1) &
+                 + A16 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,2) + A17 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,3)
+        duydzl_z = A18 * PML_duy_dzl(i,j,k) + A19 * rmemory_duy_dzl_z(i,j,k,ispec_CPML)
+        duydyl_z = A18 * PML_duy_dyl(i,j,k) + A19 * rmemory_duy_dyl_z(i,j,k,ispec_CPML)
+        duxdzl_z = A20 * PML_dux_dzl(i,j,k) + A21 * rmemory_dux_dzl_z(i,j,k,ispec_CPML)
+        duxdxl_z = A20 * PML_dux_dxl(i,j,k) + A21 * rmemory_dux_dxl_z(i,j,k,ispec_CPML)
 
-            ! compute stress sigma
-            sigma_xx = lambdalplus2mul*duxdxl_x + lambdal*duydyl_x + lambdal*duzdzl_x
-            sigma_yx = mul*duxdyl_x + mul*duydxl_x
-            sigma_zx = mul*duzdxl_x + mul*duxdzl_x
+        ! compute stress sigma
+        sigma_xx = lambdalplus2mul*duxdxl_x + lambdal*duydyl_x + lambdal*duzdzl_x
+        sigma_yx = mul*duxdyl_x + mul*duydxl_x
+        sigma_zx = mul*duzdxl_x + mul*duxdzl_x
 
-            sigma_xy = mul*duxdyl_y + mul*duydxl_y
-            sigma_yy = lambdal*duxdxl_y + lambdalplus2mul*duydyl_y + lambdal*duzdzl_y
-            sigma_zy = mul*duzdyl_y + mul*duydzl_y
+        sigma_xy = mul*duxdyl_y + mul*duydxl_y
+        sigma_yy = lambdal*duxdxl_y + lambdalplus2mul*duydyl_y + lambdal*duzdzl_y
+        sigma_zy = mul*duzdyl_y + mul*duydzl_y
 
-            sigma_xz = mul*duzdxl_z + mul*duxdzl_z
-            sigma_yz = mul*duzdyl_z + mul*duydzl_z
-            sigma_zz = lambdal*duxdxl_z + lambdal*duydyl_z + lambdalplus2mul*duzdzl_z
+        sigma_xz = mul*duzdxl_z + mul*duxdzl_z
+        sigma_yz = mul*duzdyl_z + mul*duydzl_z
+        sigma_zz = lambdal*duxdxl_z + lambdal*duydyl_z + lambdalplus2mul*duzdzl_z
 
-            ! form dot product with test vector, non-symmetric form
-            tempx1(i,j,k) = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl) ! this goes to accel_x
-            tempy1(i,j,k) = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_zy*xizl) ! this goes to accel_y
-            tempz1(i,j,k) = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl) ! this goes to accel_z
+        ! form dot product with test vector, non-symmetric form
+        tempx1(i,j,k) = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl) ! this goes to accel_x
+        tempy1(i,j,k) = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_zy*xizl) ! this goes to accel_y
+        tempz1(i,j,k) = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl) ! this goes to accel_z
 
-            tempx2(i,j,k) = jacobianl * (sigma_xx*etaxl + sigma_yx*etayl + sigma_zx*etazl) ! this goes to accel_x
-            tempy2(i,j,k) = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_zy*etazl) ! this goes to accel_y
-            tempz2(i,j,k) = jacobianl * (sigma_xz*etaxl + sigma_yz*etayl + sigma_zz*etazl) ! this goes to accel_z
+        tempx2(i,j,k) = jacobianl * (sigma_xx*etaxl + sigma_yx*etayl + sigma_zx*etazl) ! this goes to accel_x
+        tempy2(i,j,k) = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_zy*etazl) ! this goes to accel_y
+        tempz2(i,j,k) = jacobianl * (sigma_xz*etaxl + sigma_yz*etayl + sigma_zz*etazl) ! this goes to accel_z
 
-            tempx3(i,j,k) = jacobianl * (sigma_xx*gammaxl + sigma_yx*gammayl + sigma_zx*gammazl) ! this goes to accel_x
-            tempy3(i,j,k) = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_zy*gammazl) ! this goes to accel_y
-            tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl) ! this goes to accel_z
+        tempx3(i,j,k) = jacobianl * (sigma_xx*gammaxl + sigma_yx*gammayl + sigma_zx*gammazl) ! this goes to accel_x
+        tempy3(i,j,k) = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_zy*gammazl) ! this goes to accel_y
+        tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl) ! this goes to accel_z
 
-          enddo
       enddo
+    enddo
   enddo
 
 end subroutine pml_compute_memory_variables_elastic
@@ -430,8 +429,7 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
                      PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl,&
                      PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old
 
-  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS,USE_DEVILLE_PRODUCTS, &
-                       CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,USE_DEVILLE_PRODUCTS
 
   implicit none
 
@@ -458,172 +456,171 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
   CPML_region_local = CPML_regions(ispec_CPML)
 
   do k=1,NGLLZ
-     do j=1,NGLLY
-         do i=1,NGLLX
-            xixl = xix(i,j,k,ispec)
-            xiyl = xiy(i,j,k,ispec)
-            xizl = xiz(i,j,k,ispec)
-            etaxl = etax(i,j,k,ispec)
-            etayl = etay(i,j,k,ispec)
-            etazl = etaz(i,j,k,ispec)
-            gammaxl = gammax(i,j,k,ispec)
-            gammayl = gammay(i,j,k,ispec)
-            gammazl = gammaz(i,j,k,ispec)
-            jacobianl = jacobian(i,j,k,ispec)
-            rho_invl_jacob = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec) * jacobianl
-            if(USE_DEVILLE_PRODUCTS) then
-              rhoin_jacob_jk = rho_invl_jacob
-              rhoin_jacob_ik = rho_invl_jacob
-              rhoin_jacob_ij = rho_invl_jacob
-            else
-              rhoin_jacob_jk = rho_invl_jacob * wgllwgll_yz(j,k)
-              rhoin_jacob_ik = rho_invl_jacob * wgllwgll_xz(i,k)
-              rhoin_jacob_ij = rho_invl_jacob * wgllwgll_xy(i,j)
-            endif
+    do j=1,NGLLY
+      do i=1,NGLLX
+        xixl = xix(i,j,k,ispec)
+        xiyl = xiy(i,j,k,ispec)
+        xizl = xiz(i,j,k,ispec)
+        etaxl = etax(i,j,k,ispec)
+        etayl = etay(i,j,k,ispec)
+        etazl = etaz(i,j,k,ispec)
+        gammaxl = gammax(i,j,k,ispec)
+        gammayl = gammay(i,j,k,ispec)
+        gammazl = gammaz(i,j,k,ispec)
+        jacobianl = jacobian(i,j,k,ispec)
+        rho_invl_jacob = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec) * jacobianl
+        if (USE_DEVILLE_PRODUCTS) then
+          rhoin_jacob_jk = rho_invl_jacob
+          rhoin_jacob_ik = rho_invl_jacob
+          rhoin_jacob_ij = rho_invl_jacob
+        else
+          rhoin_jacob_jk = rho_invl_jacob * wgllwgll_yz(j,k)
+          rhoin_jacob_ik = rho_invl_jacob * wgllwgll_xz(i,k)
+          rhoin_jacob_ij = rho_invl_jacob * wgllwgll_xy(i,j)
+        endif
 
-            kappa_x = k_store_x(i,j,k,ispec_CPML)
-            kappa_y = k_store_y(i,j,k,ispec_CPML)
-            kappa_z = k_store_z(i,j,k,ispec_CPML)
-            d_x = d_store_x(i,j,k,ispec_CPML)
-            d_y = d_store_y(i,j,k,ispec_CPML)
-            d_z = d_store_z(i,j,k,ispec_CPML)
-            alpha_x = alpha_store_x(i,j,k,ispec_CPML)
-            alpha_y = alpha_store_y(i,j,k,ispec_CPML)
-            alpha_z = alpha_store_z(i,j,k,ispec_CPML)
-            beta_x = alpha_x + d_x / kappa_x
-            beta_y = alpha_y + d_y / kappa_y
-            beta_z = alpha_z + d_z / kappa_z
-            time_nplus1 = (it-1) * deltat
-            time_n = (it-2) * deltat
+        kappa_x = k_store_x(i,j,k,ispec_CPML)
+        kappa_y = k_store_y(i,j,k,ispec_CPML)
+        kappa_z = k_store_z(i,j,k,ispec_CPML)
+        d_x = d_store_x(i,j,k,ispec_CPML)
+        d_y = d_store_y(i,j,k,ispec_CPML)
+        d_z = d_store_z(i,j,k,ispec_CPML)
+        alpha_x = alpha_store_x(i,j,k,ispec_CPML)
+        alpha_y = alpha_store_y(i,j,k,ispec_CPML)
+        alpha_z = alpha_store_z(i,j,k,ispec_CPML)
+        beta_x = alpha_x + d_x / kappa_x
+        beta_y = alpha_y + d_y / kappa_y
+        beta_z = alpha_z + d_z / kappa_z
+        time_nplus1 = (it-1) * deltat
+        time_n = (it-2) * deltat
 
-            !---------------------- A6, A7, A8, A9 --------------------------
-            call lijk_parameter_computation(time_nplus1,deltat,&
-                                           kappa_z,beta_z,alpha_z,kappa_y,beta_y,alpha_y,kappa_x,beta_x,alpha_x,&
-                                           CPML_region_local,231,A6,A7,A8,A9,&
-                                           coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,&
-                                           coef0_3,coef1_3,coef2_3,singularity_type_2,singularity_type_3)
-
-
-            rmemory_dpotential_dxl(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,1) + &
-                   coef1_1 * PML_dpotential_dxl(i,j,k) + coef2_1 * PML_dpotential_dxl_old(i,j,k)
-
-            if(singularity_type_2 == 0)then
-              rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) + &
-                     coef1_2 * PML_dpotential_dxl(i,j,k) + coef2_2 * PML_dpotential_dxl_old(i,j,k)
-            else if(singularity_type_2 == 1)then
-              rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) + &
-                     coef1_2 * time_nplus1 * PML_dpotential_dxl(i,j,k) + &
-                     coef2_2 * time_n * PML_dpotential_dxl_old(i,j,k)
-            else
-              stop 'error in singularity_type_2 computation in acoustic part 231'
-            endif
-
-            if(singularity_type_3 == 0)then
-              rmemory_dpotential_dxl(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,3) + &
-                     coef1_3 * PML_dpotential_dxl(i,j,k) + coef2_3 * PML_dpotential_dxl_old(i,j,k)
-            else if(singularity_type_3 == 1)then
-              rmemory_dpotential_dxl(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,3) + &
-                     coef1_3 * time_nplus1 * PML_dpotential_dxl(i,j,k) + &
-                     coef2_3 * time_n * PML_dpotential_dxl_old(i,j,k)
-            else if(singularity_type_3 == 2)then
-              rmemory_dpotential_dxl(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,3) + &
-                     coef1_3 * time_nplus1**2 * PML_dpotential_dxl(i,j,k) + &
-                     coef2_3 * time_n**2 * PML_dpotential_dxl_old(i,j,k)
-            else
-              stop 'error in singularity_type_3 computation in acoustic part 231'
-            endif
-
-            !---------------------- A10,A11,A12,A13 --------------------------
-            call lijk_parameter_computation(time_nplus1,deltat,&
-                                           kappa_x,beta_x,alpha_x,kappa_z,beta_z,alpha_z,kappa_y,beta_y,alpha_y,&
-                                           CPML_region_local,132,A10,A11,A12,A13,&
-                                           coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,&
-                                           coef0_3,coef1_3,coef2_3,singularity_type_2,singularity_type_3)
-
-            rmemory_dpotential_dyl(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,1) + &
-                   coef1_1 * PML_dpotential_dyl(i,j,k) + coef2_1 * PML_dpotential_dyl_old(i,j,k)
-
-            if(singularity_type_2 == 0)then
-              rmemory_dpotential_dyl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,2) + &
-                     coef1_2 * PML_dpotential_dyl(i,j,k) + coef2_2 * PML_dpotential_dyl_old(i,j,k)
-            else if(singularity_type_2 == 1)then
-              rmemory_dpotential_dyl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,2) + &
-                     coef1_2 * time_nplus1 * PML_dpotential_dyl(i,j,k) + &
-                     coef2_2 * time_n * PML_dpotential_dyl_old(i,j,k)
-            else
-              stop 'error in singularity_type_2 computation in acoustic part,132'
-            endif
-
-            if(singularity_type_3 == 0)then
-              rmemory_dpotential_dyl(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,3) + &
-                     coef1_3 * PML_dpotential_dyl(i,j,k) + coef2_3 * PML_dpotential_dyl_old(i,j,k)
-            else if(singularity_type_3 == 1)then
-              rmemory_dpotential_dyl(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,3) + &
-                     coef1_3 * time_nplus1 * PML_dpotential_dyl(i,j,k) + &
-                     coef2_3 * time_n * PML_dpotential_dyl_old(i,j,k)
-            else if(singularity_type_3 == 2)then
-              rmemory_dpotential_dyl(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,3) + &
-                     coef1_3 * time_nplus1**2 * PML_dpotential_dyl(i,j,k) + &
-                     coef2_3 * time_n**2 * PML_dpotential_dyl_old(i,j,k)
-            else
-              stop 'error in singularity_type_3 computation in acoustic part,132'
-            endif
-
-            !---------------------- A14,A15,A16,A17 --------------------------
-            call lijk_parameter_computation(time_nplus1,deltat,&
-                                           kappa_x,beta_x,alpha_x,kappa_y,beta_y,alpha_y,kappa_z,beta_z,alpha_z,&
-                                           CPML_region_local,123,A14,A15,A16,A17,&
-                                           coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,&
-                                           coef0_3,coef1_3,coef2_3,singularity_type_2,singularity_type_3)
-
-            rmemory_dpotential_dzl(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,1) + &
-                   coef1_1 * PML_dpotential_dzl(i,j,k) + coef2_1 * PML_dpotential_dzl_old(i,j,k)
-
-            if(singularity_type_2 == 0)then
-              rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) + &
-                     coef1_2 * PML_dpotential_dzl(i,j,k) + coef2_2 * PML_dpotential_dzl_old(i,j,k)
-            else if(singularity_type_2 == 1)then
-              rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) + &
-                     coef1_2 * time_nplus1 * PML_dpotential_dzl(i,j,k) + &
-                     coef2_2 * time_n * PML_dpotential_dzl_old(i,j,k)
-            else
-              stop 'error in singularity_type_2 computation in acoustic part,123'
-            endif
-
-            if(singularity_type_3 == 0)then
-              rmemory_dpotential_dzl(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,3) + &
-                     coef1_3 * PML_dpotential_dzl(i,j,k) + coef2_3 * PML_dpotential_dzl_old(i,j,k)
-            else if(singularity_type_3 == 1)then
-              rmemory_dpotential_dzl(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,3) + &
-                     coef1_3 * time_nplus1 * PML_dpotential_dzl(i,j,k) + &
-                     coef2_3 * time_n * PML_dpotential_dzl_old(i,j,k)
-            else if(singularity_type_3 == 2)then
-              rmemory_dpotential_dzl(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,3) + &
-                     coef1_3 * time_nplus1**2 * PML_dpotential_dzl(i,j,k) + &
-                     coef2_3 * time_n**2 * PML_dpotential_dzl_old(i,j,k)
-            else
-              stop 'error in singularity_type_3 computation,123'
-            endif
+        !---------------------- A6, A7, A8, A9 --------------------------
+        call lijk_parameter_computation(time_nplus1,deltat,&
+                                        kappa_z,beta_z,alpha_z,kappa_y,beta_y,alpha_y,kappa_x,beta_x,alpha_x,&
+                                        CPML_region_local,231,A6,A7,A8,A9,&
+                                        coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,&
+                                        coef0_3,coef1_3,coef2_3,singularity_type_2,singularity_type_3)
 
 
-            dpotentialdxl = A6 * PML_dpotential_dxl(i,j,k)  + &
-                            A7 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,1) + &
-                            A8 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) + &
-                            A9 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,3)
-            dpotentialdyl = A10 * PML_dpotential_dyl(i,j,k) + &
-                            A11 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,1) + &
-                            A12 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,2) + &
-                            A13 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,3)
-            dpotentialdzl = A14 * PML_dpotential_dzl(i,j,k) + &
-                            A15 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,1) + &
-                            A16 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) + &
-                            A17 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,3)
-            temp1(i,j,k) = rhoin_jacob_jk * (xixl*dpotentialdxl + xiyl*dpotentialdyl + xizl*dpotentialdzl)
-            temp2(i,j,k) = rhoin_jacob_ik * (etaxl*dpotentialdxl + etayl*dpotentialdyl + etazl*dpotentialdzl)
-            temp3(i,j,k) = rhoin_jacob_ij * (gammaxl*dpotentialdxl + gammayl*dpotentialdyl + gammazl*dpotentialdzl)
+        rmemory_dpotential_dxl(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,1) + &
+               coef1_1 * PML_dpotential_dxl(i,j,k) + coef2_1 * PML_dpotential_dxl_old(i,j,k)
 
-          enddo
+        if (singularity_type_2 == 0) then
+          rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) + &
+                 coef1_2 * PML_dpotential_dxl(i,j,k) + coef2_2 * PML_dpotential_dxl_old(i,j,k)
+        else if (singularity_type_2 == 1) then
+          rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) + &
+                 coef1_2 * time_nplus1 * PML_dpotential_dxl(i,j,k) + &
+                 coef2_2 * time_n * PML_dpotential_dxl_old(i,j,k)
+        else
+          stop 'error in singularity_type_2 computation in acoustic part 231'
+        endif
+
+        if (singularity_type_3 == 0) then
+          rmemory_dpotential_dxl(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,3) + &
+                 coef1_3 * PML_dpotential_dxl(i,j,k) + coef2_3 * PML_dpotential_dxl_old(i,j,k)
+        else if (singularity_type_3 == 1) then
+          rmemory_dpotential_dxl(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,3) + &
+                 coef1_3 * time_nplus1 * PML_dpotential_dxl(i,j,k) + &
+                 coef2_3 * time_n * PML_dpotential_dxl_old(i,j,k)
+        else if (singularity_type_3 == 2) then
+          rmemory_dpotential_dxl(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,3) + &
+                 coef1_3 * time_nplus1**2 * PML_dpotential_dxl(i,j,k) + &
+                 coef2_3 * time_n**2 * PML_dpotential_dxl_old(i,j,k)
+        else
+          stop 'error in singularity_type_3 computation in acoustic part 231'
+        endif
+
+        !---------------------- A10,A11,A12,A13 --------------------------
+        call lijk_parameter_computation(time_nplus1,deltat,&
+                                        kappa_x,beta_x,alpha_x,kappa_z,beta_z,alpha_z,kappa_y,beta_y,alpha_y,&
+                                        CPML_region_local,132,A10,A11,A12,A13,&
+                                        coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,&
+                                        coef0_3,coef1_3,coef2_3,singularity_type_2,singularity_type_3)
+
+        rmemory_dpotential_dyl(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,1) + &
+               coef1_1 * PML_dpotential_dyl(i,j,k) + coef2_1 * PML_dpotential_dyl_old(i,j,k)
+
+        if (singularity_type_2 == 0) then
+          rmemory_dpotential_dyl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,2) + &
+                 coef1_2 * PML_dpotential_dyl(i,j,k) + coef2_2 * PML_dpotential_dyl_old(i,j,k)
+        else if (singularity_type_2 == 1) then
+          rmemory_dpotential_dyl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,2) + &
+                 coef1_2 * time_nplus1 * PML_dpotential_dyl(i,j,k) + &
+                 coef2_2 * time_n * PML_dpotential_dyl_old(i,j,k)
+        else
+          stop 'error in singularity_type_2 computation in acoustic part,132'
+        endif
+
+        if (singularity_type_3 == 0) then
+          rmemory_dpotential_dyl(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,3) + &
+                 coef1_3 * PML_dpotential_dyl(i,j,k) + coef2_3 * PML_dpotential_dyl_old(i,j,k)
+        else if (singularity_type_3 == 1) then
+          rmemory_dpotential_dyl(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,3) + &
+                 coef1_3 * time_nplus1 * PML_dpotential_dyl(i,j,k) + &
+                 coef2_3 * time_n * PML_dpotential_dyl_old(i,j,k)
+        else if (singularity_type_3 == 2) then
+          rmemory_dpotential_dyl(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,3) + &
+                 coef1_3 * time_nplus1**2 * PML_dpotential_dyl(i,j,k) + &
+                 coef2_3 * time_n**2 * PML_dpotential_dyl_old(i,j,k)
+        else
+          stop 'error in singularity_type_3 computation in acoustic part,132'
+        endif
+
+        !---------------------- A14,A15,A16,A17 --------------------------
+        call lijk_parameter_computation(time_nplus1,deltat,&
+                                        kappa_x,beta_x,alpha_x,kappa_y,beta_y,alpha_y,kappa_z,beta_z,alpha_z,&
+                                        CPML_region_local,123,A14,A15,A16,A17,&
+                                        coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,&
+                                        coef0_3,coef1_3,coef2_3,singularity_type_2,singularity_type_3)
+
+        rmemory_dpotential_dzl(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,1) + &
+               coef1_1 * PML_dpotential_dzl(i,j,k) + coef2_1 * PML_dpotential_dzl_old(i,j,k)
+
+        if (singularity_type_2 == 0) then
+          rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) + &
+                 coef1_2 * PML_dpotential_dzl(i,j,k) + coef2_2 * PML_dpotential_dzl_old(i,j,k)
+        else if (singularity_type_2 == 1) then
+          rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) + &
+                 coef1_2 * time_nplus1 * PML_dpotential_dzl(i,j,k) + &
+                 coef2_2 * time_n * PML_dpotential_dzl_old(i,j,k)
+        else
+          stop 'error in singularity_type_2 computation in acoustic part,123'
+        endif
+
+        if (singularity_type_3 == 0) then
+          rmemory_dpotential_dzl(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,3) + &
+                 coef1_3 * PML_dpotential_dzl(i,j,k) + coef2_3 * PML_dpotential_dzl_old(i,j,k)
+        else if (singularity_type_3 == 1) then
+          rmemory_dpotential_dzl(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,3) + &
+                 coef1_3 * time_nplus1 * PML_dpotential_dzl(i,j,k) + &
+                 coef2_3 * time_n * PML_dpotential_dzl_old(i,j,k)
+        else if (singularity_type_3 == 2) then
+          rmemory_dpotential_dzl(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,3) + &
+                 coef1_3 * time_nplus1**2 * PML_dpotential_dzl(i,j,k) + &
+                 coef2_3 * time_n**2 * PML_dpotential_dzl_old(i,j,k)
+        else
+          stop 'error in singularity_type_3 computation,123'
+        endif
+
+        dpotentialdxl = A6 * PML_dpotential_dxl(i,j,k)  + &
+                        A7 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,1) + &
+                        A8 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) + &
+                        A9 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,3)
+        dpotentialdyl = A10 * PML_dpotential_dyl(i,j,k) + &
+                        A11 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,1) + &
+                        A12 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,2) + &
+                        A13 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,3)
+        dpotentialdzl = A14 * PML_dpotential_dzl(i,j,k) + &
+                        A15 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,1) + &
+                        A16 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) + &
+                        A17 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,3)
+        temp1(i,j,k) = rhoin_jacob_jk * (xixl*dpotentialdxl + xiyl*dpotentialdyl + xizl*dpotentialdzl)
+        temp2(i,j,k) = rhoin_jacob_ik * (etaxl*dpotentialdxl + etayl*dpotentialdyl + etazl*dpotentialdzl)
+        temp3(i,j,k) = rhoin_jacob_ij * (gammaxl*dpotentialdxl + gammayl*dpotentialdyl + gammazl*dpotentialdzl)
+
       enddo
+    enddo
   enddo
 
 end subroutine pml_compute_memory_variables_acoustic
@@ -643,8 +640,7 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
   use specfem_par, only: NGLOB_AB,it,deltat
   use pml_par,only : CPML_regions,k_store_x,k_store_y,k_store_z,d_store_x,d_store_y,d_store_z,&
                      alpha_store_x,alpha_store_y,alpha_store_z,displ_old
-  use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ,&
-                       CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
+  use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ
 
   implicit none
 
@@ -746,8 +742,7 @@ subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,
   use specfem_par, only: NGLOB_AB,it,deltat
   use pml_par,only : CPML_regions,k_store_x,k_store_y,k_store_z,d_store_x,d_store_y,d_store_z,&
                      alpha_store_x,alpha_store_y,alpha_store_z
-  use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ,&
-                       CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
 
   implicit none
 
@@ -1141,62 +1136,62 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,beta_x,alpha_x,kapp
   bb = alpha_x
   coef0_1 = exp(- bb * deltat)
 
-  if ( abs(bb) > 1.e-5_CUSTOM_REAL ) then
-     if ( FIRST_ORDER_CONVOLUTION ) then
-        coef1_1 = ( 1._CUSTOM_REAL - exp(- bb * deltat) ) / bb
-        coef2_1 = 0._CUSTOM_REAL
-     else
-        coef1_1 = ( 1._CUSTOM_REAL - exp(- bb * deltat / 2._CUSTOM_REAL) ) / bb
-        coef2_1 = ( 1._CUSTOM_REAL - exp(- bb * deltat / 2._CUSTOM_REAL) ) * exp(- bb * deltat / 2._CUSTOM_REAL) / bb
-     endif
+  if (abs(bb) > 1.e-5_CUSTOM_REAL) then
+    if (FIRST_ORDER_CONVOLUTION) then
+      coef1_1 = ( 1._CUSTOM_REAL - exp(- bb * deltat) ) / bb
+      coef2_1 = 0._CUSTOM_REAL
+    else
+      coef1_1 = ( 1._CUSTOM_REAL - exp(- bb * deltat / 2._CUSTOM_REAL) ) / bb
+      coef2_1 = ( 1._CUSTOM_REAL - exp(- bb * deltat / 2._CUSTOM_REAL) ) * exp(- bb * deltat / 2._CUSTOM_REAL) / bb
+    endif
   else
-     if ( FIRST_ORDER_CONVOLUTION ) then
-        coef1_1 = deltat
-        coef2_1 = 0._CUSTOM_REAL
-     else
-        coef1_1 = deltat / 2._CUSTOM_REAL
-        coef2_1 = deltat / 2._CUSTOM_REAL
-     endif
+    if (FIRST_ORDER_CONVOLUTION) then
+      coef1_1 = deltat
+      coef2_1 = 0._CUSTOM_REAL
+    else
+      coef1_1 = deltat / 2._CUSTOM_REAL
+      coef2_1 = deltat / 2._CUSTOM_REAL
+    endif
   endif
 
   bb = alpha_y
   coef0_2 = exp(- bb * deltat)
-  if( abs(bb) > 1.e-5_CUSTOM_REAL ) then
-     if ( FIRST_ORDER_CONVOLUTION ) then
-        coef1_2 = ( 1._CUSTOM_REAL - exp(- bb * deltat) ) / bb
-        coef2_2 = 0._CUSTOM_REAL
-     else
-        coef1_2 = ( 1._CUSTOM_REAL - exp(- bb * deltat / 2._CUSTOM_REAL) ) / bb
-        coef2_2 = ( 1._CUSTOM_REAL - exp(- bb * deltat / 2._CUSTOM_REAL) ) * exp(- bb * deltat / 2._CUSTOM_REAL) / bb
-     endif
+  if (abs(bb) > 1.e-5_CUSTOM_REAL) then
+    if (FIRST_ORDER_CONVOLUTION) then
+      coef1_2 = ( 1._CUSTOM_REAL - exp(- bb * deltat) ) / bb
+      coef2_2 = 0._CUSTOM_REAL
+    else
+      coef1_2 = ( 1._CUSTOM_REAL - exp(- bb * deltat / 2._CUSTOM_REAL) ) / bb
+      coef2_2 = ( 1._CUSTOM_REAL - exp(- bb * deltat / 2._CUSTOM_REAL) ) * exp(- bb * deltat / 2._CUSTOM_REAL) / bb
+    endif
   else
-     if ( FIRST_ORDER_CONVOLUTION ) then
-        coef1_2 = deltat
-        coef2_2 = 0._CUSTOM_REAL
-     else
-        coef1_2 = deltat / 2._CUSTOM_REAL
-        coef2_2 = deltat / 2._CUSTOM_REAL
-     endif
+    if (FIRST_ORDER_CONVOLUTION) then
+      coef1_2 = deltat
+      coef2_2 = 0._CUSTOM_REAL
+    else
+      coef1_2 = deltat / 2._CUSTOM_REAL
+      coef2_2 = deltat / 2._CUSTOM_REAL
+    endif
   endif
 
   bb = beta_z
   coef0_3 = exp(- bb * deltat)
-  if( abs(bb) > 1.e-5_CUSTOM_REAL ) then
-     if ( FIRST_ORDER_CONVOLUTION ) then
-        coef1_3 = ( 1._CUSTOM_REAL - exp(- bb * deltat) ) / bb
-        coef2_3 = 0._CUSTOM_REAL
-     else
-        coef1_3 = ( 1._CUSTOM_REAL - exp(- bb * deltat / 2._CUSTOM_REAL) ) / bb
-        coef2_3 = ( 1._CUSTOM_REAL - exp(- bb * deltat / 2._CUSTOM_REAL) ) * exp(- bb * deltat / 2._CUSTOM_REAL) / bb
-     endif
+  if (abs(bb) > 1.e-5_CUSTOM_REAL) then
+    if (FIRST_ORDER_CONVOLUTION) then
+      coef1_3 = ( 1._CUSTOM_REAL - exp(- bb * deltat) ) / bb
+      coef2_3 = 0._CUSTOM_REAL
+    else
+      coef1_3 = ( 1._CUSTOM_REAL - exp(- bb * deltat / 2._CUSTOM_REAL) ) / bb
+      coef2_3 = ( 1._CUSTOM_REAL - exp(- bb * deltat / 2._CUSTOM_REAL) ) * exp(- bb * deltat / 2._CUSTOM_REAL) / bb
+    endif
   else
-     if ( FIRST_ORDER_CONVOLUTION ) then
-        coef1_3 = deltat
-        coef2_3 = 0._CUSTOM_REAL
-     else
-        coef1_3 = deltat / 2._CUSTOM_REAL
-        coef2_3 = deltat / 2._CUSTOM_REAL
-     endif
+    if (FIRST_ORDER_CONVOLUTION) then
+      coef1_3 = deltat
+      coef2_3 = 0._CUSTOM_REAL
+    else
+      coef1_3 = deltat / 2._CUSTOM_REAL
+      coef2_3 = deltat / 2._CUSTOM_REAL
+    endif
   endif
 
 end subroutine lijk_parameter_computation
@@ -1621,42 +1616,42 @@ subroutine lxy_interface_parameter_computation(timeval,deltat,kappa_x,beta_x,alp
   bb = alpha_x
   coef0_1 = exp(- bb * deltat)
 
-  if ( abs(bb) > 1.e-5_CUSTOM_REAL ) then
-     if ( FIRST_ORDER_CONVOLUTION ) then
-        coef1_1 = ( 1._CUSTOM_REAL - exp(- bb * deltat) ) / bb
-        coef2_1 = 0._CUSTOM_REAL
-     else
-        coef1_1 = ( 1._CUSTOM_REAL - exp(- bb * deltat / 2._CUSTOM_REAL) ) / bb
-        coef2_1 = ( 1._CUSTOM_REAL - exp(- bb * deltat / 2._CUSTOM_REAL) ) * exp(- bb * deltat / 2._CUSTOM_REAL) / bb
-     endif
+  if (abs(bb) > 1.e-5_CUSTOM_REAL) then
+    if (FIRST_ORDER_CONVOLUTION) then
+      coef1_1 = ( 1._CUSTOM_REAL - exp(- bb * deltat) ) / bb
+      coef2_1 = 0._CUSTOM_REAL
+    else
+      coef1_1 = ( 1._CUSTOM_REAL - exp(- bb * deltat / 2._CUSTOM_REAL) ) / bb
+      coef2_1 = ( 1._CUSTOM_REAL - exp(- bb * deltat / 2._CUSTOM_REAL) ) * exp(- bb * deltat / 2._CUSTOM_REAL) / bb
+    endif
   else
-     if ( FIRST_ORDER_CONVOLUTION ) then
-        coef1_1 = deltat
-        coef2_1 = 0._CUSTOM_REAL
-     else
-        coef1_1 = deltat / 2._CUSTOM_REAL
-        coef2_1 = deltat / 2._CUSTOM_REAL
-     endif
+    if (FIRST_ORDER_CONVOLUTION) then
+      coef1_1 = deltat
+      coef2_1 = 0._CUSTOM_REAL
+    else
+      coef1_1 = deltat / 2._CUSTOM_REAL
+      coef2_1 = deltat / 2._CUSTOM_REAL
+    endif
   endif
 
   bb = alpha_y
   coef0_2 = exp(- bb * deltat)
-  if( abs(bb) > 1.e-5_CUSTOM_REAL ) then
-     if ( FIRST_ORDER_CONVOLUTION ) then
-        coef1_2 = ( 1._CUSTOM_REAL - exp(- bb * deltat) ) / bb
-        coef2_2 = 0._CUSTOM_REAL
-     else
-        coef1_2 = ( 1._CUSTOM_REAL - exp(- bb * deltat / 2._CUSTOM_REAL) ) / bb
-        coef2_2 = ( 1._CUSTOM_REAL - exp(- bb * deltat / 2._CUSTOM_REAL) ) * exp(- bb * deltat / 2._CUSTOM_REAL) / bb
-     endif
+  if (abs(bb) > 1.e-5_CUSTOM_REAL) then
+    if (FIRST_ORDER_CONVOLUTION) then
+      coef1_2 = ( 1._CUSTOM_REAL - exp(- bb * deltat) ) / bb
+      coef2_2 = 0._CUSTOM_REAL
+    else
+      coef1_2 = ( 1._CUSTOM_REAL - exp(- bb * deltat / 2._CUSTOM_REAL) ) / bb
+      coef2_2 = ( 1._CUSTOM_REAL - exp(- bb * deltat / 2._CUSTOM_REAL) ) * exp(- bb * deltat / 2._CUSTOM_REAL) / bb
+    endif
   else
-     if ( FIRST_ORDER_CONVOLUTION ) then
-        coef1_2 = deltat
-        coef2_2 = 0._CUSTOM_REAL
-     else
-        coef1_2 = deltat / 2._CUSTOM_REAL
-        coef2_2 = deltat / 2._CUSTOM_REAL
-     endif
+    if (FIRST_ORDER_CONVOLUTION) then
+      coef1_2 = deltat
+      coef2_2 = 0._CUSTOM_REAL
+    else
+      coef1_2 = deltat / 2._CUSTOM_REAL
+      coef2_2 = deltat / 2._CUSTOM_REAL
+    endif
   endif
 
 end subroutine lxy_interface_parameter_computation

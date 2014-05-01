@@ -61,32 +61,32 @@
   ! assigns model parameters
   if( depth >= 32000.0 ) then
     ! moho
-    vp=7.8d0
-    vs=4.5d0
-    rho=3.0d0
+    vp=7.8_CUSTOM_REAL
+    vs=4.5_CUSTOM_REAL
+    rho=3.0_CUSTOM_REAL
   else if( depth > 16000.0 ) then
     ! moho - 16km
-    vp=6.7d0
-    vs=3.87d0
-    rho=2.8d0
+    vp=6.7_CUSTOM_REAL
+    vs=3.87_CUSTOM_REAL
+    rho=2.8_CUSTOM_REAL
   else if( depth > 5500.0 ) then
     ! basement
-    vp=6.3d0
-    vs=3.64d0
-    rho=2.67d0
+    vp=6.3_CUSTOM_REAL
+    vs=3.64_CUSTOM_REAL
+    rho=2.67_CUSTOM_REAL
   else
     ! up to topo surface
-    vp=5.5d0
-    vs=3.18d0
-    rho=2.4d0
+    vp=5.5_CUSTOM_REAL
+    vs=3.18_CUSTOM_REAL
+    rho=2.4_CUSTOM_REAL
   endif
 
   ! scale to standard units
-  vp = vp * 1000.d0
-  vs = vs * 1000.d0
-  rho = rho * 1000.d0
+  vp = vp * 1000._CUSTOM_REAL
+  vs = vs * 1000._CUSTOM_REAL
+  rho = rho * 1000._CUSTOM_REAL
 
   ! no attenuation information
-  qmu_atten = 0.d0
+  qmu_atten = 0._CUSTOM_REAL
 
   end subroutine model_1D_socal

@@ -69,17 +69,17 @@
 
       ! this transfers fields only in elements with stations for efficiency
       if( ELASTIC_SIMULATION ) then
-         if(USE_CUDA_SEISMOGRAMS) then
-            call transfer_seismograms_el_from_d(nrec_local,Mesh_pointer, &
-                                               seismograms_d,seismograms_v,seismograms_a,&
-                                               it)
-         else
-            call transfer_station_el_from_device(displ,veloc,accel, &
-                                                b_displ,b_veloc,b_accel, &
-                                                Mesh_pointer,number_receiver_global, &
-                                                ispec_selected_rec,ispec_selected_source, &
-                                                ibool)
-         endif
+        if (USE_CUDA_SEISMOGRAMS) then
+          call transfer_seismograms_el_from_d(nrec_local,Mesh_pointer, &
+                                             seismograms_d,seismograms_v,seismograms_a,&
+                                             it)
+        else
+          call transfer_station_el_from_device(displ,veloc,accel, &
+                                              b_displ,b_veloc,b_accel, &
+                                              Mesh_pointer,number_receiver_global, &
+                                              ispec_selected_rec,ispec_selected_source, &
+                                              ibool)
+        endif
         ! alternative: transfers whole fields
         !  call transfer_fields_el_from_device(NDIM*NGLOB_AB,displ,veloc, accel, Mesh_pointer)
       endif
@@ -141,10 +141,9 @@
                           dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
         endif ! acoustic
 
-       ! poroelastic wave field
+        ! poroelastic wave field
         if( ispec_is_poroelastic(ispec) ) then
           ! interpolates displ/veloc/accel at receiver locations
-        !  call compute_interpolated_dva(displw_poroelastic,velocw_poroelastic,accelw_poroelastic,NGLOB_AB, &
           call compute_interpolated_dva(displs_poroelastic,velocs_poroelastic,accels_poroelastic,NGLOB_AB, &
                           ispec,NSPEC_AB,ibool, &
                           xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
@@ -304,7 +303,7 @@
   ! write ONE binary file for all receivers (nrec_local) within one proc
   ! SU format, with 240-byte-header for each trace
   if ((mod(it,NTSTEP_BETWEEN_OUTPUT_SEISMOS) == 0 .or. it==NSTEP) .and. SU_FORMAT) &
-     call write_output_SU()
+    call write_output_SU()
 
   end subroutine write_seismograms
 
@@ -451,21 +450,21 @@
       if(total_seismos /= nrec) call exit_MPI(myrank,'incorrect total number of receivers saved')
 
     else  ! on the nodes, send the seismograms to the master
-       receiver = 0
-       tmp_nrec_local(1) = nrec_local
-       call send_i(tmp_nrec_local,1,receiver,itag)
-       if (nrec_local > 0) then
-         do irec_local = 1,nrec_local
-           ! get global number of that receiver
-           irec = number_receiver_global(irec_local)
-           tmp_irec(1) = irec
-           call send_i(tmp_irec,1,receiver,itag)
+      receiver = 0
+      tmp_nrec_local(1) = nrec_local
+      call send_i(tmp_nrec_local,1,receiver,itag)
+      if (nrec_local > 0) then
+        do irec_local = 1,nrec_local
+          ! get global number of that receiver
+          irec = number_receiver_global(irec_local)
+          tmp_irec(1) = irec
+          call send_i(tmp_irec,1,receiver,itag)
 
-           ! sends seismogram of that receiver
-           one_seismogram(:,:) = seismograms(:,irec_local,:)
-           call sendv_cr(one_seismogram,NDIM*NSTEP,receiver,itag)
-         enddo
-       endif
+          ! sends seismogram of that receiver
+          one_seismogram(:,:) = seismograms(:,irec_local,:)
+          call sendv_cr(one_seismogram,NDIM*NSTEP,receiver,itag)
+        enddo
+      endif
     endif ! myrank
 
   endif ! WRITE_SEISMOGRAMS_BY_MASTER
@@ -500,7 +499,7 @@
   ! local parameters
   integer iorientation
   integer length_station_name,length_network_name
-  character(len=256) sisname,clean_LOCAL_PATH,final_LOCAL_PATH
+  character(len=256) sisname,final_LOCAL_PATH
   character(len=3) channel
 
   ! loops over each seismogram component
@@ -516,10 +515,10 @@
 
     ! check that length conforms to standard
     if(length_station_name < 1 .or. length_station_name > MAX_LENGTH_STATION_NAME) &
-       call exit_MPI(myrank,'wrong length of station name')
+      call exit_MPI(myrank,'wrong length of station name')
 
     if(length_network_name < 1 .or. length_network_name > MAX_LENGTH_NETWORK_NAME) &
-       call exit_MPI(myrank,'wrong length of network name')
+      call exit_MPI(myrank,'wrong length of network name')
 
     write(sisname,"(a,'.',a,'.',a3,'.sem',a1)") station_name(irec)(1:length_station_name),&
        network_name(irec)(1:length_network_name),channel,component
@@ -528,10 +527,8 @@
     if( USE_OUTPUT_FILES_PATH ) then
       final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'
     else
-      ! suppress white spaces if any
-      clean_LOCAL_PATH = adjustl(LOCAL_PATH)
       ! create full final local path
-      final_LOCAL_PATH = clean_LOCAL_PATH(1:len_trim(clean_LOCAL_PATH)) // '/'
+      final_LOCAL_PATH = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // '/'
     endif
 
     ! ASCII output format
@@ -566,7 +563,7 @@
 
   character(len=3) channel
   character(len=1) component
-  character(len=256) sisname,clean_LOCAL_PATH,final_LOCAL_PATH
+  character(len=256) sisname,final_LOCAL_PATH
 
 ! save displacement, velocity or acceleration
   if(istore == 1) then
@@ -601,10 +598,8 @@
       if( USE_OUTPUT_FILES_PATH ) then
         final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'
       else
-        ! suppress white spaces if any
-        clean_LOCAL_PATH = adjustl(LOCAL_PATH)
         ! create full final local path
-        final_LOCAL_PATH = clean_LOCAL_PATH(1:len_trim(clean_LOCAL_PATH)) // '/'
+        final_LOCAL_PATH = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // '/'
       endif
 
 
@@ -661,7 +656,7 @@
 
   character(len=4) chn
   character(len=1) component
-  character(len=256) sisname,clean_LOCAL_PATH,final_LOCAL_PATH
+  character(len=256) sisname,final_LOCAL_PATH
 
   component = 'd'
 
@@ -701,10 +696,8 @@
         if( USE_OUTPUT_FILES_PATH ) then
           final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'
         else
-          ! suppress white spaces if any
-          clean_LOCAL_PATH = adjustl(LOCAL_PATH)
           ! create full final local path
-          final_LOCAL_PATH = clean_LOCAL_PATH(1:len_trim(clean_LOCAL_PATH)) // '/'
+          final_LOCAL_PATH = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // '/'
         endif
 
         ! save seismograms in text format with no subsampling.

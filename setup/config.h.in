@@ -17,10 +17,6 @@
 /* As FC_FUNC, but for C identifiers containing underscores. */
 #undef FC_FUNC_
 
-/* Define to alternate name for `main' routine that is called from a `main' in
-   the Fortran libraries. */
-#undef FC_MAIN
-
 /* Define if emmintrin.h */
 #undef HAVE_EMMINTRIN
 

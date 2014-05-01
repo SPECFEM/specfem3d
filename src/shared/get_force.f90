@@ -64,8 +64,7 @@
 !
 !---- read info
 !
-  call get_value_string(FORCESOLUTION, 'solver.FORCESOLUTION', &
-       IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'FORCESOLUTION')
+  FORCESOLUTION = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'FORCESOLUTION'
 
   open(unit=1,file=trim(FORCESOLUTION),status='old',action='read')
 
@@ -123,29 +122,29 @@
 
   ! Sets tshift_force to zero to initiate the simulation!
   if(NSOURCES == 1)then
-      tshift_force = 0.d0
-      min_tshift_force_original = t_shift(1)
+    tshift_force = 0.d0
+    min_tshift_force_original = t_shift(1)
   else
-      tshift_force(1:NSOURCES) = t_shift(1:NSOURCES)-minval(t_shift)
-      min_tshift_force_original = minval(t_shift)
+    tshift_force(1:NSOURCES) = t_shift(1:NSOURCES)-minval(t_shift)
+    min_tshift_force_original = minval(t_shift)
   endif
 
   do isource=1,NSOURCES
-     ! checks half-duration
-     ! half-duration is the dominant frequency of the source
-     ! point forces use a Ricker source time function
-     ! null half-duration indicates a very low-frequency source
-     ! (see constants.h: TINYVAL = 1.d-9 )
-     if( hdur(isource) < TINYVAL ) hdur(isource) = TINYVAL
+    ! checks half-duration
+    ! half-duration is the dominant frequency of the source
+    ! point forces use a Ricker source time function
+    ! null half-duration indicates a very low-frequency source
+    ! (see constants.h: TINYVAL = 1.d-9 )
+    if( hdur(isource) < TINYVAL ) hdur(isource) = TINYVAL
 
-     ! check (inclined) force source's direction vector
-     length = sqrt( comp_dir_vect_source_E(isource)**2 + comp_dir_vect_source_N(isource)**2 + &
-          comp_dir_vect_source_Z_UP(isource)**2 )
-     if( length < TINYVAL) then
-        print *, 'normal length: ', length
-        print *, 'isource: ',isource
-        stop 'error set force point normal length, make sure all forces have a non null direction vector'
-     endif
+    ! check (inclined) force source's direction vector
+    length = sqrt( comp_dir_vect_source_E(isource)**2 + comp_dir_vect_source_N(isource)**2 + &
+         comp_dir_vect_source_Z_UP(isource)**2 )
+    if( length < TINYVAL) then
+      print *, 'normal length: ', length
+      print *, 'isource: ',isource
+      stop 'error set force point normal length, make sure all forces have a non null direction vector'
+    endif
   enddo
 
   end subroutine get_force
