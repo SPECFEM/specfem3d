@@ -34,9 +34,9 @@
 
 ! leave sorting subroutines in same source file to allow for inlining
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer npointot
   integer nglob
@@ -85,9 +85,9 @@
 !! DK DK they cannot be vectorized. Thus the compiler is right.
 !! DK DK
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: nspec,nglob
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool

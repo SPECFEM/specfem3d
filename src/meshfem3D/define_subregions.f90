@@ -30,9 +30,9 @@
        iaddx,iaddy,iaddz,ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir,iax,iay,iar, &
        num_material)
 
-    implicit none
+    use constants
 
-    include "constants.h"
+    implicit none
 
     integer NEX_PER_PROC_XI,NEX_PER_PROC_ETA
     integer iproc_xi,iproc_eta
@@ -94,9 +94,9 @@
        nblayers,ner_layer,ndoublings,ner_doublings,&
        iaddx,iaddy,iaddz,ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir,iax,iay,iar)
 
-    implicit none
+    use constants
 
-    include "constants.h"
+    implicit none
 
     logical USE_REGULAR_MESH
 

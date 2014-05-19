@@ -37,9 +37,9 @@
                         USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
                         PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,FULL_ATTENUATION_SOLID,TRAC_PATH)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,SIMULATION_TYPE, NTSTEP_BETWEEN_READ_ADJSRC
   integer NSOURCES,NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO,UTM_PROJECTION_ZONE
@@ -354,8 +354,9 @@
 
   subroutine read_gpu_mode(GPU_MODE,GRAVITY)
 
+  use constants
+
   implicit none
-  include "constants.h"
 
   logical :: GPU_MODE
   logical :: GRAVITY
@@ -393,8 +394,10 @@
 subroutine read_adios_parameters(ADIOS_ENABLED, ADIOS_FOR_DATABASES,       &
                                  ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, &
                                  ADIOS_FOR_KERNELS)
+
+  use constants
+
   implicit none
-  include "constants.h"
 
   logical, intent(out) :: ADIOS_ENABLED, ADIOS_FOR_DATABASES,       &
                           ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, &

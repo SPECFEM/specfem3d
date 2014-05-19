@@ -208,8 +208,8 @@ end subroutine read_ibool_adios_mesh
 !=============================================================================
 subroutine read_coordinates_adios_mesh(mesh_handle, x_global_offset,  &
                                        NGLOB_AB, xstore, ystore, zstore)
+  use constants
   implicit none
-  include 'constants.h'
   ! Parameters
   integer(kind=8), intent(in) :: mesh_handle
   integer, intent(in) :: x_global_offset, NGLOB_AB
@@ -236,8 +236,8 @@ end subroutine read_coordinates_adios_mesh
 !=============================================================================
 subroutine read_double_values_adios(value_handle, var_name, ibool_offset, &
                                     NSPEC_AB, dat)
+  use constants
   implicit none
-  include 'constants.h'
   ! Parameters
   integer(kind=8), intent(in) :: value_handle
   character(len=*), intent(in) :: var_name
@@ -261,8 +261,8 @@ end subroutine read_double_values_adios
 !=============================================================================
 subroutine read_float_values_adios(value_handle, var_name, ibool_offset, &
                                     NSPEC_AB, dat)
+  use constants
   implicit none
-  include 'constants.h'
   ! Parameters
   integer(kind=8), intent(in) :: value_handle
   character(len=*), intent(in) :: var_name

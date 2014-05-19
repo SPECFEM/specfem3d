@@ -36,9 +36,9 @@ contains
                                 CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
                                 USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,UTM_PROJECTION_ZONE
 

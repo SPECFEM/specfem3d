@@ -109,10 +109,10 @@ $O/program_decompose_mesh.dec.o: $O/decompose_mesh.dec.o
 #### rule to build each .o file below
 ####
 
-$O/%.dec.o: $S/%.f90 ${SETUP}/constants.h
+$O/%.dec.o: $S/%.f90 $O/constants_mod.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} $(SCOTCH_INC) -c -o $@ $<
 
-$O/%.dec.o: $S/%.F90 ${SETUP}/constants.h
+$O/%.dec.o: $S/%.F90 $O/constants_mod.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} $(SCOTCH_INC) -c -o $@ $<
 
 

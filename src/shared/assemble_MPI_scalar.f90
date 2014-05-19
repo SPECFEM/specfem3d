@@ -36,9 +36,9 @@
 
 ! assembles scalar field in a blocking way, returns only after values have been assembled
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: NPROC
   integer :: NGLOB_AB
@@ -131,9 +131,9 @@
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         my_neighbours_ext_mesh)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: NPROC
   integer :: NGLOB_AB
@@ -229,9 +229,9 @@
 
 ! non-blocking MPI send
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: NPROC
   integer :: NGLOB_AB
@@ -296,9 +296,9 @@
 
 ! waits for send/receiver to be completed and assembles contributions
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: NPROC
   integer :: NGLOB_AB

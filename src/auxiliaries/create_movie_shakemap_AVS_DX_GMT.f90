@@ -33,9 +33,9 @@
 
   program create_movie_shakemap
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
 !-------------------------------------------------------------------------------------------------
 ! user parameters

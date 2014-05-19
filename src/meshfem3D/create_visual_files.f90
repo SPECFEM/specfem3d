@@ -29,9 +29,10 @@
   subroutine create_visual_files(CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES,&
                                 nspec,nglob,prname,nodes_coords,ibool,true_material_num)
 
+  use constants
+
   implicit none
 
-  include "constants.h"
   include "constants_meshfem3D.h"
 
 ! Mesh files for visualization

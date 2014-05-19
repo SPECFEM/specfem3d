@@ -28,9 +28,9 @@
   subroutine get_cmt(yr,jda,ho,mi,sec,tshift_cmt,hdur,lat,long,depth,moment_tensor,&
                     DT,NSOURCES,min_tshift_cmt_original)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
 !--- input or output arguments of the subroutine below
 

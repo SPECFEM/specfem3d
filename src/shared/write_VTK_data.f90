@@ -32,10 +32,9 @@
                         xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
                         elem_flag,prname_file)
 
+  use constants
 
   implicit none
-
-  include "constants.h"
 
   integer :: nspec,nglob
 
@@ -102,10 +101,9 @@
                         xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
                         elem_flag,prname_file)
 
+  use constants
 
   implicit none
-
-  include "constants.h"
 
   integer :: nspec,nglob
 
@@ -174,9 +172,9 @@
             xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
             gll_data,prname_file)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: nspec,nglob
 
@@ -265,9 +263,9 @@
             xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
             gll_data,prname_file)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: nspec,nglob
 
@@ -357,9 +355,9 @@
             points_globalindices,num_points_globalindices, &
             prname_file)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: nglob
 
@@ -413,10 +411,9 @@
                         xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
                         elem_vector,prname_file)
 
+  use constants
 
   implicit none
-
-  include "constants.h"
 
   integer :: nspec,nglob
 
@@ -479,10 +476,9 @@
                         xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
                         elem_flag,prname_file)
 
+  use constants
 
   implicit none
-
-  include "constants.h"
 
   integer :: nspec,nglob
 

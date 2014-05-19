@@ -29,9 +29,9 @@
 
 ! create name of the database for serial codes (AVS_DX and codes to check buffers)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer iproc,NPROC
 

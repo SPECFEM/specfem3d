@@ -42,11 +42,11 @@ contains
                                ADIOS_ENABLED, ADIOS_FOR_DATABASES)
 
     ! create the different regions of the mesh
-  use adios_manager_mod
+    use constants
+    use adios_manager_mod
 
     implicit none
 
-    include "constants.h"
     include "constants_meshfem3D.h"
 
     ! number of spectral elements in each block

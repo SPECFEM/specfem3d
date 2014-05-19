@@ -54,12 +54,12 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
    ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,&
    NMATERIALS,material_properties)
 
+  use constants
   use adios_helpers_mod
   use safe_alloc_mod
 
   implicit none
 
-  include "constants.h"
   include "constants_meshfem3D.h"
 
   ! MPI variables

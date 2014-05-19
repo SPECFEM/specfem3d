@@ -27,8 +27,8 @@
 
 module fault_scotch
 
+  use constants
   implicit none
-  include "constants.h"
   private
 
   type fault_type

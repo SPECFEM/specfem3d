@@ -41,7 +41,6 @@
 
   implicit none
 
-  ! include "constants.h"
   integer :: myrank
 
   ! all processes read in same file

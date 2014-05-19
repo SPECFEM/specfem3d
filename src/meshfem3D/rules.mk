@@ -152,7 +152,7 @@ $O/adios_helpers.shared_adios.o: \
 #### rule to build each .o file below
 ####
 
-$O/%.mesh.o: $S/%.f90 ${SETUP}/constants.h
+$O/%.mesh.o: $S/%.f90 $O/constants_mod.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 
@@ -160,10 +160,10 @@ $O/%.mesh.o: $S/%.f90 ${SETUP}/constants.h
 ### ADIOS compilation
 ###
 
-$O/%.mesh_adios.o: $S/%.F90 ${SETUP}/constants.h
+$O/%.mesh_adios.o: $S/%.F90 $O/constants_mod.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.mesh_adios.o: $S/%.f90 ${SETUP}/constants.h
+$O/%.mesh_adios.o: $S/%.f90 $O/constants_mod.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90}  -c -o $@ $<
 
 $O/%.mesh_noadios.o: $S/%.F90

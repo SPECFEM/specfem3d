@@ -97,7 +97,10 @@
 
   subroutine open_parameter_file(ierr)
 
-  include 'constants.h'
+  use constants
+
+  implicit none
+
   integer ierr
   character(len=512) filename
   filename = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'Par_file'

@@ -31,9 +31,10 @@
                               NSPEC2D_BOTTOM,NSPEC2D_TOP, &
                               NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX)
 
+  use constants
+
   implicit none
 
-  include "constants.h"
   include "constants_meshfem3D.h"
 
   integer nspec,myrank
@@ -137,9 +138,10 @@
                             NSPEC2D_BOTTOM,NSPEC2D_TOP, &
                             NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX)
 
+  use constants
+
   implicit none
 
-  include "constants.h"
   include "constants_meshfem3D.h"
 
   integer nspec,myrank
@@ -367,9 +369,10 @@
 
   subroutine compute_jacobian_2D(myrank,ispecb,xelm,yelm,zelm,dershape2D,jacobian2D,normal,NGLLA,NGLLB,NSPEC2DMAX_AB)
 
+  use constants
+
   implicit none
 
-  include "constants.h"
   include "constants_meshfem3D.h"
 
 ! generic routine that accepts any polynomial degree in each direction

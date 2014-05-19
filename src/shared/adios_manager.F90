@@ -36,11 +36,10 @@ contains
 !> Initialize ADIOS and setup the xml output file
 subroutine adios_setup()
 
+  use constants
   use adios_write_mod, only: adios_init
 
   implicit none
-
-  include 'constants.h'
 
   integer :: adios_err
   integer :: comm

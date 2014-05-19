@@ -28,9 +28,9 @@
 
   module generate_databases_par
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
 ! number of spectral elements in each block
   integer npointot
@@ -183,7 +183,7 @@
 
   module create_regions_mesh_ext_par
 
-  include 'constants.h'
+  use constants
 
 ! global point coordinates
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: xstore_dummy

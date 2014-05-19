@@ -29,9 +29,9 @@
 
   subroutine exit_MPI(myrank,error_msg)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
 ! identifier for error message file
   integer, parameter :: IERROR = 30
@@ -67,9 +67,9 @@
 
   subroutine exit_MPI_without_rank(error_msg)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   character(len=*) error_msg
 
@@ -90,9 +90,9 @@
 
   subroutine flush_IMAIN()
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   ! only master process writes out to main output file
   ! file I/O in fortran is buffered by default

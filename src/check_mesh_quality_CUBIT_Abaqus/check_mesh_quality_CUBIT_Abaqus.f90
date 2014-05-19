@@ -41,9 +41,9 @@
 
   program check_mesh_quality_CUBIT_Abaqus
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
 !------------------------------------------------------------------------------------------------
 ! EDIT YOUR PARAMETERS BELOW HERE
@@ -686,9 +686,9 @@
   subroutine create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NPOIN,NGNOD,VP_MAX,delta_t, &
                equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: iface,icorner,ispec,NSPEC,NPOIN,NGNOD,i
 
@@ -848,9 +848,9 @@
   subroutine create_mesh_quality_data_2D(x,y,z,ibool,ispec,NSPEC,NPOIN,NGNOD,VP_MAX,delta_t, &
                equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: icorner,ispec,NSPEC,NPOIN,NGNOD,i
 

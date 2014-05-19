@@ -29,9 +29,9 @@
 
   subroutine get_shape3D(myrank,shape3D,dershape3D,xigll,yigll,zigll,NGNOD)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer NGNOD,myrank
 
@@ -170,9 +170,9 @@
 
   subroutine eval_shape3D_single(myrank,shape3D,xi,eta,gamma,NGNOD)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: myrank,NGNOD
 
@@ -286,9 +286,9 @@
   subroutine eval_shape3D_element_corners(xelm,yelm,zelm,ispec,&
        ibool,xstore,ystore,zstore,NSPEC_AB,NGLOB_AB)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: ispec
   integer :: NSPEC_AB,NGLOB_AB
@@ -342,9 +342,9 @@
 
   subroutine get_shape3D_27(NGNOD,shape3D,dershape3D,xi,eta,gamma,i,j,k)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: NGNOD,i,j,k
 

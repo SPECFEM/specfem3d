@@ -297,6 +297,8 @@ endif
 ### Module dependencies
 ###
 
+$O/specfem3D_par.spec.o: $O/constants_mod.shared_module.o
+
 $O/assemble_MPI_vector.spec.o: $O/specfem3D_par.spec.o
 $O/check_stability.spec.o: $O/specfem3D_par.spec.o
 $O/comp_source_time_function.spec.o: $O/specfem3D_par.spec.o
@@ -373,10 +375,10 @@ $O/adios_helpers.shared_adios.o: \
 ####
 
 
-$O/%.spec.o: $S/%.f90 ${SETUP}/constants.h
+$O/%.spec.o: $S/%.f90
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.spec.o: $S/%.F90 ${SETUP}/constants.h
+$O/%.spec.o: $S/%.F90
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 ###
@@ -390,10 +392,10 @@ $(cuda_specfem3D_DEVICE_OBJ): $(cuda_OBJECTS)
 ### ADIOS compilation
 ###
 
-$O/%.spec_adios.o: $S/%.F90 ${SETUP}/constants.h
+$O/%.spec_adios.o: $S/%.F90
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.spec_adios.o: $S/%.f90 ${SETUP}/constants.h
+$O/%.spec_adios.o: $S/%.f90
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 $O/%.spec_noadios.o: $S/%.F90

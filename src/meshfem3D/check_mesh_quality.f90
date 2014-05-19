@@ -39,9 +39,9 @@
   subroutine check_mesh_quality(myrank,VP_MAX,NGLOB,NSPEC,x,y,z,ibool, &
                                 CREATE_VTK_FILES,prname)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: myrank
 
@@ -416,9 +416,10 @@
                                         equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio, &
                                         stability,distmin,distmax)
 
+  use constants
+
   implicit none
 
-  include "constants.h"
   include "constants_meshfem3D.h"
 
   integer :: NSPEC,NGLOB

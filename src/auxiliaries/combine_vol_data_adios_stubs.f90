@@ -102,7 +102,7 @@ end subroutine read_ibool_adios_mesh
 !=============================================================================
 subroutine read_coordinates_adios_mesh(mesh_handle, x_global_offset,  &
                                        NGLOB_AB, xstore, ystore, zstore)
-  include 'constants.h'
+  use constants
   ! Parameters
   integer(kind=8) :: mesh_handle
   integer :: x_global_offset, NGLOB_AB

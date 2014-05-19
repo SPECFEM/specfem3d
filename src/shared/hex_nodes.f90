@@ -27,9 +27,9 @@
 
   subroutine usual_hex_nodes(NGNOD,iaddx,iaddy,iaddz)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: NGNOD
   integer, dimension(NGNOD) :: iaddx,iaddy,iaddz
@@ -186,9 +186,9 @@
 
   subroutine unusual_hex_nodes1(iaddx,iaddy,iaddz)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer, dimension(NGNOD_EIGHT_CORNERS) :: iaddx,iaddy,iaddz
 
@@ -235,9 +235,9 @@
 
   subroutine unusual_hex_nodes1p(iaddx,iaddy,iaddz)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer, dimension(NGNOD_EIGHT_CORNERS) :: iaddx,iaddy,iaddz
 
@@ -284,9 +284,9 @@
 
   subroutine unusual_hex_nodes2(iaddx,iaddy,iaddz)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer, dimension(NGNOD_EIGHT_CORNERS) :: iaddx,iaddy,iaddz
 
@@ -333,9 +333,9 @@
 
   subroutine unusual_hex_nodes2p(iaddx,iaddy,iaddz)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer, dimension(NGNOD_EIGHT_CORNERS) :: iaddx,iaddy,iaddz
 
@@ -382,9 +382,9 @@
 
   subroutine unusual_hex_nodes3(iaddx,iaddy,iaddz)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer, dimension(NGNOD_EIGHT_CORNERS) :: iaddx,iaddy,iaddz
 
@@ -431,9 +431,9 @@
 
   subroutine unusual_hex_nodes4(iaddx,iaddy,iaddz)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer, dimension(NGNOD_EIGHT_CORNERS) :: iaddx,iaddy,iaddz
 
@@ -480,9 +480,9 @@
 
   subroutine unusual_hex_nodes4p(iaddx,iaddy,iaddz)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer, dimension(NGNOD_EIGHT_CORNERS) :: iaddx,iaddy,iaddz
 
@@ -529,9 +529,9 @@
 
   subroutine unusual_hex_nodes6(iaddx,iaddy,iaddz)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer, dimension(NGNOD_EIGHT_CORNERS) :: iaddx,iaddy,iaddz
 
@@ -578,9 +578,9 @@
 
   subroutine unusual_hex_nodes6p(iaddx,iaddy,iaddz)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer, dimension(NGNOD_EIGHT_CORNERS) :: iaddx,iaddy,iaddz
 

@@ -27,14 +27,6 @@
 !
 ! United States and French Government Sponsorship Acknowledged.
 
-module constants
-
-  include "constants.h"
-
-end module constants
-
-!=====================================================================
-
 module specfem_par
 
 ! main parameter module for specfem simulations

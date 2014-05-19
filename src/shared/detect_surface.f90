@@ -40,9 +40,9 @@
 ! returns: ispec_is_surface_external_mesh, iglob_is_surface_external_mesh
 !               and nfaces_surface_ext_mesh
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
 ! global indexing
   integer :: NPROC,nglob,nspec
@@ -162,9 +162,9 @@
 
   ! put this into separate subroutine to compile faster, otherwise compilers will try to unroll all do loops
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   ! global indexing
   integer :: nglob,nspec
@@ -231,9 +231,9 @@
 ! returns: ispec_is_surface_external_mesh, iglob_is_surface_external_mesh
 !               and nfaces_surface_ext_mesh
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
 ! global indexing
   integer :: NPROC,nglob,nspec,myrank
@@ -535,9 +535,9 @@
 
   ! put this into separate subroutine to compile faster, otherwise compilers will try to unroll all do loops
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   ! global indexing
   integer :: nglob,nspec
@@ -613,9 +613,9 @@
 
   ! put this into separate subroutine to compile faster, otherwise compilers will try to unroll all do loops
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: iface,ispec
 
@@ -670,9 +670,9 @@
 !
 ! returns: ispec_is_image_surface, iglob_is_image_surface & num_iglob_image_surface
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
 ! global indexing
   integer :: NPROC,nglob,nspec,myrank

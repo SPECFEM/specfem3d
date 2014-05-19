@@ -34,9 +34,9 @@
 !
 ! returns: maximum velocity in model ( model_speed_max ), minimum_period_resolved
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: NSPEC_AB,NGLOB_AB
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: kappastore,mustore,rho_vp,rho_vs
@@ -452,9 +452,9 @@
 !
 ! returns: maximum velocity in model ( model_speed_max ), minimum_period_resolved
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: NSPEC_AB,NGLOB_AB
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: rho_vpI,rho_vpII,rho_vsI
@@ -825,9 +825,9 @@
 
 ! calculates the min/max size of the specified element (ispec) for acoustic / elastic domains
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   real(kind=CUSTOM_REAL) :: vpmin,vpmax,vsmin,vsmax
 
@@ -913,9 +913,9 @@
 
 ! calculates the min/max size of the specified element (ispec) for acoustic / elastic domains
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   real(kind=CUSTOM_REAL) :: vpmin,vpmax,vsmin,vsmax
 
@@ -982,9 +982,10 @@
 ! calculates the min/max size of the specified  element (ispec) for poroelastic domains
 ! [CM] Note: in case of coupled acoustic-poro-elastic, rho_vpI,rho_vpII,rho_vsI, etc have
 ! been appropriately defined in /src/generate_databases/get_model.f90
-  implicit none
 
-  include "constants.h"
+  use constants
+
+  implicit none
 
   real(kind=CUSTOM_REAL) :: vpmin,vpmax,vp2min,vp2max,vsmin,vsmax
 
@@ -1076,9 +1077,9 @@
 ! calculates the min/max distances between neighboring GLL points within the specified element (ispec);
 ! we purposely do not include the distance along the diagonals of the element, only along its three coordinate axes.
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   real(kind=CUSTOM_REAL) :: distance_min,distance_max
 
@@ -1160,9 +1161,9 @@
 ! calculates the min/max size of an edge of the specified element (ispec);
 ! we purposely do not include the distance along the diagonals of the element, only the size of its edges.
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   real(kind=CUSTOM_REAL) :: elemsize_min,elemsize_max
 

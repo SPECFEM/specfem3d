@@ -119,9 +119,9 @@
        npx_interface,npy_interface,&
        orig_x_interface,orig_y_interface,spacing_x_interface,spacing_y_interface,ierr)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   logical SUPPRESS_UTM_PROJECTION
   integer iunit
@@ -144,9 +144,9 @@
 
   subroutine read_material_parameters(iunit,i,rho,vp,vs,Q_flag,anisotropy_flag,domain_id, ierr)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer iunit
   integer i
@@ -166,9 +166,9 @@
   subroutine read_region_parameters(iunit,ix_beg_region,ix_end_region,iy_beg_region,iy_end_region,&
           iz_beg_region,iz_end_region,imaterial_number, ierr)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer iunit
   integer ierr
@@ -188,9 +188,9 @@
 
   subroutine read_next_line(iunit,suppress_junk,string_read, ierr)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer ierr
   logical suppress_junk
@@ -237,8 +237,9 @@
 
   subroutine open_parameter_file_mesh
 
+  use constants
+
   implicit none
-  include "constants.h"
 
   integer ierr
 
@@ -257,7 +258,7 @@
 
   subroutine close_parameter_file_mesh
 
-  include "constants.h"
+  use constants
 
   close(IIN)
 

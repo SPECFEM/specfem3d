@@ -235,17 +235,17 @@ $O/adios_helpers.shared_adios.o: \
 ####
 
 
-$O/%.gen.o: $S/%.f90 ${SETUP}/constants.h
+$O/%.gen.o: $S/%.f90 $O/constants_mod.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 ###
 ### ADIOS compilation
 ###
 
-$O/%.gen_adios.o: $S/%.F90 ${SETUP}/constants.h
+$O/%.gen_adios.o: $S/%.F90 $O/constants_mod.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.gen_adios.o: $S/%.f90 ${SETUP}/constants.h
+$O/%.gen_adios.o: $S/%.f90 $O/constants_mod.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 $O/%.gen_noadios.o: $S/%.F90

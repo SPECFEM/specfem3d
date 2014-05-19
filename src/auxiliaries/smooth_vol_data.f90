@@ -58,8 +58,8 @@ program smooth_vol_data
 ! NOTE:  smoothing can be different in vertical & horizontal directions; mesh is in Cartesian geometry.
 !              algorithm uses vertical as Z, horizontal as X/Y direction
 
+  use constants
   implicit none
-  include "constants.h"
 
  ! data must be of dimension: (NGLLX,NGLLY,NGLLZ,NSPEC_AB)
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: dat,dat_smooth
@@ -809,8 +809,8 @@ end program smooth_vol_data
   subroutine smoothing_weights_vec(x0,y0,z0,sigma_h2,sigma_v2,exp_val,&
                               xx_elem,yy_elem,zz_elem)
 
+  use constants
   implicit none
-  include "constants.h"
 
   real(kind=CUSTOM_REAL),dimension(NGLLX,NGLLY,NGLLZ),intent(out) :: exp_val
   real(kind=CUSTOM_REAL),dimension(NGLLX,NGLLY,NGLLZ),intent(in) :: xx_elem, yy_elem, zz_elem
@@ -850,8 +850,8 @@ end program smooth_vol_data
 ! returns vector lengths as distances in radial and horizontal direction
 ! only for flat earth with z in vertical direction
 
+  use constants
   implicit none
-  include "constants.h"
 
   real(kind=CUSTOM_REAL),intent(out) :: dist_h,dist_v
   real(kind=CUSTOM_REAL),intent(in) :: x0,y0,z0,x1,y1,z1

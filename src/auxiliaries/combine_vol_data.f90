@@ -58,13 +58,13 @@
 !
 ! works for external, unregular meshes
 
+  use constants
+
   use combine_vol_data_mod
   use combine_vol_data_adios_mod
 
   use combine_vtk
   implicit none
-
-  include 'constants.h'
 
   ! data must be of dimension: (NGLLX,NGLLY,NGLLZ,NSPEC_AB)
   double precision,dimension(:,:,:,:),allocatable :: data
@@ -411,11 +411,12 @@
 ! counts total number of points and elements for external meshes in given slice list
 ! returns: total number of elements (nee) and number of points (npp)
 
+  use constants
+
   use combine_vtk
   use combine_vol_data_adios_mod
 
   implicit none
-  include 'constants.h'
 
   integer,intent(in) :: num_node
   integer,dimension(MAX_NUM_NODES),intent(in) :: node_list
@@ -534,9 +535,9 @@
                                it,npp,numpoin,np)
 
 ! writes out locations of spectral element corners only
+  use constants
   use combine_vtk
   implicit none
-  include 'constants.h'
 
   integer,intent(in) :: NSPEC_AB,NGLOB_AB
   integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
@@ -719,9 +720,9 @@
                                   it,npp,numpoin,np)
 
 ! writes out locations of all GLL points of spectral elements
+  use constants
   use combine_vtk
   implicit none
-  include 'constants.h'
 
   integer,intent(in) :: NSPEC_AB,NGLOB_AB
   integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
@@ -788,9 +789,9 @@
   subroutine cvd_write_corner_elements(NSPEC_AB,NGLOB_AB,ibool,&
                                       np,nelement,it,nee,numpoin)
 
+  use constants
   use combine_vtk
   implicit none
-  include 'constants.h'
 
   integer,intent(in) :: NSPEC_AB,NGLOB_AB
   integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
@@ -915,9 +916,9 @@
                                     np,nelement,it,nee,numpoin)
 
 ! writes out indices of elements given by GLL points
+  use constants
   use combine_vtk
   implicit none
-  include 'constants.h'
 
   integer,intent(in):: NSPEC_AB,NGLOB_AB
   integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool

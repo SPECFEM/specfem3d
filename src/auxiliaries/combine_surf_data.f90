@@ -33,9 +33,9 @@ program combine_surf_data
   ! combines the database files on several slices.
   ! the local database file needs to have been collected onto the frontend (copy_local_database.pl)
 
-  implicit none
+  use constants
 
-  include 'constants.h'
+  implicit none
 
   integer i,j,k,ispec, ios, it
   integer iproc, proc1, proc2, num_node, node_list(300), nspec, nglob

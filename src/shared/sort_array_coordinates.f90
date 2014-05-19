@@ -35,9 +35,9 @@
 !
 ! returns: sorted indexing array (ibool),  reordering array (iglob) & number of global points (nglob)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer, intent(in) :: npointot
   double precision, dimension(npointot), intent(inout) :: x, y, z

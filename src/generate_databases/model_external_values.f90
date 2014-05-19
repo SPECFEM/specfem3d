@@ -64,9 +64,9 @@
 
 !  use external_model
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: myrank
 
@@ -99,9 +99,10 @@
 !
 !  use external_model
 !
+!  use constants
+!
 !  implicit none
 !
-!  include "constants.h"
 !---
 !
 ! ADD YOUR MODEL HERE

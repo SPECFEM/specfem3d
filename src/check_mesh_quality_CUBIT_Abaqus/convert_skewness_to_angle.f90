@@ -32,9 +32,9 @@
 
   program convert_skewness_to_angle
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   double precision :: equiangle_skewness
 

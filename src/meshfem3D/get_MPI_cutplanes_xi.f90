@@ -34,9 +34,10 @@
 ! and the right cut plane of the last slice are not used
 ! in the solver except if we want to have periodic conditions
 
+  use constants
+
   implicit none
 
-  include "constants.h"
   include "constants_meshfem3D.h"
 
   integer nspec,myrank

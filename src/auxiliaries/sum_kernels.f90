@@ -51,7 +51,7 @@
 
 module sum_par
 
-  include 'constants.h'
+  use constants
 
   ! USER PARAMETERS
 

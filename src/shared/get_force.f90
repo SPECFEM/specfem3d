@@ -28,9 +28,9 @@
   subroutine get_force(tshift_force,hdur,lat,long,depth,NSOURCES,min_tshift_force_original,factor_force_source, &
                       comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
 !--- input or output arguments of the subroutine below
 
