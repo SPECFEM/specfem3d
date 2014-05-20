@@ -68,8 +68,8 @@ program model_update
 
   ! ======================================================
 
-  character(len=MAX_STRING_LEN) :: prname_new
-  character(len=MAX_STRING_LEN) :: m_file, fname
+  character(len=MAX_STRING_LEN) :: prname_new, fname
+  character(len=MAX_STRING_LEN*2) :: m_file
   integer :: NGLOB_OCEAN
   integer :: NSPEC, NGLOB
 

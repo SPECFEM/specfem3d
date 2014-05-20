@@ -91,7 +91,7 @@ program smooth_vol_data
 
   character(len=MAX_STRING_LEN) :: arg(7), filename, indir, outdir
   character(len=MAX_STRING_LEN) :: prname, prname_lp
-  character(len=MAX_STRING_LEN) :: local_data_file
+  character(len=MAX_STRING_LEN*2) :: local_data_file
 
   double precision :: DT
   double precision :: HDUR_MOVIE,OLSEN_ATTENUATION_RATIO,f0_FOR_PML
@@ -110,7 +110,7 @@ program smooth_vol_data
   integer :: MOVIE_TYPE,IMODEL
 
   ! smoothing parameters
-  character(len=MAX_STRING_LEN) :: ks_file
+  character(len=MAX_STRING_LEN*2) :: ks_file
 
   real(kind=CUSTOM_REAL) :: sigma_h, sigma_h2, sigma_h3, sigma_v, sigma_v2, sigma_v3
   real(kind=CUSTOM_REAL) :: x0, y0, z0, norm, norm_h, norm_v, max_old, max_new

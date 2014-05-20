@@ -89,7 +89,7 @@
   ! local parameters
   double precision :: dummy,temp_x,temp_y,temp_z
   integer :: ier,iundef,nrecord_max,ifiles_tomo,nrec,nlines
-  character(len=MAX_STRING_LEN) :: tomo_filename
+  character(len=MAX_STRING_LEN*2) :: tomo_filename
   character(len=MAX_STRING_LEN) :: filename
   character(len=MAX_STRING_LEN) :: string_read
 
@@ -200,7 +200,7 @@ end subroutine init_tomography_files
   ! local parameters
   real(kind=CUSTOM_REAL) :: x_tomo,y_tomo,z_tomo,vp_tomo,vs_tomo,rho_tomo
   integer :: irecord,ier,iundef,imat
-  character(len=MAX_STRING_LEN) :: tomo_filename
+  character(len=MAX_STRING_LEN*2) :: tomo_filename
   character(len=MAX_STRING_LEN) :: filename
   character(len=MAX_STRING_LEN) :: string_read
 

@@ -87,7 +87,7 @@
 
   character(len=MAX_STRING_LEN) :: arg(9), filename, indir, outdir
   character(len=MAX_STRING_LEN) :: prname, prname_lp
-  character(len=MAX_STRING_LEN) :: mesh_file,local_data_file
+  character(len=MAX_STRING_LEN*2) :: mesh_file,local_data_file
   logical :: HIGH_RESOLUTION_MESH
   integer :: ires
 

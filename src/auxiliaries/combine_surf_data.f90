@@ -53,8 +53,8 @@ program combine_surf_data
   real, dimension(:,:,:,:), allocatable :: dat3D
   real, dimension(:,:,:), allocatable :: dat2D
   character(len=MAX_STRING_LEN) :: sline, arg(8), filename, indir, outdir, prname, surfname
-  character(len=MAX_STRING_LEN) :: mesh_file, local_file, local_data_file, local_ibool_file
-  character(len=MAX_STRING_LEN) :: local_ibool_surf_file
+  character(len=MAX_STRING_LEN*2) :: mesh_file, local_file, local_data_file, local_ibool_file
+  character(len=MAX_STRING_LEN*2) :: local_ibool_surf_file
 
 !  integer :: num_ibool(NGLOB_AB)
   integer,dimension(:),allocatable :: num_ibool

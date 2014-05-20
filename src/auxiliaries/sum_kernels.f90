@@ -274,7 +274,7 @@ subroutine sum_kernel_pre(kernel_name,kernel_list,nker,myrank)
   integer :: nker,myrank
 
   ! local parameters
-  character(len=MAX_STRING_LEN) :: k_file
+  character(len=MAX_STRING_LEN*2) :: k_file
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: &
     kernel,hess,total_kernel
   integer :: iker,ios
