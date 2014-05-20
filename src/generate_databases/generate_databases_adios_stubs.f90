@@ -40,16 +40,17 @@
 
 subroutine model_gll_adios(myrank,nspec,LOCAL_PATH)
 
+  use constants, only: MAX_STRING_LEN
   use adios_manager_mod
 
   implicit none
 
   integer, intent(in) :: myrank,nspec
-  character(len=256) :: LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH
 
   ! dummy to avoid compiler warning about unused variables
   integer :: dummy
-  character(len=256) :: dummy_line
+  character(len=MAX_STRING_LEN) :: dummy_line
 
   dummy = myrank
   dummy = nspec
@@ -66,16 +67,17 @@ module model_ipati_adios_mod
 contains
 
 subroutine model_ipati_adios(myrank,nspec,LOCAL_PATH)
+  use constants, only: MAX_STRING_LEN
   use adios_manager_mod
 
   implicit none
 
   integer, intent(in) :: myrank,nspec
-  character(len=256), intent(in) :: LOCAL_PATH
+  character(len=MAX_STRING_LEN), intent(in) :: LOCAL_PATH
 
   ! dummy to avoid compiler warning about unused variables
   integer :: dummy
-  character(len=256) :: dummy_line
+  character(len=MAX_STRING_LEN) :: dummy_line
 
   dummy = myrank
   dummy = nspec
@@ -85,16 +87,17 @@ subroutine model_ipati_adios(myrank,nspec,LOCAL_PATH)
 end subroutine model_ipati_adios
 
 subroutine model_ipati_water_adios(myrank,nspec,LOCAL_PATH)
+  use constants, only: MAX_STRING_LEN
   use adios_manager_mod
 
   implicit none
 
   integer, intent(in) :: myrank,nspec
-  character(len=256), intent(in) :: LOCAL_PATH
+  character(len=MAX_STRING_LEN), intent(in) :: LOCAL_PATH
 
   ! dummy to avoid compiler warning about unused variables
   integer :: dummy
-  character(len=256) :: dummy_line
+  character(len=MAX_STRING_LEN) :: dummy_line
 
   dummy = myrank
   dummy = nspec
@@ -105,18 +108,19 @@ end subroutine model_ipati_water_adios
 
 subroutine read_model_vp_rho_adios(myrank, nspec, LOCAL_PATH, &
                                    rho_read, vp_read)
+  use constants, only: MAX_STRING_LEN
   use adios_manager_mod
 
   implicit none
 
   integer, intent(in) :: myrank,nspec
-  character(len=256), intent(in) :: LOCAL_PATH
+  character(len=MAX_STRING_LEN), intent(in) :: LOCAL_PATH
   real, dimension(:,:,:,:), intent(inout) :: vp_read,rho_read
 
   ! dummy to avoid compiler warning about unused variables
   integer :: dummy
   real :: dummy_r
-  character(len=256) :: dummy_line
+  character(len=MAX_STRING_LEN) :: dummy_line
 
   dummy = myrank
   dummy = nspec

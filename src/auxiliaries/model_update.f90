@@ -38,15 +38,15 @@ program model_update
   ! USER PARAMETERS
 
   ! directory where the mesh files for the NEW model will be written
-  character (len=256), parameter :: &
+  character(len=*), parameter :: &
     LOCAL_PATH_NEW = trim(LOCAL_PATH_Q)//'/mesh_files_m01'
 
   ! directory where the output files of model_update will be written
-  character (len=256), parameter :: &
+  character(len=*), parameter :: &
     OUTPUT_MODEL_UPD = trim(OUTPUT_FILES_PATH)//'/OUTPUT_FILES_MODEL_UPD'
 
   ! directory where the summed and smoothed input kernels are linked
-  character (len=256), parameter :: &
+  character(len=*), parameter :: &
     INPUT_KERNELS = trim(LOCAL_PATH_Q)//'/sum_smooth_kern'
 
   ! by default, this algorithm uses (bulk,bulk_beta,rho) kernels to update vp,vs,rho
@@ -68,8 +68,8 @@ program model_update
 
   ! ======================================================
 
-  character (len=256) :: prname_new
-  character(len=256) :: m_file, fname
+  character(len=MAX_STRING_LEN) :: prname_new
+  character(len=MAX_STRING_LEN) :: m_file, fname
   integer :: NGLOB_OCEAN
   integer :: NSPEC, NGLOB
 
@@ -102,7 +102,7 @@ program model_update
 
   ! steepest descent lengths
   real(kind=CUSTOM_REAL) :: step_fac,step_length
-  character(len=150) :: s_step_fac
+  character(len=MAX_STRING_LEN) :: s_step_fac
 
   ! thresholds
   real(kind=CUSTOM_REAL) :: VS_MIN, VS_MAX, VP_MIN, VP_MAX

@@ -29,12 +29,14 @@
 
 ! create the name of the database for the mesher and the solver
 
+  use constants, only: MAX_STRING_LEN
+
   implicit none
 
   integer iproc
 
 ! name of the database file
-  character(len=256) prname,procname,LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: prname,procname,LOCAL_PATH
 
 ! create the name for the database of the current slide and region
   write(procname,"('/proc',i6.6,'_')") iproc

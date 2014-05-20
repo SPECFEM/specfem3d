@@ -37,9 +37,9 @@
   integer, parameter :: IERROR = 30
 
   integer myrank
-  character(len=*) error_msg
+  character(len=*) :: error_msg
 
-  character(len=80) outputname
+  character(len=MAX_STRING_LEN) :: outputname
 
 ! write error message to screen
   write(*,*) error_msg(1:len(error_msg))

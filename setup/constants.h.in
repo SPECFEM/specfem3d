@@ -51,6 +51,9 @@
 ! if running on a Beowulf, also modify name of nodes in filter_machine_file.f90
   logical, parameter :: LOCAL_PATH_IS_ALSO_GLOBAL = .@LOCAL_PATH_IS_ALSO_GLOBAL@.
 
+! maximum length of strings used for paths, reading from files, etc.
+  integer, parameter :: MAX_STRING_LEN = 256
+
 ! use inlined products of Deville et al. (2002) to speedup the calculations to compute internal forces
   logical, parameter :: USE_DEVILLE_PRODUCTS = .false.
 
@@ -106,7 +109,7 @@
 
   ! size of the ADIOS buffer to use
   integer, parameter :: ADIOS_BUFFER_SIZE_IN_MB = 200
-  character(len=256), parameter :: ADIOS_TRANSPORT_METHOD = 'MPI'
+  character(len=*), parameter :: ADIOS_TRANSPORT_METHOD = 'MPI'
 
 !!-----------------------------------------------------------
 !!
@@ -179,9 +182,9 @@
 !!-----------------------------------------------------------
 
 ! paths for inputs and outputs files
-  character(len=256), parameter :: IN_DATA_FILES_PATH = './DATA/'
-  character(len=256), parameter :: MF_IN_DATA_FILES_PATH = './DATA/meshfem3D_files/'
-  character(len=256), parameter :: OUTPUT_FILES_PATH = './OUTPUT_FILES/'
+  character(len=*), parameter :: IN_DATA_FILES_PATH = './DATA/'
+  character(len=*), parameter :: MF_IN_DATA_FILES_PATH = './DATA/meshfem3D_files/'
+  character(len=*), parameter :: OUTPUT_FILES_PATH = './OUTPUT_FILES/'
 
 
 ! ---------------------------------------------------------------------------------------
@@ -201,7 +204,7 @@
 ! the scratch disk to save the state variables saved in the forward
 ! simulation, this can be a global scratch disk in case you run out of
 ! space on the local scratch disk, e.g. '/ibrixfs1/scratch/lqy/DATABASES_MPI_Q/'
-  character(len=256), parameter :: LOCAL_PATH_Q = './OUTPUT_FILES/DATABASES_MPI'
+  character(len=*), parameter :: LOCAL_PATH_Q = './OUTPUT_FILES/DATABASES_MPI'
 
 !------------------------------------------------------
 ! nlegoff -- Variables that should be read/computed elsewhere.
@@ -383,7 +386,7 @@
 !   double precision, parameter :: ORIG_LONG_TOPO = 729806.d0
 ! ! for Piero Basini's model this is the resolution in meters of the topo file
 !   double precision, parameter :: DEGREES_PER_CELL_TOPO = 250.d0
-!   character(len=256), parameter :: TOPO_FILE = 'DATA/piero_model/dem_EV_UTM_regular_250_reordered.dat'
+!   character(len=*), parameter :: TOPO_FILE = 'DATA/piero_model/dem_EV_UTM_regular_250_reordered.dat'
 
 ! flag for projection from latitude/longitude to UTM, and back
   integer, parameter :: ILONGLAT2UTM = 0, IUTM2LONGLAT = 1

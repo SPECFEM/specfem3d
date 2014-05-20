@@ -42,7 +42,7 @@
 
   double precision DT, memory_size
 
-  character(len=256) HEADER_FILE
+  character(len=MAX_STRING_LEN) :: HEADER_FILE
 
   integer nfaces_surface_glob_ext_mesh
 

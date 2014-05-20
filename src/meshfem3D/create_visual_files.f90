@@ -45,7 +45,7 @@
   integer nglob
 
 ! name of the database files
-  character(len=256) prname
+  character(len=MAX_STRING_LEN) :: prname
 
 ! arrays with the mesh
   integer true_material_num(nspec)

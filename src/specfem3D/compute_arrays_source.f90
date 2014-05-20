@@ -139,7 +139,7 @@
   double precision :: junk
   ! note: should have same order as orientation in write_seismograms_to_file()
   character(len=3),dimension(NDIM) :: comp != (/ "BHE", "BHN", "BHZ" /)
-  character(len=256) :: filename
+  character(len=MAX_STRING_LEN) :: filename
 
   ! gets channel names
   do icomp=1,NDIM

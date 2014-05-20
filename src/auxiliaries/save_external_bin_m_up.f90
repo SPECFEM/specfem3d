@@ -124,9 +124,8 @@
   integer :: max_nibool_interfaces_ext_mesh
   integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
 
-
 ! file name
-  character(len=256) prname
+  character(len=MAX_STRING_LEN) :: prname
   logical :: SAVE_MESH_FILES
 
 ! anisotropy
@@ -148,7 +147,7 @@
   !real(kind=CUSTOM_REAL) :: minimum(1)
   integer :: ier,i
   logical :: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,POROELASTIC_SIMULATION
-  character(len=256) :: filename
+  character(len=MAX_STRING_LEN) :: filename
 
   integer, dimension(:), allocatable :: iglob_tmp
   integer :: j,inum

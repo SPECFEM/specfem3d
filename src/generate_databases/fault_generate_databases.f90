@@ -92,7 +92,9 @@ contains
 !=================================================================================================================
 subroutine fault_read_input(prname,myrank)
 
-  character(len=256), intent(in) :: prname
+  use constants, only: MAX_STRING_LEN
+
+  character(len=MAX_STRING_LEN), intent(in) :: prname
   integer, intent(in) :: myrank
 
   integer :: nb,i,iflt,ier,nspec,dummy_node
@@ -536,11 +538,13 @@ end subroutine setup_normal_jacobian
 ! saves all fault data in ASCII files for verification
 subroutine fault_save_arrays_test(prname)
 
-  character(len=256), intent(in) :: prname ! 'proc***'
+  use constants, only: MAX_STRING_LEN
+
+  character(len=MAX_STRING_LEN), intent(in) :: prname ! 'proc***'
 
   integer, parameter :: IOUT = 121 !WARNING: not very robust. Could instead look for an available ID
   integer :: nbfaults,iflt,ier
-  character(len=256) :: filename
+  character(len=MAX_STRING_LEN) :: filename
 
   if (.not.ANY_FAULT) return
 
@@ -609,11 +613,13 @@ end subroutine save_one_fault_test
 ! saves fault data needed by the solver in binary files
 subroutine fault_save_arrays(prname)
 
-  character(len=256), intent(in) :: prname ! 'proc***'
+  use constants, only: MAX_STRING_LEN
+
+  character(len=MAX_STRING_LEN), intent(in) :: prname ! 'proc***'
 
   integer, parameter :: IOUT = 121 !WARNING: not very robust. Could instead look for an available ID
   integer :: nbfaults,iflt,ier
-  character(len=256) :: filename
+  character(len=MAX_STRING_LEN) :: filename
   integer :: size_Kelvin_Voigt
 
   if (.not.ANY_FAULT) return

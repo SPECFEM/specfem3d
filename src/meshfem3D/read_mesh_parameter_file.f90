@@ -51,8 +51,8 @@ contains
   integer NDOUBLINGS
   integer, dimension(2) :: ner_doublings
 
-  character(len=256) LOCAL_PATH
-  character(len=50) INTERFACES_FILE
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: INTERFACES_FILE
 
 ! local variables
   integer NEX_MAX

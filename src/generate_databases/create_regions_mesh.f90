@@ -384,7 +384,7 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
   integer :: nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
             nspec2D_bottom,nspec2D_top
 
-  character(len=256) :: LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH
 
   logical :: ANISOTROPY
 
@@ -1086,7 +1086,7 @@ subroutine crm_ext_setup_indexing(ibool, &
   integer :: iinterface,ier
   integer :: ispec_inner,ispec_outer
   real :: percentage_edge
-  character(len=256) :: filename
+  character(len=MAX_STRING_LEN) :: filename
   logical,dimension(:),allocatable :: iglob_is_inner
 
   logical,parameter :: DEBUG = .false.

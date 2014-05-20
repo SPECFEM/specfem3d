@@ -126,7 +126,6 @@
   logical,dimension(:),allocatable:: ispec_is_image_surface,iglob_is_image_surface
   integer :: num_iglob_image_surface
   integer :: countval,locval(1),irank
-  !character(len=256) :: vtkfilename
   integer :: zoom_factor = 4
   logical :: zoom
   integer, dimension(1,0:NPROC-1) :: tmp_pixel_per_proc
@@ -597,7 +596,7 @@
 ! display a given field as a red and blue color image
 ! to display the snapshots : display image*.gif
 ! when compiling with Intel ifort, use " -assume byterecl " option to create binary PNM images
-  use constants,only: HUGEVAL,TINYVAL,CUSTOM_REAL,OUTPUT_FILES_PATH
+  use constants,only: HUGEVAL,TINYVAL,CUSTOM_REAL,OUTPUT_FILES_PATH,MAX_STRING_LEN
   use image_PNM_par,only: BINARY_FILE,VP_BACKGROUND,&
                         POWER_DISPLAY_COLOR
   implicit none
@@ -613,7 +612,7 @@
   ! local parameter
   integer :: ix,iy,R,G,B,tenthousands,thousands,hundreds,tens,units,remainder,current_rec
   real(kind=CUSTOM_REAL) :: amplitude_max,normalized_value,vpmin,vpmax,x1
-  character(len=256) :: file_name
+  character(len=MAX_STRING_LEN) :: file_name
   ! ASCII code of character '0' and of carriage return character
   integer, parameter :: ascii_code_of_zero = 48, ascii_code_of_carriage_return = 10
 

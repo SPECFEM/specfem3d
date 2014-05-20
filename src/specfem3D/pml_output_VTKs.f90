@@ -33,7 +33,7 @@ subroutine pml_output_VTKs()
 
   use pml_par
   use specfem_par, only: NGLOB_AB,NSPEC_AB,myrank,prname,xstore,ystore,zstore,ibool
-  use constants, only: NGLLX,NGLLY,NGLLZ,IMAIN
+  use constants, only: NGLLX,NGLLY,NGLLZ,IMAIN,MAX_STRING_LEN
 
   implicit none
 
@@ -41,7 +41,7 @@ subroutine pml_output_VTKs()
   integer :: ispec,ispec_CPML,ier
   integer, dimension(:), allocatable :: temp_CPML_regions
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable:: temp_d_store_x,temp_d_store_y,temp_d_store_z
-  character(len=256) :: vtkfilename
+  character(len=MAX_STRING_LEN) :: vtkfilename
 
   if(myrank == 0) write(IMAIN,*) 'Writing informations about C-PML elements in VTK-file format'
 

@@ -79,7 +79,7 @@ contains
 subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
 
   use specfem_par, only : nt=>NSTEP
-  character(len=256), intent(in) :: prname ! 'proc***'
+  character(len=MAX_STRING_LEN), intent(in) :: prname ! 'proc***'
   double precision, intent(in) :: DTglobal
   integer, intent(in) :: myrank
 
@@ -88,7 +88,7 @@ subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
   integer :: nbfaults
   integer :: size_Kelvin_Voigt
   integer :: SIMULATION_TYPE
-  character(len=256) :: filename
+  character(len=MAX_STRING_LEN) :: filename
   integer, parameter :: IIN_PAR =151
   integer, parameter :: IIN_BIN =170
 
@@ -929,7 +929,7 @@ subroutine SCEC_Write_RuptureTime(dataXZ,iflt)
   integer, intent(in) :: iflt
 
   integer   :: i,IOUT
-  character(len=256) :: filename
+  character(len=MAX_STRING_LEN) :: filename
 
   integer, dimension(8) :: time_values
 
@@ -1101,7 +1101,7 @@ subroutine write_dataXZ(dataXZ,itime,iflt)
   type(dataXZ_type), intent(in) :: dataXZ
   integer, intent(in) :: itime,iflt
 
-  character(len=256) :: filename
+  character(len=MAX_STRING_LEN) :: filename
 
   write(filename,"(a,I0,'_F',I0,'.bin')") trim(OUTPUT_FILES_PATH)//'/Snapshot',itime,iflt
 

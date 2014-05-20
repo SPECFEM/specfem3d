@@ -36,7 +36,7 @@
 
   implicit none
 
-  character(len=256) procname,final_LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: procname,final_LOCAL_PATH
   integer :: irec_local,irec
 
   double precision, allocatable, dimension(:) :: x_found,y_found,z_found

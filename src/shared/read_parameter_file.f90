@@ -54,14 +54,14 @@
   logical USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE,USE_RICKER_TIME_FUNCTION
   logical PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID
 
-  character(len=256) LOCAL_PATH,TOMOGRAPHY_PATH,CMTSOLUTION,FORCESOLUTION,TRAC_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH,TOMOGRAPHY_PATH,CMTSOLUTION,FORCESOLUTION,TRAC_PATH
 
 ! local variables
   integer ::ios,icounter,isource,idummy,nproc_eta_old,nproc_xi_old
   double precision :: hdur,minval_hdur
-  character(len=256) :: dummystring
+  character(len=MAX_STRING_LEN) :: dummystring
 
-  character(len=150) MODEL
+  character(len=MAX_STRING_LEN) :: MODEL
   integer :: i,irange,ierr
 
   ! opens file Par_file

@@ -162,8 +162,8 @@
   integer :: ispec_inner,ispec_outer
   integer :: ier
 
-  character(len=2),dimension(2) :: str_domain = (/ "ac", "el" /)
-  character(len=256) :: filename
+  character(len=2), dimension(2), parameter :: str_domain = (/ "ac", "el" /)
+  character(len=MAX_STRING_LEN) :: filename
 
   logical, parameter :: DEBUG = .false.
 
@@ -428,7 +428,7 @@
   integer :: icolor,icounter,ispec,ielem,ier,i
   integer :: iface,old_ispec,new_ispec
 
-  character(len=256) :: filename
+  character(len=MAX_STRING_LEN) :: filename
 
   logical,parameter :: DEBUG = .false.
 

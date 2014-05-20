@@ -54,7 +54,7 @@
   integer, dimension(NGNOD_EIGHT_CORNERS,NSPEC) :: ibool
 
   logical :: CREATE_VTK_FILES
-  character(len=256) prname
+  character(len=MAX_STRING_LEN) :: prname
 
   ! local parameters
   integer :: ispec,ispec_min_edge_length,ispec_max_edge_length,ispec_max_skewness, &
@@ -103,7 +103,7 @@
   logical STACEY_ABSORBING_CONDITIONS,SAVE_FORWARD,STACEY_INSTEAD_OF_FREE_SURFACE
   logical ANISOTROPY,SAVE_MESH_FILES,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
   logical PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID
-  character(len=256) LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
   integer NPROC
   integer MOVIE_TYPE,IMODEL
 

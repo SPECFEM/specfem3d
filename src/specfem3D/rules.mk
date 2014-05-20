@@ -298,6 +298,7 @@ endif
 ###
 
 $O/specfem3D_par.spec.o: $O/constants_mod.shared_module.o
+$O/compute_stacey_acoustic.o: $O/constants_mod.shared_module.o
 
 $O/assemble_MPI_vector.spec.o: $O/specfem3D_par.spec.o
 $O/check_stability.spec.o: $O/specfem3D_par.spec.o

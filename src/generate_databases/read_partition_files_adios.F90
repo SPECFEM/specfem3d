@@ -35,7 +35,7 @@ subroutine read_partition_files_adios()
 
   implicit none
 
-  character(len=256) :: database_name
+  character(len=MAX_STRING_LEN) :: database_name
   integer(kind=8) :: handle
 
   integer(kind=8), dimension(256),target :: selections

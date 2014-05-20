@@ -45,7 +45,7 @@
   double precision :: DT
   real(kind=CUSTOM_REAL) :: model_speed_max,min_resolved_period
 
-  character(len=256):: LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH
   logical :: SAVE_MESH_FILES
 
   ! local parameters
@@ -81,7 +81,7 @@
   ! debug: for vtk output
   real(kind=CUSTOM_REAL),dimension(:),allocatable :: tmp1,tmp2
   integer:: ier
-  character(len=256) :: filename,prname
+  character(len=MAX_STRING_LEN) :: filename,prname
 
   ! timing
   double precision, external :: wtime
@@ -465,7 +465,7 @@
   double precision :: DT
   real(kind=CUSTOM_REAL) :: model_speed_max,min_resolved_period
 
-  character(len=256):: LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH
   logical :: SAVE_MESH_FILES
 
   ! local parameters
@@ -500,7 +500,7 @@
   real(kind=CUSTOM_REAL),dimension(:),allocatable :: tmp1,tmp2
 
   integer:: ier
-  character(len=256) :: filename,prname
+  character(len=MAX_STRING_LEN) :: filename,prname
 
   ! timing
   double precision, external :: wtime

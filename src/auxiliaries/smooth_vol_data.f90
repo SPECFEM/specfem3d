@@ -89,9 +89,9 @@ program smooth_vol_data
   integer :: i,j,k,ios,it,iglob,ier,ispec2,ispec
   integer :: iproc, node_list(300)
 
-  character(len=256) :: arg(7), filename, indir, outdir
-  character(len=256) :: prname, prname_lp
-  character(len=256) :: local_data_file
+  character(len=MAX_STRING_LEN) :: arg(7), filename, indir, outdir
+  character(len=MAX_STRING_LEN) :: prname, prname_lp
+  character(len=MAX_STRING_LEN) :: local_data_file
 
   double precision :: DT
   double precision :: HDUR_MOVIE,OLSEN_ATTENUATION_RATIO,f0_FOR_PML
@@ -106,11 +106,11 @@ program smooth_vol_data
   logical :: STACEY_ABSORBING_CONDITIONS,SAVE_FORWARD,STACEY_INSTEAD_OF_FREE_SURFACE
   logical :: ANISOTROPY,SAVE_MESH_FILES,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
   logical :: PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID
-  character(len=256) LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
   integer :: MOVIE_TYPE,IMODEL
 
   ! smoothing parameters
-  character(len=256) :: ks_file
+  character(len=MAX_STRING_LEN) :: ks_file
 
   real(kind=CUSTOM_REAL) :: sigma_h, sigma_h2, sigma_h3, sigma_v, sigma_v2, sigma_v3
   real(kind=CUSTOM_REAL) :: x0, y0, z0, norm, norm_h, norm_v, max_old, max_new

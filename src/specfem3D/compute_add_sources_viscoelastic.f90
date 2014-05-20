@@ -95,7 +95,7 @@
   integer :: it_start,it_end
   real(kind=CUSTOM_REAL) :: adj_temp(NSTEP)
   real(kind=CUSTOM_REAL) :: adj_src(NTSTEP_BETWEEN_READ_ADJSRC,NDIM)
-  character(len=256) :: procname
+  character(len=MAX_STRING_LEN) :: procname
   integer,parameter :: nheader=240      ! 240 bytes
   !integer(kind=2) :: i2head(nheader/2)  ! 2-byte-integer
   !integer(kind=4) :: i4head(nheader/4)  ! 4-byte-integer
@@ -658,7 +658,7 @@
   integer :: it_start,it_end
   real(kind=CUSTOM_REAL) :: adj_temp(NSTEP)
   real(kind=CUSTOM_REAL) :: adj_src(NTSTEP_BETWEEN_READ_ADJSRC,NDIM)
-  character(len=256) :: procname
+  character(len=MAX_STRING_LEN) :: procname
   integer,parameter :: nheader=240      ! 240 bytes
   !integer(kind=2) :: i2head(nheader/2)  ! 2-byte-integer
   !integer(kind=4) :: i4head(nheader/4)  ! 4-byte-integer

@@ -137,7 +137,7 @@
 
   logical, dimension(nspec) :: ispec_is_elastic
   real(kind=CUSTOM_REAL) :: min_resolved_period
-  character(len=256) :: prname
+  character(len=MAX_STRING_LEN) :: prname
 
   ! local parameters
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: one_minus_sum_beta

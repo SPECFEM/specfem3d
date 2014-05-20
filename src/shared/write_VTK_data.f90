@@ -46,7 +46,7 @@
   integer, dimension(nspec) :: elem_flag
 
   ! file name
-  character(len=256) :: prname_file
+  character(len=MAX_STRING_LEN) :: prname_file
 
   ! local parameters
   integer :: ispec,i
@@ -116,7 +116,7 @@
   integer :: ispec,i
 
 ! file name
-  character(len=256) prname_file
+  character(len=MAX_STRING_LEN) :: prname_file
 
 ! write source and receiver VTK files for Paraview
   !debug
@@ -190,7 +190,7 @@
   logical, dimension(:),allocatable :: mask_ibool
 
 ! file name
-  character(len=256) prname_file
+  character(len=MAX_STRING_LEN) :: prname_file
 
   integer :: ispec,i,j,k,ier,iglob
 
@@ -281,7 +281,7 @@
   logical, dimension(:),allocatable :: mask_ibool
 
 ! file name
-  character(len=256) prname_file
+  character(len=MAX_STRING_LEN) :: prname_file
 
   integer :: ispec,i,j,k,ier,iglob
 
@@ -369,7 +369,7 @@
   integer, dimension(num_points_globalindices) :: points_globalindices
 
 ! file name
-  character(len=256) prname_file
+  character(len=MAX_STRING_LEN) :: prname_file
 
   integer :: i,iglob
 
@@ -426,7 +426,7 @@
   integer :: ispec,i
 
   ! file name
-  character(len=256) prname_file
+  character(len=MAX_STRING_LEN) :: prname_file
 
   ! write source and receiver VTK files for Paraview
   !debug
@@ -490,7 +490,7 @@
   real(kind=CUSTOM_REAL), dimension(nspec) :: elem_flag
 
   ! file name
-  character(len=256) :: prname_file
+  character(len=MAX_STRING_LEN) :: prname_file
   !character(len=2), optional, intent(in) :: str_id
 
   ! local parameters

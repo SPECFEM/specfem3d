@@ -1010,7 +1010,7 @@
   double precision :: minlat,minlon,maxlat,maxlon
   character(len=MAX_LENGTH_STATION_NAME) :: station_name
   character(len=MAX_LENGTH_NETWORK_NAME) :: network_name
-  character(len=256) :: dummystring
+  character(len=MAX_STRING_LEN) :: dummystring
 
   nrec = 0
   nrec_filtered = 0
@@ -1019,7 +1019,7 @@
   open(unit=IIN, file=trim(filename), status = 'old', iostat = ios)
   if (ios /= 0) call exit_mpi(myrank, 'No file '//trim(filename)//', exit')
   do while(ios == 0)
-    read(IIN,"(a256)",iostat = ios) dummystring
+    read(IIN,"(a)",iostat=ios) dummystring
     if(ios /= 0) exit
 
     if( len_trim(dummystring) > 0 ) nrec = nrec + 1
@@ -1029,7 +1029,7 @@
   ! reads in station locations
   open(unit=IIN, file=trim(filename), status = 'old', iostat = ios)
   do while(ios == 0)
-    read(IIN,"(a256)",iostat = ios) dummystring
+    read(IIN,"(a)",iostat=ios) dummystring
     if( ios /= 0 ) exit
 
     ! counts number of stations in min/max region
@@ -1054,7 +1054,7 @@
     open(unit=IIN,file=trim(filename),status='old',action='read',iostat=ios)
     open(unit=IOUT,file=trim(filtered_filename),status='unknown')
     do while(ios == 0)
-      read(IIN,"(a256)",iostat = ios) dummystring
+      read(IIN,"(a)",iostat=ios) dummystring
       if( ios /= 0 ) exit
 
       if( len_trim(dummystring) > 0 ) then

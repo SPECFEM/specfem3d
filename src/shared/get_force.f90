@@ -48,7 +48,7 @@
   double precision t_shift(NSOURCES)
   double precision length
   character(len=7) dummy
-  character(len=256) string, FORCESOLUTION
+  character(len=MAX_STRING_LEN) :: string, FORCESOLUTION
 
   ! initializes
   lat(:) = 0.d0
@@ -71,10 +71,10 @@
 ! read source number isource
   do isource=1,NSOURCES
 
-    read(1,"(a256)") string
+    read(1,"(a)") string
     ! skips empty lines
     do while( len_trim(string) == 0 )
-      read(1,"(a256)") string
+      read(1,"(a)") string
     enddo
 
     ! read header with event information

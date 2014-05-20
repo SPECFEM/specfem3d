@@ -80,7 +80,7 @@ contains
 
     integer,dimension(NGLLX_M,NGLLY_M,NGLLZ_M,nspec) :: ibool
 
-    character(len=256) :: LOCAL_PATH
+    character(len=MAX_STRING_LEN) :: LOCAL_PATH
 
     ! auxiliary variables to generate the mesh
     double precision, dimension(:,:), allocatable :: nodes_coords
@@ -133,7 +133,7 @@ contains
     logical, dimension(:,:), allocatable :: iMPIcut_xi,iMPIcut_eta
 
     ! name of the database file
-    character(len=256) prname !,prname2
+    character(len=MAX_STRING_LEN) :: prname
 
     ! number of elements on the boundaries
     integer nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax

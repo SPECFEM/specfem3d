@@ -37,7 +37,7 @@
 
   integer :: i,j,k,ispec,iglob,ier
   integer :: ipoin,nfaces_org
-  character(len=256):: filename
+  character(len=MAX_STRING_LEN) :: filename
 
 ! initializes mesh arrays for movies and shakemaps
   allocate(nfaces_perproc_surface_ext_mesh(NPROC), &

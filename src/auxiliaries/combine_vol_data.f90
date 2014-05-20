@@ -85,9 +85,9 @@
 
   integer :: np, ne, npp, nee, nelement
 
-  character(len=256) :: arg(9), filename, indir, outdir
-  character(len=256) :: prname, prname_lp
-  character(len=256) :: mesh_file,local_data_file
+  character(len=MAX_STRING_LEN) :: arg(9), filename, indir, outdir
+  character(len=MAX_STRING_LEN) :: prname, prname_lp
+  character(len=MAX_STRING_LEN) :: mesh_file,local_data_file
   logical :: HIGH_RESOLUTION_MESH
   integer :: ires
 
@@ -104,7 +104,7 @@
   logical :: STACEY_ABSORBING_CONDITIONS,SAVE_FORWARD,STACEY_INSTEAD_OF_FREE_SURFACE
   logical :: ANISOTROPY,SAVE_MESH_FILES,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
   logical :: PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID
-  character(len=256) LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
   integer :: IMODEL
 
   ! ADIOS parameters
@@ -113,7 +113,7 @@
 
   ! Variables to read ADIOS files
   integer :: sizeprocs
-  character(len=256) :: var_name , value_file_name, mesh_file_name
+  character(len=MAX_STRING_LEN) :: var_name, value_file_name, mesh_file_name
   integer(kind=8) :: value_handle, mesh_handle
   integer :: ibool_offset, x_global_offset
 
@@ -423,7 +423,7 @@
 
   integer,intent(out) :: npp,nee
   logical,intent(in) :: HIGH_RESOLUTION_MESH
-  character(len=256),intent(in) :: LOCAL_PATH
+  character(len=MAX_STRING_LEN),intent(in) :: LOCAL_PATH
 
   ! local parameters
   integer, dimension(:,:,:,:),allocatable :: ibool
@@ -431,7 +431,7 @@
   integer :: NSPEC_AB, NGLOB_AB
   integer :: it,iproc,npoint,nelement,ios,ispec,ier
   integer :: iglob1, iglob2, iglob3, iglob4, iglob5, iglob6, iglob7, iglob8
-  character(len=256) :: prname_lp
+  character(len=MAX_STRING_LEN) :: prname_lp
 
   ! Variables for ADIOS
   integer(kind=8), intent(in) :: mesh_handle

@@ -63,7 +63,7 @@
   integer nspec2Dtheor1,nspec2Dtheor2
 
 ! processor identification
-  character(len=256) prname
+  character(len=MAX_STRING_LEN) :: prname
 
 ! theoretical number of surface elements in the buffers
 ! cut planes along eta=constant correspond to XI faces

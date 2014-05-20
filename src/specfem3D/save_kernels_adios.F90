@@ -70,7 +70,7 @@ subroutine define_kernel_adios_variables(handle, SAVE_WEIGHTS)
   integer(kind=8), intent(INOUT) :: handle
   logical, intent(IN) :: SAVE_WEIGHTS
   ! Variables
-  character(len=256) :: output_name, group_name
+  character(len=MAX_STRING_LEN) :: output_name, group_name
   integer(kind=8) :: group, groupsize, adios_totalsize
   integer :: local_dim, comm, adios_err
   !--- Variables to allreduce - wmax stands for world_max

@@ -518,7 +518,7 @@
   integer :: icomp,itime,nadj_files_found,nadj_files_found_tot,ier
 
   character(len=3),dimension(NDIM) :: comp
-  character(len=256) :: filename
+  character(len=MAX_STRING_LEN) :: filename
 
   double precision, dimension(NGLLX) :: hxis,hpxis
   double precision, dimension(NGLLY) :: hetas,hpetas
@@ -825,7 +825,7 @@
   real(kind=CUSTOM_REAL),dimension(NGNOD) :: xelm,yelm,zelm
   integer :: ia,ispec,isource,irec,ier,totalpoints
 
-  character(len=256) :: filename,filename_new,system_command,system_command1,system_command2
+  character(len=MAX_STRING_LEN) :: filename,filename_new,system_command,system_command1,system_command2
 
   ! determines number of points for vtk file
   if( SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
