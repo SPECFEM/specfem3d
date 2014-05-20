@@ -29,9 +29,10 @@
   subroutine create_visual_files(CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES,&
                                 nspec,nglob,prname,nodes_coords,ibool,true_material_num)
 
+  use constants
+
   implicit none
 
-  include "constants.h"
   include "constants_meshfem3D.h"
 
 ! Mesh files for visualization
@@ -44,7 +45,7 @@
   integer nglob
 
 ! name of the database files
-  character(len=256) prname
+  character(len=MAX_STRING_LEN) :: prname
 
 ! arrays with the mesh
   integer true_material_num(nspec)

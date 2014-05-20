@@ -27,6 +27,7 @@
 
 program pre_meshfem3D
 
+  use constants, only: MAX_STRING_LEN
   use decompose_mesh,only: nparts,localpath_name, outputpath_name, &
                                   read_mesh_files, &
                                   check_valence, &
@@ -49,7 +50,7 @@ program pre_meshfem3D
   implicit none
 
   integer :: i
-  character(len=256) :: arg(3)
+  character(len=MAX_STRING_LEN) :: arg(3)
 
 ! check usage
   do i=1,3

@@ -31,13 +31,13 @@
 subroutine read_mesh_for_init(nspec, nglob)
 
   use adios_read_mod
-  use specfem_par, only : myrank, LOCAL_PATH
+  use specfem_par, only : myrank, LOCAL_PATH, MAX_STRING_LEN
 
   implicit none
   ! Paramters
   integer, intent(inout) :: nspec, nglob
   ! Local variables
-  character(len=256) :: database_name
+  character(len=MAX_STRING_LEN) :: database_name
   integer(kind=8) :: handle, sel
   integer         :: ier
   integer :: comm
@@ -88,7 +88,7 @@ subroutine read_mesh_databases_adios()
   real(kind=CUSTOM_REAL):: minl,maxl,min_all,max_all
   integer :: ier,inum
 
-  character(len=256) :: database_name
+  character(len=MAX_STRING_LEN) :: database_name
   integer(kind=8) :: handle
 
   integer(kind=8), dimension(256),target :: selections
@@ -1739,7 +1739,7 @@ subroutine read_moho_mesh_adjoint_adios()
   use specfem_par_poroelastic
   implicit none
 
-  character(len=256) :: database_name
+  character(len=MAX_STRING_LEN) :: database_name
   integer(kind=8) :: handle
 
   integer(kind=8), dimension(256),target :: selections

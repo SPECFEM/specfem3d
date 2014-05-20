@@ -494,13 +494,13 @@
   character(len=MAX_LENGTH_STATION_NAME), dimension(nrec) :: station_name
   character(len=MAX_LENGTH_NETWORK_NAME), dimension(nrec) :: network_name
   character(len=1) component
-  character(len=256) LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH
 
   ! local parameters
   integer iorientation
   integer length_station_name,length_network_name
-  character(len=256) sisname,final_LOCAL_PATH
-  character(len=3) channel
+  character(len=MAX_STRING_LEN) :: sisname,final_LOCAL_PATH
+  character(len=3) :: channel
 
   ! loops over each seismogram component
   do iorientation = 1,NDIM
@@ -555,15 +555,14 @@
   integer, dimension(nrec_local) :: number_receiver_global
   real(kind=CUSTOM_REAL), dimension(NDIM,nrec_local,NSTEP) :: seismograms
   double precision t0,DT
-  character(len=256) LOCAL_PATH
-
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH
 
   integer irec,irec_local
   integer iorientation,irecord,isample
 
   character(len=3) channel
   character(len=1) component
-  character(len=256) sisname,final_LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: sisname,final_LOCAL_PATH
 
 ! save displacement, velocity or acceleration
   if(istore == 1) then
@@ -648,15 +647,14 @@
   integer, dimension(nrec_local) :: number_receiver_global
   real(kind=CUSTOM_REAL), dimension(NDIM,NDIM,nrec_local,NSTEP) :: seismograms
   double precision t0,DT
-  character(len=256) LOCAL_PATH
-
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH
 
   integer irec,irec_local
   integer idimval,jdimval,irecord,isample
 
-  character(len=4) chn
-  character(len=1) component
-  character(len=256) sisname,final_LOCAL_PATH
+  character(len=4) :: chn
+  character(len=1) :: component
+  character(len=MAX_STRING_LEN) :: sisname,final_LOCAL_PATH
 
   component = 'd'
 

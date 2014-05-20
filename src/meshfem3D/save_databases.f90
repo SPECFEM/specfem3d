@@ -34,9 +34,10 @@
                             ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,&
                             NMATERIALS,material_properties)
 
+  use constants
+
   implicit none
 
-  include "constants.h"
   include "constants_meshfem3D.h"
 
   ! number of spectral elements in each block
@@ -78,7 +79,7 @@
   integer :: dummy_nspec_cpml
 
   ! name of the database files
-  character(len=256) prname
+  character(len=MAX_STRING_LEN) :: prname
 
   ! for MPI interfaces
   integer ::  nb_interfaces,nspec_interfaces_max,idoubl

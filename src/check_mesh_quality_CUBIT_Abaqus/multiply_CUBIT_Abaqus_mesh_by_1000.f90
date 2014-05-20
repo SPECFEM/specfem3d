@@ -34,22 +34,22 @@
 
   implicit none
 
-! character(len=100), parameter :: cubit_mesh_file = 'HOMOGENE_3D_lisse_300_in_meters.inp'
+! character(len=*), parameter :: cubit_mesh_file = 'HOMOGENE_3D_lisse_300_in_meters.inp'
 ! integer, parameter :: NPOIN = 98692
 
-! character(len=100), parameter :: cubit_mesh_file = 'regolite_3D_rego3d_70m_in_meters.inp'
+! character(len=*), parameter :: cubit_mesh_file = 'regolite_3D_rego3d_70m_in_meters.inp'
 ! integer, parameter :: NPOIN = 4050696
 
-! character(len=100), parameter :: cubit_mesh_file = 'HOMOGENE_2D_in_meters.inp'
+! character(len=*), parameter :: cubit_mesh_file = 'HOMOGENE_2D_in_meters.inp'
 ! integer, parameter :: NPOIN = 3882
 
-! character(len=100), parameter :: cubit_mesh_file = 'eros_complexe_2d_regolite_fractures_modifie_in_meters.inp'
+! character(len=*), parameter :: cubit_mesh_file = 'eros_complexe_2d_regolite_fractures_modifie_in_meters.inp'
 ! integer, parameter :: NPOIN = 57807
 
-! character(len=100), parameter :: cubit_mesh_file = 'REGOLITE_only_no_fractures_2D_in_meters.inp'
+! character(len=*), parameter :: cubit_mesh_file = 'REGOLITE_only_no_fractures_2D_in_meters.inp'
 ! integer, parameter :: NPOIN = 32536
 
-  character(len=100), parameter :: cubit_mesh_file = 'rego3d_70_disp.inp'
+  character(len=*), parameter :: cubit_mesh_file = 'rego3d_70_disp.inp'
   integer, parameter :: NPOIN = 5924713
 
   real, dimension(NPOIN) :: x,y,z

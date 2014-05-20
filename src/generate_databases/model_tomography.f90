@@ -41,7 +41,6 @@
 
   implicit none
 
-  ! include "constants.h"
   integer :: myrank
 
   ! all processes read in same file
@@ -79,6 +78,7 @@
 
 ! determines the number of external tomographic models and sets a total maximum number of element records
 
+  use constants, only: MAX_STRING_LEN
   use tomography_par
   use generate_databases_par, only: TOMOGRAPHY_PATH,undef_mat_prop,nundefMat_ext_mesh
 
@@ -89,9 +89,9 @@
   ! local parameters
   double precision :: dummy,temp_x,temp_y,temp_z
   integer :: ier,iundef,nrecord_max,ifiles_tomo,nrec,nlines
-  character(len=256):: tomo_filename
-  character(len=256):: filename
-  character(len=256):: string_read
+  character(len=MAX_STRING_LEN*2) :: tomo_filename
+  character(len=MAX_STRING_LEN) :: filename
+  character(len=MAX_STRING_LEN) :: string_read
 
   NFILES_TOMO = 0
   nrecord_max = 0
@@ -189,6 +189,7 @@ end subroutine init_tomography_files
 
 ! read Vp Vs and rho from extracted text file
 
+  use constants, only: MAX_STRING_LEN
   use tomography_par
   use generate_databases_par, only: TOMOGRAPHY_PATH,undef_mat_prop,nundefMat_ext_mesh
 
@@ -199,9 +200,9 @@ end subroutine init_tomography_files
   ! local parameters
   real(kind=CUSTOM_REAL) :: x_tomo,y_tomo,z_tomo,vp_tomo,vs_tomo,rho_tomo
   integer :: irecord,ier,iundef,imat
-  character(len=256):: tomo_filename
-  character(len=256):: filename
-  character(len=256):: string_read
+  character(len=MAX_STRING_LEN*2) :: tomo_filename
+  character(len=MAX_STRING_LEN) :: filename
+  character(len=MAX_STRING_LEN) :: string_read
 
   imat = 0
 
@@ -285,15 +286,16 @@ end subroutine init_tomography_files
 
   subroutine tomo_read_next_line(unit_in,string_read)
 
+  use constants, only: MAX_STRING_LEN
   implicit none
 
   integer :: unit_in
-  character(len=256) :: string_read
+  character(len=MAX_STRING_LEN) :: string_read
 
   integer :: ios
 
   do
-     read(unit=unit_in,fmt="(a256)",iostat=ios) string_read
+     read(unit=unit_in,fmt="(a)",iostat=ios) string_read
      if(ios /= 0) stop 'error while reading tomography file'
 
      ! suppress leading white spaces, if any

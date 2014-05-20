@@ -37,9 +37,9 @@
 ! use iway = ILONGLAT2UTM for long/lat to UTM, IUTM2LONGLAT for UTM to lat/long
 ! a list of UTM zones of the world is available at www.dmap.co.uk/utmworld.htm
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
 !
 !-----CAMx v2.03

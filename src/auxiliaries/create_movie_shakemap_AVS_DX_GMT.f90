@@ -33,9 +33,9 @@
 
   program create_movie_shakemap
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
 !-------------------------------------------------------------------------------------------------
 ! user parameters
@@ -72,8 +72,8 @@
 
   double precision :: min_field_current,max_field_current,max_absol
 
-  character(len=256) :: outputname
-  character(len=256) :: line
+  character(len=MAX_STRING_LEN) :: outputname
+  character(len=MAX_STRING_LEN) :: line
 
   integer :: ipoin
 
@@ -104,7 +104,7 @@
   logical :: STACEY_ABSORBING_CONDITIONS,SAVE_FORWARD,STACEY_INSTEAD_OF_FREE_SURFACE
   logical :: ANISOTROPY,SAVE_MESH_FILES,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
   logical :: PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID
-  character(len=256) :: LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
   integer :: NPROC
   integer :: ier
   integer :: MOVIE_TYPE,IMODEL
@@ -149,10 +149,10 @@
   endif
   ! skips first few lines
   do i=1,6
-    read(IIN,'(a256)') line
+    read(IIN,'(a)') line
   enddo
   ! line with info, e.g. "integer,parameter :: NSPEC_SURFACE_EXT_MESH = 23855"
-  read(IIN,'(a256)') line
+  read(IIN,'(a)') line
   close(IIN)
   ! gets number from substring after = sign
   i = index(line,'=')

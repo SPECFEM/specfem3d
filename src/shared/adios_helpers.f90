@@ -65,10 +65,11 @@ contains
 !> Get the ADIOS error message from an adios error number if there is an error.
 !! \param adios_err The error code considered.
 subroutine check_adios_err(myrank, adios_err)
+  use constants, only: MAX_STRING_LEN
   use adios_read_mod
   implicit none
   integer, intent(in) :: myrank, adios_err
-  character(len=1024) :: msg
+  character(len=MAX_STRING_LEN*8) :: msg
 
   if (adios_err /= 0) then
     call adios_errmsg(msg)

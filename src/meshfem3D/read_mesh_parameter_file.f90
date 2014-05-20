@@ -36,9 +36,9 @@ contains
                                 CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
                                 USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,UTM_PROJECTION_ZONE
 
@@ -51,8 +51,8 @@ contains
   integer NDOUBLINGS
   integer, dimension(2) :: ner_doublings
 
-  character(len=256) LOCAL_PATH
-  character(len=50) INTERFACES_FILE
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: INTERFACES_FILE
 
 ! local variables
   integer NEX_MAX

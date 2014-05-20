@@ -487,7 +487,7 @@
 
   ! number of spectral elements in each block
   integer :: myrank,nspec
-  character(len=256) :: LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH
 
   ! external GLL models
   ! variables for importing models from files in SPECFEM format, e.g.,  proc000000_vp.bin etc.

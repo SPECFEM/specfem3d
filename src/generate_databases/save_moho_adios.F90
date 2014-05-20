@@ -59,8 +59,8 @@ subroutine crm_save_moho_adios()
   integer :: ier
 
   !--- Local parameters for ADIOS ---
-  character(len=256) :: output_name
-  character(len=64), parameter :: group_name  = "SPECFEM3D_MOHO"
+  character(len=MAX_STRING_LEN) :: output_name
+  character(len=*), parameter :: group_name = "SPECFEM3D_MOHO"
   integer(kind=8) :: group, handle
   integer(kind=8) :: groupsize, totalsize
   integer :: local_dim

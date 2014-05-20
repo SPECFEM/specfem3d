@@ -30,12 +30,12 @@
 
   subroutine meshfem3D
 
+  use constants
   use readParFile
   use createRegMesh
 
   implicit none
 
-  include "constants.h"
   include "constants_meshfem3D.h"
 
 !=============================================================================!
@@ -308,7 +308,7 @@
   double precision orig_x_interface_top,orig_y_interface_top
   double precision spacing_x_interface_bottom,spacing_y_interface_bottom
   double precision spacing_x_interface_top,spacing_y_interface_top
-  character(len=50) INTERFACES_FILE,interface_top_file
+  character(len=MAX_STRING_LEN) :: INTERFACES_FILE,interface_top_file
   integer, dimension(:), allocatable :: ner_layer
   double precision, dimension(:,:),allocatable :: interface_bottom,interface_top
 
@@ -345,7 +345,7 @@
   logical ANISOTROPY,SAVE_MESH_FILES,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
   logical PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID
   integer MOVIE_TYPE,IMODEL
-  character(len=256) LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
   logical :: ADIOS_ENABLED, ADIOS_FOR_DATABASES, ADIOS_FOR_MESH, &
              ADIOS_FOR_FORWARD_ARRAYS, ADIOS_FOR_KERNELS
 

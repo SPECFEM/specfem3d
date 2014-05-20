@@ -107,7 +107,7 @@
 
 /* ----------------------------------------------------------------------------------------------- */
 
-// (optional) pre-processing directive used in kernels: if defined check that it is also set in src/shared/constants.h:
+// (optional) pre-processing directive used in kernels: if defined check that it is also set in setup/constants.h:
 // leads up to ~ 5% performance increase
 //#define USE_MESH_COLORING_GPU
 

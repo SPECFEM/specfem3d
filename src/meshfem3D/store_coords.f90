@@ -27,9 +27,10 @@
 
   subroutine store_coords(xstore,ystore,zstore,xelm,yelm,zelm,ispec,nspec)
 
+  use constants
+
   implicit none
 
-  include "constants.h"
   include "constants_meshfem3D.h"
 
   integer ispec,nspec

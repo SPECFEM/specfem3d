@@ -27,8 +27,8 @@
 
 module fault_scotch
 
+  use constants
   implicit none
-  include "constants.h"
   private
 
   type fault_type
@@ -60,7 +60,7 @@ CONTAINS
 
   subroutine read_fault_files(localpath_name)
 
-  character(len=256),intent(in) :: localpath_name
+  character(len=MAX_STRING_LEN), intent(in) :: localpath_name
   integer :: nbfaults, iflt, ier
 
   open(101,file='../DATA/Par_file_faults',status='old',action='read',iostat=ier)
@@ -90,9 +90,9 @@ CONTAINS
   subroutine read_single_fault_file(f,ifault,localpath_name)
 
   type(fault_type), intent(inout) :: f
-  character(len=256),intent(in) :: localpath_name
+  character(len=MAX_STRING_LEN), intent(in) :: localpath_name
 
-  character(len=256) :: filename
+  character(len=MAX_STRING_LEN) :: filename
   integer,intent(in) :: ifault
   character(len=5) :: NTchar
   integer :: e,ier,nspec_side1,nspec_side2

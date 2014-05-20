@@ -29,6 +29,8 @@
 
   subroutine read_value_integer_mesh(iunit,ignore_junk,value_to_read, name, ierr)
 
+  use constants, only: MAX_STRING_LEN
+
   implicit none
 
   logical ignore_junk
@@ -36,7 +38,7 @@
   integer value_to_read
   integer ierr
   character(len=*) name
-  character(len=512) string_read
+  character(len=MAX_STRING_LEN) :: string_read
 
   call unused_string(name)
   ierr = 0
@@ -51,6 +53,8 @@
 
   subroutine read_value_dble_precision_mesh(iunit,ignore_junk,value_to_read, name, ierr)
 
+  use constants, only: MAX_STRING_LEN
+
   implicit none
 
   logical ignore_junk
@@ -58,7 +62,7 @@
   double precision value_to_read
   integer ierr
   character(len=*) name
-  character(len=512) string_read
+  character(len=MAX_STRING_LEN) :: string_read
 
   call unused_string(name)
   ierr = 0
@@ -73,6 +77,8 @@
 
   subroutine read_value_logical_mesh(iunit,ignore_junk,value_to_read, name, ierr)
 
+  use constants, only: MAX_STRING_LEN
+
   implicit none
 
   logical ignore_junk
@@ -80,7 +86,7 @@
   integer iunit
   integer ierr
   character(len=*) name
-  character(len=512) string_read
+  character(len=MAX_STRING_LEN) :: string_read
 
   call unused_string(name)
   ierr = 0
@@ -95,6 +101,8 @@
 
   subroutine read_value_string_mesh(iunit,ignore_junk,value_to_read, name, ierr)
 
+  use constants, only: MAX_STRING_LEN
+
   implicit none
 
   logical ignore_junk
@@ -102,7 +110,7 @@
   character(len=*) value_to_read
   integer ierr
   character(len=*) name
-  character(len=512) string_read
+  character(len=MAX_STRING_LEN) :: string_read
 
   call unused_string(name)
   ierr = 0
@@ -119,9 +127,9 @@
        npx_interface,npy_interface,&
        orig_x_interface,orig_y_interface,spacing_x_interface,spacing_y_interface,ierr)
 
-  implicit none
+  use constants, only: MAX_STRING_LEN,DONT_IGNORE_JUNK
 
-  include "constants.h"
+  implicit none
 
   logical SUPPRESS_UTM_PROJECTION
   integer iunit
@@ -129,8 +137,8 @@
   integer npx_interface,npy_interface
   double precision orig_x_interface,orig_y_interface
   double precision spacing_x_interface,spacing_y_interface
-  character(len=50)  interface_top_file
-  character(len=512) string_read
+  character(len=MAX_STRING_LEN) :: interface_top_file
+  character(len=MAX_STRING_LEN) :: string_read
 
   ierr = 0
   call read_next_line(iunit,DONT_IGNORE_JUNK,string_read,ierr)
@@ -144,15 +152,15 @@
 
   subroutine read_material_parameters(iunit,i,rho,vp,vs,Q_flag,anisotropy_flag,domain_id, ierr)
 
-  implicit none
+  use constants, only: MAX_STRING_LEN,DONT_IGNORE_JUNK
 
-  include "constants.h"
+  implicit none
 
   integer iunit
   integer i
   integer ierr
   double precision rho,vp,vs,Q_flag,anisotropy_flag,domain_id
-  character(len=512) string_read
+  character(len=MAX_STRING_LEN) :: string_read
 
   ierr = 0
   call read_next_line(iunit,DONT_IGNORE_JUNK,string_read,ierr)
@@ -166,15 +174,15 @@
   subroutine read_region_parameters(iunit,ix_beg_region,ix_end_region,iy_beg_region,iy_end_region,&
           iz_beg_region,iz_end_region,imaterial_number, ierr)
 
-  implicit none
+  use constants, only: MAX_STRING_LEN,DONT_IGNORE_JUNK
 
-  include "constants.h"
+  implicit none
 
   integer iunit
   integer ierr
   integer ix_beg_region,ix_end_region,iy_beg_region,iy_end_region
   integer iz_beg_region,iz_end_region,imaterial_number
-  character(len=512) string_read
+  character(len=MAX_STRING_LEN) :: string_read
 
   ierr = 0
   call read_next_line(iunit,DONT_IGNORE_JUNK,string_read,ierr)
@@ -188,18 +196,18 @@
 
   subroutine read_next_line(iunit,suppress_junk,string_read, ierr)
 
+  use constants, only: MAX_STRING_LEN
+
   implicit none
 
-  include "constants.h"
-
-  integer ierr
+  integer iunit,ierr
   logical suppress_junk
-  character(len=512) string_read
-  integer index_equal_sign,ios,iunit
+  character(len=MAX_STRING_LEN) :: string_read
+  integer index_equal_sign,ios
 
   ierr = 0
   do
-    read(unit=iunit,fmt="(a512)",iostat=ios) string_read
+    read(unit=iunit,fmt="(a)",iostat=ios) string_read
     if(ios /= 0) stop 'error while reading parameter file'
 
 ! suppress leading white spaces, if any
@@ -237,8 +245,9 @@
 
   subroutine open_parameter_file_mesh
 
+  use constants, only: IIN,MF_IN_DATA_FILES_PATH
+
   implicit none
-  include "constants.h"
 
   integer ierr
 
@@ -257,7 +266,7 @@
 
   subroutine close_parameter_file_mesh
 
-  include "constants.h"
+  use constants, only: IIN
 
   close(IIN)
 

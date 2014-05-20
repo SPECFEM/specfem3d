@@ -43,14 +43,14 @@ subroutine model_gll_adios(myrank,nspec,LOCAL_PATH)
   implicit none
 
   integer, intent(in) :: myrank,nspec
-  character(len=256) :: LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH
 
   ! local parameters
   real, dimension(:,:,:,:),allocatable :: vp_read,vs_read,rho_read
   integer :: ier
 
   ! ADIOS stuffs
-  character(len=256) :: database_name
+  character(len=MAX_STRING_LEN) :: database_name
   integer(kind=8) :: handle, sel
   integer(kind=8), dimension(1) :: start, count_ad
   integer :: local_dim_rho, local_dim_vp, local_dim_vs

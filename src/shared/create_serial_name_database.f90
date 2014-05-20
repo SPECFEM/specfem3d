@@ -29,14 +29,14 @@
 
 ! create name of the database for serial codes (AVS_DX and codes to check buffers)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer iproc,NPROC
 
 ! name of the database file
-  character(len=256) prname,procname,LOCAL_PATH,clean_LOCAL_PATH,serial_prefix,OUTPUT_FILES
+  character(len=MAX_STRING_LEN) :: prname,procname,LOCAL_PATH,clean_LOCAL_PATH,serial_prefix,OUTPUT_FILES
 
   integer iprocloop,nproc_max_loop
   integer, dimension(:), allocatable :: num_active_proc

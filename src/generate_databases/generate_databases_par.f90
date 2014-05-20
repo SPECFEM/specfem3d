@@ -28,9 +28,9 @@
 
   module generate_databases_par
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
 ! number of spectral elements in each block
   integer npointot
@@ -68,7 +68,7 @@
   logical :: USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
   logical :: MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
 
-  character(len=256) LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
 
   logical :: ADIOS_ENABLED
   logical :: ADIOS_FOR_DATABASES, ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, &
@@ -111,7 +111,7 @@
   integer :: max_nibool_interfaces_ext_mesh
   integer, dimension(:,:), allocatable :: ibool_interfaces_ext_mesh_dummy
 
-  character(len=256) prname
+  character(len=MAX_STRING_LEN) :: prname
 
 ! boundaries and materials
   double precision, dimension(:,:), allocatable :: materials_ext_mesh
@@ -183,7 +183,7 @@
 
   module create_regions_mesh_ext_par
 
-  include 'constants.h'
+  use constants
 
 ! global point coordinates
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: xstore_dummy
@@ -291,7 +291,7 @@
   logical, dimension(:), allocatable :: ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic
 
 ! name of the database file
-  character(len=256) prname
+  character(len=MAX_STRING_LEN) :: prname
 
 ! inner/outer elements
   logical,dimension(:),allocatable :: ispec_is_inner

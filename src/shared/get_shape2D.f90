@@ -27,9 +27,9 @@
 
   subroutine get_shape2D(myrank,shape2D,dershape2D,xigll,yigll,NGLLA,NGLLB,NGNOD,NGNOD2D)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
 ! generic routine that accepts any polynomial degree in each direction
 
@@ -138,9 +138,9 @@
 
   subroutine get_shape2D_9(NGNOD2D,shape2D,dershape2D,xigll,yigll,NGLLA,NGLLB)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
 ! generic routine that accepts any polynomial degree in each direction
 

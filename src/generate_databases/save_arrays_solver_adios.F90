@@ -106,8 +106,8 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob,                   &
   integer :: ier,i
 
   !--- Local parameters for ADIOS ---
-  character(len=256) :: output_name
-  character(len=64), parameter :: group_name  = "SPECFEM3D_EXTERNAL_MESH"
+  character(len=MAX_STRING_LEN) :: output_name
+  character(len=*), parameter :: group_name = "SPECFEM3D_EXTERNAL_MESH"
   integer(kind=8) :: group, handle
   integer(kind=8) :: groupsize, totalsize
   integer :: local_dim
@@ -1331,12 +1331,12 @@ subroutine save_arrays_solver_files_adios(nspec,nglob,ibool, nspec_wmax, &
   integer :: ier
 
   !--- Local parameters for ADIOS ---
-  character(len=256) :: output_name
+  character(len=MAX_STRING_LEN) :: output_name
   integer(kind=8) :: group, handle
   integer(kind=8) :: groupsize, totalsize
   integer :: local_dim
-  character(len=64), parameter :: group_name_coords  = "SPECFEM3D_MESH_COORDS"
-  character(len=64), parameter :: group_name_values = "SPECFEM3D_MODEL_VALUES"
+  character(len=*), parameter :: group_name_coords = "SPECFEM3D_MESH_COORDS"
+  character(len=*), parameter :: group_name_values = "SPECFEM3D_MODEL_VALUES"
 
   integer :: comm
 

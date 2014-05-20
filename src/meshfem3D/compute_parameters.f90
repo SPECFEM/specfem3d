@@ -33,9 +33,10 @@
                                NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB,&
                                USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
 
+  use constants
+
   implicit none
 
-  include "constants.h"
   include "constants_meshfem3D.h"
 
   ! parameters read from parameter file

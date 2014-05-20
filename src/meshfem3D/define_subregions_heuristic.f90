@@ -33,9 +33,10 @@
 ! heuristic rule to deform elements to balance angles
 ! to 120 degrees in doubling regions
 
+  use constants
+
   implicit none
 
-  include "constants.h"
   include "constants_meshfem3D.h"
 
   integer myrank

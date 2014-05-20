@@ -31,9 +31,9 @@
              ATTENUATION,ANISOTROPY,NSTEP,DT,STACEY_INSTEAD_OF_FREE_SURFACE, &
              SIMULATION_TYPE,memory_size,nfaces_surface_glob_ext_mesh)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer NSPEC_AB,NGLOB_AB,NPROC,NSTEP,SIMULATION_TYPE
 
@@ -42,7 +42,7 @@
 
   double precision DT, memory_size
 
-  character(len=256) HEADER_FILE
+  character(len=MAX_STRING_LEN) :: HEADER_FILE
 
   integer nfaces_surface_glob_ext_mesh
 

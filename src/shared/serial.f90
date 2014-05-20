@@ -64,6 +64,8 @@
 
   subroutine bcast_all_i(buffer, count)
 
+  implicit none
+
   integer count
   integer, dimension(count) :: buffer
 
@@ -75,7 +77,9 @@
 
   subroutine bcast_all_cr(buffer, count)
 
-  include "constants.h"
+  use constants
+
+  implicit none
 
   integer count
   real(kind=CUSTOM_REAL), dimension(count) :: buffer
@@ -87,6 +91,8 @@
 !
 
   subroutine bcast_all_dp(buffer, count)
+
+  implicit none
 
   integer count
   double precision, dimension(count) :: buffer
@@ -161,9 +167,9 @@
 
   subroutine gather_all_cr(sendbuf, sendcnt, recvbuf, recvcount, NPROC)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer sendcnt, recvcount, NPROC
   real(kind=CUSTOM_REAL), dimension(sendcnt) :: sendbuf
@@ -179,9 +185,9 @@
 
   subroutine gather_all_all_cr(sendbuf, recvbuf, counts,NPROC)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer  NPROC,counts
   real(kind=CUSTOM_REAL), dimension(counts) :: sendbuf
@@ -197,9 +203,9 @@
 
  subroutine gatherv_all_cr(sendbuf, sendcnt, recvbuf, recvcount, recvoffset,recvcounttot, NPROC)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer sendcnt,recvcounttot,NPROC
   integer, dimension(NPROC) :: recvcount,recvoffset
@@ -288,9 +294,9 @@
 
   subroutine max_all_cr(sendbuf, recvbuf)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   real(kind=CUSTOM_REAL) sendbuf, recvbuf
 
@@ -305,9 +311,9 @@
 
   subroutine min_all_cr(sendbuf, recvbuf)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   real(kind=CUSTOM_REAL) sendbuf, recvbuf
 
@@ -321,9 +327,9 @@
 
   subroutine min_all_all_cr(sendbuf, recvbuf)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   real(kind=CUSTOM_REAL) sendbuf, recvbuf
 
@@ -380,9 +386,9 @@
 
   subroutine max_all_all_cr(sendbuf, recvbuf)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   real(kind=CUSTOM_REAL) sendbuf, recvbuf
 
@@ -453,8 +459,9 @@
 
   subroutine sum_all_cr(sendbuf, recvbuf)
 
+  use constants
+
   implicit none
-  include "constants.h"
 
   real(kind=CUSTOM_REAL) sendbuf, recvbuf
 
@@ -468,9 +475,9 @@
 
   subroutine sum_all_all_cr(sendbuf, recvbuf)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   real(kind=CUSTOM_REAL) sendbuf, recvbuf
 
@@ -527,9 +534,9 @@
   subroutine sendrecv_all_cr(sendbuf, sendcount, dest, sendtag, &
                              recvbuf, recvcount, source, recvtag)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer sendcount, recvcount, dest, sendtag, source, recvtag
   real(kind=CUSTOM_REAL), dimension(sendcount) :: sendbuf
@@ -545,6 +552,8 @@
 
   integer function proc_null()
 
+  implicit none
+
   proc_null = 0
 
   end function proc_null
@@ -555,9 +564,9 @@
 
   subroutine isend_cr(sendbuf, sendcount, dest, sendtag, req)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer sendcount, dest, sendtag, req
   real(kind=CUSTOM_REAL), dimension(sendcount) :: sendbuf
@@ -572,9 +581,9 @@
 
   subroutine irecv_cr(recvbuf, recvcount, dest, recvtag, req)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer recvcount, dest, recvtag, req
   real(kind=CUSTOM_REAL), dimension(recvcount) :: recvbuf
@@ -637,9 +646,9 @@
 
   subroutine recvv_cr(recvbuf, recvcount, dest, recvtag )
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer recvcount,dest,recvtag
   real(kind=CUSTOM_REAL),dimension(recvcount) :: recvbuf
@@ -767,9 +776,9 @@
 
   subroutine sendv_cr(sendbuf, sendcount, dest, sendtag)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer sendcount,dest,sendtag
   real(kind=CUSTOM_REAL),dimension(sendcount) :: sendbuf

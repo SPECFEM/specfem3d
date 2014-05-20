@@ -30,9 +30,9 @@
   subroutine recompute_jacobian(xelm,yelm,zelm,xi,eta,gamma,x,y,z, &
                    xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,NGNOD)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   double precision x,y,z,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz
   double precision xi,eta,gamma,jacobian

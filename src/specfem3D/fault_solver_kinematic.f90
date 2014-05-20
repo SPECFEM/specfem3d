@@ -62,7 +62,7 @@ contains
 subroutine BC_KINFLT_init(prname,DTglobal,myrank)
 
   use specfem_par, only : nt=>NSTEP
-  character(len=256), intent(in) :: prname ! 'proc***'
+  character(len=MAX_STRING_LEN), intent(in) :: prname ! 'proc***'
   double precision, intent(in) :: DTglobal
   integer, intent(in) :: myrank
 
@@ -70,7 +70,7 @@ subroutine BC_KINFLT_init(prname,DTglobal,myrank)
   integer :: iflt,ier,dummy_idfault
   integer :: nbfaults
   integer :: SIMULATION_TYPE
-  character(len=256) :: filename
+  character(len=MAX_STRING_LEN) :: filename
   integer, parameter :: IIN_PAR =151
   integer, parameter :: IIN_BIN =170
   real(kind=CUSTOM_REAL) :: DUMMY
@@ -346,7 +346,7 @@ subroutine load_vslip_snapshots(dataXZ,itime,iflt)
   use :: specfem_par, only: OUTPUT_FILES_PATH
   integer, intent(in) :: itime,iflt
   type(dataXZ_type), intent(inout) :: dataXZ
-  character(len=256) :: filename
+  character(len=MAX_STRING_LEN) :: filename
   integer :: IIN_BIN,ier,IOUT
 
   IIN_BIN=101

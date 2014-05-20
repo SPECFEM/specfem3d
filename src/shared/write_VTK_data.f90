@@ -32,10 +32,9 @@
                         xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
                         elem_flag,prname_file)
 
+  use constants
 
   implicit none
-
-  include "constants.h"
 
   integer :: nspec,nglob
 
@@ -47,7 +46,7 @@
   integer, dimension(nspec) :: elem_flag
 
   ! file name
-  character(len=256) :: prname_file
+  character(len=MAX_STRING_LEN) :: prname_file
 
   ! local parameters
   integer :: ispec,i
@@ -102,10 +101,9 @@
                         xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
                         elem_flag,prname_file)
 
+  use constants
 
   implicit none
-
-  include "constants.h"
 
   integer :: nspec,nglob
 
@@ -118,7 +116,7 @@
   integer :: ispec,i
 
 ! file name
-  character(len=256) prname_file
+  character(len=MAX_STRING_LEN) :: prname_file
 
 ! write source and receiver VTK files for Paraview
   !debug
@@ -174,9 +172,9 @@
             xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
             gll_data,prname_file)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: nspec,nglob
 
@@ -192,7 +190,7 @@
   logical, dimension(:),allocatable :: mask_ibool
 
 ! file name
-  character(len=256) prname_file
+  character(len=MAX_STRING_LEN) :: prname_file
 
   integer :: ispec,i,j,k,ier,iglob
 
@@ -265,9 +263,9 @@
             xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
             gll_data,prname_file)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: nspec,nglob
 
@@ -283,7 +281,7 @@
   logical, dimension(:),allocatable :: mask_ibool
 
 ! file name
-  character(len=256) prname_file
+  character(len=MAX_STRING_LEN) :: prname_file
 
   integer :: ispec,i,j,k,ier,iglob
 
@@ -357,9 +355,9 @@
             points_globalindices,num_points_globalindices, &
             prname_file)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: nglob
 
@@ -371,7 +369,7 @@
   integer, dimension(num_points_globalindices) :: points_globalindices
 
 ! file name
-  character(len=256) prname_file
+  character(len=MAX_STRING_LEN) :: prname_file
 
   integer :: i,iglob
 
@@ -413,10 +411,9 @@
                         xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
                         elem_vector,prname_file)
 
+  use constants
 
   implicit none
-
-  include "constants.h"
 
   integer :: nspec,nglob
 
@@ -429,7 +426,7 @@
   integer :: ispec,i
 
   ! file name
-  character(len=256) prname_file
+  character(len=MAX_STRING_LEN) :: prname_file
 
   ! write source and receiver VTK files for Paraview
   !debug
@@ -479,10 +476,9 @@
                         xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
                         elem_flag,prname_file)
 
+  use constants
 
   implicit none
-
-  include "constants.h"
 
   integer :: nspec,nglob
 
@@ -494,7 +490,7 @@
   real(kind=CUSTOM_REAL), dimension(nspec) :: elem_flag
 
   ! file name
-  character(len=256) :: prname_file
+  character(len=MAX_STRING_LEN) :: prname_file
   !character(len=2), optional, intent(in) :: str_id
 
   ! local parameters

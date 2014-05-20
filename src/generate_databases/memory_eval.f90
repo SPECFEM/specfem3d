@@ -33,12 +33,11 @@
  subroutine memory_eval(NSPEC_AB,NGLOB_AB,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh,&
                         APPROXIMATE_OCEAN_LOAD,memory_size)
 
+  use constants
   use generate_databases_par, only: PML_CONDITIONS,nspec_cpml
   use create_regions_mesh_ext_par,only: NSPEC_ANISO,ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic
 
   implicit none
-
-  include "constants.h"
 
   ! input
   integer, intent(in) :: NSPEC_AB,NGLOB_AB
@@ -233,11 +232,10 @@
                               nspec2D_ymin,nspec2D_ymax,nspec2D_bottom,nspec2D_top, &
                               memory_size_request)
 
+  use constants
   use generate_databases_par, only: NGNOD,NGNOD2D
 
   implicit none
-
-  include "constants.h"
 
   integer,intent(in) :: myrank,nspec,npointot,nnodes_ext_mesh,nelmnts_ext_mesh, &
            nmat_ext_mesh,num_interfaces_ext_mesh, &

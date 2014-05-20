@@ -30,9 +30,10 @@
              NPROC_XI,NPROC_ETA, &
              UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK)
 
+  use constants
+
   implicit none
 
-  include "constants.h"
   include "constants_meshfem3D.h"
 
   integer nspec

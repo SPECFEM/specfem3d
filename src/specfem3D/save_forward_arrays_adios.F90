@@ -57,8 +57,8 @@ subroutine save_forward_arrays_adios()
   implicit none
 
   !--- Local parameters for ADIOS ---
-  character(len=256) :: output_name
-  character(len=64), parameter :: group_name  = "SPECFEM3D_DATABASES"
+  character(len=MAX_STRING_LEN) :: output_name
+  character(len=*), parameter :: group_name = "SPECFEM3D_DATABASES"
   integer(kind=8) :: group, handle
   integer(kind=8) :: groupsize, totalsize
   integer :: local_dim

@@ -48,7 +48,7 @@
   integer myrank
   integer iorientation,irecord
 
-  character(len=256) sisname,final_LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: sisname,final_LOCAL_PATH
 
   ! local parameter
   integer isample,nt_s,ier

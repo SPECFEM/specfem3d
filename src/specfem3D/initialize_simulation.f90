@@ -252,7 +252,7 @@
 
   integer :: ier
 
-  character(len=256) :: HEADER_FILE
+  character(len=MAX_STRING_LEN) :: HEADER_FILE
   logical :: ABSORB_FREE_SURFACE_VAL
 
   NAMELIST/MESHER/ABSORB_FREE_SURFACE_VAL

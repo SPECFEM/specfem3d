@@ -28,9 +28,9 @@
   subroutine get_cmt(yr,jda,ho,mi,sec,tshift_cmt,hdur,lat,long,depth,moment_tensor,&
                     DT,NSOURCES,min_tshift_cmt_original)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
 !--- input or output arguments of the subroutine below
 
@@ -47,7 +47,7 @@
   integer mo,da,julian_day,isource
   double precision t_shift(NSOURCES)
   character(len=5) datasource
-  character(len=256) string, CMTSOLUTION
+  character(len=MAX_STRING_LEN) :: string, CMTSOLUTION
 
   ! initializes
   lat(:) = 0.d0
@@ -73,10 +73,10 @@
 ! read source number isource
   do isource=1,NSOURCES
 
-    read(1,"(a256)") string
+    read(1,"(a)") string
     ! skips empty lines
     do while( len_trim(string) == 0 )
-      read(1,"(a256)") string
+      read(1,"(a)") string
     enddo
 
     ! read header with event information

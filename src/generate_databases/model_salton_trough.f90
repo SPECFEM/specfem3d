@@ -55,10 +55,9 @@
 
   subroutine model_salton_trough_broadcast(myrank)
 
+  use constants
   use salton_trough_par
   implicit none
-
-  include "constants.h"
 
   integer :: myrank
 

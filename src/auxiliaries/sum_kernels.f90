@@ -51,7 +51,7 @@
 
 module sum_par
 
-  include 'constants.h'
+  use constants
 
   ! USER PARAMETERS
 
@@ -77,7 +77,7 @@ module sum_par
   integer, parameter :: MAX_NUM_NODES = 1000
 
   ! default list name
-  character(len=150),parameter :: kernel_file_list = '../kernels_list.txt'
+  character(len=*), parameter :: kernel_file_list = '../kernels_list.txt'
 
   ! mesh size
   integer :: NSPEC_AB, NGLOB_AB
@@ -93,8 +93,8 @@ program sum_kernels
   use sum_par
   implicit none
 
-  character(len=150) :: kernel_list(MAX_NUM_NODES)
-  character(len=150) :: sline, kernel_name,prname_lp
+  character(len=MAX_STRING_LEN) :: kernel_list(MAX_NUM_NODES)
+  character(len=MAX_STRING_LEN) :: sline, kernel_name,prname_lp
   integer :: nker, myrank, sizeprocs
   integer :: ios
 
@@ -112,7 +112,7 @@ program sum_kernels
   logical :: STACEY_ABSORBING_CONDITIONS,SAVE_FORWARD,STACEY_INSTEAD_OF_FREE_SURFACE
   logical :: ANISOTROPY,SAVE_MESH_FILES,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
   logical :: PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID
-  character(len=256) LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
 
   ! ============ program starts here =====================
   ! initialize the MPI communicator and start the NPROCTOT MPI processes
@@ -270,11 +270,11 @@ subroutine sum_kernel_pre(kernel_name,kernel_list,nker,myrank)
   implicit none
 
   real(kind=CUSTOM_REAL) :: norm,norm_sum
-  character(len=150) :: kernel_name,kernel_list(MAX_NUM_NODES)
+  character(len=MAX_STRING_LEN) :: kernel_name,kernel_list(MAX_NUM_NODES)
   integer :: nker,myrank
 
   ! local parameters
-  character(len=150) :: k_file
+  character(len=MAX_STRING_LEN*2) :: k_file
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: &
     kernel,hess,total_kernel
   integer :: iker,ios

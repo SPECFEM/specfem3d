@@ -68,7 +68,7 @@
   integer :: max_nibool_interfaces_ext_mesh
 
   integer :: ier,i
-  character(len=256) :: filename
+  character(len=MAX_STRING_LEN) :: filename
 
   ! saves mesh file proc***_external_mesh.bin
   filename = prname(1:len_trim(prname))//'external_mesh.bin'
@@ -399,7 +399,7 @@
   integer :: ier,i
   integer, dimension(:), allocatable :: iglob_tmp
   integer :: j,inum
-  character(len=256) :: filename
+  character(len=MAX_STRING_LEN) :: filename
 
   logical,parameter :: DEBUG = .false.
 

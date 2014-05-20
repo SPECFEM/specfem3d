@@ -37,9 +37,9 @@
                         USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
                         PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,FULL_ATTENUATION_SOLID,TRAC_PATH)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,SIMULATION_TYPE, NTSTEP_BETWEEN_READ_ADJSRC
   integer NSOURCES,NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO,UTM_PROJECTION_ZONE
@@ -54,14 +54,14 @@
   logical USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE,USE_RICKER_TIME_FUNCTION
   logical PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID
 
-  character(len=256) LOCAL_PATH,TOMOGRAPHY_PATH,CMTSOLUTION,FORCESOLUTION,TRAC_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH,TOMOGRAPHY_PATH,CMTSOLUTION,FORCESOLUTION,TRAC_PATH
 
 ! local variables
   integer ::ios,icounter,isource,idummy,nproc_eta_old,nproc_xi_old
   double precision :: hdur,minval_hdur
-  character(len=256) :: dummystring
+  character(len=MAX_STRING_LEN) :: dummystring
 
-  character(len=150) MODEL
+  character(len=MAX_STRING_LEN) :: MODEL
   integer :: i,irange,ierr
 
   ! opens file Par_file
@@ -354,8 +354,9 @@
 
   subroutine read_gpu_mode(GPU_MODE,GRAVITY)
 
+  use constants
+
   implicit none
-  include "constants.h"
 
   logical :: GPU_MODE
   logical :: GRAVITY
@@ -393,8 +394,10 @@
 subroutine read_adios_parameters(ADIOS_ENABLED, ADIOS_FOR_DATABASES,       &
                                  ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, &
                                  ADIOS_FOR_KERNELS)
+
+  use constants
+
   implicit none
-  include "constants.h"
 
   logical, intent(out) :: ADIOS_ENABLED, ADIOS_FOR_DATABASES,       &
                           ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, &

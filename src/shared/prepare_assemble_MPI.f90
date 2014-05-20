@@ -37,9 +37,9 @@
 !
 ! for all points on the interface defined by ninterface, my_nelmnts_neighbours and my_interfaces
 
-  implicit none
+  use constants
 
-  include 'constants.h'
+  implicit none
 
 ! spectral element indexing
 ! ( nelmnts = number of spectral elements
@@ -147,9 +147,9 @@ subroutine get_edge ( n, itype, e1, e2, e3, e4, &
 ! returns range of local (GLL) point indices i,j,k depending on given type
 ! for corner point (1), edge (2) or face (4)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
 ! corner node indices per spectral element (8)
   integer, dimension(NGNOD_EIGHT_CORNERS), intent(in)  :: n

@@ -33,9 +33,9 @@
 
 ! returns jacobian2Dw_face and normal_face (pointing outwards of element)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: nspec,myrank,nglob
 
@@ -304,9 +304,9 @@
                                 dershape2D,wgllwgll, &
                                 jacobian2Dw_face,normal_face,NGLLA,NGLLB,NGNOD2D)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
 ! generic routine that accepts any polynomial degree in each direction
 ! returns 2D jacobian and normal for this face only

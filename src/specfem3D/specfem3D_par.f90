@@ -27,14 +27,6 @@
 !
 ! United States and French Government Sponsorship Acknowledged.
 
-module constants
-
-  include "constants.h"
-
-end module constants
-
-!=====================================================================
-
 module specfem_par
 
 ! main parameter module for specfem simulations
@@ -92,7 +84,7 @@ module specfem_par
 
 ! attenuation
   integer :: NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa
-  character(len=256) prname_Q
+  character(len=MAX_STRING_LEN) :: prname_Q
 
 ! additional mass matrix for ocean load
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_ocean_load
@@ -125,7 +117,7 @@ module specfem_par
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: pm1_source_encoding
 
 ! receiver information
-  character(len=256) :: rec_filename,filtered_rec_filename,dummystring
+  character(len=MAX_STRING_LEN) :: rec_filename,filtered_rec_filename,dummystring
   integer :: nrec,nrec_local,nrec_tot_found
   integer :: nrec_simulation
   integer, dimension(:), allocatable :: islice_selected_rec,ispec_selected_rec
@@ -201,14 +193,14 @@ module specfem_par
   integer :: NPROC_XI,NPROC_ETA
   double precision :: LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX
 
-  character(len=256) LOCAL_PATH,TOMOGRAPHY_PATH,prname,dsmname,TRAC_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH,TOMOGRAPHY_PATH,prname,dsmname,TRAC_PATH
 
   logical :: ADIOS_ENABLED
   logical :: ADIOS_FOR_DATABASES, ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, &
              ADIOS_FOR_KERNELS
 
 ! names of the data files for all the processors in MPI
-  character(len=256) outputname
+  character(len=MAX_STRING_LEN) :: outputname
 
 ! for assembling in case of external mesh
   integer :: num_interfaces_ext_mesh
@@ -264,7 +256,7 @@ module specfem_par
   logical, dimension(:),allocatable :: is_moho_top, is_moho_bot
 
   ! adjoint sources
-  character(len=256) adj_source_file
+  character(len=MAX_STRING_LEN) :: adj_source_file
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: adj_sourcearray
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:,:), allocatable :: adj_sourcearrays
   integer :: nadj_rec_local

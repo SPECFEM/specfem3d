@@ -269,7 +269,7 @@ end module user_noise_distribution
   ! local parameters
   integer :: ipoin,ispec,i,j,k,iglob,ios,iface,igll
   real(kind=CUSTOM_REAL) :: normal_x_noise_out,normal_y_noise_out,normal_z_noise_out,mask_noise_out
-  character(len=256) :: filename
+  character(len=MAX_STRING_LEN) :: filename
 
   ! read master receiver ID -- the ID in "STATIONS"
   filename = trim(OUTPUT_FILES_PATH)//'/..//NOISE_TOMOGRAPHY/irec_master_noise'
@@ -354,12 +354,12 @@ end module user_noise_distribution
 
   ! input parameters
   integer :: myrank,NOISE_TOMOGRAPHY,SIMULATION_TYPE,NSPEC_TOP,NSTEP
-  character(len=256) :: LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH
   logical :: SAVE_FORWARD
   ! local parameters
   integer :: reclen
   integer(kind=8) :: filesize
-  character(len=256) :: outputname
+  character(len=MAX_STRING_LEN) :: outputname
 
   if (myrank == 0) then
     open(unit=IOUT_NOISE,file=trim(OUTPUT_FILES_PATH)//'NOISE_SIMULATION', &
@@ -471,7 +471,7 @@ end module user_noise_distribution
   double precision :: xi_noise, eta_noise, gamma_noise ! master receiver location
   double precision :: hxir(NGLLX), hpxir(NGLLX), hetar(NGLLY), hpetar(NGLLY), &
         hgammar(NGLLZ), hpgammar(NGLLZ)
-  character(len=256) :: filename
+  character(len=MAX_STRING_LEN) :: filename
 
 
   noise_src(:) = 0._CUSTOM_REAL
@@ -870,9 +870,9 @@ end module user_noise_distribution
   integer myrank
   integer :: NSPEC_AB_VAL
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL) :: Sigma_kl
-  character(len=256) :: LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH
   ! local parameters
-  character(len=256) :: prname
+  character(len=MAX_STRING_LEN) :: prname
 
   call create_name_database(prname,myrank,LOCAL_PATH)
 

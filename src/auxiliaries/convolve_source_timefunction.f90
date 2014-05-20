@@ -35,9 +35,9 @@
 ! using a Gaussian having a very close shape, as explained in Figure 4.2
 ! of the manual
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: i,j,N_j,number_remove,nlines
 

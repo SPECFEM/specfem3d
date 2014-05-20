@@ -31,11 +31,10 @@
                           xstore,ystore,zstore, &
                           xelm,yelm,zelm,shape3D,dershape3D,ispec,nspec)
 
+  use constants
   use generate_databases_par, only: NGNOD
 
   implicit none
-
-  include "constants.h"
 
   integer ispec,nspec,myrank
 

@@ -29,11 +29,12 @@
 
   subroutine read_value_integer(value_to_read, name, ierr)
 
+  use constants, only: MAX_STRING_LEN
   implicit none
 
   integer value_to_read
-  character(len=*) name
-  character(len=512) string_read
+  character(len=*) :: name
+  character(len=MAX_STRING_LEN) :: string_read
   integer ierr
 
   call param_read(string_read, len(string_read), name, len(name), ierr)
@@ -46,11 +47,12 @@
 
   subroutine read_value_double_precision(value_to_read, name, ierr)
 
+  use constants, only: MAX_STRING_LEN
   implicit none
 
   double precision value_to_read
-  character(len=*) name
-  character(len=512) string_read
+  character(len=*) :: name
+  character(len=MAX_STRING_LEN) :: string_read
   integer ierr
 
   call param_read(string_read, len(string_read), name, len(name), ierr)
@@ -63,11 +65,12 @@
 
   subroutine read_value_logical(value_to_read, name, ierr)
 
+  use constants, only: MAX_STRING_LEN
   implicit none
 
   logical value_to_read
-  character(len=*) name
-  character(len=512) string_read
+  character(len=*) :: name
+  character(len=MAX_STRING_LEN) :: string_read
   integer ierr
 
   call param_read(string_read, len(string_read), name, len(name), ierr)
@@ -80,11 +83,12 @@
 
   subroutine read_value_string(value_to_read, name, ierr)
 
+  use constants, only: MAX_STRING_LEN
   implicit none
 
-  character(len=*) value_to_read
-  character(len=*) name
-  character(len=512) string_read
+  character(len=*) :: value_to_read
+  character(len=*) :: name
+  character(len=MAX_STRING_LEN) :: string_read
   integer ierr
 
   call param_read(string_read, len(string_read), name, len(name), ierr)
@@ -97,9 +101,12 @@
 
   subroutine open_parameter_file(ierr)
 
-  include 'constants.h'
+  use constants, only: MAX_STRING_LEN,IN_DATA_FILES_PATH
+
+  implicit none
+
   integer ierr
-  character(len=512) filename
+  character(len=MAX_STRING_LEN) :: filename
   filename = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'Par_file'
 
   call param_open(filename, len(filename), ierr)

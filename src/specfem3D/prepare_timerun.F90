@@ -394,7 +394,7 @@
   implicit none
 
   ! local parameters
-  character(len=256) :: plot_file
+  character(len=MAX_STRING_LEN) :: plot_file
   integer :: ier
 
   ! distinguish between single and double precision for reals

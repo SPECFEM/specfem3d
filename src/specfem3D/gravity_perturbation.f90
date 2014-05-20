@@ -356,7 +356,7 @@ subroutine gravity_output()
   implicit none
 
   integer :: isample,istat,nstep_grav
-  character(len=256) sisname
+  character(len=MAX_STRING_LEN) :: sisname
 
   nstep_grav = floor(dble(NSTEP/ntimgap))
   nstat_local = nint(dble(nstat/NPROC))

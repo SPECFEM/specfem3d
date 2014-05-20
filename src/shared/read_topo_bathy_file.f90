@@ -29,9 +29,9 @@
 
 ! reads topography and bathymetry file
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   ! use integer array to store topography values
   integer :: NX_TOPO,NY_TOPO
@@ -70,9 +70,9 @@
 
 ! finds elevation from topography file
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   real(kind=CUSTOM_REAL),intent(in) :: x_target,y_target
 
@@ -139,9 +139,9 @@
 
 ! get approximate topography elevation at source long/lat coordinates
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   real(kind=CUSTOM_REAL),intent(in) :: x_target,y_target
 
@@ -309,9 +309,9 @@
 
 ! get approximate topography elevation at long/lat coordinates from closest point
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   real(kind=CUSTOM_REAL),intent(in) :: x_target,y_target
 

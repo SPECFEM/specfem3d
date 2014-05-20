@@ -285,7 +285,7 @@ endif
 ## auxiliaries
 ##
 
-$O/%.aux.o: $S/%.f90 ${SETUP}/constants.h
+$O/%.aux.o: $S/%.f90 $O/constants_mod.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 
@@ -293,7 +293,7 @@ $O/%.aux.o: $S/%.f90 ${SETUP}/constants.h
 ### ADIOS compilation
 ###
 
-$O/%.aux_adios.o: $S/%.f90 ${SETUP}/constants.h
+$O/%.aux_adios.o: $S/%.f90 $O/constants_mod.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 $O/%.aux_noadios.o: $S/%.f90

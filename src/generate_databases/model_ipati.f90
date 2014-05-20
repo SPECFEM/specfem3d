@@ -40,12 +40,12 @@
   implicit none
 
   integer, intent(in) :: myrank,nspec
-  character(len=256) :: LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH
 
   ! local parameters
   real, dimension(:,:,:,:),allocatable :: vp_read,vs_read,rho_read
   integer :: ier
-  character(len=256) :: prname_lp,filename
+  character(len=MAX_STRING_LEN) :: prname_lp,filename
 
   ! -----------------------------------------------------------------------------
 
@@ -123,12 +123,12 @@
   implicit none
 
   integer, intent(in) :: myrank,nspec
-  character(len=256) :: LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH
 
   ! local parameters
   real, dimension(:,:,:,:),allocatable :: vp_read,vs_read,rho_read
   integer :: ispec,ier
-  character(len=256) :: prname_lp,filename
+  character(len=MAX_STRING_LEN) :: prname_lp,filename
 
   ! -----------------------------------------------------------------------------
 

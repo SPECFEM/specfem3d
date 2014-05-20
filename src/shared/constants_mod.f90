@@ -24,44 +24,12 @@
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
 !=====================================================================
-
-!--------------------------------------------------------------------------------------------------
 !
-! generic tomography file
-!
-! note: the idea is to use external tomography velocity models
-!
-! most of the routines here are place-holders, please add/implement your own routines
-!
-!--------------------------------------------------------------------------------------------------
+! United States and French Government Sponsorship Acknowledged.
 
-  module tomography_par
+module constants
 
-  use constants
+  include "constants.h"
 
-  ! for external tomography:
-  ! (regular spaced, xyz-block file in ascii)
+end module constants
 
-  ! number of external tomographic models
-  integer :: NFILES_TOMO
-
-  ! models dimensions
-  double precision  :: END_X,END_Y,END_Z
-
-  double precision, dimension(:), allocatable :: ORIG_X,ORIG_Y,ORIG_Z
-  double precision, dimension(:), allocatable :: SPACING_X,SPACING_Y,SPACING_Z
-
-  ! models parameter records
-  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: vp_tomography,vs_tomography,rho_tomography,z_tomography
-
-  ! models entries
-  integer, dimension(:), allocatable :: NX,NY,NZ
-  integer, dimension(:), allocatable :: nrecord
-
-  ! min/max statistics
-  double precision, dimension(:), allocatable :: VP_MIN,VS_MIN,RHO_MIN,VP_MAX,VS_MAX,RHO_MAX
-
-  ! process rank
-  integer :: myrank_tomo
-
-  end module tomography_par

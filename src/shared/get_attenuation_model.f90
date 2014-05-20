@@ -37,9 +37,9 @@
 !   Estimation of Q for Long-Period (>2 sec) Waves in the Los Angeles Basin
 !   BSSA, 93, 2, p. 627-638
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   real(kind=CUSTOM_REAL) :: vs_val
   double precision :: Q_mu
@@ -119,9 +119,9 @@
 
 ! precalculates attenuation arrays and stores arrays into files
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   double precision :: OLSEN_ATTENUATION_RATIO
   integer :: myrank,nspec
@@ -137,7 +137,7 @@
 
   logical, dimension(nspec) :: ispec_is_elastic
   real(kind=CUSTOM_REAL) :: min_resolved_period
-  character(len=256) :: prname
+  character(len=MAX_STRING_LEN) :: prname
 
   ! local parameters
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: one_minus_sum_beta
@@ -340,9 +340,9 @@
 
 ! returns: runge-kutta scheme terms alphaval, betaval and gammaval
 
-  implicit none
+  use constants
 
-  include 'constants.h'
+  implicit none
 
   real(kind=CUSTOM_REAL), dimension(N_SLS) :: tau_s, alphaval, betaval,gammaval
   real(kind=CUSTOM_REAL) :: deltat
@@ -376,9 +376,9 @@
 
 ! returns: period band constants tau_sigma and center frequency f_c_source
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   real(kind=CUSTOM_REAL) :: min_resolved_period
   double precision, dimension(N_SLS) :: tau_sigma
@@ -429,10 +429,9 @@
 ! in the future when more memory is available on computers
 ! it would be more accurate to use four mechanisms instead of three
 
+  use constants
 
   implicit none
-
-  include "constants.h"
 
   integer:: myrank
   double precision :: MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD
@@ -481,9 +480,9 @@
 !
 ! returns: coefficients beta, one_minus_sum_beta
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   double precision,dimension(N_SLS),intent(in) :: tau_s, tau_eps
   double precision,dimension(N_SLS),intent(out) :: beta
@@ -517,9 +516,9 @@
 
 ! returns: physical dispersion scaling factor scale_factor
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: myrank
   double precision :: scale_factor, Q_mu, f_c_source
@@ -596,9 +595,9 @@
 
 ! determines min/max periods for attenuation based upon mininum resolved period of mesh
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   real(kind=CUSTOM_REAL),intent(in) :: min_resolved_period
   double precision,intent(out) :: MIN_ATTENUATION_PERIOD, MAX_ATTENUATION_PERIOD
@@ -741,9 +740,9 @@
 !
 ! returns: determines strain relaxation times tau_eps
 
-  implicit none
+  use constants
 
-  include 'constants.h'
+  implicit none
 
 ! model_attenuation_variables
 !...
@@ -798,8 +797,9 @@
 
   subroutine model_attenuation_storage(Qmu, tau_eps, rw, AM_S)
 
+  use constants
+
   implicit none
-  include 'constants.h'
 
 ! model_attenuation_storage_var
   type model_attenuation_storage_var

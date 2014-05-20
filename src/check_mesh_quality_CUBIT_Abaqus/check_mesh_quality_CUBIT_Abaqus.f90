@@ -41,9 +41,9 @@
 
   program check_mesh_quality_CUBIT_Abaqus
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
 !------------------------------------------------------------------------------------------------
 ! EDIT YOUR PARAMETERS BELOW HERE
@@ -55,7 +55,7 @@
 !                 Cubit -> File -> Export... Abacus (*.inp)
 !                                         ( block ids: 1 2 3 ) volumes only
 !                                         (optional: uncheck 'Export Using Cubit IDs' to have element IDs in increasing order)
-  character(len=100), parameter :: cubit_mesh_file = 'examples/layered_halfspace/layered_halfspace_mesh.inp'
+  character(len=*), parameter :: cubit_mesh_file = 'examples/layered_halfspace/layered_halfspace_mesh.inp'
   integer, parameter :: NPOIN = 76819                    ! number of nodes
   integer, parameter :: NSPEC = 70200                    ! number of elements (only volumes, i.e. block ids 1,2,3 )
   integer, parameter :: NGNOD = 8                        ! hexahedral elements
@@ -94,7 +94,7 @@
   integer :: ntotspecAVS_DX
   logical :: USE_OPENDX
 
-  character(len=256):: line
+  character(len=MAX_STRING_LEN) :: line
 
   if(NGNOD /= 8) then
     print *,'error: check_mesh_quality_CUBIT_Abaqus only supports NGNOD == 8 for now'
@@ -174,7 +174,7 @@
   do i = 1,NPOIN
 
     ! reads in text line
-    read(10,'(a256)',iostat=ier) line
+    read(10,'(a)',iostat=ier) line
     if(ier /= 0 ) then
       print *,'error read line:',i
       stop 'error read points'
@@ -184,7 +184,7 @@
     do while ( line(1:1) == "*" )
       ! skips comment line and goes to next line
       print*,'  comment:',trim(line)
-      read(10,'(a256)',iostat=ier) line
+      read(10,'(a)',iostat=ier) line
       if(ier /= 0 ) then
         print *,'error read non-comment line:',i
         stop 'error read points'
@@ -218,7 +218,7 @@
 
 ! skip the header
   !read(10,*)
-  read(10,'(a256)',iostat=ier) line
+  read(10,'(a)',iostat=ier) line
   if( line(1:1) /= "*" ) then
     print*,'  new line: ',trim(line)
     print*,'  not a header line, check the number of points NPOIN specified'
@@ -246,7 +246,7 @@
                  .and. i == 28429) read(10,*)
 
       ! reads in line
-      read(10,'(a256)',iostat=ier) line
+      read(10,'(a)',iostat=ier) line
       if(ier /= 0 ) then
         print *,'error read:',iread
         stop 'error read elements line'
@@ -256,7 +256,7 @@
       do while ( line(1:1) == "*" )
         ! skips comment line and goes to next line
         print*,'  comment: ',trim(line)
-        read(10,'(a256)',iostat=ier) line
+        read(10,'(a)',iostat=ier) line
         if(ier /= 0 ) then
           print *,'error read:',i
           stop 'error read non-comment elements line'
@@ -291,7 +291,7 @@
                  .and. i == 252929) read(10,*)
 
       ! reads in line
-      read(10,'(a256)',iostat=ier) line
+      read(10,'(a)',iostat=ier) line
       if(ier /= 0 ) then
         print *,'error read:',iread
         stop 'error read elements line'
@@ -301,7 +301,7 @@
       do while ( line(1:1) == "*" )
         ! skips comment line and goes to next line
         print*,'  comment: ',trim(line)
-        read(10,'(a256)',iostat=ier) line
+        read(10,'(a)',iostat=ier) line
         if(ier /= 0 ) then
           print *,'error read:',i
           stop 'error read non-comment elements line'
@@ -686,9 +686,9 @@
   subroutine create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NPOIN,NGNOD,VP_MAX,delta_t, &
                equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: iface,icorner,ispec,NSPEC,NPOIN,NGNOD,i
 
@@ -848,9 +848,9 @@
   subroutine create_mesh_quality_data_2D(x,y,z,ibool,ispec,NSPEC,NPOIN,NGNOD,VP_MAX,delta_t, &
                equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: icorner,ispec,NSPEC,NPOIN,NGNOD,i
 

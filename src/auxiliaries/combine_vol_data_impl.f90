@@ -59,6 +59,7 @@ end subroutine print_usage
 !> Interpret command line arguments
 subroutine read_args(arg, MAX_NUM_NODES, node_list, num_node, &
                     filename, indir, outdir, ires)
+  use constants, only: MAX_STRING_LEN
   implicit none
   ! Arguments
   character(len=*), intent(in) :: arg(:)
@@ -67,7 +68,7 @@ subroutine read_args(arg, MAX_NUM_NODES, node_list, num_node, &
   integer, intent(out) :: num_node, ires
   character(len=*), intent(out) :: filename, indir, outdir
   ! Variables
-  character(len=256) :: sline
+  character(len=MAX_STRING_LEN) :: sline
   integer :: it, iproc, proc1, proc2, ios, njunk
 
   if (command_argument_count() == 5) then
