@@ -145,6 +145,7 @@ sum_kernels_auxiliaries_SHARED_OBJECTS = \
 
 auxiliaries_OBJECTS += $(sum_kernels_auxiliaries_OBJECTS)
 auxiliaries_SHARED_OBJECTS += $(sum_kernels_auxiliaries_SHARED_OBJECTS)
+auxiliaries_MODULES += $(FC_MODDIR)/sum_par.$(FC_MODEXT)
 
 
 ##
@@ -211,7 +212,7 @@ endif
 
 auxiliaries_OBJECTS += $(combine_vol_data_auxiliaries_OBJECTS)
 auxiliaries_SHARED_OBJECTS += $(combine_vol_data_auxiliaries_SHARED_OBJECTS)
-auxiliaries_MODULES += combine_vol_data_adios_mod.mod  
+auxiliaries_MODULES += $(FC_MODDIR)/combine_vol_data_adios_mod.$(FC_MODEXT)
 
 ##
 ## create_movie_shakemap_AVS_DX_GMT
