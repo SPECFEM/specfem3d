@@ -80,7 +80,8 @@ case $my_FC in
         # GNU gfortran
         #
         DEF_FFLAGS="-std=f2003 -fimplicit-none -frange-check -O2 -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -ffpe-trap=invalid,zero,overflow"
-        # for debugging, add -ggdb -fbacktrace -fbounds-check -ffpe-trap=overflow,zero
+        # useful for debugging: add   -ggdb -fbacktrace -fbounds-check
+        # useful to track loss of accuracy because of automatic double to single precision conversion:  -Wconversion  (this may generate many warnings...)
         ;;
     g95|*/g95)
         #
