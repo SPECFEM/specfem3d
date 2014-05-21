@@ -378,7 +378,7 @@
   double precision, parameter :: ORIG_LAT_TOPO = 32.d0
   double precision, parameter :: ORIG_LONG_TOPO = -121.d0
   double precision, parameter :: DEGREES_PER_CELL_TOPO = 5.d0 / 1000.d0
-  character(len=100), parameter :: TOPO_FILE = 'DATA/la_topography/topo_bathy_final.dat'
+  character(len=*), parameter :: TOPO_FILE = 'DATA/la_topography/topo_bathy_final.dat'
 
 ! ! size of topography and bathymetry file for Piero Basini's model
 !   integer, parameter :: NX_TOPO_FILE = 787, NY_TOPO_FILE = 793

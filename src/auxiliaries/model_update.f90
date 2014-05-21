@@ -38,7 +38,7 @@ program model_update
   ! USER PARAMETERS
 
   ! directory where the mesh files for the NEW model will be written
-  character(len=*), parameter :: &
+  character(len=MAX_STRING_LEN), parameter :: &
     LOCAL_PATH_NEW = trim(LOCAL_PATH_Q)//'/mesh_files_m01'
 
   ! directory where the output files of model_update will be written
