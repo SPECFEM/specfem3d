@@ -147,17 +147,33 @@ end subroutine read_partition_files_adios
 ! Subroutines from save_arrays_solver_adios.F90 |
 !-----------------------------------------------'
 
-subroutine save_arrays_solver_ext_mesh_adios()
+subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob,                   &
+                                             APPROXIMATE_OCEAN_LOAD,         &
+                                             ibool, num_interfaces_ext_mesh, &
+                                             my_neighbours_ext_mesh,         &
+                                             nibool_interfaces_ext_mesh,     &
+                                             max_interface_size_ext_mesh,    &
+                                             ibool_interfaces_ext_mesh,      &
+                                             SAVE_MESH_FILES,ANISOTROPY)
+
   use adios_manager_mod
+  use generate_databases_par, only: NGLLX,NGLLY,NGLLZ
+
+  implicit none
+  integer :: nspec,nglob
+  logical :: APPROXIMATE_OCEAN_LOAD
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
+  integer :: num_interfaces_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh) :: my_neighbours_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
+  integer :: max_interface_size_ext_mesh
+  integer, dimension(NGLLX * NGLLX * max_interface_size_ext_mesh, &
+                     num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
+  logical :: SAVE_MESH_FILES
+  logical :: ANISOTROPY
 
   call no_adios_err()
 end subroutine
-
-subroutine save_arrays_solver_files_adios()
-  use adios_manager_mod
-
-  call no_adios_err()
-end subroutine save_arrays_solver_files_adios
 
 !--------------------------------------.
 ! Subroutines from save_moho_adios.F90 |

@@ -287,7 +287,7 @@ subroutine save_kernels_elastic(adios_handle, alphav_kl, alphah_kl, &
                                           betav_kl, betah_kl, eta_kl,         &
                                           rhop_kl, alpha_kl, beta_kl)
 
-      integer(kind=8) :: adios_handle
+      integer(kind=8), intent(in) :: adios_handle
       ! FIXME
       ! see other FIXME above.
       real(kind=4), dimension(:,:,:,:), allocatable :: &

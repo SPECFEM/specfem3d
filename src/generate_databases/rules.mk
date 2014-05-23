@@ -220,7 +220,7 @@ else
 $O/get_model.gen.o: $O/generate_databases_par.gen.o $O/model_ipati_adios.gen_adios.o
 endif
 
-$O/generate_databases_adios_stubs.gen_noadios.o: $(adios_generate_databases_PRESTUBS)
+$O/generate_databases_adios_stubs.gen_noadios.o: $O/generate_databases_par.gen.o $(adios_generate_databases_PRESTUBS)
 
 $O/adios_helpers.shared_adios.o: \
 	$O/adios_helpers_definitions.shared_adios_module.o \
