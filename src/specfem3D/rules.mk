@@ -143,7 +143,6 @@ specfem3D_SHARED_OBJECTS = \
 
 
 specfem3D_MODULES = \
-	$(FC_MODDIR)/constants.$(FC_MODEXT) \
 	$(FC_MODDIR)/fault_solver_common.$(FC_MODEXT) \
 	$(FC_MODDIR)/fault_solver_dynamic.$(FC_MODEXT) \
 	$(FC_MODDIR)/fault_solver_kinematic.$(FC_MODEXT) \
