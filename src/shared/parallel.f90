@@ -99,11 +99,11 @@
 
   subroutine bcast_all_cr(buffer, countval)
 
-  use constants
   use mpi
 
   implicit none
 
+  include "constants.h"
   include "precision.h"
 
   integer countval
@@ -140,11 +140,11 @@
 
   subroutine bcast_all_r(buffer, countval)
 
-  use constants
   use mpi
 
   implicit none
 
+  include "constants.h"
   include "precision.h"
 
   integer countval
@@ -231,11 +231,11 @@
 
   subroutine gather_all_cr(sendbuf, sendcnt, recvbuf, recvcount, NPROC)
 
-  use constants
   use mpi
 
   implicit none
 
+  include "constants.h"
   include "precision.h"
 
   integer sendcnt, recvcount, NPROC
@@ -256,11 +256,11 @@
 
   subroutine gather_all_all_cr(sendbuf, recvbuf, counts, NPROC)
 
-  use constants
   use mpi
 
   implicit none
 
+  include "constants.h"
   include "precision.h"
 
   integer NPROC,counts
@@ -280,11 +280,11 @@
 
   subroutine gatherv_all_cr(sendbuf, sendcnt, recvbuf, recvcount, recvoffset,recvcounttot, NPROC)
 
-  use constants
   use mpi
 
   implicit none
 
+  include "constants.h"
   include "precision.h"
 
   integer sendcnt,recvcounttot,NPROC
@@ -410,11 +410,11 @@
 
   subroutine max_all_cr(sendbuf, recvbuf)
 
-  use constants
   use mpi
 
   implicit none
 
+  include "constants.h"
   include "precision.h"
 
   real(kind=CUSTOM_REAL) sendbuf, recvbuf
@@ -431,11 +431,11 @@
 
   subroutine min_all_cr(sendbuf, recvbuf)
 
-  use constants
   use mpi
 
   implicit none
 
+  include "constants.h"
   include "precision.h"
 
   real(kind=CUSTOM_REAL) sendbuf, recvbuf
@@ -453,11 +453,11 @@
 
   subroutine min_all_all_cr(sendbuf, recvbuf)
 
-  use constants
   use mpi
 
   implicit none
 
+  include "constants.h"
   include "precision.h"
 
   real(kind=CUSTOM_REAL):: sendbuf, recvbuf
@@ -475,11 +475,11 @@
 !
 !  subroutine min_all_all_dp(sendbuf, recvbuf)
 !
-!  use constants
 !  use mpi
 !
 !  implicit none
 !
+!  include "constants.h"
 !  include "precision.h"
 !
 !  double precision :: sendbuf, recvbuf
@@ -496,11 +496,11 @@
 
   subroutine max_all_i(sendbuf, recvbuf)
 
-  use constants
   use mpi
 
   implicit none
 
+  include "constants.h"
   include "precision.h"
 
   integer :: sendbuf, recvbuf
@@ -545,11 +545,11 @@
 
   subroutine max_all_all_cr(sendbuf, recvbuf)
 
-  use constants
   use mpi
 
   implicit none
 
+  include "constants.h"
   include "precision.h"
 
   real(kind=CUSTOM_REAL):: sendbuf, recvbuf
@@ -568,11 +568,11 @@
 
   subroutine max_all_all_dp(sendbuf, recvbuf)
 
-  use constants
   use mpi
 
   implicit none
 
+  include "constants.h"
   include "precision.h"
 
   double precision :: sendbuf, recvbuf
@@ -590,11 +590,11 @@
 
   subroutine min_all_i(sendbuf, recvbuf)
 
-  use constants
   use mpi
 
   implicit none
 
+  include "constants.h"
   include "precision.h"
 
   integer:: sendbuf, recvbuf
@@ -649,11 +649,11 @@
 
   subroutine sum_all_cr(sendbuf, recvbuf)
 
-  use constants
   use mpi
 
   implicit none
 
+  include "constants.h"
   include "precision.h"
 
   real(kind=CUSTOM_REAL) sendbuf, recvbuf
@@ -670,11 +670,11 @@
 
   subroutine sum_all_all_cr(sendbuf, recvbuf)
 
-  use constants
   use mpi
 
   implicit none
 
+  include "constants.h"
   include "precision.h"
 
   real(kind=CUSTOM_REAL) sendbuf, recvbuf
@@ -746,11 +746,11 @@
   subroutine sendrecv_all_cr(sendbuf, sendcount, dest, sendtag, &
                              recvbuf, recvcount, source, recvtag)
 
-  use constants
   use mpi
 
   implicit none
 
+  include "constants.h"
   include "precision.h"
 
   integer sendcount, recvcount, dest, sendtag, source, recvtag
@@ -785,11 +785,11 @@
 
   subroutine isend_cr(sendbuf, sendcount, dest, sendtag, req)
 
-  use constants
   use mpi
 
   implicit none
 
+  include "constants.h"
   include "precision.h"
 
   integer sendcount, dest, sendtag, req
@@ -808,11 +808,11 @@
 
   subroutine irecv_cr(recvbuf, recvcount, dest, recvtag, req)
 
-  use constants
   use mpi
 
   implicit none
 
+  include "constants.h"
   include "precision.h"
 
   integer recvcount, dest, recvtag, req
@@ -831,11 +831,11 @@
 
   subroutine isend_i(sendbuf, sendcount, dest, sendtag, req)
 
-  use constants
   use mpi
 
   implicit none
 
+  include "constants.h"
   include "precision.h"
 
   integer sendcount, dest, sendtag, req
@@ -854,11 +854,11 @@
 
   subroutine irecv_i(recvbuf, recvcount, dest, recvtag, req)
 
-  use constants
   use mpi
 
   implicit none
 
+  include "constants.h"
   include "precision.h"
 
   integer recvcount, dest, recvtag, req
@@ -898,11 +898,11 @@
 
   subroutine recvv_cr(recvbuf, recvcount, dest, recvtag )
 
-  use constants
   use mpi
 
   implicit none
 
+  include "constants.h"
   include "precision.h"
 
   integer recvcount,dest,recvtag
@@ -1060,11 +1060,11 @@
 
   subroutine sendv_cr(sendbuf, sendcount, dest, sendtag)
 
-  use constants
   use mpi
 
   implicit none
 
+  include "constants.h"
   include "precision.h"
 
   integer sendcount,dest,sendtag
