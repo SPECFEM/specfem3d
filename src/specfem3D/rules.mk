@@ -298,7 +298,13 @@ endif
 ###
 
 $O/specfem3D_par.spec.o: $O/constants_mod.shared_module.o
-$O/compute_stacey_acoustic.o: $O/constants_mod.shared_module.o
+$O/compute_stacey_acoustic.spec.o: $O/constants_mod.shared_module.o
+$O/compute_stacey_poroelastic.spec.o: $O/constants_mod.shared_module.o
+$O/locate_receivers.spec.o: $O/constants_mod.shared_module.o
+$O/make_gravity.spec.o: $O/constants_mod.shared_module.o
+$O/multiply_arrays_source.spec.o: $O/constants_mod.shared_module.o
+$O/noise_tomography.spec.o: $O/constants_mod.shared_module.o
+$O/write_output_ASCII.spec.o: $O/constants_mod.shared_module.o
 
 $O/assemble_MPI_vector.spec.o: $O/specfem3D_par.spec.o
 $O/check_stability.spec.o: $O/specfem3D_par.spec.o
@@ -338,8 +344,8 @@ $O/write_output_SU.spec.o: $O/specfem3D_par.spec.o
 $O/write_seismograms.spec.o: $O/specfem3D_par.spec.o
 
 ## pml
-$O/compute_coupling_acoustic_el.spec.o: $O/pml_par.spec.o
-$O/compute_coupling_viscoelastic_ac.spec.o: $O/pml_par.spec.o
+$O/compute_coupling_acoustic_el.spec.o: $O/constants_mod.shared_module.o $O/pml_par.spec.o
+$O/compute_coupling_viscoelastic_ac.spec.o: $O/constants_mod.shared_module.o $O/pml_par.spec.o
 $O/compute_forces_acoustic_calling_routine.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o
 $O/compute_forces_acoustic_Dev.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o
 $O/compute_forces_acoustic_noDev.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o
