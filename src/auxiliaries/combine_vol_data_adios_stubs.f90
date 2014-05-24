@@ -46,9 +46,6 @@ subroutine read_args_adios(arg, MAX_NUM_NODES, node_list, num_node,   &
   character(len=*) :: var_name, value_file_name, mesh_file_name, &
                                    outdir
 
-  call dimitrize_args(arg, MAX_NUM_NODES, node_list, num_node,   &
-                      var_name, value_file_name, mesh_file_name, &
-                      outdir, ires)
   call no_adios_err()
 end subroutine read_args_adios
 
@@ -59,8 +56,6 @@ subroutine init_adios(value_file_name, mesh_file_name, &
   character(len=*) :: value_file_name, mesh_file_name
   integer(kind=8) :: value_handle, mesh_handle
 
-  call dimitrize_args(value_file_name, mesh_file_name, &
-                      value_handle, mesh_handle)
   call no_adios_err()
 end subroutine init_adios
 
@@ -69,7 +64,6 @@ subroutine clean_adios(value_handle, mesh_handle)
   ! Parameters
   integer(kind=8) :: value_handle, mesh_handle
 
-  call dimitrize_args(value_handle, mesh_handle)
   call no_adios_err()
 end subroutine clean_adios
 
@@ -81,8 +75,6 @@ subroutine read_scalars_adios_mesh(mesh_handle, iproc, NGLOB_AB, NSPEC_AB, &
   integer :: iproc
   integer :: NGLOB_AB, NSPEC_AB, ibool_offset, x_global_offset
 
-  call dimitrize_args(mesh_handle, iproc, NGLOB_AB, NSPEC_AB, &
-                      ibool_offset, x_global_offset)
   call no_adios_err()
 end subroutine read_scalars_adios_mesh
 
@@ -94,8 +86,6 @@ subroutine read_ibool_adios_mesh(mesh_handle, ibool_offset, &
   integer :: ibool_offset, NGLLX, NGLLY, NGLLZ, NSPEC_AB
   integer, dimension(:,:,:,:) :: ibool
 
-  call dimitrize_args(mesh_handle, ibool_offset, &
-                      NGLLX, NGLLY, NGLLZ, NSPEC_AB, ibool)
   call no_adios_err()
 end subroutine read_ibool_adios_mesh
 
@@ -108,8 +98,6 @@ subroutine read_coordinates_adios_mesh(mesh_handle, x_global_offset,  &
   integer :: x_global_offset, NGLOB_AB
   real(kind=CUSTOM_REAL),dimension(:) :: xstore, ystore, zstore
 
-  call dimitrize_args(mesh_handle, x_global_offset,  &
-                      NGLOB_AB, xstore, ystore, zstore)
   call no_adios_err()
 end subroutine read_coordinates_adios_mesh
 
@@ -122,7 +110,6 @@ subroutine read_double_values_adios(value_handle, var_name, ibool_offset, &
   integer :: ibool_offset, NSPEC_AB
   double precision, dimension(:,:,:,:) :: dat
 
-  call dimitrize_args(value_handle, var_name, ibool_offset, NSPEC_AB, dat)
   call no_adios_err()
 end subroutine read_double_values_adios
 
@@ -135,8 +122,6 @@ subroutine read_float_values_adios(value_handle, var_name, ibool_offset, &
   integer :: ibool_offset, NSPEC_AB
   real, dimension(:,:,:,:) :: dat
 
-  call dimitrize_args(value_handle, var_name, ibool_offset, &
-                      NSPEC_AB, dat)
   call no_adios_err()
 end subroutine read_float_values_adios
 
