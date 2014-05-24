@@ -67,6 +67,7 @@ shared_OBJECTS = \
 	$O/safe_alloc_mod.shared.o \
 	$O/save_header_file.shared.o \
 	$O/sort_array_coordinates.shared.o \
+	$O/unused_mod.shared_module.o \
 	$O/utm_geo.shared.o \
 	$O/write_c_binary.cc.o \
 	$O/write_VTK_data.shared.o \
@@ -76,6 +77,7 @@ shared_OBJECTS = \
 shared_MODULES = \
 	$(FC_MODDIR)/constants.$(FC_MODEXT) \
 	$(FC_MODDIR)/safe_alloc_mod.$(FC_MODEXT) \
+	$(FC_MODDIR)/unused_mod.$(FC_MODEXT) \
 	$(EMPTY_MACRO)
 
 
@@ -124,6 +126,8 @@ endif
 ####
 #### rule for each .o file below
 ####
+
+$O/unused_mod.shared_module.o: $O/constants_mod.shared_module.o
 
 ##
 ## shared

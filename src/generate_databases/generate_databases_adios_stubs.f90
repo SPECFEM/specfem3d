@@ -41,6 +41,7 @@
 subroutine model_gll_adios(myrank,nspec,LOCAL_PATH)
 
   use constants, only: MAX_STRING_LEN
+  use unused_mod
   use adios_manager_mod
 
   implicit none
@@ -48,13 +49,9 @@ subroutine model_gll_adios(myrank,nspec,LOCAL_PATH)
   integer, intent(in) :: myrank,nspec
   character(len=MAX_STRING_LEN) :: LOCAL_PATH
 
-  ! dummy to avoid compiler warning about unused variables
-  integer :: dummy
-  character(len=MAX_STRING_LEN) :: dummy_line
-
-  dummy = myrank
-  dummy = nspec
-  dummy_line = LOCAL_PATH
+  unused_i4 = myrank
+  unused_i4 = nspec
+  unused_i4 = len_trim(LOCAL_PATH)
 
   call no_adios_err()
 end subroutine
@@ -68,6 +65,7 @@ contains
 
 subroutine model_ipati_adios(myrank,nspec,LOCAL_PATH)
   use constants, only: MAX_STRING_LEN
+  use unused_mod
   use adios_manager_mod
 
   implicit none
@@ -75,19 +73,16 @@ subroutine model_ipati_adios(myrank,nspec,LOCAL_PATH)
   integer, intent(in) :: myrank,nspec
   character(len=MAX_STRING_LEN), intent(in) :: LOCAL_PATH
 
-  ! dummy to avoid compiler warning about unused variables
-  integer :: dummy
-  character(len=MAX_STRING_LEN) :: dummy_line
-
-  dummy = myrank
-  dummy = nspec
-  dummy_line = LOCAL_PATH
+  unused_i4 = myrank
+  unused_i4 = nspec
+  unused_i4 = len_trim(LOCAL_PATH)
 
   call no_adios_err()
 end subroutine model_ipati_adios
 
 subroutine model_ipati_water_adios(myrank,nspec,LOCAL_PATH)
   use constants, only: MAX_STRING_LEN
+  use unused_mod
   use adios_manager_mod
 
   implicit none
@@ -95,13 +90,9 @@ subroutine model_ipati_water_adios(myrank,nspec,LOCAL_PATH)
   integer, intent(in) :: myrank,nspec
   character(len=MAX_STRING_LEN), intent(in) :: LOCAL_PATH
 
-  ! dummy to avoid compiler warning about unused variables
-  integer :: dummy
-  character(len=MAX_STRING_LEN) :: dummy_line
-
-  dummy = myrank
-  dummy = nspec
-  dummy_line = LOCAL_PATH
+  unused_i4 = myrank
+  unused_i4 = nspec
+  unused_i4 = len_trim(LOCAL_PATH)
 
   call no_adios_err()
 end subroutine model_ipati_water_adios
@@ -109,6 +100,7 @@ end subroutine model_ipati_water_adios
 subroutine read_model_vp_rho_adios(myrank, nspec, LOCAL_PATH, &
                                    rho_read, vp_read)
   use constants, only: MAX_STRING_LEN
+  use unused_mod
   use adios_manager_mod
 
   implicit none
@@ -117,16 +109,11 @@ subroutine read_model_vp_rho_adios(myrank, nspec, LOCAL_PATH, &
   character(len=MAX_STRING_LEN), intent(in) :: LOCAL_PATH
   real, dimension(:,:,:,:), intent(inout) :: vp_read,rho_read
 
-  ! dummy to avoid compiler warning about unused variables
-  integer :: dummy
-  real :: dummy_r
-  character(len=MAX_STRING_LEN) :: dummy_line
-
-  dummy = myrank
-  dummy = nspec
-  dummy_line = LOCAL_PATH
-  dummy_r = vp_read(1,1,1,1)
-  dummy_r = rho_read(1,1,1,1)
+  unused_i4 = myrank
+  unused_i4 = nspec
+  unused_i4 = len_trim(LOCAL_PATH)
+  unused_r = vp_read(1,1,1,1)
+  unused_r = rho_read(1,1,1,1)
 
   call no_adios_err()
 end subroutine read_model_vp_rho_adios
@@ -156,6 +143,7 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob,                   &
                                              ibool_interfaces_ext_mesh,      &
                                              SAVE_MESH_FILES,ANISOTROPY)
 
+  use unused_mod
   use adios_manager_mod
   use generate_databases_par, only: NGLLX,NGLLY,NGLLZ
 
@@ -171,6 +159,15 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob,                   &
                      num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
   logical :: SAVE_MESH_FILES
   logical :: ANISOTROPY
+
+  unused_i4 = nglob
+  unused_l  = APPROXIMATE_OCEAN_LOAD
+  unused_i4 = ibool(1,1,1,1)
+  unused_i4 = my_neighbours_ext_mesh(1)
+  unused_i4 = nibool_interfaces_ext_mesh(1)
+  unused_i4 = ibool_interfaces_ext_mesh(1,1)
+  unused_l  = SAVE_MESH_FILES
+  unused_l  = ANISOTROPY
 
   call no_adios_err()
 end subroutine

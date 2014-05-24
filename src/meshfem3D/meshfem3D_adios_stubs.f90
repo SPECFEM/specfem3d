@@ -44,6 +44,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
    NMATERIALS,material_properties)
 
   use constants
+  use unused_mod
   use adios_manager_mod
 
   implicit none
@@ -67,6 +68,29 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   integer, dimension(NSPEC2D_TOP) :: ibelm_top
   integer :: NMATERIALS
   double precision, dimension(NMATERIALS,6) ::  material_properties
+
+  unused_i4 = len_trim(LOCAL_PATH)
+  unused_i4 = myrank
+  unused_i4 = sizeprocs
+  unused_i4 = iproc_xi
+  unused_i4 = iproc_eta
+  unused_i4 = addressing(0,0)
+  unused_l  = iMPIcut_xi(1,1)
+  unused_l  = iMPIcut_eta(1,1)
+  unused_i4 = ibool(1,1,1,1)
+  unused_dp = nodes_coords(1,1)
+  unused_i4 = true_material_num(1)
+  unused_i4 = nspec2D_xmin
+  unused_i4 = nspec2D_xmax
+  unused_i4 = nspec2D_ymin
+  unused_i4 = nspec2D_ymax
+  unused_i4 = ibelm_xmin(1)
+  unused_i4 = ibelm_xmax(1)
+  unused_i4 = ibelm_ymin(1)
+  unused_i4 = ibelm_ymax(1)
+  unused_i4 = ibelm_bottom(1)
+  unused_i4 = ibelm_top(1)
+  unused_dp = material_properties(1,1)
 
   call no_adios_err()
 end subroutine save_databases_adios
