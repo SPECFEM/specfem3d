@@ -99,8 +99,8 @@
 
   subroutine bcast_all_cr(buffer, countval)
 
-  use mpi
   use constants
+  use mpi
 
   implicit none
 
@@ -140,8 +140,8 @@
 
   subroutine bcast_all_r(buffer, countval)
 
-  use mpi
   use constants
+  use mpi
 
   implicit none
 
@@ -231,8 +231,8 @@
 
   subroutine gather_all_cr(sendbuf, sendcnt, recvbuf, recvcount, NPROC)
 
-  use mpi
   use constants
+  use mpi
 
   implicit none
 
@@ -256,8 +256,8 @@
 
   subroutine gather_all_all_cr(sendbuf, recvbuf, counts, NPROC)
 
-  use mpi
   use constants
+  use mpi
 
   implicit none
 
@@ -280,8 +280,8 @@
 
   subroutine gatherv_all_cr(sendbuf, sendcnt, recvbuf, recvcount, recvoffset,recvcounttot, NPROC)
 
-  use mpi
   use constants
+  use mpi
 
   implicit none
 
@@ -410,8 +410,8 @@
 
   subroutine max_all_cr(sendbuf, recvbuf)
 
-  use mpi
   use constants
+  use mpi
 
   implicit none
 
@@ -431,8 +431,8 @@
 
   subroutine min_all_cr(sendbuf, recvbuf)
 
-  use mpi
   use constants
+  use mpi
 
   implicit none
 
@@ -453,8 +453,8 @@
 
   subroutine min_all_all_cr(sendbuf, recvbuf)
 
-  use mpi
   use constants
+  use mpi
 
   implicit none
 
@@ -475,8 +475,8 @@
 !
 !  subroutine min_all_all_dp(sendbuf, recvbuf)
 !
-!  use mpi
 !  use constants
+!  use mpi
 !
 !  implicit none
 !
@@ -496,8 +496,8 @@
 
   subroutine max_all_i(sendbuf, recvbuf)
 
-  use mpi
   use constants
+  use mpi
 
   implicit none
 
@@ -545,8 +545,8 @@
 
   subroutine max_all_all_cr(sendbuf, recvbuf)
 
-  use mpi
   use constants
+  use mpi
 
   implicit none
 
@@ -568,8 +568,8 @@
 
   subroutine max_all_all_dp(sendbuf, recvbuf)
 
-  use mpi
   use constants
+  use mpi
 
   implicit none
 
@@ -590,8 +590,8 @@
 
   subroutine min_all_i(sendbuf, recvbuf)
 
-  use mpi
   use constants
+  use mpi
 
   implicit none
 
@@ -649,8 +649,8 @@
 
   subroutine sum_all_cr(sendbuf, recvbuf)
 
-  use mpi
   use constants
+  use mpi
 
   implicit none
 
@@ -670,8 +670,8 @@
 
   subroutine sum_all_all_cr(sendbuf, recvbuf)
 
-  use mpi
   use constants
+  use mpi
 
   implicit none
 
@@ -746,8 +746,8 @@
   subroutine sendrecv_all_cr(sendbuf, sendcount, dest, sendtag, &
                              recvbuf, recvcount, source, recvtag)
 
-  use mpi
   use constants
+  use mpi
 
   implicit none
 
@@ -785,8 +785,8 @@
 
   subroutine isend_cr(sendbuf, sendcount, dest, sendtag, req)
 
-  use mpi
   use constants
+  use mpi
 
   implicit none
 
@@ -808,8 +808,8 @@
 
   subroutine irecv_cr(recvbuf, recvcount, dest, recvtag, req)
 
-  use mpi
   use constants
+  use mpi
 
   implicit none
 
@@ -831,8 +831,8 @@
 
   subroutine isend_i(sendbuf, sendcount, dest, sendtag, req)
 
-  use mpi
   use constants
+  use mpi
 
   implicit none
 
@@ -854,8 +854,8 @@
 
   subroutine irecv_i(recvbuf, recvcount, dest, recvtag, req)
 
-  use mpi
   use constants
+  use mpi
 
   implicit none
 
@@ -898,8 +898,8 @@
 
   subroutine recvv_cr(recvbuf, recvcount, dest, recvtag )
 
-  use mpi
   use constants
+  use mpi
 
   implicit none
 
@@ -1060,8 +1060,8 @@
 
   subroutine sendv_cr(sendbuf, sendcount, dest, sendtag)
 
-  use mpi
   use constants
+  use mpi
 
   implicit none
 
