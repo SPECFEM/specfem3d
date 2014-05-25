@@ -64,10 +64,13 @@
 
   subroutine bcast_all_i(buffer, count)
 
+  use unused_mod
   implicit none
 
   integer count
   integer, dimension(count) :: buffer
+
+  unused_i4 = buffer(1)
 
   end subroutine bcast_all_i
 
@@ -77,12 +80,15 @@
 
   subroutine bcast_all_cr(buffer, count)
 
+  use unused_mod
   use constants
 
   implicit none
 
   integer count
   real(kind=CUSTOM_REAL), dimension(count) :: buffer
+
+  unused_cr = buffer(1)
 
   end subroutine bcast_all_cr
 
@@ -92,10 +98,13 @@
 
   subroutine bcast_all_dp(buffer, count)
 
+  use unused_mod
   implicit none
 
   integer count
   double precision, dimension(count) :: buffer
+
+  unused_dp = buffer(1)
 
   end subroutine bcast_all_dp
 
@@ -105,10 +114,13 @@
 
   subroutine bcast_all_r(buffer, count)
 
+  use unused_mod
   implicit none
 
   integer count
   real, dimension(count) :: buffer
+
+  unused_r = buffer(1)
 
   end subroutine bcast_all_r
 
@@ -203,6 +215,7 @@
 
  subroutine gatherv_all_cr(sendbuf, sendcnt, recvbuf, recvcount, recvoffset,recvcounttot, NPROC)
 
+  use unused_mod
   use constants
 
   implicit none
@@ -213,6 +226,9 @@
   real(kind=CUSTOM_REAL), dimension(recvcounttot) :: recvbuf
 
   recvbuf(:) = sendbuf(:)
+
+  unused_i4 = recvcount(1)
+  unused_i4 = recvoffset(1)
 
   end subroutine gatherv_all_cr
 
@@ -370,13 +386,13 @@
 
   subroutine max_allreduce_i(buffer,count)
 
+  use unused_mod
   implicit none
 
   integer :: count
   integer,dimension(count),intent(inout) :: buffer
 
-  ! all values already up-to-date in buffer
-  return
+  unused_i4 = buffer(1)
 
   end subroutine max_allreduce_i
 
@@ -534,6 +550,7 @@
   subroutine sendrecv_all_cr(sendbuf, sendcount, dest, sendtag, &
                              recvbuf, recvcount, source, recvtag)
 
+  use unused_mod
   use constants
 
   implicit none
@@ -543,6 +560,12 @@
   real(kind=CUSTOM_REAL), dimension(recvcount) :: recvbuf
 
   stop 'sendrecv_all_cr not implemented for serial code'
+  unused_i4 = dest
+  unused_i4 = sendtag
+  unused_i4 = source
+  unused_i4 = recvtag
+  unused_cr = sendbuf(1)
+  unused_cr = recvbuf(1)
 
   end subroutine sendrecv_all_cr
 
@@ -564,6 +587,7 @@
 
   subroutine isend_cr(sendbuf, sendcount, dest, sendtag, req)
 
+  use unused_mod
   use constants
 
   implicit none
@@ -572,6 +596,10 @@
   real(kind=CUSTOM_REAL), dimension(sendcount) :: sendbuf
 
   stop 'isend_cr not implemented for serial code'
+  unused_i4 = dest
+  unused_i4 = sendtag
+  unused_i4 = req
+  unused_cr = sendbuf(1)
 
   end subroutine isend_cr
 
@@ -581,6 +609,7 @@
 
   subroutine irecv_cr(recvbuf, recvcount, dest, recvtag, req)
 
+  use unused_mod
   use constants
 
   implicit none
@@ -589,6 +618,10 @@
   real(kind=CUSTOM_REAL), dimension(recvcount) :: recvbuf
 
   stop 'irecv_cr not implemented for serial code'
+  unused_i4 = dest
+  unused_i4 = recvtag
+  unused_i4 = req
+  unused_cr = recvbuf(1)
 
   end subroutine irecv_cr
 
@@ -598,12 +631,18 @@
 
   subroutine isend_i(sendbuf, sendcount, dest, sendtag, req)
 
+  use unused_mod
+
   implicit none
 
   integer sendcount, dest, sendtag, req
   integer, dimension(sendcount) :: sendbuf
 
   stop 'isend_i not implemented for serial code'
+  unused_i4 = dest
+  unused_i4 = sendtag
+  unused_i4 = req
+  unused_i4 = sendbuf(1)
 
   end subroutine isend_i
 
@@ -613,12 +652,18 @@
 
   subroutine irecv_i(recvbuf, recvcount, dest, recvtag, req)
 
+  use unused_mod
+
   implicit none
 
   integer recvcount, dest, recvtag, req
   integer, dimension(recvcount) :: recvbuf
 
   stop 'irecv_i not implemented for serial code'
+  unused_i4 = dest
+  unused_i4 = recvtag
+  unused_i4 = req
+  unused_i4 = recvbuf(1)
 
   end subroutine irecv_i
 
@@ -629,14 +674,18 @@
 
   subroutine recv_i(recvbuf, recvcount, dest, recvtag )
 
+  use unused_mod
+
   implicit none
 
-  !integer recvbuf,recvcount,dest,recvtag
   integer dest,recvtag
   integer recvcount
   integer,dimension(recvcount):: recvbuf
 
   stop 'recv_i not implemented for serial code'
+  unused_i4 = dest
+  unused_i4 = recvtag
+  unused_i4 = recvbuf(1)
 
   end subroutine recv_i
 
@@ -646,6 +695,7 @@
 
   subroutine recvv_cr(recvbuf, recvcount, dest, recvtag )
 
+  use unused_mod
   use constants
 
   implicit none
@@ -654,6 +704,9 @@
   real(kind=CUSTOM_REAL),dimension(recvcount) :: recvbuf
 
   stop 'recvv_cr not implemented for serial code'
+  unused_i4 = dest
+  unused_i4 = recvtag
+  unused_cr = recvbuf(1)
 
   end subroutine recvv_cr
 
@@ -664,15 +717,18 @@
 
   subroutine send_i(sendbuf, sendcount, dest, sendtag)
 
+  use unused_mod
+
   implicit none
 
-  !integer sendbuf,sendcount,dest,sendtag
   integer dest,sendtag
   integer sendcount
-  integer,dimension(sendcount):: sendbuf
-  integer ier
+  integer, dimension(sendcount) :: sendbuf
 
   stop 'send_i not implemented for serial code'
+  unused_i4 = dest
+  unused_i4 = sendtag
+  unused_i4 = sendbuf(1)
 
   end subroutine send_i
 
@@ -683,12 +739,16 @@
 
   subroutine send_i_t(sendbuf,sendcount,dest)
 
+  use unused_mod
+
   implicit none
 
   integer :: dest,sendcount
   integer, dimension(sendcount) :: sendbuf
 
   stop 'send_i_t not implemented for serial code'
+  unused_i4 = dest
+  unused_i4 = sendbuf(1)
 
   end subroutine send_i_t
 
@@ -699,12 +759,16 @@
 
   subroutine recv_i_t(recvbuf,recvcount,source)
 
+  use unused_mod
+
   implicit none
 
   integer :: source,recvcount
   integer, dimension(recvcount) :: recvbuf
 
   stop 'recv_i_t not implemented for serial code'
+  unused_i4 = source
+  unused_i4 = recvbuf(1)
 
   end subroutine recv_i_t
 
@@ -746,6 +810,8 @@
 !  the following two subroutines are needed by locate_receivers.f90
   subroutine send_dp(sendbuf, sendcount, dest, sendtag)
 
+  use unused_mod
+
   implicit none
 
   integer dest,sendtag
@@ -753,12 +819,17 @@
   double precision,dimension(sendcount):: sendbuf
 
   stop 'send_dp not implemented for serial code'
+  unused_i4 = dest
+  unused_i4 = sendtag
+  unused_dp = sendbuf(1)
 
   end subroutine send_dp
 !
 !----
 !
   subroutine recv_dp(recvbuf, recvcount, dest, recvtag)
+
+  use unused_mod
 
   implicit none
 
@@ -767,6 +838,9 @@
   double precision,dimension(recvcount):: recvbuf
 
   stop 'recv_dp not implemented for serial code'
+  unused_i4 = dest
+  unused_i4 = recvtag
+  unused_dp = recvbuf(1)
 
   end subroutine recv_dp
 
@@ -776,6 +850,8 @@
 
   subroutine sendv_cr(sendbuf, sendcount, dest, sendtag)
 
+  use unused_mod
+
   use constants
 
   implicit none
@@ -784,6 +860,9 @@
   real(kind=CUSTOM_REAL),dimension(sendcount) :: sendbuf
 
   stop 'sendv_cr not implemented for serial code'
+  unused_i4 = dest
+  unused_i4 = sendtag
+  unused_cr = sendbuf(1)
 
   end subroutine sendv_cr
 !
@@ -792,9 +871,13 @@
 
   subroutine wait_req(req)
 
+  use unused_mod
+
   implicit none
 
   integer :: req
+
+  unused_i4 = req
 
   end subroutine wait_req
 
