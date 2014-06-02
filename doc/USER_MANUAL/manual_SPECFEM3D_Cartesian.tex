@@ -3720,6 +3720,30 @@ models that involve both fully defined materials and a tomography
 description, the \texttt{nummaterial\_velocity\_file} has multiple
 lines each with the corresponding suitable format described above.
 
+%==============
+
+\subsubsection*{Example: External tomography file with variable discretization intervals}
+
+The example in Figure~\ref{fig:tomography_file} is for an external tomography file with uniform spacing in the $x$, $y$, and $z$ directions. (Note that $\Delta x$, $\Delta y$, and $\Delta z$ need not be the same as in the example.) In that example, the  \texttt{nummaterial\_velocity\_file} is
+%
+\begin{lyxcode}
+2  -1 tomography elastic tomography\_model.xyz 1
+\end{lyxcode}
+%
+and the file \texttt{tomography\_model.xyz} will need to reside in \texttt{DATA/}. All entries in the second column of \texttt{materials\_file} will be \texttt{-1}, which means that each element in the mesh will be interpolated accordind to the values in \texttt{tomography\_model.xyz}.
+
+In some cases it may be desirable to have an external tomography model that is described in more than one file. For example, in cases like southern California, the length scale of variation in the structure of the wave speed model is much shorter in the sedimentary basin models within the upper 15~km. Therefore one might want to use an external tomography file that is sampled with, say, $\Delta x = 1000$~m, $\Delta y = 1000$~m, and $\Delta z = 250$~m in the uppermost 15~km, and then use $\Delta x = 2000$~m, $\Delta y = 2000$~m, and $\Delta z = 1000$~m below a depth of 15~km. If these intervals are chosen appropriately, then it will result in a pair of external tomography file that is much smaller than the alternative of having a single file with the fine discretization. In this case  \texttt{nummaterial\_velocity\_file} is
+%
+\begin{lyxcode}
+2  -1 tomography elastic file\_above\_15km.xyz 1 \\
+2  -2 tomography elastic file\_below\_15km.xyz 1
+\end{lyxcode}
+%
+and the files \texttt{file\_above\_15km.xyz} and \texttt{file\_below\_15km.xyz} will need to reside in \texttt{DATA/}.  All entries in the second column of \texttt{materials\_file} will need to be either \texttt{-1} or \texttt{-2}, depending on whether the element is above or below 15~km depth. In this sense, the construction of the mesh and the discretization of the external model will generally be done in tandem.
+
+Other more complicated discretizations can be used following the same procedure. (In particular, there is no limit on the number of different external files that are used.)
+
+%=============
 
 \section{{\normalsize \label{sec:Anelastic-Models}}External (an)elastic Models}
 
