@@ -26,26 +26,26 @@
 #
 #for a complete definition of the format of the mesh in SPECFEM3D check the manual (http://www.geodynamics.org/cig/software/specfem3d):
 #
-#USAGE 
+#USAGE
 #
 #############################################################################
 #PREREQUISITE
-#The mesh must be prepared 
+#The mesh must be prepared
 #   automatically using the module boundary_definition (see boundary_definition.py for more information)
-#or 
+#or
 #   manually following the convention:
-#     - each material should have a block defined by material domain_flag (acoustic/elastic/poroelastic) name,flag of the material (integer),p velocity 
+#     - each material should have a block defined by material domain_flag (acoustic/elastic/poroelastic) name,flag of the material (integer),p velocity
 #       (or the full description: name, flag, vp, vs, rho, Q ... if not present these last 3 parameters will be interpolated by module mat_parameter)
-#     - each mesh should have the block definition for the face on the free_surface (topography), 
+#     - each mesh should have the block definition for the face on the free_surface (topography),
 #       the name of this block must be 'face_topo' or you can change the default name in mesh.topo defined in profile.
-#     - each mesh should have the block definition for the faces on the absorbing boundaries, 
+#     - each mesh should have the block definition for the faces on the absorbing boundaries,
 #       one block for each surface with x=Xmin,x=Xmax,y=Ymin,y=Ymax and z=bottom. The names of the blocks should contain the strings "xmin,xmax,ymin,ymax,bottom"
 #
 #############################################################################
 #RUN
 #In a python script or in the cubit python tab call:
-#           
-#           export2SPECFEM3D(path_exporting_mesh_SPECFEM3D) 
+#
+#           export2SPECFEM3D(path_exporting_mesh_SPECFEM3D)
 #
 #the module creates a python class for the mesh: ex. profile=mesh()
 #and it export the files of the mesh needed by the partitioner of SPECFEM3D
@@ -60,20 +60,20 @@
 #        id_elements id_node1 id_node2 id_node3 id_node4 id_node5 id_node6 id_node7 id_node8
 #        .....
 #
-#__________________________________________________________________________________________        
+#__________________________________________________________________________________________
 ##nodecoord_name='nodes_coords_file' -> the file that contains the coordinates of the nodes of the all mesh
 #    format:
 #        number of nodes
 #        id_node x_coordinate y_coordinate z_coordinate
 #        .....
 #
-#__________________________________________________________________________________________        
+#__________________________________________________________________________________________
 ##material_name='materials_file' -> the file that contains the material flag of the elements
 #    format:
 #        id_element flag
 #        .....
 #
-#__________________________________________________________________________________________        
+#__________________________________________________________________________________________
 ##nummaterial_name='nummaterial_velocity_file' -> table of the material properties
 #    format:
 #        #material_domain_id #material_id #rho #vp #vs #Q_mu #anisotropy
@@ -81,7 +81,7 @@
 #        #material_domain_id 'tomography' file_name #for interpolation with tomography
 #        .....
 #        #material_domain_id 'interface' file_name flag_for_the_gll_below_the_interface flag_for_the_gll_above_the_interface #for interpolation with interface
-#__________________________________________________________________________________________        
+#__________________________________________________________________________________________
 ##absname='absorbing_surface_file' -> this file contains all the face in all the absorbing  boundaries
 ##absname_local='absorbing_surface_file'+'_xmin' -> this file contains all the face in the absorbing  boundary defined by x=Xmin
 ##absname_local='absorbing_surface_file'+'_xmax' -> this file contains all the face in the absorbing  boundary defined by x=Xmax
@@ -141,7 +141,7 @@ class mtools(object):
     def __repr__(self):
         txt='Meshing for frequency up to '+str(self.frequency)+'Hz\n'
         for surf,vp in zip(self.list_surf,self.list_vp):
-            txt=txt+'surface '+str(surf)+', vp ='+str(vp)+'  -> size '+str(self.freq2meshsize(vp)[0])+' -> dt '+str(self.freq2meshsize(vp)[0])+'\n' 
+            txt=txt+'surface '+str(surf)+', vp ='+str(vp)+'  -> size '+str(self.freq2meshsize(vp)[0])+' -> dt '+str(self.freq2meshsize(vp)[0])+'\n'
         return txt
     def freq2meshsize(self,vp):
         velocity=vp*.5
@@ -210,7 +210,7 @@ class mesh_tools(block_tools):
         return the length of a edge
     #########
     edge_min,length=edge_min_length(surface)
-        given the cubit id of a surface, it return the edge with minimun length 
+        given the cubit id of a surface, it return the edge with minimun length
     #########
     """
     def __int__(self):
@@ -258,7 +258,7 @@ class mesh_tools(block_tools):
     def edge_min_length(self,surface):
         """
         edge_min,length=edge_min_length(surface)
-            given the cubit id of a surface, it return the edge with minimun length 
+            given the cubit id of a surface, it return the edge with minimun length
         """
         from math import sqrt
         self.dmin=99999
@@ -285,8 +285,8 @@ class mesh_tools(block_tools):
         a=[p1[0]-p0[0],p1[1]-p0[1],p1[2]-p0[2]]
         b=[p2[0]-p1[0],p2[1]-p1[1],p2[2]-p1[2]]
         axb=[a[1]*b[2] - a[2]*b[1], a[2]*b[0] - a[0]*b[2], a[0]*b[1] - a[1]*b[0]]
-        dot=0.0 
-        for i in (0,1,2): 
+        dot=0.0
+        for i in (0,1,2):
             dot=dot+axb[i]*normal[i]
         if  dot > 0:
             return nodes
@@ -314,7 +314,7 @@ class mesh_tools(block_tools):
             cubit.cmd(command)
             command = "sideset "+str(nsideset)+ " name "+ "'ratio-["+str(bin_d)+"_"+str(bin_u)+"['"
             cubit.cmd(command)
-        nend=cubit.get_next_sideset_id()            
+        nend=cubit.get_next_sideset_id()
         sidelist=range(nstart,nend)
         for block in self.block_mat:
             name=cubit.get_exodus_entity_name('block',block)
@@ -360,7 +360,7 @@ class mesh(object,mesh_tools):
             self.face='QUAD4'
         self.hex='HEX'
         if version_cubit <= 13:
-            if hex27: 
+            if hex27:
                 print "ATTENTION **********************\n\nCubit <= 12.2 doesn't support HEX27\nassuming HEX8 .....\n\n"
             self.hex27=False
         else:
@@ -440,13 +440,13 @@ class mesh(object,mesh_tools):
                                     # for q to be valid: it must be positive
                                     if qk < 0 or qmu<0:
                                       print 'error, q value invalid:', qk,qmu
-                                      break                                                   
+                                      break
                                     if nattrib == 7:
                                         ani=cubit.get_block_attribute_value(block,5)
                     elif flag < 0:
                         vel=name
                         attrib=cubit.get_block_attribute_value(block,1)
-                        if attrib == 1: 
+                        if attrib == 1:
                             kind='interface'
                             flag_down=cubit.get_block_attribute_value(block,2)
                             flag_up=cubit.get_block_attribute_value(block,3)
@@ -475,7 +475,7 @@ class mesh(object,mesh_tools):
                 block_bc_flag.append(4)
                 block_bc.append(block)
                 bc[block]=4 #face has connectivity = 4
-                if name == self.topo or block == 1001: 
+                if name == self.topo or block == 1001:
                     self.topography=block
                 if self.freetxt in name:
                     self.free=block
@@ -506,7 +506,7 @@ class mesh(object,mesh_tools):
             else:
                 print 'nodeset '+name+' not defined'
                 self.receivers=None
-        
+
         try:
             self.block_mat=block_mat
             self.block_flag=block_flag
@@ -534,12 +534,12 @@ class mesh(object,mesh_tools):
             print material
             print bc
             print '****************************************'
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
     def get_hex_connectivity(self,ind):
         if self.hex27:
                 cubit.silent_cmd('group "nh" add Node in hex '+str(ind))
@@ -559,10 +559,10 @@ class mesh(object,mesh_tools):
                 cubit.cmd('del group '+str(group1))
         else:
             result=cubit.get_connectivity('face',ind)
-        return result        
-    
-    
-    def mat_parameter(self,properties): 
+        return result
+
+
+    def mat_parameter(self,properties):
         #print properties
         #format nummaterials file: #material_domain_id #material_id #rho #vp #vs #Q_kappa #Q_mu #anisotropy_flag
         imaterial=properties[0]
@@ -577,13 +577,13 @@ class mesh(object,mesh_tools):
                     m2km=1.
                 vp=vel/m2km
                 rho=(1.6612*vp-0.472*vp**2+0.0671*vp**3-0.0043*vp**4+0.000106*vp**4)*m2km
-                txt='%1i %3i %20f %20f %20f %1i %1i\n' % (properties[0],properties[1],rho,vel,vel/(3**.5),0,0)     
+                txt='%1i %3i %20f %20f %20f %1i %1i\n' % (properties[0],properties[1],rho,vel,vel/(3**.5),0,0)
             elif type(vel) != str and vel != 0.:
-                try: 
+                try:
                     qmu=properties[6]
                 except:
                     qmu=9999.
-                try: 
+                try:
                     qk=properties[5]
                 except:
                     qk=9999.
@@ -627,14 +627,14 @@ class mesh(object,mesh_tools):
 ! #(1)material_domain_id #(2)material_id  #(3)rho  #(4)vp   #(5)vs   #(6)Q_kappa   #(7)Q_mu  #(8)anisotropy_flag
 !
 ! where
-!     material_domain_id : 1=acoustic / 2=elastic 
+!     material_domain_id : 1=acoustic / 2=elastic
 !     material_id        : POSITIVE integer identifier corresponding to the identifier of material block
 !     rho                : density
 !     vp                 : P-velocity
 !     vs                 : S-velocity
 !     Q_kappa            : 9999 = no Q_kappa attenuation
 !     Q_mu               : 9999 = no Q_mu attenuation
-!     anisotropy_flag    : 0=no anisotropy/ 1,2,.. check with implementation in aniso_model.f90            
+!     anisotropy_flag    : 0=no anisotropy/ 1,2,.. check with implementation in aniso_model.f90
 !
 !example:
 !2   1 2300 2800 1500 9999.0 9999.0 0
@@ -642,12 +642,12 @@ class mesh(object,mesh_tools):
 !or
 
 ! #(1)material_domain_id #(2)material_id  tomography elastic  #(3)tomography_filename #(4)positive_unique_number
-!         
+!
 ! where
-!     material_domain_id : 1=acoustic / 2=elastic 
+!     material_domain_id : 1=acoustic / 2=elastic
 !     material_id        : NEGATIVE integer identifier corresponding to the identifier of material block
-!     tomography_filename: filename of the tomography file       
-!     positive_unique_number: a positive unique identifier   
+!     tomography_filename: filename of the tomography file
+!     positive_unique_number: a positive unique identifier
 !
 !example:
 !2  -1 tomography elastic tomo.xyz 1
@@ -656,7 +656,7 @@ class mesh(object,mesh_tools):
 '''
             nummaterial.write(txt)
         nummaterial.close()
-    
+
     def create_hexnode_string(self,hexa):
         nodes=self.get_hex_connectivity(hexa)
         #nodes=self.jac_check(nodes) #is it valid for 3D? TODO
@@ -674,7 +674,7 @@ class mesh(object,mesh_tools):
             txt=txt+'\n'
             #txt=('%10i %10i %10i %10i %10i %10i %10i %10i\n')% nodes[:]
         return txt
-        
+
     def create_facenode_string(self,hexa,face,normal=None,cknormal=True):
         nodes=self.get_face_connectivity(face)
         if cknormal:
@@ -696,8 +696,8 @@ class mesh(object,mesh_tools):
             txt=txt+'\n'
             #txt=('%10i %10i %10i %10i %10i\n') % (hexa,nodes_ok[0],nodes_ok[1],nodes_ok[2],nodes_ok[3])
         return txt
-    
-    
+
+
     def mesh_write(self,mesh_name):
         meshfile=open(mesh_name,'w')
         print 'Writing '+mesh_name+'.....'
@@ -736,7 +736,7 @@ class mesh(object,mesh_tools):
         print '  number of nodes:',str(num_nodes)
         nodecoord.write('%10i\n' % num_nodes)
         #
-        
+
         for node in node_list:
             x,y,z=cubit.get_nodal_coordinates(node)
             self.xmin,self.xmax=self.get_extreme(x,self.xmin,self.xmax)
@@ -773,7 +773,7 @@ class mesh(object,mesh_tools):
                             txt=self.create_facenode_string(h,f,normal,cknormal=True)
                             freehex.write(txt)
                 freehex.close()
-            elif block == self.free: 
+            elif block == self.free:
                 name=cubit.get_exodus_entity_name('block',block)
                 print 'free surface block name:',name,'id:',block
                 quads_all=cubit.get_block_faces(block)
@@ -800,7 +800,7 @@ class mesh(object,mesh_tools):
         elif case=='z':
             vmaxtmp=self.zmax
             vmintmp=self.zmin
-            
+
         if self.size > .3*(vmaxtmp-vmintmp):
             print 'please select the size of cpml less than 30% of the '+case+' size of the volume'
             print vmaxtmp-vmintmp,.3*(vmaxtmp-vmintmp)
@@ -819,15 +819,15 @@ class mesh(object,mesh_tools):
             return False
         else:
             txt="group 'hxmin' add hex  with X_coord < "+str(xmin)
-            cubit.cmd(txt)        
+            cubit.cmd(txt)
             txt="group 'hxmax' add hex  with X_coord > "+str(xmax)
-            cubit.cmd(txt)        
+            cubit.cmd(txt)
             txt="group 'hymin' add hex  with Y_coord < "+str(ymin)
-            cubit.cmd(txt)         
+            cubit.cmd(txt)
             txt="group 'hymax' add hex  with Y_coord > "+str(ymax)
-            cubit.cmd(txt)        
+            cubit.cmd(txt)
             txt="group 'hzmin' add hex  with Z_coord < "+str(zmin)
-            cubit.cmd(txt)       
+            cubit.cmd(txt)
             txt="group 'hzmax' add hex  with Z_coord > "+str(zmax)
             cubit.cmd(txt)
             from sets import Set
@@ -865,19 +865,19 @@ class mesh(object,mesh_tools):
             txt=' '.join(str(h) for h in cpml_xz)
             cubit.cmd("group 'xz_cpml' add hex "+txt)
             txt=' '.join(str(h) for h in cpml_yz)
-            cubit.cmd("group 'yz_cpml' add hex "+txt)            
+            cubit.cmd("group 'yz_cpml' add hex "+txt)
             txt=' '.join(str(h) for h in cpml_xyz)
             cubit.cmd("group 'xyz_cpml' add hex "+txt)
             return cpml_x,cpml_y,cpml_z,cpml_xy,cpml_xz,cpml_yz,cpml_xyz
-        
-        
-        
-        
-        
-        
-        
-    
-    
+
+
+
+
+
+
+
+
+
     def abs_write(self,absname=None):
         import re
         cubit.cmd('set info off')
@@ -885,7 +885,7 @@ class mesh(object,mesh_tools):
         cubit.cmd('set journal off')
         from sets import Set
         if not absname: absname=self.absname
-        
+
         if self.cpml:
             if not absname: absname=self.cpmlname
             print 'Writing cpml'+absname+'.....'
@@ -900,10 +900,10 @@ class mesh(object,mesh_tools):
                 for icpml,lcpml in enumerate(list_cpml):
                     for hexa in lcpml:
                         abshex_cpml.write(('%10i %10i\n') % (hexa,icpml))
-            
-            
+
+
         stacey_absorb=True
-        if stacey_absorb:      
+        if stacey_absorb:
             #
             #
             if not absname: absname=self.absname
@@ -984,7 +984,7 @@ class mesh(object,mesh_tools):
                                 if dic_quads_all.has_key(f):
                                     txt=self.create_facenode_string(h,f,normal=normal,cknormal=cknormal)
                                     abshex_local.write(txt)
-                        abshex_local.close()   
+                        abshex_local.close()
             cubit.cmd('set info on')
             cubit.cmd('set echo on')
     def surface_write(self,pathdir=None):
