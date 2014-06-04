@@ -52,7 +52,7 @@
   logical, parameter :: LOCAL_PATH_IS_ALSO_GLOBAL = .@LOCAL_PATH_IS_ALSO_GLOBAL@.
 
 ! maximum length of strings used for paths, reading from files, etc.
-  integer, parameter :: MAX_STRING_LEN = 256
+  integer, parameter :: MAX_STRING_LEN = 512
 
 ! use inlined products of Deville et al. (2002) to speedup the calculations to compute internal forces
   logical, parameter :: USE_DEVILLE_PRODUCTS = .false.
