@@ -156,7 +156,7 @@ def process_surfacefiles(iproc,nx,ny,nstep,grdfile,unit,lat_orientation):
 
 
 
-def process_irregular_surfacefiles(iproc,nx,ny,xmin,xmax,ymin,ymax,xstep,ystep,grdfile,unit_surf,lat_orientation):
+def process_irregular_surfacefiles(iproc,nx,ny,xmin,xmax,ymin,ymax,xstep,ystep,grdfile):
     gridpoints,z=read_irregular_surf(grdfile)
     coordx,coordy,points=create_grid(xmin,xmax,ymin,ymax,xstep,ystep)
 

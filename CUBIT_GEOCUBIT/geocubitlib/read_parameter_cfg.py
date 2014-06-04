@@ -194,6 +194,8 @@ def readcfg(filename=None,importmenu=False,mpiflag=False):
             except:
                 pass
         
+        print dcfg
+        
         if dcfg['nsurf']:
            surface_name=[]
            num_x=[]
@@ -261,6 +263,16 @@ def readcfg(filename=None,importmenu=False,mpiflag=False):
             dcfg['tres_boundarydetection']=tres
         except:
             pass
+            
+        if dcfg['irregulargridded_surf']:
+            print 'test'
+            dcfg['xmin']=dcfg['longitude_min']
+            dcfg['ymin']=dcfg['latitude_min']
+            dcfg['xmax']=dcfg['longitude_max']
+            dcfg['ymax']=dcfg['latitude_max']
+                
+                
+                
             
         if dcfg['sea']:
             if not dcfg['sea_level']: dcfg['sea_level']=0
