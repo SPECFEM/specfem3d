@@ -1,1 +1,0 @@
-../../CUBIT_GEOCUBIT/geocubitlib/cubit2specfem3d.py

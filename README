@@ -52,9 +52,37 @@ you can follow the examples in:
 
 - fault_examples/
 
-
-
-
 please consider submitting your own example to this package! 
 email us: cig-seismo AT geodynamics.org
+
+VERY IMPORTANT: Note from Emanuele Casarotti about how to set up the CUBIT (now called TRELIS) and GEOCUBIT meshing packages:
+
+you should set the pythonpath as in the example "homogeneous" (basically installing geocubit....)
+
+CUBIT 14 for mac
+python2.5 setup.py install --install-lib=/Library/Python/2.5/site-packages/
+
+TRELIS 14 for mac
+python2.6 setup.py install --install-lib=/Library/Python/2.6/site-packages/
+
+on a Linux machine
+
+check that the version of cubit 32/64 bit matches the python version...
+
+in order to have the possibility to import cubit in a python script.
+
+export CUBITDIR=$CUBITHOME
+export CUBITLIB=$CUBITDIR/bin:$CUBITDIR/structure
+export PYTHONPATH=$PYTHONPATH:$CUBITDIR/bin:$CUBITDIR/structure
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CUBITDIR/bin
+export PATH=$PATH:$CUBITDIR/bin
+
+if you own the root privileges
+
+python setup.py install
+
+or
+
+export PYTHONPATH=$PYTHONPATH:/import/u/u1/uaf/casarott/GEOCUBIT--experimental
+export PATH=$PATH:/import/u/u1/uaf/casarott/GEOCUBIT--experimental
 

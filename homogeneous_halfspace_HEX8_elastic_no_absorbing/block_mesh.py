@@ -1,1 +1,1 @@
-../CUBIT_GEOCUBIT/geocubitlib/block_mesh.py
+../homogeneous_halfspace_HEX8_elastic_absorbing_Stacey_5sides/block_mesh.py
