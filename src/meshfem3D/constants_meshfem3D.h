@@ -54,7 +54,7 @@
   double precision, parameter :: ORIG_LAT_TOPO_SOCAL = 32.d0
   double precision, parameter :: ORIG_LONG_TOPO_SOCAL = -121.d0
   double precision, parameter :: DEGREES_PER_CELL_TOPO_SOCAL = 5.d0 / 1000.d0
-  character(len=100), parameter :: TOPO_FILE_SOCAL = 'DATA/la_topography/topo_bathy_final.dat'
+  character(len=*), parameter :: TOPO_FILE_SOCAL = 'DATA/la_topography/topo_bathy_final.dat'
 
 ! size of Lupei Zhu's Moho map file for Southern California
   integer, parameter :: NX_MOHO = 71,NY_MOHO = 51

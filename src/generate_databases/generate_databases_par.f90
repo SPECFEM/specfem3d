@@ -124,7 +124,7 @@
   integer, dimension(:,:), allocatable :: nodes_ibelm_xmin,nodes_ibelm_xmax, &
               nodes_ibelm_ymin, nodes_ibelm_ymax, nodes_ibelm_bottom, nodes_ibelm_top
 
-  character (len=30), dimension(:,:), allocatable :: undef_mat_prop
+  character(len=MAX_STRING_LEN), dimension(:,:), allocatable :: undef_mat_prop
 
 ! C-PML absorbing boundary conditions
 

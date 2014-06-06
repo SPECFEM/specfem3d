@@ -78,8 +78,8 @@ module fault_solver_common
     real(kind=CUSTOM_REAL) :: dt
     integer, dimension(:), pointer :: iglob=>null()   ! on-fault global index of output nodes
     real(kind=CUSTOM_REAL), dimension(:,:,:), pointer :: dat=>null()
-    character(len=70), dimension(:), pointer :: name=>null(),longFieldNames=>null()
-    character(len=100) :: shortFieldNames
+    character(len=MAX_STRING_LEN), dimension(:), pointer :: name=>null(),longFieldNames=>null()
+    character(len=MAX_STRING_LEN) :: shortFieldNames
   end type dataT_type
 
   type, extends (fault_type) :: bc_dynandkinflt_type
@@ -361,8 +361,8 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
   integer, dimension(:), allocatable :: iproc,iglob_tmp,glob_indx
   real(kind=CUSTOM_REAL) :: xtarget,ytarget,ztarget,dist,distkeep
   integer :: i, iglob , IIN, ier, jflt, np, k
-  character(len=70) :: tmpname
-  character(len=70), dimension(:), allocatable :: name_tmp
+  character(len=MAX_STRING_LEN) :: tmpname
+  character(len=MAX_STRING_LEN), dimension(:), allocatable :: name_tmp
   integer :: ipoin, ipoin_local, npoin_local
 
   !  1. read fault output coordinates from user file,
@@ -543,7 +543,7 @@ subroutine SCEC_write_dataT(dataT)
     write(IOUT,*) "# location=",trim(dataT%name(i))
     write(IOUT,*) "# Column #1 = Time (s)"
     do k=1,dataT%ndat
-      write(IOUT,1100) k+1,dataT%longFieldNames(k)
+      write(IOUT,1100) k+1,trim(dataT%longFieldNames(k))
     enddo
     write(IOUT,*) "#"
     write(IOUT,*) "# The line below lists the names of the data fields:"

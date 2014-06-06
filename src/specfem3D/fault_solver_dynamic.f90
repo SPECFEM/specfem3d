@@ -308,7 +308,7 @@ subroutine init_2d_distribution(a,coord,iin,n)
   integer, intent(in) :: iin,n
 
   real(kind=CUSTOM_REAL) :: b(size(a))
-  character(len=20) :: shapeval
+  character(len=MAX_STRING_LEN) :: shapeval
   real(kind=CUSTOM_REAL) :: val,valh, xc, yc, zc, r, l, lx,ly,lz
   real(kind=CUSTOM_REAL) :: r1(size(a))
   integer :: i
