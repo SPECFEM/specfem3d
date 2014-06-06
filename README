@@ -71,18 +71,13 @@ check that the version of cubit 32/64 bit matches the python version...
 
 in order to have the possibility to import cubit in a python script.
 
+Set CUBITHOME to the directory where you installed CUBIT
 export CUBITDIR=$CUBITHOME
 export CUBITLIB=$CUBITDIR/bin:$CUBITDIR/structure
 export PYTHONPATH=$PYTHONPATH:$CUBITDIR/bin:$CUBITDIR/structure
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CUBITDIR/bin
 export PATH=$PATH:$CUBITDIR/bin
 
-if you own the root privileges
+type "source setpaths.sh" in CUBIT_GEOCUBIT/ directory
 
-python setup.py install
-
-or
-
-export PYTHONPATH=$PYTHONPATH:/import/u/u1/uaf/casarott/GEOCUBIT--experimental
-export PATH=$PATH:/import/u/u1/uaf/casarott/GEOCUBIT--experimental
 
