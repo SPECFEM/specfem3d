@@ -126,7 +126,7 @@ module decompose_mesh
   !pll
   double precision , dimension(:,:), allocatable :: mat_prop
   integer :: count_def_mat,count_undef_mat,imat
-  character (len=30), dimension(:,:), allocatable :: undef_mat_prop
+  character(len=MAX_STRING_LEN), dimension(:,:), allocatable :: undef_mat_prop
 
 ! default mesh file directory
   character(len=MAX_STRING_LEN) :: localpath_name

@@ -78,7 +78,7 @@ program model_update
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: dummy_g_1,dummy_g_2,dummy_g_3  !xstore,ystore,zstore
   integer, dimension(:), allocatable :: dummy_l_1,dummy_l_2,dummy_l_3,dummy_l_4,dummy_l_5,dummy_l_6,dummy_l_7,dummy_l_8 !ibool-1
   integer, dimension(:), allocatable :: dummy_num
-  character (len=80) :: string1,string2,string3,string4,string5,string6,string7,string8,string9,string10,string11
+  character(len=MAX_STRING_LEN) :: string1,string2,string3,string4,string5,string6,string7,string8,string9,string10,string11
   integer :: idummy1,idummy2,idummy3,idummy4,idummy5
 
   integer :: iglob

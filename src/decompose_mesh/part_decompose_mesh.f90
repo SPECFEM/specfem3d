@@ -446,7 +446,7 @@ contains
     integer, intent(in)  :: IIN_database
     integer, intent(in)  :: count_def_mat,count_undef_mat
     double precision, dimension(16,count_def_mat)  :: mat_prop
-    character (len=30), dimension(6,count_undef_mat) :: undef_mat_prop
+    character(len=MAX_STRING_LEN), dimension(6,count_undef_mat) :: undef_mat_prop
     integer  :: i
 
     write(IIN_database)  count_def_mat,count_undef_mat
@@ -1038,7 +1038,7 @@ contains
     ! materials
     integer, dimension(1:nspec), intent(in)  :: num_material
     double precision, dimension(16,count_def_mat),intent(in)  :: mat_prop
-    character (len=30), dimension(6,count_undef_mat),intent(in) :: undef_mat_prop
+    character(len=MAX_STRING_LEN), dimension(6,count_undef_mat), intent(in) :: undef_mat_prop
 
     ! local parameters
     logical, dimension(-count_undef_mat:count_def_mat)  :: is_acoustic, is_elastic, is_poroelastic

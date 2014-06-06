@@ -364,7 +364,7 @@
   double precision, dimension(16,nmat_ext_mesh),intent(in) :: materials_ext_mesh
 
   integer, intent(in) :: nundefMat_ext_mesh
-  character (len=30), dimension(6,nundefMat_ext_mesh):: undef_mat_prop
+  character(len=MAX_STRING_LEN), dimension(6,nundefMat_ext_mesh) :: undef_mat_prop
 
   integer, intent(in) :: imaterial_id,imaterial_def
 
