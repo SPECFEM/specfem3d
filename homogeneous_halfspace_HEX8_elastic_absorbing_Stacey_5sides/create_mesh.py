@@ -1,16 +1,7 @@
-#!python
-#!/usr/bin/env python
 
 # "create_mesh.py" is a script that generates mesh specific to homogenous halfspace example
 # i.e., a uniform mesh of 134 km x 134 km x 60 km with an element size 3.75 km.
 # It is not applicable to other examples.
-
-import cubit
-import boundary_definition
-import cubit2specfem3d
-
-import os
-import sys
 
 cubit.cmd('reset')
 cubit.cmd('brick x 67000 y 134000 z 60000')
