@@ -1,0 +1,84 @@
+#  ABSOLUTE PATH FOR EXECUTABLES
+DSM_BINARY_PATH          =  /smphome/rech/ubv/rubv002/progs/DSM_FOR_SPECFEM3D/bin
+SPECFEM3D_BINARY_PATH    =  /smphome/rech/ubv/rubv002/progs/SPECFEM3D_HYBRID/bin
+SHELL_SCRIPT_PATH        =  /smphome/rech/ubv/rubv002/progs/DSM_FOR_SPECFEM3D/bin
+
+
+# DIRECTORY CONTAINED INPUTS FILES (RELATIVE PATH FORM ./)
+DSM_INPUT_DIR            = input_dsm
+MESH_DIR                 = MESH
+
+
+# --------------------------------- DSM PARAMETERS ----------------------
+#
+# MODEL FILE NAME FOR DSM
+FILE_MODEL_1D            = ak135
+
+# NAME FOR DSM OUTPUT FILES
+FILE_OUT_DSM             = ak135
+
+# OUTPUT SEISMOGRAM TIME LENGTH (s) 
+# (set 2^n seconds, this value will be multiplied by 0.1 inside DSM)
+# This paramter is choosen to compute the frquency step for DSM
+TLEN                     = 16384.d0
+
+# SOURCE DEPTH (KM), LAT, LON (DEGREES)
+SRC_DEPTH                = 9.75d0
+SRC_LAT                  = 72.96d0
+SRC_LON                  = 5.71d0
+
+# SOURCE MOMENT TENSOR 
+# Mrr, Mtt, Mpp, Mrt, Mrp, Mtp
+MRR                     = -2.89d0
+MTT                     = 1.25d0
+MPP                     = 1.63d0
+MRT                     = -0.256d0
+MRP                     = -0.604d0
+MTP                     = 1.69d0
+
+# TUNNIG PARAMETER FOR PRECISION CALCULATION IN PART 2 (must be >= IFRQMAX)
+# THE HIGHER IS, MORE ACCURATE IS, BUT MORE EXPENSIVE 
+IMAX                    =  8192
+
+# Ifreq_min=index of min frequeny (should be 0)
+# Ifreq_max = index of max frequency : corresponds to TLEN/10/IFRQMAX shortest period in (s) 
+IFRQMIN                 = 0
+IFRQMAX                 = 1999
+
+# SAMPLING FOR OUTPUT SEISMOGRAMS (Hz)
+# SHOULD BE A MULTIPLE OF TEN (10Hz, 20Hz, 30Hz, 40 Hz,...)
+# TAKE INTO ACCUNT THAT MUST BE THE TIME STEP FOR SPECFEM3D
+SAMPLING                = 80. 
+
+# START TIME FOR OUTPUT SEISMOGRAMS
+TSTART                  = 330.
+
+# END TIME FOR OUTPUT SEISMOGRAMS
+TEND                    = 500. 
+
+# BUTTERWOTH FILTER MIN FREQENCY CORNER (Hz)
+FLOW                    = 0.01
+
+# BUTTERWOTH FILETER MAX FREQUENCY CORNER (Hz)
+FHIGH                   = 1.05 
+
+
+# ----------------------------- CHUNK --------------------------------------
+#
+# CHUNK EXTENSION (degrees) 
+ANGULAR_WIDTH_XI_RAD    = 3.
+ANGULAR_WIDTH_ETA_RAD   = 2.
+
+# CHUNK CENTER (degrees)
+LON_CENTER              = 1.3
+LAT_CENTER              = 42.5
+AZI_CHUNK               = 0.
+
+# DEPTH CHUNK (km)
+DEPTH_CHUNK             = 150.
+
+# SEM DISCRETISATION
+NEL_LON                 = 40
+NEL_LAT                 = 20
+NEL_DEPTH               = 20
+

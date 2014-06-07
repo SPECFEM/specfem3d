@@ -1,0 +1,5 @@
+ Total :  0.1567634    
+ Matrix definition :  3.2469968E-03   2.071272      %
+ Matrix LU decp :  8.1556067E-03   5.202495    
+ System Solver  :  8.3174378E-02   53.05727    
+  Write Exp Coef:  4.9203206E-03   3.138692    

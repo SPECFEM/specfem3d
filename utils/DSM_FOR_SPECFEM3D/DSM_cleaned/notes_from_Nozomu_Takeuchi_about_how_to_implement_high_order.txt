@@ -1,0 +1,135 @@
+
+Subject: Re: PS about going to high-order basis functions
+Date: Thu, 03 Apr 2014 19:24:33 +0900
+From: Nozomu Takeuchi
+Organization: Earthquake Research Institute, University of Tokyo
+To: Dimitri Komatitsch
+
+Dear Dimitri,
+
+
+The point for designing our operators is not
+minimizing the error of each operator but
+minimizing the total error of operators.
+(i.e., making errors of 2nd derivative operators
+and errors of other operators cancel with each
+other.)   What we meant in the 1996 paper is that
+we have to modify 0th or 1st derivative operators
+to achieve optimal accuracy because we have no
+way to tune errors of the 2nd derivative operators.    
+
+At the moment, I'm not very sure whether higher order
+basis functions will improve the performance.
+Comparison of performance will be an interesting
+topic, and I am happy if you are interested in it.
+Higher order basis may be useful especially for
+applying to your hybrid method because we need to
+compute both displacements and tractions.
+
+Switching to higher-order functions is not so easy
+but is not very difficult.
+Yes, you should modify submatrices.  The matrix
+in Figure 1 of 1996 paper will be 8x8 and 4x4
+block matrices rather than 4x4 and 2x2 for the
+solid and liquid part of the medium, respectively,
+when you use 2nd order basis functions.
+As for the Cholesky solver, you can use the same
+subroutine but should define appropriate bandwidth.
+
+If you do not define optimally accurate operators,
+what you should do is just delete the modification
+parts.  Lumping is not required, and
+submatrix_*_mod can be set to zero.
+In our experiences, it was difficult to
+(indeed, we could not) define optimal operators
+for higher-order basis functions.
+
+You also have to switch subroutines for computing
+excitation terms (comp_excitation0, comp_excitation).
+We are using very special methods to achieve
+optimal accuracy, so writing your own routines
+may be easiest, if you do not use optimal operators.
+What you should do is just substituting appropriate
+quantities according to the conventional definition.
+You also need to re-define some variables to identify the
+column number for source location, station location,
+CMB location, and so on.
+These will be the main tasks for the switch.
+
+As far as I overlooked the main file (dsmti.f),
+the attached variables should have impacts by the
+switch.  The routines including these variables
+should be inspected in details.
+(There may be some others, but I'm sorry it's very
+difficult to specify all without any mistakes).
+
+I hope the above informatino help you.
+Thank you very much.
+
+
+
+c variables for a source
+	integer idim_rs_sph,idim_rs_tor,idim_rs_sph0,idim_rs_tor0
+c variables for stations
+	integer idim_station_sph,idim_station_tor,
+     &	 idim_station_sph0,idim_station_tor0
+c variables for matrix elements
+	real*8 submatrix_I0(4,maxngrid_r)
+	real*8 submatrix_I1k(4,maxngrid_r),submatrix_I1m(4,maxngrid_r)
+	real*8 submatrix_I2(4,maxngrid_r)
+	real*8 submatrix_I3k(4,maxngrid_r),submatrix_I3m(4,maxngrid_r)
+	real*8 submatrix_I4(4,maxngrid_r)
+	real*8 submatrix_I5k(4,maxngrid_r),submatrix_I5m(4,maxngrid_r)
+	real*8 submatrix_I6(4,maxngrid_r)
+	real*8 submatrix_I7(4,maxngrid_r)
+	real*8 submatrix_I3k_mod(6,maxngrid_r)
+	real*8 submatrix_I3m_mod(6,maxngrid_r)
+	real*8 submatrix_I4_mod(6,maxngrid_r)
+c variables for wavefield
+	integer idim0,init_npos_sph,init_npos_tor
+	complex*16 whole_matrix_sph(4,2*maxngrid_r)
+	complex*16 whole_matrix_tor(2,maxngrid_r)
+	complex*16 whole_matrix_dr_sph(2*maxngrid_r)
+	complex*16 whole_matrix_dr_tor(maxngrid_r)
+	complex*16 whole_vector_sph(2*maxngrid_r,-2:2)
+	complex*16 whole_vector_tor(maxngrid_r,-2:2)
+
+
+
+2014-04-01 (火) の 15:36 +0200 に Dimitri Komatitsch さんは書きました:
+> Dear Nozomu,
+> 
+> PS: I am also not sure if the optimized operators with a 1/12.d0 
+> coefficient would also need to change when going to higher-order basis 
+> functions.
+> 
+> Thank you,
+> Best regards,
+> 
+> Dimitri.
+> 
+> On 01/04/2014 15:13, Dimitri Komatitsch wrote:
+> >
+> > Dear Nozomu,
+> >
+> > One last question I have is how easy (or difficult) it would be to
+> > switch to higher-order basis functions instead of linear? In your
+> > attached 1996 paper on page 2 (in the blue box) you mention that it
+> > would be useful to switch to higher-order instead of linear, thus I
+> > wonder how difficult you think it would be.
+> >
+> > After analyzing the source code, I have the impression that at least all
+> > the submatrix_I*() arrays would need to change, and also (maybe?) the
+> > Cholesky solver would not be block tridiagonal but (maybe?)
+> > block-pentadiagonal or block-heptadiagonal if switching to order 2 or
+> > order 3 instead of order 1 for the basis functions.
+> >
+> > I am also not sure how the mass lumping in file matrix.f would need to
+> > change, i.e., how the subgrid of size ns = 128 on which Simpson
+> > integrals are computed would be affected.
+> >
+> > Thank you,
+> > Best regards,
+> >
+> > Dimitri.
+

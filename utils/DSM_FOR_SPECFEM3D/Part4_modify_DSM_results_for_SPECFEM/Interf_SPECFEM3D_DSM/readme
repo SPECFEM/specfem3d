@@ -1,0 +1,3 @@
+constants.h is form meshfem3D sequential version, it  is use just to define some variables, you must update the precision.
+Be carreful, I added some variables that are not defined in constants.h  use by specfem.
+ 

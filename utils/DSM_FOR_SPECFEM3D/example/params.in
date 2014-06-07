@@ -1,0 +1,9 @@
+BIN=/home/bacchus1/ywang/yang/DSM_SPECFEM_HYBRID_VECTORIZED_NEW/bin/
+BINSEM=/home/bacchus1/ywang/yang/DSM_SPECFEM_HYBRID_VECTORIZED_NEW/SEMH/bin
+SCRIPTS=/home/bacchus1/ywang/yang/DSM_SPECFEM_HYBRID_VECTORIZED_NEW/shells
+DSM_tractions=$(pwd)/DSM_tractions/
+OUT=$DSM_tractions
+REP=Tract/
+IN_DSM=$(pwd)/input_dsm
+MESH=$(pwd)/MESH
+MODELE_1D=iasp91_dsm

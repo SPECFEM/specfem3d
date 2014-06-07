@@ -1,0 +1,65 @@
+###################################################################
+          PATH AND VARAIBLES TO BE DEFINE BY USER
+           IN FILE global_parameters.in
+###################### varaibles ##################################
+
+        nb_eqks  :  number of earthquakes
+
+        nproc      :  number of procs
+        MPIRUN     :  mpirun command (depends on your machines)    
+        OPTION_MPI :  option for mpirun (depends on your machine) 
+
+#################### path directories #############################
+
+       HYBRID_BINNARY : bianry were hybrid_specfem is complied
+       SEM_BINNARY    : binary were official specfem is compiled 
+
+       WARNING to do : for now I need to use the both specfem versions
+                       while the official SVN version is not supporting 
+                       the hybrid method 
+
+
+   Tractions directory from DSM (one per earthquake) 
+
+       TRACTIONS/earthquake_1  
+       TRACTIONS/earthquake_2
+       ...
+       TRACTIONS/earthquake_nb_eqks
+
+   the shell use $TRACTIONS/$EARTHQUAKE${isrc} to generate the name
+   you should fill 
+        TRACTION and EARTHQUAKE
+
+
+   Data directory (one per earthquake)
+
+       DATA/earthquake_1
+       DATA/earthquake_2
+       ...
+       DATA/earthquake_nb_eqks
+
+  the shell will  $DATA/$EARTHQUAKE${isrc} to generate the name
+  you should fill DATA 
+
+############################## PAR FILES ##########################
+
+    PAR_FILE_DIRECTORY : put all parameters files here 
+         1/ Par_file for SPECFEM3D_HYBRID (1 par file per earthquake)
+         2/ Par_file for SPECFEM3D (1 par file per earthquake for adjoint run)
+         3/ STATIONS file
+         4/ STATTONS_adjoint
+         5/ CMTSOLUTION  : not used but needed for SPECFEM3D
+
+   nomencalture :
+       Par_file_${isrc}
+       Par_file_adj_${isrc}
+       STATIONS
+       STATIONS_ADJOINT   
+       CMTSOLUTION
+
+####################################################################
+          BELOW IS DESCRIBED WHAT THE SHELLS ARE DOING
+####################################################################
+
+
+
