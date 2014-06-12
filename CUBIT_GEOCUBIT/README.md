@@ -38,5 +38,51 @@ In particular, it is focused on the meshing requests of Specfem3D and it is help
 
 GeoCubit can be used inside the graphical interface of Cubit (i.e. as a Python object in the script tab) or as Unix command.
 
+## Requirements:
+
+- cubit 13+ (or Trelis 14+)
+- python
+ - MACOSX+CUBIT = python 2.5,  
+ - MACOSX+TRELIS = python 2.6, 
+ - linux+cubit 32/64bit = python 2.* 32/64bit
+- numpy 1.0+
+
+
+## Configuration:
+
+In order to have the possibility to import cubit in a **python script** you should set up the path for CUBIT/Trelis
+
+```
+export CUBITDIR=$CUBITHOME
+export CUBITLIB=$CUBITDIR/bin:$CUBITDIR/structure
+export PYTHONPATH=$PYTHONPATH:$CUBITDIR/bin:$CUBITDIR/structure
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CUBITDIR/bin
+export PATH=$PATH:$CUBITDIR/bin
+```
+
+You could install GEOCUBIT
+
+`python setup.py install`
+
+or 
+
+```
+export PYTHONPATH=$PYTHONPATH:[YourGeocubitDir]
+export PATH=$PATH:[YourGeocubitDir]
+```
+
+
+  
+On MacOSX, if you prefer to load GEOCUBIT in the CUBIT/TRELIS **GUI**:
+
+CUBIT: `python2.5 setup.py install --install-lib=/Library/Python/2.5/site-packages/`
+
+TRELIS 14: `python2.6 setup.py install --install-lib=/Library/Python/2.6/site-packages/`
+
+
+
+
+
+
 See also Cubit (now also sold as "Trelis") here [cubit.sandia.gov]
 
