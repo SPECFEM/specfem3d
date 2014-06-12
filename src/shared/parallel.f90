@@ -668,6 +668,24 @@
 !----
 !
 
+  subroutine sum_all_1Darray_dp(sendbuf, recvbuf, nx)
+
+  use mpi
+
+  implicit none
+
+  integer :: nx
+  double precision, dimension(nx) :: sendbuf, recvbuf
+  integer :: ier
+
+  call MPI_REDUCE(sendbuf,recvbuf,nx,MPI_DOUBLE_PRECISION,MPI_SUM,0,MPI_COMM_WORLD,ier)
+
+  end subroutine sum_all_1Darray_dp
+
+!
+!----
+!
+
   subroutine sum_all_all_cr(sendbuf, recvbuf)
 
   use mpi
