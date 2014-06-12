@@ -125,6 +125,38 @@
 
 !!-----------------------------------------------------------
 !!
+!! Roland_Sylvain gravity calculations
+!!
+!!-----------------------------------------------------------
+
+!! DK DK for Roland_Sylvain
+  logical, parameter :: ROLAND_SYLVAIN = .false. !!! .true.
+
+! check for negative Jacobians in the calculation of integrals or not
+! (can safely be done once to check that the mesh is OK at a given resolution, and then permanently
+!  turned off in future runs because the mesh does not change)
+  logical, parameter :: CHECK_FOR_NEGATIVE_JACOBIANS = .true.
+
+! file that contains the observation grid (which is a simple ASCII file, with x y z of each point on separate lines)
+  character(len=*), parameter :: OBSERVATION_GRID_FILE = './DATA/observation_grid_to_use_for_gravity.txt'
+
+! number of points in the observation grid
+  integer, parameter :: NTOTAL_OBSERVATION = 4
+
+! a receiver at which we check and output the gravity field (for display purposes only; you can thus safely leave it unchanged)
+  integer, parameter :: iobs_receiver = 1
+
+! how often (every how many spectral elements computed) we print a timestamp to monitor the behavior of the code
+  integer, parameter :: NSPEC_DISPLAY_INTERVAL = 1000
+
+! definition of an Eotvos compared to S.I. units.
+! The unit of gravity gradient is the Eotvos, which is equivalent to 1e-9 s-2 (or 1e-4 mGal/m).
+! A person walking at a distance of 2 meters provides a gravity gradient signal of approximately one Eotvos.
+! Mountains can create signals of several hundred Eotvos.
+  double precision, parameter :: SI_UNITS_TO_EOTVOS = 1.d+9
+
+!!-----------------------------------------------------------
+!!
 !! source/receiver setup
 !!
 !!-----------------------------------------------------------

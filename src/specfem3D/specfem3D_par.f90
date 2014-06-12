@@ -280,6 +280,10 @@ module specfem_par
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: &
              normal_x_noise,normal_y_noise,normal_z_noise, mask_noise
 
+  ! for Roland_Sylvain integrals
+  double precision, dimension(NTOTAL_OBSERVATION) :: x_observation,y_observation,z_observation, &
+                                                g_x,g_y,g_z,G_xx,G_yy,G_zz,G_xy,G_xz,G_yz,temporary_array_for_sum
+
 end module specfem_par
 
 !=====================================================================
