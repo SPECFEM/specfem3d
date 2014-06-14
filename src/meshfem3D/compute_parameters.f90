@@ -68,11 +68,10 @@
   logical USE_REGULAR_MESH
 
   ! number of elements horizontally in each slice (i.e. per processor)
-  ! these two values MUST be equal in all cases
   NEX_PER_PROC_XI = NEX_XI / NPROC_XI
   NEX_PER_PROC_ETA = NEX_ETA / NPROC_ETA
 
-  ! total number of processors in each of the six chunks
+  ! total number of processors
   NPROC = NPROC_XI * NPROC_ETA
 
   !
