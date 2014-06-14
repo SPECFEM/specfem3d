@@ -564,20 +564,19 @@
   if(NPROC_ETA < 1) call exit_MPI(myrank,'NPROC_ETA must be greater than 1')
 
   ! check that mesh can be cut into the right number of slices
+  if(mod(NEX_XI,NPROC_XI) /= 0) call exit_MPI(myrank,'NEX_XI must be a multiple of NPROC_XI for a regular mesh')
+  if(mod(NEX_ETA,NPROC_ETA) /= 0) call exit_MPI(myrank,'NEX_ETA must be a multiple of NPROC_ETA for a regular mesh')
+
   ! also check that mesh can be coarsened in depth twice (block size multiple of 8)
-  if(USE_REGULAR_MESH) then
-    if(mod(NEX_XI,NPROC_XI) /= 0) call exit_MPI(myrank,'NEX_XI must be a multiple of NPROC_XI for a regular mesh')
-    if(mod(NEX_ETA,NPROC_ETA) /= 0) call exit_MPI(myrank,'NEX_ETA must be a multiple of NPROC_ETA for a regular mesh')
+  ! i.e. check that NEX is divisible by 8 and that NEX_PER_PROC is divisible by 8
+  ! This is not required for a regular mesh
+  if(.not. USE_REGULAR_MESH) then
+    if(mod(NEX_XI,8) /= 0) call exit_MPI(myrank,'NEX_XI must be a multiple of 8')
+    if(mod(NEX_ETA,8) /= 0) call exit_MPI(myrank,'NEX_ETA must be a multiple of 8')
+
+    if(mod(NEX_PER_PROC_XI,8) /= 0) call exit_MPI(myrank,'NEX_PER_PROC_XI must be a multiple of 8')
+    if(mod(NEX_PER_PROC_ETA,8) /= 0) call exit_MPI(myrank,'NEX_PER_PROC_ETA must be a multiple of 8')
   endif
-
-  ! checks that nex is dividable by 8
-  if(mod(NEX_XI,8) /= 0) call exit_MPI(myrank,'NEX_XI must be a multiple of 8')
-  if(mod(NEX_ETA,8) /= 0) call exit_MPI(myrank,'NEX_ETA must be a multiple of 8')
-
-  ! checks that nex_per_proc is dividable by 8
-  if(mod(NEX_PER_PROC_XI,8) /= 0) call exit_MPI(myrank,'NEX_PER_PROC_XI must be a multiple of 8')
-  if(mod(NEX_PER_PROC_ETA,8) /= 0) call exit_MPI(myrank,'NEX_PER_PROC_ETA must be a multiple of 8')
-
 
   if(myrank == 0) then
     write(IMAIN,*) 'region selected:'
