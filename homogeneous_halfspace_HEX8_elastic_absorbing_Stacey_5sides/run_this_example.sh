@@ -12,11 +12,11 @@ echo
 echo "   setting up example..."
 echo
 
-mkdir -p bin
-mkdir -p OUTPUT_FILES/DATABASES_MPI
+rm -f -r OUTPUT_FILES
 
-rm -f OUTPUT_FILES/*
-rm -rf OUTPUT_FILES/DATABASES_MPI/*
+mkdir -p bin
+mkdir -p OUTPUT_FILES
+mkdir -p OUTPUT_FILES/DATABASES_MPI
 
 # compiles executables in root directory
 cd ../../
@@ -27,8 +27,8 @@ cp -fr DATA/* ../../DATA/.
 
 cd ../../
 
-# note: ./configure will default to gfortran configuration
-# ./configure FC=ifort MPIFC=mpif90
+# note: ./configure will default to gfortran configuration, unless you uncomment the line below
+# ./configure FC=ifort CC=icc MPIFC=mpif90
 ./configure
 make clean
 make all > $currentdir/tmp.log
