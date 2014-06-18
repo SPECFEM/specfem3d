@@ -81,6 +81,33 @@
   real(kind=CUSTOM_REAL),dimension(NGNOD2D_FOUR_CORNERS) :: xcoord,ycoord,zcoord
   integer  :: ispec,ispec2D,icorner,itop,iabsval,iface,igll,i,j,igllfree,ifree
 
+  !! C. DUROCHAT modification : begin !! additonal local parameters for coupling with DSM by VM
+
+  logical, dimension(:,:),allocatable :: iboun   ! pll
+
+  ! corner locations for faces
+  real(kind=CUSTOM_REAL), dimension(:,:,:),allocatable :: xcoord_iboun,ycoord_iboun,zcoord_iboun
+  character(len=27) namefile
+
+  ! allocate temporary flag array
+  allocate(iboun(6,nspec), &
+           xcoord_iboun(NGNOD2D,6,nspec), &
+           ycoord_iboun(NGNOD2D,6,nspec), &
+           zcoord_iboun(NGNOD2D,6,nspec),stat=ier)
+  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+
+  ! sets flag in array iboun for elements with an absorbing boundary faces
+  if(COUPLE_WITH_DSM) then
+
+    iboun(:,:) = .false.
+
+    write(namefile,'(a17,i6.6,a4)') 'xmin_gll_for_dsm_',myrank,'.txt'
+    open(123,file=namefile)
+    write(123,*) nspec2D_xmin
+   endif
+
+  !! C. DUROCHAT modification : end
+
   ! abs face counter
   iabsval = 0
 
@@ -106,6 +133,12 @@
                             xstore_dummy,ystore_dummy,zstore_dummy, &
                             iface)
 
+    !! C. DUROCHAT modification : begin !! for coupling with DSM by VM
+    if(COUPLE_WITH_DSM) then 
+      iboun(iface,ispec) = .true.
+    endif
+    !! C. DUROCHAT modification : end
+
     ! ijk indices of GLL points for face id
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLZ)
 
@@ -126,6 +159,14 @@
                                       xstore_dummy,ystore_dummy,zstore_dummy, &
                                       lnormal )
         normal_face(:,i,j) = lnormal(:)
+
+        !! C. DUROCHAT modification : begin !! for coupling with DSM by VM
+        if(COUPLE_WITH_DSM) then 
+          write(123,'(i10,3f20.10)') ispec,xstore_dummy(ibool(i,j,1,ispec)),&
+                ystore_dummy(ibool(i,j,1,ispec)),zstore_dummy(ibool(i,j,1,ispec))
+        endif
+        !! C. DUROCHAT modification : end
+
       enddo
     enddo
 
@@ -145,6 +186,12 @@
     enddo
 
   enddo ! nspec2D_xmin
+
+  !! C. DUROCHAT modification : begin !! for coupling with DSM by VM
+  if(COUPLE_WITH_DSM) then 
+    close(123)
+  endif
+  !! C. DUROCHAT modification : end
 
   ! xmax
   ijk_face(:,:,:) = 0
@@ -167,6 +214,12 @@
                               ibool,nspec,nglob_dummy, &
                               xstore_dummy,ystore_dummy,zstore_dummy, &
                               iface )
+
+    !! C. DUROCHAT modification : begin !! for coupling with DSM by VM
+    if(COUPLE_WITH_DSM) then 
+      iboun(iface,ispec) = .true.
+    endif
+    !! C. DUROCHAT modification : end
 
     ! ijk indices of GLL points on face
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLZ)
@@ -230,6 +283,12 @@
                               xstore_dummy,ystore_dummy,zstore_dummy, &
                               iface )
 
+    !! C. DUROCHAT modification : begin !! for coupling with DSM by VM
+    if(COUPLE_WITH_DSM) then 
+      iboun(iface,ispec) = .true.
+    endif
+    !! C. DUROCHAT modification : end
+
     ! ijk indices of GLL points on face
     call get_element_face_gll_indices(iface,ijk_face,NGLLY,NGLLZ)
 
@@ -292,6 +351,12 @@
                               xstore_dummy,ystore_dummy,zstore_dummy, &
                               iface )
 
+    !! C. DUROCHAT modification : begin !! for coupling with DSM by VM
+    if(COUPLE_WITH_DSM) then 
+      iboun(iface,ispec) = .true.
+    endif
+    !! C. DUROCHAT modification : end
+
     ! ijk indices of GLL points on face
     call get_element_face_gll_indices(iface,ijk_face,NGLLY,NGLLZ)
 
@@ -353,6 +418,12 @@
                               ibool,nspec,nglob_dummy, &
                               xstore_dummy,ystore_dummy,zstore_dummy, &
                               iface )
+
+    !! C. DUROCHAT modification : begin !! for coupling with DSM by VM
+    if(COUPLE_WITH_DSM) then 
+      iboun(iface,ispec) = .true.
+    endif
+    !! C. DUROCHAT modification : end
 
     ! ijk indices of GLL points on face
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLY)
@@ -418,6 +489,12 @@
                               ibool,nspec,nglob_dummy, &
                               xstore_dummy,ystore_dummy,zstore_dummy, &
                               iface )
+
+    !! C. DUROCHAT modification : begin !! for coupling with DSM by VM
+    if(COUPLE_WITH_DSM) then 
+      iboun(iface,ispec) = .true.
+    endif
+    !! C. DUROCHAT modification : end
 
     ! ijk indices of GLL points on face
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLY)

@@ -157,6 +157,17 @@
 
 !!-----------------------------------------------------------
 !!
+!! Roland_Sylvain gravity calculations
+!!
+!!-----------------------------------------------------------
+
+  !! C. DUROCHAT modification : begin 
+  logical, parameter :: COUPLE_WITH_DSM = .false. !!! .true.
+
+  !! C. DUROCHAT modification : end
+
+!!-----------------------------------------------------------
+!!
 !! source/receiver setup
 !!
 !!-----------------------------------------------------------
