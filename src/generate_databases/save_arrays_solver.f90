@@ -571,6 +571,38 @@
       deallocate(iglob_tmp,v_tmp_i)
     endif
 
+    !! C. DUROCHAT modification : begin !! for coupling with DSM by VM
+    if (COUPLE_WITH_DSM) then
+      !if (num_abs_boundary_faces > 0) then
+      filename = prname(1:len_trim(prname))//'absorb_dsm'
+      open(27,file=filename(1:len_trim(filename)),status='unknown',form='unformatted',iostat=ier)
+      if( ier /= 0 ) stop 'error opening file absorb_dsm'
+      write(27) num_abs_boundary_faces
+      write(27) abs_boundary_ispec
+      write(27) abs_boundary_ijk
+      write(27) abs_boundary_jacobian2Dw
+      write(27) abs_boundary_normal
+      close(27)
+
+      filename = prname(1:len_trim(prname))//'inner'
+      open(27,file=filename(1:len_trim(filename)),status='unknown',form='unformatted',iostat=ier)
+      write(27) ispec_is_inner
+      write(27) ispec_is_elastic
+      close(27)
+        
+      !end if
+
+      !! saves 1. MPI interface
+      if( num_interfaces_ext_mesh >= 1 ) then
+        filename = prname(1:len_trim(prname))//'MPI_1_points'
+        call write_VTK_data_points(nglob, xstore_dummy,ystore_dummy,zstore_dummy, &
+                                   ibool_interfaces_ext_mesh_dummy(1:nibool_interfaces_ext_mesh(1),1), &
+                                   nibool_interfaces_ext_mesh(1), filename)
+      endif
+
+    endif
+    !! C. DUROCHAT modification : end
+
     ! acoustic-poroelastic domains
     if( ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION ) then
       ! saves points on acoustic-poroelastic coupling interface
