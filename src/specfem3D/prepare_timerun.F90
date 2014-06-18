@@ -124,7 +124,7 @@
     write(IMAIN,*) 'start time:',sngl(-t0),' seconds'
     write(IMAIN,*)
 
-    ! flushes file buffer  for main output file (IMAIN)
+    ! flushes file buffer for main output file (IMAIN)
     call flush_IMAIN()
 
     !daniel debug: total time estimation
