@@ -1,0 +1,68 @@
+# simulation input parameters
+#
+# forward or adjoint simulation
+# 1 = forward, 2 = adjoint, 3 = both simultaneously
+SIMULATION_TYPE                 = 3
+# 0 = earthquake simulation,  1/2/3 = three steps in noise simulation
+NOISE_TOMOGRAPHY                = 3
+SAVE_FORWARD                    = .false.
+
+# UTM projection parameters
+UTM_PROJECTION_ZONE             = 11
+SUPPRESS_UTM_PROJECTION         = .true.
+
+# number of MPI processors
+NPROC                           = 4
+
+# time step parameters
+NSTEP                           = 1500
+DT                              = 0.05d0
+NTSTEP_BETWEEN_READ_ADJSRC      = 0
+
+# models:
+# available options are:
+#   default (model parameters described by mesh properties)
+# 1D models available are:
+#   1d_prem,1d_socal,1d_cascadia
+# 3D models available are:
+#   aniso,external,gll,salton_trough,tomo
+MODEL                           = default
+
+# parameters describing the model
+APPROXIMATE_OCEAN_LOAD                          = .false.
+TOPOGRAPHY                      = .false.
+ATTENUATION                     = .false.
+FULL_ATTENUATION_SOLID          = .false.
+USE_OLSEN_ATTENUATION           = .false.
+ANISOTROPY                      = .false.
+GRAVITY                         = .false.
+
+# absorbing boundary conditions for a regional simulation
+STACEY_ABSORBING_CONDITIONS     = .true.
+
+# save AVS or OpenDX movies
+MOVIE_SURFACE                   = .true.
+MOVIE_VOLUME                    = .false.
+NTSTEP_BETWEEN_FRAMES           = 100
+CREATE_SHAKEMAP                 = .false.
+SAVE_DISPLACEMENT               = .false.
+USE_HIGHRES_FOR_MOVIES          = .true.
+HDUR_MOVIE                      = 0.0
+
+# save AVS or OpenDX mesh files to check the mesh
+SAVE_MESH_FILES                 = .false.
+
+# path to store the local database file on each node
+LOCAL_PATH                      = ./OUTPUT_FILES/DATABASES_MPI
+
+# interval at which we output time step info and max of norm of displacement
+NTSTEP_BETWEEN_OUTPUT_INFO      = 1000
+
+# interval in time steps for writing of seismograms
+NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 10000
+
+# print source time function
+PRINT_SOURCE_TIME_FUNCTION      = .true.
+
+# set to true to use GPUs
+GPU_MODE                        = .false.

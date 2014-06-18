@@ -1,0 +1,13 @@
+PDE  1999 01 01 00 00 00.00  100 150 -150 4.2 4.2 hom_explosion
+event name:       hom_explosion
+time shift:       0.0000
+half duration:  0.003  
+latitude:       100.0
+longitude:      150.0
+depth:          0.150
+Mrr:       1.000000e+24
+Mtt:       1.000000e+24
+Mpp:       1.000000e+24
+Mrt:       0.000000
+Mrp:       0.000000
+Mtp:       0.000000

@@ -1,0 +1,17 @@
+this test can be done on your workstation, as long as you have FOUR CPUs available.
+it should be done within 15 minutes. 
+
+
+to run this test, simply use (after ./configure FC=ifort MPIFC=mpif90):
+
+./run_inhomogeneous.bash
+
+
+you will be given information at the very end:
+
+ DATASPACE=       ?
+ MODELSPACE=      ?
+ relative error=  ?
+
+check "relative error", it must be small enough (~0.001 should be OK).
+If you fail the test, PURE ELASTIC kernel calculation is problematic.

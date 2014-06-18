@@ -1,0 +1,109 @@
+----------------------------------------------------------------------
+README
+----------------------------------------------------------------------
+
+step-by-step tutorial:
+
+0. check that all software is available (or that modules are loaded):
+     intel/openmpi, cubit, scotch, python, gnuplot
+
+
+1. configure package:
+
+   - From the SPECFEM3D root directory SPECFEM3D/
+     configure the package, e.g. using intel's ifort compiler:
+     > cd SPECFEM3D
+     > ./configure F90=ifort --with-scotch-path=/my_path_to_scotch
+
+     If successful, this will generate the files:
+     Makefile, constants.h, and precision.h, among others
+
+   - copy two run scripts from SPECFEM3D/utils/Cluster/
+     into SPECFEM3D/, e.g.,
+     pbs/go_generate_databases_pbs.bash
+     pbs/go_solver_pbs.bash
+
+
+2. create mesh:
+
+   - change to the examples directory SPECFEM3D/examples/homogeneous_poro:
+     > cd examples/homogeneous_poro
+
+   - open the cubit GUI:
+     > claro (or cubit)
+
+     then run meshing script:
+     claro -> Menu "Tools" -> "Play Journal File" ... and select file: "block_mesh.py"
+
+     if everything goes fine, this creates all the mesh files in a subdirectory MESH/:
+        MESH/absorbing_surface_file_bottom
+        MESH/absorbing_surface_file_xmax
+        MESH/absorbing_surface_file_xmin
+        MESH/absorbing_surface_file_ymax
+        MESH/absorbing_surface_file_ymin
+        MESH/free_surface_file
+        MESH/materials_file
+        MESH/mesh_file
+        MESH/nodes_coords_file
+        MESH/nummaterial_velocity_file
+        MESH/nummaterial_poroelastic_file
+
+3. decompose mesh files:
+
+   - compile decomposer in directory SPECFEM3D/:
+     > make
+
+     NOTE 1: check that the two scotch libraries are properly specified in Makefile
+     NOTE 2: compile with the same compiler (ifort or gfortran) used
+              for the SCOTCH libraries
+
+   - run decomposer in directory
+     (example assumes 16 partitions with mesh files in ../examples/homogeneous_poro/MESH/)
+     > ./bin/xdecompose_mesh 16 ../examples/homogeneous_poro/MESH/ ../OUTPUT_FILES/DATABASES_MPI/
+
+     this creates mesh partitions "proc000***_Database" in directory OUTPUT_FILES/DATABASES_MPI/.
+     (you can then specify "../OUTPUT_FILES/DATABASES_MPI" in "Par_file" for your "LOCAL_PATH")
+
+
+4. generate databases:
+
+   - compile generate_databases from SPECFEM3D/ :
+     > cd SPECFEM3D
+     > make xgenerate_databases
+
+   - submit job script
+     > qsub go_generate_databases_pbs.bash
+
+     NOTE: this script will need to be tailored to your cluster, e.g.,
+     > bsub < go_generate_databases_lsf.bash
+
+     this will create binary mesh files, e.g. "proc000***_external_mesh.bin"
+     in directory OUTPUT_FILES/DATABASES_MPI/.
+
+
+5. run simulation:
+
+   - copy three files -- Par_file CMTSOLUTION STATIONS -- from
+      SPECFEM3D/examples/homogeneous_poro/ to SPECFEM3D/DATA/
+
+   - compile specfem3D:
+     > make xspecfem3D
+
+   - submit job script:
+     > qsub go_solver_pbs.bash
+
+     NOTE 1: this script will need to be tailored to your cluster, e.g.,
+             > bsub < go_solver_lsf.bash
+     NOTE 2: the simulation runs on 4 cores and should take about 15 minutes,
+             and you can track the progress with the timestamp files
+
+   - when the job is complete, you should have 3 sets (semd,semv,sema)
+     of 672 (ls -1 *semd | wc) in the directory OUTPUT_FILES,
+     as well as 3 timestamp****** files
+
+
+6. plot your output seismograms in SPECFEM3D/OUTPUT_FILES/
+   using xmgrace for example.
+
+===========================================================
+
