@@ -658,7 +658,7 @@
                               dble(K_store_y(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML)) + &
                               dble(d_store_y(i,j,k,ispec_CPML)) * dble(K_store_x(i,j,k,ispec_CPML)) * &
                               dble(K_store_z(i,j,k,ispec_CPML)) + dble(d_store_z(i,j,k,ispec_CPML)) * &
-                              dble(K_store_y(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML))) * &
+                              dble(K_store_x(i,j,k,ispec_CPML)) * dble(K_store_y(i,j,k,ispec_CPML))) * &
                               deltat / 2.d0) )
                       else
                          rmass(iglob) = rmass(iglob) + &
@@ -666,8 +666,8 @@
                               (K_store_x(i,j,k,ispec_CPML) * K_store_y(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML) + &
                               (d_store_x(i,j,k,ispec_CPML) * K_store_y(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML) + &
                               d_store_y(i,j,k,ispec_CPML) * K_store_x(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML) + &
-                              d_store_z(i,j,k,ispec_CPML) * K_store_y(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML)) * &
-                              deltat / 2.d0)
+                              d_store_z(i,j,k,ispec_CPML) * K_store_x(i,j,k,ispec_CPML) * K_store_y(i,j,k,ispec_CPML)) * &
+                              deltat / 2.0)
                       endif
                    enddo
                 enddo
@@ -915,7 +915,7 @@
                               dble(K_store_y(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML)) + &
                               dble(d_store_y(i,j,k,ispec_CPML)) * dble(K_store_x(i,j,k,ispec_CPML)) * &
                               dble(K_store_z(i,j,k,ispec_CPML)) + dble(d_store_z(i,j,k,ispec_CPML)) * &
-                              dble(K_store_y(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML))) * &
+                              dble(K_store_y(i,j,k,ispec_CPML)) * dble(K_store_x(i,j,k,ispec_CPML))) * &
                               deltat / 2.d0) )
                       else
                          rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
@@ -923,7 +923,7 @@
                               (K_store_x(i,j,k,ispec_CPML) * K_store_y(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML) + &
                               (d_store_x(i,j,k,ispec_CPML) * K_store_y(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML) + &
                               d_store_y(i,j,k,ispec_CPML) * K_store_x(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML) + &
-                              d_store_z(i,j,k,ispec_CPML) * K_store_y(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML)) * &
+                              d_store_z(i,j,k,ispec_CPML) * K_store_y(i,j,k,ispec_CPML) * K_store_x(i,j,k,ispec_CPML)) * &
                               deltat / 2.d0)
                       endif
                    enddo
