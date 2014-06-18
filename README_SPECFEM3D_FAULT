@@ -1,16 +1,25 @@
 
+********************************************************************************
+  PLEASE IGNORE THIS FILE IF YOU DO NOT PLAN TO USE THE DYNAMIC FAULT RUPTURE
+  CAPABILITIES OF SPECFEM; in that case, just refer to the regular users manual
+  in the "doc" directory. If you plan to model dynamic rupture capabilities,
+  please refer to the file below but read the users manual first,
+  since some of the installation instructions below are probably obsolete.
+********************************************************************************
+
 This file documents modifications done by
 J.-P. Ampuero (Caltech Seismolab), P. Galvez (ETH Zurich) and S. N. Somala (Caltech)
 to model dynamic and kinematic earthquake rupture on non-planar faults.
-The main modifications are encapsulated in the following modules: 
-	decompose_mesh_SCOTCH/fault_scotch.f90
-	generate_databases/fault_generate_databases.f90 
-	specfem3d/fault_solver_dynamic.f90 
-	specfem3d/fault_solver_kinematic.f90 
-	specfem3d/fault_solver_common.f90 
-We also include examples and Matlab functions for post-processing and visualization. 
 
-This is a preliminary version, still under development and testing. 
+The main modifications are encapsulated in the following modules:
+  decompose_mesh_SCOTCH/fault_scotch.f90
+  generate_databases/fault_generate_databases.f90
+  specfem3d/fault_solver_dynamic.f90
+  specfem3d/fault_solver_kinematic.f90
+  specfem3d/fault_solver_common.f90
+We also include examples and Matlab functions for post-processing and visualization.
+
+This is a preliminary version, still under development and testing.
 The features and the format of inputs and outputs are subject to change.
 
 Details about the original package are described in its manual (manual_SPECFEM3D.pdf).
@@ -18,96 +27,30 @@ The current README file describes how to install and run our modified version of
 It is not a replacement for the original manual, which you should read first.
 
 Contents:
-	Download and updates
-	Installation
-	Mesh generation with split nodes
-	Cubit-python scripts for fault
-	Running a simulation
-	Examples
-	Sign convention for fault quantities
-	Input files
-	Output files
-	Post-processing and visualization
-	Running on Fram (the Caltech GPS cluster)
+
+  Download and updates
+  Installation
+  Mesh generation with split nodes
+  Cubit-python scripts for fault
+  Running a simulation
+  Examples
+  Sign convention for fault quantities
+  Input files
+  Output files
+  Post-processing and visualization
 
 
 
 DOWNLOAD AND UPDATES
 ---------------------
 
-To download the package for the first time run the following Subversion comand:
-
-	>> svn checkout http://geodynamics.org/svn/cig/seismo/3D/FAULT_SOURCE/branches/new_fault_db SPECFEM3D
-
-This will create a copy of the code in a directory called SPECFEM3D.
-Subsequently, to download new version of the package:
-
-	>> cd ~/SPECFEM3D
-	>> svn update
-
-This will update the package: it will replace files by new ones, add new files and remove deprecated 
-files if needed. Files that you generated and were not originally in the package will not be touched.
+Please refer to the users manual in the "doc" directory.
 
 
 INSTALLATION
 -------------
 
-1. Copy the start-up and source files to the root directory:
-
-  	>> cd SPECFEM3D 
-	>> cp START_UP/*  src/*  .
-
-
-2. Modify compiler options if needed:
-  The file flags.guess contains default values for compiler flags, which in general work fine.
-  To force your preferred compiler settings you must edit the variables FLAGS_CHECK and 
-  FLAGS_NO_CHECK in file flags.guess. 
-
-
-3. Configure the package, for instance:
-
-  	>> ./configure FC=ifort MPIFC=mpif90
-   or 
-  	>> ./configure FC=ifort MPIFC=mpiifort
-
-  Several settings can be tuned for your system, see Chapter 2 of the manual for more details.
-  The code runs by default in single precision. If you prefer to run in double precision do instead: 
-
-	>> ./configure --enable-double-precision FC=ifort MPIFC=mpif90
-
-
-4. Compile the package:
-
-	>> make 
-
-  This creates the following executables: 
-	xgenerate_dabases (database generation)
-        xspecfem3d (solver)
-	xcombine_AVS_DX 
-	xconvolve_source_timefunction.   
-
-
-5. Install SCOTCH: 
-
-   	>> cd decompose_mesh_SCOTCH
-	>> tar -xvf scotch.5.1.7.tar
-	Follow the instructions in the scotch_5.1.7/INSTALL.txt file.
-        copy scotch_5.1/src/Make.inc/Makefile.inc.i686_pc_linux2.debug to scotch_5.1/src/Makefile.inc
-
-6. Compile the SCOTCH-to-SPECFEM3D interface program, also in the directory decompose_mesh_SCOTCH:
-
-   	Edit the Makefile: 
-		+ the F90 variable to match your compiler. 
-		+ the SCOTCH_LIB_PATH to match your SCOTCH library path.
-	>> make
-
-  This creates the executable xdecompose_mesh_SCOTCH in directory decompose_mesh_SCOTCH.
-
-
-7. Obtain and install the mesh generation software CUBIT (cubit.sandia.gov). 
-  If you don't have a CUBIT license yet, you can still run the examples in this package using 
-  the mesh files we provide.
-
+Please refer to the users manual in the "doc" directory.
 
 
 MESH GENERATION WITH SPLIT NODES
@@ -115,11 +58,11 @@ MESH GENERATION WITH SPLIT NODES
 
 Faults need to be handled in a special way during mesh generation.
 A fault surface must lie at the interface between elements (the mesh
-must honor the fault surfaces). Moreover, a fault is made of two surfaces 
-in contact. Each of these two surfaces needs a separate set of nodes. 
+must honor the fault surfaces). Moreover, a fault is made of two surfaces
+in contact. Each of these two surfaces needs a separate set of nodes.
 This approach is known as "split nodes".
 To facilitate the mesh generation with split nodes in Cubit, we need to
-separate the two fault surfaces by a small distance, effectively 
+separate the two fault surfaces by a small distance, effectively
 creating a tiny opening of the fault. Note that only the interior of
 the fault must be opened, its edges must remain closed (except the edge
 on the free surface). The fault is automatically closed later by SPECFEM3D.
@@ -143,13 +86,13 @@ for a buried vertical strike-slip fault:
   node in surf 160 move X 0 Y -0.01 Z 0
 
 The Cubit scripts (*.jou and *.py) in the directory EXAMPLES generate more complicated meshes.
-The *.py files are Python scripts that execute Cubit commands and use the Cubit-python interface 
-for SPECFEM3D (see next section). The Python language allows to define and manipulate variables 
-to parameterize the mesh. Alternatively, the Python script can call a Cubit journal file (*.jou), 
-which looks like the example above. Variables can be defined and manipulated there using the 
+The *.py files are Python scripts that execute Cubit commands and use the Cubit-python interface
+for SPECFEM3D (see next section). The Python language allows to define and manipulate variables
+to parameterize the mesh. Alternatively, the Python script can call a Cubit journal file (*.jou),
+which looks like the example above. Variables can be defined and manipulated there using the
 APREPRO language built in Cubit.
 
-Note: you should avoid gaps in the list of indices of mesh objects 
+Note: you should avoid gaps in the list of indices of mesh objects
 with the following Cubit command:
   compress ids hex face edge node')
 (otherwise you will get a segmentation fault during domain decomposition)
@@ -161,33 +104,33 @@ CUBIT-PYTHON SCRIPTS FOR FAULTS
 
 The mesh generated in Cubit needs to be processed and exported in a format compatible with SPECFEM3D.
 This is achieved in the Python scripts by calling the Python-Cubit interface functions
-defined in the CUBIT directory: 
+defined in the CUBIT directory:
 1. Function "define_bc" (or similar ones) must be called to set up the absorbing boundaries database
-2. Function "fault_input" must be called once for each fault to set up the fault database 
+2. Function "fault_input" must be called once for each fault to set up the fault database
 3. Function "cubit2specfem3d.export2SESAME" must be called at the very end of the script to export the
    mesh in a SPECFEM3D format.
-The functions in #1 and #3 are part of the main SPECFEM3D-SESAME distribution and are not documented here. 
+The functions in #1 and #3 are part of the main SPECFEM3D-SESAME distribution and are not documented here.
 We focus here on #2:
 
-  Function:	fault_input
-  Purpose:	export a fault mesh database from Cubit to a SPECFEM3D-compliant file
-  Syntax:	fault_input(id_fault, ids_surf_1, ids_surf_2)
+  Function: fault_input
+  Purpose:  export a fault mesh database from Cubit to a SPECFEM3D-compliant file
+  Syntax: fault_input(id_fault, ids_surf_1, ids_surf_2)
 
-  Inputs: 	id_fault	integer index assigned to the fault. 
-				The user must number all the faults, starting at 1, with unit increments.
-		ids_surf_1	list of Cubit ids of all surfaces that form side 1 of the fault 
- 		ids_surf_2	list of Cubit ids of all surfaces that form side 2 of the fault 
-				The user must decide which side of the fault is side 1. 
-				This choice affects the sign conventions of fault quantities 
-				as explained in a later section.
+  Inputs:   id_fault  integer index assigned to the fault.
+        The user must number all the faults, starting at 1, with unit increments.
+    ids_surf_1  list of Cubit ids of all surfaces that form side 1 of the fault
+    ids_surf_2  list of Cubit ids of all surfaces that form side 2 of the fault
+        The user must decide which side of the fault is side 1.
+        This choice affects the sign conventions of fault quantities
+        as explained in a later section.
 
-  Outputs:	file "fault_file_X.dat", where X is the fault id (id_fault).
+  Outputs:  file "fault_file_X.dat", where X is the fault id (id_fault).
 
-  Example:	For the example in the previous section:
+  Example:  For the example in the previous section:
 
-  		A1 = [168]
- 	  	A2 = [160] 
- 		faultA = fault_input(1,A1,A2)
+      A1 = [168]
+      A2 = [160]
+    faultA = fault_input(1,A1,A2)
 
 
 
@@ -196,45 +139,45 @@ RUNNING A SIMULATION
 
 1. Copy the input files to the work directory:
 
-	>> cd ~/SPECFEM3D
-     	>> cp -r EXAMPLES/splay_faults/DATA  ./
+  >> cd ~/SPECFEM3D
+      >> cp -r EXAMPLES/splay_faults/DATA  ./
 
 
-2. Create a mesh with CUBIT: 
-  (If you have not installed CUBIT yet skip this step and use the mesh files included 
+2. Create a mesh with CUBIT:
+  (If you have not installed CUBIT yet skip this step and use the mesh files included
   with the examples.)
 
   See the previous section "MESH GENERATION WITH SPLIT NODES" or
-  move to the directory CUBIT, open the cubit GUI, run a CUBIT script: 
-    	>> cd ~/SPECFEM3D/CUBIT
-    	>> cubit
-  In CUBIT's menu "Tools", select "Play Journal File" and select a script file, 
+  move to the directory CUBIT, open the cubit GUI, run a CUBIT script:
+      >> cd ~/SPECFEM3D/CUBIT
+      >> cubit
+  In CUBIT's menu "Tools", select "Play Journal File" and select a script file,
   for instance:
-	EXAMPLES/splay_faults/splay_faults.py
+  EXAMPLES/splay_faults/splay_faults.py
 
-  This creates several mesh files in directory CUBIT/MESH/:     
-	absorbing_surface_file_* (5 files)
-	free_surface_file
-	materials_file
-	mesh_file
-	nodes_coords_file
-	nummaterial_velocity_file
+  This creates several mesh files in directory CUBIT/MESH/:
+  absorbing_surface_file_* (5 files)
+  free_surface_file
+  materials_file
+  mesh_file
+  nodes_coords_file
+  nummaterial_velocity_file
 
   The CUBIT graphics window should show the mesh (e.g. EXAMPLES/splay_faults/splay_faults.jpg)
-  You can zoom, pan or rotate using mouse gestures. To look at the block of your interest, 
+  You can zoom, pan or rotate using mouse gestures. To look at the block of your interest,
   set "visibility off" in the other blocks.
 
-  To run CUBIT from different working directories it is convenient to 
+  To run CUBIT from different working directories it is convenient to
   include the path to SPECFEM3D/CUBIT in an environment variable PYTHONPATH
 
 
 3. Partition the mesh with the domain decomposition software SCOTCH.
 
-	>> cd ~/SPECFEM3D/decompose_mesh_SCOTH
-	>> ./xdecompose_mesh_SCOTCH 'nproc' ../CUBIT/MESH/ ../DATABASES_MPI/ 
+  >> cd ~/SPECFEM3D/decompose_mesh_SCOTH
+  >> ./xdecompose_mesh_SCOTCH 'nproc' ../CUBIT/MESH/ ../DATABASES_MPI/
 
   where 'nproc' is the number of processors that you will use in the simulation.
-  The second argument (../CUBIT/MESH/ in this example) is the path to the directory 
+  The second argument (../CUBIT/MESH/ in this example) is the path to the directory
   containing the mesh files that were generated by CUBIT.
   This creates one mesh file proc000***_Database per processor in directory DATABASES_MPI.
   These files can be large, so you might want to place DATABASES_MPI in a scratch disk
@@ -243,59 +186,59 @@ RUNNING A SIMULATION
 
 4. Edit the file DATA/Par_file: (copy an example here, see III.2)
 
-   	LOCAL_PATH = should be the path to DATABASES_MPI
-	NPROC      = number of processors. The same as the number of partitions in SCOTCH (step 3).
+    LOCAL_PATH = should be the path to DATABASES_MPI
+  NPROC      = number of processors. The same as the number of partitions in SCOTCH (step 3).
 
 
 5. Generate databases:
 
-	>> cd ~/SPECFEM3D
-   	>> mpirun -np nproc ./xgenerate_databases
-    	or
-   	>> ./run/run.xdatabases  
-    	or
-   	>> qsub -l nodes=... -l walltime=... go_mesher
-	(the script go_mesher is in utils/)
+  >> cd ~/SPECFEM3D
+    >> mpirun -np nproc ./xgenerate_databases
+      or
+    >> ./run/run.xdatabases
+      or
+    >> qsub -l nodes=... -l walltime=... go_mesher
+  (the script go_mesher is in utils/)
 
   This creates several binary mesh files for each processor (proc000***.bin)
   in directory DATABASES_MPI.
 
 
 6. If this is the first time you run a simulation with this mesh, set the parameter
-   DT (the time step) DATA/Par_file to a value smaller than the 
-   "Maximum suggested time step" in OUTPUT_FILES/output_mesher.txt. 
+   DT (the time step) DATA/Par_file to a value smaller than the
+   "Maximum suggested time step" in OUTPUT_FILES/output_mesher.txt.
    Consider the note in section IV about the effect of Kelvin-Voigt damping on the critical timestep.
    Edit the variables NSTEP and NTSTEP_* in DATA/Par_file accordingly.
 
 
 7. Run the solver:
 
-	>> mpirun -np nproc ./xspecfem3D                   
-   	or
-	>>./run/run.xspecfem3d
-    	or
-   	>> qsub -l nodes=... -l walltime=... go_solver
-	(the script go_solver is in utils/)
+  >> mpirun -np nproc ./xspecfem3D
+    or
+  >>./run/run.xspecfem3d
+      or
+    >> qsub -l nodes=... -l walltime=... go_solver
+  (the script go_solver is in utils/)
 
 
 
-EXAMPLES 
+EXAMPLES
 ---------
 
-The package includes examples, the SCEC benchmark problems: 
-	+ TPV5, a planar vertical strike-slip fault
-	+ TPV14 and TPV15, vertical strike-slip fault system with a fault branch
- 	+ Splay fault models from Wendt et al. (2009)
+The package includes examples, the SCEC benchmark problems:
+  + TPV5, a planar vertical strike-slip fault
+  + TPV14 and TPV15, vertical strike-slip fault system with a fault branch
+  + Splay fault models from Wendt et al. (2009)
 
 To run the examples:
 
 1. Read the documents in the directory EXAMPLES/*/description. They contain a description of the example
-   and additional instructions to run it. 
+   and additional instructions to run it.
 
 2. replace the contents of directory DATA/* by one of the EXAMPLES/tpv*/DATA,
    for instance:
 
-	>> cp -r EXAMPLES/tpv5/DATA ./
+  >> cp -r EXAMPLES/tpv5/DATA ./
 
 3. follow all the steps in section II above.
 
@@ -307,7 +250,7 @@ SIGN CONVENTION FOR FAULT QUANTITIES
 -------------------------------------
 
 During mesh generation, the fault is defined by two surfaces in contact.
-Let's denote as "side 1" the SECOND surface declared by the user in the call 
+Let's denote as "side 1" the SECOND surface declared by the user in the call
 to the python function "fault_input", and the FIRST surface as "side 2".
 The local coordinate system on the fault is defined as the right-handed coordinate system
 defined by (strike, dip, normal), where "normal" is the normal vector outgoing
@@ -315,14 +258,14 @@ from side 1, "dip" is parallel to the along-dip direction pointing downwards,
 and "strike" is the horizontal along-strike vector such that the system is right-handed.
 
 Slip is defined as displacement on side 2 minus displacement on side 1.
-In the local coordinate system on the fault, 
+In the local coordinate system on the fault,
 positive along-strike slip is right-lateral
 and positive along-dip slip is thrust if side 1 is on the hanging wall
 (normal faulting if side 1 is on the foot wall).
 
 Traction is defined as the stress induced on side 1 by side 2,
 which is the stress tensor times the normal vector outgoing from side 1.
-In the local coordinate system on the fault, 
+In the local coordinate system on the fault,
 the normal traction is negative in compression,
 positive along-strike traction generates right-lateral slip
 and positive along-dip traction generates thrust slip if side 1 is on the hanging wall
@@ -333,112 +276,112 @@ and positive along-dip traction generates thrust slip if side 1 is on the hangin
 INPUT FILES
 ------------
 
-DATA/Par_file	See SPECFEM3D manual page 17.
-             	A first version of this file is generated by ./configure.
+DATA/Par_file See SPECFEM3D manual page 17.
+              A first version of this file is generated by ./configure.
 
-DATA/STATIONS 	List of stations outside the fault (see manual page 23).
+DATA/STATIONS   List of stations outside the fault (see manual page 23).
 
-DATA/Par_file_faults	contains parameters of the fault. The first part of this file
-	has a strict format:
+DATA/Par_file_faults  contains parameters of the fault. The first part of this file
+  has a strict format:
 
-	Line 1: Number of faults (NF)
-	Lines 2 to NF+1: Kelvin Voigt damping (in seconds) for each fault. (See below how to set this parameter)
-        Line NF+2: Type of simulation (1=dynamic , 2 = kinematic)       
-	Line NF+3: Number of time steps between updates of the time series outputs at selected
-		fault points (see DATA/FAULT_STATIONS), usually a large number (100s or 1000s). 
-		Note that the sampling rate of the time series is usually much higher.
-	Line NF+4: Number of time steps between fault snapshot outputs (quantities at every fault 
-		point exported at regular times), usually a large number (100s or 1000s).
-	Line NF+5: Slip velocity threshold below which frictional healing is set (friction coefficient
+  Line 1: Number of faults (NF)
+  Lines 2 to NF+1: Kelvin Voigt damping (in seconds) for each fault. (See below how to set this parameter)
+        Line NF+2: Type of simulation (1=dynamic , 2 = kinematic)
+  Line NF+3: Number of time steps between updates of the time series outputs at selected
+    fault points (see DATA/FAULT_STATIONS), usually a large number (100s or 1000s).
+    Note that the sampling rate of the time series is usually much higher.
+  Line NF+4: Number of time steps between fault snapshot outputs (quantities at every fault
+    point exported at regular times), usually a large number (100s or 1000s).
+  Line NF+5: Slip velocity threshold below which frictional healing is set (friction coefficient
                is reset to its static value). If this value is negative healing is disabled.
-	Line NF+6: Slip velocity threshold to define the rupture front. Only used for outputs.
+  Line NF+6: Slip velocity threshold to define the rupture front. Only used for outputs.
 
         The rest of this file is made of namelist input blocks (see "namelist" in a Fortran 9x manual).
         The input for each fault has the following sequence (arguments in [brackets] are optional):
 
-	  &BEGIN_FAULT /
-          &INIT_STRESS S1, S2, S3 [,n1, n2, n3] / 
+    &BEGIN_FAULT /
+          &INIT_STRESS S1, S2, S3 [,n1, n2, n3] /
           followed by (n1+n2+n3) &DIST2D blocks
-	  &SWF mus, mud, dc [, nmus, nmud, ndc] /
+    &SWF mus, mud, dc [, nmus, nmud, ndc] /
           followed by (nmus+nmud+ndc) &DIST2D blocks
 
-        The &INIT_STRESS input block sets the initial fault stresses relative to the foot-wall side of 
-	the fault. Initial stresses are composed of a constant background value possibly overwritten 
-	in prescribed regions by heterogeneous distributions (see &DIST2D blocks below):
-		S1 = constant background value of along-strike shear stress 
-		     (positive in the usual strike direction)
-		S2 = constant background value of along-dip shear
-		     (positive is down-dip, normal faulting)
-		S3 = constant background value of normal stress (negative in compresion)
-		n1 = number of heterogeneous items for along-strike shear stress [default is 0]
-		n2 = number of heterogeneous items for along-dip shear stress [default is 0]
-		n3 = number of heterogeneous items for normal stress [default is 0]
+        The &INIT_STRESS input block sets the initial fault stresses relative to the foot-wall side of
+  the fault. Initial stresses are composed of a constant background value possibly overwritten
+  in prescribed regions by heterogeneous distributions (see &DIST2D blocks below):
+    S1 = constant background value of along-strike shear stress
+         (positive in the usual strike direction)
+    S2 = constant background value of along-dip shear
+         (positive is down-dip, normal faulting)
+    S3 = constant background value of normal stress (negative in compresion)
+    n1 = number of heterogeneous items for along-strike shear stress [default is 0]
+    n2 = number of heterogeneous items for along-dip shear stress [default is 0]
+    n3 = number of heterogeneous items for normal stress [default is 0]
 
         The &SWF input block sets the slip-weakening friction parameters of the fault:
-		mus = constant background value of static friction coefficient 
-		mud = constant background value of dynamic friction coefficient 
-		dc  = constant background value of critical slip-weakening distance
-		nmus = number of heterogeneous items for static friction coefficient [default is 0]
-		nmud = number of heterogeneous items for dynamic friction coefficient [default is 0]
-		ndc = number of heterogeneous items for critical slip-weakening distance [default is 0]
+    mus = constant background value of static friction coefficient
+    mud = constant background value of dynamic friction coefficient
+    dc  = constant background value of critical slip-weakening distance
+    nmus = number of heterogeneous items for static friction coefficient [default is 0]
+    nmud = number of heterogeneous items for dynamic friction coefficient [default is 0]
+    ndc = number of heterogeneous items for critical slip-weakening distance [default is 0]
 
-        The &DIST2D input blocks modify (overwrite) the value of a fault parameter by a heterogeneous 
-	spatial distribution:
+        The &DIST2D input blocks modify (overwrite) the value of a fault parameter by a heterogeneous
+  spatial distribution:
 
-		&DIST2D	shape='square', val, xc, yc, zc, l /
-                sets a constant value (val) within a cube with center (xc,yc,zc) and edge size l. 
+    &DIST2D shape='square', val, xc, yc, zc, l /
+                sets a constant value (val) within a cube with center (xc,yc,zc) and edge size l.
 
-		&DIST2D	shape='rectangle', val, xc, yc, zc, lx, ly, lz /
+    &DIST2D shape='rectangle', val, xc, yc, zc, lx, ly, lz /
                 sets a constant value (val) within a rectangular prism with center (xc,yc,zc)
-                and edge sizes (lx,ly,lz). 
+                and edge sizes (lx,ly,lz).
 
-		&DIST2D	shape='rectangle-taper', val, valh, xc, yc, zc, lx, ly, lz /
-                sets a vertical linear gradient 
-		within a rectangular prism with center (xc,yc,zc) and edge sizes (lx,ly,lz). 
-		Values vary linearly as a function of vertical position z
-		between value val at z = zc-lz/2 and value valh at z = zc+lz/2 .
+    &DIST2D shape='rectangle-taper', val, valh, xc, yc, zc, lx, ly, lz /
+                sets a vertical linear gradient
+    within a rectangular prism with center (xc,yc,zc) and edge sizes (lx,ly,lz).
+    Values vary linearly as a function of vertical position z
+    between value val at z = zc-lz/2 and value valh at z = zc+lz/2 .
 
-		&DIST2D	shape='circular', val, xc, yc, zc, r /
-                sets a constant value (val) within a sphere with center (xc,yc,zc) and radius r. 
-
-
-DATA/FAULT_STATIONS	Stations in the fault plane.
-	Line 1: number of stations.
-	Line 2 to end: 5 columns: X, Y, Z (-depth), station name, fault-id
-       		The fault-id identifies the fault that contains the station.
-		It is the index of appearance in the faults list after line 2 of Par_file_faults
+    &DIST2D shape='circular', val, xc, yc, zc, r /
+                sets a constant value (val) within a sphere with center (xc,yc,zc) and radius r.
 
 
-DATA/input_file.txt 	Heterogeneous stresses and friction parameters
-	Documented in page 10 of EXAMPLES/tpv16.crack/description/TPV16_17_Description_v03.pdf
-	To activate this feature, in fault_solver.f90 set
-		TPV16 = .true.
-      	then re-compile the code:
-		cd SPECFEM3D 
-		make
+DATA/FAULT_STATIONS Stations in the fault plane.
+  Line 1: number of stations.
+  Line 2 to end: 5 columns: X, Y, Z (-depth), station name, fault-id
+          The fault-id identifies the fault that contains the station.
+    It is the index of appearance in the faults list after line 2 of Par_file_faults
 
 
-Heterogeneous velocity models can be given in a regular grid. 
-	In the mesh generation Python file (.py) or in the CUBIT journal file (.jou),
-	set the material 1st attribute to -1: 
-		block * attribute index 1 -1
-	In module model_tomography.f90:
-		Set the parameter TOMO_FILENAME to the name of the file containing the velocity model.
-		Re-compile the code: 
-			cd SPECFEM3D 
-			make
-	The format of the velocity file is:
-		Line 1:	ORIG_X, ORIG_Y, ORIG_Z, END_X, END_Y, END_Z
-			(coordinates of the two extreme corners of the box)
-  		Line 2:	SPACING_X, SPACING_Y, SPACING_Z
-			(regular grid spacing in each direction)
-  		Line 3:	NX, NY, NZ
-			(number of grid point in each direction)
-  		Line 4:	VP_MIN, VP_MAX, VS_MIN, VS_MAX, RHO_MIN, RHO_MAX
-			(min and max values of P wave speed, S wave speed and density)
-		Line 5 to 4+NX*NY*NZ:	
-			x_tomo,y_tomo,z_tomo,vp_tomo,vs_tomo,rho_tomo
-			(position, P wave speed, S wave speed, density)
+DATA/input_file.txt   Heterogeneous stresses and friction parameters
+  Documented in page 10 of EXAMPLES/tpv16.crack/description/TPV16_17_Description_v03.pdf
+  To activate this feature, in fault_solver.f90 set
+    TPV16 = .true.
+        then re-compile the code:
+    cd SPECFEM3D
+    make
+
+
+Heterogeneous velocity models can be given in a regular grid.
+  In the mesh generation Python file (.py) or in the CUBIT journal file (.jou),
+  set the material 1st attribute to -1:
+    block * attribute index 1 -1
+  In module model_tomography.f90:
+    Set the parameter TOMO_FILENAME to the name of the file containing the velocity model.
+    Re-compile the code:
+      cd SPECFEM3D
+      make
+  The format of the velocity file is:
+    Line 1: ORIG_X, ORIG_Y, ORIG_Z, END_X, END_Y, END_Z
+      (coordinates of the two extreme corners of the box)
+      Line 2: SPACING_X, SPACING_Y, SPACING_Z
+      (regular grid spacing in each direction)
+      Line 3: NX, NY, NZ
+      (number of grid point in each direction)
+      Line 4: VP_MIN, VP_MAX, VS_MIN, VS_MAX, RHO_MIN, RHO_MAX
+      (min and max values of P wave speed, S wave speed and density)
+    Line 5 to 4+NX*NY*NZ:
+      x_tomo,y_tomo,z_tomo,vp_tomo,vs_tomo,rho_tomo
+      (position, P wave speed, S wave speed, density)
 
 
 Several files are generated automatically by xgenerate_databases in directory DATABASES_MPI
@@ -446,7 +389,7 @@ and do not need to be modified by the user.
 
 
 
-HOW TO SET THE KELVIN-VOIGT DAMPING PARAMETER 
+HOW TO SET THE KELVIN-VOIGT DAMPING PARAMETER
 ----------------------------------------------
 
 The purpose of the Kelvin-Voigt viscosity in the dynamic fault solver is to damp spurious oscillations
@@ -454,12 +397,12 @@ generated by the fault slip at frequencies that are too high to be resolved by t
 The viscosity "eta" (in seconds) depends on the size of the elements on the fault.
 Here is how to set it:
 
-1. Determine the average linear size of the elements on the fault plane, "h_fault". 
-   Usually this value is prescribed by the user during mesh generation. 
+1. Determine the average linear size of the elements on the fault plane, "h_fault".
+   Usually this value is prescribed by the user during mesh generation.
    Otherwise it can be found by inspection of the mesh inside the Cubit GUI.
 2. Use the matlab function utils/critical_timestep.m to compute
      dtc_fault = critical_timestep(cp,h_fault,ngll)
-   This is the critical time step in an elastic medium for a hypothetical element of cubic shape 
+   This is the critical time step in an elastic medium for a hypothetical element of cubic shape
    with size equal to h_fault.
 3. Set eta in Par_file_faults to (0.1 to 0.3)*dtc_fault.
    A larger eta damps high-frequencies more aggresively but it might also affect lower frequencies
@@ -467,8 +410,8 @@ Here is how to set it:
 
 Viscosity reduces numerical stability: the critical timestep in a simulation with Kelvin-Voigt damping
 needs to be smaller than that in a purely elastic simulation. Here is how to set the time step accordingly:
-4. Run a test simulation without viscosity (eta=0 and only a few time steps) 
-5. Look for the "maximum suggested time step" in OUTPUT_FILES/output_mesher.txt 
+4. Run a test simulation without viscosity (eta=0 and only a few time steps)
+5. Look for the "maximum suggested time step" in OUTPUT_FILES/output_mesher.txt
    This is the critical timestep of a purely elastic simulation, "dtc_bulk".
 6. Reset the timestep of the simulation with a Kelvin-Voigt material to a value smaller than
      dtc_kv = eta*( sqrt(1+dtc_bulk^2/eta^2)-1 )
@@ -483,7 +426,7 @@ OUTPUT FILES
 
 Several output files are saved in ~/SPECFEM3D/OUTPUT_FILES:
 
-1. Seismograms for each station on the fault plane given in DATA/FAULT_STATIONS. 
+1. Seismograms for each station on the fault plane given in DATA/FAULT_STATIONS.
    One output file is generated for each station, named after the station. The files
    are ascii and start with a header (22 lines long) followed by a data block with the
    following format, one line per time sample:
@@ -498,14 +441,14 @@ Several output files are saved in ~/SPECFEM3D/OUTPUT_FILES:
    # Column #8 = normal stress (MPa)
 
    The stresses are relative to the footwall side of the fault (this convention controls
-   their sign, but not their amplitude). Slip is defined as displacement of the hanging 
+   their sign, but not their amplitude). Slip is defined as displacement of the hanging
    wall relative to the footwall.
 
-2. Seismograms at stations in the bulk (out of the fault plane) given in DATA/STATIONS.  
+2. Seismograms at stations in the bulk (out of the fault plane) given in DATA/STATIONS.
    The name and format of these output files is described in page 51 of the manual.
 
 3. Rupture time files are named Rupture_time_FAULT-id. One file is generated for each fault.
-   The files are ascii and start with a header (12 lines long) followed by a data block 
+   The files are ascii and start with a header (12 lines long) followed by a data block
    with the following format, one line per fault node:
    # Column #1 = horizontal coordinate, distance along strike (m)
    # Column #2 = vertical coordinate, distance down-dip (m)
@@ -522,38 +465,8 @@ POST-PROCESSING AND VISUALIZATION
 Some Matlab functions for post-processing and visualization are included in directory
 Post-processing. The functions are internally documented (see their matlab help).
 
-  FSEM3D_snapshot	reads a fault data snapshot
+  FSEM3D_snapshot reads a fault data snapshot
 
 The directories EXAMPLES/*/post contain additional Matlab scripts to generate figures
 specific to each example.
 
-
-
-RUNNING ON FRAM (THE CALTECH GPS CLUSTER)
-------------------------------------------
-
-Getting started with Fram:
-  http://hpc.caltech.edu/hel/citerrafram-new-user-guide/
-  http://citerra.gps.caltech.edu/Fram_User_Meeting.pdf
-
-Before step I.3 add this to you ~/.bash_profile file:
-  # Load modules:
-  module load intel/intel-12
-  module load intel/impi
-  # Set huge stack size:
-  ulimit -s unlimited
-
-Compiler settings for configure:
-   FC = ifort
-   MPIFC = mpiifort
-
-If you can't compile SCOTCH:
-   	cp -r /home/surendra/decompose_mesh_SCOTCH/scotch_5.1 .
-or in SPECFEM3D/decompose_mesh_SCOTCH/Makefile set
-   	SCOTCH_LIBS = -L/home/surendra/decompose_mesh_SCOTCH/scotch_5.1/lib/ -lscotch -lscotcherr
-
-Submitting a job:
-	qsub -l nodes=48 -l walltime=30:00 go_mesher
-Other useful options to qsub are: 
-        -N simulation_name 
-        -m bae -M your@email.address 
