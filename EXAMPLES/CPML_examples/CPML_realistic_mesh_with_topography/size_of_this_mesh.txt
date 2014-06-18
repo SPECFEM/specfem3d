@@ -1,0 +1,5 @@
+
+ Xmin and Xmax of the mesh =    280000.        345600.     thus size = 65600 m
+ Ymin and Ymax of the mesh =    3621400.       3685100.    thus size = 63700 m
+ Zmin and Zmax of the mesh =   -72600.        -685.4874    thus size = 71914.5126 m
+

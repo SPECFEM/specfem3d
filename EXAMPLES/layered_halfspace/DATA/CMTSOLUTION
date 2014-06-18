@@ -1,0 +1,13 @@
+PDE  1999 01 01 00 00 00.00  67000 67000 -25000 4.2 4.2 FIG8
+event name:       FIG8_vertical
+time shift:       0.0000
+half duration:    0.4
+latitude:       67000.0
+longitude:      67000.0
+depth:         25.05
+Mrr:       1.000000e+23
+Mtt:       0.000000
+Mpp:       0.000000
+Mrt:       0.000000
+Mrp:       0.000000
+Mtp:       0.000000

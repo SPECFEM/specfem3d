@@ -1,0 +1,16 @@
+ The splay fault models are based on:
+   Wendt, J., Oglesby, D.D., and Geist, E.L. (2009) 
+   Tsunamis and splay fault dynamics, Geophys. Res. Let., v. 36, L15303
+   doi:10.1029/2009GL038295
+ There are two examples: "barrier model" and "homogeneous model".
+ To run the examples:
+
+        >> cd ~/EXAMPLES/splay_faults/DATA/FAULT
+
+ For the "barrier model":
+	>> cp Par_file_faults.barrier Par_file_faults
+
+ For the "homogeneous model":
+	>> cp Par_file_faults.homogeneous Par_file_faults
+
+ Then follow section II in README_SPECFEM3D_FAULT.

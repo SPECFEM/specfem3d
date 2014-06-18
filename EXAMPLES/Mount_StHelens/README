@@ -1,0 +1,101 @@
+----------------------------------------------------------------------
+README
+----------------------------------------------------------------------
+
+This example creates a single block model with topography around Mount St.Helens
+using CUBIT, and runs a forward simulation.
+
+step-by-step tutorial:
+
+0. preparing topography data:
+
+    a low resolution 'ptopo.mean.utm' file is provided to run the example,
+    this would be the procedure to create it yourself:
+
+   a) You can get SRTM 90m Digital Elevation Data for a
+      region of interest at: http://srtm.csi.cgiar.org
+
+      For this example, we choose Mount St.Helens as region of interest.
+      Mount St. Helens is located at: 46.197 N 122.186 W
+
+      It is contained in the download: srtm_12_03.zip
+      (see http://srtm.csi.cgiar.org/SELECTION/inputCoord.asp
+        region of interest:   Latitude min: 45 N  max: 50 N
+                              Longitude min: 125 W max: 120 W )
+
+      unzipping the file
+        > unzip srtm_12_03.zip
+      leads to:
+        ..
+        srtm_12_03.tif
+        ..
+
+   b) To convert the tif-file into an lon-lat-elevation format, you can use the
+      package FWTools at: http://fwtools.maptools.org/
+
+      install the package and use their gdal2xyz executable to extract
+      into xyz format:
+        > FWTools-2.0.6/bin_safe/gdal2xyz.py srtm_12_03.tif > srtm_12_03.xyz
+
+      the file 'srtm_12_03.xyz' has now the format: #longitude #latitude #elevation (m)
+      (the file size is ~ 963 MB)
+
+   c) Extract the detailed region of interest:
+
+      To further extract and manipulate the topography data, you can use the
+      package GMT at: http://gmt.soest.hawaii.edu/
+
+      For our purposes, the region of interest will be: -R-122.3/-122.1/46.1/46.3
+      (~23.5 km x 23.5 km )
+
+      Using the blockmean executable, we extract and interpolate the topography data
+      for the detailed region, using an interpolated grid spacing of 0.006 degrees ~ 700 m:
+        > blockmean srtm_12_03.xyz -R-122.3/-122.1/46.1/46.3 -I0.006/0.006 > ptopo.mean.xyz
+
+   c) Since the mesh will need Cartesian coordinates, we convert the topography file
+      from (longitude/latitude/elevation) to UTM (X/Y/Z) coordinates.
+      Mount St.Helens lies in the UTM zone: 10 (T).
+
+      Use the script 'convert_lonlat2utm.pl' provided in this example folder:
+        > ./convert_lonlat2utm.pl ptopo.mean.xyz 10 > ptopo.mean.utm
+      to create a new file 'ptopo.mean.utm' with format: #UTM_X #UTM_Y #Z
+
+
+1. create an STL surface from topography data:
+
+      run script in CUBIT:
+      claro -> Menu "Tools" -> "Play Journal File" ... and select file: "read_topo.py"
+
+      this reads in the input file with name: ptopo.mean.utm
+      and should create a file: topo.stl
+
+      note: CUBIT has limited features when using facets/STL file formats.
+            It is in general preferable to work with ACIS formats.
+
+            However, using an ACIS topography file leads to a slower meshing process.
+            This is why we prefer to use STL file formats here, but rely on
+            a developer command (script was tested using CUBIT version 12.2).
+
+
+2. create mesh:
+
+   - run cubit GUI:
+     > claro
+
+     then run meshing script:
+     claro -> Menu "Tools" -> "Play Journal File" ... and select file: "mesh_mount.py"
+
+     this creates all the mesh files in subdirectory MESH/
+
+
+3. run processing script for a default simulation on 4 CPUs (must have access to mpi):
+
+    - run script 'process.sh' in this example directory:
+      > ./process.sh
+
+      this script handles the following steps:
+        - decomposes mesh files (example creates 4 partitions from mesh files given in MESH/)
+        - runs the database generation
+        - runs a single forward simulation (using the default setup files in DATA/)
+
+

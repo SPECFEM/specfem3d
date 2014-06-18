@@ -1,0 +1,33 @@
+----------------------------------------------------------------------
+README
+----------------------------------------------------------------------
+
+Examples contained in this folder help to familiarize yourself with simulations using
+dynamic and kinematic sources defined along fault surfaces. We suggest to start with:
+
+SCEC 3D benchmark examples (http://scecdata.usc.edu/cvws/):
+
+- tpv5/: Nucleation followed by spontaneous rupture on a slightly stress-heterogeneous 
+         vertical strike-slip fault in a homogeneous halfspace
+
+- tpv15/: Nucleation followed by spontaneous rupture on a left-lateral, vertical, strike-slip fault 
+          with a rightward branch forming a 30 degree angle.
+
+- tpv16/: Nucleation followed by spontaneous rupture on a vertical strike-slip fault in a homogeneous halfspace. 
+          There are randomly-generated heterogeneous initial stress conditions.
+
+- tpv102/: Nucleation followed by spontaneous rupture on a vertical strike-slip fault in a homogeneous halfspace. 
+           Rate-state friction, using an ageing law.
+
+- tpv103/: Nucleation followed by spontaneous rupture on a vertical strike-slip fault in a homogeneous fullspace. 
+           Rate-state friction, using a slip law with strong rate-weakening.
+
+
+additional examples:
+
+- splay_faults/: two models based on Wendt et al. (2009) "Tsunamis and splay fault dynamics" paper
+
+
+please consider submitting your own example to this package! 
+email us: cig-seismo AT geodynamics.org
+

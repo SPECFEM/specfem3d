@@ -1,0 +1,27 @@
+README
+(SPECFEM3D/examples/meshfem3D_examples/socal1D/example_utm/README)
+
+This example is mainly to show the ease of using either UTM or lon-lat coordinates.
+The utm example is better suited for direct comparison with external meshes for
+"flat models" that do not need to take into account the sphericity of Earth
+(for example, the 3D socal model used in Komatitsch et al. 2004).
+
+First, run the default socal1D example with 1 core.
+
+EXAMPLE A: Input geographic bounds in UTM, everything else in lon-lat.
+
+ > cp Mesh_Par_file_utm ../Mesh_Par_file
+ > cd ..
+ > ./process.sh
+
+EXAMPLE B: All input values in UTM.
+
+ > cp CMTSOLUTION_utm ../CMTSOLUTION
+ > cp STATIONS_utm ../STATIONS
+ > cp interfaces_utm.dat ../interfaces.dat
+ > cp Mesh_Par_file_utm ../Mesh_Par_file
+ > cp Par_file_utm ../Par_file
+ > cd ..
+ > ./process.sh
+
+=======================

@@ -1,0 +1,65 @@
+----------------------------------------------------------------------
+README
+----------------------------------------------------------------------
+
+This example creates a layered model as in example layered_halfspace/
+with a water layer on top and an elastic layer below, using CUBIT.
+It then runs a forward simulation which couples acoustic & elastic waves.
+
+step-by-step tutorial:
+
+0. run the example in the directory homogeneous_halfspace
+
+1. copy three input files from examples directory into SPECFEM3D/DATA/
+
+     > cd examples/waterlayered_halfspace/DATA/
+     > cp CMTSOLUTION Par_file STATIONS ../../../DATA/
+
+
+2. create mesh:
+
+   - run cubit GUI:
+     > claro
+
+     then run meshing script:
+     claro -> Menu "Tools" -> "Play Journal File" ... and select file: "waterlayer_mesh_boundary_fig8.py"
+
+     (or select: "waterlayer_mesh_boundary_fig8-nodoubling.py" for regular mesh without doubling layer)
+
+     this creates all the mesh files in subdirectory MESH/
+
+
+3. decompose mesh files:
+
+    - set mesh directory in go_decomposer_pbs.bash to:
+      MESHDIR=examples/waterlayered_halfspace/MESH/
+
+    - run decomposer:
+      > qsub go_decomposer_pbs.bash
+
+      which creates mesh partitions "proc0000***_Database" in directory "DATABASES_MPI".
+      you can then specify "../OUTPUT_FILES/DATABASES_MPI" in "Par_file" for your "LOCAL_PATH"
+
+
+4. generate databases:
+
+    - compile and run generate_databases in directory SPECFEM3D/:
+      > make xgenerate_databases
+      > qsub go_generate_databases_pbs.bash
+
+      this will create binary mesh files, e.g. "proc000***_external_mesh.bin"
+      in directory OUTPUT_FILES/DATABASES_MPI/.
+      (note: if execution fails due to memory shortage - most likely fails when calling routine to
+           create regional mesh - then try to increase process memory stack size: ulimit -s 2000000  (2GB) )
+
+
+5. run simulation:
+
+    - compile and run specfem3D:
+      > make xspecfem3D
+      > qsub go_solver_pbs.bash
+
+    note: simulation will take about 1 h 45 minutes and generate
+    3 sets (semd,semv,sema) of 9 seismogram files in OUTPUT_FILES,
+    as well as 10 timestamp****** files
+

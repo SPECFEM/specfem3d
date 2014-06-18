@@ -1,0 +1,77 @@
+----------------------------------------------------------------------
+README
+----------------------------------------------------------------------
+
+This example creates a single volume block and assigns a tomographic model
+as material property to run a forward simulation.
+
+step-by-step tutorial:
+
+0. run the example in the directory homogeneous_halfspace
+
+1. copy three input files from examples directory into SPECFEM3D/DATA/:
+     > cd examples/tomographic_model/DATA/
+     > cp CMTSOLUTION Par_file STATIONS ../../../DATA/
+
+
+2. create mesh:
+
+   - from the directory SPECFEM3D/examples/tomographic_model,
+     open the cubit GUI:
+     > claro (or cubit)
+
+     then run meshing script:
+     claro -> Menu "Tools" -> "Play Journal File" ... and select file: "tomoblock_mesh.py"
+
+     this creates all the mesh files in subdirectory MESH/
+     note: this is a simple uniform block mesh
+
+
+3. create tomography_model file:
+
+   - in examples/tomographic_model, run bash script:
+     > sh create_tomography_model_file.sh
+
+    which creates an example model: tomography_model.xyz
+    ( elastic model with a constant velocity gradient with depth)
+
+   - copy (or link) this file into directory SPECFEM3D/DATA/
+     > cp tomography_model.xyz ../../DATA/
+
+     note: this file is read in by subroutine read_model_tomography in
+        SPECFEM3D/src/generate_databases/model_tomography.f90,
+        which is called by get_model.f90
+
+
+4. decompose mesh files:
+
+    - set mesh directory in go_decomposer_pbs.bash to:
+      MESHDIR=examples/tomographic_model/MESH/
+
+    - run decomposer:
+      > qsub go_decomposer_pbs.bash
+
+      which creates mesh partitions "proc0000***_Database" in directory "DATABASES_MPI".
+      you can then specify "../OUTPUT_FILES/DATABASES_MPI" in "Par_file" for your "LOCAL_PATH"
+
+
+5. generate databases:
+
+   - compile and run generate_databases in directory SPECFEM3D/:
+     > make xgenerate_databases
+     > qsub go_generate_databases_pbs.bash
+
+
+6. run simulation:
+
+   - compile and run specfem3D:
+     > make xspecfem3D
+     > qsub go_solver_pbs.bash
+
+     the simulation will take about 10 minutes
+     when the job is complete, you should have 3 sets (semd,semv,sema)
+     of 18 (ls -1 *semd | wc) seismogram files in directory OUTPUT_FILES,
+     as well as 9 timestamp****** files
+
+===========================================================
+
