@@ -1,0 +1,76 @@
+----------------------------------------------------------------------
+README
+(/SPECFEM3D/examples/meshfem3D_examples/simple_model/README)
+----------------------------------------------------------------------
+
+This is a very simple example to explain the use of the internal mesher meshfem3D.
+
+Option 1: run process.sh from local directory (must have access to mpi)
+Option 2: follow instructions below for submitting separate jobs with qsub (or bsub)
+
+----------------------------------------------------------------------
+
+0. Run the default homogeneous halfspace example (external mesh).
+
+1. Set up input files.
+
+   > cd SPECFEM3D
+   > rsync -av examples/meshfem3D_examples/simple_model/DATA DATA
+
+   - adapt the submission scripts for the appropriate queues and number of cores:
+     go_mesher_pbs.bash, go_generate_databases_pbs.bash, go_solver_pbs.bash
+
+   - note: go_decomposer_pbs.bash is not used with the internal mesher
+
+2. compile and run internal mesher
+
+   > make xmeshfem3D
+   > qsub go_mesher_pbs.bash
+
+   This should generate these files in OUTPUT_FILES/DATABASES_MPI/:
+
+   proc000000_Database
+   proc000000_.dx
+   proc000000_.INP
+   proc000001_Database
+   proc000001_.dx
+   proc000001_.INP
+   proc000002_Database
+   proc000002_.dx
+   proc000002_.INP
+   proc000003_Database
+   proc000003_.dx
+   proc000003_.INP
+
+   - save output file
+   > cp OUTPUT_FILES/output_mesher.txt OUTPUT_FILES/output_meshfem3D.txt
+
+3. generate databases:
+
+   - compile and run generate_databases in directory SPECFEM3D/:
+     > make xgenerate_databases
+     > qsub go_generate_databases_pbs.bash
+
+     this will create binary mesh files, e.g. "proc000***_external_mesh.bin"
+     in directory OUTPUT_FILES/DATABASES_MPI/.
+
+     optional: If you have paraview, load the .vtk files (see simple_model.png).
+
+4. run simulation:
+
+   - compile and run specfem3D:
+     > make xspecfem3D
+     > qsub go_solver_pbs.bash
+
+   - the job should take about 10 minutes
+   - when the job is complete, you should have 3 sets (semd,semv,sema)
+     of 27 (ls -1 *semd | wc) seismogram files in the directory OUTPUT_FILES,
+     as well as 5 timestamp****** files
+
+   - view seismograms, for example, using xmgrace:
+   - xmgrace K400.CE.BXZ.semd K851.CE.BXZ.semd K853.CE.BXZ.semd &
+
+   - compare with reference seismograms in
+     examples/meshfem3D_examples/simple_model/REF_SEIS/
+
+----------------------------------------------------------------------

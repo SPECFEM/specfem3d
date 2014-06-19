@@ -1,0 +1,166 @@
+----------------------------------------------------------------------
+README
+----------------------------------------------------------------------
+
+This examples creates a homogeneous halfspace, i.e. a single volume block with a
+constant elastic material property, using CUBIT and runs a forward simulation.
+
+step-by-step tutorial:
+
+0. check that all software is available (or that modules are loaded):
+	openmpi: > which mpirun
+        cubit:   > which cubit
+        scotch:  > which gout
+        python:  > which python
+     optional:
+        gnuplot: > which gnuplot
+        xmgrace: > which xmgrace
+
+1. configure package:
+
+   - determine the path for your compiled version of SCOTCH
+
+   - From the SPECFEM3D root directory SPECFEM3D/
+     configure the package, e.g. using intel's ifort compiler:
+     > cd SPECFEM3D
+     > ./configure F90=ifort --with-scotch-dir=/my_path_to_scotch
+
+     If successful, this will generate the files in src/shared/:
+     Makefile, constants.h, and precision.h, among others
+
+     note: the same compiler used for SCOTCH must be used for SPECFEM3D (ifort, gfortran, pgf90)
+
+   - copy run scripts from utils/Cluster/ into SPECFEM3D/, e.g.,
+     pbs/go_decomposer_pbs.bash
+     pbs/go_generate_databases_pbs.bash
+     pbs/go_solver_pbs.bash
+
+     > cp utils/Cluster/pbs/*.bash .
+
+     note: you may need to adjust the commands (e.g., -q or -l)
+
+
+2. copy three input files from examples directory into SPECFEM3D/DATA/
+
+     > cd examples/homogeneous_halfspace_HEX8/DATA/
+     > cp * ../../../DATA/
+
+
+3. create mesh:
+
+   - from the directory SPECFEM3D/examples/homogeneous_halfspace_HEX8,
+     open the cubit GUI:
+
+     > claro (or cubit)
+
+     then run meshing script:
+     claro -> Menu "Tools" -> "Play Journal File" ... and select file: "block_mesh.py"
+
+     if everything goes fine, this creates the ten mesh files in subdirectory MESH/:
+        MESH/absorbing_surface_file_bottom
+        MESH/absorbing_surface_file_xmax
+        MESH/absorbing_surface_file_xmin
+        MESH/absorbing_surface_file_ymax
+        MESH/absorbing_surface_file_ymin
+        MESH/free_surface_file
+        MESH/materials_file
+        MESH/mesh_file
+        MESH/nodes_coords_file
+        MESH/nummaterial_velocity_file
+
+     the cubit graphics window should show a mesh similar to the file homogeneous.png
+
+
+4. decompose mesh files:
+
+   - compile decomposer in directory SPECFEM3D/:
+     > make xdecompose_mesh
+
+   - run decomposer:
+     > qsub go_decomposer_pbs.bash
+
+     note: this script will need to be tailored to your cluster, e.g.,
+     > bsub < go_decomposer_lsf.bash
+
+     this creates mesh partitions "proc000***_Database" in directory OUTPUT_FILES/DATABASES_MPI/.
+     the output file OUTPUT_FILES/*.o contains information on the partitioning
+
+     note 1: the program xdecompose_mesh is a serial program (runs on 1 core)
+     note 2: for small jobs (like this one), you can simply launch the job on
+             the local node from directory SPECFEM3D:
+
+     > ./bin/xdecompose_mesh 4 examples/homogeneous_halfspace/MESH/ OUTPUT_FILES/DATABASES_MPI/
+
+
+5. generate databases:
+
+   - compile generate_databases in directory SPECFEM3D/:
+     > make xgenerate_databases
+
+   - submit job script:
+     > qsub go_generate_databases_pbs.bash
+
+     note: this script will need to be tailored to your cluster, e.g.,
+     > bsub < go_generate_databases_lsf.bash
+
+     this will create binary mesh files, e.g. "proc000***_external_mesh.bin"
+     in directory OUTPUT_FILES/DATABASES_MPI/.
+
+     optional: load vtk files (e.g., vs) into paraview and check them out
+
+6. run simulation:
+
+   - compile specfem3D:
+     > make xspecfem3D
+
+   - submit job script:
+     > qsub go_solver_pbs.bash
+
+     note 1: this script will need to be tailored to your cluster, e.g.,
+             > bsub < go_solver_lsf.bash
+     note 2: the simulation runs on 4 cores and should take about 5 minutes,
+             and you can track the progress with the timestamp files
+             generated in OUTPUT_FILES/
+
+   - the job should take a couple minutes
+   - when the job is complete, you should have 3 sets (semd,semv,sema)
+     of 18 (ls -1 *semd | wc) seismogram files in the directory OUTPUT_FILES,
+     as well as 3 timestamp****** files
+
+
+7. check with 6 reference seismograms in
+      SPECFEM3D/examples/homogeneous_halfspace_HEX8/REF_SEIS/
+
+   - option 1: from SPECFEM3D/, quick viewing using xmgrace (if available):
+
+     > xmgrace examples/homogeneous_halfspace_HEX8/REF_SEIS/*Z.semd &
+     > xmgrace OUTPUT_FILES/*Z.semd &
+
+   - option 2: generate ps files using gnuplot:
+
+     > cd SPECFEM3D/examples/homogeneous_halfspace_HEX8/REF_SEIS
+     > gnuplot
+
+         gnuplot> load "X1-50.BXZ.gnuplot"
+
+     You should see a figure in a render window.
+     Writing the figure to a file may depend on your gnuplot settings.
+     One example to generate a postscript is shown below:
+
+         gnuplot> load "X1-50.BXZ.gnuplot"
+         gnuplot> set term postscript color solid
+         Terminal type set to 'postscript'
+         Options are 'landscape noenhanced color colortext \
+            solid dashlength 1.0 linewidth 1.0 defaultplex \
+            palfuncparam 2000,0.003 \
+            butt "Helvetica" 14'
+         gnuplot> set output 'my.ps'
+         gnuplot> replot
+         gnuplot> quit
+
+     - copy gnuplot script X1-50.BXZ.gnuplot to OUTPUT_FILES/
+     - execute same commands as above
+     - you should see the same image as generated from the reference seismograms
+
+===========================================================
+

@@ -1,0 +1,27 @@
+2
+0.00067                 ! #tag #eta(damping) FAULT Main fault
+0.00067                 ! #tag #eta(damping) FAULT Branch
+1                       ! 1 = dyn 2=kin
+100           ! NTOUT : Number of time steps
+1000                                            ! NTSNAP: time interation of snapshots
+-1e0                                            ! V_HEALING (-1 : Healing off)
+1e-3                                            ! V_RUPT
+
+&BEGIN_FAULT /
+
+&INIT_STRESS S1=0.0e6,S2=0.0e0,S3=-120.0e6,n1=2,n2=0,n3=0 /
+&DIST2D shape='rectangle',       val = -70.0e6,  xc = -2.0e3, yc =0.0e3, zc= -7.5e3, lx=28.0e3, ly=100.0e0, lz=15.0e3 /
+&DIST2D shape='rectangle',       val = -81.6e6,  xc = -8.0e3, yc =0.0e3, zc= -7.5e3, lx=3.1e3,  ly=100.0e0, lz=3.0e3 /
+
+&SWF mus=1000.0e0,mud=1000.0e0,dc=0.4e0,nmus=1,nmud=1,ndc=0 /
+&DIST2D shape='rectangle', val = 0.677e0,  xc = -2.0e3, yc =0.0e3, zc= -7.5e3, lx=28.0e3, ly=100.0e0, lz=15.0e3 /
+&DIST2D shape='rectangle', val = 0.525e0,  xc = -2.0e3, yc =0.0e3, zc= -7.5e3, lx=28.0e3, ly=100.0e0, lz=15.0e3 /
+
+&BEGIN_FAULT /
+
+&INIT_STRESS S1=0.0e6,S2=0.0e0,S3=-120.0e6,n1=1,n2=0,n3=0 /
+&DIST2D shape='rectangle',       val = -78.0e6,  xc = 5152.85115e0, yc =-3025.0e0, zc=-7.5e3, lx=10478.9074e0, ly=6050.0e0, lz=15.0e3 /
+
+&SWF mus=1000.e0,mud=1000.0e0,dc=0.4e0,nmus=1,nmud=1,ndc=0 /
+&DIST2D shape='rectangle',       val =  0.677e0, xc = 5152.85115e0, yc =-3025.0e0, zc=-7.5e3, lx=10478.9074e0, ly=6050.0e0, lz=15.0e3 /
+&DIST2D shape='rectangle',       val =  0.525e0, xc = 5152.85115e0, yc =-3025.0e0, zc=-7.5e3, lx=10478.9074e0, ly=6050.0e0, lz=15.0e3 /

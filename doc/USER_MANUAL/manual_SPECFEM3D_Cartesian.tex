@@ -764,7 +764,7 @@ and
 number of cores.
 \end{description}
 Examples are provided in the SPECFEM3D Cartesian package in the subdirectory
-\texttt{examples/}. We strongly encourage you to contribute your own
+\texttt{EXAMPLES/}. We strongly encourage you to contribute your own
 example to this package by contacting the CIG Computational Seismology
 Mailing List \urlwithparentheses{cig-seismo@geodynamics.org}.
 
@@ -775,7 +775,7 @@ For the installation and handling of the CUBIT meshing tool suite,
 please refer to the CUBIT user manual and documentation. In order
 to give you a basic understanding of how to use CUBIT for our purposes,
 examples are provided in the SPECFEM3D Cartesian package in the subdirectory
-\texttt{examples/}:
+\texttt{EXAMPLES/}:
 \begin{description}
 \item [{\texttt{homogeneous\_halfspace}}] Creates a single block model
 and assigns elastic material parameters.
@@ -797,7 +797,7 @@ file during the databases creation by \texttt{xgenerate\_databases}.
  \includegraphics[width=0.45\textwidth]{figures/example-water} \includegraphics[width=0.45\textwidth]{figures/example-tomo}
 \par\end{centering}
 
-\caption{Screenshots of the CUBIT examples provided in subdirectory \texttt{examples/}:
+\caption{Screenshots of the CUBIT examples provided in subdirectory \texttt{EXAMPLES/}:
 homogeneous halfspace (top-left), layered halfspace (top-right), water
 layered halfspace (bottom-left) and tomographic model (bottom-right).}
 
@@ -814,7 +814,7 @@ contacting the CIG Computational Seismology Mailing List \urlwithparentheses{cig
 In some cases, to re-create the meshes for the examples given, just type "claro ./create\_mesh.py" or similar 
 from the command line ("claro" is the command to run CUBIT from the command line).
 
-IMPORTANT note: in order to correctly set up GEOCUBIT and run the examples, please read the file called "examples/README";
+IMPORTANT note: in order to correctly set up GEOCUBIT and run the examples, please read the file called "EXAMPLES/README";
 in particular, please make sure you correctly set up the Python paths as indicated in that file.
 
 
@@ -1386,7 +1386,7 @@ increasing order).
 \end{itemize}
 At the end of this file, you simply need to set the number of spectral
 elements in the vertical direction for each layer. We provide a few
-models in the {\texttt{examples/}} directory. \\
+models in the {\texttt{EXAMPLES/}} directory. \\
 
 
 Finally, depending on your system, you might need to provide a file
@@ -2218,7 +2218,7 @@ offset by a small distance on either side of the fault}
 \end{figure}
 
 
-The CUBIT scripts ({*}.jou and {*}.py) in the directory $\mathtt{examples}$
+The CUBIT scripts ({*}.jou and {*}.py) in the directory $\mathtt{EXAMPLES}$
 generate more complicated meshes. The {*}.py files are Python scripts
 that execute CUBIT commands and use the CUBIT-python interface for
 SPECFEM3D (see next section). The Python language allows to define
@@ -2294,10 +2294,10 @@ and
 \item Splay fault models from Wendt et al. (2009)\\
 
 \end{itemize}
-Read the documents in the directory $\mathtt{examples/*/description}$.
+Read the documents in the directory $\mathtt{EXAMPLES/*/description}$.
 They contain a description of the example and additional instructions
 to run it. Visualize the results with the Matlab scripts in the directory
-$\mathtt{examples/*/post}$
+$\mathtt{EXAMPLES/*/post}$
 
 
 \section{\label{sec:Sign-Convention-for}Sign Convention for Fault Quantities}
@@ -2475,7 +2475,7 @@ the index of appearance in the faults list after line 2 of Par\_file\_faults
 parameters are documented in page 10 of
 
 \begin{lyxlist}{00.00.0000}
-\item [{$\mathtt{examples/tpv16/description/TPV16\_17\_Description\_v03.pdf}$}]~
+\item [{$\mathtt{EXAMPLES/tpv16/description/TPV16\_17\_Description\_v03.pdf}$}]~
 \end{lyxlist}
 
 To activate this feature, in fault\_solver\_dynamic.f90 set \textbf{TPV16}
@@ -2597,7 +2597,7 @@ in directory $\mathtt{utils}$. The functions are internally documented
 \texttt{FSEM3D\_snapshot} reads a fault data snapshot\\
 
 
-The directories $\mathtt{examples/*/post}$ contain additional Matlab
+The directories $\mathtt{EXAMPLES/*/post}$ contain additional Matlab
 scripts to generate figures specific to each example.
 
 
@@ -2953,8 +2953,8 @@ statistics, e.g., the ensemble-averaged noise spectrum. Matlab scripts
 are provided to help you to generate the necessary file.
 
 
-\texttt{examples/noise\_tomography/NOISE\_TOMOGRAPHY.m} (main program)\\
- \texttt{examples/noise\_tomography/PetersonNoiseModel.m}
+\texttt{EXAMPLES/noise\_tomography/NOISE\_TOMOGRAPHY.m} (main program)\\
+ \texttt{EXAMPLES/noise\_tomography/PetersonNoiseModel.m}
 
 
 In Matlab, simply run:
@@ -3118,7 +3118,7 @@ given in \citet{trompetal2010}.
 \section{Example}
 
 In order to illustrate noise simulations in an easy way, one example
-is provided in \texttt{examples/noise\_tomography/}. See \texttt{examples/noise\_tomography/README}
+is provided in \texttt{EXAMPLES/noise\_tomography/}. See \texttt{EXAMPLES/noise\_tomography/README}
 for explanations. \\
 
 
@@ -3126,7 +3126,7 @@ Note, however, that they are created for a specific workstation (CLOVER@PRINCETO
 which has at least 4 cores with `mpif90' working properly. \\
 
 
-If your workstation is suitable, you can run the example in \texttt{examples/noise\_tomography/}
+If your workstation is suitable, you can run the example in \texttt{EXAMPLES/noise\_tomography/}
 using:\\
 
 
@@ -4491,7 +4491,7 @@ fix: e.g. specify > ./configure FC=gfortran MPIF90=/usr/local/openmpi-gfortran/b
 
 \item [{after executing \texttt{xmeshfem3D} I've got elements with skewness of 81\% percent, what does this mean:}] Look
 at the skewness table printed in the \texttt{output\_mesher.txt} file
-after executing \texttt{xmeshfem3D} for the example given in \texttt{examples/meshfem3D\_examples/simple\_model/}:
+after executing \texttt{xmeshfem3D} for the example given in \texttt{EXAMPLES/meshfem3D\_examples/simple\_model/}:
 
 \begin{lyxcode}
 ...~~\\
@@ -4539,14 +4539,14 @@ are tolerable, above that you should consider remeshing...
 
 To give you an idea why some of the elements are distorted, see the
 following figure \ref{fig:mesh.vp} of the mesh you obtain in the
-example \texttt{examples/meshfem3D\_examples/simple\_model/}.
+example \texttt{EXAMPLES/meshfem3D\_examples/simple\_model/}.
 \begin{figure}[htbp]
 \noindent \begin{centering}
 \includegraphics[width=0.9\textwidth]{figures/mesh_vp}
 \par\end{centering}
 
 \caption{Paraview visualization using the mesh vtk-files for the example given
-in \texttt{examples/meshfem3D\_examples/simple\_model/}.}
+in \texttt{EXAMPLES/meshfem3D\_examples/simple\_model/}.}
 
 
 \label{fig:mesh.vp}

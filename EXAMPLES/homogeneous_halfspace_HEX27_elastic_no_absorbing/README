@@ -1,0 +1,11 @@
+
+To run this example on two processor cores for instance, type this (replace "2" with another value in the three lines below if you want to use more processor cores):
+
+cd bin/
+
+./xdecompose_mesh 2 ../DATA/MESH ../OUTPUT_FILES/DATABASES_MPI
+
+mpirun -np 2 ./xgenerate_databases
+
+mpirun -np 2 ./xspecfem3D
+

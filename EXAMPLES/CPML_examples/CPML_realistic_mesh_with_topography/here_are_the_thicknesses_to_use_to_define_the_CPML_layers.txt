@@ -1,0 +1,8 @@
+
+Here are the thicknesses to use to define the CPML layers for this mesh when running
+the Fortran code utils/CPML/convert_external_layers_of_a_given_mesh_to_CPML_layers.f90:
+
+THICKNESS_OF_X_PML = 6300
+THICKNESS_OF_Y_PML = 6300
+THICKNESS_OF_Z_PML = 12600
+

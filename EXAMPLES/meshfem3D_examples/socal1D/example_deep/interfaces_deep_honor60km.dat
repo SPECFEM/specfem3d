@@ -1,0 +1,35 @@
+# number of interfaces
+ 5
+#
+# We describe each interface below, structured as a 2D-grid, with several parameters : 
+# number of points along XI and ETA, minimal XI ETA coordinates 
+# and spacing between points which must be constant.
+# Then the records contain the Z coordinates of the NXI x NETA points.
+#
+# interface number 0
+ .false. 2 2 -121.d0 32.d0 6.0d0 6.0d0
+ interface0.dat
+# interface number 1 (moho)
+ .false. 2 2 -121.d0 32.d0 6.0d0 6.0d0
+ interface1.dat
+# interface number 2
+ .false. 2 2 -121.d0 32.d0 6.0d0 6.0d0
+ interface2.dat
+# interface number 3
+ .false. 2 2 -121.d0 32.d0 6.0d0 6.0d0
+ interface3.dat
+# interface number 4 (topography, top of the mesh)
+ .false. 2 2 -121.d0 32.d0 6.0d0 6.0d0
+ interface4.dat
+#
+# for each layer, we give the number of spectral elements in the vertical direction
+# layer number 0 (bottom layer)
+ 14
+# layer number 1
+ 3
+# layer number 2
+ 3
+# layer number 4
+ 3
+# layer number 5 (top layer)
+ 3
