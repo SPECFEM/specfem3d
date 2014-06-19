@@ -95,8 +95,9 @@ module specfem_par
 ! time loop step
   integer :: it
 
-! for new method
+  !! C. DUROCHAT modification : begin !! For coupling with DSM by VM
   integer :: it_dsm
+  !! C. DUROCHAT modification : end
 
 ! parameters for the source
   integer, dimension(:), allocatable :: islice_selected_source,ispec_selected_source
