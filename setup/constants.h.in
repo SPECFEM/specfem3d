@@ -230,10 +230,10 @@
   character(len=*), parameter :: OUTPUT_FILES_PATH = './OUTPUT_FILES/'
 
 
-! ---------------------------------------------------------------------------------------
+! --------------------------------------------------------------------------------------
 ! LQY -- Following 3 variables stays here temporarily,
 !        we need to move them to Par_file at a proper time
-! ---------------------------------------------------------------------------------------
+! --------------------------------------------------------------------------------------
 ! save moho mesh and compute Moho boundary kernels
   logical, parameter :: SAVE_MOHO_MESH = .false.
 
