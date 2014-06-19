@@ -75,7 +75,7 @@
 !!
 !! seismogram and i/o output
 !!
-!!-----------------------------------------------------------
+!!--------------------------------------- --------------------
 ! ouput format of seismograms, ASCII or binary
   logical, parameter :: SEISMOGRAMS_BINARY = .false.
 
