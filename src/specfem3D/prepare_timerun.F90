@@ -275,6 +275,11 @@
 
   if(ELASTIC_SIMULATION) then
     ! switches to three-component mass matrix
+
+    !! C. DUROCHAT modification : begin
+    !! For coupling with DSM : maybe some changes to make here and after
+    !! C. DUROCHAT modification : end
+
     if( STACEY_ABSORBING_CONDITIONS ) then
       ! adds boundary contributions
       rmassx(:) = rmass(:) + rmassx(:)
