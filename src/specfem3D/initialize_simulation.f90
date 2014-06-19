@@ -61,13 +61,17 @@
 !! DK DK added this for now (March 2013) because CPML is not yet implemented for fluid-solid coupling;
 !! DK DK we will soon add it (in a month or so)
   if(PML_CONDITIONS .and. ELASTIC_SIMULATION .and. ACOUSTIC_SIMULATION) &
-    stop 'It is still under test for this case'
-  if(PML_CONDITIONS .and. (SAVE_FORWARD .or. SIMULATION_TYPE==3)) &
-    stop 'It is still under test for adjoint simulation'
+    stop 'PML_CONDITIONS is still under test for this case'
 
+  if(PML_CONDITIONS .and. (SAVE_FORWARD .or. SIMULATION_TYPE==3)) &
+    stop 'PML_CONDITIONS is still under test for adjoint simulation'
 
   ! GPU_MODE is in par_file
   call read_gpu_mode(GPU_MODE,GRAVITY)
+
+!! C. DUROCHAT modification : begin !! For coupling with DSM by VM
+  if(GPU_MODE .and. COUPLE_WITH_DSM) stop 'Coupling with DSM currently not implemented for GPUs'
+!! C. DUROCHAT modification : end
 
   ! myrank is the rank of each process, between 0 and NPROC-1.
   ! as usual in MPI, process 0 is in charge of coordinating everything
@@ -145,7 +149,10 @@
 
   ! reads in numbers of spectral elements and points for the part of the mesh handled by this process
   call create_name_database(prname,myrank,LOCAL_PATH)
-  if (OLD_TEST_TO_FIX_ONE_DAY) call create_name_database(dsmname,myrank,TRAC_PATH)
+
+  !! C. DUROCHAT modification : begin !! For coupling with DSM by VM
+  if (COUPLE_WITH_DSM) call create_name_database(dsmname,myrank,TRAC_PATH)
+  !! C. DUROCHAT modification : end
 
   if (ADIOS_FOR_MESH) then
     call read_mesh_for_init(NSPEC_AB, NGLOB_AB)
