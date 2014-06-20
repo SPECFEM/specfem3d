@@ -170,7 +170,7 @@
   if (ierr /= 0) return
 
   !! read the traction path directory
-  if (OLD_TEST_TO_FIX_ONE_DAY) then
+  if (COUPLE_WITH_DSM) then
     call read_value_string(TRAC_PATH, 'TRAC_PATH', ierr)
     if (ierr /= 0) return
   endif

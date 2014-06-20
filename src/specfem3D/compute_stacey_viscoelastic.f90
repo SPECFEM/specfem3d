@@ -79,7 +79,7 @@
   real(kind=CUSTOM_REAL) vx,vy,vz,nx,ny,nz,tx,ty,tz,vn,jacobianw
   integer :: ispec,iglob,i,j,k,iface,igll
 
-  !! C. DUROCHAT modification : begin !! For coupling with DSM by VM
+  !! CD modif (implemented by VM) : begin !! For coupling with DSM
    
   ! See also DSM parameters in setup/constants.h.in
   real(kind=CUSTOM_REAL) :: Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
@@ -95,7 +95,7 @@
     endif
   endif
 
-  !! C. DUROCHAT modification : end
+  !! CD modif : end
 
   ! checks if anything to do
   if( num_abs_boundary_faces == 0 ) return
@@ -146,9 +146,9 @@
 
           !! C. DUROCHAT modification : begin !! For coupling with DSM by VM
           if (COUPLE_WITH_DSM) then
-            tx = tx -Tract_dsm_boundary(1,it_dsm,igll,iface)
-            ty = ty -Tract_dsm_boundary(2,it_dsm,igll,iface)
-            tz = tz -Tract_dsm_boundary(3,it_dsm,igll,iface)
+            tx = tx - Tract_dsm_boundary(1,it_dsm,igll,iface)
+            ty = ty - Tract_dsm_boundary(2,it_dsm,igll,iface)
+            tz = tz - Tract_dsm_boundary(3,it_dsm,igll,iface)
           endif
           !! C. DUROCHAT modification : end
 

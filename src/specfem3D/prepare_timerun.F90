@@ -280,16 +280,21 @@
     !! For coupling with DSM : maybe some changes to make here and after
     !! C. DUROCHAT modification : end
 
-    if( STACEY_ABSORBING_CONDITIONS ) then
+    if( STACEY_ABSORBING_CONDITIONS .and. (.not. COUPLE_WITH_DSM) ) then
       ! adds boundary contributions
       rmassx(:) = rmass(:) + rmassx(:)
       rmassy(:) = rmass(:) + rmassy(:)
       rmassz(:) = rmass(:) + rmassz(:)
+    !!elseif( STACEY_ABSORBING_CONDITIONS .and.  COUPLE_WITH_DSM ) then
+    !!  rmassx(:) = rmass(:)
+    !!  rmassy(:) = rmass(:)
+    !!  rmassz(:) = rmass(:)
     else
       rmassx(:) = rmass(:)
       rmassy(:) = rmass(:)
       rmassz(:) = rmass(:)
     endif
+
     ! not needed anymore
     deallocate(rmass)
 
