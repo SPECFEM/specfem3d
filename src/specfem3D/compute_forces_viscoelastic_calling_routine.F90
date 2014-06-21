@@ -120,7 +120,7 @@ subroutine compute_forces_viscoelastic()
                        ispec_is_inner,phase_is_inner,&
                        PML_CONDITIONS,&
                        SIMULATION_TYPE,.false., &
-                       potential_acoustic)
+                       potential_acoustic,potential_dot_acoustic)  
 
 
         else
@@ -139,7 +139,7 @@ subroutine compute_forces_viscoelastic()
                               ispec_is_inner,phase_is_inner,&
                               PML_CONDITIONS,&
                               SIMULATION_TYPE,.false., &
-                              potential_acoustic)
+                              potential_acoustic,potential_dot_acoustic)  
 
         endif
 
@@ -376,7 +376,7 @@ subroutine compute_forces_viscoelastic_bpwf()
                       ispec_is_inner,phase_is_inner,&
                       PML_CONDITIONS,&
                       SIMULATION_TYPE,.true., &
-                      potential_acoustic)
+                      potential_acoustic,potential_dot_acoustic)  
 
       endif ! num_coupling_ac_el_faces
     endif

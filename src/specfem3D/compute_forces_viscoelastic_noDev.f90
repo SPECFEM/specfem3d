@@ -53,20 +53,24 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                         num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
                         phase_ispec_inner_elastic,backward_simulation)
 
-  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,N_SLS,SAVE_MOHO_MESH,ONE_THIRD,FOUR_THIRDS
-  use pml_par, only: is_CPML, spec_to_CPML, accel_elastic_CPML,NSPEC_CPML, &
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,N_SLS,SAVE_MOHO_MESH,ONE_THIRD,FOUR_THIRDS,&
+                       CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
+  use pml_par, only: is_CPML, spec_to_CPML, accel_elastic_CPML,NSPEC_CPML,CPML_regions, &
                      PML_dux_dxl, PML_dux_dyl, PML_dux_dzl, PML_duy_dxl, PML_duy_dyl, PML_duy_dzl, &
                      PML_duz_dxl, PML_duz_dyl, PML_duz_dzl, &
                      PML_dux_dxl_old, PML_dux_dyl_old, PML_dux_dzl_old, &
                      PML_duy_dxl_old, PML_duy_dyl_old, PML_duy_dzl_old, &
                      PML_duz_dxl_old, PML_duz_dyl_old, PML_duz_dzl_old, &
+                     PML_dux_dxl_new, PML_dux_dyl_new, PML_dux_dzl_new, &   
+                     PML_duy_dxl_new, PML_duy_dyl_new, PML_duy_dzl_new, &   
+                     PML_duz_dxl_new, PML_duz_dyl_new, PML_duz_dzl_new, &   
                      rmemory_dux_dxl_x, rmemory_duy_dyl_x, rmemory_duz_dzl_x, &
                      rmemory_dux_dyl_x, rmemory_dux_dzl_x, rmemory_duz_dxl_x, rmemory_duy_dxl_x, &
                      rmemory_dux_dxl_y, rmemory_duz_dzl_y, rmemory_duy_dyl_y, &
                      rmemory_duy_dxl_y, rmemory_duy_dzl_y, rmemory_duz_dyl_y, rmemory_dux_dyl_y, &
                      rmemory_dux_dxl_z, rmemory_duy_dyl_z, rmemory_duz_dzl_z, &
                      rmemory_duz_dxl_z, rmemory_duz_dyl_z, rmemory_duy_dzl_z, rmemory_dux_dzl_z, &
-                     rmemory_displ_elastic,displ_old
+                     rmemory_displ_elastic,displ_old,displ_new   
   use fault_solver_dynamic, only : Kelvin_Voigt_eta
   use specfem_par, only : FULL_ATTENUATION_SOLID
 
@@ -187,7 +191,14 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &
     tempx1_att,tempx2_att,tempx3_att,tempy1_att,tempy2_att,tempy3_att,tempz1_att,tempz2_att,tempz3_att
+
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &   
+    tempx1_att_new,tempx2_att_new,tempx3_att_new, &
+    tempy1_att_new,tempy2_att_new,tempy3_att_new, &
+    tempz1_att_new,tempz2_att_new,tempz3_att_new   
+
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dummyx_loc_att,dummyy_loc_att,dummyz_loc_att
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dummyx_loc_att_new,dummyy_loc_att_new,dummyz_loc_att_new   
 
   real(kind=CUSTOM_REAL) :: eta
 
@@ -270,6 +281,9 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
               dummyx_loc_att(i,j,k) = displ_old(1,iglob)
               dummyy_loc_att(i,j,k) = displ_old(2,iglob)
               dummyz_loc_att(i,j,k) = displ_old(3,iglob)
+              dummyx_loc_att_new(i,j,k) = displ_new(1,iglob)
+              dummyy_loc_att_new(i,j,k) = displ_new(2,iglob)
+              dummyz_loc_att_new(i,j,k) = displ_new(3,iglob)
             enddo
           enddo
         enddo
@@ -365,6 +379,18 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
               tempz2_att(i,j,k) = 0._CUSTOM_REAL
               tempz3_att(i,j,k) = 0._CUSTOM_REAL
 
+              tempx1_att_new(i,j,k) = 0._CUSTOM_REAL
+              tempx2_att_new(i,j,k) = 0._CUSTOM_REAL
+              tempx3_att_new(i,j,k) = 0._CUSTOM_REAL
+
+              tempy1_att_new(i,j,k) = 0._CUSTOM_REAL
+              tempy2_att_new(i,j,k) = 0._CUSTOM_REAL
+              tempy3_att_new(i,j,k) = 0._CUSTOM_REAL
+
+              tempz1_att_new(i,j,k) = 0._CUSTOM_REAL
+              tempz2_att_new(i,j,k) = 0._CUSTOM_REAL
+              tempz3_att_new(i,j,k) = 0._CUSTOM_REAL
+
               ! use first order Taylor expansion of displacement for local storage of stresses
               ! at this current time step, to fix attenuation in a consistent way
               do l=1,NGLLX
@@ -372,6 +398,9 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                 tempx1_att(i,j,k) = tempx1_att(i,j,k) + dummyx_loc_att(l,j,k)*hp1
                 tempy1_att(i,j,k) = tempy1_att(i,j,k) + dummyy_loc_att(l,j,k)*hp1
                 tempz1_att(i,j,k) = tempz1_att(i,j,k) + dummyz_loc_att(l,j,k)*hp1
+                tempx1_att_new(i,j,k) = tempx1_att_new(i,j,k) + dummyx_loc_att_new(l,j,k)*hp1
+                tempy1_att_new(i,j,k) = tempy1_att_new(i,j,k) + dummyy_loc_att_new(l,j,k)*hp1
+                tempz1_att_new(i,j,k) = tempz1_att_new(i,j,k) + dummyz_loc_att_new(l,j,k)*hp1
 
                 !!! can merge these loops because NGLLX = NGLLY = NGLLZ
 
@@ -379,6 +408,9 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                 tempx2_att(i,j,k) = tempx2_att(i,j,k) + dummyx_loc_att(i,l,k)*hp2
                 tempy2_att(i,j,k) = tempy2_att(i,j,k) + dummyy_loc_att(i,l,k)*hp2
                 tempz2_att(i,j,k) = tempz2_att(i,j,k) + dummyz_loc_att(i,l,k)*hp2
+                tempx2_att_new(i,j,k) = tempx2_att_new(i,j,k) + dummyx_loc_att_new(i,l,k)*hp2
+                tempy2_att_new(i,j,k) = tempy2_att_new(i,j,k) + dummyy_loc_att_new(i,l,k)*hp2
+                tempz2_att_new(i,j,k) = tempz2_att_new(i,j,k) + dummyz_loc_att_new(i,l,k)*hp2
 
                 !!! can merge these loops because NGLLX = NGLLY = NGLLZ
 
@@ -386,6 +418,9 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                 tempx3_att(i,j,k) = tempx3_att(i,j,k) + dummyx_loc_att(i,j,l)*hp3
                 tempy3_att(i,j,k) = tempy3_att(i,j,k) + dummyy_loc_att(i,j,l)*hp3
                 tempz3_att(i,j,k) = tempz3_att(i,j,k) + dummyz_loc_att(i,j,l)*hp3
+                tempx3_att_new(i,j,k) = tempx3_att_new(i,j,k) + dummyx_loc_att_new(i,j,l)*hp3
+                tempy3_att_new(i,j,k) = tempy3_att_new(i,j,k) + dummyy_loc_att_new(i,j,l)*hp3
+                tempz3_att_new(i,j,k) = tempz3_att_new(i,j,k) + dummyz_loc_att_new(i,j,l)*hp3
               enddo
             endif
           endif
@@ -521,6 +556,27 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                    xiyl*tempz1_att(i,j,k) + etayl*tempz2_att(i,j,k) + gammayl*tempz3_att(i,j,k)
               PML_duz_dzl_old(i,j,k) = &
                    xizl*tempz1_att(i,j,k) + etazl*tempz2_att(i,j,k) + gammazl*tempz3_att(i,j,k)
+
+              PML_dux_dxl_new(i,j,k) = &
+                   xixl*tempx1_att_new(i,j,k) + etaxl*tempx2_att_new(i,j,k) + gammaxl*tempx3_att_new(i,j,k)
+              PML_dux_dyl_new(i,j,k) = &
+                   xiyl*tempx1_att_new(i,j,k) + etayl*tempx2_att_new(i,j,k) + gammayl*tempx3_att_new(i,j,k)
+              PML_dux_dzl_new(i,j,k) = &
+                   xizl*tempx1_att_new(i,j,k) + etazl*tempx2_att_new(i,j,k) + gammazl*tempx3_att_new(i,j,k)
+
+              PML_duy_dxl_new(i,j,k) = &
+                   xixl*tempy1_att_new(i,j,k) + etaxl*tempy2_att_new(i,j,k) + gammaxl*tempy3_att_new(i,j,k)
+              PML_duy_dyl_new(i,j,k) = &
+                   xiyl*tempy1_att_new(i,j,k) + etayl*tempy2_att_new(i,j,k) + gammayl*tempy3_att_new(i,j,k)
+              PML_duy_dzl_new(i,j,k) = &
+                   xizl*tempy1_att_new(i,j,k) + etazl*tempy2_att_new(i,j,k) + gammazl*tempy3_att_new(i,j,k)
+
+              PML_duz_dxl_new(i,j,k) = &
+                   xixl*tempz1_att_new(i,j,k) + etaxl*tempz2_att_new(i,j,k) + gammaxl*tempz3_att_new(i,j,k)
+              PML_duz_dyl_new(i,j,k) = &
+                   xiyl*tempz1_att_new(i,j,k) + etayl*tempz2_att_new(i,j,k) + gammayl*tempz3_att_new(i,j,k)
+              PML_duz_dzl_new(i,j,k) = &
+                   xizl*tempz1_att_new(i,j,k) + etazl*tempz2_att_new(i,j,k) + gammazl*tempz3_att_new(i,j,k)
             endif
 
           else
