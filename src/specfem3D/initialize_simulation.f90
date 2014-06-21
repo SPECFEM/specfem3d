@@ -60,8 +60,6 @@
 
 !! DK DK added this for now (March 2013) because CPML is not yet implemented for fluid-solid coupling;
 !! DK DK we will soon add it (in a month or so)
-  if(PML_CONDITIONS .and. ELASTIC_SIMULATION .and. ACOUSTIC_SIMULATION) &
-    stop 'It is still under test for this case'
   if(PML_CONDITIONS .and. (SAVE_FORWARD .or. SIMULATION_TYPE==3)) &
     stop 'It is still under test for adjoint simulation'
 

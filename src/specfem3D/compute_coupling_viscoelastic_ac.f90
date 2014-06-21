@@ -35,8 +35,8 @@
                         coupling_ac_el_jacobian2Dw, &
                         ispec_is_inner,phase_is_inner,&
                         PML_CONDITIONS,&
-                        SIMULATION_TYPE,backward_simulation,&
-                        potential_acoustic)
+                        SIMULATION_TYPE,backward_simulation,&                        
+                        potential_acoustic,potential_dot_acoustic)  
 
 ! returns the updated acceleration array: accel
 
@@ -50,7 +50,7 @@
 
 ! displacement and pressure
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: accel
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: potential_dot_dot_acoustic,potential_acoustic
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: potential_dot_dot_acoustic,potential_dot_acoustic,potential_acoustic  
 
 ! global indexing
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
@@ -104,7 +104,8 @@
               if(SIMULATION_TYPE == 1)then
                 ispec_CPML = spec_to_CPML(ispec)
                 call pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,i,j,k,&
-                                                pressure,potential_dot_dot_acoustic,potential_dot_dot_acoustic_old,&
+                                                pressure,potential_acoustic,potential_acoustic_old,&
+                                                potential_dot_acoustic,potential_dot_dot_acoustic, &  
                                                 num_coupling_ac_el_faces,rmemory_coupling_el_ac_potential_dot_dot)
                 pressure = - pressure
               endif
@@ -113,7 +114,8 @@
                 ispec_CPML = spec_to_CPML(ispec)
                 call pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,i,j,k,&
                                                 pressure,potential_acoustic,potential_acoustic_old,&
-                                                num_coupling_ac_el_faces,rmemory_coupling_el_ac_potential)
+                                                potential_dot_acoustic,potential_dot_dot_acoustic,&  
+                                                num_coupling_ac_el_faces,rmemory_coupling_el_ac_potential_dot_dot)
               endif
             else
               pressure = - potential_dot_dot_acoustic(iglob)
