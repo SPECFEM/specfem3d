@@ -74,9 +74,9 @@
   ! GPU_MODE is in par_file
   call read_gpu_mode(GPU_MODE,GRAVITY)
 
-!! C. DUROCHAT modification : begin !! For coupling with DSM by VM
+!! CD modif : begin (implemented by VM) !! For coupling with DSM
   if(GPU_MODE .and. COUPLE_WITH_DSM) stop 'Coupling with DSM currently not implemented for GPUs'
-!! C. DUROCHAT modification : end
+!! CD modif : end
 
   ! myrank is the rank of each process, between 0 and NPROC-1.
   ! as usual in MPI, process 0 is in charge of coordinating everything
