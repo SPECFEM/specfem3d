@@ -276,9 +276,9 @@
   if(ELASTIC_SIMULATION) then
     ! switches to three-component mass matrix
 
-    !! C. DUROCHAT modification : begin
+    !! CD modif. : begin (implemented by VM)
     !! For coupling with DSM : maybe some changes to make here and after
-    !! C. DUROCHAT modification : end
+    !! CD modif. : end
 
     if( STACEY_ABSORBING_CONDITIONS .and. (.not. COUPLE_WITH_DSM) ) then
       ! adds boundary contributions

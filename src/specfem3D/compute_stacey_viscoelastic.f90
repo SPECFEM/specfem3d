@@ -123,13 +123,13 @@
           vy=veloc(2,iglob)
           vz=veloc(3,iglob)
 
-          !! C. DUROCHAT modification : begin !! For coupling with DSM by VM
+          !! CD modif. : begin (implemented by VM) !! For coupling with DSM
           if (COUPLE_WITH_DSM) then
             vx = vx - Veloc_dsm_boundary(1,it_dsm,igll,iface)
             vy = vy - Veloc_dsm_boundary(2,it_dsm,igll,iface)
             vz = vz - Veloc_dsm_boundary(3,it_dsm,igll,iface)
           endif
-          !! C. DUROCHAT modification : end
+          !! CD modif. : end
 
           ! gets associated normal
           nx = abs_boundary_normal(1,igll,iface)
@@ -144,13 +144,13 @@
           ty = rho_vp(i,j,k,ispec)*vn*ny + rho_vs(i,j,k,ispec)*(vy-vn*ny)
           tz = rho_vp(i,j,k,ispec)*vn*nz + rho_vs(i,j,k,ispec)*(vz-vn*nz)
 
-          !! C. DUROCHAT modification : begin !! For coupling with DSM by VM
+          !! CD modif. : begin (implemented by VM) !! For coupling with DSM
           if (COUPLE_WITH_DSM) then
             tx = tx - Tract_dsm_boundary(1,it_dsm,igll,iface)
             ty = ty - Tract_dsm_boundary(2,it_dsm,igll,iface)
             tz = tz - Tract_dsm_boundary(3,it_dsm,igll,iface)
           endif
-          !! C. DUROCHAT modification : end
+          !! CD modif. : end
 
           ! gets associated, weighted jacobian
           jacobianw = abs_boundary_jacobian2Dw(igll,iface)

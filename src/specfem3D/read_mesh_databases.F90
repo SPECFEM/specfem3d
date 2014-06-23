@@ -396,7 +396,7 @@
            abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
   if( ier /= 0 ) stop 'error allocating array abs_boundary_ispec etc.'
 
-  !! C. DUROCHAT modification : begin !! For coupling with DSM by VM
+  !! CD modif. : begin (implemented by VM) !! For coupling with DSM
   if (COUPLE_WITH_DSM) then
     allocate(Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
     allocate(Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
@@ -408,7 +408,7 @@
     allocate(Veloc_dsm_boundary(1,1,1,1))
     allocate(Tract_dsm_boundary(1,1,1,1))
   endif
-  !! C. DUROCHAT modification : end
+  !! CD modif. : end
 
   if(PML_CONDITIONS)then
     if (num_abs_boundary_faces > 0) then

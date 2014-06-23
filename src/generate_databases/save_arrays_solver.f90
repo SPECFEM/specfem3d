@@ -571,7 +571,7 @@
       deallocate(iglob_tmp,v_tmp_i)
     endif
 
-    !! C. DUROCHAT modification : begin !! for coupling with DSM by VM
+    !! CD modif. : begin (implemented by VM) !! For coupling with DSM
     if (COUPLE_WITH_DSM) then
       !if (num_abs_boundary_faces > 0) then
       filename = prname(1:len_trim(prname))//'absorb_dsm'
@@ -604,7 +604,7 @@
       !!endif
 
     endif
-    !! C. DUROCHAT modification : end
+    !! CD modif. : end
 
     ! acoustic-poroelastic domains
     if( ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION ) then
