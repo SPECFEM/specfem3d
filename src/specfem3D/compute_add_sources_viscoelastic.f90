@@ -103,8 +103,10 @@
   !equivalence (i2head,i4head,r4head)    ! share the same 240-byte-memory
   double precision :: hxir(NGLLX),hpxir(NGLLX),hetar(NGLLY),hpetar(NGLLY),hgammar(NGLLZ),hpgammar(NGLLZ)
 
+  !! CD modif (implemented by VM) : begin !! For coupling with DSM
   ! some old tests (currently unstable; do not remove them though, we might fix this one day)
-  if (OLD_TEST_TO_FIX_ONE_DAY) return
+  if (COUPLE_WITH_DSM) return
+  !! CD modif : end
 
 ! plotting source time function
   if(PRINT_SOURCE_TIME_FUNCTION .and. .not. phase_is_inner ) then
@@ -446,8 +448,10 @@
   real(kind=CUSTOM_REAL) stf_used,stf_used_total_all,time_source
   integer :: isource,iglob,i,j,k,ispec
 
+  !! CD modif (implemented by VM) : begin !! For coupling with DSM
   ! some old tests (currently unstable; do not remove them though, we might fix this one day)
-  if (OLD_TEST_TO_FIX_ONE_DAY) return
+  if (COUPLE_WITH_DSM) return
+  !! CD modif : end
 
 ! plotting source time function
   if(PRINT_SOURCE_TIME_FUNCTION .and. .not. phase_is_inner ) then
@@ -666,8 +670,10 @@
   !equivalence (i2head,i4head,r4head)    ! share the same 240-byte-memory
   double precision :: hxir(NGLLX),hpxir(NGLLX),hetar(NGLLY),hpetar(NGLLY),hgammar(NGLLZ),hpgammar(NGLLZ)
 
+  !! CD modif (implemented by VM) : begin !! For coupling with DSM
   ! some old tests (currently unstable; do not remove them though, we might fix this one day)
-  if (OLD_TEST_TO_FIX_ONE_DAY) return
+  if (COUPLE_WITH_DSM) return
+  !! CD modif : end
 
 ! plotting source time function
   if(PRINT_SOURCE_TIME_FUNCTION .and. .not. phase_is_inner ) then
