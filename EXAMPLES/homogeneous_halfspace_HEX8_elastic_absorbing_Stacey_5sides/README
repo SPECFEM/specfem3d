@@ -66,7 +66,7 @@ step-by-step tutorial (long version -- generate MESH with GEOCUBIT):
 
      > cp utils/Cluster/pbs/*.bash .
 
-     note: you may need to adjust the commands (e.g., -q or -l)
+     note: you may need to adjust the commands for your particular cluster (e.g., -q or -l)
      note: in this example you do not need go_mesher_pbs.bash and valgrind_go_solver_pbs.bash
 
 4. copy three input files from examples directory into SPECFEM3D/DATA/
@@ -145,23 +145,19 @@ step-by-step tutorial (long version -- generate MESH with GEOCUBIT):
 
 8. run simulation:
 
-   - compile specfem3D:
+   - compile specfem3D in directory SPECFEM3D/:
      > make xspecfem3D
 
    - submit job script:
      > qsub go_solver_pbs.bash
 
-     note 1: this script will need to be tailored to your cluster, e.g.,
-             > bsub < go_solver_lsf.bash
-     note 2: the simulation runs on 4 cores and should take about 5 minutes,
-             and you can track the progress with the timestamp files
-             generated in OUTPUT_FILES/
+     note: the simulation runs on 4 cores and should take about 15 minutes,
+           and you can track the progress with the timestamp files
+           generated in OUTPUT_FILES/
 
-   - the job should take about 15 minutes
    - when the job is complete, you should have 3 sets (semd,semv,sema)
-     of 18 (ls -1 *semd | wc) seismogram files in the directory OUTPUT_FILES,
-     as well as 3 timestamp****** files
-
+     of 12 (ls -1 *semd | wc) seismogram files in the directory OUTPUT_FILES,
+     as well as 51 timestamp****** files
 
 9. check with 6 reference seismograms in
       SPECFEM3D/examples/homogeneous_halfspace/REF_SEIS/
