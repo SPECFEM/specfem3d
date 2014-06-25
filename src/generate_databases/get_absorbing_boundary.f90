@@ -42,7 +42,7 @@
   implicit none
 
 ! number of spectral elements in each block
-  integer :: myrank,nspec
+  integer :: myrank,ier,nspec
 
 ! arrays with the mesh
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
@@ -94,7 +94,7 @@
            xcoord_iboun(NGNOD2D,6,nspec), &
            ycoord_iboun(NGNOD2D,6,nspec), &
            zcoord_iboun(NGNOD2D,6,nspec),stat=ier)
-  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+  if(ier /= 0) stop 'not enough memory to allocate arrays'
 
   ! sets flag in array iboun for elements with an absorbing boundary faces
   if(COUPLE_WITH_DSM) then
