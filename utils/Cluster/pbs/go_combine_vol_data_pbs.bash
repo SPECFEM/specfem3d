@@ -2,7 +2,7 @@
 #PBS -S /bin/bash
 
 ## job name and output file
-#PBS -N go_decomposer
+#PBS -N go_combine_vol_data
 #PBS -j oe
 #PBS -o OUTPUT_FILES/$PBS_JOBID.o
 
