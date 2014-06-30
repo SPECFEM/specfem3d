@@ -193,8 +193,11 @@
   print *
   print *,'enter first time step of movie (e.g. 1, enter -1 for shaking map)'
   read(5,*) it1
-  if(it1 == 0 ) it1 = 1
+
+  if(it1 < 1 .and. it1 /= -1) stop 'the first time step must be >= 1'
+
   if(it1 == -1) plot_shaking_map = .true.
+
   if(.not. plot_shaking_map) then
     print *,'enter last time step of movie (e.g. ',NSTEP,')'
     read(5,*) it2
