@@ -43,6 +43,22 @@ subroutine compute_forces_viscoelastic()
   logical:: phase_is_inner
   integer:: iface,ispec,igll,i,j,k,iglob
 
+ 
+  ! kbai added the following two synchronizations to ensure that the displacement and velocity values 
+  ! at nodes on MPI interfaces stay equal on all processors that share the node.
+  ! Do this only for dynamic rupture simulations
+  if (SIMULATION_TYPE_DYN) then
+    call synchronize_MPI_vector_blocking_ord(NPROC,NGLOB_AB,displ, &
+                                     num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                     nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                     my_neighbours_ext_mesh,myrank)
+    call synchronize_MPI_vector_blocking_ord(NPROC,NGLOB_AB,veloc, &
+                                     num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                     nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                     my_neighbours_ext_mesh,myrank)
+  endif
+
+
 ! distinguishes two runs: for points on MPI interfaces, and points within the partitions
   do iphase=1,2
 
