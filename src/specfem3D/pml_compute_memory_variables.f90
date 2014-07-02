@@ -117,6 +117,7 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
         gammazl = gammaz(i,j,k,ispec)
         jacobianl = jacobian(i,j,k,ispec)
 
+        !---------------------- A6, A7, A8, A9 --------------------------
         kappa_x = k_store_x(i,j,k,ispec_CPML)
         kappa_y = k_store_y(i,j,k,ispec_CPML)
         kappa_z = k_store_z(i,j,k,ispec_CPML)
@@ -126,8 +127,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
         alpha_x = alpha_store_x(i,j,k,ispec_CPML)
         alpha_y = alpha_store_y(i,j,k,ispec_CPML)
         alpha_z = alpha_store_z(i,j,k,ispec_CPML)
-
-        !---------------------- A6, A7, A8, A9 --------------------------
         call lijk_parameter_computation(time_nplus1,deltat,&   
                                         kappa_z,d_z,alpha_z,kappa_y,d_y,alpha_y,kappa_x,d_x,alpha_x,&   
                                         CPML_region_local,231,A6,A7,A8,A9,&
@@ -156,6 +155,15 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
 
 
         !---------------------- A10,A11,A12,A13 --------------------------
+        kappa_x = k_store_x(i,j,k,ispec_CPML)
+        kappa_y = k_store_y(i,j,k,ispec_CPML)
+        kappa_z = k_store_z(i,j,k,ispec_CPML)
+        d_x = d_store_x(i,j,k,ispec_CPML)
+        d_y = d_store_y(i,j,k,ispec_CPML)
+        d_z = d_store_z(i,j,k,ispec_CPML)
+        alpha_x = alpha_store_x(i,j,k,ispec_CPML)
+        alpha_y = alpha_store_y(i,j,k,ispec_CPML)
+        alpha_z = alpha_store_z(i,j,k,ispec_CPML)
         call lijk_parameter_computation(time_nplus1,deltat,&   
                                         kappa_x,d_x,alpha_x,kappa_z,d_z,alpha_z,kappa_y,d_y,alpha_y,&   
                                         CPML_region_local,132,A10,A11,A12,A13,&
@@ -183,6 +191,15 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                + PML_duz_dyl_new(i,j,k) * coef1_3 + PML_duz_dyl_old(i,j,k) * coef2_3
 
         !---------------------- A14,A15,A16,A17 --------------------------
+        kappa_x = k_store_x(i,j,k,ispec_CPML)
+        kappa_y = k_store_y(i,j,k,ispec_CPML)
+        kappa_z = k_store_z(i,j,k,ispec_CPML)
+        d_x = d_store_x(i,j,k,ispec_CPML)
+        d_y = d_store_y(i,j,k,ispec_CPML)
+        d_z = d_store_z(i,j,k,ispec_CPML)
+        alpha_x = alpha_store_x(i,j,k,ispec_CPML)
+        alpha_y = alpha_store_y(i,j,k,ispec_CPML)
+        alpha_z = alpha_store_z(i,j,k,ispec_CPML)
         call lijk_parameter_computation(time_nplus1,deltat,&   
                                         kappa_x,d_x,alpha_x,kappa_y,d_y,alpha_y,kappa_z,d_z,alpha_z,&   
                                         CPML_region_local,123,A14,A15,A16,A17,&
@@ -211,6 +228,9 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                + PML_duz_dzl_new(i,j,k) * coef1_3 + PML_duz_dzl_old(i,j,k) * coef2_3
 
         !---------------------- A18 and A19 --------------------------
+        kappa_x = k_store_x(i,j,k,ispec_CPML)
+        d_x = d_store_x(i,j,k,ispec_CPML)
+        alpha_x = alpha_store_x(i,j,k,ispec_CPML)
         call lx_parameter_computation(deltat,kappa_x,d_x,alpha_x,&   
                                       CPML_region_local,A18,A19,&
                                       coef0_1,coef1_1,coef2_1)
@@ -227,6 +247,9 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                + PML_duy_dyl_new(i,j,k) * coef1_1 + PML_duy_dyl_old(i,j,k) * coef2_1
 
         !---------------------- A20 and A21 --------------------------
+        kappa_y = k_store_y(i,j,k,ispec_CPML)
+        d_y = d_store_y(i,j,k,ispec_CPML)
+        alpha_y = alpha_store_y(i,j,k,ispec_CPML)
         call ly_parameter_computation(deltat,kappa_y,d_y,alpha_y, &   
                                       CPML_region_local,A20,A21,&
                                       coef0_1,coef1_1,coef2_1)
@@ -243,6 +266,9 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                + PML_dux_dxl_new(i,j,k) * coef1_1 + PML_dux_dxl_old(i,j,k) * coef2_1
 
         !---------------------- A22 and A23 --------------------------
+        kappa_z = k_store_z(i,j,k,ispec_CPML)
+        d_z = d_store_z(i,j,k,ispec_CPML)
+        alpha_z = alpha_store_z(i,j,k,ispec_CPML)
         call lz_parameter_computation(deltat,kappa_z,d_z,alpha_z, &   
                                       CPML_region_local,A22,A23,&
                                       coef0_1,coef1_1,coef2_1)
@@ -396,6 +422,7 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
           rhoin_jacob_ij = rho_invl_jacob * wgllwgll_xy(i,j)
         endif
 
+        !---------------------- A6, A7, A8, A9 --------------------------
         kappa_x = k_store_x(i,j,k,ispec_CPML)
         kappa_y = k_store_y(i,j,k,ispec_CPML)
         kappa_z = k_store_z(i,j,k,ispec_CPML)
@@ -405,8 +432,6 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
         alpha_x = alpha_store_x(i,j,k,ispec_CPML)
         alpha_y = alpha_store_y(i,j,k,ispec_CPML)
         alpha_z = alpha_store_z(i,j,k,ispec_CPML)
-
-        !---------------------- A6, A7, A8, A9 --------------------------
         call lijk_parameter_computation(time_nplus1,deltat,&   
                                         kappa_z,d_z,alpha_z,kappa_y,d_y,alpha_y,kappa_x,d_x,alpha_x,&   
                                         CPML_region_local,231,A6,A7,A8,A9,&
@@ -424,6 +449,15 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
                 coef1_3 * PML_dpotential_dxl_new(i,j,k) + coef2_3 * PML_dpotential_dxl_old(i,j,k)
 
         !---------------------- A10,A11,A12,A13 --------------------------
+        kappa_x = k_store_x(i,j,k,ispec_CPML)
+        kappa_y = k_store_y(i,j,k,ispec_CPML)
+        kappa_z = k_store_z(i,j,k,ispec_CPML)
+        d_x = d_store_x(i,j,k,ispec_CPML)
+        d_y = d_store_y(i,j,k,ispec_CPML)
+        d_z = d_store_z(i,j,k,ispec_CPML)
+        alpha_x = alpha_store_x(i,j,k,ispec_CPML)
+        alpha_y = alpha_store_y(i,j,k,ispec_CPML)
+        alpha_z = alpha_store_z(i,j,k,ispec_CPML)
         call lijk_parameter_computation(time_nplus1,deltat,&    
                                         kappa_x,d_x,alpha_x,kappa_z,d_z,alpha_z,kappa_y,d_y,alpha_y,&    
                                         CPML_region_local,132,A10,A11,A12,A13,&
@@ -440,6 +474,15 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
                 coef1_3 * PML_dpotential_dyl_new(i,j,k) + coef2_3 * PML_dpotential_dyl_old(i,j,k)
 
         !---------------------- A14,A15,A16,A17 --------------------------
+        kappa_x = k_store_x(i,j,k,ispec_CPML)
+        kappa_y = k_store_y(i,j,k,ispec_CPML)
+        kappa_z = k_store_z(i,j,k,ispec_CPML)
+        d_x = d_store_x(i,j,k,ispec_CPML)
+        d_y = d_store_y(i,j,k,ispec_CPML)
+        d_z = d_store_z(i,j,k,ispec_CPML)
+        alpha_x = alpha_store_x(i,j,k,ispec_CPML)
+        alpha_y = alpha_store_y(i,j,k,ispec_CPML)
+        alpha_z = alpha_store_z(i,j,k,ispec_CPML)
         call lijk_parameter_computation(time_nplus1,deltat,&   
                                         kappa_x,d_x,alpha_x,kappa_y,d_y,alpha_y,kappa_z,d_z,alpha_z,&   
                                         CPML_region_local,123,A14,A15,A16,A17,&

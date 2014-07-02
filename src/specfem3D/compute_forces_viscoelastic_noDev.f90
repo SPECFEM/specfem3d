@@ -747,6 +747,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 !! DK DK that when PML_CONDITIONS is on then you do not compute the tempx, tempy, tempz arrays
 !! DK DK (even in non-PML elements!!), even though such arrays are needed below;
 !! DK DK shouldn't there be at least a "if (is_CPML(ispec))" test as well here, or something like that?
+!! ZN ZN The tempx, tempy, tempz arrays in PML region is computed in pml_compute_memory_variables_elastic
           if (PML_CONDITIONS .and. (.not. backward_simulation)  .and. NSPEC_CPML > 0) then
             ! do not merge this second line with the first using an ".and." statement
             ! because array is_CPML() is unallocated when PML_CONDITIONS is false
