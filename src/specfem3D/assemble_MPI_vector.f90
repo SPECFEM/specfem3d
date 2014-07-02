@@ -230,9 +230,11 @@
 
 
   end subroutine synchronize_MPI_vector_blocking_ord
+
 !
-!------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+!------------------------------------------------------------------------------------------------------------------------------
 !
+
   subroutine assemble_MPI_vector_async_send(NPROC,NGLOB_AB,array_val, &
                                            buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
                                            num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
