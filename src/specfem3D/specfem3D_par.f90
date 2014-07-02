@@ -95,9 +95,8 @@ module specfem_par
 ! time loop step
   integer :: it
 
-  !! CD modif. : begin (implemented by VM) !! For coupling with DSM
+! for coupling with DSM
   integer :: it_dsm
-  !! CD modif. : end
 
 ! parameters for the source
   integer, dimension(:), allocatable :: islice_selected_source,ispec_selected_source

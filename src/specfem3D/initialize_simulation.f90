@@ -147,9 +147,8 @@
   ! reads in numbers of spectral elements and points for the part of the mesh handled by this process
   call create_name_database(prname,myrank,LOCAL_PATH)
 
-  !! CD modif. : begin (implemented by VM) !! For coupling with DSM
+! for coupling with DSM
   if (COUPLE_WITH_DSM) call create_name_database(dsmname,myrank,TRAC_PATH)
-  !! CD modif. : end
 
   if (ADIOS_FOR_MESH) then
     call read_mesh_for_init(NSPEC_AB, NGLOB_AB)

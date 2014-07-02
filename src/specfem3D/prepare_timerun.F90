@@ -277,22 +277,16 @@
     ! switches to three-component mass matrix
 
     !! CD modif. : begin 
-
-    if( STACEY_ABSORBING_CONDITIONS .and. (.not. COUPLE_WITH_DSM) ) then
+    if( STACEY_ABSORBING_CONDITIONS .and. .not. COUPLE_WITH_DSM ) then
       ! adds boundary contributions
       rmassx(:) = rmass(:) + rmassx(:)
       rmassy(:) = rmass(:) + rmassy(:)
       rmassz(:) = rmass(:) + rmassz(:)
-    !!elseif( STACEY_ABSORBING_CONDITIONS .and.  COUPLE_WITH_DSM ) then
-    !!  rmassx(:) = rmass(:)
-    !!  rmassy(:) = rmass(:)
-    !!  rmassz(:) = rmass(:)
     else
       rmassx(:) = rmass(:)
       rmassy(:) = rmass(:)
       rmassz(:) = rmass(:)
     endif
-
     !! CD modif. : end
 
     ! not needed anymore
