@@ -128,6 +128,112 @@
 !
 !-------------------------------------------------------------------------------------------------
 !
+  subroutine synchronize_MPI_vector_blocking_ord(NPROC,NGLOB_AB,array_val, &
+                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                        my_neighbours_ext_mesh,myrank)
+! kbai added this subroutine to synchronize a vector field 
+! to ensure that its values at nodes on MPI interfaces stay equal on all processors that share the node.
+! Synchronize by setting the value to that of the processor with highest rank
+! (it doesn't really matter which value we take, as long as all procs end up with exactly the same value). 
+! We assume that the interfaces are ordered by increasing rank of the neighbour.
+! Uses blocking communication: only returns after values have been received and assembled
+  implicit none
+
+  include "constants.h"
+
+  integer :: NPROC
+  integer :: NGLOB_AB
+
+! array to assemble
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: array_val
+
+  integer :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh,myrank
+  integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh,my_neighbours_ext_mesh
+  integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
+  ! local parameters
+
+  ! send/receive temporary buffers
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: buffer_send_vector
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: buffer_recv_vector
+  ! requests
+  integer, dimension(:), allocatable :: request_send_vector
+  integer, dimension(:), allocatable :: request_recv_vector
+
+  integer ipoin,iinterface,ier,iglob
+
+
+
+! setting the value to that of the processor with highest rank
+
+  if(NPROC > 1) then
+
+    allocate(buffer_send_vector(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array buffer_send_vector'
+    allocate(buffer_recv_vector(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array buffer_recv_vector'
+     allocate(request_send_vector(num_interfaces_ext_mesh),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array request_send_vector'
+    allocate(request_recv_vector(num_interfaces_ext_mesh),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array request_recv_vector'
+
+    ! partition border copy into the buffer
+    do iinterface = 1, num_interfaces_ext_mesh
+      do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
+        iglob = ibool_interfaces_ext_mesh(ipoin,iinterface)
+        buffer_send_vector(:,ipoin,iinterface) = array_val(:,iglob)
+      enddo
+    enddo
+
+    ! send messages
+    do iinterface = 1, num_interfaces_ext_mesh
+      call isend_cr(buffer_send_vector(1,1,iinterface), &
+                     NDIM*nibool_interfaces_ext_mesh(iinterface), &
+                     my_neighbours_ext_mesh(iinterface), &
+                     itag, &
+                     request_send_vector(iinterface) )
+      call irecv_cr(buffer_recv_vector(1,1,iinterface), &
+                     NDIM*nibool_interfaces_ext_mesh(iinterface), &
+                     my_neighbours_ext_mesh(iinterface), &
+                     itag, &
+                     request_recv_vector(iinterface) )
+    enddo
+
+    ! wait for communications completion (recv)
+    do iinterface = 1, num_interfaces_ext_mesh
+      call wait_req(request_recv_vector(iinterface))
+    enddo
+
+    ! set the value to that of the highest-rank processor
+  do iinterface = 1, num_interfaces_ext_mesh
+    if ( myrank < my_neighbours_ext_mesh(iinterface)) then
+    do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
+      iglob = ibool_interfaces_ext_mesh(ipoin,iinterface)
+      array_val(:,iglob) = buffer_recv_vector(:,ipoin,iinterface)
+    enddo
+    endif
+  enddo
+
+ 
+
+  ! wait for communications completion (send)
+    do iinterface = 1, num_interfaces_ext_mesh
+      call wait_req(request_send_vector(iinterface))
+    enddo
+
+    deallocate(buffer_send_vector)
+    deallocate(buffer_recv_vector)
+    deallocate(request_send_vector)
+    deallocate(request_recv_vector)
+  endif
+
+
+
+  end subroutine synchronize_MPI_vector_blocking_ord
+
+!
+!------------------------------------------------------------------------------------------------------------------------------
+!
 
   subroutine assemble_MPI_vector_async_send(NPROC,NGLOB_AB,array_val, &
                                            buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
