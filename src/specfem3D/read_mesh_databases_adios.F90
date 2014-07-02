@@ -853,8 +853,8 @@ subroutine read_mesh_databases_adios()
            abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
   if( ier /= 0 ) stop 'error allocating array abs_boundary_ispec etc.'
 
-  if (OLD_TEST_TO_FIX_ONE_DAY) then
-    ! for new method
+  !! CD modif. : begin (implemented by VM) !! For coupling with DSM
+  if (COUPLE_WITH_DSM) then
     allocate(Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
     allocate(Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
     open(unit=IIN_veloc_dsm,file=dsmname(1:len_trim(dsmname))//'vel.bin',status='old', &
@@ -865,6 +865,7 @@ subroutine read_mesh_databases_adios()
     allocate(Veloc_dsm_boundary(1,1,1,1))
     allocate(Tract_dsm_boundary(1,1,1,1))
   endif
+  !! CD modif. : end
 
   allocate(ibelm_xmin(nspec2D_xmin),ibelm_xmax(nspec2D_xmax), &
            ibelm_ymin(nspec2D_ymin),ibelm_ymax(nspec2D_ymax), &

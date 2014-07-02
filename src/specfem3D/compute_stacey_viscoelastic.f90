@@ -79,19 +79,23 @@
   real(kind=CUSTOM_REAL) vx,vy,vz,nx,ny,nz,tx,ty,tz,vn,jacobianw
   integer :: ispec,iglob,i,j,k,iface,igll
 
-! for new method
+  !! CD modif (implemented by VM) : begin !! For coupling with DSM
+   
+  ! See also DSM parameters in setup/constants.h.in
   real(kind=CUSTOM_REAL) :: Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
   real(kind=CUSTOM_REAL) :: Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
 
   integer :: it_dsm
 
-  if (OLD_TEST_TO_FIX_ONE_DAY) then
+  if (COUPLE_WITH_DSM) then
     if (phase_is_inner .eqv. .false.) then
       if (mod(it_dsm,Ntime_step_dsm+1) == 0 .or. it == 1) then
         call read_dsm_file(Veloc_dsm_boundary,Tract_dsm_boundary,num_abs_boundary_faces,it_dsm)
       endif
     endif
   endif
+
+  !! CD modif : end
 
   ! checks if anything to do
   if( num_abs_boundary_faces == 0 ) return
@@ -118,11 +122,15 @@
           vx=veloc(1,iglob)
           vy=veloc(2,iglob)
           vz=veloc(3,iglob)
-          if (OLD_TEST_TO_FIX_ONE_DAY) then
+
+          !! CD modif. : begin (implemented by VM) !! For coupling with DSM
+          if (COUPLE_WITH_DSM) then
             vx = vx - Veloc_dsm_boundary(1,it_dsm,igll,iface)
             vy = vy - Veloc_dsm_boundary(2,it_dsm,igll,iface)
             vz = vz - Veloc_dsm_boundary(3,it_dsm,igll,iface)
           endif
+          !! CD modif. : end
+
           ! gets associated normal
           nx = abs_boundary_normal(1,igll,iface)
           ny = abs_boundary_normal(2,igll,iface)
@@ -136,11 +144,13 @@
           ty = rho_vp(i,j,k,ispec)*vn*ny + rho_vs(i,j,k,ispec)*(vy-vn*ny)
           tz = rho_vp(i,j,k,ispec)*vn*nz + rho_vs(i,j,k,ispec)*(vz-vn*nz)
 
-          if (OLD_TEST_TO_FIX_ONE_DAY) then
-            tx = tx -Tract_dsm_boundary(1,it_dsm,igll,iface)
-            ty = ty -Tract_dsm_boundary(2,it_dsm,igll,iface)
-            tz = tz -Tract_dsm_boundary(3,it_dsm,igll,iface)
+          !! CD modif. : begin (implemented by VM) !! For coupling with DSM
+          if (COUPLE_WITH_DSM) then
+            tx = tx - Tract_dsm_boundary(1,it_dsm,igll,iface)
+            ty = ty - Tract_dsm_boundary(2,it_dsm,igll,iface)
+            tz = tz - Tract_dsm_boundary(3,it_dsm,igll,iface)
           endif
+          !! CD modif. : end
 
           ! gets associated, weighted jacobian
           jacobianw = abs_boundary_jacobian2Dw(igll,iface)
@@ -170,11 +180,13 @@
     endif
   endif
 
-  if (OLD_TEST_TO_FIX_ONE_DAY) then
+  !! CD modif. : begin (implemented by VM) !! For coupling with DSM
+  if (COUPLE_WITH_DSM) then
     if (phase_is_inner .eqv. .true.) then
       it_dsm = it_dsm + 1
     endif
   endif
+  !! CD modif. : end
 
   end subroutine compute_stacey_viscoelastic
 !
@@ -264,7 +276,12 @@
 
   end subroutine compute_stacey_viscoelastic_bpwf
 
-!---------------------------------------------------------------------------------------
+!=============================================================================
+!
+  !! CD modif. : begin (implemented by VM) !! For coupling with DSM
+!
+!-----------------------------------------------------------------------------
+
 
   subroutine read_dsm_file(Veloc_dsm_boundary,Tract_dsm_boundary,num_abs_boundary_faces,it_dsm)
 
@@ -298,6 +315,7 @@
 
   end subroutine read_dsm_file
 
+  !! CD modif. : end
 !
 !=====================================================================
 ! for elastic solver on GPU
@@ -330,19 +348,21 @@
   ! GPU_MODE variables
   integer(kind=8) :: Mesh_pointer
 
-  ! for new method
+  !! CD modif (implemented by VM) : begin !! For coupling with DSM
   real(kind=CUSTOM_REAL) :: Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
   real(kind=CUSTOM_REAL) :: Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
 
   integer :: it_dsm
 
-  if (OLD_TEST_TO_FIX_ONE_DAY) then
+  if (COUPLE_WITH_DSM) then
     if (phase_is_inner .eqv. .false.) then
       if (mod(it_dsm,Ntime_step_dsm+1) == 0 .or. it == 1) then
         call read_dsm_file(Veloc_dsm_boundary,Tract_dsm_boundary,num_abs_boundary_faces,it_dsm)
       endif
     endif
   endif
+
+  !! CD modif. : end
 
   ! checks if anything to do
   if( num_abs_boundary_faces == 0 ) return
@@ -366,11 +386,13 @@
     endif
   endif
 
-  if (OLD_TEST_TO_FIX_ONE_DAY) then
+  !! CD modif. (implemented by VM) : begin !! For coupling with DSM
+  if (COUPLE_WITH_DSM) then
     if (phase_is_inner .eqv. .true.) then
       it_dsm = it_dsm + 1
     endif
   endif
+  !! CD modif. : end
 
   end subroutine compute_stacey_viscoelastic_GPU
 

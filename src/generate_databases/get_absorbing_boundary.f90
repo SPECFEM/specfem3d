@@ -42,7 +42,7 @@
   implicit none
 
 ! number of spectral elements in each block
-  integer :: myrank,nspec
+  integer :: myrank,ier,nspec
 
 ! arrays with the mesh
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
@@ -81,6 +81,34 @@
   real(kind=CUSTOM_REAL),dimension(NGNOD2D_FOUR_CORNERS) :: xcoord,ycoord,zcoord
   integer  :: ispec,ispec2D,icorner,itop,iabsval,iface,igll,i,j,igllfree,ifree
 
+  !! CD modif. : begin (implemented by VM) !! additonal local parameters For coupling with DSM
+
+  logical, dimension(:,:),allocatable :: iboun   ! pll
+
+  ! corner locations for faces
+  real(kind=CUSTOM_REAL), dimension(:,:,:),allocatable :: xcoord_iboun,ycoord_iboun,zcoord_iboun
+  character(len=27) namefile
+
+  ! sets flag in array iboun for elements with an absorbing boundary faces
+  if(COUPLE_WITH_DSM) then
+
+    ! allocate temporary flag array
+    allocate(iboun(6,nspec), &
+             xcoord_iboun(NGNOD2D,6,nspec), &
+             ycoord_iboun(NGNOD2D,6,nspec), &
+             zcoord_iboun(NGNOD2D,6,nspec),stat=ier)
+    if(ier /= 0) stop 'not enough memory to allocate arrays'
+
+    iboun(:,:) = .false.
+
+    write(namefile,'(a17,i6.6,a4)') 'xmin_gll_for_dsm_',myrank,'.txt'
+    open(123,file=namefile)
+    write(123,*) nspec2D_xmin
+
+   endif
+
+  !! CD modif. : end
+
   ! abs face counter
   iabsval = 0
 
@@ -106,6 +134,10 @@
                             xstore_dummy,ystore_dummy,zstore_dummy, &
                             iface)
 
+    !! CD modif. : begin (implemented by VM) !! For coupling with DSM
+    if(COUPLE_WITH_DSM) iboun(iface,ispec) = .true.
+    !! CD modif. : end
+
     ! ijk indices of GLL points for face id
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLZ)
 
@@ -126,6 +158,12 @@
                                       xstore_dummy,ystore_dummy,zstore_dummy, &
                                       lnormal )
         normal_face(:,i,j) = lnormal(:)
+
+        !! CD modif. : begin (implemented by VM) !! For coupling with DSM
+        if(COUPLE_WITH_DSM) write(123,'(i10,3f20.10)') ispec,xstore_dummy(ibool(i,j,1,ispec)),&
+                ystore_dummy(ibool(i,j,1,ispec)),zstore_dummy(ibool(i,j,1,ispec))
+        !! CD modif. : end
+
       enddo
     enddo
 
@@ -145,6 +183,10 @@
     enddo
 
   enddo ! nspec2D_xmin
+
+  !! CD modif. : begin (implemented by VM) !! For coupling with DSM
+  if(COUPLE_WITH_DSM) close(123)
+  !! CD modif. : end
 
   ! xmax
   ijk_face(:,:,:) = 0
@@ -167,6 +209,10 @@
                               ibool,nspec,nglob_dummy, &
                               xstore_dummy,ystore_dummy,zstore_dummy, &
                               iface )
+
+    !! CD modif. : begin (implemented by VM) !! For coupling with DSM
+    if(COUPLE_WITH_DSM) iboun(iface,ispec) = .true.
+    !! CD modif. : end
 
     ! ijk indices of GLL points on face
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLZ)
@@ -230,6 +276,10 @@
                               xstore_dummy,ystore_dummy,zstore_dummy, &
                               iface )
 
+    !! CD modif. : begin (implemented by VM) !! For coupling with DSM
+    if(COUPLE_WITH_DSM) iboun(iface,ispec) = .true.
+    !! CD modif. : end
+
     ! ijk indices of GLL points on face
     call get_element_face_gll_indices(iface,ijk_face,NGLLY,NGLLZ)
 
@@ -292,6 +342,10 @@
                               xstore_dummy,ystore_dummy,zstore_dummy, &
                               iface )
 
+    !! CD modif. : begin (implemented by VM) !! For coupling with DSM
+    if(COUPLE_WITH_DSM) iboun(iface,ispec) = .true.
+    !! CD modif. : end
+
     ! ijk indices of GLL points on face
     call get_element_face_gll_indices(iface,ijk_face,NGLLY,NGLLZ)
 
@@ -353,6 +407,10 @@
                               ibool,nspec,nglob_dummy, &
                               xstore_dummy,ystore_dummy,zstore_dummy, &
                               iface )
+
+    !! CD modif. : begin (implemented by VM) !! For coupling with DSM
+    if(COUPLE_WITH_DSM) iboun(iface,ispec) = .true.
+    !! CD modif. : end
 
     ! ijk indices of GLL points on face
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLY)
@@ -418,6 +476,10 @@
                               ibool,nspec,nglob_dummy, &
                               xstore_dummy,ystore_dummy,zstore_dummy, &
                               iface )
+
+    !! CD modif. : begin (implemented by VM) !! For coupling with DSM
+    if(COUPLE_WITH_DSM) iboun(iface,ispec) = .true.
+    !! CD modif. : end
 
     ! ijk indices of GLL points on face
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLY)

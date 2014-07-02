@@ -95,7 +95,7 @@ module specfem_par
 ! time loop step
   integer :: it
 
-! for new method
+! for coupling with DSM
   integer :: it_dsm
 
 ! parameters for the source

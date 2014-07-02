@@ -186,15 +186,19 @@ subroutine compute_forces_viscoelastic()
                         ispec_is_inner,phase_is_inner)
     endif
 
-! adds source term (single-force/moment-tensor solution)
-    call compute_add_sources_viscoelastic( NSPEC_AB,NGLOB_AB,accel, &
-                        ibool,ispec_is_inner,phase_is_inner, &
-                        NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                        hdur,hdur_gaussian,tshift_src,dt,t0,sourcearrays, &
-                        ispec_is_elastic,SIMULATION_TYPE,NSTEP, &
-                        nrec,islice_selected_rec,ispec_selected_rec, &
-                        nadj_rec_local,adj_sourcearrays, &
-                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY)
+    !! CD modif. : begin (implemented by VM) !! For coupling with DSM
+    if(.not. COUPLE_WITH_DSM) then 
+      ! adds source term (single-force/moment-tensor solution)
+      call compute_add_sources_viscoelastic(NSPEC_AB,NGLOB_AB,accel, &
+                                            ibool,ispec_is_inner,phase_is_inner, &
+                                            NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
+                                            hdur,hdur_gaussian,tshift_src,dt,t0,sourcearrays, &
+                                            ispec_is_elastic,SIMULATION_TYPE,NSTEP, &
+                                            nrec,islice_selected_rec,ispec_selected_rec, &
+                                            nadj_rec_local,adj_sourcearrays, &
+                                            NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY)
+    endif
+    !! CD modif. : end    
 
     ! assemble all the contributions between slices using MPI
     if( phase_is_inner .eqv. .false. ) then

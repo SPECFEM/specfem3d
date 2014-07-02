@@ -275,7 +275,9 @@
 
   if(ELASTIC_SIMULATION) then
     ! switches to three-component mass matrix
-    if( STACEY_ABSORBING_CONDITIONS ) then
+
+    !! CD modif. : begin 
+    if( STACEY_ABSORBING_CONDITIONS .and. .not. COUPLE_WITH_DSM ) then
       ! adds boundary contributions
       rmassx(:) = rmass(:) + rmassx(:)
       rmassy(:) = rmass(:) + rmassy(:)
@@ -285,6 +287,8 @@
       rmassy(:) = rmass(:)
       rmassz(:) = rmass(:)
     endif
+    !! CD modif. : end
+
     ! not needed anymore
     deallocate(rmass)
 

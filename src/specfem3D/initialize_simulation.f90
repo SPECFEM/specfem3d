@@ -66,6 +66,10 @@
   ! GPU_MODE is in par_file
   call read_gpu_mode(GPU_MODE,GRAVITY)
 
+!! CD modif. : begin !! For coupling with DSM
+  if(GPU_MODE .and. COUPLE_WITH_DSM) stop 'Coupling with DSM currently not implemented for GPUs'
+!! CD modif. : end
+
   ! myrank is the rank of each process, between 0 and NPROC-1.
   ! as usual in MPI, process 0 is in charge of coordinating everything
   ! and also takes care of the main output
@@ -142,7 +146,9 @@
 
   ! reads in numbers of spectral elements and points for the part of the mesh handled by this process
   call create_name_database(prname,myrank,LOCAL_PATH)
-  if (OLD_TEST_TO_FIX_ONE_DAY) call create_name_database(dsmname,myrank,TRAC_PATH)
+
+! for coupling with DSM
+  if (COUPLE_WITH_DSM) call create_name_database(dsmname,myrank,TRAC_PATH)
 
   if (ADIOS_FOR_MESH) then
     call read_mesh_for_init(NSPEC_AB, NGLOB_AB)
