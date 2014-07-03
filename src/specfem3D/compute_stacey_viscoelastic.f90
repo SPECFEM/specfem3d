@@ -79,7 +79,7 @@
   real(kind=CUSTOM_REAL) vx,vy,vz,nx,ny,nz,tx,ty,tz,vn,jacobianw
   integer :: ispec,iglob,i,j,k,iface,igll
 
-  !! CD modif (implemented by VM) : begin !! For coupling with DSM
+  !! CD modif. : begin (implemented by VM) !! For coupling with DSM
    
   ! See also DSM parameters in setup/constants.h.in
   real(kind=CUSTOM_REAL) :: Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
@@ -95,7 +95,7 @@
     endif
   endif
 
-  !! CD modif : end
+  !! CD modif. : end
 
   ! checks if anything to do
   if( num_abs_boundary_faces == 0 ) return
@@ -348,7 +348,7 @@
   ! GPU_MODE variables
   integer(kind=8) :: Mesh_pointer
 
-  !! CD modif (implemented by VM) : begin !! For coupling with DSM
+  !! CD modif. : begin (implemented by VM) !! For coupling with DSM
   real(kind=CUSTOM_REAL) :: Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
   real(kind=CUSTOM_REAL) :: Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
 
