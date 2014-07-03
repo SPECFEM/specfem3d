@@ -3,7 +3,7 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1                         
 !               ---------------------------------------
 !
-!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp YYYY
 !                        Princeton University, USA
 !                and CNRS / University of Marseille, France
 !                 (there are currently many more authors!)
