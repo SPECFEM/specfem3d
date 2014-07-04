@@ -1,7 +1,7 @@
 #  ABSOLUTE PATH FOR EXECUTABLES
-DSM_BINARY_PATH          =  /home/bacchus1/ywang/yang/DSM_SPECFEM_HYBRID_VECTORIZED_NEW/bin/
-SPECFEM3D_BINARY_PATH    =  /home/bacchus1/ywang/yang/DSM_SPECFEM_HYBRID_VECTORIZED_NEW/SEMH/bin
-SHELL_SCRIPT_PATH        =  /home/bacchus1/ywang/yang/DSM_SPECFEM_HYBRID_VECTORIZED_NEW/shells
+DSM_BINARY_PATH          =  /home/durochat/Codes/SPECFEM3Ds/specfem3d/utils/DSM_FOR_SPECFEM3D/bin
+SPECFEM3D_BINARY_PATH    =  /home/durochat/Codes/SPECFEM3Ds/specfem3d/bin
+SHELL_SCRIPT_PATH        =  /home/durochat/Codes/SPECFEM3Ds/specfem3d/utils/DSM_FOR_SPECFEM3D/shells
 
 
 # DIRECTORY CONTAINED INPUTS FILES (RELATIVE PATH FORM ./)
