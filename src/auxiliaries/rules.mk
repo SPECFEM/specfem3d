@@ -36,21 +36,23 @@ auxiliaries_TARGETS = \
 	$E/xcombine_vol_data \
 	$E/xconvolve_source_timefunction \
 	$E/xcreate_movie_shakemap_AVS_DX_GMT \
-	$E/xmodel_update \
 	$E/xsmooth_vol_data \
 	$E/xsum_kernels \
 	$(EMPTY_MACRO)
+##### DK DK July 2014 commented this out to temporarily avoid a dependency problem in the build system
+###########	$E/xmodel_update \
 
 auxiliaries_OBJECTS = \
 	$O/combine_surf_data.aux.o \
 	$O/combine_vol_data.aux.o \
 	$O/convolve_source_timefunction.aux.o \
 	$O/create_movie_shakemap_AVS_DX_GMT.aux.o \
-	$O/model_update.aux.o \
-	$O/save_external_bin_m_up.aux.o \
 	$O/smooth_vol_data.aux.o \
 	$O/sum_kernels.aux.o \
 	$(EMPTY_MACRO)
+##### DK DK July 2014 commented this out to temporarily avoid a dependency problem in the build system
+#########	$O/save_external_bin_m_up.aux.o \
+#########	$O/model_update.aux.o \
 
 # These files come from the shared directory
 auxiliaries_SHARED_OBJECTS = \
@@ -78,11 +80,12 @@ auxiliaries_MODULES = \
 model_upd_auxiliaries_OBJECTS = \
 	$O/specfem3D_par.spec.o \
 	$O/pml_par.spec.o \
-	$O/model_update.aux.o \
 	$O/initialize_simulation.spec.o \
 	$O/read_mesh_databases.spec.o \
-	$O/save_external_bin_m_up.aux.o \
 	$(EMPTY_MACRO)
+##### DK DK July 2014 commented this out to temporarily avoid a dependency problem in the build system
+#########	$O/model_update.aux.o \
+########	$O/save_external_bin_m_up.aux.o \
 
 model_upd_auxiliaries_SHARED_OBJECTS = \
 	$O/check_mesh_resolution.shared.o \
