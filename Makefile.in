@@ -239,14 +239,13 @@ all: default \
 	xcombine_vol_data \
 	xconvolve_source_timefunction \
 	xcreate_movie_shakemap_AVS_DX_GMT \
+	xmodel_update \
 	xsmooth_vol_data \
 	xsum_kernels \
 	xcheck_mesh_quality_CUBIT_Abaqus \
 	xconvert_skewness_to_angle \
 	xmultiply_CUBIT_Abaqus_mesh_by_1000 \
 	$(EMPTY_MACRO)
-##### DK DK July 2014 commented this out to temporarily avoid a dependency problem in the build system
-#########	xmodel_update \
 
 backup:
 	cp -rp src setup DATA/Par_file* Makefile bak
