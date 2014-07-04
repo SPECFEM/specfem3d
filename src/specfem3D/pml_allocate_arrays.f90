@@ -53,8 +53,8 @@ subroutine pml_allocate_arrays()
     ! store the displ field at n-1 time step
     allocate(displ_old(3,NGLOB_AB),stat=ier)
     if (ier /= 0) stop 'error allocating displ_old array'
-    allocate(displ_new(3,NGLOB_AB),stat=ier)   
-    if (ier /= 0) stop 'error allocating displ_new array'   
+    allocate(displ_new(3,NGLOB_AB),stat=ier)
+    if (ier /= 0) stop 'error allocating displ_new array'
     ! stores derivatives of ux, uy and uz with respect to x, y and z
     allocate(PML_dux_dxl(NGLLX,NGLLY,NGLLZ),stat=ier)
     if (ier /= 0) stop 'error allocating PML_dux_dxl array'
@@ -94,24 +94,24 @@ subroutine pml_allocate_arrays()
     allocate(PML_duz_dzl_old(NGLLX,NGLLY,NGLLZ),stat=ier)
     if (ier /= 0) stop 'error allocating PML_duz_dzl_old array'
 
-    allocate(PML_dux_dxl_new(NGLLX,NGLLY,NGLLZ),stat=ier)   
-    if (ier /= 0) stop 'error allocating PML_dux_dxl_new array'   
-    allocate(PML_dux_dyl_new(NGLLX,NGLLY,NGLLZ),stat=ier)   
-    if (ier /= 0) stop 'error allocating PML_dux_dyl_new array'   
-    allocate(PML_dux_dzl_new(NGLLX,NGLLY,NGLLZ),stat=ier)   
-    if (ier /= 0) stop 'error allocating PML_dux_dzl_new array'   
-    allocate(PML_duy_dxl_new(NGLLX,NGLLY,NGLLZ),stat=ier)   
-    if (ier /= 0) stop 'error allocating PML_duy_dxl_new array'   
-    allocate(PML_duy_dyl_new(NGLLX,NGLLY,NGLLZ),stat=ier)   
-    if (ier /= 0) stop 'error allocating PML_duy_dyl_new array'   
-    allocate(PML_duy_dzl_new(NGLLX,NGLLY,NGLLZ),stat=ier)   
-    if (ier /= 0) stop 'error allocating PML_duy_dzl_new array'   
-    allocate(PML_duz_dxl_new(NGLLX,NGLLY,NGLLZ),stat=ier)   
-    if (ier /= 0) stop 'error allocating PML_duz_dxl_new array'   
-    allocate(PML_duz_dyl_new(NGLLX,NGLLY,NGLLZ),stat=ier)   
-    if (ier /= 0) stop 'error allocating PML_duz_dyl_new array'   
-    allocate(PML_duz_dzl_new(NGLLX,NGLLY,NGLLZ),stat=ier)   
-    if (ier /= 0) stop 'error allocating PML_duz_dzl_new array'   
+    allocate(PML_dux_dxl_new(NGLLX,NGLLY,NGLLZ),stat=ier)
+    if (ier /= 0) stop 'error allocating PML_dux_dxl_new array'
+    allocate(PML_dux_dyl_new(NGLLX,NGLLY,NGLLZ),stat=ier)
+    if (ier /= 0) stop 'error allocating PML_dux_dyl_new array'
+    allocate(PML_dux_dzl_new(NGLLX,NGLLY,NGLLZ),stat=ier)
+    if (ier /= 0) stop 'error allocating PML_dux_dzl_new array'
+    allocate(PML_duy_dxl_new(NGLLX,NGLLY,NGLLZ),stat=ier)
+    if (ier /= 0) stop 'error allocating PML_duy_dxl_new array'
+    allocate(PML_duy_dyl_new(NGLLX,NGLLY,NGLLZ),stat=ier)
+    if (ier /= 0) stop 'error allocating PML_duy_dyl_new array'
+    allocate(PML_duy_dzl_new(NGLLX,NGLLY,NGLLZ),stat=ier)
+    if (ier /= 0) stop 'error allocating PML_duy_dzl_new array'
+    allocate(PML_duz_dxl_new(NGLLX,NGLLY,NGLLZ),stat=ier)
+    if (ier /= 0) stop 'error allocating PML_duz_dxl_new array'
+    allocate(PML_duz_dyl_new(NGLLX,NGLLY,NGLLZ),stat=ier)
+    if (ier /= 0) stop 'error allocating PML_duz_dyl_new array'
+    allocate(PML_duz_dzl_new(NGLLX,NGLLY,NGLLZ),stat=ier)
+    if (ier /= 0) stop 'error allocating PML_duz_dzl_new array'
 
     ! stores C-PML memory variables
     allocate(rmemory_dux_dxl_x(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3),stat=ier)
@@ -172,8 +172,8 @@ subroutine pml_allocate_arrays()
     ! store the potential acoustic field at n-1 time step
     allocate(potential_acoustic_old(NGLOB_AB),stat=ier)
     if (ier /= 0) stop 'error allocating potential_acoustic_old array'
-    allocate(potential_acoustic_new(NGLOB_AB),stat=ier)   
-    if (ier /= 0) stop 'error allocating potential_acoustic_new array'   
+    allocate(potential_acoustic_new(NGLOB_AB),stat=ier)
+    if (ier /= 0) stop 'error allocating potential_acoustic_new array'
 
     ! store the potential acoustic field at n-1 time step
     allocate(potential_dot_dot_acoustic_old(NGLOB_AB),stat=ier)
@@ -194,12 +194,12 @@ subroutine pml_allocate_arrays()
     allocate(PML_dpotential_dzl_old(NGLLX,NGLLY,NGLLZ),stat=ier)
     if (ier /= 0) stop 'error allocating PML_dpotential_dxl_old array'
 
-    allocate(PML_dpotential_dxl_new(NGLLX,NGLLY,NGLLZ),stat=ier)   
-    if(ier /= 0) stop 'error allocating PML_dpotential_dxl_new array'   
-    allocate(PML_dpotential_dyl_new(NGLLX,NGLLY,NGLLZ),stat=ier)   
-    if(ier /= 0) stop 'error allocating PML_dpotential_dxl_new array'   
-    allocate(PML_dpotential_dzl_new(NGLLX,NGLLY,NGLLZ),stat=ier)   
-    if(ier /= 0) stop 'error allocating PML_dpotential_dxl_new array'   
+    allocate(PML_dpotential_dxl_new(NGLLX,NGLLY,NGLLZ),stat=ier)
+    if(ier /= 0) stop 'error allocating PML_dpotential_dxl_new array'
+    allocate(PML_dpotential_dyl_new(NGLLX,NGLLY,NGLLZ),stat=ier)
+    if(ier /= 0) stop 'error allocating PML_dpotential_dxl_new array'
+    allocate(PML_dpotential_dzl_new(NGLLX,NGLLY,NGLLZ),stat=ier)
+    if(ier /= 0) stop 'error allocating PML_dpotential_dxl_new array'
 
     ! stores C-PML memory variables
     allocate(rmemory_dpotential_dxl(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3),stat=ier)
@@ -239,7 +239,7 @@ subroutine pml_allocate_arrays()
 
   if (ELASTIC_SIMULATION) then
     displ_old(:,:) = 0._CUSTOM_REAL
-    displ_new(:,:) = 0._CUSTOM_REAL   
+    displ_new(:,:) = 0._CUSTOM_REAL
 
     PML_dux_dxl(:,:,:) = 0._CUSTOM_REAL
     PML_dux_dyl(:,:,:) = 0._CUSTOM_REAL
@@ -261,15 +261,15 @@ subroutine pml_allocate_arrays()
     PML_duz_dyl_old(:,:,:) = 0._CUSTOM_REAL
     PML_duz_dzl_old(:,:,:) = 0._CUSTOM_REAL
 
-    PML_dux_dxl_new(:,:,:) = 0._CUSTOM_REAL   
-    PML_dux_dyl_new(:,:,:) = 0._CUSTOM_REAL   
-    PML_dux_dzl_new(:,:,:) = 0._CUSTOM_REAL   
-    PML_duy_dxl_new(:,:,:) = 0._CUSTOM_REAL   
-    PML_duy_dyl_new(:,:,:) = 0._CUSTOM_REAL   
-    PML_duy_dzl_new(:,:,:) = 0._CUSTOM_REAL   
-    PML_duz_dxl_new(:,:,:) = 0._CUSTOM_REAL   
-    PML_duz_dyl_new(:,:,:) = 0._CUSTOM_REAL   
-    PML_duz_dzl_new(:,:,:) = 0._CUSTOM_REAL   
+    PML_dux_dxl_new(:,:,:) = 0._CUSTOM_REAL
+    PML_dux_dyl_new(:,:,:) = 0._CUSTOM_REAL
+    PML_dux_dzl_new(:,:,:) = 0._CUSTOM_REAL
+    PML_duy_dxl_new(:,:,:) = 0._CUSTOM_REAL
+    PML_duy_dyl_new(:,:,:) = 0._CUSTOM_REAL
+    PML_duy_dzl_new(:,:,:) = 0._CUSTOM_REAL
+    PML_duz_dxl_new(:,:,:) = 0._CUSTOM_REAL
+    PML_duz_dyl_new(:,:,:) = 0._CUSTOM_REAL
+    PML_duz_dzl_new(:,:,:) = 0._CUSTOM_REAL
 
     rmemory_dux_dxl_x(:,:,:,:,:) = 0._CUSTOM_REAL
     rmemory_dux_dyl_x(:,:,:,:,:) = 0._CUSTOM_REAL
@@ -301,7 +301,7 @@ subroutine pml_allocate_arrays()
 
   if (ACOUSTIC_SIMULATION) then
     potential_acoustic_old(:) = 0._CUSTOM_REAL
-    potential_acoustic_new(:) = 0._CUSTOM_REAL   
+    potential_acoustic_new(:) = 0._CUSTOM_REAL
     potential_dot_dot_acoustic_old(:) = 0._CUSTOM_REAL
     PML_dpotential_dxl(:,:,:) = 0._CUSTOM_REAL
     PML_dpotential_dyl(:,:,:) = 0._CUSTOM_REAL
@@ -481,15 +481,15 @@ subroutine pml_allocate_arrays_dummy()
   if(.not. allocated(PML_duz_dxl_old)) allocate(PML_duz_dxl_old(1,1,1))
   if(.not. allocated(PML_duz_dyl_old)) allocate(PML_duz_dyl_old(1,1,1))
   if(.not. allocated(PML_duz_dzl_old)) allocate(PML_duz_dzl_old(1,1,1))
-  if(.not. allocated(PML_dux_dxl_new)) allocate(PML_dux_dxl_new(1,1,1))   
-  if(.not. allocated(PML_dux_dyl_new)) allocate(PML_dux_dyl_new(1,1,1))   
-  if(.not. allocated(PML_dux_dzl_new)) allocate(PML_dux_dzl_new(1,1,1))   
-  if(.not. allocated(PML_duy_dxl_new)) allocate(PML_duy_dxl_new(1,1,1))   
-  if(.not. allocated(PML_duy_dyl_new)) allocate(PML_duy_dyl_new(1,1,1))   
-  if(.not. allocated(PML_duy_dzl_new)) allocate(PML_duy_dzl_new(1,1,1))   
-  if(.not. allocated(PML_duz_dxl_new)) allocate(PML_duz_dxl_new(1,1,1))   
-  if(.not. allocated(PML_duz_dyl_new)) allocate(PML_duz_dyl_new(1,1,1))   
-  if(.not. allocated(PML_duz_dzl_new)) allocate(PML_duz_dzl_new(1,1,1))   
+  if(.not. allocated(PML_dux_dxl_new)) allocate(PML_dux_dxl_new(1,1,1))
+  if(.not. allocated(PML_dux_dyl_new)) allocate(PML_dux_dyl_new(1,1,1))
+  if(.not. allocated(PML_dux_dzl_new)) allocate(PML_dux_dzl_new(1,1,1))
+  if(.not. allocated(PML_duy_dxl_new)) allocate(PML_duy_dxl_new(1,1,1))
+  if(.not. allocated(PML_duy_dyl_new)) allocate(PML_duy_dyl_new(1,1,1))
+  if(.not. allocated(PML_duy_dzl_new)) allocate(PML_duy_dzl_new(1,1,1))
+  if(.not. allocated(PML_duz_dxl_new)) allocate(PML_duz_dxl_new(1,1,1))
+  if(.not. allocated(PML_duz_dyl_new)) allocate(PML_duz_dyl_new(1,1,1))
+  if(.not. allocated(PML_duz_dzl_new)) allocate(PML_duz_dzl_new(1,1,1))
   if(.not. allocated(rmemory_dux_dxl_x)) allocate(rmemory_dux_dxl_x(1,1,1,1,3))
   if(.not. allocated(rmemory_dux_dyl_x)) allocate(rmemory_dux_dyl_x(1,1,1,1,3))
   if(.not. allocated(rmemory_dux_dzl_x)) allocate(rmemory_dux_dzl_x(1,1,1,1,3))
@@ -512,7 +512,7 @@ subroutine pml_allocate_arrays_dummy()
   if(.not. allocated(rmemory_duz_dyl_z)) allocate(rmemory_duz_dyl_z(1,1,1,1,3))
   if(.not. allocated(rmemory_duz_dzl_z)) allocate(rmemory_duz_dzl_z(1,1,1,1,3))
   if(.not. allocated(displ_old)) allocate(displ_old(3,1))
-  if(.not. allocated(displ_new)) allocate(displ_new(3,1))   
+  if(.not. allocated(displ_new)) allocate(displ_new(3,1))
   if(.not. allocated(rmemory_displ_elastic)) allocate(rmemory_displ_elastic(1,1,1,1,1,3))
   if(.not. allocated(accel_elastic_CPML)) allocate(accel_elastic_CPML(1,1,1,1))
   if(.not. allocated(PML_dpotential_dxl)) allocate(PML_dpotential_dxl(1,1,1))
@@ -521,14 +521,14 @@ subroutine pml_allocate_arrays_dummy()
   if(.not. allocated(PML_dpotential_dxl_old)) allocate(PML_dpotential_dxl_old(1,1,1))
   if(.not. allocated(PML_dpotential_dyl_old)) allocate(PML_dpotential_dyl_old(1,1,1))
   if(.not. allocated(PML_dpotential_dzl_old)) allocate(PML_dpotential_dzl_old(1,1,1))
-  if(.not. allocated(PML_dpotential_dxl_new)) allocate(PML_dpotential_dxl_new(1,1,1))   
-  if(.not. allocated(PML_dpotential_dyl_new)) allocate(PML_dpotential_dyl_new(1,1,1))   
-  if(.not. allocated(PML_dpotential_dzl_new)) allocate(PML_dpotential_dzl_new(1,1,1))   
+  if(.not. allocated(PML_dpotential_dxl_new)) allocate(PML_dpotential_dxl_new(1,1,1))
+  if(.not. allocated(PML_dpotential_dyl_new)) allocate(PML_dpotential_dyl_new(1,1,1))
+  if(.not. allocated(PML_dpotential_dzl_new)) allocate(PML_dpotential_dzl_new(1,1,1))
   if(.not. allocated(rmemory_dpotential_dxl)) allocate(rmemory_dpotential_dxl(1,1,1,1,3))
   if(.not. allocated(rmemory_dpotential_dyl)) allocate(rmemory_dpotential_dyl(1,1,1,1,3))
   if(.not. allocated(rmemory_dpotential_dzl)) allocate(rmemory_dpotential_dzl(1,1,1,1,3))
   if(.not. allocated(potential_acoustic_old)) allocate(potential_acoustic_old(1))
-  if(.not. allocated(potential_acoustic_new)) allocate(potential_acoustic_new(1))   
+  if(.not. allocated(potential_acoustic_new)) allocate(potential_acoustic_new(1))
   if(.not. allocated(potential_dot_dot_acoustic_old)) allocate(potential_dot_dot_acoustic_old(1))
   if(.not. allocated(rmemory_potential_acoustic)) allocate(rmemory_potential_acoustic(1,1,1,1,3))
   if(.not. allocated(potential_dot_dot_acoustic_CPML)) allocate(potential_dot_dot_acoustic_CPML(1,1,1))

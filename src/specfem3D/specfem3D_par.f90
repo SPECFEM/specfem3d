@@ -193,11 +193,12 @@ module specfem_par
   integer :: NPROC_XI,NPROC_ETA
   double precision :: LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX
 
-  character(len=MAX_STRING_LEN) :: LOCAL_PATH,TOMOGRAPHY_PATH,prname,dsmname,TRAC_PATH
+  logical :: COUPLE_WITH_DSM
+
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH,TOMOGRAPHY_PATH,prname,dsmname,TRACTION_PATH
 
   logical :: ADIOS_ENABLED
-  logical :: ADIOS_FOR_DATABASES, ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, &
-             ADIOS_FOR_KERNELS
+  logical :: ADIOS_FOR_DATABASES, ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, ADIOS_FOR_KERNELS
 
 ! names of the data files for all the processors in MPI
   character(len=MAX_STRING_LEN) :: outputname

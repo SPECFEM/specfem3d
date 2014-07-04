@@ -161,8 +161,6 @@
 !!
 !!-----------------------------------------------------------
 
-  logical, parameter :: COUPLE_WITH_DSM = .false. !!! .true.
-
 ! some old tests (currently unstable; do not remove them though, we might fix this one day)
   integer, parameter :: IIN_veloc_dsm = 51, IIN_tract_dsm = 52, Ntime_step_dsm = 100
 
