@@ -38,7 +38,7 @@
                         ispec_is_elastic,SIMULATION_TYPE,SAVE_FORWARD, &
                         it, &
                         b_num_abs_boundary_faces,b_reclen_field,b_absorb_field, &
-                        it_dsm,Veloc_dsm_boundary,Tract_dsm_boundary)
+                        it_dsm,Veloc_dsm_boundary,Tract_dsm_boundary,COUPLE_WITH_DSM)
 
   use constants
 
@@ -74,13 +74,19 @@
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLSQUARE,b_num_abs_boundary_faces):: b_absorb_field
 
   logical:: SAVE_FORWARD
+  logical:: COUPLE_WITH_DSM
 
 ! local parameters
   real(kind=CUSTOM_REAL) vx,vy,vz,nx,ny,nz,tx,ty,tz,vn,jacobianw
   integer :: ispec,iglob,i,j,k,iface,igll
 
+<<<<<<< HEAD
   !! CD modif. : begin (implemented by VM) !! For coupling with DSM
    
+=======
+  !! CD CD : begin !! For coupling with DSM
+
+>>>>>>> 1b0834db310bc7cfc52af83933a00e7b5c44fb15
   ! See also DSM parameters in setup/constants.h.in
   real(kind=CUSTOM_REAL) :: Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
   real(kind=CUSTOM_REAL) :: Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
@@ -95,7 +101,11 @@
     endif
   endif
 
+<<<<<<< HEAD
   !! CD modif. : end
+=======
+  !! CD CD
+>>>>>>> 1b0834db310bc7cfc52af83933a00e7b5c44fb15
 
   ! checks if anything to do
   if( num_abs_boundary_faces == 0 ) return
@@ -123,13 +133,13 @@
           vy=veloc(2,iglob)
           vz=veloc(3,iglob)
 
-          !! CD modif. : begin (implemented by VM) !! For coupling with DSM
+          !! CD CD !! For coupling with DSM
           if (COUPLE_WITH_DSM) then
             vx = vx - Veloc_dsm_boundary(1,it_dsm,igll,iface)
             vy = vy - Veloc_dsm_boundary(2,it_dsm,igll,iface)
             vz = vz - Veloc_dsm_boundary(3,it_dsm,igll,iface)
           endif
-          !! CD modif. : end
+          !! CD CD
 
           ! gets associated normal
           nx = abs_boundary_normal(1,igll,iface)
@@ -144,13 +154,13 @@
           ty = rho_vp(i,j,k,ispec)*vn*ny + rho_vs(i,j,k,ispec)*(vy-vn*ny)
           tz = rho_vp(i,j,k,ispec)*vn*nz + rho_vs(i,j,k,ispec)*(vz-vn*nz)
 
-          !! CD modif. : begin (implemented by VM) !! For coupling with DSM
+          !! CD CD !! For coupling with DSM
           if (COUPLE_WITH_DSM) then
             tx = tx - Tract_dsm_boundary(1,it_dsm,igll,iface)
             ty = ty - Tract_dsm_boundary(2,it_dsm,igll,iface)
             tz = tz - Tract_dsm_boundary(3,it_dsm,igll,iface)
           endif
-          !! CD modif. : end
+          !! CD CD
 
           ! gets associated, weighted jacobian
           jacobianw = abs_boundary_jacobian2Dw(igll,iface)
@@ -180,13 +190,13 @@
     endif
   endif
 
-  !! CD modif. : begin (implemented by VM) !! For coupling with DSM
+  !! CD CD !! For coupling with DSM
   if (COUPLE_WITH_DSM) then
     if (phase_is_inner .eqv. .true.) then
       it_dsm = it_dsm + 1
     endif
   endif
-  !! CD modif. : end
+  !! CD CD
 
   end subroutine compute_stacey_viscoelastic
 !
@@ -278,7 +288,7 @@
 
 !=============================================================================
 !
-  !! CD modif. : begin (implemented by VM) !! For coupling with DSM
+  !! CD CD !! For coupling with DSM
 !
 !-----------------------------------------------------------------------------
 
@@ -315,7 +325,7 @@
 
   end subroutine read_dsm_file
 
-  !! CD modif. : end
+  !! CD CD
 !
 !=====================================================================
 ! for elastic solver on GPU
@@ -325,7 +335,7 @@
   subroutine compute_stacey_viscoelastic_GPU(phase_is_inner,num_abs_boundary_faces, &
                         SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it, &
                         b_num_abs_boundary_faces,b_reclen_field,b_absorb_field, &
-                        Mesh_pointer,it_dsm,Veloc_dsm_boundary,Tract_dsm_boundary)
+                        Mesh_pointer,it_dsm,Veloc_dsm_boundary,Tract_dsm_boundary,COUPLE_WITH_DSM)
 
   use constants
 
@@ -344,11 +354,16 @@
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLSQUARE,b_num_abs_boundary_faces):: b_absorb_field
 
   logical:: SAVE_FORWARD
+  logical:: COUPLE_WITH_DSM
 
   ! GPU_MODE variables
   integer(kind=8) :: Mesh_pointer
 
+<<<<<<< HEAD
   !! CD modif. : begin (implemented by VM) !! For coupling with DSM
+=======
+  !! CD CD : begin !! For coupling with DSM
+>>>>>>> 1b0834db310bc7cfc52af83933a00e7b5c44fb15
   real(kind=CUSTOM_REAL) :: Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
   real(kind=CUSTOM_REAL) :: Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
 
@@ -361,8 +376,6 @@
       endif
     endif
   endif
-
-  !! CD modif. : end
 
   ! checks if anything to do
   if( num_abs_boundary_faces == 0 ) return
@@ -386,13 +399,13 @@
     endif
   endif
 
-  !! CD modif. (implemented by VM) : begin !! For coupling with DSM
+  !! CD CD : begin !! For coupling with DSM
   if (COUPLE_WITH_DSM) then
     if (phase_is_inner .eqv. .true.) then
       it_dsm = it_dsm + 1
     endif
   endif
-  !! CD modif. : end
+  !! CD CD
 
   end subroutine compute_stacey_viscoelastic_GPU
 

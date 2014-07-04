@@ -66,12 +66,12 @@ module pml_par
   ! store the field of displ + (1-2 * \theta)/2*deltat * veloc + (1-\theta)/2*deltat**2 * accel
   ! for second order convolution scheme
   ! where displ, veloc, accel are defined at n-1 time step
-  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: displ_old  
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: displ_old
   real(kind=CUSTOM_REAL), parameter :: theta = 1.0_CUSTOM_REAL/8.0_CUSTOM_REAL
 
   ! store the field of displ + (1-2 * \theta)/2*deltat * veloc for second order convolution scheme
   ! where displ is defined at n time step, while veloc is predicted veloc at "n" time step
-  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: displ_new  
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: displ_new
 
   ! derivatives of ux, uy and uz with respect to x, y and z
   ! in PML_du* computation displ at "n" time step is used
@@ -85,20 +85,20 @@ module pml_par
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_duz_dxl_old,PML_duz_dyl_old,PML_duz_dzl_old
 
   ! in PML_du*_new computation we replace displ with displ_new
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_dux_dxl_new,PML_dux_dyl_new,PML_dux_dzl_new   
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_duy_dxl_new,PML_duy_dyl_new,PML_duy_dzl_new   
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_duz_dxl_new,PML_duz_dyl_new,PML_duz_dzl_new   
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_dux_dxl_new,PML_dux_dyl_new,PML_dux_dzl_new
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_duy_dxl_new,PML_duy_dyl_new,PML_duy_dzl_new
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_duz_dxl_new,PML_duz_dyl_new,PML_duz_dzl_new
 
   !store the field of
-  !potential_acoustic + (1-2 * \theta)/2*deltat * potential_dot_acoustic + (1-\theta)/2*deltat**2 * potential_dot_dot_acoustic 
+  !potential_acoustic + (1-2 * \theta)/2*deltat * potential_dot_acoustic + (1-\theta)/2*deltat**2 * potential_dot_dot_acoustic
   !where potential_acoustic, potential_dot_acoustic, potential_dot_dot_acoustic are defined at "n-1" time step
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: potential_acoustic_old
 
   !store the field of
   !potential_acoustic + (1-2 * \theta)/2*deltat * potential_dot_acoustic
-  !potential_acoustic is defined at "n" time step, 
-  !and potential_dot_acoustic is predicted potential_dot_acoustic at "n" time step 
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: potential_acoustic_new  
+  !potential_acoustic is defined at "n" time step,
+  !and potential_dot_acoustic is predicted potential_dot_acoustic at "n" time step
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: potential_acoustic_new
 
   ! derivatives of potential with respect to x, y and z
   ! in computation potential_acoustic at "n" time step is used
@@ -110,7 +110,7 @@ module pml_par
 
   ! we replace potential_acoustic at "n" time step with
   ! we replace potential_acoustic with potential_acoustic_old with potential_acoustic_new
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new   
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new
 
   ! C-PML memory variables
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_dux_dxl_x,rmemory_dux_dyl_x,rmemory_dux_dzl_x

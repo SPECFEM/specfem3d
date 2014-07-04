@@ -43,8 +43,8 @@ subroutine compute_forces_viscoelastic()
   logical:: phase_is_inner
   integer:: iface,ispec,igll,i,j,k,iglob
 
- 
-  ! kbai added the following two synchronizations to ensure that the displacement and velocity values 
+
+  ! kbai added the following two synchronizations to ensure that the displacement and velocity values
   ! at nodes on MPI interfaces stay equal on all processors that share the node.
   ! Do this only for dynamic rupture simulations
   if (SIMULATION_TYPE_DYN) then
@@ -118,7 +118,7 @@ subroutine compute_forces_viscoelastic()
                        ispec_is_elastic,SIMULATION_TYPE,SAVE_FORWARD, &
                        it, &
                        b_num_abs_boundary_faces,b_reclen_field,b_absorb_field,&
-                       it_dsm,Veloc_dsm_boundary,Tract_dsm_boundary)
+                       it_dsm,Veloc_dsm_boundary,Tract_dsm_boundary,COUPLE_WITH_DSM)
     endif
 
 
@@ -136,7 +136,7 @@ subroutine compute_forces_viscoelastic()
                        ispec_is_inner,phase_is_inner,&
                        PML_CONDITIONS,&
                        SIMULATION_TYPE,.false., &
-                       potential_acoustic,potential_dot_acoustic)  
+                       potential_acoustic,potential_dot_acoustic)
 
 
         else
@@ -155,7 +155,7 @@ subroutine compute_forces_viscoelastic()
                               ispec_is_inner,phase_is_inner,&
                               PML_CONDITIONS,&
                               SIMULATION_TYPE,.false., &
-                              potential_acoustic,potential_dot_acoustic)  
+                              potential_acoustic,potential_dot_acoustic)
 
         endif
 
@@ -186,8 +186,8 @@ subroutine compute_forces_viscoelastic()
                         ispec_is_inner,phase_is_inner)
     endif
 
-    !! CD modif. : begin (implemented by VM) !! For coupling with DSM
-    if(.not. COUPLE_WITH_DSM) then 
+    !! CD CD !! For coupling with DSM
+    if(.not. COUPLE_WITH_DSM) then
       ! adds source term (single-force/moment-tensor solution)
       call compute_add_sources_viscoelastic(NSPEC_AB,NGLOB_AB,accel, &
                                             ibool,ispec_is_inner,phase_is_inner, &
@@ -198,7 +198,7 @@ subroutine compute_forces_viscoelastic()
                                             nadj_rec_local,adj_sourcearrays, &
                                             NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY)
     endif
-    !! CD modif. : end    
+    !! CD CD
 
     ! assemble all the contributions between slices using MPI
     if( phase_is_inner .eqv. .false. ) then
@@ -396,7 +396,7 @@ subroutine compute_forces_viscoelastic_bpwf()
                       ispec_is_inner,phase_is_inner,&
                       PML_CONDITIONS,&
                       SIMULATION_TYPE,.true., &
-                      potential_acoustic,potential_dot_acoustic)  
+                      potential_acoustic,potential_dot_acoustic)
 
       endif ! num_coupling_ac_el_faces
     endif
@@ -699,7 +699,7 @@ subroutine compute_forces_viscoelastic_GPU()
                                            SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it, &
                                            b_num_abs_boundary_faces,b_reclen_field,b_absorb_field, &
                                            Mesh_pointer, &
-                                           it_dsm,Veloc_dsm_boundary,Tract_dsm_boundary)
+                                           it_dsm,Veloc_dsm_boundary,Tract_dsm_boundary,COUPLE_WITH_DSM)
     endif
 
     ! acoustic coupling

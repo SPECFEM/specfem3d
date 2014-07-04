@@ -61,16 +61,16 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                      PML_dux_dxl_old, PML_dux_dyl_old, PML_dux_dzl_old, &
                      PML_duy_dxl_old, PML_duy_dyl_old, PML_duy_dzl_old, &
                      PML_duz_dxl_old, PML_duz_dyl_old, PML_duz_dzl_old, &
-                     PML_dux_dxl_new, PML_dux_dyl_new, PML_dux_dzl_new, &   
-                     PML_duy_dxl_new, PML_duy_dyl_new, PML_duy_dzl_new, &   
-                     PML_duz_dxl_new, PML_duz_dyl_new, PML_duz_dzl_new, &   
+                     PML_dux_dxl_new, PML_dux_dyl_new, PML_dux_dzl_new, &
+                     PML_duy_dxl_new, PML_duy_dyl_new, PML_duy_dzl_new, &
+                     PML_duz_dxl_new, PML_duz_dyl_new, PML_duz_dzl_new, &
                      rmemory_dux_dxl_x, rmemory_duy_dyl_x, rmemory_duz_dzl_x, &
                      rmemory_dux_dyl_x, rmemory_dux_dzl_x, rmemory_duz_dxl_x, rmemory_duy_dxl_x, &
                      rmemory_dux_dxl_y, rmemory_duz_dzl_y, rmemory_duy_dyl_y, &
                      rmemory_duy_dxl_y, rmemory_duy_dzl_y, rmemory_duz_dyl_y, rmemory_dux_dyl_y, &
                      rmemory_dux_dxl_z, rmemory_duy_dyl_z, rmemory_duz_dzl_z, &
                      rmemory_duz_dxl_z, rmemory_duz_dyl_z, rmemory_duy_dzl_z, rmemory_dux_dzl_z, &
-                     rmemory_displ_elastic,displ_old,displ_new   
+                     rmemory_displ_elastic,displ_old,displ_new
   use fault_solver_dynamic, only : Kelvin_Voigt_eta
   use specfem_par, only : FULL_ATTENUATION_SOLID
 
@@ -192,13 +192,13 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &
     tempx1_att,tempx2_att,tempx3_att,tempy1_att,tempy2_att,tempy3_att,tempz1_att,tempz2_att,tempz3_att
 
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &   
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &
     tempx1_att_new,tempx2_att_new,tempx3_att_new, &
     tempy1_att_new,tempy2_att_new,tempy3_att_new, &
-    tempz1_att_new,tempz2_att_new,tempz3_att_new   
+    tempz1_att_new,tempz2_att_new,tempz3_att_new
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dummyx_loc_att,dummyy_loc_att,dummyz_loc_att
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dummyx_loc_att_new,dummyy_loc_att_new,dummyz_loc_att_new   
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dummyx_loc_att_new,dummyy_loc_att_new,dummyz_loc_att_new
 
   real(kind=CUSTOM_REAL) :: eta
 

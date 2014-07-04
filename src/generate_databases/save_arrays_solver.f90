@@ -25,7 +25,6 @@
 !
 !=====================================================================
 
-
 ! for external mesh
 
   subroutine save_arrays_solver_ext_mesh(nspec,nglob,APPROXIMATE_OCEAN_LOAD,ibool, &
@@ -384,7 +383,7 @@
 !
   subroutine save_arrays_solver_files(nspec,nglob,ibool)
 
-  use generate_databases_par, only: myrank
+  use generate_databases_par, only: myrank,COUPLE_WITH_DSM
   use create_regions_mesh_ext_par
 
   implicit none
@@ -571,7 +570,7 @@
       deallocate(iglob_tmp,v_tmp_i)
     endif
 
-    !! CD modif. : begin (implemented by VM) !! For coupling with DSM
+    !! CD CD !! For coupling with DSM
     if (COUPLE_WITH_DSM) then
       !if (num_abs_boundary_faces > 0) then
       filename = prname(1:len_trim(prname))//'absorb_dsm'
@@ -589,8 +588,8 @@
       write(27) ispec_is_inner
       write(27) ispec_is_elastic
       close(27)
-        
-      !end if
+
+      !endif
 
       !! Don't delete this comment for the moment
       !!
@@ -604,7 +603,7 @@
       !!endif
 
     endif
-    !! CD modif. : end
+    !! CD CD
 
     ! acoustic-poroelastic domains
     if( ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION ) then
