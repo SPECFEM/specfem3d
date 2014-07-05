@@ -365,7 +365,7 @@ def refinement(nvol,vol,filename=None):
                    cubitcommand= 'refine node in surf '+str(tsurf)+' numsplit 1 bias 1.0 depth '+str(idepth)
                 cubit.cmd(cubitcommand)
 
-        if not nvol and cfg.volume_type == 'verticalsandwich_volume_ascii_regulargrid_mpiregularmap':
+    if not nvol and cfg.volume_type == 'verticalsandwich_volume_ascii_regulargrid_mpiregularmap':
             # AAA
             # Volume 2 is always in between the 2nd and 3rd vertical surfaces from the left
             cubitcommand = "refine node in volume 2 numsplit 1 depth 0"
