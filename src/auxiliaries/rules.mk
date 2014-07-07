@@ -36,23 +36,21 @@ auxiliaries_TARGETS = \
 	$E/xcombine_vol_data \
 	$E/xconvolve_source_timefunction \
 	$E/xcreate_movie_shakemap_AVS_DX_GMT \
+	$E/xmodel_update \
 	$E/xsmooth_vol_data \
 	$E/xsum_kernels \
 	$(EMPTY_MACRO)
-##### DK DK July 2014 commented this out to temporarily avoid a dependency problem in the build system
-###########	$E/xmodel_update \
 
 auxiliaries_OBJECTS = \
 	$O/combine_surf_data.aux.o \
 	$O/combine_vol_data.aux.o \
 	$O/convolve_source_timefunction.aux.o \
 	$O/create_movie_shakemap_AVS_DX_GMT.aux.o \
+	$O/model_update.aux.o \
+	$O/save_external_bin_m_up.aux.o \
 	$O/smooth_vol_data.aux.o \
 	$O/sum_kernels.aux.o \
 	$(EMPTY_MACRO)
-##### DK DK July 2014 commented this out to temporarily avoid a dependency problem in the build system
-#########	$O/save_external_bin_m_up.aux.o \
-#########	$O/model_update.aux.o \
 
 # These files come from the shared directory
 auxiliaries_SHARED_OBJECTS = \
@@ -80,12 +78,11 @@ auxiliaries_MODULES = \
 model_upd_auxiliaries_OBJECTS = \
 	$O/specfem3D_par.spec.o \
 	$O/pml_par.spec.o \
+	$O/model_update.aux.o \
 	$O/initialize_simulation.spec.o \
 	$O/read_mesh_databases.spec.o \
+	$O/save_external_bin_m_up.aux.o \
 	$(EMPTY_MACRO)
-##### DK DK July 2014 commented this out to temporarily avoid a dependency problem in the build system
-#########	$O/model_update.aux.o \
-########	$O/save_external_bin_m_up.aux.o \
 
 model_upd_auxiliaries_SHARED_OBJECTS = \
 	$O/check_mesh_resolution.shared.o \
@@ -296,6 +293,7 @@ $E/xsum_kernels: $(sum_kernels_auxiliaries_OBJECTS) $(sum_kernels_auxiliaries_SH
 ### Module dependencies
 ###
 
+# combine_vol_data
 $O/combine_vol_data_adios_stubs.aux_noadios.o: $O/unused_mod.shared_module.o $O/adios_manager_stubs.shared_noadios.o
 ifeq ($(ADIOS),yes)
 $O/combine_vol_data.aux.o: $O/combine_vol_data_impl.aux.o $O/combine_vol_data_adios_impl.aux_adios.o
@@ -305,6 +303,10 @@ $O/adios_helpers.shared_adios.o: \
 else
 $O/combine_vol_data.aux.o: $O/combine_vol_data_impl.aux.o $O/combine_vol_data_adios_stubs.aux_noadios.o
 endif
+
+# model_update
+$O/model_update.aux.o: $O/specfem3D_par.spec.o
+$O/save_external_bin_m_up.aux.o: $O/specfem3D_par.spec.o
 
 
 #######################################
@@ -328,6 +330,6 @@ $O/%.aux.o: $S/%.f90 $O/constants_mod.shared_module.o
 $O/%.aux_adios.o: $S/%.f90 $O/constants_mod.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.aux_noadios.o: $S/%.f90
+$O/%.aux_noadios.o: $S/%.f90 $O/constants_mod.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
