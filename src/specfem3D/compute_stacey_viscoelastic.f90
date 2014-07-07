@@ -80,13 +80,8 @@
   real(kind=CUSTOM_REAL) vx,vy,vz,nx,ny,nz,tx,ty,tz,vn,jacobianw
   integer :: ispec,iglob,i,j,k,iface,igll
 
-<<<<<<< HEAD
   !! CD modif. : begin (implemented by VM) !! For coupling with DSM
    
-=======
-  !! CD CD : begin !! For coupling with DSM
-
->>>>>>> 1b0834db310bc7cfc52af83933a00e7b5c44fb15
   ! See also DSM parameters in setup/constants.h.in
   real(kind=CUSTOM_REAL) :: Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
   real(kind=CUSTOM_REAL) :: Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
@@ -101,11 +96,7 @@
     endif
   endif
 
-<<<<<<< HEAD
   !! CD modif. : end
-=======
-  !! CD CD
->>>>>>> 1b0834db310bc7cfc52af83933a00e7b5c44fb15
 
   ! checks if anything to do
   if( num_abs_boundary_faces == 0 ) return
