@@ -27,7 +27,7 @@ ABSORBING_CONDITIONS            = .true.
 
 # save AVS or OpenDX movies
 MOVIE_SURFACE                   = .false.
-MOVIE_VOLUME                    = .truee.
+MOVIE_VOLUME                    = .true.
 NTSTEP_BETWEEN_FRAMES           =  25
 CREATE_SHAKEMAP                 = .false.
 SAVE_DISPLACEMENT               = .false.
@@ -38,7 +38,7 @@ HDUR_MOVIE                      = 0.0
 SAVE_MESH_FILES                 = .true.
 
 # path to store the local database file on each node
-LOCAL_PATH                      = ../in_out_files/DATABASES_MPI
+LOCAL_PATH                      = ../OUTPUT_FILES/DATABASES_MPI
 
 # interval at which we output time step info and max of norm of displacement
 NTSTEP_BETWEEN_OUTPUT_INFO      = 25
@@ -53,5 +53,5 @@ NTSTEP_BETWEEN_READ_ADJSRC      = 0      # 0 = read the whole adjoint sources at
 PRINT_SOURCE_TIME_FUNCTION      = .false.
 
 # path to store the local database file on each node
-TRAC_PATH                      = ../in_out_files/Tractions
+TRAC_PATH                      = ../OUTPUT_FILES/Tractions
 

@@ -1,5 +1,5 @@
  ../Tract/
  ../MESH/
- ../in_out_files/DATABASES_MPI/
- ../in_out_files/Tractions/
+ ../OUTPUT_FILES/DATABASES_MPI/
+ ../OUTPUT_FILES/Tractions/
  1
