@@ -12,11 +12,11 @@ UTM_PROJECTION_ZONE             = 11
 SUPPRESS_UTM_PROJECTION         = .true.
 
 # number of MPI processors
-NPROC                           = 24
+NPROC                           = 128
 
 # time step parameters
-NSTEP                           = 12000
-DT                              = 0.1
+NSTEP                           = 5000
+DT                              = 0.0125
 
 # number of nodes for 2D and 3D shape functions for hexahedra
 # we use either 8-node mesh elements (bricks) or 27-node elements.
@@ -87,7 +87,7 @@ SAVE_MESH_FILES                 = .true.
 LOCAL_PATH                      = ../OUTPUT_FILES/DATABASES_MPI
 
 # interval at which we output time step info and max of norm of displacement
-NTSTEP_BETWEEN_OUTPUT_INFO      = 25
+NTSTEP_BETWEEN_OUTPUT_INFO      = 100
 
 # interval in time steps for writing of seismograms
 NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 100
