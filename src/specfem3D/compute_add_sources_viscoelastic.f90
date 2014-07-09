@@ -447,15 +447,9 @@
   real(kind=CUSTOM_REAL) stf_used,stf_used_total_all,time_source
   integer :: isource,iglob,i,j,k,ispec
 
-<<<<<<< HEAD
-  !! CD modif. : begin (implemented by VM) !! For coupling with DSM
-  if (COUPLE_WITH_DSM) return
-  !! CD modif. : end
-=======
 ! no source inside the mesh if we are coupling with DSM
 ! because the source is precisely the wavefield coming from the DSM traction file
   if (COUPLE_WITH_DSM) return
->>>>>>> 1b0834db310bc7cfc52af83933a00e7b5c44fb15
 
 ! plotting source time function
   if(PRINT_SOURCE_TIME_FUNCTION .and. .not. phase_is_inner ) then
@@ -674,15 +668,9 @@
   !equivalence (i2head,i4head,r4head)    ! share the same 240-byte-memory
   double precision :: hxir(NGLLX),hpxir(NGLLX),hetar(NGLLY),hpetar(NGLLY),hgammar(NGLLZ),hpgammar(NGLLZ)
 
-<<<<<<< HEAD
-  !! CD modif. : begin (implemented by VM) !! For coupling with DSM
-  if (COUPLE_WITH_DSM) return
-  !! CD modif. : end
-=======
 ! no source inside the mesh if we are coupling with DSM
 ! because the source is precisely the wavefield coming from the DSM traction file
   if (COUPLE_WITH_DSM) return
->>>>>>> 1b0834db310bc7cfc52af83933a00e7b5c44fb15
 
 ! plotting source time function
   if(PRINT_SOURCE_TIME_FUNCTION .and. .not. phase_is_inner ) then

@@ -90,7 +90,7 @@ NPROC=24
 CPUS=24
 
 # MPIRUN COMMAND 
-MPIRUN="mpirun"
+MPIRUN="mpirun -machinefile /home/cluster_maintenance/mymachines2"
 
 # ENTER OPTION FOR MPIRUN 
 OPTION=" -np "${NPROC}

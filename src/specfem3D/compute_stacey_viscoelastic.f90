@@ -350,11 +350,7 @@
   ! GPU_MODE variables
   integer(kind=8) :: Mesh_pointer
 
-<<<<<<< HEAD
-  !! CD modif. : begin (implemented by VM) !! For coupling with DSM
-=======
   !! CD CD : begin !! For coupling with DSM
->>>>>>> 1b0834db310bc7cfc52af83933a00e7b5c44fb15
   real(kind=CUSTOM_REAL) :: Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
   real(kind=CUSTOM_REAL) :: Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
 
@@ -367,6 +363,8 @@
       endif
     endif
   endif
+
+  !! CD CD : end
 
   ! checks if anything to do
   if( num_abs_boundary_faces == 0 ) return
@@ -396,7 +394,7 @@
       it_dsm = it_dsm + 1
     endif
   endif
-  !! CD CD
+  !! CD CD : end
 
   end subroutine compute_stacey_viscoelastic_GPU
 
