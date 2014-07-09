@@ -1,7 +1,7 @@
 #  ABSOLUTE PATH FOR EXECUTABLES
-DSM_BINARY_PATH          =  /home/durochat/Codes/SPECFEM3Ds/specfem3d/utils/DSM_FOR_SPECFEM3D/bin
-SPECFEM3D_BINARY_PATH    =  /home/durochat/Codes/SPECFEM3Ds/specfem3d/bin
-SHELL_SCRIPT_PATH        =  /home/durochat/Codes/SPECFEM3Ds/specfem3d/utils/DSM_FOR_SPECFEM3D/shells
+DSM_BINARY_PATH          =  /scratch/vmonteil/test_hybrid_for_distribute/DSM_SPECFEM/bin
+SPECFEM3D_BINARY_PATH    =  /scratch/vmonteil/test_hybrid_for_distribute/DSM_SPECFEM/SEMH/bin
+SHELL_SCRIPT_PATH        =  /scratch/vmonteil/test_hybrid_for_distribute/DSM_SPECFEM/shells
 
 
 # DIRECTORY CONTAINED INPUTS FILES (RELATIVE PATH FORM ./)
@@ -23,58 +23,65 @@ FILE_OUT_DSM             = iasp91_dsm
 TLEN                     = 16384.d0
 
 # SOURCE DEPTH (KM), LAT, LON (DEGREES)
-SRC_DEPTH                = 1500.d0
-SRC_LAT                  = 0.d0
-SRC_LON                  = 0.d0
+SRC_DEPTH                =  6.7d0
+SRC_LAT                  =  14.423d0 
+SRC_LON                  = -92.364d0
 
 # SOURCE MOMENT TENSOR 
 # Mrr, Mtt, Mpp, Mrt, Mrp, Mtp
-MRR                     = 0.d0
-MTT                     = 0.d0
-MPP                     = 0.d0
-MRT                     = 1.d0
-MRP                     = 1.d0
-MTP                     = 1.d0
+MRR                     = 1.d0
+MTT                     = 1.d0
+MPP                     = 1.d0
+MRT                     = 0.d0
+MRP                     = 0.d0
+MTP                     = 0.d0
 
-# TUNNIG PARAMETER FOR PRECISION CALCULATION IN PART 2 (must be >= IFRQMAX)
-# THE HIGHER IS, MORE ACCURATE IS, BUT MORE EXPENSIVE 
-IMAX                    =  167
-
-# Ifreq_min=index of min frequeny (should be 0)
-# Ifreq_max = index of max frequency : corresponds to TLEN/10/IFRQMAX shortest period in (s) 
-IFRQMIN                 = 0
-IFRQMAX                 = 167
 
 # SAMPLING FOR OUTPUT SEISMOGRAMS (Hz)
 # SHOULD BE A MULTIPLE OF TEN (10Hz, 20Hz, 30Hz, 40 Hz,...)
 # TAKE INTO ACCUNT THAT MUST BE THE TIME STEP FOR SPECFEM3D
-SAMPLING                = 10. 
+SAMPLING                = 20. 
 
-# START TIME FOR OUTPUT SEISMOGRAMS
-TSTART                  = 00.
+# TEMPORAL WINDOW FOR DSM TRACTIONS AND SEISMOGRAMS 
+# SHOULD BEGIN BEFORE THE FIRST ARRIVAL AT THE CHUNK BOTTOM 
+# START TIME
+TSTART                  = 200.
+# END TIME
+TEND                    = 500. 
 
-# END TIME FOR OUTPUT SEISMOGRAMS
-TEND                    = 1600. 
 
-# GAUSSIAN FILTER MIN FREQENCY  (Hz)
-FLOW                    = 0.003
-FHIGH                   = 0.09
+# BAND PASS FILTER FREQENCY  (Hz)
+FLOW                    = 0.006
+FHIGH                   = 0.3
+
+
+# TUNNING PARAMETER FOR PRECISION CALCULATION IN PART 2 (>1.)
+# THE HIGHER IS, MORE ACCURATE IS, BUT MORE EXPENSIVE
+ACCURACY_LEVEL         = 3.d0
+
+#
 # ----------------------------- CHUNK --------------------------------------
-
+#
 # CHUNK EXTENSION (degrees) 
-ANGULAR_WIDTH_XI_RAD    = 6.0
-ANGULAR_WIDTH_ETA_RAD   = 3.0
+ANGULAR_WIDTH_XI_RAD    = 6.
+ANGULAR_WIDTH_ETA_RAD   = 6.
 
 # CHUNK CENTER (degrees)
-LON_CENTER              = 60.
-LAT_CENTER              = 0.
+LON_CENTER              = -115.
+LAT_CENTER              = 43.
 AZI_CHUNK               = 0.
 
 # DEPTH CHUNK (km)
-DEPTH_CHUNK             = 240.
+DEPTH_CHUNK             = 800.
 
 # SEM DISCRETISATION
-NEL_LON                 = 30
-NEL_LAT                 = 15
-NEL_DEPTH               = 15
+NEL_LON                 = 60
+NEL_LAT                 = 60
+NEL_DEPTH               = 80
+
+
+#------------------- MPI  PARALLELISATION -----
+#
+MPI_CPUS                  = 480
+SUB_COMM                  = 10
 
