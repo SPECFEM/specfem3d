@@ -12,13 +12,13 @@ function clean_and_make_dir ()
 {
 delete_directory_if_exist $MESH
 delete_directory_if_exist OUTPUT_FILES
-delete_directory_if_exist in_out_files/DATABASES_MPI
+delete_directory_if_exist OUTPUT_FILES/DATABASES_MPI
 delete_directory_if_exist in_out_files/Tractions
 delete_directory_if_exist bin
 
 mkdir -p $MESH
 mkdir -p OUTPUT_FILES
-mkdir -p in_out_files/DATABASES_MPI
+mkdir -p OUTPUT_FILES/DATABASES_MPI
 mkdir -p in_out_files/Tractions
 mkdir bin
 }
@@ -47,7 +47,7 @@ function run_create_specfem_databases ()
 
 cp ParFileInterface bin/.
 
-$BINSEM/xdecompose_mesh_SCOTCH $NPROC $MESH in_out_files/DATABASES_MPI/
+$BINSEM/xdecompose_mesh_SCOTCH $NPROC $MESH OUTPUT_FILES/DATABASES_MPI/
 mv Numglob2loc_elmn.txt $MESH/.
 
 cd bin
@@ -75,14 +75,14 @@ function create_movie ()
 
 cd bin
 
-# $2 = IN (/scratch/vmonteil/BENCHMARK_COUPLAGE/chunk_15s/in_out_files/DATABASES_MPI/)
+# $2 = IN (/scratch/vmonteil/BENCHMARK_COUPLAGE/chunk_15s/OUTPUT_FILES/DATABASES_MPI/)
 # $3 = OUT (./movie)
 # $4 istep
 # $5 itmax
 declare -i it itmax istep
 
 PREFIX=$1 # (velocity_Z_it)
-IN=$2 #/scratch/vmonteil/BENCHMARK_COUPLAGE/chunk_15s/in_out_files/DATABASES_MPI/
+IN=$2 #/scratch/vmonteil/BENCHMARK_COUPLAGE/chunk_15s/OUTPUT_FILES/DATABASES_MPI/
 OUT=$3 #./movie
 istep=$4
 itmax=$5

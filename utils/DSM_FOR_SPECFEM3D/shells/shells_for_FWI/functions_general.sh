@@ -8,10 +8,10 @@ function create_directories ()
 
 mkdir -p $WORKING_DIRECTORY/DATA
 mkdir -p $WORKING_DIRECTORY/bin
-mkdir -p $WORKING_DIRECTORY/in_out_files/DATABASES_MPI
+mkdir -p $WORKING_DIRECTORY/OUTPUT_FILES/DATABASES_MPI
 mkdir -p $WORKING_DIRECTORY/in_out_files/SEM
 mkdir -p $WORKING_DIRECTORY/OUTPUT_FILES
-mkdir -p $WORKING_DIRECTORY/in_out_files/DATABASES_MPI_CURRENT
+mkdir -p $WORKING_DIRECTORY/OUTPUT_FILES/DATABASES_MPI_CURRENT
 
 cp $PAR_FILE_DIRECTORY/* DATA/.
 
@@ -39,22 +39,22 @@ done
 #============================================================================
 function copy_initial_database ()
 {
-cp $DATABASES_INIT_MODEL/* in_out_files/DATABASES_MPI/. 
+cp $DATABASES_INIT_MODEL/* OUTPUT_FILES/DATABASES_MPI/. 
 }
 #============================================================================
 function copy_current_database ()
 {
-cp ./in_out_files/DATABASES_MPI_CURRENT/* in_out_files/DATABASES_MPI/.
+cp ./OUTPUT_FILES/DATABASES_MPI_CURRENT/* OUTPUT_FILES/DATABASES_MPI/.
 }
 #=============================================================================
 function save_mv_current_database ()
 {
-mv ./in_out_files/DATABASES_MPI/* ./in_out_files/DATABASES_MPI_CURRENT/.
+mv ./OUTPUT_FILES/DATABASES_MPI/* ./OUTPUT_FILES/DATABASES_MPI_CURRENT/.
 }
 #=============================================================================
 function save_cp_current_database ()
 {
-cp ./in_out_files/DATABASES_MPI/* ./in_out_files/DATABASES_MPI_CURRENT/.
+cp ./OUTPUT_FILES/DATABASES_MPI/* ./OUTPUT_FILES/DATABASES_MPI_CURRENT/.
 }
 #============================================================================
 function initialise_process ()

@@ -60,7 +60,7 @@ while [ "$ssiter" -le "$nssiter" ] ; do
   rm bin/derivee_cout_pas.txt
 
   # on copie la base de donnee sauvee
-  cp ./in_out_files/DATABASES_MPI_CURRENT/* ./in_out_files/DATABASES_MPI/.
+  cp ./OUTPUT_FILES/DATABASES_MPI_CURRENT/* ./OUTPUT_FILES/DATABASES_MPI/.
 
   update_model $pas 
   forward_simu ss_iter

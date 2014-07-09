@@ -159,7 +159,7 @@
 ! the scratch disk to save the state variables saved in the forward
 ! simulation, this can be a global scratch disk in case you run out of
 ! space on the local scratch disk, e.g. '/ibrixfs1/scratch/lqy/DATABASES_MPI_Q/'
-  character(len=256), parameter :: LOCAL_PATH_Q = '../in_out_files/DATABASES_MPI'
+  character(len=256), parameter :: LOCAL_PATH_Q = '../OUTPUT_FILES/DATABASES_MPI'
 
 !------------------------------------------------------
 ! nlegoff -- Variables that should be read/computed elsewhere.

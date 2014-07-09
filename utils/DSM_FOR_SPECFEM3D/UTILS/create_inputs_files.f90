@@ -32,7 +32,7 @@ program create_input_files
   open(10,file='ParFileInterface')
   write(10,*) '../Tract/'
   write(10,*) '../MESH/'
-  write(10,*) '../in_out_files/DATABASES_MPI/'
+  write(10,*) '../OUTPUT_FILES/DATABASES_MPI/'
   write(10,*) '../in_out_files/Tractions/'
   write(10,*) '1'
   close(10)

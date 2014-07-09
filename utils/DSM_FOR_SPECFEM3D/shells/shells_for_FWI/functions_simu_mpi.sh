@@ -22,8 +22,8 @@ while [ "$isrc" -le "$nsrc" ]; do
   cp in_out_files_${isrc}/OUTPUT_FILES/$1/*semd in_out_files_${isrc}/OUTPUT_FILES/.
 
   # save direct field to prepare adjoint simu 
-  mv in_out_files/DATABASES_MPI/*save_forward_arrays.bin $TRACTION/$EARTHQUAKE${isrc}/.
-  mv in_out_files/DATABASES_MPI/*_absorb_field.bin $TRACTION/$EARTHQUAKE${isrc}/.
+  mv OUTPUT_FILES/DATABASES_MPI/*save_forward_arrays.bin $TRACTION/$EARTHQUAKE${isrc}/.
+  mv OUTPUT_FILES/DATABASES_MPI/*_absorb_field.bin $TRACTION/$EARTHQUAKE${isrc}/.
 
   isrc="$isrc+1"
 
@@ -45,9 +45,9 @@ while [ "$isrc" -le "$nsrc" ]; do
   cd ..
   
   # save kernel 
-  mv ./in_out_files/DATABASES_MPI/*kernel.bin in_out_files_${isrc}/OUTPUT_FILES/WF/.
-  mv ./in_out_files/DATABASES_MPI/*vp.bin in_out_files_${isrc}/OUTPUT_FILES/WF/.
-  mv ./in_out_files/DATABASES_MPI/*vs.bin in_out_files_${isrc}/OUTPUT_FILES/WF/.
+  mv ./OUTPUT_FILES/DATABASES_MPI/*kernel.bin in_out_files_${isrc}/OUTPUT_FILES/WF/.
+  mv ./OUTPUT_FILES/DATABASES_MPI/*vp.bin in_out_files_${isrc}/OUTPUT_FILES/WF/.
+  mv ./OUTPUT_FILES/DATABASES_MPI/*vs.bin in_out_files_${isrc}/OUTPUT_FILES/WF/.
 
   isrc="$isrc+1"
 

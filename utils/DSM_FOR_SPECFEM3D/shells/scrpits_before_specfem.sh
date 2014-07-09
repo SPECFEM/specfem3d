@@ -4,7 +4,7 @@
 function create_out_directory_specfem ()
 {
 mkdir -p OUTPUT_FILES
-mkdir -p in_out_files/DATABASES_MPI
+mkdir -p OUTPUT_FILES/DATABASES_MPI
 mkdir bin
 cp ParFileInterface bin/.
 }
@@ -26,7 +26,7 @@ cd ..
 #
 function decompose_scotch ()
 {
-/bin/xdecompose_mesh_SCOTCH $NPROC $MESH in_out_files/DATABASES_MPI/
+/bin/xdecompose_mesh_SCOTCH $NPROC $MESH OUTPUT_FILES/DATABASES_MPI/
 }
 
 
