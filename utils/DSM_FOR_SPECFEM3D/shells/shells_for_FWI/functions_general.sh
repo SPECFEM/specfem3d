@@ -6,14 +6,14 @@ function create_directories ()
 
 # create directories
 
-mkdir -p $WORKING_DIRECTORY/in_data_files
+mkdir -p $WORKING_DIRECTORY/DATA
 mkdir -p $WORKING_DIRECTORY/bin
 mkdir -p $WORKING_DIRECTORY/in_out_files/DATABASES_MPI
 mkdir -p $WORKING_DIRECTORY/in_out_files/SEM
-mkdir -p $WORKING_DIRECTORY/in_out_files/OUTPUT_FILES
+mkdir -p $WORKING_DIRECTORY/OUTPUT_FILES
 mkdir -p $WORKING_DIRECTORY/in_out_files/DATABASES_MPI_CURRENT
 
-cp $PAR_FILE_DIRECTORY/* in_data_files/.
+cp $PAR_FILE_DIRECTORY/* DATA/.
 
 # create earthquake directories
 isrc=1
@@ -27,7 +27,7 @@ done
 #===========================================================================
 function clean_directories ()
 {
-\rm -r bin in_data_files in_out_files
+\rm -r bin DATA in_out_files
 # create earthquake directories
 isrc=1
 while [ "$isrc" -le "$nsrc" ]; do

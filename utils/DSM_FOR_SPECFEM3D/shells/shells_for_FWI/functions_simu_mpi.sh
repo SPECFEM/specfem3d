@@ -11,14 +11,14 @@ isrc=1
 while [ "$isrc" -le "$nsrc" ]; do
 
   # forward simu for earthquake isrc
-  cp ./in_data_files/Par_file_${isrc} ./in_data_files/Par_file
+  cp ./DATA/Par_file_${isrc} ./DATA/Par_file
   cd bin
   $MPIRUN $OPTION_MPI $HYBRID_BINNARY/xspecfem3D > tmp.out 
   cd ..
 
   # copy and save outputs 
   mkdir -p in_out_files_${isrc}/OUTPUT_FILES/$1
-  mv  in_out_files/OUTPUT_FILES/* in_out_files_${isrc}/OUTPUT_FILES/$1/.  
+  mv  OUTPUT_FILES/* in_out_files_${isrc}/OUTPUT_FILES/$1/.  
   cp in_out_files_${isrc}/OUTPUT_FILES/$1/*semd in_out_files_${isrc}/OUTPUT_FILES/.
 
   # save direct field to prepare adjoint simu 
@@ -39,7 +39,7 @@ while [ "$isrc" -le "$nsrc" ]; do
   cp in_out_files_${isrc}/OUTPUT_FILES/WF/*.adj ./in_out_files/SEM/. 
 
   # forward simu for earthquake isrc
-  cp ./in_data_files/Par_file_adj_${isrc} ./in_data_files/Par_file
+  cp ./DATA/Par_file_adj_${isrc} ./DATA/Par_file
   cd bin
   $MPIRUN $OPTION_MPI $SEM_BINNARY/xspecfem3D > tmp.out
   cd ..

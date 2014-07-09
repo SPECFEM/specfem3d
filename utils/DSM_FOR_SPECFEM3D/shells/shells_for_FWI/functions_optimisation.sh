@@ -132,10 +132,10 @@ cd ..
 function compute_adjoint_source_FWI ()
 { 
 cd bin
-cp ../in_data_files/define_adjoint_sources_for_FWI.par define_adjoint_sources.par
+cp ../DATA/define_adjoint_sources_for_FWI.par define_adjoint_sources.par
 isrc=1
 while [ "$isrc" -le "$nsrc" ]; do
-   cp ../in_data_files/data_source_${isrc}.txt .
+   cp ../DATA/data_source_${isrc}.txt .
    $HYBRID_BINNARY/xdefineadj_no_aligne
    isrc="$isrc+1"
 done

@@ -11,13 +11,13 @@ fi
 function clean_and_make_dir ()
 {
 delete_directory_if_exist $MESH
-delete_directory_if_exist in_out_files/OUTPUT_FILES
+delete_directory_if_exist OUTPUT_FILES
 delete_directory_if_exist in_out_files/DATABASES_MPI
 delete_directory_if_exist in_out_files/Tractions
 delete_directory_if_exist bin
 
 mkdir -p $MESH
-mkdir -p in_out_files/OUTPUT_FILES
+mkdir -p OUTPUT_FILES
 mkdir -p in_out_files/DATABASES_MPI
 mkdir -p in_out_files/Tractions
 mkdir bin
@@ -36,7 +36,7 @@ cp ParFileMeshChunk $MESH/.
 cp $IN_DSM/$MODELE_1D $MESH/.
 cd $MESH
 $BIN/xmesh_chunk_vm
-cp $MESH/model_1D.in ../in_data_files/.
+cp $MESH/model_1D.in ../DATA/.
 cd $current_dir
 
 }

@@ -137,9 +137,9 @@
   logical,parameter :: ABSORB_USE_PML = .false.
 
 ! paths for inputs and outputs files
-  character(len=256), parameter :: IN_DATA_FILES_PATH = '../in_data_files/'
-  character(len=256), parameter :: MF_IN_DATA_FILES_PATH = '../in_data_files/meshfem3D_files/'
-  character(len=256), parameter :: OUTPUT_FILES_PATH = '../in_out_files/OUTPUT_FILES/'
+  character(len=256), parameter :: IN_DATA_FILES_PATH = '../DATA/'
+  character(len=256), parameter :: MF_IN_DATA_FILES_PATH = '../DATA/meshfem3D_files/'
+  character(len=256), parameter :: OUTPUT_FILES_PATH = '../OUTPUT_FILES/'
 
 
 ! ---------------------------------------------------------------------------------------

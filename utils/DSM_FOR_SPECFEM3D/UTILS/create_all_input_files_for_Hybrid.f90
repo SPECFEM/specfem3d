@@ -393,7 +393,7 @@ program create_input_files
  ZREF=0.d0
 !-------- station file (lat long)----
  open(10,file='station_for_simulation.txt')
- open(20,file='in_data_files/STATIONS_test')
+ open(20,file='DATA/STATIONS_test')
  do 
     read(10,*,end=99) lat,long
     call  Geogr2Cart(X,Y,Z,long,lat,rotation_matrix,ZREF)

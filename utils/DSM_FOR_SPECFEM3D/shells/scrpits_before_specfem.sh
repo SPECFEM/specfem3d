@@ -3,7 +3,7 @@
 #
 function create_out_directory_specfem ()
 {
-mkdir -p in_out_files/OUTPUT_FILES
+mkdir -p OUTPUT_FILES
 mkdir -p in_out_files/DATABASES_MPI
 mkdir bin
 cp ParFileInterface bin/.
