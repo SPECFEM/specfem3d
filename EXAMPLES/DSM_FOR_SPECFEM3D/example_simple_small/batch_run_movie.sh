@@ -51,7 +51,7 @@
 #   2/ input file : parfile_for_benchmark
 #
 #
-#   3/ SPECFEM3D input directory : ./in_data_file
+#   3/ SPECFEM3D input directory : ./DATA
 #      containts
 #             -- Par_file
 #             -- STATIONS
@@ -83,18 +83,17 @@
 
 
 # NBPROC is declared as integer (important do not change)
-declare -i NPROC NPROC_MINUS_ONE CPUS CHOICE MIDDLE
+declare -i NPROC NPROC_MINUS_ONE CPUS
 
 # NUMBER OF MPI PROCESSES
 NPROC=24
 CPUS=24
-# Here i set the number of cores for SPEC3D computation is 12 too.
 
 # MPIRUN COMMAND 
 MPIRUN="mpirun"
 
 # ENTER OPTION FOR MPIRUN 
-OPTION=" -np "${NPROC}
+OPTION=" -n "${CPUS}
 OPTION_SIMU=" -np "${CPUS}
 #OPTION=" -np "${CPUS}"  -machinefile "${OAR_NODEFILE}" -bysocket -bind-to-core"
 #OPTION_SIMU=" -np "${CPUS}"  -machinefile "${OAR_NODEFILE}" -bysocket -bind-to-core"
@@ -106,81 +105,30 @@ NPROC_MINUS_ONE="$NPROC-1"
 flog_file=$(pwd)/log.benchmark
 
 # choose the movie
-PREFIX_MOVIE=velocity_Z_it
+PREFIX_MOVIE=velocity_Y_it
 
 # directory where SPECFEM3D writes outputs  
-IN_MOVIE=$(pwd)/in_out_files/DATABASES_MPI/
+IN_MOVIE=$(pwd)/OUTPUT_FILES/DATABASES_MPI/
 
 # output movie directory 
 OUT_MOVIE=$(pwd)/movie
 
-#------- input files creation 
-# you must write the absolute path for : xcreate_input
-# you must edit and complete : parfile_for_benchmark  
-/home/bacchus1/ywang/yang/DSM_SPECFEM_HYBRID_VECTORIZED_NEW/bin/xcreate_inputs_files<<EOF
-parfile_for_benchmark
-EOF
-
-# CHOOSE the computation type.CHOICE =1/2/3 means SH/PSV/FULL wavefield computation
-CHOICE=3
-
-if [ $CHOICE -gt 3  ]
-  then
-  MIDDLE=3
-  echo 'Wrong CHOICE definition, Reset the CHOICE to 3'
-elif [ $CHOICE -lt 1  ]
-  then
-  MIDDLE=1
-  echo 'Wrong CHOICE definition, Reset the CHOICE to 1'
-else
-  MIDDLE=$CHOICE
-fi
-CHOICE=$MIDDLE
-echo 'The value of CHOICE variable is' $CHOICE 
-echo 'The value of CHOICE variable is' $CHOICE >>  $flog_file
-
-#
-# ------------------------ FROM HERE DO NOT CHANGE ANYTHING --------------------
 
 # ----- load script and path --- 
 source params.in
 source $SCRIPTS/scrpits_specfem3D.sh
-if [ $CHOICE -eq 1  ]
- then
- source $SCRIPTS/scripts_dsm_SH.sh
-elif [ $CHOICE -eq 2 ]
- then
- source $SCRIPTS/scripts_dsm_PSV.sh
-else
- source $SCRIPTS/scripts_dsm_full.sh
-fi
-
-
-## clean and make directories SPECFEM3D
-#clean_and_make_dir
-
-
-## 3 / ------- create specfem3D data base
-#run_create_specfem_databases
+source $SCRIPTS/scripts_dsm.sh
 
 
 
-# 4 / -------- create tractions for specfem3D from DSM
+# 6 / ----------------- make movie
 echo "" >> $flog_file
-echo " create traction database" >> $flog_file
+echo " MAKE movie" >> $flog_file
 echo $(date) >> $flog_file
 
-run_create_tractions_for_specfem
+create_movie $PREFIX_MOVIE $IN_MOVIE $OUT_MOVIE 25 8500 
 
+# to do chane 25 and 8500
 echo $(date) >> $flog_file
 
-
-# 5 / --------------- run simulation 
-echo "" >> $flog_file
-echo " simulation" >> $flog_file
-echo $(date) >> $flog_file
-
-run_simu
-
-echo $(date) >> $flog_file
-
+                               

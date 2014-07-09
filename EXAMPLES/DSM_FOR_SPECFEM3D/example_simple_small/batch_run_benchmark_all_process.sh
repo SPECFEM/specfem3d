@@ -51,7 +51,7 @@
 #   2/ input file : parfile_for_benchmark
 #
 #
-#   3/ SPECFEM3D input directory : ./in_data_file
+#   3/ SPECFEM3D input directory : ./DATA
 #      containts
 #             -- Par_file
 #             -- STATIONS
@@ -88,10 +88,9 @@ declare -i NPROC NPROC_MINUS_ONE CPUS CHOICE MIDDLE
 # NUMBER OF MPI PROCESSES
 NPROC=24
 CPUS=24
-# Here i set the number of cores for SPEC3D computation is 12 too.
 
 # MPIRUN COMMAND 
-MPIRUN="mpirun"
+MPIRUN="mpirun -machinefile /home/cluster_maintenance/mymachines2"
 
 # ENTER OPTION FOR MPIRUN 
 OPTION=" -np "${NPROC}
@@ -109,7 +108,7 @@ flog_file=$(pwd)/log.benchmark
 PREFIX_MOVIE=velocity_Z_it
 
 # directory where SPECFEM3D writes outputs  
-IN_MOVIE=$(pwd)/in_out_files/DATABASES_MPI/
+IN_MOVIE=$(pwd)/OUTPUT_FILES/DATABASES_MPI/
 
 # output movie directory 
 OUT_MOVIE=$(pwd)/movie
@@ -117,11 +116,11 @@ OUT_MOVIE=$(pwd)/movie
 #------- input files creation 
 # you must write the absolute path for : xcreate_input
 # you must edit and complete : parfile_for_benchmark  
-/home/bacchus1/ywang/yang/DSM_SPECFEM_HYBRID_VECTORIZED_NEW/bin/xcreate_inputs_files<<EOF
+/home/durochat/Codes/SPECFEM3Ds/specfem3d/utils/DSM_FOR_SPECFEM3D/bin/xcreate_inputs_files<<EOF
 parfile_for_benchmark
 EOF
 
-# CHOOSE the computation type.CHOICE =1/2/3 means SH/PSV/FULL wavefield computation
+# CHOOSE the computation type. CHOICE =1/2/3 means SH/PSV/FULL wavefield computation
 CHOICE=3
 if [ $CHOICE -gt 3  ]
   then
@@ -137,6 +136,7 @@ fi
 CHOICE=$MIDDLE
 echo 'The value of CHOICE variable is' $CHOICE
 echo 'The value of CHOICE variable is' $CHOICE >  $flog_file
+
 
 #
 # ------------------------ FROM HERE DO NOT CHANGE ANYTHING --------------------
@@ -195,7 +195,44 @@ run_dsm_traction
 # 3 / ------- create specfem3D data base
 echo "" >> $flog_file
 echo $(date) >> $flog_file
-echo run_create_specfem_databases >> $flog_file
 run_create_specfem_databases
+echo " create specfem3D data base" >> $flog_file
 echo $(date) >> $flog_file
 
+
+# 4 / -------- create tractions for specfem3D from DSM
+echo "" >> $flog_file
+echo " create traction database" >> $flog_file
+echo $(date) >> $flog_file
+
+run_create_tractions_for_specfem
+
+echo $(date) >> $flog_file
+
+
+
+
+
+# 5 / --------------- run simulation 
+echo "" >> $flog_file
+echo " simulation" >> $flog_file
+echo $(date) >> $flog_file
+
+run_simu
+
+echo $(date) >> $flog_file
+
+
+
+
+# 6 / ----------------- make movie
+echo "" >> $flog_file
+echo " MAKE movie" >> $flog_file
+echo $(date) >> $flog_file
+
+create_movie $PREFIX_MOVIE $IN_MOVIE $OUT_MOVIE 25 8500 
+
+# to do chane 25 and 8500
+echo $(date) >> $flog_file
+
+                               

@@ -51,7 +51,7 @@
 #   2/ input file : parfile_for_benchmark
 #
 #
-#   3/ SPECFEM3D input directory : ./in_data_file
+#   3/ SPECFEM3D input directory : ./DATA
 #      containts
 #             -- Par_file
 #             -- STATIONS
@@ -88,9 +88,10 @@ declare -i NPROC NPROC_MINUS_ONE CPUS CHOICE MIDDLE
 # NUMBER OF MPI PROCESSES
 NPROC=24
 CPUS=24
+# Here i set the number of cores for SPEC3D computation is 12 too.
 
 # MPIRUN COMMAND 
-MPIRUN="mpirun -machinefile /home/cluster_maintenance/mymachines2"
+MPIRUN="mpirun"
 
 # ENTER OPTION FOR MPIRUN 
 OPTION=" -np "${NPROC}
@@ -108,7 +109,7 @@ flog_file=$(pwd)/log.benchmark
 PREFIX_MOVIE=velocity_Z_it
 
 # directory where SPECFEM3D writes outputs  
-IN_MOVIE=$(pwd)/in_out_files/DATABASES_MPI/
+IN_MOVIE=$(pwd)/OUTPUT_FILES/DATABASES_MPI/
 
 # output movie directory 
 OUT_MOVIE=$(pwd)/movie
@@ -116,12 +117,13 @@ OUT_MOVIE=$(pwd)/movie
 #------- input files creation 
 # you must write the absolute path for : xcreate_input
 # you must edit and complete : parfile_for_benchmark  
-/home/durochat/Codes/SPECFEM3Ds/specfem3d/utils/DSM_FOR_SPECFEM3D/bin/xcreate_inputs_files<<EOF
+/home/bacchus1/ywang/yang/DSM_SPECFEM_HYBRID_VECTORIZED_NEW/bin/xcreate_inputs_files<<EOF
 parfile_for_benchmark
 EOF
 
-# CHOOSE the computation type. CHOICE =1/2/3 means SH/PSV/FULL wavefield computation
+# CHOOSE the computation type.CHOICE =1/2/3 means SH/PSV/FULL wavefield computation
 CHOICE=3
+
 if [ $CHOICE -gt 3  ]
   then
   MIDDLE=3
@@ -134,9 +136,8 @@ else
   MIDDLE=$CHOICE
 fi
 CHOICE=$MIDDLE
-echo 'The value of CHOICE variable is' $CHOICE
-echo 'The value of CHOICE variable is' $CHOICE >  $flog_file
-
+echo 'The value of CHOICE variable is' $CHOICE 
+echo 'The value of CHOICE variable is' $CHOICE >>  $flog_file
 
 #
 # ------------------------ FROM HERE DO NOT CHANGE ANYTHING --------------------
@@ -144,7 +145,7 @@ echo 'The value of CHOICE variable is' $CHOICE >  $flog_file
 # ----- load script and path --- 
 source params.in
 source $SCRIPTS/scrpits_specfem3D.sh
-if [ $CHOICE -eq 1 ]
+if [ $CHOICE -eq 1  ]
  then
  source $SCRIPTS/scripts_dsm_SH.sh
 elif [ $CHOICE -eq 2 ]
@@ -154,50 +155,14 @@ else
  source $SCRIPTS/scripts_dsm_full.sh
 fi
 
-# clean and make directories SPECFEM3D
-clean_and_make_dir
 
-# clean and make directories DSM
-clean_and_make_dir_dsm
-
-# mv some input files in rigth place
-mv input_dsm_for_write_coef $IN_DSM/inputIASP.infTra_for_coef
-mv input_dsm_for_read_xmin  $IN_DSM/inputIASP.infTra_stxmin
-mv input_dsm_for_read_xmax  $IN_DSM/inputIASP.infTra_stxmax
-mv input_dsm_for_read_ymin  $IN_DSM/inputIASP.infTra_stymin
-mv input_dsm_for_read_ymax  $IN_DSM/inputIASP.infTra_stymax
-mv input_dsm_for_read_zmin  $IN_DSM/inputIASP.infTra_stzmin
-# copy model file 
-cp $IN_DSM/iasp91 $MESH/.
+## clean and make directories SPECFEM3D
+#clean_and_make_dir
 
 
-## open the log file 
-echo >> $flog_file
-echo " BENCHMARK RUN  " >> $flog_file
-echo >> $flog_file
-echo $(date) >> $flog_file
+## 3 / ------- create specfem3D data base
+#run_create_specfem_databases
 
-
-# 1 / ------- create mesh  
-run_create_mesh
-
-
-# 2 / ----- compute DSM tractions
-cd $DSM_tractions
-make_dir_exp
-copy_input_files_exp
-compute_exp_coeff
-run_dsm_traction
-
-
-
-
-# 3 / ------- create specfem3D data base
-echo "" >> $flog_file
-echo $(date) >> $flog_file
-run_create_specfem_databases
-echo " create specfem3D data base" >> $flog_file
-echo $(date) >> $flog_file
 
 
 # 4 / -------- create tractions for specfem3D from DSM
@@ -210,9 +175,6 @@ run_create_tractions_for_specfem
 echo $(date) >> $flog_file
 
 
-
-
-
 # 5 / --------------- run simulation 
 echo "" >> $flog_file
 echo " simulation" >> $flog_file
@@ -222,17 +184,3 @@ run_simu
 
 echo $(date) >> $flog_file
 
-
-
-
-# 6 / ----------------- make movie
-echo "" >> $flog_file
-echo " MAKE movie" >> $flog_file
-echo $(date) >> $flog_file
-
-create_movie $PREFIX_MOVIE $IN_MOVIE $OUT_MOVIE 25 8500 
-
-# to do chane 25 and 8500
-echo $(date) >> $flog_file
-
-                               
