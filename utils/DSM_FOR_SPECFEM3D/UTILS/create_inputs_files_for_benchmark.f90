@@ -30,7 +30,7 @@ program create_input_files_for_benchmark
   write(10,*) '../Tract/'
   write(10,*) '../MESH/'
   write(10,*) '../OUTPUT_FILES/DATABASES_MPI/'
-  write(10,*) '../in_out_files/Tractions/'
+  write(10,*) '../OUTPUT_FILES/Tractions/'
   close(10)
 
  ! input file for DSM write coef --------------------------------------------------------

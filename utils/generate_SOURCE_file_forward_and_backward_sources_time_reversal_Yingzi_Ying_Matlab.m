@@ -10,9 +10,9 @@ backwardSourceComponent=[1 1 1];
 
 switch sourceType
 case 'FORWARD'
-[nt_status nt] = system('grep NSTEP ../in_data_files/Par_file | cut -d = -f 2');
-[dt_status dt] = system('grep DT ../in_data_files/Par_file | cut -d = -f 2');
-[f_status f] = system('grep half\ duration ../in_data_files/backup/CMTSOLUTION_FORWARD | cut -d : -f 2');
+[nt_status nt] = system('grep NSTEP ../DATAs/Par_file | cut -d = -f 2');
+[dt_status dt] = system('grep DT ../DATAs/Par_file | cut -d = -f 2');
+[f_status f] = system('grep half\ duration ../DATAs/backup/CMTSOLUTION_FORWARD | cut -d : -f 2');
 
 nt=str2num(nt);
 dt=str2num(dt);
@@ -40,10 +40,10 @@ end
 
 
 case 'BACKWARD'
-[nt_status nt] = system('grep NSTEP ../in_data_files/Par_file | cut -d = -f 2');
+[nt_status nt] = system('grep NSTEP ../DATAs/Par_file | cut -d = -f 2');
 nt=str2num(nt);
 
-fid=fopen('../in_data_files/backup/STATIONS_FORWARD');
+fid=fopen('../DATAs/backup/STATIONS_FORWARD');
   c=textscan(fid,'%s %s %f %f %f %f');
 fclose(fid);
 
@@ -63,13 +63,13 @@ cutShift = 0;
 totalCutTrace=zeros(cutLength,stationNumber);
 
 benchStation=floor((1+stationNumber)/2);
-bench=load(['../in_out_files/OUTPUT_FILES/' c{1,1}{benchStation} '.' c{1,2}{benchStation} '.' band 'Z' '.' variable]);
+bench=load(['../OUTPUT_FILES/' c{1,1}{benchStation} '.' c{1,2}{benchStation} '.' band 'Z' '.' variable]);
 [benchMax benchMaxIndex] = max(bench(:,2));
 
 for nStation = 1:stationNumber
-trace_x = load(['../in_out_files/OUTPUT_FILES/' c{1,1}{nStation} '.' c{1,2}{nStation} '.' band 'X' '.' variable]);
-trace_y = load(['../in_out_files/OUTPUT_FILES/' c{1,1}{nStation} '.' c{1,2}{nStation} '.' band 'Y' '.' variable]);
-trace_z = load(['../in_out_files/OUTPUT_FILES/' c{1,1}{nStation} '.' c{1,2}{nStation} '.' band 'Z' '.' variable]);
+trace_x = load(['../OUTPUT_FILES/' c{1,1}{nStation} '.' c{1,2}{nStation} '.' band 'X' '.' variable]);
+trace_y = load(['../OUTPUT_FILES/' c{1,1}{nStation} '.' c{1,2}{nStation} '.' band 'Y' '.' variable]);
+trace_z = load(['../OUTPUT_FILES/' c{1,1}{nStation} '.' c{1,2}{nStation} '.' band 'Z' '.' variable]);
 cutTrace_x = trace_x(benchMaxIndex - cutLength/2+cutShift:benchMaxIndex + cutLength/2 -1+cutShift,2);
 cutTrace_y = trace_y(benchMaxIndex - cutLength/2+cutShift:benchMaxIndex + cutLength/2 -1+cutShift,2);
 cutTrace_z = trace_z(benchMaxIndex - cutLength/2+cutShift:benchMaxIndex + cutLength/2 -1+cutShift,2);
@@ -102,6 +102,6 @@ end
 otherwise
 error('Wrong SOURCE type.')
 end
-save("-ascii",['../in_data_files/backup/SOURCE_X_' sourceType],'s_x')
-save("-ascii",['../in_data_files/backup/SOURCE_Y_' sourceType],'s_y')
-save("-ascii",['../in_data_files/backup/SOURCE_Z_' sourceType],'s_z')
+save("-ascii",['../DATAs/backup/SOURCE_X_' sourceType],'s_x')
+save("-ascii",['../DATAs/backup/SOURCE_Y_' sourceType],'s_y')
+save("-ascii",['../DATAs/backup/SOURCE_Z_' sourceType],'s_z')

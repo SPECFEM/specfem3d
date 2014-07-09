@@ -13,13 +13,13 @@ function clean_and_make_dir ()
 delete_directory_if_exist $MESH
 delete_directory_if_exist OUTPUT_FILES
 delete_directory_if_exist OUTPUT_FILES/DATABASES_MPI
-delete_directory_if_exist in_out_files/Tractions
+delete_directory_if_exist OUTPUT_FILES/Tractions
 delete_directory_if_exist bin
 
 mkdir -p $MESH
 mkdir -p OUTPUT_FILES
 mkdir -p OUTPUT_FILES/DATABASES_MPI
-mkdir -p in_out_files/Tractions
+mkdir -p OUTPUT_FILES/Tractions
 mkdir bin
 }
 
