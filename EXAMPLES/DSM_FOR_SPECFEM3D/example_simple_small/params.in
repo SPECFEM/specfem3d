@@ -1,6 +1,6 @@
-BIN=/home/bacchus1/ywang/yang/DSM_SPECFEM_HYBRID_VECTORIZED_NEW/bin/
-BINSEM=/home/bacchus1/ywang/yang/DSM_SPECFEM_HYBRID_VECTORIZED_NEW/SEMH/bin
-SCRIPTS=/home/bacchus1/ywang/yang/DSM_SPECFEM_HYBRID_VECTORIZED_NEW/shells
+BIN=/home/durochat/Codes/SPECFEM3Ds/specfem3d/utils/DSM_FOR_SPECFEM3D/bin
+BINSEM=/home/durochat/Codes/SPECFEM3Ds/specfem3d/bin
+SCRIPTS=/home/durochat/Codes/SPECFEM3Ds/specfem3d/utils/DSM_FOR_SPECFEM3D/shells
 DSM_tractions=$(pwd)/DSM_tractions/
 OUT=$DSM_tractions
 REP=Tract/
