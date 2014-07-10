@@ -57,7 +57,7 @@ FHIGH                   = 0.3
 
 # TUNNING PARAMETER FOR PRECISION CALCULATION IN PART 2 (>1.)
 # THE HIGHER IS, MORE ACCURATE IS, BUT MORE EXPENSIVE
-ACCURACY_LEVEL         = 3.d0
+ACCURACY_LEVEL         = 2.d0
 
 #
 # ----------------------------- CHUNK --------------------------------------
@@ -82,6 +82,6 @@ NEL_DEPTH               = 80
 
 #------------------- MPI  PARALLELISATION -----
 #
-MPI_CPUS                  = 480
-SUB_COMM                  = 10
+MPI_CPUS                  = 24
+SUB_COMM                  = 1
 
