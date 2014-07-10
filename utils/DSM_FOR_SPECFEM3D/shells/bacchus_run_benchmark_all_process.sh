@@ -54,7 +54,7 @@
 ## ------------------ INPUTS -----------------------------
 
 # DSM BINARY : (to do supprimer peut-être çà de params.in??)
-BIN_DSM=/home/bacchus1/monteil/DSM_FOR_SPECFEM3D/bin/ 
+BIN_DSM=/home/durochat/Codes/SPECFEM3Ds/specfem3d/utils/DSM_FOR_SPECFEM3D/bin
 # NBPROC is declared as integer (important do not change)
 declare -i NPROC NPROC_MINUS_ONE
 
@@ -82,7 +82,7 @@ OUT_MOVIE=$(pwd)/movie
 #------- input files creation 
 # you must write the absolute path for : xcreate_input
 # you must edit and complete : parfile_for_benchmark  
-$BIN_DSM/xcreate_input<<EOF
+$BIN_DSM/xcreate_inputs_files<<EOF
 parfile_for_benchmark
 EOF
 
