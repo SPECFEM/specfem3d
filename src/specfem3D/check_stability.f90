@@ -163,7 +163,7 @@
     iminutes = (int_tCPU - 3600*ihours) / 60
     iseconds = int_tCPU - 3600*ihours - 60*iminutes
     write(IMAIN,*) 'Elapsed time in seconds = ',tCPU
-    write(IMAIN,"(' Elapsed time in hh:mm:ss = ',i4,' h ',i2.2,' m ',i2.2,' s')") ihours,iminutes,iseconds
+    write(IMAIN,"(' Elapsed time in hh:mm:ss = ',i6,' h ',i2.2,' m ',i2.2,' s')") ihours,iminutes,iseconds
     write(IMAIN,*) 'Mean elapsed time per time step in seconds = ',sngl(tCPU/dble(it))
 
     if( ELASTIC_SIMULATION ) &
@@ -198,7 +198,7 @@
     write(IMAIN,*) 'Time steps done = ',it,' out of ',NSTEP
     write(IMAIN,*) 'Time steps remaining = ',NSTEP - it
     write(IMAIN,*) 'Estimated remaining time in seconds = ',sngl(t_remain)
-    write(IMAIN,"(' Estimated remaining time in hh:mm:ss = ',i4,' h ',i2.2,' m ',i2.2,' s')") &
+    write(IMAIN,"(' Estimated remaining time in hh:mm:ss = ',i6,' h ',i2.2,' m ',i2.2,' s')") &
              ihours_remain,iminutes_remain,iseconds_remain
 
     ! compute estimated total simulation time
@@ -208,7 +208,7 @@
     iminutes_total = (int_t_total - 3600*ihours_total) / 60
     iseconds_total = int_t_total - 3600*ihours_total - 60*iminutes_total
     write(IMAIN,*) 'Estimated total run time in seconds = ',sngl(t_total)
-    write(IMAIN,"(' Estimated total run time in hh:mm:ss = ',i4,' h ',i2.2,' m ',i2.2,' s')") &
+    write(IMAIN,"(' Estimated total run time in hh:mm:ss = ',i6,' h ',i2.2,' m ',i2.2,' s')") &
              ihours_total,iminutes_total,iseconds_total
     write(IMAIN,*) 'We have done ',sngl(100.d0*dble(it)/dble(NSTEP)),'% of that'
 
@@ -229,7 +229,7 @@
     write(IOUT,*) 'Time step # ',it
     write(IOUT,*) 'Time: ',sngl((it-1)*DT-t0),' seconds'
     write(IOUT,*) 'Elapsed time in seconds = ',tCPU
-    write(IOUT,"(' Elapsed time in hh:mm:ss = ',i4,' h ',i2.2,' m ',i2.2,' s')") ihours,iminutes,iseconds
+    write(IOUT,"(' Elapsed time in hh:mm:ss = ',i6,' h ',i2.2,' m ',i2.2,' s')") ihours,iminutes,iseconds
     write(IOUT,*) 'Mean elapsed time per time step in seconds = ',tCPU/dble(it)
 
     if( ELASTIC_SIMULATION ) &
@@ -259,10 +259,10 @@
     write(IOUT,*) 'Time steps done = ',it,' out of ',NSTEP
     write(IOUT,*) 'Time steps remaining = ',NSTEP - it
     write(IOUT,*) 'Estimated remaining time in seconds = ',t_remain
-    write(IOUT,"(' Estimated remaining time in hh:mm:ss = ',i4,' h ',i2.2,' m ',i2.2,' s')") &
+    write(IOUT,"(' Estimated remaining time in hh:mm:ss = ',i6,' h ',i2.2,' m ',i2.2,' s')") &
              ihours_remain,iminutes_remain,iseconds_remain
     write(IOUT,*) 'Estimated total run time in seconds = ',t_total
-    write(IOUT,"(' Estimated total run time in hh:mm:ss = ',i4,' h ',i2.2,' m ',i2.2,' s')") &
+    write(IOUT,"(' Estimated total run time in hh:mm:ss = ',i6,' h ',i2.2,' m ',i2.2,' s')") &
              ihours_total,iminutes_total,iseconds_total
     write(IOUT,*) 'We have done ',sngl(100.d0*dble(it)/dble(NSTEP)),'% of that'
     close(IOUT)
