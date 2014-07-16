@@ -86,8 +86,8 @@
 declare -i NPROC NPROC_MINUS_ONE CPUS CHOICE MIDDLE
 
 # NUMBER OF MPI PROCESSES
-NPROC=24
-CPUS=24
+NPROC=40
+CPUS=40
 # Here i set the number of cores for SPEC3D computation is 12 too.
 
 # MPIRUN COMMAND 

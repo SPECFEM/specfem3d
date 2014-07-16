@@ -86,8 +86,8 @@
 declare -i NPROC NPROC_MINUS_ONE CPUS CHOICE MIDDLE
 
 # NUMBER OF MPI PROCESSES
-NPROC=24
-CPUS=24
+NPROC=40
+CPUS=40
 
 # MPIRUN COMMAND 
 MPIRUN="mpirun -machinefile /home/cluster_maintenance/mymachines2"
