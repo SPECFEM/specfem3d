@@ -149,7 +149,7 @@ Roland Martin,
 René Matzen,
 Dennis McRitchie,
 Matthias Meschede,
-Peter Messmer, 
+Peter Messmer,
 David Michéa,
 Surendra Nadh Somala,
 Tarje Nissen-Meyer,
@@ -459,7 +459,7 @@ that you use the Intel icc C compiler to compile Scotch, i.e., use:
 \end{lyxcode}
 
 When compiling the SCOTCH source code, if you get a message such as: "ld: cannot find -lz",
-the Zlib compression development library is probably missing on your machine and you will need to install it or ask your system administrator to 
+the Zlib compression development library is probably missing on your machine and you will need to install it or ask your system administrator to
 do so. On Linux machines the package is often called "zlib1g-dev" or similar. (thus "sudo apt-get install zlib1g-dev" would install it)
 
 To compile a serial version of the code for small meshes that fits
@@ -528,7 +528,7 @@ your system and compare the seismograms. If they are identical (and
 in most cases they will), you can select single precision for your
 future runs.\\
 
-If your compiler has problems with the \texttt{use mpi} statements that are used in the code, use the script called 
+If your compiler has problems with the \texttt{use mpi} statements that are used in the code, use the script called
 \texttt{replace\_use\_mpi\_with\_include\_mpif\_dot\_h.pl} in the root directory to replace all of them with \texttt{include 'mpif.h'} automatically.
 
 \section{Adding OpenMP support in addition to MPI}
@@ -672,7 +672,7 @@ a GUI front-end for configuring and running \texttt{Doxygen}.
 The important entries in the Doxyfile are:
 
 \begin{description}
-\item [{\texttt{PROJECT\_NAME}}] 
+\item [{\texttt{PROJECT\_NAME}}]
 \item [{\texttt{OPTIMIZE\_FOR\_FORTRAN}}] Set to YES
 \item [{\texttt{EXTRACT\_ALL}}] Set to YES
 \item [{\texttt{EXTRACT\_PRIVATE}}] Set to YES
@@ -695,24 +695,24 @@ The important entries in the Doxyfile are:
 
 \item Run : \texttt{doxygen Doxyfile}, HTML and LaTeX files created by default in \texttt{html} and \texttt{latex} subdirectories.
 
-\item To see the call trees, you have to open the file \texttt{html/index.html} in your \underline{browser}. You will have many informations about each subroutines of SPECFEM (not only call graphs), you can click on every boxes / subroutines. It show you the call, and, the caller graph of each subroutine : the subroutines called by the concerned subroutine, and the previous subroutines who call this subroutine (the previous path), respectively. In the case of a truncated calling tree, the boxes with a red border indicates a node that has \underline{more} arrows than are shown (in other words: the graph is truncated with respect to this node). 
+\item To see the call trees, you have to open the file \texttt{html/index.html} in your \underline{browser}. You will have many informations about each subroutines of SPECFEM (not only call graphs), you can click on every boxes / subroutines. It show you the call, and, the caller graph of each subroutine : the subroutines called by the concerned subroutine, and the previous subroutines who call this subroutine (the previous path), respectively. In the case of a truncated calling tree, the boxes with a red border indicates a node that has \underline{more} arrows than are shown (in other words: the graph is truncated with respect to this node).
 
 \end{enumerate}
 
 \medskip
 
-\noindent Finally, some useful links: 
+\noindent Finally, some useful links:
 
 \begin{itemize}
 \item[\textbullet] a good and short summary for the basic utilisation of Doxygen:
 
 \texttt{http://www.softeng.rl.ac.uk/blog/2010/jan/30/callgraph-fortran-doxygen/} ,
 
-\item[\textbullet] to configure the diagrams : 
+\item[\textbullet] to configure the diagrams :
 
 \texttt{http://www.stack.nl/~dimitri/doxygen/manual/diagrams.html} ,
 
-\item[\textbullet] the complete alphabetical index of the tags in Doxyfile: 
+\item[\textbullet] the complete alphabetical index of the tags in Doxyfile:
 
 \texttt{http://www.stack.nl/~dimitri/doxygen/manual/config.html} ,
 
@@ -730,8 +730,8 @@ clusters (typically more than $10,000$ processes). SPECFEM3D use the ADIOS libra
 to deal transparently take advantage of advanced paralllel file system features. To enable
 ADIOS, the following steps should be done:
 \begin{enumerate}
-\item Install ADIOS (available from \url{https://www.olcf.ornl.gov/center-projects/adios/}). 
-Make sure that your environment variables reference it. 
+\item Install ADIOS (available from \url{https://www.olcf.ornl.gov/center-projects/adios/}).
+Make sure that your environment variables reference it.
 \item You may want to change ADIOS related values in the \texttt{constants.h.in} file.
 The default values probably suit most cases.
 \item Configure using the \texttt{--with-adios} flag.
@@ -836,7 +836,7 @@ which explains in a step-by-step tutorial the workflow for the example.
 Please feel free to contribute your own example to this package by
 contacting the CIG Computational Seismology Mailing List \urlwithparentheses{cig-seismo@geodynamics.org}.
 
-In some cases, to re-create the meshes for the examples given, just type "claro ./create\_mesh.py" or similar 
+In some cases, to re-create the meshes for the examples given, just type "claro ./create\_mesh.py" or similar
 from the command line ("claro" is the command to run CUBIT from the command line).
 
 IMPORTANT note: in order to correctly set up GEOCUBIT and run the examples, please read the file called "EXAMPLES/README";
@@ -1102,7 +1102,7 @@ In directory "CUBIT\_GEOCUBIT" we provide a script that can help doing the above
 to SPECFEM3D format automatically for you: "run\_cubit2specfem3d.py".
 Just edit them to indicate the path to your local installation of CUBIT and also the name of the *.cub existing CUBIT mesh file
 that you want to export to SPECFEM3D format. These scripts will do the conversion for you automatically except assigning material properties
-to the different mesh layers. To do so, you will then need to edit the file 
+to the different mesh layers. To do so, you will then need to edit the file
 called "nummaterial\_velocity\_file" that will have just been created and change it from the prototype created:
 
     0 1 vol1 --> syntax: \#material\_domain\_id \#material\_id \#rho \#vp \#vs \#Q\_kappa \#Q\_mu \#anisotropy
@@ -1749,14 +1749,14 @@ information about the source time function in the file \texttt{OUTPUT\_FILES/plo
 This feature is only relevant for the solver.
 \item [{\texttt{GPU\_MODE}}] Turn this flag on to use GPUs.
 
-\item [\texttt{ADIOS\_ENABLED}] Turn this flag on to enable ADIOS. If set to \texttt{.false.}, subsequent ADIOS 
+\item [\texttt{ADIOS\_ENABLED}] Turn this flag on to enable ADIOS. If set to \texttt{.false.}, subsequent ADIOS
 parameters will not be considered.
-\item [\texttt{ADIOS\_FOR\_DATABASES}] Turn this flag on to use ADIOS for xmeshfem3D output and 
+\item [\texttt{ADIOS\_FOR\_DATABASES}] Turn this flag on to use ADIOS for xmeshfem3D output and
 xgenerate\_database input.
 \item [\texttt{ADIOS\_FOR\_MESH}]  Turn this flag on to use ADIOS for generated databases.
 \item [\texttt{ADIOS\_FOR\_FORWARD\_ARRAYS}] Turn this flag on to read and write forward arrays using ADIOS.
 \item [\texttt{ADIOS\_FOR\_KERNELS}] Turn this flag on to produce ADIOS kernels that can later be visualized with the ADIOS version of combine\_vol\_data.
- 
+
 \end{description}
 If you use PML, the mesh elements that belong to the PML layers can
 be acoustic or elastic, but not viscoelastic nor poroelastic. Then,
@@ -2157,6 +2157,23 @@ file, or for different stations by changing the \texttt{STATIONS}
 file. There is no need to rerun the \texttt{xgenerate\_databases}
 executable. Of course it is best to include as many stations as possible,
 since this does not add to the cost of the simulation.
+
+We have also added the ability to run several calculations (several earthquakes)
+in an embarrassingly-parallel fashion from within the same run;
+this can be useful when using a very large supercomputer to compute
+many earthquakes in a catalog, in which case it can be better from
+a batch job submission point of few to start fewer and much larger jobs,
+each of them computing several earthquakes in parallel.
+To turn that option on, set parameter NUMBER\_OF\_SIMULTANEOUS\_RUNS
+to a value greater than 1 in file setup/constants.h.in before
+configuring and compiling the code.
+When that option is on, of course the number of processor cores used to start
+the code in the batch system must be a multiple of NUMBER\_OF\_SIMULTANEOUS\_RUNS,
+all the individual runs must use the same number of processor cores
+(which as usual is NPROC in the input file DATA/Par\_file,
+and thus the total number of processor cores to request from the batch system
+should be NUMBER\_OF\_SIMULTANEOUS\_RUNS * NPROC.
+All the runs to perform must be placed in directories called run0001, run0002, run0003 and so on (with exactly four digits).
 
 
 \chapter{\label{cha:Fault-Kinematics-Dynamics}Kinematic and dynamic fault
@@ -3293,9 +3310,7 @@ see Southern California ShakeMovie\textregistered{}\urlwithparentheses{www.shake
 When running xspecfem3D with the \texttt{\small MOVIE\_VOLUME}{\small{}
 flag turned on, the code outputs several files in }\texttt{\small LOCAL\_PATH}{\small{}
 specified in the main }\texttt{\small Par\_file}{\small , e.g. in
-directory }\texttt{\small OUTPUT\_FILES/DATABASES\_MPI}{\small . %As the files can be very large, there are several flags in the \texttt{\small Par\_file}
-%that control the region in space and time that is saved. These are:
-%\texttt{\small NTSTEP\_BETWEEN\_FRAMES}
+directory }\texttt{\small OUTPUT\_FILES/DATABASES\_MPI}{\small .
 The output is saved by each processor at the time interval specified
 by }\texttt{\small NTSTEP\_BETWEEN\_FRAMES}{\small . For all domains,
 the velocity field is output to files: }\texttt{\small proc??????\_velocity\_X\_it??????.bin}{\small ,
@@ -3548,176 +3563,6 @@ Examples of job scripts can be found in the \texttt{\small utils/Cluster/}{\smal
 directory and can straightforwardly be modified and adapted to meet
 more specific running needs.}{\small \par}
 
-We describe here in some detail a job submission procedure for the
-Caltech 1024-node cluster, CITerra, under the LSF scheduling system.
-We consider the submission of a regular forward simulation using the
-internal mesher to create mesh partitions. The two main scripts are
-\texttt{\small run\_lsf.bash}{\small , which compiles the Fortran
-code and submits the job to the scheduler, and }\texttt{\small go\_mesher\_solver\_lsf\_basin.forward}{\small ,
-which contains the instructions that make up the job itself. These
-scripts can be found in }\texttt{\small utils/Cluster/lsf/}{\small{}
-directory}{\small \par}
-
-
-\section{Job submission \texttt{run\_lsf.bash}}
-
-This script first sets the job queue to be `normal'. It then compiles
-the mesher, database generator and solver together, figures out the
-number of processors required for this simulation from the \texttt{DATA/Par\_file},
-and submits the LSF job.
-\begin{lyxcode}
-\#!/bin/bash
-
-\#~use~the~normal~queue~unless~otherwise~directed~queue=\textquotedbl{}-q~normal\textquotedbl{}~
-
-if~{[}~\$\#~-eq~1~{]};~then
-
-~~~~~~~~echo~\textquotedbl{}Setting~the~queue~to~\$1\textquotedbl{}
-
-~~~~~~~~queue=\textquotedbl{}-q~\$1\textquotedbl{}~
-
-fi~~\\
-~~~\\
-~\#~compile~the~mesher~and~the~solver~
-
-d=`date'~echo~\textquotedbl{}Starting~compilation~\$d\textquotedbl{}~
-
-make~clean~
-
-make~xmeshfem3D~
-
-make~xgenerate\_databases~
-
-make~xspecfem3D~
-
-d=`date'~
-
-echo~\textquotedbl{}Finished~compilation~\$d\textquotedbl{}~~\\
-~~~\\
-~\#~get~total~number~of~nodes~needed~for~solver~
-
-NPROC=`grep~NPROC~DATA/Par\_file~|~cut~-c~34-~'~~\\
-~~~\\
-
-
-\#~compute~total~number~of~nodes~needed~for~mesher~
-
-NPROC\_XI=`grep~NPROC\_XI~DATA/meshfem3D\_files/Mesh\_Par\_file~|~cut~-c~34-~'~~~~\\
-
-
-NPROC\_ETA=`grep~NPROC\_ETA~DATA/meshfem3D\_files/Mesh\_Par\_file~|~cut~-c~34-~'~~~~\\
-~\#~total~number~of~nodes~is~the~product~of~the~values~read~
-
-numnodes=\$((~\$NPROC\_XI~{*}~\$NPROC\_ETA~))~~\\
-~~~\\
-
-
-\#~checks~total~number~of~nodes~
-
-if~{[}~\$numnodes~-neq~\$NPROC~{]};~then
-
-~~~~~~~~echo~\textquotedbl{}error~number~of~procs~mismatch\textquotedbl{}
-
-~~~~~~~~exit~
-
-fi~~\\
-
-
-~~\\
-~echo~\textquotedbl{}Submitting~job\textquotedbl{}~
-
-bsub~\$queue~-n~\$numnodes~-W~60~-K~<go\_mesher\_solver\_lsf.forward~
-\end{lyxcode}
-
-\section{Job script \texttt{go\_mesher\_solver\_lsf.forward}}
-
-This script describes the job itself, including setup steps that can
-only be done once the scheduler has assigned a job-ID and a set of
-compute nodes to the job, the \texttt{run\_lsf.bash} commands used
-to run the mesher, database generator and the solver, and calls to
-scripts that collect the output seismograms from the compute nodes
-and perform clean-up operations.
-\begin{enumerate}
-\item First the script directs the scheduler to save its own output and
-output from \texttt{stdout} into ~\\
- \texttt{\small OUTPUT\_FILES/\%J.o}{\small , where }\texttt{\small \%J}{\small{}
-is short-hand for the job-ID; it also tells the scheduler what version
-of }\texttt{\small mpich}{\small{} to use (}\texttt{\small mpich\_gm}{\small )
-and how to name this job (}\texttt{\small go\_mesher\_solver\_lsf}{\small ). }{\small \par}
-\item The script then creates a list of the nodes allocated to this job
-by echoing the value of a dynamically set environment variable \texttt{LSB\_MCPU\_HOSTS}
-and parsing the output into a one-column list using the Perl script
-\texttt{utils/Cluster/lsf/remap\_lsf\_machines.pl}. It then creates
-a set of scratch directories on these nodes (\texttt{\small /scratch/}{\small ~}\\
-{\small{} }\texttt{\small \$USER/DATABASES\_MPI}{\small ) to be used
-as the }\texttt{\small LOCAL\_PATH}{\small{} for temporary storage
-of the database files. The scratch directories are created using }\texttt{\small shmux}{\small ,
-a shell multiplexor that can execute the same commands on many hosts
-in parallel. }\texttt{\small shmux}{\small{} is available from Shmux
-\urlwithparentheses{web.taranis.org/shmux/}. Make sure that the
-}\texttt{\small LOCAL\_PATH}{\small{} parameter in }\texttt{\small DATA/Par\_file}{\small{}
-is also set properly. }{\small \par}
-\item The next portion of the script launches the mesher, database generator
-and then the solver using \texttt{run\_lsf.bash}.
-\item The final portion of the script collects the seismograms and performs
-clean up on the nodes, using the Perl scripts \texttt{collect\_seismo\_lsf\_multi.pl}
-and \texttt{cleanmulti.pl}. \end{enumerate}
-\begin{lyxcode}
-\#!/bin/bash~-v~
-
-\#BSUB~-o~OUTPUT\_FILES/\%J.o~
-
-\#BSUB~-a~mpich\_gm~
-
-\#BSUB~-J~go\_mesher\_solver\_lsf~~\\
-~~~\\
-~\#~set~up~local~scratch~directories
-
-BASEMPIDIR=/scratch/\$USER/DATABASES\_MPI
-
-mkdir~-p~OUTPUT\_FILES~
-
-echo~\textquotedbl{}\$LSB\_MCPU\_HOSTS\textquotedbl{}~>~OUTPUT\_FILES/lsf\_machines~
-
-echo~\textquotedbl{}\$LSB\_JOBID\textquotedbl{}~>~OUTPUT\_FILES/jobid
-
-remap\_lsf\_machines.pl~OUTPUT\_FILES/lsf\_machines~>~OUTPUT\_FILES/machines
-
-shmux~-M50~-Sall~-c~\textquotedbl{}rm~-r~-f~/scratch/\$USER;~\textbackslash{}
-
-~~~~~~mkdir~-p~/scratch/\$USER;~mkdir~-p~\$BASEMPIDIR\textquotedbl{}~\textbackslash{}
-
-~~~~~~-~<~OUTPUT\_FILES/machines~>/dev/null~~\\
-~~~\\
-~\#~run~the~specfem~program
-
-current\_pwd=\$PWD~~\\
-
-
-cd~bin/~~\\
-
-
-run\_lsf.bash~-{}-gm-no-shmem~-{}-gm-copy-env~\$current\_pwd/xmeshfem3D~~\\
-
-
-run\_lsf.bash~-{}-gm-no-shmem~-{}-gm-copy-env~\$current\_pwd/xgenerate\_databases~~\\
-
-
-run\_lsf.bash~-{}-gm-no-shmem~-{}-gm-copy-env~\$current\_pwd/xspecfem3D~~\\
-~~~\\
-~\#~collect~seismograms~and~clean~up
-
-cd~current\_pwd/~~~\\
-
-
-mkdir~-p~SEM
-
-cd~SEM/~
-
-collect\_seismo.pl~../OUTPUT\_FILES/lsf\_machines
-
-cleanbase.pl~../OUTPUT\_FILES/machines
-\end{lyxcode}
 
 \chapter{{\normalsize \label{cha:-Changing-the}} Changing the Model}
 
@@ -3727,12 +3572,8 @@ that replace existing subroutines in the \texttt{SPECFEM3D Cartesian}
 package. Note that \texttt{SPECFEM3D Cartesian} can handle Earth models
 with material properties that vary within each spectral element.
 
-%% magnoni 6/12
 
-
-
-\section{{\normalsize \label{sec:Using-tomographic}}Using external tomographic
-Earth models}
+\section{{\normalsize \label{sec:Using-tomographic}}Using external tomographic Earth models}
 
 To implement your own external tomographic model(s), you must provide
 your own external tomography file(s), and choose between two possible
