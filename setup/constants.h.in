@@ -46,6 +46,30 @@
 
 !----------- parameters that can be changed by the user -----------
 
+!! DK DK July 2014, CNRS Marseille, France:
+!! DK DK added the ability to run several calculations (several earthquakes)
+!! DK DK in an embarrassingly-parallel fashion from within the same run;
+!! DK DK this can be useful when using a very large supercomputer to compute
+!! DK DK many earthquakes in a catalog, in which case it can be better from
+!! DK DK a batch job submission point of few to start fewer and much larger jobs,
+!! DK DK each of them computing several earthquakes in parallel.
+!! DK DK To turn that option on, set parameter NUMBER_OF_SIMULTANEOUS_RUNS
+!! DK DK to a value greater than 1 in file setup/constants.h.in before
+!! DK DK configuring and compiling the code.
+!! DK DK To implement that, we create NUMBER_OF_SIMULTANEOUS_RUNS MPI sub-communicators,
+!! DK DK each of them being labeled "my_local_mpi_comm_world", and we use them
+!! DK DK in all the routines in "src/shared/parallel.f90", except in MPI_ABORT() because in that case
+!! DK DK we need to keep the entire run.
+!! DK DK When that option is on, of course the number of processor cores used to start
+!! DK DK the code in the batch system must be a multiple of NUMBER_OF_SIMULTANEOUS_RUNS,
+!! DK DK all the individual runs must use the same number of processor cores
+!! DK DK (which as usual is NPROC in the input file DATA/Par_file,
+!! DK DK and thus the total number of processor cores to request from the batch system
+!! DK DK should be NUMBER_OF_SIMULTANEOUS_RUNS * NPROC.
+!! DK DK All the runs to perform must be placed in directories called run0001, run0002, run0003 and so on
+!! DK DK (with exactly four digits).
+  integer, parameter :: NUMBER_OF_SIMULTANEOUS_RUNS = 1
+
 ! set to .false.  if running on a Beowulf-type machine with local disks
 ! set to .true. if running on a shared-memory machine with common file system
 ! if running on a Beowulf, also modify name of nodes in filter_machine_file.f90
