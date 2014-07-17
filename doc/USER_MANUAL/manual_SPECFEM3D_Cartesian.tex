@@ -3,7 +3,9 @@
 %% Do not edit unless you really know what you are doing.
 \documentclass[oneside,english]{book}
 \usepackage[T1]{fontenc}
-\usepackage[latin1]{inputenc}
+%% DK DK we do not accept accented letters, use the old LaTeX syntax
+%% DK DK for them instead: \'e \`e  \"e \^e and so on.
+%% DK DK \usepackage[latin1]{inputenc}
 \usepackage[letterpaper]{geometry}
 \geometry{verbose,tmargin=1in,bmargin=1in,lmargin=1in,rmargin=1in}
 \setcounter{secnumdepth}{3}
@@ -127,7 +129,7 @@ in alphabetical order,
 Jean-Paul (Pablo) Ampuero,
 Kangchen Bai,
 Piero Basini,
-Céline Blitz,
+C\'eline Blitz,
 Ebru Bozda\u{g},
 Emanuele Casarotti,
 Joseph Charles,
@@ -146,11 +148,11 @@ Yang Luo,
 Alessia Maggi,
 Federica Magnoni,
 Roland Martin,
-René Matzen,
+Ren\'e Matzen,
 Dennis McRitchie,
 Matthias Meschede,
 Peter Messmer,
-David Michéa,
+David Mich\'ea,
 Surendra Nadh Somala,
 Tarje Nissen-Meyer,
 Daniel Peter,
@@ -443,7 +445,7 @@ and uncomment the METIS link flag in that file before running \texttt{configure}
 
 The SCOTCH library \citep{PeRo96} provides efficent static mapping,
 graph and mesh partitioning routines. SCOTCH is a free software package
-developed by François Pellegrini et al. from LaBRI and INRIA in Bordeaux,
+developed by Fran\c{c}ois Pellegrini et al. from LaBRI and INRIA in Bordeaux,
 France, downloadable from the web page \url{https://gforge.inria.fr/projects/scotch/}.
 In case no SCOTCH libraries can be found on the system, the configuration
 will bundle the version provided with the source code for compilation.
@@ -606,7 +608,7 @@ with \texttt{CC=gcc} instead of \texttt{CC=bgxlc\_r}.
 \noindent \underline{Older installation instruction for IBM BlueGene, from 2011:}\\
 
 
-\noindent To compile the code on an IBM BlueGene, Laurent Léger from
+\noindent To compile the code on an IBM BlueGene, Laurent L\'eger from
 IDRIS, France, suggests the following: compile the code with
 
 \noindent \texttt{ FLAGS\_CHECK=\textquotedbl{}-O3 -qsave -qstrict
@@ -1166,7 +1168,7 @@ of elements in each slice while minimizing the communication costs
 resulting from the placement of adjacent elements on different processors.
 \texttt{decompose\_mesh} depends on the SCOTCH library \citep{PeRo96},
 which provides efficent static mapping, graph and mesh partitioning
-routines. SCOTCH is a free software package developed by François
+routines. SCOTCH is a free software package developed by Fran\c{c}ois
 Pellegrini et al. from LaBRI and INRIA in Bordeaux, France, downloadable
 from the web page \url{https://gforge.inria.fr/projects/scotch/}.
 \\
