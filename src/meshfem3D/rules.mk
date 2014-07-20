@@ -67,6 +67,7 @@ meshfem3D_MODULES = \
 
 meshfem3D_SHARED_OBJECTS = \
 	$O/create_name_database.shared.o \
+	$O/constants_mod.shared_module.o \
 	$O/exit_mpi.shared.o \
 	$O/get_global.shared.o \
 	$O/hex_nodes.shared.o \

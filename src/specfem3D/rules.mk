@@ -43,6 +43,7 @@ specfem3D_TARGETS = \
 
 
 specfem3D_OBJECTS = \
+	$O/constants_mod.shared_module.o \
 	$O/assemble_MPI_vector.spec.o \
 	$O/check_stability.spec.o \
 	$O/fault_solver_common.spec.o \
@@ -297,7 +298,7 @@ endif
 ### Module dependencies
 ###
 
-$O/specfem3D_par.spec.o: $O/constants_mod.shared_module.o
+$O/specfem3D_par.spec.o: $O/constants_mod.shared_module.o $O/unused_mod.shared_module.o
 $O/compute_stacey_acoustic.spec.o: $O/constants_mod.shared_module.o
 $O/compute_stacey_poroelastic.spec.o: $O/constants_mod.shared_module.o
 $O/locate_receivers.spec.o: $O/constants_mod.shared_module.o
@@ -335,7 +336,7 @@ $O/model_update.spec.o: $O/specfem3D_par.spec.o
 $O/pml_par.spec.o: $O/specfem3D_par.spec.o
 $O/setup_GLL_points.spec.o: $O/specfem3D_par.spec.o
 $O/setup_movie_meshes.spec.o: $O/specfem3D_par.spec.o
-$O/setup_sources_receivers.spec.o: $O/specfem3D_par.spec.o
+$O/setup_sources_receivers.spec.o: $O/specfem3D_par.spec.o $O/constants_mod.shared_module.o 
 $O/specfem3D.spec.o: $O/specfem3D_par.spec.o
 $O/save_adjoint_kernels.spec.o: $O/specfem3D_par.spec.o
 $O/save_external_bin_m_up.spec.o: $O/specfem3D_par.spec.o
@@ -362,7 +363,7 @@ $O/compute_forces_viscoelastic_Dev.spec.o: $O/specfem3D_par.spec.o $O/pml_par.sp
 $O/compute_forces_viscoelastic_noDev.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o $O/fault_solver_dynamic.spec.o
 $O/compute_forces_viscoelastic_calling_routine.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o $O/fault_solver_dynamic.spec.o $O/fault_solver_kinematic.spec.o
 $O/iterate_time.spec.o: $O/specfem3D_par.spec.o $O/gravity_perturbation.spec.o
-$O/prepare_timerun.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o $O/fault_solver_dynamic.spec.o $O/fault_solver_kinematic.spec.o $O/gravity_perturbation.spec.o
+$O/prepare_timerun.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o $O/fault_solver_dynamic.spec.o $O/fault_solver_kinematic.spec.o $O/gravity_perturbation.spec.o $O/unused_mod.shared_module.o
 
 ## adios
 $O/read_forward_arrays_adios.spec_adios.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o

@@ -31,5 +31,12 @@ module constants
 
   include "constants.h"
 
+  ! a negative initial value is a convention that indicates that groups (i.e. sub-communicators, one per run) are off by default
+  integer :: mygroup = -1
+
+  ! create a copy of the original output file path, to which we may add a "run0001/", "run0002/", "run0003/" prefix later
+  ! if NUMBER_OF_SIMULTANEOUS_RUNS > 1
+  character(len=MAX_STRING_LEN) :: OUTPUT_FILES_PATH = OUTPUT_FILES_PATH_BASE
+
 end module constants
 

@@ -25,29 +25,26 @@
 !
 !=====================================================================
 
-
 program model_update
 
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
   use specfem_par_poroelastic
+
   implicit none
 
   ! ======================================================
   ! USER PARAMETERS
 
   ! directory where the mesh files for the NEW model will be written
-  character(len=MAX_STRING_LEN), parameter :: &
-    LOCAL_PATH_NEW = trim(LOCAL_PATH_Q)//'/mesh_files_m01'
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH_NEW
 
   ! directory where the output files of model_update will be written
-  character(len=*), parameter :: &
-    OUTPUT_MODEL_UPD = trim(OUTPUT_FILES_PATH)//'/OUTPUT_FILES_MODEL_UPD'
+  character(len=MAX_STRING_LEN) :: OUTPUT_MODEL_UPD
 
   ! directory where the summed and smoothed input kernels are linked
-  character(len=*), parameter :: &
-    INPUT_KERNELS = trim(LOCAL_PATH_Q)//'/sum_smooth_kern'
+  character(len=MAX_STRING_LEN) :: INPUT_KERNELS
 
   ! by default, this algorithm uses (bulk,bulk_beta,rho) kernels to update vp,vs,rho
   ! if you prefer using (alpha,beta,rho) kernels, set this flag to true
@@ -148,12 +145,20 @@ program model_update
 
   ! subjective step length to multiply to the gradient
   ! e.g. step_fac = 0.03
-
   call get_command_argument(1,s_step_fac)
 
   if (trim(s_step_fac) == '') then
     call exit_MPI(myrank,'Usage: add_model step_factor')
   endif
+
+  ! directory where the mesh files for the NEW model will be written
+  LOCAL_PATH_NEW = trim(OUTPUT_FILES_PATH)//'/mesh_files_m01'
+
+  ! directory where the output files of model_update will be written
+  OUTPUT_MODEL_UPD = trim(OUTPUT_FILES_PATH)//'/OUTPUT_FILES_MODEL_UPD'
+
+  ! directory where the summed and smoothed input kernels are linked
+  INPUT_KERNELS = trim(OUTPUT_FILES_PATH)//'/sum_smooth_kern'
 
   ! read in parameter information
   read(s_step_fac,*) step_fac

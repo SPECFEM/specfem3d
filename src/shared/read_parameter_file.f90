@@ -54,7 +54,7 @@
   logical USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE,USE_RICKER_TIME_FUNCTION
   logical PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID,COUPLE_WITH_DSM
 
-  character(len=MAX_STRING_LEN) :: LOCAL_PATH,TOMOGRAPHY_PATH,CMTSOLUTION,FORCESOLUTION,TRACTION_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH,TOMOGRAPHY_PATH,CMTSOLUTION,FORCESOLUTION,TRACTION_PATH,path_to_add
 
 ! local variables
   integer ::ios,icounter,isource,idummy,nproc_eta_old,nproc_xi_old
@@ -120,8 +120,17 @@
   if (ierr /= 0) return
   call read_value_logical(ANISOTROPY, 'ANISOTROPY', ierr)
   if (ierr /= 0) return
+
   call read_value_string(TOMOGRAPHY_PATH, 'TOMOGRAPHY_PATH', ierr)
   if (ierr /= 0) return
+! see if we are running several independent runs in parallel
+! if so, add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
+! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
+  if(NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
+    write(path_to_add,"('run',i4.4,'/')") mygroup + 1
+    TOMOGRAPHY_PATH = path_to_add(1:len_trim(path_to_add))//TOMOGRAPHY_PATH(1:len_trim(TOMOGRAPHY_PATH))
+  endif
+
   call read_value_logical(USE_OLSEN_ATTENUATION, 'USE_OLSEN_ATTENUATION', ierr)
   if (ierr /= 0) return
   call read_value_double_precision(OLSEN_ATTENUATION_RATIO, 'OLSEN_ATTENUATION_RATIO', ierr)
@@ -154,8 +163,17 @@
   if (ierr /= 0) return
   call read_value_logical(SAVE_MESH_FILES, 'SAVE_MESH_FILES', ierr)
   if (ierr /= 0) return
+
   call read_value_string(LOCAL_PATH, 'LOCAL_PATH', ierr)
   if (ierr /= 0) return
+! see if we are running several independent runs in parallel
+! if so, add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
+! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
+  if(NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
+    write(path_to_add,"('run',i4.4,'/')") mygroup + 1
+    LOCAL_PATH = path_to_add(1:len_trim(path_to_add))//LOCAL_PATH(1:len_trim(LOCAL_PATH))
+  endif
+
   call read_value_integer(NTSTEP_BETWEEN_OUTPUT_INFO, 'NTSTEP_BETWEEN_OUTPUT_INFO', ierr)
   if (ierr /= 0) return
   call read_value_integer(NTSTEP_BETWEEN_OUTPUT_SEISMOS, 'NTSTEP_BETWEEN_OUTPUT_SEISMOS', ierr)
@@ -170,8 +188,16 @@
   if (ierr /= 0) return
   call read_value_logical(COUPLE_WITH_DSM, 'COUPLE_WITH_DSM', ierr)
   if (ierr /= 0) return
+
   call read_value_string(TRACTION_PATH, 'TRACTION_PATH', ierr)
   if (ierr /= 0) return
+! see if we are running several independent runs in parallel
+! if so, add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
+! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
+  if(NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
+    write(path_to_add,"('run',i4.4,'/')") mygroup + 1
+    TRACTION_PATH = path_to_add(1:len_trim(path_to_add))//TRACTION_PATH(1:len_trim(TRACTION_PATH))
+  endif
 
   ! close parameter file
   call close_parameter_file()
@@ -211,6 +237,13 @@
     ! compute the total number of sources in the FORCESOLUTION file
     ! there are NLINES_PER_FORCESOLUTION_SOURCE lines per source in that file
     FORCESOLUTION = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'FORCESOLUTION'
+! see if we are running several independent runs in parallel
+! if so, add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
+! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
+    if(NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
+      write(path_to_add,"('run',i4.4,'/')") mygroup + 1
+      FORCESOLUTION = path_to_add(1:len_trim(path_to_add))//FORCESOLUTION(1:len_trim(FORCESOLUTION))
+    endif
 
     open(unit=21,file=trim(FORCESOLUTION),iostat=ios,status='old',action='read')
     if (ios /= 0) stop 'error opening FORCESOLUTION file'
@@ -232,6 +265,13 @@
     ! compute the total number of sources in the CMTSOLUTION file
     ! there are NLINES_PER_CMTSOLUTION_SOURCE lines per source in that file
     CMTSOLUTION = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'CMTSOLUTION'
+! see if we are running several independent runs in parallel
+! if so, add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
+! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
+    if(NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
+      write(path_to_add,"('run',i4.4,'/')") mygroup + 1
+      CMTSOLUTION = path_to_add(1:len_trim(path_to_add))//CMTSOLUTION(1:len_trim(CMTSOLUTION))
+    endif
 
     open(unit=21,file=trim(CMTSOLUTION),iostat=ios,status='old',action='read')
     if (ios /= 0) stop 'error opening CMTSOLUTION file'
