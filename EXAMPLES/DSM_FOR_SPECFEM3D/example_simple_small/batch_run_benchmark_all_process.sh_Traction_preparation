@@ -4,7 +4,7 @@
 #             ------------ BACTH AND SPECIFIC CLUSTER DIRECTIVES  ------ 
 
 #MSUB -r run_benchmark
-#MSUB -n 12
+#MSUB -n 24
 #MSUB -N 1
 #MSUB -x 
 #MSUB -T 10800
@@ -86,8 +86,8 @@
 declare -i NPROC NPROC_MINUS_ONE CPUS CHOICE MIDDLE
 
 # NUMBER OF MPI PROCESSES
-NPROC=40
-CPUS=40
+NPROC=24
+CPUS=24
 # Here i set the number of cores for SPEC3D computation is 12 too.
 
 # MPIRUN COMMAND 
@@ -117,7 +117,7 @@ OUT_MOVIE=$(pwd)/movie
 #------- input files creation 
 # you must write the absolute path for : xcreate_input
 # you must edit and complete : parfile_for_benchmark  
-/home/durochat/Codes/SPECFEM3Ds/specfem3d/utils/DSM_FOR_SPECFEM3D/bin/xcreate_inputs_files<<EOF
+$HOME_SPECFEM3D/utils/DSM_FOR_SPECFEM3D/bin/xcreate_inputs_files<<EOF
 parfile_for_benchmark
 EOF
 

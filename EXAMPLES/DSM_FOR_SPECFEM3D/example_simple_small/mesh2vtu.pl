@@ -6,8 +6,8 @@ use File::Basename;
 $progname = basename($0);
 
 ### Please modify the following variables according to your own system setting ###
-$mesh2vtu = "/home/durochat/Codes/SPECFEM3Ds/specfem3d/utils/Visualization/Paraview/mesh2vtu/mesh2vtu";
-$REQLIBS  = "env LD_LIBRARY_PATH=/usr/lib/vtk-5.2/";
+$mesh2vtu = "$HOME_SPECFEM3D/utils/Visualization/Paraview/mesh2vtu/mesh2vtu";
+$REQLIBS  = "env LD_LIBRARY_PATH=/usr/local/VTK/lib/vtk-5.6/";
 #################################################################################
 
 sub Usage {

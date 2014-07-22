@@ -4,7 +4,7 @@
 #             ------------ BACTH AND SPECIFIC CLUSTER DIRECTIVES  ------ 
 
 #MSUB -r run_benchmark
-#MSUB -n 12
+#MSUB -n 24
 #MSUB -N 1
 #MSUB -x 
 #MSUB -T 10800
@@ -86,8 +86,8 @@
 declare -i NPROC NPROC_MINUS_ONE CPUS
 
 # NUMBER OF MPI PROCESSES
-NPROC=40
-CPUS=40
+NPROC=24
+CPUS=24
 
 # MPIRUN COMMAND 
 MPIRUN="mpirun"

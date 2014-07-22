@@ -3,14 +3,15 @@
 
 #             ------------ BACTH AND SPECIFIC CLUSTER DIRECTIVES  ------ 
 
-#MSUB -r run_benchmark
-#MSUB -n 12
+#MSUB -r Benchmark_couple_SPECFEM3D_DSM        # Nom du job  
+#MSUB -n 24
 #MSUB -N 1
 #MSUB -x 
-#MSUB -T 10800
+#MSUB -T 84000
 #MSUB -q standard
-#MSUB -o run_benchmark.o
-#MSUB -e run_benchmark.e 
+#MSUB -e Benchmark_couple_run.e
+#MSUB -o Benchmark_couple_run.o
+#MSUB -A gen7165 
 
 set -x
 cd $BRIDGE_MSUB_PWD
