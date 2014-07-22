@@ -783,6 +783,7 @@ contains
              ! # ispec_local # material_index_1 # material_index_2 # corner_id1 # corner_id2 # ... # corner_id27
              write(IIN_database) glob2loc_elmnts(i)+1, num_modele(1,i+1), &
                                   num_modele(2,i+1),(loc_nodes(k)+1, k=0,NGNOD-1)
+             write(124,*) i+1,glob2loc_elmnts(i)+1,iproc
           endif
        enddo
     endif

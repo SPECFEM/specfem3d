@@ -68,7 +68,7 @@ cd $BRIDGE_MSUB_PWD
 declare -i NPROC NPROC_MINUS_ONE
 
 # NUMBER OF MPI PROCESSES
-NPROC=12
+NPROC=24
 
 # ENTER OPTION FOR MPIRUN 
 OPTION=
@@ -91,7 +91,7 @@ OUT_MOVIE=$(pwd)/movie
 #------- input files creation 
 # you must write the absolute path for : xcreate_input
 # you must edit and complete : parfile_for_benchmark  
-/home/durochat/Codes/SPECFEM3Ds/specfem3d/utils/DSM_FOR_SPECFEM3D/bin/xcreate_inputs_files<<EOF
+$HOME_SPECFEM3D/utils/DSM_FOR_SPECFEM3D/bin/xcreate_inputs_files<<EOF
 parfile_for_benchmark
 EOF
 

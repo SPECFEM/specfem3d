@@ -54,12 +54,12 @@
 ## ------------------ INPUTS -----------------------------
 
 # DSM BINARY : (to do supprimer peut-être çà de params.in??)
-BIN_DSM=/home/durochat/Codes/SPECFEM3Ds/specfem3d/utils/DSM_FOR_SPECFEM3D/bin
+BIN_DSM=$HOME_SPECFEM3D/utils/DSM_FOR_SPECFEM3D/bin
 # NBPROC is declared as integer (important do not change)
 declare -i NPROC NPROC_MINUS_ONE
 
 # NUMBER OF MPI PROCESSES
-NPROC=12
+NPROC=24
 
 # ENTER OPTION FOR MPIRUN 
 OPTION=

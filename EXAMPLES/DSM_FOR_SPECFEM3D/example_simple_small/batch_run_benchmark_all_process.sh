@@ -3,34 +3,16 @@
 
 #             ------------ BACTH AND SPECIFIC CLUSTER DIRECTIVES  ------ 
 
-#MSUB -r run_benchmark
-#MSUB -n 12
-#MSUB -N 1
-#MSUB -x 
-#MSUB -T 10800
+#MSUB -r Benchmark_couple_SPECFEM3D_DSM        # Nom du job  
+#MSUB -n 24
+#MSUB -T 84000
 #MSUB -q standard
-#MSUB -o run_benchmark.o
-#MSUB -e run_benchmark.e 
-
+#MSUB -e Benchmark_couple_run.e
+#MSUB -o Benchmark_couple_run.o
+#MSUB -A gen7165 
+      
 # set -x
-# cd $BRIDGE_MSUB_PWD
-
-
-#OAR -n bench_hy
-#OAR -l nodes=1,walltime=2:00:00
-#OAR -p cluster
-##OAR -q development
-#OAR -O bench_hy.%jobid%.out 
-#OAR -E bench_hy.%jobid%.err
-
-
-## Chargement des modules module load ... 
-#module load intel/13.0
-#module load openmpi/intel/1.6.3
-#module list
-#echo ${OAR_NODEFILE} 
-#CPUS=$(wc -l ${OAR_NODEFILE} | awk '{print $1}')
-#echo $CPUS
+# cd ${BRIDGE_MSUB_PWD}
 
 
 ######################################################################################################################
@@ -77,26 +59,29 @@
 # GEOPHYSICAL JOURNAL INTERNATIONAL Volume:192 Issue:1 Pages:230-247 DOI:10.1093/gji/ggs006 Published: JAN 2013 
 #
 #####################################################################################################################
-
+#
+## ----- First thing to do : the home of SPECFEM3D is in parmans.in ---------
+source params.in
 
 ## ------------------ INPUTS -----------------------------
-
 
 # NBPROC is declared as integer (important do not change)
 declare -i NPROC NPROC_MINUS_ONE CPUS CHOICE MIDDLE
 
 # NUMBER OF MPI PROCESSES
-NPROC=40
-CPUS=40
+NPROC=24
+CPUS=24
 
 # MPIRUN COMMAND 
-MPIRUN="mpirun -machinefile /home/cluster_maintenance/mymachines2"
+MPIRUN=ccc_mprun
 
 # ENTER OPTION FOR MPIRUN 
-OPTION=" -np "${NPROC}
-OPTION_SIMU=" -np "${CPUS}
-#OPTION=" -np "${CPUS}"  -machinefile "${OAR_NODEFILE}" -bysocket -bind-to-core"
-#OPTION_SIMU=" -np "${CPUS}"  -machinefile "${OAR_NODEFILE}" -bysocket -bind-to-core"
+OPTION=
+ 
+###OPTION=" -np "${NPROC}
+###OPTION_SIMU=" -np "${CPUS}
+###OPTION=" -np "${CPUS}"  -machinefile "${OAR_NODEFILE}" -bysocket -bind-to-core"
+###OPTION_SIMU=" -np "${CPUS}"  -machinefile "${OAR_NODEFILE}" -bysocket -bind-to-core"
 
 # do not change
 NPROC_MINUS_ONE="$NPROC-1"
@@ -116,7 +101,7 @@ OUT_MOVIE=$(pwd)/movie
 #------- input files creation 
 # you must write the absolute path for : xcreate_input
 # you must edit and complete : parfile_for_benchmark  
-/home/durochat/Codes/SPECFEM3Ds/specfem3d/utils/DSM_FOR_SPECFEM3D/bin/xcreate_inputs_files<<EOF
+$HOME_SPECFEM3D/utils/DSM_FOR_SPECFEM3D/bin/xcreate_inputs_files<<EOF
 parfile_for_benchmark
 EOF
 
