@@ -396,12 +396,11 @@
   implicit none
 
   ! check simulation parameters
-  if (SIMULATION_TYPE /= 1 .and. NSOURCES > 1000) &
-    call exit_mpi(myrank, 'for adjoint simulations, NSOURCES <= 1000')
+  if (SIMULATION_TYPE /= 1 .and. NSOURCES > 1000) call exit_mpi(myrank, 'for adjoint simulations, NSOURCES <= 1000')
 
   ! snapshot file names: ADJOINT attenuation
   if (ATTENUATION .and. ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3)) &
-    call create_name_database(prname_Q,myrank,LOCAL_PATH_Q)
+    call create_name_database(prname_Q,myrank,OUTPUT_FILES_PATH)
 
   ! number of elements and points for adjoint arrays
   if( SIMULATION_TYPE == 3 ) then
@@ -448,19 +447,18 @@
   endif
 
   ! check for GPU runs
-  if( NGLLX /= 5 .or. NGLLY /= 5 .or. NGLLZ /= 5 ) &
-    stop 'GPU mode can only be used if NGLLX == NGLLY == NGLLZ == 5'
-  if( CUSTOM_REAL /= 4 ) &
-    stop 'GPU mode runs only with CUSTOM_REAL == 4'
-  if( SAVE_MOHO_MESH ) &
-    stop 'GPU mode does not support SAVE_MOHO_MESH yet'
+  if( NGLLX /= 5 .or. NGLLY /= 5 .or. NGLLZ /= 5 ) stop 'GPU mode can only be used if NGLLX == NGLLY == NGLLZ == 5'
+
+  if( CUSTOM_REAL /= 4 ) stop 'GPU mode runs only with CUSTOM_REAL == 4'
+
+  if( SAVE_MOHO_MESH ) stop 'GPU mode does not support SAVE_MOHO_MESH yet'
+
   if( ATTENUATION ) then
     if( N_SLS /= 3 ) &
       stop 'GPU mode does not support N_SLS /= 3 yet'
   endif
-  if( POROELASTIC_SIMULATION ) then
-    stop 'poroelastic simulations on GPU not supported yet'
-  endif
+
+  if( POROELASTIC_SIMULATION ) stop 'poroelastic simulations on GPU not supported yet'
 
   ! initializes GPU and outputs info to files for all processes
   call initialize_cuda_device(myrank,ncuda_devices)

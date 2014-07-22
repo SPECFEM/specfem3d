@@ -30,23 +30,24 @@
 !! DK DK in an embarrassingly-parallel fashion from within the same run;
 !! DK DK this can be useful when using a very large supercomputer to compute
 !! DK DK many earthquakes in a catalog, in which case it can be better from
-!! DK DK a batch job submission point of few to start fewer and much larger jobs,
+!! DK DK a batch job submission point of view to start fewer and much larger jobs,
 !! DK DK each of them computing several earthquakes in parallel.
 !! DK DK To turn that option on, set parameter NUMBER_OF_SIMULTANEOUS_RUNS
 !! DK DK to a value greater than 1 in file setup/constants.h.in before
 !! DK DK configuring and compiling the code.
 !! DK DK To implement that, we create NUMBER_OF_SIMULTANEOUS_RUNS MPI sub-communicators,
 !! DK DK each of them being labeled "my_local_mpi_comm_world", and we use them
-!! DK DK in all the routines below, except in MPI_ABORT() because in that case
-!! DK DK we need to keep the entire run.
+!! DK DK in all the routines in "src/shared/parallel.f90", except in MPI_ABORT() because in that case
+!! DK DK we need to kill the entire run.
 !! DK DK When that option is on, of course the number of processor cores used to start
 !! DK DK the code in the batch system must be a multiple of NUMBER_OF_SIMULTANEOUS_RUNS,
-!! DK DK all the individual runs must use the same number of processor cores
-!! DK DK (which as usual is NPROC in the input file DATA/Par_file,
+!! DK DK all the individual runs must use the same number of processor cores,
+!! DK DK which as usual is NPROC in the input file DATA/Par_file,
 !! DK DK and thus the total number of processor cores to request from the batch system
 !! DK DK should be NUMBER_OF_SIMULTANEOUS_RUNS * NPROC.
 !! DK DK All the runs to perform must be placed in directories called run0001, run0002, run0003 and so on
-!! DK DK (with exactly four digits).
+!! DK DK (with exactly four digits) and you must create a link from the root directory of the code
+!! DK DK to the first copy of the executable programs by typing " ln -s run0001/bin bin ".
 
 module my_mpi
 
@@ -1199,21 +1200,39 @@ end module my_mpi
 
   implicit none
 
-! integer,intent(out) :: comm
-! integer :: ier
+  integer :: sizeval,myrank,ier,key
 
-! call MPI_COMM_DUP(my_local_mpi_comm_world,comm,ier)
-! if( ier /= 0 ) stop 'error duplicating my_local_mpi_comm_world communicator'
+  character(len=MAX_STRING_LEN) :: path_to_add
+
+  if(NUMBER_OF_SIMULTANEOUS_RUNS <= 0) stop 'NUMBER_OF_SIMULTANEOUS_RUNS <= 0 makes no sense'
+
+  call MPI_COMM_SIZE(MPI_COMM_WORLD,sizeval,ier)
+  if(NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mod(sizeval,NUMBER_OF_SIMULTANEOUS_RUNS) /= 0) &
+    stop 'the number of MPI processes is not a multiple of NUMBER_OF_SIMULTANEOUS_RUNS'
+
+  if(NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. IMAIN == ISTANDARD_OUTPUT) &
+    stop 'must not have IMAIN == ISTANDARD_OUTPUT when NUMBER_OF_SIMULTANEOUS_RUNS > 1 otherwise output to screen is mingled'
 
   if(NUMBER_OF_SIMULTANEOUS_RUNS == 1) then
+
     my_local_mpi_comm_world = MPI_COMM_WORLD
-  else if(NUMBER_OF_SIMULTANEOUS_RUNS <= 0) then
-    stop 'NUMBER_OF_SIMULTANEOUS_RUNS <= 0 makes no sense'
+
   else
-    !! DK DK temporary hack
-    my_local_mpi_comm_world = MPI_COMM_WORLD
-    stop 'NUMBER_OF_SIMULTANEOUS_RUNS > 1 not implemented yet'
-    ! we should call MPI_COMM_SPLIT() here
+
+    call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
+!   create the different groups of processes, one for each independent run
+    mygroup = mod(myrank,NUMBER_OF_SIMULTANEOUS_RUNS)
+    key = myrank
+    if(mygroup < 0 .or. mygroup > NUMBER_OF_SIMULTANEOUS_RUNS-1) stop 'invalid value of mygroup'
+
+!   build the sub-communicators
+    call MPI_COMM_SPLIT(MPI_COMM_WORLD, mygroup, key, my_local_mpi_comm_world, ier)
+    if(ier /= 0) stop 'error while trying to create the sub-communicators'
+
+!   add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
+    write(path_to_add,"('run',i4.4,'/')") mygroup + 1
+    OUTPUT_FILES_PATH = path_to_add(1:len_trim(path_to_add))//OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))
+
   endif
 
   end subroutine world_split
@@ -1230,11 +1249,9 @@ end module my_mpi
 
   implicit none
 
-  if(NUMBER_OF_SIMULTANEOUS_RUNS > 1) then
-    !! DK DK temporary hack
-    stop 'NUMBER_OF_SIMULTANEOUS_RUNS > 1 not implemented yet'
-    ! we should call MPI_COMM_FREE() here
-  endif
+  integer :: ier
+
+  if(NUMBER_OF_SIMULTANEOUS_RUNS > 1) call MPI_COMM_FREE(my_local_mpi_comm_world,ier)
 
   end subroutine world_unsplit
 

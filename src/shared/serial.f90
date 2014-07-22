@@ -29,7 +29,6 @@
 !---- Stubs for parallel routines. Used by the serial version.
 !----
 
-
   subroutine stop_all()
   stop 'error, program ended in exit_MPI'
   end subroutine stop_all
@@ -236,8 +235,14 @@
 !----
 !
 
-
   subroutine init()
+
+  use constants, only: NUMBER_OF_SIMULTANEOUS_RUNS
+
+  if(NUMBER_OF_SIMULTANEOUS_RUNS <= 0) stop 'NUMBER_OF_SIMULTANEOUS_RUNS <= 0 makes no sense'
+
+  if(NUMBER_OF_SIMULTANEOUS_RUNS > 1) stop 'serial runs require NUMBER_OF_SIMULTANEOUS_RUNS == 1'
+
   end subroutine init
 
 !
@@ -246,7 +251,6 @@
 
   subroutine finalize()
   end subroutine finalize
-
 
 !
 !----
@@ -484,6 +488,21 @@
   recvbuf = sendbuf
 
   end subroutine sum_all_cr
+
+!
+!----
+!
+
+  subroutine sum_all_1Darray_dp(sendbuf, recvbuf, nx)
+
+  implicit none
+
+  integer :: nx
+  double precision, dimension(nx) :: sendbuf, recvbuf
+
+  recvbuf = sendbuf
+
+  end subroutine sum_all_1Darray_dp
 
 !
 !----
@@ -908,4 +927,26 @@
   comm = 0
 
   end subroutine world_duplicate
+
+!
+!----
+!
+
+  subroutine world_split()
+
+  use constants
+
+  implicit none
+
+  mygroup = 0
+
+  end subroutine world_split
+
+!
+!----
+!
+
+  subroutine world_unsplit()
+
+  end subroutine world_unsplit
 

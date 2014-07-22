@@ -55,6 +55,7 @@ decompose_mesh_MODULES = \
 	$(EMPTY_MACRO)
 
 decompose_mesh_SHARED_OBJECTS = \
+	$O/constants_mod.shared_module.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \
@@ -99,8 +100,8 @@ endif
 ### Module dependencies
 ###
 
-$O/decompose_mesh.dec.o: $O/part_decompose_mesh.dec.o $O/fault_scotch.dec.o ${SCOTCH_DIR}/include/scotchf.h
-$O/program_decompose_mesh.dec.o: $O/decompose_mesh.dec.o
+$O/decompose_mesh.dec.o: $O/part_decompose_mesh.dec.o $O/fault_scotch.dec.o ${SCOTCH_DIR}/include/scotchf.h $O/constants_mod.shared_module.o
+$O/program_decompose_mesh.dec.o: $O/decompose_mesh.dec.o $O/constants_mod.shared_module.o
 
 
 #######################################

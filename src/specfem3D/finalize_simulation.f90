@@ -128,8 +128,7 @@
   if (nrec_local > 0) then
     if (.not. (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3)) then
       ! seismograms
-      call write_adj_seismograms2_to_file(myrank,seismograms_eps,number_receiver_global, &
-            nrec_local,it,DT,NSTEP,t0,LOCAL_PATH)
+      call write_adj_seismograms2_to_file(myrank,seismograms_eps,number_receiver_global,nrec_local,it,DT,NSTEP,t0)
 
       ! source gradients  (for sources in elastic domains)
       do irec_local = 1, nrec_local

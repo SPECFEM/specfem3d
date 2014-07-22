@@ -88,6 +88,7 @@ generate_databases_MODULES = \
 
 generate_databases_SHARED_OBJECTS = \
 	$O/assemble_MPI_scalar.shared.o \
+	$O/constants_mod.shared_module.o \
 	$O/check_mesh_resolution.shared.o \
 	$O/create_name_database.shared.o \
 	$O/create_serial_name_database.shared.o \

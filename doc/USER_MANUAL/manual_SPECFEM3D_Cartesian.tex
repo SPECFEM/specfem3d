@@ -2164,18 +2164,20 @@ We have also added the ability to run several calculations (several earthquakes)
 in an embarrassingly-parallel fashion from within the same run;
 this can be useful when using a very large supercomputer to compute
 many earthquakes in a catalog, in which case it can be better from
-a batch job submission point of few to start fewer and much larger jobs,
+a batch job submission point of view to start fewer and much larger jobs,
 each of them computing several earthquakes in parallel.
 To turn that option on, set parameter NUMBER\_OF\_SIMULTANEOUS\_RUNS
 to a value greater than 1 in file setup/constants.h.in before
 configuring and compiling the code.
 When that option is on, of course the number of processor cores used to start
 the code in the batch system must be a multiple of NUMBER\_OF\_SIMULTANEOUS\_RUNS,
-all the individual runs must use the same number of processor cores
-(which as usual is NPROC in the input file DATA/Par\_file,
+all the individual runs must use the same number of processor cores,
+which as usual is NPROC in the input file DATA/Par\_file,
 and thus the total number of processor cores to request from the batch system
-should be NUMBER\_OF\_SIMULTANEOUS\_RUNS * NPROC.
-All the runs to perform must be placed in directories called run0001, run0002, run0003 and so on (with exactly four digits).
+should be NUMBER\_OF\_SIMULTANEOUS\_RUNS $\times$ NPROC.
+All the runs to perform must be placed in directories called run0001, run0002, run0003 and so on (with exactly four digits)
+and you must create a link from the root directory of the code
+to the first copy of the executable programs by typing " ln -s run0001/bin bin ".
 
 
 \chapter{\label{cha:Fault-Kinematics-Dynamics}Kinematic and dynamic fault
