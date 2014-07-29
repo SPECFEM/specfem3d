@@ -20,9 +20,9 @@
 ./input_dsm/st
 
 5.The SEM3D computation parameters and path settings are in file:
-./in_data_files/Par_file
-./in_data_files/STATIONS
-./in_data_files/CMTSOLUTION
+./DATA/Par_file
+./DATA/STATIONS
+./DATA/CMTSOLUTION
 
 6.The scripts control the Hybirid computaion is in ../shells/ directory.
 

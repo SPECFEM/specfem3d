@@ -53,7 +53,7 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,displ,veloc,r
   integer :: i,j,k,iglob,CPML_region_local
   integer :: singularity_type_4, singularity_type_5
   real(kind=CUSTOM_REAL) :: wgllcube,rhol,jacobianl
-  real(kind=CUSTOM_REAL) :: alpha_x,alpha_y,alpha_z,d_x,d_y,d_z,kappa_x,kappa_y,kappa_z   
+  real(kind=CUSTOM_REAL) :: alpha_x,alpha_y,alpha_z,d_x,d_y,d_z,kappa_x,kappa_y,kappa_z
   real(kind=CUSTOM_REAL) :: coef0_x,coef1_x,coef2_x,coef0_y,coef1_y,coef2_y,coef0_z,coef1_z,coef2_z
   real(kind=CUSTOM_REAL) :: A_0,A_1,A_2,A_3,A_4,A_5
   real(kind=CUSTOM_REAL) :: time_nplus1
@@ -84,9 +84,9 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,displ,veloc,r
 
         call l_parameter_computation( &
                time_nplus1, deltat, &
-               kappa_x, d_x, alpha_x, &    
-               kappa_y, d_y, alpha_y, &    
-               kappa_z, d_z, alpha_z, &    
+               kappa_x, d_x, alpha_x, &
+               kappa_y, d_y, alpha_y, &
+               kappa_z, d_z, alpha_z, &
                CPML_region_local,  &
                A_0, A_1, A_2, A_3, A_4, A_5, &
                coef0_x, coef1_x, coef2_x, &
@@ -157,7 +157,7 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_ac
   use specfem_par, only: NGLOB_AB,it,deltat,wgll_cube,jacobian,ibool,kappastore
   use pml_par, only: CPML_regions,NSPEC_CPML,d_store_x,d_store_y,d_store_z,K_store_x,K_store_y,K_store_z,&
                      alpha_store_x, alpha_store_y, alpha_store_z, &
-                     NSPEC_CPML,potential_dot_dot_acoustic_CPML,potential_acoustic_old,potential_acoustic_new  
+                     NSPEC_CPML,potential_dot_dot_acoustic_CPML,potential_acoustic_old,potential_acoustic_new
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
                        CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
@@ -172,7 +172,7 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_ac
   integer :: i,j,k,iglob,CPML_region_local
   integer :: singularity_type_4, singularity_type_5
   real(kind=CUSTOM_REAL) :: wgllcube,kappal_inv,jacobianl
-  real(kind=CUSTOM_REAL) :: alpha_x,alpha_y,alpha_z,d_x,d_y,d_z,kappa_x,kappa_y,kappa_z  
+  real(kind=CUSTOM_REAL) :: alpha_x,alpha_y,alpha_z,d_x,d_y,d_z,kappa_x,kappa_y,kappa_z
   real(kind=CUSTOM_REAL) :: coef0_x,coef1_x,coef2_x,coef0_y,coef1_y,coef2_y,coef0_z,coef1_z,coef2_z
   real(kind=CUSTOM_REAL) :: A_0,A_1,A_2,A_3,A_4,A_5
   real(kind=CUSTOM_REAL) :: time_nplus1
@@ -203,9 +203,9 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_ac
 
         call l_parameter_computation( &
                time_nplus1, deltat, &
-               kappa_x, d_x, alpha_x, &  
-               kappa_y, d_y, alpha_y, &  
-               kappa_z, d_z, alpha_z, &  
+               kappa_x, d_x, alpha_x, &
+               kappa_y, d_y, alpha_y, &
+               kappa_z, d_z, alpha_z, &
                CPML_region_local,  &
                A_0, A_1, A_2, A_3, A_4, A_5, &
                coef0_x, coef1_x, coef2_x, &
@@ -385,9 +385,9 @@ end subroutine read_potential_on_pml_interface
 !
 subroutine l_parameter_computation( &
                timeval, deltat, &
-               kappa_x, d_x, alpha_x, &  
-               kappa_y, d_y, alpha_y, &   
-               kappa_z, d_z, alpha_z, &  
+               kappa_x, d_x, alpha_x, &
+               kappa_y, d_y, alpha_y, &
+               kappa_z, d_z, alpha_z, &
                CPML_region_local, &
                A_0, A_1, A_2, A_3, A_4, A_5, &
                coef0_x, coef1_x, coef2_x, &
@@ -402,9 +402,9 @@ subroutine l_parameter_computation( &
   implicit none
 
   real(kind=CUSTOM_REAL), intent(in) :: timeval,deltat
-  real(kind=CUSTOM_REAL) :: kappa_x,d_x,alpha_x,beta_x, &  
-                            kappa_y,d_y,alpha_y,beta_y, &  
-                            kappa_z,d_z,alpha_z,beta_z     
+  real(kind=CUSTOM_REAL) :: kappa_x,d_x,alpha_x,beta_x, &
+                            kappa_y,d_y,alpha_y,beta_y, &
+                            kappa_z,d_z,alpha_z,beta_z
   integer, intent(in) :: CPML_region_local
 
   real(kind=CUSTOM_REAL), intent(out) :: A_0, A_1, A_2, A_3, A_4, A_5
@@ -439,19 +439,19 @@ subroutine l_parameter_computation( &
           abs( alpha_y - alpha_z ) >= 1.e-5_CUSTOM_REAL &
         ) then
 
-       beta_x = alpha_x + d_x / kappa_x   
-       beta_y = alpha_y + d_y / kappa_y   
-       beta_z = alpha_z + d_z / kappa_z   
+       beta_x = alpha_x + d_x / kappa_x
+       beta_y = alpha_y + d_y / kappa_y
+       beta_z = alpha_z + d_z / kappa_z
 
-       beta_xyz_1 = beta_x + beta_y + beta_z   
-       beta_xyz_2 = beta_x * beta_y + beta_x * beta_z + beta_y * beta_z   
-       beta_xyz_3 = beta_x * beta_y * beta_z   
+       beta_xyz_1 = beta_x + beta_y + beta_z
+       beta_xyz_2 = beta_x * beta_y + beta_x * beta_z + beta_y * beta_z
+       beta_xyz_3 = beta_x * beta_y * beta_z
 
-       bar_A_0 = kappa_x * kappa_y * kappa_z   
-       bar_A_1 = bar_A_0 * (beta_x + beta_y + beta_z - alpha_x - alpha_y - alpha_z)   
-       bar_A_2 = bar_A_0 * (beta_x - alpha_x) * (beta_y - alpha_y - alpha_x) &   
-               + bar_A_0 * (beta_y - alpha_y) * (beta_z - alpha_z - alpha_y) &   
-               + bar_A_0 * (beta_z - alpha_z) * (beta_x - alpha_x - alpha_z)     
+       bar_A_0 = kappa_x * kappa_y * kappa_z
+       bar_A_1 = bar_A_0 * (beta_x + beta_y + beta_z - alpha_x - alpha_y - alpha_z)
+       bar_A_2 = bar_A_0 * (beta_x - alpha_x) * (beta_y - alpha_y - alpha_x) &
+               + bar_A_0 * (beta_y - alpha_y) * (beta_z - alpha_z - alpha_y) &
+               + bar_A_0 * (beta_z - alpha_z) * (beta_x - alpha_x - alpha_z)
 
        bar_A_3 = bar_A_0 * alpha_x**2 &
                * (beta_x - alpha_x) * (beta_y - alpha_x) * (beta_z - alpha_x) &
@@ -465,7 +465,7 @@ subroutine l_parameter_computation( &
 
        A_0 = bar_A_0
        A_1 = bar_A_1
-       A_2 = bar_A_2   
+       A_2 = bar_A_2
        A_3 = bar_A_3
        A_4 = bar_A_4
        A_5 = bar_A_5
@@ -477,7 +477,7 @@ subroutine l_parameter_computation( &
        call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y, singularity_type_4, time_nplus1, time_n)
        call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z, singularity_type_5, time_nplus1, time_n)
 
-     elseif (&
+     else if (&
              abs( alpha_x - alpha_y ) < 1.e-5_CUSTOM_REAL  .AND. &
              abs( alpha_x - alpha_z ) >= 1.e-5_CUSTOM_REAL .AND. &
              abs( alpha_y - alpha_z ) >= 1.e-5_CUSTOM_REAL &
@@ -485,22 +485,22 @@ subroutine l_parameter_computation( &
 
        alpha_0 = max(alpha_x,alpha_y)
 
-       alpha_x = alpha_0   
-       alpha_y = alpha_0   
+       alpha_x = alpha_0
+       alpha_y = alpha_0
 
-       beta_x = alpha_x + d_x / kappa_x   
-       beta_y = alpha_y + d_y / kappa_y   
-       beta_z = alpha_z + d_z / kappa_z   
+       beta_x = alpha_x + d_x / kappa_x
+       beta_y = alpha_y + d_y / kappa_y
+       beta_z = alpha_z + d_z / kappa_z
 
-       beta_xyz_1 = beta_x + beta_y + beta_z   
-       beta_xyz_2 = beta_x * beta_y + beta_x * beta_z + beta_y * beta_z   
-       beta_xyz_3 = beta_x * beta_y * beta_z   
+       beta_xyz_1 = beta_x + beta_y + beta_z
+       beta_xyz_2 = beta_x * beta_y + beta_x * beta_z + beta_y * beta_z
+       beta_xyz_3 = beta_x * beta_y * beta_z
 
-       bar_A_0 = kappa_x * kappa_y * kappa_z   
-       bar_A_1 = bar_A_0 * (beta_x + beta_y + beta_z - alpha_x - alpha_y - alpha_z)   
-       bar_A_2 = bar_A_0 * (beta_x - alpha_x) * (beta_y - alpha_y - alpha_x) &   
-               + bar_A_0 * (beta_y - alpha_y) * (beta_z - alpha_z - alpha_y) &   
-               + bar_A_0 * (beta_z - alpha_z) * (beta_x - alpha_x - alpha_z)     
+       bar_A_0 = kappa_x * kappa_y * kappa_z
+       bar_A_1 = bar_A_0 * (beta_x + beta_y + beta_z - alpha_x - alpha_y - alpha_z)
+       bar_A_2 = bar_A_0 * (beta_x - alpha_x) * (beta_y - alpha_y - alpha_x) &
+               + bar_A_0 * (beta_y - alpha_y) * (beta_z - alpha_z - alpha_y) &
+               + bar_A_0 * (beta_z - alpha_z) * (beta_x - alpha_x - alpha_z)
        bar_A_3 = bar_A_0 * alpha_0 / (alpha_z - alpha_0)**2 * ( &
                - alpha_0**3 * (4._CUSTOM_REAL * alpha_0 - 5._CUSTOM_REAL * alpha_z) &
                + alpha_0**2 * (3._CUSTOM_REAL * alpha_0 - 4._CUSTOM_REAL * alpha_z) * beta_xyz_1 &
@@ -527,7 +527,7 @@ subroutine l_parameter_computation( &
        call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y, singularity_type_4, time_nplus1, time_n)
        call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z, singularity_type_5, time_nplus1, time_n)
 
-     elseif (&
+     else if (&
              abs( alpha_x - alpha_y ) >= 1.e-5_CUSTOM_REAL .AND. &
              abs( alpha_x - alpha_z ) < 1.e-5_CUSTOM_REAL  .AND. &
              abs( alpha_y - alpha_z ) >= 1.e-5_CUSTOM_REAL &
@@ -535,22 +535,22 @@ subroutine l_parameter_computation( &
 
        alpha_0 = max(alpha_x,alpha_z)
 
-       alpha_x = alpha_0   
-       alpha_z = alpha_0   
+       alpha_x = alpha_0
+       alpha_z = alpha_0
 
-       beta_x = alpha_x + d_x / kappa_x   
-       beta_y = alpha_y + d_y / kappa_y   
-       beta_z = alpha_z + d_z / kappa_z   
+       beta_x = alpha_x + d_x / kappa_x
+       beta_y = alpha_y + d_y / kappa_y
+       beta_z = alpha_z + d_z / kappa_z
 
-       beta_xyz_1 = beta_x + beta_y + beta_z   
-       beta_xyz_2 = beta_x * beta_y + beta_x * beta_z + beta_y * beta_z   
-       beta_xyz_3 = beta_x * beta_y * beta_z   
+       beta_xyz_1 = beta_x + beta_y + beta_z
+       beta_xyz_2 = beta_x * beta_y + beta_x * beta_z + beta_y * beta_z
+       beta_xyz_3 = beta_x * beta_y * beta_z
 
-       bar_A_0 = kappa_x * kappa_y * kappa_z   
-       bar_A_1 = bar_A_0 * (beta_x + beta_y + beta_z - alpha_x - alpha_y - alpha_z)   
-       bar_A_2 = bar_A_0 * (beta_x - alpha_x) * (beta_y - alpha_y - alpha_x) &   
-               + bar_A_0 * (beta_y - alpha_y) * (beta_z - alpha_z - alpha_y) &   
-               + bar_A_0 * (beta_z - alpha_z) * (beta_x - alpha_x - alpha_z)     
+       bar_A_0 = kappa_x * kappa_y * kappa_z
+       bar_A_1 = bar_A_0 * (beta_x + beta_y + beta_z - alpha_x - alpha_y - alpha_z)
+       bar_A_2 = bar_A_0 * (beta_x - alpha_x) * (beta_y - alpha_y - alpha_x) &
+               + bar_A_0 * (beta_y - alpha_y) * (beta_z - alpha_z - alpha_y) &
+               + bar_A_0 * (beta_z - alpha_z) * (beta_x - alpha_x - alpha_z)
 
        bar_A_3 = bar_A_0 * alpha_0 / (alpha_y - alpha_0)**2 * ( &
                - alpha_0**3 * (4._CUSTOM_REAL * alpha_0 - 5._CUSTOM_REAL * alpha_y) &
@@ -578,7 +578,7 @@ subroutine l_parameter_computation( &
        call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y, singularity_type_4, time_nplus1, time_n)
        call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z, singularity_type_5, time_nplus1, time_n)
 
-     elseif (&
+     else if (&
              abs( alpha_x - alpha_y ) >= 1.e-5_CUSTOM_REAL .AND. &
              abs( alpha_x - alpha_z ) >= 1.e-5_CUSTOM_REAL .AND. &
              abs( alpha_y - alpha_z ) < 1.e-5_CUSTOM_REAL  &
@@ -586,22 +586,22 @@ subroutine l_parameter_computation( &
 
        alpha_0 = max(alpha_y,alpha_z)
 
-       alpha_y = alpha_0   
-       alpha_z = alpha_0   
+       alpha_y = alpha_0
+       alpha_z = alpha_0
 
-       beta_x = alpha_x + d_x / kappa_x   
-       beta_y = alpha_y + d_y / kappa_y   
-       beta_z = alpha_z + d_z / kappa_z   
+       beta_x = alpha_x + d_x / kappa_x
+       beta_y = alpha_y + d_y / kappa_y
+       beta_z = alpha_z + d_z / kappa_z
 
-       beta_xyz_1 = beta_x + beta_y + beta_z   
-       beta_xyz_2 = beta_x * beta_y + beta_x * beta_z + beta_y * beta_z   
-       beta_xyz_3 = beta_x * beta_y * beta_z   
+       beta_xyz_1 = beta_x + beta_y + beta_z
+       beta_xyz_2 = beta_x * beta_y + beta_x * beta_z + beta_y * beta_z
+       beta_xyz_3 = beta_x * beta_y * beta_z
 
-       bar_A_0 = kappa_x * kappa_y * kappa_z   
-       bar_A_1 = bar_A_0 * (beta_x + beta_y + beta_z - alpha_x - alpha_y - alpha_z)   
-       bar_A_2 = bar_A_0 * (beta_x - alpha_x) * (beta_y - alpha_y - alpha_x) &   
-               + bar_A_0 * (beta_y - alpha_y) * (beta_z - alpha_z - alpha_y) &   
-               + bar_A_0 * (beta_z - alpha_z) * (beta_x - alpha_x - alpha_z)     
+       bar_A_0 = kappa_x * kappa_y * kappa_z
+       bar_A_1 = bar_A_0 * (beta_x + beta_y + beta_z - alpha_x - alpha_y - alpha_z)
+       bar_A_2 = bar_A_0 * (beta_x - alpha_x) * (beta_y - alpha_y - alpha_x) &
+               + bar_A_0 * (beta_y - alpha_y) * (beta_z - alpha_z - alpha_y) &
+               + bar_A_0 * (beta_z - alpha_z) * (beta_x - alpha_x - alpha_z)
 
        bar_A_3 = bar_A_0 * alpha_x**2 &
                * (beta_x - alpha_x) * (beta_y - alpha_x) * (beta_z - alpha_x) &
@@ -617,7 +617,7 @@ subroutine l_parameter_computation( &
 
        A_0 = bar_A_0
        A_1 = bar_A_1
-       A_2 = bar_A_2   
+       A_2 = bar_A_2
        A_3 = bar_A_3
        A_4 = bar_A_4 + time_nplus1 * bar_A_5
        A_5 = - bar_A_5
@@ -629,7 +629,7 @@ subroutine l_parameter_computation( &
        call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y, singularity_type_4, time_nplus1, time_n)
        call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z, singularity_type_5, time_nplus1, time_n)
 
-     elseif (&
+     else if (&
              (abs( alpha_x - alpha_y ) < 1.e-5_CUSTOM_REAL .AND. &
               abs( alpha_x - alpha_z ) < 1.e-5_CUSTOM_REAL .AND. &
               abs( alpha_y - alpha_z ) < 1.e-5_CUSTOM_REAL).or.  &
@@ -648,23 +648,23 @@ subroutine l_parameter_computation( &
 
        alpha_0 = max(alpha_x,alpha_y,alpha_z)
 
-       alpha_x = alpha_0   
-       alpha_y = alpha_0   
-       alpha_z = alpha_0   
+       alpha_x = alpha_0
+       alpha_y = alpha_0
+       alpha_z = alpha_0
 
-       beta_x = alpha_x + d_x / kappa_x   
-       beta_y = alpha_y + d_y / kappa_y   
-       beta_z = alpha_z + d_z / kappa_z   
+       beta_x = alpha_x + d_x / kappa_x
+       beta_y = alpha_y + d_y / kappa_y
+       beta_z = alpha_z + d_z / kappa_z
 
-       beta_xyz_1 = beta_x + beta_y + beta_z   
-       beta_xyz_2 = beta_x * beta_y + beta_x * beta_z + beta_y * beta_z   
-       beta_xyz_3 = beta_x * beta_y * beta_z   
+       beta_xyz_1 = beta_x + beta_y + beta_z
+       beta_xyz_2 = beta_x * beta_y + beta_x * beta_z + beta_y * beta_z
+       beta_xyz_3 = beta_x * beta_y * beta_z
 
-       bar_A_0 = kappa_x * kappa_y * kappa_z   
-       bar_A_1 = bar_A_0 * (beta_x + beta_y + beta_z - alpha_x - alpha_y - alpha_z)   
-       bar_A_2 = bar_A_0 * (beta_x - alpha_x) * (beta_y - alpha_y - alpha_x) &   
-               + bar_A_0 * (beta_y - alpha_y) * (beta_z - alpha_z - alpha_y) &   
-               + bar_A_0 * (beta_z - alpha_z) * (beta_x - alpha_x - alpha_z)     
+       bar_A_0 = kappa_x * kappa_y * kappa_z
+       bar_A_1 = bar_A_0 * (beta_x + beta_y + beta_z - alpha_x - alpha_y - alpha_z)
+       bar_A_2 = bar_A_0 * (beta_x - alpha_x) * (beta_y - alpha_y - alpha_x) &
+               + bar_A_0 * (beta_y - alpha_y) * (beta_z - alpha_z - alpha_y) &
+               + bar_A_0 * (beta_z - alpha_z) * (beta_x - alpha_x - alpha_z)
        bar_A_3 = bar_A_0 * ( &
                - 10._CUSTOM_REAL * alpha_0**3 &
                +  6._CUSTOM_REAL * alpha_0**2 * beta_xyz_1 &
@@ -695,16 +695,16 @@ subroutine l_parameter_computation( &
        stop 'error occured in l_parameter_computation in CPML_XYZ region'
      endif
 
-  elseif ( CPML_region_local == CPML_XY_ONLY ) then
+  else if ( CPML_region_local == CPML_XY_ONLY ) then
 
     if ( abs( alpha_x - alpha_y ) >= 1.e-5_CUSTOM_REAL ) then
 
-      beta_x = alpha_x + d_x / kappa_x   
-      beta_y = alpha_y + d_y / kappa_y   
-      beta_z = alpha_z + d_z / kappa_z   
+      beta_x = alpha_x + d_x / kappa_x
+      beta_y = alpha_y + d_y / kappa_y
+      beta_z = alpha_z + d_z / kappa_z
 
-      beta_xyz_1 = beta_x + beta_y    
-      beta_xyz_2 = beta_x * beta_y    
+      beta_xyz_1 = beta_x + beta_y
+      beta_xyz_2 = beta_x * beta_y
 
       bar_A_0 = kappa_x * kappa_y
       bar_A_1 = bar_A_0 * (beta_x + beta_y - alpha_x - alpha_y)
@@ -728,23 +728,23 @@ subroutine l_parameter_computation( &
       singularity_type_4 = 0
       singularity_type_5 = 0
 
-      call compute_convolution_coef(alpha_x, deltat, coef0_x, coef1_x, coef2_x, 0, time_nplus1, time_n)   
-      call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y, singularity_type_4, time_nplus1, time_n)   
-      call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z, singularity_type_5, time_nplus1, time_n)   
+      call compute_convolution_coef(alpha_x, deltat, coef0_x, coef1_x, coef2_x, 0, time_nplus1, time_n)
+      call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y, singularity_type_4, time_nplus1, time_n)
+      call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z, singularity_type_5, time_nplus1, time_n)
 
-    elseif ( abs( alpha_x - alpha_y ) < 1.e-5_CUSTOM_REAL ) then
+    else if ( abs( alpha_x - alpha_y ) < 1.e-5_CUSTOM_REAL ) then
 
       alpha_0 = max(alpha_x,alpha_y)
 
-      alpha_x = alpha_0   
-      alpha_y = alpha_0   
+      alpha_x = alpha_0
+      alpha_y = alpha_0
 
-      beta_x = alpha_x + d_x / kappa_x   
-      beta_y = alpha_y + d_y / kappa_y   
-      beta_z = alpha_z + d_z / kappa_z   
+      beta_x = alpha_x + d_x / kappa_x
+      beta_y = alpha_y + d_y / kappa_y
+      beta_z = alpha_z + d_z / kappa_z
 
-      beta_xyz_1 = beta_x + beta_y   
-      beta_xyz_2 = beta_x * beta_y   
+      beta_xyz_1 = beta_x + beta_y
+      beta_xyz_2 = beta_x * beta_y
 
       bar_A_0 = kappa_x * kappa_y
       bar_A_1 = bar_A_0 * (beta_x + beta_y - alpha_x - alpha_y)
@@ -759,7 +759,7 @@ subroutine l_parameter_computation( &
 
       A_0 = bar_A_0
       A_1 = bar_A_1
-      A_2 = bar_A_2   
+      A_2 = bar_A_2
       A_3 = bar_A_3 + time_nplus1 * bar_A_4
       A_4 = -bar_A_4
       A_5 = bar_A_5
@@ -767,29 +767,29 @@ subroutine l_parameter_computation( &
       singularity_type_4 = 1
       singularity_type_5 = 0
 
-      call compute_convolution_coef(alpha_x, deltat, coef0_x, coef1_x, coef2_x, 0, time_nplus1, time_n)   
-      call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y, singularity_type_4, time_nplus1, time_n)   
-      call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z, singularity_type_5, time_nplus1, time_n)   
+      call compute_convolution_coef(alpha_x, deltat, coef0_x, coef1_x, coef2_x, 0, time_nplus1, time_n)
+      call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y, singularity_type_4, time_nplus1, time_n)
+      call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z, singularity_type_5, time_nplus1, time_n)
 
     else
       stop 'error occured in l_parameter_computation in CPML_XY_ONLY region'
     endif
 
-  elseif ( CPML_region_local == CPML_XZ_ONLY ) then
+  else if ( CPML_region_local == CPML_XZ_ONLY ) then
 
     if ( abs( alpha_x - alpha_z ) >= 1.e-5_CUSTOM_REAL ) then
 
-      beta_x = alpha_x + d_x / kappa_x   
-      beta_y = alpha_y + d_y / kappa_y   
-      beta_z = alpha_z + d_z / kappa_z   
+      beta_x = alpha_x + d_x / kappa_x
+      beta_y = alpha_y + d_y / kappa_y
+      beta_z = alpha_z + d_z / kappa_z
 
-      beta_xyz_1 = beta_x + beta_z   
-      beta_xyz_2 = beta_x * beta_z   
+      beta_xyz_1 = beta_x + beta_z
+      beta_xyz_2 = beta_x * beta_z
 
       bar_A_0 = kappa_x * kappa_z
-      bar_A_1 = bar_A_0 * (beta_x + beta_z - alpha_x - alpha_z)   
-      bar_A_2 = bar_A_0 * (beta_x - alpha_x) * (- alpha_x) &   
-              + bar_A_0 * (beta_z - alpha_z) * (beta_x - alpha_x - alpha_z)   
+      bar_A_1 = bar_A_0 * (beta_x + beta_z - alpha_x - alpha_z)
+      bar_A_2 = bar_A_0 * (beta_x - alpha_x) * (- alpha_x) &
+              + bar_A_0 * (beta_z - alpha_z) * (beta_x - alpha_x - alpha_z)
 
       bar_A_3 = bar_A_0 * alpha_x**2 &
               * (beta_x - alpha_x) * (beta_z - alpha_x) &
@@ -809,28 +809,28 @@ subroutine l_parameter_computation( &
       singularity_type_4 = 0
       singularity_type_5 = 0
 
-      call compute_convolution_coef(alpha_x, deltat, coef0_x, coef1_x, coef2_x, 0, time_nplus1, time_n)   
-      call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y, singularity_type_4, time_nplus1, time_n)   
-      call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z, singularity_type_5, time_nplus1, time_n)   
+      call compute_convolution_coef(alpha_x, deltat, coef0_x, coef1_x, coef2_x, 0, time_nplus1, time_n)
+      call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y, singularity_type_4, time_nplus1, time_n)
+      call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z, singularity_type_5, time_nplus1, time_n)
 
-    elseif ( abs( alpha_x - alpha_z ) < 1.e-5_CUSTOM_REAL ) then
+    else if ( abs( alpha_x - alpha_z ) < 1.e-5_CUSTOM_REAL ) then
 
       alpha_0 = max(alpha_x,alpha_z)
 
       alpha_x = alpha_0
       alpha_z = alpha_0
 
-      beta_x = alpha_x + d_x / kappa_x   
-      beta_y = alpha_y + d_y / kappa_y   
-      beta_z = alpha_z + d_z / kappa_z   
+      beta_x = alpha_x + d_x / kappa_x
+      beta_y = alpha_y + d_y / kappa_y
+      beta_z = alpha_z + d_z / kappa_z
 
-      beta_xyz_1 = beta_x + beta_z   
-      beta_xyz_2 = beta_x * beta_z   
+      beta_xyz_1 = beta_x + beta_z
+      beta_xyz_2 = beta_x * beta_z
 
       bar_A_0 = kappa_x * kappa_z
-      bar_A_1 = bar_A_0 * (beta_x + beta_z - alpha_x - alpha_z)   
-      bar_A_2 = bar_A_0 * (beta_x - alpha_x) * (- alpha_x) &   
-              + bar_A_0 * (beta_z - alpha_z) * (beta_x - alpha_x - alpha_z)   
+      bar_A_1 = bar_A_0 * (beta_x + beta_z - alpha_x - alpha_z)
+      bar_A_2 = bar_A_0 * (beta_x - alpha_x) * (- alpha_x) &
+              + bar_A_0 * (beta_z - alpha_z) * (beta_x - alpha_x - alpha_z)
 
       bar_A_3 = bar_A_0 * ( &
               - 4._CUSTOM_REAL * alpha_0**3  &
@@ -841,7 +841,7 @@ subroutine l_parameter_computation( &
 
       A_0 = bar_A_0
       A_1 = bar_A_1
-      A_2 = bar_A_2   
+      A_2 = bar_A_2
       A_3 = bar_A_3 + time_nplus1 * bar_A_5
       A_4 = bar_A_4
       A_5 = -bar_A_5
@@ -849,24 +849,24 @@ subroutine l_parameter_computation( &
       singularity_type_4 = 0
       singularity_type_5 = 1
 
-      call compute_convolution_coef(alpha_x, deltat, coef0_x, coef1_x, coef2_x, 0, time_nplus1, time_n)   
-      call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y, singularity_type_4, time_nplus1, time_n)   
-      call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z, singularity_type_5, time_nplus1, time_n)   
+      call compute_convolution_coef(alpha_x, deltat, coef0_x, coef1_x, coef2_x, 0, time_nplus1, time_n)
+      call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y, singularity_type_4, time_nplus1, time_n)
+      call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z, singularity_type_5, time_nplus1, time_n)
 
     else
       stop 'error occured in l_parameter_computation in CPML_XZ_ONLY region'
     endif
 
-  elseif ( CPML_region_local == CPML_YZ_ONLY ) then
+  else if ( CPML_region_local == CPML_YZ_ONLY ) then
 
     if ( abs( alpha_y - alpha_z ) >= 1.e-5_CUSTOM_REAL ) then
 
-      beta_x = alpha_x + d_x / kappa_x   
-      beta_y = alpha_y + d_y / kappa_y   
-      beta_z = alpha_z + d_z / kappa_z   
+      beta_x = alpha_x + d_x / kappa_x
+      beta_y = alpha_y + d_y / kappa_y
+      beta_z = alpha_z + d_z / kappa_z
 
-      beta_xyz_1 = beta_y + beta_z  
-      beta_xyz_2 = beta_y * beta_z  
+      beta_xyz_1 = beta_y + beta_z
+      beta_xyz_2 = beta_y * beta_z
 
       bar_A_0 = kappa_y * kappa_z
       bar_A_1 = bar_A_0 * (beta_y + beta_z - alpha_y - alpha_z)
@@ -882,7 +882,7 @@ subroutine l_parameter_computation( &
 
       A_0 = bar_A_0
       A_1 = bar_A_1
-      A_2 = bar_A_2   
+      A_2 = bar_A_2
       A_3 = bar_A_3
       A_4 = bar_A_4
       A_5 = bar_A_5
@@ -890,23 +890,23 @@ subroutine l_parameter_computation( &
       singularity_type_4 = 0
       singularity_type_5 = 0
 
-      call compute_convolution_coef(alpha_x, deltat, coef0_x, coef1_x, coef2_x, 0, time_nplus1, time_n)   
-      call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y, singularity_type_4, time_nplus1, time_n)   
-      call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z, singularity_type_5, time_nplus1, time_n)   
+      call compute_convolution_coef(alpha_x, deltat, coef0_x, coef1_x, coef2_x, 0, time_nplus1, time_n)
+      call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y, singularity_type_4, time_nplus1, time_n)
+      call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z, singularity_type_5, time_nplus1, time_n)
 
-    elseif ( abs( alpha_y - alpha_z ) < 1.e-5_CUSTOM_REAL ) then
+    else if ( abs( alpha_y - alpha_z ) < 1.e-5_CUSTOM_REAL ) then
 
       alpha_0 = max(alpha_y,alpha_z)
 
       alpha_y = alpha_0
       alpha_z = alpha_0
 
-      beta_x = alpha_x + d_x / kappa_x   
-      beta_y = alpha_y + d_y / kappa_y   
-      beta_z = alpha_z + d_z / kappa_z   
+      beta_x = alpha_x + d_x / kappa_x
+      beta_y = alpha_y + d_y / kappa_y
+      beta_z = alpha_z + d_z / kappa_z
 
-      beta_xyz_1 = beta_y + beta_z  
-      beta_xyz_2 = beta_y * beta_z  
+      beta_xyz_1 = beta_y + beta_z
+      beta_xyz_2 = beta_y * beta_z
 
       bar_A_0 = kappa_y * kappa_z
       bar_A_1 = bar_A_0 * (beta_y + beta_z - alpha_y - alpha_z)
@@ -921,7 +921,7 @@ subroutine l_parameter_computation( &
 
       A_0 = bar_A_0
       A_1 = bar_A_1
-      A_2 = bar_A_2   
+      A_2 = bar_A_2
       A_3 = bar_A_3
       A_4 = bar_A_4 + time_nplus1 * bar_A_5
       A_5 = -bar_A_5
@@ -929,19 +929,19 @@ subroutine l_parameter_computation( &
       singularity_type_4 = 0
       singularity_type_5 = 1
 
-      call compute_convolution_coef(alpha_x, deltat, coef0_x, coef1_x, coef2_x, 0, time_nplus1, time_n)   
-      call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y, singularity_type_4, time_nplus1, time_n)   
-      call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z, singularity_type_5, time_nplus1, time_n)   
+      call compute_convolution_coef(alpha_x, deltat, coef0_x, coef1_x, coef2_x, 0, time_nplus1, time_n)
+      call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y, singularity_type_4, time_nplus1, time_n)
+      call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z, singularity_type_5, time_nplus1, time_n)
 
     else
       stop 'error occured in l_parameter_computation in CPML_YZ_ONLY region'
     endif
 
-  elseif ( CPML_region_local == CPML_X_ONLY ) then
+  else if ( CPML_region_local == CPML_X_ONLY ) then
 
-    beta_x = alpha_x + d_x / kappa_x   
-    beta_y = alpha_y + d_y / kappa_y   
-    beta_z = alpha_z + d_z / kappa_z   
+    beta_x = alpha_x + d_x / kappa_x
+    beta_y = alpha_y + d_y / kappa_y
+    beta_z = alpha_z + d_z / kappa_z
 
     bar_A_0 = kappa_x
     bar_A_1 = bar_A_0 * (beta_x - alpha_x)
@@ -952,7 +952,7 @@ subroutine l_parameter_computation( &
 
     A_0 = bar_A_0
     A_1 = bar_A_1
-    A_2 = bar_A_2   
+    A_2 = bar_A_2
     A_3 = bar_A_3
     A_4 = bar_A_4
     A_5 = bar_A_5
@@ -960,15 +960,15 @@ subroutine l_parameter_computation( &
     singularity_type_4 = 0
     singularity_type_5 = 0
 
-    call compute_convolution_coef(alpha_x, deltat, coef0_x, coef1_x, coef2_x, 0, time_nplus1, time_n)   
-    call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y, singularity_type_4, time_nplus1, time_n)   
-    call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z, singularity_type_5, time_nplus1, time_n)   
+    call compute_convolution_coef(alpha_x, deltat, coef0_x, coef1_x, coef2_x, 0, time_nplus1, time_n)
+    call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y, singularity_type_4, time_nplus1, time_n)
+    call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z, singularity_type_5, time_nplus1, time_n)
 
-  elseif ( CPML_region_local == CPML_Y_ONLY ) then
+  else if ( CPML_region_local == CPML_Y_ONLY ) then
 
-    beta_x = alpha_x + d_x / kappa_x   
-    beta_y = alpha_y + d_y / kappa_y   
-    beta_z = alpha_z + d_z / kappa_z   
+    beta_x = alpha_x + d_x / kappa_x
+    beta_y = alpha_y + d_y / kappa_y
+    beta_z = alpha_z + d_z / kappa_z
 
     bar_A_0 = kappa_y
     bar_A_1 = bar_A_0 * (beta_y - alpha_y)
@@ -987,15 +987,15 @@ subroutine l_parameter_computation( &
     singularity_type_4 = 0
     singularity_type_5 = 0
 
-    call compute_convolution_coef(alpha_x, deltat, coef0_x, coef1_x, coef2_x, 0, time_nplus1, time_n)   
-    call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y, singularity_type_4, time_nplus1, time_n)   
-    call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z, singularity_type_5, time_nplus1, time_n)   
+    call compute_convolution_coef(alpha_x, deltat, coef0_x, coef1_x, coef2_x, 0, time_nplus1, time_n)
+    call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y, singularity_type_4, time_nplus1, time_n)
+    call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z, singularity_type_5, time_nplus1, time_n)
 
-  elseif ( CPML_region_local == CPML_Z_ONLY ) then
+  else if ( CPML_region_local == CPML_Z_ONLY ) then
 
-    beta_x = alpha_x + d_x / kappa_x   
-    beta_y = alpha_y + d_y / kappa_y   
-    beta_z = alpha_z + d_z / kappa_z   
+    beta_x = alpha_x + d_x / kappa_x
+    beta_y = alpha_y + d_y / kappa_y
+    beta_z = alpha_z + d_z / kappa_z
 
     bar_A_0 = kappa_z
     bar_A_1 = bar_A_0 * (beta_z - alpha_z)
@@ -1014,9 +1014,9 @@ subroutine l_parameter_computation( &
     singularity_type_4 = 0
     singularity_type_5 = 0
 
-    call compute_convolution_coef(alpha_x, deltat, coef0_x, coef1_x, coef2_x, 0, time_nplus1, time_n)   
-    call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y, singularity_type_4, time_nplus1, time_n)   
-    call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z, singularity_type_5, time_nplus1, time_n)   
+    call compute_convolution_coef(alpha_x, deltat, coef0_x, coef1_x, coef2_x, 0, time_nplus1, time_n)
+    call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y, singularity_type_4, time_nplus1, time_n)
+    call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z, singularity_type_5, time_nplus1, time_n)
 
   endif
 
@@ -1026,7 +1026,7 @@ end subroutine l_parameter_computation
 !=====================================================================
 !
 Subroutine compute_convolution_coef(bb, deltat, coef0, coef1, coef2, singularity_type, time_nplus1, time_n)
- 
+
   use constants, only: CUSTOM_REAL
 
   logical,parameter :: FIRST_ORDER_CONVOLUTION = .false.
@@ -1043,7 +1043,7 @@ Subroutine compute_convolution_coef(bb, deltat, coef0, coef1, coef2, singularity
       else
          coef1 = (1._CUSTOM_REAL - exp(-bb * deltat/2._CUSTOM_REAL) ) / bb
          coef2 = (1._CUSTOM_REAL - exp(-bb * deltat/2._CUSTOM_REAL) ) * exp(-bb * deltat/2._CUSTOM_REAL) / bb
-      end if
+      endif
     else
       if ( FIRST_ORDER_CONVOLUTION ) then
         coef1 = deltat
@@ -1055,17 +1055,17 @@ Subroutine compute_convolution_coef(bb, deltat, coef0, coef1, coef2, singularity
                   deltat**4*bb**3/384._CUSTOM_REAL))
         coef2 = deltat/2._CUSTOM_REAL + &
                 (- 3._CUSTOM_REAL*deltat**2*bb/8._CUSTOM_REAL + &
-                 (7._CUSTOM_REAL*deltat**3*bb**2/48._CUSTOM_REAL - & 
-                  5._CUSTOM_REAL*deltat**4*bb**3/128._CUSTOM_REAL)) 
+                 (7._CUSTOM_REAL*deltat**3*bb**2/48._CUSTOM_REAL - &
+                  5._CUSTOM_REAL*deltat**4*bb**3/128._CUSTOM_REAL))
       endif
     endif
-  elseif (singularity_type == 1)then
+  else if (singularity_type == 1)then
     if ( abs(bb) >= 1.e-5_CUSTOM_REAL ) then
       coef1 = (1._CUSTOM_REAL - exp(-bb * deltat/2._CUSTOM_REAL) ) / bb
-      coef1 = time_nplus1 * coef1 + (deltat/2._CUSTOM_REAL*exp(-bb * deltat/2._CUSTOM_REAL) - coef1) / bb 
+      coef1 = time_nplus1 * coef1 + (deltat/2._CUSTOM_REAL*exp(-bb * deltat/2._CUSTOM_REAL) - coef1) / bb
 
       coef2 = (1._CUSTOM_REAL - exp(-bb * deltat/2._CUSTOM_REAL) ) * exp(-bb * deltat/2._CUSTOM_REAL) / bb
-      coef2 = time_n * coef2 + ( deltat/2._CUSTOM_REAL*exp(-bb * deltat/2._CUSTOM_REAL) - coef2) / bb      
+      coef2 = time_n * coef2 + ( deltat/2._CUSTOM_REAL*exp(-bb * deltat/2._CUSTOM_REAL) - coef2) / bb
     else
       coef1 = -deltat**2/8._CUSTOM_REAL + (deltat**3*bb/24._CUSTOM_REAL + &
               (- deltat**4*bb**2/128._CUSTOM_REAL + deltat**5*bb**3/960._CUSTOM_REAL)) + &
@@ -1074,10 +1074,10 @@ Subroutine compute_convolution_coef(bb, deltat, coef0, coef1, coef2, singularity
       coef2 = deltat**2/8._CUSTOM_REAL + (-deltat**3*bb/12._CUSTOM_REAL + &
               (11._CUSTOM_REAL*deltat**4*bb**2/384._CUSTOM_REAL - 13._CUSTOM_REAL*deltat**5*bb**3/1920._CUSTOM_REAL)) + &
                time_n * (deltat/2._CUSTOM_REAL + (- 3._CUSTOM_REAL*deltat**2*bb/8._CUSTOM_REAL + &
-                                    (7._CUSTOM_REAL*deltat**3*bb**2/48._CUSTOM_REAL - & 
+                                    (7._CUSTOM_REAL*deltat**3*bb**2/48._CUSTOM_REAL - &
                                      5._CUSTOM_REAL*deltat**4*bb**3/128._CUSTOM_REAL)))
-     endif     
-  elseif (singularity_type == 2)then
+     endif
+  else if (singularity_type == 2)then
     if ( abs(bb) >= 1.e-5_CUSTOM_REAL ) then
       coef1 = (1._CUSTOM_REAL - exp(-bb * deltat/2._CUSTOM_REAL) ) / bb
       coef1 = time_nplus1**2 * coef1 + (time_nplus1*(-2._CUSTOM_REAL/bb*coef1 + deltat/bb*exp(-bb * deltat/2._CUSTOM_REAL)) + &
@@ -1102,9 +1102,9 @@ Subroutine compute_convolution_coef(bb, deltat, coef0, coef1, coef2, singularity
                time_n*2._CUSTOM_REAL*(deltat**2/8._CUSTOM_REAL + (-deltat**3*bb/12._CUSTOM_REAL + &
                 (11._CUSTOM_REAL*deltat**4*bb**2/384._CUSTOM_REAL - 13._CUSTOM_REAL*deltat**5*bb**3/1920._CUSTOM_REAL))) + &
                 time_n**2 * (deltat/2._CUSTOM_REAL + (- 3._CUSTOM_REAL*deltat**2*bb/8._CUSTOM_REAL + &
-                                       (7._CUSTOM_REAL*deltat**3*bb**2/48._CUSTOM_REAL - & 
+                                       (7._CUSTOM_REAL*deltat**3*bb**2/48._CUSTOM_REAL - &
                                         5._CUSTOM_REAL*deltat**4*bb**3/128._CUSTOM_REAL)))
-    endif    
+    endif
   else
      stop "error in singularity_type in compute_convolution_coefficient"
   endif

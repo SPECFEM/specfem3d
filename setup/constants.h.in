@@ -46,6 +46,45 @@
 
 !----------- parameters that can be changed by the user -----------
 
+!! DK DK July 2014, CNRS Marseille, France:
+!! DK DK added the ability to run several calculations (several earthquakes)
+!! DK DK in an embarrassingly-parallel fashion from within the same run;
+!! DK DK this can be useful when using a very large supercomputer to compute
+!! DK DK many earthquakes in a catalog, in which case it can be better from
+!! DK DK a batch job submission point of view to start fewer and much larger jobs,
+!! DK DK each of them computing several earthquakes in parallel.
+!! DK DK To turn that option on, set parameter NUMBER_OF_SIMULTANEOUS_RUNS
+!! DK DK to a value greater than 1 in file setup/constants.h.in before
+!! DK DK configuring and compiling the code.
+!! DK DK To implement that, we create NUMBER_OF_SIMULTANEOUS_RUNS MPI sub-communicators,
+!! DK DK each of them being labeled "my_local_mpi_comm_world", and we use them
+!! DK DK in all the routines in "src/shared/parallel.f90", except in MPI_ABORT() because in that case
+!! DK DK we need to kill the entire run.
+!! DK DK When that option is on, of course the number of processor cores used to start
+!! DK DK the code in the batch system must be a multiple of NUMBER_OF_SIMULTANEOUS_RUNS,
+!! DK DK all the individual runs must use the same number of processor cores,
+!! DK DK which as usual is NPROC in the input file DATA/Par_file,
+!! DK DK and thus the total number of processor cores to request from the batch system
+!! DK DK should be NUMBER_OF_SIMULTANEOUS_RUNS * NPROC.
+!! DK DK All the runs to perform must be placed in directories called run0001, run0002, run0003 and so on
+!! DK DK (with exactly four digits) and you must create a link from the root directory of the code
+!! DK DK to the first copy of the executable programs by typing " ln -s run0001/bin bin ".
+!!
+!! DK DK Imagine you have 10 independent calculations to do, each of them on 100 cores; you have three options:
+!!
+!! DK DK 1/ submit 10 jobs to the batch system
+!!
+!! DK DK 2/ submit a single job on 1000 cores to the batch, and in that script create a sub-array of jobs to start 10 jobs,
+!! DK DK each running on 100 cores (see e.g. http://www.schedmd.com/slurmdocs/job_array.html )
+!!
+!! DK DK 3/ submit a single job on 1000 cores to the batch, start SPECFEM3D on 1000 cores, create 10 sub-communicators,
+!! DK DK cd into one of 10 subdirectories (called e.g. run0001, run0002,... run0010) depending on the sub-communicator
+!! DK DK your MPI rank belongs to, and run normally on 100 cores using that sub-communicator.
+!!
+!! DK DK The option below implements 3/.
+!!
+  integer, parameter :: NUMBER_OF_SIMULTANEOUS_RUNS = 1
+
 ! set to .false.  if running on a Beowulf-type machine with local disks
 ! set to .true. if running on a shared-memory machine with common file system
 ! if running on a Beowulf, also modify name of nodes in filter_machine_file.f90
@@ -161,8 +200,6 @@
 !!
 !!-----------------------------------------------------------
 
-  logical, parameter :: COUPLE_WITH_DSM = .false. !!! .true.
-
 ! some old tests (currently unstable; do not remove them though, we might fix this one day)
   integer, parameter :: IIN_veloc_dsm = 51, IIN_tract_dsm = 52, Ntime_step_dsm = 100
 
@@ -195,9 +232,6 @@
 ! decide if master process writes all the seismograms or if all processes do it in parallel
   logical, parameter :: WRITE_SEISMOGRAMS_BY_MASTER = .false.
 
-! use directory OUTPUT_FILES/ for seismogram output
-  logical,parameter :: USE_OUTPUT_FILES_PATH = .true.
-
 !!-----------------------------------------------------------
 !!
 !! C-PML absorbing boundary conditions
@@ -227,8 +261,7 @@
 ! paths for inputs and outputs files
   character(len=*), parameter :: IN_DATA_FILES_PATH = './DATA/'
   character(len=*), parameter :: MF_IN_DATA_FILES_PATH = './DATA/meshfem3D_files/'
-  character(len=*), parameter :: OUTPUT_FILES_PATH = './OUTPUT_FILES/'
-
+  character(len=*), parameter :: OUTPUT_FILES_PATH_BASE = './OUTPUT_FILES/'
 
 ! ---------------------------------------------------------------------------------------
 ! LQY -- Following 3 variables stays here temporarily,
@@ -244,13 +277,8 @@
 ! to be used in the backward reconstruction in the presence of attenuation
   integer, parameter :: NSTEP_Q_SAVE = 50 ! depending on stability of reconstruction, up to 200
 
-! the scratch disk to save the state variables saved in the forward
-! simulation, this can be a global scratch disk in case you run out of
-! space on the local scratch disk, e.g. '/ibrixfs1/scratch/lqy/DATABASES_MPI_Q/'
-  character(len=MAX_STRING_LEN), parameter :: LOCAL_PATH_Q = './OUTPUT_FILES/DATABASES_MPI'
-
 !------------------------------------------------------
-! nlegoff -- Variables that should be read/computed elsewhere.
+! Nicolas Legoff -- Variables that should be read/computed elsewhere.
 !            Temporarily declared here.
 !------------------------------------------------------
 

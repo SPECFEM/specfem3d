@@ -276,7 +276,7 @@
   if(ELASTIC_SIMULATION) then
     ! switches to three-component mass matrix
 
-    !! CD modif. : begin 
+    !! CD CD
     if( STACEY_ABSORBING_CONDITIONS .and. .not. COUPLE_WITH_DSM ) then
       ! adds boundary contributions
       rmassx(:) = rmass(:) + rmassx(:)
@@ -287,7 +287,7 @@
       rmassy(:) = rmass(:)
       rmassz(:) = rmass(:)
     endif
-    !! CD modif. : end
+    !! CD CD
 
     ! not needed anymore
     deallocate(rmass)
@@ -1462,6 +1462,7 @@
   subroutine compute_Roland_Sylvain_integr()
 
   use constants
+  use unused_mod
 
   use specfem_par
 

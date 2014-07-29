@@ -132,10 +132,10 @@
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         my_neighbours_ext_mesh,myrank)
-! kbai added this subroutine to synchronize a vector field 
+! kbai added this subroutine to synchronize a vector field
 ! to ensure that its values at nodes on MPI interfaces stay equal on all processors that share the node.
 ! Synchronize by setting the value to that of the processor with highest rank
-! (it doesn't really matter which value we take, as long as all procs end up with exactly the same value). 
+! (it doesn't really matter which value we take, as long as all procs end up with exactly the same value).
 ! We assume that the interfaces are ordered by increasing rank of the neighbour.
 ! Uses blocking communication: only returns after values have been received and assembled
   implicit none
@@ -214,7 +214,7 @@
     endif
   enddo
 
- 
+
 
   ! wait for communications completion (send)
     do iinterface = 1, num_interfaces_ext_mesh

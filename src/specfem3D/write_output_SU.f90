@@ -66,12 +66,7 @@
   close(IIN_SU1)
 
   ! directory to store seismograms
-  if( USE_OUTPUT_FILES_PATH ) then
-    final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'
-  else
-    ! create full final local path
-    final_LOCAL_PATH = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // '/'
-  endif
+  final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'
   write(procname,"(i4)") myrank
   procname = adjustl(procname)
 

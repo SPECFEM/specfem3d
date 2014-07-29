@@ -52,7 +52,7 @@
                         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
                         USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE, &
                         USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
-                        PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,FULL_ATTENUATION_SOLID,TRAC_PATH)
+                        PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,FULL_ATTENUATION_SOLID,TRACTION_PATH,COUPLE_WITH_DSM)
 
   call read_adios_parameters(ADIOS_ENABLED, ADIOS_FOR_DATABASES,       &
                              ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, &
@@ -60,15 +60,12 @@
 
 !! DK DK added this for now (March 2013) because CPML is not yet implemented for fluid-solid coupling;
 !! DK DK we will soon add it (in a month or so)
-  if(PML_CONDITIONS .and. (SAVE_FORWARD .or. SIMULATION_TYPE==3)) &
-    stop 'PML_CONDITIONS is still under test for adjoint simulation'
+  if(PML_CONDITIONS .and. (SAVE_FORWARD .or. SIMULATION_TYPE==3)) stop 'PML_CONDITIONS is still under test for adjoint simulation'
 
   ! GPU_MODE is in par_file
   call read_gpu_mode(GPU_MODE,GRAVITY)
 
-!! CD modif. : begin !! For coupling with DSM
   if(GPU_MODE .and. COUPLE_WITH_DSM) stop 'Coupling with DSM currently not implemented for GPUs'
-!! CD modif. : end
 
   ! myrank is the rank of each process, between 0 and NPROC-1.
   ! as usual in MPI, process 0 is in charge of coordinating everything
@@ -148,7 +145,7 @@
   call create_name_database(prname,myrank,LOCAL_PATH)
 
 ! for coupling with DSM
-  if (COUPLE_WITH_DSM) call create_name_database(dsmname,myrank,TRAC_PATH)
+  if (COUPLE_WITH_DSM) call create_name_database(dsmname,myrank,TRACTION_PATH)
 
   if (ADIOS_FOR_MESH) then
     call read_mesh_for_init(NSPEC_AB, NGLOB_AB)
@@ -399,12 +396,11 @@
   implicit none
 
   ! check simulation parameters
-  if (SIMULATION_TYPE /= 1 .and. NSOURCES > 1000) &
-    call exit_mpi(myrank, 'for adjoint simulations, NSOURCES <= 1000')
+  if (SIMULATION_TYPE /= 1 .and. NSOURCES > 1000) call exit_mpi(myrank, 'for adjoint simulations, NSOURCES <= 1000')
 
   ! snapshot file names: ADJOINT attenuation
   if (ATTENUATION .and. ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3)) &
-    call create_name_database(prname_Q,myrank,LOCAL_PATH_Q)
+    call create_name_database(prname_Q,myrank,OUTPUT_FILES_PATH)
 
   ! number of elements and points for adjoint arrays
   if( SIMULATION_TYPE == 3 ) then
@@ -451,19 +447,18 @@
   endif
 
   ! check for GPU runs
-  if( NGLLX /= 5 .or. NGLLY /= 5 .or. NGLLZ /= 5 ) &
-    stop 'GPU mode can only be used if NGLLX == NGLLY == NGLLZ == 5'
-  if( CUSTOM_REAL /= 4 ) &
-    stop 'GPU mode runs only with CUSTOM_REAL == 4'
-  if( SAVE_MOHO_MESH ) &
-    stop 'GPU mode does not support SAVE_MOHO_MESH yet'
+  if( NGLLX /= 5 .or. NGLLY /= 5 .or. NGLLZ /= 5 ) stop 'GPU mode can only be used if NGLLX == NGLLY == NGLLZ == 5'
+
+  if( CUSTOM_REAL /= 4 ) stop 'GPU mode runs only with CUSTOM_REAL == 4'
+
+  if( SAVE_MOHO_MESH ) stop 'GPU mode does not support SAVE_MOHO_MESH yet'
+
   if( ATTENUATION ) then
     if( N_SLS /= 3 ) &
       stop 'GPU mode does not support N_SLS /= 3 yet'
   endif
-  if( POROELASTIC_SIMULATION ) then
-    stop 'poroelastic simulations on GPU not supported yet'
-  endif
+
+  if( POROELASTIC_SIMULATION ) stop 'poroelastic simulations on GPU not supported yet'
 
   ! initializes GPU and outputs info to files for all processes
   call initialize_cuda_device(myrank,ncuda_devices)

@@ -116,11 +116,17 @@ USE_RICKER_TIME_FUNCTION        = .false.
 # print source time function
 PRINT_SOURCE_TIME_FUNCTION      = .true.
 
+# to couple with DSM
+COUPLE_WITH_DSM                 = .false.
+TRACTION_PATH                   = ./DATA/DSM_traction_files/
+
 # set to true to use GPUs
 GPU_MODE                        = .false.
+
 # ADIOS Options for I/Os
 ADIOS_ENABLED                   = .false.
 ADIOS_FOR_DATABASES             = .false.
 ADIOS_FOR_MESH                  = .false.
 ADIOS_FOR_FORWARD_ARRAYS        = .false.
 ADIOS_FOR_KERNELS               = .false.
+

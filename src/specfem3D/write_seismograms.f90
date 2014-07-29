@@ -25,7 +25,6 @@
 !
 !=====================================================================
 
-
   subroutine write_seismograms()
 
 ! writes the seismograms with time shift
@@ -296,7 +295,7 @@
       call write_seismograms_to_file(seismograms_a,3)
     else
       call write_adj_seismograms_to_file(myrank,seismograms_d,number_receiver_global, &
-            nrec_local,it,DT,NSTEP,t0,LOCAL_PATH,1)
+            nrec_local,it,DT,NSTEP,t0,1)
     endif
   endif
 
@@ -372,7 +371,7 @@
       call write_one_seismogram(one_seismogram,irec, &
               station_name,network_name,nrec, &
               DT,t0,it,NSTEP,SIMULATION_TYPE, &
-              myrank,irecord,component,LOCAL_PATH)
+              myrank,irecord,component)
 
     enddo ! nrec_local
 
@@ -436,7 +435,7 @@
             call write_one_seismogram(one_seismogram,irec, &
                               station_name,network_name,nrec, &
                               DT,t0,it,NSTEP,SIMULATION_TYPE, &
-                              myrank,irecord,component,LOCAL_PATH)
+                              myrank,irecord,component)
 
           enddo ! nrec_local_received
         endif ! if(nrec_local_received > 0 )
@@ -478,7 +477,7 @@
   subroutine write_one_seismogram(one_seismogram,irec, &
               station_name,network_name,nrec, &
               DT,t0,it,NSTEP,SIMULATION_TYPE, &
-              myrank,irecord,component,LOCAL_PATH)
+              myrank,irecord,component)
 
   use constants
 
@@ -494,7 +493,6 @@
   character(len=MAX_LENGTH_STATION_NAME), dimension(nrec) :: station_name
   character(len=MAX_LENGTH_NETWORK_NAME), dimension(nrec) :: network_name
   character(len=1) component
-  character(len=MAX_STRING_LEN) :: LOCAL_PATH
 
   ! local parameters
   integer iorientation
@@ -524,12 +522,7 @@
        network_name(irec)(1:length_network_name),channel,component
 
     ! directory to store seismograms
-    if( USE_OUTPUT_FILES_PATH ) then
-      final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'
-    else
-      ! create full final local path
-      final_LOCAL_PATH = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // '/'
-    endif
+    final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'
 
     ! ASCII output format
     call write_output_ASCII(one_seismogram, &
@@ -545,7 +538,7 @@
 ! write adjoint seismograms (displacement) to text files
 
   subroutine write_adj_seismograms_to_file(myrank,seismograms,number_receiver_global, &
-               nrec_local,it,DT,NSTEP,t0,LOCAL_PATH,istore)
+               nrec_local,it,DT,NSTEP,t0,istore)
 
   use constants
 
@@ -555,7 +548,6 @@
   integer, dimension(nrec_local) :: number_receiver_global
   real(kind=CUSTOM_REAL), dimension(NDIM,nrec_local,NSTEP) :: seismograms
   double precision t0,DT
-  character(len=MAX_STRING_LEN) :: LOCAL_PATH
 
   integer irec,irec_local
   integer iorientation,irecord,isample
@@ -594,13 +586,7 @@
            'NT',channel,component
 
       ! directory to store seismograms
-      if( USE_OUTPUT_FILES_PATH ) then
-        final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'
-      else
-        ! create full final local path
-        final_LOCAL_PATH = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // '/'
-      endif
-
+      final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'
 
       ! save seismograms in text format with no subsampling.
       ! Because we do not subsample the output, this can result in large files
@@ -636,8 +622,7 @@
 
 ! write adjoint seismograms (strain) to text files
 
-  subroutine write_adj_seismograms2_to_file(myrank,seismograms,number_receiver_global, &
-               nrec_local,it,DT,NSTEP,t0,LOCAL_PATH)
+  subroutine write_adj_seismograms2_to_file(myrank,seismograms,number_receiver_global,nrec_local,it,DT,NSTEP,t0)
 
   use constants
 
@@ -647,7 +632,6 @@
   integer, dimension(nrec_local) :: number_receiver_global
   real(kind=CUSTOM_REAL), dimension(NDIM,NDIM,nrec_local,NSTEP) :: seismograms
   double precision t0,DT
-  character(len=MAX_STRING_LEN) :: LOCAL_PATH
 
   integer irec,irec_local
   integer idimval,jdimval,irecord,isample
@@ -691,12 +675,7 @@
            'NT',chn,component
 
         ! directory to store seismograms
-        if( USE_OUTPUT_FILES_PATH ) then
-          final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'
-        else
-          ! create full final local path
-          final_LOCAL_PATH = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // '/'
-        endif
+        final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'
 
         ! save seismograms in text format with no subsampling.
         ! Because we do not subsample the output, this can result in large files

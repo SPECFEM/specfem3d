@@ -24,6 +24,7 @@
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
 !=====================================================================
+
 ! for elastic solver
 
   subroutine compute_add_sources_viscoelastic( NSPEC_AB,NGLOB_AB,accel, &
@@ -46,8 +47,7 @@
                         mask_noise,noise_surface_movie, &
                         nrec_local,number_receiver_global, &
                         nsources_local,USE_FORCE_POINT_SOURCE, &
-                        USE_RICKER_TIME_FUNCTION
-
+                        USE_RICKER_TIME_FUNCTION,COUPLE_WITH_DSM
 
   implicit none
 
@@ -103,9 +103,9 @@
   !equivalence (i2head,i4head,r4head)    ! share the same 240-byte-memory
   double precision :: hxir(NGLLX),hpxir(NGLLX),hetar(NGLLY),hpetar(NGLLY),hgammar(NGLLZ),hpgammar(NGLLZ)
 
-  !! CD modif (implemented by VM) : !! For coupling with DSM
+! no source inside the mesh if we are coupling with DSM
+! because the source is precisely the wavefield coming from the DSM traction file
   if (COUPLE_WITH_DSM) return
-  !! CD modif : end
 
 ! plotting source time function
   if(PRINT_SOURCE_TIME_FUNCTION .and. .not. phase_is_inner ) then
@@ -413,7 +413,7 @@
                         normal_x_noise,normal_y_noise,normal_z_noise, &
                         mask_noise,noise_surface_movie, &
                         nsources_local,USE_FORCE_POINT_SOURCE, &
-                        USE_RICKER_TIME_FUNCTION
+                        USE_RICKER_TIME_FUNCTION,COUPLE_WITH_DSM
 
   implicit none
 
@@ -447,9 +447,9 @@
   real(kind=CUSTOM_REAL) stf_used,stf_used_total_all,time_source
   integer :: isource,iglob,i,j,k,ispec
 
-  !! CD modif (implemented by VM) : !! For coupling with DSM
+! no source inside the mesh if we are coupling with DSM
+! because the source is precisely the wavefield coming from the DSM traction file
   if (COUPLE_WITH_DSM) return
-  !! CD modif : end
 
 ! plotting source time function
   if(PRINT_SOURCE_TIME_FUNCTION .and. .not. phase_is_inner ) then
@@ -616,7 +616,7 @@
                         irec_master_noise,noise_surface_movie, &
                         nrec_local,number_receiver_global, &
                         nsources_local,USE_FORCE_POINT_SOURCE, &
-                        USE_RICKER_TIME_FUNCTION
+                        USE_RICKER_TIME_FUNCTION,COUPLE_WITH_DSM
 
   implicit none
 
@@ -668,9 +668,9 @@
   !equivalence (i2head,i4head,r4head)    ! share the same 240-byte-memory
   double precision :: hxir(NGLLX),hpxir(NGLLX),hetar(NGLLY),hpetar(NGLLY),hgammar(NGLLZ),hpgammar(NGLLZ)
 
-  !! CD modif (implemented by VM) : !! For coupling with DSM
+! no source inside the mesh if we are coupling with DSM
+! because the source is precisely the wavefield coming from the DSM traction file
   if (COUPLE_WITH_DSM) return
-  !! CD modif : end
 
 ! plotting source time function
   if(PRINT_SOURCE_TIME_FUNCTION .and. .not. phase_is_inner ) then

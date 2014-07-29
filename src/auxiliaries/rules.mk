@@ -54,6 +54,7 @@ auxiliaries_OBJECTS = \
 
 # These files come from the shared directory
 auxiliaries_SHARED_OBJECTS = \
+	$O/constants_mod.shared_module.o \
 	$O/check_mesh_resolution.shared.o \
 	$O/create_name_database.shared.o \
 	$O/exit_mpi.shared.o \
@@ -85,6 +86,7 @@ model_upd_auxiliaries_OBJECTS = \
 	$(EMPTY_MACRO)
 
 model_upd_auxiliaries_SHARED_OBJECTS = \
+	$O/constants_mod.shared_module.o \
 	$O/check_mesh_resolution.shared.o \
 	$O/create_name_database.shared.o \
 	$O/exit_mpi.shared.o \
@@ -106,6 +108,7 @@ adios_model_upd_auxiliaries_OBJECTS= \
 	$O/read_forward_arrays_adios.spec_adios.o
 
 adios_model_upd_auxiliaries_SHARED_OBJECTS = \
+	$O/constants_mod.shared_module.o \
 	$O/adios_manager.shared_adios.o \
 	$O/adios_helpers_definitions.shared_adios_module.o \
 	$O/adios_helpers_writers.shared_adios_module.o \
@@ -138,6 +141,7 @@ sum_kernels_auxiliaries_OBJECTS = \
 	$(EMPTY_MACRO)
 
 sum_kernels_auxiliaries_SHARED_OBJECTS = \
+	$O/constants_mod.shared_module.o \
 	$O/exit_mpi.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
@@ -157,6 +161,7 @@ smooth_vol_data_auxiliaries_OBJECTS = \
 	$(EMPTY_MACRO)
 
 smooth_vol_data_auxiliaries_SHARED_OBJECTS = \
+	$O/constants_mod.shared_module.o \
 	$O/exit_mpi.shared.o \
 	$O/gll_library.shared.o \
 	$O/param_reader.cc.o \
@@ -176,6 +181,7 @@ combine_surf_data_auxiliaries_OBJECTS = \
 	$(EMPTY_MACRO)
 
 combine_surf_data_auxiliaries_SHARED_OBJECTS = \
+	$O/constants_mod.shared_module.o \
 	$O/param_reader.cc.o \
 	$O/write_c_binary.cc.o \
 	$(EMPTY_MACRO)
@@ -192,6 +198,7 @@ combine_vol_data_auxiliaries_OBJECTS = \
 	$(EMPTY_MACRO)
 
 combine_vol_data_auxiliaries_SHARED_OBJECTS = \
+	$O/constants_mod.shared_module.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \
 	$O/param_reader.cc.o \
@@ -223,6 +230,7 @@ create_movie_shakemap_AVS_DX_GMT_auxiliaries_OBJECTS = \
 	$(EMPTY_MACRO)
 
 create_movie_shakemap_AVS_DX_GMT_auxiliaries_SHARED_OBJECTS = \
+	$O/constants_mod.shared_module.o \
 	$O/get_global.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
@@ -280,10 +288,10 @@ $E/xcreate_movie_shakemap_AVS_DX_GMT: $(create_movie_shakemap_AVS_DX_GMT_auxilia
 $E/xmodel_update: $(model_upd_auxiliaries_OBJECTS) $(model_upd_auxiliaries_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
 	${FCLINK} -o $@ $+ $(MPILIBS)
 
-$E/xsmooth_vol_data: $(smooth_vol_data_auxiliaries_OBJECTS) $(smooth_vol_data_auxiliaries_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
+$E/xsmooth_vol_data: $(smooth_vol_data_auxiliaries_OBJECTS) $(smooth_vol_data_auxiliaries_SHARED_OBJECTS) $(COND_MPI_OBJECTS) $O/unused_mod.shared_module.o
 	${FCLINK} -o $@ $+ $(MPILIBS)
 
-$E/xsum_kernels: $(sum_kernels_auxiliaries_OBJECTS) $(sum_kernels_auxiliaries_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
+$E/xsum_kernels: $(sum_kernels_auxiliaries_OBJECTS) $(sum_kernels_auxiliaries_SHARED_OBJECTS) $(COND_MPI_OBJECTS) $O/unused_mod.shared_module.o
 	${FCLINK} -o $@ $+ $(MPILIBS)
 
 
@@ -293,6 +301,7 @@ $E/xsum_kernels: $(sum_kernels_auxiliaries_OBJECTS) $(sum_kernels_auxiliaries_SH
 ### Module dependencies
 ###
 
+# combine_vol_data
 $O/combine_vol_data_adios_stubs.aux_noadios.o: $O/unused_mod.shared_module.o $O/adios_manager_stubs.shared_noadios.o
 ifeq ($(ADIOS),yes)
 $O/combine_vol_data.aux.o: $O/combine_vol_data_impl.aux.o $O/combine_vol_data_adios_impl.aux_adios.o
@@ -302,6 +311,10 @@ $O/adios_helpers.shared_adios.o: \
 else
 $O/combine_vol_data.aux.o: $O/combine_vol_data_impl.aux.o $O/combine_vol_data_adios_stubs.aux_noadios.o
 endif
+
+# model_update
+$O/model_update.aux.o: $O/specfem3D_par.spec.o
+$O/save_external_bin_m_up.aux.o: $O/specfem3D_par.spec.o
 
 
 #######################################
@@ -325,6 +338,6 @@ $O/%.aux.o: $S/%.f90 $O/constants_mod.shared_module.o
 $O/%.aux_adios.o: $S/%.f90 $O/constants_mod.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.aux_noadios.o: $S/%.f90
+$O/%.aux_noadios.o: $S/%.f90 $O/constants_mod.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 

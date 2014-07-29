@@ -47,7 +47,7 @@
   integer mo,da,julian_day,isource
   double precision t_shift(NSOURCES)
   character(len=5) datasource
-  character(len=MAX_STRING_LEN) :: string, CMTSOLUTION
+  character(len=MAX_STRING_LEN) :: string, CMTSOLUTION,path_to_add
 
   ! initializes
   lat(:) = 0.d0
@@ -67,6 +67,13 @@
 !---- read hypocenter info
 !
   CMTSOLUTION = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'CMTSOLUTION'
+! see if we are running several independent runs in parallel
+! if so, add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
+! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
+  if(NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
+    write(path_to_add,"('run',i4.4,'/')") mygroup + 1
+    CMTSOLUTION = path_to_add(1:len_trim(path_to_add))//CMTSOLUTION(1:len_trim(CMTSOLUTION))
+  endif
 
   open(unit=1,file=CMTSOLUTION,status='old',action='read')
 

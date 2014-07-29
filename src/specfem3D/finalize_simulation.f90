@@ -128,8 +128,7 @@
   if (nrec_local > 0) then
     if (.not. (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3)) then
       ! seismograms
-      call write_adj_seismograms2_to_file(myrank,seismograms_eps,number_receiver_global, &
-            nrec_local,it,DT,NSTEP,t0,LOCAL_PATH)
+      call write_adj_seismograms2_to_file(myrank,seismograms_eps,number_receiver_global,nrec_local,it,DT,NSTEP,t0)
 
       ! source gradients  (for sources in elastic domains)
       do irec_local = 1, nrec_local
@@ -208,7 +207,7 @@
 
     if (ELASTIC_SIMULATION) then
       deallocate(displ_old)
-      deallocate(displ_new)   
+      deallocate(displ_new)
       deallocate(PML_dux_dxl)
       deallocate(PML_dux_dyl)
       deallocate(PML_dux_dzl)
@@ -227,15 +226,15 @@
       deallocate(PML_duz_dxl_old)
       deallocate(PML_duz_dyl_old)
       deallocate(PML_duz_dzl_old)
-      deallocate(PML_dux_dxl_new)   
-      deallocate(PML_dux_dyl_new)   
-      deallocate(PML_dux_dzl_new)   
-      deallocate(PML_duy_dxl_new)   
-      deallocate(PML_duy_dyl_new)   
-      deallocate(PML_duy_dzl_new)   
-      deallocate(PML_duz_dxl_new)   
-      deallocate(PML_duz_dyl_new)   
-      deallocate(PML_duz_dzl_new)   
+      deallocate(PML_dux_dxl_new)
+      deallocate(PML_dux_dyl_new)
+      deallocate(PML_dux_dzl_new)
+      deallocate(PML_duy_dxl_new)
+      deallocate(PML_duy_dyl_new)
+      deallocate(PML_duy_dzl_new)
+      deallocate(PML_duz_dxl_new)
+      deallocate(PML_duz_dyl_new)
+      deallocate(PML_duz_dzl_new)
       deallocate(rmemory_dux_dxl_x)
       deallocate(rmemory_dux_dyl_x)
       deallocate(rmemory_dux_dzl_x)
@@ -263,16 +262,16 @@
 
     if (ACOUSTIC_SIMULATION) then
       deallocate(potential_acoustic_old)
-      deallocate(potential_acoustic_new)   
+      deallocate(potential_acoustic_new)
       deallocate(PML_dpotential_dxl)
       deallocate(PML_dpotential_dyl)
       deallocate(PML_dpotential_dzl)
       deallocate(PML_dpotential_dxl_old)
       deallocate(PML_dpotential_dyl_old)
       deallocate(PML_dpotential_dzl_old)
-      deallocate(PML_dpotential_dxl_new)   
-      deallocate(PML_dpotential_dyl_new)   
-      deallocate(PML_dpotential_dzl_new)   
+      deallocate(PML_dpotential_dxl_new)
+      deallocate(PML_dpotential_dyl_new)
+      deallocate(PML_dpotential_dzl_new)
       deallocate(rmemory_dpotential_dxl)
       deallocate(rmemory_dpotential_dyl)
       deallocate(rmemory_dpotential_dzl)

@@ -104,9 +104,9 @@
     ! wavefields on CPU
     ! updates (forward) acoustic potentials
     if (PML_CONDITIONS .and. NSPEC_CPML > 0)then
-      potential_acoustic_old(:) = potential_acoustic(:) &   
-                                  + deltatover2 * (1._CUSTOM_REAL - 2.0_CUSTOM_REAL*theta) * potential_dot_acoustic(:) &  
-                                  + deltatsqover2 * (1._CUSTOM_REAL - theta) * potential_dot_dot_acoustic(:)   
+      potential_acoustic_old(:) = potential_acoustic(:) &
+                                  + deltatover2 * (1._CUSTOM_REAL - 2.0_CUSTOM_REAL*theta) * potential_dot_acoustic(:) &
+                                  + deltatsqover2 * (1._CUSTOM_REAL - theta) * potential_dot_dot_acoustic(:)
     endif
     potential_acoustic(:) = potential_acoustic(:) &
                             + deltat * potential_dot_acoustic(:) &
@@ -115,10 +115,10 @@
                                 + deltatover2 * potential_dot_dot_acoustic(:)
     potential_dot_dot_acoustic(:) = 0._CUSTOM_REAL
 
-    if(PML_CONDITIONS .and. NSPEC_CPML > 0)then   
-      potential_acoustic_new(:) = potential_acoustic(:) &   
-                                  + deltatover2 * (1._CUSTOM_REAL - 2.0_CUSTOM_REAL*theta) * potential_dot_acoustic(:)   
-    endif   
+    if(PML_CONDITIONS .and. NSPEC_CPML > 0)then
+      potential_acoustic_new(:) = potential_acoustic(:) &
+                                  + deltatover2 * (1._CUSTOM_REAL - 2.0_CUSTOM_REAL*theta) * potential_dot_acoustic(:)
+    endif
 
     ! adjoint simulations
     if( SIMULATION_TYPE == 3 ) then
@@ -176,17 +176,17 @@
     ! updates elastic displacement and velocity
     if(PML_CONDITIONS .and. NSPEC_CPML > 0)then
       displ_old(:,:) = displ(:,:) &
-                       + deltatover2 * (1._CUSTOM_REAL - 2.0_CUSTOM_REAL*theta) * veloc(:,:) &   
-                       + deltatsqover2 * (1._CUSTOM_REAL - theta) * accel(:,:)   
+                       + deltatover2 * (1._CUSTOM_REAL - 2.0_CUSTOM_REAL*theta) * veloc(:,:) &
+                       + deltatsqover2 * (1._CUSTOM_REAL - theta) * accel(:,:)
     endif
     displ(:,:) = displ(:,:) + deltat*veloc(:,:) + deltatsqover2*accel(:,:)
     veloc(:,:) = veloc(:,:) + deltatover2*accel(:,:)
     if( SIMULATION_TYPE /= 1 ) accel_adj_coupling(:,:) = accel(:,:)
     accel(:,:) = 0._CUSTOM_REAL
-    if(PML_CONDITIONS .and. NSPEC_CPML > 0)then   
-      displ_new(:,:) = displ(:,:) &  
+    if(PML_CONDITIONS .and. NSPEC_CPML > 0)then
+      displ_new(:,:) = displ(:,:) &
                        + deltatover2 * (1._CUSTOM_REAL - theta) * veloc(:,:)
-    endif   
+    endif
 
     ! adjoint simulations
     if( SIMULATION_TYPE == 3 ) then

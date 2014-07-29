@@ -101,13 +101,21 @@
 
   subroutine open_parameter_file(ierr)
 
-  use constants, only: MAX_STRING_LEN,IN_DATA_FILES_PATH
+  use constants, only: MAX_STRING_LEN,IN_DATA_FILES_PATH,NUMBER_OF_SIMULTANEOUS_RUNS,mygroup
 
   implicit none
 
   integer ierr
-  character(len=MAX_STRING_LEN) :: filename
+  character(len=MAX_STRING_LEN) :: filename,path_to_add
+
   filename = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'Par_file'
+! see if we are running several independent runs in parallel
+! if so, add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
+! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
+  if(NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
+    write(path_to_add,"('run',i4.4,'/')") mygroup + 1
+    filename = path_to_add(1:len_trim(path_to_add))//filename(1:len_trim(filename))
+  endif
 
   call param_open(filename, len(filename), ierr)
   if (ierr /= 0) then
