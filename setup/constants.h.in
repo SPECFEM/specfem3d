@@ -156,13 +156,13 @@
 !!
 !!-----------------------------------------------------------
 
-! in the case of weakly nonlinear materials the stress tensor becomes non-symmetric, see for instance equation (A9)
+! in the case of weakly nonlinear materials the stress tensor becomes non-symmetric, see for instance equation (A9) in
 ! D. L. Johnson, S. Kostek and A. N. Norris, Nonlinear tube waves, J. Acoust. Soc. Am. vol. 96, p. 1829-1843 (1994).
 
   logical, parameter :: MAKE_HOOKE_LAW_WEAKLY_NONLINEAR = .false.
 
-! enter here the third-order elastic constants that are needed in addition to lambda and mu
-! for now we make them constant in the whole medium; that will be easy to change later if needed
+! define here the third-order elastic constants that are needed in addition to lambda and mu
+! for now they are constant in the whole medium; that will be easy to change later if needed
   real(kind=CUSTOM_REAL), parameter :: A = 0.0_CUSTOM_REAL
   real(kind=CUSTOM_REAL), parameter :: B = 0.0_CUSTOM_REAL
   real(kind=CUSTOM_REAL), parameter :: C = 0.0_CUSTOM_REAL

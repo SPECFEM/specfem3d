@@ -779,7 +779,7 @@
 
             else
 
-            ! in the case of weakly nonlinear materials the stress tensor becomes non-symmetric, see for instance equation (A9)
+            ! in the case of weakly nonlinear materials the stress tensor becomes non-symmetric, see for instance equation (A9) in
             ! D. L. Johnson, S. Kostek and A. N. Norris, Nonlinear tube waves, J. Acoust. Soc. Am. vol. 96, p. 1829-1843 (1994).
 
               epsilon_trace = duxdxl + duydyl + duzdzl
