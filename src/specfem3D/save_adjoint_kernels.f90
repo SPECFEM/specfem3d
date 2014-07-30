@@ -277,7 +277,8 @@ subroutine save_kernels_elastic(adios_handle, alphav_kl, alphah_kl, &
                                 betav_kl, betah_kl, eta_kl,         &
                                 rhop_kl, alpha_kl, beta_kl)
 
-  use specfem_par
+  use specfem_par, only: CUSTOM_REAL,NSPEC_AB,ibool,mustore,kappastore,ANISOTROPIC_KL,SAVE_TRANSVERSE_KL,FOUR_THIRDS, &
+                         ADIOS_FOR_KERNELS,IOUT,prname,SAVE_MOHO_MESH
   use specfem_par_elastic
 
   implicit none

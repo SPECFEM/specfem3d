@@ -54,7 +54,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                         phase_ispec_inner_elastic,backward_simulation)
 
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,N_SLS,SAVE_MOHO_MESH,ONE_THIRD,FOUR_THIRDS,&
-                       CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
+                       CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ,MAKE_HOOKE_LAW_WEAKLY_NONLINEAR,A,B,C,A_over_4,B_over_2
   use pml_par, only: is_CPML, spec_to_CPML, accel_elastic_CPML,NSPEC_CPML,CPML_regions, &
                      PML_dux_dxl, PML_dux_dyl, PML_dux_dzl, PML_duy_dxl, PML_duy_dyl, PML_duy_dzl, &
                      PML_duz_dxl, PML_duz_dyl, PML_duz_dzl, &
@@ -201,6 +201,9 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dummyx_loc_att_new,dummyy_loc_att_new,dummyz_loc_att_new
 
   real(kind=CUSTOM_REAL) :: eta
+
+  real(kind=CUSTOM_REAL) :: epsilon_trace,epsilon_trace_squared
+  real(kind=CUSTOM_REAL) :: mul_plus_A_over_4,lambdal_plus_B,lambdal_over_two_plus_B_over_2
 
   ! local C-PML absorbing boundary conditions parameters
   integer :: ispec_CPML
@@ -644,16 +647,103 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 
           ! isotropic case
             lambdalplus2mul = kappal + FOUR_THIRDS * mul
-            lambdal = lambdalplus2mul - 2.*mul
+            lambdal = lambdalplus2mul - 2._CUSTOM_REAL*mul
 
             ! compute stress sigma
-            sigma_xx = lambdalplus2mul*duxdxl + lambdal*duydyl_plus_duzdzl
-            sigma_yy = lambdalplus2mul*duydyl + lambdal*duxdxl_plus_duzdzl
-            sigma_zz = lambdalplus2mul*duzdzl + lambdal*duxdxl_plus_duydyl
+            if(.not. MAKE_HOOKE_LAW_WEAKLY_NONLINEAR) then
 
-            sigma_xy = mul*duxdyl_plus_duydxl
-            sigma_xz = mul*duzdxl_plus_duxdzl
-            sigma_yz = mul*duzdyl_plus_duydzl
+              sigma_xx = lambdalplus2mul*duxdxl + lambdal*duydyl_plus_duzdzl
+              sigma_yy = lambdalplus2mul*duydyl + lambdal*duxdxl_plus_duzdzl
+              sigma_zz = lambdalplus2mul*duzdzl + lambdal*duxdxl_plus_duydyl
+
+              sigma_xy = mul*duxdyl_plus_duydxl
+              sigma_xz = mul*duzdxl_plus_duxdzl
+              sigma_yz = mul*duzdyl_plus_duydzl
+
+            else
+
+            ! in the case of weakly nonlinear materials the stress tensor becomes non-symmetric, see for instance equation (A9)
+            ! D. L. Johnson, S. Kostek and A. N. Norris, Nonlinear tube waves, J. Acoust. Soc. Am. vol. 96, p. 1829-1843 (1994).
+
+              epsilon_trace = duxdxl + duydyl + duzdzl
+              epsilon_trace_squared = epsilon_trace * epsilon_trace
+
+              mul_plus_A_over_4 = mul + A_over_4
+              lambdal_plus_B = lambdal + B
+              lambdal_over_two_plus_B_over_2 = 0.5_CUSTOM_REAL * lambdal + B_over_2
+
+              sigma_xx = lambdal * epsilon_trace + mul * (duxdxl + duxdxl) + B * epsilon_trace * duxdxl + &
+                         lambdal_plus_B * epsilon_trace * duxdxl + C * epsilon_trace_squared + A_over_4 * &
+                         (duxdxl * duxdxl + duxdyl * duydxl + duxdzl * duzdxl) + mul_plus_A_over_4 * &
+                         (duxdxl * duxdxl + duxdxl * duxdxl + duxdxl * duxdxl + duxdyl * duxdyl + &
+                         duydxl * duydxl + duxdyl * duydxl + duxdzl * duxdzl + duzdxl * duzdxl + &
+                         duxdzl * duzdxl) + lambdal_over_two_plus_B_over_2 * (duxdxl * duxdxl + &
+                         duydxl * duydxl + duzdxl * duzdxl + duxdyl * duxdyl + duydyl * duydyl + &
+                         duzdyl * duzdyl + duxdzl * duxdzl + duydzl * duydzl + duzdzl * duzdzl) + &
+                         B_over_2 * (duxdxl * duxdxl + duydxl * duxdyl + duzdxl * duxdzl + &
+                         duxdyl * duydxl + duydyl * duydyl + duzdyl * duydzl + &
+                         duxdzl * duzdxl + duydzl * duzdyl + duzdzl * duzdzl)
+
+              sigma_xy = mul * (duxdyl + duydxl) + B * epsilon_trace * duydxl + lambdal_plus_B * &
+                         epsilon_trace * duxdyl + A_over_4 * (duydxl * duxdxl + duydyl * duydxl + &
+                         duydzl * duzdxl) + mul_plus_A_over_4 * (duxdxl * duydxl + duxdxl * duxdyl + &
+                         duxdxl * duxdyl + duxdyl * duydyl + duydxl * duydyl + duxdyl * duydyl + &
+                         duxdzl * duydzl + duzdxl * duzdyl + duxdzl * duzdyl)
+
+              sigma_xz = mul * (duxdzl + duzdxl) + B * epsilon_trace * duzdxl + lambdal_plus_B * &
+                         epsilon_trace * duxdzl + A_over_4 * (duzdxl * duxdxl + duzdyl * duydxl + &
+                         duzdzl * duzdxl) + mul_plus_A_over_4 * (duxdxl * duzdxl + duxdxl * duxdzl + &
+                         duxdxl * duxdzl + duxdyl * duzdyl + duydxl * duydzl + duxdyl * duydzl + &
+                         duxdzl * duzdzl + duzdxl * duzdzl + duxdzl * duzdzl)
+
+              sigma_yx = mul * (duydxl + duxdyl) + B * epsilon_trace * duxdyl + lambdal_plus_B * &
+                         epsilon_trace * duydxl + A_over_4 * (duxdxl * duxdyl + duxdyl * duydyl + &
+                         duxdzl * duzdyl) + mul_plus_A_over_4 * (duydxl * duxdxl + duxdyl * duxdxl + &
+                         duydxl * duxdxl + duydyl * duxdyl + duydyl * duydxl + duydyl * duydxl + &
+                         duydzl * duxdzl + duzdyl * duzdxl + duydzl * duzdxl)
+
+              sigma_yy = lambdal * epsilon_trace + mul * (duydyl + duydyl) + B * epsilon_trace * duydyl + &
+                         lambdal_plus_B * epsilon_trace * duydyl + C * epsilon_trace_squared + A_over_4 * &
+                         (duydxl * duxdyl + duydyl * duydyl + duydzl * duzdyl) + mul_plus_A_over_4 * &
+                         (duydxl * duydxl + duxdyl * duxdyl + duydxl * duxdyl + duydyl * duydyl + &
+                         duydyl * duydyl + duydyl * duydyl + duydzl * duydzl + duzdyl * duzdyl + &
+                         duydzl * duzdyl) + lambdal_over_two_plus_B_over_2 * (duxdxl * duxdxl + &
+                         duydxl * duydxl + duzdxl * duzdxl + duxdyl * duxdyl + duydyl * duydyl + &
+                         duzdyl * duzdyl + duxdzl * duxdzl + duydzl * duydzl + duzdzl * duzdzl) + &
+                         B_over_2 * (duxdxl * duxdxl + duydxl * duxdyl + duzdxl * duxdzl + &
+                         duxdyl * duydxl + duydyl * duydyl + duzdyl * duydzl + &
+                         duxdzl * duzdxl + duydzl * duzdyl + duzdzl * duzdzl)
+
+              sigma_yz = mul * (duydzl + duzdyl) + B * epsilon_trace * duzdyl + lambdal_plus_B * &
+                         epsilon_trace * duydzl + A_over_4 * (duzdxl * duxdyl + duzdyl * duydyl + &
+                         duzdzl * duzdyl) + mul_plus_A_over_4 * (duydxl * duzdxl + duxdyl * duxdzl + &
+                         duydxl * duxdzl + duydyl * duzdyl + duydyl * duydzl + duydyl * duydzl + &
+                         duydzl * duzdzl + duzdyl * duzdzl + duydzl * duzdzl)
+
+              sigma_zx = mul * (duzdxl + duxdzl) + B * epsilon_trace * duxdzl + lambdal_plus_B * &
+                         epsilon_trace * duzdxl + A_over_4 * (duxdxl * duxdzl + duxdyl * duydzl + &
+                         duxdzl * duzdzl) + mul_plus_A_over_4 * (duzdxl * duxdxl + duxdzl * duxdxl + &
+                         duzdxl * duxdxl + duzdyl * duxdyl + duydzl * duydxl + duzdyl * duydxl + &
+                         duzdzl * duxdzl + duzdzl * duzdxl + duzdzl * duzdxl)
+
+              sigma_zy = mul * (duzdyl + duydzl) + B * epsilon_trace * duydzl + lambdal_plus_B * &
+                         epsilon_trace * duzdyl + A_over_4 * (duydxl * duxdzl + duydyl * duydzl + &
+                         duydzl * duzdzl) + mul_plus_A_over_4 * (duzdxl * duydxl + duxdzl * duxdyl + &
+                         duzdxl * duxdyl + duzdyl * duydyl + duydzl * duydyl + duzdyl * duydyl + &
+                         duzdzl * duydzl + duzdzl * duzdyl + duzdzl * duzdyl)
+
+              sigma_zz = lambdal * epsilon_trace + mul * (duzdzl + duzdzl) + B * epsilon_trace * &
+                         duzdzl + lambdal_plus_B * epsilon_trace * duzdzl + C * epsilon_trace_squared + &
+                         A_over_4 * (duzdxl * duxdzl + duzdyl * duydzl + duzdzl * duzdzl) + &
+                         mul_plus_A_over_4 * (duzdxl * duzdxl + duxdzl * duxdzl + duzdxl * duxdzl + &
+                         duzdyl * duzdyl + duydzl * duydzl + duzdyl * duydzl + duzdzl * duzdzl + &
+                         duzdzl * duzdzl + duzdzl * duzdzl) + lambdal_over_two_plus_B_over_2 * (duxdxl * duxdxl + &
+                         duydxl * duydxl + duzdxl * duzdxl + duxdyl * duxdyl + duydyl * duydyl + duzdyl * duzdyl + &
+                         duxdzl * duxdzl + duydzl * duydzl + duzdzl * duzdzl) + B_over_2 * (duxdxl * duxdxl + &
+                         duydxl * duxdyl + duzdxl * duxdzl + duxdyl * duydxl + duydyl * duydyl + duzdyl * duydzl + &
+                         duxdzl * duzdxl + duydzl * duzdyl + duzdzl * duzdzl)
+
+            endif
 
           endif ! ANISOTROPY
 
@@ -740,8 +830,6 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 
           endif
 
-!! DK DK to Jo, to debug CPML, 22 March 2013:
-
 !! DK DK comment from DK DK, 22 March 2013, for Jo and Zhinan to debug CPML:
 !! DK DK are you sure about this "if" statement below? because I am surprised to see
 !! DK DK that when PML_CONDITIONS is on then you do not compute the tempx, tempy, tempz arrays
@@ -751,11 +839,14 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
           if (PML_CONDITIONS .and. (.not. backward_simulation)  .and. NSPEC_CPML > 0) then
             ! do not merge this second line with the first using an ".and." statement
             ! because array is_CPML() is unallocated when PML_CONDITIONS is false
-            if (.not.is_CPML(ispec)) then
+            if (.not. is_CPML(ispec)) then
+
               ! define symmetric components of sigma
-              sigma_yx = sigma_xy
-              sigma_zx = sigma_xz
-              sigma_zy = sigma_yz
+              if(.not. MAKE_HOOKE_LAW_WEAKLY_NONLINEAR) then
+                sigma_yx = sigma_xy
+                sigma_zx = sigma_xz
+                sigma_zy = sigma_yz
+              endif
 
               ! form dot product with test vector, non-symmetric form (which is useful in the case of PML)
               tempx1(i,j,k) = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl) ! this goes to accel_x
@@ -770,11 +861,15 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
               tempy3(i,j,k) = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_zy*gammazl) ! this goes to accel_y
               tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl) ! this goes to accel_z
             endif
+
           else
+
             ! define symmetric components of sigma
-            sigma_yx = sigma_xy
-            sigma_zx = sigma_xz
-            sigma_zy = sigma_yz
+            if(.not. MAKE_HOOKE_LAW_WEAKLY_NONLINEAR) then
+              sigma_yx = sigma_xy
+              sigma_zx = sigma_xz
+              sigma_zy = sigma_yz
+            endif
 
             ! form dot product with test vector, non-symmetric form (which is useful in the case of PML)
             tempx1(i,j,k) = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl) ! this goes to accel_x

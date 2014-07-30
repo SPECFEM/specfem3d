@@ -41,7 +41,7 @@
                         c22,c23,c24,c25,c26,c33, &
                         c34,c35,c36,c44,c45,c46,c55,c56,c66)
 
-  use constants
+  use constants, only: CUSTOM_REAL,IANISOTROPY_MODEL1,IANISOTROPY_MODEL2
 
   implicit none
 
