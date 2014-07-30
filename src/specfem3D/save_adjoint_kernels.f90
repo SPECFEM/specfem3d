@@ -55,6 +55,8 @@ subroutine save_adjoint_kernels()
                                     betav_kl, betah_kl, eta_kl,         &
                                     rhop_kl, alpha_kl, beta_kl)
 
+      use constants, only: CUSTOM_REAL
+
       integer(kind=8) :: adios_handle
       ! FIXME
       ! Break the CUSTOM_REAL stuff.
@@ -63,7 +65,8 @@ subroutine save_adjoint_kernels()
       ! redo what was done before SVN revision 22718
       !
       ! see other FIXME below (same than see one)
-      real(kind=4), dimension(:,:,:,:), allocatable :: &
+!! DK DK: sorry, we cannot afford to break the code; too many people use it; I thus put CUSTOM_REAL back
+      real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
           alphav_kl,alphah_kl,betav_kl,betah_kl, &
           eta_kl, rhop_kl, alpha_kl, beta_kl
     end subroutine save_kernels_elastic
@@ -288,10 +291,13 @@ subroutine save_kernels_elastic(adios_handle, alphav_kl, alphah_kl, &
                                           betav_kl, betah_kl, eta_kl,         &
                                           rhop_kl, alpha_kl, beta_kl)
 
+      use constants, only: CUSTOM_REAL
+
       integer(kind=8), intent(in) :: adios_handle
       ! FIXME
       ! see other FIXME above.
-      real(kind=4), dimension(:,:,:,:), allocatable :: &
+!! DK DK: sorry, we cannot afford to break the code; too many people use it; I thus put CUSTOM_REAL back
+      real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
           alphav_kl,alphah_kl,betav_kl,betah_kl, &
           eta_kl, rhop_kl, alpha_kl, beta_kl
     end subroutine save_kernels_elastic_adios
