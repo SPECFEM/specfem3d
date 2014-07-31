@@ -31,7 +31,7 @@
 #######################################
 
 FC = @FC@
-FCFLAGS = #@FCFLAGS@
+FCFLAGS = @FCFLAGS@
 MPIFC = @MPIFC@
 MPILIBS = @MPILIBS@
 
