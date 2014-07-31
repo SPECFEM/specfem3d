@@ -1,0 +1,7 @@
+FUTURE_UPDATES: Future fixes and updates to FLEXWIN
+
+Email Alessia Maggi (alessia@sismo.u-strasbg.fr)
+
+1. Create a single-trace option that does not require a pair of seismograms.  This would allow a user to feed a single set of seismograms to FLEXWIN, which could select windows and records based on many of the same criteria presently employed.
+
+--------

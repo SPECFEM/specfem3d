@@ -1,0 +1,15 @@
+2   %kernel type, WF=0 (waveform), CC=1 (cross-corr), FD=2 (freq-dep)
+2   %taper type for FD: BC=0 (boxcar), CS=1 (cosine-taper), MT=2 (multi-taper)
+OUTPUT
+OUTPUT
+.false.                  % bandpass or not
+50 500                     % tshort, tlong
+40.0                      % cc time shift max (before_shift)
+2.5 0.020 0.020          % npi, wtr, wtr_mtm
+.true.                   % select window after measurement
+1                        % number of cycles in a window
+0.250 0.500 3.500        % dt_fac, err_fac, dt_max_scale
+.false.                   % include_error
+0.2   0.05               % min_dt_sigma, min_dlnA_sigma
+-1.0 1.0 10000           % b_adj,dt_adj, npts_adj
+.false.                  % bandpass adjoint src between [tstart,tend]

@@ -1,0 +1,5 @@
+latex  measure_adj_manual
+bibtex measure_adj_manual
+latex measure_adj_manual
+dvipdf measure_adj_manual.dvi measure_adj_manual.pdf
+evince  measure_adj_manual.pdf

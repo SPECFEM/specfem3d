@@ -1,0 +1,21 @@
+  -0.585 0.0110   18200  # tstart, DT, npts: time vector for simulations
+                      7  # imeas (1-8; see manual)
+                     BH  # channel: BH or LH
+      30.000      6.000  # TLONG and TSHORT: band-pass periods for records
+                .false.  # RUN_BANDPASS: use band-pass on records
+                 .true.  # DISPLAY_DETAILS
+                 .true.  # OUTPUT_MEASUREMENT_FILES
+                 .true.  # COMPUTE_ADJOINT_SOURCE
+     -4.5000     4.5000  # TSHIFT_MIN; TSHIFT_MAX
+     -1.5000     1.5000  # DLNA_MIN; DLNA_MAX
+                  0.690  # CC_MIN
+                      1  # ERROR_TYPE -- 0 none; 1 CC, MT-CC; 2 MT-jack-knife
+                  1.000  # DT_SIGMA_MIN
+                  0.500  # DLNA_SIGMA_MIN
+                      1  # ITAPER -- taper type: 1 multi-taper; 2 cosine; 3 boxcar
+            0.020  2.50  # WTR, NPI (ntaper = 2*NPI)
+                  2.000  # DT_FAC
+                  2.500  # ERR_FAC
+                  3.500  # DT_MAX_SCALE
+                  1.500  # NCYCLE_IN_WINDOW
+		 .false. # USE_PHYSICAL_DISPERSION 

@@ -1,0 +1,11 @@
+Carl Tape, 17-June-2008
+
+To run these scripts for a set of events, first copy them into the main directoy (one up).
+
+For matlab scripts to summarize the misfit function values, see 
+
+/ADJOINT_TOMO/iterate_adj/matlab/compute_misfit.m
+
+See main README for details.
+
+-------------

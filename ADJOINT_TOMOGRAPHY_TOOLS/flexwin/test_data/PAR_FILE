@@ -1,0 +1,72 @@
+# -------------------------------------------------------------
+#
+#    This is the parameter file for FLEXWIN.  It is based on the
+#    same syntax as the Par_file for SPECFEM.  Variable names are
+#    put first, values are placed after the 34th column.
+#
+#    Comment lines and blank lines are significant.  If you
+#    change the layout of this file or add/remove parameters
+#    you must also modify the user_variables module and the 
+#    read_parameter_file subroutine at the start of seismo_subs.f90.
+#    
+# -------------------------------------------------------------
+ 
+# -------------------------------------------------------------
+# boolean parameters
+DEBUG                           = .true.
+MAKE_SEISMO_PLOTS               = .true.
+MAKE_WINDOW_FILES               = .true.
+BODY_WAVE_ONLY                  = .false.
+
+# -------------------------------------------------------------
+# period min/max for filtering
+RUN_BANDPASS                    = .true.
+WIN_MIN_PERIOD                  = 50.0
+WIN_MAX_PERIOD                  = 150.0
+
+# -------------------------------------------------------------
+# E(t) water level
+STALTA_BASE                     = 0.08
+
+# -------------------------------------------------------------
+# maximum allowable time shift from reference TSHIFT
+TSHIFT_BASE                     = 15.0
+TSHIFT_REFERENCE                = 0.0
+
+# -------------------------------------------------------------
+# maximum allowable amplitude measurement relative to reference DLNA
+DLNA_BASE                       = 1.0
+DLNA_REFERENCE                  = 0.0
+
+# -------------------------------------------------------------
+# limit on CC for window acceptance
+CC_BASE                         = 0.85
+
+# -------------------------------------------------------------
+# boolean switch for check_data_quality
+DATA_QUALITY                    = .true.
+
+# if DATA_QUALITY = .true. and if two different measurements of
+# signal-to-noise ratios exceeds these two base levels,
+# then the data time series (and syn) is kept
+SNR_INTEGRATE_BASE              = 3.5  
+SNR_MAX_BASE                    = 3.0
+
+# -------------------------------------------------------------
+# limit on signal to noise ratio in a particular window.
+WINDOW_S2N_BASE                 = 1.5
+
+# -------------------------------------------------------------
+# Fine tuning constants 
+C_0  (internal minima)          = 0.7
+C_1  (small windows)            = 4.0
+C_2  (prominence)               = 0.0
+C_3a (separation height)        = 1.0 
+C_3b (separation time)          = 2.0 
+C_4a (curtail on left)          = 3.0 
+C_4b (curtail on right)         = 10.0 
+
+WEIGHT_SPACE_COVERAGE           = 1.0
+WEIGHT_AVERAGE_CC               = 1.0
+WEIGHT_N_WINDOWS                = 1.0
+

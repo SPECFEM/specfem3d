@@ -1,0 +1,9 @@
+#!/bin/bash
+compile
+mkdir -p OUTPUT_FILES
+rm -f OUTPUT_FILES/*
+date
+#bsub -q debug -W 30 -n 168 < interp.bash
+#bsub -q normal -W 60 -n 168 < interp.bash
+bsub -q normal -W 1440 -n 168 < interp.bash
+date

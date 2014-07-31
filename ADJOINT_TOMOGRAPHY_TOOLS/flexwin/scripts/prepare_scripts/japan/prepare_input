@@ -1,0 +1,32 @@
+#!/bin/sh
+
+if [ -e t1 ] ; then ( rm t1 ) ; fi
+n=0
+for file in DATA/* ; do
+  echo $file
+  net=`saclst knetwk f $file | awk '{print $2}'`
+  sta=`saclst kstnm f $file | awk '{print $2}'`
+  comp=`saclst kcmpnm f $file | awk '{print $2}'`
+  synt=SYN/$sta.$net.$comp.sac.*
+  echo $synt
+  b1=`saclst b f $file | awk '{print $2}'`
+  b2=`saclst b f $synt | awk '{print $2}'`
+  db=$(echo "sqrt(($b1 - $b2)^2)" | bc)
+  dt1=`saclst delta f $file | awk '{print $2}'`
+  dt2=`saclst delta f $synt | awk '{print $2}'`
+  out=MEASURE/${sta}.${net}.${comp}
+  if [ -e $synt ] ; then
+    flag=`echo "$db 2*$dt1" | awk '{if ($1 < $2) print -1; else print 1}'`
+    if [ `echo "$dt1 - $dt2"| bc` = 0 ] ; then
+       if [ $flag -lt 0 ] ; then
+        n=`echo $n | awk '{print $n+1}'`
+        echo $file >> t1
+        echo $synt >> t1
+        echo $out >> t1
+       fi
+    fi
+  fi
+done
+echo $n > input
+cat t1 >> input
+rm t1

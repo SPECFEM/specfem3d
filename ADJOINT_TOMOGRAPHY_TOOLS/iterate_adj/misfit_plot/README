@@ -1,0 +1,7 @@
+Carl Tape, 20-Nov-2008
+
+/svn/cig/seismo/3D/ADJOINT_TOMO/iterate_adj/misfit_plot/README
+
+These scripts are in development.  The objective is to have a way to combine synthetics and measurements from many different models into a series of plots.
+
+---------
