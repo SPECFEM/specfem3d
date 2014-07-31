@@ -152,6 +152,27 @@
 
 !!-----------------------------------------------------------
 !!
+!! weakly nonlinear Hooke's law
+!!
+!!-----------------------------------------------------------
+
+! in the case of weakly nonlinear materials the stress tensor becomes non-symmetric, see for instance equation (A9) in
+! D. L. Johnson, S. Kostek and A. N. Norris, Nonlinear tube waves, J. Acoust. Soc. Am. vol. 96, p. 1829-1843 (1994).
+
+  logical, parameter :: MAKE_HOOKE_LAW_WEAKLY_NONLINEAR = .false.
+
+! define here the third-order elastic constants that are needed in addition to lambda and mu
+! for now they are constant in the whole medium; that will be easy to change later if needed
+  real(kind=CUSTOM_REAL), parameter :: A = 0.0_CUSTOM_REAL
+  real(kind=CUSTOM_REAL), parameter :: B = 0.0_CUSTOM_REAL
+  real(kind=CUSTOM_REAL), parameter :: C = 0.0_CUSTOM_REAL
+
+! we precompute some related constants in order to save compute time in the solver
+  real(kind=CUSTOM_REAL), parameter :: A_over_4 = 0.25_CUSTOM_REAL * A
+  real(kind=CUSTOM_REAL), parameter :: B_over_2 = 0.50_CUSTOM_REAL * B
+
+!!-----------------------------------------------------------
+!!
 !! total energy calculation
 !!
 !!-----------------------------------------------------------
