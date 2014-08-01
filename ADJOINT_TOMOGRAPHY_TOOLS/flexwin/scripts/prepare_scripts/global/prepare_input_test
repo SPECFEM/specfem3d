@@ -1,0 +1,26 @@
+#!/bin/sh
+
+if [ -e t1 ] ; then ( rm t1 ) ; fi
+
+n=0
+for file in DATA_TEST/* ; do
+
+  net=`echo $file | awk -F"." '{print $2}'`
+  sta=`echo $file | awk -F"." '{print $3}'`
+  comp=`echo $file | awk -F"." '{print $4}'`
+  #echo $net $sta $comp
+
+  synt=SYN_TEST/${sta}.${net}.${comp}.semd.sac.d
+  out=MEASURE_TEST/${sta}.${net}.${comp}
+  if [ -e $synt ] ; then
+    n=`echo $n | awk '{print $n+1}'`
+    echo $file >> t1
+    echo $synt >> t1
+    echo $out >> t1
+  fi
+done
+echo $n > input_test
+cat t1 >> input_test
+rm t1
+
+

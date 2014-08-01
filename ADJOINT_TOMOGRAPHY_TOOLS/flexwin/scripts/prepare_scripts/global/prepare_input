@@ -1,0 +1,51 @@
+#!/bin/sh
+
+
+event_name=$1
+
+if [ ! -e PAR_FILE ] ; then 
+  echo "Need PAR_FILE present" 
+  exit 0
+fi 
+
+min_T=`grep WIN_MIN_PERIOD PAR_FILE | awk '{printf "%03d", $NF}'`
+max_T=`grep WIN_MAX_PERIOD PAR_FILE | awk '{printf "%03d",$NF}'`
+ident=${min_T}-${max_T}
+
+period_range=10-250
+
+
+DATA=/data/alessia/events_lh/${event_name}/${event_name}.${period_range}
+SYN=/data/alessia/specfem/${event_name}/${event_name}.${period_range}
+MEASURE=/data/alessia/flexwin/MEASURE/${event_name}/${event_name}.${ident}
+input=/data/alessia/flexwin/input.${event_name}.${ident}
+
+if [ ! -d $MEASURE ] ; then ( mkdir -p $MEASURE ) ; fi
+
+echo $DATA
+echo $SYN
+
+if [ -e t1 ] ; then ( rm t1 ) ; fi
+
+n=0
+for file in ${DATA}/*[ZRT].?.SAC ; do
+
+  net=`echo $file | awk -F"/" '{print $NF}' | awk -F"." '{print $7}'`
+  sta=`echo $file | awk -F"/" '{print $NF}' | awk -F"." '{print $8}'`
+  comp=`echo $file | awk -F"/" '{print $NF}' | awk -F"." '{print $10}'`
+
+  synt=${SYN}/${sta}.${net}.${comp}.semd.sac
+  out=${MEASURE}/${sta}.${net}.${comp}
+  if [ -e $synt ] ; then
+    n=`echo $n | awk '{print $n+1}'`
+    echo $file >> t1
+    echo $synt >> t1
+    echo $out >> t1
+  fi
+done
+echo $n > $input
+cat t1 >> $input
+rm t1
+
+echo "Input file for $n traces is : $input"
+

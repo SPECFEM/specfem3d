@@ -1,0 +1,23 @@
+Qinya Liu, 30-Nov-2008
+
+This program is intended to compute the model values for given spatial points (as input), and the output file can be used directly in GMT plotting program such as grdimage to plot the model cross-section.
+
+Use an old version of the basin code that Carl uses for socal adjoint (subspace) tomo inversion.
+
+Includes an option (TOPOGRAPHY = .true.)  for assigning negative values to 'air points' that are above the topography.  This is useful for vertical cross sections.
+
+Max number of input points is set at NMAXPTS = 100000.
+
+--------------------------
+Carl Tape
+27-March-2009
+
+The example is executed by run.lsf and shown in interp.bash.
+
+There are two input files, vert_xc_001_input and vert_xc_002_input, each with two points.
+
+The output files are listed for four different models: vb_m00, vs_m00, vb_m16, vs_m16.
+
+Of course, in the future it would be best to pre-determine the target cross section points, and then compute (once-and-for-all) the nearest GLL point for each target point.
+
+==========================

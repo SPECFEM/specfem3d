@@ -1,0 +1,226 @@
+Carl Tape, 24-Jan-2010
+carltape@fas.harvard.edu
+
+/cig/seismo/3D/ADJOINT_TOMO/iterate_adj/SEM2D_iterate/README
+
+This is a developmental code for testing synthetic sesimic inversions using a 2D spectral-element method (SEM) code as the forward solver.  The official 2D SEM solver, SPECFEM2D, is mantained by CIG here:
+
+/cig/seismo/2D/SPECFEM2D/
+
+SEM2D_iterate emphasizes the details in embedding the forward solver within the inverse problem, which is not contained in SPECFEM2D.
+
+The code can run in P-SV mode as a depth cross-section (Tromp, Tape, Liu, GJI, 2005).
+Or it can run in SH mode as a membrane surface wave analogue (Tape, Liu, Tromp, GJI, 2007).
+
+There are several perl-based GMT plotting scripts.
+To compile and run, the user needs access to gfortran.
+For full plotting capabilities, the user needs perl, matlab, and GMT.
+
+The best reference for the inverse method implemented here is:
+Tarantola (2005), Inverse Problem Theory and Methods for Model Parameter Estimation
+In particular, Section 6.22 on gradient-based techniques is very useful.
+
+--------------------------------
+HISTORY
+
+The original version of the 2D wave propagation code came from Jeroen Tromp and was modified by Carl Tape and, later, Qinya Liu. The original simulations were presented in Tromp, Tape, Liu (2005). After Qinya's modifications, Carl used the code to time-reverse ocean microseism (OMS) records to try to determine the source regions. Later, Carl used the code for the simulations presented in Tape, Liu, Tromp (2007). That version of the codes is in the directory
+   SEM2D_iterate/gji_paper/codes_18_06Aug2006
+
+--------------------------------
+DIRECTORIES AND FILES
+
+README
+INPUT
+OUTPUT
+Makefile
+Makefile_ifort
+src
+mod
+obj
+PLOTTING
+matlab
+gji_paper
+
+The default assumes that you have an OUTPUT directory linked from
+   ../SEM2D_iterate_OUTPUT
+
+--------------------------------
+COMPILATION
+
+Last compiled on 18-Nov-2009 using (gfortran --version)
+  GNU Fortran (Ubuntu 4.3.3-5ubuntu4) 4.3.3
+on a 64-bit Linux with Ubuntu 9.04 (jaunty).
+
+make clean
+make wave2d
+
+There are lots of warning with the -fbounds-check flag.
+One of these indicates that we need to modify several simple loops:
+   Warning: Deleted feature: Step expression in DO loop at (1) must be integer
+
+--------------------------------
+EXAMPLES TO RUN
+
+The user is encouraged to first try to run the set of seven examples.
+The first six employ a conjugate-gradient algorithm,
+while the fifth uses a source subspace projection method.
+
+In examples 0-5, the scalelength of the checkerboard is set by Nfac=3.
+In examples 6-7, the scalelength of the checkerboard is set by Nfac=2 (more detailed).
+
+Example 0: 1 source, structure inversion only using CG algorithm - 2 iterations
+Example 1: 1 source, structure inversion only using CG algorithm - 16 iterations
+Example 2: 1 source, source inversion only (xs, ys, ts) using CG algorithm
+Example 3: 1 source, joint inversion using CG algorithm
+Example 4: 5 sources, joint inversion using CG algorithm
+Example 5: 25 sources, joint inversion using CG algorithm
+Example 6: 25 sources, structure inversion using CG algorithm
+Example 7: 25 sources, structure inversion using subspace method
+----------
+2 Gaussian fields
+Example 8: 25 sources, joint inversion, new source perturbations
+
+To get a sense for the output from these examples, open the composite PDF files
+    /PLOTTING/FIGURES/Example1_run_0100.pdf
+    /PLOTTING/FIGURES/Examples_all.pdf
+    /PLOTTING/FIGURES/Example7_run_0700.pdf
+
+--------------------------------
+DETAILS FOR RUNNING EACH EXAMPLE
+
+EXAMPLE 0 (run_0000)
+Compile and execute:
+  make clean ; make wave2d ; wave2d > ofile
+Examine ofile for details.
+The misfit values are given in these files:
+   OUTPUT/run_0000/chi.dat    100.1837219688
+   OUTPUT/run_0001/chi.dat     75.2034179848
+   OUTPUT/run_0002/chi.dat     31.7804791149
+   OUTPUT/run_0003/chi.dat     23.5724627945
+   OUTPUT/run_0004/chi.dat     10.7315686377
+
+------------------
+EXAMPLE 1 (run_0100)
+Make the following modifications to src/wave2d_constants.f90
+   IRUNZ = 0         --> IRUNZ = 100
+   NITERATION = 1    --> NITERATION = 16
+Then compile and execute:
+   make clean ; make wave2d ; wave2d
+
+The output files are in directories beginning with OUTPUT/run_0100.
+   cd PLOTTING/FIGURES
+Open ../plot_geometry.pl and ../plot_surf_model.pl
+Execute the example lines --> geometry_0100.ps, model_0100.ps
+   cd ../../matlab/
+Open matlab and the files wave2d_cg_poly.m and wave2d_cg_figs.m.
+Run wave2d_cg_poly.m and then wave2d_cg_figs.m; this generates
+data files that will be used in joint_inversion.pl.
+   cd ../PLOTTING/FIGURES
+Open ../joint_inversion.pl
+Execute the example line --> joint_inversion_0100_h0.ps
+
+------------------
+EXAMPLE 2 (run_0200)
+Make the following modifications to src/wave2d_constants.f90
+   IRUNZ = 100          --> IRUNZ = 200
+   PERT_STRUCT_BETA = 1 --> PERT_STRUCT_BETA = 0
+   PERT_SOURCE_T = 0    --> PERT_SOURCE_T = 1
+   PERT_SOURCE_X = 0    --> PERT_SOURCE_X = 1
+   INV_STRUCT_BETA = 1  --> INV_STRUCT_BETA = 0
+   INV_SOURCE_T = 0     --> INV_SOURCE_T = 1
+   INV_SOURCE_X = 0     --> INV_SOURCE_X = 1
+Then compile and execute:
+   make clean ; make wave2d ; wave2d
+Follow steps from Example 1 to make figures.
+
+------------------
+EXAMPLE 3 (run_0300)
+Make the following modifications to src/wave2d_constants.f90
+   IRUNZ = 200          --> IRUNZ = 300
+   PERT_STRUCT_BETA = 0 --> PERT_STRUCT_BETA = 1
+   INV_STRUCT_BETA = 0  --> INV_STRUCT_BETA = 1
+Then compile and execute:
+   make clean ; make wave2d ; wave2d
+Follow steps from Example 1 to make figures.
+
+------------------
+EXAMPLE 4 (run_0400)
+Make the following modification to src/wave2d_constants.f90
+   IRUNZ = 300         --> IRUNZ = 400
+Make the following changes in src/wave2d.f90
+   ievent_min = 5  ; ievent_max = ievent_min   -->   ievent_min = 1 ; ievent_max = 5
+Uncomment the line beginning with "ugrad_str = 0.4247330856d6", and comment out the others.
+Then compile and execute:
+   make clean ; make wave2d ; wave2d
+Follow steps from Example 1 to make figures.
+
+------------------
+EXAMPLE 5 (run_0500)
+Make the following modification to src/wave2d_constants.f90
+   IRUNZ = 400         --> IRUNZ = 500
+Make the following changes in src/wave2d.f90
+   ievent_min = 1 ; ievent_max = 5   -->  ievent_min = 1  ; ievent_max = nevent
+Uncomment the line beginning with "ugrad_str = 0.2070999127d6", and comment out the others.
+Then compile and execute:
+   make clean ; make wave2d ; wave2d
+Follow steps from Example 1 to make figures.
+
+------------------
+EXAMPLE 6 (run_0600)
+Make the following modification to src/wave2d_constants.f90
+   IRUNZ = 500         --> IRUNZ = 600
+   PERT_SOURCE_T = 1   --> PERT_SOURCE_T = 0
+   PERT_SOURCE_X = 1   --> PERT_SOURCE_X = 0
+   INV_SOURCE_T = 1    --> INV_SOURCE_T = 0
+   INV_SOURCE_X = 1    --> INV_SOURCE_X = 0
+Make the following changes in src/wave2d.f90
+   Nfac = 3            --> Nfac = 2   (decrease the checkerboard scalelength)
+Then compile and execute:
+   make clean ; make wave2d ; wave2d
+Follow steps from Example 1 to make figures.
+
+------------------
+EXAMPLE 7 (run_0700)
+Make the following modification to src/wave2d_constants.f90
+   IRUNZ = 600         --> IRUNZ = 700
+   NITERATION = 16     --> NITERATION = 0
+Then compile and execute:
+   make clean ; make wave2d ; wave2d
+Create a directory for the subspace update
+   mkdir OUTPUT/run_0700/HESSIAN
+   mkdir OUTPUT/run_0700/HESSIAN/model_m01
+   mkdir OUTPUT/run_0700/HESSIAN/model_m02
+   (make as many directories as you might need)
+Open the matlab program matlab/wave2d_subspace.m
+Enter the following values at the prompts:
+-------------------------
+ Enter irun0 : 700
+ Enter 1 to read in new event kernels (0 otherwise) : 1
+ Enter next model number (hmod) : 1
+ Enter 1 to invert for STRUCTURE : 1
+ Enter 1 to invert for SOURCE : 0
+ Enter 1 to write out files : 1
+ Enter 1 to compute the event kernels for this model : 1
+ Enter 1 to plot figures : 1
+ Enter 1 to read smoothed event kernels (0 otherwise) : 1
+ Enter 1 if this balance looks okay : 1
+ Enter 0 for GCV, 1 for OCV, 2 for L-curve : 1
+--------------------------------
+If everything has worked, you will see several sensible figures. You now have a model update dm00 (and a new model m01) computed using the subspace method. Now you want to compute the misfit function and event kernels using m01.
+Make the following modification to src/wave2d_constants.f90
+  HESSIAN = .false.    --> HESSIAN = .true.
+Then compile and execute:
+   make clean ; make wave2d ; wave2d
+After this is done, go back to wave2d_subspace.m and repeat as before, but make this change:
+   Enter next model number (hmod) : 2
+You should see more figures and write out model m02.
+Then back to wave2d.f90 and modify
+   hmod = 1            --> hmod = 2
+This tells the code where to look for model m02.
+Then compile and execute:
+   make clean ; make wave2d ; wave2d
+From PLOTTING/FIGURES/, execute ../joint_inversion.pl with $irun0_cg = 600
+
+Clearly for the subspace approach, it is not ideal to go back-and-forth between Matlab and Fortran. However, many aspects are still in development, and Matlab provides quick graphics that are crucial for debugging, checking, and testing.
+
+==================================================================

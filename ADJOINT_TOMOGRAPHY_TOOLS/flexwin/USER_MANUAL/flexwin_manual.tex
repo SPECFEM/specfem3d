@@ -1,0 +1,63 @@
+\documentclass[11pt]{report}
+%\documentclass[extra]{gji}
+\usepackage{graphicx}
+\usepackage{rotating}
+\usepackage{a4wide}
+\usepackage{setspace}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{url}
+\usepackage{natbib}
+\pagestyle{headings}
+\usepackage[noend]{algorithmic}
+
+\onehalfspacing
+\setlength\parindent{0in}
+\addtolength{\parskip}{\baselineskip}
+
+\input{def_base}
+
+\graphicspath{
+  {./manual_figures/}
+}
+
+%===================================
+\begin{document}
+%===================================
+
+%\title{FLEXWIN User Manual}
+%\author{Alessia Maggi}
+%\date{}
+%\maketitle
+
+\thispagestyle{empty}
+\begin{center}
+
+\huge {\bf FLEXWIN User's Manual} \\
+
+\vspace{1.0cm}
+\Large Alessia Maggi
+\end{center}
+
+\vspace{1.0cm}
+\hspace{-0.7cm}
+\includegraphics[width=7in]{ABKT.pdf}
+\newpage
+
+%----------------------------------
+
+\tableofcontents
+
+\input{manual_introduction}
+\input{manual_technical}
+\input{manual_tuning}
+\input{manual_other}
+
+\bibliographystyle{plainnat}
+\bibliography{AM-allcitations}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\end{document}
+

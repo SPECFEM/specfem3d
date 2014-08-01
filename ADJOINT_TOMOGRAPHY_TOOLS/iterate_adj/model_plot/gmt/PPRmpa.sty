@@ -1,0 +1,58 @@
+%==============================================================================
+% Prosper -- (PPRmpa.sty) Style file
+% A LaTeX class for creating slides
+% Author: Georg Drenkhahn (georg@mpa-garching.mpg.de)
+% 2001-10-18
+%==============================================================================
+\NeedsTeXFormat{LaTeX2e}[1995/12/01]
+\ProvidesPackage{PPRmpa}[2001/10/18]
+\typeout{`MPA' style for prosper}
+
+%% already included by prosper:
+% seminar, graphicx, hyperref, ifthen
+
+%% everybody needs color  :-)
+%% not required for MPA style file itself
+\RequirePackage{color}
+
+%% redefine some standard fonts: Seminar-Helvetica
+%% \RequirePackage{semhelv}
+
+%% Type 1 CM fonts
+\RequirePackage{ae,aecompl}
+
+\newrgbcolor{mpagreena}{0.188 0.384 0.371}
+\newrgbcolor{mpagreenb}{0.235 0.486 0.447}
+\newrgbcolor{mpagreenc}{0.263 0.537 0.506}
+
+\FontTitle{%
+  \sffamily\bfseries\fontsize{20.74pt}{18pt}\selectfont\mpagreenb}{%
+  \sffamily\bfseries\fontsize{20.74pt}{18pt}\selectfont\mpagreenb}
+
+\FontText{%
+  \sffamily\mdseries\fontsize{12.4}{12}\selectfont\black}{%
+  \sffamily\mdseries\fontsize{12.4}{12}\selectfont\black}
+
+% itemisation bullets
+\myitem{1}{{\scriptsize\mpagreena\raisebox{2pt}{\ensuremath{\bullet}}}}
+\myitem{2}{{\scriptsize\mpagreenb\raisebox{2pt}{\ensuremath{\bullet}}}}
+\myitem{3}{{\scriptsize\mpagreenc\raisebox{2pt}{\ensuremath{\bullet}}}}
+
+% Positionning of the title of a slide.
+%  A4 format: 29.7x21cm 11.7x8.3in
+\newcommand{\slidetitle}[1]{%
+  \rput[t](5.45,4.5){\fontTitle{#1}}%
+}
+
+\newcommand{\theMPAStyle}[1]{% 
+  \PutLogo%
+  {#1}}
+
+\LogoPosition{-1.1,-1.2}
+
+%% coordinate zero point is on the left edge at middle height
+%% the top center of the box is set at this point.
+\NewSlideStyle{t}{5.45,3.5}{theMPAStyle}
+%% does it have any effect?
+\PDFCroppingBox{10 40 594 820}
+\endinput

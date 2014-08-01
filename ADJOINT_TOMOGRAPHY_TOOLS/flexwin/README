@@ -1,0 +1,186 @@
+################################################################
+      FLEXWIN - AUTOMATED TIME-WINDOW SELECTION ALGORITHM
+################################################################
+
+Alessia Maggi
+alessia@sismo.u-strasbg.fr
+
+Welcome to the flexwin package.  The purpose of this package is to
+select windows on pairs of observed and synthetic seismograms on which
+measurements can subsequently be made.
+
+This is a bare-bones instruction set.  For more details read the flexwin manual
+(flexwin_manual.pdf) and the flexwin article (Maggi et al, GJI, 2009).
+
+If you have suggestions for fixes or future updates, please send me an email.
+I will post them in the file FUTURE_UPDATES.
+
+THE PACKAGE
+-----------
+
+The package contains the flexwin code and documentation, as well as a set of
+test data, examples of user files for different scenarios, and a set of utility
+scripts that may be useful for running flexwin on large datasets.
+
+QUICK TEST
+-------------
+
+For quick start-to-finish testing with the sample data set provided,
+execute these commands from within the base directory:
+
+cd ttimes_mod
+make -f make_gfortran
+make -f make_gfortran install
+cd ..
+make -f make_gfortran
+make -f make_gfortran test
+
+NOTE 1: the last command will run flexwin in test_data/ and also plot
+NOTE 2: to clean: make clean -f make_gfortran 
+
+If all goes well, it should pick 7 time windows:
+ Selected windows, start and end time, CC, Tshift, dlnA  
+   1   1054.600  1484.600     0.957    -3.000     0.073
+   2   1719.600  2067.600     0.973     0.000     0.172
+   3   2067.600  2457.600     0.965    -5.000    -0.171
+   4   2457.600  2672.600     0.982    -5.000     0.184
+   5   2851.600  3108.600     0.969    -6.000     0.091
+   6   3108.600  3407.600     0.893     4.000    -0.130
+   7   3502.600  3937.600     0.833    -9.000    -0.636
+ DEBUG : writing output seismos
+
+You should see the file MEASURE/ABKT.II.LHZ.seis.ps,
+which should have several time series as well as seven windows.
+Compare output files with those in MEASURE.orig/, described below.
+Note that the plotting script requires GMT (http://gmt.soest.hawaii.edu/).
+
+Last tested 15-Aug-2012 with the following:
+  linux: 64-bit, opensuse 12.1
+  sac 101.5
+  gfortran 4.6.2
+  GMT 4.5.3 (for plotting)
+
+COMPILATION
+-----------
+
+FLEXWIN requires the following libraries external to the package in order to
+compile and run: libsacio.a and libsac.a. Both libraries
+are distributed by IRIS as part of the SAC package (version 101.2 and above).
+The IRIS download site (as of 10-Nov-2010) is here:
+   http://www.iris.edu/forms/sac_request.htm
+(To check your version, type sac.)
+
+If your compiler of choice is gfortran, then you should be able to use the
+make_gfortran makefiles with only minor modifications (notably you may need to
+change the search path for the libsacio.a library).  If you prefer another
+compiler, you should modify the OPT and FC lines in the makefiles accordingly.
+The makefile requires GNU make.
+
+IMPORTANT NOTE: The default setting assume a 64-bit operating system,
+compatible with SAC 101.3b (August 2009) and higher.
+For older SAC versions, you must have the -m32 option, which makes
+32bit binaries.  In particular
+  OPT=-m32 -Wall         -- make_gfortran
+  OPT=-m32               -- ttimes_mod/make_gfortran
+
+Steps to compile the flexwin package:
+
+(1) Compile libtau.a and create iasp91.hed and iasp91.tbl.  In the
+flexwin/ttimes_mod directory type: "make -f make_gfortran".  This will compile
+libtau.a, and two programs, remodl and setbrn.  The makefile will also run
+remodl and setbrn to create the iasp91.hed and iasp91.tbl files.  You should
+then type "make -f make_gfortran install" to install the iasp91 files.
+
+(2) Compile flexwin.  Edit the make_gfortran file in the flexwin root directory to ensure the SACLIBDIR variable points to the location of your SAC libraries (by default $SACHOME/lib).  Then type "make -f make_gfortran".
+
+You should end up with the flexwin executable.  The program requires the iasp91
+files (or links to them) to be present in the directory from which the code is
+launched. 
+
+
+TEST DATA SET
+-------------
+
+You should test your compiled code on the test_data dataset provided.
+In the flexwin/test_data directory, type "./flexwin < input.test".
+The results of your run will be found in the MEASURE subdirectory,
+and should match those found in the MEASURE.orig subdirectory.
+
+You can also test the basic plotting script by running "./plot_seismos_gmt.sh
+MEASURE/ABKT.II.LHZ", whose output will be MEASURE/ABKT.II.LHZ.seis.eps.
+Note that plotting scripts require GMT.
+
+
+RUNNING FLEXWIN
+---------------
+In general, flexwin is run as follows:
+
+./flexwin < input
+
+where the "input" file is formatted as follows:
+
+327
+RAW_DATA/9627721.CI.ADO.BHR.sac.d.fil
+SYNTH/ADO.CI.BHR.new.fil
+MEASURE/ADO.CI.BHR
+RAW_DATA/9627721.CI.ADO.BHT.sac.d.fil
+SYNTH/ADO.CI.BHT.new.fil
+MEASURE/ADO.CI.BHT
+RAW_DATA/9627721.CI.ADO.BHZ.sac.d.fil
+SYNTH/ADO.CI.BHZ.new.fil
+MEASURE/ADO.CI.BHZ
+....
+
+i.e. the number of traces to be measured, followed by (in order) the path to
+the raw data sac file, the path to the synthetic sac file and the path and
+basename for the (many!) output files for that trace.  
+
+
+
+OUTPUT FILES
+-----------
+
+Most output files are in ascii.  All file names start with the basename given
+in the input file for that trace:
+
+basename.obs		= ascii observed seismogram (filtered) 
+basename.syn		= ascii synthetic seismogram (filtered)
+basename.obs_lp.sac = sac observed seismogram (filtered)
+basename.syn_lp.sac = sac synthetic seismogram (filtered)
+basename.env.obs	= ascii envelope of observed seismogram (filtered)
+basename.env.syn	= ascii envelope of synthetic seismogram (filtered)
+basename.win		= list of windows with theoretical phase arrival times
+basename.win.qual	= list of windows with Tshift,CC,dlnA values 
+basename.phases		= theoretical arrival times of phases
+basename.stalta		= STA:LTA timeseries used to select the windows, 
+                    and the time-dependent values of the STA:LTA water 
+                    level, the CC limit, the Tshift limit, the dlnA 
+                    limit and the window signal to noise limit.
+basename.info		= information on the path and some statistics
+
+For more details about the file formats, your best bet is to read the write_
+subroutines in io_subs.f90.
+
+
+
+SCRIPTS
+-------
+
+Several plotting routines (plot_*.sh) are provided as examples for
+plotting seismograms, measurements and adjoint sources.  All plotting is
+done in gmt.  These scripts will need to be modified to suit your
+particular plotting needs.
+
+The script extract_event_windowing_stats.sh extracts statistical
+information on the window selection process, on the measurements.  Again,
+you can use use this script as a template for your own information
+extraction needs.
+
+
+
+CONFIGURING FLEXWIN FOR YOUR SCENARIO
+-------------------------------------
+
+After having read the flexwin article to learn how
+flexwin works, you should refer to the flexwin manual
+(flexwin_manual.pdf) for basic configuration instructions.

@@ -1,0 +1,35 @@
+1. rotate_adj_src utility helps to rotate the adjoint sources
+calculated from the measurements to E, N, Z components which
+is ready to go directly into SEM adjoint code.
+
+2. combine_adj_src.pl -- directly copied over from old version. I assume
+     the original purpose is to combine cc adjoint source for body
+     waves and mt adjoint source for surface waves, it is probably
+     not the best thing to use in practice, considering the possible
+     weight one needs to add to the body waves in actual inversions.
+
+2. A list of scripts that might worth transfering from old version
+(a lot of them by Carl), notably run_mt_measure_adj.pl and 
+plot_win_adj.pl. Keep in mind now our output seismograms are in SAC format.
+
+./scripts_meas/mtm.pl
+./scripts_meas/plot_adj.pl
+./scripts_meas/plot_mtm.pl
+./scripts_meas/plot_cc.pl
+
+./scripts_tomo/combine_2_adj_src.pl
+./scripts_tomo/run_tomo.pl
+./scripts_tomo/prepare_mt_measure_adj.pl
+./scripts_tomo/combine_3_adj_src_all.pl
+./scripts_tomo/combine_3_adj_src.pl
+./scripts_tomo/run_mt_cc_plot.pl
+./scripts_tomo/combine_2_adj_src_all.pl
+./scripts_tomo/run_mt_measure_adj.pl
+
+./PLOTS/make_pdf_by_event.pl
+./PLOTS/make_pdf_by_station.pl
+./PLOTS/plot_win_adj_all.pl
+./PLOTS/plot_win_stats_all.pl
+./PLOTS/plot_win_stats.pl
+./PLOTS/plot_win_adj.pl
+

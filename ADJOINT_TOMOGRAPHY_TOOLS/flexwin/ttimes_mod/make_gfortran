@@ -1,0 +1,57 @@
+OPT=
+FC=gfortran
+FFLAGS=$(OPT)
+
+CODE=${HOME}/code
+
+BINDIR=${CODE}/bin
+SHAREDIR=..
+
+LIBDIR=.
+
+LIBSRC=libtau.f libsun.f emiasp91.f
+LIB=libtau.a
+LIBOBJ = ${LIBSRC:%.f=${LIB}(%.o)}
+
+INSTALL = install
+
+PROGS= remodl setbrn 
+
+default: ${PROGS} iaspei
+
+SUFFIXES= .f .o
+.SUFFIXES: ${SUFFIXES}
+
+.f.o:
+	${FC} ${FFLAGS} -c -o $@ $<
+
+${LIB}:${LIBOBJ}
+${LIB_SOCAL}:${LIBOBJ_SOCAL}
+
+remodl:remodl.o limits.inc ${LIB}
+	${FC} ${FFLAGS} -o $@ remodl.o ${LIB} 
+
+setbrn:setbrn.o ${LIB}
+	${FC} ${FFLAGS} -o $@ setbrn.o  ${LIB}
+
+ttimes:ttimes.o ttlim.inc ${LIB}
+	${FC} ${FFLAGS} -o $@ $@.o ${LIB} 
+
+findit:findit.o 
+	${FC} ${FFLAGS} -o $@ $@.o 
+
+pick_index:pick_index.o 
+	${FC} ${FFLAGS} -o $@ $@.o -L${LIBDIR} -lsac 
+
+iaspei: remodl setbrn
+	./remodl
+	./setbrn
+
+clean:
+	rm -f *.o ${LIB} ${LIB_SOCAL} ${PROGS} *.hed *.tbl *.lis
+
+install:
+	${INSTALL} -c -m 0644 iasp91.hed iasp91.tbl $(SHAREDIR)
+	ranlib  $(LIBDIR)/${LIB}
+
+	

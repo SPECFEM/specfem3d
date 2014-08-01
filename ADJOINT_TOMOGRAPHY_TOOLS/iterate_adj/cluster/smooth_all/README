@@ -1,0 +1,9 @@
+Carl Tape, 27-March-2009
+
+The smoothing operation -- as written -- requires the same number of processors as the wavefield simulations, so it is run in parallel on the cluster.
+
+We use two different scripts for performing the smoothing.  From smooth_all, you can setup the directories and launch them one at a time using run_dir.bash.  Or you can launch sets of them in serial from the directory SERIAL_RUN.
+
+As it is set up here, the jobs will NOT perform the operation to combine the binary files to create a low-res mesh file to view using vtk.  The Caltech cluster overseers discourage such jobs from running on the head nodes, so we have a "parallel batch" script to launch many single-processor jobs onto the compute nodes, rather than the head nodes.  This is done in TO_COMBINE.
+
+---------------------------------

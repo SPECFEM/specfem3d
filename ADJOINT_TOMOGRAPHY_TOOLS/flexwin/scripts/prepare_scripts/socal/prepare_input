@@ -1,0 +1,74 @@
+#!/bin/sh
+
+# update by Qinya -- 
+#   theoretically t2 should not exist after process_data_and_syn.pl
+rm -f t1 t2 t3
+
+n=0
+# only processing ?H[RTZ] components for the windowing code
+for file in DATA/*.?H[RTZ].* ; do
+
+  # take network, station, channel and comp info from the sac headers
+  net=`saclst knetwk f $file | awk '{print $2}'`
+  sta=`saclst kstnm f $file | awk '{print $2}'`
+  chan=`saclst kcmpnm f $file | awk '{print $2}'`
+  comp=`echo $chan | awk '{print substr($1,3,1)}'`
+  #echo $net $sta $chan $comp
+
+  # synthetics are always HX_ (for socal problem)
+  #synt=SYN/${sta}.${net}.HX${comp}.semd.sac.d
+  #synt=`ls SYN/${sta}.${net}.HX${comp}*`
+  nsynt=`ls -1 SYN/${sta}.${net}.HX${comp}* | wc | awk '{print $1}'`
+
+  out=MEASURE/${sta}.${net}.${chan}
+
+  if [ $nsynt -eq 1 ] ; then # data with unique syn match
+
+    synt=`ls SYN/${sta}.${net}.HX${comp}*`
+    b1=`saclst b f $file | awk '{print $2}'`
+    b2=`saclst b f $synt | awk '{print $2}'`
+    db=$(echo "sqrt(($b1 - $b2)^2)" | bc)
+    dt1=`saclst delta f $file | awk '{print $2}'`
+    dt2=`saclst delta f $synt | awk '{print $2}'`
+
+    flag=`echo "$db 2*$dt1" | awk '{if ($1 < $2) print -1; else print 1}'`
+    #if [ `echo "$dt1 - $dt2"| bc` = 0 ] ; then
+       if [ $flag -lt 0 ] ; then
+         n=`echo $n | awk '{print $n+1}'`
+         echo $file >> t1
+         echo $synt >> t1
+         echo $out >> t1
+       else
+         echo $file >> t2
+       fi
+
+    #fi
+
+  else
+     echo "SYN/${sta}.${net}.HX${comp}*" >> t3
+  fi
+
+done
+
+# input file for window code
+echo $n > input
+cat t1 >> input
+rm -f t1
+
+# list of probable bad data files
+if [ -e "t2" ]; then
+   mv t2 input_bad
+fi
+
+# list of missing synthetic files
+if [ -e "t3" ]; then
+   mv t3 input_no_syn
+fi
+
+
+
+
+
+
+
+

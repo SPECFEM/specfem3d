@@ -31,7 +31,7 @@
 #######################################
 
 FC = @FC@
-FCFLAGS = #@FCFLAGS@
+FCFLAGS = @FCFLAGS@
 MPIFC = @MPIFC@
 MPILIBS = @MPILIBS@
 
@@ -161,7 +161,8 @@ GENCODE_35 = -gencode=arch=compute_35,code=\"sm_35,compute_35\"
 @COND_OPENMP_FALSE@COND_OPENMP_FFLAGS =
 
 # objects toggled between openmp and non-openmp version
-@COND_OPENMP_TRUE@COND_OPENMP_OBJECTS = $O/older_not_maintained_compute_forces_viscoelastic_Dev_openmp.openmp.o
+#@COND_OPENMP_TRUE@COND_OPENMP_OBJECTS = $O/older_not_maintained_compute_forces_viscoelastic_Dev_openmp.openmp.o
+@COND_OPENMP_TRUE@COND_OPENMP_OBJECTS = 
 @COND_OPENMP_FALSE@COND_OPENMP_OBJECTS =
 
 

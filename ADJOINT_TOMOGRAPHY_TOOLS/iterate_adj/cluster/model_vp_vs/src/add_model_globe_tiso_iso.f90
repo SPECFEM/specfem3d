@@ -1,0 +1,1148 @@
+! add_model_globe_tiso_iso
+!
+! this program can be used to update TRANSVERSE ISOTROPIC model files
+! based on smoothed, summed, ISOTROPIC event kernels.
+! the kernels are given for isotropic parameters (bulk_c,bulk_beta,rho) or (alpha,beta,rho).
+!
+! the algorithm uses a steepest descent method with a step length
+! determined by the given maximum update percentage.
+!
+! input:
+!    - step_fac : step length to update the models, f.e. 0.03 for plusminus 3%
+!
+! setup:
+!
+!- INPUT_MODEL/  contains:
+!       proc000***_reg1_vsv.bin &
+!       proc000***_reg1_vsh.bin &
+!       proc000***_reg1_vpv.bin &
+!       proc000***_reg1_vph.bin &
+!       proc000***_reg1_eta.bin &
+!       proc000***_reg1_rho.bin
+!
+!- INPUT_GRADIENT/ contains:
+!       proc000***_reg1_bulk_c_kernel_smooth.bin &
+!       proc000***_reg1_bulk_beta_kernel_smooth.bin &
+!       proc000***_reg1_rho_kernel_smooth.bin
+!     or
+!       proc000***_reg1_alpha_kernel_smooth.bin &
+!       proc000***_reg1_beta_kernel_smooth.bin &
+!       proc000***_reg1_rho_kernel_smooth.bin
+!
+!- topo/ contains:
+!       proc000***_reg1_solver_data_1.bin
+!
+! new models are stored in
+!- OUTPUT_MODEL/ as
+!   proc000***_reg1_vpv_new.bin &
+!   proc000***_reg1_vph_new.bin &
+!   proc000***_reg1_vsv_new.bin &
+!   proc000***_reg1_vsh_new.bin &
+!   proc000***_reg1_eta_new.bin &
+!   proc000***_reg1_rho_new.bin
+!
+! USAGE: ./add_model_globe_tiso_iso 0.3
+
+module model_update_tiso_iso
+
+  include 'mpif.h'
+  include 'constants_globe.h'
+  include 'precision_globe.h'
+  include 'values_from_mesher_globe.h'
+
+  ! ======================================================
+
+  ! USER PARAMETERS
+
+  ! by default, this algorithm uses (bulk_c,bulk_beta,rho) kernels to update vpv,vph,vsv,vsh,rho,eta
+  ! if you prefer using (alpha,beta,rho) kernels, set this flag to true
+  logical, parameter :: USE_ALPHA_BETA_RHO = .false.
+
+  ! ignore rho kernel, but use density perturbations as a scaling of Vs perturbations
+  logical, parameter :: USE_RHO_SCALING = .false.
+
+  ! in case of rho scaling, specifies density scaling factor with shear perturbations
+  ! see e.g. Montagner & Anderson (1989), Panning & Romanowicz (2006)
+  real(kind=CUSTOM_REAL),parameter :: RHO_SCALING = 0.33_CUSTOM_REAL
+
+  ! ======================================================
+
+  integer, parameter :: NSPEC = NSPEC_CRUST_MANTLE
+  integer, parameter :: NGLOB = NGLOB_CRUST_MANTLE
+
+  ! transverse isotropic model files
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC) :: &
+        model_vpv,model_vph,model_vsv,model_vsh,model_eta,model_rho
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC) :: &
+        model_vpv_new,model_vph_new,model_vsv_new,model_vsh_new,model_eta_new,model_rho_new
+
+  ! model updates
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC) :: &
+        model_dbulk,model_dbeta,model_drho
+
+  ! kernels
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC) :: &
+        kernel_bulk,kernel_beta,kernel_rho
+
+  ! volume
+  real(kind=CUSTOM_REAL), dimension(NGLOB) :: x, y, z
+  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC) :: ibool
+  logical, dimension(NSPEC) :: ispec_is_tiso
+
+  ! gradient vector norm ( v^T * v )
+  real(kind=CUSTOM_REAL) :: norm_bulk,norm_beta,norm_rho
+  real(kind=CUSTOM_REAL) :: norm_bulk_sum,norm_beta_sum,norm_rho_sum
+
+  ! model update length
+  real(kind=CUSTOM_REAL) :: step_fac,step_length
+
+  real(kind=CUSTOM_REAL) :: min_vpv,min_vph,min_vsv,min_vsh, &
+    max_vpv,max_vph,max_vsv,max_vsh,min_beta,max_beta,min_bulk,max_bulk, &
+    min_rho,max_rho,min_eta,max_eta,minmax(4)
+
+  real(kind=CUSTOM_REAL) :: betav1,betah1,betav0,betah0,rho1,rho0, &
+    betaiso1,betaiso0,eta1,eta0,alphav1,alphav0,alphah1,alphah0
+  real(kind=CUSTOM_REAL) :: dbetaiso,dbulk
+
+  integer :: nfile, myrank, sizeprocs,  ier
+  integer :: i, j, k,ispec, iglob, ishell, n, it, j1, ib, npts_sem, ios
+  character(len=150) :: sline, m_file, fname
+
+
+end module model_update_tiso_iso
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+program add_model
+
+  use model_update_tiso_iso
+
+  implicit none
+
+  ! ============ program starts here =====================
+
+  ! initializes arrays
+  call initialize()
+
+  ! reads in parameters needed
+  call read_parameters()
+
+  ! reads in current transverse isotropic model files: vpv.. & vsv.. & eta & rho
+  call read_model()
+
+  ! reads in smoothed kernels: bulk, beta, rho
+  call read_kernels()
+
+  ! calculates gradient
+  ! steepest descent method
+  call get_gradient()
+
+  ! compute new model in terms of alpha, beta, eta and rho
+  ! (see also Carl's Latex notes)
+
+  ! model update:
+  !   isotropic update everywhere
+  do ispec = 1, NSPEC
+    do k = 1, NGLLZ
+      do j = 1, NGLLY
+        do i = 1, NGLLX
+
+          ! initial model values
+          eta0 = model_eta(i,j,k,ispec)
+          betav0 = model_vsv(i,j,k,ispec)
+          betah0 = model_vsh(i,j,k,ispec)
+          rho0 = model_rho(i,j,k,ispec)
+          alphav0 = model_vpv(i,j,k,ispec)
+          alphah0 = model_vph(i,j,k,ispec)
+
+          eta1 = 0._CUSTOM_REAL
+          betav1 = 0._CUSTOM_REAL
+          betah1 = 0._CUSTOM_REAL
+          rho1 = 0._CUSTOM_REAL
+          alphav1 = 0._CUSTOM_REAL
+          alphah1 = 0._CUSTOM_REAL
+
+          ! isotropic model update
+
+          ! no eta perturbation for isotropic updates, takes the same as initial values
+          eta1 = eta0
+
+          ! shear values
+          dbetaiso = model_dbeta(i,j,k,ispec)
+          betav1 = betav0 * exp( dbetaiso )
+          betah1 = betah0 * exp( dbetaiso )
+          ! note: betah is probably not really used in isotropic layers
+          !         (see SPECFEM3D_GLOBE/get_model.f90)
+
+          ! density
+          rho1 = rho0 * exp( model_drho(i,j,k,ispec) )
+
+          ! alpha values
+          dbulk = model_dbulk(i,j,k,ispec)
+          if( USE_ALPHA_BETA_RHO ) then
+            ! new vp values use alpha model update
+            alphav1 = alphav0 * exp( dbulk )
+            alphah1 = alphah0 * exp( dbulk )
+          else
+            ! new vp values use bulk model update:
+            ! this is based on vp_new = sqrt( bulk_new**2 + 4/3 vs_new**2 )          
+            alphav1 = sqrt( alphav0**2 * exp(2.0*dbulk) + FOUR_THIRDS * betav0**2 * ( &
+                              exp(2.0*dbetaiso) - exp(2.0*dbulk) ) )
+            alphah1 = sqrt( alphah0**2 * exp(2.0*dbulk) + FOUR_THIRDS * betah0**2 * ( &
+                              exp(2.0*dbetaiso) - exp(2.0*dbulk) ) )
+          endif
+          ! note: alphah probably not used in SPECFEM3D_GLOBE
+
+          ! stores new model values
+          model_vpv_new(i,j,k,ispec) = alphav1
+          model_vph_new(i,j,k,ispec) = alphah1
+          model_vsv_new(i,j,k,ispec) = betav1
+          model_vsh_new(i,j,k,ispec) = betah1
+          model_eta_new(i,j,k,ispec) = eta1
+          model_rho_new(i,j,k,ispec) = rho1
+
+        enddo
+      enddo
+    enddo
+  enddo
+
+  ! stores new model in files
+  call store_new_model()
+
+  ! stores relative model perturbations
+  call store_perturbations()
+
+  ! computes volume element associated with points, calculates kernel integral for statistics
+  call compute_volume()
+
+  ! stop all the MPI processes, and exit
+  call MPI_FINALIZE(ier)
+
+end program add_model
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+subroutine initialize()
+
+! initializes arrays
+
+  use model_update_tiso_iso
+  implicit none
+
+  ! initialize the MPI communicator and start the NPROCTOT MPI processes
+  call MPI_INIT(ier)
+  call MPI_COMM_SIZE(MPI_COMM_WORLD,sizeprocs,ier)
+  call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
+
+  if( sizeprocs /= nchunks_val*nproc_xi_val*nproc_eta_val ) then
+    print*,'sizeprocs:',sizeprocs,nchunks_val,nproc_xi_val,nproc_eta_val
+    call exit_mpi(myrank,'error number sizeprocs')
+  endif
+
+  ! model
+  model_vpv = 0.0_CUSTOM_REAL
+  model_vph = 0.0_CUSTOM_REAL
+  model_vsv = 0.0_CUSTOM_REAL
+  model_vsh = 0.0_CUSTOM_REAL
+  model_eta = 0.0_CUSTOM_REAL
+  model_rho = 0.0_CUSTOM_REAL
+
+  model_vpv_new = 0.0_CUSTOM_REAL
+  model_vph_new = 0.0_CUSTOM_REAL
+  model_vsv_new = 0.0_CUSTOM_REAL
+  model_vsh_new = 0.0_CUSTOM_REAL
+  model_eta_new = 0.0_CUSTOM_REAL
+  model_rho_new = 0.0_CUSTOM_REAL
+
+  ! model updates
+  model_dbulk = 0.0_CUSTOM_REAL
+  model_dbeta = 0.0_CUSTOM_REAL
+  model_drho = 0.0_CUSTOM_REAL
+
+  ! gradients
+  kernel_bulk = 0.0_CUSTOM_REAL
+  kernel_beta = 0.0_CUSTOM_REAL
+  kernel_rho = 0.0_CUSTOM_REAL
+
+end subroutine initialize
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+subroutine read_parameters()
+
+! reads in parameters needed
+
+  use model_update_tiso_iso
+  implicit none
+  character(len=150) :: s_step_fac
+
+  ! subjective step length to multiply to the gradient
+  !step_fac = 0.03
+
+  call getarg(1,s_step_fac)
+
+  if (trim(s_step_fac) == '') then
+    call exit_MPI(myrank,'Usage: add_model_globe_tiso step_factor')
+  endif
+
+  ! read in parameter information
+  read(s_step_fac,*) step_fac
+  
+  !if( abs(step_fac) < 1.e-10) then
+  !  print*,'error: step factor ',step_fac
+  !  call exit_MPI(myrank,'error step factor')
+  !endif
+
+  if (myrank == 0) then
+    print*,'defaults'
+    print*,'  NPROC_XI , NPROC_ETA: ',nproc_xi_val,nproc_eta_val
+    print*,'  NCHUNKS: ',nchunks_val
+    print*
+    print*,'model update for vsv,vsh,vpv,vph,eta,rho:'
+    print*,'  step_fac = ',step_fac
+    print*
+    if( USE_ALPHA_BETA_RHO ) then
+      print*,'kernel parameterization: (alpha,beta,rho)'
+    else
+      print*,'kernel parameterization: (bulk,beta,rho)'
+    endif
+    print*
+    if( USE_RHO_SCALING ) then
+      print*,'scaling rho perturbations'
+      print*
+    endif
+
+  endif
+
+
+end subroutine read_parameters
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+subroutine read_model()
+
+! reads in current transverse isotropic model: vpv.. & vsv.. & eta & rho
+
+  use model_update_tiso_iso
+  implicit none
+  integer, dimension(:), allocatable :: idummy
+  logical, dimension(:), allocatable :: ldummy
+
+  ! vpv model
+  write(m_file,'(a,i6.6,a)') 'INPUT_MODEL/proc',myrank,'_reg1_vpv.bin'
+  open(12,file=trim(m_file),status='old',form='unformatted',iostat=ier)
+  if( ier /= 0 ) then
+    print*,'error opening: ',trim(m_file)
+    call exit_mpi(myrank,'file not found')
+  endif
+  read(12) model_vpv(:,:,:,1:nspec)
+  close(12)
+
+  ! vph model
+  write(m_file,'(a,i6.6,a)') 'INPUT_MODEL/proc',myrank,'_reg1_vph.bin'
+  open(12,file=trim(m_file),status='old',form='unformatted',iostat=ier)
+  if( ier /= 0 ) then
+    print*,'error opening: ',trim(m_file)
+    call exit_mpi(myrank,'file not found')
+  endif
+  read(12) model_vph(:,:,:,1:nspec)
+  close(12)
+
+  ! vsv model
+  write(m_file,'(a,i6.6,a)') 'INPUT_MODEL/proc',myrank,'_reg1_vsv.bin'
+  open(12,file=trim(m_file),status='old',form='unformatted',iostat=ier)
+  if( ier /= 0 ) then
+    print*,'error opening: ',trim(m_file)
+    call exit_mpi(myrank,'file not found')
+  endif
+  read(12) model_vsv(:,:,:,1:nspec)
+  close(12)
+
+  ! vsh model
+  write(m_file,'(a,i6.6,a)') 'INPUT_MODEL/proc',myrank,'_reg1_vsh.bin'
+  open(12,file=trim(m_file),status='old',form='unformatted',iostat=ier)
+  if( ier /= 0 ) then
+    print*,'error opening: ',trim(m_file)
+    call exit_mpi(myrank,'file not found')
+  endif
+  read(12) model_vsh(:,:,:,1:nspec)
+  close(12)
+
+  ! eta model
+  write(m_file,'(a,i6.6,a)') 'INPUT_MODEL/proc',myrank,'_reg1_eta.bin'
+  open(12,file=trim(m_file),status='old',form='unformatted',iostat=ier)
+  if( ier /= 0 ) then
+    print*,'error opening: ',trim(m_file)
+    call exit_mpi(myrank,'file not found')
+  endif
+  read(12) model_eta(:,:,:,1:nspec)
+  close(12)
+
+  ! rho model
+  write(m_file,'(a,i6.6,a)') 'INPUT_MODEL/proc',myrank,'_reg1_rho.bin'
+  open(12,file=trim(m_file),status='old',form='unformatted',iostat=ier)
+  if( ier /= 0 ) then
+    print*,'error opening: ',trim(m_file)
+    call exit_mpi(myrank,'file not found')
+  endif
+  read(12) model_rho(:,:,:,1:nspec)
+  close(12)
+
+  ! statistics
+  call mpi_reduce(minval(model_vpv),min_vpv,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(maxval(model_vpv),max_vpv,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
+
+  call mpi_reduce(minval(model_vph),min_vph,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(maxval(model_vph),max_vph,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
+
+  call mpi_reduce(minval(model_vsv),min_vsv,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(maxval(model_vsv),max_vsv,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
+
+  call mpi_reduce(minval(model_vsh),min_vsh,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(maxval(model_vsh),max_vsh,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
+
+  call mpi_reduce(minval(model_eta),min_eta,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(maxval(model_eta),max_eta,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
+
+  call mpi_reduce(minval(model_rho),min_rho,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(maxval(model_rho),max_rho,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
+
+  if( myrank == 0 ) then
+    print*,'initial models:'
+    print*,'  vpv min/max: ',min_vpv,max_vpv
+    print*,'  vph min/max: ',min_vph,max_vph
+    print*,'  vsv min/max: ',min_vsv,max_vsv
+    print*,'  vsh min/max: ',min_vsh,max_vsh
+    print*,'  eta min/max: ',min_eta,max_eta
+    print*,'  rho min/max: ',min_rho,max_rho
+    print*
+  endif
+
+  ! allocates temporary array
+  allocate(idummy(NSPEC),ldummy(NSPEC),stat=ier)
+  if( ier /= 0 ) stop 'error allocating ldummy'
+
+  ! global addressing
+  write(m_file,'(a,i6.6,a)') 'topo/proc',myrank,'_reg1_solver_data_2.bin'
+  open(11,file=trim(m_file),status='old',form='unformatted',iostat=ier)
+  if( ier /= 0 ) then
+    print*,'error opening: ',trim(m_file)
+    call exit_mpi(myrank,'file not found')
+  endif
+  read(11) x(1:nglob)
+  read(11) y(1:nglob)
+  read(11) z(1:nglob)
+  read(11) ibool(:,:,:,1:nspec)
+  read(11) idummy(1:nspec) ! idoubling
+  read(11) ldummy(1:nspec) ! is_on_a_slice_edge
+  read(11) ispec_is_tiso(1:nspec)
+  close(11)
+
+  deallocate(idummy,ldummy)
+
+
+end subroutine read_model
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+subroutine read_kernels()
+
+! reads in smoothed kernels: bulk, betav, betah, eta
+
+  use model_update_tiso_iso
+  implicit none
+
+  ! bulk kernel
+  if( USE_ALPHA_BETA_RHO ) then
+    ! reads in alpha kernel
+    fname = 'alpha_kernel_smooth'
+  else
+    ! reads in bulk_c kernel
+    fname = 'bulk_c_kernel_smooth'
+  endif
+  write(m_file,'(a,i6.6,a)') 'INPUT_GRADIENT/proc',myrank,'_reg1_'//trim(fname)//'.bin'
+  open(12,file=trim(m_file),status='old',form='unformatted',iostat=ier)
+  if( ier /= 0 ) then
+    print*,'error opening: ',trim(m_file)
+    call exit_mpi(myrank,'file not found')
+  endif
+  read(12) kernel_bulk(:,:,:,1:nspec)
+  close(12)
+
+  ! shear kernel
+  if( USE_ALPHA_BETA_RHO ) then
+    ! reads in beta kernel
+    fname = 'beta_kernel_smooth'
+  else
+    ! reads in bulk_beta kernel
+    fname = 'bulk_beta_kernel_smooth'
+  endif
+  write(m_file,'(a,i6.6,a)') 'INPUT_GRADIENT/proc',myrank,'_reg1_'//trim(fname)//'.bin'
+  open(12,file=trim(m_file),status='old',form='unformatted',iostat=ier)
+  if( ier /= 0 ) then
+    print*,'error opening: ',trim(m_file)
+    call exit_mpi(myrank,'file not found')
+  endif
+  read(12) kernel_beta(:,:,:,1:nspec)
+  close(12)
+
+  ! rho kernel
+  if( USE_RHO_SCALING ) then
+
+    ! uses scaling relation with shear perturbations
+    kernel_rho(:,:,:,:) = RHO_SCALING * kernel_beta(:,:,:,:)
+
+  else
+
+    ! uses rho kernel
+    write(m_file,'(a,i6.6,a)') 'INPUT_GRADIENT/proc',myrank,'_reg1_rho_kernel_smooth.bin'
+    open(12,file=trim(m_file),status='old',form='unformatted',iostat=ier)
+    if( ier /= 0 ) then
+      print*,'error opening: ',trim(m_file)
+      call exit_mpi(myrank,'file not found')
+    endif
+    read(12) kernel_rho(:,:,:,1:nspec)
+    close(12)
+  endif
+
+
+  ! statistics
+  call mpi_reduce(minval(kernel_bulk),min_bulk,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(maxval(kernel_bulk),max_bulk,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
+
+  call mpi_reduce(minval(kernel_beta),min_beta,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(maxval(kernel_beta),max_beta,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
+
+  call mpi_reduce(minval(kernel_rho),min_rho,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(maxval(kernel_rho),max_rho,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
+
+  if( myrank == 0 ) then
+    print*,'initial kernels:'
+    print*,'  a min/max : ',min_bulk,max_bulk
+    print*,'  beta min/max: ',min_beta,max_beta
+    print*,'  rho min/max  : ',min_rho,max_rho
+    print*
+  endif
+
+end subroutine read_kernels
+
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+subroutine get_gradient()
+
+! calculates gradient by steepest descent method
+
+  use model_update_tiso_iso
+  implicit none
+  ! local parameters
+  real(kind=CUSTOM_REAL):: r,max,depth_max
+
+  ! ------------------------------------------------------------------------
+
+  ! sets maximum update in this depth range
+  logical,parameter :: use_depth_maximum = .true.
+  ! normalized radii
+  real(kind=CUSTOM_REAL),parameter :: R_top = (6371.0 - 50.0 ) / R_EARTH_KM ! shallow depth
+  real(kind=CUSTOM_REAL),parameter :: R_bottom = (6371.0 - 100.0 ) / R_EARTH_KM ! deep depth
+
+  ! ------------------------------------------------------------------------
+
+  ! initializes kernel maximum
+  max = 0._CUSTOM_REAL
+
+  ! gradient in negative direction for steepest descent
+  do ispec = 1, NSPEC
+    do k = 1, NGLLZ
+      do j = 1, NGLLY
+        do i = 1, NGLLX
+
+            ! for bulk
+            model_dbulk(i,j,k,ispec) = - kernel_bulk(i,j,k,ispec)
+
+            ! for shear
+            model_dbeta(i,j,k,ispec) = - kernel_beta(i,j,k,ispec)
+
+            ! for rho
+            model_drho(i,j,k,ispec) = - kernel_rho(i,j,k,ispec)
+
+            ! determines maximum kernel beta value within given radius
+            if( use_depth_maximum ) then
+              ! get radius of point
+              iglob = ibool(i,j,k,ispec)
+              r = sqrt( x(iglob)*x(iglob) + y(iglob)*y(iglob) + z(iglob)*z(iglob) )
+
+              ! stores maximum kernel betav value in this depth slice, since betav is most likely dominating
+              if( r < R_top .and. r > R_bottom ) then
+                ! shear kernel value
+                max_beta = abs( kernel_beta(i,j,k,ispec) )
+                if( max < max_beta ) then
+                  max = max_beta
+                  depth_max = r
+                endif
+              endif
+            endif
+
+        enddo
+      enddo
+    enddo
+  enddo
+
+  ! stores model_dbulk, ... arrays
+  call store_kernel_updates()
+
+  ! statistics
+  call mpi_reduce(minval(model_dbulk),min_bulk,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(maxval(model_dbulk),max_bulk,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
+
+  call mpi_reduce(minval(model_dbeta),min_beta,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(maxval(model_dbeta),max_beta,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
+
+  call mpi_reduce(minval(model_drho),min_rho,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(maxval(model_drho),max_rho,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
+
+  if( myrank == 0 ) then
+    print*,'initial gradients:'
+    print*,'  a min/max : ',min_bulk,max_bulk
+    print*,'  beta min/max: ',min_beta,max_beta
+    print*,'  rho min/max  : ',min_rho,max_rho
+    print*
+  endif
+
+  ! determines maximum kernel betav value within given radius
+  if( use_depth_maximum ) then
+    ! maximum of all processes stored in max_vsv
+    call mpi_reduce(max,max_beta,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
+    max = max_beta
+    depth_max = 6371.0 *( 1.0 - depth_max )
+  endif
+
+  ! determines step length based on maximum gradient value (either shear or bulk)
+  if( myrank == 0 ) then
+
+    ! determines maximum kernel betav value within given radius
+    if( use_depth_maximum ) then
+      print*,'  using depth maximum between 50km and 100km: ',max
+      print*,'  approximate depth maximum: ',depth_max
+      print*
+    else  
+      ! maximum gradient values
+      minmax(1) = abs(min_beta)
+      minmax(2) = abs(max_beta)
+      minmax(3) = abs(min_bulk)
+      minmax(4) = abs(max_bulk)
+
+      ! maximum value of all kernel maxima
+      max = maxval(minmax)
+      print*,'  using maximum: ',max
+      print*
+    endif
+    
+    ! chooses step length such that it becomes the desired, given step factor as inputted
+    step_length = step_fac/max
+
+    print*,'  step length : ',step_length,max
+    print*
+  endif
+  call mpi_bcast(step_length,1,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
+
+
+  ! gradient length sqrt( v^T * v )
+  norm_bulk = sum( model_dbulk * model_dbulk )
+  norm_beta = sum( model_dbeta * model_dbeta )
+  norm_rho = sum( model_drho * model_drho )
+
+  call mpi_reduce(norm_bulk,norm_bulk_sum,1,CUSTOM_MPI_TYPE,MPI_SUM,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(norm_beta,norm_beta_sum,1,CUSTOM_MPI_TYPE,MPI_SUM,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(norm_rho,norm_rho_sum,1,CUSTOM_MPI_TYPE,MPI_SUM,0,MPI_COMM_WORLD,ier)
+
+  norm_bulk = sqrt(norm_bulk_sum)
+  norm_beta = sqrt(norm_beta_sum)
+  norm_rho = sqrt(norm_rho_sum)
+
+  if( myrank == 0 ) then
+    print*,'norm model updates:'
+    print*,'  a : ',norm_bulk
+    print*,'  beta: ',norm_beta
+    print*,'  rho  : ',norm_rho
+    print*
+  endif
+
+  ! multiply model updates by a subjective factor that will change the step
+  model_dbulk(:,:,:,:) = step_length * model_dbulk(:,:,:,:)
+  model_dbeta(:,:,:,:) = step_length * model_dbeta(:,:,:,:)
+  model_drho(:,:,:,:) = step_length * model_drho(:,:,:,:)
+
+
+  ! statistics
+  call mpi_reduce(minval(model_dbulk),min_bulk,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(maxval(model_dbulk),max_bulk,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
+
+  call mpi_reduce(minval(model_dbeta),min_beta,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(maxval(model_dbeta),max_beta,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
+
+  call mpi_reduce(minval(model_drho),min_rho,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(maxval(model_drho),max_rho,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
+
+  if( myrank == 0 ) then
+    print*,'scaled gradients:'
+    print*,'  a min/max : ',min_bulk,max_bulk
+    print*,'  beta min/max: ',min_beta,max_beta
+    print*,'  rho min/max  : ',min_rho,max_rho
+    print*
+  endif
+
+end subroutine get_gradient
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+subroutine store_kernel_updates()
+
+! file output for new model
+
+  use model_update_tiso_iso
+  implicit none
+
+  ! kernel updates
+  fname = 'dbulk'
+  write(m_file,'(a,i6.6,a)') 'INPUT_GRADIENT/proc',myrank,'_reg1_'//trim(fname)//'.bin'
+  open(12,file=trim(m_file),form='unformatted',action='write')
+  write(12) model_dbulk
+  close(12)
+
+  fname = 'dbeta'
+  write(m_file,'(a,i6.6,a)') 'INPUT_GRADIENT/proc',myrank,'_reg1_'//trim(fname)//'.bin'
+  open(12,file=trim(m_file),form='unformatted',action='write')
+  write(12) model_dbeta
+  close(12)
+
+  fname = 'drho'
+  write(m_file,'(a,i6.6,a)') 'INPUT_GRADIENT/proc',myrank,'_reg1_'//trim(fname)//'.bin'
+  open(12,file=trim(m_file),form='unformatted',action='write')
+  write(12) model_drho
+  close(12)
+
+end subroutine store_kernel_updates
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+subroutine store_new_model()
+
+! file output for new model
+
+  use model_update_tiso_iso
+  implicit none
+
+  ! vpv model
+  call mpi_reduce(maxval(model_vpv_new),max_vpv,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(minval(model_vpv_new),min_vpv,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
+  fname = 'vpv_new'
+  write(m_file,'(a,i6.6,a)') 'OUTPUT_MODEL/proc',myrank,'_reg1_'//trim(fname)//'.bin'
+  open(12,file=trim(m_file),form='unformatted',action='write')
+  write(12) model_vpv_new
+  close(12)
+
+  ! vph model
+  call mpi_reduce(maxval(model_vph_new),max_vph,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(minval(model_vph_new),min_vph,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
+  fname = 'vph_new'
+  write(m_file,'(a,i6.6,a)') 'OUTPUT_MODEL/proc',myrank,'_reg1_'//trim(fname)//'.bin'
+  open(12,file=trim(m_file),form='unformatted',action='write')
+  write(12) model_vph_new
+  close(12)
+
+  ! vsv model
+  call mpi_reduce(maxval(model_vsv_new),max_vsv,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(minval(model_vsv_new),min_vsv,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
+  fname = 'vsv_new'
+  write(m_file,'(a,i6.6,a)') 'OUTPUT_MODEL/proc',myrank,'_reg1_'//trim(fname)//'.bin'
+  open(12,file=trim(m_file),form='unformatted',action='write')
+  write(12) model_vsv_new
+  close(12)
+
+  ! vsh model
+  call mpi_reduce(maxval(model_vsh_new),max_vsh,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(minval(model_vsh_new),min_vsh,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
+  fname = 'vsh_new'
+  write(m_file,'(a,i6.6,a)') 'OUTPUT_MODEL/proc',myrank,'_reg1_'//trim(fname)//'.bin'
+  open(12,file=trim(m_file),form='unformatted',action='write')
+  write(12) model_vsh_new
+  close(12)
+
+  ! eta model
+  call mpi_reduce(maxval(model_eta_new),max_eta,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(minval(model_eta_new),min_eta,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
+  fname = 'eta_new'
+  write(m_file,'(a,i6.6,a)') 'OUTPUT_MODEL/proc',myrank,'_reg1_'//trim(fname)//'.bin'
+  open(12,file=trim(m_file),form='unformatted',action='write')
+  write(12) model_eta_new
+  close(12)
+
+  ! rho model
+  call mpi_reduce(maxval(model_rho_new),max_rho,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(minval(model_rho_new),min_rho,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
+  fname = 'rho_new'
+  write(m_file,'(a,i6.6,a)') 'OUTPUT_MODEL/proc',myrank,'_reg1_'//trim(fname)//'.bin'
+  open(12,file=trim(m_file),form='unformatted',action='write')
+  write(12) model_rho_new
+  close(12)
+
+
+  if( myrank == 0 ) then
+    print*,'new models:'
+    print*,'  vpv min/max: ',min_vpv,max_vpv
+    print*,'  vph min/max: ',min_vph,max_vph
+    print*,'  vsv min/max: ',min_vsv,max_vsv
+    print*,'  vsh min/max: ',min_vsh,max_vsh
+    print*,'  eta min/max: ',min_eta,max_eta
+    print*,'  rho min/max: ',min_rho,max_rho
+    print*
+  endif
+
+
+end subroutine store_new_model
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+subroutine store_perturbations()
+
+! file output for new model
+
+  use model_update_tiso_iso
+  implicit none
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC) :: total_model
+
+  ! vpv relative perturbations
+  ! logarithmic perturbation: log( v_new) - log( v_old) = log( v_new / v_old )
+  total_model = 0.0_CUSTOM_REAL
+  where( model_vpv /= 0.0 ) total_model = log( model_vpv_new / model_vpv)
+  ! or
+  ! linear approximation: (v_new - v_old) / v_old
+  !where( model_vpv /= 0.0 ) total_model = ( model_vpv_new - model_vpv) / model_vpv
+
+  write(m_file,'(a,i6.6,a)') 'OUTPUT_MODEL/proc',myrank,'_reg1_dvpvvpv.bin'
+  open(12,file=trim(m_file),form='unformatted',action='write')
+  write(12) total_model
+  close(12)
+  call mpi_reduce(maxval(total_model),max_vpv,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(minval(total_model),min_vpv,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
+
+  ! vph relative perturbations
+  total_model = 0.0_CUSTOM_REAL
+  where( model_vph /= 0.0 ) total_model = log( model_vph_new / model_vph)
+  write(m_file,'(a,i6.6,a)') 'OUTPUT_MODEL/proc',myrank,'_reg1_dvphvph.bin'
+  open(12,file=trim(m_file),form='unformatted',action='write')
+  write(12) total_model
+  close(12)
+  call mpi_reduce(maxval(total_model),max_vph,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(minval(total_model),min_vph,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
+
+  ! vsv relative perturbations
+  total_model = 0.0_CUSTOM_REAL
+  where( model_vsv /= 0.0 ) total_model = log( model_vsv_new / model_vsv)
+  write(m_file,'(a,i6.6,a)') 'OUTPUT_MODEL/proc',myrank,'_reg1_dvsvvsv.bin'
+  open(12,file=trim(m_file),form='unformatted',action='write')
+  write(12) total_model
+  close(12)
+  call mpi_reduce(maxval(total_model),max_vsv,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(minval(total_model),min_vsv,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
+
+  ! vsh relative perturbations
+  total_model = 0.0_CUSTOM_REAL
+  where( model_vsh /= 0.0 ) total_model = log( model_vsh_new / model_vsh)
+  write(m_file,'(a,i6.6,a)') 'OUTPUT_MODEL/proc',myrank,'_reg1_dvshvsh.bin'
+  open(12,file=trim(m_file),form='unformatted',action='write')
+  write(12) total_model
+  close(12)
+  call mpi_reduce(maxval(total_model),max_vsh,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(minval(total_model),min_vsh,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
+
+  ! eta relative perturbations
+  total_model = 0.0_CUSTOM_REAL
+  where( model_eta /= 0.0 ) total_model = log( model_eta_new / model_eta)
+  write(m_file,'(a,i6.6,a)') 'OUTPUT_MODEL/proc',myrank,'_reg1_detaeta.bin'
+  open(12,file=trim(m_file),form='unformatted',action='write')
+  write(12) total_model
+  close(12)
+  call mpi_reduce(maxval(total_model),max_eta,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(minval(total_model),min_eta,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
+
+  ! rho relative model perturbations
+  total_model = 0.0_CUSTOM_REAL
+  where( model_rho /= 0.0 ) total_model = log( model_rho_new / model_rho)
+  write(m_file,'(a,i6.6,a)') 'OUTPUT_MODEL/proc',myrank,'_reg1_drhorho.bin'
+  open(12,file=trim(m_file),form='unformatted',action='write')
+  write(12) total_model
+  close(12)
+  call mpi_reduce(maxval(total_model),max_rho,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(minval(total_model),min_rho,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
+
+  if( myrank == 0 ) then
+    print*,'relative update:'
+    print*,'  dvpv/vpv min/max: ',min_vpv,max_vpv
+    print*,'  dvph/vph min/max: ',min_vph,max_vph
+    print*,'  dvsv/vsv min/max: ',min_vsv,max_vsv
+    print*,'  dvsh/vsh min/max: ',min_vsh,max_vsh
+    print*,'  deta/eta min/max: ',min_eta,max_eta
+    print*,'  drho/rho min/max: ',min_rho,max_rho
+    print*
+  endif
+
+end subroutine store_perturbations
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+subroutine compute_volume()
+
+! computes volume element associated with points
+
+  use model_update_tiso_iso
+  implicit none
+  ! jacobian
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC) :: jacobian
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC) :: &
+    xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz
+  real(kind=CUSTOM_REAL) xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl, &
+    jacobianl,volumel
+  ! integration values
+  real(kind=CUSTOM_REAL) :: integral_bulk_sum,integral_beta_sum,integral_rho_sum
+  real(kind=CUSTOM_REAL) :: integral_bulk,integral_beta,integral_rho
+
+  real(kind=CUSTOM_REAL) :: volume_glob,volume_glob_sum
+  ! root-mean square values
+  real(kind=CUSTOM_REAL) :: rms_vpv,rms_vph,rms_vsv,rms_vsh,rms_eta,rms_rho
+  real(kind=CUSTOM_REAL) :: rms_vpv_sum,rms_vph_sum,rms_vsv_sum,rms_vsh_sum, &
+    rms_eta_sum,rms_rho_sum
+  real(kind=CUSTOM_REAL) :: dvpv,dvph,dvsv,dvsh,deta,drho
+
+  ! Gauss-Lobatto-Legendre points of integration and weights
+  double precision, dimension(NGLLX) :: xigll, wxgll
+  double precision, dimension(NGLLY) :: yigll, wygll
+  double precision, dimension(NGLLZ) :: zigll, wzgll
+  ! array with all the weights in the cube
+  double precision, dimension(NGLLX,NGLLY,NGLLZ) :: wgll_cube
+
+  ! GLL points
+  wgll_cube = 0.0d0
+  call zwgljd(xigll,wxgll,NGLLX,GAUSSALPHA,GAUSSBETA)
+  call zwgljd(yigll,wygll,NGLLY,GAUSSALPHA,GAUSSBETA)
+  call zwgljd(zigll,wzgll,NGLLZ,GAUSSALPHA,GAUSSBETA)
+  do k=1,NGLLZ
+    do j=1,NGLLY
+      do i=1,NGLLX
+        wgll_cube(i,j,k) = wxgll(i)*wygll(j)*wzgll(k)
+      enddo
+    enddo
+  enddo
+
+  ! builds jacobian
+  write(m_file,'(a,i6.6,a)') 'topo/proc',myrank,'_reg1_solver_data_1.bin'
+  open(11,file=trim(m_file),status='old',form='unformatted',iostat=ier)
+  if( ier /= 0 ) then
+    print*,'error opening: ',trim(m_file)
+    call exit_mpi(myrank,'file not found')
+  endif
+  read(11) xix
+  read(11) xiy
+  read(11) xiz
+  read(11) etax
+  read(11) etay
+  read(11) etaz
+  read(11) gammax
+  read(11) gammay
+  read(11) gammaz
+  close(11)
+
+  jacobian = 0.0
+  do ispec = 1, NSPEC
+    do k = 1, NGLLZ
+      do j = 1, NGLLY
+        do i = 1, NGLLX
+          ! gets derivatives of ux, uy and uz with respect to x, y and z
+          xixl = xix(i,j,k,ispec)
+          xiyl = xiy(i,j,k,ispec)
+          xizl = xiz(i,j,k,ispec)
+          etaxl = etax(i,j,k,ispec)
+          etayl = etay(i,j,k,ispec)
+          etazl = etaz(i,j,k,ispec)
+          gammaxl = gammax(i,j,k,ispec)
+          gammayl = gammay(i,j,k,ispec)
+          gammazl = gammaz(i,j,k,ispec)
+          ! computes the jacobian
+          jacobianl = 1._CUSTOM_REAL / (xixl*(etayl*gammazl-etazl*gammayl) &
+                        - xiyl*(etaxl*gammazl-etazl*gammaxl) &
+                        + xizl*(etaxl*gammayl-etayl*gammaxl))
+          jacobian(i,j,k,ispec) = jacobianl
+
+          !if( abs(jacobianl) < 1.e-8 ) then
+          !  print*,'rank ',myrank,'jacobian: ',jacobianl,i,j,k,wgll_cube(i,j,k)
+          !endif
+
+        enddo
+      enddo
+    enddo
+  enddo
+
+  ! volume associated with global point
+  volume_glob = 0._CUSTOM_REAL
+  integral_bulk = 0._CUSTOM_REAL
+  integral_beta = 0._CUSTOM_REAL
+  integral_rho = 0._CUSTOM_REAL
+  norm_bulk = 0._CUSTOM_REAL
+  norm_beta = 0._CUSTOM_REAL
+  norm_rho = 0._CUSTOM_REAL
+  rms_vpv = 0._CUSTOM_REAL
+  rms_vph = 0._CUSTOM_REAL
+  rms_vsv = 0._CUSTOM_REAL
+  rms_vsh = 0._CUSTOM_REAL
+  rms_eta = 0._CUSTOM_REAL
+  rms_rho = 0._CUSTOM_REAL
+  
+  do ispec = 1, NSPEC
+    do k = 1, NGLLZ
+      do j = 1, NGLLY
+        do i = 1, NGLLX
+          iglob = ibool(i,j,k,ispec)
+          if( iglob == 0 ) then
+            print*,'iglob zero',i,j,k,ispec
+            print*
+            print*,'ibool:',ispec
+            print*,ibool(:,:,:,ispec)
+            print*
+            call exit_MPI(myrank,'error ibool')
+          endif
+
+          ! volume associated with GLL point
+          volumel = jacobian(i,j,k,ispec)*wgll_cube(i,j,k)
+          volume_glob = volume_glob + volumel
+
+          ! kernel integration: for each element
+          integral_bulk = integral_bulk &
+                                 + volumel * kernel_bulk(i,j,k,ispec)
+
+          integral_beta = integral_beta &
+                                 + volumel * kernel_beta(i,j,k,ispec)
+
+          integral_rho = integral_rho &
+                                 + volumel * kernel_rho(i,j,k,ispec)
+
+          ! gradient vector norm sqrt(  v^T * v )
+          norm_bulk = norm_bulk + kernel_bulk(i,j,k,ispec)**2
+          norm_beta = norm_beta + kernel_beta(i,j,k,ispec)**2
+          norm_rho = norm_rho + kernel_rho(i,j,k,ispec)**2
+
+          ! checks number
+          if( isNaN(integral_bulk) ) then
+            print*,'error NaN: ',integral_bulk
+            print*,'rank:',myrank
+            print*,'i,j,k,ispec:',i,j,k,ispec
+            print*,'volumel: ',volumel,'kernel_bulk:',kernel_bulk(i,j,k,ispec)
+            call exit_MPI(myrank,'error NaN')
+          endif
+
+          ! root-mean square
+          ! integrates relative perturbations ( dv / v  using logarithm ) squared
+          dvpv = log( model_vpv_new(i,j,k,ispec) / model_vpv(i,j,k,ispec) ) ! alphav
+          rms_vpv = rms_vpv + volumel * dvpv*dvpv
+
+          dvph = log( model_vph_new(i,j,k,ispec) / model_vph(i,j,k,ispec) ) ! alphah
+          rms_vph = rms_vph + volumel * dvph*dvph
+
+          dvsv = log( model_vsv_new(i,j,k,ispec) / model_vsv(i,j,k,ispec) ) ! betav
+          rms_vsv = rms_vsv + volumel * dvsv*dvsv
+
+          dvsh = log( model_vsh_new(i,j,k,ispec) / model_vsh(i,j,k,ispec) ) ! betah
+          rms_vsh = rms_vsh + volumel * dvsh*dvsh
+
+          deta = log( model_eta_new(i,j,k,ispec) / model_eta(i,j,k,ispec) ) ! eta
+          rms_eta = rms_eta + volumel * deta*deta
+
+          drho = log( model_rho_new(i,j,k,ispec) / model_rho(i,j,k,ispec) ) ! rho
+          rms_rho = rms_rho + volumel * drho*drho
+
+        enddo
+      enddo
+    enddo
+  enddo
+
+  ! statistics
+  ! kernel integration: for whole volume
+  call mpi_reduce(integral_bulk,integral_bulk_sum,1,CUSTOM_MPI_TYPE,MPI_SUM,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(integral_beta,integral_beta_sum,1,CUSTOM_MPI_TYPE,MPI_SUM,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(integral_rho,integral_rho_sum,1,CUSTOM_MPI_TYPE,MPI_SUM,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(volume_glob,volume_glob_sum,1,CUSTOM_MPI_TYPE,MPI_SUM,0,MPI_COMM_WORLD,ier)
+
+  if( myrank == 0 ) then
+    print*,'integral kernels:'
+    print*,'  a : ',integral_bulk_sum
+    print*,'  beta : ',integral_beta_sum
+    print*,'  rho : ',integral_rho_sum
+    print*
+    print*,'  total volume:',volume_glob_sum
+    print*
+  endif
+
+  ! norms: for whole volume
+  call mpi_reduce(norm_bulk,norm_bulk_sum,1,CUSTOM_MPI_TYPE,MPI_SUM,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(norm_beta,norm_beta_sum,1,CUSTOM_MPI_TYPE,MPI_SUM,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(norm_rho,norm_rho_sum,1,CUSTOM_MPI_TYPE,MPI_SUM,0,MPI_COMM_WORLD,ier)
+
+  norm_bulk = sqrt(norm_bulk_sum)
+  norm_beta = sqrt(norm_beta_sum)
+  norm_rho = sqrt(norm_rho_sum)
+
+  if( myrank == 0 ) then
+    print*,'norm kernels:'
+    print*,'  a : ',norm_bulk
+    print*,'  beta : ',norm_beta
+    print*,'  rho : ',norm_rho
+    print*
+  endif
+
+  ! root-mean square
+  call mpi_reduce(rms_vpv,rms_vpv_sum,1,CUSTOM_MPI_TYPE,MPI_SUM,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(rms_vph,rms_vph_sum,1,CUSTOM_MPI_TYPE,MPI_SUM,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(rms_vsv,rms_vsv_sum,1,CUSTOM_MPI_TYPE,MPI_SUM,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(rms_vsh,rms_vsh_sum,1,CUSTOM_MPI_TYPE,MPI_SUM,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(rms_eta,rms_eta_sum,1,CUSTOM_MPI_TYPE,MPI_SUM,0,MPI_COMM_WORLD,ier)
+  call mpi_reduce(rms_rho,rms_rho_sum,1,CUSTOM_MPI_TYPE,MPI_SUM,0,MPI_COMM_WORLD,ier)
+  rms_vpv = sqrt( rms_vpv_sum / volume_glob_sum )
+  rms_vph = sqrt( rms_vph_sum / volume_glob_sum )
+  rms_vsv = sqrt( rms_vsv_sum / volume_glob_sum )
+  rms_vsh = sqrt( rms_vsh_sum / volume_glob_sum )
+  rms_eta = sqrt( rms_eta_sum / volume_glob_sum )
+  rms_rho = sqrt( rms_rho_sum / volume_glob_sum )
+
+  if( myrank == 0 ) then
+    print*,'root-mean square of perturbations:'
+    print*,'  vpv : ',rms_vpv
+    print*,'  vph : ',rms_vph
+    print*,'  vsv : ',rms_vsv
+    print*,'  vsh : ',rms_vsh
+    print*,'  eta : ',rms_eta
+    print*,'  rho : ',rms_rho
+    print*
+  endif
+
+end subroutine compute_volume
+

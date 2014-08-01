@@ -1,0 +1,102 @@
+==============================
+Measurement and adjoint source code stored in the SVN repository of
+the Computational Infrastructure for Geodynamics (CIG).
+   /cig/seismo/3D/ADJOINT_TOMO/measure_adj/
+
+This package is complementary to FLEXWIN, the automated window-picking 
+algorithm that is also stored at CIG. Both FLEXWIN and measure_adj were
+used for the study of Tape-Liu-Maggi-Tromp (2009, Science), among others.
+
+The code was last tested on 24-May-2011 using:
+    openSUSE 11.3 Linux 64-bit
+    gfortran 4.5.0
+    64-bit SAC version 101.4, with patch
+
+The plotting routines use pssac2 and GMT. If you want to use the plotting routines,
+first compile pssac2 by following the instructions in UTILS/pssac2/README_supp.
+The executable pssac2 is linked to PLOTS/pssac2.
+
+Then for a test to see if things are working, try this:
+   > cp PLOTS/9818433_T006_T030_MPM_CI_m16_iker07_win_adj_DEFAULT.pdf .
+   > make clean
+   > make
+   > measure_adj
+   > csh -f run_measure_adj.csh
+If all goes well, you should produce the figure
+   PLOTS/9818433_T006_T030_MPM_CI_m16_iker07_win_adj.pdf
+to match 9818433_T006_T030_MPM_CI_m16_iker07_win_adj_DEFAULT.pdf
+
+Please email Carl Tape (carltape@gi.alaska.edu) with questions, comments, or bug reports.
+Users are wanted to help improve the package!
+
+==============================
+Qinya Liu, 12/2/06
+Carl Tape, 2/7/08
+
+This package measures the transfer function for given data and synthetics, 
+and then assimilates the measurements to create the adjoint source and 
+misfit function values necessary for a gradient-based toographic inversion.
+
+Input: MEASUREMENT.WINDOWS which has the format:
+
+npairs-of-data-and-syn
+data_file-pair-1
+syn_file-pair-1
+num_of_measurements 
+tstart-1  tend-1
+...
+tstart-n  tend-n
+data_file-pair-2
+syn_file-pair-2
+num_of_measurements
+...
+...
+
+
+Output: *.txt *.sac and OUTPUT_FILES/*
+
+For examples of different dataset, try other INPUT_FILES/MEASUREMENT_WINDOWS* files 
+by copying them to MEASUREMENT.WINDOWS
+
+One thing tricky:  change the measurement window length, while keeping 
+the same number of tapers is going to change the frequency domain averaging width W, 
+therefore, affect the smoothness (sometimes amplitude as well) of the adjoint source.
+
+General scripts are found in the main directory:
+
+write_par_file.pl  -- writes MEASUREMENT.PAR from a set of input numbers
+prepare_adj_src.pl -- creates Z-E-N adjoint sources from Z-R-T adjoint sources
+
+PLOTS/
+  plot_win_adj_all.pl
+  plot_win_adj.pl
+  make_pdf_by_event.pl
+  make_pdf_by_station.pl
+
+==============================
+Carl Tape, 2/7/08
+
+Several scripts have been added to facilitate running multiple events 
+and generating multiple plots for the purpose of a tomography inversion.  
+These are by no means in the "final" user-friendly state.
+
+These scripts have been placed in the directory scripts_tomo:
+
+prepare_measure_adj.pl -- prepares the directory for running the measurement code WITH PLOTS
+run_measure_adj.pl     -- runs the code and makes output plots
+run_mt_cc_plot.pl         -- runs the code in cross-correlation mode AND multi-taper mode for plots
+run_tomo.pl               -- master script that calls prepare_measure_adj.pl and run_measure_adj.pl
+combine_2_adj_src.pl      -- combines two sets of adjoint sources and creates a new STATIONS_ADJOINT file
+combine_2_adj_src_all.pl  -- calls combine_2_adj_src.pl repeatedly to make the final set of adjoint sources
+
+These must be copied into the main directory to use them.
+
+Finally, to make summary histogram plots for the measurements for each event,
+as well as a single histogram for all measurements in total, see
+
+PLOTS/plot_win_stats_all.pl
+PLOTS/plot_win_stats.pl
+
+This generates a succinct set of measurements and uncertainty estimates that is used for plotting.
+
+==============================

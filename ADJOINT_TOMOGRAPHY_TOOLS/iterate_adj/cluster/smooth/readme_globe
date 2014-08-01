@@ -1,0 +1,62 @@
+-----------------------------------------------
+readme
+-----------------------------------------------
+
+
+smooth_sem_globe:
+
+  reads in GLOBAL mesh and kernels, in parallel on all processors, and
+  smooths by a three-dimensional gaussian
+
+1. create symbolic link 'topo' to link to topography files:
+    > ln -s ../topo
+    (make sure ../topo links to files proc_**_save_data_1.bin and proc_**_save_data_2.bin)
+
+2. copy file SPECFEM3D_GLOBE/constants.h 
+   over to:  src/constants_globe.h
+
+   copy file SPECFEM3D_GLOBE/precision.h 
+   over to:  src/precision_globe.h
+
+   copy file SPECFEM3D_GLOBE/OUTPUT_FILES/values_from_mesher.h 
+   over to:  src/values_from_mesher_globe.h
+   ( when generated for a kernel run ...)
+
+   copy file SPECFEM3D_GLOBE/config.h 
+   over to:  src/config_globe.h
+
+
+3. edit file 'smooth_sem_globe.f90':
+    set your
+      NPROC_XI
+      NPROC_ETA 
+      NCHUNKS
+      element_size 
+    accordingly
+
+    
+then, compile with: 
+    > cd src/ 
+    > make -f Makefile_globe
+
+
+4. create symbolic link directory 'OUTPUT_SUM/'
+   which holds the summed kernel files proc**_alpha_kernel.bin, etc.as outputted by sum_kernel/ executable
+
+
+  run with:
+  ---------  
+  > ./run_globe.bash
+
+  (will run for about 2 hours...)
+
+  which creates smoothed kernel partitions "_smooth.bin" in the same directory
+  as the input ones.
+  
+  check size of smoothing in file go_globe_pbs.bash:
+   
+   - example: for periods 20s - 100s: minimum wavelength lambda ~ 4 km/s * 20 s = 80 km
+              then smoothing sizes become   
+                  horizontal = lambda
+                  vertical    = lambda/4
+  
