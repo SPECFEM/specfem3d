@@ -1,0 +1,4849 @@
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP create_input :   240.000000000000      
+ ----------!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!! SHELLS STEP1 : fin de lecture parfile_for_benchmark !!!!!!!!!!!!!!!!
+The value of CHOICE variable is 3
+!!!!!!!!!!!!!!!!!! SHELLS STEP3 : fin de lecture scrpits_specfem3D.sh !!!!!!!!!!!!!!!!
+   6371.00000000000        240.000000000000     
+               INITIALISATION calcul du niveau de depart : 
+ 
+ zlayer :   0.000000000000000E+000   1217.10000000000     
+   3482.00000000000        3631.00000000000        5611.00000000000     
+   5711.00000000000        5961.00000000000        6161.00000000000     
+   6251.00000000000        6336.00000000000        6351.00000000000     
+   6371.00000000000     
+ premier point :    6131.00000000000                8
+ 
+           1           2
+           2           5
+           3           5
+           4           2
+           5           2
+ SUM           16
+ nb,           15          15
+           1           2   15.0000000000000     
+   6146.00000000000        6161.00000000000     
+   6161.00000000000        6161.00000000000     
+           2           4   22.5000000000000     
+   6183.50000000000        6251.00000000000     
+   6206.00000000000        6251.00000000000     
+   6228.50000000000        6251.00000000000     
+   6251.00000000000        6251.00000000000     
+           3           5   17.0000000000000     
+   6268.00000000000        6336.00000000000     
+   6285.00000000000        6336.00000000000     
+   6302.00000000000        6336.00000000000     
+   6319.00000000000        6336.00000000000     
+   6336.00000000000        6336.00000000000     
+           4           2   7.50000000000000     
+   6343.50000000000        6351.00000000000     
+   6351.00000000000        6351.00000000000     
+           5           2   10.0000000000000     
+   6361.00000000000        6371.00000000000     
+   6371.00000000000        6371.00000000000     
+    1       6131.000       6146.000         8
+    2       6146.000       6161.000         8
+    3       6161.000       6183.500         9
+    4       6183.500       6206.000         9
+    5       6206.000       6228.500         9
+    6       6228.500       6251.000         9
+    7       6251.000       6268.000        10
+    8       6268.000       6285.000        10
+    9       6285.000       6302.000        10
+   10       6302.000       6319.000        10
+   11       6319.000       6336.000        10
+   12       6336.000       6343.500        11
+   13       6343.500       6351.000        11
+   14       6351.000       6361.000        12
+   15       6361.000       6371.000        12
+   666863.741536773     
+  SMALLVALTOL    6.668637415367732E-005
+ END 
+32
+
+/ccc/scratch/cont003/gen7165/durochtc/Codes/SPECFEM3Ds/specfem3d/utils/DSM_FOR_SPECFEM3D/bin/xTraPSV_write_ceof_mpi_SH
+/ccc/scratch/cont003/gen7165/durochtc/Codes/SPECFEM3Ds/specfem3d/utils/DSM_FOR_SPECFEM3D/bin/xTraPSV_write_ceof_mpi_PSV
+ how many processor do i successfully apply:          32
+           0           0           6
+           1           7          13
+           2          14          20
+           3          21          27
+           4          28          34
+           5          35          41
+           6          42          48
+           7          49          55
+           8          56          62
+           9          63          69
+          10          70          76
+          11          77          83
+          12          84          90
+          13          91          97
+          14          98         104
+          15         105         110
+          16         111         116
+          17         117         122
+          18         123         128
+          19         129         134
+          20         135         140
+          21         141         146
+          22         147         152
+          23         153         158
+          24         159         164
+          25         165         170
+          26         171         176
+          27         177         182
+          28         183         188
+          29         189         194
+          30         195         200
+          31         201         206
+           0           0           6
+           1           7          13
+           2          14          20
+           3          21          27
+           4          28          34
+           5          35          41
+           6          42          48
+           7          49          55
+           8          56          62
+           9          63          69
+          10          70          76
+          11          77          83
+          12          84          90
+          13          91          97
+          14          98         104
+          15         105         110
+          16         111         116
+          17         117         122
+          18         123         128
+          19         129         134
+          20         135         140
+          21         141         146
+          22         147         152
+          23         153         158
+          24         159         164
+          25         165         170
+          26         171         176
+          27         177         182
+          28         183         188
+          29         189         194
+          30         195         200
+          31         201         206
+              GRID USED FOR MAXIMUM FREQUENCY :  0.125732421875000     
+  ZONE :    1  RMIN:      0.0000  RMAX:   1217.1000
+   NB PTS :           1155   STEP :             1.053766233766234
+              GRID USED FOR MAXIMUM FREQUENCY :  0.125732421875000     
+  ZONE :    2  RMIN:   1217.1000  RMAX:   3482.0000
+   NB PTS :            923   STEP :             2.453846153846154
+              GRID USED FOR MAXIMUM FREQUENCY :  0.125732421875000     
+  ZONE :    3  RMIN:   3482.0000  RMAX:   3631.0000
+   NB PTS :             67   STEP :             2.223880597014925
+              GRID USED FOR MAXIMUM FREQUENCY :  0.125732421875000     
+  ZONE :    4  RMIN:   3631.0000  RMAX:   5611.0000
+   NB PTS :           1041   STEP :             1.902017291066282
+              GRID USED FOR MAXIMUM FREQUENCY :  0.125732421875000     
+  ZONE :    5  RMIN:   5611.0000  RMAX:   5711.0000
+   NB PTS :             55   STEP :             1.818181818181818
+              GRID USED FOR MAXIMUM FREQUENCY :  0.125732421875000     
+  ZONE :    6  RMIN:   5711.0000  RMAX:   5961.0000
+   NB PTS :            161   STEP :             1.552795031055901
+              GRID USED FOR MAXIMUM FREQUENCY :  0.125732421875000     
+  ZONE :    7  RMIN:   5961.0000  RMAX:   6161.0000
+   NB PTS :            145   STEP :             1.379310344827586
+              GRID USED FOR MAXIMUM FREQUENCY :  0.125732421875000     
+  ZONE :    8  RMIN:   6161.0000  RMAX:   6251.0000
+   NB PTS :             66   STEP :             1.363636363636364
+              GRID USED FOR MAXIMUM FREQUENCY :  0.125732421875000     
+  ZONE :    9  RMIN:   6251.0000  RMAX:   6336.0000
+   NB PTS :             63   STEP :             1.349206349206349
+              GRID USED FOR MAXIMUM FREQUENCY :  0.125732421875000     
+  ZONE :   10  RMIN:   6336.0000  RMAX:   6351.0000
+   NB PTS :             14   STEP :             1.071428571428571
+              GRID USED FOR MAXIMUM FREQUENCY :  0.125732421875000     
+  ZONE :   11  RMIN:   6351.0000  RMAX:   6371.0000
+   NB PTS :             20   STEP :             1.000000000000000
+ how many processor do i successfully apply:          32
+    PROCESS VERTICAL FACE :          65
+ **********************************
+ SOURCE :  0.000000000000000E+000  0.000000000000000E+000
+ **********************************
+          14 1
+          30 1
+          16 1
+          23 1
+           2 1
+          24 1
+           4 1
+          25 1
+           6 1
+          26 1
+           9 1
+          29 1
+          15 1
+          18 1
+           3 1
+          21 1
+           5 1
+          31 1
+           7 1
+          19 1
+          10 1
+          27 1
+          11 1
+          17 1
+          12 1
+          22 1
+           1 1
+          20 1
+           8 1
+          28 1
+          13 1
+           0 1
+ **********************************
+ 
+ SOURCE :  0.000000000000000E+000  0.000000000000000E+000
+ 
+ **********************************
+ myrank  ista :           0           1           2
+ myrank  ista :           1           3           4
+ myrank  ista :          16          33          34
+ myrank  ista :           3           7           8
+ myrank  ista :           4           9          10
+ myrank  ista :          17          35          36
+ myrank  ista :           6          13          14
+ myrank  ista :          18          37          38
+ myrank  ista :           7          15          16
+ myrank  ista :          19          39          40
+ myrank  ista :           2           5           6
+ myrank  ista :          20          41          42
+ myrank  ista :           5          11          12
+ myrank  ista :          21          43          44
+ myrank  ista :           8          17          18
+ myrank  ista :          22          45          46
+ myrank  ista :           9          19          20
+ myrank  ista :          23          47          48
+ myrank  ista :          10          21          22
+ myrank  ista :          24          49          50
+ myrank  ista :          11          23          24
+ myrank  ista :          25          51          52
+ myrank  ista :          12          25          26
+ myrank  ista :          26          53          54
+ myrank  ista :          13          27          28
+ myrank  ista :          27          55          56
+ myrank  ista :          14          29          30
+ myrank  ista :          28          57          58
+ myrank  ista :          15          31          32
+ myrank  ista :          29          59          59
+ myrank  ista :          30          60          60
+ myrank  ista :          31          61          61
+           0           1 ..//Stress/iasp91_dsm.48710.G0_PSV_00000
+           0           2 ..//Stress/iasp91_dsm.48710.G0_PSV_00001
+           0           3 ..//Stress/iasp91_dsm.48710.G0_PSV_00002
+           0           4 ..//Stress/iasp91_dsm.48710.G0_PSV_00003
+           0           5 ..//Stress/iasp91_dsm.48710.G0_PSV_00004
+           0           6 ..//Stress/iasp91_dsm.48710.G0_PSV_00005
+           0           7 ..//Stress/iasp91_dsm.48710.G0_PSV_00006
+           0           8 ..//Stress/iasp91_dsm.48710.G0_PSV_00007
+           0           9 ..//Stress/iasp91_dsm.48710.G0_PSV_00008
+           0          10 ..//Stress/iasp91_dsm.48710.G0_PSV_00009
+           0          11 ..//Stress/iasp91_dsm.48710.G0_PSV_00010
+           0          12 ..//Stress/iasp91_dsm.48710.G0_PSV_00011
+           0          13 ..//Stress/iasp91_dsm.48710.G0_PSV_00012
+           0          14 ..//Stress/iasp91_dsm.48710.G0_PSV_00013
+           0          15 ..//Stress/iasp91_dsm.48710.G0_PSV_00014
+           0          16 ..//Stress/iasp91_dsm.48710.G0_PSV_00015
+           0          17 ..//Stress/iasp91_dsm.48710.G0_PSV_00016
+           0          18 ..//Stress/iasp91_dsm.48710.G0_PSV_00017
+           0          19 ..//Stress/iasp91_dsm.48710.G0_PSV_00018
+           0          20 ..//Stress/iasp91_dsm.48710.G0_PSV_00019
+           0          21 ..//Stress/iasp91_dsm.48710.G0_PSV_00020
+           0          22 ..//Stress/iasp91_dsm.48710.G0_PSV_00021
+           0          23 ..//Stress/iasp91_dsm.48710.G0_PSV_00022
+           0          24 ..//Stress/iasp91_dsm.48710.G0_PSV_00023
+           0          25 ..//Stress/iasp91_dsm.48710.G0_PSV_00024
+           0          26 ..//Stress/iasp91_dsm.48710.G0_PSV_00025
+           0          27 ..//Stress/iasp91_dsm.48710.G0_PSV_00026
+           0          28 ..//Stress/iasp91_dsm.48710.G0_PSV_00027
+           0          29 ..//Stress/iasp91_dsm.48710.G0_PSV_00028
+           0          30 ..//Stress/iasp91_dsm.48710.G0_PSV_00029
+           0          31 ..//Stress/iasp91_dsm.48710.G0_PSV_00030
+           0          32 ..//Stress/iasp91_dsm.48710.G0_PSV_00031
+           0          33 ..//Stress/iasp91_dsm.48710.G0_PSV_00032
+           0          34 ..//Stress/iasp91_dsm.48710.G0_PSV_00033
+           0          35 ..//Stress/iasp91_dsm.48710.G0_PSV_00034
+           0          36 ..//Stress/iasp91_dsm.48710.G0_PSV_00035
+           0          37 ..//Stress/iasp91_dsm.48710.G0_PSV_00036
+           0          38 ..//Stress/iasp91_dsm.48710.G0_PSV_00037
+           0          39 ..//Stress/iasp91_dsm.48710.G0_PSV_00038
+           0          40 ..//Stress/iasp91_dsm.48710.G0_PSV_00039
+           0          41 ..//Stress/iasp91_dsm.48710.G0_PSV_00040
+           0          42 ..//Stress/iasp91_dsm.48710.G0_PSV_00041
+           0          43 ..//Stress/iasp91_dsm.48710.G0_PSV_00042
+           0          44 ..//Stress/iasp91_dsm.48710.G0_PSV_00043
+           0          45 ..//Stress/iasp91_dsm.48710.G0_PSV_00044
+           0          46 ..//Stress/iasp91_dsm.48710.G0_PSV_00045
+           0          47 ..//Stress/iasp91_dsm.48710.G0_PSV_00046
+           0          48 ..//Stress/iasp91_dsm.48710.G0_PSV_00047
+           0          49 ..//Stress/iasp91_dsm.48710.G0_PSV_00048
+           0          50 ..//Stress/iasp91_dsm.48710.G0_PSV_00049
+           0          51 ..//Stress/iasp91_dsm.48710.G0_PSV_00050
+           0          52 ..//Stress/iasp91_dsm.48710.G0_PSV_00051
+           0          53 ..//Stress/iasp91_dsm.48710.G0_PSV_00052
+           0          54 ..//Stress/iasp91_dsm.48710.G0_PSV_00053
+           0          55 ..//Stress/iasp91_dsm.48710.G0_PSV_00054
+           0          56 ..//Stress/iasp91_dsm.48710.G0_PSV_00055
+           0          57 ..//Stress/iasp91_dsm.48710.G0_PSV_00056
+           0          58 ..//Stress/iasp91_dsm.48710.G0_PSV_00057
+           0          59 ..//Stress/iasp91_dsm.48710.G0_PSV_00058
+           0          60 ..//Stress/iasp91_dsm.48710.G0_PSV_00059
+           0          61 ..//Stress/iasp91_dsm.48710.G0_PSV_00060
+           0          62 ..//Stress/iasp91_dsm.48710.G0_PSV_00061
+           0          63 ..//Stress/iasp91_dsm.48710.G0_PSV_00062
+           0          64 ..//Stress/iasp91_dsm.48710.G0_PSV_00063
+           0          65 ..//Stress/iasp91_dsm.48710.G0_PSV_00064
+           0          66 ..//Stress/iasp91_dsm.48710.G0_PSV_00065
+           0          67 ..//Stress/iasp91_dsm.48710.G0_PSV_00066
+           0          68 ..//Stress/iasp91_dsm.48710.G0_PSV_00067
+           0          69 ..//Stress/iasp91_dsm.48710.G0_PSV_00068
+           0          70 ..//Stress/iasp91_dsm.48710.G0_PSV_00069
+           0          71 ..//Stress/iasp91_dsm.48710.G0_PSV_00070
+           0          72 ..//Stress/iasp91_dsm.48710.G0_PSV_00071
+           0          73 ..//Stress/iasp91_dsm.48710.G0_PSV_00072
+           0          74 ..//Stress/iasp91_dsm.48710.G0_PSV_00073
+           0          75 ..//Stress/iasp91_dsm.48710.G0_PSV_00074
+           0          76 ..//Stress/iasp91_dsm.48710.G0_PSV_00075
+           0          77 ..//Stress/iasp91_dsm.48710.G0_PSV_00076
+           0          78 ..//Stress/iasp91_dsm.48710.G0_PSV_00077
+           0          79 ..//Stress/iasp91_dsm.48710.G0_PSV_00078
+           0          80 ..//Stress/iasp91_dsm.48710.G0_PSV_00079
+           0          81 ..//Stress/iasp91_dsm.48710.G0_PSV_00080
+           0          82 ..//Stress/iasp91_dsm.48710.G0_PSV_00081
+           0          83 ..//Stress/iasp91_dsm.48710.G0_PSV_00082
+           0          84 ..//Stress/iasp91_dsm.48710.G0_PSV_00083
+           0          85 ..//Stress/iasp91_dsm.48710.G0_PSV_00084
+           0          86 ..//Stress/iasp91_dsm.48710.G0_PSV_00085
+           0          87 ..//Stress/iasp91_dsm.48710.G0_PSV_00086
+           0          88 ..//Stress/iasp91_dsm.48710.G0_PSV_00087
+           0          89 ..//Stress/iasp91_dsm.48710.G0_PSV_00088
+           0          90 ..//Stress/iasp91_dsm.48710.G0_PSV_00089
+           0          91 ..//Stress/iasp91_dsm.48710.G0_PSV_00090
+           0          92 ..//Stress/iasp91_dsm.48710.G0_PSV_00091
+           0          93 ..//Stress/iasp91_dsm.48710.G0_PSV_00092
+           0          94 ..//Stress/iasp91_dsm.48710.G0_PSV_00093
+           0          95 ..//Stress/iasp91_dsm.48710.G0_PSV_00094
+           0          96 ..//Stress/iasp91_dsm.48710.G0_PSV_00095
+           0          97 ..//Stress/iasp91_dsm.48710.G0_PSV_00096
+           0          98 ..//Stress/iasp91_dsm.48710.G0_PSV_00097
+           0          99 ..//Stress/iasp91_dsm.48710.G0_PSV_00098
+           0         100 ..//Stress/iasp91_dsm.48710.G0_PSV_00099
+           0         101 ..//Stress/iasp91_dsm.48710.G0_PSV_00100
+           0         102 ..//Stress/iasp91_dsm.48710.G0_PSV_00101
+           0         103 ..//Stress/iasp91_dsm.48710.G0_PSV_00102
+           0         104 ..//Stress/iasp91_dsm.48710.G0_PSV_00103
+           0         105 ..//Stress/iasp91_dsm.48710.G0_PSV_00104
+           0         106 ..//Stress/iasp91_dsm.48710.G0_PSV_00105
+           0         107 ..//Stress/iasp91_dsm.48710.G0_PSV_00106
+           0         108 ..//Stress/iasp91_dsm.48710.G0_PSV_00107
+           0         109 ..//Stress/iasp91_dsm.48710.G0_PSV_00108
+           0         110 ..//Stress/iasp91_dsm.48710.G0_PSV_00109
+           0         111 ..//Stress/iasp91_dsm.48710.G0_PSV_00110
+           0         112 ..//Stress/iasp91_dsm.48710.G0_PSV_00111
+           0         113 ..//Stress/iasp91_dsm.48710.G0_PSV_00112
+           0         114 ..//Stress/iasp91_dsm.48710.G0_PSV_00113
+           0         115 ..//Stress/iasp91_dsm.48710.G0_PSV_00114
+           0         116 ..//Stress/iasp91_dsm.48710.G0_PSV_00115
+           0         117 ..//Stress/iasp91_dsm.48710.G0_PSV_00116
+           0         118 ..//Stress/iasp91_dsm.48710.G0_PSV_00117
+           0         119 ..//Stress/iasp91_dsm.48710.G0_PSV_00118
+           0         120 ..//Stress/iasp91_dsm.48710.G0_PSV_00119
+           0         121 ..//Stress/iasp91_dsm.48710.G0_PSV_00120
+           0         122 ..//Stress/iasp91_dsm.48710.G0_PSV_00121
+           0         123 ..//Stress/iasp91_dsm.48710.G0_PSV_00122
+           0         124 ..//Stress/iasp91_dsm.48710.G0_PSV_00123
+           0         125 ..//Stress/iasp91_dsm.48710.G0_PSV_00124
+           0         126 ..//Stress/iasp91_dsm.48710.G0_PSV_00125
+           0         127 ..//Stress/iasp91_dsm.48710.G0_PSV_00126
+           0         128 ..//Stress/iasp91_dsm.48710.G0_PSV_00127
+           0         129 ..//Stress/iasp91_dsm.48710.G0_PSV_00128
+           0         130 ..//Stress/iasp91_dsm.48710.G0_PSV_00129
+           0         131 ..//Stress/iasp91_dsm.48710.G0_PSV_00130
+           0         132 ..//Stress/iasp91_dsm.48710.G0_PSV_00131
+           0         133 ..//Stress/iasp91_dsm.48710.G0_PSV_00132
+           0         134 ..//Stress/iasp91_dsm.48710.G0_PSV_00133
+           0         135 ..//Stress/iasp91_dsm.48710.G0_PSV_00134
+           0         136 ..//Stress/iasp91_dsm.48710.G0_PSV_00135
+           0         137 ..//Stress/iasp91_dsm.48710.G0_PSV_00136
+           0         138 ..//Stress/iasp91_dsm.48710.G0_PSV_00137
+           0         139 ..//Stress/iasp91_dsm.48710.G0_PSV_00138
+           0         140 ..//Stress/iasp91_dsm.48710.G0_PSV_00139
+           0         141 ..//Stress/iasp91_dsm.48710.G0_PSV_00140
+           0         142 ..//Stress/iasp91_dsm.48710.G0_PSV_00141
+           0         143 ..//Stress/iasp91_dsm.48710.G0_PSV_00142
+           0         144 ..//Stress/iasp91_dsm.48710.G0_PSV_00143
+           0         145 ..//Stress/iasp91_dsm.48710.G0_PSV_00144
+           0         146 ..//Stress/iasp91_dsm.48710.G0_PSV_00145
+           0         147 ..//Stress/iasp91_dsm.48710.G0_PSV_00146
+           0         148 ..//Stress/iasp91_dsm.48710.G0_PSV_00147
+           0         149 ..//Stress/iasp91_dsm.48710.G0_PSV_00148
+           0         150 ..//Stress/iasp91_dsm.48710.G0_PSV_00149
+           0         151 ..//Stress/iasp91_dsm.48710.G0_PSV_00150
+           0         152 ..//Stress/iasp91_dsm.48710.G0_PSV_00151
+           0         153 ..//Stress/iasp91_dsm.48710.G0_PSV_00152
+           0         154 ..//Stress/iasp91_dsm.48710.G0_PSV_00153
+           0         155 ..//Stress/iasp91_dsm.48710.G0_PSV_00154
+           0         156 ..//Stress/iasp91_dsm.48710.G0_PSV_00155
+           0         157 ..//Stress/iasp91_dsm.48710.G0_PSV_00156
+           0         158 ..//Stress/iasp91_dsm.48710.G0_PSV_00157
+           0         159 ..//Stress/iasp91_dsm.48710.G0_PSV_00158
+           0         160 ..//Stress/iasp91_dsm.48710.G0_PSV_00159
+           0         161 ..//Stress/iasp91_dsm.48710.G0_PSV_00160
+           0         162 ..//Stress/iasp91_dsm.48710.G0_PSV_00161
+           0         163 ..//Stress/iasp91_dsm.48710.G0_PSV_00162
+           0         164 ..//Stress/iasp91_dsm.48710.G0_PSV_00163
+           0         165 ..//Stress/iasp91_dsm.48710.G0_PSV_00164
+           0         166 ..//Stress/iasp91_dsm.48710.G0_PSV_00165
+           0         167 ..//Stress/iasp91_dsm.48710.G0_PSV_00166
+           0         168 ..//Stress/iasp91_dsm.48710.G0_PSV_00167
+           0         169 ..//Stress/iasp91_dsm.48710.G0_PSV_00168
+           0         170 ..//Stress/iasp91_dsm.48710.G0_PSV_00169
+           0         171 ..//Stress/iasp91_dsm.48710.G0_PSV_00170
+           0         172 ..//Stress/iasp91_dsm.48710.G0_PSV_00171
+           0         173 ..//Stress/iasp91_dsm.48710.G0_PSV_00172
+           0         174 ..//Stress/iasp91_dsm.48710.G0_PSV_00173
+           0         175 ..//Stress/iasp91_dsm.48710.G0_PSV_00174
+           0         176 ..//Stress/iasp91_dsm.48710.G0_PSV_00175
+           0         177 ..//Stress/iasp91_dsm.48710.G0_PSV_00176
+           0         178 ..//Stress/iasp91_dsm.48710.G0_PSV_00177
+           0         179 ..//Stress/iasp91_dsm.48710.G0_PSV_00178
+           0         180 ..//Stress/iasp91_dsm.48710.G0_PSV_00179
+           0         181 ..//Stress/iasp91_dsm.48710.G0_PSV_00180
+           0         182 ..//Stress/iasp91_dsm.48710.G0_PSV_00181
+           0         183 ..//Stress/iasp91_dsm.48710.G0_PSV_00182
+           0         184 ..//Stress/iasp91_dsm.48710.G0_PSV_00183
+           0         185 ..//Stress/iasp91_dsm.48710.G0_PSV_00184
+           0         186 ..//Stress/iasp91_dsm.48710.G0_PSV_00185
+           0         187 ..//Stress/iasp91_dsm.48710.G0_PSV_00186
+           0         188 ..//Stress/iasp91_dsm.48710.G0_PSV_00187
+           0         189 ..//Stress/iasp91_dsm.48710.G0_PSV_00188
+           0         190 ..//Stress/iasp91_dsm.48710.G0_PSV_00189
+           0         191 ..//Stress/iasp91_dsm.48710.G0_PSV_00190
+           0         192 ..//Stress/iasp91_dsm.48710.G0_PSV_00191
+           0         193 ..//Stress/iasp91_dsm.48710.G0_PSV_00192
+           0         194 ..//Stress/iasp91_dsm.48710.G0_PSV_00193
+           0         195 ..//Stress/iasp91_dsm.48710.G0_PSV_00194
+           0         196 ..//Stress/iasp91_dsm.48710.G0_PSV_00195
+           0         197 ..//Stress/iasp91_dsm.48710.G0_PSV_00196
+           0         198 ..//Stress/iasp91_dsm.48710.G0_PSV_00197
+           0         199 ..//Stress/iasp91_dsm.48710.G0_PSV_00198
+           0         200 ..//Stress/iasp91_dsm.48710.G0_PSV_00199
+           0         201 ..//Stress/iasp91_dsm.48710.G0_PSV_00200
+           0         202 ..//Stress/iasp91_dsm.48710.G0_PSV_00201
+           0         203 ..//Stress/iasp91_dsm.48710.G0_PSV_00202
+           0         204 ..//Stress/iasp91_dsm.48710.G0_PSV_00203
+           0         205 ..//Stress/iasp91_dsm.48710.G0_PSV_00204
+           0         206 ..//Stress/iasp91_dsm.48710.G0_PSV_00205
+           0         207 ..//Stress/iasp91_dsm.48710.G0_PSV_00206
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6270.93544379898     
+           2   6268.00000000000     
+           1   6265.06455620102     
+           2   6259.50000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6253.93544379898     
+           2   6251.00000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6239.75000000000     
+           2   6232.38514620453     
+           1   6228.50000000000     
+           2   6224.61485379546     
+           1   6217.25000000000     
+           2   6209.88514620453     
+           1   6206.00000000000     
+           2   6202.11485379546     
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6148.59009746969     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6143.40990253031     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6133.59009746969     
+           2   6131.00000000000     
+           1   6194.75000000000     
+           2   6187.38514620454     
+           1   6183.50000000000     
+           2   6179.61485379546     
+           1   6172.25000000000     
+           2   6164.88514620454     
+           1   6161.00000000000     
+           2   6161.00000000000     
+           1   6158.40990253031     
+           2   6153.50000000000     
+           2   6146.00000000000     
+           2   6138.50000000000     
+           1   6343.50000000000     
+           2   6342.20495126515     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6347.25000000000     
+           2   6344.79504873484     
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6316.06455620102     
+           2   6310.50000000000     
+           1   6282.06455620102     
+           2   6276.50000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6371.00000000000     
+           2   6369.27326835354     
+           3   6366.00000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6359.27326835354     
+ PROFONDEURS TRAITEES PAR MYRANK
+           2   6356.00000000000     
+           1   6287.93544379898     
+           2   6285.00000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6321.93544379898     
+           2   6319.00000000000     
+           1   6299.06455620102     
+           2   6293.50000000000     
+           1   6304.93544379898     
+           2   6302.00000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6339.75000000000     
+           2   6337.29504873484     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6362.72673164646     
+           2   6361.00000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6351.00000000000     
+           2   6349.70495126515     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6336.00000000000     
+           2   6336.00000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6333.06455620102     
+           2   6327.50000000000     
+           1   6352.72673164646     
+           2   6351.00000000000     
+           1   6251.00000000000     
+           2   6247.11485379546     
+ myrank :          17 .//out//Disp_00036
+ myrank :          23 .//out//Disp_00048
+ myrank :           3 .//out//Disp_00008
+ myrank :           8 .//out//Disp_00018
+ myrank :           2 .//out//Disp_00006
+ myrank :           0 .//out//Disp_00001
+ myrank :          21 .//out//Disp_00044
+ myrank :          31 .//out//Disp_00064
+ myrank :          12 .//out//Disp_00026
+ myrank :           9 .//out//Disp_00020
+ myrank :          16 .//out//Disp_00034
+ myrank :          18 .//out//Disp_00038
+ myrank :           7 .//out//Disp_00016
+ myrank :          19 .//out//Disp_00040
+ myrank :          30 .//out//Disp_00062
+ myrank :          28 .//out//Disp_00058
+ myrank :          20 .//out//Disp_00042
+ myrank :          26 .//out//Disp_00054
+ myrank :          22 .//out//Disp_00046
+ myrank :          29 .//out//Disp_00060
+ myrank :           1 .//out//Disp_00004
+ myrank :           4 .//out//Disp_00010
+ myrank :          24 .//out//Disp_00050
+ myrank :          13 .//out//Disp_00028
+ myrank :          27 .//out//Disp_00056
+ myrank :          14 .//out//Disp_00030
+ myrank :           5 .//out//Disp_00012
+ myrank :          25 .//out//Disp_00052
+ myrank :           6 .//out//Disp_00014
+ myrank :          15 .//out//Disp_00032
+ myrank :          11 .//out//Disp_00024
+ myrank :          10 .//out//Disp_00022
+ myrank :           8 .//out//Disp_00019
+ myrank :          14 .//out//Disp_00031
+ myrank :           9 .//out//Disp_00021
+ myrank :          25 .//out//Disp_00053
+ myrank :          30 .//out//Disp_00063
+ myrank :          29 .//out//Disp_00061
+ myrank :          21 .//out//Disp_00045
+ myrank :           3 .//out//Disp_00009
+ myrank :          12 .//out//Disp_00027
+ myrank :          23 .//out//Disp_00049
+ myrank :          19 .//out//Disp_00041
+ myrank :          22 .//out//Disp_00047
+ myrank :          13 .//out//Disp_00029
+ myrank :          17 .//out//Disp_00037
+ myrank :           7 .//out//Disp_00017
+ myrank :           6 .//out//Disp_00015
+ myrank :           0 .//out//Disp_00002
+ myrank :          18 .//out//Disp_00039
+ myrank :          31 .//out//Disp_00065
+ myrank :          20 .//out//Disp_00043
+ myrank :          26 .//out//Disp_00055
+ myrank :           2 .//out//Disp_00007
+ myrank :          11 .//out//Disp_00025
+ myrank :          16 .//out//Disp_00035
+ myrank :           1 .//out//Disp_00005
+ myrank :           5 .//out//Disp_00013
+ myrank :          24 .//out//Disp_00051
+ myrank :          28 .//out//Disp_00059
+ myrank :          15 .//out//Disp_00033
+ myrank :          27 .//out//Disp_00057
+ myrank :           4 .//out//Disp_00011
+ myrank :          10 .//out//Disp_00023
+ myrank :           0 .//out//Disp_00003
+ how many processor do i successfully apply:          32
+    PROCESS VERTICAL FACE :          65
+ **********************************
+ SOURCE :  0.000000000000000E+000  0.000000000000000E+000
+ **********************************
+          10 1
+          25 1
+          27 1
+           8 1
+          28 1
+          12 1
+          29 1
+          13 1
+          19 1
+          15 1
+          21 1
+           1 1
+          26 1
+           3 1
+          31 1
+           4 1
+          30 1
+           6 1
+          18 1
+           7 1
+          16 1
+          14 1
+          23 1
+           9 1
+          24 1
+          11 1
+          17 1
+           2 1
+          20 1
+           5 1
+          22 1
+           0 1
+ **********************************
+ 
+ SOURCE :  0.000000000000000E+000  0.000000000000000E+000
+ 
+ **********************************
+ myrank  ista :           0           1           2
+ myrank  ista :          16          33          34
+ myrank  ista :           1           3           4
+ myrank  ista :          17          35          36
+ myrank  ista :           2           5           6
+ myrank  ista :          18          37          38
+ myrank  ista :           3           7           8
+ myrank  ista :          19          39          40
+ myrank  ista :           4           9          10
+ myrank  ista :          20          41          42
+ myrank  ista :           6          13          14
+ myrank  ista :          21          43          44
+ myrank  ista :           7          15          16
+ myrank  ista :          22          45          46
+ myrank  ista :           5          11          12
+ myrank  ista :          23          47          48
+ myrank  ista :           8          17          18
+ myrank  ista :          24          49          50
+ myrank  ista :           9          19          20
+ myrank  ista :          25          51          52
+ myrank  ista :          10          21          22
+ myrank  ista :          26          53          54
+ myrank  ista :          11          23          24
+ myrank  ista :          27          55          56
+ myrank  ista :          12          25          26
+ myrank  ista :          28          57          58
+ myrank  ista :          13          27          28
+ myrank  ista :          29          59          59
+ myrank  ista :          14          29          30
+ myrank  ista :          30          60          60
+ myrank  ista :          15          31          32
+ myrank  ista :          31          61          61
+           0           1 ..//Stress/iasp91_dsm.48710.G0_PSV_00000
+           0           2 ..//Stress/iasp91_dsm.48710.G0_PSV_00001
+           0           3 ..//Stress/iasp91_dsm.48710.G0_PSV_00002
+           0           4 ..//Stress/iasp91_dsm.48710.G0_PSV_00003
+           0           5 ..//Stress/iasp91_dsm.48710.G0_PSV_00004
+           0           6 ..//Stress/iasp91_dsm.48710.G0_PSV_00005
+           0           7 ..//Stress/iasp91_dsm.48710.G0_PSV_00006
+           0           8 ..//Stress/iasp91_dsm.48710.G0_PSV_00007
+           0           9 ..//Stress/iasp91_dsm.48710.G0_PSV_00008
+           0          10 ..//Stress/iasp91_dsm.48710.G0_PSV_00009
+           0          11 ..//Stress/iasp91_dsm.48710.G0_PSV_00010
+           0          12 ..//Stress/iasp91_dsm.48710.G0_PSV_00011
+           0          13 ..//Stress/iasp91_dsm.48710.G0_PSV_00012
+           0          14 ..//Stress/iasp91_dsm.48710.G0_PSV_00013
+           0          15 ..//Stress/iasp91_dsm.48710.G0_PSV_00014
+           0          16 ..//Stress/iasp91_dsm.48710.G0_PSV_00015
+           0          17 ..//Stress/iasp91_dsm.48710.G0_PSV_00016
+           0          18 ..//Stress/iasp91_dsm.48710.G0_PSV_00017
+           0          19 ..//Stress/iasp91_dsm.48710.G0_PSV_00018
+           0          20 ..//Stress/iasp91_dsm.48710.G0_PSV_00019
+           0          21 ..//Stress/iasp91_dsm.48710.G0_PSV_00020
+           0          22 ..//Stress/iasp91_dsm.48710.G0_PSV_00021
+           0          23 ..//Stress/iasp91_dsm.48710.G0_PSV_00022
+           0          24 ..//Stress/iasp91_dsm.48710.G0_PSV_00023
+           0          25 ..//Stress/iasp91_dsm.48710.G0_PSV_00024
+           0          26 ..//Stress/iasp91_dsm.48710.G0_PSV_00025
+           0          27 ..//Stress/iasp91_dsm.48710.G0_PSV_00026
+           0          28 ..//Stress/iasp91_dsm.48710.G0_PSV_00027
+           0          29 ..//Stress/iasp91_dsm.48710.G0_PSV_00028
+           0          30 ..//Stress/iasp91_dsm.48710.G0_PSV_00029
+           0          31 ..//Stress/iasp91_dsm.48710.G0_PSV_00030
+           0          32 ..//Stress/iasp91_dsm.48710.G0_PSV_00031
+           0          33 ..//Stress/iasp91_dsm.48710.G0_PSV_00032
+           0          34 ..//Stress/iasp91_dsm.48710.G0_PSV_00033
+           0          35 ..//Stress/iasp91_dsm.48710.G0_PSV_00034
+           0          36 ..//Stress/iasp91_dsm.48710.G0_PSV_00035
+           0          37 ..//Stress/iasp91_dsm.48710.G0_PSV_00036
+           0          38 ..//Stress/iasp91_dsm.48710.G0_PSV_00037
+           0          39 ..//Stress/iasp91_dsm.48710.G0_PSV_00038
+           0          40 ..//Stress/iasp91_dsm.48710.G0_PSV_00039
+           0          41 ..//Stress/iasp91_dsm.48710.G0_PSV_00040
+           0          42 ..//Stress/iasp91_dsm.48710.G0_PSV_00041
+           0          43 ..//Stress/iasp91_dsm.48710.G0_PSV_00042
+           0          44 ..//Stress/iasp91_dsm.48710.G0_PSV_00043
+           0          45 ..//Stress/iasp91_dsm.48710.G0_PSV_00044
+           0          46 ..//Stress/iasp91_dsm.48710.G0_PSV_00045
+           0          47 ..//Stress/iasp91_dsm.48710.G0_PSV_00046
+           0          48 ..//Stress/iasp91_dsm.48710.G0_PSV_00047
+           0          49 ..//Stress/iasp91_dsm.48710.G0_PSV_00048
+           0          50 ..//Stress/iasp91_dsm.48710.G0_PSV_00049
+           0          51 ..//Stress/iasp91_dsm.48710.G0_PSV_00050
+           0          52 ..//Stress/iasp91_dsm.48710.G0_PSV_00051
+           0          53 ..//Stress/iasp91_dsm.48710.G0_PSV_00052
+           0          54 ..//Stress/iasp91_dsm.48710.G0_PSV_00053
+           0          55 ..//Stress/iasp91_dsm.48710.G0_PSV_00054
+           0          56 ..//Stress/iasp91_dsm.48710.G0_PSV_00055
+           0          57 ..//Stress/iasp91_dsm.48710.G0_PSV_00056
+           0          58 ..//Stress/iasp91_dsm.48710.G0_PSV_00057
+           0          59 ..//Stress/iasp91_dsm.48710.G0_PSV_00058
+           0          60 ..//Stress/iasp91_dsm.48710.G0_PSV_00059
+           0          61 ..//Stress/iasp91_dsm.48710.G0_PSV_00060
+           0          62 ..//Stress/iasp91_dsm.48710.G0_PSV_00061
+           0          63 ..//Stress/iasp91_dsm.48710.G0_PSV_00062
+           0          64 ..//Stress/iasp91_dsm.48710.G0_PSV_00063
+           0          65 ..//Stress/iasp91_dsm.48710.G0_PSV_00064
+           0          66 ..//Stress/iasp91_dsm.48710.G0_PSV_00065
+           0          67 ..//Stress/iasp91_dsm.48710.G0_PSV_00066
+           0          68 ..//Stress/iasp91_dsm.48710.G0_PSV_00067
+           0          69 ..//Stress/iasp91_dsm.48710.G0_PSV_00068
+           0          70 ..//Stress/iasp91_dsm.48710.G0_PSV_00069
+           0          71 ..//Stress/iasp91_dsm.48710.G0_PSV_00070
+           0          72 ..//Stress/iasp91_dsm.48710.G0_PSV_00071
+           0          73 ..//Stress/iasp91_dsm.48710.G0_PSV_00072
+           0          74 ..//Stress/iasp91_dsm.48710.G0_PSV_00073
+           0          75 ..//Stress/iasp91_dsm.48710.G0_PSV_00074
+           0          76 ..//Stress/iasp91_dsm.48710.G0_PSV_00075
+           0          77 ..//Stress/iasp91_dsm.48710.G0_PSV_00076
+           0          78 ..//Stress/iasp91_dsm.48710.G0_PSV_00077
+           0          79 ..//Stress/iasp91_dsm.48710.G0_PSV_00078
+           0          80 ..//Stress/iasp91_dsm.48710.G0_PSV_00079
+           0          81 ..//Stress/iasp91_dsm.48710.G0_PSV_00080
+           0          82 ..//Stress/iasp91_dsm.48710.G0_PSV_00081
+           0          83 ..//Stress/iasp91_dsm.48710.G0_PSV_00082
+           0          84 ..//Stress/iasp91_dsm.48710.G0_PSV_00083
+           0          85 ..//Stress/iasp91_dsm.48710.G0_PSV_00084
+           0          86 ..//Stress/iasp91_dsm.48710.G0_PSV_00085
+           0          87 ..//Stress/iasp91_dsm.48710.G0_PSV_00086
+           0          88 ..//Stress/iasp91_dsm.48710.G0_PSV_00087
+           0          89 ..//Stress/iasp91_dsm.48710.G0_PSV_00088
+           0          90 ..//Stress/iasp91_dsm.48710.G0_PSV_00089
+           0          91 ..//Stress/iasp91_dsm.48710.G0_PSV_00090
+           0          92 ..//Stress/iasp91_dsm.48710.G0_PSV_00091
+           0          93 ..//Stress/iasp91_dsm.48710.G0_PSV_00092
+           0          94 ..//Stress/iasp91_dsm.48710.G0_PSV_00093
+           0          95 ..//Stress/iasp91_dsm.48710.G0_PSV_00094
+           0          96 ..//Stress/iasp91_dsm.48710.G0_PSV_00095
+           0          97 ..//Stress/iasp91_dsm.48710.G0_PSV_00096
+           0          98 ..//Stress/iasp91_dsm.48710.G0_PSV_00097
+           0          99 ..//Stress/iasp91_dsm.48710.G0_PSV_00098
+           0         100 ..//Stress/iasp91_dsm.48710.G0_PSV_00099
+           0         101 ..//Stress/iasp91_dsm.48710.G0_PSV_00100
+           0         102 ..//Stress/iasp91_dsm.48710.G0_PSV_00101
+           0         103 ..//Stress/iasp91_dsm.48710.G0_PSV_00102
+           0         104 ..//Stress/iasp91_dsm.48710.G0_PSV_00103
+           0         105 ..//Stress/iasp91_dsm.48710.G0_PSV_00104
+           0         106 ..//Stress/iasp91_dsm.48710.G0_PSV_00105
+           0         107 ..//Stress/iasp91_dsm.48710.G0_PSV_00106
+           0         108 ..//Stress/iasp91_dsm.48710.G0_PSV_00107
+           0         109 ..//Stress/iasp91_dsm.48710.G0_PSV_00108
+           0         110 ..//Stress/iasp91_dsm.48710.G0_PSV_00109
+           0         111 ..//Stress/iasp91_dsm.48710.G0_PSV_00110
+           0         112 ..//Stress/iasp91_dsm.48710.G0_PSV_00111
+           0         113 ..//Stress/iasp91_dsm.48710.G0_PSV_00112
+           0         114 ..//Stress/iasp91_dsm.48710.G0_PSV_00113
+           0         115 ..//Stress/iasp91_dsm.48710.G0_PSV_00114
+           0         116 ..//Stress/iasp91_dsm.48710.G0_PSV_00115
+           0         117 ..//Stress/iasp91_dsm.48710.G0_PSV_00116
+           0         118 ..//Stress/iasp91_dsm.48710.G0_PSV_00117
+           0         119 ..//Stress/iasp91_dsm.48710.G0_PSV_00118
+           0         120 ..//Stress/iasp91_dsm.48710.G0_PSV_00119
+           0         121 ..//Stress/iasp91_dsm.48710.G0_PSV_00120
+           0         122 ..//Stress/iasp91_dsm.48710.G0_PSV_00121
+           0         123 ..//Stress/iasp91_dsm.48710.G0_PSV_00122
+           0         124 ..//Stress/iasp91_dsm.48710.G0_PSV_00123
+           0         125 ..//Stress/iasp91_dsm.48710.G0_PSV_00124
+           0         126 ..//Stress/iasp91_dsm.48710.G0_PSV_00125
+           0         127 ..//Stress/iasp91_dsm.48710.G0_PSV_00126
+           0         128 ..//Stress/iasp91_dsm.48710.G0_PSV_00127
+           0         129 ..//Stress/iasp91_dsm.48710.G0_PSV_00128
+           0         130 ..//Stress/iasp91_dsm.48710.G0_PSV_00129
+           0         131 ..//Stress/iasp91_dsm.48710.G0_PSV_00130
+           0         132 ..//Stress/iasp91_dsm.48710.G0_PSV_00131
+           0         133 ..//Stress/iasp91_dsm.48710.G0_PSV_00132
+           0         134 ..//Stress/iasp91_dsm.48710.G0_PSV_00133
+           0         135 ..//Stress/iasp91_dsm.48710.G0_PSV_00134
+           0         136 ..//Stress/iasp91_dsm.48710.G0_PSV_00135
+           0         137 ..//Stress/iasp91_dsm.48710.G0_PSV_00136
+           0         138 ..//Stress/iasp91_dsm.48710.G0_PSV_00137
+           0         139 ..//Stress/iasp91_dsm.48710.G0_PSV_00138
+           0         140 ..//Stress/iasp91_dsm.48710.G0_PSV_00139
+           0         141 ..//Stress/iasp91_dsm.48710.G0_PSV_00140
+           0         142 ..//Stress/iasp91_dsm.48710.G0_PSV_00141
+           0         143 ..//Stress/iasp91_dsm.48710.G0_PSV_00142
+           0         144 ..//Stress/iasp91_dsm.48710.G0_PSV_00143
+           0         145 ..//Stress/iasp91_dsm.48710.G0_PSV_00144
+           0         146 ..//Stress/iasp91_dsm.48710.G0_PSV_00145
+           0         147 ..//Stress/iasp91_dsm.48710.G0_PSV_00146
+           0         148 ..//Stress/iasp91_dsm.48710.G0_PSV_00147
+           0         149 ..//Stress/iasp91_dsm.48710.G0_PSV_00148
+           0         150 ..//Stress/iasp91_dsm.48710.G0_PSV_00149
+           0         151 ..//Stress/iasp91_dsm.48710.G0_PSV_00150
+           0         152 ..//Stress/iasp91_dsm.48710.G0_PSV_00151
+           0         153 ..//Stress/iasp91_dsm.48710.G0_PSV_00152
+           0         154 ..//Stress/iasp91_dsm.48710.G0_PSV_00153
+           0         155 ..//Stress/iasp91_dsm.48710.G0_PSV_00154
+           0         156 ..//Stress/iasp91_dsm.48710.G0_PSV_00155
+           0         157 ..//Stress/iasp91_dsm.48710.G0_PSV_00156
+           0         158 ..//Stress/iasp91_dsm.48710.G0_PSV_00157
+           0         159 ..//Stress/iasp91_dsm.48710.G0_PSV_00158
+           0         160 ..//Stress/iasp91_dsm.48710.G0_PSV_00159
+           0         161 ..//Stress/iasp91_dsm.48710.G0_PSV_00160
+           0         162 ..//Stress/iasp91_dsm.48710.G0_PSV_00161
+           0         163 ..//Stress/iasp91_dsm.48710.G0_PSV_00162
+           0         164 ..//Stress/iasp91_dsm.48710.G0_PSV_00163
+           0         165 ..//Stress/iasp91_dsm.48710.G0_PSV_00164
+           0         166 ..//Stress/iasp91_dsm.48710.G0_PSV_00165
+           0         167 ..//Stress/iasp91_dsm.48710.G0_PSV_00166
+           0         168 ..//Stress/iasp91_dsm.48710.G0_PSV_00167
+           0         169 ..//Stress/iasp91_dsm.48710.G0_PSV_00168
+           0         170 ..//Stress/iasp91_dsm.48710.G0_PSV_00169
+           0         171 ..//Stress/iasp91_dsm.48710.G0_PSV_00170
+           0         172 ..//Stress/iasp91_dsm.48710.G0_PSV_00171
+           0         173 ..//Stress/iasp91_dsm.48710.G0_PSV_00172
+           0         174 ..//Stress/iasp91_dsm.48710.G0_PSV_00173
+           0         175 ..//Stress/iasp91_dsm.48710.G0_PSV_00174
+           0         176 ..//Stress/iasp91_dsm.48710.G0_PSV_00175
+           0         177 ..//Stress/iasp91_dsm.48710.G0_PSV_00176
+           0         178 ..//Stress/iasp91_dsm.48710.G0_PSV_00177
+           0         179 ..//Stress/iasp91_dsm.48710.G0_PSV_00178
+           0         180 ..//Stress/iasp91_dsm.48710.G0_PSV_00179
+           0         181 ..//Stress/iasp91_dsm.48710.G0_PSV_00180
+           0         182 ..//Stress/iasp91_dsm.48710.G0_PSV_00181
+           0         183 ..//Stress/iasp91_dsm.48710.G0_PSV_00182
+           0         184 ..//Stress/iasp91_dsm.48710.G0_PSV_00183
+           0         185 ..//Stress/iasp91_dsm.48710.G0_PSV_00184
+           0         186 ..//Stress/iasp91_dsm.48710.G0_PSV_00185
+           0         187 ..//Stress/iasp91_dsm.48710.G0_PSV_00186
+           0         188 ..//Stress/iasp91_dsm.48710.G0_PSV_00187
+           0         189 ..//Stress/iasp91_dsm.48710.G0_PSV_00188
+           0         190 ..//Stress/iasp91_dsm.48710.G0_PSV_00189
+           0         191 ..//Stress/iasp91_dsm.48710.G0_PSV_00190
+           0         192 ..//Stress/iasp91_dsm.48710.G0_PSV_00191
+           0         193 ..//Stress/iasp91_dsm.48710.G0_PSV_00192
+           0         194 ..//Stress/iasp91_dsm.48710.G0_PSV_00193
+           0         195 ..//Stress/iasp91_dsm.48710.G0_PSV_00194
+           0         196 ..//Stress/iasp91_dsm.48710.G0_PSV_00195
+           0         197 ..//Stress/iasp91_dsm.48710.G0_PSV_00196
+           0         198 ..//Stress/iasp91_dsm.48710.G0_PSV_00197
+           0         199 ..//Stress/iasp91_dsm.48710.G0_PSV_00198
+           0         200 ..//Stress/iasp91_dsm.48710.G0_PSV_00199
+           0         201 ..//Stress/iasp91_dsm.48710.G0_PSV_00200
+           0         202 ..//Stress/iasp91_dsm.48710.G0_PSV_00201
+           0         203 ..//Stress/iasp91_dsm.48710.G0_PSV_00202
+           0         204 ..//Stress/iasp91_dsm.48710.G0_PSV_00203
+           0         205 ..//Stress/iasp91_dsm.48710.G0_PSV_00204
+           0         206 ..//Stress/iasp91_dsm.48710.G0_PSV_00205
+           0         207 ..//Stress/iasp91_dsm.48710.G0_PSV_00206
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6206.00000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6270.93544379898     
+           2   6268.00000000000     
+           1   6265.06455620102     
+           2   6259.50000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6239.75000000000     
+           2   6232.38514620453     
+           1   6228.50000000000     
+           2   6224.61485379546     
+           2   6202.11485379546     
+           1   6183.50000000000     
+           2   6179.61485379546     
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6133.59009746969     
+           2   6131.00000000000     
+           1   6251.00000000000     
+           2   6247.11485379546     
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6172.25000000000     
+           1   6161.00000000000     
+           2   6161.00000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6143.40990253031     
+           2   6138.50000000000     
+           1   6217.25000000000     
+           2   6209.88514620453     
+ PROFONDEURS TRAITEES PAR MYRANK
+           2   6164.88514620454     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6351.00000000000     
+           2   6349.70495126515     
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6333.06455620102     
+           1   6339.75000000000     
+           2   6337.29504873484     
+           2   6327.50000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6359.27326835354     
+           2   6356.00000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6347.25000000000     
+           2   6344.79504873484     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6371.00000000000     
+           2   6369.27326835354     
+           3   6366.00000000000     
+           1   6362.72673164646     
+           2   6361.00000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6282.06455620102     
+           2   6276.50000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6316.06455620102     
+           2   6310.50000000000     
+           1   6352.72673164646     
+           2   6351.00000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6287.93544379898     
+           2   6285.00000000000     
+           1   6321.93544379898     
+           2   6319.00000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6343.50000000000     
+           2   6342.20495126515     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6336.00000000000     
+           2   6336.00000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6299.06455620102     
+           2   6293.50000000000     
+           1   6304.93544379898     
+           2   6302.00000000000     
+           1   6148.59009746969     
+           2   6146.00000000000     
+           1   6194.75000000000     
+           2   6187.38514620454     
+           1   6158.40990253031     
+           2   6153.50000000000     
+           1   6253.93544379898     
+           2   6251.00000000000     
+ myrank :          13 .//out//Disp_00028
+ myrank :          29 .//out//Disp_00060
+ myrank :          25 .//out//Disp_00052
+ myrank :          14 .//out//Disp_00030
+ myrank :          22 .//out//Disp_00046
+ myrank :          21 .//out//Disp_00044
+ myrank :           9 .//out//Disp_00020
+ myrank :          15 .//out//Disp_00032
+ myrank :          20 .//out//Disp_00042
+ myrank :           0 .//out//Disp_00001
+ myrank :          31 .//out//Disp_00064
+ myrank :          10 .//out//Disp_00022
+ myrank :          19 .//out//Disp_00040
+ myrank :          12 .//out//Disp_00026
+ myrank :          27 .//out//Disp_00056
+ myrank :          23 .//out//Disp_00048
+ myrank :           1 .//out//Disp_00004
+ myrank :          11 .//out//Disp_00024
+ myrank :          26 .//out//Disp_00054
+ myrank :           5 .//out//Disp_00012
+ myrank :          30 .//out//Disp_00062
+ myrank :           3 .//out//Disp_00008
+ myrank :           7 .//out//Disp_00016
+ myrank :          28 .//out//Disp_00058
+ myrank :           8 .//out//Disp_00018
+ myrank :           4 .//out//Disp_00010
+ myrank :          16 .//out//Disp_00034
+ myrank :          17 .//out//Disp_00036
+ myrank :           6 .//out//Disp_00014
+ myrank :          18 .//out//Disp_00038
+ myrank :           2 .//out//Disp_00006
+ myrank :          24 .//out//Disp_00050
+ myrank :          10 .//out//Disp_00023
+ myrank :          22 .//out//Disp_00047
+ myrank :           7 .//out//Disp_00017
+ myrank :          21 .//out//Disp_00045
+ myrank :          25 .//out//Disp_00053
+ myrank :          27 .//out//Disp_00057
+ myrank :          13 .//out//Disp_00029
+ myrank :          28 .//out//Disp_00059
+ myrank :           1 .//out//Disp_00005
+ myrank :           2 .//out//Disp_00007
+ myrank :          11 .//out//Disp_00025
+ myrank :           4 .//out//Disp_00011
+ myrank :          26 .//out//Disp_00055
+ myrank :           8 .//out//Disp_00019
+ myrank :          23 .//out//Disp_00049
+ myrank :          12 .//out//Disp_00027
+ myrank :           9 .//out//Disp_00021
+ myrank :           5 .//out//Disp_00013
+ myrank :          14 .//out//Disp_00031
+ myrank :          31 .//out//Disp_00065
+ myrank :          30 .//out//Disp_00063
+ myrank :          20 .//out//Disp_00043
+ myrank :          19 .//out//Disp_00041
+ myrank :           3 .//out//Disp_00009
+ myrank :          16 .//out//Disp_00035
+ myrank :          15 .//out//Disp_00033
+ myrank :           0 .//out//Disp_00002
+ myrank :          29 .//out//Disp_00061
+ myrank :           6 .//out//Disp_00015
+ myrank :          18 .//out//Disp_00039
+ myrank :          17 .//out//Disp_00037
+ myrank :          24 .//out//Disp_00051
+ myrank :           0 .//out//Disp_00003
+ how many processor do i successfully apply:          32
+    PROCESS VERTICAL FACE :          65
+ **********************************
+ SOURCE :  0.000000000000000E+000  0.000000000000000E+000
+ **********************************
+          14 1
+          21 1
+           8 1
+          10 1
+          11 1
+          15 1
+           1 1
+           3 1
+           4 1
+           5 1
+           6 1
+          12 1
+           9 1
+           2 1
+          13 1
+           7 1
+           0 1
+          27 1
+          28 1
+          30 1
+          31 1
+          16 1
+          18 1
+          22 1
+          23 1
+          26 1
+          29 1
+          17 1
+          19 1
+          25 1
+          20 1
+          24 1
+ **********************************
+ 
+ SOURCE :  0.000000000000000E+000  0.000000000000000E+000
+ 
+ **********************************
+ myrank  ista :           0           1           4
+ myrank  ista :          16          65          68
+ myrank  ista :           1           5           8
+ myrank  ista :          17          69          72
+ myrank  ista :           2           9          12
+ myrank  ista :          18          73          76
+ myrank  ista :           3          13          16
+ myrank  ista :          19          77          80
+ myrank  ista :           4          17          20
+ myrank  ista :          20          81          84
+ myrank  ista :           5          21          24
+ myrank  ista :          21          85          88
+ myrank  ista :           6          25          28
+ myrank  ista :          22          89          92
+ myrank  ista :           7          29          32
+ myrank  ista :          23          93          96
+ myrank  ista :           8          33          36
+ myrank  ista :          24          97         100
+ myrank  ista :           9          37          40
+ myrank  ista :          25         101         103
+ myrank  ista :          10          41          44
+ myrank  ista :          26         104         106
+ myrank  ista :          11          45          48
+ myrank  ista :          27         107         109
+ myrank  ista :          12          49          52
+ myrank  ista :          28         110         112
+ myrank  ista :          13          53          56
+ myrank  ista :          29         113         115
+ myrank  ista :          14          57          60
+ myrank  ista :          30         116         118
+ myrank  ista :          15          61          64
+ myrank  ista :          31         119         121
+           0           1 ..//Stress/iasp91_dsm.48710.G0_PSV_00000
+           0           2 ..//Stress/iasp91_dsm.48710.G0_PSV_00001
+           0           3 ..//Stress/iasp91_dsm.48710.G0_PSV_00002
+           0           4 ..//Stress/iasp91_dsm.48710.G0_PSV_00003
+           0           5 ..//Stress/iasp91_dsm.48710.G0_PSV_00004
+           0           6 ..//Stress/iasp91_dsm.48710.G0_PSV_00005
+           0           7 ..//Stress/iasp91_dsm.48710.G0_PSV_00006
+           0           8 ..//Stress/iasp91_dsm.48710.G0_PSV_00007
+           0           9 ..//Stress/iasp91_dsm.48710.G0_PSV_00008
+           0          10 ..//Stress/iasp91_dsm.48710.G0_PSV_00009
+           0          11 ..//Stress/iasp91_dsm.48710.G0_PSV_00010
+           0          12 ..//Stress/iasp91_dsm.48710.G0_PSV_00011
+           0          13 ..//Stress/iasp91_dsm.48710.G0_PSV_00012
+           0          14 ..//Stress/iasp91_dsm.48710.G0_PSV_00013
+           0          15 ..//Stress/iasp91_dsm.48710.G0_PSV_00014
+           0          16 ..//Stress/iasp91_dsm.48710.G0_PSV_00015
+           0          17 ..//Stress/iasp91_dsm.48710.G0_PSV_00016
+           0          18 ..//Stress/iasp91_dsm.48710.G0_PSV_00017
+           0          19 ..//Stress/iasp91_dsm.48710.G0_PSV_00018
+           0          20 ..//Stress/iasp91_dsm.48710.G0_PSV_00019
+           0          21 ..//Stress/iasp91_dsm.48710.G0_PSV_00020
+           0          22 ..//Stress/iasp91_dsm.48710.G0_PSV_00021
+           0          23 ..//Stress/iasp91_dsm.48710.G0_PSV_00022
+           0          24 ..//Stress/iasp91_dsm.48710.G0_PSV_00023
+           0          25 ..//Stress/iasp91_dsm.48710.G0_PSV_00024
+           0          26 ..//Stress/iasp91_dsm.48710.G0_PSV_00025
+           0          27 ..//Stress/iasp91_dsm.48710.G0_PSV_00026
+           0          28 ..//Stress/iasp91_dsm.48710.G0_PSV_00027
+           0          29 ..//Stress/iasp91_dsm.48710.G0_PSV_00028
+           0          30 ..//Stress/iasp91_dsm.48710.G0_PSV_00029
+           0          31 ..//Stress/iasp91_dsm.48710.G0_PSV_00030
+           0          32 ..//Stress/iasp91_dsm.48710.G0_PSV_00031
+           0          33 ..//Stress/iasp91_dsm.48710.G0_PSV_00032
+           0          34 ..//Stress/iasp91_dsm.48710.G0_PSV_00033
+           0          35 ..//Stress/iasp91_dsm.48710.G0_PSV_00034
+           0          36 ..//Stress/iasp91_dsm.48710.G0_PSV_00035
+           0          37 ..//Stress/iasp91_dsm.48710.G0_PSV_00036
+           0          38 ..//Stress/iasp91_dsm.48710.G0_PSV_00037
+           0          39 ..//Stress/iasp91_dsm.48710.G0_PSV_00038
+           0          40 ..//Stress/iasp91_dsm.48710.G0_PSV_00039
+           0          41 ..//Stress/iasp91_dsm.48710.G0_PSV_00040
+           0          42 ..//Stress/iasp91_dsm.48710.G0_PSV_00041
+           0          43 ..//Stress/iasp91_dsm.48710.G0_PSV_00042
+           0          44 ..//Stress/iasp91_dsm.48710.G0_PSV_00043
+           0          45 ..//Stress/iasp91_dsm.48710.G0_PSV_00044
+           0          46 ..//Stress/iasp91_dsm.48710.G0_PSV_00045
+           0          47 ..//Stress/iasp91_dsm.48710.G0_PSV_00046
+           0          48 ..//Stress/iasp91_dsm.48710.G0_PSV_00047
+           0          49 ..//Stress/iasp91_dsm.48710.G0_PSV_00048
+           0          50 ..//Stress/iasp91_dsm.48710.G0_PSV_00049
+           0          51 ..//Stress/iasp91_dsm.48710.G0_PSV_00050
+           0          52 ..//Stress/iasp91_dsm.48710.G0_PSV_00051
+           0          53 ..//Stress/iasp91_dsm.48710.G0_PSV_00052
+           0          54 ..//Stress/iasp91_dsm.48710.G0_PSV_00053
+           0          55 ..//Stress/iasp91_dsm.48710.G0_PSV_00054
+           0          56 ..//Stress/iasp91_dsm.48710.G0_PSV_00055
+           0          57 ..//Stress/iasp91_dsm.48710.G0_PSV_00056
+           0          58 ..//Stress/iasp91_dsm.48710.G0_PSV_00057
+           0          59 ..//Stress/iasp91_dsm.48710.G0_PSV_00058
+           0          60 ..//Stress/iasp91_dsm.48710.G0_PSV_00059
+           0          61 ..//Stress/iasp91_dsm.48710.G0_PSV_00060
+           0          62 ..//Stress/iasp91_dsm.48710.G0_PSV_00061
+           0          63 ..//Stress/iasp91_dsm.48710.G0_PSV_00062
+           0          64 ..//Stress/iasp91_dsm.48710.G0_PSV_00063
+           0          65 ..//Stress/iasp91_dsm.48710.G0_PSV_00064
+           0          66 ..//Stress/iasp91_dsm.48710.G0_PSV_00065
+           0          67 ..//Stress/iasp91_dsm.48710.G0_PSV_00066
+           0          68 ..//Stress/iasp91_dsm.48710.G0_PSV_00067
+           0          69 ..//Stress/iasp91_dsm.48710.G0_PSV_00068
+           0          70 ..//Stress/iasp91_dsm.48710.G0_PSV_00069
+           0          71 ..//Stress/iasp91_dsm.48710.G0_PSV_00070
+           0          72 ..//Stress/iasp91_dsm.48710.G0_PSV_00071
+           0          73 ..//Stress/iasp91_dsm.48710.G0_PSV_00072
+           0          74 ..//Stress/iasp91_dsm.48710.G0_PSV_00073
+           0          75 ..//Stress/iasp91_dsm.48710.G0_PSV_00074
+           0          76 ..//Stress/iasp91_dsm.48710.G0_PSV_00075
+           0          77 ..//Stress/iasp91_dsm.48710.G0_PSV_00076
+           0          78 ..//Stress/iasp91_dsm.48710.G0_PSV_00077
+           0          79 ..//Stress/iasp91_dsm.48710.G0_PSV_00078
+           0          80 ..//Stress/iasp91_dsm.48710.G0_PSV_00079
+           0          81 ..//Stress/iasp91_dsm.48710.G0_PSV_00080
+           0          82 ..//Stress/iasp91_dsm.48710.G0_PSV_00081
+           0          83 ..//Stress/iasp91_dsm.48710.G0_PSV_00082
+           0          84 ..//Stress/iasp91_dsm.48710.G0_PSV_00083
+           0          85 ..//Stress/iasp91_dsm.48710.G0_PSV_00084
+           0          86 ..//Stress/iasp91_dsm.48710.G0_PSV_00085
+           0          87 ..//Stress/iasp91_dsm.48710.G0_PSV_00086
+           0          88 ..//Stress/iasp91_dsm.48710.G0_PSV_00087
+           0          89 ..//Stress/iasp91_dsm.48710.G0_PSV_00088
+           0          90 ..//Stress/iasp91_dsm.48710.G0_PSV_00089
+           0          91 ..//Stress/iasp91_dsm.48710.G0_PSV_00090
+           0          92 ..//Stress/iasp91_dsm.48710.G0_PSV_00091
+           0          93 ..//Stress/iasp91_dsm.48710.G0_PSV_00092
+           0          94 ..//Stress/iasp91_dsm.48710.G0_PSV_00093
+           0          95 ..//Stress/iasp91_dsm.48710.G0_PSV_00094
+           0          96 ..//Stress/iasp91_dsm.48710.G0_PSV_00095
+           0          97 ..//Stress/iasp91_dsm.48710.G0_PSV_00096
+           0          98 ..//Stress/iasp91_dsm.48710.G0_PSV_00097
+           0          99 ..//Stress/iasp91_dsm.48710.G0_PSV_00098
+           0         100 ..//Stress/iasp91_dsm.48710.G0_PSV_00099
+           0         101 ..//Stress/iasp91_dsm.48710.G0_PSV_00100
+           0         102 ..//Stress/iasp91_dsm.48710.G0_PSV_00101
+           0         103 ..//Stress/iasp91_dsm.48710.G0_PSV_00102
+           0         104 ..//Stress/iasp91_dsm.48710.G0_PSV_00103
+           0         105 ..//Stress/iasp91_dsm.48710.G0_PSV_00104
+           0         106 ..//Stress/iasp91_dsm.48710.G0_PSV_00105
+           0         107 ..//Stress/iasp91_dsm.48710.G0_PSV_00106
+           0         108 ..//Stress/iasp91_dsm.48710.G0_PSV_00107
+           0         109 ..//Stress/iasp91_dsm.48710.G0_PSV_00108
+           0         110 ..//Stress/iasp91_dsm.48710.G0_PSV_00109
+           0         111 ..//Stress/iasp91_dsm.48710.G0_PSV_00110
+           0         112 ..//Stress/iasp91_dsm.48710.G0_PSV_00111
+           0         113 ..//Stress/iasp91_dsm.48710.G0_PSV_00112
+           0         114 ..//Stress/iasp91_dsm.48710.G0_PSV_00113
+           0         115 ..//Stress/iasp91_dsm.48710.G0_PSV_00114
+           0         116 ..//Stress/iasp91_dsm.48710.G0_PSV_00115
+           0         117 ..//Stress/iasp91_dsm.48710.G0_PSV_00116
+           0         118 ..//Stress/iasp91_dsm.48710.G0_PSV_00117
+           0         119 ..//Stress/iasp91_dsm.48710.G0_PSV_00118
+           0         120 ..//Stress/iasp91_dsm.48710.G0_PSV_00119
+           0         121 ..//Stress/iasp91_dsm.48710.G0_PSV_00120
+           0         122 ..//Stress/iasp91_dsm.48710.G0_PSV_00121
+           0         123 ..//Stress/iasp91_dsm.48710.G0_PSV_00122
+           0         124 ..//Stress/iasp91_dsm.48710.G0_PSV_00123
+           0         125 ..//Stress/iasp91_dsm.48710.G0_PSV_00124
+           0         126 ..//Stress/iasp91_dsm.48710.G0_PSV_00125
+           0         127 ..//Stress/iasp91_dsm.48710.G0_PSV_00126
+           0         128 ..//Stress/iasp91_dsm.48710.G0_PSV_00127
+           0         129 ..//Stress/iasp91_dsm.48710.G0_PSV_00128
+           0         130 ..//Stress/iasp91_dsm.48710.G0_PSV_00129
+           0         131 ..//Stress/iasp91_dsm.48710.G0_PSV_00130
+           0         132 ..//Stress/iasp91_dsm.48710.G0_PSV_00131
+           0         133 ..//Stress/iasp91_dsm.48710.G0_PSV_00132
+           0         134 ..//Stress/iasp91_dsm.48710.G0_PSV_00133
+           0         135 ..//Stress/iasp91_dsm.48710.G0_PSV_00134
+           0         136 ..//Stress/iasp91_dsm.48710.G0_PSV_00135
+           0         137 ..//Stress/iasp91_dsm.48710.G0_PSV_00136
+           0         138 ..//Stress/iasp91_dsm.48710.G0_PSV_00137
+           0         139 ..//Stress/iasp91_dsm.48710.G0_PSV_00138
+           0         140 ..//Stress/iasp91_dsm.48710.G0_PSV_00139
+           0         141 ..//Stress/iasp91_dsm.48710.G0_PSV_00140
+           0         142 ..//Stress/iasp91_dsm.48710.G0_PSV_00141
+           0         143 ..//Stress/iasp91_dsm.48710.G0_PSV_00142
+           0         144 ..//Stress/iasp91_dsm.48710.G0_PSV_00143
+           0         145 ..//Stress/iasp91_dsm.48710.G0_PSV_00144
+           0         146 ..//Stress/iasp91_dsm.48710.G0_PSV_00145
+           0         147 ..//Stress/iasp91_dsm.48710.G0_PSV_00146
+           0         148 ..//Stress/iasp91_dsm.48710.G0_PSV_00147
+           0         149 ..//Stress/iasp91_dsm.48710.G0_PSV_00148
+           0         150 ..//Stress/iasp91_dsm.48710.G0_PSV_00149
+           0         151 ..//Stress/iasp91_dsm.48710.G0_PSV_00150
+           0         152 ..//Stress/iasp91_dsm.48710.G0_PSV_00151
+           0         153 ..//Stress/iasp91_dsm.48710.G0_PSV_00152
+           0         154 ..//Stress/iasp91_dsm.48710.G0_PSV_00153
+           0         155 ..//Stress/iasp91_dsm.48710.G0_PSV_00154
+           0         156 ..//Stress/iasp91_dsm.48710.G0_PSV_00155
+           0         157 ..//Stress/iasp91_dsm.48710.G0_PSV_00156
+           0         158 ..//Stress/iasp91_dsm.48710.G0_PSV_00157
+           0         159 ..//Stress/iasp91_dsm.48710.G0_PSV_00158
+           0         160 ..//Stress/iasp91_dsm.48710.G0_PSV_00159
+           0         161 ..//Stress/iasp91_dsm.48710.G0_PSV_00160
+           0         162 ..//Stress/iasp91_dsm.48710.G0_PSV_00161
+           0         163 ..//Stress/iasp91_dsm.48710.G0_PSV_00162
+           0         164 ..//Stress/iasp91_dsm.48710.G0_PSV_00163
+           0         165 ..//Stress/iasp91_dsm.48710.G0_PSV_00164
+           0         166 ..//Stress/iasp91_dsm.48710.G0_PSV_00165
+           0         167 ..//Stress/iasp91_dsm.48710.G0_PSV_00166
+           0         168 ..//Stress/iasp91_dsm.48710.G0_PSV_00167
+           0         169 ..//Stress/iasp91_dsm.48710.G0_PSV_00168
+           0         170 ..//Stress/iasp91_dsm.48710.G0_PSV_00169
+           0         171 ..//Stress/iasp91_dsm.48710.G0_PSV_00170
+           0         172 ..//Stress/iasp91_dsm.48710.G0_PSV_00171
+           0         173 ..//Stress/iasp91_dsm.48710.G0_PSV_00172
+           0         174 ..//Stress/iasp91_dsm.48710.G0_PSV_00173
+           0         175 ..//Stress/iasp91_dsm.48710.G0_PSV_00174
+           0         176 ..//Stress/iasp91_dsm.48710.G0_PSV_00175
+           0         177 ..//Stress/iasp91_dsm.48710.G0_PSV_00176
+           0         178 ..//Stress/iasp91_dsm.48710.G0_PSV_00177
+           0         179 ..//Stress/iasp91_dsm.48710.G0_PSV_00178
+           0         180 ..//Stress/iasp91_dsm.48710.G0_PSV_00179
+           0         181 ..//Stress/iasp91_dsm.48710.G0_PSV_00180
+           0         182 ..//Stress/iasp91_dsm.48710.G0_PSV_00181
+           0         183 ..//Stress/iasp91_dsm.48710.G0_PSV_00182
+           0         184 ..//Stress/iasp91_dsm.48710.G0_PSV_00183
+           0         185 ..//Stress/iasp91_dsm.48710.G0_PSV_00184
+           0         186 ..//Stress/iasp91_dsm.48710.G0_PSV_00185
+           0         187 ..//Stress/iasp91_dsm.48710.G0_PSV_00186
+           0         188 ..//Stress/iasp91_dsm.48710.G0_PSV_00187
+           0         189 ..//Stress/iasp91_dsm.48710.G0_PSV_00188
+           0         190 ..//Stress/iasp91_dsm.48710.G0_PSV_00189
+           0         191 ..//Stress/iasp91_dsm.48710.G0_PSV_00190
+           0         192 ..//Stress/iasp91_dsm.48710.G0_PSV_00191
+           0         193 ..//Stress/iasp91_dsm.48710.G0_PSV_00192
+           0         194 ..//Stress/iasp91_dsm.48710.G0_PSV_00193
+           0         195 ..//Stress/iasp91_dsm.48710.G0_PSV_00194
+           0         196 ..//Stress/iasp91_dsm.48710.G0_PSV_00195
+           0         197 ..//Stress/iasp91_dsm.48710.G0_PSV_00196
+           0         198 ..//Stress/iasp91_dsm.48710.G0_PSV_00197
+           0         199 ..//Stress/iasp91_dsm.48710.G0_PSV_00198
+           0         200 ..//Stress/iasp91_dsm.48710.G0_PSV_00199
+           0         201 ..//Stress/iasp91_dsm.48710.G0_PSV_00200
+           0         202 ..//Stress/iasp91_dsm.48710.G0_PSV_00201
+           0         203 ..//Stress/iasp91_dsm.48710.G0_PSV_00202
+           0         204 ..//Stress/iasp91_dsm.48710.G0_PSV_00203
+           0         205 ..//Stress/iasp91_dsm.48710.G0_PSV_00204
+           0         206 ..//Stress/iasp91_dsm.48710.G0_PSV_00205
+           0         207 ..//Stress/iasp91_dsm.48710.G0_PSV_00206
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6251.00000000000     
+           2   6247.11485379546     
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6183.50000000000     
+           2   6179.61485379546     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6172.25000000000     
+           2   6164.88514620454     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6161.00000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6158.40990253031     
+           2   6153.50000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6148.59009746969     
+           2   6146.00000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6143.40990253031     
+           2   6138.50000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6265.06455620102     
+           2   6259.50000000000     
+           1   6253.93544379898     
+           2   6251.00000000000     
+           1   6239.75000000000     
+           2   6232.38514620453     
+           1   6228.50000000000     
+           2   6224.61485379546     
+           1   6217.25000000000     
+           2   6209.88514620453     
+           1   6206.00000000000     
+           2   6202.11485379546     
+           1   6194.75000000000     
+           2   6187.38514620454     
+           2   6161.00000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6133.59009746969     
+           2   6131.00000000000     
+           1   6371.00000000000     
+           2   6369.27326835354     
+           3   6366.00000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6336.00000000000     
+           2   6336.00000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6316.06455620102     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6304.93544379898     
+           2   6302.00000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6299.06455620102     
+           2   6293.50000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6287.93544379898     
+           2   6285.00000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6362.72673164646     
+           2   6361.00000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6359.27326835354     
+           2   6356.00000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6352.72673164646     
+           2   6351.00000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6347.25000000000     
+           2   6344.79504873484     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6343.50000000000     
+           2   6342.20495126515     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6339.75000000000     
+           2   6337.29504873484     
+           1   6321.93544379898     
+           2   6319.00000000000     
+           2   6310.50000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6282.06455620102     
+           2   6276.50000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6351.00000000000     
+           2   6349.70495126515     
+           1   6333.06455620102     
+           2   6327.50000000000     
+           1   6270.93544379898     
+           2   6268.00000000000     
+ myrank :          22 .//out//Disp_00046
+ myrank :          12 .//out//Disp_00026
+ myrank :          17 .//out//Disp_00036
+ myrank :           7 .//out//Disp_00016
+ myrank :           1 .//out//Disp_00004
+ myrank :          18 .//out//Disp_00038
+ myrank :           3 .//out//Disp_00008
+ myrank :          24 .//out//Disp_00050
+ myrank :          14 .//out//Disp_00030
+ myrank :          30 .//out//Disp_00062
+ myrank :           8 .//out//Disp_00018
+ myrank :          25 .//out//Disp_00052
+ myrank :           5 .//out//Disp_00012
+ myrank :          29 .//out//Disp_00060
+ myrank :          27 .//out//Disp_00056
+ myrank :          15 .//out//Disp_00032
+ myrank :          19 .//out//Disp_00040
+ myrank :           2 .//out//Disp_00006
+ myrank :           6 .//out//Disp_00014
+ myrank :          23 .//out//Disp_00048
+ myrank :          11 .//out//Disp_00024
+ myrank :           0 .//out//Disp_00001
+ myrank :          21 .//out//Disp_00044
+ myrank :          28 .//out//Disp_00058
+ myrank :          16 .//out//Disp_00034
+ myrank :          20 .//out//Disp_00042
+ myrank :          13 .//out//Disp_00028
+ myrank :          10 .//out//Disp_00022
+ myrank :          26 .//out//Disp_00054
+ myrank :          31 .//out//Disp_00064
+ myrank :           4 .//out//Disp_00010
+ myrank :           9 .//out//Disp_00020
+ myrank :          26 .//out//Disp_00055
+ myrank :          30 .//out//Disp_00063
+ myrank :          31 .//out//Disp_00065
+ myrank :          19 .//out//Disp_00041
+ myrank :          28 .//out//Disp_00059
+ myrank :          29 .//out//Disp_00061
+ myrank :          24 .//out//Disp_00051
+ myrank :          17 .//out//Disp_00037
+ myrank :          18 .//out//Disp_00039
+ myrank :          22 .//out//Disp_00047
+ myrank :           5 .//out//Disp_00013
+ myrank :           6 .//out//Disp_00015
+ myrank :           7 .//out//Disp_00017
+ myrank :           1 .//out//Disp_00005
+ myrank :           4 .//out//Disp_00011
+ myrank :           2 .//out//Disp_00007
+ myrank :          23 .//out//Disp_00049
+ myrank :          14 .//out//Disp_00031
+ myrank :           3 .//out//Disp_00009
+ myrank :           0 .//out//Disp_00002
+ myrank :          20 .//out//Disp_00043
+ myrank :           8 .//out//Disp_00019
+ myrank :          21 .//out//Disp_00045
+ myrank :          15 .//out//Disp_00033
+ myrank :          12 .//out//Disp_00027
+ myrank :          10 .//out//Disp_00023
+ myrank :           9 .//out//Disp_00021
+ myrank :          13 .//out//Disp_00029
+ myrank :          11 .//out//Disp_00025
+ myrank :          16 .//out//Disp_00035
+ myrank :          25 .//out//Disp_00053
+ myrank :          27 .//out//Disp_00057
+ myrank :           0 .//out//Disp_00003
+ how many processor do i successfully apply:          32
+    PROCESS VERTICAL FACE :          65
+ **********************************
+ SOURCE :  0.000000000000000E+000  0.000000000000000E+000
+ **********************************
+           9 1
+          22 1
+          24 1
+          11 1
+          25 1
+          12 1
+          26 1
+          13 1
+          29 1
+           8 1
+          30 1
+          10 1
+          31 1
+          14 1
+          27 1
+          15 1
+          21 1
+           1 1
+          17 1
+           2 1
+          18 1
+           3 1
+          28 1
+           4 1
+          19 1
+           5 1
+          23 1
+           6 1
+          16 1
+           7 1
+          20 1
+           0 1
+ **********************************
+ 
+ SOURCE :  0.000000000000000E+000  0.000000000000000E+000
+ 
+ **********************************
+ myrank  ista :           0           1           4
+ myrank  ista :          16          65          68
+ myrank  ista :           1           5           8
+ myrank  ista :           2           9          12
+ myrank  ista :          17          69          72
+ myrank  ista :           3          13          16
+ myrank  ista :          18          73          76
+ myrank  ista :           4          17          20
+ myrank  ista :          19          77          80
+ myrank  ista :           5          21          24
+ myrank  ista :          20          81          84
+ myrank  ista :           6          25          28
+ myrank  ista :          21          85          88
+ myrank  ista :           7          29          32
+ myrank  ista :          22          89          92
+ myrank  ista :           8          33          36
+ myrank  ista :          23          93          96
+ myrank  ista :           9          37          40
+ myrank  ista :          24          97         100
+ myrank  ista :          10          41          44
+ myrank  ista :          25         101         103
+ myrank  ista :          11          45          48
+ myrank  ista :          26         104         106
+ myrank  ista :          12          49          52
+ myrank  ista :          27         107         109
+ myrank  ista :          13          53          56
+ myrank  ista :          28         110         112
+ myrank  ista :          14          57          60
+ myrank  ista :          29         113         115
+ myrank  ista :          15          61          64
+ myrank  ista :          30         116         118
+ myrank  ista :          31         119         121
+           0           1 ..//Stress/iasp91_dsm.48710.G0_PSV_00000
+           0           2 ..//Stress/iasp91_dsm.48710.G0_PSV_00001
+           0           3 ..//Stress/iasp91_dsm.48710.G0_PSV_00002
+           0           4 ..//Stress/iasp91_dsm.48710.G0_PSV_00003
+           0           5 ..//Stress/iasp91_dsm.48710.G0_PSV_00004
+           0           6 ..//Stress/iasp91_dsm.48710.G0_PSV_00005
+           0           7 ..//Stress/iasp91_dsm.48710.G0_PSV_00006
+           0           8 ..//Stress/iasp91_dsm.48710.G0_PSV_00007
+           0           9 ..//Stress/iasp91_dsm.48710.G0_PSV_00008
+           0          10 ..//Stress/iasp91_dsm.48710.G0_PSV_00009
+           0          11 ..//Stress/iasp91_dsm.48710.G0_PSV_00010
+           0          12 ..//Stress/iasp91_dsm.48710.G0_PSV_00011
+           0          13 ..//Stress/iasp91_dsm.48710.G0_PSV_00012
+           0          14 ..//Stress/iasp91_dsm.48710.G0_PSV_00013
+           0          15 ..//Stress/iasp91_dsm.48710.G0_PSV_00014
+           0          16 ..//Stress/iasp91_dsm.48710.G0_PSV_00015
+           0          17 ..//Stress/iasp91_dsm.48710.G0_PSV_00016
+           0          18 ..//Stress/iasp91_dsm.48710.G0_PSV_00017
+           0          19 ..//Stress/iasp91_dsm.48710.G0_PSV_00018
+           0          20 ..//Stress/iasp91_dsm.48710.G0_PSV_00019
+           0          21 ..//Stress/iasp91_dsm.48710.G0_PSV_00020
+           0          22 ..//Stress/iasp91_dsm.48710.G0_PSV_00021
+           0          23 ..//Stress/iasp91_dsm.48710.G0_PSV_00022
+           0          24 ..//Stress/iasp91_dsm.48710.G0_PSV_00023
+           0          25 ..//Stress/iasp91_dsm.48710.G0_PSV_00024
+           0          26 ..//Stress/iasp91_dsm.48710.G0_PSV_00025
+           0          27 ..//Stress/iasp91_dsm.48710.G0_PSV_00026
+           0          28 ..//Stress/iasp91_dsm.48710.G0_PSV_00027
+           0          29 ..//Stress/iasp91_dsm.48710.G0_PSV_00028
+           0          30 ..//Stress/iasp91_dsm.48710.G0_PSV_00029
+           0          31 ..//Stress/iasp91_dsm.48710.G0_PSV_00030
+           0          32 ..//Stress/iasp91_dsm.48710.G0_PSV_00031
+           0          33 ..//Stress/iasp91_dsm.48710.G0_PSV_00032
+           0          34 ..//Stress/iasp91_dsm.48710.G0_PSV_00033
+           0          35 ..//Stress/iasp91_dsm.48710.G0_PSV_00034
+           0          36 ..//Stress/iasp91_dsm.48710.G0_PSV_00035
+           0          37 ..//Stress/iasp91_dsm.48710.G0_PSV_00036
+           0          38 ..//Stress/iasp91_dsm.48710.G0_PSV_00037
+           0          39 ..//Stress/iasp91_dsm.48710.G0_PSV_00038
+           0          40 ..//Stress/iasp91_dsm.48710.G0_PSV_00039
+           0          41 ..//Stress/iasp91_dsm.48710.G0_PSV_00040
+           0          42 ..//Stress/iasp91_dsm.48710.G0_PSV_00041
+           0          43 ..//Stress/iasp91_dsm.48710.G0_PSV_00042
+           0          44 ..//Stress/iasp91_dsm.48710.G0_PSV_00043
+           0          45 ..//Stress/iasp91_dsm.48710.G0_PSV_00044
+           0          46 ..//Stress/iasp91_dsm.48710.G0_PSV_00045
+           0          47 ..//Stress/iasp91_dsm.48710.G0_PSV_00046
+           0          48 ..//Stress/iasp91_dsm.48710.G0_PSV_00047
+           0          49 ..//Stress/iasp91_dsm.48710.G0_PSV_00048
+           0          50 ..//Stress/iasp91_dsm.48710.G0_PSV_00049
+           0          51 ..//Stress/iasp91_dsm.48710.G0_PSV_00050
+           0          52 ..//Stress/iasp91_dsm.48710.G0_PSV_00051
+           0          53 ..//Stress/iasp91_dsm.48710.G0_PSV_00052
+           0          54 ..//Stress/iasp91_dsm.48710.G0_PSV_00053
+           0          55 ..//Stress/iasp91_dsm.48710.G0_PSV_00054
+           0          56 ..//Stress/iasp91_dsm.48710.G0_PSV_00055
+           0          57 ..//Stress/iasp91_dsm.48710.G0_PSV_00056
+           0          58 ..//Stress/iasp91_dsm.48710.G0_PSV_00057
+           0          59 ..//Stress/iasp91_dsm.48710.G0_PSV_00058
+           0          60 ..//Stress/iasp91_dsm.48710.G0_PSV_00059
+           0          61 ..//Stress/iasp91_dsm.48710.G0_PSV_00060
+           0          62 ..//Stress/iasp91_dsm.48710.G0_PSV_00061
+           0          63 ..//Stress/iasp91_dsm.48710.G0_PSV_00062
+           0          64 ..//Stress/iasp91_dsm.48710.G0_PSV_00063
+           0          65 ..//Stress/iasp91_dsm.48710.G0_PSV_00064
+           0          66 ..//Stress/iasp91_dsm.48710.G0_PSV_00065
+           0          67 ..//Stress/iasp91_dsm.48710.G0_PSV_00066
+           0          68 ..//Stress/iasp91_dsm.48710.G0_PSV_00067
+           0          69 ..//Stress/iasp91_dsm.48710.G0_PSV_00068
+           0          70 ..//Stress/iasp91_dsm.48710.G0_PSV_00069
+           0          71 ..//Stress/iasp91_dsm.48710.G0_PSV_00070
+           0          72 ..//Stress/iasp91_dsm.48710.G0_PSV_00071
+           0          73 ..//Stress/iasp91_dsm.48710.G0_PSV_00072
+           0          74 ..//Stress/iasp91_dsm.48710.G0_PSV_00073
+           0          75 ..//Stress/iasp91_dsm.48710.G0_PSV_00074
+           0          76 ..//Stress/iasp91_dsm.48710.G0_PSV_00075
+           0          77 ..//Stress/iasp91_dsm.48710.G0_PSV_00076
+           0          78 ..//Stress/iasp91_dsm.48710.G0_PSV_00077
+           0          79 ..//Stress/iasp91_dsm.48710.G0_PSV_00078
+           0          80 ..//Stress/iasp91_dsm.48710.G0_PSV_00079
+           0          81 ..//Stress/iasp91_dsm.48710.G0_PSV_00080
+           0          82 ..//Stress/iasp91_dsm.48710.G0_PSV_00081
+           0          83 ..//Stress/iasp91_dsm.48710.G0_PSV_00082
+           0          84 ..//Stress/iasp91_dsm.48710.G0_PSV_00083
+           0          85 ..//Stress/iasp91_dsm.48710.G0_PSV_00084
+           0          86 ..//Stress/iasp91_dsm.48710.G0_PSV_00085
+           0          87 ..//Stress/iasp91_dsm.48710.G0_PSV_00086
+           0          88 ..//Stress/iasp91_dsm.48710.G0_PSV_00087
+           0          89 ..//Stress/iasp91_dsm.48710.G0_PSV_00088
+           0          90 ..//Stress/iasp91_dsm.48710.G0_PSV_00089
+           0          91 ..//Stress/iasp91_dsm.48710.G0_PSV_00090
+           0          92 ..//Stress/iasp91_dsm.48710.G0_PSV_00091
+           0          93 ..//Stress/iasp91_dsm.48710.G0_PSV_00092
+           0          94 ..//Stress/iasp91_dsm.48710.G0_PSV_00093
+           0          95 ..//Stress/iasp91_dsm.48710.G0_PSV_00094
+           0          96 ..//Stress/iasp91_dsm.48710.G0_PSV_00095
+           0          97 ..//Stress/iasp91_dsm.48710.G0_PSV_00096
+           0          98 ..//Stress/iasp91_dsm.48710.G0_PSV_00097
+           0          99 ..//Stress/iasp91_dsm.48710.G0_PSV_00098
+           0         100 ..//Stress/iasp91_dsm.48710.G0_PSV_00099
+           0         101 ..//Stress/iasp91_dsm.48710.G0_PSV_00100
+           0         102 ..//Stress/iasp91_dsm.48710.G0_PSV_00101
+           0         103 ..//Stress/iasp91_dsm.48710.G0_PSV_00102
+           0         104 ..//Stress/iasp91_dsm.48710.G0_PSV_00103
+           0         105 ..//Stress/iasp91_dsm.48710.G0_PSV_00104
+           0         106 ..//Stress/iasp91_dsm.48710.G0_PSV_00105
+           0         107 ..//Stress/iasp91_dsm.48710.G0_PSV_00106
+           0         108 ..//Stress/iasp91_dsm.48710.G0_PSV_00107
+           0         109 ..//Stress/iasp91_dsm.48710.G0_PSV_00108
+           0         110 ..//Stress/iasp91_dsm.48710.G0_PSV_00109
+           0         111 ..//Stress/iasp91_dsm.48710.G0_PSV_00110
+           0         112 ..//Stress/iasp91_dsm.48710.G0_PSV_00111
+           0         113 ..//Stress/iasp91_dsm.48710.G0_PSV_00112
+           0         114 ..//Stress/iasp91_dsm.48710.G0_PSV_00113
+           0         115 ..//Stress/iasp91_dsm.48710.G0_PSV_00114
+           0         116 ..//Stress/iasp91_dsm.48710.G0_PSV_00115
+           0         117 ..//Stress/iasp91_dsm.48710.G0_PSV_00116
+           0         118 ..//Stress/iasp91_dsm.48710.G0_PSV_00117
+           0         119 ..//Stress/iasp91_dsm.48710.G0_PSV_00118
+           0         120 ..//Stress/iasp91_dsm.48710.G0_PSV_00119
+           0         121 ..//Stress/iasp91_dsm.48710.G0_PSV_00120
+           0         122 ..//Stress/iasp91_dsm.48710.G0_PSV_00121
+           0         123 ..//Stress/iasp91_dsm.48710.G0_PSV_00122
+           0         124 ..//Stress/iasp91_dsm.48710.G0_PSV_00123
+           0         125 ..//Stress/iasp91_dsm.48710.G0_PSV_00124
+           0         126 ..//Stress/iasp91_dsm.48710.G0_PSV_00125
+           0         127 ..//Stress/iasp91_dsm.48710.G0_PSV_00126
+           0         128 ..//Stress/iasp91_dsm.48710.G0_PSV_00127
+           0         129 ..//Stress/iasp91_dsm.48710.G0_PSV_00128
+           0         130 ..//Stress/iasp91_dsm.48710.G0_PSV_00129
+           0         131 ..//Stress/iasp91_dsm.48710.G0_PSV_00130
+           0         132 ..//Stress/iasp91_dsm.48710.G0_PSV_00131
+           0         133 ..//Stress/iasp91_dsm.48710.G0_PSV_00132
+           0         134 ..//Stress/iasp91_dsm.48710.G0_PSV_00133
+           0         135 ..//Stress/iasp91_dsm.48710.G0_PSV_00134
+           0         136 ..//Stress/iasp91_dsm.48710.G0_PSV_00135
+           0         137 ..//Stress/iasp91_dsm.48710.G0_PSV_00136
+           0         138 ..//Stress/iasp91_dsm.48710.G0_PSV_00137
+           0         139 ..//Stress/iasp91_dsm.48710.G0_PSV_00138
+           0         140 ..//Stress/iasp91_dsm.48710.G0_PSV_00139
+           0         141 ..//Stress/iasp91_dsm.48710.G0_PSV_00140
+           0         142 ..//Stress/iasp91_dsm.48710.G0_PSV_00141
+           0         143 ..//Stress/iasp91_dsm.48710.G0_PSV_00142
+           0         144 ..//Stress/iasp91_dsm.48710.G0_PSV_00143
+           0         145 ..//Stress/iasp91_dsm.48710.G0_PSV_00144
+           0         146 ..//Stress/iasp91_dsm.48710.G0_PSV_00145
+           0         147 ..//Stress/iasp91_dsm.48710.G0_PSV_00146
+           0         148 ..//Stress/iasp91_dsm.48710.G0_PSV_00147
+           0         149 ..//Stress/iasp91_dsm.48710.G0_PSV_00148
+           0         150 ..//Stress/iasp91_dsm.48710.G0_PSV_00149
+           0         151 ..//Stress/iasp91_dsm.48710.G0_PSV_00150
+           0         152 ..//Stress/iasp91_dsm.48710.G0_PSV_00151
+           0         153 ..//Stress/iasp91_dsm.48710.G0_PSV_00152
+           0         154 ..//Stress/iasp91_dsm.48710.G0_PSV_00153
+           0         155 ..//Stress/iasp91_dsm.48710.G0_PSV_00154
+           0         156 ..//Stress/iasp91_dsm.48710.G0_PSV_00155
+           0         157 ..//Stress/iasp91_dsm.48710.G0_PSV_00156
+           0         158 ..//Stress/iasp91_dsm.48710.G0_PSV_00157
+           0         159 ..//Stress/iasp91_dsm.48710.G0_PSV_00158
+           0         160 ..//Stress/iasp91_dsm.48710.G0_PSV_00159
+           0         161 ..//Stress/iasp91_dsm.48710.G0_PSV_00160
+           0         162 ..//Stress/iasp91_dsm.48710.G0_PSV_00161
+           0         163 ..//Stress/iasp91_dsm.48710.G0_PSV_00162
+           0         164 ..//Stress/iasp91_dsm.48710.G0_PSV_00163
+           0         165 ..//Stress/iasp91_dsm.48710.G0_PSV_00164
+           0         166 ..//Stress/iasp91_dsm.48710.G0_PSV_00165
+           0         167 ..//Stress/iasp91_dsm.48710.G0_PSV_00166
+           0         168 ..//Stress/iasp91_dsm.48710.G0_PSV_00167
+           0         169 ..//Stress/iasp91_dsm.48710.G0_PSV_00168
+           0         170 ..//Stress/iasp91_dsm.48710.G0_PSV_00169
+           0         171 ..//Stress/iasp91_dsm.48710.G0_PSV_00170
+           0         172 ..//Stress/iasp91_dsm.48710.G0_PSV_00171
+           0         173 ..//Stress/iasp91_dsm.48710.G0_PSV_00172
+           0         174 ..//Stress/iasp91_dsm.48710.G0_PSV_00173
+           0         175 ..//Stress/iasp91_dsm.48710.G0_PSV_00174
+           0         176 ..//Stress/iasp91_dsm.48710.G0_PSV_00175
+           0         177 ..//Stress/iasp91_dsm.48710.G0_PSV_00176
+           0         178 ..//Stress/iasp91_dsm.48710.G0_PSV_00177
+           0         179 ..//Stress/iasp91_dsm.48710.G0_PSV_00178
+           0         180 ..//Stress/iasp91_dsm.48710.G0_PSV_00179
+           0         181 ..//Stress/iasp91_dsm.48710.G0_PSV_00180
+           0         182 ..//Stress/iasp91_dsm.48710.G0_PSV_00181
+           0         183 ..//Stress/iasp91_dsm.48710.G0_PSV_00182
+           0         184 ..//Stress/iasp91_dsm.48710.G0_PSV_00183
+           0         185 ..//Stress/iasp91_dsm.48710.G0_PSV_00184
+           0         186 ..//Stress/iasp91_dsm.48710.G0_PSV_00185
+           0         187 ..//Stress/iasp91_dsm.48710.G0_PSV_00186
+           0         188 ..//Stress/iasp91_dsm.48710.G0_PSV_00187
+           0         189 ..//Stress/iasp91_dsm.48710.G0_PSV_00188
+           0         190 ..//Stress/iasp91_dsm.48710.G0_PSV_00189
+           0         191 ..//Stress/iasp91_dsm.48710.G0_PSV_00190
+           0         192 ..//Stress/iasp91_dsm.48710.G0_PSV_00191
+           0         193 ..//Stress/iasp91_dsm.48710.G0_PSV_00192
+           0         194 ..//Stress/iasp91_dsm.48710.G0_PSV_00193
+           0         195 ..//Stress/iasp91_dsm.48710.G0_PSV_00194
+           0         196 ..//Stress/iasp91_dsm.48710.G0_PSV_00195
+           0         197 ..//Stress/iasp91_dsm.48710.G0_PSV_00196
+           0         198 ..//Stress/iasp91_dsm.48710.G0_PSV_00197
+           0         199 ..//Stress/iasp91_dsm.48710.G0_PSV_00198
+           0         200 ..//Stress/iasp91_dsm.48710.G0_PSV_00199
+           0         201 ..//Stress/iasp91_dsm.48710.G0_PSV_00200
+           0         202 ..//Stress/iasp91_dsm.48710.G0_PSV_00201
+           0         203 ..//Stress/iasp91_dsm.48710.G0_PSV_00202
+           0         204 ..//Stress/iasp91_dsm.48710.G0_PSV_00203
+           0         205 ..//Stress/iasp91_dsm.48710.G0_PSV_00204
+           0         206 ..//Stress/iasp91_dsm.48710.G0_PSV_00205
+           0         207 ..//Stress/iasp91_dsm.48710.G0_PSV_00206
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6194.75000000000     
+           2   6187.38514620454     
+           1   6172.25000000000     
+           2   6164.88514620454     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6158.40990253031     
+           2   6153.50000000000     
+           1   6143.40990253031     
+           2   6138.50000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6217.25000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6270.93544379898     
+           2   6268.00000000000     
+           1   6265.06455620102     
+           2   6259.50000000000     
+           1   6253.93544379898     
+           2   6251.00000000000     
+           1   6251.00000000000     
+           2   6247.11485379546     
+           1   6239.75000000000     
+           2   6232.38514620453     
+           1   6228.50000000000     
+           2   6224.61485379546     
+           2   6209.88514620453     
+           1   6183.50000000000     
+           2   6179.61485379546     
+           1   6161.00000000000     
+           2   6161.00000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6343.50000000000     
+           1   6339.75000000000     
+           2   6337.29504873484     
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6321.93544379898     
+           2   6319.00000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6299.06455620102     
+           2   6293.50000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6287.93544379898     
+           2   6285.00000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6282.06455620102     
+           2   6276.50000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6371.00000000000     
+           2   6369.27326835354     
+           3   6366.00000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6362.72673164646     
+           2   6361.00000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6359.27326835354     
+           2   6356.00000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6352.72673164646     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6351.00000000000     
+           2   6349.70495126515     
+           2   6342.20495126515     
+           1   6148.59009746969     
+           2   6146.00000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6336.00000000000     
+           2   6336.00000000000     
+           1   6206.00000000000     
+           2   6202.11485379546     
+           1   6333.06455620102     
+           2   6327.50000000000     
+           1   6133.59009746969     
+           1   6304.93544379898     
+           2   6302.00000000000     
+           2   6131.00000000000     
+           2   6351.00000000000     
+ PROFONDEURS TRAITEES PAR MYRANK
+           1   6347.25000000000     
+           2   6344.79504873484     
+           1   6316.06455620102     
+           2   6310.50000000000     
+ myrank :          11 .//out//Disp_00024
+ myrank :          28 .//out//Disp_00058
+ myrank :          31 .//out//Disp_00064
+ myrank :           6 .//out//Disp_00014
+ myrank :          13 .//out//Disp_00028
+ myrank :          26 .//out//Disp_00054
+ myrank :          14 .//out//Disp_00030
+ myrank :          19 .//out//Disp_00040
+ myrank :          30 .//out//Disp_00062
+ myrank :          22 .//out//Disp_00046
+ myrank :          23 .//out//Disp_00048
+ myrank :           1 .//out//Disp_00004
+ myrank :          21 .//out//Disp_00044
+ myrank :           3 .//out//Disp_00008
+ myrank :          15 .//out//Disp_00032
+ myrank :           5 .//out//Disp_00012
+ myrank :          20 .//out//Disp_00042
+ myrank :          27 .//out//Disp_00056
+ myrank :          29 .//out//Disp_00060
+ myrank :          25 .//out//Disp_00052
+ myrank :           9 .//out//Disp_00020
+ myrank :          18 .//out//Disp_00038
+ myrank :          24 .//out//Disp_00050
+ myrank :           0 .//out//Disp_00001
+ myrank :           4 .//out//Disp_00010
+ myrank :          16 .//out//Disp_00034
+ myrank :          10 .//out//Disp_00022
+ myrank :          17 .//out//Disp_00036
+ myrank :           2 .//out//Disp_00006
+ myrank :           7 .//out//Disp_00016
+ myrank :          12 .//out//Disp_00026
+ myrank :           8 .//out//Disp_00018
+ myrank :          23 .//out//Disp_00049
+ myrank :           8 .//out//Disp_00019
+ myrank :           9 .//out//Disp_00021
+ myrank :          10 .//out//Disp_00023
+ myrank :          18 .//out//Disp_00039
+ myrank :          29 .//out//Disp_00061
+ myrank :          12 .//out//Disp_00027
+ myrank :          13 .//out//Disp_00029
+ myrank :          17 .//out//Disp_00037
+ myrank :           5 .//out//Disp_00013
+ myrank :           4 .//out//Disp_00011
+ myrank :          26 .//out//Disp_00055
+ myrank :          28 .//out//Disp_00059
+ myrank :          31 .//out//Disp_00065
+ myrank :           2 .//out//Disp_00007
+ myrank :          24 .//out//Disp_00051
+ myrank :           7 .//out//Disp_00017
+ myrank :          27 .//out//Disp_00057
+ myrank :          19 .//out//Disp_00041
+ myrank :          25 .//out//Disp_00053
+ myrank :          16 .//out//Disp_00035
+ myrank :           0 .//out//Disp_00002
+ myrank :           6 .//out//Disp_00015
+ myrank :          22 .//out//Disp_00047
+ myrank :          14 .//out//Disp_00031
+ myrank :          30 .//out//Disp_00063
+ myrank :          21 .//out//Disp_00045
+ myrank :          20 .//out//Disp_00043
+ myrank :           3 .//out//Disp_00009
+ myrank :          15 .//out//Disp_00033
+ myrank :           1 .//out//Disp_00005
+ myrank :          11 .//out//Disp_00025
+ myrank :           0 .//out//Disp_00003
+    PROCESS ZMIN FACE :          65
+ **********************************
+ SOURCE :  0.000000000000000E+000  0.000000000000000E+000
+ **********************************
+ 
+    PROCESS ZMIN FACE :          65
+ 
+ 
+ **********************************
+ 
+ SOURCE :  0.000000000000000E+000  0.000000000000000E+000
+ 
+ **********************************
+ myrank  ista :           0           1         231
+ myrank  ista :           1         232         462
+ myrank  ista :           2         463         693
+ myrank  ista :           4         925        1155
+ myrank  ista :           5        1156        1386
+ myrank  ista :           6        1387        1617
+ myrank  ista :          16        3697        3927
+ myrank  ista :           7        1618        1848
+ myrank  ista :           8        1849        2079
+ myrank  ista :           9        2080        2310
+ myrank  ista :          10        2311        2541
+ myrank  ista :          11        2542        2772
+ myrank  ista :          12        2773        3003
+ myrank  ista :          13        3004        3234
+ myrank  ista :          14        3235        3465
+ myrank  ista :          15        3466        3696
+ myrank  ista :           3         694         924
+ myrank  ista :          18        4159        4389
+ myrank  ista :          19        4390        4620
+ myrank  ista :          20        4621        4851
+ myrank  ista :          21        4852        5081
+ myrank  ista :          22        5082        5311
+ myrank  ista :          25        5772        6001
+ myrank  ista :          26        6002        6231
+ myrank  ista :          29        6692        6921
+ myrank  ista :          31        7152        7381
+ myrank  ista :          17        3928        4158
+ myrank  ista :          23        5312        5541
+ myrank  ista :          24        5542        5771
+ myrank  ista :          27        6232        6461
+ myrank  ista :          28        6462        6691
+ myrank  ista :          30        6922        7151
+ np1 :        8192
+ sampling,dt :    10.0000000000000       0.100000000000000     
+ 
+ Window :           0       16000
+ time w: -0.100000000000000        1599.90000000000     
+           0        7381
+          16        7381
+           8        7381
+           2        7381
+           6        7381
+          24        7381
+          10        7381
+          26        7381
+          14        7381
+          18        7381
+           1        7381
+          22        7381
+           4        7381
+          30        7381
+           3        7381
+          17        7381
+           5        7381
+          21        7381
+           7        7381
+          25        7381
+           9        7381
+          19        7381
+          11        7381
+          20        7381
+          12        7381
+          23        7381
+          13        7381
+          27        7381
+          15        7381
+          28        7381
+ Nb sta         231 /        7381
+          29        7381
+ Istamin, istamax :           1         231
+          31        7381
+ Nb Prof           1 /            1
+ Iprof Min, Iprof Max :           1           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           0        7381
+          16        7381
+           1        7381
+           5        7381
+          13        7381
+           9        7381
+          17        7381
+           8        7381
+          21        7381
+           4        7381
+          29        7381
+          12        7381
+          25        7381
+           3        7381
+          24        7381
+           7        7381
+          28        7381
+          11        7381
+          20        7381
+          15        7381
+          19        7381
+           2        7381
+          23        7381
+           6        7381
+          27        7381
+          10        7381
+          31        7381
+          14        7381
+          18        7381
+ Nb sta         231 /        7381
+          22        7381
+ Istamin, istamax :           1         231
+          26        7381
+ Nb Prof           1 /            1
+          30        7381
+ Iprof Min, Iprof Max :           1           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+           1 /           1
+ total number of nodes: 
+   nnodes =         7936
+ total number of spectral elements:
+   nspec =         6750
+ materials:
+   num_mat =           -1
+   num_mat =           -2
+   num_mat =           -3
+   num_mat =           -4
+   num_mat =           -5
+   defined =            0 undefined =            5
+ absorbing boundaries:
+   nspec2D_xmin =          225
+   nspec2D_xmax =          225
+   nspec2D_ymin =          450
+   nspec2D_ymax =          450
+   nspec2D_bottom =          450
+   nspec2D_top =            0
+ Par_file_faults not found: assume no faults
+ node valence:
+   min =            1  max =            8
+   nsize =            8 sup_neighbour =           38
+ mesh2dual:
+   max_neighbour =           26
+ partitions: 
+   num =           32
+ 
+ Databases files in directory: OUTPUT_FILES/DATABASES_MPI/
+ finished successfully
+ 
+!!!!!!!!!!!!!!!!!!!!! SCRPITS 1 !!!!!!!!!!!!!!!!
+/ccc/scratch/cont003/gen7165/durochtc/Codes/SPECFEM3Ds/specfem3d/utils/DSM_FOR_SPECFEM3D/EXAMPLES/example_simple_small
+!!!!!!!!!!!!!!!!!!!!! SCRPITS 2 !!!!!!!!!!!!!!!!
+/ccc/scratch/cont003/gen7165/durochtc/Codes/SPECFEM3Ds/specfem3d/utils/DSM_FOR_SPECFEM3D/EXAMPLES/example_simple_small
+!!!!!!!!!!!!!!!!!!!!! SCRPITS 3 !!!!!!!!!!!!!!!!
+/ccc/scratch/cont003/gen7165/durochtc/Codes/SPECFEM3Ds/specfem3d/utils/DSM_FOR_SPECFEM3D/EXAMPLES/example_simple_small
+velocity_Z_it000025
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000050
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000075
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000100
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000125
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000150
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000175
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000200
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000225
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000250
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000275
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000300
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000325
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000350
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000375
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000400
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000425
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000450
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000475
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000500
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000525
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000550
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000575
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000600
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000625
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000650
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000675
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000700
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000725
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000750
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000775
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000800
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000825
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000850
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000875
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000900
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000925
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000950
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it000975
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001000
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001025
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001050
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001075
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001100
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001125
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001150
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001175
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001200
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001225
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001250
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001275
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001300
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001325
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001350
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001375
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001400
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001425
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001450
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001475
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001500
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001525
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001550
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001575
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001600
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001625
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001650
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001675
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001700
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001725
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001750
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001775
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001800
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001825
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001850
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001875
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001900
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001925
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001950
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it001975
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002000
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002025
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002050
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002075
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002100
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002125
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002150
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002175
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002200
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002225
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002250
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002275
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002300
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002325
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002350
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002375
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002400
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002425
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002450
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002475
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002500
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002525
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002550
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002575
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002600
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002625
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002650
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002675
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002700
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002725
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002750
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002775
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002800
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002825
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002850
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002875
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002900
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002925
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002950
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it002975
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003000
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003025
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003050
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003075
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003100
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003125
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003150
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003175
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003200
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003225
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003250
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003275
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003300
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003325
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003350
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003375
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003400
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003425
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003450
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003475
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003500
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003525
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003550
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003575
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003600
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003625
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003650
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003675
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003700
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003725
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003750
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003775
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003800
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003825
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003850
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003875
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003900
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003925
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003950
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it003975
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004000
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004025
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004050
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004075
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004100
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004125
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004150
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004175
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004200
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004225
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004250
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004275
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004300
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004325
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004350
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004375
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004400
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004425
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004450
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004475
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004500
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004525
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004550
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004575
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004600
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004625
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004650
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004675
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004700
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004725
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004750
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004775
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004800
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004825
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004850
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004875
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004900
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004925
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004950
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it004975
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005000
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005025
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005050
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005075
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005100
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005125
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005150
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005175
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005200
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005225
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005250
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005275
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005300
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005325
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005350
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005375
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005400
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005425
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005450
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005475
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005500
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005525
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005550
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005575
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005600
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005625
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005650
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005675
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005700
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005725
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005750
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005775
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005800
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005825
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005850
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005875
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005900
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005925
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005950
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it005975
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006000
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006025
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006050
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006075
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006100
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006125
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006150
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006175
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006200
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006225
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006250
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006275
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006300
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006325
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006350
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006375
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006400
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006425
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006450
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006475
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006500
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006525
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006550
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006575
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006600
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006625
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006650
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006675
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006700
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006725
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006750
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006775
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006800
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006825
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006850
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006875
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006900
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006925
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006950
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it006975
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007000
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007025
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007050
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007075
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007100
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007125
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007150
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007175
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007200
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007225
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007250
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007275
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007300
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007325
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007350
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007375
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007400
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007425
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007450
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007475
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007500
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007525
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007550
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007575
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007600
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007625
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007650
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007675
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007700
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007725
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007750
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007775
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007800
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007825
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007850
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007875
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007900
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007925
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007950
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it007975
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it008000
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it008025
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it008050
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it008075
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it008100
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it008125
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it008150
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it008175
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it008200
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it008225
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it008250
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it008275
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it008300
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it008325
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it008350
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it008375
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it008400
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it008425
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it008450
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it008475
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+velocity_Z_it008500
+ 
+ Recombining ParaView data for slices
+ 
+ 
+ opening file failed, please check your file path and run-directory.
+Can't open './DATA/Par_file'
+/ccc/scratch/cont003/gen7165/durochtc/Codes/SPECFEM3Ds/specfem3d/utils/DSM_FOR_SPECFEM3D/EXAMPLES/example_simple_small/movie/
+########## ########## ########## ########## ########## ########## ########## ##########
+Execution Sum Up
+########## ########## ########## ########## ########## ########## ########## ##########
+Jobid     : 1979576
+Jobname   : Benchmark_cdurcouple32_SPECFEM3D_DSM
+User      : durochtc
+Account   : gen7165@standard
+Limits    : time = 2:30:00 , memory/task = 4000 Mo
+Date      : submit = 30/07/2014 22:09:26 , start = 30/07/2014 22:09:42
+Execution : partition = standard , QoS = normal , Comment = (null)
+Resources : ntasks = 32 , cpus/task = 1 , ncpus = 32 , nodes = 2
+   Nodes=curie[1962,1964] CPU_IDs=0-15 Mem=64000
+ 
+Memory / step 
+--------------
+                        Resident Size (Mo)                     Virtual Size (Go)
+JobID          Max     (Node:Task)       AveTask    Max  (Node:Task)            AveTask
+-----------    ------------------------  -------    --------------------------  -------
+
+Accounting / step 
+------------------
+
+JobID          JobName             Ntasks  Ncpus Nnodes     Layout       Elapsed   Ratio      CPusage    Eff  State
+------------   ------------        ------  ----- ------     -------      -------   -----      -------    ---  -----
+1979576       Benchmark_cdurcoupl+      -     32      2           -     00:53:20     100            -      -  -
+1979576.0     xTraPSV_write_ceof_+     32     32      2      BBlock     00:00:19      .5     00:00:14   73.6  COMPLETED
+1979576.1     xTraPSV_write_ceof_+     32     32      2      BBlock     00:01:28     2.7     00:00:44   50.0  COMPLETED
+1979576.2     xTraPSV_MPI_read_ce+     32     32      2      BBlock     00:10:52    20.3     00:06:59   64.2  COMPLETED
+1979576.3     xTraPSV_MPI_read_ce+     32     32      2      BBlock     00:02:35     4.8     00:02:18   89.0  COMPLETED
+1979576.4     fft_face_vert_full       32     32      2      BBlock     00:00:15      .4     00:00:11   73.3  COMPLETED
+1979576.5     ChangeFormat             32     32      2      BBlock     00:00:21      .6     00:00:14   66.6  COMPLETED
+1979576.6     ChangeFormat_disp        32     32      2      BBlock     00:00:17      .5     00:00:14   82.3  COMPLETED
+1979576.7     xTraPSV_MPI_read_ce+     32     32      2      BBlock     00:02:29     4.6     00:01:43   69.1  COMPLETED
+1979576.8     xTraPSV_MPI_read_ce+     32     32      2      BBlock     00:04:25     8.2     00:04:10   94.3  COMPLETED
+1979576.9     fft_face_vert_full       32     32      2      BBlock     00:00:48     1.5     00:00:40   83.3  COMPLETED
+1979576.10    ChangeFormat             32     32      2      BBlock     00:00:33     1.0     00:00:21   63.6  COMPLETED
+1979576.11    ChangeFormat_disp        32     32      2      BBlock     00:00:24      .7     00:00:18   75.0  COMPLETED
+1979576.12    xTraPSV_MPI_read_ce+     32     32      2      BBlock     00:06:00    11.2     00:03:40   61.1  COMPLETED
+1979576.13    xTraPSV_MPI_read_ce+     32     32      2      BBlock     00:05:04     9.5     00:04:38   91.4  COMPLETED
+1979576.14    fft_face_vert_full       32     32      2      BBlock     00:00:30      .9     00:00:24   80.0  COMPLETED
+1979576.15    ChangeFormat             32     32      2      BBlock     00:00:33     1.0     00:00:28   84.8  COMPLETED
+1979576.16    ChangeFormat_disp        32     32      2      BBlock     00:00:34     1.0     00:00:29   85.2  COMPLETED
+1979576.17    xTraPSV_MPI_read_ce+     32     32      2      BBlock     00:02:29     4.6     00:01:59   79.8  COMPLETED
+1979576.18    xTraPSV_MPI_read_ce+     32     32      2      BBlock     00:03:05     5.7     00:03:01   97.8  COMPLETED
+1979576.19    fft_face_vert_full       32     32      2      BBlock     00:00:33     1.0     00:00:25   75.7  COMPLETED
+1979576.20    ChangeFormat             32     32      2      BBlock     00:00:33     1.0     00:00:29   87.8  COMPLETED
+1979576.21    ChangeFormat_disp        32     32      2      BBlock     00:00:34     1.0     00:00:29   85.2  COMPLETED
+1979576.22    xTraPSV_MPI_read_zm+     32     32      2      BBlock     00:02:24     4.5     00:01:38   68.0  COMPLETED
+1979576.23    xTraPSV_MPI_read_zm+     32     32      2      BBlock     00:02:14     4.1     00:01:58   88.0  COMPLETED
+1979576.24    TraFFT_MPI_face_zmi+     32     32      2      BBlock     00:01:13     2.2     00:01:02   84.9  COMPLETED
+1979576.25    ChangeFormat_zmin        32     32      2      BBlock     00:00:35     1.0     00:00:32   91.4  COMPLETED
+1979576.26    ChangeFormat_zmin_d+     32     32      2      BBlock     00:00:30      .9     00:00:24   80.0  COMPLETED
+1979576.27    xgenerate_databases      32     32      2      BBlock     00:00:04      .1            -      -  COMPLETED
+1979576.28    xread_absorbing_int+     32     32      2      BBlock     00:00:05      .1            -      -  FAILED
+1979576.29    xspecfem3D               32     32      2      BBlock     00:00:05      .1            -      -  FAILED
+########## ########## ########## ########## ########## ########## ########## ##########

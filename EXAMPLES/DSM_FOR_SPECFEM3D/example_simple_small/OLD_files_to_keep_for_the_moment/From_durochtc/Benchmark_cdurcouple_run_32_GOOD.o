@@ -1,0 +1,104 @@
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP create_input :   240.000000000000      
+ ----------!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!! SHELLS STEP1 : fin de lecture parfile_for_benchmark !!!!!!!!!!!!!!!!
+The value of CHOICE variable is 3
+!!!!!!!!!!!!!!!!!! SHELLS STEP3 : fin de lecture scrpits_specfem3D.sh !!!!!!!!!!!!!!!!
+ total number of nodes: 
+   nnodes =         7936
+ total number of spectral elements:
+   nspec =         6750
+ materials:
+   num_mat =           -1
+   num_mat =           -2
+   num_mat =           -3
+   num_mat =           -4
+   num_mat =           -5
+   defined =            0 undefined =            5
+ absorbing boundaries:
+   nspec2D_xmin =          225
+   nspec2D_xmax =          225
+   nspec2D_ymin =          450
+   nspec2D_ymax =          450
+   nspec2D_bottom =          450
+   nspec2D_top =            0
+ Par_file_faults not found: assume no faults
+ node valence:
+   min =            1  max =            8
+   nsize =            8 sup_neighbour =           38
+ mesh2dual:
+   max_neighbour =           26
+ partitions: 
+   num =           32
+ 
+ Databases files in directory: OUTPUT_FILES/DATABASES_MPI/
+ finished successfully
+ 
+!!!!!!!!!!!!!!!!!!!!! SCRPITS 1 !!!!!!!!!!!!!!!!
+/ccc/scratch/cont003/gen7165/durochtc/Codes/SPECFEM3Ds/specfem3d/utils/DSM_FOR_SPECFEM3D/EXAMPLES/example_simple_small
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+!!!!!!!!!!!!!!!!!!!!! SCRPITS 2 !!!!!!!!!!!!!!!!
+/ccc/scratch/cont003/gen7165/durochtc/Codes/SPECFEM3Ds/specfem3d/utils/DSM_FOR_SPECFEM3D/EXAMPLES/example_simple_small
+!!!!!!!!!!!!!!!!!!!!! SCRPITS 3 !!!!!!!!!!!!!!!!
+/ccc/scratch/cont003/gen7165/durochtc/Codes/SPECFEM3Ds/specfem3d/utils/DSM_FOR_SPECFEM3D/EXAMPLES/example_simple_small
+!!!!!!!!!!!!!!!!!!!!! SCRPITS 4 !!!!!!!!!!!!!!!!
+/ccc/scratch/cont003/gen7165/durochtc/Codes/SPECFEM3Ds/specfem3d/utils/DSM_FOR_SPECFEM3D/EXAMPLES/example_simple_small
+########## ########## ########## ########## ########## ########## ########## ##########
+Execution Sum Up
+########## ########## ########## ########## ########## ########## ########## ##########
+Jobid     : 1982695
+Jobname   : Benchmark_cdurcouple32_SPECFEM3D_DSM
+User      : durochtc
+Account   : gen7165@standard
+Limits    : time = 30:00 , memory/task = 4000 Mo
+Date      : submit = 31/07/2014 16:21:31 , start = 31/07/2014 16:21:53
+Execution : partition = standard , QoS = test , Comment = (null)
+Resources : ntasks = 32 , cpus/task = 1 , ncpus = 32 , nodes = 2
+   Nodes=curie[1831-1832] CPU_IDs=0-15 Mem=64000
+ 
+Memory / step 
+--------------
+                        Resident Size (Mo)                     Virtual Size (Go)
+JobID          Max     (Node:Task)       AveTask    Max  (Node:Task)            AveTask
+-----------    ------------------------  -------    --------------------------  -------
+
+Accounting / step 
+------------------
+
+JobID          JobName             Ntasks  Ncpus Nnodes     Layout       Elapsed   Ratio      CPusage    Eff  State
+------------   ------------        ------  ----- ------     -------      -------   -----      -------    ---  -----
+1982695       Benchmark_cdurcoupl+      -     32      2           -     00:05:23     100            -      -  -
+1982695.0     xgenerate_databases      32     32      2      BBlock     00:00:03      .9            -      -  COMPLETED
+1982695.1     xread_absorbing_int+     32     32      2      BBlock     00:02:23    44.2     00:02:10   90.9  COMPLETED
+1982695.2     xspecfem3D               32     32      2      BBlock     00:02:53    53.5     00:02:14   77.4  COMPLETED
+########## ########## ########## ########## ########## ########## ########## ##########
