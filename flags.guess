@@ -2,16 +2,30 @@
 
 # Attempt to guess suitable flags for the Fortran compiler.
 
+###########################################################################################################################
+###########################################################################################################################
+###########################################################################################################################
+
+# if you want to compile with OpenMP, add this to the flags listed below, depending on the compiler you use:
 #
+#   -fopenmp for GNU gfortran
+#   -openmp for Intel ifort
+#   -mp for Portland pgf90
+#   -qsmp=omp for IBM xlf
+
+###########################################################################################################################
+###########################################################################################################################
+###########################################################################################################################
+
 # You can add -DFORCE_VECTORIZATION to the options below (for all compilers, except for IBM for which the syntax is -WF,-DFORCE_VECTORIZATION )
 # to speed up the code in the fluid (acoustic) parts (only; FORCE_VECTORIZATION support for elastic parts has been discontinued in the source code).
 # This works fine if (and only if) your computer always allocates a contiguous memory block for each allocatable array;
 # this is the case for most machines and most compilers, but not all. For more details see https://github.com/geodynamics/specfem3d/issues/81 .
 # To check if that option works fine on your machine, run the code with and without it for a model containing a significant fluid layer
 # (or entirely fluid) and make sure the seismograms are identical.
-#
 
-# can add -DUSE_SERIAL_CASCADE_FOR_IOs to the compiler options to make the mesher output mesh data
+
+# you can add -DUSE_SERIAL_CASCADE_FOR_IOs to the compiler options to make the mesher output mesh data
 # to the disk for one MPI slice after the other, and to make the solver do the same thing when reading the files back from disk.
 
 # First find the "real" compiler
