@@ -66,9 +66,19 @@
   ispec_is_elastic(:) = .false.
   ispec_is_poroelastic(:) = .false.
 
-  ! prepares tomographic models if needed for elements with undefined material definitions
-  if( nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO ) then
-    call model_tomography_broadcast(myrank)
+
+  !! WANGYI test for the benchmark of hybrid DSM-SPECFEM3D coupling 
+  if (COUPLE_WITH_DSM) then 
+    if( nundefMat_ext_mesh > 6 .or. IMODEL == IMODEL_TOMO ) then ! changed by WANGYI
+      write(*,*)  'nundefMat_ext_mesh, IMODEL, IMODEL_TOMO', nundefMat_ext_mesh, IMODEL, IMODEL_TOMO ! add by WANGYI
+      call model_tomography_broadcast(myrank)
+    endif
+
+  else
+    ! prepares tomographic models if needed for elements with undefined material definitions
+    if( nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO ) then
+      call model_tomography_broadcast(myrank)
+    endif
   endif
 
   ! prepares external model values if needed
@@ -333,9 +343,17 @@
   call any_all_l( ANY(ispec_is_elastic), ELASTIC_SIMULATION )
   call any_all_l( ANY(ispec_is_poroelastic), POROELASTIC_SIMULATION )
 
-  ! deallocates tomographic arrays
-  if( nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO ) then
-     call deallocate_tomography_files()
+  !! WANGYI test for the benchmark of hybrid DSM-SPECFEM3D coupling 
+  if (COUPLE_WITH_DSM) then 
+    if( nundefMat_ext_mesh > 6 .or. IMODEL == IMODEL_TOMO ) then  ! changed by wangyi for test
+      call deallocate_tomography_files()
+    endif
+
+  else
+    ! deallocates tomographic arrays
+    if( nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO ) then
+      call deallocate_tomography_files()
+    endif
   endif
 
   end subroutine get_model

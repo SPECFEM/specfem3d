@@ -104,7 +104,20 @@
 
         read(undef_mat_prop(4,iundef),*) filename
 
-        tomo_filename = TOMOGRAPHY_PATH(1:len_trim(TOMOGRAPHY_PATH))//trim(filename)
+        !! WANGYI test for the benchmark of hybrid DSM-SPECFEM3D coupling 
+        if (COUPLE_WITH_DSM) then 
+           if ( TOMOGRAPHY_PATH(len_trim(TOMOGRAPHY_PATH):len_trim(TOMOGRAPHY_PATH)) == "/"  )then
+             tomo_filename = TOMOGRAPHY_PATH(1:len_trim(TOMOGRAPHY_PATH))//trim(filename)
+           else
+             tomo_filename = TOMOGRAPHY_PATH(1:len_trim(TOMOGRAPHY_PATH))//'/'//trim(filename)
+           endif  !add by wangyi,correct the path and filename of tomography model
+           write(*,*) 'iundef',iundef  ! add by WANGYI for test 
+           write(*,*) 'tomo_filename',tomo_filename ! add by WANGYI for test   
+
+        else
+          tomo_filename = TOMOGRAPHY_PATH(1:len_trim(TOMOGRAPHY_PATH))//trim(filename)
+
+        endif 
 
         ! opens file for reading
         open(unit=27,file=trim(tomo_filename),status='old',action='read',iostat=ier)
