@@ -1,0 +1,14 @@
+
+ 
+
+
+r Vinnik.S100.ASC_comp3.convolved_rescaled_3p.dat.sac
+SAC> qdp off
+SAC> p1
+highpass butter corner 0.00666666667 npoles 6 passes 2
+w alpha tutu
+
+
+
+
+
