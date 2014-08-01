@@ -29,7 +29,7 @@
   subroutine get_model(myrank)
 
   use generate_databases_par, only: IMODEL,nspec => NSPEC_AB,ibool,mat_ext_mesh, &
-       materials_ext_mesh,nmat_ext_mesh,undef_mat_prop,nundefMat_ext_mesh,ANISOTROPY
+       materials_ext_mesh,nmat_ext_mesh,undef_mat_prop,nundefMat_ext_mesh,ANISOTROPY,COUPLE_WITH_DSM
 
   use create_regions_mesh_ext_par
 

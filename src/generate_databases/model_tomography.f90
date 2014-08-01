@@ -80,7 +80,7 @@
 
   use constants, only: MAX_STRING_LEN
   use tomography_par
-  use generate_databases_par, only: TOMOGRAPHY_PATH,undef_mat_prop,nundefMat_ext_mesh
+  use generate_databases_par, only: TOMOGRAPHY_PATH,undef_mat_prop,nundefMat_ext_mesh,COUPLE_WITH_DSM
 
   implicit none
 
