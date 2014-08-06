@@ -62,7 +62,7 @@ cd ${BRIDGE_MSUB_PWD}
 #####################################################################################################################
 #
 ### ----- First thing to do : the home of SPECFEM3D is in parmans.in ---------
-##source params.in
+source params.in
 
 ## ------------------ INPUTS -----------------------------
 
