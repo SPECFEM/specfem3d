@@ -1,0 +1,12 @@
+Carl Tape, 27-March-2009
+
+Directions:
+(1) Copy output file directory ADJOINT_TOMO/iterate_adj/matlab/OUTPUT into INPUT
+(2) Run prepare_run.pl and check that the kernels in INPUT_KERNELS are properly linked
+(3) run.lsf
+(4) make_mesh.pl to generate the parallel batch script run_file_launch.bash
+(5) run_file_launch.bash
+(6) copy INPUT/pmax and .mesh files off cluster
+(7) off cluster, make .vtu files, then figures
+
+--------------------------

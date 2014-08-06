@@ -12,7 +12,7 @@ UTM_PROJECTION_ZONE             = 11
 SUPPRESS_UTM_PROJECTION         = .true.
 
 # number of MPI processors
-NPROC                           = 24
+NPROC                           = 32
 
 # time step parameters
 NSTEP                           = 12000
@@ -32,7 +32,8 @@ NGNOD                           = 8
 #   1d_prem,1d_socal,1d_cascadia
 # 3D models available are:
 #   aniso,external,gll,salton_trough,tomo
-MODEL                           = default
+MODEL                           = 1d_prem
+#MODEL                           = default
 
 # parameters describing the model
 APPROXIMATE_OCEAN_LOAD          = .false.
@@ -84,7 +85,7 @@ HDUR_MOVIE                      = 0.0
 SAVE_MESH_FILES                 = .true.
 
 # path to store the local database file on each node
-LOCAL_PATH                      = ../OUTPUT_FILES/DATABASES_MPI
+LOCAL_PATH                      = ./OUTPUT_FILES/DATABASES_MPI/
 
 # interval at which we output time step info and max of norm of displacement
 NTSTEP_BETWEEN_OUTPUT_INFO      = 25
@@ -118,7 +119,7 @@ PRINT_SOURCE_TIME_FUNCTION      = .false.
 
 # to couple with DSM
 COUPLE_WITH_DSM                 = .true.
-TRACTION_PATH                   = ../OUTPUT_FILES/Tractions
+TRACTION_PATH                   = ./OUTPUT_FILES/Tractions/
 
 # set to true to use GPUs
 GPU_MODE                        = .false.

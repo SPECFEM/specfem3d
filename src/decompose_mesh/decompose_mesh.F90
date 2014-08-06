@@ -1046,6 +1046,8 @@ module decompose_mesh
     allocate(my_nb_interfaces(0:ninterfaces-1),stat=ier)
     if( ier /= 0 ) stop 'error allocating array my_nb_interfaces'
 
+    if (COUPLE_WITH_DSM) open(124,file='Numglob2loc_elmn.txt')
+
     ! writes out Database file for each partition
     do ipart = 0, nparts-1
 
@@ -1159,6 +1161,8 @@ module decompose_mesh
     deallocate(CPML_to_spec,stat=ier); if( ier /= 0 ) stop 'error deallocating array CPML_to_spec'
     deallocate(CPML_regions,stat=ier); if( ier /= 0 ) stop 'error deallocating array CPML_regions'
     deallocate(is_CPML,stat=ier); if( ier /= 0 ) stop 'error deallocating array is_CPML'
+
+    if (COUPLE_WITH_DSM) close(124)
 
     print*, 'partitions: '
     print*, '  num = ',nparts

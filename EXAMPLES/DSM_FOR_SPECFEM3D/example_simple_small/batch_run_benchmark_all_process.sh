@@ -3,34 +3,17 @@
 
 #             ------------ BACTH AND SPECIFIC CLUSTER DIRECTIVES  ------ 
 
-#MSUB -r run_benchmark
-#MSUB -n 12
-#MSUB -N 1
-#MSUB -x 
-#MSUB -T 10800
+#MSUB -r Benchmark_finalcouple32_SPECFEM3D_DSM        # Nom du job  
+#MSUB -n 32
+#MSUB -N 2
+#MSUB -T 5400
 #MSUB -q standard
-#MSUB -o run_benchmark.o
-#MSUB -e run_benchmark.e 
-
-# set -x
-# cd $BRIDGE_MSUB_PWD
-
-
-#OAR -n bench_hy
-#OAR -l nodes=1,walltime=2:00:00
-#OAR -p cluster
-##OAR -q development
-#OAR -O bench_hy.%jobid%.out 
-#OAR -E bench_hy.%jobid%.err
-
-
-## Chargement des modules module load ... 
-#module load intel/13.0
-#module load openmpi/intel/1.6.3
-#module list
-#echo ${OAR_NODEFILE} 
-#CPUS=$(wc -l ${OAR_NODEFILE} | awk '{print $1}')
-#echo $CPUS
+#MSUB -e Benchmark_finalcouple_run_32.e
+#MSUB -o Benchmark_finalcouple_run_32.o
+#MSUB -A gen7165 
+      
+set -x
+cd ${BRIDGE_MSUB_PWD}
 
 
 ######################################################################################################################
@@ -77,26 +60,29 @@
 # GEOPHYSICAL JOURNAL INTERNATIONAL Volume:192 Issue:1 Pages:230-247 DOI:10.1093/gji/ggs006 Published: JAN 2013 
 #
 #####################################################################################################################
-
+#
+### ----- First thing to do : the home of SPECFEM3D is in parmans.in ---------
+##source params.in
 
 ## ------------------ INPUTS -----------------------------
-
 
 # NBPROC is declared as integer (important do not change)
 declare -i NPROC NPROC_MINUS_ONE CPUS CHOICE MIDDLE
 
 # NUMBER OF MPI PROCESSES
-NPROC=24
-CPUS=24
+NPROC=32
+CPUS=32
 
 # MPIRUN COMMAND 
-MPIRUN="mpirun"
+MPIRUN=ccc_mprun
 
 # ENTER OPTION FOR MPIRUN 
-OPTION=" -np "${NPROC}
-OPTION_SIMU=" -np "${CPUS}
-#OPTION=" -np "${CPUS}"  -machinefile "${OAR_NODEFILE}" -bysocket -bind-to-core"
-#OPTION_SIMU=" -np "${CPUS}"  -machinefile "${OAR_NODEFILE}" -bysocket -bind-to-core"
+OPTION=
+ 
+###OPTION=" -np "${NPROC}
+###OPTION_SIMU=" -np "${CPUS}
+###OPTION=" -np "${CPUS}"  -machinefile "${OAR_NODEFILE}" -bysocket -bind-to-core"
+###OPTION_SIMU=" -np "${CPUS}"  -machinefile "${OAR_NODEFILE}" -bysocket -bind-to-core"
 
 # do not change
 NPROC_MINUS_ONE="$NPROC-1"
@@ -111,14 +97,16 @@ PREFIX_MOVIE=velocity_Z_it
 IN_MOVIE=$(pwd)/OUTPUT_FILES/DATABASES_MPI/
 
 # output movie directory 
-OUT_MOVIE=$(pwd)/movie
+OUT_MOVIE=$(pwd)/movie/
 
 #------- input files creation 
 # you must write the absolute path for : xcreate_input
 # you must edit and complete : parfile_for_benchmark  
-/home/bacchus1/ywang/yang/DSM_SPECFEM_HYBRID_VECTORIZED_NEW/bin/xcreate_inputs_files<<EOF
+${HOME_SPECFEM3D}/utils/DSM_FOR_SPECFEM3D/bin/xcreate_inputs_files<<EOF
 parfile_for_benchmark
 EOF
+
+echo '!!!!!!!!!!!!!!!!!! SHELLS STEP1 : fin de lecture parfile_for_benchmark !!!!!!!!!!!!!!!!'
 
 # CHOOSE the computation type. CHOICE =1/2/3 means SH/PSV/FULL wavefield computation
 CHOICE=3
@@ -144,6 +132,7 @@ echo 'The value of CHOICE variable is' $CHOICE >  $flog_file
 # ----- load script and path --- 
 source params.in
 source $SCRIPTS/scrpits_specfem3D.sh
+echo '!!!!!!!!!!!!!!!!!! SHELLS STEP3 : fin de lecture scrpits_specfem3D.sh !!!!!!!!!!!!!!!!'
 if [ $CHOICE -eq 1 ]
  then
  source $SCRIPTS/scripts_dsm_SH.sh
@@ -225,14 +214,13 @@ echo $(date) >> $flog_file
 
 
 
-# 6 / ----------------- make movie
-echo "" >> $flog_file
-echo " MAKE movie" >> $flog_file
-echo $(date) >> $flog_file
+#### 6 / ----------------- make movie
+###echo "" >> $flog_file
+###echo " MAKE movie" >> $flog_file
+###echo $(date) >> $flog_file
+###create_movie $PREFIX_MOVIE $IN_MOVIE $OUT_MOVIE 25 8500 
 
-create_movie $PREFIX_MOVIE $IN_MOVIE $OUT_MOVIE 25 8500 
-
-# to do chane 25 and 8500
-echo $(date) >> $flog_file
+#### to do chane 25 and 8500
+###echo $(date) >> $flog_file
 
                                

@@ -1,0 +1,31 @@
+#!/bin/sh
+
+echo echo on > sac.mac
+echo readerr badfile fatal >> sac.mac
+
+for file in DATA/* ; do
+  net=`saclst knetwk f $file | awk '{print $2}'`
+  sta=`saclst kstnm f $file | awk '{print $2}'`
+  comp=`saclst kcmpnm f $file | awk '{print $2}'`
+  synt=SYN/$sta.$net.$comp.sac.*
+  echo $synt
+  if [ -e $synt ] ; then
+    echo r $file >> sac.mac
+    echo rtrend >> sac.mac
+    echo taper >> sac.mac
+    echo w over >> sac.mac
+    echo r $file $synt >> sac.mac
+    echo "setbb btime &1,b" >> sac.mac
+    echo "setbb npoints &1,npts" >> sac.mac
+    echo cuterr fillz >> sac.mac
+    echo "cut %btime n %npoints" >> sac.mac
+    echo r $synt >> sac.mac
+    echo cut off >> sac.mac
+    echo w over >> sac.mac
+  fi
+done
+echo quit >> sac.mac
+
+sac2000 sac.mac
+
+rm sac.mac

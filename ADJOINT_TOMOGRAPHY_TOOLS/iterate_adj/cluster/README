@@ -1,0 +1,95 @@
+Carl Tape and Qinya Liu
+09-Nov-2009
+
+From CIG SVN server:
+/ADJOINT_TOMO/iterate_adj/cluster/README
+
+This is designed to provide guidance for doing an inversion using event kernels
+derived from adjoint methods.  Programs are contained for the basic operations 
+needed for a tomographic inversion based on adjoint methods.  
+However, several minor adjustments need to be made for each user.
+
+Email me (carltape@fas.harvard.edu) with suggestions for improvements.
+
+Directions for user:
+
+(1) Create a working directory
+    cd /ADJOINT_TOMO/iterate_adj
+    cp -r cluster cluster_work
+
+(2) Copy slice file into topo_input/
+
+(3) Compile combine_vol_data.f90 in /topo_input/combine_vol_data/
+
+(4) Link your mesh topology files into topo/
+    For example, for slice 162, we have these files:
+      proc000162_AVS_DXelements.txt
+      proc000162_AVS_DXpoints.txt
+      proc000162_ibool.bin
+      proc000162_jacobian2D.bin
+      proc000162_jacobian.bin
+      proc000162_x.bin
+      proc000162_y.bin
+      proc000162_z.bin
+    The Jacobian is used for taking the norm of the model vectors.
+
+(5) Link your smoothing directory to smooth/kernel_smoothing
+      cd smooth
+      ln -s /---/ADJOINT_TOMO_EXTRA/kernel_smoothing_basin/smooth_sem_fun .
+
+(6) Link your kernels list
+      cd KERNELS_MODELS
+      ln -s /---/KERNELS_MODELS/kernels_run .
+
+(7) Link unsmoothed kernels into approriate directory
+      cd KERNELS_MODELS/event_kernels/kernel_m04
+      ln -s /ibrixfs1/scratch/carltape/KERNELS_MODELS/event_kernels/kernel_m04/* .
+
+(8) Link present model into appropriate directory
+      cd KERNELS_MODELS/models/m04
+      ln -s /ibrixfs1/scratch/carltape/KERNELS_MODELS/models/m04/* .
+
+-----------------
+NOTE: With mpich_gm, we needed to use the library file mpif.h.
+      With openmpi, this file is automatically present.
+      openmpi is our default and therefore no mpif.h file is present locally.
+
+-----------------
+
+OPERATION DIRECTORIES:
+sum_kernel       -- sum event kernels
+smooth           -- smooth summed kernel or model update
+smooth_all       -- setup directories for smoothing many event kernels at once
+subspace_hessian -- compute hessian for subspace method
+subspace_update  -- compute model update, after computing mu vectors in Matlab
+model_vp_vs      -- add a model update to make a new vp and vs model
+model_slice      -- nearest neighbor algorithm for grid for plotting cross sections
+
+cg_step -- compute the conjugate-gradient test model
+
+INPUT AND OUTPUT DIRECTORIES:
+topo
+topo_input
+KERNELS_MODELS/
+
+Other pertinent codes for the subspace method presently reside here:
+/ADJOINT_TOMO/iterate_adj/matlab/
+
+This is a sub-directory of the SVN package iterate_adj.
+
+-----------------
+
+See also Caltech executables in these Caltech directories:
+
+/ibrixfs1/opt/seismo-util/source/kernel_MPI/
+kernel_boun_int/
+kernel_resample/
+kernel_rotate/
+kernel_smoothing/
+kernel_smoothing_basin/
+kernel_smooth_V4.0/
+kernel_vol_int/
+sum_kernels/
+
+-----------------
+

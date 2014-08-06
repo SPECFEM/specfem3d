@@ -50,8 +50,8 @@ program create_input_files
   open(10,file='ParFileInterface')
   write(10,*) '../Tract/'
   write(10,*) '../MESH/'
-  write(10,*) '../in_out_files/DATABASES_MPI/'
-  write(10,*) '../in_out_files/Tractions/'
+  write(10,*) '../OUTPUT_FILES/DATABASES_MPI/'
+  write(10,*) '../OUTPUT_FILES/Tractions/'
   write(10,*) '1'
   close(10)
 
@@ -393,7 +393,7 @@ program create_input_files
  ZREF=0.d0
 !-------- station file (lat long)----
  open(10,file='station_for_simulation.txt')
- open(20,file='in_data_files/STATIONS_test')
+ open(20,file='DATA/STATIONS_test')
  do 
     read(10,*,end=99) lat,long
     call  Geogr2Cart(X,Y,Z,long,lat,rotation_matrix,ZREF)

@@ -52,7 +52,7 @@ program read_absorbing_interfaces
   call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ierr)
   call MPI_COMM_SIZE(MPI_COMM_WORLD,nbproc,ierr)
 
-
+  write(*,*) '!!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing 0----------!!!!!!!!!!!'
 !
 !------------------- PARAMETRES ----------------------------
   NTIMESTEP = 100
@@ -93,8 +93,7 @@ program read_absorbing_interfaces
   read(10,*) zmin
   read(10,*) lon0,lat0,azi0
   close(10)
-  
-  
+
 !----------------------- lecture des tables de correspondances ---------
 
   open(90,file=trim(meshdirectory)//'/flags_boundary.txt')  ! table de correspondance ispec2D <-> ispec
@@ -334,6 +333,8 @@ program read_absorbing_interfaces
      read(27) zstore
      close(27)
      
+     write(*,*) 'STEP 1'
+
      write(*,*) prname(1:len_trim(prname))//'inner'
      open(27,file=prname(1:len_trim(prname))//'inner',status='old',&
           action='read',form='unformatted',iostat=ier)
@@ -341,7 +342,7 @@ program read_absorbing_interfaces
      read(27) ispec_is_elastic
      close(27) 
 
-
+     write(*,*) 'STEP 2'
    
      write(*,*) prname(1:len_trim(prname))//'absorb_dsm'
      open(27,file=prname(1:len_trim(prname))//'absorb_dsm',status='old',&
@@ -359,6 +360,8 @@ program read_absorbing_interfaces
      read(27) abs_boundary_normal
      close(27)
      ! fin de lecture
+
+     write(*,*) 'STEP 3'
 
      ! ouverture du fichier traction
      !open(27,file=trname(1:len_trim(trname))//'tract.indx')
@@ -604,6 +607,7 @@ program read_absorbing_interfaces
   
   call MPI_FINALIZE(ierr)
 
+  write(*,*) '!!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing fin ----------!!!!!!!!!!!'
 
 end program read_absorbing_interfaces
 

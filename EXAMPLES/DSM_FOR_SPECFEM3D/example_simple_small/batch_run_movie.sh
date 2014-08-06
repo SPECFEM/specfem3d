@@ -4,8 +4,7 @@
 #             ------------ BACTH AND SPECIFIC CLUSTER DIRECTIVES  ------ 
 
 #MSUB -r run_benchmark
-#MSUB -n 12
-#MSUB -N 1
+#MSUB -n 24
 #MSUB -x 
 #MSUB -T 10800
 #MSUB -q standard

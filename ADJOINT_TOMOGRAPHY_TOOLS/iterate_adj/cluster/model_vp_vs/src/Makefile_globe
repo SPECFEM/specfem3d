@@ -1,0 +1,26 @@
+FFLAGS=-O3 -assume byterecl
+
+all: add_model_globe_iso  \
+		 add_model_globe_tiso \
+		 add_model_globe_tiso_cg \
+     add_model_globe_tiso_iso 
+
+add_model_globe_iso: add_model_globe_iso.f90
+	mpif90 -o add_model_globe_iso $(FFLAGS) add_model_globe_iso.f90 gll_library.f90 exit_mpi.f90
+
+add_model_globe_tiso: add_model_globe_tiso.f90
+	mpif90 -o add_model_globe_tiso $(FFLAGS) add_model_globe_tiso.f90 gll_library.f90 exit_mpi.f90
+
+add_model_globe_tiso_iso: add_model_globe_tiso_iso.f90
+	mpif90 -o add_model_globe_tiso_iso $(FFLAGS) add_model_globe_tiso_iso.f90 gll_library.f90 exit_mpi.f90
+
+add_model_globe_tiso_cg: add_model_globe_tiso_cg.f90
+	mpif90 -o add_model_globe_tiso_cg $(FFLAGS) add_model_globe_tiso_cg.f90 gll_library.f90 exit_mpi.f90
+
+
+clean:
+	rm -f add_model_globe_iso \
+      add_model_globe_tiso \
+      add_model_globe_tiso_cg \
+      add_model_globe_tiso_iso \
+      *.o *.mod

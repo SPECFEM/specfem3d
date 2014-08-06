@@ -3,14 +3,15 @@
 
 #             ------------ BACTH AND SPECIFIC CLUSTER DIRECTIVES  ------ 
 
-#MSUB -r run_benchmark
-#MSUB -n 12
-#MSUB -N 1
+#MSUB -r Benchmark_couple_SPECFEM3D_DSM        # Nom du job  
+#MSUB -n 580
+#MSUB -N 6
 #MSUB -x 
-#MSUB -T 10800
+#MSUB -T 84000
 #MSUB -q standard
-#MSUB -o run_benchmark.o
-#MSUB -e run_benchmark.e 
+#MSUB -e Benchmark_couple_run.e
+#MSUB -o Benchmark_couple_run.o
+#MSUB -A gen7165 
 
 set -x
 cd $BRIDGE_MSUB_PWD
@@ -33,7 +34,7 @@ cd $BRIDGE_MSUB_PWD
 #   2/ input file : parfile_for_benchmark
 #
 #
-#   3/ SPECFEM3D input directory : ./in_data_file
+#   3/ SPECFEM3D input directory : ./DATA
 #      containts
 #             -- Par_file
 #             -- STATIONS
@@ -68,7 +69,7 @@ cd $BRIDGE_MSUB_PWD
 declare -i NPROC NPROC_MINUS_ONE
 
 # NUMBER OF MPI PROCESSES
-NPROC=12
+NPROC=32
 
 # ENTER OPTION FOR MPIRUN 
 OPTION=
@@ -83,7 +84,7 @@ flog_file=$(pwd)/log.benchmark
 PREFIX_MOVIE=velocity_Z_it
 
 # directory where SPECFEM3D writes outputs  
-IN_MOVIE=$(pwd)/in_out_files/DATABASES_MPI/
+IN_MOVIE=$(pwd)/OUTPUT_FILES/DATABASES_MPI/
 
 # output movie directory 
 OUT_MOVIE=$(pwd)/movie
@@ -91,7 +92,7 @@ OUT_MOVIE=$(pwd)/movie
 #------- input files creation 
 # you must write the absolute path for : xcreate_input
 # you must edit and complete : parfile_for_benchmark  
-/ccc/cont003/home/gen6351/vmont/progs/DSM_FOR_SPECFEM3D/bin/xcreate_input<<EOF
+$HOME_SPECFEM3D/utils/DSM_FOR_SPECFEM3D/bin/xcreate_inputs_files<<EOF
 parfile_for_benchmark
 EOF
 

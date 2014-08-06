@@ -33,7 +33,7 @@ cd $BRIDGE_MSUB_PWD
 #   2/ input file : parfile_for_benchmark
 #
 #
-#   3/ SPECFEM3D input directory : ./in_data_file
+#   3/ SPECFEM3D input directory : ./DATA
 #      containts
 #             -- Par_file
 #             -- STATIONS
@@ -64,12 +64,12 @@ cd $BRIDGE_MSUB_PWD
 ## ------------------ INPUTS -----------------------------
 
 # DSM BINARY : (to do supprimer peut-être çà de params.in??)
-BIN_DSM=/ccc/work/cont003/gen6351/vmont/codes/DSM_FOR_SPECFEM3D/bin 
+BIN_DSM=$HOME_SPECFEM3D/utils/DSM_FOR_SPECFEM3D/bin 
 # NBPROC is declared as integer (important do not change)
 declare -i NPROC NPROC_MINUS_ONE
 
 # NUMBER OF MPI PROCESSES
-NPROC=12
+NPROC=32
 
 # ENTER OPTION FOR MPIRUN 
 OPTION=
@@ -84,7 +84,7 @@ flog_file=$(pwd)/log.benchmark
 PREFIX_MOVIE=velocity_Z_it
 
 # directory where SPECFEM3D writes outputs  
-IN_MOVIE=$(pwd)/in_out_files/DATABASES_MPI/
+IN_MOVIE=$(pwd)/OUTPUT_FILES/DATABASES_MPI/
 
 # output movie directory 
 OUT_MOVIE=$(pwd)/movie
@@ -92,7 +92,7 @@ OUT_MOVIE=$(pwd)/movie
 #------- input files creation 
 # you must write the absolute path for : xcreate_input
 # you must edit and complete : parfile_for_benchmark  
-$BIN_DSM/xcreate_input<<EOF
+$BIN_DSM/xcreate_inputs_files<<EOF
 parfile_for_benchmark
 EOF
 

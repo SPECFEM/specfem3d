@@ -515,15 +515,15 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
       theta_old = bc%rsf%theta
       call rsf_update_state(Vf_old,bc%dt,bc%rsf)
       do i=1,bc%nglob
-        Vf_new(i)=rtsafe(funcd,0.0,Vf_old(i)+5.0,1e-5,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
+        Vf_new(i)=rtsafe(funcd,0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
                          bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
       enddo
 
       ! second pass
       bc%rsf%theta = theta_old
-      call rsf_update_state(0.5e0_CUSTOM_REAL*(Vf_old + Vf_new),bc%dt,bc%rsf)
+      call rsf_update_state(0.5_CUSTOM_REAL*(Vf_old + Vf_new),bc%dt,bc%rsf)
       do i=1,bc%nglob
-        Vf_new(i)=rtsafe(funcd,0.0,Vf_old(i)+5.0,1e-5,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
+        Vf_new(i)=rtsafe(funcd,0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
                          bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
       enddo
 

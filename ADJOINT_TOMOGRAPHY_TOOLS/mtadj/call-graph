@@ -1,0 +1,105 @@
+This package is rewritten from the old version (named measure_adj), mainly
+to reflect the updated sequence of processing, 
+i.e. we now pick time windows using FLEXWIN package before
+running the measurement code, which should have eliminated the bad picks.
+I also try to take advantage of the modules in Fortran 90 and instead of
+passing everything through the subroutine arguments, passing them through
+the global variables (since we have one module dedicated for this anyways).
+
+Concerns:
+
+1. Extra manipulations to the adjoint source, such as time-domain taper
+and band-passing (interpolation not included), which are not reflected
+on evaluation of the misfit function, need to be done with care.
+I basically set time windowing to be boxcar, and let bandpassing the signal
+to be an option.
+
+2. Presumably windowing code should have been run before making the measure-
+ments, therefore, BEFORE_SHIFT may not be useful, or you could probably get
+rid of the selection process. I took out the selection criteria before_quality
+after_shift, after_quality. They may turn out to be useful at some point, and
+they are not very hard to add back.
+
+3. I am pretty clueless when it comes to how to set MIN_SIGMA_DT and MIN_SIGMA_DTAU, just to make the adjoint source stable. I am also not sure how to compute the errors for tshift_cc and dlnA, of course misfit is one factor, also the frequency content should also be taken into account.
+
+4. comparing CC with MT(or FD in general), one can set INCLUDE_ERROR = false
+
+5. right now if the measurements do not pass selection, they are discarded,
+   which may not be great if you want to resort to CC in the FD case.
+
+6. right now the dtau(f) is allowed to be within one cycle (-T/2,T/2), if
+   this is not the case, then adjoint source is erroneous.
+===================================================
+
+mtadj_sub.f90 =====
+  subroutine read_mtadj_par(par_file)
+  subroutine read_data_syn(datafile,synfile,sta,chan,net)
+  subroutine cc_fd_measure(file_prefix,tstart,tend)
+  subroutine select_cc_fd_measure(tstart, tend, use_window)
+  subroutine mt_adj_src(dt_adj_src,amp_adj_src,dt_chi,amp_chi)
+   subroutine adjust_adj_src(dt_adj_src,amp_adj_src,nlen,tstart,dt,&
+                 dt_adj_src_win,amp_adj_src_win,npts_adj,b_adj,dt_adj)
+
+mtadj_sub2.f90 ====
+  call rsac1(datafile,data,npts1,b1,dt1,NDIM,nerr)
+  call getkhv('kstnm', sta, nerr)
+  call wsac1(trim(file_prefix)//'.obs.sac',dataw,nlen,tstart,dt,nerr)
+  call compute_time_shift(synw,dataw,nlen,dt,ishift,tshift_cc,BEFORE_SHIFT)
+  call reconstruct_syn_cc(synw,nlen,dt,ishift,dlnA,synw_rc_cc)
+  call compute_cc_error(dataw,synw_rc_cc,nlen,dt,i_pmax,dlnA,sigma_tshift_cc,sigma_dlnA_cc,MIN_DT_SIGMA,MIN_DlnA_SIGMA)
+  call fft(LNPT,cdataw,FORWARD_FFT,dt)
+  call staper(nlen, NPI, NTAPER, tas, NPT, ey1, ey2)
+  call costaper(nlen, NPT, tas)
+  call boxcar(nlen, NPT, tas)
+  call reconstruct_syn_fd(csynwt,dtau_fdm,dlnA_fdm,i_right,synw_rc_fd,dt,nlen)
+  call compute_dtau_dlnA(trans_fdm,tshift_cc,dtau_fdm,dlnA_fdm,i_right)
+  call compute_mt_error(ntaper,dataw,synw,tas,dt,wtr,i_right,tshift_cc, &
+            dtau_fdm,dlnA_fdm,sigma_dtau_fdm, sigma_dlnA_fdm)
+  call compute_fd_error(npi,nlen,i_right,dtau_fdm,dlnA_fdm, &
+            sigma_dtau_fdm,sigma_dlnA_fdm)
+  call compute_veloc_from_displ(synw,nlen,dt,synw_veloc)
+  call interp_adj_src(dt_adj_src,nlen,tstart,dt, &
+            dt_adj_src_win,npts_adj,b_adj,dt_adj)
+
+
+====================================================
+
+-- NDIM used only for data, syn, dt_adj_src_all, amp_adj_src_all,
+                      dt_adj_src_win, amp_adj_src_win
+   most of other arrays actually use NPT as the dimension in accordance
+   with nlen
+
+-- fft and fftinv convention:
+   fft(nn,cdata,forward_fft,dt) outputs the true Fourier spectrum as
+                                defined in the continuos FT.
+   same as fftinv(nn,cdata,reverse_fft,dt,data) 
+           although only the first half of cdata is used, and the
+           second half mirror imaged to produce real 'data'.
+
+-- xapiir from libsac.a
+   xapiir(data,npts,'BU',trbddw,apara,iord,'bp',flo,fhi,dt,passes)
+   where trbddw,apara, flo,fhi and dt have to be double, while data is float
+
+========================================================
+
+input file:
+
+2   %kernel type, WF=0 (waveform), CC=1 (cross-corr), FD=2 (freq-dep)
+2   %taper type for FD: BC=0 (boxcar), CS=1 (cosine-taper), MT=2 (multi-taper)
+OUTPUT_MT
+OUTPUT_MT
+.false.                  % bandpass or not
+50 500                     % tshort, tlong
+40.0                      % cc time shift max (before_shift)
+2.5 0.020 0.020          % npi, wtr, wtr_mtm
+.true.                   % select window after measurement
+1                        % number of cycles in a window
+0.250 0.500 3.500        % dt_fac, err_fac, dt_max_scale
+.false.                   % include_error
+0.2   0.05               % min_dt_sigma, min_dlnA_sigma
+-1.0 1.0 10000           % b_adj,dt_adj, npts_adj
+.false.                  % bandpass adjoint src between [tstart,tend]
+   
+
+Qinya Liu
+Feb 19, 2009 

@@ -6,7 +6,7 @@ use File::Basename;
 $progname = basename($0);
 
 ### Please modify the following variables according to your own system setting ###
-$mesh2vtu = "/home/bacchus1/monteil/NewCodeSEM/SPECFEM3D/utils/Visualization/Paraview/mesh2vtu/mesh2vtu";
+$mesh2vtu = "$HOME_SPECFEM3D/utils/Visualization/Paraview/mesh2vtu/mesh2vtu";
 $REQLIBS  = "env LD_LIBRARY_PATH=/usr/local/VTK/lib/vtk-5.6/";
 #################################################################################
 

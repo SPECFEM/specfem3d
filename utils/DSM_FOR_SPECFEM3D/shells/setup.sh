@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-$BIN_DSM/xcreate_input<<EOF
+$BIN_DSM/xcreate_inputs_files<<EOF
 parfile_for_benchmark
 EOF
 

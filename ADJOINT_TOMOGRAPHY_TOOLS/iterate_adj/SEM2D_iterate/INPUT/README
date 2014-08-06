@@ -1,0 +1,14 @@
+Carl Tape, 25-Jan-2006
+
+Source and receiver files
+----------------------------
+
+Earthquake locations (SCEC)
+socal_quakes_N034.dat <--> socal_quakes_v01.dat
+socal_quakes_N025.dat (subset of the 34 list)
+
+Nearest GLL gridpoint (used in GJI 2006 simulations)
+socal_quakes_v02.dat
+socal_quakes_v02_pert_02.dat   ! 2km perturbed source
+socal_quakes_v02_pert_05.dat   ! 5km perturbed source
+

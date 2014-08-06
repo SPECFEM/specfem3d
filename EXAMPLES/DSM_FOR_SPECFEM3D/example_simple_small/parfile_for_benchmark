@@ -1,8 +1,8 @@
 #  ABSOLUTE PATH FOR EXECUTABLES
-DSM_BINARY_PATH          =  /home/bacchus1/ywang/yang/DSM_SPECFEM_HYBRID_VECTORIZED_NEW/bin/
-SPECFEM3D_BINARY_PATH    =  /home/bacchus1/ywang/yang/DSM_SPECFEM_HYBRID_VECTORIZED_NEW/SEMH/bin
-SHELL_SCRIPT_PATH        =  /home/bacchus1/ywang/yang/DSM_SPECFEM_HYBRID_VECTORIZED_NEW/shells
-
+HOME_SPECFEM3D           =  /ccc/scratch/cont003/gen7165/durochtc/Codes/SPECFEM3Ds/specfem3d
+DSM_BINARY_PATH          =  $HOME_SPECFEM3D/utils/DSM_FOR_SPECFEM3D/bin
+SPECFEM3D_BINARY_PATH    =  $HOME_SPECFEM3D/bin
+SHELL_SCRIPT_PATH        =  $HOME_SPECFEM3D/utils/DSM_FOR_SPECFEM3D/shells
 
 # DIRECTORY CONTAINED INPUTS FILES (RELATIVE PATH FORM ./)
 DSM_INPUT_DIR            = input_dsm
@@ -36,34 +36,35 @@ MRT                     = 1.d0
 MRP                     = 1.d0
 MTP                     = 1.d0
 
-# TUNNIG PARAMETER FOR PRECISION CALCULATION IN PART 2 (must be >= IFRQMAX)
-# THE HIGHER IS, MORE ACCURATE IS, BUT MORE EXPENSIVE 
-IMAX                    =  167
-
-# Ifreq_min=index of min frequeny (should be 0)
-# Ifreq_max = index of max frequency : corresponds to TLEN/10/IFRQMAX shortest period in (s) 
-IFRQMIN                 = 0
-IFRQMAX                 = 167
 
 # SAMPLING FOR OUTPUT SEISMOGRAMS (Hz)
 # SHOULD BE A MULTIPLE OF TEN (10Hz, 20Hz, 30Hz, 40 Hz,...)
 # TAKE INTO ACCUNT THAT MUST BE THE TIME STEP FOR SPECFEM3D
 SAMPLING                = 10. 
 
-# START TIME FOR OUTPUT SEISMOGRAMS
+# TEMPORAL WINDOW FOR DSM TRACTIONS AND SEISMOGRAMS 
+# SHOULD BEGIN BEFORE THE FIRST ARRIVAL AT THE CHUNK BOTTOM 
+# START TIME
 TSTART                  = 00.
-
-# END TIME FOR OUTPUT SEISMOGRAMS
+# END TIME
 TEND                    = 1600. 
 
-# GAUSSIAN FILTER MIN FREQENCY  (Hz)
+
+# BAND PASS FILTER FREQENCY  (Hz)
 FLOW                    = 0.003
 FHIGH                   = 0.09
-# ----------------------------- CHUNK --------------------------------------
 
+
+# TUNNING PARAMETER FOR PRECISION CALCULATION IN PART 2 (>1.)
+# THE HIGHER IS, MORE ACCURATE IS, BUT MORE EXPENSIVE
+ACCURACY_LEVEL         = 1.d0
+
+#
+# ----------------------------- CHUNK --------------------------------------
+#
 # CHUNK EXTENSION (degrees) 
-ANGULAR_WIDTH_XI_RAD    = 6.0
-ANGULAR_WIDTH_ETA_RAD   = 3.0
+ANGULAR_WIDTH_XI_RAD    = 6.
+ANGULAR_WIDTH_ETA_RAD   = 3.
 
 # CHUNK CENTER (degrees)
 LON_CENTER              = 60.
@@ -77,4 +78,10 @@ DEPTH_CHUNK             = 240.
 NEL_LON                 = 30
 NEL_LAT                 = 15
 NEL_DEPTH               = 15
+
+
+#------------------- MPI  PARALLELISATION -----
+#
+MPI_CPUS                  = 32
+SUB_COMM                  = 1
 

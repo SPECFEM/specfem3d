@@ -1,0 +1,8 @@
+#!/bin/bash
+
+mkdir -p OUTPUT_FILES
+rm OUTPUT_FILES/*
+date
+bsub -q short_parallel -W 30 -n 168 < go.bash
+#bsub -q sophrosyne -W 30 -n 168 -R span[ptile=8] < go.bash
+date

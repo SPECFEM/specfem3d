@@ -93,7 +93,7 @@ SHELL_DSM=/smphome/rech/ubv/rubv002/progs/shells_specfem3D_hybrid
 declare -i NPROC NPROC_MINUS_ONE
 
 # NUMBER OF MPI PROCESSES
-NPROC=12
+NPROC=32
 
 # MPI COMMAND
 MPIRUN=poe

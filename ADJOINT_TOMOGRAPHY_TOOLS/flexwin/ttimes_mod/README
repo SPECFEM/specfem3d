@@ -1,0 +1,12 @@
+The ttimes package is based on the work of Buland and Chapman  (1983) BSSA 73,
+1271-1302, and provides a convenient means of interpolating in tau-tables to
+provide a rapid computation of travel times for multiple phases at a fixed
+distance.  
+
+The current versions were expanded to meet the needs of the iasp91 (1991) and
+ak135 (1995) reference models by R. Buland with assistance from B. Kennett.
+
+The ttimes codes can be downloaded from: 
+http://rses.anu.edu.au/seismology/soft/ttsoft.html
+
+The ttimes codes are distributed under the GNU General Public License

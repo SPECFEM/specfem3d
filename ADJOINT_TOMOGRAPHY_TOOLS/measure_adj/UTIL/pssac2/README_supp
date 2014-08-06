@@ -1,0 +1,10 @@
+Additional tips (see README first):
+
+pssac2 files provided by Brian Savage as pssac2-v2.1.tar.gz (2011)
+
+1. Define $NETCDFHOME and $GMTHOME in your .bashrc file
+2. ./configure --with-netcdf=$NETCDFHOME --with-gmt=$GMTHOME
+3. make
+4. Usage: pssac2 >& pssac2_usage
+
+---------------------

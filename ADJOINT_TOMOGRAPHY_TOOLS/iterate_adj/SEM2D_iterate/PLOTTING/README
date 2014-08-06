@@ -1,0 +1,12 @@
+Carl Tape, 21-Nov-2008
+
+FIGURES -- run directory for figures
+DATA_FILES -- directory for data files generated from matlab
+              and used in plotting scripts
+
+Main script to run:
+
+plot_geometry.pl
+plot_surf_model.pl
+
+------------------------------

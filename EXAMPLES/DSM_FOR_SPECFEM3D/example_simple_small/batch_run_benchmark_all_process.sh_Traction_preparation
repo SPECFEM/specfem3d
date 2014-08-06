@@ -4,8 +4,7 @@
 #             ------------ BACTH AND SPECIFIC CLUSTER DIRECTIVES  ------ 
 
 #MSUB -r run_benchmark
-#MSUB -n 12
-#MSUB -N 1
+#MSUB -n 24
 #MSUB -x 
 #MSUB -T 10800
 #MSUB -q standard
@@ -117,7 +116,7 @@ OUT_MOVIE=$(pwd)/movie
 #------- input files creation 
 # you must write the absolute path for : xcreate_input
 # you must edit and complete : parfile_for_benchmark  
-/home/bacchus1/ywang/yang/DSM_SPECFEM_HYBRID_VECTORIZED_NEW/bin/xcreate_inputs_files<<EOF
+$HOME_SPECFEM3D/utils/DSM_FOR_SPECFEM3D/bin/xcreate_inputs_files<<EOF
 parfile_for_benchmark
 EOF
 

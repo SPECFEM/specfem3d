@@ -1,0 +1,192 @@
+\documentclass[11pt]{article}
+\usepackage{geometry}                % See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                   % ... or a4paper or a5paper or ...
+%\geometry{landscape}                % Activate for for rotated page geometry
+%\usepackage[parfill]{parskip}    % Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{epstopdf}
+\DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
+
+\title{How to use the tomography toolkit of SPECFEM3D}
+\author{The Author}
+%\date{}                                           % Activate to display a given date or no date
+
+\begin{document}
+\maketitle
+%\section{}
+%\subsection{}
+
+\section{Future plan}
+\begin{enumerate}
+\item check in the latest version of measurement code, add a flag to decide whether new or old strategy you use
+\item implement full attenuation for the reconstructed original wavefields
+\item export models or gradients on a regular grid instead of a unstructured mesh
+\item add Qinya's GUI for flexwin window selection part
+\item add Qinya's CMT source inversion package to the SOURCE\_INVERSION directory
+\item start to prepare a document for this toolkit
+\item start to think about one example for the inversion (may be a subset of dataset)
+\item start to use routine to interpolate back and forth between the SEM mesh and a regular mesh
+\item start to incorporate noise tomography in the toolkit
+\end{enumerate}
+
+
+\section{Modifications of measurement code}
+We changed the scheme about how to generate adjoint sources.
+Right now, we use synthetic seismograms with physical dispersion to construct adjoint source for banana-dougnut kernels.
+Frequency-dependent phase and amplitude anomalies are measured based on data and synthetics with full attenuation.
+Thus, we changed the measurement code to read in three traces: data, synthetics with full attenuation and synthetics with physical dispersion.
+One more forward simulation is required for each source.
+
+\begin{enumerate}
+\item adjoint sources for BD kernels: data + synthetics with physical dispersion
+\item measurements: data + synthetics with full attenuation.
+\end{enumerate}
+
+1D test to take care of full attenuation is being designed.
+
+\section{Source correction for origin time and scalar moment}
+We use a 2D grid search to make correction for origin time and scalar moment.
+Basic idea is that we perturbate synthetic seismograms by using origin time shift $\delta t_0$ and scalar moment change $\delta M_0$.
+Then calculate misfit functions (cross-correlation phase and amplitude anomalies between data and synthetics) for each pair of ($\delta t_0$, $\delta M_0$) in a 2D searching domain, select the one with minimal misfit value. Then use this origin time and scalar moment to correct
+your synthetic seismograms.
+
+\begin{enumerate}
+\item 2D grid search for origin time and scalar moment
+\item correct your synthetic seismograms using new origin time and scalar moment
+\item reprocessing your data and synthetic seismograms by using new source files.
+\end{enumerate}
+
+\section{Basic structure of adjoint toolkit}
+
+\subsection{FORWARD\_ADJOINT}
+This directory is used to launch forward and adjoint simulations, and process data, it includes:
+\begin{enumerate}
+\item XSRC\_SEM, specfem package for forward and adjoint simulations
+\item XSRC\_FLEXWIN, flexwin for window selection
+\item XSRC\_MEASURE\_ADJ, generate adjoint sources and make measurements
+\item PERL\_CENTER, processing scripts for data and synthetics
+\item xsubmit\_forward\_simulation.sh, a script used to submit forward simulations
+\item xsubmit\_adjoint\_simulation.sh, a script used to submit adjoint simulations
+\item XSHELL\_process\_dat.sh, a script used to process data and synthetics
+\end{enumerate}
+
+\subsection{ITERATION\_UPDATE}
+This directory is used to perform gradient summation, precondition, smoothing and update models, it includes:
+\begin{enumerate}
+\item X01\_SRC\_SUM\_KERNELS, sum event kernels
+\item X02\_SRC\_PRECOND\_KERNELS, precondition summed kernels
+\item X03\_SRC\_SMOOTH\_KERNELS, smooth kernels
+\item X04a\_SRC\_DIRECTION\_CG, calculate search directions using conjugate gradient method; DK DK comment from Dimitri Komatitsch: why not use BiCGStab here
+instead of a classical CG; usually it is much better than simple CG; however it seems that Yang Luo tried BiCGStab already (?) and found it less efficient than L-BFGS anyway
+\item X04b\_SRC\_DIRECTION\_SD, calculate search directions using steepest descent method
+\item X04c\_SRC\_DIRECTION\_LBFGS, calculate search directions using L-BFGS method
+\item X05\_SRC\_UPDATE\_MODELS, update model parameters based on search directions
+\end{enumerate}
+
+In Step 4 above, one should either 04a, 04b or 04c; in most cases, the best choice is 04c, which approximates the Hessian and thus 
+converges much faster.
+
+From Wikipedia http://en.wikipedia.org/wiki/Limited-memory\_BFGS, here is a brief description of L-BFGS:
+
+The ''limited-memory BFGS'' (''L-BFGS'' or ''LM-BFGS'') algorithm is a member of the broad family of quasi-Newton optimization methods that uses a limited memory variation of the Broyden-Fletcher-Goldfarb-Shanno (BFGS) update to approximate the inverse Hessian matrix (denoted by $H_k$). Unlike the original BFGS method which stores a dense $ n \times n $ approximation, L-BFGS stores only a few vectors that represent the approximation implicitly. Due to its moderate memory requirement, the L-BFGS method is particularly well suited for optimization problems with a large number of variables.  L-BFGS never explicitly forms or stores $H_k$.  Instead, it maintains a history of the past $m\,\!$ updates of the position  $x\,\!$ and gradient  $\nabla f(x)$, where generally the history  $m\,\!$ can be short, often less than 10.  These updates are used to implicitly do operations requiring the $H_k$-vector product.  While strictly, a straightforward BFGS implementation at the  $i\,\!$-th iteration would represent the inverse Hessian approximation as informed by all updates on  $0 \ldots i-1$, L-BFGS does quite well using updates from only the most recent iterations  $i-m \ldots i-1$.
+
+\subsection{MODEL\_VISUALIZATION}
+This directory is used to extract xyz files from your models or gradients, and plot them based on GMT.
+\begin{enumerate}
+\item SRC\_GEN\_XYZ\_HORIZ\_VERT, matlab scripts used to generate xyz files (matlab scripts will be transfered to fortran code soon)
+\item SRC\_MODEL\_SLICE\_HORIZ, subroutines used to extract xyz files from models for horizontal cross sections
+\item SRC\_MODEL\_SLICE\_VERT, subroutines used to extract xyz files from modes for vertical cross sections
+\end{enumerate}
+
+
+\subsection{SHARE\_FILES}
+This directory contains several common files which are used by other directories, such as FORWARD\_ADJOINT, ITERATION\_UPDATE.
+\begin{enumerate}
+\item CMTSOLUTION\_CENTER, contains all CMTSOLUTIONs
+\item EVENTID\_CENTER, contains eventid used to submit jobs
+\item HEADER\_FILES, contains header files generated by specfem package
+\item STATIONS\_CENTER, contains all station files
+\end{enumerate}
+
+
+\subsection{SOURCE\_INVERSION}
+This directory is used to perform source correction for origin time and scalar moment.
+\begin{enumerate}
+\item SRC\_GRIDSEARCH\_INITIALTIME\_MOMENT, perform 2D grid search for origin time and scalar moment
+\item SRC\_CORRECT\_INITIALTIME\_MOMENT, correct synthetics based on grid search
+\end{enumerate}
+
+\subsection{XUTIL}
+This directory contains useful scripts, such as checking scripts to check whether your jobs are finished or not.
+
+\section{Other issues}
+\subsection{name convention for data and synthetic seismograms}
+At current stage, we rename all data and synthetics by using convention such as Network.Station.Comp.sac, which are easy to manipulate.
+
+\subsection{name convention for scripts}
+We use XSHELL\_**.sh as a main shell script which will submit XPBS\_**.sh on the cluster, such as in FORWARD\_ADJOINT, we use XSHELL\_process\_data.sh to submit XPBS\_process\_dat.sh iteratively.
+
+
+\section{Suggestion by Dimitri Komatitsch, November 2012}
+
+Below is some feedback (in no particular order) from us at CNRS:
+
+- move the whole 'ADJOINT\_TOMO' set of tools to the SVN trunk of SPECFEM3D, and maintain it there instead of in an independent directory (CIG can do that for you using 'svn move', I guess you need root access to do that from one level above the different code directories); that point is very important, since having everything in the same SVN branch will be far more flexible; also considering that in 2013 or 2014 we will probably get rid of the GLOBE solver and permanently merge GLOBE into Cartesian (i.e. keep the GLOBE mesher only and just make its output compatible with the Cartesian solver); thus by then we would have everything in the same directory
+
+- about Section 1: clarify how you generate "synthetics with physical dispersion but without full attenuation; One more forward run is required for each source" because currently Par\_file contains an ATTENUATION flag that can be on or off, but on means full attenuation;
+thus not clear how the third option is implemented
+
+- change the title of the document to "How to use the tomography toolkit of SPECFEM3D" or similar
+
+- Section 2: type the comments made by Carl, Hejun and Jeroen about why source correction is that critical (there was a discussion about this yesterday, let us thus summarize it there in a few sentences);
+also clarify what you mean by "3/ reprocessing your data and synthetic seismograms is necessary": does one only need to update the SAC headers? if so, how? (is there a script for that)
+
+- section 3.2: Rename items 4, 5 and 6 to 4a, 4b and 4c and clarify that a single option should be selected; mentioned that Jeroen said that ultimately using L-BFGS is better; briefly explain why (i.e., briefly summarize the drawbacks of the first two options)
+
+- clarify somewhere if and when/why a pseudo-Hessian calculation could or should be done; explain how to use the internal flag "APPROXIMATE\_HESS\_KL" of the code
+
+- mention somewhere that Vadim and Sébastien Chevrot will commit their routines to interpolate back and forth between the SEM mesh and a regular mesh; mention that we should talk to Qinya about this, since she was in the process of implementing that as well (I think that Vadim and Sébastien's routine will be sufficient, but we should doublecheck with Qinya if she had something different (more powerful? or faster?) in mind
+
+- what about boundary kernels, as developed by Qinya a few years ago?
+we forgot to talk about this yesterday, and they are not mentioned in the document; I guess they are inactive by default, but can one use them, and if so how? and are there scripts to use for that?
+(if not, i.e. if Qinya has some local scripts that have not been committed to SVN, we should probably commit them, even if they are not very flexible yet; scripts and code that are kept outside of SVN tend to quickly vanish ; if some scripts from Qinya are available, can somebody add a few lines in the document about how to use them?
+
+- mention that Piero will update the document to explain how to use the toolkit for noise tomography
+
+- In Section 1, mention that Zhinan and I will do some 1D tests in January (using SPECFEM1D) to try to undo full attenuation in the 1D case; in the case of the structural dynamics equation Zhinan managed to do it in a stable way (i.e. he managed to undo the -C*v damping term in a stable way; and that term is not that different from memory variables with a constant Q; thus there is hope); mention that this is already in the to-do list, but less urgent/important than the rest I guess
+
+- In Section 3.3, mention that I think that it would be better to convert the Matlab scripts back to Fortran, or else use Python or similar; this way we avoid depending on a commercial package. That is probably not critical (at least for our groups), but at the same time if these scripts are simple and easy to export to Fortran, there is no reason not to do it (and the sooner the better). Mention maybe that if possible we should try to keep the whole toolkit independent of commercial packages, so that all users worldwide can use it easily
+
+- in Section 4.1, I think your convention for seismogram names : Network.Station is better than the old convention, which was Station.Network. This way it is easier to handle all the stations from a given network. Please just confirm that you swapped that purposely, i.e. that it is not a typo (if not, I would suggest we switch anyway, since that is a very good idea)
+Below is some feedback (in no particular order) from us at CNRS, which you can cut and paste in your file before uploading it to SVN.
+
+- move the whole 'ADJOINT\_TOMO' set of tools to the SVN trunk of SPECFEM3D, and maintain it there instead of in an independent directory (CIG can do that for you using 'svn move', I guess you need root access to do that from one level above the different code directories); that point is very important, since having everything in the same SVN branch will be far more flexible; also considering that in 2013 or 2014 we will probably get rid of the GLOBE solver and permanently merge GLOBE into Cartesian (i.e. keep the GLOBE mesher only and just make its output compatible with the Cartesian solver); thus by then we would have everything in the same directory
+
+- about Section 1: clarify how you generate "synthetics with physical dispersion but without full attenuation; One more forward run is required for each source" because currently Par\_file contains an ATTENUATION flag that can be on or off, but on means full attenuation;
+thus not clear how the third option is implemented
+
+- change the title of the document to "How to use the tomography toolkit of SPECFEM3D" or similar
+
+- Section 2: type the comments made by Carl, Hejun and Jeroen about why source correction is that critical (there was a discussion about this yesterday, let us thus summarize it there in a few sentences);
+also clarify what you mean by "3/ reprocessing your data and synthetic seismograms is necessary": does one only need to update the SAC headers? if so, how? (is there a script for that)
+
+- section 3.2: Rename items 4, 5 and 6 to 4a, 4b and 4c and clarify that a single option should be selected; mentioned that Jeroen said that ultimately using L-BFGS is better; briefly explain why (i.e., briefly summarize the drawbacks of the first two options)
+
+- clarify somewhere if and when/why a pseudo-Hessian calculation could or should be done; explain how to use the internal flag "APPROXIMATE\_HESS\_KL" of the code
+
+- mention somewhere that Vadim and Sébastien Chevrot will commit their routines to interpolate back and forth between the SEM mesh and a regular mesh; mention that we should talk to Qinya about this, since she was in the process of implementing that as well (I think that Vadim and Sébastien's routine will be sufficient, but we should doublecheck with Qinya if she had something different (more powerful? or faster?) in mind
+
+- what about boundary kernels, as developed by Qinya a few years ago?
+we forgot to talk about this yesterday, and they are not mentioned in the document; I guess they are inactive by default, but can one use them, and if so how? and are there scripts to use for that?
+(if not, i.e. if Qinya has some local scripts that have not been committed to SVN, we should probably commit them, even if they are not very flexible yet; scripts and code that are kept outside of SVN tend to quickly vanish ; if some scripts from Qinya are available, can somebody add a few lines in the document about how to use them?
+
+- mention that Piero will update the document to explain how to use the toolkit for noise tomography
+
+- In Section 1, mention that Zhinan and I will do some 1D tests in January (using SPECFEM1D) to try to undo full attenuation in the 1D case; in the case of the structural dynamics equation Zhinan managed to do it in a stable way (i.e. he managed to undo the -C*v damping term in a stable way; and that term is not that different from memory variables with a constant Q; thus there is hope); mention that this is already in the to-do list, but less urgent/important than the rest I guess
+
+- In Section 3.3, mention that I think that it would be better to convert the Matlab scripts back to Fortran, or else use Python or similar; this way we avoid depending on a commercial package. That is probably not critical (at least for our groups), but at the same time if these scripts are simple and easy to export to Fortran, there is no reason not to do it (and the sooner the better). Mention maybe that if possible we should try to keep the whole toolkit independent of commercial packages, so that all users worldwide can use it easily
+
+- in Section 4.1, I think your convention for seismogram names : Network.Station is better than the old convention, which was Station.Network. This way it is easier to handle all the stations from a given network. Please just confirm that you swapped that purposely, i.e. that it is not a typo (if not, I would suggest we switch anyway, since that is a very good idea)
+
+\end{document}

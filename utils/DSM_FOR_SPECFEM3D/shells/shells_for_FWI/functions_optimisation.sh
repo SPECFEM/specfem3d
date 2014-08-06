@@ -60,7 +60,7 @@ while [ "$ssiter" -le "$nssiter" ] ; do
   rm bin/derivee_cout_pas.txt
 
   # on copie la base de donnee sauvee
-  cp ./in_out_files/DATABASES_MPI_CURRENT/* ./in_out_files/DATABASES_MPI/.
+  cp ./OUTPUT_FILES/DATABASES_MPI_CURRENT/* ./OUTPUT_FILES/DATABASES_MPI/.
 
   update_model $pas 
   forward_simu ss_iter
@@ -132,10 +132,10 @@ cd ..
 function compute_adjoint_source_FWI ()
 { 
 cd bin
-cp ../in_data_files/define_adjoint_sources_for_FWI.par define_adjoint_sources.par
+cp ../DATA/define_adjoint_sources_for_FWI.par define_adjoint_sources.par
 isrc=1
 while [ "$isrc" -le "$nsrc" ]; do
-   cp ../in_data_files/data_source_${isrc}.txt .
+   cp ../DATA/data_source_${isrc}.txt .
    $HYBRID_BINNARY/xdefineadj_no_aligne
    isrc="$isrc+1"
 done

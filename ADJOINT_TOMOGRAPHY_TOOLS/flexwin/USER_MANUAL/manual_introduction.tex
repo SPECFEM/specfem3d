@@ -1,0 +1,27 @@
+\chapter{Introduction}
+
+The FLEXWIN software package automates the time-window selection problem for
+seismologists.  It operates on pairs of observed and synthetic single component
+seismograms, defining windows that cover as much of a given seismogram as
+possible, while avoiding portions of the waveform that are dominated by noise.  
+
+FLEXWIN selects time windows on the synthetic seismogram within which the waveform
+contains a distinct energy arrival, then requires an adequate correspondence
+between observed and synthetic waveforms within these windows.
+
+There is no restriction on the type of simulation used to
+generate the synthetics. Realistic Earth models and more complete wave
+propagation theories yield waveforms that are more similar to the observed
+seismograms, and thereby promote the selection of measurement windows covering
+more of the available data.  The input seismograms can be measures of
+displacement, velocity or acceleration.  There is no requirement
+for horizontal signals to be rotated into radial and transverse directions.
+
+FLEXWIN is a configurable data selection process that can be adapted to
+different tomographic scenarios by tuning a handful of parameters.  Although
+the algorithm was designed for use in 3D-3D adjoint tomography, its inherent
+flexibility should make it useful in many data-selection applications.
+
+For a detailed introduction to FLEXWIN as applied to seismic tomography, please consult \cite{MaggiEtal2009}.  If you use FLEXWIN for your own research, please cite \cite{MaggiEtal2009}.
+
+
