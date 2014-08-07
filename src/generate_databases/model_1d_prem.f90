@@ -116,7 +116,7 @@
   ! normalized radius
 
 !  r0 = R_EARTH + dble(depth)  ! add by wangyi, refer to model_1D_PREM_routine_PB
-  r=sqrt(xloc**2+yloc**2+(zloc+6120505.36002571)**2)  ! add by wangyi, refer to model_1D_PREM_routine_PB
+!  r=sqrt(xloc**2+yloc**2+(zloc+6120505.36002571)**2)  ! add by wangyi, refer to model_1D_PREM_routine_PB
   x = r / R_EARTH
 
   ! given a normalized radius x, gives the non-dimensionalized density rho,

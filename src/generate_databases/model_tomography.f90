@@ -52,6 +52,8 @@
   ! reads Vp Vs and rho from extracted text file
   call read_model_tomography(myrank)
 
+  call read_model_1D(myrank)  ! add by wangyi, read the 1D regional model for databases
+
   ! otherwise:
 
   ! only master reads in model file
@@ -72,7 +74,91 @@
 
 !
 !-------------------------------------------------------------------------------------------------
-!
+  subroutine read_model_1D(myrank)  ! add by wangyi
+
+  use generate_databases_par, only: IN_DATA_FILES_PATH,nlayer,ncoeff,vpv_1D,vsv_1D,density_1D,zlayer,ZREF,OLON,OLAT
+    implicit none
+    integer :: myrank
+    character(len=256):: filename
+    integer i
+
+    filename = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'/model_1D.in'
+    open(27,file=trim(filename))
+    read(27,*) nlayer,ncoeff
+    allocate(vpv_1D(nlayer,ncoeff))
+    allocate(vsv_1D(nlayer,ncoeff))
+    allocate(density_1D(nlayer,ncoeff))
+    allocate(zlayer(nlayer))
+    do i=1,nlayer
+       read(27,*) zlayer(i)
+       read(27,*) vpv_1D(i,:)
+       read(27,*) vsv_1D(i,:)
+       read(27,*) density_1D(i,:)
+!       write(*,*) i,zlayer(i) ! add by wangyi
+!       write(*,*) vpv_1D(i,1:2),vsv_1D(i,1:2),density_1D(i,1:2) ! add by wangyi
+    end do
+    read(27,*) ZREF
+    read(27,*) OLON,OLAT
+
+
+  end subroutine read_model_1D
+
+!------------------------------------------------------------------------------
+  subroutine model_1D_dsm(x_eval,y_eval,z_eval,rho_final,vp_final,vs_final,ilayer,r1)  ! add by wangyi
+  use generate_databases_par, only: CUSTOM_REAL,IN_DATA_FILES_PATH,nlayer,ncoeff,vpv_1D,vsv_1D,density_1D,zlayer,ZREF
+
+    implicit none
+    double precision :: r1,radius,x_eval,y_eval,z_eval
+    double precision :: rho,vp,vs
+    real(kind=CUSTOM_REAL) rho_final,vp_final,vs_final
+    double precision Interpol,Xtol
+    integer ilayer
+
+    Xtol=1d-2
+
+    radius = dsqrt(x_eval**2 + y_eval**2 + (z_eval+zref)**2)
+    radius = radius / 1000.d0
+    r1=radius
+
+    ! get vp,vs and rho   
+    radius = radius / zlayer(nlayer)
+    vp = Interpol(vpv_1D,ilayer,radius,nlayer)
+    vs = Interpol(vsv_1D,ilayer,radius,nlayer)
+    rho = Interpol(density_1D,ilayer,radius,nlayer)
+
+    vp_final = vp * 1000.d0
+    vs_final = vs * 1000.d0
+    rho_final = rho * 1000.d0
+
+  end subroutine model_1D_dsm
+
+!-------------------------------------------------------
+  function Interpol(v,i,x,nl)
+    implicit none
+    integer i,nl
+    double precision Interpol,x,v(nl,4)
+    Interpol = v(i,1)+x*(v(i,2)+x*(v(i,3)+x*v(i,4)))
+  end function Interpol
+
+!--------------------------------------------------------
+
+  subroutine FindLayer(x,y,z,ilayer)  ! add by wangyi
+    use generate_databases_par, only: nlayer,zlayer,ZREF
+    implicit none
+    integer ilayer
+    double precision radius,x,y,z
+    radius =  dsqrt(x**2 + y**2 + (z+zref)**2) / 1000.d0
+
+    !write(*,*) radius
+    ilayer = 1
+    do while (radius .gt. zlayer(ilayer).and.ilayer.lt.nlayer)
+       ilayer = ilayer + 1
+    end do
+    ilayer = ilayer - 1
+    !write(666,*) 'r, i : ',z,zref,radius, ilayer
+  end subroutine FindLayer
+
+!--------------------------------------
 
   subroutine init_tomography_files(myrank)
 
@@ -80,7 +166,7 @@
 
   use constants, only: MAX_STRING_LEN
   use tomography_par
-  use generate_databases_par, only: TOMOGRAPHY_PATH,undef_mat_prop,nundefMat_ext_mesh,COUPLE_WITH_DSM
+  use generate_databases_par, only: TOMOGRAPHY_PATH,undef_mat_prop,nundefMat_ext_mesh
 
   implicit none
 
@@ -104,20 +190,14 @@
 
         read(undef_mat_prop(4,iundef),*) filename
 
-        !! wangyi test for the benchmark of hybrid DSM-SPECFEM3D coupling 
-        if (COUPLE_WITH_DSM) then 
-           if ( TOMOGRAPHY_PATH(len_trim(TOMOGRAPHY_PATH):len_trim(TOMOGRAPHY_PATH)) == "/"  )then
-             tomo_filename = TOMOGRAPHY_PATH(1:len_trim(TOMOGRAPHY_PATH))//trim(filename)
-           else
-             tomo_filename = TOMOGRAPHY_PATH(1:len_trim(TOMOGRAPHY_PATH))//'/'//trim(filename)
-           endif  !add by wangyi,correct the path and filename of tomography model
-!           write(*,*) 'iundef',iundef  ! add by wangyi for test 
-!           write(*,*) 'tomo_filename',tomo_filename ! add by wangyi for test   
+      if ( TOMOGRAPHY_PATH(len_trim(TOMOGRAPHY_PATH):len_trim(TOMOGRAPHY_PATH)) == "/"  )then
+        tomo_filename = TOMOGRAPHY_PATH(1:len_trim(TOMOGRAPHY_PATH))//trim(filename)
+      else
+        tomo_filename = TOMOGRAPHY_PATH(1:len_trim(TOMOGRAPHY_PATH))//'/'//trim(filename)
+      endif  !add by wangyi,correct the path and filename of tomography model
 
-        else
-          tomo_filename = TOMOGRAPHY_PATH(1:len_trim(TOMOGRAPHY_PATH))//trim(filename)
-
-        endif 
+!       write(*,*) 'iundef',iundef  ! add by wangyi for test 
+!       write(*,*) 'tomo_filename',tomo_filename ! add by wangyi for test   
 
         ! opens file for reading
         open(unit=27,file=trim(tomo_filename),status='old',action='read',iostat=ier)

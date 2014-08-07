@@ -175,6 +175,12 @@
   integer :: NOISE_TOMOGRAPHY
   integer :: IMODEL
 
+! external model reading and writing, for DSM couple with SPECFEM3D package. add by wangyi
+  double precision, dimension (:,:), allocatable :: vpv_1D,vsv_1D,density_1D !add by wangyi
+  double precision, dimension (:), allocatable :: zlayer !add by wangyi
+  integer :: nlayer,ncoeff  !add by wangyi
+  double precision :: ZREF,OLON,OLAT   ! add by wangyi
+
   end module generate_databases_par
 
 !

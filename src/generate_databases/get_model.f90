@@ -55,7 +55,6 @@
 
   ! gll point location
   double precision :: xmesh,ymesh,zmesh
-  double precision :: zmesh_1 ! add by wangyi, zmesh_1 is only for Hybrid package
   integer :: iglob
 
   ! timing
@@ -69,6 +68,7 @@
 
   ! prepares tomographic models if needed for elements with undefined material definitions
  if (COUPLE_WITH_DSM) then
+  call read_model_1D(myrank)  ! add by wangyi, read the 1D regional model for databases
   if( nundefMat_ext_mesh > 6 .or. IMODEL == IMODEL_TOMO ) then ! changed by wangyi
 !  if( nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO ) then
    write(*,*)  'nundefMat_ext_mesh, IMODEL, IMODEL_TOMO', nundefMat_ext_mesh, IMODEL, IMODEL_TOMO ! add by wangyi
@@ -156,12 +156,6 @@
           ymesh = ystore_dummy(iglob)
           zmesh = zstore_dummy(iglob)
 
-    if (COUPLE_WITH_DSM) then
-        zmesh_1 = 1.0 * zmesh
-    else
-        zmesh_1 = zmesh
-    endif  
-
           ! material index 1: associated material number
           ! 1 = acoustic, 2 = elastic, 3 = poroelastic, -1 = undefined tomographic
           imaterial_id = mat_ext_mesh(1,ispec)
@@ -174,7 +168,7 @@
           call get_model_values(materials_ext_mesh,nmat_ext_mesh, &
                                undef_mat_prop,nundefMat_ext_mesh, &
                                imaterial_id,imaterial_def, &
-                               xmesh,ymesh,zmesh_1, &   
+                               xmesh,ymesh,zmesh, &   
                                rho,vp,vs,qkappa_atten,qmu_atten,idomain_id, &
                                rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
                                phi,tort,kxx,kxy,kxz,kyy,kyz,kzz, &
@@ -183,9 +177,6 @@
                                c34,c35,c36,c44,c45,c46,c55,c56,c66, &
                                ANISOTROPY)
 
-!                               xmesh,ymesh,zmesh, &  ! changed by wangyi. this line is original version. 
-! add by wangyi. but for hybrid package, because of the different definition of z coordinate, 
-! add by wangyi. we use zmesh_1 = -1*zmesh instead.
 
           ! stores velocity model
 
@@ -382,7 +373,7 @@
                              c34,c35,c36,c44,c45,c46,c55,c56,c66, &
                              ANISOTROPY)
 
-  use generate_databases_par,only: IMODEL
+  use generate_databases_par,only: IMODEL,COUPLE_WITH_DSM   ! add flag COUPLE_WITH_DSM by wangyi
   use create_regions_mesh_ext_par
   implicit none
 
@@ -411,15 +402,48 @@
   ! local parameters
   integer :: iflag_aniso
   integer :: iundef,imaterial_PB
+  integer :: ilayer  ! add by wangyi
 
   ! use acoustic domains for simulation
   logical,parameter :: USE_PURE_ACOUSTIC_MOD = .false.
+  
+  double precision :: rayon  ! add by wangyi for model_1D subroutine
 
   ! initializes with default values
   ! no anisotropy
   iflag_aniso = 0
   idomain_id = IDOMAIN_ELASTIC
 
+ if (COUPLE_WITH_DSM)  then  ! add by wangyi for Hybrid regional databases reading
+   call FindLayer(xmesh,ymesh,zmesh,ilayer)  ! add by wangyi for Hybrid regional databases reading
+   call model_1D_dsm(xmesh,ymesh,zmesh,rho,vp,vs,ilayer,rayon) ! add by wangyi 
+ 
+   qmu_atten = ATTENUATION_COMP_MAXIMUM   ! attenuation: arbitrary value, see maximum in constants.h
+          if (ilayer == 7 ) then
+               qmu_atten =  143.0d0
+               write(*,*)  'test the ilayer',ilayer,qmu_atten
+          elseif (ilayer == 8) then
+               qmu_atten =  80.0d0
+               write(*,*)  'test the ilayer',ilayer,qmu_atten
+          elseif (ilayer == 9) then
+               qmu_atten =  600.0d0
+               write(*,*)  'test the ilayer',ilayer,qmu_atten
+          elseif (ilayer == 10) then
+               qmu_atten =  600.0d0
+               write(*,*)  'test the ilayer',ilayer,qmu_atten
+          elseif (ilayer == 11) then
+               qmu_atten =  600.0d0
+               write(*,*)  'test the ilayer',ilayer,qmu_atten
+          elseif (ilayer == 12) then
+               write(*,*)  'test the ilayer',ilayer,qmu_atten
+               qmu_atten =  600.0d0
+          else
+               write(*,*)  'other layer :',ilayer,qmu_atten
+          endif     !  add by wangyi to conform the new version of specfem3D for prem 1D model
+  
+   qkappa_atten = 9999.  ! undefined in this model
+
+ else
   ! selects chosen velocity model
   select case( IMODEL )
 
@@ -438,11 +462,9 @@
 !    write(*,*)   'IMODEL_1D_PREM is lauched',IMODEL  ! add by wangyi for test
     ! 1D model profile from PREM
     call model_1D_prem_iso(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
+    !write(*,*)   'rho,vp,vs,qmu_atten',rho,vp,vs,qmu_atten   ! add by wangyi for test
     !write(*,*)   'xmesh,ymesh,zmesh',xmesh,ymesh,zmesh  ! add by wangyi for test
-if ( abs(rho) <1e-12 .or. abs(vp) <1e-12 .or. abs(vs) <1e-12 .or. abs(qmu_atten) < 1e-12 ) then
-    write(*,*)   'rho,vp,vs,qmu_atten',rho,vp,vs,qmu_atten   ! add by wangyi for test
-    write(*,*)   'xmesh,ymesh,zmesh',xmesh,ymesh,zmesh
-endif
+
     qkappa_atten = 9999.  ! undefined in this model
 
   case( IMODEL_1D_PREM_PB )
@@ -489,6 +511,8 @@ endif
   case default
     stop 'error: model not implemented yet'
   end select
+
+ end if
 
   ! adds anisotropic default model
   if( ANISOTROPY ) then
