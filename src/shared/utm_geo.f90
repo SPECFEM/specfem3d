@@ -35,7 +35,7 @@
 ! converted by Dimitri Komatitsch to Fortran90 and slightly modified to add one parameter to the subroutine call
 ! and change the order of the arguments for compatibility with SPECFEM calls.
 ! Also converted to double precision for all calculations and all results.
-! Also define the UTM easting and northing in meters instead of kilometers for compatibility with SPECFEM calls.
+! Also defined the UTM easting and northing in meters instead of kilometers for compatibility with SPECFEM calls.
 
 ! convert geodetic longitude and latitude to UTM, and back
 ! use iway = ILONGLAT2UTM for long/lat to UTM, IUTM2LONGLAT for UTM to lat/long
@@ -58,15 +58,15 @@
 !
 !     Modifications:
 !      2012/12/02   Added logic for southern hemisphere UTM zones
-!                   Use zones +1 to +60 for NH, -1 to -60 for SH
-!                   Equator is defined as 0 km North for NH, 10,000 km N for SH
+!                   Use zones +1 to +60 for the Northern hemisphere, -1 to -60 for the Southern hemisphere
+!                   Equator is defined as 0 km North for the Northern hemisphere, 10,000 km North for the Southern hemisphere
 !
 !     Input/Output arguments:
 !
-!        rlon4                 Longitude (deg, negative for West)
-!        rlat4                 Latitude (deg)
-!        rx4                   UTM easting (m)
-!        ry4                   UTM northing (m)
+!        rlon4                 Longitude (degrees, negative for West)
+!        rlat4                 Latitude (degrees)
+!        rx4                   UTM easting (meters)
+!        ry4                   UTM northing (meters)
 !        UTM_PROJECTION_ZONE   UTM zone
 !                              The Northern hemisphere corresponds to zones +1 to +60
 !                              The Southern hemisphere corresponds to zones -1 to -60
@@ -97,7 +97,7 @@
 
 ! local parameters
 
-! From http://en.wikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system:
+! From http://en.wikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system :
 ! The Universal Transverse Mercator coordinate system was developed by the United States Army Corps of Engineers in the 1940s.
 ! The system was based on an ellipsoidal model of Earth. For areas within the contiguous United States
 ! the Clarke Ellipsoid of 1866 was used. For the remaining areas of Earth, including Hawaii, the International Ellipsoid was used.
@@ -113,18 +113,18 @@
 
 ! Note that the UTM grids are actually Mercators which
 ! employ the standard UTM scale factor 0.9996 and set the Easting Origin to 500,000.
-  double precision, parameter :: scfa=.9996d0
+  double precision, parameter :: scfa=0.9996d0
   double precision, parameter :: north=0.d0, east=500000.d0
 
-  double precision, parameter :: DEGREES_TO_RADIANS=PI/180.d0, RADIANS_TO_DEGREES=1.d0/DEGREES_TO_RADIANS
+  double precision, parameter :: DEGREES_TO_RADIANS=PI/180.d0, RADIANS_TO_DEGREES=180.d0/PI
 
 ! local variables
-  double precision rlon,rlat
-  double precision e2,e4,e6,ep2,xx,yy,dlat,dlon,zone,cm,cmr,delam
-  double precision f1,f2,f3,f4,rm,rn,t,c,a,e1,u,rlat1,dlat1,c1,t1,rn1,r1,d
-  double precision rx_save,ry_save,rlon_save,rlat_save
-
-  logical lsouth
+  integer :: zone
+  double precision :: rlon,rlat
+  double precision :: e2,e4,e6,ep2,xx,yy,dlat,dlon,cm,cmr,delam
+  double precision :: f1,f2,f3,f4,rm,rn,t,c,a,e1,u,rlat1,dlat1,c1,t1,rn1,r1,d
+  double precision :: rx_save,ry_save,rlon_save,rlat_save
+  logical :: lsouth
 
   ! checks if conversion to UTM has to be done
   if(SUPPRESS_UTM_PROJECTION) then
