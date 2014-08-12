@@ -31,18 +31,20 @@
 !
 !=====================================================================
 
-  subroutine utm_geo(rlon,rlat,rx,ry,UTM_PROJECTION_ZONE,iway,SUPPRESS_UTM_PROJECTION)
+! taken from the open-source package CAMx at http://www.camx.com/download
+! converted by Dimitri Komatitsch to Fortran90 and slightly modified to add one parameter to the subroutine call
+! and change the order of the arguments for compatibility with SPECFEM calls.
+! Also converted to double precision for all calculations and all results.
+! Also define the UTM easting and northing in meters instead of kilometers for compatibility with SPECFEM calls.
 
 ! convert geodetic longitude and latitude to UTM, and back
 ! use iway = ILONGLAT2UTM for long/lat to UTM, IUTM2LONGLAT for UTM to lat/long
 ! a list of UTM zones of the world is available at www.dmap.co.uk/utmworld.htm
 
-  use constants, only: PI,ILONGLAT2UTM,IUTM2LONGLAT
-
-  implicit none
+  subroutine utm_geo(rlon4,rlat4,rx4,ry4,UTM_PROJECTION_ZONE,iway,SUPPRESS_UTM_PROJECTION)
 
 !
-!-----CAMx v2.03
+!---- CAMx v6.10 2014/04/02
 !
 !     UTM_GEO performs UTM to geodetic (long/lat) translation, and back.
 !
@@ -51,27 +53,29 @@
 !     Based on algorithm taken from "Map Projections Used by the USGS"
 !     by John P. Snyder, Geological Survey Bulletin 1532, USDI.
 !
+!     Portions Copyright 1996 - 2014
+!     ENVIRON International Corporation
+!
+!     Modifications:
+!      2012/12/02   Added logic for southern hemisphere UTM zones
+!                   Use zones +1 to +60 for NH, -1 to -60 for SH
+!                   Equator is defined as 0 km North for NH, 10,000 km N for SH
+!
 !     Input/Output arguments:
 !
-!        rlon                  Longitude (deg, negative for West)
-!        rlat                  Latitude (deg)
-!        rx                    UTM easting (m)
-!        ry                    UTM northing (m)
-!        UTM_PROJECTION_ZONE  UTM zone
+!        rlon4                 Longitude (deg, negative for West)
+!        rlat4                 Latitude (deg)
+!        rx4                   UTM easting (m)
+!        ry4                   UTM northing (m)
+!        UTM_PROJECTION_ZONE   UTM zone
+!                              The Northern hemisphere corresponds to zones +1 to +60
+!                              The Southern hemisphere corresponds to zones -1 to -60
 !        iway                  Conversion type
 !                              ILONGLAT2UTM = geodetic to UTM
 !                              IUTM2LONGLAT = UTM to geodetic
-!
 
-  integer UTM_PROJECTION_ZONE,iway
-  double precision rx,ry,rlon,rlat
-  logical SUPPRESS_UTM_PROJECTION
-
-  double precision, parameter :: degrad=PI/180.d0, raddeg=180.d0/PI
-  double precision, parameter :: semimaj=6378206.4d0, semimin=6356583.8d0
-  double precision, parameter :: scfa=0.9996d0
-
-! some extracts about UTM:
+! Some general information about UTM:
+! (for more details see e.g. http://en.wikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system )
 !
 ! There are 60 longitudinal projection zones numbered 1 to 60 starting at 180°W.
 ! Each of these zones is 6 degrees wide, apart from a few exceptions around Norway and Svalbard.
@@ -79,113 +83,130 @@
 ! by the letters C to X, ommitting the letter O.
 ! Each of these is 8 degrees south-north, apart from zone X which is 12 degrees south-north.
 !
-! To change the UTM zone and the hemisphere in which the
-! calculations are carried out, need to change the fortran code and recompile. The UTM zone is described
-! actually by the central meridian of that zone, i.e. the longitude at the midpoint of the zone, 3 degrees
-! from either zone boundary.
-! To change hemisphere need to change the "north" variable:
-!  - north=0 for northern hemisphere and
-!  - north=10000000 (10000km) for southern hemisphere. values must be in metres i.e. north=10000000.
+! The UTM zone is described by the central meridian of that zone, i.e. the longitude at the midpoint of the zone,
+! 3 degrees away from both zone boundary.
 !
-! Note that the UTM grids are actually Mercators which
-! employ the standard UTM scale factor 0.9996 and set the
-! Easting Origin to 500,000;
-! the Northing origin in the southern
-! hemisphere is kept at 0 rather than set to 10,000,000
-! and this gives a uniform scale across the equator if the
-! normal convention of selecting the Base Latitude (origin)
-! at the equator (0 deg.) is followed.  Northings are
-! positive in the northern hemisphere and negative in the
-! southern hemisphere.
-  double precision, parameter :: north=0.d0
-  double precision, parameter :: east=500000.d0
+  use constants, only: PI,ILONGLAT2UTM,IUTM2LONGLAT
 
+  implicit none
+
+! input/output parameters
+  double precision :: rx4,ry4,rlon4,rlat4
+  integer, intent(in) :: UTM_PROJECTION_ZONE,iway
+  logical, intent(in) :: SUPPRESS_UTM_PROJECTION
+
+! local parameters
+
+! From http://en.wikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system:
+! The Universal Transverse Mercator coordinate system was developed by the United States Army Corps of Engineers in the 1940s.
+! The system was based on an ellipsoidal model of Earth. For areas within the contiguous United States
+! the Clarke Ellipsoid of 1866 was used. For the remaining areas of Earth, including Hawaii, the International Ellipsoid was used.
+! The WGS84 ellipsoid is now generally used to model the Earth in the UTM coordinate system,
+! which means that current UTM northing at a given point can be 200+ meters different from the old one.
+! For different geographic regions, other datum systems (e.g.: ED50, NAD83) can be used.
+
+! Clarke 1866
+! double precision, parameter :: SEMI_MAJOR_AXIS = 6378206.4d0, SEMI_MINOR_AXIS = 6356583.8d0
+
+! WGS84 (World Geodetic System 1984)
+  double precision, parameter :: SEMI_MAJOR_AXIS = 6378137.0d0, SEMI_MINOR_AXIS = 6356752.314245d0
+
+! Note that the UTM grids are actually Mercators which
+! employ the standard UTM scale factor 0.9996 and set the Easting Origin to 500,000.
+  double precision, parameter :: scfa=.9996d0
+  double precision, parameter :: north=0.d0, east=500000.d0
+
+  double precision, parameter :: DEGREES_TO_RADIANS=PI/180.d0, RADIANS_TO_DEGREES=1.d0/DEGREES_TO_RADIANS
+
+! local variables
+  double precision rlon,rlat
   double precision e2,e4,e6,ep2,xx,yy,dlat,dlon,zone,cm,cmr,delam
   double precision f1,f2,f3,f4,rm,rn,t,c,a,e1,u,rlat1,dlat1,c1,t1,rn1,r1,d
   double precision rx_save,ry_save,rlon_save,rlat_save
 
-  ! checks if conversion to utm has to be done
+  logical lsouth
+
+  ! checks if conversion to UTM has to be done
   if(SUPPRESS_UTM_PROJECTION) then
     if (iway == ILONGLAT2UTM) then
-      rx = rlon
-      ry = rlat
+      rx4 = rlon4
+      ry4 = rlat4
     else
-      rlon = rx
-      rlat = ry
+      rlon4 = rx4
+      rlat4 = ry4
     endif
     return
   endif
 
 ! save original parameters
-  rlon_save = rlon
-  rlat_save = rlat
-  rx_save = rx
-  ry_save = ry
+  rlon_save = rlon4
+  rlat_save = rlat4
+  rx_save = rx4
+  ry_save = ry4
 
-  xx = 0.d0
-  yy = 0.d0
-  dlat = 0.d0
-  dlon = 0.d0
-
-! define parameters of reference ellipsoid
-  e2=1.0-(semimin/semimaj)**2.0
+  e2=1.d0-(SEMI_MINOR_AXIS/SEMI_MAJOR_AXIS)**2
   e4=e2*e2
   e6=e2*e4
-  ep2=e2/(1.-e2)
+  ep2=e2/(1.d0-e2)
+
+!
+!---- Set Zone parameters
+!
+
+  lsouth = .false.
+  if( UTM_PROJECTION_ZONE < 0 ) lsouth = .true.
+  zone = abs(UTM_PROJECTION_ZONE)
+  cm = zone*6.0d0 - 183.d0
+  cmr = cm*DEGREES_TO_RADIANS
 
   if (iway == IUTM2LONGLAT) then
-    xx = rx
-    yy = ry
+    xx = rx4
+    yy = ry4
+    if (lsouth) yy = yy - 1.d7
   else
-    dlon = rlon
-    dlat = rlat
+    dlat = rlat4
+    dlon = rlon4
   endif
-!
-!----- Set Zone parameters
-!
-  zone = dble(UTM_PROJECTION_ZONE)
-  ! sets central meridian for this zone
-  cm = zone*6.0 - 183.0
-  cmr = cm*degrad
+
 !
 !---- Lat/Lon to UTM conversion
 !
   if (iway == ILONGLAT2UTM) then
 
-    rlon = degrad*dlon
-    rlat = degrad*dlat
+    rlon = DEGREES_TO_RADIANS*dlon
+    rlat = DEGREES_TO_RADIANS*dlat
 
     delam = dlon - cm
-    if (delam < -180.) delam = delam + 360.
-    if (delam > 180.) delam = delam - 360.
-    delam = delam*degrad
+    if (delam < -180.d0) delam = delam + 360.d0
+    if (delam > 180.d0) delam = delam - 360.d0
+    delam = delam*DEGREES_TO_RADIANS
 
-    f1 = (1. - e2/4. - 3.*e4/64. - 5.*e6/256)*rlat
-    f2 = 3.*e2/8. + 3.*e4/32. + 45.*e6/1024.
-    f2 = f2*sin(2.*rlat)
-    f3 = 15.*e4/256.*45.*e6/1024.
-    f3 = f3*sin(4.*rlat)
-    f4 = 35.*e6/3072.
-    f4 = f4*sin(6.*rlat)
-    rm = semimaj*(f1 - f2 + f3 - f4)
-    if (dlat == 90. .or. dlat == -90.) then
-      xx = 0.
+    f1 = (1.d0 - e2/4.d0 - 3.d0*e4/64.d0 - 5.d0*e6/256d0)*rlat
+    f2 = 3.d0*e2/8.d0 + 3.d0*e4/32.d0 + 45.d0*e6/1024.d0
+    f2 = f2*sin(2.d0*rlat)
+    f3 = 15.d0*e4/256.d0*45.d0*e6/1024.d0
+    f3 = f3*sin(4.d0*rlat)
+    f4 = 35.d0*e6/3072.d0
+    f4 = f4*sin(6.d0*rlat)
+    rm = SEMI_MAJOR_AXIS*(f1 - f2 + f3 - f4)
+    if (dlat == 90.d0 .or. dlat == -90.d0) then
+      xx = 0.d0
       yy = scfa*rm
     else
-      rn = semimaj/sqrt(1. - e2*sin(rlat)**2)
+      rn = SEMI_MAJOR_AXIS/sqrt(1.d0 - e2*sin(rlat)**2)
       t = tan(rlat)**2
       c = ep2*cos(rlat)**2
       a = cos(rlat)*delam
 
-      f1 = (1. - t + c)*a**3/6.
-      f2 = 5. - 18.*t + t**2 + 72.*c - 58.*ep2
-      f2 = f2*a**5/120.
+      f1 = (1.d0 - t + c)*a**3/6.d0
+      f2 = 5.d0 - 18.d0*t + t**2 + 72.d0*c - 58.d0*ep2
+      f2 = f2*a**5/120.d0
       xx = scfa*rn*(a + f1 + f2)
-      f1 = a**2/2.
-      f2 = 5. - t + 9.*c + 4.*c**2
-      f2 = f2*a**4/24.
-      f3 = 61. - 58.*t + t**2 + 600.*c - 330.*ep2
-      f3 = f3*a**6/720.
+      f1 = a**2/2.d0
+      f2 = 5.d0 - t + 9.d0*c + 4.d0*c**2
+      f2 = f2*a**4/24.d0
+      f3 = 61.d0 - 58.d0*t + t**2 + 600.d0*c - 330.d0*ep2
+      f3 = f3*a**6/720.d0
       yy = scfa*(rm + rn*tan(rlat)*(f1 + f2 + f3))
     endif
     xx = xx + east
@@ -198,62 +219,66 @@
 
     xx = xx - east
     yy = yy - north
-    e1 = sqrt(1. - e2)
-    e1 = (1. - e1)/(1. + e1)
+    e1 = sqrt(1.d0 - e2)
+    e1 = (1.d0 - e1)/(1.d0 + e1)
     rm = yy/scfa
-    u = 1. - e2/4. - 3.*e4/64. - 5.*e6/256.
-    u = rm/(semimaj*u)
+    u = 1.d0 - e2/4.d0 - 3.d0*e4/64.d0 - 5.d0*e6/256.d0
+    u = rm/(SEMI_MAJOR_AXIS*u)
 
-    f1 = 3.*e1/2. - 27.*e1**3./32.
-    f1 = f1*sin(2.*u)
-    f2 = 21.*e1**2/16. - 55.*e1**4/32.
-    f2 = f2*sin(4.*u)
-    f3 = 151.*e1**3./96.
-    f3 = f3*sin(6.*u)
+    f1 = 3.d0*e1/2.d0 - 27.d0*e1**3.d0/32.d0
+    f1 = f1*sin(2.d0*u)
+    f2 = 21.d0*e1**2/16.d0 - 55.d0*e1**4/32.d0
+    f2 = f2*sin(4.d0*u)
+    f3 = 151.d0*e1**3.d0/96.d0
+    f3 = f3*sin(6.d0*u)
     rlat1 = u + f1 + f2 + f3
-    dlat1 = rlat1*raddeg
-    if (dlat1 >= 90. .or. dlat1 <= -90.) then
-      dlat1 = dmin1(dlat1,dble(90.) )
-      dlat1 = dmax1(dlat1,dble(-90.) )
+    dlat1 = rlat1*RADIANS_TO_DEGREES
+    if (dlat1 >= 90.d0 .or. dlat1 <= -90.d0) then
+      dlat1 = dmin1(dlat1,90.d0)
+      dlat1 = dmax1(dlat1,-90.d0)
       dlon = cm
     else
-      c1 = ep2*cos(rlat1)**2.
-      t1 = tan(rlat1)**2.
-      f1 = 1. - e2*sin(rlat1)**2.
-      rn1 = semimaj/sqrt(f1)
-      r1 = semimaj*(1. - e2)/sqrt(f1**3)
+      c1 = ep2*cos(rlat1)**2
+      t1 = tan(rlat1)**2
+      f1 = 1.d0 - e2*sin(rlat1)**2
+      rn1 = SEMI_MAJOR_AXIS/sqrt(f1)
+      r1 = SEMI_MAJOR_AXIS*(1.d0 - e2)/sqrt(f1**3)
       d = xx/(rn1*scfa)
 
       f1 = rn1*tan(rlat1)/r1
-      f2 = d**2/2.
-      f3 = 5.*3.*t1 + 10.*c1 - 4.*c1**2 - 9.*ep2
-      f3 = f3*d**2*d**2/24.
-      f4 = 61. + 90.*t1 + 298.*c1 + 45.*t1**2. - 252.*ep2 - 3.*c1**2
-      f4 = f4*(d**2)**3./720.
+      f2 = d**2/2.d0
+      f3 = 5.d0*3.d0*t1 + 10.d0*c1 - 4.d0*c1**2 - 9.d0*ep2
+      f3 = f3*d**2*d**2/24.d0
+      f4 = 61.d0 + 90.d0*t1 + 298.d0*c1 + 45.d0*t1**2 - 252.d0*ep2 - 3.d0*c1**2
+      f4 = f4*(d**2)**3.d0/720.d0
       rlat = rlat1 - f1*(f2 - f3 + f4)
-      dlat = rlat*raddeg
+      dlat = rlat*RADIANS_TO_DEGREES
 
-      f1 = 1. + 2.*t1 + c1
-      f1 = f1*d**2*d/6.
-      f2 = 5. - 2.*c1 + 28.*t1 - 3.*c1**2 + 8.*ep2 + 24.*t1**2.
-      f2 = f2*(d**2)**2*d/120.
+      f1 = 1.d0 + 2.d0*t1 + c1
+      f1 = f1*d**2*d/6.d0
+      f2 = 5.d0 - 2.d0*c1 + 28.d0*t1 - 3.d0*c1**2 + 8.d0*ep2 + 24.d0*t1**2
+      f2 = f2*(d**2)**2*d/120.d0
       rlon = cmr + (d - f1 + f2)/cos(rlat1)
-      dlon = rlon*raddeg
-      if (dlon < -180.) dlon = dlon + 360.
-      if (dlon > 180.) dlon = dlon - 360.
+      dlon = rlon*RADIANS_TO_DEGREES
+      if (dlon < -180.d0) dlon = dlon + 360.d0
+      if (dlon > 180.d0) dlon = dlon - 360.d0
     endif
   endif
 
+!
+!----- output
+!
   if (iway == IUTM2LONGLAT) then
-    rlon = dlon
-    rlat = dlat
-    rx = rx_save
-    ry = ry_save
+    rlon4 = dlon
+    rlat4 = dlat
+    rx4 = rx_save
+    ry4 = ry_save
   else
-    rx = xx
-    ry = yy
-    rlon = rlon_save
-    rlat = rlat_save
+    rx4 = xx
+    if (lsouth) yy = yy + 1.d7
+    ry4 = yy
+    rlon4 = rlon_save
+    rlat4 = rlat_save
   endif
 
   end subroutine utm_geo
