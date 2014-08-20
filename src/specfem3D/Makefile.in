@@ -430,13 +430,13 @@ $O/%.adios.o: %.f90
 	${MPIFCCOMPILE_CHECK} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INCLUDES) -o $@ $<
 
 $O/%.noadios.o: %.F90 
-	${FC} -c -o $@ $<
+	${FCCOMPILE_CHECK} -c -o $@ $<
 
 $O/%.noadios.o: %.f90 
-	${FC} -c -o $@ $<
+	${FCCOMPILE_CHECK} -c -o $@ $<
 
 $O/%.shared_noadios.o: ${SHARED}/%.f90 .FORCE
-	${MPIFC} -c -o $@ $<
+	${MPIFCCOMPILE_CHECK} -c -o $@ $<
 
 $O/%.shared_adios.o: ${SHARED}/%.f90 ${SHARED}/constants.h .FORCE
 	${MPIFC} -c $(ADIOS_INC) $(FCFLAGS) $(MPI_INCLUDES) -o $@ $<
