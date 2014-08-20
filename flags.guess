@@ -42,7 +42,7 @@ case $my_FC in
         #
         # Cray Fortran
         #
-        DEF_FFLAGS="-O3 -Onoaggress -Oipa0 -hfp2 -Ovector3 -Oscalar3 -Ocache2 -Ounroll2 -Ofusion2 -DFORCE_VECTORIZATION -p \$O" # turn on optimization; -Oaggress -Oipa4 would make it even more aggressive
+        DEF_FFLAGS="-O3 -Onoaggress -Oipa0 -hfp2 -Ovector3 -Oscalar3 -Ocache2 -Ounroll2 -Ofusion2 -DFORCE_VECTORIZATION -p \$O  -eF -em -rm" # turn on optimization; -Oaggress -Oipa4 would make it even more aggressive
         # -eC -eD -ec -en -eI -ea -g -G0  # turn on full debugging and range checking
         ;;
     pgf95|*/pgf95|pgf90|*/pgf90)
