@@ -71,9 +71,11 @@ step-by-step tutorial (long version -- generate MESH with GEOCUBIT):
 
 4. copy three input files from examples directory into SPECFEM3D/DATA/
 
-     > cd examples/homogeneous_halfspace/DATA/
+     > cd EXAMPLES/homogeneous_halfspace/DATA/
      > cp * ../../../DATA/
      > cd ..
+
+     note: this may not be needed if the files are already symbolically linked
 
 5. create mesh:
 
@@ -122,7 +124,7 @@ step-by-step tutorial (long version -- generate MESH with GEOCUBIT):
      note 2: for small jobs (like this one), you can simply launch the job on
              the local node from directory SPECFEM3D:
 
-     > ./bin/xdecompose_mesh 4 examples/homogeneous_halfspace/MESH/ OUTPUT_FILES/DATABASES_MPI/
+     > ./bin/xdecompose_mesh 4 EXAMPLES/homogeneous_halfspace/MESH/ OUTPUT_FILES/DATABASES_MPI/
 
 7. generate databases:
 
@@ -160,25 +162,25 @@ step-by-step tutorial (long version -- generate MESH with GEOCUBIT):
      as well as 51 timestamp****** files
 
 9. check with 6 reference seismograms in
-      SPECFEM3D/examples/homogeneous_halfspace/REF_SEIS/
+      SPECFEM3D/EXAMPLES/homogeneous_halfspace/REF_SEIS/
 
    - option 1: from SPECFEM3D/, quick viewing using xmgrace (if available):
 
-     > xmgrace examples/homogeneous_halfspace/REF_SEIS/*Z.semd &
+     > xmgrace EXAMPLES/homogeneous_halfspace/REF_SEIS/*Z.semd &
      > xmgrace OUTPUT_FILES/*Z.semd &
 
    - option 2: generate ps files using gnuplot:
 
-     > cd SPECFEM3D/examples/homogeneous_halfspace/REF_SEIS
+     > cd SPECFEM3D/EXAMPLES/homogeneous_halfspace/REF_SEIS
      > gnuplot
 
-         gnuplot> load "X1-50.BXZ.gnuplot"
+         gnuplot> load "plot_these_seismograms_with_gnuplot.gnu"
 
      You should see a figure in a render window.
      Writing the figure to a file may depend on your gnuplot settings.
      One example to generate a postscript is shown below:
 
-         gnuplot> load "X1-50.BXZ.gnuplot"
+         gnuplot> load "plot_these_seismograms_with_gnuplot.gnu"
          gnuplot> set term postscript color solid
          Terminal type set to 'postscript'
          Options are 'landscape noenhanced color colortext \
@@ -189,7 +191,7 @@ step-by-step tutorial (long version -- generate MESH with GEOCUBIT):
          gnuplot> replot
          gnuplot> quit
 
-     - copy gnuplot script X1-50.BXZ.gnuplot to OUTPUT_FILES/
+     - copy gnuplot script plot_these_seismograms_with_gnuplot.gnu to OUTPUT_FILES/
      - execute same commands as above
      - you should see the same image as generated from the reference seismograms
 

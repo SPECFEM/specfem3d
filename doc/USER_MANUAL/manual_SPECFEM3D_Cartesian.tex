@@ -390,14 +390,13 @@ edit file \texttt{flags.guess} to make sure that it contains the best
 compiler options for your system. Known issues or things to check
 are:
 \begin{description}
-\item [{\texttt{Intel ifort compiler}}] See if you need to add \texttt{-assume
-byterecl} for your machine.
+\item [{\texttt{Intel ifort compiler}}] See if you need to add \texttt{-assume byterecl} for your machine. \textbf{In the case of that compiler, we have noticed that versions dot zero sometimes have bugs or issues that can lead to wrong results when running the code, thus we \emph{strongly} recommend using versions dot one or above (for instance version 13.1 instead of 13.0, version 14.1 instead of 14.0 and so on)}.
 \item [{\texttt{IBM compiler}}] See if you need to add \texttt{-qsave}
 or \texttt{-qnosave} for your machine.
 \item [{\texttt{Mac OS}}] You will probably need to install \texttt{XCODE}.
 In addition, the \texttt{clock\_gettime} routine, which is used by
 the \texttt{SCOTCH} library that we use, does not exist in Mac OS.
-You will need to replace it with \texttt{clock\_get\_time} if you
+You may need to replace it with \texttt{clock\_get\_time} if you
 want to use \texttt{SCOTCH}.
 \end{description}
 When compiling on an IBM machine with the \texttt{xlf} and \texttt{xlc}
@@ -1299,6 +1298,18 @@ for West).
 \item [{\texttt{\noun{UTM\_PROJECTION\_ZONE}}}] UTM projection zone in
 which your model resides, only valid when \texttt{SUPPRESS\_UTM\_}~\\
  \texttt{PROJECTION} is \texttt{.false.}.
+Use a negative zone number for the Southern hemisphere:
+the Northern hemisphere corresponds to zones +1 to +60,
+the Southern hemisphere to zones -1 to -60.
+We use the WGS84 (World Geodetic System 1984) reference ellipsoid for the UTM projection. If you prefer to use the Clarke 1866 ellipsoid,
+edit file \texttt{src/shared/utm\_geo.f90}, uncomment that ellipsoid and recompile the code.
+From http://en.wikipedia.org/wiki/Universal\_Transverse\_Mercator\_coordinate\_system :
+The Universal Transverse Mercator coordinate system was developed by the United States Army Corps of Engineers in the 1940s.
+The system was based on an ellipsoidal model of Earth. For areas within the contiguous United States
+the Clarke Ellipsoid of 1866 was used. For the remaining areas of Earth, including Hawaii, the International Ellipsoid was used.
+The WGS84 ellipsoid is now generally used to model the Earth in the UTM coordinate system,
+which means that current UTM northing at a given point can be 200+ meters different from the old one.
+For different geographic regions, other datum systems (e.g.: ED50, NAD83) can be used.
 \item [{\texttt{SUPPRESS\_UTM\_PROJECTION}}] set to be \texttt{.false.}
 when your model range is specified in geographical coordinates, and
 needs to be \texttt{.true.} when your model is specified in Cartesian
