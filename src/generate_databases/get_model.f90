@@ -66,20 +66,18 @@
   ispec_is_elastic(:) = .false.
   ispec_is_poroelastic(:) = .false.
 
-
-  !! WANGYI test for the benchmark of hybrid DSM-SPECFEM3D coupling 
-  if (COUPLE_WITH_DSM) then 
-    if( nundefMat_ext_mesh > 6 .or. IMODEL == IMODEL_TOMO ) then ! changed by WANGYI
-      write(*,*)  'nundefMat_ext_mesh, IMODEL, IMODEL_TOMO', nundefMat_ext_mesh, IMODEL, IMODEL_TOMO ! add by WANGYI
-      call model_tomography_broadcast(myrank)
-    endif
-
-  else
-    ! prepares tomographic models if needed for elements with undefined material definitions
-    if( nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO ) then
-      call model_tomography_broadcast(myrank)
-    endif
+  ! prepares tomographic models if needed for elements with undefined material definitions
+ if (COUPLE_WITH_DSM) then
+  call read_model_1D(myrank)  ! read the 1D regional model for databases
+  if( nundefMat_ext_mesh > 6 .or. IMODEL == IMODEL_TOMO ) then ! wangyi
+!  if( nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO ) then
+    call model_tomography_broadcast(myrank)
   endif
+  else
+  if( nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO ) then
+    call model_tomography_broadcast(myrank)
+  endif
+ endif
 
   ! prepares external model values if needed
   select case( IMODEL )
@@ -168,7 +166,7 @@
           call get_model_values(materials_ext_mesh,nmat_ext_mesh, &
                                undef_mat_prop,nundefMat_ext_mesh, &
                                imaterial_id,imaterial_def, &
-                               xmesh,ymesh,zmesh, &
+                               xmesh,ymesh,zmesh, &   
                                rho,vp,vs,qkappa_atten,qmu_atten,idomain_id, &
                                rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
                                phi,tort,kxx,kxy,kxz,kyy,kyz,kzz, &
@@ -343,18 +341,17 @@
   call any_all_l( ANY(ispec_is_elastic), ELASTIC_SIMULATION )
   call any_all_l( ANY(ispec_is_poroelastic), POROELASTIC_SIMULATION )
 
-  !! WANGYI test for the benchmark of hybrid DSM-SPECFEM3D coupling 
-  if (COUPLE_WITH_DSM) then 
-    if( nundefMat_ext_mesh > 6 .or. IMODEL == IMODEL_TOMO ) then  ! changed by wangyi for test
-      call deallocate_tomography_files()
-    endif
-
-  else
-    ! deallocates tomographic arrays
-    if( nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO ) then
-      call deallocate_tomography_files()
-    endif
+  ! deallocates tomographic arrays
+ if (COUPLE_WITH_DSM) then
+  if( nundefMat_ext_mesh > 6 .or. IMODEL == IMODEL_TOMO ) then  ! wangyi
+!  if( nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO ) then
+     call deallocate_tomography_files()
   endif
+ else
+  if( nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO ) then
+     call deallocate_tomography_files()
+  endif
+ endif
 
   end subroutine get_model
 
@@ -374,7 +371,7 @@
                              c34,c35,c36,c44,c45,c46,c55,c56,c66, &
                              ANISOTROPY)
 
-  use generate_databases_par,only: IMODEL
+  use generate_databases_par,only: IMODEL,COUPLE_WITH_DSM   ! add flag COUPLE_WITH_DSM
   use create_regions_mesh_ext_par
   implicit none
 
@@ -403,15 +400,43 @@
   ! local parameters
   integer :: iflag_aniso
   integer :: iundef,imaterial_PB
+  integer :: ilayer  
 
   ! use acoustic domains for simulation
   logical,parameter :: USE_PURE_ACOUSTIC_MOD = .false.
+  
+  double precision :: rayon  ! for model_1D subroutine
 
   ! initializes with default values
   ! no anisotropy
   iflag_aniso = 0
   idomain_id = IDOMAIN_ELASTIC
 
+ if (COUPLE_WITH_DSM)  then  ! Hybrid regional databases reading
+   call FindLayer(xmesh,ymesh,zmesh,ilayer)  ! Hybrid regional databases reading
+   call model_1D_dsm(xmesh,ymesh,zmesh,rho,vp,vs,ilayer,rayon) ! reginal chunk mesh.
+ 
+   qmu_atten = ATTENUATION_COMP_MAXIMUM   ! attenuation: arbitrary value, see maximum in constants.h
+          if (ilayer == 7 ) then
+               qmu_atten =  143.0d0
+          elseif (ilayer == 8) then
+               qmu_atten =  80.0d0
+          elseif (ilayer == 9) then
+               qmu_atten =  600.0d0
+          elseif (ilayer == 10) then
+               qmu_atten =  600.0d0
+          elseif (ilayer == 11) then
+               qmu_atten =  600.0d0
+          elseif (ilayer == 12) then
+               !write(*,*)  'test the ilayer',ilayer,qmu_atten
+               qmu_atten =  600.0d0
+          else
+               !write(*,*)  'other layer :',ilayer,qmu_atten
+          endif     !  to conform the new version of specfem3D for prem 1D model
+  
+   qkappa_atten = 9999.  ! undefined in this model
+
+ else
   ! selects chosen velocity model
   select case( IMODEL )
 
@@ -427,11 +452,14 @@
                           phi,tort,kxx,kxy,kxz,kyy,kyz,kzz)
 
   case( IMODEL_1D_PREM )
+!    write(*,*)   'IMODEL_1D_PREM is lauched',IMODEL  
     ! 1D model profile from PREM
     call model_1D_prem_iso(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
+
     qkappa_atten = 9999.  ! undefined in this model
 
   case( IMODEL_1D_PREM_PB )
+    !write(*,*)   'IMODEL_1D_PREM_Piero is lauched',IMODEL  ! 
     ! 1D model profile from PREM modified by Piero
     imaterial_PB = abs(imaterial_id)
     call model_1D_PREM_routine_PB(xmesh,ymesh,zmesh,rho,vp,vs,imaterial_PB)
@@ -443,25 +471,30 @@
     qkappa_atten = 9999.  ! undefined in this model
 
   case( IMODEL_1D_CASCADIA )
+    !write(*,*)   'IMODEL_1D_CASCADIA is lauched',IMODEL  !
     ! 1D model profile for Cascadia region
     call model_1D_cascadia(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
     qkappa_atten = 9999.  ! undefined in this model
 
   case( IMODEL_1D_SOCAL )
+    !write(*,*)   'IMODEL_1D_SOCAL is lauched',IMODEL  ! 
     ! 1D model profile for Southern California
     call model_1D_socal(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
     qkappa_atten = 9999.  ! undefined in this model
 
   case( IMODEL_SALTON_TROUGH )
+    !write(*,*)   'IMODEL_SALTON_TROUGH is lauched',IMODEL  !
     ! gets model values from tomography file
     call model_salton_trough(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
     qkappa_atten = 9999.  ! undefined in this model
 
   case( IMODEL_TOMO )
+    !write(*,*)   'IMODEL_TOMO is lauched',IMODEL  ! 
     ! gets model values from tomography file
     call model_tomography(xmesh,ymesh,zmesh,rho,vp,vs,qkappa_atten,qmu_atten,imaterial_id)
 
   case( IMODEL_USER_EXTERNAL )
+    !write(*,*)   'IMODEL_USER_EXTERNAL is lauched',IMODEL  ! 
     ! user model from external routine
     ! adds/gets velocity model as specified in model_external_values.f90
     call model_external_values(xmesh,ymesh,zmesh,rho,vp,vs,qkappa_atten,qmu_atten,iflag_aniso,idomain_id)
@@ -469,6 +502,8 @@
   case default
     stop 'error: model not implemented yet'
   end select
+
+ end if
 
   ! adds anisotropic default model
   if( ANISOTROPY ) then

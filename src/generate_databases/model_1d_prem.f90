@@ -65,7 +65,7 @@
   double precision :: &
       R_EARTH_M,RICB,RCMB,RTOPDDOUBLEPRIME, &
       R771,R600,R670,R400,R220,R80,RMOHO,RMIDDLE_CRUST,ROCEAN
-  double precision :: r
+  double precision :: r,r0  
 
   ! uses crustal values from other models (like crust2.0) than prem
   ! set to .false. to use PREM crustal values, otherwise will take mantle values up to surface
@@ -111,8 +111,11 @@
 
   ! compute real physical radius in meters
   r = R_EARTH - dble(depth)
-
+!  write(*,*)  'r,R_EARTH,depth,zloc,elevation',r,R_EARTH,depth,zloc,elevation   ! 
   ! normalized radius
+
+!  r0 = R_EARTH + dble(depth)  ! refer to model_1D_PREM_routine_PB
+!  r=sqrt(xloc**2+yloc**2+(zloc+6120505.36002571)**2)  ! refer to model_1D_PREM_routine_PB
   x = r / R_EARTH
 
   ! given a normalized radius x, gives the non-dimensionalized density rho,
