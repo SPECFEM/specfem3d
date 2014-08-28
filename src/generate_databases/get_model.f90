@@ -419,24 +419,19 @@
    qmu_atten = ATTENUATION_COMP_MAXIMUM   ! attenuation: arbitrary value, see maximum in constants.h
           if (ilayer == 7 ) then
                qmu_atten =  143.0d0
-               write(*,*)  'test the ilayer',ilayer,qmu_atten
           elseif (ilayer == 8) then
                qmu_atten =  80.0d0
-               write(*,*)  'test the ilayer',ilayer,qmu_atten
           elseif (ilayer == 9) then
                qmu_atten =  600.0d0
-               write(*,*)  'test the ilayer',ilayer,qmu_atten
           elseif (ilayer == 10) then
                qmu_atten =  600.0d0
-               write(*,*)  'test the ilayer',ilayer,qmu_atten
           elseif (ilayer == 11) then
                qmu_atten =  600.0d0
-               write(*,*)  'test the ilayer',ilayer,qmu_atten
           elseif (ilayer == 12) then
-               write(*,*)  'test the ilayer',ilayer,qmu_atten
+               !write(*,*)  'test the ilayer',ilayer,qmu_atten
                qmu_atten =  600.0d0
           else
-               write(*,*)  'other layer :',ilayer,qmu_atten
+               !write(*,*)  'other layer :',ilayer,qmu_atten
           endif     !  to conform the new version of specfem3D for prem 1D model
   
    qkappa_atten = 9999.  ! undefined in this model
