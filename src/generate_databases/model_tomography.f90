@@ -52,7 +52,7 @@
   ! reads Vp Vs and rho from extracted text file
   call read_model_tomography(myrank)
 
-  call read_model_1D(myrank)  ! add by wangyi, read the 1D regional model for databases
+  call read_model_1D(myrank)  !  read the 1D regional model for databases
 
   ! otherwise:
 
@@ -74,7 +74,7 @@
 
 !
 !-------------------------------------------------------------------------------------------------
-  subroutine read_model_1D(myrank)  ! add by wangyi
+  subroutine read_model_1D(myrank) 
 
   use generate_databases_par, only: IN_DATA_FILES_PATH,nlayer,ncoeff,vpv_1D,vsv_1D,density_1D,zlayer,ZREF,OLON,OLAT
     implicit none
@@ -94,8 +94,7 @@
        read(27,*) vpv_1D(i,:)
        read(27,*) vsv_1D(i,:)
        read(27,*) density_1D(i,:)
-!       write(*,*) i,zlayer(i) ! add by wangyi
-!       write(*,*) vpv_1D(i,1:2),vsv_1D(i,1:2),density_1D(i,1:2) ! add by wangyi
+!       write(*,*) i,zlayer(i) !
     end do
     read(27,*) ZREF
     read(27,*) OLON,OLAT
@@ -104,7 +103,7 @@
   end subroutine read_model_1D
 
 !------------------------------------------------------------------------------
-  subroutine model_1D_dsm(x_eval,y_eval,z_eval,rho_final,vp_final,vs_final,ilayer,r1)  ! add by wangyi
+  subroutine model_1D_dsm(x_eval,y_eval,z_eval,rho_final,vp_final,vs_final,ilayer,r1) 
   use generate_databases_par, only: CUSTOM_REAL,IN_DATA_FILES_PATH,nlayer,ncoeff,vpv_1D,vsv_1D,density_1D,zlayer,ZREF
 
     implicit none
@@ -142,7 +141,7 @@
 
 !--------------------------------------------------------
 
-  subroutine FindLayer(x,y,z,ilayer)  ! add by wangyi
+  subroutine FindLayer(x,y,z,ilayer)  
     use generate_databases_par, only: nlayer,zlayer,ZREF
     implicit none
     integer ilayer
@@ -194,10 +193,8 @@
         tomo_filename = TOMOGRAPHY_PATH(1:len_trim(TOMOGRAPHY_PATH))//trim(filename)
       else
         tomo_filename = TOMOGRAPHY_PATH(1:len_trim(TOMOGRAPHY_PATH))//'/'//trim(filename)
-      endif  !add by wangyi,correct the path and filename of tomography model
+      endif  !correct the path and filename of tomography model
 
-!       write(*,*) 'iundef',iundef  ! add by wangyi for test 
-!       write(*,*) 'tomo_filename',tomo_filename ! add by wangyi for test   
 
         ! opens file for reading
         open(unit=27,file=trim(tomo_filename),status='old',action='read',iostat=ier)

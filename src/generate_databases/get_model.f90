@@ -68,15 +68,13 @@
 
   ! prepares tomographic models if needed for elements with undefined material definitions
  if (COUPLE_WITH_DSM) then
-  call read_model_1D(myrank)  ! add by wangyi, read the 1D regional model for databases
-  if( nundefMat_ext_mesh > 6 .or. IMODEL == IMODEL_TOMO ) then ! changed by wangyi
+  call read_model_1D(myrank)  ! read the 1D regional model for databases
+  if( nundefMat_ext_mesh > 6 .or. IMODEL == IMODEL_TOMO ) then ! wangyi
 !  if( nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO ) then
-   write(*,*)  'nundefMat_ext_mesh, IMODEL, IMODEL_TOMO', nundefMat_ext_mesh, IMODEL, IMODEL_TOMO ! add by wangyi
     call model_tomography_broadcast(myrank)
   endif
   else
   if( nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO ) then
-   write(*,*)  'nundefMat_ext_mesh, IMODEL, IMODEL_TOMO', nundefMat_ext_mesh, IMODEL, IMODEL_TOMO ! add by wangyi
     call model_tomography_broadcast(myrank)
   endif
  endif
@@ -345,7 +343,7 @@
 
   ! deallocates tomographic arrays
  if (COUPLE_WITH_DSM) then
-  if( nundefMat_ext_mesh > 6 .or. IMODEL == IMODEL_TOMO ) then  ! changed by wangyi for test
+  if( nundefMat_ext_mesh > 6 .or. IMODEL == IMODEL_TOMO ) then  ! wangyi
 !  if( nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO ) then
      call deallocate_tomography_files()
   endif
@@ -373,7 +371,7 @@
                              c34,c35,c36,c44,c45,c46,c55,c56,c66, &
                              ANISOTROPY)
 
-  use generate_databases_par,only: IMODEL,COUPLE_WITH_DSM   ! add flag COUPLE_WITH_DSM by wangyi
+  use generate_databases_par,only: IMODEL,COUPLE_WITH_DSM   ! add flag COUPLE_WITH_DSM
   use create_regions_mesh_ext_par
   implicit none
 
@@ -402,21 +400,21 @@
   ! local parameters
   integer :: iflag_aniso
   integer :: iundef,imaterial_PB
-  integer :: ilayer  ! add by wangyi
+  integer :: ilayer  
 
   ! use acoustic domains for simulation
   logical,parameter :: USE_PURE_ACOUSTIC_MOD = .false.
   
-  double precision :: rayon  ! add by wangyi for model_1D subroutine
+  double precision :: rayon  ! for model_1D subroutine
 
   ! initializes with default values
   ! no anisotropy
   iflag_aniso = 0
   idomain_id = IDOMAIN_ELASTIC
 
- if (COUPLE_WITH_DSM)  then  ! add by wangyi for Hybrid regional databases reading
-   call FindLayer(xmesh,ymesh,zmesh,ilayer)  ! add by wangyi for Hybrid regional databases reading
-   call model_1D_dsm(xmesh,ymesh,zmesh,rho,vp,vs,ilayer,rayon) ! add by wangyi for reginal chunk mesh.
+ if (COUPLE_WITH_DSM)  then  ! Hybrid regional databases reading
+   call FindLayer(xmesh,ymesh,zmesh,ilayer)  ! Hybrid regional databases reading
+   call model_1D_dsm(xmesh,ymesh,zmesh,rho,vp,vs,ilayer,rayon) ! reginal chunk mesh.
  
    qmu_atten = ATTENUATION_COMP_MAXIMUM   ! attenuation: arbitrary value, see maximum in constants.h
           if (ilayer == 7 ) then
@@ -439,7 +437,7 @@
                qmu_atten =  600.0d0
           else
                write(*,*)  'other layer :',ilayer,qmu_atten
-          endif     !  add by wangyi to conform the new version of specfem3D for prem 1D model
+          endif     !  to conform the new version of specfem3D for prem 1D model
   
    qkappa_atten = 9999.  ! undefined in this model
 
@@ -459,16 +457,14 @@
                           phi,tort,kxx,kxy,kxz,kyy,kyz,kzz)
 
   case( IMODEL_1D_PREM )
-!    write(*,*)   'IMODEL_1D_PREM is lauched',IMODEL  ! add by wangyi for test
+!    write(*,*)   'IMODEL_1D_PREM is lauched',IMODEL  
     ! 1D model profile from PREM
     call model_1D_prem_iso(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
-    !write(*,*)   'rho,vp,vs,qmu_atten',rho,vp,vs,qmu_atten   ! add by wangyi for test
-    !write(*,*)   'xmesh,ymesh,zmesh',xmesh,ymesh,zmesh  ! add by wangyi for test
 
     qkappa_atten = 9999.  ! undefined in this model
 
   case( IMODEL_1D_PREM_PB )
-    write(*,*)   'IMODEL_1D_PREM_Piero is lauched',IMODEL  ! add by wangyi for test
+    !write(*,*)   'IMODEL_1D_PREM_Piero is lauched',IMODEL  ! 
     ! 1D model profile from PREM modified by Piero
     imaterial_PB = abs(imaterial_id)
     call model_1D_PREM_routine_PB(xmesh,ymesh,zmesh,rho,vp,vs,imaterial_PB)
@@ -480,30 +476,30 @@
     qkappa_atten = 9999.  ! undefined in this model
 
   case( IMODEL_1D_CASCADIA )
-    write(*,*)   'IMODEL_1D_CASCADIA is lauched',IMODEL  ! add by wangyi for test
+    !write(*,*)   'IMODEL_1D_CASCADIA is lauched',IMODEL  !
     ! 1D model profile for Cascadia region
     call model_1D_cascadia(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
     qkappa_atten = 9999.  ! undefined in this model
 
   case( IMODEL_1D_SOCAL )
-    write(*,*)   'IMODEL_1D_SOCAL is lauched',IMODEL  ! add by wangyi for test
+    !write(*,*)   'IMODEL_1D_SOCAL is lauched',IMODEL  ! 
     ! 1D model profile for Southern California
     call model_1D_socal(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
     qkappa_atten = 9999.  ! undefined in this model
 
   case( IMODEL_SALTON_TROUGH )
-    write(*,*)   'IMODEL_SALTON_TROUGH is lauched',IMODEL  ! add by wangyi for test
+    !write(*,*)   'IMODEL_SALTON_TROUGH is lauched',IMODEL  !
     ! gets model values from tomography file
     call model_salton_trough(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
     qkappa_atten = 9999.  ! undefined in this model
 
   case( IMODEL_TOMO )
-    write(*,*)   'IMODEL_TOMO is lauched',IMODEL  ! add by wangyi for test
+    !write(*,*)   'IMODEL_TOMO is lauched',IMODEL  ! 
     ! gets model values from tomography file
     call model_tomography(xmesh,ymesh,zmesh,rho,vp,vs,qkappa_atten,qmu_atten,imaterial_id)
 
   case( IMODEL_USER_EXTERNAL )
-    write(*,*)   'IMODEL_USER_EXTERNAL is lauched',IMODEL  ! add by wangyi for test
+    !write(*,*)   'IMODEL_USER_EXTERNAL is lauched',IMODEL  ! 
     ! user model from external routine
     ! adds/gets velocity model as specified in model_external_values.f90
     call model_external_values(xmesh,ymesh,zmesh,rho,vp,vs,qkappa_atten,qmu_atten,iflag_aniso,idomain_id)
