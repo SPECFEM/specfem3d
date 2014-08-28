@@ -416,7 +416,7 @@
 
  if (COUPLE_WITH_DSM)  then  ! add by wangyi for Hybrid regional databases reading
    call FindLayer(xmesh,ymesh,zmesh,ilayer)  ! add by wangyi for Hybrid regional databases reading
-   call model_1D_dsm(xmesh,ymesh,zmesh,rho,vp,vs,ilayer,rayon) ! add by wangyi 
+   call model_1D_dsm(xmesh,ymesh,zmesh,rho,vp,vs,ilayer,rayon) ! add by wangyi for reginal chunk mesh.
  
    qmu_atten = ATTENUATION_COMP_MAXIMUM   ! attenuation: arbitrary value, see maximum in constants.h
           if (ilayer == 7 ) then
