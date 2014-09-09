@@ -9,7 +9,7 @@ dnl You must have recent versions of Autoconf and Automake installed.
 ############################################################
 
 AC_PREREQ(2.61)
-AC_INIT([Specfem3D], [2.1.0], [jtromp AT princeton.edu], [Specfem3D])
+AC_INIT([Specfem3D], [2.1.0], [see the wiki], [Specfem3D])
 AC_CONFIG_SRCDIR([src/specfem3D/specfem3D.f90])
 
 AC_CONFIG_HEADER([setup/config.h])
@@ -23,13 +23,6 @@ AS_BOX([setting up compilation flags])
 AC_CANONICAL_HOST
 
 # 'configure' options
-
-AC_ARG_WITH([pyre],
-    [AS_HELP_STRING([--with-pyre],
-        [build Pyrized version @<:@default=no@:>@])],
-    [want_pyre="$withval"],
-    [want_pyre=no])
-AM_CONDITIONAL([COND_PYRE], [test "$want_pyre" = yes])
 
 ###
 ### MPI
@@ -99,11 +92,6 @@ AM_CONDITIONAL([COND_OPENMP], [test "$want_openmp" = yes])
 ############################################################
 
 # Checks for programs.
-
-if test "$want_pyre" = yes; then
-    AM_PATH_PYTHON([2.3])
-    CIT_PYTHON_SYSCONFIG
-fi
 
 # a courtesy to the installed base of users
 if test x"$FC" = x && test x"$F90" != x; then
@@ -273,58 +261,6 @@ AS_IF([test x"$LOCAL_PATH_IS_ALSO_GLOBAL" = x],[
     LOCAL_PATH_IS_ALSO_GLOBAL=true
 ])
 
-# python and pyre, this is probably unused...
-
-AC_ARG_VAR(PYTHON, [Python interpreter])
-AC_ARG_VAR(PYTHONPATH, [Python module search path])
-
-# Checks for Python modules and packages.
-
-AC_LANG(C)
-if test "$want_pyre" = yes; then
-    builddir=`pwd`
-    save_PYTHONPATH="$PYTHONPATH"
-    PYTHONPATH="$builddir/python:$PYTHONPATH"; export PYTHONPATH
-    # Cheap work-around for the inability of merlin/setuptools to control #! line.
-    rm -f pyspecfem3D
-    $as_ln_s $PYTHON pyspecfem3D
-    pyspecfem3D="$builddir/pyspecfem3D"
-    cd $srcdir
-
-    AC_MSG_NOTICE([downloading missing Python dependencies])
-    AS_IF([AC_TRY_COMMAND([$pyspecfem3D setup.py install_deps -zmxd $builddir/deps >&AS_MESSAGE_LOG_FD 2>&AS_MESSAGE_LOG_FD])],
-          [],
-          [AC_MSG_FAILURE([cannot download missing Python dependencies])])
-
-    AC_MSG_NOTICE([building Python dependencies])
-    AS_IF([AC_TRY_COMMAND([$pyspecfem3D setup.py develop -H None -f $builddir/deps -s $builddir -d $builddir/python >&AS_MESSAGE_LOG_FD 2>&AS_MESSAGE_LOG_FD])],
-          [],
-          [AC_MSG_FAILURE([building Python dependencies])])
-
-    AC_MSG_CHECKING([for egg-related flags])
-    AS_IF([AC_TRY_COMMAND([$pyspecfem3D setup.py egg_flags >&AS_MESSAGE_LOG_FD 2>&AS_MESSAGE_LOG_FD])],
-          [AC_MSG_RESULT(ok)
-           . egg-flags.sh
-           rm -f egg-flags.sh
-          ],
-          [AC_MSG_RESULT(failed)
-          AC_MSG_FAILURE([cannot scan Python eggs for flags])])
-
-    cd $builddir
-    rm -f pyspecfem3D
-    PYTHONPATH="$save_PYTHONPATH"
-    PYTHONPATH="${pythondir}:${pyexecdir}${save_PYTHONPATH:+:${save_PYTHONPATH}}"
-
-    AC_SUBST(PYTHONPATH)
-    AC_SUBST(PYTHON_EGG_CFLAGS)
-    AC_SUBST(PYTHON_EGG_CPPFLAGS)
-    AC_SUBST(PYTHON_EGG_LDFLAGS)
-fi
-
-if test "$want_pyre" = yes; then
-    CIT_FC_MAIN
-fi
-
 # Checks for typedefs, structures, and compiler characteristics.
 
 # check fortran modules flag
@@ -351,9 +287,9 @@ AC_SUBST([FC_MODDIR])
 
 if test "$want_mpi" = yes; then
     AS_BOX([MPI])
-    CIT_FC_MPI_MODULE([mpif.h], [$MPIFC], [$FLAGS_CHECK], [:], [
-        AC_MSG_FAILURE([cannot compile a trivial MPI program using $MPIFC])
-    ])
+#     CIT_FC_MPI_MODULE([mpif.h], [$MPIFC], [$FLAGS_CHECK], [:], [
+#         AC_MSG_FAILURE([cannot compile a trivial MPI program using $MPIFC])
+#     ])
     CIT_MPI_INCDIR([$MPIFC])
 fi
 

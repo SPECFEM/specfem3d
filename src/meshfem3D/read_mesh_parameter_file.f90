@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -35,9 +36,9 @@ contains
                                 CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
                                 USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,UTM_PROJECTION_ZONE
 
@@ -50,17 +51,15 @@ contains
   integer NDOUBLINGS
   integer, dimension(2) :: ner_doublings
 
-  character(len=256) LOCAL_PATH
-  character(len=50) INTERFACES_FILE
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: INTERFACES_FILE
 
 ! local variables
   integer NEX_MAX
 
-  double precision DEPTH_BLOCK_KM!,RECORD_LENGTH_IN_SECONDS,hdur,minval_hdur
+  double precision DEPTH_BLOCK_KM
 
-!  character(len=256) dummystring
   integer ierr
-  integer, external :: err_occurred_mesh
 
 ! subregions parameters
   integer NSUBREGIONS
@@ -85,33 +84,32 @@ contains
 ! open parameter file Mesh_Par_file
   call open_parameter_file_mesh()
 
-  call read_value_dble_precision_mesh(IIN,IGNORE_JUNK,LATITUDE_MIN, 'mesher.LATITUDE_MIN')
-  if(err_occurred_mesh() /= 0) return
-  call read_value_dble_precision_mesh(IIN,IGNORE_JUNK,LATITUDE_MAX, 'mesher.LATITUDE_MAX')
-  if(err_occurred_mesh() /= 0) return
-  call read_value_dble_precision_mesh(IIN,IGNORE_JUNK,LONGITUDE_MIN, 'mesher.LONGITUDE_MIN')
-  if(err_occurred_mesh() /= 0) return
-  call read_value_dble_precision_mesh(IIN,IGNORE_JUNK,LONGITUDE_MAX, 'mesher.LONGITUDE_MAX')
-  if(err_occurred_mesh() /= 0) return
-  call read_value_dble_precision_mesh(IIN,IGNORE_JUNK,DEPTH_BLOCK_KM, 'mesher.DEPTH_BLOCK_KM')
-  if(err_occurred_mesh() /= 0) return
-  call read_value_integer_mesh(IIN,IGNORE_JUNK,UTM_PROJECTION_ZONE, 'mesher.UTM_PROJECTION_ZONE')
-  if(err_occurred_mesh() /= 0) return
-  call read_value_logical_mesh(IIN,IGNORE_JUNK,SUPPRESS_UTM_PROJECTION, 'mesher.SUPPRESS_UTM_PROJECTION')
-  if(err_occurred_mesh() /= 0) return
+  call read_value_dble_precision_mesh(IIN,IGNORE_JUNK,LATITUDE_MIN, 'LATITUDE_MIN', ierr)
+  if (ierr /= 0) stop 'Error reading Mesh parameter 1'
+  call read_value_dble_precision_mesh(IIN,IGNORE_JUNK,LATITUDE_MAX, 'LATITUDE_MAX', ierr)
+  if (ierr /= 0) stop 'Error reading Mesh parameter 2'
+  call read_value_dble_precision_mesh(IIN,IGNORE_JUNK,LONGITUDE_MIN, 'LONGITUDE_MIN', ierr)
+  if (ierr /= 0) stop 'Error reading Mesh parameter 3'
+  call read_value_dble_precision_mesh(IIN,IGNORE_JUNK,LONGITUDE_MAX, 'LONGITUDE_MAX', ierr)
+  if (ierr /= 0) stop 'Error reading Mesh parameter 4'
+  call read_value_dble_precision_mesh(IIN,IGNORE_JUNK,DEPTH_BLOCK_KM, 'DEPTH_BLOCK_KM', ierr)
+  if (ierr /= 0) stop 'Error reading Mesh parameter 5'
+  call read_value_integer_mesh(IIN,IGNORE_JUNK,UTM_PROJECTION_ZONE, 'UTM_PROJECTION_ZONE', ierr)
+  if (ierr /= 0) stop 'Error reading Mesh parameter 6'
+  call read_value_logical_mesh(IIN,IGNORE_JUNK,SUPPRESS_UTM_PROJECTION, 'SUPPRESS_UTM_PROJECTION', ierr)
+  if (ierr /= 0) stop 'Error reading Mesh parameter 7'
 
-  call read_value_string_mesh(IIN,IGNORE_JUNK,INTERFACES_FILE, 'mesher.INTERFACES_FILE')
-  if(err_occurred_mesh() /= 0) return
+  call read_value_string_mesh(IIN,IGNORE_JUNK,INTERFACES_FILE, 'INTERFACES_FILE', ierr)
+  if (ierr /= 0) stop 'Error reading Mesh parameter 8'
 
-  call read_value_integer_mesh(IIN,IGNORE_JUNK,NEX_XI, 'mesher.NEX_XI')
-  if(err_occurred_mesh() /= 0) return
-  call read_value_integer_mesh(IIN,IGNORE_JUNK,NEX_ETA, 'mesher.NEX_ETA')
-  if(err_occurred_mesh() /= 0) return
-  call read_value_integer_mesh(IIN,IGNORE_JUNK,NPROC_XI, 'mesher.NPROC_XI')
-  if(err_occurred_mesh() /= 0) return
-  call read_value_integer_mesh(IIN,IGNORE_JUNK,NPROC_ETA, 'mesher.NPROC_ETA')
-  if(err_occurred_mesh() /= 0) return
-
+  call read_value_integer_mesh(IIN,IGNORE_JUNK,NEX_XI, 'NEX_XI', ierr)
+  if (ierr /= 0) stop 'Error reading Mesh parameter 9'
+  call read_value_integer_mesh(IIN,IGNORE_JUNK,NEX_ETA, 'NEX_ETA', ierr)
+  if (ierr /= 0) stop 'Error reading Mesh parameter 10'
+  call read_value_integer_mesh(IIN,IGNORE_JUNK,NPROC_XI, 'NPROC_XI', ierr)
+  if (ierr /= 0) stop 'Error reading Mesh parameter 11'
+  call read_value_integer_mesh(IIN,IGNORE_JUNK,NPROC_ETA, 'NPROC_ETA', ierr)
+  if (ierr /= 0) stop 'Error reading Mesh parameter 12'
 
 ! convert model size to UTM coordinates and depth of mesh to meters
   call utm_geo(LONGITUDE_MIN,LATITUDE_MIN,UTM_X_MIN,UTM_Y_MIN,UTM_PROJECTION_ZONE,ILONGLAT2UTM,SUPPRESS_UTM_PROJECTION)
@@ -128,14 +126,14 @@ contains
   NEX_MAX = max(NEX_XI,NEX_ETA)
   UTM_MAX = max(UTM_Y_MAX-UTM_Y_MIN, UTM_X_MAX-UTM_X_MIN)/1000.0 ! in KM
 
-  call read_value_logical_mesh(IIN,IGNORE_JUNK,USE_REGULAR_MESH, 'mesher.USE_REGULAR_MESH')
-  if(err_occurred_mesh() /= 0) return
-  call read_value_integer_mesh(IIN,IGNORE_JUNK,NDOUBLINGS, 'mesher.NDOUBLINGS')
-  if(err_occurred_mesh() /= 0) return
-  call read_value_integer_mesh(IIN,IGNORE_JUNK,ner_doublings(1), 'mesher.NZ_DOUGLING_1')
-  if(err_occurred_mesh() /= 0) return
-  call read_value_integer_mesh(IIN,IGNORE_JUNK,ner_doublings(2), 'mesher.NZ_DOUGLING_2')
-  if(err_occurred_mesh() /= 0) return
+  call read_value_logical_mesh(IIN,IGNORE_JUNK,USE_REGULAR_MESH, 'USE_REGULAR_MESH', ierr)
+  if (ierr /= 0) stop 'Error reading Mesh parameter 13'
+  call read_value_integer_mesh(IIN,IGNORE_JUNK,NDOUBLINGS, 'NDOUBLINGS', ierr)
+  if (ierr /= 0) stop 'Error reading Mesh parameter 14'
+  call read_value_integer_mesh(IIN,IGNORE_JUNK,ner_doublings(1), 'NZ_DOUGLING_1', ierr)
+  if (ierr /= 0) stop 'Error reading Mesh parameter 15'
+  call read_value_integer_mesh(IIN,IGNORE_JUNK,ner_doublings(2), 'NZ_DOUGLING_2', ierr)
+  if (ierr /= 0) stop 'Error reading Mesh parameter 16'
 
   if(ner_doublings(1) < ner_doublings(2) .and. NDOUBLINGS == 2) then
     idoubl = ner_doublings(1)
@@ -143,29 +141,27 @@ contains
     ner_doublings(2) = idoubl
   endif
 
-
-
-  call read_value_logical_mesh(IIN,IGNORE_JUNK,CREATE_ABAQUS_FILES, 'mesher.CREATE_ABAQUS_FILES')
-  if(err_occurred_mesh() /= 0) return
-  call read_value_logical_mesh(IIN,IGNORE_JUNK,CREATE_DX_FILES, 'mesher.CREATE_DX_FILES')
-  if(err_occurred_mesh() /= 0) return
-  call read_value_logical_mesh(IIN,IGNORE_JUNK,CREATE_VTK_FILES, 'mesher.CREATE_VTK_FILES')
-  if(err_occurred_mesh() /= 0) return
+  call read_value_logical_mesh(IIN,IGNORE_JUNK,CREATE_ABAQUS_FILES, 'CREATE_ABAQUS_FILES', ierr)
+  if (ierr /= 0) stop 'Error reading Mesh parameter 17'
+  call read_value_logical_mesh(IIN,IGNORE_JUNK,CREATE_DX_FILES, 'CREATE_DX_FILES', ierr)
+  if (ierr /= 0) stop 'Error reading Mesh parameter 18'
+  call read_value_logical_mesh(IIN,IGNORE_JUNK,CREATE_VTK_FILES, 'CREATE_VTK_FILES', ierr)
+  if (ierr /= 0) stop 'Error reading Mesh parameter 19'
 
 ! file in which we store the databases
-  call read_value_string_mesh(IIN,IGNORE_JUNK,LOCAL_PATH, 'LOCAL_PATH')
-  if(err_occurred_mesh() /= 0) return
+  call read_value_string_mesh(IIN,IGNORE_JUNK,LOCAL_PATH, 'LOCAL_PATH', ierr)
+  if (ierr /= 0) stop 'Error reading Mesh parameter 20'
 
 ! read number of materials
-  call read_value_integer_mesh(IIN,IGNORE_JUNK,NMATERIALS, 'mesher.NMATERIALS')
-  if(err_occurred_mesh() /= 0) return
+  call read_value_integer_mesh(IIN,IGNORE_JUNK,NMATERIALS, 'NMATERIALS', ierr)
+  if (ierr /= 0) stop 'Error reading Mesh parameter 21'
 
 ! read materials properties
   allocate(material_properties(NMATERIALS,6),stat=ierr)
-  if(ierr /= 0) print*,"Allocation error of material_properties"
+  if (ierr /= 0) stop 'Allocation error of material_properties'
 
   do imat =1,NMATERIALS
-     call read_material_parameters(IIN,i,rho,vp,vs,Q_flag,anisotropy_flag,domain_id)
+     call read_material_parameters(IIN,i,rho,vp,vs,Q_flag,anisotropy_flag,domain_id,ierr)
      if (i /= imat) stop "Incorrect material ID"
      if(rho <= 0.d0 .or. vp <= 0.d0 .or. vs < 0.d0) stop 'negative value of velocity or density'
      material_properties(imat,1) = rho
@@ -177,28 +173,28 @@ contains
   enddo
 
 ! read number of subregions
-  call read_value_integer_mesh(IIN,IGNORE_JUNK,NSUBREGIONS, 'mesher.NSUBREGIONS')
-  if(err_occurred_mesh() /= 0) return
+  call read_value_integer_mesh(IIN,IGNORE_JUNK,NSUBREGIONS, 'NSUBREGIONS', ierr)
+  if (ierr /= 0) stop 'Error reading Mesh parameter 22'
 
 ! read subregions properties
   allocate(subregions(NSUBREGIONS,7),stat=ierr)
-  if(ierr /= 0) print*,"Allocation error of subregions"
+  if (ierr /= 0) stop 'Allocation error of subregions'
   do ireg =1,NSUBREGIONS
-     call read_region_parameters(IIN,ix_beg_region,ix_end_region,iy_beg_region,iy_end_region,&
-          iz_beg_region,iz_end_region,imaterial_number)
-     if(ix_beg_region < 1) stop 'XI coordinate of region negative!'
-     if(ix_end_region > NEX_XI) stop 'XI coordinate of region too high!'
-     if(iy_beg_region < 1) stop 'ETA coordinate of region negative!'
-     if(iy_end_region > NEX_ETA) stop 'ETA coordinate of region too high!'
-     if(iz_beg_region < 1) stop 'Z coordinate of region negative!'
+    call read_region_parameters(IIN,ix_beg_region,ix_end_region,iy_beg_region,iy_end_region,&
+         iz_beg_region,iz_end_region,imaterial_number,ierr)
+    if (ix_beg_region < 1) stop 'XI coordinate of region negative!'
+    if (ix_end_region > NEX_XI) stop 'XI coordinate of region too high!'
+    if (iy_beg_region < 1) stop 'ETA coordinate of region negative!'
+    if (iy_end_region > NEX_ETA) stop 'ETA coordinate of region too high!'
+    if (iz_beg_region < 1) stop 'Z coordinate of region negative!'
 
-     subregions(ireg,1) = ix_beg_region
-     subregions(ireg,2) = ix_end_region
-     subregions(ireg,3) = iy_beg_region
-     subregions(ireg,4) = iy_end_region
-     subregions(ireg,5) = iz_beg_region
-     subregions(ireg,6) = iz_end_region
-     subregions(ireg,7) = imaterial_number
+    subregions(ireg,1) = ix_beg_region
+    subregions(ireg,2) = ix_end_region
+    subregions(ireg,3) = iy_beg_region
+    subregions(ireg,4) = iy_end_region
+    subregions(ireg,5) = iz_beg_region
+    subregions(ireg,6) = iz_end_region
+    subregions(ireg,7) = imaterial_number
   enddo
 
 ! close parameter file

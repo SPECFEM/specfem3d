@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -59,6 +60,7 @@ end subroutine print_usage_adios
 subroutine read_args_adios(arg, MAX_NUM_NODES, node_list, num_node,   &
                            var_name, value_file_name, mesh_file_name, &
                            outdir, ires)
+  use constants, only: MAX_STRING_LEN
   implicit none
   ! Arguments
   character(len=*), intent(in) :: arg(:)
@@ -68,7 +70,7 @@ subroutine read_args_adios(arg, MAX_NUM_NODES, node_list, num_node,   &
   character(len=*), intent(out) :: var_name, value_file_name, mesh_file_name, &
                                    outdir
   ! Variables
-  character(len=256) :: sline
+  character(len=MAX_STRING_LEN) :: sline
   integer :: it, iproc, proc1, proc2, ios, njunk
 
   if (command_argument_count() == 6) then
@@ -207,8 +209,8 @@ end subroutine read_ibool_adios_mesh
 !=============================================================================
 subroutine read_coordinates_adios_mesh(mesh_handle, x_global_offset,  &
                                        NGLOB_AB, xstore, ystore, zstore)
+  use constants
   implicit none
-  include 'constants.h'
   ! Parameters
   integer(kind=8), intent(in) :: mesh_handle
   integer, intent(in) :: x_global_offset, NGLOB_AB
@@ -235,8 +237,8 @@ end subroutine read_coordinates_adios_mesh
 !=============================================================================
 subroutine read_double_values_adios(value_handle, var_name, ibool_offset, &
                                     NSPEC_AB, dat)
+  use constants
   implicit none
-  include 'constants.h'
   ! Parameters
   integer(kind=8), intent(in) :: value_handle
   character(len=*), intent(in) :: var_name
@@ -260,8 +262,8 @@ end subroutine read_double_values_adios
 !=============================================================================
 subroutine read_float_values_adios(value_handle, var_name, ibool_offset, &
                                     NSPEC_AB, dat)
+  use constants
   implicit none
-  include 'constants.h'
   ! Parameters
   integer(kind=8), intent(in) :: value_handle
   character(len=*), intent(in) :: var_name

@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -27,9 +28,9 @@
   subroutine get_cmt(yr,jda,ho,mi,sec,tshift_cmt,hdur,lat,long,depth,moment_tensor,&
                     DT,NSOURCES,min_tshift_cmt_original)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
 !--- input or output arguments of the subroutine below
 
@@ -46,7 +47,7 @@
   integer mo,da,julian_day,isource
   double precision t_shift(NSOURCES)
   character(len=5) datasource
-  character(len=256) string, CMTSOLUTION
+  character(len=MAX_STRING_LEN) :: string, CMTSOLUTION,path_to_add
 
   ! initializes
   lat(:) = 0.d0
@@ -65,18 +66,24 @@
 !
 !---- read hypocenter info
 !
-  call get_value_string(CMTSOLUTION, 'solver.CMTSOLUTION', &
-       IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'CMTSOLUTION')
+  CMTSOLUTION = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'CMTSOLUTION'
+! see if we are running several independent runs in parallel
+! if so, add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
+! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
+  if(NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
+    write(path_to_add,"('run',i4.4,'/')") mygroup + 1
+    CMTSOLUTION = path_to_add(1:len_trim(path_to_add))//CMTSOLUTION(1:len_trim(CMTSOLUTION))
+  endif
 
   open(unit=1,file=CMTSOLUTION,status='old',action='read')
 
 ! read source number isource
   do isource=1,NSOURCES
 
-    read(1,"(a256)") string
+    read(1,"(a)") string
     ! skips empty lines
     do while( len_trim(string) == 0 )
-      read(1,"(a256)") string
+      read(1,"(a)") string
     enddo
 
     ! read header with event information
@@ -88,7 +95,6 @@
 
     ! read time shift
     read(1,"(a)") string
-    !read(string(12:len_trim(string)),*) tshift_cmt(isource)
     read(string(12:len_trim(string)),*) t_shift(isource)
 
     ! read half duration

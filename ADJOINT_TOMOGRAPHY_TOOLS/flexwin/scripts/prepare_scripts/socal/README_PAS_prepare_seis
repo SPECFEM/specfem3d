@@ -1,0 +1,47 @@
+Carl Tape
+23-Oct-2007
+
+The figure PAS_prepare_seis.pdf is aimed at explaining prepare_seis.pl.
+I have pasted the output for prepare_seis.pl below.
+
+In this case, the final records have dt = 0.05, b = -40.58, e = 260.70.
+The synthetics are padded with zeros BEFORE t=0 and AFTER tend by a factor
+controlled by tfac = 1.25.
+
+--------------------
+ Running prepare_seis.pl
+ PAS
+ 3 data files to line up with synthetics
+
+ DATA_TEST/9818433.CI.PAS.BHR.sac.d SYN_TEST/PAS.CI.BHR.semd.sac.d
+ Data : -40.58 459.42 0.05 10001 -- 500
+ Syn  : -0.484 200.442 0.011 18267 -- 200.926
+ b0, e0, tlen0 : -40.58, 200.442, 241.022 
+   b : -40.58, -0.484, -40.58 
+   e : 459.42, 200.442, 260.6975 
+ npt : 10001, 18267, 6025 
+ 301.2775 = 1.25 * (200.442 - -40.58)
+ 260.6975 = -40.58 + 301.2775 
+
+ DATA_TEST/9818433.CI.PAS.BHT.sac.d SYN_TEST/PAS.CI.BHT.semd.sac.d
+ Data : -40.58 459.42 0.05 10001 -- 500
+ Syn  : -0.484 200.442 0.011 18267 -- 200.926
+ b0, e0, tlen0 : -40.58, 200.442, 241.022 
+   b : -40.58, -0.484, -40.58 
+   e : 459.42, 200.442, 260.6975 
+ npt : 10001, 18267, 6025 
+ 301.2775 = 1.25 * (200.442 - -40.58)
+ 260.6975 = -40.58 + 301.2775 
+
+ DATA_TEST/9818433.CI.PAS.BHZ.sac.d SYN_TEST/PAS.CI.BHZ.semd.sac.d
+ Data : -40.58 459.42 0.05 10001 -- 500
+ Syn  : -0.484 200.442 0.011 18267 -- 200.926
+ b0, e0, tlen0 : -40.58, 200.442, 241.022 
+   b : -40.58, -0.484, -40.58 
+   e : 459.42, 200.442, 260.6975 
+ npt : 10001, 18267, 6025 
+ 301.2775 = 1.25 * (200.442 - -40.58)
+ 260.6975 = -40.58 + 301.2775 
+
+ Done with prepare_seis.pl
+--------------------

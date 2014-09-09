@@ -2,7 +2,30 @@
 
 # Attempt to guess suitable flags for the Fortran compiler.
 
-# can add -DUSE_SERIAL_CASCADE_FOR_IOs to the compiler options to make the mesher output mesh data
+###########################################################################################################################
+###########################################################################################################################
+###########################################################################################################################
+
+# if you want to compile with OpenMP, add this to the flags listed below, depending on the compiler you use:
+#
+#   -fopenmp for GNU gfortran
+#   -openmp for Intel ifort
+#   -mp for Portland pgf90
+#   -qsmp=omp for IBM xlf
+
+###########################################################################################################################
+###########################################################################################################################
+###########################################################################################################################
+
+# You can add -DFORCE_VECTORIZATION to the options below (for all compilers, except for IBM for which the syntax is -WF,-DFORCE_VECTORIZATION )
+# to speed up the code in the fluid (acoustic) parts (only; FORCE_VECTORIZATION support for elastic parts has been discontinued in the source code).
+# This works fine if (and only if) your computer always allocates a contiguous memory block for each allocatable array;
+# this is the case for most machines and most compilers, but not all. For more details see https://github.com/geodynamics/specfem3d/issues/81 .
+# To check if that option works fine on your machine, run the code with and without it for a model containing a significant fluid layer
+# (or entirely fluid) and make sure the seismograms are identical.
+
+
+# you can add -DUSE_SERIAL_CASCADE_FOR_IOs to the compiler options to make the mesher output mesh data
 # to the disk for one MPI slice after the other, and to make the solver do the same thing when reading the files back from disk.
 
 # First find the "real" compiler
@@ -42,14 +65,14 @@ case $my_FC in
         #
         # Cray Fortran
         #
-        DEF_FFLAGS="-O3 -Onoaggress -Oipa0 -hfp2 -Ovector3 -Oscalar3 -Ocache2 -Ounroll2 -Ofusion2 -DFORCE_VECTORIZATION -p \$O" # turn on optimization; -Oaggress -Oipa4 would make it even more aggressive
-        # -eC -eD -ec -en -eI -ea -g -G0  # turn on full debugging and range checking
+        DEF_FFLAGS="-O3 -Onoaggress -Oipa0 -hfp2 -Ovector3 -Oscalar3 -Ocache2 -Ounroll2 -Ofusion2 -p \$O -eF -em -rm" # turn on optimization; -Oaggress -Oipa4 would make it even more aggressive
+        # -eC -eD -ec -en -eI -ea -g -G0 -M 1193 -M 1438 # turn on full debugging and range checking
         ;;
     pgf95|*/pgf95|pgf90|*/pgf90)
         #
         # Portland PGI
         #
-        DEF_FFLAGS="-fast -Mnobounds -Minline -Mneginfo -Mdclchk -Knoieee -Minform=warn -Mdaz -Mflushz -Mvect -DFORCE_VECTORIZATION"
+        DEF_FFLAGS="-fast -Mnobounds -Minline -Mneginfo -Mdclchk -Knoieee -Minform=inform -Mdaz -Mflushz -Mvect -mcmodel=medium"
         # -Mbounds
         # -fastsse -tp amd64e -Msmart
         ;;
@@ -62,16 +85,17 @@ case $my_FC in
 # parallel file systems like SFS 3.2 / Lustre 1.8. If omitted
 # I/O throughput lingers at 2.5 MB/s, with it it can increase to ~44 MB/s
 # However it does not make much of a difference on NFS mounted volumes or with SFS 3.1.1 / Lustre 1.6.7.1 
-        DEF_FFLAGS="-O3 -DFORCE_VECTORIZATION -check nobounds -xHost -ftz -assume buffered_io -assume byterecl -align sequence -vec-report0 -std03 -diag-disable 6477 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage"
+        DEF_FFLAGS="-O3 -check nobounds -xHost -fpe0 -ftz -assume buffered_io -assume byterecl -align sequence -vec-report0 -std03 -diag-disable 6477 -implicitnone -gen-interfaces -warn all"
         # useful for debugging...
-        # for debugging: change "-O3 -check nobounds -DFORCE_VECTORIZATION" to  "-check all -debug -g -O0 -fp-stack-check -traceback -ftrapuv"
+        # for debugging: change "-O3 -check nobounds" to  "-check all -debug -g -O0 -fp-stack-check -traceback -ftrapuv"
         ;;
     gfortran|*/gfortran|f95|*/f95)
         #
         # GNU gfortran
         #
-        DEF_FFLAGS="-std=f2003 -fimplicit-none -frange-check -O2 -DFORCE_VECTORIZATION -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -ffpe-trap=invalid,zero,overflow"
-        # for debugging, add -fbacktrace -fbounds-check -ffpe-trap=overflow,zero  and suppress -DFORCE_VECTORIZATION
+        DEF_FFLAGS="-std=f2003 -fimplicit-none -frange-check -O2 -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -ffpe-trap=invalid,zero,overflow"
+        # useful for debugging: add   -ggdb -fbacktrace -fbounds-check
+        # useful to track loss of accuracy because of automatic double to single precision conversion:  -Wconversion  (this may generate many warnings...)
         ;;
     g95|*/g95)
         #
@@ -144,7 +168,7 @@ case $my_FC in
         # CFLAGS = -Wl,-relax
         #
 # deleted -qxflag=dvz because it requires handler function __xl_dzx and thus linking will fail 
-        DEF_FFLAGS="-O4 -qnostrict -qassert=contig -qhot -q64 -qtune=auto -qarch=auto -qcache=auto -qfree=f90 -qsuffix=f=f90 -qhalt=w -qlanglvl=2003std -g -qsuppress=1518-234 -qsuppress=1518-317 -qsuppress=1518-318 -qsuppress=1500-036 -Q -Q+rank,swap_all -Wl,-relax -WF,-DFORCE_VECTORIZATION"
+        DEF_FFLAGS="-O4 -qnostrict -qassert=contig -qhot -q64 -qtune=auto -qarch=auto -qcache=auto -qfree=f90 -qsuffix=f=f90 -qhalt=w -qlanglvl=2003std -g -qsuppress=1518-234 -qsuppress=1518-317 -qsuppress=1518-318 -qsuppress=1500-036 -Q -Q+rank,swap_all -Wl,-relax"
         # Options -qreport -qsource -qlist create a *.lst file containing detailed information about vectorization.
         # On IBM BlueGene at IDRIS (France) use:
         # -qtune=auto -qarch=450d -qsave     instead of -qtune=auto -qarch=auto

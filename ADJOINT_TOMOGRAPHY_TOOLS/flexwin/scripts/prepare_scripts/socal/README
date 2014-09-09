@@ -1,0 +1,7 @@
+Carl Tape, 27-March-2009
+
+The user is advised to examine process_data_and_syn.pl.
+This script was the processing script used for an application
+of seismic tomography for the southern California crust.
+The script will need to be adapted for other datasets.
+-------------------------------------------

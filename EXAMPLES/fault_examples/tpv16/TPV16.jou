@@ -1,0 +1,23 @@
+# Surendra Nadh Somala, Caltech 2012
+
+reset
+brick x 100000 y 160000 z 50000
+volume 1 move z -25000
+
+create planar surface with plane xplane offset 0
+webcut volume 1 with sheet surface 7
+delete body 2
+
+surface 8 merge off
+imprint all
+merge all
+
+volume all size 300
+mesh volume all
+
+
+
+
+
+
+

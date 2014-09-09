@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -23,7 +24,6 @@
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
 !=====================================================================
-
 
 ! for external mesh
 
@@ -67,7 +67,7 @@
   integer :: max_nibool_interfaces_ext_mesh
 
   integer :: ier,i
-  character(len=256) :: filename
+  character(len=MAX_STRING_LEN) :: filename
 
   ! saves mesh file proc***_external_mesh.bin
   filename = prname(1:len_trim(prname))//'external_mesh.bin'
@@ -383,7 +383,7 @@
 !
   subroutine save_arrays_solver_files(nspec,nglob,ibool)
 
-  use generate_databases_par, only: myrank
+  use generate_databases_par, only: myrank,COUPLE_WITH_DSM
   use create_regions_mesh_ext_par
 
   implicit none
@@ -398,7 +398,7 @@
   integer :: ier,i
   integer, dimension(:), allocatable :: iglob_tmp
   integer :: j,inum
-  character(len=256) :: filename
+  character(len=MAX_STRING_LEN) :: filename
 
   logical,parameter :: DEBUG = .false.
 
@@ -497,7 +497,7 @@
   ! VTK file output
   if( DEBUG ) then
 
-    call sync_all()
+    call synchronize_all()
     if( myrank == 0) then
       write(IMAIN,*) '     saving debugging mesh files'
       call flush_IMAIN()
@@ -568,7 +568,45 @@
                         v_tmp_i,filename)
 
       deallocate(iglob_tmp,v_tmp_i)
-    endif
+    endif !if( ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION ) 
+  endif  !if( DEBUG )
+
+  !! CD CD !! For coupling with DSM
+  if (COUPLE_WITH_DSM) then
+    !if (num_abs_boundary_faces > 0) then
+    filename = prname(1:len_trim(prname))//'absorb_dsm'
+    open(27,file=filename(1:len_trim(filename)),status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file absorb_dsm'
+    write(27) num_abs_boundary_faces
+    write(27) abs_boundary_ispec
+    write(27) abs_boundary_ijk
+    write(27) abs_boundary_jacobian2Dw
+    write(27) abs_boundary_normal
+    close(27)
+
+    filename = prname(1:len_trim(prname))//'inner'
+    open(27,file=filename(1:len_trim(filename)),status='unknown',form='unformatted',iostat=ier)
+    write(27) ispec_is_inner
+    write(27) ispec_is_elastic
+    close(27)
+
+    !endif
+
+    !! Don't delete this comment for the moment
+    !!
+    !! saves 1. MPI interface
+    !!
+    !!if( num_interfaces_ext_mesh >= 1 ) then
+    !!  filename = prname(1:len_trim(prname))//'MPI_1_points'
+    !!  call write_VTK_data_points(nglob, xstore_dummy,ystore_dummy,zstore_dummy, &
+    !!                             ibool_interfaces_ext_mesh_dummy(1:nibool_interfaces_ext_mesh(1),1), &
+    !!                             nibool_interfaces_ext_mesh(1), filename)
+    !!endif
+
+  endif !  if (COUPLE_WITH_DSM)
+  !! CD CD
+
+  if( DEBUG ) then  !! CD CD
 
     ! acoustic-poroelastic domains
     if( ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION ) then

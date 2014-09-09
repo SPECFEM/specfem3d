@@ -1,0 +1,10 @@
+HOME_SPECFEM3D=/ccc/scratch/cont003/gen7165/durochtc/Codes/SPECFEM3Ds/specfem3d
+BIN=$HOME_SPECFEM3D/utils/DSM_FOR_SPECFEM3D/bin
+BINSEM=$HOME_SPECFEM3D/bin
+SCRIPTS=$HOME_SPECFEM3D/utils/DSM_FOR_SPECFEM3D/shells
+DSM_tractions=$(pwd)/DSM_tractions/
+OUT=$DSM_tractions
+REP=Tract/
+IN_DSM=$(pwd)/input_dsm
+MESH=$(pwd)/MESH
+MODELE_1D=iasp91_dsm

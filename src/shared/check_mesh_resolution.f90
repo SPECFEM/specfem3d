@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -33,9 +34,9 @@
 !
 ! returns: maximum velocity in model ( model_speed_max ), minimum_period_resolved
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: NSPEC_AB,NGLOB_AB
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: kappastore,mustore,rho_vp,rho_vs
@@ -44,7 +45,7 @@
   double precision :: DT
   real(kind=CUSTOM_REAL) :: model_speed_max,min_resolved_period
 
-  character(len=256):: LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH
   logical :: SAVE_MESH_FILES
 
   ! local parameters
@@ -80,7 +81,7 @@
   ! debug: for vtk output
   real(kind=CUSTOM_REAL),dimension(:),allocatable :: tmp1,tmp2
   integer:: ier
-  character(len=256) :: filename,prname
+  character(len=MAX_STRING_LEN) :: filename,prname
 
   ! timing
   double precision, external :: wtime
@@ -451,9 +452,9 @@
 !
 ! returns: maximum velocity in model ( model_speed_max ), minimum_period_resolved
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: NSPEC_AB,NGLOB_AB
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: rho_vpI,rho_vpII,rho_vsI
@@ -464,7 +465,7 @@
   double precision :: DT
   real(kind=CUSTOM_REAL) :: model_speed_max,min_resolved_period
 
-  character(len=256):: LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH
   logical :: SAVE_MESH_FILES
 
   ! local parameters
@@ -499,7 +500,7 @@
   real(kind=CUSTOM_REAL),dimension(:),allocatable :: tmp1,tmp2
 
   integer:: ier
-  character(len=256) :: filename,prname
+  character(len=MAX_STRING_LEN) :: filename,prname
 
   ! timing
   double precision, external :: wtime
@@ -590,9 +591,9 @@
     !          there is no such sharp cut-off period for valid synthetics.
     !          seismograms become just more and more inaccurate for periods shorter than this estimate.
     if (has_vp2_zero) then
-        pmax = avg_distance / min( vpmin,vsmin ) * NPTS_PER_WAVELENGTH
+      pmax = avg_distance / min( vpmin,vsmin ) * NPTS_PER_WAVELENGTH
     else
-        pmax = avg_distance / min( vpmin,vp2min,vsmin ) * NPTS_PER_WAVELENGTH
+      pmax = avg_distance / min( vpmin,vp2min,vsmin ) * NPTS_PER_WAVELENGTH
     endif
     pmax_glob = max(pmax_glob,pmax)
 
@@ -824,9 +825,9 @@
 
 ! calculates the min/max size of the specified element (ispec) for acoustic / elastic domains
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   real(kind=CUSTOM_REAL) :: vpmin,vpmax,vsmin,vsmax
 
@@ -912,9 +913,9 @@
 
 ! calculates the min/max size of the specified element (ispec) for acoustic / elastic domains
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   real(kind=CUSTOM_REAL) :: vpmin,vpmax,vsmin,vsmax
 
@@ -981,9 +982,10 @@
 ! calculates the min/max size of the specified  element (ispec) for poroelastic domains
 ! [CM] Note: in case of coupled acoustic-poro-elastic, rho_vpI,rho_vpII,rho_vsI, etc have
 ! been appropriately defined in /src/generate_databases/get_model.f90
-  implicit none
 
-  include "constants.h"
+  use constants
+
+  implicit none
 
   real(kind=CUSTOM_REAL) :: vpmin,vpmax,vp2min,vp2max,vsmin,vsmax
 
@@ -1037,9 +1039,9 @@
 
   ! ignore non porous region with vp2 = 0
   if( val_min(1) > 0.0001 ) then
-      vp2min = min(vp2min,val_min(1))
+    vp2min = min(vp2min,val_min(1))
   else
-      has_vp2_zero = .true.
+    has_vp2_zero = .true.
   endif
   vp2max = max(vp2max,val_max(1))
 
@@ -1075,9 +1077,9 @@
 ! calculates the min/max distances between neighboring GLL points within the specified element (ispec);
 ! we purposely do not include the distance along the diagonals of the element, only along its three coordinate axes.
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   real(kind=CUSTOM_REAL) :: distance_min,distance_max
 
@@ -1159,9 +1161,9 @@
 ! calculates the min/max size of an edge of the specified element (ispec);
 ! we purposely do not include the distance along the diagonals of the element, only the size of its edges.
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   real(kind=CUSTOM_REAL) :: elemsize_min,elemsize_max
 

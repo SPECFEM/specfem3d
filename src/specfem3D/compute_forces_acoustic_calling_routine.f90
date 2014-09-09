@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -106,13 +107,13 @@ subroutine compute_forces_acoustic()
 
     ! ! Stacey absorbing boundary conditions
     if(STACEY_ABSORBING_CONDITIONS) then
-       call compute_stacey_acoustic(NSPEC_AB,NGLOB_AB, &
-                         potential_dot_dot_acoustic,potential_dot_acoustic, &
-                         ibool,ispec_is_inner,phase_is_inner, &
-                         abs_boundary_jacobian2Dw,abs_boundary_ijk,abs_boundary_ispec, &
-                         num_abs_boundary_faces,rhostore,kappastore,ispec_is_acoustic, &
-                         SIMULATION_TYPE,SAVE_FORWARD,it,b_reclen_potential, &
-                         b_absorb_potential,b_num_abs_boundary_faces)
+      call compute_stacey_acoustic(NSPEC_AB,NGLOB_AB, &
+                        potential_dot_dot_acoustic,potential_dot_acoustic, &
+                        ibool,ispec_is_inner,phase_is_inner, &
+                        abs_boundary_jacobian2Dw,abs_boundary_ijk,abs_boundary_ispec, &
+                        num_abs_boundary_faces,rhostore,kappastore,ispec_is_acoustic, &
+                        SIMULATION_TYPE,SAVE_FORWARD,it,b_reclen_potential, &
+                        b_absorb_potential,b_num_abs_boundary_faces)
     endif
 
     ! elastic coupling
@@ -135,6 +136,10 @@ subroutine compute_forces_acoustic()
           ! handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
           ! adjoint definition: \partial_t^2 \bfs^\dagger=-\frac{1}{\rho}\bfnabla\phi^\dagger
           call compute_coupling_acoustic_el(NSPEC_AB,NGLOB_AB, &
+!! DK DK: beware: function or procedure arguments that contain a calculation produce a memory copy
+!! DK DK: created by the compiler; The code is fine, but the hidden copy may slow it down.
+!! DK DK: here is the warning from the Cray compiler:
+!! DK DK: ftn-1438 crayftn: This argument produces a copy in to a temporary variable.
                               ibool,-accel,potential_dot_dot_acoustic, &
                               num_coupling_ac_el_faces, &
                               coupling_ac_el_ispec,coupling_ac_el_ijk, &

@@ -1,0 +1,15 @@
+Carl Tape, 01-Oct-2008
+
+/net/denali/scratch1/carltape/svn
+   /cig/seismo/3D/ADJOINT_TOMO/iterate_adj/UTILS/station_lists/
+
+First, get two files, STATIONS_in and EIDS_in, each with the three columns
+    name   longitude    latitude
+
+This is what I did to get the files:
+awk '{print $2,$8,$9}' /net/sierra/raid1/carltape/results/SOURCES/socal_10/EIDs_lonlat_otime > EIDS_in
+awk '{print $3"."$4,$1,$2}' /net/denali/home2/carltape/gmt/stations/seismic/Matlab_output/STATIONS_CALIFORNIA_TOMO_INNER_gmt > STATIONS_in
+
+Then run make_station_lists.m from Matlab to generate the output lists.
+
+-----------------------

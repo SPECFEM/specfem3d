@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -33,22 +34,22 @@
 
   implicit none
 
-! character(len=100), parameter :: cubit_mesh_file = 'HOMOGENE_3D_lisse_300_in_meters.inp'
+! character(len=*), parameter :: cubit_mesh_file = 'HOMOGENE_3D_lisse_300_in_meters.inp'
 ! integer, parameter :: NPOIN = 98692
 
-! character(len=100), parameter :: cubit_mesh_file = 'regolite_3D_rego3d_70m_in_meters.inp'
+! character(len=*), parameter :: cubit_mesh_file = 'regolite_3D_rego3d_70m_in_meters.inp'
 ! integer, parameter :: NPOIN = 4050696
 
-! character(len=100), parameter :: cubit_mesh_file = 'HOMOGENE_2D_in_meters.inp'
+! character(len=*), parameter :: cubit_mesh_file = 'HOMOGENE_2D_in_meters.inp'
 ! integer, parameter :: NPOIN = 3882
 
-! character(len=100), parameter :: cubit_mesh_file = 'eros_complexe_2d_regolite_fractures_modifie_in_meters.inp'
+! character(len=*), parameter :: cubit_mesh_file = 'eros_complexe_2d_regolite_fractures_modifie_in_meters.inp'
 ! integer, parameter :: NPOIN = 57807
 
-! character(len=100), parameter :: cubit_mesh_file = 'REGOLITE_only_no_fractures_2D_in_meters.inp'
+! character(len=*), parameter :: cubit_mesh_file = 'REGOLITE_only_no_fractures_2D_in_meters.inp'
 ! integer, parameter :: NPOIN = 32536
 
-  character(len=100), parameter :: cubit_mesh_file = 'rego3d_70_disp.inp'
+  character(len=*), parameter :: cubit_mesh_file = 'rego3d_70_disp.inp'
   integer, parameter :: NPOIN = 5924713
 
   real, dimension(NPOIN) :: x,y,z

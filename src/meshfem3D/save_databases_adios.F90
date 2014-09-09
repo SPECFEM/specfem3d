@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -53,12 +54,12 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
    ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,&
    NMATERIALS,material_properties)
 
+  use constants
   use adios_helpers_mod
   use safe_alloc_mod
 
   implicit none
 
-  include "constants.h"
   include "constants_meshfem3D.h"
 
   ! MPI variables
@@ -106,7 +107,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   integer :: dummy_nspec_cpml
 
   ! name of the database files
-  character(len=256) LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH
 
   ! for MPI interfaces
   integer ::  nb_interfaces,nspec_interfaces_max
@@ -118,8 +119,8 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   integer :: ngnod, ngnod2d
 
   !--- Local parameters for ADIOS ---
-  character(len=256) :: output_name
-  character(len=64), parameter :: group_name  = "SPECFEM3D_DATABASES"
+  character(len=MAX_STRING_LEN) :: output_name
+  character(len=*), parameter :: group_name = "SPECFEM3D_DATABASES"
   integer(kind=8) :: group, handle
   integer(kind=8) :: groupsize, totalsize
   integer :: local_dim
@@ -660,7 +661,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   local_dim = nspec2d_xmin_wmax
   call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                    STRINGIFY_VAR(ibelm_xmin))
-  if (nspec2d_xmin .ne. 0) then
+  if (nspec2d_xmin /= 0) then
     local_dim = NGNOD2D * nspec2d_xmin_wmax
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(nodes_ibelm_xmin))
@@ -668,7 +669,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   local_dim = nspec2d_xmax_wmax
   call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                    STRINGIFY_VAR(ibelm_xmax))
-  if (nspec2d_xmax .ne. 0) then
+  if (nspec2d_xmax /= 0) then
     local_dim = NGNOD2D * nspec2d_xmax_wmax
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(nodes_ibelm_xmax))
@@ -676,7 +677,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   local_dim = nspec2d_ymin_wmax
   call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                    STRINGIFY_VAR(ibelm_ymin))
-  if (nspec2d_ymin .ne. 0) then
+  if (nspec2d_ymin /= 0) then
     local_dim = NGNOD2D * nspec2d_ymin_wmax
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(nodes_ibelm_ymin))
@@ -684,7 +685,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   local_dim = nspec2d_ymax_wmax
   call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                    STRINGIFY_VAR(ibelm_ymax))
-  if (nspec2d_ymax .ne. 0) then
+  if (nspec2d_ymax /= 0) then
   local_dim = NGNOD2D * nspec2d_ymax_wmax
   call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                    STRINGIFY_VAR(nodes_ibelm_ymax))
@@ -692,7 +693,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   local_dim = nspec2d_bottom_wmax
   call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                    STRINGIFY_VAR(ibelm_bottom))
-  if (nspec2d_bottom .ne. 0) then
+  if (nspec2d_bottom /= 0) then
     local_dim = NGNOD2D * nspec2d_bottom_wmax
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(nodes_ibelm_bottom))
@@ -700,7 +701,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   local_dim = nspec2d_top_wmax
   call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                    STRINGIFY_VAR(ibelm_top))
-  if (nspec2d_top .ne. 0) then
+  if (nspec2d_top /= 0) then
     local_dim = NGNOD2D * nspec2d_top_wmax
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(nodes_ibelm_top))

@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -96,7 +97,7 @@
       call exit_MPI(myrank, 'maxval(perm) should be max(num_phase_ispec_..)')
 
     ! sorts array according to permutation
-    call sync_all()
+    call synchronize_all()
     if(myrank == 0) then
       write(IMAIN,*) '     mesh permutation:'
     endif
@@ -161,8 +162,8 @@
   integer :: ispec_inner,ispec_outer
   integer :: ier
 
-  character(len=2),dimension(2) :: str_domain = (/ "ac", "el" /)
-  character(len=256) :: filename
+  character(len=2), dimension(2), parameter :: str_domain = (/ "ac", "el" /)
+  character(len=MAX_STRING_LEN) :: filename
 
   logical, parameter :: DEBUG = .false.
 
@@ -427,7 +428,7 @@
   integer :: icolor,icounter,ispec,ielem,ier,i
   integer :: iface,old_ispec,new_ispec
 
-  character(len=256) :: filename
+  character(len=MAX_STRING_LEN) :: filename
 
   logical,parameter :: DEBUG = .false.
 

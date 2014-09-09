@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -25,69 +26,70 @@
 !=====================================================================
 
 ! read values from parameter file, ignoring white lines and comments
-  subroutine read_value_integer(value_to_read, name)
 
+  subroutine read_value_integer(value_to_read, name, ierr)
+
+  use constants, only: MAX_STRING_LEN
   implicit none
 
   integer value_to_read
-  character(len=*) name
-  character(len=512) string_read
+  character(len=*) :: name
+  character(len=MAX_STRING_LEN) :: string_read
   integer ierr
-  common /param_err_common/ ierr
 
   call param_read(string_read, len(string_read), name, len(name), ierr)
   if (ierr /= 0) return
-  read(string_read,*) value_to_read
+  read(string_read,*,iostat=ierr) value_to_read
 
   end subroutine read_value_integer
 
 !--------------------
 
-  subroutine read_value_double_precision(value_to_read, name)
+  subroutine read_value_double_precision(value_to_read, name, ierr)
 
+  use constants, only: MAX_STRING_LEN
   implicit none
 
   double precision value_to_read
-  character(len=*) name
-  character(len=512) string_read
+  character(len=*) :: name
+  character(len=MAX_STRING_LEN) :: string_read
   integer ierr
-  common /param_err_common/ ierr
 
   call param_read(string_read, len(string_read), name, len(name), ierr)
   if (ierr /= 0) return
-  read(string_read,*) value_to_read
+  read(string_read,*,iostat=ierr) value_to_read
 
   end subroutine read_value_double_precision
 
 !--------------------
 
-  subroutine read_value_logical(value_to_read, name)
+  subroutine read_value_logical(value_to_read, name, ierr)
 
+  use constants, only: MAX_STRING_LEN
   implicit none
 
   logical value_to_read
-  character(len=*) name
-  character(len=512) string_read
+  character(len=*) :: name
+  character(len=MAX_STRING_LEN) :: string_read
   integer ierr
-  common /param_err_common/ ierr
 
   call param_read(string_read, len(string_read), name, len(name), ierr)
   if (ierr /= 0) return
-  read(string_read,*) value_to_read
+  read(string_read,*,iostat=ierr) value_to_read
 
   end subroutine read_value_logical
 
 !--------------------
 
-  subroutine read_value_string(value_to_read, name)
+  subroutine read_value_string(value_to_read, name, ierr)
 
+  use constants, only: MAX_STRING_LEN
   implicit none
 
-  character(len=*) value_to_read
-  character(len=*) name
-  character(len=512) string_read
+  character(len=*) :: value_to_read
+  character(len=*) :: name
+  character(len=MAX_STRING_LEN) :: string_read
   integer ierr
-  common /param_err_common/ ierr
 
   call param_read(string_read, len(string_read), name, len(name), ierr)
   if (ierr /= 0) return
@@ -97,15 +99,25 @@
 
 !--------------------
 
-  subroutine open_parameter_file()
+  subroutine open_parameter_file(ierr)
 
-  include 'constants.h'
+  use constants, only: MAX_STRING_LEN,IN_DATA_FILES_PATH,NUMBER_OF_SIMULTANEOUS_RUNS,mygroup
+
+  implicit none
+
   integer ierr
-  common /param_err_common/ ierr
-  character(len=512) filename
-  filename = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'Par_file'
+  character(len=MAX_STRING_LEN) :: filename,path_to_add
 
-  call param_open(filename, len(filename), ierr);
+  filename = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'Par_file'
+! see if we are running several independent runs in parallel
+! if so, add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
+! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
+  if(NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
+    write(path_to_add,"('run',i4.4,'/')") mygroup + 1
+    filename = path_to_add(1:len_trim(path_to_add))//filename(1:len_trim(filename))
+  endif
+
+  call param_open(filename, len(filename), ierr)
   if (ierr /= 0) then
     print*
     print*,'opening file failed, please check your file path and run-directory.'
@@ -116,179 +128,8 @@
 
 !--------------------
 
-  subroutine close_parameter_file()
+  subroutine close_parameter_file
 
-  call param_close();
+  call param_close()
 
   end subroutine close_parameter_file
-
-!--------------------
-
-  integer function err_occurred()
-
-  integer ierr
-  common /param_err_common/ ierr
-
-  err_occurred = ierr
-
-  end function err_occurred
-
-!--------------------
-
-
-!
-! unused routines:
-!
-
-
-!  subroutine read_value_integer(value_to_read, name)
-!
-!  implicit none
-!
-!  integer value_to_read
-!  character(len=*) name
-!  character(len=256) string_read
-!
-!  call unused_string(name)
-!
-!  call read_next_line(string_read)
-!  read(string_read,*) value_to_read
-!
-!  end subroutine read_value_integer
-!
-!!--------------------
-!
-!  subroutine read_value_double_precision(value_to_read, name)
-!
-!  implicit none
-!
-!  double precision value_to_read
-!  character(len=*) name
-!  character(len=256) string_read
-!
-!  call unused_string(name)
-!
-!  call read_next_line(string_read)
-!  read(string_read,*) value_to_read
-!
-!  end subroutine read_value_double_precision
-!
-!!--------------------
-!
-!  subroutine read_value_logical(value_to_read, name)
-!
-!  implicit none
-!
-!  logical value_to_read
-!  character(len=*) name
-!  character(len=256) string_read
-!
-!  call unused_string(name)
-!
-!  call read_next_line(string_read)
-!  read(string_read,*) value_to_read
-!
-!  end subroutine read_value_logical
-!
-!!--------------------
-!
-!  subroutine read_value_string(value_to_read, name)
-!
-!  implicit none
-!
-!  character(len=*) value_to_read
-!  character(len=*) name
-!  character(len=256) string_read
-!
-!  call unused_string(name)
-!
-!  call read_next_line(string_read)
-!  value_to_read = string_read
-!
-!  end subroutine read_value_string
-!
-!!--------------------
-!
-!  subroutine read_next_line(string_read)
-!
-!  implicit none
-!
-!  include "constants.h"
-!
-!  character(len=256) string_read
-!
-!  integer index_equal_sign,ios
-!
-!  do
-!    read(unit=IIN,fmt="(a256)",iostat=ios) string_read
-!    if(ios /= 0) stop 'error while reading parameter file'
-!
-!! suppress leading white spaces, if any
-!    string_read = adjustl(string_read)
-!
-!! suppress trailing carriage return (ASCII code 13) if any (e.g. if input text file coming from Windows/DOS)
-!    if(index(string_read,achar(13)) > 0) string_read = string_read(1:index(string_read,achar(13))-1)
-!
-!! exit loop when we find the first line that is not a comment or a white line
-!    if(len_trim(string_read) == 0) cycle
-!    if(string_read(1:1) /= '#') exit
-!
-!  enddo
-!
-!! suppress trailing white spaces, if any
-!  string_read = string_read(1:len_trim(string_read))
-!
-!! suppress trailing comments, if any
-!  if(index(string_read,'#') > 0) string_read = string_read(1:index(string_read,'#')-1)
-!
-!! suppress leading junk (up to the first equal sign, included)
-!  index_equal_sign = index(string_read,'=')
-!  if(index_equal_sign <= 1 .or. index_equal_sign == len_trim(string_read)) stop 'incorrect syntax detected in Par_file'
-!  string_read = string_read(index_equal_sign + 1:len_trim(string_read))
-!
-!! suppress leading and trailing white spaces again, if any, after having suppressed the leading junk
-!  string_read = adjustl(string_read)
-!  string_read = string_read(1:len_trim(string_read))
-!
-!  end subroutine read_next_line
-!
-!!--------------------
-!
-!  subroutine open_parameter_file
-!
-!  include "constants.h"
-!
-!  open(unit=IIN,file='DATA/Par_file',status='old',action='read')
-!
-!  end subroutine open_parameter_file
-!
-!!--------------------
-!
-!  subroutine close_parameter_file
-!
-!  include "constants.h"
-!
-!  close(IIN)
-!
-!  end subroutine close_parameter_file
-!
-!!--------------------
-!
-!  integer function err_occurred()
-!
-!  err_occurred = 0
-!
-!  end function err_occurred
-!
-!!--------------------
-!
-!! dummy subroutine to avoid warnings about variable not used in other subroutines
-!  subroutine unused_string(s)
-!
-!  character(len=*) s
-!
-!  if (len(s) == 1) continue
-!
-!  end subroutine unused_string
-!
-

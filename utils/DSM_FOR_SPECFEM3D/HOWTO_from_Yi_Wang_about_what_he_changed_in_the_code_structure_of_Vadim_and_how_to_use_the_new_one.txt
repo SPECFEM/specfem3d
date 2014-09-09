@@ -1,0 +1,83 @@
+
+Subject:  Re: did you change anything in DSM_FOR_SPECFEM3D/SPECFEM3D_HYBRID_VADIM_version_non_official ?
+Date:   Tue, 03 Jun 2014 16:10:20 +0200
+From:   ywang
+To:   Dimitri Komatitsch
+
+Dear dimitri,
+
+I didn't change anything in Vadim's DSM codes of PSV
+parts. In the new Hybrid package, i just merged and modified DSM codes
+of SH parts. Maybe there are some differences in the makefile for my SH
+DSM computation from Vadim's PSV parts. But I think my SH DSM
+contributions are self-consistent.
+
+The major change of new Hybrid package is the new directory
+structure. For Vadim's old PSV Hybrid computation, the directories
+structure contain every part of codes is like below :
+
+  |-- bin
+  |-- Part1_create_SPECFEM3D_Cartesian_mesh_for_DSM
+  |-- Part2_compute_DSM_coefficients_with_FEMs
+  |-- Part3_read_DSM_coefficients_back
+  | |-- TraPSV_MPI_read_vertical_faces
+  | `-- TraPSV_MPI_read_Zmin
+  |-- Part4_modify_DSM_results_for_SPECFEM
+  | |-- ChangeFormat
+  | |-- ChangeFormat_disp
+  | |-- ChangeFormat_zmin
+  | |-- ChangeFormat_zmin_disp
+  | |-- FFT_MPI_FACES_VERT
+  | |-- FFT_MPI_FACES_ZMIN
+  | `-- Interf_SPECFEM3D_DSM
+  |-- shared
+  |-- shells
+  `-- UTILS
+
+For my new Hybrid merge the SH contributions, the directories structure contain every part of codes is :
+
+  |-- bin
+  |-- Part1_create_SPECFEM3D_Cartesian_mesh_for_DSM
+  |-- Part2_compute_DSM_coefficients_with_FEMs_PSV
+  |-- Part2_compute_DSM_coefficients_with_FEMs_SH
+  |-- Part3_read_DSM_coefficients_back_PSV
+  | |-- TraPSV_MPI_read_vertical_faces
+  | `-- TraPSV_MPI_read_Zmin
+  |-- Part3_read_DSM_coefficients_back_SH
+  | |-- TraPSV_MPI_read_vertical_faces
+  | `-- TraPSV_MPI_read_Zmin
+  |-- Part4_modify_DSM_results_for_SPECFEM
+  | |-- ChangeFormat
+  | |-- ChangeFormat_disp
+  | |-- ChangeFormat_zmin
+  | |-- ChangeFormat_zmin_disp
+  | |-- FFT_MPI_FACES_VERT_FULL
+  | |-- FFT_MPI_FACES_VERT_PSV
+  | |-- FFT_MPI_FACES_VERT_SH
+  | |-- FFT_MPI_FACES_ZMIN_FULL
+  | |-- FFT_MPI_FACES_ZMIN_PSV
+  | |-- FFT_MPI_FACES_ZMIN_SH
+  | `-- Interf_SPECFEM3D_DSM
+  |-- shared
+  |-- shells
+  `-- UTILS
+
+     I move Vadim's DSM codes of PSV part into the directory end with
+_PSV. My DSM codes of SH parts is in the directory end with _SH. For the
+full wavefields computation, I move the relative codes into the
+directories end with _FULL. (in fact , only the FFT routines may
+consider 3 different cases: full wavefields/PSV/SH  transform).
+
+     I also modified and added some control scripts for DSM computation
+in the shells directory, they are:
+
+     ./shells/scripts_dsm_full.sh
+
+     ./shell/scripts_dsm_PSV.sh
+
+     ./shell/scripts_dsm_SH.sh
+
+     Best wishes,
+
+     YI
+

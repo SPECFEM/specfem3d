@@ -1,3 +1,30 @@
+!=====================================================================
+!
+!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               ---------------------------------------
+!
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
+!
+! This program is free software; you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation; either version 2 of the License, or
+! (at your option) any later version.
+!
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+!
+! You should have received a copy of the GNU General Public License along
+! with this program; if not, write to the Free Software Foundation, Inc.,
+! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+!
+!=====================================================================
+
 ! Generates database for faults (dynamic or kinematic)
 !
 ! Splitting fault nodes (with opening) is done in CUBIT.
@@ -65,7 +92,9 @@ contains
 !=================================================================================================================
 subroutine fault_read_input(prname,myrank)
 
-  character(len=256), intent(in) :: prname
+  use constants, only: MAX_STRING_LEN
+
+  character(len=MAX_STRING_LEN), intent(in) :: prname
   integer, intent(in) :: myrank
 
   integer :: nb,i,iflt,ier,nspec,dummy_node
@@ -290,7 +319,7 @@ subroutine setup_ibools(fdb,xstore,ystore,zstore,nspec,npointot)
   double precision, dimension(NGLLX,NGLLY,NGLLZ,nspec), intent(in) :: xstore,ystore,zstore
 
   double precision :: xp(npointot),yp(npointot),zp(npointot),xmin,xmax
-  integer :: loc(npointot)
+  integer :: locval(npointot)
   logical :: ifseg(npointot)
   integer :: ispec,k,igll,ie,je,ke,e
 
@@ -311,7 +340,7 @@ subroutine setup_ibools(fdb,xstore,ystore,zstore,nspec,npointot)
     enddo
   enddo
   allocate( fdb%ibool1(NGLLSQUARE,fdb%nspec) )
-  call get_global(fdb%nspec,xp,yp,zp,fdb%ibool1,loc,ifseg,fdb%nglob,npointot,xmin,xmax)
+  call get_global(npointot,xp,yp,zp,fdb%ibool1,locval,ifseg,fdb%nglob,xmin,xmax)
 
 ! xp,yp,zp need to be recomputed on side 2
 ! because they are generally not in the same order as on side 1,
@@ -331,7 +360,7 @@ subroutine setup_ibools(fdb,xstore,ystore,zstore,nspec,npointot)
     enddo
   enddo
   allocate( fdb%ibool2(NGLLSQUARE,fdb%nspec) )
-  call get_global(fdb%nspec,xp,yp,zp,fdb%ibool2,loc,ifseg,fdb%nglob,npointot,xmin,xmax)
+  call get_global(npointot,xp,yp,zp,fdb%ibool2,locval,ifseg,fdb%nglob,xmin,xmax)
 
 end subroutine setup_ibools
 
@@ -383,11 +412,11 @@ subroutine close_fault(fdb)
   do i=1,fdb%nglob
     K1 = fdb%ibulk1(i)
     K2 = fdb%ibulk2(i)
-    xstore_dummy(K1) = 0.5d0*( xstore_dummy(K1) + xstore_dummy(K2) )
+    xstore_dummy(K1) = 0.5_CUSTOM_REAL*( xstore_dummy(K1) + xstore_dummy(K2) )
     xstore_dummy(K2) = xstore_dummy(K1)
-    ystore_dummy(K1) = 0.5d0*( ystore_dummy(K1) + ystore_dummy(K2) )
+    ystore_dummy(K1) = 0.5_CUSTOM_REAL*( ystore_dummy(K1) + ystore_dummy(K2) )
     ystore_dummy(K2) = ystore_dummy(K1)
-    zstore_dummy(K1) = 0.5d0*( zstore_dummy(K1) + zstore_dummy(K2) )
+    zstore_dummy(K1) = 0.5_CUSTOM_REAL*( zstore_dummy(K1) + zstore_dummy(K2) )
     zstore_dummy(K2) = zstore_dummy(K1)
   enddo
 
@@ -509,11 +538,13 @@ end subroutine setup_normal_jacobian
 ! saves all fault data in ASCII files for verification
 subroutine fault_save_arrays_test(prname)
 
-  character(len=256), intent(in) :: prname ! 'proc***'
+  use constants, only: MAX_STRING_LEN
+
+  character(len=MAX_STRING_LEN), intent(in) :: prname ! 'proc***'
 
   integer, parameter :: IOUT = 121 !WARNING: not very robust. Could instead look for an available ID
   integer :: nbfaults,iflt,ier
-  character(len=256) :: filename
+  character(len=MAX_STRING_LEN) :: filename
 
   if (.not.ANY_FAULT) return
 
@@ -582,11 +613,13 @@ end subroutine save_one_fault_test
 ! saves fault data needed by the solver in binary files
 subroutine fault_save_arrays(prname)
 
-  character(len=256), intent(in) :: prname ! 'proc***'
+  use constants, only: MAX_STRING_LEN
+
+  character(len=MAX_STRING_LEN), intent(in) :: prname ! 'proc***'
 
   integer, parameter :: IOUT = 121 !WARNING: not very robust. Could instead look for an available ID
   integer :: nbfaults,iflt,ier
-  character(len=256) :: filename
+  character(len=MAX_STRING_LEN) :: filename
   integer :: size_Kelvin_Voigt
 
   if (.not.ANY_FAULT) return
@@ -607,7 +640,7 @@ subroutine fault_save_arrays(prname)
     size_Kelvin_Voigt = 0
   endif
   write(IOUT) size_Kelvin_Voigt
-  if (size_Kelvin_Voigt /= 0) Write(IOUT) Kelvin_Voigt_eta
+  if (size_Kelvin_Voigt /= 0) write(IOUT) Kelvin_Voigt_eta
   close(IOUT)
 
 ! saves mesh file proc***_fault_db.bin

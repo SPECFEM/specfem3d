@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -45,13 +46,52 @@
 
 !----------- parameters that can be changed by the user -----------
 
+!! DK DK July 2014, CNRS Marseille, France:
+!! DK DK added the ability to run several calculations (several earthquakes)
+!! DK DK in an embarrassingly-parallel fashion from within the same run;
+!! DK DK this can be useful when using a very large supercomputer to compute
+!! DK DK many earthquakes in a catalog, in which case it can be better from
+!! DK DK a batch job submission point of view to start fewer and much larger jobs,
+!! DK DK each of them computing several earthquakes in parallel.
+!! DK DK To turn that option on, set parameter NUMBER_OF_SIMULTANEOUS_RUNS
+!! DK DK to a value greater than 1 in file setup/constants.h.in before
+!! DK DK configuring and compiling the code.
+!! DK DK To implement that, we create NUMBER_OF_SIMULTANEOUS_RUNS MPI sub-communicators,
+!! DK DK each of them being labeled "my_local_mpi_comm_world", and we use them
+!! DK DK in all the routines in "src/shared/parallel.f90", except in MPI_ABORT() because in that case
+!! DK DK we need to kill the entire run.
+!! DK DK When that option is on, of course the number of processor cores used to start
+!! DK DK the code in the batch system must be a multiple of NUMBER_OF_SIMULTANEOUS_RUNS,
+!! DK DK all the individual runs must use the same number of processor cores,
+!! DK DK which as usual is NPROC in the input file DATA/Par_file,
+!! DK DK and thus the total number of processor cores to request from the batch system
+!! DK DK should be NUMBER_OF_SIMULTANEOUS_RUNS * NPROC.
+!! DK DK All the runs to perform must be placed in directories called run0001, run0002, run0003 and so on
+!! DK DK (with exactly four digits) and you must create a link from the root directory of the code
+!! DK DK to the first copy of the executable programs by typing " ln -s run0001/bin bin ".
+!!
+!! DK DK Imagine you have 10 independent calculations to do, each of them on 100 cores; you have three options:
+!!
+!! DK DK 1/ submit 10 jobs to the batch system
+!!
+!! DK DK 2/ submit a single job on 1000 cores to the batch, and in that script create a sub-array of jobs to start 10 jobs,
+!! DK DK each running on 100 cores (see e.g. http://www.schedmd.com/slurmdocs/job_array.html )
+!!
+!! DK DK 3/ submit a single job on 1000 cores to the batch, start SPECFEM3D on 1000 cores, create 10 sub-communicators,
+!! DK DK cd into one of 10 subdirectories (called e.g. run0001, run0002,... run0010) depending on the sub-communicator
+!! DK DK your MPI rank belongs to, and run normally on 100 cores using that sub-communicator.
+!!
+!! DK DK The option below implements 3/.
+!!
+  integer, parameter :: NUMBER_OF_SIMULTANEOUS_RUNS = 1
+
 ! set to .false.  if running on a Beowulf-type machine with local disks
 ! set to .true. if running on a shared-memory machine with common file system
 ! if running on a Beowulf, also modify name of nodes in filter_machine_file.f90
   logical, parameter :: LOCAL_PATH_IS_ALSO_GLOBAL = .@LOCAL_PATH_IS_ALSO_GLOBAL@.
 
-! apply heuristic rule to modify doubling regions to balance angles
-  logical, parameter :: APPLY_HEURISTIC_RULE = .true.
+! maximum length of strings used for paths, reading from files, etc.
+  integer, parameter :: MAX_STRING_LEN = 512
 
 ! use inlined products of Deville et al. (2002) to speedup the calculations to compute internal forces
   logical, parameter :: USE_DEVILLE_PRODUCTS = .false.
@@ -90,15 +130,14 @@
 ! integer, parameter :: IMAIN = ISTANDARD_OUTPUT
 ! I/O unit for source and receiver vtk file
   integer, parameter :: IOVTK = 98
-! I/O unit for absorbing boundary snapshots
-!  integer, parameter :: IOABS = 31
-!  integer, parameter :: IOABS_AC = 32
+! I/O number for absorbing boundary snapshots (opened in C for speed)
+!  Not a Fortran I/O unit! See write_c_binary.c for more information.
+  integer, parameter :: IOABS = 0
+  integer, parameter :: IOABS_AC = 1
 ! I/O unit for plotting source time function
   integer, Parameter :: IOSTF = 71
-! I/O unit for interface file
-  integer, parameter :: IIN_INTERFACES = 43
 ! I/O unit for noise simulations
-  integer, parameter :: IIN_NOISE = 44,IOUT_NOISE = 45
+  integer, parameter :: IIN_NOISE = 44, IOUT_NOISE = 45
 ! I/O unit for SU formatted seismograms
   integer, parameter :: IOUT_SU = 46
 ! I/O unit for SU formatted adjoint sources
@@ -109,7 +148,28 @@
 
   ! size of the ADIOS buffer to use
   integer, parameter :: ADIOS_BUFFER_SIZE_IN_MB = 200
-  character(len=256), parameter :: ADIOS_TRANSPORT_METHOD = 'MPI'
+  character(len=*), parameter :: ADIOS_TRANSPORT_METHOD = 'MPI'
+
+!!-----------------------------------------------------------
+!!
+!! weakly nonlinear Hooke's law
+!!
+!!-----------------------------------------------------------
+
+! in the case of weakly nonlinear materials the stress tensor becomes non-symmetric, see for instance equation (A9) in
+! D. L. Johnson, S. Kostek and A. N. Norris, Nonlinear tube waves, J. Acoust. Soc. Am. vol. 96, p. 1829-1843 (1994).
+
+  logical, parameter :: MAKE_HOOKE_LAW_WEAKLY_NONLINEAR = .false.
+
+! define here the third-order elastic constants that are needed in addition to lambda and mu
+! for now they are constant in the whole medium; that will be easy to change later if needed
+  real(kind=CUSTOM_REAL), parameter :: A = 0.0_CUSTOM_REAL
+  real(kind=CUSTOM_REAL), parameter :: B = 0.0_CUSTOM_REAL
+  real(kind=CUSTOM_REAL), parameter :: C = 0.0_CUSTOM_REAL
+
+! we precompute some related constants in order to save compute time in the solver
+  real(kind=CUSTOM_REAL), parameter :: A_over_4 = 0.25_CUSTOM_REAL * A
+  real(kind=CUSTOM_REAL), parameter :: B_over_2 = 0.50_CUSTOM_REAL * B
 
 !!-----------------------------------------------------------
 !!
@@ -122,6 +182,47 @@
   logical, parameter :: OUTPUT_ENERGY = .false. ! .true.
   integer, parameter :: IOUT_ENERGY = 937  ! file number for the energy file
   integer, parameter :: NTSTEP_BETWEEN_OUTPUT_ENERGY = 10  ! how often we compute energy (which is expensive to compute)
+
+!!-----------------------------------------------------------
+!!
+!! Roland_Sylvain gravity calculations
+!!
+!!-----------------------------------------------------------
+
+!! DK DK for Roland_Sylvain
+  logical, parameter :: ROLAND_SYLVAIN = .false. !!! .true.
+
+! check for negative Jacobians in the calculation of integrals or not
+! (can safely be done once to check that the mesh is OK at a given resolution, and then permanently
+!  turned off in future runs because the mesh does not change)
+  logical, parameter :: CHECK_FOR_NEGATIVE_JACOBIANS = .true.
+
+! file that contains the observation grid (which is a simple ASCII file, with x y z of each point on separate lines)
+  character(len=*), parameter :: OBSERVATION_GRID_FILE = './DATA/observation_grid_to_use_for_gravity.txt'
+
+! number of points in the observation grid
+  integer, parameter :: NTOTAL_OBSERVATION = 4
+
+! a receiver at which we check and output the gravity field (for display purposes only; you can thus safely leave it unchanged)
+  integer, parameter :: iobs_receiver = 1
+
+! how often (every how many spectral elements computed) we print a timestamp to monitor the behavior of the code
+  integer, parameter :: NSPEC_DISPLAY_INTERVAL = 1000
+
+! definition of an Eotvos compared to S.I. units.
+! The unit of gravity gradient is the Eotvos, which is equivalent to 1e-9 s-2 (or 1e-4 mGal/m).
+! A person walking at a distance of 2 meters provides a gravity gradient signal of approximately one Eotvos.
+! Mountains can create signals of several hundred Eotvos.
+  double precision, parameter :: SI_UNITS_TO_EOTVOS = 1.d+9
+
+!!-----------------------------------------------------------
+!!
+!! For coupling with DSM
+!!
+!!-----------------------------------------------------------
+
+! some old tests (currently unstable; do not remove them though, we might fix this one day)
+  integer, parameter :: IIN_veloc_dsm = 51, IIN_tract_dsm = 52, Ntime_step_dsm = 100
 
 !!-----------------------------------------------------------
 !!
@@ -152,22 +253,16 @@
 ! decide if master process writes all the seismograms or if all processes do it in parallel
   logical, parameter :: WRITE_SEISMOGRAMS_BY_MASTER = .false.
 
-! use directory OUTPUT_FILES/ for seismogram output
-  logical,parameter :: USE_OUTPUT_FILES_PATH = .true.
-
 !!-----------------------------------------------------------
 !!
 !! C-PML absorbing boundary conditions
 !!
 !!-----------------------------------------------------------
-  real(kind=CUSTOM_REAL), parameter :: NPOWER = 1.d0
+  real(kind=CUSTOM_REAL), parameter :: NPOWER = 1._CUSTOM_REAL
 
 ! C-PML theoretical reflection coefficient
 ! (INRIA research report section 6.1:  http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf)
-  real(kind=CUSTOM_REAL), parameter :: CPML_Rcoef = 0.001d0
-
-! empirical damping modified factor
-  real(kind=CUSTOM_REAL), parameter :: damping_factor = 1.2d0
+  real(kind=CUSTOM_REAL), parameter :: CPML_Rcoef = 0.001_CUSTOM_REAL
 
 ! flags for the seven CPML regions
   integer, parameter :: CPML_X_ONLY = 1
@@ -185,10 +280,9 @@
 !!-----------------------------------------------------------
 
 ! paths for inputs and outputs files
-  character(len=256), parameter :: IN_DATA_FILES_PATH = '../DATA/'
-  character(len=256), parameter :: MF_IN_DATA_FILES_PATH = '../DATA/meshfem3D_files/'
-  character(len=256), parameter :: OUTPUT_FILES_PATH = '../OUTPUT_FILES/'
-
+  character(len=*), parameter :: IN_DATA_FILES_PATH = './DATA/'
+  character(len=*), parameter :: MF_IN_DATA_FILES_PATH = './DATA/meshfem3D_files/'
+  character(len=*), parameter :: OUTPUT_FILES_PATH_BASE = './OUTPUT_FILES/'
 
 ! ---------------------------------------------------------------------------------------
 ! LQY -- Following 3 variables stays here temporarily,
@@ -204,13 +298,8 @@
 ! to be used in the backward reconstruction in the presence of attenuation
   integer, parameter :: NSTEP_Q_SAVE = 50 ! depending on stability of reconstruction, up to 200
 
-! the scratch disk to save the state variables saved in the forward
-! simulation, this can be a global scratch disk in case you run out of
-! space on the local scratch disk, e.g. '/ibrixfs1/scratch/lqy/DATABASES_MPI_Q/'
-  character(len=256), parameter :: LOCAL_PATH_Q = '../OUTPUT_FILES/DATABASES_MPI'
-
 !------------------------------------------------------
-! nlegoff -- Variables that should be read/computed elsewhere.
+! Nicolas Legoff -- Variables that should be read/computed elsewhere.
 !            Temporarily declared here.
 !------------------------------------------------------
 
@@ -245,9 +334,9 @@
 ! (EXPERIMENTAL feature)
 ! (requires MOVIE_SURFACE set to .true. in Par_file)
   logical, parameter :: PLOT_CROSS_SECTIONS = .false.
-  real(kind=CUSTOM_REAL),parameter :: CROSS_SECTION_X = 67000.0
-  real(kind=CUSTOM_REAL),parameter :: CROSS_SECTION_Y = 65500.0
-  real(kind=CUSTOM_REAL),parameter :: CROSS_SECTION_Z = -30000.0
+  real(kind=CUSTOM_REAL),parameter :: CROSS_SECTION_X = 67000.0_CUSTOM_REAL
+  real(kind=CUSTOM_REAL),parameter :: CROSS_SECTION_Y = 65500.0_CUSTOM_REAL
+  real(kind=CUSTOM_REAL),parameter :: CROSS_SECTION_Z = -30000.0_CUSTOM_REAL
 
 ! plots PNM cross-section image
 ! (EXPERIMENTAL feature)
@@ -381,7 +470,7 @@
   double precision, parameter :: ORIG_LAT_TOPO = 32.d0
   double precision, parameter :: ORIG_LONG_TOPO = -121.d0
   double precision, parameter :: DEGREES_PER_CELL_TOPO = 5.d0 / 1000.d0
-  character(len=100), parameter :: TOPO_FILE = 'DATA/la_topography/topo_bathy_final.dat'
+  character(len=*), parameter :: TOPO_FILE = 'DATA/la_topography/topo_bathy_final.dat'
 
 ! ! size of topography and bathymetry file for Piero Basini's model
 !   integer, parameter :: NX_TOPO_FILE = 787, NY_TOPO_FILE = 793
@@ -389,7 +478,7 @@
 !   double precision, parameter :: ORIG_LONG_TOPO = 729806.d0
 ! ! for Piero Basini's model this is the resolution in meters of the topo file
 !   double precision, parameter :: DEGREES_PER_CELL_TOPO = 250.d0
-!   character(len=256), parameter :: TOPO_FILE = 'DATA/piero_model/dem_EV_UTM_regular_250_reordered.dat'
+!   character(len=*), parameter :: TOPO_FILE = 'DATA/piero_model/dem_EV_UTM_regular_250_reordered.dat'
 
 ! flag for projection from latitude/longitude to UTM, and back
   integer, parameter :: ILONGLAT2UTM = 0, IUTM2LONGLAT = 1
@@ -403,7 +492,7 @@
 ! to avoid taking into account spurious oscillations in topography model
   double precision, parameter :: MINIMUM_THICKNESS_3D_OCEANS = 10.d0
 ! density of sea water
-  real(kind=CUSTOM_REAL), parameter :: RHO_APPROXIMATE_OCEAN_LOAD = 1020.0
+  real(kind=CUSTOM_REAL), parameter :: RHO_APPROXIMATE_OCEAN_LOAD = 1020.0_CUSTOM_REAL
 
 !!-----------------------------------------------------------
 !!
@@ -414,8 +503,6 @@
   double precision, parameter :: GRAV = 6.6723d-11
 ! number of layers in PREM
   integer, parameter :: NR = 640
-! for lookup table for gravity every 100 m in radial direction of Earth model
-  integer, parameter :: NRAD_GRAVITY = 70000
 ! R_EARTH is the radius of the bottom of the oceans (radius of Earth in m)
   double precision, parameter :: R_EARTH = 6371000.d0
 ! same radius in km
@@ -449,8 +536,4 @@
   integer, parameter :: IMODEL_1D_PREM_PB       = 9
   integer, parameter :: IMODEL_IPATI            = 10
   integer, parameter :: IMODEL_IPATI_WATER      = 11
-
-! some old tests (currently unstable; do not remove them though, we might fix this one day)
-  logical, parameter :: OLD_TEST_TO_FIX_ONE_DAY = .false.
-  integer, parameter :: IIN_veloc_dsm = 51, IIN_tract_dsm = 52, Ntime_step_dsm = 100
 

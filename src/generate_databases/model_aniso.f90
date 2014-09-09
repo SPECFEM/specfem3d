@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -40,9 +41,9 @@
                         c22,c23,c24,c25,c26,c33, &
                         c34,c35,c36,c44,c45,c46,c55,c56,c66)
 
-  implicit none
+  use constants, only: CUSTOM_REAL,IANISOTROPY_MODEL1,IANISOTROPY_MODEL2
 
-  include "constants.h"
+  implicit none
 
 ! see for example:
 !

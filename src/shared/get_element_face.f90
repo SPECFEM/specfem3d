@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -31,9 +32,9 @@
 
 ! returns iface_id of face in reference element, determined by corner locations xcoord/ycoord/zcoord;
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: ispec,nspec,nglob,iface_id
 
@@ -162,9 +163,9 @@
 
 ! returns local indices in ijk_face for specified face
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: iface !,nspec,nglob
 
@@ -281,9 +282,9 @@ end subroutine get_element_face_gll_indices
 
 ! only changes direction of normal to point outwards of element
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: ispec,iface,nspec,nglob
 
@@ -387,9 +388,9 @@ end subroutine get_element_face_gll_indices
 !   idirect = 1 to point outwards of/away from element
 !   idirect = 2 to point into element
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: ispec,iface,nspec,nglob
 
@@ -492,9 +493,9 @@ end subroutine get_element_face_gll_indices
                                 ibool,nspec,nglob,xstore_dummy,ystore_dummy,zstore_dummy, &
                                 iface_all_corner_ijk)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer,intent(in) :: ispec,iface_ref,nspec,nglob
 

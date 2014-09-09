@@ -1,7 +1,34 @@
+!=====================================================================
+!
+!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               ---------------------------------------
+!
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
+!
+! This program is free software; you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation; either version 2 of the License, or
+! (at your option) any later version.
+!
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+!
+! You should have received a copy of the GNU General Public License along
+! with this program; if not, write to the Free Software Foundation, Inc.,
+! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+!
+!=====================================================================
+
 module fault_scotch
 
+  use constants
   implicit none
-  include "constants.h"
   private
 
   type fault_type
@@ -31,9 +58,9 @@ module fault_scotch
 CONTAINS
 !==========================================================================================
 
-  Subroutine read_fault_files(localpath_name)
+  subroutine read_fault_files(localpath_name)
 
-  character(len=256),intent(in) :: localpath_name
+  character(len=MAX_STRING_LEN), intent(in) :: localpath_name
   integer :: nbfaults, iflt, ier
 
   open(101,file='../DATA/Par_file_faults',status='old',action='read',iostat=ier)
@@ -60,12 +87,12 @@ CONTAINS
 
 !---------------------------------------------------------------------------------------------------
 
-  Subroutine read_single_fault_file(f,ifault,localpath_name)
+  subroutine read_single_fault_file(f,ifault,localpath_name)
 
   type(fault_type), intent(inout) :: f
-  character(len=256),intent(in) :: localpath_name
+  character(len=MAX_STRING_LEN), intent(in) :: localpath_name
 
-  character(len=256) :: filename
+  character(len=MAX_STRING_LEN) :: filename
   integer,intent(in) :: ifault
   character(len=5) :: NTchar
   integer :: e,ier,nspec_side1,nspec_side2
@@ -75,7 +102,6 @@ CONTAINS
 
   filename = localpath_name(1:len_trim(localpath_name))//'/fault_file_'//&
              NTchar(1:len_trim(NTchar))//'.dat'
-  filename = adjustl(filename)
   ! reads fault elements and nodes
  ! File format:
  ! Line 1:
@@ -113,7 +139,7 @@ CONTAINS
 
   close(101)
 
-  end Subroutine read_single_fault_file
+  end subroutine read_single_fault_file
 
 
 ! ---------------------------------------------------------------------------------------------------
@@ -263,80 +289,27 @@ CONTAINS
   end subroutine reorder_fault_elements_single
 
 ! ---------------------------------------------------------------------------------------------------
-  subroutine lex_order(xyz_c,loc,nspec)
+  subroutine lex_order(xyz_c,locval,nspec)
 
   integer, intent(in) :: nspec
-  integer, intent(out) :: loc(nspec)
+  integer, intent(out) :: locval(nspec)
   double precision, intent(in) :: xyz_c(3,nspec)
 
-  double precision, dimension(nspec) :: work,xp,yp,zp
-  integer, dimension(nspec) :: ind,ninseg,iwork
+  double precision, dimension(nspec) :: xp,yp,zp
+  integer, dimension(nspec) :: ninseg,ibool,iglob
+  integer :: nglob
   logical :: ifseg(nspec)
-  integer :: ispec,i,j
-  integer :: nseg,ioff,iseg
-  double precision :: SMALLVALTOL
+  double precision :: xtol
 
   xp=xyz_c(1,:)
   yp=xyz_c(2,:)
   zp=xyz_c(3,:)
 
   ! define geometrical tolerance based upon typical size of the model
-  SMALLVALTOL = 1.d-10 * maxval( maxval(xyz_c,2) - minval(xyz_c,2) )
+  xtol = 1.d-10 * maxval( maxval(xyz_c,2) - minval(xyz_c,2) )
 
-  ! establish initial pointers
-  do ispec=1,nspec
-    loc(ispec)=ispec
-  enddo
-
-  ifseg(:)=.false.
-
-  nseg=1
-  ifseg(1)=.true.
-  ninseg(1)=nspec
-
-  do j=1,NDIM
-
-  ! sort within each segment
-    ioff=1
-    do iseg=1,nseg
-      if(j == 1) then
-        call rank(xp(ioff),ind,ninseg(iseg))
-      else if(j == 2) then
-        call rank(yp(ioff),ind,ninseg(iseg))
-      else
-        call rank(zp(ioff),ind,ninseg(iseg))
-      endif
-      call swap_all(loc(ioff),xp(ioff),yp(ioff),zp(ioff),iwork,work,ind,ninseg(iseg))
-      ioff=ioff+ninseg(iseg)
-    enddo
-
-  ! check for jumps in current coordinate
-  ! compare the coordinates of the points within a small tolerance
-    if(j == 1) then
-      do i=2,nspec
-        if(dabs(xp(i)-xp(i-1)) > SMALLVALTOL) ifseg(i)=.true.
-      enddo
-    else if(j == 2) then
-      do i=2,nspec
-        if(dabs(yp(i)-yp(i-1)) > SMALLVALTOL) ifseg(i)=.true.
-      enddo
-    else
-      do i=2,nspec
-        if(dabs(zp(i)-zp(i-1)) > SMALLVALTOL) ifseg(i)=.true.
-      enddo
-    endif
-
-  ! count up number of different segments
-    nseg=0
-    do i=1,nspec
-      if(ifseg(i)) then
-        nseg=nseg+1
-        ninseg(nseg)=1
-      else
-        ninseg(nseg)=ninseg(nseg)+1
-      endif
-    enddo
-  enddo
+  call sort_array_coordinates(nspec,xp,yp,zp,ibool,iglob,locval,ifseg, &
+                              nglob,ninseg,xtol)
 
   end subroutine lex_order
 
@@ -519,7 +492,6 @@ CONTAINS
       print *, 'Fatal error: Number of fault elements do not coincide. Abort.'
       stop
     endif
-    !write(IIN_database,*) nspec_fault_1
     write(IIN_database) nspec_fault_1
 
    ! if no fault element in this partition, move to next fault
@@ -537,7 +509,6 @@ CONTAINS
             endif
           enddo
         enddo
-        !write(IIN_database,*) glob2loc_elmnts(e-1)+1, loc_nodes
         write(IIN_database) glob2loc_elmnts(e-1)+1, loc_nodes
       endif
     enddo
@@ -554,7 +525,6 @@ CONTAINS
             endif
           enddo
         enddo
-        !write(IIN_database,*) glob2loc_elmnts(e-1)+1, loc_nodes
         write(IIN_database) glob2loc_elmnts(e-1)+1, loc_nodes
       endif
     enddo
@@ -562,109 +532,6 @@ CONTAINS
   enddo
 
   end subroutine write_fault_database
-
-
-! -----------------------------------
-
-! sorting routines put in same file to allow for inlining
-
-  subroutine rank(A,IND,N)
-!
-! Use Heap Sort (Numerical Recipes)
-!
-  implicit none
-
-  integer n
-  double precision A(n)
-  integer IND(n)
-
-  integer i,j,l,ir,indx
-  double precision q
-
-  do j=1,n
-   IND(j)=j
-  enddo
-
-  if (n == 1) return
-
-  L=n/2+1
-  ir=n
-  100 CONTINUE
-   IF (l>1) THEN
-      l=l-1
-      indx=ind(l)
-      q=a(indx)
-   ELSE
-      indx=ind(ir)
-      q=a(indx)
-      ind(ir)=ind(1)
-      ir=ir-1
-      if (ir == 1) then
-         ind(1)=indx
-         return
-      endif
-   ENDIF
-   i=l
-   j=l+l
-  200    CONTINUE
-   IF (J <= IR) THEN
-      IF (J<IR) THEN
-         IF ( A(IND(j))<A(IND(j+1)) ) j=j+1
-      ENDIF
-      IF (q<A(IND(j))) THEN
-         IND(I)=IND(J)
-         I=J
-         J=J+J
-      ELSE
-         J=IR+1
-      ENDIF
-   goto 200
-   ENDIF
-   IND(I)=INDX
-  goto 100
-
-  end subroutine rank
-
-! ------------------------------------------------------------------
-
-  subroutine swap_all(IA,A,B,C,IW,W,ind,n)
-!
-! swap arrays IA, A, B and C according to addressing in array IND
-!
-  implicit none
-
-  integer n
-
-  integer IND(n)
-  integer IA(n),IW(n)
-  double precision A(n),B(n),C(n),W(n)
-
-  integer i
-
-  IW(:) = IA(:)
-  W(:) = A(:)
-
-  do i=1,n
-    IA(i)=IW(ind(i))
-    A(i)=W(ind(i))
-  enddo
-
-  W(:) = B(:)
-
-  do i=1,n
-    B(i)=W(ind(i))
-  enddo
-
-  W(:) = C(:)
-
-  do i=1,n
-    C(i)=W(ind(i))
-  enddo
-
-end subroutine swap_all
-
-! ------------------------------------------------------------------
-
 
 end module fault_scotch
 

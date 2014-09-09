@@ -7,18 +7,19 @@
 #                                                                           #
 #############################################################################
 #                                                                           #
-# GEOCUBIT is free software: you can redistribute it and/or modify          #
+# This program is free software; you can redistribute it and/or modify      #
 # it under the terms of the GNU General Public License as published by      #
-# the Free Software Foundation, either version 3 of the License, or         #
+# the Free Software Foundation; either version 2 of the License, or         #
 # (at your option) any later version.                                       #
 #                                                                           #
-# GEOCUBIT is distributed in the hope that it will be useful,               #
+# This program is distributed in the hope that it will be useful,           #
 # but WITHOUT ANY WARRANTY; without even the implied warranty of            #
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             #
 # GNU General Public License for more details.                              #
 #                                                                           #
-# You should have received a copy of the GNU General Public License         #
-# along with GEOCUBIT.  If not, see <http://www.gnu.org/licenses/>.         #
+# You should have received a copy of the GNU General Public License along   #
+# with this program; if not, write to the Free Software Foundation, Inc.,   #
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.               #
 #                                                                           #
 #############################################################################
 try:
@@ -170,7 +171,10 @@ def layercake_volume_ascii_regulargrid_mpiregularmap(filename=None,verticalsandw
         xp=(cfg.xmax-cfg.xmin)/float((nx-1))
         yp=(cfg.ymax-cfg.ymin)/float((ny-1))
         #
-        elev=numpy.zeros([nx,ny,cfg.nz],float)
+        if verticalsandwich:
+            elev=numpy.zeros([nx,ny,cfg.nxvol],float)
+        else:
+            elev=numpy.zeros([nx,ny,cfg.nz],float)
         coordx=numpy.zeros([nx,ny],float)
         coordy=numpy.zeros([nx,ny],float)
         #
@@ -183,8 +187,12 @@ def layercake_volume_ascii_regulargrid_mpiregularmap(filename=None,verticalsandw
         ivytot=nelem_chunk_y+1 
         xstep=xlength #distance between vertex on x
         ystep=ylength
-        for i in range(0,cfg.nz):
-            elev[:,:,i] = cfg.zdepth[i]
+        if verticalsandwich:
+            for i in range(0,cfg.nxvol):
+                elev[:,:,i] = cfg.zdepth[i]
+        else:
+            for i in range(0,cfg.nz):
+                elev[:,:,i] = cfg.xwidth[i]
         
         icoord=0
         for iy in range(0,ny):
@@ -218,7 +226,12 @@ def layercake_volume_ascii_regulargrid_mpiregularmap(filename=None,verticalsandw
     ivertex=0
     #
     #create vertex
-    for inz in range(0,cfg.nz):
+    if verticalsandwich:
+        nlayer=cfg.nxvol
+    else:
+        nlayer=cfg.nz
+    
+    for inz in range(0,nlayer):
         if cfg.sea and inz==cfg.nz-1: #sea layer
             sealevel=True
             bathymetry=False
@@ -232,7 +245,7 @@ def layercake_volume_ascii_regulargrid_mpiregularmap(filename=None,verticalsandw
         
         if  cfg.bottomflat and inz == 0: #bottom layer
                 #
-                if cfg.geometry_format == 'ascii':
+                if cfg.geometry_format == 'ascii' and not verticalsandwich:
                     lv=cubit.get_last_id("vertex")     
                     
                     x_current,y_current=(coordx[nxmin_cpu,nymin_cpu],coordy[nxmin_cpu,nymin_cpu])
@@ -267,13 +280,22 @@ def layercake_volume_ascii_regulargrid_mpiregularmap(filename=None,verticalsandw
                     cubitcommand= 'create vertex '+ str( x_current )+ ' ' + str( y_current) +' '+ str( cfg.depth_bottom )
                     cubit.cmd(cubitcommand)                                                                              
                     #
-                    x_current,y_current=geo2utm(coordx[nxmax_cpu,nymax_cpu],coordy[nxmax_cpu,nymax_cpu],'utm')
-                    cubitcommand= 'create vertex '+ str( x_current )+ ' ' + str( y_current) +' '+ str( cfg.depth_bottom )
-                    cubit.cmd(cubitcommand)
-                    #
-                    x_current,y_current=geo2utm(coordx[nxmax_cpu,nymin_cpu],coordy[nxmax_cpu,nymin_cpu],'utm')
-                    cubitcommand= 'create vertex '+ str( x_current )+ ' ' + str( y_current) +' '+ str( cfg.depth_bottom )
-                    cubit.cmd(cubitcommand)
+                    if verticalsandwich:
+                        x_current,y_current=geo2utm(coordx[nxmin_cpu,nymax_cpu],coordy[nxmin_cpu,nymax_cpu],'utm')
+                        cubitcommand= 'create vertex '+ str( x_current )+ ' ' + str( y_current) +' '+ str( 0 )
+                        cubit.cmd(cubitcommand)
+                        #
+                        x_current,y_current=geo2utm(coordx[nxmin_cpu,nymin_cpu],coordy[nxmin_cpu,nymin_cpu],'utm')
+                        cubitcommand= 'create vertex '+ str( x_current )+ ' ' + str( y_current) +' '+ str( 0 )
+                        cubit.cmd(cubitcommand)
+                    else:
+                        x_current,y_current=geo2utm(coordx[nxmax_cpu,nymax_cpu],coordy[nxmax_cpu,nymax_cpu],'utm')
+                        cubitcommand= 'create vertex '+ str( x_current )+ ' ' + str( y_current) +' '+ str( cfg.depth_bottom )
+                        cubit.cmd(cubitcommand)
+                        #
+                        x_current,y_current=geo2utm(coordx[nxmax_cpu,nymin_cpu],coordy[nxmax_cpu,nymin_cpu],'utm')
+                        cubitcommand= 'create vertex '+ str( x_current )+ ' ' + str( y_current) +' '+ str( cfg.depth_bottom )
+                        cubit.cmd(cubitcommand)
                     #
                     lv2=cubit.get_last_id("vertex") 
                     cubitcommand= 'create surface vertex '+str(lv+1)+' to '+str(lv2)
@@ -282,23 +304,46 @@ def layercake_volume_ascii_regulargrid_mpiregularmap(filename=None,verticalsandw
                     isurf = isurf + 1
         else:
             if cfg.geometry_format == 'regmesh':
-                zvertex=cfg.zdepth[inz]
-                lv=cubit.get_last_id("vertex")                        
-                x_current,y_current=geo2utm(coordx[nxmin_cpu,nymin_cpu],coordy[nxmin_cpu,nymin_cpu],'utm')
-                cubitcommand= 'create vertex '+ str( x_current )+ ' ' + str( y_current) +' '+ str( zvertex )
-                cubit.cmd(cubitcommand)
-                #
-                x_current,y_current=geo2utm(coordx[nxmin_cpu,nymax_cpu],coordy[nxmin_cpu,nymax_cpu],'utm')
-                cubitcommand= 'create vertex '+ str( x_current )+ ' ' + str( y_current) +' '+ str( zvertex )
-                cubit.cmd(cubitcommand)                                                                              
-                #
-                x_current,y_current=geo2utm(coordx[nxmax_cpu,nymax_cpu],coordy[nxmax_cpu,nymax_cpu],'utm')
-                cubitcommand= 'create vertex '+ str( x_current )+ ' ' + str( y_current) +' '+ str( zvertex )
-                cubit.cmd(cubitcommand)
-                #
-                x_current,y_current=geo2utm(coordx[nxmax_cpu,nymin_cpu],coordy[nxmax_cpu,nymin_cpu],'utm')
-                cubitcommand= 'create vertex '+ str( x_current )+ ' ' + str( y_current) +' '+ str( zvertex )
-                cubit.cmd(cubitcommand)
+                if verticalsandwich:
+                    zvertex=cfg.xwidth[inz]
+                    lv=cubit.get_last_id("vertex")                        
+                    x_current,y_current=geo2utm(coordx[nxmax_cpu,nymin_cpu],coordy[nxmax_cpu,nymin_cpu],'utm')
+                    x_current = x_current + zvertex;
+                    cubitcommand= 'create vertex '+ str( x_current )+ ' ' + str( y_current) +' '+ str( cfg.depth_bottom )
+                    cubit.cmd(cubitcommand)
+                    #
+                    x_current,y_current=geo2utm(coordx[nxmax_cpu,nymax_cpu],coordy[nxmax_cpu,nymax_cpu],'utm')
+                    x_current = x_current + zvertex;
+                    cubitcommand= 'create vertex '+ str( x_current )+ ' ' + str( y_current) +' '+ str( cfg.depth_bottom )
+                    cubit.cmd(cubitcommand)                                                                              
+                    #
+                    x_current,y_current=geo2utm(coordx[nxmax_cpu,nymax_cpu],coordy[nxmax_cpu,nymax_cpu],'utm')
+                    x_current = x_current + zvertex;
+                    cubitcommand= 'create vertex '+ str( x_current )+ ' ' + str( y_current) +' '+ str( 0 )
+                    cubit.cmd(cubitcommand)
+                    #
+                    x_current,y_current=geo2utm(coordx[nxmax_cpu,nymin_cpu],coordy[nxmax_cpu,nymin_cpu],'utm')
+                    x_current = x_current + zvertex;
+                    cubitcommand= 'create vertex '+ str( x_current )+ ' ' + str( y_current) +' '+ str( 0 )
+                    cubit.cmd(cubitcommand)
+                else:
+                    zvertex=cfg.zdepth[inz]
+                    lv=cubit.get_last_id("vertex")                        
+                    x_current,y_current=geo2utm(coordx[nxmin_cpu,nymin_cpu],coordy[nxmin_cpu,nymin_cpu],'utm')
+                    cubitcommand= 'create vertex '+ str( x_current )+ ' ' + str( y_current) +' '+ str( zvertex )
+                    cubit.cmd(cubitcommand)
+                    #
+                    x_current,y_current=geo2utm(coordx[nxmin_cpu,nymax_cpu],coordy[nxmin_cpu,nymax_cpu],'utm')
+                    cubitcommand= 'create vertex '+ str( x_current )+ ' ' + str( y_current) +' '+ str( zvertex )
+                    cubit.cmd(cubitcommand)                                                                              
+                    #
+                    x_current,y_current=geo2utm(coordx[nxmax_cpu,nymax_cpu],coordy[nxmax_cpu,nymax_cpu],'utm')
+                    cubitcommand= 'create vertex '+ str( x_current )+ ' ' + str( y_current) +' '+ str( zvertex )
+                    cubit.cmd(cubitcommand)
+                    #
+                    x_current,y_current=geo2utm(coordx[nxmax_cpu,nymin_cpu],coordy[nxmax_cpu,nymin_cpu],'utm')
+                    cubitcommand= 'create vertex '+ str( x_current )+ ' ' + str( y_current) +' '+ str( zvertex )
+                    cubit.cmd(cubitcommand)
                 #
                 cubitcommand= 'create surface vertex '+str(lv+1)+' '+str(lv+2)+' '+str(lv+3)+' '+str(lv+4)
                 cubit.cmd(cubitcommand)
@@ -375,10 +420,10 @@ def layercake_volume_ascii_regulargrid_mpiregularmap(filename=None,verticalsandw
     #
     #!create volume
     if not onlysurface:
-        if cfg.nz == 1:
+        if nlayer == 1:
             nsurface=2
         else:
-            nsurface=cfg.nz
+            nsurface=nlayer
         for inz in range(1,nsurface):
             ner=cubit.get_error_count()
             create_volume(inz,inz+1,method=cfg.volumecreation_method)

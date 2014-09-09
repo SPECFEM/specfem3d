@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -24,33 +25,26 @@
 !
 !=====================================================================
 
-
 program model_update
 
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
   use specfem_par_poroelastic
+
   implicit none
 
   ! ======================================================
   ! USER PARAMETERS
 
-  ! root file directory
-  character (len=256), parameter :: &
-    ROOT_PATH = '/lscratch/users/magnoni/SPECFEM3D/trunk_update/OUTPUT_FILES'
-
   ! directory where the mesh files for the NEW model will be written
-  character (len=256), parameter :: &
-    LOCAL_PATH_NEW = trim(ROOT_PATH)//'/'//'DATABASES_MPI/mesh_files_m01'
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH_NEW
 
   ! directory where the output files of model_update will be written
-  character (len=256), parameter :: &
-    OUTPUT_MODEL_UPD = trim(ROOT_PATH)//'/'//'OUTPUT_FILES_MODEL_UPD'
+  character(len=MAX_STRING_LEN) :: OUTPUT_MODEL_UPD
 
   ! directory where the summed and smoothed input kernels are linked
-  character (len=256), parameter :: &
-    INPUT_KERNELS = trim(ROOT_PATH)//'/'//'DATABASES_MPI/sum_smooth_kern'
+  character(len=MAX_STRING_LEN) :: INPUT_KERNELS
 
   ! by default, this algorithm uses (bulk,bulk_beta,rho) kernels to update vp,vs,rho
   ! if you prefer using (alpha,beta,rho) kernels, set this flag to true
@@ -71,8 +65,8 @@ program model_update
 
   ! ======================================================
 
-  character (len=256) :: prname_new
-  character(len=256) :: m_file, fname
+  character(len=MAX_STRING_LEN) :: prname_new, fname
+  character(len=MAX_STRING_LEN*2) :: m_file
   integer :: NGLOB_OCEAN
   integer :: NSPEC, NGLOB
 
@@ -81,7 +75,7 @@ program model_update
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: dummy_g_1,dummy_g_2,dummy_g_3  !xstore,ystore,zstore
   integer, dimension(:), allocatable :: dummy_l_1,dummy_l_2,dummy_l_3,dummy_l_4,dummy_l_5,dummy_l_6,dummy_l_7,dummy_l_8 !ibool-1
   integer, dimension(:), allocatable :: dummy_num
-  character (len=80) :: string1,string2,string3,string4,string5,string6,string7,string8,string9,string10,string11
+  character(len=MAX_STRING_LEN) :: string1,string2,string3,string4,string5,string6,string7,string8,string9,string10,string11
   integer :: idummy1,idummy2,idummy3,idummy4,idummy5
 
   integer :: iglob
@@ -105,7 +99,7 @@ program model_update
 
   ! steepest descent lengths
   real(kind=CUSTOM_REAL) :: step_fac,step_length
-  character(len=150) :: s_step_fac
+  character(len=MAX_STRING_LEN) :: s_step_fac
 
   ! thresholds
   real(kind=CUSTOM_REAL) :: VS_MIN, VS_MAX, VP_MIN, VP_MAX
@@ -124,7 +118,7 @@ program model_update
   !gradients in direction of steepest descent (= - kernels)
   real(kind=CUSTOM_REAL) :: min_vs_g, max_vs_g, min_vp_g, max_vp_g, min_rho_g, max_rho_g
   real(kind=CUSTOM_REAL) :: min_vp,min_vs,max_vp,max_vs,min_rho,max_rho, &
-                            max,minmax(4),vs_sum,vp_sum,rho_sum
+                            maxvalue,minmax(4),vs_sum,vp_sum,rho_sum
 
   integer :: i,j,k,ispec
 
@@ -151,12 +145,20 @@ program model_update
 
   ! subjective step length to multiply to the gradient
   ! e.g. step_fac = 0.03
-
   call get_command_argument(1,s_step_fac)
 
   if (trim(s_step_fac) == '') then
     call exit_MPI(myrank,'Usage: add_model step_factor')
   endif
+
+  ! directory where the mesh files for the NEW model will be written
+  LOCAL_PATH_NEW = trim(OUTPUT_FILES_PATH)//'/mesh_files_m01'
+
+  ! directory where the output files of model_update will be written
+  OUTPUT_MODEL_UPD = trim(OUTPUT_FILES_PATH)//'/OUTPUT_FILES_MODEL_UPD'
+
+  ! directory where the summed and smoothed input kernels are linked
+  INPUT_KERNELS = trim(OUTPUT_FILES_PATH)//'/sum_smooth_kern'
 
   ! read in parameter information
   read(s_step_fac,*) step_fac
@@ -165,12 +167,12 @@ program model_update
     call exit_MPI(myrank,'error step factor')
   endif
 
-  call sync_all()
+  call synchronize_all()
 
   ! reads in parameters and checks for some inconsistencies
   call initialize_simulation()
 
-  call sync_all()
+  call synchronize_all()
 
   ! reads in external mesh
   call read_mesh_databases()
@@ -188,7 +190,7 @@ program model_update
     print*,'NGLOB            ', NGLOB
   endif
 
-  call sync_all()
+  call synchronize_all()
 
   !! allocation
   ! model and kernel variables
@@ -549,10 +551,10 @@ program model_update
     minmax(3) = abs(min_vp_g)
     minmax(4) = abs(max_vp_g)
 
-    max = maxval(minmax)
-    step_length = step_fac/max
+    maxvalue = maxval(minmax)
+    step_length = step_fac/maxvalue
 
-    print*,'  step length : ',step_length,max
+    print*,'  step length : ',step_length,maxvalue
     print*
   endif
   tmp_step(1) = step_length
@@ -788,12 +790,12 @@ program model_update
   rmass_old = 0._CUSTOM_REAL
   rmass_old = rmass
 
-  call sync_all()
+  call synchronize_all()
 
   ! create mass matrix ONLY for the elastic case
   allocate(rmass_new(NGLOB))
 
-  call sync_all()
+  call synchronize_all()
 
   if( myrank == 0) then
     print*, '  ...creating mass matrix '
@@ -832,7 +834,7 @@ program model_update
   enddo ! nspec
 
 
-  call sync_all()
+  call synchronize_all()
 
   ! dummy allocations, arrays are not needed since the update here only works for elastic models
   allocate(rmass_acoustic_new(NGLOB))
@@ -913,7 +915,7 @@ program model_update
   enddo
 
 
-  call sync_all()
+  call synchronize_all()
 
   ! calculate min_resolved_period needed for attenuation model
   call check_mesh_resolution(myrank,NSPEC,NGLOB,ibool,&
@@ -922,7 +924,7 @@ program model_update
                             -1.0d0, model_speed_max,min_resolved_period, &
                             LOCAL_PATH,SAVE_MESH_FILES )
 
-  call sync_all()
+  call synchronize_all()
 
   ! saves binary mesh files for attenuation for the NEW model
   call create_name_database(prname_new,myrank,LOCAL_PATH_NEW)
@@ -938,7 +940,7 @@ program model_update
 
   !----------------------------
 
-  call sync_all()
+  call synchronize_all()
 
   if( myrank == 0 ) then
     print*,'external_mesh.bin new: ', prname_new

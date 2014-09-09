@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -32,7 +33,7 @@ subroutine pml_output_VTKs()
 
   use pml_par
   use specfem_par, only: NGLOB_AB,NSPEC_AB,myrank,prname,xstore,ystore,zstore,ibool
-  use constants, only: NGLLX,NGLLY,NGLLZ,IMAIN
+  use constants, only: NGLLX,NGLLY,NGLLZ,IMAIN,MAX_STRING_LEN
 
   implicit none
 
@@ -40,7 +41,7 @@ subroutine pml_output_VTKs()
   integer :: ispec,ispec_CPML,ier
   integer, dimension(:), allocatable :: temp_CPML_regions
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable:: temp_d_store_x,temp_d_store_y,temp_d_store_z
-  character(len=256) :: vtkfilename
+  character(len=MAX_STRING_LEN) :: vtkfilename
 
   if(myrank == 0) write(IMAIN,*) 'Writing informations about C-PML elements in VTK-file format'
 
@@ -51,9 +52,9 @@ subroutine pml_output_VTKs()
   temp_CPML_regions(:) = 0
 
   do ispec_CPML=1,nspec_cpml
-     ispec = CPML_to_spec(ispec_CPML)
+    ispec = CPML_to_spec(ispec_CPML)
 
-     temp_CPML_regions(ispec) = CPML_regions(ispec_CPML)
+    temp_CPML_regions(ispec) = CPML_regions(ispec_CPML)
   enddo
 
   if(myrank == 0) write(IMAIN,*) 'Generating CPML_regions VTK file'
@@ -76,11 +77,11 @@ subroutine pml_output_VTKs()
   temp_d_store_z(:,:,:,:) = 0._CUSTOM_REAL
 
   do ispec_CPML=1,nspec_cpml
-     ispec = CPML_to_spec(ispec_CPML)
+    ispec = CPML_to_spec(ispec_CPML)
 
-     temp_d_store_x(:,:,:,ispec) = d_store_x(:,:,:,ispec_CPML)
-     temp_d_store_y(:,:,:,ispec) = d_store_y(:,:,:,ispec_CPML)
-     temp_d_store_z(:,:,:,ispec) = d_store_z(:,:,:,ispec_CPML)
+    temp_d_store_x(:,:,:,ispec) = d_store_x(:,:,:,ispec_CPML)
+    temp_d_store_y(:,:,:,ispec) = d_store_y(:,:,:,ispec_CPML)
+    temp_d_store_z(:,:,:,ispec) = d_store_z(:,:,:,ispec_CPML)
   enddo
 
   if(myrank == 0) write(IMAIN,*) 'Generating CPML_damping_dx, CPML_damping_dy and CPML_damping_dz VTK files'

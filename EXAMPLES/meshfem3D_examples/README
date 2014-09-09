@@ -1,0 +1,20 @@
+----------------------------------------------------------------------
+README
+----------------------------------------------------------------------
+
+Examples contained in this folder help to familiarize yourself with the new 
+in-house mesher xmeshfem3D (no CUBIT needed). We suggest to start with:
+
+simple examples:
+
+- simple_model/: a model with topography, an internal interface and a mesh doubling layer
+
+- socal1D/: a 1D standard velocity model for Southern California
+
+more complex example are provided in:
+
+- many_interfaces/: a model with topography and several internal interfaces defined
+
+please consider submitting your own example to this package! 
+email us: cig-seismo AT geodynamics.org
+

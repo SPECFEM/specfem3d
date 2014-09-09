@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<artifact type="SNL Mesh"
+          xmlns="http://www-irn.sandia.gov/schema/dart/3.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://www-irn.sandia.gov/schema/dart/3.0 http://www-irn.sandia.gov/schema/dart/3.0/DARTMetadata.xsd">
+  <mesh>
+    <metadata-source application="CUBIT" application-version="13.0" last-modified-date="2011-08-17"/>
+    <file format="Exodus" href="/Users/emanuele/Documents/Dropbox/EXAMPLE_GEOCUBIT/tomographicmodel/cubit_mesh_files/totalmesh_merged.e"/>
+    <block-description id="4" name="vol4" />
+    <block-description id="1001" name="face_topo" />
+    <block-description id="1002" name="face_bottom" />
+    <block-description id="1003" name="face_abs_xmin" />
+    <block-description id="1004" name="face_abs_ymin" />
+    <block-description id="1005" name="face_abs_xmax" />
+    <block-description id="1006" name="face_abs_ymax" />
+  </mesh>
+</artifact>

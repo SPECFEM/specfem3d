@@ -3,10 +3,11 @@
 #               S p e c f e m 3 D  V e r s i o n  2 . 1
 #               ---------------------------------------
 #
-#          Main authors: Dimitri Komatitsch and Jeroen Tromp
-#    Princeton University, USA and University of Pau / CNRS / INRIA
-# (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
-#                            April 2011
+#     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+#                        Princeton University, USA
+#                and CNRS / University of Marseille, France
+#                 (there are currently many more authors!)
+# (c) Princeton University and CNRS / University of Marseille, July 2012
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -30,7 +31,7 @@
 #######################################
 
 FC = @FC@
-FCFLAGS = #@FCFLAGS@
+FCFLAGS = @FCFLAGS@
 MPIFC = @MPIFC@
 MPILIBS = @MPILIBS@
 
@@ -160,7 +161,8 @@ GENCODE_35 = -gencode=arch=compute_35,code=\"sm_35,compute_35\"
 @COND_OPENMP_FALSE@COND_OPENMP_FFLAGS =
 
 # objects toggled between openmp and non-openmp version
-@COND_OPENMP_TRUE@COND_OPENMP_OBJECTS = $O/older_not_maintained_compute_forces_viscoelastic_Dev_openmp.openmp.o
+#@COND_OPENMP_TRUE@COND_OPENMP_OBJECTS = $O/older_not_maintained_compute_forces_viscoelastic_Dev_openmp.openmp.o
+@COND_OPENMP_TRUE@COND_OPENMP_OBJECTS = 
 @COND_OPENMP_FALSE@COND_OPENMP_OBJECTS =
 
 
@@ -252,11 +254,15 @@ backup:
 ifdef CLEAN
 clean:
 	@echo "cleaning by CLEAN defined"
-	-rm -f $(foreach dir, $(CLEAN), $($(dir)_OBJECTS) $($(dir)_MODULES) $($(dir)_SHARED_OBJECTS) $($(dir)_TARGETS)) $O/*
+	-rm -f $(foreach dir, $(CLEAN), $($(dir)_OBJECTS) $($(dir)_MODULES) $($(dir)_SHARED_OBJECTS) $($(dir)_TARGETS))
+	-rm -f ${E}/*__genmod.*
+	-rm -f ${O}/*__genmod.*
 else
 clean:
 	@echo "cleaning by CLEAN not defined"
-	-rm -f $(foreach dir, $(SUBDIRS), $($(dir)_OBJECTS) $($(dir)_MODULES) $($(dir)_TARGETS)) $O/*
+	-rm -f $(foreach dir, $(SUBDIRS), $($(dir)_OBJECTS) $($(dir)_MODULES) $($(dir)_TARGETS))
+	-rm -f ${E}/*__genmod.*
+	-rm -f ${O}/*__genmod.*
 endif
 
 realclean: clean
@@ -264,7 +270,7 @@ ifeq (${SCOTCH_BUNDLED},1)
 	@echo "cleaning bundled Scotch in directory: ${SCOTCH_DIR}/src"
 	$(MAKE) -C ${SCOTCH_DIR}/src realclean
 endif
-	rm -rf $E/* $O/* $L/*
+	-rm -f $E/* $O/*
 
 help:
 	@echo "usage: make [executable]"

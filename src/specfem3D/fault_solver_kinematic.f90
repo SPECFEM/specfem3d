@@ -1,3 +1,30 @@
+!=====================================================================
+!
+!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               ---------------------------------------
+!
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
+!
+! This program is free software; you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation; either version 2 of the License, or
+! (at your option) any later version.
+!
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+!
+! You should have received a copy of the GNU General Public License along
+! with this program; if not, write to the Free Software Foundation, Inc.,
+! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+!
+!=====================================================================
+
 ! This module implements kinematic faults: prescribed spatio-temporal slip history
 !
 ! Authors:
@@ -12,28 +39,6 @@ module fault_solver_kinematic
 
   private
 
-!! DK DK used the "dynamic" version that I moved to "fault_common" instead
-!! DK DK works fine because it has all the elements needed below, plus some others that are then simply unused
-! type dataXZ_type
-!   integer :: npoin=0
-!   real(kind=CUSTOM_REAL), dimension(:), pointer :: d1=>null(), d2=>null(), &
-!                                                    v1=>null(), v2=>null(), &
-!                                                    t1=>null(), t2=>null(), t3=>null(), &
-!                                                    xcoord=>null(), ycoord=>null(), zcoord=>null()
-! end type dataXZ_type
-
-!! DK DK not needed any more, merged into a new "bc_dynandkinflt_type" to avoid having to use the "class" keyword,
-!! DK DK which is currently not supported by many Fortran compilers (and it is crucial for us to keep full portability)
-! type, extends (fault_type) ::  bc_kinflt_type
-!   private
-!   type(dataT_type) :: dataT
-!   type(dataXZ_type) :: dataXZ
-!   real(kind=CUSTOM_REAL) :: kin_dt
-!   integer :: kin_it
-!   real(kind=CUSTOM_REAL), dimension(:,:), pointer :: v_kin_t1,v_kin_t2
-! end type bc_kinflt_type
-
-!! DK DK now use bc_dynandkinflt_type here instead
   type(bc_dynandkinflt_type), allocatable, save :: faults(:)
 
   !Number of time steps defined by the user : NTOUT
@@ -57,7 +62,7 @@ contains
 subroutine BC_KINFLT_init(prname,DTglobal,myrank)
 
   use specfem_par, only : nt=>NSTEP
-  character(len=256), intent(in) :: prname ! 'proc***'
+  character(len=MAX_STRING_LEN), intent(in) :: prname ! 'proc***'
   double precision, intent(in) :: DTglobal
   integer, intent(in) :: myrank
 
@@ -65,7 +70,7 @@ subroutine BC_KINFLT_init(prname,DTglobal,myrank)
   integer :: iflt,ier,dummy_idfault
   integer :: nbfaults
   integer :: SIMULATION_TYPE
-  character(len=256) :: filename
+  character(len=MAX_STRING_LEN) :: filename
   integer, parameter :: IIN_PAR =151
   integer, parameter :: IIN_BIN =170
   real(kind=CUSTOM_REAL) :: DUMMY
@@ -131,7 +136,6 @@ end subroutine BC_KINFLT_init
 
 subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt)
 
-!! DK DK now use bc_dynandkinflt_type here instead
   type(bc_dynandkinflt_type), intent(inout) :: bc
   integer, intent(in)                 :: IIN_BIN,IIN_PAR,NT,iflt
   real(kind=CUSTOM_REAL), intent(in)  :: dt
@@ -200,7 +204,6 @@ subroutine BC_KINFLT_set_single(bc,MxA,V,D,iflt)
   use specfem_par, only:it,NSTEP
 
   real(kind=CUSTOM_REAL), intent(inout) :: MxA(:,:)
-!! DK DK now use bc_dynandkinflt_type here instead
   type(bc_dynandkinflt_type), intent(inout) :: bc
   real(kind=CUSTOM_REAL), intent(in) :: V(:,:),D(:,:)
   integer,intent(in) :: iflt
@@ -208,7 +211,7 @@ subroutine BC_KINFLT_set_single(bc,MxA,V,D,iflt)
   real(kind=CUSTOM_REAL), dimension(3,bc%nglob) :: T
   real(kind=CUSTOM_REAL), dimension(3,bc%nglob) :: dD,dV,dA,dV_free
   real(kind=CUSTOM_REAL) :: t1,t2
-  real(kind=CUSTOM_REAL) :: half_dt,time
+  real(kind=CUSTOM_REAL) :: half_dt,timeval
 
   if (bc%nspec > 0) then !Surendra : for parallel faults
 
@@ -226,7 +229,7 @@ subroutine BC_KINFLT_set_single(bc,MxA,V,D,iflt)
     dA = rotate(bc,dA,1)
 
     ! Time marching
-    time = it*bc%dt
+    timeval = it*bc%dt
     ! Slip_rate step "it_kin"
     it_kin = bc%kin_it*nint(bc%kin_dt/bc%dt)
     ! (nint : fortran round (nearest whole number) ,
@@ -266,8 +269,8 @@ subroutine BC_KINFLT_set_single(bc,MxA,V,D,iflt)
     ! bc%V : Imposed a priori and read from slip rate snapshots (from time reversal)
     !        Linear interpolation between consecutive kinematic time steps.
     !        V will be given at each time step.
-    bc%V(1,:) = ( (t2 - time)*bc%v_kin_t1(1,:) + (time - t1)*bc%v_kin_t2(1,:) )/ bc%kin_dt
-    bc%V(2,:) = ( (t2 - time)*bc%v_kin_t1(2,:) + (time - t1)*bc%v_kin_t2(2,:) )/ bc%kin_dt
+    bc%V(1,:) = ( (t2 - timeval)*bc%v_kin_t1(1,:) + (timeval - t1)*bc%v_kin_t2(1,:) )/ bc%kin_dt
+    bc%V(2,:) = ( (t2 - timeval)*bc%v_kin_t1(2,:) + (timeval - t1)*bc%v_kin_t2(2,:) )/ bc%kin_dt
 
     !dV_free = dV_predictor + (dt/2)*dA_free
     dV_free(1,:) = dV(1,:) + half_dt*dA(1,:)
@@ -340,15 +343,16 @@ end subroutine init_dataXZ
 
 subroutine load_vslip_snapshots(dataXZ,itime,iflt)
 
+  use :: specfem_par, only: OUTPUT_FILES_PATH
   integer, intent(in) :: itime,iflt
   type(dataXZ_type), intent(inout) :: dataXZ
-  character(len=70) :: filename
+  character(len=MAX_STRING_LEN) :: filename
   integer :: IIN_BIN,ier,IOUT
 
   IIN_BIN=101
   IOUT = 102
 
-  write(filename,"('../OUTPUT_FILES/Snapshot',I0,'_F',I0,'.bin')") itime,iflt
+  write(filename,"(a,I0,'_F',I0,'.bin')") trim(OUTPUT_FILES_PATH)//'/Snapshot',itime,iflt
   print*, trim(filename)
 
   open(unit=IIN_BIN, file= trim(filename), status='old', form='formatted',&

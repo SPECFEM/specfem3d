@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -33,9 +34,10 @@
                             ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,&
                             NMATERIALS,material_properties)
 
+  use constants
+
   implicit none
 
-  include "constants.h"
   include "constants_meshfem3D.h"
 
   ! number of spectral elements in each block
@@ -77,7 +79,7 @@
   integer :: dummy_nspec_cpml
 
   ! name of the database files
-  character(len=256) prname
+  character(len=MAX_STRING_LEN) :: prname
 
   ! for MPI interfaces
   integer ::  nb_interfaces,nspec_interfaces_max,idoubl
@@ -99,7 +101,6 @@
   ! Materials properties
    write(IIN_database) NMATERIALS, 0
    do idoubl = 1,NMATERIALS
-      !write(IIN_database,*) material_properties(idoubl,:)
       matpropl(:) = 0.d0
       matpropl(1:6) = material_properties(idoubl,1:6)
       ! pad dummy zeros to fill up 16 entries (poroelastic medium not allowed)
@@ -109,9 +110,6 @@
 
   write(IIN_database) nspec
   do ispec=1,nspec
-      !write(IIN_database,'(11i14)') ispec,true_material_num(ispec),1,ibool(1,1,1,ispec),ibool(2,1,1,ispec),&
-      !     ibool(2,2,1,ispec),ibool(1,2,1,ispec),ibool(1,1,2,ispec),&
-      !     ibool(2,1,2,ispec),ibool(2,2,2,ispec),ibool(1,2,2,ispec)
       write(IIN_database) ispec,true_material_num(ispec),1,ibool(1,1,1,ispec),ibool(2,1,1,ispec),&
            ibool(2,2,1,ispec),ibool(1,2,1,ispec),ibool(1,1,2,ispec),&
            ibool(2,1,2,ispec),ibool(2,2,2,ispec),ibool(1,2,2,ispec)

@@ -1,0 +1,18 @@
+/seismo/3D/ADJOINT_TOMO/iterate_adj/model_plot/gmt/README
+
+Suggested file structure:
+
+1. Each user has his own directory of files here:
+   /ADJOINT_TOMO/ADJOINT_TOMO_OUTPUT
+      model_plot_gmt_OUTPUT
+      model_plot_matlab_OUTPUT
+      misfit_plot_OUTPUT
+      misfit_plot_INPUT
+      
+2. Link files:
+   rm OUTPUT
+   rm INPUT
+   ln -s /ADJOINT_TOMO/ADJOINT_TOMO_OUTPUT/model_plot_gmt_OUTPUT OUTPUT
+   ln -s /ADJOINT_TOMO/ADJOINT_TOMO_OUTPUT/model_plot_matlab_OUTPUT INPUT
+
+-----------

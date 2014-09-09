@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -36,9 +37,9 @@
 !
 ! for all points on the interface defined by ninterface, my_nelmnts_neighbours and my_interfaces
 
-  implicit none
+  use constants
 
-  include 'constants.h'
+  implicit none
 
 ! spectral element indexing
 ! ( nelmnts = number of spectral elements
@@ -146,9 +147,9 @@ subroutine get_edge ( n, itype, e1, e2, e3, e4, &
 ! returns range of local (GLL) point indices i,j,k depending on given type
 ! for corner point (1), edge (2) or face (4)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
 ! corner node indices per spectral element (8)
   integer, dimension(NGNOD_EIGHT_CORNERS), intent(in)  :: n
@@ -238,164 +239,164 @@ subroutine get_edge ( n, itype, e1, e2, e3, e4, &
 ! edges
 
     if ( e1 ==  n(1) ) then
-       ixmin = 1
-       iymin = 1
-       izmin = 1
-       if ( e2 == n(2) ) then
-          ixmax = NGLLX
-          iymax = 1
-          izmax = 1
-       endif
-       if ( e2 == n(4) ) then
-          ixmax = 1
-          iymax = NGLLY
-          izmax = 1
-       endif
-       if ( e2 == n(5) ) then
-          ixmax = 1
-          iymax = 1
-          izmax = NGLLZ
-       endif
+      ixmin = 1
+      iymin = 1
+      izmin = 1
+      if ( e2 == n(2) ) then
+        ixmax = NGLLX
+        iymax = 1
+        izmax = 1
+      endif
+      if ( e2 == n(4) ) then
+        ixmax = 1
+        iymax = NGLLY
+        izmax = 1
+      endif
+      if ( e2 == n(5) ) then
+        ixmax = 1
+        iymax = 1
+        izmax = NGLLZ
+      endif
     endif
     if ( e1 == n(2) ) then
-       ixmin = NGLLX
-       iymin = 1
-       izmin = 1
-       if ( e2 == n(3) ) then
-          ixmax = NGLLX
-          iymax = NGLLY
-          izmax = 1
-       endif
-       if ( e2 == n(1) ) then
-          ixmax = 1
-          iymax = 1
-          izmax = 1
-       endif
-       if ( e2 == n(6) ) then
-          ixmax = NGLLX
-          iymax = 1
-          izmax = NGLLZ
-       endif
+      ixmin = NGLLX
+      iymin = 1
+      izmin = 1
+      if ( e2 == n(3) ) then
+        ixmax = NGLLX
+        iymax = NGLLY
+        izmax = 1
+      endif
+      if ( e2 == n(1) ) then
+        ixmax = 1
+        iymax = 1
+        izmax = 1
+      endif
+      if ( e2 == n(6) ) then
+        ixmax = NGLLX
+        iymax = 1
+        izmax = NGLLZ
+      endif
     endif
     if ( e1 == n(3) ) then
-       ixmin = NGLLX
-       iymin = NGLLY
-       izmin = 1
-       if ( e2 == n(4) ) then
-          ixmax = 1
-          iymax = NGLLY
-          izmax = 1
-       endif
-       if ( e2 == n(2) ) then
-          ixmax = NGLLX
-          iymax = 1
-          izmax = 1
-       endif
-       if ( e2 == n(7) ) then
-          ixmax = NGLLX
-          iymax = NGLLY
-          izmax = NGLLZ
-       endif
+      ixmin = NGLLX
+      iymin = NGLLY
+      izmin = 1
+      if ( e2 == n(4) ) then
+        ixmax = 1
+        iymax = NGLLY
+        izmax = 1
+      endif
+      if ( e2 == n(2) ) then
+        ixmax = NGLLX
+        iymax = 1
+        izmax = 1
+      endif
+      if ( e2 == n(7) ) then
+        ixmax = NGLLX
+        iymax = NGLLY
+        izmax = NGLLZ
+      endif
     endif
     if ( e1 == n(4) ) then
-       ixmin = 1
-       iymin = NGLLY
-       izmin = 1
-       if ( e2 == n(1) ) then
-          ixmax = 1
-          iymax = 1
-          izmax = 1
-       endif
-       if ( e2 == n(3) ) then
-          ixmax = NGLLX
-          iymax = NGLLY
-          izmax = 1
-       endif
-       if ( e2 == n(8) ) then
-          ixmax = 1
-          iymax = NGLLY
-          izmax = NGLLZ
-       endif
+      ixmin = 1
+      iymin = NGLLY
+      izmin = 1
+      if ( e2 == n(1) ) then
+        ixmax = 1
+        iymax = 1
+        izmax = 1
+      endif
+      if ( e2 == n(3) ) then
+        ixmax = NGLLX
+        iymax = NGLLY
+        izmax = 1
+      endif
+      if ( e2 == n(8) ) then
+        ixmax = 1
+        iymax = NGLLY
+        izmax = NGLLZ
+      endif
     endif
     if ( e1 == n(5) ) then
-       ixmin = 1
-       iymin = 1
-       izmin = NGLLZ
-       if ( e2 == n(1) ) then
-          ixmax = 1
-          iymax = 1
-          izmax = 1
-       endif
-       if ( e2 == n(6) ) then
-          ixmax = NGLLX
-          iymax = 1
-          izmax = NGLLZ
-       endif
-       if ( e2 == n(8) ) then
-          ixmax = 1
-          iymax = NGLLY
-          izmax = NGLLZ
-       endif
+      ixmin = 1
+      iymin = 1
+      izmin = NGLLZ
+      if ( e2 == n(1) ) then
+        ixmax = 1
+        iymax = 1
+        izmax = 1
+      endif
+      if ( e2 == n(6) ) then
+        ixmax = NGLLX
+        iymax = 1
+        izmax = NGLLZ
+      endif
+      if ( e2 == n(8) ) then
+        ixmax = 1
+        iymax = NGLLY
+        izmax = NGLLZ
+      endif
     endif
     if ( e1 == n(6) ) then
-       ixmin = NGLLX
-       iymin = 1
-       izmin = NGLLZ
-       if ( e2 == n(2) ) then
-          ixmax = NGLLX
-          iymax = 1
-          izmax = 1
-       endif
-       if ( e2 == n(7) ) then
-          ixmax = NGLLX
-          iymax = NGLLY
-          izmax = NGLLZ
-       endif
-       if ( e2 == n(5) ) then
-          ixmax = 1
-          iymax = 1
-          izmax = NGLLZ
-       endif
+      ixmin = NGLLX
+      iymin = 1
+      izmin = NGLLZ
+      if ( e2 == n(2) ) then
+        ixmax = NGLLX
+        iymax = 1
+        izmax = 1
+      endif
+      if ( e2 == n(7) ) then
+        ixmax = NGLLX
+        iymax = NGLLY
+        izmax = NGLLZ
+      endif
+      if ( e2 == n(5) ) then
+        ixmax = 1
+        iymax = 1
+        izmax = NGLLZ
+      endif
     endif
     if ( e1 == n(7) ) then
-       ixmin = NGLLX
-       iymin = NGLLY
-       izmin = NGLLZ
-       if ( e2 == n(3) ) then
-          ixmax = NGLLX
-          iymax = NGLLY
-          izmax = 1
-       endif
-       if ( e2 == n(8) ) then
-          ixmax = 1
-          iymax = NGLLY
-          izmax = NGLLZ
-       endif
-       if ( e2 == n(6) ) then
-          ixmax = NGLLX
-          iymax = 1
-          izmax = NGLLZ
-       endif
+      ixmin = NGLLX
+      iymin = NGLLY
+      izmin = NGLLZ
+      if ( e2 == n(3) ) then
+        ixmax = NGLLX
+        iymax = NGLLY
+        izmax = 1
+      endif
+      if ( e2 == n(8) ) then
+        ixmax = 1
+        iymax = NGLLY
+        izmax = NGLLZ
+      endif
+      if ( e2 == n(6) ) then
+        ixmax = NGLLX
+        iymax = 1
+        izmax = NGLLZ
+      endif
     endif
     if ( e1 == n(8) ) then
-       ixmin = 1
-       iymin = NGLLY
-       izmin = NGLLZ
-       if ( e2 == n(4) ) then
-          ixmax = 1
-          iymax = NGLLY
-          izmax = 1
-       endif
-       if ( e2 == n(5) ) then
-          ixmax = 1
-          iymax = 1
-          izmax = NGLLZ
-       endif
-       if ( e2 == n(7) ) then
-          ixmax = NGLLX
-          iymax = NGLLY
-          izmax = NGLLZ
-       endif
+      ixmin = 1
+      iymin = NGLLY
+      izmin = NGLLZ
+      if ( e2 == n(4) ) then
+        ixmax = 1
+        iymax = NGLLY
+        izmax = 1
+      endif
+      if ( e2 == n(5) ) then
+        ixmax = 1
+        iymax = 1
+        izmax = NGLLZ
+      endif
+      if ( e2 == n(7) ) then
+        ixmax = NGLLX
+        iymax = NGLLY
+        izmax = NGLLZ
+      endif
     endif
 
   else if (itype == 4) then
@@ -411,16 +412,16 @@ subroutine get_edge ( n, itype, e1, e2, e3, e4, &
     valence = 0
     do i = 1, 4
       if ( en(i) == n(1)) then
-         valence = valence+1
+        valence = valence+1
       endif
       if ( en(i) == n(2)) then
-         valence = valence+1
+        valence = valence+1
       endif
       if ( en(i) == n(3)) then
-         valence = valence+1
+        valence = valence+1
       endif
       if ( en(i) == n(4)) then
-         valence = valence+1
+        valence = valence+1
       endif
     enddo
     if ( valence == 4 ) then
@@ -436,16 +437,16 @@ subroutine get_edge ( n, itype, e1, e2, e3, e4, &
     valence = 0
     do i = 1, 4
       if ( en(i) == n(1)) then
-         valence = valence+1
+        valence = valence+1
       endif
       if ( en(i) == n(2)) then
-         valence = valence+1
+        valence = valence+1
       endif
       if ( en(i) == n(5)) then
-         valence = valence+1
+        valence = valence+1
       endif
       if ( en(i) == n(6)) then
-         valence = valence+1
+        valence = valence+1
       endif
     enddo
     if ( valence == 4 ) then
@@ -461,16 +462,16 @@ subroutine get_edge ( n, itype, e1, e2, e3, e4, &
     valence = 0
     do i = 1, 4
       if ( en(i) == n(2)) then
-         valence = valence+1
+        valence = valence+1
       endif
       if ( en(i) == n(3)) then
-         valence = valence+1
+        valence = valence+1
       endif
       if ( en(i) == n(6)) then
-         valence = valence+1
+        valence = valence+1
       endif
       if ( en(i) == n(7)) then
-         valence = valence+1
+        valence = valence+1
       endif
     enddo
     if ( valence == 4 ) then
@@ -486,16 +487,16 @@ subroutine get_edge ( n, itype, e1, e2, e3, e4, &
     valence = 0
     do i = 1, 4
       if ( en(i) == n(3)) then
-         valence = valence+1
+        valence = valence+1
       endif
       if ( en(i) == n(4)) then
-         valence = valence+1
+        valence = valence+1
       endif
       if ( en(i) == n(7)) then
-         valence = valence+1
+        valence = valence+1
       endif
       if ( en(i) == n(8)) then
-         valence = valence+1
+        valence = valence+1
       endif
     enddo
     if ( valence == 4 ) then
@@ -511,16 +512,16 @@ subroutine get_edge ( n, itype, e1, e2, e3, e4, &
     valence = 0
     do i = 1, 4
       if ( en(i) == n(1)) then
-         valence = valence+1
+        valence = valence+1
       endif
       if ( en(i) == n(4)) then
-         valence = valence+1
+        valence = valence+1
       endif
       if ( en(i) == n(5)) then
-         valence = valence+1
+        valence = valence+1
       endif
       if ( en(i) == n(8)) then
-         valence = valence+1
+        valence = valence+1
       endif
     enddo
     if ( valence == 4 ) then
@@ -536,16 +537,16 @@ subroutine get_edge ( n, itype, e1, e2, e3, e4, &
     valence = 0
     do i = 1, 4
       if ( en(i) == n(5)) then
-         valence = valence+1
+        valence = valence+1
       endif
       if ( en(i) == n(6)) then
-         valence = valence+1
+        valence = valence+1
       endif
       if ( en(i) == n(7)) then
-         valence = valence+1
+        valence = valence+1
       endif
       if ( en(i) == n(8)) then
-         valence = valence+1
+        valence = valence+1
       endif
     enddo
     if ( valence == 4 ) then

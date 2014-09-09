@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -91,7 +92,7 @@
   integer :: it_start,it_end
   real(kind=CUSTOM_REAL) :: adj_temp(NSTEP)
   real(kind=CUSTOM_REAL) :: adj_src(NTSTEP_BETWEEN_READ_ADJSRC,NDIM)
-  character(len=256) :: procname
+  character(len=MAX_STRING_LEN) :: procname
   integer,parameter :: nheader=240      ! 240 bytes
   !integer(kind=2) :: i2head(nheader/2)  ! 2-byte-integer
   !integer(kind=4) :: i4head(nheader/4)  ! 4-byte-integer
@@ -109,97 +110,97 @@
   if (SIMULATION_TYPE == 1 .and. nsources_local > 0) then
 
 !way 2
-     ! adds acoustic sources
-     do isource = 1,NSOURCES
+    ! adds acoustic sources
+    do isource = 1,NSOURCES
 
-        !   add the source (only if this proc carries the source)
-        if(myrank == islice_selected_source(isource)) then
+      !   add the source (only if this proc carries the source)
+      if (myrank == islice_selected_source(isource)) then
 
-           ispec = ispec_selected_source(isource)
+        ispec = ispec_selected_source(isource)
 
-           if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
+        if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
 
-              if( ispec_is_acoustic(ispec) ) then
+          if (ispec_is_acoustic(ispec)) then
 
-                 if(USE_FORCE_POINT_SOURCE) then
+            if (USE_FORCE_POINT_SOURCE) then
 
-                    f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing FORCESOLUTION file format
+              f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing FORCESOLUTION file format
 
-                    !if (it == 1 .and. myrank == 0) then
-                    !  write(IMAIN,*) 'using a source of dominant frequency ',f0
-                    !  write(IMAIN,*) 'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
-                    !  write(IMAIN,*) 'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
-                    !endif
+              !if (it == 1 .and. myrank == 0) then
+              !  write(IMAIN,*) 'using a source of dominant frequency ',f0
+              !  write(IMAIN,*) 'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
+              !  write(IMAIN,*) 'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
+              !endif
 
-                    if( USE_RICKER_TIME_FUNCTION ) then
-                       stf_used = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),f0)
-                    else
-                       stf_used = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_tiny(isource))
-                    endif
+              if (USE_RICKER_TIME_FUNCTION) then
+                stf_used = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),f0)
+              else
+                stf_used = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_tiny(isource))
+              endif
 
-                    ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
-                    ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
-                    ! to add minus the source to Chi_dot_dot to get plus the source in pressure:
+              ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
+              ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
+              ! to add minus the source to Chi_dot_dot to get plus the source in pressure:
 
-                    ! acoustic source for pressure gets divided by kappa
-                    ! source contribution
-                    do k=1,NGLLZ
-                      do j=1,NGLLY
-                        do i=1,NGLLX
-                          iglob = ibool(i,j,k,ispec)
-                          potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
-                                  - sourcearrays(isource,1,i,j,k) * stf_used / kappastore(i,j,k,ispec)
-                        enddo
-                      enddo
-                    enddo
+              ! acoustic source for pressure gets divided by kappa
+              ! source contribution
+              do k=1,NGLLZ
+                do j=1,NGLLY
+                  do i=1,NGLLX
+                    iglob = ibool(i,j,k,ispec)
+                    potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
+                            - sourcearrays(isource,1,i,j,k) * stf_used / kappastore(i,j,k,ispec)
+                  enddo
+                enddo
+              enddo
 
-                 else
+            else
 
-                    if( USE_RICKER_TIME_FUNCTION ) then
-                       stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
-                    else
-                       ! gaussian source time
-                       stf = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
-                    endif
+              if (USE_RICKER_TIME_FUNCTION) then
+                stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+              else
+                ! gaussian source time
+                stf = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+              endif
 
-                    ! quasi-Heaviside
-                    !stf = comp_source_time_function(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+              ! quasi-Heaviside
+              !stf = comp_source_time_function(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
 
-                    ! source encoding
-                    stf = stf * pm1_source_encoding(isource)
+              ! source encoding
+              stf = stf * pm1_source_encoding(isource)
 
-                    ! distinguishes between single and double precision for reals
-                    if(CUSTOM_REAL == SIZE_REAL) then
-                       stf_used = sngl(stf)
-                    else
-                       stf_used = stf
-                    endif
+              ! distinguishes between single and double precision for reals
+              if (CUSTOM_REAL == SIZE_REAL) then
+                stf_used = sngl(stf)
+              else
+                stf_used = stf
+              endif
 
-                    ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
-                    ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
-                    ! to add minus the source to Chi_dot_dot to get plus the source in pressure
+              ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
+              ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
+              ! to add minus the source to Chi_dot_dot to get plus the source in pressure
 
-                    !     add source array
-                    do k=1,NGLLZ
-                       do j=1,NGLLY
-                          do i=1,NGLLX
-                             ! adds source contribution
-                             ! note: acoustic source for pressure gets divided by kappa
-                             iglob = ibool(i,j,k,ispec)
-                             potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
-                                     - sourcearrays(isource,1,i,j,k) * stf_used / kappastore(i,j,k,ispec)
-                          enddo
-                       enddo
-                    enddo
+              !     add source array
+              do k=1,NGLLZ
+                do j=1,NGLLY
+                  do i=1,NGLLX
+                    ! adds source contribution
+                    ! note: acoustic source for pressure gets divided by kappa
+                    iglob = ibool(i,j,k,ispec)
+                    potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
+                            - sourcearrays(isource,1,i,j,k) * stf_used / kappastore(i,j,k,ispec)
+                  enddo
+                enddo
+              enddo
 
-                 endif ! USE_FORCE_POINT_SOURCE
+            endif ! USE_FORCE_POINT_SOURCE
 
-                 stf_used_total = stf_used_total + stf_used
+            stf_used_total = stf_used_total + stf_used
 
-              endif ! ispec_is_acoustic
-           endif ! ispec_is_inner
-        endif ! myrank
-     enddo ! NSOURCES
+          endif ! ispec_is_acoustic
+        endif ! ispec_is_inner
+      endif ! myrank
+    enddo ! NSOURCES
   endif
 
 ! NOTE: adjoint sources and backward wavefield timing:
@@ -254,36 +255,37 @@
         if( ier /= 0 ) stop 'error allocating array adj_sourcearray'
 
         if (.not. SU_FORMAT) then
-           !!! read ascii adjoint sources
-           irec_local = 0
-           do irec = 1, nrec
-             ! compute source arrays
-             if (myrank == islice_selected_rec(irec)) then
-               irec_local = irec_local + 1
+          !!! read ascii adjoint sources
+          irec_local = 0
+          do irec = 1, nrec
+            ! compute source arrays
+            if (myrank == islice_selected_rec(irec)) then
+              irec_local = irec_local + 1
 
-               ! reads in **sta**.**net**.**LH**.adj files
-               adj_source_file = trim(station_name(irec))//'.'//trim(network_name(irec))
-               call compute_arrays_adjoint_source(myrank,adj_source_file, &
-                                                  xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
-                                                  adj_sourcearray, xigll,yigll,zigll, &
-                                                  it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC)
+              ! reads in **sta**.**net**.**LH**.adj files
+              adj_source_file = trim(station_name(irec))//'.'//trim(network_name(irec))
+              call compute_arrays_adjoint_source(myrank,adj_source_file, &
+                                                 xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
+                                                 adj_sourcearray, xigll,yigll,zigll, &
+                                                 it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC)
 
-               do itime = 1,NTSTEP_BETWEEN_READ_ADJSRC
-                 adj_sourcearrays(irec_local,itime,:,:,:,:) = adj_sourcearray(itime,:,:,:,:)
-               enddo
+              do itime = 1,NTSTEP_BETWEEN_READ_ADJSRC
+                adj_sourcearrays(irec_local,itime,:,:,:,:) = adj_sourcearray(itime,:,:,:,:)
+              enddo
 
-             endif
-           enddo
+            endif
+          enddo
         else
           !!! read SU adjoint sources
           ! range of the block we need to read
           it_start = NSTEP - it_sub_adj*NTSTEP_BETWEEN_READ_ADJSRC + 1
           it_end   = it_start + NTSTEP_BETWEEN_READ_ADJSRC - 1
           write(procname,"(i4)") myrank
-          open(unit=IIN_SU1, file=trim(adjustl(OUTPUT_FILES_PATH))//'../SEM/'//trim(adjustl(procname))//'_dx_SU.adj', &
+          procname = adjustl(procname)
+          open(unit=IIN_SU1, file=trim(OUTPUT_FILES_PATH)//'../SEM/'//trim(procname)//'_dx_SU.adj', &
                             status='old',access='direct',recl=240+4*(NSTEP),iostat = ier)
-          if( ier /= 0 ) call exit_MPI(myrank,'file '//trim(adjustl(OUTPUT_FILES_PATH)) &
-                                    //'../SEM/'//trim(adjustl(procname))//'_dx_SU.adj does not exit')
+          if (ier /= 0) call exit_MPI(myrank,'file '//trim(OUTPUT_FILES_PATH) &
+                                    //'../SEM/'//trim(procname)//'_dx_SU.adj does not exist')
 
           do irec_local = 1,nrec_local
             irec = number_receiver_global(irec_local)
@@ -348,9 +350,9 @@
             endif
           endif
         enddo ! nrec
-    endif ! it
-  endif ! nadj_rec_local > 0
-endif
+      endif ! it
+    endif ! nadj_rec_local > 0
+  endif
 
   ! master prints out source time function to file
   if(PRINT_SOURCE_TIME_FUNCTION .and. phase_is_inner) then
@@ -412,9 +414,6 @@ endif
   real(kind=CUSTOM_REAL) stf_used,stf_used_total_all,time_source
   integer :: isource,iglob,ispec,i,j,k
 
-! adjoint sources in SU format
-  integer,parameter :: nheader=240      ! 240 bytes
-
   ! checks if anything to do
   if( SIMULATION_TYPE /= 3 ) return
 
@@ -455,100 +454,100 @@ endif
 ! adjoint simulations
   if( nsources_local > 0 ) then
 
-     ! adds acoustic sources
-     do isource = 1,NSOURCES
+    ! adds acoustic sources
+    do isource = 1,NSOURCES
 
-        !   add the source (only if this proc carries the source)
-        if(myrank == islice_selected_source(isource)) then
+      !   add the source (only if this proc carries the source)
+      if (myrank == islice_selected_source(isource)) then
 
-           ispec = ispec_selected_source(isource)
+        ispec = ispec_selected_source(isource)
 
-           if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
+        if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
 
-              if( ispec_is_acoustic(ispec) ) then
+          if (ispec_is_acoustic(ispec)) then
 
-                 if(USE_FORCE_POINT_SOURCE) then
+            if (USE_FORCE_POINT_SOURCE) then
 
-                    f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing FORCESOLUTION file format
+              f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing FORCESOLUTION file format
 
-                    !if (it == 1 .and. myrank == 0) then
-                    !  write(IMAIN,*) 'using a source of dominant frequency ',f0
-                    !  write(IMAIN,*) 'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
-                    !  write(IMAIN,*) 'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
-                    !endif
+              !if (it == 1 .and. myrank == 0) then
+              !  write(IMAIN,*) 'using a source of dominant frequency ',f0
+              !  write(IMAIN,*) 'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
+              !  write(IMAIN,*) 'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
+              !endif
 
-                    if( USE_RICKER_TIME_FUNCTION ) then
-                       stf_used = comp_source_time_function_rickr( &
-                                  dble(NSTEP-it)*DT-t0-tshift_src(isource),f0)
-                    else
-                       stf_used = comp_source_time_function_gauss( &
-                                  dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_tiny(isource))
-                    endif
+              if (USE_RICKER_TIME_FUNCTION) then
+                stf_used = comp_source_time_function_rickr( &
+                           dble(NSTEP-it)*DT-t0-tshift_src(isource),f0)
+              else
+                stf_used = comp_source_time_function_gauss( &
+                           dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_tiny(isource))
+              endif
 
-                    ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
-                    ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
-                    ! to add minus the source to Chi_dot_dot to get plus the source in pressure:
+              ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
+              ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
+              ! to add minus the source to Chi_dot_dot to get plus the source in pressure:
 
-                    ! acoustic source for pressure gets divided by kappa
-                    ! source contribution
-                    do k=1,NGLLZ
-                      do j=1,NGLLY
-                        do i=1,NGLLX
-                          iglob = ibool(i,j,k,ispec)
-                          b_potential_dot_dot_acoustic(iglob) = b_potential_dot_dot_acoustic(iglob) &
-                                  - sourcearrays(isource,1,i,j,k) * stf_used / kappastore(i,j,k,ispec)
-                        enddo
-                      enddo
-                    enddo
+              ! acoustic source for pressure gets divided by kappa
+              ! source contribution
+              do k=1,NGLLZ
+                do j=1,NGLLY
+                  do i=1,NGLLX
+                    iglob = ibool(i,j,k,ispec)
+                    b_potential_dot_dot_acoustic(iglob) = b_potential_dot_dot_acoustic(iglob) &
+                            - sourcearrays(isource,1,i,j,k) * stf_used / kappastore(i,j,k,ispec)
+                  enddo
+                enddo
+              enddo
 
-                 else
-                    if( USE_RICKER_TIME_FUNCTION ) then
-                       stf = comp_source_time_function_rickr( &
-                             dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
-                    else
-                       ! gaussian source time
-                       stf = comp_source_time_function_gauss( &
-                             dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
-                    endif
+            else
+              if (USE_RICKER_TIME_FUNCTION) then
+                stf = comp_source_time_function_rickr( &
+                      dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
+              else
+                ! gaussian source time
+                stf = comp_source_time_function_gauss( &
+                      dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+              endif
 
-                    ! quasi-Heaviside
-                    !stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+              ! quasi-Heaviside
+              !stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
 
-                    ! source encoding
-                    stf = stf * pm1_source_encoding(isource)
+              ! source encoding
+              stf = stf * pm1_source_encoding(isource)
 
-                    ! distinguishes between single and double precision for reals
-                    if(CUSTOM_REAL == SIZE_REAL) then
-                       stf_used = sngl(stf)
-                    else
-                       stf_used = stf
-                    endif
+              ! distinguishes between single and double precision for reals
+              if (CUSTOM_REAL == SIZE_REAL) then
+                stf_used = sngl(stf)
+              else
+                stf_used = stf
+              endif
 
-                    ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
-                    ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
-                    ! to add minus the source to Chi_dot_dot to get plus the source in pressure
+              ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
+              ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
+              ! to add minus the source to Chi_dot_dot to get plus the source in pressure
 
-                    !     add source array
-                    do k=1,NGLLZ
-                       do j=1,NGLLY
-                          do i=1,NGLLX
-                             ! adds source contribution
-                             ! note: acoustic source for pressure gets divided by kappa
-                             iglob = ibool(i,j,k,ispec)
-                             b_potential_dot_dot_acoustic(iglob) = b_potential_dot_dot_acoustic(iglob) &
-                                     - sourcearrays(isource,1,i,j,k) * stf_used / kappastore(i,j,k,ispec)
-                          enddo
-                       enddo
-                    enddo
+              !     add source array
+              do k=1,NGLLZ
+                do j=1,NGLLY
+                  do i=1,NGLLX
+                    ! adds source contribution
+                    ! note: acoustic source for pressure gets divided by kappa
+                    iglob = ibool(i,j,k,ispec)
+                    b_potential_dot_dot_acoustic(iglob) = b_potential_dot_dot_acoustic(iglob) &
+                            - sourcearrays(isource,1,i,j,k) * stf_used / kappastore(i,j,k,ispec)
+                  enddo
+                enddo
+              enddo
 
-                 endif ! USE_FORCE_POINT_SOURCE
+            endif ! USE_FORCE_POINT_SOURCE
 
-                 stf_used_total = stf_used_total + stf_used
+            stf_used_total = stf_used_total + stf_used
 
-              endif ! ispec_is_elastic
-           endif ! ispec_is_inner
-        endif ! myrank
-     enddo ! NSOURCES
+          endif ! ispec_is_elastic
+        endif ! ispec_is_inner
+      endif ! myrank
+    enddo ! NSOURCES
   endif
 
   ! master prints out source time function to file
@@ -621,7 +620,7 @@ endif
   integer :: it_start,it_end
   real(kind=CUSTOM_REAL) :: adj_temp(NSTEP)
   real(kind=CUSTOM_REAL) :: adj_src(NTSTEP_BETWEEN_READ_ADJSRC,NDIM)
-  character(len=256) :: procname
+  character(len=MAX_STRING_LEN) :: procname
   integer,parameter :: nheader=240      ! 240 bytes
   !integer(kind=2) :: i2head(nheader/2)  ! 2-byte-integer
   !integer(kind=4) :: i4head(nheader/4)  ! 4-byte-integer
@@ -639,33 +638,33 @@ endif
   if (SIMULATION_TYPE == 1 .and. nsources_local > 0) then
 
 !way 2
-      if( NSOURCES > 0 ) then
-         do isource = 1,NSOURCES
-            ! precomputes source time function factor
-            if(USE_FORCE_POINT_SOURCE) then
-               if( USE_RICKER_TIME_FUNCTION ) then
-                  stf_pre_compute(isource) = &
-                       comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
-               else
-                  stf_pre_compute(isource) = &
-                       comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_tiny(isource))
-               endif
-            else
-               if( USE_RICKER_TIME_FUNCTION ) then
-                  stf_pre_compute(isource) = &
-                       comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
-               else
-                  stf_pre_compute(isource) = &
-                       comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
-               endif
-            endif
-         enddo
-         stf_used_total = stf_used_total + sum(stf_pre_compute(:))
-         ! only implements SIMTYPE=1 and NOISE_TOM=0
-         ! write(*,*) "fortran dt = ", dt
-         ! change dt -> DT
-         call compute_add_sources_ac_cuda(Mesh_pointer,phase_is_inner,NSOURCES,stf_pre_compute)
-      endif
+    if (NSOURCES > 0) then
+      do isource = 1,NSOURCES
+        ! precomputes source time function factor
+        if (USE_FORCE_POINT_SOURCE) then
+          if (USE_RICKER_TIME_FUNCTION) then
+            stf_pre_compute(isource) = &
+                 comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+          else
+            stf_pre_compute(isource) = &
+                 comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_tiny(isource))
+          endif
+        else
+          if (USE_RICKER_TIME_FUNCTION) then
+            stf_pre_compute(isource) = &
+                 comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+          else
+            stf_pre_compute(isource) = &
+                 comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+          endif
+        endif
+      enddo
+      stf_used_total = stf_used_total + sum(stf_pre_compute(:))
+      ! only implements SIMTYPE=1 and NOISE_TOM=0
+      ! write(*,*) "fortran dt = ", dt
+      ! change dt -> DT
+      call compute_add_sources_ac_cuda(Mesh_pointer,phase_is_inner,NSOURCES,stf_pre_compute)
+    endif
   endif
 
 ! NOTE: adjoint sources and backward wavefield timing:
@@ -720,36 +719,37 @@ endif
         if( ier /= 0 ) stop 'error allocating array adj_sourcearray'
 
         if (.not. SU_FORMAT) then
-           !!! read ascii adjoint sources
-           irec_local = 0
-           do irec = 1, nrec
-             ! compute source arrays
-             if (myrank == islice_selected_rec(irec)) then
-               irec_local = irec_local + 1
+          !!! read ascii adjoint sources
+          irec_local = 0
+          do irec = 1, nrec
+            ! compute source arrays
+            if (myrank == islice_selected_rec(irec)) then
+              irec_local = irec_local + 1
 
-               ! reads in **sta**.**net**.**LH**.adj files
-               adj_source_file = trim(station_name(irec))//'.'//trim(network_name(irec))
-               call compute_arrays_adjoint_source(myrank,adj_source_file, &
-                                                  xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
-                                                  adj_sourcearray, xigll,yigll,zigll, &
-                                                  it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC)
+              ! reads in **sta**.**net**.**LH**.adj files
+              adj_source_file = trim(station_name(irec))//'.'//trim(network_name(irec))
+              call compute_arrays_adjoint_source(myrank,adj_source_file, &
+                                                 xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
+                                                 adj_sourcearray, xigll,yigll,zigll, &
+                                                 it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC)
 
-               do itime = 1,NTSTEP_BETWEEN_READ_ADJSRC
-                 adj_sourcearrays(irec_local,itime,:,:,:,:) = adj_sourcearray(itime,:,:,:,:)
-               enddo
+              do itime = 1,NTSTEP_BETWEEN_READ_ADJSRC
+                adj_sourcearrays(irec_local,itime,:,:,:,:) = adj_sourcearray(itime,:,:,:,:)
+              enddo
 
-             endif
-           enddo
+            endif
+          enddo
         else
           !!! read SU adjoint sources
           ! range of the block we need to read
           it_start = NSTEP - it_sub_adj*NTSTEP_BETWEEN_READ_ADJSRC + 1
           it_end   = it_start + NTSTEP_BETWEEN_READ_ADJSRC - 1
           write(procname,"(i4)") myrank
-          open(unit=IIN_SU1, file=trim(adjustl(OUTPUT_FILES_PATH))//'../SEM/'//trim(adjustl(procname))//'_dx_SU.adj', &
+          procname = adjustl(procname)
+          open(unit=IIN_SU1, file=trim(OUTPUT_FILES_PATH)//'../SEM/'//trim(procname)//'_dx_SU.adj', &
                             status='old',access='direct',recl=240+4*(NSTEP),iostat = ier)
-          if( ier /= 0 ) call exit_MPI(myrank,'file '//trim(adjustl(OUTPUT_FILES_PATH)) &
-                                    //'../SEM/'//trim(adjustl(procname))//'_dx_SU.adj does not exit')
+          if (ier /= 0) call exit_MPI(myrank,'file '//trim(OUTPUT_FILES_PATH) &
+                                    //'../SEM/'//trim(procname)//'_dx_SU.adj does not exist')
 
           do irec_local = 1,nrec_local
             irec = number_receiver_global(irec_local)
@@ -800,31 +800,31 @@ endif
 ! adjoint simulations
   if (SIMULATION_TYPE == 3 .and. nsources_local > 0) then
 
-      if( NSOURCES > 0 ) then
-         do isource = 1,NSOURCES
-            ! precomputes source time function factors
-            if(USE_FORCE_POINT_SOURCE) then
-               if( USE_RICKER_TIME_FUNCTION ) then
-                  stf_pre_compute(isource) = &
-                       comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
-               else
-                  stf_pre_compute(isource) = &
-                       comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_tiny(isource))
-               endif
-            else
-               if( USE_RICKER_TIME_FUNCTION ) then
-                  stf_pre_compute(isource) = &
-                       comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
-               else
-                  stf_pre_compute(isource) = &
-                       comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
-               endif
-            endif
-         enddo
-         stf_used_total = stf_used_total + sum(stf_pre_compute(:))
-         ! only implements SIMTYPE=3
-         call compute_add_sources_ac_s3_cuda(Mesh_pointer,phase_is_inner,NSOURCES,stf_pre_compute)
-      endif
+    if (NSOURCES > 0) then
+      do isource = 1,NSOURCES
+        ! precomputes source time function factors
+        if (USE_FORCE_POINT_SOURCE) then
+           if (USE_RICKER_TIME_FUNCTION) then
+             stf_pre_compute(isource) = &
+                  comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
+           else
+             stf_pre_compute(isource) = &
+                  comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_tiny(isource))
+           endif
+        else
+          if (USE_RICKER_TIME_FUNCTION) then
+            stf_pre_compute(isource) = &
+                 comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
+          else
+            stf_pre_compute(isource) = &
+                 comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+          endif
+        endif
+      enddo
+      stf_used_total = stf_used_total + sum(stf_pre_compute(:))
+      ! only implements SIMTYPE=3
+      call compute_add_sources_ac_s3_cuda(Mesh_pointer,phase_is_inner,NSOURCES,stf_pre_compute)
+    endif
   endif
 
   ! master prints out source time function to file

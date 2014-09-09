@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -40,7 +41,7 @@
 ! note that pressure is defined as:
 !     p = - Chi_dot_dot
 !
-  use specfem_par,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,TINYVAL_SNGL, &
+  use specfem_par,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ, &
                         m1,m2,NGLLCUBE,PML_CONDITIONS
   use pml_par, only: is_CPML, spec_to_CPML, NSPEC_CPML, &
                      PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl,&
@@ -245,7 +246,7 @@
           do j=1,NGLLY
             do i=1,NGLLX
 
-             ! get derivatives of potential with respect to x, y and z
+              ! get derivatives of potential with respect to x, y and z
               xixl = xix(i,j,k,ispec)
               xiyl = xiy(i,j,k,ispec)
               xizl = xiz(i,j,k,ispec)
@@ -271,26 +272,26 @@
         enddo
 #else
         do ijk = 1,NGLLCUBE
-           ! get derivatives of potential with respect to x, y and z
-           xixl = xix(ijk,1,1,ispec)
-           xiyl = xiy(ijk,1,1,ispec)
-           xizl = xiz(ijk,1,1,ispec)
-           etaxl = etax(ijk,1,1,ispec)
-           etayl = etay(ijk,1,1,ispec)
-           etazl = etaz(ijk,1,1,ispec)
-           gammaxl = gammax(ijk,1,1,ispec)
-           gammayl = gammay(ijk,1,1,ispec)
-           gammazl = gammaz(ijk,1,1,ispec)
-           jacobianl = jacobian(ijk,1,1,ispec)
+          ! get derivatives of potential with respect to x, y and z
+          xixl = xix(ijk,1,1,ispec)
+          xiyl = xiy(ijk,1,1,ispec)
+          xizl = xiz(ijk,1,1,ispec)
+          etaxl = etax(ijk,1,1,ispec)
+          etayl = etay(ijk,1,1,ispec)
+          etazl = etaz(ijk,1,1,ispec)
+          gammaxl = gammax(ijk,1,1,ispec)
+          gammayl = gammay(ijk,1,1,ispec)
+          gammazl = gammaz(ijk,1,1,ispec)
+          jacobianl = jacobian(ijk,1,1,ispec)
 
-           ! derivatives of potential
-           PML_dpotential_dxl(ijk,1,1) = xixl*tempx1(ijk,1,1) + etaxl*tempx2(ijk,1,1) + gammaxl*tempx3(ijk,1,1)
-           PML_dpotential_dyl(ijk,1,1) = xiyl*tempx1(ijk,1,1) + etayl*tempx2(ijk,1,1) + gammayl*tempx3(ijk,1,1)
-           PML_dpotential_dzl(ijk,1,1) = xizl*tempx1(ijk,1,1) + etazl*tempx2(ijk,1,1) + gammazl*tempx3(ijk,1,1)
+          ! derivatives of potential
+          PML_dpotential_dxl(ijk,1,1) = xixl*tempx1(ijk,1,1) + etaxl*tempx2(ijk,1,1) + gammaxl*tempx3(ijk,1,1)
+          PML_dpotential_dyl(ijk,1,1) = xiyl*tempx1(ijk,1,1) + etayl*tempx2(ijk,1,1) + gammayl*tempx3(ijk,1,1)
+          PML_dpotential_dzl(ijk,1,1) = xizl*tempx1(ijk,1,1) + etazl*tempx2(ijk,1,1) + gammazl*tempx3(ijk,1,1)
 
-           PML_dpotential_dxl_old(ijk,1,1) = xixl*tempx1_old(ijk,1,1) + etaxl*tempx2_old(ijk,1,1) + gammaxl*tempx3_old(ijk,1,1)
-           PML_dpotential_dyl_old(ijk,1,1) = xiyl*tempx1_old(ijk,1,1) + etayl*tempx2_old(ijk,1,1) + gammayl*tempx3_old(ijk,1,1)
-           PML_dpotential_dzl_old(ijk,1,1) = xizl*tempx1_old(ijk,1,1) + etazl*tempx2_old(ijk,1,1) + gammazl*tempx3_old(ijk,1,1)
+          PML_dpotential_dxl_old(ijk,1,1) = xixl*tempx1_old(ijk,1,1) + etaxl*tempx2_old(ijk,1,1) + gammaxl*tempx3_old(ijk,1,1)
+          PML_dpotential_dyl_old(ijk,1,1) = xiyl*tempx1_old(ijk,1,1) + etayl*tempx2_old(ijk,1,1) + gammayl*tempx3_old(ijk,1,1)
+          PML_dpotential_dzl_old(ijk,1,1) = xizl*tempx1_old(ijk,1,1) + etazl*tempx2_old(ijk,1,1) + gammazl*tempx3_old(ijk,1,1)
 
         enddo
 #endif
@@ -303,7 +304,7 @@
       do j=1,NGLLY
         do i=1,NGLLX
 
-         ! get derivatives of potential with respect to x, y and z
+          ! get derivatives of potential with respect to x, y and z
           xixl = xix(i,j,k,ispec)
           xiyl = xiy(i,j,k,ispec)
           xizl = xiz(i,j,k,ispec)
@@ -336,51 +337,51 @@
     enddo
 #else
     do ijk = 1,NGLLCUBE
-         ! get derivatives of potential with respect to x, y and z
-          xixl = xix(ijk,1,1,ispec)
-          xiyl = xiy(ijk,1,1,ispec)
-          xizl = xiz(ijk,1,1,ispec)
-          etaxl = etax(ijk,1,1,ispec)
-          etayl = etay(ijk,1,1,ispec)
-          etazl = etaz(ijk,1,1,ispec)
-          gammaxl = gammax(ijk,1,1,ispec)
-          gammayl = gammay(ijk,1,1,ispec)
-          gammazl = gammaz(ijk,1,1,ispec)
-          jacobianl = jacobian(ijk,1,1,ispec)
+      ! get derivatives of potential with respect to x, y and z
+      xixl = xix(ijk,1,1,ispec)
+      xiyl = xiy(ijk,1,1,ispec)
+      xizl = xiz(ijk,1,1,ispec)
+      etaxl = etax(ijk,1,1,ispec)
+      etayl = etay(ijk,1,1,ispec)
+      etazl = etaz(ijk,1,1,ispec)
+      gammaxl = gammax(ijk,1,1,ispec)
+      gammayl = gammay(ijk,1,1,ispec)
+      gammazl = gammaz(ijk,1,1,ispec)
+      jacobianl = jacobian(ijk,1,1,ispec)
 
-          ! derivatives of potential
-          dpotentialdxl = xixl*tempx1(ijk,1,1) + etaxl*tempx2(ijk,1,1) + gammaxl*tempx3(ijk,1,1)
-          dpotentialdyl = xiyl*tempx1(ijk,1,1) + etayl*tempx2(ijk,1,1) + gammayl*tempx3(ijk,1,1)
-          dpotentialdzl = xizl*tempx1(ijk,1,1) + etazl*tempx2(ijk,1,1) + gammazl*tempx3(ijk,1,1)
+      ! derivatives of potential
+      dpotentialdxl = xixl*tempx1(ijk,1,1) + etaxl*tempx2(ijk,1,1) + gammaxl*tempx3(ijk,1,1)
+      dpotentialdyl = xiyl*tempx1(ijk,1,1) + etayl*tempx2(ijk,1,1) + gammayl*tempx3(ijk,1,1)
+      dpotentialdzl = xizl*tempx1(ijk,1,1) + etazl*tempx2(ijk,1,1) + gammazl*tempx3(ijk,1,1)
 
-          ! density (reciproc)
-          rho_invl = 1.0_CUSTOM_REAL / rhostore(ijk,1,1,ispec)
+      ! density (reciproc)
+      rho_invl = 1.0_CUSTOM_REAL / rhostore(ijk,1,1,ispec)
 
-          ! for acoustic medium
-          ! also add GLL integration weights
-          tempx1(ijk,1,1) = rho_invl * jacobianl* &
-                        (xixl*dpotentialdxl + xiyl*dpotentialdyl + xizl*dpotentialdzl)
-          tempx2(ijk,1,1) = rho_invl * jacobianl* &
-                        (etaxl*dpotentialdxl + etayl*dpotentialdyl + etazl*dpotentialdzl)
-          tempx3(ijk,1,1) = rho_invl * jacobianl* &
-                        (gammaxl*dpotentialdxl + gammayl*dpotentialdyl + gammazl*dpotentialdzl)
+      ! for acoustic medium
+      ! also add GLL integration weights
+      tempx1(ijk,1,1) = rho_invl * jacobianl* &
+                    (xixl*dpotentialdxl + xiyl*dpotentialdyl + xizl*dpotentialdzl)
+      tempx2(ijk,1,1) = rho_invl * jacobianl* &
+                    (etaxl*dpotentialdxl + etayl*dpotentialdyl + etazl*dpotentialdzl)
+      tempx3(ijk,1,1) = rho_invl * jacobianl* &
+                    (gammaxl*dpotentialdxl + gammayl*dpotentialdyl + gammazl*dpotentialdzl)
     enddo
 #endif
 
     if (PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
-       ! do not merge this second line with the first using an ".and." statement
-       ! because array is_CPML() is unallocated when PML_CONDITIONS is false
-       if(is_CPML(ispec)) then
-          tempx1 = 0._CUSTOM_REAL; tempx2 = 0._CUSTOM_REAL; tempx3 = 0._CUSTOM_REAL
-          ispec_CPML = spec_to_CPML(ispec)
-          ! sets C-PML elastic memory variables to compute stress sigma and form dot product with test vector
-          call pml_compute_memory_variables_acoustic(ispec,ispec_CPML,tempx1,tempx2,tempx3,&
-                                                     rmemory_dpotential_dxl,rmemory_dpotential_dyl,rmemory_dpotential_dzl)
+      ! do not merge this second line with the first using an ".and." statement
+      ! because array is_CPML() is unallocated when PML_CONDITIONS is false
+      if (is_CPML(ispec)) then
+        tempx1 = 0._CUSTOM_REAL; tempx2 = 0._CUSTOM_REAL; tempx3 = 0._CUSTOM_REAL
+        ispec_CPML = spec_to_CPML(ispec)
+        ! sets C-PML elastic memory variables to compute stress sigma and form dot product with test vector
+        call pml_compute_memory_variables_acoustic(ispec,ispec_CPML,tempx1,tempx2,tempx3,&
+                                                   rmemory_dpotential_dxl,rmemory_dpotential_dyl,rmemory_dpotential_dzl)
 
-          ! calculates contribution from each C-PML element to update acceleration
-          call pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_acoustic,&
-                                                       potential_dot_acoustic,rmemory_potential_acoustic)
-       endif
+        ! calculates contribution from each C-PML element to update acceleration
+        call pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_acoustic,&
+                                                     potential_dot_acoustic,rmemory_potential_acoustic)
+      endif
     endif
 
     ! subroutines adapted from Deville, Fischer and Mund, High-order methods
@@ -438,10 +439,10 @@
 ! (only common points between different elements can be the same)
 !DIR$ IVDEP
     do ijk = 1,NGLLCUBE
-          ! sum contributions from each element to the global values
-       iglob = ibool(ijk,1,1,ispec)
-       potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) - (wgllwgll_yz_3D(ijk,1,1)*newtempx1(ijk,1,1) &
-                       + wgllwgll_xz_3D(ijk,1,1)*newtempx2(ijk,1,1) + wgllwgll_xy_3D(ijk,1,1)*newtempx3(ijk,1,1))
+      ! sum contributions from each element to the global values
+      iglob = ibool(ijk,1,1,ispec)
+      potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) - (wgllwgll_yz_3D(ijk,1,1)*newtempx1(ijk,1,1) &
+                      + wgllwgll_xz_3D(ijk,1,1)*newtempx2(ijk,1,1) + wgllwgll_xy_3D(ijk,1,1)*newtempx3(ijk,1,1))
     enddo
 #endif
 

@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -27,7 +28,6 @@
 ! read a 3D CUBIT mesh file and display statistics about mesh quality;
 ! and create an OpenDX file showing a given range of elements or a single element
 
-
 ! Dimitri Komatitsch, University of Pau, France, March 2009.
 ! Modified by Pieyre Le Loher
 
@@ -38,9 +38,9 @@
   subroutine check_mesh_quality(myrank,VP_MAX,NGLOB,NSPEC,x,y,z,ibool, &
                                 CREATE_VTK_FILES,prname)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: myrank
 
@@ -53,7 +53,7 @@
   integer, dimension(NGNOD_EIGHT_CORNERS,NSPEC) :: ibool
 
   logical :: CREATE_VTK_FILES
-  character(len=256) prname
+  character(len=MAX_STRING_LEN) :: prname
 
   ! local parameters
   integer :: ispec,ispec_min_edge_length,ispec_max_edge_length,ispec_max_skewness, &
@@ -83,11 +83,6 @@
   integer :: iclass
   double precision :: current_percent,total_percent
 
-  ! to export elements that have a certain skewness range to OpenDX
-  !integer :: ntotspecAVS_DX
-  !logical :: USE_OPENDX
-
-  !character(len=256):: line
   integer,dimension(1) :: tmp_ispec_max_skewness,tmp_ispec_max_skewness_MPI
 
   ! debug: for vtk output
@@ -106,8 +101,8 @@
           APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,USE_FORCE_POINT_SOURCE
   logical STACEY_ABSORBING_CONDITIONS,SAVE_FORWARD,STACEY_INSTEAD_OF_FREE_SURFACE
   logical ANISOTROPY,SAVE_MESH_FILES,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
-  logical PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID
-  character(len=256) LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
+  logical PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID,COUPLE_WITH_DSM
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH,TOMOGRAPHY_PATH,TRACTION_PATH
   integer NPROC
   integer MOVIE_TYPE,IMODEL
 
@@ -132,7 +127,7 @@
                         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
                         USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE, &
                         USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
-                        PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,FULL_ATTENUATION_SOLID,TRAC_PATH)
+                        PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,FULL_ATTENUATION_SOLID,TRACTION_PATH,COUPLE_WITH_DSM)
 
   if(NGNOD /= 8) stop 'error: check_mesh_quality only supports NGNOD == 8 for now'
 
@@ -200,7 +195,7 @@
 
   enddo
 
-  call sync_all()
+  call synchronize_all()
 
   call min_all_dp(distance_min,distance_min_MPI)
   call max_all_dp(distance_max,distance_max_MPI)
@@ -420,9 +415,10 @@
                                         equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio, &
                                         stability,distmin,distmax)
 
+  use constants
+
   implicit none
 
-  include "constants.h"
   include "constants_meshfem3D.h"
 
   integer :: NSPEC,NGLOB
@@ -568,8 +564,6 @@
 
   ! compute edge aspect ratio
   edge_aspect_ratio = distmax / distmin
-
-  !stability = delta_t * VP_MAX / (distmin * percent_GLL(true_NGLLX))
 
   dt_suggested = ((1.d0 - 0.02d0)*0.48d0) * (distmin * percent_GLL(true_NGLLX)) / VP_MAX
   stability = dt_suggested * VP_MAX / (distmin * percent_GLL(true_NGLLX))

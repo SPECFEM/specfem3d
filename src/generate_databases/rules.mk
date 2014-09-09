@@ -3,10 +3,11 @@
 #               S p e c f e m 3 D  V e r s i o n  2 . 1
 #               ---------------------------------------
 #
-#          Main authors: Dimitri Komatitsch and Jeroen Tromp
-#    Princeton University, USA and University of Pau / CNRS / INRIA
-# (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
-#                            April 2011
+#     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+#                        Princeton University, USA
+#                and CNRS / University of Marseille, France
+#                 (there are currently many more authors!)
+# (c) Princeton University and CNRS / University of Marseille, July 2012
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -51,7 +52,6 @@ generate_databases_OBJECTS = \
 	$O/generate_databases.gen.o \
 	$O/get_absorbing_boundary.gen.o \
 	$O/get_coupling_surfaces.gen.o \
-	$O/get_global.gen.o \
 	$O/get_model.gen.o \
 	$O/get_MPI.gen.o \
 	$O/get_perm_color.gen.o \
@@ -75,8 +75,20 @@ generate_databases_OBJECTS = \
 	$(EMPTY_MACRO)
 
 
+generate_databases_MODULES = \
+	$(FC_MODDIR)/create_regions_mesh_ext_par.$(FC_MODEXT) \
+	$(FC_MODDIR)/external_model.$(FC_MODEXT) \
+	$(FC_MODDIR)/fault_generate_databases.$(FC_MODEXT) \
+	$(FC_MODDIR)/generate_databases_par.$(FC_MODEXT) \
+	$(FC_MODDIR)/model_ipati_adios_mod.$(FC_MODEXT) \
+	$(FC_MODDIR)/salton_trough_par.$(FC_MODEXT) \
+	$(FC_MODDIR)/tomography_par.$(FC_MODEXT) \
+	$(EMPTY_MACRO)
+
+
 generate_databases_SHARED_OBJECTS = \
 	$O/assemble_MPI_scalar.shared.o \
+	$O/constants_mod.shared_module.o \
 	$O/check_mesh_resolution.shared.o \
 	$O/create_name_database.shared.o \
 	$O/create_serial_name_database.shared.o \
@@ -87,10 +99,10 @@ generate_databases_SHARED_OBJECTS = \
 	$O/get_cmt.shared.o \
 	$O/get_element_face.shared.o \
 	$O/get_force.shared.o \
+	$O/get_global.shared.o \
 	$O/get_jacobian_boundaries.shared.o \
 	$O/get_shape2D.shared.o \
 	$O/get_shape3D.shared.o \
-	$O/get_value_parameters.shared.o \
 	$O/gll_library.shared.o \
 	$O/hex_nodes.shared.o \
 	$O/lagrange_poly.shared.o \
@@ -103,6 +115,7 @@ generate_databases_SHARED_OBJECTS = \
 	$O/recompute_jacobian.shared.o \
 	$O/save_header_file.shared.o \
 	$O/sort_array_coordinates.shared.o \
+	$O/unused_mod.shared_module.o \
 	$O/utm_geo.shared.o \
 	$O/write_VTK_data.shared.o \
 	$(EMPTY_MACRO)
@@ -111,9 +124,9 @@ generate_databases_SHARED_OBJECTS = \
 # using ADIOS files
 
 adios_generate_databases_PREOBJECTS= \
-	$O/adios_manager.shared_adios.o  \
-	$O/adios_helpers_definitions.shared_adios.o  \
-	$O/adios_helpers_writers.shared_adios.o  \
+	$O/adios_manager.shared_adios.o \
+	$O/adios_helpers_definitions.shared_adios_module.o \
+	$O/adios_helpers_writers.shared_adios_module.o \
 	$O/adios_helpers.shared_adios.o
 
 adios_generate_databases_OBJECTS= \
@@ -209,11 +222,11 @@ else
 $O/get_model.gen.o: $O/generate_databases_par.gen.o $O/model_ipati_adios.gen_adios.o
 endif
 
-$O/generate_databases_adios_stubs.gen_noadios.o: $(adios_generate_databases_PRESTUBS)
+$O/generate_databases_adios_stubs.gen_noadios.o: $O/generate_databases_par.gen.o $O/unused_mod.shared_module.o $(adios_generate_databases_PRESTUBS)
 
 $O/adios_helpers.shared_adios.o: \
-	$O/adios_helpers_definitions.shared_adios.o \
-	$O/adios_helpers_writers.shared_adios.o
+	$O/adios_helpers_definitions.shared_adios_module.o \
+	$O/adios_helpers_writers.shared_adios_module.o
 
 
 
@@ -224,17 +237,17 @@ $O/adios_helpers.shared_adios.o: \
 ####
 
 
-$O/%.gen.o: $S/%.f90 ${SETUP}/constants.h
+$O/%.gen.o: $S/%.f90 $O/constants_mod.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 ###
 ### ADIOS compilation
 ###
 
-$O/%.gen_adios.o: $S/%.F90 ${SETUP}/constants.h
+$O/%.gen_adios.o: $S/%.F90 $O/constants_mod.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.gen_adios.o: $S/%.f90 ${SETUP}/constants.h
+$O/%.gen_adios.o: $S/%.f90 $O/constants_mod.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 $O/%.gen_noadios.o: $S/%.F90

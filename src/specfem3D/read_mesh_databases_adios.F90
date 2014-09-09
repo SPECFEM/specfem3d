@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -30,13 +31,13 @@
 subroutine read_mesh_for_init(nspec, nglob)
 
   use adios_read_mod
-  use specfem_par, only : myrank, LOCAL_PATH
+  use specfem_par, only : myrank, LOCAL_PATH, MAX_STRING_LEN
 
   implicit none
   ! Paramters
   integer, intent(inout) :: nspec, nglob
   ! Local variables
-  character(len=256) :: database_name
+  character(len=MAX_STRING_LEN) :: database_name
   integer(kind=8) :: handle, sel
   integer         :: ier
   integer :: comm
@@ -44,8 +45,7 @@ subroutine read_mesh_for_init(nspec, nglob)
   !-------------------------------------.
   ! Open ADIOS Database file, read mode |
   !-------------------------------------'
-  database_name = adjustl(LOCAL_PATH)
-  database_name = database_name(1:len_trim(database_name)) // "/external_mesh.bp"
+  database_name = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // "/external_mesh.bp"
 
   call world_get_comm(comm)
 
@@ -88,7 +88,7 @@ subroutine read_mesh_databases_adios()
   real(kind=CUSTOM_REAL):: minl,maxl,min_all,max_all
   integer :: ier,inum
 
-  character(len=256) :: database_name
+  character(len=MAX_STRING_LEN) :: database_name
   integer(kind=8) :: handle
 
   integer(kind=8), dimension(256),target :: selections
@@ -153,8 +153,7 @@ subroutine read_mesh_databases_adios()
   !-------------------------------------'
   sel_num = 0
 
-  database_name = adjustl(LOCAL_PATH)
-  database_name = database_name(1:len_trim(database_name)) // "/external_mesh.bp"
+  database_name = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // "/external_mesh.bp"
 
   call world_get_comm(comm)
 
@@ -216,7 +215,7 @@ subroutine read_mesh_databases_adios()
   if( (.not. ACOUSTIC_SIMULATION ) .and. &
       (.not. ELASTIC_SIMULATION ) .and. &
       (.not. POROELASTIC_SIMULATION ) ) then
-     call exit_mpi(myrank,'error no simulation type defined')
+    call exit_mpi(myrank,'error no simulation type defined')
   endif
 
   ! outputs total element numbers
@@ -746,7 +745,7 @@ subroutine read_mesh_databases_adios()
   if( POROELASTIC_SIMULATION ) then
 
     if( GPU_MODE ) &
-        call exit_mpi(myrank,'POROELASTICITY not supported by GPU mode yet...')
+      call exit_mpi(myrank,'POROELASTICITY not supported by GPU mode yet...')
 
     ! displacement,velocity,acceleration for the solid (s) & fluid (w) phases
     allocate(displs_poroelastic(NDIM,NGLOB_AB),stat=ier)
@@ -780,19 +779,19 @@ subroutine read_mesh_databases_adios()
 
     ! needed for kernel computations
     allocate(epsilonsdev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            epsilonsdev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            epsilonsdev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            epsilonsdev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            epsilonsdev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            epsilonwdev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            epsilonwdev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            epsilonwdev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            epsilonwdev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            epsilonwdev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+             epsilonsdev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             epsilonsdev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             epsilonsdev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             epsilonsdev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             epsilonwdev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             epsilonwdev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             epsilonwdev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             epsilonwdev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             epsilonwdev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
     if( ier /= 0 ) stop 'error allocating array epsilonsdev_xx etc.'
 
     allocate(epsilons_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            epsilonw_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+             epsilonw_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
     if( ier /= 0 ) stop 'error allocating array epsilons_trace_over_3 etc.'
   endif
 
@@ -849,16 +848,13 @@ subroutine read_mesh_databases_adios()
 
   ! absorbing boundary surface
   allocate(abs_boundary_ispec(num_abs_boundary_faces), &
-          abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces), &
-          abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces), &
-          abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
+           abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces), &
+           abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces), &
+           abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
   if( ier /= 0 ) stop 'error allocating array abs_boundary_ispec etc.'
 
-  if (OLD_TEST_TO_FIX_ONE_DAY) then
-    ! VM for new method
-    !! DK DK for VM VM: these two arrays are undeclared, thus I comment them out i
-    ! for now otherwise the code does not compile
-    !! VM VM : I already declared these two array in the specfem_par module
+  !! CD CD !! For coupling with DSM
+  if (COUPLE_WITH_DSM) then
     allocate(Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
     allocate(Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
     open(unit=IIN_veloc_dsm,file=dsmname(1:len_trim(dsmname))//'vel.bin',status='old', &
@@ -866,48 +862,49 @@ subroutine read_mesh_databases_adios()
     open(unit=IIN_tract_dsm,file=dsmname(1:len_trim(dsmname))//'tract.bin',status='old', &
          action='read',form='unformatted',iostat=ier)
   else
-     allocate(Veloc_dsm_boundary(1,1,1,1))
-     allocate(Tract_dsm_boundary(1,1,1,1))
+    allocate(Veloc_dsm_boundary(1,1,1,1))
+    allocate(Tract_dsm_boundary(1,1,1,1))
   endif
+  !! CD CD
 
   allocate(ibelm_xmin(nspec2D_xmin),ibelm_xmax(nspec2D_xmax), &
-       ibelm_ymin(nspec2D_ymin),ibelm_ymax(nspec2D_ymax), &
-       ibelm_bottom(NSPEC2D_BOTTOM),ibelm_top(NSPEC2D_TOP),stat=ier)
+           ibelm_ymin(nspec2D_ymin),ibelm_ymax(nspec2D_ymax), &
+           ibelm_bottom(NSPEC2D_BOTTOM),ibelm_top(NSPEC2D_TOP),stat=ier)
   if(ier /= 0) stop 'error allocating arrays ibelm_xmin,ibelm_xmax etc.'
 
   ! free surface
   allocate(free_surface_ispec(num_free_surface_faces), &
-          free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces), &
-          free_surface_jacobian2Dw(NGLLSQUARE,num_free_surface_faces), &
-          free_surface_normal(NDIM,NGLLSQUARE,num_free_surface_faces),stat=ier)
+           free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces), &
+           free_surface_jacobian2Dw(NGLLSQUARE,num_free_surface_faces), &
+           free_surface_normal(NDIM,NGLLSQUARE,num_free_surface_faces),stat=ier)
   if(ier /= 0) stop 'error allocating arrays free_surface_ispec etc.'
 
   ! acoustic-elastic coupling surface
   allocate(coupling_ac_el_normal(NDIM,NGLLSQUARE,num_coupling_ac_el_faces), &
-          coupling_ac_el_jacobian2Dw(NGLLSQUARE,num_coupling_ac_el_faces), &
-          coupling_ac_el_ijk(3,NGLLSQUARE,num_coupling_ac_el_faces), &
-          coupling_ac_el_ispec(num_coupling_ac_el_faces),stat=ier)
+           coupling_ac_el_jacobian2Dw(NGLLSQUARE,num_coupling_ac_el_faces), &
+           coupling_ac_el_ijk(3,NGLLSQUARE,num_coupling_ac_el_faces), &
+           coupling_ac_el_ispec(num_coupling_ac_el_faces),stat=ier)
   if( ier /= 0 ) stop 'error allocating array coupling_ac_el_normal etc.'
 
   ! acoustic-poroelastic coupling surface
   allocate(coupling_ac_po_normal(NDIM,NGLLSQUARE,num_coupling_ac_po_faces), &
-          coupling_ac_po_jacobian2Dw(NGLLSQUARE,num_coupling_ac_po_faces), &
-          coupling_ac_po_ijk(3,NGLLSQUARE,num_coupling_ac_po_faces), &
-          coupling_ac_po_ispec(num_coupling_ac_po_faces),stat=ier)
+           coupling_ac_po_jacobian2Dw(NGLLSQUARE,num_coupling_ac_po_faces), &
+           coupling_ac_po_ijk(3,NGLLSQUARE,num_coupling_ac_po_faces), &
+           coupling_ac_po_ispec(num_coupling_ac_po_faces),stat=ier)
   if( ier /= 0 ) stop 'error allocating array coupling_ac_po_normal etc.'
 
   ! elastic-poroelastic coupling surface
   allocate(coupling_el_po_normal(NDIM,NGLLSQUARE,num_coupling_el_po_faces), &
-          coupling_el_po_jacobian2Dw(NGLLSQUARE,num_coupling_el_po_faces), &
-          coupling_el_po_ijk(3,NGLLSQUARE,num_coupling_el_po_faces), &
-          coupling_po_el_ijk(3,NGLLSQUARE,num_coupling_el_po_faces), &
-          coupling_el_po_ispec(num_coupling_el_po_faces), &
-          coupling_po_el_ispec(num_coupling_el_po_faces),stat=ier)
+           coupling_el_po_jacobian2Dw(NGLLSQUARE,num_coupling_el_po_faces), &
+           coupling_el_po_ijk(3,NGLLSQUARE,num_coupling_el_po_faces), &
+           coupling_po_el_ijk(3,NGLLSQUARE,num_coupling_el_po_faces), &
+           coupling_el_po_ispec(num_coupling_el_po_faces), &
+           coupling_po_el_ispec(num_coupling_el_po_faces),stat=ier)
   if( ier /= 0 ) stop 'error allocating array coupling_el_po_normal etc.'
 
   ! MPI interfaces
   allocate(my_neighbours_ext_mesh(num_interfaces_ext_mesh), &
-          nibool_interfaces_ext_mesh(num_interfaces_ext_mesh),stat=ier)
+           nibool_interfaces_ext_mesh(num_interfaces_ext_mesh),stat=ier)
   if( ier /= 0 ) stop 'error allocating array my_neighbours_ext_mesh etc.'
   if( num_interfaces_ext_mesh > 0 ) then
     allocate(ibool_interfaces_ext_mesh(max_nibool_interfaces_ext_mesh, &
@@ -1205,104 +1202,104 @@ subroutine read_mesh_databases_adios()
     endif
   endif
 
-  if(PML_CONDITIONS)then
-     if( num_abs_boundary_faces > 0 ) then
-        start(1) = local_dim_abs_boundary_ispec * myrank
-        count_ad(1) = num_abs_boundary_faces
-        sel_num = sel_num+1
-        sel => selections(sel_num)
-        call adios_selection_boundingbox (sel , 1, start, count_ad)
-        call adios_schedule_read(handle, sel, "abs_boundary_ispec/array", &
-                                 0, 1, abs_boundary_ispec, ier)
+  if (PML_CONDITIONS) then
+    if (num_abs_boundary_faces > 0) then
+      start(1) = local_dim_abs_boundary_ispec * myrank
+      count_ad(1) = num_abs_boundary_faces
+      sel_num = sel_num+1
+      sel => selections(sel_num)
+      call adios_selection_boundingbox (sel , 1, start, count_ad)
+      call adios_schedule_read(handle, sel, "abs_boundary_ispec/array", &
+                               0, 1, abs_boundary_ispec, ier)
 
-        start(1) = local_dim_abs_boundary_ijk * myrank
-        count_ad(1) = 3 * NGLLSQUARE * num_abs_boundary_faces
-        sel_num = sel_num+1
-        sel => selections(sel_num)
-        call adios_selection_boundingbox (sel , 1, start, count_ad)
-        call adios_schedule_read(handle, sel, "abs_boundary_ijk/array", &
-                                 0, 1, abs_boundary_ijk, ier)
+      start(1) = local_dim_abs_boundary_ijk * myrank
+      count_ad(1) = 3 * NGLLSQUARE * num_abs_boundary_faces
+      sel_num = sel_num+1
+      sel => selections(sel_num)
+      call adios_selection_boundingbox (sel , 1, start, count_ad)
+      call adios_schedule_read(handle, sel, "abs_boundary_ijk/array", &
+                               0, 1, abs_boundary_ijk, ier)
 
-        start(1) = local_dim_abs_boundary_jacobian2Dw * myrank
-        count_ad(1) = NGLLSQUARE * num_abs_boundary_faces
-        sel_num = sel_num+1
-        sel => selections(sel_num)
-        call adios_selection_boundingbox (sel , 1, start, count_ad)
-        call adios_schedule_read(handle, sel, "abs_boundary_jacobian2Dw/array", &
-                                 0, 1, abs_boundary_jacobian2Dw, ier)
+      start(1) = local_dim_abs_boundary_jacobian2Dw * myrank
+      count_ad(1) = NGLLSQUARE * num_abs_boundary_faces
+      sel_num = sel_num+1
+      sel => selections(sel_num)
+      call adios_selection_boundingbox (sel , 1, start, count_ad)
+      call adios_schedule_read(handle, sel, "abs_boundary_jacobian2Dw/array", &
+                               0, 1, abs_boundary_jacobian2Dw, ier)
 
-        start(1) = local_dim_abs_boundary_normal * myrank
-        count_ad(1) = NDIM * NGLLSQUARE * num_abs_boundary_faces
-        sel_num = sel_num+1
-        sel => selections(sel_num)
-        call adios_selection_boundingbox (sel , 1, start, count_ad)
-        call adios_schedule_read(handle, sel, "abs_boundary_normal/array", &
-                                 0, 1, abs_boundary_normal, ier)
-     endif
+      start(1) = local_dim_abs_boundary_normal * myrank
+      count_ad(1) = NDIM * NGLLSQUARE * num_abs_boundary_faces
+      sel_num = sel_num+1
+      sel => selections(sel_num)
+      call adios_selection_boundingbox (sel , 1, start, count_ad)
+      call adios_schedule_read(handle, sel, "abs_boundary_normal/array", &
+                               0, 1, abs_boundary_normal, ier)
+    endif
   else
-     if( num_abs_boundary_faces > 0 ) then
-        start(1) = local_dim_abs_boundary_ispec * myrank
-        count_ad(1) = num_abs_boundary_faces
-        sel_num = sel_num+1
-        sel => selections(sel_num)
-        call adios_selection_boundingbox (sel , 1, start, count_ad)
-        call adios_schedule_read(handle, sel, "abs_boundary_ispec/array", &
-                                 0, 1, abs_boundary_ispec, ier)
+    if (num_abs_boundary_faces > 0) then
+      start(1) = local_dim_abs_boundary_ispec * myrank
+      count_ad(1) = num_abs_boundary_faces
+      sel_num = sel_num+1
+      sel => selections(sel_num)
+      call adios_selection_boundingbox (sel , 1, start, count_ad)
+      call adios_schedule_read(handle, sel, "abs_boundary_ispec/array", &
+                               0, 1, abs_boundary_ispec, ier)
 
-        start(1) = local_dim_abs_boundary_ijk * myrank
-        count_ad(1) = 3 * NGLLSQUARE * num_abs_boundary_faces
-        sel_num = sel_num+1
-        sel => selections(sel_num)
-        call adios_selection_boundingbox (sel , 1, start, count_ad)
-        call adios_schedule_read(handle, sel, "abs_boundary_ijk/array", &
-                                 0, 1, abs_boundary_ijk, ier)
+      start(1) = local_dim_abs_boundary_ijk * myrank
+      count_ad(1) = 3 * NGLLSQUARE * num_abs_boundary_faces
+      sel_num = sel_num+1
+      sel => selections(sel_num)
+      call adios_selection_boundingbox (sel , 1, start, count_ad)
+      call adios_schedule_read(handle, sel, "abs_boundary_ijk/array", &
+                               0, 1, abs_boundary_ijk, ier)
 
-        start(1) = local_dim_abs_boundary_jacobian2Dw * myrank
-        count_ad(1) = NGLLSQUARE * num_abs_boundary_faces
-        sel_num = sel_num+1
-        sel => selections(sel_num)
-        call adios_selection_boundingbox (sel , 1, start, count_ad)
-        call adios_schedule_read(handle, sel, "abs_boundary_jacobian2Dw/array", &
-                                 0, 1, abs_boundary_jacobian2Dw, ier)
+      start(1) = local_dim_abs_boundary_jacobian2Dw * myrank
+      count_ad(1) = NGLLSQUARE * num_abs_boundary_faces
+      sel_num = sel_num+1
+      sel => selections(sel_num)
+      call adios_selection_boundingbox (sel , 1, start, count_ad)
+      call adios_schedule_read(handle, sel, "abs_boundary_jacobian2Dw/array", &
+                               0, 1, abs_boundary_jacobian2Dw, ier)
 
-        start(1) = local_dim_abs_boundary_normal * myrank
-        count_ad(1) = NDIM * NGLLSQUARE * num_abs_boundary_faces
-        sel_num = sel_num+1
-        sel => selections(sel_num)
-        call adios_selection_boundingbox (sel , 1, start, count_ad)
-        call adios_schedule_read(handle, sel, "abs_boundary_normal/array", &
-                                 0, 1, abs_boundary_normal, ier)
+      start(1) = local_dim_abs_boundary_normal * myrank
+      count_ad(1) = NDIM * NGLLSQUARE * num_abs_boundary_faces
+      sel_num = sel_num+1
+      sel => selections(sel_num)
+      call adios_selection_boundingbox (sel , 1, start, count_ad)
+      call adios_schedule_read(handle, sel, "abs_boundary_normal/array", &
+                               0, 1, abs_boundary_normal, ier)
 
-       if( STACEY_ABSORBING_CONDITIONS ) then
-          ! store mass matrix contributions
-          if(ELASTIC_SIMULATION) then
-            start(1) = local_dim_rmassx * myrank
-            count_ad(1) = NGLOB_AB  ! == nglob_xy in generate_databse
-            sel_num = sel_num+1
-            sel => selections(sel_num)
-            call adios_selection_boundingbox (sel , 1, start, count_ad)
-            call adios_schedule_read(handle, sel, "rmassx/array", 0, 1, &
-                                     rmassx, ier)
-            call adios_schedule_read(handle, sel, "rmassy/array", 0, 1, &
-                                     rmassy, ier)
-            call adios_schedule_read(handle, sel, "rmassz/array", 0, 1, &
-                                     rmassz, ier)
-          endif
-          if(ACOUSTIC_SIMULATION) then
-            start(1) = local_dim_rmassz_acoustic * myrank
-            count_ad(1) = NGLOB_AB ! == nglob_xy in generate_databse
-            sel_num = sel_num+1
-            sel => selections(sel_num)
-            call adios_selection_boundingbox (sel , 1, start, count_ad)
-            call adios_schedule_read(handle, sel, "rmassx/array", 0, 1, &
-                                     rmassx, ier)
-            call adios_schedule_read(handle, sel, "rmassy/array", 0, 1, &
-                                     rmassy, ier)
-            call adios_schedule_read(handle, sel, "rmassz_acoustic/array", &
-                                     0, 1, rmassz_acoustic, ier)
-          endif
-       endif
-     endif
+      if (STACEY_ABSORBING_CONDITIONS) then
+        ! store mass matrix contributions
+        if (ELASTIC_SIMULATION) then
+          start(1) = local_dim_rmassx * myrank
+          count_ad(1) = NGLOB_AB  ! == nglob_xy in generate_databse
+          sel_num = sel_num+1
+          sel => selections(sel_num)
+          call adios_selection_boundingbox (sel , 1, start, count_ad)
+          call adios_schedule_read(handle, sel, "rmassx/array", 0, 1, &
+                                   rmassx, ier)
+          call adios_schedule_read(handle, sel, "rmassy/array", 0, 1, &
+                                   rmassy, ier)
+          call adios_schedule_read(handle, sel, "rmassz/array", 0, 1, &
+                                   rmassz, ier)
+        endif
+        if (ACOUSTIC_SIMULATION) then
+          start(1) = local_dim_rmassz_acoustic * myrank
+          count_ad(1) = NGLOB_AB ! == nglob_xy in generate_databse
+          sel_num = sel_num+1
+          sel => selections(sel_num)
+          call adios_selection_boundingbox (sel , 1, start, count_ad)
+          call adios_schedule_read(handle, sel, "rmassx/array", 0, 1, &
+                                   rmassx, ier)
+          call adios_schedule_read(handle, sel, "rmassy/array", 0, 1, &
+                                   rmassy, ier)
+          call adios_schedule_read(handle, sel, "rmassz_acoustic/array", &
+                                   0, 1, rmassz_acoustic, ier)
+        endif
+      endif
+    endif
   endif
 
   start(1) = local_dim_ibelm_xmin * myrank
@@ -1743,7 +1740,7 @@ subroutine read_moho_mesh_adjoint_adios()
   use specfem_par_poroelastic
   implicit none
 
-  character(len=256) :: database_name
+  character(len=MAX_STRING_LEN) :: database_name
   integer(kind=8) :: handle
 
   integer(kind=8), dimension(256),target :: selections
@@ -1763,8 +1760,7 @@ subroutine read_moho_mesh_adjoint_adios()
   !-------------------------------------'
   sel_num = 0
 
-  database_name = adjustl(LOCAL_PATH)
-  database_name = database_name(1:len_trim(database_name)) // "/moho.bp"
+  database_name = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // "/moho.bp"
 
   call world_get_comm(comm)
 
@@ -1814,11 +1810,11 @@ subroutine read_moho_mesh_adjoint_adios()
   ! Allocate arrays with previously read values |
   !---------------------------------------------'
   allocate(ibelm_moho_bot(NSPEC2D_MOHO), &
-          ibelm_moho_top(NSPEC2D_MOHO), &
-          normal_moho_top(NDIM,NGLLSQUARE,NSPEC2D_MOHO), &
-          normal_moho_bot(NDIM,NGLLSQUARE,NSPEC2D_MOHO), &
-          ijk_moho_bot(3,NGLLSQUARE,NSPEC2D_MOHO), &
-          ijk_moho_top(3,NGLLSQUARE,NSPEC2D_MOHO),stat=ier)
+           ibelm_moho_top(NSPEC2D_MOHO), &
+           normal_moho_top(NDIM,NGLLSQUARE,NSPEC2D_MOHO), &
+           normal_moho_bot(NDIM,NGLLSQUARE,NSPEC2D_MOHO), &
+           ijk_moho_bot(3,NGLLSQUARE,NSPEC2D_MOHO), &
+           ijk_moho_top(3,NGLLSQUARE,NSPEC2D_MOHO),stat=ier)
   if( ier /= 0 ) stop 'error allocating array ibelm_moho_bot etc.'
 
   !-----------------------------------.

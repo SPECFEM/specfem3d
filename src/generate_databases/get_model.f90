@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -28,7 +29,7 @@
   subroutine get_model(myrank)
 
   use generate_databases_par, only: IMODEL,nspec => NSPEC_AB,ibool,mat_ext_mesh, &
-       materials_ext_mesh,nmat_ext_mesh,undef_mat_prop,nundefMat_ext_mesh,ANISOTROPY
+       materials_ext_mesh,nmat_ext_mesh,undef_mat_prop,nundefMat_ext_mesh,ANISOTROPY,COUPLE_WITH_DSM
 
   use create_regions_mesh_ext_par
 
@@ -65,9 +66,19 @@
   ispec_is_elastic(:) = .false.
   ispec_is_poroelastic(:) = .false.
 
-  ! prepares tomographic models if needed for elements with undefined material definitions
-  if( nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO ) then
-    call model_tomography_broadcast(myrank)
+
+  !! WANGYI test for the benchmark of hybrid DSM-SPECFEM3D coupling 
+  if (COUPLE_WITH_DSM) then 
+    if( nundefMat_ext_mesh > 6 .or. IMODEL == IMODEL_TOMO ) then ! changed by WANGYI
+      write(*,*)  'nundefMat_ext_mesh, IMODEL, IMODEL_TOMO', nundefMat_ext_mesh, IMODEL, IMODEL_TOMO ! add by WANGYI
+      call model_tomography_broadcast(myrank)
+    endif
+
+  else
+    ! prepares tomographic models if needed for elements with undefined material definitions
+    if( nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO ) then
+      call model_tomography_broadcast(myrank)
+    endif
   endif
 
   ! prepares external model values if needed
@@ -332,9 +343,17 @@
   call any_all_l( ANY(ispec_is_elastic), ELASTIC_SIMULATION )
   call any_all_l( ANY(ispec_is_poroelastic), POROELASTIC_SIMULATION )
 
-  ! deallocates tomographic arrays
-  if( nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO ) then
-     call deallocate_tomography_files()
+  !! WANGYI test for the benchmark of hybrid DSM-SPECFEM3D coupling 
+  if (COUPLE_WITH_DSM) then 
+    if( nundefMat_ext_mesh > 6 .or. IMODEL == IMODEL_TOMO ) then  ! changed by wangyi for test
+      call deallocate_tomography_files()
+    endif
+
+  else
+    ! deallocates tomographic arrays
+    if( nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO ) then
+      call deallocate_tomography_files()
+    endif
   endif
 
   end subroutine get_model
@@ -363,7 +382,7 @@
   double precision, dimension(16,nmat_ext_mesh),intent(in) :: materials_ext_mesh
 
   integer, intent(in) :: nundefMat_ext_mesh
-  character (len=30), dimension(6,nundefMat_ext_mesh):: undef_mat_prop
+  character(len=MAX_STRING_LEN), dimension(6,nundefMat_ext_mesh) :: undef_mat_prop
 
   integer, intent(in) :: imaterial_id,imaterial_def
 
@@ -486,7 +505,7 @@
 
   ! number of spectral elements in each block
   integer :: myrank,nspec
-  character(len=256) :: LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH
 
   ! external GLL models
   ! variables for importing models from files in SPECFEM format, e.g.,  proc000000_vp.bin etc.

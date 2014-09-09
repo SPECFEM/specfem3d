@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -42,7 +43,7 @@ subroutine model_ipati_adios(myrank,nspec,LOCAL_PATH)
   implicit none
 
   integer, intent(in) :: myrank,nspec
-  character(len=256) :: LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH
 
   ! local parameters
   real, dimension(:,:,:,:),allocatable :: vp_read,vs_read,rho_read
@@ -101,7 +102,7 @@ subroutine model_ipati_water_adios(myrank,nspec,LOCAL_PATH)
   implicit none
 
   integer, intent(in) :: myrank,nspec
-  character(len=256) :: LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH
 
   ! local parameters
   real, dimension(:,:,:,:),allocatable :: vp_read,vs_read,rho_read
@@ -168,11 +169,11 @@ subroutine read_model_vp_rho_adios (myrank, nspec, LOCAL_PATH, &
   implicit none
 
   integer, intent(in) :: myrank,nspec
-  character(len=256), intent(in) :: LOCAL_PATH
+  character(len=MAX_STRING_LEN), intent(in) :: LOCAL_PATH
   real, dimension(:,:,:,:), intent(inout) :: vp_read,rho_read
 
   ! ADIOS stuffs
-  character(len=256) :: database_name
+  character(len=MAX_STRING_LEN) :: database_name
   integer(kind=8) :: handle, sel
   integer(kind=8), dimension(1) :: start, count_ad
   integer :: local_dim_rho, local_dim_vp
@@ -185,8 +186,7 @@ subroutine read_model_vp_rho_adios (myrank, nspec, LOCAL_PATH, &
   !-------------------------------------.
   ! Open ADIOS Database file, read mode |
   !-------------------------------------'
-  database_name = adjustl(LOCAL_PATH)
-  database_name = database_name(1:len_trim(database_name)) //"/model_values.bp"
+  database_name = LOCAL_PATH(1:len_trim(LOCAL_PATH)) //"/model_values.bp"
 
   call adios_read_init_method (ADIOS_READ_METHOD_BP, comm, &
                                "verbose=1", ier)

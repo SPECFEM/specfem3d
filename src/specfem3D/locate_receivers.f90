@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -86,7 +87,6 @@
   integer ios
 
   double precision,dimension(1) :: altitude_rec,distmin_ele
-  !double precision,dimension(4) :: elevation_node,dist_node
   double precision,dimension(NPROC) :: distmin_ele_all,elevation_all
 
   real(kind=CUSTOM_REAL) :: xloc,yloc,loc_ele,loc_distmin
@@ -109,9 +109,7 @@
   integer irec
   integer i,j,k,ispec,iglob
   integer imin,imax,jmin,jmax,kmin,kmax
-  !integer iface,inode,igll,jgll,kgll
 
-!  integer iselected,jselected,iface_selected,iadjust,jadjust
   integer iproc(1)
 
   ! topology of the control points of the surface element
@@ -131,7 +129,6 @@
 
   ! receiver information
   ! station information for writing the seismograms
-!  integer :: iglob_selected
   double precision, allocatable, dimension(:) :: stlat,stlon,stele,stbur,stutm_x,stutm_y,elevation
   double precision, allocatable, dimension(:) :: x_found_all,y_found_all,z_found_all
   double precision, dimension(:), allocatable :: final_distance_all
@@ -140,7 +137,6 @@
   integer, allocatable, dimension(:) :: ispec_selected_rec_all
 
   integer :: ier
-  character(len=256) OUTPUT_FILES
 
   real(kind=CUSTOM_REAL) :: xmin,xmax,ymin,ymax,zmin,zmax
   real(kind=CUSTOM_REAL) :: xmin_ELE,xmax_ELE,ymin_ELE,ymax_ELE,zmin_ELE,zmax_ELE
@@ -189,13 +185,10 @@
   open(unit=IIN,file=trim(rec_filename),status='old',action='read',iostat=ios)
   if (ios /= 0) call exit_mpi(myrank,'error opening file '//trim(rec_filename))
 
-  ! get the base pathname for output files
-  call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)))
-
   ! checks if station locations already available
   if( SU_FORMAT ) then
     ! checks if file with station infos located from previous run exists
-    INQUIRE(file=trim(OUTPUT_FILES)//'/SU_stations_info.bin',exist=SU_station_file_exists)
+    inquire(file=trim(OUTPUT_FILES_PATH)//'/SU_stations_info.bin',exist=SU_station_file_exists)
     if ( SU_station_file_exists ) then
       ! all processes read in stations names from STATIONS file
       do irec=1,nrec
@@ -205,7 +198,7 @@
       close(IIN)
       ! master reads in available station information
       if( myrank == 0 ) then
-        open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/SU_stations_info.bin', &
+        open(unit=IOUT_SU,file=trim(OUTPUT_FILES_PATH)//'/SU_stations_info.bin', &
               status='old',action='read',form='unformatted',iostat=ios)
         if (ios /= 0) call exit_mpi(myrank,'error opening file '//trim(rec_filename))
 
@@ -220,10 +213,10 @@
         read(IOUT_SU) nu
         close(IOUT_SU)
         ! write the locations of stations, so that we can load them and write them to SU headers later
-        open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/output_list_stations.txt', &
+        open(unit=IOUT_SU,file=trim(OUTPUT_FILES_PATH)//'/output_list_stations.txt', &
               status='unknown',action='write',iostat=ios)
         if( ios /= 0 ) &
-          call exit_mpi(myrank,'error opening file '//trim(OUTPUT_FILES)//'/output_list_stations.txt')
+          call exit_mpi(myrank,'error opening file '//trim(OUTPUT_FILES_PATH)//'/output_list_stations.txt')
 
         do irec=1,nrec
           write(IOUT_SU,*) station_name(irec),network_name(irec),x_found(irec),y_found(irec),z_found(irec)
@@ -239,7 +232,7 @@
       call bcast_all_dp(eta_receiver,nrec)
       call bcast_all_dp(gamma_receiver,nrec)
       call bcast_all_dp(nu,NDIM*NDIM*nrec)
-      call sync_all()
+      call synchronize_all()
       ! user output
       if( myrank == 0 ) then
         ! elapsed time since beginning of mesh generation
@@ -780,45 +773,45 @@
   endif ! of if (.not. FASTER_RECEIVERS_POINTS_ONLY)
 
   ! synchronize all the processes to make sure all the estimates are available
-  call sync_all()
+  call synchronize_all()
   ! for MPI version, gather information from all the nodes
   if (myrank/=0) then ! gather information from other processors (one at a time)
-     call send_i(ispec_selected_rec, nrec,0,0)
-     call send_dp(xi_receiver,       nrec,0,1)
-     call send_dp(eta_receiver,      nrec,0,2)
-     call send_dp(gamma_receiver,    nrec,0,3)
-     call send_dp(final_distance,    nrec,0,4)
-     call send_dp(x_found,           nrec,0,5)
-     call send_dp(y_found,           nrec,0,6)
-     call send_dp(z_found,           nrec,0,7)
-     call send_dp(nu,            3*3*nrec,0,8)
+    call send_i(ispec_selected_rec, nrec,0,0)
+    call send_dp(xi_receiver,       nrec,0,1)
+    call send_dp(eta_receiver,      nrec,0,2)
+    call send_dp(gamma_receiver,    nrec,0,3)
+    call send_dp(final_distance,    nrec,0,4)
+    call send_dp(x_found,           nrec,0,5)
+    call send_dp(y_found,           nrec,0,6)
+    call send_dp(z_found,           nrec,0,7)
+    call send_dp(nu,            3*3*nrec,0,8)
   else
-     islice_selected_rec(:) = 0
-     do iprocloop=1,NPROC-1
-        call recv_i(ispec_selected_rec_all, nrec,iprocloop,0)
-        call recv_dp(xi_receiver_all,       nrec,iprocloop,1)
-        call recv_dp(eta_receiver_all,      nrec,iprocloop,2)
-        call recv_dp(gamma_receiver_all,    nrec,iprocloop,3)
-        call recv_dp(final_distance_all,    nrec,iprocloop,4)
-        call recv_dp(x_found_all,           nrec,iprocloop,5)
-        call recv_dp(y_found_all,           nrec,iprocloop,6)
-        call recv_dp(z_found_all,           nrec,iprocloop,7)
-        call recv_dp(nu_all,            3*3*nrec,iprocloop,8)
-        do irec=1,nrec
-           if (final_distance_all(irec) < final_distance(irec)) then
-              final_distance(irec) = final_distance_all(irec)
-              islice_selected_rec(irec) = iprocloop
-              ispec_selected_rec(irec) = ispec_selected_rec_all(irec)
-              xi_receiver(irec) = xi_receiver_all(irec)
-              eta_receiver(irec) = eta_receiver_all(irec)
-              gamma_receiver(irec) = gamma_receiver_all(irec)
-              x_found(irec) = x_found_all(irec)
-              y_found(irec) = y_found_all(irec)
-              z_found(irec) = z_found_all(irec)
-              nu(:,:,irec) = nu_all(:,:,irec)
-           endif
-        enddo
-     enddo
+    islice_selected_rec(:) = 0
+    do iprocloop=1,NPROC-1
+      call recv_i(ispec_selected_rec_all, nrec,iprocloop,0)
+      call recv_dp(xi_receiver_all,       nrec,iprocloop,1)
+      call recv_dp(eta_receiver_all,      nrec,iprocloop,2)
+      call recv_dp(gamma_receiver_all,    nrec,iprocloop,3)
+      call recv_dp(final_distance_all,    nrec,iprocloop,4)
+      call recv_dp(x_found_all,           nrec,iprocloop,5)
+      call recv_dp(y_found_all,           nrec,iprocloop,6)
+      call recv_dp(z_found_all,           nrec,iprocloop,7)
+      call recv_dp(nu_all,            3*3*nrec,iprocloop,8)
+      do irec=1,nrec
+        if (final_distance_all(irec) < final_distance(irec)) then
+          final_distance(irec) = final_distance_all(irec)
+          islice_selected_rec(irec) = iprocloop
+          ispec_selected_rec(irec) = ispec_selected_rec_all(irec)
+          xi_receiver(irec) = xi_receiver_all(irec)
+          eta_receiver(irec) = eta_receiver_all(irec)
+          gamma_receiver(irec) = gamma_receiver_all(irec)
+          x_found(irec) = x_found_all(irec)
+          y_found(irec) = y_found_all(irec)
+          z_found(irec) = z_found_all(irec)
+          nu(:,:,irec) = nu_all(:,:,irec)
+        endif
+      enddo
+    enddo
   endif
 
   ! this is executed by main process only
@@ -916,10 +909,10 @@
     endif
 
     ! write the locations of stations, so that we can load them and write them to SU headers later
-    open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/output_list_stations.txt', &
-              status='unknown',action='write',iostat=ios)
+    open(unit=IOUT_SU,file=trim(OUTPUT_FILES_PATH)//'/output_list_stations.txt', &
+         status='unknown',action='write',iostat=ios)
     if( ios /= 0 ) &
-      call exit_mpi(myrank,'error opening file '//trim(OUTPUT_FILES)//'/output_list_stations.txt')
+      call exit_mpi(myrank,'error opening file '//trim(OUTPUT_FILES_PATH)//'/output_list_stations.txt')
 
     do irec=1,nrec
       write(IOUT_SU,*) station_name(irec),network_name(irec),x_found(irec),y_found(irec),z_found(irec)
@@ -929,8 +922,8 @@
 
     ! stores station infos for later runs
     if( SU_FORMAT ) then
-      open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/SU_stations_info.bin', &
-            status='unknown',action='write',form='unformatted',iostat=ios)
+      open(unit=IOUT_SU,file=trim(OUTPUT_FILES_PATH)//'/SU_stations_info.bin', &
+           status='unknown',action='write',form='unformatted',iostat=ios)
       if( ios == 0 ) then
         write(IOUT_SU) islice_selected_rec,ispec_selected_rec
         write(IOUT_SU) xi_receiver,eta_receiver,gamma_receiver
@@ -985,7 +978,7 @@
   deallocate(final_distance_all)
 
   ! synchronize all the processes to make sure everybody has finished
-  call sync_all()
+  call synchronize_all()
 
   end subroutine locate_receivers
 
@@ -1017,7 +1010,7 @@
   double precision :: minlat,minlon,maxlat,maxlon
   character(len=MAX_LENGTH_STATION_NAME) :: station_name
   character(len=MAX_LENGTH_NETWORK_NAME) :: network_name
-  character(len=256) :: dummystring
+  character(len=MAX_STRING_LEN) :: dummystring
 
   nrec = 0
   nrec_filtered = 0
@@ -1026,7 +1019,7 @@
   open(unit=IIN, file=trim(filename), status = 'old', iostat = ios)
   if (ios /= 0) call exit_mpi(myrank, 'No file '//trim(filename)//', exit')
   do while(ios == 0)
-    read(IIN,"(a256)",iostat = ios) dummystring
+    read(IIN,"(a)",iostat=ios) dummystring
     if(ios /= 0) exit
 
     if( len_trim(dummystring) > 0 ) nrec = nrec + 1
@@ -1036,23 +1029,23 @@
   ! reads in station locations
   open(unit=IIN, file=trim(filename), status = 'old', iostat = ios)
   do while(ios == 0)
-    read(IIN,"(a256)",iostat = ios) dummystring
+    read(IIN,"(a)",iostat=ios) dummystring
     if( ios /= 0 ) exit
 
     ! counts number of stations in min/max region
     if( len_trim(dummystring) > 0 ) then
-        dummystring = trim(dummystring)
-        read(dummystring, *) station_name, network_name, stlat, stlon, stele, stbur
+      dummystring = trim(dummystring)
+      read(dummystring, *) station_name, network_name, stlat, stlon, stele, stbur
 
-        ! convert station location to UTM
-        call utm_geo(stlon,stlat,stutm_x,stutm_y,&
-             UTM_PROJECTION_ZONE,ILONGLAT2UTM,SUPPRESS_UTM_PROJECTION)
+      ! convert station location to UTM
+      call utm_geo(stlon,stlat,stutm_x,stutm_y,&
+           UTM_PROJECTION_ZONE,ILONGLAT2UTM,SUPPRESS_UTM_PROJECTION)
 
-        ! counts stations within lon/lat region
-        if( stutm_y >= LATITUDE_MIN .and. stutm_y <= LATITUDE_MAX .and. &
-           stutm_x >= LONGITUDE_MIN .and. stutm_x <= LONGITUDE_MAX) &
-          nrec_filtered = nrec_filtered + 1
-     endif
+      ! counts stations within lon/lat region
+      if (stutm_y >= LATITUDE_MIN .and. stutm_y <= LATITUDE_MAX .and. &
+          stutm_x >= LONGITUDE_MIN .and. stutm_x <= LONGITUDE_MAX) &
+        nrec_filtered = nrec_filtered + 1
+    endif
   enddo
   close(IIN)
 
@@ -1061,10 +1054,9 @@
     open(unit=IIN,file=trim(filename),status='old',action='read',iostat=ios)
     open(unit=IOUT,file=trim(filtered_filename),status='unknown')
     do while(ios == 0)
-      read(IIN,"(a256)",iostat = ios) dummystring
+      read(IIN,"(a)",iostat=ios) dummystring
       if( ios /= 0 ) exit
 
-      !read(IIN,*) station_name,network_name,stlat,stlon,stele,stbur
       if( len_trim(dummystring) > 0 ) then
         dummystring = trim(dummystring)
         read(dummystring, *) station_name, network_name, stlat, stlon, stele, stbur
@@ -1081,7 +1073,7 @@
                             trim(station_name),trim(network_name), &
                             sngl(stlat),sngl(stlon),sngl(stele),sngl(stbur)
 
-       endif
+        endif
       endif
     enddo
     close(IIN)

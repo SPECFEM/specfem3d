@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -41,7 +42,7 @@
 ! call sum_all_i(NGLOB_AB,nglob_total)
   call sum_all_dp(dble(NGLOB_AB),nglob_total)
 
-  call sync_all()
+  call synchronize_all()
   if(myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) 'Repartition of elements:'
@@ -81,7 +82,7 @@
   do i = 1, num_interfaces_ext_mesh
      ibool_interfaces_ext_mesh_dummy(:,:) = ibool_interfaces_ext_mesh(1:max_nibool_interfaces_ext_mesh,:)
   enddo
-  call sync_all()
+  call synchronize_all()
   call detect_surface(NPROC,NGLOB_AB,NSPEC_AB,ibool, &
                         ispec_is_surface_external_mesh, &
                         iglob_is_surface_external_mesh, &
@@ -130,7 +131,7 @@
   endif
 
 ! synchronize all the processes to make sure everybody has finished
-  call sync_all()
+  call synchronize_all()
 
   end subroutine finalize_databases
 

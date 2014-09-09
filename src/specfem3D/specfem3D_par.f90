@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -26,19 +27,12 @@
 !
 ! United States and French Government Sponsorship Acknowledged.
 
-module constants
-
-  include "constants.h"
-
-end module constants
-
-!=====================================================================
-
 module specfem_par
 
 ! main parameter module for specfem simulations
 
   use constants
+  use unused_mod
 
   implicit none
 
@@ -86,12 +80,12 @@ module specfem_par
   integer, dimension(:), allocatable :: free_surface_ispec
   integer :: num_free_surface_faces
 
-! VM for new method
+! for new method
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: Veloc_dsm_boundary,Tract_dsm_boundary
 
 ! attenuation
   integer :: NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa
-  character(len=256) prname_Q
+  character(len=MAX_STRING_LEN) :: prname_Q
 
 ! additional mass matrix for ocean load
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_ocean_load
@@ -102,7 +96,7 @@ module specfem_par
 ! time loop step
   integer :: it
 
-! VM for new  method
+! for coupling with DSM
   integer :: it_dsm
 
 ! parameters for the source
@@ -124,7 +118,7 @@ module specfem_par
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: pm1_source_encoding
 
 ! receiver information
-  character(len=256) :: rec_filename,filtered_rec_filename,dummystring
+  character(len=MAX_STRING_LEN) :: rec_filename,filtered_rec_filename,dummystring
   integer :: nrec,nrec_local,nrec_tot_found
   integer :: nrec_simulation
   integer, dimension(:), allocatable :: islice_selected_rec,ispec_selected_rec
@@ -200,14 +194,15 @@ module specfem_par
   integer :: NPROC_XI,NPROC_ETA
   double precision :: LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX
 
-  character(len=256) OUTPUT_FILES,LOCAL_PATH,TOMOGRAPHY_PATH,prname,dsmname,TRAC_PATH
+  logical :: COUPLE_WITH_DSM
+
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH,TOMOGRAPHY_PATH,prname,dsmname,TRACTION_PATH
 
   logical :: ADIOS_ENABLED
-  logical :: ADIOS_FOR_DATABASES, ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, &
-             ADIOS_FOR_KERNELS
+  logical :: ADIOS_FOR_DATABASES, ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, ADIOS_FOR_KERNELS
 
 ! names of the data files for all the processors in MPI
-  character(len=256) outputname
+  character(len=MAX_STRING_LEN) :: outputname
 
 ! for assembling in case of external mesh
   integer :: num_interfaces_ext_mesh
@@ -263,7 +258,7 @@ module specfem_par
   logical, dimension(:),allocatable :: is_moho_top, is_moho_bot
 
   ! adjoint sources
-  character(len=256) adj_source_file
+  character(len=MAX_STRING_LEN) :: adj_source_file
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: adj_sourcearray
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:,:), allocatable :: adj_sourcearrays
   integer :: nadj_rec_local
@@ -286,6 +281,10 @@ module specfem_par
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: noise_surface_movie
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: &
              normal_x_noise,normal_y_noise,normal_z_noise, mask_noise
+
+  ! for Roland_Sylvain integrals
+  double precision, dimension(NTOTAL_OBSERVATION) :: x_observation,y_observation,z_observation, &
+                                                g_x,g_y,g_z,G_xx,G_yy,G_zz,G_xy,G_xz,G_yz,temporary_array_for_sum
 
 end module specfem_par
 

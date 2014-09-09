@@ -3,10 +3,11 @@
 #               S p e c f e m 3 D  V e r s i o n  2 . 1
 #               ---------------------------------------
 #
-#          Main authors: Dimitri Komatitsch and Jeroen Tromp
-#    Princeton University, USA and University of Pau / CNRS / INRIA
-# (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
-#                            April 2011
+#     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+#                        Princeton University, USA
+#                and CNRS / University of Marseille, France
+#                 (there are currently many more authors!)
+# (c) Princeton University and CNRS / University of Marseille, July 2012
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -38,6 +39,7 @@ shared_TARGETS = \
 shared_OBJECTS = \
 	$O/assemble_MPI_scalar.shared.o \
 	$O/check_mesh_resolution.shared.o \
+	$O/constants_mod.shared_module.o \
 	$O/create_name_database.shared.o \
 	$O/create_serial_name_database.shared.o \
 	$O/define_derivation_matrices.shared.o \
@@ -48,10 +50,10 @@ shared_OBJECTS = \
 	$O/get_cmt.shared.o \
 	$O/get_element_face.shared.o \
 	$O/get_force.shared.o \
+	$O/get_global.shared.o \
 	$O/get_jacobian_boundaries.shared.o \
 	$O/get_shape2D.shared.o \
 	$O/get_shape3D.shared.o \
-	$O/get_value_parameters.shared.o \
 	$O/gll_library.shared.o \
 	$O/hex_nodes.shared.o \
 	$O/lagrange_poly.shared.o \
@@ -62,13 +64,22 @@ shared_OBJECTS = \
 	$O/read_topo_bathy_file.shared.o \
 	$O/read_value_parameters.shared.o \
 	$O/recompute_jacobian.shared.o \
-	$O/save_alloc_mod.shared.o \
+	$O/safe_alloc_mod.shared.o \
 	$O/save_header_file.shared.o \
 	$O/sort_array_coordinates.shared.o \
+	$O/unused_mod.shared_module.o \
 	$O/utm_geo.shared.o \
 	$O/write_c_binary.cc.o \
 	$O/write_VTK_data.shared.o \
 	$(EMPTY_MACRO)
+
+
+shared_MODULES = \
+	$(FC_MODDIR)/constants.$(FC_MODEXT) \
+	$(FC_MODDIR)/safe_alloc_mod.$(FC_MODEXT) \
+	$(FC_MODDIR)/unused_mod.$(FC_MODEXT) \
+	$(EMPTY_MACRO)
+
 
 ###
 ### MPI
@@ -91,17 +102,23 @@ adios_shared_MODULES = \
 	$(FC_MODDIR)/adios_helpers_definitions_mod.$(FC_MODEXT) \
 	$(FC_MODDIR)/adios_helpers_mod.$(FC_MODEXT) \
 	$(FC_MODDIR)/adios_helpers_writers_mod.$(FC_MODEXT) \
+	$(FC_MODDIR)/adios_manager_mod.$(FC_MODEXT) \
 	$(EMPTY_MACRO)
 
-adios_shared_STUBS = \
-	$O/adios_manager_stubs.cc.o \
+adios_shared_STUB_OBJECTS = \
+	$O/adios_manager_stubs.shared_noadios.o \
+	$(EMPTY_MACRO)
+
+adios_shared_STUB_MODULES = \
+	$(FC_MODDIR)/adios_manager_mod.$(FC_MODEXT) \
 	$(EMPTY_MACRO)
 
 ifeq ($(ADIOS),yes)
 shared_OBJECTS += $(adios_shared_OBJECTS)
 shared_MODULES += $(adios_shared_MODULES)
 else
-shared_OBJECTS += $(adios_shared_STUBS)
+shared_OBJECTS += $(adios_shared_STUB_OBJECTS)
+shared_MODULES += $(adios_shared_STUB_MODULES)
 endif
 
 #######################################
@@ -110,6 +127,8 @@ endif
 #### rule for each .o file below
 ####
 
+$O/unused_mod.shared_module.o: $O/constants_mod.shared_module.o
+
 ##
 ## shared
 ##
@@ -117,13 +136,13 @@ endif
 $O/%.shared_module.o: $S/%.f90 ${SETUP}/constants.h
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.shared.o: $S/%.f90
+$O/%.shared.o: $S/%.f90 $O/constants_mod.shared_module.o $O/unused_mod.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.shared.o: $S/%.F90
+$O/%.shared.o: $S/%.F90 $O/constants_mod.shared_module.o $O/unused_mod.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.sharedmpi.o: $S/%.f90
+$O/%.sharedmpi.o: $S/%.f90 ${SETUP}/constants.h
 	${MPIFCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 
@@ -134,10 +153,10 @@ $O/%.sharedmpi.o: $S/%.f90
 $O/%.shared_adios_module.o: $S/%.f90
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.shared_adios.o: $S/%.f90 $O/adios_helpers_writers.shared_adios_module.o $O/adios_helpers_definitions.shared_adios_module.o ${SETUP}/constants.h
+$O/%.shared_adios.o: $S/%.f90 $O/adios_helpers_writers.shared_adios_module.o $O/adios_helpers_definitions.shared_adios_module.o $O/constants_mod.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.shared_adios.o: $S/%.F90 $O/adios_helpers_writers.shared_adios_module.o $O/adios_helpers_definitions.shared_adios_module.o ${SETUP}/constants.h
+$O/%.shared_adios.o: $S/%.F90 $O/adios_helpers_writers.shared_adios_module.o $O/adios_helpers_definitions.shared_adios_module.o $O/constants_mod.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 $O/%.shared_noadios.o: $S/%.f90

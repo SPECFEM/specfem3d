@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -29,9 +30,9 @@
        iaddx,iaddy,iaddz,ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir,iax,iay,iar, &
        num_material)
 
-    implicit none
+    use constants
 
-    include "constants.h"
+    implicit none
 
     integer NEX_PER_PROC_XI,NEX_PER_PROC_ETA
     integer iproc_xi,iproc_eta
@@ -93,9 +94,9 @@
        nblayers,ner_layer,ndoublings,ner_doublings,&
        iaddx,iaddy,iaddz,ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir,iax,iay,iar)
 
-    implicit none
+    use constants
 
-    include "constants.h"
+    implicit none
 
     logical USE_REGULAR_MESH
 
@@ -106,7 +107,6 @@
     integer ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir
     integer iax,iay,iar
     integer nblayers
-    !integer num_material
     integer ndoublings
 
 ! topology of the elements

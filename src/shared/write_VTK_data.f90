@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -31,10 +32,9 @@
                         xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
                         elem_flag,prname_file)
 
+  use constants
 
   implicit none
-
-  include "constants.h"
 
   integer :: nspec,nglob
 
@@ -46,8 +46,7 @@
   integer, dimension(nspec) :: elem_flag
 
   ! file name
-  character(len=256) :: prname_file
-  !character(len=2), optional, intent(in) :: str_id
+  character(len=MAX_STRING_LEN) :: prname_file
 
   ! local parameters
   integer :: ispec,i
@@ -82,11 +81,6 @@
   write(IOVTK,*) ""
 
   write(IOVTK,'(a,i12)') "CELL_DATA ",nspec
-  !if( present( str_id ) ) then
-  !  write(IOVTK,'(a)') "SCALARS elem_flag_"//str_id//" integer"
-  !else
-  !  write(IOVTK,'(a)') "SCALARS elem_flag integer"
-  !endif
   write(IOVTK,'(a)') "SCALARS elem_flag integer"
   write(IOVTK,'(a)') "LOOKUP_TABLE default"
   do ispec = 1,nspec
@@ -107,10 +101,9 @@
                         xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
                         elem_flag,prname_file)
 
+  use constants
 
   implicit none
-
-  include "constants.h"
 
   integer :: nspec,nglob
 
@@ -123,7 +116,7 @@
   integer :: ispec,i
 
 ! file name
-  character(len=256) prname_file
+  character(len=MAX_STRING_LEN) :: prname_file
 
 ! write source and receiver VTK files for Paraview
   !debug
@@ -179,9 +172,9 @@
             xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
             gll_data,prname_file)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: nspec,nglob
 
@@ -197,7 +190,7 @@
   logical, dimension(:),allocatable :: mask_ibool
 
 ! file name
-  character(len=256) prname_file
+  character(len=MAX_STRING_LEN) :: prname_file
 
   integer :: ispec,i,j,k,ier,iglob
 
@@ -231,7 +224,8 @@
   write(IOVTK,*) ""
 
   ! iflag field on global nodeset
-  allocate(mask_ibool(nglob),flag_val(nglob),stat=ier)
+  !allocate(mask_ibool(nglob),flag_val(nglob),stat=ier)
+  if (.not. allocated(mask_ibool)) allocate(mask_ibool(nglob),flag_val(nglob),stat=ier)
   if( ier /= 0 ) stop 'error allocating mask'
 
   mask_ibool = .false.
@@ -270,9 +264,9 @@
             xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
             gll_data,prname_file)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: nspec,nglob
 
@@ -288,7 +282,7 @@
   logical, dimension(:),allocatable :: mask_ibool
 
 ! file name
-  character(len=256) prname_file
+  character(len=MAX_STRING_LEN) :: prname_file
 
   integer :: ispec,i,j,k,ier,iglob
 
@@ -362,9 +356,9 @@
             points_globalindices,num_points_globalindices, &
             prname_file)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: nglob
 
@@ -376,7 +370,7 @@
   integer, dimension(num_points_globalindices) :: points_globalindices
 
 ! file name
-  character(len=256) prname_file
+  character(len=MAX_STRING_LEN) :: prname_file
 
   integer :: i,iglob
 
@@ -418,10 +412,9 @@
                         xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
                         elem_vector,prname_file)
 
+  use constants
 
   implicit none
-
-  include "constants.h"
 
   integer :: nspec,nglob
 
@@ -434,7 +427,7 @@
   integer :: ispec,i
 
   ! file name
-  character(len=256) prname_file
+  character(len=MAX_STRING_LEN) :: prname_file
 
   ! write source and receiver VTK files for Paraview
   !debug
@@ -484,10 +477,9 @@
                         xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
                         elem_flag,prname_file)
 
+  use constants
 
   implicit none
-
-  include "constants.h"
 
   integer :: nspec,nglob
 
@@ -499,7 +491,7 @@
   real(kind=CUSTOM_REAL), dimension(nspec) :: elem_flag
 
   ! file name
-  character(len=256) :: prname_file
+  character(len=MAX_STRING_LEN) :: prname_file
   !character(len=2), optional, intent(in) :: str_id
 
   ! local parameters
@@ -535,11 +527,6 @@
   write(IOVTK,*) ""
 
   write(IOVTK,'(a,i12)') "CELL_DATA ",nspec
-  !if( present( str_id ) ) then
-  !  write(IOVTK,'(a)') "SCALARS elem_flag_"//str_id//" integer"
-  !else
-  !  write(IOVTK,'(a)') "SCALARS elem_flag integer"
-  !endif
   write(IOVTK,'(a)') "SCALARS elem_val float"
   write(IOVTK,'(a)') "LOOKUP_TABLE default"
   do ispec = 1,nspec

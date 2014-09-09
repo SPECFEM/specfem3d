@@ -1,0 +1,864 @@
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing 0----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing 0----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing 0----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing 0----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing 0----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing 0----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing 0----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing 0----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing 0----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing 0----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing 0----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing 0----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing 0----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing 0----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing 0----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing 0----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing 0----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing 0----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing 0----------!!!!!!!!!!!
+           4  ./Tract/
+           4  ./MESH/
+           4  ./OUTPUT_FILES/DATABASES_MPI/
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing 0----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing 0----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing 0----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing 0----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing 0----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing 0----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing 0----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing 0----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing 0----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing 0----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing 0----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing 0----------!!!!!!!!!!!
+           6  ./Tract/
+           6  ./MESH/
+           6  ./OUTPUT_FILES/DATABASES_MPI/
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing 0----------!!!!!!!!!!!
+          19  ./Tract/
+          19  ./MESH/
+          19  ./OUTPUT_FILES/DATABASES_MPI/
+          16  ./Tract/
+          16  ./MESH/
+          16  ./OUTPUT_FILES/DATABASES_MPI/
+          22  ./Tract/
+          22  ./MESH/
+          22  ./OUTPUT_FILES/DATABASES_MPI/
+          24  ./Tract/
+          24  ./MESH/
+          24  ./OUTPUT_FILES/DATABASES_MPI/
+           5  ./Tract/
+           5  ./MESH/
+           5  ./OUTPUT_FILES/DATABASES_MPI/
+          11  ./Tract/
+          11  ./MESH/
+          11  ./OUTPUT_FILES/DATABASES_MPI/
+          15  ./Tract/
+          15  ./MESH/
+          15  ./OUTPUT_FILES/DATABASES_MPI/
+          13  ./Tract/
+          13  ./MESH/
+          13  ./OUTPUT_FILES/DATABASES_MPI/
+          14  ./Tract/
+          14  ./MESH/
+          14  ./OUTPUT_FILES/DATABASES_MPI/
+           2  ./Tract/
+           2  ./MESH/
+           2  ./OUTPUT_FILES/DATABASES_MPI/
+          13  ./OUTPUT_FILES/Tractions/
+          14  ./OUTPUT_FILES/Tractions/
+           2  ./OUTPUT_FILES/Tractions/
+           4  ./OUTPUT_FILES/Tractions/
+           5  ./OUTPUT_FILES/Tractions/
+           6  ./OUTPUT_FILES/Tractions/
+          11  ./OUTPUT_FILES/Tractions/
+          15  ./OUTPUT_FILES/Tractions/
+          10  ./Tract/
+          10  ./MESH/
+          10  ./OUTPUT_FILES/DATABASES_MPI/
+          10  ./OUTPUT_FILES/Tractions/
+           0  ./Tract/
+           0  ./MESH/
+           0  ./OUTPUT_FILES/DATABASES_MPI/
+          27  ./Tract/
+          27  ./MESH/
+          27  ./OUTPUT_FILES/DATABASES_MPI/
+           0  ./OUTPUT_FILES/Tractions/
+          28  ./Tract/
+          28  ./MESH/
+          28  ./OUTPUT_FILES/DATABASES_MPI/
+          19  ./OUTPUT_FILES/Tractions/
+          28  ./OUTPUT_FILES/Tractions/
+          16  ./OUTPUT_FILES/Tractions/
+          22  ./OUTPUT_FILES/Tractions/
+          24  ./OUTPUT_FILES/Tractions/
+          27  ./OUTPUT_FILES/Tractions/
+          18  ./Tract/
+          18  ./MESH/
+          18  ./OUTPUT_FILES/DATABASES_MPI/
+          18  ./OUTPUT_FILES/Tractions/
+          23  ./Tract/
+          23  ./MESH/
+          23  ./OUTPUT_FILES/DATABASES_MPI/
+          23  ./OUTPUT_FILES/Tractions/
+          17  ./Tract/
+          17  ./MESH/
+          17  ./OUTPUT_FILES/DATABASES_MPI/
+          17  ./OUTPUT_FILES/Tractions/
+          31  ./Tract/
+          31  ./MESH/
+          31  ./OUTPUT_FILES/DATABASES_MPI/
+          31  ./OUTPUT_FILES/Tractions/
+          26  ./Tract/
+          26  ./MESH/
+          26  ./OUTPUT_FILES/DATABASES_MPI/
+          26  ./OUTPUT_FILES/Tractions/
+          29  ./Tract/
+          29  ./MESH/
+          29  ./OUTPUT_FILES/DATABASES_MPI/
+           3  ./Tract/
+           3  ./MESH/
+           3  ./OUTPUT_FILES/DATABASES_MPI/
+          29  ./OUTPUT_FILES/Tractions/
+           3  ./OUTPUT_FILES/Tractions/
+          25  ./Tract/
+          25  ./MESH/
+          25  ./OUTPUT_FILES/DATABASES_MPI/
+          25  ./OUTPUT_FILES/Tractions/
+          12  ./Tract/
+          12  ./MESH/
+          12  ./OUTPUT_FILES/DATABASES_MPI/
+          12  ./OUTPUT_FILES/Tractions/
+           9  ./Tract/
+           9  ./MESH/
+           9  ./OUTPUT_FILES/DATABASES_MPI/
+           9  ./OUTPUT_FILES/Tractions/
+           7  ./Tract/
+           7  ./MESH/
+           7  ./OUTPUT_FILES/DATABASES_MPI/
+           7  ./OUTPUT_FILES/Tractions/
+           8  ./Tract/
+           8  ./MESH/
+           8  ./OUTPUT_FILES/DATABASES_MPI/
+           8  ./OUTPUT_FILES/Tractions/
+           1  ./Tract/
+           1  ./MESH/
+           1  ./OUTPUT_FILES/DATABASES_MPI/
+           1  ./OUTPUT_FILES/Tractions/
+          20  ./Tract/
+          20  ./MESH/
+          20  ./OUTPUT_FILES/DATABASES_MPI/
+          20  ./OUTPUT_FILES/Tractions/
+          30  ./Tract/
+          30  ./MESH/
+          30  ./OUTPUT_FILES/DATABASES_MPI/
+          30  ./OUTPUT_FILES/Tractions/
+          21  ./Tract/
+          21  ./MESH/
+          21  ./OUTPUT_FILES/DATABASES_MPI/
+          21  ./OUTPUT_FILES/Tractions/
+ NtimeStep         100
+ NtimeStep         100
+ NtimeStep         100
+ NtimeStep         100
+ NtimeStep         100
+ NtimeStep         100
+ NtimeStep         100
+ NtimeStep         100
+ NtimeStep         100
+ NtimeStep         100
+ NtimeStep         100
+ NtimeStep         100
+ NtimeStep         100
+ NtimeStep         100
+ NtimeStep         100
+ NtimeStep         100
+ NtimeStep         100
+ NtimeStep         100
+ NtimeStep         100
+ NtimeStep         100
+ NtimeStep         100
+ NtimeStep         100
+ NtimeStep         100
+ NtimeStep         100
+ NtimeStep         100
+ NtimeStep         100
+ NtimeStep         100
+ NtimeStep         100
+ NtimeStep         100
+ NtimeStep         100
+ NtimeStep         100
+ NtimeStep         100
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+ ./OUTPUT_FILES/DATABASES_MPI//proc000001_external_mesh.bin
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+ ./OUTPUT_FILES/DATABASES_MPI//proc000003_external_mesh.bin
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+ ./OUTPUT_FILES/DATABASES_MPI//proc000004_external_mesh.bin
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+ ./OUTPUT_FILES/DATABASES_MPI//proc000005_external_mesh.bin
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+ ./OUTPUT_FILES/DATABASES_MPI//proc000006_external_mesh.bin
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+ ./OUTPUT_FILES/DATABASES_MPI//proc000009_external_mesh.bin
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+ ./OUTPUT_FILES/DATABASES_MPI//proc000010_external_mesh.bin
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+ ./OUTPUT_FILES/DATABASES_MPI//proc000029_external_mesh.bin
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+ ./OUTPUT_FILES/DATABASES_MPI//proc000030_external_mesh.bin
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+ ./OUTPUT_FILES/DATABASES_MPI//proc000007_external_mesh.bin
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+ ./OUTPUT_FILES/DATABASES_MPI//proc000011_external_mesh.bin
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+ ./OUTPUT_FILES/DATABASES_MPI//proc000012_external_mesh.bin
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+ ./OUTPUT_FILES/DATABASES_MPI//proc000025_external_mesh.bin
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+ ./OUTPUT_FILES/DATABASES_MPI//proc000013_external_mesh.bin
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+ ./OUTPUT_FILES/DATABASES_MPI//proc000016_external_mesh.bin
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+ ./OUTPUT_FILES/DATABASES_MPI//proc000014_external_mesh.bin
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+ ./OUTPUT_FILES/DATABASES_MPI//proc000017_external_mesh.bin
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+ ./OUTPUT_FILES/DATABASES_MPI//proc000019_external_mesh.bin
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+ ./OUTPUT_FILES/DATABASES_MPI//proc000008_external_mesh.bin
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+ ./OUTPUT_FILES/DATABASES_MPI//proc000021_external_mesh.bin
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+ ./OUTPUT_FILES/DATABASES_MPI//proc000015_external_mesh.bin
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+ ./OUTPUT_FILES/DATABASES_MPI//proc000028_external_mesh.bin
+                                                                                
+                                                                                
+                    
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+ ./OUTPUT_FILES/DATABASES_MPI//proc000018_external_mesh.bin
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+ ./OUTPUT_FILES/DATABASES_MPI//proc000002_external_mesh.bin
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+ ./OUTPUT_FILES/DATABASES_MPI//proc000022_external_mesh.bin
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+ ./OUTPUT_FILES/DATABASES_MPI//proc000023_external_mesh.bin
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+ ./OUTPUT_FILES/DATABASES_MPI//proc000027_external_mesh.bin
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+ ./OUTPUT_FILES/DATABASES_MPI//proc000020_external_mesh.bin
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+ ./OUTPUT_FILES/DATABASES_MPI//proc000024_external_mesh.bin
+                                                                                
+                                                                                
+                    
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+ ./OUTPUT_FILES/DATABASES_MPI//proc000026_external_mesh.bin
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+ ./OUTPUT_FILES/DATABASES_MPI//proc000000_external_mesh.bin
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+  ./OUTPUT_FILES/DATABASES_MPI/                                                 
+                                                                                
+                                                                                
+                    
+ ./OUTPUT_FILES/DATABASES_MPI//proc000031_external_mesh.bin
+ STEP 1
+ ./OUTPUT_FILES/DATABASES_MPI//proc000027_inner
+ STEP 1
+ ./OUTPUT_FILES/DATABASES_MPI//proc000026_inner
+ STEP 1
+ ./OUTPUT_FILES/DATABASES_MPI//proc000025_inner
+ STEP 1
+ ./OUTPUT_FILES/DATABASES_MPI//proc000028_inner
+ STEP 1
+ ./OUTPUT_FILES/DATABASES_MPI//proc000004_inner
+ STEP 1
+ ./OUTPUT_FILES/DATABASES_MPI//proc000016_inner
+ STEP 1
+ ./OUTPUT_FILES/DATABASES_MPI//proc000020_inner
+ STEP 1
+ ./OUTPUT_FILES/DATABASES_MPI//proc000029_inner
+ STEP 1
+ ./OUTPUT_FILES/DATABASES_MPI//proc000002_inner
+ STEP 1
+ ./OUTPUT_FILES/DATABASES_MPI//proc000008_inner
+ STEP 1
+ ./OUTPUT_FILES/DATABASES_MPI//proc000021_inner
+ STEP 1
+ ./OUTPUT_FILES/DATABASES_MPI//proc000023_inner
+ STEP 1
+ ./OUTPUT_FILES/DATABASES_MPI//proc000001_inner
+ STEP 1
+ ./OUTPUT_FILES/DATABASES_MPI//proc000018_inner
+ STEP 1
+ ./OUTPUT_FILES/DATABASES_MPI//proc000031_inner
+ STEP 1
+ ./OUTPUT_FILES/DATABASES_MPI//proc000030_inner
+ STEP 1
+ ./OUTPUT_FILES/DATABASES_MPI//proc000013_inner
+ STEP 1
+ ./OUTPUT_FILES/DATABASES_MPI//proc000012_inner
+ STEP 1
+ ./OUTPUT_FILES/DATABASES_MPI//proc000022_inner
+ STEP 1
+ ./OUTPUT_FILES/DATABASES_MPI//proc000005_inner
+ STEP 1
+ ./OUTPUT_FILES/DATABASES_MPI//proc000007_inner
+ STEP 1
+ ./OUTPUT_FILES/DATABASES_MPI//proc000010_inner
+ STEP 2
+ ./OUTPUT_FILES/DATABASES_MPI//proc000028_absorb_dsm
+ STEP 2
+ ./OUTPUT_FILES/DATABASES_MPI//proc000026_absorb_dsm
+ STEP 2
+ ./OUTPUT_FILES/DATABASES_MPI//proc000025_absorb_dsm
+ STEP 1
+ ./OUTPUT_FILES/DATABASES_MPI//proc000014_inner
+ STEP 2
+ ./OUTPUT_FILES/DATABASES_MPI//proc000027_absorb_dsm
+ STEP 2
+ ./OUTPUT_FILES/DATABASES_MPI//proc000002_absorb_dsm
+ STEP 1
+ ./OUTPUT_FILES/DATABASES_MPI//proc000015_inner
+ STEP 2
+ ./OUTPUT_FILES/DATABASES_MPI//proc000029_absorb_dsm
+ STEP 1
+ ./OUTPUT_FILES/DATABASES_MPI//proc000009_inner
+ STEP 1
+ ./OUTPUT_FILES/DATABASES_MPI//proc000006_inner
+ STEP 2
+ ./OUTPUT_FILES/DATABASES_MPI//proc000018_absorb_dsm
+ STEP 1
+ ./OUTPUT_FILES/DATABASES_MPI//proc000003_inner
+ STEP 2
+ ./OUTPUT_FILES/DATABASES_MPI//proc000004_absorb_dsm
+ STEP 1
+ ./OUTPUT_FILES/DATABASES_MPI//proc000024_inner
+ STEP 1
+ ./OUTPUT_FILES/DATABASES_MPI//proc000017_inner
+ STEP 2
+ ./OUTPUT_FILES/DATABASES_MPI//proc000016_absorb_dsm
+ STEP 2
+ ./OUTPUT_FILES/DATABASES_MPI//proc000022_absorb_dsm
+ STEP 1
+ ./OUTPUT_FILES/DATABASES_MPI//proc000011_inner
+ STEP 2
+ ./OUTPUT_FILES/DATABASES_MPI//proc000020_absorb_dsm
+ STEP 2
+ ./OUTPUT_FILES/DATABASES_MPI//proc000001_absorb_dsm
+          81
+ STEP 2
+ ./OUTPUT_FILES/DATABASES_MPI//proc000023_absorb_dsm
+ STEP 2
+ ./OUTPUT_FILES/DATABASES_MPI//proc000012_absorb_dsm
+          31
+ STEP 2
+ ./OUTPUT_FILES/DATABASES_MPI//proc000008_absorb_dsm
+ STEP 1
+ ./OUTPUT_FILES/DATABASES_MPI//proc000019_inner
+ STEP 2
+ ./OUTPUT_FILES/DATABASES_MPI//proc000021_absorb_dsm
+ STEP 3
+          25
+ STEP 2
+ ./OUTPUT_FILES/DATABASES_MPI//proc000030_absorb_dsm
+ STEP 2
+ ./OUTPUT_FILES/DATABASES_MPI//proc000003_absorb_dsm
+ STEP 2
+ ./OUTPUT_FILES/DATABASES_MPI//proc000031_absorb_dsm
+ STEP 3
+ STEP 2
+ ./OUTPUT_FILES/DATABASES_MPI//proc000015_absorb_dsm
+ STEP 2
+ ./OUTPUT_FILES/DATABASES_MPI//proc000024_absorb_dsm
+ STEP 1
+ ./OUTPUT_FILES/DATABASES_MPI//proc000000_inner
+ STEP 2
+ ./OUTPUT_FILES/DATABASES_MPI//proc000007_absorb_dsm
+ STEP 2
+ ./OUTPUT_FILES/DATABASES_MPI//proc000013_absorb_dsm
+          56
+          60
+          29
+          31
+ STEP 2
+ ./OUTPUT_FILES/DATABASES_MPI//proc000011_absorb_dsm
+          30
+         114
+         113
+ STEP 3
+ STEP 2
+ ./OUTPUT_FILES/DATABASES_MPI//proc000017_absorb_dsm
+ STEP 2
+ ./OUTPUT_FILES/DATABASES_MPI//proc000009_absorb_dsm
+ STEP 3
+ STEP 2
+ ./OUTPUT_FILES/DATABASES_MPI//proc000010_absorb_dsm
+          52
+ STEP 3
+         111
+          60
+           0
+ STEP 3
+ STEP 3
+ STEP 2
+ ./OUTPUT_FILES/DATABASES_MPI//proc000014_absorb_dsm
+ STEP 3
+ STEP 2
+ ./OUTPUT_FILES/DATABASES_MPI//proc000019_absorb_dsm
+          30
+ STEP 2
+ ./OUTPUT_FILES/DATABASES_MPI//proc000006_absorb_dsm
+ STEP 3
+           0
+ STEP 3
+ STEP 2
+ ./OUTPUT_FILES/DATABASES_MPI//proc000005_absorb_dsm
+ STEP 3
+          29
+ STEP 2
+ ./OUTPUT_FILES/DATABASES_MPI//proc000000_absorb_dsm
+ STEP 3
+          59
+ STEP 3
+          56
+          79
+ STEP 3
+ STEP 3
+          51
+ STEP 3
+          77
+          65
+         113
+ STEP 3
+ STEP 3
+ STEP 3
+ STEP 3
+          38
+          48
+          86
+          26
+ STEP 3
+ STEP 3
+          59
+ STEP 3
+          56
+ STEP 3
+          77
+          58
+ STEP 3
+ STEP 3
+ STEP 3
+ STEP 3
+ read bloc           1         160
+ STEP 3
+ STEP 3
+ STEP 3
+ STEP 3
+ read bloc           2         160
+ read bloc           3         160
+ read bloc           4         160
+ read bloc           5         160
+ read bloc           6         160
+ read bloc           7         160
+ read bloc           8         160
+ read bloc           9         160
+ read bloc          10         160
+ read bloc          11         160
+ read bloc          12         160
+ read bloc          13         160
+ read bloc          14         160
+ read bloc          15         160
+ read bloc          16         160
+ read bloc          17         160
+ read bloc          18         160
+ read bloc          19         160
+ read bloc          20         160
+ read bloc          21         160
+ read bloc          22         160
+ read bloc          23         160
+ read bloc          24         160
+ read bloc          25         160
+ read bloc          26         160
+ read bloc          27         160
+ read bloc          28         160
+ read bloc          29         160
+ read bloc          30         160
+ read bloc          31         160
+ read bloc          32         160
+ read bloc          33         160
+ read bloc          34         160
+ read bloc          35         160
+ read bloc          36         160
+ read bloc          37         160
+ read bloc          38         160
+ read bloc          39         160
+ read bloc          40         160
+ read bloc          41         160
+ read bloc          42         160
+ read bloc          43         160
+ read bloc          44         160
+ read bloc          45         160
+ read bloc          46         160
+ read bloc          47         160
+ read bloc          48         160
+ read bloc          49         160
+ read bloc          50         160
+ read bloc          51         160
+ read bloc          52         160
+ read bloc          53         160
+ read bloc          54         160
+ read bloc          55         160
+ read bloc          56         160
+ read bloc          57         160
+ read bloc          58         160
+ read bloc          59         160
+ read bloc          60         160
+ read bloc          61         160
+ read bloc          62         160
+ read bloc          63         160
+ read bloc          64         160
+ read bloc          65         160
+ read bloc          66         160
+ read bloc          67         160
+ read bloc          68         160
+ read bloc          69         160
+ read bloc          70         160
+ read bloc          71         160
+ read bloc          72         160
+ read bloc          73         160
+ read bloc          74         160
+ read bloc          75         160
+ read bloc          76         160
+ read bloc          77         160
+ read bloc          78         160
+ read bloc          79         160
+ read bloc          80         160
+ read bloc          81         160
+ read bloc          82         160
+ read bloc          83         160
+ read bloc          84         160
+ read bloc          85         160
+ read bloc          86         160
+ read bloc          87         160
+ read bloc          88         160
+ read bloc          89         160
+ read bloc          90         160
+ read bloc          91         160
+ read bloc          92         160
+ read bloc          93         160
+ read bloc          94         160
+ read bloc          95         160
+ read bloc          96         160
+ read bloc          97         160
+ read bloc          98         160
+ read bloc          99         160
+ read bloc         100         160
+ read bloc         101         160
+ read bloc         102         160
+ read bloc         103         160
+ read bloc         104         160
+ read bloc         105         160
+ read bloc         106         160
+ read bloc         107         160
+ read bloc         108         160
+ read bloc         109         160
+ read bloc         110         160
+ read bloc         111         160
+ read bloc         112         160
+ read bloc         113         160
+ read bloc         114         160
+ read bloc         115         160
+ read bloc         116         160
+ read bloc         117         160
+ read bloc         118         160
+ read bloc         119         160
+ read bloc         120         160
+ read bloc         121         160
+ read bloc         122         160
+ read bloc         123         160
+ read bloc         124         160
+ read bloc         125         160
+ read bloc         126         160
+ read bloc         127         160
+ read bloc         128         160
+ read bloc         129         160
+ read bloc         130         160
+ read bloc         131         160
+ read bloc         132         160
+ read bloc         133         160
+ read bloc         134         160
+ read bloc         135         160
+ read bloc         136         160
+ read bloc         137         160
+ read bloc         138         160
+ read bloc         139         160
+ read bloc         140         160
+ read bloc         141         160
+ read bloc         142         160
+ read bloc         143         160
+ read bloc         144         160
+ read bloc         145         160
+ read bloc         146         160
+ read bloc         147         160
+ read bloc         148         160
+ read bloc         149         160
+ read bloc         150         160
+ read bloc         151         160
+ read bloc         152         160
+ read bloc         153         160
+ read bloc         154         160
+ read bloc         155         160
+ read bloc         156         160
+ read bloc         157         160
+ read bloc         158         160
+ read bloc         159         160
+ read bloc         160         160
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing fin ----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing fin ----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing fin ----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing fin ----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing fin ----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing fin ----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing fin ----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing fin ----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing fin ----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing fin ----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing fin ----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing fin ----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing fin ----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing fin ----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing fin ----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing fin ----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing fin ----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing fin ----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing fin ----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing fin ----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing fin ----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing fin ----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing fin ----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing fin ----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing fin ----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing fin ----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing fin ----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing fin ----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing fin ----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing fin ----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing fin ----------!!!!!!!!!!!
+ !!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing fin ----------!!!!!!!!!!!

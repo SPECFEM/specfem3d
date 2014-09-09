@@ -7,18 +7,19 @@
 #                                                                           #
 #############################################################################
 #                                                                           #
-# GEOCUBIT is free software: you can redistribute it and/or modify          #
+# This program is free software; you can redistribute it and/or modify      #
 # it under the terms of the GNU General Public License as published by      #
-# the Free Software Foundation, either version 3 of the License, or         #
+# the Free Software Foundation; either version 2 of the License, or         #
 # (at your option) any later version.                                       #
 #                                                                           #
-# GEOCUBIT is distributed in the hope that it will be useful,               #
+# This program is distributed in the hope that it will be useful,           #
 # but WITHOUT ANY WARRANTY; without even the implied warranty of            #
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             #
 # GNU General Public License for more details.                              #
 #                                                                           #
-# You should have received a copy of the GNU General Public License         #
-# along with GEOCUBIT.  If not, see <http://www.gnu.org/licenses/>.         #
+# You should have received a copy of the GNU General Public License along   #
+# with this program; if not, write to the Free Software Foundation, Inc.,   #
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.               #
 #                                                                           #
 #############################################################################
 try:
@@ -347,13 +348,13 @@ def savegeometry(iproc=0,surf=False,filename=None):
         import start as start
         cubit                   = start.start_cubit()
         cfg                         = start.start_cfg(filename=filename)
-        flag=0
+        flag=[0]
         ner=cubit.get_error_count()
         cubitcommand= 'save as "'+ cfg.output_dir+'/'+geometryfile+ '"  overwrite' 
         cubit.cmd(cubitcommand)                                                    
         ner2=cubit.get_error_count()                                             
         if ner == ner2:
-            flag=1
+            flag=[1]
         return flag
         
     if surf:
@@ -361,7 +362,7 @@ def savegeometry(iproc=0,surf=False,filename=None):
     else:
         geometryfile='geometry_vol_'+str(iproc)+'.cub'
         
-    flagsaved=0
+    flagsaved=[0]
     infosave=(iproc,flagsaved)
     
     mpi.barrier()
@@ -373,10 +374,10 @@ def savegeometry(iproc=0,surf=False,filename=None):
     while saving:
         if len(total_saved) != sum(total_saved):
             #
-            if not flagsaved: 
+            if not flagsaved[0]: 
                 flagsaved=runsave(geometryfile,iproc,filename=filename)
-                if flagsaved:
-                    infosave=(iproc,flagsaved)        
+                if flagsaved[0]:
+                    infosave=(iproc,flagsaved[0])        
                     if numproc > 1:
                         f=open('geometry_saved'+str(iproc),'w')
                         f.close()

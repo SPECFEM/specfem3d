@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -29,12 +30,12 @@
 
   subroutine meshfem3D
 
+  use constants
   use readParFile
   use createRegMesh
 
   implicit none
 
-  include "constants.h"
   include "constants_meshfem3D.h"
 
 !=============================================================================!
@@ -297,7 +298,7 @@
 
 ! interfaces parameters
   logical SUPPRESS_UTM_PROJECTION_BOTTOM,SUPPRESS_UTM_PROJECTION_TOP
-  integer ilayer,interface_current ! ipoint_current
+  integer ilayer,interface_current
   integer number_of_interfaces,number_of_layers
   integer max_npx_interface,max_npy_interface
   integer npx_interface_bottom,npy_interface_bottom
@@ -307,7 +308,7 @@
   double precision orig_x_interface_top,orig_y_interface_top
   double precision spacing_x_interface_bottom,spacing_y_interface_bottom
   double precision spacing_x_interface_top,spacing_y_interface_top
-  character(len=50) INTERFACES_FILE,interface_top_file
+  character(len=MAX_STRING_LEN) :: INTERFACES_FILE,interface_top_file
   integer, dimension(:), allocatable :: ner_layer
   double precision, dimension(:,:),allocatable :: interface_bottom,interface_top
 
@@ -342,9 +343,9 @@
           APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,USE_FORCE_POINT_SOURCE
   logical STACEY_ABSORBING_CONDITIONS,SAVE_FORWARD,STACEY_INSTEAD_OF_FREE_SURFACE
   logical ANISOTROPY,SAVE_MESH_FILES,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
-  logical PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID
+  logical PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID,COUPLE_WITH_DSM
   integer MOVIE_TYPE,IMODEL
-  character(len=256) OUTPUT_FILES,LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH,TOMOGRAPHY_PATH,TRACTION_PATH
   logical :: ADIOS_ENABLED, ADIOS_FOR_DATABASES, ADIOS_FOR_MESH, &
              ADIOS_FOR_FORWARD_ARRAYS, ADIOS_FOR_KERNELS
 
@@ -357,12 +358,9 @@
   call world_size(sizeprocs)
   call world_rank(myrank)
 
-! get the base pathname for output files
-  call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)))
-
 ! open main output file, only written to by process 0
   if(myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
-    open(unit=IMAIN,file=trim(OUTPUT_FILES)//'/output_mesher.txt',status='unknown')
+    open(unit=IMAIN,file=trim(OUTPUT_FILES_PATH)//'/output_mesher.txt',status='unknown')
 
 ! get MPI starting time
   time_start = wtime()
@@ -387,7 +385,7 @@
                         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
                         USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE, &
                         USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
-                        PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,FULL_ATTENUATION_SOLID,TRAC_PATH)
+                        PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,FULL_ATTENUATION_SOLID,TRACTION_PATH,COUPLE_WITH_DSM)
 
   call read_adios_parameters(ADIOS_ENABLED, ADIOS_FOR_DATABASES,       &
                              ADIOS_FOR_FORWARD_ARRAYS, ADIOS_FOR_MESH, &
@@ -420,14 +418,15 @@
   max_npy_interface  = -1
 
 ! read number of interfaces
-  call read_value_integer_mesh(IIN,DONT_IGNORE_JUNK,number_of_interfaces,'NINTERFACES')
+  call read_value_integer_mesh(IIN,DONT_IGNORE_JUNK,number_of_interfaces,'NINTERFACES', ier)
   if(number_of_interfaces < 1) stop 'error: not enough interfaces (minimum is 1, for topography)'
 
 ! loop on all the interfaces
   do interface_current = 1,number_of_interfaces
     call read_interface_parameters(IIN,SUPPRESS_UTM_PROJECTION_BOTTOM,interface_top_file, &
           npx_interface_bottom,npy_interface_bottom,&
-          orig_x_interface_bottom,orig_y_interface_bottom,spacing_x_interface_bottom,spacing_y_interface_bottom)
+          orig_x_interface_bottom,orig_y_interface_bottom,&
+          spacing_x_interface_bottom,spacing_y_interface_bottom,ier)
 
     max_npx_interface = max(npx_interface_bottom,max_npx_interface)
     max_npy_interface = max(npy_interface_bottom,max_npy_interface)
@@ -445,7 +444,7 @@
   do ilayer = 1,number_of_layers
 
 ! read number of spectral elements in vertical direction in this layer
-    call read_value_integer_mesh(IIN,DONT_IGNORE_JUNK,ner_layer(ilayer),'NER_LAYER')
+    call read_value_integer_mesh(IIN,DONT_IGNORE_JUNK,ner_layer(ilayer),'NER_LAYER', ier)
     if(ner_layer(ilayer) < 1) stop 'not enough spectral elements along Z in layer (minimum is 1)'
 
   enddo
@@ -565,20 +564,19 @@
   if(NPROC_ETA < 1) call exit_MPI(myrank,'NPROC_ETA must be greater than 1')
 
   ! check that mesh can be cut into the right number of slices
+  if(mod(NEX_XI,NPROC_XI) /= 0) call exit_MPI(myrank,'NEX_XI must be a multiple of NPROC_XI for a regular mesh')
+  if(mod(NEX_ETA,NPROC_ETA) /= 0) call exit_MPI(myrank,'NEX_ETA must be a multiple of NPROC_ETA for a regular mesh')
+
   ! also check that mesh can be coarsened in depth twice (block size multiple of 8)
-  if(USE_REGULAR_MESH) then
-    if(mod(NEX_XI,NPROC_XI) /= 0) call exit_MPI(myrank,'NEX_XI must be a multiple of NPROC_XI for a regular mesh')
-    if(mod(NEX_ETA,NPROC_ETA) /= 0) call exit_MPI(myrank,'NEX_ETA must be a multiple of NPROC_ETA for a regular mesh')
+  ! i.e. check that NEX is divisible by 8 and that NEX_PER_PROC is divisible by 8
+  ! This is not required for a regular mesh
+  if(.not. USE_REGULAR_MESH) then
+    if(mod(NEX_XI,8) /= 0) call exit_MPI(myrank,'NEX_XI must be a multiple of 8')
+    if(mod(NEX_ETA,8) /= 0) call exit_MPI(myrank,'NEX_ETA must be a multiple of 8')
+
+    if(mod(NEX_PER_PROC_XI,8) /= 0) call exit_MPI(myrank,'NEX_PER_PROC_XI must be a multiple of 8')
+    if(mod(NEX_PER_PROC_ETA,8) /= 0) call exit_MPI(myrank,'NEX_PER_PROC_ETA must be a multiple of 8')
   endif
-
-  ! checks that nex is dividable by 8
-  if(mod(NEX_XI,8) /= 0) call exit_MPI(myrank,'NEX_XI must be a multiple of 8')
-  if(mod(NEX_ETA,8) /= 0) call exit_MPI(myrank,'NEX_ETA must be a multiple of 8')
-
-  ! checks that nex_per_proc is dividable by 8
-  if(mod(NEX_PER_PROC_XI,8) /= 0) call exit_MPI(myrank,'NEX_PER_PROC_XI must be a multiple of 8')
-  if(mod(NEX_PER_PROC_ETA,8) /= 0) call exit_MPI(myrank,'NEX_PER_PROC_ETA must be a multiple of 8')
-
 
   if(myrank == 0) then
     write(IMAIN,*) 'region selected:'
@@ -639,7 +637,7 @@
   if( ier /= 0 ) stop 'error allocating array interface_top'
 
   ! read number of interfaces
-  call read_value_integer_mesh(IIN,DONT_IGNORE_JUNK,number_of_interfaces,'NINTERFACES')
+  call read_value_integer_mesh(IIN,DONT_IGNORE_JUNK,number_of_interfaces,'NINTERFACES', ier)
 
   SUPPRESS_UTM_PROJECTION_BOTTOM = SUPPRESS_UTM_PROJECTION
   npx_interface_bottom = 2
@@ -657,7 +655,8 @@
     ! read top interface
     call read_interface_parameters(IIN,SUPPRESS_UTM_PROJECTION_TOP,interface_top_file,&
          npx_interface_top,npy_interface_top,&
-         orig_x_interface_top,orig_y_interface_top,spacing_x_interface_top,spacing_y_interface_top)
+         orig_x_interface_top,orig_y_interface_top,&
+         spacing_x_interface_top,spacing_y_interface_top,ier)
 
     !npoints_interface_top = npx_interface_top * npy_interface
     ! loop on all the points describing this interface
@@ -665,7 +664,7 @@
          //interface_top_file,status='old')
     do iy=1,npy_interface_top
       do ix=1,npx_interface_top
-        call read_value_dble_precision_mesh(45,DONT_IGNORE_JUNK,interface_top(ix,iy),'Z_INTERFACE_TOP')
+        call read_value_dble_precision_mesh(45,DONT_IGNORE_JUNK,interface_top(ix,iy),'Z_INTERFACE_TOP',ier)
       enddo
     enddo
     close(45)
@@ -784,8 +783,6 @@
 
   enddo
 
-  close(IIN_INTERFACES)
-
   if(myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) '**************************'
@@ -801,7 +798,7 @@
   npointot = nspec * NGLLCUBE_M
 
 ! make sure everybody is synchronized
-  call sync_all()
+  call synchronize_all()
 
 ! use dynamic allocation to allocate memory for arrays
   allocate(ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec),stat=ier)
@@ -833,7 +830,7 @@
   endif
 
 ! make sure everybody is synchronized
-  call sync_all()
+  call synchronize_all()
 
 !--- print number of points and elements in the mesh
 
@@ -882,7 +879,7 @@
   endif
 
 ! synchronize all the processes to make sure everybody has finished
-  call sync_all()
+  call synchronize_all()
 
   end subroutine meshfem3D
 

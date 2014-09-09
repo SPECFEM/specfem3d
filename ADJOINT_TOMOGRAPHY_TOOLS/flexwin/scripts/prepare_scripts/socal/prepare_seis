@@ -1,0 +1,41 @@
+#!/bin/sh
+
+echo echo on > sac.mac
+echo readerr badfile fatal >> sac.mac
+
+for file in DATA/* ; do
+
+  net=`saclst knetwk f $file | awk '{print $2}'`
+  sta=`saclst kstnm f $file | awk '{print $2}'`
+  chan=`saclst kcmpnm f $file | awk '{print $2}'`
+  #net=`echo $file | awk -F"." '{print $2}'`
+  #sta=`echo $file | awk -F"." '{print $3}'`
+  #chan=`echo $file | awk -F"." '{print $4}'`
+  comp=`echo $chan | awk '{print substr($1,3,1)}'`
+  #echo $net $sta $chan $comp
+
+  synt=SYN/${sta}.${net}.BH${comp}.semd.sac.d
+  #echo $synt
+
+  if [ -e $synt ] ; then
+    echo r $file >> sac.mac
+    echo interpolate delta 0.05 >> sac.mac
+    echo rtrend >> sac.mac
+    echo taper >> sac.mac
+    echo w over >> sac.mac
+    echo r $file $synt >> sac.mac
+    echo interpolate delta 0.05 >> sac.mac
+    echo "setbb btime &1,b" >> sac.mac
+    echo "setbb npoints &1,npts" >> sac.mac
+    echo cuterr fillz >> sac.mac
+    echo "cut %btime n %npoints" >> sac.mac
+    echo r $synt >> sac.mac
+    echo cut off >> sac.mac
+    echo w over >> sac.mac
+  fi
+done
+echo quit >> sac.mac
+
+sac sac.mac
+
+rm sac.mac

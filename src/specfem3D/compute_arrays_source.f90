@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -138,7 +139,7 @@
   double precision :: junk
   ! note: should have same order as orientation in write_seismograms_to_file()
   character(len=3),dimension(NDIM) :: comp != (/ "BHE", "BHN", "BHZ" /)
-  character(len=256) :: filename
+  character(len=MAX_STRING_LEN) :: filename
 
   ! gets channel names
   do icomp=1,NDIM
@@ -241,87 +242,4 @@ end subroutine compute_arrays_adjoint_source
   endif
 
   end subroutine compute_arrays_source_acoustic
-
-
-! testing read in adjoint sources block by block
-
-!!!the original version
-!!!
-!!!subroutine compute_arrays_adjoint_source(myrank, adj_source_file, &
-!!!                    xi_receiver,eta_receiver,gamma_receiver, adj_sourcearray, &
-!!!                    xigll,yigll,zigll,NSTEP)
-!!!
-!!!
-!!!  implicit none
-!!!
-!!!  include 'constants.h'
-!!!
-!!!! input
-!!!  integer myrank, NSTEP
-!!!
-!!!  double precision xi_receiver, eta_receiver, gamma_receiver
-!!!
-!!!  character(len=*) adj_source_file
-!!!
-!!!! output
-!!!  real(kind=CUSTOM_REAL),dimension(NSTEP,NDIM,NGLLX,NGLLY,NGLLZ) :: adj_sourcearray
-!!!
-!!!! Gauss-Lobatto-Legendre points of integration and weights
-!!!  double precision, dimension(NGLLX) :: xigll
-!!!  double precision, dimension(NGLLY) :: yigll
-!!!  double precision, dimension(NGLLZ) :: zigll
-!!!
-!!!  double precision :: hxir(NGLLX), hpxir(NGLLX), hetar(NGLLY), hpetar(NGLLY), &
-!!!        hgammar(NGLLZ), hpgammar(NGLLZ)
-!!!
-!!!  real(kind=CUSTOM_REAL) :: adj_src(NSTEP,NDIM)
-!!!
-!!!  integer icomp, itime, i, j, k, ios
-!!!  double precision :: junk
-!!!  ! note: should have same order as orientation in write_seismograms_to_file()
-!!!  character(len=3),dimension(NDIM) :: comp = (/ "BHE", "BHN", "BHZ" /)
-!!!  character(len=256) :: filename
-!!!
-!!!  !adj_sourcearray(:,:,:,:,:) = 0.
-!!!  adj_src = 0._CUSTOM_REAL
-!!!
-!!!  ! loops over components
-!!!  do icomp = 1, NDIM
-!!!
-!!!    filename = 'SEM/'//trim(adj_source_file) // '.'// comp(icomp) // '.adj'
-!!!    open(unit=IIN,file=trim(filename),status='old',action='read',iostat = ios)
-!!!    if (ios /= 0) cycle ! cycles to next file
-!!!    !if (ios /= 0) call exit_MPI(myrank, ' file '//trim(filename)//'does not exist')
-!!!
-!!!    ! reads in adjoint source trace
-!!!    do itime = 1, NSTEP
-!!!
-!!!      ! things become a bit tricky because of the Newmark time scheme at
-!!!      ! the very beginning of the time loop. however, when we read in the backward/reconstructed
-!!!      ! wavefields at the end of the first time loop, we can use the adjoint source index from 1 to NSTEP
-!!!      ! (and then access it in reverse NSTEP-it+1  down to 1, for it=1,..NSTEP; see compute_add_sources*.f90).
-!!!      read(IIN,*,iostat=ios) junk, adj_src(itime,icomp)
-!!!      if( ios /= 0 ) &
-!!!        call exit_MPI(myrank, &
-!!!          'file '//trim(filename)//' has wrong length, please check with your simulation duration')
-!!!    enddo
-!!!    close(IIN)
-!!!
-!!!  enddo
-!!!
-!!!  ! lagrange interpolators for receiver location
-!!!  call lagrange_any(xi_receiver,NGLLX,xigll,hxir,hpxir)
-!!!  call lagrange_any(eta_receiver,NGLLY,yigll,hetar,hpetar)
-!!!  call lagrange_any(gamma_receiver,NGLLZ,zigll,hgammar,hpgammar)
-!!!
-!!!  ! interpolates adjoint source onto GLL points within this element
-!!!  do k = 1, NGLLZ
-!!!    do j = 1, NGLLY
-!!!      do i = 1, NGLLX
-!!!        adj_sourcearray(:,:,i,j,k) = hxir(i) * hetar(j) * hgammar(k) * adj_src(:,:)
-!!!      enddo
-!!!    enddo
-!!!  enddo
-!!!
-!!!end subroutine compute_arrays_adjoint_source
 

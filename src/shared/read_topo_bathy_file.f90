@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -28,9 +29,9 @@
 
 ! reads topography and bathymetry file
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   ! use integer array to store topography values
   integer :: NX_TOPO,NY_TOPO
@@ -69,9 +70,9 @@
 
 ! finds elevation from topography file
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   real(kind=CUSTOM_REAL),intent(in) :: x_target,y_target
 
@@ -138,9 +139,9 @@
 
 ! get approximate topography elevation at source long/lat coordinates
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   real(kind=CUSTOM_REAL),intent(in) :: x_target,y_target
 
@@ -308,9 +309,9 @@
 
 ! get approximate topography elevation at long/lat coordinates from closest point
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   real(kind=CUSTOM_REAL),intent(in) :: x_target,y_target
 

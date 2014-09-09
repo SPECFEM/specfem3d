@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -39,9 +40,9 @@
 ! returns: ispec_is_surface_external_mesh, iglob_is_surface_external_mesh
 !               and nfaces_surface_ext_mesh
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
 ! global indexing
   integer :: NPROC,nglob,nspec
@@ -161,9 +162,9 @@
 
   ! put this into separate subroutine to compile faster, otherwise compilers will try to unroll all do loops
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   ! global indexing
   integer :: nglob,nspec
@@ -230,9 +231,9 @@
 ! returns: ispec_is_surface_external_mesh, iglob_is_surface_external_mesh
 !               and nfaces_surface_ext_mesh
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
 ! global indexing
   integer :: NPROC,nglob,nspec,myrank
@@ -264,7 +265,7 @@
   real(kind=CUSTOM_REAL) :: min_dist,normal(NDIM)
   integer, dimension(:), allocatable :: valence_external_mesh
 
-  integer :: ispec,i,j,k,iglob,ier,count
+  integer :: ispec,i,j,k,iglob,ier,countval
   integer :: iface,icorner
   logical, dimension(:),allocatable :: ispec_has_points
 
@@ -344,7 +345,7 @@
 ! determines spectral elements containing surface points
 ! (only counts element outer faces, no planes inside element)
   ispec_has_points(:) = .false.
-  count = 0
+  countval = 0
   do ispec = 1, nspec
 
     ! loops over GLL points not on edges or corners, but inside faces
@@ -372,7 +373,7 @@
               call ds_set_cross_section_flags(nspec,ispec_is_surface_external_mesh, &
                                             nglob,iglob_is_surface_external_mesh, &
                                             i,j,k,ispec,ibool, &
-                                            valence_external_mesh,count)
+                                            valence_external_mesh,countval)
             endif
 
           endif
@@ -530,18 +531,18 @@
   subroutine ds_set_cross_section_flags(nspec,ispec_is_surface_external_mesh, &
                                         nglob,iglob_is_surface_external_mesh, &
                                         i,j,k,ispec,ibool, &
-                                        valence_external_mesh,count)
+                                        valence_external_mesh,countval)
 
   ! put this into separate subroutine to compile faster, otherwise compilers will try to unroll all do loops
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   ! global indexing
   integer :: nglob,nspec
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec):: ibool
-  integer :: i,j,k,ispec,count
+  integer :: i,j,k,ispec,countval
 
   integer, dimension(nglob) :: valence_external_mesh
 
@@ -596,7 +597,7 @@
   ! sets flag for element to indicate that it has a face on surface
   if( has_face ) then
     ispec_is_surface_external_mesh(ispec) = .true.
-    count = count+1
+    countval = countval + 1
   endif
 
   end subroutine ds_set_cross_section_flags
@@ -612,9 +613,9 @@
 
   ! put this into separate subroutine to compile faster, otherwise compilers will try to unroll all do loops
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: iface,ispec
 
@@ -669,9 +670,9 @@
 !
 ! returns: ispec_is_image_surface, iglob_is_image_surface & num_iglob_image_surface
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
 ! global indexing
   integer :: NPROC,nglob,nspec,myrank
@@ -699,7 +700,7 @@
 !local parameters
   real(kind=CUSTOM_REAL) :: min_dist,distance
   integer, dimension(:), allocatable :: valence_external_mesh
-  integer :: ispec,i,j,k,iglob,ier,count
+  integer :: ispec,i,j,k,iglob,ier,countval
   real(kind=CUSTOM_REAL),parameter :: TOLERANCE_DISTANCE = 0.9
 
 ! detecting surface points/elements (based on valence check on NGLL points) for external mesh
@@ -745,7 +746,7 @@
 
 
 ! determines spectral elements containing points on surface
-  count = 0
+  countval = 0
   do ispec = 1, nspec
     ! loops over GLL points not on edges or corners, but inside faces
     do k = 1, NGLLZ
@@ -755,7 +756,7 @@
           ! considers only points in same process or, if point is shared between two processes,
           ! only with higher process ranks than itself
           if (valence_external_mesh(iglob) == myrank+1 .or. valence_external_mesh(iglob) > 2*(myrank+1) ) then
-            if( iglob_is_image_surface(iglob) .eqv. .false. ) count = count+1
+            if( iglob_is_image_surface(iglob) .eqv. .false. ) countval = countval + 1
             iglob_is_image_surface(iglob) = .true.
             ispec_is_image_surface(ispec) = .true.
           endif
@@ -763,7 +764,7 @@
       enddo
     enddo
   enddo ! nspec
-  num_iglob_image_surface = count
+  num_iglob_image_surface = countval
 
   end subroutine detect_surface_PNM_image
 

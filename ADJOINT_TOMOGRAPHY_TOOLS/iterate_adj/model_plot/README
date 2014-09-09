@@ -1,0 +1,32 @@
+Carl Tape
+22-May-2009
+
+A preliminary set of scripts for generating xyz files for cross-sections to be extracted from volumetric .bin files (for example, a Vp model or a sensitivity kernel).  These have been used for the southern California crustal tomography study.  Significant work is needed to generalize the codes for any user.
+
+Basic order of operations:
+1.  matlab  -- generate target cross section (horizontal or vertical)
+            --> /ADJOINT_TOMO/iterate_adj/model_plot/matlab/
+2.  CLUSTER -- extract model value of the nearest GLL point to each target point
+            --> /ADJOINT_TOMO/iterate_adj/pangu/model_slice/
+3.  gmt     -- plot cross sections
+            --> /ADJOINT_TOMO/iterate_adj/model_plot/gmt/
+
+Cross-section choices include:
+ (1)  Vertical or horizontal cross section
+ (2)  Sampling density in the horizontal dimension
+ (3)  Sampling density in the vertical dimension (for vertical xc only)
+ (4)  Area of the cross section
+
+------------------
+Link output directories to the local directories, for example:
+
+From /ADJOINT_TOMO/iterate_adj/model_plot_work/matlab:
+ln -s /home/carltape/ADJOINT_TOMO/ADJOINT_TOMO_OUTPUT/model_plot_matlab_OUTPUT SAVE
+
+From /ADJOINT_TOMO/iterate_adj/model_plot_work/gmt:
+ln -s /home/carltape/ADJOINT_TOMO/ADJOINT_TOMO_OUTPUT/model_plot_gmt_OUTPUT SAVE
+------------------
+
+The vtk directory is for quick-and-dirty plots of the low-res mesh files for kernels and models.
+
+------------------

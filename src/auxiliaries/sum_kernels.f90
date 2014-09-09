@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -50,7 +51,7 @@
 
 module sum_par
 
-  include 'constants.h'
+  use constants
 
   ! USER PARAMETERS
 
@@ -76,7 +77,7 @@ module sum_par
   integer, parameter :: MAX_NUM_NODES = 1000
 
   ! default list name
-  character(len=150),parameter :: kernel_file_list = '../kernels_list.txt'
+  character(len=*), parameter :: kernel_file_list = '../kernels_list.txt'
 
   ! mesh size
   integer :: NSPEC_AB, NGLOB_AB
@@ -92,8 +93,8 @@ program sum_kernels
   use sum_par
   implicit none
 
-  character(len=150) :: kernel_list(MAX_NUM_NODES)
-  character(len=150) :: sline, kernel_name,prname_lp
+  character(len=MAX_STRING_LEN) :: kernel_list(MAX_NUM_NODES)
+  character(len=MAX_STRING_LEN) :: sline, kernel_name,prname_lp
   integer :: nker, myrank, sizeprocs
   integer :: ios
 
@@ -110,8 +111,8 @@ program sum_kernels
             APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,USE_FORCE_POINT_SOURCE
   logical :: STACEY_ABSORBING_CONDITIONS,SAVE_FORWARD,STACEY_INSTEAD_OF_FREE_SURFACE
   logical :: ANISOTROPY,SAVE_MESH_FILES,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
-  logical :: PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID
-  character(len=256) LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
+  logical :: PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID,COUPLE_WITH_DSM
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH,TOMOGRAPHY_PATH,TRACTION_PATH
 
   ! ============ program starts here =====================
   ! initialize the MPI communicator and start the NPROCTOT MPI processes
@@ -124,7 +125,7 @@ program sum_kernels
     write(*,*)
     write(*,*) 'reading kernel list: '
   endif
-  call sync_all()
+  call synchronize_all()
 
   ! reads in event list
   nker=0
@@ -157,7 +158,7 @@ program sum_kernels
                         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
                         USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE, &
                         USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
-                        PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,FULL_ATTENUATION_SOLID,TRAC_PATH)
+                        PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,FULL_ATTENUATION_SOLID,TRACTION_PATH,COUPLE_WITH_DSM)
 
   ! checks if number of MPI process as specified
   if (sizeprocs /= NPROC) then
@@ -171,7 +172,7 @@ program sum_kernels
     endif
     call exit_mpi(myrank,'Error total number of slices')
   endif
-  call sync_all()
+  call synchronize_all()
 
   ! reads mesh file
   !
@@ -202,7 +203,7 @@ program sum_kernels
   endif
 
   ! synchronizes
-  call sync_all()
+  call synchronize_all()
 
   ! sums up kernels
   if( USE_ISO_KERNELS ) then
@@ -269,11 +270,11 @@ subroutine sum_kernel_pre(kernel_name,kernel_list,nker,myrank)
   implicit none
 
   real(kind=CUSTOM_REAL) :: norm,norm_sum
-  character(len=150) :: kernel_name,kernel_list(MAX_NUM_NODES)
+  character(len=MAX_STRING_LEN) :: kernel_name,kernel_list(MAX_NUM_NODES)
   integer :: nker,myrank
 
   ! local parameters
-  character(len=150) :: k_file
+  character(len=MAX_STRING_LEN*2) :: k_file
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: &
     kernel,hess,total_kernel
   integer :: iker,ios

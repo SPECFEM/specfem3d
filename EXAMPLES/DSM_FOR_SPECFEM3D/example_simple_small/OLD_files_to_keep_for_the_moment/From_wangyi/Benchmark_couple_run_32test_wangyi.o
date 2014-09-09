@@ -1,0 +1,34 @@
+!!!!!!!!!!!!!!!!!! SHELLS STEP1 : fin de lecture parfile_for_benchmark !!!!!!!!!!!!!!!!
+The value of CHOICE variable is 3
+!!!!!!!!!!!!!!!!!! SHELLS STEP3 : fin de lecture scrpits_specfem3D_wangyi.sh !!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!! SCRPITS 3 !!!!!!!!!!!!!!!!
+/ccc/scratch/cont003/gen7165/durochtc/Codes/SPECFEM3Ds/specfem3d/utils/DSM_FOR_SPECFEM3D/EXAMPLES/example_simple_small
+!!!!!!!!!!!!!!!!!!!!! SCRPITS 4 !!!!!!!!!!!!!!!!
+/ccc/scratch/cont003/gen7165/durochtc/Codes/SPECFEM3Ds/specfem3d/utils/DSM_FOR_SPECFEM3D/EXAMPLES/example_simple_small
+########## ########## ########## ########## ########## ########## ########## ##########
+Execution Sum Up
+########## ########## ########## ########## ########## ########## ########## ##########
+Jobid     : 1982044
+Jobname   : Benchmark_couple32test_SPECFEM3D_DSM
+User      : wangyi
+Account   : gen7165@standard
+Limits    : time = 1:07:00 , memory/task = 4000 Mo
+Date      : submit = 31/07/2014 15:06:09 , start = 31/07/2014 15:06:09
+Execution : partition = standard , QoS = normal , Comment = (null)
+Resources : ntasks = 32 , cpus/task = 1 , ncpus = 32 , nodes = 2
+   Nodes=curie[2400,2411] CPU_IDs=0-15 Mem=64000
+ 
+Memory / step 
+--------------
+                        Resident Size (Mo)                     Virtual Size (Go)
+JobID          Max     (Node:Task)       AveTask    Max  (Node:Task)            AveTask
+-----------    ------------------------  -------    --------------------------  -------
+
+Accounting / step 
+------------------
+
+JobID          JobName             Ntasks  Ncpus Nnodes     Layout       Elapsed   Ratio      CPusage    Eff  State
+------------   ------------        ------  ----- ------     -------      -------   -----      -------    ---  -----
+1982044       Benchmark_couple32t+      -     32      2           -     00:01:12     100            -      -  -
+1982044.0     xspecfem3D               32     32      2      BBlock     00:01:09    95.8     00:00:42   60.8  COMPLETED
+########## ########## ########## ########## ########## ########## ########## ##########

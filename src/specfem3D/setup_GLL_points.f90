@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -41,9 +42,9 @@
 
 ! set up GLL points, weights and derivation matrices for reference element (between -1,1)
   call define_derivation_matrices(xigll,yigll,zigll,wxgll,wygll,wzgll, &
-                                hprime_xx,hprime_yy,hprime_zz, &
-                                hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
-                                wgllwgll_xy,wgllwgll_xz,wgllwgll_yz)
+                                  hprime_xx,hprime_yy,hprime_zz, &
+                                  hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
+                                  wgllwgll_xy,wgllwgll_xz,wgllwgll_yz)
 
 ! define transpose of derivation matrix
   do j = 1,NGLLY
@@ -66,11 +67,11 @@
 
 ! allocate 1-D Lagrange interpolators and derivatives
   allocate(hxir(NGLLX), &
-          hpxir(NGLLX), &
-          hetar(NGLLY), &
-          hpetar(NGLLY), &
-          hgammar(NGLLZ), &
-          hpgammar(NGLLZ),stat=ier)
+           hpxir(NGLLX), &
+           hetar(NGLLY), &
+           hpetar(NGLLY), &
+           hgammar(NGLLZ), &
+           hpgammar(NGLLZ),stat=ier)
   if( ier /= 0 ) stop 'error allocating arrays for interpolators'
 
 ! create name of database

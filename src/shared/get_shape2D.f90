@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -26,9 +27,9 @@
 
   subroutine get_shape2D(myrank,shape2D,dershape2D,xigll,yigll,NGLLA,NGLLB,NGNOD,NGNOD2D)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
 ! generic routine that accepts any polynomial degree in each direction
 
@@ -52,9 +53,9 @@
 
 ! check that the parameter file is correct
   if(NGNOD /= 8 .and. NGNOD /= 27) &
-       call exit_MPI(myrank,'volume elements should have 8 or 27 control nodes')
+    call exit_MPI(myrank,'volume elements should have 8 or 27 control nodes')
   if(NGNOD2D /= 4 .and. NGNOD2D /= 9) &
-       call exit_MPI(myrank,'surface elements should have 4 or 9 control nodes')
+    call exit_MPI(myrank,'surface elements should have 4 or 9 control nodes')
 
   if(NGNOD2D == 4) then
 
@@ -104,27 +105,27 @@
   do i=1,NGLLA
     do j=1,NGLLB
 
-    sumshape=ZERO
+      sumshape=ZERO
 
-    sumdershapexi=ZERO
-    sumdershapeeta=ZERO
+      sumdershapexi=ZERO
+      sumdershapeeta=ZERO
 
-    do ia=1,NGNOD2D
-      sumshape=sumshape+shape2D(ia,i,j)
+      do ia=1,NGNOD2D
+        sumshape=sumshape+shape2D(ia,i,j)
 
-      sumdershapexi=sumdershapexi+dershape2D(1,ia,i,j)
-      sumdershapeeta=sumdershapeeta+dershape2D(2,ia,i,j)
-    enddo
+        sumdershapexi=sumdershapexi+dershape2D(1,ia,i,j)
+        sumdershapeeta=sumdershapeeta+dershape2D(2,ia,i,j)
+      enddo
 
 !   the sum of the shape functions should be 1
-    if(abs(sumshape-ONE)>TINYVAL) call exit_MPI(myrank,'error in 2D shape functions')
+      if(abs(sumshape-ONE)>TINYVAL) call exit_MPI(myrank,'error in 2D shape functions')
 
 !   the sum of the derivatives of the shape functions should be 0
-    if(abs(sumdershapexi)>TINYVAL) &
-      call exit_MPI(myrank,'error in xi derivatives of 2D shape function')
+      if(abs(sumdershapexi)>TINYVAL) &
+        call exit_MPI(myrank,'error in xi derivatives of 2D shape function')
 
-    if(abs(sumdershapeeta)>TINYVAL) &
-      call exit_MPI(myrank,'error in eta derivatives of 2D shape function')
+      if(abs(sumdershapeeta)>TINYVAL) &
+        call exit_MPI(myrank,'error in eta derivatives of 2D shape function')
 
     enddo
   enddo
@@ -137,9 +138,9 @@
 
   subroutine get_shape2D_9(NGNOD2D,shape2D,dershape2D,xigll,yigll,NGLLA,NGLLB)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
 ! generic routine that accepts any polynomial degree in each direction
 

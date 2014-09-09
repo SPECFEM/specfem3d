@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -657,7 +658,7 @@
                               dble(K_store_y(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML)) + &
                               dble(d_store_y(i,j,k,ispec_CPML)) * dble(K_store_x(i,j,k,ispec_CPML)) * &
                               dble(K_store_z(i,j,k,ispec_CPML)) + dble(d_store_z(i,j,k,ispec_CPML)) * &
-                              dble(K_store_y(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML))) * &
+                              dble(K_store_x(i,j,k,ispec_CPML)) * dble(K_store_y(i,j,k,ispec_CPML))) * &
                               deltat / 2.d0) )
                       else
                          rmass(iglob) = rmass(iglob) + &
@@ -665,8 +666,8 @@
                               (K_store_x(i,j,k,ispec_CPML) * K_store_y(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML) + &
                               (d_store_x(i,j,k,ispec_CPML) * K_store_y(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML) + &
                               d_store_y(i,j,k,ispec_CPML) * K_store_x(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML) + &
-                              d_store_z(i,j,k,ispec_CPML) * K_store_y(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML)) * &
-                              deltat / 2.d0)
+                              d_store_z(i,j,k,ispec_CPML) * K_store_x(i,j,k,ispec_CPML) * K_store_y(i,j,k,ispec_CPML)) * &
+                              deltat / 2.0)
                       endif
                    enddo
                 enddo
@@ -716,7 +717,7 @@
              do j=1,NGLLY
                 do i=1,NGLLX
                    ! defines the material coefficient associated to the domain
-                   mat_coef = 1.d0 / kappastore(i,j,k,ispec)
+                   mat_coef = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
                    iglob = ibool(i,j,k,ispec)
                    weight = wxgll(i)*wygll(j)*wzgll(k)
                    jacobianl = jacobianstore(i,j,k,ispec)
@@ -745,7 +746,7 @@
                 do j=1,NGLLY
                    do i=1,NGLLX
                       ! defines the material coefficient associated to the domain
-                      mat_coef = 1.d0 / kappastore(i,j,k,ispec)
+                      mat_coef = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
                       iglob = ibool(i,j,k,ispec)
                       weight = wxgll(i)*wygll(j)*wzgll(k)
                       jacobianl = jacobianstore(i,j,k,ispec)
@@ -769,7 +770,7 @@
                 do j=1,NGLLY
                    do i=1,NGLLX
                       ! defines the material coefficient associated to the domain
-                      mat_coef = 1.d0 / kappastore(i,j,k,ispec)
+                      mat_coef = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
                       iglob = ibool(i,j,k,ispec)
                       weight = wxgll(i)*wygll(j)*wzgll(k)
                       jacobianl = jacobianstore(i,j,k,ispec)
@@ -793,7 +794,7 @@
                 do j=1,NGLLY
                    do i=1,NGLLX
                       ! defines the material coefficient associated to the domain
-                      mat_coef = 1.d0 / kappastore(i,j,k,ispec)
+                      mat_coef = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
                       iglob = ibool(i,j,k,ispec)
                       weight = wxgll(i)*wygll(j)*wzgll(k)
                       jacobianl = jacobianstore(i,j,k,ispec)
@@ -817,7 +818,7 @@
                 do j=1,NGLLY
                    do i=1,NGLLX
                       ! defines the material coefficient associated to the domain
-                      mat_coef = 1.d0 / kappastore(i,j,k,ispec)
+                      mat_coef = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
                       iglob = ibool(i,j,k,ispec)
                       weight = wxgll(i)*wygll(j)*wzgll(k)
                       jacobianl = jacobianstore(i,j,k,ispec)
@@ -845,7 +846,7 @@
                 do j=1,NGLLY
                    do i=1,NGLLX
                       ! defines the material coefficient associated to the domain
-                      mat_coef = 1.d0 / kappastore(i,j,k,ispec)
+                      mat_coef = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
                       iglob = ibool(i,j,k,ispec)
                       weight = wxgll(i)*wygll(j)*wzgll(k)
                       jacobianl = jacobianstore(i,j,k,ispec)
@@ -873,7 +874,7 @@
                 do j=1,NGLLY
                    do i=1,NGLLX
                       ! defines the material coefficient associated to the domain
-                      mat_coef = 1.d0 / kappastore(i,j,k,ispec)
+                      mat_coef = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
                       iglob = ibool(i,j,k,ispec)
                       weight = wxgll(i)*wygll(j)*wzgll(k)
                       jacobianl = jacobianstore(i,j,k,ispec)
@@ -901,7 +902,7 @@
                 do j=1,NGLLY
                    do i=1,NGLLX
                       ! defines the material coefficient associated to the domain
-                      mat_coef = 1.d0 / kappastore(i,j,k,ispec)
+                      mat_coef = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
                       iglob = ibool(i,j,k,ispec)
                       weight = wxgll(i)*wygll(j)*wzgll(k)
                       jacobianl = jacobianstore(i,j,k,ispec)
@@ -914,7 +915,7 @@
                               dble(K_store_y(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML)) + &
                               dble(d_store_y(i,j,k,ispec_CPML)) * dble(K_store_x(i,j,k,ispec_CPML)) * &
                               dble(K_store_z(i,j,k,ispec_CPML)) + dble(d_store_z(i,j,k,ispec_CPML)) * &
-                              dble(K_store_y(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML))) * &
+                              dble(K_store_y(i,j,k,ispec_CPML)) * dble(K_store_x(i,j,k,ispec_CPML))) * &
                               deltat / 2.d0) )
                       else
                          rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
@@ -922,7 +923,7 @@
                               (K_store_x(i,j,k,ispec_CPML) * K_store_y(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML) + &
                               (d_store_x(i,j,k,ispec_CPML) * K_store_y(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML) + &
                               d_store_y(i,j,k,ispec_CPML) * K_store_x(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML) + &
-                              d_store_z(i,j,k,ispec_CPML) * K_store_y(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML)) * &
+                              d_store_z(i,j,k,ispec_CPML) * K_store_y(i,j,k,ispec_CPML) * K_store_x(i,j,k,ispec_CPML)) * &
                               deltat / 2.d0)
                       endif
                    enddo

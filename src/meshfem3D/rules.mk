@@ -3,10 +3,11 @@
 #               S p e c f e m 3 D  V e r s i o n  2 . 1
 #               ---------------------------------------
 #
-#          Main authors: Dimitri Komatitsch and Jeroen Tromp
-#    Princeton University, USA and University of Pau / CNRS / INRIA
-# (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
-#                            April 2011
+#     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+#                        Princeton University, USA
+#                and CNRS / University of Marseille, France
+#                 (there are currently many more authors!)
+# (c) Princeton University and CNRS / University of Marseille, July 2012
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -42,17 +43,14 @@ meshfem3D_TARGETS = \
 meshfem3D_OBJECTS = \
 	$O/check_mesh_quality.mesh.o \
 	$O/compute_parameters.mesh.o \
-	$O/create_name_database.mesh.o \
 	$O/create_regions_mesh.mesh.o \
 	$O/create_visual_files.mesh.o \
 	$O/define_subregions.mesh.o \
 	$O/define_subregions_heuristic.mesh.o \
 	$O/define_superbrick.mesh.o \
 	$O/get_flags_boundaries.mesh.o \
-	$O/get_global.mesh.o \
 	$O/get_MPI_cutplanes_eta.mesh.o \
 	$O/get_MPI_cutplanes_xi.mesh.o \
-	$O/get_value_parameters.mesh.o \
 	$O/meshfem3D.mesh.o \
 	$O/program_meshfem3D.mesh.o \
 	$O/read_mesh_parameter_file.mesh.o \
@@ -62,23 +60,33 @@ meshfem3D_OBJECTS = \
 	$O/store_coords.mesh.o \
 	$(EMPTY_MACRO)
 
+meshfem3D_MODULES = \
+	$(FC_MODDIR)/createregmesh.$(FC_MODEXT) \
+	$(FC_MODDIR)/readparfile.$(FC_MODEXT) \
+	$(EMPTY_MACRO)
+
 meshfem3D_SHARED_OBJECTS = \
+	$O/create_name_database.shared.o \
+	$O/constants_mod.shared_module.o \
 	$O/exit_mpi.shared.o \
+	$O/get_global.shared.o \
 	$O/hex_nodes.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_topo_bathy_file.shared.o \
 	$O/read_value_parameters.shared.o \
 	$O/safe_alloc_mod.shared.o \
+	$O/sort_array_coordinates.shared.o \
+	$O/unused_mod.shared_module.o \
 	$O/utm_geo.shared.o \
 	$(EMPTY_MACRO)
 
 
 # using ADIOS files
 adios_meshfem3D_PREOBJECTS= \
-	$O/adios_manager.shared_adios.o  \
-	$O/adios_helpers_definitions.shared_adios.o  \
-	$O/adios_helpers_writers.shared_adios.o  \
+	$O/adios_manager.shared_adios.o \
+	$O/adios_helpers_definitions.shared_adios_module.o \
+	$O/adios_helpers_writers.shared_adios_module.o \
 	$O/adios_helpers.shared_adios.o
 
 adios_meshfem3D_OBJECTS= \
@@ -132,21 +140,21 @@ $E/xmeshfem3D: $(XMESHFEM_OBJECTS)
 $O/meshfem3D.mesh.o: $O/create_regions_mesh.mesh.o $O/read_mesh_parameter_file.mesh.o
 
 ## adios
-$O/meshfem3D_adios_stubs.mesh_adios.o: $O/adios_manager_stubs.shared_noadios.o
+$O/meshfem3D_adios_stubs.mesh_noadios.o: $O/constants_mod.shared_module.o $O/unused_mod.shared_module.o $O/adios_manager_stubs.shared_noadios.o
 
 $O/save_databases_adios.mesh_adios.o: $O/safe_alloc_mod.shared.o $(adios_meshfem3D_PREOBJECTS)
 $O/create_regions_mesh.mesh.o: $(adios_meshfem3D_PREOBJECTS)
 
 $O/adios_helpers.shared_adios.o: \
-	$O/adios_helpers_definitions.shared_adios.o \
-	$O/adios_helpers_writers.shared_adios.o
+	$O/adios_helpers_definitions.shared_adios_module.o \
+	$O/adios_helpers_writers.shared_adios_module.o
 
 
 ####
 #### rule to build each .o file below
 ####
 
-$O/%.mesh.o: $S/%.f90 ${SETUP}/constants.h
+$O/%.mesh.o: $S/%.f90 $O/constants_mod.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 
@@ -154,10 +162,10 @@ $O/%.mesh.o: $S/%.f90 ${SETUP}/constants.h
 ### ADIOS compilation
 ###
 
-$O/%.mesh_adios.o: $S/%.F90 ${SETUP}/constants.h
+$O/%.mesh_adios.o: $S/%.F90 $O/constants_mod.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.mesh_adios.o: $S/%.f90 ${SETUP}/constants.h
+$O/%.mesh_adios.o: $S/%.f90 $O/constants_mod.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90}  -c -o $@ $<
 
 $O/%.mesh_noadios.o: $S/%.F90

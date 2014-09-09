@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -34,7 +35,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                                     K_store_x,K_store_y,K_store_z,alpha_store_x,alpha_store_y,alpha_store_z,CPML_to_spec, &
                                     CPML_width_x,CPML_width_y,CPML_width_z,NPOWER,&
                                     CUSTOM_REAL,SIZE_REAL,NGLLX,NGLLY,NGLLZ,nspec_cpml,PML_INSTEAD_OF_FREE_SURFACE, &
-                                    IMAIN,FOUR_THIRDS,CPML_REGIONS,f0_FOR_PML,PI, &
+                                    IMAIN,CPML_REGIONS,f0_FOR_PML,PI, &
                                     CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ,&
                                     SIMULATION_TYPE,SAVE_FORWARD,nspec => NSPEC_AB,is_CPML,&
                                     mask_ibool_interior_domain,nglob_interface_PML_acoustic,points_interface_PML_acoustic,&
@@ -54,7 +55,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
   ! JC JC: Remove the parameter definition here and make the calculation of ALPHA_MAX_PML automatic
   !        by recovering the value of hdur in FORCESOLUTION/CMTSOLUTION
   real(kind=CUSTOM_REAL) :: ALPHA_MAX_PML
-  real(kind=CUSTOM_REAL), parameter :: K_MAX_PML = 1.d0
+  real(kind=CUSTOM_REAL), parameter :: K_MAX_PML = 1.0d0,K_MIN_PML=1.0d0
   real(kind=CUSTOM_REAL) :: pml_damping_profile_l,dist,vp
   real(kind=CUSTOM_REAL) :: xoriginleft,xoriginright,yoriginfront,yoriginback,zoriginbottom,zorigintop
   real(kind=CUSTOM_REAL) :: abscissa_in_PML_x,abscissa_in_PML_y,abscissa_in_PML_z
@@ -273,7 +274,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
      write(IMAIN,*)
   endif
 
-  call sync_all()
+  call synchronize_all()
 
   ! loops over all C-PML elements
   do ispec_CPML=1,nspec_cpml
@@ -317,7 +318,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets damping profile at the C-PML element's GLL point
                     d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
                     alpha_x = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                    K_x = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                    K_x = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                     ! avoid d_x to be less than zero
                     if( d_x < 0._CUSTOM_REAL .or. K_x < 1._CUSTOM_REAL ) then
@@ -334,7 +335,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets damping profile at the C-PML grid point
                     d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
                     alpha_x = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                    K_x = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                    K_x = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                     if( d_x < 0._CUSTOM_REAL .or. K_x < 1._CUSTOM_REAL ) then
                        d_x = 0._CUSTOM_REAL; K_x = 1._CUSTOM_REAL
@@ -374,7 +375,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets damping profile at the C-PML element's GLL point
                     d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
                     alpha_y = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                    K_y = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                    K_y = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                     if( d_y < 0._CUSTOM_REAL .or. K_y < 1._CUSTOM_REAL ) then
                        d_y = 0._CUSTOM_REAL; K_y = 1._CUSTOM_REAL
@@ -390,7 +391,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets damping profile at the C-PML element's GLL point
                     d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
                     alpha_y = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                    K_y = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                    K_y = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                     if( d_y < 0._CUSTOM_REAL .or. K_y < 1._CUSTOM_REAL ) then
                        d_y = 0._CUSTOM_REAL; K_y = 1._CUSTOM_REAL
@@ -432,7 +433,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        ! gets damping profile at the C-PML element's GLL point
                        d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
                        alpha_z = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                       K_z = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                       K_z = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                        if( d_z < 0._CUSTOM_REAL .or. K_z < 1._CUSTOM_REAL ) then
                           d_z = 0._CUSTOM_REAL; K_z = 1._CUSTOM_REAL
@@ -449,7 +450,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets damping profile at the C-PML element's GLL point
                     d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
                     alpha_z = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                    K_z = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                    K_z = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                     if( d_z < 0._CUSTOM_REAL .or. K_z < 1._CUSTOM_REAL ) then
                        d_z = 0._CUSTOM_REAL; K_z = 1._CUSTOM_REAL
@@ -489,7 +490,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets damping profile at the C-PML element's GLL point
                     d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
                     alpha_x = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                    K_x = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                    K_x = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_y = ystore(iglob) - yoriginfront
@@ -500,7 +501,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets damping profile at the C-PML element's GLL point
                     d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
                     alpha_y = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                    K_y = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                    K_y = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                     if( d_x < 0._CUSTOM_REAL .or. K_x < 1._CUSTOM_REAL ) then
                        d_x = 0._CUSTOM_REAL; K_x = 1._CUSTOM_REAL
@@ -520,7 +521,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets damping profile at the C-PML element's GLL point
                     d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
                     alpha_x = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                    K_x = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                    K_x = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_y = yoriginback - ystore(iglob)
@@ -531,7 +532,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets damping profile at the C-PML element's GLL point
                     d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
                     alpha_y = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                    K_y = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                    K_y = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                     if( d_x < 0._CUSTOM_REAL .or. K_x < 1._CUSTOM_REAL ) then
                        d_x = 0._CUSTOM_REAL; K_x = 1._CUSTOM_REAL
@@ -551,7 +552,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets damping profile at the C-PML element's GLL point
                     d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
                     alpha_x = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                    K_x = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                    K_x = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_y = ystore(iglob) - yoriginfront
@@ -562,7 +563,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets damping profile at the C-PML element's GLL point
                     d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
                     alpha_y = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                    K_y = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                    K_y = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                     if( d_x < 0._CUSTOM_REAL .or. K_x < 1._CUSTOM_REAL ) then
                        d_x = 0._CUSTOM_REAL; K_x = 1._CUSTOM_REAL
@@ -582,7 +583,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets damping profile at the C-PML element's GLL point
                     d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
                     alpha_x = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                    K_x = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                    K_x = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_y = yoriginback - ystore(iglob)
@@ -593,7 +594,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets damping profile at the C-PML element's GLL point
                     d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
                     alpha_y = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                    K_y = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                    K_y = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                     if( d_x < 0._CUSTOM_REAL .or. K_x < 1._CUSTOM_REAL ) then
                        d_x = 0._CUSTOM_REAL; K_x = 1._CUSTOM_REAL
@@ -641,7 +642,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        ! gets damping profile at the C-PML element's GLL point
                        d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
                        alpha_x = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                       K_x = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                       K_x = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                        ! gets abscissa of current grid point along the damping profile
                        abscissa_in_PML_z = zstore(iglob) - zorigintop
@@ -652,7 +653,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        ! gets damping profile at the C-PML element's GLL point
                        d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
                        alpha_z = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                       K_z = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                       K_z = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                        if( d_x < 0._CUSTOM_REAL .or. K_x < 1._CUSTOM_REAL ) then
                           d_x = 0._CUSTOM_REAL; K_x = 1._CUSTOM_REAL
@@ -673,7 +674,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets damping profile at the C-PML element's GLL point
                     d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
                     alpha_x = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                    K_x = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                    K_x = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_z = zoriginbottom - zstore(iglob)
@@ -684,7 +685,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets damping profile at the C-PML element's GLL point
                     d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
                     alpha_z = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                    K_z = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                    K_z = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                     if( d_x < 0._CUSTOM_REAL .or. K_x < 1._CUSTOM_REAL ) then
                        d_x = 0._CUSTOM_REAL; K_x = 1._CUSTOM_REAL
@@ -705,7 +706,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        ! gets damping profile at the C-PML element's GLL point
                        d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
                        alpha_x = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                       K_x = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                       K_x = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                        ! gets abscissa of current grid point along the damping profile
                        abscissa_in_PML_z = zstore(iglob) - zorigintop
@@ -716,7 +717,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        ! gets damping profile at the C-PML element's GLL point
                        d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
                        alpha_z = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                       K_z = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                       K_z = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                        if( d_x < 0._CUSTOM_REAL .or. K_x < 1._CUSTOM_REAL ) then
                           d_x = 0._CUSTOM_REAL; K_x = 1._CUSTOM_REAL
@@ -737,7 +738,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets damping profile at the C-PML element's GLL point
                     d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
                     alpha_x = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                    K_x = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                    K_x = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_z = zoriginbottom - zstore(iglob)
@@ -748,7 +749,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets damping profile at the C-PML element's GLL point
                     d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
                     alpha_z = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                    K_z = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                    K_z = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                     if( d_x < 0._CUSTOM_REAL .or. K_x < 1._CUSTOM_REAL ) then
                        d_x = 0._CUSTOM_REAL; K_x = 1._CUSTOM_REAL
@@ -795,7 +796,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        ! gets damping profile at the C-PML element's GLL point
                        d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
                        alpha_y = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                       K_y = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                       K_y = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                        ! gets abscissa of current grid point along the damping profile
                        abscissa_in_PML_z = zstore(iglob) - zorigintop
@@ -806,7 +807,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        ! gets damping profile at the C-PML element's GLL point
                        d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
                        alpha_z = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                       K_z = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                       K_z = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                        if( d_y < 0._CUSTOM_REAL  .or. K_y < 1._CUSTOM_REAL ) then
                           d_y = 0._CUSTOM_REAL; K_y = 1._CUSTOM_REAL
@@ -827,7 +828,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets damping profile at the C-PML element's GLL point
                     d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
                     alpha_y = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                    K_y = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                    K_y = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_z = zoriginbottom - zstore(iglob)
@@ -838,7 +839,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets damping profile at the C-PML element's GLL point
                     d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
                     alpha_z = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                    K_z = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                    K_z = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                     if( d_y < 0._CUSTOM_REAL .or. K_y < 1._CUSTOM_REAL ) then
                        d_y = 0._CUSTOM_REAL; K_y = 1._CUSTOM_REAL
@@ -859,7 +860,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        ! gets damping profile at the C-PML element's GLL point
                        d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
                        alpha_y = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                       K_y = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                       K_y = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                        ! gets abscissa of current grid point along the damping profile
                        abscissa_in_PML_z = zstore(iglob) - zorigintop
@@ -870,7 +871,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        ! gets damping profile at the C-PML element's GLL point
                        d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
                        alpha_z = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                       K_z = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                       K_z = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                        if( d_y < 0._CUSTOM_REAL .or. K_y < 1._CUSTOM_REAL ) then
                           d_y = 0._CUSTOM_REAL; K_y = 1._CUSTOM_REAL
@@ -891,7 +892,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets damping profile at the C-PML element's GLL point
                     d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
                     alpha_y = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                    K_y = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                    K_y = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_z = zoriginbottom - zstore(iglob)
@@ -902,7 +903,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets damping profile at the C-PML element's GLL point
                     d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
                     alpha_z = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                    K_z = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                    K_z = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                     if( d_y < 0._CUSTOM_REAL .or. K_y < 1._CUSTOM_REAL ) then
                        d_y = 0._CUSTOM_REAL; K_y = 1._CUSTOM_REAL
@@ -950,7 +951,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        ! gets damping profile at the C-PML grid point
                        d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
                        alpha_x = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                       K_x = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                       K_x = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                        ! gets abscissa of current grid point along the damping profile
                        abscissa_in_PML_y = ystore(iglob) - yoriginfront
@@ -961,7 +962,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        ! gets damping profile at the C-PML element's GLL point
                        d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
                        alpha_y = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                       K_y = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                       K_y = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                        ! gets abscissa of current grid point along the damping profile
                        abscissa_in_PML_z = zstore(iglob) - zorigintop
@@ -972,7 +973,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        ! gets damping profile at the C-PML element's GLL point
                        d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
                        alpha_z = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                       K_z = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                       K_z = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                        if( d_x < 0._CUSTOM_REAL .or. K_x < 1._CUSTOM_REAL ) then
                           d_x = 0._CUSTOM_REAL; K_x = 1._CUSTOM_REAL
@@ -999,7 +1000,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets damping profile at the C-PML grid point
                     d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
                     alpha_x = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                    K_x = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                    K_x = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_y = ystore(iglob) - yoriginfront
@@ -1010,7 +1011,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets damping profile at the C-PML element's GLL point
                     d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
                     alpha_y = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                    K_y = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                    K_y = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_z = zoriginbottom - zstore(iglob)
@@ -1021,7 +1022,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets damping profile at the C-PML element's GLL point
                     d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
                     alpha_z = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                    K_z = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                    K_z = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                     if( d_x < 0._CUSTOM_REAL .or. K_x < 1._CUSTOM_REAL ) then
                        d_x = 0._CUSTOM_REAL; K_x = 1._CUSTOM_REAL
@@ -1048,7 +1049,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        ! gets damping profile at the C-PML element's GLL point
                        d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
                        alpha_x = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                       K_x = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                       K_x = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                        ! gets abscissa of current grid point along the damping profile
                        abscissa_in_PML_y = yoriginback - ystore(iglob)
@@ -1059,7 +1060,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        ! gets damping profile at the C-PML element's GLL point
                        d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
                        alpha_y = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                       K_y = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                       K_y = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
 
                        ! gets abscissa of current grid point along the damping profile
@@ -1071,7 +1072,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        ! gets damping profile at the C-PML element's GLL point
                        d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
                        alpha_z = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                       K_z = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                       K_z = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                        if( d_x < 0._CUSTOM_REAL .or. K_x < 1._CUSTOM_REAL ) then
                           d_x = 0._CUSTOM_REAL; K_x = 1._CUSTOM_REAL
@@ -1098,7 +1099,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets damping profile at the C-PML element's GLL point
                     d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
                     alpha_x = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                    K_x = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                    K_x = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
 
                     ! gets abscissa of current grid point along the damping profile
@@ -1110,7 +1111,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets damping profile at the C-PML element's GLL point
                     d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
                     alpha_y = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                    K_y = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                    K_y = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
 
                     ! gets abscissa of current grid point along the damping profile
@@ -1122,7 +1123,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets damping profile at the C-PML element's GLL point
                     d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
                     alpha_z = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                    K_z = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                    K_z = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                     if( d_x < 0._CUSTOM_REAL .or. K_x < 1._CUSTOM_REAL ) then
                        d_x = 0._CUSTOM_REAL; K_x = 1._CUSTOM_REAL
@@ -1149,7 +1150,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        ! gets damping profile at the C-PML grid point
                        d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
                        alpha_x = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                       K_x = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                       K_x = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                        ! gets abscissa of current grid point along the damping profile
                        abscissa_in_PML_y = ystore(iglob) - yoriginfront
@@ -1160,7 +1161,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        ! gets damping profile at the C-PML element's GLL point
                        d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
                        alpha_y = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                       K_y = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                       K_y = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                        ! gets abscissa of current grid point along the damping profile
                        abscissa_in_PML_z = zstore(iglob) - zorigintop
@@ -1171,7 +1172,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        ! gets damping profile at the C-PML element's GLL point
                        d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
                        alpha_z = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                       K_z = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                       K_z = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                        if( d_x < 0._CUSTOM_REAL .or. K_x < 1._CUSTOM_REAL ) then
                           d_x = 0._CUSTOM_REAL; K_x = 1._CUSTOM_REAL
@@ -1198,7 +1199,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets damping profile at the C-PML grid point
                     d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
                     alpha_x = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                    K_x = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                    K_x = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_y = ystore(iglob) - yoriginfront
@@ -1209,7 +1210,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets damping profile at the C-PML element's GLL point
                     d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
                     alpha_y = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                    K_y = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                    K_y = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_z = zoriginbottom - zstore(iglob)
@@ -1220,7 +1221,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets damping profile at the C-PML element's GLL point
                     d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
                     alpha_z = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                    K_z = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                    K_z = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                     if( d_x < 0._CUSTOM_REAL .or. K_x < 1._CUSTOM_REAL ) then
                        d_x = 0._CUSTOM_REAL; K_x = 1._CUSTOM_REAL
@@ -1247,7 +1248,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        ! gets damping profile at the C-PML element's GLL point
                        d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
                        alpha_x = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                       K_x = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                       K_x = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                        ! gets abscissa of current grid point along the damping profile
                        abscissa_in_PML_y = yoriginback - ystore(iglob)
@@ -1258,7 +1259,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        ! gets damping profile at the C-PML element's GLL point
                        d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
                        alpha_y = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                       K_y = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                       K_y = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                        ! gets abscissa of current grid point along the damping profile
                        abscissa_in_PML_z = zstore(iglob) - zorigintop
@@ -1269,7 +1270,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        ! gets damping profile at the C-PML element's GLL point
                        d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
                        alpha_z = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                       K_z = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                       K_z = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                        if( d_x < 0._CUSTOM_REAL .or. K_x < 1._CUSTOM_REAL ) then
                           d_x = 0._CUSTOM_REAL; K_x = 1._CUSTOM_REAL
@@ -1296,7 +1297,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets damping profile at the C-PML element's GLL point
                     d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
                     alpha_x = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                    K_x = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                    K_x = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_y = yoriginback - ystore(iglob)
@@ -1307,7 +1308,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets damping profile at the C-PML element's GLL point
                     d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
                     alpha_y = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                    K_y = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                    K_y = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_z = zoriginbottom - zstore(iglob)
@@ -1318,7 +1319,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets damping profile at the C-PML element's GLL point
                     d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
                     alpha_z = ALPHA_MAX_PML * (1._CUSTOM_REAL - dist)
-                    K_z = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
+                    K_z = K_MIN_PML  + (K_MAX_PML - 1._CUSTOM_REAL) * dist
 
                     if( d_x < 0._CUSTOM_REAL .or. K_x < 1._CUSTOM_REAL ) then
                        d_x = 0._CUSTOM_REAL; K_x = 1._CUSTOM_REAL
@@ -1470,7 +1471,7 @@ function pml_damping_profile_l(myrank,iglob,dist,vp,delta)
   !   vp:    P-velocity
   !   delta: thickness of the C-PML layer
 
-  use generate_databases_par, only: CUSTOM_REAL,NPOWER,CPML_Rcoef,damping_factor
+  use generate_databases_par, only: CUSTOM_REAL,NPOWER,CPML_Rcoef
 
   implicit none
 

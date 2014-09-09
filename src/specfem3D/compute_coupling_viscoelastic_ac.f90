@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -35,7 +36,7 @@
                         ispec_is_inner,phase_is_inner,&
                         PML_CONDITIONS,&
                         SIMULATION_TYPE,backward_simulation,&
-                        potential_acoustic)
+                        potential_acoustic,potential_dot_acoustic)
 
 ! returns the updated acceleration array: accel
 
@@ -49,7 +50,7 @@
 
 ! displacement and pressure
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: accel
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: potential_dot_dot_acoustic,potential_acoustic
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: potential_dot_dot_acoustic,potential_dot_acoustic,potential_acoustic
 
 ! global indexing
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
@@ -103,7 +104,8 @@
               if(SIMULATION_TYPE == 1)then
                 ispec_CPML = spec_to_CPML(ispec)
                 call pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,i,j,k,&
-                                                pressure,potential_dot_dot_acoustic,potential_dot_dot_acoustic_old,&
+                                                pressure,potential_acoustic,potential_acoustic_old,&
+                                                potential_dot_acoustic,potential_dot_dot_acoustic, &
                                                 num_coupling_ac_el_faces,rmemory_coupling_el_ac_potential_dot_dot)
                 pressure = - pressure
               endif
@@ -112,7 +114,8 @@
                 ispec_CPML = spec_to_CPML(ispec)
                 call pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,i,j,k,&
                                                 pressure,potential_acoustic,potential_acoustic_old,&
-                                                num_coupling_ac_el_faces,rmemory_coupling_el_ac_potential)
+                                                potential_dot_acoustic,potential_dot_dot_acoustic,&
+                                                num_coupling_ac_el_faces,rmemory_coupling_el_ac_potential_dot_dot)
               endif
             else
               pressure = - potential_dot_dot_acoustic(iglob)
@@ -125,7 +128,7 @@
             endif
           endif
         else
-           pressure = - potential_dot_dot_acoustic(iglob)
+          pressure = - potential_dot_dot_acoustic(iglob)
         endif
 
         ! gets associated normal on GLL point

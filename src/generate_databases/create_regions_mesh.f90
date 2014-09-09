@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -64,7 +65,7 @@
   real(kind=CUSTOM_REAL) :: model_speed_max,min_resolved_period
 
 ! initializes arrays
-  call sync_all()
+  call synchronize_all()
   if( myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) '  ...allocating arrays '
@@ -80,7 +81,7 @@
 ! fills location and weights for Gauss-Lobatto-Legendre points, shape and derivations,
 ! returns jacobianstore,xixstore,...gammazstore
 ! and GLL-point locations in xstore,ystore,zstore
-  call sync_all()
+  call synchronize_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...setting up jacobian '
     call flush_IMAIN()
@@ -100,7 +101,7 @@
 
 
 ! creates ibool index array for projection from local to global points
-  call sync_all()
+  call synchronize_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...indexing global points'
     call flush_IMAIN()
@@ -117,7 +118,7 @@
 
   if (ANY_FAULT) then
    ! recalculate *store with faults closed
-    call sync_all()
+    call synchronize_all()
     if (myrank == 0) then
       write(IMAIN,*) '  ... resetting up jacobian in fault domains'
       call flush_IMAIN()
@@ -134,7 +135,7 @@
 
 
 ! sets up MPI interfaces between partitions
-  call sync_all()
+  call synchronize_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...preparing MPI interfaces '
     call flush_IMAIN()
@@ -150,7 +151,7 @@
 
   !SURENDRA (setting up parallel fault)
   if (PARALLEL_FAULT .AND. ANY_FAULT) then
-    call sync_all()
+    call synchronize_all()
     !at this point (xyz)store_dummy are still open
     call fault_setup (ibool,nnodes_ext_mesh,nodes_coords_ext_mesh, &
                     xstore,ystore,zstore,nspec,nglob,myrank)
@@ -159,7 +160,7 @@
 
 
 ! sets up absorbing/free surface boundaries
-  call sync_all()
+  call synchronize_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...setting up absorbing boundaries '
     call flush_IMAIN()
@@ -174,7 +175,7 @@
 
 ! sets up up Moho surface
   if( SAVE_MOHO_MESH ) then
-    call sync_all()
+    call synchronize_all()
     if( myrank == 0) then
       write(IMAIN,*) '  ...setting up Moho surface'
       call flush_IMAIN()
@@ -185,7 +186,7 @@
   endif
 
 ! sets material velocities
-  call sync_all()
+  call synchronize_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...determining velocity model'
     call flush_IMAIN()
@@ -193,7 +194,7 @@
   call get_model(myrank)
 
 ! sets up acoustic-elastic-poroelastic coupling surfaces
-  call sync_all()
+  call synchronize_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...detecting acoustic-elastic-poroelastic surfaces '
     call flush_IMAIN()
@@ -205,7 +206,7 @@
                         my_neighbours_ext_mesh)
 
 ! locates inner and outer elements
-  call sync_all()
+  call synchronize_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...element inner/outer separation '
     call flush_IMAIN()
@@ -216,7 +217,7 @@
                                     ibool,SAVE_MESH_FILES)
 
 ! colors mesh if requested
-  call sync_all()
+  call synchronize_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...element mesh coloring '
     call flush_IMAIN()
@@ -224,11 +225,11 @@
   call setup_color_perm(myrank,nspec,nglob,ibool,ANISOTROPY,SAVE_MESH_FILES)
 
 ! overwrites material parameters from external binary files
-  call sync_all()
+  call synchronize_all()
   call get_model_binaries(myrank,nspec,LOCAL_PATH)
 
 ! calculates damping profiles and auxiliary coefficients on all C-PML points
-  call sync_all()
+  call synchronize_all()
   if( PML_CONDITIONS ) then
      if( myrank == 0) then
         write(IMAIN,*) '  ...creating C-PML damping profiles '
@@ -238,7 +239,7 @@
   endif
 
 ! creates mass matrix
-  call sync_all()
+  call synchronize_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...creating mass matrix '
     call flush_IMAIN()
@@ -246,7 +247,7 @@
   call create_mass_matrices(nglob_dummy,nspec,ibool,PML_CONDITIONS,STACEY_ABSORBING_CONDITIONS)
 
 ! saves the binary mesh files
-  call sync_all()
+  call synchronize_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...saving databases'
     call flush_IMAIN()
@@ -270,7 +271,7 @@
 
 ! saves faults
   if( ANY_FAULT ) then
-    call sync_all()
+    call synchronize_all()
     if( myrank == 0) then
       write(IMAIN,*) '  ...saving fault databases'
       call flush_IMAIN()
@@ -281,7 +282,7 @@
 
 ! saves moho surface
   if( SAVE_MOHO_MESH ) then
-    call sync_all()
+    call synchronize_all()
     if( myrank == 0) then
       write(IMAIN,*) '  ...saving Moho surfaces'
       call flush_IMAIN()
@@ -290,13 +291,13 @@
   endif
 
 ! computes the approximate amount of memory needed to run the solver
-  call sync_all()
+  call synchronize_all()
   call memory_eval(nspec,nglob_dummy,maxval(nibool_interfaces_ext_mesh),num_interfaces_ext_mesh, &
                   APPROXIMATE_OCEAN_LOAD,memory_size)
   call max_all_dp(memory_size, max_memory_size)
 
 ! checks the mesh, stability and resolved period
-  call sync_all()
+  call synchronize_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...checking mesh resolution'
     call flush_IMAIN()
@@ -319,7 +320,7 @@
 
 ! saves binary mesh files for attenuation
   if( ATTENUATION ) then
-    call sync_all()
+    call synchronize_all()
     if( myrank == 0) then
       write(IMAIN,*) '  ...saving attenuation databases'
       call flush_IMAIN()
@@ -383,7 +384,7 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
   integer :: nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
             nspec2D_bottom,nspec2D_top
 
-  character(len=256) :: LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH
 
   logical :: ANISOTROPY
 
@@ -684,7 +685,7 @@ subroutine crm_ext_setup_indexing(ibool, &
   enddo
 
 ! gets ibool indexing from local (GLL points) to global points
-  call get_global(nspec,xp,yp,zp,ibool,locval,ifseg,nglob,npointot, &
+  call get_global(npointot,xp,yp,zp,ibool,locval,ifseg,nglob, &
        minval(nodes_coords_ext_mesh(1,:)),maxval(nodes_coords_ext_mesh(1,:)))
 
 !- we can create a new indirect addressing to reduce cache misses
@@ -1085,7 +1086,7 @@ subroutine crm_ext_setup_indexing(ibool, &
   integer :: iinterface,ier
   integer :: ispec_inner,ispec_outer
   real :: percentage_edge
-  character(len=256) :: filename
+  character(len=MAX_STRING_LEN) :: filename
   logical,dimension(:),allocatable :: iglob_is_inner
 
   logical,parameter :: DEBUG = .false.

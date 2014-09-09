@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -161,12 +162,12 @@ contains
   lat_cn = (45.113)*PI/180
 
   if (xcoord >= 0) then
-   lon=asin(ycoord/(sqrt(xcoord**2+ycoord**2)))
+    lon=asin(ycoord/(sqrt(xcoord**2+ycoord**2)))
   else
-   lon=(PI-(asin(ycoord/(sqrt(xcoord**2+ycoord**2)))))
+    lon=(PI-(asin(ycoord/(sqrt(xcoord**2+ycoord**2)))))
   endif
-   colat=atan(sqrt(xcoord**2+ycoord**2)/zcoord)
-   lat=(PI/2)-colat
+  colat=atan(sqrt(xcoord**2+ycoord**2)/zcoord)
+  lat=(PI/2)-colat
 
   !PB CALCULATE THE DISTANCE BETWEEN CENTER OF NOISE REGION AND EACH
   ! POINT OF THE MODEL'S FREE SURFACE  !PB dsigma IS THE "3D" ANGLE BETWEEN
@@ -206,9 +207,9 @@ contains
 
   !HERE IS NOT UNIFORM
   if (d <= dmax) then
-  mask_noise_out = 1.0
+    mask_noise_out = 1.0
   else
-  mask_noise_out = 0.0
+    mask_noise_out = 0.0
   endif
 
   !******************************** change your noise characteristics above ****************************************
@@ -261,11 +262,6 @@ end module user_noise_distribution
 
   logical, dimension(NSPEC_AB_VAL) :: ispec_is_acoustic
 
-  !from global code...
-  !integer, dimension(NSPEC2D_TOP_VAL) :: ibelm_top ! equals free_surface_ispec
-  !integer :: NSPEC2D_TOP_VAL ! equals num_free_surface_faces
-  !integer :: nspec_top ! equals num_free_surface_faces
-
   ! output parameters
   integer :: irec_master_noise
   real(kind=CUSTOM_REAL) :: noise_sourcearray(NDIM,NGLLX,NGLLY,NGLLZ,NSTEP)
@@ -273,7 +269,7 @@ end module user_noise_distribution
   ! local parameters
   integer :: ipoin,ispec,i,j,k,iglob,ios,iface,igll
   real(kind=CUSTOM_REAL) :: normal_x_noise_out,normal_y_noise_out,normal_z_noise_out,mask_noise_out
-  character(len=256) :: filename
+  character(len=MAX_STRING_LEN) :: filename
 
   ! read master receiver ID -- the ID in "STATIONS"
   filename = trim(OUTPUT_FILES_PATH)//'/..//NOISE_TOMOGRAPHY/irec_master_noise'
@@ -294,7 +290,7 @@ end module user_noise_distribution
     open(unit=IOUT_NOISE,file=trim(OUTPUT_FILES_PATH)//'/irec_master_noise', &
             status='unknown',action='write',iostat=ios)
     if( ios /= 0 ) call exit_MPI(myrank,'error opening file '//trim(OUTPUT_FILES_PATH)//'/irec_master_noise')
-    WRITE(IOUT_NOISE,*) 'The master receiver is: (RECEIVER ID)', irec_master_noise
+    write(IOUT_NOISE,*) 'The master receiver is: (RECEIVER ID)', irec_master_noise
     close(IOUT_NOISE)
   endif
 
@@ -307,11 +303,6 @@ end module user_noise_distribution
 
   ! noise distribution and noise direction
   ipoin = 0
-
-  !from global code, carefull: ngllz must not be face on top...
-  !  do ispec2D = 1, nspec_top
-  !    ispec = ibelm_top(ispec2D)
-  !    k = NGLLZ
 
   ! loops over surface points
   ! puts noise distrubution and direction onto the surface points
@@ -326,73 +317,26 @@ end module user_noise_distribution
     endif
 
     do igll = 1, NGLLSQUARE
-        i = free_surface_ijk(1,igll,iface)
-        j = free_surface_ijk(2,igll,iface)
-        k = free_surface_ijk(3,igll,iface)
+      i = free_surface_ijk(1,igll,iface)
+      j = free_surface_ijk(2,igll,iface)
+      k = free_surface_ijk(3,igll,iface)
 
-        ipoin = ipoin + 1
-        iglob = ibool(i,j,k,ispec)
+      ipoin = ipoin + 1
+      iglob = ibool(i,j,k,ispec)
 
-        ! this subroutine must be modified by USERS in module user_noise_distribution
-        call noise_distribution_direction(xstore(iglob), &
-                                          ystore(iglob),zstore(iglob), &
-                                          normal_x_noise_out,normal_y_noise_out,normal_z_noise_out, &
-                                          mask_noise_out)
+      ! this subroutine must be modified by USERS in module user_noise_distribution
+      call noise_distribution_direction(xstore(iglob), &
+                                        ystore(iglob),zstore(iglob), &
+                                        normal_x_noise_out,normal_y_noise_out,normal_z_noise_out, &
+                                        mask_noise_out)
 
-        normal_x_noise(ipoin) = normal_x_noise_out
-        normal_y_noise(ipoin) = normal_y_noise_out
-        normal_z_noise(ipoin) = normal_z_noise_out
-        mask_noise(ipoin)     = mask_noise_out
+      normal_x_noise(ipoin) = normal_x_noise_out
+      normal_y_noise(ipoin) = normal_y_noise_out
+      normal_z_noise(ipoin) = normal_z_noise_out
+      mask_noise(ipoin)     = mask_noise_out
     enddo
 
   enddo
-
-
-
-!!  !!!BEGIN!!! save mask_noise for check, a file called "mask_noise" is saved in "./OUTPUT_FIELS/"
-!!    ipoin = 0
-!!      do ispec2D = 1, nspec_top ! NSPEC2D_TOP(IREGION)
-!!          ispec = ibelm_top(ispec2D)
-!!          k = NGLLZ
-!!        ! loop on all the points inside the element
-!!          do j = 1,NGLLY,NIT
-!!             do i = 1,NGLLX,NIT
-!!                ipoin = ipoin + 1
-!!                iglob = ibool(i,j,k,ispec)
-!!                store_val_x(ipoin) = xstore(iglob)
-!!                store_val_y(ipoin) = ystore(iglob)
-!!                store_val_z(ipoin) = zstore(iglob)
-!!                store_val_ux(ipoin) = mask_noise(ipoin)
-!!                store_val_uy(ipoin) = mask_noise(ipoin)
-!!                store_val_uz(ipoin) = mask_noise(ipoin)
-!!             enddo
-!!          enddo
-!!      enddo
-!!
-!!  ! gather info on master proc
-!!      ispec = nmovie_points
-!!      call MPI_GATHER(store_val_x,ispec,CUSTOM_MPI_TYPE,store_val_x_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
-!!      call MPI_GATHER(store_val_y,ispec,CUSTOM_MPI_TYPE,store_val_y_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
-!!      call MPI_GATHER(store_val_z,ispec,CUSTOM_MPI_TYPE,store_val_z_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
-!!      call MPI_GATHER(store_val_ux,ispec,CUSTOM_MPI_TYPE,store_val_ux_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
-!!      call MPI_GATHER(store_val_uy,ispec,CUSTOM_MPI_TYPE,store_val_uy_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
-!!      call MPI_GATHER(store_val_uz,ispec,CUSTOM_MPI_TYPE,store_val_uz_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
-!!
-!!  ! save maks_noise data to disk in home directory
-!!  ! this file can be viewed the same way as surface movie data (xcreate_movie_AVS_DX)
-!!  ! create_movie_AVS_DX.f90 needs to be modified in order to do that,
-!!  ! i.e., instead of showing the normal component, change it to either x, y or z component, or the norm.
-!!    if(myrank == 0) then
-!!        open(unit=IOUT_NOISE,file='OUTPUT_FILES/mask_noise',status='unknown',form='unformatted',action='write')
-!!        write(IOUT_NOISE) store_val_x_all
-!!        write(IOUT_NOISE) store_val_y_all
-!!        write(IOUT_NOISE) store_val_z_all
-!!        write(IOUT_NOISE) store_val_ux_all
-!!        write(IOUT_NOISE) store_val_uy_all
-!!        write(IOUT_NOISE) store_val_uz_all
-!!        close(IOUT_NOISE)
-!!     endif
-!!  !!!END!!! save mask_noise for check, a file called "mask_noise" is saved in "./OUTPUT_FIELS/"
 
   end subroutine read_parameters_noise
 
@@ -410,32 +354,32 @@ end module user_noise_distribution
 
   ! input parameters
   integer :: myrank,NOISE_TOMOGRAPHY,SIMULATION_TYPE,NSPEC_TOP,NSTEP
-  character(len=256) :: LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH
   logical :: SAVE_FORWARD
   ! local parameters
   integer :: reclen
   integer(kind=8) :: filesize
-  character(len=256) :: outputname
+  character(len=MAX_STRING_LEN) :: outputname
 
   if (myrank == 0) then
-     open(unit=IOUT_NOISE,file=trim(OUTPUT_FILES_PATH)//'NOISE_SIMULATION', &
-          status='unknown',action='write')
-     WRITE(IOUT_NOISE,*) '*******************************************************************************'
-     WRITE(IOUT_NOISE,*) '*******************************************************************************'
-     WRITE(IOUT_NOISE,*) 'WARNING!!!!!!!!!!!!'
-     WRITE(IOUT_NOISE,*) 'You are running simulations using NOISE TOMOGRAPHY techniques.'
-     WRITE(IOUT_NOISE,*) 'Please make sure you understand the procedures before you have a try.'
-     WRITE(IOUT_NOISE,*) 'Displacements everywhere at the free surface are saved every timestep,'
-     WRITE(IOUT_NOISE,*) 'so make sure that LOCAL_PATH in Par_file is not global.'
-     WRITE(IOUT_NOISE,*) 'Otherwise the disk storage may be a serious issue, as is the speed of I/O.'
-     WRITE(IOUT_NOISE,*) 'Also make sure that NO earthquakes are included,'
-     WRITE(IOUT_NOISE,*) 'i.e., set moment tensor to be ZERO in CMTSOLUTION'
-     WRITE(IOUT_NOISE,*) '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
-     WRITE(IOUT_NOISE,*) 'If you just want a regular EARTHQUAKE simulation,'
-     WRITE(IOUT_NOISE,*) 'set NOISE_TOMOGRAPHY=0 in Par_file'
-     WRITE(IOUT_NOISE,*) '*******************************************************************************'
-     WRITE(IOUT_NOISE,*) '*******************************************************************************'
-     close(IOUT_NOISE)
+    open(unit=IOUT_NOISE,file=trim(OUTPUT_FILES_PATH)//'NOISE_SIMULATION', &
+         status='unknown',action='write')
+    write(IOUT_NOISE,*) '*******************************************************************************'
+    write(IOUT_NOISE,*) '*******************************************************************************'
+    write(IOUT_NOISE,*) 'WARNING!!!!!!!!!!!!'
+    write(IOUT_NOISE,*) 'You are running simulations using NOISE TOMOGRAPHY techniques.'
+    write(IOUT_NOISE,*) 'Please make sure you understand the procedures before you have a try.'
+    write(IOUT_NOISE,*) 'Displacements everywhere at the free surface are saved every timestep,'
+    write(IOUT_NOISE,*) 'so make sure that LOCAL_PATH in Par_file is not global.'
+    write(IOUT_NOISE,*) 'Otherwise the disk storage may be a serious issue, as is the speed of I/O.'
+    write(IOUT_NOISE,*) 'Also make sure that NO earthquakes are included,'
+    write(IOUT_NOISE,*) 'i.e., set moment tensor to be ZERO in CMTSOLUTION'
+    write(IOUT_NOISE,*) '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+    write(IOUT_NOISE,*) 'If you just want a regular EARTHQUAKE simulation,'
+    write(IOUT_NOISE,*) 'set NOISE_TOMOGRAPHY=0 in Par_file'
+    write(IOUT_NOISE,*) '*******************************************************************************'
+    write(IOUT_NOISE,*) '*******************************************************************************'
+    close(IOUT_NOISE)
   endif
 
   !no dependancy on movies ...
@@ -460,37 +404,40 @@ end module user_noise_distribution
   endif
 
   if (NOISE_TOMOGRAPHY/=0) then
-     ! save/read the surface movie using the same c routine as we do for absorbing boundaries (file ID is 2)
+    ! save/read the surface movie using the same c routine as we do for absorbing boundaries (file ID is 2)
 
-     ! size of single record
-     reclen=CUSTOM_REAL*NDIM*NGLLSQUARE*NSPEC_TOP
+    ! size of single record
+    reclen=CUSTOM_REAL*NDIM*NGLLSQUARE*NSPEC_TOP
 
-     ! only open files if there are surface faces in this paritition
-     if(NSPEC_TOP > 0) then
+    ! only open files if there are surface faces in this paritition
+    if (NSPEC_TOP > 0) then
 
-        ! check integer size limit: size of b_reclen_field must fit onto an 4-byte integer
-        if( NSPEC_TOP > 2147483646 / (CUSTOM_REAL * NGLLSQUARE * NDIM) ) then
-           print *,'reclen of noise surface_movie needed exceeds integer 4-byte limit: ',reclen
-           print *,'  ',CUSTOM_REAL, NDIM, NGLLSQUARE, NSPEC_TOP
-           print*,'bit size fortran: ',bit_size(NSPEC_TOP)
-           call exit_MPI(myrank,"error NSPEC_TOP integer limit")
-        endif
+      ! check integer size limit: size of b_reclen_field must fit onto an 4-byte integer
+      if ( NSPEC_TOP > 2147483646 / (CUSTOM_REAL * NGLLSQUARE * NDIM) ) then
+        print *,'reclen of noise surface_movie needed exceeds integer 4-byte limit: ',reclen
+        print *,'  ',CUSTOM_REAL, NDIM, NGLLSQUARE, NSPEC_TOP
+        print*,'bit size fortran: ',bit_size(NSPEC_TOP)
+        call exit_MPI(myrank,"error NSPEC_TOP integer limit")
+      endif
 
-        ! total file size
-        filesize = reclen
-        filesize = filesize*NSTEP
+      ! total file size
+      filesize = reclen
+      filesize = filesize*NSTEP
 
-        write(outputname,"('/proc',i6.6,'_surface_movie')") myrank
-        if (NOISE_TOMOGRAPHY==1) call open_file_abs_w(2,trim(LOCAL_PATH)//trim(outputname), &
-             len_trim(trim(LOCAL_PATH)//trim(outputname)), &
-             filesize)
-        if (NOISE_TOMOGRAPHY==2) call open_file_abs_r(2,trim(LOCAL_PATH)//trim(outputname), &
-             len_trim(trim(LOCAL_PATH)//trim(outputname)), &
-             filesize)
-        if (NOISE_TOMOGRAPHY==3) call open_file_abs_r(2,trim(LOCAL_PATH)//trim(outputname), &
-             len_trim(trim(LOCAL_PATH)//trim(outputname)), &
-             filesize)
-     endif
+      write(outputname,"('/proc',i6.6,'_surface_movie')") myrank
+      if (NOISE_TOMOGRAPHY==1) &
+        call open_file_abs_w(2,trim(LOCAL_PATH)//trim(outputname), &
+           len_trim(trim(LOCAL_PATH)//trim(outputname)), &
+           filesize)
+      if (NOISE_TOMOGRAPHY==2) &
+        call open_file_abs_r(2,trim(LOCAL_PATH)//trim(outputname), &
+           len_trim(trim(LOCAL_PATH)//trim(outputname)), &
+           filesize)
+      if (NOISE_TOMOGRAPHY==3) &
+        call open_file_abs_r(2,trim(LOCAL_PATH)//trim(outputname), &
+           len_trim(trim(LOCAL_PATH)//trim(outputname)), &
+           filesize)
+    endif
   endif
   end subroutine check_parameters_noise
 
@@ -524,7 +471,7 @@ end module user_noise_distribution
   double precision :: xi_noise, eta_noise, gamma_noise ! master receiver location
   double precision :: hxir(NGLLX), hpxir(NGLLX), hetar(NGLLY), hpetar(NGLLY), &
         hgammar(NGLLZ), hpgammar(NGLLZ)
-  character(len=256) :: filename
+  character(len=MAX_STRING_LEN) :: filename
 
 
   noise_src(:) = 0._CUSTOM_REAL
@@ -559,9 +506,9 @@ end module user_noise_distribution
   close(IIN_NOISE)
 
   if (myrank == 0) then
-     open(unit=IOUT_NOISE,file=trim(OUTPUT_FILES_PATH)//'nu_master',status='unknown',action='write')
-     WRITE(IOUT_NOISE,*) 'The direction (ENZ) of selected component of master receiver is', nu_master
-     close(IOUT_NOISE)
+    open(unit=IOUT_NOISE,file=trim(OUTPUT_FILES_PATH)//'nu_master',status='unknown',action='write')
+    write(IOUT_NOISE,*) 'The direction (ENZ) of selected component of master receiver is', nu_master
+    close(IOUT_NOISE)
   endif
 
   ! rotates to cartesian
@@ -668,12 +615,6 @@ end module user_noise_distribution
   integer, dimension(num_free_surface_faces) :: free_surface_ispec
   integer, dimension(3,NGLLSQUARE,num_free_surface_faces) :: free_surface_ijk
 
-  !from global code...
-  !integer :: nspec_top ! equals num_free_surface_faces
-  !integer :: NSPEC2D_TOP_VAL ! equals num_free_surface_faces
-  !integer, dimension(NSPEC2D_TOP_VAL) :: ibelm_top ! equals free_surface_ispec
-  !integer :: ispec2D ! equals iface
-
   ! local parameters
   integer :: ispec,i,j,k,iglob,iface,igll
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLSQUARE,num_free_surface_faces) :: noise_surface_movie
@@ -684,24 +625,24 @@ end module user_noise_distribution
   if( num_free_surface_faces > 0 ) then
 
     if(.NOT. GPU_MODE) then
-       ! loops over surface points
-       ! get coordinates of surface mesh and surface displacement
-       do iface = 1, num_free_surface_faces
+      ! loops over surface points
+      ! get coordinates of surface mesh and surface displacement
+      do iface = 1, num_free_surface_faces
 
-          ispec = free_surface_ispec(iface)
+        ispec = free_surface_ispec(iface)
 
-          do igll = 1, NGLLSQUARE
-             i = free_surface_ijk(1,igll,iface)
-             j = free_surface_ijk(2,igll,iface)
-             k = free_surface_ijk(3,igll,iface)
+        do igll = 1, NGLLSQUARE
+          i = free_surface_ijk(1,igll,iface)
+          j = free_surface_ijk(2,igll,iface)
+          k = free_surface_ijk(3,igll,iface)
 
-             iglob = ibool(i,j,k,ispec)
-             noise_surface_movie(:,igll,iface) = displ(:,iglob)
-          enddo
-       enddo
+          iglob = ibool(i,j,k,ispec)
+          noise_surface_movie(:,igll,iface) = displ(:,iglob)
+        enddo
+      enddo
     ! TODO: Check if transfer_surface_to_hose is compatible with newer version above
     else ! GPU_MODE == 1
-       call transfer_surface_to_host(Mesh_pointer,noise_surface_movie)
+      call transfer_surface_to_host(Mesh_pointer,noise_surface_movie)
     endif
 
     ! save surface motion to disk
@@ -741,14 +682,6 @@ end module user_noise_distribution
   integer, dimension(3,NGLLSQUARE,num_free_surface_faces) :: free_surface_ijk
   real(kind=CUSTOM_REAL) :: free_surface_jacobian2Dw(NGLLSQUARE,num_free_surface_faces)
 
-  ! from global code...
-  !integer :: nspec_top ! equals num_free_surface_faces
-  !integer :: NSPEC2D_TOP_VAL ! equal num_free_surface_faces
-  !integer, dimension(NSPEC2D_TOP_VAL) :: ibelm_top ! equals free_surface_ispec
-  !real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NSPEC2D_TOP_VAL) :: jacobian2D_top
-                    ! equals to:                   free_surface_jacobian2Dw including weights wgllwgll
-  !real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY) :: wgllwgll_xy
-
   ! local parameters
   integer :: ipoin,ispec,i,j,k,iglob,iface,igll
   real(kind=CUSTOM_REAL) :: eta
@@ -767,27 +700,27 @@ end module user_noise_distribution
     ! puts noise distrubution and direction onto the surface points
     do iface = 1, num_free_surface_faces
 
-       ispec = free_surface_ispec(iface)
+      ispec = free_surface_ispec(iface)
 
-       do igll = 1, NGLLSQUARE
-          i = free_surface_ijk(1,igll,iface)
-          j = free_surface_ijk(2,igll,iface)
-          k = free_surface_ijk(3,igll,iface)
+      do igll = 1, NGLLSQUARE
+        i = free_surface_ijk(1,igll,iface)
+        j = free_surface_ijk(2,igll,iface)
+        k = free_surface_ijk(3,igll,iface)
 
-          ipoin = ipoin + 1
-          iglob = ibool(i,j,k,ispec)
+        ipoin = ipoin + 1
+        iglob = ibool(i,j,k,ispec)
 
-          eta = noise_surface_movie(1,igll,iface) * normal_x_noise(ipoin) + &
-                noise_surface_movie(2,igll,iface) * normal_y_noise(ipoin) + &
-                noise_surface_movie(3,igll,iface) * normal_z_noise(ipoin)
+        eta = noise_surface_movie(1,igll,iface) * normal_x_noise(ipoin) + &
+              noise_surface_movie(2,igll,iface) * normal_y_noise(ipoin) + &
+              noise_surface_movie(3,igll,iface) * normal_z_noise(ipoin)
 
-          accel(1,iglob) = accel(1,iglob) + eta * mask_noise(ipoin) * normal_x_noise(ipoin) &
-                  * free_surface_jacobian2Dw(igll,iface)
-          accel(2,iglob) = accel(2,iglob) + eta * mask_noise(ipoin) * normal_y_noise(ipoin) &
-                  * free_surface_jacobian2Dw(igll,iface)
-          accel(3,iglob) = accel(3,iglob) + eta * mask_noise(ipoin) * normal_z_noise(ipoin) &
-                  * free_surface_jacobian2Dw(igll,iface) ! wgllwgll_xy(i,j) * jacobian2D_top(i,j,iface)
-       enddo
+        accel(1,iglob) = accel(1,iglob) + eta * mask_noise(ipoin) * normal_x_noise(ipoin) &
+                * free_surface_jacobian2Dw(igll,iface)
+        accel(2,iglob) = accel(2,iglob) + eta * mask_noise(ipoin) * normal_y_noise(ipoin) &
+                * free_surface_jacobian2Dw(igll,iface)
+        accel(3,iglob) = accel(3,iglob) + eta * mask_noise(ipoin) * normal_z_noise(ipoin) &
+                * free_surface_jacobian2Dw(igll,iface) ! wgllwgll_xy(i,j) * jacobian2D_top(i,j,iface)
+      enddo
     enddo
   endif
 
@@ -810,14 +743,6 @@ end module user_noise_distribution
 
   ! input parameters
   integer :: it,num_free_surface_faces
-
-  ! from global code...
-  !integer :: nspec_top ! equals num_free_surface_faces
-  !integer :: NSPEC2D_TOP_VAL ! equal num_free_surface_faces
-  !integer, dimension(NSPEC2D_TOP_VAL) :: ibelm_top ! equals free_surface_ispec
-  !real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NSPEC2D_TOP_VAL) :: jacobian2D_top
-                    ! equals to:                   free_surface_jacobian2Dw including weights wgllwgll
-  !real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY) :: wgllwgll_xy
 
   ! local parameters
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLLSQUARE,num_free_surface_faces) :: noise_surface_movie
@@ -871,11 +796,6 @@ end module user_noise_distribution
   integer, dimension(num_free_surface_faces) :: free_surface_ispec
   integer, dimension(3,NGLLSQUARE,num_free_surface_faces) :: free_surface_ijk
 
-  ! from global code...
-  !integer :: nspec_top ! equals num_free_surface_faces
-  !integer :: NSPEC2D_TOP_VAL ! equals num_free_surface_faces
-  !integer, dimension(NSPEC2D_TOP_VAL) :: ibelm_top ! equals free_surface_ispec
-
   ! output parameters
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL) :: Sigma_kl
 
@@ -896,39 +816,39 @@ end module user_noise_distribution
 
     if(.NOT. GPU_MODE) then
 
-       ! noise source strength kernel
-       ! to keep similar structure to other kernels, the source strength kernel is saved as a volumetric kernel
-       ! but only updated at the surface, because the noise is generated there
-       ipoin = 0
+      ! noise source strength kernel
+      ! to keep similar structure to other kernels, the source strength kernel is saved as a volumetric kernel
+      ! but only updated at the surface, because the noise is generated there
+      ipoin = 0
 
-       ! loops over surface points
-       ! puts noise distrubution and direction onto the surface points
-       do iface = 1, num_free_surface_faces
+      ! loops over surface points
+      ! puts noise distrubution and direction onto the surface points
+      do iface = 1, num_free_surface_faces
 
-          ispec = free_surface_ispec(iface)
+        ispec = free_surface_ispec(iface)
 
-          do igll = 1, NGLLSQUARE
-             i = free_surface_ijk(1,igll,iface)
-             j = free_surface_ijk(2,igll,iface)
-             k = free_surface_ijk(3,igll,iface)
+        do igll = 1, NGLLSQUARE
+          i = free_surface_ijk(1,igll,iface)
+          j = free_surface_ijk(2,igll,iface)
+          k = free_surface_ijk(3,igll,iface)
 
-             ipoin = ipoin + 1
-             iglob = ibool(i,j,k,ispec)
+          ipoin = ipoin + 1
+          iglob = ibool(i,j,k,ispec)
 
-             eta = noise_surface_movie(1,igll,iface) * normal_x_noise(ipoin) + &
-                  noise_surface_movie(2,igll,iface) * normal_y_noise(ipoin) + &
-                  noise_surface_movie(3,igll,iface) * normal_z_noise(ipoin)
+          eta = noise_surface_movie(1,igll,iface) * normal_x_noise(ipoin) + &
+               noise_surface_movie(2,igll,iface) * normal_y_noise(ipoin) + &
+               noise_surface_movie(3,igll,iface) * normal_z_noise(ipoin)
 
-             Sigma_kl(i,j,k,ispec) =  Sigma_kl(i,j,k,ispec) &
-                  + deltat * eta * ( normal_x_noise(ipoin) * displ(1,iglob) &
-                  + normal_y_noise(ipoin) * displ(2,iglob) &
-                  + normal_z_noise(ipoin) * displ(3,iglob) )
-          enddo
+          Sigma_kl(i,j,k,ispec) =  Sigma_kl(i,j,k,ispec) &
+               + deltat * eta * ( normal_x_noise(ipoin) * displ(1,iglob) &
+               + normal_y_noise(ipoin) * displ(2,iglob) &
+               + normal_z_noise(ipoin) * displ(3,iglob) )
+        enddo
 
-       enddo
+      enddo
 
     else ! GPU_MODE==1
-       call compute_kernels_strgth_noise_cu(Mesh_pointer,noise_surface_movie,deltat)
+      call compute_kernels_strgth_noise_cu(Mesh_pointer,noise_surface_movie,deltat)
     endif ! GPU_MODE
 
   endif
@@ -950,14 +870,14 @@ end module user_noise_distribution
   integer myrank
   integer :: NSPEC_AB_VAL
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL) :: Sigma_kl
-  character(len=256) :: LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH
   ! local parameters
-  character(len=256) :: prname
+  character(len=MAX_STRING_LEN) :: prname
 
   call create_name_database(prname,myrank,LOCAL_PATH)
 
   open(unit=IOUT_NOISE,file=trim(prname)//'sigma_kernel.bin',status='unknown', &
-        form='unformatted',action='write')
+       form='unformatted',action='write')
   write(IOUT_NOISE) Sigma_kl
   close(IOUT_NOISE)
 

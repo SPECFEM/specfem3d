@@ -1,0 +1,29 @@
+Carl Tape, 19-June-2008
+
+/cig/seismo/3D/ADJOINT_TOMO/iterate_adj/matlab/
+
+The primary programs here are compute_misfit.m and subspace_specfem.m
+
+------------------
+
+compute_misfit.m
+
+After having run the measurement code, you can look at a set of misfit 
+measurements using compute_misfit.m.  In order to tabulate various summaries 
+of the dataset (picks by station, event, network, etc), the program reads in 
+a concatenated list of CMTSOLUTION files, and also a STATIONS list.
+
+------------------
+
+subspace_specfem.m
+
+After having run the measurement code AND the /subspace_hessian code (on the cluster), 
+you can run subspace_specfem.m.  The output files will be placed in the subdirectories 
+of OUTPUT, which can be generated using make_dirs.pl.  
+(The user should keep a copy of these files somewhere not on SVN.)
+
+Typically, one will generate, say, 100 model updates for 100 different regularization parameters, 
+save the mu-vectors describing the linear combination of kernels describing the model update, 
+and then generate the model updates on the cluster, using /subspace_update.
+
+------------------

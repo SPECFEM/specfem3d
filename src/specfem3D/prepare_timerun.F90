@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -72,13 +73,13 @@
   call prepare_timerun_gravity()
 
   ! prepares C-PML arrays
-  if( PML_CONDITIONS ) then
-    if( SIMULATION_TYPE /= 1 )  then
-       stop 'error: C-PML for adjoint simulations not supported yet'
+  if (PML_CONDITIONS) then
+    if (SIMULATION_TYPE /= 1)  then
+      stop 'error: C-PML for adjoint simulations not supported yet'
     else if( GPU_MODE ) then
-       stop 'error: C-PML only supported in CPU mode'
+      stop 'error: C-PML only supported in CPU mode'
     else
-       call prepare_timerun_pml()
+      call prepare_timerun_pml()
     endif
   endif
   ! dummy allocation with a size of 1 for all the PML arrays that have not yet been allocated
@@ -92,15 +93,25 @@
   call prepare_timerun_noise()
 
   ! prepares GPU arrays
-  if( GPU_MODE ) call prepare_timerun_GPU()
+  if (GPU_MODE) call prepare_timerun_GPU()
 
 #ifdef OPENMP_MODE
   ! prepares arrays for OpenMP
   call prepare_timerun_OpenMP()
 #endif
 
+  ! compute the Roland_Sylvain gravity integrals if needed
+  if(ROLAND_SYLVAIN) then
+    if( myrank == 0) then
+      write(IMAIN,*)
+      write(IMAIN,*) '  ...computing Roland_Sylvain gravity integrals'
+      call flush_IMAIN()
+    endif
+    call compute_Roland_Sylvain_integr()
+  endif
+
   ! elapsed time since beginning of preparation
-  if(myrank == 0) then
+  if (myrank == 0) then
     tCPU = wtime() - time_start
     write(IMAIN,*)
     write(IMAIN,*) 'Elapsed time for preparing timerun in seconds = ',tCPU
@@ -130,7 +141,7 @@
   endif
 
   ! synchronize all the processes
-  call sync_all()
+  call synchronize_all()
 
   end subroutine prepare_timerun
 
@@ -149,14 +160,14 @@
   implicit none
 
   ! flag for any movie simulation
-  if( MOVIE_SURFACE .or. CREATE_SHAKEMAP .or. MOVIE_VOLUME .or. PNM_IMAGE ) then
+  if (MOVIE_SURFACE .or. CREATE_SHAKEMAP .or. MOVIE_VOLUME .or. PNM_IMAGE) then
     MOVIE_SIMULATION = .true.
   else
     MOVIE_SIMULATION = .false.
   endif
 
   ! user info
-  if(myrank == 0) then
+  if (myrank == 0) then
 
     write(IMAIN,*)
     if(ATTENUATION) then
@@ -240,7 +251,7 @@
 
   ! synchronize all the processes before assembling the mass matrix
   ! to make sure all the nodes have finished to read their databases
-  call sync_all()
+  call synchronize_all()
 
   ! the mass matrix needs to be assembled with MPI here once and for all
   if(ACOUSTIC_SIMULATION) then
@@ -264,7 +275,9 @@
 
   if(ELASTIC_SIMULATION) then
     ! switches to three-component mass matrix
-    if( STACEY_ABSORBING_CONDITIONS ) then
+
+    !! CD CD
+    if( STACEY_ABSORBING_CONDITIONS .and. .not. COUPLE_WITH_DSM ) then
       ! adds boundary contributions
       rmassx(:) = rmass(:) + rmassx(:)
       rmassy(:) = rmass(:) + rmassy(:)
@@ -274,6 +287,8 @@
       rmassy(:) = rmass(:)
       rmassz(:) = rmass(:)
     endif
+    !! CD CD
+
     ! not needed anymore
     deallocate(rmass)
 
@@ -308,7 +323,7 @@
       where(rmass_ocean_load <= 0._CUSTOM_REAL) rmass_ocean_load = 1._CUSTOM_REAL
       rmass_ocean_load(:) = 1._CUSTOM_REAL / rmass_ocean_load(:)
     endif
- endif
+  endif
 
   if(POROELASTIC_SIMULATION) then
     call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmass_solid_poroelastic, &
@@ -393,7 +408,7 @@
   implicit none
 
   ! local parameters
-  character(len=256) :: plot_file
+  character(len=MAX_STRING_LEN) :: plot_file
   integer :: ier
 
   ! distinguish between single and double precision for reals
@@ -440,13 +455,9 @@
     if(NSOURCES == 1) then
       plot_file = '/plot_source_time_function.txt'
     else
-     if(NSOURCES < 10) then
-        write(plot_file,"('/plot_source_time_function',i1,'.txt')") NSOURCES
-      else
-        write(plot_file,"('/plot_source_time_function',i2,'.txt')") NSOURCES
-      endif
+      write(plot_file,"('/plot_source_time_function',i7.7,'.txt')") NSOURCES
     endif
-    open(unit=IOSTF,file=trim(OUTPUT_FILES)//plot_file,status='unknown',iostat=ier)
+    open(unit=IOSTF,file=trim(OUTPUT_FILES_PATH)//plot_file,status='unknown',iostat=ier)
     if( ier /= 0 ) call exit_mpi(myrank,'error opening plot_source_time_function file')
   endif
 
@@ -703,84 +714,84 @@
 
   subroutine prepare_timerun_pml()
 
-    use pml_par
-    use specfem_par, only: NSPEC_AB,NGNOD,myrank
-    use constants, only: IMAIN,NGNOD_EIGHT_CORNERS
+  use pml_par
+  use specfem_par, only: NSPEC_AB,NGNOD,myrank
+  use constants, only: IMAIN,NGNOD_EIGHT_CORNERS
 
-    implicit none
+  implicit none
 
-    ! local parameters
-    integer :: ispec,ispec_CPML,NSPEC_CPML_GLOBAL
+  ! local parameters
+  integer :: ispec,ispec_CPML,NSPEC_CPML_GLOBAL
 
-    call sum_all_i(NSPEC_CPML,NSPEC_CPML_GLOBAL)
+  call sum_all_i(NSPEC_CPML,NSPEC_CPML_GLOBAL)
 
-    ! user output
-    if( myrank == 0 ) then
-      write(IMAIN,*)
-      write(IMAIN,*) 'incorporating C-PML  '
-      write(IMAIN,*)
-      write(IMAIN,*) 'number of C-PML spectral elements in the global mesh: ', NSPEC_CPML_GLOBAL
-      write(IMAIN,*)
-      write(IMAIN,*) 'thickness of C-PML layer in X direction: ', CPML_width_x
-      write(IMAIN,*) 'thickness of C-PML layer in Y direction: ', CPML_width_y
-      write(IMAIN,*) 'thickness of C-PML layer in Z direction: ', CPML_width_z
-      write(IMAIN,*)
-      call flush_IMAIN()
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*)
+    write(IMAIN,*) 'incorporating C-PML  '
+    write(IMAIN,*)
+    write(IMAIN,*) 'number of C-PML spectral elements in the global mesh: ', NSPEC_CPML_GLOBAL
+    write(IMAIN,*)
+    write(IMAIN,*) 'thickness of C-PML layer in X direction: ', CPML_width_x
+    write(IMAIN,*) 'thickness of C-PML layer in Y direction: ', CPML_width_y
+    write(IMAIN,*) 'thickness of C-PML layer in Z direction: ', CPML_width_z
+    write(IMAIN,*)
+    call flush_IMAIN()
+  endif
+  call synchronize_all()
+
+  ! checks that 8-node mesh elements are used (27-node elements are not supported)
+  if (NGNOD /= NGNOD_EIGHT_CORNERS) &
+    stop 'error: the C-PML code works for 8-node bricks only; should be made more general'
+
+  ! allocates and initializes C-PML arrays
+  if (NSPEC_CPML > 0) call pml_allocate_arrays()
+  ! dummy allocation with a size of 1 for all the PML arrays that have not yet been allocated
+  ! in order to be able to use these arrays as arguments in subroutine calls
+  call pml_allocate_arrays_dummy()
+
+  ! defines C-PML spectral elements local indexing
+  ispec_CPML = 0
+  do ispec=1,NSPEC_AB
+    if (is_CPML(ispec)) then
+      ispec_CPML = ispec_CPML + 1
+      spec_to_CPML(ispec) = ispec_CPML
     endif
-    call sync_all()
+  enddo
 
-    ! checks that 8-node mesh elements are used (27-node elements are not supported)
-    if( NGNOD /= NGNOD_EIGHT_CORNERS) &
-         stop 'error: the C-PML code works for 8-node bricks only; should be made more general'
+  ! defines C-PML element type array: 1 = face, 2 = edge, 3 = corner
+  do ispec_CPML=1,NSPEC_CPML
 
-    ! allocates and initializes C-PML arrays
-    if( NSPEC_CPML > 0 ) call pml_allocate_arrays()
-    ! dummy allocation with a size of 1 for all the PML arrays that have not yet been allocated
-    ! in order to be able to use these arrays as arguments in subroutine calls
-    call pml_allocate_arrays_dummy()
+    ! X_surface C-PML
+    if (CPML_regions(ispec_CPML) == 1) then
+      CPML_type(ispec_CPML) = 1
 
-    ! defines C-PML spectral elements local indexing
-    ispec_CPML = 0
-    do ispec=1,NSPEC_AB
-       if( is_CPML(ispec) ) then
-          ispec_CPML = ispec_CPML + 1
-          spec_to_CPML(ispec) = ispec_CPML
-       endif
-    enddo
+    ! Y_surface C-PML
+    else if (CPML_regions(ispec_CPML) == 2) then
+      CPML_type(ispec_CPML) = 1
 
-    ! defines C-PML element type array: 1 = face, 2 = edge, 3 = corner
-    do ispec_CPML=1,NSPEC_CPML
+    ! Z_surface C-PML
+    else if (CPML_regions(ispec_CPML) == 3) then
+      CPML_type(ispec_CPML) = 1
 
-       ! X_surface C-PML
-       if( CPML_regions(ispec_CPML) == 1 ) then
-          CPML_type(ispec_CPML) = 1
+    ! XY_edge C-PML
+    else if (CPML_regions(ispec_CPML) == 4) then
+      CPML_type(ispec_CPML) = 2
 
-       ! Y_surface C-PML
-       else if( CPML_regions(ispec_CPML) == 2 ) then
-          CPML_type(ispec_CPML) = 1
+    ! XZ_edge C-PML
+    else if (CPML_regions(ispec_CPML) == 5) then
+      CPML_type(ispec_CPML) = 2
 
-       ! Z_surface C-PML
-       else if( CPML_regions(ispec_CPML) == 3 ) then
-          CPML_type(ispec_CPML) = 1
+    ! YZ_edge C-PML
+    else if (CPML_regions(ispec_CPML) == 6) then
+      CPML_type(ispec_CPML) = 2
 
-       ! XY_edge C-PML
-       else if( CPML_regions(ispec_CPML) == 4 ) then
-          CPML_type(ispec_CPML) = 2
+    ! XYZ_corner C-PML
+    else if (CPML_regions(ispec_CPML) == 7) then
+      CPML_type(ispec_CPML) = 3
+    endif
 
-       ! XZ_edge C-PML
-       else if( CPML_regions(ispec_CPML) == 5 ) then
-          CPML_type(ispec_CPML) = 2
-
-       ! YZ_edge C-PML
-       else if( CPML_regions(ispec_CPML) == 6 ) then
-          CPML_type(ispec_CPML) = 2
-
-       ! XYZ_corner C-PML
-       else if( CPML_regions(ispec_CPML) == 7 ) then
-          CPML_type(ispec_CPML) = 3
-       endif
-
-    enddo
+  enddo
 
   end subroutine prepare_timerun_pml
 
@@ -855,18 +866,18 @@
 
       ! memory variables if attenuation
       if( ATTENUATION ) then
-         b_R_trace = 0._CUSTOM_REAL
-         b_R_xx = 0._CUSTOM_REAL
-         b_R_yy = 0._CUSTOM_REAL
-         b_R_xy = 0._CUSTOM_REAL
-         b_R_xz = 0._CUSTOM_REAL
-         b_R_yz = 0._CUSTOM_REAL
-         b_epsilondev_trace = 0._CUSTOM_REAL
-         b_epsilondev_xx = 0._CUSTOM_REAL
-         b_epsilondev_yy = 0._CUSTOM_REAL
-         b_epsilondev_xy = 0._CUSTOM_REAL
-         b_epsilondev_xz = 0._CUSTOM_REAL
-         b_epsilondev_yz = 0._CUSTOM_REAL
+        b_R_trace = 0._CUSTOM_REAL
+        b_R_xx = 0._CUSTOM_REAL
+        b_R_yy = 0._CUSTOM_REAL
+        b_R_xy = 0._CUSTOM_REAL
+        b_R_xz = 0._CUSTOM_REAL
+        b_R_yz = 0._CUSTOM_REAL
+        b_epsilondev_trace = 0._CUSTOM_REAL
+        b_epsilondev_xx = 0._CUSTOM_REAL
+        b_epsilondev_yy = 0._CUSTOM_REAL
+        b_epsilondev_xy = 0._CUSTOM_REAL
+        b_epsilondev_xz = 0._CUSTOM_REAL
+        b_epsilondev_yz = 0._CUSTOM_REAL
       endif
 
     endif
@@ -953,29 +964,14 @@
 
         if (SIMULATION_TYPE == 3) then
           ! opens existing files
-
-          ! uses fortran routines for reading
-          !open(unit=IOABS,file=trim(prname)//'absorb_field.bin',status='old',&
-          !      action='read',form='unformatted',access='direct', &
-          !      recl=b_reclen_field+2*4,iostat=ier )
-          !if( ier /= 0 ) call exit_mpi(myrank,'error opening proc***_absorb_field.bin file')
-          ! uses c routines for faster reading
-          call open_file_abs_r(0,trim(prname)//'absorb_field.bin', &
+          call open_file_abs_r(IOABS,trim(prname)//'absorb_field.bin', &
                               len_trim(trim(prname)//'absorb_field.bin'), &
                               filesize)
-
         else
           ! opens new file
-          ! uses fortran routines for writing
-          !open(unit=IOABS,file=trim(prname)//'absorb_field.bin',status='unknown',&
-          !      form='unformatted',access='direct',&
-          !      recl=b_reclen_field+2*4,iostat=ier )
-          !if( ier /= 0 ) call exit_mpi(myrank,'error opening proc***_absorb_field.bin file')
-          ! uses c routines for faster writing (file index 0 for acoutic domain file)
-          call open_file_abs_w(0,trim(prname)//'absorb_field.bin', &
+          call open_file_abs_w(IOABS,trim(prname)//'absorb_field.bin', &
                               len_trim(trim(prname)//'absorb_field.bin'), &
                               filesize)
-
         endif
       endif
 
@@ -1010,29 +1006,14 @@
 
         if (SIMULATION_TYPE == 3) then
           ! opens existing files
-          ! uses fortran routines for reading
-          !open(unit=IOABS_AC,file=trim(prname)//'absorb_potential.bin',status='old',&
-          !      action='read',form='unformatted',access='direct', &
-          !      recl=b_reclen_potential+2*4,iostat=ier )
-          !if( ier /= 0 ) call exit_mpi(myrank,'error opening proc***_absorb_potential.bin file')
-
-          ! uses c routines for faster reading
-          call open_file_abs_r(1,trim(prname)//'absorb_potential.bin', &
+          call open_file_abs_r(IOABS_AC,trim(prname)//'absorb_potential.bin', &
                               len_trim(trim(prname)//'absorb_potential.bin'), &
                               filesize)
-
         else
           ! opens new file
-          ! uses fortran routines for writing
-          !open(unit=IOABS_AC,file=trim(prname)//'absorb_potential.bin',status='unknown',&
-          !      form='unformatted',access='direct',&
-          !      recl=b_reclen_potential+2*4,iostat=ier )
-          !if( ier /= 0 ) call exit_mpi(myrank,'error opening proc***_absorb_potential.bin file')
-          ! uses c routines for faster writing (file index 1 for acoutic domain file)
-          call open_file_abs_w(1,trim(prname)//'absorb_potential.bin', &
+          call open_file_abs_w(IOABS_AC,trim(prname)//'absorb_potential.bin', &
                               len_trim(trim(prname)//'absorb_potential.bin'), &
                               filesize)
-
         endif
       endif
 
@@ -1061,38 +1042,20 @@
 
         if (SIMULATION_TYPE == 3) then
           ! opens existing files
-
-          ! uses fortran routines for reading
-          !open(unit=IOABS,file=trim(prname)//'absorb_field.bin',status='old',&
-          !      action='read',form='unformatted',access='direct', &
-          !      recl=b_reclen_field+2*4,iostat=ier )
-          !if( ier /= 0 ) call exit_mpi(myrank,'error opening
-          !proc***_absorb_field.bin file')
-          ! uses c routines for faster reading
-          call open_file_abs_r(0,trim(prname)//'absorb_fields.bin', &
+          call open_file_abs_r(IOABS,trim(prname)//'absorb_fields.bin', &
                               len_trim(trim(prname)//'absorb_fields.bin'), &
                               filesize)
-          call open_file_abs_r(0,trim(prname)//'absorb_fieldw.bin', &
+          call open_file_abs_r(IOABS,trim(prname)//'absorb_fieldw.bin', &
                               len_trim(trim(prname)//'absorb_fieldw.bin'), &
                               filesize)
-
         else
           ! opens new file
-          ! uses fortran routines for writing
-          !open(unit=IOABS,file=trim(prname)//'absorb_field.bin',status='unknown',&
-          !      form='unformatted',access='direct',&
-          !      recl=b_reclen_field+2*4,iostat=ier )
-          !if( ier /= 0 ) call exit_mpi(myrank,'error opening
-          !proc***_absorb_field.bin file')
-          ! uses c routines for faster writing (file index 0 for acoutic domain
-          ! file)
-          call open_file_abs_w(0,trim(prname)//'absorb_fields.bin', &
+          call open_file_abs_w(IOABS,trim(prname)//'absorb_fields.bin', &
                               len_trim(trim(prname)//'absorb_fields.bin'), &
                               filesize)
-          call open_file_abs_w(0,trim(prname)//'absorb_fieldw.bin', &
+          call open_file_abs_w(IOABS,trim(prname)//'absorb_fieldw.bin', &
                               len_trim(trim(prname)//'absorb_fieldw.bin'), &
                               filesize)
-
         endif
       endif
     else
@@ -1135,7 +1098,6 @@
     endif
   endif
 
-
   end subroutine prepare_timerun_adjoint
 
 !
@@ -1162,8 +1124,8 @@
 
     ! checks if free surface is defined
     if( num_free_surface_faces == 0 ) then
-       write(*,*) myrank, " doesn't have a free_surface_face"
-       ! stop 'error: noise simulations need a free surface'
+      write(*,*) myrank, " doesn't have a free_surface_face"
+      ! stop 'error: noise simulations need a free surface'
     endif
 
     ! allocates arrays
@@ -1332,7 +1294,7 @@
   endif
 
   ! synchronizes processes
-  !call sync_all()
+  !call synchronize_all()
 
   ! prepares needed receiver array for adjoint runs
   if( SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3 ) &
@@ -1365,7 +1327,7 @@
   endif
 
   ! synchronizes processes
-  call sync_all()
+  call synchronize_all()
 
   ! sends initial data to device
 
@@ -1387,7 +1349,7 @@
   endif
 
   ! synchronizes processes
-  call sync_all()
+  call synchronize_all()
 
   ! outputs GPU usage to files for all processes
   call output_free_device_memory(myrank)
@@ -1436,39 +1398,43 @@
     endif
 
     ! allocate cfe_Dev_openmp local arrays for OpenMP version
-    allocate(dummyx_loc(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-    allocate(dummyy_loc(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-    allocate(dummyz_loc(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-    allocate(dummyx_loc_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-    allocate(dummyy_loc_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-    allocate(dummyz_loc_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-    allocate(newtempx1(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-    allocate(newtempx2(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-    allocate(newtempx3(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-    allocate(newtempy1(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-    allocate(newtempy2(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-    allocate(newtempy3(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-    allocate(newtempz1(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-    allocate(newtempz2(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-    allocate(newtempz3(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-    allocate(tempx1(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-    allocate(tempx2(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-    allocate(tempx3(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-    allocate(tempy1(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-    allocate(tempy2(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-    allocate(tempy3(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-    allocate(tempz1(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-    allocate(tempz2(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-    allocate(tempz3(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-    allocate(tempx1_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-    allocate(tempx2_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-    allocate(tempx3_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-    allocate(tempy1_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-    allocate(tempy2_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-    allocate(tempy3_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-    allocate(tempz1_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-    allocate(tempz2_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-    allocate(tempz3_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+!! DK DK July 2014: I do not know who wrote the OpenMP version, but it is currently broken
+!! DK DK July 2014: because the arrays below are undeclared; I therefore need to comment them out
+!! DK DK July 2014: for now and put a stop statement instead
+    stop 'from DK DK, July 2014: the OpenMP version is currently broken here, not sure who wrote it, please fix it if possible'
+!   allocate(dummyx_loc(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+!   allocate(dummyy_loc(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+!   allocate(dummyz_loc(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+!   allocate(dummyx_loc_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+!   allocate(dummyy_loc_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+!   allocate(dummyz_loc_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+!   allocate(newtempx1(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+!   allocate(newtempx2(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+!   allocate(newtempx3(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+!   allocate(newtempy1(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+!   allocate(newtempy2(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+!   allocate(newtempy3(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+!   allocate(newtempz1(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+!   allocate(newtempz2(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+!   allocate(newtempz3(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+!   allocate(tempx1(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+!   allocate(tempx2(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+!   allocate(tempx3(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+!   allocate(tempy1(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+!   allocate(tempy2(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+!   allocate(tempy3(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+!   allocate(tempz1(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+!   allocate(tempz2(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+!   allocate(tempz3(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+!   allocate(tempx1_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+!   allocate(tempx2_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+!   allocate(tempx3_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+!   allocate(tempy1_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+!   allocate(tempy2_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+!   allocate(tempy3_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+!   allocate(tempz1_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+!   allocate(tempz2_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+!   allocate(tempz3_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
 
     ! set num_elem_colors array in case no mesh coloring is used
     if( .not. USE_MESH_COLORING_GPU ) then
@@ -1490,3 +1456,325 @@
 
   end subroutine prepare_timerun_OpenMP
 #endif
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  ! compute Roland_Sylvain integrals of that slice, and then total integrals for the whole mesh
+
+  subroutine compute_Roland_Sylvain_integr()
+
+  use constants
+  use unused_mod
+
+  use specfem_par
+
+  implicit none
+
+  ! local parameters
+  double precision :: weight
+  real(kind=CUSTOM_REAL) :: xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl
+  double precision :: jacobianl
+  integer :: i,j,k,ispec,iglob,ier
+  double precision :: xval,yval,zval
+  double precision :: xval_squared,yval_squared,zval_squared
+  double precision :: x_meshpoint,y_meshpoint,z_meshpoint
+  double precision :: distance_squared,distance_cubed, &
+                      three_over_distance_squared,one_over_distance_cubed,three_over_distance_fifth_power
+  double precision :: common_multiplying_factor,common_mult_times_one_over,common_mult_times_three_over
+
+  integer :: iobservation
+
+! read the observation surface
+  x_observation(:) = 0.d0
+  y_observation(:) = 0.d0
+  z_observation(:) = 0.d0
+  if(myrank == 0) then
+    open(unit=IIN,file=OBSERVATION_GRID_FILE(1:len_trim(OBSERVATION_GRID_FILE)),status='old',action='read',iostat=ier)
+    if( ier /= 0 ) call exit_mpi(myrank,'error opening file observation_grid_to_use_for_gravity.txt')
+    do iobservation = 1,NTOTAL_OBSERVATION
+      read(IIN,*) x_observation(iobservation),y_observation(iobservation),z_observation(iobservation)
+    enddo
+    close(unit=IIN)
+  endif
+
+! broadcast the observation surface read
+  call bcast_all_dp(x_observation, NTOTAL_OBSERVATION)
+  call bcast_all_dp(y_observation, NTOTAL_OBSERVATION)
+  call bcast_all_dp(z_observation, NTOTAL_OBSERVATION)
+
+! initialize the gravity arrays
+  g_x(:) = 0.d0
+  g_y(:) = 0.d0
+  g_z(:) = 0.d0
+
+  G_xx(:) = 0.d0
+  G_yy(:) = 0.d0
+  G_zz(:) = 0.d0
+  G_xy(:) = 0.d0
+  G_xz(:) = 0.d0
+  G_yz(:) = 0.d0
+
+  ! calculates volume of all elements in mesh
+  do ispec = 1,NSPEC_AB
+
+    ! print information about number of elements done so far
+    if(myrank == 0 .and. (mod(ispec,NSPEC_DISPLAY_INTERVAL) == 0 .or. ispec == 1 .or. ispec == NSPEC_AB)) then
+       write(IMAIN,*) 'for Roland_Sylvain integrals, ',ispec,' elements computed out of ',NSPEC_AB
+       ! write time stamp file to give information about progression of the calculation of gravity integrals
+       write(outputname,"('/timestamp_gravity_calculations_ispec',i7.7,'_out_of_',i7.7)") ispec,NSPEC_AB
+       ! timestamp file output
+       open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//outputname,status='unknown',action='write')
+       write(IOUT,*) ispec,' elements done for gravity calculations out of ',NSPEC_AB
+       close(unit=IOUT)
+    endif
+
+    do k = 1,NGLLZ
+      do j = 1,NGLLY
+        do i = 1,NGLLX
+
+          weight = wxgll(i)*wygll(j)*wzgll(k)
+
+          ! compute the Jacobian
+          xixl = xix(i,j,k,ispec)
+          xiyl = xiy(i,j,k,ispec)
+          xizl = xiz(i,j,k,ispec)
+          etaxl = etax(i,j,k,ispec)
+          etayl = etay(i,j,k,ispec)
+          etazl = etaz(i,j,k,ispec)
+          gammaxl = gammax(i,j,k,ispec)
+          gammayl = gammay(i,j,k,ispec)
+          gammazl = gammaz(i,j,k,ispec)
+
+          ! do this in double precision for accuracy
+          jacobianl = 1.d0 / dble(xixl*(etayl*gammazl-etazl*gammayl) &
+                        - xiyl*(etaxl*gammazl-etazl*gammaxl) &
+                        + xizl*(etaxl*gammayl-etayl*gammaxl))
+
+          if(CHECK_FOR_NEGATIVE_JACOBIANS .and. jacobianl <= ZERO) stop 'error: negative Jacobian found in integral calculation'
+
+          iglob = ibool(i,j,k,ispec)
+          x_meshpoint = xstore(iglob)
+          y_meshpoint = ystore(iglob)
+          z_meshpoint = zstore(iglob)
+
+          common_multiplying_factor = jacobianl * weight * rhostore(i,j,k,ispec)
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!! beginning of loop on all the data to create
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+! loop on all the points in the observation surface
+  do iobservation = 1,NTOTAL_OBSERVATION
+
+    xval = x_meshpoint - x_observation(iobservation)
+    yval = y_meshpoint - y_observation(iobservation)
+    zval = z_meshpoint - z_observation(iobservation)
+
+    xval_squared = xval**2
+    yval_squared = yval**2
+    zval_squared = zval**2
+
+    distance_squared = xval_squared + yval_squared + zval_squared
+    distance_cubed = distance_squared * sqrt(distance_squared)
+
+    three_over_distance_squared = 3.d0 / distance_squared
+    one_over_distance_cubed = 1.d0 / distance_cubed
+    three_over_distance_fifth_power = three_over_distance_squared * one_over_distance_cubed
+
+    common_mult_times_one_over = common_multiplying_factor * one_over_distance_cubed
+    common_mult_times_three_over = common_multiplying_factor * three_over_distance_fifth_power
+
+    g_x(iobservation) = g_x(iobservation) + common_mult_times_one_over * xval
+    g_y(iobservation) = g_y(iobservation) + common_mult_times_one_over * yval
+    g_z(iobservation) = g_z(iobservation) + common_mult_times_one_over * zval
+
+    G_xx(iobservation) = G_xx(iobservation) + common_mult_times_one_over * (xval_squared * three_over_distance_squared - 1.d0)
+    G_yy(iobservation) = G_yy(iobservation) + common_mult_times_one_over * (yval_squared * three_over_distance_squared - 1.d0)
+    G_zz(iobservation) = G_zz(iobservation) + common_mult_times_one_over * (zval_squared * three_over_distance_squared - 1.d0)
+
+    G_xy(iobservation) = G_xy(iobservation) + common_mult_times_three_over * xval*yval
+    G_xz(iobservation) = G_xz(iobservation) + common_mult_times_three_over * xval*zval
+    G_yz(iobservation) = G_yz(iobservation) + common_mult_times_three_over * yval*zval
+
+  enddo
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!! end of loop on all the data to create
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+        enddo
+      enddo
+    enddo
+  enddo
+
+    ! the result is displayed in Eotvos = 1.e+9 s-2
+    G_xx(:) = G_xx(:) * SI_UNITS_TO_EOTVOS
+    G_yy(:) = G_yy(:) * SI_UNITS_TO_EOTVOS
+    G_zz(:) = G_zz(:) * SI_UNITS_TO_EOTVOS
+    G_xy(:) = G_xy(:) * SI_UNITS_TO_EOTVOS
+    G_xz(:) = G_xz(:) * SI_UNITS_TO_EOTVOS
+    G_yz(:) = G_yz(:) * SI_UNITS_TO_EOTVOS
+
+    ! use an MPI reduction to compute the total value of the integral into a temporary array
+    ! and then copy it back into the original array
+    call sum_all_1Darray_dp(g_x,temporary_array_for_sum,NTOTAL_OBSERVATION)
+    if(myrank == 0) g_x(:) = temporary_array_for_sum(:)
+
+    call sum_all_1Darray_dp(g_y,temporary_array_for_sum,NTOTAL_OBSERVATION)
+    if(myrank == 0) g_y(:) = temporary_array_for_sum(:)
+
+    call sum_all_1Darray_dp(g_z,temporary_array_for_sum,NTOTAL_OBSERVATION)
+    if(myrank == 0) g_z(:) = temporary_array_for_sum(:)
+
+    call sum_all_1Darray_dp(G_xx,temporary_array_for_sum,NTOTAL_OBSERVATION)
+    if(myrank == 0) G_xx(:) = temporary_array_for_sum(:)
+
+    call sum_all_1Darray_dp(G_yy,temporary_array_for_sum,NTOTAL_OBSERVATION)
+    if(myrank == 0) G_yy(:) = temporary_array_for_sum(:)
+
+    call sum_all_1Darray_dp(G_zz,temporary_array_for_sum,NTOTAL_OBSERVATION)
+    if(myrank == 0) G_zz(:) = temporary_array_for_sum(:)
+
+    call sum_all_1Darray_dp(G_xy,temporary_array_for_sum,NTOTAL_OBSERVATION)
+    if(myrank == 0) G_xy(:) = temporary_array_for_sum(:)
+
+    call sum_all_1Darray_dp(G_xz,temporary_array_for_sum,NTOTAL_OBSERVATION)
+    if(myrank == 0) G_xz(:) = temporary_array_for_sum(:)
+
+    call sum_all_1Darray_dp(G_yz,temporary_array_for_sum,NTOTAL_OBSERVATION)
+    if(myrank == 0) G_yz(:) = temporary_array_for_sum(:)
+
+  !--- print number of points and elements in the mesh for each region
+  if(myrank == 0) then
+
+      temporary_array_for_sum(:) = sqrt(g_x(:)**2 + g_y(:)**2 + g_z(:)**2)
+      write(IMAIN,*)
+      write(IMAIN,*) 'minval of norm of g vector on whole observation surface = ',minval(temporary_array_for_sum),' m.s-2'
+      write(IMAIN,*) 'maxval of norm of g vector on whole observation surface = ',maxval(temporary_array_for_sum),' m.s-2'
+
+      write(IMAIN,*)
+      write(IMAIN,*) 'minval of G_xx on whole observation surface = ',minval(G_xx),' Eotvos'
+      write(IMAIN,*) 'maxval of G_xx on whole observation surface = ',maxval(G_xx),' Eotvos'
+
+      write(IMAIN,*)
+      write(IMAIN,*) 'minval of G_yy on whole observation surface = ',minval(G_yy),' Eotvos'
+      write(IMAIN,*) 'maxval of G_yy on whole observation surface = ',maxval(G_yy),' Eotvos'
+
+      write(IMAIN,*)
+      write(IMAIN,*) 'minval of G_zz on whole observation surface = ',minval(G_zz),' Eotvos'
+      write(IMAIN,*) 'maxval of G_zz on whole observation surface = ',maxval(G_zz),' Eotvos'
+
+      write(IMAIN,*)
+      write(IMAIN,*) 'minval of G_xy on whole observation surface = ',minval(G_xy),' Eotvos'
+      write(IMAIN,*) 'maxval of G_xy on whole observation surface = ',maxval(G_xy),' Eotvos'
+
+      write(IMAIN,*)
+      write(IMAIN,*) 'minval of G_xz on whole observation surface = ',minval(G_xz),' Eotvos'
+      write(IMAIN,*) 'maxval of G_xz on whole observation surface = ',maxval(G_xz),' Eotvos'
+
+      write(IMAIN,*)
+      write(IMAIN,*) 'minval of G_yz on whole observation surface = ',minval(G_yz),' Eotvos'
+      write(IMAIN,*) 'maxval of G_yz on whole observation surface = ',maxval(G_yz),' Eotvos'
+
+      write(IMAIN,*)
+      write(IMAIN,*) 'Minval and maxval of trace of G, which in principle should be zero:'
+      write(IMAIN,*)
+      temporary_array_for_sum(:) = abs(G_xx(:) + G_yy(:) + G_zz(:))
+      write(IMAIN,*) 'minval of abs(G_xx + G_yy + G_zz) on whole observation surface = ',minval(temporary_array_for_sum),' Eotvos'
+      write(IMAIN,*) 'maxval of abs(G_xx + G_yy + G_zz) on whole observation surface = ',maxval(temporary_array_for_sum),' Eotvos'
+
+      write(IMAIN,*)
+      write(IMAIN,*) '-----------------------------'
+      write(IMAIN,*)
+      write(IMAIN,*) 'displaying the fields computed at observation point = ',iobs_receiver,' out of ',NTOTAL_OBSERVATION
+      write(IMAIN,*)
+      write(IMAIN,*) 'computed g_x  = ',g_x(iobs_receiver),' m.s-2'
+      write(IMAIN,*) 'computed g_y  = ',g_y(iobs_receiver),' m.s-2'
+      write(IMAIN,*) 'computed g_z  = ',g_z(iobs_receiver),' m.s-2'
+      write(IMAIN,*)
+      write(IMAIN,*) 'computed norm of g vector = ',sqrt(g_x(iobs_receiver)**2 + g_y(iobs_receiver)**2 + &
+                                                                 g_z(iobs_receiver)**2),' m.s-2'
+
+      write(IMAIN,*)
+      write(IMAIN,*) 'computed G_xx = ',G_xx(iobs_receiver),' Eotvos'
+      write(IMAIN,*) 'computed G_yy = ',G_yy(iobs_receiver),' Eotvos'
+      write(IMAIN,*) 'computed G_zz = ',G_zz(iobs_receiver),' Eotvos'
+      write(IMAIN,*)
+      write(IMAIN,*) 'G tensor should be traceless, G_xx + G_yy + G_zz = 0.'
+      write(IMAIN,*) 'Actual sum obtained = ',G_xx(iobs_receiver) + G_yy(iobs_receiver) + G_zz(iobs_receiver)
+      if(max(abs(G_xx(iobs_receiver)),abs(G_yy(iobs_receiver)),abs(G_zz(iobs_receiver))) > TINYVAL) &
+           write(IMAIN,*) ' i.e., ',sngl(100.d0*abs(G_xx(iobs_receiver) + G_yy(iobs_receiver) + G_zz(iobs_receiver)) / &
+                                     max(abs(G_xx(iobs_receiver)),abs(G_yy(iobs_receiver)),abs(G_zz(iobs_receiver)))), &
+                                     '% of max(abs(G_xx),abs(G_yy),abs(G_zz))'
+      write(IMAIN,*)
+      write(IMAIN,*) 'computed G_xy = ',G_xy(iobs_receiver),' Eotvos'
+      write(IMAIN,*) 'computed G_xz = ',G_xz(iobs_receiver),' Eotvos'
+      write(IMAIN,*) 'computed G_yz = ',G_yz(iobs_receiver),' Eotvos'
+
+      ! save the results
+      open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/results_g_x_for_GMT.txt',status='unknown',action='write')
+      do iobservation = 1,NTOTAL_OBSERVATION
+        write(IOUT,*) g_x(iobservation)
+      enddo
+      close(unit=IOUT)
+
+      open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/results_g_y_for_GMT.txt',status='unknown',action='write')
+      do iobservation = 1,NTOTAL_OBSERVATION
+        write(IOUT,*) g_y(iobservation)
+      enddo
+      close(unit=IOUT)
+
+      open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/results_g_z_for_GMT.txt',status='unknown',action='write')
+      do iobservation = 1,NTOTAL_OBSERVATION
+        write(IOUT,*) g_z(iobservation)
+      enddo
+      close(unit=IOUT)
+
+      open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/results_norm_of_g_for_GMT.txt',status='unknown',action='write')
+      do iobservation = 1,NTOTAL_OBSERVATION
+        write(IOUT,*) sqrt(g_x(iobservation)**2 + g_y(iobservation)**2 + g_z(iobservation)**2)
+      enddo
+      close(unit=IOUT)
+
+      open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/results_G_xx_for_GMT.txt',status='unknown',action='write')
+      do iobservation = 1,NTOTAL_OBSERVATION
+        write(IOUT,*) G_xx(iobservation)
+      enddo
+      close(unit=IOUT)
+
+      open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/results_G_yy_for_GMT.txt',status='unknown',action='write')
+      do iobservation = 1,NTOTAL_OBSERVATION
+        write(IOUT,*) G_yy(iobservation)
+      enddo
+      close(unit=IOUT)
+
+      open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/results_G_zz_for_GMT.txt',status='unknown',action='write')
+      do iobservation = 1,NTOTAL_OBSERVATION
+        write(IOUT,*) G_zz(iobservation)
+      enddo
+      close(unit=IOUT)
+
+      open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/results_G_xy_for_GMT.txt',status='unknown',action='write')
+      do iobservation = 1,NTOTAL_OBSERVATION
+        write(IOUT,*) G_xy(iobservation)
+      enddo
+      close(unit=IOUT)
+
+      open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/results_G_xz_for_GMT.txt',status='unknown',action='write')
+      do iobservation = 1,NTOTAL_OBSERVATION
+        write(IOUT,*) G_xz(iobservation)
+      enddo
+      close(unit=IOUT)
+
+      open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/results_G_yz_for_GMT.txt',status='unknown',action='write')
+      do iobservation = 1,NTOTAL_OBSERVATION
+        write(IOUT,*) G_yz(iobservation)
+      enddo
+      close(unit=IOUT)
+
+  endif
+
+  end subroutine compute_Roland_Sylvain_integr
+

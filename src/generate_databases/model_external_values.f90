@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -63,9 +64,9 @@
 
 !  use external_model
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: myrank
 
@@ -98,9 +99,10 @@
 !
 !  use external_model
 !
+!  use constants
+!
 !  implicit none
 !
-!  include "constants.h"
 !---
 !
 ! ADD YOUR MODEL HERE
@@ -163,12 +165,12 @@
   !          convention is z-axis points up
 
   ! model dimensions
-  xmin = 0. ! minval(xstore_dummy)
-  xmax = 134000. ! maxval(xstore_dummy)
-  ymin = 0.  !minval(ystore_dummy)
-  ymax = 134000. ! maxval(ystore_dummy)
-  zmin = 0. ! minval(zstore_dummy)
-  zmax = 60000. ! maxval(zstore_dummy)
+  xmin = 0._CUSTOM_REAL ! minval(xstore_dummy)
+  xmax = 134000._CUSTOM_REAL ! maxval(xstore_dummy)
+  ymin = 0._CUSTOM_REAL  !minval(ystore_dummy)
+  ymax = 134000._CUSTOM_REAL ! maxval(ystore_dummy)
+  zmin = 0._CUSTOM_REAL ! minval(zstore_dummy)
+  zmax = 60000._CUSTOM_REAL ! maxval(zstore_dummy)
 
   ! get approximate topography elevation at target coordinates from free surface
   call get_topo_elevation_free_closest(x,y,elevation,distmin, &
@@ -187,24 +189,24 @@
   if( abs( zmax - zmin ) > TINYVAL ) depth = depth / (zmax - zmin)
 
   ! initial values (in m/s and kg/m^3)
-  rho = 2691.0d0
-  vp = 4187.5d0
-  vs = 2151.9d0
+  rho = 2691.0_CUSTOM_REAL
+  vp = 4187.5_CUSTOM_REAL
+  vs = 2151.9_CUSTOM_REAL
 
   ! adds a velocity depth gradient
   ! (e.g. from PREM mantle gradients:
   !     vp : 3.9382*6371/5.5
   !     vs : 2.3481*6371/5.5
   !     rho : 0.6924*6371/5.5 )
-  rho = rho + 802.d0 * depth
-  vp = vp + 4562.d0 * depth
-  vs = vs + 2720.d0 * depth
+  rho = rho + 802._CUSTOM_REAL * depth
+  vp = vp + 4562._CUSTOM_REAL * depth
+  vs = vs + 2720._CUSTOM_REAL * depth
 
   ! attenuation: PREM crust value
-  qmu_atten=600.
+  qmu_atten=600._CUSTOM_REAL
 
   ! no Q_kappa in this model
-  qkappa_atten = 9999.
+  qkappa_atten = 9999._CUSTOM_REAL
 
   ! no anisotropy
   iflag_aniso = 0

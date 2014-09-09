@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -117,8 +118,8 @@
     if( num_abs_boundary_faces > 0 .and. (SIMULATION_TYPE == 3 .or. &
           (SIMULATION_TYPE == 1 .and. SAVE_FORWARD)) ) then
 
-      if( ELASTIC_SIMULATION) call close_file_abs(0) ! close(IOABS)
-      if( ACOUSTIC_SIMULATION) call close_file_abs(1) ! close(IOABS_AC)
+      if (ELASTIC_SIMULATION) call close_file_abs(IOABS)
+      if (ACOUSTIC_SIMULATION) call close_file_abs(IOABS_AC)
 
     endif
   endif
@@ -127,8 +128,7 @@
   if (nrec_local > 0) then
     if (.not. (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3)) then
       ! seismograms
-      call write_adj_seismograms2_to_file(myrank,seismograms_eps,number_receiver_global, &
-            nrec_local,it,DT,NSTEP,t0,LOCAL_PATH)
+      call write_adj_seismograms2_to_file(myrank,seismograms_eps,number_receiver_global,nrec_local,it,DT,NSTEP,t0)
 
       ! source gradients  (for sources in elastic domains)
       do irec_local = 1, nrec_local
@@ -165,12 +165,12 @@
   ! frees dynamically allocated memory
 
   if (USE_FORCE_POINT_SOURCE) then
-     deallocate(factor_force_source)
-     deallocate(comp_dir_vect_source_E)
-     deallocate(comp_dir_vect_source_N)
-     deallocate(comp_dir_vect_source_Z_UP)
-     if (.not. USE_RICKER_TIME_FUNCTION) then
-       deallocate(hdur_tiny)
+    deallocate(factor_force_source)
+    deallocate(comp_dir_vect_source_E)
+    deallocate(comp_dir_vect_source_N)
+    deallocate(comp_dir_vect_source_Z_UP)
+    if (.not. USE_RICKER_TIME_FUNCTION) then
+      deallocate(hdur_tiny)
     endif
   endif
 
@@ -186,84 +186,98 @@
 
   ! C-PML absorbing boundary conditions
   if( PML_CONDITIONS .and. NSPEC_CPML > 0 ) then
-     ! outputs informations about C-PML elements in VTK-file format
-     call pml_output_VTKs()
+    ! outputs informations about C-PML elements in VTK-file format
+    call pml_output_VTKs()
 
-     ! deallocates C_PML arrays
-     deallocate(CPML_regions)
-     deallocate(CPML_to_spec)
-     deallocate(is_CPML)
-     deallocate(d_store_x)
-     deallocate(d_store_y)
-     deallocate(d_store_z)
-     deallocate(k_store_x)
-     deallocate(k_store_y)
-     deallocate(k_store_z)
-     deallocate(alpha_store_x)
-     deallocate(alpha_store_y)
-     deallocate(alpha_store_z)
-     deallocate(spec_to_CPML)
-     deallocate(CPML_type)
+    ! deallocates C_PML arrays
+    deallocate(CPML_regions)
+    deallocate(CPML_to_spec)
+    deallocate(is_CPML)
+    deallocate(d_store_x)
+    deallocate(d_store_y)
+    deallocate(d_store_z)
+    deallocate(k_store_x)
+    deallocate(k_store_y)
+    deallocate(k_store_z)
+    deallocate(alpha_store_x)
+    deallocate(alpha_store_y)
+    deallocate(alpha_store_z)
+    deallocate(spec_to_CPML)
+    deallocate(CPML_type)
 
-     if( ELASTIC_SIMULATION ) then
-       deallocate(displ_old)
-       deallocate(PML_dux_dxl)
-       deallocate(PML_dux_dyl)
-       deallocate(PML_dux_dzl)
-       deallocate(PML_duy_dxl)
-       deallocate(PML_duy_dyl)
-       deallocate(PML_duy_dzl)
-       deallocate(PML_duz_dxl)
-       deallocate(PML_duz_dyl)
-       deallocate(PML_duz_dzl)
-       deallocate(PML_dux_dxl_old)
-       deallocate(PML_dux_dyl_old)
-       deallocate(PML_dux_dzl_old)
-       deallocate(PML_duy_dxl_old)
-       deallocate(PML_duy_dyl_old)
-       deallocate(PML_duy_dzl_old)
-       deallocate(PML_duz_dxl_old)
-       deallocate(PML_duz_dyl_old)
-       deallocate(PML_duz_dzl_old)
-       deallocate(rmemory_dux_dxl_x)
-       deallocate(rmemory_dux_dyl_x)
-       deallocate(rmemory_dux_dzl_x)
-       deallocate(rmemory_duy_dxl_x)
-       deallocate(rmemory_duy_dyl_x)
-       deallocate(rmemory_duz_dxl_x)
-       deallocate(rmemory_duz_dzl_x)
-       deallocate(rmemory_dux_dxl_y)
-       deallocate(rmemory_dux_dyl_y)
-       deallocate(rmemory_duy_dxl_y)
-       deallocate(rmemory_duy_dyl_y)
-       deallocate(rmemory_duy_dzl_y)
-       deallocate(rmemory_duz_dyl_y)
-       deallocate(rmemory_duz_dzl_y)
-       deallocate(rmemory_dux_dxl_z)
-       deallocate(rmemory_dux_dzl_z)
-       deallocate(rmemory_duy_dyl_z)
-       deallocate(rmemory_duy_dzl_z)
-       deallocate(rmemory_duz_dxl_z)
-       deallocate(rmemory_duz_dyl_z)
-       deallocate(rmemory_duz_dzl_z)
-       deallocate(rmemory_displ_elastic)
-       deallocate(accel_elastic_CPML)
-     endif
+    if (ELASTIC_SIMULATION) then
+      deallocate(displ_old)
+      deallocate(displ_new)
+      deallocate(PML_dux_dxl)
+      deallocate(PML_dux_dyl)
+      deallocate(PML_dux_dzl)
+      deallocate(PML_duy_dxl)
+      deallocate(PML_duy_dyl)
+      deallocate(PML_duy_dzl)
+      deallocate(PML_duz_dxl)
+      deallocate(PML_duz_dyl)
+      deallocate(PML_duz_dzl)
+      deallocate(PML_dux_dxl_old)
+      deallocate(PML_dux_dyl_old)
+      deallocate(PML_dux_dzl_old)
+      deallocate(PML_duy_dxl_old)
+      deallocate(PML_duy_dyl_old)
+      deallocate(PML_duy_dzl_old)
+      deallocate(PML_duz_dxl_old)
+      deallocate(PML_duz_dyl_old)
+      deallocate(PML_duz_dzl_old)
+      deallocate(PML_dux_dxl_new)
+      deallocate(PML_dux_dyl_new)
+      deallocate(PML_dux_dzl_new)
+      deallocate(PML_duy_dxl_new)
+      deallocate(PML_duy_dyl_new)
+      deallocate(PML_duy_dzl_new)
+      deallocate(PML_duz_dxl_new)
+      deallocate(PML_duz_dyl_new)
+      deallocate(PML_duz_dzl_new)
+      deallocate(rmemory_dux_dxl_x)
+      deallocate(rmemory_dux_dyl_x)
+      deallocate(rmemory_dux_dzl_x)
+      deallocate(rmemory_duy_dxl_x)
+      deallocate(rmemory_duy_dyl_x)
+      deallocate(rmemory_duz_dxl_x)
+      deallocate(rmemory_duz_dzl_x)
+      deallocate(rmemory_dux_dxl_y)
+      deallocate(rmemory_dux_dyl_y)
+      deallocate(rmemory_duy_dxl_y)
+      deallocate(rmemory_duy_dyl_y)
+      deallocate(rmemory_duy_dzl_y)
+      deallocate(rmemory_duz_dyl_y)
+      deallocate(rmemory_duz_dzl_y)
+      deallocate(rmemory_dux_dxl_z)
+      deallocate(rmemory_dux_dzl_z)
+      deallocate(rmemory_duy_dyl_z)
+      deallocate(rmemory_duy_dzl_z)
+      deallocate(rmemory_duz_dxl_z)
+      deallocate(rmemory_duz_dyl_z)
+      deallocate(rmemory_duz_dzl_z)
+      deallocate(rmemory_displ_elastic)
+      deallocate(accel_elastic_CPML)
+    endif
 
-     if( ACOUSTIC_SIMULATION ) then
-       deallocate(potential_acoustic_old)
-       deallocate(PML_dpotential_dxl)
-       deallocate(PML_dpotential_dyl)
-       deallocate(PML_dpotential_dzl)
-       deallocate(PML_dpotential_dxl_old)
-       deallocate(PML_dpotential_dyl_old)
-       deallocate(PML_dpotential_dzl_old)
-       deallocate(rmemory_dpotential_dxl)
-       deallocate(rmemory_dpotential_dyl)
-       deallocate(rmemory_dpotential_dzl)
-       deallocate(rmemory_potential_acoustic)
-       deallocate(potential_dot_dot_acoustic_CPML)
-     endif
+    if (ACOUSTIC_SIMULATION) then
+      deallocate(potential_acoustic_old)
+      deallocate(potential_acoustic_new)
+      deallocate(PML_dpotential_dxl)
+      deallocate(PML_dpotential_dyl)
+      deallocate(PML_dpotential_dzl)
+      deallocate(PML_dpotential_dxl_old)
+      deallocate(PML_dpotential_dyl_old)
+      deallocate(PML_dpotential_dzl_old)
+      deallocate(PML_dpotential_dxl_new)
+      deallocate(PML_dpotential_dyl_new)
+      deallocate(PML_dpotential_dzl_new)
+      deallocate(rmemory_dpotential_dxl)
+      deallocate(rmemory_dpotential_dyl)
+      deallocate(rmemory_dpotential_dzl)
+      deallocate(rmemory_potential_acoustic)
+      deallocate(potential_dot_dot_acoustic_CPML)
+    endif
 
   endif
 
@@ -287,6 +301,6 @@
   endif
 
 ! synchronize all the processes to make sure everybody has finished
-  call sync_all()
+  call synchronize_all()
 
   end subroutine finalize_simulation

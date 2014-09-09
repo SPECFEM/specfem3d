@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -34,7 +35,7 @@ subroutine read_partition_files_adios()
 
   implicit none
 
-  character(len=256) :: database_name
+  character(len=MAX_STRING_LEN) :: database_name
   integer(kind=8) :: handle
 
   integer(kind=8), dimension(256),target :: selections
@@ -64,8 +65,7 @@ subroutine read_partition_files_adios()
   !-------------------------------------.
   ! Open ADIOS Database file, read mode |
   !-------------------------------------'
-  database_name = adjustl(LOCAL_PATH)
-  database_name = database_name(1:len_trim(database_name)) // "/Database.bp"
+  database_name = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // "/Database.bp"
 
   call world_get_comm(comm)
 
@@ -387,6 +387,6 @@ subroutine read_partition_files_adios()
     !write(IMAIN,*) '    bottom,top: ',num_bottom,num_top
     !write(IMAIN,*) '  number of MPI partition interfaces: ',num_int
   !endif
-  !call sync_all()
+  !call synchronize_all()
 
 end subroutine read_partition_files_adios

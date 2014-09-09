@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -28,9 +29,9 @@
 
   subroutine get_shape3D(myrank,shape3D,dershape3D,xigll,yigll,zigll,NGNOD)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer NGNOD,myrank
 
@@ -56,107 +57,107 @@
 
 ! check that the parameter file is correct
   if(NGNOD /= 8 .and. NGNOD /= 27) &
-       call exit_MPI(myrank,'volume elements should have 8 or 27 control nodes')
+    call exit_MPI(myrank,'volume elements should have 8 or 27 control nodes')
 
 ! ***
 ! *** create 3D shape functions and jacobian
 ! ***
 
   do i=1,NGLLX
-  do j=1,NGLLY
-  do k=1,NGLLZ
+    do j=1,NGLLY
+      do k=1,NGLLZ
 
-  xi = xigll(i)
-  eta = yigll(j)
-  gamma = zigll(k)
+        xi = xigll(i)
+        eta = yigll(j)
+        gamma = zigll(k)
 
-!--- case of a 3D 8-node element (Dhatt-Touzot p. 115)
-  if(NGNOD == 8) then
+        !--- case of a 3D 8-node element (Dhatt-Touzot p. 115)
+        if (NGNOD == 8) then
 
-  ra1 = one + xi
-  ra2 = one - xi
+          ra1 = one + xi
+          ra2 = one - xi
 
-  rb1 = one + eta
-  rb2 = one - eta
+          rb1 = one + eta
+          rb2 = one - eta
 
-  rc1 = one + gamma
-  rc2 = one - gamma
+          rc1 = one + gamma
+          rc2 = one - gamma
 
-  shape3D(1,i,j,k) = ONE_EIGHTH*ra2*rb2*rc2
-  shape3D(2,i,j,k) = ONE_EIGHTH*ra1*rb2*rc2
-  shape3D(3,i,j,k) = ONE_EIGHTH*ra1*rb1*rc2
-  shape3D(4,i,j,k) = ONE_EIGHTH*ra2*rb1*rc2
-  shape3D(5,i,j,k) = ONE_EIGHTH*ra2*rb2*rc1
-  shape3D(6,i,j,k) = ONE_EIGHTH*ra1*rb2*rc1
-  shape3D(7,i,j,k) = ONE_EIGHTH*ra1*rb1*rc1
-  shape3D(8,i,j,k) = ONE_EIGHTH*ra2*rb1*rc1
+          shape3D(1,i,j,k) = ONE_EIGHTH*ra2*rb2*rc2
+          shape3D(2,i,j,k) = ONE_EIGHTH*ra1*rb2*rc2
+          shape3D(3,i,j,k) = ONE_EIGHTH*ra1*rb1*rc2
+          shape3D(4,i,j,k) = ONE_EIGHTH*ra2*rb1*rc2
+          shape3D(5,i,j,k) = ONE_EIGHTH*ra2*rb2*rc1
+          shape3D(6,i,j,k) = ONE_EIGHTH*ra1*rb2*rc1
+          shape3D(7,i,j,k) = ONE_EIGHTH*ra1*rb1*rc1
+          shape3D(8,i,j,k) = ONE_EIGHTH*ra2*rb1*rc1
 
-  dershape3D(1,1,i,j,k) = - ONE_EIGHTH*rb2*rc2
-  dershape3D(1,2,i,j,k) = ONE_EIGHTH*rb2*rc2
-  dershape3D(1,3,i,j,k) = ONE_EIGHTH*rb1*rc2
-  dershape3D(1,4,i,j,k) = - ONE_EIGHTH*rb1*rc2
-  dershape3D(1,5,i,j,k) = - ONE_EIGHTH*rb2*rc1
-  dershape3D(1,6,i,j,k) = ONE_EIGHTH*rb2*rc1
-  dershape3D(1,7,i,j,k) = ONE_EIGHTH*rb1*rc1
-  dershape3D(1,8,i,j,k) = - ONE_EIGHTH*rb1*rc1
+          dershape3D(1,1,i,j,k) = - ONE_EIGHTH*rb2*rc2
+          dershape3D(1,2,i,j,k) = ONE_EIGHTH*rb2*rc2
+          dershape3D(1,3,i,j,k) = ONE_EIGHTH*rb1*rc2
+          dershape3D(1,4,i,j,k) = - ONE_EIGHTH*rb1*rc2
+          dershape3D(1,5,i,j,k) = - ONE_EIGHTH*rb2*rc1
+          dershape3D(1,6,i,j,k) = ONE_EIGHTH*rb2*rc1
+          dershape3D(1,7,i,j,k) = ONE_EIGHTH*rb1*rc1
+          dershape3D(1,8,i,j,k) = - ONE_EIGHTH*rb1*rc1
 
-  dershape3D(2,1,i,j,k) = - ONE_EIGHTH*ra2*rc2
-  dershape3D(2,2,i,j,k) = - ONE_EIGHTH*ra1*rc2
-  dershape3D(2,3,i,j,k) = ONE_EIGHTH*ra1*rc2
-  dershape3D(2,4,i,j,k) = ONE_EIGHTH*ra2*rc2
-  dershape3D(2,5,i,j,k) = - ONE_EIGHTH*ra2*rc1
-  dershape3D(2,6,i,j,k) = - ONE_EIGHTH*ra1*rc1
-  dershape3D(2,7,i,j,k) = ONE_EIGHTH*ra1*rc1
-  dershape3D(2,8,i,j,k) = ONE_EIGHTH*ra2*rc1
+          dershape3D(2,1,i,j,k) = - ONE_EIGHTH*ra2*rc2
+          dershape3D(2,2,i,j,k) = - ONE_EIGHTH*ra1*rc2
+          dershape3D(2,3,i,j,k) = ONE_EIGHTH*ra1*rc2
+          dershape3D(2,4,i,j,k) = ONE_EIGHTH*ra2*rc2
+          dershape3D(2,5,i,j,k) = - ONE_EIGHTH*ra2*rc1
+          dershape3D(2,6,i,j,k) = - ONE_EIGHTH*ra1*rc1
+          dershape3D(2,7,i,j,k) = ONE_EIGHTH*ra1*rc1
+          dershape3D(2,8,i,j,k) = ONE_EIGHTH*ra2*rc1
 
-  dershape3D(3,1,i,j,k) = - ONE_EIGHTH*ra2*rb2
-  dershape3D(3,2,i,j,k) = - ONE_EIGHTH*ra1*rb2
-  dershape3D(3,3,i,j,k) = - ONE_EIGHTH*ra1*rb1
-  dershape3D(3,4,i,j,k) = - ONE_EIGHTH*ra2*rb1
-  dershape3D(3,5,i,j,k) = ONE_EIGHTH*ra2*rb2
-  dershape3D(3,6,i,j,k) = ONE_EIGHTH*ra1*rb2
-  dershape3D(3,7,i,j,k) = ONE_EIGHTH*ra1*rb1
-  dershape3D(3,8,i,j,k) = ONE_EIGHTH*ra2*rb1
+          dershape3D(3,1,i,j,k) = - ONE_EIGHTH*ra2*rb2
+          dershape3D(3,2,i,j,k) = - ONE_EIGHTH*ra1*rb2
+          dershape3D(3,3,i,j,k) = - ONE_EIGHTH*ra1*rb1
+          dershape3D(3,4,i,j,k) = - ONE_EIGHTH*ra2*rb1
+          dershape3D(3,5,i,j,k) = ONE_EIGHTH*ra2*rb2
+          dershape3D(3,6,i,j,k) = ONE_EIGHTH*ra1*rb2
+          dershape3D(3,7,i,j,k) = ONE_EIGHTH*ra1*rb1
+          dershape3D(3,8,i,j,k) = ONE_EIGHTH*ra2*rb1
 
-    else
+        else
 
-    ! note: put further initialization for NGNOD == 27 into subroutine
-    !       to avoid compilation errors in case NGNOD == 8
-      call get_shape3D_27(NGNOD,shape3D,dershape3D,xi,eta,gamma,i,j,k)
+          ! note: put further initialization for NGNOD == 27 into subroutine
+          !       to avoid compilation errors in case NGNOD == 8
+          call get_shape3D_27(NGNOD,shape3D,dershape3D,xi,eta,gamma,i,j,k)
 
-    endif
+        endif
 
-  enddo
-  enddo
+      enddo
+    enddo
   enddo
 
 !--- check the shape functions and their derivatives
 
   do i=1,NGLLX
-  do j=1,NGLLY
-  do k=1,NGLLZ
+    do j=1,NGLLY
+      do k=1,NGLLZ
 
-  sumshape = ZERO
-  sumdershapexi = ZERO
-  sumdershapeeta = ZERO
-  sumdershapegamma = ZERO
+        sumshape = ZERO
+        sumdershapexi = ZERO
+        sumdershapeeta = ZERO
+        sumdershapegamma = ZERO
 
-  do ia=1,NGNOD
-    sumshape = sumshape + shape3D(ia,i,j,k)
-    sumdershapexi = sumdershapexi + dershape3D(1,ia,i,j,k)
-    sumdershapeeta = sumdershapeeta + dershape3D(2,ia,i,j,k)
-    sumdershapegamma = sumdershapegamma + dershape3D(3,ia,i,j,k)
-  enddo
+        do ia=1,NGNOD
+          sumshape = sumshape + shape3D(ia,i,j,k)
+          sumdershapexi = sumdershapexi + dershape3D(1,ia,i,j,k)
+          sumdershapeeta = sumdershapeeta + dershape3D(2,ia,i,j,k)
+          sumdershapegamma = sumdershapegamma + dershape3D(3,ia,i,j,k)
+        enddo
 
-! sum of shape functions should be one
-! sum of derivative of shape functions should be zero
-  if(abs(sumshape-one) >  TINYVAL) call exit_MPI(myrank,'error in 3D shape functions')
-  if(abs(sumdershapexi) >  TINYVAL) call exit_MPI(myrank,'error in xi derivative of 3D shape functions')
-  if(abs(sumdershapeeta) >  TINYVAL) call exit_MPI(myrank,'error in eta derivative of 3D shape functions')
-  if(abs(sumdershapegamma) >  TINYVAL) call exit_MPI(myrank,'error in gamma derivative of 3D shape functions')
+        ! sum of shape functions should be one
+        ! sum of derivative of shape functions should be zero
+        if (abs(sumshape-one) >  TINYVAL) call exit_MPI(myrank,'error in 3D shape functions')
+        if (abs(sumdershapexi) >  TINYVAL) call exit_MPI(myrank,'error in xi derivative of 3D shape functions')
+        if (abs(sumdershapeeta) >  TINYVAL) call exit_MPI(myrank,'error in eta derivative of 3D shape functions')
+        if (abs(sumdershapegamma) >  TINYVAL) call exit_MPI(myrank,'error in gamma derivative of 3D shape functions')
 
-  enddo
-  enddo
+      enddo
+    enddo
   enddo
 
   end subroutine get_shape3D
@@ -169,9 +170,9 @@
 
   subroutine eval_shape3D_single(myrank,shape3D,xi,eta,gamma,NGNOD)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: myrank,NGNOD
 
@@ -190,7 +191,7 @@
 
 ! check that the parameter file is correct
   if(NGNOD /= 8 .and. NGNOD /= 27) &
-       call exit_MPI(myrank,'volume elements should have 8 or 27 control nodes')
+    call exit_MPI(myrank,'volume elements should have 8 or 27 control nodes')
 
   ! shape functions
 
@@ -217,52 +218,52 @@
 
   else
 
-  l1xi=HALF*xi*(xi-ONE)
-  l2xi=ONE-xi**2
-  l3xi=HALF*xi*(xi+ONE)
+    l1xi=HALF*xi*(xi-ONE)
+    l2xi=ONE-xi**2
+    l3xi=HALF*xi*(xi+ONE)
 
     l1eta=HALF*eta*(eta-ONE)
     l2eta=ONE-eta**2
     l3eta=HALF*eta*(eta+ONE)
 
-      l1gamma=HALF*gamma*(gamma-ONE)
-      l2gamma=ONE-gamma**2
-      l3gamma=HALF*gamma*(gamma+ONE)
+    l1gamma=HALF*gamma*(gamma-ONE)
+    l2gamma=ONE-gamma**2
+    l3gamma=HALF*gamma*(gamma+ONE)
 
-!     corner nodes
-      shape3D(1)=l1xi*l1eta*l1gamma
-      shape3D(2)=l3xi*l1eta*l1gamma
-      shape3D(3)=l3xi*l3eta*l1gamma
-      shape3D(4)=l1xi*l3eta*l1gamma
-      shape3D(5)=l1xi*l1eta*l3gamma
-      shape3D(6)=l3xi*l1eta*l3gamma
-      shape3D(7)=l3xi*l3eta*l3gamma
-      shape3D(8)=l1xi*l3eta*l3gamma
+    ! corner nodes
+    shape3D(1)=l1xi*l1eta*l1gamma
+    shape3D(2)=l3xi*l1eta*l1gamma
+    shape3D(3)=l3xi*l3eta*l1gamma
+    shape3D(4)=l1xi*l3eta*l1gamma
+    shape3D(5)=l1xi*l1eta*l3gamma
+    shape3D(6)=l3xi*l1eta*l3gamma
+    shape3D(7)=l3xi*l3eta*l3gamma
+    shape3D(8)=l1xi*l3eta*l3gamma
 
-!     midside nodes
-      shape3D(9)=l2xi*l1eta*l1gamma
-      shape3D(10)=l3xi*l2eta*l1gamma
-      shape3D(11)=l2xi*l3eta*l1gamma
-      shape3D(12)=l1xi*l2eta*l1gamma
-      shape3D(13)=l1xi*l1eta*l2gamma
-      shape3D(14)=l3xi*l1eta*l2gamma
-      shape3D(15)=l3xi*l3eta*l2gamma
-      shape3D(16)=l1xi*l3eta*l2gamma
-      shape3D(17)=l2xi*l1eta*l3gamma
-      shape3D(18)=l3xi*l2eta*l3gamma
-      shape3D(19)=l2xi*l3eta*l3gamma
-      shape3D(20)=l1xi*l2eta*l3gamma
+    ! midside nodes
+    shape3D(9)=l2xi*l1eta*l1gamma
+    shape3D(10)=l3xi*l2eta*l1gamma
+    shape3D(11)=l2xi*l3eta*l1gamma
+    shape3D(12)=l1xi*l2eta*l1gamma
+    shape3D(13)=l1xi*l1eta*l2gamma
+    shape3D(14)=l3xi*l1eta*l2gamma
+    shape3D(15)=l3xi*l3eta*l2gamma
+    shape3D(16)=l1xi*l3eta*l2gamma
+    shape3D(17)=l2xi*l1eta*l3gamma
+    shape3D(18)=l3xi*l2eta*l3gamma
+    shape3D(19)=l2xi*l3eta*l3gamma
+    shape3D(20)=l1xi*l2eta*l3gamma
 
-!     side center nodes
-      shape3D(21)=l2xi*l2eta*l1gamma
-      shape3D(22)=l2xi*l1eta*l2gamma
-      shape3D(23)=l3xi*l2eta*l2gamma
-      shape3D(24)=l2xi*l3eta*l2gamma
-      shape3D(25)=l1xi*l2eta*l2gamma
-      shape3D(26)=l2xi*l2eta*l3gamma
+    ! side center nodes
+    shape3D(21)=l2xi*l2eta*l1gamma
+    shape3D(22)=l2xi*l1eta*l2gamma
+    shape3D(23)=l3xi*l2eta*l2gamma
+    shape3D(24)=l2xi*l3eta*l2gamma
+    shape3D(25)=l1xi*l2eta*l2gamma
+    shape3D(26)=l2xi*l2eta*l3gamma
 
-!     center node
-      shape3D(27)=l2xi*l2eta*l2gamma
+    ! center node
+    shape3D(27)=l2xi*l2eta*l2gamma
 
   endif
 
@@ -285,9 +286,9 @@
   subroutine eval_shape3D_element_corners(xelm,yelm,zelm,ispec,&
        ibool,xstore,ystore,zstore,NSPEC_AB,NGLOB_AB)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: ispec
   integer :: NSPEC_AB,NGLOB_AB
@@ -341,9 +342,9 @@
 
   subroutine get_shape3D_27(NGNOD,shape3D,dershape3D,xi,eta,gamma,i,j,k)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: NGNOD,i,j,k
 
@@ -364,147 +365,147 @@
   l2pxi=-TWO*xi
   l3pxi=xi+HALF
 
-    l1eta=HALF*eta*(eta-ONE)
-    l2eta=ONE-eta**2
-    l3eta=HALF*eta*(eta+ONE)
+  l1eta=HALF*eta*(eta-ONE)
+  l2eta=ONE-eta**2
+  l3eta=HALF*eta*(eta+ONE)
 
-    l1peta=eta-HALF
-    l2peta=-TWO*eta
-    l3peta=eta+HALF
+  l1peta=eta-HALF
+  l2peta=-TWO*eta
+  l3peta=eta+HALF
 
-      l1gamma=HALF*gamma*(gamma-ONE)
-      l2gamma=ONE-gamma**2
-      l3gamma=HALF*gamma*(gamma+ONE)
+  l1gamma=HALF*gamma*(gamma-ONE)
+  l2gamma=ONE-gamma**2
+  l3gamma=HALF*gamma*(gamma+ONE)
 
-      l1pgamma=gamma-HALF
-      l2pgamma=-TWO*gamma
-      l3pgamma=gamma+HALF
+  l1pgamma=gamma-HALF
+  l2pgamma=-TWO*gamma
+  l3pgamma=gamma+HALF
 
-!     corner nodes
-      shape3D(1,i,j,k)=l1xi*l1eta*l1gamma
-      shape3D(2,i,j,k)=l3xi*l1eta*l1gamma
-      shape3D(3,i,j,k)=l3xi*l3eta*l1gamma
-      shape3D(4,i,j,k)=l1xi*l3eta*l1gamma
-      shape3D(5,i,j,k)=l1xi*l1eta*l3gamma
-      shape3D(6,i,j,k)=l3xi*l1eta*l3gamma
-      shape3D(7,i,j,k)=l3xi*l3eta*l3gamma
-      shape3D(8,i,j,k)=l1xi*l3eta*l3gamma
+  ! corner nodes
+  shape3D(1,i,j,k)=l1xi*l1eta*l1gamma
+  shape3D(2,i,j,k)=l3xi*l1eta*l1gamma
+  shape3D(3,i,j,k)=l3xi*l3eta*l1gamma
+  shape3D(4,i,j,k)=l1xi*l3eta*l1gamma
+  shape3D(5,i,j,k)=l1xi*l1eta*l3gamma
+  shape3D(6,i,j,k)=l3xi*l1eta*l3gamma
+  shape3D(7,i,j,k)=l3xi*l3eta*l3gamma
+  shape3D(8,i,j,k)=l1xi*l3eta*l3gamma
 
-      dershape3D(1,1,i,j,k)=l1pxi*l1eta*l1gamma
-      dershape3D(1,2,i,j,k)=l3pxi*l1eta*l1gamma
-      dershape3D(1,3,i,j,k)=l3pxi*l3eta*l1gamma
-      dershape3D(1,4,i,j,k)=l1pxi*l3eta*l1gamma
-      dershape3D(1,5,i,j,k)=l1pxi*l1eta*l3gamma
-      dershape3D(1,6,i,j,k)=l3pxi*l1eta*l3gamma
-      dershape3D(1,7,i,j,k)=l3pxi*l3eta*l3gamma
-      dershape3D(1,8,i,j,k)=l1pxi*l3eta*l3gamma
+  dershape3D(1,1,i,j,k)=l1pxi*l1eta*l1gamma
+  dershape3D(1,2,i,j,k)=l3pxi*l1eta*l1gamma
+  dershape3D(1,3,i,j,k)=l3pxi*l3eta*l1gamma
+  dershape3D(1,4,i,j,k)=l1pxi*l3eta*l1gamma
+  dershape3D(1,5,i,j,k)=l1pxi*l1eta*l3gamma
+  dershape3D(1,6,i,j,k)=l3pxi*l1eta*l3gamma
+  dershape3D(1,7,i,j,k)=l3pxi*l3eta*l3gamma
+  dershape3D(1,8,i,j,k)=l1pxi*l3eta*l3gamma
 
-      dershape3D(2,1,i,j,k)=l1xi*l1peta*l1gamma
-      dershape3D(2,2,i,j,k)=l3xi*l1peta*l1gamma
-      dershape3D(2,3,i,j,k)=l3xi*l3peta*l1gamma
-      dershape3D(2,4,i,j,k)=l1xi*l3peta*l1gamma
-      dershape3D(2,5,i,j,k)=l1xi*l1peta*l3gamma
-      dershape3D(2,6,i,j,k)=l3xi*l1peta*l3gamma
-      dershape3D(2,7,i,j,k)=l3xi*l3peta*l3gamma
-      dershape3D(2,8,i,j,k)=l1xi*l3peta*l3gamma
+  dershape3D(2,1,i,j,k)=l1xi*l1peta*l1gamma
+  dershape3D(2,2,i,j,k)=l3xi*l1peta*l1gamma
+  dershape3D(2,3,i,j,k)=l3xi*l3peta*l1gamma
+  dershape3D(2,4,i,j,k)=l1xi*l3peta*l1gamma
+  dershape3D(2,5,i,j,k)=l1xi*l1peta*l3gamma
+  dershape3D(2,6,i,j,k)=l3xi*l1peta*l3gamma
+  dershape3D(2,7,i,j,k)=l3xi*l3peta*l3gamma
+  dershape3D(2,8,i,j,k)=l1xi*l3peta*l3gamma
 
-      dershape3D(3,1,i,j,k)=l1xi*l1eta*l1pgamma
-      dershape3D(3,2,i,j,k)=l3xi*l1eta*l1pgamma
-      dershape3D(3,3,i,j,k)=l3xi*l3eta*l1pgamma
-      dershape3D(3,4,i,j,k)=l1xi*l3eta*l1pgamma
-      dershape3D(3,5,i,j,k)=l1xi*l1eta*l3pgamma
-      dershape3D(3,6,i,j,k)=l3xi*l1eta*l3pgamma
-      dershape3D(3,7,i,j,k)=l3xi*l3eta*l3pgamma
-      dershape3D(3,8,i,j,k)=l1xi*l3eta*l3pgamma
+  dershape3D(3,1,i,j,k)=l1xi*l1eta*l1pgamma
+  dershape3D(3,2,i,j,k)=l3xi*l1eta*l1pgamma
+  dershape3D(3,3,i,j,k)=l3xi*l3eta*l1pgamma
+  dershape3D(3,4,i,j,k)=l1xi*l3eta*l1pgamma
+  dershape3D(3,5,i,j,k)=l1xi*l1eta*l3pgamma
+  dershape3D(3,6,i,j,k)=l3xi*l1eta*l3pgamma
+  dershape3D(3,7,i,j,k)=l3xi*l3eta*l3pgamma
+  dershape3D(3,8,i,j,k)=l1xi*l3eta*l3pgamma
 
-!     midside nodes
-      shape3D(9,i,j,k)=l2xi*l1eta*l1gamma
-      shape3D(10,i,j,k)=l3xi*l2eta*l1gamma
-      shape3D(11,i,j,k)=l2xi*l3eta*l1gamma
-      shape3D(12,i,j,k)=l1xi*l2eta*l1gamma
-      shape3D(13,i,j,k)=l1xi*l1eta*l2gamma
-      shape3D(14,i,j,k)=l3xi*l1eta*l2gamma
-      shape3D(15,i,j,k)=l3xi*l3eta*l2gamma
-      shape3D(16,i,j,k)=l1xi*l3eta*l2gamma
-      shape3D(17,i,j,k)=l2xi*l1eta*l3gamma
-      shape3D(18,i,j,k)=l3xi*l2eta*l3gamma
-      shape3D(19,i,j,k)=l2xi*l3eta*l3gamma
-      shape3D(20,i,j,k)=l1xi*l2eta*l3gamma
+  ! midside nodes
+  shape3D(9,i,j,k)=l2xi*l1eta*l1gamma
+  shape3D(10,i,j,k)=l3xi*l2eta*l1gamma
+  shape3D(11,i,j,k)=l2xi*l3eta*l1gamma
+  shape3D(12,i,j,k)=l1xi*l2eta*l1gamma
+  shape3D(13,i,j,k)=l1xi*l1eta*l2gamma
+  shape3D(14,i,j,k)=l3xi*l1eta*l2gamma
+  shape3D(15,i,j,k)=l3xi*l3eta*l2gamma
+  shape3D(16,i,j,k)=l1xi*l3eta*l2gamma
+  shape3D(17,i,j,k)=l2xi*l1eta*l3gamma
+  shape3D(18,i,j,k)=l3xi*l2eta*l3gamma
+  shape3D(19,i,j,k)=l2xi*l3eta*l3gamma
+  shape3D(20,i,j,k)=l1xi*l2eta*l3gamma
 
-      dershape3D(1,9,i,j,k)=l2pxi*l1eta*l1gamma
-      dershape3D(1,10,i,j,k)=l3pxi*l2eta*l1gamma
-      dershape3D(1,11,i,j,k)=l2pxi*l3eta*l1gamma
-      dershape3D(1,12,i,j,k)=l1pxi*l2eta*l1gamma
-      dershape3D(1,13,i,j,k)=l1pxi*l1eta*l2gamma
-      dershape3D(1,14,i,j,k)=l3pxi*l1eta*l2gamma
-      dershape3D(1,15,i,j,k)=l3pxi*l3eta*l2gamma
-      dershape3D(1,16,i,j,k)=l1pxi*l3eta*l2gamma
-      dershape3D(1,17,i,j,k)=l2pxi*l1eta*l3gamma
-      dershape3D(1,18,i,j,k)=l3pxi*l2eta*l3gamma
-      dershape3D(1,19,i,j,k)=l2pxi*l3eta*l3gamma
-      dershape3D(1,20,i,j,k)=l1pxi*l2eta*l3gamma
+  dershape3D(1,9,i,j,k)=l2pxi*l1eta*l1gamma
+  dershape3D(1,10,i,j,k)=l3pxi*l2eta*l1gamma
+  dershape3D(1,11,i,j,k)=l2pxi*l3eta*l1gamma
+  dershape3D(1,12,i,j,k)=l1pxi*l2eta*l1gamma
+  dershape3D(1,13,i,j,k)=l1pxi*l1eta*l2gamma
+  dershape3D(1,14,i,j,k)=l3pxi*l1eta*l2gamma
+  dershape3D(1,15,i,j,k)=l3pxi*l3eta*l2gamma
+  dershape3D(1,16,i,j,k)=l1pxi*l3eta*l2gamma
+  dershape3D(1,17,i,j,k)=l2pxi*l1eta*l3gamma
+  dershape3D(1,18,i,j,k)=l3pxi*l2eta*l3gamma
+  dershape3D(1,19,i,j,k)=l2pxi*l3eta*l3gamma
+  dershape3D(1,20,i,j,k)=l1pxi*l2eta*l3gamma
 
-      dershape3D(2,9,i,j,k)=l2xi*l1peta*l1gamma
-      dershape3D(2,10,i,j,k)=l3xi*l2peta*l1gamma
-      dershape3D(2,11,i,j,k)=l2xi*l3peta*l1gamma
-      dershape3D(2,12,i,j,k)=l1xi*l2peta*l1gamma
-      dershape3D(2,13,i,j,k)=l1xi*l1peta*l2gamma
-      dershape3D(2,14,i,j,k)=l3xi*l1peta*l2gamma
-      dershape3D(2,15,i,j,k)=l3xi*l3peta*l2gamma
-      dershape3D(2,16,i,j,k)=l1xi*l3peta*l2gamma
-      dershape3D(2,17,i,j,k)=l2xi*l1peta*l3gamma
-      dershape3D(2,18,i,j,k)=l3xi*l2peta*l3gamma
-      dershape3D(2,19,i,j,k)=l2xi*l3peta*l3gamma
-      dershape3D(2,20,i,j,k)=l1xi*l2peta*l3gamma
+  dershape3D(2,9,i,j,k)=l2xi*l1peta*l1gamma
+  dershape3D(2,10,i,j,k)=l3xi*l2peta*l1gamma
+  dershape3D(2,11,i,j,k)=l2xi*l3peta*l1gamma
+  dershape3D(2,12,i,j,k)=l1xi*l2peta*l1gamma
+  dershape3D(2,13,i,j,k)=l1xi*l1peta*l2gamma
+  dershape3D(2,14,i,j,k)=l3xi*l1peta*l2gamma
+  dershape3D(2,15,i,j,k)=l3xi*l3peta*l2gamma
+  dershape3D(2,16,i,j,k)=l1xi*l3peta*l2gamma
+  dershape3D(2,17,i,j,k)=l2xi*l1peta*l3gamma
+  dershape3D(2,18,i,j,k)=l3xi*l2peta*l3gamma
+  dershape3D(2,19,i,j,k)=l2xi*l3peta*l3gamma
+  dershape3D(2,20,i,j,k)=l1xi*l2peta*l3gamma
 
-      dershape3D(3,9,i,j,k)=l2xi*l1eta*l1pgamma
-      dershape3D(3,10,i,j,k)=l3xi*l2eta*l1pgamma
-      dershape3D(3,11,i,j,k)=l2xi*l3eta*l1pgamma
-      dershape3D(3,12,i,j,k)=l1xi*l2eta*l1pgamma
-      dershape3D(3,13,i,j,k)=l1xi*l1eta*l2pgamma
-      dershape3D(3,14,i,j,k)=l3xi*l1eta*l2pgamma
-      dershape3D(3,15,i,j,k)=l3xi*l3eta*l2pgamma
-      dershape3D(3,16,i,j,k)=l1xi*l3eta*l2pgamma
-      dershape3D(3,17,i,j,k)=l2xi*l1eta*l3pgamma
-      dershape3D(3,18,i,j,k)=l3xi*l2eta*l3pgamma
-      dershape3D(3,19,i,j,k)=l2xi*l3eta*l3pgamma
-      dershape3D(3,20,i,j,k)=l1xi*l2eta*l3pgamma
+  dershape3D(3,9,i,j,k)=l2xi*l1eta*l1pgamma
+  dershape3D(3,10,i,j,k)=l3xi*l2eta*l1pgamma
+  dershape3D(3,11,i,j,k)=l2xi*l3eta*l1pgamma
+  dershape3D(3,12,i,j,k)=l1xi*l2eta*l1pgamma
+  dershape3D(3,13,i,j,k)=l1xi*l1eta*l2pgamma
+  dershape3D(3,14,i,j,k)=l3xi*l1eta*l2pgamma
+  dershape3D(3,15,i,j,k)=l3xi*l3eta*l2pgamma
+  dershape3D(3,16,i,j,k)=l1xi*l3eta*l2pgamma
+  dershape3D(3,17,i,j,k)=l2xi*l1eta*l3pgamma
+  dershape3D(3,18,i,j,k)=l3xi*l2eta*l3pgamma
+  dershape3D(3,19,i,j,k)=l2xi*l3eta*l3pgamma
+  dershape3D(3,20,i,j,k)=l1xi*l2eta*l3pgamma
 
-!     side center nodes
-      shape3D(21,i,j,k)=l2xi*l2eta*l1gamma
-      shape3D(22,i,j,k)=l2xi*l1eta*l2gamma
-      shape3D(23,i,j,k)=l3xi*l2eta*l2gamma
-      shape3D(24,i,j,k)=l2xi*l3eta*l2gamma
-      shape3D(25,i,j,k)=l1xi*l2eta*l2gamma
-      shape3D(26,i,j,k)=l2xi*l2eta*l3gamma
+  ! side center nodes
+  shape3D(21,i,j,k)=l2xi*l2eta*l1gamma
+  shape3D(22,i,j,k)=l2xi*l1eta*l2gamma
+  shape3D(23,i,j,k)=l3xi*l2eta*l2gamma
+  shape3D(24,i,j,k)=l2xi*l3eta*l2gamma
+  shape3D(25,i,j,k)=l1xi*l2eta*l2gamma
+  shape3D(26,i,j,k)=l2xi*l2eta*l3gamma
 
-      dershape3D(1,21,i,j,k)=l2pxi*l2eta*l1gamma
-      dershape3D(1,22,i,j,k)=l2pxi*l1eta*l2gamma
-      dershape3D(1,23,i,j,k)=l3pxi*l2eta*l2gamma
-      dershape3D(1,24,i,j,k)=l2pxi*l3eta*l2gamma
-      dershape3D(1,25,i,j,k)=l1pxi*l2eta*l2gamma
-      dershape3D(1,26,i,j,k)=l2pxi*l2eta*l3gamma
+  dershape3D(1,21,i,j,k)=l2pxi*l2eta*l1gamma
+  dershape3D(1,22,i,j,k)=l2pxi*l1eta*l2gamma
+  dershape3D(1,23,i,j,k)=l3pxi*l2eta*l2gamma
+  dershape3D(1,24,i,j,k)=l2pxi*l3eta*l2gamma
+  dershape3D(1,25,i,j,k)=l1pxi*l2eta*l2gamma
+  dershape3D(1,26,i,j,k)=l2pxi*l2eta*l3gamma
 
-      dershape3D(2,21,i,j,k)=l2xi*l2peta*l1gamma
-      dershape3D(2,22,i,j,k)=l2xi*l1peta*l2gamma
-      dershape3D(2,23,i,j,k)=l3xi*l2peta*l2gamma
-      dershape3D(2,24,i,j,k)=l2xi*l3peta*l2gamma
-      dershape3D(2,25,i,j,k)=l1xi*l2peta*l2gamma
-      dershape3D(2,26,i,j,k)=l2xi*l2peta*l3gamma
+  dershape3D(2,21,i,j,k)=l2xi*l2peta*l1gamma
+  dershape3D(2,22,i,j,k)=l2xi*l1peta*l2gamma
+  dershape3D(2,23,i,j,k)=l3xi*l2peta*l2gamma
+  dershape3D(2,24,i,j,k)=l2xi*l3peta*l2gamma
+  dershape3D(2,25,i,j,k)=l1xi*l2peta*l2gamma
+  dershape3D(2,26,i,j,k)=l2xi*l2peta*l3gamma
 
-      dershape3D(3,21,i,j,k)=l2xi*l2eta*l1pgamma
-      dershape3D(3,22,i,j,k)=l2xi*l1eta*l2pgamma
-      dershape3D(3,23,i,j,k)=l3xi*l2eta*l2pgamma
-      dershape3D(3,24,i,j,k)=l2xi*l3eta*l2pgamma
-      dershape3D(3,25,i,j,k)=l1xi*l2eta*l2pgamma
-      dershape3D(3,26,i,j,k)=l2xi*l2eta*l3pgamma
+  dershape3D(3,21,i,j,k)=l2xi*l2eta*l1pgamma
+  dershape3D(3,22,i,j,k)=l2xi*l1eta*l2pgamma
+  dershape3D(3,23,i,j,k)=l3xi*l2eta*l2pgamma
+  dershape3D(3,24,i,j,k)=l2xi*l3eta*l2pgamma
+  dershape3D(3,25,i,j,k)=l1xi*l2eta*l2pgamma
+  dershape3D(3,26,i,j,k)=l2xi*l2eta*l3pgamma
 
-!     center node
-      shape3D(27,i,j,k)=l2xi*l2eta*l2gamma
+  ! center node
+  shape3D(27,i,j,k)=l2xi*l2eta*l2gamma
 
-      dershape3D(1,27,i,j,k)=l2pxi*l2eta*l2gamma
-      dershape3D(2,27,i,j,k)=l2xi*l2peta*l2gamma
-      dershape3D(3,27,i,j,k)=l2xi*l2eta*l2pgamma
+  dershape3D(1,27,i,j,k)=l2pxi*l2eta*l2gamma
+  dershape3D(2,27,i,j,k)=l2xi*l2peta*l2gamma
+  dershape3D(3,27,i,j,k)=l2xi*l2eta*l2pgamma
 
   end subroutine get_shape3D_27
 

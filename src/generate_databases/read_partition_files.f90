@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -38,7 +39,6 @@
   integer :: num_cpml
   integer :: num_moho
   integer :: i,j
-  !character(len=128) :: line
 
 ! read databases about external mesh simulation
 ! global node coordinates
@@ -64,7 +64,7 @@
   if(myrank == 0) then
     write(IMAIN,*) '  external mesh points: ',num
   endif
-  call sync_all()
+  call synchronize_all()
 
 ! read physical properties of the materials
 ! added poroelastic properties and filled with 0 the last 10 entries for elastic/acoustic
@@ -90,7 +90,7 @@
   if(myrank == 0) then
     write(IMAIN,*) '  defined materials: ',nmat_ext_mesh
   endif
-  call sync_all()
+  call synchronize_all()
 
   allocate(undef_mat_prop(6,nundefMat_ext_mesh),stat=ier)
   if( ier /= 0 ) stop 'error allocating array undef_mat_prop'
@@ -106,7 +106,7 @@
   if(myrank == 0) then
     write(IMAIN,*) '  undefined materials: ',nundefMat_ext_mesh
   endif
-  call sync_all()
+  call synchronize_all()
 
 ! element indexing
   read(IIN) nelmnts_ext_mesh
@@ -133,7 +133,7 @@
   if(myrank == 0) then
     write(IMAIN,*) ' total number of spectral elements: ',num
   endif
-  call sync_all()
+  call synchronize_all()
 
 ! reads absorbing/free-surface boundaries
   read(IIN) boundary_number ,nspec2D_xmin
@@ -206,7 +206,7 @@
     write(IMAIN,*) '    ymin,ymax: ',num_ymin,num_ymax
     write(IMAIN,*) '    bottom,top: ',num_bottom,num_top
   endif
-  call sync_all()
+  call synchronize_all()
 
   ! reads number of C-PML elements in the global mesh
   nspec_cpml_tot = 0
@@ -216,7 +216,7 @@
   if(myrank == 0) then
      write(IMAIN,*) ' total number of C-PML elements in the global mesh: ',nspec_cpml_tot
   endif
-  call sync_all()
+  call synchronize_all()
 
   if( nspec_cpml_tot > 0 ) then
      ! reads number of C-PML elements in this partition
@@ -225,7 +225,7 @@
      if(myrank == 0) then
         write(IMAIN,*) '  number of C-PML spectral elements in this partition: ',nspec_cpml
      endif
-     call sync_all()
+     call synchronize_all()
 
      call sum_all_i(nspec_cpml,num_cpml)
 
@@ -307,7 +307,7 @@
   if(myrank == 0) then
     write(IMAIN,*) '  number of MPI partition interfaces: ',num
   endif
-  call sync_all()
+  call synchronize_all()
 
   ! optional moho
   if( SAVE_MOHO_MESH ) then
@@ -336,7 +336,7 @@
     if(myrank == 0) then
       write(IMAIN,*) '  moho surfaces: ',num_moho
     endif
-    call sync_all()
+    call synchronize_all()
   else
     ! allocate dummy array
     nspec2D_moho_ext = 0

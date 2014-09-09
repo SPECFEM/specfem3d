@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -57,13 +58,13 @@
 !
 ! works for external, unregular meshes
 
+  use constants
+
   use combine_vol_data_mod
   use combine_vol_data_adios_mod
 
   use combine_vtk
   implicit none
-
-  include 'constants.h'
 
   ! data must be of dimension: (NGLLX,NGLLY,NGLLZ,NSPEC_AB)
   double precision,dimension(:,:,:,:),allocatable :: data
@@ -84,9 +85,9 @@
 
   integer :: np, ne, npp, nee, nelement
 
-  character(len=256) :: arg(9), filename, indir, outdir
-  character(len=256) :: prname, prname_lp
-  character(len=256) :: mesh_file,local_data_file
+  character(len=MAX_STRING_LEN) :: arg(9), filename, indir, outdir
+  character(len=MAX_STRING_LEN) :: prname, prname_lp
+  character(len=MAX_STRING_LEN*2) :: mesh_file,local_data_file
   logical :: HIGH_RESOLUTION_MESH
   integer :: ires
 
@@ -102,8 +103,8 @@
             APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,USE_FORCE_POINT_SOURCE
   logical :: STACEY_ABSORBING_CONDITIONS,SAVE_FORWARD,STACEY_INSTEAD_OF_FREE_SURFACE
   logical :: ANISOTROPY,SAVE_MESH_FILES,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
-  logical :: PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID
-  character(len=256) LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
+  logical :: PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID,COUPLE_WITH_DSM
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH,TOMOGRAPHY_PATH,TRACTION_PATH
   integer :: IMODEL
 
   ! ADIOS parameters
@@ -112,13 +113,13 @@
 
   ! Variables to read ADIOS files
   integer :: sizeprocs
-  character(len=256) :: var_name , value_file_name, mesh_file_name
+  character(len=MAX_STRING_LEN) :: var_name, value_file_name, mesh_file_name
   integer(kind=8) :: value_handle, mesh_handle
   integer :: ibool_offset, x_global_offset
 
   call init()
   call world_size(sizeprocs)
-  if (sizeprocs .ne. 1) then
+  if (sizeprocs /= 1) then
     print *, "sequential program. Only mpirun -np 1 ..."
     call stop_all()
   endif
@@ -165,7 +166,7 @@
                         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
                         USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE, &
                         USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
-                        PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,FULL_ATTENUATION_SOLID,TRAC_PATH)
+                        PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,FULL_ATTENUATION_SOLID,TRACTION_PATH,COUPLE_WITH_DSM)
 
   if (ADIOS_FOR_MESH) then
     call init_adios(value_file_name, mesh_file_name, value_handle, mesh_handle)
@@ -410,18 +411,19 @@
 ! counts total number of points and elements for external meshes in given slice list
 ! returns: total number of elements (nee) and number of points (npp)
 
+  use constants
+
   use combine_vtk
   use combine_vol_data_adios_mod
 
   implicit none
-  include 'constants.h'
 
   integer,intent(in) :: num_node
   integer,dimension(MAX_NUM_NODES),intent(in) :: node_list
 
   integer,intent(out) :: npp,nee
   logical,intent(in) :: HIGH_RESOLUTION_MESH
-  character(len=256),intent(in) :: LOCAL_PATH
+  character(len=MAX_STRING_LEN),intent(in) :: LOCAL_PATH
 
   ! local parameters
   integer, dimension(:,:,:,:),allocatable :: ibool
@@ -429,7 +431,7 @@
   integer :: NSPEC_AB, NGLOB_AB
   integer :: it,iproc,npoint,nelement,ios,ispec,ier
   integer :: iglob1, iglob2, iglob3, iglob4, iglob5, iglob6, iglob7, iglob8
-  character(len=256) :: prname_lp
+  character(len=MAX_STRING_LEN) :: prname_lp
 
   ! Variables for ADIOS
   integer(kind=8), intent(in) :: mesh_handle
@@ -533,9 +535,9 @@
                                it,npp,numpoin,np)
 
 ! writes out locations of spectral element corners only
+  use constants
   use combine_vtk
   implicit none
-  include 'constants.h'
 
   integer,intent(in) :: NSPEC_AB,NGLOB_AB
   integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
@@ -718,9 +720,9 @@
                                   it,npp,numpoin,np)
 
 ! writes out locations of all GLL points of spectral elements
+  use constants
   use combine_vtk
   implicit none
-  include 'constants.h'
 
   integer,intent(in) :: NSPEC_AB,NGLOB_AB
   integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
@@ -787,9 +789,9 @@
   subroutine cvd_write_corner_elements(NSPEC_AB,NGLOB_AB,ibool,&
                                       np,nelement,it,nee,numpoin)
 
+  use constants
   use combine_vtk
   implicit none
-  include 'constants.h'
 
   integer,intent(in) :: NSPEC_AB,NGLOB_AB
   integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
@@ -914,9 +916,9 @@
                                     np,nelement,it,nee,numpoin)
 
 ! writes out indices of elements given by GLL points
+  use constants
   use combine_vtk
   implicit none
-  include 'constants.h'
 
   integer,intent(in):: NSPEC_AB,NGLOB_AB
   integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool

@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -403,7 +404,7 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine intgrl(sum,r,nir,ner,f,s1,s2,s3)
+  subroutine intgrl(sumval,r,nir,ner,f,s1,s2,s3)
 
 ! Computes the integral of f[i]*r[i]*r[i] from i=nir to i=ner for
 ! radii values as in model PREM_an640
@@ -413,7 +414,7 @@
 ! Argument variables
   integer ner,nir
   double precision f(640),r(640),s1(640),s2(640)
-  double precision s3(640),sum
+  double precision s3(640),sumval
 
 ! Local variables
   double precision, parameter :: third = 1.0d0/3.0d0
@@ -433,14 +434,14 @@
 
   call deriv(f,yprime,n,r,ndis,kdis,s1,s2,s3)
   nir1 = nir + 1
-  sum = 0.0d0
+  sumval = 0.0d0
   do i=nir1,ner
     j = i-1
     rji = r(i) - r(j)
     s1l = s1(j)
     s2l = s2(j)
     s3l = s3(j)
-    sum = sum + r(j)*r(j)*rji*(f(j) &
+    sumval = sumval + r(j)*r(j)*rji*(f(j) &
               + rji*(0.5d0*s1l + rji*(third*s2l + rji*0.25d0*s3l))) &
               + 2.0d0*r(j)*rji*rji*(0.5d0*f(j) + rji*(third*s1l + rji*(0.25d0*s2l + rji*fifth*s3l))) &
               + rji*rji*rji*(third*f(j) + rji*(0.25d0*s1l + rji*(fifth*s2l + rji*sixth*s3l)))

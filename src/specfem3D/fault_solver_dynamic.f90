@@ -1,3 +1,30 @@
+!=====================================================================
+!
+!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               ---------------------------------------
+!
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
+!
+! This program is free software; you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation; either version 2 of the License, or
+! (at your option) any later version.
+!
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+!
+! You should have received a copy of the GNU General Public License along
+! with this program; if not, write to the Free Software Foundation, Inc.,
+! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+!
+!=====================================================================
+
 ! This module implements dynamic faults: spontaneous rupture with prescribed
 ! friction laws (slip-weakening or rate-and-state) and heterogeneous initial conditions
 !
@@ -16,49 +43,6 @@ module fault_solver_dynamic
   implicit none
 
   private
-
-!! DK DK moved this to fault_common in order to use it there
-
-! ! outputs(dyn) /inputs (kind) at selected times for all fault nodes:
-! ! strength, state, slip, slip velocity, fault stresses, rupture time, process zone time
-! ! rupture time = first time when slip velocity = threshold V_RUPT (defined below)
-! ! process zone time = first time when slip = Dc
-! type dataXZ_type
-!   real(kind=CUSTOM_REAL), dimension(:), pointer :: stg=>null(), sta=>null(), d1=>null(), d2=>null(), v1=>null(), v2=>null(), &
-!                                                    t1=>null(), t2=>null(), t3=>null(), tRUP=>null(), tPZ=>null()
-!   real(kind=CUSTOM_REAL), dimension(:), pointer :: xcoord=>null(), ycoord=>null(), zcoord=>null()
-!   integer                                       :: npoin=0
-! end type dataXZ_type
-
-! type swf_type
-!   private
-!   integer :: kind
-!   logical :: healing = .false.
-!   real(kind=CUSTOM_REAL), dimension(:), pointer :: Dc=>null(), mus=>null(), mud=>null(), &
-!                                                    theta=>null(), T=>null(), C=>null()
-! end type swf_type
-
-! type rsf_type
-!   private
-!   integer :: StateLaw = 1 ! 1=ageing law, 2=slip law
-!   real(kind=CUSTOM_REAL), dimension(:), pointer :: V0=>null(), f0=>null(), L=>null(), &
-!                                                    V_init=>null(), &
-!                                                    a=>null(), b=>null(), theta=>null(), &
-!                                                    T=>null(), C=>null(), &
-!                                                    fw=>null(), Vw=>null()
-! end type rsf_type
-
-! type, extends (fault_type) :: bc_dynandkinflt_type
-!   private
-!   real(kind=CUSTOM_REAL), dimension(:,:), pointer :: T0=>null()
-!   real(kind=CUSTOM_REAL), dimension(:),   pointer :: MU=>null(), Fload=>null()
-!   integer, dimension(:),   pointer :: npoin_perproc=>null(), poin_offset=>null()
-!   type(dataT_type)        :: dataT
-!   type(dataXZ_type)       :: dataXZ,dataXZ_all
-!   type(swf_type), pointer :: swf => null()
-!   type(rsf_type), pointer :: rsf => null()
-!   logical                 :: allow_opening = .false. ! default : do not allow opening
-! end type bc_dynandkinflt_type
 
   type(bc_dynandkinflt_type), allocatable, save :: faults(:)
 
@@ -95,7 +79,7 @@ contains
 subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
 
   use specfem_par, only : nt=>NSTEP
-  character(len=256), intent(in) :: prname ! 'proc***'
+  character(len=MAX_STRING_LEN), intent(in) :: prname ! 'proc***'
   double precision, intent(in) :: DTglobal
   integer, intent(in) :: myrank
 
@@ -104,7 +88,7 @@ subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
   integer :: nbfaults
   integer :: size_Kelvin_Voigt
   integer :: SIMULATION_TYPE
-  character(len=256) :: filename
+  character(len=MAX_STRING_LEN) :: filename
   integer, parameter :: IIN_PAR =151
   integer, parameter :: IIN_BIN =170
 
@@ -324,20 +308,20 @@ subroutine init_2d_distribution(a,coord,iin,n)
   integer, intent(in) :: iin,n
 
   real(kind=CUSTOM_REAL) :: b(size(a))
-  character(len=20) :: shape
+  character(len=MAX_STRING_LEN) :: shapeval
   real(kind=CUSTOM_REAL) :: val,valh, xc, yc, zc, r, l, lx,ly,lz
   real(kind=CUSTOM_REAL) :: r1(size(a))
   integer :: i
   real(kind=CUSTOM_REAL) :: SMALLVAL
 
-  NAMELIST / DIST2D / shape, val,valh, xc, yc, zc, r, l, lx,ly,lz
+  NAMELIST / DIST2D / shapeval, val,valh, xc, yc, zc, r, l, lx,ly,lz
 
   SMALLVAL = 1.e-10_CUSTOM_REAL
 
   if (n==0) return
 
   do i=1,n
-    shape = ''
+    shapeval = ''
     val  = 0e0_CUSTOM_REAL
     valh = 0e0_CUSTOM_REAL
     xc = 0e0_CUSTOM_REAL
@@ -350,8 +334,13 @@ subroutine init_2d_distribution(a,coord,iin,n)
     lz = 0e0_CUSTOM_REAL
 
     read(iin,DIST2D)
-    select case(shape)
+    select case(shapeval)
     case ('circle')
+!! DK DK: beware: function or procedure arguments that contain a calculation produce a memory copy
+!! DK DK: created by the compiler; The code is fine, but the hidden copy may slow it down.
+!! DK DK: here is the warning from the Cray compiler:
+!! DK DK: ftn-1438 crayftn: CAUTION INIT_2D_DISTRIBUTION, File = src/specfem3D/fault_solver_dynamic.f90, Line = 355, Column = 24
+!! DK DK: This argument produces a copy in to a temporary variable.
       b = heaviside( r - sqrt((coord(1,:)-xc)**2 + (coord(2,:)-yc)**2 + (coord(3,:)-zc)**2 ) ) *val
     case ('circle-exp')
       r1 = sqrt((coord(1,:)-xc)**2 + (coord(2,:)-yc)**2 + (coord(3,:)-zc)**2 )
@@ -361,8 +350,12 @@ subroutine init_2d_distribution(a,coord,iin,n)
         b =0._CUSTOM_REAL
       endwhere
     case ('ellipse')
+!! DK DK: beware: function or procedure arguments that contain a calculation produce a memory copy
+!! DK DK: created by the compiler; The code is fine, but the hidden copy may slow it down.
       b = heaviside( 1e0_CUSTOM_REAL - sqrt( (coord(1,:)-xc)**2/lx**2 + (coord(2,:)-yc)**2/ly**2 + (coord(3,:)-zc)**2/lz**2 ) ) *val
     case ('square')
+!! DK DK: beware: function or procedure arguments that contain a calculation produce a memory copy
+!! DK DK: created by the compiler; The code is fine, but the hidden copy may slow it down.
       b = heaviside((l/2._CUSTOM_REAL)-abs(coord(1,:)-xc)+SMALLVAL)  * &
            heaviside((l/2._CUSTOM_REAL)-abs(coord(2,:)-yc)+SMALLVAL) * &
            heaviside((l/2._CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL) * &
@@ -439,7 +432,7 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
   real(kind=CUSTOM_REAL), dimension(bc%nglob) :: strength,tStick,tnew, &
                                                  theta_old, theta_new, dc, &
                                                  Vf_old,Vf_new,TxExt
-  real(kind=CUSTOM_REAL) :: half_dt,TLoad,DTau0,GLoad,time
+  real(kind=CUSTOM_REAL) :: half_dt,TLoad,DTau0,GLoad,timeval
   integer :: i
 
   if (bc%nspec > 0) then !Surendra : for parallel faults
@@ -482,9 +475,9 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
       TxExt = 0._CUSTOM_REAL
       TLoad = 1.0_CUSTOM_REAL
       DTau0 = 25e6_CUSTOM_REAL
-      time = it*bc%dt !time will never be zero. it starts from 1
-      if (time <= TLoad) then
-        GLoad = exp( (time-TLoad)*(time-Tload) / (time*(time-2.0_CUSTOM_REAL*TLoad)) )
+      timeval = it*bc%dt !time will never be zero. it starts from 1
+      if (timeval <= TLoad) then
+        GLoad = exp( (timeval-TLoad)*(timeval-Tload) / (timeval*(timeval-2.0_CUSTOM_REAL*TLoad)) )
       else
         GLoad = 1.0_CUSTOM_REAL
       endif
@@ -504,7 +497,7 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
       bc%MU = swf_mu(bc%swf)
 
       ! combined with time-weakening for nucleation
-      !  if (associated(bc%twf)) bc%MU = min( bc%MU, twf_mu(bc%twf,bc%coord,time) )
+      !  if (associated(bc%twf)) bc%MU = min( bc%MU, twf_mu(bc%twf,bc%coord,timeval) )
       if (TPV16) then
         where (bc%swf%T <= it*bc%dt) bc%MU = bc%swf%mud
       endif
@@ -522,15 +515,15 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
       theta_old = bc%rsf%theta
       call rsf_update_state(Vf_old,bc%dt,bc%rsf)
       do i=1,bc%nglob
-        Vf_new(i)=rtsafe(funcd,0.0,Vf_old(i)+5.0,1e-5,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
+        Vf_new(i)=rtsafe(funcd,0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
                          bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
       enddo
 
       ! second pass
       bc%rsf%theta = theta_old
-      call rsf_update_state(0.5e0_CUSTOM_REAL*(Vf_old + Vf_new),bc%dt,bc%rsf)
+      call rsf_update_state(0.5_CUSTOM_REAL*(Vf_old + Vf_new),bc%dt,bc%rsf)
       do i=1,bc%nglob
-        Vf_new(i)=rtsafe(funcd,0.0,Vf_old(i)+5.0,1e-5,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
+        Vf_new(i)=rtsafe(funcd,0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
                          bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
       enddo
 
@@ -851,15 +844,15 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
 
   enddo
 
- ! WARNING: The line below scratches an earlier initialization of theta through theta_init
- !          We should implement it as an option for the user
+  ! WARNING: The line below scratches an earlier initialization of theta through theta_init
+  !          We should implement it as an option for the user
   if(f%stateLaw == 1) then
-     f%theta = f%L/f%V0 &
-               * exp( ( f%a * log(TWO*sinh(-sqrt(T0(1,:)**2+T0(2,:)**2)/T0(3,:)/f%a)) &
-                        - f%f0 - f%a*log(f%V_init/f%V0) ) &
-                      / f%b )
+    f%theta = f%L/f%V0 &
+              * exp( ( f%a * log(TWO*sinh(-sqrt(T0(1,:)**2+T0(2,:)**2)/T0(3,:)/f%a)) &
+                       - f%f0 - f%a*log(f%V_init/f%V0) ) &
+                     / f%b )
   else
-     f%theta =  f%a * log(TWO*f%V0/f%V_init * sinh(-sqrt(T0(1,:)**2+T0(2,:)**2)/T0(3,:)/f%a))
+    f%theta =  f%a * log(TWO*f%V0/f%V_init * sinh(-sqrt(T0(1,:)**2+T0(2,:)**2)/T0(3,:)/f%a))
   endif
 
  ! WARNING : ad hoc for SCEC benchmark TPV10x
@@ -870,7 +863,7 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
   nucFload = Fload
   call init_2d_distribution(nucFload,coord,IIN_PAR,nFload)
 
- ! WARNING: the line below is only valid for pure strike-slip faulting
+  ! WARNING: the line below is only valid for pure strike-slip faulting
   V(1,:) = f%V_init
 
 end subroutine rsf_init
@@ -913,14 +906,14 @@ subroutine rsf_update_state(V,dt,f)
   ! slip law : by default use strong rate-weakening
   else
 !    f%theta = f%L/V * (f%theta*V/f%L)**(exp(-vDtL))
-     where(V /= 0._CUSTOM_REAL)
-        fLV = f%f0 - (f%b - f%a)*log(V/f%V0)
-        f_ss = f%fw + (fLV - f%fw)/(ONE + (V/f%Vw)**8)**0.125
-        xi_ss = f%a * log( TWO*f%V0/V * sinh(f_ss/f%a) )
-        f%theta = xi_ss + (f%theta - xi_ss) * exp(-vDtL)
-     elsewhere
-        f%theta = f%theta
-     endwhere
+    where(V /= 0._CUSTOM_REAL)
+      fLV = f%f0 - (f%b - f%a)*log(V/f%V0)
+      f_ss = f%fw + (fLV - f%fw)/(ONE + (V/f%Vw)**8)**0.125
+      xi_ss = f%a * log( TWO*f%V0/V * sinh(f_ss/f%a) )
+      f%theta = xi_ss + (f%theta - xi_ss) * exp(-vDtL)
+    elsewhere
+      f%theta = f%theta
+    endwhere
   endif
 
 end subroutine rsf_update_state
@@ -931,17 +924,18 @@ end subroutine rsf_update_state
 
 subroutine SCEC_Write_RuptureTime(dataXZ,iflt)
 
+  use :: specfem_par, only: OUTPUT_FILES_PATH
   type(dataXZ_type), intent(in) :: dataXZ
   integer, intent(in) :: iflt
 
   integer   :: i,IOUT
-  character(len=70) :: filename
+  character(len=MAX_STRING_LEN) :: filename
 
   integer, dimension(8) :: time_values
 
   call date_and_time(VALUES=time_values)
 
-  write(filename,"('../OUTPUT_FILES/RuptureTime_Fault',I0)") iflt
+  write(filename,'(a,I0)') trim(OUTPUT_FILES_PATH)//'/RuptureTime_Fault', iflt
 
   IOUT = 121 !WARNING: not very robust. Could instead look for an available ID
 
@@ -1067,11 +1061,11 @@ subroutine gather_dataXZ(bc)
 end subroutine gather_dataXZ
 
 !---------------------------------------------------------------
-subroutine store_dataXZ(dataXZ,stg,dold,dnew,dc,vold,vnew,time,dt)
+subroutine store_dataXZ(dataXZ,stg,dold,dnew,dc,vold,vnew,timeval,dt)
 
   type(dataXZ_type), intent(inout) :: dataXZ
   real(kind=CUSTOM_REAL), dimension(:), intent(in) :: stg,dold,dnew,dc,vold,vnew
-  real(kind=CUSTOM_REAL), intent(in) :: time,dt
+  real(kind=CUSTOM_REAL), intent(in) :: timeval,dt
 
   integer :: i
 
@@ -1083,14 +1077,14 @@ subroutine store_dataXZ(dataXZ,stg,dold,dnew,dc,vold,vnew,time,dt)
     ! with linear time interpolation
     if (dataXZ%tPZ(i)==0e0_CUSTOM_REAL) then
       if (dold(i)<=dc(i) .and. dnew(i) >= dc(i)) then
-        dataXZ%tPZ(i) = time-dt*(dnew(i)-dc(i))/(dnew(i)-dold(i))
+        dataXZ%tPZ(i) = timeval-dt*(dnew(i)-dc(i))/(dnew(i)-dold(i))
       endif
     endif
 
     ! rupture time = first time when slip velocity = V_RUPT
     ! with linear time interpolation
     if (dataXZ%tRUP(i)==0e0_CUSTOM_REAL) then
-      if (vold(i)<=V_RUPT .and. vnew(i)>=V_RUPT) dataXZ%tRUP(i)= time-dt*(vnew(i)-V_RUPT)/(vnew(i)-vold(i))
+      if (vold(i)<=V_RUPT .and. vnew(i)>=V_RUPT) dataXZ%tRUP(i)= timeval-dt*(vnew(i)-V_RUPT)/(vnew(i)-vold(i))
     endif
 
   enddo
@@ -1103,12 +1097,13 @@ end subroutine store_dataXZ
 !---------------------------------------------------------------
 subroutine write_dataXZ(dataXZ,itime,iflt)
 
+  use :: specfem_par, only: OUTPUT_FILES_PATH
   type(dataXZ_type), intent(in) :: dataXZ
   integer, intent(in) :: itime,iflt
 
-  character(len=70) :: filename
+  character(len=MAX_STRING_LEN) :: filename
 
-  write(filename,"('../OUTPUT_FILES/Snapshot',I0,'_F',I0,'.bin')") itime,iflt
+  write(filename,"(a,I0,'_F',I0,'.bin')") trim(OUTPUT_FILES_PATH)//'/Snapshot',itime,iflt
 
   open(unit=IOUT, file= trim(filename), status='replace', form='unformatted',action='write')
 
@@ -1292,9 +1287,9 @@ subroutine funcd(x,fn,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
   integer :: statelaw
 
   if(statelaw == 1) then
-     arg = exp((f0+dble(b)*log(V0*theta/L))/a)/TWO/V0
+    arg = exp((f0+dble(b)*log(V0*theta/L))/a)/TWO/V0
   else
-     arg = exp(theta/a)/TWO/V0
+    arg = exp(theta/a)/TWO/V0
   endif
   fn = tStick - Z*x - a*Seff*asinh_slatec(x*arg)
   df = -Z - a*Seff/sqrt(ONE + (x*arg)**2)*arg

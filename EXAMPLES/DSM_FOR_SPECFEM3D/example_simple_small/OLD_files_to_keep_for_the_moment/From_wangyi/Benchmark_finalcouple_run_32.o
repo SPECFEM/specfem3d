@@ -1,0 +1,350 @@
+!!!!!!!!!!!!!!!!!! SHELLS STEP1 : fin de lecture parfile_for_benchmark !!!!!!!!!!!!!!!!
+The value of CHOICE variable is 3
+!!!!!!!!!!!!!!!!!! SHELLS STEP3 : fin de lecture scrpits_specfem3D.sh !!!!!!!!!!!!!!!!
+ total number of nodes: 
+   nnodes =         7936
+ total number of spectral elements:
+   nspec =         6750
+ materials:
+   num_mat =           -1
+   num_mat =           -2
+   num_mat =           -3
+   num_mat =           -4
+   num_mat =           -5
+   defined =            0 undefined =            5
+ absorbing boundaries:
+   nspec2D_xmin =          225
+   nspec2D_xmax =          225
+   nspec2D_ymin =          450
+   nspec2D_ymax =          450
+   nspec2D_bottom =          450
+   nspec2D_top =            0
+ Par_file_faults not found: assume no faults
+ node valence:
+   min =            1  max =            8
+   nsize =            8 sup_neighbour =           38
+ mesh2dual:
+   max_neighbour =           26
+ partitions: 
+   num =           32
+ 
+ Databases files in directory: OUTPUT_FILES/DATABASES_MPI/
+ finished successfully
+ 
+!!!!!!!!!!!!!!!!!!!!! SCRPITS 1 !!!!!!!!!!!!!!!!
+/ccc/scratch/cont003/gen7165/durochtc/Codes/SPECFEM3Ds/specfem3d/utils/DSM_FOR_SPECFEM3D/EXAMPLES/example_simple_small
+ prname, nmat_ext_mesh, nundefMat_ext_mesh
+ ./OUTPUT_FILES/DATABASES_MPI//proc000000_                                      
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                  0           5
+ prname, nmat_ext_mesh, nundefMat_ext_mesh
+ prname, nmat_ext_mesh, nundefMat_ext_mesh
+ ./OUTPUT_FILES/DATABASES_MPI//proc000002_                                      
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                  0           5
+ prname, nmat_ext_mesh, nundefMat_ext_mesh
+ ./OUTPUT_FILES/DATABASES_MPI//proc000006_                                      
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                  0           5
+ prname, nmat_ext_mesh, nundefMat_ext_mesh
+ ./OUTPUT_FILES/DATABASES_MPI//proc000011_                                      
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                  0           5
+ prname, nmat_ext_mesh, nundefMat_ext_mesh
+ ./OUTPUT_FILES/DATABASES_MPI//proc000005_                                      
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                  0           5
+ prname, nmat_ext_mesh, nundefMat_ext_mesh
+ ./OUTPUT_FILES/DATABASES_MPI//proc000004_                                      
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                  0           5
+ prname, nmat_ext_mesh, nundefMat_ext_mesh
+ ./OUTPUT_FILES/DATABASES_MPI//proc000014_                                      
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                  0           5
+ prname, nmat_ext_mesh, nundefMat_ext_mesh
+ ./OUTPUT_FILES/DATABASES_MPI//proc000010_                                      
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                  0           5
+ prname, nmat_ext_mesh, nundefMat_ext_mesh
+ ./OUTPUT_FILES/DATABASES_MPI//proc000003_                                      
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                  0           5
+ prname, nmat_ext_mesh, nundefMat_ext_mesh
+ ./OUTPUT_FILES/DATABASES_MPI//proc000009_                                      
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                  0           5
+ prname, nmat_ext_mesh, nundefMat_ext_mesh
+ ./OUTPUT_FILES/DATABASES_MPI//proc000013_                                      
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                  0           5
+ prname, nmat_ext_mesh, nundefMat_ext_mesh
+ ./OUTPUT_FILES/DATABASES_MPI//proc000015_                                      
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                  0           5
+ prname, nmat_ext_mesh, nundefMat_ext_mesh
+ ./OUTPUT_FILES/DATABASES_MPI//proc000008_                                      
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                  0           5
+ prname, nmat_ext_mesh, nundefMat_ext_mesh
+ ./OUTPUT_FILES/DATABASES_MPI//proc000012_                                      
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                  0           5
+ ./OUTPUT_FILES/DATABASES_MPI//proc000001_                                      
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                  0           5
+ prname, nmat_ext_mesh, nundefMat_ext_mesh
+ ./OUTPUT_FILES/DATABASES_MPI//proc000007_                                      
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                  0           5
+ prname, nmat_ext_mesh, nundefMat_ext_mesh
+ ./OUTPUT_FILES/DATABASES_MPI//proc000030_                                      
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                  0           5
+ prname, nmat_ext_mesh, nundefMat_ext_mesh
+ prname, nmat_ext_mesh, nundefMat_ext_mesh
+ ./OUTPUT_FILES/DATABASES_MPI//proc000026_                                      
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+ prname, nmat_ext_mesh, nundefMat_ext_mesh
+ ./OUTPUT_FILES/DATABASES_MPI//proc000019_                                      
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                  0           5
+ prname, nmat_ext_mesh, nundefMat_ext_mesh
+ ./OUTPUT_FILES/DATABASES_MPI//proc000020_                                      
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                  0           5
+ prname, nmat_ext_mesh, nundefMat_ext_mesh
+ ./OUTPUT_FILES/DATABASES_MPI//proc000025_                                      
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                  0           5
+                                                                                
+                                                  0           5
+ prname, nmat_ext_mesh, nundefMat_ext_mesh
+ ./OUTPUT_FILES/DATABASES_MPI//proc000027_                                      
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                  0           5
+ prname, nmat_ext_mesh, nundefMat_ext_mesh
+ ./OUTPUT_FILES/DATABASES_MPI//proc000029_                                      
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                  0           5
+ prname, nmat_ext_mesh, nundefMat_ext_mesh
+ ./OUTPUT_FILES/DATABASES_MPI//proc000017_                                      
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                  0           5
+ prname, nmat_ext_mesh, nundefMat_ext_mesh
+ ./OUTPUT_FILES/DATABASES_MPI//proc000018_                                      
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                  0           5
+ prname, nmat_ext_mesh, nundefMat_ext_mesh
+ ./OUTPUT_FILES/DATABASES_MPI//proc000021_                                      
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                  0           5
+ prname, nmat_ext_mesh, nundefMat_ext_mesh
+ ./OUTPUT_FILES/DATABASES_MPI//proc000022_                                      
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                  0           5
+ prname, nmat_ext_mesh, nundefMat_ext_mesh
+ ./OUTPUT_FILES/DATABASES_MPI//proc000023_                                      
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                  0           5
+ prname, nmat_ext_mesh, nundefMat_ext_mesh
+ ./OUTPUT_FILES/DATABASES_MPI//proc000024_                                      
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                  0           5
+ prname, nmat_ext_mesh, nundefMat_ext_mesh
+ ./OUTPUT_FILES/DATABASES_MPI//proc000028_                                      
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                  0           5
+ prname, nmat_ext_mesh, nundefMat_ext_mesh
+ ./OUTPUT_FILES/DATABASES_MPI//proc000016_                                      
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                  0           5
+ ./OUTPUT_FILES/DATABASES_MPI//proc000031_                                      
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                  0           5
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+ COUPLE_WITH_DSM T
+########## ########## ########## ########## ########## ########## ########## ##########
+Execution Sum Up
+########## ########## ########## ########## ########## ########## ########## ##########
+Jobid     : 1987077
+Jobname   : Benchmark_finalcouple32_SPECFEM3D_DSM
+User      : wangyi
+Account   : gen7165@standard
+Limits    : time = 40:00 , memory/task = 4000 Mo
+Date      : submit = 01/08/2014 16:17:05 , start = 01/08/2014 16:19:27
+Execution : partition = standard , QoS = normal , Comment = (null)
+Resources : ntasks = 32 , cpus/task = 1 , ncpus = 32 , nodes = 2
+   Nodes=curie[4485,4487] CPU_IDs=0-15 Mem=64000
+ 
+Memory / step 
+--------------
+                        Resident Size (Mo)                     Virtual Size (Go)
+JobID          Max     (Node:Task)       AveTask    Max  (Node:Task)            AveTask
+-----------    ------------------------  -------    --------------------------  -------
+
+Accounting / step 
+------------------
+
+JobID          JobName             Ntasks  Ncpus Nnodes     Layout       Elapsed   Ratio      CPusage    Eff  State
+------------   ------------        ------  ----- ------     -------      -------   -----      -------    ---  -----
+1987077       Benchmark_finalcoup+      -     32      2           -     00:00:06     100            -      -  -
+1987077.0     xgenerate_databases      32     32      2      BBlock     00:00:04    66.6            -      -  COMPLETED
+########## ########## ########## ########## ########## ########## ########## ##########

@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -138,8 +139,6 @@
 
   double precision, dimension(6,NSOURCES) ::  moment_tensor
 
-  character(len=256) OUTPUT_FILES
-
   double precision, dimension(NSOURCES) :: x_found_source,y_found_source,z_found_source
   double precision, dimension(NSOURCES) :: elevation
   double precision distmin
@@ -163,15 +162,12 @@
 
   !-----------------------------------------------------------------------------------
 
-  ! get the base pathname for output files
-  call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)))
-
   ! read all the sources (note: each process reads the source file)
   if (USE_FORCE_POINT_SOURCE) then
-     call get_force(tshift_src,hdur,lat,long,depth,NSOURCES,min_tshift_src_original,factor_force_source, &
+    call get_force(tshift_src,hdur,lat,long,depth,NSOURCES,min_tshift_src_original,factor_force_source, &
                    comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP)
   else
-     call get_cmt(yr,jda,ho,mi,sec,tshift_src,hdur,lat,long,depth,moment_tensor, &
+    call get_cmt(yr,jda,ho,mi,sec,tshift_src,hdur,lat,long,depth,moment_tensor, &
                  DT,NSOURCES,min_tshift_src_original)
   endif
 
@@ -763,8 +759,8 @@
           write(IMAIN,*) '  lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
           write(IMAIN,*) '  lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
           if( USE_RICKER_TIME_FUNCTION ) then
-             t0_ricker = 1.2d0/f0
-             write(IMAIN,*) '  t0_ricker = ',t0_ricker
+            t0_ricker = 1.2d0/f0
+            write(IMAIN,*) '  t0_ricker = ',t0_ricker
           endif
           write(IMAIN,*) '  time shift = ',tshift_src(isource)
           write(IMAIN,*)
@@ -842,14 +838,14 @@
       if( idomain(isource) == IDOMAIN_ACOUSTIC ) then
         if( Mxx(isource) /= Myy(isource) .or. Myy(isource) /= Mzz(isource) .or. &
            Mxy(isource) > TINYVAL .or. Mxz(isource) > TINYVAL .or. Myz(isource) > TINYVAL ) then
-            write(IMAIN,*)
-            write(IMAIN,*) ' error CMTSOLUTION format for acoustic source:'
-            write(IMAIN,*) '   acoustic source needs explosive moment tensor with'
-            write(IMAIN,*) '      Mrr = Mtt = Mpp '
-            write(IMAIN,*) '   and '
-            write(IMAIN,*) '      Mrt = Mrp = Mtp = zero'
-            write(IMAIN,*)
-            call exit_mpi(myrank,'error acoustic source')
+          write(IMAIN,*)
+          write(IMAIN,*) ' error CMTSOLUTION format for acoustic source:'
+          write(IMAIN,*) '   acoustic source needs explosive moment tensor with'
+          write(IMAIN,*) '      Mrr = Mtt = Mpp '
+          write(IMAIN,*) '   and '
+          write(IMAIN,*) '      Mrt = Mrp = Mtp = zero'
+          write(IMAIN,*)
+          call exit_mpi(myrank,'error acoustic source')
         endif
       endif
 
@@ -863,12 +859,12 @@
     enddo
 
     if( .not. SHOW_DETAILS_LOCATE_SOURCE .and. NSOURCES > 1 ) then
-        write(IMAIN,*)
-        write(IMAIN,*) '*************************************'
-        write(IMAIN,*) ' using sources ',NSOURCES
-        write(IMAIN,*) '*************************************'
-        write(IMAIN,*)
-        call flush_IMAIN()
+      write(IMAIN,*)
+      write(IMAIN,*) '*************************************'
+      write(IMAIN,*) ' using sources ',NSOURCES
+      write(IMAIN,*) '*************************************'
+      write(IMAIN,*)
+      call flush_IMAIN()
     endif
 
     if(PRINT_SOURCE_TIME_FUNCTION) then
@@ -908,7 +904,7 @@
     call flush_IMAIN()
 
     ! output source information to a file so that we can load it and write to SU headers later
-    open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/output_list_sources.txt',status='unknown')
+    open(unit=IOUT_SU,file=trim(OUTPUT_FILES_PATH)//'/output_list_sources.txt',status='unknown')
     do isource=1,NSOURCES
       write(IOUT_SU,*) x_found_source(isource),y_found_source(isource),z_found_source(isource)
     enddo

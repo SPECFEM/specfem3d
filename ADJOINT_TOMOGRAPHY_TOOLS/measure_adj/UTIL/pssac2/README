@@ -1,0 +1,28 @@
+
+pssac2
+======
+
+Installation Instructions
+-------------------------
+
+ ./configure 
+ make
+ make install
+
+If ./configure cannot find the required libraries try:
+
+ ./configure --with-gmt=/path/to/gmt --with-netcdf=/path/to/netcdf
+ make
+ make install
+
+Required Libraries
+------------------
+
+ * GMT version 4.2 or higher
+ * NetCDF Library (This is required to compile GMT)
+
+Bugs
+----
+
+If you find bugs or something does not work as expected, please contact savage@uri.edu 
+Yes, there are bugs.

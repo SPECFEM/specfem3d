@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -35,13 +36,13 @@
 ! determines absorbing boundaries/free-surface, 2D jacobians, face normals for Stacey conditions
 
   use generate_databases_par, only: STACEY_INSTEAD_OF_FREE_SURFACE, PML_INSTEAD_OF_FREE_SURFACE, NGNOD2D, &
-                                      STACEY_ABSORBING_CONDITIONS,PML_CONDITIONS
+                                      STACEY_ABSORBING_CONDITIONS,PML_CONDITIONS,COUPLE_WITH_DSM
   use create_regions_mesh_ext_par
 
   implicit none
 
 ! number of spectral elements in each block
-  integer :: myrank,nspec
+  integer :: myrank,ier,nspec
 
 ! arrays with the mesh
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
@@ -78,10 +79,38 @@
 
   ! face corner locations
   real(kind=CUSTOM_REAL),dimension(NGNOD2D_FOUR_CORNERS) :: xcoord,ycoord,zcoord
-  integer  :: ispec,ispec2D,icorner,itop,iabs,iface,igll,i,j,igllfree,ifree
+  integer  :: ispec,ispec2D,icorner,itop,iabsval,iface,igll,i,j,igllfree,ifree
+
+  !! CD CD !! additonal local parameters For coupling with DSM
+
+  logical, dimension(:,:),allocatable :: iboun   ! pll
+
+  ! corner locations for faces
+  real(kind=CUSTOM_REAL), dimension(:,:,:),allocatable :: xcoord_iboun,ycoord_iboun,zcoord_iboun
+  character(len=27) namefile
+
+  ! sets flag in array iboun for elements with an absorbing boundary faces
+  if(COUPLE_WITH_DSM) then
+
+    ! allocate temporary flag array
+    allocate(iboun(6,nspec), &
+             xcoord_iboun(NGNOD2D,6,nspec), &
+             ycoord_iboun(NGNOD2D,6,nspec), &
+             zcoord_iboun(NGNOD2D,6,nspec),stat=ier)
+    if(ier /= 0) stop 'not enough memory to allocate arrays'
+
+    iboun(:,:) = .false.
+
+    write(namefile,'(a17,i6.6,a4)') 'xmin_gll_for_dsm_',myrank,'.txt'
+    open(123,file=namefile)
+    write(123,*) nspec2D_xmin
+
+   endif
+
+  !! CD CD
 
   ! abs face counter
-  iabs = 0
+  iabsval = 0
 
   ! xmin
   ijk_face(:,:,:) = 0
@@ -105,6 +134,10 @@
                             xstore_dummy,ystore_dummy,zstore_dummy, &
                             iface)
 
+    !! CD CD !! For coupling with DSM
+    if(COUPLE_WITH_DSM) iboun(iface,ispec) = .true.
+    !! CD CD
+
     ! ijk indices of GLL points for face id
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLZ)
 
@@ -125,25 +158,35 @@
                                       xstore_dummy,ystore_dummy,zstore_dummy, &
                                       lnormal )
         normal_face(:,i,j) = lnormal(:)
+
+        !! CD CD !! For coupling with DSM
+        if(COUPLE_WITH_DSM) write(123,'(i10,3f20.10)') ispec,xstore_dummy(ibool(i,j,1,ispec)),&
+                ystore_dummy(ibool(i,j,1,ispec)),zstore_dummy(ibool(i,j,1,ispec))
+        !! CD CD
+
       enddo
     enddo
 
     ! sets face infos
-    iabs = iabs + 1
-    abs_boundary_ispec(iabs) = ispec
+    iabsval = iabsval + 1
+    abs_boundary_ispec(iabsval) = ispec
 
     ! gll points -- assuming NGLLX = NGLLY = NGLLZ
     igll = 0
     do j=1,NGLLZ
       do i=1,NGLLX
         igll = igll+1
-        abs_boundary_ijk(:,igll,iabs) = ijk_face(:,i,j)
-        abs_boundary_jacobian2Dw(igll,iabs) = jacobian2Dw_face(i,j)
-        abs_boundary_normal(:,igll,iabs) = normal_face(:,i,j)
+        abs_boundary_ijk(:,igll,iabsval) = ijk_face(:,i,j)
+        abs_boundary_jacobian2Dw(igll,iabsval) = jacobian2Dw_face(i,j)
+        abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
       enddo
     enddo
 
   enddo ! nspec2D_xmin
+
+  !! CD CD !! For coupling with DSM
+  if(COUPLE_WITH_DSM) close(123)
+  !! CD CD
 
   ! xmax
   ijk_face(:,:,:) = 0
@@ -166,6 +209,10 @@
                               ibool,nspec,nglob_dummy, &
                               xstore_dummy,ystore_dummy,zstore_dummy, &
                               iface )
+
+    !! CD CD !! For coupling with DSM
+    if(COUPLE_WITH_DSM) iboun(iface,ispec) = .true.
+    !! CD CD
 
     ! ijk indices of GLL points on face
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLZ)
@@ -191,17 +238,17 @@
     enddo
 
     ! sets face infos
-    iabs = iabs + 1
-    abs_boundary_ispec(iabs) = ispec
+    iabsval = iabsval + 1
+    abs_boundary_ispec(iabsval) = ispec
 
     ! gll points -- assuming NGLLX = NGLLY = NGLLZ
     igll = 0
     do j=1,NGLLZ
       do i=1,NGLLX
         igll = igll+1
-        abs_boundary_ijk(:,igll,iabs) = ijk_face(:,i,j)
-        abs_boundary_jacobian2Dw(igll,iabs) = jacobian2Dw_face(i,j)
-        abs_boundary_normal(:,igll,iabs) = normal_face(:,i,j)
+        abs_boundary_ijk(:,igll,iabsval) = ijk_face(:,i,j)
+        abs_boundary_jacobian2Dw(igll,iabsval) = jacobian2Dw_face(i,j)
+        abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
       enddo
     enddo
 
@@ -229,6 +276,10 @@
                               xstore_dummy,ystore_dummy,zstore_dummy, &
                               iface )
 
+    !! CD CD !! For coupling with DSM
+    if(COUPLE_WITH_DSM) iboun(iface,ispec) = .true.
+    !! CD CD
+
     ! ijk indices of GLL points on face
     call get_element_face_gll_indices(iface,ijk_face,NGLLY,NGLLZ)
 
@@ -253,17 +304,17 @@
     enddo
 
     ! sets face infos
-    iabs = iabs + 1
-    abs_boundary_ispec(iabs) = ispec
+    iabsval = iabsval + 1
+    abs_boundary_ispec(iabsval) = ispec
 
     ! gll points -- assuming NGLLX = NGLLY = NGLLZ
     igll = 0
     do j=1,NGLLZ
       do i=1,NGLLY
         igll = igll+1
-        abs_boundary_ijk(:,igll,iabs) = ijk_face(:,i,j)
-        abs_boundary_jacobian2Dw(igll,iabs) = jacobian2Dw_face(i,j)
-        abs_boundary_normal(:,igll,iabs) = normal_face(:,i,j)
+        abs_boundary_ijk(:,igll,iabsval) = ijk_face(:,i,j)
+        abs_boundary_jacobian2Dw(igll,iabsval) = jacobian2Dw_face(i,j)
+        abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
       enddo
     enddo
 
@@ -291,6 +342,10 @@
                               xstore_dummy,ystore_dummy,zstore_dummy, &
                               iface )
 
+    !! CD CD !! For coupling with DSM
+    if(COUPLE_WITH_DSM) iboun(iface,ispec) = .true.
+    !! CD CD
+
     ! ijk indices of GLL points on face
     call get_element_face_gll_indices(iface,ijk_face,NGLLY,NGLLZ)
 
@@ -315,17 +370,17 @@
     enddo
 
     ! sets face infos
-    iabs = iabs + 1
-    abs_boundary_ispec(iabs) = ispec
+    iabsval = iabsval + 1
+    abs_boundary_ispec(iabsval) = ispec
 
     ! gll points -- assuming NGLLX = NGLLY = NGLLZ
     igll = 0
     do j=1,NGLLY
       do i=1,NGLLX
         igll = igll+1
-        abs_boundary_ijk(:,igll,iabs) = ijk_face(:,i,j)
-        abs_boundary_jacobian2Dw(igll,iabs) = jacobian2Dw_face(i,j)
-        abs_boundary_normal(:,igll,iabs) = normal_face(:,i,j)
+        abs_boundary_ijk(:,igll,iabsval) = ijk_face(:,i,j)
+        abs_boundary_jacobian2Dw(igll,iabsval) = jacobian2Dw_face(i,j)
+        abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
       enddo
     enddo
 
@@ -353,6 +408,10 @@
                               xstore_dummy,ystore_dummy,zstore_dummy, &
                               iface )
 
+    !! CD CD !! For coupling with DSM
+    if(COUPLE_WITH_DSM) iboun(iface,ispec) = .true.
+    !! CD CD
+
     ! ijk indices of GLL points on face
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLY)
 
@@ -377,17 +436,17 @@
     enddo
 
     ! sets face infos
-    iabs = iabs + 1
-    abs_boundary_ispec(iabs) = ispec
+    iabsval = iabsval + 1
+    abs_boundary_ispec(iabsval) = ispec
 
     ! gll points -- assuming NGLLX = NGLLY = NGLLZ
     igll = 0
     do j=1,NGLLY
       do i=1,NGLLX
         igll = igll+1
-        abs_boundary_ijk(:,igll,iabs) = ijk_face(:,i,j)
-        abs_boundary_jacobian2Dw(igll,iabs) = jacobian2Dw_face(i,j)
-        abs_boundary_normal(:,igll,iabs) = normal_face(:,i,j)
+        abs_boundary_ijk(:,igll,iabsval) = ijk_face(:,i,j)
+        abs_boundary_jacobian2Dw(igll,iabsval) = jacobian2Dw_face(i,j)
+        abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
       enddo
     enddo
 
@@ -417,6 +476,10 @@
                               ibool,nspec,nglob_dummy, &
                               xstore_dummy,ystore_dummy,zstore_dummy, &
                               iface )
+
+    !! CD CD !! For coupling with DSM
+    if(COUPLE_WITH_DSM) iboun(iface,ispec) = .true.
+    !! CD CD
 
     ! ijk indices of GLL points on face
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLY)
@@ -479,17 +542,17 @@
          enddo
 
          ! adds face infos to absorbing boundary surface
-         iabs = iabs + 1
-         abs_boundary_ispec(iabs) = ispec
+         iabsval = iabsval + 1
+         abs_boundary_ispec(iabsval) = ispec
 
          ! gll points -- assuming NGLLX = NGLLY = NGLLZ
          igll = 0
          do j=1,NGLLY
            do i=1,NGLLX
              igll = igll+1
-             abs_boundary_ijk(:,igll,iabs) = ijk_face(:,i,j)
-             abs_boundary_jacobian2Dw(igll,iabs) = jacobian2Dw_face(i,j)
-             abs_boundary_normal(:,igll,iabs) = normal_face(:,i,j)
+             abs_boundary_ijk(:,igll,iabsval) = ijk_face(:,i,j)
+             abs_boundary_jacobian2Dw(igll,iabsval) = jacobian2Dw_face(i,j)
+             abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
            enddo
          enddo
        endif
@@ -531,17 +594,17 @@
          enddo
 
          ! adds face infos to absorbing boundary surface
-         iabs = iabs + 1
-         abs_boundary_ispec(iabs) = ispec
+         iabsval = iabsval + 1
+         abs_boundary_ispec(iabsval) = ispec
 
          ! gll points -- assuming NGLLX = NGLLY = NGLLZ
          igll = 0
          do j=1,NGLLY
            do i=1,NGLLX
              igll = igll+1
-             abs_boundary_ijk(:,igll,iabs) = ijk_face(:,i,j)
-             abs_boundary_jacobian2Dw(igll,iabs) = jacobian2Dw_face(i,j)
-             abs_boundary_normal(:,igll,iabs) = normal_face(:,i,j)
+             abs_boundary_ijk(:,igll,iabsval) = ijk_face(:,i,j)
+             abs_boundary_jacobian2Dw(igll,iabsval) = jacobian2Dw_face(i,j)
+             abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
            enddo
          enddo
        endif
@@ -572,17 +635,17 @@
     stop 'error number of free surface faces'
   endif
 
-  if( iabs /= num_abs_boundary_faces ) then
-    print*,'error number of absorbing faces:',iabs,num_abs_boundary_faces
+  if( iabsval /= num_abs_boundary_faces ) then
+    print*,'error number of absorbing faces:',iabsval,num_abs_boundary_faces
     stop 'error number of absorbing faces'
   endif
 
   call sum_all_i(num_free_surface_faces,itop)
-  call sum_all_i(num_abs_boundary_faces,iabs)
+  call sum_all_i(num_abs_boundary_faces,iabsval)
   if( myrank == 0 ) then
     write(IMAIN,*) '     absorbing boundary:'
     write(IMAIN,*) '     total number of free faces = ',itop
-    write(IMAIN,*) '     total number of faces = ',iabs
+    write(IMAIN,*) '     total number of faces = ',iabsval
     if((PML_CONDITIONS .and. PML_INSTEAD_OF_FREE_SURFACE) .or. &
        (STACEY_ABSORBING_CONDITIONS .and. STACEY_INSTEAD_OF_FREE_SURFACE)) then
        write(IMAIN,*) '     absorbing boundary includes free surface (i.e., top surface converted from free to absorbing)'

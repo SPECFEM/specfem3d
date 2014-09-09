@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -23,7 +24,6 @@
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
 !=====================================================================
-
 
   subroutine write_seismograms()
 
@@ -68,17 +68,17 @@
 
       ! this transfers fields only in elements with stations for efficiency
       if( ELASTIC_SIMULATION ) then
-         if(USE_CUDA_SEISMOGRAMS) then
-            call transfer_seismograms_el_from_d(nrec_local,Mesh_pointer, &
-                                               seismograms_d,seismograms_v,seismograms_a,&
-                                               it)
-         else
-            call transfer_station_el_from_device(displ,veloc,accel, &
-                                                b_displ,b_veloc,b_accel, &
-                                                Mesh_pointer,number_receiver_global, &
-                                                ispec_selected_rec,ispec_selected_source, &
-                                                ibool)
-         endif
+        if (USE_CUDA_SEISMOGRAMS) then
+          call transfer_seismograms_el_from_d(nrec_local,Mesh_pointer, &
+                                             seismograms_d,seismograms_v,seismograms_a,&
+                                             it)
+        else
+          call transfer_station_el_from_device(displ,veloc,accel, &
+                                              b_displ,b_veloc,b_accel, &
+                                              Mesh_pointer,number_receiver_global, &
+                                              ispec_selected_rec,ispec_selected_source, &
+                                              ibool)
+        endif
         ! alternative: transfers whole fields
         !  call transfer_fields_el_from_device(NDIM*NGLOB_AB,displ,veloc, accel, Mesh_pointer)
       endif
@@ -140,10 +140,9 @@
                           dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
         endif ! acoustic
 
-       ! poroelastic wave field
+        ! poroelastic wave field
         if( ispec_is_poroelastic(ispec) ) then
           ! interpolates displ/veloc/accel at receiver locations
-        !  call compute_interpolated_dva(displw_poroelastic,velocw_poroelastic,accelw_poroelastic,NGLOB_AB, &
           call compute_interpolated_dva(displs_poroelastic,velocs_poroelastic,accels_poroelastic,NGLOB_AB, &
                           ispec,NSPEC_AB,ibool, &
                           xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
@@ -296,14 +295,14 @@
       call write_seismograms_to_file(seismograms_a,3)
     else
       call write_adj_seismograms_to_file(myrank,seismograms_d,number_receiver_global, &
-            nrec_local,it,DT,NSTEP,t0,LOCAL_PATH,1)
+            nrec_local,it,DT,NSTEP,t0,1)
     endif
   endif
 
   ! write ONE binary file for all receivers (nrec_local) within one proc
   ! SU format, with 240-byte-header for each trace
   if ((mod(it,NTSTEP_BETWEEN_OUTPUT_SEISMOS) == 0 .or. it==NSTEP) .and. SU_FORMAT) &
-     call write_output_SU()
+    call write_output_SU()
 
   end subroutine write_seismograms
 
@@ -372,7 +371,7 @@
       call write_one_seismogram(one_seismogram,irec, &
               station_name,network_name,nrec, &
               DT,t0,it,NSTEP,SIMULATION_TYPE, &
-              myrank,irecord,component,LOCAL_PATH)
+              myrank,irecord,component)
 
     enddo ! nrec_local
 
@@ -436,7 +435,7 @@
             call write_one_seismogram(one_seismogram,irec, &
                               station_name,network_name,nrec, &
                               DT,t0,it,NSTEP,SIMULATION_TYPE, &
-                              myrank,irecord,component,LOCAL_PATH)
+                              myrank,irecord,component)
 
           enddo ! nrec_local_received
         endif ! if(nrec_local_received > 0 )
@@ -450,21 +449,21 @@
       if(total_seismos /= nrec) call exit_MPI(myrank,'incorrect total number of receivers saved')
 
     else  ! on the nodes, send the seismograms to the master
-       receiver = 0
-       tmp_nrec_local(1) = nrec_local
-       call send_i(tmp_nrec_local,1,receiver,itag)
-       if (nrec_local > 0) then
-         do irec_local = 1,nrec_local
-           ! get global number of that receiver
-           irec = number_receiver_global(irec_local)
-           tmp_irec(1) = irec
-           call send_i(tmp_irec,1,receiver,itag)
+      receiver = 0
+      tmp_nrec_local(1) = nrec_local
+      call send_i(tmp_nrec_local,1,receiver,itag)
+      if (nrec_local > 0) then
+        do irec_local = 1,nrec_local
+          ! get global number of that receiver
+          irec = number_receiver_global(irec_local)
+          tmp_irec(1) = irec
+          call send_i(tmp_irec,1,receiver,itag)
 
-           ! sends seismogram of that receiver
-           one_seismogram(:,:) = seismograms(:,irec_local,:)
-           call sendv_cr(one_seismogram,NDIM*NSTEP,receiver,itag)
-         enddo
-       endif
+          ! sends seismogram of that receiver
+          one_seismogram(:,:) = seismograms(:,irec_local,:)
+          call sendv_cr(one_seismogram,NDIM*NSTEP,receiver,itag)
+        enddo
+      endif
     endif ! myrank
 
   endif ! WRITE_SEISMOGRAMS_BY_MASTER
@@ -478,7 +477,7 @@
   subroutine write_one_seismogram(one_seismogram,irec, &
               station_name,network_name,nrec, &
               DT,t0,it,NSTEP,SIMULATION_TYPE, &
-              myrank,irecord,component,LOCAL_PATH)
+              myrank,irecord,component)
 
   use constants
 
@@ -494,13 +493,12 @@
   character(len=MAX_LENGTH_STATION_NAME), dimension(nrec) :: station_name
   character(len=MAX_LENGTH_NETWORK_NAME), dimension(nrec) :: network_name
   character(len=1) component
-  character(len=256) LOCAL_PATH
 
   ! local parameters
   integer iorientation
   integer length_station_name,length_network_name
-  character(len=256) sisname,clean_LOCAL_PATH,final_LOCAL_PATH
-  character(len=3) channel
+  character(len=MAX_STRING_LEN) :: sisname,final_LOCAL_PATH
+  character(len=3) :: channel
 
   ! loops over each seismogram component
   do iorientation = 1,NDIM
@@ -515,23 +513,16 @@
 
     ! check that length conforms to standard
     if(length_station_name < 1 .or. length_station_name > MAX_LENGTH_STATION_NAME) &
-       call exit_MPI(myrank,'wrong length of station name')
+      call exit_MPI(myrank,'wrong length of station name')
 
     if(length_network_name < 1 .or. length_network_name > MAX_LENGTH_NETWORK_NAME) &
-       call exit_MPI(myrank,'wrong length of network name')
+      call exit_MPI(myrank,'wrong length of network name')
 
     write(sisname,"(a,'.',a,'.',a3,'.sem',a1)") station_name(irec)(1:length_station_name),&
        network_name(irec)(1:length_network_name),channel,component
 
     ! directory to store seismograms
-    if( USE_OUTPUT_FILES_PATH ) then
-      final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'
-    else
-      ! suppress white spaces if any
-      clean_LOCAL_PATH = adjustl(LOCAL_PATH)
-      ! create full final local path
-      final_LOCAL_PATH = clean_LOCAL_PATH(1:len_trim(clean_LOCAL_PATH)) // '/'
-    endif
+    final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'
 
     ! ASCII output format
     call write_output_ASCII(one_seismogram, &
@@ -547,7 +538,7 @@
 ! write adjoint seismograms (displacement) to text files
 
   subroutine write_adj_seismograms_to_file(myrank,seismograms,number_receiver_global, &
-               nrec_local,it,DT,NSTEP,t0,LOCAL_PATH,istore)
+               nrec_local,it,DT,NSTEP,t0,istore)
 
   use constants
 
@@ -557,15 +548,13 @@
   integer, dimension(nrec_local) :: number_receiver_global
   real(kind=CUSTOM_REAL), dimension(NDIM,nrec_local,NSTEP) :: seismograms
   double precision t0,DT
-  character(len=256) LOCAL_PATH
-
 
   integer irec,irec_local
   integer iorientation,irecord,isample
 
   character(len=3) channel
   character(len=1) component
-  character(len=256) sisname,clean_LOCAL_PATH,final_LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: sisname,final_LOCAL_PATH
 
 ! save displacement, velocity or acceleration
   if(istore == 1) then
@@ -597,15 +586,7 @@
            'NT',channel,component
 
       ! directory to store seismograms
-      if( USE_OUTPUT_FILES_PATH ) then
-        final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'
-      else
-        ! suppress white spaces if any
-        clean_LOCAL_PATH = adjustl(LOCAL_PATH)
-        ! create full final local path
-        final_LOCAL_PATH = clean_LOCAL_PATH(1:len_trim(clean_LOCAL_PATH)) // '/'
-      endif
-
+      final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'
 
       ! save seismograms in text format with no subsampling.
       ! Because we do not subsample the output, this can result in large files
@@ -641,8 +622,7 @@
 
 ! write adjoint seismograms (strain) to text files
 
-  subroutine write_adj_seismograms2_to_file(myrank,seismograms,number_receiver_global, &
-               nrec_local,it,DT,NSTEP,t0,LOCAL_PATH)
+  subroutine write_adj_seismograms2_to_file(myrank,seismograms,number_receiver_global,nrec_local,it,DT,NSTEP,t0)
 
   use constants
 
@@ -652,15 +632,13 @@
   integer, dimension(nrec_local) :: number_receiver_global
   real(kind=CUSTOM_REAL), dimension(NDIM,NDIM,nrec_local,NSTEP) :: seismograms
   double precision t0,DT
-  character(len=256) LOCAL_PATH
-
 
   integer irec,irec_local
-  integer idim,jdim,irecord,isample
+  integer idimval,jdimval,irecord,isample
 
-  character(len=4) chn
-  character(len=1) component
-  character(len=256) sisname,clean_LOCAL_PATH,final_LOCAL_PATH
+  character(len=4) :: chn
+  character(len=1) :: component
+  character(len=MAX_STRING_LEN) :: sisname,final_LOCAL_PATH
 
   component = 'd'
 
@@ -672,20 +650,20 @@
     ! save three components of displacement vector
     irecord = 1
 
-    do idim = 1, 3
-      do jdim = idim, 3
+    do idimval = 1, 3
+      do jdimval = idimval, 3
 
-        if(idim == 1 .and. jdim == 1) then
+        if(idimval == 1 .and. jdimval == 1) then
           chn = 'SNN'
-        else if(idim == 1 .and. jdim == 2) then
+        else if(idimval == 1 .and. jdimval == 2) then
           chn = 'SEN'
-        else if(idim == 1 .and. jdim == 3) then
+        else if(idimval == 1 .and. jdimval == 3) then
           chn = 'SEZ'
-        else if(idim == 2 .and. jdim == 2) then
+        else if(idimval == 2 .and. jdimval == 2) then
           chn = 'SEE'
-        else if(idim == 2 .and. jdim == 3) then
+        else if(idimval == 2 .and. jdimval == 3) then
           chn = 'SNZ'
-        else if(idim == 3 .and. jdim == 3) then
+        else if(idimval == 3 .and. jdimval == 3) then
           chn = 'SZZ'
         else
           call exit_MPI(myrank,'incorrect channel value')
@@ -697,14 +675,7 @@
            'NT',chn,component
 
         ! directory to store seismograms
-        if( USE_OUTPUT_FILES_PATH ) then
-          final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'
-        else
-          ! suppress white spaces if any
-          clean_LOCAL_PATH = adjustl(LOCAL_PATH)
-          ! create full final local path
-          final_LOCAL_PATH = clean_LOCAL_PATH(1:len_trim(clean_LOCAL_PATH)) // '/'
-        endif
+        final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'
 
         ! save seismograms in text format with no subsampling.
         ! Because we do not subsample the output, this can result in large files
@@ -719,9 +690,9 @@
           if(irecord == 1) then
             ! distinguish between single and double precision for reals
             if(CUSTOM_REAL == SIZE_REAL) then
-              write(IOUT,*) sngl(dble(isample-1)*DT - t0),' ',seismograms(jdim,idim,irec_local,isample)
+              write(IOUT,*) sngl(dble(isample-1)*DT - t0),' ',seismograms(jdimval,idimval,irec_local,isample)
             else
-              write(IOUT,*) dble(isample-1)*DT - t0,' ',seismograms(jdim,idim,irec_local,isample)
+              write(IOUT,*) dble(isample-1)*DT - t0,' ',seismograms(jdimval,idimval,irec_local,isample)
             endif
           else
             call exit_MPI(myrank,'incorrect record label')
@@ -730,8 +701,8 @@
 
         close(IOUT)
 
-      enddo ! jdim
-    enddo ! idim
+      enddo ! jdimval
+    enddo ! idimval
   enddo ! irec_local
 
   end subroutine write_adj_seismograms2_to_file

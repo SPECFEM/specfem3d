@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -32,9 +33,9 @@ program combine_surf_data
   ! combines the database files on several slices.
   ! the local database file needs to have been collected onto the frontend (copy_local_database.pl)
 
-  implicit none
+  use constants
 
-  include 'constants.h'
+  implicit none
 
   integer i,j,k,ispec, ios, it
   integer iproc, proc1, proc2, num_node, node_list(300), nspec, nglob
@@ -51,15 +52,15 @@ program combine_surf_data
   real x, y, z
   real, dimension(:,:,:,:), allocatable :: dat3D
   real, dimension(:,:,:), allocatable :: dat2D
-  character(len=256) :: sline, arg(8), filename, indir, outdir, prname, surfname
-  character(len=256) :: mesh_file, local_file, local_data_file, local_ibool_file
-  character(len=256) :: local_ibool_surf_file
+  character(len=MAX_STRING_LEN) :: sline, arg(8), filename, indir, outdir, prname, surfname
+  character(len=MAX_STRING_LEN*2) :: mesh_file, local_file, local_data_file, local_ibool_file
+  character(len=MAX_STRING_LEN*2) :: local_ibool_surf_file
 
 !  integer :: num_ibool(NGLOB_AB)
   integer,dimension(:),allocatable :: num_ibool
 
   logical :: HIGH_RESOLUTION_MESH,  FILE_ARRAY_IS_3D
-  integer :: ires, nspec_surf, npoint1, npoint2, ispec_surf, inx, iny, idim, ier
+  integer :: ires, nspec_surf, npoint1, npoint2, ispec_surf, inx, iny, idimval, ier
   integer,dimension(:), allocatable ::  ibelm_surf
 
 
@@ -99,7 +100,7 @@ program combine_surf_data
     indir= arg(4)
     outdir = arg(5)
     read(arg(6),*) ires
-    read(arg(7),*) idim
+    read(arg(7),*) idimval
   else
     read(arg(1),*) proc1
     read(arg(2),*) proc2
@@ -112,7 +113,7 @@ program combine_surf_data
     indir = arg(5)
     outdir = arg(6)
     read(arg(7),*) ires
-    read(arg(8),*) idim
+    read(arg(8),*) idimval
   endif
 
   if (ires == 0) then
@@ -125,7 +126,7 @@ program combine_surf_data
     iny = 1
   endif
 
-  if (idim == 0) then
+  if (idimval == 0) then
     FILE_ARRAY_IS_3D = .false.
   else
     FILE_ARRAY_IS_3D = .true.

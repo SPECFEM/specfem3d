@@ -1,0 +1,12 @@
+1
+0.00134                 ! #tag #eta(damping) FAULT A
+1                       ! 1 = dyn 2=kin
+1200            ! NTOUT : Number of time steps
+200                                              ! NTSNAP: time interation of snapshots
+-1e0                                            ! V_HEALING (-1 : Healing off)
+1e-3                                            ! V_RUPT
+&BEGIN_FAULT /
+&INIT_STRESS S1=40.0e6,S2=0.0e0,S3=-120.0e6,n1=0,n2=0,n3=0 /
+&RSF V0 =1.e-6, f0 =0.6, a =0.01, b =0.014, L =0.4, V_init =1.e-16, theta_init =0.563591842632738, C=0.e0, nV0 =0, nf0 =0, na=0, nb=0, nL=0, nV_init=0, ntheta_init=0 /
+&ASP Fload =0.e0, nFload =1 /
+&DIST2D shape='circle-exp', val =1.e0, xc = 0.e3, yc =0.e3, zc = -7.5e3, r =3.e3 /

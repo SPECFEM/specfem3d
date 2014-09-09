@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -105,8 +106,8 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob,                   &
   integer :: ier,i
 
   !--- Local parameters for ADIOS ---
-  character(len=256) :: output_name
-  character(len=64), parameter :: group_name  = "SPECFEM3D_EXTERNAL_MESH"
+  character(len=MAX_STRING_LEN) :: output_name
+  character(len=*), parameter :: group_name = "SPECFEM3D_EXTERNAL_MESH"
   integer(kind=8) :: group, handle
   integer(kind=8) :: groupsize, totalsize
   integer :: local_dim
@@ -516,32 +517,32 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob,                   &
   call define_adios_scalar(group, groupsize, "", STRINGIFY_VAR(nspec2d_bottom))
   call define_adios_scalar(group, groupsize, "", STRINGIFY_VAR(nspec2d_top))
 
-  if (nspec2d_xmin .ne. 0) then
+  if (nspec2d_xmin /= 0) then
     local_dim = nspec2d_xmin_wmax
     call define_adios_global_array1D(group, groupsize, local_dim, &
                                      "", STRINGIFY_VAR(ibelm_xmin))
   endif
-  if (nspec2d_xmax .ne. 0) then
+  if (nspec2d_xmax /= 0) then
     local_dim = nspec2d_xmax_wmax
     call define_adios_global_array1D(group, groupsize, local_dim, &
                                      "", STRINGIFY_VAR(ibelm_xmax))
   endif
-  if (nspec2d_ymin .ne. 0) then
+  if (nspec2d_ymin /= 0) then
     local_dim = nspec2d_ymin_wmax
     call define_adios_global_array1D(group, groupsize, local_dim, &
                                      "", STRINGIFY_VAR(ibelm_ymin))
   endif
-  if (nspec2d_ymax .ne. 0) then
+  if (nspec2d_ymax /= 0) then
     local_dim = nspec2d_ymax_wmax
     call define_adios_global_array1D(group, groupsize, local_dim, &
                                      "", STRINGIFY_VAR(ibelm_ymax))
   endif
-  if (nspec2d_bottom .ne. 0) then
+  if (nspec2d_bottom /= 0) then
     local_dim = nspec2d_bottom_wmax
     call define_adios_global_array1D(group, groupsize, local_dim, &
                                      "", STRINGIFY_VAR(ibelm_bottom))
   endif
-  if (nspec2d_top .ne. 0) then
+  if (nspec2d_top /= 0) then
     local_dim = nspec2d_top_wmax
     call define_adios_global_array1D(group, groupsize, local_dim, &
                                      "", STRINGIFY_VAR(ibelm_top))
@@ -1018,32 +1019,32 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob,                   &
   call adios_write(handle, STRINGIFY_VAR(nspec2d_bottom), ier)
   call adios_write(handle, STRINGIFY_VAR(nspec2d_top), ier)
 
-  if (nspec2d_xmin .ne. 0) then
+  if (nspec2d_xmin /= 0) then
       local_dim = nspec2d_xmin_wmax
       call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                        STRINGIFY_VAR(ibelm_xmin))
   endif
-  if (nspec2d_xmax .ne. 0) then
+  if (nspec2d_xmax /= 0) then
     local_dim = nspec2d_xmax_wmax
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(ibelm_xmax))
   endif
-  if (nspec2d_ymin .ne. 0) then
+  if (nspec2d_ymin /= 0) then
     local_dim = nspec2d_ymin_wmax
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(ibelm_ymin))
   endif
-  if (nspec2d_ymax .ne. 0) then
+  if (nspec2d_ymax /= 0) then
     local_dim = nspec2d_ymax_wmax
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(ibelm_ymax))
   endif
-  if (nspec2d_bottom .ne. 0) then
+  if (nspec2d_bottom /= 0) then
     local_dim = nspec2d_bottom_wmax
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(ibelm_bottom))
   endif
-  if (nspec2d_top .ne. 0) then
+  if (nspec2d_top /= 0) then
     local_dim = nspec2d_top_wmax
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(ibelm_top))
@@ -1330,12 +1331,12 @@ subroutine save_arrays_solver_files_adios(nspec,nglob,ibool, nspec_wmax, &
   integer :: ier
 
   !--- Local parameters for ADIOS ---
-  character(len=256) :: output_name
+  character(len=MAX_STRING_LEN) :: output_name
   integer(kind=8) :: group, handle
   integer(kind=8) :: groupsize, totalsize
   integer :: local_dim
-  character(len=64), parameter :: group_name_coords  = "SPECFEM3D_MESH_COORDS"
-  character(len=64), parameter :: group_name_values = "SPECFEM3D_MODEL_VALUES"
+  character(len=*), parameter :: group_name_coords = "SPECFEM3D_MESH_COORDS"
+  character(len=*), parameter :: group_name_values = "SPECFEM3D_MODEL_VALUES"
 
   integer :: comm
 

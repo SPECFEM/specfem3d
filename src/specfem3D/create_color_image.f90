@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -124,8 +125,7 @@
   integer,dimension(:),allocatable :: iglob_coord,ispec_coord
   logical,dimension(:),allocatable:: ispec_is_image_surface,iglob_is_image_surface
   integer :: num_iglob_image_surface
-  integer :: count,loc(1),irank
-  !character(len=256) :: vtkfilename
+  integer :: countval,locval(1),irank
   integer :: zoom_factor = 4
   logical :: zoom
   integer, dimension(1,0:NPROC-1) :: tmp_pixel_per_proc
@@ -171,7 +171,7 @@
            ispec_coord(num_iglob_image_surface),stat=ier )
   if( ier /= 0 ) call exit_mpi(myrank,'error allocating xyz image coordinates')
 
-  count=0
+  countval=0
   do ispec=1,NSPEC_AB
     if( ispec_is_image_surface(ispec) ) then
       do k=1,NGLLZ
@@ -179,16 +179,16 @@
           do i=1,NGLLX
             iglob = ibool(i,j,k,ispec)
             if( iglob_is_image_surface(iglob) ) then
-              count = count+1
+              countval = countval + 1
               ! coordinates with respect to horizontal and vertical direction
-              xcoord(count)= xstore(iglob)*section_hdirx &
+              xcoord(countval)= xstore(iglob)*section_hdirx &
                                 + ystore(iglob)*section_hdiry &
                                 + zstore(iglob)*section_hdirz
-              zcoord(count)= xstore(iglob)*section_vdirx &
+              zcoord(countval)= xstore(iglob)*section_vdirx &
                                 + ystore(iglob)*section_vdiry &
                                 + zstore(iglob)*section_vdirz
-              iglob_coord(count) = iglob
-              ispec_coord(count) = ispec
+              iglob_coord(countval) = iglob
+              ispec_coord(countval) = ispec
 
               ! reset iglob flag
               iglob_is_image_surface(iglob) = .false.
@@ -199,7 +199,7 @@
     endif
   enddo
 
-  if( count /= num_iglob_image_surface) call exit_mpi(myrank,'error image point number')
+  if( countval /= num_iglob_image_surface) call exit_mpi(myrank,'error image point number')
 
   ! horizontal size of the image
   xmin_color_image_loc = minval( xcoord(:) )
@@ -354,8 +354,8 @@
     ! selects entries
     do i=1,NX_IMAGE_color
       ! note: minimum location will be between 1 and NPROC
-      loc = minloc(dist_pixel_recv(i,:))
-      irank = loc(1) - 1
+      locval = minloc(dist_pixel_recv(i,:))
+      irank = locval(1) - 1
       ! store only own best points
       if( irank == myrank .and. dist_pixel_recv(i,irank) < HUGEVAL) then
         ! increases count
@@ -596,7 +596,7 @@
 ! display a given field as a red and blue color image
 ! to display the snapshots : display image*.gif
 ! when compiling with Intel ifort, use " -assume byterecl " option to create binary PNM images
-  use constants,only: HUGEVAL,TINYVAL,CUSTOM_REAL,OUTPUT_FILES_PATH
+  use constants,only: HUGEVAL,TINYVAL,CUSTOM_REAL,OUTPUT_FILES_PATH,MAX_STRING_LEN
   use image_PNM_par,only: BINARY_FILE,VP_BACKGROUND,&
                         POWER_DISPLAY_COLOR
   implicit none
@@ -612,7 +612,7 @@
   ! local parameter
   integer :: ix,iy,R,G,B,tenthousands,thousands,hundreds,tens,units,remainder,current_rec
   real(kind=CUSTOM_REAL) :: amplitude_max,normalized_value,vpmin,vpmax,x1
-  character(len=256) :: file_name
+  character(len=MAX_STRING_LEN) :: file_name
   ! ASCII code of character '0' and of carriage return character
   integer, parameter :: ascii_code_of_zero = 48, ascii_code_of_carriage_return = 10
 
@@ -724,18 +724,18 @@
           if((vpmax-vpmin)/vpmin > 0.02d0) then
             x1 = (image_color_vp_display(ix,iy)-vpmin)/(vpmax-vpmin)
           else
-            x1 = 0.5d0
+            x1 = 0.5_CUSTOM_REAL
           endif
 
           ! rescale to avoid very dark gray levels
           x1 = x1*0.7 + 0.2
-          if(x1 > 1.d0) x1=1.d0
+          if(x1 > 1.d0) x1=1._CUSTOM_REAL
 
           ! invert scale: white = vpmin, dark gray = vpmax
-          x1 = 1.d0 - x1
+          x1 = 1._CUSTOM_REAL - x1
 
           ! map to [0,255]
-          x1 = x1 * 255.d0
+          x1 = x1 * 255._CUSTOM_REAL
 
           R = nint(x1)
           if(R < 0) R = 0

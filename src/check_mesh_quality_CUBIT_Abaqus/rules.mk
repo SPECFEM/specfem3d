@@ -3,10 +3,11 @@
 #               S p e c f e m 3 D  V e r s i o n  2 . 1
 #               ---------------------------------------
 #
-#          Main authors: Dimitri Komatitsch and Jeroen Tromp
-#    Princeton University, USA and University of Pau / CNRS / INRIA
-# (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
-#                            April 2011
+#     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+#                        Princeton University, USA
+#                and CNRS / University of Marseille, France
+#                 (there are currently many more authors!)
+# (c) Princeton University and CNRS / University of Marseille, July 2012
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -44,6 +45,7 @@ check_mesh_quality_CUBIT_Abaqus_TARGETS = \
 check_mesh_quality_CUBIT_Abaqus_OBJECTS = \
 	$O/check_mesh_quality_CUBIT_Abaqus.check.o \
 	$O/convert_skewness_to_angle.check.o \
+	$O/unused_mod.shared_module.o \
 	$O/multiply_CUBIT_Abaqus_mesh_by_1000.check.o \
 	$(EMPTY_MACRO)
 
@@ -85,7 +87,7 @@ $E/xmultiply_CUBIT_Abaqus_mesh_by_1000: $O/multiply_CUBIT_Abaqus_mesh_by_1000.ch
 #### rule to build each .o file below
 ####
 
-$O/%.check.o: $S/%.f90 ${SETUP}/constants.h
+$O/%.check.o: $S/%.f90 $O/constants_mod.shared_module.o  $O/unused_mod.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 

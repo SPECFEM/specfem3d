@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -44,9 +45,9 @@
                                   first_elem_number_in_this_color, &
                                   myrank)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer, intent(in) :: nspec, nglob
   logical, dimension(nspec), intent(in) :: is_on_a_slice_edge
@@ -104,9 +105,9 @@
                              color, nb_colors_outer_elements, nb_colors_inner_elements, &
                              nspec_outer,nspec_inner,nspec_domain)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer nspec,nglob
   logical, dimension(nspec) :: is_on_a_slice_edge,ispec_is_d
@@ -427,9 +428,9 @@
                                 myrank, nspec, nglob, &
                                 maxval_count_ibool_outer,maxval_count_ibool_inner)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: nspec,nglob
 
@@ -534,9 +535,9 @@
                                   nspec_outer,nspec_inner,maxval_count_ibool_inner, &
                                   mask_ibool,fail_safe)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: nspec,nglob
 
@@ -721,9 +722,9 @@
                                   color, nb_colors_outer_elements, nb_colors_inner_elements, &
                                   nspec_outer,nspec_inner,mask_ibool)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: nspec,nglob
 
@@ -1098,9 +1099,9 @@
 
   subroutine permute_elements_real(array_to_permute,temp_array,perm,nspec)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer, intent(in) :: nspec
   integer, intent(in), dimension(nspec) :: perm
@@ -1128,9 +1129,9 @@
 
   subroutine permute_elements_integer(array_to_permute,temp_array,perm,nspec)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer, intent(in) :: nspec
   integer, intent(in), dimension(nspec) :: perm
@@ -1158,9 +1159,9 @@
 
   subroutine permute_elements_dble(array_to_permute,temp_array,perm,nspec)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer, intent(in) :: nspec
   integer, intent(in), dimension(nspec) :: perm
@@ -1188,9 +1189,9 @@
 
   subroutine permute_elements_logical1D(array_to_permute,temp_array,perm,nspec)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer, intent(in) :: nspec
   integer, intent(in), dimension(nspec) :: perm

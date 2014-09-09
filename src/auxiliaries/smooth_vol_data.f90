@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -28,10 +29,7 @@
 ! where it smooths files with a given input kernel name:
 !
 ! compile with:
-!     mpif90 -o bin/xsmooth_vol_data -Wall src/shared/smooth_vol_data.f90 \
-!               obj/spec/gll_library.o obj/spec/read_parameter_file.o obj/spec/read_value_parameters.o \
-!               obj/spec/get_value_parameters.o obj/spec/param_reader.o obj/spec/parallel.o obj/spec/exit_mpi.o
-!     or
+!
 !     make xsmooth_vol_data
 !
 ! Usage:
@@ -60,8 +58,8 @@ program smooth_vol_data
 ! NOTE:  smoothing can be different in vertical & horizontal directions; mesh is in Cartesian geometry.
 !              algorithm uses vertical as Z, horizontal as X/Y direction
 
+  use constants
   implicit none
-  include "constants.h"
 
  ! data must be of dimension: (NGLLX,NGLLY,NGLLZ,NSPEC_AB)
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: dat,dat_smooth
@@ -85,13 +83,15 @@ program smooth_vol_data
 
   integer :: NSPEC_AB, NGLOB_AB
   integer :: NSPEC_N, NGLOB_N
+  integer :: NSPEC2D_BOTTOM, NSPEC2D_TOP
+  integer :: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax
 
   integer :: i,j,k,ios,it,iglob,ier,ispec2,ispec
   integer :: iproc, node_list(300)
 
-  character(len=256) :: arg(7), filename, indir, outdir
-  character(len=256) :: prname, prname_lp
-  character(len=256) :: local_data_file
+  character(len=MAX_STRING_LEN) :: arg(7), filename, indir, outdir
+  character(len=MAX_STRING_LEN) :: prname, prname_lp
+  character(len=MAX_STRING_LEN*2) :: local_data_file
 
   double precision :: DT
   double precision :: HDUR_MOVIE,OLSEN_ATTENUATION_RATIO,f0_FOR_PML
@@ -105,12 +105,12 @@ program smooth_vol_data
             APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,USE_FORCE_POINT_SOURCE
   logical :: STACEY_ABSORBING_CONDITIONS,SAVE_FORWARD,STACEY_INSTEAD_OF_FREE_SURFACE
   logical :: ANISOTROPY,SAVE_MESH_FILES,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
-  logical :: PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID
-  character(len=256) LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
+  logical :: PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID,COUPLE_WITH_DSM
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH,TOMOGRAPHY_PATH,TRACTION_PATH
   integer :: MOVIE_TYPE,IMODEL
 
   ! smoothing parameters
-  character(len=256) :: ks_file
+  character(len=MAX_STRING_LEN*2) :: ks_file
 
   real(kind=CUSTOM_REAL) :: sigma_h, sigma_h2, sigma_h3, sigma_v, sigma_v2, sigma_v3
   real(kind=CUSTOM_REAL) :: x0, y0, z0, norm, norm_h, norm_v, max_old, max_new
@@ -145,7 +145,7 @@ program smooth_vol_data
   call world_rank(myrank)
 
   if (myrank == 0) print*,"smooth_vol_data:"
-  call sync_all()
+  call synchronize_all()
 
   ! reads arguments
   do i = 1, 5
@@ -220,7 +220,8 @@ program smooth_vol_data
                         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
                         USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE, &
                         USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
-                        PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,FULL_ATTENUATION_SOLID,TRAC_PATH)
+                        PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,FULL_ATTENUATION_SOLID,TRACTION_PATH,COUPLE_WITH_DSM)
+
 
   ! checks if number of MPI process as specified
   if (sizeprocs /= NPROC) then
@@ -234,7 +235,7 @@ program smooth_vol_data
     endif
     call exit_mpi(myrank,'Error total number of slices')
   endif
-  call sync_all()
+  call synchronize_all()
 
   ! GLL points weights
   call zwgljd(xigll,wxgll,NGLLX,GAUSSALPHA,GAUSSBETA)
@@ -270,7 +271,6 @@ program smooth_vol_data
           status='old',action='read',form='unformatted',iostat=ios)
   if( ier /= 0 ) then
     print*,'error: could not open database '
-    print*,'path: ',trim(prname_lp)
     call exit_mpi(myrank, 'error reading external mesh file')
   endif
 
@@ -330,17 +330,21 @@ program smooth_vol_data
   ! acoustic
   if( ACOUSTIC_SIMULATION ) then
     read(27) dummy_1 ! rmass_acoustic
-    read(27) dummy ! rhostore
   endif
+
+  read(27) dummy ! rhostore
 
   ! elastic
   if( ELASTIC_SIMULATION ) then
+
     read(27) dummy_1 ! rmass
     if( APPROXIMATE_OCEAN_LOAD ) then
       read(27) dummy_1 ! rmass_ocean_load
     endif
+
     read(27) dummy ! rho_vp
     read(27) dummy ! rho_vs
+
   endif
 
   ! poroelastic
@@ -377,6 +381,7 @@ program smooth_vol_data
 
   ! absorbing boundary surface
   read(27) idummy_a ! num_abs_boundary_faces
+
   if( idummy_a > 0 ) then
     allocate(idummy(idummy_a), &
             idummy_3(3,NGLLSQUARE,idummy_a), &
@@ -390,8 +395,56 @@ program smooth_vol_data
     deallocate( idummy,idummy_3,dummy_2,dummy_3)
   endif
 
+  if (PML_CONDITIONS) then
+    ! not yet implemented
+  else
+    if( STACEY_ABSORBING_CONDITIONS ) then
+      ! store mass matrix contributions
+      if(ELASTIC_SIMULATION ) then
+
+        allocate(dummy_1(nglob_ab))
+        read(27) dummy_1 ! rmassx
+        read(27) dummy_1 ! rmassy
+        read(27) dummy_1 ! rmassz
+        deallocate(dummy_1)
+      endif
+      if(ACOUSTIC_SIMULATION) then
+        allocate(dummy_1(nglob_ab))
+        read(27) dummy_1 ! rmassz_acoustic
+        deallocate(dummy_1)
+      endif
+    endif
+  endif
+
+  read(27) nspec2D_xmin
+  read(27) nspec2D_xmax
+  read(27) nspec2D_ymin
+  read(27) nspec2D_ymax
+  read(27) NSPEC2D_BOTTOM
+  read(27) NSPEC2D_TOP
+
+  allocate(idummy(nspec2d_xmin))
+  read(27) idummy
+  deallocate(idummy)
+  allocate(idummy(nspec2d_xmax))
+  read(27) idummy
+  deallocate(idummy)
+  allocate(idummy(nspec2d_ymin))
+  read(27) idummy
+  deallocate(idummy)
+  allocate(idummy(nspec2d_ymax))
+  read(27) idummy
+  deallocate(idummy)
+  allocate(idummy(NSPEC2D_BOTTOM))
+  read(27) idummy ! ibelm_bottom
+  deallocate(idummy)
+  allocate(idummy(NSPEC2D_TOP))
+  read(27) idummy ! ibelm_top
+  deallocate(idummy)
+
   ! free surface
   read(27) idummy_a ! num_free_surface_faces
+
   if( idummy_a > 0 ) then
     allocate(idummy(idummy_a), &
             idummy_3(3,NGLLSQUARE,idummy_a), &
@@ -510,10 +563,11 @@ program smooth_vol_data
 
   ! user output
   if(myrank == 0) then
-    print*
-    print*,'  rank:',myrank,'  smoothing slices'
-    print*,node_list(1:num_interfaces_ext_mesh+1)
+  print*
+  print*,'  rank:',myrank,'  smoothing slices'
+  print*,node_list(1:num_interfaces_ext_mesh+1)
   endif
+
   !do i=0,sizeprocs-1
   !  if( myrank == i ) then
   !    print*,'rank:',myrank,'  smoothing slices'
@@ -523,7 +577,7 @@ program smooth_vol_data
   !enddo
 
   ! synchronizes
-  call sync_all()
+  call synchronize_all()
 
 
 !----------------------
@@ -545,7 +599,6 @@ program smooth_vol_data
 
     ! gets number of elements and global points for this partition
     write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',iproc,'_'//'external_mesh.bin'
-    !if( myrank == 0 ) print*,trim(prname_lp)
 
     open(unit=27,file=trim(prname_lp),&
             status='old',action='read',form='unformatted',iostat=ios)
@@ -615,7 +668,6 @@ program smooth_vol_data
     ! data file
     write(prname,'(a,i6.6,a)') trim(indir)//'proc',iproc,'_'
     local_data_file = trim(prname) // trim(filename) // '.bin'
-    !if( myrank == 0 ) print*,trim(local_data_file)
 
     open(unit = 28,file = trim(local_data_file),status='old',&
           action='read',form ='unformatted',iostat=ios)
@@ -732,7 +784,7 @@ program smooth_vol_data
   deallocate(dat_smooth)
 
   ! synchronizes
-  call sync_all()
+  call synchronize_all()
 
   ! the maximum value for the smoothed kernel
   norm = max_old
@@ -746,7 +798,7 @@ program smooth_vol_data
     print *
   endif
 
-  ! stop all the processes, and exit
+  ! stop all the processes and exit
   call finalize()
 
 end program smooth_vol_data
@@ -757,8 +809,8 @@ end program smooth_vol_data
   subroutine smoothing_weights_vec(x0,y0,z0,sigma_h2,sigma_v2,exp_val,&
                               xx_elem,yy_elem,zz_elem)
 
+  use constants
   implicit none
-  include "constants.h"
 
   real(kind=CUSTOM_REAL),dimension(NGLLX,NGLLY,NGLLZ),intent(out) :: exp_val
   real(kind=CUSTOM_REAL),dimension(NGLLX,NGLLY,NGLLZ),intent(in) :: xx_elem, yy_elem, zz_elem
@@ -798,8 +850,8 @@ end program smooth_vol_data
 ! returns vector lengths as distances in radial and horizontal direction
 ! only for flat earth with z in vertical direction
 
+  use constants
   implicit none
-  include "constants.h"
 
   real(kind=CUSTOM_REAL),intent(out) :: dist_h,dist_v
   real(kind=CUSTOM_REAL),intent(in) :: x0,y0,z0,x1,y1,z1

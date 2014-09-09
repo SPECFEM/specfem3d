@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -105,7 +106,7 @@
 
           ! adjoint simulations
           if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
-              b_absorb_potential(igll,iface) = absorbl
+            b_absorb_potential(igll,iface) = absorbl
           endif !adjoint
 
          enddo
@@ -117,10 +118,7 @@
   if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD ) then
     ! writes out absorbing boundary value only when second phase is running
     if( phase_is_inner .eqv. .true. ) then
-      ! uses fortran routine
-      !write(IOABS_AC,rec=it) b_reclen_potential,b_absorb_potential,b_reclen_potential
-      ! uses c routine
-      call write_abs(1,b_absorb_potential,b_reclen_potential,it)
+      call write_abs(IOABS_AC,b_absorb_potential,b_reclen_potential,it)
     endif
   endif
 
@@ -176,12 +174,7 @@
     ! reads in absorbing boundary array when first phase is running
     if( phase_is_inner .eqv. .false. ) then
       ! note: the index NSTEP-it+1 is valid if b_displ is read in after the Newmark scheme
-      ! uses fortran routine
-      !read(IOABS_AC,rec=NSTEP-it+1) reclen1,b_absorb_potential,reclen2
-      !if (reclen1 /= b_reclen_potential .or. reclen1 /= reclen2) &
-      !  call exit_mpi(0,'Error reading absorbing contribution b_absorb_potential')
-      ! uses c routine for faster reading
-      call read_abs(1,b_absorb_potential,b_reclen_potential,NSTEP-it+1)
+      call read_abs(IOABS_AC,b_absorb_potential,b_reclen_potential,NSTEP-it+1)
     endif
   endif !adjoint
 
@@ -207,11 +200,11 @@
 
           ! adjoint simulations
           if(SIMULATION_TYPE == 3) then
-             b_potential_dot_dot_acoustic(iglob) = b_potential_dot_dot_acoustic(iglob) &
-                                                    - b_absorb_potential(igll,iface)
+            b_potential_dot_dot_acoustic(iglob) = b_potential_dot_dot_acoustic(iglob) &
+                                                - b_absorb_potential(igll,iface)
           endif !adjoint
 
-         enddo
+        enddo
       endif ! ispec_is_acoustic
     endif ! ispec_is_inner
   enddo ! num_abs_boundary_faces
@@ -256,12 +249,7 @@
     ! reads in absorbing boundary array when first phase is running
     if( phase_is_inner .eqv. .false. ) then
       ! note: the index NSTEP-it+1 is valid if b_displ is read in after the Newmark scheme
-      ! uses fortran routine
-      !read(IOABS_AC,rec=NSTEP-it+1) reclen1,b_absorb_potential,reclen2
-      !if (reclen1 /= b_reclen_potential .or. reclen1 /= reclen2) &
-      !  call exit_mpi(0,'Error reading absorbing contribution b_absorb_potential')
-      ! uses c routine for faster reading
-      call read_abs(1,b_absorb_potential,b_reclen_potential,NSTEP-it+1)
+      call read_abs(IOABS_AC,b_absorb_potential,b_reclen_potential,NSTEP-it+1)
     endif
   endif !adjoint
 
@@ -272,10 +260,7 @@
   if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD ) then
     ! writes out absorbing boundary value only when second phase is running
     if( phase_is_inner .eqv. .true. ) then
-      ! uses fortran routine
-      !write(IOABS_AC,rec=it) b_reclen_potential,b_absorb_potential,b_reclen_potential
-      ! uses c routine
-      call write_abs(1,b_absorb_potential,b_reclen_potential,it)
+      call write_abs(IOABS_AC,b_absorb_potential,b_reclen_potential,it)
     endif
   endif
 

@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -106,7 +107,7 @@ module decompose_mesh
   integer, dimension(:), allocatable :: ibelm_moho
   integer, dimension(:,:), allocatable :: nodes_ibelm_moho
 
-  character(len=256)  :: prname
+  character(len=MAX_STRING_LEN) :: prname
 
   logical, dimension(:), allocatable :: mask_nodes_elmnts
   integer, dimension(:), allocatable :: used_nodes_elmnts
@@ -118,18 +119,18 @@ module decompose_mesh
 #else
   double precision, dimension(SCOTCH_GRAPHDIM)  :: scotchgraph
   double precision, dimension(SCOTCH_STRATDIM)  :: scotchstrat
-!!!!!! character(len=256), parameter :: scotch_strategy='b{job=t,map=t,poli=S,sep=h{pass=30}}'
+!!!!!! character(len=*), parameter :: scotch_strategy='b{job=t,map=t,poli=S,sep=h{pass=30}}'
 #endif
   integer  :: ier,idummy
 
   !pll
   double precision , dimension(:,:), allocatable :: mat_prop
   integer :: count_def_mat,count_undef_mat,imat
-  character (len=30), dimension(:,:), allocatable :: undef_mat_prop
+  character(len=MAX_STRING_LEN), dimension(:,:), allocatable :: undef_mat_prop
 
 ! default mesh file directory
-  character(len=256) :: localpath_name
-  character(len=256) :: outputpath_name
+  character(len=MAX_STRING_LEN) :: localpath_name
+  character(len=MAX_STRING_LEN) :: outputpath_name
 
   integer :: aniso_flag,idomain_id
   double precision :: vp,vs,rho,qkappa,qmu
@@ -149,8 +150,8 @@ module decompose_mesh
   logical :: ATTENUATION,USE_OLSEN_ATTENUATION,PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE, &
             APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,USE_FORCE_POINT_SOURCE,FULL_ATTENUATION_SOLID
   logical :: STACEY_ABSORBING_CONDITIONS,SAVE_FORWARD,STACEY_INSTEAD_OF_FREE_SURFACE
-  logical :: ANISOTROPY,SAVE_MESH_FILES,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
-  character(len=256) LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
+  logical :: ANISOTROPY,SAVE_MESH_FILES,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION,COUPLE_WITH_DSM
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH,TOMOGRAPHY_PATH,TRACTION_PATH
   integer :: IMODEL
 
   contains
@@ -162,7 +163,7 @@ module decompose_mesh
 
     implicit none
 
-    character(len=256)  :: line
+    character(len=MAX_STRING_LEN) :: line
     logical :: use_poroelastic_file
     integer(long) :: nspec_long
     integer :: inode
@@ -347,7 +348,7 @@ module decompose_mesh
        ! reads lines until it reaches a defined material
        num_mat = -1
        do while( num_mat < 0 .and. ier == 0)
-         read(98,'(A256)',iostat=ier) line
+         read(98,'(A)',iostat=ier) line
          read(line,*) idomain_id,num_mat
        enddo
        if( ier /= 0 ) stop 'error reading in defined materials in nummaterial_velocity_file'
@@ -426,7 +427,7 @@ module decompose_mesh
        ! reads lines until it reaches a defined material
        num_mat = 1
        do while( num_mat >= 0 .and. ier == 0 )
-         read(98,'(A256)',iostat=ier) line
+         read(98,'(A)',iostat=ier) line
          read(line,*) idomain_id,num_mat
        enddo
        if( ier /= 0 ) stop 'error reading in undefined materials in nummaterial_velocity_file'
@@ -1045,6 +1046,8 @@ module decompose_mesh
     allocate(my_nb_interfaces(0:ninterfaces-1),stat=ier)
     if( ier /= 0 ) stop 'error allocating array my_nb_interfaces'
 
+    if (COUPLE_WITH_DSM) open(124,file='Numglob2loc_elmn.txt')
+
     ! writes out Database file for each partition
     do ipart = 0, nparts-1
 
@@ -1102,7 +1105,7 @@ module decompose_mesh
             CPML_regions, is_CPML, glob2loc_elmnts, part)
 
        ! gets number of MPI interfaces
-       call Write_interfaces_database(IIN_database, tab_interfaces, tab_size_interfaces, ipart, ninterfaces, &
+       call write_interfaces_database(IIN_database, tab_interfaces, tab_size_interfaces, ipart, ninterfaces, &
                                   my_ninterface, my_interfaces, my_nb_interfaces, &
                                   glob2loc_elmnts, glob2loc_nodes_nparts, glob2loc_nodes_parts, &
                                   glob2loc_nodes, 1, nparts)
@@ -1115,7 +1118,7 @@ module decompose_mesh
         write(IIN_database) my_ninterface, maxval(my_nb_interfaces)
        endif
 
-       call Write_interfaces_database(IIN_database, tab_interfaces, tab_size_interfaces, ipart, ninterfaces, &
+       call write_interfaces_database(IIN_database, tab_interfaces, tab_size_interfaces, ipart, ninterfaces, &
                                   my_ninterface, my_interfaces, my_nb_interfaces, &
                                   glob2loc_elmnts, glob2loc_nodes_nparts, glob2loc_nodes_parts, &
                                   glob2loc_nodes, 2, nparts)
@@ -1158,6 +1161,8 @@ module decompose_mesh
     deallocate(CPML_to_spec,stat=ier); if( ier /= 0 ) stop 'error deallocating array CPML_to_spec'
     deallocate(CPML_regions,stat=ier); if( ier /= 0 ) stop 'error deallocating array CPML_regions'
     deallocate(is_CPML,stat=ier); if( ier /= 0 ) stop 'error deallocating array is_CPML'
+
+    if (COUPLE_WITH_DSM) close(124)
 
     print*, 'partitions: '
     print*, '  num = ',nparts

@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -27,9 +28,9 @@
 
   module generate_databases_par
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
 ! number of spectral elements in each block
   integer npointot
@@ -65,9 +66,9 @@
   logical :: ANISOTROPY,STACEY_ABSORBING_CONDITIONS,SAVE_MESH_FILES,STACEY_INSTEAD_OF_FREE_SURFACE
   logical :: PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID
   logical :: USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
-  logical :: MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
+  logical :: MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES,COUPLE_WITH_DSM
 
-  character(len=256) OUTPUT_FILES,LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH,TOMOGRAPHY_PATH,TRACTION_PATH
 
   logical :: ADIOS_ENABLED
   logical :: ADIOS_FOR_DATABASES, ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, &
@@ -110,7 +111,7 @@
   integer :: max_nibool_interfaces_ext_mesh
   integer, dimension(:,:), allocatable :: ibool_interfaces_ext_mesh_dummy
 
-  character(len=256) prname
+  character(len=MAX_STRING_LEN) :: prname
 
 ! boundaries and materials
   double precision, dimension(:,:), allocatable :: materials_ext_mesh
@@ -123,7 +124,7 @@
   integer, dimension(:,:), allocatable :: nodes_ibelm_xmin,nodes_ibelm_xmax, &
               nodes_ibelm_ymin, nodes_ibelm_ymax, nodes_ibelm_bottom, nodes_ibelm_top
 
-  character (len=30), dimension(:,:), allocatable :: undef_mat_prop
+  character(len=MAX_STRING_LEN), dimension(:,:), allocatable :: undef_mat_prop
 
 ! C-PML absorbing boundary conditions
 
@@ -182,7 +183,7 @@
 
   module create_regions_mesh_ext_par
 
-  include 'constants.h'
+  use constants
 
 ! global point coordinates
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: xstore_dummy
@@ -290,7 +291,7 @@
   logical, dimension(:), allocatable :: ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic
 
 ! name of the database file
-  character(len=256) prname
+  character(len=MAX_STRING_LEN) :: prname
 
 ! inner/outer elements
   logical,dimension(:),allocatable :: ispec_is_inner

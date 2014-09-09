@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -40,7 +41,6 @@
 
   implicit none
 
-  ! include "constants.h"
   integer :: myrank
 
   ! all processes read in same file
@@ -78,8 +78,9 @@
 
 ! determines the number of external tomographic models and sets a total maximum number of element records
 
+  use constants, only: MAX_STRING_LEN
   use tomography_par
-  use generate_databases_par, only: TOMOGRAPHY_PATH,undef_mat_prop,nundefMat_ext_mesh
+  use generate_databases_par, only: TOMOGRAPHY_PATH,undef_mat_prop,nundefMat_ext_mesh,COUPLE_WITH_DSM
 
   implicit none
 
@@ -88,9 +89,9 @@
   ! local parameters
   double precision :: dummy,temp_x,temp_y,temp_z
   integer :: ier,iundef,nrecord_max,ifiles_tomo,nrec,nlines
-  character(len=256):: tomo_filename
-  character(len=256):: filename
-  character(len=256):: string_read
+  character(len=MAX_STRING_LEN*2) :: tomo_filename
+  character(len=MAX_STRING_LEN) :: filename
+  character(len=MAX_STRING_LEN) :: string_read
 
   NFILES_TOMO = 0
   nrecord_max = 0
@@ -103,7 +104,20 @@
 
         read(undef_mat_prop(4,iundef),*) filename
 
-        tomo_filename = TOMOGRAPHY_PATH(1:len_trim(TOMOGRAPHY_PATH))//trim(filename)
+        !! WANGYI test for the benchmark of hybrid DSM-SPECFEM3D coupling 
+        if (COUPLE_WITH_DSM) then 
+           if ( TOMOGRAPHY_PATH(len_trim(TOMOGRAPHY_PATH):len_trim(TOMOGRAPHY_PATH)) == "/"  )then
+             tomo_filename = TOMOGRAPHY_PATH(1:len_trim(TOMOGRAPHY_PATH))//trim(filename)
+           else
+             tomo_filename = TOMOGRAPHY_PATH(1:len_trim(TOMOGRAPHY_PATH))//'/'//trim(filename)
+           endif  !add by wangyi,correct the path and filename of tomography model
+           write(*,*) 'iundef',iundef  ! add by WANGYI for test 
+           write(*,*) 'tomo_filename',tomo_filename ! add by WANGYI for test   
+
+        else
+          tomo_filename = TOMOGRAPHY_PATH(1:len_trim(TOMOGRAPHY_PATH))//trim(filename)
+
+        endif 
 
         ! opens file for reading
         open(unit=27,file=trim(tomo_filename),status='old',action='read',iostat=ier)
@@ -120,7 +134,7 @@
         read(string_read,*) temp_x,temp_y,temp_z
 
         ! determines total maximum number of element records
-        nrec = temp_x*temp_y*temp_z
+        nrec = int(temp_x*temp_y*temp_z)
         nrecord_max = max(nrecord_max,nrec)
 
         call tomo_read_next_line(27,string_read)
@@ -188,6 +202,7 @@ end subroutine init_tomography_files
 
 ! read Vp Vs and rho from extracted text file
 
+  use constants, only: MAX_STRING_LEN
   use tomography_par
   use generate_databases_par, only: TOMOGRAPHY_PATH,undef_mat_prop,nundefMat_ext_mesh
 
@@ -198,9 +213,9 @@ end subroutine init_tomography_files
   ! local parameters
   real(kind=CUSTOM_REAL) :: x_tomo,y_tomo,z_tomo,vp_tomo,vs_tomo,rho_tomo
   integer :: irecord,ier,iundef,imat
-  character(len=256):: tomo_filename
-  character(len=256):: filename
-  character(len=256):: string_read
+  character(len=MAX_STRING_LEN*2) :: tomo_filename
+  character(len=MAX_STRING_LEN) :: filename
+  character(len=MAX_STRING_LEN) :: string_read
 
   imat = 0
 
@@ -228,29 +243,24 @@ end subroutine init_tomography_files
         ! reads in model dimensions
         call tomo_read_next_line(27,string_read)
         read(string_read,*) ORIG_X(imat), ORIG_Y(imat), ORIG_Z(imat), END_X, END_Y, END_Z
-        !read(27,*) ORIG_X, ORIG_Y, ORIG_Z, END_X, END_Y, END_Z
 
         call tomo_read_next_line(27,string_read)
         read(string_read,*) SPACING_X(imat), SPACING_Y(imat), SPACING_Z(imat)
-        !read(27,*) SPACING_X, SPACING_Y, SPACING_Z
 
         ! reads in models entries
         call tomo_read_next_line(27,string_read)
         read(string_read,*) NX(imat), NY(imat), NZ(imat)
-        !read(27,*) NX, NY, NZ
 
         ! reads in models min/max statistics
         call tomo_read_next_line(27,string_read)
         read(string_read,*) VP_MIN(imat), VP_MAX(imat), &
              VS_MIN(imat), VS_MAX(imat), &
              RHO_MIN(imat), RHO_MAX(imat)
-        !read(27,*) VP_MIN, VP_MAX, VS_MIN, VS_MAX, RHO_MIN, RHO_MAX
 
         ! total number of element records
         nrecord(imat) = NX(imat)*NY(imat)*NZ(imat)
 
         ! first record
-        !read(27,*) x_tomo,y_tomo,z_tomo,vp_tomo,vs_tomo,rho_tomo
         call tomo_read_next_line(27,string_read)
         read(string_read,*) x_tomo,y_tomo,z_tomo,vp_tomo,vs_tomo,rho_tomo
 
@@ -289,15 +299,16 @@ end subroutine init_tomography_files
 
   subroutine tomo_read_next_line(unit_in,string_read)
 
+  use constants, only: MAX_STRING_LEN
   implicit none
 
   integer :: unit_in
-  character(len=256) :: string_read
+  character(len=MAX_STRING_LEN) :: string_read
 
   integer :: ios
 
   do
-     read(unit=unit_in,fmt="(a256)",iostat=ios) string_read
+     read(unit=unit_in,fmt="(a)",iostat=ios) string_read
      if(ios /= 0) stop 'error while reading tomography file'
 
      ! suppress leading white spaces, if any

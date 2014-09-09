@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -37,7 +38,7 @@
                         ispec_is_elastic,SIMULATION_TYPE,SAVE_FORWARD, &
                         it, &
                         b_num_abs_boundary_faces,b_reclen_field,b_absorb_field, &
-                        it_dsm,Veloc_dsm_boundary,Tract_dsm_boundary)
+                        it_dsm,Veloc_dsm_boundary,Tract_dsm_boundary,COUPLE_WITH_DSM)
 
   use constants
 
@@ -73,30 +74,29 @@
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLSQUARE,b_num_abs_boundary_faces):: b_absorb_field
 
   logical:: SAVE_FORWARD
+  logical:: COUPLE_WITH_DSM
 
 ! local parameters
   real(kind=CUSTOM_REAL) vx,vy,vz,nx,ny,nz,tx,ty,tz,vn,jacobianw
   integer :: ispec,iglob,i,j,k,iface,igll
 
-! VM VM for new method
-!! DK DK for VM VM: this MUST be declared in the main program (i.e. in the calling program) and sent
-!! DK DK to this subroutine as an argument, otherwise it is allocated and deallocated every time the code
-!! DK DK enters this subroutine, thus this will be extremely slow, and also what the array contains
-!! DK DK will be lost between two calls
-!! VM VM I did it
+  !! CD modif. : begin (implemented by VM) !! For coupling with DSM
+   
+  ! See also DSM parameters in setup/constants.h.in
   real(kind=CUSTOM_REAL) :: Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
   real(kind=CUSTOM_REAL) :: Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
 
-!! DK DK for VM VM: I had to add this missing declaration; but then of course now it is declared but undefined / unassigned
   integer :: it_dsm
 
-  if (OLD_TEST_TO_FIX_ONE_DAY) then
-     if ( phase_is_inner .eqv. .false. ) then
-        if (mod(it_dsm,Ntime_step_dsm+1) == 0 .or. it == 1) then
-           call read_dsm_file(Veloc_dsm_boundary,Tract_dsm_boundary,num_abs_boundary_faces,it_dsm)
-        endif
-     endif
+  if (COUPLE_WITH_DSM) then
+    if (phase_is_inner .eqv. .false.) then
+      if (mod(it_dsm,Ntime_step_dsm+1) == 0 .or. it == 1) then
+        call read_dsm_file(Veloc_dsm_boundary,Tract_dsm_boundary,num_abs_boundary_faces,it_dsm)
+      endif
+    endif
   endif
+
+  !! CD modif. : end
 
   ! checks if anything to do
   if( num_abs_boundary_faces == 0 ) return
@@ -104,85 +104,90 @@
   ! absorbs absorbing-boundary surface using Stacey condition (Clayton & Enquist)
   do iface=1,num_abs_boundary_faces
 
-     ispec = abs_boundary_ispec(iface)
+    ispec = abs_boundary_ispec(iface)
 
-     if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
+    if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
 
-        if( ispec_is_elastic(ispec) ) then
+      if (ispec_is_elastic(ispec)) then
 
-           ! reference gll points on boundary face
-           do igll = 1,NGLLSQUARE
+        ! reference gll points on boundary face
+        do igll = 1,NGLLSQUARE
 
-              ! gets local indices for GLL point
-              i = abs_boundary_ijk(1,igll,iface)
-              j = abs_boundary_ijk(2,igll,iface)
-              k = abs_boundary_ijk(3,igll,iface)
+          ! gets local indices for GLL point
+          i = abs_boundary_ijk(1,igll,iface)
+          j = abs_boundary_ijk(2,igll,iface)
+          k = abs_boundary_ijk(3,igll,iface)
 
-              ! gets velocity
-              iglob=ibool(i,j,k,ispec)
-              vx=veloc(1,iglob)
-              vy=veloc(2,iglob)
-              vz=veloc(3,iglob)
-              if (OLD_TEST_TO_FIX_ONE_DAY) then
-                  vx = vx - Veloc_dsm_boundary(1,it_dsm,igll,iface)
-                  vy = vy - Veloc_dsm_boundary(2,it_dsm,igll,iface)
-                  vz = vz - Veloc_dsm_boundary(3,it_dsm,igll,iface)
-              endif
-              ! gets associated normal
-              nx = abs_boundary_normal(1,igll,iface)
-              ny = abs_boundary_normal(2,igll,iface)
-              nz = abs_boundary_normal(3,igll,iface)
+          ! gets velocity
+          iglob=ibool(i,j,k,ispec)
+          vx=veloc(1,iglob)
+          vy=veloc(2,iglob)
+          vz=veloc(3,iglob)
 
-              ! velocity component in normal direction (normal points out of element)
-              vn = vx*nx + vy*ny + vz*nz
+          !! CD CD !! For coupling with DSM
+          if (COUPLE_WITH_DSM) then
+            vx = vx - Veloc_dsm_boundary(1,it_dsm,igll,iface)
+            vy = vy - Veloc_dsm_boundary(2,it_dsm,igll,iface)
+            vz = vz - Veloc_dsm_boundary(3,it_dsm,igll,iface)
+          endif
+          !! CD CD
 
-              ! stacey term: velocity vector component * vp * rho in normal direction + vs * rho component tangential to it
-              tx = rho_vp(i,j,k,ispec)*vn*nx + rho_vs(i,j,k,ispec)*(vx-vn*nx)
-              ty = rho_vp(i,j,k,ispec)*vn*ny + rho_vs(i,j,k,ispec)*(vy-vn*ny)
-              tz = rho_vp(i,j,k,ispec)*vn*nz + rho_vs(i,j,k,ispec)*(vz-vn*nz)
+          ! gets associated normal
+          nx = abs_boundary_normal(1,igll,iface)
+          ny = abs_boundary_normal(2,igll,iface)
+          nz = abs_boundary_normal(3,igll,iface)
 
-              if (OLD_TEST_TO_FIX_ONE_DAY) then
-                  tx = tx -Tract_dsm_boundary(1,it_dsm,igll,iface)
-                  ty = ty -Tract_dsm_boundary(2,it_dsm,igll,iface)
-                  tz = tz -Tract_dsm_boundary(3,it_dsm,igll,iface)
-              endif
+          ! velocity component in normal direction (normal points out of element)
+          vn = vx*nx + vy*ny + vz*nz
 
-              ! gets associated, weighted jacobian
-              jacobianw = abs_boundary_jacobian2Dw(igll,iface)
+          ! stacey term: velocity vector component * vp * rho in normal direction + vs * rho component tangential to it
+          tx = rho_vp(i,j,k,ispec)*vn*nx + rho_vs(i,j,k,ispec)*(vx-vn*nx)
+          ty = rho_vp(i,j,k,ispec)*vn*ny + rho_vs(i,j,k,ispec)*(vy-vn*ny)
+          tz = rho_vp(i,j,k,ispec)*vn*nz + rho_vs(i,j,k,ispec)*(vz-vn*nz)
 
-              ! adds stacey term (weak form)
-              accel(1,iglob) = accel(1,iglob) - tx*jacobianw
-              accel(2,iglob) = accel(2,iglob) - ty*jacobianw
-              accel(3,iglob) = accel(3,iglob) - tz*jacobianw
+          !! CD CD !! For coupling with DSM
+          if (COUPLE_WITH_DSM) then
+            tx = tx - Tract_dsm_boundary(1,it_dsm,igll,iface)
+            ty = ty - Tract_dsm_boundary(2,it_dsm,igll,iface)
+            tz = tz - Tract_dsm_boundary(3,it_dsm,igll,iface)
+          endif
+          !! CD CD
 
-              ! adjoint simulations
-              if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
-                 b_absorb_field(1,igll,iface) = tx*jacobianw
-                 b_absorb_field(2,igll,iface) = ty*jacobianw
-                 b_absorb_field(3,igll,iface) = tz*jacobianw
-              endif !adjoint
+          ! gets associated, weighted jacobian
+          jacobianw = abs_boundary_jacobian2Dw(igll,iface)
 
-           enddo
-        endif ! ispec_is_elastic
-     endif ! ispec_is_inner
+          ! adds stacey term (weak form)
+          accel(1,iglob) = accel(1,iglob) - tx*jacobianw
+          accel(2,iglob) = accel(2,iglob) - ty*jacobianw
+          accel(3,iglob) = accel(3,iglob) - tz*jacobianw
+
+          ! adjoint simulations
+          if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
+            b_absorb_field(1,igll,iface) = tx*jacobianw
+            b_absorb_field(2,igll,iface) = ty*jacobianw
+            b_absorb_field(3,igll,iface) = tz*jacobianw
+          endif !adjoint
+
+        enddo
+      endif ! ispec_is_elastic
+    endif ! ispec_is_inner
   enddo
 
   ! adjoint simulations: stores absorbed wavefield part
   if( SIMULATION_TYPE == 1 .and. SAVE_FORWARD ) then
     ! writes out absorbing boundary value only when second phase is running
     if( phase_is_inner .eqv. .true. ) then
-      ! uses fortran routine
-      !write(IOABS,rec=it) b_reclen_field,b_absorb_field,b_reclen_field
-      ! uses c routine
-      call write_abs(0,b_absorb_field,b_reclen_field,it)
+      call write_abs(IOABS,b_absorb_field,b_reclen_field,it)
     endif
   endif
 
-  if (OLD_TEST_TO_FIX_ONE_DAY) then
-     if (phase_is_inner .eqv. .true.) then
-        it_dsm = it_dsm + 1
-     endif
+  !! CD CD !! For coupling with DSM
+  if (COUPLE_WITH_DSM) then
+    if (phase_is_inner .eqv. .true.) then
+      it_dsm = it_dsm + 1
+    endif
   endif
+  !! CD CD
 
   end subroutine compute_stacey_viscoelastic
 !
@@ -242,12 +247,7 @@
   ! reads in absorbing boundary array when first phase is running
   if( phase_is_inner .eqv. .false. ) then
     ! note: the index NSTEP-it+1 is valid if b_displ is read in after the Newmark scheme
-    ! uses fortran routine
-    !read(IOABS,rec=NSTEP-it+1) reclen1,b_absorb_field,reclen2
-    !if (reclen1 /= b_reclen_field .or. reclen1 /= reclen2) &
-    !  call exit_mpi(0,'Error reading absorbing contribution b_absorb_field')
-    ! uses c routine for faster reading
-    call read_abs(0,b_absorb_field,b_reclen_field,NSTEP-it+1)
+    call read_abs(IOABS,b_absorb_field,b_reclen_field,NSTEP-it+1)
   endif
 
   ! absorbs absorbing-boundary surface using Stacey condition (Clayton & Enquist)
@@ -277,7 +277,12 @@
 
   end subroutine compute_stacey_viscoelastic_bpwf
 
-!---------------------------------------------------------------------------------------
+!=============================================================================
+!
+  !! CD CD !! For coupling with DSM
+!
+!-----------------------------------------------------------------------------
+
 
   subroutine read_dsm_file(Veloc_dsm_boundary,Tract_dsm_boundary,num_abs_boundary_faces,it_dsm)
 
@@ -292,18 +297,14 @@
   real(kind=CUSTOM_REAL) :: Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
   real(kind=CUSTOM_REAL) :: Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
 
-  !! DK DK why use 5 and not NGLLX here? (I assume 5 means 5 GLL points here?)
-  !! VM VM fixed to NGLLX
   real(kind=CUSTOM_REAL) :: dsm_boundary_tmp(3,Ntime_step_dsm,NGLLX,NGLLY)
 
   it_dsm = 1
-  !write(*,*) 'read dsm files',it_dsm
   do iface=1,num_abs_boundary_faces
 
     igll = 0
-    do j=1,NGLLY  !! DK DK why use 5 and not NGLLY here? (I assume 5 means 5 GLL points here?)
-      do i=1,NGLLX  !! DK DK why use 5 and not NGLLX here? (I assume 5 means 5 GLL points here?)
-                    !! VM VM Correction 5->NGLLX or NGLLY
+    do j=1,NGLLY
+      do i=1,NGLLX
         igll = igll + 1
         read(IIN_veloc_dsm) dsm_boundary_tmp(:,:,i,j)
         Veloc_dsm_boundary(:,:,igll,iface) = dsm_boundary_tmp(:,:,i,j)
@@ -315,6 +316,7 @@
 
   end subroutine read_dsm_file
 
+  !! CD CD
 !
 !=====================================================================
 ! for elastic solver on GPU
@@ -324,7 +326,7 @@
   subroutine compute_stacey_viscoelastic_GPU(phase_is_inner,num_abs_boundary_faces, &
                         SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it, &
                         b_num_abs_boundary_faces,b_reclen_field,b_absorb_field, &
-                        Mesh_pointer,it_dsm,Veloc_dsm_boundary,Tract_dsm_boundary)
+                        Mesh_pointer,it_dsm,Veloc_dsm_boundary,Tract_dsm_boundary,COUPLE_WITH_DSM)
 
   use constants
 
@@ -343,29 +345,26 @@
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLSQUARE,b_num_abs_boundary_faces):: b_absorb_field
 
   logical:: SAVE_FORWARD
+  logical:: COUPLE_WITH_DSM
 
   ! GPU_MODE variables
   integer(kind=8) :: Mesh_pointer
 
-! VM VM for new method
-!! DK DK for VM VM: this MUST be declared in the main program (i.e. in the calling program) and sent
-!! DK DK to this subroutine as an argument, otherwise it is allocated and deallocated every time the code
-!! DK DK enters this subroutine, thus this will be extremely slow, and also what the array contains
-!! DK DK will be lost between two calls
-!! VM VM I did it
+  !! CD CD : begin !! For coupling with DSM
   real(kind=CUSTOM_REAL) :: Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
   real(kind=CUSTOM_REAL) :: Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
 
-!! DK DK for VM VM: I had to add this missing declaration; but then of course now it is declared but undefined / unassigned
   integer :: it_dsm
 
-  if (OLD_TEST_TO_FIX_ONE_DAY) then
-     if ( phase_is_inner .eqv. .false. ) then
-        if (mod(it_dsm,Ntime_step_dsm+1) == 0 .or. it == 1) then
-           call read_dsm_file(Veloc_dsm_boundary,Tract_dsm_boundary,num_abs_boundary_faces,it_dsm)
-        endif
-     endif
+  if (COUPLE_WITH_DSM) then
+    if (phase_is_inner .eqv. .false.) then
+      if (mod(it_dsm,Ntime_step_dsm+1) == 0 .or. it == 1) then
+        call read_dsm_file(Veloc_dsm_boundary,Tract_dsm_boundary,num_abs_boundary_faces,it_dsm)
+      endif
+    endif
   endif
+
+  !! CD CD : end
 
   ! checks if anything to do
   if( num_abs_boundary_faces == 0 ) return
@@ -375,12 +374,7 @@
     ! reads in absorbing boundary array when first phase is running
     if( phase_is_inner .eqv. .false. ) then
       ! note: the index NSTEP-it+1 is valid if b_displ is read in after the Newmark scheme
-      ! uses fortran routine
-      !read(IOABS,rec=NSTEP-it+1) reclen1,b_absorb_field,reclen2
-      !if (reclen1 /= b_reclen_field .or. reclen1 /= reclen2) &
-      !  call exit_mpi(0,'Error reading absorbing contribution b_absorb_field')
-      ! uses c routine for faster reading
-      call read_abs(0,b_absorb_field,b_reclen_field,NSTEP-it+1)
+      call read_abs(IOABS,b_absorb_field,b_reclen_field,NSTEP-it+1)
     endif
   endif !adjoint
 
@@ -390,18 +384,17 @@
   if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD ) then
     ! writes out absorbing boundary value only when second phase is running
     if( phase_is_inner .eqv. .true. ) then
-      ! uses fortran routine
-      !write(IOABS,rec=it) b_reclen_field,b_absorb_field,b_reclen_field
-      ! uses c routine
-      call write_abs(0,b_absorb_field,b_reclen_field,it)
+      call write_abs(IOABS,b_absorb_field,b_reclen_field,it)
     endif
   endif
 
-  if (OLD_TEST_TO_FIX_ONE_DAY) then
-     if (phase_is_inner .eqv. .true.) then
-        it_dsm = it_dsm + 1
-     endif
+  !! CD CD : begin !! For coupling with DSM
+  if (COUPLE_WITH_DSM) then
+    if (phase_is_inner .eqv. .true.) then
+      it_dsm = it_dsm + 1
+    endif
   endif
+  !! CD CD : end
 
   end subroutine compute_stacey_viscoelastic_GPU
 
