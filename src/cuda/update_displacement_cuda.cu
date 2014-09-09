@@ -54,10 +54,6 @@ __global__ void UpdateDispVeloc_kernel(realw* displ,
                                        realw deltatover2) {
 
   // two dimensional array of blocks on grid where each block has one dimensional array of threads
-  //int tid = threadIdx.x;
-  //int bx = blockIdx.y*gridDim.x+blockIdx.x;
-  //int id = tid + bx*blockDim.x;
-
   int id = threadIdx.x + blockIdx.x*blockDim.x + blockIdx.y*gridDim.x*blockDim.x;
 
   // because of block and grid sizing problems, there is a small
@@ -67,6 +63,15 @@ __global__ void UpdateDispVeloc_kernel(realw* displ,
     veloc[id] = veloc[id] + deltatover2*accel[id];
     accel[id] = 0.0f; // can do this using memset...not sure if faster,probably not
   }
+
+// -----------------
+// total of: 6 FLOP per thread (without int id calculation at beginning)
+//
+//           8 * 4 BYTE = 32 DRAM accesses per thread
+//
+// arithmetic intensity: 6 FLOP / 32 BYTES ~ 0.19 FLOP/BYTE
+// -----------------
+// nvprof: 24599250 flops for 4099875 threads -> 6 FLOP per thread
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -100,6 +105,12 @@ void FC_FUNC_(update_displacement_cuda,
   dim3 grid(num_blocks_x,num_blocks_y);
   dim3 threads(blocksize,1,1);
 
+  // Cuda timing
+  cudaEvent_t start,stop;
+  if( CUDA_TIMING_UPDATE ){
+    start_timing_cuda(&start,&stop);
+  }
+
   // debug
   //realw max_d,max_v,max_a;
   //max_d = get_device_array_maximum_value(mp->d_displ, size);
@@ -119,6 +130,18 @@ void FC_FUNC_(update_displacement_cuda,
 
     UpdateDispVeloc_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_displ,mp->d_b_veloc,mp->d_b_accel,
                                                                   size,b_deltat,b_deltatsqover2,b_deltatover2);
+  }
+
+  // Cuda timing
+  if( CUDA_TIMING_UPDATE ){
+    realw flops,time;
+    stop_timing_cuda(&start,&stop,"UpdateDispVeloc_kernel",&time);
+    // time in seconds
+    time = time / 1000.;
+    // performance: 6 FLOPS per thread
+    flops = 6.0 * size;
+    //printf("  performance: %f GFlop/s num_blocks x/y: %d %d threads: %d\n", flops/time * 1.e-9,num_blocks_x,num_blocks_y,size);
+    printf("  performance: %f GFlop/s\n", flops/time * 1.e-9);
   }
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
@@ -155,6 +178,21 @@ __global__ void UpdatePotential_kernel(realw* potential_acoustic,
 
     potential_dot_dot_acoustic[id] = 0.0f;
   }
+
+// -----------------
+// total of: 6 FLOP per thread (without id calculation)
+//
+//           8 * 4 BYTE = 32 DRAM accesses per thread
+//
+// arithmetic intensity: 6 FLOP / 32 BYTES ~ 0.19 FLOP/BYTE
+// -----------------
+//
+// nvprof: nvprof --metrics flops_sp ./xspecfem3D
+//          -> 8199750 FLOPS (Single) floating-point operations for 1366625 threads
+//                                    1366625 (NGLOB) -> 10677 * 128 active threads- 31 ghost threads
+//          -> 6 FLOP per thread
+
+  
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -188,6 +226,12 @@ void FC_FUNC_(it_update_displacement_ac_cuda,
   realw deltatsqover2 = *deltatsqover2_F;
   realw deltatover2 = *deltatover2_F;
 
+  // Cuda timing
+  cudaEvent_t start,stop;
+  if( CUDA_TIMING_UPDATE ){
+    start_timing_cuda(&start,&stop);
+  }
+
   UpdatePotential_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_potential_acoustic,
                                                                  mp->d_potential_dot_acoustic,
                                                                  mp->d_potential_dot_dot_acoustic,
@@ -203,6 +247,21 @@ void FC_FUNC_(it_update_displacement_ac_cuda,
                                                                   mp->d_b_potential_dot_acoustic,
                                                                   mp->d_b_potential_dot_dot_acoustic,
                                                                   size,b_deltat,b_deltatsqover2,b_deltatover2);
+  }
+
+  // Cuda timing
+  if( CUDA_TIMING_UPDATE ){
+    realw flops,time;
+    stop_timing_cuda(&start,&stop,"UpdatePotential_kernel",&time);
+    // time in seconds
+    time = time / 1000.;
+    // performance
+    // see with: nvprof --metrics flops_sp ./xspecfem3D
+    //           -> using 8199750 FLOPS (Single) floating-point operations for 1366625 threads
+    //              = 6 FLOPS per thread
+    flops = 6.0 * size;
+    //printf("  performance: %f GFlop/s num_blocks x/y: %d %d threads: %d\n", flops/time * 1.e-9,num_blocks_x,num_blocks_y,size);
+    printf("  performance: %f GFlop/s\n", flops/time * 1.e-9);
   }
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
@@ -241,6 +300,15 @@ __global__ void kernel_3_cuda_device(realw* veloc,
     veloc[3*id+1] = veloc[3*id+1] + deltatover2*accel[3*id+1];
     veloc[3*id+2] = veloc[3*id+2] + deltatover2*accel[3*id+2];
   }
+
+// -----------------
+// total of: 34 FLOP per thread (without int id calculation at beginning)
+//
+//           (3 * 3 + 3 * 3) * 4 BYTE = 72 DRAM accesses per thread
+//
+// arithmetic intensity: 34 FLOP / 72 BYTES ~ 0.47 FLOP/BYTE
+// -----------------
+  
 }
 
 /* ----------------------------------------------------------------------------------------------- */
