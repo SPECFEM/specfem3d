@@ -287,9 +287,6 @@ AC_SUBST([FC_MODDIR])
 
 if test "$want_mpi" = yes; then
     AS_BOX([MPI])
-#     CIT_FC_MPI_MODULE([mpif.h], [$MPIFC], [$FLAGS_CHECK], [:], [
-#         AC_MSG_FAILURE([cannot compile a trivial MPI program using $MPIFC])
-#     ])
     CIT_MPI_INCDIR([$MPIFC])
 fi
 
@@ -301,7 +298,7 @@ fi
 if test "$want_adios" = yes; then
     AS_BOX([ADIOS])
     if test "$want_mpi" != yes; then
-        AC_MSG_ERROR([Cannot compile with ADIOS but without MPI.])
+        AC_MSG_ERROR([Cannot compile with ADIOS without MPI.])
     fi
     CIT_ADIOS_CONFIG
 fi	
@@ -314,41 +311,7 @@ fi
 if test "$want_cuda" != no; then
     AS_BOX([CUDA])
     AC_ARG_VAR(CUDA_FLAGS, [Cuda compiler flags])
-    if test "$want_mpi" = yes; then
-      CIT_CUDA_CONFIG
-      CIT_MPI_INCDIR([$MPIFC])
-    else
-      # note: CUDA could be run without mpi, however CIT_CUDA_CONFIG is not working without it...
-      # checks for compiler
-      AC_PATH_PROG(NVCC, nvcc)
-      if test -z "$NVCC" ; then
-        AC_MSG_ERROR([cannot find 'nvcc' program.])
-      fi
-      # checks for CUDA headers
-      if test "x$CUDA_INC" != "x"; then
-        CUDA_CPPFLAGS="-I$CUDA_INC"
-        CPPFLAGS="$CUDA_CPPFLAGS $CPPFLAGS"
-      fi
-      AC_CHECK_HEADER([cuda_runtime.h], [], [
-        AC_MSG_ERROR([CUDA runtime header not found; try setting CUDA_INC.])
-      ])
-      # checks for CUDA libraries
-      if test "x$CUDA_LIB" != "x"; then
-        CUDA_LDFLAGS="-L$CUDA_LIB"
-        LDFLAGS="$CUDA_LDFLAGS $LDFLAGS"
-      fi
-      CUDA_LIBS="-lcudart"
-      LIBS="$CUDA_LIBS $LIBS"
-      AC_MSG_CHECKING([for cudaMalloc in -lcudart])
-      AC_LINK_IFELSE(
-        [AC_LANG_PROGRAM([[#include <cuda_runtime.h>]],
-                     [[void* ptr = 0;]]
-                     [[cudaMalloc(&ptr, 1);]])],
-        [AC_MSG_RESULT(yes)],
-        [AC_MSG_RESULT(no)
-        AC_MSG_ERROR([CUDA library not found; try setting CUDA_LIB.])
-      ])
-    fi
+    CIT_CUDA_CONFIG
 fi
 
 
