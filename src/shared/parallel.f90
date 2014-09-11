@@ -921,7 +921,7 @@ end module my_mpi
   implicit none
 
   include "precision.h"
-  
+
   integer recvcount,dest,recvtag
   real(kind=CUSTOM_REAL),dimension(recvcount) :: recvbuf
   integer ier

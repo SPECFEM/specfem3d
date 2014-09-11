@@ -127,7 +127,7 @@ Kernel_2_acoustic_impl(const int nb_blocks_to_compute,
 
   // block-id == number of local element id in phase_ispec array
   int bx = blockIdx.y*gridDim.x+blockIdx.x;
-  
+
   // thread-id == GLL node id
   // note: use only NGLL^3 = 125 active threads, plus 3 inactive/ghost threads,
   //       because we used memory padding from NGLL^3 = 125 to 128 to get coalescent memory accesses;
@@ -200,7 +200,7 @@ Kernel_2_acoustic_impl(const int nb_blocks_to_compute,
 
   // local padded index
   offset = working_element*NGLL3_PADDED + tx;
-  
+
   // global index
   iglob = d_ibool[offset] - 1;
 
@@ -370,7 +370,7 @@ Kernel_2_acoustic_impl(const int nb_blocks_to_compute,
   fac3 = wgllwgll_xy[J*NGLLX+I];
 
   sum_terms = -(fac1*temp1l + fac2*temp2l + fac3*temp3l);
-  
+
   // adds gravity contribution
   if( gravity ) sum_terms += gravity_term;
 
@@ -709,7 +709,7 @@ void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
   if( CUDA_TIMING ){
     start_timing_cuda(&start,&stop);
   }
-  
+
   // forward wavefields -> FORWARD_OR_ADJOINT == 1
   Kernel_2_acoustic_impl<1><<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
                                                                     d_ibool,
@@ -751,7 +751,7 @@ void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
                                                                       d_kappastore,
                                                                       mp->d_wgll_cube);
   }
-  
+
   // Cuda timing
   if( CUDA_TIMING ){
     realw flops,time;
@@ -775,7 +775,7 @@ void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
     }
     printf("  performance: %f GFlop/s\n", flops/time * 1.e-9);
   }
-  
+
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   exit_on_cuda_error("kernel Kernel_2");
 #endif

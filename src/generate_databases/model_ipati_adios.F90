@@ -29,7 +29,7 @@
 module model_ipati_adios_mod
 
   use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,IMAIN,FOUR_THIRDS
-  
+
 contains
 !-----------------------------------------------------------------------------
 !

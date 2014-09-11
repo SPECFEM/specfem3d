@@ -193,7 +193,7 @@ __global__ void UpdatePotential_kernel(realw* potential_acoustic,
 //                                    1366625 (NGLOB) -> 10677 * 128 active threads- 31 ghost threads
 //          -> 6 FLOP per thread
 
-  
+
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -309,7 +309,7 @@ __global__ void kernel_3_cuda_device(realw* veloc,
 //
 // arithmetic intensity: 34 FLOP / 72 BYTES ~ 0.47 FLOP/BYTE
 // -----------------
-  
+
 }
 
 /* ----------------------------------------------------------------------------------------------- */

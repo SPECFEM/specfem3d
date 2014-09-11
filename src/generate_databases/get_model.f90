@@ -73,8 +73,8 @@
   ispec_is_poroelastic(:) = .false.
 
 
-  !! WANGYI test for the benchmark of hybrid DSM-SPECFEM3D coupling 
-  if (COUPLE_WITH_DSM) then 
+  !! WANGYI test for the benchmark of hybrid DSM-SPECFEM3D coupling
+  if (COUPLE_WITH_DSM) then
     if( nundefMat_ext_mesh > 6 .or. IMODEL == IMODEL_TOMO ) then ! changed by WANGYI
       write(*,*)  'nundefMat_ext_mesh, IMODEL, IMODEL_TOMO', nundefMat_ext_mesh, IMODEL, IMODEL_TOMO ! add by WANGYI
       call model_tomography_broadcast(myrank)
@@ -349,8 +349,8 @@
   call any_all_l( ANY(ispec_is_elastic), ELASTIC_SIMULATION )
   call any_all_l( ANY(ispec_is_poroelastic), POROELASTIC_SIMULATION )
 
-  !! WANGYI test for the benchmark of hybrid DSM-SPECFEM3D coupling 
-  if (COUPLE_WITH_DSM) then 
+  !! WANGYI test for the benchmark of hybrid DSM-SPECFEM3D coupling
+  if (COUPLE_WITH_DSM) then
     if( nundefMat_ext_mesh > 6 .or. IMODEL == IMODEL_TOMO ) then  ! changed by wangyi for test
       call deallocate_tomography_files()
     endif

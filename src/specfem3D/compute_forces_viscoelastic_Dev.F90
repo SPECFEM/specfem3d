@@ -324,7 +324,7 @@
 
 ! counts:
 ! + 0 FLOP
-! 
+!
 ! + NGLLX * NGLLY * NGLLZ * ( 1 + 3 ) float = 2000 BYTE
 
 

@@ -568,7 +568,7 @@
                         v_tmp_i,filename)
 
       deallocate(iglob_tmp,v_tmp_i)
-    endif !if( ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION ) 
+    endif !if( ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION )
   endif  !if( DEBUG )
 
   !! CD CD !! For coupling with DSM

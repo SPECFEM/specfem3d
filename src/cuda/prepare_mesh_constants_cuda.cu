@@ -1413,7 +1413,7 @@ TRACE("prepare_cleanup_device");
     cudaFree(mp->d_nibool_interfaces_ext_mesh);
     cudaFree(mp->d_ibool_interfaces_ext_mesh);
   }
-  
+
   // global indexing
   cudaFree(mp->d_ispec_is_inner);
   cudaFree(mp->d_ibool);

@@ -354,7 +354,7 @@ __device__  __forceinline__ void sum_hprime_xi(int I, int J, int K,
                                               realw* sh_tempx,realw* sh_tempy,realw* sh_tempz, realw* sh_hprime ){
 
   realw fac;
-  
+
   // initializes
   realw sumx = 0.f;
   realw sumy = 0.f;
@@ -364,7 +364,7 @@ __device__  __forceinline__ void sum_hprime_xi(int I, int J, int K,
   #pragma unroll
   for (int l=0;l<NGLLX;l++) {
     fac = sh_hprime[l*NGLLX+I];
-    
+
     sumx += sh_tempx[K*NGLL2+J*NGLLX+l] * fac;
     sumy += sh_tempy[K*NGLL2+J*NGLLX+l] * fac;
     sumz += sh_tempz[K*NGLL2+J*NGLLX+l] * fac;
@@ -389,7 +389,7 @@ __device__  __forceinline__ void sum_hprime_eta(int I, int J, int K,
                                                realw* sh_tempx,realw* sh_tempy,realw* sh_tempz, realw* sh_hprime ){
 
   realw fac;
-  
+
   // initializes
   realw sumx = 0.f;
   realw sumy = 0.f;
@@ -399,7 +399,7 @@ __device__  __forceinline__ void sum_hprime_eta(int I, int J, int K,
   #pragma unroll
   for (int l=0;l<NGLLX;l++) {
     fac = sh_hprime[l*NGLLX+J];
-    
+
     sumx += sh_tempx[K*NGLL2+l*NGLLX+I] * fac;
     sumy += sh_tempy[K*NGLL2+l*NGLLX+I] * fac;
     sumz += sh_tempz[K*NGLL2+l*NGLLX+I] * fac;
@@ -419,7 +419,7 @@ __device__  __forceinline__ void sum_hprime_gamma(int I, int J, int K,
                                                  realw* sh_tempx,realw* sh_tempy,realw* sh_tempz, realw* sh_hprime ){
 
   realw fac;
-  
+
   // initializes
   realw sumx = 0.f;
   realw sumy = 0.f;
@@ -429,7 +429,7 @@ __device__  __forceinline__ void sum_hprime_gamma(int I, int J, int K,
   #pragma unroll
   for (int l=0;l<NGLLX;l++) {
     fac = sh_hprime[l*NGLLX+K];
-    
+
     sumx += sh_tempx[l*NGLL2+J*NGLLX+I] * fac;
     sumy += sh_tempy[l*NGLL2+J*NGLLX+I] * fac;
     sumz += sh_tempz[l*NGLL2+J*NGLLX+I] * fac;
@@ -449,7 +449,7 @@ __device__  __forceinline__ void sum_hprimewgll_xi(int I, int J, int K,
                                                    realw* sh_tempx,realw* sh_tempy,realw* sh_tempz, realw* sh_hprimewgll ){
 
   realw fac;
-  
+
   // initializes
   realw sumx = 0.f;
   realw sumy = 0.f;
@@ -479,7 +479,7 @@ __device__  __forceinline__ void sum_hprimewgll_eta(int I, int J, int K,
                                                realw* sh_tempx,realw* sh_tempy,realw* sh_tempz, realw* sh_hprimewgll ){
 
   realw fac;
-  
+
   // initializes
   realw sumx = 0.f;
   realw sumy = 0.f;
@@ -509,7 +509,7 @@ __device__  __forceinline__ void sum_hprimewgll_gamma(int I, int J, int K,
                                                  realw* sh_tempx,realw* sh_tempy,realw* sh_tempz, realw* sh_hprimewgll ){
 
   realw fac;
-  
+
   // initializes
   realw sumx = 0.f;
   realw sumy = 0.f;
@@ -519,7 +519,7 @@ __device__  __forceinline__ void sum_hprimewgll_gamma(int I, int J, int K,
   #pragma unroll
   for (int l=0;l<NGLLX;l++) {
     fac = sh_hprimewgll[K*NGLLX+l]; // d_hprimewgll_xx[K*NGLLX+l];
-    
+
     sumx += sh_tempx[l*NGLL2+J*NGLLX+I] * fac;
     sumy += sh_tempy[l*NGLL2+J*NGLLX+I] * fac;
     sumz += sh_tempz[l*NGLL2+J*NGLLX+I] * fac;
@@ -587,7 +587,7 @@ Kernel_2_noatt_iso_impl(const int nb_blocks_to_compute,
 
   // block-id == number of local element id in phase_ispec array
   int bx = blockIdx.y*gridDim.x+blockIdx.x;
-  
+
   // thread-id == GLL node id
   // note: use only NGLL^3 = 125 active threads, plus 3 inactive/ghost threads,
   //       because we used memory padding from NGLL^3 = 125 to 128 to get coalescent memory accesses;
@@ -813,10 +813,10 @@ Kernel_2_noatt_iso_impl(const int nb_blocks_to_compute,
   __syncthreads();
   // 1. cut-plane xi
   sum_hprimewgll_xi(I,J,K,&tempx1l,&tempy1l,&tempz1l,sh_tempx,sh_tempy,sh_tempz,sh_hprimewgll_xx);
-  
+
   // 2. cut-plane eta
   __syncthreads();
-  // fills shared memory arrays  
+  // fills shared memory arrays
   if( threadIdx.x < NGLL3 ) {
     sh_tempx[tx] = jacobianl * (sigma_xx*etaxl + sigma_xy*etayl + sigma_xz*etazl); // sh_tempx2
     sh_tempy[tx] = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_yz*etazl); // sh_tempy2
@@ -825,10 +825,10 @@ Kernel_2_noatt_iso_impl(const int nb_blocks_to_compute,
   __syncthreads();
   // 2. cut-plane eta
   sum_hprimewgll_eta(I,J,K,&tempx2l,&tempy2l,&tempz2l,sh_tempx,sh_tempy,sh_tempz,sh_hprimewgll_xx);
-  
+
   // 3. cut-plane gamma
   __syncthreads();
-  // fills shared memory arrays  
+  // fills shared memory arrays
   if( threadIdx.x < NGLL3 ) {
     sh_tempx[tx] = jacobianl * (sigma_xx*gammaxl + sigma_xy*gammayl + sigma_xz*gammazl); // sh_tempx3
     sh_tempy[tx] = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_yz*gammazl); // sh_tempy3
@@ -959,7 +959,7 @@ Kernel_2_noatt_iso_strain_impl(int nb_blocks_to_compute,
 
   // checks if anything to do
   if( bx >= nb_blocks_to_compute ) return;
-  
+
   // thread-id == GLL node id
   // note: use only NGLL^3 = 125 active threads, plus 3 inactive/ghost threads,
   //       because we used memory padding from NGLL^3 = 125 to 128 to get coalescent memory accesses;
@@ -1126,10 +1126,10 @@ Kernel_2_noatt_iso_strain_impl(int nb_blocks_to_compute,
   __syncthreads();
   // 1. cut-plane xi
   sum_hprimewgll_xi(I,J,K,&tempx1l,&tempy1l,&tempz1l,sh_tempx,sh_tempy,sh_tempz,sh_hprimewgll_xx);
-  
+
   // 2. cut-plane eta
   __syncthreads();
-  // fills shared memory arrays  
+  // fills shared memory arrays
   if( threadIdx.x < NGLL3 ) {
     sh_tempx[tx] = jacobianl * (sigma_xx*etaxl + sigma_xy*etayl + sigma_xz*etazl); // sh_tempx2
     sh_tempy[tx] = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_yz*etazl); // sh_tempy2
@@ -1138,10 +1138,10 @@ Kernel_2_noatt_iso_strain_impl(int nb_blocks_to_compute,
   __syncthreads();
   // 2. cut-plane eta
   sum_hprimewgll_eta(I,J,K,&tempx2l,&tempy2l,&tempz2l,sh_tempx,sh_tempy,sh_tempz,sh_hprimewgll_xx);
-  
+
   // 3. cut-plane gamma
   __syncthreads();
-  // fills shared memory arrays  
+  // fills shared memory arrays
   if( threadIdx.x < NGLL3 ) {
     sh_tempx[tx] = jacobianl * (sigma_xx*gammaxl + sigma_xy*gammayl + sigma_xz*gammazl); // sh_tempx3
     sh_tempy[tx] = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_yz*gammazl); // sh_tempy3
@@ -1211,7 +1211,7 @@ Kernel_2_noatt_iso_col_impl(int nb_blocks_to_compute,
 
   // checks if anything to do
   if( bx >= nb_blocks_to_compute ) return;
-  
+
   // thread-id == GLL node id
   // note: use only NGLL^3 = 125 active threads, plus 3 inactive/ghost threads,
   //       because we used memory padding from NGLL^3 = 125 to 128 to get coalescent memory accesses;
@@ -1357,7 +1357,7 @@ Kernel_2_noatt_iso_col_impl(int nb_blocks_to_compute,
   }
 
   // stress calculations
-  
+
   // isotropic case
   // compute elements with an elastic isotropic rheology
   kappal = d_kappav[offset];
@@ -1387,10 +1387,10 @@ Kernel_2_noatt_iso_col_impl(int nb_blocks_to_compute,
   __syncthreads();
   // 1. cut-plane xi
   sum_hprimewgll_xi(I,J,K,&tempx1l,&tempy1l,&tempz1l,sh_tempx,sh_tempy,sh_tempz,sh_hprimewgll_xx);
-  
+
   // 2. cut-plane eta
   __syncthreads();
-  // fills shared memory arrays  
+  // fills shared memory arrays
   if( threadIdx.x < NGLL3 ) {
     sh_tempx[tx] = jacobianl * (sigma_xx*etaxl + sigma_xy*etayl + sigma_xz*etazl); // sh_tempx2
     sh_tempy[tx] = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_yz*etazl); // sh_tempy2
@@ -1399,10 +1399,10 @@ Kernel_2_noatt_iso_col_impl(int nb_blocks_to_compute,
   __syncthreads();
   // 2. cut-plane eta
   sum_hprimewgll_eta(I,J,K,&tempx2l,&tempy2l,&tempz2l,sh_tempx,sh_tempy,sh_tempz,sh_hprimewgll_xx);
-  
+
   // 3. cut-plane gamma
   __syncthreads();
-  // fills shared memory arrays  
+  // fills shared memory arrays
   if( threadIdx.x < NGLL3 ) {
     sh_tempx[tx] = jacobianl * (sigma_xx*gammaxl + sigma_xy*gammayl + sigma_xz*gammazl); // sh_tempx3
     sh_tempy[tx] = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_yz*gammazl); // sh_tempy3
@@ -1513,7 +1513,7 @@ Kernel_2_noatt_iso_grav_impl(int nb_blocks_to_compute,
 
   // checks if anything to do
   if( bx >= nb_blocks_to_compute ) return;
-  
+
   // thread-id == GLL node id
   // note: use only NGLL^3 = 125 active threads, plus 3 inactive/ghost threads,
   //       because we used memory padding from NGLL^3 = 125 to 128 to get coalescent memory accesses;
@@ -1665,7 +1665,7 @@ Kernel_2_noatt_iso_grav_impl(int nb_blocks_to_compute,
   }
 
   // stress calculations
-  
+
   // isotropic case
   // compute elements with an elastic isotropic rheology
   kappal = d_kappav[offset];
@@ -1708,7 +1708,7 @@ Kernel_2_noatt_iso_grav_impl(int nb_blocks_to_compute,
   __syncthreads();
   // 1. cut-plane xi
   sum_hprimewgll_xi(I,J,K,&tempx1l,&tempy1l,&tempz1l,sh_tempx,sh_tempy,sh_tempz,sh_hprimewgll_xx);
-  
+
   // 2. cut-plane eta
   __syncthreads();
   if( threadIdx.x < NGLL3 ) {
@@ -1844,7 +1844,7 @@ Kernel_2_noatt_ani_impl(int nb_blocks_to_compute,
 
   // checks if anything to do
   if( bx >= nb_blocks_to_compute ) return;
-  
+
   // thread-id == GLL node id
   // note: use only NGLL^3 = 125 active threads, plus 3 inactive/ghost threads,
   //       because we used memory padding from NGLL^3 = 125 to 128 to get coalescent memory accesses;
@@ -2078,7 +2078,7 @@ Kernel_2_noatt_ani_impl(int nb_blocks_to_compute,
   __syncthreads();
   // 1. cut-plane xi
   sum_hprimewgll_xi(I,J,K,&tempx1l,&tempy1l,&tempz1l,sh_tempx,sh_tempy,sh_tempz,sh_hprimewgll_xx);
-  
+
   // 2. cut-plane eta
   __syncthreads();
   if( threadIdx.x < NGLL3 ) {
@@ -3646,7 +3646,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
   if( CUDA_TIMING ){
     start_timing_cuda(&start,&stop);
   }
-  
+
   // cuda kernel call
   if( ATTENUATION ){
     // compute kernels with attenuation
@@ -4023,7 +4023,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
       }
     }
   }
-  
+
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   exit_on_cuda_error("Kernel_2_impl");
 #endif
