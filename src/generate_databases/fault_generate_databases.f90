@@ -36,8 +36,7 @@
 
 module fault_generate_databases
 
-  use create_regions_mesh_ext_par, only: NGLLX,NGLLY,NGLLZ,NGLLSQUARE,NDIM,CUSTOM_REAL,IMAIN
-  use generate_databases_par, only : NGNOD2D
+  use generate_databases_par, only : NGNOD2D,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,NDIM,CUSTOM_REAL,IMAIN
 
   implicit none
   private
@@ -314,6 +313,7 @@ subroutine setup_ibools(fdb,xstore,ystore,zstore,nspec,npointot)
 
   use generate_databases_par, only: nodes_coords_ext_mesh
 
+  implicit none
   type(fault_db_type), intent(inout) :: fdb
   integer, intent(in) :: nspec,npointot
   double precision, dimension(NGLLX,NGLLY,NGLLZ,nspec), intent(in) :: xstore,ystore,zstore
@@ -461,9 +461,10 @@ end subroutine close_fault
   use create_regions_mesh_ext_par, only: xstore_dummy,ystore_dummy,zstore_dummy, &
                                          dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
                                          wgllwgll_xy,wgllwgll_xz,wgllwgll_yz
+
   use generate_databases_par, only : NGNOD2D
 
-
+  implicit none
   type(fault_db_type), intent(inout) :: fdb
   integer, intent(in) :: nspec,nglob, ibool(NGLLX,NGLLY,NGLLZ,nspec)
 
@@ -540,6 +541,7 @@ subroutine fault_save_arrays_test(prname)
 
   use constants, only: MAX_STRING_LEN
 
+  implicit none
   character(len=MAX_STRING_LEN), intent(in) :: prname ! 'proc***'
 
   integer, parameter :: IOUT = 121 !WARNING: not very robust. Could instead look for an available ID
@@ -568,6 +570,7 @@ end subroutine fault_save_arrays_test
 
 subroutine save_one_fault_test(f,IOUT)
 
+  implicit none
   type(fault_db_type), intent(in) :: f
   integer, intent(in) :: IOUT
 
@@ -615,6 +618,7 @@ subroutine fault_save_arrays(prname)
 
   use constants, only: MAX_STRING_LEN
 
+  implicit none
   character(len=MAX_STRING_LEN), intent(in) :: prname ! 'proc***'
 
   integer, parameter :: IOUT = 121 !WARNING: not very robust. Could instead look for an available ID
@@ -665,6 +669,7 @@ end subroutine fault_save_arrays
 
 subroutine save_one_fault_bin(f,IOUT)
 
+  implicit none
   type(fault_db_type), intent(in) :: f
   integer, intent(in) :: IOUT
 

@@ -28,8 +28,14 @@
 
   subroutine get_model(myrank)
 
-  use generate_databases_par, only: IMODEL,nspec => NSPEC_AB,ibool,mat_ext_mesh, &
-       materials_ext_mesh,nmat_ext_mesh,undef_mat_prop,nundefMat_ext_mesh,ANISOTROPY,COUPLE_WITH_DSM
+  use generate_databases_par, only: IMODEL, &
+    IMODEL_DEFAULT,IMODEL_GLL,IMODEL_1D_PREM,IMODEL_1D_CASCADIA,IMODEL_1D_SOCAL, &
+    IMODEL_SALTON_TROUGH,IMODEL_TOMO,IMODEL_USER_EXTERNAL,IMODEL_IPATI,IMODEL_IPATI_WATER, &
+    IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC, &
+    nspec => NSPEC_AB,ibool,mat_ext_mesh, &
+    materials_ext_mesh,nmat_ext_mesh,undef_mat_prop,nundefMat_ext_mesh,ANISOTROPY,COUPLE_WITH_DSM, &
+    NGLLX,NGLLY,NGLLZ, &
+    FOUR_THIRDS,TWO,IMAIN
 
   use create_regions_mesh_ext_par
 
@@ -374,7 +380,12 @@
                              c34,c35,c36,c44,c45,c46,c55,c56,c66, &
                              ANISOTROPY)
 
-  use generate_databases_par,only: IMODEL
+  use generate_databases_par,only: IMODEL, &
+    IMODEL_DEFAULT,IMODEL_GLL,IMODEL_1D_PREM,IMODEL_1D_CASCADIA,IMODEL_1D_SOCAL, &
+    IMODEL_SALTON_TROUGH,IMODEL_TOMO,IMODEL_USER_EXTERNAL,IMODEL_IPATI,IMODEL_IPATI_WATER, &
+    IMODEL_1D_PREM_PB,IMODEL_GLL, &
+    IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,ATTENUATION_COMP_MAXIMUM
+
   use create_regions_mesh_ext_par
   implicit none
 
@@ -495,7 +506,9 @@
 
 ! reads in material parameters from external binary files
 
-  use generate_databases_par,only: IMODEL, ADIOS_FOR_MESH
+  use generate_databases_par,only: IMODEL, &
+    IMODEL_GLL,IMODEL_IPATI,IMODEL_IPATI_WATER, &
+    ADIOS_FOR_MESH
 
   use create_regions_mesh_ext_par
 

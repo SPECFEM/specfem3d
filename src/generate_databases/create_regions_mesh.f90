@@ -29,6 +29,7 @@
   subroutine create_regions_mesh()
 
 ! create the different regions of the mesh
+
   use generate_databases_par, only:                                            &
       nspec => NSPEC_AB,nglob => NGLOB_AB,                                     &
       ibool,xstore,ystore,zstore,                                              &
@@ -49,7 +50,7 @@
       ANISOTROPY,NPROC,APPROXIMATE_OCEAN_LOAD,OLSEN_ATTENUATION_RATIO,         &
       ATTENUATION,USE_OLSEN_ATTENUATION,                                       &
       nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho,                            &
-      ADIOS_FOR_MESH
+      ADIOS_FOR_MESH,IMAIN,SAVE_MOHO_MESH
 
   use create_regions_mesh_ext_par
   use fault_generate_databases, only: fault_read_input,fault_setup, &
@@ -374,8 +375,8 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
                         nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
                         nspec2D_bottom,nspec2D_top,ANISOTROPY)
 
-  use generate_databases_par, only: STACEY_INSTEAD_OF_FREE_SURFACE,NGNOD,NGNOD2D,&
-                                    PML_INSTEAD_OF_FREE_SURFACE
+  use generate_databases_par, only: STACEY_INSTEAD_OF_FREE_SURFACE,PML_INSTEAD_OF_FREE_SURFACE, &
+    NGNOD,NGNOD2D,NDIM,NDIM2D,NGLLX,NGLLY,NGLLZ,NGLLSQUARE
   use create_regions_mesh_ext_par
 
   implicit none
@@ -544,8 +545,9 @@ subroutine crm_ext_setup_jacobian(myrank, &
                         nodes_coords_ext_mesh,nnodes_ext_mesh,&
                         elmnts_ext_mesh,nelmnts_ext_mesh)
 
-  use generate_databases_par, only: NGNOD,NGNOD2D
+  use generate_databases_par, only: NGNOD,NGNOD2D,NDIM,NGLLX,NGLLY,NGLLZ,GAUSSALPHA,GAUSSBETA
   use create_regions_mesh_ext_par
+
   implicit none
 
 ! number of spectral elements in each block
@@ -630,6 +632,7 @@ subroutine crm_ext_setup_indexing(ibool, &
 
 ! creates global indexing array ibool
 
+  use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,NDIM
   use create_regions_mesh_ext_par
 
   implicit none
@@ -728,8 +731,10 @@ subroutine crm_ext_setup_indexing(ibool, &
                         nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho, &
                         nodes_coords_ext_mesh,nnodes_ext_mesh,ibool )
 
-  use generate_databases_par, only: NGNOD2D
+  use generate_databases_par, only: NGNOD2D,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL,SIZE_REAL,IMAIN, &
+    NDIM,NGLLSQUARE,NGNOD2D_FOUR_CORNERS
   use create_regions_mesh_ext_par
+
   implicit none
 
   integer :: nspec2D_moho_ext
@@ -1021,9 +1026,11 @@ subroutine crm_ext_setup_indexing(ibool, &
 
   subroutine crm_save_moho()
 
-  use generate_databases_par, only: ADIOS_FOR_MESH
+  use generate_databases_par, only: ADIOS_FOR_MESH,IOUT
   use create_regions_mesh_ext_par
+
   implicit none
+
   ! local parameters
   integer :: ier
 
@@ -1031,27 +1038,27 @@ subroutine crm_ext_setup_indexing(ibool, &
     call crm_save_moho_adios()
   else
     ! saves moho files: total number of elements, corner points, all points
-    open(unit=27,file=prname(1:len_trim(prname))//'ibelm_moho.bin', &
+    open(unit=IOUT,file=prname(1:len_trim(prname))//'ibelm_moho.bin', &
           status='unknown',form='unformatted',iostat=ier)
     if( ier /= 0 ) stop 'error opening ibelm_moho.bin file'
-    write(27) NSPEC2D_MOHO
-    write(27) ibelm_moho_top
-    write(27) ibelm_moho_bot
-    write(27) ijk_moho_top
-    write(27) ijk_moho_bot
-    close(27)
-    open(unit=27,file=prname(1:len_trim(prname))//'normal_moho.bin', &
+    write(IOUT) NSPEC2D_MOHO
+    write(IOUT) ibelm_moho_top
+    write(IOUT) ibelm_moho_bot
+    write(IOUT) ijk_moho_top
+    write(IOUT) ijk_moho_bot
+    close(IOUT)
+    open(unit=IOUT,file=prname(1:len_trim(prname))//'normal_moho.bin', &
           status='unknown',form='unformatted',iostat=ier)
     if( ier /= 0 ) stop 'error opening normal_moho.bin file'
-    write(27) normal_moho_top
-    write(27) normal_moho_bot
-    close(27)
-    open(unit=27,file=prname(1:len_trim(prname))//'is_moho.bin', &
+    write(IOUT) normal_moho_top
+    write(IOUT) normal_moho_bot
+    close(IOUT)
+    open(unit=IOUT,file=prname(1:len_trim(prname))//'is_moho.bin', &
       status='unknown',form='unformatted',iostat=ier)
     if( ier /= 0 ) stop 'error opening is_moho.bin file'
-    write(27) is_moho_top
-    write(27) is_moho_bot
-    close(27)
+    write(IOUT) is_moho_top
+    write(IOUT) is_moho_bot
+    close(IOUT)
   endif
 
   end subroutine crm_save_moho
@@ -1067,7 +1074,9 @@ subroutine crm_ext_setup_indexing(ibool, &
 
 ! locates inner and outer elements
 
+  use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,IMAIN
   use create_regions_mesh_ext_par
+
   implicit none
 
   integer :: myrank,nspec

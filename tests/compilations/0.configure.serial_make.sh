@@ -40,6 +40,5 @@ if [[ $? -ne 0 ]]; then
   exit 1
 fi
 
-
 echo "successful compilation" >> $testdir/results.log
 

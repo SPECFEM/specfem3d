@@ -33,16 +33,16 @@
                     SAVE_MESH_FILES,ANISOTROPY)
 
   use generate_databases_par, only: nspec_cpml,CPML_width_x,CPML_width_y,CPML_width_z,CPML_to_spec,&
-                                    CPML_regions,is_CPML,nspec_cpml_tot, &
-                                    d_store_x,d_store_y,d_store_z,k_store_x,k_store_y,k_store_z,&
-                                    alpha_store_x,alpha_store_y,alpha_store_z, &
-                                    nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-                                    ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,PML_CONDITIONS,&
-                                    !for adjoint tomography
-                                    SIMULATION_TYPE,SAVE_FORWARD,mask_ibool_interior_domain, &
-                                    nglob_interface_PML_acoustic,points_interface_PML_acoustic,&
-                                    nglob_interface_PML_elastic,points_interface_PML_elastic, &
-                                    STACEY_ABSORBING_CONDITIONS
+    CPML_regions,is_CPML,nspec_cpml_tot, &
+    d_store_x,d_store_y,d_store_z,k_store_x,k_store_y,k_store_z,&
+    alpha_store_x,alpha_store_y,alpha_store_z, &
+    nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+    ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,PML_CONDITIONS,&
+    SIMULATION_TYPE,SAVE_FORWARD,mask_ibool_interior_domain, &
+    nglob_interface_PML_acoustic,points_interface_PML_acoustic,&
+    nglob_interface_PML_elastic,points_interface_PML_elastic, &
+    STACEY_ABSORBING_CONDITIONS, &
+    NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN,IOUT,USE_MESH_COLORING_GPU
   use create_regions_mesh_ext_par
 
   implicit none
@@ -383,7 +383,7 @@
 !
   subroutine save_arrays_solver_files(nspec,nglob,ibool)
 
-  use generate_databases_par, only: myrank,COUPLE_WITH_DSM
+  use generate_databases_par, only: myrank,COUPLE_WITH_DSM,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN,IOUT,FOUR_THIRDS
   use create_regions_mesh_ext_par
 
   implicit none
@@ -409,28 +409,28 @@
 
   ! mesh arrays used for example in combine_vol_data.f90
   !--- x coordinate
-  open(unit=27,file=prname(1:len_trim(prname))//'x.bin',status='unknown',form='unformatted',iostat=ier)
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'x.bin',status='unknown',form='unformatted',iostat=ier)
   if( ier /= 0 ) stop 'error opening file x.bin'
-  write(27) xstore_dummy
-  close(27)
+  write(IOUT) xstore_dummy
+  close(IOUT)
 
   !--- y coordinate
-  open(unit=27,file=prname(1:len_trim(prname))//'y.bin',status='unknown',form='unformatted',iostat=ier)
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'y.bin',status='unknown',form='unformatted',iostat=ier)
   if( ier /= 0 ) stop 'error opening file y.bin'
-  write(27) ystore_dummy
-  close(27)
+  write(IOUT) ystore_dummy
+  close(IOUT)
 
   !--- z coordinate
-  open(unit=27,file=prname(1:len_trim(prname))//'z.bin',status='unknown',form='unformatted',iostat=ier)
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'z.bin',status='unknown',form='unformatted',iostat=ier)
   if( ier /= 0 ) stop 'error opening file z.bin'
-  write(27) zstore_dummy
-  close(27)
+  write(IOUT) zstore_dummy
+  close(IOUT)
 
   ! ibool
-  open(unit=27,file=prname(1:len_trim(prname))//'ibool.bin',status='unknown',form='unformatted',iostat=ier)
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'ibool.bin',status='unknown',form='unformatted',iostat=ier)
   if( ier /= 0 ) stop 'error opening file ibool.bin'
-  write(27) ibool
-  close(27)
+  write(IOUT) ibool
+  close(IOUT)
 
   allocate( v_tmp(NGLLX,NGLLY,NGLLZ,nspec), stat=ier); if( ier /= 0 ) stop 'error allocating array '
 
@@ -443,10 +443,10 @@
   !endif
   v_tmp = 0.0
   where( rho_vp /= 0._CUSTOM_REAL ) v_tmp = (FOUR_THIRDS * mustore + kappastore) / rho_vp
-  open(unit=27,file=prname(1:len_trim(prname))//'vp.bin',status='unknown',form='unformatted',iostat=ier)
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'vp.bin',status='unknown',form='unformatted',iostat=ier)
   if( ier /= 0 ) stop 'error opening file vp.bin'
-  write(27) v_tmp
-  close(27)
+  write(IOUT) v_tmp
+  close(IOUT)
 
   ! VTK file output
   ! vp values
@@ -465,10 +465,10 @@
   !endif
   v_tmp = 0.0
   where( rho_vs /= 0._CUSTOM_REAL )  v_tmp = mustore / rho_vs
-  open(unit=27,file=prname(1:len_trim(prname))//'vs.bin',status='unknown',form='unformatted',iostat=ier)
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'vs.bin',status='unknown',form='unformatted',iostat=ier)
   if( ier /= 0 ) stop 'error opening file vs.bin'
-  write(27) v_tmp
-  close(27)
+  write(IOUT) v_tmp
+  close(IOUT)
 
   ! VTK file output
   ! vs values
@@ -480,10 +480,10 @@
   ! outputs density model for check
   v_tmp = 0.0
   where( rho_vp /= 0._CUSTOM_REAL ) v_tmp = rho_vp**2 / (FOUR_THIRDS * mustore + kappastore)
-  open(unit=27,file=prname(1:len_trim(prname))//'rho.bin',status='unknown',form='unformatted',iostat=ier)
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'rho.bin',status='unknown',form='unformatted',iostat=ier)
   if( ier /= 0 ) stop 'error opening file rho.bin'
-  write(27) v_tmp
-  close(27)
+  write(IOUT) v_tmp
+  close(IOUT)
 
   ! VTK file output
   ! saves attenuation flag assigned on each gll point into a vtk file
@@ -575,20 +575,20 @@
   if (COUPLE_WITH_DSM) then
     !if (num_abs_boundary_faces > 0) then
     filename = prname(1:len_trim(prname))//'absorb_dsm'
-    open(27,file=filename(1:len_trim(filename)),status='unknown',form='unformatted',iostat=ier)
+    open(IOUT,file=filename(1:len_trim(filename)),status='unknown',form='unformatted',iostat=ier)
     if( ier /= 0 ) stop 'error opening file absorb_dsm'
-    write(27) num_abs_boundary_faces
-    write(27) abs_boundary_ispec
-    write(27) abs_boundary_ijk
-    write(27) abs_boundary_jacobian2Dw
-    write(27) abs_boundary_normal
-    close(27)
+    write(IOUT) num_abs_boundary_faces
+    write(IOUT) abs_boundary_ispec
+    write(IOUT) abs_boundary_ijk
+    write(IOUT) abs_boundary_jacobian2Dw
+    write(IOUT) abs_boundary_normal
+    close(IOUT)
 
     filename = prname(1:len_trim(prname))//'inner'
-    open(27,file=filename(1:len_trim(filename)),status='unknown',form='unformatted',iostat=ier)
-    write(27) ispec_is_inner
-    write(27) ispec_is_elastic
-    close(27)
+    open(IOUT,file=filename(1:len_trim(filename)),status='unknown',form='unformatted',iostat=ier)
+    write(IOUT) ispec_is_inner
+    write(IOUT) ispec_is_elastic
+    close(IOUT)
 
     !endif
 

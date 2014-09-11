@@ -36,7 +36,9 @@
 ! determines absorbing boundaries/free-surface, 2D jacobians, face normals for Stacey conditions
 
   use generate_databases_par, only: STACEY_INSTEAD_OF_FREE_SURFACE, PML_INSTEAD_OF_FREE_SURFACE, NGNOD2D, &
-                                      STACEY_ABSORBING_CONDITIONS,PML_CONDITIONS,COUPLE_WITH_DSM
+    STACEY_ABSORBING_CONDITIONS,PML_CONDITIONS,COUPLE_WITH_DSM, &
+    NGLLX,NGLLY,NGLLZ,NDIM,NGNOD2D_FOUR_CORNERS,IMAIN
+
   use create_regions_mesh_ext_par
 
   implicit none

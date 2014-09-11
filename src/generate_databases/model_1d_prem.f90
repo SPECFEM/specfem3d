@@ -47,7 +47,7 @@
 
 ! given a GLL point, returns super-imposed velocity model values
 
-  use generate_databases_par,only: nspec => NSPEC_AB,ibool
+  use generate_databases_par,only: nspec => NSPEC_AB,ibool,HUGEVAL,R_EARTH
   use create_regions_mesh_ext_par
   implicit none
 

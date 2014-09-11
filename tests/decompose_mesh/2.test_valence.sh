@@ -28,8 +28,7 @@ fi
 
 # runs test
 echo "run: `date`" >> $testdir/results.log
-cd bin/
-./$var >> $testdir/results.log 2>$testdir/error.log
+./bin/$var >> $testdir/results.log 2>$testdir/error.log
 
 # checks exit code
 if [[ $? -ne 0 ]]; then
@@ -44,7 +43,6 @@ if [[ -s $testdir/error.log ]]; then
 fi
 rm -f $testdir/error.log
 
-cd ../
 #cleanup
 rm -f bin/$var
 # done

@@ -4,6 +4,14 @@ program test_read
 
   implicit none
 
+  ! some test values from the default Par_file
+  integer,parameter :: PAR_FILE_NPROC = 4
+  integer,parameter :: PAR_FILE_NSTEP = 5000
+  integer,parameter :: PAR_FILE_NT = 5000
+  integer,parameter :: PAR_FILE_NTSTEP_BETWEEN_OUTPUT_INFO = 100
+  double precision,parameter :: PAR_FILE_DT = 0.05
+  logical,parameter :: PAR_FILE_USE_RICKER_TIME_FUNCTION = .false.
+
   ! reads ../DATA/Par_file
   call read_parameter_file(NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT,NGNOD,NGNOD2D, &
                           UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,TOMOGRAPHY_PATH, &
@@ -16,11 +24,11 @@ program test_read
                           NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
                           USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE, &
                           USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
-                          PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,FULL_ATTENUATION_SOLID,TRAC_PATH)
+                          PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,FULL_ATTENUATION_SOLID,TRACTION_PATH,COUPLE_WITH_DSM)
 
   ! punctual check of values for given default Par_file in SPECFEM3D/DATA/ directory
   print*,'NPROC = ',NPROC
-  if( NPROC /= 4 ) then
+  if( NPROC /= PAR_FILE_NPROC ) then
     print*,'ERROR: NPROC value invalid'
     stop 1
   else
@@ -28,7 +36,7 @@ program test_read
   endif
 
   print*,'NSTEP = ',NSTEP
-  if( NSTEP /= 200 ) then
+  if( NSTEP /= PAR_FILE_NSTEP ) then
     print*,'ERROR: NSTEP value invalid'
     stop 1
   else
@@ -36,7 +44,7 @@ program test_read
   endif
 
   print*,'DT = ',DT
-  if( abs(DT - 0.03) > 1.e-9 ) then
+  if( abs(DT - PAR_FILE_DT) > 1.e-9 ) then
     print*,'ERROR: DT value invalid'
     stop 1
   else
@@ -44,7 +52,7 @@ program test_read
   endif
 
   print*,'NTSTEP_BETWEEN_OUTPUT_INFO = ',NTSTEP_BETWEEN_OUTPUT_INFO
-  if( NTSTEP_BETWEEN_OUTPUT_INFO /= 100 ) then
+  if( NTSTEP_BETWEEN_OUTPUT_INFO /= PAR_FILE_NTSTEP_BETWEEN_OUTPUT_INFO ) then
     print*,'ERROR: NPROC value invalid'
     stop 1
   else
@@ -52,7 +60,7 @@ program test_read
   endif
 
   print*,'USE_RICKER_TIME_FUNCTION = ',USE_RICKER_TIME_FUNCTION
-  if( USE_RICKER_TIME_FUNCTION .neqv. .false. ) then
+  if( USE_RICKER_TIME_FUNCTION .neqv. PAR_FILE_USE_RICKER_TIME_FUNCTION ) then
     print*,'ERROR: NPROC value invalid'
     stop 1
   else

@@ -31,8 +31,7 @@
                           xstore,ystore,zstore, &
                           xelm,yelm,zelm,shape3D,dershape3D,ispec,nspec)
 
-  use constants
-  use generate_databases_par, only: NGNOD
+  use generate_databases_par, only: NGNOD,CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,SIZE_REAL,ZERO
 
   implicit none
 

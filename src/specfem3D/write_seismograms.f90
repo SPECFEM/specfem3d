@@ -319,7 +319,7 @@
   use specfem_par,only: &
           myrank,number_receiver_global,station_name,network_name, &
           nrec,nrec_local,islice_selected_rec, &
-          it,DT,NSTEP,t0,LOCAL_PATH,SIMULATION_TYPE
+          it,DT,NSTEP,t0,SIMULATION_TYPE
 
   implicit none
 

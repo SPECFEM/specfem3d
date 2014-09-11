@@ -41,8 +41,8 @@
 ! returns the updated acceleration array: accel
 
   use constants
-  use pml_par,only : rmemory_coupling_el_ac_potential,rmemory_coupling_el_ac_potential_dot_dot,is_CPML,spec_to_CPML,&
-                     potential_acoustic_old,potential_dot_dot_acoustic_old,NSPEC_CPML
+  use pml_par,only : rmemory_coupling_el_ac_potential_dot_dot,is_CPML,spec_to_CPML,&
+                     potential_acoustic_old,NSPEC_CPML
   implicit none
 
   integer :: NSPEC_AB,NGLOB_AB,SIMULATION_TYPE

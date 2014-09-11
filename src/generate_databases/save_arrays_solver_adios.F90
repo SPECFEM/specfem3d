@@ -56,27 +56,28 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob,                   &
                                        SAVE_MESH_FILES,ANISOTROPY)
 
   use generate_databases_par, only: nspec_cpml, CPML_width_x, CPML_width_y, &
-                                    CPML_width_z, CPML_to_spec,             &
-                                    CPML_regions, is_CPML, nspec_cpml_tot,  &
-                                    d_store_x, d_store_y, d_store_z,        &
-                                    k_store_x, k_store_y, k_store_z,        &
-                               alpha_store_x, alpha_store_y, alpha_store_z, &
-                                    nspec2D_xmin, nspec2D_xmax,             &
-                                    nspec2D_ymin, nspec2D_ymax,             &
-                                    NSPEC2D_BOTTOM, NSPEC2D_TOP,            &
-                                    ibelm_xmin, ibelm_xmax,ibelm_ymin,      &
-                                    ibelm_ymax, ibelm_bottom, ibelm_top,    &
-                                    PML_CONDITIONS,                         &
-                                    !for adjoint tomography
-                                    SIMULATION_TYPE, SAVE_FORWARD,          &
-                                    mask_ibool_interior_domain,             &
-                                    nglob_interface_PML_acoustic,           &
-                                    points_interface_PML_acoustic,          &
-                                    nglob_interface_PML_elastic,            &
-                                    points_interface_PML_elastic,           &
-                                    STACEY_ABSORBING_CONDITIONS,            &
-                                    LOCAL_PATH, myrank, sizeprocs,          &
-                                    nspec_ab
+    CPML_width_z, CPML_to_spec,             &
+    CPML_regions, is_CPML, nspec_cpml_tot,  &
+    d_store_x, d_store_y, d_store_z,        &
+    k_store_x, k_store_y, k_store_z,        &
+    alpha_store_x, alpha_store_y, alpha_store_z, &
+    nspec2D_xmin, nspec2D_xmax,             &
+    nspec2D_ymin, nspec2D_ymax,             &
+    NSPEC2D_BOTTOM, NSPEC2D_TOP,            &
+    ibelm_xmin, ibelm_xmax,ibelm_ymin,      &
+    ibelm_ymax, ibelm_bottom, ibelm_top,    &
+    PML_CONDITIONS,                         &
+    SIMULATION_TYPE, SAVE_FORWARD,          &
+    mask_ibool_interior_domain,             &
+    nglob_interface_PML_acoustic,           &
+    points_interface_PML_acoustic,          &
+    nglob_interface_PML_elastic,            &
+    points_interface_PML_elastic,           &
+    STACEY_ABSORBING_CONDITIONS,            &
+    LOCAL_PATH, myrank, sizeprocs,          &
+    nspec_ab,NGLLX,NGLLY,NGLLZ,NDIM,NGLLSQUARE,USE_MESH_COLORING_GPU, &
+    ADIOS_TRANSPORT_METHOD
+
 
   use adios_helpers_mod
   use create_regions_mesh_ext_par
@@ -1313,8 +1314,10 @@ subroutine save_arrays_solver_files_adios(nspec,nglob,ibool, nspec_wmax, &
                                           nglob_wmax)
 
   use generate_databases_par, only: myrank, LOCAL_PATH,     &
-                                    xstore, ystore, zstore, &
-                                    sizeprocs
+    xstore, ystore, zstore, sizeprocs, &
+    NGLLX,NGLLY,NGLLZ,ADIOS_TRANSPORT_METHOD, &
+    FOUR_THIRDS,IMAIN
+
   use create_regions_mesh_ext_par
   use adios_helpers_mod
 

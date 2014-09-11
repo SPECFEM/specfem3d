@@ -85,7 +85,9 @@ shared_MODULES = \
 ### MPI
 ###
 shared_OBJECTS += $(COND_MPI_OBJECTS)
-
+ifeq ($(MPI),yes)
+shared_MODULES += $(FC_MODDIR)/my_mpi.$(FC_MODEXT)
+endif
 
 ###
 ### ADIOS
@@ -142,7 +144,7 @@ $O/%.shared.o: $S/%.f90 $O/constants_mod.shared_module.o $O/unused_mod.shared_mo
 $O/%.shared.o: $S/%.F90 $O/constants_mod.shared_module.o $O/unused_mod.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.sharedmpi.o: $S/%.f90 ${SETUP}/constants.h
+$O/%.sharedmpi.o: $S/%.f90 ${SETUP}/constants.h $O/constants_mod.shared_module.o
 	${MPIFCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 
