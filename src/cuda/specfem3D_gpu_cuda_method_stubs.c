@@ -37,6 +37,62 @@ typedef float realw;
 
 
 //
+// src/cuda/assemble_MPI_scalar_cuda.cu
+//
+
+void FC_FUNC_(transfer_boun_pot_from_device,
+              TRANSFER_BOUN_POT_FROM_DEVICE)(long* Mesh_pointer,
+                                             realw* potential_dot_dot_acoustic,
+                                             realw* send_potential_dot_dot_buffer,
+                                             const int* FORWARD_OR_ADJOINT){}
+
+void FC_FUNC_(transfer_asmbl_pot_to_device,
+              TRANSFER_ASMBL_POT_TO_DEVICE)(long* Mesh_pointer,
+                                            realw* potential_dot_dot_acoustic,
+                                            realw* buffer_recv_scalar_ext_mesh,
+                                            const int* FORWARD_OR_ADJOINT) {}
+
+
+//
+// src/cuda/assemble_MPI_vector_cuda.cu
+//
+
+void FC_FUNC_(transfer_boun_accel_from_device,
+              TRANSFER_BOUN_ACCEL_FROM_DEVICE)(long* Mesh_pointer,
+                                               realw* accel,
+                                               realw* send_accel_buffer,
+                                               const int* FORWARD_OR_ADJOINT){}
+
+void FC_FUNC_(transfer_boundary_from_device_a,
+              TRANSFER_BOUNDARY_FROM_DEVICE_A)(long* Mesh_pointer,
+                                               const int* nspec_outer_elastic) {}
+
+void FC_FUNC_(transfer_boundary_to_device_a,
+              TRANSFER_BOUNDARY_TO_DEVICE_A)(long* Mesh_pointer,
+                                             realw* buffer_recv_vector_ext_mesh,
+                                             const int* num_interfaces_ext_mesh,
+                                             const int* max_nibool_interfaces_ext_mesh) {}
+
+void FC_FUNC_(transfer_asmbl_accel_to_device,
+              TRANSFER_ASMBL_ACCEL_TO_DEVICE)(long* Mesh_pointer, realw* accel,
+                                              realw* buffer_recv_vector_ext_mesh,
+                                              const int* num_interfaces_ext_mesh,
+                                              const int* max_nibool_interfaces_ext_mesh,
+                                              const int* nibool_interfaces_ext_mesh,
+                                              const int* ibool_interfaces_ext_mesh,
+                                              const int* FORWARD_OR_ADJOINT) {}
+
+//void FC_FUNC_(assemble_accel_on_device,
+//              ASSEMBLE_ACCEL_on_DEVICE)(long* Mesh_pointer, realw* accel,
+//                                              realw* buffer_recv_vector_ext_mesh,
+//                                              int* num_interfaces_ext_mesh,
+//                                              int* max_nibool_interfaces_ext_mesh,
+//                                              int* nibool_interfaces_ext_mesh,
+//                                              int* ibool_interfaces_ext_mesh,
+//                                              int* FORWARD_OR_ADJOINT) {}
+
+
+//
 // src/cuda/check_fields_cuda.cu
 //
 
@@ -175,18 +231,6 @@ void FC_FUNC_(compute_coupling_ocean_cuda,
 // src/cuda/compute_forces_acoustic_cuda.cu
 //
 
-void FC_FUNC_(transfer_boun_pot_from_device,
-              TRANSFER_BOUN_POT_FROM_DEVICE)(long* Mesh_pointer,
-                                             realw* potential_dot_dot_acoustic,
-                                             realw* send_potential_dot_dot_buffer,
-                                             const int* FORWARD_OR_ADJOINT){}
-
-void FC_FUNC_(transfer_asmbl_pot_to_device,
-              TRANSFER_ASMBL_POT_TO_DEVICE)(long* Mesh_pointer,
-                                            realw* potential_dot_dot_acoustic,
-                                            realw* buffer_recv_scalar_ext_mesh,
-                                            const int* FORWARD_OR_ADJOINT) {}
-
 void FC_FUNC_(compute_forces_acoustic_cuda,
               COMPUTE_FORCES_ACOUSTIC_CUDA)(long* Mesh_pointer,
                                             int* iphase,
@@ -201,40 +245,6 @@ void FC_FUNC_(acoustic_enforce_free_surf_cuda,
 //
 // src/cuda/compute_forces_viscoelastic_cuda.cu
 //
-
-void FC_FUNC_(transfer_boun_accel_from_device,
-              TRANSFER_BOUN_ACCEL_FROM_DEVICE)(long* Mesh_pointer,
-                                               realw* accel,
-                                               realw* send_accel_buffer,
-                                               const int* FORWARD_OR_ADJOINT){}
-
-void FC_FUNC_(transfer_boundary_from_device_a,
-              TRANSFER_BOUNDARY_FROM_DEVICE_A)(long* Mesh_pointer,
-                                               const int* nspec_outer_elastic) {}
-
-void FC_FUNC_(transfer_boundary_to_device_a,
-              TRANSFER_BOUNDARY_TO_DEVICE_A)(long* Mesh_pointer,
-                                             realw* buffer_recv_vector_ext_mesh,
-                                             const int* num_interfaces_ext_mesh,
-                                             const int* max_nibool_interfaces_ext_mesh) {}
-
-void FC_FUNC_(transfer_asmbl_accel_to_device,
-              TRANSFER_ASMBL_ACCEL_TO_DEVICE)(long* Mesh_pointer, realw* accel,
-                                              realw* buffer_recv_vector_ext_mesh,
-                                              const int* num_interfaces_ext_mesh,
-                                              const int* max_nibool_interfaces_ext_mesh,
-                                              const int* nibool_interfaces_ext_mesh,
-                                              const int* ibool_interfaces_ext_mesh,
-                                              const int* FORWARD_OR_ADJOINT) {}
-
-//void FC_FUNC_(assemble_accel_on_device,
-//              ASSEMBLE_ACCEL_on_DEVICE)(long* Mesh_pointer, realw* accel,
-//                                              realw* buffer_recv_vector_ext_mesh,
-//                                              int* num_interfaces_ext_mesh,
-//                                              int* max_nibool_interfaces_ext_mesh,
-//                                              int* nibool_interfaces_ext_mesh,
-//                                              int* ibool_interfaces_ext_mesh,
-//                                              int* FORWARD_OR_ADJOINT) {}
 
 void FC_FUNC_(compute_forces_viscoelastic_cuda,
               COMPUTE_FORCES_VISCOELASTIC_CUDA)(long* Mesh_pointer,

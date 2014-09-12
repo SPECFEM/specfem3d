@@ -464,6 +464,7 @@
     ! values given in constants.h
     NX_TOPO = NX_TOPO_FILE
     NY_TOPO = NY_TOPO_FILE
+
     allocate(itopo_bathy(NX_TOPO,NY_TOPO),stat=ier)
     if( ier /= 0 ) stop 'error allocating array itopo_bathy'
 

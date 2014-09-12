@@ -36,6 +36,8 @@ cuda_TARGETS = \
 	$(EMPTY_MACRO)
 
 cuda_OBJECTS = \
+	$O/assemble_MPI_scalar_cuda.cuda.o \
+	$O/assemble_MPI_vector_cuda.cuda.o \
 	$O/check_fields_cuda.cuda.o \
 	$O/compute_add_sources_acoustic_cuda.cuda.o \
 	$O/compute_add_sources_viscoelastic_cuda.cuda.o \

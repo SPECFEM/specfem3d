@@ -27,6 +27,9 @@
 
 
 module model_ipati_adios_mod
+
+  use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,IMAIN,FOUR_THIRDS
+
 contains
 !-----------------------------------------------------------------------------
 !
@@ -159,6 +162,10 @@ subroutine model_ipati_water_adios(myrank,nspec,LOCAL_PATH)
   deallocate( rho_read,vp_read,vs_read)
 
 end subroutine model_ipati_water_adios
+
+!
+!-------------------------------------------------------------------------------------------------
+!
 
 subroutine read_model_vp_rho_adios (myrank, nspec, LOCAL_PATH, &
                                     rho_read, vp_read)

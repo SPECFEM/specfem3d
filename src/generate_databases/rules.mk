@@ -43,7 +43,6 @@ generate_databases_TARGETS = \
 
 generate_databases_OBJECTS = \
 	$O/generate_databases_par.gen.o \
-	$O/tomography_par.gen.o \
 	$O/calc_jacobian.gen.o \
 	$O/fault_generate_databases.gen.o \
 	$O/create_mass_matrices.gen.o \
@@ -206,7 +205,7 @@ $O/setup_color_perm.gen.o: $O/generate_databases_par.gen.o
 $O/setup_mesh.gen.o: $O/generate_databases_par.gen.o
 
 $O/create_regions_mesh.gen.o: $O/generate_databases_par.gen.o $O/fault_generate_databases.gen.o
-$O/model_tomography.gen.o: $O/generate_databases_par.gen.o $O/tomography_par.gen.o
+$O/model_tomography.gen.o: $O/generate_databases_par.gen.o
 
 ## adios
 $O/generate_databases.gen.o: $O/generate_databases_par.gen.o $(adios_generate_databases_PREOBJECTS)

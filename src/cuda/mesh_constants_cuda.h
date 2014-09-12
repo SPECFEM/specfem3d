@@ -71,6 +71,10 @@
 #define PRINT5(var,offset) // for(i=0;i<10;i++) printf("var(%d)=%f\n",i,var[offset+i]);
 #endif
 
+// performance timers
+#define CUDA_TIMING 0
+#define CUDA_TIMING_UPDATE 0
+
 // error checking after cuda function calls
 // (note: this synchronizes many calls, thus e.g. no asynchronuous memcpy possible)
 //#define ENABLE_VERY_SLOW_ERROR_CHECKING
@@ -143,25 +147,33 @@
 
 // compiler specifications
 // (optional) use launch_bounds specification to increase compiler optimization
-//
+// (depending on GPU type, register spilling might slow down the performance)
+// (uncomment if desired)
+#define USE_LAUNCH_BOUNDS
+
+// elastic kernel
 // note: main kernel is Kernel_2_***_impl() which is limited by shared memory usage to 8 active blocks
 //       while register usage might use up to 9 blocks
 //
 // performance statistics: kernel Kernel_2_noatt_impl():
-//       shared memory per block = 6100    for Kepler: total = 49152 -> limits active blocks to 8
-//       registers per thread    = 53
-//       registers per block     = 7168                total = 65536 -> limits active blocks to 9
+//       shared memory per block = 1700    for Kepler: total = 49152 -> limits active blocks to 16
+//       registers per thread    = 48
+//       registers per block     = 6144                total = 65536 -> limits active blocks to 10
 //
 // performance statistics: kernel Kernel_2_att_impl():
 //       shared memory per block = 6100    for Kepler: total = 49152 -> limits active blocks to 8
 //       registers per thread    = 59
 //       registers per block     = 8192                total = 65536 -> limits active blocks to 8
-//
-//
-// (depending on GPU type, register spilling might slow down the performance)
-// (uncomment if desired)
-#define USE_LAUNCH_BOUNDS
-#define LAUNCH_MIN_BLOCKS 8
+#define LAUNCH_MIN_BLOCKS 10
+
+// acoustic kernel
+// performance statistics: kernel Kernel_2_acoustic_impl():
+//       shared memory per block = 2200    for Kepler: -> limits active blocks to 16 (maximum possible)
+//       registers per thread    = 40
+//       registers per block     = 5120                -> limits active blocks to 12
+// note: for K20x, using a minimum of 16 blocks leads to register spilling.
+//       this slows down the kernel by ~ 4%
+#define LAUNCH_MIN_BLOCKS_ACOUSTIC 16
 
 /* ----------------------------------------------------------------------------------------------- */
 
@@ -199,15 +211,20 @@ typedef float realw;
 // textures
 typedef texture<float, cudaTextureType1D, cudaReadModeElementType> realw_texture;
 
-// restricted pointers: improves performance on Kepler ~ 10%
-// see: http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#restrict
-typedef const realw* __restrict__ realw_const_p;
-// otherwise use:
-//typedef const realw* realw_const_p;
-
-typedef realw* __restrict__ realw_p;
-// otherwise use:
-//typedef realw* realw_p;
+// pointer declarations
+// restricted pointers: can improve performance on Kepler ~ 10%
+//   see: http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#restrict
+//   however, compiler tends to use texture loads for restricted memory arrays, which might slow down performance
+//
+// non-restricted (default)
+typedef const realw* realw_const_p;
+// restricted
+//typedef const realw* __restrict__ realw_const_p;
+//
+// non-restricted (default)
+typedef realw* realw_p;
+// restricted
+//typedef realw* __restrict__ realw_p;
 
 // wrapper for global memory load function
 // usage:  val = get_global_cr( &A[index] );
@@ -235,6 +252,7 @@ void synchronize_cuda();
 void synchronize_mpi();
 void start_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop);
 void stop_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop, char* info_str);
+void stop_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop, char* info_str,realw* t);
 void get_blocks_xy(int num_blocks,int* num_blocks_x,int* num_blocks_y);
 realw get_device_array_maximum_value(realw* array,int size);
 

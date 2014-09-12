@@ -138,9 +138,10 @@
 ! (it doesn't really matter which value we take, as long as all procs end up with exactly the same value).
 ! We assume that the interfaces are ordered by increasing rank of the neighbour.
 ! Uses blocking communication: only returns after values have been received and assembled
-  implicit none
 
-  include "constants.h"
+  use constants
+
+  implicit none
 
   integer :: NPROC
   integer :: NGLOB_AB

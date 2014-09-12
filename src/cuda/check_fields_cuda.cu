@@ -241,6 +241,23 @@ void stop_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop, char* info_str){
   printf("%s: Execution Time = %f ms\n",info_str,time);
 }
 
+/* ----------------------------------------------------------------------------------------------- */
+
+void stop_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop, char* info_str,realw* t){
+  realw time;
+  // stops events
+  cudaEventRecord( *stop, 0 );
+  cudaEventSynchronize( *stop );
+  cudaEventElapsedTime( &time, *start, *stop );
+  cudaEventDestroy( *start );
+  cudaEventDestroy( *stop );
+  // user output
+  printf("%s: Execution Time = %f ms\n",info_str,time);
+
+  // returns time
+  *t = time;
+}
+
 
 /* ----------------------------------------------------------------------------------------------- */
 

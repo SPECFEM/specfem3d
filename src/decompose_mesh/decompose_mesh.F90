@@ -38,8 +38,15 @@
 
 module decompose_mesh
 
-  use part_decompose_mesh
-  use fault_scotch
+  use part_decompose_mesh,only: long,MAX_STRING_LEN,ACOUSTIC_LOAD,SAVE_MOHO_MESH,nfaces,NGNOD_EIGHT_CORNERS, &
+    write_interfaces_database,write_moho_surface_database,write_glob2loc_nodes_database, &
+    write_material_props_database,write_boundaries_database, &
+    write_partition_database,write_cpml_database, &
+    acoustic_elastic_poro_load,mesh2dual_ncommonnodes, &
+    build_glob2loc_elmnts,build_glob2loc_nodes,build_interfaces
+
+  use fault_scotch,only: ANY_FAULT,nodes_coords_open,read_fault_files,save_nodes_coords,close_faults, &
+    fault_repartition,write_fault_database
 
   implicit none
 
@@ -141,17 +148,23 @@ module decompose_mesh
 
   double precision :: DT
   double precision :: HDUR_MOVIE,OLSEN_ATTENUATION_RATIO,f0_FOR_PML
+
   integer :: NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP, &
             UTM_PROJECTION_ZONE,SIMULATION_TYPE,NGNOD,NGNOD2D
+
   integer :: NSOURCES,NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY
   integer :: NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO,MOVIE_TYPE
+
   logical :: MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
             USE_HIGHRES_FOR_MOVIES,SUPPRESS_UTM_PROJECTION
+
   logical :: ATTENUATION,USE_OLSEN_ATTENUATION,PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE, &
             APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,USE_FORCE_POINT_SOURCE,FULL_ATTENUATION_SOLID
   logical :: STACEY_ABSORBING_CONDITIONS,SAVE_FORWARD,STACEY_INSTEAD_OF_FREE_SURFACE
   logical :: ANISOTROPY,SAVE_MESH_FILES,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION,COUPLE_WITH_DSM
+
   character(len=MAX_STRING_LEN) :: LOCAL_PATH,TOMOGRAPHY_PATH,TRACTION_PATH
+
   integer :: IMODEL
 
   contains
@@ -816,18 +829,16 @@ module decompose_mesh
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 #ifdef USE_TWO_CALLS_TO_mesh2dual
+    print*, 'mesh2dual first call:'
     ncommonnodes = NGNOD2D_FOUR_CORNERS
 #else
+    print*, 'mesh2dual:'
     ncommonnodes = 1
 #endif
     call mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbour, elmnts, xadj, adjncy, nnodes_elmnts, &
          nodes_elmnts, max_neighbour, ncommonnodes, NGNOD)
 
-#ifdef USE_TWO_CALLS_TO_mesh2dual
-    print*, 'mesh2dual first call:'
-#else
-    print*, 'mesh2dual:'
-#endif
+    ! user output
     print*, '  max_neighbour = ',max_neighbour
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1069,7 +1080,7 @@ module decompose_mesh
 
        call write_partition_database(IIN_database, ipart, nspec_local, nspec, elmnts, &
                                   glob2loc_elmnts, glob2loc_nodes_nparts, &
-                                  glob2loc_nodes_parts, glob2loc_nodes, part, mat, NGNOD, 1)
+                                  glob2loc_nodes_parts, glob2loc_nodes, part, mat, NGNOD, 1, COUPLE_WITH_DSM)
 
        !debug
        !print*, ipart,": nspec_local=",nspec_local, " nnodes_local=", nnodes_loc
@@ -1088,7 +1099,7 @@ module decompose_mesh
        write(IIN_database) nspec_local
        call write_partition_database(IIN_database, ipart, nspec_local, nspec, elmnts, &
                                   glob2loc_elmnts, glob2loc_nodes_nparts, &
-                                  glob2loc_nodes_parts, glob2loc_nodes, part, mat, NGNOD, 2)
+                                  glob2loc_nodes_parts, glob2loc_nodes, part, mat, NGNOD, 2, COUPLE_WITH_DSM)
 
        ! writes out absorbing/free-surface boundaries
        call write_boundaries_database(IIN_database, ipart, nspec, nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, &

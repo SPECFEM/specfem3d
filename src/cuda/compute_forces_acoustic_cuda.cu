@@ -68,223 +68,31 @@ extern realw_texture d_hprime_xx_tex;
 #endif
 
 
-/* ----------------------------------------------------------------------------------------------- */
-
-// prepares a device array with with all inter-element edge-nodes -- this
-// is followed by a memcpy and MPI operations
-__global__ void prepare_boundary_potential_on_device(realw* d_potential_dot_dot_acoustic,
-                                                     realw* d_send_potential_dot_dot_buffer,
-                                                     const int num_interfaces_ext_mesh,
-                                                     const int max_nibool_interfaces_ext_mesh,
-                                                     const int* d_nibool_interfaces_ext_mesh,
-                                                     const int* d_ibool_interfaces_ext_mesh) {
-
-  int id = threadIdx.x + blockIdx.x*blockDim.x + blockIdx.y*gridDim.x*blockDim.x;
-  int ientry,iglob;
-
-  for(int iinterface=0; iinterface < num_interfaces_ext_mesh; iinterface++) {
-    if(id<d_nibool_interfaces_ext_mesh[iinterface]) {
-
-      // entry in interface array
-      ientry = id + max_nibool_interfaces_ext_mesh*iinterface;
-      // global index in wavefield
-      iglob = d_ibool_interfaces_ext_mesh[ientry] - 1;
-
-      d_send_potential_dot_dot_buffer[ientry] = d_potential_dot_dot_acoustic[iglob];
-    }
-  }
-
-}
-
-
-/* ----------------------------------------------------------------------------------------------- */
-
-// prepares and transfers the inter-element edge-nodes to the host to be MPI'd
-extern "C"
-void FC_FUNC_(transfer_boun_pot_from_device,
-              TRANSFER_BOUN_POT_FROM_DEVICE)(long* Mesh_pointer,
-                                             realw* potential_dot_dot_acoustic,
-                                             realw* send_potential_dot_dot_buffer,
-                                             const int* FORWARD_OR_ADJOINT){
-
-TRACE("transfer_boun_pot_from_device");
-
-  Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
-
-  // checks if anything to do
-  if( mp->size_mpi_buffer_potential > 0 ){
-
-    int blocksize = BLOCKSIZE_TRANSFER;
-    int size_padded = ((int)ceil(((double)(mp->max_nibool_interfaces_ext_mesh))/((double)blocksize)))*blocksize;
-
-    int num_blocks_x, num_blocks_y;
-    get_blocks_xy(size_padded/blocksize,&num_blocks_x,&num_blocks_y);
-
-    dim3 grid(num_blocks_x,num_blocks_y);
-    dim3 threads(blocksize,1,1);
-
-    if(*FORWARD_OR_ADJOINT == 1) {
-      prepare_boundary_potential_on_device<<<grid,threads,0,mp->compute_stream>>>(mp->d_potential_dot_dot_acoustic,
-                                                                                   mp->d_send_potential_dot_dot_buffer,
-                                                                                   mp->num_interfaces_ext_mesh,
-                                                                                   mp->max_nibool_interfaces_ext_mesh,
-                                                                                   mp->d_nibool_interfaces_ext_mesh,
-                                                                                   mp->d_ibool_interfaces_ext_mesh);
-
-      // synchronizes
-      //synchronize_cuda();
-      // explicitly waits until previous compute stream finishes
-      // (cudaMemcpy implicitly synchronizes all other cuda operations)
-      cudaStreamSynchronize(mp->compute_stream);
-
-      print_CUDA_error_if_any(cudaMemcpy(send_potential_dot_dot_buffer,mp->d_send_potential_dot_dot_buffer,
-                                         mp->size_mpi_buffer_potential*sizeof(realw),cudaMemcpyDeviceToHost),98000);
-    }
-    else if(*FORWARD_OR_ADJOINT == 3) {
-      // backward/reconstructed wavefield buffer
-      prepare_boundary_potential_on_device<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_potential_dot_dot_acoustic,
-                                                                                   mp->d_b_send_potential_dot_dot_buffer,
-                                                                                   mp->num_interfaces_ext_mesh,
-                                                                                   mp->max_nibool_interfaces_ext_mesh,
-                                                                                   mp->d_nibool_interfaces_ext_mesh,
-                                                                                   mp->d_ibool_interfaces_ext_mesh);
-
-      // synchronizes
-      //synchronize_cuda();
-      // explicitly waits until previous compute stream finishes
-      // (cudaMemcpy implicitly synchronizes all other cuda operations)
-      cudaStreamSynchronize(mp->compute_stream);
-
-      print_CUDA_error_if_any(cudaMemcpy(send_potential_dot_dot_buffer,mp->d_b_send_potential_dot_dot_buffer,
-                                         mp->size_mpi_buffer_potential*sizeof(realw),cudaMemcpyDeviceToHost),98000);
-    }
-  }
-
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("after prepare_boundary_potential_on_device");
-#endif
-
-
-  // finish timing of kernel+memcpy
-  // cudaEventRecord( stop, 0 );
-  // cudaEventSynchronize( stop );
-  // cudaEventElapsedTime( &time, start, stop );
-  // cudaEventDestroy( start );
-  // cudaEventDestroy( stop );
-  // printf("boundary xfer d->h Time: %f ms\n",time);
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("transfer_boun_pot_from_device");
-#endif
-}
-
-
-/* ----------------------------------------------------------------------------------------------- */
-
-
-__global__ void assemble_boundary_potential_on_device(realw* d_potential_dot_dot_acoustic,
-                                                      realw* d_send_potential_dot_dot_buffer,
-                                                      const int num_interfaces_ext_mesh,
-                                                      const int max_nibool_interfaces_ext_mesh,
-                                                      const int* d_nibool_interfaces_ext_mesh,
-                                                      const int* d_ibool_interfaces_ext_mesh) {
-
-  int id = threadIdx.x + blockIdx.x*blockDim.x + blockIdx.y*gridDim.x*blockDim.x;
-  int ientry,iglob;
-
-  for( int iinterface=0; iinterface < num_interfaces_ext_mesh; iinterface++) {
-    if(id<d_nibool_interfaces_ext_mesh[iinterface]) {
-
-      // entry in interface array
-      ientry = id + max_nibool_interfaces_ext_mesh*iinterface;
-      // global index in wavefield
-      iglob = d_ibool_interfaces_ext_mesh[ientry] - 1;
-
-      // for testing atomic operations against not atomic operations (0.1ms vs. 0.04 ms)
-      // d_potential_dot_dot_acoustic[3*(d_ibool_interfaces_ext_mesh[id+max_nibool_interfaces_ext_mesh*iinterface]-1)] +=
-      // d_send_potential_dot_dot_buffer[3*(id + max_nibool_interfaces_ext_mesh*iinterface)];
-
-      atomicAdd(&d_potential_dot_dot_acoustic[iglob],d_send_potential_dot_dot_buffer[ientry]);
-    }
-  }
-  // ! This step is done via previous function transfer_and_assemble...
-  // ! do iinterface = 1, num_interfaces_ext_mesh
-  // !   do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
-  // !     array_val(:,ibool_interfaces_ext_mesh(ipoin,iinterface)) = &
-  // !          array_val(:,ibool_interfaces_ext_mesh(ipoin,iinterface)) + buffer_recv_vector_ext_mesh(:,ipoin,iinterface)
-  // !   enddo
-  // ! enddo
-}
-
-
-/* ----------------------------------------------------------------------------------------------- */
-
-extern "C"
-void FC_FUNC_(transfer_asmbl_pot_to_device,
-              TRANSFER_ASMBL_POT_TO_DEVICE)(long* Mesh_pointer,
-                                            realw* potential_dot_dot_acoustic,
-                                            realw* buffer_recv_scalar_ext_mesh,
-                                            const int* FORWARD_OR_ADJOINT) {
-
-TRACE("transfer_asmbl_pot_to_device");
-
-  Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
-
-  // Cuda timing
-  //cudaEvent_t start, stop;
-  //start_timing_cuda(&start,&stop);
-
-  // checks if anything to do
-  if( mp->size_mpi_buffer_potential > 0 ){
-
-    // assembles on GPU
-    int blocksize = BLOCKSIZE_TRANSFER;
-    int size_padded = ((int)ceil(((double)mp->max_nibool_interfaces_ext_mesh)/((double)blocksize)))*blocksize;
-
-    int num_blocks_x, num_blocks_y;
-    get_blocks_xy(size_padded/blocksize,&num_blocks_x,&num_blocks_y);
-
-    dim3 grid(num_blocks_x,num_blocks_y);
-    dim3 threads(blocksize,1,1);
-
-    // synchronizes
-    synchronize_cuda();
-
-    if(*FORWARD_OR_ADJOINT == 1) {
-      // copies buffer onto GPU
-      print_CUDA_error_if_any(cudaMemcpy(mp->d_send_potential_dot_dot_buffer, buffer_recv_scalar_ext_mesh,
-                                         mp->size_mpi_buffer_potential*sizeof(realw), cudaMemcpyHostToDevice),98010);
-
-      //assemble forward field
-      assemble_boundary_potential_on_device<<<grid,threads,0,mp->compute_stream>>>(mp->d_potential_dot_dot_acoustic,
-                                                                                    mp->d_send_potential_dot_dot_buffer,
-                                                                                    mp->num_interfaces_ext_mesh,
-                                                                                    mp->max_nibool_interfaces_ext_mesh,
-                                                                                    mp->d_nibool_interfaces_ext_mesh,
-                                                                                    mp->d_ibool_interfaces_ext_mesh);
-    }
-    else if(*FORWARD_OR_ADJOINT == 3) {
-      // copies buffer onto GPU
-      print_CUDA_error_if_any(cudaMemcpy(mp->d_b_send_potential_dot_dot_buffer, buffer_recv_scalar_ext_mesh,
-                                         mp->size_mpi_buffer_potential*sizeof(realw), cudaMemcpyHostToDevice),98011);
-
-      //assemble reconstructed/backward field
-      assemble_boundary_potential_on_device<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_potential_dot_dot_acoustic,
-                                                                                    mp->d_b_send_potential_dot_dot_buffer,
-                                                                                    mp->num_interfaces_ext_mesh,
-                                                                                    mp->max_nibool_interfaces_ext_mesh,
-                                                                                    mp->d_nibool_interfaces_ext_mesh,
-                                                                                    mp->d_ibool_interfaces_ext_mesh);
-    }
-  }
-
-  // Cuda timing
-  //stop_timing_cuda(&start,&stop,"assemble_boundary_potential_on_device");
-
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("transfer_asmbl_pot_to_device");
-#endif
-}
-
+// note on performance optimizations:
+//
+//   instead of providing spezialized kernel routines (without mesh coloring, without gravity, etc.),
+//   we only provide one "general" kernel to handle all cases. this reduces code redundancy and improves code readability.
+//   as tradeoff, we take a little performance hit of around ~ 3%
+//
+//   performance tests done:
+//   - registers: we were trying to reduce the number of registers, as this is the main limiter for the
+//                occupancy of the kernel. however, there is only little difference in register pressure for one "general" kernel
+//                or multiple "spezialized" kernels. reducing registers is mainly achieved through the launch_bonds() directive.
+//   - branching: we were trying to reduce code branches, such as the if-active check in earlier code versions.
+//                reducing the branching helps the compiler to better optimize the executable.
+//   - memory accesses: the global memory accesses are avoiding texture reads for coalescent arrays, as this is
+//                still faster. thus we were using no __ldg() loads or __restricted__ pointer usage,
+//                as those implicitly lead the compiler to use texture reads.
+//   - arithmetic intensity: ratio of floating-point operations vs. memory accesses is still low for our kernels.
+//                tests with using a loop over elements to re-use the constant arrays (like hprime, wgllwgll,..) and thus
+//                increasing the arithmetic intensity failed because the number of registers increased as well.
+//                this increased register pressure reduced the occupancy and slowed down the kernel performance.
+//   - hiding memory latency: to minimize waiting times to retrieve a memory value from global memory, we put
+//                some more calculations into the same code block before calling syncthreads(). this should help the
+//                compiler to move independent calculations to wherever it can overlap it with memory access operations.
+//                note, especially the if( gravity )-block locations are very sensitive
+//                for optimal register usage and compiler optimizations
+//
 
 /* ----------------------------------------------------------------------------------------------- */
 
@@ -293,40 +101,47 @@ TRACE("transfer_asmbl_pot_to_device");
 /* ----------------------------------------------------------------------------------------------- */
 
 template<int FORWARD_OR_ADJOINT> __global__ void
-Kernel_2_acoustic_impl(int nb_blocks_to_compute,
-                       const int NGLOB,
+#ifdef USE_LAUNCH_BOUNDS
+// adds compiler specification
+__launch_bounds__(NGLL3_PADDED,LAUNCH_MIN_BLOCKS_ACOUSTIC)
+#endif
+Kernel_2_acoustic_impl(const int nb_blocks_to_compute,
                        const int* d_ibool,
                        const int* d_phase_ispec_inner_acoustic,
                        const int num_phase_ispec_acoustic,
                        const int d_iphase,
-                       const int use_mesh_coloring_gpu,
                        realw_const_p d_potential_acoustic,
                        realw_p d_potential_dot_dot_acoustic,
-                       realw_const_p d_xix,realw_const_p d_xiy,realw_const_p d_xiz,
-                       realw_const_p d_etax,realw_const_p d_etay,realw_const_p d_etaz,
-                       realw_const_p d_gammax,realw_const_p d_gammay,realw_const_p d_gammaz,
+                       realw* d_xix,realw* d_xiy,realw* d_xiz,
+                       realw* d_etax,realw* d_etay,realw* d_etaz,
+                       realw* d_gammax,realw* d_gammay,realw* d_gammaz,
                        realw_const_p d_hprime_xx,
                        realw_const_p hprimewgll_xx,
                        realw_const_p wgllwgll_xy,realw_const_p wgllwgll_xz,realw_const_p wgllwgll_yz,
-                       realw_const_p d_rhostore,
+                       realw* d_rhostore,
+                       const int use_mesh_coloring_gpu,
                        const int gravity,
                        realw_const_p minus_g,
-                       realw_const_p d_kappastore,
+                       realw* d_kappastore,
                        realw_const_p wgll_cube){
 
+  // block-id == number of local element id in phase_ispec array
   int bx = blockIdx.y*gridDim.x+blockIdx.x;
+
+  // thread-id == GLL node id
+  // note: use only NGLL^3 = 125 active threads, plus 3 inactive/ghost threads,
+  //       because we used memory padding from NGLL^3 = 125 to 128 to get coalescent memory accesses;
+  //       to avoid execution branching and the need of registers to store an active state variable,
+  //       the thread ids are put in valid range
   int tx = threadIdx.x;
 
-  int K = (tx/NGLL2);
-  int J = ((tx-K*NGLL2)/NGLLX);
-  int I = (tx-K*NGLL2-J*NGLLX);
-
-  unsigned short int active;
+  int I,J,K;
   int iglob,offset;
   int working_element;
 
   realw temp1l,temp2l,temp3l;
-  realw xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl;
+  realw xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl;
+  realw jacobianl;
 
   realw dpotentialdxl,dpotentialdyl,dpotentialdzl;
   realw fac1,fac2,fac3;
@@ -335,10 +150,6 @@ Kernel_2_acoustic_impl(int nb_blocks_to_compute,
   realw sum_terms;
   realw gravity_term;
 
-#ifndef MANUALLY_UNROLLED_LOOPS
-  int l;
-#endif
-
   __shared__ realw s_dummy_loc[NGLL3];
 
   __shared__ realw s_temp1[NGLL3];
@@ -346,32 +157,60 @@ Kernel_2_acoustic_impl(int nb_blocks_to_compute,
   __shared__ realw s_temp3[NGLL3];
 
   __shared__ realw sh_hprime_xx[NGLL2];
+  __shared__ realw sh_hprimewgll_xx[NGLL2];
 
-// use only NGLL^3 = 125 active threads, plus 3 inactive/ghost threads,
-// because we used memory padding from NGLL^3 = 125 to 128 to get coalescent memory accesses
-  active = (tx < NGLL3 && bx < nb_blocks_to_compute) ? 1:0;
+// arithmetic intensity: ratio of number-of-arithmetic-operations / number-of-bytes-accessed-on-DRAM
+//
+// hand-counts on floating-point operations: counts addition/subtraction/multiplication/division
+//                                           no counts for operations on indices in for-loops (compiler will likely unrool loops)
+//
+//                                           counts accesses to global memory, but no shared memory or register loads/stores
+//                                           float has 4 bytes
 
-// copy from global memory to shared memory
-// each thread writes one of the NGLL^3 = 125 data points
-  if (active) {
+// counts: for simulations without gravity, without mesh_coloring
+//         counts floating-point operations (FLOP) per thread
+//         counts global memory accesses in bytes (BYTES) per block
+// 2 FLOP
+//
+// 0 BYTES
 
+  // checks if anything to do
+  if( bx >= nb_blocks_to_compute ) return;
+
+  // limits thread ids to range [0,125-1]
+  if( tx >= NGLL3 ) tx = NGLL3-1;
+
+// counts:
+// + 1 FLOP
+//
+// + 0 BYTE
+
+  // spectral-element id
 #ifdef USE_MESH_COLORING_GPU
-    working_element = bx;
+  working_element = bx;
 #else
-    //mesh coloring
-    if( use_mesh_coloring_gpu ){
-      working_element = bx;
-    }else{
-      // iphase-1 and working_element-1 for Fortran->C array conventions
-      working_element = d_phase_ispec_inner_acoustic[bx + num_phase_ispec_acoustic*(d_iphase-1)]-1;
-    }
+  //mesh coloring
+  if( use_mesh_coloring_gpu ){
+    working_element = bx;
+  }else{
+    // iphase-1 and working_element-1 for Fortran->C array conventions
+    working_element = d_phase_ispec_inner_acoustic[bx + num_phase_ispec_acoustic*(d_iphase-1)]-1;
+  }
 #endif
-    // local padded index
-    offset = working_element*NGLL3_PADDED + tx;
 
-    // global index
-    iglob = d_ibool[offset] - 1;
+  // local padded index
+  offset = working_element*NGLL3_PADDED + tx;
 
+  // global index
+  iglob = d_ibool[offset] - 1;
+
+// counts:
+// + 7 FLOP
+//
+// + 2 float * 128 threads = 1024 BYTE
+
+  // loads potential values into shared memory
+  if(threadIdx.x < NGLL3) {
 #ifdef USE_TEXTURES_FIELDS
     s_dummy_loc[tx] = texfetch_potential<FORWARD_OR_ADJOINT>(iglob);
 #else
@@ -380,183 +219,176 @@ Kernel_2_acoustic_impl(int nb_blocks_to_compute,
 #endif
   }
 
+// counts:
+// + 0 FLOP
+//
+// + 1 float * 125 threads = 500 BYTE
+
+  // gravity
+  if( gravity ){
+    kappa_invl = 1.f / d_kappastore[working_element*NGLL3 + tx];
+  }
+
+  // local index
+  K = (tx/NGLL2);
+  J = ((tx-K*NGLL2)/NGLLX);
+  I = (tx-K*NGLL2-J*NGLLX);
+
+// counts:
+// + 8 FLOP
+//
+// + 0 BYTES
+
+  // note: loads mesh values here to give compiler possibility to overlap memory fetches with some computations;
+  //       arguments defined as realw* instead of const realw* __restrict__ to avoid that the compiler
+  //       loads all memory by texture loads (arrays accesses are coalescent, thus no need for texture reads)
+  //
+  // calculates laplacian
+  xixl = d_xix[offset];
+  xiyl = d_xiy[offset];
+  xizl = d_xiz[offset];
+  etaxl = d_etax[offset];
+  etayl = d_etay[offset];
+  etazl = d_etaz[offset];
+  gammaxl = d_gammax[offset];
+  gammayl = d_gammay[offset];
+  gammazl = d_gammaz[offset];
+
+  jacobianl = 1.f / (xixl*(etayl*gammazl-etazl*gammayl)
+                    -xiyl*(etaxl*gammazl-etazl*gammaxl)
+                    +xizl*(etaxl*gammayl-etayl*gammaxl));
+
+  // density (reciproc)
+  rho_invl = 1.f / d_rhostore[offset];
+
+// counts:
+// + 16 FLOP
+//
+// + 10 float * 128 threads = 5120 BYTE
+
+  // loads hprime into shared memory
   if (tx < NGLL2) {
 #ifdef USE_TEXTURES_CONSTANTS
     sh_hprime_xx[tx] = tex1Dfetch(d_hprime_xx_tex,tx);
 #else
     sh_hprime_xx[tx] = d_hprime_xx[tx];
 #endif
+    // loads hprimewgll into shared memory
+    sh_hprimewgll_xx[tx] = hprimewgll_xx[tx];
   }
 
-// synchronize all the threads (one thread for each of the NGLL grid points of the
-// current spectral element) because we need the whole element to be ready in order
-// to be able to compute the matrix products along cut planes of the 3D element below
+// counts:
+// + 0 FLOP
+//
+// + 2 * 1 float * 25 threads = 200 BYTE
+
+  // synchronize all the threads (one thread for each of the NGLL grid points of the
+  // current spectral element) because we need the whole element to be ready in order
+  // to be able to compute the matrix products along cut planes of the 3D element below
   __syncthreads();
 
-  if (active) {
+  // computes first matrix product
+  temp1l = 0.f;
+  temp2l = 0.f;
+  temp3l = 0.f;
 
-#ifndef MANUALLY_UNROLLED_LOOPS
+  for (int l=0;l<NGLLX;l++) {
+    //assumes that hprime_xx = hprime_yy = hprime_zz
+    // 1. cut-plane along xi-direction
+    temp1l += s_dummy_loc[K*NGLL2+J*NGLLX+l] * sh_hprime_xx[l*NGLLX+I];
+    // 2. cut-plane along eta-direction
+    temp2l += s_dummy_loc[K*NGLL2+l*NGLLX+I] * sh_hprime_xx[l*NGLLX+J];
+    // 3. cut-plane along gamma-direction
+    temp3l += s_dummy_loc[l*NGLL2+J*NGLLX+I] * sh_hprime_xx[l*NGLLX+K];
+  }
 
-    temp1l = 0.f;
-    temp2l = 0.f;
-    temp3l = 0.f;
+// counts:
+// + NGLLX * 3 * 8 FLOP = 120 FLOP
+//
+// + 0 BYTE
 
-    for (l=0;l<NGLLX;l++) {
-      //assumes that hprime_xx = hprime_yy = hprime_zz
-      fac1 = sh_hprime_xx[l*NGLLX+I];
-      temp1l += s_dummy_loc[K*NGLL2+J*NGLLX+l]*fac1;
+  // compute derivatives of ux, uy and uz with respect to x, y and z
+  // derivatives of potential
+  dpotentialdxl = xixl*temp1l + etaxl*temp2l + gammaxl*temp3l;
+  dpotentialdyl = xiyl*temp1l + etayl*temp2l + gammayl*temp3l;
+  dpotentialdzl = xizl*temp1l + etazl*temp2l + gammazl*temp3l;
 
-      fac2 = sh_hprime_xx[l*NGLLX+J];
-      temp2l += s_dummy_loc[K*NGLL2+l*NGLLX+I]*fac2;
+// counts:
+// + 3 * 5 FLOP = 15 FLOP
+//
+// + 0 BYTE
 
-      fac3 = sh_hprime_xx[l*NGLLX+K];
-      temp3l += s_dummy_loc[l*NGLL2+J*NGLLX+I]*fac3;
-    }
-#else
-    temp1l = s_dummy_loc[K*NGLL2+J*NGLLX]*d_hprime_xx[I]
-            + s_dummy_loc[K*NGLL2+J*NGLLX+1]*d_hprime_xx[NGLLX+I]
-            + s_dummy_loc[K*NGLL2+J*NGLLX+2]*d_hprime_xx[2*NGLLX+I]
-            + s_dummy_loc[K*NGLL2+J*NGLLX+3]*d_hprime_xx[3*NGLLX+I]
-            + s_dummy_loc[K*NGLL2+J*NGLLX+4]*d_hprime_xx[4*NGLLX+I];
-
-    temp2l = s_dummy_loc[K*NGLL2+I]*d_hprime_xx[J]
-            + s_dummy_loc[K*NGLL2+NGLLX+I]*d_hprime_xx[NGLLX+J]
-            + s_dummy_loc[K*NGLL2+2*NGLLX+I]*d_hprime_xx[2*NGLLX+J]
-            + s_dummy_loc[K*NGLL2+3*NGLLX+I]*d_hprime_xx[3*NGLLX+J]
-            + s_dummy_loc[K*NGLL2+4*NGLLX+I]*d_hprime_xx[4*NGLLX+J];
-
-    temp3l = s_dummy_loc[J*NGLLX+I]*d_hprime_xx[K]
-            + s_dummy_loc[NGLL2+J*NGLLX+I]*d_hprime_xx[NGLLX+K]
-            + s_dummy_loc[2*NGLL2+J*NGLLX+I]*d_hprime_xx[2*NGLLX+K]
-            + s_dummy_loc[3*NGLL2+J*NGLLX+I]*d_hprime_xx[3*NGLLX+K]
-            + s_dummy_loc[4*NGLL2+J*NGLLX+I]*d_hprime_xx[4*NGLLX+K];
-#endif
-
-    // compute derivatives of ux, uy and uz with respect to x, y and z
-    xixl = d_xix[offset];
-    xiyl = d_xiy[offset];
-    xizl = d_xiz[offset];
-    etaxl = d_etax[offset];
-    etayl = d_etay[offset];
-    etazl = d_etaz[offset];
-    gammaxl = d_gammax[offset];
-    gammayl = d_gammay[offset];
-    gammazl = d_gammaz[offset];
-
-    jacobianl = 1.f / (xixl*(etayl*gammazl-etazl*gammayl)
-                      -xiyl*(etaxl*gammazl-etazl*gammaxl)
-                      +xizl*(etaxl*gammayl-etayl*gammaxl));
-
-    // derivatives of potential
-    dpotentialdxl = xixl*temp1l + etaxl*temp2l + gammaxl*temp3l;
-    dpotentialdyl = xiyl*temp1l + etayl*temp2l + gammayl*temp3l;
-    dpotentialdzl = xizl*temp1l + etazl*temp2l + gammazl*temp3l;
-
-    // pre-computes gravity sum term
-    if( gravity ){
-      // uses potential definition: s = grad(chi)
-
-      // gravity term: 1/kappa grad(chi) * g
-      // assumes that g only acts in (negative) z-direction
-      kappa_invl = 1.f / d_kappastore[working_element*NGLL3 + tx];
-
-      // daniel: TODO - check gravity
-//      if( kappa_invl <= 0.0f ){
-//        printf("kappa error: %f %f\n",kappa_invl,d_kappastore[working_element*NGLL3 + tx]);
-//        printf("kappa error: thread %d %d \n",tx,working_element);
-//        asm("trap;");
-//      }
-//      if( iglob <= 0 ){
-//        printf("iglob error: %d %d %d \n",iglob,tx,working_element);
-//        asm("trap;");
-//      }
-
-      gravity_term = minus_g[iglob] * kappa_invl * jacobianl * wgll_cube[tx] * dpotentialdzl;
-
-      // daniel: TODO - check gravity
-      //gravity_term = 0.f;
-      //if( iglob == 5 ){
-      //  printf("iglob infos: %f %f %f %f %f \n",minus_g[iglob],kappa_invl,jacobianl,wgll_cube[tx],dpotentialdzl);
-      //}
-    }
-
-    // density (reciproc)
-    rho_invl = 1.f / d_rhostore[offset];
-
-    // form the dot product with the test vector
+  // form the dot product with the test vector
+  if( threadIdx.x < NGLL3 ) {
     s_temp1[tx] = jacobianl * rho_invl * (dpotentialdxl*xixl + dpotentialdyl*xiyl + dpotentialdzl*xizl);
     s_temp2[tx] = jacobianl * rho_invl * (dpotentialdxl*etaxl + dpotentialdyl*etayl + dpotentialdzl*etazl);
     s_temp3[tx] = jacobianl * rho_invl * (dpotentialdxl*gammaxl + dpotentialdyl*gammayl + dpotentialdzl*gammazl);
   }
 
-// synchronize all the threads (one thread for each of the NGLL grid points of the
-// current spectral element) because we need the whole element to be ready in order
-// to be able to compute the matrix products along cut planes of the 3D element below
+  // pre-computes gravity sum term
+  if( gravity ){
+    // uses potential definition: s = grad(chi)
+    //
+    // gravity term: 1/kappa grad(chi) * g
+    // assumes that g only acts in (negative) z-direction
+    gravity_term = minus_g[iglob] * kappa_invl * jacobianl * wgll_cube[tx] * dpotentialdzl;
+  }
+
+// counts:
+// + 3 * 7 FLOP = 21 FLOP
+//
+// + 0 BYTE
+
+  // synchronize all the threads (one thread for each of the NGLL grid points of the
+  // current spectral element) because we need the whole element to be ready in order
+  // to be able to compute the matrix products along cut planes of the 3D element below
   __syncthreads();
 
-  if (active) {
+  // computes second matrix product
+  temp1l = 0.f;
+  temp2l = 0.f;
+  temp3l = 0.f;
 
-#ifndef MANUALLY_UNROLLED_LOOPS
+  for (int l=0;l<NGLLX;l++) {
+    //assumes hprimewgll_xx = hprimewgll_yy = hprimewgll_zz
+    // 1. cut-plane along xi-direction
+    temp1l += s_temp1[K*NGLL2+J*NGLLX+l] * sh_hprimewgll_xx[I*NGLLX+l];
+    // 2. cut-plane along eta-direction
+    temp2l += s_temp2[K*NGLL2+l*NGLLX+I] * sh_hprimewgll_xx[J*NGLLX+l];
+    // 3. cut-plane along gamma-direction
+    temp3l += s_temp3[l*NGLL2+J*NGLLX+I] * sh_hprimewgll_xx[K*NGLLX+l];
+  }
 
-    temp1l = 0.f;
-    temp2l = 0.f;
-    temp3l = 0.f;
+// counts:
+// + NGLLX * 3 * 8 FLOP = 120 FLOP
+//
+// + 0 BYTE
 
-    for (l=0;l<NGLLX;l++) {
-      //assumes hprimewgll_xx = hprimewgll_yy = hprimewgll_zz
-      fac1 = hprimewgll_xx[I*NGLLX+l];
-      temp1l += s_temp1[K*NGLL2+J*NGLLX+l]*fac1;
+  // summed terms with added gll weights
+  fac1 = wgllwgll_yz[K*NGLLX+J];
+  fac2 = wgllwgll_xz[K*NGLLX+I];
+  fac3 = wgllwgll_xy[J*NGLLX+I];
 
-      fac2 = hprimewgll_xx[J*NGLLX+l];
-      temp2l += s_temp2[K*NGLL2+l*NGLLX+I]*fac2;
+  sum_terms = -(fac1*temp1l + fac2*temp2l + fac3*temp3l);
 
-      fac3 = hprimewgll_xx[K*NGLLX+l];
-      temp3l += s_temp3[l*NGLL2+J*NGLLX+I]*fac3;
-    }
-#else
+  // adds gravity contribution
+  if( gravity ) sum_terms += gravity_term;
 
-    temp1l = s_temp1[K*NGLL2+J*NGLLX]*hprimewgll_xx[I*NGLLX]
-            + s_temp1[K*NGLL2+J*NGLLX+1]*hprimewgll_xx[I*NGLLX+1]
-            + s_temp1[K*NGLL2+J*NGLLX+2]*hprimewgll_xx[I*NGLLX+2]
-            + s_temp1[K*NGLL2+J*NGLLX+3]*hprimewgll_xx[I*NGLLX+3]
-            + s_temp1[K*NGLL2+J*NGLLX+4]*hprimewgll_xx[I*NGLLX+4];
+// counts:
+// + 3 * 2 FLOP + 6 FLOP = 12 FLOP
+//
+// + 3 float * 128 threads = 1536 BYTE
 
-
-    temp2l = s_temp2[K*NGLL2+I]*hprimewgll_xx[J*NGLLX]
-            + s_temp2[K*NGLL2+NGLLX+I]*hprimewgll_xx[J*NGLLX+1]
-            + s_temp2[K*NGLL2+2*NGLLX+I]*hprimewgll_xx[J*NGLLX+2]
-            + s_temp2[K*NGLL2+3*NGLLX+I]*hprimewgll_xx[J*NGLLX+3]
-            + s_temp2[K*NGLL2+4*NGLLX+I]*hprimewgll_xx[J*NGLLX+4];
-
-
-    temp3l = s_temp3[J*NGLLX+I]*hprimewgll_xx[K*NGLLX]
-            + s_temp3[NGLL2+J*NGLLX+I]*hprimewgll_xx[K*NGLLX+1]
-            + s_temp3[2*NGLL2+J*NGLLX+I]*hprimewgll_xx[K*NGLLX+2]
-            + s_temp3[3*NGLL2+J*NGLLX+I]*hprimewgll_xx[K*NGLLX+3]
-            + s_temp3[4*NGLL2+J*NGLLX+I]*hprimewgll_xx[K*NGLLX+4];
-
-
-#endif
-
-    fac1 = wgllwgll_yz[K*NGLLX+J];
-    fac2 = wgllwgll_xz[K*NGLLX+I];
-    fac3 = wgllwgll_xy[J*NGLLX+I];
-
-    sum_terms = -(fac1*temp1l + fac2*temp2l + fac3*temp3l);
-    if( gravity ) sum_terms += gravity_term;
-
+  // assembles potential array
+  if(threadIdx.x < NGLL3) {
 #ifdef USE_MESH_COLORING_GPU
-    // no atomic operation needed, colors don't share global points between elements
-
+  // no atomic operation needed, colors don't share global points between elements
 #ifdef USE_TEXTURES_FIELDS
     d_potential_dot_dot_acoustic[iglob] = texfetch_potential_dot_dot<FORWARD_OR_ADJOINT>(iglob) + sum_terms;
 #else
     d_potential_dot_dot_acoustic[iglob] += sum_terms;
 #endif // USE_TEXTURES_FIELDS
-
-
 #else  // MESH_COLORING
-
     //mesh coloring
     if( use_mesh_coloring_gpu ){
       // no atomic operation needed, colors don't share global points between elements
@@ -565,14 +397,286 @@ Kernel_2_acoustic_impl(int nb_blocks_to_compute,
 #else
       d_potential_dot_dot_acoustic[iglob] += sum_terms;
 #endif // USE_TEXTURES_FIELDS
-
     }else{
       atomicAdd(&d_potential_dot_dot_acoustic[iglob],sum_terms);
     }
 #endif // MESH_COLORING
+  }
 
+// counts:
+// + 1 FLOP
+//
+// + 1 float * 125 threads = 500 BYTE
+
+// -----------------
+// total of: 323 FLOP per thread
+//           ~ 128 * 323 = 41344 FLOP per block
+//
+//           8880 BYTE DRAM accesses per block
+//
+//           -> arithmetic intensity: 41344 FLOP / 8880 BYTES ~ 4.66 FLOP/BYTE (hand-count)
+//
+// -----------------
+//
+// nvprof: nvprof --metrics flops_sp ./xspecfem3D
+//         -> 322631424 FLOPS (Single) floating-point operations for 20736 elements
+//         -> 15559 FLOP per block
+//
+//         -> arithmetic intensity: ~ 15559 / 8880 flop/byte = 1.75 flop/byte
+//
+// roofline model: Tesla K20x
+// ---------------------------
+//   for a Kepler K20x card, the peak single-precision performance is about 3.95 TFlop/s.
+//   global memory access has a bandwidth of ~ 250 GB/s.
+//   thus there should be about 16 flop to hide a single byte memory access (3950./250. ~ 15.8 flop/byte = arithmetic intensity).
+//
+//   memory bandwidth: 250 GB/s
+//   single-precision peak performance: 3.95 TFlop/s -> corner arithmetic intensity = 3950 / 250 ~ 15.8 flop/byte
+//
+//   note:
+//     using dense matrix-matrix multiplication (SGEMM) leads to "practical" peak performance of around 2.9 TFlops.
+//     (http://www.nvidia.com/docs/IO/122874/K20-and-K20X-application-performance-technical-brief.pdf)
+//
+//   acoustic kernel has an arithmetic intensity of: hand-counts   ~ 4.66 flop/byte
+//                                                   nvprof-counts ~ 1.75 flop/byte
+//
+//   -> we can only achieve about: (hand-counts)   29% of the peak performance
+//                                 (nvprof-counts) 11% of the peak performance
+//
+//                              i.e.               11% x theoretical peak performance ~ 440 GFlop/s.
+//                                                 11% x "pratical"  peak performance ~ 320 GFlop/s.
+//
+//   CUDA_TIMING: we achieve about 224 GFlop/s (1 mpi process, 20736 elements)
+//                -> that is about 8% of the "practical" peak. (or 70% of the theoretical arithmetic intensity)
+//
+//                this might be due to the first compute code block (before first syncthreads), where
+//                the partial arithmetic intensity is lower than for the total routine.
+//
+// roofline model: Tesla K20c (Kepler architecture: http://www.nvidia.com/content/tesla/pdf/Tesla-KSeries-Overview-LR.pdf)
+// ---------------------------
+//   memory bandwidth: 208 GB/s
+//   single-precision peak performance: 3.52 TFlop/s -> corner arithmetic intensity = 3520 / 208 ~ 16.9 flop/byte
+//
+//   we can only achieve about: (hand-counts)   27% of the peak performance -> 970.6 GFlop/s
+//                              (nvprof-counts) 10% of the peak performance -> 364.5 GFlop/s - measured: 229.631 GFlop/s
+//
+// roofline model: nVidia GT 650m  http://www.gpuzoo.com/GPU-NVIDIA/GeForce_GT_650M_DDR3.html
+// ---------------------------
+//   memory bandwidth: 28.8 GB/s
+//   single-precision peak performance: 625.6 GFlop/s -> corner arithmetic intensity = 625.6 / 28.8 ~ 21.7 flop/byte
+//
+//   we can only achieve about: (hand-counts)   21% of the peak performance -> 132.6 GFlop/s
+//                              (nvprof-counts)  8% of the peak performance ->  50.5 GFlop/s - measured: 52.1907 GFlop/s
+//
+//
+//
+// better performance ideas and improvements are welcome :)
+
+}
+
+/* ----------------------------------------------------------------------------------------------- */
+
+/*
+
+// kernel useful for optimization: stripped-down version
+//                                 acoustic kernel without gravity and without mesh coloring
+
+template<int FORWARD_OR_ADJOINT> __global__ void
+#ifdef USE_LAUNCH_BOUNDS
+// adds compiler specification
+__launch_bounds__(NGLL3_PADDED,LAUNCH_MIN_BLOCKS_ACOUSTIC)
+#endif
+Kernel_2_acoustic_perf_impl(const int nb_blocks_to_compute,
+                       const int* d_ibool,
+                       const int* d_phase_ispec_inner_acoustic,
+                       const int num_phase_ispec_acoustic,
+                       const int d_iphase,
+                       realw_const_p d_potential_acoustic,
+                       realw_p d_potential_dot_dot_acoustic,
+                       realw* d_xix,realw* d_xiy,realw* d_xiz,
+                       realw* d_etax,realw* d_etay,realw* d_etaz,
+                       realw* d_gammax,realw* d_gammay,realw* d_gammaz,
+                       realw_const_p d_hprime_xx,
+                       realw_const_p hprimewgll_xx,
+                       realw_const_p wgllwgll_xy,realw_const_p wgllwgll_xz,realw_const_p wgllwgll_yz,
+                       realw* d_rhostore,
+                       const int use_mesh_coloring_gpu,
+                       const int gravity,
+                       realw_const_p minus_g,
+                       realw* d_kappastore,
+                       realw_const_p wgll_cube){
+
+// note: this routine is using only 12 active blocks instead of full occupancy (16 active blocks)
+//       due to small register spilling which slows down performance
+//       timing: ~ 1.41 ms (Kepler: Tesla K20c)
+
+  // block-id == number of local element id in phase_ispec array
+  int bx = blockIdx.y*gridDim.x+blockIdx.x;
+
+  // thread-id == GLL node id
+  // note: use only NGLL^3 = 125 active threads, plus 3 inactive/ghost threads,
+  //       because we used memory padding from NGLL^3 = 125 to 128 to get coalescent memory accesses;
+  //       to avoid execution branching and the need of registers to store an active state variable,
+  //       the thread ids are put in valid range
+  int tx = threadIdx.x;
+
+  int I,J,K;
+  int iglob,offset;
+  int working_element;
+
+  realw temp1l,temp2l,temp3l;
+  realw xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl;
+
+  realw dpotentialdxl,dpotentialdyl,dpotentialdzl;
+  realw fac1,fac2,fac3;
+  realw rho_invl;
+
+  realw sum_terms;
+
+  __shared__ realw s_dummy_loc[NGLL3];
+
+  __shared__ realw s_temp1[NGLL3];
+  __shared__ realw s_temp2[NGLL3];
+  __shared__ realw s_temp3[NGLL3];
+
+  __shared__ realw sh_hprime_xx[NGLL2];
+  __shared__ realw sh_hprimewgll_xx[NGLL2];
+
+  // checks if anything to do
+  if( bx >= nb_blocks_to_compute ) return;
+
+  // limits thread ids to range [0,125-1]
+  if( tx >= NGLL3 ) tx = NGLL3 - 1;
+
+  // spectral-element id
+  // iphase-1 and working_element-1 for Fortran->C array conventions
+  working_element = d_phase_ispec_inner_acoustic[bx + num_phase_ispec_acoustic*(d_iphase-1)] - 1;
+
+  // local padded index
+  offset = working_element*NGLL3_PADDED + tx;
+
+  // global index
+  iglob = d_ibool[offset] - 1;
+
+  // loads potential values into shared memory
+  if(threadIdx.x < NGLL3) {
+    // loads potentials
+#ifdef USE_TEXTURES_FIELDS
+    s_dummy_loc[tx] = texfetch_potential<FORWARD_OR_ADJOINT>(iglob);
+#else
+    // changing iglob indexing to match fortran row changes fast style
+    s_dummy_loc[tx] = d_potential_acoustic[iglob];
+#endif
+  }
+
+  // local index
+  K = (tx/NGLL2);
+  J = ((tx-K*NGLL2)/NGLLX);
+  I = (tx-K*NGLL2-J*NGLLX);
+
+  // loads mesh values here to give compiler possibility to overlap memory fetches with some computations
+  // note: arguments defined as realw* instead of const realw* __restrict__ to avoid that the compiler
+  //       loads all memory by texture loads
+  //       we only use the first loads explicitly by texture loads, all subsequent without. this should lead/trick
+  //       the compiler to use global memory loads for all the subsequent accesses.
+  //
+  // calculates laplacian
+  //xixl = get_global_cr( &d_xix[offset] ); // first array with texture load
+  xixl = d_xix[offset];
+  xiyl = d_xiy[offset]; // all subsequent without to avoid over-use of texture for coalescent access
+  xizl = d_xiz[offset];
+  etaxl = d_etax[offset];
+  etayl = d_etay[offset];
+  etazl = d_etaz[offset];
+  gammaxl = d_gammax[offset];
+  gammayl = d_gammay[offset];
+  gammazl = d_gammaz[offset];
+
+  jacobianl = 1.f / (xixl*(etayl*gammazl-etazl*gammayl)
+                    -xiyl*(etaxl*gammazl-etazl*gammaxl)
+                    +xizl*(etaxl*gammayl-etayl*gammaxl));
+
+  // density (reciproc)
+  rho_invl = 1.f / d_rhostore[offset];
+
+  // loads hprime into shared memory
+  if (tx < NGLL2) {
+#ifdef USE_TEXTURES_CONSTANTS
+    sh_hprime_xx[tx] = tex1Dfetch(d_hprime_xx_tex,tx);
+#else
+    sh_hprime_xx[tx] = d_hprime_xx[tx];
+#endif
+    // loads hprimewgll into shared memory
+    sh_hprimewgll_xx[tx] = hprimewgll_xx[tx];
+  }
+
+  // synchronize all the threads (one thread for each of the NGLL grid points of the
+  // current spectral element) because we need the whole element to be ready in order
+  // to be able to compute the matrix products along cut planes of the 3D element below
+  __syncthreads();
+
+  // computes first matrix product
+  temp1l = 0.f;
+  temp2l = 0.f;
+  temp3l = 0.f;
+
+  for (int l=0;l<NGLLX;l++) {
+    //assumes that hprime_xx = hprime_yy = hprime_zz
+    // 1. cut-plane along xi-direction
+    temp1l += s_dummy_loc[K*NGLL2+J*NGLLX+l] * sh_hprime_xx[l*NGLLX+I];
+    // 2. cut-plane along eta-direction
+    temp2l += s_dummy_loc[K*NGLL2+l*NGLLX+I] * sh_hprime_xx[l*NGLLX+J];
+    // 3. cut-plane along gamma-direction
+    temp3l += s_dummy_loc[l*NGLL2+J*NGLLX+I] * sh_hprime_xx[l*NGLLX+K];
+  }
+
+  // compute derivatives of ux, uy and uz with respect to x, y and z
+  // derivatives of potential
+  dpotentialdxl = xixl*temp1l + etaxl*temp2l + gammaxl*temp3l;
+  dpotentialdyl = xiyl*temp1l + etayl*temp2l + gammayl*temp3l;
+  dpotentialdzl = xizl*temp1l + etazl*temp2l + gammazl*temp3l;
+
+  // form the dot product with the test vector
+  if( threadIdx.x < NGLL3 ) {
+    s_temp1[tx] = jacobianl * rho_invl * (dpotentialdxl*xixl + dpotentialdyl*xiyl + dpotentialdzl*xizl);
+    s_temp2[tx] = jacobianl * rho_invl * (dpotentialdxl*etaxl + dpotentialdyl*etayl + dpotentialdzl*etazl);
+    s_temp3[tx] = jacobianl * rho_invl * (dpotentialdxl*gammaxl + dpotentialdyl*gammayl + dpotentialdzl*gammazl);
+  }
+
+  // synchronize all the threads (one thread for each of the NGLL grid points of the
+  // current spectral element) because we need the whole element to be ready in order
+  // to be able to compute the matrix products along cut planes of the 3D element below
+  __syncthreads();
+
+  // computes second matrix product
+  temp1l = 0.f;
+  temp2l = 0.f;
+  temp3l = 0.f;
+
+  for (int l=0;l<NGLLX;l++) {
+    //assumes hprimewgll_xx = hprimewgll_yy = hprimewgll_zz
+    // 1. cut-plane along xi-direction
+    temp1l += s_temp1[K*NGLL2+J*NGLLX+l] * sh_hprimewgll_xx[I*NGLLX+l];
+    // 2. cut-plane along eta-direction
+    temp2l += s_temp2[K*NGLL2+l*NGLLX+I] * sh_hprimewgll_xx[J*NGLLX+l];
+    // 3. cut-plane along gamma-direction
+    temp3l += s_temp3[l*NGLL2+J*NGLLX+I] * sh_hprimewgll_xx[K*NGLLX+l];
+  }
+
+  // summed terms with added gll weights
+  fac1 = wgllwgll_yz[K*NGLLX+J];
+  fac2 = wgllwgll_xz[K*NGLLX+I];
+  fac3 = wgllwgll_xy[J*NGLLX+I];
+
+  sum_terms = -(fac1*temp1l + fac2*temp2l + fac3*temp3l);
+
+  // assembles potential array
+  if(threadIdx.x < NGLL3) {
+      atomicAdd(&d_potential_dot_dot_acoustic[iglob],sum_terms);
   }
 }
+
+*/
 
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -592,7 +696,6 @@ void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
   // if the grid can handle the number of blocks, we let it be 1D
   // grid_2_x = nb_elem_color;
   // nb_elem_color is just how many blocks we are computing now
-
   int blocksize = NGLL3_PADDED;
 
   int num_blocks_x, num_blocks_y;
@@ -602,55 +705,76 @@ void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
   dim3 threads(blocksize,1,1);
 
   // Cuda timing
-  //cudaEvent_t start, stop;
-  //start_timing_cuda(&start,&stop);
+  cudaEvent_t start, stop;
+  if( CUDA_TIMING ){
+    start_timing_cuda(&start,&stop);
+  }
 
   // forward wavefields -> FORWARD_OR_ADJOINT == 1
   Kernel_2_acoustic_impl<1><<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
-                                                            mp->NGLOB_AB,
-                                                            d_ibool,
-                                                            mp->d_phase_ispec_inner_acoustic,
-                                                            mp->num_phase_ispec_acoustic,
-                                                            d_iphase,
-                                                            mp->use_mesh_coloring_gpu,
-                                                            mp->d_potential_acoustic, mp->d_potential_dot_dot_acoustic,
-                                                            d_xix, d_xiy, d_xiz,
-                                                            d_etax, d_etay, d_etaz,
-                                                            d_gammax, d_gammay, d_gammaz,
-                                                            mp->d_hprime_xx,
-                                                            mp->d_hprimewgll_xx,
-                                                            mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
-                                                            d_rhostore,
-                                                            mp->gravity,
-                                                            mp->d_minus_g,
-                                                            d_kappastore,
-                                                            mp->d_wgll_cube);
+                                                                    d_ibool,
+                                                                    mp->d_phase_ispec_inner_acoustic,
+                                                                    mp->num_phase_ispec_acoustic,
+                                                                    d_iphase,
+                                                                    mp->d_potential_acoustic, mp->d_potential_dot_dot_acoustic,
+                                                                    d_xix, d_xiy, d_xiz,
+                                                                    d_etax, d_etay, d_etaz,
+                                                                    d_gammax, d_gammay, d_gammaz,
+                                                                    mp->d_hprime_xx,
+                                                                    mp->d_hprimewgll_xx,
+                                                                    mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
+                                                                    d_rhostore,
+                                                                    mp->use_mesh_coloring_gpu,
+                                                                    mp->gravity,
+                                                                    mp->d_minus_g,
+                                                                    d_kappastore,
+                                                                    mp->d_wgll_cube);
 
   if(mp->simulation_type == 3) {
     // backward/reconstructed wavefields -> FORWARD_OR_ADJOINT == 3
     Kernel_2_acoustic_impl<3><<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
-                                                          mp->NGLOB_AB,
-                                                          d_ibool,
-                                                          mp->d_phase_ispec_inner_acoustic,
-                                                          mp->num_phase_ispec_acoustic,
-                                                          d_iphase,
-                                                          mp->use_mesh_coloring_gpu,
-                                                          mp->d_b_potential_acoustic, mp->d_b_potential_dot_dot_acoustic,
-                                                          d_xix, d_xiy, d_xiz,
-                                                          d_etax, d_etay, d_etaz,
-                                                          d_gammax, d_gammay, d_gammaz,
-                                                          mp->d_hprime_xx,
-                                                          mp->d_hprimewgll_xx,
-                                                          mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
-                                                          d_rhostore,
-                                                          mp->gravity,
-                                                          mp->d_minus_g,
-                                                          d_kappastore,
-                                                          mp->d_wgll_cube);
+                                                                      d_ibool,
+                                                                      mp->d_phase_ispec_inner_acoustic,
+                                                                      mp->num_phase_ispec_acoustic,
+                                                                      d_iphase,
+                                                                      mp->d_b_potential_acoustic, mp->d_b_potential_dot_dot_acoustic,
+                                                                      d_xix, d_xiy, d_xiz,
+                                                                      d_etax, d_etay, d_etaz,
+                                                                      d_gammax, d_gammay, d_gammaz,
+                                                                      mp->d_hprime_xx,
+                                                                      mp->d_hprimewgll_xx,
+                                                                      mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
+                                                                      d_rhostore,
+                                                                      mp->use_mesh_coloring_gpu,
+                                                                      mp->gravity,
+                                                                      mp->d_minus_g,
+                                                                      d_kappastore,
+                                                                      mp->d_wgll_cube);
   }
 
   // Cuda timing
-  //stop_timing_cuda(&start,&stop,"Kernel_2_acoustic_impl");
+  if( CUDA_TIMING ){
+    realw flops,time;
+    stop_timing_cuda(&start,&stop,"Kernel_2_acoustic_impl",&time);
+    // time in seconds
+    time = time / 1000.;
+    // performance
+    if( ! mp->gravity ) {
+      if( ! mp->use_mesh_coloring_gpu ){
+        // see with: nvprof --metrics flops_sp ./xspecfem3D
+        //           -> using 322631424 FLOPS (Single) floating-point operations for 20736 elements
+        //              = 15559 FLOPS per block
+        flops = 15559 * nb_blocks_to_compute;
+      }else{
+        // coloring
+        flops = 15559 * nb_blocks_to_compute;
+      }
+    }else{
+      // gravity
+      flops = 15559 * nb_blocks_to_compute;
+    }
+    printf("  performance: %f GFlop/s\n", flops/time * 1.e-9);
+  }
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   exit_on_cuda_error("kernel Kernel_2");

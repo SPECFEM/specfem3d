@@ -287,9 +287,6 @@ AC_SUBST([FC_MODDIR])
 
 if test "$want_mpi" = yes; then
     AS_BOX([MPI])
-#     CIT_FC_MPI_MODULE([mpif.h], [$MPIFC], [$FLAGS_CHECK], [:], [
-#         AC_MSG_FAILURE([cannot compile a trivial MPI program using $MPIFC])
-#     ])
     CIT_MPI_INCDIR([$MPIFC])
 fi
 
@@ -301,7 +298,7 @@ fi
 if test "$want_adios" = yes; then
     AS_BOX([ADIOS])
     if test "$want_mpi" != yes; then
-        AC_MSG_ERROR([Cannot compile with ADIOS but without MPI.])
+        AC_MSG_ERROR([Cannot compile with ADIOS without MPI.])
     fi
     CIT_ADIOS_CONFIG
 fi	
@@ -315,7 +312,6 @@ if test "$want_cuda" != no; then
     AS_BOX([CUDA])
     AC_ARG_VAR(CUDA_FLAGS, [Cuda compiler flags])
     CIT_CUDA_CONFIG
-    CIT_MPI_INCDIR([$MPIFC])
 fi
 
 

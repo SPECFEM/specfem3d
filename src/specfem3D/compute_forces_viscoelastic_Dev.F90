@@ -263,6 +263,19 @@
 
   do ispec_p = 1,num_elements
 
+
+! arithmetic intensity: ratio of number-of-arithmetic-operations / number-of-bytes-accessed-on-DRAM
+!
+! hand-counts on floating-point operations: counts addition/subtraction/multiplication/division
+!                                           no counts for operations on indices in do-loops (?)
+!
+!                                           counts accesses to global memory, but no shared/cache memory or register loads/stores
+!                                           float/real has 4 bytes
+
+! hand-counts: floating-point operations FLOP, DRAM accesses in BYTES
+!              for "simplest kernel" (isotropic without attenuation, dynamic fault, etc.)
+!              and for single element, assuming NGLLX == NGLLY == NGLLZ == 5
+
     ! returns element id from stored element list
     ispec = phase_ispec_inner_elastic(ispec_p,iphase)
 
@@ -274,6 +287,11 @@
         ispec2D_moho_bot = ispec2D_moho_bot + 1
       endif
     endif ! adjoint
+
+! counts:
+! 0 FLOP
+!
+! 1 float = 4 BYTE
 
     ! Kelvin Voigt damping: artificial viscosity around dynamic faults
 
@@ -303,6 +321,12 @@
         enddo
       enddo
     endif
+
+! counts:
+! + 0 FLOP
+!
+! + NGLLX * NGLLY * NGLLZ * ( 1 + 3 ) float = 2000 BYTE
+
 
     ! use first order Taylor expansion of displacement for local storage of stresses
     ! at this current time step, to fix attenuation in a consistent way
@@ -357,6 +381,11 @@
                                 hprime_xx(i,5)*B3_m1_m2_5points(5,j)
       enddo
     enddo
+
+! counts:
+! + m1 * m2 * 3 * 9 = 5 * 25 * 3 * 9 = 3375 FLOP
+!
+! + m1 * 5 float = 100 BYTE  (hprime_xx once, assuming B3_** in cache)
 
     if (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) then
       ! temporary variables used for fixing attenuation in a consistent way
@@ -439,6 +468,14 @@
         enddo
       enddo
     enddo
+
+
+
+! counts:
+! + m1 * m1 * NGLLX * 3 * 9 = 5 * 5 * 5 * 3 * 9 = 3375 FLOP
+!
+! + m1 * 5 float = 100 BYTE  (hprime_xxT once, assuming dummy*_** in cache)
+
 
     if (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) then
       ! temporary variables used for fixing attenuation in a consistent way
@@ -525,6 +562,11 @@
       enddo
     enddo
 
+! counts:
+! + m1 * m2 * 3 * 9 = 5 * 25 * 3 * 9 = 3375 FLOP
+!
+! + 0 BYTE  (assuming A3_**, hprime_xxT in cache)
+
     if (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) then
       ! temporary variables used for fixing attenuation in a consistent way
       do j=1,m1
@@ -598,6 +640,11 @@
           gammazl = gammaz(i,j,k,ispec)
           jacobianl = jacobian(i,j,k,ispec)
 
+! counts:
+! + 0 FLOP
+!
+! + NGLLX * NGLLY * NGLLZ * 10 float = 5000 BYTE  (assuming A3_**, hprime_xxT in cache)
+
           duxdxl = xixl*tempx1(i,j,k) + etaxl*tempx2(i,j,k) + gammaxl*tempx3(i,j,k)
           duxdyl = xiyl*tempx1(i,j,k) + etayl*tempx2(i,j,k) + gammayl*tempx3(i,j,k)
           duxdzl = xizl*tempx1(i,j,k) + etazl*tempx2(i,j,k) + gammazl*tempx3(i,j,k)
@@ -609,6 +656,11 @@
           duzdxl = xixl*tempz1(i,j,k) + etaxl*tempz2(i,j,k) + gammaxl*tempz3(i,j,k)
           duzdyl = xiyl*tempz1(i,j,k) + etayl*tempz2(i,j,k) + gammayl*tempz3(i,j,k)
           duzdzl = xizl*tempz1(i,j,k) + etazl*tempz2(i,j,k) + gammazl*tempz3(i,j,k)
+
+! counts:
+! + NGLLX * NGLLY * NGLLZ * 9 * 5 = 5625 FLOP
+!
+! + 0 BYTE  (assuming temp*_** in cache)
 
           ! save strain on the Moho boundary
           if (SAVE_MOHO_MESH ) then
@@ -642,6 +694,11 @@
           duxdyl_plus_duydxl = duxdyl + duydxl
           duzdxl_plus_duxdzl = duzdxl + duxdzl
           duzdyl_plus_duydzl = duzdyl + duydzl
+
+! counts:
+! + NGLLX * NGLLY * NGLLZ * 6 * 1 = 750 FLOP
+!
+! + 0 BYTE  (assuming registers)
 
           if (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) then
             ! temporary variables used for fixing attenuation in a consistent way
@@ -715,6 +772,11 @@
 
           kappal = kappastore(i,j,k,ispec)
           mul = mustore(i,j,k,ispec)
+
+! counts:
+! + 0 FLOP
+!
+! + NGLLX * NGLLY * NGLLZ * 2 float = 1000 BYTE
 
           ! attenuation
           if (ATTENUATION) then
@@ -864,6 +926,11 @@
 
           endif ! of if(ANISOTROPY)
 
+! counts:
+! + NGLLX * NGLLY * NGLLZ * 16 =  2000 FLOP
+!
+! + 0 BYTE
+
           ! subtract memory variables if attenuation
           if (ATTENUATION) then
 ! way 1
@@ -967,6 +1034,11 @@
           tempy3(i,j,k) = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_zy*gammazl) ! this goes to accel_y
           tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl) ! this goes to accel_z
 
+! counts:
+! + NGLLX * NGLLY * NGLLZ * 9 * 6 = 6750 FLOP
+!
+! + NGLLX * NGLLY * NGLLZ * 9 float = 4500 BYTE (temp* stores)
+
         enddo
       enddo
     enddo
@@ -1014,6 +1086,11 @@
       enddo
     enddo
 
+! counts:
+! + m1 * m2 * 3 * 9 = 3375 FLOP
+!
+! + m1 * 5 float = 100 BYTE (hprimewgll_xxT once, assumes E3*, C1* in cache)
+
     do i=1,m1
       do j=1,m1
         ! for efficiency it is better to leave this loop on k inside, it leads to slightly faster code
@@ -1037,6 +1114,11 @@
       enddo
     enddo
 
+! counts:
+! + m1 * m1 * NGLLX * 3 * 9 = 3375 FLOP
+!
+! + m1 * 5 float = 100 BYTE (hprimewgll_xx once, assumes E3*, C1* in cache)
+
     do j=1,m1
       do i=1,m2
         E1_mxm_m2_m1_5points(i,j) = C1_mxm_m2_m1_5points(i,1)*hprimewgll_xx(1,j) + &
@@ -1057,6 +1139,11 @@
       enddo
     enddo
 
+! counts:
+! + m1 * m2 * 3 * 9 = 3375 FLOP
+!
+! + 0 BYTE (assumes E1*, C1*, hprime* in cache)
+
     do k=1,NGLLZ
       do j=1,NGLLY
         do i=1,NGLLX
@@ -1073,6 +1160,12 @@
                             fac2*newtempy2(i,j,k) - fac3*newtempy3(i,j,k)
           accel(3,iglob) = accel(3,iglob) - fac1*newtempz1(i,j,k) - &
                             fac2*newtempz2(i,j,k) - fac3*newtempz3(i,j,k)
+
+! counts:
+! + NGLLX * NGLLY * NGLLZ * 3 * 6 = 2250 FLOP
+!
+! + NGLLX * NGLLY * 3 float = 300 BYTE (wgllwgll once)
+! + NGLLX * NGLLY * NGLLZ * (1 + 3 ) float = 2000 BYTE (ibool & accel, assumes newtemp* in cache)
 
           !  update memory variables based upon the Runge-Kutta scheme
           if (ATTENUATION) then
@@ -1158,6 +1251,21 @@
       epsilondev_xz(:,:,:,ispec) = epsilondev_xz_loc(:,:,:)
       epsilondev_yz(:,:,:,ispec) = epsilondev_yz_loc(:,:,:)
     endif
+
+! counts:
+! + 0 FLOP
+!
+! + 0 BYTE
+
+! counts:
+! -----------------
+! total of: 37625 FLOP per element
+!
+!           15204 BYTE DRAM accesses per block
+!
+! arithmetic intensity: 37625 FLOP / 15204 BYTES ~ 2.5 FLOP/BYTE
+! -----------------
+
 
   enddo  ! spectral element loop
 

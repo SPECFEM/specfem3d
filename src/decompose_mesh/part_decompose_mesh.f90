@@ -27,7 +27,7 @@
 
 module part_decompose_mesh
 
-  use constants
+  use constants,only: MAX_STRING_LEN,NGNOD2D_FOUR_CORNERS,NGNOD_EIGHT_CORNERS,SAVE_MOHO_MESH
 
   implicit none
 
@@ -57,6 +57,7 @@ contains
                                     nnodes_elmnts, nodes_elmnts, &
                                     max_neighbour, ncommonnodes, NGNOD)
 
+    implicit none
     integer, intent(in)  :: nspec
     integer, intent(in)  :: nnodes
     integer, intent(in)  :: nsize
@@ -77,7 +78,6 @@ contains
     integer  :: num_node, n
     integer  :: elem_base, elem_target
     integer  :: connectivity
-
 
     ! initializes
     xadj(:) = 0
@@ -162,6 +162,7 @@ contains
   !--------------------------------------------------
   subroutine build_glob2loc_elmnts(nspec, part, glob2loc_elmnts,nparts)
 
+    implicit none
     integer, intent(in)  :: nspec
     integer, dimension(0:nspec-1), intent(in)  :: part
     integer, dimension(:), pointer  :: glob2loc_elmnts
@@ -198,6 +199,7 @@ contains
   subroutine build_glob2loc_nodes(nspec, nnodes, nsize, nnodes_elmnts, nodes_elmnts, part, &
        glob2loc_nodes_nparts, glob2loc_nodes_parts, glob2loc_nodes,nparts)
 
+    implicit none
     integer, intent(in)  :: nspec
     integer, intent(in) :: nsize
     integer, intent(in) :: nnodes
@@ -287,6 +289,7 @@ contains
                               tab_interfaces, tab_size_interfaces, ninterfaces, &
                               nparts, NGNOD)
 
+    implicit none
     integer, intent(in)  :: nspec
     integer, intent(in)  :: NGNOD
     integer, intent(in) :: sup_neighbour
@@ -399,6 +402,7 @@ contains
                   nodes_coords, glob2loc_nodes_nparts, glob2loc_nodes_parts, &
                   glob2loc_nodes, nnodes, num_phase)
 
+    implicit none
     integer, intent(in)  :: IIN_database
     integer, intent(in)  :: nnodes, iproc, num_phase
     integer, intent(inout)  :: npgeo
@@ -443,6 +447,7 @@ contains
   subroutine write_material_props_database(IIN_database,count_def_mat, &
                                 count_undef_mat, mat_prop, undef_mat_prop)
 
+    implicit none
     integer, intent(in)  :: IIN_database
     integer, intent(in)  :: count_def_mat,count_undef_mat
     double precision, dimension(16,count_def_mat)  :: mat_prop
@@ -491,6 +496,7 @@ contains
                         glob2loc_elmnts, glob2loc_nodes_nparts, &
                         glob2loc_nodes_parts, glob2loc_nodes, part, NGNOD2D)
 
+    implicit none
     integer, intent(in)  :: IIN_database
     integer, intent(in)  :: iproc
     integer, intent(in)  :: nspec
@@ -671,6 +677,7 @@ contains
   subroutine write_cpml_database(IIN_database, iproc, nspec, nspec_cpml, CPML_to_spec, &
                                  CPML_regions, is_CPML, glob2loc_elmnts, part)
 
+    implicit none
     integer, intent(in)  :: IIN_database
     integer, intent(in)  :: iproc
     integer, intent(in)  :: nspec
@@ -735,21 +742,29 @@ contains
   subroutine write_partition_database(IIN_database, iproc, nspec_local, nspec, elmnts, &
                                       glob2loc_elmnts, glob2loc_nodes_nparts, &
                                       glob2loc_nodes_parts, glob2loc_nodes, &
-                                      part, num_modele, NGNOD, num_phase)
+                                      part, num_modele, NGNOD, num_phase, COUPLE_WITH_DSM)
 
-    integer, intent(in)  :: NGNOD
+    implicit none
     integer, intent(in)  :: IIN_database
-    integer, intent(in)  :: num_phase, iproc
-    integer, intent(in)  :: nspec
+    integer, intent(in)  :: iproc
     integer, intent(inout)  :: nspec_local
-    integer, dimension(0:nspec-1)  :: part
+
+    integer, intent(in)  :: nspec
+    integer, intent(in)  :: NGNOD
     integer, dimension(0:NGNOD*nspec-1)  :: elmnts
+
     integer, dimension(:), pointer :: glob2loc_elmnts
-    integer, dimension(2,nspec)  :: num_modele
     integer, dimension(:), pointer  :: glob2loc_nodes_nparts
     integer, dimension(:), pointer  :: glob2loc_nodes_parts
     integer, dimension(:), pointer  :: glob2loc_nodes
 
+    integer, dimension(0:nspec-1)  :: part
+    integer, dimension(2,nspec)  :: num_modele
+
+    integer, intent(in)  :: num_phase
+    logical, intent(in) :: COUPLE_WITH_DSM
+
+    ! local parameters
     integer  :: i,j,k
     integer, dimension(0:NGNOD-1)  :: loc_nodes
 
@@ -783,7 +798,9 @@ contains
              ! # ispec_local # material_index_1 # material_index_2 # corner_id1 # corner_id2 # ... # corner_id27
              write(IIN_database) glob2loc_elmnts(i)+1, num_modele(1,i+1), &
                                   num_modele(2,i+1),(loc_nodes(k)+1, k=0,NGNOD-1)
-             write(124,*) i+1,glob2loc_elmnts(i)+1,iproc
+
+             ! writes out to file Numglob2loc_elmn.txt
+             if (COUPLE_WITH_DSM) write(124,*) i+1,glob2loc_elmnts(i)+1,iproc
           endif
        enddo
     endif

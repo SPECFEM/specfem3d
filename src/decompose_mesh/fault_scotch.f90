@@ -27,8 +27,10 @@
 
 module fault_scotch
 
-  use constants
+  use constants,only: MAX_STRING_LEN
+
   implicit none
+
   private
 
   type fault_type

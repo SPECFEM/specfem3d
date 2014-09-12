@@ -80,7 +80,7 @@
   subroutine bcast_all_cr(buffer, count)
 
   use unused_mod
-  use constants
+  use constants,only: CUSTOM_REAL
 
   implicit none
 
@@ -178,7 +178,7 @@
 
   subroutine gather_all_cr(sendbuf, sendcnt, recvbuf, recvcount, NPROC)
 
-  use constants
+  use constants,only: CUSTOM_REAL
 
   implicit none
 
@@ -196,7 +196,7 @@
 
   subroutine gather_all_all_cr(sendbuf, recvbuf, counts,NPROC)
 
-  use constants
+  use constants,only: CUSTOM_REAL
 
   implicit none
 
@@ -215,7 +215,7 @@
  subroutine gatherv_all_cr(sendbuf, sendcnt, recvbuf, recvcount, recvoffset,recvcounttot, NPROC)
 
   use unused_mod
-  use constants
+  use constants,only: CUSTOM_REAL
 
   implicit none
 
@@ -314,7 +314,7 @@
 
   subroutine max_all_cr(sendbuf, recvbuf)
 
-  use constants
+  use constants,only: CUSTOM_REAL
 
   implicit none
 
@@ -331,7 +331,7 @@
 
   subroutine min_all_cr(sendbuf, recvbuf)
 
-  use constants
+  use constants,only: CUSTOM_REAL
 
   implicit none
 
@@ -347,7 +347,7 @@
 
   subroutine min_all_all_cr(sendbuf, recvbuf)
 
-  use constants
+  use constants,only: CUSTOM_REAL
 
   implicit none
 
@@ -406,7 +406,7 @@
 
   subroutine max_all_all_cr(sendbuf, recvbuf)
 
-  use constants
+  use constants,only: CUSTOM_REAL
 
   implicit none
 
@@ -479,7 +479,7 @@
 
   subroutine sum_all_cr(sendbuf, recvbuf)
 
-  use constants
+  use constants,only: CUSTOM_REAL
 
   implicit none
 
@@ -510,7 +510,7 @@
 
   subroutine sum_all_all_cr(sendbuf, recvbuf)
 
-  use constants
+  use constants,only: CUSTOM_REAL
 
   implicit none
 
@@ -570,7 +570,7 @@
                              recvbuf, recvcount, source, recvtag)
 
   use unused_mod
-  use constants
+  use constants,only: CUSTOM_REAL
 
   implicit none
 
@@ -607,7 +607,7 @@
   subroutine isend_cr(sendbuf, sendcount, dest, sendtag, req)
 
   use unused_mod
-  use constants
+  use constants,only: CUSTOM_REAL
 
   implicit none
 
@@ -629,7 +629,7 @@
   subroutine irecv_cr(recvbuf, recvcount, dest, recvtag, req)
 
   use unused_mod
-  use constants
+  use constants,only: CUSTOM_REAL
 
   implicit none
 
@@ -715,7 +715,7 @@
   subroutine recvv_cr(recvbuf, recvcount, dest, recvtag )
 
   use unused_mod
-  use constants
+  use constants,only: CUSTOM_REAL
 
   implicit none
 
@@ -871,7 +871,7 @@
 
   use unused_mod
 
-  use constants
+  use constants,only: CUSTOM_REAL
 
   implicit none
 
@@ -934,7 +934,7 @@
 
   subroutine world_split()
 
-  use constants
+  use constants,only: mygroup
 
   implicit none
 

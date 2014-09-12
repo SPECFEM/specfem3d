@@ -174,6 +174,8 @@ specfem3D_SHARED_OBJECTS += $(COND_OPENMP_OBJECTS)
 ### CUDA
 ###
 cuda_specfem3D_OBJECTS = \
+	$O/assemble_MPI_scalar_cuda.cuda.o \
+	$O/assemble_MPI_vector_cuda.cuda.o \
 	$O/check_fields_cuda.cuda.o \
 	$O/compute_add_sources_acoustic_cuda.cuda.o \
 	$O/compute_add_sources_viscoelastic_cuda.cuda.o \
@@ -332,6 +334,7 @@ $O/detect_mesh_surfaces.spec.o: $O/specfem3D_par.spec.o
 $O/fault_solver_common.spec.o: $O/specfem3D_par.spec.o
 $O/gravity_perturbation.spec.o: $O/specfem3D_par.spec.o
 $O/locate_source.spec.o: $O/specfem3D_par.spec.o
+$O/locate_receivers.spec.o: $O/specfem3D_par.spec.o
 $O/model_update.spec.o: $O/specfem3D_par.spec.o
 $O/pml_par.spec.o: $O/specfem3D_par.spec.o
 $O/setup_GLL_points.spec.o: $O/specfem3D_par.spec.o

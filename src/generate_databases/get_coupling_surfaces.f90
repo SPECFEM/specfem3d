@@ -34,6 +34,7 @@
 ! determines coupling surface for acoustic-elastic domains
 ! based on ispec_is_acoustic, ispec_is_elastic and ispec_is_poroelastic arrays
 
+  use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,IMAIN
   use create_regions_mesh_ext_par
   implicit none
 
@@ -175,8 +176,9 @@
 
 ! determines coupling surface for acoustic-elastic domains
 
-  use generate_databases_par, only: NGNOD2D
+  use generate_databases_par, only: NGNOD2D,NGLLX,NGLLY,NGLLZ,NDIM,NGNOD2D_FOUR_CORNERS,NGLLSQUARE,IMAIN
   use create_regions_mesh_ext_par
+
   implicit none
 
 ! number of spectral elements in each block
@@ -383,7 +385,7 @@
 
 ! determines coupling surface for acoustic-poroelastic domains
 
-  use generate_databases_par, only: NGNOD2D
+  use generate_databases_par, only: NGNOD2D,NGLLX,NGLLY,NGLLZ,NDIM,NGNOD2D_FOUR_CORNERS,NGLLSQUARE,IMAIN
   use create_regions_mesh_ext_par
   implicit none
 
@@ -546,7 +548,7 @@
 
 ! determines coupling surface for elastic-poroelastic domains
 
-  use generate_databases_par, only: NGNOD2D
+  use generate_databases_par, only: NGNOD2D,NGLLX,NGLLY,NGLLZ,NDIM,NGNOD2D_FOUR_CORNERS,NGLLSQUARE,IMAIN
   use create_regions_mesh_ext_par
   implicit none
 

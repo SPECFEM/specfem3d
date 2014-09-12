@@ -30,6 +30,7 @@
 
 ! sets up mesh coloring and permutes elements
 
+  use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,IMAIN,USE_MESH_COLORING_GPU
   use create_regions_mesh_ext_par
   implicit none
 
@@ -129,7 +130,9 @@
 
 ! sets up mesh coloring
 
+  use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,IMAIN,USE_MESH_COLORING_GPU,MAX_NUMBER_OF_COLORS
   use create_regions_mesh_ext_par
+
   implicit none
 
   integer :: myrank,nspec,nglob
@@ -404,7 +407,9 @@
   subroutine setup_permutation(myrank,nspec,nglob,ibool,ANISOTROPY,perm, &
                                   SAVE_MESH_FILES)
 
+  use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,IMAIN
   use create_regions_mesh_ext_par
+
   implicit none
 
   integer :: myrank,nspec,nglob

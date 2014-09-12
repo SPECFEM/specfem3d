@@ -81,7 +81,7 @@
   integer :: ispec,iglob,i,j,k,iface,igll
 
   !! CD modif. : begin (implemented by VM) !! For coupling with DSM
-   
+
   ! See also DSM parameters in setup/constants.h.in
   real(kind=CUSTOM_REAL) :: Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
   real(kind=CUSTOM_REAL) :: Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)

@@ -341,13 +341,73 @@ def define_bc(*args,**keys):
         id_0=cubit.get_next_block_id()
         v_list,name_list=define_block()
         build_block(v_list,name_list,id_0,top_surf,optionsea=optionsea)
-        #
+        # entities
+        entities=args[0]
+        print entities
+        for entity in entities:
+            print "##entity: "+str(entity)
+            # block for free surface (w/ topography)
+            #print '## topo surface block: ' + str(topo)
+            if len(top_surf) == 0:
+              print ""
+              print "no topo surface found, please create block face_topo manually..."
+              print ""
+            else:
+              build_block_side(top_surf,entity+'_topo',obj=entity,id_0=1001)
+            # model has parallel sides (e.g. a block model )
+            # xmin - blocks
+            if len(xmin) == 0:
+              print ""
+              print "no abs_xmin surface found, please create block manually..."
+              print ""
+            else:
+              build_block_side(xmin,entity+'_abs_xmin',obj=entity,id_0=1002)
+            # xmax - blocks
+            if len(xmax) == 0:
+              print ""
+              print "no abs_xmax surface found, please create block manually..."
+              print ""
+            else:
+              build_block_side(xmax,entity+'_abs_xmax',obj=entity,id_0=1003)
+            # ymin - blocks
+            if len(ymin) == 0:
+              print ""
+              print "no abs_xmin surface found, please create block manually..."
+              print ""
+            else:
+              build_block_side(ymin,entity+'_abs_ymin',obj=entity,id_0=1004)
+            # ymax - blocks
+            if len(ymax) == 0:
+              print ""
+              print "no abs_ymax surface found, please create block manually..."
+              print ""
+            else:
+              build_block_side(ymax,entity+'_abs_ymax',obj=entity,id_0=1005)
+            # bottom - blocks
+            if len(bottom_surf) == 0:
+              print ""
+              print "no abs_bottom surface found, please create block manually..."
+              print ""
+            else:
+              build_block_side(bottom_surf,entity+'_abs_bottom',obj=entity,id_0=1006)
+            # block for all sides together
+            # NOTE:
+            #    this might fail in some CUBIT versions, when elements are already
+            #    assigned to other blocks
+            #cubit.cmd('set duplicate block elements on')
+            #try:
+            #  build_block_side(absorbing_surf,entity+'_abs',obj=entity,id_0=2001)
+            #except:
+            #  print "no combined surface with all sides created"
     elif closed:
+        print "##closed region"
         surf=define_absorbing_surf_sphere()
         v_list,name_list=define_block()
         build_block(v_list,name_list,id_0)
+        # entities
         entities=args[0]
-        id_side=1
+        id_side=1001
+        print entities
         for entity in entities:
             build_block_side(surf,entity+'_closedvol',obj=entity,id_0=id_side)
             id_side=id_side+1

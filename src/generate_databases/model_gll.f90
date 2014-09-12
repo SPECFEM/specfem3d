@@ -38,6 +38,7 @@
 
   subroutine model_gll(myrank,nspec,LOCAL_PATH)
 
+  use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,FOUR_THIRDS
   use create_regions_mesh_ext_par
   implicit none
 

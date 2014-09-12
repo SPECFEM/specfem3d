@@ -135,10 +135,10 @@ end module my_mpi
   subroutine bcast_all_cr(buffer, countval)
 
   use my_mpi
+  use constants,only: CUSTOM_REAL
 
   implicit none
 
-  include "constants.h"
   include "precision.h"
 
   integer countval
@@ -178,9 +178,6 @@ end module my_mpi
   use my_mpi
 
   implicit none
-
-  include "constants.h"
-  include "precision.h"
 
   integer countval
   real, dimension(countval) :: buffer
@@ -267,10 +264,10 @@ end module my_mpi
   subroutine gather_all_cr(sendbuf, sendcnt, recvbuf, recvcount, NPROC)
 
   use my_mpi
+  use constants,only: CUSTOM_REAL
 
   implicit none
 
-  include "constants.h"
   include "precision.h"
 
   integer sendcnt, recvcount, NPROC
@@ -292,10 +289,10 @@ end module my_mpi
   subroutine gather_all_all_cr(sendbuf, recvbuf, counts, NPROC)
 
   use my_mpi
+  use constants,only: CUSTOM_REAL
 
   implicit none
 
-  include "constants.h"
   include "precision.h"
 
   integer NPROC,counts
@@ -304,8 +301,7 @@ end module my_mpi
 
   integer ier
 
-  call MPI_ALLGATHER(sendbuf,counts,CUSTOM_MPI_TYPE,recvbuf,counts,CUSTOM_MPI_TYPE, &
-                 my_local_mpi_comm_world,ier)
+  call MPI_ALLGATHER(sendbuf,counts,CUSTOM_MPI_TYPE,recvbuf,counts,CUSTOM_MPI_TYPE,my_local_mpi_comm_world,ier)
 
   end subroutine gather_all_all_cr
 
@@ -316,10 +312,10 @@ end module my_mpi
   subroutine gatherv_all_cr(sendbuf, sendcnt, recvbuf, recvcount, recvoffset,recvcounttot, NPROC)
 
   use my_mpi
+  use constants,only: CUSTOM_REAL
 
   implicit none
 
-  include "constants.h"
   include "precision.h"
 
   integer sendcnt,recvcounttot,NPROC
@@ -422,8 +418,7 @@ end module my_mpi
   double precision sendbuf, recvbuf
   integer ier
 
-  call MPI_REDUCE(sendbuf,recvbuf,1,MPI_DOUBLE_PRECISION, &
-                  MPI_MIN,0,my_local_mpi_comm_world,ier)
+  call MPI_REDUCE(sendbuf,recvbuf,1,MPI_DOUBLE_PRECISION,MPI_MIN,0,my_local_mpi_comm_world,ier)
 
   end subroutine min_all_dp
 
@@ -440,8 +435,7 @@ end module my_mpi
   double precision sendbuf, recvbuf
   integer ier
 
-  call MPI_REDUCE(sendbuf,recvbuf,1,MPI_DOUBLE_PRECISION, &
-                  MPI_MAX,0,my_local_mpi_comm_world,ier)
+  call MPI_REDUCE(sendbuf,recvbuf,1,MPI_DOUBLE_PRECISION,MPI_MAX,0,my_local_mpi_comm_world,ier)
 
   end subroutine max_all_dp
 
@@ -452,17 +446,16 @@ end module my_mpi
   subroutine max_all_cr(sendbuf, recvbuf)
 
   use my_mpi
+  use constants,only: CUSTOM_REAL
 
   implicit none
 
-  include "constants.h"
   include "precision.h"
 
   real(kind=CUSTOM_REAL) sendbuf, recvbuf
   integer ier
 
-  call MPI_REDUCE(sendbuf,recvbuf,1,CUSTOM_MPI_TYPE, &
-                  MPI_MAX,0,my_local_mpi_comm_world,ier)
+  call MPI_REDUCE(sendbuf,recvbuf,1,CUSTOM_MPI_TYPE,MPI_MAX,0,my_local_mpi_comm_world,ier)
 
   end subroutine max_all_cr
 
@@ -473,17 +466,16 @@ end module my_mpi
   subroutine min_all_cr(sendbuf, recvbuf)
 
   use my_mpi
+  use constants,only: CUSTOM_REAL
 
   implicit none
 
-  include "constants.h"
   include "precision.h"
 
   real(kind=CUSTOM_REAL) sendbuf, recvbuf
   integer ier
 
-  call MPI_REDUCE(sendbuf,recvbuf,1,CUSTOM_MPI_TYPE, &
-                  MPI_MIN,0,my_local_mpi_comm_world,ier)
+  call MPI_REDUCE(sendbuf,recvbuf,1,CUSTOM_MPI_TYPE,MPI_MIN,0,my_local_mpi_comm_world,ier)
 
   end subroutine min_all_cr
 
@@ -495,17 +487,16 @@ end module my_mpi
   subroutine min_all_all_cr(sendbuf, recvbuf)
 
   use my_mpi
+  use constants,only: CUSTOM_REAL
 
   implicit none
 
-  include "constants.h"
   include "precision.h"
 
   real(kind=CUSTOM_REAL):: sendbuf, recvbuf
   integer ier
 
-  call MPI_ALLREDUCE(sendbuf,recvbuf,1,CUSTOM_MPI_TYPE, &
-                  MPI_MIN,my_local_mpi_comm_world,ier)
+  call MPI_ALLREDUCE(sendbuf,recvbuf,1,CUSTOM_MPI_TYPE,MPI_MIN,my_local_mpi_comm_world,ier)
 
   end subroutine min_all_all_cr
 
@@ -519,9 +510,6 @@ end module my_mpi
 !  use my_mpi
 !
 !  implicit none
-!
-!  include "constants.h"
-!  include "precision.h"
 !
 !  double precision :: sendbuf, recvbuf
 !  integer ier
@@ -541,14 +529,10 @@ end module my_mpi
 
   implicit none
 
-  include "constants.h"
-  include "precision.h"
-
   integer :: sendbuf, recvbuf
   integer :: ier
 
-  call MPI_REDUCE(sendbuf,recvbuf,1,MPI_INTEGER, &
-                  MPI_MAX,0,my_local_mpi_comm_world,ier)
+  call MPI_REDUCE(sendbuf,recvbuf,1,MPI_INTEGER,MPI_MAX,0,my_local_mpi_comm_world,ier)
 
   end subroutine max_all_i
 
@@ -587,17 +571,16 @@ end module my_mpi
   subroutine max_all_all_cr(sendbuf, recvbuf)
 
   use my_mpi
+  use constants,only: CUSTOM_REAL
 
   implicit none
 
-  include "constants.h"
   include "precision.h"
 
   real(kind=CUSTOM_REAL):: sendbuf, recvbuf
   integer ier
 
-  call MPI_ALLREDUCE(sendbuf,recvbuf,1,CUSTOM_MPI_TYPE, &
-                  MPI_MAX,my_local_mpi_comm_world,ier)
+  call MPI_ALLREDUCE(sendbuf,recvbuf,1,CUSTOM_MPI_TYPE,MPI_MAX,my_local_mpi_comm_world,ier)
 
   end subroutine max_all_all_cr
 
@@ -613,14 +596,10 @@ end module my_mpi
 
   implicit none
 
-  include "constants.h"
-  include "precision.h"
-
   double precision :: sendbuf, recvbuf
   integer ier
 
-  call MPI_ALLREDUCE(sendbuf,recvbuf,1,MPI_DOUBLE_PRECISION, &
-                  MPI_MAX,my_local_mpi_comm_world,ier)
+  call MPI_ALLREDUCE(sendbuf,recvbuf,1,MPI_DOUBLE_PRECISION,MPI_MAX,my_local_mpi_comm_world,ier)
 
   end subroutine max_all_all_dp
 
@@ -635,14 +614,10 @@ end module my_mpi
 
   implicit none
 
-  include "constants.h"
-  include "precision.h"
-
   integer:: sendbuf, recvbuf
   integer ier
 
-  call MPI_REDUCE(sendbuf,recvbuf,1,MPI_INTEGER, &
-                  MPI_MIN,0,my_local_mpi_comm_world,ier)
+  call MPI_REDUCE(sendbuf,recvbuf,1,MPI_INTEGER,MPI_MIN,0,my_local_mpi_comm_world,ier)
 
   end subroutine min_all_i
 
@@ -659,8 +634,7 @@ end module my_mpi
   double precision, dimension(2) :: sendbuf,recvbuf
   integer ier
 
-  call MPI_ALLREDUCE(sendbuf,recvbuf,1,MPI_2DOUBLE_PRECISION, &
-                  MPI_MAXLOC,my_local_mpi_comm_world,ier)
+  call MPI_ALLREDUCE(sendbuf,recvbuf,1,MPI_2DOUBLE_PRECISION,MPI_MAXLOC,my_local_mpi_comm_world,ier)
 
   end subroutine maxloc_all_dp
 
@@ -679,8 +653,7 @@ end module my_mpi
   double precision sendbuf, recvbuf
   integer ier
 
-  call MPI_REDUCE(sendbuf,recvbuf,1,MPI_DOUBLE_PRECISION, &
-                  MPI_SUM,0,my_local_mpi_comm_world,ier)
+  call MPI_REDUCE(sendbuf,recvbuf,1,MPI_DOUBLE_PRECISION,MPI_SUM,0,my_local_mpi_comm_world,ier)
 
   end subroutine sum_all_dp
 
@@ -691,17 +664,16 @@ end module my_mpi
   subroutine sum_all_cr(sendbuf, recvbuf)
 
   use my_mpi
+  use constants,only: CUSTOM_REAL
 
   implicit none
 
-  include "constants.h"
   include "precision.h"
 
   real(kind=CUSTOM_REAL) sendbuf, recvbuf
   integer ier
 
-  call MPI_REDUCE(sendbuf,recvbuf,1,CUSTOM_MPI_TYPE, &
-                  MPI_SUM,0,my_local_mpi_comm_world,ier)
+  call MPI_REDUCE(sendbuf,recvbuf,1,CUSTOM_MPI_TYPE,MPI_SUM,0,my_local_mpi_comm_world,ier)
 
   end subroutine sum_all_cr
 
@@ -730,17 +702,16 @@ end module my_mpi
   subroutine sum_all_all_cr(sendbuf, recvbuf)
 
   use my_mpi
+  use constants,only: CUSTOM_REAL
 
   implicit none
 
-  include "constants.h"
   include "precision.h"
 
   real(kind=CUSTOM_REAL) sendbuf, recvbuf
   integer ier
 
-  call MPI_ALLREDUCE(sendbuf,recvbuf,1,CUSTOM_MPI_TYPE, &
-                  MPI_SUM,my_local_mpi_comm_world,ier)
+  call MPI_ALLREDUCE(sendbuf,recvbuf,1,CUSTOM_MPI_TYPE,MPI_SUM,my_local_mpi_comm_world,ier)
 
   end subroutine sum_all_all_cr
 
@@ -757,8 +728,7 @@ end module my_mpi
   integer sendbuf, recvbuf
   integer ier
 
-  call MPI_REDUCE(sendbuf,recvbuf,1,MPI_INTEGER, &
-                  MPI_SUM,0,my_local_mpi_comm_world,ier)
+  call MPI_REDUCE(sendbuf,recvbuf,1,MPI_INTEGER,MPI_SUM,0,my_local_mpi_comm_world,ier)
 
   end subroutine sum_all_i
 
@@ -775,8 +745,7 @@ end module my_mpi
   integer sendbuf, recvbuf
   integer ier
 
-  call MPI_ALLREDUCE(sendbuf,recvbuf,1,MPI_INTEGER, &
-                  MPI_SUM,my_local_mpi_comm_world,ier)
+  call MPI_ALLREDUCE(sendbuf,recvbuf,1,MPI_INTEGER,MPI_SUM,my_local_mpi_comm_world,ier)
 
   end subroutine sum_all_all_i
 
@@ -793,8 +762,7 @@ end module my_mpi
   logical sendbuf, recvbuf
   integer ier
 
-  call MPI_ALLREDUCE(sendbuf,recvbuf,1,MPI_LOGICAL, &
-                  MPI_LOR,my_local_mpi_comm_world,ier)
+  call MPI_ALLREDUCE(sendbuf,recvbuf,1,MPI_LOGICAL,MPI_LOR,my_local_mpi_comm_world,ier)
 
   end subroutine any_all_l
 
@@ -806,10 +774,10 @@ end module my_mpi
                              recvbuf, recvcount, source, recvtag)
 
   use my_mpi
+  use constants,only: CUSTOM_REAL
 
   implicit none
 
-  include "constants.h"
   include "precision.h"
 
   integer sendcount, recvcount, dest, sendtag, source, recvtag
@@ -845,10 +813,10 @@ end module my_mpi
   subroutine isend_cr(sendbuf, sendcount, dest, sendtag, req)
 
   use my_mpi
+  use constants,only: CUSTOM_REAL
 
   implicit none
 
-  include "constants.h"
   include "precision.h"
 
   integer sendcount, dest, sendtag, req
@@ -856,8 +824,7 @@ end module my_mpi
 
   integer ier
 
-  call MPI_ISEND(sendbuf,sendcount,CUSTOM_MPI_TYPE,dest,sendtag, &
-                  my_local_mpi_comm_world,req,ier)
+  call MPI_ISEND(sendbuf,sendcount,CUSTOM_MPI_TYPE,dest,sendtag,my_local_mpi_comm_world,req,ier)
 
   end subroutine isend_cr
 
@@ -868,10 +835,10 @@ end module my_mpi
   subroutine irecv_cr(recvbuf, recvcount, dest, recvtag, req)
 
   use my_mpi
+  use constants,only: CUSTOM_REAL
 
   implicit none
 
-  include "constants.h"
   include "precision.h"
 
   integer recvcount, dest, recvtag, req
@@ -879,8 +846,7 @@ end module my_mpi
 
   integer ier
 
-  call MPI_IRECV(recvbuf,recvcount,CUSTOM_MPI_TYPE,dest,recvtag, &
-                  my_local_mpi_comm_world,req,ier)
+  call MPI_IRECV(recvbuf,recvcount,CUSTOM_MPI_TYPE,dest,recvtag,my_local_mpi_comm_world,req,ier)
 
   end subroutine irecv_cr
 
@@ -894,16 +860,12 @@ end module my_mpi
 
   implicit none
 
-  include "constants.h"
-  include "precision.h"
-
   integer sendcount, dest, sendtag, req
   integer, dimension(sendcount) :: sendbuf
 
   integer ier
 
-  call MPI_ISEND(sendbuf,sendcount,MPI_INTEGER,dest,sendtag, &
-                  my_local_mpi_comm_world,req,ier)
+  call MPI_ISEND(sendbuf,sendcount,MPI_INTEGER,dest,sendtag,my_local_mpi_comm_world,req,ier)
 
   end subroutine isend_i
 
@@ -917,15 +879,11 @@ end module my_mpi
 
   implicit none
 
-  include "constants.h"
-  include "precision.h"
-
   integer recvcount, dest, recvtag, req
   integer, dimension(recvcount) :: recvbuf
   integer ier
 
-  call MPI_IRECV(recvbuf,recvcount,MPI_INTEGER,dest,recvtag, &
-                  my_local_mpi_comm_world,req,ier)
+  call MPI_IRECV(recvbuf,recvcount,MPI_INTEGER,dest,recvtag,my_local_mpi_comm_world,req,ier)
 
   end subroutine irecv_i
 
@@ -958,10 +916,10 @@ end module my_mpi
   subroutine recvv_cr(recvbuf, recvcount, dest, recvtag )
 
   use my_mpi
+  use constants,only: CUSTOM_REAL
 
   implicit none
 
-  include "constants.h"
   include "precision.h"
 
   integer recvcount,dest,recvtag
@@ -1009,8 +967,7 @@ end module my_mpi
   integer :: tag = 100
   integer, dimension(sendcount) :: sendbuf
 
-  call MPI_SEND(sendbuf,sendcount,MPI_INTEGER,dest,tag, &
-       my_local_mpi_comm_world,ier)
+  call MPI_SEND(sendbuf,sendcount,MPI_INTEGER,dest,tag,my_local_mpi_comm_world,ier)
 
   end subroutine send_i_t
 
@@ -1120,10 +1077,10 @@ end module my_mpi
   subroutine sendv_cr(sendbuf, sendcount, dest, sendtag)
 
   use my_mpi
+  use constants,only: CUSTOM_REAL
 
   implicit none
 
-  include "constants.h"
   include "precision.h"
 
   integer sendcount,dest,sendtag
@@ -1195,8 +1152,10 @@ end module my_mpi
 !! DK DK if there is a single run to do, then just copy the default communicator to the new one
   subroutine world_split()
 
-  use constants
   use my_mpi
+  use constants,only: MAX_STRING_LEN,NUMBER_OF_SIMULTANEOUS_RUNS,OUTPUT_FILES_PATH, &
+    IMAIN,ISTANDARD_OUTPUT, &
+    mygroup
 
   implicit none
 
@@ -1244,8 +1203,8 @@ end module my_mpi
 ! close sub-communicators if needed, if running more than one earthquake from the same job.
   subroutine world_unsplit()
 
-  use constants
   use my_mpi
+  use constants,only: NUMBER_OF_SIMULTANEOUS_RUNS
 
   implicit none
 

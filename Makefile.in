@@ -253,13 +253,13 @@ backup:
 
 ifdef CLEAN
 clean:
-	@echo "cleaning by CLEAN defined"
+	@echo "cleaning by CLEAN"
 	-rm -f $(foreach dir, $(CLEAN), $($(dir)_OBJECTS) $($(dir)_MODULES) $($(dir)_SHARED_OBJECTS) $($(dir)_TARGETS))
 	-rm -f ${E}/*__genmod.*
 	-rm -f ${O}/*__genmod.*
 else
 clean:
-	@echo "cleaning by CLEAN not defined"
+	@echo "cleaning all"
 	-rm -f $(foreach dir, $(SUBDIRS), $($(dir)_OBJECTS) $($(dir)_MODULES) $($(dir)_TARGETS))
 	-rm -f ${E}/*__genmod.*
 	-rm -f ${O}/*__genmod.*
@@ -270,7 +270,14 @@ ifeq (${SCOTCH_BUNDLED},1)
 	@echo "cleaning bundled Scotch in directory: ${SCOTCH_DIR}/src"
 	$(MAKE) -C ${SCOTCH_DIR}/src realclean
 endif
-	-rm -f $E/* $O/*
+	-rm -rf $E/* $O/*
+
+# unit testing
+tests:
+	@echo "testing in directory: ${S_TOP}/tests/"
+	cd ${S_TOP}/tests; ./run_all_tests.sh
+	@echo ""
+
 
 help:
 	@echo "usage: make [executable]"
@@ -293,6 +300,9 @@ help:
 	@echo "    xconvert_skewness_to_angle"
 	@echo "    xmultiply_CUBIT_Abaqus_mesh_by_1000"
 	@echo ""
+	@echo "for unit testing:"
+	@echo "    tests"
+	@echo ""
 
 .PHONY: clean realclean \
 	help default all \
@@ -307,9 +317,10 @@ help:
 	gen generate_databases xgenerate_databases \
 	dec decompose_mesh xdecompose_mesh \
 	mesh meshfem3D xmeshfem3D \
-	spec specfem3D xspecfem3D
+	spec specfem3D xspecfem3D \
+  tests
 
-.PHONY: all default backup clean realclean help
+.PHONY: all default backup clean realclean help tests
 
 #######################################
 

@@ -4,14 +4,17 @@ include Makefile
 # test target
 default: test_read
 
+## compilation directories
+O := ./obj
+
 OBJECTS = \
-	./obj/decompose_mesh.dec.o \
-	./obj/fault_scotch.dec.o \
-	./obj/part_decompose_mesh.dec.o \
-	./obj/get_value_parameters.shared.o \
-	./obj/param_reader.cc.o \
-	./obj/read_parameter_file.shared.o \
-	./obj/read_value_parameters.shared.o \
+	$O/decompose_mesh.dec.o \
+	$O/fault_scotch.dec.o \
+	$O/part_decompose_mesh.dec.o \
+	$O/param_reader.cc.o \
+	$O/read_parameter_file.shared.o \
+	$O/read_value_parameters.shared.o \
+	$O/sort_array_coordinates.shared.o \
 	$(EMPTY_MACRO)
 
 test_read:
