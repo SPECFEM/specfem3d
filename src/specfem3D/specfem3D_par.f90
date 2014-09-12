@@ -32,7 +32,6 @@ module specfem_par
 ! main parameter module for specfem simulations
 
   use constants
-  use unused_mod
 
   implicit none
 

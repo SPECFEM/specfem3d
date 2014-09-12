@@ -108,7 +108,6 @@ adios_model_upd_auxiliaries_OBJECTS= \
 	$O/read_forward_arrays_adios.spec_adios.o
 
 adios_model_upd_auxiliaries_SHARED_OBJECTS = \
-	$O/constants_mod.shared_module.o \
 	$O/adios_manager.shared_adios.o \
 	$O/adios_helpers_definitions.shared_adios_module.o \
 	$O/adios_helpers_writers.shared_adios_module.o \

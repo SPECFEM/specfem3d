@@ -1466,7 +1466,6 @@
   subroutine compute_Roland_Sylvain_integr()
 
   use constants
-  use unused_mod
 
   use specfem_par
 
