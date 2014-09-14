@@ -68,7 +68,7 @@
   !********************************************************************************
 
   ! empirical choice for distorted elements to estimate time step and period resolved:
-  ! courant number for time step estimate
+  ! Courant number for time step estimate
   real(kind=CUSTOM_REAL),parameter :: COURANT_SUGGESTED = 0.5 !! DK DK now that Stacey has been fixed, 0.3 is too low
   ! number of points per minimum wavelength for minimum period estimate
   real(kind=CUSTOM_REAL),parameter :: NPTS_PER_WAVELENGTH = 5
@@ -172,7 +172,7 @@
     call flush_IMAIN()
   endif
 
-  ! checks courant number & minimum resolved period for each grid cell
+  ! checks Courant number & minimum resolved period for each grid cell
   do ispec=1,NSPEC_AB
 
     ! determines minimum/maximum velocities within this element
@@ -224,7 +224,7 @@
     distance_min_glob = min(distance_min_glob, distance_min)
     distance_max_glob = max(distance_max_glob, distance_max)
 
-    ! courant number
+    ! Courant number
     ! based on minimum GLL point distance and maximum velocity
     ! i.e. on the maximum ratio of ( velocity / gridsize )
     if( DT_PRESENT ) then
@@ -349,7 +349,7 @@
 
   ! determines global min/max values from all cpu partitions
   if( DT_PRESENT ) then
-    ! courant number
+    ! Courant number
     cmax = cmax_glob
     call max_all_cr(cmax,cmax_glob)
   endif
@@ -415,14 +415,14 @@
 
     ! user output
     if ( myrank == 0 ) then
-      write(IMAIN,*) 'saving VTK files for courant number and minimum period'
+      write(IMAIN,*) 'saving VTK files for Courant number and minimum period'
       write(IMAIN,*)
       call flush_IMAIN()
     endif
 
-    ! courant number
+    ! Courant number
     if( DT_PRESENT ) then
-      filename = trim(prname)//'res_courant_number'
+      filename = trim(prname)//'res_Courant_number'
       call write_VTK_data_elem_cr(NSPEC_AB,NGLOB_AB, &
                           xstore,ystore,zstore,ibool, &
                           tmp1,filename)
@@ -486,7 +486,7 @@
   !********************************************************************************
 
   ! empirical choice for distorted elements to estimate time step and period resolved:
-  ! courant number for time step estimate
+  ! Courant number for time step estimate
   real(kind=CUSTOM_REAL),parameter :: COURANT_SUGGESTED = 0.5 !! DK DK now that Stacey has been fixed, 0.3 is too low
   ! number of points per minimum wavelength for minimum period estimate
   real(kind=CUSTOM_REAL),parameter :: NPTS_PER_WAVELENGTH = 5
@@ -548,7 +548,7 @@
     tmp2(:) = 0.0
   endif
 
-  ! checks courant number & minimum resolved period for each grid cell
+  ! checks Courant number & minimum resolved period for each grid cell
   do ispec=1,NSPEC_AB
 
     ! determines minimum/maximum velocities within this element
@@ -608,7 +608,7 @@
     distance_min_glob = min( distance_min_glob, distance_min)
     distance_max_glob = max( distance_max_glob, distance_max)
 
-    ! courant number
+    ! Courant number
     ! based on minimum GLL point distance and maximum velocity
     ! i.e. on the maximum ratio of ( velocity / gridsize )
     if( DT_PRESENT ) then
@@ -631,7 +631,7 @@
 
 ! determines global min/max values from all cpu partitions
   if( DT_PRESENT ) then
-    ! courant number
+    ! Courant number
     cmax = cmax_glob
     call max_all_cr(cmax,cmax_glob)
   endif
@@ -798,9 +798,9 @@
   ! debug: for vtk output
   if( SAVE_MESH_FILES ) then
     call create_name_database(prname,myrank,LOCAL_PATH)
-    ! courant number
+    ! Courant number
     if( DT_PRESENT ) then
-      filename = trim(prname)//'res_courant_number'
+      filename = trim(prname)//'res_Courant_number'
       call write_VTK_data_elem_cr(NSPEC_AB,NGLOB_AB, &
                           xstore,ystore,zstore,ibool, &
                           tmp1,filename)
