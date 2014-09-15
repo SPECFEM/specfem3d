@@ -85,31 +85,31 @@ contains
   call open_parameter_file_mesh()
 
   call read_value_dble_precision_mesh(IIN,IGNORE_JUNK,LATITUDE_MIN, 'LATITUDE_MIN', ierr)
-  if (ierr /= 0) stop 'Error reading Mesh parameter 1'
+  if (ierr /= 0) stop 'Error reading Mesh parameter LATITUDE_MIN'
   call read_value_dble_precision_mesh(IIN,IGNORE_JUNK,LATITUDE_MAX, 'LATITUDE_MAX', ierr)
-  if (ierr /= 0) stop 'Error reading Mesh parameter 2'
+  if (ierr /= 0) stop 'Error reading Mesh parameter LATITUDE_MAX'
   call read_value_dble_precision_mesh(IIN,IGNORE_JUNK,LONGITUDE_MIN, 'LONGITUDE_MIN', ierr)
-  if (ierr /= 0) stop 'Error reading Mesh parameter 3'
+  if (ierr /= 0) stop 'Error reading Mesh parameter LONGITUDE_MIN'
   call read_value_dble_precision_mesh(IIN,IGNORE_JUNK,LONGITUDE_MAX, 'LONGITUDE_MAX', ierr)
-  if (ierr /= 0) stop 'Error reading Mesh parameter 4'
+  if (ierr /= 0) stop 'Error reading Mesh parameter LONGITUDE_MAX'
   call read_value_dble_precision_mesh(IIN,IGNORE_JUNK,DEPTH_BLOCK_KM, 'DEPTH_BLOCK_KM', ierr)
-  if (ierr /= 0) stop 'Error reading Mesh parameter 5'
+  if (ierr /= 0) stop 'Error reading Mesh parameter DEPTH_BLOCK_KM'
   call read_value_integer_mesh(IIN,IGNORE_JUNK,UTM_PROJECTION_ZONE, 'UTM_PROJECTION_ZONE', ierr)
-  if (ierr /= 0) stop 'Error reading Mesh parameter 6'
+  if (ierr /= 0) stop 'Error reading Mesh parameter UTM_PROJECTION_ZONE'
   call read_value_logical_mesh(IIN,IGNORE_JUNK,SUPPRESS_UTM_PROJECTION, 'SUPPRESS_UTM_PROJECTION', ierr)
-  if (ierr /= 0) stop 'Error reading Mesh parameter 7'
+  if (ierr /= 0) stop 'Error reading Mesh parameter SUPPRESS_UTM_PROJECTION'
 
   call read_value_string_mesh(IIN,IGNORE_JUNK,INTERFACES_FILE, 'INTERFACES_FILE', ierr)
-  if (ierr /= 0) stop 'Error reading Mesh parameter 8'
+  if (ierr /= 0) stop 'Error reading Mesh parameter INTERFACES_FILE'
 
   call read_value_integer_mesh(IIN,IGNORE_JUNK,NEX_XI, 'NEX_XI', ierr)
-  if (ierr /= 0) stop 'Error reading Mesh parameter 9'
+  if (ierr /= 0) stop 'Error reading Mesh parameter NEX_XI'
   call read_value_integer_mesh(IIN,IGNORE_JUNK,NEX_ETA, 'NEX_ETA', ierr)
-  if (ierr /= 0) stop 'Error reading Mesh parameter 10'
+  if (ierr /= 0) stop 'Error reading Mesh parameter NEX_ETA'
   call read_value_integer_mesh(IIN,IGNORE_JUNK,NPROC_XI, 'NPROC_XI', ierr)
-  if (ierr /= 0) stop 'Error reading Mesh parameter 11'
+  if (ierr /= 0) stop 'Error reading Mesh parameter NPROC_XI'
   call read_value_integer_mesh(IIN,IGNORE_JUNK,NPROC_ETA, 'NPROC_ETA', ierr)
-  if (ierr /= 0) stop 'Error reading Mesh parameter 12'
+  if (ierr /= 0) stop 'Error reading Mesh parameter NPROC_ETA'
 
 ! convert model size to UTM coordinates and depth of mesh to meters
   call utm_geo(LONGITUDE_MIN,LATITUDE_MIN,UTM_X_MIN,UTM_Y_MIN,UTM_PROJECTION_ZONE,ILONGLAT2UTM,SUPPRESS_UTM_PROJECTION)
@@ -127,13 +127,13 @@ contains
   UTM_MAX = max(UTM_Y_MAX-UTM_Y_MIN, UTM_X_MAX-UTM_X_MIN)/1000.0 ! in KM
 
   call read_value_logical_mesh(IIN,IGNORE_JUNK,USE_REGULAR_MESH, 'USE_REGULAR_MESH', ierr)
-  if (ierr /= 0) stop 'Error reading Mesh parameter 13'
+  if (ierr /= 0) stop 'Error reading Mesh parameter USE_REGULAR_MESH'
   call read_value_integer_mesh(IIN,IGNORE_JUNK,NDOUBLINGS, 'NDOUBLINGS', ierr)
-  if (ierr /= 0) stop 'Error reading Mesh parameter 14'
+  if (ierr /= 0) stop 'Error reading Mesh parameter NDOUBLINGS'
   call read_value_integer_mesh(IIN,IGNORE_JUNK,ner_doublings(1), 'NZ_DOUGLING_1', ierr)
-  if (ierr /= 0) stop 'Error reading Mesh parameter 15'
+  if (ierr /= 0) stop 'Error reading Mesh parameter NZ_DOUGLING_1'
   call read_value_integer_mesh(IIN,IGNORE_JUNK,ner_doublings(2), 'NZ_DOUGLING_2', ierr)
-  if (ierr /= 0) stop 'Error reading Mesh parameter 16'
+  if (ierr /= 0) stop 'Error reading Mesh parameter NZ_DOUGLING_2'
 
   if(ner_doublings(1) < ner_doublings(2) .and. NDOUBLINGS == 2) then
     idoubl = ner_doublings(1)
@@ -142,19 +142,19 @@ contains
   endif
 
   call read_value_logical_mesh(IIN,IGNORE_JUNK,CREATE_ABAQUS_FILES, 'CREATE_ABAQUS_FILES', ierr)
-  if (ierr /= 0) stop 'Error reading Mesh parameter 17'
+  if (ierr /= 0) stop 'Error reading Mesh parameter CREATE_ABAQUS_FILES'
   call read_value_logical_mesh(IIN,IGNORE_JUNK,CREATE_DX_FILES, 'CREATE_DX_FILES', ierr)
-  if (ierr /= 0) stop 'Error reading Mesh parameter 18'
+  if (ierr /= 0) stop 'Error reading Mesh parameter CREATE_DX_FILES'
   call read_value_logical_mesh(IIN,IGNORE_JUNK,CREATE_VTK_FILES, 'CREATE_VTK_FILES', ierr)
-  if (ierr /= 0) stop 'Error reading Mesh parameter 19'
+  if (ierr /= 0) stop 'Error reading Mesh parameter CREATE_VTK_FILES'
 
 ! file in which we store the databases
   call read_value_string_mesh(IIN,IGNORE_JUNK,LOCAL_PATH, 'LOCAL_PATH', ierr)
-  if (ierr /= 0) stop 'Error reading Mesh parameter 20'
+  if (ierr /= 0) stop 'Error reading Mesh parameter LOCAL_PATH'
 
 ! read number of materials
   call read_value_integer_mesh(IIN,IGNORE_JUNK,NMATERIALS, 'NMATERIALS', ierr)
-  if (ierr /= 0) stop 'Error reading Mesh parameter 21'
+  if (ierr /= 0) stop 'Error reading Mesh parameter NMATERIALS'
 
 ! read materials properties
   allocate(material_properties(NMATERIALS,6),stat=ierr)
@@ -174,7 +174,7 @@ contains
 
 ! read number of subregions
   call read_value_integer_mesh(IIN,IGNORE_JUNK,NSUBREGIONS, 'NSUBREGIONS', ierr)
-  if (ierr /= 0) stop 'Error reading Mesh parameter 22'
+  if (ierr /= 0) stop 'Error reading Mesh parameter NSUBREGIONS'
 
 ! read subregions properties
   allocate(subregions(NSUBREGIONS,7),stat=ierr)

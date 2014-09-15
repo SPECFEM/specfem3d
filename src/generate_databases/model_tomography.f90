@@ -216,10 +216,10 @@
     enddo
 
     if( nlines /= nrec .and. myrank_tomo == 0 ) then
-       write(6,*) '',trim(tomo_filename)
-       write(6,*) '     number of grid points = NX*NY*NZ:',nrec
-       write(6,*) '     number of lines for grid points:',nlines
-       stop 'Error in the grid points definition'
+       print*, 'Error: ',trim(tomo_filename),' has invalid number of records'
+       print*, '     number of grid points specified (= NX*NY*NZ):',nrec
+       print*, '     number of file lines for grid points        :',nlines
+       stop 'Error in tomography data file for the grid points definition'
     endif
 
     ! closes file
@@ -233,8 +233,12 @@
   ! user output
   if( myrank_tomo == 0 ) then
     write(IMAIN,*)
-    write(IMAIN,*) '     number of tomographic models = ',NFILES_TOMO
+    write(IMAIN,*) '     number of tomographic models       = ',NFILES_TOMO
+    write(IMAIN,*) '     maximum number of data records     = ',nrecord_max
+    write(IMAIN,*) '     size of required tomography arrays = ', &
+      sngl( 4.d0 * NFILES_TOMO * nrecord_max * CUSTOM_REAL / 1024.d0 /1024.d0),'MB per process'
     write(IMAIN,*)
+    call flush_IMAIN()
   endif
 
   ! checks if we found a tomography model
@@ -327,7 +331,8 @@ end subroutine init_tomography_files
 
     ! user output
     if( myrank_tomo == 0 ) then
-       write(IMAIN,*) '     ',trim(tomo_filename)
+       write(IMAIN,*) '     reading: ',trim(tomo_filename)
+       call flush_IMAIN()
     endif
 
     ! opens file for reading
