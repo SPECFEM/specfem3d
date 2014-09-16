@@ -513,7 +513,7 @@ program mesh_chunk
   ! -------------------------------- SAUVEGARDE DES MESH FILES --------------------------------------------------------------------------------
  
   open(27,file='nodes_coords_file')
-  write(27,*) nglob
+  write(27,*) nglob ! nb de sommets
   do kglob=1,nglob
      write(27,'(i14,3x,3(f20.5,1x))') kglob,xp(kglob),yp(kglob),zp(kglob) 
   end do

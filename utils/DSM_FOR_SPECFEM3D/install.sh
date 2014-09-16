@@ -1,5 +1,7 @@
 #!/bin/bash
 
+mkdir -p bin
+
 cd Part1_create_SPECFEM3D_Cartesian_mesh_for_DSM;make;cd ..
 cd Part2_compute_DSM_coefficients_with_FEMs_SH; make;cd ../
 cd Part2_compute_DSM_coefficients_with_FEMs_PSV; make;cd ../

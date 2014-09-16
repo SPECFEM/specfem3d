@@ -3365,28 +3365,55 @@ it in the root directory, type:
 \end{lyxcode}
 which will create the executable \texttt{xcombine\_vol\_data} in the
 directory \texttt{bin/}. To output the usage of this executable, type
-`./bin/xcombine\_vol\_data` without arguments. As an example, to run
-the executable you would use
 \begin{lyxcode}
-{\footnotesize cd~bin/~}{\footnotesize \par}
-
-~{\footnotesize ./xcombine\_vol\_data~0~3~velocity\_Z\_it000400~../OUTPUT\_FILES/DATABASES\_MPI~../OUTPUT\_FILES~0~}{\footnotesize \par}
+{\footnotesize ./bin/xcombine\_vol\_data~}{\footnotesize \par}
 \end{lyxcode}
-to create a low-resolution mesh file. The output mesh file will have
-the name \texttt{velocity\_Z\_it000400.mesh}. We next convert the
-\texttt{.mesh} file into the VTU (Unstructured grid file) format which
-can be viewed in ParaView. For this task, you can use and modify the
-script \texttt{mesh2vtu.pl} located in directory \texttt{utils/Visualization/Paraview/},
-for example:
+without arguments. 
+
+\medskip
+
+\texttt{xcombine\_vol\_data} will combine the data on the different processors (located in \texttt{OUTPUT\_FILES/DATABASES\_MPI}), for a given quantity and a given iteration, to one file. For example, if you want to combine \texttt{velocity\_Z}, for the iteration 400 on 4 processors, i.e. if you want to combine these files : 
+
+\medskip
+
+\texttt{proc000000\_velocity\_Z\_it000400.bin }
+
+\texttt{proc000001\_velocity\_Z\_it000400.bin }
+
+\texttt{proc000002\_velocity\_Z\_it000400.bin }
+
+\texttt{proc000003\_velocity\_Z\_it000400.bin}
+
+\medskip
+
+You have to go in the directory of the concerned example (where are the directories \texttt{DATA}, \texttt{OUTPUT\_FILES}, etc.).
+Then, you can launch \texttt{xcombine\_vol\_data}, specifying the path where it is located. As an example, if the \texttt{DATA} and \texttt{OUTPUT\_FILES} directories of the concerned example are in the root specfem3d directory, \texttt{xcombine\_vol\_data} is in \texttt{./bin}, and you have to type:
+
+\begin{lyxcode}
+~{\footnotesize ./bin/xcombine\_vol\_data~0~3~velocity\_Z\_it000400~./OUTPUT\_FILES/DATABASES\_MPI~./OUTPUT\_FILES~0~}{\footnotesize \par}
+\end{lyxcode}
+
+Here, $0$ is the number of the first processor, $3$ the number of the last one, \texttt{velocity\_Z\_it000400} the name of the files we want to combine without the prefix \texttt{proc000000*\_}, \texttt{./OUTPUT\_FILES/DATABASES\_MPI} the directory where the files are located, \texttt{./OUTPUT\_FILES} the directory where the combined file will be stored, and $0$ is the parameter to create a low-resolution mesh file ($1$ for a high-resolution). 
+
+\medskip
+
+At the beginning of the source file \texttt{combine\_vol\_data.f90} (located in \texttt{src/auxiliaries/}), there is a logical constant parameter \texttt{USE\_VTK\_OUTPUT} whose default value is \texttt{.true.}, that which will provide the output combined file directly in the VTK format and you can use Paraview to visualize it. 
+
+\medskip
+
+If the value of this parameter is \texttt{.false.}, the output mesh file will have the name \texttt{velocity\_Z\_it000400.mesh}. Then we next have to convert the
+\texttt{.mesh} file into the VTU (Unstructured grid file) format which can be viewed in ParaView. For this task, you can use and modify the
+script \texttt{mesh2vtu.pl} located in directory \texttt{utils/Visualization/Paraview/}, for example:
 \begin{lyxcode}
 {\footnotesize mesh2vtu.pl~-i~velocity\_Z\_it000400.mesh~-o~velocity\_Z\_it000400.vtu}{\footnotesize \par}
 \end{lyxcode}
-Notice that this Perl script uses a program \texttt{mesh2vtu} in the
-\texttt{utils/Visualization/Paraview/mesh2vtu} directory, which further
-uses the VTK \urlwithparentheses{http://www.vtk.org/} run-time library
-for its execution. Therefore, make sure you have them properly set
+Notice that this Perl script uses a program \texttt{mesh2vtu} in the \texttt{utils/Visualization/Paraview/mesh2vtu} directory, which further
+uses the VTK \urlwithparentheses{http://www.vtk.org/} run-time library for its execution. Therefore, make sure you have them properly set
 in the script according to your system.
 
+\bigskip
+
+Then, to do a movie with several iterations, you have to repeat this process for each iteration you want to put in your movie.
 
 \section{\label{sec:Finite-Frequency-Kernels}Finite-Frequency Kernels}
 

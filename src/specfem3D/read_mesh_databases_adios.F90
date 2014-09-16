@@ -1689,7 +1689,7 @@ subroutine read_mesh_databases_adios()
   LATITUDE_MIN = min_all
   LATITUDE_MAX = max_all
 
-  ! checks courant criteria on mesh
+  ! checks Courant criteria on mesh
   if( ELASTIC_SIMULATION ) then
     call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB, &
                               ibool,xstore,ystore,zstore, &
