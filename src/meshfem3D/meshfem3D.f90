@@ -857,17 +857,18 @@
     write(IMAIN,*) 'Repartition of elements:'
     write(IMAIN,*) '-----------------------'
     write(IMAIN,*)
-    write(IMAIN,*) 'total number of elements in each slice: ',NSPEC_AB
-    write(IMAIN,*)
-    write(IMAIN,*) 'total number of points in each slice: ',NGLOB_AB
+    write(IMAIN,*) 'total number of elements in mesh slice 0: ',NSPEC_AB
+    write(IMAIN,*) 'total number of points in mesh slice 0: ',NGLOB_AB
     write(IMAIN,*)
     write(IMAIN,*) 'total number of elements in entire mesh: ',NSPEC_AB*NPROC
 ! the float() statements here are for the case of more than 2 Gigapoints per mesh, in which
 ! case and integer(kind=4) counter would overflow and display an incorrect negative value;
 ! converting it to float fixes the problem (but then prints some extra decimals equal to zero).
 ! Another option would be to declare the sum as integer(kind=8) and then print it.
-    write(IMAIN,*) 'total number of points in entire mesh: ',dble(NGLOB_AB)*dble(NPROC)
-    write(IMAIN,*) 'total number of DOFs in entire mesh: ',dble(NGLOB_AB)*dble(NPROC*NDIM)
+    write(IMAIN,*) 'approximate total number of points in entire mesh (with duplicates on MPI edges): ', &
+                                             dble(NGLOB_AB)*dble(NPROC)
+    write(IMAIN,*) 'approximate total number of DOFs in entire mesh (with duplicates on MPI edges): ', &
+                                             dble(NGLOB_AB)*dble(NPROC*NDIM)
     write(IMAIN,*)
     ! write information about precision used for floating-point operations
     if(CUSTOM_REAL == SIZE_REAL) then
