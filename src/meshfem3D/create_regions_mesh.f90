@@ -34,9 +34,9 @@ contains
                                NEX_PER_PROC_XI,NEX_PER_PROC_ETA,NER, &
                                NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
                                NPROC_XI,NPROC_ETA, &
-                               nsubregions,subregions,nblayers,ner_layer,NMATERIALS,material_properties, &
+                               nsubregions,subregions,NMATERIALS,material_properties, &
                                myrank, sizeprocs, &
-                 LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
+                               LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
                                CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
                                USE_REGULAR_MESH,NDOUBLINGS,ner_doublings, &
                                ADIOS_ENABLED, ADIOS_FOR_DATABASES)
@@ -98,10 +98,6 @@ contains
     !  #5 #6 : nz_begining,nz_end
     !     #7 : material number
     integer subregions(nsubregions,7)
-
-    ! layers of the model
-    integer nblayers
-    integer ner_layer(nblayers)
 
     ! topology of the elements
     integer iaddx(NGNOD_EIGHT_CORNERS)
@@ -221,9 +217,9 @@ contains
 
     do isubregion = 1,nsubregions
        call define_model_regions(NEX_PER_PROC_XI,NEX_PER_PROC_ETA,iproc_xi,iproc_eta,&
-            isubregion,nsubregions,subregions,nblayers,ner_layer, &
-            iaddx,iaddy,iaddz,ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir,iax,iay,iar, &
-            imaterial_number)
+                                 isubregion,nsubregions,subregions, &
+                                 iaddx,iaddy,iaddz,ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir,iax,iay,iar, &
+                                 imaterial_number)
 
        ! loop on all the mesh points in current subregion
        do ir = ir1,ir2,dir
@@ -257,8 +253,8 @@ contains
     do isubregion = 1,nmeshregions
       ! define shape of elements
       call define_mesh_regions(USE_REGULAR_MESH,isubregion,NER,NEX_PER_PROC_XI,NEX_PER_PROC_ETA,iproc_xi,iproc_eta,&
-            nblayers,ner_layer,NDOUBLINGS,ner_doublings,&
-            iaddx,iaddy,iaddz,ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir,iax,iay,iar)
+                               NDOUBLINGS,ner_doublings,&
+                               iaddx,iaddy,iaddz,ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir,iax,iay,iar)
 
       ! loop on all the mesh points in current subregion
       do ir = ir1,ir2,dir

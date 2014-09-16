@@ -33,9 +33,6 @@ WARNING: We do not recommend running this as a test example, due to its requirem
 
    - this should generate "proc000***_Database" files in OUTPUT_FILES/DATABASES_MPI/.
 
-   - save output file
-   > cp OUTPUT_FILES/output_mesher.txt OUTPUT_FILES/output_meshfem3D.txt
-
 3. generate databases:
 
    - compile and run generate_databases in directory SPECFEM3D/:

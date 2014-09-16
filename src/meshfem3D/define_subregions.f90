@@ -26,73 +26,67 @@
 !=====================================================================
 
   subroutine define_model_regions(NEX_PER_PROC_XI,NEX_PER_PROC_ETA,iproc_xi,iproc_eta,&
-       isubregion,nbsubregions,subregions,nblayers,ner_layer,&
-       iaddx,iaddy,iaddz,ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir,iax,iay,iar, &
-       num_material)
+                                  isubregion,nbsubregions,subregions, &
+                                  iaddx,iaddy,iaddz,ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir,iax,iay,iar, &
+                                  num_material)
 
-    use constants
+  use constants
 
-    implicit none
+  implicit none
 
-    integer NEX_PER_PROC_XI,NEX_PER_PROC_ETA
-    integer iproc_xi,iproc_eta
+  integer NEX_PER_PROC_XI,NEX_PER_PROC_ETA
+  integer iproc_xi,iproc_eta
 
-    integer ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir
-    integer iax,iay,iar
-    integer isubregion,nbsubregions,nblayers
-    integer num_material
+  integer ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir
+  integer iax,iay,iar
+  integer isubregion,nbsubregions
+  integer num_material
 
-! topology of the elements
-    integer iaddx(NGNOD_EIGHT_CORNERS)
-    integer iaddy(NGNOD_EIGHT_CORNERS)
-    integer iaddz(NGNOD_EIGHT_CORNERS)
-    integer ner_layer(nblayers)
+  ! topology of the elements
+  integer iaddx(NGNOD_EIGHT_CORNERS)
+  integer iaddy(NGNOD_EIGHT_CORNERS)
+  integer iaddz(NGNOD_EIGHT_CORNERS)
 
-!  definition of the different regions of the model in the mesh (nx,ny,nz)
-!  #1 #2 : nx_begining,nx_end
-!  #3 #4 : ny_begining,ny_end
-!  #5 #6 : nz_begining,nz_end
-!     #7 : material number
-    integer subregions(nbsubregions,7)
+  !  definition of the different regions of the model in the mesh (nx,ny,nz)
+  !  #1 #2 : nx_begining,nx_end
+  !  #3 #4 : ny_begining,ny_end
+  !  #5 #6 : nz_begining,nz_end
+  !     #7 : material number
+  integer subregions(nbsubregions,7)
 
-    ! to avoid compiler warnings
-    integer idummy
-    idummy = ner_layer(1)
-! **************
+  call usual_hex_nodes(NGNOD_EIGHT_CORNERS,iaddx,iaddy,iaddz)
 
-     call usual_hex_nodes(NGNOD_EIGHT_CORNERS,iaddx,iaddy,iaddz)
+  ix1=2*(subregions(isubregion,1) - iproc_xi*NEX_PER_PROC_XI - 1)
+  if(ix1 < 0) ix1 = 0
+  ix2=2*(subregions(isubregion,2) - iproc_xi*NEX_PER_PROC_XI - 1)
+  if(ix2 > 2*(NEX_PER_PROC_XI - 1)) ix2 = 2*(NEX_PER_PROC_XI - 1)
+  dix=2
 
+  iy1=2*(subregions(isubregion,3) - iproc_eta*NEX_PER_PROC_ETA - 1)
+  if(iy1 < 0) iy1 = 0
+  iy2=2*(subregions(isubregion,4) - iproc_eta*NEX_PER_PROC_ETA - 1)
+  if(iy2 > 2*(NEX_PER_PROC_ETA - 1)) iy2 = 2*(NEX_PER_PROC_ETA - 1)
+  diy=2
 
-     ix1=2*(subregions(isubregion,1) - iproc_xi*NEX_PER_PROC_XI - 1)
-     if(ix1 < 0) ix1 = 0
-     ix2=2*(subregions(isubregion,2) - iproc_xi*NEX_PER_PROC_XI - 1)
-     if(ix2 > 2*(NEX_PER_PROC_XI - 1)) ix2 = 2*(NEX_PER_PROC_XI - 1)
-     dix=2
+  ir1=2*(subregions(isubregion,5) - 1)
+  ir2=2*(subregions(isubregion,6) - 1)
+  dir=2
 
-     iy1=2*(subregions(isubregion,3) - iproc_eta*NEX_PER_PROC_ETA - 1)
-     if(iy1 < 0) iy1 = 0
-     iy2=2*(subregions(isubregion,4) - iproc_eta*NEX_PER_PROC_ETA - 1)
-     if(iy2 > 2*(NEX_PER_PROC_ETA - 1)) iy2 = 2*(NEX_PER_PROC_ETA - 1)
-     diy=2
+  iax=1
+  iay=1
+  iar=1
 
-     ir1=2*(subregions(isubregion,5) - 1)
-     ir2=2*(subregions(isubregion,6) - 1)
-     dir=2
-
-     iax=1
-     iay=1
-     iar=1
-
-     num_material = subregions(isubregion,7)
-
+  num_material = subregions(isubregion,7)
 
   end subroutine define_model_regions
 
-
+!
+!------------------------------------------------------------------------------------
+!
 
   subroutine define_mesh_regions(USE_REGULAR_MESH,isubregion,NER,NEX_PER_PROC_XI,NEX_PER_PROC_ETA,iproc_xi,iproc_eta,&
-       nblayers,ner_layer,ndoublings,ner_doublings,&
-       iaddx,iaddy,iaddz,ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir,iax,iay,iar)
+                                 ndoublings,ner_doublings,&
+                                 iaddx,iaddy,iaddz,ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir,iax,iay,iar)
 
     use constants
 
@@ -106,19 +100,16 @@
 
     integer ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir
     integer iax,iay,iar
-    integer nblayers
     integer ndoublings
 
 ! topology of the elements
     integer iaddx(NGNOD_EIGHT_CORNERS)
     integer iaddy(NGNOD_EIGHT_CORNERS)
     integer iaddz(NGNOD_EIGHT_CORNERS)
-    integer ner_layer(nblayers)
     integer ner_doublings(2)
 
     ! to avoid compiler warnings
     integer idummy
-    idummy = ner_layer(1)
     idummy = iproc_xi
     idummy = iproc_eta
 

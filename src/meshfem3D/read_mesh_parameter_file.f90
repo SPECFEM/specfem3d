@@ -158,12 +158,12 @@ contains
 
 ! read materials properties
   allocate(material_properties(NMATERIALS,6),stat=ierr)
-  if (ierr /= 0) stop 'Allocation error of material_properties'
+  if (ierr /= 0) stop 'Error allocation of material_properties'
 
-  do imat =1,NMATERIALS
+  do imat = 1,NMATERIALS
      call read_material_parameters(IIN,i,rho,vp,vs,Q_flag,anisotropy_flag,domain_id,ierr)
-     if (i /= imat) stop "Incorrect material ID"
-     if(rho <= 0.d0 .or. vp <= 0.d0 .or. vs < 0.d0) stop 'negative value of velocity or density'
+     if (i /= imat) stop 'Error incorrect material ID'
+     if(rho <= 0.d0 .or. vp <= 0.d0 .or. vs < 0.d0) stop 'Error negative value of velocity or density'
      material_properties(imat,1) = rho
      material_properties(imat,2) = vp
      material_properties(imat,3) = vs
@@ -178,10 +178,10 @@ contains
 
 ! read subregions properties
   allocate(subregions(NSUBREGIONS,7),stat=ierr)
-  if (ierr /= 0) stop 'Allocation error of subregions'
+  if (ierr /= 0) stop 'Error allocation of subregions'
   do ireg =1,NSUBREGIONS
     call read_region_parameters(IIN,ix_beg_region,ix_end_region,iy_beg_region,iy_end_region,&
-         iz_beg_region,iz_end_region,imaterial_number,ierr)
+                                iz_beg_region,iz_end_region,imaterial_number,ierr)
     if (ix_beg_region < 1) stop 'XI coordinate of region negative!'
     if (ix_end_region > NEX_XI) stop 'XI coordinate of region too high!'
     if (iy_beg_region < 1) stop 'ETA coordinate of region negative!'

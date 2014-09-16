@@ -61,7 +61,6 @@ echo
 echo "  meshing..."
 echo
 mpiexec -np $numnodes ./bin/xmeshfem3D
-mv OUTPUT_FILES/output_mesher.txt OUTPUT_FILES/output_meshfem3D.txt
 
 # stores setup
 cp DATA/Par_file OUTPUT_FILES/

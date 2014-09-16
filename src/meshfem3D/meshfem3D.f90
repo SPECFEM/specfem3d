@@ -359,8 +359,13 @@
   call world_rank(myrank)
 
 ! open main output file, only written to by process 0
-  if(myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
-    open(unit=IMAIN,file=trim(OUTPUT_FILES_PATH)//'/output_mesher.txt',status='unknown')
+  if(myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) then
+    open(unit=IMAIN,file=trim(OUTPUT_FILES_PATH)//'/output_meshfem3D.txt',status='unknown',iostat=ier)
+    if (ier /= 0) then
+      print*,'Error could not open output file :',trim(OUTPUT_FILES_PATH)//'/output_meshfem3D.txt'
+      stop 'Error opening output file'
+    endif
+  endif
 
 ! get MPI starting time
   time_start = wtime()
@@ -394,57 +399,69 @@
 ! read the mesh parameter file (Data/meshfem3D_files/Mesh_Par_file)
 ! nullify(subregions,material_properties)
   call read_mesh_parameter_file(LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
-                          UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
-                          NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,UTM_PROJECTION_ZONE, &
-                          LOCAL_PATH,SUPPRESS_UTM_PROJECTION,&
-                          INTERFACES_FILE,NSUBREGIONS,subregions,NMATERIALS,material_properties, &
-                          CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
-                          USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
+                                UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
+                                NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,UTM_PROJECTION_ZONE, &
+                                LOCAL_PATH,SUPPRESS_UTM_PROJECTION,&
+                                INTERFACES_FILE,NSUBREGIONS,subregions,NMATERIALS,material_properties, &
+                                CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
+                                USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
 
   if (sizeprocs == 1 .and. (NPROC_XI /= 1 .or. NPROC_ETA /= 1)) &
-    stop 'error: must have NPROC_XI = NPROC_ETA = 1 for a serial run'
+    stop 'Error: must have NPROC_XI = NPROC_ETA = 1 for a serial run'
 
 ! get interface data from external file to count the spectral elements along Z
   if(myrank == 0) then
-     write(IMAIN,*) 'Reading interface data from file ',&
-      MF_IN_DATA_FILES_PATH(1:len_trim(MF_IN_DATA_FILES_PATH))//INTERFACES_FILE(1:len_trim(INTERFACES_FILE)), &
+     write(IMAIN,*) 'Reading interface data from file ',trim(MF_IN_DATA_FILES_PATH)//trim(INTERFACES_FILE), &
       ' to count the spectral elements'
   endif
 
-  open(unit=IIN,file=MF_IN_DATA_FILES_PATH(1:len_trim(MF_IN_DATA_FILES_PATH))//INTERFACES_FILE, &
-      status='old')
+  open(unit=IIN,file=trim(MF_IN_DATA_FILES_PATH)//trim(INTERFACES_FILE),status='old',iostat=ier)
+  if (ier /= 0 ) then
+    print*,'Error opening interface file: ',trim(MF_IN_DATA_FILES_PATH)//trim(INTERFACES_FILE)
+    stop 'Error opening interface file'
+  endif
 
   max_npx_interface  = -1
   max_npy_interface  = -1
 
 ! read number of interfaces
   call read_value_integer_mesh(IIN,DONT_IGNORE_JUNK,number_of_interfaces,'NINTERFACES', ier)
-  if(number_of_interfaces < 1) stop 'error: not enough interfaces (minimum is 1, for topography)'
+  if (ier /= 0) stop 'Error reading interface parameter for NINTERFACES'
+
+  if (number_of_interfaces < 1) stop 'Error not enough interfaces (minimum is 1, for topography)'
 
 ! loop on all the interfaces
   do interface_current = 1,number_of_interfaces
     call read_interface_parameters(IIN,SUPPRESS_UTM_PROJECTION_BOTTOM,interface_top_file, &
-          npx_interface_bottom,npy_interface_bottom,&
-          orig_x_interface_bottom,orig_y_interface_bottom,&
-          spacing_x_interface_bottom,spacing_y_interface_bottom,ier)
+                                   npx_interface_bottom,npy_interface_bottom,&
+                                   orig_x_interface_bottom,orig_y_interface_bottom,&
+                                   spacing_x_interface_bottom,spacing_y_interface_bottom,ier)
+    if (ier /= 0) then
+      print*,'Error reading interface parameters: interface ',interface_current
+      stop 'Error reading interface parameters for interfaces'
+    endif
 
     max_npx_interface = max(npx_interface_bottom,max_npx_interface)
     max_npy_interface = max(npy_interface_bottom,max_npy_interface)
 
-    if((max_npx_interface < 2) .or.(max_npy_interface < 2)) stop 'not enough interface points (minimum is 2x2)'
-
+    if((max_npx_interface < 2) .or.(max_npy_interface < 2)) then
+      print*,'Error interface ',interface_current,': has not enough interface points (minimum is 2x2)'
+      stop 'Error not enough interface points (minimum is 2x2)'
+    endif
   enddo
 
   ! define number of layers
-  number_of_layers = number_of_interfaces! - 1
+  number_of_layers = number_of_interfaces ! - 1
   allocate(ner_layer(number_of_layers),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array ner_layer'
+  if( ier /= 0 ) stop 'Error allocating array ner_layer'
 
 ! loop on all the layers
   do ilayer = 1,number_of_layers
 
 ! read number of spectral elements in vertical direction in this layer
     call read_value_integer_mesh(IIN,DONT_IGNORE_JUNK,ner_layer(ilayer),'NER_LAYER', ier)
+    if (ier /= 0) stop 'Error reading interface parameter for NER_LAYER'
+
     if(ner_layer(ilayer) < 1) stop 'not enough spectral elements along Z in layer (minimum is 1)'
 
   enddo
@@ -456,21 +473,21 @@
 
 ! compute other parameters based upon values read
   call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
-                        NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
-                        NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
-                        NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
-                        NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-                        NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB,&
-                        USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
+                          NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
+                          NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
+                          NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
+                          NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+                          NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB,&
+                          USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
 
 ! check that the code is running with the requested nb of processes
   if(sizeprocs /= NPROC) then
     if( myrank == 0 ) then
-      write(IMAIN,*) 'error: number of processors supposed to run on: ',NPROC
-      write(IMAIN,*) 'error: number of MPI processors actually run on: ',sizeprocs
+      write(IMAIN,*) 'Error: number of processors supposed to run on: ',NPROC
+      write(IMAIN,*) 'Error: number of MPI processors actually run on: ',sizeprocs
       print*
-      print*, 'error meshfem3D: number of processors supposed to run on: ',NPROC
-      print*, 'error meshfem3D: number of MPI processors actually run on: ',sizeprocs
+      print*, 'Error meshfem3D: number of processors supposed to run on: ',NPROC
+      print*, 'Error meshfem3D: number of MPI processors actually run on: ',sizeprocs
       print*
     endif
     call exit_MPI(myrank,'wrong number of MPI processes')
@@ -478,21 +495,21 @@
 
 ! dynamic allocation of mesh arrays
   allocate(rns(0:2*NER),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array rns'
+  if( ier /= 0 ) stop 'Error allocating array rns'
 
   allocate(xgrid(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array xgrid'
+  if( ier /= 0 ) stop 'Error allocating array xgrid'
   allocate(ygrid(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array ygrid'
+  if( ier /= 0 ) stop 'Error allocating array ygrid'
   allocate(zgrid(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA),stat=ier)
   if( ier /= 0 ) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
   allocate(addressing(0:NPROC_XI-1,0:NPROC_ETA-1),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array addressing'
+  if( ier /= 0 ) stop 'Error allocating array addressing'
   allocate(iproc_xi_slice(0:NPROC-1),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array iproc_xi_slice'
+  if( ier /= 0 ) stop 'Error allocating array iproc_xi_slice'
   allocate(iproc_eta_slice(0:NPROC-1),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array iproc_eta_slice'
+  if( ier /= 0 ) stop 'Error allocating array iproc_eta_slice'
 
 ! clear arrays
   xgrid(:,:,:) = 0.d0
@@ -626,19 +643,17 @@
 
   if(myrank == 0) then
     write(IMAIN,*)
-    write(IMAIN,*) 'Reading interface data from file ', &
-          MF_IN_DATA_FILES_PATH(1:len_trim(MF_IN_DATA_FILES_PATH)) &
-          //INTERFACES_FILE(1:len_trim(INTERFACES_FILE))
+    write(IMAIN,*) 'Reading interface data from file ',trim(MF_IN_DATA_FILES_PATH)//trim(INTERFACES_FILE)
     write(IMAIN,*)
   endif
 
-  open(unit=IIN,file=MF_IN_DATA_FILES_PATH(1:len_trim(MF_IN_DATA_FILES_PATH)) &
-          //INTERFACES_FILE,status='old')
+  open(unit=IIN,file=trim(MF_IN_DATA_FILES_PATH)//trim(INTERFACES_FILE),status='old',iostat=ier)
+  if (ier /= 0 ) stop 'Error opening interfaces file'
 
   allocate(interface_bottom(max_npx_interface,max_npy_interface),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array interface_bottom'
+  if( ier /= 0 ) stop 'Error allocating array interface_bottom'
   allocate(interface_top(max_npx_interface,max_npy_interface),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array interface_top'
+  if( ier /= 0 ) stop 'Error allocating array interface_top'
 
   ! read number of interfaces
   call read_value_integer_mesh(IIN,DONT_IGNORE_JUNK,number_of_interfaces,'NINTERFACES', ier)
@@ -653,19 +668,18 @@
   interface_bottom(:,:) = - dabs(Z_DEPTH_BLOCK)
 
   ! loop on all the layers
-
   do ilayer = 1,number_of_layers
 
     ! read top interface
     call read_interface_parameters(IIN,SUPPRESS_UTM_PROJECTION_TOP,interface_top_file,&
-         npx_interface_top,npy_interface_top,&
-         orig_x_interface_top,orig_y_interface_top,&
-         spacing_x_interface_top,spacing_y_interface_top,ier)
+                                   npx_interface_top,npy_interface_top,&
+                                   orig_x_interface_top,orig_y_interface_top,&
+                                   spacing_x_interface_top,spacing_y_interface_top,ier)
 
     !npoints_interface_top = npx_interface_top * npy_interface
     ! loop on all the points describing this interface
-    open(unit=45,file=MF_IN_DATA_FILES_PATH(1:len_trim(MF_IN_DATA_FILES_PATH)) &
-         //interface_top_file,status='old')
+    open(unit=45,file=trim(MF_IN_DATA_FILES_PATH)//trim(interface_top_file),status='old',iostat=ier)
+    if ( ier /= 0 ) stop 'Error opening interface_top file'
     do iy=1,npy_interface_top
       do ix=1,npx_interface_top
         call read_value_dble_precision_mesh(45,DONT_IGNORE_JUNK,interface_top(ix,iy),'Z_INTERFACE_TOP',ier)
@@ -806,27 +820,27 @@
 
 ! use dynamic allocation to allocate memory for arrays
   allocate(ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array ibool'
+  if( ier /= 0 ) stop 'Error allocating array ibool'
   allocate(xstore(NGLLX_M,NGLLY_M,NGLLZ_M,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array xstore'
+  if( ier /= 0 ) stop 'Error allocating array xstore'
   allocate(ystore(NGLLX_M,NGLLY_M,NGLLZ_M,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array ystore'
+  if( ier /= 0 ) stop 'Error allocating array ystore'
   allocate(zstore(NGLLX_M,NGLLY_M,NGLLZ_M,nspec),stat=ier)
   ! exit if there is not enough memory to allocate all the arrays
   if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
   call create_regions_mesh(xgrid,ygrid,zgrid,ibool, &
-                         xstore,ystore,zstore,iproc_xi,iproc_eta,addressing,nspec, &
-                         NGLOB_AB,npointot, &
-                         NEX_PER_PROC_XI,NEX_PER_PROC_ETA,NER, &
-                         NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-                         NPROC_XI,NPROC_ETA, &
-                         NSUBREGIONS,subregions,number_of_layers,ner_layer,NMATERIALS,material_properties, &
-                         myrank, sizeprocs, &
-                         LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK,&
-                         CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
-                        USE_REGULAR_MESH,NDOUBLINGS,ner_doublings, &
-                        ADIOS_ENABLED, ADIOS_FOR_DATABASES)
+                           xstore,ystore,zstore,iproc_xi,iproc_eta,addressing,nspec, &
+                           NGLOB_AB,npointot, &
+                           NEX_PER_PROC_XI,NEX_PER_PROC_ETA,NER, &
+                           NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+                           NPROC_XI,NPROC_ETA, &
+                           NSUBREGIONS,subregions,NMATERIALS,material_properties, &
+                           myrank, sizeprocs, &
+                           LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK,&
+                           CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
+                           USE_REGULAR_MESH,NDOUBLINGS,ner_doublings, &
+                           ADIOS_ENABLED, ADIOS_FOR_DATABASES)
 
   if(myrank == 0) then
 ! compare to exact theoretical value (bottom is always flat)
