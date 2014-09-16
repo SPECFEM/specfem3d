@@ -79,6 +79,8 @@ specfem3D_OBJECTS = \
 	$O/compute_stacey_viscoelastic.spec.o \
 	$O/compute_stacey_poroelastic.spec.o \
 	$O/compute_total_energy.spec.o \
+	$O/convert_time.spec.o \
+	$O/calendar.spec.o \
 	$O/create_color_image.spec.o \
 	$O/detect_mesh_surfaces.spec.o \
 	$O/finalize_simulation.spec.o \
@@ -354,6 +356,8 @@ $O/compute_forces_acoustic_calling_routine.spec.o: $O/specfem3D_par.spec.o $O/pm
 $O/compute_forces_acoustic_Dev.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o
 $O/compute_forces_acoustic_noDev.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o
 $O/compute_total_energy.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o
+$O/convert_time.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o
+$O/calendar.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o
 $O/pml_allocate_arrays.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o
 $O/pml_compute_accel_contribution.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o
 $O/pml_compute_memory_variables.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o

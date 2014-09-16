@@ -640,13 +640,6 @@
     call flush_IMAIN()
   endif
 
-  ! debug
-  !call sum_all_i(num_interfaces_ext_mesh,inum)
-  !if(myrank == 0) then
-  !  write(IMAIN,*) 'number of MPI partition interfaces: ',inum
-  !  write(IMAIN,*)
-  !endif
-
   ! MPI communications
   if( ACOUSTIC_SIMULATION ) then
     allocate(buffer_send_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
@@ -729,7 +722,6 @@
   call read_mesh_databases_adjoint()
 
   end subroutine read_mesh_databases
-
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -1127,3 +1119,4 @@
   endif
 
   end subroutine read_mesh_databases_adjoint
+

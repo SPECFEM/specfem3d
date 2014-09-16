@@ -57,6 +57,20 @@
   real(kind=CUSTOM_REAL) b_Usolidnorms, b_Usolidnorms_all
   real(kind=CUSTOM_REAL) b_Usolidnormw, b_Usolidnormw_all
 
+  ! to determine date and time at which the run will finish
+  character(len=8) datein
+  character(len=10) timein
+  character(len=5)  :: zone
+  integer, dimension(8) :: time_values
+
+  character(len=3), dimension(12) :: month_name
+  character(len=3), dimension(0:6) :: weekday_name
+  data month_name /'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'/
+  data weekday_name /'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'/
+  integer :: year,mon,day,hr,minutes,timestamp,julian_day_number,day_of_week, &
+             timestamp_remote,year_remote,mon_remote,day_remote,hr_remote,minutes_remote,day_of_week_remote
+  integer, external :: idaywk
+
   ! initializes
   Usolidnorm_all = 0.0_CUSTOM_REAL
   Usolidnormp_all = 0.0_CUSTOM_REAL
@@ -212,12 +226,76 @@
              ihours_total,iminutes_total,iseconds_total
     write(IMAIN,*) 'We have done ',sngl(100.d0*dble(it)/dble(NSTEP)),'% of that'
 
-    if(it < 100) then
-      write(IMAIN,*) '************************************************************'
-      write(IMAIN,*) '**** BEWARE: the above time estimates are not reliable'
-      write(IMAIN,*) '**** because fewer than 100 iterations have been performed'
-      write(IMAIN,*) '************************************************************'
+    if (it < NSTEP) then
+
+      ! get current date
+      call date_and_time(datein,timein,zone,time_values)
+      ! time_values(1): year
+      ! time_values(2): month of the year
+      ! time_values(3): day of the month
+      ! time_values(5): hour of the day
+      ! time_values(6): minutes of the hour
+
+      ! compute date at which the run should finish; for simplicity only minutes
+      ! are considered, seconds are ignored; in any case the prediction is not
+      ! accurate down to seconds because of system and network fluctuations
+      year = time_values(1)
+      mon = time_values(2)
+      day = time_values(3)
+      hr = time_values(5)
+      minutes = time_values(6)
+
+      ! get timestamp in minutes of current date and time
+      call convtime(timestamp,year,mon,day,hr,minutes)
+
+      ! add remaining minutes
+      timestamp = timestamp + nint(t_remain / 60.d0)
+
+      ! get date and time of that future timestamp in minutes
+      call invtime(timestamp,year,mon,day,hr,minutes)
+
+      ! convert to Julian day to get day of the week
+      call calndr(day,mon,year,julian_day_number)
+      day_of_week = idaywk(julian_day_number)
+
+      write(IMAIN,"(' The run will finish approximately on (in local time): ',a3,' ',a3,' ',i2.2,', ',i4.4,' ',i2.2,':',i2.2)") &
+          weekday_name(day_of_week),month_name(mon),day,year,hr,minutes
+
+      ! print date and time estimate of end of run in another country.
+      ! For instance: the code runs at Caltech in California but the person
+      ! running the code is connected remotely from France, which has 9 hours more
+      if (ADD_TIME_ESTIMATE_ELSEWHERE .and. HOURS_TIME_DIFFERENCE * 60 + MINUTES_TIME_DIFFERENCE /= 0) then
+
+        ! add time difference with that remote location (can be negative)
+        timestamp_remote = timestamp + HOURS_TIME_DIFFERENCE * 60 + MINUTES_TIME_DIFFERENCE
+
+        ! get date and time of that future timestamp in minutes
+        call invtime(timestamp_remote,year_remote,mon_remote,day_remote,hr_remote,minutes_remote)
+
+        ! convert to Julian day to get day of the week
+        call calndr(day_remote,mon_remote,year_remote,julian_day_number)
+        day_of_week_remote = idaywk(julian_day_number)
+
+        if (HOURS_TIME_DIFFERENCE * 60 + MINUTES_TIME_DIFFERENCE > 0) then
+          write(IMAIN,*) 'Adding positive time difference of ',abs(HOURS_TIME_DIFFERENCE),' hours'
+        else
+          write(IMAIN,*) 'Adding negative time difference of ',abs(HOURS_TIME_DIFFERENCE),' hours'
+        endif
+        write(IMAIN,*) 'and ',abs(MINUTES_TIME_DIFFERENCE),' minutes to get estimate at a remote location'
+        write(IMAIN, &
+            "(' The run will finish approximately on: ',a3,' ',a3,' ',i2.2,', ',i4.4,' ',i2.2,':',i2.2)") &
+            weekday_name(day_of_week_remote),month_name(mon_remote),day_remote,year_remote,hr_remote,minutes_remote
+      endif
+
+      if (it < 100) then
+        write(IMAIN,*) '************************************************************'
+        write(IMAIN,*) '**** BEWARE: the above time estimates are not reliable'
+        write(IMAIN,*) '**** because fewer than 100 iterations have been performed'
+        write(IMAIN,*) '************************************************************'
+      endif
+
     endif
+
     write(IMAIN,*)
 
     ! flushes file buffer for main output file (IMAIN)
@@ -265,6 +343,38 @@
     write(IOUT,"(' Estimated total run time in hh:mm:ss = ',i6,' h ',i2.2,' m ',i2.2,' s')") &
              ihours_total,iminutes_total,iseconds_total
     write(IOUT,*) 'We have done ',sngl(100.d0*dble(it)/dble(NSTEP)),'% of that'
+
+  if (it < NSTEP) then
+
+    write(IOUT,"(' The run will finish approximately on (in local time): ',a3,' ',a3,' ',i2.2,', ',i4.4,' ',i2.2,':',i2.2)") &
+        weekday_name(day_of_week),month_name(mon),day,year,hr,minutes
+
+    ! print date and time estimate of end of run in another country.
+    ! For instance: the code runs at Caltech in California but the person
+    ! running the code is connected remotely from France, which has 9 hours more
+    if (ADD_TIME_ESTIMATE_ELSEWHERE .and. HOURS_TIME_DIFFERENCE * 60 + MINUTES_TIME_DIFFERENCE /= 0) then
+      if (HOURS_TIME_DIFFERENCE * 60 + MINUTES_TIME_DIFFERENCE > 0) then
+        write(IOUT,*) 'Adding positive time difference of ',abs(HOURS_TIME_DIFFERENCE),' hours'
+      else
+        write(IOUT,*) 'Adding negative time difference of ',abs(HOURS_TIME_DIFFERENCE),' hours'
+      endif
+      write(IOUT,*) 'and ',abs(MINUTES_TIME_DIFFERENCE),' minutes to get estimate at a remote location'
+      write(IOUT, &
+          "(' The run will finish approximately on (in remote time): ',a3,' ',a3,' ',i2.2,', ',i4.4,' ',i2.2,':',i2.2)") &
+          weekday_name(day_of_week_remote),month_name(mon_remote), &
+          day_remote,year_remote,hr_remote,minutes_remote
+    endif
+
+    if (it < 100) then
+      write(IOUT,*)
+      write(IOUT,*) '************************************************************'
+      write(IOUT,*) '**** BEWARE: the above time estimates are not reliable'
+      write(IOUT,*) '**** because fewer than 100 iterations have been performed'
+      write(IOUT,*) '************************************************************'
+    endif
+
+  endif
+
     close(IOUT)
 
     ! check stability of the code, exit if unstable

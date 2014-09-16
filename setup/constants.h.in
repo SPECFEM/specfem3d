@@ -537,3 +537,18 @@
   integer, parameter :: IMODEL_IPATI            = 10
   integer, parameter :: IMODEL_IPATI_WATER      = 11
 
+!!-----------------------------------------------------------
+!!
+!! time stamp information
+!!
+!!-----------------------------------------------------------
+
+! print date and time estimate of end of run in another country,
+! in addition to local time.
+! For instance: the code runs at Caltech in California but the person
+! running the code is connected remotely from France, which has 9 hours more.
+! The time difference with that remote location can be positive or negative
+  logical, parameter :: ADD_TIME_ESTIMATE_ELSEWHERE = .false.
+  integer, parameter :: HOURS_TIME_DIFFERENCE = +9
+  integer, parameter :: MINUTES_TIME_DIFFERENCE = +0
+
