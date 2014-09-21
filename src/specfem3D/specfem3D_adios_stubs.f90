@@ -38,7 +38,7 @@
 ! Subroutines from read_mesh_databases_adios.F90 |
 !------------------------------------------------'
 
-subroutine read_mesh_for_init(nspec, nglob)
+subroutine read_mesh_for_init_ADIOS(nspec, nglob)
   use unused_mod
   use adios_manager_mod
 
@@ -49,7 +49,7 @@ subroutine read_mesh_for_init(nspec, nglob)
   unused_i4 = nglob
 
   call no_adios_err()
-end subroutine read_mesh_for_init
+end subroutine read_mesh_for_init_ADIOS
 
 subroutine read_mesh_databases_adios()
   use adios_manager_mod

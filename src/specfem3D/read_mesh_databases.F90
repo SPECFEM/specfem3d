@@ -729,12 +729,13 @@
 
   subroutine read_mesh_databases_adjoint()
 
-! reads in moho meshes
+! reads in Moho meshes
 
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
   use specfem_par_poroelastic
+
   implicit none
 
   integer :: ier
@@ -1119,4 +1120,31 @@
   endif
 
   end subroutine read_mesh_databases_adjoint
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine read_mesh_for_init()
+
+! reads in the value of NSPEC_AB and NGLOB_AB
+
+  use specfem_par
+
+  implicit none
+
+  integer :: ier
+
+  open(unit=IIN,file=prname(1:len_trim(prname))//'external_mesh.bin',status='old',&
+       action='read',form='unformatted',iostat=ier)
+  if( ier /= 0 ) then
+    print*,'error: could not open database '
+    print*,'path: ',prname(1:len_trim(prname))//'external_mesh.bin'
+    call exit_mpi(myrank,'error opening database')
+  endif
+  read(IIN) NSPEC_AB
+  read(IIN) NGLOB_AB
+  close(IIN)
+
+  end subroutine read_mesh_for_init
 

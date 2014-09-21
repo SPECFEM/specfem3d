@@ -28,7 +28,7 @@
 ! United States and French Government Sponsorship Acknowledged.
 
 !==============================================================================
-subroutine read_mesh_for_init(nspec, nglob)
+subroutine read_mesh_for_init_ADIOS(nspec, nglob)
 
   use adios_read_mod
   use specfem_par, only : myrank, LOCAL_PATH, MAX_STRING_LEN
@@ -69,7 +69,7 @@ subroutine read_mesh_for_init(nspec, nglob)
   call adios_read_close(handle,ier)
   call adios_read_finalize_method(ADIOS_READ_METHOD_BP, ier)
 
-end subroutine read_mesh_for_init
+end subroutine read_mesh_for_init_ADIOS
 
 !==============================================================================
 subroutine read_mesh_databases_adios()

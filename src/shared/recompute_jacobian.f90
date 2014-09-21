@@ -59,8 +59,8 @@
 ! recompute jacobian for any (xi,eta,gamma) point, not necessarily a GLL point
 
 ! check that the parameter file is correct
-  if(NGNOD /= 8 .and. NGNOD /= 27) &
-       stop 'elements should have 8 or 27 control nodes'
+  if(NGNOD /= 8 .and. NGNOD /= 27) stop 'elements should have 8 or 27 control nodes'
+
   if(NGNOD == 8) then
 
 ! ***
@@ -119,6 +119,7 @@
     ! note: put further setup for ngnod == 27 into subroutine
     !       to avoid compilation errors in case ngnod == 8
     call recompute_jacobian_27(NGNOD,NDIM,xi,eta,gamma,shape3D,dershape3D)
+
   endif
 
 ! compute coordinates and jacobian matrix

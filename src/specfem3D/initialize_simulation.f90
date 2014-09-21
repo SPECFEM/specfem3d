@@ -78,6 +78,7 @@
   ! open main output file, only written to by process 0
   if(myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
     open(unit=IMAIN,file=trim(OUTPUT_FILES_PATH)//'/output_solver.txt',status='unknown')
+
   ! user output
   if(myrank == 0) then
     write(IMAIN,*)
@@ -147,19 +148,11 @@
 ! for coupling with DSM
   if (COUPLE_WITH_DSM) call create_name_database(dsmname,myrank,TRACTION_PATH)
 
+! read the value of NSPEC_AB and NGLOB_AB because we need it to define some array sizes below
   if (ADIOS_FOR_MESH) then
-    call read_mesh_for_init(NSPEC_AB, NGLOB_AB)
+    call read_mesh_for_init_ADIOS(NSPEC_AB, NGLOB_AB)
   else
-    open(unit=IIN,file=prname(1:len_trim(prname))//'external_mesh.bin',status='old',&
-         action='read',form='unformatted',iostat=ier)
-    if( ier /= 0 ) then
-      print*,'error: could not open database '
-      print*,'path: ',prname(1:len_trim(prname))//'external_mesh.bin'
-      call exit_mpi(myrank,'error opening database')
-    endif
-    read(IIN) NSPEC_AB
-    read(IIN) NGLOB_AB
-    close(IIN)
+    call read_mesh_for_init()
   endif
 
   ! attenuation arrays size
