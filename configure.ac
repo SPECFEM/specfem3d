@@ -100,12 +100,17 @@ fi
 if test x"$MPIFC" = x && test x"$MPIF90" != x; then
     MPIFC="$MPIF90"
 fi
+# note: if not set, default FCFLAGS (and CFLAGS) will be set by autoconf/configure script (mostly -g -O2)
+if test x"$FCFLAGS" = x && test x"$FLAGS_CHECK" != x ; then
+    FCFLAGS=""
+fi
 
 AC_PROG_FC
 export FC
 export MPIFC
 F77="$FC"
 FFLAGS="$FCFLAGS"
+
 AC_PROVIDE([AC_PROG_F77])
 AC_SUBST([FCENV])
 AC_SUBST(srcdir)
@@ -310,7 +315,6 @@ fi
 
 if test "$want_cuda" != no; then
     AS_BOX([CUDA])
-    AC_ARG_VAR(CUDA_FLAGS, [Cuda compiler flags])
     CIT_CUDA_CONFIG
 fi
 
