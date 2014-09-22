@@ -187,6 +187,25 @@ end module my_mpi
 
   end subroutine bcast_all_dp
 
+
+!
+!----
+!
+
+  subroutine bcast_all_singledp(buffer)
+
+  use my_mpi
+
+  implicit none
+
+  double precision :: buffer
+
+  integer :: ier
+
+  call MPI_BCAST(buffer,1,MPI_DOUBLE_PRECISION,0,my_local_mpi_comm_world,ier)
+
+  end subroutine bcast_all_singledp
+
 !
 !----
 !

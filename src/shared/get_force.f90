@@ -28,7 +28,7 @@
   subroutine get_force(tshift_force,hdur,lat,long,depth,NSOURCES,min_tshift_force_original,factor_force_source, &
                       comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP)
 
-  use constants
+  use constants,only: IIN,IN_DATA_FILES_PATH,MAX_STRING_LEN,TINYVAL,NUMBER_OF_SIMULTANEOUS_RUNS,mygroup
 
   implicit none
 
@@ -42,13 +42,14 @@
   double precision, dimension(NSOURCES), intent(out) :: comp_dir_vect_source_N
   double precision, dimension(NSOURCES), intent(out) :: comp_dir_vect_source_Z_UP
 
-!--- local variables below
-
-  integer isource,dummyval
-  double precision t_shift(NSOURCES)
-  double precision length
-  character(len=7) dummy
-  character(len=MAX_STRING_LEN) :: string, FORCESOLUTION,path_to_add
+  ! local variables below
+  integer :: isource,dummyval
+  double precision :: t_shift(NSOURCES)
+  double precision :: length
+  character(len=7) :: dummy
+  character(len=MAX_STRING_LEN) :: string
+  character(len=MAX_STRING_LEN) :: FORCESOLUTION,path_to_add
+  integer :: ier
 
   ! initializes
   lat(:) = 0.d0
@@ -74,59 +75,63 @@
     FORCESOLUTION = path_to_add(1:len_trim(path_to_add))//FORCESOLUTION(1:len_trim(FORCESOLUTION))
   endif
 
-  open(unit=1,file=trim(FORCESOLUTION),status='old',action='read')
+  open(unit=IIN,file=trim(FORCESOLUTION),status='old',action='read',iostat=ier)
+  if (ier /= 0) then
+    print*,'Error opening file: ',trim(FORCESOLUTION)
+    stop 'Error opening FORCESOLUTION file'
+  endif
 
 ! read source number isource
   do isource=1,NSOURCES
 
-    read(1,"(a)") string
+    read(IIN,"(a)") string
     ! skips empty lines
     do while( len_trim(string) == 0 )
-      read(1,"(a)") string
+      read(IIN,"(a)") string
     enddo
 
     ! read header with event information
     read(string,"(a6,i4)") dummy,dummyval
 
     ! read time shift
-    read(1,"(a)") string
+    read(IIN,"(a)") string
     read(string(12:len_trim(string)),*) t_shift(isource)
 
     ! read half duration
-    read(1,"(a)") string
+    read(IIN,"(a)") string
     read(string(6:len_trim(string)),*) hdur(isource)
 
     ! read latitude
-    read(1,"(a)") string
+    read(IIN,"(a)") string
     read(string(10:len_trim(string)),*) lat(isource)
 
     ! read longitude
-    read(1,"(a)") string
+    read(IIN,"(a)") string
     read(string(11:len_trim(string)),*) long(isource)
 
     ! read depth
-    read(1,"(a)") string
+    read(IIN,"(a)") string
     read(string(7:len_trim(string)),*) depth(isource)
 
     ! read magnitude
-    read(1,"(a)") string
+    read(IIN,"(a)") string
     read(string(21:len_trim(string)),*) factor_force_source(isource)
 
     ! read direction vector's East component
-    read(1,"(a)") string
+    read(IIN,"(a)") string
     read(string(29:len_trim(string)),*) comp_dir_vect_source_E(isource)
 
     ! read direction vector's North component
-    read(1,"(a)") string
+    read(IIN,"(a)") string
     read(string(29:len_trim(string)),*) comp_dir_vect_source_N(isource)
 
     ! read direction vector's vertical component
-    read(1,"(a)") string
+    read(IIN,"(a)") string
     read(string(32:len_trim(string)),*) comp_dir_vect_source_Z_UP(isource)
 
   enddo
 
-  close(1)
+  close(IIN)
 
   ! Sets tshift_force to zero to initiate the simulation!
   if(NSOURCES == 1)then

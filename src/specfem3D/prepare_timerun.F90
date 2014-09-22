@@ -1194,6 +1194,9 @@
     call flush_IMAIN()
   endif
 
+  ! evaluates memory required
+  call memory_eval_gpu()
+
   ! prepares general fields on GPU
   !§!§ JC JC here we will need to add GPU support for the new C-PML routines
   call prepare_constants_device(Mesh_pointer, &
@@ -1363,6 +1366,160 @@
     write(IMAIN,*)
     call flush_IMAIN()
   endif
+
+  contains
+
+    subroutine memory_eval_gpu()
+
+    implicit none
+
+    ! local parameters
+    double precision :: memory_size
+    integer,parameter :: NGLL2 = 25
+    integer,parameter :: NGLL3 = 125
+    integer,parameter :: NGLL3_PADDED = 128
+
+    memory_size = 0.d0
+
+    ! add size of each set of arrays multiplied by the number of such arrays
+    ! d_hprime_xx,d_hprimewgll_xx
+    memory_size = memory_size + 2.d0 * NGLL2 * dble(CUSTOM_REAL)
+    ! padded xix,..gammaz
+    memory_size = memory_size + 9.d0 * NGLL3_PADDED * NSPEC_AB * dble(CUSTOM_REAL)
+    ! padded kappav,muv
+    memory_size = memory_size + 2.d0 * NGLL3_PADDED * NSPEC_AB * dble(CUSTOM_REAL)
+    ! ibool
+    memory_size = memory_size + NGLL3 * NSPEC_AB * dble(SIZE_INTEGER)
+    ! d_ibool_interfaces_ext_mesh
+    memory_size = memory_size + num_interfaces_ext_mesh * max_nibool_interfaces_ext_mesh * dble(SIZE_INTEGER)
+    ! ispec_is_inner
+    memory_size = memory_size + NSPEC_AB * dble(SIZE_INTEGER)
+
+    if( STACEY_ABSORBING_CONDITIONS ) then
+      ! d_abs_boundary_ispec
+      memory_size = memory_size + num_abs_boundary_faces * dble(SIZE_INTEGER)
+      ! d_abs_boundary_ijk
+      memory_size = memory_size + num_abs_boundary_faces * 3.d0 * NGLL2 * dble(SIZE_INTEGER)
+      ! d_abs_boundary_normal
+      memory_size = memory_size + num_abs_boundary_faces * NDIM * NGLL2 * dble(CUSTOM_REAL)
+      ! d_abs_boundary_jacobian2Dw
+      memory_size = memory_size + num_abs_boundary_faces * NGLL2 * dble(CUSTOM_REAL)
+    endif
+
+    ! sources
+    ! d_sourcearrays
+    memory_size = memory_size + NGLL3 * NSOURCES * NDIM * dble(CUSTOM_REAL)
+    ! d_islice_selected_source,d_ispec_selected_source
+    memory_size = memory_size + 2.0 * NSOURCES * dble(SIZE_INTEGER)
+
+    ! receivers
+    !d_number_receiver_global
+    memory_size = memory_size + nrec_local * dble(SIZE_INTEGER)
+    ! d_ispec_selected_rec
+    memory_size = memory_size + nrec * dble(SIZE_INTEGER)
+
+    ! acoustic simulations
+    if( ACOUSTIC_SIMULATION ) then
+      ! d_potential_acoustic,d_potential_dot_acoustic,d_potential_dot_dot_acoustic
+      memory_size = memory_size + 3.d0 * NGLOB_AB * dble(CUSTOM_REAL)
+      ! d_rmass_acoustic
+      memory_size = memory_size + NGLOB_AB * dble(CUSTOM_REAL)
+      ! padded d_rhostore
+      memory_size = memory_size + NGLL3_PADDED * NSPEC_AB * dble(CUSTOM_REAL)
+      ! d_kappastore
+      memory_size = memory_size + NGLL3 * NSPEC_AB * dble(CUSTOM_REAL)
+      ! d_phase_ispec_inner_acoustic
+      memory_size = memory_size + 2.d0 * num_phase_ispec_acoustic * dble(SIZE_INTEGER)
+      ! d_ispec_is_acoustic
+      memory_size = memory_size + NSPEC_AB * dble(SIZE_INTEGER)
+    endif
+
+    ! elastic simulations
+    if( ELASTIC_SIMULATION ) then
+      ! d_displ,..
+      memory_size = memory_size + 3.d0 * NDIM * NGLOB_AB * dble(CUSTOM_REAL)
+      ! d_send_accel_buffer
+      memory_size = memory_size + 3.d0 * num_interfaces_ext_mesh * max_nibool_interfaces_ext_mesh * dble(CUSTOM_REAL)
+      ! d_rmassx,..
+      memory_size = memory_size + 3.d0 * NGLOB_AB * dble(CUSTOM_REAL)
+      ! d_ispec_is_elastic
+      memory_size = memory_size + NSPEC_AB * dble(SIZE_INTEGER)
+      ! d_phase_ispec_inner_elastic
+      memory_size = memory_size + 2.d0 * num_phase_ispec_elastic * dble(SIZE_INTEGER)
+      ! d_station_seismo_field
+      memory_size = memory_size + 3.d0 * NGLL3 * nrec_local * dble(CUSTOM_REAL)
+
+      if( STACEY_ABSORBING_CONDITIONS ) then
+        ! d_rho_vp,..
+        memory_size = memory_size + 2.d0 * NGLL3 * NSPEC_AB * dble(CUSTOM_REAL)
+      endif
+      if( COMPUTE_AND_STORE_STRAIN ) then
+        ! d_epsilondev_xx,..
+        memory_size = memory_size + 5.d0 * NGLL3 * NSPEC_AB * dble(CUSTOM_REAL)
+      endif
+      if( ATTENUATION ) then
+        ! d_R_xx,..
+        memory_size = memory_size + 5.d0 * size(R_xx) * dble(CUSTOM_REAL)
+        ! d_one_minus_sum_beta
+        memory_size = memory_size + NGLL3 * NSPEC_AB * dble(CUSTOM_REAL)
+        ! d_factor_common
+        memory_size = memory_size + N_SLS * NGLL3 * NSPEC_AB * dble(CUSTOM_REAL)
+        ! alphaval,..
+        memory_size = memory_size + 3.d0 * N_SLS * dble(CUSTOM_REAL)
+      endif
+      if( ANISOTROPY ) then
+        ! padded d_c11store,..
+        memory_size = memory_size + 21.d0 * NGLL3_PADDED * NSPEC_AB * dble(CUSTOM_REAL)
+      endif
+      if( APPROXIMATE_OCEAN_LOAD ) then
+        ! d_rmass_ocean_load
+        memory_size = memory_size + NGLOB_AB * dble(CUSTOM_REAL)
+        ! d_free_surface_normal
+        memory_size = memory_size + 3.d0 * NGLL2 * num_free_surface_faces * dble(CUSTOM_REAL)
+      endif
+    endif
+
+    ! noise simulations
+    if( NOISE_TOMOGRAPHY > 0 ) then
+      ! d_free_surface_ispec
+      memory_size = memory_size + num_free_surface_faces * dble(SIZE_INTEGER)
+      ! d_free_surface_ijk
+      memory_size = memory_size + 3.d0 * NGLL2 * num_free_surface_faces * dble(SIZE_INTEGER)
+      ! d_noise_surface_movie
+      memory_size = memory_size + 3.d0 * NGLL2 * num_free_surface_faces * dble(CUSTOM_REAL)
+      if( NOISE_TOMOGRAPHY == 1 ) then
+        ! d_noise_sourcearray
+        memory_size = memory_size + 3.d0 * NGLL3 * NSTEP * dble(CUSTOM_REAL)
+      endif
+      if( NOISE_TOMOGRAPHY > 1 ) then
+        ! d_normal_x_noise,..
+        memory_size = memory_size + 5.d0 * NGLL2 * num_free_surface_faces * dble(CUSTOM_REAL)
+      endif
+      if( NOISE_TOMOGRAPHY == 3 ) then
+        ! d_Sigma_kl
+        memory_size = memory_size + NGLL3 * NSPEC_AB * dble(CUSTOM_REAL)
+      endif
+    endif
+
+    if( GRAVITY ) then
+      ! d_minus_deriv_gravity,d_minus_g
+      memory_size = memory_size + 2.d0 * NGLOB_AB * dble(CUSTOM_REAL)
+    endif
+
+    ! poor estimate for kernel simulations...
+    if( SIMULATION_TYPE == 3 ) memory_size = 2.d0 * memory_size
+
+    ! user output
+    if(myrank == 0) then
+      write(IMAIN,*)
+      write(IMAIN,*) '  minimum memory requested     : ', &
+                    memory_size / 1024. / 1024., &
+                     'MB per process'
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
+
+    end subroutine memory_eval_gpu
 
   end subroutine prepare_timerun_GPU
 

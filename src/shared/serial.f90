@@ -126,6 +126,22 @@
 !----
 !
 
+  subroutine bcast_all_singledp(buffer)
+
+  use unused_mod
+
+  implicit none
+
+  double precision :: buffer
+
+  unused_dp = buffer
+
+  end subroutine bcast_all_singledp
+
+!
+!----
+!
+
   subroutine bcast_all_r(buffer, count)
 
   use unused_mod

@@ -126,7 +126,6 @@
           DT,hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
           islice_selected_source,ispec_selected_source, &
           xi_source,eta_source,gamma_source, &
-          UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,PRINT_SOURCE_TIME_FUNCTION, &
           nu_source,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh,&
           ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic, &
           num_free_surface_faces,free_surface_ispec,free_surface_ijk)

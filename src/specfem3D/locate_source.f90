@@ -35,23 +35,20 @@
                  DT,hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
                  islice_selected_source,ispec_selected_source, &
                  xi_source,eta_source,gamma_source, &
-                 UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,PRINT_SOURCE_TIME_FUNCTION, &
                  nu_source,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh, &
                  ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic, &
                  num_free_surface_faces,free_surface_ispec,free_surface_ijk)
 
   use constants
 
-  use specfem_par,only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION,factor_force_source, &
-       comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP
+  use specfem_par,only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION, &
+      UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
+      factor_force_source,comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP
 
   implicit none
 
-  integer NPROC,UTM_PROJECTION_ZONE
+  integer NPROC
   integer NSPEC_AB,NGLOB_AB,NSOURCES,NGNOD
-
-  logical PRINT_SOURCE_TIME_FUNCTION
-  logical SUPPRESS_UTM_PROJECTION
 
   double precision DT
 
@@ -160,16 +157,41 @@
   integer, dimension(NSOURCES) :: idomain
   integer, dimension(NGATHER_SOURCES,0:NPROC-1) :: idomain_all
 
+  double precision, external :: get_cmt_scalar_moment
+  double precision, external :: get_cmt_moment_magnitude
+
   !-----------------------------------------------------------------------------------
 
-  ! read all the sources (note: each process reads the source file)
+  ! read all the sources
   if (USE_FORCE_POINT_SOURCE) then
-    call get_force(tshift_src,hdur,lat,long,depth,NSOURCES,min_tshift_src_original,factor_force_source, &
-                   comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP)
+    ! point forces
+    if (myrank == 0) then
+      ! only master process reads in FORCESOLUTION file
+      call get_force(tshift_src,hdur,lat,long,depth,NSOURCES,min_tshift_src_original,factor_force_source, &
+                     comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP)
+    endif
+    ! broadcasts specific point force infos
+    call bcast_all_dp(factor_force_source,NSOURCES)
+    call bcast_all_dp(comp_dir_vect_source_E,NSOURCES)
+    call bcast_all_dp(comp_dir_vect_source_N,NSOURCES)
+    call bcast_all_dp(comp_dir_vect_source_Z_UP,NSOURCES)
   else
-    call get_cmt(yr,jda,ho,mi,sec,tshift_src,hdur,lat,long,depth,moment_tensor, &
-                 DT,NSOURCES,min_tshift_src_original)
+    ! CMT moment tensors
+    if (myrank == 0) then
+      ! only master process reads in CMTSOLUTION file
+      call get_cmt(yr,jda,ho,mi,sec,tshift_src,hdur,lat,long,depth,moment_tensor, &
+                   DT,NSOURCES,min_tshift_src_original)
+    endif
+    ! broadcasts specific moment tensor infos
+    call bcast_all_dp(moment_tensor,6*NSOURCES)
   endif
+  ! broadcasts general source information read on the master to the nodes
+  call bcast_all_dp(tshift_src,NSOURCES)
+  call bcast_all_dp(hdur,NSOURCES)
+  call bcast_all_dp(lat,NSOURCES)
+  call bcast_all_dp(long,NSOURCES)
+  call bcast_all_dp(depth,NSOURCES)
+  call bcast_all_singledp(min_tshift_src_original)
 
   ! define topology of the control element
   call usual_hex_nodes(NGNOD,iaddx,iaddy,iaddz)
@@ -778,6 +800,13 @@
             write(IMAIN,*)
           endif
           write(IMAIN,*) '  half duration: ',hdur(isource),' seconds'
+          write(IMAIN,*)
+          write(IMAIN,*) 'magnitude of the source:'
+          write(IMAIN,*) '     scalar moment M0 = ', &
+            get_cmt_scalar_moment(Mxx(isource),Myy(isource),Mzz(isource),Mxy(isource),Mxz(isource),Myz(isource)),' dyne-cm'
+          write(IMAIN,*) '  moment magnitude Mw = ', &
+            get_cmt_moment_magnitude(Mxx(isource),Myy(isource),Mzz(isource),Mxy(isource),Mxz(isource),Myz(isource))
+          write(IMAIN,*)
         endif
         write(IMAIN,*) '  time shift: ',tshift_src(isource),' seconds'
         write(IMAIN,*)
