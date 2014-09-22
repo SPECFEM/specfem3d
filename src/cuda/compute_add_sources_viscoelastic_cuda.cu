@@ -27,19 +27,7 @@
  !=====================================================================
  */
 
-#include <stdio.h>
-#include <cuda.h>
-#include <cublas.h>
-
-#include <sys/types.h>
-#include <unistd.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-
-#include "config.h"
 #include "mesh_constants_cuda.h"
-// #include "epik_user.h"
-
 
 /* ----------------------------------------------------------------------------------------------- */
 

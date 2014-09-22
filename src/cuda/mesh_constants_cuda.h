@@ -41,11 +41,26 @@
 
 */
 
-#ifndef GPU_MESH_
-#define GPU_MESH_
+#ifndef MESH_CONSTANTS_CUDA_H
+#define MESH_CONSTANTS_CUDA_H
 
-#include <sys/types.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
+#include <math.h>
+#include <sys/types.h>
+#include <sys/time.h>
+#include <sys/resource.h>
+
+#include "config.h"
+
+#ifdef WITH_MPI
+#include <mpi.h>
+#endif
+
+#include <cuda.h>
+#include <cuda_runtime.h>
+
 
 /* ----------------------------------------------------------------------------------------------- */
 

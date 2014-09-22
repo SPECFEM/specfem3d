@@ -27,17 +27,7 @@
  !=====================================================================
  */
 
-#include <stdio.h>
-#include <cuda.h>
-//#include <cublas.h>
-
-#include "config.h"
 #include "mesh_constants_cuda.h"
-
-
-//#define CUBLAS_ERROR(s,n)  if (s != CUBLAS_STATUS_SUCCESS) {  \
-//fprintf (stderr, "CUBLAS Memory Write Error @ %d\n",n); \
-//exit(EXIT_FAILURE); }
 
 /* ----------------------------------------------------------------------------------------------- */
 

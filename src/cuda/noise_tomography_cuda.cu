@@ -27,21 +27,7 @@
  !=====================================================================
  */
 
-#include <stdio.h>
-#include <cuda.h>
-#include <cublas.h>
-
-#ifdef WITH_MPI
-#include <mpi.h>
-#endif
-
-#include <sys/types.h>
-#include <unistd.h>
-
-#include "config.h"
 #include "mesh_constants_cuda.h"
-// #include "epik_user.h"
-
 
 /* ----------------------------------------------------------------------------------------------- */
 

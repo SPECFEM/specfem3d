@@ -27,20 +27,7 @@
  !=====================================================================
  */
 
-#include <stdio.h>
-#include <cuda.h>
-#include <cublas.h>
-
-#ifdef WITH_MPI
-#include <mpi.h>
-#endif
-
-#include <sys/time.h>
-#include <sys/resource.h>
-
-#include "config.h"
 #include "mesh_constants_cuda.h"
-
 
 /* ----------------------------------------------------------------------------------------------- */
 

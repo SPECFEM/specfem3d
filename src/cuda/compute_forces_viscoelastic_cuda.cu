@@ -27,16 +27,9 @@
  !=====================================================================
  */
 
-#include <stdio.h>
-#include <cuda.h>
-#include <cublas.h>
-
-#include <sys/time.h>
-#include <sys/resource.h>
-
-#include "config.h"
 #include "mesh_constants_cuda.h"
 
+/* ----------------------------------------------------------------------------------------------- */
 
 #ifdef USE_TEXTURES_FIELDS
 realw_texture d_displ_tex;
