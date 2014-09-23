@@ -51,8 +51,8 @@ generate_databases_OBJECTS = \
 	$O/generate_databases.gen.o \
 	$O/get_absorbing_boundary.gen.o \
 	$O/get_coupling_surfaces.gen.o \
-	$O/get_model.gen.o \
 	$O/get_MPI.gen.o \
+	$O/get_model.gen.o \
 	$O/get_perm_color.gen.o \
 	$O/model_1d_cascadia.gen.o \
 	$O/model_1d_prem.gen.o \
@@ -61,7 +61,9 @@ generate_databases_OBJECTS = \
 	$O/model_default.gen.o \
 	$O/model_external_values.gen.o \
 	$O/model_ipati.gen.o \
+	$O/parse_sep.genc.o \
 	$O/model_gll.gen.o \
+	$O/model_sep.gen.o \
 	$O/model_salton_trough.gen.o \
 	$O/model_tomography.gen.o \
 	$O/pml_set_local_dampingcoeff.gen.o \
@@ -80,6 +82,7 @@ generate_databases_MODULES = \
 	$(FC_MODDIR)/fault_generate_databases.$(FC_MODEXT) \
 	$(FC_MODDIR)/generate_databases_par.$(FC_MODEXT) \
 	$(FC_MODDIR)/model_ipati_adios_mod.$(FC_MODEXT) \
+	$(FC_MODDIR)/model_sep_mod.$(FC_MODEXT) \
 	$(FC_MODDIR)/salton_trough_par.$(FC_MODEXT) \
 	$(FC_MODDIR)/tomography_par.$(FC_MODEXT) \
 	$(EMPTY_MACRO)
@@ -187,6 +190,7 @@ $O/finalize_databases.gen.o: $O/generate_databases_par.gen.o
 $O/get_absorbing_boundary.gen.o: $O/generate_databases_par.gen.o
 $O/get_coupling_surfaces.gen.o: $O/generate_databases_par.gen.o
 $O/get_MPI.gen.o: $O/generate_databases_par.gen.o
+$O/get_model.gen.o: $O/model_sep.gen.o
 $O/memory_eval.gen.o: $O/generate_databases_par.gen.o
 $O/model_1d_cascadia.gen.o: $O/generate_databases_par.gen.o
 $O/model_1d_prem.gen.o: $O/generate_databases_par.gen.o
@@ -195,6 +199,7 @@ $O/model_default.gen.o: $O/generate_databases_par.gen.o
 $O/model_external_values.gen.o: $O/generate_databases_par.gen.o
 $O/model_gll.gen.o: $O/generate_databases_par.gen.o
 $O/model_ipati.gen.o: $O/generate_databases_par.gen.o
+$O/model_sep.gen.o: $O/generate_databases_par.gen.o
 $O/model_salton_trough.gen.o: $O/generate_databases_par.gen.o
 $O/pml_set_local_dampingcoeff.gen.o: $O/generate_databases_par.gen.o
 $O/read_partition_files.gen.o: $O/generate_databases_par.gen.o
@@ -235,7 +240,10 @@ $O/adios_helpers.shared_adios.o: \
 
 
 $O/%.gen.o: $S/%.f90 $O/constants_mod.shared_module.o
-	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+	${MPIFCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+$O/%.genc.o: $S/%.c
+	${CC} ${CFLAGS} -c -o $@ $<
 
 ###
 ### ADIOS compilation

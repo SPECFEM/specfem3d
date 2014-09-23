@@ -513,6 +513,8 @@
   use create_regions_mesh_ext_par
 
   use model_ipati_adios_mod
+  
+  use model_sep_mod
 
   implicit none
 

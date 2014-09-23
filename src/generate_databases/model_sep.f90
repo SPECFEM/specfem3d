@@ -1,17 +1,49 @@
-module model_sep_mode
+module model_sep_mod
   implicit none
+
+  !interface
+    !subroutine parse_sep_header(header_name, &
+                                !nx, ny, nz,  &
+                                !ox, oy, oz,  &
+                                !dx, dy, dz,  &
+                                !bin_name)
+      !character(len=:) :: header_name, bin_name
+      !integer :: nx, ny, nz
+      !real :: ox, oy, ox, dx, dy, dz
+    !end subroutine parse_sep_header
+  !end interface
 contains
 
 !==============================================================================
 subroutine model_sep()
-  use create_regions_mesh_ext_par, only rhostore, rho_vp, rho_vs
+  use generate_databases_par, only: NGLLX, NGLLY, NGLLZ, NSPEC=>NSPEC_AB, &
+                                    SEP_MODEL_DIRECTORY
+  use create_regions_mesh_ext_par, only: rhostore, rho_vp, rho_vs, &
+                                         ispec_is_acoustic, ispec_is_elastic
 
   real(kind=4), allocatable, dimension(:,:,:) :: vp_sep, vs_sep, rho_sep
   integer :: NX, NY, NZ
   real :: OX, OY, OZ, DX, DY, DZ
-  character(len=512) :: sep_bin_vp
+  integer :: NX_alt, NY_alt, NZ_alt
+  real :: OX_alt, OY_alt, OZ_alt, DX_alt, DY_alt, DZ_alt
+  character(len=512) :: sep_header_name_vp, sep_header_name_vs, &
+                        sep_header_name_rho 
+  character(len=512) :: sep_bin_vp, sep_bin_vs, sep_bin_rho
   real :: xmin, ymin
   integer :: imin, jmin, kmin, ni, nj, nk
+  logical :: vp_exists, vs_exists, rho_exists
+
+  ! Get files from SEP_MODEL_DIRECTORY
+  write(sep_header_name_vp, *) trim(SEP_MODEL_DIRECTORY) // "/vp.H" 
+  write(sep_header_name_vs, *) trim(SEP_MODEL_DIRECTORY) // "/vs.H" 
+  write(sep_header_name_rho, *) trim(SEP_MODEL_DIRECTORY) // "/rho.H" 
+
+  inquire(file=trim(sep_header_name_vp), exist=vp_exists) 
+  if (.not. vp_exists) stop "SEP vp model should exist"
+  inquire(file=trim(sep_header_name_vs), exist=vs_exists) 
+  if (.not. vp_exists) stop "SEP vp model should exist"
+  inquire(file=trim(sep_header_name_rho), exist=rho_exists) 
+  if (.not. vp_exists) stop "SEP vp model should exist"
 
   ! Read SEP header for each SEP file
   !    -> n1 (NX), n2 (NY), n3 (NZ)
@@ -21,73 +53,87 @@ subroutine model_sep()
   !    -> Check for unit* to be meter
   ! Parse only one of the header, vp is the most likely to be present
   ! It might be useful to make sure that all SEP files have coherent dimensions.
-  parse_sep_vs_header(sep_header_name_vp,                 &
-                      NX, NY, NZ, OX, OY, OZ, D1, D2, D3, &
-                      sep_bin_vp)
+  call parse_sep_header(trim(sep_header_name_vp),           &
+                        NX, NY, NZ, OX, OY, OZ, DX, DY, DZ, &
+                        sep_bin_vp)
+  if (vs_exists) then
+    call parse_sep_header(trim(sep_header_name_vs), &
+                          NX_alt, NY_alt, NZ_alt,   &
+                          OX_alt, OY_alt, OZ_alt,   &
+                          DX_alt, DY_alt, DZ_alt,   &
+                          sep_bin_vs)
+    if ((NX /= NX_alt) .and. (NY /= NX_alt) .and. (NZ /= NZ_alt) .and. &
+        (OX /= OX_alt) .and. (OY /= OX_alt) .and. (OZ /= OZ_alt) .and. &
+        (DX /= DX_alt) .and. (DY /= DX_alt) .and. (DZ /= DZ_alt)) then
+      stop "SEP headers should be consistant."
+    endif
+  endif
+  if (rho_exists) then
+    call parse_sep_header(trim(sep_header_name_rho), &
+                          NX_alt, NY_alt, NZ_alt,    &
+                          OX_alt, OY_alt, OZ_alt,    &
+                          DX_alt, DY_alt, DZ_alt,    &
+                          sep_bin_rho)
+    if ((NX /= NX_alt) .and. (NY/= NX_alt) .and. (NZ/= NZ_alt) .and. &
+        (OX /= OX_alt) .and. (OY/= OX_alt) .and. (OZ/= OZ_alt) .and. &
+        (DX /= DX_alt) .and. (DY/= DX_alt) .and. (DZ/= DZ_alt)) then
+      stop "SEP headers should be consistant."
+    endif
+  endif
 
   ! Match slice topography and parts of the SEP file.
   call find_slice_bounds_sep(NX, NY, NZ, OX, OY, OZ, DX, DY, DZ, &
                              xmin, ymin, imin, jmin, kmin, ni, nj, nk)
 
+  !---------.
+  ! Read VP |
+  !---------'
   ! Read available SEP files, assign default values for unfound files.
   allocate(vp_sep(ni, nj, NZ))
-  allocate(vs_sep(ni, nj, NZ))
-  allocate(rho_sep(ni, nj, NZ))
-
-  call read_sep_binary_mpiio(FILE_VP, NX, NY, NZ, ni, nj, NZ, vp_sep)
-  call read_sep_binary_mpiio(FILE_VS, NX, NY, NZ, ni, nj, NZ, vs_sep)
-  call read_sep_binary_mpiio(FILE_RHO, NX, NY, NZ, ni, nj, NZ, rho_sep)
-
+  call read_sep_binary_mpiio(sep_bin_vp, NX, NY, NZ, ni, nj, NZ, &
+                             imin, jmin, kmin, vp_sep)
   ! Interpolate SEP values on meshfem mesh.
-  call interpolate_sep_on_mesh(rho_sep, xmin, ymin, ni, nj, NZ, &
-                               DX, DY, DZ, rhostore)
   call interpolate_sep_on_mesh(vp_sep, xmin, ymin, ni, nj, NZ, &
                                DX, DY, DZ, rho_vp)
-  call interpolate_sep_on_mesh(vs_sep, xmin, ymin, ni, nj, NZ, &
-                               DX, DY, DZ, rho_vs)
 
-  ! Assign acoustic / elastic properties with respect to vs being 0 or not.
+  !---------.
+  ! Read VS |
+  !---------'
+  if (vs_exists) then
+    allocate(vs_sep(ni, nj, NZ))
+    call read_sep_binary_mpiio(sep_bin_vs, NX, NY, NZ, ni, nj, &
+                               imin, jmin, kmin, NZ, vs_sep)
+    call interpolate_sep_on_mesh(rho_sep, xmin, ymin, ni, nj, NZ, &
+                                 DX, DY, DZ, rhostore)
+  endif
+
+  !----------.
+  ! Read RHO |
+  !----------'
+  if (rho_exists) then
+    allocate(rho_sep(ni, nj, NZ))
+    call read_sep_binary_mpiio(sep_bin_rho, NX, NY, NZ, ni, nj, &
+                               imin, jmin, kmin, NZ, rho_sep)
+    call interpolate_sep_on_mesh(vs_sep, xmin, ymin, ni, nj, NZ, &
+                                 DX, DY, DZ, rho_vs)
+  endif
+
+  ! Check that values around the acoustic / elastic interface is correct.
+  ! Apply eventual correction.
   ! Note that an element should be entirely elastic or acoustic
-  do ispec = 1, NSPEC
-    num_acoustic_pts = 0
-    num_elastic_pts = 0
-    do k = 1, NGLLZ
-      do j = 1, NGLLY
-        do i = 1, NGLLX
-          if (rho_vs(i, j, k, ispec) == 0) then
-            num_acoustic_pts = num_acoustic_pts + 1 
-          else
-            num_elastic_pts = num_elastic_pts + 1 
-          endif
-        enddo ! k
-      enddo ! j
-    enddo ! i
-    if (num_acoustic_pts > num_elastic_pts) then
-      ispec_is_acoustic(ispec) = .true.
-      ! Z axis is up. Bottom points might include the elastic material
-      if (any(rho_vs(, :, 1, ispec) /= 0.0)) then
-        rho_vs(:, :, :, ispec) = 0.0
-        rho(:, :, :, ispec) = minval(rho(:, :, :. ispec))
-        rho_vp(:, :, :, ispec) = minval(rho(:, :, :. ispec))
-      endif
-    else
-      ispec_is_elastic(ispec) = .true.
-      ! Z axis is up. Top points might include the acoustic interface 
-      if (any(rho_vs(, :, NGLLZ, ispec) == 0.0)) then
-        rho_vs(:, :, NGLLZ-1, ispec) = 0.0
-        rho(:, :, NGLLZ-1, ispec) = minval(rho(:, :, :. ispec))
-        rho_vp(:, :, NGLLZ-1, ispec) = minval(rho(:, :, :. ispec))
-      endif
-    endif
-  enddo ! ispec
+  if (vs_exists) then
+    call correct_sep_interface()
+  endif ! vs_exists
 
   ! SPECFEM expects rho*velocity
   rho_vp = rho_vp * rhostore
-  rho_vs = rho_vs * rhostore
+  if (vs_exists) then
+    rho_vs = rho_vs * rhostore
+  endif
 
-  deallocate(vp_sep)
-  deallocate(vs_sep)
-  deallocate(rho_sep)
+  if (allocated(vp_sep)) deallocate(vp_sep)
+  if (allocated(vs_sep)) deallocate(vs_sep)
+  if (allocated(rho_sep)) deallocate(rho_sep)
 end subroutine model_sep
 
 
@@ -103,11 +149,12 @@ end subroutine model_sep
 !! \param nk Dimension in z for a process -- usually equal to NZ.
 !!
 !! \note xyz SEP organized files are expected.
-subroutine read_sep_binary_mpiio(filename, NX, NY, NZ, ni, nj, nk, var)
+subroutine read_sep_binary_mpiio(filename, NX, NY, NZ, ni, nj, nk, &
+                                 imin, jmin, kmin, var)
   use mpi
   ! Parameters
   character(len=*), intent(in) :: filename
-  integer, intent(in) :: NX, NY, NZ, ni, nj, nk
+  integer, intent(in) :: NX, NY, NZ, ni, nj, nk, imin, jmin, kmin
   real(kind =4), dimension(:, :, :), intent(inout) :: var
 
   !Variables
@@ -145,8 +192,8 @@ end subroutine read_sep_binary_mpiio
 !! \note from Yang Luo's external routines. Actually finds a nearby point.
 subroutine interpolate_sep_on_mesh(sep_var, xmin, ymin, ni, nj, NZ, &
                                    DX, DY, DZ, var)
-  use generate_database_par, only: NGLLX, NGLLY, NGLLZ, NSPEC=>NSPEC_AB &
-                                   ibool
+  use generate_databases_par, only: NGLLX, NGLLY, NGLLZ, NSPEC=>NSPEC_AB, &
+                                    ibool, xstore, ystore, zstore
   !--- Parameters
   real(kind=4), dimension(:,:,:), intent(in) :: sep_var 
   real, intent(in) :: xmin, ymin, DX, DY, DZ
@@ -161,10 +208,10 @@ subroutine interpolate_sep_on_mesh(sep_var, xmin, ymin, ni, nj, NZ, &
         do j=1,NGLLY
            do k=1,NGLLZ
               iglob=ibool(i,j,k,ispec);
-              i_target=NINT((xstore(iglob)-xmin)/DX)+1
-              j_target=NINT((ystore(iglob)-ymin)/DY)+1
+              i_target=NINT((xstore(i, j, k, ispec)-xmin)/DX)+1
+              j_target=NINT((ystore(i, j, k, ispec)-ymin)/DY)+1
               ! in SEP, z-axis is downward; in SPECFEM, z-axis is upward
-              k_target=NINT(-zstore(iglob)/DZ)+1; !NOT using (z_temp-zmin)
+              k_target=NINT(-zstore(i, j, k, ispec)/DZ)+1; !NOT using (z_temp-zmin)
               ! Stay in the computational domain
               if(i_target< 1)  i_target=  1
               if(j_target< 1)  j_target=  1
@@ -184,12 +231,15 @@ end subroutine interpolate_sep_on_mesh
 !>
 subroutine find_slice_bounds_sep(NX, NY, NZ, OX, OY, OZ, DX, DY, DZ, &
                                  xmin, ymin, imin, jmin, kmin, ni, nj, nk)
-  use generate_database_par, only: xstor, ystore, zstore
+  use generate_databases_par, only: xstore, ystore, zstore
   ! Parameters
   integer, intent(in) :: NX, NY, NZ
   real, intent(in) :: OX, OY, OZ, DX, DY, DZ
   real, intent(out) :: xmin, ymin
   integer, intent(out) :: imin, jmin, kmin, ni, nj, nk
+  ! Variables
+  real :: xmax, ymax, zmin, zmax
+  integer :: imax, jmax, kmax
 
   ! Actual bounds for the current slice mesh
   xmin=minval(xstore); xmax=maxval(xstore);
@@ -215,5 +265,49 @@ subroutine find_slice_bounds_sep(NX, NY, NZ, OX, OY, OZ, DX, DY, DZ, &
 
 end subroutine find_slice_bounds_sep
 
-end module model_sep_mode
+
+!==============================================================================
+!>
+subroutine correct_sep_interface()
+  use generate_databases_par, only: NGLLX, NGLLY, NGLLZ, NSPEC=>NSPEC_AB
+  use create_regions_mesh_ext_par, only: rhostore, rho_vp, rho_vs, &
+                                         ispec_is_acoustic, ispec_is_elastic
+  integer :: ispec, i, j, k
+  integer :: num_acoustic_pts, num_elastic_pts
+
+  do ispec = 1, NSPEC
+    num_acoustic_pts = 0
+    num_elastic_pts = 0
+    do k = 1, NGLLZ
+      do j = 1, NGLLY
+        do i = 1, NGLLX
+          if (rho_vs(i, j, k, ispec) == 0) then
+            num_acoustic_pts = num_acoustic_pts + 1 
+          else
+            num_elastic_pts = num_elastic_pts + 1 
+          endif
+        enddo ! k
+      enddo ! j
+    enddo ! i
+    if (num_acoustic_pts > num_elastic_pts) then
+      ispec_is_acoustic(ispec) = .true.
+      ! Z axis is up. Bottom points might include the elastic material
+      if (any(rho_vs(:, :, 1, ispec) /= 0.0)) then
+        rho_vs(:, :, :, ispec) = 0.0
+        rhostore(:, :, :, ispec) = minval(rhostore(:, :, :, ispec))
+        rho_vp(:, :, :, ispec) = minval(rho_vp(:, :, :, ispec))
+      endif
+    else
+      ispec_is_elastic(ispec) = .true.
+      ! Z axis is up. Top points might include the acoustic interface 
+      if (any(rho_vs(:, :, NGLLZ, ispec) == 0.0)) then
+        rho_vs(:, :, NGLLZ, ispec) = rho_vs(:, :, NGLLZ-1, ispec) 
+        rhostore(:, :, NGLLZ, ispec) = rhostore(:, :, NGLLZ-1, ispec)
+        rho_vp(:, :, NGLLZ, ispec) = rho_vp(:, :, NGLLZ-1, ispec) 
+      endif
+    endif
+  enddo ! ispec
+end subroutine correct_sep_interface
+
+end module model_sep_mod
 
