@@ -54,7 +54,8 @@
   logical USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE,USE_RICKER_TIME_FUNCTION
   logical PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID,COUPLE_WITH_DSM
 
-  character(len=MAX_STRING_LEN) :: LOCAL_PATH,TOMOGRAPHY_PATH,CMTSOLUTION,FORCESOLUTION,TRACTION_PATH,path_to_add
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH,TOMOGRAPHY_PATH,CMTSOLUTION,FORCESOLUTION,TRACTION_PATH,path_to_add, SEP_MODEL_DIRECTORY
+
 
 ! local variables
   integer ::ios,icounter,isource,idummy,nproc_eta_old,nproc_xi_old
@@ -62,6 +63,7 @@
   character(len=MAX_STRING_LEN) :: dummystring
 
   character(len=MAX_STRING_LEN) :: MODEL
+  logical :: sep_dir_exists
   integer :: i,irange,ierr
 
   ! opens file Par_file
@@ -106,6 +108,10 @@
   if (ierr /= 0) stop 'Error reading Par_file parameter NGNOD'
   call read_value_string(MODEL, 'MODEL', ierr)
   if (ierr /= 0) stop 'Error reading Par_file parameter MODEL'
+  write(SEP_MODEL_DIRECTORY, 'a') ''
+  call read_value_string(SEP_MODEL_DIRECTORY, 'SEP_MODEL_DIRECTORY', ierr)
+  if (ierr /= 0) write (0, 'a') 'No SEP_MODEL_DIRECTORY defined in Par_file.'
+  !if (ierr /= 0) stop 'Error reading Par_file parameter SEP_MODEL_DIRECTORY'
   call read_value_logical(APPROXIMATE_OCEAN_LOAD, 'APPROXIMATE_OCEAN_LOAD', ierr)
   if (ierr /= 0) stop 'Error reading Par_file parameter APPROXIMATE_OCEAN_LOAD'
   call read_value_logical(TOPOGRAPHY, 'TOPOGRAPHY', ierr)
@@ -338,6 +344,16 @@
     IMODEL = IMODEL_SALTON_TROUGH
   case( 'tomo' )
     IMODEL = IMODEL_TOMO
+  case( 'sep' )
+    IMODEL = IMODEL_SEP 
+    if (trim(SEP_MODEL_DIRECTORY) == '') then
+      stop 'Error: Using sep model requires defining a SEP_MODEL_DIRECTORY.'
+    endif
+    inquire(directory=trim(SEP_MODEL_DIRECTORY), exists=sep_dir_exists)
+    if (.not. sep_dir_exists) then
+      stop 'Error: SEP_MODEL_DIRECTORY should exist.'
+    endif
+
 
   case default
     print*
