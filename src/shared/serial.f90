@@ -61,6 +61,21 @@
 !----
 !
 
+  subroutine bcast_all_one_i(buffer)
+
+  use unused_mod
+  implicit none
+
+  integer :: buffer
+
+  unused_i4 = buffer
+
+  end subroutine bcast_all_one_i
+
+!
+!----
+!
+
   subroutine bcast_all_i(buffer, count)
 
   use unused_mod
@@ -123,6 +138,20 @@
 
   end subroutine bcast_all_r
 
+!
+!----
+!
+
+  subroutine bcast_all_one_i_for_database(buffer)
+
+  use unused_mod
+  implicit none
+
+  integer :: buffer
+
+  unused_i4 = buffer
+
+  end subroutine bcast_all_one_i_for_database
 
 !
 !----
