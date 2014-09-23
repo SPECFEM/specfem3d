@@ -507,7 +507,7 @@
 ! reads in material parameters from external binary files
 
   use generate_databases_par,only: IMODEL, &
-    IMODEL_GLL,IMODEL_IPATI,IMODEL_IPATI_WATER, &
+    IMODEL_GLL,IMODEL_IPATI,IMODEL_IPATI_WATER, IMODEL_SEP, &
     ADIOS_FOR_MESH
 
   use create_regions_mesh_ext_par
@@ -553,6 +553,10 @@
     else
       call model_ipati_water(myrank,nspec,LOCAL_PATH)
     endif
+
+  case( IMODEL_SEP)
+    ! use values from SEP files
+    call model_sep()
 
   end select
 
