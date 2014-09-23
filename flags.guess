@@ -72,7 +72,7 @@ case $my_FC in
         #
         # Portland PGI
         #
-        DEF_FFLAGS="-Mdclchk -Minform=warn -mcmodel=medium -Mnobounds -fast -Mipa=fast,inline -mcmodel=medium"
+        DEF_FFLAGS="-Mdclchk -Minform=warn -mcmodel=medium -Mnobounds -fast -mcmodel=medium"
         # -Mbounds
         ;;
     ifort|*/ifort)
