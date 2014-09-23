@@ -441,6 +441,8 @@ subroutine read_adios_parameters(ADIOS_ENABLED, ADIOS_FOR_DATABASES,       &
   endif
   call close_parameter_file()
 
-end subroutine read_adios_parameters
+  if(NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. BROADCAST_SAME_MESH_AND_MODEL .and. ADIOS_ENABLED) &
+         stop 'ADIOS not yet supported by option BROADCAST_SAME_MESH_AND_MODEL'
 
+end subroutine read_adios_parameters
 

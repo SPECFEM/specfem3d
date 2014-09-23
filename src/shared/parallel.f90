@@ -57,7 +57,7 @@ module my_mpi
 
   implicit none
 
-  integer :: my_local_mpi_comm_world
+  integer :: my_local_mpi_comm_world, my_local_mpi_comm_for_bcast
 
 end module my_mpi
 
@@ -108,6 +108,24 @@ end module my_mpi
   call MPI_BARRIER(my_local_mpi_comm_world,ier)
 
   end subroutine synchronize_all
+
+!
+!---- broadcast using the default communicator for the whole run
+!
+
+  subroutine bcast_all_one_i(buffer)
+
+  use my_mpi
+
+  implicit none
+
+  integer :: buffer
+
+  integer ier
+
+  call MPI_BCAST(buffer,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
+
+  end subroutine bcast_all_one_i
 
 !
 !----
@@ -188,6 +206,102 @@ end module my_mpi
 
   end subroutine bcast_all_r
 
+!
+!---- broadcast using the communicator to send the mesh and model to other simultaneous runs
+!
+
+  subroutine bcast_all_one_i_for_database(buffer)
+
+  use my_mpi
+
+  implicit none
+
+  integer :: buffer
+
+  integer ier
+
+  call MPI_BCAST(buffer,1,MPI_INTEGER,0,my_local_mpi_comm_for_bcast,ier)
+
+  end subroutine bcast_all_one_i_for_database
+
+!
+!----
+!
+
+  subroutine bcast_all_i_for_database(buffer, countval)
+
+  use my_mpi
+
+  implicit none
+
+  integer countval
+  integer, dimension(countval) :: buffer
+
+  integer ier
+
+  call MPI_BCAST(buffer,countval,MPI_INTEGER,0,my_local_mpi_comm_for_bcast,ier)
+
+  end subroutine bcast_all_i_for_database
+
+!
+!----
+!
+
+  subroutine bcast_all_cr_for_database(buffer, countval)
+
+  use my_mpi
+  use constants,only: CUSTOM_REAL
+
+  implicit none
+
+  include "precision.h"
+
+  integer countval
+  real(kind=CUSTOM_REAL), dimension(countval) :: buffer
+
+  integer ier
+
+  call MPI_BCAST(buffer,countval,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_for_bcast,ier)
+
+  end subroutine bcast_all_cr_for_database
+
+!
+!----
+!
+
+  subroutine bcast_all_dp_for_database(buffer, countval)
+
+  use my_mpi
+
+  implicit none
+
+  integer countval
+  double precision, dimension(countval) :: buffer
+
+  integer ier
+
+  call MPI_BCAST(buffer,countval,MPI_DOUBLE_PRECISION,0,my_local_mpi_comm_for_bcast,ier)
+
+  end subroutine bcast_all_dp_for_database
+
+!
+!----
+!
+
+  subroutine bcast_all_r_for_database(buffer, countval)
+
+  use my_mpi
+
+  implicit none
+
+  integer countval
+  real, dimension(countval) :: buffer
+
+  integer ier
+
+  call MPI_BCAST(buffer,countval,MPI_REAL,0,my_local_mpi_comm_for_bcast,ier)
+
+  end subroutine bcast_all_r_for_database
 
 !
 !----
@@ -1154,12 +1268,11 @@ end module my_mpi
 
   use my_mpi
   use constants,only: MAX_STRING_LEN,NUMBER_OF_SIMULTANEOUS_RUNS,OUTPUT_FILES_PATH, &
-    IMAIN,ISTANDARD_OUTPUT, &
-    mygroup
+    IMAIN,ISTANDARD_OUTPUT,mygroup,BROADCAST_SAME_MESH_AND_MODEL,I_should_read_the_database,I_should_broadcast_the_database
 
   implicit none
 
-  integer :: sizeval,myrank,ier,key
+  integer :: sizeval,myrank,ier,key,my_group_for_bcast,my_local_rank_for_bcast,NPROC
 
   character(len=MAX_STRING_LEN) :: path_to_add
 
@@ -1176,7 +1289,13 @@ end module my_mpi
 
     my_local_mpi_comm_world = MPI_COMM_WORLD
 
+! no broadcast of the mesh and model databases to other runs in that case
+    my_group_for_bcast = 0
+    my_local_mpi_comm_for_bcast = MPI_COMM_NULL
+
   else
+
+!--- create a subcommunicator for each independent run
 
     call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
 !   create the different groups of processes, one for each independent run
@@ -1192,6 +1311,33 @@ end module my_mpi
     write(path_to_add,"('run',i4.4,'/')") mygroup + 1
     OUTPUT_FILES_PATH = path_to_add(1:len_trim(path_to_add))//OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))
 
+!--- create a subcommunicator to broadcast the identical mesh and model databases if needed
+    if(BROADCAST_SAME_MESH_AND_MODEL) then
+
+      call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
+!     to broadcast the model, split along similar ranks per run instead
+      NPROC = sizeval / NUMBER_OF_SIMULTANEOUS_RUNS
+      my_group_for_bcast = mod(myrank,NPROC)
+      key = myrank
+      if(my_group_for_bcast < 0 .or. my_group_for_bcast > NPROC-1) stop 'invalid value of my_group_for_bcast'
+
+!     build the sub-communicators
+      call MPI_COMM_SPLIT(MPI_COMM_WORLD, my_group_for_bcast, key, my_local_mpi_comm_for_bcast, ier)
+      if(ier /= 0) stop 'error while trying to create the sub-communicators'
+
+!     see if that process will need to read the mesh and model database and then broadcast it to others
+      call MPI_COMM_RANK(my_local_mpi_comm_for_bcast,my_local_rank_for_bcast,ier)
+      if(my_local_rank_for_bcast > 0) I_should_read_the_database = .false.
+      if(my_local_rank_for_bcast == 0) I_should_broadcast_the_database = .true.
+
+    else
+
+! no broadcast of the mesh and model databases to other runs in that case
+      my_group_for_bcast = 0
+      my_local_mpi_comm_for_bcast = MPI_COMM_NULL
+
+    endif
+
   endif
 
   end subroutine world_split
@@ -1204,13 +1350,16 @@ end module my_mpi
   subroutine world_unsplit()
 
   use my_mpi
-  use constants,only: NUMBER_OF_SIMULTANEOUS_RUNS
+  use constants,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
 
   implicit none
 
   integer :: ier
 
-  if(NUMBER_OF_SIMULTANEOUS_RUNS > 1) call MPI_COMM_FREE(my_local_mpi_comm_world,ier)
+  if(NUMBER_OF_SIMULTANEOUS_RUNS > 1) then
+    call MPI_COMM_FREE(my_local_mpi_comm_world,ier)
+    if(BROADCAST_SAME_MESH_AND_MODEL) call MPI_COMM_FREE(my_local_mpi_comm_for_bcast,ier)
+  endif
 
   end subroutine world_unsplit
 
