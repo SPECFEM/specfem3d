@@ -10,7 +10,7 @@
 #
 #   -fopenmp for GNU gfortran
 #   -openmp for Intel ifort
-#   -mp for Portland pgf90
+#   -mp for Portland pgfortran
 #   -qsmp=omp for IBM xlf
 
 ###########################################################################################################################
@@ -47,7 +47,7 @@ case $FC in
                 my_FC=pathf90
                 ;;
             PGI)
-                my_FC=pgf90
+                my_FC=pgfortran
                 ;;
             *)
                 # Unrecognized (this will not set any default flags)
@@ -68,13 +68,12 @@ case $my_FC in
         DEF_FFLAGS="-O3 -Onoaggress -Oipa0 -hfp2 -Ovector3 -Oscalar3 -Ocache2 -Ounroll2 -Ofusion2 -p \$O -eF -em -rm" # turn on optimization; -Oaggress -Oipa4 would make it even more aggressive
         # -eC -eD -ec -en -eI -ea -g -G0 -M 1193 -M 1438 # turn on full debugging and range checking
         ;;
-    pgf95|*/pgf95|pgf90|*/pgf90)
+    pgf95|*/pgf95|pgf90|*/pgf90|pgfortran|*/pgfortran)
         #
         # Portland PGI
         #
-        DEF_FFLAGS="-fast -Mnobounds -Minline -Mneginfo -Mdclchk -Knoieee -Minform=inform -Mdaz -Mflushz -Mvect -mcmodel=medium"
+        DEF_FFLAGS="-Mdclchk -Minform=warn -mcmodel=medium -Mnobounds -fast -Mipa=fast,inline -mcmodel=medium"
         # -Mbounds
-        # -fastsse -tp amd64e -Msmart
         ;;
     ifort|*/ifort)
         #
