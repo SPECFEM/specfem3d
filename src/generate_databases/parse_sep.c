@@ -26,11 +26,11 @@
 
 
 /*****************************************************************************/
-void parse_sep_vs_header(char *header_name, 
-                         int *n1, int *n2, int *n3, 
-                         int *o1, int *o2, int *o3, 
-                         float *d1, float *d2, float *d3, 
-                         char *in) {
+void parse_sep_header(char *header_name, 
+                      int *n1, int *n2, int *n3, 
+                      int *o1, int *o2, int *o3, 
+                      float *d1, float *d2, float *d3, 
+                      char *in) {
   char *line = NULL;
   size_t len = 0;
 
@@ -94,7 +94,7 @@ void parse_sep_vs_header(char *header_name,
       } else if (!strcmp(name, "data_format")) {
         strncpy(*data_format, value, value_len+1);*/
       } else if (!strcmp(name, "in")) {
-        strncpy(*in, value, value_len+1);
+        strncpy(in, value, value_len+1);
       }
     }
 
@@ -110,10 +110,10 @@ void parse_sep_vs_header(char *header_name,
 /*****************************************************************************/
 /*** Aliases for Fortran bindings ***/
 
-void parse_sep_vs_header_(char *header_name, 
-                         int *n1, int *n2, int *n3, 
-                         int *o1, int *o2, int *o3, 
-                         float *f1, float *f2, float *f3, 
-                         char *in)
-    __attribute__((alias("parse_sep_vs_header")));
+void parse_sep_header_(char *header_name, 
+                       int *n1, int *n2, int *n3, 
+                       int *o1, int *o2, int *o3, 
+                       float *f1, float *f2, float *f3, 
+                       char *in)
+    __attribute__((alias("parse_sep_header")));
 /*****************************************************************************/
