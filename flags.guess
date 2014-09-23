@@ -47,7 +47,7 @@ case $FC in
                 my_FC=pathf90
                 ;;
             PGI)
-                my_FC=pgfortran
+                my_FC=pgf90
                 ;;
             *)
                 # Unrecognized (this will not set any default flags)
