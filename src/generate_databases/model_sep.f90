@@ -45,6 +45,42 @@ subroutine model_sep()
                                DX, DY, DZ, rho_vp)
   call interpolate_sep_on_mesh(vs_sep, xmin, ymin, ni, nj, NZ, &
                                DX, DY, DZ, rho_vs)
+
+  ! Assign acoustic / elastic properties with respect to vs being 0 or not.
+  ! Note that an element should be entirely elastic or acoustic
+  do ispec = 1, NSPEC
+    num_acoustic_pts = 0
+    num_elastic_pts = 0
+    do k = 1, NGLLZ
+      do j = 1, NGLLY
+        do i = 1, NGLLX
+          if (rho_vs(i, j, k, ispec) == 0) then
+            num_acoustic_pts = num_acoustic_pts + 1 
+          else
+            num_elastic_pts = num_elastic_pts + 1 
+          endif
+        enddo ! k
+      enddo ! j
+    enddo ! i
+    if (num_acoustic_pts > num_elastic_pts) then
+      ispec_is_acoustic(ispec) = .true.
+      ! Z axis is up. Bottom points might include the elastic material
+      if (any(rho_vs(, :, 1, ispec) /= 0.0)) then
+        rho_vs(:, :, :, ispec) = 0.0
+        rho(:, :, :, ispec) = minval(rho(:, :, :. ispec))
+        rho_vp(:, :, :, ispec) = minval(rho(:, :, :. ispec))
+      endif
+    else
+      ispec_is_elastic(ispec) = .true.
+      ! Z axis is up. Top points might include the acoustic interface 
+      if (any(rho_vs(, :, NGLLZ, ispec) == 0.0)) then
+        rho_vs(:, :, NGLLZ-1, ispec) = 0.0
+        rho(:, :, NGLLZ-1, ispec) = minval(rho(:, :, :. ispec))
+        rho_vp(:, :, NGLLZ-1, ispec) = minval(rho(:, :, :. ispec))
+      endif
+    endif
+  enddo ! ispec
+
   ! SPECFEM expects rho*velocity
   rho_vp = rho_vp * rhostore
   rho_vs = rho_vs * rhostore
