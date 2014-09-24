@@ -113,24 +113,6 @@ end module my_mpi
 !---- broadcast using the default communicator for the whole run
 !
 
-  subroutine bcast_all_one_i(buffer)
-
-  use my_mpi
-
-  implicit none
-
-  integer :: buffer
-
-  integer ier
-
-  call MPI_BCAST(buffer,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
-
-  end subroutine bcast_all_one_i
-
-!
-!----
-!
-
   subroutine bcast_all_i(buffer, countval)
 
   use my_mpi
@@ -210,34 +192,22 @@ end module my_mpi
 !---- broadcast using the communicator to send the mesh and model to other simultaneous runs
 !
 
-  subroutine bcast_all_one_i_for_database(buffer)
-
-  use my_mpi
-
-  implicit none
-
-  integer :: buffer
-
-  integer ier
-
-  call MPI_BCAST(buffer,1,MPI_INTEGER,0,my_local_mpi_comm_for_bcast,ier)
-
-  end subroutine bcast_all_one_i_for_database
-
-!
-!----
-!
-
   subroutine bcast_all_i_for_database(buffer, countval)
 
   use my_mpi
+  use constants,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
 
   implicit none
 
   integer countval
-  integer, dimension(countval) :: buffer
+  ! by not specifying any dimensions for the buffer here we can use this routine for arrays of any number
+  ! of indices, provided we call the routine using the first memory cell of that multidimensional array,
+  ! i.e. for instance buffer(1,1,1) if the array has three dimensions with indices that all start at 1.
+  integer :: buffer
 
   integer ier
+
+  if(.not. (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. BROADCAST_SAME_MESH_AND_MODEL)) return
 
   call MPI_BCAST(buffer,countval,MPI_INTEGER,0,my_local_mpi_comm_for_bcast,ier)
 
@@ -247,19 +217,49 @@ end module my_mpi
 !----
 !
 
+  subroutine bcast_all_l_for_database(buffer, countval)
+
+  use my_mpi
+  use constants,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
+
+  implicit none
+
+  integer countval
+  ! by not specifying any dimensions for the buffer here we can use this routine for arrays of any number
+  ! of indices, provided we call the routine using the first memory cell of that multidimensional array,
+  ! i.e. for instance buffer(1,1,1) if the array has three dimensions with indices that all start at 1.
+  logical :: buffer
+
+  integer ier
+
+  if(.not. (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. BROADCAST_SAME_MESH_AND_MODEL)) return
+
+  call MPI_BCAST(buffer,countval,MPI_INTEGER,0,my_local_mpi_comm_for_bcast,ier)
+
+  end subroutine bcast_all_l_for_database
+
+!
+!----
+!
+
   subroutine bcast_all_cr_for_database(buffer, countval)
 
   use my_mpi
-  use constants,only: CUSTOM_REAL
+  use constants,only: CUSTOM_REAL,NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
 
   implicit none
 
   include "precision.h"
 
   integer countval
-  real(kind=CUSTOM_REAL), dimension(countval) :: buffer
+  ! by not specifying any dimensions for the buffer here we can use this routine for arrays of any number
+  ! of indices, provided we call the routine using the first memory cell of that multidimensional array,
+  ! i.e. for instance buffer(1,1,1) if the array has three dimensions with indices that all start at 1.
+  real(kind=CUSTOM_REAL) :: buffer
 
   integer ier
+
+  if(.not. (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. BROADCAST_SAME_MESH_AND_MODEL)) return
 
   call MPI_BCAST(buffer,countval,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_for_bcast,ier)
 
@@ -272,13 +272,19 @@ end module my_mpi
   subroutine bcast_all_dp_for_database(buffer, countval)
 
   use my_mpi
+  use constants,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
 
   implicit none
 
   integer countval
-  double precision, dimension(countval) :: buffer
+  ! by not specifying any dimensions for the buffer here we can use this routine for arrays of any number
+  ! of indices, provided we call the routine using the first memory cell of that multidimensional array,
+  ! i.e. for instance buffer(1,1,1) if the array has three dimensions with indices that all start at 1.
+  double precision :: buffer
 
   integer ier
+
+  if(.not. (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. BROADCAST_SAME_MESH_AND_MODEL)) return
 
   call MPI_BCAST(buffer,countval,MPI_DOUBLE_PRECISION,0,my_local_mpi_comm_for_bcast,ier)
 
@@ -291,13 +297,19 @@ end module my_mpi
   subroutine bcast_all_r_for_database(buffer, countval)
 
   use my_mpi
+  use constants,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
 
   implicit none
 
   integer countval
-  real, dimension(countval) :: buffer
+  ! by not specifying any dimensions for the buffer here we can use this routine for arrays of any number
+  ! of indices, provided we call the routine using the first memory cell of that multidimensional array,
+  ! i.e. for instance buffer(1,1,1) if the array has three dimensions with indices that all start at 1.
+  real :: buffer
 
   integer ier
+
+  if(.not. (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. BROADCAST_SAME_MESH_AND_MODEL)) return
 
   call MPI_BCAST(buffer,countval,MPI_REAL,0,my_local_mpi_comm_for_bcast,ier)
 
@@ -325,7 +337,6 @@ end module my_mpi
 
   end subroutine gather_all_i
 
-
 !
 !----
 !
@@ -347,7 +358,6 @@ end module my_mpi
                   0,my_local_mpi_comm_world,ier)
 
   end subroutine gather_all_singlei
-
 
 !
 !----
@@ -1268,7 +1278,7 @@ end module my_mpi
 
   use my_mpi
   use constants,only: MAX_STRING_LEN,NUMBER_OF_SIMULTANEOUS_RUNS,OUTPUT_FILES_PATH, &
-    IMAIN,ISTANDARD_OUTPUT,mygroup,BROADCAST_SAME_MESH_AND_MODEL,I_should_read_the_database,I_should_broadcast_the_database
+    IMAIN,ISTANDARD_OUTPUT,mygroup,BROADCAST_SAME_MESH_AND_MODEL,I_should_read_the_database
 
   implicit none
 
@@ -1279,6 +1289,8 @@ end module my_mpi
   if(NUMBER_OF_SIMULTANEOUS_RUNS <= 0) stop 'NUMBER_OF_SIMULTANEOUS_RUNS <= 0 makes no sense'
 
   call MPI_COMM_SIZE(MPI_COMM_WORLD,sizeval,ier)
+  call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
+
   if(NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mod(sizeval,NUMBER_OF_SIMULTANEOUS_RUNS) /= 0) &
     stop 'the number of MPI processes is not a multiple of NUMBER_OF_SIMULTANEOUS_RUNS'
 
@@ -1297,9 +1309,10 @@ end module my_mpi
 
 !--- create a subcommunicator for each independent run
 
-    call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
+    NPROC = sizeval / NUMBER_OF_SIMULTANEOUS_RUNS
+
 !   create the different groups of processes, one for each independent run
-    mygroup = mod(myrank,NUMBER_OF_SIMULTANEOUS_RUNS)
+    mygroup = myrank / NPROC
     key = myrank
     if(mygroup < 0 .or. mygroup > NUMBER_OF_SIMULTANEOUS_RUNS-1) stop 'invalid value of mygroup'
 
@@ -1316,7 +1329,6 @@ end module my_mpi
 
       call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
 !     to broadcast the model, split along similar ranks per run instead
-      NPROC = sizeval / NUMBER_OF_SIMULTANEOUS_RUNS
       my_group_for_bcast = mod(myrank,NPROC)
       key = myrank
       if(my_group_for_bcast < 0 .or. my_group_for_bcast > NPROC-1) stop 'invalid value of my_group_for_bcast'
@@ -1328,7 +1340,6 @@ end module my_mpi
 !     see if that process will need to read the mesh and model database and then broadcast it to others
       call MPI_COMM_RANK(my_local_mpi_comm_for_bcast,my_local_rank_for_bcast,ier)
       if(my_local_rank_for_bcast > 0) I_should_read_the_database = .false.
-      if(my_local_rank_for_bcast == 0) I_should_broadcast_the_database = .true.
 
     else
 
