@@ -43,7 +43,7 @@ module decompose_mesh
     write_material_props_database,write_boundaries_database, &
     write_partition_database,write_cpml_database, &
     acoustic_elastic_poro_load,mesh2dual_ncommonnodes, &
-    build_glob2loc_elmnts,build_glob2loc_nodes,build_interfaces
+    build_glob2loc_elmnts,build_glob2loc_nodes,build_interfaces,poro_elastic_repartitioning,moho_surface_repartitioning
 
   use fault_scotch,only: ANY_FAULT,nodes_coords_open,read_fault_files,save_nodes_coords,close_faults, &
     fault_repartition,write_fault_database
@@ -536,7 +536,7 @@ module decompose_mesh
     else
       read(98,*) nspec2D_xmin
     endif
-! 33333333333333333333333333333333333333333
+
 ! an array of size 0 is a valid object in Fortran 90, i.e. the array is then considered as allocated
 ! and can thus for instance be used as an argument in a call to a subroutine without giving any error
 ! even when full range and pointer checking is used in the compiler options;
@@ -655,7 +655,6 @@ module decompose_mesh
     close(98)
     print*, '  nspec2D_top = ', nspec2D_top
 
-! 33333333333333333333333333333333333333333
 ! an array of size 0 is a valid object in Fortran 90, i.e. the array is then considered as allocated
 ! and can thus for instance be used as an argument in a call to a subroutine without giving any error
 ! even when full range and pointer checking is used in the compiler options;

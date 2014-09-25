@@ -61,28 +61,13 @@
 !----
 !
 
-  subroutine bcast_all_one_i(buffer)
+  subroutine bcast_all_i(buffer, countval)
 
   use unused_mod
   implicit none
 
-  integer :: buffer
-
-  unused_i4 = buffer
-
-  end subroutine bcast_all_one_i
-
-!
-!----
-!
-
-  subroutine bcast_all_i(buffer, count)
-
-  use unused_mod
-  implicit none
-
-  integer count
-  integer, dimension(count) :: buffer
+  integer countval
+  integer, dimension(countval) :: buffer
 
   unused_i4 = buffer(1)
 
@@ -92,15 +77,15 @@
 !----
 !
 
-  subroutine bcast_all_cr(buffer, count)
+  subroutine bcast_all_cr(buffer, countval)
 
   use unused_mod
   use constants,only: CUSTOM_REAL
 
   implicit none
 
-  integer count
-  real(kind=CUSTOM_REAL), dimension(count) :: buffer
+  integer countval
+  real(kind=CUSTOM_REAL), dimension(countval) :: buffer
 
   unused_cr = buffer(1)
 
@@ -110,13 +95,13 @@
 !----
 !
 
-  subroutine bcast_all_dp(buffer, count)
+  subroutine bcast_all_dp(buffer, countval)
 
   use unused_mod
   implicit none
 
-  integer count
-  double precision, dimension(count) :: buffer
+  integer countval
+  double precision, dimension(countval) :: buffer
 
   unused_dp = buffer(1)
 
@@ -142,13 +127,13 @@
 !----
 !
 
-  subroutine bcast_all_r(buffer, count)
+  subroutine bcast_all_r(buffer, countval)
 
   use unused_mod
   implicit none
 
-  integer count
-  real, dimension(count) :: buffer
+  integer countval
+  real, dimension(countval) :: buffer
 
   unused_r = buffer(1)
 
@@ -158,16 +143,108 @@
 !----
 !
 
-  subroutine bcast_all_one_i_for_database(buffer)
+  subroutine bcast_all_i_for_database(buffer, countval)
 
   use unused_mod
   implicit none
 
+  integer countval
+  ! by not specifying any dimensions for the buffer here we can use this routine for arrays of any number
+  ! of indices, provided we call the routine using the first memory cell of that multidimensional array,
+  ! i.e. for instance buffer(1,1,1) if the array has three dimensions with indices that all start at 1.
   integer :: buffer
+
+  unused_i4 = countval
 
   unused_i4 = buffer
 
-  end subroutine bcast_all_one_i_for_database
+  end subroutine bcast_all_i_for_database
+
+!
+!----
+!
+
+  subroutine bcast_all_l_for_database(buffer, countval)
+
+  use unused_mod
+  implicit none
+
+  integer countval
+  ! by not specifying any dimensions for the buffer here we can use this routine for arrays of any number
+  ! of indices, provided we call the routine using the first memory cell of that multidimensional array,
+  ! i.e. for instance buffer(1,1,1) if the array has three dimensions with indices that all start at 1.
+  logical :: buffer
+
+  unused_i4 = countval
+
+  unused_l = buffer
+
+  end subroutine bcast_all_l_for_database
+
+!
+!----
+!
+
+  subroutine bcast_all_cr_for_database(buffer, countval)
+
+  use unused_mod
+  use constants,only: CUSTOM_REAL
+
+  implicit none
+
+  integer countval
+  ! by not specifying any dimensions for the buffer here we can use this routine for arrays of any number
+  ! of indices, provided we call the routine using the first memory cell of that multidimensional array,
+  ! i.e. for instance buffer(1,1,1) if the array has three dimensions with indices that all start at 1.
+  real(kind=CUSTOM_REAL) :: buffer
+
+  unused_i4 = countval
+
+  unused_cr = buffer
+
+  end subroutine bcast_all_cr_for_database
+
+!
+!----
+!
+
+  subroutine bcast_all_dp_for_database(buffer, countval)
+
+  use unused_mod
+  implicit none
+
+  integer countval
+  ! by not specifying any dimensions for the buffer here we can use this routine for arrays of any number
+  ! of indices, provided we call the routine using the first memory cell of that multidimensional array,
+  ! i.e. for instance buffer(1,1,1) if the array has three dimensions with indices that all start at 1.
+  double precision :: buffer
+
+  unused_i4 = countval
+
+  unused_dp = buffer
+
+  end subroutine bcast_all_dp_for_database
+
+!
+!----
+!
+
+  subroutine bcast_all_r_for_database(buffer, countval)
+
+  use unused_mod
+  implicit none
+
+  integer countval
+  ! by not specifying any dimensions for the buffer here we can use this routine for arrays of any number
+  ! of indices, provided we call the routine using the first memory cell of that multidimensional array,
+  ! i.e. for instance buffer(1,1,1) if the array has three dimensions with indices that all start at 1.
+  real :: buffer
+
+  unused_i4 = countval
+
+  unused_r = buffer
+
+  end subroutine bcast_all_r_for_database
 
 !
 !----
@@ -433,13 +510,13 @@
 !----
 !
 
-  subroutine max_allreduce_i(buffer,count)
+  subroutine max_allreduce_i(buffer,countval)
 
   use unused_mod
   implicit none
 
-  integer :: count
-  integer,dimension(count),intent(inout) :: buffer
+  integer :: countval
+  integer,dimension(countval),intent(inout) :: buffer
 
   unused_i4 = buffer(1)
 

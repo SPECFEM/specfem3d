@@ -38,9 +38,9 @@ module constants
   ! if NUMBER_OF_SIMULTANEOUS_RUNS > 1
   character(len=MAX_STRING_LEN) :: OUTPUT_FILES_PATH = OUTPUT_FILES_PATH_BASE
 
-  ! in the case of simultaneous runs for the same mesh and model, see who reads the mesh and the model and broadcasts it to others
-  ! we put default values here
-  logical :: I_should_read_the_database = .true., I_should_broadcast_the_database = .false.
+  ! if doing simultaneous runs for the same mesh and model, see who should read the mesh and the model and broadcast it to others
+  ! we put a default value here
+  logical :: I_should_read_the_database = .true.
 
 end module constants
 

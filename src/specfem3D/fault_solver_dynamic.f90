@@ -37,8 +37,8 @@
 
 module fault_solver_dynamic
 
-  use fault_solver_common
   use constants
+  use fault_solver_common
 
   implicit none
 

@@ -91,6 +91,9 @@
 !! DK DK runs for instance when solving inverse problems iteratively this can DRASTICALLY reduce I/Os to disk in the solver
 !! DK DK (by a factor equal to NUMBER_OF_SIMULTANEOUS_RUNS), and reducing I/Os is crucial in the case of huge runs.
 !! DK DK Thus, always set this option to .true. if the mesh and the model are the same for all simultaneous runs.
+!! DK DK In that case there is no need to duplicate the mesh and model file database (the content of the DATABASES_MPI
+!! DK DK directories) in each of the run0001, run0002,... directories, it is sufficient to have one in run0001
+!! DK DK and the code will broadcast it to the others)
   logical, parameter :: BROADCAST_SAME_MESH_AND_MODEL = .false.
 
 ! set to .false.  if running on a Beowulf-type machine with local disks

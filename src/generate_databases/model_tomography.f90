@@ -99,9 +99,10 @@
   ! otherwise:
 
   ! only master reads in model file
+  !integer, dimension(1) :: nrecord
   !if(myrank == 0) call read_model_tomography()
   ! broadcast the information read on the master to the nodes, e.g.
-  !call bcast_all_one_i(nrecord)
+  !call bcast_all_i(nrecord,1)
 
   !if( myrank /= 0 ) then
   ! allocate( vp_tomography(1:nrecord) ,stat=ier)

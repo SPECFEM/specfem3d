@@ -479,7 +479,6 @@ module specfem_par_poroelastic
     epsilons_trace_over_3,epsilonw_trace_over_3
 
 ! material properties
-!  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: mustore
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: etastore,tortstore
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: phistore
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rhoarraystore
