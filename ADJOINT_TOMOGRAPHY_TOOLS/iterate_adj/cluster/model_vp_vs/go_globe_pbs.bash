@@ -31,7 +31,7 @@ cat $PBS_NODEFILE > OUTPUT_FILES/compute_nodes
 echo "$PBS_JOBID" > OUTPUT_FILES/jobid
 
 # steepest descent step
-mpiexec -np $numnodes $PWD/src/add_model_globe_iso $percentage
+mpiexec -np $numnodes $PWD/xadd_model_iso $percentage
 
 
 echo "done successfully"

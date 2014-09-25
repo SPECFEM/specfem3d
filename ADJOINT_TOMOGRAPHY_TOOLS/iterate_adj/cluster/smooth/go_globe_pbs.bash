@@ -48,10 +48,10 @@ echo "$PBS_JOBID" > OUTPUT_FILES/jobid
 # the vertical smoothing radius would be sigma_v:
 #  40 km ( ~about quater wavelength 4km * 40 s / 4 )
 
-# usage: smooth_sem_globe sigma_h sigma_v kernel_name kernel_input_dir/ topo_dir/
+# usage: smooth_sem sigma_h sigma_v kernel_name kernel_input_dir/ topo_dir/
 
 echo "kernel smoothing: $kernel"
-mpiexec -np $numnodes $PWD/src/smooth_sem_globe $sigmah $sigmav $kernel $PWD/OUTPUT_SUM $PWD/topo
+mpiexec -np $numnodes $PWD/xsmooth_sem $sigmah $sigmav $kernel $PWD/OUTPUT_SUM $PWD/topo
 echo
 
 

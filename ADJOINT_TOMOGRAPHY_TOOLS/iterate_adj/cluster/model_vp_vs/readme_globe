@@ -30,17 +30,17 @@ add_model_globe_iso:
 
 
 
-add_model_globe_tiso_iso:
+add_model_tiso_iso:
 
   takes TRANSVERSE ISOTROPIC model and ISOTROPIC kernels and
   makes a steepest descent model update
 
-add_model_globe_tiso:
+add_model_tiso:
 
   takes TRANSVERSE ISOTROPIC model and TRANSVERSE ISOTROPIC kernels and
   makes a steepest descent model update
 
-add_model_globe_tiso_cg:
+add_model_tiso_cg:
 
   takes TRANSVERSE ISOTROPIC model and TRANSVERSE ISOTROPIC kernels and
   makes a conjugate-gradient model update
@@ -49,27 +49,19 @@ add_model_globe_tiso_cg:
 steps:
 ------
 
-0. copy file SPECFEM3D_GLOBE/constants.h 
-   over to:  src/constants_globe.h
+0. compile executables 'add_model_**': 
+    (source files have been moved to SPECFEM3D_GLOBE package in src/tomography/)
+    > cd ~/SPECFEM3D_GLOBE/
+    > make tomography
+    then copy binaries into this directory...
 
-   copy file SPECFEM3D_GLOBE/precision.h 
-   over to:  src/precision_globe.h
-
-   copy file SPECFEM3D_GLOBE/OUTPUT_FILES/values_from_mesher.h 
-   over to:  src/values_from_mesher_globe.h
-   ( when generated for a kernel run ...)
-
-1. compile add_model_globe_iso: 
-   > cd src/ 
-   > make -f Makefile_globe
-   
-2. setup input model links:
+1. setup input model links:
    > ln -s /my_input_model/proc***.bin INPUT_MODEL/ 
    
-3. setup gradient directory:
+2. setup gradient directory:
    > ln -s /my_summed_smoothed_event_kernel_directory INPUT_GRADIENT   
    
-4. run job: 
+3. run job: 
    
    modify step_length in go_globe_pbs.bash, 
    then

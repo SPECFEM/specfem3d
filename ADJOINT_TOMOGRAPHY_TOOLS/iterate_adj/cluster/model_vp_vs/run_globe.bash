@@ -6,9 +6,9 @@ rm -f OUTPUT_FILES/*
 rm -f OUTPUT_MODEL/*.*
 
 # compiles executable
-cd src/
-make -f Makefile_globe
-cd ..
+#cd src/
+#make -f Makefile_globe
+#cd ..
 
 # submits job
 date

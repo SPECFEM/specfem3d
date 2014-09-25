@@ -23,9 +23,9 @@ cd ..
 ls -1 INPUT_KERNELS/ > kernels_run.globe
 
 # compiles
-cd src/
-make -f Makefile_globe
-cd ..
+#cd src/
+#make -f Makefile_globe
+#cd ..
 
 # runs job
 date

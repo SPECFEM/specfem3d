@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # compiles executable in src/ directory
-current_pwd=$PWD
-cd src/
-make -f Makefile_globe
-cd ../
+#current_pwd=$PWD
+#cd src/
+#make -f Makefile_globe
+#cd ../
 
 # cleans up outputs
 rm -f OUTPUT_FILES/*

@@ -8,30 +8,20 @@ sum_kernels_globe:
   and sums them all up
 
 
-1. copy file SPECFEM3D_GLOBE/constants.h 
-   over to:  src/constants_globe.h
+0. compile executable 'sum_kernels': 
+    (source files have been moved to SPECFEM3D_GLOBE package in src/tomography/)
+    > cd ~/SPECFEM3D_GLOBE/
+    > make xsum_kernels
+    then copy binaries into this directory...
 
-   copy file SPECFEM3D_GLOBE/precision.h 
-   over to:  src/precision_globe.h
-
-   copy file SPECFEM3D_GLOBE/OUTPUT_FILES/values_from_mesher.h 
-   over to:  src/values_from_mesher_globe.h
-   ( when generated for a kernel run ...)
-
-   copy file SPECFEM3D_GLOBE/config.h 
-   over to:  src/config_globe.h
    
-2. compile executable 'sum_kernels_globe': 
-    > cd src/
-    > make -f Makefile_globe
-    
-3. create symbolic link 'INPUT_KERNELS' to kernel directories:
+1. create symbolic link 'INPUT_KERNELS' to kernel directories:
     > ln -s /my_OUTPUTS_KERNEL INPUT_KERNEL
     or
     > cd INPUT_KERNEL/
     > ln -s /my_OUTPUTS_KERNEL/*.* ./
 
-4. copy each single kernel directory name to file 'kernels_run.globe':
+2. copy each single kernel directory name to file 'kernels_run.globe':
     > ls -1 INPUT_KERNELS/ > kernels_run.globe 
     
     

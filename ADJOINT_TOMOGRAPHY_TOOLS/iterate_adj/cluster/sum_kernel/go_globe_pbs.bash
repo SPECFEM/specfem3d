@@ -26,5 +26,5 @@ cd $PBS_O_WORKDIR
 cat $PBS_NODEFILE > OUTPUT_FILES/compute_nodes
 echo "$PBS_JOBID" > OUTPUT_FILES/jobid
 
-mpiexec -np $numnodes $PWD/src/sum_kernels_globe
+mpiexec -np $numnodes $PWD/xsum_kernels
 
