@@ -67,8 +67,7 @@
 !! DK DK and thus the total number of processor cores to request from the batch system
 !! DK DK should be NUMBER_OF_SIMULTANEOUS_RUNS * NPROC.
 !! DK DK All the runs to perform must be placed in directories called run0001, run0002, run0003 and so on
-!! DK DK (with exactly four digits) and you must create a link from the root directory of the code
-!! DK DK to the first copy of the executable programs by typing " ln -s run0001/bin bin ".
+!! DK DK (with exactly four digits).
 !!
 !! DK DK Imagine you have 10 independent calculations to do, each of them on 100 cores; you have three options:
 !!
