@@ -2,8 +2,8 @@ XXXX 2002  9  3  7 08 51.77  33.9133 -117.7840   8.6 4.3 4.3 9818433_SEMm12_Lin
 event name:     9818433
 time shift:      0.0000
 half duration:   0.3900
-latitude:       33.9133
-longitude:    -117.7840
+latorUTM:       33.9133
+longorUTM:    -117.7840
 depth:           8.5902
 Mrr:      -6.047300e+20
 Mtt:      -3.805420e+22

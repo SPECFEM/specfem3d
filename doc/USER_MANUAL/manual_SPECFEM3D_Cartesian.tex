@@ -1917,6 +1917,7 @@ magnitude.}
 \end{lyxcode}
 The \texttt{CMTSOLUTION} file should be edited in the following way:
 \begin{itemize}
+\item Set the latitude or UTM $x$ coordinate, longitude or UTM $y$ coordinate, depth of the source (in km).
 \item Set the \texttt{time shift} parameter equal to $0.0$ (the solver
 will not run otherwise.) The time shift parameter would simply apply
 an overall time shift to the synthetics, something that can be done
@@ -2036,7 +2037,7 @@ in the main parameter file {\texttt{Par\_file}}. In case that the
 solver uses a (pseudo) Dirac delta source time function to represent
 a force point source, a very short \texttt{half duration} parameter
 (hdur = 5 {*} DT) is automatically set by default.
-\item Set the latitude, longitude, depth of the source in geographical coordinates.
+\item Set the latitude or UTM $x$ coordinate, longitude or UTM $y$ coordinate, depth of the source (in km).
 \item Set the magnitude of the force source.
 \item Set the components of a (non-unitary) direction vector for the force
 source in the East/North/Vertical basis (see Appendix A for the orientation

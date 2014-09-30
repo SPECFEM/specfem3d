@@ -2,8 +2,8 @@ PDE  1999 01 01 00 00 00.00  1000000 1000000 -1000000 1 1 dynamic_rupture
 event name:       dynamic_rupture
 time shift:       0.0000
 half duration:    0.0
-latitude:        1000000.0
-longitude:       1000000.0
+latorUTM:        1000000.0
+longorUTM:       1000000.0
 depth:          -1000000.0
 Mrr:       1.258900e+0
 Mtt:       1.258900e+0
