@@ -1,25 +1,16 @@
 module model_sep_mod
   implicit none
 
-  !interface
-    !subroutine parse_sep_header(header_name, &
-                                !nx, ny, nz,  &
-                                !ox, oy, oz,  &
-                                !dx, dy, dz,  &
-                                !bin_name)
-      !character(len=:) :: header_name, bin_name
-      !integer :: nx, ny, nz
-      !real :: ox, oy, ox, dx, dy, dz
-    !end subroutine parse_sep_header
-  !end interface
 contains
 
 !==============================================================================
 subroutine model_sep()
   use generate_databases_par, only: NGLLX, NGLLY, NGLLZ, NSPEC=>NSPEC_AB, &
-                                    SEP_MODEL_DIRECTORY
+                                    SEP_MODEL_DIRECTORY, FOUR_THIRDS
   use create_regions_mesh_ext_par, only: rhostore, rho_vp, rho_vs, &
-                                         ispec_is_acoustic, ispec_is_elastic
+                                         ispec_is_acoustic, ispec_is_elastic, &
+                                         kappastore, mustore, &
+                                         rho_vpI, rho_vsI, rhoarraystore
 
   real(kind=4), allocatable, dimension(:,:,:) :: vp_sep, vs_sep, rho_sep
   integer :: NX, NY, NZ
@@ -34,9 +25,12 @@ subroutine model_sep()
   logical :: vp_exists, vs_exists, rho_exists
 
   ! Get files from SEP_MODEL_DIRECTORY
-  write(sep_header_name_vp, *) trim(SEP_MODEL_DIRECTORY) // "/vp.H" 
-  write(sep_header_name_vs, *) trim(SEP_MODEL_DIRECTORY) // "/vs.H" 
-  write(sep_header_name_rho, *) trim(SEP_MODEL_DIRECTORY) // "/rho.H" 
+  sep_header_name_vp = trim(SEP_MODEL_DIRECTORY) // "/vp.H" 
+  sep_header_name_vs = trim(SEP_MODEL_DIRECTORY) // "/vs.H" 
+  sep_header_name_rho = trim(SEP_MODEL_DIRECTORY) // "/rho.H" 
+  !write(sep_header_name_vp, '(a)') trim(SEP_MODEL_DIRECTORY) // "/vp.H" 
+  !write(sep_header_name_vs, *) trim(SEP_MODEL_DIRECTORY) // "/vs.H" 
+  !write(sep_header_name_rho, *) trim(SEP_MODEL_DIRECTORY) // "/rho.H" 
 
   inquire(file=trim(sep_header_name_vp), exist=vp_exists) 
   if (.not. vp_exists) stop "SEP vp model should exist"
@@ -53,14 +47,14 @@ subroutine model_sep()
   !    -> Check for unit* to be meter
   ! Parse only one of the header, vp is the most likely to be present
   ! It might be useful to make sure that all SEP files have coherent dimensions.
-  call parse_sep_header(trim(sep_header_name_vp),           &
-                        NX, NY, NZ, OX, OY, OZ, DX, DY, DZ, &
+  call parse_sep_header(trim(sep_header_name_vp) // char(0), &
+                        NX, NY, NZ, OX, OY, OZ, DX, DY, DZ,  &
                         sep_bin_vp)
   if (vs_exists) then
-    call parse_sep_header(trim(sep_header_name_vs), &
-                          NX_alt, NY_alt, NZ_alt,   &
-                          OX_alt, OY_alt, OZ_alt,   &
-                          DX_alt, DY_alt, DZ_alt,   &
+    call parse_sep_header(trim(sep_header_name_vs) // char(0), &
+                          NX_alt, NY_alt, NZ_alt,              &
+                          OX_alt, OY_alt, OZ_alt,              &
+                          DX_alt, DY_alt, DZ_alt,              &
                           sep_bin_vs)
     if ((NX /= NX_alt) .and. (NY /= NX_alt) .and. (NZ /= NZ_alt) .and. &
         (OX /= OX_alt) .and. (OY /= OX_alt) .and. (OZ /= OZ_alt) .and. &
@@ -69,10 +63,10 @@ subroutine model_sep()
     endif
   endif
   if (rho_exists) then
-    call parse_sep_header(trim(sep_header_name_rho), &
-                          NX_alt, NY_alt, NZ_alt,    &
-                          OX_alt, OY_alt, OZ_alt,    &
-                          DX_alt, DY_alt, DZ_alt,    &
+    call parse_sep_header(trim(sep_header_name_rho) // char(0), &
+                          NX_alt, NY_alt, NZ_alt,               &
+                          OX_alt, OY_alt, OZ_alt,               &
+                          DX_alt, DY_alt, DZ_alt,               &
                           sep_bin_rho)
     if ((NX /= NX_alt) .and. (NY/= NX_alt) .and. (NZ/= NZ_alt) .and. &
         (OX /= OX_alt) .and. (OY/= OX_alt) .and. (OZ/= OZ_alt) .and. &
@@ -93,6 +87,7 @@ subroutine model_sep()
   call read_sep_binary_mpiio(sep_bin_vp, NX, NY, NZ, ni, nj, NZ, &
                              imin, jmin, kmin, vp_sep)
   ! Interpolate SEP values on meshfem mesh.
+  rho_vp = 0.0
   call interpolate_sep_on_mesh(vp_sep, xmin, ymin, ni, nj, NZ, &
                                DX, DY, DZ, rho_vp)
 
@@ -101,10 +96,10 @@ subroutine model_sep()
   !---------'
   if (vs_exists) then
     allocate(vs_sep(ni, nj, NZ))
-    call read_sep_binary_mpiio(sep_bin_vs, NX, NY, NZ, ni, nj, &
-                               imin, jmin, kmin, NZ, vs_sep)
-    call interpolate_sep_on_mesh(rho_sep, xmin, ymin, ni, nj, NZ, &
-                                 DX, DY, DZ, rhostore)
+    call read_sep_binary_mpiio(sep_bin_vs, NX, NY, NZ, ni, nj, NZ, &
+                               imin, jmin, kmin, vs_sep)
+    call interpolate_sep_on_mesh(vs_sep, xmin, ymin, ni, nj, NZ, &
+                                 DX, DY, DZ, rho_vs)
   endif
 
   !----------.
@@ -112,10 +107,10 @@ subroutine model_sep()
   !----------'
   if (rho_exists) then
     allocate(rho_sep(ni, nj, NZ))
-    call read_sep_binary_mpiio(sep_bin_rho, NX, NY, NZ, ni, nj, &
-                               imin, jmin, kmin, NZ, rho_sep)
-    call interpolate_sep_on_mesh(vs_sep, xmin, ymin, ni, nj, NZ, &
-                                 DX, DY, DZ, rho_vs)
+    call read_sep_binary_mpiio(sep_bin_rho, NX, NY, NZ, ni, nj, NZ, &
+                               imin, jmin, kmin, rho_sep)
+    call interpolate_sep_on_mesh(rho_sep, xmin, ymin, ni, nj, NZ, &
+                                 DX, DY, DZ, rhostore)
   endif
 
   ! Check that values around the acoustic / elastic interface is correct.
@@ -125,11 +120,20 @@ subroutine model_sep()
     call correct_sep_interface()
   endif ! vs_exists
 
+  kappastore = rhostore *( rho_vp * rho_vp - FOUR_THIRDS*rho_vs*rho_vs )
+  mustore = rhostore*rho_vs*rho_vs
+
   ! SPECFEM expects rho*velocity
   rho_vp = rho_vp * rhostore
   if (vs_exists) then
     rho_vs = rho_vs * rhostore
   endif
+  ! Stacey, a completer par la suite
+  !
+  rho_vpI = rho_vp
+  rho_vsI = rho_vs
+  rhoarraystore(1, :, :, :, :) = rhostore
+  rhoarraystore(2, :, :, :, :) = rhostore
 
   if (allocated(vp_sep)) deallocate(vp_sep)
   if (allocated(vs_sep)) deallocate(vs_sep)
@@ -168,6 +172,8 @@ subroutine read_sep_binary_mpiio(filename, NX, NY, NZ, ni, nj, nk, &
   global_sizes = (/ NX, NY, NZ /)
   local_sizes = (/ ni, nj, nk /)
   starting_idx = (/ imin-1, jmin-1, kmin-1 /)
+
+  call MPI_BARRIER(MPI_COMM_WORLD, ier)
 
   ! Create the 3D stencil for values consecutive in X but disjoint in Y and Z.
   call MPI_Type_create_subarray(3, global_sizes, local_sizes, starting_idx, &

@@ -28,7 +28,7 @@
 /*****************************************************************************/
 void parse_sep_header(char *header_name, 
                       int *n1, int *n2, int *n3, 
-                      int *o1, int *o2, int *o3, 
+                      float *o1, float *o2, float *o3, 
                       float *d1, float *d2, float *d3, 
                       char *in) {
   char *line = NULL;
@@ -36,7 +36,7 @@ void parse_sep_header(char *header_name,
 
   FILE *fd = fopen(header_name, "r");
   if (fd == NULL) 
-    EXIT_ON_ERR("fopen");
+    EXIT_ON_ERR(header_name);
 
   /* Build regex mathing "name=value" with optional spaces*/
   regex_t re;
@@ -68,11 +68,11 @@ void parse_sep_header(char *header_name,
       } else if (!strcmp(name, "n3")) {
         *n3 = atoi(value);
       } else if (!strcmp(name, "o1")) {
-        *o1 = atoi(value);
+        *o1 = atof(value);
       } else if (!strcmp(name, "o2")) {
-        *o2 = atoi(value);
+        *o2 = atof(value);
       } else if (!strcmp(name, "o3")) {
-        *o3 = atoi(value);
+        *o3 = atof(value);
       } else if (!strcmp(name, "d1")) {
         *d1 = atof(value);
       } else if (!strcmp(name, "d2")) {
