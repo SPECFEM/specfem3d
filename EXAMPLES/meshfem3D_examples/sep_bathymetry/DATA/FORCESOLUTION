@@ -1,0 +1,10 @@
+FORCE  001
+time shift:     0.0000
+hdur:           0.5
+latitude:       33.6
+longitude:      -118.4
+depth:           10.0
+factor force source:             1.d15
+component dir vect source E:     1.d0
+component dir vect source N:     -2.d0
+component dir vect source Z_UP:  -1.d0
