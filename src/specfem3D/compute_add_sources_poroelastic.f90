@@ -116,16 +116,6 @@
 
             if(USE_FORCE_POINT_SOURCE) then
 
-              !f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing CMTSOLUTION file format
-              !t0 = 1.2d0/f0
-
-!              if (it == 1 .and. myrank == 0) then
-!                print *,'using a source of dominant frequency ',f0
-!chris
-!                print *,'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
-!                print *,'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
-!              endif
-
               if( USE_RICKER_TIME_FUNCTION ) then
                 stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
               else
@@ -362,13 +352,6 @@
           if( ispec_is_poroelastic(ispec) ) then
 
             if(USE_FORCE_POINT_SOURCE) then
-
-               !f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing CMTSOLUTION file format
-               !if (it == 1 .and. myrank == 0) then
-               !   write(IMAIN,*) 'using a source of dominant frequency ',f0
-               !   write(IMAIN,*) 'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
-               !   write(IMAIN,*) 'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
-               !endif
 
                if( USE_RICKER_TIME_FUNCTION ) then
                  stf = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))

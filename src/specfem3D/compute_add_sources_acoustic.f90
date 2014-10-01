@@ -124,13 +124,8 @@
 
             if (USE_FORCE_POINT_SOURCE) then
 
+!! DK DK note from DK DK: the statement below is very weird
               f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing FORCESOLUTION file format
-
-              !if (it == 1 .and. myrank == 0) then
-              !  write(IMAIN,*) 'using a source of dominant frequency ',f0
-              !  write(IMAIN,*) 'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
-              !  write(IMAIN,*) 'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
-              !endif
 
               if (USE_RICKER_TIME_FUNCTION) then
                 stf_used = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),f0)
@@ -468,20 +463,13 @@
 
             if (USE_FORCE_POINT_SOURCE) then
 
+!! DK DK note from DK DK: the statement below is very weird
               f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing FORCESOLUTION file format
 
-              !if (it == 1 .and. myrank == 0) then
-              !  write(IMAIN,*) 'using a source of dominant frequency ',f0
-              !  write(IMAIN,*) 'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
-              !  write(IMAIN,*) 'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
-              !endif
-
               if (USE_RICKER_TIME_FUNCTION) then
-                stf_used = comp_source_time_function_rickr( &
-                           dble(NSTEP-it)*DT-t0-tshift_src(isource),f0)
+                stf_used = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),f0)
               else
-                stf_used = comp_source_time_function_gauss( &
-                           dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_tiny(isource))
+                stf_used = comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_tiny(isource))
               endif
 
               ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
@@ -637,7 +625,6 @@
 ! forward simulations
   if (SIMULATION_TYPE == 1 .and. nsources_local > 0) then
 
-!way 2
     if (NSOURCES > 0) then
       do isource = 1,NSOURCES
         ! precomputes source time function factor
