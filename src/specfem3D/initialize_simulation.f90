@@ -67,7 +67,7 @@
 
   if(GPU_MODE .and. COUPLE_WITH_DSM) stop 'Coupling with DSM currently not implemented for GPUs'
 
-  ! myrank is the rank of each process, between 0 and NPROC-1.
+  ! myrank is the rank of each process, between 0 and NPROC-1
   ! as usual in MPI, process 0 is in charge of coordinating everything
   ! and also takes care of the main output
   call world_rank(myrank)
