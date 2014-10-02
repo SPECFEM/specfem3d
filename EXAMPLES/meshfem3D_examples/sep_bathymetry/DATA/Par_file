@@ -15,8 +15,8 @@ SUPPRESS_UTM_PROJECTION         = .true.
 NPROC                           = 5
 
 # time step parameters
-NSTEP                           = 200
-DT                              = 0.03
+NSTEP                           = 10000
+DT                              = 0.0018
 
 # number of nodes for 2D and 3D shape functions for hexahedra
 # we use either 8-node mesh elements (bricks) or 27-node elements.
