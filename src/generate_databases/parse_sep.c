@@ -125,13 +125,21 @@ void parse_sep_header(char *header_name,
 
 /*****************************************************************************/
 /*** Aliases for Fortran bindings ***/
+/*
+void parse_sep_header_(char *header_name, 
+                       int *n1, int *n2, int *n3, 
+                       float *o1, float *o2, float *o3, 
+                       float *f1, float *f2, float *f3, 
+                       char *in)
+    __attribute__((alias("parse_sep_header")));
+*/
 
 void parse_sep_header_(char *header_name, 
                        int *n1, int *n2, int *n3, 
                        float *o1, float *o2, float *o3, 
                        float *f1, float *f2, float *f3, 
                        char *in) {
-  parse_sep_header_(header_name, n1, n2, n3, o1, o2, o3, f1, f2, f3, in);
+  parse_sep_header(header_name, n1, n2, n3, o1, o2, o3, f1, f2, f3, in);
 }
 //  __attribute__((alias("parse_sep_header")));  // not known to PGI compilers
 /*****************************************************************************/
