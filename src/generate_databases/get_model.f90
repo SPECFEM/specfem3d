@@ -383,7 +383,7 @@
   use generate_databases_par,only: IMODEL, &
     IMODEL_DEFAULT,IMODEL_GLL,IMODEL_1D_PREM,IMODEL_1D_CASCADIA,IMODEL_1D_SOCAL, &
     IMODEL_SALTON_TROUGH,IMODEL_TOMO,IMODEL_USER_EXTERNAL,IMODEL_IPATI,IMODEL_IPATI_WATER, &
-    IMODEL_1D_PREM_PB,IMODEL_GLL, IMODEL_SEP, &
+    IMODEL_1D_PREM_PB,IMODEL_GLL, &
     IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,ATTENUATION_COMP_MAXIMUM
 
   use create_regions_mesh_ext_par
@@ -426,7 +426,7 @@
   ! selects chosen velocity model
   select case( IMODEL )
 
-  case( IMODEL_DEFAULT,IMODEL_GLL,IMODEL_IPATI,IMODEL_IPATI_WATER, IMODEL_SEP )
+  case( IMODEL_DEFAULT,IMODEL_GLL,IMODEL_IPATI,IMODEL_IPATI_WATER )
     ! material values determined by mesh properties
     call model_default(materials_ext_mesh,nmat_ext_mesh, &
                           undef_mat_prop,nundefMat_ext_mesh, &
@@ -507,14 +507,12 @@
 ! reads in material parameters from external binary files
 
   use generate_databases_par,only: IMODEL, &
-    IMODEL_GLL,IMODEL_IPATI,IMODEL_IPATI_WATER, IMODEL_SEP, &
+    IMODEL_GLL,IMODEL_IPATI,IMODEL_IPATI_WATER, &
     ADIOS_FOR_MESH
 
   use create_regions_mesh_ext_par
 
   use model_ipati_adios_mod
-  
-  use model_sep_mod
 
   implicit none
 
@@ -555,10 +553,6 @@
     else
       call model_ipati_water(myrank,nspec,LOCAL_PATH)
     endif
-
-  case( IMODEL_SEP)
-    ! use values from SEP files
-    call model_sep()
 
   end select
 
