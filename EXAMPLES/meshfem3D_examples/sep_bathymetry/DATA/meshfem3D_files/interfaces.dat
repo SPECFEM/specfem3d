@@ -17,6 +17,6 @@
 #
 # for each layer, we give the number of spectral elements in the vertical direction
 # layer number 1 (bottom layer)
- 85
+ 48
 # layer number 2 (top layer)
- 15
+ 2

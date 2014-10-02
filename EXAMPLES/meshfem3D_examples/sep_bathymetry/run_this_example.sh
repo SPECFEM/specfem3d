@@ -31,7 +31,7 @@ rm -rf OUTPUT_FILES/DATABASES_MPI/*
 
 # compiles executables in root directory
 cd ../../../
-#make clean
+make clean
 make -j 4 #> $currentdir/tmp.log
 cd $currentdir
 
@@ -51,6 +51,7 @@ echo
 echo "running mesher..."
 echo
 mpirun -np $NPROC ./bin/xmeshfem3D
+#./bin/xmeshfem3D
 #mv OUTPUT_FILES/output_mesher.txt OUTPUT_FILES/output_meshfem3D.txt
 
 # runs database generation
@@ -58,12 +59,13 @@ echo
 echo "running database generation..."
 echo
 mpirun -np $NPROC ./bin/xgenerate_databases
+#./bin/xgenerate_databases
 
 # runs simulation
 echo
 echo "  running solver..."
 echo
-#mpirun -np $NPROC ./bin/xspecfem3D
+mpirun -np $NPROC ./bin/xspecfem3D
 
 echo
 echo "see results in directory: OUTPUT_FILES/"
