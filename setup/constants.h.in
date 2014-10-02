@@ -546,6 +546,7 @@
   integer, parameter :: IMODEL_1D_PREM_PB       = 9
   integer, parameter :: IMODEL_IPATI            = 10
   integer, parameter :: IMODEL_IPATI_WATER      = 11
+  integer, parameter :: IMODEL_SEP              = 12
 
 !!-----------------------------------------------------------
 !!

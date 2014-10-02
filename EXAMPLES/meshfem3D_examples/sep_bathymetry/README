@@ -1,0 +1,8 @@
+----------------------------------------------------------------------
+README
+(/SPECFEM3D/examples/meshfem3D_examples/sep_bathymetry/README)
+----------------------------------------------------------------------
+
+Option 1: run process.sh from local directory (must have access to mpi)
+
+----------------------------------------------------------------------
