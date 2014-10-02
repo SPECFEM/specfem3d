@@ -1,9 +1,14 @@
+!> Module dealing with SEP model files.
+!! Constraints:
+!! * Only acoustic and elastic elements
+!! * Requires VP, VS and RHO models
 module model_sep_mod
   implicit none
 
 contains
 
 !==============================================================================
+!> Reads a SEP elastic model, with vp, vs and rho files.
 subroutine model_sep()
   use generate_databases_par, only: NGLLX, NGLLY, NGLLZ, NSPEC=>NSPEC_AB, &
                                     SEP_MODEL_DIRECTORY, FOUR_THIRDS
@@ -28,9 +33,6 @@ subroutine model_sep()
   sep_header_name_vp = trim(SEP_MODEL_DIRECTORY) // "/vp.H" 
   sep_header_name_vs = trim(SEP_MODEL_DIRECTORY) // "/vs.H" 
   sep_header_name_rho = trim(SEP_MODEL_DIRECTORY) // "/rho.H" 
-  !write(sep_header_name_vp, '(a)') trim(SEP_MODEL_DIRECTORY) // "/vp.H" 
-  !write(sep_header_name_vs, *) trim(SEP_MODEL_DIRECTORY) // "/vs.H" 
-  !write(sep_header_name_rho, *) trim(SEP_MODEL_DIRECTORY) // "/rho.H" 
 
   inquire(file=trim(sep_header_name_vp), exist=vp_exists) 
   if (.not. vp_exists) stop "SEP vp model should exist"
@@ -234,7 +236,8 @@ subroutine interpolate_sep_on_mesh(sep_var, xmin, ymin, ni, nj, NZ, &
 end subroutine interpolate_sep_on_mesh
 
 !==============================================================================
-!>
+!> Find offsets and number of elements to read from the SEP file according
+!! to the slice topology.
 subroutine find_slice_bounds_sep(NX, NY, NZ, OX, OY, OZ, DX, DY, DZ, &
                                  xmin, ymin, imin, jmin, kmin, ni, nj, nk)
   use generate_databases_par, only: xstore, ystore, zstore
@@ -273,7 +276,7 @@ end subroutine find_slice_bounds_sep
 
 
 !==============================================================================
-!>
+!> Make sure that each element is fully acoustic or fully elastic.
 subroutine correct_sep_interface()
   use generate_databases_par, only: NGLLX, NGLLY, NGLLZ, NSPEC=>NSPEC_AB
   use create_regions_mesh_ext_par, only: rhostore, rho_vp, rho_vs, &

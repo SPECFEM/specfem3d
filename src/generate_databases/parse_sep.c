@@ -26,6 +26,21 @@
 
 
 /*****************************************************************************/
+/**
+ * Parse a sep header file and get information of interest
+ *
+ * \param header_name Name of the sep header to parse
+ * \param n1 Number of sample in X direction
+ * \param n2 Number of sample in Y direction
+ * \param n3 Number of sample in Z direction
+ * \param o1 Offset (m) in X direction
+ * \param o2 Offset (m) in Y direction
+ * \param o3 Offset (m) in Z direction
+ * \param d1 Spatial increment (m) in X direction
+ * \param d2 Spatial increment (m) in Y direction
+ * \param d3 Spatial increment (m) in Z direction
+ * \param in Name and location of the SEP binary file
+ */
 void parse_sep_header(char *header_name, 
                       int *n1, int *n2, int *n3, 
                       float *o1, float *o2, float *o3, 
@@ -79,6 +94,7 @@ void parse_sep_header(char *header_name,
         *d2 = atof(value);
       } else if (!strcmp(name, "d3")) {
         *d3 = atof(value);
+        /* We do not have use for other fields. */
       /*} else if (!strcmp(name, "label1")) {
         strncpy(*label1, value, value_len+1);
       } else if (!strcmp(name, "label2")) {
