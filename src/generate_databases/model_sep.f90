@@ -201,12 +201,13 @@ end subroutine read_sep_binary_mpiio
 subroutine interpolate_sep_on_mesh(sep_var, xmin, ymin, ni, nj, NZ, &
                                    DX, DY, DZ, var)
   use generate_databases_par, only: NGLLX, NGLLY, NGLLZ, NSPEC=>NSPEC_AB, &
-                                    ibool, xstore, ystore, zstore
+                                    ibool, xstore, ystore, zstore, &
+                                    CUSTOM_REAL
   !--- Parameters
   real(kind=4), dimension(:,:,:), intent(in) :: sep_var 
   real, intent(in) :: xmin, ymin, DX, DY, DZ
   integer, intent(in) :: ni, nj, NZ
-  real, dimension(:,:,:,:) :: var
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:) :: var
   !--- Variables
   integer :: iglob, i_target, j_target, k_target
   integer :: ispec, i, j, k                                   
