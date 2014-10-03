@@ -15,6 +15,7 @@
  */
 
 /*****************************************************************************/
+#include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -41,11 +42,13 @@
  * \param d3 Spatial increment (m) in Z direction
  * \param in Name and location of the SEP binary file
  */
-void parse_sep_header(char *header_name, 
-                      int *n1, int *n2, int *n3, 
-                      float *o1, float *o2, float *o3, 
-                      float *d1, float *d2, float *d3, 
-                      char *in) {
+void
+FC_FUNC_(parse_sep_header, PARSE_SEP_HEADER)
+    (char *header_name, 
+     int *n1, int *n2, int *n3, 
+     float *o1, float *o2, float *o3, 
+     float *d1, float *d2, float *d3, 
+     char *in) {
   char *line = NULL;
   size_t len = 0;
 
@@ -121,25 +124,3 @@ void parse_sep_header(char *header_name,
   fclose(fd);
   regfree(&re);
 }
-
-
-/*****************************************************************************/
-/*** Aliases for Fortran bindings ***/
-/*
-void parse_sep_header_(char *header_name, 
-                       int *n1, int *n2, int *n3, 
-                       float *o1, float *o2, float *o3, 
-                       float *f1, float *f2, float *f3, 
-                       char *in)
-    __attribute__((alias("parse_sep_header")));
-*/
-
-void parse_sep_header_(char *header_name, 
-                       int *n1, int *n2, int *n3, 
-                       float *o1, float *o2, float *o3, 
-                       float *f1, float *f2, float *f3, 
-                       char *in) {
-  parse_sep_header(header_name, n1, n2, n3, o1, o2, o3, f1, f2, f3, in);
-}
-//  __attribute__((alias("parse_sep_header")));  // not known to PGI compilers
-/*****************************************************************************/
