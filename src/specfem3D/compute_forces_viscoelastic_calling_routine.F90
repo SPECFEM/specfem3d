@@ -192,7 +192,7 @@ subroutine compute_forces_viscoelastic()
       call compute_add_sources_viscoelastic(NSPEC_AB,NGLOB_AB,accel, &
                                             ibool,ispec_is_inner,phase_is_inner, &
                                             NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                                            hdur,hdur_gaussian,tshift_src,dt,t0,sourcearrays, &
+                                            hdur,hdur_gaussian,hdur_tiny,tshift_src,dt,t0,sourcearrays, &
                                             ispec_is_elastic,SIMULATION_TYPE,NSTEP, &
                                             nrec,islice_selected_rec,ispec_selected_rec, &
                                             nadj_rec_local,adj_sourcearrays, &
@@ -411,7 +411,7 @@ subroutine compute_forces_viscoelastic_bpwf()
     call compute_add_sources_viscoelastic_bpwf( NSPEC_AB,NGLOB_AB, &
                         ibool,ispec_is_inner,phase_is_inner, &
                         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                        hdur,hdur_gaussian,tshift_src,dt,t0,sourcearrays, &
+                        hdur,hdur_gaussian,hdur_tiny,tshift_src,dt,t0,sourcearrays, &
                         ispec_is_elastic,SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                         b_accel,NOISE_TOMOGRAPHY)
 
@@ -747,7 +747,7 @@ subroutine compute_forces_viscoelastic_GPU()
     ! adds source term (single-force/moment-tensor solution)
     call compute_add_sources_viscoelastic_GPU(NSPEC_AB, &
                         ispec_is_inner,phase_is_inner,NSOURCES,myrank,it,&
-                        hdur,hdur_gaussian,tshift_src,dt,t0, &
+                        hdur,hdur_gaussian,hdur_tiny,tshift_src,dt,t0, &
                         ispec_is_elastic,SIMULATION_TYPE,NSTEP, &
                         nrec,islice_selected_rec,ispec_selected_rec, &
                         nadj_rec_local,adj_sourcearrays, &

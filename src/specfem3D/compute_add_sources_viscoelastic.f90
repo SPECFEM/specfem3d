@@ -27,10 +27,10 @@
 
 ! for elastic solver
 
-  subroutine compute_add_sources_viscoelastic( NSPEC_AB,NGLOB_AB,accel, &
+  subroutine compute_add_sources_viscoelastic(NSPEC_AB,NGLOB_AB,accel, &
                         ibool,ispec_is_inner,phase_is_inner, &
                         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                        hdur,hdur_gaussian,tshift_src,dt,t0,sourcearrays, &
+                        hdur,hdur_gaussian,hdur_tiny,tshift_src,dt,t0,sourcearrays, &
                         ispec_is_elastic,SIMULATION_TYPE,NSTEP, &
                         nrec,islice_selected_rec,ispec_selected_rec, &
                         nadj_rec_local,adj_sourcearrays, &
@@ -128,13 +128,6 @@
           if (ispec_is_elastic(ispec)) then
 
             if (USE_FORCE_POINT_SOURCE) then
-
-              !f0 = hdur(isource) !! using hdur as a FREQUENCY
-              !if (it == 1 .and. myrank == 0) then
-              !  write(IMAIN,*) 'using a source of dominant frequency ',f0
-              !  write(IMAIN,*) 'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
-              !  write(IMAIN,*) 'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
-              !endif
 
               if (USE_RICKER_TIME_FUNCTION) then
                 stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
@@ -402,7 +395,7 @@
   subroutine compute_add_sources_viscoelastic_bpwf( NSPEC_AB,NGLOB_AB, &
                         ibool,ispec_is_inner,phase_is_inner, &
                         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                        hdur,hdur_gaussian,tshift_src,dt,t0,sourcearrays, &
+                        hdur,hdur_gaussian,hdur_tiny,tshift_src,dt,t0,sourcearrays, &
                         ispec_is_elastic,SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                         b_accel,NOISE_TOMOGRAPHY)
 
@@ -601,7 +594,7 @@
 
   subroutine compute_add_sources_viscoelastic_GPU(NSPEC_AB, &
                         ispec_is_inner,phase_is_inner,NSOURCES,myrank,it,&
-                        hdur,hdur_gaussian,tshift_src,dt,t0, &
+                        hdur,hdur_gaussian,hdur_tiny,tshift_src,dt,t0, &
                         ispec_is_elastic,SIMULATION_TYPE,NSTEP, &
                         nrec,islice_selected_rec,ispec_selected_rec, &
                         nadj_rec_local,adj_sourcearrays, &

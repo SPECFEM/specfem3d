@@ -28,12 +28,12 @@
 
 ! for poroelastic solver
 
-  subroutine compute_add_sources_poroelastic( NSPEC_AB,NGLOB_AB, &
+  subroutine compute_add_sources_poroelastic(NSPEC_AB,NGLOB_AB, &
                         accels,accelw,&
                         rhoarraystore,phistore,tortstore,&
                         ibool,ispec_is_inner,phase_is_inner, &
                         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                        hdur,hdur_gaussian,tshift_src,dt,t0,sourcearrays, &
+                        hdur,hdur_gaussian,hdur_tiny,tshift_src,dt,t0,sourcearrays, &
                         ispec_is_poroelastic,SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                         nrec,islice_selected_rec,ispec_selected_rec, &
                         nadj_rec_local,adj_sourcearrays,b_accels,b_accelw, &
@@ -42,7 +42,7 @@
   use constants
   use specfem_par,only: PRINT_SOURCE_TIME_FUNCTION,stf_used_total, &
                         xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
-                        station_name,network_name,adj_source_file,hdur_tiny, &
+                        station_name,network_name,adj_source_file, &
                         USE_RICKER_TIME_FUNCTION,USE_FORCE_POINT_SOURCE
 
   implicit none
@@ -65,7 +65,7 @@
 ! source
   integer :: NSOURCES,myrank,it
   integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
-  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,tshift_src
+  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,hdur_tiny,tshift_src
   double precision :: dt,t0
   real(kind=CUSTOM_REAL), dimension(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrays
 

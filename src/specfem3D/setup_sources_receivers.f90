@@ -106,11 +106,10 @@
              comp_dir_vect_source_N(NSOURCES), &
              comp_dir_vect_source_Z_UP(NSOURCES),stat=ier)
     if (ier /= 0) stop 'error allocating arrays for force point sources'
-    if (.not. USE_RICKER_TIME_FUNCTION) then
-      allocate(hdur_tiny(NSOURCES),stat=ier)
-      if (ier /= 0) stop 'error allocating arrays for force point sources'
-    endif
   endif
+
+  allocate(hdur_tiny(NSOURCES),stat=ier)
+  if (ier /= 0) stop 'error allocating arrays for force point sources'
 
   ! for source encoding (acoustic sources so far only)
   allocate(pm1_source_encoding(NSOURCES),stat=ier)
@@ -146,9 +145,7 @@
   hdur_gaussian(:) = hdur(:)/SOURCE_DECAY_MIMIC_TRIANGLE
 
   ! initialize a very short (but non-zero) half duration to use a pseudo-Dirac function
-  if(USE_FORCE_POINT_SOURCE .and. .not. USE_RICKER_TIME_FUNCTION) then
-    hdur_tiny(:) = 5*DT
-  endif
+  hdur_tiny(:) = 5*DT
 
   ! define t0 as the earliest start time
   ! note: an earlier start time also reduces numerical noise due to a
