@@ -44,21 +44,21 @@
  */
 void
 FC_FUNC_(parse_sep_header, PARSE_SEP_HEADER)
-    (char *header_name, 
-     int *n1, int *n2, int *n3, 
-     float *o1, float *o2, float *o3, 
-     float *d1, float *d2, float *d3, 
+    (char *header_name,
+     int *n1, int *n2, int *n3,
+     float *o1, float *o2, float *o3,
+     float *d1, float *d2, float *d3,
      char *in) {
   char *line = NULL;
   size_t len = 0;
 
   FILE *fd = fopen(header_name, "r");
-  if (fd == NULL) 
+  if (fd == NULL)
     EXIT_ON_ERR(header_name);
 
   /* Build regex mathing "name=value" with optional spaces*/
   regex_t re;
-  if(regcomp(&re, "^[ \t]*\\(.*\\)[ \t]*=[ \t]*\\(.*\\)[ \t]*", 
+  if(regcomp(&re, "^[ \t]*\\(.*\\)[ \t]*=[ \t]*\\(.*\\)[ \t]*",
              REG_ICASE | REG_NEWLINE))
     EXIT_ON_ERR("regcomp");
 

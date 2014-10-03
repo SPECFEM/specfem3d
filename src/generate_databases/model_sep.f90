@@ -23,22 +23,22 @@ subroutine model_sep()
   integer :: NX_alt, NY_alt, NZ_alt
   real :: OX_alt, OY_alt, OZ_alt, DX_alt, DY_alt, DZ_alt
   character(len=512) :: sep_header_name_vp, sep_header_name_vs, &
-                        sep_header_name_rho 
+                        sep_header_name_rho
   character(len=512) :: sep_bin_vp, sep_bin_vs, sep_bin_rho
   real :: xmin, ymin
   integer :: imin, jmin, kmin, ni, nj, nk
   logical :: vp_exists, vs_exists, rho_exists
 
   ! Get files from SEP_MODEL_DIRECTORY
-  sep_header_name_vp = trim(SEP_MODEL_DIRECTORY) // "/vp.H" 
-  sep_header_name_vs = trim(SEP_MODEL_DIRECTORY) // "/vs.H" 
-  sep_header_name_rho = trim(SEP_MODEL_DIRECTORY) // "/rho.H" 
+  sep_header_name_vp = trim(SEP_MODEL_DIRECTORY) // "/vp.H"
+  sep_header_name_vs = trim(SEP_MODEL_DIRECTORY) // "/vs.H"
+  sep_header_name_rho = trim(SEP_MODEL_DIRECTORY) // "/rho.H"
 
-  inquire(file=trim(sep_header_name_vp), exist=vp_exists) 
+  inquire(file=trim(sep_header_name_vp), exist=vp_exists)
   if (.not. vp_exists) stop "SEP vp model should exist"
-  inquire(file=trim(sep_header_name_vs), exist=vs_exists) 
+  inquire(file=trim(sep_header_name_vs), exist=vs_exists)
   if (.not. vp_exists) stop "SEP vp model should exist"
-  inquire(file=trim(sep_header_name_rho), exist=rho_exists) 
+  inquire(file=trim(sep_header_name_rho), exist=rho_exists)
   if (.not. vp_exists) stop "SEP vp model should exist"
 
   ! Read SEP header for each SEP file
@@ -181,14 +181,14 @@ subroutine read_sep_binary_mpiio(filename, NX, NY, NZ, ni, nj, nk, &
   call MPI_Type_create_subarray(3, global_sizes, local_sizes, starting_idx, &
                                 MPI_ORDER_FORTRAN, MPI_REAL, subarray_type, ier)
   call MPI_Type_commit(subarray_type, ier)
-  
+
   call MPI_File_open(MPI_COMM_WORLD, trim(adjustl(filename)), &
                      MPI_MODE_RDONLY, MPI_INFO_NULL, fh, ier)
-  ! View is set to match the stencil 
+  ! View is set to match the stencil
   displ = 0
   call MPI_File_set_view(fh, displ, MPI_REAL, subarray_type, "native", &
                          MPI_INFO_NULL, ier)
-  ! Number of element is equal to the local size                       
+  ! Number of element is equal to the local size
   call MPI_File_read_all(fh, var, ni * nj * nk, &
                          MPI_REAL, mpi_status, ier)
   call MPI_File_close(fh, ier)
@@ -204,13 +204,13 @@ subroutine interpolate_sep_on_mesh(sep_var, xmin, ymin, ni, nj, NZ, &
                                     ibool, xstore, ystore, zstore, &
                                     CUSTOM_REAL
   !--- Parameters
-  real(kind=4), dimension(:,:,:), intent(in) :: sep_var 
+  real(kind=4), dimension(:,:,:), intent(in) :: sep_var
   real, intent(in) :: xmin, ymin, DX, DY, DZ
   integer, intent(in) :: ni, nj, NZ
   real(kind=CUSTOM_REAL), dimension(:,:,:,:) :: var
   !--- Variables
   integer :: iglob, i_target, j_target, k_target
-  integer :: ispec, i, j, k                                   
+  integer :: ispec, i, j, k
 
   do ispec=1,NSPEC
      do i=1,NGLLX
@@ -228,7 +228,7 @@ subroutine interpolate_sep_on_mesh(sep_var, xmin, ymin, ni, nj, NZ, &
               if(i_target>ni)  i_target= ni
               if(j_target>nj)  j_target= nj
               if(k_target>NZ)  k_target= NZ
-              
+
               var(i,j,k,ispec) = sep_var(i_target,j_target,k_target)
            enddo
         enddo
@@ -263,7 +263,7 @@ subroutine find_slice_bounds_sep(NX, NY, NZ, OX, OY, OZ, DX, DY, DZ, &
   kmin=floor((zmin-OZ)/DZ+1); kmax=ceiling((zmax-OZ)/DZ+1);
   if(imin<1)  imin= 1;  if(jmin<1)  jmin= 1;  if(kmin<1)  kmin= 1;
   if(imax>NX) imin=NX;  if(jmax>NY) jmax=NY;  if(kmax>NZ) kmax=NZ;
-  ! Number of SEP indexes for the current slice 
+  ! Number of SEP indexes for the current slice
   ni=imax-imin+1
   nj=jmax-jmin+1
   nk=kmax-kmin+1
@@ -292,9 +292,9 @@ subroutine correct_sep_interface()
       do j = 1, NGLLY
         do i = 1, NGLLX
           if (rho_vs(i, j, k, ispec) == 0) then
-            num_acoustic_pts = num_acoustic_pts + 1 
+            num_acoustic_pts = num_acoustic_pts + 1
           else
-            num_elastic_pts = num_elastic_pts + 1 
+            num_elastic_pts = num_elastic_pts + 1
           endif
         enddo ! k
       enddo ! j
@@ -309,11 +309,11 @@ subroutine correct_sep_interface()
       endif
     else
       ispec_is_elastic(ispec) = .true.
-      ! Z axis is up. Top points might include the acoustic interface 
+      ! Z axis is up. Top points might include the acoustic interface
       if (any(rho_vs(:, :, NGLLZ, ispec) == 0.0)) then
-        rho_vs(:, :, NGLLZ, ispec) = rho_vs(:, :, NGLLZ-1, ispec) 
+        rho_vs(:, :, NGLLZ, ispec) = rho_vs(:, :, NGLLZ-1, ispec)
         rhostore(:, :, NGLLZ, ispec) = rhostore(:, :, NGLLZ-1, ispec)
-        rho_vp(:, :, NGLLZ, ispec) = rho_vp(:, :, NGLLZ-1, ispec) 
+        rho_vp(:, :, NGLLZ, ispec) = rho_vp(:, :, NGLLZ-1, ispec)
       endif
     endif
   enddo ! ispec

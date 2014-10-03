@@ -347,7 +347,7 @@
   case( 'tomo' )
     IMODEL = IMODEL_TOMO
   case( 'sep' )
-    IMODEL = IMODEL_SEP 
+    IMODEL = IMODEL_SEP
     if (trim(SEP_MODEL_DIRECTORY) == '') then
       stop 'Error: Using sep model requires defining a SEP_MODEL_DIRECTORY.'
     endif
