@@ -60,7 +60,7 @@
   hdur_decay = hdur
 
   ! this here uses a stronger gaussian decay rate (empirical value) to avoid non-zero onset times;
-  ! however, it should mimic a triangle source time function...
+  ! however, it should mimik a triangle source time function...
   !hdur_decay = hdur  / SOURCE_DECAY_STRONG
 
   ! note: a nonzero time to start the simulation with would lead to more high-frequency noise

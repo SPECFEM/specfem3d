@@ -34,6 +34,9 @@ NGNOD                       = 8
 #   aniso,external,gll,salton_trough,tomo
 MODEL                           = default
 
+# if you are using a SEP model (oil-industry format)
+SEP_MODEL_DIRECTORY             = ./DATA/my_SEP_model/
+
 # parameters describing the model
 APPROXIMATE_OCEAN_LOAD                          = .false.
 TOPOGRAPHY                      = .false.
@@ -119,6 +122,7 @@ PRINT_SOURCE_TIME_FUNCTION      = .true.
 # to couple with DSM
 COUPLE_WITH_DSM                 = .false.
 TRACTION_PATH                   = ./DATA/DSM_traction_files/
+MESH_A_CHUNK_OF_THE_EARTH       = .true.
 
 # set to true to use GPUs
 GPU_MODE                        = .false.

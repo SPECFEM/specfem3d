@@ -35,6 +35,9 @@ NGNOD                           = 8
 MODEL                           = 1d_prem
 #MODEL                           = default
 
+# if you are using a SEP model (oil-industry format)
+SEP_MODEL_DIRECTORY             = ./DATA/my_SEP_model/
+
 # parameters describing the model
 APPROXIMATE_OCEAN_LOAD          = .false.
 TOPOGRAPHY                      = .false.
@@ -120,6 +123,7 @@ PRINT_SOURCE_TIME_FUNCTION      = .false.
 # to couple with DSM
 COUPLE_WITH_DSM                 = .true.
 TRACTION_PATH                   = ./OUTPUT_FILES/Tractions/
+MESH_A_CHUNK_OF_THE_EARTH       = .true.
 
 # set to true to use GPUs
 GPU_MODE                        = .false.

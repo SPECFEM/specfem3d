@@ -109,7 +109,6 @@
 ! forward simulations
   if (SIMULATION_TYPE == 1 .and. nsources_local > 0) then
 
-!way 2
     ! adds acoustic sources
     do isource = 1,NSOURCES
 

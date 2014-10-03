@@ -51,8 +51,8 @@ generate_databases_OBJECTS = \
 	$O/generate_databases.gen.o \
 	$O/get_absorbing_boundary.gen.o \
 	$O/get_coupling_surfaces.gen.o \
-	$O/get_MPI.gen.o \
 	$O/get_model.gen.o \
+	$O/get_MPI.gen.o \
 	$O/get_perm_color.gen.o \
 	$O/model_1d_cascadia.gen.o \
 	$O/model_1d_prem.gen.o \

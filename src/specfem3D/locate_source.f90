@@ -42,7 +42,7 @@
   use constants
 
   use specfem_par,only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION, &
-      UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
+      UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,COUPLE_WITH_DSM, &
       factor_force_source,comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP
 
   implicit none
@@ -800,13 +800,21 @@
             write(IMAIN,*)
           endif
           write(IMAIN,*) '  half duration: ',hdur(isource),' seconds'
-          write(IMAIN,*)
-          write(IMAIN,*) 'magnitude of the source:'
-          write(IMAIN,*) '     scalar moment M0 = ', &
-            get_cmt_scalar_moment(Mxx(isource),Myy(isource),Mzz(isource),Mxy(isource),Mxz(isource),Myz(isource)),' dyne-cm'
-          write(IMAIN,*) '  moment magnitude Mw = ', &
-            get_cmt_moment_magnitude(Mxx(isource),Myy(isource),Mzz(isource),Mxy(isource),Mxz(isource),Myz(isource))
-          write(IMAIN,*)
+
+          if (COUPLE_WITH_DSM) then
+            write(IMAIN,*)
+            write(IMAIN,*) 'Coupling with an external code activated, thus not including any internal source'
+            write(IMAIN,*)
+          else
+            write(IMAIN,*)
+            write(IMAIN,*) 'magnitude of the source:'
+            write(IMAIN,*) '     scalar moment M0 = ', &
+              get_cmt_scalar_moment(Mxx(isource),Myy(isource),Mzz(isource),Mxy(isource),Mxz(isource),Myz(isource)),' dyne-cm'
+            write(IMAIN,*) '  moment magnitude Mw = ', &
+              get_cmt_moment_magnitude(Mxx(isource),Myy(isource),Mzz(isource),Mxy(isource),Mxz(isource),Myz(isource))
+            write(IMAIN,*)
+          endif
+
         endif
         write(IMAIN,*) '  time shift: ',tshift_src(isource),' seconds'
         write(IMAIN,*)

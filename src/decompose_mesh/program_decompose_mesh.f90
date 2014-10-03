@@ -45,7 +45,8 @@ program pre_meshfem3D
                                   STACEY_ABSORBING_CONDITIONS,SAVE_FORWARD,STACEY_INSTEAD_OF_FREE_SURFACE, &
                                   ANISOTROPY,SAVE_MESH_FILES,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION, &
                                   LOCAL_PATH,TOMOGRAPHY_PATH,PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE, &
-                                  f0_FOR_PML,IMODEL,SEP_MODEL_DIRECTORY,FULL_ATTENUATION_SOLID,TRACTION_PATH,COUPLE_WITH_DSM
+                                  f0_FOR_PML,IMODEL,SEP_MODEL_DIRECTORY,FULL_ATTENUATION_SOLID,TRACTION_PATH, &
+                                  COUPLE_WITH_DSM,MESH_A_CHUNK_OF_THE_EARTH
 
   implicit none
 
@@ -84,7 +85,7 @@ program pre_meshfem3D
                           USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE, &
                           USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
                           PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL, SEP_MODEL_DIRECTORY, &
-                          FULL_ATTENUATION_SOLID,TRACTION_PATH,COUPLE_WITH_DSM)
+                          FULL_ATTENUATION_SOLID,TRACTION_PATH,COUPLE_WITH_DSM,MESH_A_CHUNK_OF_THE_EARTH)
 
 ! reads in (CUBIT) mesh files: mesh_file,nodes_coord_file, ...
   call read_mesh_files()
