@@ -854,7 +854,7 @@ subroutine read_mesh_databases_adios()
   if( ier /= 0 ) stop 'error allocating array abs_boundary_ispec etc.'
 
   !! CD CD !! For coupling with DSM
-  if (COUPLE_WITH_DSM) then
+  if (COUPLE_WITH_EXTERNAL_CODE) then
     allocate(Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
     allocate(Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
     open(unit=IIN_veloc_dsm,file=dsmname(1:len_trim(dsmname))//'vel.bin',status='old', &

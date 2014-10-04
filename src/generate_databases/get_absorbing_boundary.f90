@@ -36,7 +36,7 @@
 ! determines absorbing boundaries/free-surface, 2D jacobians, face normals for Stacey conditions
 
   use generate_databases_par, only: STACEY_INSTEAD_OF_FREE_SURFACE, PML_INSTEAD_OF_FREE_SURFACE, NGNOD2D, &
-    STACEY_ABSORBING_CONDITIONS,PML_CONDITIONS,COUPLE_WITH_DSM, &
+    STACEY_ABSORBING_CONDITIONS,PML_CONDITIONS,COUPLE_WITH_EXTERNAL_CODE, &
     NGLLX,NGLLY,NGLLZ,NDIM,NGNOD2D_FOUR_CORNERS,IMAIN
 
   use create_regions_mesh_ext_par
@@ -92,7 +92,7 @@
   character(len=27) namefile
 
   ! sets flag in array iboun for elements with an absorbing boundary faces
-  if(COUPLE_WITH_DSM) then
+  if(COUPLE_WITH_EXTERNAL_CODE) then
 
     ! allocate temporary flag array
     allocate(iboun(6,nspec), &
@@ -137,7 +137,7 @@
                             iface)
 
     !! CD CD !! For coupling with DSM
-    if(COUPLE_WITH_DSM) iboun(iface,ispec) = .true.
+    if(COUPLE_WITH_EXTERNAL_CODE) iboun(iface,ispec) = .true.
     !! CD CD
 
     ! ijk indices of GLL points for face id
@@ -162,7 +162,7 @@
         normal_face(:,i,j) = lnormal(:)
 
         !! CD CD !! For coupling with DSM
-        if(COUPLE_WITH_DSM) write(123,'(i10,3f20.10)') ispec,xstore_dummy(ibool(i,j,1,ispec)),&
+        if(COUPLE_WITH_EXTERNAL_CODE) write(123,'(i10,3f20.10)') ispec,xstore_dummy(ibool(i,j,1,ispec)),&
                 ystore_dummy(ibool(i,j,1,ispec)),zstore_dummy(ibool(i,j,1,ispec))
         !! CD CD
 
@@ -187,7 +187,7 @@
   enddo ! nspec2D_xmin
 
   !! CD CD !! For coupling with DSM
-  if(COUPLE_WITH_DSM) close(123)
+  if(COUPLE_WITH_EXTERNAL_CODE) close(123)
   !! CD CD
 
   ! xmax
@@ -213,7 +213,7 @@
                               iface )
 
     !! CD CD !! For coupling with DSM
-    if(COUPLE_WITH_DSM) iboun(iface,ispec) = .true.
+    if(COUPLE_WITH_EXTERNAL_CODE) iboun(iface,ispec) = .true.
     !! CD CD
 
     ! ijk indices of GLL points on face
@@ -279,7 +279,7 @@
                               iface )
 
     !! CD CD !! For coupling with DSM
-    if(COUPLE_WITH_DSM) iboun(iface,ispec) = .true.
+    if(COUPLE_WITH_EXTERNAL_CODE) iboun(iface,ispec) = .true.
     !! CD CD
 
     ! ijk indices of GLL points on face
@@ -345,7 +345,7 @@
                               iface )
 
     !! CD CD !! For coupling with DSM
-    if(COUPLE_WITH_DSM) iboun(iface,ispec) = .true.
+    if(COUPLE_WITH_EXTERNAL_CODE) iboun(iface,ispec) = .true.
     !! CD CD
 
     ! ijk indices of GLL points on face
@@ -411,7 +411,7 @@
                               iface )
 
     !! CD CD !! For coupling with DSM
-    if(COUPLE_WITH_DSM) iboun(iface,ispec) = .true.
+    if(COUPLE_WITH_EXTERNAL_CODE) iboun(iface,ispec) = .true.
     !! CD CD
 
     ! ijk indices of GLL points on face
@@ -480,7 +480,7 @@
                               iface )
 
     !! CD CD !! For coupling with DSM
-    if(COUPLE_WITH_DSM) iboun(iface,ispec) = .true.
+    if(COUPLE_WITH_EXTERNAL_CODE) iboun(iface,ispec) = .true.
     !! CD CD
 
     ! ijk indices of GLL points on face

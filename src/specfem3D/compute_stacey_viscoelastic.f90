@@ -38,7 +38,7 @@
                         ispec_is_elastic,SIMULATION_TYPE,SAVE_FORWARD, &
                         it, &
                         b_num_abs_boundary_faces,b_reclen_field,b_absorb_field, &
-                        it_dsm,Veloc_dsm_boundary,Tract_dsm_boundary,COUPLE_WITH_DSM)
+                        it_dsm,Veloc_dsm_boundary,Tract_dsm_boundary,COUPLE_WITH_EXTERNAL_CODE)
 
   use constants
 
@@ -74,7 +74,7 @@
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLSQUARE,b_num_abs_boundary_faces):: b_absorb_field
 
   logical:: SAVE_FORWARD
-  logical:: COUPLE_WITH_DSM
+  logical:: COUPLE_WITH_EXTERNAL_CODE
 
 ! local parameters
   real(kind=CUSTOM_REAL) vx,vy,vz,nx,ny,nz,tx,ty,tz,vn,jacobianw
@@ -88,7 +88,7 @@
 
   integer :: it_dsm
 
-  if (COUPLE_WITH_DSM) then
+  if (COUPLE_WITH_EXTERNAL_CODE) then
     if (phase_is_inner .eqv. .false.) then
       if (mod(it_dsm,Ntime_step_dsm+1) == 0 .or. it == 1) then
         call read_dsm_file(Veloc_dsm_boundary,Tract_dsm_boundary,num_abs_boundary_faces,it_dsm)
@@ -125,7 +125,7 @@
           vz=veloc(3,iglob)
 
           !! CD CD !! For coupling with DSM
-          if (COUPLE_WITH_DSM) then
+          if (COUPLE_WITH_EXTERNAL_CODE) then
             vx = vx - Veloc_dsm_boundary(1,it_dsm,igll,iface)
             vy = vy - Veloc_dsm_boundary(2,it_dsm,igll,iface)
             vz = vz - Veloc_dsm_boundary(3,it_dsm,igll,iface)
@@ -146,7 +146,7 @@
           tz = rho_vp(i,j,k,ispec)*vn*nz + rho_vs(i,j,k,ispec)*(vz-vn*nz)
 
           !! CD CD !! For coupling with DSM
-          if (COUPLE_WITH_DSM) then
+          if (COUPLE_WITH_EXTERNAL_CODE) then
             tx = tx - Tract_dsm_boundary(1,it_dsm,igll,iface)
             ty = ty - Tract_dsm_boundary(2,it_dsm,igll,iface)
             tz = tz - Tract_dsm_boundary(3,it_dsm,igll,iface)
@@ -182,7 +182,7 @@
   endif
 
   !! CD CD !! For coupling with DSM
-  if (COUPLE_WITH_DSM) then
+  if (COUPLE_WITH_EXTERNAL_CODE) then
     if (phase_is_inner .eqv. .true.) then
       it_dsm = it_dsm + 1
     endif
@@ -326,7 +326,7 @@
   subroutine compute_stacey_viscoelastic_GPU(phase_is_inner,num_abs_boundary_faces, &
                         SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it, &
                         b_num_abs_boundary_faces,b_reclen_field,b_absorb_field, &
-                        Mesh_pointer,it_dsm,Veloc_dsm_boundary,Tract_dsm_boundary,COUPLE_WITH_DSM)
+                        Mesh_pointer,it_dsm,Veloc_dsm_boundary,Tract_dsm_boundary,COUPLE_WITH_EXTERNAL_CODE)
 
   use constants
 
@@ -345,7 +345,7 @@
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLSQUARE,b_num_abs_boundary_faces):: b_absorb_field
 
   logical:: SAVE_FORWARD
-  logical:: COUPLE_WITH_DSM
+  logical:: COUPLE_WITH_EXTERNAL_CODE
 
   ! GPU_MODE variables
   integer(kind=8) :: Mesh_pointer
@@ -356,7 +356,7 @@
 
   integer :: it_dsm
 
-  if (COUPLE_WITH_DSM) then
+  if (COUPLE_WITH_EXTERNAL_CODE) then
     if (phase_is_inner .eqv. .false.) then
       if (mod(it_dsm,Ntime_step_dsm+1) == 0 .or. it == 1) then
         call read_dsm_file(Veloc_dsm_boundary,Tract_dsm_boundary,num_abs_boundary_faces,it_dsm)
@@ -389,7 +389,7 @@
   endif
 
   !! CD CD : begin !! For coupling with DSM
-  if (COUPLE_WITH_DSM) then
+  if (COUPLE_WITH_EXTERNAL_CODE) then
     if (phase_is_inner .eqv. .true.) then
       it_dsm = it_dsm + 1
     endif

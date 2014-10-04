@@ -119,8 +119,9 @@ USE_RICKER_TIME_FUNCTION        = .false.
 # print source time function
 PRINT_SOURCE_TIME_FUNCTION      = .true.
 
-# to couple with DSM
-COUPLE_WITH_DSM                 = .false.
+# to couple with an external code (such as DSM, AxiSEM, or FK)
+COUPLE_WITH_EXTERNAL_CODE       = .false.
+EXTERNAL_CODE_TYPE              = 1   # 1 = DSM, 2 = AxiSEM, 3 = FK
 TRACTION_PATH                   = ./DATA/DSM_traction_files/
 MESH_A_CHUNK_OF_THE_EARTH       = .true.
 

@@ -742,7 +742,7 @@ contains
   subroutine write_partition_database(IIN_database, iproc, nspec_local, nspec, elmnts, &
                                       glob2loc_elmnts, glob2loc_nodes_nparts, &
                                       glob2loc_nodes_parts, glob2loc_nodes, &
-                                      part, num_modele, NGNOD, num_phase, COUPLE_WITH_DSM)
+                                      part, num_modele, NGNOD, num_phase, COUPLE_WITH_EXTERNAL_CODE)
 
     implicit none
     integer, intent(in)  :: IIN_database
@@ -762,7 +762,7 @@ contains
     integer, dimension(2,nspec)  :: num_modele
 
     integer, intent(in)  :: num_phase
-    logical, intent(in) :: COUPLE_WITH_DSM
+    logical, intent(in) :: COUPLE_WITH_EXTERNAL_CODE
 
     ! local parameters
     integer  :: i,j,k
@@ -800,7 +800,7 @@ contains
                                   num_modele(2,i+1),(loc_nodes(k)+1, k=0,NGNOD-1)
 
              ! writes out to file Numglob2loc_elmn.txt
-             if (COUPLE_WITH_DSM) write(124,*) i+1,glob2loc_elmnts(i)+1,iproc
+             if (COUPLE_WITH_EXTERNAL_CODE) write(124,*) i+1,glob2loc_elmnts(i)+1,iproc
           endif
        enddo
     endif

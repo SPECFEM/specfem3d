@@ -53,7 +53,8 @@
                         USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE, &
                         USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
                         PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,SEP_MODEL_DIRECTORY, &
-                        FULL_ATTENUATION_SOLID,TRACTION_PATH,COUPLE_WITH_DSM,MESH_A_CHUNK_OF_THE_EARTH)
+                        FULL_ATTENUATION_SOLID,TRACTION_PATH,COUPLE_WITH_EXTERNAL_CODE,EXTERNAL_CODE_TYPE, &
+                        MESH_A_CHUNK_OF_THE_EARTH)
 
   call read_adios_parameters(ADIOS_ENABLED, ADIOS_FOR_DATABASES,       &
                              ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, &
@@ -66,7 +67,7 @@
   ! GPU_MODE is in par_file
   call read_gpu_mode(GPU_MODE,GRAVITY)
 
-  if(GPU_MODE .and. COUPLE_WITH_DSM) stop 'Coupling with DSM currently not implemented for GPUs'
+  if(GPU_MODE .and. COUPLE_WITH_EXTERNAL_CODE) stop 'Coupling with DSM currently not implemented for GPUs'
 
   ! myrank is the rank of each process, between 0 and NPROC-1.
   ! as usual in MPI, process 0 is in charge of coordinating everything
@@ -147,7 +148,7 @@
   call create_name_database(prname,myrank,LOCAL_PATH)
 
 ! for coupling with DSM
-  if (COUPLE_WITH_DSM) call create_name_database(dsmname,myrank,TRACTION_PATH)
+  if (COUPLE_WITH_EXTERNAL_CODE) call create_name_database(dsmname,myrank,TRACTION_PATH)
 
 ! read the value of NSPEC_AB and NGLOB_AB because we need it to define some array sizes below
   if (ADIOS_FOR_MESH) then

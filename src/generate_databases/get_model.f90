@@ -33,7 +33,7 @@
     IMODEL_SALTON_TROUGH,IMODEL_TOMO,IMODEL_USER_EXTERNAL,IMODEL_IPATI,IMODEL_IPATI_WATER, &
     IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC, &
     nspec => NSPEC_AB,ibool,mat_ext_mesh, &
-    materials_ext_mesh,nmat_ext_mesh,undef_mat_prop,nundefMat_ext_mesh,ANISOTROPY,COUPLE_WITH_DSM, &
+    materials_ext_mesh,nmat_ext_mesh,undef_mat_prop,nundefMat_ext_mesh,ANISOTROPY,COUPLE_WITH_EXTERNAL_CODE, &
     NGLLX,NGLLY,NGLLZ, &
     FOUR_THIRDS,TWO,IMAIN
 
@@ -74,7 +74,7 @@
 
 
   !! WANGYI test for the benchmark of hybrid DSM-SPECFEM3D coupling
-  if (COUPLE_WITH_DSM) then
+  if (COUPLE_WITH_EXTERNAL_CODE) then
     if( nundefMat_ext_mesh > 6 .or. IMODEL == IMODEL_TOMO ) then ! changed by WANGYI
       write(*,*)  'nundefMat_ext_mesh, IMODEL, IMODEL_TOMO', nundefMat_ext_mesh, IMODEL, IMODEL_TOMO ! add by WANGYI
       call model_tomography_broadcast(myrank)
@@ -350,7 +350,7 @@
   call any_all_l( ANY(ispec_is_poroelastic), POROELASTIC_SIMULATION )
 
   !! WANGYI test for the benchmark of hybrid DSM-SPECFEM3D coupling
-  if (COUPLE_WITH_DSM) then
+  if (COUPLE_WITH_EXTERNAL_CODE) then
     if( nundefMat_ext_mesh > 6 .or. IMODEL == IMODEL_TOMO ) then  ! changed by wangyi for test
       call deallocate_tomography_files()
     endif

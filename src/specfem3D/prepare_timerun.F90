@@ -277,7 +277,7 @@
     ! switches to three-component mass matrix
 
     !! CD CD
-    if( STACEY_ABSORBING_CONDITIONS .and. .not. COUPLE_WITH_DSM ) then
+    if( STACEY_ABSORBING_CONDITIONS .and. .not. COUPLE_WITH_EXTERNAL_CODE ) then
       ! adds boundary contributions
       rmassx(:) = rmass(:) + rmassx(:)
       rmassy(:) = rmass(:) + rmassy(:)

@@ -125,7 +125,7 @@
 
   use constants, only: MAX_STRING_LEN,IIN,IMAIN
 
-  use generate_databases_par, only: TOMOGRAPHY_PATH,undef_mat_prop,nundefMat_ext_mesh,IMODEL,COUPLE_WITH_DSM
+  use generate_databases_par, only: TOMOGRAPHY_PATH,undef_mat_prop,nundefMat_ext_mesh,IMODEL,COUPLE_WITH_EXTERNAL_CODE
 
   use tomography_par
 
@@ -179,7 +179,7 @@
     endif
 
     !! WANGYI test for the benchmark of hybrid DSM-SPECFEM3D coupling
-    if (COUPLE_WITH_DSM) then
+    if (COUPLE_WITH_EXTERNAL_CODE) then
        write(*,*) 'iundef',iundef  ! add by WANGYI for test
        write(*,*) 'tomo_filename',tomo_filename ! add by WANGYI for test
     endif

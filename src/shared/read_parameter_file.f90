@@ -36,7 +36,7 @@
                         USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE, &
                         USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
                         PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,SEP_MODEL_DIRECTORY, &
-                        FULL_ATTENUATION_SOLID,TRACTION_PATH,COUPLE_WITH_DSM,MESH_A_CHUNK_OF_THE_EARTH)
+                        FULL_ATTENUATION_SOLID,TRACTION_PATH,COUPLE_WITH_EXTERNAL_CODE,EXTERNAL_CODE_TYPE,MESH_A_CHUNK_OF_THE_EARTH)
 
   use constants
 
@@ -46,6 +46,7 @@
   integer NSOURCES,NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO,UTM_PROJECTION_ZONE
   integer NOISE_TOMOGRAPHY,NGNOD,NGNOD2D,MOVIE_TYPE
   integer IMODEL
+  integer EXTERNAL_CODE_TYPE
 
   double precision DT,HDUR_MOVIE,OLSEN_ATTENUATION_RATIO,f0_FOR_PML
 
@@ -53,7 +54,7 @@
   logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
   logical ANISOTROPY,SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION
   logical USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE,USE_RICKER_TIME_FUNCTION
-  logical PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID,COUPLE_WITH_DSM,MESH_A_CHUNK_OF_THE_EARTH
+  logical PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID,COUPLE_WITH_EXTERNAL_CODE,MESH_A_CHUNK_OF_THE_EARTH
 
   character(len=MAX_STRING_LEN) :: LOCAL_PATH,TOMOGRAPHY_PATH,CMTSOLUTION,FORCESOLUTION, &
                                    TRACTION_PATH,path_to_add, SEP_MODEL_DIRECTORY
@@ -171,8 +172,10 @@
   if (ierr /= 0) stop 'Error reading Par_file parameter USE_RICKER_TIME_FUNCTION'
   call read_value_logical(PRINT_SOURCE_TIME_FUNCTION, 'PRINT_SOURCE_TIME_FUNCTION', ierr)
   if (ierr /= 0) stop 'Error reading Par_file parameter PRINT_SOURCE_TIME_FUNCTION'
-  call read_value_logical(COUPLE_WITH_DSM, 'COUPLE_WITH_DSM', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter COUPLE_WITH_DSM'
+  call read_value_logical(COUPLE_WITH_EXTERNAL_CODE, 'COUPLE_WITH_EXTERNAL_CODE', ierr)
+  if (ierr /= 0) stop 'Error reading Par_file parameter COUPLE_WITH_EXTERNAL_CODE'
+  call read_value_integer(EXTERNAL_CODE_TYPE, 'EXTERNAL_CODE_TYPE', ierr)
+  if (ierr /= 0) stop 'Error reading Par_file parameter EXTERNAL_CODE_TYPE'
   call read_value_string(TRACTION_PATH, 'TRACTION_PATH', ierr)
   if (ierr /= 0) stop 'Error reading Par_file parameter TRACTION_PATH'
   call read_value_logical(MESH_A_CHUNK_OF_THE_EARTH, 'MESH_A_CHUNK_OF_THE_EARTH', ierr)
@@ -180,6 +183,19 @@
 
   ! close parameter file
   call close_parameter_file()
+
+! check the type of external code to couple with, if any
+  if(COUPLE_WITH_EXTERNAL_CODE) then
+    if(EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_DSM .and. &
+       EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_AXISEM .and. &
+       EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_FK) stop 'incorrect value of EXTERNAL_CODE_TYPE read'
+
+    if(EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) &
+         stop 'coupling with AxiSEM not implemented yet, but will soon be'
+
+    if(EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_FK) &
+         stop 'coupling with F-K not implemented yet, but see work by Ping et al. (GJI 2014, GRL 2015)'
+  endif
 
 ! see if we are running several independent runs in parallel
 ! if so, add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)

@@ -42,7 +42,7 @@
   use constants
 
   use specfem_par,only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION, &
-      UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,COUPLE_WITH_DSM, &
+      UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,COUPLE_WITH_EXTERNAL_CODE, &
       factor_force_source,comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP
 
   implicit none
@@ -801,7 +801,7 @@
           endif
           write(IMAIN,*) '  half duration: ',hdur(isource),' seconds'
 
-          if (COUPLE_WITH_DSM) then
+          if (COUPLE_WITH_EXTERNAL_CODE) then
             write(IMAIN,*)
             write(IMAIN,*) 'Coupling with an external code activated, thus not including any internal source'
             write(IMAIN,*)

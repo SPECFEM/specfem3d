@@ -118,7 +118,7 @@ subroutine compute_forces_viscoelastic()
                        ispec_is_elastic,SIMULATION_TYPE,SAVE_FORWARD, &
                        it, &
                        b_num_abs_boundary_faces,b_reclen_field,b_absorb_field,&
-                       it_dsm,Veloc_dsm_boundary,Tract_dsm_boundary,COUPLE_WITH_DSM)
+                       it_dsm,Veloc_dsm_boundary,Tract_dsm_boundary,COUPLE_WITH_EXTERNAL_CODE)
     endif
 
 
@@ -187,7 +187,7 @@ subroutine compute_forces_viscoelastic()
     endif
 
     !! CD CD !! For coupling with DSM
-    if(.not. COUPLE_WITH_DSM) then
+    if(.not. COUPLE_WITH_EXTERNAL_CODE) then
       ! adds source term (single-force/moment-tensor solution)
       call compute_add_sources_viscoelastic(NSPEC_AB,NGLOB_AB,accel, &
                                             ibool,ispec_is_inner,phase_is_inner, &
@@ -699,7 +699,7 @@ subroutine compute_forces_viscoelastic_GPU()
                                            SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it, &
                                            b_num_abs_boundary_faces,b_reclen_field,b_absorb_field, &
                                            Mesh_pointer, &
-                                           it_dsm,Veloc_dsm_boundary,Tract_dsm_boundary,COUPLE_WITH_DSM)
+                                           it_dsm,Veloc_dsm_boundary,Tract_dsm_boundary,COUPLE_WITH_EXTERNAL_CODE)
     endif
 
     ! acoustic coupling

@@ -383,7 +383,7 @@
 !
   subroutine save_arrays_solver_files(nspec,nglob,ibool)
 
-  use generate_databases_par, only: myrank,COUPLE_WITH_DSM,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN,IOUT,FOUR_THIRDS
+  use generate_databases_par, only: myrank,COUPLE_WITH_EXTERNAL_CODE,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN,IOUT,FOUR_THIRDS
   use create_regions_mesh_ext_par
 
   implicit none
@@ -572,7 +572,7 @@
   endif  !if( DEBUG )
 
   !! CD CD !! For coupling with DSM
-  if (COUPLE_WITH_DSM) then
+  if (COUPLE_WITH_EXTERNAL_CODE) then
     !if (num_abs_boundary_faces > 0) then
     filename = prname(1:len_trim(prname))//'absorb_dsm'
     open(IOUT,file=filename(1:len_trim(filename)),status='unknown',form='unformatted',iostat=ier)
@@ -603,7 +603,7 @@
     !!                             nibool_interfaces_ext_mesh(1), filename)
     !!endif
 
-  endif !  if (COUPLE_WITH_DSM)
+  endif !  if (COUPLE_WITH_EXTERNAL_CODE)
   !! CD CD
 
   if( DEBUG ) then  !! CD CD

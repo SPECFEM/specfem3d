@@ -141,7 +141,7 @@
 ! I/O unit for source and receiver vtk file
   integer, parameter :: IOVTK = 98
 ! I/O number for absorbing boundary snapshots (opened in C for speed)
-!  Not a Fortran I/O unit! See write_c_binary.c for more information.
+! Not a Fortran I/O unit! See write_c_binary.c for more information.
   integer, parameter :: IOABS = 0
   integer, parameter :: IOABS_AC = 1
 ! I/O unit for plotting source time function
@@ -230,6 +230,11 @@
 !! For coupling with DSM
 !!
 !!-----------------------------------------------------------
+
+! add support for AXISEM and FK as external codes, not only DSM
+  integer, parameter :: EXTERNAL_CODE_IS_DSM    = 1
+  integer, parameter :: EXTERNAL_CODE_IS_AXISEM = 2
+  integer, parameter :: EXTERNAL_CODE_IS_FK     = 3
 
 ! some old tests (currently unstable; do not remove them though, we might fix this one day)
   integer, parameter :: IIN_veloc_dsm = 51, IIN_tract_dsm = 52, Ntime_step_dsm = 100

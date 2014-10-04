@@ -47,7 +47,7 @@
                         mask_noise,noise_surface_movie, &
                         nrec_local,number_receiver_global, &
                         nsources_local,USE_FORCE_POINT_SOURCE, &
-                        USE_RICKER_TIME_FUNCTION,COUPLE_WITH_DSM
+                        USE_RICKER_TIME_FUNCTION,COUPLE_WITH_EXTERNAL_CODE
 
   implicit none
 
@@ -105,7 +105,7 @@
 
 ! no source inside the mesh if we are coupling with DSM
 ! because the source is precisely the wavefield coming from the DSM traction file
-  if (COUPLE_WITH_DSM) return
+  if (COUPLE_WITH_EXTERNAL_CODE) return
 
 ! plotting source time function
   if(PRINT_SOURCE_TIME_FUNCTION .and. .not. phase_is_inner ) then
@@ -406,7 +406,7 @@
                         normal_x_noise,normal_y_noise,normal_z_noise, &
                         mask_noise,noise_surface_movie, &
                         nsources_local,USE_FORCE_POINT_SOURCE, &
-                        USE_RICKER_TIME_FUNCTION,COUPLE_WITH_DSM
+                        USE_RICKER_TIME_FUNCTION,COUPLE_WITH_EXTERNAL_CODE
 
   implicit none
 
@@ -442,7 +442,7 @@
 
 ! no source inside the mesh if we are coupling with DSM
 ! because the source is precisely the wavefield coming from the DSM traction file
-  if (COUPLE_WITH_DSM) return
+  if (COUPLE_WITH_EXTERNAL_CODE) return
 
 ! plotting source time function
   if(PRINT_SOURCE_TIME_FUNCTION .and. .not. phase_is_inner ) then
@@ -609,7 +609,7 @@
                         irec_master_noise,noise_surface_movie, &
                         nrec_local,number_receiver_global, &
                         nsources_local,USE_FORCE_POINT_SOURCE, &
-                        USE_RICKER_TIME_FUNCTION,COUPLE_WITH_DSM
+                        USE_RICKER_TIME_FUNCTION,COUPLE_WITH_EXTERNAL_CODE
 
   implicit none
 
@@ -663,7 +663,7 @@
 
 ! no source inside the mesh if we are coupling with DSM
 ! because the source is precisely the wavefield coming from the DSM traction file
-  if (COUPLE_WITH_DSM) return
+  if (COUPLE_WITH_EXTERNAL_CODE) return
 
 ! plotting source time function
   if(PRINT_SOURCE_TIME_FUNCTION .and. .not. phase_is_inner ) then
