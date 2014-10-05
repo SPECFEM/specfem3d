@@ -1,7 +1,7 @@
 
 ! -------------------------------------------------------------
-! edit here to change T0 and T1 on some condition 
-! Note, this function is called AFTER the seismogram has been 
+! edit here to change T0 and T1 on some condition
+! Note, this function is called AFTER the seismogram has been
 ! read but before it is filtered.
 ! -------------------------------------------------------------
 
@@ -18,14 +18,14 @@
   end subroutine
 
 ! -------------------------------------------------------------
-! edit here to change the time dependent properties of the 
+! edit here to change the time dependent properties of the
 ! selection criteria
-! Note, this function is called AFTER the seismogram has been 
+! Note, this function is called AFTER the seismogram has been
 ! read and filtered.
 ! -------------------------------------------------------------
 
   subroutine set_up_criteria_arrays
-  use seismo_variables 
+  use seismo_variables
   implicit none
 
   integer :: i
@@ -62,7 +62,7 @@
 ! This is where you reset the signal_end and noise_end values
 ! if you want to modify them from the defaults.
 ! This is also where you modulate the time dependence of the selection
-! criteria.  You have access to the following parameters from the 
+! criteria.  You have access to the following parameters from the
 ! seismogram itself:
 !
 ! dt, b, kstnm, knetwk, kcmpnm
@@ -77,7 +77,7 @@
 ! R_time=dist_km/R_vel
 ! do i = 1, npts
 !   time=b+(i-1)*dt
-!   if (time.gt.R_time) then
+!   if (time>R_time) then
 !     S2N_LIMIT(i)=2*WINDOW_S2N_BASE
 !   endif
 ! enddo
@@ -104,7 +104,7 @@
    ! --------------------------------
    ! if we are beyond the Rayleigh wave, then make the all criteria stronger
    ! ratio criterion stronger
-   if (time.gt.R_time) then
+   if (time>R_time) then
      S2N_LIMIT(i)=10*WINDOW_S2N_BASE    ! only pick big signals
      CC_LIMIT(i)= 0.95                  ! only pick very similar signals
      TSHIFT_LIMIT(i)=TSHIFT_BASE/3.0    ! only pick small timeshifts
@@ -114,17 +114,17 @@
    ! --------------------------------
    ! if we are in the surface wave times, then make the cross-correlation
    ! criterion less severe
-   if (time.gt.Q_time .and. time.lt.R_time) then
+   if (time>Q_time .and. time<R_time) then
      CC_LIMIT(i)=0.9*CC_LIMIT(i)
    endif
    ! --------------------------------
    ! modulate criteria according to event depth
    !
    ! if an intermediate depth event
-   if (evdp.ge.70 .and. evdp.lt.300) then
+   if (evdp>=70 .and. evdp<300) then
      TSHIFT_LIMIT(i)=TSHIFT_BASE*1.4
    ! if a deep event
-   elseif (evdp.ge.300) then
+   else if (evdp>=300) then
      TSHIFT_LIMIT(i)=TSHIFT_BASE*1.7
    endif
  enddo

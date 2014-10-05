@@ -305,7 +305,7 @@
   real(kind=8) vsh_structure_zone(4,n_structure_zone)
   real(kind=8) eta_structure_zone(4,n_structure_zone)
 
- 
+
 !! DK DK added this for Gauss integration
   real(kind=8), dimension(ns) :: xi_Gauss,weight_Gauss
   real(kind=8) :: A
@@ -698,8 +698,8 @@ coef(:)=0.0d0
 do i=0,3
  do k=0,3
   coef(i+1) = coef(i+1) + b(i,k)*bb(k)
- end do
-end do
+ enddo
+enddo
 
 a(0:3) = x(2382:2385) / rmax
 bb(0:3) = y(2382:2385)
@@ -739,12 +739,12 @@ coef_check(:)=0.0d0
 do i=0,3
  do k=0,3
    coef_check(i+1) = coef_check(i+1) + b(i,k)*bb(k)
- end do
-end do
+ enddo
+enddo
 
 write(*,*) 'coef',coef
 write(*,*) 'coef_check',coef_check
-         
+
 ! open(1,file = './data/compare_integration', status = 'unknown', form = 'formatted')
 ! do k=1,2385
 !    rr = x(k) / rmax

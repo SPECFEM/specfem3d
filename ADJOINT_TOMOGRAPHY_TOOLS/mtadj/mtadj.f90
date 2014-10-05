@@ -68,7 +68,7 @@ program mtadj
         call xapiir(data,npts,'BU',TRBDNDW,APARM,IORD,'BP',fstart_dble,fend_dble,dt_dble,PASSES)
         call xapiir(syn,npts,'BU',TRBDNDW,APARM,IORD,'BP',fstart_dble,fend_dble,dt_dble,PASSES)
      endif
-    
+
      ! loop over nwin
      read(11,*) nwin
      if (nwin < 0) stop 'Check nwin '
@@ -119,7 +119,7 @@ program mtadj
            adj_prefix=trim(CTAP(itap+1))//'.adj'
         endif
         adj_prefix=trim(adj_dir)//'/'//trim(file_prefix)//'.'//trim(adj_prefix)
-        
+
         call wsac1(trim(adj_prefix),dt_adj_src_all,npts_adj,b_adj,dt_adj,nerr)
         ! write amplitude adjoint sources here
         nadj_src = nadj_src + 1

@@ -8,9 +8,9 @@
 
     x=0.
     y=0.
-    z=1101121.76137563 
+    z=1101121.76137563
 
-   
+
 
     call read_chunk_parameters()
     lon_center_chunk=LON_CENTER
@@ -19,7 +19,7 @@
     call compute_rotation_matrix(rotation_matrix,lon_center_chunk,lat_center_chunk, chunk_azi)
     call  cart2geogr(x,y,z,long,lati,depth,ksi,eta)
 
-   
+
     write(*,*) long,lati,depth
-    
+
   end program test_cart2geogr

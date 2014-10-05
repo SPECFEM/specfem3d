@@ -171,7 +171,7 @@ end subroutine bpcoeff
 
 
 
-!####################### FIN PREMEIER ###################################################################################### 
+!####################### FIN PREMEIER ######################################################################################
 
 !############################## DEUXIEME FILTRE ##############################
 subroutine convolve_src_function(dt,y_input,y_output,convole_function,nsamples,nstep_convole_function)
@@ -186,8 +186,8 @@ subroutine convolve_src_function(dt,y_input,y_output,convole_function,nsamples,n
      jmax=min(nsamples,floor(it+0.5*(nstep_convole_function-1)))
      do j=jmin,jmax
         y_output(it) = y_output(it) + y_input(j)*convole_function(1+j-jmin)*dt
-     end do
-  end do
+     enddo
+  enddo
 
 end subroutine convolve_src_function
 
@@ -199,6 +199,6 @@ subroutine define_gaussian(gauss,f0,dt,n)
  i0=n/2
  do i=1,n
    gauss(i)=const*exp(- ((i - i0)*dt*f0)**2)
- end do
+ enddo
 end subroutine define_gaussian
 !####################################### FIN DEUXIEME ####################

@@ -1,6 +1,6 @@
 program rotate_adj_src
 
-  ! this program rotates the three component seismograms in the sac format 
+  ! this program rotates the three component seismograms in the sac format
   ! from (R, T) to (N, E)
 
   implicit none
@@ -70,7 +70,7 @@ program rotate_adj_src
   ! [N E]' = [ -costh sinth; -sinth costh ] [R T]'
   costh = cos(baz)
   sinth = sin(baz)
-  ndata(1:npts) = - costh * rdata(1:npts) + sinth * tdata(1:npts) 
+  ndata(1:npts) = - costh * rdata(1:npts) + sinth * tdata(1:npts)
   edata(1:npts) = - sinth * rdata(1:npts) - costh * tdata(1:npts)
 
   ! write N/E adjoint source

@@ -54,11 +54,11 @@ contains
 
     double precision, intent(out) :: tshift,sigma_dt_cc,dlnA,sigma_dlnA_cc,cc_max,sigma_dt,sigma_dlnA
     integer, intent(out) :: istart,nlen,i_pmax_dat,i_pmax_syn,i_right
-   
+
     double precision, dimension(:), intent(out) :: syn_dtw,dat_dtw,syn_dtw_phydisp, syn_dtw_cc,syn_dtw_mt,dtau_w,dlnA_w
     complex*16, dimension(:), intent(out) :: trans_w
     double precision, dimension(:), intent(out), optional :: err_dt,err_dlnA
-    
+
 
     ! local variables
     double precision, dimension(NPT) :: syn_dtw_mt_dt, &
@@ -80,7 +80,7 @@ contains
        print *, 'tstart, t0, tend, t0+(npts-1)*dt:'
        print *, tstart, t0, tend, t0+(npts-1)*dt
        stop 'Check tstart and tend'
-    else    
+    else
        print *, '   start and end time of window: ' ,sngl(tstart),sngl(tend)
     endif
 
@@ -113,9 +113,9 @@ contains
 
       syn_dtw(i)  = syn_dtw(i) * fac  ! syn, windowed
       dat_dtw(i) = dat_dtw(i) * fac  ! dat, windowed
-      if (USE_PHYSICAL_DISPERSION) then 
+      if (USE_PHYSICAL_DISPERSION) then
           syn_dtw_phydisp(i)=syn_dtw_phydisp(i)*fac
-      end if 
+      endif
     enddo
 
     if (DISPLAY_DETAILS) then
@@ -208,7 +208,7 @@ contains
 
     ampmax_unw = 0.
     i_amp_max_unw = 1
-    do i = 1, fnum   
+    do i = 1, fnum
       if( abs(syn_dtwo(i)) > ampmax_unw) then
         ampmax_unw =  abs(syn_dtwo(i))
         i_amp_max_unw = i
@@ -261,9 +261,9 @@ contains
     ! calculate the tapers
     if (is_mtm == 1) then
       call staper(nlen, NPI, NTAPER, tas, NPT, ey1, ey2)
-    elseif (is_mtm == 2) then
+    else if (is_mtm == 2) then
       call costaper(nlen, NPT, tas)
-    elseif (is_mtm == 3) then
+    else if (is_mtm == 3) then
       call boxcar(nlen, NPT, tas)
     endif
 
@@ -294,8 +294,8 @@ contains
       ! in the single-tapered synthetics record
       ampmax = 0.
       i_amp_max = 1
-      do i = 1, fnum   
-        if( abs(syn_dtw_ho(i)) > ampmax) then 
+      do i = 1, fnum
+        if( abs(syn_dtw_ho(i)) > ampmax) then
           ampmax = abs(syn_dtw_ho(i))
           i_amp_max = i
         endif
@@ -345,13 +345,13 @@ contains
     enddo
     wtr_use = cmplx(ampmax * wtr_mtm**2, 0.)
     !wtr_use = cmplx(ampmax * WTR, 0.)
-    
+
     ! calculate MT transfer function using water level
     do i = 1, fnum
        if(abs(bot_mtm(i)) > abs(wtr_use)) trans_mtm(i) = top_mtm(i) /  bot_mtm(i)
        if(abs(bot_mtm(i)) < abs(wtr_use)) trans_mtm(i) = top_mtm(i) / (bot_mtm(i)+wtr_use)
     enddo
-  
+
     ! multitaper phase, abs, tt, and amp (freq)
     call write_trans(filename,trans_mtm,wvec,fnum,i_right,idf_new,df,tshift,dlnA, &
         phi_mtm,abs_mtm,dtau_mtm,dlnA_mtm,dtau_wa,dlnA_wa)
@@ -366,7 +366,7 @@ contains
     ! CHT: estimate error using the same procedure as for the cross-correlation error estimate
     sigma_dt = sigma_dt_cc  ;  sigma_dlnA = sigma_dlnA_cc
 
-    ! write average multitaper measurement to file 
+    ! write average multitaper measurement to file
     is_mtm_av=1
     call write_average_meas(filename, is_mtm_av, dtau_wa, dlnA_wa, sigma_dt, sigma_dlnA)
 
@@ -390,7 +390,7 @@ contains
         bot_mtm(:) = cmplx(0.,0.)
 
         do ictaper = 1, ntaper
-          if(ictaper.eq.iom) cycle
+          if(ictaper==iom) cycle
 
           ! apply ictaper-th taper
           syn_dtw_h(1:nlen) = syn_dtw(1:nlen) * tas(1:nlen,ictaper)
@@ -416,7 +416,7 @@ contains
         ! water level
         ampmax = 0.
         do i = 1, fnum
-          if( abs(bot_mtm(i)).gt.ampmax) then
+          if( abs(bot_mtm(i))>ampmax) then
             ampmax =  abs(bot_mtm(i))
             i_amp_max = i
           endif
@@ -425,8 +425,8 @@ contains
 
         !  calculate transfer function using water level
         do i = 1, fnum
-          if(abs(bot_mtm(i)).gt.abs(wtr_use)) trans_mtm(i) = top_mtm(i) / bot_mtm(i)
-          if(abs(bot_mtm(i)).le.abs(wtr_use)) trans_mtm(i) = top_mtm(i) /(bot_mtm(i)+wtr_use)
+          if(abs(bot_mtm(i))>abs(wtr_use)) trans_mtm(i) = top_mtm(i) / bot_mtm(i)
+          if(abs(bot_mtm(i))<=abs(wtr_use)) trans_mtm(i) = top_mtm(i) /(bot_mtm(i)+wtr_use)
         enddo
 
         call write_trans(filename,trans_mtm,wvec,fnum,i_right,idf_new,df,tshift,dlnA, &
@@ -448,7 +448,7 @@ contains
          open(50,file=trim(filename)//'.err_dt_full')
          open(60,file=trim(filename)//'.err_dlnA_full')
       endif
-      
+
       err_phi  = 0.
       err_dt   = 0.
       err_abs  = 0.
@@ -527,7 +527,7 @@ contains
     endif
 
     !     ------------------------------------------------------------------
-    !     End error calculation 
+    !     End error calculation
     !     ------------------------------------------------------------------
 
   end subroutine mt_measure
@@ -539,7 +539,7 @@ contains
   ! adjoint sources by assimulate the measurements passed from mt_measure()
   !
   !    Input:
-  !      istart -- starting index of the windowed portion of original trace, used to assign 
+  !      istart -- starting index of the windowed portion of original trace, used to assign
   !                tr/amp_adj_src(:) corresponding to the original synthetics
   !      dat_dtw(:), syn_dtw(:), nlen, dt -- windowed data and synthetics
   !                                           with length nlen and sampling rate dt
@@ -597,11 +597,11 @@ contains
     ! waveform
     if(imeas==1 .or. imeas==2) then
        print *, '     computing waveform adjoint source'
-    elseif(imeas==3 .or. imeas==4) then
+    else if(imeas==3 .or. imeas==4) then
        print *, '     computing banana-doughtnut adjoint source'
-    elseif(imeas==5 .or. imeas==6) then
+    else if(imeas==5 .or. imeas==6) then
        print *, '     computing cross-correlation adjoint source'
-    elseif(imeas==7 .or. imeas==8) then
+    else if(imeas==7 .or. imeas==8) then
        print *, '     computing multitaper adjoint source'
     endif
 
@@ -627,7 +627,7 @@ contains
     if( (imeas >= 3).and.(imeas <= 6) ) then
 
       ! compute synthetic velocity
-      if (USE_PHYSICAL_DISPERSION) then 
+      if (USE_PHYSICAL_DISPERSION) then
         do i = 2, nlen-1
                 syn_vtw(i) = (syn_dtw_phydisp(i+1) - syn_dtw_phydisp(i-1)) / (2.0*dt)
         enddo
@@ -657,7 +657,7 @@ contains
         fa_bar_t = 0.
         Mnorm = dt * sum( syn_dtw(1:nlen) * syn_dtw(1:nlen) )
         fa_bar_t(1:nlen) = syn_dtw(1:nlen) / Mnorm
-      end if 
+      endif
     endif
 
     ! ----------------------------------------------
@@ -699,12 +699,12 @@ contains
           wp_taper(i) = w_taper(i) / ffac
           wq_taper(i) = w_taper(i) / ffac
 
-        elseif (ERROR_TYPE == 1) then  ! CC error as a constant for all freqs.
+        else if (ERROR_TYPE == 1) then  ! CC error as a constant for all freqs.
           ! MT error estimate is assigned the CC error estimate
           wp_taper(i) = w_taper(i) / ffac / (sigma_dt ** 2)
           wq_taper(i) = w_taper(i) / ffac / (sigma_dlnA ** 2)
 
-        elseif (ERROR_TYPE == 2) then  ! MT jack-knife error estimate
+        else if (ERROR_TYPE == 2) then  ! MT jack-knife error estimate
           err_t = err_dtau(i)
           if (err_dtau(i) < dtau_wtr)  err_t = err_t + dtau_wtr
           err_A = err_dlnA(i)
@@ -736,11 +736,11 @@ contains
       do ictaper = 1,ntaper
 
         ! tapered synthetic displacement
-        if (USE_PHYSICAL_DISPERSION) then 
+        if (USE_PHYSICAL_DISPERSION) then
                 syn_dtw_h(1:nlen) = syn_dtw_phydisp(1:nlen) * tas(1:nlen,ictaper)
-        else 
+        else
                 syn_dtw_h(1:nlen) = syn_dtw(1:nlen) * tas(1:nlen,ictaper)
-        end if 
+        endif
         ! compute velocity of tapered syn
         do i = 2, nlen-1
           syn_vtw_h(i) = (syn_dtw_h(i+1) - syn_dtw_h(i-1)) / (2.0*dt)
@@ -825,36 +825,36 @@ contains
     do i = 1,nlen
        i1 = istart + i -1 ! start index in the full adjoint source array(1:npts)
 
-       ! waveform 
+       ! waveform
        if(imeas==1 .or. imeas==2) then
           tr_adj_src(i1) = -dat_dtw(i)/waveform_d2 * time_window(i) ! imeas=1
           ! consider normalizing this by waveform_d2
           am_adj_src(i1) = ( syn_dtw(i) - dat_dtw(i) ) * time_window(i) ! imeas=2
-          
+
           ! use pure data waveform in time window
           if( NO_WAVEFORM_DIFFERENCE ) then
              tr_adj_src(i1) = dat_dtw(i) * time_window(i) ! waveform misfit (imeas=1)
           endif
-          
+
        ! banana-doughnut kernel adjoint source (no measurement)
-       elseif(imeas==3 .or. imeas==4) then
+       else if(imeas==3 .or. imeas==4) then
           tr_adj_src(i1) = ft_bar_t(i) * time_window(i)  ! imeas=3
           am_adj_src(i1) = fa_bar_t(i) * time_window(i)  ! imreas=4
-          
+
        ! cross-correlation
-       elseif(imeas==5 .or. imeas==6) then
+       else if(imeas==5 .or. imeas==6) then
           tr_adj_src(i1) = -(tshift / sigma_dt_cc**2 ) * ft_bar_t(i) * time_window(i)
           am_adj_src(i1) = -(dlnA / sigma_dlnA_cc**2 ) * fa_bar_t(i) * time_window(i)
-          
+
           ! ray density
           if( DO_RAY_DENSITY_SOURCE ) then
              ! uses a misfit measurement of 1
              tr_adj_src(i1) = - (1.0) * ft_bar_t(i) * time_window(i)
              am_adj_src(i1) = - (1.0) * fa_bar_t(i) * time_window(i)
           endif
-          
+
        ! multitaper
-       elseif(imeas==7 .or. imeas==8) then
+       else if(imeas==7 .or. imeas==8) then
           tr_adj_src(i1) = fp(i) * time_window(i)
           am_adj_src(i1) = fq(i) * time_window(i)
        endif
@@ -914,11 +914,11 @@ contains
       tr_chi = 0.5 * waveform_chi
       am_chi = 0.5 * waveform_chi
 
-    elseif( (imeas >= 3).and.(imeas <= 6) ) then  ! cross_correlation
+    else if( (imeas >= 3).and.(imeas <= 6) ) then  ! cross_correlation
       tr_chi = window_chi(3)
       am_chi = window_chi(4)
 
-    elseif( (imeas==7).or.(imeas==8) ) then       ! multitaper
+    else if( (imeas==7).or.(imeas==8) ) then       ! multitaper
       tr_chi = window_chi(1)
       am_chi = window_chi(2)
 
@@ -1163,7 +1163,7 @@ contains
     ! IT SEEMS LIKE THERE SHOULD BE NO NEED FOR THIS, SINCE THE SIGNAL HAS ALREADY
     ! BEEN BAND-PASSED PRIOR TO MAKING THE MULTITAPER MEASUREMENT.
     ! LQY: this should be useful to constraint the range of which use_trace is checked
- 
+
     i_left_old = i_left
     i_right_old = i_right
     do j = i_left_old, i_right_old
@@ -1186,7 +1186,7 @@ contains
        write(*,'(a24,2i6,2f14.8)') '      New frequency bounds :', i_left, i_right, &
             sngl(df*(i_left-1)), sngl(df*(i_right-1))
     endif
-    
+
     ! update the frequency limits
     fstart = (i_left-1)*df
     fend = (i_right-1)*df
@@ -1227,7 +1227,7 @@ contains
   !==============================================================================
   !        subroutines used in mtm_measure() and mtm_adj()
   !==============================================================================
-  
+
   subroutine interpolate_dat_and_syn(data, syn, syn_phydisp, tstart, tend, t0, dt, NPT, &
        dat_win, syn_win, syn_win_phydisp, nlen, istart)
 
@@ -1247,7 +1247,7 @@ contains
     double precision :: time, t1
 
     nlen = floor((tend-tstart)/dt) + 1
-    
+
     istart = floor((tstart-t0)/dt) + 1
     ! tstart = t0+(istart-1)*dt ! minor adjustments
     !print *, '*** diff tstart = ', t0+(istart-1)*dt - tstart
@@ -1267,11 +1267,11 @@ contains
 
       t1 = floor((time-t0)/dt) * dt + t0
 
-      dat_win(i) = data(ii) + (data(ii+1)-data(ii)) * (time-t1) / dt   
-      syn_win(i) = syn(ii) + (syn(ii+1)-syn(ii)) * (time-t1) /dt     
-      if (USE_PHYSICAL_DISPERSION) then 
+      dat_win(i) = data(ii) + (data(ii+1)-data(ii)) * (time-t1) / dt
+      syn_win(i) = syn(ii) + (syn(ii+1)-syn(ii)) * (time-t1) /dt
+      if (USE_PHYSICAL_DISPERSION) then
         syn_win_phydisp(i) = syn_phydisp(ii) + ( syn_phydisp(ii+1) - syn_phydisp(ii) ) * (time-t1)/dt
-      end if 
+      endif
     enddo
 
   end subroutine interpolate_dat_and_syn
@@ -1350,7 +1350,7 @@ contains
        ! cc as a function of i
        cc = 0.
        do j = i1, i2   ! loop over full window length
-          if((j+i).ge.1 .and. (j+i).le.nlen) cc = cc + syn(j)*data(j+i)  ! d is shifted by i
+          if((j+i)>=1 .and. (j+i)<=nlen) cc = cc + syn(j)*data(j+i)  ! d is shifted by i
        enddo
        cc = cc/norm
 
@@ -1370,7 +1370,7 @@ contains
     ! The previously used expression for dlnA of Dahlen and Baig (2002),
     ! is a first-order perturbation of ln(A1/A2) = (A1-A2)/A2 .
     ! The new expression is better suited to getting Gaussian-distributed
-    ! values between -1 and 1, with dlnA = 0 indicating perfect fit, as before.    
+    ! values between -1 and 1, with dlnA = 0 indicating perfect fit, as before.
     dlnA = 0.5 * log( sum(data(i1:i2) * data(i1:i2)) / sum(syn(i1:i2) * syn(i1:i2)) )
 
   end subroutine compute_cc
@@ -1417,7 +1417,7 @@ contains
 !!$       write(88,'(5e18.6)') (i-1)*dt, data_dtw(i), syn_dtw_cc(i), syn_dtw_cc_dt(i), syn_vtw_cc(i)
 !!$    enddo
 !!$    close(88)
-    
+
     ! make final adjustments to uncertainty estimate
     if (ERROR_TYPE == 0) then
        ! set uncertainty factors to 1 if you do not want to incorporate them
@@ -1450,7 +1450,7 @@ contains
        stlab = 'multitaper averaged' ; suffix = 'average'
     else
        stlab = 'cross-correlation' ; suffix = 'cc'
-    endif 
+    endif
 
     if ( is_mtm > 0) then ! CC or MT
        if (DISPLAY_DETAILS) then
@@ -1515,7 +1515,7 @@ contains
       phi_wt(i) = atan2( aimag(trans(i)) , real(trans(i)) )
       abs_wt(i) = abs(trans(i))
       fr(i) = df*(i-1)
-      if (mod(i,idf_new).eq.0 .and. OUTPUT_MEASUREMENT_FILES .and. ioactive) then
+      if (mod(i,idf_new)==0 .and. OUTPUT_MEASUREMENT_FILES .and. ioactive) then
         write(10,*) fr(i), phi_wt(i)
         write(20,*) fr(i), abs_wt(i)
 ! LQY: should not we apply dlnA from cc before this?
@@ -1532,14 +1532,14 @@ contains
         smth  =  phi_wt(i+1) + phi_wt(i-1) - 2.0 * phi_wt(i)
         smth1 = (phi_wt(i+1) + TWOPI) + phi_wt(i-1) - 2.0 * phi_wt(i)
         smth2 = (phi_wt(i+1) - TWOPI) + phi_wt(i-1) - 2.0 * phi_wt(i)
-        if(abs(smth1).lt.abs(smth).and.abs(smth1).lt.abs(smth2).and. abs(phi_wt(i) - phi_wt(i+1)) > PHASE_STEP)then
+        if(abs(smth1)<abs(smth).and.abs(smth1)<abs(smth2).and. abs(phi_wt(i) - phi_wt(i+1)) > PHASE_STEP)then
           if (DISPLAY_DETAILS .and. ioactive) &
                print *, '     phase correction : 2 pi', sngl(fr(i)), sngl(phi_wt(i) - phi_wt(i+1))
           do j = i+1, i_right
             phi_wt(j) = phi_wt(j) + TWOPI
           enddo
         endif
-        if(abs(smth2).lt.abs(smth).and.abs(smth2).lt.abs(smth1).and. abs(phi_wt(i) - phi_wt(i+1)) > PHASE_STEP)then
+        if(abs(smth2)<abs(smth).and.abs(smth2)<abs(smth1).and. abs(phi_wt(i) - phi_wt(i+1)) > PHASE_STEP)then
           if (DISPLAY_DETAILS .and. ioactive) &
                print *, '     phase correction : - 2 pi', sngl(fr(i)), sngl(phi_wt(i) - phi_wt(i+1))
           do j = i+1, i_right
@@ -1553,7 +1553,7 @@ contains
       dlnA_wt(i) = log(abs_wt(i)) + dlnA
       !!dlnA_wt(i) = abs_wt(i) - 1. + dlnA
 
-      if(mod(i,idf_new).eq.0 .and. OUTPUT_MEASUREMENT_FILES .and. ioactive) then
+      if(mod(i,idf_new)==0 .and. OUTPUT_MEASUREMENT_FILES .and. ioactive) then
         write(30,*) fr(i), dlnA_wt(i)
         write(40,*) fr(i), phi_wt(i)
         write(50,*) fr(i), dtau_wt(i)
@@ -1591,7 +1591,7 @@ contains
 
   subroutine deconstruct_dat_cc(filename,dat_dtw,tstart,dt,nlen,&
        ishift,tshift,dlnA,dat_dtw_cc)
-  
+
     ! Using CC measurements, map the data to the synthetics;
     ! because the windows are picked based on the synthetics,
     ! we apply the transfer function from the synthetics to the
@@ -1943,7 +1943,7 @@ contains
      ! assign additional parameters and stop for certain inconsistencies
      if (fstart0 >= fend0) &
           stop 'Check input frequency range of the signal'
-        
+
      if (nn > NDIM) &
           stop 'Error: Change interpolation nn or NDIM'
 
@@ -1952,11 +1952,11 @@ contains
 
      if ( imeas == 1 .or. imeas == 2 ) then ! waveforms
         is_mtm0 = 0
-     elseif ( imeas >= 3 .and. imeas <= 6 ) then ! CC Dt/DlnA
+     else if ( imeas >= 3 .and. imeas <= 6 ) then ! CC Dt/DlnA
         ! for CC kernels, ITAPER must be a single taper (2 or 3)
         if ( ITAPER == 1 ) stop  'Error: Change ITAPER to 2/3 for CC measurements'
         is_mtm0 = ITAPER     ! 2 or 3 for CC adjoint sources
-     elseif ( imeas==7 .or. imeas==8 ) then 
+     else if ( imeas==7 .or. imeas==8 ) then
         is_mtm0 = 1          ! multitaper required for MT adjoint source
      else
         stop 'Error: imeas must by 1-8'
@@ -1981,7 +1981,7 @@ contains
     character(len=*),intent(out) :: ntw,sta,comp
     real :: tmp
 
-    integer :: nsec,msec 
+    integer :: nsec,msec
     integer :: nerr
 
     ! note here data_file is a dummy argument, and we rely on the earlier
@@ -2001,54 +2001,54 @@ contains
 
     ! string headers
     call getkhv('knetwk',ntw,nerr)
-    if(nerr .ne. 0) then
+    if(nerr /= 0) then
       write(*,*)'Error reading variable: knetwk'
       call exit(-1)
     endif
 
     call getkhv('kstnm',sta,nerr)
-    if(nerr .ne. 0) then
+    if(nerr /= 0) then
       write(*,*)'Error reading variable: kstnm'
       call exit(-1)
     endif
 
     call getkhv('kcmpnm',comp,nerr)
-    if(nerr .ne. 0) then
+    if(nerr /= 0) then
       write(*,*)'Error reading variable: kcmpnm'
       call exit(-1)
     endif
 
     ! decimal headers
     call getfhv('dist',tmp,nerr)
-    if(nerr .ne. 0) then
+    if(nerr /= 0) then
       write(*,*)'Error reading variable: dist'
       call exit(-1)
     endif
     dist = tmp
 
     call getfhv('az',tmp,nerr)
-    if(nerr .ne. 0) then
+    if(nerr /= 0) then
       write(*,*)'Error reading variable: az'
       call exit(-1)
     endif
     az = tmp
 
     call getfhv('baz',tmp,nerr)
-    if(nerr .ne. 0) then
+    if(nerr /= 0) then
       write(*,*)'Error reading variable: baz'
       call exit(-1)
     endif
     baz = tmp
 
     call getfhv('stlo',tmp,nerr)
-    if(nerr .ne. 0) then
+    if(nerr /= 0) then
       write(*,*)'Error reading variable: stlo'
       call exit(-1)
     endif
     slon = tmp
 
     call getfhv('stla',tmp,nerr)
-    if(nerr .ne. 0) then
+    if(nerr /= 0) then
       write(*,*)'Error reading variable: stla'
       call exit(-1)
     endif
@@ -2142,7 +2142,7 @@ subroutine setup_weighting(chan_syn)
 
     if (max(npt1,npt2) > NDIM) &
         stop 'Error: Too many npts in data or syn'
-    
+
     ! check if t0 and dt match
     if (abs(dt1-dt2) > TOL) stop 'Error: check if dt match'
     dt = dt1
@@ -2202,7 +2202,7 @@ subroutine setup_weighting(chan_syn)
 
     enddo
 
-    ! determines all picks on a trace component 
+    ! determines all picks on a trace component
     ! (also cross-check comp name in filename)
     ! transverse
     iposition = INDEX( trim(synfile), comp_T, .false. )

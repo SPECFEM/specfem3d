@@ -1,14 +1,14 @@
 module ma_sub2
- 
-  use ma_constants 
-  
+
+  use ma_constants
+
   implicit none
 
 ! TOLERRANCE CONTROL
   double precision, parameter ::  TOL=1e-7
 
 contains
-        
+
 !------------------------------------------------------------------
   subroutine fft(n,xi,zzign,dt)
 ! Fourier transform
@@ -26,7 +26,7 @@ contains
       double precision :: zzign,zign,flx,v
       integer :: lblock,k,fk,jh,ii,istart
       integer :: l,iblock,nblock,i,lbhalf,j,lx
-                  
+
       ! sign must be +1. or -1.
       if(zzign >= 0.) then
         zign = 1.
@@ -35,12 +35,12 @@ contains
       endif
 
       lx = 2**n
-      
+
       ! checks bounds
       if( lx > NPT ) stop 'error fft increase NPT, or decrease n'
-      
-      
-      
+
+
+
       do 1 i=1,n
     1 m(i) = 2**(n-i)
       do 4 l=1,n
@@ -62,7 +62,7 @@ contains
       jh = j+lbhalf
       ! checks bounds
       if( jh < 1 .or. jh > NPT ) stop 'error fft bounds'
-      
+
       q = xi(jh)*wk
       xi(jh) = xi(j)-q
       xi(j)  = xi(j)+q
@@ -89,13 +89,13 @@ contains
 
       ! final steps deal with dt factors
       if(zign > 0.) then       ! FORWARD FFT
-         do i = 1,lx 
+         do i = 1,lx
             xi(i) = xi(i)*dt   ! multiplication by dt
          enddo
 
       else                     ! REVERSE FFT
          flx = flx*dt
-         do i = 1,lx 
+         do i = 1,lx
             xi(i) = xi(i)/flx  ! division by dt
          enddo
       endif
@@ -127,7 +127,7 @@ contains
       do i = 1,nsmp
         r(i) = real(s(i))     ! REAL part
       enddo
- 
+
   end subroutine fftinv
 
 !------------------------------------------------------------------
@@ -391,7 +391,7 @@ contains
 !-------------------------------------------
 
 !  -----------------------------------------------------------------
-!  
+!
 !  Alessia Maggi, May 2005
 !
 !  -----------------------------------------------------------------
@@ -401,23 +401,23 @@ contains
 !  Implementation of the Ritsema & van Heijst 2002 quality checking
 !  technique.
 !  Calculation of two quantities:
-!  
+!
 !  F1 = sum_t [ d(t) - s(t)]^2 / sum_t [d(t)]^2
 !
-!  F2 = min[A1,A2] / max [A1,A2] 
+!  F2 = min[A1,A2] / max [A1,A2]
 !
 !  A1 minimizes : sum_t [ d(t) - A1*s(t)]^2
 !  A2 minimizes : sum_t [ (1/A2)*d(t) - s(t)]^2
 !
 !  Inputs:
 !  -------
-!  d	: data timeseries array
-!  s	: synthetic timeseries array
-!  npts	: number of points in the two timeseries
+!  d  : data timeseries array
+!  s  : synthetic timeseries array
+!  npts : number of points in the two timeseries
 
 !  Outputs:
 !  --------
-!  F1, F2,dlnA,cc_max	: defined above
+!  F1, F2,dlnA,cc_max : defined above
 !
 !  Calls numerical recipies routines :
 !  mnbrak, golden
@@ -457,27 +457,27 @@ contains
 !!$!      do i = n_left, n_right
 !!$!        cc = 0
 !!$!        do j = 1, npts
-!!$!          if((j+i).gt.1.and.(j+i).lt.npts) cc = cc + s(j) * d(j+i)
+!!$!          if((j+i)>1.and.(j+i)<npts) cc = cc + s(j) * d(j+i)
 !!$!        enddo
-!!$!        if( cc .gt. cc_max) then 
+!!$!        if( cc > cc_max) then
 !!$!          cc_max = cc
 !!$!          ishift = i
-!!$!        endif       
-!!$!      enddo   
+!!$!        endif
+!!$!      enddo
 !!$      tshift=ishift*dt
 !!$
 !!$!     apply time shift to synthetic seismogram
 !!$!     write(*,*)'shift synth seismogram by ', tshift, 'seconds'
 !!$      do i = 1, npts_win
 !!$        s_cor(i) = 0
-!!$        if( (i1-1+i-ishift) .gt. 1 .and. (i1-1+i-ishift) .lt.npts ) s_cor(i) = s(i1-1+i-ishift)
+!!$        if( (i1-1+i-ishift) > 1 .and. (i1-1+i-ishift) <npts ) s_cor(i) = s(i1-1+i-ishift)
 !!$      enddo
 !!$
-!!$! DEBUG: output 
+!!$! DEBUG: output
 !!$!      open(unit=11, file='DEBUG_calcF1F2.dat')
 !!$!      do i = 1, npts_win
 !!$!        write(11,'(4(e12.4,1x))') b+(i-1)*dt, s_cor(i), s(i1-1+i), d(i1-1+i)
-!!$!      enddo      
+!!$!      enddo
 !!$!      close(11)
 !!$
 !!$! calculate dlnA
@@ -492,7 +492,7 @@ contains
 !!$!        f1_bot=f1_bot+sqrt(sngl(d_loc(i))**2*sngl(s_cor(i))**2)
 !!$        f1_bot=f1_bot+sngl(d_loc(i))**2
 !!$      enddo
-!!$      if ( f1_bot .gt. 0.0 ) then
+!!$      if ( f1_bot > 0.0 ) then
 !!$        F1 = dble(f1_top / f1_bot)
 !!$      else
 !!$        write(*,*) 'Sum d(t)**2 = 0 : empty observed seismogram.'
@@ -515,7 +515,7 @@ contains
 !!$
 !!$!     calculate F2
 !!$      F2=dble(min(A1,A2)/max(A1,A2))
-!!$     
+!!$
 !!$!     Turn F1 around
 !!$      F1=1-F1
 !!$
@@ -528,8 +528,8 @@ contains
 !!$
 !!$      real function fa1(a1)
 !!$      real a1
-!!$ 
-!!$      if (abs(a1).lt.TOL) then
+!!$
+!!$      if (abs(a1)<TOL) then
 !!$       write(*,*) 'value of a1 close to zero : ', a1
 !!$       stop
 !!$      endif
@@ -546,7 +546,7 @@ contains
 !!$      real function fa2(a2)
 !!$      real a2
 !!$
-!!$      if (abs(a2).lt.TOL) then
+!!$      if (abs(a2)<TOL) then
 !!$       write(*,*) 'value of a2 close to zero : ', a2
 !!$       stop
 !!$      endif
@@ -567,8 +567,8 @@ contains
 !!$  ! inputs:
 !!$  ! s(npts) = synthetic
 !!$  ! d(npts) = data (or observed)
-!!$  ! i1, i2 = start and stop indexes of window within s and d 
-!!$  
+!!$  ! i1, i2 = start and stop indexes of window within s and d
+!!$
 !!$  double precision, dimension(*), intent(in) :: s,d
 !!$  integer, intent(in) :: npts, i1, i2
 !!$
@@ -587,7 +587,7 @@ contains
 !!$  ishift=0
 !!$  cc_max=0
 !!$
-!!$  if (i1.gt.i2 .or. i2.gt.npts) then
+!!$  if (i1>i2 .or. i2>npts) then
 !!$    write(*,*) 'Error with window limits: i1, i2, npts ', i1, i2, npts
 !!$    return
 !!$  endif
@@ -599,14 +599,14 @@ contains
 !!$  i_left=-1*int(nlen/2)
 !!$  i_right=int(nlen/2)
 !!$
-!!$  
-!!$  ! i -> shift (to be applied to d in cc search) 
+!!$
+!!$  ! i -> shift (to be applied to d in cc search)
 !!$  do i = i_left, i_right
 !!$    cc=0
-!!$    do j = i1, i2 
-!!$      if((j+i).ge.1 .and. (j+i).le.npts) cc = cc + s(j)*d(j+i)
+!!$    do j = i1, i2
+!!$      if((j+i)>=1 .and. (j+i)<=npts) cc = cc + s(j)*d(j+i)
 !!$    enddo
-!!$    if (cc .gt. cc_max) then
+!!$    if (cc > cc_max) then
 !!$      cc_max=cc
 !!$      ishift=i
 !!$    endif

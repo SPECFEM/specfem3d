@@ -334,12 +334,12 @@ program create_movie_GMT
                           yp(ieoff+ilocnum) = dble(y(i,j))
                           zp(ieoff+ilocnum) = dble(z(i,j))
                           field_display(ieoff+ilocnum) = dble(display(i,j))
-                       elseif(ilocnum == 2) then
+                       else if(ilocnum == 2) then
                           xp(ieoff+ilocnum) = dble(x(i+1,j))
                           yp(ieoff+ilocnum) = dble(y(i+1,j))
                           zp(ieoff+ilocnum) = dble(z(i+1,j))
                           field_display(ieoff+ilocnum) = dble(display(i+1,j))
-                       elseif(ilocnum == 3) then
+                       else if(ilocnum == 3) then
                           xp(ieoff+ilocnum) = dble(x(i+1,j+1))
                           yp(ieoff+ilocnum) = dble(y(i+1,j+1))
                           zp(ieoff+ilocnum) = dble(z(i+1,j+1))
@@ -685,23 +685,23 @@ end program create_movie_GMT
          ind(1)=indx
          return
       endif
-   ENDIF
+   endif
    i=l
    j=l+l
   200    CONTINUE
    IF (J <= IR) THEN
       IF (J<IR) THEN
          IF ( A(IND(j))<A(IND(j+1)) ) j=j+1
-      ENDIF
+      endif
       IF (q<A(IND(j))) THEN
          IND(I)=IND(J)
          I=J
          J=J+J
       ELSE
          J=IR+1
-      ENDIF
+      endif
    goto 200
-   ENDIF
+   endif
    IND(I)=INDX
   goto 100
   end subroutine rank

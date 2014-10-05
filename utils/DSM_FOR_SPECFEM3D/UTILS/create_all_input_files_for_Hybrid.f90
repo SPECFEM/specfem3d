@@ -3,7 +3,7 @@ program create_input_files
   character(len=250) input_file,path
   double precision dp(6)
   integer id(3)
- ! 
+ !
   integer nb_proc_by_colors,reste_by_colors, nb_frq_by_colors,reste_by_frq
   integer  reste_ifrq,ncpus, sub_comm, ifrqmax, ifrq_by_proc, icpu,i,j,k,imin,imax,ifq
 
@@ -17,7 +17,7 @@ program create_input_files
   ! input file name
   read(*,'(a)') input_file
   call  open_parameter_file(input_file)
-  
+
 
   ! parameters --------
   call read_value_double_precision(tlen_dsm,'TLEN')
@@ -28,7 +28,7 @@ program create_input_files
   iamax_for_dsm = acc_level * ifmax_for_dsm
 
   ! param.in -------------------------------------------------------------------
-  open(10,file='params.in') 
+  open(10,file='params.in')
   call read_value_string(path, 'DSM_BINARY_PATH')
   write(10,'(a)') 'BIN='//trim(path)
   call read_value_string(path, 'SPECFEM3D_BINARY_PATH')
@@ -122,7 +122,7 @@ program create_input_files
  call read_value_double_precision(dp(1),'FLOW')
  call read_value_double_precision(dp(2),'FHIGH')
  write(10,*) dp(1),dp(2)
- !call read_value_double_precision(dp(1),'FGAUSS') 
+ !call read_value_double_precision(dp(1),'FGAUSS')
  !write(10,*) dp(1)
  write(10,'(a3)') 'end'
 
@@ -318,7 +318,7 @@ program create_input_files
  write(10,'(a)') trim(path)
  close(10)
 
- 
+
 
  !----- parallelisation file -------
  !call read_value_integer(ifrqmax,'IFRQMAX')
@@ -329,7 +329,7 @@ program create_input_files
  ifrq_by_proc = int((ifrqmax+1)/ncpus) ! quotient
  reste_ifrq   = (ifrqmax + 1) - ifrq_by_proc *  ncpus
 
- ! step 1 
+ ! step 1
  open(10,file='./input_dsm/FrqsMpi.txt')
  write(10,*) '2'
 
@@ -338,13 +338,13 @@ program create_input_files
  do icpu = 1,reste_ifrq
     write(10,*) icpu-1,ifq+imin,ifq+imax
     ifq=ifq+imax
- end do
+ enddo
 
  imax=ifrq_by_proc
  do icpu = reste_ifrq+1,ncpus
     write(10,*) icpu-1,ifq+imin,ifq+imax
     ifq=ifq+imax
- end do
+ enddo
  close(10)
 
  ! step 2
@@ -360,26 +360,26 @@ program create_input_files
  imin=0;k=0
  do i=1, sub_comm
 
-    if (i .le.  reste_by_frq) then
+    if (i <=  reste_by_frq) then
        imax = imin+nb_frq_by_colors-1 + 1
-    else 
+    else
        imax = imin+nb_frq_by_colors-1
-    end if
+    endif
 
     write(10,*) i-1,imin,imax,nb_proc_by_colors
     imin=imax+1
-    if (j .le.  reste_by_colors) then
+    if (j <=  reste_by_colors) then
        do  j=1,nb_proc_by_colors+1
           write(10,*) k
           k=k+1
-       end do
+       enddo
     else
        do  j=1,nb_proc_by_colors
           write(10,*) k
           k=k+1
-       end do
-    end if
- end do
+       enddo
+    endif
+ enddo
  close(10)
 
  call read_value_double_precision(ANGULAR_WIDTH_XI,'ANGULAR_WIDTH_XI_RAD')
@@ -394,11 +394,11 @@ program create_input_files
 !-------- station file (lat long)----
  open(10,file='station_for_simulation.txt')
  open(20,file='DATA/STATIONS_test')
- do 
+ do
     read(10,*,end=99) lat,long
     call  Geogr2Cart(X,Y,Z,long,lat,rotation_matrix,ZREF)
     write(20,*) x,y,z
- end do
+ enddo
 99 close(10)
 
 end program create_input_files
@@ -418,7 +418,7 @@ end program create_input_files
   common /param_err_common/ ierr
 
   call param_read(string_read, len(string_read), name, len(name), ierr)
-  if (ierr .ne. 0) return
+  if (ierr /= 0) return
   read(string_read,*) value_to_read
 
   end subroutine read_value_integer
@@ -436,7 +436,7 @@ end program create_input_files
   common /param_err_common/ ierr
 
   call param_read(string_read, len(string_read), name, len(name), ierr)
-  if (ierr .ne. 0) return
+  if (ierr /= 0) return
   read(string_read,*) value_to_read
 
   end subroutine read_value_double_precision
@@ -454,7 +454,7 @@ end program create_input_files
   common /param_err_common/ ierr
 
   call param_read(string_read, len(string_read), name, len(name), ierr)
-  if (ierr .ne. 0) return
+  if (ierr /= 0) return
   read(string_read,*) value_to_read
 
   end subroutine read_value_logical
@@ -472,19 +472,19 @@ end program create_input_files
   common /param_err_common/ ierr
 
   call param_read(string_read, len(string_read), name, len(name), ierr)
-  if (ierr .ne. 0) return
+  if (ierr /= 0) return
   value_to_read = string_read
 
   end subroutine read_value_string
 
  subroutine open_parameter_file(filename)
    character(len=250) filename
-   call param_open(filename, len(filename), ierr); 
+   call param_open(filename, len(filename), ierr);
  end subroutine open_parameter_file
 
 
 !----------------------------------------------------------------------------------------------------------
-!! routine for convertion coordiantes 
+!! routine for convertion coordiantes
 
 
 
@@ -496,7 +496,7 @@ end program create_input_files
     ! je met le chunk en 0,0
     axe_rotation(1)=0.d0; axe_rotation(2)=-1.d0; axe_rotation(3)=0.d0
     call rotation_matrix_axe(R00,axe_rotation,90.d0)  ! je ramene le chunk en (0,0)
- 
+
    ! rotation de l'azimuth du chunk
     axe_rotation(1)=-1.d0; axe_rotation(2)=0.d0; axe_rotation(3)=0.d0
     call rotation_matrix_axe(R0,axe_rotation,90.-chunk_azi)
@@ -508,8 +508,8 @@ end program create_input_files
     ! on met le chunk a la bonne longitude
     axe_rotation(1)=0.d0; axe_rotation(2)=0.d0; axe_rotation(3)=-1.d0
     call rotation_matrix_axe(R2,axe_rotation, lon_center_chunk)
- 
-   
+
+
 
     ! rotation resultante
     call compose4matrix(rotation_matrix,R2,R1,R0,R00)
@@ -519,7 +519,7 @@ end program create_input_files
 
 !
 !   ROUTINES POUR FAIRE DES ROTATIONS 3D ET DIVERS CHANGEMENTS DE REPERES
-!       
+!
 !       Vadim Monteiller Mars 2013
 !
 !---------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -542,7 +542,7 @@ subroutine rotation_matrix_axe(R,axe,theta)
   uy=axe(2)/norme_axe
   uz=axe(3)/norme_axe
 
-  ! on calcule le cos et sin 
+  ! on calcule le cos et sin
   c=dcos(deg2rad * theta);s=dsin(deg2rad * theta)
 
   ! matrice de rotation complexe
@@ -562,7 +562,7 @@ subroutine rotation_matrix_axe(R,axe,theta)
 !!$  write(49,*) R(1,:)
 !!$  write(49,*) R(2,:)
 !!$  write(49,*) R(3,:)
-!!$  write(49,*) 
+!!$  write(49,*)
 end subroutine rotation_matrix_axe
 
 !-------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -579,9 +579,9 @@ subroutine compose4matrix(R,R00,R0,R1,R2)
      do i=1,3
         do k=1,3
            R(i,j)=R(i,j) + R0(i,k)*R00(k,j)
-        end do
-     end do
-  end do
+        enddo
+     enddo
+  enddo
 
   ! multiplication R=R1*R
  Rtmp=R
@@ -590,9 +590,9 @@ subroutine compose4matrix(R,R00,R0,R1,R2)
      do i=1,3
         do k=1,3
            R(i,j)=R(i,j) + R1(i,k)*Rtmp(k,j)
-        end do
-     end do
-  end do
+        enddo
+     enddo
+  enddo
 
   ! multiplication R=R2*R
  Rtmp=R
@@ -601,15 +601,15 @@ subroutine compose4matrix(R,R00,R0,R1,R2)
      do i=1,3
         do k=1,3
            R(i,j)=R(i,j) + R2(i,k)*Rtmp(k,j)
-        end do
-     end do
-  end do
+        enddo
+     enddo
+  enddo
 
 !!$  write(49,*) ' MATRICE ROTATION COMPLETE '
 !!$  write(49,*) R(1,:)
 !!$  write(49,*) R(2,:)
 !!$  write(49,*) R(3,:)
-!!$  write(49,*) 
+!!$  write(49,*)
 end subroutine compose4matrix
 
 !---------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -624,24 +624,24 @@ subroutine Geogr2Cart(X,Y,Z,long,lat,rotation_matrix,ZREF)
   NDIM=3
   deg2rad = 3.141592653589793238d0/ 180.d0
   radius_earth = 6371000.d0
- 
+
 
   vector_ori(1) = radius_earth * cos(long*deg2rad) * cos(lat*deg2rad)
   vector_ori(2) = radius_earth * sin(long*deg2rad) * cos(lat*deg2rad)
   vector_ori(3) = radius_earth *                     sin(lat*deg2rad)
-  
+
   do i = 1,NDIM
      vector_rotated(i) = 0.d0
      do j = 1,NDIM
         vector_rotated(i) = vector_rotated(i) + rotation_matrix(i,j)*vector_ori(j)
      enddo
   enddo
-  
+
   x = vector_rotated(1)
   y = vector_rotated(2)
   z = vector_rotated(3) - ZREF
-  
-  
+
+
 end subroutine Geogr2Cart
 
 !!$

@@ -35,7 +35,7 @@
   character(40) :: datex,timex
   real(kind(0d0)), parameter :: pi=3.1415926535897932d0
   real(kind(0d0)), parameter :: re=1.d-2, ratc=1.d-10, ratl=1.d-4
-  !integer, parameter :: maxlmax = 35000,maxlmax_g=1000 !! VM VM I moved this in constants.h 
+  !integer, parameter :: maxlmax = 35000,maxlmax_g=1000 !! VM VM I moved this in constants.h
 
   real(kind(0d0)) :: tlen
   real(kind(0d0)) :: r0min, r0max, r0delta  !!! JUST FOR ONE DEPTH FOR THIS MOMENT !!
@@ -133,23 +133,23 @@
   !! VM VM timer
   real time_to_write, time_to_dcsymbdl, time_to_dcsbdlv,time_to_define_matrix,time_total
   real start_time_to_write, start_time_to_dcsymbdl, start_time_to_dcsbdlv,&
-       start_time_to_define_matrix,start_time_total  
+       start_time_to_define_matrix,start_time_total
   real finish_time_to_write, finish_time_to_dcsymbdl, finish_time_to_dcsbdlv,&
        finish_time_to_define_matrix,finish_time_total
   real total_global_time
   !--------------------------------------------------------------------------
-  
+
   call MPI_INIT(ierr)
   call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ierr)
   call MPI_COMM_SIZE(MPI_COMM_WORLD,nbproc,ierr)
-  if (USE_TIMER) then 
+  if (USE_TIMER) then
      call cpu_time(start_time_total)
      time_to_write=0.
      time_to_dcsymbdl=0.
-     time_to_dcsbdlv=0. 
+     time_to_dcsbdlv=0.
      time_to_define_matrix=0.
      time_total=0.
-  end if
+  endif
   allocate(Ifrq(nbproc+1))
   allocate(Ifrq2(0:nbproc-1,2))
   if (myrank==0) call ReadFrqsByProc(Ifrq,Ifrq2,para,nbproc+1)
@@ -689,8 +689,8 @@ endif
         enddo
         if (USE_TIMER) then
            call cpu_time(finish_time_to_define_matrix)
-           time_to_define_matrix = time_to_define_matrix + finish_time_to_define_matrix - start_time_to_define_matrix 
-        end if
+           time_to_define_matrix = time_to_define_matrix + finish_time_to_define_matrix - start_time_to_define_matrix
+        endif
 
         kc = 1
         ismall = 0
@@ -751,8 +751,8 @@ endif
            call calbc( nzone,ndc,vrmax,iphase,kkdr,a )
            if (USE_TIMER) then
               call cpu_time(finish_time_to_define_matrix)
-              time_to_define_matrix = time_to_define_matrix + finish_time_to_define_matrix - start_time_to_define_matrix 
-           end if
+              time_to_define_matrix = time_to_define_matrix + finish_time_to_define_matrix - start_time_to_define_matrix
+           endif
            jtmp = kkdr(spn) + 2 * int(spo)
            mtmp = isp(spn) + int(spo)
            if ( spo==int(spo) ) then
@@ -772,7 +772,7 @@ endif
 
                     !  rearranging the matrix elements
                     do imt = 1,6
-                       
+
                        call setmt(imt,mt)
                        g0 = cmplx(0.d0)
                        call calg(l,m,coef1(spn),coef2(spn),lsq,ecC0,ecF0,ecL0,ya,yb,yc,yd,ra(mtmp),r0(ir0),mt,g0(jtmp))
@@ -784,19 +784,19 @@ endif
                        ns = kkdr0 + ( nint(spo) - 1 )
                        if (USE_TIMER) call cpu_time(start_time_to_dcsymbdl)
                        call dcsymbdl0_m_equals_1_nn_equals_1(c(1,itmp),nn0-itmp+1,eps,z(itmp),w(itmp),ll,lli,llj,ier)
-                       if (USE_TIMER) then 
+                       if (USE_TIMER) then
                           call cpu_time( finish_time_to_dcsymbdl)
                           time_to_dcsymbdl = time_to_dcsymbdl +  finish_time_to_dcsymbdl - start_time_to_dcsymbdl
-                       end if
+                       endif
                        if( ((abs(m)==0).and.((imt==1).or.(imt==2).or.(imt==3))) .or. &
                            ((abs(m)==1).and.((imt==4).or.(imt==5))) .or. &
                            ((abs(m)==2).and.((imt==2).or.(imt==3).or.(imt==6))) ) then
                           if (USE_TIMER) call cpu_time(start_time_to_dcsbdlv)
                           call dcsbdlv0_m_equals_1(c(1,itmp),d0(itmp),nn0-itmp+1,z(itmp))
-                          if (USE_TIMER) then 
+                          if (USE_TIMER) then
                              call cpu_time( finish_time_to_dcsbdlv)
                              time_to_dcsbdlv = time_to_dcsbdlv +  finish_time_to_dcsbdlv - start_time_to_dcsbdlv
-                          end if
+                          endif
                        endif
 
 !! DK DK this loop cannot be vectorized because the call to "interpolate" that it contains cannot be inlined
@@ -832,10 +832,10 @@ endif
 !******************************************************************************************************************
                              if (USE_TIMER) call cpu_time(start_time_to_dcsymbdl)
                              call dcsymbdl0_m_equals_3_nn_equals_6(a(1,itmp),nn-itmp+1,eps,z(itmp),w(itmp),ier) ! expensive routine
-                             if (USE_TIMER) then 
+                             if (USE_TIMER) then
                                 call cpu_time( finish_time_to_dcsymbdl)
                                 time_to_dcsymbdl = time_to_dcsymbdl +  finish_time_to_dcsymbdl - start_time_to_dcsymbdl
-                             end if
+                             endif
 !******************************************************************************************************************
                              ig2 = 1
                           endif
@@ -846,10 +846,10 @@ endif
 !******************************************************************************************************************
                           if (USE_TIMER) call cpu_time(start_time_to_dcsbdlv)
                           call dcsbdlv0_m_equals_3(a(1,itmp),g0(itmp),nn-itmp+1,z(itmp)) ! expensive routine
-                          if (USE_TIMER) then 
+                          if (USE_TIMER) then
                              call cpu_time( finish_time_to_dcsbdlv)
                              time_to_dcsbdlv = time_to_dcsbdlv +  finish_time_to_dcsbdlv - start_time_to_dcsbdlv
-                          end if
+                          endif
 !******************************************************************************************************************
                        endif
 
@@ -908,18 +908,18 @@ if(SLOW_DEBUG_MODE) then
 endif
                  if (USE_TIMER) call cpu_time(start_time_to_write)
                  if (llog0 > 0) call write_a_block_of_coefs_to_disk(tabg0,tabg0der,tabg0_small_buffer,ir_,llog0,maxlmax_g,r_n)
-                
+
                  if (USE_TIMER) then
                     call cpu_time(finish_time_to_write)
                     time_to_write = time_to_write + finish_time_to_write - start_time_to_write
-                 end if
+                 endif
               enddo
 
               ! write a separator between blocks and re-initialise arrays to zero
               tabg0=dcmplx(0.d0)
               tabg0der=dcmplx(0.d0)
               write(34) -1,1
-              !write(34) tabg0(1,:,:,:,1) !! VM VM this is not useful any more 
+              !write(34) tabg0(1,:,:,:,1) !! VM VM this is not useful any more
               !write(34) tabg0(1,:,:,:,1) !! VM VM this is not useful any more
 
               ! reset the index, for the next block to write later
@@ -967,9 +967,9 @@ endif
         if (USE_TIMER) then
            call cpu_time(finish_time_to_write)
            time_to_write = time_to_write + finish_time_to_write - start_time_to_write
-        end if
+        endif
      enddo
-    
+
 if(SLOW_DEBUG_MODE) then
      write(24,*) 'end of writing for freq ', i
 endif
@@ -982,7 +982,7 @@ endif
      ! close the file (write dummy negative values to indicate the end of the data)
      write(34) -1,1
      write(34) -1,-1 !! VM VM add this line because of bugs occurs sometimes when
-                     !! VM VM mod(maxlmax_g,lmax)==0 
+                     !! VM VM mod(maxlmax_g,lmax)==0
      !write(34) tabg0(1,:,:,:,1) !! VM VM this is not useful any more
      !write(34) tabg0(1,:,:,:,1) !! VM VM this is not useful any more
      close(34)
@@ -1001,7 +1001,7 @@ if(SLOW_DEBUG_MODE) then
   close(25)
 endif
 
-  if (USE_TIMER) then 
+  if (USE_TIMER) then
      call cpu_time(finish_time_total)
      time_total = finish_time_total - start_time_total
      ! convert to hours
@@ -1010,7 +1010,7 @@ endif
      time_to_dcsymbdl = time_to_dcsymbdl/3600.
      time_to_dcsbdlv = time_to_dcsbdlv/3600.
      time_to_define_matrix = time_to_define_matrix/3600.
-     ! 
+     !
      call mpi_allreduce( time_total, total_global_time,1, MPI_REAL ,MPI_SUM, MPI_COMM_WORLD, ierr)
      time_total= total_global_time
      call mpi_allreduce( time_to_write, total_global_time,1, MPI_REAL ,MPI_SUM, MPI_COMM_WORLD, ierr)
@@ -1021,7 +1021,7 @@ endif
      time_to_dcsbdlv= total_global_time
      call mpi_allreduce( time_to_define_matrix, total_global_time,1, MPI_REAL ,MPI_SUM, MPI_COMM_WORLD, ierr)
      time_to_define_matrix= total_global_time
-     if(myrank.eq.0) then
+     if(myrank==0) then
         open(25,file='timer_part2.txt')
         write(25,*) 'Total :',time_total
         write(25,*) 'Matrix definition :',time_to_define_matrix,100*time_to_define_matrix/time_total,' %'
@@ -1029,8 +1029,8 @@ endif
         write(25,*) 'System Solver  :', time_to_dcsbdlv,100*time_to_dcsbdlv/time_total
         write(25,*) ' Write Exp Coef:',time_to_write,100*time_to_write/time_total
         close(25)
-     end if
-  end if
+     endif
+  endif
   call MPI_Barrier(MPI_COMM_WORLD,ierr)
   call MPI_FINALIZE(ierr)
 

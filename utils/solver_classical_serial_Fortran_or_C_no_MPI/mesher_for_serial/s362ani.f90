@@ -905,11 +905,11 @@
   lu=1                    ! --- log unit: input 3-D model
   if(THREE_D_MODEL  ==  THREE_D_MODEL_S362ANI) then
     modeldef='DATA/s362ani/S362ANI'
-  elseif(THREE_D_MODEL  ==  THREE_D_MODEL_S362WMANI) then
+  else if(THREE_D_MODEL  ==  THREE_D_MODEL_S362WMANI) then
     modeldef='DATA/s362ani/S362WMANI'
-  elseif(THREE_D_MODEL  ==  THREE_D_MODEL_S362ANI_PREM) then
+  else if(THREE_D_MODEL  ==  THREE_D_MODEL_S362ANI_PREM) then
     modeldef='DATA/s362ani/S362ANI_PREM'
-  elseif(THREE_D_MODEL  ==  THREE_D_MODEL_S29EA) then
+  else if(THREE_D_MODEL  ==  THREE_D_MODEL_S29EA) then
     modeldef='DATA/s362ani/S2.9EA'
   else
     stop 'unknown 3D model in read_model_s362ani'

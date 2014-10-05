@@ -1,16 +1,16 @@
-!      
+!
 !     ---  Alessia Maggi, May 2006  ----
-!        
+!
 !     loosely based on code by Carl Tape, Sept 2005
-!   
+!
 !     Measurement by simple cross-correlation and adjoint source calculation
 !     Both phase and amplitude information output
 !
-!     Input: 
-!        Two sac files : synthetic and data 
+!     Input:
+!        Two sac files : synthetic and data
 !        Starting/Ending measurement window in seconds
 !
-!     Ouput: 
+!     Ouput:
 !        at discrete frequencies omega
 !         amplitude:
 !        (1) d(lnA) = (A_obs/A_syn - 1) =  dA/A
@@ -19,7 +19,7 @@
 !        (1) dt(\omega) = T_obs(\omega) - T_syn(\omega)
 !
 !
-!	$Id: $
+! $Id: $
 !        -------------------------------------------------------
 !
 
@@ -75,7 +75,7 @@
 
 !     for cross correlation calculation
       integer :: ishift
-      double precision :: cc_max 
+      double precision :: cc_max
 
 !     for adjoint sources
       double precision :: Nnorm, Mnorm
@@ -90,18 +90,18 @@
       nstart = 1+int(floor((t_start - b) / dt))
       nstop =  1+int(ceiling((t_stop  - b) / dt))
       nlen = nstop - nstart +1
-      if(nstart.lt.1.or.nstop.gt.npts) stop 'Window outside seismogram'
+      if(nstart<1.or.nstop>npts) stop 'Window outside seismogram'
 
 !     Apply boxcar window to filtered data to create windowed seismograms
 !     ------------------------------------------------------------------
       obs_win_save(1:nlen) = obs(nstart:nstop)
       syn_win_save(1:nlen) = syn(nstart:nstop)
-!     DEBUG: output 
+!     DEBUG: output
       if (DEBUG) then
       open(unit=11, file='DEBUG_xcor_windows.dat')
       do i = 1, nlen
         write(11,'(5(e12.4,1x))') (i-1)*dt, syn_win_save(i), obs_win_save(i), syn(nstart-1+i), obs(nstart-1+i)
-      enddo      
+      enddo
       close(11)
       endif
 
@@ -122,7 +122,7 @@
 !     -----------------------------------------------------
       obs_rec(:) = 0
       do i = 1, nlen
-      if( (nstart-1+i-ishift) .ge. 1 .and. (nstart-1+i-ishift) .lt.npts ) then
+      if( (nstart-1+i-ishift) >= 1 .and. (nstart-1+i-ishift) <npts ) then
         obs_rec(i) = syn(nstart-1+i-ishift)
       endif
       enddo
@@ -131,7 +131,7 @@
 
 !     Finish reconstruction by applying dlnA
       obs_rec(1:nlen) = obs_rec(1:nlen)*(1+dlnA_xcorr)
-      
+
 
 !     calculate the quality according to Ritsema & van Heijst (2002)
 !     ------------------------------------------------------------------
@@ -149,7 +149,7 @@
         syn_veloc(:) = 0 ; syn_accel(:) = 0
 
 !       Calculate adjoint sources for dt
-        
+
 !       Calculate velocity synthetics
 !       ----------------------------------------
         do i = 2, nlen-1
@@ -166,12 +166,12 @@
         syn_accel(1) = (syn_veloc(2) - syn_veloc(1)) / dt
         syn_accel(nlen) = (syn_veloc(nlen) - syn_veloc(nlen-1)) /dt
 
-!       DEBUG: output 
+!       DEBUG: output
         if(DEBUG) then
         open(unit=11, file='DEBUG_xcor_vel_acc.dat')
         do i = 1, nlen
           write(11,'(5(e12.4,1x))') (i-1)*dt, syn_win_save(i), syn_veloc(i), syn_accel(i), obs_win_save(i)
-        enddo      
+        enddo
         close(11)
         endif
 
@@ -179,12 +179,12 @@
 !       Calculate ajoint source for traveltime
 !       ----------------------------------------
         Nnorm = -dt*sum(syn_win_save(1:nlen)*syn_accel(1:nlen)*t_window(1:nlen)*t_window(1:nlen))
-        fp(1:nlen)= dtau_xcorr*syn_veloc(1:nlen)*t_window(1:nlen)/Nnorm 
-        fp_nomeasure(1:nlen)= syn_veloc(1:nlen)*t_window(1:nlen)/Nnorm 
+        fp(1:nlen)= dtau_xcorr*syn_veloc(1:nlen)*t_window(1:nlen)/Nnorm
+        fp_nomeasure(1:nlen)= syn_veloc(1:nlen)*t_window(1:nlen)/Nnorm
 !        call t_taper(fp,nlen,HANNING,0.05)
 
 !       definition of Dahlen and Baig (2002), Eq. 3,17,18 : dlnA = Aobs/Asyn - 1
-!       Calculate adjoint source for amplitude      
+!       Calculate adjoint source for amplitude
 !       ------------------------------------------------------
         Mnorm = dt*sum(syn_win_save(1:nlen)*syn_win_save(1:nlen)*t_window(1:nlen)*t_window(1:nlen))
         fq(1:nlen) = -dlnA_xcorr*syn_win_save(1:nlen)*t_window(1:nlen)/Mnorm
@@ -197,7 +197,7 @@
         open(unit=11, file='DEBUG_fp_fq.dat')
         do i = 1, nlen
           write(11,'(3(e12.4,1x))') (i-1)*dt, fp(i), fq(i)
-        enddo      
+        enddo
         close(11)
         endif
 
@@ -206,7 +206,7 @@
         open(unit=11, file='DEBUG_fp_fq_nomeasure.dat')
         do i = 1, nlen
           write(11,'(3(e12.4,1x))') (i-1)*dt, fp_nomeasure(i), fq_nomeasure(i)
-        enddo      
+        enddo
         close(11)
         endif
 

@@ -9,7 +9,7 @@ program create_input_files_for_benchmark
   call  open_parameter_file(input_file)
 
   ! param.in -------------------------------------------------------------------
-  open(10,file='params.in') 
+  open(10,file='params.in')
   call read_value_string(path, 'DSM_BINARY_PATH')
   write(10,*) 'BIN='//trim(path)
   call read_value_string(path, 'SPECFEM3D_BINARY_PATH')
@@ -264,7 +264,7 @@ program create_input_files_for_benchmark
  call  read_value_integer(id(1),'NEL_LON')
  call  read_value_integer(id(2),'NEL_LAT')
  call  read_value_integer(id(3),'NEL_DEPTH')
- write(10,*) id(1),id(2),id(3) 
+ write(10,*) id(1),id(2),id(3)
  close(10)
 end program create_input_files_for_benchmark
 
@@ -283,7 +283,7 @@ end program create_input_files_for_benchmark
   common /param_err_common/ ierr
 
   call param_read(string_read, len(string_read), name, len(name), ierr)
-  if (ierr .ne. 0) return
+  if (ierr /= 0) return
   read(string_read,*) value_to_read
 
   end subroutine read_value_integer
@@ -301,7 +301,7 @@ end program create_input_files_for_benchmark
   common /param_err_common/ ierr
 
   call param_read(string_read, len(string_read), name, len(name), ierr)
-  if (ierr .ne. 0) return
+  if (ierr /= 0) return
   read(string_read,*) value_to_read
 
   end subroutine read_value_double_precision
@@ -319,7 +319,7 @@ end program create_input_files_for_benchmark
   common /param_err_common/ ierr
 
   call param_read(string_read, len(string_read), name, len(name), ierr)
-  if (ierr .ne. 0) return
+  if (ierr /= 0) return
   read(string_read,*) value_to_read
 
   end subroutine read_value_logical
@@ -337,12 +337,12 @@ end program create_input_files_for_benchmark
   common /param_err_common/ ierr
 
   call param_read(string_read, len(string_read), name, len(name), ierr)
-  if (ierr .ne. 0) return
+  if (ierr /= 0) return
   value_to_read = string_read
 
   end subroutine read_value_string
 
  subroutine open_parameter_file(filename)
    character(len=250) filename
-   call param_open(filename, len(filename), ierr); 
+   call param_open(filename, len(filename), ierr);
  end subroutine open_parameter_file

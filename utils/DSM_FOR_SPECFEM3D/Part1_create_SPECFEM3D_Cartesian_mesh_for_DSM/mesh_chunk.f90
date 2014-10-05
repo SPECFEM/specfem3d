@@ -2,11 +2,11 @@
 !
 !  MAILLAGE D'UN CHUNK POUR INTERFACE SPECFEM/DSM
 !  !!!!!!! cas 8 noeuds
-! 
+!
 !  Vadim Monteiler, Fevrier 2013
 !
 !
-! J'ai une convention propre pour le mapping de la sphere cubique (a compléter ... ) !!!!!! 
+! J'ai une convention propre pour le mapping de la sphere cubique (a compléter ... ) !!!!!!
 !
 program mesh_chunk
   implicit none
@@ -39,7 +39,7 @@ program mesh_chunk
   logical, dimension(:,:), allocatable :: iboun
 
   ! nb couches dans modele iasp91 ou ak135 ou prem
-  integer nlayer 
+  integer nlayer
   parameter (nlayer=12) ! 1 couche de plus que le modèle
   double precision zlayer(nlayer),vpv(nlayer,4),vsv(nlayer,4),density(nlayer,4)
   double precision, dimension(:,:), allocatable :: ProfForGemini
@@ -55,7 +55,7 @@ program mesh_chunk
   logical,parameter ::  RUN_BENCHMARK=.false.
   character(len=100) line
   character(len=250) model1D_file
-  
+
   !! CONVENTION : (lon,lat) -> (xi,eta) (k=6 avec -z pour le mapping sphere cubique (cf Chervot 2012)
    ! on definit le maillage d'un chunk dans la sphère cubique-------------------------------------------------------
   PI = 3.141592653589793d0
@@ -69,17 +69,17 @@ program mesh_chunk
      ANGULAR_WIDTH_ETA_RAD = deg2rad * 10.d0 ! latitude 2.5
      ANGULAR_WIDTH_XI_RAD = deg2rad * 20.d0  ! longitude 2.
      ! centre du chunk
-     lat_center_chunk= 0.d0 !42.35d0  !42.5d0 !* deg2rad 
+     lat_center_chunk= 0.d0 !42.35d0  !42.5d0 !* deg2rad
      lon_center_chunk=60.d0 ! 1.3d0 ! 1.2d0 !* deg2rad
      ! azimuth
      chunk_azi=0.d0 !90.d0 !80.d0 !10.d0  !* deg2rad
-     ! depth 
-     chunk_depth = 1000.d0 *1000.d0 ! 250.d0 * 1000.d0 
-     ! nb d'éléments 
+     ! depth
+     chunk_depth = 1000.d0 *1000.d0 ! 250.d0 * 1000.d0
+     ! nb d'éléments
      nel_lat = 20 !120
      nel_lon = 40 !96
      nel_depth = 20 !100
-     
+
   !nel_lat = 15
   !nel_lon = 15
   !nel_depth = 10
@@ -99,18 +99,18 @@ program mesh_chunk
      ANGULAR_WIDTH_XI_RAD = deg2rad * ANGULAR_WIDTH_XI_RAD
      ANGULAR_WIDTH_ETA_RAD = deg2rad * ANGULAR_WIDTH_ETA_RAD
      chunk_depth = chunk_depth * 1000.d0
-  end if   !这里是读入chunk的尺寸和网点间隔，需要ParFileMeshChunk文件
+  endif   !这里是读入chunk的尺寸和网点间隔，需要ParFileMeshChunk文件
 
  NX = nel_lon
  NY = nel_lat
  NZ = nel_depth
-  !-------------------------------------------------------------------------------- 
+  !--------------------------------------------------------------------------------
 !! TO DO : il faut que le chunk de refernece soit tout le temps symetrique (EW) et (NS)
 
  nlon_dsm=(ngllx-1)*NX+1
  nlat_dsm=(nglly-1)*NY+1
  nglob=(nel_lat+1)*(nel_lon+1)*(nel_depth+1)
- nspec= (nel_lat) * (nel_lon ) * (nel_depth ) 
+ nspec= (nel_lat) * (nel_lon ) * (nel_depth )
  npointot=8*nspec
 
  allocate(xp(npointot),yp(npointot),zp(npointot))
@@ -123,7 +123,7 @@ program mesh_chunk
  allocate(lon_zmin(nlon_dsm,nlat_dsm),lat_zmin(nlon_dsm,nlat_dsm))
 ! boundary locator
   allocate(iboun(6,nspec))
- 
+
   iboun(:,:)=.false.
 
   iaddx(1)=0
@@ -164,7 +164,7 @@ program mesh_chunk
   call zwgljd(xigll,wxgll,NGLLX,GAUSSALPHA,GAUSSBETA)
   call zwgljd(yigll,wygll,NGLLY,GAUSSALPHA,GAUSSBETA)
   call zwgljd(zigll,wzgll,NGLLZ,GAUSSALPHA,GAUSSBETA)
-  
+
 ! if number of points is odd, the middle abscissa is exactly zero
   if(mod(NGLLX,2) /= 0) xigll((NGLLX-1)/2+1) = ZERO
   if(mod(NGLLY,2) /= 0) yigll((NGLLY-1)/2+1) = ZERO
@@ -174,16 +174,16 @@ program mesh_chunk
   call get_shape3D(myrank,shape3D,dershape3D,xigll,yigll,zigll,NGNOD,NGLLX,NGLLY,NGLLZ)
 
 
- ! matrice de rotation pour passes en coordoennees geographique 
+ ! matrice de rotation pour passes en coordoennees geographique
  !call  euler_angles(rotation_matrix, lon_center_chunk,lat_center_chunk, chunk_azi)
- ! nouvelle matrice de rotation 
+ ! nouvelle matrice de rotation
  call compute_rotation_matrix(rotation_matrix, lon_center_chunk,lat_center_chunk, chunk_azi)
  !call ReadIasp91(vpv,vsv,density,zlayer,nlayer)
  call Read_dsm_model(model1D_file,vpv,vsv,density,zlayer,nlayer)
 
   ! calcul de la discretisation verticale des layers
   Z_DEPTH_BLOCK=chunk_depth /1000.d0 !!!! je passe en km
-  call CalGridProf(ProfForGemini,current_layer,zlayer,nlayer,NZ,Z_DEPTH_BLOCK)  
+  call CalGridProf(ProfForGemini,current_layer,zlayer,nlayer,NZ,Z_DEPTH_BLOCK)
   !stop
 !---------------------------------------------- GRILLE DU MAILLAGE  -------------------------------------------------
   izshift=0
@@ -192,7 +192,7 @@ program mesh_chunk
   Ndepth=0
   ispec2Dxmin=0;ispec2Dxmax=0;ispec2Dymin=0;ispec2Dymax=0;ispec2Dzmin=0;;ispec2Dzmax=0
   ! fichier interface DSM - SPECFEM3D
-  open(27,file='.recdepth')  ! recepteurs sur la verticale 
+  open(27,file='.recdepth')  ! recepteurs sur la verticale
   open(28,file='stxmin');write(28,*) nlat_dsm ! face xmin
   open(29,file='stxmax');write(29,*) nlat_dsm ! face xmax
   open(30,file='stymin');write(30,*) nlon_dsm ! face ymin
@@ -202,14 +202,14 @@ program mesh_chunk
   open(40,file='IgYmin')
   open(41,file='IgYmax')
   open(42,file='IgZmin')
-  ! MESH pour SPECFEM3D 
+  ! MESH pour SPECFEM3D
   open(86,file='nummaterial_velocity_file')
   open(87,file='materials_file')
   !open(88,file='model_1D.in')
   open(89,file='flags_boundary.txt')
   open(90,file='Nb_ielm_faces.txt')
 
- 
+
   open(88,file='OrigRepSpecfm')
   write(88,*)  lon_center_chunk,lat_center_chunk
   write(88,*) chunk_azi,  ANGULAR_WIDTH_XI_RAD/deg2rad,ANGULAR_WIDTH_ETA_RAD/deg2rad
@@ -221,73 +221,73 @@ program mesh_chunk
   index_mat=0
   do iz =0,nel_depth-1
      ilayer_current=current_layer(iz)-1 ! attention entre piquets et intervalles !!!!!
-     if (iz.ne.0) then
-        if (current_layer(iz-1).ne.current_layer(iz)) then
+     if (iz/=0) then
+        if (current_layer(iz-1)/=current_layer(iz)) then
            izshift=izshift+1 ! on repete le point sur l'interface pour DSM
            index_mat=index_mat-1
            write(86,'(a1,2x,i10,2x,a10,2x,a7,2x,a20,2x,a1)') &
                 '2',index_mat,'tomography','elastic','tomography_model.xyz','1'
-        end if
+        endif
      else
         ! on ecrit le premier materiau
         index_mat=index_mat-1
         write(86,'(a1,2x,i10,2x,a10,2x,a7,2x,a20,2x,a1)') &
              '2',index_mat,'tomography','elastic','tomography_model.xyz','1'
-     end if
+     endif
      do ilat=0,nel_lat-1
         do ilon=0,nel_lon-1
-    
+
            ispec = ispec + 1
            ! mateiral file
            write(87 ,*) ispec,index_mat
 
-           ! get boundary 
+           ! get boundary
            !on boundary 1: x=xmin
-           if(ilon == 0 ) then 
+           if(ilon == 0 ) then
               iboun(1,ispec)=.true.
               ispec2Dxmin=ispec2Dxmin+1
               write(89,*) ispec,ispec2Dxmin,1
-           end if
+           endif
            ! on boundary 2: xmax
-           if(ilon == nel_lon-1) then 
+           if(ilon == nel_lon-1) then
               iboun(2,ispec)=.true.
               ispec2Dxmax=ispec2Dxmax+1
               !write(*,*) '------ TOZ',ispec,ilon
               write(89,*) ispec,ispec2Dxmax,2
-           end if
+           endif
            ! on boundary 3: ymin
            if(ilat == 0) then
               iboun(3,ispec)=.true.
               ispec2Dymin=ispec2Dymin+1
               write(89,*) ispec,ispec2Dymin,3
-           end if
+           endif
            ! on boundary 4: ymax
            if(ilat == nel_lat-1 ) then
               iboun(4,ispec) =.true.
               ispec2Dymax=ispec2Dymax+1
               write(89,*) ispec,ispec2Dymax,4
-           end if
+           endif
            ! on boundary 5: bottom
-           if(iz == 0) then 
+           if(iz == 0) then
               iboun(5,ispec)=.true.
               ispec2Dzmin=ispec2Dzmin+1
               write(89,*) ispec,ispec2Dzmin,5
-           end if
+           endif
            ! on boundary 6: top
            if(iz == nel_depth-1) then
               ispec2Dzmax= ispec2Dzmax+1
               iboun(6,ispec)=.true.
-           end if
+           endif
 
           ! 8 sommet de l'element ispec
            do ia=1,NGNOD
-           
+
               i=iaddx(ia)
               j=iaddy(ia)
               k=iaddz(ia)
 
-              z = 1000d0*ProfForGemini(iz,1+k)  
-              
+              z = 1000d0*ProfForGemini(iz,1+k)
+
               ! longitude
               ratio_xi = (dble(ilon+i)) / dble(NX)
               x = 2.d0*ratio_xi-1.d0
@@ -297,94 +297,94 @@ program mesh_chunk
               ratio_eta = (dble(ilat+j)) / dble(NY)
               y = 2.d0*ratio_eta-1.d0
               y = tan((ANGULAR_WIDTH_ETA_RAD/2.d0) * y)
-              !if (ilat.eq.0.and.iz.eq.0) write(49,*) ia,i,ratio_xi
+              !if (ilat==0.and.iz==0) write(49,*) ia,i,ratio_xi
 
               !mapping sphere cubique (k=5) (Chevrot et al 2012) (il y a un signe opposé)
-              !pz = z/dsqrt(1.d0 + y*y + x*x) 
-              !px = x*pz 
-              !py = y*pz 
+              !pz = z/dsqrt(1.d0 + y*y + x*x)
+              !px = x*pz
+              !py = y*pz
               ! mapping qui permet d'avoir le chunk au pole Nord
               ! mapping sphère cubique (k=6, Chevrot at al 2012, avec -z)
-              pz=  z/dsqrt(1.d0 + y*y + x*x) !(=r/s) 
+              pz=  z/dsqrt(1.d0 + y*y + x*x) !(=r/s)
               px= pz * x !(tan(xi) * r/s)
               py= pz * y !(tan(eta) * r/s)
 
               ! ancienne version
-              xgrid(i+1,j+1,k+1,ispec) = px !px 
+              xgrid(i+1,j+1,k+1,ispec) = px !px
               ygrid(i+1,j+1,k+1,ispec) = py !py
               zgrid(i+1,j+1,k+1,ispec) = pz
-               
+
               !xgrid(i+1,j+1,k+1,ispec) = py ! long
-              !ygrid(i+1,j+1,k+1,ispec) = pz ! lat 
+              !ygrid(i+1,j+1,k+1,ispec) = pz ! lat
               !zgrid(i+1,j+1,k+1,ispec) = px ! prof
-              
+
               xelm(ia)=xgrid(i+1,j+1,k+1,ispec)
               yelm(ia)=ygrid(i+1,j+1,k+1,ispec)
-              zelm(ia)=zgrid(i+1,j+1,k+1,ispec) 
-              
+              zelm(ia)=zgrid(i+1,j+1,k+1,ispec)
 
-           end do
+
+           enddo
 
            ! INTERFACE POUR DSM ------
 
            ! recepteurs verticaux
-           if (ilat.eq.0 .and. ilon.eq.0) then 
+           if (ilat==0 .and. ilon==0) then
               call calc_gll_points(xelm,yelm,zelm,xstore,ystore,zstore,shape3D,NGNOD,NGLLX,NGLLY,NGLLZ)
               call write_gllz_points(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,current_layer,nel_depth,ilayer,iz,Ndepth)
-           end if
+           endif
 
            ! recepteurs horizontaux
 
            ! stxmin
-           if (ilon.eq.0.and.iz.eq.nel_depth-1)  then
+           if (ilon==0.and.iz==nel_depth-1)  then
               call calc_gll_points(xelm,yelm,zelm,xstore,ystore,zstore,shape3D,NGNOD,NGLLX,NGLLY,NGLLZ)
-              if (ilat.eq.nel_lat-1) then ! ce test sert a rajouter le dernier point GLL
+              if (ilat==nel_lat-1) then ! ce test sert a rajouter le dernier point GLL
                  test=.true.
               else
                  test=.false.
-              end if
+              endif
               call  write_stxmin(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,rotation_matrix,test)
-              
-           end if
-            if (ilon.eq.0) call write_Igm_file(38,ispec2Dxmin,NGLLY,NGLLZ,ilat,iz,izshift,ilayer_current)
+
+           endif
+            if (ilon==0) call write_Igm_file(38,ispec2Dxmin,NGLLY,NGLLZ,ilat,iz,izshift,ilayer_current)
 
            ! stxmax
-           if (ilon.eq.nel_lon - 1 .and. iz.eq.nel_depth-1)  then
+           if (ilon==nel_lon - 1 .and. iz==nel_depth-1)  then
               call calc_gll_points(xelm,yelm,zelm,xstore,ystore,zstore,shape3D,NGNOD,NGLLX,NGLLY,NGLLZ)
-               if (ilat.eq.nel_lat-1) then ! ce test sert a rajouter le dernier point GLL
+               if (ilat==nel_lat-1) then ! ce test sert a rajouter le dernier point GLL
                  test=.true.
               else
                  test=.false.
-              end if
+              endif
               call  write_stxmax(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,rotation_matrix,test)
-           end if
-           if (ilon.eq.nel_lon-1)  call write_Igm_file(39,ispec2Dxmax,NGLLY,NGLLZ,ilat,iz,izshift,ilayer_current)
+           endif
+           if (ilon==nel_lon-1)  call write_Igm_file(39,ispec2Dxmax,NGLLY,NGLLZ,ilat,iz,izshift,ilayer_current)
 
            ! stymin
-           if (ilat.eq.0.and. iz.eq.nel_depth-1)  then
+           if (ilat==0.and. iz==nel_depth-1)  then
               call calc_gll_points(xelm,yelm,zelm,xstore,ystore,zstore,shape3D,NGNOD,NGLLX,NGLLY,NGLLZ)
-              if (ilon.eq.nel_lon-1) then ! ce test sert a rajouter le dernier point GLL
+              if (ilon==nel_lon-1) then ! ce test sert a rajouter le dernier point GLL
                  test=.true.
               else
                  test=.false.
-              end if
+              endif
                call write_stymin(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,rotation_matrix,test)
-           end if
-           if (ilat.eq.0) call write_Igm_file(40,ispec2Dymin,NGLLX,NGLLZ,ilon,iz,izshift,ilayer_current)
+           endif
+           if (ilat==0) call write_Igm_file(40,ispec2Dymin,NGLLX,NGLLZ,ilon,iz,izshift,ilayer_current)
            ! stymax
-           if (ilat.eq.nel_lat-1.and. iz.eq.nel_depth-1)  then
+           if (ilat==nel_lat-1.and. iz==nel_depth-1)  then
               call calc_gll_points(xelm,yelm,zelm,xstore,ystore,zstore,shape3D,NGNOD,NGLLX,NGLLY,NGLLZ)
-              if (ilon.eq.nel_lon-1) then ! ce test sert a rajouter le dernier point GLL
+              if (ilon==nel_lon-1) then ! ce test sert a rajouter le dernier point GLL
                  test=.true.
               else
                  test=.false.
-              end if
+              endif
               call write_stymax(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,rotation_matrix,test)
-           end if
-           if (ilat.eq.nel_lat-1) call write_Igm_file(41,ispec2Dymax,NGLLX,NGLLZ,ilon,iz,izshift,ilayer_current)
+           endif
+           if (ilat==nel_lat-1) call write_Igm_file(41,ispec2Dymax,NGLLX,NGLLZ,ilon,iz,izshift,ilayer_current)
 
            ! stzmin
-           if (iz.eq.0) then ! pas besoin du test comme précédemment car je stocke tout dans des tableaux et c'est pas 
+           if (iz==0) then ! pas besoin du test comme précédemment car je stocke tout dans des tableaux et c'est pas
                                       ! grave si on récrit les memes choses
               call calc_gll_points(xelm,yelm,zelm,xstore,ystore,zstore,shape3D,NGNOD,NGLLX,NGLLY,NGLLZ)
                call write_Igm_file(42,ispec2Dzmin,NGLLX,NGLLY,ilon,ilat,0,ilayer_current)
@@ -394,18 +394,18 @@ program mesh_chunk
 !!$                    do iii=1,NGLLX
 !!$                       write(125,'(3f20.10)') xstore(iii,jjj,kkk)/1000.d0,  ystore(iii,jjj,kkk)/1000.d0,  zstore(iii,jjj,kkk)/1000.d0
 !!$              !write(*,*) xstore
-!!$                    end do
-!!$                 end do
-!!$              end do
+!!$                    enddo
+!!$                 enddo
+!!$              enddo
               !close(125)
               !   read(*,*) ia
               call store_zmin_points(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,rotation_matrix,&
                    lon_zmin,lat_zmin,nlon_dsm,nlat_dsm,ilon,ilat,nel_lon,nel_lat)
-           end if
+           endif
 
-        end do
-     end do
-  end do
+        enddo
+     enddo
+  enddo
   close(27)
   close(28)
   close(29)
@@ -418,7 +418,7 @@ program mesh_chunk
   ! ecriture de stzmin
   call write_stzmin(lon_zmin,lat_zmin,nlon_dsm,nlat_dsm)
   !
-  
+
   z_bottom = minval(zgrid(:,:,:,:))
   zgrid(:,:,:,:) = zgrid(:,:,:,:) - z_bottom
   UTM_X_MIN=minval(xgrid)
@@ -431,7 +431,7 @@ program mesh_chunk
      write(88,'(4f20.10)') vpv(i,:)
      write(88,'(4f20.10)') vsv(i,:)
      write(88,'(4f20.10)') density(i,:)
-  end do
+  enddo
   write(88,*)  z_bottom
   write(88,*)  lon_center_chunk,  lat_center_chunk,  chunk_azi
   close(88)
@@ -450,14 +450,14 @@ program mesh_chunk
               ilocnum = ilocnum + 1
               xp(ilocnum + ieoff)= xgrid(i,j,k,ispec)
               yp(ilocnum + ieoff)= ygrid(i,j,k,ispec)
-              zp(ilocnum + ieoff)= zgrid(i,j,k,ispec) 
-              
-           end do
-        end do
-     end do
-  end do
+              zp(ilocnum + ieoff)= zgrid(i,j,k,ispec)
 
-  ! on identifie les points semblables et on les numerote 
+           enddo
+        enddo
+     enddo
+  enddo
+
+  ! on identifie les points semblables et on les numerote
   call get_global1(nspec,xp,yp,zp,iglob,loc,ifseg,nglob,npointot,UTM_X_MIN,UTM_X_MAX)
 
   deallocate(xp,yp,zp)
@@ -474,11 +474,11 @@ program mesh_chunk
               inum_loc(i,j,k,ispec) = iglob(ilocnum+ieoff)
               xp(iglob(ilocnum+ieoff)) = xgrid(i,j,k,ispec)
               yp(iglob(ilocnum+ieoff)) = ygrid(i,j,k,ispec)
-              zp(iglob(ilocnum+ieoff)) = zgrid(i,j,k,ispec) 
-           end do
-        end do
-     end do
-  end do
+              zp(iglob(ilocnum+ieoff)) = zgrid(i,j,k,ispec)
+           enddo
+        enddo
+     enddo
+  enddo
 
 
   !---------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -511,12 +511,12 @@ program mesh_chunk
   close(90)
   !stop
   ! -------------------------------- SAUVEGARDE DES MESH FILES --------------------------------------------------------------------------------
- 
+
   open(27,file='nodes_coords_file')
   write(27,*) nglob ! nb de sommets
   do kglob=1,nglob
-     write(27,'(i14,3x,3(f20.5,1x))') kglob,xp(kglob),yp(kglob),zp(kglob) 
-  end do
+     write(27,'(i14,3x,3(f20.5,1x))') kglob,xp(kglob),yp(kglob),zp(kglob)
+  enddo
   close(27)
 
   open(27,file='mesh_file')
@@ -526,58 +526,58 @@ program mesh_chunk
           inum_loc(2,2,1,ispec),inum_loc(1,2,1,ispec),&
           inum_loc(1,1,2,ispec),inum_loc(2,1,2,ispec),&
           inum_loc(2,2,2,ispec),inum_loc(1,2,2,ispec)
-  end do
+  enddo
   close(27)
-  ! 
- 
+  !
+
   open(27,file='absorbing_surface_file_xmin')
   write(27,*)  ispec2Dxmin
   do ispec=1,nspec
      if (iboun(1,ispec)) write(27,'(5(i10,1x))') ispec,inum_loc(1,1,1,ispec),inum_loc(1,2,1,ispec),&
           inum_loc(1,2,2,ispec),inum_loc(1,1,2,ispec)
-  end do
+  enddo
   close(27)
-  
+
   open(27,file='absorbing_surface_file_xmax')
   write(27,*) ispec2Dxmax
   do ispec=1,nspec
      if (iboun(2,ispec)) write(27,'(5(i10,1x))') ispec,inum_loc(2,1,1,ispec),inum_loc(2,2,1,ispec),&
           inum_loc(2,2,2,ispec),inum_loc(2,1,2,ispec)
-  end do
+  enddo
   close(27)
-  
+
   open(27,file='absorbing_surface_file_ymin')
   write(27,*) ispec2Dymin
   do ispec=1,nspec
      if (iboun(3,ispec)) write(27,'(5(i10,1x))') ispec,inum_loc(1,1,1,ispec),inum_loc(2,1,1,ispec),&
           inum_loc(2,1,2,ispec),inum_loc(1,1,2,ispec)
-  end do
+  enddo
   close(27)
-  
+
   open(27,file='absorbing_surface_file_ymax')
   write(27,*) ispec2Dymax
   do ispec=1,nspec
      if (iboun(4,ispec)) write(27,'(5(i10,1x))') ispec,inum_loc(1,2,1,ispec),inum_loc(2,2,1,ispec),&
           inum_loc(2,2,2,ispec),inum_loc(1,2,2,ispec)
-  end do
+  enddo
   close(27)
-  
+
   open(27,file='absorbing_surface_file_bottom')
   write(27,*) ispec2Dzmin
   do ispec=1,nspec
      if (iboun(5,ispec)) write(27,'(5(i10,1x))') ispec,inum_loc(1,1,1,ispec),inum_loc(1,2,1,ispec),&
           inum_loc(2,2,1,ispec),inum_loc(2,1,1,ispec)
-  end do
+  enddo
   close(27)
-  
+
   open(27,file='free_surface')
   write(27,*) ispec2Dzmax
   do ispec=1,nspec
      if (iboun(1,ispec)) write(27,'(5(i10,1x))') ispec,inum_loc(1,1,2,ispec),inum_loc(1,2,2,ispec),&
           inum_loc(2,2,2,ispec),inum_loc(2,1,2,ispec)
-  end do
+  enddo
   close(27)
-  
+
   close(49)
   write(*,*) 'END '
   stop
@@ -604,7 +604,7 @@ end program mesh_chunk
   double precision DEGREES_TO_RADIANS
 
   DEGREES_TO_RADIANS = 3.141592653589793d0/180.d0
-  
+
 
 ! compute colatitude and longitude and convert to radians
   alpha = CENTER_LONGITUDE_IN_DEGREES * DEGREES_TO_RADIANS
@@ -642,17 +642,17 @@ subroutine write_gllz_points(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,current_laye
   !write(*,*) ilayer,  current_layer(iz)
   !profondeur = dsqrt(xstore(1,1,k)**2 + ystore(1,1,k)**2 + (zstore(1,1,k) )**2 )
   !write(27,*) profondeur/1000., ilayer
-  if (ilayer .eq.  current_layer(iz)) then
+  if (ilayer ==  current_layer(iz)) then
      do k=2,NGLLZ
         profondeur = dsqrt(xstore(1,1,k)**2 + ystore(1,1,k)**2 + (zstore(1,1,k) )**2 )
         write(27,*) profondeur/1000., ilayer-1,1
         Ndepth=Ndepth+1
-     end do
+     enddo
   else ! new layer
-     
+
      k=1
      profondeur = dsqrt(xstore(1,1,k)**2 + ystore(1,1,k)**2 + (zstore(1,1,k) )**2 )
-     if (ilayer.eq.0) then
+     if (ilayer==0) then
         ilayer =  current_layer(iz)
         write(27,*)  profondeur/1000., ilayer-1,1
         Ndepth=Ndepth+1
@@ -660,30 +660,30 @@ subroutine write_gllz_points(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,current_laye
         ilayer =  current_layer(iz)
         write(27,*)  profondeur/1000., ilayer-1,-1
         Ndepth=Ndepth+1
-     end if
+     endif
      do k=2,NGLLZ ! on duplique le dernier point
         profondeur = dsqrt(xstore(1,1,k)**2 + ystore(1,1,k)**2 + (zstore(1,1,k) )**2 )
         write(27,*)  profondeur/1000., ilayer-1,1
         Ndepth=Ndepth+1
-     end do
-    
-     
-  end if
+     enddo
+
+
+  endif
 
 end subroutine write_gllz_points
 
 
 subroutine write_recdepth_dsm(Ndepth,R_EARTH)
-  implicit none 
+  implicit none
   integer Ndepth,i
   double precision R_EARTH,prof
   double precision, allocatable :: z(:)
-  integer, allocatable :: zindex(:),ziflag(:) 
+  integer, allocatable :: zindex(:),ziflag(:)
   integer ilayer,flag
 
-  
+
   open(27,file='.recdepth')
- 
+
   allocate(zindex(Ndepth),ziflag(Ndepth))
   allocate(z(Ndepth))
 
@@ -692,7 +692,7 @@ subroutine write_recdepth_dsm(Ndepth,R_EARTH)
      z(Ndepth-i+1)=R_EARTH/1000.d0-prof
      zindex(Ndepth-i+1)=ilayer
      ziflag(Ndepth-i+1)=flag
-  end do
+  enddo
 
   close(27)
   open(27,file='recdepth')
@@ -701,15 +701,15 @@ subroutine write_recdepth_dsm(Ndepth,R_EARTH)
   i=1
   write(27,*) z(i),zindex(i),ziflag(i)
   do i=2,Ndepth-1
-     if (ziflag(i-1) .eq. -1 ) then
+     if (ziflag(i-1) == -1 ) then
         write(27,*) z(i),zindex(i),-1
      else
          write(27,*) z(i),zindex(i),1
-     end if
-  end do
+     endif
+  enddo
   i=Ndepth
   write(27,*) z(i),zindex(i),ziflag(i)
-  
+
 end subroutine write_recdepth_dsm
 
 
@@ -721,7 +721,7 @@ subroutine write_stxmin(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,rotation_matrix,t
   double precision rotation_matrix(3,3)
   double precision vector_ori(3),vector_rotated(3)
   double precision rayon,x,y,z,deg2rad,long,lati
-  logical test 
+  logical test
 
   deg2rad=3.141592653589793d0/180.d0
   NDIM=3
@@ -730,13 +730,13 @@ subroutine write_stxmin(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,rotation_matrix,t
      NGLLY_eff = NGLLY
   else
      NGLLY_eff = NGLLY - 1
-  end if
- 
+  endif
+
   do jgll=1,NGLLY_eff
      vector_ori(1)=xstore(1,jgll,NGLLZ)
      vector_ori(2)=ystore(1,jgll,NGLLZ)
      vector_ori(3)=zstore(1,jgll,NGLLZ)
-    
+
      do i = 1,NDIM
         vector_rotated(i) = 0.d0
         do j = 1,NDIM
@@ -748,7 +748,7 @@ subroutine write_stxmin(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,rotation_matrix,t
 
       long=atan2(y,x)
       lati=asin(z/rayon)
-     
+
       ! passage de geocentique à géographique
       !!theta = PI/2.D0 - lati
       ! convert the geocentric colatitude to a geographic colatitude
@@ -758,11 +758,11 @@ subroutine write_stxmin(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,rotation_matrix,t
       !write(28,*) xstore(1,jgll,NGLLZ), ystore(1,jgll,NGLLZ), zstore(1,jgll,NGLLZ)!x,y !long/deg2rad,lati/deg2rad
       write(28,*) long/deg2rad,lati/deg2rad !,rayon/1000
       !write(38,'()') 1,(NGLLY-1)*jy_elm+jgll
-       write(49,*) 
+       write(49,*)
        write(49,*)     vector_ori(:)
        write(49,*)     vector_rotated(:)
-   
-  end do
+
+  enddo
 end subroutine write_stxmin
 
 
@@ -775,12 +775,12 @@ subroutine write_stxmax(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,rotation_matrix,t
   double precision vector_ori(3),vector_rotated(3)
   double precision rayon,x,y,z,deg2rad,long,lati
   logical test
-  
+
   if (test) then
      NGLLY_eff = NGLLY
   else
      NGLLY_eff = NGLLY - 1
-  end if
+  endif
 
   deg2rad=3.141592653589793d0/180.d0
   NDIM=3
@@ -789,7 +789,7 @@ subroutine write_stxmax(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,rotation_matrix,t
      vector_ori(1)=xstore(NGLLX,jgll,NGLLZ)
      vector_ori(2)=ystore(NGLLX,jgll,NGLLZ)
      vector_ori(3) =zstore(NGLLX,jgll,NGLLZ)
-    
+
      do i = 1,NDIM
         vector_rotated(i) = 0.d0
         do j = 1,NDIM
@@ -801,7 +801,7 @@ subroutine write_stxmax(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,rotation_matrix,t
 
       long=atan2(y,x)
       lati=asin(z/rayon)
-     
+
       ! passage de geocentique à géographique
       !!theta = PI/2.D0 - lati
       ! convert the geocentric colatitude to a geographic colatitude
@@ -810,10 +810,10 @@ subroutine write_stxmax(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,rotation_matrix,t
 
       !write(28,*) xstore(1,jgll,NGLLZ), ystore(1,jgll,NGLLZ), zstore(1,jgll,NGLLZ)!x,y !long/deg2rad,lati/deg2rad
       write(29,*) long/deg2rad,lati/deg2rad !,rayon/1000
-  end do
+  enddo
 
-  
- 
+
+
 end subroutine write_stxmax
 
 
@@ -827,7 +827,7 @@ subroutine write_stymin(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,rotation_matrix,t
   double precision rotation_matrix(3,3)
   double precision vector_ori(3),vector_rotated(3)
   double precision rayon,x,y,z,deg2rad,long,lati
-  logical test 
+  logical test
 
   deg2rad=3.141592653589793d0/180.d0
   NDIM=3
@@ -836,13 +836,13 @@ subroutine write_stymin(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,rotation_matrix,t
      NGLLX_eff = NGLLX
   else
      NGLLX_eff = NGLLX - 1
-  end if
+  endif
 
   do jgll=1,NGLLX_eff
      vector_ori(1)=xstore(jgll,1,NGLLZ)
      vector_ori(2)=ystore(jgll,1,NGLLZ)
      vector_ori(3) =zstore(jgll,1,NGLLZ)
-    
+
      do i = 1,NDIM
         vector_rotated(i) = 0.d0
         do j = 1,NDIM
@@ -854,7 +854,7 @@ subroutine write_stymin(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,rotation_matrix,t
 
       long=atan2(y,x)
       lati=asin(z/rayon)
-     
+
       ! passage de geocentique à géographique
       !!theta = PI/2.D0 - lati
       ! convert the geocentric colatitude to a geographic colatitude
@@ -863,7 +863,7 @@ subroutine write_stymin(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,rotation_matrix,t
 
       !write(28,*) xstore(1,jgll,NGLLZ), ystore(1,jgll,NGLLZ), zstore(1,jgll,NGLLZ)!x,y !long/deg2rad,lati/deg2rad
       write(30,*) long/deg2rad,lati/deg2rad !,rayon/1000
-  end do
+  enddo
 end subroutine write_stymin
 
 
@@ -876,12 +876,12 @@ subroutine write_stymax(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,rotation_matrix,t
   double precision vector_ori(3),vector_rotated(3)
   double precision rayon,x,y,z,deg2rad,long,lati
   logical test
-  
+
   if (test) then
      NGLLX_eff = NGLLX
   else
      NGLLX_eff = NGLLX - 1
-  end if
+  endif
 
   deg2rad=3.141592653589793d0/180.d0
   NDIM=3
@@ -890,7 +890,7 @@ subroutine write_stymax(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,rotation_matrix,t
      vector_ori(1)=xstore(jgll,NGLLY,NGLLZ)
      vector_ori(2)=ystore(jgll,NGLLY,NGLLZ)
      vector_ori(3) =zstore(jgll,NGLLY,NGLLZ)
-    
+
      do i = 1,NDIM
         vector_rotated(i) = 0.d0
         do j = 1,NDIM
@@ -902,7 +902,7 @@ subroutine write_stymax(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,rotation_matrix,t
 
       long=atan2(y,x)
       lati=asin(z/rayon)
-     
+
       ! passage de geocentique à géographique
       !!theta = PI/2.D0 - lati
       ! convert the geocentric colatitude to a geographic colatitude
@@ -911,10 +911,10 @@ subroutine write_stymax(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,rotation_matrix,t
 
       !write(28,*) xstore(1,jgll,NGLLZ), ystore(1,jgll,NGLLZ), zstore(1,jgll,NGLLZ)!x,y !long/deg2rad,lati/deg2rad
       write(31,*) long/deg2rad,lati/deg2rad !,rayon/1000
-  end do
+  enddo
 
-  
- 
+
+
 end subroutine write_stymax
 
 
@@ -930,7 +930,7 @@ subroutine store_zmin_points(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,rotation_mat
   double precision rayon,x,y,z,deg2rad,long,lati
   double precision lon_zmin(nlon_dsm,nlat_dsm),lat_zmin(nlon_dsm,nlat_dsm)
   logical test
-  
+
 
 
   deg2rad=3.141592653589793d0/180.d0
@@ -941,7 +941,7 @@ subroutine store_zmin_points(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,rotation_mat
         vector_ori(1)=xstore(igll,jgll,1)
         vector_ori(2)=ystore(igll,jgll,1)
         vector_ori(3) =zstore(igll,jgll,1)
-    
+
         do i = 1,NDIM
            vector_rotated(i) = 0.d0
            do j = 1,NDIM
@@ -950,10 +950,10 @@ subroutine store_zmin_points(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,rotation_mat
         enddo
         x=vector_rotated(1);y=vector_rotated(2);z=vector_rotated(3)
         rayon = dsqrt(vector_rotated(1)**2 + vector_rotated(2)**2 + vector_rotated(3)**2)
-        
+
         long=atan2(y,x)
         lati=asin(z/rayon)
-     
+
       ! passage de geocentique à géographique
       !!theta = PI/2.D0 - lati
       ! convert the geocentric colatitude to a geographic colatitude
@@ -965,28 +965,28 @@ subroutine store_zmin_points(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,rotation_mat
         iglob=(ilon)*(NGLLX-1)+igll
         jglob=(ilat)*(NGLLY-1)+jgll
         lon_zmin(iglob,jglob)= long/deg2rad
-        lat_zmin(iglob,jglob)= lati/deg2rad 
+        lat_zmin(iglob,jglob)= lati/deg2rad
         !write(32,'(3f20.10)') xstore(igll,jgll,1)/1000.d0, ystore(igll,jgll,1)/1000.d0,zstore(igll,jgll,1)/1000.d0
         !write(32,*) xstore(igll,jgll,NGLLZ), ystore(igll,igll,NGLLZ),zstore(igll,jgll,NGLLZ)
-     end do
-  end do
+     enddo
+  enddo
 
-  
- 
+
+
 end subroutine store_zmin_points
 
 subroutine write_stzmin(x,y,nx,ny)
   implicit none
   integer i,j,nx,ny
   double precision x(nx,ny),y(nx,ny)
-  
+
   open(27,file='stzmin')
   write(27,*) nx*ny
   do j=1,ny
      do i=1,nx
         write(27,*) x(i,j),y(i,j)
-     end do
-  end do
+     enddo
+  enddo
   close(27)
 end subroutine write_stzmin
 
@@ -998,13 +998,13 @@ subroutine write_Igm_file(iunit,ispec2D,NGLL1,NGLL2,ie,je,js,il)
   do j=1,NGLL2
      do i=1,NGLL1
         write(iunit,*) i,j,ispec2D,(NGLL1-1)*ie+i,(NGLL2-1)*je+j+js,il
-     end do
-  end do
+     enddo
+  enddo
 end subroutine write_Igm_file
 
 
 subroutine  compute_rotation_matrix(rotation_matrix, lon_center_chunk,lat_center_chunk, chunk_azi)
-  implicit none 
+  implicit none
   double precision rotation_matrix(3,3),lon_center_chunk,lat_center_chunk, chunk_azi
   double precision R0(3,3),R1(3,3),R2(3,3),axe_rotation(3),R00(3,3)
 
@@ -1030,12 +1030,12 @@ end subroutine compute_rotation_matrix
 !
 !
 !   ROUTINES POUR FAIRE DES ROTATIONS 3D ET DIVERS CHANGEMENTS DE REPERES
-!	
-!	Vadim Monteiller Mars 2013
+!
+! Vadim Monteiller Mars 2013
 !
 !-------------------------------------------------------------------------------
 ! matrice de rotation 3D d'axe "axe" et d'angle theta (d°)
-! cette matrice est en complexe 
+! cette matrice est en complexe
 subroutine rotation_matrix_axe(R,axe,theta)
   implicit none
   double precision axe(3),theta,pi,deg2rad
@@ -1044,7 +1044,7 @@ subroutine rotation_matrix_axe(R,axe,theta)
   integer i,j
 
   pi=3.1415926535897932d0
-  deg2rad = pi / 180.d0 
+  deg2rad = pi / 180.d0
   ! on normalise l'axe
   norme_axe=dsqrt(axe(1)**2 + axe(2)**2 + axe(3)**2)
 
@@ -1053,7 +1053,7 @@ subroutine rotation_matrix_axe(R,axe,theta)
   uy=axe(2)/norme_axe
   uz=axe(3)/norme_axe
 
-  ! on calcule le cos et sin 
+  ! on calcule le cos et sin
   c=dcos(deg2rad * theta);s=dsin(deg2rad * theta)
 
   ! matrice de rotation complexe
@@ -1073,7 +1073,7 @@ subroutine rotation_matrix_axe(R,axe,theta)
   write(49,*) R(1,:)
   write(49,*) R(2,:)
   write(49,*) R(3,:)
-  write(49,*) 
+  write(49,*)
 end subroutine rotation_matrix_axe
 
 !-------------------------------------------------------------------------------
@@ -1082,17 +1082,17 @@ subroutine compose4matrix(R,R00,R0,R1,R2)
   implicit none
   double precision R(3,3),R0(3,3),R1(3,3),R2(3,3),R00(3,3),Rtmp(3,3)
   integer i,j,k
-  
- 
+
+
  R(:,:)=0.d0
   ! multiplication R=R0*R00
   do j=1,3
      do i=1,3
         do k=1,3
            R(i,j)=R(i,j) + R0(i,k)*R00(k,j)
-        end do
-     end do
-  end do
+        enddo
+     enddo
+  enddo
 
   ! multiplication R=R1*R
  Rtmp=R
@@ -1101,9 +1101,9 @@ subroutine compose4matrix(R,R00,R0,R1,R2)
      do i=1,3
         do k=1,3
            R(i,j)=R(i,j) + R1(i,k)*Rtmp(k,j)
-        end do
-     end do
-  end do
+        enddo
+     enddo
+  enddo
 
   ! multiplication R=R2*R
  Rtmp=R
@@ -1112,16 +1112,16 @@ subroutine compose4matrix(R,R00,R0,R1,R2)
      do i=1,3
         do k=1,3
            R(i,j)=R(i,j) + R2(i,k)*Rtmp(k,j)
-        end do
-     end do
-  end do
+        enddo
+     enddo
+  enddo
 
   write(49,*) ' MATRICE ROTATION COMPLETE '
   write(49,*) R(1,:)
   write(49,*) R(2,:)
   write(49,*) R(3,:)
-  write(49,*) 
+  write(49,*)
 end subroutine compose4matrix
 
 !------------------------------------------------------------------------------
-! rotation pour passer d'un repere local a un autre 
+! rotation pour passer d'un repere local a un autre

@@ -494,7 +494,7 @@
     call convspc( max_nstation,maxnfreq,n_station, time_series_length,n_frequency,omega_imag, &
            station_displacement, source_depth,source_lat,source_lon,station_lat,station_lon, &
            work_spc,work_spc_real,work_time,sac_file,ITYPE_SEISMOGRAMS )
-    
+
 !    coutfile = "./data/test_velocity"
 
 !    do i = 0,n_frequency
@@ -502,7 +502,7 @@
 !       if (i /= 0) then
 !         do j = 1,n_station
 !          displacementsngl(1:3,j) =  station_displacement(1:3,j,i)
-!         end do
+!         enddo
 !       endif
 
 !      open(1,file=coutfile,status='unknown',form='unformatted',access = 'direct', recl=2*3*kind(0e0)*n_station)

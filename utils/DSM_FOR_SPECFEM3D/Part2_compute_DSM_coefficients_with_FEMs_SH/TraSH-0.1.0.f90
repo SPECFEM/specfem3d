@@ -2,18 +2,18 @@ program TraSH_Write_coefficients
 
 
 !-----------------------------------------------------------------------
-!     
 !
-!  
 !
-!       
+!
+!
+!
 !                                               2002.10.KAWAI Kenji
 !                                               2009.6. FUJI Nobuaki
 !                                               2011.9. FUJI Nobuaki
 !                                               2013.11 YI WANG (MPI)
 !
 !
-!                 
+!
 !
 !-----------------------------------------------------------------------
 
@@ -33,10 +33,10 @@ INTEGER myrank,nbproc,ierr
   character(40) :: datex,timex
   real(kind(0d0)), parameter :: pi=3.1415926535897932d0
   real(kind(0d0)), parameter :: re=1.d-2, ratc=1.d-10, ratl=1.d-4
-  integer, parameter :: maxlmax = 25000, maxlmax_g = 1000, nsta = 1, theta_n=nsta 
+  integer, parameter :: maxlmax = 25000, maxlmax_g = 1000, nsta = 1, theta_n=nsta
   !change to 30000 for possible high frequency calculation.
- 
-  real(kind(0d0)) :: tlen 
+
+  real(kind(0d0)) :: tlen
   real(kind(0d0)) :: r0min, r0max, r0delta  !!! JUST FOR ONE DEPTH FOR THIS MOMENT !!
   real(kind(0d0)) :: r0lat, r0lon,stla_curr,stlo_curr
   real(kind(0d0)), allocatable :: stla(:),stlo(:),stla_g(:),stlo_g(:)
@@ -46,7 +46,7 @@ INTEGER myrank,nbproc,ierr
   real(kind(0d0)), allocatable :: rrsta(:,:)
   integer, allocatable :: iista(:,:)
   integer :: r_n,r0_n, ir_,ir0,imt,itheta,nsta_ignored_in_this_code
-  
+
   character(120) :: coutfile, coutfile1, coutfile2
   integer :: imin,imax
   integer :: itranslat
@@ -70,17 +70,17 @@ INTEGER myrank,nbproc,ierr
   integer, allocatable :: nlayer(:), iphase(:)
   integer :: ioutercore
 
-  ! variables pour des points stackes 
+  ! variables pour des points stackes
   integer, allocatable :: isp(:),jsp(:),ins(:)
 
   ! variables pour la source
- 
+
   integer, allocatable :: spn(:),ns(:)
   real(kind(0d0)) :: mt(3,3),lsq
   real(kind(0d0)), allocatable :: mu0(:),spo(:)
 
 !-----------------------------------------------------------------------
-  ! variables pour des elements de matrice 
+  ! variables pour des elements de matrice
   complex(kind(0d0)), allocatable :: a0(:,:), a2(:,:), a(:,:),dr(:),z(:)
   real(kind(0d0)), allocatable :: t(:), h1(:), h2(:), h3(:), h4(:), work(:),w(:)
   real(kind(0d0)), allocatable :: gt(:,:),gh1(:,:),gh2(:,:),gh3(:,:),gh4(:,:)
@@ -91,11 +91,11 @@ INTEGER myrank,nbproc,ierr
   real(kind(0d0)) :: omega
   integer :: lsuf
 
-  ! des autres 
-  integer :: lda 
+  ! des autres
+  integer :: lda
   integer :: kc, ismall,ismall0, llog,m, l,ig2,ll(12),lli(12),llj(12)
-  real(kind(0d0)) :: eps 
-  
+  real(kind(0d0)) :: eps
+
 !-----------------------------------------------------------------------
   complex(kind(0d0)), allocatable :: bvec(:,:,:),bvecdt(:,:,:),bvecdp(:,:,:)
   real(kind(0d0)), allocatable :: plm(:,:,:),maxamp_r(:)
@@ -138,7 +138,7 @@ if (myrank==0)  write(*,*) 'how many processor do i successfully apply:',nbproc
  endif !only the root can excute this function call.
 
 
- 
+
  allocate(Ifrq(nbproc+1))
  allocate(Ifrq2(0:nbproc-1,2))
  if (myrank==0)   call ReadFrqsByProc(Ifrq,Ifrq2,para,nbproc+1)  !frequency calculation separation.
@@ -175,7 +175,7 @@ if (myrank==0)  write(*,*) 'how many processor do i successfully apply:',nbproc
      imax=Ifrq2(myrank,2)
    endif
 !   write(*,*) 'the',myrank,'th processor, frequency section is:',imin,imax
-  imax_global = imax_glob 
+  imax_global = imax_glob
 
 
 if (myrank==0) then
@@ -200,9 +200,9 @@ if (myrank==0) then
 
    do i = 1, nzone
      read (20, *) vrmin(i), vrmax(i), rrho(1,i), rrho(2,i), rrho(3,i), rrho(4,i), dummy, dummy, dummy, dummy, dummy, dummy, dummy, dummy, vsv(1,i), vsv(2,i), vsv(3,i), vsv(4,i), vsh(1,i), vsh(2,i), vsh(3,i), vsh(4,i), dummy, dummy, dummy, dummy, qmu(i), dummy
-     if ((vsv(1,i).eq.0.d0).and.(vsv(2,i).eq.0.d0).and.(vsv(3,i).eq.0.d0).and.(vsv(4,i).eq.0.d0)) then
+     if ((vsv(1,i)==0.d0).and.(vsv(2,i)==0.d0).and.(vsv(3,i)==0.d0).and.(vsv(4,i)==0.d0)) then
         iphase(i) = 2
-	ioutercore = i
+  ioutercore = i
      else
         iphase(i) = 1
      endif
@@ -261,7 +261,7 @@ endif ! only root can read file for inputing the setting parameters.
 
  if (myrank==0) then
    open (1,file=stationsinf,status='old',action='read',position='rewind')
-   if(itranslat.eq.1) call translat (r0lat,r0lat)
+   if(itranslat==1) call translat (r0lat,r0lat)
    open(2,file='recdepth')
    read(2,*) r_n
    read(1,*) nsta_ignored_in_this_code
@@ -295,7 +295,7 @@ endif ! only root can read file for inputing the setting parameters.
   allocate(tabg0(maxlmax_g,1,6,-2:2,r_n))
   allocate(tabg0der(maxlmax_g,1,6,-2:2,r_n))
   allocate(tabg0_small_buffer(maxlmax_g,1,6,-2:2))
-!! for now is the computation of SH parts, So the tabg0 is the half of the PSV parts ,because only one 
+!! for now is the computation of SH parts, So the tabg0 is the half of the PSV parts ,because only one
 !! kind of coefficients need to be stored.
 
 
@@ -303,20 +303,20 @@ endif ! only root can read file for inputing the setting parameters.
    do i = 1,nsta
    read(1,*) r_(i),stla(i),stlo(i),updown(i)
      r_(i) = 6371.d0 -r_(i)
-     if(itranslat.eq.1) call translat(stla(i),stla(i))
+     if(itranslat==1) call translat(stla(i),stla(i))
      call calthetaphi(r0lat,r0lon,stla(i),stlo(i),theta(i),phi(i))
    enddo
    close(1)
- endif 
+ endif
 !! in fact ,this part is unused in the writing coefficients routine.
   if (myrank==0) then
     do i=1,r_n
         read(2,*) r_(i),idum(i),updown(i)
-	r_(i) = 6371.d0 -r_(i)
+  r_(i) = 6371.d0 -r_(i)
     enddo
     close(1)
     close(2)
-  endif	    
+  endif
 
 
  call MPI_Barrier(MPI_COMM_WORLD,ierr)
@@ -340,7 +340,7 @@ endif ! only root can read file for inputing the setting parameters.
 
  write(list, '(I6,".",I6)'), imin_glob,imax_glob
  do j = 1,15
-    if(list(j:j).eq.' ')list(j:j) = '0'
+    if(list(j:j)==' ')list(j:j) = '0'
  enddo
  list = trim(outputDir)//"/log/calLogSH"//"."//trim(modelname)//"."//trim(list)
 
@@ -386,7 +386,7 @@ endif ! only root can read file for inputing the setting parameters.
       allocate(ga(1:8,1:r0_n))
       allocate(ga2(1:2,1:3,1:r0_n))
       allocate(gdr(1:3,r0_n))
-  
+
   do i = 1, r0_n
      r0(i) = r0min + dble(i-1)*r0delta
   enddo
@@ -441,11 +441,11 @@ endif ! only root can read file for inputing the setting parameters.
   allocate(g0(1:nnlayer+1))
   allocate(dr(1:nnlayer+1))
   allocate(w(1:nnlayer+1))
-  allocate(z(1:nnlayer+1),stat=ier)  
+  allocate(z(1:nnlayer+1),stat=ier)
   if(ier /= 0) stop '<!!!error: not enough memory to allocate array>!!!!'
   call calstg( nzone,rrho,vsv,vsh,nnlayer,nlayer,ra,rmax,vnp,vra,rho,ecL,ecN)
   do ir0 = 1, r0_n
-     call calgstg(nzone,nnlayer,spn(ir0),rrho,vsv,vsh,gra(1:3,ir0),gvra(1:3,ir0),rmax,grho(1:3,ir0),gecL(1:3,ir0),gecN(1:3,ir0),r0(ir0),mu0(ir0)) 
+     call calgstg(nzone,nnlayer,spn(ir0),rrho,vsv,vsh,gra(1:3,ir0),gvra(1:3,ir0),rmax,grho(1:3,ir0),gecL(1:3,ir0),gecN(1:3,ir0),r0(ir0),mu0(ir0))
   enddo
 
   do i= 1, nzone
@@ -472,7 +472,7 @@ endif ! only root can read file for inputing the setting parameters.
      call calhl(2,3,gvra(1:3,ir0),gecL(1:3,ir0),gra(1:3,ir0),work)
      call calt( 2,gh3(1:8,ir0),work,gh3(1:8,ir0))
      call calhl(2,3,gvra(1:3,ir0),gecN(1:3,ir0),gra(1:3,ir0),work )
-     call calt( 2,gh4(1:8,ir0),work,gh4(1:8,ir0))  
+     call calt( 2,gh4(1:8,ir0),work,gh4(1:8,ir0))
   enddo
 
 
@@ -483,16 +483,16 @@ endif ! only root can read file for inputing the setting parameters.
      ins(ir0) = 4 * ns(ir0) - 3
   enddo
   llog = 0
-  
+
 
   write(list1, '(I6,".",I6)'), imin_glob,imax_glob  !!unify scanning file for the process
   do j = 1,15
-     if(list1(j:j).eq.' ')list1(j:j) = '0'
+     if(list1(j:j)==' ')list1(j:j) = '0'
   enddo
   list1 = trim(outputDir)//"/log/listSH"//"."//trim(modelname)//"."//trim(list1)
-  
+
   open(24, file = list1, status = 'unknown', form = 'formatted')
-  write(24,*) 
+  write(24,*)
   close(24)
 
 
@@ -501,19 +501,19 @@ endif ! only root can read file for inputing the setting parameters.
  if (myrank == 0) then
   write(list, '(I6,".",I6)'), imin_glob,imax_glob  !unify scanning file for the process
   do j = 1,15
-     if(list(j:j).eq.' ')list(j:j) = '0'
+     if(list(j:j)==' ')list(j:j) = '0'
   enddo
   list = trim(outputDir)//"/log/calLogSH"//"."//trim(modelname)//"."//trim(list)
-  
+
   open(1,file =list, status = 'unknown', form = 'formatted')
   call date_and_time(datex,timex)
   write(1,'(/a,a4,a,a2,a,a2,a,a2,a,a2,a,a4)') &
        '    Starting date and time:                     ', &
        datex(1:4),'-',datex(5:6),'-',datex(7:8),'.  ', &
-       timex(1:2),':',timex(3:4),':',timex(5:8)   
+       timex(1:2),':',timex(3:4),':',timex(5:8)
   close (1)
  endif
-  
+
 
    ! call clPLM(plm(1:3,0:3,1:theta_n,0:maxlmax),maxlmax,theta(1:theta_n),theta_n)
   !do l = 0,maxlmax
@@ -539,8 +539,8 @@ endif ! only root can read file for inputing the setting parameters.
 
 
     ir0 = r0_n
-!write(*,*) myrank,"th !!!!!!!!!!!!!!!start frequency calculation!!!!!!----" 
-  do i=imin,imax ! each frequency        
+!write(*,*) myrank,"th !!!!!!!!!!!!!!!start frequency calculation!!!!!!----"
+  do i=imin,imax ! each frequency
 
   write(coutfile, '(I5.5,".G0_SH_",I5.5)') int(r0(r0_n)*10.d0),i
 ! here we must change the r0(:) index to fix value r0_n,otherwise the error occurs.
@@ -548,15 +548,15 @@ endif ! only root can read file for inputing the setting parameters.
   coutfile = trim(outputDir)//"/Stress/"//coutfile
 !  write(*,*) i,'th freq for the filename is:',coutfile,ir0,r0(ir0)
   open(34,file=coutfile, form='unformatted',action='write')
-  
+
   ! initialisation
   tabg0 = dcmplx(0.d0)
   tabg0der = dcmplx(0.d0)
-  
+
   omega = 2.d0 * pi * dble(i)/tlen
 
-     if ( i.ne.0 ) then
-        call callsuf(omega,nzone,vrmax,vsv,lsuf)       
+     if ( i/=0 ) then
+        call callsuf(omega,nzone,vrmax,vsv,lsuf)
         call calcoef( nzone,omega,qmu,coef)
 !        plm = 0.d0
         a0 = 0.d0
@@ -568,7 +568,7 @@ endif ! only root can read file for inputing the setting parameters.
            call cala2( nlayer(j),h4(jsp(j)),coef(j), cwork(jsp(j)) )
            call overlap( nlayer(j),cwork(jsp(j)),a2( 1,isp(j) ) )
         enddo
- 
+
 
         kc = 1
         ismall = 0
@@ -585,64 +585,64 @@ endif ! only root can read file for inputing the setting parameters.
         we_left_the_loop_through_exit = .false.
 
         do l = 0, maxlmax ! l-loop commence
-        
-        index_l=index_l+1       
+
+        index_l=index_l+1
         lsq = dsqrt(dble(l)*dble(l+1))
 !           do itheta = 1,theta_n
 !              call calbvec(l,(theta(itheta)/180.d0*pi),(phi(itheta)/180.d0*pi),plm(1,0,itheta),bvec(1,-2,itheta),bvecdt(1,-2,itheta),bvecdp(1,-2,itheta))
 !           enddo   ! this code is not used here which is enable in the second part of the program.
            do ir_=1,r_n
              if (ismall_r(ir_)>20) then
-	      if (lmax_r(ir_)>l) then
-	        lmax_r(ir_)=l
-		arret(ir_)=0
-	      endif
-	     endif
-	   enddo
+        if (lmax_r(ir_)>l) then
+          lmax_r(ir_)=l
+    arret(ir_)=0
+        endif
+       endif
+     enddo
 
            if (SUM(arret(:)) == 0) then
-	        llog = l
+          llog = l
 !! DK DK added this to make sure we do not write the same last buffer twice
                 we_left_the_loop_through_exit = .true.
                 exit
            endif
 
-!           if(ismall.gt.20) then
-!              if(llog.gt.l) then
+!           if(ismall>20) then
+!              if(llog>l) then
 !                 llog =l
 !              endif
 !              cycle   !exit
 !           endif
-           
+
            tmpc = 0.d0
-           
+
            a = 0.d0
            ga2 = 0.d0
-           
+
            call cala( nn,l,lda,a0,a2,a )
            do ir0 = 1, r0_n
               call calga( 1,omega,omegai,l,t(ins(ir0)),h1(ins(ir0)),h2(ins(ir0)),h3(ins(ir0)),h4(ins(ir0)),coef(spn(ir0)),aa(1:4,ir0))
               call calga( 2,omega,omegai,l,gt(1:8,ir0),gh1(1:8,ir0),gh2(1:8,ir0),gh3(1:8,ir0),gh4(1:8,ir0),coef(spn(ir0)),ga(1:8,ir0))
               call overlap( 2,ga(1:8,ir0),ga2(1:2,1:3,ir0))
            enddo
-           
-           
-           do m = -2, 2 ! m-loop commence      
-	   !remembering that the computation for SH has no l=0 components, don't like the PSV part. 
-              if ( ( m.ne.0 ).and.( iabs(m).le.iabs(l) ) ) then
-  
+
+
+           do m = -2, 2 ! m-loop commence
+     !remembering that the computation for SH has no l=0 components, don't like the PSV part.
+              if ( ( m/=0 ).and.( iabs(m)<=iabs(l) ) ) then
+
                  do ir0 = 1,r0_n
                     ig2 = 0
                     do imt = 2,6
                        g0 = cmplx(0.d0)
-                       call setmt(imt,mt)  
+                       call setmt(imt,mt)
                        call calg2( l,m,spo(ir0),r0(ir0),mt,mu0(ir0),coef(spn(ir0)),ga(1:8,ir0),aa(1:4,ir0),ga2(1:2,1:3,ir0),gdr(1:3,ir0),g0(isp(spn(ir0))),ig2)
-           
-                       if ( (m.eq.-2).or.(m.eq.-l) ) then             
-                          if(ig2.eq.1) then
+
+                       if ( (m==-2).or.(m==-l) ) then
+                          if(ig2==1) then
 !!                             call dclisb0( a,nn,1,lda,g0,eps,dr,z,ier)
 !                             call dcsymbdl0( a,1,nn,1,eps,z(1),w(1),ll,lli,llj,ier)
-!                             call dcsbdlv0( a,g0,1,nn,eps,z(1),ier )     
+!                             call dcsbdlv0( a,g0,1,nn,eps,z(1),ier )
                               call dcsymbdl0_m_equals_1_nn_equals_1(a,nn,eps,z(1),w(1),ll,lli,llj,ier)
                               call dcsbdlv0_m_equals_1(a,g0,nn,z(1))
                              ig2 = ig2+1
@@ -651,26 +651,26 @@ endif ! only root can read file for inputing the setting parameters.
 !                             call dcsbdlv0( a,g0,1,nn,eps,z(1),ier )
                               call dcsbdlv0_m_equals_1(a,g0,nn,z(1))
                           endif
-                       else 
+                       else
 !!                          call dcsbsub0( a,nn,1,lda,g0,eps,dr,z,ier)
 !                          call dcsbdlv0( a,g0,1,nn,eps,z(1),ier )
                            call dcsbdlv0_m_equals_1(a,g0,nn,z(1))
                        endif
-!dclisb0 is subroutine used for solving simultaneous linear equations with real symmetric positive definite  band matrix by cholesky method.                                 
-!  parameters                                                          
-!    (1) a : 2-dim. array containing the matrix.here the dimension of the 2-dim array is 2*nn, and nn = (nnlayer+1) 
-!    (2) nn : order of the matrix.                                      
-!    (3) 3rd parameter : size of band's half width, excluding diagonal.here is set to 1.                       
-!    (4) lda : row size of the array a in the 'dimension' statement.here lda = 2 which is used for defining the dimension of band matrix a.    
-!    (5) g0 : 1-dim. array containing the right hand side vector.       
-!    (6) eps : parameter to check singurarity off the matrix           
-!              standard value = 1.0d-14                                
-!    (7) dr : 1-dim. working array.                                    
-!    (8) z :  1-dim. working array.dimension of the dr and z is nn = (nnlayer+1) too.                              
+!dclisb0 is subroutine used for solving simultaneous linear equations with real symmetric positive definite  band matrix by cholesky method.
+!  parameters
+!    (1) a : 2-dim. array containing the matrix.here the dimension of the 2-dim array is 2*nn, and nn = (nnlayer+1)
+!    (2) nn : order of the matrix.
+!    (3) 3rd parameter : size of band's half width, excluding diagonal.here is set to 1.
+!    (4) lda : row size of the array a in the 'dimension' statement.here lda = 2 which is used for defining the dimension of band matrix a.
+!    (5) g0 : 1-dim. array containing the right hand side vector.
+!    (6) eps : parameter to check singurarity off the matrix
+!              standard value = 1.0d-14
+!    (7) dr : 1-dim. working array.
+!    (8) z :  1-dim. working array.dimension of the dr and z is nn = (nnlayer+1) too.
 !    (9) ier : error code.
 !entry dcsbsub0(a, nn, 1, lda, g0, eps, dr, z, ier) is used for forward substitution.
 
-                       if((imt.eq.2).and.(ir0.eq.r0_n)) then
+                       if((imt==2).and.(ir0==r0_n)) then
 !! DK DK r_n is of the order of ~500 and thus it is worth trying to vectorize it
 !IBM* ASSERT (MINITERCNT(1000))
 !!DIR$ loop count min(1000)
@@ -684,15 +684,15 @@ endif ! only root can read file for inputing the setting parameters.
         if(ampratio < ratl .and. l > lsuf) then
           ismall_r(ir_) = ismall_r(ir_) + 1
         else
-          ismall_r(ir_) = 0 
+          ismall_r(ir_) = 0
         endif
         enddo
         call calamp(g0(nn-1),l,lsuf,maxamp,ismall,ratl)
 !        call calamp_vector(g0(nn-1),l,lsuf,maxamp_r,ismall_r,ratl,r_n)
                        endif
-                    
-!! DK DK this loop cannot be vectorized because the call to "interpolate" that it contains cannot be inlined                       
-                       do ir_= 1,r_n                    
+
+!! DK DK this loop cannot be vectorized because the call to "interpolate" that it contains cannot be inlined
+                       do ir_= 1,r_n
                           g0tmp = (0.d0,0.d0)
                           g0dertmp = (0.d0,0.d0)
                           call interpolate(1,0,r_(ir_),rrsta(1:3,ir_),g0(iista(1:3,ir_)),g0tmp)
@@ -714,51 +714,51 @@ endif ! only root can read file for inputing the setting parameters.
 !                             call locallyCartesianDerivatives(u(1:3),udr(1:3),udt(1:3),udp(1:3),uder(1:3,1:3),r_(ir_),theta(itheta)/180.d0*pi)
 !                             call udertoStress(uder(1:3,1:3),stress(1:6,imt,itheta),A0sta(itheta),C0sta(itheta),F0sta(itheta),L0sta(itheta),N0sta(itheta))
 !                             displacement(1:3,imt,itheta) = u(1:3)+displacement(1:3,imt,itheta)
-                             
+
                           !enddo
                        enddo ! ir_-loop termine
                     enddo ! imt-loop termine
-                 enddo !ir0-loop termine     
+                 enddo !ir0-loop termine
               endif
-           enddo ! m-loop termine             
-           
-	   if (index_l == maxlmax_g) then
+           enddo ! m-loop termine
+
+     if (index_l == maxlmax_g) then
               do ir_=1,r_n
-	        llog0=min(maxlmax_g, lmax_r(ir_) - lref)
+          llog0=min(maxlmax_g, lmax_r(ir_) - lref)
                  if (llog0 > 0) call write_a_block_of_coefs_to_disk(tabg0,tabg0der,tabg0_small_buffer,ir_,llog0,maxlmax_g,r_n)
 
               enddo
              ! write a separator between blocks and re-initialise arrays to zero
               tabg0=dcmplx(0.d0)
-	      tabg0der=dcmplx(0.d0)
+        tabg0der=dcmplx(0.d0)
               write(34) -1,1
-	     !write(34) tabg0(1,:,:,:,1) !! VM VM this is not useful any more 
+       !write(34) tabg0(1,:,:,:,1) !! VM VM this is not useful any more
              !write(34) tabg0(1,:,:,:,1) !! VM VM this is not useful any more
 
-	     ! reset the index, for the next block to write later
+       ! reset the index, for the next block to write later
               index_l=0
               lref=l
-	   endif
+     endif
 
 
 
-        enddo !l-loop termine                       
+        enddo !l-loop termine
 
         open(24,file =list1, status = 'old',access='append', form = 'formatted')
-        write(24,*) i, dble(i)/tlen, llog-1     
+        write(24,*) i, dble(i)/tlen, llog-1
         close(24)
-        
-        
-!        stress(1:6,1:6,1:nsta) = stress(1:6,1:6,1:nsta)/cmplx(0,omega) 
+
+
+!        stress(1:6,1:6,1:nsta) = stress(1:6,1:6,1:nsta)/cmplx(0,omega)
 !        stresssngl(1:6,1:6,1:nsta) = stress(1:6,1:6,1:nsta)
 !        displacementsngl(1:3,1:6,1:nsta) = displacement(1:3,1:6,1:nsta)
 
 
      endif
-     
+
 
    if(mod(maxlmax,maxlmax_g) /= 0 .or. we_left_the_loop_through_exit) then
-        
+
     do ir_=1,r_n
        llog0=min(maxlmax_g,lmax_r(ir_)-lref)
        if (llog0 > 0) call write_a_block_of_coefs_to_disk(tabg0,tabg0der,tabg0_small_buffer,ir_,llog0,maxlmax_g,r_n)
@@ -773,25 +773,25 @@ endif ! only root can read file for inputing the setting parameters.
    ! close the file (write dummy negative values to indicate the end of the data)
       write(34) -1,1
       write(34) -1,-1 !! VM VM add this line because of bugs occurs sometimes when
-                           !! VM VM mod(maxlmax_g,lmax)==0 
+                           !! VM VM mod(maxlmax_g,lmax)==0
      !write(34) tabg0(1,:,:,:,1) !! VM VM this is not useful any more
      !write(34) tabg0(1,:,:,:,1) !! VM VM this is not useful any more
      close(34)
-  
-     
-     if(mod(i,8).eq.0) then
-     
+
+
+     if(mod(i,8)==0) then
+
         open(1,file =list, status = 'old',access='append', form = 'formatted')
         call date_and_time(datex,timex)
         write(1,'(/a,i,a,a4,a,a2,a,a2,a,a2,a,a2,a,a4)') &
              '    Frequency-index ', i, ' :', &
              datex(1:4),'-',datex(5:6),'-',datex(7:8),'.  ', &
-             timex(1:2),':',timex(3:4),':',timex(5:8)   
+             timex(1:2),':',timex(3:4),':',timex(5:8)
         close (1)
      endif
 
 
-  enddo ! omega-loop termine   
+  enddo ! omega-loop termine
 
 
   call MPI_Barrier(MPI_COMM_WORLD,ierr)
@@ -805,7 +805,7 @@ endif ! only root can read file for inputing the setting parameters.
    write(1,'(/a,a4,a,a2,a,a2,a,a2,a,a2,a,a4)') &
         '    Finishing date and time:                     ', &
         datex(1:4),'-',datex(5:6),'-',datex(7:8),'.  ', &
-        timex(1:2),':',timex(3:4),':',timex(5:8)   
+        timex(1:2),':',timex(3:4),':',timex(5:8)
    close (1)
  endif  !using the last processor to write the final statement.
 
@@ -816,8 +816,8 @@ call MPI_FINALIZE(ierr)
 
   stop
 
-  
-  
+
+
 
 
 

@@ -35,9 +35,9 @@ subroutine glu( a, n, n1, b, eps, wk, ip, ier )
   complex(kind(0d0)) :: amax,aik,w,t
   !             left-hand side
 
-  if( eps.lt.0.d0 )  eps = 3.52d-15
+  if( eps<0.d0 )  eps = 3.52d-15
 
-  if( ( n1.lt.n ).or.( n.le.0 ) )  then
+  if( ( n1<n ).or.( n<=0 ) )  then
      ier = 3
      print *, '  (subr. glu)  invalid argument.  n1, n =', n1, n
      return
@@ -56,13 +56,13 @@ subroutine glu( a, n, n1, b, eps, wk, ip, ier )
   enddo
 
   do i = 1, n
-     if( abs( wk(i) ).lt.eps )  then
+     if( abs( wk(i) )<eps )  then
         ier = 2
         print *, '  (subr. glu)  original matrix is singular.'
         return
      endif
   enddo
- 
+
 
   ier = 0
   do k = 1, n
@@ -71,16 +71,16 @@ subroutine glu( a, n, n1, b, eps, wk, ip, ier )
      ipk = k
      do i = k+1, n
         aik = abs(a(i,k))
-        if( abs( aik ).gt.abs( amax ) )  then
+        if( abs( aik )>abs( amax ) )  then
            ipk = i
            amax = aik
-        end if
+        endif
      enddo
- 
+
      ip(k) = ipk
-     
-     if( abs( amax ).gt.eps )  then
-        if( ipk.ne.k )  then
+
+     if( abs( amax )>eps )  then
+        if( ipk/=k )  then
            w = a(ipk,k)
            a(ipk,k) = a(k,k)
            a(k,k) = w
@@ -91,7 +91,7 @@ subroutine glu( a, n, n1, b, eps, wk, ip, ier )
            wk(i) = a(i,k)
         enddo
         do j = k+1, n
-           if( ipk.ne.k )  then
+           if( ipk/=k )  then
               w = a(ipk,j)
               a(ipk,j) = a(k,j)
               a(k,j) = w
@@ -102,7 +102,7 @@ subroutine glu( a, n, n1, b, eps, wk, ip, ier )
               a(i,j) = a(i,j) + wk(i)*t
            enddo
         enddo
- 
+
         !             matrix is singular.
      else
         ier = 1
@@ -114,18 +114,18 @@ subroutine glu( a, n, n1, b, eps, wk, ip, ier )
         return
      endif
   enddo
-  
+
 !             right-hand side
   !  entry glusub( a, b )
   entry glusub( a, n, n1, b, eps, wk, ip, ier )
   !forward elimination process
   do k = 1, n
-     if( ip(k).ne.k ) then
+     if( ip(k)/=k ) then
         w = b(ip(k))
         b(ip(k)) = b(k)
         b(k) = w
      endif
-     
+
      t = b(k)
      do i = k+1, n
         b(i) = b(i) + a(i,k)*t

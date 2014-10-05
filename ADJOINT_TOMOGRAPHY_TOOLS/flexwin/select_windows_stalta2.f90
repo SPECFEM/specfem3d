@@ -57,7 +57,7 @@
 !!$     ! reject window if it does not satisfy F2, tshift and dlnA criteria;
 !!$     ! here we are only interested in using the dlnA criterion
 !!$     call reject_on_fit_criteria(nwin,iM,iL,iR,CC_local,Tshift_local,dlnA_local)
-!!$     if (nwin.eq.0) then
+!!$     if (nwin==0) then
 !!$        write(*,*) 'NO WINDOWS SELECTED FOR THIS TRACE'
 !!$        num_win = 0
 !!$        return
@@ -75,7 +75,7 @@
      ! find all possible windows within seismogram, with central maxima above the water level
      if(DEBUG) print *, "Making all windows "
      call setup_M_L_R(nmax,maxima_lp,nmin,minima_lp,nwin,iM,iL,iR)
-     if (nwin.eq.0) then
+     if (nwin==0) then
         write(*,*) 'NO WINDOWS SELECTED FOR THIS TRACE'
         num_win = 0
         return
@@ -84,7 +84,7 @@
      ! remove windows with internal minima below the water level
      if(DEBUG) print *, "Rejecting on water level "
      call reject_on_water_level(nwin,iM,iL,iR,nmin,minima_lp,C_0)
-     if (nwin.eq.0) then
+     if (nwin==0) then
         write(*,*) 'NO WINDOWS SELECTED FOR THIS TRACE'
         num_win = 0
         return
@@ -96,7 +96,7 @@
      ! remove small windows
      if(DEBUG) print *, "Rejecting on size "
      call reject_on_window_width(nwin,iM,iL,iR,C_1)
-     if (nwin.eq.0) then
+     if (nwin==0) then
         write(*,*) 'NO WINDOWS SELECTED FOR THIS TRACE'
         num_win = 0
         return
@@ -106,7 +106,7 @@
      ! reject on prominence of central maximum
      if(DEBUG) print *, "Rejecting on prominence "
      call reject_on_prominence(nwin,iM,iL,iR,nmin,minima_lp,C_2)
-     if (nwin.eq.0) then
+     if (nwin==0) then
         write(*,*) 'NO WINDOWS SELECTED FOR THIS TRACE'
         num_win = 0
         return
@@ -115,7 +115,7 @@
 
      ! reject windows containing more than one distinct phase
      call reject_on_phase_separation(nwin,iM,iL,iR,nmin,minima_lp,nmax,maxima_lp,C_3a, C_3b)
-     if (nwin.eq.0) then
+     if (nwin==0) then
         write(*,*) 'NO WINDOWS SELECTED FOR THIS TRACE'
         num_win = 0
         return
@@ -130,7 +130,7 @@
      ! NOTE: perhaps this only needs to be done once (here)
      if(DEBUG) print *, "Rejecting on size (REPEAT)"
      call reject_on_window_width(nwin,iM,iL,iR,C_1)
-     if (nwin.eq.0) then
+     if (nwin==0) then
         write(*,*) 'NO WINDOWS SELECTED FOR THIS TRACE'
         num_win = 0
         return
@@ -139,7 +139,7 @@
 
      ! check window quality
      if(DATA_QUALITY) call check_window_s2n(nwin,iM,iL,iR)
-     if (nwin.eq.0) then
+     if (nwin==0) then
         write(*,*) 'NO WINDOWS SELECTED FOR THIS TRACE'
         num_win = 0
         return
@@ -148,7 +148,7 @@
 
      ! reject windows that do not satisfy F2, tshift and dlnA criteria
      call reject_on_fit_criteria(nwin,iM,iL,iR,CC_local,Tshift_local, dlnA_local)
-     if (nwin.eq.0) then
+     if (nwin==0) then
         write(*,*) 'NO WINDOWS SELECTED FOR THIS TRACE'
         num_win = 0
         return
@@ -177,8 +177,8 @@
     write(*,'(i4,1x,5f10.3)') k, win_start(k), win_end(k), CC_local(k), Tshift_local(k), dlnA_local(k)
 
     ! sanity check for the end of the record
-    if(win_start(k) .lt. b) win_start(k) = b
-    if(win_end(k) .gt. b+(npts-1)*dt) win_end(k) = b+(npts-1)*dt
+    if(win_start(k) < b) win_start(k) = b
+    if(win_end(k) > b+(npts-1)*dt) win_end(k) = b+(npts-1)*dt
 
     ! calculate indexes for start and and of windows
     i_start(k) = 1+int((win_start(k)-b)/dt)
@@ -368,7 +368,7 @@
     ! only continue if there are available minima on either side
     if (maxima_lp(i) > minima_lp(1) .and. maxima_lp(i) < minima_lp(nmin) ) then
       ! only continue if this maximum is above the water level
-      if (STA_LTA(maxima_lp(i)) .gt. STALTA_W_LEVEL(maxima_lp(i))) then
+      if (STA_LTA(maxima_lp(i)) > STALTA_W_LEVEL(maxima_lp(i))) then
 
         ! find the first minimum right of this maximum
         R = 0
@@ -391,7 +391,7 @@
         do i_left = L,1,-1
           do i_right = R,nmin,1
             ! checks number of windows so far
-            if (nwin .ge. NWINDOWS*NWINDOWS) then
+            if (nwin >= NWINDOWS*NWINDOWS) then
                print *, 'setup_M_L_R: ', nwin, NWINDOWS, NWINDOWS*NWINDOWS
                print *, 'setup_M_L_R: limit number (nwin = NWINDOWS*NWINDOWS)'
                !print *, 'setup_M_L_R: ignoring trace (nwin > NWINDOWS*NWINDOWS)'
@@ -412,8 +412,8 @@
 
       endif
     endif
-    if (nwin .ge. NWINDOWS*NWINDOWS) exit
-  end do
+    if (nwin >= NWINDOWS*NWINDOWS) exit
+  enddo
   if (DEBUG) write(*,*) 'DEBUG : window generation found ', nwin, ' possible windows'
 
   end subroutine setup_M_L_R
@@ -446,17 +446,17 @@
        ! if the current minimum is within our window AND it falls beneath
        ! the water level, then reject this proto-window
        min_index = minima_lp(imin)
-       if ( min_index .gt. iL(iwin) &
-          .and. min_index .lt. iR(iwin) &
-          .and. STA_LTA(min_index) .le. c_value*STALTA_W_LEVEL(iM(iwin)) ) then
+       if ( min_index > iL(iwin) &
+          .and. min_index < iR(iwin) &
+          .and. STA_LTA(min_index) <= c_value*STALTA_W_LEVEL(iM(iwin)) ) then
          accept = .false.
          exit
-       end if
+       endif
     enddo
     ! if the proto-window is acceptable, then accept it
     if (accept) then
       ! checks windows
-      if (nwin_new .ge. NWINDOWS) then
+      if (nwin_new >= NWINDOWS) then
          print *, 'reject_on_water_level: limit windows number (nwin = NWINDOWS)',nwin_new
          !print *, 'reject_on_water_level: ignoring trace (nwin > NWINDOWS*NWINDOWS)'
          !nwin = 0
@@ -508,13 +508,13 @@
     stalta_min = STA_LTA(iL(iwin))
     do imin = 1,nmin
        min_index = minima_lp(imin)
-       if ( min_index .gt. iL(iwin) &
-           .and. min_index .le. iR(iwin) &
-           .and. STA_LTA(min_index) .lt. stalta_min ) then
+       if ( min_index > iL(iwin) &
+           .and. min_index <= iR(iwin) &
+           .and. STA_LTA(min_index) < stalta_min ) then
          stalta_min = STA_LTA(min_index)
        endif
-    end do
-    if(stalta_min .lt. STALTA_W_LEVEL(iM(iwin)) ) stalta_min = STALTA_W_LEVEL(iM(iwin))
+    enddo
+    if(stalta_min < STALTA_W_LEVEL(iM(iwin)) ) stalta_min = STALTA_W_LEVEL(iM(iwin))
 
     ! find the height of the central maximum above this minimum value
     d_stalta_center = STA_LTA(iM(iwin)) - stalta_min
@@ -522,26 +522,26 @@
     ! run check on maxima on either side of the central maximum
     do imax = 1, nmax
        max_index = maxima_lp(imax)
-       if ( max_index .gt. iL(iwin) &
-           .and. max_index .lt. iR(iwin) &
-           .and. max_index .ne. iM(iwin) ) then
+       if ( max_index > iL(iwin) &
+           .and. max_index < iR(iwin) &
+           .and. max_index /= iM(iwin) ) then
           ! find height of current maximum above lowest minimum
           d_stalta = (STA_LTA(max_index) - stalta_min)
           ! find scaled time between current maximum and central maximum
           d_time = abs(iM(iwin)-max_index)*dt / WIN_MIN_PERIOD
           ! find value of time decay function
-          if (d_time .ge. c_value2) then
+          if (d_time >= c_value2) then
             f_time = exp(-((d_time-c_value2)/c_value2)**2)
           else
             f_time = 1.0
           endif
           ! check condition
-          if (d_stalta .gt. c_value*d_stalta_center*f_time) then
+          if (d_stalta > c_value*d_stalta_center*f_time) then
             accept = .false.
             exit
           endif
-       end if
-    end do
+       endif
+    enddo
 
     ! if the proto-window is acceptable, then accept it
     if (accept) then
@@ -582,13 +582,13 @@
   do iwin = 1,nwin
     accept = .true.
     ! check window length against minimum acceptable length
-    if (iR(iwin) - iL(iwin) .lt. window_length  ) then
+    if (iR(iwin) - iL(iwin) < window_length  ) then
       accept = .false.
-    end if
+    endif
 
     if (accept) then
       ! checks windows
-      if (nwin_new .ge. NWINDOWS) then
+      if (nwin_new >= NWINDOWS) then
          print *, 'reject_on_window_width: limit (nwin = NWINDOWS)'
          exit
          !print *, 'reject_on_window_width: ignoring trace (nwin > NWINDOWS*NWINDOWS)'
@@ -634,9 +634,9 @@
 !!$    if (duplicate(iwin)) accept = .false.
 !!$    do iwin2 = iwin,nwin
 !!$      ! check if other windows are duplicates of this one, and if so set them as duplicates
-!!$      if (iwin2.ne.iwin &
-!!$        .and. iL(iwin).eq.iL(iwin2) &
-!!$        .and. iR(iwin).eq.iR(iwin2) ) then
+!!$      if (iwin2/=iwin &
+!!$        .and. iL(iwin)==iL(iwin2) &
+!!$        .and. iR(iwin)==iR(iwin2) ) then
 !!$        duplicate(iwin2) = .true.
 !!$        continue
 !!$      endif
@@ -684,9 +684,9 @@
     if (duplicate(iwin)) accept = .false.
     do iwin2 = iwin,nwin
       ! check if other windows are duplicates of this one, and if so set them as duplicates
-      if (iwin2.ne.iwin &
-        .and. iL(iwin).eq.iL(iwin2) &
-        .and. iR(iwin).eq.iR(iwin2) ) then
+      if (iwin2/=iwin &
+        .and. iL(iwin)==iL(iwin2) &
+        .and. iR(iwin)==iR(iwin2) ) then
         duplicate(iwin2) = .true.
         continue
       endif
@@ -744,14 +744,14 @@
     i_left = 0
     ! find index of minimum on the right of the central maximum
     do imin = 1, nmin
-      if (minima_lp(imin) .gt. iM(iwin)) then
+      if (minima_lp(imin) > iM(iwin)) then
         i_right = minima_lp(imin)
         exit
       endif
     enddo
     ! find index of minimum on the left of the central maximum
     do imin = nmin, 1, -1
-      if (minima_lp(imin) .lt. iM(iwin)) then
+      if (minima_lp(imin) < iM(iwin)) then
         i_left = minima_lp(imin)
         exit
       endif
@@ -763,10 +763,10 @@
     ! check prominence condition
     ! if the maximum is not high enough above EITHER of the two adjecent
     ! minima, then reject the window
-    if ( delta_left .lt. c_value * STALTA_W_LEVEL(iM(iwin)) &
-        .or. delta_right .lt. c_value * STALTA_W_LEVEL(iM(iwin)) ) then
+    if ( delta_left < c_value * STALTA_W_LEVEL(iM(iwin)) &
+        .or. delta_right < c_value * STALTA_W_LEVEL(iM(iwin)) ) then
       accept = .false.
-    end if
+    endif
 
     if (accept) then
       nwin_new = nwin_new + 1
@@ -814,14 +814,14 @@
     i_left = 0
     ! find index of maximum on the right of left boundary
     do imax = 1, nmax
-      if (maxima_lp(imax) .gt. iL(iwin)) then
+      if (maxima_lp(imax) > iL(iwin)) then
         i_left = maxima_lp(imax)
         exit
       endif
     enddo
     ! find index of maximum on the left of right boundary
     do imax = nmax, 1, -1
-      if (maxima_lp(imax) .lt. iR(iwin)) then
+      if (maxima_lp(imax) < iR(iwin)) then
         i_right = maxima_lp(imax)
         exit
       endif
@@ -831,14 +831,14 @@
     delta_right = iR(iwin) - i_right
 
     ! check condition
-    if (delta_left .gt. time_decay_left) then
+    if (delta_left > time_decay_left) then
       n_left = n_left+1
       iL(iwin) = int(i_left - time_decay_left)
-    end if
-    if (delta_right .gt. time_decay_right) then
+    endif
+    if (delta_right > time_decay_right) then
       n_right = n_right+1
       iR(iwin) = int(i_right + time_decay_right)
-    end if
+    endif
 
   enddo
 
@@ -878,19 +878,19 @@
     dlnA_min   = DLNA_REFERENCE - DLNA_LIMIT(iM(iwin))
     dlnA_max   = DLNA_REFERENCE + DLNA_LIMIT(iM(iwin))
 
-    if ( (Tshift_temp .lt. tshift_min) .or. (Tshift_temp .gt.tshift_max ) ) then
+    if ( (Tshift_temp < tshift_min) .or. (Tshift_temp >tshift_max ) ) then
        write(*,*) iwin, ' : rejection based on not satisfying TSHIFT_MIN < TSHIFT < TSHIFT_MAX'
        write(*,*) 'Tshift : ',tshift_min , Tshift_temp, tshift_max
        accept = .false.
     endif
 
-    if ( accept .and. ( (dlnA_temp .lt. dlnA_min) .or. (dlnA_temp .gt. dlnA_max ) )) then
+    if ( accept .and. ( (dlnA_temp < dlnA_min) .or. (dlnA_temp > dlnA_max ) )) then
        write(*,*) iwin, ' : rejection based on not satisfying DLNA_MIN < DLNA < DLNA_MAX'
        write(*,*) 'dlnA : ', dlnA_min , dlnA_temp, dlnA_max
        accept = .false.
     endif
 
-    if( accept .and. (CC_temp .lt. CC_LIMIT(iM(iwin))) ) then
+    if( accept .and. (CC_temp < CC_LIMIT(iM(iwin))) ) then
        write(*,*) iwin, ' : rejection based on CC < CC_MIN'
        write(*,*) 'CC : ', CC_temp, CC_LIMIT(iM(iwin))
        accept = .false.
@@ -949,7 +949,7 @@
     iL_early = NDIM
     ! iterate over all non dealt with windows to find earliest time
     do jwin = 1, nwin
-      if ((.not. dealt_with(jwin)) .and. iL(jwin) .lt. iL_early) then
+      if ((.not. dealt_with(jwin)) .and. iL(jwin) < iL_early) then
         iL_early_index = jwin
         iL_early = iL(jwin)
       endif
@@ -1034,15 +1034,15 @@
       ! ignoring those that have already been assigned to groups
       do iwin2 = 1, nwin
         if (.not.assigned(iwin2) &
-            .and. iR(iwin2).gt.iL_group(n_groups) &
-            .and. iL(iwin2).lt.iR_group(n_groups)) then
+            .and. iR(iwin2)>iL_group(n_groups) &
+            .and. iL(iwin2)<iR_group(n_groups)) then
           ! assign this window to the current overlap list
           assigned(iwin2) = .true.
           group_size(n_groups) = group_size(n_groups) + 1
           groups(n_groups,group_size(n_groups)) = iwin2
           ! update the group boundaries
-          if ( iL(iwin2).lt.iL_group(n_groups) ) iL_group(n_groups) = iL(iwin2)
-          if ( iR(iwin2).gt.iR_group(n_groups) ) iR_group(n_groups) = iR(iwin2)
+          if ( iL(iwin2)<iL_group(n_groups) ) iL_group(n_groups) = iL(iwin2)
+          if ( iR(iwin2)>iR_group(n_groups) ) iR_group(n_groups) = iR(iwin2)
         endif
       enddo
     endif
@@ -1067,7 +1067,7 @@
       iwin = groups(igroup,igroup_window)
       ! increment the number of combinations
       ! checks bounds
-      if (n_comb .ge. NWINDOWS) then
+      if (n_comb >= NWINDOWS) then
         print*,'limiting number of combinations: n_comb=',n_comb
         !stop 'Too many window combinations'
         exit
@@ -1090,11 +1090,11 @@
         ! check if we can add another window to this combination (only on the
         ! right, so only if this combination does not already reach the group
         ! right limit)
-        if (iR_comb(icomb).lt.iR_group(igroup)) then
+        if (iR_comb(icomb)<iR_group(igroup)) then
           do igroup_window = 1, group_size(igroup)
             iwin=groups(igroup,igroup_window)
             ! if the window is to the right of (or adjacent to) the current combination
-            if(iL(iwin).ge.iR_comb(icomb)) then
+            if(iL(iwin)>=iR_comb(icomb)) then
               ! make a new combination with this window added
               ! checks bounds
               if( n_comb >= NWINDOWS ) then
@@ -1117,7 +1117,7 @@
         if(n_comb >= NWINDOWS) exit
       enddo
       ! check if we have added some new combinations
-      if (n_comb.gt.prev_comb_end) then
+      if (n_comb>prev_comb_end) then
         ! update the counters
         prev_comb_start = prev_comb_end+1
         prev_comb_end = n_comb
@@ -1174,9 +1174,9 @@
 
     ! find the best-scoring combination
     chosen_combination = 1
-    if (n_comb.gt.1) then
+    if (n_comb>1) then
       do icomb = 2, n_comb
-        if (score(icomb).gt.score(chosen_combination)) chosen_combination = icomb
+        if (score(icomb)>score(chosen_combination)) chosen_combination = icomb
       enddo
     endif
 

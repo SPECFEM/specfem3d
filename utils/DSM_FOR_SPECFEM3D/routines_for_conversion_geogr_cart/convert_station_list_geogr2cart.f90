@@ -15,7 +15,7 @@
     lat_center_chunk=LAT_CENTER
     chunk_azi=AZI_CHUNK
     call compute_rotation_matrix(rotation_matrix,lon_center_chunk,lat_center_chunk, chunk_azi)
-    
+
     ista=0
     open(10,file='list_stations_files_to_convert.geogr')
     open(20,file='STATIONS_INPUT_FOR_SEM')
@@ -27,8 +27,8 @@
        ista=ista+1
        write(ST,'(a1,i5.5)') 'S',ista
        write(20,1000) ST,'TS',x,y,-z,-z
-    end do
+    enddo
 99  close(10)
     close(20)
   end program convert_station_list
- 
+

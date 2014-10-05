@@ -49,7 +49,7 @@
   do i = 1, npts
     write(11,'(f10.2,2x,e12.6)') b+(i-1)*dt, obs_lp(i)
     write(12,'(f10.2,2x,e12.6)') b+(i-1)*dt, synt_lp(i)
-  end do
+  enddo
 
   ! close the files
   close(11)
@@ -98,7 +98,7 @@
   do i = 1, npts
     write(13,'(f10.2,2x,e12.6)') b+(i-1)*dt, env_obs_lp(i)
     write(14,'(f10.2,2x,e12.6)') b+(i-1)*dt, env_synt_lp(i)
-  end do
+  enddo
 
   ! close the files
   close(13)
@@ -125,7 +125,7 @@
   do i = 1, num_win
     call phases_in_window(win_start(i), win_end(i), n_phases, phase_indexes)
     write(11,'(i4,1x,2f10.2,1x,i4,60(1x,a8))') i, win_start(i), win_end(i), n_phases, (ph_names(phase_indexes(k)), k=1,n_phases)
-  end do
+  enddo
   close(11)
 
   end subroutine
@@ -149,7 +149,7 @@
   do i = 1, num_win
     write(11,'(i4,5(1x,f10.5))') i, win_start(i), win_end(i), &
                                  Tshift(i),CC(i),dlnA(i)
-  end do
+  enddo
   close(11)
 
   end subroutine
@@ -179,7 +179,7 @@
     ! calculate indexes for start and and of windows
     i_start(i)=1+int((win_start(i)-b)/dt)
     i_end(i)  =1+int((win_end(i)  -b)/dt)
-  end do
+  enddo
   close(11)
 
   end subroutine
@@ -244,7 +244,7 @@
   do i = 1, npts
     write(15,'(f10.2,6(2x,e12.6))') b+(i-1)*dt, STA_LTA(i), STALTA_W_LEVEL(i), &
     CC_LIMIT(i), TSHIFT_LIMIT(i), DLNA_LIMIT(i), S2N_LIMIT(i)
-  end do
+  enddo
 
   close(15)
 
@@ -369,10 +369,10 @@
   spos=0
   k=0
   pos=index(filename,'/')
-  if (pos.eq.0) then
+  if (pos==0) then
     spos = 0
   else
-   do while (pos .ne. 0)
+   do while (pos /= 0)
      k=k+1
      prev_pos = pos
      pos = index(filename(prev_pos+1:len_trim(filename)), '/')
@@ -406,7 +406,7 @@
     write(11,*) num_win
     do i = 1, num_win
        write(11,'(2(f10.4,1x))') win_start(i), win_end(i)
-    end do
+    enddo
     close(11)
 
   end subroutine write_mt_input

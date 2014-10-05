@@ -26,12 +26,12 @@ program measure_adj
   use ascii_rw       ! dwascii()
   use ma_sub2        ! fft(), fftinv()
   use ma_sub         ! mt_measure(), mt_adj()
-  use ma_weighting 
+  use ma_weighting
 
   implicit none
 
   character(len=150) :: datafile,synfile,synfile_phydisp,file_prefix,file_prefix0,file_prefix2,measure_file_prefix,adj_file_prefix
-  integer :: num_meas, j, ios, npt1, npt2,npt3, npts, nn 
+  integer :: num_meas, j, ios, npt1, npt2,npt3, npts, nn
   double precision, dimension(NDIM) :: data, syn, syn_phydisp, adj_syn_all, &
                         tr_adj_src, am_adj_src, recon_cc_all, syn_dtw_cc, syn_dtw_mt
   double precision :: t01, dt1, t02, dt2, t03, dt3, t0, dt, tstart, tend, tt, dtt, df
@@ -48,8 +48,8 @@ program measure_adj
   double precision, dimension(NPT) :: dtau_w, dlnA_w, err_dt, err_dlnA, syn_dtw, data_dtw,syn_dtw_phydisp
   complex*16, dimension(NPT) :: trans_mtm
   integer :: nlen, i_left, i_pmax_dat, i_pmax_syn, i_right, i_right0, istart, &
-        ipair, npairs, nwin, itmax 
-  logical :: use_trace 
+        ipair, npairs, nwin, itmax
+  logical :: use_trace
   !double precision :: trbdndw, a
   !integer :: iord, passes
   integer :: ipick_type
@@ -66,7 +66,7 @@ program measure_adj
 
   ! input file: MEASUREMENT.WINDOWS
   open(11,file='MEASUREMENT.WINDOWS',status='old',iostat=ios)
-  if (ios /= 0) stop 'Error opening input file: MEASUREMENT WINDOWS' 
+  if (ios /= 0) stop 'Error opening input file: MEASUREMENT WINDOWS'
 
   read(11,*,iostat=ios) npairs
   if (ios /= 0) stop 'Error reading number of pairs of data/syn'
@@ -92,7 +92,7 @@ program measure_adj
     if (ios /= 0) stop 'Error reading windows file'
     if (USE_PHYSICAL_DISPERSION) then
             synfile_phydisp=trim(synfile)//'.phydisp'
-    end if 
+    endif
 
 
     ! read data and syn (in double precision)
@@ -100,15 +100,15 @@ program measure_adj
 
     call drsac1(datafile,data,npt1,t01,dt1)
     call drsac1(synfile,syn,npt2,t02,dt2)
-    if (USE_PHYSICAL_DISPERSION) then 
+    if (USE_PHYSICAL_DISPERSION) then
             call drsac1(synfile_phydisp,syn_phydisp,npt3,t03,dt3)
-    end if 
+    endif
 
     if (DISPLAY_DETAILS) then
        print *
        print *, 'data: ',trim(datafile)
        print *, '  min/max: ',sngl(minval(data(:))),sngl(maxval(data(:)))
-       
+
        print *, 'syn:   ',trim(synfile)
        print *, '  min/max: ',sngl(minval(syn(:))),sngl(maxval(syn(:)))
     endif
@@ -119,14 +119,14 @@ program measure_adj
          stop 'Error: Too many number of points in data or syn'
     npts = min(npt1,npt2)
 
-    if (abs(dt1-dt2) > TOL) stop 'Error: check if dt match' 
+    if (abs(dt1-dt2) > TOL) stop 'Error: check if dt match'
     dt = dt1
 
     if (abs(t01-t02) > dt)  stop 'Check if t0 match'
     t0 = t01
 
     if (DISPLAY_DETAILS) print *,'  time, dt, npts :',sngl(t01), sngl(dt), npts
-    
+
 
     ! apply bandpass filter to data and synthetics with saclib, if desired
     ! http://www.iris.washington.edu/pipermail/sac-help/2008-March/000376.html
@@ -136,9 +136,9 @@ program measure_adj
     if(RUN_BANDPASS) then
        call bandpass(data,npts,dt,fstart0,fend0)
        call bandpass(syn,npts,dt,fstart0,fend0)
-       if (USE_PHYSICAL_DISPERSION) then 
+       if (USE_PHYSICAL_DISPERSION) then
                call bandpass(syn_phydisp,npts,dt,fstart0,fend0)
-       end if 
+       endif
     endif
 
     ! find out station/network/comp names,etc from synthetics
@@ -168,7 +168,7 @@ program measure_adj
     do j = 1, num_meas
       ! reads in start and end time of the measurement window
       read(11,*,iostat=ios) tstart, tend
-      if (ios /= 0) stop 'Error reading tstart and tend' 
+      if (ios /= 0) stop 'Error reading tstart and tend'
 
       ! checks start and end times of window compared to trace lengths
       tstart = max(tstart,t0)
@@ -184,7 +184,7 @@ program measure_adj
 
       if (is_mtm == 1) then
         measure_file_prefix = trim(file_prefix) // '.mtm'  ! multitaper taper
-      elseif (is_mtm == 2) then
+      else if (is_mtm == 2) then
         measure_file_prefix = trim(file_prefix) // '.ctp'  ! cosine taper
       else
         measure_file_prefix = trim(file_prefix) // '.btp'  ! boxcar taper
@@ -258,7 +258,7 @@ program measure_adj
       if (COMPUTE_ADJOINT_SOURCE) then
          print *, '   Generating adjoint source and chi value for imeas = ', imeas
 
-        ! banana-doughnut kernel (needs only synthetic trace) 
+        ! banana-doughnut kernel (needs only synthetic trace)
         ! LQY: what is this section intended to do?
         ! reset imeas == 3 for adjoint sources without time shift and uncertainty scaling
         ! (pure cross-correlation adjoint source for banana-doughnuts)
@@ -339,7 +339,7 @@ program measure_adj
           adj_syn_all(:) = adj_syn_all(:) + am_adj_src(:)   ! imeas = 2,4,6,8
           all_chi = all_chi + am_chi
        endif
-      
+
         ! combine CC-reconstructed records
        if (imeas >= 7) then
           recon_cc_all(istart:istart+nlen-1) = recon_cc_all(istart:istart+nlen-1) + syn_dtw_mt(1:nlen)
@@ -376,7 +376,7 @@ program measure_adj
       ! then kernels,
       ! i.e. for a traveltime measurement: DeltaT = 1/N * int  F(d/dt s) F(ds)
       ! should contain this filter as well.
-      ! 
+      !
       ! when we construct the adjoint source here,it is initially a filtered version
       ! as well F(s_adj) since we use/depend on filtered synthetics F(s).
       ! however, for kernel simulations, we do run with a reconstructed forward wavefield,

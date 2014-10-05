@@ -66,8 +66,8 @@ contains
 
   ! ======================================================================
 
-  ! this subroutine computes the cross-correlation error 
-  ! sigma_tshift_cc and sigma_dlnA_cc to take into account 
+  ! this subroutine computes the cross-correlation error
+  ! sigma_tshift_cc and sigma_dlnA_cc to take into account
   ! the data and synthetics misfit
 
   subroutine compute_cc_error(dataw,synw,nlen,dt,i_pmax,dlnA,&
@@ -91,12 +91,12 @@ contains
     Tmax=1./(df*i_pmax)
 
     misfit=sum((dataw(1:nlen)-synw(1:nlen))**2)/sum(dataw(1:nlen)**2)
-  
+
     sigma_tshift_cc = max(MIN_SIGMA_TSHIFT_CC,Tmax*misfit*SIGMA_TSHIFT_CC_SCALE)
     sigma_dlnA_cc = max(MIN_SIGMA_dlnA_CC,abs(dlnA)*misfit*SIGMA_TSHIFT_CC_SCALE)
 
-    print *, 
- 
+    print *,
+
   end subroutine compute_cc_error
 
   ! ======================================================================
@@ -122,7 +122,7 @@ contains
     csynw_recon = cmplx(0.,0.)
     csynw_recon(1:i_right)=csynw(1:i_right) * (1.+ dlnA_fdm(1:i_right))&
          * exp(-CCI*2*pi*fvec(1:i_right)*dtau_fdm(1:i_right))
-    
+
     call fftinv(LNPT,csynw_recon,REVERSE_FFT,dble(dt),synw_rc_fd_dp)
     synw_rc_fd(1:nlen) = synw_rc_fd_dp(1:nlen)
     synw_rc_fd(nlen+1:NPT) = 0.
@@ -139,7 +139,7 @@ contains
     real,dimension(:), intent(out) :: dtau_fdm, dlnA_fdm
     integer, intent(in) :: i_right
 
-    real :: df, smth, smth1, smth2 
+    real :: df, smth, smth1, smth2
     real, dimension(NPT) :: fvec, phi_wt, abs_wt
     integer :: nf, j, i
 
@@ -152,14 +152,14 @@ contains
       phi_wt(i) = atan2( aimag(trans_fdm(i)) , real(trans_fdm(i)) )
       abs_wt(i) = abs(trans_fdm(i))
    enddo
-   
+
    ! convert phase to travel time delay
    dtau_fdm(1) = 0.  ! tshift_cc is probably not a good choice
    do i = 1, i_right
-  
+
       dlnA_fdm(i) = abs_wt(i) - 1.
-      ! 
-      if (i > 1) dtau_fdm(i) = (-1./(TWOPI*fvec(i))) * phi_wt(i) + tshift_cc  
+      !
+      if (i > 1) dtau_fdm(i) = (-1./(TWOPI*fvec(i))) * phi_wt(i) + tshift_cc
 
       ! right now phi_wt [-180,180], adjust abrupt phase discontinuities [-90,90]
       if (i > 1 .and. i < i_right) then
@@ -167,13 +167,13 @@ contains
          smth  =  phi_wt(i+1) + phi_wt(i-1) -  2.0 * phi_wt(i)
          smth1 = (phi_wt(i+1) + TWOPI) + phi_wt(i-1) -  2.0 * phi_wt(i)
          smth2 = (phi_wt(i+1) - TWOPI) + phi_wt(i-1) -  2.0 * phi_wt(i)
-         if(abs(smth1).lt.abs(smth).and.abs(smth1).lt.abs(smth2).and. abs(phi_wt(i) - phi_wt(i+1)) > PHASE_STEP)then
+         if(abs(smth1)<abs(smth).and.abs(smth1)<abs(smth2).and. abs(phi_wt(i) - phi_wt(i+1)) > PHASE_STEP)then
             if (DEBUG) print *, '2 pi phase correction:', fvec(i), phi_wt(i) - phi_wt(i+1)
             do j = i+1, i_right
                phi_wt(j) = phi_wt(j) + TWOPI
             enddo
          endif
-         if(abs(smth2).lt.abs(smth).and.abs(smth2).lt.abs(smth1).and. abs(phi_wt(i) - phi_wt(i+1)) > PHASE_STEP)then
+         if(abs(smth2)<abs(smth).and.abs(smth2)<abs(smth1).and. abs(phi_wt(i) - phi_wt(i+1)) > PHASE_STEP)then
             if (DEBUG) print *, '-2 pi phase correction:', fvec(i), phi_wt(i) - phi_wt(i+1)
             do j = i+1, i_right
                phi_wt(j) = phi_wt(j) - TWOPI
@@ -182,7 +182,7 @@ contains
       endif
 !      write(21,*) fvec(i), aimag(trans_fdm(i)),real(trans_fdm(i)),phi_wt(i)/PI*180
    enddo
-      
+
   end subroutine compute_dtau_dlnA
 
   ! ======================================================================
@@ -203,8 +203,8 @@ contains
     real,dimension(NPT,NMAX_TAPER) :: dtau_mtm, dlnA_mtm
     real :: ampmax_bot, wtr_amp_bot, edt_ave, eabs2_ave, edt_iom, eabs2_iom
     real,dimension(NPT)::err_dt,err_dlnA ,datawt,synwt
-    
-    
+
+
     nf=floor(NPT/2.)+1
 
     do iom = 1, ntaper
@@ -213,7 +213,7 @@ contains
        bot_mtm(:) = cmplx(0.,0.)
 
        do ictaper = 1, ntaper
-          if(ictaper.eq.iom) cycle
+          if(ictaper==iom) cycle
 
           ! apply ictaper'th taper
           datawt(1:nlen) = dataw(1:nlen) * tas(1:nlen,ictaper)
@@ -236,7 +236,7 @@ contains
           enddo
        enddo ! ictaper
 
-       ! water level 
+       ! water level
        ampmax_bot = maxval(abs(bot_mtm(1:nf)))
        wtr_amp_bot = ampmax_bot * wtr_mtm ** 2
 
@@ -272,7 +272,7 @@ contains
        enddo
 
        err_dt(i)   =  sqrt( err_dt(i) / (ntaper * (ntaper-1) ) )
-       ! set the error bar for the first point corresponding to 
+       ! set the error bar for the first point corresponding to
        ! static offset to be large, which makes no contribution to
        ! the adjoint source
        if (i == 1) err_dt(i) = LARGE_VAL
@@ -286,7 +286,7 @@ contains
 
   ! ======================================================================
   subroutine compute_fd_error(npi,nlen,i_right,dt,dtau_fdm,dlnA_fdm, &
-       sigma_dtau_fdm,sigma_dlnA_fdm) 
+       sigma_dtau_fdm,sigma_dlnA_fdm)
 
     real,intent(in) :: npi
     integer,intent(in) :: nlen, i_right
@@ -305,7 +305,7 @@ contains
     enddo
     sigma_dtau_fdm(i_right-idf_new+1:i_right) = sigma_dtau_fdm(i_right-idf_new)
     sigma_dlnA_fdm(i_right-idf_new+1:i_right) = sigma_dlnA_fdm(i_right-idf_new)
-    
+
   end subroutine compute_fd_error
 
   ! ======================================================================
@@ -316,9 +316,9 @@ contains
     integer, intent(in) :: nlen
     real, intent(in) :: dt
     real,dimension(:),intent(out) :: synw_veloc
-    
+
     integer i
-    
+
     do i = 2, nlen-1
        synw_veloc(i) = (synw(i+1) - synw(i-1)) / (2.0*dt)
     enddo
@@ -351,7 +351,7 @@ contains
           dt_adj_src_win(i) = (dt_adj_src(ii+1)-dt_adj_src(ii)) * tt/dt + dt_adj_src(ii)
        endif
     enddo
-    
+
   end subroutine interp_adj_src
 
   ! ======================================================================

@@ -9,14 +9,14 @@
 ! subroutine boxcar(ipoint, ndata, tas)
 
 module mtadj_sub3
- 
+
   implicit none
 
 ! TOLERRANCE CONTROL
   double precision, parameter ::  TOL=1e-7
 
 contains
-        
+
 !------------------------------------------------------------------
   subroutine fft(n,xi,zzign,dt)
 ! Fourier transform
@@ -34,14 +34,14 @@ contains
       double precision :: zzign,zign,flx,v
       integer :: lblock,k,fk,jh,ii,istart
       integer :: l,iblock,nblock,i,lbhalf,j,lx
-  
+
       ! sign must be +1. or -1.
       if(zzign >= 0.) then
         zign = 1.
       else
         zign = -1.
       endif
-     
+
       lx = 2**n
       do 1 i=1,n
     1 m(i) = 2**(n-i)
@@ -86,13 +86,13 @@ contains
 
       ! final steps deal with dt factors
       if(zign > 0.) then       ! FORWARD FFT
-         do i = 1,lx 
+         do i = 1,lx
             xi(i) = xi(i)*dt   ! multiplication by dt
          enddo
 
       else                     ! REVERSE FFT
          flx = flx*dt
-         do i = 1,lx 
+         do i = 1,lx
             xi(i) = xi(i)/flx  ! division by dt
          enddo
       endif
@@ -124,7 +124,7 @@ contains
       do i = 1,nsmp
         r(i) = real(s(i))     ! REAL part
       enddo
- 
+
   end subroutine fftinv
 
 !------------------------------------------------------------------
@@ -432,7 +432,7 @@ contains
       integer npts
       real dat(npts),sum
       integer i
-      
+
 
       sum=0
       do i = 1, npts
@@ -441,16 +441,16 @@ contains
       do i = 1, npts
          dat(i) = dat(i) - sum/npts
       enddo
- 
+
       return
-      
+
       end subroutine rmean
 
 !     ----------------------------
-      subroutine rtrend(y, n) 
+      subroutine rtrend(y, n)
 !     ---------------------------
 
-!      remove trend a*i + b 
+!      remove trend a*i + b
 !      revised from lupei's c code
 
       implicit none
@@ -475,7 +475,7 @@ contains
       do i = 1, n
        y(i) = y(i) - a * (i-1) - b
       enddo
-      
+
       return
       end subroutine rtrend
 
@@ -483,7 +483,7 @@ contains
       subroutine taper (a, n, start, end, b)
 !     ---------------------------------------
         integer n
-        real start, end 
+        real start, end
         real a(*), b(*)
 
 ! taper a(1:n) to b(1:n)
@@ -507,7 +507,7 @@ contains
       m3 = an*end+0.5
       m5 = n-m3
       m4 = m5 + 1
- 
+
       if(m3 > 0) then
         ang = 3.1415926 / float (m3)
         do i=m4,n

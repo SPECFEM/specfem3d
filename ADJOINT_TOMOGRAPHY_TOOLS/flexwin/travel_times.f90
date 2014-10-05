@@ -12,7 +12,7 @@
 
   real, intent(in) :: dist_deg, depth
 
-  integer, intent(out) :: nphases 
+  integer, intent(out) :: nphases
   character*8, dimension(*), intent(out) :: names
   double precision, dimension(*), intent(out) :: times
 
@@ -43,7 +43,7 @@
 
   call trtm(dist_deg,MAX_PHASES,nphases,times_sngl,dtdd,dtdh,dddp,names)
   times(1:nphases) = dble(times_sngl(1:nphases))
-  
+
   !write(*,*) 'Found ', nphases, ' phases:'
 
   end subroutine ttimes

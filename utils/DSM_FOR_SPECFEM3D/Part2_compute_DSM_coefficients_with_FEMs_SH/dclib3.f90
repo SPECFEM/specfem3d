@@ -14,7 +14,7 @@ subroutine dclisb(a, n, nud, n1, np, b, eps, dr, z, ier)
 !    (8) z : 1-dim. working array.                                     *
 !    (9) ier : error code.                                             *
 !  copy right   t. oguni   july 30 1989   version 1.0                  *
-!***********************************************************************  
+!***********************************************************************
   integer :: n, nud, n1, np, ier
   complex(kind(0d0)) :: a(n1,n), b(n), dr(n), z(n)
   real(kind(0d0)) :: eps
@@ -26,14 +26,14 @@ subroutine dclisb(a, n, nud, n1, np, b, eps, dr, z, ier)
   ier = 0
   eps1 = 1.0d-14
   m = nud + 1
-  if ((n .le. 0) .or. (nud .le. 0 ) .or. (n1 .lt. m)) then
+  if ((n <= 0) .or. (nud <= 0 ) .or. (n1 < m)) then
      ier = 2
      print *, '(subr. lisb) invalid argument. ', n, nud, n1
   endif
-  if (eps .le. 0.0) eps = eps1
+  if (eps <= 0.0) eps = eps1
   !  modified cholesky decomposition
   j = 1
-  if (abs(a(m,1)) .le. eps) then
+  if (abs(a(m,1)) <= eps) then
      ier = 1
      print *, '(subr. lisb) singular at step # ', j
   endif
@@ -42,17 +42,17 @@ subroutine dclisb(a, n, nud, n1, np, b, eps, dr, z, ier)
   a(m-1,2) = a(m-1,2) * dr(1)
   s = a(m,2) - xx * a(m-1,2)
   j = 2
-  if (abs(s) .le. eps) then
+  if (abs(s) <= eps) then
      ier = 1
      print *, '(subr. lisb) singular at step # ', j
   endif
   dr(2) = dcmplx(1.0d0) / s
-  if (m .lt. 3) then
+  if (m < 3) then
      do j=3,n
         xx = a(1,j)
         a(1,j) = xx * dr(j-1)
         s = a(2,j) - xx * a(1,j)
-        if (abs(s) .le. eps) then
+        if (abs(s) <= eps) then
            ier = 1
            print *, ' (subr. lisb) singular at step # ', j
         endif
@@ -61,7 +61,7 @@ subroutine dclisb(a, n, nud, n1, np, b, eps, dr, z, ier)
   else
      do j=3,n
         k1 = 1
-        if (j .ge. m) k1 = j - m + 1
+        if (j >= m) k1 = j - m + 1
         mj = m - j
         do i=k1+1,j-1
            sum = dcmplx(0.0d0)
@@ -78,7 +78,7 @@ subroutine dclisb(a, n, nud, n1, np, b, eps, dr, z, ier)
            a(mj+i,j) = au
         enddo
         t = a(m,j) - sum
-        if (abs(t) .le. eps) then
+        if (abs(t) <= eps) then
            ier = 1
            print *, ' (subr. lisb) singular at step # ', j
         endif
@@ -89,7 +89,7 @@ subroutine dclisb(a, n, nud, n1, np, b, eps, dr, z, ier)
   entry dcsbsub(a, n, nud, n1, np, b, eps, dr, z, ier)
   !  forward substitution
   m = nud + 1
-  if (m .lt. 3) then
+  if (m < 3) then
      z(np) = b(np)
      do j=np+1,n
         z(j) = b(j) - a(1,j) * z(j-1)
@@ -99,7 +99,7 @@ subroutine dclisb(a, n, nud, n1, np, b, eps, dr, z, ier)
      z(np) = b(np)
      z(np+1) = b(np+1) - a(m-1,np+1) * z(np)
      do j=np+2,n
-        if (j .gt. np-1+m) then
+        if (j > np-1+m) then
            i1 = 1
         else
            i1 = np-1+m - j + 1
@@ -115,8 +115,8 @@ subroutine dclisb(a, n, nud, n1, np, b, eps, dr, z, ier)
      enddo
      b(n) = z(n)
      b(n-1) = z(n-1) - a(m-1,n) * z(n)
-  endif  
-  
+  endif
+
 end subroutine dclisb
 
 

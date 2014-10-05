@@ -37,56 +37,56 @@ subroutine dcsymbdl0(a,m,n,nn,eps,z,w,l,li,lj,ier)
      lj(ij) = 2
      l(ij) = m * (i-1) + 1
      do j=i+1,m
-	ij = ij + 1
-	l(ij) = l(ij-1) + m + 1
-	li(ij) = li(ij-1) + 1
-	lj(ij) = lj(ij-1) + 1
+  ij = ij + 1
+  l(ij) = l(ij-1) + m + 1
+  li(ij) = li(ij-1) + 1
+  lj(ij) = lj(ij-1) + 1
      enddo
   enddo
   mm = (m+1) * m / 2
   do k=1,n-m
      nk = (m+1) * (k-1) + 1
-     if (zabs(a(nk+m)) .lt. eps) then
+     if (zabs(a(nk+m)) < eps) then
         print *, '(subr. symbdl) singular at step = ', k
         ier = 1
         return
      endif
      piv = dcmplx(1.0d0) / a(nk+m)
      do j=2,m+1
-	z(j) = - a(nk+m*j)
-	w(j) =	 a(nk+m*j) * piv
-	a(nk+m*j) = w(j)
+  z(j) = - a(nk+m*j)
+  w(j) =   a(nk+m*j) * piv
+  a(nk+m*j) = w(j)
      enddo
      kk = nk + m + m
      ! vortion vec
      do i=1,mm
-   	a(kk+l(i)) = a(kk+l(i)) + w(lj(i)) * z(li(i))
+    a(kk+l(i)) = a(kk+l(i)) + w(lj(i)) * z(li(i))
      enddo
   enddo
-  
+
   do k=n-m+1,n-1
      nk = (m+1) * (k-1) + 1
      nkk = (m+1) * k - 1
-     if (zabs(a(nk+m)) .lt. eps) then
+     if (zabs(a(nk+m)) < eps) then
         print *, '(subr. symbdl) singular at step = ', k
         ier = 1
         return
      endif
      piv = dcmplx(1.0d0) / a(nk+m)
      do j=2,n-k+1
-	z(j) = - a(nk+m*j)
-	w(j) =	 a(nk+m*j) * piv
-	a(nk+m*j) = w(j)
-        
-	nki = nkk + m * (j-1)
-	do i=2,j
+  z(j) = - a(nk+m*j)
+  w(j) =   a(nk+m*j) * piv
+  a(nk+m*j) = w(j)
+
+  nki = nkk + m * (j-1)
+  do i=2,j
            a(nki+i) = a(nki+i) + w(j) * z(i)
         enddo
      enddo
   enddo
-  
+
   return
-  
+
 end subroutine dcsymbdl0
 
 
@@ -122,7 +122,7 @@ subroutine dcsbdlv0(a,b,m,n,eps,z,ier)
 
   !  forward substitution
   mm = m + 1
-  if (mm .lt. 3) then
+  if (mm < 3) then
      z(1) = b(1)
      do j=2,n
         z(j) = b(j) - a(1,j) * z(j-1)
@@ -138,7 +138,7 @@ subroutine dcsbdlv0(a,b,m,n,eps,z,ier)
      z(1) = b(1)
      z(2) = b(2) - a(m-1,2) * z(1)
      do j=3,n
-        if (j .gt. mm) then
+        if (j > mm) then
            i1 = 1
         else
            i1 = mm - j + 1
@@ -157,7 +157,7 @@ subroutine dcsbdlv0(a,b,m,n,eps,z,ier)
      do j=3,n
         j1 = n - j + 1
         i1 = 1
-        if (j .lt. mm) i1 = mm - j + 1
+        if (j < mm) i1 = mm - j + 1
         sum = dcmplx(0.0d0)
         do k=i1,mm-1
            sum = sum + a(k,mm-k+j1) * b(mm-k+j1)

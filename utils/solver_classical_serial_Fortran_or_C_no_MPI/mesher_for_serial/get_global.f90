@@ -173,23 +173,23 @@ enddo
          ind(1)=indx
          return
       endif
-   ENDIF
+   endif
    i=l
    j=l+l
   200    CONTINUE
    IF (J <= IR) THEN
       IF (J<IR) THEN
          IF ( A(IND(j))<A(IND(j+1)) ) j=j+1
-      ENDIF
+      endif
       IF (q<A(IND(j))) THEN
          IND(I)=IND(J)
          I=J
          J=J+J
       ELSE
          J=IR+1
-      ENDIF
+      endif
    goto 200
-   ENDIF
+   endif
    IND(I)=INDX
   goto 100
   end subroutine rank

@@ -6,7 +6,7 @@ module mtadj_variables
   ! parameter file
   integer :: iker  ! kernel type
   integer :: itap  ! taper type
-  character(len=150) :: meas_dir ! output dir for measurements 
+  character(len=150) :: meas_dir ! output dir for measurements
   character(len=150) :: adj_dir ! output dir for adj src
 
   ! preprocessing
@@ -21,22 +21,22 @@ module mtadj_variables
   real :: npi
   integer :: ntaper ! ntaper = 2*npi
   real :: wtr_mtm ! water level for bottom of MTM
-  real :: MIN_DT_SIGMA,MIN_DlnA_SIGMA ! minimum dt,dlnA standard error 
+  real :: MIN_DT_SIGMA,MIN_DlnA_SIGMA ! minimum dt,dlnA standard error
 
   ! compute error ????
- 
-  ! window selection after measurements  
+
+  ! window selection after measurements
   logical :: SELECT_WINDOW
-  ! selection criteria 
+  ! selection criteria
   integer :: ncycle_in_window
-  ! dtau_i < min(T_i/dt_fac,dt_max_scale*tshift), err_dt_i < T_i/err_fac 
+  ! dtau_i < min(T_i/dt_fac,dt_max_scale*tshift), err_dt_i < T_i/err_fac
   real :: dt_fac, dt_max_scale, err_fac
   !  real ::  after_quality,after_tshift ! ??????
 
   ! write adjoint source
   logical :: INCLUDE_ERROR, BANDPASS_ADJ
   real :: b_adj, dt_adj
-  integer :: npts_adj   !interpolation of adjoint source 
+  integer :: npts_adj   !interpolation of adjoint source
 
   ! -----------------------------------------------------
   ! global parameters
@@ -49,7 +49,7 @@ module mtadj_variables
   ! windowed data and syn
   real, dimension(NPT) :: dataw, synw
   integer :: nstart, nend, nlen
-  
+
   ! cross-correlation measurements
   real :: tshift_cc, dlnA
   real :: sigma_tshift_cc, sigma_dlnA_cc ! error estimates

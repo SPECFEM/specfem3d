@@ -28,16 +28,16 @@ subroutine dclisb0(a, n, nud, n1, b, eps, dr, z, ier)
   ier = 0
   eps1 = 1.0d-14
   m = nud + 1
-  if ((n .le. 0) .or. (nud .le. 0 ) .or. (n1 .lt. m)) then
+  if ((n <= 0) .or. (nud <= 0 ) .or. (n1 < m)) then
      ier = 2
-     print *, '(subr. lisb) invalid argument. ', n, nud, n1     
+     print *, '(subr. lisb) invalid argument. ', n, nud, n1
   endif
- 
-  if (eps .le. 0.d0) eps = eps1
+
+  if (eps <= 0.d0) eps = eps1
 
   !  modified cholesky decomposition
   j = 1
-  if (abs(a(m,1)) .le. eps) then
+  if (abs(a(m,1)) <= eps) then
      ier = 1
      print *,  '(subr. lisb) singular at step # ', j
   endif
@@ -46,17 +46,17 @@ subroutine dclisb0(a, n, nud, n1, b, eps, dr, z, ier)
   a(m-1,2) = a(m-1,2) * dr(1)
   s = a(m,2) - xx * a(m-1,2)
   j = 2
-  if (abs(s) .le. eps) then
+  if (abs(s) <= eps) then
      ier = 1
      print *, '(subr. lisb) singular at step # ', j
   endif
   dr(2) = dcmplx(1.0d0) / s
-  if (m .lt. 3) then
+  if (m < 3) then
      do j=3,n
         xx = a(1,j)
         a(1,j) = xx * dr(j-1)
         s = a(2,j) - xx * a(1,j)
-        if (abs(s) .le. eps) then
+        if (abs(s) <= eps) then
            ier = 1
            print *, ' (subr. lisb) singular at step # ', j
         endif
@@ -65,7 +65,7 @@ subroutine dclisb0(a, n, nud, n1, b, eps, dr, z, ier)
   else
      do j=3,n
         k1 = 1
-        if (j .ge. m) k1 = j - m + 1
+        if (j >= m) k1 = j - m + 1
         mj = m - j
         do i=k1+1,j-1
            sum = dcmplx(0.0d0)
@@ -82,7 +82,7 @@ subroutine dclisb0(a, n, nud, n1, b, eps, dr, z, ier)
            a(mj+i,j) = au
         enddo
         t = a(m,j) - sum
-        if (abs(t) .le. eps) then
+        if (abs(t) <= eps) then
            ier = 1
            print *, ' (subr. lisb) singular at step # ', j
         endif
@@ -93,7 +93,7 @@ subroutine dclisb0(a, n, nud, n1, b, eps, dr, z, ier)
   entry dcsbsub0(a, n, nud, n1, b, eps, dr, z, ier)
   !  forward substitution
   m = nud + 1
-  if (m .lt. 3) then
+  if (m < 3) then
      z(1) = b(1)
      do j=2,n
         z(j) = b(j) - a(1,j) * z(j-1)
@@ -109,7 +109,7 @@ subroutine dclisb0(a, n, nud, n1, b, eps, dr, z, ier)
      z(1) = b(1)
      z(2) = b(2) - a(m-1,2) * z(1)
      do j=3,n
-        if (j .gt. m) then
+        if (j > m) then
            i1 = 1
         else
            i1 = m - j + 1
@@ -128,7 +128,7 @@ subroutine dclisb0(a, n, nud, n1, b, eps, dr, z, ier)
      do j=3,n
         j1 = n - j + 1
         i1 = 1
-        if (j .lt. m) i1 = m - j + 1
+        if (j < m) i1 = m - j + 1
         sum = dcmplx(0.0d0)
         do k=i1,m-1
            sum = sum + a(k,m-k+j1) * b(m-k+j1)
@@ -136,6 +136,6 @@ subroutine dclisb0(a, n, nud, n1, b, eps, dr, z, ier)
         b(j1) = z(j1) - sum
      enddo
   endif
-  
+
 end subroutine dclisb0
 

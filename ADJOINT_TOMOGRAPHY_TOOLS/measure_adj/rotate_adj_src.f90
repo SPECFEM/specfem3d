@@ -12,7 +12,7 @@ program rotate_adj_src
   double precision :: t0t,dtt,t0r,dtr, t0,dt, costh, sinth
   integer, parameter :: NDIM = 40000  ! check ma_constants.f90
   double precision, dimension(NDIM) :: rdata, tdata, edata, ndata
-  
+
   call getarg(1,bazch)
   call getarg(2,zfile)
   call getarg(3,tfile)
@@ -32,7 +32,7 @@ program rotate_adj_src
   inquire(file=trim(zfile),exist=z_exist)
 
   ! initialization
-  rdata = 0; tdata = 0 
+  rdata = 0; tdata = 0
 
   ! at least one file (T,R,Z) should be present
   if (.not. t_exist .and. .not. r_exist) then
@@ -67,7 +67,7 @@ program rotate_adj_src
   sinth = sin(baz)
   edata(1:npts) = -costh * tdata(1:npts) - sinth * rdata(1:npts)
   ndata(1:npts) =  sinth * tdata(1:npts) - costh * rdata(1:npts)
-    
+
   ! write E,N files
   call dwascii(efile,edata,npts,t0,dt)
   call dwascii(nfile,ndata,npts,t0,dt)

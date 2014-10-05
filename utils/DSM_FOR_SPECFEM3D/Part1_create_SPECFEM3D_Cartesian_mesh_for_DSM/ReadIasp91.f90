@@ -24,13 +24,13 @@ subroutine Read_dsm_model(model_file,vp,vs,rho,rb,n)
           eta(1), eta(2), eta(3), eta(4),&
           qm, qk
           rb(i)=vrmin
-  end do
+  enddo
   i=nzone+1
   rb(i)=vrmax
   vp(i,:)=vp(i-1,:)
   vs(i,:)=vs(i-1,:)
   rho(i,:)=rho(i-1,:)
-  
+
   close(iunit)
 end subroutine Read_dsm_model
 
@@ -60,36 +60,36 @@ subroutine ReadIasp91(vp,vs,rho,rb,n)
 
 
 1 read(iunit,'(a72)') text
-  if (text(1:1).eq.'#') then
+  if (text(1:1)=='#') then
      goto 1
   endif
   backspace iunit
-  
-  
+
+
   read(iunit,'(i2)') nlay                ! Number of layers
-  
-  write(cnlay,'(i2)') nlay               ! 
+
+  write(cnlay,'(i2)') nlay               !
   form='('//cnlay//'i2)'                 ! Number of polynomal
-  read(iunit,form) (nco(i),i=1,nlay)     ! coefficients for each layer 
-  
+  read(iunit,form) (nco(i),i=1,nlay)     ! coefficients for each layer
+
   read(iunit,*) fref               ! reference frequency of Qs in Hertz
   read(iunit,*) ifanis             ! Transversal isotropic? 1=y, else=n
   read(iunit,'(1x/1x/)')
-  
-  
-  do i = 1, nlay 
-     
+
+
+  do i = 1, nlay
+
      !read(iunit,*) rb(i-1),rho(i,1),vpv(i,1),vph(i,1),vsv(i,1),vsh(i,1),qm(i),qk(i),eta(i,1)
      read(iunit,*) rb(i),rho(i,1),vp(i,1),vph,vs(i,1),vsh,qm,qk,eta
      !write(*,*) i,rb(i),rho(i,1)
      do j = 2, nco(i)
         read(iunit,*) rho(i,j),vp(i,j),vph,vs(i,j),vsh,eta
         !write(*,*) i,j,rho(i,j)
-     end do
+     enddo
      read(iunit,'(1x)')
-  end do
+  enddo
   i = nlay+1
-  read(iunit,*) rb(i)   
+  read(iunit,*) rb(i)
   j = 1
   rho(i,j) =  rho(i-1,j)
   vp(i,j) = vp(i-1,j)
@@ -106,7 +106,7 @@ subroutine Lyfnd(r,rb,n,i)
   i=1
   do while (r > rb(i) )
      i = i + 1
-  end do
+  enddo
   i = i - 1
   return
 end subroutine Lyfnd
@@ -127,12 +127,12 @@ function IsNewLayer(x,r,n)
   ! ce test fonctionne que si les mailles sont suffisament petites !! ATTENTION
   do i = 1, n-1
      !write(*,*) x,r(i),x-r(i)
-     if (abs(x-r(i)).lt.1.d-10) then
+     if (abs(x-r(i))<1.d-10) then
         !write(*,*) 'its layer'
         IsNewLayer = 1
         return
-     end if
-  end do
+     endif
+  enddo
 end function IsNewLayer
 
 
@@ -140,18 +140,18 @@ subroutine StorePoint(z,k,zc)
   implicit none
   integer k
   double precision z(*),zc
-  if (k.eq.0) then
+  if (k==0) then
      k = k + 1
      z(k) = zc
      return
   else
-     if (z(k).eq.zc) then
+     if (z(k)==zc) then
         return
      else
         k = k + 1
         z(k) = zc
-     end if
-  end if
+     endif
+  endif
 end subroutine StorePoint
 
 subroutine StorePointZ(z,k,zc,NoInter)
@@ -159,18 +159,18 @@ subroutine StorePointZ(z,k,zc,NoInter)
   integer k
   double precision z(*),zc
   logical NoInter
-  if (k.eq.0) then
+  if (k==0) then
      k = k + 1
      z(k) = zc
      return
   else
-     if (z(k).eq.zc.and.NoInter) then
+     if (z(k)==zc.and.NoInter) then
         return
      else
         k = k + 1
         z(k) = zc
-     end if
-  end if
+     endif
+  endif
 end subroutine StorePointZ
 
 !!$subroutine FindNum(i,X,X0,n)
@@ -178,14 +178,14 @@ end subroutine StorePointZ
 !!$  integer i,n
 !!$  real X(n),X0
 !!$  do i=1,n
-!!$     if (X0.eq.X(n)) return
-!!$  end do
+!!$     if (X0==X(n)) return
+!!$  enddo
 !!$  write(*,*) ' warrnig FindnNum ',X0
-!!$  stop 
+!!$  stop
 !!$end subroutine FindNum
  subroutine CalGridProf(ProfForGemini,Niveau_elm,zlayer,nlayer,NEX_GAMMA,Z_DEPTH_BLOCK)
 
-  implicit none 
+  implicit none
   integer NEX_GAMMA,nlayer,nbbloc(100000),Niveau_elm(0:NEX_GAMMA-1)
   double precision ProfForGemini(0:NEX_GAMMA-1,3),zlayer(nlayer)
   double precision Z_DEPTH_BLOCK,zpoint(100000),zz(100000)
@@ -193,20 +193,20 @@ end subroutine StorePointZ
   integer nb, n, i,j,k,iz,ilayer,ilay,nd,niveau
   double precision r,ll ,p, pas, longeur, zref
   logical test
-  
+
   epsillon=1d-3
    nbbloc(:)=0
    ! point de depart
-   zpoint(1)=zlayer(nlayer) - Z_DEPTH_BLOCK 
-   write(*,*) zlayer(nlayer) ,  Z_DEPTH_BLOCK 
+   zpoint(1)=zlayer(nlayer) - Z_DEPTH_BLOCK
+   write(*,*) zlayer(nlayer) ,  Z_DEPTH_BLOCK
    !! niveau de depart
    call FindLayer(ilayer,zlayer,zpoint(1),nlayer)
    write(*,*) '              INITIALISATION calcul du niveau de depart : '
-   write(*,*) 
+   write(*,*)
    write(*,*) 'zlayer : ', zlayer
    write(*,*) 'premier point : '   , zpoint(1),ilayer
-    write(*,*) 
-   
+    write(*,*)
+
   !!
 
 
@@ -214,12 +214,12 @@ end subroutine StorePointZ
   i = 1
   k = ilayer - 1
   nb = 0
-  do while (zpoint(i)<zlayer(nlayer)) 
+  do while (zpoint(i)<zlayer(nlayer))
     i = i + 1
     k = k + 1
     zpoint(i) = zlayer(k)
-  end do
- 
+  enddo
+
   nb = i
   nd = i-1
   longeur = zlayer(nlayer) - zpoint(1)
@@ -234,11 +234,11 @@ end subroutine StorePointZ
         n = 1
     else
         n = max(int(p),2)
-    end if
+    endif
     !write(*,*) 'n :',n
 
     nbbloc(i)=n
-  end do
+  enddo
 
 
 
@@ -247,8 +247,8 @@ end subroutine StorePointZ
 
   do j=1,nb-1
     write(*,*) j,nbbloc(j)
-  end do
-  
+  enddo
+
 
   !! on elimine les blocs en trop
    write(*,*) 'SUM ',sum(nbbloc)
@@ -257,28 +257,28 @@ end subroutine StorePointZ
 
 
    do while ( nb > NEX_GAMMA)
-      
+
       k  =  1
       test = .true.
-  
+
     do  while (test)
 
          j =  maxval(nbbloc)
-         ! on cherche l'indice du max  
+         ! on cherche l'indice du max
 
-         if (j == nbbloc(k) ) then 
+         if (j == nbbloc(k) ) then
             nbbloc(k ) = nbbloc(k) -1
             test = .false.
-         end if
+         endif
 
          k = k + 1
 
-      end do
+      enddo
 
       nb = sum(nbbloc)
       write(*,*) 'nb, ',nb,NEX_GAMMA
-   end do
-  
+   enddo
+
   !!
   longeur = zlayer(nlayer) - zpoint(1)
   k=1
@@ -292,27 +292,27 @@ end subroutine StorePointZ
         k = k + 1
         zz(k) = zz(k-1) + pas
         write(*,*) zz(k), zpoint(i+1)
-     end do    
-  end do
+     enddo
+  enddo
 
-  
- 
-    
+
+
+
    do ilay=1,NEX_GAMMA
-      
-      ProfForGemini(ilay-1,1)  =  zz(ilay)  
+
+      ProfForGemini(ilay-1,1)  =  zz(ilay)
       ProfForGemini(ilay-1,2)  =  zz(ilay+1)
       ProfForGemini(ilay-1,3)  = 0.5d0 * (zz(ilay) + zz(ilay+1))
 
       call FindLayer(niveau,zlayer, ProfForGemini(ilay-1,3),nlayer)
       Niveau_elm(ilay-1)=niveau
       write(*,'(i5,2f15.3,i10)') ilay,zz(ilay),zz(ilay+1),niveau
-   end do
- 
+   enddo
+
    do ilay=0,NEX_GAMMA-1
      !write(*,*) ProfForGemini(ilay,1), ProfForGemini(ilay,2), ProfForGemini(ilay,3)
-   end do
-  
+   enddo
+
 
  end subroutine CalGridProf
 
@@ -324,11 +324,11 @@ end subroutine StorePointZ
    if (r>z(n) .or. r<z(1)) then
     write(*,*) 'STOP :: point ouside grid'
     stop
-   end if
+   endif
    i = 1
-   do while (r > z(i)) 
+   do while (r > z(i))
      i = i + 1
-   end do
+   enddo
 
 
  end subroutine FindLayer
@@ -447,11 +447,11 @@ end subroutine StorePointZ
 
 !! verif VM
 !   open(27,file='zp_rank.txt')
-  
+
 !  do i=1,npointot
-    
+
 !     write(27,*) zp(i)
-!  end do
+!  enddo
 !  close(27)
 
 ! deallocate arrays
@@ -502,23 +502,23 @@ end subroutine StorePointZ
          ind(1)=indx
          return
       endif
-   ENDIF
+   endif
    i=l
    j=l+l
   200    CONTINUE
    IF (J <= IR) THEN
       IF (J<IR) THEN
          IF ( A(IND(j))<A(IND(j+1)) ) j=j+1
-      ENDIF
+      endif
       IF (q<A(IND(j))) THEN
          IND(I)=IND(J)
          I=J
          J=J+J
       ELSE
          J=IR+1
-      ENDIF
+      endif
    goto 200
-   ENDIF
+   endif
    IND(I)=INDX
   goto 100
   end subroutine rank
@@ -595,7 +595,7 @@ end subroutine StorePointZ
 
   double precision, parameter :: ONE_EIGHTH = 0.125d0, ZERO = 0.d0, one=1.d0,TINYVAL = 1.d-9
 
-  
+
 ! check that the parameter file is correct
   !myrank=0
   if(NGNOD /= 8) call exit_MPI(myrank,'elements should have 8 control nodes')
@@ -707,7 +707,7 @@ end subroutine exit_MPI
 
 
 
-! 
+!
 subroutine calc_gll_points(xelm,yelm,zelm,xstore,ystore,zstore,shape3D,NGNOD,NGLLX,NGLLY,NGLLZ)
   implicit none
   integer NGNOD,NGLLX,NGLLY,NGLLZ
@@ -732,7 +732,7 @@ subroutine calc_gll_points(xelm,yelm,zelm,xstore,ystore,zstore,shape3D,NGNOD,NGL
            xstore(i,j,k) = xmesh
            ystore(i,j,k) = ymesh
            zstore(i,j,k) = zmesh
-        end do
-     end do
-  end do
+        enddo
+     enddo
+  enddo
 end subroutine calc_gll_points

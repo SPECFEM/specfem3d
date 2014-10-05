@@ -280,7 +280,7 @@
 
 ! read synthetic
   call rsac1(file_s,synt_sngl,npts1,b1,dt1,NDIM,nerr)
-  if (nerr.ne.0) then
+  if (nerr/=0) then
     write(*,*)
     write(*,*)' !!! Error reading file ', file_s
     !write(*,*)'     Program stop !!!'
@@ -296,7 +296,7 @@
 
 ! read observed
   call rsac1(file_o,obs_sngl, npts2,b2,dt2,NDIM,nerr)
-  if (nerr.ne.0) then
+  if (nerr/=0) then
     write(*,*)
     write(*,*)' !!! Error reading file ', file_o
     !write(*,*)'     Program stop !!!'
@@ -312,7 +312,7 @@
   obs(1:npts1) = dble(obs_sngl(1:npts1))
 
 ! check sample rates are equal
-  if( abs(dt1-dt2).gt.1e-05) then
+  if( abs(dt1-dt2)>1e-05) then
     write(*,*)
     !write(*,*) 'dt1-syn, dt2-dat,  abs(dt1-dt2):'
     write(*,*) 'error: dt1-syn, dt2-dat,  abs(dt1-dt2):'
@@ -329,7 +329,7 @@
   !write(*,*)'sampling rate dt=',dt
 
 ! check start times are equal
-  if(abs(b1-b2).gt.2.0*dt) then
+  if(abs(b1-b2)>2.0*dt) then
     write(*,*)
     write(*,*) 'b1, b2, dt, abs(b1-b2), 2*dt:'
     write(*,*) b1, b2, dt, abs(b1-b2), 2.0*dt
@@ -346,7 +346,7 @@
 
 ! set global npts to the npts of the shortest seismogram
   npts = npts1
-  if (npts2 .lt. npts1) npts = npts2
+  if (npts2 < npts1) npts = npts2
 !  write(*,*)'number of points =',npts
 
 ! DEBUG
@@ -473,7 +473,7 @@
   do i = 1, n_width
     x(i) = x(i) * (f0-f1*cos(omega*(i-1)))
     x(n+1-i) = x(n+1-i) * (f0-f1*cos(omega*(i-1)))
-  end do
+  enddo
 
   end subroutine t_taper
 
@@ -653,10 +653,10 @@
   do i = 1, npts
     sta=(Cs*sta+extended_syn(n_extend+i))
     lta=(Cl*lta+extended_syn(n_extend+i))
-    if (lta.gt.TOL) then
+    if (lta>TOL) then
       if( TWEAK ) then
         ! additional envelope criteria
-        if( lta .gt. TOL*lta_max ) then
+        if( lta > TOL*lta_max ) then
           if( i >= thres_noise) then
             STA_LTA(i)=sta/lta
           endif
@@ -710,15 +710,15 @@
   integer, intent(in) :: i
   character*8, intent(out) :: istring
 
-  if(i.lt.0) stop 'Complete subroutine for negative integers'
+  if(i<0) stop 'Complete subroutine for negative integers'
 
-  if(abs(i).lt.10) then
+  if(abs(i)<10) then
     write(istring,'(i1)') i
-  elseif(abs(i).lt.100) then
+  else if(abs(i)<100) then
     write(istring,'(i2)') i
-  elseif(abs(i).lt.1000) then
+  else if(abs(i)<1000) then
     write(istring,'(i3)') i
-  elseif(abs(i).lt.10000) then
+  else if(abs(i)<10000) then
     write(istring,'(i4)') i
   else
     stop 'Complete subroutine for integers over 9999 '
@@ -776,7 +776,7 @@
   ishift = 0
   cc_max = 0.0d0
 
-  if (i1.lt.1 .or. i1.gt.i2 .or. i2.gt.npts) then
+  if (i1<1 .or. i1>i2 .or. i2>npts) then
     write(*,*) 'Error with window limits: i1, i2, npts ', i1, i2, npts
     return
   endif
@@ -806,12 +806,12 @@
     ! cc as a function of i
     cc = 0.
     do j = i1, i2   ! loop over full window length
-      if((j+i).ge.1 .and. (j+i).le.npts) cc = cc + s(j)*d(j+i)  ! d is shifted by i
+      if((j+i)>=1 .and. (j+i)<=npts) cc = cc + s(j)*d(j+i)  ! d is shifted by i
     enddo
     cc = cc/norm
 
     ! keeping cc-max only
-    if (cc .gt. cc_max) then
+    if (cc > cc_max) then
       cc_max = cc
       ishift = i
     endif
@@ -899,7 +899,7 @@ subroutine calc_criteria_original(d,s,npts,i1,i2,dt,tshift,cc_max,dlnA)
   ! apply time shift to synthetic seismogram
   do i = 1, npts_win
      s_cor(i) = 0.
-     if( (i1-1+i-ishift) .gt. 1 .and. (i1-1+i-ishift) .lt. npts ) s_cor(i) = s(i1-1+i-ishift)
+     if( (i1-1+i-ishift) > 1 .and. (i1-1+i-ishift) < npts ) s_cor(i) = s(i1-1+i-ishift)
   enddo
 
   ! calculate dlnA
@@ -920,7 +920,7 @@ end subroutine calc_criteria_original
 
   ! find the index of the first arrival (global, filtered)
   n_p = 1+int((ph_times(1)-WIN_MIN_PERIOD/2.0-b)/dt)
-  if (n_p .le. 0) n_p = 1
+  if (n_p <= 0) n_p = 1
 
   call prepare_lp_env
 

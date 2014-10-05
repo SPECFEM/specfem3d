@@ -274,7 +274,7 @@ subroutine dcsymbdl0_m_equals_1_nn_equals_1(a,n,eps,z,w,l,li,lj,ier)
   complex(kind(0d0)) :: pivot
 
 
-! mm = 1 at the moment 
+! mm = 1 at the moment
   ier = 0
   ij = 0
 
@@ -321,7 +321,7 @@ subroutine dcsymbdl0_m_equals_1_nn_equals_1(a,n,eps,z,w,l,li,lj,ier)
 
   enddo
 
-!  do k=n-m+1,n-1  ! because m =1 ,so the loop don't run 
+!  do k=n-m+1,n-1  ! because m =1 ,so the loop don't run
 !     nk = (m+1) * (k-1) + 1
 !     nkk = (m+1) * k - 1
 

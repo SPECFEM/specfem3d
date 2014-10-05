@@ -262,7 +262,7 @@
 
         ! stores displacment values in local array
         if (allocated(Kelvin_Voigt_eta)) then
-          eta = Kelvin_Voigt_eta(ispec)   
+          eta = Kelvin_Voigt_eta(ispec)
           do k=1,NGLLZ
             do j=1,NGLLY
               do i=1,NGLLX
@@ -403,7 +403,7 @@
              enddo
           enddo
 
-          ! use first order Taylor expansion of displacement for local storage of stresses 
+          ! use first order Taylor expansion of displacement for local storage of stresses
           ! at this current time step, to fix attenuation in a consistent way
           do j=1,m2
              do i=1,m1
@@ -542,7 +542,7 @@
                 duxdyl_plus_duydxl = duxdyl + duydxl
                 duzdxl_plus_duxdzl = duzdxl + duxdzl
                 duzdyl_plus_duydzl = duzdyl + duydzl
-                
+
                 if( ATTENUATION .and. COMPUTE_AND_STORE_STRAIN ) then
                    ! temporary variables used for fixing attenuation in a consistent way
                    duxdxl_att = xixl*tempx1l_att(i,j,k,thread_id) + etaxl*tempx2l_att(i,j,k,thread_id) + &
@@ -922,7 +922,7 @@
        endif
 
     enddo  ! spectral element loop
-    !$OMP END DO
+    !$OMP enddo
     !$OMP END PARALLEL
 
     ! The elements are in order of color. First we do color 1 elements,

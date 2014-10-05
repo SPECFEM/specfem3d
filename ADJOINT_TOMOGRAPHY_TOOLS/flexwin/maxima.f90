@@ -1,7 +1,7 @@
 !
 ! $Id: $
 !
-! Given an array of floating point numbers, returns an array of 
+! Given an array of floating point numbers, returns an array of
 ! integers containing the indexes of the maxima of the array
 !
 
@@ -16,29 +16,29 @@
   double precision, dimension (*), intent(in) :: x
   integer, intent(in)  :: nx
   double precision, intent(in)     :: w_level
-   
+
   integer, dimension (*), intent(out) :: maxima
   integer,intent(out)  :: nindex
 
   integer :: i,k, prev_dir, next_dir
   integer, external :: direction
 
-  k=0 
+  k=0
 
 
-! set up the starting previous direction 
+! set up the starting previous direction
   prev_dir=direction(x(1),x(2), w_level)
 
 
-! iterate through the points in the array 
+! iterate through the points in the array
   do i=2, nx-1
-    !the next direction 
+    !the next direction
     next_dir=direction(x(i),x(i+1),w_level)
-    if(next_dir.eq.DOWN .and. prev_dir .eq. UP) then
+    if(next_dir==DOWN .and. prev_dir == UP) then
       k=k+1
       maxima(k)=i
     endif
-!   set up prev_dir for next iternation 
+!   set up prev_dir for next iternation
     prev_dir = next_dir
   enddo
 
@@ -60,11 +60,11 @@ end subroutine find_maxima
 
 !  write(*,*) 'Direction entered'
 
-  if ( a < w_level .or. b < w_level ) then 
+  if ( a < w_level .or. b < w_level ) then
     direction = FLAT
-  elseif ( abs(a-b) < EPS) then
+  else if ( abs(a-b) < EPS) then
     direction = FLAT
-  elseif (b > a) then
+  else if (b > a) then
     direction = UP
   else
     direction = DOWN
@@ -73,15 +73,15 @@ end subroutine find_maxima
 !  write(*,*) 'Direction =', direction
 
   end function direction
- 
 
- 
+
+
 
 ! given an array, the index of a local maximum, and a water level, give
 ! the index of the closest points in the array that dip below the water
 ! level
 
-  subroutine bracket_maximum(x, nx, imax , w_level, i1, i2) 
+  subroutine bracket_maximum(x, nx, imax , w_level, i1, i2)
   implicit none
   double precision, dimension(*), intent(in) :: x
   integer, intent(in) :: nx , imax
@@ -111,7 +111,7 @@ end subroutine find_maxima
 
   end subroutine
 
-!!$! given an array and the index of two end points, calculate the 
+!!$! given an array and the index of two end points, calculate the
 !!$! area under the curve by simple trapezium integration
 !!$
 !!$  function area_under_curve(x,dx,i1,i2)
@@ -143,28 +143,28 @@ end subroutine find_maxima
   double precision, dimension (*), intent(in) :: x
   integer, intent(in)  :: nx
   double precision, intent(in)    :: w_level
-   
+
   integer, dimension (*), intent(out) :: minima
   integer, intent(out) :: nindex
 
   integer :: i,k, prev_dir, next_dir
   integer, external :: direction
-   
-  k=0 
+
+  k=0
 
 
-! set up the starting previous direction 
+! set up the starting previous direction
   prev_dir=direction(x(1),x(2), w_level)
 
-! iterate through the points in the array 
+! iterate through the points in the array
   do i=2, nx-1
-    !the next direction 
+    !the next direction
     next_dir=direction(x(i),x(i+1),w_level)
-    if(next_dir.eq.UP .and. prev_dir .eq. DOWN) then
+    if(next_dir==UP .and. prev_dir == DOWN) then
       k=k+1
       minima(k)=i
     endif
-!   set up prev_dir for next iternation 
+!   set up prev_dir for next iternation
     prev_dir = next_dir
   enddo
 

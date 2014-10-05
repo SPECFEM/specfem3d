@@ -65,7 +65,7 @@
     if(r > 0.0d0 .and. r <= RICB/R_EARTH) then
 ! stretching between center and RICB
       gamma = r/(RICB/R_EARTH)
-    elseif(r>= RICB/R_EARTH .and. r <= RCMB/R_EARTH) then
+    else if(r>= RICB/R_EARTH .and. r <= RCMB/R_EARTH) then
 ! stretching between RICB and RCMB
       gamma = (r - RCMB/R_EARTH) / (RICB/R_EARTH - RCMB/R_EARTH)
     endif

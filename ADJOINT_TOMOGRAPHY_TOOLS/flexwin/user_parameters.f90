@@ -1,5 +1,5 @@
   module user_parameters
- 
+
   !===================================================================
   ! filter parameters for xapiir subroutine (filter type is BP)
   double precision, parameter :: TRBDNDW = 0.3

@@ -36,7 +36,7 @@
 
 ! -----------------------------------------------------------------------
 
- 
+
   subroutine write_measurements_gmt(basename)
   use seismo_variables
   use measurement_variables
@@ -80,7 +80,7 @@
       max_adj_q = maxval(abs(fq_adj_win(1:npts_iwin,iwin)))
     endif
 
-    
+
 
     ! write the seismograms and envelopes and f1f2
     ! open the files
@@ -120,8 +120,8 @@
       write(14,'("# CC = ",f10.4)') CC(iwin)
       write(14,*) '# FP_ADJ FQ_ADJ'
     endif
- 
- 
+
+
     ! write the measurement
     do i = 1, n_freq(iwin)
       write(11,'(e12.6,2(2x,e12.6))') fr(i,iwin), dtau_w(i,iwin), dtau_w_err(i,iwin)
@@ -140,8 +140,8 @@
     close(13)
     if(CALC_ADJ) close(14)
 
-  end do
+  enddo
 
   end subroutine write_measurements_gmt
 
- 
+

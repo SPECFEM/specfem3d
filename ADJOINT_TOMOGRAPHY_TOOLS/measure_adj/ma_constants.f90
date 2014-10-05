@@ -12,8 +12,8 @@ module ma_constants
 
   ! FFT parameters
   integer, parameter :: LNPT = 15, NPT = 2**LNPT, NDIM = 80000
-  double precision, parameter :: FORWARD_FFT = 1.0  
-  double precision, parameter :: REVERSE_FFT = -1.0   
+  double precision, parameter :: FORWARD_FFT = 1.0
+  double precision, parameter :: REVERSE_FFT = -1.0
 
   ! phase correction control parameters, set this between (PI, 2PI),
   ! use a higher value for conservative phase wrapping
@@ -28,7 +28,7 @@ module ma_constants
 
   ! takes waveform of first trace dat_dtw, without taking the difference waveform to the second trace syn_dtw
   ! this is useful to cissor out later reflections which appear in data (no synthetics needed)
-  logical, parameter :: NO_WAVEFORM_DIFFERENCE = .false. 
+  logical, parameter :: NO_WAVEFORM_DIFFERENCE = .false.
 
   ! constructs adjoint sources for a "ray density" kernel, where all misfits are equal to one
   logical, parameter :: DO_RAY_DENSITY_SOURCE = .false.

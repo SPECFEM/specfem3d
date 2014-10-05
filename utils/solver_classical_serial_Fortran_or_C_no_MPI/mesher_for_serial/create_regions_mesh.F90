@@ -667,11 +667,11 @@
 ! define models 1066a and ak135 and ref
   if(REFERENCE_1D_MODEL == REFERENCE_MODEL_1066A) then
     call define_model_1066a(CRUSTAL, M1066a_V)
-  elseif(REFERENCE_1D_MODEL == REFERENCE_MODEL_AK135) then
+  else if(REFERENCE_1D_MODEL == REFERENCE_MODEL_AK135) then
     call define_model_ak135(CRUSTAL, Mak135_V)
-  elseif(REFERENCE_1D_MODEL == REFERENCE_MODEL_REF) then
+  else if(REFERENCE_1D_MODEL == REFERENCE_MODEL_REF) then
     call define_model_ref(Mref_V)
-  elseif(REFERENCE_1D_MODEL == REFERENCE_MODEL_SEA1D) then
+  else if(REFERENCE_1D_MODEL == REFERENCE_MODEL_SEA1D) then
     call define_model_sea1d(CRUSTAL, SEA1DM_V)
   endif
 
@@ -1207,7 +1207,7 @@
   if (mod(NPROC_XI,2)/=0) then
     if (ichunk == CHUNK_AB) then
       nz_inf_limit = ((nz_central_cube*2)/NPROC_XI)*floor(NPROC_XI/2.d0)
-    elseif (ichunk == CHUNK_AB_ANTIPODE) then
+    else if (ichunk == CHUNK_AB_ANTIPODE) then
       nz_inf_limit = ((nz_central_cube*2)/NPROC_XI)*ceiling(NPROC_XI/2.d0)
     endif
   else

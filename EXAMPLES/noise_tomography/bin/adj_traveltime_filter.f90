@@ -57,17 +57,17 @@ do irec = 1,nrec
    open(unit=1001,file=trim(file_data),status='old',action='read')
    do itime = 1,nstep
            read(1001,*) t(itime),data_origin(nstep-itime+1,irec)  ! the reversed seismogram involves $C^\alpha\beta(t)=C^\beta\alpha(-t)$
-   end do
+   enddo
    close(1001)
 
    data_temp(1)=0.0
    data_temp(nstep)=0.0
    do itime = 2,nstep-1
       data_temp(itime)=( data_origin(itime+1,irec) - data_origin(itime-1,irec) )/(2*dt)                  ! displacement --> particle  velocity (elastic  ".semd")
-   end do
+   enddo
    data_origin(:,irec)=data_temp
    trace_data_max(irec)=maxval(abs(data_temp))
-end do
+enddo
 
 data_max=maxval(trace_data_max)
 
@@ -78,22 +78,22 @@ allocate(adj_temp(length_window)); adj_temp(:)=0.0d0
 allocate(corre(2*length_window-1)); corre(:)=0.0d0
 allocate(data_trace_temp(length_window)); data_trace_temp(:)=0.0d0
 allocate(syn_trace_temp(length_window)); syn_trace_temp(:)=0.0d0
-if (taper_type .eq. 1) then  ! cosine taper, otherwise using a constant (1.0) instead
+if (taper_type == 1) then  ! cosine taper, otherwise using a constant (1.0) instead
    do l=1,length_window
       taper(l) = (1.0-cos(pi*2.0*(l-1)/(length_window-1)))/2.0
-   end do
-end if
+   enddo
+endif
 
 !!!! computing adj sources !!!!
-                  if (filter_flag .eq. 0)   then
+                  if (filter_flag == 0)   then
                       nfreq=1
-                  end if
+                  endif
 do irec = 1,nrec
    do ifreq = 1,nfreq
      ! bandpass filter
      data_filtered(:,irec)=data_origin(:,irec)
       syn_filtered(:,irec)= syn_origin(:,irec)
-     if (filter_flag .eq. 1) then
+     if (filter_flag == 1) then
          print *, 'filtering'
          write(*,"('frequency band ',i2,' : f_min = ',f10.5,' Hz , f_max = ',f10.5, ' Hz')") ifreq, freq_low(ifreq), freq_high(ifreq)
      ! THIS SECTION CALCULATES THE FILTER AND MUST BE CALLED BEFORE
@@ -113,7 +113,7 @@ do irec = 1,nrec
      !     G = FILTER GAIN
      !     IG = 1  one pass
      !     ig = 2  two passes
-     end if
+     endif
 
      c(:)=0.0
      I(:)=(length_window-1)
@@ -134,7 +134,7 @@ do irec = 1,nrec
 
         w(:)=0.0
         w(i_start_window : i_end_window)=taper
-     end do
+     enddo
 
      data_trace=data_trace*w
      data_filtered(:,irec)=data_trace
@@ -147,20 +147,20 @@ do irec = 1,nrec
            misfit_traveltime = misfit_traveltime + traveltime_delay * traveltime_delay / 2.0
            write(1111,*) traveltime_delay
 
-   end do  !do ifreq=1,nfreq
+   enddo  !do ifreq=1,nfreq
 
    !!!! output !!!!
    file_adj_BXZ      = '../OUTPUT_FILES/SEM/adj_sources_contribution1'
    open(unit=1002,file=trim(file_adj_BXZ),status='unknown')
    do itime = 1,nstep
       write(1002,*) t(itime), adj(nstep-itime+1,irec)
-   end do
+   enddo
    close(1002)
    file_adj_zeros      = '../OUTPUT_FILES/SEM/adj_sources_contribution2'
    open(unit=1002,file=trim(file_adj_zeros),status='unknown')
    do itime = 1,nstep
       write(1002,*) t(itime), adj(itime,irec)
-   end do
+   enddo
    close(1002)
 
 enddo  !do irec=1,nrec
@@ -253,7 +253,7 @@ SUBROUTINE BNDPAS(F1,F2,DELT,D,G,N)
 !     IG = 1  one pass
 !     ig = 2  two passes
 
-      IF (ISW.EQ.1) GO TO 31
+      IF (ISW==1) GO TO 31
       WRITE (6,6)
     6 FORMAT ('1BNDPAS MUST BE CALLED BEFORE FILTER')
       return
@@ -298,7 +298,7 @@ SUBROUTINE BNDPAS(F1,F2,DELT,D,G,N)
    39 X(I)=XE(M)-XE(M2)-D(7)*X(I-1)-D(8)*X(I-2)
 !
 !
-      if(ig.eq.1) goto 3333
+      if(ig==1) goto 3333
       XM2=X(N)
       XM1=X(N-1)
       XM=X(N-2)
@@ -337,7 +337,7 @@ SUBROUTINE BNDPAS(F1,F2,DELT,D,G,N)
       XE(M)=XD(M)-XD(M2)-D(5)*XE(M1)-D(6)*XE(M2)
    49 X(J)=XE(M)-XE(M2)-D(7)*X(J+1)-D(8)*X(J+2)
  3333 continue
-      if (ig.eq.1) then
+      if (ig==1) then
         gg=sqrt(g)   ! if only pass once, modify gain
       else
         gg=g

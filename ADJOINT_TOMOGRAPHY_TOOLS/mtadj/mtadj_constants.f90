@@ -6,15 +6,15 @@ module mtadj_constants
   integer, parameter :: IKER_CC = 1
   integer, parameter :: IKER_FD = 2
   character(len=2), parameter :: CKER(3) = (/ 'wf', 'cc', 'fd' /)
- 
+
   ! taper types
   integer, parameter :: ITAP_BC = 0
   integer, parameter :: ITAP_CS = 1
   integer, parameter :: ITAP_MT = 2
   character(len=2), parameter :: CTAP(3) = (/ 'bc', 'cs', 'mt' /)
- 
+
   ! maximum number of tapers
-  integer, parameter :: NMAX_TAPER = 10  
+  integer, parameter :: NMAX_TAPER = 10
 
   ! debug flags
   logical, parameter :: DEBUG = .true.
@@ -33,7 +33,7 @@ module mtadj_constants
   real*8, parameter :: FORWARD_FFT = 1.0
   real*8, parameter :: REVERSE_FFT = -1.0
 
-  ! phase correction control parameters, set this between (PI, 2PI), 
+  ! phase correction control parameters, set this between (PI, 2PI),
   ! use a higher value for conservative phase wrapping
   real, parameter :: PHASE_STEP = 1.5 * PI
 

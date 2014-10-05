@@ -22,7 +22,7 @@
   double precision, dimension(npt) :: fp_local, fq_local
 
 
-  
+
 ! Loop over windows
 ! ---------------------------------------------------------------------
   write(*,*) "Cross-correlation measurements"
@@ -31,9 +31,9 @@
     win_length = win_end(iwin) - win_start(iwin)
     nlen=win_length/dt
 
-!   initialise global measurements 
+!   initialise global measurements
 !   ---------------------------------------------------------------------
-    n_freq(iwin) = 0 
+    n_freq(iwin) = 0
     fr(:,iwin) = 0
     dtau_w(:,iwin) = 0; dlnA_w(:,iwin) = 0
     F1_after(iwin) = 0; F2_after(iwin) = 0
@@ -52,7 +52,7 @@
     obs_win_local(:) = 0 ; syn_win_local(:) = 0; obs_rec_local(:) = 0
     fp_local(:) = 0 ; fq_local(:) = 0
     obs_lp_local(:)=0; syn_lp_local(:)=0
- 
+
     obs_lp_local(1:npts)=obs_lp(1:npts)
     syn_lp_local(1:npts)=synt_lp(1:npts)
 

@@ -20,9 +20,9 @@ contains
     if (ios /= 0) stop 'Error opening parameter file'
 
     ! kernel type, WF=0 (waveform), CC=1 (cross-corr), FD=2 (freq-dep)
-    read(10,*) iker   
+    read(10,*) iker
     ! taper type for FD meas: BC=0 (boxcar), CS=1 (cosine-taper), MT=2 (multi-taper)
-    read(10,*) itap   
+    read(10,*) itap
     read(10,'(a)') meas_dir
     read(10,'(a)') adj_dir
 
@@ -45,7 +45,7 @@ contains
     !  read(10,*) after_quality, after_tshift, dlna_sigma_min
 
     ! interpolation of adjoint source
-    read(10,*) INCLUDE_ERROR 
+    read(10,*) INCLUDE_ERROR
     read(10,*) MIN_DT_SIGMA,MIN_DlnA_SIGMA
     read(10,*) b_adj, dt_adj, npts_adj
     read(10,*) BANDPASS_ADJ
@@ -108,7 +108,7 @@ contains
        write(*,*) '  CC adjoint source minimum error: ', MIN_DT_SIGMA,MIN_DlnA_SIGMA
     endif
     write(*,*) ' '
-    
+
     ! frequency-domain taper (power of cosine) for adjoint source calculation
     ipwr_w = 4
     ! time domain taper for adjoint source
@@ -117,7 +117,7 @@ contains
   end subroutine read_mtadj_par
 
   !========================================================
-  
+
   subroutine read_data_syn(datafile,synfile,sta,chan,net)
 
     character(len=*),intent(in) :: datafile,synfile
@@ -125,7 +125,7 @@ contains
 
     integer :: npts1, npts2, nerr, j
     real :: b1, b2, dt1, dt2
-    
+
     ! read data and syn
     call rsac1(datafile,data,npts1,b1,dt1,NDIM,nerr)
     if (nerr > 0) stop ' Error reading synthetic file'
@@ -147,7 +147,7 @@ contains
   end subroutine read_data_syn
 
 !============================================================
-  
+
   subroutine cc_fd_measure(file_prefix,tstart,tend)
 
     character(len=*) file_prefix
@@ -163,7 +163,7 @@ contains
     character(len=150) :: meas_prefix
     real*8,dimension(NPT,NMAX_TAPER) :: tas_dp
     real*8 :: dt_dble
-   
+
 
     ! set measurement file prefix
      if (iker /= IKER_FD) then
@@ -183,7 +183,7 @@ contains
     ! window data and syn (data -> dataw; syn -> synw)
     dataw(1:nlen) = data(nstart:nend)
     synw(1:nlen) = syn(nstart:nend)
-    
+
     ! for BC or CS tapers, rmean and rtrend
     if (iker == IKER_FD .and. itap == ITAP_BC) then
        call rmean(dataw,nlen); call rmean(synw,nlen)
@@ -208,7 +208,7 @@ contains
     call compute_time_shift(synw,dataw,nlen,dt,ishift,tshift_cc)
     if (abs(tshift_cc) > BEFORE_SHIFT) &
          stop 'Check if BEFORE_SHIFT is too small for tshift'
-    
+
     ! align data and synthetics according to CC
     do i = 1, nlen
       if ( (i+nstart-1+ishift) >= 1 .and. (i+nstart-1+ishift) <= npts) then
@@ -242,17 +242,17 @@ contains
     ! FFT windowed data (shifted) and syn
     cdataw = cmplx(0.,0.); csynw = cmplx(0.,0.)
     cdataw(1:nlen)=cmplx(dataw(1:nlen)); csynw(1:nlen)=cmplx(synw(1:nlen))
-    
+
     call fft(LNPT,cdataw,FORWARD_FFT,dble(dt))
     call fft(LNPT,csynw,FORWARD_FFT,dble(dt))
-  
+
     ! check the highest trustable frequency according to synthetics water level
     ampmax_syn = maxval(abs(csynw(1:nf)))
     i_ampmax_syn = maxloc(abs(csynw(1:nf)))
     wtr_amp_syn = cmplx(ampmax_syn * wtr, 0.)
     i_pmax=i_ampmax_syn(1)
 
-    ! estimate tshift, dlnA uncertainties 
+    ! estimate tshift, dlnA uncertainties
     ! according to misfit between shifted data and reconstructed syn
     call compute_cc_error(dataw_save,synw_rc_cc,nlen,dt,i_pmax,dlnA,&
          sigma_tshift_cc,sigma_dlnA_cc,MIN_DT_SIGMA,MIN_DlnA_SIGMA)
@@ -266,7 +266,7 @@ contains
     ! DONE if just cross-correlation measurements
     if (iker /= IKER_FD) then
        dataw(1:nlen) = dataw_save(1:nlen)
-       return 
+       return
     endif
 
     ! ============= FD measurements ====================
@@ -302,9 +302,9 @@ contains
     ! define tapers for FD measurements: tas(1:nlen,1:ntaper)
     if (itap == ITAP_MT) then
       call staper(nlen, dble(NPI), ntaper, tas_dp, NPT, ey1, ey2)
-    elseif (itap == ITAP_CS) then
+    else if (itap == ITAP_CS) then
       call costaper(nlen, NPT, tas_dp)
-    elseif (itap == ITAP_BC) then
+    else if (itap == ITAP_BC) then
       call boxcar(nlen, NPT, tas_dp)
     endif
     tas=tas_dp
@@ -330,7 +330,7 @@ contains
        bot_fdm(1:nf) = bot_fdm(1:nf) + csynwt(1:nf) * conjg(csynwt(1:nf))
 
     enddo
-    
+
     ! water level of bottom
     ampmax_bot = maxval(abs(bot_fdm(1:nf)))
     if (itap == ITAP_MT) then
@@ -369,7 +369,7 @@ contains
        call compute_fd_error(npi,nlen,i_right,dt,dtau_fdm,dlnA_fdm,&
             sigma_dtau_fdm,sigma_dlnA_fdm)
     endif
-    
+
     ! write transfer function measurements
     open(30,file=trim(meas_prefix)//'.dtau',status='unknown')
     open(40,file=trim(meas_prefix)//'.dlnA',status='unknown')
@@ -388,7 +388,7 @@ contains
     enddo
 
     dataw(1:nlen) = dataw_save(1:nlen)
-  
+
   end subroutine cc_fd_measure
 
 ! ======================================================================
@@ -452,13 +452,13 @@ contains
 
 
   subroutine mt_adj_src(file_prefix,iwin,tstart,dt_adj_src,amp_adj_src,dt_chi,amp_chi)
-  
+
     character(len=*) :: file_prefix
     integer, intent(in) :: iwin
     real,intent(in) :: tstart
     real, dimension(NPT) :: dt_adj_src, amp_adj_src
     real :: dt_chi,amp_chi
- 
+
     real, dimension(NPT) :: synw_veloc, synwt, synwt_veloc,&
          ft_bar, fa_bar, wf_taper, wp_taper, wq_taper, &
          d_bot_mtm, v_bot_mtm
@@ -475,7 +475,7 @@ contains
         file=trim(CTAP(itap+1))
      endif
      file=trim(adj_dir)//'/'//trim(file_prefix)//'.'//trim(file)// '.'//char(iwin+48)
-    
+
     ! IKER_WF
     if (iker == IKER_WF) then
        dt_adj_src(1:nlen) = synw(1:nlen)-dataw(1:nlen)
@@ -489,14 +489,14 @@ contains
        ft_bar = 0.; fa_bar = 0.
        ft_bar(1:nlen) = - synw_veloc(1:nlen) / ( sum(synw_veloc(1:nlen)**2) * dt )
        fa_bar(1:nlen) = synw(1:nlen) / ( sum(synw(1:nlen)**2) * dt )
-       if (INCLUDE_ERROR) then 
+       if (INCLUDE_ERROR) then
           err_t = sigma_tshift_cc; err_a = sigma_dlnA_cc
        else
           err_t = 1; err_a = 1
        endif
        ! include CC measurements (and error)
        dt_adj_src(1:nlen) = - (tshift_cc / err_t**2) * ft_bar(1:nlen)
-       amp_adj_src(1:nlen) = - (dlnA / err_a**2 ) * fa_bar(1:nlen) 
+       amp_adj_src(1:nlen) = - (dlnA / err_a**2 ) * fa_bar(1:nlen)
 
        dt_chi = 0.5 * (tshift_cc/err_t) ** 2
        amp_chi = 0.5 * (dlnA / err_a) ** 2
@@ -507,24 +507,24 @@ contains
        ! define frequency-domain taper W(f)
        wf_taper(:) = 0.
        i_left = 1 !! a better choice??
-       do i = i_left, i_right  
+       do i = i_left, i_right
           !wf_taper(i) = 1.                                       ! boxcar
           !wf_taper(i) = 1. - (2.0/nw)**2 * ((i-1) - nw/2.0)**2     ! welch
           wf_taper(i) = 1. - cos(PI*(i-i_left)/(i_right-i_left))**ipwr_w    ! cosine
        enddo
        ! normalize freq taper
-       ffac=2*df*sum(wf_taper(i_left:i_right)) 
+       ffac=2*df*sum(wf_taper(i_left:i_right))
        wf_taper(i_left:i_right) = wf_taper(i_left:i_right) / ffac
 
        ! water level of FD measurements based on average (LQY:can be smaller for mtm!!)
-       dtau_wtr = wtr * sum(abs(dtau_fdm(i_left:i_right)))/(i_right-i_left)  
-       dlnA_wtr = wtr * sum(abs(dlnA_fdm(i_left:i_right)))/(i_right-i_left)  
+       dtau_wtr = wtr * sum(abs(dtau_fdm(i_left:i_right)))/(i_right-i_left)
+       dlnA_wtr = wtr * sum(abs(dlnA_fdm(i_left:i_right)))/(i_right-i_left)
 
        ! include errors in the W(f) taper
        wp_taper(:) = 0.; wq_taper(:) = 0.
        do i = i_left, i_right
           wp_taper(i) = wf_taper(i); wq_taper(i) = wf_taper(i)
-          if (INCLUDE_ERROR) then 
+          if (INCLUDE_ERROR) then
              err_t = max(sigma_dtau_fdm(i),dtau_wtr)
              err_a = max(sigma_dlnA_fdm(i),dlnA_wtr)
              wp_taper(i) = wp_taper(i) / (err_t ** 2)
@@ -539,7 +539,7 @@ contains
 
        ! compute bottom (f) of p_j(f) and q_j(f)
        do ictaper = 1, ntaper
-    
+
           synwt(1:nlen) = synw(1:nlen) * tas(1:nlen,ictaper)
           call compute_veloc_from_displ(synwt,nlen,dt,synwt_veloc)
           ! FFT
@@ -572,10 +572,10 @@ contains
           dtau_pj =  pwc_adj(:,ictaper)
           dlnA_qj =  qwc_adj(:,ictaper)
           dtau_pj(1:i_right) = dtau_pj(1:i_right)/ v_bot_mtm(1:i_right) &
-               * cmplx(dtau_fdm(1:i_right), 0.) * cmplx(wp_taper(1:i_right),0.) 
+               * cmplx(dtau_fdm(1:i_right), 0.) * cmplx(wp_taper(1:i_right),0.)
           dlnA_qj(1:i_right) = dlnA_qj(1:i_right) / d_bot_mtm(1:i_right) &
                * cmplx(dlnA_fdm(1:i_right), 0.) * cmplx(wp_taper(1:i_right),0.)
-          
+
           ! IFFT into the time domain
           call fftinv(LNPT,dtau_pj,REVERSE_FFT,dble(dt),dtau_pj_t)
           call fftinv(LNPT,dlnA_qj,REVERSE_FFT,dble(dt),dlnA_qj_t)
@@ -592,7 +592,7 @@ contains
     endif
 
     if (DEBUG) then
-       print *, 'Writing adjoint file: ', trim(file)//'.adj.sac'  
+       print *, 'Writing adjoint file: ', trim(file)//'.adj.sac'
        call wsac1(trim(file)//'.adj.sac',dt_adj_src,nlen,tstart,dt,nerr)
        if (nerr > 0) stop 'Error writing windowed adjoint file'
     endif
@@ -613,7 +613,7 @@ contains
     real, dimension(:) :: dt_adj_src, amp_adj_src
     real :: tstart, dt, b_adj, dt_adj
     integer :: nlen, npts_adj
-    
+
     real,dimension(NPT) :: time_window
     real :: fac
     integer :: i
@@ -632,11 +632,11 @@ contains
     ! interpolate adjoint source
     call interp_adj_src(dt_adj_src,nlen,tstart,dt, &
          dt_adj_src_win,npts_adj,b_adj,dt_adj)
-         
+
     call interp_adj_src(amp_adj_src,nlen,tstart,dt, &
          amp_adj_src_win,npts_adj,b_adj,dt_adj)
-         
-    
+
+
   end subroutine adjust_adj_src
 
 

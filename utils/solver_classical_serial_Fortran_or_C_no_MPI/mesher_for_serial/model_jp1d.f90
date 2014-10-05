@@ -192,7 +192,7 @@ subroutine model_jp1d(myrank,x,rho,vp,vs,Qkappa,Qmu,idoubling, &
      vs = 3.5d0
      Qmu=600.0d0
      Qkappa=57827.0d0
-  end if
+  endif
 
 
 ! non-dimensionalize

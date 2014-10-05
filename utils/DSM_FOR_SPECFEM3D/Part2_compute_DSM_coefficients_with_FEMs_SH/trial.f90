@@ -1,21 +1,21 @@
 subroutine calbvecphi0_stock( l,thetadeg,plmDir,bvec,bvecdt,bvecdp)
-  
+
   implicit none
   character(*) :: plmDir
   character(120) :: coutfile
-  real(kind(0d0)), parameter ::  pi=3.1415926535897932d0 
+  real(kind(0d0)), parameter ::  pi=3.1415926535897932d0
   integer  :: l,m,i,j
   real(kind(0d0)) :: theta,thetadeg,x,plm(1:3,0:3),fact,coef
   complex(kind(0d0)) :: bvec(1:3,-2:2)
   complex(kind(0d0)) :: bvecdt(1:3,-2:2),bvecdp(1:3,-2:2)
   real(kind(0d0)) :: plmdt,xl2
 
- 
+
   write(coutfile, '(I8, ".","PLM")') int(thetadeg*100000.d0)
   do j = 1,8
-     if (coutfile(j:j).eq.' ')coutfile(j:j) = '0'
+     if (coutfile(j:j)==' ')coutfile(j:j) = '0'
   enddo
-     
+
   coutfile = plmDir//"/"//coutfile
 
   open(1,file=coutfile,status='old',form='unformatted',access='direct', &
@@ -32,7 +32,7 @@ subroutine calbvecphi0_stock( l,thetadeg,plmDir,bvec,bvecdt,bvecdp)
 
   do m=0,min0(l,2)
      fact = 1.d0
-     if ( m.ne.0 ) then
+     if ( m/=0 ) then
         do i=l-m+1,l+m
            fact = fact * dble(i)
         enddo
@@ -41,28 +41,28 @@ subroutine calbvecphi0_stock( l,thetadeg,plmDir,bvec,bvecdt,bvecdp)
      plmdt = dble(m) * x / sin( theta ) * plm(1,m) + plm(1,m+1)
      bvec(1,m)  = dcmplx( 0.d0 )
      bvec(1,-m) = dcmplx( 0.d0 )
-     bvec(2,m)  = dcmplx( 0.d0, dble(m) ) / dsin( theta) * coef * plm(1,m) 
+     bvec(2,m)  = dcmplx( 0.d0, dble(m) ) / dsin( theta) * coef * plm(1,m)
      bvec(2,-m) = dcmplx(conjg( bvec(2,m)) )
-     bvec(3,m) = - coef * plmdt 
+     bvec(3,m) = - coef * plmdt
      bvec(3,-m) = dcmplx(conjg( bvec(3,m) ))
 
      ! calculate derivatives
      bvecdt(1,m)  = dcmplx( 0.d0 )
      bvecdt(1,-m) = dcmplx( 0.d0 )
      bvecdt(2,m)  = dcmplx( 0.d0, dble(m) ) * ( plmdt / dsin(theta) &
-          - x / ( 1 - x * x ) * plm(1,m) ) * coef 
+          - x / ( 1 - x * x ) * plm(1,m) ) * coef
      bvecdt(2,-m) = dcmplx( conjg( bvecdt(2,m) ))
      bvecdt(3,m) = ( x / dsin(theta) * plmdt - dble(m) * dble(m)/(1-x*x) *plm(1,m) &
-          &           + xl2 * plm(1,m) ) * coef 
+          &           + xl2 * plm(1,m) ) * coef
      bvecdt(3,-m) = dcmplx(conjg( bvecdt(3,m)) )
      bvecdp(1,m)  = dcmplx( 0.d0 )
      bvecdp(1,-m) = dcmplx( 0.d0 )
-     bvecdp(2,m)  = - dble(m) * dble(m) / dsin(theta) * plm(1,m) * coef 
+     bvecdp(2,m)  = - dble(m) * dble(m) / dsin(theta) * plm(1,m) * coef
      bvecdp(2,-m) = dcmplx(conjg( bvecdp(2,m)) )
-     bvecdp(3,m)  = - dcmplx( 0.d0, dble(m) ) * plmdt * coef 
+     bvecdp(3,m)  = - dcmplx( 0.d0, dble(m) ) * plmdt * coef
      bvecdp(3,-m) = dcmplx(conjg( bvecdp(3,m)) )
 
-     if ( mod(m,2).eq.1 ) then
+     if ( mod(m,2)==1 ) then
         bvec(2,-m) = - bvec(2,-m)
         bvec(3,-m) = - bvec(3,-m)
         bvecdt(2,-m) = - bvecdt(2,-m)
@@ -78,9 +78,9 @@ end subroutine calbvecphi0_stock
 
 
 subroutine calbvecphi0( l,theta,plm,bvec,bvecdt,bvecdp)
-  
+
   implicit none
-  real(kind(0d0)), parameter ::  pi=3.1415926535897932d0 
+  real(kind(0d0)), parameter ::  pi=3.1415926535897932d0
   integer  :: l,m,i
   real(kind(0d0)) :: theta,x,plm(1:3,0:3),fact,coef
   complex(kind(0d0)) :: bvec(1:3,-2:2)
@@ -91,11 +91,11 @@ subroutine calbvecphi0( l,theta,plm,bvec,bvecdt,bvecdp)
   xl2 = dble(l) * dble(l+1)
   do m=0,min0(l,3)
      call calplm( l,m,x,plm(1:3,m))
-  enddo 
+  enddo
 
   do m=0,min0(l,2)
      fact = 1.d0
-     if ( m.ne.0 ) then
+     if ( m/=0 ) then
         do i=l-m+1,l+m
            fact = fact * dble(i)
         enddo
@@ -104,28 +104,28 @@ subroutine calbvecphi0( l,theta,plm,bvec,bvecdt,bvecdp)
      plmdt = dble(m) * x / sin( theta ) * plm(1,m) + plm(1,m+1)
      bvec(1,m)  = dcmplx( 0.d0 )
      bvec(1,-m) = dcmplx( 0.d0 )
-     bvec(2,m)  = dcmplx( 0.d0, dble(m) ) / dsin( theta) * coef * plm(1,m) 
+     bvec(2,m)  = dcmplx( 0.d0, dble(m) ) / dsin( theta) * coef * plm(1,m)
      bvec(2,-m) = dcmplx(conjg( bvec(2,m)) )
-     bvec(3,m) = - coef * plmdt 
+     bvec(3,m) = - coef * plmdt
      bvec(3,-m) = dcmplx(conjg( bvec(3,m) ))
 
      ! calculate derivatives
      bvecdt(1,m)  = dcmplx( 0.d0 )
      bvecdt(1,-m) = dcmplx( 0.d0 )
      bvecdt(2,m)  = dcmplx( 0.d0, dble(m) ) * ( plmdt / dsin(theta) &
-          - x / ( 1 - x * x ) * plm(1,m) ) * coef 
+          - x / ( 1 - x * x ) * plm(1,m) ) * coef
      bvecdt(2,-m) = dcmplx( conjg( bvecdt(2,m) ))
      bvecdt(3,m) = ( x / dsin(theta) * plmdt - dble(m) * dble(m)/(1-x*x) *plm(1,m) &
-          &           + xl2 * plm(1,m) ) * coef 
+          &           + xl2 * plm(1,m) ) * coef
      bvecdt(3,-m) = dcmplx(conjg( bvecdt(3,m)) )
      bvecdp(1,m)  = dcmplx( 0.d0 )
      bvecdp(1,-m) = dcmplx( 0.d0 )
-     bvecdp(2,m)  = - dble(m) * dble(m) / dsin(theta) * plm(1,m) * coef 
+     bvecdp(2,m)  = - dble(m) * dble(m) / dsin(theta) * plm(1,m) * coef
      bvecdp(2,-m) = dcmplx(conjg( bvecdp(2,m)) )
-     bvecdp(3,m)  = - dcmplx( 0.d0, dble(m) ) * plmdt * coef 
+     bvecdp(3,m)  = - dcmplx( 0.d0, dble(m) ) * plmdt * coef
      bvecdp(3,-m) = dcmplx(conjg( bvecdp(3,m)) )
 
-     if ( mod(m,2).eq.1 ) then
+     if ( mod(m,2)==1 ) then
         bvec(2,-m) = - bvec(2,-m)
         bvec(3,-m) = - bvec(3,-m)
         bvecdt(2,-m) = - bvecdt(2,-m)
@@ -147,10 +147,10 @@ subroutine calplm( l,m,x,plm )
   integer :: l,m,i
   real(kind(0d0)) :: x,plm(1:3),pmm,somx2,fact
 
-  if ((m.lt.0).or.(m.gt.l).or.(dabs(x).gt.1.d0)) pause 'bad arguments'
-  if ( l.eq.m ) then
+  if ((m<0).or.(m>l).or.(dabs(x)>1.d0)) pause 'bad arguments'
+  if ( l==m ) then
      pmm = 1.d0
-     if ( m.gt.0 ) then
+     if ( m>0 ) then
         somx2 = dsqrt( (1.d0-x)*(1.d0+x) )
         fact = 1.d0
         do i=1,m
@@ -164,7 +164,7 @@ subroutine calplm( l,m,x,plm )
   else
      plm(3) = plm(2)
      plm(2) = plm(1)
-     if ( l.eq.m+1 ) then
+     if ( l==m+1 ) then
         plm(1) = x * dble(2*m+1) * plm(2)
      else
         !print *, l,m,x
@@ -178,10 +178,10 @@ end subroutine calplm
 
 
 subroutine calbveczero( l,bvec )
-  
+
   implicit none
-  real(kind(0d0)), parameter ::  pi=3.1415926535897932d0 
-  
+  real(kind(0d0)), parameter ::  pi=3.1415926535897932d0
+
   integer  :: l,m,i
   real(kind(0d0)) :: fact,coef
   complex(kind(0d0)) :: bvec(1:3,-2:2)
@@ -192,7 +192,7 @@ subroutine calbveczero( l,bvec )
 
   do m=0,min0(l,1)
      fact = 1.d0
-     if ( m.ne.0 ) then
+     if ( m/=0 ) then
         do i=l-m+1,l+m
            fact = fact * dble(i)
         enddo
@@ -205,7 +205,7 @@ subroutine calbveczero( l,bvec )
      bvec(3,m) =  -dcmplx(dble(m),0.d0) * xl2 * coef / 2.d0
      bvec(3,-m) = dcmplx(conjg( bvec(3,m) ))
 
-     if ( mod(m,2).eq.1 ) then
+     if ( mod(m,2)==1 ) then
         bvec(2,-m) = - bvec(2,-m)
         bvec(3,-m) = - bvec(3,-m)
      endif
@@ -224,18 +224,18 @@ subroutine calbvec_vector( l,theta,phi,plm,bvec,bvecdt,bvecdp,theta_n)
   !c at each station whose latitude and longitude are theta and phi.
   !cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
   implicit none
-  real(kind(0d0)),parameter :: pi=3.1415926535897932d0 
-  
+  real(kind(0d0)),parameter :: pi=3.1415926535897932d0
+
   integer ::  l,m,i,theta_n,itheta
   real(kind(0d0)):: theta(theta_n),phi(theta_n),x,plm(theta_n,1:3,0:3),fact,coef(0:2),inv_sintheta
   complex(kind(0d0)) :: bvec(theta_n,1:3,-2:2),expimp
   complex(kind(0d0)) :: bvecdt(theta_n,1:3,-2:2),bvecdp(theta_n,1:3,-2:2)
   real(kind(0d0)) :: plmdt,xl2
-  
+
   xl2 = dble(l) * dble(l+1)
  do itheta = 1,theta_n
   x = dcos( theta(itheta) )
-  
+
   if (l <4 ) then
    do m=0,min0(l,3)
       call calplm( l,m,x,plm(itheta,1,m) )
@@ -272,15 +272,15 @@ subroutine calbvec_vector( l,theta,phi,plm,bvec,bvecdt,bvecdp,theta_n)
     plm(itheta,3,3) = plm(itheta,2,3)
     plm(itheta,2,3) = plm(itheta,1,3)
     plm(itheta,1,3) = (x*dble(2*l-1) * plm(itheta,2,3)-dble(l+2) * plm(itheta,3,3) )/dble(l-3)
-  
-  endif 
- enddo 
+
+  endif
+ enddo
 
 ! plm computation is over.
 
   do m=0,min0(l,2)
      fact = 1.d0
-     if ( m.ne.0 ) then
+     if ( m/=0 ) then
         do i=l-m+1,l+m
            fact = fact * dble(i)
         enddo
@@ -288,11 +288,11 @@ subroutine calbvec_vector( l,theta,phi,plm,bvec,bvecdt,bvecdp,theta_n)
      coef(m) = dsqrt( dble(2*l+1)/(4.d0*pi) / fact )
   enddo
 ! unify cofficients computation.
- 
+
 
   do itheta = 1,theta_n
    inv_sintheta = 1.d0 / dsin(theta(itheta)) !pre-computing the inverse of sin(theta)
-! this is for m==0, for any l value we need to calculate thses.   
+! this is for m==0, for any l value we need to calculate thses.
      expimp = cdexp( dcmplx( 0.d0,0.d0 ) )
      plmdt = plm(itheta,1,1)
      bvec(itheta,1,0)  = dcmplx( 0.d0 ,0.d0)
@@ -305,10 +305,10 @@ subroutine calbvec_vector( l,theta,phi,plm,bvec,bvecdt,bvecdp,theta_n)
      bvecdp(itheta,1,0)  = dcmplx( 0.d0, 0.d0)
      bvecdp(itheta,2,0)  = dcmplx( 0.d0, 0.d0)
      bvecdp(itheta,3,0)  = dcmplx( 0.d0, 0.d0)
-  
+
 ! this is for m==1, for any l>=1
   if(l >= 1) then
- 
+
      expimp = cdexp( dcmplx( 0.d0, phi(itheta) ) )
      plmdt =  x *inv_sintheta  * plm(itheta,1,1) + plm(itheta,1,2)
      bvec(itheta,1,1)  = dcmplx( 0.d0 )
@@ -330,7 +330,7 @@ subroutine calbvec_vector( l,theta,phi,plm,bvec,bvecdt,bvecdp,theta_n)
      bvecdp(itheta,2,-1) = - dconjg( bvecdp(itheta,2,1) )
      bvecdp(itheta,3,1)  = - dcmplx( 0.d0, 1.d0 ) * plmdt * coef(1) * expimp
      bvecdp(itheta,3,-1) = - dconjg( bvecdp(itheta,3,1) )
-    
+
   endif
 ! this is for m==2, for any l>=2
 
@@ -360,7 +360,7 @@ subroutine calbvec_vector( l,theta,phi,plm,bvec,bvecdt,bvecdp,theta_n)
   endif
 
 
-!     if ( mod(m,2).eq.1 ) then
+!     if ( mod(m,2)==1 ) then
 !        bvec(2,-m) = - bvec(2,-m)
 !        bvec(3,-m) = - bvec(3,-m)
 !        bvecdt(2,-m) = - bvecdt(2,-m)

@@ -1014,7 +1014,7 @@
       call MPI_BCAST(D3MM_V%qq0,(NK+1)*(NK+1),MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
       call MPI_BCAST(D3MM_V%qq,3*(NK+1)*(NK+1),MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
 #endif
-   elseif(THREE_D_MODEL == THREE_D_MODEL_SEA99_JP3D) then
+   else if(THREE_D_MODEL == THREE_D_MODEL_SEA99_JP3D) then
 ! the variables read are declared and stored in structure SEA99M_V and JP3DM_V
       if(myrank == 0) then
          call read_sea99_s_model(SEA99M_V)
@@ -1089,7 +1089,7 @@
       call MPI_BCAST(JP3DM_V%RA,29,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
       call MPI_BCAST(JP3DM_V%DEPJ,29,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
 #endif
-   elseif(THREE_D_MODEL == THREE_D_MODEL_SEA99) then
+   else if(THREE_D_MODEL == THREE_D_MODEL_SEA99) then
 ! the variables read are declared and stored in structure SEA99M_V
       if(myrank == 0) call read_sea99_s_model(SEA99M_V)
 ! broadcast the information read on the master to the nodes
@@ -1106,7 +1106,7 @@
       call MPI_BCAST(SEA99M_V%sea99_vs,100*100*100,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
       call MPI_BCAST(SEA99M_V%sea99_depth,100,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
 #endif
-   elseif(THREE_D_MODEL == THREE_D_MODEL_JP3D) then
+   else if(THREE_D_MODEL == THREE_D_MODEL_JP3D) then
 ! the variables read are declared and stored in structure JP3DM_V
       if(myrank == 0) call read_iso3d_dpzhao_model(JP3DM_V)
 ! JP3DM_V
@@ -1166,7 +1166,7 @@
       call MPI_BCAST(JP3DM_V%RA,29,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
       call MPI_BCAST(JP3DM_V%DEPJ,29,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
 #endif
-   elseif(THREE_D_MODEL == THREE_D_MODEL_S362ANI .or. THREE_D_MODEL == THREE_D_MODEL_S362WMANI &
+   else if(THREE_D_MODEL == THREE_D_MODEL_S362ANI .or. THREE_D_MODEL == THREE_D_MODEL_S362WMANI &
            .or. THREE_D_MODEL == THREE_D_MODEL_S362ANI_PREM .or. THREE_D_MODEL == THREE_D_MODEL_S29EA) then
       if(myrank == 0) call read_model_s362ani(THREE_D_MODEL,THREE_D_MODEL_S362ANI,THREE_D_MODEL_S362WMANI, &
                               THREE_D_MODEL_S362ANI_PREM,THREE_D_MODEL_S29EA, &

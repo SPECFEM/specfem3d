@@ -1,13 +1,13 @@
 !
 !            ROUTINES FOR 3D ROTATIONS
-!       
+!
 !       Vadim Monteiller Mars 2013
 !
-!- 
+!-
 module geogr2cart_mod
 
-  ! chnuk parameters 
-  double precision ZREF  
+  ! chnuk parameters
+  double precision ZREF
   double precision LON_CENTER,LAT_CENTER,AZI_CHUNK
   double precision rotation_matrix(3,3)
 
@@ -20,7 +20,7 @@ module geogr2cart_mod
   double precision REARTH
   parameter(REARTH=6371000.d0)
 
-contains 
+contains
 
   subroutine read_chunk_parameters()
 
@@ -30,10 +30,10 @@ contains
     read(10,*) n,m
     do i=1,n*m
        read(10,'(a)') Cdummy
-    end do
-    read(10,*)  ZREF 
+    enddo
+    read(10,*)  ZREF
     read(10,*) LON_CENTER,LAT_CENTER,AZI_CHUNK
-    
+
   end subroutine read_chunk_parameters
 
   subroutine  geogr2cart(x,y,z,xlon,ylat,depth,ksi,eta)
@@ -47,16 +47,16 @@ contains
 
 
 1000 format(3(f12.4,1x),5x,2(f15.5,1x),5x,4(f15.5,1x))
-    
+
 
     !write(*,1000) x/1000.,y/1000.,z/1000.,ksi,eta,xlon,ylat,depth
-! 
 !
-    
+!
+
 
     xlon = xlon*pi/180.d0
     ylat = ylat*pi/180.d0
-    
+
 
     vector_ori(1) = cos(xlon)*cos(ylat)*(REARTH - depth)
     vector_ori(2) = sin(xlon)*cos(ylat)*(REARTH - depth)
@@ -72,7 +72,7 @@ contains
     x=vector_rotated(1)
     y=vector_rotated(2)
     z=vector_rotated(3)-ZREF
-    
+
   end subroutine geogr2cart
 
 
@@ -83,7 +83,7 @@ contains
     double precision rotation_matrix(3,3),lon_center_chunk,lat_center_chunk,chunk_azi
     double precision R0(3,3),R1(3,3),R2(3,3),axe_rotation(3),R00(3,3)
 
-    ! put chunk in (0,0) from (90,0) 
+    ! put chunk in (0,0) from (90,0)
     axe_rotation(1)=0.d0; axe_rotation(2)=-1.d0; axe_rotation(3)=0.d0
     call rotation_matrix_axe(R00,axe_rotation,90.d0)  ! chunk in (0,0)
     ! azimuth chunk rotation
@@ -95,7 +95,7 @@ contains
     ! put chunk in the rigth longitude
     axe_rotation(1)=0.d0; axe_rotation(2)=0.d0; axe_rotation(3)=-1.d0
     call rotation_matrix_axe(R2,axe_rotation, lon_center_chunk)
-    ! compose 4 rotation matrises 
+    ! compose 4 rotation matrises
     call compose4matrix(rotation_matrix,R2,R1,R0,R00)
 
 
@@ -103,7 +103,7 @@ contains
 
 !--------------------------------------------------------------------------------------------------------------------------------------------------------
 ! 3D rotation matrix with axis  "axe" and angle theta (d°)
-! 
+!
 subroutine rotation_matrix_axe(R,axe,theta)
   implicit none
   double precision axe(3),theta,pi,deg2rad
@@ -121,7 +121,7 @@ subroutine rotation_matrix_axe(R,axe,theta)
   uy=axe(2)/norme_axe
   uz=axe(3)/norme_axe
 
-  ! computing cos and sin 
+  ! computing cos and sin
   c=dcos(deg2rad * theta);s=dsin(deg2rad * theta)
 
   ! rotation matrix
@@ -155,9 +155,9 @@ subroutine compose4matrix(R,R00,R0,R1,R2)
      do i=1,3
         do k=1,3
            R(i,j)=R(i,j) + R0(i,k)*R00(k,j)
-        end do
-     end do
-  end do
+        enddo
+     enddo
+  enddo
 
   ! multiplication R=R1*R
  Rtmp=R
@@ -166,9 +166,9 @@ subroutine compose4matrix(R,R00,R0,R1,R2)
      do i=1,3
         do k=1,3
            R(i,j)=R(i,j) + R1(i,k)*Rtmp(k,j)
-        end do
-     end do
-  end do
+        enddo
+     enddo
+  enddo
 
   ! multiplication R=R2*R
  Rtmp=R
@@ -177,9 +177,9 @@ subroutine compose4matrix(R,R00,R0,R1,R2)
      do i=1,3
         do k=1,3
            R(i,j)=R(i,j) + R2(i,k)*Rtmp(k,j)
-        end do
-     end do
-  end do
+        enddo
+     enddo
+  enddo
 
 
 end subroutine compose4matrix
