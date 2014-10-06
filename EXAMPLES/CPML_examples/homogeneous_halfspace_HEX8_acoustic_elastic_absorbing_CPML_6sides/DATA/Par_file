@@ -8,6 +8,9 @@ NOISE_TOMOGRAPHY                = 0
 SAVE_FORWARD                    = .false.
 
 # UTM projection parameters
+# Use a negative zone number for the Southern hemisphere:
+# The Northern hemisphere corresponds to zones +1 to +60,
+# The Southern hemisphere corresponds to zones -1 to -60.
 UTM_PROJECTION_ZONE             = 11
 SUPPRESS_UTM_PROJECTION         = .true.
 

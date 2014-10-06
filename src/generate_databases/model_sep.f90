@@ -38,7 +38,7 @@ contains
 !> Reads a SEP elastic model, with vp, vs and rho files.
 subroutine model_sep()
   use generate_databases_par, only: NGLLX, NGLLY, NGLLZ, &
-                                    SEP_MODEL_DIRECTORY, FOUR_THIRDS
+                                    SEP_MODEL_DIRECTORY, FOUR_THIRDS, myrank, IMAIN
   use create_regions_mesh_ext_par, only: rhostore, rho_vp, rho_vs, &
                                          kappastore, mustore, &
                                          rho_vpI, rho_vsI, rhoarraystore
@@ -54,6 +54,11 @@ subroutine model_sep()
   real :: xmin, ymin
   integer :: imin, jmin, kmin, ni, nj, nk
   logical :: vp_exists, vs_exists, rho_exists
+
+  ! user output
+  if (myrank==0) then
+    write(IMAIN,*) '     using SEP model from directory: ',trim(SEP_MODEL_DIRECTORY)
+  endif
 
   ! Get files from SEP_MODEL_DIRECTORY
   sep_header_name_vp = trim(SEP_MODEL_DIRECTORY) // "/vp.H"

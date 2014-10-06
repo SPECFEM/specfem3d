@@ -23,7 +23,7 @@ cd ${BRIDGE_MSUB_PWD}
 #      
 # INPUTS :
 #
-#   1/ input directoy : ./input_dsm
+#   1/ input directory : ./input_dsm
 #      containts  
 #             -- Double_para.txt
 #             -- FrqsMpi.txt
