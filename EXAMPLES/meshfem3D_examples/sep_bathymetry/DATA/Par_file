@@ -120,7 +120,7 @@ PRINT_SOURCE_TIME_FUNCTION      = .false.
 
 # to couple with DSM
 COUPLE_WITH_DSM                 = .false.
-TRACTION_PATH                   = ./DATA/DSM_traction_files/
+TRACTION_PATH                   = ./OUTPUT_FILES/Tractions/
 
 # set to true to use GPUs
 GPU_MODE                        = .false.

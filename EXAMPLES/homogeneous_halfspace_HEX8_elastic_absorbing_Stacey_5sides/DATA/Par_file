@@ -125,7 +125,7 @@ PRINT_SOURCE_TIME_FUNCTION      = .false.
 # to couple with an external code (such as DSM, AxiSEM, or FK)
 COUPLE_WITH_EXTERNAL_CODE       = .false.
 EXTERNAL_CODE_TYPE              = 1   # 1 = DSM, 2 = AxiSEM, 3 = FK
-TRACTION_PATH                   = ./DATA/DSM_traction_files/
+TRACTION_PATH                   = ./OUTPUT_FILES/Tractions/
 MESH_A_CHUNK_OF_THE_EARTH       = .true.
 
 # set to true to use GPUs
