@@ -227,16 +227,20 @@
 
 ! overwrites material parameters from external binary files
   call synchronize_all()
+  if( myrank == 0) then
+    write(IMAIN,*) '  ...external binary models '
+    call flush_IMAIN()
+  endif
   call get_model_binaries(myrank,nspec,LOCAL_PATH)
 
 ! calculates damping profiles and auxiliary coefficients on all C-PML points
-  call synchronize_all()
   if( PML_CONDITIONS ) then
-     if( myrank == 0) then
-        write(IMAIN,*) '  ...creating C-PML damping profiles '
-        call flush_IMAIN()
-     endif
-     call pml_set_local_dampingcoeff(myrank,xstore_dummy,ystore_dummy,zstore_dummy)
+    call synchronize_all()
+    if( myrank == 0) then
+      write(IMAIN,*) '  ...creating C-PML damping profiles '
+      call flush_IMAIN()
+    endif
+    call pml_set_local_dampingcoeff(myrank,xstore_dummy,ystore_dummy,zstore_dummy)
   endif
 
 ! creates mass matrix

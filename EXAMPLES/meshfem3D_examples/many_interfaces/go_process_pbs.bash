@@ -29,7 +29,7 @@ echo
 echo "(will take about 1 h 15 minutes)"
 echo
 
-# sets up directory structure in current example directoy
+# sets up directory structure in current example directory
 echo
 echo "   setting up example..."
 echo

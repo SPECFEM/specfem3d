@@ -61,10 +61,8 @@ subroutine model_ipati_adios(myrank,nspec,LOCAL_PATH)
 
   ! user output
   if (myrank==0) then
-    write(IMAIN,*)
-    write(IMAIN,*) 'using external IPATI model from:',trim(LOCAL_PATH)
-    write(IMAIN,*) 'scaling factor: ',SCALING_FACTOR
-    write(IMAIN,*)
+    write(IMAIN,*) '     using IPATI model (ADIOS) from: ',trim(LOCAL_PATH)
+    write(IMAIN,*) '     scaling factor: ',SCALING_FACTOR
   endif
 
   ! density
@@ -121,10 +119,8 @@ subroutine model_ipati_water_adios(myrank,nspec,LOCAL_PATH)
 
   ! user output
   if (myrank==0) then
-    write(IMAIN,*)
-    write(IMAIN,*) 'using external IPATI_WATER model from:',trim(LOCAL_PATH)
-    write(IMAIN,*) 'scaling factor: ',SCALING_FACTOR
-    write(IMAIN,*)
+    write(IMAIN,*) '     using IPATI_WATER model (ADIOS) from: ',trim(LOCAL_PATH)
+    write(IMAIN,*) '     scaling factor: ',SCALING_FACTOR
   endif
 
   ! density

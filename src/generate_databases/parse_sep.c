@@ -116,11 +116,12 @@ FC_FUNC_(parse_sep_header, PARSE_SEP_HEADER)
         strncpy(in, value, value_len+1);
       }
     }
-
-    if (line)
-      free(line);
-    len = 0;
   }
+  
+  // buffer will be reallocated by getline
+  // should be freed even if getline is not successful
+  free(line);
+  
   fclose(fd);
   regfree(&re);
 }

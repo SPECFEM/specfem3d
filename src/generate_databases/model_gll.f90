@@ -38,7 +38,7 @@
 
   subroutine model_gll(myrank,nspec,LOCAL_PATH)
 
-  use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,FOUR_THIRDS
+  use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,FOUR_THIRDS,IMAIN
   use create_regions_mesh_ext_par
   implicit none
 
@@ -49,6 +49,11 @@
   real, dimension(:,:,:,:),allocatable :: vp_read,vs_read,rho_read
   integer :: ier
   character(len=MAX_STRING_LEN) :: prname_lp,filename
+
+  ! user output
+  if (myrank==0) then
+    write(IMAIN,*) '     using GLL model from: ',trim(LOCAL_PATH)
+  endif
 
   ! processors name
   write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)// '/' //'proc',myrank,'_'

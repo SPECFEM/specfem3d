@@ -38,7 +38,7 @@
 subroutine model_gll_adios(myrank,nspec,LOCAL_PATH)
 
   use adios_read_mod
-  use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,FOUR_THIRDS
+  use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,FOUR_THIRDS,IMAIN
   use create_regions_mesh_ext_par
 
   implicit none
@@ -56,6 +56,11 @@ subroutine model_gll_adios(myrank,nspec,LOCAL_PATH)
   integer(kind=8), dimension(1) :: start, count_ad
   integer :: local_dim_rho, local_dim_vp, local_dim_vs
   integer :: comm
+
+  ! user output
+  if (myrank==0) then
+    write(IMAIN,*) '     using GLL model (ADIOS) from: ',trim(LOCAL_PATH)
+  endif
 
   ! density
   allocate( rho_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)

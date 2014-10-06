@@ -506,7 +506,7 @@
 
 ! reads in material parameters from external binary files
 
-  use generate_databases_par,only: IMODEL, &
+  use generate_databases_par,only: IMAIN, IMODEL, &
     IMODEL_GLL,IMODEL_IPATI,IMODEL_IPATI_WATER, IMODEL_SEP, &
     ADIOS_FOR_MESH
 
@@ -560,6 +560,11 @@
     ! use values from SEP files
     call model_sep()
 
+  case default
+    ! user output
+    if (myrank==0) then
+      write(IMAIN,*) '     no external binary model used '
+    endif
   end select
 
   end subroutine get_model_binaries
