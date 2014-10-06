@@ -52,7 +52,7 @@ program read_absorbing_interfaces
   call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ierr)
   call MPI_COMM_SIZE(MPI_COMM_WORLD,nbproc,ierr)
 
-  write(*,*) '!!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing 0----------!!!!!!!!!!!'
+!!!  write(*,*) '!!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing 0----------!!!!!!!!!!!'
 !
 !------------------- PARAMETRES ----------------------------
   NTIMESTEP = 100
@@ -607,7 +607,7 @@ program read_absorbing_interfaces
   
   call MPI_FINALIZE(ierr)
 
-  write(*,*) '!!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing fin ----------!!!!!!!!!!!'
+!!!  write(*,*) '!!!!!!!!!!!!!!!!!!!!!!----------- STEP read_absorbing fin ----------!!!!!!!!!!!'
 
 end program read_absorbing_interfaces
 

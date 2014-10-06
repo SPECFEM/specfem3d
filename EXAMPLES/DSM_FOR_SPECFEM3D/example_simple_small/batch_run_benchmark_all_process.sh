@@ -90,6 +90,9 @@ NPROC_MINUS_ONE="$NPROC-1"
 # log file for output 
 flog_file=$(pwd)/log.benchmark
 
+# Define the home of specfem3d
+HOME_SPECFEM3D=/ccc/scratch/cont003/gen7165/durochtc/Codes/SPECFEM3Ds/specfem3d
+
 # choose the movie
 PREFIX_MOVIE=velocity_Z_it
 
@@ -106,7 +109,7 @@ ${HOME_SPECFEM3D}/utils/DSM_FOR_SPECFEM3D/bin/xcreate_inputs_files<<EOF
 parfile_for_benchmark
 EOF
 
-echo '!!!!!!!!!!!!!!!!!! SHELLS STEP1 : fin de lecture parfile_for_benchmark !!!!!!!!!!!!!!!!'
+###echo '!!!!!!!!!!!!!!!!!! SHELLS STEP1 : fin de lecture parfile_for_benchmark !!!!!!!!!!!!!!!!'
 
 # CHOOSE the computation type. CHOICE =1/2/3 means SH/PSV/FULL wavefield computation
 CHOICE=3
@@ -132,7 +135,7 @@ echo 'The value of CHOICE variable is' $CHOICE >  $flog_file
 # ----- load script and path --- 
 source params.in
 source $SCRIPTS/scrpits_specfem3D.sh
-echo '!!!!!!!!!!!!!!!!!! SHELLS STEP3 : fin de lecture scrpits_specfem3D.sh !!!!!!!!!!!!!!!!'
+###echo '!!!!!!!!!!!!!!!!!! SHELLS STEP2 : fin de lecture scrpits_specfem3D.sh !!!!!!!!!!!!!!!!'
 if [ $CHOICE -eq 1 ]
  then
  source $SCRIPTS/scripts_dsm_SH.sh

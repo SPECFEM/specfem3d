@@ -34,8 +34,10 @@ current_dir=$(pwd)
 
 cp ParFileMeshChunk $MESH/.
 cp $IN_DSM/$MODELE_1D $MESH/.
-cd $MESH
-$BIN/xmesh_chunk_vm
+###cd $MESH
+###$BIN/xmesh_chunk_vm
+cd $current_dir
+$BINSEM/xmeshfem3D
 cp $MESH/model_1D.in ../DATA/.
 cd $current_dir
 
@@ -51,7 +53,7 @@ $BINSEM/xdecompose_mesh $NPROC $MESH OUTPUT_FILES/DATABASES_MPI/
 mv Numglob2loc_elmn.txt $MESH/.
 
 ###cd bin
-echo '!!!!!!!!!!!!!!!!!!!!! SCRPITS 1 !!!!!!!!!!!!!!!!'
+###echo '!!!!!!!!!!!!!!!!!!!!! SCRPITS 1 !!!!!!!!!!!!!!!!'
 pwd
 $MPIRUN $OPTION_SIMU $BINSEM/xgenerate_databases
 ###cd ..
@@ -62,7 +64,7 @@ function run_create_tractions_for_specfem ()
 cp ParFileInterface bin/. 
 
 ###cd bin
-echo '!!!!!!!!!!!!!!!!!!!!! SCRPITS 2 !!!!!!!!!!!!!!!!'
+###echo '!!!!!!!!!!!!!!!!!!!!! SCRPITS 2 !!!!!!!!!!!!!!!!'
 pwd
 $MPIRUN $OPTION_SIMU $BIN/xread_absorbing_interfaces > out_read.txt
 ###cd ..
@@ -73,12 +75,12 @@ function run_simu ()
 {
 
 ###cd bin
-echo '!!!!!!!!!!!!!!!!!!!!! SCRPITS 3 !!!!!!!!!!!!!!!!'
+###echo '!!!!!!!!!!!!!!!!!!!!! SCRPITS 3 !!!!!!!!!!!!!!!!'
 pwd
 $MPIRUN $OPTION_SIMU $BINSEM/xspecfem3D > tmp_sem.out
 ###cd ..
 cp out_read.txt bin/
-echo '!!!!!!!!!!!!!!!!!!!!! SCRPITS 4 !!!!!!!!!!!!!!!!'
+###echo '!!!!!!!!!!!!!!!!!!!!! SCRPITS 4 !!!!!!!!!!!!!!!!'
 pwd
 }
 

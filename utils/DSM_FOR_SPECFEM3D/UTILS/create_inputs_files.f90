@@ -28,9 +28,7 @@ program create_input_files
   iamax_for_dsm = acc_level * ifmax_for_dsm
 
   ! param.in -------------------------------------------------------------------
-  open(10,file='params.in')
-  call read_value_string(path, 'HOME_SPECFEM3D')
-  write(10,'(a)') 'HOME_SPECFEM3D='//trim(path)
+  open(10,file='params.in') 
   call read_value_string(path, 'DSM_BINARY_PATH')
   write(10,'(a)') 'BIN='//trim(path)
   call read_value_string(path, 'SPECFEM3D_BINARY_PATH')
@@ -393,9 +391,7 @@ program create_input_files
  open(10,file='station_for_simulation.txt')
  open(20,file='DATA/STATIONS_test')
 
- write(*,*) '!!!!!!!!!!!!!!!!!!!!!!----------- STEP create_input :', DEPTH_CHUNK,'----------!!!!!!!!!!!!!!!!!!'
-
- do
+ do 
     read(10,*,end=99) lat,long
     call  Geogr2Cart(X,Y,Z,long,lat,rotation_matrix,ZREF)
     write(20,*) x,y,z
