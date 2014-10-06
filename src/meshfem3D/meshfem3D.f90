@@ -374,7 +374,7 @@
   if(myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) '******************************************'
-    write(IMAIN,*) '*** Specfem3D MPI Mesher - f90 version ***'
+    write(IMAIN,*) '*** Specfem3D MPI meshfem3D - f90 version ***'
     write(IMAIN,*) '******************************************'
     write(IMAIN,*)
   endif
@@ -397,13 +397,11 @@
 
 ! if meshing a chunk of the Earth, call a specific internal mesher designed specifically for that
   if (COUPLE_WITH_EXTERNAL_CODE .and. MESH_A_CHUNK_OF_THE_EARTH) then
-
     call chunk_of_earth_Mesh()
-
   else
 
-  call read_adios_parameters(ADIOS_ENABLED, ADIOS_FOR_DATABASES,       &
-                             ADIOS_FOR_FORWARD_ARRAYS, ADIOS_FOR_MESH, &
+  call read_adios_parameters(ADIOS_ENABLED, ADIOS_FOR_DATABASES, &
+                             ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, &
                              ADIOS_FOR_KERNELS)
 
 ! read the mesh parameter file (Data/meshfem3D_files/Mesh_Par_file)

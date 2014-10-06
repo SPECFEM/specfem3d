@@ -36,7 +36,8 @@
                         USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE, &
                         USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
                         PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,SEP_MODEL_DIRECTORY, &
-                        FULL_ATTENUATION_SOLID,TRACTION_PATH,COUPLE_WITH_EXTERNAL_CODE,EXTERNAL_CODE_TYPE,MESH_A_CHUNK_OF_THE_EARTH)
+                        FULL_ATTENUATION_SOLID,TRACTION_PATH,COUPLE_WITH_EXTERNAL_CODE,EXTERNAL_CODE_TYPE, &
+                        MESH_A_CHUNK_OF_THE_EARTH)
 
   use constants
 
@@ -464,20 +465,22 @@ subroutine read_adios_parameters(ADIOS_ENABLED, ADIOS_FOR_DATABASES,       &
   ADIOS_FOR_MESH           = .false.
   ADIOS_FOR_FORWARD_ARRAYS = .false.
   ADIOS_FOR_KERNELS        = .false.
+
   ! opens file Par_file
   call open_parameter_file(ierr)
   call read_value_logical(ADIOS_ENABLED, 'ADIOS_ENABLED', ierr)
+
   if (ierr == 0 .and. ADIOS_ENABLED) then
     call read_value_logical(ADIOS_FOR_DATABASES, 'ADIOS_FOR_DATABASES', ierr)
     call read_value_logical(ADIOS_FOR_MESH, 'ADIOS_FOR_MESH', ierr)
-    call read_value_logical(ADIOS_FOR_FORWARD_ARRAYS, &
-                           'ADIOS_FOR_FORWARD_ARRAYS', ierr)
+    call read_value_logical(ADIOS_FOR_FORWARD_ARRAYS, 'ADIOS_FOR_FORWARD_ARRAYS', ierr)
     call read_value_logical(ADIOS_FOR_KERNELS, 'ADIOS_FOR_KERNELS', ierr)
   endif
+
   call close_parameter_file()
 
   if(NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. BROADCAST_SAME_MESH_AND_MODEL .and. ADIOS_ENABLED) &
-         stop 'ADIOS not yet supported by option BROADCAST_SAME_MESH_AND_MODEL'
+    stop 'ADIOS not yet supported by option BROADCAST_SAME_MESH_AND_MODEL'
 
 end subroutine read_adios_parameters
 

@@ -31,7 +31,9 @@ contains
 
 !=============================================================================
 subroutine print_usage_adios()
+
   call no_adios_err()
+
 end subroutine print_usage_adios
 
 !=============================================================================
@@ -58,6 +60,7 @@ subroutine read_args_adios(arg, MAX_NUM_NODES, node_list, num_node,   &
   unused_i4 = len_trim(outdir)
 
   call no_adios_err()
+
 end subroutine read_args_adios
 
 !=============================================================================
@@ -74,6 +77,7 @@ subroutine init_adios(value_file_name, mesh_file_name, &
   unused_i8 = mesh_handle
 
   call no_adios_err()
+
 end subroutine init_adios
 
 !=============================================================================
@@ -86,6 +90,7 @@ subroutine clean_adios(value_handle, mesh_handle)
   unused_i8 = mesh_handle
 
   call no_adios_err()
+
 end subroutine clean_adios
 
 !=============================================================================
@@ -105,6 +110,7 @@ subroutine read_scalars_adios_mesh(mesh_handle, iproc, NGLOB_AB, NSPEC_AB, &
   unused_i4 = x_global_offset
 
   call no_adios_err()
+
 end subroutine read_scalars_adios_mesh
 
 !=============================================================================
@@ -125,6 +131,7 @@ subroutine read_ibool_adios_mesh(mesh_handle, ibool_offset, &
   unused_i4 = ibool(1,1,1,1)
 
   call no_adios_err()
+
 end subroutine read_ibool_adios_mesh
 
 !=============================================================================
@@ -145,6 +152,7 @@ subroutine read_coordinates_adios_mesh(mesh_handle, x_global_offset,  &
   unused_cr = zstore(1)
 
   call no_adios_err()
+
 end subroutine read_coordinates_adios_mesh
 
 !=============================================================================
@@ -164,6 +172,7 @@ subroutine read_double_values_adios(value_handle, var_name, ibool_offset, &
   unused_dp = dat(1,1,1,1)
 
   call no_adios_err()
+
 end subroutine read_double_values_adios
 
 !=============================================================================
@@ -183,6 +192,7 @@ subroutine read_float_values_adios(value_handle, var_name, ibool_offset, &
   unused_dp = dat(1,1,1,1)
 
   call no_adios_err()
+
 end subroutine read_float_values_adios
 
 end module combine_vol_data_adios_mod

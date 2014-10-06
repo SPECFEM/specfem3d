@@ -52,12 +52,15 @@ program pre_meshfem3D
 
   integer :: i
   character(len=MAX_STRING_LEN) :: arg(3)
+  ! ADIOS parameters
+  logical :: ADIOS_ENABLED, ADIOS_FOR_DATABASES, ADIOS_FOR_MESH, &
+             ADIOS_FOR_FORWARD_ARRAYS, ADIOS_FOR_KERNELS
 
 ! check usage
   do i=1,3
     call get_command_argument(i,arg(i))
     if (i <= 3 .and. trim(arg(i)) == "") then
-      print *, 'Usage: ./decompose_mesh  nparts  input_directory output_directory'
+      print *, 'Usage: ./xdecompose_mesh  nparts  input_directory output_directory'
       print *
       print *, '  where'
       print *, '      nparts = number of partitons'
@@ -74,19 +77,31 @@ program pre_meshfem3D
 
  ! needs local_path for mesh files
   call read_parameter_file(NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT,NGNOD,NGNOD2D, &
-                          UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,TOMOGRAPHY_PATH, &
-                          ATTENUATION,USE_OLSEN_ATTENUATION,LOCAL_PATH,NSOURCES, &
-                          APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,ANISOTROPY,STACEY_ABSORBING_CONDITIONS,MOVIE_TYPE, &
-                          MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
-                          NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
-                          SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
-                          NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD, &
-                          NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
-                          USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE, &
-                          USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
-                          PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL, SEP_MODEL_DIRECTORY, &
-                          FULL_ATTENUATION_SOLID,TRACTION_PATH,COUPLE_WITH_EXTERNAL_CODE,EXTERNAL_CODE_TYPE, &
-                          MESH_A_CHUNK_OF_THE_EARTH)
+                           UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,TOMOGRAPHY_PATH, &
+                           ATTENUATION,USE_OLSEN_ATTENUATION,LOCAL_PATH,NSOURCES, &
+                           APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,ANISOTROPY,STACEY_ABSORBING_CONDITIONS,MOVIE_TYPE, &
+                           MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
+                           NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
+                           SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
+                           NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD, &
+                           NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
+                           USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE, &
+                           USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
+                           PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL, SEP_MODEL_DIRECTORY, &
+                           FULL_ATTENUATION_SOLID,TRACTION_PATH,COUPLE_WITH_EXTERNAL_CODE,EXTERNAL_CODE_TYPE, &
+                           MESH_A_CHUNK_OF_THE_EARTH)
+
+  ! gets adios parameters in Par_file
+  call read_adios_parameters(ADIOS_ENABLED, ADIOS_FOR_DATABASES, &
+                             ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, &
+                             ADIOS_FOR_KERNELS)
+
+  ! checks adios parameters
+  if (ADIOS_FOR_DATABASES) then
+    print *, 'Error: ADIOS_FOR_DATABASES set to .true. in Par_file'
+    print *, 'ADIOS format for databases stored by xdecompose_mesh not implemented yet, please check your Par_file settings...'
+    stop 'Error ADIOS_FOR_DATABASES setting; Reenter command line'
+  endif
 
 ! reads in (CUBIT) mesh files: mesh_file,nodes_coord_file, ...
   call read_mesh_files()

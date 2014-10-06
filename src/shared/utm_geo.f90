@@ -127,7 +127,7 @@
   logical :: lsouth
 
   ! checks if conversion to UTM has to be done
-  if(SUPPRESS_UTM_PROJECTION) then
+  if (SUPPRESS_UTM_PROJECTION) then
     if (iway == ILONGLAT2UTM) then
       rx4 = rlon4
       ry4 = rlat4
@@ -154,7 +154,7 @@
 !
 
   lsouth = .false.
-  if( UTM_PROJECTION_ZONE < 0 ) lsouth = .true.
+  if (UTM_PROJECTION_ZONE < 0) lsouth = .true.
   zone = abs(UTM_PROJECTION_ZONE)
   cm = zone*6.0d0 - 183.d0
   cmr = cm*DEGREES_TO_RADIANS

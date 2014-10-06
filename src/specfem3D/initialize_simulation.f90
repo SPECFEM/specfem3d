@@ -56,7 +56,7 @@
                         FULL_ATTENUATION_SOLID,TRACTION_PATH,COUPLE_WITH_EXTERNAL_CODE,EXTERNAL_CODE_TYPE, &
                         MESH_A_CHUNK_OF_THE_EARTH)
 
-  call read_adios_parameters(ADIOS_ENABLED, ADIOS_FOR_DATABASES,       &
+  call read_adios_parameters(ADIOS_ENABLED, ADIOS_FOR_DATABASES, &
                              ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, &
                              ADIOS_FOR_KERNELS)
 

@@ -125,21 +125,38 @@
     call stop_all()
   endif
 
-! checks given arguments
   print *
   print *,'Recombining ParaView data for slices'
   print *
 
+  ! needs local_path for mesh files
+  call read_parameter_file(NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT,NGNOD,NGNOD2D, &
+                           UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,TOMOGRAPHY_PATH, &
+                           ATTENUATION,USE_OLSEN_ATTENUATION,LOCAL_PATH,NSOURCES, &
+                           APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,ANISOTROPY,STACEY_ABSORBING_CONDITIONS,MOVIE_TYPE, &
+                           MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
+                           NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
+                           SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
+                           NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD, &
+                           NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
+                           USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE, &
+                           USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
+                           PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,SEP_MODEL_DIRECTORY, &
+                           FULL_ATTENUATION_SOLID,TRACTION_PATH,COUPLE_WITH_EXTERNAL_CODE,EXTERNAL_CODE_TYPE, &
+                           MESH_A_CHUNK_OF_THE_EARTH)
+
+  ! gets adios parameters in Par_file
+  call read_adios_parameters(ADIOS_ENABLED, ADIOS_FOR_DATABASES, &
+                             ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, &
+                             ADIOS_FOR_KERNELS)
+
+  ! reads in arguments
   do i = 1, command_argument_count()
     call get_command_argument(i,arg(i))
   enddo
 
-  call read_adios_parameters(ADIOS_ENABLED, ADIOS_FOR_DATABASES,       &
-                             ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, &
-                             ADIOS_FOR_KERNELS)
-
-                             print *, "adios par have been read"
   if (ADIOS_FOR_MESH) then
+    print *, "adios par have been read"
     call read_args_adios(arg, MAX_NUM_NODES, node_list, num_node,   &
                          var_name, value_file_name, mesh_file_name, &
                          outdir, ires)
@@ -154,22 +171,6 @@
   else
     HIGH_RESOLUTION_MESH = .true.
   endif
-
-  ! needs local_path for mesh files
-  call read_parameter_file(NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT,NGNOD,NGNOD2D, &
-                        UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,TOMOGRAPHY_PATH, &
-                        ATTENUATION,USE_OLSEN_ATTENUATION,LOCAL_PATH,NSOURCES, &
-                        APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,ANISOTROPY,STACEY_ABSORBING_CONDITIONS,MOVIE_TYPE, &
-                        MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
-                        NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
-                        SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
-                        NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD, &
-                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
-                        USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE, &
-                        USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
-                        PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,SEP_MODEL_DIRECTORY, &
-                        FULL_ATTENUATION_SOLID,TRACTION_PATH,COUPLE_WITH_EXTERNAL_CODE,EXTERNAL_CODE_TYPE, &
-                        MESH_A_CHUNK_OF_THE_EARTH)
 
   if (ADIOS_FOR_MESH) then
     call init_adios(value_file_name, mesh_file_name, value_handle, mesh_handle)

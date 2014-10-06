@@ -173,7 +173,7 @@ module decompose_mesh
   !----------------------------------------------------------------------------------------------
   ! reads in mesh files
   !----------------------------------------------------------------------------------------------
-  subroutine read_mesh_files
+  subroutine read_mesh_files()
 
     implicit none
 
@@ -804,7 +804,7 @@ module decompose_mesh
   ! divides model into partitions using scotch library functions
   !----------------------------------------------------------------------------------------------
 
-  subroutine scotch_partitioning
+  subroutine scotch_partitioning()
 
     implicit none
     ! local parameters
@@ -1046,7 +1046,7 @@ module decompose_mesh
   ! writes out new Databases files for each partition
   !----------------------------------------------------------------------------------------------
 
-  subroutine write_mesh_databases
+  subroutine write_mesh_databases()
 
     implicit none
 
