@@ -65,7 +65,7 @@ mpirun -np $NPROC ./bin/xgenerate_databases
 echo
 echo "  running solver..."
 echo
-mpirun -np $NPROC ./bin/xspecfem3D
+#mpirun -np $NPROC ./bin/xspecfem3D
 
 echo
 echo "see results in directory: OUTPUT_FILES/"
