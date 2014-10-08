@@ -146,7 +146,7 @@ echo 'The value of CHOICE variable is' $CHOICE >  $flog_file
 
 # ----- load script and path --- 
 source params.in
-source $SCRIPTS/scrpits_specfem3D.sh
+source $SCRIPTS/scripts_specfem3D.sh
 if [ $CHOICE -eq 1 ]
  then
  source $SCRIPTS/scripts_dsm_SH.sh

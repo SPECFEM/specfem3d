@@ -1,6 +1,6 @@
 !!!!!!!!!!!!!!!!!! SHELLS STEP1 : fin de lecture parfile_for_benchmark !!!!!!!!!!!!!!!!
 The value of CHOICE variable is 3
-!!!!!!!!!!!!!!!!!! SHELLS STEP3 : fin de lecture scrpits_specfem3D.sh !!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!! SHELLS STEP3 : fin de lecture scripts_specfem3D.sh !!!!!!!!!!!!!!!!
  total number of nodes: 
    nnodes =         7936
  total number of spectral elements:

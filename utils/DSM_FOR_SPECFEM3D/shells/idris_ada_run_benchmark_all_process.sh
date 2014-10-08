@@ -137,7 +137,7 @@ EOF
 
 # ----- load script and path --- 
 source params.in
-source $SCRIPTS/scrpits_specfem3D.sh
+source $SCRIPTS/scripts_specfem3D.sh
 source $SCRIPTS/scripts_dsm.sh
 
 # clean and make directories SPECFEM3D

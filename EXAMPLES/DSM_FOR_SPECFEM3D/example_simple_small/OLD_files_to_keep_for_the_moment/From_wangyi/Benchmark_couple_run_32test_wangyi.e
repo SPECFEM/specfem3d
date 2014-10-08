@@ -57,8 +57,8 @@
 +++ pwd
 ++ MESH=/ccc/scratch/cont003/gen7165/durochtc/Codes/SPECFEM3Ds/specfem3d/utils/DSM_FOR_SPECFEM3D/EXAMPLES/example_simple_small/MESH
 ++ MODELE_1D=iasp91_dsm
-+ source /ccc/scratch/cont003/gen7165/durochtc/Codes/SPECFEM3Ds/specfem3d/utils/DSM_FOR_SPECFEM3D/shells/scrpits_specfem3D_wangyi.sh
-+ echo '!!!!!!!!!!!!!!!!!! SHELLS STEP3 : fin de lecture scrpits_specfem3D_wangyi.sh !!!!!!!!!!!!!!!!'
++ source /ccc/scratch/cont003/gen7165/durochtc/Codes/SPECFEM3Ds/specfem3d/utils/DSM_FOR_SPECFEM3D/shells/scripts_specfem3D_wangyi.sh
++ echo '!!!!!!!!!!!!!!!!!! SHELLS STEP3 : fin de lecture scripts_specfem3D_wangyi.sh !!!!!!!!!!!!!!!!'
 + '[' 3 -eq 1 ']'
 + '[' 3 -eq 2 ']'
 + source /ccc/scratch/cont003/gen7165/durochtc/Codes/SPECFEM3Ds/specfem3d/utils/DSM_FOR_SPECFEM3D/shells/scripts_dsm_full.sh

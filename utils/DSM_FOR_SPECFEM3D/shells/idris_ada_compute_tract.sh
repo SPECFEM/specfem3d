@@ -159,7 +159,7 @@ case ${LOADL_STEP_NAME} in
     set -x
     cd $TMPDIR
     source params.in
-    source $SCRIPTS/scrpits_specfem3D.sh
+    source $SCRIPTS/scripts_specfem3D.sh
     source $SCRIPTS/scripts_dsm.sh
     cd $DSM_tractions
     compute_exp_coeff
@@ -171,7 +171,7 @@ case ${LOADL_STEP_NAME} in
     set -x
     cd $TMPDIR
     source params.in
-    source $SCRIPTS/scrpits_specfem3D.sh
+    source $SCRIPTS/scripts_specfem3D.sh
     source $SCRIPTS/scripts_dsm.sh
     cd $DSM_tractions
     run_dsm_traction_xmin
@@ -183,7 +183,7 @@ case ${LOADL_STEP_NAME} in
     set -x
     cd $TMPDIR
     source params.in
-    source $SCRIPTS/scrpits_specfem3D.sh
+    source $SCRIPTS/scripts_specfem3D.sh
     source $SCRIPTS/scripts_dsm.sh
     cd $DSM_tractions
     run_dsm_traction_xmax
@@ -195,7 +195,7 @@ case ${LOADL_STEP_NAME} in
     set -x
     cd $TMPDIR
     source params.in
-    source $SCRIPTS/scrpits_specfem3D.sh
+    source $SCRIPTS/scripts_specfem3D.sh
     source $SCRIPTS/scripts_dsm.sh
     cd $DSM_tractions
     run_dsm_traction_ymin
@@ -207,7 +207,7 @@ case ${LOADL_STEP_NAME} in
     set -x
     cd $TMPDIR
     source params.in
-    source $SCRIPTS/scrpits_specfem3D.sh
+    source $SCRIPTS/scripts_specfem3D.sh
     source $SCRIPTS/scripts_dsm.sh
     cd $DSM_tractions
     run_dsm_traction_ymax
@@ -220,7 +220,7 @@ case ${LOADL_STEP_NAME} in
     set -x
     cd $TMPDIR
     source params.in
-    source $SCRIPTS/scrpits_specfem3D.sh
+    source $SCRIPTS/scripts_specfem3D.sh
     source $SCRIPTS/scripts_dsm.sh
     cd $DSM_tractions
     run_dsm_traction_zmin
@@ -235,7 +235,7 @@ case ${LOADL_STEP_NAME} in
     set -x
     cd $TMPDIR
     source params.in
-    source $SCRIPTS/scrpits_specfem3D.sh
+    source $SCRIPTS/scripts_specfem3D.sh
     source $SCRIPTS/scripts_dsm.sh
     cd $DSM_tractions
 

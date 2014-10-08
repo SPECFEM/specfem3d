@@ -91,7 +91,7 @@ OUT_MOVIE=$(pwd)/movie
 
 # ----- load script and path --- 
 source params.in
-source $SCRIPTS/scrpits_specfem3D.sh
+source $SCRIPTS/scripts_specfem3D.sh
 source $SCRIPTS/scripts_dsm.sh
 
 ## open the log file 
