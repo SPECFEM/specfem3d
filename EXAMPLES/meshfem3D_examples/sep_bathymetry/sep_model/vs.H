@@ -15,5 +15,4 @@ label1="DEPTH"
 unit3="METER"
 esize=4
 data_format="native_float"
-in=./sep_model/vs.H@
-
+in=vs.H@

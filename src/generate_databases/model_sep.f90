@@ -117,7 +117,8 @@ subroutine model_sep()
   !---------'
   ! Read available SEP files, assign default values for unfound files.
   allocate(vp_sep(ni, nj, NZ))
-  call read_sep_binary_mpiio(sep_bin_vp, NX, NY, NZ, ni, nj, NZ, &
+  call read_sep_binary_mpiio(trim(SEP_MODEL_DIRECTORY) // "/" // sep_bin_vp, &
+                             NX, NY, NZ, ni, nj, NZ,                         &
                              imin, jmin, kmin, vp_sep)
   ! Interpolate SEP values on meshfem mesh.
   rho_vp = 0.0
@@ -129,7 +130,8 @@ subroutine model_sep()
   !---------'
   if (vs_exists) then
     allocate(vs_sep(ni, nj, NZ))
-    call read_sep_binary_mpiio(sep_bin_vs, NX, NY, NZ, ni, nj, NZ, &
+    call read_sep_binary_mpiio(trim(SEP_MODEL_DIRECTORY) // "/" // sep_bin_vs, &
+                               NX, NY, NZ, ni, nj, NZ,                         &
                                imin, jmin, kmin, vs_sep)
     call interpolate_sep_on_mesh(vs_sep, xmin, ymin, ni, nj, NZ, &
                                  DX, DY, DZ, rho_vs)
@@ -140,7 +142,8 @@ subroutine model_sep()
   !----------'
   if (rho_exists) then
     allocate(rho_sep(ni, nj, NZ))
-    call read_sep_binary_mpiio(sep_bin_rho, NX, NY, NZ, ni, nj, NZ, &
+    call read_sep_binary_mpiio(trim(SEP_MODEL_DIRECTORY) // "/" // sep_bin_rho, &
+                               NX, NY, NZ, ni, nj, NZ,                          &
                                imin, jmin, kmin, rho_sep)
     call interpolate_sep_on_mesh(rho_sep, xmin, ymin, ni, nj, NZ, &
                                  DX, DY, DZ, rhostore)

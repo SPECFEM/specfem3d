@@ -3801,6 +3801,34 @@ You can replace the \texttt{model\_aniso.f90} file by your own version
 i.e., the new routine should take exactly the same input and produce
 the required relative output.
 
+\section{{\normalsize \label{sec:Using-SEP}}Using external SEP models.}
+
+Stanford Exploration Project (SEP) models consists of two files per variables, one header file (\texttt{.H}) 
+and one binary file (\texttt{.H$@$}). 
+Among other information, the header file indicates, for each dimension, 
+the offset (\texttt{o1}, \texttt{o2} and \texttt{o3} fields), 
+the spatial step size (\texttt{d1}, \texttt{d2} and \texttt{d3} fields)
+and the number of samples (\texttt{n1}, \texttt{n2} and \texttt{n3}) necessary to read
+the linked binary file (\texttt{in} field).
+
+SEP model reading occurs during database generation. It it the user responsibility
+to ensure that proper interfaces between acoustic and elastic domains are set up
+during the meshing phase. For more information, refer to 
+section~\ref{cha:Running-the-Mesher-Meshfem3D}.
+
+In \texttt{DATA/Par\_file}, \texttt{\textbf{MODEL}} should be set to \texttt{\textbf{sep}},
+and \texttt{\textbf{SEP\_MODEL\_DIRECTORY}} should point to wherever your sep model files reside.
+
+Note that in order not to overload the parameter file, SEP header files
+should be named \texttt{vp.H}, \texttt{vs.H} and \texttt{rho.H}. The \texttt{in} field
+in these binary files can be any path as long as it is relative to
+the previously set \texttt{SEP\_MODEL\_DIRECTORY}.
+We also assume that any dimensional value inside SEP header files is given in meters and
+that binary files are single precision floating point numbers stored in little endian format.
+There is currently only support for \texttt{vp}, \texttt{vs} and \texttt{rho} variables.
+
+An example demonstrating the use SEP models is given in:
+\texttt{EXAMPLES/meshfem3D\_examples/sep\_bathymetry}.
 
 \chapter{Post-Processing Scripts}
 

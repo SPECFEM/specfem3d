@@ -27,3 +27,8 @@ doc/USER_MANUAL/manual_SPECFEM3D_Cartesian.out
 doc/USER_MANUAL/manual_SPECFEM3D_Cartesian.synctex.gz
 doc/USER_MANUAL/manual_SPECFEM3D_Cartesian.toc
 doc/USER_MANUAL/Schedule
+
+# Trash files
+.*swp
+.*swo
+*~
