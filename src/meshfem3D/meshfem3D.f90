@@ -31,7 +31,9 @@
   subroutine meshfem3D
 
   use constants
-  use readParFile
+
+  use readParFile,only: read_mesh_parameter_file
+
   use createRegMesh
 
   implicit none
@@ -377,6 +379,7 @@
     write(IMAIN,*) '*** Specfem3D MPI meshfem3D - f90 version ***'
     write(IMAIN,*) '******************************************'
     write(IMAIN,*)
+    call flush_IMAIN()
   endif
 
 ! read the parameter file (DATA/Par_file)
@@ -395,14 +398,27 @@
                            FULL_ATTENUATION_SOLID,TRACTION_PATH,COUPLE_WITH_EXTERNAL_CODE,EXTERNAL_CODE_TYPE, &
                            MESH_A_CHUNK_OF_THE_EARTH)
 
-! if meshing a chunk of the Earth, call a specific internal mesher designed specifically for that
-  if (COUPLE_WITH_EXTERNAL_CODE .and. MESH_A_CHUNK_OF_THE_EARTH) then
-    call chunk_of_earth_Mesh()
-  else
-
   call read_adios_parameters(ADIOS_ENABLED, ADIOS_FOR_DATABASES, &
                              ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, &
                              ADIOS_FOR_KERNELS)
+
+! if meshing a chunk of the Earth, call a specific internal mesher designed specifically for that
+  if (COUPLE_WITH_EXTERNAL_CODE .and. MESH_A_CHUNK_OF_THE_EARTH) then
+    ! user output
+    if(myrank == 0) then
+      write(IMAIN,*)
+      write(IMAIN,*) 'creating chunk of earth Mesh'
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
+    ! creates mesh in MESH/
+    call chunk_of_earth_Mesh()
+    ! done with mesher
+    stop 'Done creating a chunk_of_earth_Mesh, see directory MESH/'
+  endif
+
+! make sure everybody is synchronized
+  call synchronize_all()
 
 ! read the mesh parameter file (Data/meshfem3D_files/Mesh_Par_file)
 ! nullify(subregions,material_properties)
@@ -417,10 +433,14 @@
   if (sizeprocs == 1 .and. (NPROC_XI /= 1 .or. NPROC_ETA /= 1)) &
     stop 'Error: must have NPROC_XI = NPROC_ETA = 1 for a serial run'
 
+! make sure everybody is synchronized
+  call synchronize_all()
+
 ! get interface data from external file to count the spectral elements along Z
   if(myrank == 0) then
-     write(IMAIN,*) 'Reading interface data from file ',trim(MF_IN_DATA_FILES_PATH)//trim(INTERFACES_FILE), &
-      ' to count the spectral elements'
+    write(IMAIN,*) 'Reading interface data from file ',trim(MF_IN_DATA_FILES_PATH)//trim(INTERFACES_FILE), &
+                   ' to count the spectral elements'
+    call flush_IMAIN()
   endif
 
   open(unit=IIN,file=trim(MF_IN_DATA_FILES_PATH)//trim(INTERFACES_FILE),status='old',iostat=ier)
@@ -854,8 +874,6 @@
 ! compare to exact theoretical value (bottom is always flat)
     write(IMAIN,*) '            exact area: ',(UTM_Y_MAX-UTM_Y_MIN)*(UTM_X_MAX-UTM_X_MIN)
   endif
-
-  endif ! of if (COUPLE_WITH_EXTERNAL_CODE .and. MESH_A_CHUNK_OF_THE_EARTH)
 
 ! make sure everybody is synchronized
   call synchronize_all()

@@ -25,7 +25,7 @@
 !
 !=====================================================================
 
-  subroutine chunk_of_earth_Mesh
+  subroutine chunk_of_earth_Mesh()
 
   implicit none
 
@@ -698,9 +698,14 @@
   close(27)
 
   close(49)
+
+  ! all processes done
   write(*,*) 'END '
+
+  ! nothing to do anymore... bailing out
   stop
-end subroutine chunk_of_earth_Mesh
+
+  end subroutine chunk_of_earth_Mesh
 
 !=======================================================================================================
 !
@@ -793,7 +798,7 @@ end subroutine chunk_of_earth_Mesh
 
   endif
 
-end subroutine write_gllz_points
+  end subroutine write_gllz_points
 
 !=======================================================================================================
 !
@@ -897,7 +902,8 @@ end subroutine write_recdepth_dsm
        write(49,*)     vector_rotated(:)
 
   enddo
-end subroutine write_stxmin
+
+  end subroutine write_stxmin
 
 !=======================================================================================================
 !
@@ -950,7 +956,7 @@ end subroutine write_stxmin
       write(29,*) long/deg2rad,lati/deg2rad !,rayon/1000
   enddo
 
-end subroutine write_stxmax
+  end subroutine write_stxmax
 
 !=======================================================================================================
 !
@@ -1002,7 +1008,8 @@ end subroutine write_stxmax
       !write(28,*) xstore(1,jgll,NGLLZ), ystore(1,jgll,NGLLZ), zstore(1,jgll,NGLLZ)!x,y !long/deg2rad,lati/deg2rad
       write(30,*) long/deg2rad,lati/deg2rad !,rayon/1000
   enddo
-end subroutine write_stymin
+
+  end subroutine write_stymin
 
 !=======================================================================================================
 !
@@ -1055,7 +1062,7 @@ end subroutine write_stymin
       write(31,*) long/deg2rad,lati/deg2rad !,rayon/1000
   enddo
 
-end subroutine write_stymax
+  end subroutine write_stymax
 
 !=======================================================================================================
 !
@@ -1113,7 +1120,7 @@ end subroutine write_stymax
      enddo
   enddo
 
-end subroutine store_zmin_points
+  end subroutine store_zmin_points
 
 !=======================================================================================================
 !
@@ -1135,7 +1142,8 @@ end subroutine store_zmin_points
      enddo
   enddo
   close(27)
-end subroutine write_stzmin
+
+  end subroutine write_stzmin
 
 !=======================================================================================================
 !
@@ -1152,7 +1160,8 @@ end subroutine write_stzmin
         write(iunit,*) i,j,ispec2D,(NGLL1-1)*ie+i,(NGLL2-1)*je+j+js,il
      enddo
   enddo
-end subroutine write_Igm_file
+
+  end subroutine write_Igm_file
 
 !=======================================================================================================
 !
@@ -1180,7 +1189,7 @@ end subroutine write_Igm_file
   ! rotation resultante
   call compose4matrix(rotation_matrix,R00,R0,R1,R2)
 
-end subroutine compute_rotation_matrix
+  end subroutine compute_rotation_matrix
 
 !=======================================================================================================
 !
@@ -1233,7 +1242,8 @@ end subroutine compute_rotation_matrix
   write(49,*) R(2,:)
   write(49,*) R(3,:)
   write(49,*)
-end subroutine rotation_matrix_axe
+
+  end subroutine rotation_matrix_axe
 
 !=======================================================================================================
 !
@@ -1287,7 +1297,7 @@ end subroutine rotation_matrix_axe
   write(49,*) R(3,:)
   write(49,*)
 
-end subroutine compose4matrix
+  end subroutine compose4matrix
 
 !------------------------------------------------------------------------------
 ! rotation pour passer d'un repere local a un autre

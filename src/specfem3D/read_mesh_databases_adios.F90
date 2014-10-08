@@ -1291,10 +1291,6 @@ subroutine read_mesh_databases_adios()
           sel_num = sel_num+1
           sel => selections(sel_num)
           call adios_selection_boundingbox (sel , 1, start, count_ad)
-          call adios_schedule_read(handle, sel, "rmassx/array", 0, 1, &
-                                   rmassx, ier)
-          call adios_schedule_read(handle, sel, "rmassy/array", 0, 1, &
-                                   rmassy, ier)
           call adios_schedule_read(handle, sel, "rmassz_acoustic/array", &
                                    0, 1, rmassz_acoustic, ier)
         endif

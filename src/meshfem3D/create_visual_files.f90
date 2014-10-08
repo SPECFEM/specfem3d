@@ -27,7 +27,7 @@
 
 
   subroutine create_visual_files(CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES,&
-                                nspec,nglob,prname,nodes_coords,ibool,true_material_num)
+                                nspec,nglob,prname,nodes_coords,ibool,ispec_material_id)
 
   use constants
 
@@ -48,7 +48,7 @@
   character(len=MAX_STRING_LEN) :: prname
 
 ! arrays with the mesh
-  integer true_material_num(nspec)
+  integer ispec_material_id(nspec)
   integer ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
   double precision :: nodes_coords(nglob,3)
 
@@ -112,7 +112,7 @@
 
      ! loop on all the elements
      do ispec = 1,nspec
-        write(66,*)  true_material_num(ispec)
+        write(66,*)  ispec_material_id(ispec)
      enddo
 
      write(66,*) 'attribute "dep" string "connections"'
@@ -157,7 +157,7 @@
     write(66,'(a)') "SCALARS elem_val float"
     write(66,'(a)') "LOOKUP_TABLE default"
     do ispec = 1,nspec
-      write(66,*) true_material_num(ispec)
+      write(66,*) ispec_material_id(ispec)
     enddo
     write(66,*) ""
     close(66)

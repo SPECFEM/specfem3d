@@ -132,13 +132,14 @@ subroutine init_adios(value_file_name, mesh_file_name, &
 
   call world_get_comm(comm)
 
-  call adios_read_init_method(ADIOS_READ_METHOD_BP, comm, &
-                              "verbose=1", ier)
-  call adios_read_open_file(mesh_handle, trim(mesh_file_name), 0, &
-                            comm, ier)
+  call adios_read_init_method(ADIOS_READ_METHOD_BP, comm, "verbose=1", ier)
+
+  print*,'ADIOS opening mesh file: ',trim(mesh_file_name)
+  call adios_read_open_file(mesh_handle, trim(mesh_file_name), 0, comm, ier)
   if (ier /= 0) call stop_all()
-  call adios_read_open_file(value_handle, trim(value_file_name), 0, &
-                            comm, ier)
+
+  print*,'ADIOS opening data file: ',trim(value_file_name)
+  call adios_read_open_file(value_handle, trim(value_file_name), 0, comm, ier)
   if (ier /= 0) call stop_all()
 
 end subroutine init_adios

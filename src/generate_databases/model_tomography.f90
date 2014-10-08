@@ -452,7 +452,8 @@ end subroutine init_tomography_files
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine model_tomography(xmesh,ymesh,zmesh,rho_model,vp_model,vs_model,qkappa_atten,qmu_atten,imaterial_id)
+  subroutine model_tomography(xmesh,ymesh,zmesh,rho_model,vp_model,vs_model,qkappa_atten,qmu_atten,imaterial_id, &
+                              has_tomo_value)
 
   use generate_databases_par, only: undef_mat_prop,nundefMat_ext_mesh,IMODEL,ATTENUATION_COMP_MAXIMUM
 
@@ -460,13 +461,14 @@ end subroutine init_tomography_files
 
   implicit none
 
-  integer, intent(in) :: imaterial_id
-
   double precision, intent(in) :: xmesh,ymesh,zmesh
 
   real(kind=CUSTOM_REAL), intent(out) :: qkappa_atten,qmu_atten
 
   real(kind=CUSTOM_REAL), intent(out) :: vp_model,vs_model,rho_model
+
+  integer, intent(in) :: imaterial_id
+  logical,intent(out) :: has_tomo_value
 
   ! local parameters
   integer :: ix,iy,iz,imat,iundef
@@ -482,6 +484,9 @@ end subroutine init_tomography_files
 
   real(kind=CUSTOM_REAL), dimension(NFILES_TOMO) :: vp_final,vs_final,rho_final
   integer :: nmaterials,imaterial
+
+  ! initializes flag
+  has_tomo_value = .false.
 
   ! sets number of materials to loop over
   nmaterials = nundefMat_ext_mesh
@@ -709,6 +714,9 @@ end subroutine init_tomography_files
 
 !! DK DK Q_kappa is not implemented in this model_tomography routine yet, thus set it to dummy value
   qkappa_atten = 9999.
+
+  ! value found
+  has_tomo_value = .true.
 
   end subroutine model_tomography
 

@@ -57,6 +57,7 @@
   real(kind=CUSTOM_REAL) :: z_min,z_max,z_min_glob,z_max_glob
   real(kind=CUSTOM_REAL) :: cmax,cmax_glob,pmax,pmax_glob
   real(kind=CUSTOM_REAL) :: dt_suggested,dt_suggested_glob,avg_distance
+  real(kind=CUSTOM_REAL) :: vel_min,vel_max
 
   logical:: DT_PRESENT
 
@@ -210,7 +211,8 @@
     !          also, keep in mind that the minimum period is just an estimation and
     !          there is no such sharp cut-off period for valid synthetics.
     !          seismograms become just more and more inaccurate for periods shorter than this estimate.
-    pmax = avg_distance / min( vpmin,vsmin ) * NPTS_PER_WAVELENGTH
+    vel_min = min( vpmin,vsmin)
+    pmax = avg_distance / vel_min * NPTS_PER_WAVELENGTH
     pmax_glob = max(pmax_glob,pmax)
 
     ! old: based on GLL distance, i.e. on maximum ratio ( gridspacing / velocity )
@@ -236,7 +238,8 @@
     endif
 
     ! suggested timestep
-    dt_suggested = COURANT_SUGGESTED * distance_min / max( vpmax,vsmax )
+    vel_max = max( vpmax,vsmax )
+    dt_suggested = COURANT_SUGGESTED * distance_min / vel_max
     dt_suggested_glob = min( dt_suggested_glob, dt_suggested)
 
     ! debug: for vtk output
@@ -257,22 +260,6 @@
   vsmax = vsmax_glob
   call min_all_cr(vsmin,vsmin_glob)
   call max_all_cr(vsmax,vsmax_glob)
-
-  ! checks velocities
-  if( myrank == 0 ) then
-    if( vpmin_glob <= 0.0_CUSTOM_REAL ) then
-      call exit_mpi(myrank,"error: vp minimum velocity")
-    endif
-    if( vpmax_glob >= HUGEVAL ) then
-      call exit_mpi(myrank,"error: vp maximum velocity")
-    endif
-    if( vsmin_glob < 0.0_CUSTOM_REAL ) then
-      call exit_mpi(myrank,"error: vs minimum velocity")
-    endif
-    if( vsmax_glob >= HUGEVAL ) then
-      call exit_mpi(myrank,"error: vs maximum velocity")
-    endif
-  endif
 
   ! outputs infos
   if ( myrank == 0 ) then
@@ -296,22 +283,6 @@
   elemsize_max = elemsize_max_glob
   call min_all_cr(elemsize_min,elemsize_min_glob)
   call max_all_cr(elemsize_max,elemsize_max_glob)
-
-  ! checks mesh
-  if( myrank == 0 ) then
-    if( distance_min_glob <= 0.0_CUSTOM_REAL ) then
-      call exit_mpi(myrank,"error: GLL points minimum distance")
-    endif
-    if( distance_max_glob >= HUGEVAL ) then
-      call exit_mpi(myrank,"error: GLL points maximum distance")
-    endif
-    if( elemsize_min_glob <= 0.0_CUSTOM_REAL ) then
-      call exit_mpi(myrank,"error: element minimum size")
-    endif
-    if( elemsize_max_glob >= HUGEVAL ) then
-      call exit_mpi(myrank,"error: element maximum size")
-    endif
-  endif
 
   ! model dimensions
   x_min_glob = minval(xstore)
@@ -381,6 +352,38 @@
       write(IMAIN,*)
     endif
     call flush_IMAIN()
+  endif
+
+  ! checks velocities
+  if( myrank == 0 ) then
+    if( vpmin_glob <= 0.0_CUSTOM_REAL ) then
+      call exit_mpi(myrank,"error: vp minimum velocity")
+    endif
+    if( vpmax_glob >= HUGEVAL ) then
+      call exit_mpi(myrank,"error: vp maximum velocity")
+    endif
+    if( vsmin_glob < 0.0_CUSTOM_REAL ) then
+      call exit_mpi(myrank,"error: vs minimum velocity")
+    endif
+    if( vsmax_glob >= HUGEVAL ) then
+      call exit_mpi(myrank,"error: vs maximum velocity")
+    endif
+  endif
+
+  ! checks mesh
+  if( myrank == 0 ) then
+    if( distance_min_glob <= 0.0_CUSTOM_REAL ) then
+      call exit_mpi(myrank,"error: GLL points minimum distance")
+    endif
+    if( distance_max_glob >= HUGEVAL ) then
+      call exit_mpi(myrank,"error: GLL points maximum distance")
+    endif
+    if( elemsize_min_glob <= 0.0_CUSTOM_REAL ) then
+      call exit_mpi(myrank,"error: element minimum size")
+    endif
+    if( elemsize_max_glob >= HUGEVAL ) then
+      call exit_mpi(myrank,"error: element maximum size")
+    endif
   endif
 
   ! returns the maximum velocity

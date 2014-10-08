@@ -26,24 +26,25 @@
 !=====================================================================
 
 module createRegMesh
+
 contains
 
   subroutine create_regions_mesh(xgrid,ygrid,zgrid,ibool, &
-                               xstore,ystore,zstore,iproc_xi,iproc_eta,addressing,nspec, &
-                               NGLOB_AB,npointot, &
-                               NEX_PER_PROC_XI,NEX_PER_PROC_ETA,NER, &
-                               NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-                               NPROC_XI,NPROC_ETA, &
-                               nsubregions,subregions,NMATERIALS,material_properties, &
-                               myrank, sizeprocs, &
-                               LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
-                               CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
-                               USE_REGULAR_MESH,NDOUBLINGS,ner_doublings, &
-                               ADIOS_ENABLED, ADIOS_FOR_DATABASES)
+                                 xstore,ystore,zstore,iproc_xi,iproc_eta,addressing,nspec, &
+                                 NGLOB_AB,npointot, &
+                                 NEX_PER_PROC_XI,NEX_PER_PROC_ETA,NER, &
+                                 NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+                                 NPROC_XI,NPROC_ETA, &
+                                 nsubregions,subregions,NMATERIALS,material_properties, &
+                                 myrank, sizeprocs, &
+                                 LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
+                                 CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
+                                 USE_REGULAR_MESH,NDOUBLINGS,ner_doublings, &
+                                 ADIOS_ENABLED, ADIOS_FOR_DATABASES)
 
     ! create the different regions of the mesh
-    use constants
-    use adios_manager_mod
+    use constants,only: MAX_STRING_LEN,NGNOD_EIGHT_CORNERS,IMAIN
+    use adios_manager_mod,only: adios_setup,adios_cleanup
 
     implicit none
 
@@ -89,7 +90,7 @@ contains
     integer iax,iay,iar
     integer isubregion,nsubregions,doubling_index,nmeshregions
     integer imaterial_number
-    integer, dimension(nspec) :: true_material_num
+    integer, dimension(nspec) :: ispec_material_id
     integer, dimension(:,:,:), allocatable :: material_num
 
     !  definition of the different regions of the model in the mesh (nx,ny,nz)
@@ -146,8 +147,8 @@ contains
     integer :: NMATERIALS
     double precision :: VP_MAX
     ! first dimension  : material_id
-    ! second dimension : #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id
-    double precision , dimension(NMATERIALS,6) ::  material_properties
+    ! second dimension : #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id #material_id
+    double precision , dimension(NMATERIALS,7) ::  material_properties
 
     ! doublings zone
     integer :: nspec_sb
@@ -214,6 +215,7 @@ contains
 
     ! to check that we assign a material to each element
     material_num(:,:,:) = -1000 ! dummy value
+    ispec_material_id(:) = -1000
 
     do isubregion = 1,nsubregions
        call define_model_regions(NEX_PER_PROC_XI,NEX_PER_PROC_ETA,iproc_xi,iproc_eta,&
@@ -280,6 +282,7 @@ contains
 
               ! add one spectral element to the list and store its material number
               ispec = ispec + 1
+
               if(ispec > nspec) then
                 call exit_MPI(myrank,'ispec greater than nspec in mesh creation')
               endif
@@ -291,7 +294,7 @@ contains
                 doubling_index = IFLAG_BASEMENT_TOPO
               endif
 
-              true_material_num(ispec) = material_num(ir,ix,iy)
+              ispec_material_id(ispec) = material_num(ir,ix,iy)
 
               ! store coordinates
               call store_coords(xstore,ystore,zstore,xelm,yelm,zelm,ispec,nspec)
@@ -323,12 +326,13 @@ contains
 
                 ! add one spectral element to the list and store its material number
                 ispec = ispec + 1
+
                 if(ispec > nspec) then
                   call exit_MPI(myrank,'ispec greater than nspec in mesh creation')
                 endif
 
                 doubling_index = IFLAG_BASEMENT_TOPO
-                true_material_num(ispec) = material_num(ir,ix,iy)
+                ispec_material_id(ispec) = material_num(ir,ix,iy)
 
                 ! store coordinates
                 call store_coords(xstore,ystore,zstore,xelm,yelm,zelm,ispec,nspec)
@@ -354,7 +358,7 @@ contains
     if(ispec /= nspec) call exit_MPI(myrank,'ispec should equal nspec')
 
     ! check that we assign a material to each element
-    if(any(true_material_num(:) == -1000)) stop 'Element of undefined material found'
+    if(any(ispec_material_id(:) == -1000)) stop 'Element of undefined material found'
 
     ! puts x,y,z locations into 1D arrays
     do ispec=1,nspec
@@ -427,7 +431,7 @@ contains
       write(66,'(a)') "SCALARS elem_val float"
       write(66,'(a)') "LOOKUP_TABLE default"
       do ispec = 1,nspec
-        write(66,*) true_material_num(ispec)
+        write(66,*) ispec_material_id(ispec)
       enddo
       write(66,*) ""
       close(66)
@@ -472,7 +476,7 @@ contains
     ! outputs mesh file for visualization
     call create_visual_files(CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
                             nspec,nglob, &
-                            prname,nodes_coords,ibool,true_material_num)
+                            prname,nodes_coords,ibool,ispec_material_id)
 
     ! stores boundary informations
     call store_boundaries(myrank,iboun,nspec, &
@@ -492,7 +496,7 @@ contains
     call save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
                               nspec,nglob,iproc_xi,iproc_eta, &
                               NPROC_XI,NPROC_ETA,addressing,iMPIcut_xi,iMPIcut_eta,&
-                              ibool,nodes_coords,true_material_num, &
+                              ibool,nodes_coords,ispec_material_id, &
                               nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
                               NSPEC2D_BOTTOM,NSPEC2D_TOP, NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
                               ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,&
@@ -501,7 +505,7 @@ contains
     ! saves mesh as databases file
     call save_databases(prname,nspec,nglob,iproc_xi,iproc_eta, &
                       NPROC_XI,NPROC_ETA,addressing,iMPIcut_xi,iMPIcut_eta,&
-                      ibool,nodes_coords,true_material_num, &
+                      ibool,nodes_coords,ispec_material_id, &
                       nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP,&
                       NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
                       ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,&

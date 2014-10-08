@@ -28,13 +28,13 @@
 
   subroutine save_databases(prname,nspec,nglob,iproc_xi,iproc_eta, &
                             NPROC_XI,NPROC_ETA,addressing,iMPIcut_xi,iMPIcut_eta,&
-                            ibool,nodes_coords,true_material_num, &
+                            ibool,nodes_coords,ispec_material_id, &
                             nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP,&
                             NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
                             ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,&
                             NMATERIALS,material_properties)
 
-  use constants
+  use constants,only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC
 
   implicit none
 
@@ -58,7 +58,7 @@
   integer ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
   double precision :: nodes_coords(nglob,3)
 
-  integer true_material_num(nspec)
+  integer ispec_material_id(nspec)
 
   ! boundary parameters locator
   integer NSPEC2D_BOTTOM,NSPEC2D_TOP,NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX
@@ -71,8 +71,8 @@
   ! material properties
   integer :: NMATERIALS
   ! first dimension  : material_id
-  ! second dimension : #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id
-  double precision , dimension(NMATERIALS,6) ::  material_properties
+  ! second dimension : #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id #material_id
+  double precision , dimension(NMATERIALS,7) ::  material_properties
   double precision , dimension(16) :: matpropl
   integer :: i,ispec,iglob,ier
   ! dummy_nspec_cpml is used here to match the read instructions in generate_databases/read_partition_files.f90
@@ -82,36 +82,111 @@
   character(len=MAX_STRING_LEN) :: prname
 
   ! for MPI interfaces
-  integer ::  nb_interfaces,nspec_interfaces_max,idoubl
+  integer ::  nb_interfaces,nspec_interfaces_max
   logical, dimension(8) ::  interfaces
   integer, dimension(8) ::  nspec_interface
 
   integer, parameter :: IIN_database = 15
 
+  integer :: ndef,nundef
+  integer :: mat_id,domain_id
+  integer,dimension(2,nspec) :: material_index
+  character(len=MAX_STRING_LEN), dimension(6,1) :: undef_mat_prop
+
+  ! assignes material index
+  ! format: (1,ispec) = #material_id , (2,ispec) = #material_definition
+  material_index (:,:) = 0
+  do ispec = 1, nspec
+    ! material id
+    material_index(1,ispec) = ispec_material_id(ispec)
+    ! material definition: 1 = interface type / 2 = tomography type
+    if (ispec_material_id(ispec) > 0 ) then
+      ! dummy value, not used any further
+      material_index(2,ispec) = 1
+    else
+      ! negative material ids
+      ! by default, assumes tomography model material
+      ! (note: interface type not implemented yet...)
+      material_index(2,ispec) = 2
+    endif
+  enddo
+
+  ! Materials properties
+  ! counts defined/undefined materials
+  ndef = 0
+  nundef = 0
+  do i = 1,NMATERIALS
+    mat_id = material_properties(i,7)
+    if (mat_id > 0) ndef = ndef + 1
+    if (mat_id < 0) nundef = nundef + 1
+  enddo
+  !debug
+  !print*,'materials def/undef: ',ndef,nundef
+
   ! opens database file
   open(unit=IIN_database,file=prname(1:len_trim(prname))//'Database', &
         status='unknown',action='write',form='unformatted',iostat=ier)
-  if( ier /= 0 ) stop 'error opening Database file'
+  if( ier /= 0 ) then
+    print*,'Error opening Database file: ',prname(1:len_trim(prname))//'Database'
+    stop 'error opening Database file'
+  endif
 
+  ! global nodes
   write(IIN_database) nglob
   do iglob=1,nglob
      write(IIN_database) iglob,nodes_coords(iglob,1),nodes_coords(iglob,2),nodes_coords(iglob,3)
   enddo
 
-  ! Materials properties
-   write(IIN_database) NMATERIALS, 0
-   do idoubl = 1,NMATERIALS
-      matpropl(:) = 0.d0
-      matpropl(1:6) = material_properties(idoubl,1:6)
+  ! materials
+  ! format: #number of defined materials #number of undefined materials
+  write(IIN_database) ndef, nundef
+  ! writes out defined materials
+  do i = 1,NMATERIALS
+    mat_id = material_properties(i,7)
+    if (mat_id > 0 ) then
       ! pad dummy zeros to fill up 16 entries (poroelastic medium not allowed)
+      matpropl(:) = 0.d0
+      matpropl(1:6) = material_properties(i,1:6)
       write(IIN_database) matpropl
-   enddo
+    endif
+  enddo
+  ! writes out undefined materials
+  do i = 1,NMATERIALS
+    domain_id = material_properties(i,6)
+    mat_id = material_properties(i,7)
+    if (mat_id < 0) then
+      ! format:      
+      ! #material_id #type-keyword #domain-name #tomo-filename #tomo_id #domain_id
+      ! format example tomography: -1 tomography elastic tomography_model.xyz 0 2
+      undef_mat_prop(:,:) = ''
+      ! material id
+      write(undef_mat_prop(1,1),*) mat_id
+      ! name
+      undef_mat_prop(2,1) = 'tomography'
+      select case (domain_id)
+      case (IDOMAIN_ACOUSTIC)
+        undef_mat_prop(3,1) = 'acoustic'
+      case (IDOMAIN_ELASTIC)
+        undef_mat_prop(3,1) = 'elastic'
+      end select
+      ! default name
+      undef_mat_prop(4,1) = 'tomography_model.xyz'
+      ! default tomo-id (unused)
+      write(undef_mat_prop(5,1),*) 0
+      ! domain-id
+      write(undef_mat_prop(6,1),*) domain_id
+      ! debug
+      !print *,'undef mat: ',undef_mat_prop
+      ! writes out properties
+      write(IIN_database) undef_mat_prop
+    endif
+  enddo
 
-
+  ! spectral-elements
   write(IIN_database) nspec
   do ispec=1,nspec
-      write(IIN_database) ispec,true_material_num(ispec),1,ibool(1,1,1,ispec),ibool(2,1,1,ispec),&
-           ibool(2,2,1,ispec),ibool(1,2,1,ispec),ibool(1,1,2,ispec),&
+      write(IIN_database) ispec,material_index(1,ispec),material_index(2,ispec), &
+           ibool(1,1,1,ispec),ibool(2,1,1,ispec),ibool(2,2,1,ispec),ibool(1,2,1,ispec),ibool(1,1,2,ispec), &
            ibool(2,1,2,ispec),ibool(2,2,2,ispec),ibool(1,2,2,ispec)
   enddo
 
@@ -156,129 +231,133 @@
   ! MPI Interfaces
 
   if(NPROC_XI >= 2 .or. NPROC_ETA >= 2) then
+    ! determines number of mpi interfaces for each slice
+    nb_interfaces = 4
+    interfaces(W:N) = .true.
+    interfaces(NW:SW) = .false.
 
-  nb_interfaces = 4
-  interfaces(W:N) = .true.
-  interfaces(NW:SW) = .false.
-  if(iproc_xi == 0) then
-     nb_interfaces =  nb_interfaces -1
-     interfaces(W) = .false.
-  endif
-  if(iproc_xi == NPROC_XI-1) then
-     nb_interfaces =  nb_interfaces -1
-     interfaces(E) = .false.
-  endif
-  if(iproc_eta == 0) then
-     nb_interfaces =  nb_interfaces -1
-     interfaces(S) = .false.
-  endif
-  if(iproc_eta == NPROC_ETA-1) then
-     nb_interfaces =  nb_interfaces -1
-     interfaces(N) = .false.
-  endif
+    ! slices at model boundaries
+    if(iproc_xi == 0) then
+      nb_interfaces =  nb_interfaces -1
+      interfaces(W) = .false.
+    endif
+    if(iproc_xi == NPROC_XI-1) then
+      nb_interfaces =  nb_interfaces -1
+      interfaces(E) = .false.
+    endif
+    if(iproc_eta == 0) then
+      nb_interfaces =  nb_interfaces -1
+      interfaces(S) = .false.
+    endif
+    if(iproc_eta == NPROC_ETA-1) then
+      nb_interfaces =  nb_interfaces -1
+      interfaces(N) = .false.
+    endif
 
-  if((interfaces(W) .eqv. .true.) .and. (interfaces(N) .eqv. .true.)) then
-       interfaces(NW) = .true.
-       nb_interfaces =  nb_interfaces +1
-  endif
-  if((interfaces(N) .eqv. .true.) .and. (interfaces(E) .eqv. .true.)) then
-       interfaces(NE) = .true.
-       nb_interfaces =  nb_interfaces +1
-  endif
-  if((interfaces(E) .eqv. .true.) .and. (interfaces(S) .eqv. .true.)) then
-       interfaces(SE) = .true.
-       nb_interfaces =  nb_interfaces +1
-  endif
-  if((interfaces(W) .eqv. .true.) .and. (interfaces(S) .eqv. .true.)) then
-       interfaces(SW) = .true.
-       nb_interfaces =  nb_interfaces +1
-  endif
+    ! slices in middle of model
+    if((interfaces(W) .eqv. .true.) .and. (interfaces(N) .eqv. .true.)) then
+      interfaces(NW) = .true.
+      nb_interfaces =  nb_interfaces +1
+    endif
+    if((interfaces(N) .eqv. .true.) .and. (interfaces(E) .eqv. .true.)) then
+      interfaces(NE) = .true.
+      nb_interfaces =  nb_interfaces +1
+    endif
+    if((interfaces(E) .eqv. .true.) .and. (interfaces(S) .eqv. .true.)) then
+      interfaces(SE) = .true.
+      nb_interfaces =  nb_interfaces +1
+    endif
+    if((interfaces(W) .eqv. .true.) .and. (interfaces(S) .eqv. .true.)) then
+      interfaces(SW) = .true.
+      nb_interfaces =  nb_interfaces +1
+    endif
 
-  nspec_interface(:) = 0
-  if(interfaces(W))  nspec_interface(W) = count(iMPIcut_xi(1,:) .eqv. .true.)
-  if(interfaces(E))  nspec_interface(E) = count(iMPIcut_xi(2,:) .eqv. .true.)
-  if(interfaces(S))  nspec_interface(S) = count(iMPIcut_eta(1,:) .eqv. .true.)
-  if(interfaces(N))  nspec_interface(N) = count(iMPIcut_eta(2,:) .eqv. .true.)
-  if(interfaces(NW))  nspec_interface(NW) = count((iMPIcut_xi(1,:) .eqv. .true.) .and. (iMPIcut_eta(2,:) .eqv. .true.))
-  if(interfaces(NE))  nspec_interface(NE) = count((iMPIcut_xi(2,:) .eqv. .true.) .and. (iMPIcut_eta(2,:) .eqv. .true.))
-  if(interfaces(SE))  nspec_interface(SE) = count((iMPIcut_xi(2,:) .eqv. .true.) .and. (iMPIcut_eta(1,:) .eqv. .true.))
-  if(interfaces(SW))  nspec_interface(SW) = count((iMPIcut_xi(1,:) .eqv. .true.) .and. (iMPIcut_eta(1,:) .eqv. .true.))
+    nspec_interface(:) = 0
+    if(interfaces(W))  nspec_interface(W) = count(iMPIcut_xi(1,:) .eqv. .true.)
+    if(interfaces(E))  nspec_interface(E) = count(iMPIcut_xi(2,:) .eqv. .true.)
+    if(interfaces(S))  nspec_interface(S) = count(iMPIcut_eta(1,:) .eqv. .true.)
+    if(interfaces(N))  nspec_interface(N) = count(iMPIcut_eta(2,:) .eqv. .true.)
+    if(interfaces(NW))  nspec_interface(NW) = count((iMPIcut_xi(1,:) .eqv. .true.) .and. (iMPIcut_eta(2,:) .eqv. .true.))
+    if(interfaces(NE))  nspec_interface(NE) = count((iMPIcut_xi(2,:) .eqv. .true.) .and. (iMPIcut_eta(2,:) .eqv. .true.))
+    if(interfaces(SE))  nspec_interface(SE) = count((iMPIcut_xi(2,:) .eqv. .true.) .and. (iMPIcut_eta(1,:) .eqv. .true.))
+    if(interfaces(SW))  nspec_interface(SW) = count((iMPIcut_xi(1,:) .eqv. .true.) .and. (iMPIcut_eta(1,:) .eqv. .true.))
 
-  nspec_interfaces_max = maxval(nspec_interface)
+    nspec_interfaces_max = maxval(nspec_interface)
 
-  write(IIN_database) nb_interfaces,nspec_interfaces_max
+    write(IIN_database) nb_interfaces,nspec_interfaces_max
 
-  if(interfaces(W)) then
-     write(IIN_database) addressing(iproc_xi-1,iproc_eta),nspec_interface(W)
-     do ispec = 1,nspec
-        if(iMPIcut_xi(1,ispec))  write(IIN_database) ispec,4,ibool(1,1,1,ispec),ibool(1,2,1,ispec), &
-             ibool(1,1,2,ispec),ibool(1,2,2,ispec)
-     enddo
-  endif
+    if(interfaces(W)) then
+      write(IIN_database) addressing(iproc_xi-1,iproc_eta),nspec_interface(W)
+      do ispec = 1,nspec
+        if(iMPIcut_xi(1,ispec)) write(IIN_database) ispec,4,ibool(1,1,1,ispec),ibool(1,2,1,ispec), &
+                                                    ibool(1,1,2,ispec),ibool(1,2,2,ispec)
+      enddo
+    endif
 
-  if(interfaces(E)) then
-     write(IIN_database) addressing(iproc_xi+1,iproc_eta),nspec_interface(E)
-     do ispec = 1,nspec
-        if(iMPIcut_xi(2,ispec))  write(IIN_database) ispec,4,ibool(2,1,1,ispec),ibool(2,2,1,ispec), &
-             ibool(2,1,2,ispec),ibool(2,2,2,ispec)
-     enddo
-  endif
+    if(interfaces(E)) then
+      write(IIN_database) addressing(iproc_xi+1,iproc_eta),nspec_interface(E)
+      do ispec = 1,nspec
+        if(iMPIcut_xi(2,ispec)) write(IIN_database) ispec,4,ibool(2,1,1,ispec),ibool(2,2,1,ispec), &
+                                                    ibool(2,1,2,ispec),ibool(2,2,2,ispec)
+      enddo
+    endif
 
-   if(interfaces(S)) then
-     write(IIN_database) addressing(iproc_xi,iproc_eta-1),nspec_interface(S)
-     do ispec = 1,nspec
-        if(iMPIcut_eta(1,ispec))  write(IIN_database) ispec,4,ibool(1,1,1,ispec),ibool(2,1,1,ispec), &
-             ibool(1,1,2,ispec),ibool(2,1,2,ispec)
-     enddo
-  endif
+    if(interfaces(S)) then
+      write(IIN_database) addressing(iproc_xi,iproc_eta-1),nspec_interface(S)
+      do ispec = 1,nspec
+        if(iMPIcut_eta(1,ispec)) write(IIN_database) ispec,4,ibool(1,1,1,ispec),ibool(2,1,1,ispec), &
+                                                     ibool(1,1,2,ispec),ibool(2,1,2,ispec)
+      enddo
+    endif
 
-  if(interfaces(N)) then
-     write(IIN_database) addressing(iproc_xi,iproc_eta+1),nspec_interface(N)
-     do ispec = 1,nspec
-        if(iMPIcut_eta(2,ispec))  write(IIN_database) ispec,4,ibool(2,2,1,ispec),ibool(1,2,1,ispec), &
-             ibool(2,2,2,ispec),ibool(1,2,2,ispec)
-     enddo
-  endif
+    if(interfaces(N)) then
+      write(IIN_database) addressing(iproc_xi,iproc_eta+1),nspec_interface(N)
+      do ispec = 1,nspec
+        if(iMPIcut_eta(2,ispec)) write(IIN_database) ispec,4,ibool(2,2,1,ispec),ibool(1,2,1,ispec), &
+                                                     ibool(2,2,2,ispec),ibool(1,2,2,ispec)
+      enddo
+    endif
 
-  if(interfaces(NW)) then
-     write(IIN_database) addressing(iproc_xi-1,iproc_eta+1),nspec_interface(NW)
-     do ispec = 1,nspec
+    if(interfaces(NW)) then
+      write(IIN_database) addressing(iproc_xi-1,iproc_eta+1),nspec_interface(NW)
+      do ispec = 1,nspec
         if((iMPIcut_xi(1,ispec) .eqv. .true.) .and. (iMPIcut_eta(2,ispec) .eqv. .true.))  then
-           write(IIN_database) ispec,2,ibool(1,2,1,ispec),ibool(1,2,2,ispec),-1,-1
+          write(IIN_database) ispec,2,ibool(1,2,1,ispec),ibool(1,2,2,ispec),-1,-1
         endif
-     enddo
-  endif
+      enddo
+    endif
 
-  if(interfaces(NE)) then
-     write(IIN_database) addressing(iproc_xi+1,iproc_eta+1),nspec_interface(NE)
-     do ispec = 1,nspec
+    if(interfaces(NE)) then
+      write(IIN_database) addressing(iproc_xi+1,iproc_eta+1),nspec_interface(NE)
+      do ispec = 1,nspec
         if((iMPIcut_xi(2,ispec) .eqv. .true.) .and. (iMPIcut_eta(2,ispec) .eqv. .true.))  then
-           write(IIN_database) ispec,2,ibool(2,2,1,ispec),ibool(2,2,2,ispec),-1,-1
+          write(IIN_database) ispec,2,ibool(2,2,1,ispec),ibool(2,2,2,ispec),-1,-1
         endif
-     enddo
-  endif
+      enddo
+    endif
 
-  if(interfaces(SE)) then
-     write(IIN_database) addressing(iproc_xi+1,iproc_eta-1),nspec_interface(SE)
-     do ispec = 1,nspec
+    if(interfaces(SE)) then
+      write(IIN_database) addressing(iproc_xi+1,iproc_eta-1),nspec_interface(SE)
+      do ispec = 1,nspec
         if((iMPIcut_xi(2,ispec) .eqv. .true.) .and. (iMPIcut_eta(1,ispec) .eqv. .true.))  then
-           write(IIN_database) ispec,2,ibool(2,1,1,ispec),ibool(2,1,2,ispec),-1,-1
+          write(IIN_database) ispec,2,ibool(2,1,1,ispec),ibool(2,1,2,ispec),-1,-1
         endif
-     enddo
-  endif
+      enddo
+    endif
 
-  if(interfaces(SW)) then
-     write(IIN_database) addressing(iproc_xi-1,iproc_eta-1),nspec_interface(SW)
-     do ispec = 1,nspec
+    if(interfaces(SW)) then
+      write(IIN_database) addressing(iproc_xi-1,iproc_eta-1),nspec_interface(SW)
+      do ispec = 1,nspec
         if((iMPIcut_xi(1,ispec) .eqv. .true.) .and. (iMPIcut_eta(1,ispec) .eqv. .true.))  then
-           write(IIN_database) ispec,2,ibool(1,1,1,ispec),ibool(1,1,2,ispec),-1,-1
+          write(IIN_database) ispec,2,ibool(1,1,1,ispec),ibool(1,1,2,ispec),-1,-1
         endif
-     enddo
-  endif
+      enddo
+    endif
 
   else
 
-     write(IIN_database) 0,0
+    ! only 1 single slice, no mpi interfaces
+    write(IIN_database) 0,0
 
   endif
 

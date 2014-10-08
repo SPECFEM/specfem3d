@@ -468,16 +468,16 @@ contains
       ! (note that this order of the properties is different than the input in nummaterial_velocity_file)
       !
        write(IIN_database) mat_prop(1,i), mat_prop(2,i), mat_prop(3,i), &
-                            mat_prop(4,i), mat_prop(5,i), mat_prop(6,i), &
-                            mat_prop(7,i), mat_prop(8,i), mat_prop(9,i), &
-                            mat_prop(10,i), mat_prop(11,i), mat_prop(12,i), &
-                            mat_prop(13,i), mat_prop(14,i), mat_prop(15,i), mat_prop(16,i)
+                           mat_prop(4,i), mat_prop(5,i), mat_prop(6,i), &
+                           mat_prop(7,i), mat_prop(8,i), mat_prop(9,i), &
+                           mat_prop(10,i), mat_prop(11,i), mat_prop(12,i), &
+                           mat_prop(13,i), mat_prop(14,i), mat_prop(15,i), mat_prop(16,i)
     enddo
 
     do i = 1, count_undef_mat
        write(IIN_database) undef_mat_prop(1,i),undef_mat_prop(2,i), &
-                          undef_mat_prop(3,i),undef_mat_prop(4,i), &
-                          undef_mat_prop(5,i),undef_mat_prop(6,i)
+                           undef_mat_prop(3,i),undef_mat_prop(4,i), &
+                           undef_mat_prop(5,i),undef_mat_prop(6,i)
     enddo
 
   end subroutine  write_material_props_database
@@ -796,8 +796,7 @@ contains
              ! # ispec_local # material_index_1 # material_index_2 # corner_id1 # corner_id2 # ... # corner_id8
              ! or
              ! # ispec_local # material_index_1 # material_index_2 # corner_id1 # corner_id2 # ... # corner_id27
-             write(IIN_database) glob2loc_elmnts(i)+1, num_modele(1,i+1), &
-                                  num_modele(2,i+1),(loc_nodes(k)+1, k=0,NGNOD-1)
+             write(IIN_database) glob2loc_elmnts(i)+1,num_modele(1,i+1),num_modele(2,i+1),(loc_nodes(k)+1, k=0,NGNOD-1)
 
              ! writes out to file Numglob2loc_elmn.txt
              if (COUPLE_WITH_EXTERNAL_CODE) write(124,*) i+1,glob2loc_elmnts(i)+1,iproc

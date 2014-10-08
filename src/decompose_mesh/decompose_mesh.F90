@@ -452,12 +452,12 @@ module decompose_mesh
        if( trim(undef_mat_prop(2,imat)) == 'interface' ) then
          ! line will have 5 arguments, e.g.: 2 -1 interface 1 2
          read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat),&
-                     undef_mat_prop(3,imat),undef_mat_prop(4,imat)
+                      undef_mat_prop(3,imat),undef_mat_prop(4,imat)
          undef_mat_prop(5,imat) = "0" ! dummy value
        else if( trim(undef_mat_prop(2,imat)) == 'tomography' ) then
          ! line will have 6 arguments, e.g.: 2 -1 tomography elastic tomography_model.xyz 1
          read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat),&
-                        undef_mat_prop(3,imat),undef_mat_prop(4,imat)
+                      undef_mat_prop(3,imat),undef_mat_prop(4,imat)
          undef_mat_prop(5,imat) = "0" ! dummy value
        else
          stop "ERROR: invalid line in nummaterial_velocity_file for undefined material"

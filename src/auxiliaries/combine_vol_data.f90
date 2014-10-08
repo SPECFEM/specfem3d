@@ -88,6 +88,7 @@
   character(len=MAX_STRING_LEN) :: arg(9), filename, indir, outdir
   character(len=MAX_STRING_LEN) :: prname, prname_lp
   character(len=MAX_STRING_LEN*2) :: mesh_file,local_data_file
+  character(len=MAX_STRING_LEN) :: data_array_name
   logical :: HIGH_RESOLUTION_MESH
   integer :: ires
 
@@ -156,14 +157,12 @@
   enddo
 
   if (ADIOS_FOR_MESH) then
-    print *, "adios par have been read"
     call read_args_adios(arg, MAX_NUM_NODES, node_list, num_node,   &
                          var_name, value_file_name, mesh_file_name, &
                          outdir, ires)
     filename = var_name
   else
-    call read_args(arg, MAX_NUM_NODES, node_list, num_node, &
-                   filename, indir, outdir, ires)
+    call read_args(arg, MAX_NUM_NODES, node_list, num_node, filename, indir, outdir, ires)
   endif
 
   if (ires == 0) then
@@ -383,8 +382,25 @@
     write(IOVTK,'(6i12)') (12,it=1,nee)
     write(IOVTK,*) ""
 
+    ! point data values
+    ! data array name
+    data_array_name = trim(filename)
+    ! movie snapshot files: uses a common short name (like "velocity_X","div","curl_X",..)
+    ! note: changing the data array name for each timestep creates problems in paraview
+    !       when reading in a bunch of these vtk-files and animating the wavefield
+    ! velocity_X_it002000.bin,..,velocity_Y_it**.bin,velocity_Z_it**.bin
+    if (filename(1:13) == 'velocity_X_it' .or. filename(1:13) == 'velocity_Y_it' .or. filename(1:13) == 'velocity_Z_it') then
+      data_array_name = trim(filename(1:10)) ! "velocity_X",..
+    endif
+    if (filename(1:6) == 'div_it') then
+      data_array_name = trim(filename(1:3)) ! "div"
+    endif
+    if (filename(1:9) == 'curl_X_it' .or. filename(1:9) == 'curl_Y_it' .or. filename(1:9) == 'curl_Z_it' ) then
+      data_array_name = trim(filename(1:6)) ! "curl_X",..
+    endif
+
     write(IOVTK,'(a,i12)') "POINT_DATA ",npp
-    write(IOVTK,'(a)') "SCALARS "//trim(filename)//" float"
+    write(IOVTK,'(a)') "SCALARS "//trim(data_array_name)//" float"
     write(IOVTK,'(a)') "LOOKUP_TABLE default"
     do it = 1,npp
         write(IOVTK,*) total_dat(it)

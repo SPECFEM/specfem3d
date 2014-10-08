@@ -150,22 +150,23 @@
 
 !--------------------
 
-  subroutine read_material_parameters(iunit,i,rho,vp,vs,Q_flag,anisotropy_flag,domain_id, ierr)
+  subroutine read_material_parameters(iunit,mat_id,rho,vp,vs,Q_flag,anisotropy_flag,domain_id, ierr)
 
   use constants, only: MAX_STRING_LEN,DONT_IGNORE_JUNK
 
   implicit none
 
   integer iunit
-  integer i
+  integer mat_id
+  double precision rho,vp,vs,Q_flag,anisotropy_flag
+  integer domain_id
   integer ierr
-  double precision rho,vp,vs,Q_flag,anisotropy_flag,domain_id
   character(len=MAX_STRING_LEN) :: string_read
 
   ierr = 0
   call read_next_line(iunit,DONT_IGNORE_JUNK,string_read,ierr)
   if (ierr /= 0) return
-  read(string_read,*,iostat=ierr) i,rho,vp,vs,Q_flag,anisotropy_flag,domain_id
+  read(string_read,*,iostat=ierr) mat_id,rho,vp,vs,Q_flag,anisotropy_flag,domain_id
 
   end subroutine read_material_parameters
 

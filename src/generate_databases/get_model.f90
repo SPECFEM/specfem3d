@@ -72,7 +72,6 @@
   ispec_is_elastic(:) = .false.
   ispec_is_poroelastic(:) = .false.
 
-
   !! WANGYI test for the benchmark of hybrid DSM-SPECFEM3D coupling
   if (COUPLE_WITH_EXTERNAL_CODE) then
     if( nundefMat_ext_mesh > 6 .or. IMODEL == IMODEL_TOMO ) then ! changed by WANGYI
@@ -183,9 +182,7 @@
                                c34,c35,c36,c44,c45,c46,c55,c56,c66, &
                                ANISOTROPY)
 
-
           ! stores velocity model
-
           if(idomain_id == IDOMAIN_ACOUSTIC .or. idomain_id == IDOMAIN_ELASTIC) then
 
             ! elastic or acoustic material
@@ -294,7 +291,7 @@
           case( IDOMAIN_POROELASTIC )
             ispec_is_poroelastic(ispec) = .true.
           case default
-            stop 'error material domain index'
+            stop 'Error material domain index'
           end select
 
         enddo
@@ -323,11 +320,11 @@
     if( (ispec_is_acoustic(ispec) .eqv. .false.) &
           .and. (ispec_is_elastic(ispec) .eqv. .false.) &
           .and. (ispec_is_poroelastic(ispec) .eqv. .false.) ) then
-      print*,'error material domain not assigned to element:',ispec
+      print*,'Error material domain not assigned to element:',ispec
       print*,'acoustic: ',ispec_is_acoustic(ispec)
       print*,'elastic: ',ispec_is_elastic(ispec)
       print*,'poroelastic: ',ispec_is_poroelastic(ispec)
-      stop 'error material domain index element'
+      stop 'Error material domain index element'
     endif
     ! checks if domain is unique
     if( ((ispec_is_acoustic(ispec) .eqv. .true.) .and. (ispec_is_elastic(ispec) .eqv. .true.)) .or. &
@@ -335,11 +332,11 @@
        ((ispec_is_poroelastic(ispec) .eqv. .true.) .and. (ispec_is_elastic(ispec) .eqv. .true.)) .or. &
        ((ispec_is_acoustic(ispec) .eqv. .true.) .and. (ispec_is_elastic(ispec) .eqv. .true.) .and. &
        (ispec_is_poroelastic(ispec) .eqv. .true.)) ) then
-      print*,'error material domain assigned twice to element:',ispec
+      print*,'Error material domain assigned twice to element:',ispec
       print*,'acoustic: ',ispec_is_acoustic(ispec)
       print*,'elastic: ',ispec_is_elastic(ispec)
       print*,'poroelastic: ',ispec_is_poroelastic(ispec)
-      stop 'error material domain index element'
+      stop 'Error material domain index element'
     endif
   enddo
 
@@ -369,16 +366,16 @@
 !
 
   subroutine get_model_values(materials_ext_mesh,nmat_ext_mesh, &
-                             undef_mat_prop,nundefMat_ext_mesh, &
-                             imaterial_id,imaterial_def, &
-                             xmesh,ymesh,zmesh, &
-                             rho,vp,vs,qkappa_atten,qmu_atten,idomain_id, &
-                             rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
-                             phi,tort,kxx,kxy,kxz,kyy,kyz,kzz, &
-                             c11,c12,c13,c14,c15,c16, &
-                             c22,c23,c24,c25,c26,c33, &
-                             c34,c35,c36,c44,c45,c46,c55,c56,c66, &
-                             ANISOTROPY)
+                              undef_mat_prop,nundefMat_ext_mesh, &
+                              imaterial_id,imaterial_def, &
+                              xmesh,ymesh,zmesh, &
+                              rho,vp,vs,qkappa_atten,qmu_atten,idomain_id, &
+                              rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
+                              phi,tort,kxx,kxy,kxz,kyy,kyz,kzz, &
+                              c11,c12,c13,c14,c15,c16, &
+                              c22,c23,c24,c25,c26,c33, &
+                              c34,c35,c36,c44,c45,c46,c55,c56,c66, &
+                              ANISOTROPY)
 
   use generate_databases_par,only: IMODEL, &
     IMODEL_DEFAULT,IMODEL_GLL,IMODEL_1D_PREM,IMODEL_1D_CASCADIA,IMODEL_1D_SOCAL, &
@@ -414,6 +411,7 @@
   ! local parameters
   integer :: iflag_aniso
   integer :: iundef,imaterial_PB
+  logical :: has_tomo_value
 
   ! use acoustic domains for simulation
   logical,parameter :: USE_PURE_ACOUSTIC_MOD = .false.
@@ -424,18 +422,18 @@
   idomain_id = IDOMAIN_ELASTIC
 
   ! selects chosen velocity model
-  select case( IMODEL )
+  select case (IMODEL)
 
   case( IMODEL_DEFAULT,IMODEL_GLL,IMODEL_IPATI,IMODEL_IPATI_WATER, IMODEL_SEP )
     ! material values determined by mesh properties
     call model_default(materials_ext_mesh,nmat_ext_mesh, &
-                          undef_mat_prop,nundefMat_ext_mesh, &
-                          imaterial_id,imaterial_def, &
-                          xmesh,ymesh,zmesh, &
-                          rho,vp,vs, &
-                          iflag_aniso,qkappa_atten,qmu_atten,idomain_id, &
-                          rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
-                          phi,tort,kxx,kxy,kxz,kyy,kyz,kzz)
+                       undef_mat_prop,nundefMat_ext_mesh, &
+                       imaterial_id,imaterial_def, &
+                       xmesh,ymesh,zmesh, &
+                       rho,vp,vs, &
+                       iflag_aniso,qkappa_atten,qmu_atten,idomain_id, &
+                       rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
+                       phi,tort,kxx,kxy,kxz,kyy,kyz,kzz)
 
   case( IMODEL_1D_PREM )
     ! 1D model profile from PREM
@@ -470,7 +468,14 @@
 
   case( IMODEL_TOMO )
     ! gets model values from tomography file
-    call model_tomography(xmesh,ymesh,zmesh,rho,vp,vs,qkappa_atten,qmu_atten,imaterial_id)
+    call model_tomography(xmesh,ymesh,zmesh,rho,vp,vs,qkappa_atten,qmu_atten,imaterial_id,has_tomo_value)
+
+    ! in case no tomography value defined for this region, fall back to defaults
+    if (.not. has_tomo_value) then
+      print*,'Error: tomography value not defined for model material id ',imaterial_id
+      print*,'Please check if Par_file setting MODEL = tomo is applicable, or try using MODEL = default ...'
+      stop 'Error tomo model not found for material'
+    endif
 
   case( IMODEL_USER_EXTERNAL )
     ! user model from external routine
@@ -478,11 +483,11 @@
     call model_external_values(xmesh,ymesh,zmesh,rho,vp,vs,qkappa_atten,qmu_atten,iflag_aniso,idomain_id)
 
   case default
-    stop 'error: model not implemented yet'
+    stop 'Error model not implemented yet'
   end select
 
   ! adds anisotropic default model
-  if( ANISOTROPY ) then
+  if (ANISOTROPY) then
     call model_aniso(iflag_aniso,rho,vp,vs, &
                     c11,c12,c13,c14,c15,c16, &
                     c22,c23,c24,c25,c26,c33, &
@@ -492,8 +497,17 @@
   ! for pure acoustic simulations (a way of avoiding re-mesh, re-partition etc.)
   ! can be used to compare elastic & acoustic reflections in exploration seismology
   ! do NOT use it unless you are confident
-  if( USE_PURE_ACOUSTIC_MOD ) then
+  if (USE_PURE_ACOUSTIC_MOD) then
     idomain_id = IDOMAIN_ACOUSTIC
+  endif
+
+  ! checks if valid vp value
+  if (idomain_id == IDOMAIN_ACOUSTIC .or. idomain_id == IDOMAIN_ELASTIC) then
+    if (vp <= 0._CUSTOM_REAL) then
+      print*,'Error: encountered zero Vp velocity in element! '
+      print*,'domain id = ',idomain_id,' material id = ',imaterial_id, 'vp/vs/rho = ',vp,vs,rho
+      stop 'Error zero Vp velocity found'
+    endif
   endif
 
   end subroutine get_model_values

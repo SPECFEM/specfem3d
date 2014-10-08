@@ -95,7 +95,8 @@
   allocate(undef_mat_prop(6,nundefMat_ext_mesh),stat=ier)
   if( ier /= 0 ) stop 'Error allocating array undef_mat_prop'
   do imat = 1, nundefMat_ext_mesh
-     ! format example tomography:
+     ! format example tomography: 
+     ! #material_id #type-keyword #domain-name #tomo-filename #tomo_id #domain_id
      ! e.g.: -1 tomography elastic tomography_model.xyz 0 2
      ! format example interface:
      ! e.g.: -1 interface 14 15 0 2

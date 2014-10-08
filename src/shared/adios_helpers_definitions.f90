@@ -1455,7 +1455,7 @@ subroutine define_adios_global_1d_string_1d(adios_group, group_size_inc, local_d
   integer :: idummy
 
   full_name = trim(path) // trim(array_name)
-  print *,"full name", trim(full_name),"local_dim:",local_dim
+  print *,"full name: ", trim(full_name)," local_dim: ",local_dim
 
   call define_adios_global_1d_string_generic(adios_group, group_size_inc,full_name, local_dim)
 

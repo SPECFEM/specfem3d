@@ -67,6 +67,9 @@
   ! local parameters
   integer :: iflag,flag_below,flag_above
   integer :: iundef
+  logical :: has_tomo_value
+  character(len=MAX_STRING_LEN) :: str_domain
+  integer :: ier
 
   ! check if the material is known or unknown
   if( imaterial_id > 0 ) then
@@ -76,7 +79,7 @@
     ! material domain_id
     idomain_id = nint(materials_ext_mesh(6,imaterial_id))
 
-    select case( idomain_id )
+    select case (idomain_id)
 
     case( IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC )
       ! (visco)elastic or acoustic
@@ -124,56 +127,76 @@
       kzz =  materials_ext_mesh(12,imaterial_id)
 
     case default
-      print*,'error: domain id = ',idomain_id,'not recognized'
-      stop 'error: domain not recognized'
-
+      print*,'Error: domain id = ',idomain_id,'not recognized'
+      stop 'Error domain id not recognized'
     end select
-
- else if ( imaterial_def == 1 ) then
-
-    stop 'material: interface not implemented yet'
-
-    do iundef = 1,nundefMat_ext_mesh
-       if(trim(undef_mat_prop(2,iundef)) == 'interface') then
-          read(undef_mat_prop(3,iundef),'(1i3)') flag_below
-          read(undef_mat_prop(4,iundef),'(1i3)') flag_above
-       endif
-    enddo
-
-    ! see file model_interface_bedrock.f90: routine interface()
-    !call interface(iflag,flag_below,flag_above,ispec,nspec,i,j,k,xstore,ystore,zstore,ibedrock)
-
-    ! dummy: takes 1. defined material
-    iflag = 1
-    rho = materials_ext_mesh(1,iflag)
-    vp = materials_ext_mesh(2,iflag)
-    vs = materials_ext_mesh(3,iflag)
-    ! Q_kappa is not stored next to Q_mu for historical reasons, because it was added later
-    qkappa_atten = materials_ext_mesh(7,iflag)
-    qmu_atten = materials_ext_mesh(4,iflag)
-
-    iflag_aniso = nint(materials_ext_mesh(5,iflag))
-    idomain_id = nint(materials_ext_mesh(6,iflag))
-
-  else if ( imaterial_def == 2 ) then
-
-    ! material definition undefined, uses definition from tomography model
-
-    ! gets model values from tomography file
-    call model_tomography(xmesh,ymesh,zmesh,rho,vp,vs,qkappa_atten,qmu_atten,imaterial_id)
-
-    ! no anisotropy
-    iflag_aniso = 0
-
-    ! sets acoustic/elastic domain as given in materials properties
-    iundef = - imaterial_id    ! iundef must be positive
-    read(undef_mat_prop(6,iundef),*) idomain_id
-    ! or
-    !idomain_id = IDOMAIN_ELASTIC    ! forces to be elastic domain
 
   else
 
-    stop 'material: not implemented yet'
+    ! negative material ids 
+    ! (valid for interfaces/tomography model materials)
+
+    select case (imaterial_def)
+    case (1)
+      ! interfaces
+      stop 'Error material definition: interface not implemented yet'
+
+      ! would do something like the following...
+      do iundef = 1,nundefMat_ext_mesh
+         if(trim(undef_mat_prop(2,iundef)) == 'interface') then
+            read(undef_mat_prop(3,iundef),'(1i3)') flag_below
+            read(undef_mat_prop(4,iundef),'(1i3)') flag_above
+         endif
+      enddo
+
+      ! see file model_interface_bedrock.f90: routine interface()
+      !call interface(iflag,flag_below,flag_above,ispec,nspec,i,j,k,xstore,ystore,zstore,ibedrock)
+
+      ! dummy: takes 1. defined material
+      iflag = 1
+      rho = materials_ext_mesh(1,iflag)
+      vp = materials_ext_mesh(2,iflag)
+      vs = materials_ext_mesh(3,iflag)
+      ! Q_kappa is not stored next to Q_mu for historical reasons, because it was added later
+      qkappa_atten = materials_ext_mesh(7,iflag)
+      qmu_atten = materials_ext_mesh(4,iflag)
+
+      iflag_aniso = nint(materials_ext_mesh(5,iflag))
+      idomain_id = nint(materials_ext_mesh(6,iflag))
+
+    case (2)
+      ! tomography models
+
+      ! material definition undefined, uses definition from tomography model
+
+      ! gets model values from tomography file
+      call model_tomography(xmesh,ymesh,zmesh,rho,vp,vs,qkappa_atten,qmu_atten,imaterial_id,has_tomo_value)
+
+      ! checks if value was found
+      if (.not. has_tomo_value) then
+        print*,'Error: tomography value not defined for model material id ',imaterial_id
+        stop 'Error no matching material value found'
+      endif
+
+      ! no anisotropy
+      iflag_aniso = 0
+
+      ! sets acoustic/elastic domain as given in materials properties
+      iundef = - imaterial_id    ! iundef must be positive
+      if (iundef > nundefMat_ext_mesh ) stop 'Error negative material ID exceeds total number undefined materials'
+
+      str_domain = trim(adjustl(undef_mat_prop(6,iundef)))
+
+      read(str_domain(1:len_trim(str_domain)),'(i1)',iostat=ier) idomain_id
+      if (ier /= 0 ) stop 'Error reading domain ID from undefined material properties'
+
+      ! or
+      !idomain_id = IDOMAIN_ELASTIC    ! forces to be elastic domain
+
+    case default
+      print*,'Error: material definition = ',imaterial_def,'not recognized'
+      stop 'Error material definition: unknown material definition'
+    end select
 
   endif
 
