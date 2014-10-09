@@ -133,7 +133,7 @@
 
   else
 
-    ! negative material ids 
+    ! negative material ids
     ! (valid for interfaces/tomography model materials)
 
     select case (imaterial_def)

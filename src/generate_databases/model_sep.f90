@@ -202,7 +202,8 @@ subroutine read_sep_binary_mpiio(filename, NX, NY, NZ, ni, nj, nk, &
   integer, dimension(3) :: global_sizes, local_sizes, starting_idx
   integer(kind=MPI_OFFSET_KIND) :: displ
   integer :: subarray_type
-  integer :: mpi_status, ier
+  integer :: ier
+  integer :: status(MPI_STATUS_SIZE)
 
   ! Sizes for the subarrays
   global_sizes = (/ NX, NY, NZ /)
@@ -224,9 +225,9 @@ subroutine read_sep_binary_mpiio(filename, NX, NY, NZ, ni, nj, nk, &
   call MPI_File_set_view(fh, displ, MPI_REAL, subarray_type, "native", &
                          MPI_INFO_NULL, ier)
   ! Number of elements is equal to the local size
-  call MPI_File_read_all(fh, var, ni * nj * nk, &
-                         MPI_REAL, mpi_status, ier)
+  call MPI_File_read_all(fh, var, ni * nj * nk, MPI_REAL, status, ier)
   call MPI_File_close(fh, ier)
+
 end subroutine read_sep_binary_mpiio
 
 !==============================================================================

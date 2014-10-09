@@ -212,7 +212,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
     mat_id = material_properties(i,7)
     if (mat_id < 0) then
       icount = icount + 1
-      ! format:      
+      ! format:
       ! #material_id #type-keyword #domain-name #tomo-filename #tomo_id #domain_id
       ! format example tomography: -1 tomography elastic tomography_model.xyz 0 2
       ! material id

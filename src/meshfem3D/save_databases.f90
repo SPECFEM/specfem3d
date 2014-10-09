@@ -155,7 +155,7 @@
     domain_id = material_properties(i,6)
     mat_id = material_properties(i,7)
     if (mat_id < 0) then
-      ! format:      
+      ! format:
       ! #material_id #type-keyword #domain-name #tomo-filename #tomo_id #domain_id
       ! format example tomography: -1 tomography elastic tomography_model.xyz 0 2
       undef_mat_prop(:,:) = ''

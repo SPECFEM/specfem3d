@@ -1014,8 +1014,8 @@ subroutine write_adios_global_1d_string_1d(adios_handle, myrank, sizeprocs, loca
 
   print *,"tag1: ",trim(array_name)," local_dim/global_dim/offset: ",local_dim,global_dim,offset
 
-!  call write_1D_string_array_adios_dims(adios_handle, myrank, local_dim, global_dim, offset, sizeprocs, array_name)
-  call write_1D_global_array_adios_dims(adios_handle, myrank, local_dim, sizeprocs, array_name)
+  call write_1D_string_array_adios_dims(adios_handle, myrank, local_dim, global_dim, offset, sizeprocs, array_name)
+  !call write_1D_global_array_adios_dims(adios_handle, myrank, local_dim, sizeprocs, array_name)
   print *,"tag2: ",trim(array)
 
   call adios_write(adios_handle, trim(array_name)// "/array", array(1:local_dim), adios_err)

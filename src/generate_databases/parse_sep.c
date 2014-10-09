@@ -117,11 +117,11 @@ FC_FUNC_(parse_sep_header, PARSE_SEP_HEADER)
       }
     }
   }
-  
+
   // buffer will be reallocated by getline
   // should be freed even if getline is not successful
   free(line);
-  
+
   fclose(fd);
   regfree(&re);
 }
