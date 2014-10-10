@@ -1,0 +1,15 @@
+Tool to create a bathymetry ASCII file in specfem3d'topo format from a VS SEP model.
+It just assumes that points with VS=0 are part of the water layer.
+
+How to use it;
+1) Generate the make file
+$> cd specfem3d/utils/bathy_sep_to_ascii
+$> cmake .
+
+You may change the CMakeCache.txt file, although it is not mandatory as this tool
+is not a critical computational step.
+
+2) Compile
+$> make
+
+3) ./bin/create_ascii_bathy_from_sep_vs --help
