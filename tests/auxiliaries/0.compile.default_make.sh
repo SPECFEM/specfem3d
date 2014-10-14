@@ -31,11 +31,12 @@ make clean >> $testdir/results.log 2>&1
 make -j 4 aux >> $testdir/results.log 2>&1
 
 # check
-if [ ! -e bin/xsum_kernels ]; then
+if [ ! -e bin/xcombine_vol_data ]; then
+  echo "binary does not exist! xcombine_vol_data" >> $testdir/results.log
   echo "compilation of auxiliaries failed, please check..." >> $testdir/results.log
   exit 1
 else
-  echo "binary exists: xsum_kernels" >> $testdir/results.log
+  echo "binary exists: xcombine_vol_data" >> $testdir/results.log
 fi
 
 #cleanup

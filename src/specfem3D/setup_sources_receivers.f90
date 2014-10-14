@@ -32,23 +32,39 @@
   use specfem_par
 
   implicit none
+  real(kind=CUSTOM_REAL):: minl,maxl,min_all,max_all
 
-! locates sources and determines simulation start time t0
+  ! gets model dimensions
+  minl = minval( xstore )
+  maxl = maxval( xstore )
+  call min_all_all_cr(minl,min_all)
+  call max_all_all_cr(maxl,max_all)
+  LONGITUDE_MIN = min_all
+  LONGITUDE_MAX = max_all
+
+  minl = minval( ystore )
+  maxl = maxval( ystore )
+  call min_all_all_cr(minl,min_all)
+  call max_all_all_cr(maxl,max_all)
+  LATITUDE_MIN = min_all
+  LATITUDE_MAX = max_all
+
+  ! locates sources and determines simulation start time t0
   call setup_sources()
 
-! reads in stations file and locates receivers
+  ! reads in stations file and locates receivers
   call setup_receivers()
 
-! pre-compute source arrays
+  ! pre-compute source arrays
   call setup_sources_precompute_arrays()
 
-! pre-compute receiver interpolation factors
+  ! pre-compute receiver interpolation factors
   call setup_receivers_precompute_intp()
 
-! write source and receiver VTK files for Paraview
+  ! write source and receiver VTK files for Paraview
   call setup_sources_receivers_VTKfile()
 
-! user output
+  ! user output
   if(myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) 'Total number of samples for seismograms = ',NSTEP

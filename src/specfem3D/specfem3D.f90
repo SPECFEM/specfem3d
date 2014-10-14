@@ -343,22 +343,27 @@
     call read_mesh_databases()
   endif
 
+  ! reads in moho mesh
+  if (ADIOS_FOR_MESH) then
+    call read_mesh_databases_moho_adios()
+  else
+    call read_mesh_databases_moho()
+  endif
+
+  ! reads adjoint parameters
+  call read_mesh_databases_adjoint()
 
 ! sets up reference element GLL points/weights/derivatives
   call setup_GLL_points()
 
-
 ! detects surfaces
   call detect_mesh_surfaces()
-
 
 ! prepares sources and receivers
   call setup_sources_receivers()
 
-
 ! sets up and precomputes simulation arrays
   call prepare_timerun()
-
 
 ! steps through time iterations
   call iterate_time()

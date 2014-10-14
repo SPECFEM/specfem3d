@@ -84,9 +84,7 @@ subroutine read_mesh_databases_adios()
   use specfem_par_poroelastic
 
   implicit none
-
-  real(kind=CUSTOM_REAL):: minl,maxl,min_all,max_all
-  integer :: ier,inum
+  integer :: ier !,inum
 
   character(len=MAX_STRING_LEN) :: database_name
   integer(kind=8) :: handle
@@ -216,21 +214,6 @@ subroutine read_mesh_databases_adios()
       (.not. ELASTIC_SIMULATION ) .and. &
       (.not. POROELASTIC_SIMULATION ) ) then
     call exit_mpi(myrank,'error no simulation type defined')
-  endif
-
-  ! outputs total element numbers
-  call sum_all_i(count(ispec_is_acoustic(:)),inum)
-  if( myrank == 0 ) then
-    write(IMAIN,*) 'total acoustic elements    :',inum
-  endif
-  call sum_all_i(count(ispec_is_elastic(:)),inum)
-  if( myrank == 0 ) then
-    write(IMAIN,*) 'total elastic elements     :',inum
-  endif
-  call sum_all_i(count(ispec_is_poroelastic(:)),inum)
-  if( myrank == 0 ) then
-    write(IMAIN,*) 'total poroelastic elements :',inum
-    call flush_IMAIN()
   endif
 
   !------------------------------------------------------------------.
@@ -1670,63 +1653,12 @@ subroutine read_mesh_databases_adios()
     request_recv_vector_ext_mesh_w(num_interfaces_ext_mesh),stat=ier)
   if( ier /= 0 ) stop 'error allocating array buffer_send_vector_ext_mesh etc.'
 
-  ! gets model dimensions
-  minl = minval( xstore )
-  maxl = maxval( xstore )
-  call min_all_all_cr(minl,min_all)
-  call max_all_all_cr(maxl,max_all)
-  LONGITUDE_MIN = min_all
-  LONGITUDE_MAX = max_all
-
-  minl = minval( ystore )
-  maxl = maxval( ystore )
-  call min_all_all_cr(minl,min_all)
-  call max_all_all_cr(maxl,max_all)
-  LATITUDE_MIN = min_all
-  LATITUDE_MAX = max_all
-
-  ! checks Courant criteria on mesh
-  if( ELASTIC_SIMULATION ) then
-    call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB, &
-                              ibool,xstore,ystore,zstore, &
-                              kappastore,mustore,rho_vp,rho_vs, &
-                              DT,model_speed_max,min_resolved_period, &
-                              LOCAL_PATH,SAVE_MESH_FILES)
-
-  else if( POROELASTIC_SIMULATION ) then
-    allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    rho_vp = 0.0_CUSTOM_REAL
-    rho_vs = 0.0_CUSTOM_REAL
-    call check_mesh_resolution_poro(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
-                                    DT,model_speed_max,min_resolved_period, &
-                                    phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI, &
-                                    LOCAL_PATH,SAVE_MESH_FILES)
-    deallocate(rho_vp,rho_vs)
-  else if( ACOUSTIC_SIMULATION ) then
-    allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array rho_vp'
-    allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array rho_vs'
-    rho_vp = sqrt( kappastore / rhostore ) * rhostore
-    rho_vs = 0.0_CUSTOM_REAL
-    call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB, &
-                              ibool,xstore,ystore,zstore, &
-                              kappastore,mustore,rho_vp,rho_vs, &
-                              DT,model_speed_max,min_resolved_period, &
-                              LOCAL_PATH,SAVE_MESH_FILES)
-    deallocate(rho_vp,rho_vs)
-  endif
-
-  ! reads adjoint parameters
-  call read_mesh_databases_adjoint()
-
 end subroutine read_mesh_databases_adios
 
 
 !-------------------------------------------------------------------------------
 !> Reads in moho meshes
-subroutine read_moho_mesh_adjoint_adios()
+subroutine read_mesh_databases_moho_adios()
 
   use adios_read_mod
 
@@ -1751,137 +1683,160 @@ subroutine read_moho_mesh_adjoint_adios()
 
   integer :: ier
   integer :: comm
-  !-------------------------------------.
-  ! Open ADIOS Database file, read mode |
-  !-------------------------------------'
-  sel_num = 0
 
-  database_name = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // "/moho.bp"
+  ! always needed to be allocated for routine arguments
+  allocate( is_moho_top(NSPEC_BOUN),is_moho_bot(NSPEC_BOUN),stat=ier)
+  if( ier /= 0 ) stop 'Error allocating array is_moho_top etc.'
 
-  call world_get_comm(comm)
+  ! checks if anything to do
+  if( ELASTIC_SIMULATION .and. SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3 ) then
 
-  call adios_read_init_method (ADIOS_READ_METHOD_BP, comm, &
-                               "verbose=1", ier)
-  call adios_read_open_file (handle, database_name, 0, comm, ier)
-  if (ier /= 0) call stop_all()
+    !-------------------------------------.
+    ! Open ADIOS Database file, read mode |
+    !-------------------------------------'
+    sel_num = 0
 
-  !------------------------------------------------------------------.
-  ! Get scalar values. Might be differents for different processors. |
-  ! Hence the selection writeblock.                                  |
-  ! ONLY NSPEC_AB and NGLOB_AB
-  !------------------------------------------------------------------'
-  sel_num = sel_num+1
-  sel => selections(sel_num)
-  call adios_selection_writeblock(sel, myrank)
-  call adios_schedule_read(handle, sel, "nspec2d_moho", 0, 1, &
-                           NSPEC2D_MOHO, ier)
-  call adios_perform_reads(handle, ier)
-  if (ier /= 0) call stop_all()
+    database_name = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // "/moho.bp"
 
-  !----------------------------------------------.
-  ! Fetch values to compute the simulation type. |
-  !----------------------------------------------'
-  sel_num = 0
-  call adios_get_scalar(handle, "ibelm_moho_bot/local_dim",&
-                        local_dim_ibelm_moho_bot ,ier)
-  call adios_get_scalar(handle, "ibelm_moho_top/local_dim",&
-                        local_dim_ibelm_moho_top ,ier)
+    call world_get_comm(comm)
 
-  call adios_get_scalar(handle, "ijk_moho_bot/local_dim",&
-                        local_dim_ijk_moho_bot ,ier)
-  call adios_get_scalar(handle, "ijk_moho_top/local_dim",&
-                        local_dim_ijk_moho_top ,ier)
+    call adios_read_init_method (ADIOS_READ_METHOD_BP, comm, &
+                                 "verbose=1", ier)
+    call adios_read_open_file (handle, database_name, 0, comm, ier)
+    if (ier /= 0) call stop_all()
 
-  call adios_get_scalar(handle,"normal_moho_bot /local_dim",&
-                        local_dim_normal_moho_bot ,ier)
-  call adios_get_scalar(handle, "normal_moho_top/local_dim",&
-                        local_dim_normal_moho_top ,ier)
+    !------------------------------------------------------------------.
+    ! Get scalar values. Might be differents for different processors. |
+    ! Hence the selection writeblock.                                  |
+    ! ONLY NSPEC_AB and NGLOB_AB
+    !------------------------------------------------------------------'
+    sel_num = sel_num+1
+    sel => selections(sel_num)
+    call adios_selection_writeblock(sel, myrank)
+    call adios_schedule_read(handle, sel, "nspec2d_moho", 0, 1, &
+                             NSPEC2D_MOHO, ier)
+    call adios_perform_reads(handle, ier)
+    if (ier /= 0) call stop_all()
 
-  call adios_get_scalar(handle, "is_moho_bot/local_dim",&
-                        local_dim_is_moho_bot ,ier)
-  call adios_get_scalar(handle, "is_moho_top/local_dim",&
-                        local_dim_is_moho_top ,ier)
+    !----------------------------------------------.
+    ! Fetch values to compute the simulation type. |
+    !----------------------------------------------'
+    sel_num = 0
+    call adios_get_scalar(handle, "ibelm_moho_bot/local_dim",&
+                          local_dim_ibelm_moho_bot ,ier)
+    call adios_get_scalar(handle, "ibelm_moho_top/local_dim",&
+                          local_dim_ibelm_moho_top ,ier)
 
-  !---------------------------------------------.
-  ! Allocate arrays with previously read values |
-  !---------------------------------------------'
-  allocate(ibelm_moho_bot(NSPEC2D_MOHO), &
-           ibelm_moho_top(NSPEC2D_MOHO), &
-           normal_moho_top(NDIM,NGLLSQUARE,NSPEC2D_MOHO), &
-           normal_moho_bot(NDIM,NGLLSQUARE,NSPEC2D_MOHO), &
-           ijk_moho_bot(3,NGLLSQUARE,NSPEC2D_MOHO), &
-           ijk_moho_top(3,NGLLSQUARE,NSPEC2D_MOHO),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array ibelm_moho_bot etc.'
+    call adios_get_scalar(handle, "ijk_moho_bot/local_dim",&
+                          local_dim_ijk_moho_bot ,ier)
+    call adios_get_scalar(handle, "ijk_moho_top/local_dim",&
+                          local_dim_ijk_moho_top ,ier)
 
-  !-----------------------------------.
-  ! Read arrays from external_mesh.bp |
-  !-----------------------------------'
-  start(1) = local_dim_ibelm_moho_bot * myrank
-  count_ad(1) = NSPEC2D_MOHO
-  sel_num = sel_num+1
-  sel => selections(sel_num)
-  call adios_selection_boundingbox (sel , 1, start, count_ad)
-  call adios_schedule_read(handle, sel, "ibelm_moho_bot/array", 0, 1, &
-                           ibelm_moho_bot, ier)
-  start(1) = local_dim_ibelm_moho_top * myrank
-  count_ad(1) = NSPEC2D_MOHO
-  sel_num = sel_num+1
-  sel => selections(sel_num)
-  call adios_selection_boundingbox (sel , 1, start, count_ad)
-  call adios_schedule_read(handle, sel, "ibelm_moho_top/array", 0, 1, &
-                           ibelm_moho_top, ier)
+    call adios_get_scalar(handle,"normal_moho_bot /local_dim",&
+                          local_dim_normal_moho_bot ,ier)
+    call adios_get_scalar(handle, "normal_moho_top/local_dim",&
+                          local_dim_normal_moho_top ,ier)
 
-  start(1) = local_dim_ijk_moho_bot * myrank
-  count_ad(1) = 3 * NGLLSQUARE * NSPEC2D_MOHO
-  sel_num = sel_num+1
-  sel => selections(sel_num)
-  call adios_selection_boundingbox (sel , 1, start, count_ad)
-  call adios_schedule_read(handle, sel, "ijk_moho_bot/array", 0, 1, &
-                           ijk_moho_bot, ier)
-  start(1) = local_dim_ijk_moho_top * myrank
-  count_ad(1) = 3 * NGLLSQUARE * NSPEC2D_MOHO
-  sel_num = sel_num+1
-  sel => selections(sel_num)
-  call adios_selection_boundingbox (sel , 1, start, count_ad)
-  call adios_schedule_read(handle, sel, "ijk_moho_top/array", 0, 1, &
-                           ijk_moho_top, ier)
+    call adios_get_scalar(handle, "is_moho_bot/local_dim",&
+                          local_dim_is_moho_bot ,ier)
+    call adios_get_scalar(handle, "is_moho_top/local_dim",&
+                          local_dim_is_moho_top ,ier)
 
-  start(1) = local_dim_normal_moho_bot * myrank
-  count_ad(1) = NDIM * NGLLSQUARE * NSPEC2D_MOHO
-  sel_num = sel_num+1
-  sel => selections(sel_num)
-  call adios_selection_boundingbox (sel , 1, start, count_ad)
-  call adios_schedule_read(handle, sel, "normal_moho_bot/array", 0, 1, &
-                           normal_moho_bot, ier)
-  start(1) = local_dim_normal_moho_top * myrank
-  count_ad(1) = NDIM * NGLLSQUARE * NSPEC2D_MOHO
-  sel_num = sel_num+1
-  sel => selections(sel_num)
-  call adios_selection_boundingbox (sel , 1, start, count_ad)
-  call adios_schedule_read(handle, sel, "normal_moho_top/array", 0, 1, &
-                           normal_moho_top, ier)
+    !---------------------------------------------.
+    ! Allocate arrays with previously read values |
+    !---------------------------------------------'
+    allocate(ibelm_moho_bot(NSPEC2D_MOHO), &
+             ibelm_moho_top(NSPEC2D_MOHO), &
+             normal_moho_top(NDIM,NGLLSQUARE,NSPEC2D_MOHO), &
+             normal_moho_bot(NDIM,NGLLSQUARE,NSPEC2D_MOHO), &
+             ijk_moho_bot(3,NGLLSQUARE,NSPEC2D_MOHO), &
+             ijk_moho_top(3,NGLLSQUARE,NSPEC2D_MOHO),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array ibelm_moho_bot etc.'
 
-  start(1) = local_dim_is_moho_bot * myrank
-  count_ad(1) = NSPEC_AB
-  sel_num = sel_num+1
-  sel => selections(sel_num)
-  call adios_selection_boundingbox (sel , 1, start, count_ad)
-  call adios_schedule_read(handle, sel, "is_moho_bot/array", 0, 1, &
-                           is_moho_bot, ier)
-  start(1) = local_dim_is_moho_top * myrank
-  count_ad(1) = NSPEC_AB
-  sel_num = sel_num+1
-  sel => selections(sel_num)
-  call adios_selection_boundingbox (sel , 1, start, count_ad)
-  call adios_schedule_read(handle, sel, "is_moho_top/array", 0, 1, &
-                           is_moho_top, ier)
+    !-----------------------------------.
+    ! Read arrays from external_mesh.bp |
+    !-----------------------------------'
+    start(1) = local_dim_ibelm_moho_bot * myrank
+    count_ad(1) = NSPEC2D_MOHO
+    sel_num = sel_num+1
+    sel => selections(sel_num)
+    call adios_selection_boundingbox (sel , 1, start, count_ad)
+    call adios_schedule_read(handle, sel, "ibelm_moho_bot/array", 0, 1, &
+                             ibelm_moho_bot, ier)
+    start(1) = local_dim_ibelm_moho_top * myrank
+    count_ad(1) = NSPEC2D_MOHO
+    sel_num = sel_num+1
+    sel => selections(sel_num)
+    call adios_selection_boundingbox (sel , 1, start, count_ad)
+    call adios_schedule_read(handle, sel, "ibelm_moho_top/array", 0, 1, &
+                             ibelm_moho_top, ier)
 
-  !---------------------------------------------------------------.
-  ! Perform the reads and close the ADIOS 'external_mesh.bp' file |
-  !---------------------------------------------------------------'
-  call adios_perform_reads(handle, ier)
-  if (ier /= 0) call stop_all()
-  call adios_read_close(handle,ier)
-  call adios_read_finalize_method(ADIOS_READ_METHOD_BP, ier)
+    start(1) = local_dim_ijk_moho_bot * myrank
+    count_ad(1) = 3 * NGLLSQUARE * NSPEC2D_MOHO
+    sel_num = sel_num+1
+    sel => selections(sel_num)
+    call adios_selection_boundingbox (sel , 1, start, count_ad)
+    call adios_schedule_read(handle, sel, "ijk_moho_bot/array", 0, 1, &
+                             ijk_moho_bot, ier)
+    start(1) = local_dim_ijk_moho_top * myrank
+    count_ad(1) = 3 * NGLLSQUARE * NSPEC2D_MOHO
+    sel_num = sel_num+1
+    sel => selections(sel_num)
+    call adios_selection_boundingbox (sel , 1, start, count_ad)
+    call adios_schedule_read(handle, sel, "ijk_moho_top/array", 0, 1, &
+                             ijk_moho_top, ier)
 
-end subroutine read_moho_mesh_adjoint_adios
+    start(1) = local_dim_normal_moho_bot * myrank
+    count_ad(1) = NDIM * NGLLSQUARE * NSPEC2D_MOHO
+    sel_num = sel_num+1
+    sel => selections(sel_num)
+    call adios_selection_boundingbox (sel , 1, start, count_ad)
+    call adios_schedule_read(handle, sel, "normal_moho_bot/array", 0, 1, &
+                             normal_moho_bot, ier)
+    start(1) = local_dim_normal_moho_top * myrank
+    count_ad(1) = NDIM * NGLLSQUARE * NSPEC2D_MOHO
+    sel_num = sel_num+1
+    sel => selections(sel_num)
+    call adios_selection_boundingbox (sel , 1, start, count_ad)
+    call adios_schedule_read(handle, sel, "normal_moho_top/array", 0, 1, &
+                             normal_moho_top, ier)
+
+    start(1) = local_dim_is_moho_bot * myrank
+    count_ad(1) = NSPEC_AB
+    sel_num = sel_num+1
+    sel => selections(sel_num)
+    call adios_selection_boundingbox (sel , 1, start, count_ad)
+    call adios_schedule_read(handle, sel, "is_moho_bot/array", 0, 1, &
+                             is_moho_bot, ier)
+    start(1) = local_dim_is_moho_top * myrank
+    count_ad(1) = NSPEC_AB
+    sel_num = sel_num+1
+    sel => selections(sel_num)
+    call adios_selection_boundingbox (sel , 1, start, count_ad)
+    call adios_schedule_read(handle, sel, "is_moho_top/array", 0, 1, &
+                             is_moho_top, ier)
+
+    !---------------------------------------------------------------.
+    ! Perform the reads and close the ADIOS 'external_mesh.bp' file |
+    !---------------------------------------------------------------'
+    call adios_perform_reads(handle, ier)
+    if (ier /= 0) call stop_all()
+    call adios_read_close(handle,ier)
+    call adios_read_finalize_method(ADIOS_READ_METHOD_BP, ier)
+
+  else
+    ! dummy
+    NSPEC2D_MOHO = 1
+  endif
+
+  ! moho boundary
+  if( ELASTIC_SIMULATION ) then
+    ! always needed to be allocated for routine arguments
+    allocate(dsdx_top(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO), &
+             dsdx_bot(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO), &
+             b_dsdx_top(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO), &
+             b_dsdx_bot(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO),stat=ier)
+    if( ier /= 0 ) stop 'Error allocating array dsdx_top etc.'
+  endif
+
+end subroutine read_mesh_databases_moho_adios

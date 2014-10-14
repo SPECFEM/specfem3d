@@ -337,14 +337,12 @@ $O/fault_solver_common.spec.o: $O/specfem3D_par.spec.o
 $O/gravity_perturbation.spec.o: $O/specfem3D_par.spec.o
 $O/locate_source.spec.o: $O/specfem3D_par.spec.o
 $O/locate_receivers.spec.o: $O/specfem3D_par.spec.o
-$O/model_update.spec.o: $O/specfem3D_par.spec.o
 $O/pml_par.spec.o: $O/specfem3D_par.spec.o
 $O/setup_GLL_points.spec.o: $O/specfem3D_par.spec.o
 $O/setup_movie_meshes.spec.o: $O/specfem3D_par.spec.o
 $O/setup_sources_receivers.spec.o: $O/specfem3D_par.spec.o $O/constants_mod.shared_module.o 
 $O/specfem3D.spec.o: $O/specfem3D_par.spec.o
 $O/save_adjoint_kernels.spec.o: $O/specfem3D_par.spec.o
-$O/save_external_bin_m_up.spec.o: $O/specfem3D_par.spec.o
 $O/write_movie_output.spec.o: $O/specfem3D_par.spec.o
 $O/write_output_SU.spec.o: $O/specfem3D_par.spec.o
 $O/write_seismograms.spec.o: $O/specfem3D_par.spec.o

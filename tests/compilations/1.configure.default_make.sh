@@ -18,6 +18,7 @@ rm -rf ./bin ./obj ./setup ./OUTPUT_FILES ./DATA
 
 # default configuration
 # (out-of-source compilation)
+echo "configuration: $srcdir/configure" >> $testdir/results.log
 $srcdir/configure >> $testdir/results.log 2>&1
 
 # checks exit code

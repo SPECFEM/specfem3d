@@ -1074,13 +1074,140 @@
 !-------------------------------------------------------------------------------------------------
 !
 
+  subroutine check_mesh_distances(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
+                                  x_min_glob,x_max_glob,y_min_glob,y_max_glob,z_min_glob,z_max_glob, &
+                                  elemsize_min_glob,elemsize_max_glob, &
+                                  distance_min_glob,distance_max_glob)
+
+! checks the mesh sizes
+!
+! returns: global dimensions, element size and gll point distances
+
+  use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,HUGEVAL
+
+  implicit none
+
+  integer,intent(in) :: myrank
+  integer,intent(in) :: NSPEC_AB,NGLOB_AB
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(in) :: xstore,ystore,zstore
+  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
+
+  real(kind=CUSTOM_REAL),intent(out) :: distance_min_glob,distance_max_glob
+  real(kind=CUSTOM_REAL),intent(out) :: elemsize_min_glob,elemsize_max_glob
+  real(kind=CUSTOM_REAL),intent(out) :: x_min_glob,x_max_glob
+  real(kind=CUSTOM_REAL),intent(out) :: y_min_glob,y_max_glob
+  real(kind=CUSTOM_REAL),intent(out) :: z_min_glob,z_max_glob
+
+  ! local parameters
+  real(kind=CUSTOM_REAL) :: distance_min,distance_max
+  real(kind=CUSTOM_REAL) :: elemsize_min,elemsize_max
+  real(kind=CUSTOM_REAL) :: x_min,x_max
+  real(kind=CUSTOM_REAL) :: y_min,y_max
+  real(kind=CUSTOM_REAL) :: z_min,z_max
+  integer :: ispec
+
+  ! initializes
+  x_min_glob = HUGEVAL
+  x_max_glob = -HUGEVAL
+
+  y_min_glob = HUGEVAL
+  y_max_glob = -HUGEVAL
+
+  z_min_glob = HUGEVAL
+  z_max_glob = -HUGEVAL
+
+  elemsize_min_glob = HUGEVAL
+  elemsize_max_glob = -HUGEVAL
+
+  distance_min_glob = HUGEVAL
+  distance_max_glob = -HUGEVAL
+
+  ! model dimensions
+  x_min_glob = minval(xstore)
+  x_max_glob = maxval(xstore)
+
+  y_min_glob = minval(ystore)
+  y_max_glob = maxval(ystore)
+
+  z_min_glob = minval(zstore)
+  z_max_glob = maxval(zstore)
+
+  ! min and max dimensions of the model
+  x_min = x_min_glob
+  x_max = x_max_glob
+  call min_all_cr(x_min,x_min_glob)
+  call max_all_cr(x_max,x_max_glob)
+
+  y_min = y_min_glob
+  y_max = y_max_glob
+  call min_all_cr(y_min,y_min_glob)
+  call max_all_cr(y_max,y_max_glob)
+
+  z_min = z_min_glob
+  z_max = z_max_glob
+  call min_all_cr(z_min,z_min_glob)
+  call max_all_cr(z_max,z_max_glob)
+
+  ! gets distances for each grid cell
+  do ispec=1,NSPEC_AB
+
+    ! computes minimum and maximum size of this grid cell
+    call get_elem_minmaxsize(elemsize_min,elemsize_max,ispec, &
+                             NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
+
+    elemsize_min_glob = min(elemsize_min_glob, elemsize_min)
+    elemsize_max_glob = max(elemsize_max_glob, elemsize_max)
+
+    ! computes minimum and maximum distance of neighbor GLL points in this grid cell
+    call get_GLL_minmaxdistance(distance_min,distance_max,ispec, &
+                                NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
+
+    distance_min_glob = min(distance_min_glob, distance_min)
+    distance_max_glob = max(distance_max_glob, distance_max)
+
+  enddo
+
+  ! element size
+  elemsize_min = elemsize_min_glob
+  elemsize_max = elemsize_max_glob
+  call min_all_cr(elemsize_min,elemsize_min_glob)
+  call max_all_cr(elemsize_max,elemsize_max_glob)
+
+  ! GLL point distance
+  distance_min = distance_min_glob
+  distance_max = distance_max_glob
+  call min_all_cr(distance_min,distance_min_glob)
+  call max_all_cr(distance_max,distance_max_glob)
+
+  ! checks mesh
+  if( myrank == 0 ) then
+    if( distance_min_glob <= 0.0_CUSTOM_REAL ) then
+      call exit_mpi(myrank,"Error GLL points minimum distance invalid")
+    endif
+    if( distance_max_glob >= HUGEVAL ) then
+      call exit_mpi(myrank,"Error GLL points maximum distance invalid")
+    endif
+    if( elemsize_min_glob <= 0.0_CUSTOM_REAL ) then
+      call exit_mpi(myrank,"Error element minimum size invalid")
+    endif
+    if( elemsize_max_glob >= HUGEVAL ) then
+      call exit_mpi(myrank,"Error element maximum size invalid")
+    endif
+  endif
+
+  end subroutine check_mesh_distances
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
   subroutine get_GLL_minmaxdistance(distance_min,distance_max,ispec, &
                           NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
 
 ! calculates the min/max distances between neighboring GLL points within the specified element (ispec);
 ! we purposely do not include the distance along the diagonals of the element, only along its three coordinate axes.
 
-  use constants
+  use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,HUGEVAL
 
   implicit none
 
@@ -1164,7 +1291,7 @@
 ! calculates the min/max size of an edge of the specified element (ispec);
 ! we purposely do not include the distance along the diagonals of the element, only the size of its edges.
 
-  use constants
+  use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,HUGEVAL
 
   implicit none
 

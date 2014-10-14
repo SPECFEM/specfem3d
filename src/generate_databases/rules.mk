@@ -82,8 +82,8 @@ generate_databases_MODULES = \
 	$(FC_MODDIR)/generate_databases_par.$(FC_MODEXT) \
 	$(FC_MODDIR)/model_ipati_adios_mod.$(FC_MODEXT) \
 	$(FC_MODDIR)/model_sep_mod.$(FC_MODEXT) \
+	$(FC_MODDIR)/model_tomography_par.$(FC_MODEXT) \
 	$(FC_MODDIR)/salton_trough_par.$(FC_MODEXT) \
-	$(FC_MODDIR)/tomography_par.$(FC_MODEXT) \
 	$(EMPTY_MACRO)
 
 

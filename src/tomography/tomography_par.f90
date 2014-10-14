@@ -25,15 +25,24 @@
 !
 !=====================================================================
 
-  program xspecfem3D
 
-! mpi initialization
-  call init_mpi()
+module tomography_par
 
-! run the main program
-  call specfem3D()
+  use constants,only: CUSTOM_REAL,MAX_STRING_LEN,NGLLX,NGLLY,NGLLZ,IIN,IOUT,R_EARTH_KM
 
-! mpi finish
-  call finalize_mpi()
+  implicit none
 
-  end program xspecfem3D
+  ! tomography parameter settings
+  include "constants_tomography.h"
+
+  ! mesh size
+  integer :: NSPEC, NGLOB
+
+  ! model update length
+  real(kind=CUSTOM_REAL) :: step_fac,step_length
+
+  ! mpi process
+  integer :: myrank
+
+end module tomography_par
+

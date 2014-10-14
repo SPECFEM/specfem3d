@@ -342,6 +342,7 @@ AC_DEFINE_UNQUOTED([CONFIGURE_FLAGS],["${configure_flags_str}"],
 AC_CONFIG_FILES([
     Makefile
     setup/constants.h
+    setup/constants_tomography.h
     setup/precision.h
 ])
 

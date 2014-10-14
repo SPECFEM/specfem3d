@@ -37,21 +37,22 @@
   use specfem_par_poroelastic
 
   implicit none
+  integer :: ier
+  character(len=MAX_STRING_LEN) :: database_name
 
-  real(kind=CUSTOM_REAL):: minl,maxl,min_all,max_all
-  integer :: ier,inum
+  ! sets file name
+  call create_name_database(prname,myrank,LOCAL_PATH)
+  database_name = prname(1:len_trim(prname))//'external_mesh.bin'
 
 ! start reading the databases
 
 ! info about external mesh simulation
-  call create_name_database(prname,myrank,LOCAL_PATH)
   if(I_should_read_the_database) then
-    open(unit=27,file=prname(1:len_trim(prname))//'external_mesh.bin',status='old',&
+    open(unit=27,file=trim(database_name),status='old',&
        action='read',form='unformatted',iostat=ier)
     if( ier /= 0 ) then
-      print*,'error: could not open database '
-      print*,'path: ',prname(1:len_trim(prname))//'external_mesh.bin'
-      call exit_mpi(myrank,'error opening database')
+      print*,'Error could not open database file: ',trim(database_name)
+      call exit_mpi(myrank,'Error opening database file')
     endif
   endif
 
@@ -114,31 +115,31 @@
   if( ACOUSTIC_SIMULATION ) then
     ! potentials
     allocate(potential_acoustic(NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array potential_acoustic'
+    if( ier /= 0 ) stop 'Error allocating array potential_acoustic'
     allocate(potential_dot_acoustic(NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array potential_dot_acoustic'
+    if( ier /= 0 ) stop 'Error allocating array potential_dot_acoustic'
     allocate(potential_dot_dot_acoustic(NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array potential_dot_dot_acoustic'
+    if( ier /= 0 ) stop 'Error allocating array potential_dot_dot_acoustic'
     if( SIMULATION_TYPE /= 1 ) then
       allocate(potential_acoustic_adj_coupling(NGLOB_AB),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array potential_acoustic_adj_coupling'
+      if( ier /= 0 ) stop 'Error allocating array potential_acoustic_adj_coupling'
     endif
     ! mass matrix, density
     allocate(rmass_acoustic(NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array rmass_acoustic'
+    if( ier /= 0 ) stop 'Error allocating array rmass_acoustic'
     if(I_should_read_the_database) read(27) rmass_acoustic
     if(size(rmass_acoustic) > 0) call bcast_all_cr_for_database(rmass_acoustic(1), size(rmass_acoustic))
 
     ! initializes mass matrix contribution
     allocate(rmassz_acoustic(NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array rmassz_acoustic'
+    if( ier /= 0 ) stop 'Error allocating array rmassz_acoustic'
     rmassz_acoustic(:) = 0._CUSTOM_REAL
   endif
 
 ! this array is needed for acoustic simulations but also for elastic simulations with CPML,
 ! thus we now allocate it and read it in all cases (whether the simulation is acoustic, elastic, or acoustic/elastic)
   allocate(rhostore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array rhostore'
+  if( ier /= 0 ) stop 'Error allocating array rhostore'
   if(I_should_read_the_database) read(27) rhostore
   call bcast_all_cr_for_database(rhostore(1,1,1,1), size(rhostore))
 
@@ -151,34 +152,34 @@
   if( ELASTIC_SIMULATION ) then
     ! displacement,velocity,acceleration
     allocate(displ(NDIM,NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array displ'
+    if( ier /= 0 ) stop 'Error allocating array displ'
     allocate(veloc(NDIM,NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array veloc'
+    if( ier /= 0 ) stop 'Error allocating array veloc'
     allocate(accel(NDIM,NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array accel'
+    if( ier /= 0 ) stop 'Error allocating array accel'
     if( SIMULATION_TYPE /= 1 ) then
       allocate(accel_adj_coupling(NDIM,NGLOB_AB),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array accel_adj_coupling'
+      if( ier /= 0 ) stop 'Error allocating array accel_adj_coupling'
     endif
 
     ! allocates mass matrix
     allocate(rmass(NGLOB_AB),stat=ier)
 
-    if( ier /= 0 ) stop 'error allocating array rmass'
+    if( ier /= 0 ) stop 'Error allocating array rmass'
     ! initializes mass matrix contributions
     allocate(rmassx(NGLOB_AB), &
              rmassy(NGLOB_AB), &
              rmassz(NGLOB_AB), &
              stat=ier)
-    if( ier /= 0 ) stop 'error allocating array rmassx,rmassy,rmassz'
+    if( ier /= 0 ) stop 'Error allocating array rmassx,rmassy,rmassz'
     rmassx(:) = 0._CUSTOM_REAL
     rmassy(:) = 0._CUSTOM_REAL
     rmassz(:) = 0._CUSTOM_REAL
 
     allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array rho_vp'
+    if( ier /= 0 ) stop 'Error allocating array rho_vp'
     allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array rho_vs'
+    if( ier /= 0 ) stop 'Error allocating array rho_vs'
     allocate(c11store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
              c12store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
              c13store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
@@ -200,7 +201,7 @@
              c55store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
              c56store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
              c66store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array c11store etc.'
+    if( ier /= 0 ) stop 'Error allocating array c11store etc.'
 
     ! note: currently, they need to be defined, as they are used in the routine arguments
     !          for compute_forces_viscoelastic_Deville()
@@ -209,7 +210,7 @@
              R_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
              R_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
              R_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array R_xx etc.'
+    if( ier /= 0 ) stop 'Error allocating array R_xx etc.'
 
     ! needed for attenuation and/or kernel computations
     allocate(epsilondev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY), &
@@ -217,49 +218,49 @@
              epsilondev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY), &
              epsilondev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY), &
              epsilondev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array epsilondev_xx etc.'
+    if( ier /= 0 ) stop 'Error allocating array epsilondev_xx etc.'
 
     allocate(R_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa,N_SLS),&
              epsilondev_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array R_trace etc.'
+    if( ier /= 0 ) stop 'Error allocating array R_trace etc.'
 
     ! note: needed for argument of deville routine
     allocate(epsilon_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array epsilon_trace_over_3'
+    if( ier /= 0 ) stop 'Error allocating array epsilon_trace_over_3'
 
     ! needed for attenuation
     allocate(one_minus_sum_beta(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB), &
              factor_common(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array one_minus_sum_beta etc.'
+    if( ier /= 0 ) stop 'Error allocating array one_minus_sum_beta etc.'
 
     allocate(one_minus_sum_beta_kappa(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa), &
              factor_common_kappa(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array one_minus_sum_beta_kappa etc.'
+    if( ier /= 0 ) stop 'Error allocating array one_minus_sum_beta_kappa etc.'
 
     ! reads mass matrices
     if(I_should_read_the_database) read(27,iostat=ier) rmass
     call bcast_all_cr_for_database(rmass(1), size(rmass))
-    if( ier /= 0 ) stop 'error reading in array rmass'
+    if( ier /= 0 ) stop 'Error reading in array rmass'
 
     if( APPROXIMATE_OCEAN_LOAD ) then
       ! ocean mass matrix
       allocate(rmass_ocean_load(NGLOB_AB),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array rmass_ocean_load'
+      if( ier /= 0 ) stop 'Error allocating array rmass_ocean_load'
       if(I_should_read_the_database) read(27) rmass_ocean_load
       if(size(rmass_ocean_load) > 0) call bcast_all_cr_for_database(rmass_ocean_load(1), size(rmass_ocean_load))
     else
       ! dummy allocation
       allocate(rmass_ocean_load(1),stat=ier)
-      if( ier /= 0 ) stop 'error allocating dummy array rmass_ocean_load'
+      if( ier /= 0 ) stop 'Error allocating dummy array rmass_ocean_load'
     endif
 
     !pll material parameters for stacey conditions
     if(I_should_read_the_database) read(27,iostat=ier) rho_vp
     if(size(rho_vp) > 0) call bcast_all_cr_for_database(rho_vp(1,1,1,1), size(rho_vp))
-    if( ier /= 0 ) stop 'error reading in array rho_vp'
+    if( ier /= 0 ) stop 'Error reading in array rho_vp'
     if(I_should_read_the_database) read(27,iostat=ier) rho_vs
     if(size(rho_vs) > 0) call bcast_all_cr_for_database(rho_vs(1,1,1,1), size(rho_vs))
-    if( ier /= 0 ) stop 'error reading in array rho_vs'
+    if( ier /= 0 ) stop 'Error reading in array rho_vs'
 
   else
     ! no elastic attenuation & anisotropy
@@ -275,22 +276,22 @@
 
     ! displacement,velocity,acceleration for the solid (s) & fluid (w) phases
     allocate(displs_poroelastic(NDIM,NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array displs_poroelastic'
+    if( ier /= 0 ) stop 'Error allocating array displs_poroelastic'
     allocate(velocs_poroelastic(NDIM,NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array velocs_poroelastic'
+    if( ier /= 0 ) stop 'Error allocating array velocs_poroelastic'
     allocate(accels_poroelastic(NDIM,NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array accels_poroelastic'
+    if( ier /= 0 ) stop 'Error allocating array accels_poroelastic'
     allocate(displw_poroelastic(NDIM,NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array displw_poroelastic'
+    if( ier /= 0 ) stop 'Error allocating array displw_poroelastic'
     allocate(velocw_poroelastic(NDIM,NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array velocw_poroelastic'
+    if( ier /= 0 ) stop 'Error allocating array velocw_poroelastic'
     allocate(accelw_poroelastic(NDIM,NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array accelw_poroelastic'
+    if( ier /= 0 ) stop 'Error allocating array accelw_poroelastic'
 
     allocate(rmass_solid_poroelastic(NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array rmass_solid_poroelastic'
+    if( ier /= 0 ) stop 'Error allocating array rmass_solid_poroelastic'
     allocate(rmass_fluid_poroelastic(NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array rmass_fluid_poroelastic'
+    if( ier /= 0 ) stop 'Error allocating array rmass_fluid_poroelastic'
 
     allocate(rhoarraystore(2,NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
              kappaarraystore(3,NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
@@ -301,7 +302,7 @@
              rho_vpI(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
              rho_vpII(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
              rho_vsI(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array poroelastic properties'
+    if( ier /= 0 ) stop 'Error allocating array poroelastic properties'
 
     ! needed for kernel computations
     allocate(epsilonsdev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
@@ -314,11 +315,11 @@
              epsilonwdev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
              epsilonwdev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
              epsilonwdev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array epsilonsdev_xx etc.'
+    if( ier /= 0 ) stop 'Error allocating array epsilonsdev_xx etc.'
 
     allocate(epsilons_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
              epsilonw_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array epsilons_trace_over_3 etc.'
+    if( ier /= 0 ) stop 'Error allocating array epsilons_trace_over_3 etc.'
 
     if(I_should_read_the_database) then
       read(27) rmass_solid_poroelastic
@@ -351,7 +352,7 @@
      (.not. ELASTIC_SIMULATION ) .and. &
      (.not. POROELASTIC_SIMULATION ) ) then
     if(I_should_read_the_database) close(27)
-    call exit_mpi(myrank,'error no simulation type defined')
+    call exit_mpi(myrank,'Error no simulation type defined')
   endif
 
   ! C-PML absorbing boundary conditions
@@ -369,7 +370,7 @@
     call bcast_all_cr_for_database(CPML_width_z, 1)
 
     allocate(is_CPML(NSPEC_AB),stat=ier)
-    if(ier /= 0) stop 'error allocating array is_CPML'
+    if(ier /= 0) stop 'Error allocating array is_CPML'
 
 ! make sure there are no PMLs by default,
 ! and then below if NSPEC_CPML > 0 we will need the real flags for this mesh from the disk
@@ -377,27 +378,27 @@
 
     if( NSPEC_CPML > 0 ) then
       allocate(CPML_regions(NSPEC_CPML),stat=ier)
-      if(ier /= 0) stop 'error allocating array CPML_regions'
+      if(ier /= 0) stop 'Error allocating array CPML_regions'
       allocate(CPML_to_spec(NSPEC_CPML),stat=ier)
-      if(ier /= 0) stop 'error allocating array CPML_to_spec'
+      if(ier /= 0) stop 'Error allocating array CPML_to_spec'
       allocate(d_store_x(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-      if(ier /= 0) stop 'error allocating array d_store_x'
+      if(ier /= 0) stop 'Error allocating array d_store_x'
       allocate(d_store_y(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-      if(ier /= 0) stop 'error allocating array d_store_y'
+      if(ier /= 0) stop 'Error allocating array d_store_y'
       allocate(d_store_z(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-      if(ier /= 0) stop 'error allocating array d_store_z'
+      if(ier /= 0) stop 'Error allocating array d_store_z'
       allocate(K_store_x(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-      if(ier /= 0) stop 'error allocating array K_store_x'
+      if(ier /= 0) stop 'Error allocating array K_store_x'
       allocate(K_store_y(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-      if(ier /= 0) stop 'error allocating array K_store_y'
+      if(ier /= 0) stop 'Error allocating array K_store_y'
       allocate(K_store_z(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-      if(ier /= 0) stop 'error allocating array K_store_z'
+      if(ier /= 0) stop 'Error allocating array K_store_z'
       allocate(alpha_store_x(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-      if(ier /= 0) stop 'error allocating array alpha_store'
+      if(ier /= 0) stop 'Error allocating array alpha_store'
       allocate(alpha_store_y(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-      if(ier /= 0) stop 'error allocating array alpha_store'
+      if(ier /= 0) stop 'Error allocating array alpha_store'
       allocate(alpha_store_z(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-      if(ier /= 0) stop 'error allocating array alpha_store'
+      if(ier /= 0) stop 'Error allocating array alpha_store'
 
       if(I_should_read_the_database) then
         read(27) CPML_regions
@@ -433,14 +434,14 @@
         call bcast_all_i_for_database(nglob_interface_PML_elastic, 1)
         if(nglob_interface_PML_acoustic > 0) then
           allocate(points_interface_PML_acoustic(nglob_interface_PML_acoustic),stat=ier)
-          if(ier /= 0) stop 'error allocating array points_interface_PML_acoustic'
+          if(ier /= 0) stop 'Error allocating array points_interface_PML_acoustic'
           if(I_should_read_the_database) read(27) points_interface_PML_acoustic
           if(size(points_interface_PML_acoustic) > 0) &
             call bcast_all_i_for_database(points_interface_PML_acoustic(1), size(points_interface_PML_acoustic))
         endif
         if(nglob_interface_PML_elastic > 0) then
           allocate(points_interface_PML_elastic(nglob_interface_PML_elastic),stat=ier)
-          if(ier /= 0) stop 'error allocating array points_interface_PML_elastic'
+          if(ier /= 0) stop 'Error allocating array points_interface_PML_elastic'
           if(I_should_read_the_database) read(27) points_interface_PML_elastic
           if(size(points_interface_PML_elastic) > 0) &
             call bcast_all_i_for_database(points_interface_PML_elastic(1), size(points_interface_PML_elastic))
@@ -465,7 +466,7 @@
            abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces), &
            abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces), &
            abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array abs_boundary_ispec etc.'
+  if( ier /= 0 ) stop 'Error allocating array abs_boundary_ispec etc.'
 
   !! CD CD !! For coupling with DSM
   if (COUPLE_WITH_EXTERNAL_CODE) then
@@ -546,7 +547,7 @@
   allocate(ibelm_xmin(nspec2D_xmin),ibelm_xmax(nspec2D_xmax), &
            ibelm_ymin(nspec2D_ymin),ibelm_ymax(nspec2D_ymax), &
            ibelm_bottom(NSPEC2D_BOTTOM),ibelm_top(NSPEC2D_TOP),stat=ier)
-  if(ier /= 0) stop 'error allocating arrays ibelm_xmin,ibelm_xmax etc.'
+  if(ier /= 0) stop 'Error allocating arrays ibelm_xmin,ibelm_xmax etc.'
   if(I_should_read_the_database) then
     read(27) ibelm_xmin
     read(27) ibelm_xmax
@@ -569,7 +570,7 @@
            free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces), &
            free_surface_jacobian2Dw(NGLLSQUARE,num_free_surface_faces), &
            free_surface_normal(NDIM,NGLLSQUARE,num_free_surface_faces),stat=ier)
-  if(ier /= 0) stop 'error allocating arrays free_surface_ispec etc.'
+  if(ier /= 0) stop 'Error allocating arrays free_surface_ispec etc.'
   if( num_free_surface_faces > 0 ) then
     if(I_should_read_the_database) then
       read(27) free_surface_ispec
@@ -591,7 +592,7 @@
            coupling_ac_el_jacobian2Dw(NGLLSQUARE,num_coupling_ac_el_faces), &
            coupling_ac_el_ijk(3,NGLLSQUARE,num_coupling_ac_el_faces), &
            coupling_ac_el_ispec(num_coupling_ac_el_faces),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array coupling_ac_el_normal etc.'
+  if( ier /= 0 ) stop 'Error allocating array coupling_ac_el_normal etc.'
   if( num_coupling_ac_el_faces > 0 ) then
     if(I_should_read_the_database) then
       read(27) coupling_ac_el_ispec
@@ -613,7 +614,7 @@
            coupling_ac_po_jacobian2Dw(NGLLSQUARE,num_coupling_ac_po_faces), &
            coupling_ac_po_ijk(3,NGLLSQUARE,num_coupling_ac_po_faces), &
            coupling_ac_po_ispec(num_coupling_ac_po_faces),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array coupling_ac_po_normal etc.'
+  if( ier /= 0 ) stop 'Error allocating array coupling_ac_po_normal etc.'
   if( num_coupling_ac_po_faces > 0 ) then
     if(I_should_read_the_database) then
       read(27) coupling_ac_po_ispec
@@ -637,7 +638,7 @@
            coupling_po_el_ijk(3,NGLLSQUARE,num_coupling_el_po_faces), &
            coupling_el_po_ispec(num_coupling_el_po_faces), &
            coupling_po_el_ispec(num_coupling_el_po_faces),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array coupling_el_po_normal etc.'
+  if( ier /= 0 ) stop 'Error allocating array coupling_el_po_normal etc.'
   if( num_coupling_el_po_faces > 0 ) then
     if(I_should_read_the_database) then
       read(27) coupling_el_po_ispec
@@ -661,12 +662,12 @@
   call bcast_all_i_for_database(num_interfaces_ext_mesh, 1)
   allocate(my_neighbours_ext_mesh(num_interfaces_ext_mesh), &
            nibool_interfaces_ext_mesh(num_interfaces_ext_mesh),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array my_neighbours_ext_mesh etc.'
+  if( ier /= 0 ) stop 'Error allocating array my_neighbours_ext_mesh etc.'
   if( num_interfaces_ext_mesh > 0 ) then
     if(I_should_read_the_database) read(27) max_nibool_interfaces_ext_mesh
     call bcast_all_i_for_database(max_nibool_interfaces_ext_mesh, 1)
     allocate(ibool_interfaces_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array ibool_interfaces_ext_mesh'
+    if( ier /= 0 ) stop 'Error allocating array ibool_interfaces_ext_mesh'
     if(I_should_read_the_database) then
       read(27) my_neighbours_ext_mesh
       read(27) nibool_interfaces_ext_mesh
@@ -731,7 +732,7 @@
 
   ! inner / outer elements
   allocate(ispec_is_inner(NSPEC_AB),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array ispec_is_inner'
+  if( ier /= 0 ) stop 'Error allocating array ispec_is_inner'
   if(I_should_read_the_database) read(27) ispec_is_inner
   if(size(ispec_is_inner) > 0) call bcast_all_l_for_database(ispec_is_inner(1), size(ispec_is_inner))
 
@@ -743,9 +744,9 @@
     call bcast_all_i_for_database(nspec_inner_acoustic, 1)
     call bcast_all_i_for_database(nspec_outer_acoustic, 1)
     call bcast_all_i_for_database(num_phase_ispec_acoustic, 1)
-    if( num_phase_ispec_acoustic < 0 ) stop 'error acoustic simulation: num_phase_ispec_acoustic is < zero'
+    if( num_phase_ispec_acoustic < 0 ) stop 'Error acoustic simulation: num_phase_ispec_acoustic is < zero'
     allocate( phase_ispec_inner_acoustic(num_phase_ispec_acoustic,2),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array phase_ispec_inner_acoustic'
+    if( ier /= 0 ) stop 'Error allocating array phase_ispec_inner_acoustic'
     if(num_phase_ispec_acoustic > 0 ) then
       if(I_should_read_the_database) read(27) phase_ispec_inner_acoustic
       if(size(phase_ispec_inner_acoustic) > 0) &
@@ -761,9 +762,9 @@
     call bcast_all_i_for_database(nspec_inner_elastic, 1)
     call bcast_all_i_for_database(nspec_outer_elastic, 1)
     call bcast_all_i_for_database(num_phase_ispec_elastic, 1)
-    if( num_phase_ispec_elastic < 0 ) stop 'error elastic simulation: num_phase_ispec_elastic is < zero'
+    if( num_phase_ispec_elastic < 0 ) stop 'Error elastic simulation: num_phase_ispec_elastic is < zero'
     allocate( phase_ispec_inner_elastic(num_phase_ispec_elastic,2),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array phase_ispec_inner_elastic'
+    if( ier /= 0 ) stop 'Error allocating array phase_ispec_inner_elastic'
     if(num_phase_ispec_elastic > 0 ) then
       if(I_should_read_the_database) read(27) phase_ispec_inner_elastic
       if(size(phase_ispec_inner_elastic) > 0) &
@@ -779,9 +780,9 @@
     call bcast_all_i_for_database(nspec_inner_poroelastic, 1)
     call bcast_all_i_for_database(nspec_outer_poroelastic, 1)
     call bcast_all_i_for_database(num_phase_ispec_poroelastic, 1)
-    if( num_phase_ispec_poroelastic < 0 ) stop 'error poroelastic simulation: num_phase_ispec_poroelastic is < zero'
+    if( num_phase_ispec_poroelastic < 0 ) stop 'Error poroelastic simulation: num_phase_ispec_poroelastic is < zero'
     allocate( phase_ispec_inner_poroelastic(num_phase_ispec_poroelastic,2),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array phase_ispec_inner_poroelastic'
+    if( ier /= 0 ) stop 'Error allocating array phase_ispec_inner_poroelastic'
     if(num_phase_ispec_poroelastic > 0 ) then
       if(I_should_read_the_database) read(27) phase_ispec_inner_poroelastic
       if(size(phase_ispec_inner_poroelastic) > 0) &
@@ -798,7 +799,7 @@
       call bcast_all_i_for_database(num_colors_inner_acoustic, 1)
 
       allocate(num_elem_colors_acoustic(num_colors_outer_acoustic + num_colors_inner_acoustic),stat=ier)
-      if( ier /= 0 ) stop 'error allocating num_elem_colors_acoustic array'
+      if( ier /= 0 ) stop 'Error allocating num_elem_colors_acoustic array'
 
       if(I_should_read_the_database) read(27) num_elem_colors_acoustic
       if(size(num_elem_colors_acoustic) > 0) &
@@ -811,7 +812,7 @@
       call bcast_all_i_for_database(num_colors_inner_elastic, 1)
 
       allocate(num_elem_colors_elastic(num_colors_outer_elastic + num_colors_inner_elastic),stat=ier)
-      if( ier /= 0 ) stop 'error allocating num_elem_colors_elastic array'
+      if( ier /= 0 ) stop 'Error allocating num_elem_colors_elastic array'
 
       if(I_should_read_the_database) read(27) num_elem_colors_elastic
       if(size(num_elem_colors_elastic) > 0) call bcast_all_i_for_database(num_elem_colors_elastic(1), size(num_elem_colors_elastic))
@@ -822,31 +823,16 @@
       num_colors_outer_acoustic = 0
       num_colors_inner_acoustic = 0
       allocate(num_elem_colors_acoustic(num_colors_outer_acoustic + num_colors_inner_acoustic),stat=ier)
-      if( ier /= 0 ) stop 'error allocating num_elem_colors_acoustic array'
+      if( ier /= 0 ) stop 'Error allocating num_elem_colors_acoustic array'
     endif
     if( ELASTIC_SIMULATION ) then
       num_colors_outer_elastic = 0
       num_colors_inner_elastic = 0
       allocate(num_elem_colors_elastic(num_colors_outer_elastic + num_colors_inner_elastic),stat=ier)
-      if( ier /= 0 ) stop 'error allocating num_elem_colors_elastic array'
+      if( ier /= 0 ) stop 'Error allocating num_elem_colors_elastic array'
     endif
   endif
   if(I_should_read_the_database) close(27)
-
-  ! outputs total element numbers
-  call sum_all_i(count(ispec_is_acoustic(:)),inum)
-  if( myrank == 0 ) then
-    write(IMAIN,*) 'total acoustic elements    :',inum
-  endif
-  call sum_all_i(count(ispec_is_elastic(:)),inum)
-  if( myrank == 0 ) then
-    write(IMAIN,*) 'total elastic elements     :',inum
-  endif
-  call sum_all_i(count(ispec_is_poroelastic(:)),inum)
-  if( myrank == 0 ) then
-    write(IMAIN,*) 'total poroelastic elements :',inum
-    call flush_IMAIN()
-  endif
 
   ! MPI communications
   if( ACOUSTIC_SIMULATION ) then
@@ -855,7 +841,7 @@
              request_send_scalar_ext_mesh(num_interfaces_ext_mesh), &
              request_recv_scalar_ext_mesh(num_interfaces_ext_mesh), &
              stat=ier)
-    if( ier /= 0 ) stop 'error allocating array buffer_send_scalar_ext_mesh,.. for acoustic simulations'
+    if( ier /= 0 ) stop 'Error allocating array buffer_send_scalar_ext_mesh,.. for acoustic simulations'
   endif
   if( ELASTIC_SIMULATION ) then
     allocate(buffer_send_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
@@ -863,7 +849,7 @@
              request_send_vector_ext_mesh(num_interfaces_ext_mesh), &
              request_recv_vector_ext_mesh(num_interfaces_ext_mesh), &
              stat=ier)
-    if( ier /= 0 ) stop 'error allocating array buffer_send_vector_ext_mesh,.. for elastic simulations'
+    if( ier /= 0 ) stop 'Error allocating array buffer_send_vector_ext_mesh,.. for elastic simulations'
   endif
   if( POROELASTIC_SIMULATION ) then
     allocate(buffer_send_vector_ext_mesh_s(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
@@ -875,61 +861,121 @@
              request_send_vector_ext_mesh_w(num_interfaces_ext_mesh), &
              request_recv_vector_ext_mesh_w(num_interfaces_ext_mesh), &
              stat=ier)
-    if( ier /= 0 ) stop 'error allocating array buffer_send_vector_ext_mesh_s,.. for poroelastic simulations'
+    if( ier /= 0 ) stop 'Error allocating array buffer_send_vector_ext_mesh_s,.. for poroelastic simulations'
   endif
-
-  ! gets model dimensions
-  minl = minval( xstore )
-  maxl = maxval( xstore )
-  call min_all_all_cr(minl,min_all)
-  call max_all_all_cr(maxl,max_all)
-  LONGITUDE_MIN = min_all
-  LONGITUDE_MAX = max_all
-
-  minl = minval( ystore )
-  maxl = maxval( ystore )
-  call min_all_all_cr(minl,min_all)
-  call max_all_all_cr(maxl,max_all)
-  LATITUDE_MIN = min_all
-  LATITUDE_MAX = max_all
-
-  ! checks Courant criteria on mesh
-  if( ELASTIC_SIMULATION ) then
-    call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB, &
-                               ibool,xstore,ystore,zstore, &
-                               kappastore,mustore,rho_vp,rho_vs, &
-                               DT,model_speed_max,min_resolved_period, &
-                               LOCAL_PATH,SAVE_MESH_FILES)
-
-  else if( POROELASTIC_SIMULATION ) then
-    allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    rho_vp = 0.0_CUSTOM_REAL
-    rho_vs = 0.0_CUSTOM_REAL
-    call check_mesh_resolution_poro(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
-                                    DT,model_speed_max,min_resolved_period, &
-                                    phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI, &
-                                    LOCAL_PATH,SAVE_MESH_FILES)
-    deallocate(rho_vp,rho_vs)
-  else if( ACOUSTIC_SIMULATION ) then
-    allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array rho_vp'
-    allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array rho_vs'
-    rho_vp = sqrt( kappastore / rhostore ) * rhostore
-    rho_vs = 0.0_CUSTOM_REAL
-    call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB, &
-                               ibool,xstore,ystore,zstore, &
-                               kappastore,mustore,rho_vp,rho_vs, &
-                               DT,model_speed_max,min_resolved_period, &
-                               LOCAL_PATH,SAVE_MESH_FILES)
-    deallocate(rho_vp,rho_vs)
-  endif
-
-  ! reads adjoint parameters
-  call read_mesh_databases_adjoint()
 
   end subroutine read_mesh_databases
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine read_mesh_databases_moho()
+
+  use specfem_par
+  use specfem_par_elastic
+  use specfem_par_acoustic
+  use specfem_par_poroelastic
+
+  implicit none
+
+  integer :: ier
+
+  ! always needed to be allocated for routine arguments
+  allocate( is_moho_top(NSPEC_BOUN),is_moho_bot(NSPEC_BOUN),stat=ier)
+  if( ier /= 0 ) stop 'Error allocating array is_moho_top etc.'
+
+  ! checks if anything to do
+  if( ELASTIC_SIMULATION .and. SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3 ) then
+    ! boundary elements
+    if(I_should_read_the_database) then
+      open(unit=27,file=prname(1:len_trim(prname))//'ibelm_moho.bin',status='old',&
+         action='read',form='unformatted',iostat=ier)
+      if( ier /= 0 ) then
+        print*,'Error could not open ibelm_moho file: ',prname(1:len_trim(prname))//'ibelm_moho.bin'
+        call exit_mpi(myrank,'Error opening ibelm_moho file')
+      endif
+    endif
+
+    if(I_should_read_the_database) read(27) NSPEC2D_MOHO
+    call bcast_all_i_for_database(NSPEC2D_MOHO, 1)
+
+    ! allocates arrays for moho mesh
+    allocate(ibelm_moho_bot(NSPEC2D_MOHO), &
+             ibelm_moho_top(NSPEC2D_MOHO), &
+             normal_moho_top(NDIM,NGLLSQUARE,NSPEC2D_MOHO), &
+             normal_moho_bot(NDIM,NGLLSQUARE,NSPEC2D_MOHO), &
+             ijk_moho_bot(3,NGLLSQUARE,NSPEC2D_MOHO), &
+             ijk_moho_top(3,NGLLSQUARE,NSPEC2D_MOHO),stat=ier)
+    if( ier /= 0 ) stop 'Error allocating array ibelm_moho_bot etc.'
+
+    if(I_should_read_the_database) then
+      read(27) ibelm_moho_top
+      read(27) ibelm_moho_bot
+      read(27) ijk_moho_top
+      read(27) ijk_moho_bot
+    endif
+    if(size(ibelm_moho_top) > 0) call bcast_all_i_for_database(ibelm_moho_top(1), size(ibelm_moho_top))
+    if(size(ibelm_moho_bot) > 0) call bcast_all_i_for_database(ibelm_moho_bot(1), size(ibelm_moho_bot))
+    if(size(ijk_moho_top) > 0) call bcast_all_i_for_database(ijk_moho_top(1,1,1), size(ijk_moho_top))
+    if(size(ijk_moho_bot) > 0) call bcast_all_i_for_database(ijk_moho_bot(1,1,1), size(ijk_moho_bot))
+
+    if(I_should_read_the_database) close(27)
+
+    ! normals
+    if(I_should_read_the_database) then
+      open(unit=27,file=prname(1:len_trim(prname))//'normal_moho.bin',status='old',&
+         action='read',form='unformatted',iostat=ier)
+      if( ier /= 0 ) then
+        print*,'Error could not open normal_moho file: ',prname(1:len_trim(prname))//'normal_moho.bin'
+        call exit_mpi(myrank,'Error opening normal_moho file')
+      endif
+    endif
+
+    if(I_should_read_the_database) then
+      read(27) normal_moho_top
+      read(27) normal_moho_bot
+    endif
+    if(size(normal_moho_top) > 0) call bcast_all_cr_for_database(normal_moho_top(1,1,1), size(normal_moho_top))
+    if(size(normal_moho_bot) > 0) call bcast_all_cr_for_database(normal_moho_bot(1,1,1), size(normal_moho_bot))
+    if(I_should_read_the_database) close(27)
+
+    ! flags
+    if(I_should_read_the_database) then
+      open(unit=27,file=prname(1:len_trim(prname))//'is_moho.bin',status='old',&
+         action='read',form='unformatted',iostat=ier)
+      if( ier /= 0 ) then
+        print*,'Error could not open is_moho file: ',prname(1:len_trim(prname))//'is_moho.bin'
+        call exit_mpi(myrank,'Error opening is_moho file')
+      endif
+    endif
+
+    if(I_should_read_the_database) then
+      read(27) is_moho_top
+      read(27) is_moho_bot
+    endif
+    if(size(is_moho_top) > 0) call bcast_all_l_for_database(is_moho_top(1), size(is_moho_top))
+    if(size(is_moho_bot) > 0) call bcast_all_l_for_database(is_moho_bot(1), size(is_moho_bot))
+
+    if(I_should_read_the_database) close(27)
+
+  else
+    ! dummy
+    NSPEC2D_MOHO = 1
+  endif
+
+  ! moho boundary
+  if( ELASTIC_SIMULATION ) then
+    ! always needed to be allocated for routine arguments
+    allocate(dsdx_top(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO), &
+             dsdx_bot(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO), &
+             b_dsdx_top(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO), &
+             b_dsdx_bot(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO),stat=ier)
+    if( ier /= 0 ) stop 'Error allocating array dsdx_top etc.'
+  endif
+
+  end subroutine read_mesh_databases_moho
+
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -952,33 +998,33 @@
   if( ELASTIC_SIMULATION .and. SIMULATION_TYPE == 3 ) then
     ! backward displacement,velocity,acceleration fields
     allocate(b_displ(NDIM,NGLOB_ADJOINT),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array b_displ'
+    if( ier /= 0 ) stop 'Error allocating array b_displ'
     allocate(b_veloc(NDIM,NGLOB_ADJOINT),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array b_veloc'
+    if( ier /= 0 ) stop 'Error allocating array b_veloc'
     allocate(b_accel(NDIM,NGLOB_ADJOINT),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array b_accel'
+    if( ier /= 0 ) stop 'Error allocating array b_accel'
 
     ! adjoint kernels
 
     ! primary, isotropic kernels
     ! density kernel
     allocate(rho_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array rho_kl'
+    if( ier /= 0 ) stop 'Error allocating array rho_kl'
 
     if (ANISOTROPIC_KL) then
       ! anisotropic kernels
       allocate(cijkl_kl(21,NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array cijkl_kl'
+      if( ier /= 0 ) stop 'Error allocating array cijkl_kl'
       !dummy
       allocate(mu_kl(1,1,1,1))
       allocate(kappa_kl(1,1,1,1))
     else
       ! shear modulus kernel
       allocate(mu_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array mu_kl'
+      if( ier /= 0 ) stop 'Error allocating array mu_kl'
       ! compressional modulus kernel
       allocate(kappa_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array kappa_kl'
+      if( ier /= 0 ) stop 'Error allocating array kappa_kl'
       !dummy
       allocate(cijkl_kl(1,1,1,1,1))
     endif
@@ -986,17 +1032,17 @@
     ! noise source strength kernel
     if (NOISE_TOMOGRAPHY == 3) then
       allocate(sigma_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array sigma_kl'
+      if( ier /= 0 ) stop 'Error allocating array sigma_kl'
     endif
 
     ! preconditioner
     if ( APPROXIMATE_HESS_KL ) then
       allocate(hess_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array hess_kl'
+      if( ier /= 0 ) stop 'Error allocating array hess_kl'
     else
       ! dummy allocation
       allocate(hess_kl(0,0,0,0),stat=ier)
-      if( ier /= 0 ) stop 'error allocating dummy array hess_kl'
+      if( ier /= 0 ) stop 'Error allocating dummy array hess_kl'
     endif
 
     ! MPI handling
@@ -1004,7 +1050,7 @@
              b_request_recv_vector_ext_mesh(num_interfaces_ext_mesh), &
              b_buffer_send_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
              b_buffer_recv_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array b_request_send_vector_ext_mesh etc.'
+    if( ier /= 0 ) stop 'Error allocating array b_request_send_vector_ext_mesh etc.'
 
     ! allocates attenuation solids
     allocate(b_R_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
@@ -1012,7 +1058,7 @@
              b_R_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
              b_R_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
              b_R_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array b_R_xx etc.'
+    if( ier /= 0 ) stop 'Error allocating array b_R_xx etc.'
 
     ! note: these arrays are needed for attenuation and/or kernel computations
     allocate(b_epsilondev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY), &
@@ -1020,25 +1066,29 @@
              b_epsilondev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY), &
              b_epsilondev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY), &
              b_epsilondev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array b_epsilon_dev_xx etc.'
+    if( ier /= 0 ) stop 'Error allocating array b_epsilon_dev_xx etc.'
     ! needed for kernel computations
     allocate(b_epsilon_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array b_epsilon_trace_over_3'
+    if( ier /= 0 ) stop 'Error allocating array b_epsilon_trace_over_3'
 
     ! allocates attenuation solids for considering kappa
     allocate(b_R_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa,N_SLS),&
              b_epsilondev_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array b_R_trace etc.'
+    if( ier /= 0 ) stop 'Error allocating array b_R_trace etc.'
 
+    ! Moho kernel
+    if (SAVE_MOHO_MESH) then
+      allocate( moho_kl(NGLLSQUARE,NSPEC2D_MOHO),stat=ier)
+      if( ier /= 0 ) stop 'Error allocating array moho_kl'
+    endif
   else
     ! dummy allocation
     allocate(b_displ(1,1),stat=ier)
-    if( ier /= 0 ) stop 'error allocating dummy array b_displ'
+    if( ier /= 0 ) stop 'Error allocating dummy array b_displ'
     allocate(b_veloc(1,1),stat=ier)
-    if( ier /= 0 ) stop 'error allocating dummy array b_veloc'
+    if( ier /= 0 ) stop 'Error allocating dummy array b_veloc'
     allocate(b_accel(1,1),stat=ier)
-    if( ier /= 0 ) stop 'error allocating dummy array b_accel'
-
+    if( ier /= 0 ) stop 'Error allocating dummy array b_accel'
   endif
 
   ! allocates adjoint arrays for acoustic simulations
@@ -1048,23 +1098,23 @@
     allocate(b_potential_acoustic(NGLOB_ADJOINT), &
              b_potential_dot_acoustic(NGLOB_ADJOINT), &
              b_potential_dot_dot_acoustic(NGLOB_ADJOINT),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array b_potential_acoustic etc.'
+    if( ier /= 0 ) stop 'Error allocating array b_potential_acoustic etc.'
 
     ! kernels
     allocate(rho_ac_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
              rhop_ac_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
              kappa_ac_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
              alpha_ac_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array rho_ac_kl etc.'
+    if( ier /= 0 ) stop 'Error allocating array rho_ac_kl etc.'
 
     ! preconditioner
     if ( APPROXIMATE_HESS_KL ) then
       allocate(hess_ac_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array hess_ac_kl'
+      if( ier /= 0 ) stop 'Error allocating array hess_ac_kl'
     else
       ! dummy allocation
       allocate(hess_ac_kl(0,0,0,0),stat=ier)
-      if( ier /= 0 ) stop 'error allocating dummy array hess_ac_kl'
+      if( ier /= 0 ) stop 'Error allocating dummy array hess_ac_kl'
     endif
 
     ! MPI handling
@@ -1072,7 +1122,7 @@
              b_request_recv_scalar_ext_mesh(num_interfaces_ext_mesh), &
              b_buffer_send_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
              b_buffer_recv_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array b_request_send_scalar_ext_mesh'
+    if( ier /= 0 ) stop 'Error allocating array b_request_send_scalar_ext_mesh'
 
   else
 
@@ -1080,144 +1130,39 @@
     allocate(b_potential_acoustic(1), &
              b_potential_dot_acoustic(1), &
              b_potential_dot_dot_acoustic(1),stat=ier)
-    if( ier /= 0 ) stop 'error allocating dummy array b_potential_acoustic etc.'
+    if( ier /= 0 ) stop 'Error allocating dummy array b_potential_acoustic etc.'
 
     ! kernels
     allocate(rho_ac_kl(1,1,1,1), &
              rhop_ac_kl(1,1,1,1), &
              kappa_ac_kl(1,1,1,1), &
              alpha_ac_kl(1,1,1,1),stat=ier)
-    if( ier /= 0 ) stop 'error allocating dummy array rho_ac_kl etc.'
+    if( ier /= 0 ) stop 'Error allocating dummy array rho_ac_kl etc.'
 
     ! MPI handling
     allocate(b_request_send_scalar_ext_mesh(1), &
              b_request_recv_scalar_ext_mesh(1), &
              b_buffer_send_scalar_ext_mesh(1,1), &
              b_buffer_recv_scalar_ext_mesh(1,1),stat=ier)
-    if( ier /= 0 ) stop 'error allocating dummy array b_request_send_scalar_ext_mesh etc.'
+    if( ier /= 0 ) stop 'Error allocating dummy array b_request_send_scalar_ext_mesh etc.'
 
-  endif
-
-  ! ADJOINT moho
-  ! moho boundary
-  if( ELASTIC_SIMULATION ) then
-    ! always needed to be allocated for routine arguments
-    allocate( is_moho_top(NSPEC_BOUN),is_moho_bot(NSPEC_BOUN),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array is_moho_top etc.'
-
-    if( SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3 ) then
-
-      if (ADIOS_FOR_MESH) then
-        call read_moho_mesh_adjoint_adios()
-      else
-        ! boundary elements
-        if(I_should_read_the_database) then
-          open(unit=27,file=prname(1:len_trim(prname))//'ibelm_moho.bin',status='old',&
-             action='read',form='unformatted',iostat=ier)
-          if( ier /= 0 ) then
-            print*,'error: could not open ibelm_moho '
-            print*,'path: ',prname(1:len_trim(prname))//'ibelm_moho.bin'
-            call exit_mpi(myrank,'error opening ibelm_moho')
-          endif
-        endif
-
-        if(I_should_read_the_database) read(27) NSPEC2D_MOHO
-        call bcast_all_i_for_database(NSPEC2D_MOHO, 1)
-
-        ! allocates arrays for moho mesh
-        allocate(ibelm_moho_bot(NSPEC2D_MOHO), &
-                 ibelm_moho_top(NSPEC2D_MOHO), &
-                 normal_moho_top(NDIM,NGLLSQUARE,NSPEC2D_MOHO), &
-                 normal_moho_bot(NDIM,NGLLSQUARE,NSPEC2D_MOHO), &
-                 ijk_moho_bot(3,NGLLSQUARE,NSPEC2D_MOHO), &
-                 ijk_moho_top(3,NGLLSQUARE,NSPEC2D_MOHO),stat=ier)
-        if( ier /= 0 ) stop 'error allocating array ibelm_moho_bot etc.'
-
-        if(I_should_read_the_database) then
-          read(27) ibelm_moho_top
-          read(27) ibelm_moho_bot
-          read(27) ijk_moho_top
-          read(27) ijk_moho_bot
-        endif
-        if(size(ibelm_moho_top) > 0) call bcast_all_i_for_database(ibelm_moho_top(1), size(ibelm_moho_top))
-        if(size(ibelm_moho_bot) > 0) call bcast_all_i_for_database(ibelm_moho_bot(1), size(ibelm_moho_bot))
-        if(size(ijk_moho_top) > 0) call bcast_all_i_for_database(ijk_moho_top(1,1,1), size(ijk_moho_top))
-        if(size(ijk_moho_bot) > 0) call bcast_all_i_for_database(ijk_moho_bot(1,1,1), size(ijk_moho_bot))
-
-        if(I_should_read_the_database) close(27)
-
-        ! normals
-        if(I_should_read_the_database) then
-          open(unit=27,file=prname(1:len_trim(prname))//'normal_moho.bin',status='old',&
-             action='read',form='unformatted',iostat=ier)
-          if( ier /= 0 ) then
-            print*,'error: could not open normal_moho '
-            print*,'path: ',prname(1:len_trim(prname))//'normal_moho.bin'
-            call exit_mpi(myrank,'error opening normal_moho')
-          endif
-        endif
-
-        if(I_should_read_the_database) then
-          read(27) normal_moho_top
-          read(27) normal_moho_bot
-        endif
-        if(size(normal_moho_top) > 0) call bcast_all_cr_for_database(normal_moho_top(1,1,1), size(normal_moho_top))
-        if(size(normal_moho_bot) > 0) call bcast_all_cr_for_database(normal_moho_bot(1,1,1), size(normal_moho_bot))
-        if(I_should_read_the_database) close(27)
-
-        ! flags
-        if(I_should_read_the_database) then
-          open(unit=27,file=prname(1:len_trim(prname))//'is_moho.bin',status='old',&
-             action='read',form='unformatted',iostat=ier)
-          if( ier /= 0 ) then
-            print*,'error: could not open is_moho '
-            print*,'path: ',prname(1:len_trim(prname))//'is_moho.bin'
-            call exit_mpi(myrank,'error opening is_moho')
-          endif
-        endif
-
-        if(I_should_read_the_database) then
-          read(27) is_moho_top
-          read(27) is_moho_bot
-        endif
-        if(size(is_moho_top) > 0) call bcast_all_l_for_database(is_moho_top(1), size(is_moho_top))
-        if(size(is_moho_bot) > 0) call bcast_all_l_for_database(is_moho_bot(1), size(is_moho_bot))
-
-        if(I_should_read_the_database) close(27)
-      endif
-
-      ! Moho kernel
-      allocate( moho_kl(NGLLSQUARE,NSPEC2D_MOHO),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array moho_kl'
-      moho_kl = 0._CUSTOM_REAL
-
-    else
-      NSPEC2D_MOHO = 1
-    endif
-
-    ! always needed to be allocated for routine arguments
-    allocate(dsdx_top(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO), &
-             dsdx_bot(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO), &
-             b_dsdx_top(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO), &
-             b_dsdx_bot(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array dsdx_top etc.'
   endif
 
   ! allocates adjoint arrays for poroelastic simulations
   if( POROELASTIC_SIMULATION .and. SIMULATION_TYPE == 3 ) then
     ! backward displacement,velocity,acceleration for the solid (s) & fluid (w) phases
     allocate(b_displs_poroelastic(NDIM,NGLOB_ADJOINT),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array b_displs_poroelastic'
+    if( ier /= 0 ) stop 'Error allocating array b_displs_poroelastic'
     allocate(b_velocs_poroelastic(NDIM,NGLOB_ADJOINT),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array b_velocs_poroelastic'
+    if( ier /= 0 ) stop 'Error allocating array b_velocs_poroelastic'
     allocate(b_accels_poroelastic(NDIM,NGLOB_ADJOINT),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array b_accels_poroelastic'
+    if( ier /= 0 ) stop 'Error allocating array b_accels_poroelastic'
     allocate(b_displw_poroelastic(NDIM,NGLOB_ADJOINT),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array b_displw_poroelastic'
+    if( ier /= 0 ) stop 'Error allocating array b_displw_poroelastic'
     allocate(b_velocw_poroelastic(NDIM,NGLOB_ADJOINT),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array b_velocw_poroelastic'
+    if( ier /= 0 ) stop 'Error allocating array b_velocw_poroelastic'
     allocate(b_accelw_poroelastic(NDIM,NGLOB_ADJOINT),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array b_accelw_poroelastic'
+    if( ier /= 0 ) stop 'Error allocating array b_accelw_poroelastic'
 
     ! adjoint kernels
 
@@ -1226,50 +1171,50 @@
              rhof_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
              sm_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
              eta_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), stat=ier)
-    if( ier /= 0 ) stop 'error allocating array rhot_kl etc.'
+    if( ier /= 0 ) stop 'Error allocating array rhot_kl etc.'
     allocate(mufr_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array mufr_kl'
+    if( ier /= 0 ) stop 'Error allocating array mufr_kl'
     allocate(B_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
              C_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
              M_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), stat=ier)
-    if( ier /= 0 ) stop 'error allocating array B_kl etc.'
+    if( ier /= 0 ) stop 'Error allocating array B_kl etc.'
 
     ! density, isotropic kernels
     allocate(rhob_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
              rhofb_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
              phi_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), stat=ier)
-    if( ier /= 0 ) stop 'error allocating array rhob_kl etc.'
+    if( ier /= 0 ) stop 'Error allocating array rhob_kl etc.'
     allocate(mufrb_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array mufrb_kl'
+    if( ier /= 0 ) stop 'Error allocating array mufrb_kl'
     allocate(Bb_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
              Cb_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
              Mb_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), stat=ier)
-    if( ier /= 0 ) stop 'error allocating array Bb_kl etc.'
+    if( ier /= 0 ) stop 'Error allocating array Bb_kl etc.'
 
     ! wavespeed, isotropic kernels
     allocate(rhobb_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
              rhofbb_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
              phib_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
              ratio_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), stat=ier)
-    if( ier /= 0 ) stop 'error allocating array rhobb_kl etc.'
+    if( ier /= 0 ) stop 'Error allocating array rhobb_kl etc.'
     allocate(cs_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array cs_kl'
+    if( ier /= 0 ) stop 'Error allocating array cs_kl'
     allocate(cpI_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
              cpII_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), stat=ier)
-    if( ier /= 0 ) stop 'error allocating array cpI_kl etc.'
+    if( ier /= 0 ) stop 'Error allocating array cpI_kl etc.'
 
     ! MPI handling
     allocate(b_request_send_vector_ext_meshs(num_interfaces_ext_mesh), &
              b_request_recv_vector_ext_meshs(num_interfaces_ext_mesh), &
              b_buffer_send_vector_ext_meshs(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
              b_buffer_recv_vector_ext_meshs(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array b_request_send_vector_ext_meshs etc.'
+    if( ier /= 0 ) stop 'Error allocating array b_request_send_vector_ext_meshs etc.'
 
     allocate(b_request_send_vector_ext_meshw(num_interfaces_ext_mesh), &
              b_request_recv_vector_ext_meshw(num_interfaces_ext_mesh), &
              b_buffer_send_vector_ext_meshw(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
              b_buffer_recv_vector_ext_meshw(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array b_request_send_vector_ext_meshw etc.'
+    if( ier /= 0 ) stop 'Error allocating array b_request_send_vector_ext_meshw etc.'
 
     ! arrays needed for kernel computations
     allocate(b_epsilonsdev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
@@ -1282,28 +1227,28 @@
              b_epsilonwdev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
              b_epsilonwdev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
              b_epsilonwdev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array b_epsilonsdev_xx etc.'
+    if( ier /= 0 ) stop 'Error allocating array b_epsilonsdev_xx etc.'
 
     allocate(b_epsilons_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
              b_epsilonw_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array b_epsilons_trace_over_3 etc.'
+    if( ier /= 0 ) stop 'Error allocating array b_epsilons_trace_over_3 etc.'
 
   else ! dummy arrays
 
     ! backward displacement,velocity,acceleration for the solid (s) & fluid (w)
     ! phases
     allocate(b_displs_poroelastic(1,1),stat=ier)
-    if( ier /= 0 ) stop 'error allocating dummy array b_displs_poroelastic'
+    if( ier /= 0 ) stop 'Error allocating dummy array b_displs_poroelastic'
     allocate(b_velocs_poroelastic(1,1),stat=ier)
-    if( ier /= 0 ) stop 'error allocating dummy array b_velocs_poroelastic'
+    if( ier /= 0 ) stop 'Error allocating dummy array b_velocs_poroelastic'
     allocate(b_accels_poroelastic(1,1),stat=ier)
-    if( ier /= 0 ) stop 'error allocating dummy array b_accels_poroelastic'
+    if( ier /= 0 ) stop 'Error allocating dummy array b_accels_poroelastic'
     allocate(b_displw_poroelastic(1,1),stat=ier)
-    if( ier /= 0 ) stop 'error allocating dummy array b_displw_poroelastic'
+    if( ier /= 0 ) stop 'Error allocating dummy array b_displw_poroelastic'
     allocate(b_velocw_poroelastic(1,1),stat=ier)
-    if( ier /= 0 ) stop 'error allocating dummy array b_velocw_poroelastic'
+    if( ier /= 0 ) stop 'Error allocating dummy array b_velocw_poroelastic'
     allocate(b_accelw_poroelastic(1,1),stat=ier)
-    if( ier /= 0 ) stop 'error allocating dummy array b_accelw_poroelastic'
+    if( ier /= 0 ) stop 'Error allocating dummy array b_accelw_poroelastic'
 
     ! adjoint kernels
 
@@ -1312,37 +1257,37 @@
              rhof_kl(1,1,1,1), &
              sm_kl(1,1,1,1), &
              eta_kl(1,1,1,1), stat=ier)
-    if( ier /= 0 ) stop 'error allocating dummy array rhot_kl etc.'
+    if( ier /= 0 ) stop 'Error allocating dummy array rhot_kl etc.'
     allocate(mufr_kl(1,1,1,1),stat=ier)
-    if( ier /= 0 ) stop 'error allocating dummy array mufr_kl'
+    if( ier /= 0 ) stop 'Error allocating dummy array mufr_kl'
     allocate(B_kl(1,1,1,1), &
              C_kl(1,1,1,1), &
              M_kl(1,1,1,1), stat=ier)
-    if( ier /= 0 ) stop 'error allocating dummy array B_kl etc.'
+    if( ier /= 0 ) stop 'Error allocating dummy array B_kl etc.'
 
     ! density, isotropic kernels
     allocate(rhob_kl(1,1,1,1), &
              rhofb_kl(1,1,1,1), &
              phi_kl(1,1,1,1), stat=ier)
-    if( ier /= 0 ) stop 'error allocating dummy array rhob_kl etc.'
+    if( ier /= 0 ) stop 'Error allocating dummy array rhob_kl etc.'
     allocate(mufrb_kl(1,1,1,1),stat=ier)
-    if( ier /= 0 ) stop 'error allocating dummy array mufrb_kl'
+    if( ier /= 0 ) stop 'Error allocating dummy array mufrb_kl'
     allocate(Bb_kl(1,1,1,1), &
              Cb_kl(1,1,1,1), &
              Mb_kl(1,1,1,1), stat=ier)
-    if( ier /= 0 ) stop 'error allocating dummy array Bb_kl etc.'
+    if( ier /= 0 ) stop 'Error allocating dummy array Bb_kl etc.'
 
     ! wavespeed, isotropic kernels
     allocate(rhobb_kl(1,1,1,1), &
              rhofbb_kl(1,1,1,1), &
              phib_kl(1,1,1,1), &
              ratio_kl(1,1,1,1), stat=ier)
-    if( ier /= 0 ) stop 'error allocating dummy array rhobb_kl etc.'
+    if( ier /= 0 ) stop 'Error allocating dummy array rhobb_kl etc.'
     allocate(cs_kl(1,1,1,1),stat=ier)
-    if( ier /= 0 ) stop 'error allocating dummy array cs_kl'
+    if( ier /= 0 ) stop 'Error allocating dummy array cs_kl'
     allocate(cpI_kl(1,1,1,1), &
              cpII_kl(1,1,1,1), stat=ier)
-    if( ier /= 0 ) stop 'error allocating dummy array cpI_kl etc.'
+    if( ier /= 0 ) stop 'Error allocating dummy array cpI_kl etc.'
 
   endif
 
@@ -1352,6 +1297,7 @@
 !-------------------------------------------------------------------------------------------------
 !
 
+
   subroutine read_mesh_for_init()
 
 ! reads in the value of NSPEC_AB and NGLOB_AB
@@ -1359,16 +1305,19 @@
   use specfem_par
 
   implicit none
-
+  ! Local variables
   integer :: ier
+  character(len=MAX_STRING_LEN) :: database_name
+
+  ! sets file name
+  call create_name_database(prname,myrank,LOCAL_PATH)
+  database_name = prname(1:len_trim(prname))//'external_mesh.bin'
 
   if(I_should_read_the_database) then
-    open(unit=IIN,file=prname(1:len_trim(prname))//'external_mesh.bin',status='old',&
-       action='read',form='unformatted',iostat=ier)
+    open(unit=IIN,file=trim(database_name),status='old',action='read',form='unformatted',iostat=ier)
     if( ier /= 0 ) then
-      print*,'error: could not open database '
-      print*,'path: ',prname(1:len_trim(prname))//'external_mesh.bin'
-      call exit_mpi(myrank,'error opening database')
+      print*,'Error could not open database file: ',trim(database_name)
+      call exit_mpi(myrank,'Error opening database file')
     endif
   endif
 

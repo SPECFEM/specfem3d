@@ -474,7 +474,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
           endif
 
           ! save strain on the Moho boundary
-          if (SAVE_MOHO_MESH) then
+          if (SIMULATION_TYPE == 3 .and. SAVE_MOHO_MESH) then
             if (is_moho_top(ispec)) then
               dsdx_top(1,1,i,j,k,ispec2D_moho_top) = duxdxl
               dsdx_top(1,2,i,j,k,ispec2D_moho_top) = duxdyl

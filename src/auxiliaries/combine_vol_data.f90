@@ -67,9 +67,9 @@
   implicit none
 
   ! data must be of dimension: (NGLLX,NGLLY,NGLLZ,NSPEC_AB)
-  double precision,dimension(:,:,:,:),allocatable :: data
+  double precision,dimension(:,:,:,:),allocatable :: data_dp
   ! real array for data
-  real,dimension(:,:,:,:),allocatable :: dat
+  real,dimension(:,:,:,:),allocatable :: data_sp
 
   ! mesh coordinates
   real(kind=CUSTOM_REAL),dimension(:),allocatable :: xstore, ystore, zstore
@@ -119,7 +119,7 @@
   integer(kind=8) :: value_handle, mesh_handle
   integer :: ibool_offset, x_global_offset
 
-  call init()
+  call init_mpi()
   call world_size(sizeprocs)
   if (sizeprocs /= 1) then
     print *, "sequential program. Only mpirun -np 1 ..."
@@ -242,20 +242,19 @@
     endif
 
 
-    allocate(dat(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating dat array'
+    allocate(data_sp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if( ier /= 0 ) stop 'error allocating single precision data array'
+
     if( CUSTOM_REAL == SIZE_DOUBLE ) then
-      allocate(data(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-      if( ier /= 0 ) stop 'error allocating data array'
+      allocate(data_dp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+      if( ier /= 0 ) stop 'error allocating double precision data array'
     endif
 
     if (ADIOS_FOR_MESH) then
       if( CUSTOM_REAL == SIZE_DOUBLE ) then
-        call read_double_values_adios(value_handle, var_name, ibool_offset, &
-                               NSPEC_AB, data)
+        call read_double_values_adios(value_handle, var_name, ibool_offset, NSPEC_AB, data_dp)
       else
-        call read_float_values_adios(value_handle, var_name, ibool_offset, &
-                               NSPEC_AB, dat)
+        call read_float_values_adios(value_handle, var_name, ibool_offset, NSPEC_AB, data_sp)
       endif
     else
       ! data file
@@ -270,17 +269,17 @@
 
       ! Read either SP or DP floating point numbers.
       if( CUSTOM_REAL == SIZE_DOUBLE ) then
-        read(28) data
+        read(28) data_dp
       else
-        read(28) dat
+        read(28) data_sp
       endif
       close(28)
     endif
 
     ! uses conversion to real values
     if( CUSTOM_REAL == SIZE_DOUBLE ) then
-      dat = sngl(data)
-      deallocate(data)
+      data_sp(:,:,:,:) = sngl(data_dp(:,:,:,:))
+      deallocate(data_dp)
     endif
 
     print *, trim(local_data_file)
@@ -288,12 +287,10 @@
     ! writes point coordinates and scalar value to mesh file
     if (.not. HIGH_RESOLUTION_MESH) then
       ! writes out element corners only
-      call cvd_write_corners(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,dat, &
-                            it,npp,numpoin,np)
+      call cvd_write_corners(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,data_sp,it,npp,numpoin,np)
     else
       ! high resolution, all GLL points
-      call cvd_write_GLL_points(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,dat,&
-                               it,npp,numpoin,np)
+      call cvd_write_GLL_points(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,data_sp,it,npp,numpoin,np)
     endif
 
     print*,'  points:',np,numpoin
@@ -302,7 +299,8 @@
     np = np + numpoin
 
     ! cleans up memory allocations
-    deallocate(ibool,dat,xstore,ystore,zstore)
+    deallocate(ibool,xstore,ystore,zstore)
+    deallocate(data_sp)
 
   enddo  ! all slices for points
 
@@ -416,7 +414,7 @@
     call clean_adios(mesh_handle, value_handle)
   endif
 
-  call finalize()
+  call finalize_mpi()
 
   print *, 'Done writing '//trim(mesh_file)
 

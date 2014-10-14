@@ -57,7 +57,9 @@ check_mesh_quality_CUBIT_Abaqus_OBJECTS = \
 #### rules for executables
 ####
 
+
 check: $(check_mesh_quality_CUBIT_Abaqus_TARGETS)
+check_mesh: $(check_mesh_quality_CUBIT_Abaqus_TARGETS)
 
 
 check_mesh_quality_CUBIT_Abaqus: xcheck_mesh_quality_CUBIT_Abaqus

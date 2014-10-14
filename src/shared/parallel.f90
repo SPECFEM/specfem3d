@@ -477,7 +477,7 @@ end module my_mpi
 !----
 !
 
-  subroutine init()
+  subroutine init_mpi()
 
   use my_mpi
 
@@ -491,13 +491,13 @@ end module my_mpi
 ! create sub-communicators if needed, if running more than one earthquake from the same job
   call world_split()
 
-  end subroutine init
+  end subroutine init_mpi
 
 !
 !----
 !
 
-  subroutine finalize()
+  subroutine finalize_mpi()
 
   use my_mpi
 
@@ -511,7 +511,7 @@ end module my_mpi
 ! stop all the MPI processes, and exit
   call MPI_FINALIZE(ier)
 
-  end subroutine finalize
+  end subroutine finalize_mpi
 
 !
 !----

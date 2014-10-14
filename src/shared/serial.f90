@@ -357,7 +357,7 @@
 !----
 !
 
-  subroutine init()
+  subroutine init_mpi()
 
   use constants, only: NUMBER_OF_SIMULTANEOUS_RUNS
 
@@ -365,14 +365,14 @@
 
   if(NUMBER_OF_SIMULTANEOUS_RUNS > 1) stop 'serial runs require NUMBER_OF_SIMULTANEOUS_RUNS == 1'
 
-  end subroutine init
+  end subroutine init_mpi
 
 !
 !----
 !
 
-  subroutine finalize()
-  end subroutine finalize
+  subroutine finalize_mpi()
+  end subroutine finalize_mpi
 
 !
 !----

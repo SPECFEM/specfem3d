@@ -222,6 +222,7 @@ SUBDIRS = \
 	meshfem3D \
 	shared \
 	specfem3D \
+	tomography \
 	$(EMPTY_MACRO)
 
 # default targets for the pure Fortran version
@@ -241,8 +242,9 @@ all: default \
 	xconvolve_source_timefunction \
 	xcreate_movie_shakemap_AVS_DX_GMT \
 	xmodel_update \
-	xsmooth_vol_data \
+	xsmooth_sem \
 	xsum_kernels \
+	xsum_preconditioned_kernels \
 	xcheck_mesh_quality_CUBIT_Abaqus \
 	xconvert_skewness_to_angle \
 	xmultiply_CUBIT_Abaqus_mesh_by_1000 \
@@ -288,17 +290,37 @@ help:
 	@echo "    xgenerate_databases"
 	@echo "    xspecfem3D"
 	@echo ""
-	@echo "supported additional executables:"
+	@echo "defaults:"
+	@echo "    xdecompose_mesh"
+	@echo "    xmeshfem3D"
+	@echo "    xgenerate_databases"
+	@echo "    xspecfem3D"
+	@echo ""
 	@echo "    xcombine_surf_data"
 	@echo "    xcombine_vol_data"
 	@echo "    xconvolve_source_timefunction"
 	@echo "    xcreate_movie_shakemap_AVS_DX_GMT"
-	@echo "    xmodel_update"
-	@echo "    xsmooth_vol_data"
-	@echo "    xsum_kernels"
+	@echo ""
+	@echo "    xcheck_mesh_quality_CUBIT_Abaqus"
+	@echo "    xconvert_skewness_to_angle"
+	@echo ""
+	@echo "additional executables:"
+	@echo "- auxiliary executables: [make aux]"
+	@echo "    xcombine_surf_data"
+	@echo "    xcombine_vol_data"
+	@echo "    xconvolve_source_timefunction"
+	@echo "    xcreate_movie_shakemap_AVS_DX_GMT"
+	@echo ""
+	@echo "- check mesh executables: [make check_mesh]"
 	@echo "    xcheck_mesh_quality_CUBIT_Abaqus"
 	@echo "    xconvert_skewness_to_angle"
 	@echo "    xmultiply_CUBIT_Abaqus_mesh_by_1000"
+	@echo ""
+	@echo "- tomography tools: [make tomography]"
+	@echo "    xmodel_update"
+	@echo "    xsmooth_sem"
+	@echo "    xsum_kernels"
+	@echo "    xsum_preconditioned_kernels"
 	@echo ""
 	@echo "for unit testing:"
 	@echo "    tests"
@@ -310,8 +332,9 @@ help:
 	create_movie_shakemap_AVS_DX_GMT xcreate_movie_shakemap_AVS_DX_GMT \
 	combine_vol_data xcombine_vol_data \
 	combine_surf_data xcombine_surf_data \
-	smooth_vol_data xsmooth_vol_data \
+	smooth_sem xsmooth_sem \
 	sum_kernels xsum_kernels \
+	sum_preconditioned_kernels xsum_preconditioned_kernels \
 	model_update xmodel_update \
 	check_mesh_quality_CUBIT_Abaqus xcheck_mesh_quality_CUBIT_Abaqus \
 	gen generate_databases xgenerate_databases \

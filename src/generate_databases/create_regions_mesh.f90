@@ -73,8 +73,8 @@
     call flush_IMAIN()
   endif
   call crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
-                        nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
-                        nspec2D_bottom,nspec2D_top,ANISOTROPY)
+                               nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
+                               nspec2D_bottom,nspec2D_top,ANISOTROPY)
 
  ! if faults exist this reads nodes_coords_open
   call fault_read_input(prname,myrank)
@@ -90,14 +90,14 @@
   if (ANY_FAULT_IN_THIS_PROC) then
    ! compute jacobians with fault open and *store needed for ibool.
     call crm_ext_setup_jacobian(myrank, &
-                         xstore,ystore,zstore,nspec, &
-                         nodes_coords_open, nnodes_coords_open,&
-                         elmnts_ext_mesh,nelmnts_ext_mesh)
+                                xstore,ystore,zstore,nspec, &
+                                nodes_coords_open, nnodes_coords_open,&
+                                elmnts_ext_mesh,nelmnts_ext_mesh)
   else ! with no fault
     call crm_ext_setup_jacobian(myrank, &
-                        xstore,ystore,zstore,nspec, &
-                        nodes_coords_ext_mesh,nnodes_ext_mesh,&
-                        elmnts_ext_mesh,nelmnts_ext_mesh)
+                                xstore,ystore,zstore,nspec, &
+                                nodes_coords_ext_mesh,nnodes_ext_mesh,&
+                                elmnts_ext_mesh,nelmnts_ext_mesh)
   endif
 
 
@@ -109,29 +109,33 @@
   endif
   if (ANY_FAULT_IN_THIS_PROC) then
     call crm_ext_setup_indexing(ibool, &
-                       xstore,ystore,zstore,nspec,nglob,npointot, &
-                       nnodes_coords_open,nodes_coords_open,myrank)
+                                xstore,ystore,zstore,nspec,nglob,npointot, &
+                                nnodes_coords_open,nodes_coords_open,myrank)
   else ! with no fault
     call crm_ext_setup_indexing(ibool, &
-                      xstore,ystore,zstore,nspec,nglob,npointot, &
-                      nnodes_ext_mesh,nodes_coords_ext_mesh,myrank)
+                                xstore,ystore,zstore,nspec,nglob,npointot, &
+                                nnodes_ext_mesh,nodes_coords_ext_mesh,myrank)
   endif
 
   if (ANY_FAULT) then
-   ! recalculate *store with faults closed
+    ! recalculate *store with faults closed
     call synchronize_all()
     if (myrank == 0) then
       write(IMAIN,*) '  ... resetting up jacobian in fault domains'
       call flush_IMAIN()
     endif
-    if (ANY_FAULT_IN_THIS_PROC) call crm_ext_setup_jacobian(myrank, &
-                           xstore,ystore,zstore,nspec, &
-                           nodes_coords_ext_mesh,nnodes_ext_mesh,&
-                           elmnts_ext_mesh,nelmnts_ext_mesh)
-   ! at this point (xyz)store_dummy are still open
-    if (.NOT. PARALLEL_FAULT) call fault_setup (ibool,nnodes_ext_mesh,nodes_coords_ext_mesh, &
-                    xstore,ystore,zstore,nspec,nglob,myrank)
-   ! this closes (xyz)store_dummy
+    if (ANY_FAULT_IN_THIS_PROC) then
+      call crm_ext_setup_jacobian(myrank, &
+                                  xstore,ystore,zstore,nspec, &
+                                  nodes_coords_ext_mesh,nnodes_ext_mesh,&
+                                  elmnts_ext_mesh,nelmnts_ext_mesh)
+    endif
+    ! at this point (xyz)store_dummy are still open
+    if (.NOT. PARALLEL_FAULT) then
+      call fault_setup (ibool,nnodes_ext_mesh,nodes_coords_ext_mesh, &
+                        xstore,ystore,zstore,nspec,nglob,myrank)
+    endif
+    ! this closes (xyz)store_dummy
   endif
 
 
@@ -142,12 +146,12 @@
     call flush_IMAIN()
   endif
   call get_MPI(myrank,nglob_dummy,nspec,ibool, &
-              nelmnts_ext_mesh,elmnts_ext_mesh, &
-              my_nelmnts_neighbours_ext_mesh, my_interfaces_ext_mesh, &
-              ibool_interfaces_ext_mesh, &
-              nibool_interfaces_ext_mesh, &
-              num_interfaces_ext_mesh,max_interface_size_ext_mesh,&
-              my_neighbours_ext_mesh)
+               nelmnts_ext_mesh,elmnts_ext_mesh, &
+               my_nelmnts_neighbours_ext_mesh, my_interfaces_ext_mesh, &
+               ibool_interfaces_ext_mesh, &
+               nibool_interfaces_ext_mesh, &
+               num_interfaces_ext_mesh,max_interface_size_ext_mesh,&
+               my_neighbours_ext_mesh)
 
 
   !SURENDRA (setting up parallel fault)
@@ -155,7 +159,7 @@
     call synchronize_all()
     !at this point (xyz)store_dummy are still open
     call fault_setup (ibool,nnodes_ext_mesh,nodes_coords_ext_mesh, &
-                    xstore,ystore,zstore,nspec,nglob,myrank)
+                      xstore,ystore,zstore,nspec,nglob,myrank)
    ! this closes (xyz)store_dummy
   endif
 
@@ -167,12 +171,12 @@
     call flush_IMAIN()
   endif
   call get_absorbing_boundary(myrank,nspec,ibool, &
-                            nodes_coords_ext_mesh,nnodes_ext_mesh, &
-                            ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
-                            nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax, &
-                            nodes_ibelm_bottom,nodes_ibelm_top, &
-                            nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
-                            nspec2D_bottom,nspec2D_top)
+                              nodes_coords_ext_mesh,nnodes_ext_mesh, &
+                              ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
+                              nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax, &
+                              nodes_ibelm_bottom,nodes_ibelm_top, &
+                              nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
+                              nspec2D_bottom,nspec2D_top)
 
 ! sets up up Moho surface
   if( SAVE_MOHO_MESH ) then
@@ -182,8 +186,8 @@
       call flush_IMAIN()
     endif
     call crm_setup_moho(myrank,nspec, &
-                      nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho, &
-                      nodes_coords_ext_mesh,nnodes_ext_mesh,ibool )
+                        nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho, &
+                        nodes_coords_ext_mesh,nnodes_ext_mesh,ibool )
   endif
 
 ! sets material velocities
@@ -201,10 +205,10 @@
     call flush_IMAIN()
   endif
   call get_coupling_surfaces(myrank, &
-                        nspec,ibool,NPROC, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,&
-                        num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
-                        my_neighbours_ext_mesh)
+                             nspec,ibool,NPROC, &
+                             nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,&
+                             num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
+                             my_neighbours_ext_mesh)
 
 ! locates inner and outer elements
   call synchronize_all()
@@ -213,9 +217,9 @@
     call flush_IMAIN()
   endif
   call crm_setup_inner_outer_elemnts(myrank,nspec, &
-                                    num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
-                                    nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                                    ibool,SAVE_MESH_FILES)
+                                     num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
+                                     nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                     ibool,SAVE_MESH_FILES)
 
 ! colors mesh if requested
   call synchronize_all()
@@ -268,10 +272,10 @@
                                            ibool_interfaces_ext_mesh,      &
                                            SAVE_MESH_FILES,ANISOTROPY)
   else
-  call save_arrays_solver_ext_mesh(nspec,nglob_dummy,APPROXIMATE_OCEAN_LOAD,ibool, &
-                        num_interfaces_ext_mesh,my_neighbours_ext_mesh,nibool_interfaces_ext_mesh, &
-                        max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &
-                        SAVE_MESH_FILES,ANISOTROPY)
+    call save_arrays_solver_ext_mesh(nspec,nglob_dummy,APPROXIMATE_OCEAN_LOAD,ibool, &
+                                     num_interfaces_ext_mesh,my_neighbours_ext_mesh,nibool_interfaces_ext_mesh, &
+                                     max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &
+                                     SAVE_MESH_FILES,ANISOTROPY)
   endif
 
 ! saves faults
@@ -298,7 +302,7 @@
 ! computes the approximate amount of memory needed to run the solver
   call synchronize_all()
   call memory_eval(nspec,nglob_dummy,maxval(nibool_interfaces_ext_mesh),num_interfaces_ext_mesh, &
-                  APPROXIMATE_OCEAN_LOAD,memory_size)
+                   APPROXIMATE_OCEAN_LOAD,memory_size)
   call max_all_dp(memory_size, max_memory_size)
 
 ! checks the mesh, stability and resolved period
@@ -311,16 +315,16 @@
   if( POROELASTIC_SIMULATION ) then
     !chris: check for poro: At the moment cpI & cpII are for eta=0
     call check_mesh_resolution_poro(myrank,nspec,nglob_dummy,ibool,&
-                            xstore_dummy,ystore_dummy,zstore_dummy, &
-                            -1.0d0, model_speed_max,min_resolved_period, &
-                            phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI, &
-                            LOCAL_PATH,SAVE_MESH_FILES )
+                                    xstore_dummy,ystore_dummy,zstore_dummy, &
+                                    -1.0d0, model_speed_max,min_resolved_period, &
+                                    phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI, &
+                                    LOCAL_PATH,SAVE_MESH_FILES )
   else
     call check_mesh_resolution(myrank,nspec,nglob_dummy, &
-                              ibool,xstore_dummy,ystore_dummy,zstore_dummy, &
-                              kappastore,mustore,rho_vp,rho_vs, &
-                              -1.0d0,model_speed_max,min_resolved_period, &
-                              LOCAL_PATH,SAVE_MESH_FILES)
+                               ibool,xstore_dummy,ystore_dummy,zstore_dummy, &
+                               kappastore,mustore,rho_vp,rho_vs, &
+                               -1.0d0,model_speed_max,min_resolved_period, &
+                               LOCAL_PATH,SAVE_MESH_FILES)
   endif
 
 ! saves binary mesh files for attenuation
@@ -331,14 +335,14 @@
       call flush_IMAIN()
     endif
     call get_attenuation_model(myrank,nspec,USE_OLSEN_ATTENUATION,OLSEN_ATTENUATION_RATIO, &
-                              mustore,rho_vs,kappastore,rho_vp,qkappa_attenuation_store,qmu_attenuation_store, &
-                              ispec_is_elastic,min_resolved_period,prname,FULL_ATTENUATION_SOLID)
+                               mustore,rho_vs,kappastore,rho_vp,qkappa_attenuation_store,qmu_attenuation_store, &
+                               ispec_is_elastic,min_resolved_period,prname,FULL_ATTENUATION_SOLID)
   endif
 
   ! cleanup
   deallocate(xixstore,xiystore,xizstore,&
-              etaxstore,etaystore,etazstore,&
-              gammaxstore,gammaystore,gammazstore)
+             etaxstore,etaystore,etazstore,&
+             gammaxstore,gammaystore,gammazstore)
   deallocate(jacobianstore,qkappa_attenuation_store,qmu_attenuation_store)
   deallocate(kappastore,mustore,rho_vp,rho_vs)
   deallocate(rho_vpI,rho_vpII,rho_vsI)
@@ -1010,12 +1014,10 @@ subroutine crm_ext_setup_indexing(ibool, &
   call sum_all_i( imoho_bot, imoho_bot_all )
   call sum_all_i( NSPEC2D_MOHO, imoho_all )
   if( myrank == 0 ) then
-    write(IMAIN,*) '********'
-    write(IMAIN,*) 'Moho surface:'
-    write(IMAIN,*) '    total surface elements: ',imoho_all
-    write(IMAIN,*) '    top elements   :',imoho_top_all
-    write(IMAIN,*) '    bottom elements:',imoho_bot_all
-    write(IMAIN,*) '********'
+    write(IMAIN,*) '     Moho surface:'
+    write(IMAIN,*) '     total surface elements: ',imoho_all
+    write(IMAIN,*) '     top elements   :',imoho_top_all
+    write(IMAIN,*) '     bottom elements:',imoho_bot_all
     call flush_IMAIN()
   endif
 

@@ -880,6 +880,8 @@
         b_epsilondev_yz = 0._CUSTOM_REAL
       endif
 
+      ! moho kernels
+      if (SAVE_MOHO_MESH) moho_kl(:,:) = 0._CUSTOM_REAL
     endif
 
     ! acoustic domain

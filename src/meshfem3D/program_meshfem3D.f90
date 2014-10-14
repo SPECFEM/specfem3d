@@ -27,11 +27,11 @@
 
   program xmeshfem3D
 
-  call init()
+  call init_mpi()
 
 ! run the main program
   call meshfem3D
 
-  call finalize()
+  call finalize_mpi()
 
   end program xmeshfem3D

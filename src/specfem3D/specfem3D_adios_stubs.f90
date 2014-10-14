@@ -57,11 +57,11 @@ subroutine read_mesh_databases_adios()
   call no_adios_err()
 end subroutine read_mesh_databases_adios
 
-subroutine read_moho_mesh_adjoint_adios()
+subroutine read_mesh_databases_moho_adios()
   use adios_manager_mod
 
   call no_adios_err()
-end subroutine read_moho_mesh_adjoint_adios
+end subroutine read_mesh_databases_moho_adios
 
 !-----------------------------------------.
 ! Subroutines from save_kernels_adios.F90 |

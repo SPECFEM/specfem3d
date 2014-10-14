@@ -35,7 +35,7 @@
 !
 !--------------------------------------------------------------------------------------------------
 
-  module tomography_par
+  module model_tomography_par
 
   use constants,only: CUSTOM_REAL,IMODEL_TOMO
 
@@ -66,7 +66,7 @@
   ! process rank
   integer :: myrank_tomo
 
-  end module tomography_par
+  end module model_tomography_par
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -75,7 +75,7 @@
 
   subroutine model_tomography_broadcast(myrank)
 
-  use tomography_par, only: myrank_tomo
+  use model_tomography_par, only: myrank_tomo
 
   implicit none
 
@@ -127,7 +127,7 @@
 
   use generate_databases_par, only: TOMOGRAPHY_PATH,undef_mat_prop,nundefMat_ext_mesh,IMODEL,COUPLE_WITH_EXTERNAL_CODE
 
-  use tomography_par
+  use model_tomography_par
 
   implicit none
 
@@ -283,7 +283,7 @@ end subroutine init_tomography_files
 
   use generate_databases_par, only: TOMOGRAPHY_PATH,undef_mat_prop,nundefMat_ext_mesh,IMODEL
 
-  use tomography_par
+  use model_tomography_par
 
   implicit none
 
@@ -457,7 +457,7 @@ end subroutine init_tomography_files
 
   use generate_databases_par, only: undef_mat_prop,nundefMat_ext_mesh,IMODEL,ATTENUATION_COMP_MAXIMUM
 
-  use tomography_par
+  use model_tomography_par
 
   implicit none
 
@@ -726,7 +726,7 @@ end subroutine init_tomography_files
 
   subroutine deallocate_tomography_files()
 
-    use tomography_par
+    use model_tomography_par
 
     implicit none
 

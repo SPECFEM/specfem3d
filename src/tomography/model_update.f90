@@ -32,6 +32,8 @@ program model_update
   use specfem_par_acoustic
   use specfem_par_poroelastic
 
+  use tomography_par,only: USE_ALPHA_BETA_RHO,USE_RHO_SCALING,RHO_SCALING,NSPEC,NGLOB
+
   implicit none
 
   ! ======================================================
@@ -46,17 +48,6 @@ program model_update
   ! directory where the summed and smoothed input kernels are linked
   character(len=MAX_STRING_LEN) :: INPUT_KERNELS
 
-  ! by default, this algorithm uses (bulk,bulk_beta,rho) kernels to update vp,vs,rho
-  ! if you prefer using (alpha,beta,rho) kernels, set this flag to true
-  logical, parameter :: USE_ALPHA_BETA_RHO = .true.
-
-  ! ignore rho kernel, but use density perturbations as a scaling of Vs perturbations
-  logical, parameter :: USE_RHO_SCALING = .false.
-
-  ! in case of rho scaling, specifies density scaling factor with shear perturbations
-  ! see e.g. Montagner & Anderson (1989), Panning & Romanowicz (2006)
-  real(kind=CUSTOM_REAL),parameter :: RHO_SCALING = 0.33_CUSTOM_REAL
-
   !set to true if you want to print out log files with statistics
   logical, parameter :: PRINT_OUT_FILES = .true.
 
@@ -68,7 +59,6 @@ program model_update
   character(len=MAX_STRING_LEN) :: prname_new, fname
   character(len=MAX_STRING_LEN*2) :: m_file
   integer :: NGLOB_OCEAN
-  integer :: NSPEC, NGLOB
 
   ! for attenuation
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: qmu_attenuation_store,qkappa_attenuation_store  ! attenuation
@@ -132,14 +122,19 @@ program model_update
   real(kind=CUSTOM_REAL),dimension(1) :: tmp_step
 
   ! security check
-  if( ATTENUATION ) then
+  if (ATTENUATION) then
     print*,'sorry using ATTENUATION, this routine has qkappa not implemented yet...'
-    stop
+    stop 'Error ATTENUATION flag invalid'
+  endif
+
+  if (USE_ALPHA_BETA_RHO .neqv. .true.) then
+    print*,'sorry using USE_ALPHA_BETA_RHO must be set to .true. in constants_tomography.h file; Please recompile...'
+    stop 'Error USE_ALPHA_BETA_RHO flag invalid'
   endif
 
   ! ============ program starts here =====================
   ! initialize the MPI communicator and start the NPROCTOT MPI processes
-  call init()
+  call init_mpi()
   call world_size(sizeprocs)
   call world_rank(myrank)
 
@@ -163,8 +158,8 @@ program model_update
   ! read in parameter information
   read(s_step_fac,*) step_fac
   if( abs(step_fac) < 1.e-10) then
-    print*,'error: step factor ',step_fac
-    call exit_MPI(myrank,'error step factor')
+    print*,'Error: step factor ',step_fac
+    call exit_MPI(myrank,'Error step factor')
   endif
 
   call synchronize_all()
@@ -172,18 +167,49 @@ program model_update
   ! reads in parameters and checks for some inconsistencies
   call initialize_simulation()
 
-  call synchronize_all()
-
   ! reads in external mesh
   call read_mesh_databases()
+
+  ! checks Courant criteria on mesh
+  if( ELASTIC_SIMULATION ) then
+    call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB, &
+                               ibool,xstore,ystore,zstore, &
+                               kappastore,mustore,rho_vp,rho_vs, &
+                               DT,model_speed_max,min_resolved_period, &
+                               LOCAL_PATH,SAVE_MESH_FILES)
+
+  else if( POROELASTIC_SIMULATION ) then
+    allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    rho_vp = 0.0_CUSTOM_REAL
+    rho_vs = 0.0_CUSTOM_REAL
+    call check_mesh_resolution_poro(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
+                                    DT,model_speed_max,min_resolved_period, &
+                                    phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI, &
+                                    LOCAL_PATH,SAVE_MESH_FILES)
+    deallocate(rho_vp,rho_vs)
+  else if( ACOUSTIC_SIMULATION ) then
+    allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array rho_vp'
+    allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array rho_vs'
+    rho_vp = sqrt( kappastore / rhostore ) * rhostore
+    rho_vs = 0.0_CUSTOM_REAL
+    call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB, &
+                               ibool,xstore,ystore,zstore, &
+                               kappastore,mustore,rho_vp,rho_vs, &
+                               DT,model_speed_max,min_resolved_period, &
+                               LOCAL_PATH,SAVE_MESH_FILES)
+    deallocate(rho_vp,rho_vs)
+  endif
 
   !===================================================
   !===================================================
   ! MODEL UPDATE
 
   ! number of spectral el for each processor
-  NSPEC=NSPEC_AB
-  NGLOB=NGLOB_AB
+  NSPEC = NSPEC_AB
+  NGLOB = NGLOB_AB
 
   if( myrank == 0 ) then
     print*,'NSPEC            ', NSPEC
@@ -209,10 +235,10 @@ program model_update
           model_dR(NGLLX,NGLLY,NGLLZ,NSPEC))
   ! new variables for save_external_bin_m_up
   allocate(kappastore_new(NGLLX,NGLLY,NGLLZ,NSPEC), &
-          mustore_new(NGLLX,NGLLY,NGLLZ,NSPEC), &
-          rhostore_new(NGLLX,NGLLY,NGLLZ,NSPEC), &
-          rho_vp_new(NGLLX,NGLLY,NGLLZ,NSPEC), &
-          rho_vs_new(NGLLX,NGLLY,NGLLZ,NSPEC))
+           mustore_new(NGLLX,NGLLY,NGLLZ,NSPEC), &
+           rhostore_new(NGLLX,NGLLY,NGLLZ,NSPEC), &
+           rho_vp_new(NGLLX,NGLLY,NGLLZ,NSPEC), &
+           rho_vs_new(NGLLX,NGLLY,NGLLZ,NSPEC))
 
 
   !! inizialize variables
@@ -423,8 +449,8 @@ program model_update
   write(m_file,'(a,i6.6,a)') trim(INPUT_KERNELS)//'/proc',myrank,'_'//trim(fname)//'.bin'
   open(12,file=trim(m_file),status='old',form='unformatted',iostat=ier)
   if( ier /= 0 ) then
-    print*,'error opening: ',trim(m_file)
-    call exit_mpi(myrank,'file not found')
+    print*,'Error opening: ',trim(m_file)
+    call exit_mpi(myrank,'Error file not found')
   endif
   read(12) kernel_a(:,:,:,1:nspec)
   close(12)
@@ -440,8 +466,8 @@ program model_update
   write(m_file,'(a,i6.6,a)') trim(INPUT_KERNELS)//'/proc',myrank,'_'//trim(fname)//'.bin'
   open(12,file=trim(m_file),status='old',form='unformatted',iostat=ier)
   if( ier /= 0 ) then
-    print*,'error opening: ',trim(m_file)
-    call exit_mpi(myrank,'file not found')
+    print*,'Error opening: ',trim(m_file)
+    call exit_mpi(myrank,'Error file not found')
   endif
   read(12) kernel_b(:,:,:,1:nspec)
   close(12)
@@ -458,8 +484,8 @@ program model_update
     write(m_file,'(a,i6.6,a)') trim(INPUT_KERNELS)//'/proc',myrank,'_rho_kernel_smooth.bin'
     open(12,file=trim(m_file),status='old',form='unformatted',iostat=ier)
     if( ier /= 0 ) then
-      print*,'error opening: ',trim(m_file)
-      call exit_mpi(myrank,'file not found')
+      print*,'Error opening: ',trim(m_file)
+      call exit_mpi(myrank,'Error file not found')
     endif
     read(12) kernel_rho(:,:,:,1:nspec)
     close(12)
@@ -851,41 +877,51 @@ program model_update
   write(m_file,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',myrank,'_attenuation.vtk'
   open(12,file=trim(m_file),status='old',iostat=ier)
   if( ier /= 0 ) then
-    print*,'error opening: ',trim(m_file)
-    call exit_mpi(myrank,'file not found')
+    print*,'Error opening: ',trim(m_file)
+    call exit_mpi(myrank,'Error file not found')
   endif
   read(12,'(a)') string1 !text
   read(12,'(a)') string2 !text
   read(12,'(a)') string3 !text
   read(12,'(a)') string4 !text
   read(12,'(a,i12,a)') string5, idummy1, string6 !text
+
   allocate(dummy_g_1(NGLOB),dummy_g_2(NGLOB),dummy_g_3(NGLOB),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array dummy etc.'
+  if( ier /= 0 ) stop 'Error allocating array dummy etc.'
+
   read(12,'(3e18.6)') dummy_g_1,dummy_g_2,dummy_g_3 !xstore,ystore,zstore for i=1,nglob
   read(12,*) !blank line
   deallocate(dummy_g_1,dummy_g_2,dummy_g_3)
 
   read(12,'(a,i12,i12)') string7, idummy2, idummy3 !text
+
   allocate(dummy_num(NSPEC),dummy_l_1(NSPEC),dummy_l_2(NSPEC),dummy_l_3(NSPEC),dummy_l_4(NSPEC), &
            dummy_l_5(NSPEC),dummy_l_6(NSPEC),dummy_l_7(NSPEC),dummy_l_8(NSPEC),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array dummy etc.'
+  if( ier /= 0 ) stop 'Error allocating array dummy etc.'
+
   read(12,'(9i12)') dummy_num,dummy_l_1,dummy_l_2,dummy_l_3,dummy_l_4, &
                   dummy_l_5,dummy_l_6,dummy_l_7,dummy_l_8 !8,ibool-1 for ispec=1,nspec
   read(12,*) !blank line
+
   deallocate(dummy_num,dummy_l_1,dummy_l_2,dummy_l_3,dummy_l_4,dummy_l_5,dummy_l_6,dummy_l_7,dummy_l_8)
 
   read(12,'(a,i12)') string8, idummy4 !text
+
   allocate(dummy_num(NSPEC),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array dummy etc.'
+  if( ier /= 0 ) stop 'Error allocating array dummy etc.'
+
   read(12,*) dummy_num !12 for ispec=1,nspec
   read(12,*) !blank line
+
   deallocate(dummy_num)
 
   read(12,'(a,i12)') string9, idummy5 !text
   read(12,'(a)') string10 !text
   read(12,'(a)') string11 !text
+
   allocate(flag_val(NGLOB),stat=ier)
-  if( ier /= 0 ) stop 'error allocating flag_val'
+  if( ier /= 0 ) stop 'Error allocating flag_val'
+
   read(12,*) flag_val
   read(12,*) !blank line
   close(12)
@@ -897,7 +933,7 @@ program model_update
   qkappa_attenuation_store=0._CUSTOM_REAL
 
   allocate(mask_ibool(NGLOB),stat=ier)
-  if( ier /= 0 ) stop 'error allocating mask'
+  if( ier /= 0 ) stop 'Error allocating mask'
 
   mask_ibool = .false.
   do ispec=1,nspec
@@ -1148,6 +1184,6 @@ program model_update
   !-----------------------------------------------------
 
   ! stop all the processes, and exit
-  call finalize()
+  call finalize_mpi()
 
 end program model_update

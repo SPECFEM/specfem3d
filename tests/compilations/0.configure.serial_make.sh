@@ -18,6 +18,7 @@ rm -rf ./bin ./obj ./setup ./OUTPUT_FILES ./DATA
 
 # default configuration for serial version (without MPI)
 # (out-of-source compilation)
+echo "configuration: $srcdir/configure --without-mpi" >> $testdir/results.log
 $srcdir/configure --without-mpi >> $testdir/results.log 2>&1
 
 # checks exit code
