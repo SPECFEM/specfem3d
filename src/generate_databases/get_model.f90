@@ -72,18 +72,9 @@
   ispec_is_elastic(:) = .false.
   ispec_is_poroelastic(:) = .false.
 
-  !! WANGYI test for the benchmark of hybrid DSM-SPECFEM3D coupling
-  if (COUPLE_WITH_EXTERNAL_CODE) then
-    if( nundefMat_ext_mesh > 6 .or. IMODEL == IMODEL_TOMO ) then ! changed by WANGYI
-      write(*,*)  'nundefMat_ext_mesh, IMODEL, IMODEL_TOMO', nundefMat_ext_mesh, IMODEL, IMODEL_TOMO ! add by WANGYI
-      call model_tomography_broadcast(myrank)
-    endif
-
-  else
-    ! prepares tomographic models if needed for elements with undefined material definitions
-    if( nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO ) then
-      call model_tomography_broadcast(myrank)
-    endif
+  ! prepares tomographic models if needed for elements with undefined material definitions
+  if( (nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO) .and. (.not. COUPLE_WITH_EXTERNAL_CODE) ) then
+    call model_tomography_broadcast(myrank)
   endif
 
   ! prepares external model values if needed
@@ -93,6 +84,23 @@
   case( IMODEL_SALTON_TROUGH )
     call model_salton_trough_broadcast(myrank)
   end select
+
+!! VM VM for coupling with DSM
+!! find the # layer where the middle of the element is located      
+  if (COUPLE_WITH_EXTERNAL_CODE) then
+
+    if (NGLL == 5) then
+      ! gets xyz coordinates of GLL point
+      iglob = ibool(3,3,3,1)
+      xmesh = xstore_dummy(iglob)
+      ymesh = ystore_dummy(iglob)
+      zmesh = zstore_dummy(iglob)
+	else
+      stop 'bad number of GLL points for coupling with DSM'
+    endif
+
+    call FindLayer(xmesh,ymesh,zmesh)
+  end if
 
 ! !  Piero, read bedrock file
 ! in case, see file model_interface_bedrock.f90:
@@ -160,6 +168,18 @@
           xmesh = xstore_dummy(iglob)
           ymesh = ystore_dummy(iglob)
           zmesh = zstore_dummy(iglob)
+ 
+          !! VM VM for coupling with DSM
+          !! find the # layer where the middle of the element is located
+          if (COUPLE_WITH_EXTERNAL_CODE) then 
+
+            if (NGLL == 5) then
+              if (i==3 .and. j==3 .and. k==3) call FindLayer(xmesh,ymesh,zmesh)
+	        else
+              stop 'bad number of GLL points for coupling with DSM'
+            endif
+
+          end if
 
           ! material index 1: associated material number
           ! 1 = acoustic, 2 = elastic, 3 = poroelastic, -1 = undefined tomographic
@@ -346,17 +366,9 @@
   call any_all_l( ANY(ispec_is_elastic), ELASTIC_SIMULATION )
   call any_all_l( ANY(ispec_is_poroelastic), POROELASTIC_SIMULATION )
 
-  !! WANGYI test for the benchmark of hybrid DSM-SPECFEM3D coupling
-  if (COUPLE_WITH_EXTERNAL_CODE) then
-    if( nundefMat_ext_mesh > 6 .or. IMODEL == IMODEL_TOMO ) then  ! changed by wangyi for test
-      call deallocate_tomography_files()
-    endif
-
-  else
-    ! deallocates tomographic arrays
-    if( nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO ) then
-      call deallocate_tomography_files()
-    endif
+  ! deallocates tomographic arrays
+  if( (nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO) .and. (.not. COUPLE_WITH_EXTERNAL_CODE) ) then
+    call deallocate_tomography_files()
   endif
 
   end subroutine get_model

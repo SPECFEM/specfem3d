@@ -133,13 +133,13 @@ subroutine Lyfnd(r,rb,n,i)
   return
 end subroutine Lyfnd
 
-
-function Interpol(v,i,x,nl)
-  implicit none
-  integer i,nl
-  double precision Interpol,x,v(nl,4)
-  Interpol = v(i,1)+x*(v(i,2)+x*(v(i,3)+x*v(i,4)))
-end function Interpol
+!! CD CD ==> to verify if it is not necessary here
+!!! function Interpol(v,i,x,nl)
+!!!   implicit none
+!!!   integer i,nl
+!!!   double precision Interpol,x,v(nl,4)
+!!!   Interpol = v(i,1)+x*(v(i,2)+x*(v(i,3)+x*v(i,4)))
+!!! end function Interpol
 
 function IsNewLayer(x,r,n)
   implicit none
@@ -222,7 +222,7 @@ end subroutine StorePointZ
    zpoint(1)=zlayer(nlayer) - Z_DEPTH_BLOCK
    write(*,*) zlayer(nlayer) ,  Z_DEPTH_BLOCK
    !! niveau de depart
-   call FindLayer(ilayer,zlayer,zpoint(1),nlayer)
+   call FindLayer_in_mesh_chunk(ilayer,zlayer,zpoint(1),nlayer)
    write(*,*) '              INITIALISATION calcul du niveau de depart : '
    write(*,*)
    write(*,*) 'zlayer : ', zlayer
@@ -326,7 +326,7 @@ end subroutine StorePointZ
       ProfForGemini(ilay-1,2)  =  zz(ilay+1)
       ProfForGemini(ilay-1,3)  = 0.5d0 * (zz(ilay) + zz(ilay+1))
 
-      call FindLayer(niveau,zlayer, ProfForGemini(ilay-1,3),nlayer)
+      call FindLayer_in_mesh_chunk(niveau,zlayer, ProfForGemini(ilay-1,3),nlayer)
       Niveau_elm(ilay-1)=niveau
       write(*,'(i5,2f15.3,i10)') ilay,zz(ilay),zz(ilay+1),niveau
    enddo
@@ -338,7 +338,7 @@ end subroutine StorePointZ
 
  end subroutine CalGridProf
 
- subroutine  FindLayer(i,z,r,n)
+ subroutine  FindLayer_in_mesh_chunk(i,z,r,n)
    implicit none
    integer i,n
    double precision z(n),r
@@ -353,7 +353,7 @@ end subroutine StorePointZ
    enddo
 
 
- end subroutine FindLayer
+ end subroutine FindLayer_in_mesh_chunk
 
 
 

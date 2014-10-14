@@ -276,8 +276,8 @@
   if(ELASTIC_SIMULATION) then
     ! switches to three-component mass matrix
 
-    !! CD CD
-    if( STACEY_ABSORBING_CONDITIONS .and. .not. COUPLE_WITH_EXTERNAL_CODE ) then
+    !! CD CD !! to verify 
+    if( STACEY_ABSORBING_CONDITIONS) then
       ! adds boundary contributions
       rmassx(:) = rmass(:) + rmassx(:)
       rmassy(:) = rmass(:) + rmassy(:)
