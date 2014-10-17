@@ -35,7 +35,7 @@ NGNOD                           = 8
 #   1d_prem,1d_socal,1d_cascadia
 # 3D models available are:
 #   aniso,external,gll,salton_trough,tomo
-MODEL                           = 1d_prem
+MODEL                           = external
 
 # if you are using a SEP model (oil-industry format)
 SEP_MODEL_DIRECTORY             = ./DATA/my_SEP_model/
@@ -80,9 +80,9 @@ STACEY_INSTEAD_OF_FREE_SURFACE  = .false.
 CREATE_SHAKEMAP                 = .false.
 MOVIE_SURFACE                   = .false.
 MOVIE_TYPE                      = 1
-MOVIE_VOLUME                    = .true.
+MOVIE_VOLUME                    = .false.
 SAVE_DISPLACEMENT               = .false.
-USE_HIGHRES_FOR_MOVIES          = .true.
+USE_HIGHRES_FOR_MOVIES          = .false.
 NTSTEP_BETWEEN_FRAMES           = 80
 HDUR_MOVIE                      = 0.0
 

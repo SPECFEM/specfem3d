@@ -89,18 +89,17 @@
 !! find the # layer where the middle of the element is located      
   if (COUPLE_WITH_EXTERNAL_CODE) then
 
-    if (NGLL == 5) then
+    if( (NGLLX == 5) .and. (NGLLY == 5) .and. (NGLLZ == 5) ) then
       ! gets xyz coordinates of GLL point
       iglob = ibool(3,3,3,1)
       xmesh = xstore_dummy(iglob)
       ymesh = ystore_dummy(iglob)
       zmesh = zstore_dummy(iglob)
-	else
+      call FindLayer(xmesh,ymesh,zmesh)
+    else
       stop 'bad number of GLL points for coupling with DSM'
-    endif
-
-    call FindLayer(xmesh,ymesh,zmesh)
-  end if
+    end if
+  endif
 
 ! !  Piero, read bedrock file
 ! in case, see file model_interface_bedrock.f90:
@@ -173,9 +172,9 @@
           !! find the # layer where the middle of the element is located
           if (COUPLE_WITH_EXTERNAL_CODE) then 
 
-            if (NGLL == 5) then
+            if( (NGLLX == 5) .and. (NGLLY == 5) .and. (NGLLZ == 5) ) then
               if (i==3 .and. j==3 .and. k==3) call FindLayer(xmesh,ymesh,zmesh)
-	        else
+            else
               stop 'bad number of GLL points for coupling with DSM'
             endif
 
@@ -594,3 +593,26 @@
   end select
 
   end subroutine get_model_binaries
+
+!----------------------------------------------------------------
+
+  subroutine FindLayer(x,y,z)
+    use external_model
+    implicit none
+    integer il
+    double precision radius
+    double precision :: x,y,z
+    radius =  dsqrt(x**2 + y**2 + (z+zref)**2) / 1000.d0
+
+    !write(124,*) 'RADIUS ',radius,x,y,z,z+zref,zref
+    il = 1
+    do while (radius .gt. zlayer(il).and.il.lt.nlayer)
+       il = il + 1
+    end do
+    il = il - 1
+    ilayer = il 
+    
+    !write(124,*) 'r, i : ',z,zref,radius, ilayer
+  end subroutine FindLayer
+
+!----------------------------------------------------------------

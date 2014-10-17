@@ -202,9 +202,8 @@
   integer :: idomain_id
 
   ! local parameters
-  double precision :: radius
-  real(kind=CUSTOM_REAL) :: x,y,z
-  real(kind=CUSTOM_REAL) :: xmin,xmax,ymin,ymax,zmin,zmax
+  double precision :: radius, x,y,z
+  real(kind=CUSTOM_REAL) :: xmin,xmax,ymin,ymax,zmin,zmax,x_target,y_target
   real(kind=CUSTOM_REAL) :: depth
   real(kind=CUSTOM_REAL) :: elevation,distmin
 
@@ -232,9 +231,11 @@
     ymax = 134000._CUSTOM_REAL ! maxval(ystore_dummy)
     zmin = 0._CUSTOM_REAL ! minval(zstore_dummy)
     zmax = 60000._CUSTOM_REAL ! maxval(zstore_dummy)
+    x_target = x
+    y_target = y
 
     ! get approximate topography elevation at target coordinates from free surface
-    call get_topo_elevation_free_closest(x,y,elevation,distmin, &
+    call get_topo_elevation_free_closest(x_target,y_target,elevation,distmin, &
          nspec,nglob_dummy,ibool,xstore_dummy,ystore_dummy,zstore_dummy, &
          num_free_surface_faces,free_surface_ispec,free_surface_ijk)
 
@@ -283,32 +284,14 @@
 !! !! ================= VM VM CUSTOM SUBROUTINE FOR DSM COUPLING
 !----------------------------------------------------------------
 
-  subroutine FindLayer(x,y,z)
-    use external_model
-    implicit none
-    integer il
-    double precision radius,x,y,z
-    radius =  dsqrt(x**2 + y**2 + (z+zref)**2) / 1000.d0
-
-    !write(124,*) 'RADIUS ',radius,x,y,z,z+zref,zref
-    il = 1
-    do while (radius .gt. zlayer(il).and.il.lt.nlayer)
-       il = il + 1
-    end do
-    il = il - 1
-    ilayer = il 
-    
-    !write(124,*) 'r, i : ',z,zref,radius, ilayer
-  end subroutine FindLayer
-
-!----------------------------------------------------------------
 
  subroutine model_1D(x_eval,y_eval,z_eval, &
                              rho_final,vp_final,vs_final,r1)
     use external_model
     implicit none
-    double precision r1,radius,x_eval,y_eval,z_eval
+    double precision r1,radius
     double precision rho,vp,vs
+    double precision x_eval,y_eval,z_eval
     real(kind=CUSTOM_REAL) rho_final,vp_final,vs_final
     double precision Interpol,Xtol
     
