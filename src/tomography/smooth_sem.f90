@@ -232,24 +232,24 @@ program smooth_sem
            gammay(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
            gammaz(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
            jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-  if( ier /= 0 ) stop 'error allocating arrays for databases'
+  if( ier /= 0 ) stop 'Error allocating arrays for databases'
 
   ! mesh node locations
   allocate(xstore(NGLOB_AB), &
            ystore(NGLOB_AB), &
            zstore(NGLOB_AB),stat=ier)
-  if( ier /= 0 ) stop 'error allocating arrays for mesh nodes'
+  if( ier /= 0 ) stop 'Error allocating arrays for mesh nodes'
 
   ! material properties
   allocate(kappastore(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
            mustore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-  if( ier /= 0 ) stop 'error allocating arrays for material properties'
+  if( ier /= 0 ) stop 'Error allocating arrays for material properties'
 
   ! material flags
   allocate(ispec_is_acoustic(NSPEC_AB), &
            ispec_is_elastic(NSPEC_AB), &
            ispec_is_poroelastic(NSPEC_AB),stat=ier)
-  if( ier /= 0 ) stop 'error allocating arrays for material flags'
+  if( ier /= 0 ) stop 'Error allocating arrays for material flags'
   ispec_is_acoustic(:) = .false.
   ispec_is_elastic(:) = .false.
   ispec_is_poroelastic(:) = .false.
@@ -299,9 +299,9 @@ program smooth_sem
     deallocate(rho_vp,rho_vs)
   else if( ACOUSTIC_SIMULATION ) then
     allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array rho_vp'
+    if( ier /= 0 ) stop 'Error allocating array rho_vp'
     allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array rho_vs'
+    if( ier /= 0 ) stop 'Error allocating array rho_vs'
     rho_vp = sqrt( kappastore / rhostore ) * rhostore
     rho_vs = 0.0_CUSTOM_REAL
     call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB, &
