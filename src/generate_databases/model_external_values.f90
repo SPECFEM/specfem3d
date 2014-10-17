@@ -284,6 +284,27 @@
 !! !! ================= VM VM CUSTOM SUBROUTINE FOR DSM COUPLING
 !----------------------------------------------------------------
 
+  subroutine FindLayer(x,y,z)
+
+    use external_model
+    implicit none
+    integer il
+    double precision radius
+    double precision :: x,y,z
+    radius =  dsqrt(x**2 + y**2 + (z+zref)**2) / 1000.d0
+
+    !write(124,*) 'RADIUS ',radius,x,y,z,z+zref,zref
+    il = 1
+    do while (radius .gt. zlayer(il).and.il.lt.nlayer)
+       il = il + 1
+    end do
+    il = il - 1
+    ilayer = il 
+    
+    !write(124,*) 'r, i : ',z,zref,radius, ilayer
+  end subroutine FindLayer
+
+!----------------------------------------------------------------
 
  subroutine model_1D(x_eval,y_eval,z_eval, &
                              rho_final,vp_final,vs_final,r1)

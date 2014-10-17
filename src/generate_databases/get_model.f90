@@ -593,26 +593,3 @@
   end select
 
   end subroutine get_model_binaries
-
-!----------------------------------------------------------------
-
-  subroutine FindLayer(x,y,z)
-    use external_model
-    implicit none
-    integer il
-    double precision radius
-    double precision :: x,y,z
-    radius =  dsqrt(x**2 + y**2 + (z+zref)**2) / 1000.d0
-
-    !write(124,*) 'RADIUS ',radius,x,y,z,z+zref,zref
-    il = 1
-    do while (radius .gt. zlayer(il).and.il.lt.nlayer)
-       il = il + 1
-    end do
-    il = il - 1
-    ilayer = il 
-    
-    !write(124,*) 'r, i : ',z,zref,radius, ilayer
-  end subroutine FindLayer
-
-!----------------------------------------------------------------
