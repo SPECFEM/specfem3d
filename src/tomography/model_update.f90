@@ -652,7 +652,7 @@ end subroutine initialize
 subroutine get_external_mesh()
 
   use specfem_par,only: CUSTOM_REAL,NSPEC_AB,NGLOB_AB,NGLLX,NGLLY,NGLLZ, &
-    LOCAL_PATH,SAVE_MESH_FILES,model_speed_max,DT,myrank
+    LOCAL_PATH,SAVE_MESH_FILES,model_speed_max,DT,myrank,IMAIN,ISTANDARD_OUTPUT
 
   use specfem_par,only: ibool,xstore,ystore,zstore,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian, &
     kappastore,mustore,rhostore
@@ -661,6 +661,8 @@ subroutine get_external_mesh()
   use specfem_par_acoustic,only: ACOUSTIC_SIMULATION,ispec_is_acoustic
   use specfem_par_poroelastic,only: POROELASTIC_SIMULATION,ispec_is_poroelastic,rho_vpI,rho_vpII,rho_vsI, &
     phistore,tortstore,rhoarraystore
+
+  use tomography_par,only: OUTPUT_MODEL_DIR
 
   implicit none
   integer :: ier
@@ -729,8 +731,14 @@ subroutine get_external_mesh()
     print*,'  Max/min ratio = ',elemsize_max_glob/elemsize_min_glob
     print*
   endif
+  call synchronize_all()
 
-  if( ELASTIC_SIMULATION ) then
+  ! resolution check
+  ! open main output file, only written to by process 0
+  if(myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
+    open(unit=IMAIN,file=trim(OUTPUT_MODEL_DIR)//'/output_mesh_resolution_initial.txt',status='unknown')
+
+  if (ELASTIC_SIMULATION) then
     call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB, &
                                ibool,xstore,ystore,zstore, &
                                kappastore,mustore,rho_vp,rho_vs, &
@@ -761,7 +769,8 @@ subroutine get_external_mesh()
                                LOCAL_PATH,SAVE_MESH_FILES)
     deallocate(rho_vp,rho_vs)
   endif
-  call synchronize_all()
+
+  if(myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) close(IMAIN)
 
 end subroutine get_external_mesh
 
@@ -773,8 +782,8 @@ subroutine save_new_databases()
 
   use specfem_par
   use specfem_par_elastic
-  use specfem_par_acoustic
-  use specfem_par_poroelastic
+  use specfem_par_acoustic,only:ACOUSTIC_SIMULATION,ispec_is_acoustic
+  use specfem_par_poroelastic,only:POROELASTIC_SIMULATION,ispec_is_poroelastic
 
   use tomography_model_iso,only: model_vs_new,model_vp_new,model_rho_new,OUTPUT_MODEL_DIR
 
@@ -910,6 +919,28 @@ subroutine save_new_databases()
   rmass_solid_poroelastic_new = 0._CUSTOM_REAL
   rmass_fluid_poroelastic_new = 0._CUSTOM_REAL
 
+
+  ! new resolution check
+  ! open main output file, only written to by process 0
+  if(myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
+    open(unit=IMAIN,file=trim(OUTPUT_MODEL_DIR)//'/output_mesh_resolution_final.txt',status='unknown')
+
+  ! calculate min_resolved_period (needed for attenuation model)
+  if (ELASTIC_SIMULATION) then
+    call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB, &
+                               ibool,xstore,ystore,zstore, &
+                               kappastore_new,mustore_new,rho_vp_new,rho_vs_new, &
+                               -1.0d0,model_speed_max,min_resolved_period, &
+                               LOCAL_PATH,SAVE_MESH_FILES)
+
+  else if( POROELASTIC_SIMULATION ) then
+    stop 'Error saving new databases for POROELASTIC models not implemented yet'
+  else if( ACOUSTIC_SIMULATION ) then
+    stop 'Error saving new databases for ACOUSTIC models not implemented yet'
+  endif
+
+  if(myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) close(IMAIN)
+
   !-------- attenuation -------
   ! store the attenuation flag in qmu_attenuation_store
   allocate(qmu_attenuation_store(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
@@ -989,13 +1020,6 @@ subroutine save_new_databases()
       enddo
     enddo
     call synchronize_all()
-
-    ! calculate min_resolved_period needed for attenuation model
-    call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB,ibool,&
-                               xstore,ystore,zstore, &
-                               kappastore_new,mustore_new,rho_vp_new,rho_vs_new, &
-                               -1.0d0, model_speed_max,min_resolved_period, &
-                               LOCAL_PATH,SAVE_MESH_FILES )
 
     ! calculates and stores attenuation arrays
     call get_attenuation_model(myrank,NSPEC_AB,USE_OLSEN_ATTENUATION,OLSEN_ATTENUATION_RATIO, &
