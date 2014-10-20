@@ -95,6 +95,23 @@
 !----
 !
 
+  subroutine bcast_all_singlecr(buffer)
+
+  use unused_mod
+  use constants,only: CUSTOM_REAL
+
+  implicit none
+
+  real(kind=CUSTOM_REAL) :: buffer
+
+  unused_cr = buffer
+
+  end subroutine bcast_all_singlecr
+
+!
+!----
+!
+
   subroutine bcast_all_dp(buffer, countval)
 
   use unused_mod

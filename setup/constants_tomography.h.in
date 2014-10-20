@@ -34,7 +34,7 @@
 !! Model parameterization
 !!
 !!-----------------------------------------------------------
-! by default, this algorithm uses transverse isotropic (bulk,bulk_betav,bulk_betah,eta) kernels to sum up
+! by default, this algorithm uses isotropic (alpha,beta) kernels to sum up
 ! if you prefer using isotropic kernels, set flags below accordingly
 
   ! if you prefer using isotropic kernels (bulk,bulk_beta,rho) kernels, set this flag to true
@@ -42,6 +42,10 @@
 
   ! if you prefer isotropic  (alpha,beta,rho) kernels, set this flag to true
   logical, parameter :: USE_ALPHA_BETA_RHO = .true.
+
+  ! region code 
+  ! (local version "_", globe version "_reg1_" for crust/mantle
+  character(len=8),parameter :: REG = "_"
 
 !!-----------------------------------------------------------
 !!
@@ -83,16 +87,16 @@
 !!-----------------------------------------------------------
 ! kernel values are maximum at very shallow depth (due to receivers at surface) which leads to strong
 ! model updates closest to the surface. scaling the kernel values, such that the maximum is taken slightly below
-! the surface (between 50km - 100km) leads to a "more balanced" gradient, i.e., a better model update in deeper parts
+! the surface (between 1km - 5km) leads to a "more balanced" gradient, i.e., a better model update in deeper parts
 
   ! by default, sets maximum update in this depth range
-  logical,parameter :: USE_DEPTH_RANGE_MAXIMUM = .true.
+  logical,parameter :: USE_DEPTH_RANGE_MAXIMUM = .false.
 
-  ! normalized radii
-  ! top at 50km depth
-  real(kind=CUSTOM_REAL),parameter :: R_top = (6371.0 - 50.0 ) / R_EARTH_KM ! shallow depth
-  ! bottom at 100km depth
-  real(kind=CUSTOM_REAL),parameter :: R_bottom = (6371.0 - 100.0 ) / R_EARTH_KM ! deep depth
+  ! depths
+  ! top at 1km depth
+  real(kind=CUSTOM_REAL),parameter :: R_TOP = -1000.0 ! shallow depth
+  ! bottom at 5km depth
+  real(kind=CUSTOM_REAL),parameter :: R_BOTTOM = -5000.0 ! deep depth
 
 !!-----------------------------------------------------------
 !!
@@ -115,7 +119,7 @@
   logical,parameter :: USE_SEPARATE_CG_STEPLENGTHS = .false.
 
   ! directory which contains kernels/gradients from former iteration
-  character(len=150),parameter :: kernel_old_dir = './KERNELS/OUTPUT_SUM.old'
+  character(len=MAX_STRING_LEN),parameter :: KERNEL_OLD_DIR = './KERNELS/OUTPUT_SUM.old'
 
 
 !!-----------------------------------------------------------
@@ -127,5 +131,5 @@
   integer, parameter :: MAX_NUM_NODES = 10000
 
   ! default list name
-  character(len=*), parameter :: kernel_file_list = './kernels_list.txt'
+  character(len=*), parameter :: KERNEL_FILE_LIST = './kernels_list.txt'
 

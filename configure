@@ -7436,9 +7436,10 @@ rm -f core conftest.err conftest.$ac_objext \
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking linking with cudaMalloc in -lcudart" >&5
 $as_echo_n "checking linking with cudaMalloc in -lcudart... " >&6; }
   # C compiler linking
-  #ac_link='$NVCC -c $CFLAGS conftest.$ac_ext >&5; $CC -o conftest$ac_exeext $LDFLAGS conftest.$ac_objext $LIBS >&5'
+  ac_link='$NVCC -c $CFLAGS conftest.$ac_ext >&5; $CC -o conftest$ac_exeext $LDFLAGS conftest.$ac_objext $LIBS >&5'
   # Fortran compiler linking
-  ac_link='$NVCC -c $CFLAGS conftest.$ac_ext >&5; $FC -o conftest$ac_exeext $LDFLAGS conftest.$ac_objext $LIBS >&5'
+  # note: fortran linking with ifort would need -nofor-main to succeed
+  #ac_link='$NVCC -c $CFLAGS conftest.$ac_ext >&5; $FC -o conftest$ac_exeext $LDFLAGS conftest.$ac_objext $LIBS >&5'
   cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 

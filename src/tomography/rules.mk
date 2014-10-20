@@ -32,6 +32,7 @@ $(tomography_OBJECTS): S := ${S_TOP}/src/tomography
 #######################################
 
 tomography_TARGETS = \
+	$E/xadd_model_iso \
 	$E/xmodel_update \
 	$E/xsmooth_sem \
 	$E/xsum_kernels \
@@ -39,6 +40,7 @@ tomography_TARGETS = \
 	$(EMPTY_MACRO)
 
 tomography_OBJECTS = \
+	$(xadd_model_iso_OBJECTS) \
 	$(xmodel_update_OBJECTS) \
 	$(xsmooth_sem_OBJECTS) \
 	$(xsum_kernels_OBJECTS) \
@@ -47,6 +49,7 @@ tomography_OBJECTS = \
 
 # These files come from the shared directory
 tomography_SHARED_OBJECTS = \
+	$(xadd_model_SHARED_OBJECTS) \
 	$(xmodel_update_SHARED_OBJECTS) \
 	$(xsmooth_sem_SHARED_OBJECTS) \
 	$(xsum_kernels_SHARED_OBJECTS) \
@@ -55,6 +58,11 @@ tomography_SHARED_OBJECTS = \
 
 tomography_MODULES = \
 	$(FC_MODDIR)/tomography_par.$(FC_MODEXT) \
+	$(FC_MODDIR)/tomography_kernels_iso.$(FC_MODEXT) \
+	$(FC_MODDIR)/tomography_kernels_tiso.$(FC_MODEXT) \
+	$(FC_MODDIR)/tomography_kernels_tiso_cg.$(FC_MODEXT) \
+	$(FC_MODDIR)/tomography_model_tiso.$(FC_MODEXT) \
+	$(FC_MODDIR)/tomography_model_iso.$(FC_MODEXT) \
 	$(EMPTY_MACRO)
 
 ####
@@ -68,6 +76,10 @@ all_tomo: $(tomography_TARGETS)
 tomo: $(tomography_TARGETS)
 
 tomography: $(tomography_TARGETS)
+
+## single targets
+add_model_iso: xadd_model_iso
+xadd_model_iso: $E/xadd_model_iso
 
 model_update: xmodel_update
 xmodel_update: $E/xmodel_update
@@ -90,14 +102,65 @@ xsum_preconditioned_kernels: $E/xsum_preconditioned_kernels
 
 #######################################
 
+##
+## add_model
+##
+xadd_model_OBJECTS = \
+	$O/tomography_par.tomo_module.o \
+	$O/compute_kernel_integral.tomo.o \
+	$O/get_gradient_cg.tomo.o \
+	$O/get_gradient_steepest.tomo.o \
+	$O/read_kernels.tomo.o \
+	$O/read_kernels_cg.tomo.o \
+	$O/read_model.tomo.o \
+	$O/read_parameters_tomo.tomo.o \
+	$O/write_gradients.tomo.o \
+	$O/write_new_model.tomo.o \
+	$O/write_new_model_perturbations.tomo.o \
+	$(EMPTY_MACRO)
+
+xadd_model_SHARED_OBJECTS = \
+	$O/specfem3D_par.spec.o \
+	$O/pml_par.spec.o \
+	$O/read_mesh_databases.spec.o \
+	$O/constants_mod.shared_module.o \
+	$O/create_name_database.shared.o \
+	$O/exit_mpi.shared.o \
+	$O/gll_library.shared.o \
+	$O/param_reader.cc.o \
+	$O/read_parameter_file.shared.o \
+	$O/read_value_parameters.shared.o \
+	$O/unused_mod.shared_module.o \
+	$(EMPTY_MACRO)
+
+##
+## xadd_model_iso
+##
+xadd_model_iso_OBJECTS = \
+	$O/add_model_iso.tomo.o \
+	$(xadd_model_OBJECTS) \
+	$(EMPTY_MACRO)
+
+# extra dependencies
+$O/add_model_iso.tomo.o: $O/specfem3D_par.spec.o $O/tomography_par.tomo_module.o
+
+${E}/xadd_model_iso: $(xadd_model_iso_OBJECTS) $(xadd_model_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
+	${FCLINK} -o $@ $+ $(MPILIBS)
+
 
 ##
 ## xmodel_update
 ##
 xmodel_update_OBJECTS = \
 	$O/tomography_par.tomo_module.o \
+	$O/get_gradient_steepest.tomo.o \
 	$O/model_update.tomo.o \
+	$O/read_kernels.tomo.o \
+	$O/read_parameters_tomo.tomo.o \
 	$O/save_external_bin_m_up.tomo.o \
+	$O/write_gradients.tomo.o \
+	$O/write_new_model.tomo.o \
+	$O/write_new_model_perturbations.tomo.o \
 	$(EMPTY_MACRO)
 
 xmodel_update_SHARED_OBJECTS = \
@@ -148,7 +211,7 @@ xmodel_update_OBJECTS += $(adios_model_update_STUBS)
 xmodel_update_SHARED_OBJECTS += $(adios_model_update_SHARED_STUBS)
 endif
 
-# dependencies
+# extra dependencies
 $O/model_update.tomo.o: $O/specfem3D_par.spec.o $O/tomography_par.tomo_module.o
 $O/save_external_bin_m_up.tomo.o: $O/specfem3D_par.spec.o
 
@@ -197,7 +260,6 @@ xsum_kernels_OBJECTS = \
 
 xsum_kernels_SHARED_OBJECTS = \
 	$O/constants_mod.shared_module.o \
-	$O/exit_mpi.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \

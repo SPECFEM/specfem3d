@@ -48,14 +48,16 @@
 
 program sum_kernels
 
-  use tomography_par,only: MAX_STRING_LEN,MAX_NUM_NODES,kernel_file_list,IIN,myrank,NGLOB,NSPEC, &
+  use tomography_par,only: MAX_STRING_LEN,MAX_NUM_NODES,KERNEL_FILE_LIST,IIN, &
+    myrank,sizeprocs, &
+    NGLOB,NSPEC, &
     USE_ALPHA_BETA_RHO,USE_ISO_KERNELS
 
   implicit none
 
   character(len=MAX_STRING_LEN) :: kernel_list(MAX_NUM_NODES)
   character(len=MAX_STRING_LEN) :: sline, kernel_name,prname_lp
-  integer :: nker, sizeprocs
+  integer :: nker
   integer :: ier
 
   double precision :: DT
@@ -90,9 +92,9 @@ program sum_kernels
 
   ! reads in event list
   nker=0
-  open(unit = IIN, file = trim(kernel_file_list), status = 'old',iostat = ier)
+  open(unit = IIN, file = trim(KERNEL_FILE_LIST), status = 'old',iostat = ier)
   if (ier /= 0) then
-     print *,'Error opening ',trim(kernel_file_list),myrank
+     print *,'Error opening ',trim(KERNEL_FILE_LIST),myrank
      stop 1
   endif
   do while (1 == 1)
@@ -134,7 +136,8 @@ program sum_kernels
       print*,'for example: mpirun -np ',NPROC,' ./xsum_kernels ...'
       print*,''
     endif
-    call exit_mpi(myrank,'Error total number of slices')
+    call synchronize_all()
+    stop 'Error total number of slices'
   endif
   call synchronize_all()
 
@@ -149,7 +152,7 @@ program sum_kernels
   if( ier /= 0 ) then
     print*,'Error: could not open database '
     print*,'path: ',trim(prname_lp)
-    call exit_mpi(myrank, 'Error reading external mesh file')
+    stop 'Error reading external mesh file'
   endif
 
   ! gets number of elements and global points for this partition
@@ -265,7 +268,7 @@ subroutine sum_kernel(kernel_name,kernel_list,nker)
     ! sensitivity kernel / frechet derivative
     kernel = 0._CUSTOM_REAL
     write(k_file,'(a,i6.6,a)') 'INPUT_KERNELS/'//trim(kernel_list(iker)) &
-                          //'/proc',myrank,'_'//trim(kernel_name)//'.bin'
+                          //'/proc',myrank,trim(REG)//trim(kernel_name)//'.bin'
 
     open(IIN,file=trim(k_file),status='old',form='unformatted',action='read',iostat=ier)
     if( ier /= 0 ) then
@@ -287,7 +290,7 @@ subroutine sum_kernel(kernel_name,kernel_list,nker)
     if( USE_SOURCE_MASK ) then
       ! reads in mask
       write(k_file,'(a,i6.6,a)') 'INPUT_KERNELS/'//trim(kernel_list(iker)) &
-                            //'/proc',myrank,'_reg1_mask_source.bin'
+                            //'/proc',myrank,trim(REG)//'mask_source.bin'
       open(IIN,file=trim(k_file),status='old',form='unformatted',action='read',iostat=ier)
       if( ier /= 0 ) then
         write(*,*) '  file not found: ',trim(k_file)
@@ -307,7 +310,7 @@ subroutine sum_kernel(kernel_name,kernel_list,nker)
   ! stores summed kernels
   if(myrank==0) write(*,*) 'writing out summed kernel for: ',trim(kernel_name)
 
-  write(k_file,'(a,i6.6,a)') 'OUTPUT_SUM/proc',myrank,'_'//trim(kernel_name)//'.bin'
+  write(k_file,'(a,i6.6,a)') 'OUTPUT_SUM/proc',myrank,trim(REG)//trim(kernel_name)//'.bin'
 
   open(IOUT,file=trim(k_file),form='unformatted',status='unknown',action='write',iostat=ier)
   if( ier /= 0 ) then

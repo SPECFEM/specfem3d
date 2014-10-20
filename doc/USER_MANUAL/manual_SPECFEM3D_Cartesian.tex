@@ -397,10 +397,6 @@ are:
 \item [{\texttt{IBM compiler}}] See if you need to add \texttt{-qsave}
 or \texttt{-qnosave} for your machine.
 \item [{\texttt{Mac OS}}] You will probably need to install \texttt{XCODE}.
-In addition, the \texttt{clock\_gettime} routine, which is used by
-the \texttt{SCOTCH} library that we use, does not exist in Mac OS.
-You may need to replace it with \texttt{clock\_get\_time} if you
-want to use \texttt{SCOTCH}.
 \end{description}
 When compiling on an IBM machine with the \texttt{xlf} and \texttt{xlc}
 compilers, we suggest running the \texttt{configure} script with the

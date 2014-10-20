@@ -105,11 +105,13 @@ clockGet (void)
           ((double) data.ru_utime.tv_usec + (double) data.ru_stime.tv_usec) * 1.0e-6L);
 #else /* COMMON_TIMING_OLD */
 #if defined (_POSIX_TIMERS) && (_POSIX_TIMERS >= 200112L)
-  struct timespec     tp;
+// DK DK removed lines that do not compile on MAC OS  struct timespec     tp;
 
-  clock_gettime (CLOCK_REALTIME, &tp);            /* Elapsed time */
+// DK DK removed lines that do not compile on MAC OS  clock_gettime (CLOCK_REALTIME, &tp);            /* Elapsed time */
 
-  return ((double) tp.tv_sec + (double) tp.tv_nsec * 1.0e-9L);
+// DK DK removed lines that do not compile on MAC OS  return ((double) tp.tv_sec + (double) tp.tv_nsec * 1.0e-9L);
+// DK DK return a dummy value, since we do not care about timings
+  return (1.0e-6L);
 #else /* defined (_POSIX_TIMERS) && (_POSIX_TIMERS >= 200112L) */
   struct timeval      tv;
 

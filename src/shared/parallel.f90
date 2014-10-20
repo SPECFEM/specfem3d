@@ -149,6 +149,28 @@ end module my_mpi
 
   end subroutine bcast_all_cr
 
+
+!
+!----
+!
+
+  subroutine bcast_all_singlecr(buffer)
+
+  use my_mpi
+  use constants,only: CUSTOM_REAL
+
+  implicit none
+
+  include "precision.h"
+
+  real(kind=CUSTOM_REAL) :: buffer
+
+  integer :: ier
+
+  call MPI_BCAST(buffer,1,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
+
+  end subroutine bcast_all_singlecr
+
 !
 !----
 !

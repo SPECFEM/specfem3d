@@ -60,7 +60,7 @@
   use constants
 
   use specfem_par,only: &
-    ispec_is_inner
+    ispec_is_inner,ATTENUATION
 
   use specfem_par_elastic,only: &
     rmassx,rmassy,rmassz, &
@@ -410,11 +410,13 @@
 
 
     ! VTK file output
-    ! saves attenuation flag assigned on each gll point into a vtk file
-    filename = prname(1:len_trim(prname))//'attenuation'
-    call write_VTK_data_gll_cr(nspec,nglob, &
-                        xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-                        qmu_attenuation_store,filename)
+    if (ATTENUATION) then
+      ! saves attenuation flag assigned on each gll point into a vtk file
+      filename = prname(1:len_trim(prname))//'attenuation'
+      call write_VTK_data_gll_cr(nspec,nglob, &
+                          xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                          qmu_attenuation_store,filename)
+    endif
 
     ! VTK file output
     ! acoustic-elastic domains
