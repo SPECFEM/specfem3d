@@ -472,9 +472,9 @@
   if (COUPLE_WITH_EXTERNAL_CODE) then
     allocate(Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
     allocate(Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
-    if(I_should_read_the_database) open(unit=IIN_veloc_dsm,file=dsmname(1:len_trim(dsmname))//'vel.bin',status='old', &
+    open(unit=IIN_veloc_dsm,file=dsmname(1:len_trim(dsmname))//'vel.bin',status='old', &
          action='read',form='unformatted',iostat=ier)
-    if(I_should_read_the_database) open(unit=IIN_tract_dsm,file=dsmname(1:len_trim(dsmname))//'tract.bin',status='old', &
+    open(unit=IIN_tract_dsm,file=dsmname(1:len_trim(dsmname))//'tract.bin',status='old', &
          action='read',form='unformatted',iostat=ier)
   else
     allocate(Veloc_dsm_boundary(1,1,1,1))
