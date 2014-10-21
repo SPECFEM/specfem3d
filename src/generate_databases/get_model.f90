@@ -111,6 +111,15 @@
   ! material properties on all GLL points: taken from material values defined for
   ! each spectral element in input mesh
   do ispec = 1, nspec
+
+    if (COUPLE_WITH_EXTERNAL_CODE) then
+      iglob = ibool(3,3,3,ispec)
+      xmesh = xstore_dummy(iglob)
+      ymesh = ystore_dummy(iglob)
+      zmesh = zstore_dummy(iglob)
+      call FindLayer(xmesh,ymesh,zmesh)
+    endif
+
     ! loops over all gll points in element
     do k = 1, NGLLZ
       do j = 1, NGLLY
@@ -170,15 +179,7 @@
  
           !! VM VM for coupling with DSM
           !! find the # layer where the middle of the element is located
-          if (COUPLE_WITH_EXTERNAL_CODE) then 
-
-            if( (NGLLX == 5) .and. (NGLLY == 5) .and. (NGLLZ == 5) ) then
-              if (i==3 .and. j==3 .and. k==3) call FindLayer(xmesh,ymesh,zmesh)
-            else
-              stop 'bad number of GLL points for coupling with DSM'
-            endif
-
-          end if
+          if ( COUPLE_WITH_EXTERNAL_CODE .and. (i==3 .and. j==3 .and. k==3) ) call FindLayer(xmesh,ymesh,zmesh)
 
           ! material index 1: associated material number
           ! 1 = acoustic, 2 = elastic, 3 = poroelastic, -1 = undefined tomographic
