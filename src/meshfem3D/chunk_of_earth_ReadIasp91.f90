@@ -133,14 +133,6 @@ subroutine Lyfnd(r,rb,n,i)
   return
 end subroutine Lyfnd
 
-!! CD CD ==> to verify if it is not necessary here
-!!! function Interpol(v,i,x,nl)
-!!!   implicit none
-!!!   integer i,nl
-!!!   double precision Interpol,x,v(nl,4)
-!!!   Interpol = v(i,1)+x*(v(i,2)+x*(v(i,3)+x*v(i,4)))
-!!! end function Interpol
-
 function IsNewLayer(x,r,n)
   implicit none
   integer IsNewLayer,n,i
