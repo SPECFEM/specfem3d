@@ -22,17 +22,17 @@
 
 /*****************************************************************************/
 
-/** 
+/**
   * \brief Fill a sep_header structure from a sep_header
-  * 
+  *
   * \param vs_name Name of the sep header
   * \param sep_header Structure to fill
   */
 void parse_sep_vs_header(char *vs_name, sep_header_t *sep_header);
 
-/** 
+/**
   * \brief Get bathimetry location, where vs == 0.
-  * 
+  *
   * \param vs_header SEP header indicating dimensions and file location.
   * \param topo Array to store index where liquid / solid interface is found.
   */

@@ -43,7 +43,7 @@
   ! if you prefer isotropic  (alpha,beta,rho) kernels, set this flag to true
   logical, parameter :: USE_ALPHA_BETA_RHO = .true.
 
-  ! region code 
+  ! region code
   ! (local version "_", globe version "_reg1_" for crust/mantle
   character(len=8),parameter :: REG = "_"
 

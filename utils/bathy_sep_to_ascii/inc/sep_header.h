@@ -20,7 +20,7 @@
 /*****************************************************************************/
 
 /**
-  * brief SEP header informations 
+  * brief SEP header informations
   *
   * 3D files at most.
   */
@@ -34,9 +34,9 @@ typedef struct {
   char in[512];
 } sep_header_t;
 
-/** 
+/**
   * \brief Display the values in a sep header structure.
-  * 
+  *
   * \param h Header information to display
   */
 void show_header(sep_header_t h);

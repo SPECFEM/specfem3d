@@ -52,14 +52,14 @@
   !  end type model_external_variables
   !  type (model_external_variables) MEXT_V
 
-  ! VM VM my model for DSM coupling 
+  ! VM VM my model for DSM coupling
   use constants
    ! VM VM
   double precision, dimension (:,:), allocatable :: vpv_1D,vsv_1D,density_1D
   double precision, dimension (:), allocatable :: zlayer
   double precision, dimension (:), allocatable :: smooth_vp,smooth_vs
-  integer :: ilayer,nlayer,ncoeff,ndeg_poly 
-  double precision :: ZREF,OLON,OLAT 
+  integer :: ilayer,nlayer,ncoeff,ndeg_poly
+  double precision :: ZREF,OLON,OLAT
 
   end module external_model
 
@@ -92,7 +92,7 @@
 ! ADD YOUR MODEL HERE
 !
   if (COUPLE_WITH_EXTERNAL_CODE) call read_external_model_coupling()
-  
+
 !---
 
   ! the variables read are declared and stored in structure MEXT_V
@@ -139,7 +139,7 @@
     character(len=256):: filename
     integer i,cc
     double precision aa,bb
- 
+
     filename = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'/coeff_poly_deg12'
     open(27,file=trim(filename))
     read(27,*) ndeg_poly
@@ -149,7 +149,7 @@
        smooth_vp(i) = aa
        smooth_vs(i) = bb
        !write(*,*) a,b
-    end do
+    enddo
 
     filename = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'/model_1D.in'
     open(27,file=trim(filename))
@@ -163,7 +163,7 @@
        read(27,*) vpv_1D(i,:)
        read(27,*) vsv_1D(i,:)
        read(27,*) density_1D(i,:)
-    end do
+    enddo
     read(27,*) ZREF
     read(27,*) OLON,OLAT
 
@@ -223,7 +223,7 @@
   else
     ! note: z coordinate will be negative below surface
     !          convention is z-axis points up
-     
+
     ! model dimensions
     xmin = 0._CUSTOM_REAL ! minval(xstore_dummy)
     xmax = 134000._CUSTOM_REAL ! maxval(xstore_dummy)
@@ -295,12 +295,12 @@
 
     !write(124,*) 'RADIUS ',radius,x,y,z,z+zref,zref
     il = 1
-    do while (radius .gt. zlayer(il).and.il.lt.nlayer)
+    do while (radius > zlayer(il).and.il<nlayer)
        il = il + 1
-    end do
+    enddo
     il = il - 1
-    ilayer = il 
-    
+    ilayer = il
+
     !write(124,*) 'r, i : ',z,zref,radius, ilayer
   end subroutine FindLayer
 
@@ -315,7 +315,7 @@
     double precision x_eval,y_eval,z_eval
     real(kind=CUSTOM_REAL) rho_final,vp_final,vs_final
     double precision Interpol,Xtol
-    
+
 
     Xtol=1d-2
 
@@ -323,7 +323,7 @@
     radius = radius / 1000.d0
     r1=radius
 
-    ! get vp,vs and rho   
+    ! get vp,vs and rho
     radius = radius / zlayer(nlayer)
     vp = Interpol(vpv_1D,ilayer,radius,nlayer)
     vs = Interpol(vsv_1D,ilayer,radius,nlayer)

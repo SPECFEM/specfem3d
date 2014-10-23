@@ -25,14 +25,14 @@
 #include "convert_topo.h"
 
 /*****************************************************************************/
-/** 
+/**
   * \brief Parse arguments form the command line.
-  * 
-  * \param argc 
-  * \param argv 
+  *
+  * \param argc
+  * \param argv
   * \param vs_name From '-i' option.
   * \param topo_name From '-o' option.
-  * 
+  *
   * \return Success if all args are correct.
   */
 int parse_args(int argc, char *argv[], char **vs_name, char **topo_name);
@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
   parse_sep_vs_binary(&vs_header, topo);
 
   /* Create ascii topo according to geometry */
-  float *ascii_topo = (float *) malloc(vs_header.n1 * vs_header.n2 
+  float *ascii_topo = (float *) malloc(vs_header.n1 * vs_header.n2
                                       * sizeof (float));
   /* sep topo index to ascii topo depth (m) */
   /* Interpolation is done in meshfem 3d*/
@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
 
   if (vs_name) free(vs_name);
   if (topo_name) free(topo_name);
-  
+
   return EXIT_SUCCESS;
 }
 
@@ -78,17 +78,17 @@ int parse_args(int argc, char *argv[], char **vs_name, char **topo_name) {
       {"output",required_argument, 0, 'o'},
       {0,0,0,0}
     };
-  
+
     int option_index = 0;
-  
+
     /* Argument parameters:
       no_argument: " "
       required_argument: ":"
       optional_argument: "::" */
-  
+
     choice = getopt_long( argc, argv, "h::i:o:",
           long_options, &option_index);
-  
+
     if (choice == -1)
       break;
 

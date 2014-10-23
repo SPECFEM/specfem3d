@@ -30,11 +30,11 @@ void parse_sep_vs_header(char *vs_name, sep_header_t *sep_header) {
   size_t len = 0;
 
   FILE *fd = fopen(vs_name, "r");
-  if (fd == NULL) 
+  if (fd == NULL)
     EXIT_ON_ERR("fopen");
 
   regex_t re;
-  if(regcomp(&re, "^[ \t]*\\(.*\\)[ \t]*=[ \t]*\\(.*\\)[ \t]*", 
+  if(regcomp(&re, "^[ \t]*\\(.*\\)[ \t]*=[ \t]*\\(.*\\)[ \t]*",
              REG_ICASE | REG_NEWLINE))
     EXIT_ON_ERR("regcomp");
 
@@ -111,7 +111,7 @@ void parse_sep_vs_binary(sep_header_t *vs_header, int *topo) {
 
   int count = 0;
   memset(topo, -1, vs_header->n1 * vs_header->n2 *sizeof(int));
-  
+
 
   for (int k = 0; k < vs_header->n3; ++k) {
     size_t num_read = fread(buf, sizeof(float), buf_size, fd);
@@ -124,9 +124,9 @@ void parse_sep_vs_binary(sep_header_t *vs_header, int *topo) {
           topo[i + j*vs_header->n1] = k;
           count++;
         }
-      } 
+      }
     }
-    if (count == vs_header->n1 * vs_header->n2) 
+    if (count == vs_header->n1 * vs_header->n2)
       break;
   }
   free(buf);

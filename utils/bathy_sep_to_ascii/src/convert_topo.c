@@ -36,7 +36,7 @@ void convert_topo_sep_to_ascii(char *sep_name, char *ascii_name) {
                                     * sizeof(int));
   read_topo_sep(&sep_header, sep_topo);
   /* Create ascii topo according to geometry */
-  float *ascii_topo = (float *) malloc(sep_header.n1 * sep_header.n2 
+  float *ascii_topo = (float *) malloc(sep_header.n1 * sep_header.n2
                                       * sizeof (float));
   /* sep topo index to ascii topo depth (m) */
   /* Interpolation is done in meshfem 3d*/
@@ -60,10 +60,10 @@ void assign_ascii_topo_values(sep_header_t *header,
                               int *sep_topo, float *ascii_topo) {
   int nx = header->n1;
   int ny = header->n2;
-  
+
   float oz = header->o3;
   float dz = header->d3;
-  
+
   for (int i = 0; i < nx*ny; ++i) {
     ascii_topo[i] = - dz*(oz + sep_topo[i]);
   }
@@ -71,9 +71,9 @@ void assign_ascii_topo_values(sep_header_t *header,
 
 void write_ascii_topo(char *ascii_name, float *ascii_topo, int n) {
   FILE *fd = fopen(ascii_name, "w");
-  if (fd == NULL) 
+  if (fd == NULL)
     EXIT_ON_ERR("fopen");
- 
+
   for (int i = 0; i < n; ++i) {
     fprintf(fd, "%f\n", ascii_topo[i]);
   }
