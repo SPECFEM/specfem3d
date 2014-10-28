@@ -25,7 +25,7 @@
 !
 !=====================================================================
 
-  subroutine chunk_of_earth_Mesh()
+  subroutine earth_chunk_HEX8_Mesher()
 
   implicit none
 
@@ -705,7 +705,7 @@
   ! nothing to do anymore... bailing out
   stop
 
-  end subroutine chunk_of_earth_Mesh
+  end subroutine earth_chunk_HEX8_Mesher
 
 !=======================================================================================================
 !

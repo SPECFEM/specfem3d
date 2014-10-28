@@ -13,13 +13,13 @@ function clean_and_make_dir ()
 delete_directory_if_exist $MESH
 delete_directory_if_exist OUTPUT_FILES
 delete_directory_if_exist OUTPUT_FILES/DATABASES_MPI
-delete_directory_if_exist OUTPUT_FILES/Tractions
+delete_directory_if_exist DATA/DSM_tractions_for_specfem3D
 delete_directory_if_exist bin
 
 mkdir -p $MESH
 mkdir -p OUTPUT_FILES/
 mkdir -p OUTPUT_FILES/DATABASES_MPI/
-mkdir -p OUTPUT_FILES/Tractions/
+mkdir -p DATA/DSM_tractions_for_specfem3D
 mkdir bin/
 }
 

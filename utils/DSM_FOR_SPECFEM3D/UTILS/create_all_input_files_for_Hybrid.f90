@@ -51,7 +51,7 @@ program create_input_files
   write(10,*) '../Tract/'
   write(10,*) '../MESH/'
   write(10,*) '../OUTPUT_FILES/DATABASES_MPI/'
-  write(10,*) '../OUTPUT_FILES/Tractions/'
+  write(10,*) '../DATA/DSM_tractions_for_specfem3D/'
   write(10,*) '1'
   close(10)
 

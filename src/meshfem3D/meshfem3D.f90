@@ -407,14 +407,27 @@
     ! user output
     if(myrank == 0) then
       write(IMAIN,*)
-      write(IMAIN,*) 'creating chunk of earth Mesh'
+      write(IMAIN,*) 'creating chunk of the earth Mesh'
       write(IMAIN,*)
       call flush_IMAIN()
     endif
-    ! creates mesh in MESH/
-    call chunk_of_earth_Mesh()
-    ! done with mesher
-    stop 'Done creating a chunk_of_earth_Mesh, see directory MESH/'
+
+    if (NGNOD == 8) then
+      ! creates mesh in MESH/
+      call earth_chunk_HEX8_Mesher()
+      ! done with mesher
+      stop 'Done creating a chunk of the earth Mesh (HEX8 elements), see directory MESH/'
+
+    elseif (NGNOD == 27) then
+      ! creates mesh in MESH/
+      call earth_chunk_HEX27_Mesher()
+      ! done with mesher
+      stop 'Done creating a chunk of the earth Mesh (HEX27 elements), see directory MESH/'
+
+    else
+      stop 'Bad number of nodes per hexahedron : NGNOD must be equal to 8 or 27'
+    endif
+
   endif
 
 ! make sure everybody is synchronized

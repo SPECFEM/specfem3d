@@ -1,5 +1,5 @@
  ./Tract/
  ./MESH/
  ./OUTPUT_FILES/DATABASES_MPI/
- ./OUTPUT_FILES/Tractions/
+ ./DATA/DSM_tractions_for_specfem3D/
  1
