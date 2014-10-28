@@ -238,7 +238,7 @@ end subroutine StorePointZ
    zpoint(1)=zlayer(nlayer) - Z_DEPTH_BLOCK
    write(*,*) zlayer(nlayer) ,  Z_DEPTH_BLOCK
    !! niveau de depart
-   call FindLayer_in_mesh_chunk(ilayer,zlayer,zpoint(1),nlayer)
+   call FindLayer_for_earth_chunk_mesh(ilayer,zlayer,zpoint(1),nlayer)
    write(*,*) '              INITIALISATION calcul du niveau de depart : '
    write(*,*)
    write(*,*) 'zlayer : ', zlayer
@@ -342,7 +342,7 @@ end subroutine StorePointZ
       ProfForGemini(ilay-1,2)  =  zz(ilay+1)
       ProfForGemini(ilay-1,3)  = 0.5d0 * (zz(ilay) + zz(ilay+1))
 
-      call FindLayer_in_mesh_chunk(niveau,zlayer, ProfForGemini(ilay-1,3),nlayer)
+      call FindLayer_for_earth_chunk_mesh(niveau,zlayer, ProfForGemini(ilay-1,3),nlayer)
       Niveau_elm(ilay-1)=niveau
       write(*,'(i5,2f15.3,i10)') ilay,zz(ilay),zz(ilay+1),niveau
    enddo
