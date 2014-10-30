@@ -195,7 +195,7 @@ void FC_FUNC_(transfer_boundary_to_device_a,
     memcpy(mp->h_recv_accel_buffer,buffer_recv_vector_ext_mesh,mp->size_mpi_buffer*sizeof(realw));
 
     // asynchronous copy to GPU using copy_stream
-    cudaMemcpyAsync(mp->d_send_accel_buffer, buffer_recv_vector_ext_mesh,
+    cudaMemcpyAsync(mp->d_send_accel_buffer, mp->h_recv_accel_buffer,
                     mp->size_mpi_buffer*sizeof(realw),cudaMemcpyHostToDevice,mp->copy_stream);
   }
 }
