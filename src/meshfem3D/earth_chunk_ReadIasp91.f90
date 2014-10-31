@@ -26,7 +26,7 @@
 !===========================================================================
 !
 
-  subroutine earth_chunk_HEX8_ReadIasp91(vp,vs,rho,rb,n)
+  subroutine earth_chunk_ReadIasp91(vp,vs,rho,rb,n)
 
   implicit none
 
@@ -91,7 +91,7 @@
 
   return
 
-  end subroutine earth_chunk_HEX8_ReadIasp91
+  end subroutine earth_chunk_ReadIasp91
 
 !
 !===========================================================================

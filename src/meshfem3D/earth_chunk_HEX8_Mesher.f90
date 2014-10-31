@@ -25,7 +25,9 @@
 !
 !=====================================================================
 
-  subroutine earth_chunk_HEX8_Mesher()
+  subroutine earth_chunk_HEX8_Mesher(NGNOD)
+
+  use constants, only: NGLLX, NGLLY, NGLLZ, NDIM
 
   implicit none
 
@@ -34,7 +36,7 @@
 !  Singular option of meshfem3D : MESH OF A GLOBE EARTH CHUNK FOR THE INTERFACE DSM-SPECFEM3D  !
 !  Case of 8 nodes per element (HEX8)                                                          !
 !                                                                                              !
-!  Vadim Monteiller, February 2013                                                             !
+!  VM, February 2013                                                             !
 !  Integrated in meshfem3d by CD, September 2014                                               !
 !                                                                                              !
 !  WARNING : A local convention is used for the mapping of                                     !
@@ -46,7 +48,6 @@
 !--- Parameters
 !
 
-  integer, parameter :: NGLLX  = 5, NGLLY = 5, NGLLZ = 5, NGNOD = 8, NDIM = 3
   integer, parameter :: myrank = 0
   integer, parameter :: nlayer = 12 !! (number of layer in the model iasp91, or ak135, or prem (one more layer than the model)
 
@@ -57,6 +58,8 @@
 !
 !--- Other
 !
+
+  integer NGNOD
 
   integer  nel_lat, nel_lon, nel_depth, NX, NY, NZ, Ndepth, nglob, kglob, ilocnum, ieoff, npointot
   integer ilat, ilon, ispec, iz, i, j, k, nspec, ia, izshift, index_mat
@@ -116,7 +119,7 @@
   TINYVAL = 1.d-9
   ZERO    = 0.d0
 
-  open(49, file=trim(MESH)//'output_mesher_chunk.txt')
+  open(49, file=trim(MESH)//'output_mesher_chunk_HEX8.txt')
 
   if (RUN_BENCHMARK) then
 !
