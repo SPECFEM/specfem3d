@@ -34,24 +34,11 @@ VERSION	= 5
 RELEASE = 1
 PATCHLEVEL = 12
 
-.PHONY				:	clean	default	install	ptscotch	realclean	required	scotch
+.PHONY				:	clean	default	install	realclean	required	scotch
 
 default				:	scotch
 
 required			:	Makefile.inc	../bin	../include	../lib
-
-Makefile.inc			:
-					@echo "#####################################################################"
-			        	@echo "BEFORE COMPILING Scotch OR PT-Scotch, YOU SHOULD HAVE AN APPROPRIATE"
-					@echo "Makefile.inc FILE IN THIS DIRECTORY. PLEASE LOOK INTO DIRECTORY"
-	        			@echo " ./Make.inc FOR AN EXISTING Makefile.inc FILE THAT FITS YOUR NEED, OR"
-		        		@echo "USE THEM AS MODELS IN CASE YOU NEED TO BUILD A NEW ONE FOR YOUR"
-		        		@echo "PARTICULAR PLATFORM."
-			        	@echo "#####################################################################"
-			        	@echo "Then, type \"make scotch\" (default) for the sequential library"
-			        	@echo "and software, or \"make ptscotch\" for the parallel library and"
-			        	@echo "software."
-					@exit 1
 
 include Makefile.inc
 
@@ -90,14 +77,8 @@ $(mandir)/man1			:	$(mandir)
 					-$(MKDIR) $(mandir)/man1
 
 scotch				:	required
-					(cd libscotch ;      $(MAKE) VERSION=$(VERSION) RELEASE=$(RELEASE) PATCHLEVEL=$(PATCHLEVEL) scotch && $(MAKE) install)
-					(cd scotch ;         $(MAKE) VERSION=$(VERSION) RELEASE=$(RELEASE) PATCHLEVEL=$(PATCHLEVEL) scotch && $(MAKE) install)
-					(cd libscotchmetis ; $(MAKE)                                                                scotch && $(MAKE) install)
-
-ptscotch			:	required
-					(cd libscotch ;      $(MAKE) VERSION=$(VERSION) RELEASE=$(RELEASE) PATCHLEVEL=$(PATCHLEVEL) ptscotch && $(MAKE) ptinstall)
-					(cd scotch ;         $(MAKE) VERSION=$(VERSION) RELEASE=$(RELEASE) PATCHLEVEL=$(PATCHLEVEL) ptscotch && $(MAKE) ptinstall)
-					(cd libscotchmetis ; $(MAKE)                                                                ptscotch && $(MAKE) ptinstall)
+					(cd libscotch ;      $(MAKE) scotch ; $(MAKE) install)
+					(cd scotch ;         $(MAKE) scotch ; $(MAKE) install)
 
 install				:	required	$(bindir)	$(includedir)	$(libdir)	$(mandir)/man1
 					-$(CP) -f ../bin/[agm]*$(EXE) $(bindir)
@@ -108,10 +89,8 @@ install				:	required	$(bindir)	$(includedir)	$(libdir)	$(mandir)/man1
 clean				:	required
 					(cd libscotch ;      $(MAKE) clean)
 					(cd scotch ;         $(MAKE) clean)
-					(cd libscotchmetis ; $(MAKE) clean)
 
 realclean			:	required
 					(cd libscotch ;      $(MAKE) realclean)
 					(cd scotch ;         $(MAKE) realclean)
-					(cd libscotchmetis ; $(MAKE) realclean)
 					-$(RM) ../bin/* ../include/* ../lib/*

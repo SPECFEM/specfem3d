@@ -418,7 +418,7 @@
       ! done with mesher
       stop 'Done creating a chunk of the earth Mesh (HEX8 elements), see directory MESH/'
 
-    elseif (NGNOD == 27) then
+    else if (NGNOD == 27) then
       ! creates mesh in MESH/
 !! to uncomment when finished ==> call earth_chunk_HEX27_Mesher()
       ! done with mesher
