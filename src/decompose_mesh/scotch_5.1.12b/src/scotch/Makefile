@@ -33,6 +33,7 @@
 bindir		= ../../bin
 includedir	= ../../include
 libdir		= ../../lib
+SCOTCHLIB=scotch
 
 ##
 ##  General inference rules.
