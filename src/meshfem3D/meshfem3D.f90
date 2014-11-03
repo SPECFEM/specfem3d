@@ -420,10 +420,10 @@
 
     else if (NGNOD == 27) then
       ! creates mesh in MESH/
-! to uncomment when finished ==> ! call earth_chunk_HEX27_Mesher(NGNOD)
+      call earth_chunk_HEX27_Mesher(NGNOD)
       ! done with mesher
-      stop 'Creating a chunk of the earth Mesh not implmented yet with HEX27 elements'
-! to uncomment when finished ==> ! stop 'Done creating a chunk of the earth Mesh (HEX27 elements), see directory MESH/'
+!!      stop 'Creating a chunk of the earth Mesh not implmented yet with HEX27 elements'
+      stop 'Done creating a chunk of the earth Mesh (HEX27 elements), see directory MESH/'
 
     else
       stop 'Bad number of nodes per hexahedron : NGNOD must be equal to 8 or 27'

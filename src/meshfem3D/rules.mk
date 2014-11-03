@@ -43,6 +43,7 @@ meshfem3D_TARGETS = \
 meshfem3D_OBJECTS = \
 	$O/check_mesh_quality.mesh.o \
     $O/earth_chunk_HEX8_Mesher.mesh.o \
+    $O/earth_chunk_HEX27_Mesher.mesh.o \
     $O/earth_chunk_ReadIasp91.mesh.o \
 	$O/compute_parameters.mesh.o \
 	$O/create_regions_mesh.mesh.o \
