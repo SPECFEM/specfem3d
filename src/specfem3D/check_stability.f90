@@ -63,6 +63,8 @@
   character(len=5)  :: zone
   integer, dimension(8) :: time_values
 
+  character(len=MAX_STRING_LEN) :: outputname
+
   character(len=3), dimension(12) :: month_name
   character(len=3), dimension(0:6) :: weekday_name
   data month_name /'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'/

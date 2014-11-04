@@ -391,7 +391,10 @@
   implicit none
 
   ! check simulation parameters
-  if (SIMULATION_TYPE /= 1 .and. NSOURCES > 1000) call exit_mpi(myrank, 'for adjoint simulations, NSOURCES <= 1000')
+
+  ! checks number of sources for adjoint simulations
+  if (SIMULATION_TYPE /= 1 .and. NSOURCES > 999999) &
+    call exit_MPI(myrank,'for adjoint simulations, NSOURCES <= 999999, if you need more change i6.6 in write_seismograms.f90')
 
   ! snapshot file names: ADJOINT attenuation
   if (ATTENUATION .and. ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3)) &

@@ -324,6 +324,7 @@
   implicit none
 
   integer :: ier
+  character(len=MAX_STRING_LEN) :: outputname
 
   if( it > 1 .and. it < NSTEP) then
     ! adjoint simulations

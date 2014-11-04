@@ -295,7 +295,7 @@
       call write_seismograms_to_file(seismograms_a,3)
     else
       call write_adj_seismograms_to_file(myrank,seismograms_d,number_receiver_global, &
-            nrec_local,it,DT,NSTEP,t0,1)
+                                         nrec_local,it,DT,NSTEP,t0,1)
     endif
   endif
 
@@ -369,9 +369,9 @@
       one_seismogram = seismograms(:,irec_local,:)
 
       call write_one_seismogram(one_seismogram,irec, &
-              station_name,network_name,nrec, &
-              DT,t0,it,NSTEP,SIMULATION_TYPE, &
-              myrank,irecord,component)
+                                station_name,network_name,nrec, &
+                                DT,t0,it,NSTEP,SIMULATION_TYPE, &
+                                myrank,irecord,component)
 
     enddo ! nrec_local
 
@@ -433,9 +433,9 @@
 
             ! writes out this seismogram
             call write_one_seismogram(one_seismogram,irec, &
-                              station_name,network_name,nrec, &
-                              DT,t0,it,NSTEP,SIMULATION_TYPE, &
-                              myrank,irecord,component)
+                                      station_name,network_name,nrec, &
+                                      DT,t0,it,NSTEP,SIMULATION_TYPE, &
+                                      myrank,irecord,component)
 
           enddo ! nrec_local_received
         endif ! if(nrec_local_received > 0 )
@@ -526,8 +526,8 @@
 
     ! ASCII output format
     call write_output_ASCII(one_seismogram, &
-              NSTEP,it,SIMULATION_TYPE,DT,t0,myrank, &
-              iorientation,irecord,sisname,final_LOCAL_PATH)
+                            NSTEP,it,SIMULATION_TYPE,DT,t0,myrank, &
+                            iorientation,irecord,sisname,final_LOCAL_PATH)
 
   enddo ! do iorientation
 
@@ -538,23 +538,25 @@
 ! write adjoint seismograms (displacement) to text files
 
   subroutine write_adj_seismograms_to_file(myrank,seismograms,number_receiver_global, &
-               nrec_local,it,DT,NSTEP,t0,istore)
+                                           nrec_local,it,DT,NSTEP,t0,istore)
 
   use constants
 
   implicit none
 
-  integer nrec_local,NSTEP,it,myrank,istore
+  integer :: myrank
+  integer :: nrec_local,NSTEP,it,istore
   integer, dimension(nrec_local) :: number_receiver_global
   real(kind=CUSTOM_REAL), dimension(NDIM,nrec_local,NSTEP) :: seismograms
-  double precision t0,DT
+  double precision :: t0,DT
 
-  integer irec,irec_local
-  integer iorientation,irecord,isample
+  ! local parameters
+  integer :: irec,irec_local
+  integer :: iorientation,irecord,isample
 
-  character(len=3) channel
-  character(len=1) component
-  character(len=MAX_STRING_LEN) :: sisname,final_LOCAL_PATH
+  character(len=3) :: channel
+  character(len=1) :: component
+  character(len=MAX_STRING_LEN) :: sisname
 
 ! save displacement, velocity or acceleration
   if(istore == 1) then
@@ -582,18 +584,14 @@
 
       ! create the name of the seismogram file for each slice
       ! file name includes the name of the station, the network and the component
-      write(sisname,"(a,i5.5,'.',a,'.',a3,'.sem',a1)") 'S',irec_local,&
-           'NT',channel,component
-
-      ! directory to store seismograms
-      final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'
+      write(sisname,"(a2,i6.6,'.',a,'.',a3,'.sem',a1)") '/S',irec,'NT',channel,component
 
       ! save seismograms in text format with no subsampling.
       ! Because we do not subsample the output, this can result in large files
       ! if the simulation uses many time steps. However, subsampling the output
       ! here would result in a loss of accuracy when one later convolves
       ! the results with the source time function
-      open(unit=IOUT,file=final_LOCAL_PATH(1:len_trim(final_LOCAL_PATH))//sisname(1:len_trim(sisname)),status='unknown')
+      open(unit=IOUT,file=OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))//sisname(1:len_trim(sisname)),status='unknown')
 
       ! make sure we never write more than the maximum number of time steps
       ! subtract half duration of the source to make sure travel time is correct
@@ -627,18 +625,19 @@
   use constants
 
   implicit none
-
-  integer nrec_local,NSTEP,it,myrank
+  integer :: myrank
+  integer :: nrec_local,NSTEP,it
   integer, dimension(nrec_local) :: number_receiver_global
   real(kind=CUSTOM_REAL), dimension(NDIM,NDIM,nrec_local,NSTEP) :: seismograms
-  double precision t0,DT
+  double precision :: t0,DT
 
-  integer irec,irec_local
-  integer idimval,jdimval,irecord,isample
+  ! local parameters
+  integer :: irec,irec_local
+  integer :: idimval,jdimval,irecord,isample
 
   character(len=4) :: chn
   character(len=1) :: component
-  character(len=MAX_STRING_LEN) :: sisname,final_LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: sisname
 
   component = 'd'
 
@@ -650,9 +649,10 @@
     ! save three components of displacement vector
     irecord = 1
 
-    do idimval = 1, 3
-      do jdimval = idimval, 3
+    do idimval = 1, NDIM
+      do jdimval = idimval, NDIM
 
+        ! strain channel name
         if(idimval == 1 .and. jdimval == 1) then
           chn = 'SNN'
         else if(idimval == 1 .and. jdimval == 2) then
@@ -671,18 +671,14 @@
 
         ! create the name of the seismogram file for each slice
         ! file name includes the name of the station, the network and the component
-        write(sisname,"(a,i5.5,'.',a,'.',a3,'.sem',a1)") 'S',irec_local,&
-           'NT',chn,component
-
-        ! directory to store seismograms
-        final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'
+        write(sisname,"(a2,i6.6,'.',a,'.',a3,'.sem',a1)") '/S',irec,'NT',chn,component
 
         ! save seismograms in text format with no subsampling.
         ! Because we do not subsample the output, this can result in large files
         ! if the simulation uses many time steps. However, subsampling the output
         ! here would result in a loss of accuracy when one later convolves
         ! the results with the source time function
-        open(unit=IOUT,file=final_LOCAL_PATH(1:len_trim(final_LOCAL_PATH))//sisname(1:len_trim(sisname)),status='unknown')
+        open(unit=IOUT,file=OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))//sisname(1:len_trim(sisname)),status='unknown')
 
         ! make sure we never write more than the maximum number of time steps
         ! subtract half duration of the source to make sure travel time is correct

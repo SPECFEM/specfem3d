@@ -355,6 +355,7 @@
   real(kind=CUSTOM_REAL),dimension(:,:,:,:),allocatable:: val_element
   real(kind=CUSTOM_REAL),dimension(1):: dummy
   integer :: ispec2D,ispec,ipoin,iglob,ier
+  character(len=MAX_STRING_LEN) :: outputname
 
   ! allocate array for single elements
   allocate( val_element(NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
@@ -571,6 +572,7 @@
   real(kind=CUSTOM_REAL),dimension(1) :: dummy
   integer :: ispec,ipoin,iglob,i,j,k,ier
   integer :: imin,imax,jmin,jmax,kmin,kmax,iface,igll,iloc
+  character(len=MAX_STRING_LEN) :: outputname
 
   ! allocate array for single elements
   allocate(val_element(NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
@@ -1005,6 +1007,7 @@
   integer :: ispec,ier
   character(len=3) :: channel
   character(len=1) :: compx,compy,compz
+  character(len=MAX_STRING_LEN) :: outputname
 
   ! gets component characters: X/Y/Z or E/N/Z
   call write_channel_name(1,channel)

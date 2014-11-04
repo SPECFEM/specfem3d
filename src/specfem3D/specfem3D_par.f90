@@ -119,7 +119,6 @@ module specfem_par
 ! receiver information
   character(len=MAX_STRING_LEN) :: rec_filename,filtered_rec_filename,dummystring
   integer :: nrec,nrec_local,nrec_tot_found
-  integer :: nrec_simulation
   integer, dimension(:), allocatable :: islice_selected_rec,ispec_selected_rec
   integer, dimension(:), allocatable :: number_receiver_global
   double precision, dimension(:), allocatable :: xi_receiver,eta_receiver,gamma_receiver
@@ -200,9 +199,6 @@ module specfem_par
 
   logical :: ADIOS_ENABLED
   logical :: ADIOS_FOR_DATABASES, ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, ADIOS_FOR_KERNELS
-
-! names of the data files for all the processors in MPI
-  character(len=MAX_STRING_LEN) :: outputname
 
 ! for assembling in case of external mesh
   integer :: num_interfaces_ext_mesh

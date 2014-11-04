@@ -39,7 +39,6 @@
 
   implicit none
 
-  integer :: irec_local
   integer :: ier
 
   ! write gravity perturbations
@@ -97,22 +96,31 @@
 
       close(IOUT)
     endif
-
-! adjoint simulations
-  else if (SIMULATION_TYPE == 3) then
-
-    ! adjoint kernels
-    call save_adjoint_kernels()
-
   endif
 
-! closing source time function file
+  ! adjoint simulations
+  if (SIMULATION_TYPE == 3) then
+    ! adjoint kernels
+    call save_adjoint_kernels()
+  endif
+
+  ! seismograms and source parameter gradients for (pure type=2) adjoint simulation runs
+  if (SIMULATION_TYPE == 2) then
+    if (nrec_local > 0) then
+      ! seismograms (strain)
+      call write_adj_seismograms2_to_file(myrank,seismograms_eps,number_receiver_global,nrec_local,it,DT,NSTEP,t0)
+      ! source gradients  (for sources in elastic domains)
+      call save_kernels_source_derivatives()
+    endif
+  endif
+
+  ! closing source time function file
   if(PRINT_SOURCE_TIME_FUNCTION .and. myrank == 0) then
     close(IOSTF)
   endif
 
-! stacey absorbing fields will be reconstructed for adjoint simulations
-! using snapshot files of wavefields
+  ! stacey absorbing fields will be reconstructed for adjoint simulations
+  ! using snapshot files of wavefields
   if( STACEY_ABSORBING_CONDITIONS ) then
     ! closes absorbing wavefield saved/to-be-saved by forward simulations
     if( num_abs_boundary_faces > 0 .and. (SIMULATION_TYPE == 3 .or. &
@@ -124,46 +132,7 @@
     endif
   endif
 
-! seismograms and source parameter gradients for (pure type=2) adjoint simulation runs
-  if (nrec_local > 0) then
-    if (.not. (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3)) then
-      ! seismograms
-      call write_adj_seismograms2_to_file(myrank,seismograms_eps,number_receiver_global,nrec_local,it,DT,NSTEP,t0)
-
-      ! source gradients  (for sources in elastic domains)
-      do irec_local = 1, nrec_local
-        write(outputname,'(a,i5.5)') OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // &
-            '/src_frechet.',number_receiver_global(irec_local)
-        open(unit=IOUT,file=trim(outputname),status='unknown',iostat=ier)
-        if( ier /= 0 ) then
-          print*,'error opening file: ',trim(outputname)
-          call exit_mpi(myrank,'error opening file src_frechet.**')
-        endif
-        !
-        ! r -> z, theta -> -y, phi -> x
-        !
-        !  Mrr =  Mzz
-        !  Mtt =  Myy
-        !  Mpp =  Mxx
-        !  Mrt = -Myz
-        !  Mrp =  Mxz
-        !  Mtp = -Mxy
-        write(IOUT,*) Mzz_der(irec_local)
-        write(IOUT,*) Myy_der(irec_local)
-        write(IOUT,*) Mxx_der(irec_local)
-        write(IOUT,*) -Myz_der(irec_local)
-        write(IOUT,*) Mxz_der(irec_local)
-        write(IOUT,*) -Mxy_der(irec_local)
-        write(IOUT,*) sloc_der(1,irec_local)
-        write(IOUT,*) sloc_der(2,irec_local)
-        write(IOUT,*) sloc_der(3,irec_local)
-        close(IOUT)
-      enddo
-    endif
-  endif
-
   ! frees dynamically allocated memory
-
   if (USE_FORCE_POINT_SOURCE) then
     deallocate(factor_force_source)
     deallocate(comp_dir_vect_source_E)
@@ -292,7 +261,7 @@
     call adios_cleanup()
   endif
 
-! close the main output file
+  ! close the main output file
   if(myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) 'End of the simulation'
@@ -300,7 +269,7 @@
     close(IMAIN)
   endif
 
-! synchronize all the processes to make sure everybody has finished
+  ! synchronize all the processes to make sure everybody has finished
   call synchronize_all()
 
   end subroutine finalize_simulation

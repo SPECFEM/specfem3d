@@ -1643,6 +1643,7 @@
   double precision :: common_multiplying_factor,common_mult_times_one_over,common_mult_times_three_over
 
   integer :: iobservation
+  character(len=MAX_STRING_LEN) :: outputname
 
 ! read the observation surface
   x_observation(:) = 0.d0
