@@ -36,9 +36,9 @@
 !==============================================================================
 
 
-!==============================================================================
 !> Save kernels.
-subroutine save_adjoint_kernels()
+
+  subroutine save_adjoint_kernels()
 
   use constants, only: CUSTOM_REAL, SAVE_TRANSVERSE_KL, ANISOTROPIC_KL, &
                        APPROXIMATE_HESS_KL, NGLLX, NGLLY, NGLLZ
@@ -172,12 +172,17 @@ subroutine save_adjoint_kernels()
     endif
   endif
 
-end subroutine save_adjoint_kernels
+  end subroutine save_adjoint_kernels
 
-!==============================================================================
+!
+!-------------------------------------------------------------------------------------------------
+!
+
 !> Save weights for volume integration,
 !! in order to benchmark the kernels with analytical expressions.
+
 subroutine save_weights_kernel()
+
   use specfem_par
   use specfem_par_acoustic
   use specfem_par_elastic
@@ -208,10 +213,15 @@ subroutine save_weights_kernel()
 
   deallocate(weights_kernel,stat=ier)
   if( ier /= 0 ) stop 'error allocating array weights_kernel'
-end subroutine save_weights_kernel
 
-!==============================================================================
+  end subroutine save_weights_kernel
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
 !> Save acoustic related kernels
+
 subroutine save_kernels_acoustic(adios_handle)
 
   use specfem_par
@@ -272,11 +282,16 @@ subroutine save_kernels_acoustic(adios_handle)
     close(IOUT)
 
   endif
-end subroutine save_kernels_acoustic
 
-!==============================================================================
+  end subroutine save_kernels_acoustic
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
 !> Save elastic related kernels
-subroutine save_kernels_elastic(adios_handle, alphav_kl, alphah_kl, &
+
+  subroutine save_kernels_elastic(adios_handle, alphav_kl, alphah_kl, &
                                 betav_kl, betah_kl, eta_kl,         &
                                 rhop_kl, alpha_kl, beta_kl)
 
@@ -521,11 +536,15 @@ subroutine save_kernels_elastic(adios_handle, alphav_kl, alphah_kl, &
     endif
   endif
 
-end subroutine save_kernels_elastic
+  end subroutine save_kernels_elastic
 
-!==============================================================================
-!> Save poroelastic related kernels
-subroutine save_kernels_poroelastic(adios_handle)
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  !> Save poroelastic related kernels
+
+  subroutine save_kernels_poroelastic(adios_handle)
 
   use specfem_par
   use specfem_par_poroelastic
@@ -860,11 +879,16 @@ subroutine save_kernels_poroelastic(adios_handle)
     close(IOUT)
 
   endif
-end subroutine save_kernels_poroelastic
 
-!==============================================================================
+  end subroutine save_kernels_poroelastic
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
 !> Save hessians
-subroutine save_kernels_hessian(adios_handle)
+
+  subroutine save_kernels_hessian(adios_handle)
 
   use specfem_par
   use specfem_par_elastic
@@ -911,5 +935,59 @@ subroutine save_kernels_hessian(adios_handle)
       close(IOUT)
     endif
   endif
-end subroutine save_kernels_hessian
+
+  end subroutine save_kernels_hessian
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+
+  subroutine save_kernels_source_derivatives()
+
+  use specfem_par
+
+  implicit none
+
+  ! local parameters
+  integer :: irec_local,ier
+  character(len=MAX_STRING_LEN) :: outputname
+
+  ! checks
+  if (ADIOS_FOR_KERNELS ) stop 'Source derivative kernels not implemented yet for ADIOS'
+
+  ! writes out derivative kernels
+  do irec_local = 1, nrec_local
+    write(outputname,'(a,i6.6)') OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // &
+        '/src_frechet.',number_receiver_global(irec_local)
+
+    open(unit=IOUT,file=trim(outputname),status='unknown',iostat=ier)
+    if( ier /= 0 ) then
+      print*,'error opening file: ',trim(outputname)
+      call exit_mpi(myrank,'error opening file src_frechet.**')
+    endif
+
+    !
+    ! r -> z, theta -> -y, phi -> x
+    !
+    !  Mrr =  Mzz
+    !  Mtt =  Myy
+    !  Mpp =  Mxx
+    !  Mrt = -Myz
+    !  Mrp =  Mxz
+    !  Mtp = -Mxy
+    write(IOUT,*) Mzz_der(irec_local)
+    write(IOUT,*) Myy_der(irec_local)
+    write(IOUT,*) Mxx_der(irec_local)
+    write(IOUT,*) -Myz_der(irec_local)
+    write(IOUT,*) Mxz_der(irec_local)
+    write(IOUT,*) -Mxy_der(irec_local)
+    write(IOUT,*) sloc_der(1,irec_local)
+    write(IOUT,*) sloc_der(2,irec_local)
+    write(IOUT,*) sloc_der(3,irec_local)
+
+    close(IOUT)
+  enddo
+
+  end subroutine save_kernels_source_derivatives
 

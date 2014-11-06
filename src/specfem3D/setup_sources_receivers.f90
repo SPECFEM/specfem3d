@@ -349,8 +349,9 @@
 
   implicit none
 
+  ! local parameters
+  integer :: nrec_simulation
   integer :: irec,isource,ier
-
   character(len=MAX_STRING_LEN) :: path_to_add
 
 ! reads in station file
@@ -439,6 +440,15 @@
       if(myrank == islice_selected_source(isource)) nrec_local = nrec_local + 1
     enddo
   endif
+
+! check that the sum of the number of receivers in each slice is nrec
+  call sum_all_i(nrec_local,nrec_tot_found)
+  if( myrank == 0 ) then
+    if(nrec_tot_found /= nrec_simulation) then
+      call exit_MPI(myrank,'problem when dispatching the receivers')
+    endif
+  endif
+  call synchronize_all()
 
 ! checks if acoustic receiver is exactly on the free surface because pressure is zero there
   call setup_receivers_check_acoustic()
@@ -744,8 +754,8 @@
       adj_sourcearrays = 0._CUSTOM_REAL
     else
       ! skip counting, because only one file per component per proc in SU_FORMAT
-      nadj_rec_local=nrec_local
-      nadj_files_found=nrec_local
+      nadj_rec_local = nrec_local
+      nadj_files_found = nrec_local
       allocate(adj_sourcearrays(nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
       if (ier /= 0) stop 'error allocating array adj_sourcearrays'
       adj_sourcearrays = 0._CUSTOM_REAL
@@ -787,6 +797,14 @@
              hgammar_store(nrec_local,NGLLZ),stat=ier)
     if( ier /= 0 ) stop 'error allocating array hxir_store etc.'
 
+    ! allocates derivatives
+    if (SIMULATION_TYPE == 2 ) then
+      allocate(hpxir_store(nrec_local,NGLLX), &
+               hpetar_store(nrec_local,NGLLY), &
+               hpgammar_store(nrec_local,NGLLZ),stat=ier)
+      if( ier /= 0 ) stop 'error allocating array hpxir_store'
+    endif
+
     ! define local to global receiver numbering mapping
     irec_local = 0
     if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
@@ -805,44 +823,35 @@
       enddo
     endif
 
-  ! define and store Lagrange interpolators at all the receivers
-    if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
-      do irec_local = 1,nrec_local
-        irec = number_receiver_global(irec_local)
+    ! define and store Lagrange interpolators at all the receivers
+    do irec_local = 1,nrec_local
+      irec = number_receiver_global(irec_local)
+
+      if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
+        ! receiver positions
         call lagrange_any(xi_receiver(irec),NGLLX,xigll,hxir,hpxir)
         call lagrange_any(eta_receiver(irec),NGLLY,yigll,hetar,hpetar)
         call lagrange_any(gamma_receiver(irec),NGLLZ,zigll,hgammar,hpgammar)
-        hxir_store(irec_local,:) = hxir(:)
-        hetar_store(irec_local,:) = hetar(:)
-        hgammar_store(irec_local,:) = hgammar(:)
-      enddo
-    else
-      allocate(hpxir_store(nrec_local,NGLLX), &
-               hpetar_store(nrec_local,NGLLY), &
-               hpgammar_store(nrec_local,NGLLZ),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array hpxir_store'
-      do irec_local = 1,nrec_local
-        irec = number_receiver_global(irec_local)
+      else
+        ! source positions
         call lagrange_any(xi_source(irec),NGLLX,xigll,hxir,hpxir)
         call lagrange_any(eta_source(irec),NGLLY,yigll,hetar,hpetar)
         call lagrange_any(gamma_source(irec),NGLLZ,zigll,hgammar,hpgammar)
-        hxir_store(irec_local,:) = hxir(:)
-        hetar_store(irec_local,:) = hetar(:)
-        hgammar_store(irec_local,:) = hgammar(:)
+      endif
+
+      ! stores interpolators
+      hxir_store(irec_local,:) = hxir(:)
+      hetar_store(irec_local,:) = hetar(:)
+      hgammar_store(irec_local,:) = hgammar(:)
+
+      ! stores derivatives
+      if (SIMULATION_TYPE == 2) then
         hpxir_store(irec_local,:) = hpxir(:)
         hpetar_store(irec_local,:) = hpetar(:)
         hpgammar_store(irec_local,:) = hpgammar(:)
-      enddo
-    endif
+      endif
+    enddo
   endif ! nrec_local > 0
-
-! check that the sum of the number of receivers in each slice is nrec
-  call sum_all_i(nrec_local,nrec_tot_found)
-  if( myrank == 0 ) then
-    if(nrec_tot_found /= nrec_simulation) then
-      call exit_MPI(myrank,'problem when dispatching the receivers')
-    endif
-  endif
 
   end subroutine setup_receivers_precompute_intp
 
