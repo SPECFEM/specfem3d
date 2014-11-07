@@ -56,7 +56,7 @@
   real(kind=CUSTOM_REAL) :: time_t
 
   ! opens seismogram file
-  if(SEISMOGRAMS_BINARY)then
+  if (SEISMOGRAMS_BINARY)then
     ! allocate trace
     nt_s = min(it,NSTEP)
     allocate(tr(nt_s),stat=ier)
@@ -75,12 +75,12 @@
   ! make sure we never write more than the maximum number of time steps
   ! subtract half duration of the source to make sure travel time is correct
   do isample = 1,min(it,NSTEP)
-    if(irecord == 1) then
+    if (irecord == 1) then
 
       ! forward simulation
-      if( SIMULATION_TYPE == 1 ) then
+      if (SIMULATION_TYPE == 1) then
         ! distinguish between single and double precision for reals
-        if(CUSTOM_REAL == SIZE_REAL) then
+        if (CUSTOM_REAL == SIZE_REAL) then
           time_t = sngl( dble(isample-1)*DT - t0 )
         else
           time_t = dble(isample-1)*DT - t0
@@ -88,17 +88,17 @@
       endif
 
       ! adjoint simulation: backward/reconstructed wavefields
-      if( SIMULATION_TYPE == 3 ) then
+      if (SIMULATION_TYPE == 3) then
         ! distinguish between single and double precision for reals
         ! note: compare time_t with time used for source term
-        if(CUSTOM_REAL == SIZE_REAL) then
+        if (CUSTOM_REAL == SIZE_REAL) then
           time_t = sngl( dble(NSTEP-isample)*DT - t0 )
         else
           time_t = dble(NSTEP-isample)*DT - t0
         endif
       endif
 
-      if(SEISMOGRAMS_BINARY) then
+      if (SEISMOGRAMS_BINARY) then
         ! binary format case
         !tr(isample)=seismograms(iorientation,irec_local,isample)
         tr(isample) = one_seismogram(iorientation,isample)
@@ -114,7 +114,7 @@
   enddo
 
   ! binary format case
-  if(SEISMOGRAMS_BINARY) then
+  if (SEISMOGRAMS_BINARY) then
     ! writes out whole trace into binary file
     write(IOUT,rec=1) tr
     deallocate(tr)

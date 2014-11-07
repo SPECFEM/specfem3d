@@ -64,7 +64,7 @@
                     num_free_surface_faces,free_surface_ispec,free_surface_ijk)
 
   ! depth in Z-direction
-  if( distmin < HUGEVAL ) then
+  if (distmin < HUGEVAL) then
     depth = elevation - z
   else
     depth = - z
@@ -76,26 +76,26 @@
   ! 1D profile Cascadia
 
   ! super-imposes values
-  if( depth < 1.0 ) then
+  if (depth < 1.0) then
     ! vp in m/s
     vp = 5000.0
     ! vs in m/s
     vs = 2890.0
     ! density in kg/m**3
     rho = 2800.0
-  else if( depth < 6.0 ) then
+  else if (depth < 6.0) then
     vp = 6000.0
     vs = 3460.0
     rho = 2800.0
-  else if( depth < 30.0 ) then
+  else if (depth < 30.0) then
     vp = 6700.0
     vs = 3870.0
     rho = 3200.0
-  else if( depth < 45.0 ) then
+  else if (depth < 45.0) then
     vp = 7100.0
     vs = 4100.0
     rho = 3200.0
-  else if( depth < 65.0 ) then
+  else if (depth < 65.0) then
     vp = 7750.0
     vs = 4470.0
     rho = 3200.0

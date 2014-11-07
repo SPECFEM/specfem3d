@@ -80,8 +80,8 @@
   Usolidnormw_all = 0.0_CUSTOM_REAL
 
   ! compute maximum of norm of displacement in each slice
-  if( ELASTIC_SIMULATION ) then
-    if( GPU_MODE) then
+  if (ELASTIC_SIMULATION) then
+    if (GPU_MODE) then
       ! way 2: just get maximum of field from GPU
       call get_norm_elastic_from_device(Usolidnorm,Mesh_pointer,1)
     else
@@ -91,15 +91,15 @@
     ! check stability of the code, exit if unstable
     ! negative values can occur with some compilers when the unstable value is greater
     ! than the greatest possible floating-point number of the machine
-    !if(Usolidnorm > STABILITY_THRESHOLD .or. Usolidnorm < 0.0_CUSTOM_REAL) &
+    !if (Usolidnorm > STABILITY_THRESHOLD .or. Usolidnorm < 0.0_CUSTOM_REAL) &
     !  call exit_MPI(myrank,'single forward simulation became unstable and blew up')
 
     ! compute the maximum of the maxima for all the slices using an MPI reduction
     call max_all_cr(Usolidnorm,Usolidnorm_all)
   endif
 
-  if( ACOUSTIC_SIMULATION ) then
-    if(GPU_MODE) then
+  if (ACOUSTIC_SIMULATION) then
+    if (GPU_MODE) then
       ! way 2: just get maximum of field from GPU
       call get_norm_acoustic_from_device(Usolidnormp,Mesh_pointer,1)
     else
@@ -110,7 +110,7 @@
     call max_all_cr(Usolidnormp,Usolidnormp_all)
   endif
 
-  if( POROELASTIC_SIMULATION ) then
+  if (POROELASTIC_SIMULATION) then
     Usolidnorms = maxval(sqrt(displs_poroelastic(1,:)**2 + displs_poroelastic(2,:)**2 + &
                              displs_poroelastic(3,:)**2))
     Usolidnormw = maxval(sqrt(displw_poroelastic(1,:)**2 + displw_poroelastic(2,:)**2 + &
@@ -123,16 +123,16 @@
 
 
   ! adjoint simulations
-  if( SIMULATION_TYPE == 3 ) then
+  if (SIMULATION_TYPE == 3) then
     ! initializes backward field norms
     b_Usolidnorm_all = 0.0_CUSTOM_REAL
     b_Usolidnormp_all = 0.0_CUSTOM_REAL
     b_Usolidnorms_all = 0.0_CUSTOM_REAL
     b_Usolidnormw_all = 0.0_CUSTOM_REAL
 
-    if( ELASTIC_SIMULATION ) then
+    if (ELASTIC_SIMULATION) then
       ! way 2
-      if(GPU_MODE) then
+      if (GPU_MODE) then
         call get_norm_elastic_from_device(b_Usolidnorm,Mesh_pointer,3)
       else
         b_Usolidnorm = maxval(sqrt(b_displ(1,:)**2 + b_displ(2,:)**2 + b_displ(3,:)**2))
@@ -140,9 +140,9 @@
       ! compute max of all slices
       call max_all_cr(b_Usolidnorm,b_Usolidnorm_all)
     endif
-    if( ACOUSTIC_SIMULATION ) then
+    if (ACOUSTIC_SIMULATION) then
       ! way 2
-      if(GPU_MODE) then
+      if (GPU_MODE) then
         call get_norm_acoustic_from_device(b_Usolidnormp,Mesh_pointer,3)
       else
         b_Usolidnormp = maxval(abs(b_potential_dot_dot_acoustic(:)))
@@ -150,7 +150,7 @@
       ! compute max of all slices
       call max_all_cr(b_Usolidnormp,b_Usolidnormp_all)
     endif
-    if( POROELASTIC_SIMULATION ) then
+    if (POROELASTIC_SIMULATION) then
       b_Usolidnorms = maxval(sqrt(b_displs_poroelastic(1,:)**2 + b_displs_poroelastic(2,:)**2 + &
                                   b_displs_poroelastic(3,:)**2))
       b_Usolidnormw = maxval(sqrt(b_displw_poroelastic(1,:)**2 + b_displw_poroelastic(2,:)**2 + &
@@ -162,12 +162,12 @@
     ! check stability of the code, exit if unstable
     ! negative values can occur with some compilers when the unstable value is greater
     ! than the greatest possible floating-point number of the machine
-    !if(b_Usolidnorm > STABILITY_THRESHOLD .or. b_Usolidnorm < 0.0_CUSTOM_REAL) &
+    !if (b_Usolidnorm > STABILITY_THRESHOLD .or. b_Usolidnorm < 0.0_CUSTOM_REAL) &
     !  call exit_MPI(myrank,'single backward simulation became unstable and blew up')
   endif
 
   ! user output
-  if(myrank == 0) then
+  if (myrank == 0) then
 
     write(IMAIN,*) 'Time step # ',it
     write(IMAIN,*) 'Time: ',sngl((it-1)*DT-t0),' seconds'
@@ -182,24 +182,24 @@
     write(IMAIN,"(' Elapsed time in hh:mm:ss = ',i6,' h ',i2.2,' m ',i2.2,' s')") ihours,iminutes,iseconds
     write(IMAIN,*) 'Mean elapsed time per time step in seconds = ',sngl(tCPU/dble(it))
 
-    if( ELASTIC_SIMULATION ) &
+    if (ELASTIC_SIMULATION) &
       write(IMAIN,*) 'Max norm displacement vector U in all slices (m) = ',Usolidnorm_all
 
-    if( ACOUSTIC_SIMULATION ) &
+    if (ACOUSTIC_SIMULATION) &
       write(IMAIN,*) 'Max norm pressure P in all slices (Pa) = ',Usolidnormp_all
 
-    if( POROELASTIC_SIMULATION ) then
+    if (POROELASTIC_SIMULATION) then
       write(IMAIN,*) 'Max norm displacement vector Us in all slices (m) = ',Usolidnorms_all
       write(IMAIN,*) 'Max norm displacement vector W in all slices (m) = ',Usolidnormw_all
     endif
 
     ! adjoint simulations
     if (SIMULATION_TYPE == 3) then
-      if( ELASTIC_SIMULATION ) &
+      if (ELASTIC_SIMULATION) &
         write(IMAIN,*) 'Max norm displacement vector U (backward) in all slices (m) = ',b_Usolidnorm_all
-      if( ACOUSTIC_SIMULATION ) &
+      if (ACOUSTIC_SIMULATION) &
         write(IMAIN,*) 'Max norm pressure P (backward) in all slices (Pa) = ',b_Usolidnormp_all
-      if( POROELASTIC_SIMULATION ) then
+      if (POROELASTIC_SIMULATION) then
         write(IMAIN,*) 'Max norm displacement vector Us (backward) in all slices (m) = ',b_Usolidnorms_all
         write(IMAIN,*) 'Max norm displacement vector W (backward) in all slices (m) = ',b_Usolidnormw_all
       endif
@@ -312,24 +312,24 @@
     write(IOUT,"(' Elapsed time in hh:mm:ss = ',i6,' h ',i2.2,' m ',i2.2,' s')") ihours,iminutes,iseconds
     write(IOUT,*) 'Mean elapsed time per time step in seconds = ',tCPU/dble(it)
 
-    if( ELASTIC_SIMULATION ) &
+    if (ELASTIC_SIMULATION) &
       write(IOUT,*) 'Max norm displacement vector U in all slices (m) = ',Usolidnorm_all
 
-    if( ACOUSTIC_SIMULATION ) &
+    if (ACOUSTIC_SIMULATION) &
       write(IOUT,*) 'Max norm pressure P in all slices (Pa) = ',Usolidnormp_all
 
-    if( POROELASTIC_SIMULATION ) then
+    if (POROELASTIC_SIMULATION) then
       write(IOUT,*) 'Max norm displacement vector Us in all slices (m) = ',Usolidnorms_all
       write(IOUT,*) 'Max norm displacement vector W in all slices (m) = ',Usolidnormw_all
     endif
 
     ! adjoint simulations
     if (SIMULATION_TYPE == 3) then
-      if( ELASTIC_SIMULATION ) &
+      if (ELASTIC_SIMULATION) &
         write(IOUT,*) 'Max norm displacement vector U (backward) in all slices (m) = ',b_Usolidnorm_all
-      if( ACOUSTIC_SIMULATION ) &
+      if (ACOUSTIC_SIMULATION) &
         write(IOUT,*) 'Max norm pressure P (backward) in all slices (Pa) = ',b_Usolidnormp_all
-      if( POROELASTIC_SIMULATION ) then
+      if (POROELASTIC_SIMULATION) then
         write(IOUT,*) 'Max norm displacement vector Us (backward) in all slices (m) = ',b_Usolidnorms_all
         write(IOUT,*) 'Max norm displacement vector W (backward) in all slices (m) = ',b_Usolidnormw_all
       endif
@@ -382,18 +382,18 @@
     ! check stability of the code, exit if unstable
     ! negative values can occur with some compilers when the unstable value is greater
     ! than the greatest possible floating-point number of the machine
-    if(Usolidnorm_all > STABILITY_THRESHOLD .or. Usolidnorm_all < 0.0_CUSTOM_REAL &
+    if (Usolidnorm_all > STABILITY_THRESHOLD .or. Usolidnorm_all < 0.0_CUSTOM_REAL &
      .or. Usolidnormp_all > STABILITY_THRESHOLD .or. Usolidnormp_all < 0.0_CUSTOM_REAL &
      .or. Usolidnorms_all > STABILITY_THRESHOLD .or. Usolidnorms_all < 0.0_CUSTOM_REAL &
      .or. Usolidnormw_all > STABILITY_THRESHOLD .or. Usolidnormw_all < 0.0_CUSTOM_REAL) &
         call exit_MPI(myrank,'forward simulation became unstable and blew up')
 
     ! adjoint simulations
-    if( SIMULATION_TYPE == 3 ) then
-      if( b_Usolidnorm_all > STABILITY_THRESHOLD .or. b_Usolidnorm_all < 0.0_CUSTOM_REAL &
+    if (SIMULATION_TYPE == 3) then
+      if (b_Usolidnorm_all > STABILITY_THRESHOLD .or. b_Usolidnorm_all < 0.0_CUSTOM_REAL &
         .or. b_Usolidnormp_all > STABILITY_THRESHOLD .or. b_Usolidnormp_all < 0.0_CUSTOM_REAL &
         .or. b_Usolidnorms_all > STABILITY_THRESHOLD .or. b_Usolidnorms_all < 0.0_CUSTOM_REAL &
-        .or. b_Usolidnormw_all > STABILITY_THRESHOLD .or. b_Usolidnormw_all < 0.0_CUSTOM_REAL ) &
+        .or. b_Usolidnormw_all > STABILITY_THRESHOLD .or. b_Usolidnormw_all < 0.0_CUSTOM_REAL) &
         call exit_MPI(myrank,'backward simulation became unstable and blew up')
     endif
 

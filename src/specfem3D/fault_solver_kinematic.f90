@@ -80,7 +80,7 @@ subroutine BC_KINFLT_init(prname,DTglobal,myrank)
   dummy_idfault = 0
 
   open(unit=IIN_PAR,file='../DATA/Par_file_faults',status='old',iostat=ier)
-  if( ier /= 0 ) then
+  if (ier /= 0) then
     if (myrank==0) write(IMAIN,*) 'no kinematic faults'
     close(IIN_PAR)
     return
@@ -98,7 +98,7 @@ subroutine BC_KINFLT_init(prname,DTglobal,myrank)
 
   filename = prname(1:len_trim(prname))//'fault_db.bin'
   open(unit=IIN_BIN,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
-  if( ier /= 0 ) then
+  if (ier /= 0) then
     write(IMAIN,*) 'Fatal error: file ',trim(filename),' not found. Abort'
     stop
   endif
@@ -106,7 +106,7 @@ subroutine BC_KINFLT_init(prname,DTglobal,myrank)
 
   read(IIN_PAR,*)  ! eta
   read(IIN_PAR,*) SIMULATION_TYPE
-  if ( SIMULATION_TYPE == 2 ) then
+  if (SIMULATION_TYPE == 2) then
     SIMULATION_TYPE_KIN = .true.
     read(IIN_PAR,*) NTOUT
     read(IIN_PAR,*) NSNAP
@@ -300,9 +300,9 @@ subroutine BC_KINFLT_set_single(bc,MxA,V,D,iflt)
 
     !-- OUTPUTS --
     ! write dataT every NTOUT time steps or at the end of simulation
-    if ( mod(it,NTOUT) == 0 .or. it==NSTEP) call SCEC_write_dataT(bc%dataT)
+    if (mod(it,NTOUT) == 0 .or. it==NSTEP) call SCEC_write_dataT(bc%dataT)
     ! write dataXZ every NSNAP time steps
-    ! if ( mod(it,NSNAP) == 0) call write_dataXZ(bc,it,iflt)
+    ! if (mod(it,NSNAP) == 0) call write_dataXZ(bc,it,iflt)
 
   endif
 
@@ -360,7 +360,7 @@ subroutine load_vslip_snapshots(dataXZ,itime,iflt)
 !  COMPILERS WRITE BINARY OUTPUTS IN DIFFERENT FORMATS !!!!!!!!!!
 !  open(unit=IIN_BIN, file= trim(filename), status='old', form='unformatted',&
 !        action='read',iostat=ier)
-!  if( ier /= 0 ) stop 'Snapshots have been found'
+!  if (ier /= 0) stop 'Snapshots have been found'
 
   read(IIN_BIN,"(5F24.15)") dataXZ%xcoord,dataXZ%ycoord,dataXZ%zcoord,dataXZ%v1,dataXZ%v2
 

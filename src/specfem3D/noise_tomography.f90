@@ -70,7 +70,7 @@ contains
   real(kind=CUSTOM_REAL) :: normal_x_noise_out,normal_y_noise_out,normal_z_noise_out,mask_noise_out
 
   ! Setup for NOISE_TOMOGRAPHY by Piero Basini
-  if( USE_PIERO_DISTRIBUTION ) then
+  if (USE_PIERO_DISTRIBUTION) then
     call noise_distribution_dir_non_uni(xcoord_in,ycoord_in,zcoord_in, &
                                       normal_x_noise_out,normal_y_noise_out,normal_z_noise_out, &
                                       mask_noise_out)
@@ -267,35 +267,37 @@ end module user_noise_distribution
   real(kind=CUSTOM_REAL) :: noise_sourcearray(NDIM,NGLLX,NGLLY,NGLLZ,NSTEP)
   real(kind=CUSTOM_REAL), dimension(nmovie_points) :: normal_x_noise,normal_y_noise,normal_z_noise,mask_noise
   ! local parameters
-  integer :: ipoin,ispec,i,j,k,iglob,ios,iface,igll
+  integer :: ipoin,ispec,i,j,k,iglob,ier,iface,igll
   real(kind=CUSTOM_REAL) :: normal_x_noise_out,normal_y_noise_out,normal_z_noise_out,mask_noise_out
   character(len=MAX_STRING_LEN) :: filename
 
   ! read master receiver ID -- the ID in "STATIONS"
   filename = trim(OUTPUT_FILES_PATH)//'/..//NOISE_TOMOGRAPHY/irec_master_noise'
-  open(unit=IIN_NOISE,file=trim(filename),status='old',action='read',iostat=ios)
-  if( ios /= 0 ) &
+  open(unit=IIN_NOISE,file=trim(filename),status='old',action='read',iostat=ier)
+  if (ier /= 0) &
     call exit_MPI(myrank, 'file '//trim(filename)//' does NOT exist! This file contains the ID of the master receiver')
-  read(IIN_NOISE,*,iostat=ios) irec_master_noise
-  if( ios /= 0 ) call exit_MPI(myrank,'error reading file irec_master_noise')
+
+  read(IIN_NOISE,*,iostat=ier) irec_master_noise
+  if (ier /= 0) call exit_MPI(myrank,'error reading file irec_master_noise')
+
   close(IIN_NOISE)
 
   ! checks value
-  if( irec_master_noise <= 0 ) then
+  if (irec_master_noise <= 0) then
     write(IOUT,*) 'error: irec_master_noise value:',irec_master_noise,'must be positive'
     call exit_MPI(myrank,'error irec_master_noise value')
   endif
 
   if (myrank == 0) then
     open(unit=IOUT_NOISE,file=trim(OUTPUT_FILES_PATH)//'/irec_master_noise', &
-            status='unknown',action='write',iostat=ios)
-    if( ios /= 0 ) call exit_MPI(myrank,'error opening file '//trim(OUTPUT_FILES_PATH)//'/irec_master_noise')
+            status='unknown',action='write',iostat=ier)
+    if (ier /= 0) call exit_MPI(myrank,'error opening file '//trim(OUTPUT_FILES_PATH)//'/irec_master_noise')
     write(IOUT_NOISE,*) 'The master receiver is: (RECEIVER ID)', irec_master_noise
     close(IOUT_NOISE)
   endif
 
   ! compute source arrays for "ensemble forward source", which is source of "ensemble forward wavefield"
-  if(myrank == islice_selected_rec(irec_master_noise) .OR. myrank == 0) then ! myrank == 0 is used for output only
+  if (myrank == islice_selected_rec(irec_master_noise) .OR. myrank == 0) then ! myrank == 0 is used for output only
     call compute_arrays_source_noise(myrank, &
               xi_receiver(irec_master_noise),eta_receiver(irec_master_noise),gamma_receiver(irec_master_noise), &
               nu(:,:,irec_master_noise),noise_sourcearray, xigll,yigll,zigll,NSTEP)
@@ -311,7 +313,7 @@ end module user_noise_distribution
     ispec = free_surface_ispec(iface)
 
     ! checks if surface element belongs to elastic domain
-    if( ispec_is_acoustic(ispec) ) then
+    if (ispec_is_acoustic(ispec)) then
       print*,'error noise simulation: element',ispec,'is acoustic'
       stop 'error: noise for acoustic elements not implemented yet!'
     endif
@@ -413,7 +415,7 @@ end module user_noise_distribution
     if (NSPEC_TOP > 0) then
 
       ! check integer size limit: size of b_reclen_field must fit onto an 4-byte integer
-      if ( NSPEC_TOP > 2147483646 / (CUSTOM_REAL * NGLLSQUARE * NDIM) ) then
+      if (NSPEC_TOP > 2147483646 / (CUSTOM_REAL * NGLLSQUARE * NDIM)) then
         print *,'reclen of noise surface_movie needed exceeds integer 4-byte limit: ',reclen
         print *,'  ',CUSTOM_REAL, NDIM, NGLLSQUARE, NSPEC_TOP
         print*,'bit size fortran: ',bit_size(NSPEC_TOP)
@@ -464,7 +466,7 @@ end module user_noise_distribution
   ! output parameters
   real(kind=CUSTOM_REAL) :: noise_sourcearray(NDIM,NGLLX,NGLLY,NGLLZ,NSTEP)
   ! local parameters
-  integer itime, i, j, k, ios
+  integer itime, i, j, k, ier
   real(kind=CUSTOM_REAL) :: junk
   real(kind=CUSTOM_REAL) :: noise_src(NSTEP),noise_src_u(NDIM,NSTEP)
   double precision, dimension(NDIM) :: nu_master       ! component direction chosen at the master receiver
@@ -477,13 +479,13 @@ end module user_noise_distribution
   noise_src(:) = 0._CUSTOM_REAL
   ! noise file (source time function)
   filename = trim(OUTPUT_FILES_PATH)//'/..//NOISE_TOMOGRAPHY/S_squared'
-  open(unit=IIN_NOISE,file=trim(filename),status='old',action='read',iostat=ios)
-  if( ios /= 0 .and. myrank == 0 )  &
+  open(unit=IIN_NOISE,file=trim(filename),status='old',action='read',iostat=ier)
+  if (ier /= 0 .and. myrank == 0)  &
     call exit_MPI(myrank, 'file '//trim(filename)//' does NOT exist! This file should have been generated using Matlab scripts')
 
   do itime =1,NSTEP
-    read(IIN_NOISE,*,iostat=ios) junk, noise_src(itime)
-    if( ios /= 0)  call exit_MPI(myrank,&
+    read(IIN_NOISE,*,iostat=ier) junk, noise_src(itime)
+    if (ier /= 0)  call exit_MPI(myrank,&
         'file '//trim(filename)//' has wrong length, please check your simulation duration')
   enddo
   close(IIN_NOISE)
@@ -492,14 +494,14 @@ end module user_noise_distribution
 
   ! master receiver component direction, \nu_master
   filename = trim(OUTPUT_FILES_PATH)//'/..//NOISE_TOMOGRAPHY/nu_master'
-  open(unit=IIN_NOISE,file=trim(filename),status='old',action='read',iostat=ios)
-  if( ios /= 0 .and. myrank == 0 ) &
+  open(unit=IIN_NOISE,file=trim(filename),status='old',action='read',iostat=ier)
+  if (ier /= 0 .and. myrank == 0) &
     call exit_MPI(myrank,&
       'file '//trim(filename)//' does NOT exist! nu_master is the component direction (ENZ) for master receiver')
 
   do itime =1,3
-    read(IIN_NOISE,*,iostat=ios) nu_master(itime)
-    if( ios /= 0 .and. myrank == 0 ) &
+    read(IIN_NOISE,*,iostat=ier) nu_master(itime)
+    if (ier /= 0 .and. myrank == 0) &
       call exit_MPI(myrank,&
         'file '//trim(filename)//' has wrong length, the vector should have three components (ENZ)')
   enddo
@@ -563,13 +565,13 @@ end module user_noise_distribution
   ! local parameters
   integer :: i,j,k,iglob,ispec, it
 
-  if( irec_master_noise <= 0 ) then
+  if (irec_master_noise <= 0) then
     print*,'error rank',myrank,irec_master_noise
     stop 'error irec_master_noise'
   endif
 
   ! adds noise source (only if this proc carries the noise)
-  if(myrank == islice_selected_rec(irec_master_noise)) then
+  if (myrank == islice_selected_rec(irec_master_noise)) then
 
     ispec = ispec_selected_rec(irec_master_noise)
 
@@ -622,9 +624,9 @@ end module user_noise_distribution
   logical :: GPU_MODE
 
   ! writes out wavefield at surface
-  if( num_free_surface_faces > 0 ) then
+  if (num_free_surface_faces > 0) then
 
-    if(.NOT. GPU_MODE) then
+    if (.NOT. GPU_MODE) then
       ! loops over surface points
       ! get coordinates of surface mesh and surface displacement
       do iface = 1, num_free_surface_faces
@@ -688,7 +690,7 @@ end module user_noise_distribution
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLLSQUARE,num_free_surface_faces) :: noise_surface_movie
 
   ! reads in ensemble noise sources at surface
-  if( num_free_surface_faces > 0 ) then
+  if (num_free_surface_faces > 0) then
 
     ! read surface movie
     call read_abs(2,noise_surface_movie,CUSTOM_REAL*NDIM*NGLLSQUARE*num_free_surface_faces,it)
@@ -752,7 +754,7 @@ end module user_noise_distribution
   integer :: NOISE_TOMOGRAPHY
 
   ! reads in ensemble noise sources at surface
-  if( num_free_surface_faces > 0 ) then
+  if (num_free_surface_faces > 0) then
 
     ! read surface movie
     call read_abs(2,noise_surface_movie,CUSTOM_REAL*NDIM*NGLLSQUARE*num_free_surface_faces,it)
@@ -809,12 +811,12 @@ end module user_noise_distribution
   logical :: GPU_MODE
 
   ! updates contribution to noise strength kernel
-  if( num_free_surface_faces > 0 ) then
+  if (num_free_surface_faces > 0) then
 
     ! read surface movie, needed for Sigma_kl
     call read_abs(2,noise_surface_movie,CUSTOM_REAL*NDIM*NGLLSQUARE*num_free_surface_faces,it)
 
-    if(.NOT. GPU_MODE) then
+    if (.NOT. GPU_MODE) then
 
       ! noise source strength kernel
       ! to keep similar structure to other kernels, the source strength kernel is saved as a volumetric kernel

@@ -247,7 +247,7 @@ end module my_mpi
 
   integer ier
 
-  if(.not. (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. BROADCAST_SAME_MESH_AND_MODEL)) return
+  if (.not. (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. BROADCAST_SAME_MESH_AND_MODEL)) return
 
   call MPI_BCAST(buffer,countval,MPI_INTEGER,0,my_local_mpi_comm_for_bcast,ier)
 
@@ -272,7 +272,7 @@ end module my_mpi
 
   integer ier
 
-  if(.not. (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. BROADCAST_SAME_MESH_AND_MODEL)) return
+  if (.not. (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. BROADCAST_SAME_MESH_AND_MODEL)) return
 
   call MPI_BCAST(buffer,countval,MPI_INTEGER,0,my_local_mpi_comm_for_bcast,ier)
 
@@ -299,7 +299,7 @@ end module my_mpi
 
   integer ier
 
-  if(.not. (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. BROADCAST_SAME_MESH_AND_MODEL)) return
+  if (.not. (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. BROADCAST_SAME_MESH_AND_MODEL)) return
 
   call MPI_BCAST(buffer,countval,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_for_bcast,ier)
 
@@ -324,7 +324,7 @@ end module my_mpi
 
   integer ier
 
-  if(.not. (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. BROADCAST_SAME_MESH_AND_MODEL)) return
+  if (.not. (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. BROADCAST_SAME_MESH_AND_MODEL)) return
 
   call MPI_BCAST(buffer,countval,MPI_DOUBLE_PRECISION,0,my_local_mpi_comm_for_bcast,ier)
 
@@ -349,7 +349,7 @@ end module my_mpi
 
   integer ier
 
-  if(.not. (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. BROADCAST_SAME_MESH_AND_MODEL)) return
+  if (.not. (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. BROADCAST_SAME_MESH_AND_MODEL)) return
 
   call MPI_BCAST(buffer,countval,MPI_REAL,0,my_local_mpi_comm_for_bcast,ier)
 
@@ -724,7 +724,7 @@ end module my_mpi
   send(:) = buffer(:)
 
   call MPI_ALLREDUCE(send, buffer, countval, MPI_INTEGER, MPI_MAX, my_local_mpi_comm_world, ier)
-  if( ier /= 0 ) stop 'Allreduce to get max values failed.'
+  if (ier /= 0) stop 'Allreduce to get max values failed.'
 
   end subroutine max_allreduce_i
 
@@ -1303,7 +1303,7 @@ end module my_mpi
   integer :: ier
 
   call MPI_COMM_DUP(my_local_mpi_comm_world,comm,ier)
-  if( ier /= 0 ) stop 'error duplicating my_local_mpi_comm_world communicator'
+  if (ier /= 0) stop 'error duplicating my_local_mpi_comm_world communicator'
 
   end subroutine world_duplicate
 
@@ -1326,18 +1326,18 @@ end module my_mpi
 
   character(len=MAX_STRING_LEN) :: path_to_add
 
-  if(NUMBER_OF_SIMULTANEOUS_RUNS <= 0) stop 'NUMBER_OF_SIMULTANEOUS_RUNS <= 0 makes no sense'
+  if (NUMBER_OF_SIMULTANEOUS_RUNS <= 0) stop 'NUMBER_OF_SIMULTANEOUS_RUNS <= 0 makes no sense'
 
   call MPI_COMM_SIZE(MPI_COMM_WORLD,sizeval,ier)
   call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
 
-  if(NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mod(sizeval,NUMBER_OF_SIMULTANEOUS_RUNS) /= 0) &
+  if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mod(sizeval,NUMBER_OF_SIMULTANEOUS_RUNS) /= 0) &
     stop 'the number of MPI processes is not a multiple of NUMBER_OF_SIMULTANEOUS_RUNS'
 
-  if(NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. IMAIN == ISTANDARD_OUTPUT) &
+  if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. IMAIN == ISTANDARD_OUTPUT) &
     stop 'must not have IMAIN == ISTANDARD_OUTPUT when NUMBER_OF_SIMULTANEOUS_RUNS > 1 otherwise output to screen is mingled'
 
-  if(NUMBER_OF_SIMULTANEOUS_RUNS == 1) then
+  if (NUMBER_OF_SIMULTANEOUS_RUNS == 1) then
 
     my_local_mpi_comm_world = MPI_COMM_WORLD
 
@@ -1354,32 +1354,32 @@ end module my_mpi
 !   create the different groups of processes, one for each independent run
     mygroup = myrank / NPROC
     key = myrank
-    if(mygroup < 0 .or. mygroup > NUMBER_OF_SIMULTANEOUS_RUNS-1) stop 'invalid value of mygroup'
+    if (mygroup < 0 .or. mygroup > NUMBER_OF_SIMULTANEOUS_RUNS-1) stop 'invalid value of mygroup'
 
 !   build the sub-communicators
     call MPI_COMM_SPLIT(MPI_COMM_WORLD, mygroup, key, my_local_mpi_comm_world, ier)
-    if(ier /= 0) stop 'error while trying to create the sub-communicators'
+    if (ier /= 0) stop 'error while trying to create the sub-communicators'
 
 !   add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
     write(path_to_add,"('run',i4.4,'/')") mygroup + 1
     OUTPUT_FILES_PATH = path_to_add(1:len_trim(path_to_add))//OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))
 
 !--- create a subcommunicator to broadcast the identical mesh and model databases if needed
-    if(BROADCAST_SAME_MESH_AND_MODEL) then
+    if (BROADCAST_SAME_MESH_AND_MODEL) then
 
       call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
 !     to broadcast the model, split along similar ranks per run instead
       my_group_for_bcast = mod(myrank,NPROC)
       key = myrank
-      if(my_group_for_bcast < 0 .or. my_group_for_bcast > NPROC-1) stop 'invalid value of my_group_for_bcast'
+      if (my_group_for_bcast < 0 .or. my_group_for_bcast > NPROC-1) stop 'invalid value of my_group_for_bcast'
 
 !     build the sub-communicators
       call MPI_COMM_SPLIT(MPI_COMM_WORLD, my_group_for_bcast, key, my_local_mpi_comm_for_bcast, ier)
-      if(ier /= 0) stop 'error while trying to create the sub-communicators'
+      if (ier /= 0) stop 'error while trying to create the sub-communicators'
 
 !     see if that process will need to read the mesh and model database and then broadcast it to others
       call MPI_COMM_RANK(my_local_mpi_comm_for_bcast,my_local_rank_for_bcast,ier)
-      if(my_local_rank_for_bcast > 0) I_should_read_the_database = .false.
+      if (my_local_rank_for_bcast > 0) I_should_read_the_database = .false.
 
     else
 
@@ -1407,9 +1407,9 @@ end module my_mpi
 
   integer :: ier
 
-  if(NUMBER_OF_SIMULTANEOUS_RUNS > 1) then
+  if (NUMBER_OF_SIMULTANEOUS_RUNS > 1) then
     call MPI_COMM_FREE(my_local_mpi_comm_world,ier)
-    if(BROADCAST_SAME_MESH_AND_MODEL) call MPI_COMM_FREE(my_local_mpi_comm_for_bcast,ier)
+    if (BROADCAST_SAME_MESH_AND_MODEL) call MPI_COMM_FREE(my_local_mpi_comm_for_bcast,ier)
   endif
 
   end subroutine world_unsplit

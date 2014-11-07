@@ -78,7 +78,7 @@
   integer :: NSPEC_AB, NGLOB_AB
   integer :: numpoin
 
-  integer :: i, ios, it, ier
+  integer :: i, it, ier
   integer :: iproc, num_node
 
   integer,dimension(MAX_NUM_NODES) :: node_list
@@ -178,10 +178,10 @@
   print *, 'Slice list: '
   print *, node_list(1:num_node)
 
-  if( USE_VTK_OUTPUT ) then
+  if (USE_VTK_OUTPUT) then
     mesh_file = trim(outdir) // '/' // trim(filename)//'.vtk'
-    open(IOVTK,file=mesh_file(1:len_trim(mesh_file)),status='unknown',iostat=ios)
-    if( ios /= 0 ) stop 'error opening vtk output file'
+    open(IOVTK,file=mesh_file(1:len_trim(mesh_file)),status='unknown',iostat=ier)
+    if (ier /= 0) stop 'error opening vtk output file'
 
     write(IOVTK,'(a)') '# vtk DataFile Version 3.1'
     write(IOVTK,'(a)') 'material model VTK file'
@@ -217,16 +217,16 @@
     else
       write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',iproc,'_'
       open(unit=27,file=prname_lp(1:len_trim(prname_lp))//'external_mesh.bin',&
-            status='old',action='read',form='unformatted',iostat=ios)
+            status='old',action='read',form='unformatted',iostat=ier)
       read(27) NSPEC_AB
       read(27) NGLOB_AB
     endif
 
     ! ibool and global point arrays file
     allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array ibool'
+    if (ier /= 0) stop 'error allocating array ibool'
     allocate(xstore(NGLOB_AB),ystore(NGLOB_AB),zstore(NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array xstore etc.'
+    if (ier /= 0) stop 'error allocating array xstore etc.'
 
     if (ADIOS_FOR_MESH) then
       call read_ibool_adios_mesh(mesh_handle, ibool_offset, &
@@ -243,15 +243,15 @@
 
 
     allocate(data_sp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating single precision data array'
+    if (ier /= 0) stop 'error allocating single precision data array'
 
-    if( CUSTOM_REAL == SIZE_DOUBLE ) then
+    if (CUSTOM_REAL == SIZE_DOUBLE) then
       allocate(data_dp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-      if( ier /= 0 ) stop 'error allocating double precision data array'
+      if (ier /= 0) stop 'error allocating double precision data array'
     endif
 
     if (ADIOS_FOR_MESH) then
-      if( CUSTOM_REAL == SIZE_DOUBLE ) then
+      if (CUSTOM_REAL == SIZE_DOUBLE) then
         call read_double_values_adios(value_handle, var_name, ibool_offset, NSPEC_AB, data_dp)
       else
         call read_float_values_adios(value_handle, var_name, ibool_offset, NSPEC_AB, data_sp)
@@ -261,14 +261,14 @@
       write(prname,'(a,i6.6,a)') trim(indir)//'proc',iproc,'_'
       local_data_file = trim(prname) // trim(filename) // '.bin'
       open(unit = 28,file = trim(local_data_file),status='old',&
-            action='read',form ='unformatted',iostat=ios)
-      if (ios /= 0) then
+            action='read',form ='unformatted',iostat=ier)
+      if (ier /= 0) then
         print *,'Error opening ',trim(local_data_file)
         stop
       endif
 
       ! Read either SP or DP floating point numbers.
-      if( CUSTOM_REAL == SIZE_DOUBLE ) then
+      if (CUSTOM_REAL == SIZE_DOUBLE) then
         read(28) data_dp
       else
         read(28) data_sp
@@ -277,7 +277,7 @@
     endif
 
     ! uses conversion to real values
-    if( CUSTOM_REAL == SIZE_DOUBLE ) then
+    if (CUSTOM_REAL == SIZE_DOUBLE) then
       data_sp(:,:,:,:) = sngl(data_dp(:,:,:,:))
       deallocate(data_dp)
     endif
@@ -304,7 +304,7 @@
 
   enddo  ! all slices for points
 
-  if( USE_VTK_OUTPUT) write(IOVTK,*) ""
+  if (USE_VTK_OUTPUT) write(IOVTK,*) ""
 
   if (np /=  npp) stop 'Error: Number of total points are not consistent'
   print *, 'Total number of points: ', np
@@ -340,7 +340,7 @@
       call read_ibool_adios_mesh(mesh_handle, ibool_offset, &
                                  NGLLX, NGLLY, NGLLZ, NSPEC_AB, ibool)
     else
-      if( ier /= 0 ) stop 'error allocating array ibool'
+      if (ier /= 0) stop 'error allocating array ibool'
       read(27) ibool
       close(27)
     endif
@@ -365,7 +365,7 @@
 
   enddo ! num_node
 
-  if( USE_VTK_OUTPUT) write(IOVTK,*) ""
+  if (USE_VTK_OUTPUT) write(IOVTK,*) ""
 
   ! checks with total number of elements
   if (ne /= nee) then
@@ -374,7 +374,7 @@
   endif
   print *, 'Total number of elements: ', ne
 
-  if( USE_VTK_OUTPUT) then
+  if (USE_VTK_OUTPUT) then
     ! type: hexahedrons
     write(IOVTK,'(a,i12)') "CELL_TYPES ",nee
     write(IOVTK,'(6i12)') (12,it=1,nee)
@@ -393,7 +393,7 @@
     if (filename(1:6) == 'div_it') then
       data_array_name = trim(filename(1:3)) ! "div"
     endif
-    if (filename(1:9) == 'curl_X_it' .or. filename(1:9) == 'curl_Y_it' .or. filename(1:9) == 'curl_Z_it' ) then
+    if (filename(1:9) == 'curl_X_it' .or. filename(1:9) == 'curl_Y_it' .or. filename(1:9) == 'curl_Z_it') then
       data_array_name = trim(filename(1:6)) ! "curl_X",..
     endif
 
@@ -447,7 +447,7 @@
   integer, dimension(:,:,:,:),allocatable :: ibool
   logical, dimension(:),allocatable :: mask_ibool
   integer :: NSPEC_AB, NGLOB_AB
-  integer :: it,iproc,npoint,nelement,ios,ispec,ier
+  integer :: it,iproc,npoint,nelement,ispec,ier
   integer :: iglob1, iglob2, iglob3, iglob4, iglob5, iglob6, iglob7, iglob8
   character(len=MAX_STRING_LEN) :: prname_lp
 
@@ -469,8 +469,8 @@
       iproc = node_list(it)
       write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',iproc,'_'
       open(unit=27,file=prname_lp(1:len_trim(prname_lp))//'external_mesh.bin',&
-            status='old',action='read',form='unformatted',iostat=ios)
-      if (ios /= 0) then
+            status='old',action='read',form='unformatted',iostat=ier)
+      if (ier /= 0) then
         print *,'Error opening: ',prname_lp(1:len_trim(prname_lp))//'external_mesh.bin'
         stop
       endif
@@ -480,9 +480,9 @@
     endif
 
     ! gets ibool
-    if( .not. HIGH_RESOLUTION_MESH ) then
+    if (.not. HIGH_RESOLUTION_MESH) then
       allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array ibool'
+      if (ier /= 0) stop 'error allocating array ibool'
 
       if (ADIOS_FOR_MESH) then
         call read_ibool_adios_mesh(mesh_handle, ibool_offset, &
@@ -494,7 +494,7 @@
     endif
 
     ! calculates totals
-    if( HIGH_RESOLUTION_MESH ) then
+    if (HIGH_RESOLUTION_MESH) then
       ! total number of global points
       npp = npp + NGLOB_AB
 
@@ -508,7 +508,7 @@
 
       ! mark element corners (global AVS or DX points)
       allocate(mask_ibool(NGLOB_AB),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array mask_ibool'
+      if (ier /= 0) stop 'error allocating array mask_ibool'
       mask_ibool = .false.
       do ispec=1,NSPEC_AB
         iglob1=ibool(1,1,1,ispec)
@@ -539,8 +539,8 @@
     endif ! HIGH_RESOLUTION_MESH
 
     ! frees arrays
-    if( allocated(mask_ibool) ) deallocate( mask_ibool)
-    if( allocated(ibool) ) deallocate(ibool)
+    if (allocated(mask_ibool)) deallocate( mask_ibool)
+    if (allocated(ibool)) deallocate(ibool)
 
   enddo
 
@@ -572,11 +572,11 @@
 
   ! writes out total number of points
   if (it == 1) then
-    if( USE_VTK_OUTPUT ) then
+    if (USE_VTK_OUTPUT) then
       write(IOVTK, '(a,i12,a)') 'POINTS ', npp, ' float'
       ! creates array to hold point data
       allocate(total_dat(npp),stat=ier)
-      if( ier /= 0 ) stop 'error allocating total dat array'
+      if (ier /= 0) stop 'error allocating total dat array'
       total_dat(:) = 0.0
     else
       call write_integer(npp)
@@ -585,7 +585,7 @@
 
   ! writes our corner point locations
   allocate(mask_ibool(NGLOB_AB),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array mask_ibool'
+  if (ier /= 0) stop 'error allocating array mask_ibool'
   mask_ibool(:) = .false.
   numpoin = 0
   do ispec=1,NSPEC_AB
@@ -598,12 +598,12 @@
     iglob7=ibool(NGLLX,NGLLY,NGLLZ,ispec)
     iglob8=ibool(1,NGLLY,NGLLZ,ispec)
 
-    if(.not. mask_ibool(iglob1)) then
+    if (.not. mask_ibool(iglob1)) then
       numpoin = numpoin + 1
       x = xstore(iglob1)
       y = ystore(iglob1)
       z = zstore(iglob1)
-      if( USE_VTK_OUTPUT ) then
+      if (USE_VTK_OUTPUT) then
         write(IOVTK,'(3e18.6)') x,y,z
         total_dat(np+numpoin) = dat(1,1,1,ispec)
       else
@@ -614,12 +614,12 @@
       endif
         mask_ibool(iglob1) = .true.
     endif
-    if(.not. mask_ibool(iglob2)) then
+    if (.not. mask_ibool(iglob2)) then
       numpoin = numpoin + 1
       x = xstore(iglob2)
       y = ystore(iglob2)
       z = zstore(iglob2)
-      if( USE_VTK_OUTPUT ) then
+      if (USE_VTK_OUTPUT) then
         write(IOVTK,'(3e18.6)') x,y,z
         total_dat(np+numpoin) = dat(NGLLX,1,1,ispec)
       else
@@ -630,12 +630,12 @@
       endif
       mask_ibool(iglob2) = .true.
     endif
-    if(.not. mask_ibool(iglob3)) then
+    if (.not. mask_ibool(iglob3)) then
       numpoin = numpoin + 1
       x = xstore(iglob3)
       y = ystore(iglob3)
       z = zstore(iglob3)
-      if( USE_VTK_OUTPUT ) then
+      if (USE_VTK_OUTPUT) then
         write(IOVTK,'(3e18.6)') x,y,z
         total_dat(np+numpoin) = dat(NGLLX,NGLLY,1,ispec)
       else
@@ -646,12 +646,12 @@
       endif
       mask_ibool(iglob3) = .true.
     endif
-    if(.not. mask_ibool(iglob4)) then
+    if (.not. mask_ibool(iglob4)) then
       numpoin = numpoin + 1
       x = xstore(iglob4)
       y = ystore(iglob4)
       z = zstore(iglob4)
-      if( USE_VTK_OUTPUT ) then
+      if (USE_VTK_OUTPUT) then
         write(IOVTK,'(3e18.6)') x,y,z
         total_dat(np+numpoin) = dat(1,NGLLY,1,ispec)
       else
@@ -662,12 +662,12 @@
       endif
       mask_ibool(iglob4) = .true.
     endif
-    if(.not. mask_ibool(iglob5)) then
+    if (.not. mask_ibool(iglob5)) then
       numpoin = numpoin + 1
       x = xstore(iglob5)
       y = ystore(iglob5)
       z = zstore(iglob5)
-      if( USE_VTK_OUTPUT ) then
+      if (USE_VTK_OUTPUT) then
         write(IOVTK,'(3e18.6)') x,y,z
         total_dat(np+numpoin) = dat(1,1,NGLLZ,ispec)
       else
@@ -678,12 +678,12 @@
       endif
       mask_ibool(iglob5) = .true.
     endif
-    if(.not. mask_ibool(iglob6)) then
+    if (.not. mask_ibool(iglob6)) then
       numpoin = numpoin + 1
       x = xstore(iglob6)
       y = ystore(iglob6)
       z = zstore(iglob6)
-      if( USE_VTK_OUTPUT ) then
+      if (USE_VTK_OUTPUT) then
         write(IOVTK,'(3e18.6)') x,y,z
         total_dat(np+numpoin) = dat(NGLLX,1,NGLLZ,ispec)
       else
@@ -694,12 +694,12 @@
       endif
       mask_ibool(iglob6) = .true.
     endif
-    if(.not. mask_ibool(iglob7)) then
+    if (.not. mask_ibool(iglob7)) then
       numpoin = numpoin + 1
       x = xstore(iglob7)
       y = ystore(iglob7)
       z = zstore(iglob7)
-      if( USE_VTK_OUTPUT ) then
+      if (USE_VTK_OUTPUT) then
         write(IOVTK,'(3e18.6)') x,y,z
         total_dat(np+numpoin) = dat(NGLLX,NGLLY,NGLLZ,ispec)
       else
@@ -710,12 +710,12 @@
       endif
       mask_ibool(iglob7) = .true.
     endif
-    if(.not. mask_ibool(iglob8)) then
+    if (.not. mask_ibool(iglob8)) then
       numpoin = numpoin + 1
       x = xstore(iglob8)
       y = ystore(iglob8)
       z = zstore(iglob8)
-      if( USE_VTK_OUTPUT ) then
+      if (USE_VTK_OUTPUT) then
         write(IOVTK,'(3e18.6)') x,y,z
         total_dat(np+numpoin) = dat(1,NGLLY,NGLLZ,ispec)
       else
@@ -755,11 +755,11 @@
 
   ! writes out total number of points
   if (it == 1) then
-    if( USE_VTK_OUTPUT ) then
+    if (USE_VTK_OUTPUT) then
       write(IOVTK, '(a,i12,a)') 'POINTS ', npp, ' float'
       ! creates array to hold point data
       allocate(total_dat(npp),stat=ier)
-      if( ier /= 0 ) stop 'error allocating total dat array'
+      if (ier /= 0) stop 'error allocating total dat array'
       total_dat(:) = 0.0
     else
       call write_integer(npp)
@@ -768,7 +768,7 @@
 
   ! writes out point locations and values
   allocate(mask_ibool(NGLOB_AB),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array mask_ibool'
+  if (ier /= 0) stop 'error allocating array mask_ibool'
 
   mask_ibool(:) = .false.
   numpoin = 0
@@ -777,12 +777,12 @@
       do j = 1, NGLLY
         do i = 1, NGLLX
           iglob = ibool(i,j,k,ispec)
-          if(.not. mask_ibool(iglob)) then
+          if (.not. mask_ibool(iglob)) then
             numpoin = numpoin + 1
             x = xstore(iglob)
             y = ystore(iglob)
             z = zstore(iglob)
-            if( USE_VTK_OUTPUT ) then
+            if (USE_VTK_OUTPUT) then
               write(IOVTK,'(3e18.6)') x,y,z
               total_dat(np+numpoin) = dat(i,j,k,ispec)
             else
@@ -824,7 +824,7 @@
 
   ! outputs total number of elements for all slices
   if (it == 1) then
-    if( USE_VTK_OUTPUT ) then
+    if (USE_VTK_OUTPUT) then
       ! note: indices for vtk start at 0
       write(IOVTK,'(a,i12,i12)') "CELLS ",nee,nee*9
     else
@@ -835,7 +835,7 @@
   ! writes out element indices
   allocate(mask_ibool(NGLOB_AB), &
           num_ibool(NGLOB_AB),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array mask_ibool'
+  if (ier /= 0) stop 'error allocating array mask_ibool'
 
   mask_ibool(:) = .false.
   num_ibool(:) = 0
@@ -852,48 +852,48 @@
     iglob8=ibool(1,NGLLY,NGLLZ,ispec)
 
     ! sets increasing numbering
-    if(.not. mask_ibool(iglob1)) then
+    if (.not. mask_ibool(iglob1)) then
       numpoin = numpoin + 1
       num_ibool(iglob1) = numpoin
       mask_ibool(iglob1) = .true.
     endif
-    if(.not. mask_ibool(iglob2)) then
+    if (.not. mask_ibool(iglob2)) then
       numpoin = numpoin + 1
       num_ibool(iglob2) = numpoin
       mask_ibool(iglob2) = .true.
     endif
-    if(.not. mask_ibool(iglob3)) then
+    if (.not. mask_ibool(iglob3)) then
       numpoin = numpoin + 1
       num_ibool(iglob3) = numpoin
       mask_ibool(iglob3) = .true.
     endif
-    if(.not. mask_ibool(iglob4)) then
+    if (.not. mask_ibool(iglob4)) then
       numpoin = numpoin + 1
       num_ibool(iglob4) = numpoin
       mask_ibool(iglob4) = .true.
     endif
-    if(.not. mask_ibool(iglob5)) then
+    if (.not. mask_ibool(iglob5)) then
       numpoin = numpoin + 1
       num_ibool(iglob5) = numpoin
       mask_ibool(iglob5) = .true.
     endif
-    if(.not. mask_ibool(iglob6)) then
+    if (.not. mask_ibool(iglob6)) then
       numpoin = numpoin + 1
       num_ibool(iglob6) = numpoin
       mask_ibool(iglob6) = .true.
     endif
-    if(.not. mask_ibool(iglob7)) then
+    if (.not. mask_ibool(iglob7)) then
       numpoin = numpoin + 1
       num_ibool(iglob7) = numpoin
       mask_ibool(iglob7) = .true.
     endif
-    if(.not. mask_ibool(iglob8)) then
+    if (.not. mask_ibool(iglob8)) then
       numpoin = numpoin + 1
       num_ibool(iglob8) = numpoin
       mask_ibool(iglob8) = .true.
     endif
 
-    ! outputs corner indices (starting with 0 )
+    ! outputs corner indices (starting with 0)
     n1 = num_ibool(iglob1) -1 + np
     n2 = num_ibool(iglob2) -1 + np
     n3 = num_ibool(iglob3) -1 + np
@@ -903,7 +903,7 @@
     n7 = num_ibool(iglob7) -1 + np
     n8 = num_ibool(iglob8) -1 + np
 
-    if( USE_VTK_OUTPUT ) then
+    if (USE_VTK_OUTPUT) then
       write(IOVTK,'(9i12)') 8,n1,n2,n3,n4,n5,n6,n7,n8
     else
       call write_integer(n1)
@@ -951,7 +951,7 @@
 
   ! outputs total number of elements for all slices
   if (it == 1) then
-    if( USE_VTK_OUTPUT ) then
+    if (USE_VTK_OUTPUT) then
       ! note: indices for vtk start at 0
       write(IOVTK,'(a,i12,i12)') "CELLS ",nee,nee*9
     else
@@ -963,7 +963,7 @@
   ! sets numbering num_ibool respecting mask
   allocate(mask_ibool(NGLOB_AB), &
           num_ibool(NGLOB_AB),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array mask_ibool'
+  if (ier /= 0) stop 'error allocating array mask_ibool'
 
   mask_ibool(:) = .false.
   num_ibool(:) = 0
@@ -973,7 +973,7 @@
       do j = 1, NGLLY
         do i = 1, NGLLX
           iglob = ibool(i,j,k,ispec)
-          if(.not. mask_ibool(iglob)) then
+          if (.not. mask_ibool(iglob)) then
             numpoin = numpoin + 1
             num_ibool(iglob) = numpoin
             mask_ibool(iglob) = .true.
@@ -1005,7 +1005,7 @@
           n7 = num_ibool(iglob7)+np-1
           n8 = num_ibool(iglob8)+np-1
 
-          if( USE_VTK_OUTPUT ) then
+          if (USE_VTK_OUTPUT) then
             write(IOVTK,'(9i12)') 8,n1,n2,n3,n4,n5,n6,n7,n8
           else
             call write_integer(n1)

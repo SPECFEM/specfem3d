@@ -113,7 +113,7 @@ __global__ void transfer_surface_to_host_kernel(int* free_surface_ispec,
 
   // int id = tx + blockIdx.x*blockDim.x + blockIdx.y*blockDim.x*gridDim.x;
 
-  if(iface < num_free_surface_faces) {
+  if (iface < num_free_surface_faces) {
     int ispec = free_surface_ispec[iface]-1; //-1 for C-based indexing
 
     int i = free_surface_ijk[INDEX3(NDIM,NGLL2,0,igll,iface)]-1;
@@ -175,7 +175,7 @@ __global__ void noise_read_add_surface_movie_cuda_kernel(realw* accel, int* d_ib
   int iface = blockIdx.x + gridDim.x*blockIdx.y; // surface element id
 
   // when nspec_top > 65535, but mod(nspec_top,2) > 0, we end up with an extra block.
-  if(iface < num_free_surface_faces) {
+  if (iface < num_free_surface_faces) {
     int ispec = free_surface_ispec[iface]-1;
 
     int igll = threadIdx.x;
@@ -253,7 +253,7 @@ void FC_FUNC_(noise_read_add_surface_movie_cu,
   dim3 grid(num_blocks_x,num_blocks_y,1);
   dim3 threads(NGLL2,1,1);
 
-  if(NOISE_TOMOGRAPHY == 2) { // add surface source to forward field
+  if (NOISE_TOMOGRAPHY == 2) { // add surface source to forward field
     noise_read_add_surface_movie_cuda_kernel<<<grid,threads>>>(mp->d_accel,
                                                                mp->d_ibool,
                                                                mp->d_free_surface_ispec,
@@ -266,7 +266,7 @@ void FC_FUNC_(noise_read_add_surface_movie_cu,
                                                                mp->d_mask_noise,
                                                                mp->d_free_surface_jacobian2Dw);
   }
-  else if(NOISE_TOMOGRAPHY == 3) { // add surface source to adjoint (backward) field
+  else if (NOISE_TOMOGRAPHY == 3) { // add surface source to adjoint (backward) field
     noise_read_add_surface_movie_cuda_kernel<<<grid,threads>>>(mp->d_b_accel,
                                                                mp->d_ibool,
                                                                mp->d_free_surface_ispec,

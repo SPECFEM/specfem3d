@@ -71,22 +71,22 @@ subroutine read_args_adios(arg, MAX_NUM_NODES, node_list, num_node,   &
                                    outdir
   ! Variables
   character(len=MAX_STRING_LEN) :: sline
-  integer :: it, iproc, proc1, proc2, ios, njunk
+  integer :: it, iproc, proc1, proc2, ier, njunk
 
   if (command_argument_count() == 6) then
     num_node = 0
-    open(unit = 20, file = trim(arg(1)), status = 'unknown',iostat = ios)
-    if (ios /= 0) then
+    open(unit = 20, file = trim(arg(1)), status = 'unknown',iostat = ier)
+    if (ier /= 0) then
       print *,'Error opening ',trim(arg(1))
       stop
     endif
-    do while ( 1 == 1)
-      read(20,'(a)',iostat=ios) sline
-      if (ios /= 0) exit
-      read(sline,*,iostat=ios) njunk
-      if (ios /= 0) exit
+    do while (1 == 1)
+      read(20,'(a)',iostat=ier) sline
+      if (ier /= 0) exit
+      read(sline,*,iostat=ier) njunk
+      if (ier /= 0) exit
       num_node = num_node + 1
-      if( num_node > MAX_NUM_NODES ) &
+      if (num_node > MAX_NUM_NODES) &
           stop 'error number of slices exceeds MAX_NUM_NODES...'
       node_list(num_node) = njunk
     enddo
@@ -101,7 +101,7 @@ subroutine read_args_adios(arg, MAX_NUM_NODES, node_list, num_node,   &
     read(arg(2),*) proc2
     do iproc = proc1, proc2
       it = iproc - proc1 + 1
-      if( it > MAX_NUM_NODES ) &
+      if (it > MAX_NUM_NODES) &
           stop 'error number of slices exceeds MAX_NUM_NODES...'
       node_list(it) = iproc
     enddo

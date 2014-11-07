@@ -64,13 +64,13 @@ subroutine model_gll_adios(myrank,nspec,LOCAL_PATH)
 
   ! density
   allocate( rho_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array rho_read'
+  if (ier /= 0) stop 'error allocating array rho_read'
   ! vp
   allocate( vp_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array vp_read'
+  if (ier /= 0) stop 'error allocating array vp_read'
   ! vs
   allocate( vs_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array vs_read'
+  if (ier /= 0) stop 'error allocating array vs_read'
 
   !-------------------------------------.
   ! Open ADIOS Database file, read mode |
@@ -119,7 +119,7 @@ subroutine model_gll_adios(myrank,nspec,LOCAL_PATH)
   !                      -0.4720 * (vp_read / 1000.0)**2  &
   !                      +0.0671 * (vp_read / 1000.0)**3  &
   !                      -0.0043 * (vp_read / 1000.0)**4  &
-  !                      +0.000106*(vp_read / 1000.0)**5 )*1000.0
+  !                      +0.000106*(vp_read / 1000.0)**5)*1000.0
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!! in cases where shear wavespeed structure is not given

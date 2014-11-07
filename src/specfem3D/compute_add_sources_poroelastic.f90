@@ -37,7 +37,7 @@
                         ispec_is_poroelastic,SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                         nrec,islice_selected_rec,ispec_selected_rec, &
                         nadj_rec_local,adj_sourcearrays,b_accels,b_accelw, &
-                        NTSTEP_BETWEEN_READ_ADJSRC )
+                        NTSTEP_BETWEEN_READ_ADJSRC)
 
   use constants
   use specfem_par,only: PRINT_SOURCE_TIME_FUNCTION,stf_used_total, &
@@ -95,7 +95,7 @@
   integer :: ier
 
 ! plotting source time function
-  if(PRINT_SOURCE_TIME_FUNCTION .and. .not. phase_is_inner ) then
+  if (PRINT_SOURCE_TIME_FUNCTION .and. .not. phase_is_inner) then
     ! initializes total
     stf_used_total = 0.0_CUSTOM_REAL
   endif
@@ -106,17 +106,17 @@
     do isource = 1,NSOURCES
 
       !   add the source (only if this proc carries the source)
-      if(myrank == islice_selected_source(isource)) then
+      if (myrank == islice_selected_source(isource)) then
 
         ispec = ispec_selected_source(isource)
 
         if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
 
-          if( ispec_is_poroelastic(ispec) ) then
+          if (ispec_is_poroelastic(ispec)) then
 
-            if(USE_FORCE_POINT_SOURCE) then
+            if (USE_FORCE_POINT_SOURCE) then
 
-              if( USE_RICKER_TIME_FUNCTION ) then
+              if (USE_RICKER_TIME_FUNCTION) then
                 stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
               else
                 stf = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_tiny(isource))
@@ -126,7 +126,7 @@
               ! the source is applied to both solid and fluid phase: bulk source.
 
               ! distinguish between single and double precision for reals
-              if(CUSTOM_REAL == SIZE_REAL) then
+              if (CUSTOM_REAL == SIZE_REAL) then
                 stf_used = sngl(stf)
               else
                 stf_used = stf
@@ -160,7 +160,7 @@
               stf = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
 
               !     distinguish between single and double precision for reals
-              if(CUSTOM_REAL == SIZE_REAL) then
+              if (CUSTOM_REAL == SIZE_REAL) then
                 stf_used = sngl(stf)
               else
                 stf_used = stf
@@ -206,8 +206,8 @@
 !             and convolve with the adjoint field at time (T-t)
 !
 ! backward/reconstructed wavefields:
-!       time for b_displ( it ) corresponds to (NSTEP - it - 1 )*DT - t0  ...
-!       since we start with saved wavefields b_displ( 0 ) = displ( NSTEP ) which correspond
+!       time for b_displ( it ) corresponds to (NSTEP - it - 1)*DT - t0  ...
+!       since we start with saved wavefields b_displ( 0) = displ( NSTEP ) which correspond
 !       to a time (NSTEP - 1)*DT - t0
 !       (see sources for simulation_type 1 and seismograms)
 !       now, at the beginning of the time loop, the numerical Newmark time scheme updates
@@ -228,7 +228,7 @@
   if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
 
     ! adds adjoint source in this partitions
-    if( nadj_rec_local > 0 ) then
+    if (nadj_rec_local > 0) then
 
       ! add adjoint source following elastic block by block consideration
       ! read in adjoint sources block by block (for memory consideration)
@@ -277,7 +277,7 @@
 
         deallocate(adj_sourcearray)
 
-      endif ! if(ibool_read_adj_arrays)
+      endif ! if (ibool_read_adj_arrays)
 
       if (it < NSTEP) then
 
@@ -343,17 +343,17 @@
     do isource = 1,NSOURCES
 
       ! add the source (only if this proc carries the source)
-      if(myrank == islice_selected_source(isource)) then
+      if (myrank == islice_selected_source(isource)) then
 
         ispec = ispec_selected_source(isource)
 
         if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
 
-          if( ispec_is_poroelastic(ispec) ) then
+          if (ispec_is_poroelastic(ispec)) then
 
-            if(USE_FORCE_POINT_SOURCE) then
+            if (USE_FORCE_POINT_SOURCE) then
 
-               if( USE_RICKER_TIME_FUNCTION ) then
+               if (USE_RICKER_TIME_FUNCTION) then
                  stf = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
                else
                  stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_tiny(isource))
@@ -364,7 +364,7 @@
                ! note: time step is now at NSTEP-it
 
                ! distinguish between single and double precision for reals
-               if(CUSTOM_REAL == SIZE_REAL) then
+               if (CUSTOM_REAL == SIZE_REAL) then
                  stf_used = sngl(stf)
                else
                  stf_used = stf
@@ -400,7 +400,7 @@
               stf = comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
 
               ! distinguish between single and double precision for reals
-              if(CUSTOM_REAL == SIZE_REAL) then
+              if (CUSTOM_REAL == SIZE_REAL) then
                 stf_used = sngl(stf)
               else
                 stf_used = stf
@@ -441,10 +441,10 @@
   endif ! adjoint
 
   ! master prints out source time function to file
-  if(PRINT_SOURCE_TIME_FUNCTION .and. phase_is_inner) then
+  if (PRINT_SOURCE_TIME_FUNCTION .and. phase_is_inner) then
     time_source = (it-1)*DT - t0
     call sum_all_cr(stf_used_total,stf_used_total_all)
-    if( myrank == 0 ) write(IOSTF,*) time_source,stf_used_total_all
+    if (myrank == 0) write(IOSTF,*) time_source,stf_used_total_all
   endif
 
   end subroutine compute_add_sources_poroelastic

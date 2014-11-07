@@ -125,7 +125,7 @@ program add_model
   allocate(model_vp_new(NGLLX,NGLLY,NGLLZ,NSPEC), &
            model_vs_new(NGLLX,NGLLY,NGLLZ,NSPEC), &
            model_rho_new(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
-  if( ier /= 0 ) stop 'Error allocating model arrays'
+  if (ier /= 0) stop 'Error allocating model arrays'
 
   ! initializes arrays
   model_vp_new = 0.0_CUSTOM_REAL
@@ -164,7 +164,7 @@ program add_model
             alpha1 = alpha0 * exp( dbulk )
           else
             ! new vp values use bulk model update:
-            ! this is based on vp_new = sqrt( bulk_new**2 + 4/3 vs_new**2 )
+            ! this is based on vp_new = sqrt( bulk_new**2 + 4/3 vs_new**2)
             alpha1 = sqrt( alpha0**2 * exp(2.0*dbulk) + FOUR_THIRDS * beta0**2 * ( &
                               exp(2.0*dbetaiso) - exp(2.0*dbulk) ) )
           endif
@@ -256,8 +256,8 @@ subroutine initialize()
   if (ADIOS_ENABLED) stop 'Flag ADIOS_ENABLED not supported yet for xadd_model, please rerun program...'
 
   ! check that the code is running with the requested nb of processes
-  if(sizeprocs /= NPROC) then
-    if( myrank == 0 ) then
+  if (sizeprocs /= NPROC) then
+    if (myrank == 0) then
       print*, 'Error number of processors supposed to run on: ',NPROC
       print*, 'Error number of MPI processors actually run on: ',sizeprocs
       print*

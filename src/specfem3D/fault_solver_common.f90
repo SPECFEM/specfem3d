@@ -405,7 +405,7 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
     do iglob=1,nglob
       dist = sqrt( (coord(1,iglob)-xtarget)**2 &
                  + (coord(2,iglob)-ytarget)**2 &
-                 + (coord(3,iglob)-ztarget)**2 )
+                 + (coord(3,iglob)-ztarget)**2)
       if (dist < distkeep) then
         distkeep = dist
         dataT%iglob(k) = iglob

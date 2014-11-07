@@ -211,7 +211,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
   imodulo_N_SLS = mod(N_SLS,3)
 
   ! choses inner/outer elements
-  if( iphase == 1 ) then
+  if (iphase == 1) then
     num_elements = nspec_outer_elastic
   else
     num_elements = nspec_inner_elastic
@@ -650,7 +650,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
             lambdal = lambdalplus2mul - 2._CUSTOM_REAL*mul
 
             ! compute stress sigma
-            if(.not. MAKE_HOOKE_LAW_WEAKLY_NONLINEAR) then
+            if (.not. MAKE_HOOKE_LAW_WEAKLY_NONLINEAR) then
 
               sigma_xx = lambdalplus2mul*duxdxl + lambdal*duydyl_plus_duzdzl
               sigma_yy = lambdalplus2mul*duydyl + lambdal*duxdxl_plus_duzdzl
@@ -842,7 +842,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
             if (.not. is_CPML(ispec)) then
 
               ! define symmetric components of sigma
-              if(.not. MAKE_HOOKE_LAW_WEAKLY_NONLINEAR) then
+              if (.not. MAKE_HOOKE_LAW_WEAKLY_NONLINEAR) then
                 sigma_yx = sigma_xy
                 sigma_zx = sigma_xz
                 sigma_zy = sigma_yz
@@ -865,7 +865,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
           else
 
             ! define symmetric components of sigma
-            if(.not. MAKE_HOOKE_LAW_WEAKLY_NONLINEAR) then
+            if (.not. MAKE_HOOKE_LAW_WEAKLY_NONLINEAR) then
               sigma_yx = sigma_xy
               sigma_zx = sigma_xz
               sigma_zy = sigma_yz
@@ -959,7 +959,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                                 fac2*newtempz2(i,j,k) - fac3*newtempz3(i,j,k)
 
           !  update memory variables based upon the Runge-Kutta scheme
-          if(ATTENUATION) then
+          if (ATTENUATION) then
 
             ! use Runge-Kutta scheme to march in time
             do i_sls = 1,N_SLS

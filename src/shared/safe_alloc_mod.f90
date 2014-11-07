@@ -141,7 +141,7 @@ subroutine check_alloc_err(ier, usr_msg)
 
   integer :: myrank
 
-  if(ier /= 0) then
+  if (ier /= 0) then
     call world_rank(myrank)
     if (present(usr_msg)) then
       write(error_unit, "('Process ', i6.6, " // &
@@ -164,7 +164,7 @@ subroutine check_dealloc_err(ier, usr_msg)
 
   integer :: myrank
 
-  if(ier /= 0) then
+  if (ier /= 0) then
     call world_rank(myrank)
     if (present(usr_msg)) then
       write(error_unit, "('Process ', i6.6, " // &

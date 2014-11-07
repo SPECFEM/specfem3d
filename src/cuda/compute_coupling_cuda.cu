@@ -54,16 +54,16 @@ __global__ void compute_coupling_acoustic_el_kernel(realw* displ,
   realw nx,ny,nz;
   realw jacobianw;
 
-  if( iface < num_coupling_ac_el_faces){
+  if (iface < num_coupling_ac_el_faces){
 
     // don't compute points outside NGLLSQUARE==NGLL2==25
     // way 2: no further check needed since blocksize = 25
-    //  if(igll<NGLL2) {
+    //  if (igll<NGLL2) {
 
     // "-1" from index values to convert from Fortran-> C indexing
     ispec = coupling_ac_el_ispec[iface] - 1;
 
-    if(ispec_is_inner[ispec] == phase_is_inner ) {
+    if (ispec_is_inner[ispec] == phase_is_inner ) {
 
       i = coupling_ac_el_ijk[INDEX3(NDIM,NGLL2,0,igll,iface)] - 1;
       j = coupling_ac_el_ijk[INDEX3(NDIM,NGLL2,1,igll,iface)] - 1;
@@ -140,7 +140,7 @@ void FC_FUNC_(compute_coupling_ac_el_cuda,
                                                        phase_is_inner);
 
   //  adjoint simulations
-  if (mp->simulation_type == 3 ){
+  if (mp->simulation_type == 3){
     compute_coupling_acoustic_el_kernel<<<grid,threads>>>(mp->d_b_displ,
                                                           mp->d_b_potential_dot_dot_acoustic,
                                                           num_coupling_ac_el_faces,
@@ -192,16 +192,16 @@ __global__ void compute_coupling_elastic_ac_kernel(realw* potential_dot_dot_acou
   realw jacobianw;
   realw rhol;
 
-  if( iface < num_coupling_ac_el_faces){
+  if (iface < num_coupling_ac_el_faces){
 
     // don't compute points outside NGLLSQUARE==NGLL2==25
     // way 2: no further check needed since blocksize = 25
-    //  if(igll<NGLL2) {
+    //  if (igll<NGLL2) {
 
     // "-1" from index values to convert from Fortran-> C indexing
     ispec = coupling_ac_el_ispec[iface] - 1;
 
-    if(ispec_is_inner[ispec] == phase_is_inner ) {
+    if (ispec_is_inner[ispec] == phase_is_inner ) {
 
       i = coupling_ac_el_ijk[INDEX3(NDIM,NGLL2,0,igll,iface)] - 1;
       j = coupling_ac_el_ijk[INDEX3(NDIM,NGLL2,1,igll,iface)] - 1;
@@ -219,7 +219,7 @@ __global__ void compute_coupling_elastic_ac_kernel(realw* potential_dot_dot_acou
       jacobianw = coupling_ac_el_jacobian2Dw[INDEX2(NGLL2,igll,iface)];
 
       // acoustic pressure on global point
-      if( gravity ){
+      if (gravity ){
         // takes density (from acoustic? element)
         rhol = rhostore[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)];
 
@@ -233,14 +233,14 @@ __global__ void compute_coupling_elastic_ac_kernel(realw* potential_dot_dot_acou
 
         //daniel: TODO - check gravity and coupling
         //pressure = - potential_dot_dot_acoustic[iglob] ;
-        //if( iface == 128 && igll == 5 ){
+        //if (iface == 128 && igll == 5){
         //  printf("coupling acoustic: %f %f \n",potential_dot_dot_acoustic[iglob],
         //             minus_g[iglob] * displ[iglob*3+2]);
         //}
 
       }else{
         // no gravity: uses potential chi such that displacement s = 1/rho grad(chi)
-        //                  pressure p = - kappa ( div( s ) ) then becomes: p = - dot_dot_chi
+        //                  pressure p = - kappa ( div( s )) then becomes: p = - dot_dot_chi
         //                  ( multiplied with factor 1/kappa due to setup of equation of motion )
         pressure = - potential_dot_dot_acoustic[iglob];
       }
@@ -302,7 +302,7 @@ void FC_FUNC_(compute_coupling_el_ac_cuda,
                                                        mp->d_displ);
 
   //  adjoint simulations
-  if (mp->simulation_type == 3 ){
+  if (mp->simulation_type == 3){
     compute_coupling_elastic_ac_kernel<<<grid,threads>>>(mp->d_b_potential_dot_dot_acoustic,
                                                          mp->d_b_accel,
                                                          num_coupling_ac_el_faces,
@@ -351,7 +351,7 @@ __global__ void compute_coupling_ocean_cuda_kernel(realw* accel,
   realw force_normal_comp;
 
   // for all faces on free surface
-  if( iface < num_free_surface_faces ){
+  if (iface < num_free_surface_faces ){
 
     int ispec = free_surface_ispec[iface]-1;
 
@@ -362,7 +362,7 @@ __global__ void compute_coupling_ocean_cuda_kernel(realw* accel,
 
     int iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)] - 1;
 
-    //if(igll == 0 ) printf("igll %d %d %d %d\n",igll,i,j,k,iglob);
+    //if (igll == 0) printf("igll %d %d %d %d\n",igll,i,j,k,iglob);
 
     // only update this global point once
 
@@ -370,7 +370,7 @@ __global__ void compute_coupling_ocean_cuda_kernel(realw* accel,
     //            and find a workaround to not use the temporary update array.
     //            atomicExch: returns the old value, i.e. 0 indicates that we still have to do this point
 
-    if( atomicExch(&updated_dof_ocean_load[iglob],1) == 0){
+    if (atomicExch(&updated_dof_ocean_load[iglob],1) == 0){
 
       // get normal
       nx = free_surface_normal[INDEX3(NDIM,NGLL2,0,igll,iface)]; //(1,igll,iface)
@@ -403,7 +403,7 @@ void FC_FUNC_(compute_coupling_ocean_cuda,
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
 
   // checks if anything to do
-  if( mp->num_free_surface_faces == 0 ) return;
+  if (mp->num_free_surface_faces == 0) return;
 
   // block sizes: exact blocksize to match NGLLSQUARE
   int blocksize = NGLL2;
@@ -433,7 +433,7 @@ void FC_FUNC_(compute_coupling_ocean_cuda,
                                                                            mp->d_ibool,
                                                                            mp->d_updated_dof_ocean_load);
   // for backward/reconstructed potentials
-  if(mp->simulation_type == 3) {
+  if (mp->simulation_type == 3) {
     // re-initializes array
     print_CUDA_error_if_any(cudaMemset(mp->d_updated_dof_ocean_load,0,
                                        sizeof(int)*mp->NGLOB_AB),88502);

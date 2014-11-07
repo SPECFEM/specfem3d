@@ -122,7 +122,7 @@ subroutine fault_read_input(prname,myrank)
  ! read fault database file
   open(unit=IIN_PAR,file=prname(1:len_trim(prname))//'Database_fault', &
        status='old',action='read',form='unformatted',iostat=ier)
-  if( ier /= 0 ) then
+  if (ier /= 0) then
     write(IMAIN,*) 'error opening file: ',prname(1:len_trim(prname))//'Database_fault'
     write(IMAIN,*) 'make sure file exists'
     stop
@@ -184,7 +184,7 @@ subroutine fault_setup(ibool,nnodes_ext_mesh,nodes_coords_ext_mesh, &
 
   integer :: iflt
 
-  if (.not. ANY_FAULT_IN_THIS_PROC ) return
+  if (.not. ANY_FAULT_IN_THIS_PROC) return
 
   do iflt=1,size(fault_db)
 
@@ -553,7 +553,7 @@ subroutine fault_save_arrays_test(prname)
 ! saves mesh file proc***_fault_db.txt
   filename = prname(1:len_trim(prname))//'fault_db.txt'
   open(unit=IOUT,file=trim(filename),status='unknown',action='write',iostat=ier)
-  if( ier /= 0 ) stop 'error opening database proc######_external_mesh.bin'
+  if (ier /= 0) stop 'error opening database proc######_external_mesh.bin'
 
   nbfaults = size(fault_db)
   write(IOUT,*) 'NBFAULTS = ',nbfaults
@@ -632,7 +632,7 @@ subroutine fault_save_arrays(prname)
 ! if number of fault elements = 0 then the file is empty
   filename = prname(1:len_trim(prname))//'Kelvin_voigt_eta.bin'
   open(unit=IOUT,file=trim(filename),status='unknown',action='write',form='unformatted',iostat=ier)
-  if( ier /= 0 ) then
+  if (ier /= 0) then
     write(IMAIN,*) 'error opening file ',trim(filename)
     stop
   endif
@@ -650,7 +650,7 @@ subroutine fault_save_arrays(prname)
 ! saves mesh file proc***_fault_db.bin
   filename = prname(1:len_trim(prname))//'fault_db.bin'
   open(unit=IOUT,file=trim(filename),status='unknown',action='write',form='unformatted',iostat=ier)
-  if( ier /= 0 ) then
+  if (ier /= 0) then
     write(IMAIN,*) 'error opening file ',trim(filename)
     stop
   endif

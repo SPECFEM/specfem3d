@@ -65,7 +65,7 @@ subroutine get_gradient_cg_tiso()
            model_dbetav(NGLLX,NGLLY,NGLLZ,NSPEC), &
            model_dbetah(NGLLX,NGLLY,NGLLZ,NSPEC), &
            model_deta(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
-  if( ier /= 0 ) stop 'error allocating gradient arrays'
+  if (ier /= 0) stop 'error allocating gradient arrays'
 
   ! initializes arrays
   model_dbulk = 0.0_CUSTOM_REAL
@@ -100,10 +100,10 @@ subroutine get_gradient_cg_tiso()
     print*
 
     ! checks lengths
-    if (norm_bulk_old < 1.e-22 ) call exit_mpi(myrank,'norm old gradient bulk is zero')
-    if (norm_betav_old < 1.e-22 ) call exit_mpi(myrank,'norm old gradient betav is zero')
-    if (norm_betah_old < 1.e-22 ) call exit_mpi(myrank,'norm old gradient betah is zero')
-    if (norm_eta_old < 1.e-22 ) call exit_mpi(myrank,'norm old gradient eta is zero')
+    if (norm_bulk_old < 1.e-22) call exit_mpi(myrank,'norm old gradient bulk is zero')
+    if (norm_betav_old < 1.e-22) call exit_mpi(myrank,'norm old gradient betav is zero')
+    if (norm_betah_old < 1.e-22) call exit_mpi(myrank,'norm old gradient betah is zero')
+    if (norm_eta_old < 1.e-22) call exit_mpi(myrank,'norm old gradient eta is zero')
   endif
 
   ! Powell, 1977: checks orthogonality between old and new gradients
@@ -119,7 +119,7 @@ subroutine get_gradient_cg_tiso()
   call sum_all_cr(norm_eta,norm_eta_sum)
 
   if (myrank == 0) then
-    ! ratio:  ( g_n * g_n-1 ) / ( g_n-1 * g_n-1)
+    ! ratio:  ( g_n * g_n-1) / ( g_n-1 * g_n-1)
     ratio_bulk = norm_bulk_sum / norm_bulk_old
     ratio_betav = norm_betav_sum / norm_betav_old
     ratio_betah = norm_betah_sum / norm_betah_old
@@ -133,7 +133,7 @@ subroutine get_gradient_cg_tiso()
     print*,'  eta  : ',ratio_eta
     print*
     if (ratio_bulk > 0.2 .and. ratio_betav > 0.2 .and. ratio_betah > 0.2 &
-      .and. ratio_eta > 0.2 ) then
+      .and. ratio_eta > 0.2) then
       print*,'  critical ratio found!'
       print*
       print*,'****************'
@@ -233,7 +233,7 @@ subroutine get_gradient_cg_tiso()
 
   ! gradient in negative direction
   if (USE_OLD_GRADIENT) then
-    ! uses old kernel/gradient updates ( phi_n-1 )
+    ! uses old kernel/gradient updates ( phi_n-1)
     do ispec = 1, NSPEC
       do k = 1, NGLLZ
         do j = 1, NGLLY

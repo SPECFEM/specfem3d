@@ -121,7 +121,7 @@
   close(10)
 
 ! compare number of surface elements detected to analytical value
-  if(ispecc1 /= nspec2Dtheor1 .and. ispecc1 /= nspec2Dtheor2) &
+  if (ispecc1 /= nspec2Dtheor1 .and. ispecc1 /= nspec2Dtheor2) &
     call exit_MPI(myrank,'error MPI cut-planes detection in xi=left')
 
 !
@@ -172,7 +172,7 @@
   close(10)
 
 ! compare number of surface elements detected to analytical value
-  if(ispecc2 /= nspec2Dtheor1 .and. ispecc2 /= nspec2Dtheor2) &
+  if (ispecc2 /= nspec2Dtheor1 .and. ispecc2 /= nspec2Dtheor2) &
     call exit_MPI(myrank,'error MPI cut-planes detection in xi=right')
 
   end subroutine get_MPI_cutplanes_xi

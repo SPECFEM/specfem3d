@@ -56,7 +56,7 @@ void FC_FUNC_(pause_for_debug,PAUSE_FOR_DEBUG)() {
 /* ----------------------------------------------------------------------------------------------- */
 
 void pause_for_debugger(int pause) {
-  if(pause) {
+  if (pause) {
     int myrank;
 #ifdef WITH_MPI
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
@@ -212,7 +212,7 @@ void start_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop){
   // creates & starts event
   cudaEventCreate(start);
   cudaEventCreate(stop);
-  cudaEventRecord( *start, 0 );
+  cudaEventRecord( *start, 0);
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -220,7 +220,7 @@ void start_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop){
 void stop_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop, char* info_str){
   realw time;
   // stops events
-  cudaEventRecord( *stop, 0 );
+  cudaEventRecord( *stop, 0);
   cudaEventSynchronize( *stop );
   cudaEventElapsedTime( &time, *start, *stop );
   cudaEventDestroy( *start );
@@ -234,7 +234,7 @@ void stop_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop, char* info_str){
 void stop_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop, char* info_str,realw* t){
   realw time;
   // stops events
-  cudaEventRecord( *stop, 0 );
+  cudaEventRecord( *stop, 0);
   cudaEventSynchronize( *stop );
   cudaEventElapsedTime( &time, *start, *stop );
   cudaEventDestroy( *start );
@@ -263,7 +263,7 @@ void get_blocks_xy(int num_blocks,int* num_blocks_x,int* num_blocks_y) {
   *num_blocks_x = num_blocks;
   *num_blocks_y = 1;
 
-  while(*num_blocks_x > MAXIMUM_GRID_DIM) {
+  while (*num_blocks_x > MAXIMUM_GRID_DIM) {
     *num_blocks_x = (int) ceil(*num_blocks_x * 0.5f);
     *num_blocks_y = *num_blocks_y * 2;
   }
@@ -285,7 +285,7 @@ void get_free_memory(double* free_db, double* used_db, double* total_db) {
   size_t free_byte ;
   size_t total_byte ;
   cudaError_t cuda_status = cudaMemGetInfo( &free_byte, &total_byte ) ;
-  if ( cudaSuccess != cuda_status ){
+  if (cudaSuccess != cuda_status){
     printf("Error: cudaMemGetInfo fails, %s \n", cudaGetErrorString(cuda_status) );
     exit(EXIT_FAILURE);
   }
@@ -310,25 +310,25 @@ void output_free_memory(int myrank,char* info_str) {
 
   // by default, only master process outputs device infos to avoid file cluttering
   do_output_info = 0;
-  if( myrank == 0 ){
+  if (myrank == 0){
     do_output_info = 1;
     sprintf(filename,OUTPUT_FILES_PATH"/gpu_device_mem_usage.txt");
   }
   // debugging
-  if( DEBUG ){
+  if (DEBUG){
     do_output_info = 1;
     sprintf(filename,OUTPUT_FILES_PATH"/gpu_device_mem_usage_proc_%06d.txt",myrank);
   }
 
   // outputs to file
-  if( do_output_info ){
+  if (do_output_info){
 
     // gets memory usage
     get_free_memory(&free_db,&used_db,&total_db);
 
     // file output
     fp = fopen(filename,"a+");
-    if( fp != NULL ){
+    if (fp != NULL){
       fprintf(fp,"%d: @%s GPU memory usage: used = %f MB, free = %f MB, total = %f MB\n", myrank, info_str,
               used_db/1024.0/1024.0, free_db/1024.0/1024.0, total_db/1024.0/1024.0);
       fclose(fp);
@@ -357,7 +357,7 @@ void FC_FUNC_(output_free_device_memory,
 
 extern "C"
 void FC_FUNC_(get_free_device_memory,
-              get_FREE_DEVICE_MEMORY)(realw* free, realw* used, realw* total ) {
+              get_FREE_DEVICE_MEMORY)(realw* free, realw* used, realw* total) {
   TRACE("get_free_device_memory");
 
   double free_db,used_db,total_db;
@@ -386,7 +386,7 @@ __global__ void memset_to_realw_kernel(realw* array, int size, realw value){
   unsigned int bx = blockIdx.y*gridDim.x+blockIdx.x;
   unsigned int i = tid + bx*blockDim.x;
 
-  if( i < size ){
+  if (i < size){
     array[i] = *value;
   }
 }
@@ -401,7 +401,7 @@ realw get_device_array_maximum_value(realw* array, int size){
   realw max = 0.0f;
 
   // checks if anything to do
-  if( size > 0 ){
+  if (size > 0){
     realw* h_array;
 
     // explicitly wait for cuda kernels to finish
@@ -414,7 +414,7 @@ realw get_device_array_maximum_value(realw* array, int size){
     // finds maximum value in array
     max = h_array[0];
     for( int i=1; i < size; i++){
-      if( abs(h_array[i]) > max ) max = abs(h_array[i]);
+      if (abs(h_array[i]) > max) max = abs(h_array[i]);
     }
     free(h_array);
   }
@@ -436,10 +436,10 @@ __global__ void get_maximum_kernel(realw* array, int size, realw* d_max){
    realw max;
    max = 0;
    // finds maximum value in array
-   if( size > 0 ){
+   if (size > 0){
    max = abs(array[0]);
    for( int i=1; i < size; i++){
-   if( abs(array[i]) > max ) max = abs(array[i]);
+   if (abs(array[i]) > max) max = abs(array[i]);
    }
    }
    *d_max = max;
@@ -465,7 +465,7 @@ __global__ void get_maximum_kernel(realw* array, int size, realw* d_max){
       // summation:
       //sdata[tid] += sdata[tid + s];
       // maximum:
-      if( sdata[tid] < sdata[tid + s] ) sdata[tid] = sdata[tid + s];
+      if (sdata[tid] < sdata[tid + s]) sdata[tid] = sdata[tid + s];
     }
     __syncthreads();
   }
@@ -501,7 +501,7 @@ void FC_FUNC_(get_norm_acoustic_from_device,
    // finds maximum value in array
    max = h_array[0];
    for( int i=1; i < mp->NGLOB_AB; i++){
-   if( abs(h_array[i]) > max ) max = abs(h_array[i]);
+   if (abs(h_array[i]) > max) max = abs(h_array[i]);
    }
    free(h_array);
    */
@@ -546,9 +546,9 @@ void FC_FUNC_(get_norm_acoustic_from_device,
   print_CUDA_error_if_any(cudaMemset(d_max,0,num_blocks_x*num_blocks_y*sizeof(realw)),77002);
 
 
-  if(*sim_type == 1 ){
+  if (*sim_type == 1){
     get_maximum_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_potential_dot_dot_acoustic,size,d_max);
-  }else if(*sim_type == 3 ){
+  }else if (*sim_type == 3){
     get_maximum_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_potential_dot_dot_acoustic,size,d_max);
   }
 
@@ -568,7 +568,7 @@ void FC_FUNC_(get_norm_acoustic_from_device,
   // determines max for all blocks
   max = h_max[0];
   for(int i=1;i<num_blocks_x*num_blocks_y;i++) {
-    if( max < h_max[i]) max = h_max[i];
+    if (max < h_max[i]) max = h_max[i];
   }
 
   cudaFree(d_max);
@@ -648,7 +648,7 @@ __global__ void get_maximum_vector_kernel(realw* array, int size, realw* d_max){
       // summation:
       //sdata[tid] += sdata[tid + s];
       // maximum:
-      if( sdata[tid] < sdata[tid + s] ) sdata[tid] = sdata[tid + s];
+      if (sdata[tid] < sdata[tid + s]) sdata[tid] = sdata[tid + s];
     }
     __syncthreads();
   }
@@ -697,9 +697,9 @@ void FC_FUNC_(get_norm_elastic_from_device,
   // initializes values to zero
   print_CUDA_error_if_any(cudaMemset(d_max,0,num_blocks_x*num_blocks_y*sizeof(realw)),77002);
 
-  if(*type == 1 ){
+  if (*type == 1){
     get_maximum_vector_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_displ,size,d_max);
-  }else if(*type == 3 ){
+  }else if (*type == 3){
     get_maximum_vector_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_displ,size,d_max);
   }
 
@@ -722,7 +722,7 @@ void FC_FUNC_(get_norm_elastic_from_device,
   // determines max for all blocks
   max = h_max[0];
   for(int i=1;i<num_blocks_x*num_blocks_y;i++) {
-    if( max < h_max[i]) max = h_max[i];
+    if (max < h_max[i]) max = h_max[i];
   }
   res = sqrt(max);
 
@@ -793,13 +793,13 @@ TRACE("get_max_accel");
 
  for(i=0; i < num_phase_ispec; i++){
  ispec = phase_ispec[iphase*num_phase_ispec + i] - 1;
- if( ispec < -1 || ispec >= NSPEC_AB ){
+ if (ispec < -1 || ispec >= NSPEC_AB){
  printf("Error in d_phase_ispec_inner_elastic %d %d\n",i,ispec);
  *ier = 1;
  return;
  }
- if( ispec >= 0 ){ count0++;}
- if( ispec < 0 ){ count1++;}
+ if (ispec >= 0){ count0++;}
+ if (ispec < 0){ count1++;}
  }
 
  printf("check_phase_ispec done: phase %d, count = %d %d \n",iphase,count0,count1);
@@ -820,12 +820,12 @@ TRACE("get_max_accel");
  int* d_debug;
  cudaMalloc((void**)&d_debug,sizeof(int));
 
- if( type == 1 ){
+ if (type == 1){
  check_phase_ispec_kernel<<<grid,threads>>>(mp->num_phase_ispec_elastic,
  mp->d_phase_ispec_inner_elastic,
  mp->NSPEC_AB,
  d_debug);
- }else if( type == 2 ){
+ }else if (type == 2){
  check_phase_ispec_kernel<<<grid,threads>>>(mp->num_phase_ispec_acoustic,
  mp->d_phase_ispec_inner_acoustic,
  mp->NSPEC_AB,
@@ -834,7 +834,7 @@ TRACE("get_max_accel");
 
  cudaMemcpy(h_debug,d_debug,1*sizeof(int),cudaMemcpyDeviceToHost);
  cudaFree(d_debug);
- if( *h_debug != 0 ){printf("error for type=%d\n",type); exit(1);}
+ if (*h_debug != 0){printf("error for type=%d\n",type); exit(1);}
  free(h_debug);
  fflush(stdout);
 
@@ -858,14 +858,14 @@ TRACE("get_max_accel");
  count0 = 0;
  count1 = 0;
  for(ispec=0; ispec < NSPEC_AB; ispec++){
- if( ispec_is[ispec] < -1 || ispec_is[ispec] > 1 ){
+ if (ispec_is[ispec] < -1 || ispec_is[ispec] > 1){
  printf("Error in ispec_is %d %d\n",ispec,ispec_is[ispec]);
  *ier = 1;
  return;
  //exit(1);
  }
- if( ispec_is[ispec] == 0 ){count0++;}
- if( ispec_is[ispec] != 0 ){count1++;}
+ if (ispec_is[ispec] == 0){count0++;}
+ if (ispec_is[ispec] != 0){count1++;}
  }
  printf("check_ispec_is done: count = %d %d\n",count0,count1);
  }
@@ -883,15 +883,15 @@ TRACE("get_max_accel");
  int* d_debug;
  cudaMalloc((void**)&d_debug,sizeof(int));
 
- if( type == 0 ){
+ if (type == 0){
  check_ispec_is_kernel<<<grid,threads>>>(mp->NSPEC_AB,
  mp->d_ispec_is_inner,
  d_debug);
- }else if( type == 1 ){
+ }else if (type == 1){
  check_ispec_is_kernel<<<grid,threads>>>(mp->NSPEC_AB,
  mp->d_ispec_is_elastic,
  d_debug);
- }else if( type == 2 ){
+ }else if (type == 2){
  check_ispec_is_kernel<<<grid,threads>>>(mp->NSPEC_AB,
  mp->d_ispec_is_acoustic,
  d_debug);
@@ -899,7 +899,7 @@ TRACE("get_max_accel");
 
  cudaMemcpy(h_debug,d_debug,1*sizeof(int),cudaMemcpyDeviceToHost);
  cudaFree(d_debug);
- if( *h_debug != 0 ){printf("error for type=%d\n",type); exit(1);}
+ if (*h_debug != 0){printf("error for type=%d\n",type); exit(1);}
  free(h_debug);
  fflush(stdout);
 
@@ -924,13 +924,13 @@ TRACE("get_max_accel");
 
  for(i=0; i < num_array_ispec; i++){
  ispec = array_ispec[i] - 1;
- if( ispec < -1 || ispec >= NSPEC_AB ){
+ if (ispec < -1 || ispec >= NSPEC_AB){
  printf("Error in d_array_ispec %d %d\n",i,ispec);
  *ier = 1;
  return;
  }
- if( ispec >= 0 ){ count0++;}
- if( ispec < 0 ){ count1++;}
+ if (ispec >= 0){ count0++;}
+ if (ispec < 0){ count1++;}
  }
 
  printf("check_array_ispec done: count = %d %d \n",count0,count1);
@@ -949,7 +949,7 @@ TRACE("get_max_accel");
  int* d_debug;
  cudaMalloc((void**)&d_debug,sizeof(int));
 
- if( type == 1 ){
+ if (type == 1){
  check_array_ispec_kernel<<<grid,threads>>>(mp->d_num_abs_boundary_faces,
  mp->d_abs_boundary_ispec,
  mp->NSPEC_AB,
@@ -958,7 +958,7 @@ TRACE("get_max_accel");
 
  cudaMemcpy(h_debug,d_debug,1*sizeof(int),cudaMemcpyDeviceToHost);
  cudaFree(d_debug);
- if( *h_debug != 0 ){printf("error for type=%d\n",type); exit(1);}
+ if (*h_debug != 0){printf("error for type=%d\n",type); exit(1);}
  free(h_debug);
  fflush(stdout);
 
@@ -1013,7 +1013,7 @@ TRACE("check_max_norm_vector");
   realw maxnorm=0;
   int maxloc;
   for(int i=0;i<*size;i++) {
-    if(maxnorm<fabsf(vector1[i])) {
+    if (maxnorm<fabsf(vector1[i])) {
       maxnorm = vector1[i];
       maxloc = i;
     }
@@ -1170,7 +1170,7 @@ TRACE("check_error_vectors");
     temp = vector1[i]-vector2[i];
     diff2 += temp*temp;
     sum += vector1[i]*vector1[i];
-    if(maxerr < fabsf(temp)) {
+    if (maxerr < fabsf(temp)) {
       maxerr = abs(temp);
       maxerrorloc = i;
     }
@@ -1183,7 +1183,7 @@ TRACE("check_error_vectors");
 #else
   myrank = 0;
 #endif
-  if(myrank == 0) {
+  if (myrank == 0) {
     for(int i=maxerrorloc;i>maxerrorloc-5;i--) {
       printf("[%d]: %e vs. %e\n",i,vector1[i],vector2[i]);
     }

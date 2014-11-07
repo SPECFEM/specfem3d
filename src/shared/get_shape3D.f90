@@ -56,7 +56,7 @@
   double precision, parameter :: ONE_EIGHTH = 0.125d0
 
 ! check that the parameter file is correct
-  if(NGNOD /= 8 .and. NGNOD /= 27) &
+  if (NGNOD /= 8 .and. NGNOD /= 27) &
     call exit_MPI(myrank,'volume elements should have 8 or 27 control nodes')
 
 ! ***
@@ -190,13 +190,13 @@
   integer :: ia
 
 ! check that the parameter file is correct
-  if(NGNOD /= 8 .and. NGNOD /= 27) &
+  if (NGNOD /= 8 .and. NGNOD /= 27) &
     call exit_MPI(myrank,'volume elements should have 8 or 27 control nodes')
 
   ! shape functions
 
 !--- case of a 3D 8-node element (Dhatt-Touzot p. 115)
-  if(NGNOD == 8) then
+  if (NGNOD == 8) then
 
     ra1 = one + xi
     ra2 = one - xi
@@ -275,7 +275,7 @@
 
   ! sum of shape functions should be one
   ! sum of derivative of shape functions should be zero
-  if(abs(sumshape-one) >  TINYVAL) call exit_MPI(myrank,'error single shape functions')
+  if (abs(sumshape-one) >  TINYVAL) call exit_MPI(myrank,'error single shape functions')
 
   end subroutine eval_shape3D_single
 

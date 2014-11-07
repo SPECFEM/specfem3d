@@ -42,7 +42,7 @@
 ! initializes mesh arrays for movies and shakemaps
   allocate(nfaces_perproc_surface_ext_mesh(NPROC), &
            faces_surface_offset_ext_mesh(NPROC),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array for movie faces'
+  if (ier /= 0) stop 'error allocating array for movie faces'
 
   nfaces_org = nfaces_surface_ext_mesh
   if (nfaces_surface_ext_mesh == 0) then
@@ -55,7 +55,7 @@
                store_val_ux_external_mesh(NGLLX*NGLLY*1), &
                store_val_uy_external_mesh(NGLLX*NGLLY*1), &
                store_val_uz_external_mesh(NGLLX*NGLLY*1),stat=ier)
-      if( ier /= 0 ) stop 'error allocating dummy arrays for highres movie'
+      if (ier /= 0) stop 'error allocating dummy arrays for highres movie'
     else
       allocate(faces_surface_ext_mesh(NGNOD2D_FOUR_CORNERS,1), &
                store_val_x_external_mesh(NGNOD2D_FOUR_CORNERS*1), &
@@ -64,7 +64,7 @@
                store_val_ux_external_mesh(NGNOD2D_FOUR_CORNERS*1), &
                store_val_uy_external_mesh(NGNOD2D_FOUR_CORNERS*1), &
                store_val_uz_external_mesh(NGNOD2D_FOUR_CORNERS*1),stat=ier)
-      if( ier /= 0 ) stop 'error allocating dummy arrays for lowres movie'
+      if (ier /= 0) stop 'error allocating dummy arrays for lowres movie'
     endif
   else
     if (USE_HIGHRES_FOR_MOVIES) then
@@ -75,7 +75,7 @@
                store_val_ux_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh), &
                store_val_uy_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh), &
                store_val_uz_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh),stat=ier)
-      if( ier /= 0 ) stop 'error allocating arrays for highres movie'
+      if (ier /= 0) stop 'error allocating arrays for highres movie'
     else
       allocate(faces_surface_ext_mesh(NGNOD2D_FOUR_CORNERS,nfaces_surface_ext_mesh), &
                store_val_x_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh), &
@@ -84,7 +84,7 @@
                store_val_ux_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh), &
                store_val_uy_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh), &
                store_val_uz_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh),stat=ier)
-      if( ier /= 0 ) stop 'error allocating arrays for lowres movie'
+      if (ier /= 0) stop 'error allocating arrays for lowres movie'
     endif
   endif
   store_val_ux_external_mesh(:) = 0._CUSTOM_REAL
@@ -103,7 +103,7 @@
                store_val_ux_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh), &
                store_val_uy_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh), &
                store_val_uz_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh),stat=ier)
-      if( ier /= 0 ) stop 'error allocating arrays for highres movie'
+      if (ier /= 0) stop 'error allocating arrays for highres movie'
     else
       allocate(store_val_x_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_glob_ext_mesh), &
                store_val_y_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_glob_ext_mesh), &
@@ -111,7 +111,7 @@
                store_val_ux_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_glob_ext_mesh), &
                store_val_uy_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_glob_ext_mesh), &
                store_val_uz_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_glob_ext_mesh),stat=ier)
-      if( ier /= 0 ) stop 'error allocating arrays for lowres movie'
+      if (ier /= 0) stop 'error allocating arrays for lowres movie'
     endif
   endif
   call gather_all_singlei(nfaces_surface_ext_mesh,nfaces_perproc_surface_ext_mesh,NPROC)
@@ -128,10 +128,10 @@
   endif
 
 ! stores global indices of GLL points on the surface to array faces_surface_ext_mesh
-  if( MOVIE_TYPE == 2 ) then
+  if (MOVIE_TYPE == 2) then
 
     allocate( faces_surface_ext_mesh_ispec(nfaces_surface_ext_mesh),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array faces_surface_ext_mesh_ispec'
+    if (ier /= 0) stop 'error allocating array faces_surface_ext_mesh_ispec'
 
     ! stores global indices
     nfaces_surface_ext_mesh = 0
@@ -263,7 +263,7 @@
     enddo ! NSPEC_AB
 
     ! checks number of faces
-    if( nfaces_surface_ext_mesh /= nfaces_org ) then
+    if (nfaces_surface_ext_mesh /= nfaces_org) then
       print*,'error number of movie faces: ',nfaces_surface_ext_mesh,nfaces_org
       call exit_mpi(myrank,'error number of faces')
     endif
@@ -271,7 +271,7 @@
 
   ! user output
   if (myrank == 0) then
-    if( PLOT_CROSS_SECTIONS ) then
+    if (PLOT_CROSS_SECTIONS) then
       write(IMAIN,*) 'movie cross-sections:'
     else
       write(IMAIN,*) 'movie surface:'
@@ -281,7 +281,7 @@
     write(IMAIN,*) '  nfaces_surface_glob_ext_mesh:',nfaces_surface_glob_ext_mesh
 
     ! updates number of surface elements in an include file for the movies
-    if( nfaces_surface_glob_ext_mesh > 0 ) then
+    if (nfaces_surface_glob_ext_mesh > 0) then
       filename = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/surface_from_mesher.h'
       open(unit=IOUT,file=trim(filename),status='unknown')
       write(IOUT,*) '!'

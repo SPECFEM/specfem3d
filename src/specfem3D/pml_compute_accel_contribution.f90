@@ -431,13 +431,11 @@ subroutine l_parameter_computation( &
   coef1_z = 0._CUSTOM_REAL
   coef2_z = 0._CUSTOM_REAL
 
-  if (CPML_region_local == CPML_XYZ ) then
+  if (CPML_region_local == CPML_XYZ) then
 
-     if ( &
-          abs( alpha_x - alpha_y ) >= 1.e-5_CUSTOM_REAL .AND. &
+     if ( abs( alpha_x - alpha_y ) >= 1.e-5_CUSTOM_REAL .AND. &
           abs( alpha_x - alpha_z ) >= 1.e-5_CUSTOM_REAL .AND. &
-          abs( alpha_y - alpha_z ) >= 1.e-5_CUSTOM_REAL &
-        ) then
+          abs( alpha_y - alpha_z ) >= 1.e-5_CUSTOM_REAL) then
 
        beta_x = alpha_x + d_x / kappa_x
        beta_y = alpha_y + d_y / kappa_y
@@ -477,11 +475,9 @@ subroutine l_parameter_computation( &
        call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y, singularity_type_4, time_nplus1, time_n)
        call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z, singularity_type_5, time_nplus1, time_n)
 
-     else if (&
-             abs( alpha_x - alpha_y ) < 1.e-5_CUSTOM_REAL  .AND. &
-             abs( alpha_x - alpha_z ) >= 1.e-5_CUSTOM_REAL .AND. &
-             abs( alpha_y - alpha_z ) >= 1.e-5_CUSTOM_REAL &
-            ) then
+     else if (abs( alpha_x - alpha_y ) < 1.e-5_CUSTOM_REAL  .AND. &
+              abs( alpha_x - alpha_z ) >= 1.e-5_CUSTOM_REAL .AND. &
+              abs( alpha_y - alpha_z ) >= 1.e-5_CUSTOM_REAL) then
 
        alpha_0 = max(alpha_x,alpha_y)
 
@@ -527,11 +523,9 @@ subroutine l_parameter_computation( &
        call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y, singularity_type_4, time_nplus1, time_n)
        call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z, singularity_type_5, time_nplus1, time_n)
 
-     else if (&
-             abs( alpha_x - alpha_y ) >= 1.e-5_CUSTOM_REAL .AND. &
-             abs( alpha_x - alpha_z ) < 1.e-5_CUSTOM_REAL  .AND. &
-             abs( alpha_y - alpha_z ) >= 1.e-5_CUSTOM_REAL &
-            )then
+     else if (abs( alpha_x - alpha_y ) >= 1.e-5_CUSTOM_REAL .AND. &
+              abs( alpha_x - alpha_z ) < 1.e-5_CUSTOM_REAL  .AND. &
+              abs( alpha_y - alpha_z ) >= 1.e-5_CUSTOM_REAL)then
 
        alpha_0 = max(alpha_x,alpha_z)
 
@@ -578,11 +572,9 @@ subroutine l_parameter_computation( &
        call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y, singularity_type_4, time_nplus1, time_n)
        call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z, singularity_type_5, time_nplus1, time_n)
 
-     else if (&
-             abs( alpha_x - alpha_y ) >= 1.e-5_CUSTOM_REAL .AND. &
-             abs( alpha_x - alpha_z ) >= 1.e-5_CUSTOM_REAL .AND. &
-             abs( alpha_y - alpha_z ) < 1.e-5_CUSTOM_REAL  &
-            )then
+     else if (abs( alpha_x - alpha_y ) >= 1.e-5_CUSTOM_REAL .AND. &
+              abs( alpha_x - alpha_z ) >= 1.e-5_CUSTOM_REAL .AND. &
+              abs( alpha_y - alpha_z ) < 1.e-5_CUSTOM_REAL)then
 
        alpha_0 = max(alpha_y,alpha_z)
 
@@ -695,9 +687,9 @@ subroutine l_parameter_computation( &
        stop 'error occured in l_parameter_computation in CPML_XYZ region'
      endif
 
-  else if ( CPML_region_local == CPML_XY_ONLY ) then
+  else if (CPML_region_local == CPML_XY_ONLY) then
 
-    if ( abs( alpha_x - alpha_y ) >= 1.e-5_CUSTOM_REAL ) then
+    if (abs( alpha_x - alpha_y ) >= 1.e-5_CUSTOM_REAL) then
 
       beta_x = alpha_x + d_x / kappa_x
       beta_y = alpha_y + d_y / kappa_y
@@ -732,7 +724,7 @@ subroutine l_parameter_computation( &
       call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y, singularity_type_4, time_nplus1, time_n)
       call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z, singularity_type_5, time_nplus1, time_n)
 
-    else if ( abs( alpha_x - alpha_y ) < 1.e-5_CUSTOM_REAL ) then
+    else if (abs( alpha_x - alpha_y ) < 1.e-5_CUSTOM_REAL) then
 
       alpha_0 = max(alpha_x,alpha_y)
 
@@ -775,9 +767,9 @@ subroutine l_parameter_computation( &
       stop 'error occured in l_parameter_computation in CPML_XY_ONLY region'
     endif
 
-  else if ( CPML_region_local == CPML_XZ_ONLY ) then
+  else if (CPML_region_local == CPML_XZ_ONLY) then
 
-    if ( abs( alpha_x - alpha_z ) >= 1.e-5_CUSTOM_REAL ) then
+    if (abs( alpha_x - alpha_z ) >= 1.e-5_CUSTOM_REAL) then
 
       beta_x = alpha_x + d_x / kappa_x
       beta_y = alpha_y + d_y / kappa_y
@@ -813,7 +805,7 @@ subroutine l_parameter_computation( &
       call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y, singularity_type_4, time_nplus1, time_n)
       call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z, singularity_type_5, time_nplus1, time_n)
 
-    else if ( abs( alpha_x - alpha_z ) < 1.e-5_CUSTOM_REAL ) then
+    else if (abs( alpha_x - alpha_z ) < 1.e-5_CUSTOM_REAL) then
 
       alpha_0 = max(alpha_x,alpha_z)
 
@@ -857,9 +849,9 @@ subroutine l_parameter_computation( &
       stop 'error occured in l_parameter_computation in CPML_XZ_ONLY region'
     endif
 
-  else if ( CPML_region_local == CPML_YZ_ONLY ) then
+  else if (CPML_region_local == CPML_YZ_ONLY) then
 
-    if ( abs( alpha_y - alpha_z ) >= 1.e-5_CUSTOM_REAL ) then
+    if (abs( alpha_y - alpha_z ) >= 1.e-5_CUSTOM_REAL) then
 
       beta_x = alpha_x + d_x / kappa_x
       beta_y = alpha_y + d_y / kappa_y
@@ -894,7 +886,7 @@ subroutine l_parameter_computation( &
       call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y, singularity_type_4, time_nplus1, time_n)
       call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z, singularity_type_5, time_nplus1, time_n)
 
-    else if ( abs( alpha_y - alpha_z ) < 1.e-5_CUSTOM_REAL ) then
+    else if (abs( alpha_y - alpha_z ) < 1.e-5_CUSTOM_REAL) then
 
       alpha_0 = max(alpha_y,alpha_z)
 
@@ -937,7 +929,7 @@ subroutine l_parameter_computation( &
       stop 'error occured in l_parameter_computation in CPML_YZ_ONLY region'
     endif
 
-  else if ( CPML_region_local == CPML_X_ONLY ) then
+  else if (CPML_region_local == CPML_X_ONLY) then
 
     beta_x = alpha_x + d_x / kappa_x
     beta_y = alpha_y + d_y / kappa_y
@@ -964,7 +956,7 @@ subroutine l_parameter_computation( &
     call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y, singularity_type_4, time_nplus1, time_n)
     call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z, singularity_type_5, time_nplus1, time_n)
 
-  else if ( CPML_region_local == CPML_Y_ONLY ) then
+  else if (CPML_region_local == CPML_Y_ONLY) then
 
     beta_x = alpha_x + d_x / kappa_x
     beta_y = alpha_y + d_y / kappa_y
@@ -991,7 +983,7 @@ subroutine l_parameter_computation( &
     call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y, singularity_type_4, time_nplus1, time_n)
     call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z, singularity_type_5, time_nplus1, time_n)
 
-  else if ( CPML_region_local == CPML_Z_ONLY ) then
+  else if (CPML_region_local == CPML_Z_ONLY) then
 
     beta_x = alpha_x + d_x / kappa_x
     beta_y = alpha_y + d_y / kappa_y
@@ -1036,8 +1028,8 @@ Subroutine compute_convolution_coef(bb, deltat, coef0, coef1, coef2, singularity
   coef0 = exp(-bb * deltat)
 
   if (singularity_type == 0)then
-    if ( abs(bb) >= 1.e-5_CUSTOM_REAL ) then
-      if ( FIRST_ORDER_CONVOLUTION ) then
+    if (abs(bb) >= 1.e-5_CUSTOM_REAL) then
+      if (FIRST_ORDER_CONVOLUTION) then
          coef1 = (1._CUSTOM_REAL - exp(-bb * deltat) ) / bb
          coef2 = 0._CUSTOM_REAL
       else
@@ -1045,7 +1037,7 @@ Subroutine compute_convolution_coef(bb, deltat, coef0, coef1, coef2, singularity
          coef2 = (1._CUSTOM_REAL - exp(-bb * deltat/2._CUSTOM_REAL) ) * exp(-bb * deltat/2._CUSTOM_REAL) / bb
       endif
     else
-      if ( FIRST_ORDER_CONVOLUTION ) then
+      if (FIRST_ORDER_CONVOLUTION) then
         coef1 = deltat
         coef2 = 0._CUSTOM_REAL
       else
@@ -1060,7 +1052,7 @@ Subroutine compute_convolution_coef(bb, deltat, coef0, coef1, coef2, singularity
       endif
     endif
   else if (singularity_type == 1)then
-    if ( abs(bb) >= 1.e-5_CUSTOM_REAL ) then
+    if (abs(bb) >= 1.e-5_CUSTOM_REAL) then
       coef1 = (1._CUSTOM_REAL - exp(-bb * deltat/2._CUSTOM_REAL) ) / bb
       coef1 = time_nplus1 * coef1 + (deltat/2._CUSTOM_REAL*exp(-bb * deltat/2._CUSTOM_REAL) - coef1) / bb
 
@@ -1078,7 +1070,7 @@ Subroutine compute_convolution_coef(bb, deltat, coef0, coef1, coef2, singularity
                                      5._CUSTOM_REAL*deltat**4*bb**3/128._CUSTOM_REAL)))
      endif
   else if (singularity_type == 2)then
-    if ( abs(bb) >= 1.e-5_CUSTOM_REAL ) then
+    if (abs(bb) >= 1.e-5_CUSTOM_REAL) then
       coef1 = (1._CUSTOM_REAL - exp(-bb * deltat/2._CUSTOM_REAL) ) / bb
       coef1 = time_nplus1**2 * coef1 + (time_nplus1*(-2._CUSTOM_REAL/bb*coef1 + deltat/bb*exp(-bb * deltat/2._CUSTOM_REAL)) + &
               ((2._CUSTOM_REAL/bb**2* coef1 - exp(-bb * deltat/2._CUSTOM_REAL)*deltat/bb**2) - &

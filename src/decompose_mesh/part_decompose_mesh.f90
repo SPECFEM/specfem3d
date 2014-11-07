@@ -103,24 +103,24 @@ contains
              do n = 1, NGNOD_EIGHT_CORNERS
                 num_node = elmnts(NGNOD*elem_base+n-1)
                 do m = 0, nnodes_elmnts(num_node)-1
-                   if ( nodes_elmnts(m+num_node*nsize) == elem_target ) then
+                   if (nodes_elmnts(m+num_node*nsize) == elem_target) then
                       connectivity = connectivity + 1
                    endif
                 enddo
              enddo
 
-             if ( connectivity >=  ncommonnodes) then
+             if (connectivity >=  ncommonnodes) then
 
                 is_neighbour = .false.
 
                 do m = 0, xadj(nodes_elmnts(k+j*nsize))
-                   if ( .not.is_neighbour ) then
-                      if ( adjncy(nodes_elmnts(k+j*nsize)*sup_neighbour+m) == nodes_elmnts(l+j*nsize) ) then
+                   if (.not.is_neighbour) then
+                      if (adjncy(nodes_elmnts(k+j*nsize)*sup_neighbour+m) == nodes_elmnts(l+j*nsize)) then
                          is_neighbour = .true.
                       endif
                    endif
                 enddo
-                if ( .not.is_neighbour ) then
+                if (.not.is_neighbour) then
                    adjncy(nodes_elmnts(k+j*nsize)*sup_neighbour &
                           + xadj(nodes_elmnts(k+j*nsize))) = nodes_elmnts(l+j*nsize)
 
@@ -173,7 +173,7 @@ contains
 
     ! allocates local numbering array
     allocate(glob2loc_elmnts(0:nspec-1),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array glob2loc_elmnts'
+    if (ier /= 0) stop 'error allocating array glob2loc_elmnts'
 
     ! initializes number of local elements per partition
     do num_part = 0, nparts-1
@@ -219,7 +219,7 @@ contains
     integer :: ier
 
     allocate(glob2loc_nodes_nparts(0:nnodes),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array glob2loc_nodes_nparts'
+    if (ier /= 0) stop 'error allocating array glob2loc_nodes_nparts'
 
     size_glob2loc_nodes = 0
     parts_node(:) = 0
@@ -231,7 +231,7 @@ contains
        enddo
 
        do num_part = 0, nparts-1
-          if ( parts_node(num_part) == 1 ) then
+          if (parts_node(num_part) == 1) then
              size_glob2loc_nodes = size_glob2loc_nodes + 1
              parts_node(num_part) = 0
           endif
@@ -242,9 +242,9 @@ contains
     glob2loc_nodes_nparts(nnodes) = size_glob2loc_nodes
 
     allocate(glob2loc_nodes_parts(0:glob2loc_nodes_nparts(nnodes)-1),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array glob2loc_nodes_parts'
+    if (ier /= 0) stop 'error allocating array glob2loc_nodes_parts'
     allocate(glob2loc_nodes(0:glob2loc_nodes_nparts(nnodes)-1),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array glob2loc_nodes'
+    if (ier /= 0) stop 'error allocating array glob2loc_nodes'
 
     glob2loc_nodes(0) = 0
 
@@ -259,7 +259,7 @@ contains
        enddo
        do num_part = 0, nparts-1
 
-          if ( parts_node(num_part) == 1 ) then
+          if (parts_node(num_part) == 1) then
              glob2loc_nodes_parts(size_glob2loc_nodes) = num_part
              glob2loc_nodes(size_glob2loc_nodes) = num_parts(num_part)
              size_glob2loc_nodes = size_glob2loc_nodes + 1
@@ -317,7 +317,7 @@ contains
     enddo
 
     allocate(tab_size_interfaces(0:ninterfaces),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array tab_size_interfaces'
+    if (ier /= 0) stop 'error allocating array tab_size_interfaces'
     tab_size_interfaces(:) = 0
 
     num_interface = 0
@@ -328,11 +328,11 @@ contains
     do num_part = 0, nparts-1
        do num_part_bis = num_part+1, nparts-1
           do el = 0, nspec-1
-             if ( part(el) == num_part ) then
+             if (part(el) == num_part) then
                 ! looks at all neighbor elements
                 do el_adj = xadj(el), xadj(el+1)-1
                    ! adds element if neighbor element lies in next partition
-                   if ( part(adjncy(el_adj)) == num_part_bis ) then
+                   if (part(adjncy(el_adj)) == num_part_bis) then
                       num_edge = num_edge + 1
                    endif
 
@@ -353,22 +353,22 @@ contains
     num_edge = 0
 
     allocate(tab_interfaces(0:(tab_size_interfaces(ninterfaces)*7-1)),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array tab_interfaces'
+    if (ier /= 0) stop 'error allocating array tab_interfaces'
     tab_interfaces(:) = 0
 
     do num_part = 0, nparts-1
        do num_part_bis = num_part+1, nparts-1
           do el = 0, nspec-1
-             if ( part(el) == num_part ) then
+             if (part(el) == num_part) then
                 do el_adj = xadj(el), xadj(el+1)-1
                    ! adds element if in adjacent partition
-                   if ( part(adjncy(el_adj)) == num_part_bis ) then
+                   if (part(adjncy(el_adj)) == num_part_bis) then
                       tab_interfaces(tab_size_interfaces(num_interface)*7+num_edge*7+0) = el
                       tab_interfaces(tab_size_interfaces(num_interface)*7+num_edge*7+1) = adjncy(el_adj)
                       ncommon_nodes = 0
                       do num_node = 0, NGNOD_EIGHT_CORNERS-1
                          do num_node_bis = 0, NGNOD_EIGHT_CORNERS-1
-                            if ( elmnts(el*NGNOD+num_node) == elmnts(adjncy(el_adj)*NGNOD+num_node_bis) ) then
+                            if (elmnts(el*NGNOD+num_node) == elmnts(adjncy(el_adj)*NGNOD+num_node_bis)) then
                                tab_interfaces(tab_size_interfaces(num_interface)*7 &
                                               +num_edge*7+3+ncommon_nodes) &
                                     = elmnts(el*NGNOD+num_node)
@@ -376,7 +376,7 @@ contains
                             endif
                          enddo
                       enddo
-                      if ( ncommon_nodes > 0 ) then
+                      if (ncommon_nodes > 0) then
                          tab_interfaces(tab_size_interfaces(num_interface)*7+num_edge*7+2) = ncommon_nodes
                       else
                          print *, "Error while building interfaces!", ncommon_nodes
@@ -414,28 +414,26 @@ contains
 
     integer  :: i, j
 
-    if ( num_phase == 1 ) then
+    if (num_phase == 1) then
     ! counts number of points in partition
-       npgeo = 0
-       do i = 0, nnodes-1
-          do j = glob2loc_nodes_nparts(i), glob2loc_nodes_nparts(i+1)-1
-             if ( glob2loc_nodes_parts(j) == iproc ) then
-                npgeo = npgeo + 1
-
-             endif
-
-          enddo
-       enddo
+      npgeo = 0
+      do i = 0, nnodes-1
+        do j = glob2loc_nodes_nparts(i), glob2loc_nodes_nparts(i+1)-1
+          if (glob2loc_nodes_parts(j) == iproc) then
+            npgeo = npgeo + 1
+          endif
+        enddo
+      enddo
     else
     ! writes out point coordinates
-       do i = 0, nnodes-1
-          do j = glob2loc_nodes_nparts(i), glob2loc_nodes_nparts(i+1)-1
-             if ( glob2loc_nodes_parts(j) == iproc ) then
-                write(IIN_database) glob2loc_nodes(j)+1, nodes_coords(1,i+1), &
-                                      nodes_coords(2,i+1), nodes_coords(3,i+1)
-             endif
-          enddo
-       enddo
+      do i = 0, nnodes-1
+        do j = glob2loc_nodes_nparts(i), glob2loc_nodes_nparts(i+1)-1
+          if (glob2loc_nodes_parts(j) == iproc) then
+            write(IIN_database) glob2loc_nodes(j)+1, nodes_coords(1,i+1), &
+                                nodes_coords(2,i+1), nodes_coords(3,i+1)
+          endif
+        enddo
+      enddo
     endif
 
   end subroutine write_glob2loc_nodes_database
@@ -533,7 +531,7 @@ contains
     ! counts number of elements for boundary at xmin, xmax, ymin, ymax, bottom, top in this partition
     loc_nspec2D_xmin = 0
     do i=1,nspec2D_xmin
-       if(part(ibelm_xmin(i)) == iproc) then
+       if (part(ibelm_xmin(i)) == iproc) then
           loc_nspec2D_xmin = loc_nspec2D_xmin + 1
        endif
     enddo
@@ -541,7 +539,7 @@ contains
 
     loc_nspec2D_xmax = 0
     do i=1,nspec2D_xmax
-       if(part(ibelm_xmax(i)) == iproc) then
+       if (part(ibelm_xmax(i)) == iproc) then
           loc_nspec2D_xmax = loc_nspec2D_xmax + 1
        endif
     enddo
@@ -549,7 +547,7 @@ contains
 
     loc_nspec2D_ymin = 0
     do i=1,nspec2D_ymin
-       if(part(ibelm_ymin(i)) == iproc) then
+       if (part(ibelm_ymin(i)) == iproc) then
           loc_nspec2D_ymin = loc_nspec2D_ymin + 1
        endif
     enddo
@@ -557,7 +555,7 @@ contains
 
     loc_nspec2D_ymax = 0
     do i=1,nspec2D_ymax
-       if(part(ibelm_ymax(i)) == iproc) then
+       if (part(ibelm_ymax(i)) == iproc) then
           loc_nspec2D_ymax = loc_nspec2D_ymax + 1
        endif
     enddo
@@ -565,7 +563,7 @@ contains
 
     loc_nspec2D_bottom = 0
     do i=1,nspec2D_bottom
-       if(part(ibelm_bottom(i)) == iproc) then
+       if (part(ibelm_bottom(i)) == iproc) then
           loc_nspec2D_bottom = loc_nspec2D_bottom + 1
        endif
     enddo
@@ -573,7 +571,7 @@ contains
 
     loc_nspec2D_top = 0
     do i=1,nspec2D_top
-       if(part(ibelm_top(i)) == iproc) then
+       if (part(ibelm_top(i)) == iproc) then
           loc_nspec2D_top = loc_nspec2D_top + 1
        endif
     enddo
@@ -583,13 +581,13 @@ contains
     ! note: assumes that element indices in ibelm_* arrays are in the range from 1 to nspec
     !          (this is assigned by CUBIT, if this changes the following indexing must be changed as well)
     !          while glob2loc_elmnts(.) is shifted from 0 to nspec-1  thus
-    !          we need to have the arg of glob2loc_elmnts start at 0 ==> glob2loc_nodes(ibelm_** -1 )
+    !          we need to have the arg of glob2loc_elmnts start at 0 ==> glob2loc_nodes(ibelm_** -1)
     do i=1,nspec2D_xmin
-       if(part(ibelm_xmin(i)) == iproc) then
+       if (part(ibelm_xmin(i)) == iproc) then
           do inode = 1,NGNOD2D
           do j = glob2loc_nodes_nparts(nodes_ibelm_xmin(inode,i)-1), &
                   glob2loc_nodes_nparts(nodes_ibelm_xmin(inode,i))-1
-             if (glob2loc_nodes_parts(j) == iproc ) then
+             if (glob2loc_nodes_parts(j) == iproc) then
                 loc_node(inode) = glob2loc_nodes(j)+1
              endif
           enddo
@@ -599,11 +597,11 @@ contains
     enddo
 
     do i=1,nspec2D_xmax
-       if(part(ibelm_xmax(i)) == iproc) then
+       if (part(ibelm_xmax(i)) == iproc) then
           do inode = 1,NGNOD2D
           do j = glob2loc_nodes_nparts(nodes_ibelm_xmax(inode,i)-1), &
                   glob2loc_nodes_nparts(nodes_ibelm_xmax(inode,i))-1
-             if (glob2loc_nodes_parts(j) == iproc ) then
+             if (glob2loc_nodes_parts(j) == iproc) then
                 loc_node(inode) = glob2loc_nodes(j)+1
              endif
           enddo
@@ -613,11 +611,11 @@ contains
     enddo
 
     do i=1,nspec2D_ymin
-       if(part(ibelm_ymin(i)) == iproc) then
+       if (part(ibelm_ymin(i)) == iproc) then
           do inode = 1,NGNOD2D
           do j = glob2loc_nodes_nparts(nodes_ibelm_ymin(inode,i)-1), &
                   glob2loc_nodes_nparts(nodes_ibelm_ymin(inode,i))-1
-             if (glob2loc_nodes_parts(j) == iproc ) then
+             if (glob2loc_nodes_parts(j) == iproc) then
                 loc_node(inode) = glob2loc_nodes(j)+1
              endif
           enddo
@@ -627,11 +625,11 @@ contains
     enddo
 
     do i=1,nspec2D_ymax
-       if(part(ibelm_ymax(i)) == iproc) then
+       if (part(ibelm_ymax(i)) == iproc) then
           do inode = 1,NGNOD2D
           do j = glob2loc_nodes_nparts(nodes_ibelm_ymax(inode,i)-1), &
                   glob2loc_nodes_nparts(nodes_ibelm_ymax(inode,i))-1
-             if (glob2loc_nodes_parts(j) == iproc ) then
+             if (glob2loc_nodes_parts(j) == iproc) then
                 loc_node(inode) = glob2loc_nodes(j)+1
              endif
           enddo
@@ -641,11 +639,11 @@ contains
     enddo
 
     do i=1,nspec2D_bottom
-       if(part(ibelm_bottom(i)) == iproc) then
+       if (part(ibelm_bottom(i)) == iproc) then
           do inode = 1,NGNOD2D
           do j = glob2loc_nodes_nparts(nodes_ibelm_bottom(inode,i)-1), &
                   glob2loc_nodes_nparts(nodes_ibelm_bottom(inode,i))-1
-             if (glob2loc_nodes_parts(j) == iproc ) then
+             if (glob2loc_nodes_parts(j) == iproc) then
                 loc_node(inode) = glob2loc_nodes(j)+1
              endif
           enddo
@@ -655,11 +653,11 @@ contains
     enddo
 
     do i=1,nspec2D_top
-       if(part(ibelm_top(i)) == iproc) then
+       if (part(ibelm_top(i)) == iproc) then
           do inode = 1,NGNOD2D
           do j = glob2loc_nodes_nparts(nodes_ibelm_top(inode,i)-1), &
                   glob2loc_nodes_nparts(nodes_ibelm_top(inode,i))-1
-             if (glob2loc_nodes_parts(j) == iproc ) then
+             if (glob2loc_nodes_parts(j) == iproc) then
                 loc_node(inode) = glob2loc_nodes(j)+1
              endif
           enddo
@@ -698,11 +696,11 @@ contains
     ! writes number of C-PML elements in the global mesh
     write(IIN_database) nspec_cpml
 
-    if( nspec_cpml > 0 ) then
+    if (nspec_cpml > 0) then
        ! writes number of C-PML elements in this partition
        nspec_cpml_local = 0
        do i=1,nspec_cpml
-          if( part(CPML_to_spec(i)) == iproc ) then
+          if (part(CPML_to_spec(i)) == iproc) then
              nspec_cpml_local = nspec_cpml_local + 1
           endif
        enddo
@@ -720,14 +718,14 @@ contains
           ! #id_cpml_regions = 7 : XYZ_corner C-PML
           !
           ! format: #id_cpml_element #id_cpml_regions
-          if( part(CPML_to_spec(i)) == iproc ) then
+          if (part(CPML_to_spec(i)) == iproc) then
              write(IIN_database) glob2loc_elmnts(CPML_to_spec(i)-1)+1, CPML_regions(i)
           endif
        enddo
 
        ! writes mask of C-PML elements for all elements in this partition
        do i=1,nspec
-          if( part(i) == iproc ) then
+          if (part(i) == iproc) then
              write(IIN_database) is_CPML(i)
           endif
        enddo
@@ -768,11 +766,11 @@ contains
     integer  :: i,j,k
     integer, dimension(0:NGNOD-1)  :: loc_nodes
 
-    if ( num_phase == 1 ) then
+    if (num_phase == 1) then
        ! counts number of spectral elements in this partition
        nspec_local = 0
        do i = 0, nspec-1
-          if ( part(i) == iproc ) then
+          if (part(i) == iproc) then
              nspec_local = nspec_local + 1
           endif
        enddo
@@ -780,12 +778,12 @@ contains
     else
        ! writes out element corner indices
        do i = 0, nspec-1
-          if ( part(i) == iproc ) then
+          if (part(i) == iproc) then
 
              do j = 0, NGNOD-1
                 do k = glob2loc_nodes_nparts(elmnts(i*NGNOD+j)), glob2loc_nodes_nparts(elmnts(i*NGNOD+j)+1)-1
 
-                   if ( glob2loc_nodes_parts(k) == iproc ) then
+                   if (glob2loc_nodes_parts(k) == iproc) then
                       loc_nodes(j) = glob2loc_nodes(k)
                    endif
                 enddo
@@ -842,7 +840,7 @@ contains
 
     num_interface = 0
 
-    if ( num_phase == 1 ) then
+    if (num_phase == 1) then
     ! counts number of interfaces to neighbouring partitions
        my_interfaces(:) = 0
        my_nb_interfaces(:) = 0
@@ -851,8 +849,8 @@ contains
        do i = 0, nparts-1
           do j = i+1, nparts-1
              ! only counts if specified partition (iproc) appears and interface elements increment
-             if ( (tab_size_interfaces(num_interface) < tab_size_interfaces(num_interface+1)) .and. &
-                  (i == iproc .or. j == iproc) ) then
+             if ((tab_size_interfaces(num_interface) < tab_size_interfaces(num_interface+1)) .and. &
+                  (i == iproc .or. j == iproc)) then
                 ! sets flag
                 my_interfaces(num_interface) = 1
                 ! sets number of elements on interface
@@ -868,8 +866,8 @@ contains
     ! writes out MPI interface elements
       do i = 0, nparts-1
          do j = i+1, nparts-1
-            if ( my_interfaces(num_interface) == 1 ) then
-               if ( i == iproc ) then
+            if (my_interfaces(num_interface) == 1) then
+               if (i == iproc) then
                   write(IIN_database) j, my_nb_interfaces(num_interface)
                else
                   write(IIN_database) i, my_nb_interfaces(num_interface)
@@ -877,7 +875,7 @@ contains
 
                count_faces = 0
                do k = tab_size_interfaces(num_interface), tab_size_interfaces(num_interface+1)-1
-                  if ( i == iproc ) then
+                  if (i == iproc) then
                      local_elmnt = glob2loc_elmnts(tab_interfaces(k*7+0))+1
                   else
                      local_elmnt = glob2loc_elmnts(tab_interfaces(k*7+1))+1
@@ -888,7 +886,7 @@ contains
                      ! single point element
                      do l = glob2loc_nodes_nparts(tab_interfaces(k*7+3)), &
                           glob2loc_nodes_nparts(tab_interfaces(k*7+3)+1)-1
-                        if ( glob2loc_nodes_parts(l) == iproc ) then
+                        if (glob2loc_nodes_parts(l) == iproc) then
                            local_nodes(1) = glob2loc_nodes(l)+1
                         endif
                      enddo
@@ -899,13 +897,13 @@ contains
                      ! edge element
                      do l = glob2loc_nodes_nparts(tab_interfaces(k*7+3)), &
                           glob2loc_nodes_nparts(tab_interfaces(k*7+3)+1)-1
-                        if ( glob2loc_nodes_parts(l) == iproc ) then
+                        if (glob2loc_nodes_parts(l) == iproc) then
                            local_nodes(1) = glob2loc_nodes(l)+1
                         endif
                      enddo
                      do l = glob2loc_nodes_nparts(tab_interfaces(k*7+4)), &
                           glob2loc_nodes_nparts(tab_interfaces(k*7+4)+1)-1
-                        if ( glob2loc_nodes_parts(l) == iproc ) then
+                        if (glob2loc_nodes_parts(l) == iproc) then
                            local_nodes(2) = glob2loc_nodes(l)+1
                         endif
                      enddo
@@ -917,25 +915,25 @@ contains
                      count_faces = count_faces + 1
                      do l = glob2loc_nodes_nparts(tab_interfaces(k*7+3)), &
                           glob2loc_nodes_nparts(tab_interfaces(k*7+3)+1)-1
-                        if ( glob2loc_nodes_parts(l) == iproc ) then
+                        if (glob2loc_nodes_parts(l) == iproc) then
                            local_nodes(1) = glob2loc_nodes(l)+1
                         endif
                      enddo
                      do l = glob2loc_nodes_nparts(tab_interfaces(k*7+4)), &
                           glob2loc_nodes_nparts(tab_interfaces(k*7+4)+1)-1
-                        if ( glob2loc_nodes_parts(l) == iproc ) then
+                        if (glob2loc_nodes_parts(l) == iproc) then
                            local_nodes(2) = glob2loc_nodes(l)+1
                         endif
                      enddo
                      do l = glob2loc_nodes_nparts(tab_interfaces(k*7+5)), &
                           glob2loc_nodes_nparts(tab_interfaces(k*7+5)+1)-1
-                        if ( glob2loc_nodes_parts(l) == iproc ) then
+                        if (glob2loc_nodes_parts(l) == iproc) then
                            local_nodes(3) = glob2loc_nodes(l)+1
                         endif
                      enddo
                      do l = glob2loc_nodes_nparts(tab_interfaces(k*7+6)), &
                           glob2loc_nodes_nparts(tab_interfaces(k*7+6)+1)-1
-                        if ( glob2loc_nodes_parts(l) == iproc ) then
+                        if (glob2loc_nodes_parts(l) == iproc) then
                            local_nodes(4) = glob2loc_nodes(l)+1
                         endif
                      enddo
@@ -993,12 +991,12 @@ contains
     ! optional moho
     loc_nspec2D_moho = 0
     do i=1,nspec2D_moho
-       if(part(ibelm_moho(i)) == iproc) then
+       if (part(ibelm_moho(i)) == iproc) then
           loc_nspec2D_moho = loc_nspec2D_moho + 1
        endif
     enddo
     ! checks if anything to do
-    if( loc_nspec2D_moho == 0 ) return
+    if (loc_nspec2D_moho == 0) return
 
     ! format: #surface_id, #number of elements
     write(IIN_database) 7, loc_nspec2D_moho
@@ -1007,15 +1005,15 @@ contains
     ! note: assumes that element indices in ibelm_* arrays are in the range from 1 to nspec
     !          (this is assigned by CUBIT, if this changes the following indexing must be changed as well)
     !          while glob2loc_elmnts(.) is shifted from 0 to nspec-1  thus
-    !          we need to have the arg of glob2loc_elmnts start at 0 ==> glob2loc_nodes(ibelm_** -1 )
+    !          we need to have the arg of glob2loc_elmnts start at 0 ==> glob2loc_nodes(ibelm_** -1)
 
     ! optional moho
     do i=1,nspec2D_moho
-       if(part(ibelm_moho(i)) == iproc) then
+       if (part(ibelm_moho(i)) == iproc) then
           do inode = 1,NGNOD2D
           do j = glob2loc_nodes_nparts(nodes_ibelm_moho(inode,i)-1), &
                   glob2loc_nodes_nparts(nodes_ibelm_moho(inode,i))-1
-             if (glob2loc_nodes_parts(j) == iproc ) then
+             if (glob2loc_nodes_parts(j) == iproc) then
                 loc_node(inode) = glob2loc_nodes(j)+1
              endif
           enddo
@@ -1070,15 +1068,15 @@ contains
     do i = 1, count_def_mat
        idomain_id = nint(mat_prop(6,i))
        ! acoustic material has idomain_id 1
-       if (idomain_id == 1 ) then
+       if (idomain_id == 1) then
           is_acoustic(i) = .true.
        endif
        ! elastic material has idomain_id 2
-       if (idomain_id == 2 ) then
+       if (idomain_id == 2) then
           is_elastic(i) = .true.
        endif
        ! poroelastic material has idomain_id 3
-       if (idomain_id == 3 ) then
+       if (idomain_id == 3) then
           is_poroelastic(i) = .true.
        endif
     enddo
@@ -1087,11 +1085,11 @@ contains
     do i = 1, count_undef_mat
        read(undef_mat_prop(6,i),*) idomain_id
        ! acoustic material has idomain_id 1
-       if (idomain_id == 1 ) then
+       if (idomain_id == 1) then
           is_acoustic(-i) = .true.
        endif
        ! elastic material has idomain_id 2
-       if (idomain_id == 2 ) then
+       if (idomain_id == 2) then
           is_elastic(-i) = .true.
        endif
     enddo
@@ -1101,11 +1099,11 @@ contains
     do el = 0, nspec-1
       ! note: num_material index can be negative for tomographic material definitions
       ! acoustic element (cheap)
-      if( num_material(el+1) > 0 ) then
+      if (num_material(el+1) > 0) then
         if (is_acoustic(num_material(el+1))) elmnts_load(el+1) = ACOUSTIC_LOAD
         ! elastic element (expensive)
         if (is_elastic(num_material(el+1))) then
-          if(ATTENUATION) then
+          if (ATTENUATION) then
             elmnts_load(el+1) = VISCOELASTIC_LOAD
           else
             elmnts_load(el+1) = ELASTIC_LOAD
@@ -1115,7 +1113,7 @@ contains
         if (is_poroelastic(num_material(el+1))) elmnts_load(el+1) = POROELASTIC_LOAD
       else ! JC JC: beware! To modify to take into account the -200? flags used in C-PML boundary conditions
         ! tomographic materials count as elastic
-        if(ATTENUATION) then
+        if (ATTENUATION) then
           elmnts_load(el+1) = VISCOELASTIC_LOAD
         else
           elmnts_load(el+1) = ELASTIC_LOAD
@@ -1170,27 +1168,27 @@ contains
     is_poroelastic(:) = .false.
     is_elastic(:) = .false.
     do i = 1, nb_materials
-       if ( nint(mat_prop(6,i)) == 3 ) then
+       if (nint(mat_prop(6,i)) == 3) then
           is_poroelastic(i) = .true.
        endif
-       if ( nint(mat_prop(6,i)) == 2 ) then
+       if (nint(mat_prop(6,i)) == 2) then
           is_elastic(i) = .true.
        endif
     enddo
 
     ! checks if any poroelastic/elastic elements are set
-    if( .not. any(is_poroelastic) ) return
-    if( .not. any(is_elastic) ) return
+    if (.not. any(is_poroelastic)) return
+    if (.not. any(is_elastic)) return
 
     ! gets neighbors by 4 common nodes (face)
     allocate(xadj(0:nspec),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array xadj'
+    if (ier /= 0) stop 'error allocating array xadj'
     allocate(adjncy(0:sup_neighbour*nspec-1),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array adjncy'
+    if (ier /= 0) stop 'error allocating array adjncy'
     allocate(nnodes_elmnts(0:nnodes-1),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array nnodes_elmnts'
+    if (ier /= 0) stop 'error allocating array nnodes_elmnts'
     allocate(nodes_elmnts(0:nsize*nnodes-1),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array nodes_elmnts'
+    if (ier /= 0) stop 'error allocating array nodes_elmnts'
     call mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbour, &
                                 elmnts, xadj, adjncy, nnodes_elmnts, &
                                 nodes_elmnts, max_neighbour, 4, NGNOD)
@@ -1198,11 +1196,11 @@ contains
     ! counts coupled elements
     nfaces_coupled = 0
     do el = 0, nspec-1
-      if( num_material(el+1) > 0 ) then
-        if ( is_poroelastic(num_material(el+1)) ) then
+      if (num_material(el+1) > 0) then
+        if (is_poroelastic(num_material(el+1))) then
           do el_adj = xadj(el), xadj(el+1) - 1
-            if(num_material(adjncy(el_adj)+1) > 0 ) then
-              if ( is_elastic(num_material(adjncy(el_adj)+1)) ) then
+            if (num_material(adjncy(el_adj)+1) > 0) then
+              if (is_elastic(num_material(adjncy(el_adj)+1))) then
                 nfaces_coupled = nfaces_coupled + 1
               endif
             endif
@@ -1213,17 +1211,17 @@ contains
 
     ! coupled elements
     allocate(faces_coupled(2,nfaces_coupled),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array faces_coupled'
+    if (ier /= 0) stop 'error allocating array faces_coupled'
     faces_coupled(:,:) = -1
 
     ! stores elements indices
     nfaces_coupled = 0
     do el = 0, nspec-1
-      if( num_material(el+1) > 0 ) then
-        if ( is_poroelastic(num_material(el+1)) ) then
+      if (num_material(el+1) > 0) then
+        if (is_poroelastic(num_material(el+1))) then
           do el_adj = xadj(el), xadj(el+1) - 1
-            if( num_material(adjncy(el_adj)+1) > 0 ) then
-              if ( is_elastic(abs(num_material(adjncy(el_adj)+1))) ) then
+            if (num_material(adjncy(el_adj)+1) > 0) then
+              if (is_elastic(abs(num_material(adjncy(el_adj)+1)))) then
                 nfaces_coupled = nfaces_coupled + 1
                 faces_coupled(1,nfaces_coupled) = el
                 faces_coupled(2,nfaces_coupled) = adjncy(el_adj)
@@ -1238,8 +1236,8 @@ contains
     do i = 1, nfaces_coupled*nproc
        is_repartitioned = .false.
        do iface = 1, nfaces_coupled
-          if ( part(faces_coupled(1,iface)) /= part(faces_coupled(2,iface)) ) then
-             if ( part(faces_coupled(1,iface)) < part(faces_coupled(2,iface)) ) then
+          if (part(faces_coupled(1,iface)) /= part(faces_coupled(2,iface))) then
+             if (part(faces_coupled(1,iface)) < part(faces_coupled(2,iface))) then
                 part(faces_coupled(2,iface)) = part(faces_coupled(1,iface))
              else
                 part(faces_coupled(1,iface)) = part(faces_coupled(2,iface))
@@ -1247,7 +1245,7 @@ contains
              is_repartitioned = .true.
           endif
        enddo
-       if ( .not. is_repartitioned ) then
+       if (.not. is_repartitioned) then
           exit
        endif
     enddo
@@ -1312,10 +1310,10 @@ contains
     ! temporary flag arrays
     ! element ids start from 0
     allocate( is_moho(0:nspec-1),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array is_moho'
+    if (ier /= 0) stop 'error allocating array is_moho'
     ! node ids start from 0
     allocate( node_is_moho(0:nnodes-1),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array node_is_moho'
+    if (ier /= 0) stop 'error allocating array node_is_moho'
 
     is_moho(:) = .false.
     node_is_moho(:) = .false.
@@ -1336,38 +1334,38 @@ contains
 
     ! checks if element has moho surface
     do el = 0, nspec-1
-      if( is_moho(el) ) cycle
+      if (is_moho(el)) cycle
 
       ! loops over all element corners
       counter = 0
       do i=0,NGNOD_EIGHT_CORNERS-1
         ! note: assumes that node indices in elmnts array are in the range from 0 to nodes-1
         inode = elmnts(el*NGNOD+i)
-        if( node_is_moho(inode) ) counter = counter + 1
+        if (node_is_moho(inode)) counter = counter + 1
       enddo
 
       ! sets flag if it has a surface
-      if( counter == NGNOD2D_FOUR_CORNERS ) is_moho(el) = .true.
+      if (counter == NGNOD2D_FOUR_CORNERS) is_moho(el) = .true.
     enddo
 
     ! statistics output
     counter = 0
     do el=0, nspec-1
-     if ( is_moho(el) ) counter = counter + 1
+     if (is_moho(el)) counter = counter + 1
     enddo
     print*,'  moho elements = ',counter
 
     ! gets neighbors by 4 common nodes (face)
     ! contains number of adjacent elements (neighbours)
     allocate(xadj(0:nspec),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array xadj'
+    if (ier /= 0) stop 'error allocating array xadj'
     ! contains all element id indices of adjacent elements
     allocate(adjncy(0:sup_neighbour*nspec-1),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array adjncy'
+    if (ier /= 0) stop 'error allocating array adjncy'
     allocate(nnodes_elmnts(0:nnodes-1),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array nnodes_elmnts'
+    if (ier /= 0) stop 'error allocating array nnodes_elmnts'
     allocate(nodes_elmnts(0:nsize*nnodes-1),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array nodes_elmnts'
+    if (ier /= 0) stop 'error allocating array nodes_elmnts'
 
     call mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbour, &
                         elmnts, xadj, adjncy, nnodes_elmnts, &
@@ -1376,25 +1374,25 @@ contains
     ! counts coupled elements
     nfaces_coupled = 0
     do el = 0, nspec-1
-       if ( is_moho(el) ) then
+       if (is_moho(el)) then
           do el_adj = xadj(el), xadj(el+1) - 1
             ! increments counter if it contains face
-            if( is_moho(adjncy(el_adj)) ) nfaces_coupled = nfaces_coupled + 1
+            if (is_moho(adjncy(el_adj))) nfaces_coupled = nfaces_coupled + 1
           enddo
        endif
     enddo
 
     ! coupled elements
     allocate(faces_coupled(2,nfaces_coupled),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array faces_coupled'
+    if (ier /= 0) stop 'error allocating array faces_coupled'
     faces_coupled(:,:) = -1
 
     ! stores elements indices
     nfaces_coupled = 0
     do el = 0, nspec-1
-       if ( is_moho(el) ) then
+       if (is_moho(el)) then
           do el_adj = xadj(el), xadj(el+1) - 1
-             if ( is_moho(adjncy(el_adj)) ) then
+             if (is_moho(adjncy(el_adj))) then
                 nfaces_coupled = nfaces_coupled + 1
                 faces_coupled(1,nfaces_coupled) = el
                 faces_coupled(2,nfaces_coupled) = adjncy(el_adj)
@@ -1407,9 +1405,9 @@ contains
     do i = 1, nfaces_coupled*nproc
        is_repartitioned = .false.
        do iface = 1, nfaces_coupled
-          if ( part(faces_coupled(1,iface)) /= part(faces_coupled(2,iface)) ) then
+          if (part(faces_coupled(1,iface)) /= part(faces_coupled(2,iface))) then
              ! coupled moho elements are in different partitions
-             if ( part(faces_coupled(1,iface)) < part(faces_coupled(2,iface)) ) then
+             if (part(faces_coupled(1,iface)) < part(faces_coupled(2,iface))) then
                 part(faces_coupled(2,iface)) = part(faces_coupled(1,iface))
              else
                 part(faces_coupled(1,iface)) = part(faces_coupled(2,iface))
@@ -1417,7 +1415,7 @@ contains
              is_repartitioned = .true.
           endif
        enddo
-       if ( .not. is_repartitioned ) then
+       if (.not. is_repartitioned) then
           exit
        endif
     enddo

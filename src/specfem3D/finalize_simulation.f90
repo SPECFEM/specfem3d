@@ -52,31 +52,31 @@
     else
       open(unit=IOUT,file=prname(1:len_trim(prname))//'save_forward_arrays.bin',&
             status='unknown',form='unformatted',iostat=ier)
-      if( ier /= 0 ) then
+      if (ier /= 0) then
         print*,'error: opening save_forward_arrays.bin'
         print*,'path: ',prname(1:len_trim(prname))//'save_forward_arrays.bin'
         call exit_mpi(myrank,'error opening file save_forward_arrays.bin')
       endif
 
-      if( ACOUSTIC_SIMULATION ) then
+      if (ACOUSTIC_SIMULATION) then
         write(IOUT) potential_acoustic
         write(IOUT) potential_dot_acoustic
         write(IOUT) potential_dot_dot_acoustic
       endif
 
-      if( ELASTIC_SIMULATION ) then
+      if (ELASTIC_SIMULATION) then
         write(IOUT) displ
         write(IOUT) veloc
         write(IOUT) accel
 
         if (ATTENUATION) then
-          if(FULL_ATTENUATION_SOLID) write(IOUT) R_trace
+          if (FULL_ATTENUATION_SOLID) write(IOUT) R_trace
           write(IOUT) R_xx
           write(IOUT) R_yy
           write(IOUT) R_xy
           write(IOUT) R_xz
           write(IOUT) R_yz
-          if(FULL_ATTENUATION_SOLID) write(IOUT) epsilondev_trace
+          if (FULL_ATTENUATION_SOLID) write(IOUT) epsilondev_trace
           write(IOUT) epsilondev_xx
           write(IOUT) epsilondev_yy
           write(IOUT) epsilondev_xy
@@ -85,7 +85,7 @@
         endif
       endif
 
-      if( POROELASTIC_SIMULATION ) then
+      if (POROELASTIC_SIMULATION) then
         write(IOUT) displs_poroelastic
         write(IOUT) velocs_poroelastic
         write(IOUT) accels_poroelastic
@@ -115,16 +115,16 @@
   endif
 
   ! closing source time function file
-  if(PRINT_SOURCE_TIME_FUNCTION .and. myrank == 0) then
+  if (PRINT_SOURCE_TIME_FUNCTION .and. myrank == 0) then
     close(IOSTF)
   endif
 
   ! stacey absorbing fields will be reconstructed for adjoint simulations
   ! using snapshot files of wavefields
-  if( STACEY_ABSORBING_CONDITIONS ) then
+  if (STACEY_ABSORBING_CONDITIONS) then
     ! closes absorbing wavefield saved/to-be-saved by forward simulations
-    if( num_abs_boundary_faces > 0 .and. (SIMULATION_TYPE == 3 .or. &
-          (SIMULATION_TYPE == 1 .and. SAVE_FORWARD)) ) then
+    if (num_abs_boundary_faces > 0 .and. (SIMULATION_TYPE == 3 .or. &
+          (SIMULATION_TYPE == 1 .and. SAVE_FORWARD))) then
 
       if (ELASTIC_SIMULATION) call close_file_abs(IOABS)
       if (ACOUSTIC_SIMULATION) call close_file_abs(IOABS_AC)
@@ -144,17 +144,17 @@
   endif
 
   ! mass matrices
-  if( ELASTIC_SIMULATION ) then
+  if (ELASTIC_SIMULATION) then
     deallocate(rmassx)
     deallocate(rmassy)
     deallocate(rmassz)
   endif
-  if( ACOUSTIC_SIMULATION ) then
+  if (ACOUSTIC_SIMULATION) then
     deallocate(rmass_acoustic)
   endif
 
   ! C-PML absorbing boundary conditions
-  if( PML_CONDITIONS .and. NSPEC_CPML > 0 ) then
+  if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
     ! outputs informations about C-PML elements in VTK-file format
     call pml_output_VTKs()
 
@@ -262,7 +262,7 @@
   endif
 
   ! close the main output file
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) 'End of the simulation'
     write(IMAIN,*)

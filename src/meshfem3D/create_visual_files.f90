@@ -55,7 +55,7 @@
 !  ---------------
   integer i,ipoin,ispec
 
-  if(CREATE_ABAQUS_FILES) then
+  if (CREATE_ABAQUS_FILES) then
 
      open(unit=64,file=prname(1:len_trim(prname))//'mesh.INP',status='unknown',action='write',form='formatted')
      write(64,'(a8)') '*HEADING'
@@ -75,7 +75,7 @@
   endif
 
 
-  if(CREATE_DX_FILES) then
+  if (CREATE_DX_FILES) then
 
      open(unit=66,file=prname(1:len_trim(prname))//'mesh.dx',status='unknown')
 
@@ -126,7 +126,7 @@
 
   endif
 
-  if( CREATE_VTK_FILES ) then
+  if (CREATE_VTK_FILES) then
     ! vtk file output
     open(66,file=prname(1:len_trim(prname))//'mesh.vtk',status='unknown')
     write(66,'(a)') '# vtk DataFile Version 3.1'

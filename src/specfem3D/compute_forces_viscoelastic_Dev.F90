@@ -255,7 +255,7 @@
   imodulo_N_SLS = mod(N_SLS,3)
 
   ! choses inner/outer elements
-  if( iphase == 1 ) then
+  if (iphase == 1) then
     num_elements = nspec_outer_elastic
   else
     num_elements = nspec_inner_elastic
@@ -325,7 +325,7 @@
 ! counts:
 ! + 0 FLOP
 !
-! + NGLLX * NGLLY * NGLLZ * ( 1 + 3 ) float = 2000 BYTE
+! + NGLLX * NGLLY * NGLLZ * ( 1 + 3) float = 2000 BYTE
 
 
     ! use first order Taylor expansion of displacement for local storage of stresses
@@ -663,7 +663,7 @@
 ! + 0 BYTE  (assuming temp*_** in cache)
 
           ! save strain on the Moho boundary
-          if (SIMULATION_TYPE == 3 .and. SAVE_MOHO_MESH ) then
+          if (SIMULATION_TYPE == 3 .and. SAVE_MOHO_MESH) then
             if (is_moho_top(ispec)) then
               dsdx_top(1,1,i,j,k,ispec2D_moho_top) = duxdxl
               dsdx_top(1,2,i,j,k,ispec2D_moho_top) = duxdyl
@@ -829,7 +829,7 @@
             lambdal = lambdalplus2mul - 2._CUSTOM_REAL*mul
 
             ! compute stress sigma
-            if(.not. MAKE_HOOKE_LAW_WEAKLY_NONLINEAR) then
+            if (.not. MAKE_HOOKE_LAW_WEAKLY_NONLINEAR) then
 
               sigma_xx = lambdalplus2mul*duxdxl + lambdal*duydyl_plus_duzdzl
               sigma_yy = lambdalplus2mul*duydyl + lambdal*duxdxl_plus_duzdzl
@@ -924,7 +924,7 @@
 
             endif
 
-          endif ! of if(ANISOTROPY)
+          endif ! of if (ANISOTROPY)
 
 ! counts:
 ! + NGLLX * NGLLY * NGLLZ * 16 =  2000 FLOP
@@ -1015,7 +1015,7 @@
           endif
 
           ! define symmetric components of sigma
-          if(.not. MAKE_HOOKE_LAW_WEAKLY_NONLINEAR) then
+          if (.not. MAKE_HOOKE_LAW_WEAKLY_NONLINEAR) then
             sigma_yx = sigma_xy
             sigma_zx = sigma_xz
             sigma_zy = sigma_yz
@@ -1165,7 +1165,7 @@
 ! + NGLLX * NGLLY * NGLLZ * 3 * 6 = 2250 FLOP
 !
 ! + NGLLX * NGLLY * 3 float = 300 BYTE (wgllwgll once)
-! + NGLLX * NGLLY * NGLLZ * (1 + 3 ) float = 2000 BYTE (ibool & accel, assumes newtemp* in cache)
+! + NGLLX * NGLLY * NGLLZ * (1 + 3) float = 2000 BYTE (ibool & accel, assumes newtemp* in cache)
 
           !  update memory variables based upon the Runge-Kutta scheme
           if (ATTENUATION) then

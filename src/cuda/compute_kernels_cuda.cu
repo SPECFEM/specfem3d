@@ -64,10 +64,10 @@ __global__ void compute_kernels_ani_cudakernel(int* ispec_is_elastic,
   int i,j;
 
   // handles case when there is 1 extra block (due to rectangular grid)
-  if(ispec < NSPEC_AB) {
+  if (ispec < NSPEC_AB) {
 
     // elastic elements only
-    if( ispec_is_elastic[ispec] ) {
+    if (ispec_is_elastic[ispec]) {
       int iglob = d_ibool[ijk + NGLL3_PADDED*ispec] - 1;
 
       // anisotropic kernels:
@@ -120,11 +120,11 @@ __global__ void compute_kernels_ani_cudakernel(int* ispec_is_elastic,
       for( i=0; i<6; i++){
         for( j=i; j<6; j++){
           prod[p] = eps[i] * b_eps[j];
-          if( j > i ){
+          if (j > i ){
             prod[p] = prod[p] + eps[j]*b_eps[i];
-            if( j > 2 && i < 3 ){ prod[p] = prod[p]*2; }
+            if (j > 2 && i < 3){ prod[p] = prod[p]*2; }
           }
-          if(i > 2 ){ prod[p] = prod[p]*4; }
+          if (i > 2){ prod[p] = prod[p]*4; }
           p++;
         }
       }
@@ -161,10 +161,10 @@ __global__ void compute_kernels_cudakernel(int* ispec_is_elastic,
   int ijk_ispec = ijk + NGLL3*ispec;
 
   // handles case when there is 1 extra block (due to rectangular grid)
-  if(ispec < NSPEC_AB) {
+  if (ispec < NSPEC_AB) {
 
     // elastic elements only
-    if( ispec_is_elastic[ispec] ) {
+    if (ispec_is_elastic[ispec]) {
       int iglob = d_ibool[ijk + NGLL3_PADDED*ispec] - 1 ;
 
       // isotropic kernels:
@@ -211,7 +211,7 @@ void FC_FUNC_(compute_kernels_elastic_cuda,
   dim3 grid(num_blocks_x,num_blocks_y);
   dim3 threads(blocksize,1,1);
 
-  if( mp->anisotropic_kl ){
+  if (mp->anisotropic_kl ){
     compute_kernels_ani_cudakernel<<<grid,threads>>>(mp->d_ispec_is_elastic,mp->d_ibool,
                                                      mp->d_accel, mp->d_b_displ,
                                                      mp->d_epsilondev_xx,
@@ -281,7 +281,7 @@ __global__ void compute_kernels_strength_noise_cuda_kernel(realw* displ,
   int igll = threadIdx.x;
   int ipoin = igll + NGLL2*iface;
 
-  if(iface < num_free_surface_faces) {
+  if (iface < num_free_surface_faces) {
 
     int ispec = free_surface_ispec[iface]-1;
 
@@ -315,7 +315,7 @@ TRACE("compute_kernels_strgth_noise_cu");
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
 
   // checks if anything to do
-  if( mp->num_free_surface_faces == 0 ) return;
+  if (mp->num_free_surface_faces == 0) return;
 
   int num_blocks_x, num_blocks_y;
   get_blocks_xy(mp->num_free_surface_faces,&num_blocks_x,&num_blocks_y);
@@ -412,7 +412,7 @@ __device__ void compute_gradient_kernel(int ijk,
   gammayl = d_gammay[offset];
   gammazl = d_gammaz[offset];
 
-  if( gravity ){
+  if (gravity ){
     // daniel: TODO - check gravity case here
     rho_invl = 1.0f / rhol;
   }else{
@@ -460,9 +460,9 @@ __global__ void compute_kernels_acoustic_kernel(int* ispec_is_acoustic,
   int active = 0;
 
   // handles case when there is 1 extra block (due to rectangular grid)
-  if( ispec < NSPEC_AB ){
+  if (ispec < NSPEC_AB ){
     // acoustic elements only
-    if( ispec_is_acoustic[ispec] ){
+    if (ispec_is_acoustic[ispec] ){
       active = 1;
 
       // copy field values
@@ -475,7 +475,7 @@ __global__ void compute_kernels_acoustic_kernel(int* ispec_is_acoustic,
   // synchronizes threads
   __syncthreads();
 
-  if( active ){
+  if (active ){
     realw accel_elm[3];
     realw b_displ_elm[3];
     realw rhol,kappal;
@@ -568,10 +568,10 @@ __global__ void compute_kernels_hess_el_cudakernel(int* ispec_is_elastic,
   int ijk = threadIdx.x;
 
   // handles case when there is 1 extra block (due to rectangular grid)
-  if(ispec < NSPEC_AB) {
+  if (ispec < NSPEC_AB) {
 
     // elastic elements only
-    if( ispec_is_elastic[ispec] ) {
+    if (ispec_is_elastic[ispec]) {
       int iglob = d_ibool[ijk + NGLL3_PADDED*ispec] - 1;
 
       // approximate hessian
@@ -610,10 +610,10 @@ __global__ void compute_kernels_hess_ac_cudakernel(int* ispec_is_acoustic,
   int active = 0;
 
   // handles case when there is 1 extra block (due to rectangular grid)
-  if(ispec < NSPEC_AB) {
+  if (ispec < NSPEC_AB) {
 
     // acoustic elements only
-    if( ispec_is_acoustic[ispec] ){
+    if (ispec_is_acoustic[ispec] ){
       active = 1;
 
       // global indices
@@ -628,7 +628,7 @@ __global__ void compute_kernels_hess_ac_cudakernel(int* ispec_is_acoustic,
   // synchronizes threads
   __syncthreads();
 
-  if( active ){
+  if (active ){
     realw accel_elm[3];
     realw b_accel_elm[3];
     realw rhol;
@@ -678,7 +678,7 @@ void FC_FUNC_(compute_kernels_hess_cuda,
   dim3 grid(num_blocks_x,num_blocks_y);
   dim3 threads(blocksize,1,1);
 
-  if( *ELASTIC_SIMULATION ) {
+  if (*ELASTIC_SIMULATION) {
     compute_kernels_hess_el_cudakernel<<<grid,threads>>>(mp->d_ispec_is_elastic,
                                                          mp->d_ibool,
                                                          mp->d_accel,
@@ -688,7 +688,7 @@ void FC_FUNC_(compute_kernels_hess_cuda,
                                                          mp->NSPEC_AB);
   }
 
-  if( *ACOUSTIC_SIMULATION ) {
+  if (*ACOUSTIC_SIMULATION) {
     compute_kernels_hess_ac_cudakernel<<<grid,threads>>>(mp->d_ispec_is_acoustic,
                                                          mp->d_ibool,
                                                          mp->d_potential_dot_dot_acoustic,

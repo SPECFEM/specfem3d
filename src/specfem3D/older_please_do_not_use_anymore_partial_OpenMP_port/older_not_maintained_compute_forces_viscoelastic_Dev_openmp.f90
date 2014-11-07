@@ -196,7 +196,7 @@
 
 
   ! choses inner/outer elements
-  if( iphase == 1 ) then
+  if (iphase == 1) then
      number_of_colors = num_colors_outer_elastic
      istart = 1
   else
@@ -250,7 +250,7 @@
        ispec = phase_ispec_inner_elastic(ispec_p,iphase)
 
        ! adjoint simulations: moho kernel
-       if( SIMULATION_TYPE == 3 .and. SAVE_MOHO_MESH ) then
+       if (SIMULATION_TYPE == 3 .and. SAVE_MOHO_MESH) then
           if (is_moho_top(ispec)) then
              ispec2D_moho_top = ispec2D_moho_top + 1
           else if (is_moho_bot(ispec)) then
@@ -376,7 +376,7 @@
           enddo
        enddo
 
-       if( ATTENUATION .and. COMPUTE_AND_STORE_STRAIN ) then
+       if (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) then
           do j=1,m2
              do i=1,m1
                 tempx1_att(i,j,1,thread_id) = tempx1(i,j,1,thread_id)
@@ -511,7 +511,7 @@
                 duzdzl = xizl*tempz1(i,j,k,thread_id) + etazl*tempz2(i,j,k,thread_id) + gammazl*tempz3(i,j,k,thread_id)
 
                 ! save strain on the Moho boundary
-                if (SAVE_MOHO_MESH ) then
+                if (SAVE_MOHO_MESH) then
                    if (is_moho_top(ispec)) then
                       dsdx_top(1,1,i,j,k,ispec2D_moho_top) = duxdxl
                       dsdx_top(1,2,i,j,k,ispec2D_moho_top) = duxdyl
@@ -543,7 +543,7 @@
                 duzdxl_plus_duxdzl = duzdxl + duxdzl
                 duzdyl_plus_duydzl = duzdyl + duydzl
 
-                if( ATTENUATION .and. COMPUTE_AND_STORE_STRAIN ) then
+                if (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) then
                    ! temporary variables used for fixing attenuation in a consistent way
                    duxdxl_att = xixl*tempx1l_att(i,j,k,thread_id) + etaxl*tempx2l_att(i,j,k,thread_id) + &
                         gammaxl*tempx3l_att(i,j,k,thread_id)
@@ -572,7 +572,7 @@
                    duzdyl_plus_duydzl_att = duzdyl_att + duydzl_att
 
                    ! compute deviatoric strain
-                   if( SIMULATION_TYPE == 3 ) &
+                   if (SIMULATION_TYPE == 3) &
                         epsilon_trace_over_3(i,j,k,ispec) = ONE_THIRD * (duxdxl_att + duydyl_att + duzdzl_att)
                    epsilondev_xx_loc(i,j,k) = duxdxl_att - epsilon_trace_over_3(i,j,k,ispec)
                    epsilondev_yy_loc(i,j,k) = duydyl_att - epsilon_trace_over_3(i,j,k,ispec)
@@ -583,7 +583,7 @@
                    ! computes deviatoric strain attenuation and/or for kernel calculations
                    if (COMPUTE_AND_STORE_STRAIN) then
                       templ = ONE_THIRD * (duxdxl + duydyl + duzdzl)
-                      if( SIMULATION_TYPE == 3 ) epsilon_trace_over_3(i,j,k,ispec) = templ
+                      if (SIMULATION_TYPE == 3) epsilon_trace_over_3(i,j,k,ispec) = templ
                       epsilondev_xx_loc(i,j,k) = duxdxl - templ
                       epsilondev_yy_loc(i,j,k) = duydyl - templ
                       epsilondev_xy_loc(i,j,k) = 0.5 * duxdyl_plus_duydxl
@@ -596,13 +596,13 @@
                 mul = mustore(i,j,k,ispec)
 
                 ! attenuation
-                if(ATTENUATION) then
+                if (ATTENUATION) then
                    ! use unrelaxed parameters if attenuation
                    mul  = mul * one_minus_sum_beta(i,j,k,ispec)
                 endif
 
                 ! full anisotropic case, stress calculations
-                if(ANISOTROPY) then
+                if (ANISOTROPY) then
                    c11 = c11store(i,j,k,ispec)
                    c12 = c12store(i,j,k,ispec)
                    c13 = c13store(i,j,k,ispec)
@@ -656,7 +656,7 @@
                 endif ! ANISOTROPY
 
                 ! subtract memory variables if attenuation
-                if(ATTENUATION) then
+                if (ATTENUATION) then
                    ! way 1
                    !                do i_sls = 1,N_SLS
                    !                  R_xx_val = R_xx(i,j,k,ispec,i_sls)
@@ -673,7 +673,7 @@
                    ! note: this should help compilers to pipeline the code and make better use of the cache;
                    !          depending on compilers, it can further decrease the computation time by ~ 30%.
                    !          by default, N_SLS = 3, therefore we take steps of 3
-                   if(imodulo_N_SLS >= 1) then
+                   if (imodulo_N_SLS >= 1) then
                       do i_sls = 1,imodulo_N_SLS
                          R_xx_val1 = R_xx(i,j,k,ispec,i_sls)
                          R_yy_val1 = R_yy(i,j,k,ispec,i_sls)
@@ -686,7 +686,7 @@
                       enddo
                    endif
 
-                   if(N_SLS >= imodulo_N_SLS+1) then
+                   if (N_SLS >= imodulo_N_SLS+1) then
                       do i_sls = imodulo_N_SLS+1,N_SLS,3
                          R_xx_val1 = R_xx(i,j,k,ispec,i_sls)
                          R_yy_val1 = R_yy(i,j,k,ispec,i_sls)
@@ -866,7 +866,7 @@
                 !      fac2*newtempz2(i,j,k,thread_id) - fac3*newtempz3(i,j,k,thread_id)
 
                 !  update memory variables based upon the Runge-Kutta scheme
-                if(ATTENUATION) then
+                if (ATTENUATION) then
 
                    ! use Runge-Kutta scheme to march in time
                    do i_sls = 1,N_SLS
@@ -913,7 +913,7 @@
        enddo
 
        ! save deviatoric strain for Runge-Kutta scheme
-       if ( COMPUTE_AND_STORE_STRAIN ) then
+       if (COMPUTE_AND_STORE_STRAIN) then
           epsilondev_xx(:,:,:,ispec) = epsilondev_xx_loc(:,:,:)
           epsilondev_yy(:,:,:,ispec) = epsilondev_yy_loc(:,:,:)
           epsilondev_xy(:,:,:,ispec) = epsilondev_xy_loc(:,:,:)

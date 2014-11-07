@@ -364,7 +364,7 @@ __device__  __forceinline__ void sum_hprime_xi(int I, int J, int K,
   }
 
 // counts:
-// + NGLLX * ( 2 + 3*6 ) FLOP = 100 FLOP
+// + NGLLX * ( 2 + 3*6) FLOP = 100 FLOP
 //
 // + 0 BYTE
 
@@ -625,10 +625,10 @@ Kernel_2_noatt_iso_impl(const int nb_blocks_to_compute,
 // 2 FLOP
 
   // checks if anything to do
-  if( bx >= nb_blocks_to_compute ) return;
+  if (bx >= nb_blocks_to_compute) return;
 
   // limits thread ids to range [0,125-1]
-  if( tx >= NGLL3 ) tx = NGLL3 - 1;
+  if (tx >= NGLL3) tx = NGLL3 - 1;
 
 // counts:
 // + 1 FLOP
@@ -636,7 +636,7 @@ Kernel_2_noatt_iso_impl(const int nb_blocks_to_compute,
 // + 0 BYTE
 
   // loads hprime's into shared memory
-  if( tx < NGLL2 ) {
+  if (tx < NGLL2) {
     // copy hprime from global memory to shared memory
     load_shared_memory_hprime(&tx,d_hprime_xx,sh_hprime_xx);
 
@@ -666,7 +666,7 @@ Kernel_2_noatt_iso_impl(const int nb_blocks_to_compute,
 
   // copy from global memory to shared memory
   // each thread writes one of the NGLL^3 = 125 data points
-  if( threadIdx.x < NGLL3 ){
+  if (threadIdx.x < NGLL3 ){
     // copy displacement from global memory to shared memory
     load_shared_memory_displ<FORWARD_OR_ADJOINT>(&tx,&iglob,d_displ,sh_tempx,sh_tempy,sh_tempz);
   }
@@ -798,7 +798,7 @@ Kernel_2_noatt_iso_impl(const int nb_blocks_to_compute,
   // 1. cut-plane xi
   __syncthreads();
   // fills shared memory arrays
-  if( threadIdx.x < NGLL3 ) {
+  if (threadIdx.x < NGLL3) {
     sh_tempx[tx] = jacobianl * (sigma_xx*xixl + sigma_xy*xiyl + sigma_xz*xizl); // sh_tempx1
     sh_tempy[tx] = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_yz*xizl); // sh_tempy1
     sh_tempz[tx] = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl); // sh_tempz1
@@ -810,7 +810,7 @@ Kernel_2_noatt_iso_impl(const int nb_blocks_to_compute,
   // 2. cut-plane eta
   __syncthreads();
   // fills shared memory arrays
-  if( threadIdx.x < NGLL3 ) {
+  if (threadIdx.x < NGLL3) {
     sh_tempx[tx] = jacobianl * (sigma_xx*etaxl + sigma_xy*etayl + sigma_xz*etazl); // sh_tempx2
     sh_tempy[tx] = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_yz*etazl); // sh_tempy2
     sh_tempz[tx] = jacobianl * (sigma_xz*etaxl + sigma_yz*etayl + sigma_zz*etazl); // sh_tempz2
@@ -822,7 +822,7 @@ Kernel_2_noatt_iso_impl(const int nb_blocks_to_compute,
   // 3. cut-plane gamma
   __syncthreads();
   // fills shared memory arrays
-  if( threadIdx.x < NGLL3 ) {
+  if (threadIdx.x < NGLL3) {
     sh_tempx[tx] = jacobianl * (sigma_xx*gammaxl + sigma_xy*gammayl + sigma_xz*gammazl); // sh_tempx3
     sh_tempy[tx] = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_yz*gammazl); // sh_tempy3
     sh_tempz[tx] = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl); // sh_tempz3
@@ -857,7 +857,7 @@ Kernel_2_noatt_iso_impl(const int nb_blocks_to_compute,
 // + 0 BYTE
 
   // assembles acceleration array
-  if(threadIdx.x < NGLL3) {
+  if (threadIdx.x < NGLL3) {
     atomicAdd(&d_accel[iglob*3], sum_terms1);
     atomicAdd(&d_accel[iglob*3+1], sum_terms2);
     atomicAdd(&d_accel[iglob*3+2], sum_terms3);
@@ -951,7 +951,7 @@ Kernel_2_noatt_iso_strain_impl(int nb_blocks_to_compute,
   int bx = blockIdx.y*gridDim.x+blockIdx.x;
 
   // checks if anything to do
-  if( bx >= nb_blocks_to_compute ) return;
+  if (bx >= nb_blocks_to_compute) return;
 
   // thread-id == GLL node id
   // note: use only NGLL^3 = 125 active threads, plus 3 inactive/ghost threads,
@@ -959,7 +959,7 @@ Kernel_2_noatt_iso_strain_impl(int nb_blocks_to_compute,
   //       to avoid execution branching and the need of registers to store an active state variable,
   //       the thread ids are put in valid range
   int tx = threadIdx.x;
-  if( tx >= NGLL3 ) tx = NGLL3 - 1;
+  if (tx >= NGLL3) tx = NGLL3 - 1;
 
   int K = (tx/NGLL2);
   int J = ((tx-K*NGLL2)/NGLLX);
@@ -990,7 +990,7 @@ Kernel_2_noatt_iso_strain_impl(int nb_blocks_to_compute,
   __shared__ realw sh_hprimewgll_xx[NGLL2];
 
   // loads hprime's into shared memory
-  if( tx < NGLL2 ) {
+  if (tx < NGLL2) {
     // copy hprime from global memory to shared memory
     load_shared_memory_hprime(&tx,d_hprime_xx,sh_hprime_xx);
     // copy hprime from global memory to shared memory
@@ -1009,7 +1009,7 @@ Kernel_2_noatt_iso_strain_impl(int nb_blocks_to_compute,
 
   // copy from global memory to shared memory
   // each thread writes one of the NGLL^3 = 125 data points
-  if( threadIdx.x < NGLL3 ){
+  if (threadIdx.x < NGLL3 ){
     // copy displacement from global memory to shared memory
     load_shared_memory_displ<FORWARD_OR_ADJOINT>(&tx,&iglob,d_displ,sh_tempx,sh_tempy,sh_tempz);
   }
@@ -1070,9 +1070,9 @@ Kernel_2_noatt_iso_strain_impl(int nb_blocks_to_compute,
   duzdyl_plus_duydzl = duzdyl + duydzl;
 
   // computes deviatoric strain for kernel calculations
-  if( COMPUTE_AND_STORE_STRAIN ) {
+  if (COMPUTE_AND_STORE_STRAIN) {
     // save deviatoric strain for Runge-Kutta scheme
-    if( threadIdx.x < NGLL3) {
+    if (threadIdx.x < NGLL3) {
       realw templ = 0.33333333333333333333f * (duxdxl + duydyl + duzdzl); // 1./3. = 0.33333
       // local storage: stresses at this current time step
       // fortran: epsilondev_xx(:,:,:,ispec) = epsilondev_xx_loc(:,:,:)
@@ -1082,7 +1082,7 @@ Kernel_2_noatt_iso_strain_impl(int nb_blocks_to_compute,
       epsilondev_xz[tx + working_element*NGLL3] = 0.5f * duzdxl_plus_duxdzl; // epsilondev_xz_loc;
       epsilondev_yz[tx + working_element*NGLL3] = 0.5f * duzdyl_plus_duydzl; //epsilondev_yz_loc;
       // kernel simulations
-      if( SIMULATION_TYPE == 3 ){
+      if (SIMULATION_TYPE == 3){
         epsilon_trace_over_3[tx + working_element*NGLL3] = templ;
       }
     } // threadIdx.x
@@ -1111,7 +1111,7 @@ Kernel_2_noatt_iso_strain_impl(int nb_blocks_to_compute,
   // 1. cut-plane xi
   __syncthreads();
   // fills shared memory arrays
-  if( threadIdx.x < NGLL3 ) {
+  if (threadIdx.x < NGLL3) {
     sh_tempx[tx] = jacobianl * (sigma_xx*xixl + sigma_xy*xiyl + sigma_xz*xizl); // sh_tempx1
     sh_tempy[tx] = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_yz*xizl); // sh_tempy1
     sh_tempz[tx] = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl); // sh_tempz1
@@ -1123,7 +1123,7 @@ Kernel_2_noatt_iso_strain_impl(int nb_blocks_to_compute,
   // 2. cut-plane eta
   __syncthreads();
   // fills shared memory arrays
-  if( threadIdx.x < NGLL3 ) {
+  if (threadIdx.x < NGLL3) {
     sh_tempx[tx] = jacobianl * (sigma_xx*etaxl + sigma_xy*etayl + sigma_xz*etazl); // sh_tempx2
     sh_tempy[tx] = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_yz*etazl); // sh_tempy2
     sh_tempz[tx] = jacobianl * (sigma_xz*etaxl + sigma_yz*etayl + sigma_zz*etazl); // sh_tempz2
@@ -1135,7 +1135,7 @@ Kernel_2_noatt_iso_strain_impl(int nb_blocks_to_compute,
   // 3. cut-plane gamma
   __syncthreads();
   // fills shared memory arrays
-  if( threadIdx.x < NGLL3 ) {
+  if (threadIdx.x < NGLL3) {
     sh_tempx[tx] = jacobianl * (sigma_xx*gammaxl + sigma_xy*gammayl + sigma_xz*gammazl); // sh_tempx3
     sh_tempy[tx] = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_yz*gammazl); // sh_tempy3
     sh_tempz[tx] = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl); // sh_tempz3
@@ -1154,7 +1154,7 @@ Kernel_2_noatt_iso_strain_impl(int nb_blocks_to_compute,
   sum_terms3 = - (fac1*tempz1l + fac2*tempz2l + fac3*tempz3l);
 
   // assembles acceleration array
-  if(threadIdx.x < NGLL3) {
+  if (threadIdx.x < NGLL3) {
     atomicAdd(&d_accel[iglob*3], sum_terms1);
     atomicAdd(&d_accel[iglob*3+1], sum_terms2);
     atomicAdd(&d_accel[iglob*3+2], sum_terms3);
@@ -1203,7 +1203,7 @@ Kernel_2_noatt_iso_col_impl(int nb_blocks_to_compute,
   int bx = blockIdx.y*gridDim.x+blockIdx.x;
 
   // checks if anything to do
-  if( bx >= nb_blocks_to_compute ) return;
+  if (bx >= nb_blocks_to_compute) return;
 
   // thread-id == GLL node id
   // note: use only NGLL^3 = 125 active threads, plus 3 inactive/ghost threads,
@@ -1211,7 +1211,7 @@ Kernel_2_noatt_iso_col_impl(int nb_blocks_to_compute,
   //       to avoid execution branching and the need of registers to store an active state variable,
   //       the thread ids are put in valid range
   int tx = threadIdx.x;
-  if( tx >= NGLL3 ) tx = NGLL3-1;
+  if (tx >= NGLL3) tx = NGLL3-1;
 
   int K = (tx/NGLL2);
   int J = ((tx-K*NGLL2)/NGLLX);
@@ -1242,7 +1242,7 @@ Kernel_2_noatt_iso_col_impl(int nb_blocks_to_compute,
   __shared__ realw sh_hprimewgll_xx[NGLL2];
 
   // loads hprime's into shared memory
-  if( tx < NGLL2 ) {
+  if (tx < NGLL2) {
     // copy hprime from global memory to shared memory
     load_shared_memory_hprime(&tx,d_hprime_xx,sh_hprime_xx);
     // copy hprime from global memory to shared memory
@@ -1255,7 +1255,7 @@ Kernel_2_noatt_iso_col_impl(int nb_blocks_to_compute,
   working_element = bx;
 #else
   //mesh coloring
-  if( use_mesh_coloring_gpu ){
+  if (use_mesh_coloring_gpu ){
     working_element = bx;
   }else{
     // iphase-1 and working_element-1 for Fortran->C array conventions
@@ -1270,7 +1270,7 @@ Kernel_2_noatt_iso_col_impl(int nb_blocks_to_compute,
 
   // copy from global memory to shared memory
   // each thread writes one of the NGLL^3 = 125 data points
-  if( threadIdx.x < NGLL3 ){
+  if (threadIdx.x < NGLL3 ){
     // copy displacement from global memory to shared memory
     load_shared_memory_displ<FORWARD_OR_ADJOINT>(&tx,&iglob,d_displ,sh_tempx,sh_tempy,sh_tempz);
   }
@@ -1331,9 +1331,9 @@ Kernel_2_noatt_iso_col_impl(int nb_blocks_to_compute,
   duzdyl_plus_duydzl = duzdyl + duydzl;
 
   // computes deviatoric strain for kernel calculations
-  if( COMPUTE_AND_STORE_STRAIN ) {
+  if (COMPUTE_AND_STORE_STRAIN) {
     // save deviatoric strain for Runge-Kutta scheme
-    if( threadIdx.x < NGLL3) {
+    if (threadIdx.x < NGLL3) {
       realw templ = 0.33333333333333333333f * (duxdxl + duydyl + duzdzl); // 1./3. = 0.33333
       // local storage: stresses at this current time step
       // fortran: epsilondev_xx(:,:,:,ispec) = epsilondev_xx_loc(:,:,:)
@@ -1343,7 +1343,7 @@ Kernel_2_noatt_iso_col_impl(int nb_blocks_to_compute,
       epsilondev_xz[tx + working_element*NGLL3] = 0.5f * duzdxl_plus_duxdzl; // epsilondev_xz_loc;
       epsilondev_yz[tx + working_element*NGLL3] = 0.5f * duzdyl_plus_duydzl; //epsilondev_yz_loc;
       // kernel simulations
-      if( SIMULATION_TYPE == 3 ){
+      if (SIMULATION_TYPE == 3){
         epsilon_trace_over_3[tx + working_element*NGLL3] = templ;
       }
     } // threadIdx.x
@@ -1372,7 +1372,7 @@ Kernel_2_noatt_iso_col_impl(int nb_blocks_to_compute,
   // 1. cut-plane xi
   __syncthreads();
   // fills shared memory arrays
-  if( threadIdx.x < NGLL3 ) {
+  if (threadIdx.x < NGLL3) {
     sh_tempx[tx] = jacobianl * (sigma_xx*xixl + sigma_xy*xiyl + sigma_xz*xizl); // sh_tempx1
     sh_tempy[tx] = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_yz*xizl); // sh_tempy1
     sh_tempz[tx] = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl); // sh_tempz1
@@ -1384,7 +1384,7 @@ Kernel_2_noatt_iso_col_impl(int nb_blocks_to_compute,
   // 2. cut-plane eta
   __syncthreads();
   // fills shared memory arrays
-  if( threadIdx.x < NGLL3 ) {
+  if (threadIdx.x < NGLL3) {
     sh_tempx[tx] = jacobianl * (sigma_xx*etaxl + sigma_xy*etayl + sigma_xz*etazl); // sh_tempx2
     sh_tempy[tx] = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_yz*etazl); // sh_tempy2
     sh_tempz[tx] = jacobianl * (sigma_xz*etaxl + sigma_yz*etayl + sigma_zz*etazl); // sh_tempz2
@@ -1396,7 +1396,7 @@ Kernel_2_noatt_iso_col_impl(int nb_blocks_to_compute,
   // 3. cut-plane gamma
   __syncthreads();
   // fills shared memory arrays
-  if( threadIdx.x < NGLL3 ) {
+  if (threadIdx.x < NGLL3) {
     sh_tempx[tx] = jacobianl * (sigma_xx*gammaxl + sigma_xy*gammayl + sigma_xz*gammazl); // sh_tempx3
     sh_tempy[tx] = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_yz*gammazl); // sh_tempy3
     sh_tempz[tx] = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl); // sh_tempz3
@@ -1415,7 +1415,7 @@ Kernel_2_noatt_iso_col_impl(int nb_blocks_to_compute,
   sum_terms3 = - (fac1*tempz1l + fac2*tempz2l + fac3*tempz3l);
 
   // assembles acceleration array
-  if(threadIdx.x < NGLL3) {
+  if (threadIdx.x < NGLL3) {
 
 #ifdef USE_MESH_COLORING_GPU
     // no atomic operation needed, colors don't share global points between elements
@@ -1433,7 +1433,7 @@ Kernel_2_noatt_iso_col_impl(int nb_blocks_to_compute,
 #else // MESH_COLORING
 
     //mesh coloring
-    if( use_mesh_coloring_gpu ){
+    if (use_mesh_coloring_gpu ){
 
       // no atomic operation needed, colors don't share global points between elements
 #ifdef USE_TEXTURES_FIELDS
@@ -1450,7 +1450,7 @@ Kernel_2_noatt_iso_col_impl(int nb_blocks_to_compute,
       atomicAdd(&d_accel[iglob*3], sum_terms1);
       atomicAdd(&d_accel[iglob*3+1], sum_terms2);
       atomicAdd(&d_accel[iglob*3+2], sum_terms3);
-    } // if(use_mesh_coloring_gpu)
+    } // if (use_mesh_coloring_gpu)
 
 #endif // MESH_COLORING
 
@@ -1505,7 +1505,7 @@ Kernel_2_noatt_iso_grav_impl(int nb_blocks_to_compute,
   int bx = blockIdx.y*gridDim.x+blockIdx.x;
 
   // checks if anything to do
-  if( bx >= nb_blocks_to_compute ) return;
+  if (bx >= nb_blocks_to_compute) return;
 
   // thread-id == GLL node id
   // note: use only NGLL^3 = 125 active threads, plus 3 inactive/ghost threads,
@@ -1513,7 +1513,7 @@ Kernel_2_noatt_iso_grav_impl(int nb_blocks_to_compute,
   //       to avoid execution branching and the need of registers to store an active state variable,
   //       the thread ids are put in valid range
   int tx = threadIdx.x;
-  if( tx >= NGLL3 ) tx = NGLL3-1;
+  if (tx >= NGLL3) tx = NGLL3-1;
 
   int K = (tx/NGLL2);
   int J = ((tx-K*NGLL2)/NGLLX);
@@ -1550,7 +1550,7 @@ Kernel_2_noatt_iso_grav_impl(int nb_blocks_to_compute,
   __shared__ realw sh_hprimewgll_xx[NGLL2];
 
   // loads hprime's into shared memory
-  if( tx < NGLL2 ) {
+  if (tx < NGLL2) {
     // copy hprime from global memory to shared memory
     load_shared_memory_hprime(&tx,d_hprime_xx,sh_hprime_xx);
     // copy hprime from global memory to shared memory
@@ -1563,7 +1563,7 @@ Kernel_2_noatt_iso_grav_impl(int nb_blocks_to_compute,
   working_element = bx;
 #else
   //mesh coloring
-  if( use_mesh_coloring_gpu ){
+  if (use_mesh_coloring_gpu ){
     working_element = bx;
   }else{
     // iphase-1 and working_element-1 for Fortran->C array conventions
@@ -1578,7 +1578,7 @@ Kernel_2_noatt_iso_grav_impl(int nb_blocks_to_compute,
 
   // copy from global memory to shared memory
   // each thread writes one of the NGLL^3 = 125 data points
-  if( threadIdx.x < NGLL3 ){
+  if (threadIdx.x < NGLL3 ){
     // copy displacement from global memory to shared memory
     load_shared_memory_displ<FORWARD_OR_ADJOINT>(&tx,&iglob,d_displ,sh_tempx,sh_tempy,sh_tempz);
   }
@@ -1639,9 +1639,9 @@ Kernel_2_noatt_iso_grav_impl(int nb_blocks_to_compute,
   duzdyl_plus_duydzl = duzdyl + duydzl;
 
   // computes deviatoric strain for kernel calculations
-  if( COMPUTE_AND_STORE_STRAIN ) {
+  if (COMPUTE_AND_STORE_STRAIN) {
     // save deviatoric strain for Runge-Kutta scheme
-    if( threadIdx.x < NGLL3) {
+    if (threadIdx.x < NGLL3) {
       realw templ = 0.33333333333333333333f * (duxdxl + duydyl + duzdzl); // 1./3. = 0.33333
       // local storage: stresses at this current time step
       // fortran: epsilondev_xx(:,:,:,ispec) = epsilondev_xx_loc(:,:,:)
@@ -1651,7 +1651,7 @@ Kernel_2_noatt_iso_grav_impl(int nb_blocks_to_compute,
       epsilondev_xz[tx + working_element*NGLL3] = 0.5f * duzdxl_plus_duxdzl; // epsilondev_xz_loc;
       epsilondev_yz[tx + working_element*NGLL3] = 0.5f * duzdyl_plus_duydzl; //epsilondev_yz_loc;
       // kernel simulations
-      if( SIMULATION_TYPE == 3 ){
+      if (SIMULATION_TYPE == 3){
         epsilon_trace_over_3[tx + working_element*NGLL3] = templ;
       }
     } // threadIdx.x
@@ -1681,7 +1681,7 @@ Kernel_2_noatt_iso_grav_impl(int nb_blocks_to_compute,
   sigma_zx = sigma_xz;
   sigma_zy = sigma_yz;
 
-  if( gravity ){
+  if (gravity ){
     //  computes non-symmetric terms for gravity
     compute_element_gravity(tx,working_element,&iglob,d_minus_g,d_minus_deriv_gravity,
                             d_rhostore,wgll_cube,jacobianl,
@@ -1693,7 +1693,7 @@ Kernel_2_noatt_iso_grav_impl(int nb_blocks_to_compute,
   // form dot product with test vector, non-symmetric form
   // 1. cut-plane xi
   __syncthreads();
-  if( threadIdx.x < NGLL3 ) {
+  if (threadIdx.x < NGLL3) {
     sh_tempx[tx] = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl); // sh_tempx1
     sh_tempy[tx] = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_zy*xizl); // sh_tempy1
     sh_tempz[tx] = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl); // sh_tempz1
@@ -1704,7 +1704,7 @@ Kernel_2_noatt_iso_grav_impl(int nb_blocks_to_compute,
 
   // 2. cut-plane eta
   __syncthreads();
-  if( threadIdx.x < NGLL3 ) {
+  if (threadIdx.x < NGLL3) {
     sh_tempx[tx] = jacobianl * (sigma_xx*etaxl + sigma_yx*etayl + sigma_zx*etazl); // sh_tempx2
     sh_tempy[tx] = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_zy*etazl); // sh_tempy2
     sh_tempz[tx] = jacobianl * (sigma_xz*etaxl + sigma_yz*etayl + sigma_zz*etazl); // sh_tempz2
@@ -1715,7 +1715,7 @@ Kernel_2_noatt_iso_grav_impl(int nb_blocks_to_compute,
 
   // 3. cut-plane gamma
   __syncthreads();
-  if( threadIdx.x < NGLL3 ) {
+  if (threadIdx.x < NGLL3) {
     sh_tempx[tx] = jacobianl * (sigma_xx*gammaxl + sigma_yx*gammayl + sigma_zx*gammazl); // sh_tempx3
     sh_tempy[tx] = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_zy*gammazl); // sh_tempy3
     sh_tempz[tx] = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl); // sh_tempz3
@@ -1739,7 +1739,7 @@ Kernel_2_noatt_iso_grav_impl(int nb_blocks_to_compute,
   sum_terms3 += rho_s_H3;
 
   // assembles acceleration array
-  if(threadIdx.x < NGLL3) {
+  if (threadIdx.x < NGLL3) {
 
 #ifdef USE_MESH_COLORING_GPU
     // no atomic operation needed, colors don't share global points between elements
@@ -1757,7 +1757,7 @@ Kernel_2_noatt_iso_grav_impl(int nb_blocks_to_compute,
 #else // MESH_COLORING
 
     //mesh coloring
-    if( use_mesh_coloring_gpu ){
+    if (use_mesh_coloring_gpu ){
 
       // no atomic operation needed, colors don't share global points between elements
 #ifdef USE_TEXTURES_FIELDS
@@ -1774,7 +1774,7 @@ Kernel_2_noatt_iso_grav_impl(int nb_blocks_to_compute,
       atomicAdd(&d_accel[iglob*3], sum_terms1);
       atomicAdd(&d_accel[iglob*3+1], sum_terms2);
       atomicAdd(&d_accel[iglob*3+2], sum_terms3);
-    } // if(use_mesh_coloring_gpu)
+    } // if (use_mesh_coloring_gpu)
 
 #endif // MESH_COLORING
 
@@ -1836,7 +1836,7 @@ Kernel_2_noatt_ani_impl(int nb_blocks_to_compute,
   int bx = blockIdx.y*gridDim.x+blockIdx.x;
 
   // checks if anything to do
-  if( bx >= nb_blocks_to_compute ) return;
+  if (bx >= nb_blocks_to_compute) return;
 
   // thread-id == GLL node id
   // note: use only NGLL^3 = 125 active threads, plus 3 inactive/ghost threads,
@@ -1844,7 +1844,7 @@ Kernel_2_noatt_ani_impl(int nb_blocks_to_compute,
   //       to avoid execution branching and the need of registers to store an active state variable,
   //       the thread ids are put in valid range
   int tx = threadIdx.x;
-  if( tx >= NGLL3 ) tx = NGLL3-1;
+  if (tx >= NGLL3) tx = NGLL3-1;
 
   int K = (tx/NGLL2);
   int J = ((tx-K*NGLL2)/NGLLX);
@@ -1883,7 +1883,7 @@ Kernel_2_noatt_ani_impl(int nb_blocks_to_compute,
   __shared__ realw sh_hprimewgll_xx[NGLL2];
 
   // loads hprime's into shared memory
-  if( tx < NGLL2 ) {
+  if (tx < NGLL2) {
     // copy hprime from global memory to shared memory
     load_shared_memory_hprime(&tx,d_hprime_xx,sh_hprime_xx);
     // copy hprime from global memory to shared memory
@@ -1896,7 +1896,7 @@ Kernel_2_noatt_ani_impl(int nb_blocks_to_compute,
   working_element = bx;
 #else
   //mesh coloring
-  if( use_mesh_coloring_gpu ){
+  if (use_mesh_coloring_gpu ){
     working_element = bx;
   }else{
     // iphase-1 and working_element-1 for Fortran->C array conventions
@@ -1911,7 +1911,7 @@ Kernel_2_noatt_ani_impl(int nb_blocks_to_compute,
 
   // copy from global memory to shared memory
   // each thread writes one of the NGLL^3 = 125 data points
-  if( threadIdx.x < NGLL3 ){
+  if (threadIdx.x < NGLL3 ){
     // copy displacement from global memory to shared memory
     load_shared_memory_displ<FORWARD_OR_ADJOINT>(&tx,&iglob,d_displ,sh_tempx,sh_tempy,sh_tempz);
   }
@@ -1972,7 +1972,7 @@ Kernel_2_noatt_ani_impl(int nb_blocks_to_compute,
   duzdyl_plus_duydzl = duzdyl + duydzl;
 
   // computes deviatoric strain for kernel calculations
-  if( COMPUTE_AND_STORE_STRAIN ) {
+  if (COMPUTE_AND_STORE_STRAIN) {
     realw templ = 0.33333333333333333333f * (duxdxl + duydyl + duzdzl); // 1./3. = 0.33333
     // local storage: stresses at this current time step
     epsilondev_xx_loc = duxdxl - templ;
@@ -1981,15 +1981,15 @@ Kernel_2_noatt_ani_impl(int nb_blocks_to_compute,
     epsilondev_xz_loc = 0.5f * duzdxl_plus_duxdzl;
     epsilondev_yz_loc = 0.5f * duzdyl_plus_duydzl;
 
-    if( SIMULATION_TYPE == 3 ){
-      if( threadIdx.x < NGLL3) {
+    if (SIMULATION_TYPE == 3){
+      if (threadIdx.x < NGLL3) {
         epsilon_trace_over_3[tx + working_element*NGLL3] = templ;
       }
     }
   }
 
   // full anisotropic case, stress calculations
-  if(ANISOTROPY){
+  if (ANISOTROPY){
     c11 = d_c11store[offset];
     c12 = d_c12store[offset];
     c13 = d_c13store[offset];
@@ -2051,7 +2051,7 @@ Kernel_2_noatt_ani_impl(int nb_blocks_to_compute,
   sigma_zx = sigma_xz;
   sigma_zy = sigma_yz;
 
-  if( gravity ){
+  if (gravity ){
     //  computes non-symmetric terms for gravity
     compute_element_gravity(tx,working_element,&iglob,d_minus_g,d_minus_deriv_gravity,
                             d_rhostore,wgll_cube,jacobianl,
@@ -2063,7 +2063,7 @@ Kernel_2_noatt_ani_impl(int nb_blocks_to_compute,
   // form dot product with test vector, non-symmetric form
   // 1. cut-plane xi
   __syncthreads();
-  if( threadIdx.x < NGLL3 ) {
+  if (threadIdx.x < NGLL3) {
     sh_tempx[tx] = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl); // sh_tempx1
     sh_tempy[tx] = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_zy*xizl); // sh_tempy1
     sh_tempz[tx] = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl); // sh_tempz1
@@ -2074,7 +2074,7 @@ Kernel_2_noatt_ani_impl(int nb_blocks_to_compute,
 
   // 2. cut-plane eta
   __syncthreads();
-  if( threadIdx.x < NGLL3 ) {
+  if (threadIdx.x < NGLL3) {
     sh_tempx[tx] = jacobianl * (sigma_xx*etaxl + sigma_yx*etayl + sigma_zx*etazl); // sh_tempx2
     sh_tempy[tx] = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_zy*etazl); // sh_tempy2
     sh_tempz[tx] = jacobianl * (sigma_xz*etaxl + sigma_yz*etayl + sigma_zz*etazl); // sh_tempz2
@@ -2085,7 +2085,7 @@ Kernel_2_noatt_ani_impl(int nb_blocks_to_compute,
 
   // 3. cut-plane gamma
   __syncthreads();
-  if( threadIdx.x < NGLL3 ) {
+  if (threadIdx.x < NGLL3) {
     sh_tempx[tx] = jacobianl * (sigma_xx*gammaxl + sigma_yx*gammayl + sigma_zx*gammazl); // sh_tempx3
     sh_tempy[tx] = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_zy*gammazl); // sh_tempy3
     sh_tempz[tx] = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl); // sh_tempz3
@@ -2104,14 +2104,14 @@ Kernel_2_noatt_ani_impl(int nb_blocks_to_compute,
   sum_terms3 = - (fac1*tempz1l + fac2*tempz2l + fac3*tempz3l);
 
   // adds gravity term
-  if( gravity ){
+  if (gravity ){
     sum_terms1 += rho_s_H1;
     sum_terms2 += rho_s_H2;
     sum_terms3 += rho_s_H3;
   }
 
   // assembles acceleration array
-  if(threadIdx.x < NGLL3) {
+  if (threadIdx.x < NGLL3) {
 
 #ifdef USE_MESH_COLORING_GPU
     // no atomic operation needed, colors don't share global points between elements
@@ -2129,7 +2129,7 @@ Kernel_2_noatt_ani_impl(int nb_blocks_to_compute,
 #else // MESH_COLORING
 
     //mesh coloring
-    if( use_mesh_coloring_gpu ){
+    if (use_mesh_coloring_gpu ){
 
       // no atomic operation needed, colors don't share global points between elements
 #ifdef USE_TEXTURES_FIELDS
@@ -2146,12 +2146,12 @@ Kernel_2_noatt_ani_impl(int nb_blocks_to_compute,
       atomicAdd(&d_accel[iglob*3], sum_terms1);
       atomicAdd(&d_accel[iglob*3+1], sum_terms2);
       atomicAdd(&d_accel[iglob*3+2], sum_terms3);
-    } // if(use_mesh_coloring_gpu)
+    } // if (use_mesh_coloring_gpu)
 
 #endif // MESH_COLORING
 
     // save deviatoric strain for Runge-Kutta scheme
-    if( COMPUTE_AND_STORE_STRAIN ){
+    if (COMPUTE_AND_STORE_STRAIN ){
       // fortran: epsilondev_xx(:,:,:,ispec) = epsilondev_xx_loc(:,:,:)
       epsilondev_xx[tx + working_element*NGLL3] = epsilondev_xx_loc;
       epsilondev_yy[tx + working_element*NGLL3] = epsilondev_yy_loc;
@@ -2289,13 +2289,13 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
 
   // copy from global memory to shared memory
   // each thread writes one of the NGLL^3 = 125 data points
-  if( active ){
+  if (active ){
 
 #ifdef USE_MESH_COLORING_GPU
     working_element = bx;
 #else
     //mesh coloring
-    if( use_mesh_coloring_gpu ){
+    if (use_mesh_coloring_gpu ){
       working_element = bx;
     }else{
       // iphase-1 and working_element-1 for Fortran->C array conventions
@@ -2328,7 +2328,7 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
   }// active
 
   // loads hprime's into shared memory
-  if( tx < NGLL2 ) {
+  if (tx < NGLL2) {
     // copy hprime from global memory to shared memory
     load_shared_memory_hprime(&tx,d_hprime_xx,sh_hprime_xx);
   }
@@ -2338,7 +2338,7 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
   // to be able to compute the matrix products along cut planes of the 3D element below
   __syncthreads();
 
-  if( active ){
+  if (active ){
 
 #ifndef MANUALLY_UNROLLED_LOOPS
 
@@ -2587,12 +2587,12 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
     epsilondev_xz_loc = 0.5f * duzdxl_plus_duxdzl_att;
     epsilondev_yz_loc = 0.5f * duzdyl_plus_duydzl_att;
 
-    if(SIMULATION_TYPE == 3) {
+    if (SIMULATION_TYPE == 3) {
       epsilon_trace_over_3[tx + working_element*NGLL3] = templ;
     }
 
     // full anisotropic case, stress calculations
-    if(ANISOTROPY){
+    if (ANISOTROPY){
       c11 = d_c11store[offset];
       c12 = d_c12store[offset];
       c13 = d_c13store[offset];
@@ -2663,7 +2663,7 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
     sigma_zx = sigma_xz;
     sigma_zy = sigma_yz;
 
-    if( gravity ){
+    if (gravity ){
       //  computes non-symmetric terms for gravity
       compute_element_gravity(tx,working_element,&iglob,d_minus_g,d_minus_deriv_gravity,
                               d_rhostore,wgll_cube,jacobianl,
@@ -2676,7 +2676,7 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
   //note: due to re-assignement of s_dummyx_loc_att,..,we need to sync before updating sh_tempx1...
   __syncthreads();
 
-  if( active ){
+  if (active ){
     // form dot product with test vector, non-symmetric form
     sh_tempx1[tx] = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl);
     sh_tempy1[tx] = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_zy*xizl);
@@ -2706,7 +2706,7 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
 
 // JC JC here we will need to add GPU support for the new C-PML routines
 
-  if( active ){
+  if (active ){
 
 #ifndef MANUALLY_UNROLLED_LOOPS
 
@@ -2804,7 +2804,7 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
     sum_terms3 = - (fac1*tempz1l + fac2*tempz2l + fac3*tempz3l);
 
     // adds gravity term
-    if( gravity ){
+    if (gravity ){
       sum_terms1 += rho_s_H1;
       sum_terms2 += rho_s_H2;
       sum_terms3 += rho_s_H3;
@@ -2828,7 +2828,7 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
 #else // MESH_COLORING
 
     //mesh coloring
-    if( use_mesh_coloring_gpu ){
+    if (use_mesh_coloring_gpu ){
 
       // no atomic operation needed, colors don't share global points between elements
 #ifdef USE_TEXTURES_FIELDS
@@ -2846,7 +2846,7 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
       atomicAdd(&d_accel[iglob*3], sum_terms1);
       atomicAdd(&d_accel[iglob*3+1], sum_terms2);
       atomicAdd(&d_accel[iglob*3+2], sum_terms3);
-    } // if(use_mesh_coloring_gpu)
+    } // if (use_mesh_coloring_gpu)
 
 #endif // MESH_COLORING
 
@@ -2866,7 +2866,7 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
     epsilondev_xy[tx + working_element*NGLL3] = epsilondev_xy_loc;
     epsilondev_xz[tx + working_element*NGLL3] = epsilondev_xz_loc;
     epsilondev_yz[tx + working_element*NGLL3] = epsilondev_yz_loc;
-  } // if(active)
+  } // if (active)
 
 // JC JC here we will need to add GPU support for the new C-PML routines
 
@@ -2998,13 +2998,13 @@ Kernel_2_att_org_impl(int nb_blocks_to_compute,
 
   // copy from global memory to shared memory
   // each thread writes one of the NGLL^3 = 125 data points
-  if( active ){
+  if (active ){
 
 #ifdef USE_MESH_COLORING_GPU
     working_element = bx;
 #else
     //mesh coloring
-    if( use_mesh_coloring_gpu ){
+    if (use_mesh_coloring_gpu ){
       working_element = bx;
     }else{
       // iphase-1 and working_element-1 for Fortran->C array conventions
@@ -3037,7 +3037,7 @@ Kernel_2_att_org_impl(int nb_blocks_to_compute,
   }// active
 
   // loads hprime's into shared memory
-  if( tx < NGLL2 ) {
+  if (tx < NGLL2) {
     // copy hprime from global memory to shared memory
     load_shared_memory_hprime(&tx,d_hprime_xx,sh_hprime_xx);
   }
@@ -3047,7 +3047,7 @@ Kernel_2_att_org_impl(int nb_blocks_to_compute,
   // to be able to compute the matrix products along cut planes of the 3D element below
   __syncthreads();
 
-  if( active ){
+  if (active ){
 
 #ifndef MANUALLY_UNROLLED_LOOPS
 
@@ -3296,12 +3296,12 @@ Kernel_2_att_org_impl(int nb_blocks_to_compute,
     epsilondev_xz_loc = 0.5f * duzdxl_plus_duxdzl_att;
     epsilondev_yz_loc = 0.5f * duzdyl_plus_duydzl_att;
 
-    if(SIMULATION_TYPE == 3) {
+    if (SIMULATION_TYPE == 3) {
       epsilon_trace_over_3[tx + working_element*NGLL3] = templ;
     }
 
     // full anisotropic case, stress calculations
-    if(ANISOTROPY){
+    if (ANISOTROPY){
       c11 = d_c11store[offset];
       c12 = d_c12store[offset];
       c13 = d_c13store[offset];
@@ -3372,7 +3372,7 @@ Kernel_2_att_org_impl(int nb_blocks_to_compute,
     sigma_zx = sigma_xz;
     sigma_zy = sigma_yz;
 
-    if( gravity ){
+    if (gravity ){
       //  computes non-symmetric terms for gravity
       compute_element_gravity(tx,working_element,&iglob,d_minus_g,d_minus_deriv_gravity,
                               d_rhostore,wgll_cube,jacobianl,
@@ -3385,7 +3385,7 @@ Kernel_2_att_org_impl(int nb_blocks_to_compute,
   //note: due to re-assignement of s_dummyx_loc_att,..,we need to sync before updating sh_tempx1...
   __syncthreads();
 
-  if( active ){
+  if (active ){
     // form dot product with test vector, non-symmetric form
     sh_tempx1[tx] = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl);
     sh_tempy1[tx] = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_zy*xizl);
@@ -3415,7 +3415,7 @@ Kernel_2_att_org_impl(int nb_blocks_to_compute,
 
 // JC JC here we will need to add GPU support for the new C-PML routines
 
-  if( active ){
+  if (active ){
 
 #ifndef MANUALLY_UNROLLED_LOOPS
 
@@ -3513,7 +3513,7 @@ Kernel_2_att_org_impl(int nb_blocks_to_compute,
     sum_terms3 = - (fac1*tempz1l + fac2*tempz2l + fac3*tempz3l);
 
     // adds gravity term
-    if( gravity ){
+    if (gravity ){
       sum_terms1 += rho_s_H1;
       sum_terms2 += rho_s_H2;
       sum_terms3 += rho_s_H3;
@@ -3537,7 +3537,7 @@ Kernel_2_att_org_impl(int nb_blocks_to_compute,
 #else // MESH_COLORING
 
     //mesh coloring
-    if( use_mesh_coloring_gpu ){
+    if (use_mesh_coloring_gpu ){
 
       // no atomic operation needed, colors don't share global points between elements
 #ifdef USE_TEXTURES_FIELDS
@@ -3555,7 +3555,7 @@ Kernel_2_att_org_impl(int nb_blocks_to_compute,
       atomicAdd(&d_accel[iglob*3], sum_terms1);
       atomicAdd(&d_accel[iglob*3+1], sum_terms2);
       atomicAdd(&d_accel[iglob*3+2], sum_terms3);
-    } // if(use_mesh_coloring_gpu)
+    } // if (use_mesh_coloring_gpu)
 
 #endif // MESH_COLORING
 
@@ -3575,7 +3575,7 @@ Kernel_2_att_org_impl(int nb_blocks_to_compute,
     epsilondev_xy[tx + working_element*NGLL3] = epsilondev_xy_loc;
     epsilondev_xz[tx + working_element*NGLL3] = epsilondev_xz_loc;
     epsilondev_yz[tx + working_element*NGLL3] = epsilondev_yz_loc;
-  } // if(active)
+  } // if (active)
 
 // JC JC here we will need to add GPU support for the new C-PML routines
 
@@ -3636,12 +3636,12 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
 
   // Cuda timing
   cudaEvent_t start,stop;
-  if( CUDA_TIMING ){
+  if (CUDA_TIMING ){
     start_timing_cuda(&start,&stop);
   }
 
   // cuda kernel call
-  if( ATTENUATION ){
+  if (ATTENUATION ){
     // compute kernels with attenuation
     // forward wavefields -> FORWARD_OR_ADJOINT == 1
     Kernel_2_att_impl<1><<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
@@ -3682,7 +3682,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                 d_rhostore,
                                                                 mp->d_wgll_cube);
 
-    if(mp->simulation_type == 3) {
+    if (mp->simulation_type == 3) {
       // backward/reconstructed wavefields -> FORWARD_OR_ADJOINT == 3
       Kernel_2_att_impl<3><<< grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
                                                                    d_ibool,
@@ -3724,7 +3724,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
     }
   }else{
     // compute kernels without attenuation
-    if( ANISOTROPY ){
+    if (ANISOTROPY ){
       // full anisotropy
       // forward wavefields -> FORWARD_OR_ADJOINT == 1
       Kernel_2_noatt_ani_impl<1><<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
@@ -3761,7 +3761,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                         mp->d_wgll_cube );
 
       // backward/reconstructed wavefield
-      if(mp->simulation_type == 3) {
+      if (mp->simulation_type == 3) {
         // backward/reconstructed wavefields -> FORWARD_OR_ADJOINT == 3
         Kernel_2_noatt_ani_impl<3><<< grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
                                                                            d_ibool,
@@ -3798,7 +3798,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
       }
     }else{
       // isotropic case
-      if( mp->gravity){
+      if (mp->gravity){
         // with gravity
         // forward wavefields -> FORWARD_OR_ADJOINT == 1
         Kernel_2_noatt_iso_grav_impl<1><<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
@@ -3827,7 +3827,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                           mp->d_wgll_cube );
 
         // backward/reconstructed wavefield
-        if(mp->simulation_type == 3) {
+        if (mp->simulation_type == 3) {
           // backward/reconstructed wavefields -> FORWARD_OR_ADJOINT == 3
           Kernel_2_noatt_iso_grav_impl<3><<< grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
                                                                              d_ibool,
@@ -3856,7 +3856,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
         }
       }else{
         // without gravity
-        if( mp->use_mesh_coloring_gpu ) {
+        if (mp->use_mesh_coloring_gpu) {
           // with mesh coloring
           // forward wavefields -> FORWARD_OR_ADJOINT == 1
           Kernel_2_noatt_iso_col_impl<1><<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
@@ -3880,7 +3880,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                             mp->simulation_type);
 
           // backward/reconstructed wavefield
-          if(mp->simulation_type == 3) {
+          if (mp->simulation_type == 3) {
             // backward/reconstructed wavefields -> FORWARD_OR_ADJOINT == 3
             Kernel_2_noatt_iso_col_impl<3><<< grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
                                                                                d_ibool,
@@ -3904,7 +3904,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
           }
         }else{
           // without mesh coloring
-          if( COMPUTE_AND_STORE_STRAIN ){
+          if (COMPUTE_AND_STORE_STRAIN ){
             // stores strains
             // forward wavefields -> FORWARD_OR_ADJOINT == 1
             Kernel_2_noatt_iso_strain_impl<1><<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
@@ -3927,7 +3927,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                               mp->simulation_type);
 
             // backward/reconstructed wavefield
-            if(mp->simulation_type == 3) {
+            if (mp->simulation_type == 3) {
               // backward/reconstructed wavefields -> FORWARD_OR_ADJOINT == 3
               Kernel_2_noatt_iso_strain_impl<3><<< grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
                                                                                  d_ibool,
@@ -3966,7 +3966,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                               d_kappav, d_muv);
 
             // backward/reconstructed wavefield
-            if(mp->simulation_type == 3) {
+            if (mp->simulation_type == 3) {
               // backward/reconstructed wavefields -> FORWARD_OR_ADJOINT == 3
               Kernel_2_noatt_iso_impl<3><<< grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
                                                                                  d_ibool,
@@ -3989,17 +3989,17 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
   } // ATTENUATION
 
   // Cuda timing
-  if( CUDA_TIMING ){
-    if( ATTENUATION ){
+  if (CUDA_TIMING ){
+    if (ATTENUATION ){
       stop_timing_cuda(&start,&stop,"Kernel_2_att_impl");
     }else{
-      if( ANISOTROPY ){
+      if (ANISOTROPY ){
         stop_timing_cuda(&start,&stop,"Kernel_2_noatt_ani_impl");
       }else{
-        if( mp->gravity ){
+        if (mp->gravity ){
           stop_timing_cuda(&start,&stop,"Kernel_2_noatt_iso_grav_impl");
         }else{
-          if( COMPUTE_AND_STORE_STRAIN ){
+          if (COMPUTE_AND_STORE_STRAIN ){
             stop_timing_cuda(&start,&stop,"Kernel_2_noatt_iso_strain_impl");
           }else{
             realw time;
@@ -4045,16 +4045,16 @@ void FC_FUNC_(compute_forces_viscoelastic_cuda,
 
   int num_elements;
 
-  if( *iphase == 1 )
+  if (*iphase == 1)
     num_elements = *nspec_outer_elastic;
   else
     num_elements = *nspec_inner_elastic;
 
   // checks if anything to do
-  if( num_elements == 0 ) return;
+  if (num_elements == 0) return;
 
   // mesh coloring
-  if( mp->use_mesh_coloring_gpu ){
+  if (mp->use_mesh_coloring_gpu ){
     // note: array offsets require sorted arrays, such that e.g. ibool starts with elastic elements
     //         and followed by acoustic ones.
     //         elastic elements also start with outer than inner element ordering
@@ -4063,7 +4063,7 @@ void FC_FUNC_(compute_forces_viscoelastic_cuda,
     int offset,offset_nonpadded,offset_nonpadded_att2;
 
     // sets up color loop
-    if( *iphase == 1 ){
+    if (*iphase == 1){
       // outer elements
       nb_colors = mp->num_colors_outer_elastic;
       istart = 0;
@@ -4089,7 +4089,7 @@ void FC_FUNC_(compute_forces_viscoelastic_cuda,
       nb_blocks_to_compute = mp->h_num_elem_colors_elastic[icolor];
 
       // checks
-      //if( nb_blocks_to_compute <= 0 ){
+      //if (nb_blocks_to_compute <= 0){
       //  printf("error number of elastic color blocks: %d -- color = %d \n",nb_blocks_to_compute,icolor);
       //  exit(EXIT_FAILURE);
       //}

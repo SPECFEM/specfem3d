@@ -37,10 +37,10 @@ program combine_surf_data
 
   implicit none
 
-  integer i,j,k,ispec, ios, it
-  integer iproc, proc1, proc2, num_node, node_list(300), nspec, nglob
-  integer np, ne, npp, nee, npoint, nelement, njunk, n1, n2, n3, n4
-  integer numpoin, iglob1, iglob2, iglob3, iglob4, iglob
+  integer :: i,j,k,ispec, it
+  integer :: iproc, proc1, proc2, num_node, node_list(300), nspec, nglob
+  integer :: np, ne, npp, nee, npoint, nelement, njunk, n1, n2, n3, n4
+  integer :: numpoin, iglob1, iglob2, iglob3, iglob4, iglob
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: data_3D
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: data_2D
   ! mesh coordinates
@@ -49,7 +49,7 @@ program combine_surf_data
   logical, dimension(:),allocatable :: mask_ibool
   integer :: NSPEC_AB,NGLOB_AB
 
-  real x, y, z
+  real :: x, y, z
   real, dimension(:,:,:,:), allocatable :: dat3D
   real, dimension(:,:,:), allocatable :: dat2D
   character(len=MAX_STRING_LEN) :: sline, arg(8), filename, indir, outdir, prname, surfname
@@ -81,16 +81,16 @@ program combine_surf_data
   ! get slice list
   if (trim(arg(8)) == '') then
     num_node = 0
-    open(unit = 20, file = trim(arg(1)), status = 'unknown',iostat = ios)
-    if (ios /= 0) then
+    open(unit = 20, file = trim(arg(1)), status = 'unknown',iostat = ier)
+    if (ier /= 0) then
       print *,'Error opening ',trim(arg(1))
       stop
     endif
-    do while ( 1 == 1)
-      read(20,'(a)',iostat=ios) sline
-      if (ios /= 0) exit
-      read(sline,*,iostat=ios) njunk
-      if (ios /= 0) exit
+    do while (1 == 1)
+      read(20,'(a)',iostat=ier) sline
+      if (ier /= 0) exit
+      read(sline,*,iostat=ier) njunk
+      if (ier /= 0) exit
       num_node = num_node + 1
       node_list(num_node) = njunk
     enddo
@@ -156,7 +156,7 @@ program combine_surf_data
 
     ! gets number of elements and global points for this partition
     open(unit=27,file=prname(1:len_trim(prname))//'external_mesh.bin',&
-          status='old',action='read',form='unformatted',iostat=ios)
+          status='old',action='read',form='unformatted',iostat=ier)
     read(27) NSPEC_AB
     read(27) NGLOB_AB
     close(27)
@@ -168,12 +168,12 @@ program combine_surf_data
             mask_ibool(NGLOB_AB), &
             num_ibool(NGLOB_AB), &
             xstore(NGLOB_AB),ystore(NGLOB_AB),zstore(NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array ibool etc.'
+    if (ier /= 0) stop 'error allocating array ibool etc.'
 
     ! surface file
     local_ibool_surf_file = trim(prname) // 'ibelm_' //trim(surfname)// '.bin'
-    open(unit = 28,file = trim(local_ibool_surf_file),status='old', iostat = ios, form='unformatted')
-    if (ios /= 0) then
+    open(unit = 28,file = trim(local_ibool_surf_file),status='old', iostat = ier, form='unformatted')
+    if (ier /= 0) then
       print *,'Error opening ',trim(local_ibool_surf_file)
       stop
     endif
@@ -183,7 +183,7 @@ program combine_surf_data
 
     if (it == 1) then
       allocate(ibelm_surf(nspec_surf),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array ibelm_surf'
+      if (ier /= 0) stop 'error allocating array ibelm_surf'
     endif
     read(28) ibelm_surf
     close(28)
@@ -192,17 +192,17 @@ program combine_surf_data
     if (it == 1) then
       if (FILE_ARRAY_IS_3D) then
         allocate(data_3D(NGLLX,NGLLY,NGLLZ,NSPEC_AB),dat3D(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-        if( ier /= 0 ) stop 'error allocating array data_3D'
+        if (ier /= 0) stop 'error allocating array data_3D'
       else
         allocate(data_2D(NGLLX,NGLLY,nspec_surf),dat2D(NGLLX,NGLLY,nspec_surf),stat=ier)
-        if( ier /= 0 ) stop 'error allocating array data_2D'
+        if (ier /= 0) stop 'error allocating array data_2D'
       endif
     endif
 
     ! data file
     local_data_file = trim(prname) // trim(filename) // '.bin'
-    open(unit = 27,file = trim(local_data_file),status='old', iostat = ios,form ='unformatted')
-    if (ios /= 0) then
+    open(unit = 27,file = trim(local_data_file),status='old', iostat = ier,form ='unformatted')
+    if (ier /= 0) then
       print *,'Error opening ',trim(local_data_file)
       stop
     endif
@@ -218,8 +218,8 @@ program combine_surf_data
 
     ! ibool file
     local_ibool_file = trim(prname) // 'ibool' // '.bin'
-    open(unit = 28,file = trim(local_ibool_file),status='old', iostat = ios, form='unformatted')
-    if (ios /= 0) then
+    open(unit = 28,file = trim(local_ibool_file),status='old', iostat = ier, form='unformatted')
+    if (ier /= 0) then
       print *,'Error opening ',trim(local_data_file)
       stop
     endif
@@ -242,24 +242,24 @@ program combine_surf_data
     endif
 
     local_file = trim(prname)//'x.bin'
-    open(unit = 27,file = trim(prname)//'x.bin',status='old', iostat = ios,form ='unformatted')
-    if (ios /= 0) then
+    open(unit = 27,file = trim(prname)//'x.bin',status='old', iostat = ier,form ='unformatted')
+    if (ier /= 0) then
       print *,'Error opening ',trim(local_file)
       stop
     endif
     read(27) xstore
     close(27)
     local_file = trim(prname)//'y.bin'
-    open(unit = 27,file = trim(prname)//'y.bin',status='old', iostat = ios,form ='unformatted')
-    if (ios /= 0) then
+    open(unit = 27,file = trim(prname)//'y.bin',status='old', iostat = ier,form ='unformatted')
+    if (ier /= 0) then
       print *,'Error opening ',trim(local_file)
       stop
     endif
     read(27) ystore
     close(27)
     local_file = trim(prname)//'z.bin'
-    open(unit = 27,file = trim(prname)//'z.bin',status='old', iostat = ios,form ='unformatted')
-    if (ios /= 0) then
+    open(unit = 27,file = trim(prname)//'z.bin',status='old', iostat = ier,form ='unformatted')
+    if (ier /= 0) then
       print *,'Error opening ',trim(local_file)
       stop
     endif
@@ -272,7 +272,7 @@ program combine_surf_data
       do j = 1, NGLLY, iny
         do i = 1, NGLLX, inx
           iglob = ibool(i,j,k,ispec)
-          if(.not. mask_ibool(iglob)) then
+          if (.not. mask_ibool(iglob)) then
             numpoin = numpoin + 1
             x = xstore(iglob)
             y = ystore(iglob)
@@ -315,7 +315,7 @@ program combine_surf_data
 
     ! gets number of elements and global points for this partition
     open(unit=27,file=prname(1:len_trim(prname))//'external_mesh.bin',&
-          status='old',action='read',form='unformatted',iostat=ios)
+          status='old',action='read',form='unformatted',iostat=ier)
     read(27) NSPEC_AB
     read(27) NGLOB_AB
     close(27)
@@ -326,14 +326,14 @@ program combine_surf_data
     allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
             mask_ibool(NGLOB_AB), &
             num_ibool(NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array ibool etc.'
+    if (ier /= 0) stop 'error allocating array ibool etc.'
 
 
     np = npoint * (it-1)
 
 ! surface file
     local_ibool_surf_file = trim(prname) // 'ibelm_' //trim(surfname)// '.bin'
-    open(unit = 28,file = trim(local_ibool_surf_file),status='old', iostat = ios, form='unformatted')
+    open(unit = 28,file = trim(local_ibool_surf_file),status='old', iostat = ier, form='unformatted')
     read(28) nspec_surf
     read(28) njunk
     read(28) njunk
@@ -342,7 +342,7 @@ program combine_surf_data
 
 ! ibool file
     local_ibool_file = trim(prname) // 'ibool' // '.bin'
-    open(unit = 28,file = trim(local_ibool_file),status='old', iostat = ios, form='unformatted')
+    open(unit = 28,file = trim(local_ibool_file),status='old', iostat = ier, form='unformatted')
     read(28) ibool
     close(28)
 
@@ -364,7 +364,7 @@ program combine_surf_data
       do j = 1, NGLLY, iny
         do i = 1, NGLLX, inx
           iglob = ibool(i,j,k,ispec)
-          if(.not. mask_ibool(iglob)) then
+          if (.not. mask_ibool(iglob)) then
             numpoin = numpoin + 1
             num_ibool(iglob) = numpoin
             mask_ibool(iglob) = .true.

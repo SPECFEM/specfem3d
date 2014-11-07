@@ -84,7 +84,7 @@ extern realw_texture d_hprime_xx_tex;
 //   - hiding memory latency: to minimize waiting times to retrieve a memory value from global memory, we put
 //                some more calculations into the same code block before calling syncthreads(). this should help the
 //                compiler to move independent calculations to wherever it can overlap it with memory access operations.
-//                note, especially the if( gravity )-block locations are very sensitive
+//                note, especially the if (gravity )-block locations are very sensitive
 //                for optimal register usage and compiler optimizations
 //
 
@@ -169,10 +169,10 @@ Kernel_2_acoustic_impl(const int nb_blocks_to_compute,
 // 0 BYTES
 
   // checks if anything to do
-  if( bx >= nb_blocks_to_compute ) return;
+  if (bx >= nb_blocks_to_compute) return;
 
   // limits thread ids to range [0,125-1]
-  if( tx >= NGLL3 ) tx = NGLL3-1;
+  if (tx >= NGLL3) tx = NGLL3-1;
 
 // counts:
 // + 1 FLOP
@@ -184,7 +184,7 @@ Kernel_2_acoustic_impl(const int nb_blocks_to_compute,
   working_element = bx;
 #else
   //mesh coloring
-  if( use_mesh_coloring_gpu ){
+  if (use_mesh_coloring_gpu ){
     working_element = bx;
   }else{
     // iphase-1 and working_element-1 for Fortran->C array conventions
@@ -204,7 +204,7 @@ Kernel_2_acoustic_impl(const int nb_blocks_to_compute,
 // + 2 float * 128 threads = 1024 BYTE
 
   // loads potential values into shared memory
-  if(threadIdx.x < NGLL3) {
+  if (threadIdx.x < NGLL3) {
 #ifdef USE_TEXTURES_FIELDS
     s_dummy_loc[tx] = texfetch_potential<FORWARD_OR_ADJOINT>(iglob);
 #else
@@ -219,7 +219,7 @@ Kernel_2_acoustic_impl(const int nb_blocks_to_compute,
 // + 1 float * 125 threads = 500 BYTE
 
   // gravity
-  if( gravity ){
+  if (gravity ){
     kappa_invl = 1.f / d_kappastore[working_element*NGLL3 + tx];
   }
 
@@ -313,14 +313,14 @@ Kernel_2_acoustic_impl(const int nb_blocks_to_compute,
 // + 0 BYTE
 
   // form the dot product with the test vector
-  if( threadIdx.x < NGLL3 ) {
+  if (threadIdx.x < NGLL3) {
     s_temp1[tx] = jacobianl * rho_invl * (dpotentialdxl*xixl + dpotentialdyl*xiyl + dpotentialdzl*xizl);
     s_temp2[tx] = jacobianl * rho_invl * (dpotentialdxl*etaxl + dpotentialdyl*etayl + dpotentialdzl*etazl);
     s_temp3[tx] = jacobianl * rho_invl * (dpotentialdxl*gammaxl + dpotentialdyl*gammayl + dpotentialdzl*gammazl);
   }
 
   // pre-computes gravity sum term
-  if( gravity ){
+  if (gravity ){
     // uses potential definition: s = grad(chi)
     //
     // gravity term: 1/kappa grad(chi) * g
@@ -366,7 +366,7 @@ Kernel_2_acoustic_impl(const int nb_blocks_to_compute,
   sum_terms = -(fac1*temp1l + fac2*temp2l + fac3*temp3l);
 
   // adds gravity contribution
-  if( gravity ) sum_terms += gravity_term;
+  if (gravity) sum_terms += gravity_term;
 
 // counts:
 // + 3 * 2 FLOP + 6 FLOP = 12 FLOP
@@ -374,7 +374,7 @@ Kernel_2_acoustic_impl(const int nb_blocks_to_compute,
 // + 3 float * 128 threads = 1536 BYTE
 
   // assembles potential array
-  if(threadIdx.x < NGLL3) {
+  if (threadIdx.x < NGLL3) {
 #ifdef USE_MESH_COLORING_GPU
   // no atomic operation needed, colors don't share global points between elements
 #ifdef USE_TEXTURES_FIELDS
@@ -384,7 +384,7 @@ Kernel_2_acoustic_impl(const int nb_blocks_to_compute,
 #endif // USE_TEXTURES_FIELDS
 #else  // MESH_COLORING
     //mesh coloring
-    if( use_mesh_coloring_gpu ){
+    if (use_mesh_coloring_gpu ){
       // no atomic operation needed, colors don't share global points between elements
 #ifdef USE_TEXTURES_FIELDS
       d_potential_dot_dot_acoustic[iglob] = texfetch_potential_dot_dot<FORWARD_OR_ADJOINT>(iglob) + sum_terms;
@@ -537,10 +537,10 @@ Kernel_2_acoustic_perf_impl(const int nb_blocks_to_compute,
   __shared__ realw sh_hprimewgll_xx[NGLL2];
 
   // checks if anything to do
-  if( bx >= nb_blocks_to_compute ) return;
+  if (bx >= nb_blocks_to_compute) return;
 
   // limits thread ids to range [0,125-1]
-  if( tx >= NGLL3 ) tx = NGLL3 - 1;
+  if (tx >= NGLL3) tx = NGLL3 - 1;
 
   // spectral-element id
   // iphase-1 and working_element-1 for Fortran->C array conventions
@@ -553,7 +553,7 @@ Kernel_2_acoustic_perf_impl(const int nb_blocks_to_compute,
   iglob = d_ibool[offset] - 1;
 
   // loads potential values into shared memory
-  if(threadIdx.x < NGLL3) {
+  if (threadIdx.x < NGLL3) {
     // loads potentials
 #ifdef USE_TEXTURES_FIELDS
     s_dummy_loc[tx] = texfetch_potential<FORWARD_OR_ADJOINT>(iglob);
@@ -631,7 +631,7 @@ Kernel_2_acoustic_perf_impl(const int nb_blocks_to_compute,
   dpotentialdzl = xizl*temp1l + etazl*temp2l + gammazl*temp3l;
 
   // form the dot product with the test vector
-  if( threadIdx.x < NGLL3 ) {
+  if (threadIdx.x < NGLL3) {
     s_temp1[tx] = jacobianl * rho_invl * (dpotentialdxl*xixl + dpotentialdyl*xiyl + dpotentialdzl*xizl);
     s_temp2[tx] = jacobianl * rho_invl * (dpotentialdxl*etaxl + dpotentialdyl*etayl + dpotentialdzl*etazl);
     s_temp3[tx] = jacobianl * rho_invl * (dpotentialdxl*gammaxl + dpotentialdyl*gammayl + dpotentialdzl*gammazl);
@@ -665,7 +665,7 @@ Kernel_2_acoustic_perf_impl(const int nb_blocks_to_compute,
   sum_terms = -(fac1*temp1l + fac2*temp2l + fac3*temp3l);
 
   // assembles potential array
-  if(threadIdx.x < NGLL3) {
+  if (threadIdx.x < NGLL3) {
       atomicAdd(&d_potential_dot_dot_acoustic[iglob],sum_terms);
   }
 }
@@ -700,7 +700,7 @@ void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
 
   // Cuda timing
   cudaEvent_t start, stop;
-  if( CUDA_TIMING ){
+  if (CUDA_TIMING ){
     start_timing_cuda(&start,&stop);
   }
 
@@ -724,7 +724,7 @@ void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
                                                                     d_kappastore,
                                                                     mp->d_wgll_cube);
 
-  if(mp->simulation_type == 3) {
+  if (mp->simulation_type == 3) {
     // backward/reconstructed wavefields -> FORWARD_OR_ADJOINT == 3
     Kernel_2_acoustic_impl<3><<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
                                                                       d_ibool,
@@ -747,14 +747,14 @@ void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
   }
 
   // Cuda timing
-  if( CUDA_TIMING ){
+  if (CUDA_TIMING ){
     realw flops,time;
     stop_timing_cuda(&start,&stop,"Kernel_2_acoustic_impl",&time);
     // time in seconds
     time = time / 1000.;
     // performance
-    if( ! mp->gravity ) {
-      if( ! mp->use_mesh_coloring_gpu ){
+    if (! mp->gravity) {
+      if (! mp->use_mesh_coloring_gpu ){
         // see with: nvprof --metrics flops_sp ./xspecfem3D
         //           -> using 322631424 FLOPS (Single) floating-point operations for 20736 elements
         //              = 15559 FLOPS per block
@@ -795,15 +795,15 @@ void FC_FUNC_(compute_forces_acoustic_cuda,
 
   int num_elements;
 
-  if( *iphase == 1 )
+  if (*iphase == 1)
     num_elements = *nspec_outer_acoustic;
   else
     num_elements = *nspec_inner_acoustic;
 
-  if( num_elements == 0 ) return;
+  if (num_elements == 0) return;
 
   // mesh coloring
-  if( mp->use_mesh_coloring_gpu ){
+  if (mp->use_mesh_coloring_gpu ){
 
     // note: array offsets require sorted arrays, such that e.g. ibool starts with elastic elements
     //         and followed by acoustic ones.
@@ -814,7 +814,7 @@ void FC_FUNC_(compute_forces_acoustic_cuda,
     int offset,offset_nonpadded;
 
     // sets up color loop
-    if( *iphase == 1 ){
+    if (*iphase == 1){
       // outer elements
       nb_colors = mp->num_colors_outer_acoustic;
       istart = 0;
@@ -887,12 +887,12 @@ __global__ void enforce_free_surface_cuda_kernel(
   int iface = blockIdx.x + gridDim.x*blockIdx.y;
 
   // for all faces on free surface
-  if( iface < num_free_surface_faces ){
+  if (iface < num_free_surface_faces ){
 
     int ispec = free_surface_ispec[iface]-1;
 
     // checks if element is in acoustic domain
-    if( ispec_is_acoustic[ispec] ){
+    if (ispec_is_acoustic[ispec] ){
 
       // gets global point index
       int igll = threadIdx.x + threadIdx.y*blockDim.x;
@@ -923,7 +923,7 @@ TRACE("acoustic_enforce_free_surf_cuda");
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
 
   // checks if anything to do
-  if( *ABSORB_INSTEAD_OF_FREE_SURFACE == 0 ){
+  if (*ABSORB_INSTEAD_OF_FREE_SURFACE == 0){
 
     // does not absorb free surface, thus we enforce the potential to be zero at surface
 
@@ -944,7 +944,7 @@ TRACE("acoustic_enforce_free_surf_cuda");
                                                                              mp->d_ibool,
                                                                              mp->d_ispec_is_acoustic);
     // for backward/reconstructed potentials
-    if(mp->simulation_type == 3) {
+    if (mp->simulation_type == 3) {
       enforce_free_surface_cuda_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_potential_acoustic,
                                                                                mp->d_b_potential_dot_acoustic,
                                                                                mp->d_b_potential_dot_dot_acoustic,

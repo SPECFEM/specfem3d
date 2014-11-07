@@ -132,7 +132,7 @@ void FC_FUNC_(prepare_constants_device,
                                         int* USE_MESH_COLORING_GPU_f,
                                         int* nspec_acoustic,int* nspec_elastic,
                                         int* h_myrank,
-                                        int* SAVE_FORWARD ) {
+                                        int* SAVE_FORWARD) {
 
   TRACE("prepare_constants_device");
 
@@ -142,7 +142,7 @@ void FC_FUNC_(prepare_constants_device,
   *Mesh_pointer = (long)mp;
 
   // checks if NGLLX == 5
-  if( *h_NGLLX != NGLLX ){
+  if (*h_NGLLX != NGLLX ){
     exit_on_error("NGLLX must be 5 for CUDA devices");
   }
 
@@ -278,7 +278,7 @@ void FC_FUNC_(prepare_constants_device,
   // prepare interprocess-edge exchange information
   mp->num_interfaces_ext_mesh = *num_interfaces_ext_mesh;
   mp->max_nibool_interfaces_ext_mesh = *max_nibool_interfaces_ext_mesh;
-  if( mp->num_interfaces_ext_mesh > 0 ){
+  if (mp->num_interfaces_ext_mesh > 0){
     copy_todevice_int((void**)&mp->d_nibool_interfaces_ext_mesh,h_nibool_interfaces_ext_mesh,
                       mp->num_interfaces_ext_mesh);
     copy_todevice_int((void**)&mp->d_ibool_interfaces_ext_mesh,h_ibool_interfaces_ext_mesh,
@@ -289,7 +289,7 @@ void FC_FUNC_(prepare_constants_device,
   // compute stream
   cudaStreamCreate(&mp->compute_stream);
   // copy stream (needed to transfer mpi buffers)
-  if( mp->num_interfaces_ext_mesh * mp->max_nibool_interfaces_ext_mesh > 0 ){
+  if (mp->num_interfaces_ext_mesh * mp->max_nibool_interfaces_ext_mesh > 0){
     cudaStreamCreate(&mp->copy_stream);
   }
 
@@ -298,7 +298,7 @@ void FC_FUNC_(prepare_constants_device,
 
   // absorbing boundaries
   mp->d_num_abs_boundary_faces = *h_num_abs_boundary_faces;
-  if( mp->absorbing_conditions && mp->d_num_abs_boundary_faces > 0 ){
+  if (mp->absorbing_conditions && mp->d_num_abs_boundary_faces > 0){
     copy_todevice_int((void**)&mp->d_abs_boundary_ispec,h_abs_boundary_ispec,mp->d_num_abs_boundary_faces);
     copy_todevice_int((void**)&mp->d_abs_boundary_ijk,h_abs_boundary_ijk,
                       3*NGLL2*(mp->d_num_abs_boundary_faces));
@@ -327,7 +327,7 @@ void FC_FUNC_(prepare_constants_device,
   // note that:
   // size(number_receiver_global) = nrec_local
   // size(ispec_selected_rec) = nrec
-  if( mp->nrec_local > 0 ){
+  if (mp->nrec_local > 0){
     copy_todevice_int((void**)&mp->d_number_receiver_global,h_number_receiver_global,mp->nrec_local);
   }
   copy_todevice_int((void**)&mp->d_ispec_selected_rec,h_ispec_selected_rec,(*nrec));
@@ -335,7 +335,7 @@ void FC_FUNC_(prepare_constants_device,
 
 #ifdef USE_MESH_COLORING_GPU
   mp->use_mesh_coloring_gpu = 1;
-  if( ! *USE_MESH_COLORING_GPU_f ) exit_on_error("error with USE_MESH_COLORING_GPU constant; please re-compile\n");
+  if (! *USE_MESH_COLORING_GPU_f) exit_on_error("error with USE_MESH_COLORING_GPU constant; please re-compile\n");
 #else
   // mesh coloring
   // note: this here passes the coloring as an option to the kernel routines
@@ -420,7 +420,7 @@ void FC_FUNC_(prepare_fields_acoustic_device,
 
   // mpi buffer
   mp->size_mpi_buffer_potential = (mp->num_interfaces_ext_mesh) * (mp->max_nibool_interfaces_ext_mesh);
-  if( mp->size_mpi_buffer_potential > 0 ){
+  if (mp->size_mpi_buffer_potential > 0){
     print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_send_potential_dot_dot_buffer),mp->size_mpi_buffer_potential *sizeof(realw)),2004);
   }
 
@@ -456,10 +456,10 @@ void FC_FUNC_(prepare_fields_acoustic_device,
   copy_todevice_int((void**)&mp->d_ispec_is_acoustic,ispec_is_acoustic,mp->NSPEC_AB);
 
   // free surface
-  if( *NOISE_TOMOGRAPHY == 0 ){
+  if (*NOISE_TOMOGRAPHY == 0){
     // allocate surface arrays
     mp->num_free_surface_faces = *num_free_surface_faces;
-    if( mp->num_free_surface_faces > 0 ){
+    if (mp->num_free_surface_faces > 0){
       copy_todevice_int((void**)&mp->d_free_surface_ispec,free_surface_ispec,mp->num_free_surface_faces);
       copy_todevice_int((void**)&mp->d_free_surface_ijk,free_surface_ijk,
                         3*NGLL2*mp->num_free_surface_faces);
@@ -467,9 +467,9 @@ void FC_FUNC_(prepare_fields_acoustic_device,
   }
 
   // absorbing boundaries
-  if( mp->absorbing_conditions && mp->d_num_abs_boundary_faces > 0 ){
+  if (mp->absorbing_conditions && mp->d_num_abs_boundary_faces > 0){
     // absorb_field array used for file i/o
-    if(mp->simulation_type == 3 || ( mp->simulation_type == 1 && mp->save_forward )){
+    if (mp->simulation_type == 3 || ( mp->simulation_type == 1 && mp->save_forward )){
       // note: b_reclen_potential is record length in bytes ( CUSTOM_REAL * NGLLSQUARE * num_abs_boundary_faces )
       mp->d_b_reclen_potential = *b_reclen_potential;
       print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_b_absorb_potential,mp->d_b_reclen_potential),2201);
@@ -478,16 +478,16 @@ void FC_FUNC_(prepare_fields_acoustic_device,
   }
 
   // for seismograms
-  if( mp->nrec_local > 0 ){
+  if (mp->nrec_local > 0){
     print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_station_seismo_potential),
                                        mp->nrec_local*NGLL3*sizeof(realw)),2107);
 
     mp->h_station_seismo_potential = (realw*) malloc( mp->nrec_local*NGLL3*sizeof(realw) );
-    if( mp->h_station_seismo_potential == NULL) exit_on_error("error allocating h_station_seismo_potential");
+    if (mp->h_station_seismo_potential == NULL) exit_on_error("error allocating h_station_seismo_potential");
   }
 
   // coupling with elastic parts
-  if( *ELASTIC_SIMULATION && *num_coupling_ac_el_faces > 0 ){
+  if (*ELASTIC_SIMULATION && *num_coupling_ac_el_faces > 0){
     copy_todevice_int((void**)&mp->d_coupling_ac_el_ispec,coupling_ac_el_ispec,(*num_coupling_ac_el_faces));
     copy_todevice_int((void**)&mp->d_coupling_ac_el_ijk,coupling_ac_el_ijk,3*NGLL2*(*num_coupling_ac_el_faces));
     copy_todevice_realw((void**)&mp->d_coupling_ac_el_normal,coupling_ac_el_normal,
@@ -497,7 +497,7 @@ void FC_FUNC_(prepare_fields_acoustic_device,
   }
 
   // mesh coloring
-  if( mp->use_mesh_coloring_gpu ){
+  if (mp->use_mesh_coloring_gpu ){
     mp->num_colors_outer_acoustic = *num_colors_outer_acoustic;
     mp->num_colors_inner_acoustic = *num_colors_inner_acoustic;
     mp->h_num_elem_colors_acoustic = (int*) num_elem_colors_acoustic;
@@ -521,7 +521,7 @@ void FC_FUNC_(prepare_fields_acoustic_adj_dev,
   Mesh* mp = (Mesh*)(*Mesh_pointer);
 
   // kernel simulations
-  if( mp->simulation_type != 3 ) return;
+  if (mp->simulation_type != 3) return;
 
   // allocates backward/reconstructed arrays on device (GPU)
   int size = mp->NGLOB_AB;
@@ -561,14 +561,14 @@ void FC_FUNC_(prepare_fields_acoustic_adj_dev,
   print_CUDA_error_if_any(cudaMemset(mp->d_kappa_ac_kl,0,size*sizeof(realw)),3020);
 
   // preconditioner
-  if( *APPROXIMATE_HESS_KL ){
+  if (*APPROXIMATE_HESS_KL ){
     print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_hess_ac_kl),size*sizeof(realw)),3030);
     // initializes with zeros
     print_CUDA_error_if_any(cudaMemset(mp->d_hess_ac_kl,0,size*sizeof(realw)),3031);
   }
 
   // mpi buffer
-  if( mp->size_mpi_buffer_potential > 0 ){
+  if (mp->size_mpi_buffer_potential > 0){
     print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_b_send_potential_dot_dot_buffer),mp->size_mpi_buffer_potential*sizeof(realw)),3014);
   }
 
@@ -669,7 +669,7 @@ void FC_FUNC_(prepare_fields_elastic_device,
 
   // MPI buffer
   mp->size_mpi_buffer = NDIM * (mp->num_interfaces_ext_mesh) * (mp->max_nibool_interfaces_ext_mesh);
-  if( mp->size_mpi_buffer > 0 ){
+  if (mp->size_mpi_buffer > 0){
     // note: Allocate pinned mpi-buffers.
     //       MPI buffers use pinned memory allocated by cudaMallocHost, which
     //       enables the use of asynchronous memory copies from host <-> device
@@ -686,7 +686,7 @@ void FC_FUNC_(prepare_fields_elastic_device,
     // non-pinned buffer
     print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_send_accel_buffer),mp->size_mpi_buffer*sizeof(realw)),4004);
     // adjoint
-    if( mp->simulation_type == 3 ){
+    if (mp->simulation_type == 3){
       print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_b_send_accel_buffer),mp->size_mpi_buffer*sizeof(realw)),4004);
     }
   }
@@ -712,21 +712,21 @@ void FC_FUNC_(prepare_fields_elastic_device,
   //synchronize_mpi();
 
   // for seismograms
-  if( mp->nrec_local > 0 ){
+  if (mp->nrec_local > 0){
     // debug
     //printf("prepare_fields_elastic_device: rank %d - seismogram setup\n",mp->myrank);
 
     print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_station_seismo_field),3*NGLL3*(mp->nrec_local)*sizeof(realw)),4015);
 
     mp->h_station_seismo_field = (realw*) malloc( 3*NGLL3*(mp->nrec_local)*sizeof(realw) );
-    if( mp->h_station_seismo_field == NULL) exit_on_error("h_station_seismo_field not allocated \n");
+    if (mp->h_station_seismo_field == NULL) exit_on_error("h_station_seismo_field not allocated \n");
   }
 
   // debug
   //synchronize_mpi();
 
   // absorbing conditions
-  if( mp->absorbing_conditions && mp->d_num_abs_boundary_faces > 0){
+  if (mp->absorbing_conditions && mp->d_num_abs_boundary_faces > 0){
 
     // debug
     //printf("prepare_fields_elastic_device: rank %d - absorbing boundary setup\n",mp->myrank);
@@ -737,7 +737,7 @@ void FC_FUNC_(prepare_fields_elastic_device,
     copy_todevice_realw((void**)&mp->d_rho_vs,rho_vs,NGLL3*mp->NSPEC_AB);
 
     // absorb_field array used for file i/o
-    if(mp->simulation_type == 3 || ( mp->simulation_type == 1 && mp->save_forward )){
+    if (mp->simulation_type == 3 || ( mp->simulation_type == 1 && mp->save_forward )){
       // note: b_reclen_field is length in bytes already (CUSTOM_REAL * NDIM * NGLLSQUARE * num_abs_boundary_faces )
       mp->d_b_reclen_field = *b_reclen_field;
 
@@ -754,7 +754,7 @@ void FC_FUNC_(prepare_fields_elastic_device,
   //synchronize_mpi();
 
   // strains used for attenuation and kernel simulations
-  if( *COMPUTE_AND_STORE_STRAIN ){
+  if (*COMPUTE_AND_STORE_STRAIN ){
     // debug
     //printf("prepare_fields_elastic_device: rank %d - strain setup\n",mp->myrank);
     //synchronize_mpi();
@@ -769,7 +769,7 @@ void FC_FUNC_(prepare_fields_elastic_device,
   }
 
   // attenuation memory variables
-  if( *ATTENUATION ){
+  if (*ATTENUATION ){
     // debug
     //printf("prepare_fields_elastic_device: rank %d - attenuation setup\n",mp->myrank);
     //synchronize_mpi();
@@ -791,7 +791,7 @@ void FC_FUNC_(prepare_fields_elastic_device,
   }
 
   // anisotropy
-  if( *ANISOTROPY ){
+  if (*ANISOTROPY ){
     // debug
     //printf("prepare_fields_elastic_device: rank %d - attenuation setup\n",mp->myrank);
     //synchronize_mpi();
@@ -940,14 +940,14 @@ void FC_FUNC_(prepare_fields_elastic_device,
   }
 
   // ocean load approximation
-  if( *APPROXIMATE_OCEAN_LOAD ){
+  if (*APPROXIMATE_OCEAN_LOAD ){
     // debug
     //printf("prepare_fields_elastic_device: rank %d - ocean load setup\n",mp->myrank);
     //synchronize_mpi();
 
     // oceans needs a free surface
     mp->num_free_surface_faces = *num_free_surface_faces;
-    if( mp->num_free_surface_faces > 0 ){
+    if (mp->num_free_surface_faces > 0){
       // mass matrix
       copy_todevice_realw((void**)&mp->d_rmass_ocean_load,rmass_ocean_load,mp->NGLOB_AB);
       // surface normal
@@ -957,7 +957,7 @@ void FC_FUNC_(prepare_fields_elastic_device,
       print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_updated_dof_ocean_load),
                                          sizeof(int)*mp->NGLOB_AB),4505);
 
-      if( *NOISE_TOMOGRAPHY == 0 && *ACOUSTIC_SIMULATION == 0 ){
+      if (*NOISE_TOMOGRAPHY == 0 && *ACOUSTIC_SIMULATION == 0){
         copy_todevice_int((void**)&mp->d_free_surface_ispec,free_surface_ispec,mp->num_free_surface_faces);
         copy_todevice_int((void**)&mp->d_free_surface_ijk,free_surface_ijk,
                           3*NGLL2*mp->num_free_surface_faces);
@@ -966,7 +966,7 @@ void FC_FUNC_(prepare_fields_elastic_device,
   }
 
   // mesh coloring
-  if( mp->use_mesh_coloring_gpu ){
+  if (mp->use_mesh_coloring_gpu ){
     mp->num_colors_outer_elastic = *num_colors_outer_elastic;
     mp->num_colors_inner_elastic = *num_colors_inner_elastic;
     mp->h_num_elem_colors_elastic = (int*) num_elem_colors_elastic;
@@ -1007,7 +1007,7 @@ void FC_FUNC_(prepare_fields_elastic_adj_dev,
   int size;
 
   // checks if kernel simulation
-  if( mp->simulation_type != 3 ) return;
+  if (mp->simulation_type != 3) return;
 
   // kernel simulations
   // debug
@@ -1065,7 +1065,7 @@ void FC_FUNC_(prepare_fields_elastic_adj_dev,
   // initializes kernel values to zero
   print_CUDA_error_if_any(cudaMemset(mp->d_rho_kl,0,size*sizeof(realw)),5214);
 
-  if( mp->anisotropic_kl ){
+  if (mp->anisotropic_kl ){
     // anisotropic kernels
     print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_cijkl_kl),21*size*sizeof(realw)),5205);
     print_CUDA_error_if_any(cudaMemset(mp->d_cijkl_kl,0,21*size*sizeof(realw)),5215);
@@ -1079,7 +1079,7 @@ void FC_FUNC_(prepare_fields_elastic_adj_dev,
   }
 
   // strains used for attenuation and kernel simulations
-  if( *COMPUTE_AND_STORE_STRAIN ){
+  if (*COMPUTE_AND_STORE_STRAIN ){
     // strains
     // debug
     //printf("prepare_fields_elastic_adj_dev: rank %d - strains\n",mp->myrank);
@@ -1102,7 +1102,7 @@ void FC_FUNC_(prepare_fields_elastic_adj_dev,
   }
 
   // attenuation memory variables
-  if( *ATTENUATION ){
+  if (*ATTENUATION ){
     // debug
     //printf("prepare_fields_elastic_adj_dev: rank %d - attenuation\n",mp->myrank);
     //synchronize_mpi();
@@ -1122,7 +1122,7 @@ void FC_FUNC_(prepare_fields_elastic_adj_dev,
   }
 
   // approximate hessian kernel
-  if( *APPROXIMATE_HESS_KL ){
+  if (*APPROXIMATE_HESS_KL ){
     // debug
     //printf("prepare_fields_elastic_adj_dev: rank %d - hessian kernel\n",mp->myrank);
     //synchronize_mpi();
@@ -1161,7 +1161,7 @@ void FC_FUNC_(prepare_sim2_or_3_const_device,
 
   // adjoint source arrays
   mp->nadj_rec_local = *nadj_rec_local;
-  if( mp->nadj_rec_local > 0 ){
+  if (mp->nadj_rec_local > 0){
     print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_adj_sourcearrays,
                                        (mp->nadj_rec_local)*3*NGLL3*sizeof(realw)),6003);
 
@@ -1173,17 +1173,17 @@ void FC_FUNC_(prepare_sim2_or_3_const_device,
     // h_pre_comp..), because normally it is in the loop updating accel,
     // and due to how it's incremented, it cannot be parallelized
     int* h_pre_computed_irec = (int*) malloc( (mp->nadj_rec_local)*sizeof(int) );
-    if( h_pre_computed_irec == NULL ) exit_on_error("prepare_sim2_or_3_const_device: h_pre_computed_irec not allocated\n");
+    if (h_pre_computed_irec == NULL) exit_on_error("prepare_sim2_or_3_const_device: h_pre_computed_irec not allocated\n");
 
     int irec_local = 0;
     for(int irec = 0; irec < *nrec; irec++) {
-      if(mp->myrank == islice_selected_rec[irec]) {
+      if (mp->myrank == islice_selected_rec[irec]) {
         irec_local++;
         h_pre_computed_irec[irec_local-1] = irec;
       }
     }
     // checks if all local receivers have been found
-    if( irec_local != mp->nadj_rec_local ) exit_on_error("prepare_sim2_or_3_const_device: irec_local not equal\n");
+    if (irec_local != mp->nadj_rec_local) exit_on_error("prepare_sim2_or_3_const_device: irec_local not equal\n");
 
     // copies values onto GPU
     print_CUDA_error_if_any(cudaMemcpy(mp->d_pre_computed_irec,h_pre_computed_irec,
@@ -1192,7 +1192,7 @@ void FC_FUNC_(prepare_sim2_or_3_const_device,
 
     // temporary array to prepare extracted source array values
     mp->h_adj_sourcearrays_slice = (realw*) malloc( (mp->nadj_rec_local)*3*NGLL3*sizeof(realw) );
-    if( mp->h_adj_sourcearrays_slice == NULL ) exit_on_error("h_adj_sourcearrays_slice not allocated\n");
+    if (mp->h_adj_sourcearrays_slice == NULL) exit_on_error("h_adj_sourcearrays_slice not allocated\n");
   }
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
@@ -1237,13 +1237,13 @@ void FC_FUNC_(prepare_fields_noise_device,
                                      3*NGLL2*mp->num_free_surface_faces*sizeof(realw)),7005);
 
   // prepares noise source array
-  if( *NOISE_TOMOGRAPHY == 1 ){
+  if (*NOISE_TOMOGRAPHY == 1){
     copy_todevice_realw((void**)&mp->d_noise_sourcearray,noise_sourcearray,
                         3*NGLL3*(*NSTEP));
   }
 
   // prepares noise directions
-  if( *NOISE_TOMOGRAPHY > 1 ){
+  if (*NOISE_TOMOGRAPHY > 1){
     int nface_size = NGLL2*(*num_free_surface_faces);
     // allocates memory on GPU
     copy_todevice_realw((void**)&mp->d_normal_x_noise,normal_x_noise,nface_size);
@@ -1254,7 +1254,7 @@ void FC_FUNC_(prepare_fields_noise_device,
   }
 
   // prepares noise strength kernel
-  if( *NOISE_TOMOGRAPHY == 3 ){
+  if (*NOISE_TOMOGRAPHY == 3){
     print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_Sigma_kl),NGLL3*(mp->NSPEC_AB)*sizeof(realw)),7401);
     // initializes kernel values to zero
     print_CUDA_error_if_any(cudaMemset(mp->d_Sigma_kl,0,NGLL3*mp->NSPEC_AB*sizeof(realw)),7403);
@@ -1289,12 +1289,12 @@ void FC_FUNC_(prepare_fields_gravity_device,
   setConst_wgll_cube(h_wgll_cube,mp);
 
   mp->gravity = *GRAVITY;
-  if( mp->gravity ){
+  if (mp->gravity ){
 
     copy_todevice_realw((void**)&mp->d_minus_deriv_gravity,minus_deriv_gravity,mp->NGLOB_AB);
     copy_todevice_realw((void**)&mp->d_minus_g,minus_g,mp->NGLOB_AB);
 
-    if( *ACOUSTIC_SIMULATION == 0 ){
+    if (*ACOUSTIC_SIMULATION == 0){
       // density
       // rhostore not allocated yet
       int size_padded = NGLL3_PADDED * (mp->NSPEC_AB);
@@ -1391,7 +1391,7 @@ TRACE("prepare_cleanup_device");
   cudaFree(mp->d_muv);
 
   // absorbing boundaries
-  if( *ABSORBING_CONDITIONS && mp->d_num_abs_boundary_faces > 0 ){
+  if (*ABSORBING_CONDITIONS && mp->d_num_abs_boundary_faces > 0){
     cudaFree(mp->d_abs_boundary_ispec);
     cudaFree(mp->d_abs_boundary_ijk);
     cudaFree(mp->d_abs_boundary_normal);
@@ -1399,7 +1399,7 @@ TRACE("prepare_cleanup_device");
   }
 
   // interfaces
-  if( mp->num_interfaces_ext_mesh > 0 ){
+  if (mp->num_interfaces_ext_mesh > 0){
     cudaFree(mp->d_nibool_interfaces_ext_mesh);
     cudaFree(mp->d_ibool_interfaces_ext_mesh);
   }
@@ -1418,11 +1418,11 @@ TRACE("prepare_cleanup_device");
   cudaFree(mp->d_ispec_selected_source);
 
   // receivers
-  if( mp->nrec_local > 0 ) cudaFree(mp->d_number_receiver_global);
+  if (mp->nrec_local > 0) cudaFree(mp->d_number_receiver_global);
   cudaFree(mp->d_ispec_selected_rec);
 
   // ACOUSTIC arrays
-  if( *ACOUSTIC_SIMULATION ){
+  if (*ACOUSTIC_SIMULATION ){
     cudaFree(mp->d_potential_acoustic);
     cudaFree(mp->d_potential_dot_acoustic);
     cudaFree(mp->d_potential_dot_dot_acoustic);
@@ -1433,24 +1433,24 @@ TRACE("prepare_cleanup_device");
     cudaFree(mp->d_phase_ispec_inner_acoustic);
     cudaFree(mp->d_ispec_is_acoustic);
 
-    if( *NOISE_TOMOGRAPHY == 0 ){
+    if (*NOISE_TOMOGRAPHY == 0){
       cudaFree(mp->d_free_surface_ispec);
       cudaFree(mp->d_free_surface_ijk);
     }
 
-    if( *ABSORBING_CONDITIONS ) cudaFree(mp->d_b_absorb_potential);
+    if (*ABSORBING_CONDITIONS) cudaFree(mp->d_b_absorb_potential);
 
-    if( mp->simulation_type == 3 ) {
+    if (mp->simulation_type == 3) {
       cudaFree(mp->d_b_potential_acoustic);
       cudaFree(mp->d_b_potential_dot_acoustic);
       cudaFree(mp->d_b_potential_dot_dot_acoustic);
       cudaFree(mp->d_rho_ac_kl);
       cudaFree(mp->d_kappa_ac_kl);
-      if( *APPROXIMATE_HESS_KL) cudaFree(mp->d_hess_ac_kl);
+      if (*APPROXIMATE_HESS_KL) cudaFree(mp->d_hess_ac_kl);
     }
 
 
-    if(mp->nrec_local > 0 ){
+    if (mp->nrec_local > 0){
       cudaFree(mp->d_station_seismo_potential);
       free(mp->h_station_seismo_potential);
     }
@@ -1458,13 +1458,13 @@ TRACE("prepare_cleanup_device");
   } // ACOUSTIC_SIMULATION
 
   // ELASTIC arrays
-  if( *ELASTIC_SIMULATION ){
+  if (*ELASTIC_SIMULATION ){
     cudaFree(mp->d_displ);
     cudaFree(mp->d_veloc);
     cudaFree(mp->d_accel);
 
     cudaFree(mp->d_send_accel_buffer);
-    if( mp->simulation_type == 3) cudaFree(mp->d_b_send_accel_buffer);
+    if (mp->simulation_type == 3) cudaFree(mp->d_b_send_accel_buffer);
 
     cudaFree(mp->d_rmassx);
     cudaFree(mp->d_rmassy);
@@ -1473,40 +1473,40 @@ TRACE("prepare_cleanup_device");
     cudaFree(mp->d_phase_ispec_inner_elastic);
     cudaFree(mp->d_ispec_is_elastic);
 
-    if( mp->nrec_local > 0 ){
+    if (mp->nrec_local > 0){
       cudaFree(mp->d_station_seismo_field);
       free(mp->h_station_seismo_field);
     }
 
-    if( *ABSORBING_CONDITIONS && mp->d_num_abs_boundary_faces > 0){
+    if (*ABSORBING_CONDITIONS && mp->d_num_abs_boundary_faces > 0){
       cudaFree(mp->d_rho_vp);
       cudaFree(mp->d_rho_vs);
 
-      if(mp->simulation_type == 3 || ( mp->simulation_type == 1 && mp->save_forward ))
+      if (mp->simulation_type == 3 || ( mp->simulation_type == 1 && mp->save_forward ))
           cudaFree(mp->d_b_absorb_field);
     }
 
-    if( mp->simulation_type == 3 ) {
+    if (mp->simulation_type == 3) {
       cudaFree(mp->d_b_displ);
       cudaFree(mp->d_b_veloc);
       cudaFree(mp->d_b_accel);
       cudaFree(mp->d_rho_kl);
-      if( mp->anisotropic_kl ){
+      if (mp->anisotropic_kl ){
         cudaFree(mp->d_cijkl_kl);
       }else{
         cudaFree(mp->d_mu_kl);
         cudaFree(mp->d_kappa_kl);
       }
-      if( *APPROXIMATE_HESS_KL ) cudaFree(mp->d_hess_el_kl);
+      if (*APPROXIMATE_HESS_KL) cudaFree(mp->d_hess_el_kl);
     }
 
-    if( *COMPUTE_AND_STORE_STRAIN ){
+    if (*COMPUTE_AND_STORE_STRAIN ){
       cudaFree(mp->d_epsilondev_xx);
       cudaFree(mp->d_epsilondev_yy);
       cudaFree(mp->d_epsilondev_xy);
       cudaFree(mp->d_epsilondev_xz);
       cudaFree(mp->d_epsilondev_yz);
-      if( mp->simulation_type == 3 ){
+      if (mp->simulation_type == 3){
         cudaFree(mp->d_epsilon_trace_over_3);
         cudaFree(mp->d_b_epsilon_trace_over_3);
         cudaFree(mp->d_b_epsilondev_xx);
@@ -1517,7 +1517,7 @@ TRACE("prepare_cleanup_device");
       }
     }
 
-    if( *ATTENUATION ){
+    if (*ATTENUATION ){
       cudaFree(mp->d_factor_common);
       cudaFree(mp->d_one_minus_sum_beta);
       cudaFree(mp->d_alphaval);
@@ -1528,7 +1528,7 @@ TRACE("prepare_cleanup_device");
       cudaFree(mp->d_R_xy);
       cudaFree(mp->d_R_xz);
       cudaFree(mp->d_R_yz);
-      if( mp->simulation_type == 3){
+      if (mp->simulation_type == 3){
         cudaFree(mp->d_b_R_xx);
         cudaFree(mp->d_b_R_yy);
         cudaFree(mp->d_b_R_xy);
@@ -1540,7 +1540,7 @@ TRACE("prepare_cleanup_device");
       }
     }
 
-    if( *ANISOTROPY ){
+    if (*ANISOTROPY ){
       cudaFree(mp->d_c11store);
       cudaFree(mp->d_c12store);
       cudaFree(mp->d_c13store);
@@ -1564,12 +1564,12 @@ TRACE("prepare_cleanup_device");
       cudaFree(mp->d_c66store);
     }
 
-    if( *APPROXIMATE_OCEAN_LOAD ){
-      if( mp->num_free_surface_faces > 0 ){
+    if (*APPROXIMATE_OCEAN_LOAD ){
+      if (mp->num_free_surface_faces > 0){
         cudaFree(mp->d_rmass_ocean_load);
         cudaFree(mp->d_free_surface_normal);
         cudaFree(mp->d_updated_dof_ocean_load);
-        if( *NOISE_TOMOGRAPHY == 0){
+        if (*NOISE_TOMOGRAPHY == 0){
           cudaFree(mp->d_free_surface_ispec);
           cudaFree(mp->d_free_surface_ijk);
         }
@@ -1578,8 +1578,8 @@ TRACE("prepare_cleanup_device");
   } // ELASTIC_SIMULATION
 
   // purely adjoint & kernel array
-  if( mp->simulation_type == 2 || mp->simulation_type == 3 ){
-    if(mp->nadj_rec_local > 0 ){
+  if (mp->simulation_type == 2 || mp->simulation_type == 3){
+    if (mp->nadj_rec_local > 0){
       cudaFree(mp->d_adj_sourcearrays);
       cudaFree(mp->d_pre_computed_irec);
       free(mp->h_adj_sourcearrays_slice);
@@ -1587,19 +1587,19 @@ TRACE("prepare_cleanup_device");
   }
 
   // NOISE arrays
-  if( *NOISE_TOMOGRAPHY > 0 ){
+  if (*NOISE_TOMOGRAPHY > 0){
     cudaFree(mp->d_free_surface_ispec);
     cudaFree(mp->d_free_surface_ijk);
     cudaFree(mp->d_noise_surface_movie);
-    if( *NOISE_TOMOGRAPHY == 1 ) cudaFree(mp->d_noise_sourcearray);
-    if( *NOISE_TOMOGRAPHY > 1 ){
+    if (*NOISE_TOMOGRAPHY == 1) cudaFree(mp->d_noise_sourcearray);
+    if (*NOISE_TOMOGRAPHY > 1){
       cudaFree(mp->d_normal_x_noise);
       cudaFree(mp->d_normal_y_noise);
       cudaFree(mp->d_normal_z_noise);
       cudaFree(mp->d_mask_noise);
       cudaFree(mp->d_free_surface_jacobian2Dw);
     }
-    if( *NOISE_TOMOGRAPHY == 3 ) cudaFree(mp->d_Sigma_kl);
+    if (*NOISE_TOMOGRAPHY == 3) cudaFree(mp->d_Sigma_kl);
   }
 
   // mesh pointer - not needed anymore

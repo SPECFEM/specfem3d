@@ -279,7 +279,7 @@ void FC_FUNC_(transfer_kernels_el_to_host,
 
   print_CUDA_error_if_any(cudaMemcpy(h_rho_kl,mp->d_rho_kl,*NSPEC_AB*NGLL3*sizeof(realw),
                                      cudaMemcpyDeviceToHost),40101);
-  if( mp->anisotropic_kl ){
+  if (mp->anisotropic_kl ){
     print_CUDA_error_if_any(cudaMemcpy(h_cijkl_kl,mp->d_cijkl_kl,*NSPEC_AB*21*NGLL3*sizeof(realw),
                                        cudaMemcpyDeviceToHost),40102);
   }else{
@@ -524,7 +524,7 @@ TRACE("transfer_compute_kernel_answers_from_device");
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
   cudaMemcpy(rho_kl,mp->d_rho_kl,*size_rho*sizeof(realw),cudaMemcpyDeviceToHost);
-  if( ! mp->anisotropic_kl ){
+  if (! mp->anisotropic_kl ){
     cudaMemcpy(mu_kl,mp->d_mu_kl,*size_mu*sizeof(realw),cudaMemcpyDeviceToHost);
     cudaMemcpy(kappa_kl,mp->d_kappa_kl,*size_kappa*sizeof(realw),cudaMemcpyDeviceToHost);
   }
@@ -567,7 +567,7 @@ TRACE("transfer_compute_kernel_fields_from_device");
   cudaMemcpy(b_epsilondev_yz,mp->d_b_epsilondev_yz,*size_b_epsilondev*sizeof(realw),cudaMemcpyDeviceToHost);
   cudaMemcpy(rho_kl,mp->d_rho_kl,*size_rho*sizeof(realw),cudaMemcpyDeviceToHost);
 
-  if( ! mp->anisotropic_kl ){
+  if (! mp->anisotropic_kl ){
     cudaMemcpy(mu_kl,mp->d_mu_kl,*size_mu*sizeof(realw),cudaMemcpyDeviceToHost);
     cudaMemcpy(kappa_kl,mp->d_kappa_kl,*size_kappa*sizeof(realw),cudaMemcpyDeviceToHost);
   }

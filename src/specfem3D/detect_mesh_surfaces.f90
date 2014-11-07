@@ -39,7 +39,7 @@
   ! for mesh surface
   allocate(ispec_is_surface_external_mesh(NSPEC_AB), &
           iglob_is_surface_external_mesh(NGLOB_AB),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array for mesh surface'
+  if (ier /= 0) stop 'error allocating array for mesh surface'
 
 ! determines model surface
   if (.not. RECEIVERS_CAN_BE_BURIED .or. MOVIE_TYPE == 2) then
@@ -59,7 +59,7 @@
   endif
 
 ! takes cross-section surfaces instead
-  if( MOVIE_TYPE == 2 .and. PLOT_CROSS_SECTIONS ) then
+  if (MOVIE_TYPE == 2 .and. PLOT_CROSS_SECTIONS) then
     call detect_surface_cross_section(NPROC,NGLOB_AB,NSPEC_AB,ibool,&
                             ispec_is_surface_external_mesh, &
                             iglob_is_surface_external_mesh, &
@@ -74,7 +74,7 @@
   endif
 
 ! takes number of faces for top, free surface only
-  if( MOVIE_TYPE == 1 ) then
+  if (MOVIE_TYPE == 1) then
     nfaces_surface_ext_mesh = num_free_surface_faces
     ! face corner indices
     iorderi(1) = 1
@@ -88,26 +88,26 @@
   endif
 
 ! handles movies and shakemaps
-  if( MOVIE_SURFACE .or. CREATE_SHAKEMAP ) then
+  if (MOVIE_SURFACE .or. CREATE_SHAKEMAP) then
     call setup_movie_meshes()
   endif
 
 ! stores wavefields for whole volume
   if (MOVIE_VOLUME) then
     ! acoustic
-    if( ACOUSTIC_SIMULATION .or. ELASTIC_SIMULATION ) then
+    if (ACOUSTIC_SIMULATION .or. ELASTIC_SIMULATION) then
       allocate(velocity_x(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
               velocity_y(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
               velocity_z(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array movie velocity_x etc.'
+      if (ier /= 0) stop 'error allocating array movie velocity_x etc.'
     endif
     ! elastic only
-    if( ELASTIC_SIMULATION ) then
+    if (ELASTIC_SIMULATION) then
       allocate(div(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
               curl_x(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
               curl_y(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
               curl_z(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array movie div and curl'
+      if (ier /= 0) stop 'error allocating array movie div and curl'
       div(:,:,:,:) = 0._CUSTOM_REAL
       curl_x(:,:,:,:) = 0._CUSTOM_REAL
       curl_y(:,:,:,:) = 0._CUSTOM_REAL
@@ -116,7 +116,7 @@
   endif
 
 ! initializes cross-section gif image
-  if( PNM_IMAGE ) then
+  if (PNM_IMAGE) then
     call write_PNM_initialize()
   endif
 

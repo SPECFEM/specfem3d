@@ -73,7 +73,7 @@
                         nspec_outer,nspec_inner,nspec_domain)
 
   !debug output
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*) '     colors:'
     write(IMAIN,*) '     number of colors for inner elements = ',nb_colors_inner_elements
     write(IMAIN,*) '     number of colors for outer elements = ',nb_colors_outer_elements
@@ -136,10 +136,10 @@
   logical, parameter :: DISPLAY_MIN_POSSIBLE_COLORS = .false.
 
   ! user output
-  if( myrank == 0 ) then
-    if( USE_DROUX_OPTIMIZATION ) then
+  if (myrank == 0) then
+    if (USE_DROUX_OPTIMIZATION) then
       write(IMAIN,*) '     fast coloring mesh algorithm w/ Droux optimization'
-    else if( BALANCE_COLORS_SIMPLE_ALGO ) then
+    else if (BALANCE_COLORS_SIMPLE_ALGO) then
       write(IMAIN,*) '     fast coloring mesh algorithm w/ color balancing'
     else
       write(IMAIN,*) '     fast coloring mesh algorithm'
@@ -152,9 +152,9 @@
   nspec_domain = 0
   do ispec=1,nspec
     ! domain elements
-    if(ispec_is_d(ispec)) then
+    if (ispec_is_d(ispec)) then
       ! outer/inner elements
-      if(is_on_a_slice_edge(ispec)) then
+      if (is_on_a_slice_edge(ispec)) then
         nspec_outer=nspec_outer+1
       else
         nspec_inner=nspec_inner+1
@@ -164,7 +164,7 @@
   enddo
 
   ! debug
-  !if(myrank == 0) then
+  !if (myrank == 0) then
   !  print *
   !  print *,'----------------------------------'
   !  print *,'coloring the mesh'
@@ -175,8 +175,8 @@
   ! Droux optimization
   try_Droux_coloring = USE_DROUX_OPTIMIZATION
 
-  if(BALANCE_COLORS_SIMPLE_ALGO .and. USE_DROUX_OPTIMIZATION ) then
-    if( myrank == 0 ) then
+  if (BALANCE_COLORS_SIMPLE_ALGO .and. USE_DROUX_OPTIMIZATION) then
+    if (myrank == 0) then
       print *,'noticed a problem with mesh coloring options: '
       print *,'  cannot set both USE_DROUX_OPTIMAL_ALGO and BALANCE_COLORS_SIMPLE_ALGO'
       print *,'  -> this run will use only BALANCE_COLORS_SIMPLE_ALGO'
@@ -186,7 +186,7 @@
   endif
 
   ! gives a lower bound for the number of colors needed
-  if(DISPLAY_MIN_POSSIBLE_COLORS .or. try_Droux_coloring) then
+  if (DISPLAY_MIN_POSSIBLE_COLORS .or. try_Droux_coloring) then
     ! gets maximum values of valence for inner and outer element points
     call count_mesh_valence(ibool,is_on_a_slice_edge,ispec_is_d, &
                            myrank, nspec, nglob, &
@@ -195,7 +195,7 @@
 
   ! allocates mask
   allocate(mask_ibool(nglob),stat=ier)
-  if( ier /= 0 ) stop 'error allocating mask_ibool array'
+  if (ier /= 0) stop 'error allocating mask_ibool array'
 
   ! entry point for fail-safe mechanism when Droux 1993 fails
   999 continue
@@ -207,13 +207,13 @@
   nb_already_colored = 0
 
   ! colors outer elements
-  do while( nb_already_colored < nspec_outer )
+  do while (nb_already_colored < nspec_outer )
 
     333 continue
     icolor = icolor + 1
 
     ! debug: user output
-    !if(myrank == 0) then
+    !if (myrank == 0) then
     !  print *,'  analyzing color ',icolor,' - outer elements'
     !endif
 
@@ -224,10 +224,10 @@
     ! finds un-colored elements
     do ispec = 1,nspec
       ! domain elements only
-      if( ispec_is_d(ispec) ) then
+      if (ispec_is_d(ispec)) then
         ! outer elements
-        if( is_on_a_slice_edge(ispec) ) then
-          if(color(ispec) == 0) then
+        if (is_on_a_slice_edge(ispec)) then
+          if (color(ispec) == 0) then
             ! the eight corners of the current element
             iglob1=ibool(1,1,1,ispec)
             iglob2=ibool(NGLLX,1,1,ispec)
@@ -238,7 +238,7 @@
             iglob7=ibool(NGLLX,NGLLY,NGLLZ,ispec)
             iglob8=ibool(1,NGLLY,NGLLZ,ispec)
 
-            if(mask_ibool(iglob1) .or. mask_ibool(iglob2) .or. mask_ibool(iglob3) .or. mask_ibool(iglob4) .or. &
+            if (mask_ibool(iglob1) .or. mask_ibool(iglob2) .or. mask_ibool(iglob3) .or. mask_ibool(iglob4) .or. &
                mask_ibool(iglob5) .or. mask_ibool(iglob6) .or. mask_ibool(iglob7) .or. mask_ibool(iglob8)) then
               ! if element of this color has a common point with another element of that same color
               ! then we need to create a new color, i.e., increment the color of the current element
@@ -261,12 +261,12 @@
     enddo
 
     ! debug: user output
-    !if(myrank == 0) then
+    !if (myrank == 0) then
     !  print *,'  done ',(100.0*nb_already_colored)/nspec_domain,'% of ',nspec_domain,'elements'
     !endif
 
-    if(conflict_found_need_new_color) then
-      if( icolor >= MAX_NUMBER_OF_COLORS ) stop 'error MAX_NUMBER_OF_COLORS too small'
+    if (conflict_found_need_new_color) then
+      if (icolor >= MAX_NUMBER_OF_COLORS) stop 'error MAX_NUMBER_OF_COLORS too small'
       goto 333
     endif
   enddo
@@ -274,13 +274,13 @@
   nb_colors_outer_elements = icolor
 
   ! colors inner elements
-  do while(nb_already_colored < nspec_domain)
+  do while (nb_already_colored < nspec_domain)
 
     334 continue
     icolor = icolor + 1
 
     ! debug: user output
-    !if(myrank == 0) then
+    !if (myrank == 0) then
     !  print *,'  analyzing color ',icolor,' - inner elements'
     !endif
 
@@ -290,10 +290,10 @@
 
     do ispec = 1,nspec
       ! domain elements only
-      if(ispec_is_d(ispec)) then
+      if (ispec_is_d(ispec)) then
         ! inner elements
         if (.not. is_on_a_slice_edge(ispec)) then
-          if(color(ispec) == 0) then
+          if (color(ispec) == 0) then
             ! the eight corners of the current element
             iglob1=ibool(1,1,1,ispec)
             iglob2=ibool(NGLLX,1,1,ispec)
@@ -304,7 +304,7 @@
             iglob7=ibool(NGLLX,NGLLY,NGLLZ,ispec)
             iglob8=ibool(1,NGLLY,NGLLZ,ispec)
 
-            if(mask_ibool(iglob1) .or. mask_ibool(iglob2) .or. mask_ibool(iglob3) .or. mask_ibool(iglob4) .or. &
+            if (mask_ibool(iglob1) .or. mask_ibool(iglob2) .or. mask_ibool(iglob3) .or. mask_ibool(iglob4) .or. &
                mask_ibool(iglob5) .or. mask_ibool(iglob6) .or. mask_ibool(iglob7) .or. mask_ibool(iglob8)) then
               ! if element of this color has a common point with another element of that same color
               ! then we need to create a new color, i.e., increment the color of the current element
@@ -327,12 +327,12 @@
     enddo
 
     ! debug user output
-    !if(myrank == 0) then
+    !if (myrank == 0) then
     !  print *,'  done ',(100.0*nb_already_colored)/nspec_domain,'% of ',nspec_domain,'elements'
     !endif
 
-    if(conflict_found_need_new_color) then
-      if( icolor >= MAX_NUMBER_OF_COLORS ) stop 'error MAX_NUMBER_OF_COLORS too small'
+    if (conflict_found_need_new_color) then
+      if (icolor >= MAX_NUMBER_OF_COLORS) stop 'error MAX_NUMBER_OF_COLORS too small'
       goto 334
     endif
   enddo
@@ -343,7 +343,7 @@
   ! added this to create more balanced colors according to JJ Droux (1993)
   ! note: this might not find an optimial solution.
   !          we will probably have to try a few times with increasing colors
-  if( try_Droux_coloring ) then
+  if (try_Droux_coloring) then
     ! initializes fail-safe mechanism
     fail_safe = .false.
 
@@ -355,15 +355,15 @@
                               mask_ibool,fail_safe)
 
     ! in case it fails go back to simple coloring algorithm
-    if( fail_safe ) then
+    if (fail_safe) then
       try_Droux_coloring = .false.
-      if(myrank == 0) write(IMAIN,*) '     giving up on Droux 1993 algorithm, calling fail-safe mechanism'
+      if (myrank == 0) write(IMAIN,*) '     giving up on Droux 1993 algorithm, calling fail-safe mechanism'
       goto 999
     endif
-  endif ! of if(try_Droux_coloring)
+  endif ! of if (try_Droux_coloring)
 
   ! balances colors using a simple algorithm (if Droux was not used)
-  if( BALANCE_COLORS_SIMPLE_ALGO ) then
+  if (BALANCE_COLORS_SIMPLE_ALGO) then
     call balance_colors_simple(ibool,is_on_a_slice_edge,ispec_is_d, &
                               myrank, nspec, nglob, &
                               color,nb_colors_outer_elements,nb_colors_inner_elements, &
@@ -375,8 +375,8 @@
     mask_ibool(:) = .false.
     do ispec = 1,nspec
       ! domain elements only
-      if(ispec_is_d(ispec)) then
-        if(color(ispec) == icolor ) then
+      if (ispec_is_d(ispec)) then
+        if (color(ispec) == icolor) then
           ! the eight corners of the current element
           iglob1=ibool(1,1,1,ispec)
           iglob2=ibool(NGLLX,1,1,ispec)
@@ -387,7 +387,7 @@
           iglob7=ibool(NGLLX,NGLLY,NGLLZ,ispec)
           iglob8=ibool(1,NGLLY,NGLLZ,ispec)
 
-          if(mask_ibool(iglob1) .or. mask_ibool(iglob2) .or. mask_ibool(iglob3) .or. mask_ibool(iglob4) .or. &
+          if (mask_ibool(iglob1) .or. mask_ibool(iglob2) .or. mask_ibool(iglob3) .or. mask_ibool(iglob4) .or. &
              mask_ibool(iglob5) .or. mask_ibool(iglob6) .or. mask_ibool(iglob7) .or. mask_ibool(iglob8)) then
             ! if element of this color has a common point with another element of that same color
             ! then there is a problem, the color set is not correct
@@ -408,11 +408,11 @@
     enddo
 
     !debug output
-    !if(myrank == 0) print *,'  color ',icolor,' has disjoint elements only and is therefore OK'
-    !if(myrank == 0) print *,'  color ',icolor,' contains ',count(color == icolor),' elements'
+    !if (myrank == 0) print *,'  color ',icolor,' has disjoint elements only and is therefore OK'
+    !if (myrank == 0) print *,'  color ',icolor,' contains ',count(color == icolor),' elements'
   enddo
   ! debug output
-  !if(myrank == 0) then
+  !if (myrank == 0) then
   !  print*, '     the ',maxval(color),' color sets are OK'
   !endif
 
@@ -449,7 +449,7 @@
 
   ! allocates count array
   allocate(count_ibool(nglob),stat=ier)
-  if( ier /= 0 ) stop 'error allocating count_ibool array'
+  if (ier /= 0) stop 'error allocating count_ibool array'
 
   ! valence numbers of the mesh
   maxval_count_ibool_outer = 0
@@ -459,7 +459,7 @@
   count_ibool(:) = 0
   do ispec = 1,nspec
     ! domain elements only
-    if(ispec_is_d(ispec)) then
+    if (ispec_is_d(ispec)) then
       ! outer elements
       if (is_on_a_slice_edge(ispec)) then
         ! the eight corners of the current element
@@ -489,7 +489,7 @@
   count_ibool(:) = 0
   do ispec = 1,nspec
     ! domain elements only
-    if(ispec_is_d(ispec)) then
+    if (ispec_is_d(ispec)) then
       ! inner elements
       if (.not. is_on_a_slice_edge(ispec)) then
         ! the eight corners of the current element
@@ -516,7 +516,7 @@
   maxval_count_ibool_inner = maxval(count_ibool)
 
   ! debug outupt
-  if( myrank == 0 ) then
+  if (myrank == 0) then
     write(IMAIN,*) '     maximum valence (i.e. minimum possible nb of colors) for outer = ',maxval_count_ibool_outer
     write(IMAIN,*) '     maximum valence (i.e. minimum possible nb of colors) for inner = ',maxval_count_ibool_inner
   endif
@@ -564,7 +564,7 @@
   integer :: ier
 
   ! debug outupt
-  if( myrank == 0 ) then
+  if (myrank == 0) then
     write(IMAIN,*) '     balancing colors: Droux algorithm'
     write(IMAIN,*) '       initial number of outer element colors = ',nb_colors_outer_elements
     write(IMAIN,*) '       initial number of inner element colors = ',nb_colors_inner_elements
@@ -572,7 +572,7 @@
   endif
 
   ! initial guess of number of colors needed
-  if( maxval_count_ibool_inner > 0 .and. maxval_count_ibool_inner < nb_colors_inner_elements ) then
+  if (maxval_count_ibool_inner > 0 .and. maxval_count_ibool_inner < nb_colors_inner_elements) then
     ! uses maximum valence to estimate number of colors for Droux
     nb_colors_inner_elements = maxval_count_ibool_inner
   endif
@@ -588,7 +588,7 @@
   ncolors = nb_colors_outer_elements + nb_colors_inner_elements
 
   ! debug output
-  if( myrank == 0 ) then
+  if (myrank == 0) then
     write(IMAIN,*) '     Droux optimization: try = ',nb_tries_of_Droux_1993,'colors = ',ncolors
   endif
 
@@ -598,7 +598,7 @@
   ! allocates temporary arrays
   allocate(nb_elems_in_this_color(ncolors), &
           icolor_conflict_found(ncolors),stat=ier)
-  if( ier /= 0 ) stop 'error allocating nb_elems_in_this_color arrays'
+  if (ier /= 0) stop 'error allocating nb_elems_in_this_color arrays'
 
   nb_elems_in_this_color(:) = 0
   mask_ibool(:) = .false.
@@ -606,13 +606,13 @@
 
   do ispec = 1,nspec
     ! domain elements only
-    if(ispec_is_d(ispec)) then
+    if (ispec_is_d(ispec)) then
 
       ! only inner elements
       if (is_on_a_slice_edge(ispec)) cycle
 
       ! unmark the eight corners of the previously marked element
-      if(last_ispec_studied > 0) then
+      if (last_ispec_studied > 0) then
         mask_ibool(ibool(1,1,1,last_ispec_studied)) = .false.
         mask_ibool(ibool(NGLLX,1,1,last_ispec_studied)) = .false.
         mask_ibool(ibool(NGLLX,NGLLY,1,last_ispec_studied)) = .false.
@@ -635,10 +635,10 @@
       mask_ibool(ibool(1,NGLLY,NGLLZ,ispec)) = .true.
       last_ispec_studied = ispec
 
-      if(ispec > 1) then
+      if (ispec > 1) then
         do ispec2 = 1,ispec - 1
           ! domain elements only
-          if(ispec_is_d(ispec2)) then
+          if (ispec_is_d(ispec2)) then
 
             ! only inner elements
             if (is_on_a_slice_edge(ispec2)) cycle
@@ -664,10 +664,10 @@
       ! check if the Droux 1993 algorithm found a solution
       if (all(icolor_conflict_found(icolormin:icolormax))) then
         ! user output
-        !if(myrank == 0) write(IMAIN,*) '     Droux 1993 algorithm did not find any solution for ncolors = ',ncolors
+        !if (myrank == 0) write(IMAIN,*) '     Droux 1993 algorithm did not find any solution for ncolors = ',ncolors
 
         ! try with one more color
-        if(nb_tries_of_Droux_1993 < MAX_NB_TRIES_OF_DROUX_1993) then
+        if (nb_tries_of_Droux_1993 < MAX_NB_TRIES_OF_DROUX_1993) then
           nb_colors_inner_elements = nb_colors_inner_elements + 1
           deallocate(nb_elems_in_this_color)
           deallocate(icolor_conflict_found)
@@ -700,12 +700,12 @@
   enddo
 
   ! debug output
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*) '     created a total of ',maxval(color),' colors in this domain' ! 'for all the domain elements of the mesh'
-    if( nb_colors_outer_elements > 0 ) &
+    if (nb_colors_outer_elements > 0) &
       write(IMAIN,*) '     typical nb of elements per color for outer elements should be ', &
         nspec_outer / nb_colors_outer_elements
-    if( nb_colors_inner_elements > 0 ) &
+    if (nb_colors_inner_elements > 0) &
       write(IMAIN,*) '     typical nb of elements per color for inner elements should be ', &
         nspec_inner / nb_colors_inner_elements
   endif
@@ -749,7 +749,7 @@
   integer :: ier
 
   ! debug outupt
-  if( myrank == 0 ) then
+  if (myrank == 0) then
     write(IMAIN,*) '     balancing colors: simple algorithm'
     write(IMAIN,*) '       number of outer element colors = ',nb_colors_outer_elements
     write(IMAIN,*) '       number of inner element colors = ',nb_colors_inner_elements
@@ -762,14 +762,14 @@
   ! allocates temporary arrays
   allocate(nb_elems_in_this_color(ncolors), &
           icolor_conflict_found(ncolors),stat=ier)
-  if( ier /= 0 ) stop 'error allocating nb_elems_in_this_color arrays'
+  if (ier /= 0) stop 'error allocating nb_elems_in_this_color arrays'
 
   !! DK DK do it for outer elements
   icolormin = 1
   icolormax = nb_colors_outer_elements
 
   ! ideal value if all colors are perfectly balanced
-  if( nb_colors_outer_elements > 0 ) then
+  if (nb_colors_outer_elements > 0) then
     target_nb_elems_per_color = nspec_outer / nb_colors_outer_elements + 1
   else
     target_nb_elems_per_color = 1
@@ -788,14 +788,14 @@
 
     ! if color is already balanced, do nothing
     ! (this works because in the initial set the number of elements per color decreases when the color number increases)
-    if(nb_elems_in_this_color(icolor) <= target_nb_elems_per_color) cycle
+    if (nb_elems_in_this_color(icolor) <= target_nb_elems_per_color) cycle
 
     mask_ibool(:) = .false.
     last_ispec_studied = -1
 
     do ispec = 1,nspec
       ! domain elements only
-      if(ispec_is_d(ispec)) then
+      if (ispec_is_d(ispec)) then
 
         ! only outer elements
         if (.not. is_on_a_slice_edge(ispec)) cycle
@@ -804,10 +804,10 @@
         if (color(ispec) /= icolor) cycle
 
         ! if color is now balanced because we have moved enough elements then stop searching
-        if(nb_elems_in_this_color(icolor) <= target_nb_elems_per_color) exit
+        if (nb_elems_in_this_color(icolor) <= target_nb_elems_per_color) exit
 
         ! unmark the eight corners of the previously marked element
-        if(last_ispec_studied > 0) then
+        if (last_ispec_studied > 0) then
           mask_ibool(ibool(1,1,1,last_ispec_studied)) = .false.
           mask_ibool(ibool(NGLLX,1,1,last_ispec_studied)) = .false.
           mask_ibool(ibool(NGLLX,NGLLY,1,last_ispec_studied)) = .false.
@@ -834,7 +834,7 @@
         ! test if we can move this element to another color
         do ispec2 = 1,nspec
           ! domain elements only
-          if(ispec_is_d(ispec2)) then
+          if (ispec_is_d(ispec2)) then
 
             ! do not test that element itself
             if (ispec2 == ispec) cycle
@@ -860,7 +860,7 @@
 
         ! if color is already above target size for a balanced set, do not move to it
         do icolor_target = icolormin,icolormax
-          if(nb_elems_in_this_color(icolor_target) >= target_nb_elems_per_color) &
+          if (nb_elems_in_this_color(icolor_target) >= target_nb_elems_per_color) &
             icolor_conflict_found(icolor_target) = .true.
         enddo
 
@@ -897,7 +897,7 @@
   icolormax = ncolors
 
   ! ideal value if all colors are perfectly balanced
-  if( nb_colors_inner_elements > 0 ) then
+  if (nb_colors_inner_elements > 0) then
     target_nb_elems_per_color = nspec_inner / nb_colors_inner_elements + 1
   else
     target_nb_elems_per_color = 1
@@ -915,14 +915,14 @@
 
     ! if color is already balanced, do nothing
     ! (this works because in the initial set the number of elements per color decreases when the color number increases)
-    if(nb_elems_in_this_color(icolor) <= target_nb_elems_per_color) cycle
+    if (nb_elems_in_this_color(icolor) <= target_nb_elems_per_color) cycle
 
     mask_ibool(:) = .false.
     last_ispec_studied = -1
 
     do ispec = 1,nspec
       ! domain elements only
-      if(ispec_is_d(ispec)) then
+      if (ispec_is_d(ispec)) then
 
         ! only inner elements
         if (is_on_a_slice_edge(ispec)) cycle
@@ -931,10 +931,10 @@
         if (color(ispec) /= icolor) cycle
 
         ! if color is now balanced because we have moved enough elements then stop searching
-        if(nb_elems_in_this_color(icolor) <= target_nb_elems_per_color) exit
+        if (nb_elems_in_this_color(icolor) <= target_nb_elems_per_color) exit
 
         ! unmark the eight corners of the previously marked element
-        if(last_ispec_studied > 0) then
+        if (last_ispec_studied > 0) then
           mask_ibool(ibool(1,1,1,last_ispec_studied)) = .false.
           mask_ibool(ibool(NGLLX,1,1,last_ispec_studied)) = .false.
           mask_ibool(ibool(NGLLX,NGLLY,1,last_ispec_studied)) = .false.
@@ -961,7 +961,7 @@
         ! test if we can move this element to another color
         do ispec2 = 1,nspec
           ! domain elements only
-          if(ispec_is_d(ispec2)) then
+          if (ispec_is_d(ispec2)) then
 
             ! do not test that element itself
             if (ispec2 == ispec) cycle
@@ -988,7 +988,7 @@
 
         ! if color is already above target size for a balanced set, do not move to it
         do icolor_target = icolormin,icolormax
-          if(nb_elems_in_this_color(icolor_target) >= target_nb_elems_per_color) &
+          if (nb_elems_in_this_color(icolor_target) >= target_nb_elems_per_color) &
             icolor_conflict_found(icolor_target) = .true.
         enddo
 
@@ -1052,8 +1052,8 @@
     first_elem_number_in_this_color(icolor) = icounter
     do ispec = 1, nspec
       ! elements in this domain only
-      if( ispec_is_d(ispec) ) then
-        if(color(ispec) == icolor) then
+      if (ispec_is_d(ispec)) then
+        if (color(ispec) == icolor) then
           perm(ispec) = icounter
           icounter = icounter + 1
         endif
@@ -1068,9 +1068,9 @@
     first_elem_number_in_this_color(icolor) = icounter + counter_outer
     do ispec = 1, nspec
       ! elements in this domain only
-      if( ispec_is_d(ispec) ) then
+      if (ispec_is_d(ispec)) then
         ! outer elements
-        if(color(ispec) == icolor) then
+        if (color(ispec) == icolor) then
           perm(ispec) = icounter
           icounter = icounter + 1
         endif
@@ -1079,7 +1079,7 @@
   enddo
 
   ! checks
-  if( counter_outer + icounter -1 /= nspec_domain ) then
+  if (counter_outer + icounter -1 /= nspec_domain) then
     print*,'error: perm: ',nspec_domain,counter_outer,icounter,counter_outer+icounter-1
     stop 'error get_final_perm: counter incomplete'
   endif

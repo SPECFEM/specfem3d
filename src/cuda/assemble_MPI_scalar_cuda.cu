@@ -47,7 +47,7 @@ __global__ void prepare_boundary_potential_on_device(realw* d_potential_dot_dot_
   int ientry,iglob;
 
   for(int iinterface=0; iinterface < num_interfaces_ext_mesh; iinterface++) {
-    if(id<d_nibool_interfaces_ext_mesh[iinterface]) {
+    if (id<d_nibool_interfaces_ext_mesh[iinterface]) {
 
       // entry in interface array
       ientry = id + max_nibool_interfaces_ext_mesh*iinterface;
@@ -76,7 +76,7 @@ TRACE("transfer_boun_pot_from_device");
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
 
   // checks if anything to do
-  if( mp->size_mpi_buffer_potential > 0 ){
+  if (mp->size_mpi_buffer_potential > 0){
 
     int blocksize = BLOCKSIZE_TRANSFER;
     int size_padded = ((int)ceil(((double)(mp->max_nibool_interfaces_ext_mesh))/((double)blocksize)))*blocksize;
@@ -87,7 +87,7 @@ TRACE("transfer_boun_pot_from_device");
     dim3 grid(num_blocks_x,num_blocks_y);
     dim3 threads(blocksize,1,1);
 
-    if(*FORWARD_OR_ADJOINT == 1) {
+    if (*FORWARD_OR_ADJOINT == 1) {
       prepare_boundary_potential_on_device<<<grid,threads,0,mp->compute_stream>>>(mp->d_potential_dot_dot_acoustic,
                                                                                    mp->d_send_potential_dot_dot_buffer,
                                                                                    mp->num_interfaces_ext_mesh,
@@ -104,7 +104,7 @@ TRACE("transfer_boun_pot_from_device");
       print_CUDA_error_if_any(cudaMemcpy(send_potential_dot_dot_buffer,mp->d_send_potential_dot_dot_buffer,
                                          mp->size_mpi_buffer_potential*sizeof(realw),cudaMemcpyDeviceToHost),98000);
     }
-    else if(*FORWARD_OR_ADJOINT == 3) {
+    else if (*FORWARD_OR_ADJOINT == 3) {
       // backward/reconstructed wavefield buffer
       prepare_boundary_potential_on_device<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_potential_dot_dot_acoustic,
                                                                                    mp->d_b_send_potential_dot_dot_buffer,
@@ -130,7 +130,7 @@ TRACE("transfer_boun_pot_from_device");
 
 
   // finish timing of kernel+memcpy
-  // cudaEventRecord( stop, 0 );
+  // cudaEventRecord( stop, 0);
   // cudaEventSynchronize( stop );
   // cudaEventElapsedTime( &time, start, stop );
   // cudaEventDestroy( start );
@@ -159,7 +159,7 @@ __global__ void assemble_boundary_potential_on_device(realw* d_potential_dot_dot
   int ientry,iglob;
 
   for( int iinterface=0; iinterface < num_interfaces_ext_mesh; iinterface++) {
-    if(id<d_nibool_interfaces_ext_mesh[iinterface]) {
+    if (id<d_nibool_interfaces_ext_mesh[iinterface]) {
 
       // entry in interface array
       ientry = id + max_nibool_interfaces_ext_mesh*iinterface;
@@ -201,7 +201,7 @@ TRACE("transfer_asmbl_pot_to_device");
   //start_timing_cuda(&start,&stop);
 
   // checks if anything to do
-  if( mp->size_mpi_buffer_potential > 0 ){
+  if (mp->size_mpi_buffer_potential > 0){
 
     // assembles on GPU
     int blocksize = BLOCKSIZE_TRANSFER;
@@ -216,7 +216,7 @@ TRACE("transfer_asmbl_pot_to_device");
     // synchronizes
     synchronize_cuda();
 
-    if(*FORWARD_OR_ADJOINT == 1) {
+    if (*FORWARD_OR_ADJOINT == 1) {
       // copies buffer onto GPU
       print_CUDA_error_if_any(cudaMemcpy(mp->d_send_potential_dot_dot_buffer, buffer_recv_scalar_ext_mesh,
                                          mp->size_mpi_buffer_potential*sizeof(realw), cudaMemcpyHostToDevice),98010);
@@ -229,7 +229,7 @@ TRACE("transfer_asmbl_pot_to_device");
                                                                                     mp->d_nibool_interfaces_ext_mesh,
                                                                                     mp->d_ibool_interfaces_ext_mesh);
     }
-    else if(*FORWARD_OR_ADJOINT == 3) {
+    else if (*FORWARD_OR_ADJOINT == 3) {
       // copies buffer onto GPU
       print_CUDA_error_if_any(cudaMemcpy(mp->d_b_send_potential_dot_dot_buffer, buffer_recv_scalar_ext_mesh,
                                          mp->size_mpi_buffer_potential*sizeof(realw), cudaMemcpyHostToDevice),98011);

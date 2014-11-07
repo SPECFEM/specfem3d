@@ -113,7 +113,7 @@ CONTAINS
  ! Then the same for side 2.
  ! Note: element ids start at 1, not 0 (see cubit2specfem3d.py)
   open(unit=101, file=filename, status='old', form='formatted', iostat = ier)
-  if( ier /= 0 ) then
+  if (ier /= 0) then
     write(6,*) 'Fatal error: file '//filename//' not found'
     write(6,*) 'Abort'
     stop
@@ -357,18 +357,18 @@ CONTAINS
   integer, dimension(:), allocatable :: elem_proc_null
 
  ! downloading processor 0
-  nproc_null = count( part == 0 )
+  nproc_null = count( part == 0)
 
   print*, 'Elements proc = 0 redistributed in [{nproc}- nproc0] :'
   print*, nproc_null
 
-  if ( nproc_null /= 0 ) then
+  if (nproc_null /= 0) then
 
     allocate(elem_proc_null(nproc_null))
    ! Filling up proc = 0 elements
     nproc_null = 0
     do i = 0,nelmnts-1
-      if ( part(i) == 0 ) then
+      if (part(i) == 0) then
         nproc_null = nproc_null + 1
         elem_proc_null(nproc_null) = i
       endif
@@ -378,7 +378,7 @@ CONTAINS
     if (nproc > 1) then
       do i = 1, nproc_null
         part(elem_proc_null(i)) = ipart
-        if ( ipart == nproc-1 ) ipart = 0
+        if (ipart == nproc-1) ipart = 0
         ipart = ipart +1
       enddo
     endif
@@ -419,7 +419,7 @@ CONTAINS
     enddo
   enddo
 
-  nproc_null_final = count( part == 0 )
+  nproc_null_final = count( part == 0)
   print *, nproc_null_final
 
   end subroutine fault_repartition_not_parallel
@@ -506,7 +506,7 @@ CONTAINS
         inodes = faults(iflt)%inodes1(:,i)
         do k=1,4
           do j = glob2loc_nodes_nparts(inodes(k)-1), glob2loc_nodes_nparts(inodes(k))-1
-            if (glob2loc_nodes_parts(j) == iproc ) then
+            if (glob2loc_nodes_parts(j) == iproc) then
               loc_nodes(k) = glob2loc_nodes(j) + 1
             endif
           enddo
@@ -518,11 +518,11 @@ CONTAINS
    ! export fault element data, side 2
     do i=1,faults(iflt)%nspec
       e = faults(iflt)%ispec2(i)
-      if(part(e-1) == iproc) then
+      if (part(e-1) == iproc) then
         inodes = faults(iflt)%inodes2(:,i)
         do k=1,4
           do j = glob2loc_nodes_nparts(inodes(k)-1), glob2loc_nodes_nparts(inodes(k))-1
-            if (glob2loc_nodes_parts(j) == iproc ) then
+            if (glob2loc_nodes_parts(j) == iproc) then
               loc_nodes(k) = glob2loc_nodes(j)+1
             endif
           enddo

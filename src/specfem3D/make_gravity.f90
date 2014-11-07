@@ -142,7 +142,7 @@
   rspl(1)=r(1)
   gspl(1)=g(1)
   do i=2,NR
-    if(r(i)/=r(i-1)) then
+    if (r(i)/=r(i-1)) then
       nspl=nspl+1
       rspl(nspl)=r(i)
       gspl(nspl)=g(i)
@@ -194,7 +194,7 @@
 !
 !--- inner core
 !
-  if(r >= 0.d0 .and. r <= RICB) then
+  if (r >= 0.d0 .and. r <= RICB) then
     drhodr=-2.0d0*8.8381d0*x
     rho=13.0885d0-8.8381d0*x*x
     vp=11.2622d0-6.3640d0*x*x
@@ -204,7 +204,7 @@
 !
 !--- outer core
 !
-  else if(r > RICB .and. r <= RCMB) then
+  else if (r > RICB .and. r <= RCMB) then
     drhodr=-1.2638d0-2.0d0*3.6426d0*x-3.0d0*5.5281d0*x*x
     rho=12.5815d0-1.2638d0*x-3.6426d0*x*x-5.5281d0*x*x*x
     vp=11.0487d0-4.0362d0*x+4.8023d0*x*x-13.5732d0*x*x*x
@@ -214,7 +214,7 @@
 !
 !--- D" at the base of the mantle
 !
-  else if(r > RCMB .and. r <= RTOPDDOUBLEPRIME) then
+  else if (r > RCMB .and. r <= RTOPDDOUBLEPRIME) then
     drhodr=-6.4761d0+2.0d0*5.5283d0*x-3.0d0*3.0807d0*x*x
     rho=7.9565d0-6.4761d0*x+5.5283d0*x*x-3.0807d0*x*x*x
     vp=15.3891d0-5.3181d0*x+5.5242d0*x*x-2.5514d0*x*x*x
@@ -224,14 +224,14 @@
 !
 !--- mantle: from top of D" to d670
 !
-  else if(r > RTOPDDOUBLEPRIME .and. r <= R771) then
+  else if (r > RTOPDDOUBLEPRIME .and. r <= R771) then
     drhodr=-6.4761d0+2.0d0*5.5283d0*x-3.0d0*3.0807d0*x*x
     rho=7.9565d0-6.4761d0*x+5.5283d0*x*x-3.0807d0*x*x*x
     vp=24.9520d0-40.4673d0*x+51.4832d0*x*x-26.6419d0*x*x*x
     vs=11.1671d0-13.7818d0*x+17.4575d0*x*x-9.2777d0*x*x*x
     Qmu=312.0d0
     Qkappa=57827.0d0
-  else if(r > R771 .and. r <= R670) then
+  else if (r > R771 .and. r <= R670) then
     drhodr=-6.4761d0+2.0d0*5.5283d0*x-3.0d0*3.0807d0*x*x
     rho=7.9565d0-6.4761d0*x+5.5283d0*x*x-3.0807d0*x*x*x
     vp=29.2766d0-23.6027d0*x+5.5242d0*x*x-2.5514d0*x*x*x
@@ -241,28 +241,28 @@
 !
 !--- mantle: above d670
 !
-  else if(r > R670 .and. r <= R600) then
+  else if (r > R670 .and. r <= R600) then
     drhodr=-1.4836d0
     rho=5.3197d0-1.4836d0*x
     vp=19.0957d0-9.8672d0*x
     vs=9.9839d0-4.9324d0*x
     Qmu=143.0d0
     Qkappa=57827.0d0
-  else if(r > R600 .and. r <= R400) then
+  else if (r > R600 .and. r <= R400) then
     drhodr=-8.0298d0
     rho=11.2494d0-8.0298d0*x
     vp=39.7027d0-32.6166d0*x
     vs=22.3512d0-18.5856d0*x
     Qmu=143.0d0
     Qkappa=57827.0d0
-  else if(r > R400 .and. r <= R220) then
+  else if (r > R400 .and. r <= R220) then
     drhodr=-3.8045d0
     rho=7.1089d0-3.8045d0*x
     vp=20.3926d0-12.2569d0*x
     vs=8.9496d0-4.4597d0*x
     Qmu=143.0d0
     Qkappa=57827.0d0
-  else if(r > R220 .and. r <= R80) then
+  else if (r > R220 .and. r <= R80) then
     drhodr=0.6924d0
     rho=2.6910d0+0.6924d0*x
     vp=4.1875d0+3.9382d0*x
@@ -270,9 +270,9 @@
     Qmu=80.0d0
     Qkappa=57827.0d0
   else
-    if(CRUSTAL) then
+    if (CRUSTAL) then
     ! fill with PREM mantle and later add CRUST2.0
-      if(r > R80) then
+      if (r > R80) then
         ! density/velocity from mantle just below moho
         drhodr=0.6924d0
         rho=2.6910d0+0.6924d0*x
@@ -284,7 +284,7 @@
       endif
     else
     ! use PREM crust
-      if(r > R80 .and. r <= RMOHO) then
+      if (r > R80 .and. r <= RMOHO) then
         drhodr=0.6924d0
         rho=2.6910d0+0.6924d0*x
         vp=4.1875d0+3.9382d0*x
@@ -292,7 +292,7 @@
         Qmu=600.0d0
         Qkappa=57827.0d0
 
-      else if(r > RMOHO .and. r <= RMIDDLE_CRUST) then
+      else if (r > RMOHO .and. r <= RMIDDLE_CRUST) then
         drhodr=0.0d0
         rho=2.9d0
         vp=6.8d0
@@ -301,7 +301,7 @@
         Qkappa=57827.0d0
 
     ! same properties everywhere in PREM crust if we decide to define only one layer in the crust
-        if(ONE_CRUST) then
+        if (ONE_CRUST) then
           drhodr=0.0d0
           rho=2.6d0
           vp=5.8d0
@@ -310,7 +310,7 @@
           Qkappa=57827.0d0
         endif
 
-      else if(r > RMIDDLE_CRUST .and. r <= ROCEAN) then
+      else if (r > RMIDDLE_CRUST .and. r <= ROCEAN) then
         drhodr=0.0d0
         rho=2.6d0
         vp=5.8d0
@@ -318,7 +318,7 @@
         Qmu=600.0d0
         Qkappa=57827.0d0
     ! for density profile for gravity, we do not check that r <= R_EARTH
-      else if(r > ROCEAN) then
+      else if (r > ROCEAN) then
         drhodr=0.0d0
         rho=2.6d0
         vp=5.8d0
@@ -362,36 +362,36 @@
   r = x * R_EARTH
 
   ! calculates density according to radius
-  if(r <= RICB) then
+  if (r <= RICB) then
     rho=13.0885d0-8.8381d0*x*x
-  else if(r > RICB .and. r <= RCMB) then
+  else if (r > RICB .and. r <= RCMB) then
     rho=12.5815d0-1.2638d0*x-3.6426d0*x*x-5.5281d0*x*x*x
-  else if(r > RCMB .and. r <= RTOPDDOUBLEPRIME) then
+  else if (r > RCMB .and. r <= RTOPDDOUBLEPRIME) then
     rho=7.9565d0-6.4761d0*x+5.5283d0*x*x-3.0807d0*x*x*x
-  else if(r > RTOPDDOUBLEPRIME .and. r <= R771) then
+  else if (r > RTOPDDOUBLEPRIME .and. r <= R771) then
     rho=7.9565d0-6.4761d0*x+5.5283d0*x*x-3.0807d0*x*x*x
-  else if(r > R771 .and. r <= R670) then
+  else if (r > R771 .and. r <= R670) then
     rho=7.9565d0-6.4761d0*x+5.5283d0*x*x-3.0807d0*x*x*x
-  else if(r > R670 .and. r <= R600) then
+  else if (r > R670 .and. r <= R600) then
     rho=5.3197d0-1.4836d0*x
-  else if(r > R600 .and. r <= R400) then
+  else if (r > R600 .and. r <= R400) then
     rho=11.2494d0-8.0298d0*x
-  else if(r > R400 .and. r <= R220) then
+  else if (r > R400 .and. r <= R220) then
     rho=7.1089d0-3.8045d0*x
-  else if(r > R220 .and. r <= R80) then
+  else if (r > R220 .and. r <= R80) then
     rho=2.6910d0+0.6924d0*x
   else
-    if(r > R80 .and. r <= RMOHO) then
+    if (r > R80 .and. r <= RMOHO) then
       rho=2.6910d0+0.6924d0*x
-    else if(r > RMOHO .and. r <= RMIDDLE_CRUST) then
-      if(ONE_CRUST) then
+    else if (r > RMOHO .and. r <= RMIDDLE_CRUST) then
+      if (ONE_CRUST) then
         rho=2.6d0
       else
         rho=2.9d0
       endif
-    else if(r > RMIDDLE_CRUST .and. r <= ROCEAN) then
+    else if (r > RMIDDLE_CRUST .and. r <= ROCEAN) then
       rho=2.6d0
-    else if(r > ROCEAN) then
+    else if (r > ROCEAN) then
       rho=2.6d0
     endif
   endif
@@ -476,8 +476,8 @@
 
   ndp=ndis+1
   do 3 nd=1,ndp
-  if(nd == 1) goto 4
-  if(nd == ndp) goto 5
+  if (nd == 1) goto 4
+  if (nd == ndp) goto 5
   j1=kdis(nd-1)+1
   j2=kdis(nd)-2
   goto 6
@@ -486,7 +486,7 @@
   goto 6
     5 j1=kdis(ndis)+1
   j2=n-2
-    6 if((j2+1-j1)>0) goto 11
+    6 if ((j2+1-j1)>0) goto 11
   j2=j2+2
   yy(1)=(y(j2)-y(j1))/(r(j2)-r(j1))
   s1(j1)=yy(1)
@@ -497,7 +497,7 @@
   s3(j2)=yy(3)
   goto 3
    11 a0=0.0d0
-  if(j1 == 1) goto 7
+  if (j1 == 1) goto 7
   h=r(j1+1)-r(j1)
   h2=r(j1+2)-r(j1)
   yy(1)=h*h2*(h2-h)
@@ -508,7 +508,7 @@
  7 b0=0.0d0
  8 b1=b0
 
-  if(j2 > 1000) stop 'error in subroutine deriv for j2'
+  if (j2 > 1000) stop 'error in subroutine deriv for j2'
 
   do i=j1,j2
     h=r(i+1)-r(i)
@@ -658,7 +658,7 @@
   do while (index_higher - index_lower > 1)
 ! compute the middle of the interval
     index_loop = (index_higher + index_lower) / 2
-    if(xpoint(index_loop) > x_evaluate_spline) then
+    if (xpoint(index_loop) > x_evaluate_spline) then
       index_higher = index_loop
     else
       index_lower = index_loop
@@ -667,7 +667,7 @@
 
 ! test that the interval obtained does not have a size of zero
 ! (this could happen for instance in the case of duplicates in the input list of points)
-  if(xpoint(index_higher) == xpoint(index_lower)) stop 'incorrect interval found in spline evaluation'
+  if (xpoint(index_higher) == xpoint(index_lower)) stop 'incorrect interval found in spline evaluation'
 
   coef1 = (xpoint(index_higher) - x_evaluate_spline) / (xpoint(index_higher) - xpoint(index_lower))
   coef2 = (x_evaluate_spline - xpoint(index_lower)) / (xpoint(index_higher) - xpoint(index_lower))

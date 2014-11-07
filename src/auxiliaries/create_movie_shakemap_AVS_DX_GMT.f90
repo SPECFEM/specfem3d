@@ -144,7 +144,7 @@
   ! only one global array for movie data, but stored for all surfaces defined
   ! in file 'surface_from_mesher.h'
   open(unit=IIN,file=trim(OUTPUT_FILES_PATH)//'surface_from_mesher.h',status='old',action='read',iostat=ier)
-  if( ier /= 0 ) then
+  if (ier /= 0) then
     print*,'error opening file: ',trim(OUTPUT_FILES_PATH)//'surface_from_mesher.h'
     print*
     print*,'please run xgenerate_databases or xspecfem3D first to create this file, exiting now...'
@@ -159,12 +159,12 @@
   close(IIN)
   ! gets number from substring after = sign
   i = index(line,'=')
-  if( i == 0 ) stop 'error reading in NSPEC_SURFACE_EXT_MESH from file OUTPUT_FILES/surface_from_mesher.h'
+  if (i == 0) stop 'error reading in NSPEC_SURFACE_EXT_MESH from file OUTPUT_FILES/surface_from_mesher.h'
 
-  read(line(i+1:len_trim(line)),* ) NSPEC_SURFACE_EXT_MESH
+  read(line(i+1:len_trim(line)),*) NSPEC_SURFACE_EXT_MESH
 
   ! calculates number of total surface points
-  if(USE_HIGHRES_FOR_MOVIES) then
+  if (USE_HIGHRES_FOR_MOVIES) then
      ilocnum = NSPEC_SURFACE_EXT_MESH*NGLLSQUARE
   else
      ilocnum = NSPEC_SURFACE_EXT_MESH*NGNOD2D_FOUR_CORNERS_AVS_DX
@@ -173,7 +173,7 @@
   print*,'  moviedata total elements all: ',ilocnum
   print *
 
-  if(SAVE_DISPLACEMENT) then
+  if (SAVE_DISPLACEMENT) then
     print *,'Vertical displacement will be shown in movie'
   else
     print *,'Vertical velocity will be shown in movie'
@@ -189,7 +189,7 @@
   print *
   print *,'enter value:'
   read(5,*) iformat
-  if(iformat < 1 .or. iformat > 3) stop 'exiting...'
+  if (iformat < 1 .or. iformat > 3) stop 'exiting...'
 
   plot_shaking_map = .false.
   print *,'movie frames have been saved every ',NTSTEP_BETWEEN_FRAMES,' time steps'
@@ -197,11 +197,11 @@
   print *,'enter first time step of movie (e.g. 1, enter -1 for shaking map)'
   read(5,*) it1
 
-  if(it1 < 1 .and. it1 /= -1) stop 'the first time step must be >= 1'
+  if (it1 < 1 .and. it1 /= -1) stop 'the first time step must be >= 1'
 
-  if(it1 == -1) plot_shaking_map = .true.
+  if (it1 == -1) plot_shaking_map = .true.
 
-  if(.not. plot_shaking_map) then
+  if (.not. plot_shaking_map) then
     print *,'enter last time step of movie (e.g. ',NSTEP,')'
     read(5,*) it2
     print *
@@ -211,13 +211,13 @@
     print *
     print *,'enter value:'
     read(5,*) inumber
-    if(inumber<1 .or. inumber>2) stop 'exiting...'
+    if (inumber<1 .or. inumber>2) stop 'exiting...'
     print *
     print *,'looping from ',it1,' to ',it2,' every ',NTSTEP_BETWEEN_FRAMES,' time steps'
     ! count number of movie frames
     nframes = 0
     do it = it1,it2
-      if(mod(it,NTSTEP_BETWEEN_FRAMES) == 0) nframes = nframes + 1
+      if (mod(it,NTSTEP_BETWEEN_FRAMES) == 0) nframes = nframes + 1
     enddo
   else
     ! only one frame if shaking map
@@ -227,37 +227,37 @@
   endif
   print *
   print *,'total number of frames will be ',nframes
-  if(nframes == 0) stop 'null number of frames'
+  if (nframes == 0) stop 'null number of frames'
 
   iscaling_shake = 0
-  if(plot_shaking_map) then
+  if (plot_shaking_map) then
     print *
     print *,'norm to display in shaking map:'
     print *,'1=displacement  2=velocity  3=acceleration'
     print *
     read(5,*) inorm
-    if(inorm < 1 .or. inorm > 3) stop 'incorrect value of inorm'
+    if (inorm < 1 .or. inorm > 3) stop 'incorrect value of inorm'
     print *
     print *,'apply non-linear scaling to shaking map:'
     print *,'1=non-linear  2=no scaling'
     print *
     read(5,*) iscaling_shake
-    if(iscaling_shake < 1 .or. iscaling_shake > 2) stop 'incorrect value of iscaling_shake'
+    if (iscaling_shake < 1 .or. iscaling_shake > 2) stop 'incorrect value of iscaling_shake'
   else
     print *
     print *,'movie data:'
     print *,'1= norm of velocity  2=velocity x-comp 3=velocity y-comp 4=velocity z-comp'
     print *
     read(5,*) inorm
-    if(inorm < 1 .or. inorm > 4) stop 'incorrect value of inorm'
+    if (inorm < 1 .or. inorm > 4) stop 'incorrect value of inorm'
   endif
 
 ! file format flags
-  if(iformat == 1) then
+  if (iformat == 1) then
     USE_OPENDX = .true.
     USE_AVS = .false.
     USE_GMT = .false.
-  else if(iformat == 2) then
+  else if (iformat == 2) then
     USE_OPENDX = .false.
     USE_AVS = .true.
     USE_GMT = .false.
@@ -268,7 +268,7 @@
   endif
 
   ! define the total number of elements at the surface
-  if(USE_HIGHRES_FOR_MOVIES) then
+  if (USE_HIGHRES_FOR_MOVIES) then
      nspectot_AVS_max = NSPEC_SURFACE_EXT_MESH * (NGLLX-1) * (NGLLY-1)
   else
      nspectot_AVS_max = NSPEC_SURFACE_EXT_MESH
@@ -285,7 +285,7 @@
           field_display(npointot), &
           mask_point(npointot), &
           ireorder(npointot),stat=ier)
-  if( ier /= 0 ) stop 'error allocating arrays for sorting routine'
+  if (ier /= 0) stop 'error allocating arrays for sorting routine'
 
   ! allocates data arrays
   allocate(store_val_x(ilocnum), &
@@ -294,14 +294,14 @@
           store_val_ux(ilocnum), &
           store_val_uy(ilocnum), &
           store_val_uz(ilocnum),stat=ier)
-  if( ier /= 0 ) stop 'error allocating arrays for data arrays'
+  if (ier /= 0) stop 'error allocating arrays for data arrays'
 
-  if(USE_HIGHRES_FOR_MOVIES) then
+  if (USE_HIGHRES_FOR_MOVIES) then
     allocate(x(NGLLX,NGLLY), &
             y(NGLLX,NGLLY), &
             z(NGLLX,NGLLY), &
             display(NGLLX,NGLLY),stat=ier)
-    if( ier /= 0 ) stop 'error allocating arrays for highres'
+    if (ier /= 0) stop 'error allocating arrays for highres'
   endif
 
   ! user output
@@ -309,9 +309,9 @@
   print *,'there are a total of ',nspectot_AVS_max,' elements at the surface'
   print *
   print *
-  if(APPLY_THRESHOLD .and. .not. plot_shaking_map) &
+  if (APPLY_THRESHOLD .and. .not. plot_shaking_map) &
     print *,'Will apply a threshold to amplitude below ',100.*THRESHOLD,' %'
-  if(NONLINEAR_SCALING .and. (.not. plot_shaking_map .or. iscaling_shake == 1)) &
+  if (NONLINEAR_SCALING .and. (.not. plot_shaking_map .or. iscaling_shake == 1)) &
     print *,'Will apply a non linear scaling with coef ',POWER_SCALING
 
 
@@ -321,12 +321,12 @@
   do it = it1,it2
 
     ! check if time step corresponds to a movie frame
-    if(mod(it,NTSTEP_BETWEEN_FRAMES) == 0 .or. plot_shaking_map) then
+    if (mod(it,NTSTEP_BETWEEN_FRAMES) == 0 .or. plot_shaking_map) then
 
       iframe = iframe + 1
 
       print *
-      if(plot_shaking_map) then
+      if (plot_shaking_map) then
         print *,'reading shaking map snapshot'
       else
         print *,'reading snapshot time step ',it,' out of ',NSTEP
@@ -334,14 +334,14 @@
       print *
 
       ! read all the elements from the same file
-      if(plot_shaking_map) then
+      if (plot_shaking_map) then
         write(outputname,"('/shakingdata')")
       else
         write(outputname,"('/moviedata',i6.6)") it
       endif
       open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//trim(outputname),status='old', &
             action='read',form='unformatted',iostat=ier)
-      if( ier /= 0 ) then
+      if (ier /= 0) then
         print*,'error: ',trim(OUTPUT_FILES_PATH)//trim(outputname)
         stop 'error opening moviedata file'
       endif
@@ -362,7 +362,7 @@
 
       do ispecloc = 1, NSPEC_SURFACE_EXT_MESH
 
-        if(USE_HIGHRES_FOR_MOVIES) then
+        if (USE_HIGHRES_FOR_MOVIES) then
           ! assign the OpenDX "elements"
           do j = 1,NGLLY
             do i = 1,NGLLX
@@ -385,7 +385,7 @@
               z(i,j) = zcoord
 
               ! shakemap
-              if(plot_shaking_map) then
+              if (plot_shaking_map) then
                 !!!! NL NL mute value near source
                 if ( (sqrt(((x(i,j) - (X_SOURCE_EXT_MESH))**2 + &
                      (y(i,j) - (Y_SOURCE_EXT_MESH))**2 + &
@@ -395,10 +395,10 @@
                   display(i,j) = 0.
                 else
                   ! chooses norm
-                  if(inorm == 1) then
+                  if (inorm == 1) then
                     ! norm displacement
                     display(i,j) = vectorx
-                  else if(inorm == 2) then
+                  else if (inorm == 2) then
                     ! norm velocity
                     display(i,j) = vectory
                   else
@@ -408,16 +408,16 @@
                 endif
               else
                 ! movie
-                if(inorm == 1) then
+                if (inorm == 1) then
                   ! norm of velocity
                   display(i,j) = sqrt(vectorz**2+vectory**2+vectorx**2)
-                else if( inorm == 2 ) then
+                else if (inorm == 2) then
                   ! velocity x-component
                   display(i,j) = vectorx
-                else if( inorm == 3 ) then
+                else if (inorm == 3) then
                   ! velocity y-component
                   display(i,j) = vectory
-                else if( inorm == 4 ) then
+                else if (inorm == 4) then
                   ! velocity z-component
                   display(i,j) = vectorz
                 endif
@@ -435,12 +435,12 @@
               ieoff = NGNOD2D_FOUR_CORNERS_AVS_DX*(ielm+(i-1)+(j-1)*(NGLLX-1))
               do ilocnum = 1,NGNOD2D_FOUR_CORNERS_AVS_DX
 
-                if(ilocnum == 1) then
+                if (ilocnum == 1) then
                   xp(ieoff+ilocnum) = dble(x(i,j))
                   yp(ieoff+ilocnum) = dble(y(i,j))
                   zp(ieoff+ilocnum) = dble(z(i,j))
                   field_display(ieoff+ilocnum) = dble(display(i,j))
-                else if(ilocnum == 2) then
+                else if (ilocnum == 2) then
 
                   ! accounts for different ordering of square points
                   xp(ieoff+ilocnum) = dble(x(i+1,j+1))
@@ -448,7 +448,7 @@
                   zp(ieoff+ilocnum) = dble(z(i+1,j+1))
                   field_display(ieoff+ilocnum) = dble(display(i+1,j+1))
 
-                else if(ilocnum == 3) then
+                else if (ilocnum == 3) then
 
                   ! accounts for different ordering of square points
                   xp(ieoff+ilocnum) = dble(x(i+1,j))
@@ -495,7 +495,7 @@
             zp(ilocnum+ieoff) = dble(zcoord)
 
             ! shakemap
-            if(plot_shaking_map) then
+            if (plot_shaking_map) then
               !!!! NL NL mute value near source
               if ( (sqrt(((dble(xcoord) - (X_SOURCE_EXT_MESH))**2 + &
                      (dble(ycoord) - (Y_SOURCE_EXT_MESH))**2 + &
@@ -503,10 +503,10 @@
                      .and. MUTE_SOURCE) then
                   field_display(ilocnum+ieoff) = 0.
               else
-                if(inorm == 1) then
+                if (inorm == 1) then
                   ! norm of displacement
                   field_display(ilocnum+ieoff) = dble(vectorx)
-                else if(inorm == 2) then
+                else if (inorm == 2) then
                   ! norm of velocity
                   field_display(ilocnum+ieoff) = dble(vectory)
                 else
@@ -516,13 +516,13 @@
               endif
             else
               ! movie
-              if(inorm == 1) then
+              if (inorm == 1) then
                 ! norm of velocity
                 field_display(ilocnum+ieoff) = sqrt(vectorz**2+vectory**2+vectorx**2)
-              else if( inorm == 2 ) then
+              else if (inorm == 2) then
                 ! velocity x-component
                 field_display(ilocnum+ieoff) = vectorx
-              else if( inorm == 3 ) then
+              else if (inorm == 3) then
                 ! velocity y-component
                 field_display(ilocnum+ieoff) = vectory
               else
@@ -557,7 +557,7 @@
       min_field_current = minval(field_display(:))
       max_field_current = maxval(field_display(:))
 
-      if(plot_shaking_map) then
+      if (plot_shaking_map) then
         ! print minimum and maximum amplitude in current snapshot
         print *
         print *,'minimum amplitude in current snapshot after removal = ',min_field_current
@@ -572,10 +572,10 @@
       endif
 
       ! apply scaling in all cases for movies
-      if(.not. plot_shaking_map) then
+      if (.not. plot_shaking_map) then
 
         ! normalizes values
-        if( NORMALIZE_OUTPUT ) then
+        if (NORMALIZE_OUTPUT) then
           ! make sure range is always symmetric and center is in zero
           ! this assumption works only for fields that can be negative
           ! would not work for norm of vector for instance
@@ -585,19 +585,19 @@
           max_field_current = + max_absol
 
           ! normalize field to [0:1]
-          if( abs(max_field_current - min_field_current) > TINYVAL ) &
+          if (abs(max_field_current - min_field_current) > TINYVAL) &
             field_display(:) = (field_display(:) - min_field_current) / (max_field_current - min_field_current)
 
           ! rescale to [-1,1]
           field_display(:) = 2.*field_display(:) - 1.
 
           ! apply threshold to normalized field
-          if(APPLY_THRESHOLD) &
+          if (APPLY_THRESHOLD) &
             where(abs(field_display(:)) <= THRESHOLD) field_display = 0.
         endif
 
         ! apply non linear scaling to normalized field if needed
-        if(NONLINEAR_SCALING) then
+        if (NONLINEAR_SCALING) then
           where(field_display(:) >= 0.)
             field_display = field_display ** POWER_SCALING
           elsewhere
@@ -606,7 +606,7 @@
         endif
 
         ! normalizes values
-        if( NORMALIZE_OUTPUT ) then
+        if (NORMALIZE_OUTPUT) then
           ! map back to [0,1]
           field_display(:) = (field_display(:) + 1.) / 2.
 
@@ -615,10 +615,10 @@
         endif
 
       ! apply scaling only if selected for shaking map
-      else if(NONLINEAR_SCALING .and. iscaling_shake == 1) then
+      else if (NONLINEAR_SCALING .and. iscaling_shake == 1) then
 
         ! normalize field to [0:1]
-        if( abs(max_field_current) > TINYVAL ) &
+        if (abs(max_field_current) > TINYVAL) &
           field_display(:) = field_display(:) / max_field_current
 
         ! apply non linear scaling to normalized field
@@ -631,8 +631,8 @@
 
       !--- ****** create AVS file using sorted list ******
 
-      if(.not. plot_shaking_map) then
-        if(inumber == 1) then
+      if (.not. plot_shaking_map) then
+        if (inumber == 1) then
           ivalue = iframe
         else
           ivalue = it
@@ -640,17 +640,17 @@
       endif
 
       ! create file name and open file
-      if(plot_shaking_map) then
+      if (plot_shaking_map) then
 
-        if(USE_OPENDX) then
+        if (USE_OPENDX) then
           write(outputname,"('/DX_shaking_map.dx')")
           open(unit=11,file=trim(OUTPUT_FILES_PATH)//outputname,status='unknown')
           write(11,*) 'object 1 class array type float rank 1 shape 3 items ',nglob,' data follows'
-        else if(USE_AVS) then
+        else if (USE_AVS) then
           write(outputname,"('/AVS_shaking_map.inp')")
           open(unit=11,file=trim(OUTPUT_FILES_PATH)//outputname,status='unknown')
           write(11,*) nglob,' ',nspectot_AVS_max,' 1 0 0'
-       else if(USE_GMT) then
+       else if (USE_GMT) then
           write(outputname,"('/gmt_shaking_map.xyz')")
           open(unit=11,file=trim(OUTPUT_FILES_PATH)//outputname,status='unknown')
         else
@@ -659,15 +659,15 @@
 
       else
 
-        if(USE_OPENDX) then
+        if (USE_OPENDX) then
           write(outputname,"('/DX_movie_',i6.6,'.dx')") ivalue
           open(unit=11,file=trim(OUTPUT_FILES_PATH)//outputname,status='unknown')
           write(11,*) 'object 1 class array type float rank 1 shape 3 items ',nglob,' data follows'
-        else if(USE_AVS) then
+        else if (USE_AVS) then
           write(outputname,"('/AVS_movie_',i6.6,'.inp')") ivalue
           open(unit=11,file=trim(OUTPUT_FILES_PATH)//outputname,status='unknown')
           write(11,*) nglob,' ',nspectot_AVS_max,' 1 0 0'
-       else if(USE_GMT) then
+       else if (USE_GMT) then
           write(outputname,"('/gmt_movie_',i6.6,'.xyz')") ivalue
           open(unit=11,file=trim(OUTPUT_FILES_PATH)//outputname,status='unknown')
         else
@@ -677,7 +677,7 @@
       endif
 
 
-      if(USE_GMT) then
+      if (USE_GMT) then
 
         ! output list of points
         mask_point = .false.
@@ -686,7 +686,7 @@
           ! four points for each element
           do ilocnum = 1,NGNOD2D_FOUR_CORNERS_AVS_DX
             ibool_number = iglob(ilocnum+ieoff)
-            if(.not. mask_point(ibool_number)) then
+            if (.not. mask_point(ibool_number)) then
               call utm_geo(long,lat,xp_save(ilocnum+ieoff),yp_save(ilocnum+ieoff), &
                       UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)
               write(11,*) sngl(long),sngl(lat),sngl(field_display(ilocnum+ieoff))
@@ -705,12 +705,12 @@
           ! four points for each element
           do ilocnum = 1,NGNOD2D_FOUR_CORNERS_AVS_DX
             ibool_number = iglob(ilocnum+ieoff)
-            if(.not. mask_point(ibool_number)) then
+            if (.not. mask_point(ibool_number)) then
               ipoin = ipoin + 1
               ireorder(ibool_number) = ipoin
-              if(USE_OPENDX) then
+              if (USE_OPENDX) then
                 write(11,*) sngl(xp_save(ilocnum+ieoff)),sngl(yp_save(ilocnum+ieoff)),sngl(zp_save(ilocnum+ieoff))
-              else if(USE_AVS) then
+              else if (USE_AVS) then
                 write(11,*) ireorder(ibool_number),sngl(xp_save(ilocnum+ieoff)), &
                             sngl(yp_save(ilocnum+ieoff)),sngl(zp_save(ilocnum+ieoff))
               endif
@@ -719,7 +719,7 @@
           enddo
         enddo
 
-        if(USE_OPENDX) &
+        if (USE_OPENDX) &
           write(11,*) 'object 2 class array type int rank 1 shape 4 items ',nspectot_AVS_max,' data follows'
 
         ! output list of elements
@@ -730,7 +730,7 @@
           ibool_number2 = iglob(ieoff + 2)
           ibool_number3 = iglob(ieoff + 3)
           ibool_number4 = iglob(ieoff + 4)
-          if(USE_OPENDX) then
+          if (USE_OPENDX) then
             ! point order in OpenDX is 1,4,2,3 *not* 1,2,3,4 as in AVS
             write(11,"(i10,1x,i10,1x,i10,1x,i10)") ireorder(ibool_number1)-1, &
               ireorder(ibool_number4)-1,ireorder(ibool_number2)-1,ireorder(ibool_number3)-1
@@ -740,7 +740,7 @@
           endif
         enddo
 
-        if(USE_OPENDX) then
+        if (USE_OPENDX) then
           write(11,*) 'attribute "element type" string "quads"'
           write(11,*) 'attribute "ref" string "positions"'
           write(11,*) 'object 3 class array type float rank 0 items ',nglob,' data follows'
@@ -757,15 +757,15 @@
           ! four points for each element
           do ilocnum = 1,NGNOD2D_FOUR_CORNERS_AVS_DX
             ibool_number = iglob(ilocnum+ieoff)
-            if(.not. mask_point(ibool_number)) then
-              if(USE_OPENDX) then
-                if(plot_shaking_map) then
+            if (.not. mask_point(ibool_number)) then
+              if (USE_OPENDX) then
+                if (plot_shaking_map) then
                   write(11,*) sngl(field_display(ilocnum+ieoff))
                 else
                   write(11,*) sngl(field_display(ilocnum+ieoff))
                 endif
               else
-                if(plot_shaking_map) then
+                if (plot_shaking_map) then
                   write(11,*) ireorder(ibool_number),sngl(field_display(ilocnum+ieoff))
                 else
                   write(11,*) ireorder(ibool_number),sngl(field_display(ilocnum+ieoff))
@@ -777,7 +777,7 @@
         enddo
 
         ! define OpenDX field
-        if(USE_OPENDX) then
+        if (USE_OPENDX) then
           write(11,*) 'attribute "dep" string "positions"'
           write(11,*) 'object "irregular positions irregular connections" class field'
           write(11,*) 'component "positions" value 1'
@@ -819,7 +819,7 @@ enddo ! it
   deallocate(mask_point)
   deallocate(ireorder)
 
-  if(USE_HIGHRES_FOR_MOVIES) then
+  if (USE_HIGHRES_FOR_MOVIES) then
     deallocate(x)
     deallocate(y)
     deallocate(z)

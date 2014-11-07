@@ -97,7 +97,7 @@ subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
   dummy_idfault = 0
 
   open(unit=IIN_PAR,file='../DATA/Par_file_faults',status='old',iostat=ier)
-  if( ier /= 0 ) then
+  if (ier /= 0) then
     if (myrank==0) write(IMAIN,*) 'no dynamic faults'
     close(IIN_PAR)
     return
@@ -115,7 +115,7 @@ subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
 
   filename = prname(1:len_trim(prname))//'fault_db.bin'
   open(unit=IIN_BIN,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
-  if( ier /= 0 ) then
+  if (ier /= 0) then
     write(IMAIN,*) 'Fatal error: file ',trim(filename),' not found. Abort'
     stop
   endif
@@ -126,7 +126,7 @@ subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
     read(IIN_PAR,*) ! etas
   enddo
   read(IIN_PAR,*) SIMULATION_TYPE
-  if ( SIMULATION_TYPE /= 1 ) then
+  if (SIMULATION_TYPE /= 1) then
     close(IIN_BIN)
     close(IIN_PAR)
     return
@@ -149,7 +149,7 @@ subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
 
   filename = prname(1:len_trim(prname))//'Kelvin_voigt_eta.bin'
   open(unit=IIN_BIN,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
-  if( ier /= 0 ) then
+  if (ier /= 0) then
     write(IMAIN,*) 'Fatal error: file ',trim(filename),' not found. Abort'
     stop
   endif
@@ -334,16 +334,16 @@ subroutine init_2d_distribution(a,coord,iin,n)
     lz = 0e0_CUSTOM_REAL
 
     read(iin,DIST2D)
-    select case(shapeval)
+    select case (shapeval)
     case ('circle')
 !! DK DK: beware: function or procedure arguments that contain a calculation produce a memory copy
 !! DK DK: created by the compiler; The code is fine, but the hidden copy may slow it down.
 !! DK DK: here is the warning from the Cray compiler:
 !! DK DK: ftn-1438 crayftn: CAUTION INIT_2D_DISTRIBUTION, File = src/specfem3D/fault_solver_dynamic.f90, Line = 355, Column = 24
 !! DK DK: This argument produces a copy in to a temporary variable.
-      b = heaviside( r - sqrt((coord(1,:)-xc)**2 + (coord(2,:)-yc)**2 + (coord(3,:)-zc)**2 ) ) *val
+      b = heaviside( r - sqrt((coord(1,:)-xc)**2 + (coord(2,:)-yc)**2 + (coord(3,:)-zc)**2) ) *val
     case ('circle-exp')
-      r1 = sqrt((coord(1,:)-xc)**2 + (coord(2,:)-yc)**2 + (coord(3,:)-zc)**2 )
+      r1 = sqrt((coord(1,:)-xc)**2 + (coord(2,:)-yc)**2 + (coord(3,:)-zc)**2)
       where(r1<r)
         b =exp(r1**2/(r1**2 - r**2) ) *val + valh
       elsewhere
@@ -352,7 +352,7 @@ subroutine init_2d_distribution(a,coord,iin,n)
     case ('ellipse')
 !! DK DK: beware: function or procedure arguments that contain a calculation produce a memory copy
 !! DK DK: created by the compiler; The code is fine, but the hidden copy may slow it down.
-      b = heaviside( 1e0_CUSTOM_REAL - sqrt( (coord(1,:)-xc)**2/lx**2 + (coord(2,:)-yc)**2/ly**2 + (coord(3,:)-zc)**2/lz**2 ) ) *val
+      b = heaviside( 1e0_CUSTOM_REAL - sqrt( (coord(1,:)-xc)**2/lx**2 + (coord(2,:)-yc)**2/ly**2 + (coord(3,:)-zc)**2/lz**2) ) *val
     case ('square')
 !! DK DK: beware: function or procedure arguments that contain a calculation produce a memory copy
 !! DK DK: created by the compiler; The code is fine, but the hidden copy may slow it down.
@@ -561,7 +561,7 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
 
     !-- intermediate storage of outputs --
     Vf_new = sqrt(bc%V(1,:)*bc%V(1,:)+bc%V(2,:)*bc%V(2,:))
-    if(.not. RATE_AND_STATE) then
+    if (.not. RATE_AND_STATE) then
       theta_new = bc%swf%theta
       dc = bc%swf%dc
     else
@@ -583,12 +583,12 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
 
     !-- outputs --
     ! write dataT every NTOUT time step or at the end of simulation
-    if ( mod(it,NTOUT) == 0 .or. it==NSTEP) call SCEC_write_dataT(bc%dataT)
+    if (mod(it,NTOUT) == 0 .or. it==NSTEP) call SCEC_write_dataT(bc%dataT)
 
   endif
 
   ! write dataXZ every NSNAP time step
-  if ( mod(it,NSNAP) == 0) then
+  if (mod(it,NSNAP) == 0) then
     if (.NOT. PARALLEL_FAULT) then
       if (bc%nspec > 0) call write_dataXZ(bc%dataXZ,it,iflt)
     else
@@ -597,7 +597,7 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
     endif
   endif
 
-  if ( it == NSTEP) then
+  if (it == NSTEP) then
     if (.NOT. PARALLEL_FAULT) then
       call SCEC_Write_RuptureTime(bc%dataXZ,iflt)
     else
@@ -673,7 +673,7 @@ subroutine swf_update_state(dold,dnew,vold,f)
   real(kind=CUSTOM_REAL) :: vnorm
   integer :: k,npoin
 
-  f%theta = f%theta + sqrt( (dold(1,:)-dnew(1,:))**2 + (dold(2,:)-dnew(2,:))**2 )
+  f%theta = f%theta + sqrt( (dold(1,:)-dnew(1,:))**2 + (dold(2,:)-dnew(2,:))**2)
 
   if (f%healing) then
     npoin = size(vold,2)
@@ -809,13 +809,13 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
     c2=abs(x)>W1
     c3=abs(z-hypo_z)<W2+w
     c4=abs(z-hypo_z)>W2
-    if( (c1 .and. c2 .and. c3) .or. (c3 .and. c4 .and. c1) ) then
+    if ((c1 .and. c2 .and. c3) .or. (c3 .and. c4 .and. c1)) then
 
       if (c1 .and. c2) then
         b11 = w/(abs(x)-W1-w)
         b12 = w/(abs(x)-W1)
         B1 = HALF * (ONE + tanh(b11 + b12))
-      else if(abs(x)<=W1) then
+      else if (abs(x)<=W1) then
         B1 = 1._CUSTOM_REAL
       else
         B1 = 0._CUSTOM_REAL
@@ -825,7 +825,7 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
         b21 = w/(abs(z-hypo_z)-W2-w)
         b22 = w/(abs(z-hypo_z)-W2)
         B2 = HALF * (ONE + tanh(b21 + b22))
-      else if(abs(z-hypo_z)<=W2) then
+      else if (abs(z-hypo_z)<=W2) then
         B2 = 1._CUSTOM_REAL
       else
         B2 = 0._CUSTOM_REAL
@@ -834,7 +834,7 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
       f%a(i) = 0.008 + 0.008 * (ONE - B1*B2)
       f%Vw(i) = 0.1 + 0.9 * (ONE - B1*B2)
 
-    else if( abs(x)<=W1 .and. abs(z-hypo_z)<=W2 ) then
+    else if (abs(x)<=W1 .and. abs(z-hypo_z)<=W2) then
       f%a(i) = 0.008
       f%Vw(i) = 0.1_CUSTOM_REAL
     else
@@ -846,7 +846,7 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
 
   ! WARNING: The line below scratches an earlier initialization of theta through theta_init
   !          We should implement it as an option for the user
-  if(f%stateLaw == 1) then
+  if (f%stateLaw == 1) then
     f%theta = f%L/f%V0 &
               * exp( ( f%a * log(TWO*sinh(-sqrt(T0(1,:)**2+T0(2,:)**2)/T0(3,:)/f%a)) &
                        - f%f0 - f%a*log(f%V_init/f%V0) ) &
@@ -973,10 +973,10 @@ subroutine init_dataXZ(dataXZ,bc)
 
   dataXZ%npoin = bc%nglob
 
-  if(bc%nglob > 0) then
+  if (bc%nglob > 0) then
 
     allocate(dataXZ%stg(bc%nglob))
-    if(.not. RATE_AND_STATE) then
+    if (.not. RATE_AND_STATE) then
       dataXZ%sta => bc%swf%theta
     else
       dataXZ%sta => bc%rsf%theta
@@ -1286,7 +1286,7 @@ subroutine funcd(x,fn,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
   double precision :: arg,fn,df,x
   integer :: statelaw
 
-  if(statelaw == 1) then
+  if (statelaw == 1) then
     arg = exp((f0+dble(b)*log(V0*theta/L))/a)/TWO/V0
   else
     arg = exp(theta/a)/TWO/V0
@@ -1310,14 +1310,14 @@ function rtsafe(funcd,x1,x2,xacc,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
 
   call funcd(dble(x1),fl,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
   call funcd(dble(x2),fh,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
-  if( (fl>0 .and. fh>0) .or. (fl<0 .and. fh<0) ) stop 'root must be bracketed in rtsafe'
-  if(fl==0.) then
+  if ((fl>0 .and. fh>0) .or. (fl<0 .and. fh<0) ) stop 'root must be bracketed in rtsafe'
+  if (fl==0.) then
     rtsafe=x2
     return
-  else if(fh==0.) then
+  else if (fh==0.) then
     rtsafe=x2
     return
-  else if(fl<0) then
+  else if (fl<0) then
     xl=x1
     xh=x2
   else
@@ -1330,21 +1330,21 @@ function rtsafe(funcd,x1,x2,xacc,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
   dx=dxold
   call funcd(rtsafe,f,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
   do j=1,MAXIT
-    if( ((rtsafe-xh)*df-f)*((rtsafe-xl)*df-f)>0 .or. abs(2.*f)>abs(dxold*df)  ) then
+    if (((rtsafe-xh)*df-f)*((rtsafe-xl)*df-f)>0 .or. abs(2.*f)>abs(dxold*df)) then
       dxold=dx
       dx=0.5d0*(xh-xl)
       rtsafe=xl+dx
-      if(xl==rtsafe) return
+      if (xl==rtsafe) return
     else
       dxold=dx
       dx=f/df
       temp=rtsafe
       rtsafe=rtsafe-dx
-      if(temp==rtsafe) return
+      if (temp==rtsafe) return
     endif
-    if(abs(dx)<xacc) return
+    if (abs(dx)<xacc) return
     call funcd(rtsafe,f,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
-    if(f<0.) then
+    if (f<0.) then
       xl=rtsafe
     else
       xh=rtsafe

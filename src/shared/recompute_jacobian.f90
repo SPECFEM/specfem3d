@@ -59,9 +59,9 @@
 ! recompute jacobian for any (xi,eta,gamma) point, not necessarily a GLL point
 
 ! check that the parameter file is correct
-  if(NGNOD /= 8 .and. NGNOD /= 27) stop 'elements should have 8 or 27 control nodes'
+  if (NGNOD /= 8 .and. NGNOD /= 27) stop 'elements should have 8 or 27 control nodes'
 
-  if(NGNOD == 8) then
+  if (NGNOD == 8) then
 
 ! ***
 ! *** create the 3D shape functions and the Jacobian for an 8-node element
@@ -154,7 +154,7 @@
 
   jacobian = xxi*(yeta*zgamma-ygamma*zeta) - xeta*(yxi*zgamma-ygamma*zxi) + xgamma*(yxi*zeta-yeta*zxi)
 
-  if(jacobian <= ZERO) stop '3D Jacobian undefined'
+  if (jacobian <= ZERO) stop '3D Jacobian undefined'
 
 ! invert the relation (Fletcher p. 50 vol. 2)
   xix=(yeta*zgamma-ygamma*zeta)/jacobian

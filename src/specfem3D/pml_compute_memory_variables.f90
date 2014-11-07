@@ -713,7 +713,7 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
 
   logical,parameter :: FIRST_ORDER_CONVOLUTION = .false.
 
-  if(index_ijk == 123)then
+  if (index_ijk == 123)then
     CPML_X_ONLY_TEMP = CPML_X_ONLY
     CPML_Y_ONLY_TEMP = CPML_Y_ONLY
     CPML_Z_ONLY_TEMP = CPML_Z_ONLY
@@ -721,7 +721,7 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
     CPML_XZ_ONLY_TEMP = CPML_XZ_ONLY
     CPML_YZ_ONLY_TEMP = CPML_YZ_ONLY
     CPML_XYZ_TEMP = CPML_XYZ
-  else if(index_ijk == 132)then
+  else if (index_ijk == 132)then
     CPML_X_ONLY_TEMP = CPML_X_ONLY
     CPML_Y_ONLY_TEMP = CPML_Z_ONLY
     CPML_Z_ONLY_TEMP = CPML_Y_ONLY
@@ -729,7 +729,7 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
     CPML_XZ_ONLY_TEMP = CPML_XY_ONLY
     CPML_YZ_ONLY_TEMP = CPML_YZ_ONLY
     CPML_XYZ_TEMP = CPML_XYZ
-  else if(index_ijk == 231)then
+  else if (index_ijk == 231)then
     CPML_X_ONLY_TEMP = CPML_Z_ONLY
     CPML_Y_ONLY_TEMP = CPML_Y_ONLY
     CPML_Z_ONLY_TEMP = CPML_X_ONLY
@@ -749,12 +749,12 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
   beta_z = alpha_z + d_z / kappa_z
 
 
-  if(CPML_region_local == CPML_XYZ_TEMP)then
+  if (CPML_region_local == CPML_XYZ_TEMP)then
   !----------------A0-------------------------
     bar_A_0 = kappa_x * kappa_y / kappa_z
     A_0 = bar_A_0
 
-    if(abs(alpha_x-alpha_y) >= 1.e-5_CUSTOM_REAL .and. abs(alpha_x-beta_z) >= 1.e-5_CUSTOM_REAL &
+    if (abs(alpha_x-alpha_y) >= 1.e-5_CUSTOM_REAL .and. abs(alpha_x-beta_z) >= 1.e-5_CUSTOM_REAL &
        .and. abs(alpha_y-beta_z) >= 1.e-5_CUSTOM_REAL)then
       !----------------A1,2,3-------------------------
       bar_A_1 = - bar_A_0 * (alpha_x - alpha_z) * (alpha_x - beta_x) * (alpha_x - beta_y) / &
@@ -775,7 +775,7 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
       call compute_convolution_coef(alpha_y, deltat, coef0_2, coef1_2, coef2_2, singularity_type_2, time_nplus1,time_n)
       call compute_convolution_coef(beta_z, deltat, coef0_3, coef1_3, coef2_3, singularity_type_3, time_nplus1,time_n)
 
-    else if(abs(alpha_x-alpha_y) < 1.e-5_CUSTOM_REAL .and. abs(alpha_x-beta_z) >= 1.e-5_CUSTOM_REAL &
+    else if (abs(alpha_x-alpha_y) < 1.e-5_CUSTOM_REAL .and. abs(alpha_x-beta_z) >= 1.e-5_CUSTOM_REAL &
           .and. abs(alpha_y-beta_z) >= 1.e-5_CUSTOM_REAL)then
       !----------------A1,2,3-------------------------
       alpha_0 = max(alpha_x,alpha_y)
@@ -808,7 +808,7 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
       call compute_convolution_coef(alpha_y, deltat, coef0_2, coef1_2, coef2_2, singularity_type_2, time_nplus1,time_n)
       call compute_convolution_coef(beta_z, deltat, coef0_3, coef1_3, coef2_3, singularity_type_3, time_nplus1,time_n)
 
-    else if(abs(alpha_x-alpha_y) >= 1.e-5_CUSTOM_REAL .and. abs(alpha_x-beta_z) < 1.e-5_CUSTOM_REAL &
+    else if (abs(alpha_x-alpha_y) >= 1.e-5_CUSTOM_REAL .and. abs(alpha_x-beta_z) < 1.e-5_CUSTOM_REAL &
           .and. abs(alpha_y-beta_z) >= 1.e-5_CUSTOM_REAL)then
       !----------------A1,2,3-------------------------
       alpha_0 = max(alpha_x,beta_z)
@@ -840,7 +840,7 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
       call compute_convolution_coef(alpha_y, deltat, coef0_2, coef1_2, coef2_2, singularity_type_2, time_nplus1,time_n)
       call compute_convolution_coef(beta_z, deltat, coef0_3, coef1_3, coef2_3, singularity_type_3, time_nplus1,time_n)
 
-    else if(abs(alpha_x-alpha_y) >= 1.e-5_CUSTOM_REAL .and. abs(alpha_x-beta_z) >= 1.e-5_CUSTOM_REAL &
+    else if (abs(alpha_x-alpha_y) >= 1.e-5_CUSTOM_REAL .and. abs(alpha_x-beta_z) >= 1.e-5_CUSTOM_REAL &
           .and. abs(alpha_y-beta_z) < 1.e-5_CUSTOM_REAL)then
       !----------------A1,2,3-------------------------
       alpha_0 = max(alpha_y,beta_z)
@@ -872,18 +872,17 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
       call compute_convolution_coef(alpha_y, deltat, coef0_2, coef1_2, coef2_2, singularity_type_2, time_nplus1,time_n)
       call compute_convolution_coef(beta_z, deltat, coef0_3, coef1_3, coef2_3, singularity_type_3, time_nplus1,time_n)
 
-    else if(&
-           (abs(alpha_x-alpha_y) < 1.e-5_CUSTOM_REAL .and. abs(alpha_x-beta_z) < 1.e-5_CUSTOM_REAL &
-          .and. abs(alpha_y-beta_z) < 1.e-5_CUSTOM_REAL) .or.&
+    else if ((abs(alpha_x-alpha_y) < 1.e-5_CUSTOM_REAL .and. abs(alpha_x-beta_z) < 1.e-5_CUSTOM_REAL &
+             .and. abs(alpha_y-beta_z) < 1.e-5_CUSTOM_REAL) .or.&
 
-           (abs(alpha_x-alpha_y) < 1.e-5_CUSTOM_REAL .and. abs(alpha_x-beta_z) < 1.e-5_CUSTOM_REAL &
-          .and. abs(alpha_y-beta_z) < 1.e-5_CUSTOM_REAL) .or.&
+             (abs(alpha_x-alpha_y) < 1.e-5_CUSTOM_REAL .and. abs(alpha_x-beta_z) < 1.e-5_CUSTOM_REAL &
+             .and. abs(alpha_y-beta_z) < 1.e-5_CUSTOM_REAL) .or.&
 
-           (abs(alpha_x-alpha_y) < 1.e-5_CUSTOM_REAL .and. abs(alpha_x-beta_z) < 1.e-5_CUSTOM_REAL &
-          .and. abs(alpha_y-beta_z) < 1.e-5_CUSTOM_REAL) .or.&
+             (abs(alpha_x-alpha_y) < 1.e-5_CUSTOM_REAL .and. abs(alpha_x-beta_z) < 1.e-5_CUSTOM_REAL &
+             .and. abs(alpha_y-beta_z) < 1.e-5_CUSTOM_REAL) .or.&
 
-           (abs(alpha_x-alpha_y) < 1.e-5_CUSTOM_REAL .and. abs(alpha_x-beta_z) < 1.e-5_CUSTOM_REAL &
-          .and. abs(alpha_y-beta_z) < 1.e-5_CUSTOM_REAL) )then
+             (abs(alpha_x-alpha_y) < 1.e-5_CUSTOM_REAL .and. abs(alpha_x-beta_z) < 1.e-5_CUSTOM_REAL &
+             .and. abs(alpha_y-beta_z) < 1.e-5_CUSTOM_REAL)) then
       !----------------A1,2,3-------------------------
       alpha_0 = max(alpha_x,alpha_y,beta_z)
 
@@ -913,12 +912,12 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
     else
       stop 'error in lijk_parameter_computation'
     endif
-  else if(CPML_region_local == CPML_YZ_ONLY_TEMP)then
+  else if (CPML_region_local == CPML_YZ_ONLY_TEMP)then
   !----------------A0-------------------------
     bar_A_0 = kappa_y / kappa_z
     A_0 = bar_A_0
 
-    if(abs(alpha_y-beta_z) >= 1.e-5_CUSTOM_REAL)then
+    if (abs(alpha_y-beta_z) >= 1.e-5_CUSTOM_REAL)then
       !----------------A1,2,3-------------------------
 
       beta_x = alpha_x + d_x / kappa_x
@@ -942,7 +941,7 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
       call compute_convolution_coef(alpha_y, deltat, coef0_2, coef1_2, coef2_2, singularity_type_2, time_nplus1,time_n)
       call compute_convolution_coef(beta_z, deltat, coef0_3, coef1_3, coef2_3, singularity_type_3, time_nplus1,time_n)
 
-    else if( abs(alpha_y-beta_z) < 1.e-5_CUSTOM_REAL)then
+    else if (abs(alpha_y-beta_z) < 1.e-5_CUSTOM_REAL)then
       !----------------A1,2,3-------------------------
       alpha_0 = max(alpha_y,beta_z)
 
@@ -970,12 +969,12 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
     else
       stop 'error in lijk_parameter_computation'
     endif
-  else if(CPML_region_local == CPML_XZ_ONLY_TEMP)then
+  else if (CPML_region_local == CPML_XZ_ONLY_TEMP)then
   !----------------A0-------------------------
     bar_A_0 = kappa_x / kappa_z
     A_0 = bar_A_0
 
-    if(abs(alpha_x-beta_z) >= 1.e-5_CUSTOM_REAL)then
+    if (abs(alpha_x-beta_z) >= 1.e-5_CUSTOM_REAL)then
       !----------------A1,2,3-------------------------
 
       beta_x = alpha_x + d_x / kappa_x
@@ -999,7 +998,7 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
       call compute_convolution_coef(alpha_y, deltat, coef0_2, coef1_2, coef2_2, singularity_type_2, time_nplus1,time_n)
       call compute_convolution_coef(beta_z, deltat, coef0_3, coef1_3, coef2_3, singularity_type_3, time_nplus1,time_n)
 
-    else if(abs(alpha_x-beta_z) < 1.e-5_CUSTOM_REAL)then
+    else if (abs(alpha_x-beta_z) < 1.e-5_CUSTOM_REAL)then
       !----------------A1,2,3-------------------------
       alpha_0 = max(alpha_x,beta_z)
 
@@ -1028,12 +1027,12 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
       stop 'error in lijk_parameter_computation'
     endif
 
-  else if(CPML_region_local == CPML_XY_ONLY_TEMP)then
+  else if (CPML_region_local == CPML_XY_ONLY_TEMP)then
   !----------------A0-------------------------
     bar_A_0 = kappa_x * kappa_y
     A_0 = bar_A_0
 
-    if(abs(alpha_x-alpha_y) >= 1.e-5_CUSTOM_REAL)then
+    if (abs(alpha_x-alpha_y) >= 1.e-5_CUSTOM_REAL)then
       !----------------A1,2,3-------------------------
 
       beta_x = alpha_x + d_x / kappa_x
@@ -1057,7 +1056,7 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
       call compute_convolution_coef(alpha_y, deltat, coef0_2, coef1_2, coef2_2, singularity_type_2, time_nplus1,time_n)
       call compute_convolution_coef(beta_z, deltat, coef0_3, coef1_3, coef2_3, singularity_type_3, time_nplus1,time_n)
 
-    else if(abs(alpha_x-alpha_y) < 1.e-5_CUSTOM_REAL)then
+    else if (abs(alpha_x-alpha_y) < 1.e-5_CUSTOM_REAL)then
       !----------------A1,2,3-------------------------
       alpha_0 = max(alpha_x,alpha_y)
 
@@ -1086,7 +1085,7 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
     else
       stop 'error in lijk_parameter_computation'
     endif
-  else if(CPML_region_local == CPML_X_ONLY_TEMP)then
+  else if (CPML_region_local == CPML_X_ONLY_TEMP)then
   !----------------A0-------------------------
     bar_A_0 = kappa_x
     A_0 = bar_A_0
@@ -1106,7 +1105,7 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
     call compute_convolution_coef(alpha_y, deltat, coef0_2, coef1_2, coef2_2, singularity_type_2, time_nplus1,time_n)
     call compute_convolution_coef(beta_z, deltat, coef0_3, coef1_3, coef2_3, singularity_type_3, time_nplus1,time_n)
 
-  else if(CPML_region_local == CPML_Y_ONLY_TEMP)then
+  else if (CPML_region_local == CPML_Y_ONLY_TEMP)then
   !----------------A0-------------------------
     bar_A_0 = kappa_y
     A_0 = bar_A_0
@@ -1126,7 +1125,7 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
     call compute_convolution_coef(alpha_y, deltat, coef0_2, coef1_2, coef2_2, singularity_type_2, time_nplus1,time_n)
     call compute_convolution_coef(beta_z, deltat, coef0_3, coef1_3, coef2_3, singularity_type_3, time_nplus1,time_n)
 
-  else if(CPML_region_local == CPML_Z_ONLY_TEMP)then
+  else if (CPML_region_local == CPML_Z_ONLY_TEMP)then
   !----------------A0-------------------------
     bar_A_0 = 1._CUSTOM_REAL / kappa_z
     A_0 = bar_A_0
@@ -1175,43 +1174,43 @@ subroutine lx_parameter_computation(deltat,kappa_x,d_x,alpha_x, &
 
   beta_x = alpha_x + d_x / kappa_x
 
-  if(CPML_region_local == CPML_XYZ)then
+  if (CPML_region_local == CPML_XYZ)then
   !----------------A0-------------------------
     A_0 = kappa_x
   !----------------A1-------------------------
     A_1 = - A_0 * (alpha_x - beta_x)
 
-  else if(CPML_region_local == CPML_YZ_ONLY)then
+  else if (CPML_region_local == CPML_YZ_ONLY)then
   !----------------A0-------------------------
     A_0 = 1._CUSTOM_REAL
   !----------------A1-------------------------
     A_1 = 0._CUSTOM_REAL
 
-  else if(CPML_region_local == CPML_XZ_ONLY)then
+  else if (CPML_region_local == CPML_XZ_ONLY)then
   !----------------A0-------------------------
     A_0 = kappa_x
   !----------------A1-------------------------
     A_1 = - A_0 * (alpha_x - beta_x)
 
-  else if(CPML_region_local == CPML_XY_ONLY)then
+  else if (CPML_region_local == CPML_XY_ONLY)then
   !----------------A0-------------------------
     A_0 = kappa_x
   !----------------A1-------------------------
     A_1 = - A_0 * (alpha_x - beta_x)
 
-  else if(CPML_region_local == CPML_X_ONLY)then
+  else if (CPML_region_local == CPML_X_ONLY)then
   !----------------A0-------------------------
     A_0 = kappa_x
   !----------------A1-------------------------
     A_1 = - A_0 * (alpha_x - beta_x)
 
-  else if(CPML_region_local == CPML_Y_ONLY)then
+  else if (CPML_region_local == CPML_Y_ONLY)then
   !----------------A0-------------------------
     A_0 = 1._CUSTOM_REAL
   !----------------A1-------------------------
     A_1 = 0._CUSTOM_REAL
 
-  else if(CPML_region_local == CPML_Z_ONLY)then
+  else if (CPML_region_local == CPML_Z_ONLY)then
   !----------------A0-------------------------
     A_0 = 1._CUSTOM_REAL
   !----------------A1-------------------------
@@ -1246,43 +1245,43 @@ subroutine ly_parameter_computation(deltat,kappa_y,d_y,alpha_y, &
 
   beta_y = alpha_y + d_y / kappa_y
 
-  if(CPML_region_local == CPML_XYZ)then
+  if (CPML_region_local == CPML_XYZ)then
   !----------------A0-------------------------
     A_0 = kappa_y
   !----------------A1-------------------------
     A_1 = - A_0 * (alpha_y - beta_y)
 
-  else if(CPML_region_local == CPML_YZ_ONLY)then
+  else if (CPML_region_local == CPML_YZ_ONLY)then
   !----------------A0-------------------------
     A_0 = kappa_y
   !----------------A1-------------------------
     A_1 = - A_0 * (alpha_y - beta_y)
 
-  else if(CPML_region_local == CPML_XZ_ONLY)then
+  else if (CPML_region_local == CPML_XZ_ONLY)then
   !----------------A0-------------------------
     A_0 = 1._CUSTOM_REAL
   !----------------A1-------------------------
     A_1 = 0._CUSTOM_REAL
 
-  else if(CPML_region_local == CPML_XY_ONLY)then
+  else if (CPML_region_local == CPML_XY_ONLY)then
   !----------------A0-------------------------
     A_0 = kappa_y
   !----------------A1-------------------------
     A_1 = - A_0 * (alpha_y - beta_y)
 
-  else if(CPML_region_local == CPML_X_ONLY)then
+  else if (CPML_region_local == CPML_X_ONLY)then
   !----------------A0-------------------------
     A_0 = 1._CUSTOM_REAL
   !----------------A1-------------------------
     A_1 = 0._CUSTOM_REAL
 
-  else if(CPML_region_local == CPML_Y_ONLY)then
+  else if (CPML_region_local == CPML_Y_ONLY)then
   !----------------A0-------------------------
     A_0 = kappa_y
   !----------------A1-------------------------
     A_1 = - A_0 * (alpha_y - beta_y)
 
-  else if(CPML_region_local == CPML_Z_ONLY)then
+  else if (CPML_region_local == CPML_Z_ONLY)then
   !----------------A0-------------------------
     A_0 = 1._CUSTOM_REAL
   !----------------A1-------------------------
@@ -1321,43 +1320,43 @@ subroutine lz_parameter_computation(deltat,kappa_z,d_z,alpha_z, &
 
   beta_z = alpha_z + d_z / kappa_z
 
-  if(CPML_region_local == CPML_XYZ)then
+  if (CPML_region_local == CPML_XYZ)then
   !----------------A0-------------------------
     A_0 = kappa_z
   !----------------A1-------------------------
     A_1 = - A_0 * (alpha_z - beta_z)
 
-  else if(CPML_region_local == CPML_YZ_ONLY)then
+  else if (CPML_region_local == CPML_YZ_ONLY)then
   !----------------A0-------------------------
     A_0 = kappa_z
   !----------------A1-------------------------
     A_1 = - A_0 * (alpha_z - beta_z)
 
-  else if(CPML_region_local == CPML_XZ_ONLY)then
+  else if (CPML_region_local == CPML_XZ_ONLY)then
   !----------------A0-------------------------
     A_0 = kappa_z
   !----------------A1-------------------------
     A_1 = - A_0 * (alpha_z - beta_z)
 
-  else if(CPML_region_local == CPML_XY_ONLY)then
+  else if (CPML_region_local == CPML_XY_ONLY)then
   !----------------A0-------------------------
     A_0 = 1._CUSTOM_REAL
   !----------------A1-------------------------
     A_1 = 0._CUSTOM_REAL
 
-  else if(CPML_region_local == CPML_X_ONLY)then
+  else if (CPML_region_local == CPML_X_ONLY)then
   !----------------A0-------------------------
     A_0 = 1._CUSTOM_REAL
   !----------------A1-------------------------
     A_1 = 0._CUSTOM_REAL
 
-  else if(CPML_region_local == CPML_Y_ONLY)then
+  else if (CPML_region_local == CPML_Y_ONLY)then
   !----------------A0-------------------------
     A_0 = 1._CUSTOM_REAL
   !----------------A1-------------------------
     A_1 = 0._CUSTOM_REAL
 
-  else if(CPML_region_local == CPML_Z_ONLY)then
+  else if (CPML_region_local == CPML_Z_ONLY)then
   !----------------A0-------------------------
     A_0 = kappa_z
   !----------------A1-------------------------
@@ -1399,7 +1398,7 @@ subroutine lxy_interface_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_
 
   logical,parameter :: FIRST_ORDER_CONVOLUTION = .false.
 
-  if(index_ijk == 12)then
+  if (index_ijk == 12)then
     CPML_X_ONLY_TEMP = CPML_X_ONLY
     CPML_Y_ONLY_TEMP = CPML_Y_ONLY
     CPML_Z_ONLY_TEMP = CPML_Z_ONLY

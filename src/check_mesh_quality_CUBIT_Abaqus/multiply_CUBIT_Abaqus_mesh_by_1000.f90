@@ -67,7 +67,7 @@
 ! read the points
   do i = 1,NPOIN
     read(10,*) iread,x(i),y(i),z(i)
-    if(iread /= i) then
+    if (iread /= i) then
       print *,'error at i,iread = ',i,iread
       stop 'wrong input for a point'
     endif

@@ -58,9 +58,9 @@
 
 ! dynamically allocate arrays
   allocate(ninseg(npointot),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array ninseg'
+  if (ier /= 0) stop 'error allocating array ninseg'
   allocate(idummy(npointot),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array idummy'
+  if (ier /= 0) stop 'error allocating array idummy'
 
   call sort_array_coordinates(npointot,xp,yp,zp,idummy,iglob,locval,ifseg, &
                               nglob,ninseg,SMALLVALTOL)
@@ -99,8 +99,8 @@
   integer:: i,j,k,ispec,ier
 
 ! copies original array
-  allocate(copy_ibool_ori(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if(ier /= 0) stop 'error in allocate'
-  allocate(mask_ibool(nglob),stat=ier); if(ier /= 0) stop 'error in allocate'
+  allocate(copy_ibool_ori(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if (ier /= 0) stop 'error in allocate'
+  allocate(mask_ibool(nglob),stat=ier); if (ier /= 0) stop 'error in allocate'
 
   mask_ibool(:) = -1
   copy_ibool_ori(:,:,:,:) = ibool(:,:,:,:)
@@ -111,7 +111,7 @@
     do k=1,NGLLZ
       do j=1,NGLLY
         do i=1,NGLLX
-          if(mask_ibool(copy_ibool_ori(i,j,k,ispec)) == -1) then
+          if (mask_ibool(copy_ibool_ori(i,j,k,ispec)) == -1) then
 ! create a new point
             inumber = inumber + 1
             ibool(i,j,k,ispec) = inumber
@@ -126,8 +126,8 @@
   enddo
 
 ! cleanup
-  deallocate(copy_ibool_ori,stat=ier); if(ier /= 0) stop 'error in deallocate'
-  deallocate(mask_ibool,stat=ier); if(ier /= 0) stop 'error in deallocate'
+  deallocate(copy_ibool_ori,stat=ier); if (ier /= 0) stop 'error in deallocate'
+  deallocate(mask_ibool,stat=ier); if (ier /= 0) stop 'error in deallocate'
 
   end subroutine get_global_indirect_addressing
 

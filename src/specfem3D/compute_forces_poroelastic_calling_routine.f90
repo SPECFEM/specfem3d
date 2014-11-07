@@ -44,14 +44,14 @@ subroutine compute_forces_poroelastic()
   do iphase=1,2
 
     !first for points on MPI interfaces
-    if( iphase == 1 ) then
+    if (iphase == 1) then
       phase_is_inner = .false.
     else
       phase_is_inner = .true.
     endif
 
 
-    if ( .NOT. GPU_MODE ) then
+    if (.NOT. GPU_MODE) then
 
       ! solid phase
       call compute_forces_poro_solid_part( iphase, &
@@ -127,7 +127,7 @@ subroutine compute_forces_poroelastic()
     endif ! GPU_MODE
 
     ! adds poroelastic absorbing boundary terms to accelerations (type Stacey conditions)
-    if(STACEY_ABSORBING_CONDITIONS) &
+    if (STACEY_ABSORBING_CONDITIONS) &
       call compute_stacey_poroelastic(NSPEC_AB,NGLOB_AB,accels_poroelastic,accelw_poroelastic, &
                         ibool,ispec_is_inner,phase_is_inner, &
                         abs_boundary_normal,abs_boundary_jacobian2Dw, &
@@ -141,7 +141,7 @@ subroutine compute_forces_poroelastic()
                         b_absorb_fieldw)
 
     ! acoustic coupling
-    if( ACOUSTIC_SIMULATION ) then
+    if (ACOUSTIC_SIMULATION) then
       call compute_coupling_poroelastic_ac(NSPEC_AB,NGLOB_AB, &
                         ibool,accels_poroelastic,accelw_poroelastic, &
                         potential_dot_dot_acoustic, &
@@ -153,7 +153,7 @@ subroutine compute_forces_poroelastic()
                         ispec_is_inner,phase_is_inner)
 
       ! adjoint simulations
-      !if( SIMULATION_TYPE == 3 ) &
+      !if (SIMULATION_TYPE == 3) &
 ! chris:'adjoint acoustic-poroelastic simulation not implemented yet'
 !        call ccmpute_coupling_elastic_ac(NSPEC_ADJOINT,NGLOB_ADJOINT, &
 !                        ibool,b_accel,b_potential_dot_dot_acoustic, &
@@ -165,7 +165,7 @@ subroutine compute_forces_poroelastic()
     endif
 
 ! elastic coupling
-    if( ELASTIC_SIMULATION ) then
+    if (ELASTIC_SIMULATION) then
       call compute_coupling_poroelastic_el(NSPEC_AB,NGLOB_AB,ibool,&
                         displs_poroelastic,accels_poroelastic,displw_poroelastic,&
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
@@ -188,7 +188,7 @@ subroutine compute_forces_poroelastic()
 
       ! adjoint simulations
 ! chris:'adjoint elastic-poroelastic simulation not implemented yet'
-!      if( SIMULATION_TYPE == 3 ) &
+!      if (SIMULATION_TYPE == 3) &
 !        call compute_coupling_viscoelastic_ac(NSPEC_ADJOINT,NGLOB_ADJOINT, &
 !                        ibool,b_accel,b_potential_dot_dot_acoustic, &
 !                        num_coupling_ac_el_faces, &
@@ -211,7 +211,7 @@ subroutine compute_forces_poroelastic()
                         NTSTEP_BETWEEN_READ_ADJSRC)
 
 ! assemble all the contributions between slices using MPI
-    if( phase_is_inner .eqv. .false. ) then
+    if (phase_is_inner .eqv. .false.) then
       ! sends accel values to corresponding MPI interface neighbors
       call assemble_MPI_vector_poro_s(NPROC,NGLOB_AB,accels_poroelastic, &
                         accelw_poroelastic,&
@@ -224,7 +224,7 @@ subroutine compute_forces_poroelastic()
                         request_send_vector_ext_mesh_w,request_recv_vector_ext_mesh_w)
 
       ! adjoint simulations
-      if( SIMULATION_TYPE == 3 ) then
+      if (SIMULATION_TYPE == 3) then
       call assemble_MPI_vector_poro_s(NPROC,NGLOB_ADJOINT,b_accels_poroelastic, &
                         b_accelw_poroelastic,&
                         b_buffer_send_vector_ext_meshs,b_buffer_recv_vector_ext_meshs, &
@@ -248,7 +248,7 @@ subroutine compute_forces_poroelastic()
                         request_send_vector_ext_mesh_w,request_recv_vector_ext_mesh_w)
 
       ! adjoint simulations
-      if( SIMULATION_TYPE == 3 ) then
+      if (SIMULATION_TYPE == 3) then
       call assemble_MPI_vector_poro_w(NPROC,NGLOB_ADJOINT,b_accels_poroelastic, &
                         b_accelw_poroelastic,&
                         b_buffer_recv_vector_ext_meshs,b_buffer_recv_vector_ext_meshw, &
@@ -320,7 +320,7 @@ subroutine compute_forces_poroelastic()
                                b_deltatover2*b_accelw_poroelastic(:,:)
 
 ! elastic coupling
-    if( ELASTIC_SIMULATION ) &
+    if (ELASTIC_SIMULATION) &
       call compute_continuity_disp_po_el(NSPEC_AB,NGLOB_AB,ibool,&
                         accel,veloc,&
                         accels_poroelastic,velocs_poroelastic,&
@@ -443,7 +443,7 @@ subroutine compute_continuity_disp_po_el(NSPEC_AB,NGLOB_AB,ibool,&
           l = NSPEC_ADJOINT ! to avoid compilation warnings
         endif
 
-      endif !if(icount(iglob) ==1)
+      endif !if (icount(iglob) ==1)
     enddo ! igll
   enddo ! iface
 

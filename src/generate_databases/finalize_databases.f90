@@ -43,7 +43,7 @@
   call sum_all_dp(dble(NGLOB_AB),nglob_total)
 
   call synchronize_all()
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) 'Repartition of elements:'
     write(IMAIN,*) '-----------------------'
@@ -62,7 +62,7 @@
     write(IMAIN,*) 'total number of time steps in the solver will be: ',NSTEP
     write(IMAIN,*)
     ! write information about precision used for floating-point operations
-    if(CUSTOM_REAL == SIZE_REAL) then
+    if (CUSTOM_REAL == SIZE_REAL) then
       write(IMAIN,*) 'using single precision for the calculations'
     else
       write(IMAIN,*) 'using double precision for the calculations'
@@ -75,10 +75,10 @@
 ! gets number of surface elements (for movie outputs)
   allocate( ispec_is_surface_external_mesh(NSPEC_AB), &
            iglob_is_surface_external_mesh(NGLOB_AB),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array'
+  if (ier /= 0) stop 'error allocating array'
   max_nibool_interfaces_ext_mesh = maxval(nibool_interfaces_ext_mesh)
   allocate(ibool_interfaces_ext_mesh_dummy(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array'
+  if (ier /= 0) stop 'error allocating array'
   do i = 1, num_interfaces_ext_mesh
      ibool_interfaces_ext_mesh_dummy(:,:) = ibool_interfaces_ext_mesh(1:max_nibool_interfaces_ext_mesh,:)
   enddo
@@ -99,7 +99,7 @@
   deallocate(ibool_interfaces_ext_mesh_dummy)
 
   ! takes number of faces for top, free surface only
-  if( MOVIE_TYPE == 1 ) then
+  if (MOVIE_TYPE == 1) then
     nfaces_surface_ext_mesh = NSPEC2D_TOP
   endif
 
@@ -107,7 +107,7 @@
   call sum_all_i(nfaces_surface_ext_mesh,nfaces_surface_glob_ext_mesh)
 
 ! copy number of elements and points in an include file for the solver
-  if( myrank == 0 ) then
+  if (myrank == 0) then
 
     call save_header_file(NSPEC_AB,NGLOB_AB,NPROC, &
                ATTENUATION,ANISOTROPY,NSTEP,DT,STACEY_INSTEAD_OF_FREE_SURFACE, &
@@ -115,7 +115,7 @@
   endif
 
 ! elapsed time since beginning of mesh generation
-  if(myrank == 0) then
+  if (myrank == 0) then
     tCPU = wtime() - time_start
     write(IMAIN,*)
     write(IMAIN,*) 'Elapsed time for mesh generation and buffer creation in seconds = ',tCPU
@@ -124,7 +124,7 @@
   endif
 
 ! close main output file
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*) 'done'
     write(IMAIN,*)
     close(IMAIN)

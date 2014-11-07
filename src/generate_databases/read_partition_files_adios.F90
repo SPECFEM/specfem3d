@@ -116,7 +116,7 @@ subroutine read_partition_files_adios()
   ! MPI interfaces between different partitions
   num_interfaces_ext_mesh = 0
   max_interface_size_ext_mesh = 0
-  if( NPROC > 1 ) then
+  if (NPROC > 1) then
     ! format: #number_of_MPI_interfaces
     !         #maximum_number_of_elements_on_each_interface
     call adios_schedule_read(handle, sel, "nb_interfaces", 0, 1, num_interfaces_ext_mesh, ier)
@@ -134,7 +134,7 @@ subroutine read_partition_files_adios()
 
   ! user output
   call sum_all_i(nnodes_ext_mesh,num)
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*) 'external mesh points : ',num
     write(IMAIN,*) 'defined materials    : ',nmat_ext_mesh
     write(IMAIN,*) 'undefined materials  : ',nundefMat_ext_mesh
@@ -142,13 +142,13 @@ subroutine read_partition_files_adios()
   call synchronize_all()
 
   call sum_all_i(nspec_ab,num)
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*) 'total number of spectral elements: ',num
   endif
   call synchronize_all()
 
   call sum_all_i(num_interfaces_ext_mesh,num)
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*) 'number of MPI partition interfaces: ',num
   endif
   call synchronize_all()
@@ -157,49 +157,49 @@ subroutine read_partition_files_adios()
   ! Allocate arrays with previously read values |
   !---------------------------------------------'
   allocate(nodes_coords_ext_mesh(NDIM,nnodes_ext_mesh),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array nodes_coords_ext_mesh'
+  if (ier /= 0) stop 'error allocating array nodes_coords_ext_mesh'
 
   allocate(materials_ext_mesh(16,nmat_ext_mesh),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array materials_ext_mesh'
+  if (ier /= 0) stop 'error allocating array materials_ext_mesh'
   allocate(undef_mat_prop(6,nundefMat_ext_mesh),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array undef_mat_prop'
+  if (ier /= 0) stop 'error allocating array undef_mat_prop'
 
   allocate(elmnts_ext_mesh(NGNOD,nelmnts_ext_mesh),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array elmnts_ext_mesh'
+  if (ier /= 0) stop 'error allocating array elmnts_ext_mesh'
   allocate(mat_ext_mesh(2,nelmnts_ext_mesh),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array mat_ext_mesh'
+  if (ier /= 0) stop 'error allocating array mat_ext_mesh'
 
   allocate(ibelm_xmin(nspec2D_xmin),&
            nodes_ibelm_xmin(NGNOD2D,nspec2D_xmin),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array ibelm_xmin etc.'
+  if (ier /= 0) stop 'error allocating array ibelm_xmin etc.'
   allocate(ibelm_xmax(nspec2D_xmax),&
            nodes_ibelm_xmax(NGNOD2D,nspec2D_xmax),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array ibelm_xmax etc.'
+  if (ier /= 0) stop 'error allocating array ibelm_xmax etc.'
   allocate(ibelm_ymin(nspec2D_ymin), &
            nodes_ibelm_ymin(NGNOD2D,nspec2D_ymin),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array ibelm_ymin'
+  if (ier /= 0) stop 'error allocating array ibelm_ymin'
   allocate(ibelm_ymax(nspec2D_ymax),&
            nodes_ibelm_ymax(NGNOD2D,nspec2D_ymax),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array ibelm_ymax etc.'
+  if (ier /= 0) stop 'error allocating array ibelm_ymax etc.'
   allocate(ibelm_bottom(nspec2D_bottom_ext),&
            nodes_ibelm_bottom(NGNOD2D,nspec2D_bottom_ext),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array ibelm_bottom etc.'
+  if (ier /= 0) stop 'error allocating array ibelm_bottom etc.'
   allocate(ibelm_top(nspec2D_top_ext), &
            nodes_ibelm_top(NGNOD2D,nspec2D_top_ext),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array ibelm_top etc.'
+  if (ier /= 0) stop 'error allocating array ibelm_top etc.'
   ! allocates interfaces
   allocate(my_neighbours_ext_mesh(num_interfaces_ext_mesh),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array my_neighbours_ext_mesh'
+  if (ier /= 0) stop 'error allocating array my_neighbours_ext_mesh'
   allocate(my_nelmnts_neighbours_ext_mesh(num_interfaces_ext_mesh),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array my_nelmnts_neighbours_ext_mesh'
+  if (ier /= 0) stop 'error allocating array my_nelmnts_neighbours_ext_mesh'
   allocate(my_interfaces_ext_mesh(6,max_interface_size_ext_mesh, &
                                   num_interfaces_ext_mesh),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array my_interfaces_ext_mesh'
+  if (ier /= 0) stop 'error allocating array my_interfaces_ext_mesh'
   allocate(ibool_interfaces_ext_mesh(NGLLX*NGLLX*max_interface_size_ext_mesh, &
                                     num_interfaces_ext_mesh),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array ibool_interfaces_ext_mesh'
+  if (ier /= 0) stop 'error allocating array ibool_interfaces_ext_mesh'
   allocate(nibool_interfaces_ext_mesh(num_interfaces_ext_mesh),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array nibool_interfaces_ext_mesh'
+  if (ier /= 0) stop 'error allocating array nibool_interfaces_ext_mesh'
 
   !------------------------.
   ! Get the 'chunks' sizes |
@@ -450,7 +450,7 @@ subroutine read_partition_files_adios()
   !call sum_all_i(nspec2D_top_ext,num_top)
   !call sum_all_i(nspec2D_bottom_ext,num_bottom)
   !call sum_all_i(num_interfaces_ext_mesh,num_int)
-  !if(myrank == 0) then
+  !if (myrank == 0) then
     !write(IMAIN,*) ' total number of spectral elements: ',num_spec
     !write(IMAIN,*) '  external mesh points: ',num
     !write(IMAIN,*) '  defined materials: ',nmat_ext_mesh

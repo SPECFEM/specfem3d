@@ -132,7 +132,7 @@
                            FULL_ATTENUATION_SOLID,TRACTION_PATH,COUPLE_WITH_EXTERNAL_CODE,EXTERNAL_CODE_TYPE, &
                            MESH_A_CHUNK_OF_THE_EARTH)
 
-  if(NGNOD /= 8) stop 'error: check_mesh_quality only supports NGNOD == 8 for now'
+  if (NGNOD /= 8) stop 'error: check_mesh_quality only supports NGNOD == 8 for now'
 
   ! ************* compute min and max of skewness and ratios ******************
 
@@ -155,9 +155,9 @@
   ispec_max_skewness = -1
 
   ! debug: for vtk output
-  if( CREATE_VTK_FILES ) then
+  if (CREATE_VTK_FILES) then
     allocate(tmp1(NSPEC),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array tmp'
+    if (ier /= 0) stop 'error allocating array tmp'
     tmp1(:) = 0.0
   endif
 
@@ -170,12 +170,12 @@
                                     stability,distmin,distmax)
 
      ! store element number in which the edge of minimum or maximum length is located
-     if(distmin < distance_min) ispec_min_edge_length = ispec
-     if(distmax > distance_max) ispec_max_edge_length = ispec
-     if(equiangle_skewness > equiangle_skewness_max) ispec_max_skewness = ispec
+     if (distmin < distance_min) ispec_min_edge_length = ispec
+     if (distmax > distance_max) ispec_max_edge_length = ispec
+     if (equiangle_skewness > equiangle_skewness_max) ispec_max_skewness = ispec
 
-     if( CREATE_VTK_FILES ) then
-        if(CUSTOM_REAL == SIZE_REAL) then
+     if (CREATE_VTK_FILES) then
+        if (CUSTOM_REAL == SIZE_REAL) then
           tmp1(ispec) = sngl(equiangle_skewness)
         else
           tmp1(ispec) = equiangle_skewness
@@ -216,14 +216,14 @@
   call max_all_dp(edge_aspect_ratio_max,edge_aspect_ratio_max_MPI)
   call max_all_dp(diagonal_aspect_ratio_max,diagonal_aspect_ratio_max_MPI)
 
-  if((myrank == skewness_max_rank) .and. (myrank /= 0)) then
+  if ((myrank == skewness_max_rank) .and. (myrank /= 0)) then
      tmp_ispec_max_skewness(1) = ispec_max_skewness
      call send_i_t(tmp_ispec_max_skewness,1,0)
   endif
 
-  if(myrank == 0) then
+  if (myrank == 0) then
 
-     if(skewness_max_rank /= myrank) then
+     if (skewness_max_rank /= myrank) then
         call recv_i_t(tmp_ispec_max_skewness_MPI,1,skewness_max_rank)
         ispec_max_skewness_MPI = tmp_ispec_max_skewness_MPI(1)
      else
@@ -272,7 +272,7 @@
 !! DK DK we could probably increase this, now that the Stacey conditions have been fixed
   max_CFL_stability_limit = 0.55d0 !! DK DK increased this    0.48d0
 
-  if(stability_max_MPI >= max_CFL_stability_limit) then
+  if (stability_max_MPI >= max_CFL_stability_limit) then
      write(IMAIN,*) '*********************************************'
      write(IMAIN,*) '*********************************************'
      write(IMAIN,*) ' WARNING, that value is above the upper CFL limit of ',max_CFL_stability_limit
@@ -302,8 +302,8 @@
 
      ! store skewness in histogram
      iclass = int(equiangle_skewness * dble(NCLASS))
-     if(iclass < 0) iclass = 0
-     if(iclass > NCLASS-1) iclass = NCLASS-1
+     if (iclass < 0) iclass = 0
+     if (iclass > NCLASS-1) iclass = NCLASS-1
      classes_skewness(iclass) = classes_skewness(iclass) + 1
 
   enddo
@@ -315,7 +315,7 @@
 
   call sum_all_i(NSPEC,NSPEC_ALL_SLICES)
 
-  if(myrank == 0) then
+  if (myrank == 0) then
   ! create histogram of skewness and save in Gnuplot file
   write(IMAIN,*)
   write(IMAIN,*) 'histogram of skewness (0. good - 1. bad):'
@@ -348,7 +348,7 @@
   close(14)
 
   ! display warning if maximum skewness is too high
-  if(equiangle_skewness_max >= 0.75d0) then
+  if (equiangle_skewness_max >= 0.75d0) then
      write(IMAIN,*)
      write(IMAIN,*) '*********************************************'
      write(IMAIN,*) '*********************************************'
@@ -358,7 +358,7 @@
      write(IMAIN,*)
   endif
 
-  if(total_percent < 99.9d0 .or. total_percent > 100.1d0) then
+  if (total_percent < 99.9d0 .or. total_percent > 100.1d0) then
      write(IMAIN,*) 'total percentage = ',total_percent,' %'
      stop 'total percentage should be 100%'
   endif
@@ -366,7 +366,7 @@
   endif
 
   ! debug: for vtk output
-  if( CREATE_VTK_FILES ) then
+  if (CREATE_VTK_FILES) then
     ! vtk file output
     open(66,file=prname(1:len_trim(prname))//'skewness.vtk',status='unknown')
     write(66,'(a)') '# vtk DataFile Version 3.1'
@@ -483,7 +483,7 @@
   percent_GLL(:) = percent_GLL(:) / 100.d0
 
   ! check that the degree is not above the threshold for list of percentages
-  if(NGLLX_M > NGLL_MAX_STABILITY) stop 'degree too high to compute stability value'
+  if (NGLLX_M > NGLL_MAX_STABILITY) stop 'degree too high to compute stability value'
 
   ! define topology of faces of cube for skewness
 

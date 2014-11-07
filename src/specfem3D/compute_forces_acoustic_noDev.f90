@@ -99,7 +99,7 @@
   ! local C-PML absorbing boundary conditions parameters
   integer :: ispec_CPML
 
-  if( iphase == 1 ) then
+  if (iphase == 1) then
     num_elements = nspec_outer_acoustic
   else
     num_elements = nspec_inner_acoustic
@@ -268,7 +268,7 @@
     if (PML_CONDITIONS .and. (.not. backward_simulation)  .and. NSPEC_CPML > 0) then
       ! do not merge this second line with the first using an ".and." statement
       ! because array is_CPML() is unallocated when PML_CONDITIONS is false
-      if(is_CPML(ispec)) then
+      if (is_CPML(ispec)) then
 
         do k = 1,NGLLZ
           do j = 1,NGLLY

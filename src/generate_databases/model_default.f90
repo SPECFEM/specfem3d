@@ -72,7 +72,7 @@
   integer :: ier
 
   ! check if the material is known or unknown
-  if( imaterial_id > 0 ) then
+  if (imaterial_id > 0) then
     ! gets velocity model as specified by (cubit) mesh files for elastic & acoustic
     ! or from nummaterial_poroelastic_file for poroelastic (too many arguments for cubit)
 
@@ -81,7 +81,7 @@
 
     select case (idomain_id)
 
-    case( IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC )
+    case (IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC)
       ! (visco)elastic or acoustic
 
       ! density
@@ -102,7 +102,7 @@
       ! anisotropy
       iflag_aniso = nint(materials_ext_mesh(5,imaterial_id))
 
-    case( IDOMAIN_POROELASTIC )
+    case (IDOMAIN_POROELASTIC)
       ! poroelastic
       ! materials_ext_mesh format:
       ! rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr,phi,tort,kxx,kxy,kxz,kyy,kyz,kzz
@@ -143,7 +143,7 @@
 
       ! would do something like the following...
       do iundef = 1,nundefMat_ext_mesh
-         if(trim(undef_mat_prop(2,iundef)) == 'interface') then
+         if (trim(undef_mat_prop(2,iundef)) == 'interface') then
             read(undef_mat_prop(3,iundef),'(1i3)') flag_below
             read(undef_mat_prop(4,iundef),'(1i3)') flag_above
          endif
@@ -183,12 +183,12 @@
 
       ! sets acoustic/elastic domain as given in materials properties
       iundef = - imaterial_id    ! iundef must be positive
-      if (iundef > nundefMat_ext_mesh ) stop 'Error negative material ID exceeds total number undefined materials'
+      if (iundef > nundefMat_ext_mesh) stop 'Error negative material ID exceeds total number undefined materials'
 
       str_domain = trim(adjustl(undef_mat_prop(6,iundef)))
 
       read(str_domain(1:len_trim(str_domain)),'(i1)',iostat=ier) idomain_id
-      if (ier /= 0 ) stop 'Error reading domain ID from undefined material properties'
+      if (ier /= 0) stop 'Error reading domain ID from undefined material properties'
 
       ! or
       !idomain_id = IDOMAIN_ELASTIC    ! forces to be elastic domain

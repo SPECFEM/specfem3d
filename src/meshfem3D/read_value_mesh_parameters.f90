@@ -27,96 +27,96 @@
 
 ! read values from parameter file, ignoring white lines and comments
 
-  subroutine read_value_integer_mesh(iunit,ignore_junk,value_to_read, name, ierr)
+  subroutine read_value_integer_mesh(iunit,ignore_junk,value_to_read, name, ier)
 
   use constants, only: MAX_STRING_LEN
 
   implicit none
 
-  logical ignore_junk
-  integer iunit
-  integer value_to_read
-  integer ierr
-  character(len=*) name
+  logical :: ignore_junk
+  integer :: iunit
+  integer :: value_to_read
+  integer :: ier
+  character(len=*) :: name
   character(len=MAX_STRING_LEN) :: string_read
 
   call unused_string(name)
-  ierr = 0
+  ier = 0
 
-  call read_next_line(iunit,ignore_junk,string_read,ierr)
-  if (ierr /= 0) return
-  read(string_read,*,iostat=ierr) value_to_read
+  call read_next_line(iunit,ignore_junk,string_read,ier)
+  if (ier /= 0) return
+  read(string_read,*,iostat=ier) value_to_read
 
   end subroutine read_value_integer_mesh
 
 !--------------------
 
-  subroutine read_value_dble_precision_mesh(iunit,ignore_junk,value_to_read, name, ierr)
+  subroutine read_value_dble_precision_mesh(iunit,ignore_junk,value_to_read, name, ier)
 
   use constants, only: MAX_STRING_LEN
 
   implicit none
 
-  logical ignore_junk
-  integer iunit
-  double precision value_to_read
-  integer ierr
-  character(len=*) name
+  logical :: ignore_junk
+  integer :: iunit
+  double precision :: value_to_read
+  integer :: ier
+  character(len=*) :: name
   character(len=MAX_STRING_LEN) :: string_read
 
   call unused_string(name)
-  ierr = 0
+  ier = 0
 
-  call read_next_line(iunit,ignore_junk,string_read,ierr)
-  if (ierr /= 0) return
-  read(string_read,*,iostat=ierr) value_to_read
+  call read_next_line(iunit,ignore_junk,string_read,ier)
+  if (ier /= 0) return
+  read(string_read,*,iostat=ier) value_to_read
 
   end subroutine read_value_dble_precision_mesh
 
 !--------------------
 
-  subroutine read_value_logical_mesh(iunit,ignore_junk,value_to_read, name, ierr)
+  subroutine read_value_logical_mesh(iunit,ignore_junk,value_to_read, name, ier)
 
   use constants, only: MAX_STRING_LEN
 
   implicit none
 
-  logical ignore_junk
-  logical value_to_read
-  integer iunit
-  integer ierr
-  character(len=*) name
+  logical :: ignore_junk
+  logical :: value_to_read
+  integer :: iunit
+  integer :: ier
+  character(len=*) :: name
   character(len=MAX_STRING_LEN) :: string_read
 
   call unused_string(name)
-  ierr = 0
+  ier = 0
 
-  call read_next_line(iunit,ignore_junk,string_read,ierr)
-  if (ierr /= 0) return
-  read(string_read,*,iostat=ierr) value_to_read
+  call read_next_line(iunit,ignore_junk,string_read,ier)
+  if (ier /= 0) return
+  read(string_read,*,iostat=ier) value_to_read
 
   end subroutine read_value_logical_mesh
 
 !--------------------
 
-  subroutine read_value_string_mesh(iunit,ignore_junk,value_to_read, name, ierr)
+  subroutine read_value_string_mesh(iunit,ignore_junk,value_to_read, name, ier)
 
   use constants, only: MAX_STRING_LEN
 
   implicit none
 
-  logical ignore_junk
-  integer iunit
-  character(len=*) value_to_read
-  integer ierr
-  character(len=*) name
+  logical :: ignore_junk
+  integer :: iunit
+  character(len=*) :: value_to_read
+  integer :: ier
+  character(len=*) :: name
   character(len=MAX_STRING_LEN) :: string_read
 
   call unused_string(name)
-  ierr = 0
+  ier = 0
 
-  call read_next_line(iunit,ignore_junk,string_read,ierr)
-  if (ierr /= 0) return
+  call read_next_line(iunit,ignore_junk,string_read,ier)
+  if (ier /= 0) return
   value_to_read = string_read
 
   end subroutine read_value_string_mesh
@@ -125,101 +125,101 @@
 
   subroutine read_interface_parameters(iunit,SUPPRESS_UTM_PROJECTION,interface_top_file, &
        npx_interface,npy_interface,&
-       orig_x_interface,orig_y_interface,spacing_x_interface,spacing_y_interface,ierr)
+       orig_x_interface,orig_y_interface,spacing_x_interface,spacing_y_interface,ier)
 
   use constants, only: MAX_STRING_LEN,DONT_IGNORE_JUNK
 
   implicit none
 
-  logical SUPPRESS_UTM_PROJECTION
-  integer iunit
-  integer ierr
-  integer npx_interface,npy_interface
-  double precision orig_x_interface,orig_y_interface
-  double precision spacing_x_interface,spacing_y_interface
+  logical :: SUPPRESS_UTM_PROJECTION
+  integer :: iunit
+  integer :: ier
+  integer :: npx_interface,npy_interface
+  double precision :: orig_x_interface,orig_y_interface
+  double precision :: spacing_x_interface,spacing_y_interface
   character(len=MAX_STRING_LEN) :: interface_top_file
   character(len=MAX_STRING_LEN) :: string_read
 
-  ierr = 0
-  call read_next_line(iunit,DONT_IGNORE_JUNK,string_read,ierr)
-  if (ierr /= 0) return
-  read(string_read,*,iostat=ierr) SUPPRESS_UTM_PROJECTION,npx_interface,npy_interface,&
+  ier = 0
+  call read_next_line(iunit,DONT_IGNORE_JUNK,string_read,ier)
+  if (ier /= 0) return
+  read(string_read,*,iostat=ier) SUPPRESS_UTM_PROJECTION,npx_interface,npy_interface,&
              orig_x_interface,orig_y_interface,spacing_x_interface,spacing_y_interface
-  call read_value_string_mesh(iunit,DONT_IGNORE_JUNK,interface_top_file,'INTERFACE_TOP',ierr)
+  call read_value_string_mesh(iunit,DONT_IGNORE_JUNK,interface_top_file,'INTERFACE_TOP',ier)
   end subroutine read_interface_parameters
 
 !--------------------
 
-  subroutine read_material_parameters(iunit,mat_id,rho,vp,vs,Q_flag,anisotropy_flag,domain_id, ierr)
+  subroutine read_material_parameters(iunit,mat_id,rho,vp,vs,Q_flag,anisotropy_flag,domain_id, ier)
 
   use constants, only: MAX_STRING_LEN,DONT_IGNORE_JUNK
 
   implicit none
 
-  integer iunit
-  integer mat_id
-  double precision rho,vp,vs,Q_flag,anisotropy_flag
-  integer domain_id
-  integer ierr
+  integer :: iunit
+  integer :: mat_id
+  double precision :: rho,vp,vs,Q_flag,anisotropy_flag
+  integer :: domain_id
+  integer :: ier
   character(len=MAX_STRING_LEN) :: string_read
 
-  ierr = 0
-  call read_next_line(iunit,DONT_IGNORE_JUNK,string_read,ierr)
-  if (ierr /= 0) return
-  read(string_read,*,iostat=ierr) mat_id,rho,vp,vs,Q_flag,anisotropy_flag,domain_id
+  ier = 0
+  call read_next_line(iunit,DONT_IGNORE_JUNK,string_read,ier)
+  if (ier /= 0) return
+  read(string_read,*,iostat=ier) mat_id,rho,vp,vs,Q_flag,anisotropy_flag,domain_id
 
   end subroutine read_material_parameters
 
 !--------------------
 
   subroutine read_region_parameters(iunit,ix_beg_region,ix_end_region,iy_beg_region,iy_end_region,&
-          iz_beg_region,iz_end_region,imaterial_number, ierr)
+          iz_beg_region,iz_end_region,imaterial_number, ier)
 
   use constants, only: MAX_STRING_LEN,DONT_IGNORE_JUNK
 
   implicit none
 
-  integer iunit
-  integer ierr
-  integer ix_beg_region,ix_end_region,iy_beg_region,iy_end_region
-  integer iz_beg_region,iz_end_region,imaterial_number
+  integer :: iunit
+  integer :: ier
+  integer :: ix_beg_region,ix_end_region,iy_beg_region,iy_end_region
+  integer :: iz_beg_region,iz_end_region,imaterial_number
   character(len=MAX_STRING_LEN) :: string_read
 
-  ierr = 0
-  call read_next_line(iunit,DONT_IGNORE_JUNK,string_read,ierr)
-  if (ierr /= 0) return
-  read(string_read,*,iostat=ierr) ix_beg_region,ix_end_region,iy_beg_region,iy_end_region,&
+  ier = 0
+  call read_next_line(iunit,DONT_IGNORE_JUNK,string_read,ier)
+  if (ier /= 0) return
+  read(string_read,*,iostat=ier) ix_beg_region,ix_end_region,iy_beg_region,iy_end_region,&
           iz_beg_region,iz_end_region,imaterial_number
 
   end subroutine read_region_parameters
 
 !--------------------
 
-  subroutine read_next_line(iunit,suppress_junk,string_read, ierr)
+  subroutine read_next_line(iunit,suppress_junk,string_read, ier)
 
   use constants, only: MAX_STRING_LEN
 
   implicit none
 
-  integer iunit,ierr
-  logical suppress_junk
+  integer :: iunit,ier
+  logical :: suppress_junk
   character(len=MAX_STRING_LEN) :: string_read
-  integer index_equal_sign,ios
+  integer :: index_equal_sign
 
-  ierr = 0
+  ier = 0
   do
-    read(unit=iunit,fmt="(a)",iostat=ios) string_read
-    if(ios /= 0) stop 'error while reading parameter file'
+    read(unit=iunit,fmt="(a)",iostat=ier) string_read
+    if (ier /= 0) stop 'error while reading parameter file'
 
 ! suppress leading white spaces, if any
     string_read = adjustl(string_read)
 
 ! suppress trailing carriage return (ASCII code 13) if any (e.g. if input text file coming from Windows/DOS)
-    if(index(string_read,achar(13)) > 0) string_read = string_read(1:index(string_read,achar(13))-1)
+    if (index(string_read,achar(13)) > 0) string_read = string_read(1:index(string_read,achar(13))-1)
 
 ! exit loop when we find the first line that is not a comment or a white line
-    if(len_trim(string_read) == 0) cycle
-    if(string_read(1:1) /= '#') exit
+    if (len_trim(string_read) == 0) cycle
+    if (string_read(1:1) /= '#') exit
 
   enddo
 
@@ -227,12 +227,12 @@
   string_read = string_read(1:len_trim(string_read))
 
 ! suppress trailing comments, if any
-  if(index(string_read,'#') > 0) string_read = string_read(1:index(string_read,'#')-1)
+  if (index(string_read,'#') > 0) string_read = string_read(1:index(string_read,'#')-1)
 
-  if(suppress_junk) then
+  if (suppress_junk) then
 ! suppress leading junk (up to the first equal sign, included)
      index_equal_sign = index(string_read,'=')
-     if(index_equal_sign <= 1 .or. index_equal_sign == len_trim(string_read)) stop 'incorrect syntax detected in Mesh_Par_file'
+     if (index_equal_sign <= 1 .or. index_equal_sign == len_trim(string_read)) stop 'incorrect syntax detected in Mesh_Par_file'
      string_read = string_read(index_equal_sign + 1:len_trim(string_read))
   endif
 
@@ -250,11 +250,11 @@
 
   implicit none
 
-  integer ierr
+  integer :: ier
 
   open(unit=IIN,file=MF_IN_DATA_FILES_PATH(1:len_trim(MF_IN_DATA_FILES_PATH)) &
-       //'Mesh_Par_file',status='old',action='read',iostat=ierr)
-  if (ierr /= 0) then
+       //'Mesh_Par_file',status='old',action='read',iostat=ier)
+  if (ier /= 0) then
     print*,'error opening file: ',MF_IN_DATA_FILES_PATH(1:len_trim(MF_IN_DATA_FILES_PATH))
     print*
     print*,'please check your file path and run-directory.'

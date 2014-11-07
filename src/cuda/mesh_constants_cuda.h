@@ -37,7 +37,7 @@
   ifort / gfortran caveat:
     to check whether it is true or false, do not check for == 1 to test for true values since ifort just uses
     non-zero values for true (e.g. can be -1 for true). however, false will be always == 0.
-  thus, rather use: if( var ) {...}  for testing if true instead of if( var == 1){...} (alternative: one could use if( var != 0 ){...}
+  thus, rather use: if (var ) {...}  for testing if true instead of if (var == 1){...} (alternative: one could use if (var != 0){...}
 
 */
 
@@ -79,8 +79,8 @@
 #if MAXDEBUG == 1
 #define LOG(x) printf("%s\n",x)
 #define PRINT5(var,offset) for(;print_count<5;print_count++) printf("var(%d)=%2.20f\n",print_count,var[offset+print_count]);
-#define PRINT10(var) if(print_count<10) { printf("var=%1.20e\n",var); print_count++; }
-#define PRINT10i(var) if(print_count<10) { printf("var=%d\n",var); print_count++; }
+#define PRINT10(var) if (print_count<10) { printf("var=%1.20e\n",var); print_count++; }
+#define PRINT10i(var) if (print_count<10) { printf("var=%d\n",var); print_count++; }
 #else
 #define LOG(x) // printf("%s\n",x);
 #define PRINT5(var,offset) // for(i=0;i<10;i++) printf("var(%d)=%f\n",i,var[offset+i]);

@@ -107,7 +107,7 @@ void FC_FUNC_(output_free_device_memory,
               OUTPUT_FREE_DEVICE_MEMORY)(int* myrank_f) {}
 
 void FC_FUNC_(get_free_device_memory,
-              get_FREE_DEVICE_MEMORY)(realw* free, realw* used, realw* total ) {}
+              get_FREE_DEVICE_MEMORY)(realw* free, realw* used, realw* total) {}
 
 void FC_FUNC_(get_norm_acoustic_from_device,
               GET_NORM_ACOUSTIC_FROM_DEVICE)(realw* norm,long* Mesh_pointer,int* sim_type) {}
@@ -372,7 +372,7 @@ void FC_FUNC_(prepare_constants_device,
                                         int* USE_MESH_COLORING_GPU_f,
                                         int* nspec_acoustic,int* nspec_elastic,
                                         int* h_myrank,
-                                        int* SAVE_FORWARD ) {}
+                                        int* SAVE_FORWARD) {}
 
 void FC_FUNC_(prepare_fields_acoustic_device,
               PREPARE_FIELDS_ACOUSTIC_DEVICE)(long* Mesh_pointer,
@@ -660,7 +660,7 @@ void FC_FUNC_(kernel_3_b_cuda,
                                realw* b_deltatover2_F) {}
 
 void FC_FUNC_(kernel_3_a_acoustic_cuda,
-              KERNEL_3_ACOUSTIC_CUDA)(long* Mesh_pointer ) {}
+              KERNEL_3_ACOUSTIC_CUDA)(long* Mesh_pointer) {}
 
 void FC_FUNC_(kernel_3_b_acoustic_cuda,
               KERNEL_3_ACOUSTIC_CUDA)(long* Mesh_pointer,

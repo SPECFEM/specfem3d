@@ -36,21 +36,21 @@
   implicit none
 
   ! gets resulting array values onto CPU
-  if(GPU_MODE .and. &
+  if (GPU_MODE .and. &
     ( &
       CREATE_SHAKEMAP .or. &
       ( MOVIE_SURFACE .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) .or. &
       ( MOVIE_VOLUME .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) .or. &
       ( PNM_IMAGE .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) &
-     ) ) then
+     )) then
     ! acoustic domains
-    if ( ACOUSTIC_SIMULATION ) then
+    if (ACOUSTIC_SIMULATION) then
       ! transfers whole fields
       call transfer_fields_ac_from_device(NGLOB_AB,potential_acoustic, &
                 potential_dot_acoustic,potential_dot_dot_acoustic,Mesh_pointer)
     endif
     ! elastic domains
-    if ( ELASTIC_SIMULATION ) then
+    if (ELASTIC_SIMULATION) then
       ! transfers whole fields
       call transfer_fields_el_from_device(NDIM*NGLOB_AB,displ,veloc, accel, Mesh_pointer)
     endif
@@ -80,7 +80,7 @@
   endif
 
   ! creates cross-section PNM image
-  if (PNM_IMAGE .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0 ) then
+  if (PNM_IMAGE .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) then
     call write_PNM_create_image()
   endif
 
@@ -109,7 +109,7 @@
   allocate(displ_element(NDIM,NGLLX,NGLLY,NGLLZ), &
            veloc_element(NDIM,NGLLX,NGLLY,NGLLZ), &
            accel_element(NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
-  if( ier /= 0 ) stop 'error allocating arrays for movie elements'
+  if (ier /= 0) stop 'error allocating arrays for movie elements'
 
 ! initializes arrays for point coordinates
   if (it == 1) then
@@ -141,7 +141,7 @@
   do ispec2D = 1,nfaces_surface_ext_mesh
     ispec = faces_surface_ext_mesh_ispec(ispec2D)
 
-    if( ispec_is_acoustic(ispec) ) then
+    if (ispec_is_acoustic(ispec)) then
       ! displacement vector
       call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
                           potential_acoustic, displ_element,&
@@ -168,7 +168,7 @@
         iglob = faces_surface_ext_mesh(ipoin,ispec2D)
 
         ! saves norm of displacement,velocity and acceleration vector
-        if( ispec_is_elastic(ispec) ) then
+        if (ispec_is_elastic(ispec)) then
           ! norm of displacement
           store_val_ux_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin) = &
                max(store_val_ux_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin), &
@@ -184,7 +184,7 @@
         endif
 
         ! acoustic domains
-        if( ispec_is_acoustic(ispec) ) then
+        if (ispec_is_acoustic(ispec)) then
           ! sets velocity vector with maximum norm of wavefield values
           call wmo_get_max_vector(ispec,ispec2D,iglob,ipoin, &
                                   displ_element,veloc_element,accel_element, &
@@ -197,7 +197,7 @@
       do ipoin = 1, 4
         iglob = faces_surface_ext_mesh(ipoin,ispec2D)
         ! saves norm of displacement,velocity and acceleration vector
-        if( ispec_is_elastic(ispec) ) then
+        if (ispec_is_elastic(ispec)) then
           ! norm of displacement
           store_val_ux_external_mesh(NGNOD2D_FOUR_CORNERS*(ispec2D-1)+ipoin) = &
                 max(store_val_ux_external_mesh(NGNOD2D_FOUR_CORNERS*(ispec2D-1)+ipoin), &
@@ -213,7 +213,7 @@
         endif
 
         ! acoustic domains
-        if( ispec_is_acoustic(ispec) ) then
+        if (ispec_is_acoustic(ispec)) then
           ! sets velocity vector with maximum norm of wavefield values
           call wmo_get_max_vector(ispec,ispec2D,iglob,ipoin, &
                                   displ_element,veloc_element,accel_element, &
@@ -226,7 +226,7 @@
 ! finalizes shakemap: master process collects all info
   if (it == NSTEP) then
     ! master collects data
-    if( myrank == 0 ) then
+    if (myrank == 0) then
       call gatherv_all_cr(store_val_x_external_mesh,nfaces_surface_ext_mesh_points,&
            store_val_x_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
            nfaces_surface_glob_em_points,NPROC)
@@ -268,9 +268,9 @@
     endif
 
 ! creates shakemap file
-    if(myrank == 0) then
+    if (myrank == 0) then
       open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/shakingdata',status='unknown',form='unformatted',iostat=ier)
-      if( ier /= 0 ) stop 'error opening file shakingdata'
+      if (ier /= 0) stop 'error opening file shakingdata'
       write(IOUT) store_val_x_all_external_mesh   ! x coordinates
       write(IOUT) store_val_y_all_external_mesh   ! y coordinates
       write(IOUT) store_val_z_all_external_mesh   ! z coordinates
@@ -311,7 +311,7 @@
   do k=1,NGLLZ
     do j=1,NGLLY
       do i=1,NGLLX
-        if( iglob == ibool(i,j,k,ispec) ) then
+        if (iglob == ibool(i,j,k,ispec)) then
           ! norm of displacement
           store_val_ux_external_mesh(narraydim*(ispec2D-1)+ipoin) = &
             max(store_val_ux_external_mesh(narraydim*(ispec2D-1)+ipoin), &
@@ -359,10 +359,10 @@
 
   ! allocate array for single elements
   allocate( val_element(NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
-  if( ier /= 0 ) stop 'error allocating arrays for movie elements'
+  if (ier /= 0) stop 'error allocating arrays for movie elements'
 
 ! initializes arrays for point coordinates
-  if (it == NTSTEP_BETWEEN_FRAMES ) then
+  if (it == NTSTEP_BETWEEN_FRAMES) then
     do ispec2D = 1,nfaces_surface_ext_mesh
       if (USE_HIGHRES_FOR_MOVIES) then
         do ipoin = 1, NGLLX*NGLLY
@@ -388,8 +388,8 @@
   do ispec2D = 1,nfaces_surface_ext_mesh
     ispec = faces_surface_ext_mesh_ispec(ispec2D)
 
-    if( ispec_is_acoustic(ispec) ) then
-      if(SAVE_DISPLACEMENT) then
+    if (ispec_is_acoustic(ispec)) then
+      if (SAVE_DISPLACEMENT) then
         ! displacement vector
         call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
                           potential_acoustic, val_element,&
@@ -429,9 +429,9 @@
 
 ! master process collects all info
   ! collects locations only once
-  if (it == NTSTEP_BETWEEN_FRAMES ) then
+  if (it == NTSTEP_BETWEEN_FRAMES) then
     ! master collects all
-    if( myrank == 0 ) then
+    if (myrank == 0) then
       call gatherv_all_cr(store_val_x_external_mesh,nfaces_surface_ext_mesh_points,&
          store_val_x_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
          nfaces_surface_glob_em_points,NPROC)
@@ -456,7 +456,7 @@
   endif
 
   ! updates/gathers velocity field (high-res or low-res)
-  if( myrank == 0 ) then
+  if (myrank == 0) then
     call gatherv_all_cr(store_val_ux_external_mesh,nfaces_surface_ext_mesh_points,&
          store_val_ux_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
          nfaces_surface_glob_em_points,NPROC)
@@ -480,10 +480,10 @@
   endif
 
 ! file output
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(outputname,"('/moviedata',i6.6)") it
     open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//outputname,status='unknown',form='unformatted',iostat=ier)
-    if( ier /= 0 ) stop 'error opening file moviedata'
+    if (ier /= 0) stop 'error opening file moviedata'
     write(IOUT) store_val_x_all_external_mesh   ! x coordinate
     write(IOUT) store_val_y_all_external_mesh   ! y coordinate
     write(IOUT) store_val_z_all_external_mesh   ! z coordinate
@@ -521,8 +521,8 @@
   logical :: is_done
 
   ! elastic displacement/velocity
-  if( ispec_is_elastic(ispec) ) then
-    if(SAVE_DISPLACEMENT) then
+  if (ispec_is_elastic(ispec)) then
+    if (SAVE_DISPLACEMENT) then
       ! velocity x,y,z-components
       store_val_ux_external_mesh(narraydim*(ispec2D-1)+ipoin) = displ(1,iglob)
       store_val_uy_external_mesh(narraydim*(ispec2D-1)+ipoin) = displ(2,iglob)
@@ -536,12 +536,12 @@
   endif
 
   ! acoustic pressure potential
-  if( ispec_is_acoustic(ispec) ) then
+  if (ispec_is_acoustic(ispec)) then
     is_done = .false.
     do k=1,NGLLZ
       do j=1,NGLLY
         do i=1,NGLLX
-          if( iglob == ibool(i,j,k,ispec) ) then
+          if (iglob == ibool(i,j,k,ispec)) then
             store_val_ux_external_mesh(narraydim*(ispec2D-1)+ipoin) = val_element(1,i,j,k)
             store_val_uy_external_mesh(narraydim*(ispec2D-1)+ipoin) = val_element(2,i,j,k)
             store_val_uz_external_mesh(narraydim*(ispec2D-1)+ipoin) = val_element(3,i,j,k)
@@ -579,7 +579,7 @@
   if (ier /= 0) stop 'error allocating arrays for movie elements'
 
   ! initializes arrays for point coordinates
-  if (it == NTSTEP_BETWEEN_FRAMES ) then
+  if (it == NTSTEP_BETWEEN_FRAMES) then
     ipoin = 0
     do iface=1,num_free_surface_faces
       ispec = free_surface_ispec(iface)
@@ -777,14 +777,14 @@
   allocate(displ_element(NDIM,NGLLX,NGLLY,NGLLZ), &
            veloc_element(NDIM,NGLLX,NGLLY,NGLLZ), &
            accel_element(NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
-  if( ier /= 0 ) stop 'error allocating arrays for movie elements'
+  if (ier /= 0) stop 'error allocating arrays for movie elements'
 
   ! outputs values on free surface
   ipoin = 0
   do iface=1,num_free_surface_faces
     ispec = free_surface_ispec(iface)
 
-    if( ispec_is_acoustic(ispec) ) then
+    if (ispec_is_acoustic(ispec)) then
       ! displacement vector
       call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
                           potential_acoustic, displ_element,&
@@ -806,7 +806,7 @@
     endif
 
     ! save all points for high resolution, or only four corners for low resolution
-    if(USE_HIGHRES_FOR_MOVIES) then
+    if (USE_HIGHRES_FOR_MOVIES) then
       do igll = 1, NGLLSQUARE
         ipoin = ipoin + 1
         i = free_surface_ijk(1,igll,iface)
@@ -817,7 +817,7 @@
         store_val_y_external_mesh(ipoin) = ystore(iglob)
         store_val_z_external_mesh(ipoin) = zstore(iglob)
         ! todo: are we only interested in the absolute maximum of horizontal (E,N) components?
-        if( ispec_is_elastic( ispec) ) then
+        if (ispec_is_elastic( ispec)) then
           ! horizontal displacement
           store_val_ux_external_mesh(ipoin) = max(store_val_ux_external_mesh(ipoin),&
                                                 abs(displ(1,iglob)),abs(displ(2,iglob)))
@@ -830,7 +830,7 @@
         endif
 
         ! acoustic domains
-        if( ispec_is_acoustic(ispec) ) then
+        if (ispec_is_acoustic(ispec)) then
           ! stores maximum values
           call wmo_get_max_vector_o(ispec,iglob,ipoin,displ_element,veloc_element,accel_element)
         endif
@@ -846,9 +846,9 @@
       do iloc = 1, NGNOD2D_FOUR_CORNERS
         ipoin = ipoin + 1
         ! corner points
-        if( imin == imax ) then
+        if (imin == imax) then
           iglob = ibool(imin,iorderi(iloc),iorderj(iloc),ispec)
-        else if( jmin == jmax ) then
+        else if (jmin == jmax) then
           iglob = ibool(iorderi(iloc),jmin,iorderj(iloc),ispec)
         else
           iglob = ibool(iorderi(iloc),iorderj(iloc),kmin,ispec)
@@ -858,7 +858,7 @@
         store_val_y_external_mesh(ipoin) = ystore(iglob)
         store_val_z_external_mesh(ipoin) = zstore(iglob)
         ! todo: are we only interested in the absolute maximum of horizontal (E,N) components?
-        if( ispec_is_elastic( ispec) ) then
+        if (ispec_is_elastic( ispec)) then
           store_val_ux_external_mesh(ipoin) = max(store_val_ux_external_mesh(ipoin),&
                                                   abs(displ(1,iglob)),abs(displ(2,iglob)))
           store_val_uy_external_mesh(ipoin) = max(store_val_uy_external_mesh(ipoin),&
@@ -868,7 +868,7 @@
         endif
 
         ! acoustic domains
-        if( ispec_is_acoustic(ispec) ) then
+        if (ispec_is_acoustic(ispec)) then
           ! stores maximum values
           call wmo_get_max_vector_o(ispec,iglob,ipoin,displ_element,veloc_element,accel_element)
         endif
@@ -878,9 +878,9 @@
   enddo
 
   ! saves shakemap only at the end of the simulation
-  if(it == NSTEP) then
+  if (it == NSTEP) then
     ! master collects
-    if( myrank == 0 ) then
+    if (myrank == 0) then
       call gatherv_all_cr(store_val_x_external_mesh,nfaces_surface_ext_mesh_points,&
            store_val_x_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
            nfaces_surface_glob_em_points,NPROC)
@@ -921,9 +921,9 @@
     endif
 
     ! creates shakemap file: note that values are only stored on free surface
-    if(myrank == 0) then
+    if (myrank == 0) then
       open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/shakingdata',status='unknown',form='unformatted',iostat=ier)
-      if( ier /= 0 ) stop 'error opening file shakingdata'
+      if (ier /= 0) stop 'error opening file shakingdata'
       write(IOUT) store_val_x_all_external_mesh   ! x coordinates
       write(IOUT) store_val_y_all_external_mesh   ! y coordinates
       write(IOUT) store_val_z_all_external_mesh   ! z coordinates
@@ -966,7 +966,7 @@
     do j=1,NGLLY
       do i=1,NGLLX
         ! checks if global point is found
-        if( iglob == ibool(i,j,k,ispec) ) then
+        if (iglob == ibool(i,j,k,ispec)) then
 
           ! horizontal displacement
           store_val_ux_external_mesh(ipoin) = max(store_val_ux_external_mesh(ipoin),&
@@ -1022,15 +1022,15 @@
   velocity_y(:,:,:,:) = 0._CUSTOM_REAL
   velocity_z(:,:,:,:) = 0._CUSTOM_REAL
 
-  if( ACOUSTIC_SIMULATION ) then
+  if (ACOUSTIC_SIMULATION) then
 
     ! allocate array for single elements
     allocate(veloc_element(NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
-    if( ier /= 0 ) stop 'error allocating arrays for movie elements'
+    if (ier /= 0) stop 'error allocating arrays for movie elements'
 
     ! uses div as temporary array to store velocity on all gll points
     do ispec=1,NSPEC_AB
-      if( .not. ispec_is_acoustic(ispec) ) cycle
+      if (.not. ispec_is_acoustic(ispec)) cycle
 
       ! calculates velocity
       call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
@@ -1048,13 +1048,13 @@
   endif ! acoustic
 
   ! saves full snapshot data to local disk
-  if( ELASTIC_SIMULATION ) then
+  if (ELASTIC_SIMULATION) then
 
     ! allocate array for single elements
     allocate(div_glob(NGLOB_AB), &
              curl_glob(NGLOB_AB), &
              valency(NGLOB_AB), stat=ier)
-    if( ier /= 0 ) stop 'error allocating arrays for movie div and curl'
+    if (ier /= 0) stop 'error allocating arrays for movie div and curl'
 
     ! calculates divergence and curl of velocity field
     call wmo_movie_div_curl(NSPEC_AB,NGLOB_AB,veloc, &
@@ -1068,12 +1068,12 @@
     ! writes out div and curl on global points
     write(outputname,"('/proc',i6.6,'_div_glob_it',i6.6,'.bin')") myrank,it
     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-    if( ier /= 0 ) stop 'error opening file div_glob'
+    if (ier /= 0) stop 'error opening file div_glob'
     write(27) div_glob
     close(27)
     write(outputname,"('/proc',i6.6,'_curl_glob_it',i6.6,'.bin')") myrank,it
     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-    if( ier /= 0 ) stop 'error opening file curl_glob'
+    if (ier /= 0) stop 'error opening file curl_glob'
     write(27) curl_glob
     close(27)
 
@@ -1082,12 +1082,12 @@
   endif ! elastic
 
   ! saves full snapshot data to local disk
-  if( POROELASTIC_SIMULATION ) then
+  if (POROELASTIC_SIMULATION) then
     ! allocate array for single elements
     allocate(div_glob(NGLOB_AB), &
              curl_glob(NGLOB_AB), &
              valency(NGLOB_AB), stat=ier)
-    if( ier /= 0 ) stop 'error allocating arrays for movie div and curl'
+    if (ier /= 0) stop 'error allocating arrays for movie div and curl'
     ! calculates divergence and curl of velocity field
     call wmo_movie_div_curl(NSPEC_AB,NGLOB_AB,velocs_poroelastic, &
                             div_glob,curl_glob,valency, &
@@ -1099,50 +1099,50 @@
     deallocate(div_glob,curl_glob,valency)
   endif ! poroelastic
 
-  if( ELASTIC_SIMULATION .or. POROELASTIC_SIMULATION ) then
+  if (ELASTIC_SIMULATION .or. POROELASTIC_SIMULATION) then
 
     ! writes our divergence
     write(outputname,"('/proc',i6.6,'_div_it',i6.6,'.bin')") myrank,it
     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-    if( ier /= 0 ) stop 'error opening file div_it'
+    if (ier /= 0) stop 'error opening file div_it'
     write(27) div
     close(27)
 
     ! writes out curl
     write(outputname,"('/proc',i6.6,'_curl_',a1,'_it',i6.6,'.bin')") myrank,compx,it
     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-    if( ier /= 0 ) stop 'error opening file curl_x_it '
+    if (ier /= 0) stop 'error opening file curl_x_it '
     write(27) curl_x
     close(27)
     write(outputname,"('/proc',i6.6,'_curl_',a1,'_it',i6.6,'.bin')") myrank,compy,it
     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-    if( ier /= 0 ) stop 'error opening file curl_y_it'
+    if (ier /= 0) stop 'error opening file curl_y_it'
     write(27) curl_y
     close(27)
     write(outputname,"('/proc',i6.6,'_curl_',a1,'_it',i6.6,'.bin')") myrank,compz,it
     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-    if( ier /= 0 ) stop 'error opening file curl_z_it'
+    if (ier /= 0) stop 'error opening file curl_z_it'
     write(27) curl_z
     close(27)
 
   endif
 
-  if( ACOUSTIC_SIMULATION .or. ELASTIC_SIMULATION .or. POROELASTIC_SIMULATION) then
+  if (ACOUSTIC_SIMULATION .or. ELASTIC_SIMULATION .or. POROELASTIC_SIMULATION) then
     write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compx,it
     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-    if( ier /= 0 ) stop 'error opening file movie output velocity x'
+    if (ier /= 0) stop 'error opening file movie output velocity x'
     write(27) velocity_x
     close(27)
 
     write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compy,it
     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-    if( ier /= 0 ) stop 'error opening file movie output velocity y'
+    if (ier /= 0) stop 'error opening file movie output velocity y'
     write(27) velocity_y
     close(27)
 
     write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compz,it
     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-    if( ier /= 0 ) stop 'error opening file movie output velocity z'
+    if (ier /= 0) stop 'error opening file movie output velocity z'
     write(27) velocity_z
     close(27)
 
@@ -1205,7 +1205,7 @@
 
   ! loops over elements
   do ispec=1,NSPEC_AB
-    if( .not. ispec_is(ispec) ) cycle
+    if (.not. ispec_is(ispec)) cycle
 
     ! calculates divergence and curl of velocity field
     do k=1,NGLLZ
@@ -1295,7 +1295,7 @@
   do i=1,NGLOB_AB
     ! checks if point has a contribution
     ! note: might not be the case for points in acoustic elements
-    if( valency(i) /= 0 ) then
+    if (valency(i) /= 0) then
       ! averages by number of contributions
       div_glob(i) = div_glob(i)/valency(i)
       curl_glob(i) = curl_glob(i)/valency(i)

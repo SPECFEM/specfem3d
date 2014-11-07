@@ -55,13 +55,13 @@ __global__ void compute_add_sources_kernel(realw* accel,
   int ispec,iglob;
   realw stf;
 
-  if(isource < NSOURCES) { // when NSOURCES > 65535, but mod(nspec_top,2) > 0, we end up with an extra block.
+  if (isource < NSOURCES) { // when NSOURCES > 65535, but mod(nspec_top,2) > 0, we end up with an extra block.
 
-    if(myrank == islice_selected_source[isource]) {
+    if (myrank == islice_selected_source[isource]) {
 
       ispec = ispec_selected_source[isource]-1;
 
-      if(ispec_is_inner[ispec] == phase_is_inner && ispec_is_elastic[ispec] ) {
+      if (ispec_is_inner[ispec] == phase_is_inner && ispec_is_elastic[ispec]) {
 
         stf = (realw) stf_pre_compute[isource];
         iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
@@ -90,7 +90,7 @@ void FC_FUNC_(compute_add_sources_el_cuda,
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
 
   // check if anything to do
-  if( mp->nsources_local == 0 ) return;
+  if (mp->nsources_local == 0) return;
 
   int NSOURCES = *h_NSOURCES;
   int phase_is_inner = *h_phase_is_inner;
@@ -211,7 +211,7 @@ TRACE("\tadd_source_master_rec_noise_cu");
   dim3 grid(1,1,1);
   dim3 threads(NGLL3,1,1);
 
-  if(mp->myrank == islice_selected_rec[irec_master_noise-1]) {
+  if (mp->myrank == islice_selected_rec[irec_master_noise-1]) {
     add_source_master_rec_noise_cuda_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_ibool,
                                                                                     mp->d_ispec_selected_rec,
                                                                                     irec_master_noise,
@@ -244,14 +244,14 @@ __global__ void add_sources_el_SIM_TYPE_2_OR_3_kernel(realw* accel,
 
   int irec_local = blockIdx.x + gridDim.x*blockIdx.y;
 
-  if(irec_local < nadj_rec_local) { // when nrec > 65535, but mod(nspec_top,2) > 0, we end up with an extra block.
+  if (irec_local < nadj_rec_local) { // when nrec > 65535, but mod(nspec_top,2) > 0, we end up with an extra block.
 
     int irec = pre_computed_irec[irec_local];
 
     int ispec = ispec_selected_rec[irec]-1;
-    if( ispec_is_elastic[ispec] ){
+    if (ispec_is_elastic[ispec]){
 
-      if(ispec_is_inner[ispec] == phase_is_inner) {
+      if (ispec_is_inner[ispec] == phase_is_inner) {
         int i = threadIdx.x;
         int j = threadIdx.y;
         int k = threadIdx.z;
@@ -288,7 +288,7 @@ void FC_FUNC_(add_sources_el_sim_type_2_or_3,
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
 
   // checks
-  if( *nadj_rec_local != mp->nadj_rec_local) exit_on_error("add_sources_el_sim_type_2_or_3: nadj_rec_local not equal\n");
+  if (*nadj_rec_local != mp->nadj_rec_local) exit_on_error("add_sources_el_sim_type_2_or_3: nadj_rec_local not equal\n");
 
   int num_blocks_x, num_blocks_y;
   get_blocks_xy(mp->nadj_rec_local,&num_blocks_x,&num_blocks_y);
@@ -305,14 +305,14 @@ void FC_FUNC_(add_sources_el_sim_type_2_or_3,
   irec_local = 0;
 
   for(int irec = 0; irec < *nrec; irec++) {
-    if(mp->myrank == h_islice_selected_rec[irec]) {
+    if (mp->myrank == h_islice_selected_rec[irec]) {
       // takes only elastic sources
       ispec = h_ispec_selected_rec[irec] - 1;
 
       // only for elastic elements
-      if( h_ispec_is_elastic[ispec] ){
+      if (h_ispec_is_elastic[ispec]){
 
-        if( h_ispec_is_inner[ispec] == *phase_is_inner) {
+        if (h_ispec_is_inner[ispec] == *phase_is_inner) {
           for(k=0;k<NGLLX;k++) {
             for(j=0;j<NGLLX;j++) {
               for(i=0;i<NGLLX;i++) {
@@ -342,7 +342,7 @@ void FC_FUNC_(add_sources_el_sim_type_2_or_3,
     }
   }
   // check all local sources were added
-  if( irec_local != mp->nadj_rec_local) exit_on_error("irec_local not equal to nadj_rec_local\n");
+  if (irec_local != mp->nadj_rec_local) exit_on_error("irec_local not equal to nadj_rec_local\n");
 
   // copies extracted array values onto GPU
   print_CUDA_error_if_any(cudaMemcpy(mp->d_adj_sourcearrays, mp->h_adj_sourcearrays_slice,

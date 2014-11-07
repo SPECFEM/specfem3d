@@ -99,12 +99,12 @@ subroutine define_kernel_adios_variables(handle, SAVE_WEIGHTS)
 
   local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
 
-  if( SAVE_WEIGHTS ) then
+  if (SAVE_WEIGHTS) then
     call define_adios_global_array1D(group, groupsize, local_dim, &
                                      "", "weights_kernel", dummy_kernel)
   endif
 
-  if( ACOUSTIC_SIMULATION ) then
+  if (ACOUSTIC_SIMULATION) then
     call define_adios_global_array1D(group, groupsize, local_dim, &
                                      "", "rho_ac_kl", dummy_kernel)
     call define_adios_global_array1D(group, groupsize, local_dim, &
@@ -115,7 +115,7 @@ subroutine define_kernel_adios_variables(handle, SAVE_WEIGHTS)
                                      "", "alpha_ac_kl", dummy_kernel)
   endif
 
-  if( ELASTIC_SIMULATION ) then
+  if (ELASTIC_SIMULATION) then
     if (ANISOTROPIC_KL) then
       if (SAVE_TRANSVERSE_KL) then
         call define_adios_global_array1D(group, groupsize, local_dim, &
@@ -158,7 +158,7 @@ subroutine define_kernel_adios_variables(handle, SAVE_WEIGHTS)
     endif
   endif
 
-  if( POROELASTIC_SIMULATION ) then
+  if (POROELASTIC_SIMULATION) then
     call define_adios_global_array1D(group, groupsize, local_dim, &
                                      "", "rhot_kl", dummy_kernel)
     call define_adios_global_array1D(group, groupsize, local_dim, &
@@ -201,12 +201,12 @@ subroutine define_kernel_adios_variables(handle, SAVE_WEIGHTS)
                                      "", "ratio_kl", dummy_kernel)
   endif
 
-  if ( APPROXIMATE_HESS_KL ) then
-    if( ACOUSTIC_SIMULATION ) then
+  if (APPROXIMATE_HESS_KL) then
+    if (ACOUSTIC_SIMULATION) then
       call define_adios_global_array1D(group, groupsize, local_dim, &
                                        "", "hess_ac_kl", dummy_kernel)
     endif
-    if( ELASTIC_SIMULATION ) then
+    if (ELASTIC_SIMULATION) then
       call define_adios_global_array1D(group, groupsize, local_dim, &
                                        "", "hess_kl", dummy_kernel)
     endif
@@ -455,12 +455,12 @@ subroutine save_kernels_hessian_adios(handle)
   local_dim = NGLLX * NGLLY * NGLLZ * NSPEC_AB
 
   ! acoustic domains
-  if( ACOUSTIC_SIMULATION ) then
+  if (ACOUSTIC_SIMULATION) then
     call write_adios_global_1d_array(handle, myrank, sizeprocs, &
                                      local_dim, STRINGIFY_VAR(hess_ac_kl))
   endif
   ! elastic domains
-  if( ELASTIC_SIMULATION ) then
+  if (ELASTIC_SIMULATION) then
     call write_adios_global_1d_array(handle, myrank, sizeprocs, &
                                      local_dim, STRINGIFY_VAR(hess_kl))
   endif

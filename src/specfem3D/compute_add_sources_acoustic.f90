@@ -101,7 +101,7 @@
   double precision :: hxir(NGLLX), hpxir(NGLLX), hetar(NGLLY), hpetar(NGLLY),hgammar(NGLLZ), hpgammar(NGLLZ)
 
 ! plotting source time function
-  if(PRINT_SOURCE_TIME_FUNCTION .and. .not. phase_is_inner ) then
+  if (PRINT_SOURCE_TIME_FUNCTION .and. .not. phase_is_inner) then
     ! initializes total
     stf_used_total = 0.0_CUSTOM_REAL
   endif
@@ -202,7 +202,7 @@
 !             and convolve with the adjoint field at time (T-t)
 !
 ! backward/reconstructed wavefields:
-!       time for b_potential( it ) would correspond to (NSTEP - it - 1 )*DT - t0
+!       time for b_potential( it ) would correspond to (NSTEP - it - 1)*DT - t0
 !       if we read in saved wavefields b_potential() before Newmark time scheme
 !       (see sources for simulation_type 1 and seismograms)
 !       since at the beginning of the time loop, the numerical Newmark time scheme updates
@@ -225,7 +225,7 @@
   if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
 
     ! adds adjoint source in this partitions
-    if( nadj_rec_local > 0 ) then
+    if (nadj_rec_local > 0) then
 
       ! read in adjoint sources block by block (for memory consideration)
       ! e.g., in exploration experiments, both the number of receivers (nrec) and
@@ -246,7 +246,7 @@
 
         ! allocates temporary source array
         allocate(adj_sourcearray(NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
-        if( ier /= 0 ) stop 'error allocating array adj_sourcearray'
+        if (ier /= 0) stop 'error allocating array adj_sourcearray'
 
         if (.not. SU_FORMAT) then
           !!! read ascii adjoint sources
@@ -307,9 +307,9 @@
         endif !if (.not. SU_FORMAT)
 
         deallocate(adj_sourcearray)
-      endif ! if(ibool_read_adj_arrays)
+      endif ! if (ibool_read_adj_arrays)
 
-      if( it < NSTEP ) then
+      if (it < NSTEP) then
         ! receivers act as sources
         irec_local = 0
         do irec = 1,nrec
@@ -319,7 +319,7 @@
 
             ! adds source array
             ispec = ispec_selected_rec(irec)
-            if( ispec_is_acoustic(ispec) ) then
+            if (ispec_is_acoustic(ispec)) then
 
               ! checks if element is in phase_is_inner run
               if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
@@ -349,10 +349,10 @@
   endif
 
   ! master prints out source time function to file
-  if(PRINT_SOURCE_TIME_FUNCTION .and. phase_is_inner) then
+  if (PRINT_SOURCE_TIME_FUNCTION .and. phase_is_inner) then
     time_source = (it-1)*DT - t0
     call sum_all_cr(stf_used_total,stf_used_total_all)
-    if( myrank == 0 ) write(IOSTF,*) time_source,stf_used_total_all
+    if (myrank == 0) write(IOSTF,*) time_source,stf_used_total_all
   endif
 
   end subroutine compute_add_sources_acoustic
@@ -409,10 +409,10 @@
   integer :: isource,iglob,ispec,i,j,k
 
   ! checks if anything to do
-  if( SIMULATION_TYPE /= 3 ) return
+  if (SIMULATION_TYPE /= 3) return
 
 ! plotting source time function
-  if(PRINT_SOURCE_TIME_FUNCTION .and. .not. phase_is_inner ) then
+  if (PRINT_SOURCE_TIME_FUNCTION .and. .not. phase_is_inner) then
     ! initializes total
     stf_used_total = 0.0_CUSTOM_REAL
   endif
@@ -422,7 +422,7 @@
 !             and convolve with the adjoint field at time (T-t)
 !
 ! backward/reconstructed wavefields:
-!       time for b_potential( it ) would correspond to (NSTEP - it - 1 )*DT - t0
+!       time for b_potential( it ) would correspond to (NSTEP - it - 1)*DT - t0
 !       if we read in saved wavefields b_potential() before Newmark time scheme
 !       (see sources for simulation_type 1 and seismograms)
 !       since at the beginning of the time loop, the numerical Newmark time scheme updates
@@ -446,7 +446,7 @@
 !           thus indexing is NSTEP - it , instead of NSTEP - it - 1
 
 ! adjoint simulations
-  if( nsources_local > 0 ) then
+  if (nsources_local > 0) then
 
     ! adds acoustic sources
     do isource = 1,NSOURCES
@@ -538,10 +538,10 @@
   endif
 
   ! master prints out source time function to file
-  if(PRINT_SOURCE_TIME_FUNCTION .and. phase_is_inner) then
+  if (PRINT_SOURCE_TIME_FUNCTION .and. phase_is_inner) then
     time_source = (it-1)*DT - t0
     call sum_all_cr(stf_used_total,stf_used_total_all)
-    if( myrank == 0 ) write(IOSTF,*) time_source,stf_used_total_all
+    if (myrank == 0) write(IOSTF,*) time_source,stf_used_total_all
   endif
 
   end subroutine compute_add_sources_acoustic_bpwf
@@ -616,7 +616,7 @@
   double precision :: hxir(NGLLX), hpxir(NGLLX), hetar(NGLLY), hpetar(NGLLY),hgammar(NGLLZ), hpgammar(NGLLZ)
 
 ! plotting source time function
-  if(PRINT_SOURCE_TIME_FUNCTION .and. .not. phase_is_inner ) then
+  if (PRINT_SOURCE_TIME_FUNCTION .and. .not. phase_is_inner) then
     ! initializes total
     stf_used_total = 0.0_CUSTOM_REAL
   endif
@@ -658,7 +658,7 @@
 !             and convolve with the adjoint field at time (T-t)
 !
 ! backward/reconstructed wavefields:
-!       time for b_potential( it ) would correspond to (NSTEP - it - 1 )*DT - t0
+!       time for b_potential( it ) would correspond to (NSTEP - it - 1)*DT - t0
 !       if we read in saved wavefields b_potential() before Newmark time scheme
 !       (see sources for simulation_type 1 and seismograms)
 !       since at the beginning of the time loop, the numerical Newmark time scheme updates
@@ -681,7 +681,7 @@
   if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
 
     ! adds adjoint source in this partitions
-    if( nadj_rec_local > 0 ) then
+    if (nadj_rec_local > 0) then
 
       ! read in adjoint sources block by block (for memory consideration)
       ! e.g., in exploration experiments, both the number of receivers (nrec) and
@@ -702,7 +702,7 @@
 
         ! allocates temporary source array
         allocate(adj_sourcearray(NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
-        if( ier /= 0 ) stop 'error allocating array adj_sourcearray'
+        if (ier /= 0) stop 'error allocating array adj_sourcearray'
 
         if (.not. SU_FORMAT) then
           !!! read ascii adjoint sources
@@ -763,9 +763,9 @@
         endif !if (.not. SU_FORMAT)
 
         deallocate(adj_sourcearray)
-      endif ! if(ibool_read_adj_arrays)
+      endif ! if (ibool_read_adj_arrays)
 
-      if( it < NSTEP ) then
+      if (it < NSTEP) then
         ! receivers act as sources
         ! on GPU
         call add_sources_ac_sim_2_or_3_cuda(Mesh_pointer,adj_sourcearrays,phase_is_inner, &
@@ -814,10 +814,10 @@
   endif
 
   ! master prints out source time function to file
-  if(PRINT_SOURCE_TIME_FUNCTION .and. phase_is_inner) then
+  if (PRINT_SOURCE_TIME_FUNCTION .and. phase_is_inner) then
     time_source = (it-1)*DT - t0
     call sum_all_cr(stf_used_total,stf_used_total_all)
-    if( myrank == 0 ) write(IOSTF,*) time_source,stf_used_total_all
+    if (myrank == 0) write(IOSTF,*) time_source,stf_used_total_all
   endif
 
   end subroutine compute_add_sources_acoustic_GPU

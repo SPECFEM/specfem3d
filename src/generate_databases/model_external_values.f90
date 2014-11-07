@@ -96,7 +96,7 @@
 !---
 
   ! the variables read are declared and stored in structure MEXT_V
-  !if(myrank == 0) call read_external_model()
+  !if (myrank == 0) call read_external_model()
 
   ! broadcast the information read on the master to the nodes
   !call bcast_all_dp(MEXT_V%dvs, size(MEXT_V%dvs))
@@ -241,14 +241,14 @@
 
 
     ! depth in Z-direction
-    if( distmin < HUGEVAL ) then
+    if (distmin < HUGEVAL) then
        depth = elevation - z
     else
        depth = zmin - z
     endif
 
     ! normalizes depth between 0 and 1
-    if( abs( zmax - zmin ) > TINYVAL ) depth = depth / (zmax - zmin)
+    if (abs( zmax - zmin ) > TINYVAL) depth = depth / (zmax - zmin)
 
     ! initial values (in m/s and kg/m^3)
     rho = 2691.0_CUSTOM_REAL

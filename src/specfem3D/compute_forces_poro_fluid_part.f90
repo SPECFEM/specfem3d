@@ -135,7 +135,7 @@
 
   real(kind=CUSTOM_REAL) :: mul_G,lambdal_G,lambdalplus2mul_G
 
-  if( iphase == 1 ) then
+  if (iphase == 1) then
     num_elements = nspec_outer_poroelastic
   else
     num_elements = nspec_inner_poroelastic
@@ -285,7 +285,7 @@
 
           ! compute stress tensor (include attenuation or anisotropy if needed)
 
-          !  if(VISCOATTENUATION) then
+          !  if (VISCOATTENUATION) then
           !chris:check
 
 ! Dissipation only controlled by frame share attenuation in poroelastic (see Morency & Tromp, GJI 2008).
@@ -308,7 +308,7 @@
 
           sigmap = C_biot*duxdxl_plus_duydyl_plus_duzdzl + M_biot*dwxdxl_plus_dwydyl_plus_dwzdzl
 
-          if(SIMULATION_TYPE == 3) then ! kernels calculation
+          if (SIMULATION_TYPE == 3) then ! kernels calculation
             epsilonw_trace_over_3(i,j,k,ispec) = ONE_THIRD * (duxdxl + duydyl + duzdzl)
             epsilonwdev_xx(i,j,k,ispec) = duxdxl - ONE_THIRD * (duxdxl + duydyl + duzdzl)
             epsilonwdev_yy(i,j,k,ispec) = duydyl - ONE_THIRD * (duxdxl + duydyl + duzdzl)
@@ -316,7 +316,7 @@
             epsilonwdev_xz(i,j,k,ispec) = 0.5 * duzdxl_plus_duxdzl
             epsilonwdev_yz(i,j,k,ispec) = 0.5 * duzdyl_plus_duydzl
           endif
-          !  endif !if(VISCOATTENUATION)
+          !  endif !if (VISCOATTENUATION)
 
           ! weak formulation term based on stress tensor (non-symmetric form)
 
@@ -489,7 +489,7 @@
             bl_relaxed(5) = etal_f*invpermlyz
             bl_relaxed(6) = etal_f*invpermlzz
 
-            ! if(VISCOATTENUATION) then
+            ! if (VISCOATTENUATION) then
             !   bl_unrelaxed(1) = etal_f*invpermlxx*theta_e/theta_s
             !   bl_unrelaxed(2) = etal_f*invpermlxz*theta_e/theta_s
             !   bl_unrelaxed(3) = etal_f*invpermlzz*theta_e/theta_s
@@ -501,7 +501,7 @@
 
             !      iglob = ibool(i,j,k,ispec)
 
-            !      if(VISCOATTENUATION) then
+            !      if (VISCOATTENUATION) then
             !        ! compute the viscous damping term with the unrelaxed viscous coef and add memory variable
             !        viscodampx = velocw_poroelastic(1,iglob)*bl_unrelaxed(1) &
             !                   + velocw_poroelastic(2,iglob)*bl_unrelaxed(2) &
@@ -531,7 +531,7 @@
                                         - wxgll(i)*wygll(j)*wzgll(k)*jacobian(i,j,k,ispec)*viscodampz
 
             !       ! if isolver == 1 .and. save_forward then b_viscodamp is saved in compute_forces_poro_fluid_part.f90
-            !       if(isolver == 2) then ! kernels calculation
+            !       if (isolver == 2) then ! kernels calculation
             !         b_accels_poroelastic(1,iglob) = b_accels_poroelastic(1,iglob) + phil/tortl*b_viscodampx(iglob)
             !         b_accels_poroelastic(2,iglob) = b_accels_poroelastic(2,iglob) + phil/tortl*b_viscodampz(iglob)
             !       endif
@@ -540,7 +540,7 @@
             !   enddo
             ! enddo
 
-          endif ! if(etal_f >0.d0) then
+          endif ! if (etal_f >0.d0) then
 
         enddo ! second loop over the GLL points
       enddo

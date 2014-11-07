@@ -68,7 +68,7 @@ subroutine compute_interpolated_dva(displ,veloc,accel,NGLOB_AB, &
   azd = ZERO
 
 ! takes closest GLL point only (no interpolation)
-  if(FASTER_RECEIVERS_POINTS_ONLY) then
+  if (FASTER_RECEIVERS_POINTS_ONLY) then
 
     iglob = ibool(nint(xi_r),nint(eta_r),nint(gamma_r),ispec)
 
@@ -169,7 +169,7 @@ subroutine compute_interpolated_dva_ac(displ_element,veloc_element,&
   azd = ZERO
 
 ! takes closest GLL point only (no interpolation)
-  if(FASTER_RECEIVERS_POINTS_ONLY) then
+  if (FASTER_RECEIVERS_POINTS_ONLY) then
 
     ! displacement
     dxd = displ_element(1,nint(xi_r),nint(eta_r),nint(gamma_r))

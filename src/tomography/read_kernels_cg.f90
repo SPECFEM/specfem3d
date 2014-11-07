@@ -47,7 +47,7 @@ subroutine read_kernels_cg_tiso_old()
            kernel_betav_old(NGLLX,NGLLY,NGLLZ,NSPEC), &
            kernel_betah_old(NGLLX,NGLLY,NGLLZ,NSPEC), &
            kernel_eta_old(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
-  if( ier /= 0 ) stop 'error allocating kernel arrays'
+  if (ier /= 0) stop 'error allocating kernel arrays'
 
   ! initializes arrays
   kernel_bulk_old = 0.0_CUSTOM_REAL
@@ -193,7 +193,7 @@ subroutine read_kernels_cg_tiso_old()
              model_dbetav_old(NGLLX,NGLLY,NGLLZ,NSPEC), &
              model_dbetah_old(NGLLX,NGLLY,NGLLZ,NSPEC), &
              model_deta_old(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
-    if( ier /= 0 ) stop 'error allocating gradient arrays'
+    if (ier /= 0) stop 'error allocating gradient arrays'
 
     ! initializes arrays
     model_dbulk_old = 0.0_CUSTOM_REAL

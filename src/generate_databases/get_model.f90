@@ -73,15 +73,15 @@
   ispec_is_poroelastic(:) = .false.
 
   ! prepares tomographic models if needed for elements with undefined material definitions
-  if( (nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO) .and. (.not. COUPLE_WITH_EXTERNAL_CODE) ) then
+  if ((nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO) .and. (.not. COUPLE_WITH_EXTERNAL_CODE)) then
     call model_tomography_broadcast(myrank)
   endif
 
   ! prepares external model values if needed
-  select case( IMODEL )
-  case( IMODEL_USER_EXTERNAL )
+  select case (IMODEL)
+  case (IMODEL_USER_EXTERNAL )
     call model_external_broadcast(myrank)
-  case( IMODEL_SALTON_TROUGH )
+  case (IMODEL_SALTON_TROUGH )
     call model_salton_trough_broadcast(myrank)
   end select
 
@@ -89,7 +89,7 @@
 !! find the # layer where the middle of the element is located
   if (COUPLE_WITH_EXTERNAL_CODE) then
 
-    if( (NGLLX == 5) .and. (NGLLY == 5) .and. (NGLLZ == 5) ) then
+    if ((NGLLX == 5) .and. (NGLLY == 5) .and. (NGLLZ == 5)) then
       ! gets xyz coordinates of GLL point
       iglob = ibool(3,3,3,1)
       xmesh = xstore_dummy(iglob)
@@ -179,7 +179,7 @@
 
           !! VM VM for coupling with DSM
           !! find the # layer where the middle of the element is located
-          if ( COUPLE_WITH_EXTERNAL_CODE .and. (i==3 .and. j==3 .and. k==3) ) call FindLayer(xmesh,ymesh,zmesh)
+          if (COUPLE_WITH_EXTERNAL_CODE .and. (i==3 .and. j==3 .and. k==3)) call FindLayer(xmesh,ymesh,zmesh)
 
           ! material index 1: associated material number
           ! 1 = acoustic, 2 = elastic, 3 = poroelastic, -1 = undefined tomographic
@@ -203,7 +203,7 @@
                                ANISOTROPY)
 
           ! stores velocity model
-          if(idomain_id == IDOMAIN_ACOUSTIC .or. idomain_id == IDOMAIN_ELASTIC) then
+          if (idomain_id == IDOMAIN_ACOUSTIC .or. idomain_id == IDOMAIN_ELASTIC) then
 
             ! elastic or acoustic material
 
@@ -274,10 +274,10 @@
             rho_vpII(i,j,k,ispec) = (rho_bar - phi/tort*rho_f)*sqrt(cpIIsquare)
             rho_vsI(i,j,k,ispec) = (rho_bar - phi/tort*rho_f)*sqrt(cssquare)
 
-          endif !if(idomain_id == IDOMAIN_ACOUSTIC .or. idomain_id == IDOMAIN_ELASTIC)
+          endif !if (idomain_id == IDOMAIN_ACOUSTIC .or. idomain_id == IDOMAIN_ELASTIC)
 
           ! stores anisotropic parameters
-          if( ANISOTROPY ) then
+          if (ANISOTROPY) then
             c11store(i,j,k,ispec) = c11
             c12store(i,j,k,ispec) = c12
             c13store(i,j,k,ispec) = c13
@@ -303,12 +303,12 @@
 
 
           ! stores material domain
-          select case( idomain_id )
-          case( IDOMAIN_ACOUSTIC )
+          select case (idomain_id )
+          case (IDOMAIN_ACOUSTIC )
             ispec_is_acoustic(ispec) = .true.
-          case( IDOMAIN_ELASTIC )
+          case (IDOMAIN_ELASTIC )
             ispec_is_elastic(ispec) = .true.
-          case( IDOMAIN_POROELASTIC )
+          case (IDOMAIN_POROELASTIC )
             ispec_is_poroelastic(ispec) = .true.
           case default
             stop 'Error material domain index'
@@ -319,8 +319,8 @@
     enddo
 
     ! user output
-    if(myrank == 0 ) then
-      if( mod(ispec,nspec/10) == 0 ) then
+    if (myrank == 0) then
+      if (mod(ispec,nspec/10) == 0) then
         tCPU = wtime() - time_start
         ! remaining
         tCPU = (10.0-ispec/(nspec/10.0))/ispec/(nspec/10.0)*tCPU
@@ -337,9 +337,9 @@
   ! checks material domains
   do ispec=1,nspec
     ! checks if domain is set
-    if( (ispec_is_acoustic(ispec) .eqv. .false.) &
+    if ((ispec_is_acoustic(ispec) .eqv. .false.) &
           .and. (ispec_is_elastic(ispec) .eqv. .false.) &
-          .and. (ispec_is_poroelastic(ispec) .eqv. .false.) ) then
+          .and. (ispec_is_poroelastic(ispec) .eqv. .false.)) then
       print*,'Error material domain not assigned to element:',ispec
       print*,'acoustic: ',ispec_is_acoustic(ispec)
       print*,'elastic: ',ispec_is_elastic(ispec)
@@ -347,11 +347,11 @@
       stop 'Error material domain index element'
     endif
     ! checks if domain is unique
-    if( ((ispec_is_acoustic(ispec) .eqv. .true.) .and. (ispec_is_elastic(ispec) .eqv. .true.)) .or. &
+    if (((ispec_is_acoustic(ispec) .eqv. .true.) .and. (ispec_is_elastic(ispec) .eqv. .true.)) .or. &
        ((ispec_is_acoustic(ispec) .eqv. .true.) .and. (ispec_is_poroelastic(ispec) .eqv. .true.)) .or. &
        ((ispec_is_poroelastic(ispec) .eqv. .true.) .and. (ispec_is_elastic(ispec) .eqv. .true.)) .or. &
        ((ispec_is_acoustic(ispec) .eqv. .true.) .and. (ispec_is_elastic(ispec) .eqv. .true.) .and. &
-       (ispec_is_poroelastic(ispec) .eqv. .true.)) ) then
+       (ispec_is_poroelastic(ispec) .eqv. .true.))) then
       print*,'Error material domain assigned twice to element:',ispec
       print*,'acoustic: ',ispec_is_acoustic(ispec)
       print*,'elastic: ',ispec_is_elastic(ispec)
@@ -367,7 +367,7 @@
   call any_all_l( ANY(ispec_is_poroelastic), POROELASTIC_SIMULATION )
 
   ! deallocates tomographic arrays
-  if( (nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO) .and. (.not. COUPLE_WITH_EXTERNAL_CODE) ) then
+  if ((nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO) .and. (.not. COUPLE_WITH_EXTERNAL_CODE)) then
     call deallocate_tomography_files()
   endif
 
@@ -436,7 +436,7 @@
   ! selects chosen velocity model
   select case (IMODEL)
 
-  case( IMODEL_DEFAULT,IMODEL_GLL,IMODEL_IPATI,IMODEL_IPATI_WATER, IMODEL_SEP )
+  case (IMODEL_DEFAULT,IMODEL_GLL,IMODEL_IPATI,IMODEL_IPATI_WATER, IMODEL_SEP )
     ! material values determined by mesh properties
     call model_default(materials_ext_mesh,nmat_ext_mesh, &
                        undef_mat_prop,nundefMat_ext_mesh, &
@@ -447,12 +447,12 @@
                        rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
                        phi,tort,kxx,kxy,kxz,kyy,kyz,kzz)
 
-  case( IMODEL_1D_PREM )
+  case (IMODEL_1D_PREM )
     ! 1D model profile from PREM
     call model_1D_prem_iso(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
     qkappa_atten = 9999.  ! undefined in this model
 
-  case( IMODEL_1D_PREM_PB )
+  case (IMODEL_1D_PREM_PB )
     ! 1D model profile from PREM modified by Piero
     imaterial_PB = abs(imaterial_id)
     call model_1D_PREM_routine_PB(xmesh,ymesh,zmesh,rho,vp,vs,imaterial_PB)
@@ -463,22 +463,22 @@
     read(undef_mat_prop(6,iundef),*) idomain_id
     qkappa_atten = 9999.  ! undefined in this model
 
-  case( IMODEL_1D_CASCADIA )
+  case (IMODEL_1D_CASCADIA )
     ! 1D model profile for Cascadia region
     call model_1D_cascadia(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
     qkappa_atten = 9999.  ! undefined in this model
 
-  case( IMODEL_1D_SOCAL )
+  case (IMODEL_1D_SOCAL )
     ! 1D model profile for Southern California
     call model_1D_socal(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
     qkappa_atten = 9999.  ! undefined in this model
 
-  case( IMODEL_SALTON_TROUGH )
+  case (IMODEL_SALTON_TROUGH )
     ! gets model values from tomography file
     call model_salton_trough(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
     qkappa_atten = 9999.  ! undefined in this model
 
-  case( IMODEL_TOMO )
+  case (IMODEL_TOMO )
     ! gets model values from tomography file
     call model_tomography(xmesh,ymesh,zmesh,rho,vp,vs,qkappa_atten,qmu_atten,imaterial_id,has_tomo_value)
 
@@ -489,7 +489,7 @@
       stop 'Error tomo model not found for material'
     endif
 
-  case( IMODEL_USER_EXTERNAL )
+  case (IMODEL_USER_EXTERNAL )
     ! user model from external routine
     ! adds/gets velocity model as specified in model_external_values.f90
     call model_external_values(xmesh,ymesh,zmesh,rho,vp,vs,qkappa_atten,qmu_atten,iflag_aniso,idomain_id)
@@ -555,8 +555,8 @@
   ! note: we read in these binary files after mesh coloring, since mesh coloring is permuting arrays.
   !          here, the ordering in **_vp.bin etc. can be permuted as they are outputted when saving mesh files
 
-  select case( IMODEL )
-  case( IMODEL_GLL )
+  select case (IMODEL)
+  case (IMODEL_GLL)
     ! note:
     ! import the model from files in SPECFEM format
     ! note that those those files should be saved in LOCAL_PATH
@@ -566,7 +566,7 @@
       call model_gll(myrank,nspec,LOCAL_PATH)
     endif
 
-  case( IMODEL_IPATI )
+  case (IMODEL_IPATI)
     ! import the model from modified files in SPECFEM format
     if (ADIOS_FOR_MESH) then
       call model_ipati_adios(myrank,nspec,LOCAL_PATH)
@@ -574,7 +574,7 @@
       call model_ipati(myrank,nspec,LOCAL_PATH)
     endif
 
-  case( IMODEL_IPATI_WATER )
+  case (IMODEL_IPATI_WATER)
     ! import the model from modified files in SPECFEM format
     if (ADIOS_FOR_MESH) then
       call model_ipati_water_adios(myrank,nspec,LOCAL_PATH)
@@ -582,7 +582,7 @@
       call model_ipati_water(myrank,nspec,LOCAL_PATH)
     endif
 
-  case( IMODEL_SEP)
+  case (IMODEL_SEP)
     ! use values from SEP files
     call model_sep()
 
