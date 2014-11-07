@@ -103,9 +103,12 @@
   call bcast_all_cr_for_database(jacobian(1,1,1,1), size(jacobian))
   call bcast_all_cr_for_database(kappastore(1,1,1,1), size(kappastore))
   call bcast_all_cr_for_database(mustore(1,1,1,1), size(mustore))
-  if (size(ispec_is_acoustic) > 0) call bcast_all_l_for_database(ispec_is_acoustic(1), size(ispec_is_acoustic))
-  if (size(ispec_is_elastic) > 0) call bcast_all_l_for_database(ispec_is_elastic(1), size(ispec_is_elastic))
-  if (size(ispec_is_poroelastic) > 0) call bcast_all_l_for_database(ispec_is_poroelastic(1), size(ispec_is_poroelastic))
+  if (size(ispec_is_acoustic) > 0) &
+    call bcast_all_l_for_database(ispec_is_acoustic(1), size(ispec_is_acoustic))
+  if (size(ispec_is_elastic) > 0) &
+    call bcast_all_l_for_database(ispec_is_elastic(1), size(ispec_is_elastic))
+  if (size(ispec_is_poroelastic) > 0) &
+    call bcast_all_l_for_database(ispec_is_poroelastic(1), size(ispec_is_poroelastic))
 
   ! acoustic
   ! number of acoustic elements in this partition
@@ -334,17 +337,28 @@
       read(27) rho_vpII
       read(27) rho_vsI
     endif
-    if (size(rmass_solid_poroelastic) > 0) call bcast_all_cr_for_database(rmass_solid_poroelastic(1), size(rmass_solid_poroelastic))
-    if (size(rmass_fluid_poroelastic) > 0) call bcast_all_cr_for_database(rmass_fluid_poroelastic(1), size(rmass_fluid_poroelastic))
-    if (size(rhoarraystore) > 0) call bcast_all_cr_for_database(rhoarraystore(1,1,1,1,1), size(rhoarraystore))
-    if (size(kappaarraystore) > 0) call bcast_all_cr_for_database(kappaarraystore(1,1,1,1,1), size(kappaarraystore))
-    if (size(etastore) > 0) call bcast_all_cr_for_database(etastore(1,1,1,1), size(etastore))
-    if (size(tortstore) > 0) call bcast_all_cr_for_database(tortstore(1,1,1,1), size(tortstore))
-    if (size(permstore) > 0) call bcast_all_cr_for_database(permstore(1,1,1,1,1), size(permstore))
-    if (size(phistore) > 0) call bcast_all_cr_for_database(phistore(1,1,1,1), size(phistore))
-    if (size(rho_vpI) > 0) call bcast_all_cr_for_database(rho_vpI(1,1,1,1), size(rho_vpI))
-    if (size(rho_vpII) > 0) call bcast_all_cr_for_database(rho_vpII(1,1,1,1), size(rho_vpII))
-    if (size(rho_vsI) > 0) call bcast_all_cr_for_database(rho_vsI(1,1,1,1), size(rho_vsI))
+    if (size(rmass_solid_poroelastic) > 0) &
+      call bcast_all_cr_for_database(rmass_solid_poroelastic(1), size(rmass_solid_poroelastic))
+    if (size(rmass_fluid_poroelastic) > 0) &
+      call bcast_all_cr_for_database(rmass_fluid_poroelastic(1), size(rmass_fluid_poroelastic))
+    if (size(rhoarraystore) > 0) &
+      call bcast_all_cr_for_database(rhoarraystore(1,1,1,1,1), size(rhoarraystore))
+    if (size(kappaarraystore) > 0) &
+      call bcast_all_cr_for_database(kappaarraystore(1,1,1,1,1), size(kappaarraystore))
+    if (size(etastore) > 0) &
+      call bcast_all_cr_for_database(etastore(1,1,1,1), size(etastore))
+    if (size(tortstore) > 0) &
+      call bcast_all_cr_for_database(tortstore(1,1,1,1), size(tortstore))
+    if (size(permstore) > 0) &
+      call bcast_all_cr_for_database(permstore(1,1,1,1,1), size(permstore))
+    if (size(phistore) > 0) &
+      call bcast_all_cr_for_database(phistore(1,1,1,1), size(phistore))
+    if (size(rho_vpI) > 0) &
+      call bcast_all_cr_for_database(rho_vpI(1,1,1,1), size(rho_vpI))
+    if (size(rho_vpII) > 0) &
+      call bcast_all_cr_for_database(rho_vpII(1,1,1,1), size(rho_vpII))
+    if (size(rho_vsI) > 0) &
+      call bcast_all_cr_for_database(rho_vsI(1,1,1,1), size(rho_vsI))
   endif
 
   ! checks simulation types are valid
@@ -490,11 +504,14 @@
         read(27) abs_boundary_jacobian2Dw
         read(27) abs_boundary_normal
       endif
-      if (size(abs_boundary_ispec) > 0) call bcast_all_i_for_database(abs_boundary_ispec(1), size(abs_boundary_ispec))
-      if (size(abs_boundary_ijk) > 0) call bcast_all_i_for_database(abs_boundary_ijk(1,1,1), size(abs_boundary_ijk))
+      if (size(abs_boundary_ispec) > 0) &
+        call bcast_all_i_for_database(abs_boundary_ispec(1), size(abs_boundary_ispec))
+      if (size(abs_boundary_ijk) > 0) &
+        call bcast_all_i_for_database(abs_boundary_ijk(1,1,1), size(abs_boundary_ijk))
       if (size(abs_boundary_jacobian2Dw) > 0) &
-            call bcast_all_cr_for_database(abs_boundary_jacobian2Dw(1,1), size(abs_boundary_jacobian2Dw))
-      if (size(abs_boundary_normal) > 0) call bcast_all_cr_for_database(abs_boundary_normal(1,1,1), size(abs_boundary_normal))
+        call bcast_all_cr_for_database(abs_boundary_jacobian2Dw(1,1), size(abs_boundary_jacobian2Dw))
+      if (size(abs_boundary_normal) > 0) &
+        call bcast_all_cr_for_database(abs_boundary_normal(1,1,1), size(abs_boundary_normal))
     endif
   else
     if (num_abs_boundary_faces > 0) then
@@ -504,11 +521,15 @@
         read(27) abs_boundary_jacobian2Dw
         read(27) abs_boundary_normal
       endif
-      if (size(abs_boundary_ispec) > 0) call bcast_all_i_for_database(abs_boundary_ispec(1), size(abs_boundary_ispec))
-      if (size(abs_boundary_ijk) > 0) call bcast_all_i_for_database(abs_boundary_ijk(1,1,1), size(abs_boundary_ijk))
+      if (size(abs_boundary_ispec) > 0) &
+        call bcast_all_i_for_database(abs_boundary_ispec(1), size(abs_boundary_ispec))
+      if (size(abs_boundary_ijk) > 0) &
+        call bcast_all_i_for_database(abs_boundary_ijk(1,1,1), size(abs_boundary_ijk))
       if (size(abs_boundary_jacobian2Dw) > 0) &
-            call bcast_all_cr_for_database(abs_boundary_jacobian2Dw(1,1), size(abs_boundary_jacobian2Dw))
-      if (size(abs_boundary_normal) > 0) call bcast_all_cr_for_database(abs_boundary_normal(1,1,1), size(abs_boundary_normal))
+        call bcast_all_cr_for_database(abs_boundary_jacobian2Dw(1,1), size(abs_boundary_jacobian2Dw))
+      if (size(abs_boundary_normal) > 0) &
+        call bcast_all_cr_for_database(abs_boundary_normal(1,1,1), size(abs_boundary_normal))
+
       if (STACEY_ABSORBING_CONDITIONS) then
         ! store mass matrix contributions
         if (ELASTIC_SIMULATION) then
@@ -578,11 +599,14 @@
       read(27) free_surface_jacobian2Dw
       read(27) free_surface_normal
     endif
-    if (size(free_surface_ispec) > 0) call bcast_all_i_for_database(free_surface_ispec(1), size(free_surface_ispec))
-    if (size(free_surface_ijk) > 0) call bcast_all_i_for_database(free_surface_ijk(1,1,1), size(free_surface_ijk))
+    if (size(free_surface_ispec) > 0) &
+      call bcast_all_i_for_database(free_surface_ispec(1), size(free_surface_ispec))
+    if (size(free_surface_ijk) > 0) &
+      call bcast_all_i_for_database(free_surface_ijk(1,1,1), size(free_surface_ijk))
     if (size(free_surface_jacobian2Dw) > 0) &
-            call bcast_all_cr_for_database(free_surface_jacobian2Dw(1,1), size(free_surface_jacobian2Dw))
-    if (size(free_surface_normal) > 0) call bcast_all_cr_for_database(free_surface_normal(1,1,1), size(free_surface_normal))
+      call bcast_all_cr_for_database(free_surface_jacobian2Dw(1,1), size(free_surface_jacobian2Dw))
+    if (size(free_surface_normal) > 0) &
+      call bcast_all_cr_for_database(free_surface_normal(1,1,1), size(free_surface_normal))
   endif
 
   ! acoustic-elastic coupling surface
@@ -600,11 +624,14 @@
       read(27) coupling_ac_el_jacobian2Dw
       read(27) coupling_ac_el_normal
     endif
-    if (size(coupling_ac_el_ispec) > 0) call bcast_all_i_for_database(coupling_ac_el_ispec(1), size(coupling_ac_el_ispec))
-    if (size(coupling_ac_el_ijk) > 0) call bcast_all_i_for_database(coupling_ac_el_ijk(1,1,1), size(coupling_ac_el_ijk))
+    if (size(coupling_ac_el_ispec) > 0) &
+      call bcast_all_i_for_database(coupling_ac_el_ispec(1), size(coupling_ac_el_ispec))
+    if (size(coupling_ac_el_ijk) > 0) &
+      call bcast_all_i_for_database(coupling_ac_el_ijk(1,1,1), size(coupling_ac_el_ijk))
     if (size(coupling_ac_el_jacobian2Dw) > 0) &
-            call bcast_all_cr_for_database(coupling_ac_el_jacobian2Dw(1,1), size(coupling_ac_el_jacobian2Dw))
-    if (size(coupling_ac_el_normal) > 0) call bcast_all_cr_for_database(coupling_ac_el_normal(1,1,1), size(coupling_ac_el_normal))
+      call bcast_all_cr_for_database(coupling_ac_el_jacobian2Dw(1,1), size(coupling_ac_el_jacobian2Dw))
+    if (size(coupling_ac_el_normal) > 0) &
+      call bcast_all_cr_for_database(coupling_ac_el_normal(1,1,1), size(coupling_ac_el_normal))
   endif
 
   ! acoustic-poroelastic coupling surface
@@ -622,11 +649,14 @@
       read(27) coupling_ac_po_jacobian2Dw
       read(27) coupling_ac_po_normal
     endif
-    if (size(coupling_ac_po_ispec) > 0) call bcast_all_i_for_database(coupling_ac_po_ispec(1), size(coupling_ac_po_ispec))
-    if (size(coupling_ac_po_ijk) > 0) call bcast_all_i_for_database(coupling_ac_po_ijk(1,1,1), size(coupling_ac_po_ijk))
+    if (size(coupling_ac_po_ispec) > 0) &
+      call bcast_all_i_for_database(coupling_ac_po_ispec(1), size(coupling_ac_po_ispec))
+    if (size(coupling_ac_po_ijk) > 0) &
+      call bcast_all_i_for_database(coupling_ac_po_ijk(1,1,1), size(coupling_ac_po_ijk))
     if (size(coupling_ac_po_jacobian2Dw) > 0) &
-            call bcast_all_cr_for_database(coupling_ac_po_jacobian2Dw(1,1), size(coupling_ac_po_jacobian2Dw))
-    if (size(coupling_ac_po_normal) > 0) call bcast_all_cr_for_database(coupling_ac_po_normal(1,1,1), size(coupling_ac_po_normal))
+      call bcast_all_cr_for_database(coupling_ac_po_jacobian2Dw(1,1), size(coupling_ac_po_jacobian2Dw))
+    if (size(coupling_ac_po_normal) > 0) &
+      call bcast_all_cr_for_database(coupling_ac_po_normal(1,1,1), size(coupling_ac_po_normal))
   endif
 
   ! elastic-poroelastic coupling surface
@@ -648,13 +678,18 @@
       read(27) coupling_el_po_jacobian2Dw
       read(27) coupling_el_po_normal
     endif
-    if (size(coupling_el_po_ispec) > 0) call bcast_all_i_for_database(coupling_el_po_ispec(1), size(coupling_el_po_ispec))
-    if (size(coupling_po_el_ispec) > 0) call bcast_all_i_for_database(coupling_po_el_ispec(1), size(coupling_po_el_ispec))
-    if (size(coupling_el_po_ijk) > 0) call bcast_all_i_for_database(coupling_el_po_ijk(1,1,1), size(coupling_el_po_ijk))
-    if (size(coupling_po_el_ijk) > 0) call bcast_all_i_for_database(coupling_po_el_ijk(1,1,1), size(coupling_po_el_ijk))
+    if (size(coupling_el_po_ispec) > 0) &
+      call bcast_all_i_for_database(coupling_el_po_ispec(1), size(coupling_el_po_ispec))
+    if (size(coupling_po_el_ispec) > 0) &
+      call bcast_all_i_for_database(coupling_po_el_ispec(1), size(coupling_po_el_ispec))
+    if (size(coupling_el_po_ijk) > 0) &
+      call bcast_all_i_for_database(coupling_el_po_ijk(1,1,1), size(coupling_el_po_ijk))
+    if (size(coupling_po_el_ijk) > 0) &
+      call bcast_all_i_for_database(coupling_po_el_ijk(1,1,1), size(coupling_po_el_ijk))
     if (size(coupling_el_po_jacobian2Dw) > 0) &
-            call bcast_all_cr_for_database(coupling_el_po_jacobian2Dw(1,1), size(coupling_el_po_jacobian2Dw))
-    if (size(coupling_el_po_normal) > 0) call bcast_all_cr_for_database(coupling_el_po_normal(1,1,1), size(coupling_el_po_normal))
+      call bcast_all_cr_for_database(coupling_el_po_jacobian2Dw(1,1), size(coupling_el_po_jacobian2Dw))
+    if (size(coupling_el_po_normal) > 0) &
+      call bcast_all_cr_for_database(coupling_el_po_normal(1,1,1), size(coupling_el_po_normal))
   endif
 
   ! MPI interfaces
@@ -673,11 +708,12 @@
       read(27) nibool_interfaces_ext_mesh
       read(27) ibool_interfaces_ext_mesh
     endif
-    if (size(my_neighbours_ext_mesh) > 0) call bcast_all_i_for_database(my_neighbours_ext_mesh(1), size(my_neighbours_ext_mesh))
+    if (size(my_neighbours_ext_mesh) > 0) &
+      call bcast_all_i_for_database(my_neighbours_ext_mesh(1), size(my_neighbours_ext_mesh))
     if (size(nibool_interfaces_ext_mesh) > 0) &
-            call bcast_all_i_for_database(nibool_interfaces_ext_mesh(1), size(nibool_interfaces_ext_mesh))
+      call bcast_all_i_for_database(nibool_interfaces_ext_mesh(1), size(nibool_interfaces_ext_mesh))
     if (size(ibool_interfaces_ext_mesh) > 0) &
-            call bcast_all_i_for_database(ibool_interfaces_ext_mesh(1,1), size(ibool_interfaces_ext_mesh))
+      call bcast_all_i_for_database(ibool_interfaces_ext_mesh(1,1), size(ibool_interfaces_ext_mesh))
   else
     max_nibool_interfaces_ext_mesh = 0
     allocate(ibool_interfaces_ext_mesh(0,0),stat=ier)
@@ -768,7 +804,7 @@
     if (num_phase_ispec_elastic > 0) then
       if (I_should_read_the_database) read(27) phase_ispec_inner_elastic
       if (size(phase_ispec_inner_elastic) > 0) &
-            call bcast_all_i_for_database(phase_ispec_inner_elastic(1,1), size(phase_ispec_inner_elastic))
+        call bcast_all_i_for_database(phase_ispec_inner_elastic(1,1), size(phase_ispec_inner_elastic))
     endif
   endif
 
@@ -786,7 +822,7 @@
     if (num_phase_ispec_poroelastic > 0) then
       if (I_should_read_the_database) read(27) phase_ispec_inner_poroelastic
       if (size(phase_ispec_inner_poroelastic) > 0) &
-            call bcast_all_i_for_database(phase_ispec_inner_poroelastic(1,1), size(phase_ispec_inner_poroelastic))
+        call bcast_all_i_for_database(phase_ispec_inner_poroelastic(1,1), size(phase_ispec_inner_poroelastic))
     endif
   endif
 
@@ -803,7 +839,7 @@
 
       if (I_should_read_the_database) read(27) num_elem_colors_acoustic
       if (size(num_elem_colors_acoustic) > 0) &
-            call bcast_all_i_for_database(num_elem_colors_acoustic(1), size(num_elem_colors_acoustic))
+        call bcast_all_i_for_database(num_elem_colors_acoustic(1), size(num_elem_colors_acoustic))
     endif
     ! elastic domain colors
     if (ELASTIC_SIMULATION) then
@@ -815,7 +851,8 @@
       if (ier /= 0) stop 'Error allocating num_elem_colors_elastic array'
 
       if (I_should_read_the_database) read(27) num_elem_colors_elastic
-      if (size(num_elem_colors_elastic) > 0) call bcast_all_i_for_database(num_elem_colors_elastic(1), size(num_elem_colors_elastic))
+      if (size(num_elem_colors_elastic) > 0) &
+        call bcast_all_i_for_database(num_elem_colors_elastic(1), size(num_elem_colors_elastic))
     endif
   else
     ! allocates dummy arrays
