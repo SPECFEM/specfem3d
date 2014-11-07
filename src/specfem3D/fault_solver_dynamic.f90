@@ -924,7 +924,7 @@ end subroutine rsf_update_state
 
 subroutine SCEC_Write_RuptureTime(dataXZ,iflt)
 
-  use :: specfem_par, only: OUTPUT_FILES_PATH
+  use specfem_par, only: OUTPUT_FILES_PATH
   type(dataXZ_type), intent(in) :: dataXZ
   integer, intent(in) :: iflt
 
@@ -1097,7 +1097,7 @@ end subroutine store_dataXZ
 !---------------------------------------------------------------
 subroutine write_dataXZ(dataXZ,itime,iflt)
 
-  use :: specfem_par, only: OUTPUT_FILES_PATH
+  use specfem_par, only: OUTPUT_FILES_PATH
   type(dataXZ_type), intent(in) :: dataXZ
   integer, intent(in) :: itime,iflt
 

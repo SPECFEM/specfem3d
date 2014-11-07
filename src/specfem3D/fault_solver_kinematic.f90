@@ -343,7 +343,7 @@ end subroutine init_dataXZ
 
 subroutine load_vslip_snapshots(dataXZ,itime,iflt)
 
-  use :: specfem_par, only: OUTPUT_FILES_PATH
+  use specfem_par, only: OUTPUT_FILES_PATH
   integer, intent(in) :: itime,iflt
   type(dataXZ_type), intent(inout) :: dataXZ
   character(len=MAX_STRING_LEN) :: filename
