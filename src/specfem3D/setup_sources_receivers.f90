@@ -190,7 +190,7 @@
     ! note: point force sources will give the dominant frequency in hdur,
     !       thus the main period is 1/hdur.
     !       also, these sources use a Ricker source time function instead of a gaussian.
-    !       for a Ricker source time function, a start time ~1.2 * main_period is a good choice
+    !       for a Ricker source time function, a start time ~1.2 * dominant_period is a good choice
     t0 = - 1.2d0 * minval(tshift_src(:) - 1.0d0/hdur(:))
   endif
 
@@ -326,11 +326,11 @@
     ! user output
     call any_all_l( is_on, is_on_all )
     if (myrank == 0 .and. is_on_all) then
-      write(IMAIN,*) '**********************************************************************'
+      write(IMAIN,*) '********************************************************************'
       write(IMAIN,*) '*** source: ',isource,'                                          ***'
       write(IMAIN,*) '*** Warning: acoustic source located exactly on the free surface ***'
-      write(IMAIN,*) '*** will be zeroed                                                                           ***'
-      write(IMAIN,*) '**********************************************************************'
+      write(IMAIN,*) '*** will be zeroed                                               ***'
+      write(IMAIN,*) '********************************************************************'
       write(IMAIN,*)
     endif
 
@@ -530,7 +530,7 @@
       ! limits user output if too many receivers
       if (nrec < 1000 .and. (.not. SU_FORMAT )) then
         write(IMAIN,*) '**********************************************************************'
-        write(IMAIN,*) '*** station:',irec,'                                          ***'
+        write(IMAIN,*) '*** station:',irec,'                                               ***'
         write(IMAIN,*) '*** Warning: acoustic receiver located exactly on the free surface ***'
         write(IMAIN,*) '*** Warning: tangential component will be zero there               ***'
         write(IMAIN,*) '**********************************************************************'
