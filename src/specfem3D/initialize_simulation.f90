@@ -393,6 +393,11 @@
   ! check simulation parameters
 
   ! checks number of sources for adjoint simulations
+  ! The limit below is somewhat arbitrary. For pure adjoint simulations (SIMULATION_TYPE == 2),
+  ! the code outputs displacement (S00001.NT.BXX.semd,..) and strains (S00001.NT.SEE.semd,..)
+  ! as well as source derivative kernels (src_frechet.00001,..) all for each point source.
+  ! The naming convention for these files uses (.., i6.6,..), which limits the number of sources to 999999.
+  ! If that is still too low, you can increase it further (if so, change all the occurrences of (.., i6.6,..) in the code).
   if (SIMULATION_TYPE /= 1 .and. NSOURCES > 999999) &
     call exit_MPI(myrank,'for adjoint simulations, NSOURCES <= 999999, if you need more change i6.6 in write_seismograms.f90')
 
