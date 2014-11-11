@@ -1,0 +1,45 @@
+OPT= -Wall -fbounds-check
+FC = gfortran
+CFLAGS= ${OPT}
+
+TAULIBDIR=ttimes_mod
+SACLIBDIR=${SACHOME}/lib
+
+LIBS= -lsacio -lsac -ltau -lm
+
+PROGS= flexwin
+default:${PROGS} 
+
+LIBSRC2=distaz.f user_parameters.f90  seismo_subs.f90  user_functions.f90 maxima.f90 travel_times.f90 io_subs.f90 select_windows_stalta2.f90
+
+
+LIB2=libmeasure2.a
+LIBOBJ2 = ${LIBSRC2:%.f=${LIB2}(%.o)} ${LIBSRC2:%.f90=${LIB2}(%.o)} \
+         ${LIBSRC2:%.F=${LIB2}(%.o)} 
+
+${LIB2}:${LIBOBJ2} 
+
+SUFFIXES = .f .o .f90 .F .mod
+.SUFFIXES: $(SUFFIXES)
+
+.f.o:
+	$(FC) ${CFLAGS} -c -o $@ $< 
+.F.o:
+	$(FC) ${CFLAGS} -c -o $@ $< 
+.f90.o:
+	$(FC) ${CFLAGS} -c -o $@ $< 
+
+
+flexwin:flexwin.f90 copy_float.o ${LIB2} 
+	$(FC) ${CFLAGS} flexwin.f90 -o flexwin copy_float.o ${LIB2} -L${TAULIBDIR} -L${SACLIBDIR} ${LIBS} 
+
+test: flexwin.f90 ${LIB2}
+	cd test_data; ./flexwin < input.test; ./plot_seismos_gmt.sh MEASURE/ABKT.II.LHZ
+
+clean:
+	rm -f  ${LIB2} ${PROGS} *.o *.mod
+
+cleanall:
+	rm -f  iasp91.*
+	cd $TAULIBDUR ; make -f make_gfortran clean
+

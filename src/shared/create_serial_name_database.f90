@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -28,14 +29,14 @@
 
 ! create name of the database for serial codes (AVS_DX and codes to check buffers)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer iproc,NPROC
 
 ! name of the database file
-  character(len=256) prname,procname,LOCAL_PATH,clean_LOCAL_PATH,serial_prefix,OUTPUT_FILES
+  character(len=MAX_STRING_LEN) :: prname,procname,LOCAL_PATH,clean_LOCAL_PATH,serial_prefix,OUTPUT_FILES
 
   integer iprocloop,nproc_max_loop
   integer, dimension(:), allocatable :: num_active_proc
@@ -46,11 +47,11 @@
   write(procname,"('/proc',i6.6,'_')") iproc
 
 ! on a Beowulf-type machine, path on frontend can be different from local paths
-  if(.not. LOCAL_PATH_IS_ALSO_GLOBAL) then
+  if (.not. LOCAL_PATH_IS_ALSO_GLOBAL) then
 
 ! allocate array for active processors
     allocate(num_active_proc(0:nproc_max_loop),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array num_active_proc'
+    if (ier /= 0) stop 'error allocating array num_active_proc'
 
 ! read filtered file with name of active machines
     open(unit=48,file=trim(OUTPUT_FILES)//'/filtered_machines.txt',status='old',action='read')
@@ -76,11 +77,8 @@
 ! on shared-memory machines, global path is the same as local path
   else
 
-! suppress white spaces if any
-    clean_LOCAL_PATH = adjustl(LOCAL_PATH)
-
 ! create full name with path
-    prname = clean_LOCAL_PATH(1:len_trim(clean_LOCAL_PATH)) // procname
+    prname = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // procname
 
   endif
 

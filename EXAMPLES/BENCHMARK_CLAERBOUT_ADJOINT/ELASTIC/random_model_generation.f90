@@ -31,7 +31,7 @@ program random_model
   call MPI_Comm_Size(MPI_COMM_WORLD,NPROC,ier)
 
   !! input parameters
-  if( iargc() .ne. 1 ) stop 'Usage: ./xrandom_model percent [must be small enough (~1d-5) for F*dm=S(m+dm)-S(m) to be valid]'
+  if( iargc() /= 1 ) stop 'Usage: ./xrandom_model percent [must be small enough (~1d-5) for F*dm=S(m+dm)-S(m) to be valid]'
   j=1;  call getarg(j, arg); read(arg,*,iostat=ios) percent;   if (ios /= 0) stop 'Error reading percent'
 
   ! processors name

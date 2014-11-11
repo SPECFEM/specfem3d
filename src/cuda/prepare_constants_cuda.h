@@ -4,10 +4,11 @@
  !               S p e c f e m 3 D  V e r s i o n  2 . 1
  !               ---------------------------------------
  !
- !          Main authors: Dimitri Komatitsch and Jeroen Tromp
- !    Princeton University, USA and CNRS / INRIA / University of Pau
- ! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
- !                             July 2012
+ !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+ !                        Princeton University, USA
+ !                and CNRS / University of Marseille, France
+ !                 (there are currently many more authors!)
+ ! (c) Princeton University and CNRS / University of Marseille, July 2012
  !
  ! This program is free software; you can redistribute it and/or modify
  ! it under the terms of the GNU General Public License as published by
@@ -26,8 +27,8 @@
  !=====================================================================
  */
 
-#ifndef CUDA_HEADER_H
-#define CUDA_HEADER_H
+#ifndef PREPARE_CONSTANTS_CUDA_H
+#define PREPARE_CONSTANTS_CUDA_H
 
 typedef float realw;  // type of "working" variables
 
@@ -106,7 +107,7 @@ void setConst_hprime_xx(realw* array,Mesh* mp)
 #else
   err = cudaGetSymbolAddress((void**)&(mp->d_hprime_xx),d_hprime_xx);
 #endif
-  if(err != cudaSuccess) {
+  if (err != cudaSuccess) {
     fprintf(stderr, "Error with d_hprime_xx: %s\n", cudaGetErrorString(err));
     exit(1);
   }
@@ -124,7 +125,7 @@ void setConst_hprime_xx(realw* array,Mesh* mp)
 //   }
 
 //   err = cudaGetSymbolAddress((void**)&(mp->d_hprime_yy),"d_hprime_yy");
-//   if(err != cudaSuccess) {
+//   if (err != cudaSuccess) {
 //     fprintf(stderr, "Error with d_hprime_yy: %s\n", cudaGetErrorString(err));
 //     exit(1);
 //   }
@@ -142,7 +143,7 @@ void setConst_hprime_xx(realw* array,Mesh* mp)
 //   }
 
 //   err = cudaGetSymbolAddress((void**)&(mp->d_hprime_zz),"d_hprime_zz");
-//   if(err != cudaSuccess) {
+//   if (err != cudaSuccess) {
 //     fprintf(stderr, "Error with d_hprime_zz: %s\n", cudaGetErrorString(err));
 //     exit(1);
 //   }
@@ -163,7 +164,7 @@ void setConst_hprimewgll_xx(realw* array,Mesh* mp)
 #else
   err = cudaGetSymbolAddress((void**)&(mp->d_hprimewgll_xx),d_hprimewgll_xx);
 #endif
-  if(err != cudaSuccess) {
+  if (err != cudaSuccess) {
     fprintf(stderr, "Error with d_hprimewgll_xx: %s\n", cudaGetErrorString(err));
     exit(1);
   }
@@ -181,7 +182,7 @@ void setConst_hprimewgll_yy(realw* array,Mesh* mp)
   }
 
   err = cudaGetSymbolAddress((void**)&(mp->d_hprimewgll_yy),"d_hprimewgll_yy");
-  if(err != cudaSuccess) {
+  if (err != cudaSuccess) {
     fprintf(stderr, "Error with d_hprimewgll_yy: %s\n", cudaGetErrorString(err));
     exit(1);
   }
@@ -200,7 +201,7 @@ void setConst_hprimewgll_zz(realw* array,Mesh* mp)
   }
 
   err = cudaGetSymbolAddress((void**)&(mp->d_hprimewgll_zz),"d_hprimewgll_zz");
-  if(err != cudaSuccess) {
+  if (err != cudaSuccess) {
     fprintf(stderr, "Error with d_hprimewgll_zz: %s\n", cudaGetErrorString(err));
     exit(1);
   }
@@ -221,7 +222,7 @@ void setConst_wgllwgll_xy(realw* array,Mesh* mp)
 #else
   err = cudaGetSymbolAddress((void**)&(mp->d_wgllwgll_xy),d_wgllwgll_xy);
 #endif
-  if(err != cudaSuccess) {
+  if (err != cudaSuccess) {
     fprintf(stderr, "Error with d_wgllwgll_xy: %s\n", cudaGetErrorString(err));
     exit(1);
   }
@@ -242,7 +243,7 @@ void setConst_wgllwgll_xz(realw* array,Mesh* mp)
 #else
   err = cudaGetSymbolAddress((void**)&(mp->d_wgllwgll_xz),d_wgllwgll_xz);
 #endif
-  if(err != cudaSuccess) {
+  if (err != cudaSuccess) {
     fprintf(stderr, "Error with d_wgllwgll_xz: %s\n", cudaGetErrorString(err));
     exit(1);
   }
@@ -263,7 +264,7 @@ void setConst_wgllwgll_yz(realw* array,Mesh* mp)
 #else
   err = cudaGetSymbolAddress((void**)&(mp->d_wgllwgll_yz),d_wgllwgll_yz);
 #endif
-  if(err != cudaSuccess) {
+  if (err != cudaSuccess) {
     fprintf(stderr, "Error with d_wgllwgll_yz: %s\n", cudaGetErrorString(err));
     exit(1);
   }
@@ -284,11 +285,11 @@ void setConst_wgll_cube(realw* array,Mesh* mp)
 #else
   err = cudaGetSymbolAddress((void**)&(mp->d_wgll_cube),d_wgll_cube);
 #endif
-  if(err != cudaSuccess) {
+  if (err != cudaSuccess) {
     fprintf(stderr, "Error with d_wgll_cube: %s\n", cudaGetErrorString(err));
     exit(1);
   }
 
 }
 
-#endif //CUDA_HEADER_H
+#endif

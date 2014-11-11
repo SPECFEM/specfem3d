@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -25,6 +26,11 @@
 !=====================================================================
 
 
+module model_ipati_adios_mod
+
+  use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,IMAIN,FOUR_THIRDS
+
+contains
 !-----------------------------------------------------------------------------
 !
 ! IPATI
@@ -34,15 +40,13 @@
 !------------------------------------------------------------------------------
 subroutine model_ipati_adios(myrank,nspec,LOCAL_PATH)
 
-  use mpi
   use adios_read_mod
   use create_regions_mesh_ext_par
-  use generate_databases_par, only: sizeprocs
 
   implicit none
 
   integer, intent(in) :: myrank,nspec
-  character(len=256) :: LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH
 
   ! local parameters
   real, dimension(:,:,:,:),allocatable :: vp_read,vs_read,rho_read
@@ -57,21 +61,19 @@ subroutine model_ipati_adios(myrank,nspec,LOCAL_PATH)
 
   ! user output
   if (myrank==0) then
-    write(IMAIN,*)
-    write(IMAIN,*) 'using external IPATI model from:',trim(LOCAL_PATH)
-    write(IMAIN,*) 'scaling factor: ',SCALING_FACTOR
-    write(IMAIN,*)
+    write(IMAIN,*) '     using IPATI model (ADIOS) from: ',trim(LOCAL_PATH)
+    write(IMAIN,*) '     scaling factor: ',SCALING_FACTOR
   endif
 
   ! density
   allocate( rho_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array rho_read'
+  if (ier /= 0) stop 'error allocating array rho_read'
   ! vp
   allocate( vp_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array vp_read'
+  if (ier /= 0) stop 'error allocating array vp_read'
   ! vs scaled from vp
   allocate( vs_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array vs_read'
+  if (ier /= 0) stop 'error allocating array vs_read'
 
   call read_model_vp_rho_adios(myrank, nspec, LOCAL_PATH, &
                                rho_read, vp_read)
@@ -101,7 +103,7 @@ subroutine model_ipati_water_adios(myrank,nspec,LOCAL_PATH)
   implicit none
 
   integer, intent(in) :: myrank,nspec
-  character(len=256) :: LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH
 
   ! local parameters
   real, dimension(:,:,:,:),allocatable :: vp_read,vs_read,rho_read
@@ -117,21 +119,19 @@ subroutine model_ipati_water_adios(myrank,nspec,LOCAL_PATH)
 
   ! user output
   if (myrank==0) then
-    write(IMAIN,*)
-    write(IMAIN,*) 'using external IPATI_WATER model from:',trim(LOCAL_PATH)
-    write(IMAIN,*) 'scaling factor: ',SCALING_FACTOR
-    write(IMAIN,*)
+    write(IMAIN,*) '     using IPATI_WATER model (ADIOS) from: ',trim(LOCAL_PATH)
+    write(IMAIN,*) '     scaling factor: ',SCALING_FACTOR
   endif
 
   ! density
   allocate( rho_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array rho_read'
+  if (ier /= 0) stop 'error allocating array rho_read'
   ! vp
   allocate( vp_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array vp_read'
+  if (ier /= 0) stop 'error allocating array vp_read'
   ! vs scaled from vp
   allocate( vs_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array vs_read'
+  if (ier /= 0) stop 'error allocating array vs_read'
 
   call read_model_vp_rho_adios(myrank, nspec, LOCAL_PATH, &
                                rho_read, vp_read)
@@ -143,7 +143,7 @@ subroutine model_ipati_water_adios(myrank,nspec,LOCAL_PATH)
   do ispec=1,nspec
     ! assumes water layer with acoustic elements are set properly
     ! only overwrites elastic elements
-    if( ispec_is_elastic(ispec)) then
+    if (ispec_is_elastic(ispec)) then
       ! isotropic model parameters
       rhostore(:,:,:,ispec) = rho_read(:,:,:,ispec)
       kappastore(:,:,:,ispec) = rhostore(:,:,:,ispec) * ( vp_read(:,:,:,ispec) * vp_read(:,:,:,ispec) &
@@ -159,36 +159,42 @@ subroutine model_ipati_water_adios(myrank,nspec,LOCAL_PATH)
 
 end subroutine model_ipati_water_adios
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
 subroutine read_model_vp_rho_adios (myrank, nspec, LOCAL_PATH, &
                                     rho_read, vp_read)
 
-  use mpi
   use adios_read_mod
   use create_regions_mesh_ext_par
-  use generate_databases_par, only: sizeprocs
 
   implicit none
 
   integer, intent(in) :: myrank,nspec
-  character(len=256), intent(in) :: LOCAL_PATH
+  character(len=MAX_STRING_LEN), intent(in) :: LOCAL_PATH
   real, dimension(:,:,:,:), intent(inout) :: vp_read,rho_read
 
   ! ADIOS stuffs
-  character(len=256) :: database_name
+  character(len=MAX_STRING_LEN) :: database_name
   integer(kind=8) :: handle, sel
   integer(kind=8), dimension(1) :: start, count_ad
   integer :: local_dim_rho, local_dim_vp
   integer :: ier
+  integer :: comm
+
+  ! gets mpi communicator
+  call world_get_comm(comm)
 
   !-------------------------------------.
   ! Open ADIOS Database file, read mode |
   !-------------------------------------'
-  database_name = adjustl(LOCAL_PATH)
-  database_name = database_name(1:len_trim(database_name)) //"/model_values.bp"
+  database_name = LOCAL_PATH(1:len_trim(LOCAL_PATH)) //"/model_values.bp"
 
-  call adios_read_init_method (ADIOS_READ_METHOD_BP, MPI_COMM_WORLD, &
+  call adios_read_init_method (ADIOS_READ_METHOD_BP, comm, &
                                "verbose=1", ier)
-  call adios_read_open_file (handle, database_name, 0, MPI_COMM_WORLD, ier)
+  call adios_read_open_file (handle, database_name, 0, comm, ier)
+  if (ier /= 0) call stop_all()
 
   !------------------------.
   ! Get the 'chunks' sizes |
@@ -208,6 +214,9 @@ subroutine read_model_vp_rho_adios (myrank, nspec, LOCAL_PATH, &
   ! Perform read and close the adios file |
   !---------------------------------------'
   call adios_perform_reads(handle, ier)
+  if (ier /= 0) call stop_all()
   call adios_read_close(handle,ier)
   call adios_read_finalize_method(ADIOS_READ_METHOD_BP, ier)
 end subroutine read_model_vp_rho_adios
+
+end module model_ipati_adios_mod

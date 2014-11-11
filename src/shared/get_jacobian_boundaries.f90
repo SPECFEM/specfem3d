@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -32,9 +33,9 @@
 
 ! returns jacobian2Dw_face and normal_face (pointing outwards of element)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: nspec,myrank,nglob
 
@@ -62,12 +63,12 @@
   double precision xelm(NGNOD2D),yelm(NGNOD2D),zelm(NGNOD2D)
 
 ! check that the parameter file is correct
-  if(NGNOD2D /= 4 .and. NGNOD2D /= 9) &
-       call exit_MPI(myrank,'surface elements should have 4 or 9 control nodes')
+  if (NGNOD2D /= 4 .and. NGNOD2D /= 9) &
+    call exit_MPI(myrank,'surface elements should have 4 or 9 control nodes')
 
-  select case ( iface )
+  select case (iface)
   ! on reference face: xmin
-  case(1)
+  case (1)
     xelm(1)=xstore_dummy( ibool(1,1,1,ispec) )
     yelm(1)=ystore_dummy( ibool(1,1,1,ispec) )
     zelm(1)=zstore_dummy( ibool(1,1,1,ispec) )
@@ -81,22 +82,22 @@
     yelm(4)=ystore_dummy( ibool(1,1,NGLLZ,ispec) )
     zelm(4)=zstore_dummy( ibool(1,1,NGLLZ,ispec) )
 
-    if(NGNOD2D == 9) then
-          xelm(5)=xstore_dummy( ibool(1,(NGLLY+1)/2,1,ispec) )
-          yelm(5)=ystore_dummy( ibool(1,(NGLLY+1)/2,1,ispec) )
-          zelm(5)=zstore_dummy( ibool(1,(NGLLY+1)/2,1,ispec) )
-          xelm(6)=xstore_dummy( ibool(1,NGLLY,(NGLLZ+1)/2,ispec) )
-          yelm(6)=ystore_dummy( ibool(1,NGLLY,(NGLLZ+1)/2,ispec) )
-          zelm(6)=zstore_dummy( ibool(1,NGLLY,(NGLLZ+1)/2,ispec) )
-          xelm(7)=xstore_dummy( ibool(1,(NGLLY+1)/2,NGLLZ,ispec) )
-          yelm(7)=ystore_dummy( ibool(1,(NGLLY+1)/2,NGLLZ,ispec) )
-          zelm(7)=zstore_dummy( ibool(1,(NGLLY+1)/2,NGLLZ,ispec) )
-          xelm(8)=xstore_dummy( ibool(1,1,(NGLLZ+1)/2,ispec) )
-          yelm(8)=ystore_dummy( ibool(1,1,(NGLLZ+1)/2,ispec) )
-          zelm(8)=zstore_dummy( ibool(1,1,(NGLLZ+1)/2,ispec) )
-          xelm(9)=xstore_dummy( ibool(1,(NGLLY+1)/2,(NGLLZ+1)/2,ispec) )
-          yelm(9)=ystore_dummy( ibool(1,(NGLLY+1)/2,(NGLLZ+1)/2,ispec) )
-          zelm(9)=zstore_dummy( ibool(1,(NGLLY+1)/2,(NGLLZ+1)/2,ispec) )
+    if (NGNOD2D == 9) then
+      xelm(5)=xstore_dummy( ibool(1,(NGLLY+1)/2,1,ispec) )
+      yelm(5)=ystore_dummy( ibool(1,(NGLLY+1)/2,1,ispec) )
+      zelm(5)=zstore_dummy( ibool(1,(NGLLY+1)/2,1,ispec) )
+      xelm(6)=xstore_dummy( ibool(1,NGLLY,(NGLLZ+1)/2,ispec) )
+      yelm(6)=ystore_dummy( ibool(1,NGLLY,(NGLLZ+1)/2,ispec) )
+      zelm(6)=zstore_dummy( ibool(1,NGLLY,(NGLLZ+1)/2,ispec) )
+      xelm(7)=xstore_dummy( ibool(1,(NGLLY+1)/2,NGLLZ,ispec) )
+      yelm(7)=ystore_dummy( ibool(1,(NGLLY+1)/2,NGLLZ,ispec) )
+      zelm(7)=zstore_dummy( ibool(1,(NGLLY+1)/2,NGLLZ,ispec) )
+      xelm(8)=xstore_dummy( ibool(1,1,(NGLLZ+1)/2,ispec) )
+      yelm(8)=ystore_dummy( ibool(1,1,(NGLLZ+1)/2,ispec) )
+      zelm(8)=zstore_dummy( ibool(1,1,(NGLLZ+1)/2,ispec) )
+      xelm(9)=xstore_dummy( ibool(1,(NGLLY+1)/2,(NGLLZ+1)/2,ispec) )
+      yelm(9)=ystore_dummy( ibool(1,(NGLLY+1)/2,(NGLLZ+1)/2,ispec) )
+      zelm(9)=zstore_dummy( ibool(1,(NGLLY+1)/2,(NGLLZ+1)/2,ispec) )
     endif
 
     call compute_jacobian_2D_face(myrank,xelm,yelm,zelm, &
@@ -104,7 +105,7 @@
                   jacobian2Dw_face,normal_face,NGLLY,NGLLZ,NGNOD2D)
 
 ! on boundary: xmax
-  case(2)
+  case (2)
     xelm(1)=xstore_dummy( ibool(NGLLX,1,1,ispec) )
     yelm(1)=ystore_dummy( ibool(NGLLX,1,1,ispec) )
     zelm(1)=zstore_dummy( ibool(NGLLX,1,1,ispec) )
@@ -118,22 +119,22 @@
     yelm(4)=ystore_dummy( ibool(NGLLX,1,NGLLZ,ispec) )
     zelm(4)=zstore_dummy( ibool(NGLLX,1,NGLLZ,ispec) )
 
-    if(NGNOD2D == 9) then
-          xelm(5)=xstore_dummy( ibool(NGLLX,(NGLLY+1)/2,1,ispec) )
-          yelm(5)=ystore_dummy( ibool(NGLLX,(NGLLY+1)/2,1,ispec) )
-          zelm(5)=zstore_dummy( ibool(NGLLX,(NGLLY+1)/2,1,ispec) )
-          xelm(6)=xstore_dummy( ibool(NGLLX,NGLLY,(NGLLZ+1)/2,ispec) )
-          yelm(6)=ystore_dummy( ibool(NGLLX,NGLLY,(NGLLZ+1)/2,ispec) )
-          zelm(6)=zstore_dummy( ibool(NGLLX,NGLLY,(NGLLZ+1)/2,ispec) )
-          xelm(7)=xstore_dummy( ibool(NGLLX,(NGLLY+1)/2,NGLLZ,ispec) )
-          yelm(7)=ystore_dummy( ibool(NGLLX,(NGLLY+1)/2,NGLLZ,ispec) )
-          zelm(7)=zstore_dummy( ibool(NGLLX,(NGLLY+1)/2,NGLLZ,ispec) )
-          xelm(8)=xstore_dummy( ibool(NGLLX,1,(NGLLZ+1)/2,ispec) )
-          yelm(8)=ystore_dummy( ibool(NGLLX,1,(NGLLZ+1)/2,ispec) )
-          zelm(8)=zstore_dummy( ibool(NGLLX,1,(NGLLZ+1)/2,ispec) )
-          xelm(9)=xstore_dummy( ibool(NGLLX,(NGLLY+1)/2,(NGLLZ+1)/2,ispec) )
-          yelm(9)=ystore_dummy( ibool(NGLLX,(NGLLY+1)/2,(NGLLZ+1)/2,ispec) )
-          zelm(9)=zstore_dummy( ibool(NGLLX,(NGLLY+1)/2,(NGLLZ+1)/2,ispec) )
+    if (NGNOD2D == 9) then
+      xelm(5)=xstore_dummy( ibool(NGLLX,(NGLLY+1)/2,1,ispec) )
+      yelm(5)=ystore_dummy( ibool(NGLLX,(NGLLY+1)/2,1,ispec) )
+      zelm(5)=zstore_dummy( ibool(NGLLX,(NGLLY+1)/2,1,ispec) )
+      xelm(6)=xstore_dummy( ibool(NGLLX,NGLLY,(NGLLZ+1)/2,ispec) )
+      yelm(6)=ystore_dummy( ibool(NGLLX,NGLLY,(NGLLZ+1)/2,ispec) )
+      zelm(6)=zstore_dummy( ibool(NGLLX,NGLLY,(NGLLZ+1)/2,ispec) )
+      xelm(7)=xstore_dummy( ibool(NGLLX,(NGLLY+1)/2,NGLLZ,ispec) )
+      yelm(7)=ystore_dummy( ibool(NGLLX,(NGLLY+1)/2,NGLLZ,ispec) )
+      zelm(7)=zstore_dummy( ibool(NGLLX,(NGLLY+1)/2,NGLLZ,ispec) )
+      xelm(8)=xstore_dummy( ibool(NGLLX,1,(NGLLZ+1)/2,ispec) )
+      yelm(8)=ystore_dummy( ibool(NGLLX,1,(NGLLZ+1)/2,ispec) )
+      zelm(8)=zstore_dummy( ibool(NGLLX,1,(NGLLZ+1)/2,ispec) )
+      xelm(9)=xstore_dummy( ibool(NGLLX,(NGLLY+1)/2,(NGLLZ+1)/2,ispec) )
+      yelm(9)=ystore_dummy( ibool(NGLLX,(NGLLY+1)/2,(NGLLZ+1)/2,ispec) )
+      zelm(9)=zstore_dummy( ibool(NGLLX,(NGLLY+1)/2,(NGLLZ+1)/2,ispec) )
     endif
 
     call compute_jacobian_2D_face(myrank,xelm,yelm,zelm, &
@@ -141,7 +142,7 @@
                   jacobian2Dw_face,normal_face,NGLLY,NGLLZ,NGNOD2D)
 
 ! on boundary: ymin
-  case(3)
+  case (3)
     xelm(1)=xstore_dummy( ibool(1,1,1,ispec) )
     yelm(1)=ystore_dummy( ibool(1,1,1,ispec) )
     zelm(1)=zstore_dummy( ibool(1,1,1,ispec) )
@@ -155,22 +156,22 @@
     yelm(4)=ystore_dummy( ibool(1,1,NGLLZ,ispec) )
     zelm(4)=zstore_dummy( ibool(1,1,NGLLZ,ispec) )
 
-    if(NGNOD2D == 9) then
-          xelm(5)=xstore_dummy( ibool((NGLLX+1)/2,1,1,ispec) )
-          yelm(5)=ystore_dummy( ibool((NGLLX+1)/2,1,1,ispec) )
-          zelm(5)=zstore_dummy( ibool((NGLLX+1)/2,1,1,ispec) )
-          xelm(6)=xstore_dummy( ibool(NGLLX,1,(NGLLZ+1)/2,ispec) )
-          yelm(6)=ystore_dummy( ibool(NGLLX,1,(NGLLZ+1)/2,ispec) )
-          zelm(6)=zstore_dummy( ibool(NGLLX,1,(NGLLZ+1)/2,ispec) )
-          xelm(7)=xstore_dummy( ibool((NGLLX+1)/2,1,NGLLZ,ispec) )
-          yelm(7)=ystore_dummy( ibool((NGLLX+1)/2,1,NGLLZ,ispec) )
-          zelm(7)=zstore_dummy( ibool((NGLLX+1)/2,1,NGLLZ,ispec) )
-          xelm(8)=xstore_dummy( ibool(1,1,(NGLLZ+1)/2,ispec) )
-          yelm(8)=ystore_dummy( ibool(1,1,(NGLLZ+1)/2,ispec) )
-          zelm(8)=zstore_dummy( ibool(1,1,(NGLLZ+1)/2,ispec) )
-          xelm(9)=xstore_dummy( ibool((NGLLX+1)/2,1,(NGLLZ+1)/2,ispec) )
-          yelm(9)=ystore_dummy( ibool((NGLLX+1)/2,1,(NGLLZ+1)/2,ispec) )
-          zelm(9)=zstore_dummy( ibool((NGLLX+1)/2,1,(NGLLZ+1)/2,ispec) )
+    if (NGNOD2D == 9) then
+      xelm(5)=xstore_dummy( ibool((NGLLX+1)/2,1,1,ispec) )
+      yelm(5)=ystore_dummy( ibool((NGLLX+1)/2,1,1,ispec) )
+      zelm(5)=zstore_dummy( ibool((NGLLX+1)/2,1,1,ispec) )
+      xelm(6)=xstore_dummy( ibool(NGLLX,1,(NGLLZ+1)/2,ispec) )
+      yelm(6)=ystore_dummy( ibool(NGLLX,1,(NGLLZ+1)/2,ispec) )
+      zelm(6)=zstore_dummy( ibool(NGLLX,1,(NGLLZ+1)/2,ispec) )
+      xelm(7)=xstore_dummy( ibool((NGLLX+1)/2,1,NGLLZ,ispec) )
+      yelm(7)=ystore_dummy( ibool((NGLLX+1)/2,1,NGLLZ,ispec) )
+      zelm(7)=zstore_dummy( ibool((NGLLX+1)/2,1,NGLLZ,ispec) )
+      xelm(8)=xstore_dummy( ibool(1,1,(NGLLZ+1)/2,ispec) )
+      yelm(8)=ystore_dummy( ibool(1,1,(NGLLZ+1)/2,ispec) )
+      zelm(8)=zstore_dummy( ibool(1,1,(NGLLZ+1)/2,ispec) )
+      xelm(9)=xstore_dummy( ibool((NGLLX+1)/2,1,(NGLLZ+1)/2,ispec) )
+      yelm(9)=ystore_dummy( ibool((NGLLX+1)/2,1,(NGLLZ+1)/2,ispec) )
+      zelm(9)=zstore_dummy( ibool((NGLLX+1)/2,1,(NGLLZ+1)/2,ispec) )
     endif
 
     call compute_jacobian_2D_face(myrank,xelm,yelm,zelm, &
@@ -178,7 +179,7 @@
                   jacobian2Dw_face,normal_face,NGLLX,NGLLZ,NGNOD2D)
 
 ! on boundary: ymax
-  case(4)
+  case (4)
     xelm(1)=xstore_dummy( ibool(1,NGLLY,1,ispec) )
     yelm(1)=ystore_dummy( ibool(1,NGLLY,1,ispec) )
     zelm(1)=zstore_dummy( ibool(1,NGLLY,1,ispec) )
@@ -192,22 +193,22 @@
     yelm(4)=ystore_dummy( ibool(1,NGLLY,NGLLZ,ispec) )
     zelm(4)=zstore_dummy( ibool(1,NGLLY,NGLLZ,ispec) )
 
-    if(NGNOD2D == 9) then
-          xelm(5)=xstore_dummy( ibool((NGLLX+1)/2,NGLLY,1,ispec) )
-          yelm(5)=ystore_dummy( ibool((NGLLX+1)/2,NGLLY,1,ispec) )
-          zelm(5)=zstore_dummy( ibool((NGLLX+1)/2,NGLLY,1,ispec) )
-          xelm(6)=xstore_dummy( ibool(NGLLX,NGLLY,(NGLLZ+1)/2,ispec) )
-          yelm(6)=ystore_dummy( ibool(NGLLX,NGLLY,(NGLLZ+1)/2,ispec) )
-          zelm(6)=zstore_dummy( ibool(NGLLX,NGLLY,(NGLLZ+1)/2,ispec) )
-          xelm(7)=xstore_dummy( ibool((NGLLX+1)/2,NGLLY,NGLLZ,ispec) )
-          yelm(7)=ystore_dummy( ibool((NGLLX+1)/2,NGLLY,NGLLZ,ispec) )
-          zelm(7)=zstore_dummy( ibool((NGLLX+1)/2,NGLLY,NGLLZ,ispec) )
-          xelm(8)=xstore_dummy( ibool(1,NGLLY,(NGLLZ+1)/2,ispec) )
-          yelm(8)=ystore_dummy( ibool(1,NGLLY,(NGLLZ+1)/2,ispec) )
-          zelm(8)=zstore_dummy( ibool(1,NGLLY,(NGLLZ+1)/2,ispec) )
-          xelm(9)=xstore_dummy( ibool((NGLLX+1)/2,NGLLY,(NGLLZ+1)/2,ispec) )
-          yelm(9)=ystore_dummy( ibool((NGLLX+1)/2,NGLLY,(NGLLZ+1)/2,ispec) )
-          zelm(9)=zstore_dummy( ibool((NGLLX+1)/2,NGLLY,(NGLLZ+1)/2,ispec) )
+    if (NGNOD2D == 9) then
+      xelm(5)=xstore_dummy( ibool((NGLLX+1)/2,NGLLY,1,ispec) )
+      yelm(5)=ystore_dummy( ibool((NGLLX+1)/2,NGLLY,1,ispec) )
+      zelm(5)=zstore_dummy( ibool((NGLLX+1)/2,NGLLY,1,ispec) )
+      xelm(6)=xstore_dummy( ibool(NGLLX,NGLLY,(NGLLZ+1)/2,ispec) )
+      yelm(6)=ystore_dummy( ibool(NGLLX,NGLLY,(NGLLZ+1)/2,ispec) )
+      zelm(6)=zstore_dummy( ibool(NGLLX,NGLLY,(NGLLZ+1)/2,ispec) )
+      xelm(7)=xstore_dummy( ibool((NGLLX+1)/2,NGLLY,NGLLZ,ispec) )
+      yelm(7)=ystore_dummy( ibool((NGLLX+1)/2,NGLLY,NGLLZ,ispec) )
+      zelm(7)=zstore_dummy( ibool((NGLLX+1)/2,NGLLY,NGLLZ,ispec) )
+      xelm(8)=xstore_dummy( ibool(1,NGLLY,(NGLLZ+1)/2,ispec) )
+      yelm(8)=ystore_dummy( ibool(1,NGLLY,(NGLLZ+1)/2,ispec) )
+      zelm(8)=zstore_dummy( ibool(1,NGLLY,(NGLLZ+1)/2,ispec) )
+      xelm(9)=xstore_dummy( ibool((NGLLX+1)/2,NGLLY,(NGLLZ+1)/2,ispec) )
+      yelm(9)=ystore_dummy( ibool((NGLLX+1)/2,NGLLY,(NGLLZ+1)/2,ispec) )
+      zelm(9)=zstore_dummy( ibool((NGLLX+1)/2,NGLLY,(NGLLZ+1)/2,ispec) )
     endif
 
     call compute_jacobian_2D_face(myrank,xelm,yelm,zelm, &
@@ -216,7 +217,7 @@
 
 
 ! on boundary: bottom
-  case(5)
+  case (5)
     xelm(1)=xstore_dummy( ibool(1,1,1,ispec) )
     yelm(1)=ystore_dummy( ibool(1,1,1,ispec) )
     zelm(1)=zstore_dummy( ibool(1,1,1,ispec) )
@@ -230,22 +231,22 @@
     yelm(4)=ystore_dummy( ibool(1,NGLLY,1,ispec) )
     zelm(4)=zstore_dummy( ibool(1,NGLLY,1,ispec) )
 
-    if(NGNOD2D == 9) then
-          xelm(5)=xstore_dummy( ibool((NGLLX+1)/2,1,1,ispec) )
-          yelm(5)=ystore_dummy( ibool((NGLLX+1)/2,1,1,ispec) )
-          zelm(5)=zstore_dummy( ibool((NGLLX+1)/2,1,1,ispec) )
-          xelm(6)=xstore_dummy( ibool(NGLLX,(NGLLY+1)/2,1,ispec) )
-          yelm(6)=ystore_dummy( ibool(NGLLX,(NGLLY+1)/2,1,ispec) )
-          zelm(6)=zstore_dummy( ibool(NGLLX,(NGLLY+1)/2,1,ispec) )
-          xelm(7)=xstore_dummy( ibool((NGLLX+1)/2,NGLLY,1,ispec) )
-          yelm(7)=ystore_dummy( ibool((NGLLX+1)/2,NGLLY,1,ispec) )
-          zelm(7)=zstore_dummy( ibool((NGLLX+1)/2,NGLLY,1,ispec) )
-          xelm(8)=xstore_dummy( ibool(1,(NGLLY+1)/2,1,ispec) )
-          yelm(8)=ystore_dummy( ibool(1,(NGLLY+1)/2,1,ispec) )
-          zelm(8)=zstore_dummy( ibool(1,(NGLLY+1)/2,1,ispec) )
-          xelm(9)=xstore_dummy( ibool((NGLLX+1)/2,(NGLLY+1)/2,1,ispec) )
-          yelm(9)=ystore_dummy( ibool((NGLLX+1)/2,(NGLLY+1)/2,1,ispec) )
-          zelm(9)=zstore_dummy( ibool((NGLLX+1)/2,(NGLLY+1)/2,1,ispec) )
+    if (NGNOD2D == 9) then
+      xelm(5)=xstore_dummy( ibool((NGLLX+1)/2,1,1,ispec) )
+      yelm(5)=ystore_dummy( ibool((NGLLX+1)/2,1,1,ispec) )
+      zelm(5)=zstore_dummy( ibool((NGLLX+1)/2,1,1,ispec) )
+      xelm(6)=xstore_dummy( ibool(NGLLX,(NGLLY+1)/2,1,ispec) )
+      yelm(6)=ystore_dummy( ibool(NGLLX,(NGLLY+1)/2,1,ispec) )
+      zelm(6)=zstore_dummy( ibool(NGLLX,(NGLLY+1)/2,1,ispec) )
+      xelm(7)=xstore_dummy( ibool((NGLLX+1)/2,NGLLY,1,ispec) )
+      yelm(7)=ystore_dummy( ibool((NGLLX+1)/2,NGLLY,1,ispec) )
+      zelm(7)=zstore_dummy( ibool((NGLLX+1)/2,NGLLY,1,ispec) )
+      xelm(8)=xstore_dummy( ibool(1,(NGLLY+1)/2,1,ispec) )
+      yelm(8)=ystore_dummy( ibool(1,(NGLLY+1)/2,1,ispec) )
+      zelm(8)=zstore_dummy( ibool(1,(NGLLY+1)/2,1,ispec) )
+      xelm(9)=xstore_dummy( ibool((NGLLX+1)/2,(NGLLY+1)/2,1,ispec) )
+      yelm(9)=ystore_dummy( ibool((NGLLX+1)/2,(NGLLY+1)/2,1,ispec) )
+      zelm(9)=zstore_dummy( ibool((NGLLX+1)/2,(NGLLY+1)/2,1,ispec) )
     endif
 
     call compute_jacobian_2D_face(myrank,xelm,yelm,zelm,&
@@ -253,7 +254,7 @@
                   jacobian2Dw_face,normal_face,NGLLX,NGLLY,NGNOD2D)
 
 ! on boundary: top
-  case(6)
+  case (6)
     xelm(1)=xstore_dummy( ibool(1,1,NGLLZ,ispec) )
     yelm(1)=ystore_dummy( ibool(1,1,NGLLZ,ispec) )
     zelm(1)=zstore_dummy( ibool(1,1,NGLLZ,ispec) )
@@ -267,22 +268,22 @@
     yelm(4)=ystore_dummy( ibool(1,NGLLY,NGLLZ,ispec) )
     zelm(4)=zstore_dummy( ibool(1,NGLLY,NGLLZ,ispec) )
 
-    if(NGNOD2D == 9) then
-          xelm(5)=xstore_dummy( ibool((NGLLX+1)/2,1,NGLLZ,ispec) )
-          yelm(5)=ystore_dummy( ibool((NGLLX+1)/2,1,NGLLZ,ispec) )
-          zelm(5)=zstore_dummy( ibool((NGLLX+1)/2,1,NGLLZ,ispec) )
-          xelm(6)=xstore_dummy( ibool(NGLLX,(NGLLY+1)/2,NGLLZ,ispec) )
-          yelm(6)=ystore_dummy( ibool(NGLLX,(NGLLY+1)/2,NGLLZ,ispec) )
-          zelm(6)=zstore_dummy( ibool(NGLLX,(NGLLY+1)/2,NGLLZ,ispec) )
-          xelm(7)=xstore_dummy( ibool((NGLLX+1)/2,NGLLY,NGLLZ,ispec) )
-          yelm(7)=ystore_dummy( ibool((NGLLX+1)/2,NGLLY,NGLLZ,ispec) )
-          zelm(7)=zstore_dummy( ibool((NGLLX+1)/2,NGLLY,NGLLZ,ispec) )
-          xelm(8)=xstore_dummy( ibool(1,(NGLLY+1)/2,NGLLZ,ispec) )
-          yelm(8)=ystore_dummy( ibool(1,(NGLLY+1)/2,NGLLZ,ispec) )
-          zelm(8)=zstore_dummy( ibool(1,(NGLLY+1)/2,NGLLZ,ispec) )
-          xelm(9)=xstore_dummy( ibool((NGLLX+1)/2,(NGLLY+1)/2,NGLLZ,ispec) )
-          yelm(9)=ystore_dummy( ibool((NGLLX+1)/2,(NGLLY+1)/2,NGLLZ,ispec) )
-          zelm(9)=zstore_dummy( ibool((NGLLX+1)/2,(NGLLY+1)/2,NGLLZ,ispec) )
+    if (NGNOD2D == 9) then
+      xelm(5)=xstore_dummy( ibool((NGLLX+1)/2,1,NGLLZ,ispec) )
+      yelm(5)=ystore_dummy( ibool((NGLLX+1)/2,1,NGLLZ,ispec) )
+      zelm(5)=zstore_dummy( ibool((NGLLX+1)/2,1,NGLLZ,ispec) )
+      xelm(6)=xstore_dummy( ibool(NGLLX,(NGLLY+1)/2,NGLLZ,ispec) )
+      yelm(6)=ystore_dummy( ibool(NGLLX,(NGLLY+1)/2,NGLLZ,ispec) )
+      zelm(6)=zstore_dummy( ibool(NGLLX,(NGLLY+1)/2,NGLLZ,ispec) )
+      xelm(7)=xstore_dummy( ibool((NGLLX+1)/2,NGLLY,NGLLZ,ispec) )
+      yelm(7)=ystore_dummy( ibool((NGLLX+1)/2,NGLLY,NGLLZ,ispec) )
+      zelm(7)=zstore_dummy( ibool((NGLLX+1)/2,NGLLY,NGLLZ,ispec) )
+      xelm(8)=xstore_dummy( ibool(1,(NGLLY+1)/2,NGLLZ,ispec) )
+      yelm(8)=ystore_dummy( ibool(1,(NGLLY+1)/2,NGLLZ,ispec) )
+      zelm(8)=zstore_dummy( ibool(1,(NGLLY+1)/2,NGLLZ,ispec) )
+      xelm(9)=xstore_dummy( ibool((NGLLX+1)/2,(NGLLY+1)/2,NGLLZ,ispec) )
+      yelm(9)=ystore_dummy( ibool((NGLLX+1)/2,(NGLLY+1)/2,NGLLZ,ispec) )
+      zelm(9)=zstore_dummy( ibool((NGLLX+1)/2,(NGLLY+1)/2,NGLLZ,ispec) )
     endif
 
     call compute_jacobian_2D_face(myrank,xelm,yelm,zelm,&
@@ -303,9 +304,9 @@
                                 dershape2D,wgllwgll, &
                                 jacobian2Dw_face,normal_face,NGLLA,NGLLB,NGNOD2D)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
 ! generic routine that accepts any polynomial degree in each direction
 ! returns 2D jacobian and normal for this face only
@@ -346,12 +347,12 @@
       uny=zxi*xeta-zeta*xxi
       unz=xxi*yeta-xeta*yxi
       jacobian=dsqrt(unx*unx+uny*uny+unz*unz)
-      if(jacobian <= ZERO) call exit_MPI(myrank,'2D Jacobian undefined')
+      if (jacobian <= ZERO) call exit_MPI(myrank,'2D Jacobian undefined')
 
       !   normalize normal vector and store weighted surface jacobian
 
       ! distinguish if single or double precision for reals
-      if(CUSTOM_REAL == SIZE_REAL) then
+      if (CUSTOM_REAL == SIZE_REAL) then
         jacobian2Dw_face(i,j) = sngl(jacobian * wgllwgll(i,j))
         normal_face(1,i,j)=sngl(unx/jacobian)
         normal_face(2,i,j)=sngl(uny/jacobian)

@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -33,8 +34,9 @@ subroutine compute_interpolated_dva(displ,veloc,accel,NGLOB_AB, &
 
 ! returns displacement/velocity/acceleration (dxd,..,vxd,..,axd,.. ) at receiver location
 
+  use constants
+
   implicit none
-  include 'constants.h'
 
   double precision,intent(out) :: dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd
 
@@ -66,7 +68,7 @@ subroutine compute_interpolated_dva(displ,veloc,accel,NGLOB_AB, &
   azd = ZERO
 
 ! takes closest GLL point only (no interpolation)
-  if(FASTER_RECEIVERS_POINTS_ONLY) then
+  if (FASTER_RECEIVERS_POINTS_ONLY) then
 
     iglob = ibool(nint(xi_r),nint(eta_r),nint(gamma_r),ispec)
 
@@ -129,8 +131,9 @@ subroutine compute_interpolated_dva_ac(displ_element,veloc_element,&
 ! acoustic elements
 ! returns displacement/velocity/pressure (dxd,..,vxd,..,axd,.. ) at receiver location
 
+  use constants
+
   implicit none
-  include 'constants.h'
 
   double precision,intent(out) :: dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd
 
@@ -166,7 +169,7 @@ subroutine compute_interpolated_dva_ac(displ_element,veloc_element,&
   azd = ZERO
 
 ! takes closest GLL point only (no interpolation)
-  if(FASTER_RECEIVERS_POINTS_ONLY) then
+  if (FASTER_RECEIVERS_POINTS_ONLY) then
 
     ! displacement
     dxd = displ_element(1,nint(xi_r),nint(eta_r),nint(gamma_r))

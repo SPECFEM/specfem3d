@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -33,16 +34,16 @@
 !! DK DK this routine could be improved by computing the mean in addition to min and max of ratios
 !! DK DK
 !! DK DK also, the particular treatment for sub-blocks in Gocad files, e.g.,
-!! DK DK if(IGNORE_OTHER_HEADERS .and. cubit_mesh_file == 'REGOLITE_only_no_fractures_2D_in_meters.inp' &
+!! DK DK if (IGNORE_OTHER_HEADERS .and. cubit_mesh_file == 'REGOLITE_only_no_fractures_2D_in_meters.inp' &
 !! DK DK                  .and. i == 28429)
 !! DK DK is not general at all and should be rewritten
 !! DK DK
 
   program check_mesh_quality_CUBIT_Abaqus
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
 !------------------------------------------------------------------------------------------------
 ! EDIT YOUR PARAMETERS BELOW HERE
@@ -52,9 +53,9 @@
 
 ! example: layered_halfspace
 !                 Cubit -> File -> Export... Abacus (*.inp)
-!                                         ( block ids: 1 2 3 ) volumes only
+!                                         ( block ids: 1 2 3) volumes only
 !                                         (optional: uncheck 'Export Using Cubit IDs' to have element IDs in increasing order)
-  character(len=100), parameter :: cubit_mesh_file = 'examples/layered_halfspace/layered_halfspace_mesh.inp'
+  character(len=*), parameter :: cubit_mesh_file = 'examples/layered_halfspace/layered_halfspace_mesh.inp'
   integer, parameter :: NPOIN = 76819                    ! number of nodes
   integer, parameter :: NSPEC = 70200                    ! number of elements (only volumes, i.e. block ids 1,2,3 )
   integer, parameter :: NGNOD = 8                        ! hexahedral elements
@@ -93,9 +94,9 @@
   integer :: ntotspecAVS_DX
   logical :: USE_OPENDX
 
-  character(len=256):: line
+  character(len=MAX_STRING_LEN) :: line
 
-  if(NGNOD /= 8) then
+  if (NGNOD /= 8) then
     print *,'error: check_mesh_quality_CUBIT_Abaqus only supports NGNOD == 8 for now'
     stop 'thus if NGNOD == 27, just run the solver without checking the mesh with this program'
   endif
@@ -108,36 +109,36 @@
   print *,'enter value:'
   read(5,*) iformat
 
-  if(iformat < 1 .or. iformat > 3) stop 'exiting...'
+  if (iformat < 1 .or. iformat > 3) stop 'exiting...'
 
-  if(iformat == 1 .or. iformat == 2) then
+  if (iformat == 1 .or. iformat == 2) then
     USE_OPENDX = .true.
   else
     USE_OPENDX = .false.
   endif
 
-  if(USE_OPENDX) then
+  if (USE_OPENDX) then
 
-    if(iformat == 1) then
+    if (iformat == 1) then
 
       ! read range of skewness used for elements
       print *,'enter minimum skewness for OpenDX (between 0. and 0.99):'
       read(5,*) skewness_AVS_DX_min
-      if(skewness_AVS_DX_min < 0.d0) skewness_AVS_DX_min = 0.d0
-      if(skewness_AVS_DX_min > 0.99999d0) skewness_AVS_DX_min = 0.99999d0
+      if (skewness_AVS_DX_min < 0.d0) skewness_AVS_DX_min = 0.d0
+      if (skewness_AVS_DX_min > 0.99999d0) skewness_AVS_DX_min = 0.99999d0
 
       !!!!!!!!  print *,'enter maximum skewness for OpenDX (between 0. and 1.):'
       !!!!!!!!!!!!!  read(5,*) skewness_AVS_DX_max
       skewness_AVS_DX_max = 0.99999d0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      if(skewness_AVS_DX_max < 0.d0) skewness_AVS_DX_max = 0.d0
-      if(skewness_AVS_DX_max > 0.99999d0) skewness_AVS_DX_max = 0.99999d0
+      if (skewness_AVS_DX_max < 0.d0) skewness_AVS_DX_max = 0.d0
+      if (skewness_AVS_DX_max > 0.99999d0) skewness_AVS_DX_max = 0.99999d0
 
-      if(skewness_AVS_DX_min > skewness_AVS_DX_max) stop 'incorrect skewness range'
+      if (skewness_AVS_DX_min > skewness_AVS_DX_max) stop 'incorrect skewness range'
 
     else
       print *,'enter the element number to output in OpenDX format between 1 and ',NSPEC
       read(5,*) ispec_to_output
-      if(ispec_to_output < 1 .or. ispec_to_output > NSPEC) stop 'incorrect element number to output'
+      if (ispec_to_output < 1 .or. ispec_to_output > NSPEC) stop 'incorrect element number to output'
     endif
 
   endif
@@ -173,18 +174,18 @@
   do i = 1,NPOIN
 
     ! reads in text line
-    read(10,'(a256)',iostat=ier) line
-    if(ier /= 0 ) then
+    read(10,'(a)',iostat=ier) line
+    if (ier /= 0) then
       print *,'error read line:',i
       stop 'error read points'
     endif
 
     ! checks if line is a comment line (starts with *), and reads until it finds a non-comment line
-    do while ( line(1:1) == "*" )
+    do while (line(1:1) == "*")
       ! skips comment line and goes to next line
       print*,'  comment:',trim(line)
-      read(10,'(a256)',iostat=ier) line
-      if(ier /= 0 ) then
+      read(10,'(a)',iostat=ier) line
+      if (ier /= 0) then
         print *,'error read non-comment line:',i
         stop 'error read points'
       endif
@@ -194,13 +195,13 @@
     read(line,*,iostat=ier) iread,xtmp,ytmp,ztmp
 
     ! checks
-    if(ier /= 0 ) then
+    if (ier /= 0) then
       print *,'error point read:',iread,i
       print*, 'line: ',trim(line)
       stop 'error read points from current line'
     endif
     ! checks if out-of-range
-    if(iread < 1 .or. iread > NPOIN ) then
+    if (iread < 1 .or. iread > NPOIN) then
       print *,'error at i,iread = ',i,iread
       stop 'wrong ID input for a point'
     endif
@@ -217,8 +218,8 @@
 
 ! skip the header
   !read(10,*)
-  read(10,'(a256)',iostat=ier) line
-  if( line(1:1) /= "*" ) then
+  read(10,'(a)',iostat=ier) line
+  if (line(1:1) /= "*") then
     print*,'  new line: ',trim(line)
     print*,'  not a header line, check the number of points NPOIN specified'
     stop 'error reading elements'
@@ -233,30 +234,30 @@
   do i = 1,NSPEC
 
     ! reads in element connectivity
-    if(NGNOD == 4) then
+    if (NGNOD == 4) then
 
       ! quadrangles
 
       !! DK DK ignore other headers for 2D mesh of Eros with fractures, which has multiple material sets
-      if(IGNORE_OTHER_HEADERS .and. cubit_mesh_file == 'eros_complexe_2d_regolite_fractures_modifie_in_meters.inp' &
+      if (IGNORE_OTHER_HEADERS .and. cubit_mesh_file == 'eros_complexe_2d_regolite_fractures_modifie_in_meters.inp' &
                  .and. i == 5709) read(10,*)
 
-      if(IGNORE_OTHER_HEADERS .and. cubit_mesh_file == 'REGOLITE_only_no_fractures_2D_in_meters.inp' &
+      if (IGNORE_OTHER_HEADERS .and. cubit_mesh_file == 'REGOLITE_only_no_fractures_2D_in_meters.inp' &
                  .and. i == 28429) read(10,*)
 
       ! reads in line
-      read(10,'(a256)',iostat=ier) line
-      if(ier /= 0 ) then
+      read(10,'(a)',iostat=ier) line
+      if (ier /= 0) then
         print *,'error read:',iread
         stop 'error read elements line'
       endif
 
       ! checks if line is a comment line (starts with *), and reads until it finds a non-comment line
-      do while ( line(1:1) == "*" )
+      do while (line(1:1) == "*")
         ! skips comment line and goes to next line
         print*,'  comment: ',trim(line)
-        read(10,'(a256)',iostat=ier) line
-        if(ier /= 0 ) then
+        read(10,'(a)',iostat=ier) line
+        if (ier /= 0) then
           print *,'error read:',i
           stop 'error read non-comment elements line'
         endif
@@ -266,12 +267,12 @@
       read(line,*,iostat=ier) iread,n1,n2,n3,n4
 
       ! checks
-      if(ier /= 0 ) then
+      if (ier /= 0) then
         print *,'error read:',iread
         stop 'error read elements'
       endif
       ! requires that elements are in increasing order
-      if(iread /= i) then
+      if (iread /= i) then
         print *,'error at i,iread = ',i,iread
         stop 'wrong input ID for an element'
       endif
@@ -282,26 +283,26 @@
       ibool(3,iread) = n3
       ibool(4,iread) = n4
 
-    else if(NGNOD == 8) then
+    else if (NGNOD == 8) then
 
       ! hexahedra
 
-      if(IGNORE_OTHER_HEADERS .and. cubit_mesh_file == 'rego3d_70_disp.inp' &
+      if (IGNORE_OTHER_HEADERS .and. cubit_mesh_file == 'rego3d_70_disp.inp' &
                  .and. i == 252929) read(10,*)
 
       ! reads in line
-      read(10,'(a256)',iostat=ier) line
-      if(ier /= 0 ) then
+      read(10,'(a)',iostat=ier) line
+      if (ier /= 0) then
         print *,'error read:',iread
         stop 'error read elements line'
       endif
 
       ! checks if line is a comment line (starts with *), and reads until it finds a non-comment line
-      do while ( line(1:1) == "*" )
+      do while (line(1:1) == "*")
         ! skips comment line and goes to next line
         print*,'  comment: ',trim(line)
-        read(10,'(a256)',iostat=ier) line
-        if(ier /= 0 ) then
+        read(10,'(a)',iostat=ier) line
+        if (ier /= 0) then
           print *,'error read:',i
           stop 'error read non-comment elements line'
         endif
@@ -311,19 +312,19 @@
       read(line,*,iostat=ier) iread,n1,n2,n3,n4,n5,n6,n7,n8
 
       ! checks
-      if(ier /= 0 ) then
+      if (ier /= 0) then
         print *,'error element read:',i
         print *,'line: ',trim(line)
         stop 'error read elements connectivity'
       endif
-      if( iread < 1 .or. iread > NSPEC ) then
+      if (iread < 1 .or. iread > NSPEC) then
         print *,'error at i,iread = ',i,iread
         stop 'wrong input ID for an element'
       endif
 
       ! if we analyze only the second layer of the mesh and ignore the first, shift iread
       ! so that it conforms with i
-      if(cubit_mesh_file == 'rego3d_70_disp_bedrock_only.inp') iread = iread - 252928
+      if (cubit_mesh_file == 'rego3d_70_disp_bedrock_only.inp') iread = iread - 252928
 
       ! stores element nodes
       ibool(1,iread) = n1
@@ -369,9 +370,9 @@
 ! loop on all the elements
   do ispec = 1,NSPEC
 
-    if(mod(ispec,100000) == 0) print *,'processed ',ispec,' elements out of ',NSPEC
+    if (mod(ispec,100000) == 0) print *,'processed ',ispec,' elements out of ',NSPEC
 
-    if(NGNOD == 4) then
+    if (NGNOD == 4) then
       call create_mesh_quality_data_2D(x,y,z,ibool,ispec,NSPEC,NPOIN,NGNOD,VP_MAX,delta_t, &
                equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax)
     else
@@ -380,8 +381,8 @@
     endif
 
 ! store element number in which the edge of minimum or maximum length is located
-    if(distmin < distance_min) ispec_min_edge_length = ispec
-    if(distmax > distance_max) ispec_max_edge_length = ispec
+    if (distmin < distance_min) ispec_min_edge_length = ispec
+    if (distmax > distance_max) ispec_max_edge_length = ispec
 
 ! compute minimum and maximum of quality numbers
     equiangle_skewness_min = min(equiangle_skewness_min,equiangle_skewness)
@@ -433,15 +434,15 @@
 ! print *,'min stability = ',stability_min
 
 ! max stability CFL value is different in 2D and in 3D
-  if(NGNOD == 8) then
+  if (NGNOD == 8) then
     max_CFL_stability_limit = 0.48d0
-  else if(NGNOD == 4) then
+  else if (NGNOD == 4) then
     max_CFL_stability_limit = 0.68d0
   else
     stop 'NGNOD must be 4 or 8'
   endif
 
-  if(stability_max >= max_CFL_stability_limit) then
+  if (stability_max >= max_CFL_stability_limit) then
     print *,'*********************************************'
     print *,'*********************************************'
     print *,' WARNING, that value is above the upper CFL limit of ',max_CFL_stability_limit
@@ -463,7 +464,7 @@
 ! loop on all the elements
   do ispec = 1,NSPEC
 
-    if(NGNOD == 4) then
+    if (NGNOD == 4) then
       call create_mesh_quality_data_2D(x,y,z,ibool,ispec,NSPEC,NPOIN,NGNOD,VP_MAX,delta_t, &
                equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax)
     else
@@ -473,8 +474,8 @@
 
 ! store skewness in histogram
     iclass = int(equiangle_skewness * dble(NCLASS))
-    if(iclass < 0) iclass = 0
-    if(iclass > NCLASS-1) iclass = NCLASS-1
+    if (iclass < 0) iclass = 0
+    if (iclass > NCLASS-1) iclass = NCLASS-1
     classes_skewness(iclass) = classes_skewness(iclass) + 1
 
   enddo
@@ -513,7 +514,7 @@
   print *
 
 ! display warning if maximum skewness is too high
-  if(equiangle_skewness_max >= 0.75d0) then
+  if (equiangle_skewness_max >= 0.75d0) then
     print *
     print *,'*********************************************'
     print *,'*********************************************'
@@ -523,17 +524,17 @@
     print *
   endif
 
-  if(total_percent < 99.9d0 .or. total_percent > 100.1d0) then
+  if (total_percent < 99.9d0 .or. total_percent > 100.1d0) then
     print *,'total percentage = ',total_percent,' %'
     stop 'total percentage should be 100%'
   endif
 
 ! ************* create OpenDX file with elements in a certain range of skewness
 
-  if(USE_OPENDX) then
+  if (USE_OPENDX) then
 
   print *
-  if(iformat == 1) then
+  if (iformat == 1) then
     print *,'creating OpenDX file with subset of elements in skewness range'
     print *,'between ',skewness_AVS_DX_min,' and ',skewness_AVS_DX_max
   else
@@ -547,11 +548,11 @@
   ntotspecAVS_DX = 0
 
 ! loop on all the elements
-  if(iformat == 1) then
+  if (iformat == 1) then
 
   do ispec = 1,NSPEC
 
-    if(NGNOD == 4) then
+    if (NGNOD == 4) then
       call create_mesh_quality_data_2D(x,y,z,ibool,ispec,NSPEC,NPOIN,NGNOD,VP_MAX,delta_t, &
                equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax)
     else
@@ -560,7 +561,7 @@
     endif
 
 ! check if element belongs to requested skewness range
-    if(equiangle_skewness >= skewness_AVS_DX_min .and. equiangle_skewness <= skewness_AVS_DX_max) &
+    if (equiangle_skewness >= skewness_AVS_DX_min .and. equiangle_skewness <= skewness_AVS_DX_max) &
         ntotspecAVS_DX = ntotspecAVS_DX + 1
 
   enddo
@@ -570,9 +571,9 @@
     ntotspecAVS_DX = 1
   endif
 
-  if(ntotspecAVS_DX == 0) then
+  if (ntotspecAVS_DX == 0) then
     stop 'no elements in skewness range, no file created'
-  else if(iformat == 1) then
+  else if (iformat == 1) then
     print *
     print *,'there are ',ntotspecAVS_DX,' elements in AVS or DX skewness range ',skewness_AVS_DX_min,skewness_AVS_DX_max
     print *
@@ -595,7 +596,7 @@
   write(11,*) 'object 2 class array type int rank 1 shape ',NGNOD,' items ',ntotspecAVS_DX,' data follows'
 
 ! loop on all the elements
-  if(iformat == 1) then
+  if (iformat == 1) then
     ispec_begin = 1
     ispec_end = NSPEC
   else
@@ -605,7 +606,7 @@
 
   do ispec = ispec_begin,ispec_end
 
-    if(NGNOD == 4) then
+    if (NGNOD == 4) then
       call create_mesh_quality_data_2D(x,y,z,ibool,ispec,NSPEC,NPOIN,NGNOD,VP_MAX,delta_t, &
                equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax)
     else
@@ -614,12 +615,12 @@
     endif
 
 ! check if element needs to be output
-    if(iformat == 2 .or. (iformat == 1 .and. &
+    if (iformat == 2 .or. (iformat == 1 .and. &
        equiangle_skewness >= skewness_AVS_DX_min .and. equiangle_skewness <= skewness_AVS_DX_max)) then
 ! point order in OpenDX in 2D is 1,4,2,3 *not* 1,2,3,4 as in AVS
 ! point order in OpenDX in 3D is 4,1,8,5,3,2,7,6, *not* 1,2,3,4,5,6,7,8 as in AVS
 ! in the case of OpenDX, node numbers start at zero
-      if(NGNOD == 4) then
+      if (NGNOD == 4) then
         write(11,"(i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9)") &
             ibool(1,ispec)-1, ibool(4,ispec)-1, ibool(2,ispec)-1, ibool(3,ispec)-1
       else
@@ -627,7 +628,7 @@
             ibool(4,ispec)-1, ibool(1,ispec)-1, ibool(8,ispec)-1, ibool(5,ispec)-1, &
             ibool(3,ispec)-1, ibool(2,ispec)-1, ibool(7,ispec)-1, ibool(6,ispec)-1
       endif
-      if(iformat == 1) print *,'element ',ispec,' belongs to the range and has skewness = ',sngl(equiangle_skewness)
+      if (iformat == 1) print *,'element ',ispec,' belongs to the range and has skewness = ',sngl(equiangle_skewness)
     endif
 
   enddo
@@ -635,7 +636,7 @@
 ! ************* generate element data values ******************
 
 ! output OpenDX header for data
-  if(NGNOD == 4) then
+  if (NGNOD == 4) then
     write(11,*) 'attribute "element type" string "quads"'
   else
     write(11,*) 'attribute "element type" string "cubes"'
@@ -646,7 +647,7 @@
 ! loop on all the elements
   do ispec = ispec_begin,ispec_end
 
-    if(NGNOD == 4) then
+    if (NGNOD == 4) then
       call create_mesh_quality_data_2D(x,y,z,ibool,ispec,NSPEC,NPOIN,NGNOD,VP_MAX,delta_t, &
                equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax)
     else
@@ -655,7 +656,7 @@
     endif
 
 ! check if element needs to be output
-    if(iformat == 2 .or. (iformat == 1 .and. &
+    if (iformat == 2 .or. (iformat == 1 .and. &
        equiangle_skewness >= skewness_AVS_DX_min .and. equiangle_skewness <= skewness_AVS_DX_max)) &
     write(11,*) sngl(equiangle_skewness)
 
@@ -685,9 +686,9 @@
   subroutine create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NPOIN,NGNOD,VP_MAX,delta_t, &
                equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: iface,icorner,ispec,NSPEC,NPOIN,NGNOD,i
 
@@ -742,7 +743,7 @@
   percent_GLL(:) = percent_GLL(:) / 100.d0
 
 ! check that the degree is not above the threshold for list of percentages
-  if(NGLLX > NGLL_MAX_STABILITY) stop 'degree too high to compute stability value'
+  if (NGLLX > NGLL_MAX_STABILITY) stop 'degree too high to compute stability value'
 
 ! define topology of faces of cube for skewness
 
@@ -847,9 +848,9 @@
   subroutine create_mesh_quality_data_2D(x,y,z,ibool,ispec,NSPEC,NPOIN,NGNOD,VP_MAX,delta_t, &
                equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: icorner,ispec,NSPEC,NPOIN,NGNOD,i
 
@@ -904,7 +905,7 @@
   percent_GLL(:) = percent_GLL(:) / 100.d0
 
 ! check that the degree is not above the threshold for list of percentages
-  if(NGLLX > NGLL_MAX_STABILITY) stop 'degree too high to compute stability value'
+  if (NGLLX > NGLL_MAX_STABILITY) stop 'degree too high to compute stability value'
 
 ! define topology of faces of cube for skewness
 

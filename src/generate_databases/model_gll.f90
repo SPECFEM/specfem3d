@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -37,16 +38,22 @@
 
   subroutine model_gll(myrank,nspec,LOCAL_PATH)
 
+  use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,FOUR_THIRDS,IMAIN
   use create_regions_mesh_ext_par
   implicit none
 
   integer, intent(in) :: myrank,nspec
-  character(len=256) :: LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH
 
   ! local parameters
   real, dimension(:,:,:,:),allocatable :: vp_read,vs_read,rho_read
   integer :: ier
-  character(len=256) :: prname_lp,filename
+  character(len=MAX_STRING_LEN) :: prname_lp,filename
+
+  ! user output
+  if (myrank==0) then
+    write(IMAIN,*) '     using GLL model from: ',trim(LOCAL_PATH)
+  endif
 
   ! processors name
   write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)// '/' //'proc',myrank,'_'
@@ -57,11 +64,11 @@
 
   ! density
   allocate( rho_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array rho_read'
+  if (ier /= 0) stop 'error allocating array rho_read'
 
   filename = prname_lp(1:len_trim(prname_lp))//'rho.bin'
   open(unit=28,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
-  if( ier /= 0 ) then
+  if (ier /= 0) then
     print*,'error opening file: ',trim(filename)
     stop 'error reading rho.bin file'
   endif
@@ -71,11 +78,11 @@
 
   ! vp
   allocate( vp_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array vp_read'
+  if (ier /= 0) stop 'error allocating array vp_read'
 
   filename = prname_lp(1:len_trim(prname_lp))//'vp.bin'
   open(unit=28,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
-  if( ier /= 0 ) then
+  if (ier /= 0) then
     print*,'error opening file: ',trim(filename)
     stop 'error reading vp.bin file'
   endif
@@ -85,11 +92,11 @@
 
   ! vs
   allocate( vs_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array vs_read'
+  if (ier /= 0) stop 'error allocating array vs_read'
 
   filename = prname_lp(1:len_trim(prname_lp))//'vs.bin'
   open(unit=28,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
-  if( ier /= 0 ) then
+  if (ier /= 0) then
     print*,'error opening file: ',trim(filename)
     stop 'error reading vs.bin file'
   endif
@@ -107,7 +114,7 @@
   !                      -0.4720 * (vp_read / 1000.0)**2  &
   !                      +0.0671 * (vp_read / 1000.0)**3  &
   !                      -0.0043 * (vp_read / 1000.0)**4  &
-  !                      +0.000106*(vp_read / 1000.0)**5 )*1000.0
+  !                      +0.000106*(vp_read / 1000.0)**5)*1000.0
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!! in cases where shear wavespeed structure is not given

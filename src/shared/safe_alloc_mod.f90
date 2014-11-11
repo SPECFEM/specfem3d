@@ -1,4 +1,29 @@
-
+!=====================================================================
+!
+!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               ---------------------------------------
+!
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
+!
+! This program is free software; you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation; either version 2 of the License, or
+! (at your option) any later version.
+!
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+!
+! You should have received a copy of the GNU General Public License along
+! with this program; if not, write to the Free Software Foundation, Inc.,
+! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+!
+!=====================================================================
 
 !==============================================================================
 !> \file  safe_alloc_mod.f90
@@ -110,15 +135,14 @@ contains
 !>
 subroutine check_alloc_err(ier, usr_msg)
   use iso_fortran_env, only : error_unit
-  use mpi
 
   integer, intent(in) :: ier
   character(len=*), intent(in), optional :: usr_msg
 
-  integer :: myrank, mpi_er
+  integer :: myrank
 
-  if(ier /= 0) then
-    call MPI_Comm_rank(MPI_COMM_WORLD, myrank, mpi_er)
+  if (ier /= 0) then
+    call world_rank(myrank)
     if (present(usr_msg)) then
       write(error_unit, "('Process ', i6.6, " // &
                         "': Allocation error. ', A)") myrank, usr_msg
@@ -126,8 +150,7 @@ subroutine check_alloc_err(ier, usr_msg)
       write(error_unit, "('Process ', i6.6, ': Allocation error. " // &
                         " No user message specified.')") myrank
     endif
-    !call exit(ier)
-    call MPI_Abort(MPI_COMM_WORLD, ier, mpi_er)
+    call stop_all()
   endif
 end subroutine check_alloc_err
 
@@ -135,15 +158,14 @@ end subroutine check_alloc_err
 !>
 subroutine check_dealloc_err(ier, usr_msg)
   use iso_fortran_env, only : error_unit
-  use mpi
 
   integer, intent(in) :: ier
   character(len=*), intent(in), optional :: usr_msg
 
-  integer :: myrank, mpi_er
+  integer :: myrank
 
-  if(ier /= 0) then
-    call MPI_Comm_rank(MPI_COMM_WORLD, myrank, mpi_er)
+  if (ier /= 0) then
+    call world_rank(myrank)
     if (present(usr_msg)) then
       write(error_unit, "('Process ', i6.6, " // &
                         "': Deallocation error. ', A)") myrank, usr_msg
@@ -151,8 +173,7 @@ subroutine check_dealloc_err(ier, usr_msg)
       write(error_unit, "('Process ', i6.6, ': Deallocation error. " // &
                         " No user message specified.')") myrank
     endif
-    !call exit(ier)
-    call MPI_Abort(MPI_COMM_WORLD, ier, mpi_er)
+    call stop_all()
   endif
 end subroutine check_dealloc_err
 

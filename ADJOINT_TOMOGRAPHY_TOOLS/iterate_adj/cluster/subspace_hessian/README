@@ -1,0 +1,9 @@
+Carl Tape, 17-June-2008
+
+Order of commands.
+(1) prepare_run.pl
+(2) run.lsf
+(3) move hessian files into HESSIANS to save
+(4) load Hessian file in /iterate_adj/matlab/subspace_hessian.m
+
+---------------------

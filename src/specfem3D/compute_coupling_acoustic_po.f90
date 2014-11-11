@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -37,8 +38,9 @@
 
 ! returns the updated pressure array: potential_dot_dot_acoustic
 
+  use constants
+
   implicit none
-  include 'constants.h'
 
   integer :: NSPEC_AB,NGLOB_AB
 
@@ -73,7 +75,7 @@
     ! gets corresponding elements
     ispec = coupling_ac_po_ispec(iface)
 
-    if( ispec_is_inner(ispec) .eqv. phase_is_inner ) then
+    if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
 
       ! loops over common GLL points
       do igll = 1, NGLLSQUARE

@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -35,7 +36,7 @@
 
   implicit none
 
-  character(len=256) procname,final_LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: procname,final_LOCAL_PATH
   integer :: irec_local,irec
 
   double precision, allocatable, dimension(:) :: x_found,y_found,z_found
@@ -46,49 +47,44 @@
   integer :: i,ier
 
   allocate(x_found(nrec),y_found(nrec),z_found(nrec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array x_found y_found z_found'
+  if (ier /= 0) stop 'error allocating arrays x_found y_found z_found'
 
   ! reads in station locations from output_list file
-  open(unit=IIN_SU1,file=trim(OUTPUT_FILES)//'/output_list_stations.txt',status='unknown',iostat=ier)
-  if( ier /= 0 ) stop 'error opening output_list_stations.txt file'
+  open(unit=IIN_SU1,file=trim(OUTPUT_FILES_PATH)//'/output_list_stations.txt',status='old',iostat=ier)
+  if (ier /= 0) stop 'error opening output_list_stations.txt file'
 
   do irec=1,nrec
-   read(IIN_SU1,*) x_found(irec),y_found(irec),z_found(irec)
+   read(IIN_SU1,*) station_name(irec),network_name(irec),x_found(irec),y_found(irec),z_found(irec)
   enddo
   close(IIN_SU1)
 
   ! reads in source locations from output_list file
-  open(unit=IIN_SU1,file=trim(OUTPUT_FILES)//'/output_list_sources.txt',status='unknown',iostat=ier)
-  if( ier /= 0 ) stop 'error opening output_list_sources.txt file'
+  open(unit=IIN_SU1,file=trim(OUTPUT_FILES_PATH)//'/output_list_sources.txt',status='old',iostat=ier)
+  if (ier /= 0) stop 'error opening output_list_sources.txt file'
 
   read(IIN_SU1,*) x_found_source,y_found_source,z_found_source
   close(IIN_SU1)
 
   ! directory to store seismograms
-  if( USE_OUTPUT_FILES_PATH ) then
-   final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'
-  else
-   ! create full final local path
-   final_LOCAL_PATH = trim(adjustl(LOCAL_PATH)) // '/'
-  endif
+  final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'
   write(procname,"(i4)") myrank
+  procname = adjustl(procname)
 
   allocate(rtmpseis(NSTEP),stat=ier)
-  if( ier /= 0 ) stop 'error allocating rtmpseis array'
+  if (ier /= 0) stop 'error allocating rtmpseis array'
 
   ! write seismograms (dx)
-  open(unit=IOUT_SU, file=trim(adjustl(final_LOCAL_PATH))//trim(adjustl(procname))//'_dx_SU' ,&
-      status='unknown', access='direct', recl=4, iostat=ier)
+  open(unit=IOUT_SU, file=trim(final_LOCAL_PATH)//trim(procname)//'_dx_SU' ,&
+       status='unknown', access='direct', recl=4, iostat=ier)
 
-  if( ier /= 0 ) stop 'error opening ***_dx_SU file'
+  if (ier /= 0) stop 'error opening ***_dx_SU file'
 
   ! receiver interval
-  if( nrec > 1) then
+  if (nrec > 1) then
     dx = SNGL(x_found(2)-x_found(1))
   else
     dx = 0.0
   endif
-
 
   do irec_local = 1,nrec_local
     irec = number_receiver_global(irec_local)
@@ -107,10 +103,10 @@
   close(IOUT_SU)
 
   ! write seismograms (dy)
-  open(unit=IOUT_SU, file=trim(adjustl(final_LOCAL_PATH))//trim(adjustl(procname))//'_dy_SU' ,&
-      status='unknown', access='direct', recl=4, iostat=ier)
+  open(unit=IOUT_SU, file=trim(final_LOCAL_PATH)//trim(procname)//'_dy_SU' ,&
+       status='unknown', access='direct', recl=4, iostat=ier)
 
-  if( ier /= 0 ) stop 'error opening ***_dy_SU file'
+  if (ier /= 0) stop 'error opening ***_dy_SU file'
 
   do irec_local = 1,nrec_local
     irec = number_receiver_global(irec_local)
@@ -128,10 +124,10 @@
   close(IOUT_SU)
 
   ! write seismograms (dz)
-  open(unit=IOUT_SU, file=trim(adjustl(final_LOCAL_PATH))//trim(adjustl(procname))//'_dz_SU' ,&
-      status='unknown', access='direct', recl=4, iostat=ier)
+  open(unit=IOUT_SU, file=trim(final_LOCAL_PATH)//trim(procname)//'_dz_SU' ,&
+       status='unknown', access='direct', recl=4, iostat=ier)
 
-  if( ier /= 0 ) stop 'error opening ***_dz_SU file'
+  if (ier /= 0) stop 'error opening ***_dz_SU file'
 
   do irec_local = 1,nrec_local
     irec = number_receiver_global(irec_local)
@@ -158,9 +154,10 @@
   subroutine write_SU_header(irec_local,irec,nrec,NSTEP,DT,dx, &
                              x_found,y_found,z_found,x_found_source,y_found_source,z_found_source)
 
-  implicit none
 
-  include "constants.h"
+  use constants
+
+  implicit none
 
   integer :: irec_local,irec,nrec
   integer :: NSTEP
@@ -188,16 +185,16 @@
 
   ! time steps
   header2(1)=0  ! dummy
-  header2(2)=NSTEP
+  header2(2)=int(NSTEP, kind=2)
   write(IOUT_SU,rec=(irec_local-1)*60+(irec_local-1)*NSTEP+29) header2
 
   ! time increment
-  if( NINT(DT*1.0d6) < 65536 ) then
-    header2(1)=NINT(DT*1.0d6)  ! deltat (unit: 10^{-6} second)
-  else if( NINT(DT*1.0d3) < 65536 ) then
-    header2(1)=NINT(DT*1.0d3)  ! deltat (unit: 10^{-3} second)
+  if (NINT(DT*1.0d6) < 65536) then
+    header2(1)=NINT(DT*1.0d6, kind=2)  ! deltat (unit: 10^{-6} second)
+  else if (NINT(DT*1.0d3) < 65536) then
+    header2(1)=NINT(DT*1.0d3, kind=2)  ! deltat (unit: 10^{-3} second)
   else
-    header2(1)=NINT(DT)  ! deltat (unit: 10^{0} second)
+    header2(1)=NINT(DT, kind=2)  ! deltat (unit: 10^{0} second)
   endif
   header2(2)=0  ! dummy
   write(IOUT_SU,rec=(irec_local-1)*60+(irec_local-1)*NSTEP+30) header2

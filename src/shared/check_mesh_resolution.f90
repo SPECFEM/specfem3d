@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -27,15 +28,15 @@
   subroutine check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
                                     kappastore,mustore,rho_vp,rho_vs, &
                                     DT, model_speed_max,min_resolved_period, &
-                                    LOCAL_PATH,SAVE_MESH_FILES )
+                                    LOCAL_PATH,SAVE_MESH_FILES)
 
 ! check the mesh, stability and resolved period for acoustic / elastic domains
 !
 ! returns: maximum velocity in model ( model_speed_max ), minimum_period_resolved
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: NSPEC_AB,NGLOB_AB
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: kappastore,mustore,rho_vp,rho_vs
@@ -44,7 +45,7 @@
   double precision :: DT
   real(kind=CUSTOM_REAL) :: model_speed_max,min_resolved_period
 
-  character(len=256):: LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH
   logical :: SAVE_MESH_FILES
 
   ! local parameters
@@ -56,18 +57,19 @@
   real(kind=CUSTOM_REAL) :: z_min,z_max,z_min_glob,z_max_glob
   real(kind=CUSTOM_REAL) :: cmax,cmax_glob,pmax,pmax_glob
   real(kind=CUSTOM_REAL) :: dt_suggested,dt_suggested_glob,avg_distance
+  real(kind=CUSTOM_REAL) :: vel_min,vel_max
 
   logical:: DT_PRESENT
 
   integer :: myrank
   integer :: NSPEC_AB_global_min,NSPEC_AB_global_max,NSPEC_AB_global_sum
   integer :: NGLOB_AB_global_min,NGLOB_AB_global_max,NGLOB_AB_global_sum
-  integer :: ispec !,sizeprocs
+  integer :: ispec
 
   !********************************************************************************
 
   ! empirical choice for distorted elements to estimate time step and period resolved:
-  ! courant number for time step estimate
+  ! Courant number for time step estimate
   real(kind=CUSTOM_REAL),parameter :: COURANT_SUGGESTED = 0.5 !! DK DK now that Stacey has been fixed, 0.3 is too low
   ! number of points per minimum wavelength for minimum period estimate
   real(kind=CUSTOM_REAL),parameter :: NPTS_PER_WAVELENGTH = 5
@@ -80,10 +82,17 @@
   ! debug: for vtk output
   real(kind=CUSTOM_REAL),dimension(:),allocatable :: tmp1,tmp2
   integer:: ier
-  character(len=256) :: filename,prname
+  character(len=MAX_STRING_LEN) :: filename,prname
+
+  ! timing
+  double precision, external :: wtime
+  double precision :: time_start,tCPU
+
+  ! timing gets MPI starting time
+  time_start = wtime()
 
   ! initializations
-  if( DT <= 0.0d0) then
+  if (DT <= 0.0d0) then
     DT_PRESENT = .false.
   else
     DT_PRESENT = .true.
@@ -118,10 +127,10 @@
   has_vs_zero = .false.
 
   ! debug: for vtk output
-  if( SAVE_MESH_FILES ) then
+  if (SAVE_MESH_FILES) then
     allocate(tmp1(NSPEC_AB),stat=ier)
     allocate(tmp2(NSPEC_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array tmp'
+    if (ier /= 0) stop 'error allocating array tmp'
     tmp1(:) = 0.0
     tmp2(:) = 0.0
   endif
@@ -137,7 +146,7 @@
   call sum_all_i(NGLOB_AB,NGLOB_AB_global_sum)
 
 ! outputs infos
-  if ( myrank == 0 ) then
+  if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) '********'
     write(IMAIN,*) 'minimum and maximum number of elements'
@@ -164,12 +173,12 @@
     call flush_IMAIN()
   endif
 
-  ! checks courant number & minimum resolved period for each grid cell
+  ! checks Courant number & minimum resolved period for each grid cell
   do ispec=1,NSPEC_AB
 
     ! determines minimum/maximum velocities within this element
     call get_vpvs_minmax(vpmin,vpmax,vsmin,vsmax,ispec,has_vs_zero, &
-                        NSPEC_AB,kappastore,mustore,rho_vp,rho_vs)
+                         NSPEC_AB,kappastore,mustore,rho_vp,rho_vs)
 
     ! min/max for whole cpu partition
     vpmin_glob = min(vpmin_glob, vpmin)
@@ -178,44 +187,12 @@
     vsmin_glob = min(vsmin_glob, vsmin)
     vsmax_glob = max(vsmax_glob, vsmax)
 
-    ! computes minimum and maximum distance of neighbor GLL points in this grid cell
-    call get_GLL_minmaxdistance(distance_min,distance_max,ispec, &
-                          NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
-
-    distance_min_glob = min(distance_min_glob, distance_min)
-    distance_max_glob = max(distance_max_glob, distance_max)
-
-    x_min_glob = minval(xstore)
-    x_max_glob = maxval(xstore)
-
-    y_min_glob = minval(ystore)
-    y_max_glob = maxval(ystore)
-
-    z_min_glob = minval(zstore)
-    z_max_glob = maxval(zstore)
-
     ! computes minimum and maximum size of this grid cell
     call get_elem_minmaxsize(elemsize_min,elemsize_max,ispec, &
-                          NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
+                             NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
 
     elemsize_min_glob = min(elemsize_min_glob, elemsize_min)
     elemsize_max_glob = max(elemsize_max_glob, elemsize_max)
-
-    ! courant number
-    ! based on minimum GLL point distance and maximum velocity
-    ! i.e. on the maximum ratio of ( velocity / gridsize )
-    if( DT_PRESENT ) then
-      cmax = max(vpmax,vsmax) * DT / distance_min
-      cmax_glob = max(cmax_glob,cmax)
-
-      ! debug: for vtk output
-      if( SAVE_MESH_FILES ) tmp1(ispec) = cmax
-    endif
-
-
-    ! suggested timestep
-    dt_suggested = COURANT_SUGGESTED * distance_min / max( vpmax,vsmax )
-    dt_suggested_glob = min( dt_suggested_glob, dt_suggested)
 
     ! estimation of minimum period resolved
     ! based on average GLL distance within element and minimum velocity
@@ -224,7 +201,7 @@
     ! "average number of points per minimum wavelength in an element should be around 5."
 
     ! average distance between GLL points within this element
-    avg_distance = elemsize_max / ( NGLLX - 1 )  ! since NGLLX = NGLLY = NGLLZ
+    avg_distance = elemsize_max / ( NGLLX - 1)  ! since NGLLX = NGLLY = NGLLZ
 
     ! largest possible minimum period such that number of points per minimum wavelength
     ! npts = ( min(vpmin,vsmin)  * pmax ) / avg_distance  is about ~ NPTS_PER_WAVELENGTH
@@ -234,15 +211,39 @@
     !          also, keep in mind that the minimum period is just an estimation and
     !          there is no such sharp cut-off period for valid synthetics.
     !          seismograms become just more and more inaccurate for periods shorter than this estimate.
-    pmax = avg_distance / min( vpmin,vsmin ) * NPTS_PER_WAVELENGTH
+    vel_min = min( vpmin,vsmin)
+    pmax = avg_distance / vel_min * NPTS_PER_WAVELENGTH
     pmax_glob = max(pmax_glob,pmax)
 
     ! old: based on GLL distance, i.e. on maximum ratio ( gridspacing / velocity )
     !pmax = distance_max / min( vpmin,vsmin ) * NELEM_PER_WAVELENGTH
     !pmax_glob = max(pmax_glob,pmax)
 
+    ! computes minimum and maximum distance of neighbor GLL points in this grid cell
+    call get_GLL_minmaxdistance(distance_min,distance_max,ispec, &
+                                NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
+
+    distance_min_glob = min(distance_min_glob, distance_min)
+    distance_max_glob = max(distance_max_glob, distance_max)
+
+    ! Courant number
+    ! based on minimum GLL point distance and maximum velocity
+    ! i.e. on the maximum ratio of ( velocity / gridsize )
+    if (DT_PRESENT) then
+      cmax = max(vpmax,vsmax) * DT / distance_min
+      cmax_glob = max(cmax_glob,cmax)
+
+      ! debug: for vtk output
+      if (SAVE_MESH_FILES) tmp1(ispec) = cmax
+    endif
+
+    ! suggested timestep
+    vel_max = max( vpmax,vsmax )
+    dt_suggested = COURANT_SUGGESTED * distance_min / vel_max
+    dt_suggested_glob = min( dt_suggested_glob, dt_suggested)
+
     ! debug: for vtk output
-    if( SAVE_MESH_FILES ) tmp2(ispec) = pmax
+    if (SAVE_MESH_FILES) tmp2(ispec) = pmax
 
   enddo
 
@@ -254,30 +255,14 @@
 
   ! Vs velocity
   vsmin = vsmin_glob
-  if( has_vs_zero ) vsmin = 0.0
+  if (has_vs_zero) vsmin = 0.0
 
   vsmax = vsmax_glob
   call min_all_cr(vsmin,vsmin_glob)
   call max_all_cr(vsmax,vsmax_glob)
 
-  ! checks velocities
-  if( myrank == 0 ) then
-    if( vpmin_glob <= 0.0_CUSTOM_REAL ) then
-      call exit_mpi(myrank,"error: vp minimum velocity")
-    endif
-    if( vpmax_glob >= HUGEVAL ) then
-      call exit_mpi(myrank,"error: vp maximum velocity")
-    endif
-    if( vsmin_glob < 0.0_CUSTOM_REAL ) then
-      call exit_mpi(myrank,"error: vs minimum velocity")
-    endif
-    if( vsmax_glob >= HUGEVAL ) then
-      call exit_mpi(myrank,"error: vs maximum velocity")
-    endif
-  endif
-
-! outputs infos
-  if ( myrank == 0 ) then
+  ! outputs infos
+  if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) '********'
     write(IMAIN,*) 'Model: P velocity min,max = ',vpmin_glob,vpmax_glob
@@ -299,21 +284,15 @@
   call min_all_cr(elemsize_min,elemsize_min_glob)
   call max_all_cr(elemsize_max,elemsize_max_glob)
 
-  ! checks mesh
-  if( myrank == 0 ) then
-    if( distance_min_glob <= 0.0_CUSTOM_REAL ) then
-      call exit_mpi(myrank,"error: GLL points minimum distance")
-    endif
-    if( distance_max_glob >= HUGEVAL ) then
-      call exit_mpi(myrank,"error: GLL points maximum distance")
-    endif
-    if( elemsize_min_glob <= 0.0_CUSTOM_REAL ) then
-      call exit_mpi(myrank,"error: element minimum size")
-    endif
-    if( elemsize_max_glob >= HUGEVAL ) then
-      call exit_mpi(myrank,"error: element maximum size")
-    endif
-  endif
+  ! model dimensions
+  x_min_glob = minval(xstore)
+  x_max_glob = maxval(xstore)
+
+  y_min_glob = minval(ystore)
+  y_max_glob = maxval(ystore)
+
+  z_min_glob = minval(zstore)
+  z_max_glob = maxval(zstore)
 
   ! min and max dimensions of the model
   x_min = x_min_glob
@@ -339,17 +318,15 @@
   dt_suggested = dt_suggested_glob
   call min_all_cr(dt_suggested,dt_suggested_glob)
 
-! determines global min/max values from all cpu partitions
-  if( DT_PRESENT ) then
-    ! courant number
+  ! determines global min/max values from all cpu partitions
+  if (DT_PRESENT) then
+    ! Courant number
     cmax = cmax_glob
     call max_all_cr(cmax,cmax_glob)
   endif
 
-  !call world_size(sizeprocs)
-
-! outputs infos
-  if ( myrank == 0 ) then
+  ! outputs infos
+  if (myrank == 0) then
     write(IMAIN,*) '*********************************************'
     write(IMAIN,*) '*** Verification of simulation parameters ***'
     write(IMAIN,*) '*********************************************'
@@ -369,7 +346,7 @@
     write(IMAIN,*) '*** Minimum period resolved = ',pmax_glob
     write(IMAIN,*) '*** Maximum suggested time step = ',dt_suggested_glob
     write(IMAIN,*)
-    if( DT_PRESENT ) then
+    if (DT_PRESENT) then
       write(IMAIN,*) '*** for DT : ',DT
       write(IMAIN,*) '*** Max stability for wave velocities = ',cmax_glob
       write(IMAIN,*)
@@ -377,9 +354,41 @@
     call flush_IMAIN()
   endif
 
+  ! checks velocities
+  if (myrank == 0) then
+    if (vpmin_glob <= 0.0_CUSTOM_REAL) then
+      call exit_mpi(myrank,"error: vp minimum velocity")
+    endif
+    if (vpmax_glob >= HUGEVAL) then
+      call exit_mpi(myrank,"error: vp maximum velocity")
+    endif
+    if (vsmin_glob < 0.0_CUSTOM_REAL) then
+      call exit_mpi(myrank,"error: vs minimum velocity")
+    endif
+    if (vsmax_glob >= HUGEVAL) then
+      call exit_mpi(myrank,"error: vs maximum velocity")
+    endif
+  endif
+
+  ! checks mesh
+  if (myrank == 0) then
+    if (distance_min_glob <= 0.0_CUSTOM_REAL) then
+      call exit_mpi(myrank,"error: GLL points minimum distance")
+    endif
+    if (distance_max_glob >= HUGEVAL) then
+      call exit_mpi(myrank,"error: GLL points maximum distance")
+    endif
+    if (elemsize_min_glob <= 0.0_CUSTOM_REAL) then
+      call exit_mpi(myrank,"error: element minimum size")
+    endif
+    if (elemsize_max_glob >= HUGEVAL) then
+      call exit_mpi(myrank,"error: element maximum size")
+    endif
+  endif
+
   ! returns the maximum velocity
-  if( myrank == 0 ) then
-    if( vpmax_glob > vsmax_glob ) then
+  if (myrank == 0) then
+    if (vpmax_glob > vsmax_glob) then
       model_speed_max = vpmax_glob
     else
       model_speed_max = vsmax_glob
@@ -390,25 +399,33 @@
   model_speed_max = tmp_val(1)
 
   ! returns minimum period
-  if( myrank == 0 ) min_resolved_period = pmax_glob
+  if (myrank == 0) min_resolved_period = pmax_glob
   tmp_val(1) = min_resolved_period
   call bcast_all_cr(tmp_val,1)
   min_resolved_period = tmp_val(1)
 
+  ! timing
+  tCPU = wtime() - time_start
+  if (myrank == 0) then
+    write(IMAIN,*) "Elapsed time for checking mesh resolution in seconds = ", tCPU
+    ! flushes file buffer for main output file (IMAIN)
+    call flush_IMAIN()
+  endif
+
   ! debug: for vtk output
-  if( SAVE_MESH_FILES ) then
+  if (SAVE_MESH_FILES) then
     call create_name_database(prname,myrank,LOCAL_PATH)
 
     ! user output
-    if ( myrank == 0 ) then
-      write(IMAIN,*) 'saving VTK files for courant number and minimum period'
+    if (myrank == 0) then
+      write(IMAIN,*) 'saving VTK files for Courant number and minimum period'
       write(IMAIN,*)
       call flush_IMAIN()
     endif
 
-    ! courant number
-    if( DT_PRESENT ) then
-      filename = trim(prname)//'res_courant_number'
+    ! Courant number
+    if (DT_PRESENT) then
+      filename = trim(prname)//'res_Courant_number'
       call write_VTK_data_elem_cr(NSPEC_AB,NGLOB_AB, &
                           xstore,ystore,zstore,ibool, &
                           tmp1,filename)
@@ -432,15 +449,15 @@
                                     DT, model_speed_max,min_resolved_period, &
                                     phistore,tortstore,rhoarraystore, &
                                     rho_vpI,rho_vpII,rho_vsI, &
-                                    LOCAL_PATH,SAVE_MESH_FILES )
+                                    LOCAL_PATH,SAVE_MESH_FILES)
 
 ! check the mesh, stability and resolved period for poroelastic domains
 !
 ! returns: maximum velocity in model ( model_speed_max ), minimum_period_resolved
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: NSPEC_AB,NGLOB_AB
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: rho_vpI,rho_vpII,rho_vsI
@@ -451,7 +468,7 @@
   double precision :: DT
   real(kind=CUSTOM_REAL) :: model_speed_max,min_resolved_period
 
-  character(len=256):: LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH
   logical :: SAVE_MESH_FILES
 
   ! local parameters
@@ -467,12 +484,12 @@
   integer :: myrank
   integer :: NSPEC_AB_global_min,NSPEC_AB_global_max,NSPEC_AB_global_sum
   integer :: NGLOB_AB_global_min,NGLOB_AB_global_max,NGLOB_AB_global_sum
-  integer :: ispec !,sizeprocs
+  integer :: ispec
 
   !********************************************************************************
 
   ! empirical choice for distorted elements to estimate time step and period resolved:
-  ! courant number for time step estimate
+  ! Courant number for time step estimate
   real(kind=CUSTOM_REAL),parameter :: COURANT_SUGGESTED = 0.5 !! DK DK now that Stacey has been fixed, 0.3 is too low
   ! number of points per minimum wavelength for minimum period estimate
   real(kind=CUSTOM_REAL),parameter :: NPTS_PER_WAVELENGTH = 5
@@ -486,10 +503,17 @@
   real(kind=CUSTOM_REAL),dimension(:),allocatable :: tmp1,tmp2
 
   integer:: ier
-  character(len=256) :: filename,prname
+  character(len=MAX_STRING_LEN) :: filename,prname
+
+  ! timing
+  double precision, external :: wtime
+  double precision :: time_start,tCPU
+
+  ! timing gets MPI starting time
+  time_start = wtime()
 
   ! initializations
-  if( DT <= 0.0d0) then
+  if (DT <= 0.0d0) then
     DT_PRESENT = .false.
   else
     DT_PRESENT = .true.
@@ -519,15 +543,15 @@
   has_vp2_zero = .false.
 
   ! debug: for vtk output
-  if( SAVE_MESH_FILES ) then
+  if (SAVE_MESH_FILES) then
     allocate(tmp1(NSPEC_AB),stat=ier)
     allocate(tmp2(NSPEC_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array tmp'
+    if (ier /= 0) stop 'error allocating array tmp'
     tmp1(:) = 0.0
     tmp2(:) = 0.0
   endif
 
-  ! checks courant number & minimum resolved period for each grid cell
+  ! checks Courant number & minimum resolved period for each grid cell
   do ispec=1,NSPEC_AB
 
     ! determines minimum/maximum velocities within this element
@@ -545,35 +569,12 @@
     vsmin_glob = min ( vsmin_glob, vsmin)
     vsmax_glob = max ( vsmax_glob, vsmax)
 
-    ! computes minimum and maximum distance of neighbor GLL points in this grid cell
-    call get_GLL_minmaxdistance(distance_min,distance_max,ispec, &
-                          NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
-
-    distance_min_glob = min( distance_min_glob, distance_min)
-    distance_max_glob = max( distance_max_glob, distance_max)
-
     ! computes minimum and maximum size of this grid cell
     call get_elem_minmaxsize(elemsize_min,elemsize_max,ispec, &
                           NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
 
     elemsize_min_glob = min( elemsize_min_glob, elemsize_min)
     elemsize_max_glob = max( elemsize_max_glob, elemsize_max)
-
-    ! courant number
-    ! based on minimum GLL point distance and maximum velocity
-    ! i.e. on the maximum ratio of ( velocity / gridsize )
-    if( DT_PRESENT ) then
-      cmax = max( vpmax,vp2max,vsmax ) * DT / distance_min
-      cmax_glob = max(cmax_glob,cmax)
-
-      ! debug: for vtk output
-      if( SAVE_MESH_FILES ) tmp1(ispec) = cmax
-
-    endif
-
-    ! suggested timestep
-    dt_suggested = COURANT_SUGGESTED * distance_min / max( vpmax,vp2max,vsmax )
-    dt_suggested_glob = min( dt_suggested_glob, dt_suggested)
 
     ! estimation of minimum period resolved
     ! based on average GLL distance within element and minimum velocity
@@ -582,7 +583,7 @@
     ! "average number of points per minimum wavelength in an element should be around 5."
 
     ! average distance between GLL points within this element
-    avg_distance = elemsize_max / ( NGLLX - 1 )  ! since NGLLX = NGLLY = NGLLZ
+    avg_distance = elemsize_max / ( NGLLX - 1)  ! since NGLLX = NGLLY = NGLLZ
 
     ! largest possible minimum period such that number of points per minimum wavelength
     ! npts = ( min(vpmin,vp2min,vsmin)  * pmax ) / avg_distance  is about ~ NPTS_PER_WAVELENGTH
@@ -593,9 +594,9 @@
     !          there is no such sharp cut-off period for valid synthetics.
     !          seismograms become just more and more inaccurate for periods shorter than this estimate.
     if (has_vp2_zero) then
-        pmax = avg_distance / min( vpmin,vsmin ) * NPTS_PER_WAVELENGTH
+      pmax = avg_distance / min( vpmin,vsmin ) * NPTS_PER_WAVELENGTH
     else
-        pmax = avg_distance / min( vpmin,vp2min,vsmin ) * NPTS_PER_WAVELENGTH
+      pmax = avg_distance / min( vpmin,vp2min,vsmin ) * NPTS_PER_WAVELENGTH
     endif
     pmax_glob = max(pmax_glob,pmax)
 
@@ -603,14 +604,37 @@
     !pmax = distance_max / min( vpmin,vsmin ) * NELEM_PER_WAVELENGTH
     !pmax_glob = max(pmax_glob,pmax)
 
+    ! computes minimum and maximum distance of neighbor GLL points in this grid cell
+    call get_GLL_minmaxdistance(distance_min,distance_max,ispec, &
+                          NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
+
+    distance_min_glob = min( distance_min_glob, distance_min)
+    distance_max_glob = max( distance_max_glob, distance_max)
+
+    ! Courant number
+    ! based on minimum GLL point distance and maximum velocity
+    ! i.e. on the maximum ratio of ( velocity / gridsize )
+    if (DT_PRESENT) then
+      cmax = max( vpmax,vp2max,vsmax ) * DT / distance_min
+      cmax_glob = max(cmax_glob,cmax)
+
+      ! debug: for vtk output
+      if (SAVE_MESH_FILES) tmp1(ispec) = cmax
+
+    endif
+
+    ! suggested timestep
+    dt_suggested = COURANT_SUGGESTED * distance_min / max( vpmax,vp2max,vsmax )
+    dt_suggested_glob = min( dt_suggested_glob, dt_suggested)
+
     ! debug: for vtk output
-    if( SAVE_MESH_FILES ) tmp2(ispec) = pmax
+    if (SAVE_MESH_FILES) tmp2(ispec) = pmax
 
   enddo
 
 ! determines global min/max values from all cpu partitions
-  if( DT_PRESENT ) then
-    ! courant number
+  if (DT_PRESENT) then
+    ! Courant number
     cmax = cmax_glob
     call max_all_cr(cmax,cmax_glob)
   endif
@@ -631,7 +655,7 @@
 
   ! Vp2 velocity (relevant for poroelastic cases)
   vp2min = vp2min_glob
-  if( has_vp2_zero ) vp2min = 0.0
+  if (has_vp2_zero) vp2min = 0.0
 
   vp2max = vp2max_glob
   call min_all_cr(vp2min,vp2min_glob)
@@ -639,30 +663,30 @@
 
   ! Vs velocity
   vsmin = vsmin_glob
-  if( has_vs_zero ) vsmin = 0.0
+  if (has_vs_zero) vsmin = 0.0
 
   vsmax = vsmax_glob
   call min_all_cr(vsmin,vsmin_glob)
   call max_all_cr(vsmax,vsmax_glob)
 
   ! checks velocities
-  if( myrank == 0 ) then
-    if( vpmin_glob <= 0.0_CUSTOM_REAL ) then
+  if (myrank == 0) then
+    if (vpmin_glob <= 0.0_CUSTOM_REAL) then
       call exit_mpi(myrank,"error: vp minimum velocity")
     endif
-    if( vpmax_glob >= HUGEVAL ) then
+    if (vpmax_glob >= HUGEVAL) then
       call exit_mpi(myrank,"error: vp maximum velocity")
     endif
-    if( vp2min_glob < 0.0_CUSTOM_REAL ) then
+    if (vp2min_glob < 0.0_CUSTOM_REAL) then
       call exit_mpi(myrank,"error: vp2 minimum velocity")
     endif
-    if( vp2max_glob >= HUGEVAL ) then
+    if (vp2max_glob >= HUGEVAL) then
       call exit_mpi(myrank,"error: vp2 maximum velocity")
     endif
-    if( vsmin_glob < 0.0_CUSTOM_REAL ) then
+    if (vsmin_glob < 0.0_CUSTOM_REAL) then
       call exit_mpi(myrank,"error: vs minimum velocity")
     endif
-    if( vsmax_glob >= HUGEVAL ) then
+    if (vsmax_glob >= HUGEVAL) then
       call exit_mpi(myrank,"error: vs maximum velocity")
     endif
   endif
@@ -680,17 +704,17 @@
   call max_all_cr(elemsize_max,elemsize_max_glob)
 
   ! checks mesh
-  if( myrank == 0 ) then
-    if( distance_min_glob <= 0.0_CUSTOM_REAL ) then
+  if (myrank == 0) then
+    if (distance_min_glob <= 0.0_CUSTOM_REAL) then
       call exit_mpi(myrank,"error: GLL points minimum distance")
     endif
-    if( distance_max_glob >= HUGEVAL ) then
+    if (distance_max_glob >= HUGEVAL) then
       call exit_mpi(myrank,"error: GLL points maximum distance")
     endif
-    if( elemsize_min_glob <= 0.0_CUSTOM_REAL ) then
+    if (elemsize_min_glob <= 0.0_CUSTOM_REAL) then
       call exit_mpi(myrank,"error: element minimum size")
     endif
-    if( elemsize_max_glob >= HUGEVAL ) then
+    if (elemsize_max_glob >= HUGEVAL) then
       call exit_mpi(myrank,"error: element maximum size")
     endif
   endif
@@ -705,10 +729,8 @@
   call max_all_i(NGLOB_AB,NGLOB_AB_global_max)
   call sum_all_i(NGLOB_AB,NGLOB_AB_global_sum)
 
-  !call world_size(sizeprocs)
-
 ! outputs infos
-  if ( myrank == 0 ) then
+  if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) '********'
     write(IMAIN,*) 'minimum and maximum number of elements'
@@ -742,7 +764,7 @@
     write(IMAIN,*) '*** Minimum period resolved = ',pmax_glob
     write(IMAIN,*) '*** Maximum suggested time step = ',dt_suggested_glob
     write(IMAIN,*)
-    if( DT_PRESENT ) then
+    if (DT_PRESENT) then
       write(IMAIN,*) '*** for DT : ',DT
       write(IMAIN,*) '*** Max stability for wave velocities = ',cmax_glob
       write(IMAIN,*)
@@ -751,8 +773,8 @@
   endif
 
   ! returns the maximum velocity
-  if( myrank == 0 ) then
-    if( vpmax_glob > vsmax_glob ) then
+  if (myrank == 0) then
+    if (vpmax_glob > vsmax_glob) then
       model_speed_max = vpmax_glob
     else
       model_speed_max = vsmax_glob
@@ -763,17 +785,25 @@
   model_speed_max = tmp_val(1)
 
   ! returns minimum period
-  if( myrank == 0 ) min_resolved_period = pmax_glob
+  if (myrank == 0) min_resolved_period = pmax_glob
   tmp_val(1) = min_resolved_period
   call bcast_all_cr(tmp_val,1)
   min_resolved_period = tmp_val(1)
 
+  ! timing
+  tCPU = wtime() - time_start
+  if (myrank == 0) then
+    write(IMAIN,*) "Elapsed time for checking mesh resolution in seconds = ", tCPU
+    ! flushes file buffer for main output file (IMAIN)
+    call flush_IMAIN()
+  endif
+
   ! debug: for vtk output
-  if( SAVE_MESH_FILES ) then
+  if (SAVE_MESH_FILES) then
     call create_name_database(prname,myrank,LOCAL_PATH)
-    ! courant number
-    if( DT_PRESENT ) then
-      filename = trim(prname)//'res_courant_number'
+    ! Courant number
+    if (DT_PRESENT) then
+      filename = trim(prname)//'res_Courant_number'
       call write_VTK_data_elem_cr(NSPEC_AB,NGLOB_AB, &
                           xstore,ystore,zstore,ibool, &
                           tmp1,filename)
@@ -794,13 +824,101 @@
 
 
   subroutine get_vpvs_minmax(vpmin,vpmax,vsmin,vsmax,ispec,has_vs_zero, &
-                            NSPEC_AB,kappastore,mustore,rho_vp,rho_vs)
+                             NSPEC_AB,kappastore,mustore,rho_vp,rho_vs)
 
 ! calculates the min/max size of the specified element (ispec) for acoustic / elastic domains
 
+  use constants
+
   implicit none
 
-  include "constants.h"
+  real(kind=CUSTOM_REAL) :: vpmin,vpmax,vsmin,vsmax
+
+  integer :: ispec
+  logical :: has_vs_zero
+
+  integer :: NSPEC_AB
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
+    kappastore,mustore,rho_vp,rho_vs
+
+  ! local parameters
+  real(kind=CUSTOM_REAL) :: vp,vs
+  integer :: i,j,k
+  integer :: incrx,incry,incrz
+
+  ! element looping
+  ! note: the mesh resolution check is only approximative, it is thus sufficient to check only a few element points
+  logical,parameter :: MIDPOINT_CHECK_ONLY = .true.
+
+  ! initializes
+  vpmin = HUGEVAL
+  vpmax = -HUGEVAL
+  vsmin = HUGEVAL
+  vsmax = -HUGEVAL
+
+  ! looping increments
+  if (MIDPOINT_CHECK_ONLY) then
+    ! only corners and midpoints
+    incrx = NGLLX/2
+    incry = NGLLY/2
+    incrz = NGLLZ/2
+  else
+    ! all gll points
+    incrx = 1
+    incry = 1
+    incrz = 1
+  endif
+
+  ! loops over gll points
+  ! (avoids temporary 3d arrays)
+  do k=1,NGLLZ,incrz
+    do j=1,NGLLY,incry
+      do i=1,NGLLX,incrx
+
+        ! vp
+        if (rho_vp(i,j,k,ispec) > TINYVAL) then
+          vp = (FOUR_THIRDS * mustore(i,j,k,ispec) + kappastore(i,j,k,ispec)) / rho_vp(i,j,k,ispec)
+        else
+          vp = 0.0_CUSTOM_REAL
+        endif
+        ! min/max
+        if (vp < vpmin) vpmin = vp
+        if (vp > vpmax) vpmax = vp
+
+        ! vs
+        if (rho_vs(i,j,k,ispec) > TINYVAL) then
+          vs = mustore(i,j,k,ispec) / rho_vs(i,j,k,ispec)
+        else
+          vs = 0.0_CUSTOM_REAL
+        endif
+        ! ignore fluid regions with Vs = 0
+        if (vs > TINYVAL) then
+          if (vs < vsmin) vsmin = vs
+        else
+          has_vs_zero = .true.
+        endif
+        if (vs > vsmax) vsmax = vs
+
+      enddo
+    enddo
+  enddo
+
+  end subroutine get_vpvs_minmax
+
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+
+  subroutine get_vpvs_minmax_alt(vpmin,vpmax,vsmin,vsmax,ispec,has_vs_zero, &
+                                 NSPEC_AB,kappastore,mustore,rho_vp,rho_vs)
+
+! calculates the min/max size of the specified element (ispec) for acoustic / elastic domains
+
+  use constants
+
+  implicit none
 
   real(kind=CUSTOM_REAL) :: vpmin,vpmax,vsmin,vsmax
 
@@ -826,7 +944,7 @@
     vp_elem(:,:,:) = (FOUR_THIRDS * mustore(:,:,:,ispec) &
                     + kappastore(:,:,:,ispec)) / rho_vp(:,:,:,ispec)
   elsewhere
-    vp_elem(:,:,:) = 0.0
+    vp_elem(:,:,:) = 0.0_CUSTOM_REAL
   endwhere
 
   val_min = minval(vp_elem(:,:,:))
@@ -839,21 +957,21 @@
   where( rho_vs(:,:,:,ispec) > TINYVAL )
     vs_elem(:,:,:) = mustore(:,:,:,ispec) / rho_vs(:,:,:,ispec)
   elsewhere
-    vs_elem(:,:,:) = 0.0
+    vs_elem(:,:,:) = 0.0_CUSTOM_REAL
   endwhere
 
   val_min = minval(vs_elem(:,:,:))
   val_max = maxval(vs_elem(:,:,:))
 
   ! ignore fluid regions with Vs = 0
-  if( val_min(1) > 0.0001 ) then
+  if (val_min(1) > 0.0001) then
     vsmin = min(vsmin,val_min(1))
   else
     has_vs_zero = .true.
   endif
   vsmax = max(vsmax,val_max(1))
 
-  end subroutine get_vpvs_minmax
+  end subroutine get_vpvs_minmax_alt
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -867,9 +985,10 @@
 ! calculates the min/max size of the specified  element (ispec) for poroelastic domains
 ! [CM] Note: in case of coupled acoustic-poro-elastic, rho_vpI,rho_vpII,rho_vsI, etc have
 ! been appropriately defined in /src/generate_databases/get_model.f90
-  implicit none
 
-  include "constants.h"
+  use constants
+
+  implicit none
 
   real(kind=CUSTOM_REAL) :: vpmin,vpmax,vp2min,vp2max,vsmin,vsmax
 
@@ -922,10 +1041,10 @@
   val_max = maxval(vp2_elem(:,:,:))
 
   ! ignore non porous region with vp2 = 0
-  if( val_min(1) > 0.0001 ) then
-      vp2min = min(vp2min,val_min(1))
+  if (val_min(1) > 0.0001) then
+    vp2min = min(vp2min,val_min(1))
   else
-      has_vp2_zero = .true.
+    has_vp2_zero = .true.
   endif
   vp2max = max(vp2max,val_max(1))
 
@@ -942,7 +1061,7 @@
   val_max = maxval(vs_elem(:,:,:))
 
   ! ignore fluid regions with Vs = 0
-  if( val_min(1) > 0.0001 ) then
+  if (val_min(1) > 0.0001) then
     vsmin = min(vsmin,val_min(1))
   else
     has_vs_zero = .true.
@@ -955,15 +1074,142 @@
 !-------------------------------------------------------------------------------------------------
 !
 
+  subroutine check_mesh_distances(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
+                                  x_min_glob,x_max_glob,y_min_glob,y_max_glob,z_min_glob,z_max_glob, &
+                                  elemsize_min_glob,elemsize_max_glob, &
+                                  distance_min_glob,distance_max_glob)
+
+! checks the mesh sizes
+!
+! returns: global dimensions, element size and gll point distances
+
+  use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,HUGEVAL
+
+  implicit none
+
+  integer,intent(in) :: myrank
+  integer,intent(in) :: NSPEC_AB,NGLOB_AB
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(in) :: xstore,ystore,zstore
+  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
+
+  real(kind=CUSTOM_REAL),intent(out) :: distance_min_glob,distance_max_glob
+  real(kind=CUSTOM_REAL),intent(out) :: elemsize_min_glob,elemsize_max_glob
+  real(kind=CUSTOM_REAL),intent(out) :: x_min_glob,x_max_glob
+  real(kind=CUSTOM_REAL),intent(out) :: y_min_glob,y_max_glob
+  real(kind=CUSTOM_REAL),intent(out) :: z_min_glob,z_max_glob
+
+  ! local parameters
+  real(kind=CUSTOM_REAL) :: distance_min,distance_max
+  real(kind=CUSTOM_REAL) :: elemsize_min,elemsize_max
+  real(kind=CUSTOM_REAL) :: x_min,x_max
+  real(kind=CUSTOM_REAL) :: y_min,y_max
+  real(kind=CUSTOM_REAL) :: z_min,z_max
+  integer :: ispec
+
+  ! initializes
+  x_min_glob = HUGEVAL
+  x_max_glob = -HUGEVAL
+
+  y_min_glob = HUGEVAL
+  y_max_glob = -HUGEVAL
+
+  z_min_glob = HUGEVAL
+  z_max_glob = -HUGEVAL
+
+  elemsize_min_glob = HUGEVAL
+  elemsize_max_glob = -HUGEVAL
+
+  distance_min_glob = HUGEVAL
+  distance_max_glob = -HUGEVAL
+
+  ! model dimensions
+  x_min_glob = minval(xstore)
+  x_max_glob = maxval(xstore)
+
+  y_min_glob = minval(ystore)
+  y_max_glob = maxval(ystore)
+
+  z_min_glob = minval(zstore)
+  z_max_glob = maxval(zstore)
+
+  ! min and max dimensions of the model
+  x_min = x_min_glob
+  x_max = x_max_glob
+  call min_all_cr(x_min,x_min_glob)
+  call max_all_cr(x_max,x_max_glob)
+
+  y_min = y_min_glob
+  y_max = y_max_glob
+  call min_all_cr(y_min,y_min_glob)
+  call max_all_cr(y_max,y_max_glob)
+
+  z_min = z_min_glob
+  z_max = z_max_glob
+  call min_all_cr(z_min,z_min_glob)
+  call max_all_cr(z_max,z_max_glob)
+
+  ! gets distances for each grid cell
+  do ispec=1,NSPEC_AB
+
+    ! computes minimum and maximum size of this grid cell
+    call get_elem_minmaxsize(elemsize_min,elemsize_max,ispec, &
+                             NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
+
+    elemsize_min_glob = min(elemsize_min_glob, elemsize_min)
+    elemsize_max_glob = max(elemsize_max_glob, elemsize_max)
+
+    ! computes minimum and maximum distance of neighbor GLL points in this grid cell
+    call get_GLL_minmaxdistance(distance_min,distance_max,ispec, &
+                                NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
+
+    distance_min_glob = min(distance_min_glob, distance_min)
+    distance_max_glob = max(distance_max_glob, distance_max)
+
+  enddo
+
+  ! element size
+  elemsize_min = elemsize_min_glob
+  elemsize_max = elemsize_max_glob
+  call min_all_cr(elemsize_min,elemsize_min_glob)
+  call max_all_cr(elemsize_max,elemsize_max_glob)
+
+  ! GLL point distance
+  distance_min = distance_min_glob
+  distance_max = distance_max_glob
+  call min_all_cr(distance_min,distance_min_glob)
+  call max_all_cr(distance_max,distance_max_glob)
+
+  ! checks mesh
+  if (myrank == 0) then
+    if (distance_min_glob <= 0.0_CUSTOM_REAL) then
+      call exit_mpi(myrank,"Error GLL points minimum distance invalid")
+    endif
+    if (distance_max_glob >= HUGEVAL) then
+      call exit_mpi(myrank,"Error GLL points maximum distance invalid")
+    endif
+    if (elemsize_min_glob <= 0.0_CUSTOM_REAL) then
+      call exit_mpi(myrank,"Error element minimum size invalid")
+    endif
+    if (elemsize_max_glob >= HUGEVAL) then
+      call exit_mpi(myrank,"Error element maximum size invalid")
+    endif
+  endif
+
+  end subroutine check_mesh_distances
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
   subroutine get_GLL_minmaxdistance(distance_min,distance_max,ispec, &
                           NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
 
 ! calculates the min/max distances between neighboring GLL points within the specified element (ispec);
 ! we purposely do not include the distance along the diagonals of the element, only along its three coordinate axes.
 
-  implicit none
+  use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,HUGEVAL
 
-  include "constants.h"
+  implicit none
 
   real(kind=CUSTOM_REAL) :: distance_min,distance_max
 
@@ -975,53 +1221,57 @@
 
   ! local parameters
   real(kind=CUSTOM_REAL) :: dist
-  integer :: i,j,k,iglob_a,iglob_b
+  real(kind=CUSTOM_REAL) :: x1,x2,y1,y2,z1,z2
+  integer :: i,j,k,iglob1,iglob2
 
   ! initializes
   distance_min = HUGEVAL
   distance_max = -HUGEVAL
 
-  ! loops over all GLL points along X
-  do k=1,NGLLZ
-    do j=1,NGLLY
+  ! loops over all GLL points
+  ! (combines directions to speed up calculations)
+  do k=1,NGLLZ-1
+    do j=1,NGLLY-1
       do i=1,NGLLX-1
-        iglob_a = ibool(i  ,j,k,ispec)
-        iglob_b = ibool(i+1,j,k,ispec)
-        dist =       ( xstore(iglob_a) - xstore(iglob_b) )**2 &
-                   + ( ystore(iglob_a) - ystore(iglob_b) )**2 &
-                   + ( zstore(iglob_a) - zstore(iglob_b) )**2
-        if( dist < distance_min) distance_min = dist
-        if( dist > distance_max) distance_max = dist
-      enddo
-    enddo
-  enddo
+        ! reference point
+        iglob1 = ibool(i,j,k,ispec)
+        x1 = xstore(iglob1)
+        y1 = ystore(iglob1)
+        z1 = zstore(iglob1)
 
-  ! loops over all GLL points along Y
-  do k=1,NGLLZ
-    do i=1,NGLLX
-      do j=1,NGLLY-1
-        iglob_a = ibool(i,j  ,k,ispec)
-        iglob_b = ibool(i,j+1,k,ispec)
-        dist =       ( xstore(iglob_a) - xstore(iglob_b) )**2 &
-                   + ( ystore(iglob_a) - ystore(iglob_b) )**2 &
-                   + ( zstore(iglob_a) - zstore(iglob_b) )**2
-        if( dist < distance_min) distance_min = dist
-        if( dist > distance_max) distance_max = dist
-      enddo
-    enddo
-  enddo
+        ! along X
+        iglob2 = ibool(i+1,j,k,ispec)
+        x2 = xstore(iglob2)
+        y2 = ystore(iglob2)
+        z2 = zstore(iglob2)
 
-  ! loops over all GLL points along Z
-  do i=1,NGLLX
-    do j=1,NGLLY
-      do k=1,NGLLZ-1
-        iglob_a = ibool(i,j,k  ,ispec)
-        iglob_b = ibool(i,j,k+1,ispec)
-        dist =       ( xstore(iglob_a) - xstore(iglob_b) )**2 &
-                   + ( ystore(iglob_a) - ystore(iglob_b) )**2 &
-                   + ( zstore(iglob_a) - zstore(iglob_b) )**2
-        if( dist < distance_min) distance_min = dist
-        if( dist > distance_max) distance_max = dist
+        dist = (x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2)
+
+        if (dist < distance_min) distance_min = dist
+        if (dist > distance_max) distance_max = dist
+
+        ! along Y
+        iglob2 = ibool(i,j+1,k,ispec)
+        x2 = xstore(iglob2)
+        y2 = ystore(iglob2)
+        z2 = zstore(iglob2)
+
+        dist = (x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2)
+
+        if (dist < distance_min) distance_min = dist
+        if (dist > distance_max) distance_max = dist
+
+        ! along Z
+        iglob2 = ibool(i,j,k+1,ispec)
+        x2 = xstore(iglob2)
+        y2 = ystore(iglob2)
+        z2 = zstore(iglob2)
+
+        dist = (x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2)
+
+        if (dist < distance_min) distance_min = dist
+        if (dist > distance_max) distance_max = dist
+
       enddo
     enddo
   enddo
@@ -1041,9 +1291,9 @@
 ! calculates the min/max size of an edge of the specified element (ispec);
 ! we purposely do not include the distance along the diagonals of the element, only the size of its edges.
 
-  implicit none
+  use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,HUGEVAL
 
-  include "constants.h"
+  implicit none
 
   real(kind=CUSTOM_REAL) :: elemsize_min,elemsize_max
 
@@ -1055,8 +1305,10 @@
 
   ! local parameters
   real(kind=CUSTOM_REAL) :: dist
+  real(kind=CUSTOM_REAL) :: x1,x2,y1,y2,z1,z2
   integer :: i,j,k
-  integer :: i1,i2,j1,j2,k1,k2,ibool1,ibool2
+  integer :: i1,i2,j1,j2,k1,k2
+  integer :: iglob1,iglob2
 
   ! initializes
   elemsize_min = HUGEVAL
@@ -1065,45 +1317,69 @@
   ! loops over the four edges that are along X
   i1 = 1
   i2 = NGLLX
-  do j = 1, NGLLY, NGLLY-1
-    do k = 1, NGLLZ, NGLLZ-1
-      ibool1 = ibool(i1,j,k,ispec)
-      ibool2 = ibool(i2,j,k,ispec)
-      dist =      (xstore(ibool1) - xstore(ibool2))**2 &
-                + (ystore(ibool1) - ystore(ibool2))**2 &
-                + (zstore(ibool1) - zstore(ibool2))**2
-      if(dist < elemsize_min) elemsize_min = dist
-      if(dist > elemsize_max) elemsize_max = dist
+  do k = 1, NGLLZ, NGLLZ-1
+    do j = 1, NGLLY, NGLLY-1
+      iglob1 = ibool(i1,j,k,ispec)
+      iglob2 = ibool(i2,j,k,ispec)
+
+      x1 = xstore(iglob1)
+      y1 = ystore(iglob1)
+      z1 = zstore(iglob1)
+
+      x2 = xstore(iglob2)
+      y2 = ystore(iglob2)
+      z2 = zstore(iglob2)
+
+      dist = (x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2)
+
+      if (dist < elemsize_min) elemsize_min = dist
+      if (dist > elemsize_max) elemsize_max = dist
     enddo
   enddo
 
   ! loops over the four edges that are along Y
   j1 = 1
   j2 = NGLLY
-  do i = 1, NGLLX, NGLLX-1
-    do k = 1, NGLLZ, NGLLZ-1
-      ibool1 = ibool(i,j1,k,ispec)
-      ibool2 = ibool(i,j2,k,ispec)
-      dist =      (xstore(ibool1) - xstore(ibool2))**2 &
-                + (ystore(ibool1) - ystore(ibool2))**2 &
-                + (zstore(ibool1) - zstore(ibool2))**2
-      if(dist < elemsize_min) elemsize_min = dist
-      if(dist > elemsize_max) elemsize_max = dist
+  do k = 1, NGLLZ, NGLLZ-1
+    do i = 1, NGLLX, NGLLX-1
+      iglob1 = ibool(i,j1,k,ispec)
+      iglob2 = ibool(i,j2,k,ispec)
+
+      x1 = xstore(iglob1)
+      y1 = ystore(iglob1)
+      z1 = zstore(iglob1)
+
+      x2 = xstore(iglob2)
+      y2 = ystore(iglob2)
+      z2 = zstore(iglob2)
+
+      dist = (x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2)
+
+      if (dist < elemsize_min) elemsize_min = dist
+      if (dist > elemsize_max) elemsize_max = dist
     enddo
   enddo
 
   ! loops over the four edges that are along Z
   k1 = 1
   k2 = NGLLZ
-  do i = 1, NGLLX, NGLLX-1
-    do j = 1, NGLLY, NGLLY-1
-      ibool1 = ibool(i,j,k1,ispec)
-      ibool2 = ibool(i,j,k2,ispec)
-      dist =      (xstore(ibool1) - xstore(ibool2))**2 &
-                + (ystore(ibool1) - ystore(ibool2))**2 &
-                + (zstore(ibool1) - zstore(ibool2))**2
-      if(dist < elemsize_min) elemsize_min = dist
-      if(dist > elemsize_max) elemsize_max = dist
+  do j = 1, NGLLY, NGLLY-1
+    do i = 1, NGLLX, NGLLX-1
+      iglob1 = ibool(i,j,k1,ispec)
+      iglob2 = ibool(i,j,k2,ispec)
+
+      x1 = xstore(iglob1)
+      y1 = ystore(iglob1)
+      z1 = zstore(iglob1)
+
+      x2 = xstore(iglob2)
+      y2 = ystore(iglob2)
+      z2 = zstore(iglob2)
+
+      dist = (x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2)
+
+      if (dist < elemsize_min) elemsize_min = dist
+      if (dist > elemsize_max) elemsize_max = dist
     enddo
   enddo
 

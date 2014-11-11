@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -32,9 +33,10 @@
 ! heuristic rule to deform elements to balance angles
 ! to 120 degrees in doubling regions
 
+  use constants
+
   implicit none
 
-  include "constants.h"
   include "constants_meshfem3D.h"
 
   integer myrank
@@ -52,7 +54,7 @@
 
 ! **************
 
-  if(isubregion == 8) then
+  if (isubregion == 8) then
 
     call unusual_hex_nodes1(iaddx,iaddy,iaddz)
 
@@ -77,7 +79,7 @@
 
     itype_element = ITYPE_UNUSUAL_1
 
-  else if(isubregion == 7) then
+  else if (isubregion == 7) then
 
     call unusual_hex_nodes1p(iaddx,iaddy,iaddz)
 
@@ -102,7 +104,7 @@
 
     itype_element = ITYPE_UNUSUAL_1p
 
-  else if(isubregion == 6) then
+  else if (isubregion == 6) then
 
     call unusual_hex_nodes4(iaddx,iaddy,iaddz)
 
@@ -127,7 +129,7 @@
 
     itype_element = ITYPE_UNUSUAL_4
 
-  else if(isubregion == 5) then
+  else if (isubregion == 5) then
 
     call unusual_hex_nodes4p(iaddx,iaddy,iaddz)
 
@@ -152,7 +154,7 @@
 
     itype_element = ITYPE_UNUSUAL_4p
 
-  else if(isubregion == 4) then
+  else if (isubregion == 4) then
 
     call unusual_hex_nodes1(iaddx,iaddy,iaddz)
 
@@ -177,7 +179,7 @@
 
     itype_element = ITYPE_UNUSUAL_1
 
-  else if(isubregion == 3) then
+  else if (isubregion == 3) then
 
     call unusual_hex_nodes1p(iaddx,iaddy,iaddz)
 
@@ -202,7 +204,7 @@
 
     itype_element = ITYPE_UNUSUAL_1p
 
-  else if(isubregion == 2) then
+  else if (isubregion == 2) then
 
     call unusual_hex_nodes4(iaddx,iaddy,iaddz)
 
@@ -227,7 +229,7 @@
 
     itype_element = ITYPE_UNUSUAL_4
 
-  else if(isubregion == 1) then
+  else if (isubregion == 1) then
 
     call unusual_hex_nodes4p(iaddx,iaddy,iaddz)
 

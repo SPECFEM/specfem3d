@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -45,21 +46,25 @@
 
 !==============================================================================
 subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
-   nspec,nglob,iproc_xi,iproc_eta, &
-   NPROC_XI,NPROC_ETA,addressing,iMPIcut_xi,iMPIcut_eta,&
-   ibool,nodes_coords,true_material_num, &
-   nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
-   NSPEC2D_BOTTOM,NSPEC2D_TOP, NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
-   ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,&
-   NMATERIALS,material_properties)
+                                nspec,nglob,iproc_xi,iproc_eta, &
+                                NPROC_XI,NPROC_ETA,addressing,iMPIcut_xi,iMPIcut_eta,&
+                                ibool,nodes_coords,ispec_material_id, &
+                                nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
+                                NSPEC2D_BOTTOM,NSPEC2D_TOP, NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
+                                ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,&
+                                NMATERIALS,material_properties)
 
-  use mpi
-  use adios_helpers_mod
-  use safe_alloc_mod
+  use constants,only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,ADIOS_TRANSPORT_METHOD, &
+    NGLLX,NGLLY,NGLLZ
+
+  use adios_helpers_mod,only: define_adios_global_array1d,define_adios_scalar, &
+    write_adios_global_1d_array,write_adios_global_string_1d_array, &
+    define_adios_local_string_1d_array
+
+  use safe_alloc_mod,only: safe_alloc,safe_dealloc
 
   implicit none
 
-  include "constants.h"
   include "constants_meshfem3D.h"
 
   ! MPI variables
@@ -84,8 +89,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   integer ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
   double precision :: nodes_coords(nglob,3)
 
-  integer true_material_num(nspec)
-  integer(kind=4), dimension(2,nspec) :: material_index
+  integer ispec_material_id(nspec)
 
   ! boundary parameters locator
   integer NSPEC2D_BOTTOM,NSPEC2D_TOP,NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX
@@ -96,34 +100,39 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   integer ibelm_top(NSPEC2D_TOP)
 
   ! material properties
-  integer :: NMATERIALS, nundef_materials
+  integer :: NMATERIALS
   ! first dimension  : material_id
-  ! second dimension : #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id
-  double precision , dimension(NMATERIALS,6) ::  material_properties
-  double precision , dimension(16,NMATERIALS) :: matpropl
-  integer :: i,ispec,iglob,ier
+  ! second dimension : #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id #material_id
+  double precision , dimension(NMATERIALS,7) ::  material_properties
+  integer :: i,ispec,ier
   ! dummy_nspec_cpml is used here to match the read instructions
   ! in generate_databases/read_partition_files.f90
   integer :: dummy_nspec_cpml
 
   ! name of the database files
-  character(len=256) LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH
 
   ! for MPI interfaces
-  integer ::  nb_interfaces,nspec_interfaces_max,idoubl
+  integer ::  nb_interfaces,nspec_interfaces_max
   logical, dimension(8) ::  interfaces
   integer, dimension(8) ::  nspec_interface
 
-  integer, parameter :: IIN_database = 15
+  ! materials
+  integer :: ndef,nundef
+  integer :: icount,is,ie
+  integer :: mat_id,domain_id
+  integer(kind=4), dimension(2,nspec) :: material_index
+  double precision , dimension(:,:),allocatable :: matpropl
+  character(len=MAX_STRING_LEN*6*NMATERIALS) :: undef_matpropl
 
   integer :: ngnod, ngnod2d
 
   !--- Local parameters for ADIOS ---
-  character(len=256) :: output_name
-  character(len=64), parameter :: group_name  = "SPECFEM3D_DATABASES"
+  character(len=MAX_STRING_LEN) :: output_name
+  character(len=*), parameter :: group_name = "SPECFEM3D_DATABASES"
   integer(kind=8) :: group, handle
   integer(kind=8) :: groupsize, totalsize
-  integer :: local_dim, global_dim, offset, varid
+  integer :: local_dim
 
   !--- Variables to allreduce - wmax stands for world_max
   integer :: nglob_wmax, nspec_wmax, nmaterials_wmax, &
@@ -142,6 +151,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   integer, dimension(:,:,:), allocatable :: interfaces_mesh
   integer, dimension(:,:), allocatable :: elmnts_mesh
   integer :: interface_num, ispec_interface
+  integer :: comm
 
   !---------------------------.
   ! Setup the values to write |
@@ -149,24 +159,102 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   ngnod   = NGLLX_M * NGLLY_M *  NGLLZ_M
   ngnod2d = NGLLX_M * NGLLY_M
 
-  ! pad dummy zeros to fill up 16 entries (poroelastic medium not allowed)
-  matpropl(:,:) = 0.d0
-  matpropl(1:6, :) = transpose(material_properties(:,1:6))
-
-  nundef_materials = 0
-
-  material_index (:,:)=1
+  ! assignes material index
+  ! format: (1,ispec) = #material_id , (2,ispec) = #material_definition
+  material_index (:,:) = 0
   do ispec = 1, nspec
-    material_index(2, :)     = 1
-    material_index(1, ispec) = true_material_num(ispec)
+    ! material id
+    material_index(1,ispec) = ispec_material_id(ispec)
+    ! material definition: 1 = interface type / 2 = tomography type
+    if (ispec_material_id(ispec) > 0) then
+      ! dummy value, not used any further
+      material_index(2,ispec) = 1
+    else
+      ! negative material ids
+      ! by default, assumes tomography model material
+      ! (note: interface type not implemented yet...)
+      material_index(2,ispec) = 2
+    endif
   enddo
 
-  call safe_alloc(nodes_ibelm_xmin,ngnod2d, nspec2d_xmin, "nodes_ibelm_xmin")
-  call safe_alloc(nodes_ibelm_xmax,ngnod2d, nspec2d_xmax, "nodes_ibelm_xmax")
-  call safe_alloc(nodes_ibelm_ymin,ngnod2d, nspec2d_ymin, "nodes_ibelm_ymin")
+  ! Materials properties
+  ! counts defined/undefined materials
+  ndef = 0
+  nundef = 0
+  do i = 1,NMATERIALS
+    mat_id = material_properties(i,7)
+    if (mat_id > 0) ndef = ndef + 1
+    if (mat_id < 0) nundef = nundef + 1
+  enddo
+  !debug
+  !print*,'materials def/undef: ',ndef,nundef
+
+  ! defined material properties
+  ! pad dummy zeros to fill up 16 entries (poroelastic medium not allowed)
+  call safe_alloc(matpropl,16, ndef,"matpropl")
+  matpropl(:,:) = 0.d0
+  icount = 0
+  do i = 1,NMATERIALS
+    mat_id = material_properties(i,7)
+    if (mat_id > 0) then
+      icount = icount + 1
+      matpropl(1:6, icount) = material_properties(i,1:6)
+    endif
+  enddo
+  if (icount /= ndef) stop 'Error icount not equal to ndef'
+
+  ! undefined material properties
+  ! we use a 1D character string for ADIOS read/write
+  undef_matpropl(:) = ''
+  icount = 0
+  do i = 1,NMATERIALS
+    domain_id = material_properties(i,6)
+    mat_id = material_properties(i,7)
+    if (mat_id < 0) then
+      icount = icount + 1
+      ! format:
+      ! #material_id #type-keyword #domain-name #tomo-filename #tomo_id #domain_id
+      ! format example tomography: -1 tomography elastic tomography_model.xyz 0 2
+      ! material id
+      is = (icount-1)*6*MAX_STRING_LEN + 1
+      ie = is + MAX_STRING_LEN
+      write(undef_matpropl(is:ie),*) mat_id
+      ! name
+      is = (icount-1)*6*MAX_STRING_LEN + (1*MAX_STRING_LEN + 1)
+      ie = is + MAX_STRING_LEN
+      undef_matpropl(is:ie) = 'tomography'
+      ! name type
+      is = (icount-1)*6*MAX_STRING_LEN + (2*MAX_STRING_LEN + 1)
+      ie = is + MAX_STRING_LEN
+      select case (domain_id)
+      case (IDOMAIN_ACOUSTIC)
+        undef_matpropl(is:ie) = 'acoustic'
+      case (IDOMAIN_ELASTIC)
+        undef_matpropl(is:ie) = 'elastic'
+      end select
+      ! default name
+      is = (icount-1)*6*MAX_STRING_LEN + (3*MAX_STRING_LEN + 1)
+      ie = is + MAX_STRING_LEN
+      undef_matpropl(is:ie) = 'tomography_model.xyz'
+      ! default tomo-id (unused)
+      is = (icount-1)*6*MAX_STRING_LEN + (4*MAX_STRING_LEN + 1)
+      ie = is + MAX_STRING_LEN
+      write(undef_matpropl(is:ie),*) 0
+      ! domain-id
+      is = (icount-1)*6*MAX_STRING_LEN + (5*MAX_STRING_LEN + 1)
+      ie = is + MAX_STRING_LEN
+      write(undef_matpropl(is:ie),*) domain_id
+    endif
+  enddo
+  if (icount /= nundef) stop 'Error icount not equal to ndef'
+  ! debug
+  !print*,'undef_matpropl: ',trim(undef_matpropl)
+
+  call safe_alloc(nodes_ibelm_xmin, ngnod2d, nspec2d_xmin, "nodes_ibelm_xmin")
+  call safe_alloc(nodes_ibelm_xmax, ngnod2d, nspec2d_xmax, "nodes_ibelm_xmax")
+  call safe_alloc(nodes_ibelm_ymin, ngnod2d, nspec2d_ymin, "nodes_ibelm_ymin")
   call safe_alloc(nodes_ibelm_ymax, ngnod2d, nspec2d_ymax, "nodes_ibelm_ymax")
-  call safe_alloc(nodes_ibelm_bottom, ngnod2d, nspec2d_bottom, &
-                  "nodes_ibelm_bottom")
+  call safe_alloc(nodes_ibelm_bottom, ngnod2d, nspec2d_bottom, "nodes_ibelm_bottom")
   call safe_alloc(nodes_ibelm_top, ngnod2d, nspec2d_top, "nodes_ibelm_top")
   call safe_alloc(elmnts_mesh, NGNOD, nspec, "elmnts_mesh")
 
@@ -225,63 +313,63 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
 
   nb_interfaces = 0
   nspec_interfaces_max = 0
-  if(NPROC_XI >= 2 .or. NPROC_ETA >= 2) then
+  if (NPROC_XI >= 2 .or. NPROC_ETA >= 2) then
     nb_interfaces = 4
     interfaces(W:N) = .true.
     interfaces(NW:SW) = .false.
-    if(iproc_xi == 0) then
+    if (iproc_xi == 0) then
        nb_interfaces =  nb_interfaces -1
        interfaces(W) = .false.
     endif
-    if(iproc_xi == NPROC_XI-1) then
+    if (iproc_xi == NPROC_XI-1) then
        nb_interfaces =  nb_interfaces -1
        interfaces(E) = .false.
     endif
-    if(iproc_eta == 0) then
+    if (iproc_eta == 0) then
        nb_interfaces =  nb_interfaces -1
        interfaces(S) = .false.
     endif
-    if(iproc_eta == NPROC_ETA-1) then
+    if (iproc_eta == NPROC_ETA-1) then
        nb_interfaces =  nb_interfaces -1
        interfaces(N) = .false.
     endif
 
-    if((interfaces(W) .eqv. .true.) .and. (interfaces(N) .eqv. .true.)) then
+    if ((interfaces(W) .eqv. .true.) .and. (interfaces(N) .eqv. .true.)) then
          interfaces(NW) = .true.
          nb_interfaces =  nb_interfaces +1
     endif
-    if((interfaces(N) .eqv. .true.) .and. (interfaces(E) .eqv. .true.)) then
+    if ((interfaces(N) .eqv. .true.) .and. (interfaces(E) .eqv. .true.)) then
          interfaces(NE) = .true.
          nb_interfaces =  nb_interfaces +1
     endif
-    if((interfaces(E) .eqv. .true.) .and. (interfaces(S) .eqv. .true.)) then
+    if ((interfaces(E) .eqv. .true.) .and. (interfaces(S) .eqv. .true.)) then
          interfaces(SE) = .true.
          nb_interfaces =  nb_interfaces +1
     endif
-    if((interfaces(W) .eqv. .true.) .and. (interfaces(S) .eqv. .true.)) then
+    if ((interfaces(W) .eqv. .true.) .and. (interfaces(S) .eqv. .true.)) then
          interfaces(SW) = .true.
          nb_interfaces =  nb_interfaces +1
     endif
 
     nspec_interface(:) = 0
-    if(interfaces(W)) &
+    if (interfaces(W)) &
         nspec_interface(W) = count(iMPIcut_xi(1,:) .eqv. .true.)
-    if(interfaces(E)) &
+    if (interfaces(E)) &
         nspec_interface(E) = count(iMPIcut_xi(2,:) .eqv. .true.)
-    if(interfaces(S)) &
+    if (interfaces(S)) &
         nspec_interface(S) = count(iMPIcut_eta(1,:) .eqv. .true.)
-    if(interfaces(N)) &
+    if (interfaces(N)) &
         nspec_interface(N) = count(iMPIcut_eta(2,:) .eqv. .true.)
-    if(interfaces(NW)) &
+    if (interfaces(NW)) &
         nspec_interface(NW) = count((iMPIcut_xi(1,:) .eqv. .true.) &
             .and. (iMPIcut_eta(2,:) .eqv. .true.))
-    if(interfaces(NE)) &
+    if (interfaces(NE)) &
         nspec_interface(NE) = count((iMPIcut_xi(2,:) .eqv. .true.) &
             .and. (iMPIcut_eta(2,:) .eqv. .true.))
-    if(interfaces(SE)) &
+    if (interfaces(SE)) &
         nspec_interface(SE) = count((iMPIcut_xi(2,:) .eqv. .true.) &
             .and. (iMPIcut_eta(1,:) .eqv. .true.))
-    if(interfaces(SW)) &
+    if (interfaces(SW)) &
         nspec_interface(SW) = count((iMPIcut_xi(1,:) .eqv. .true.) &
             .and. (iMPIcut_eta(1,:) .eqv. .true.))
 
@@ -289,20 +377,19 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
 
     call safe_alloc(neighbours_mesh, nb_interfaces, "neighbours_mesh")
     call safe_alloc(num_elmnts_mesh, nb_interfaces, "num_elmnts_mesh")
-    call safe_alloc(interfaces_mesh, 6, nspec_interfaces_max, nb_interfaces, &
-                    "interfaces_mesh")
+    call safe_alloc(interfaces_mesh, 6, nspec_interfaces_max, nb_interfaces, "interfaces_mesh")
 
     interface_num = 1
     neighbours_mesh(:) = 0
     num_elmnts_mesh(:) = 0
     interfaces_mesh(:,:,:) = 0
 
-    if(interfaces(W)) then
+    if (interfaces(W)) then
       neighbours_mesh(interface_num) = addressing(iproc_xi-1,iproc_eta)
       num_elmnts_mesh(interface_num) = nspec_interface(W)
       ispec_interface = 1
       do ispec = 1,nspec
-        if(iMPIcut_xi(1,ispec)) then
+        if (iMPIcut_xi(1,ispec)) then
           interfaces_mesh(1, ispec_interface, interface_num) = ispec
           interfaces_mesh(2, ispec_interface, interface_num) = 4
           interfaces_mesh(3, ispec_interface, interface_num) &
@@ -319,12 +406,12 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
       interface_num = interface_num +1
     endif
 
-    if(interfaces(E)) then
+    if (interfaces(E)) then
       neighbours_mesh(interface_num) = addressing(iproc_xi+1,iproc_eta)
       num_elmnts_mesh(interface_num) = nspec_interface(E)
       ispec_interface = 1
       do ispec = 1,nspec
-        if(iMPIcut_xi(2,ispec)) then
+        if (iMPIcut_xi(2,ispec)) then
           interfaces_mesh(1, ispec_interface, interface_num) = ispec
           interfaces_mesh(2, ispec_interface, interface_num) = 4
           interfaces_mesh(3, ispec_interface, interface_num) &
@@ -341,12 +428,12 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
       interface_num = interface_num +1
     endif
 
-    if(interfaces(S)) then
+    if (interfaces(S)) then
       neighbours_mesh(interface_num) = addressing(iproc_xi,iproc_eta-1)
       num_elmnts_mesh(interface_num) = nspec_interface(S)
       ispec_interface = 1
       do ispec = 1,nspec
-        if(iMPIcut_eta(1,ispec)) then
+        if (iMPIcut_eta(1,ispec)) then
           interfaces_mesh(1, ispec_interface, interface_num) = ispec
           interfaces_mesh(2, ispec_interface, interface_num) = 4
           interfaces_mesh(3, ispec_interface, interface_num) &
@@ -363,12 +450,12 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
       interface_num = interface_num +1
     endif
 
-    if(interfaces(N)) then
+    if (interfaces(N)) then
       neighbours_mesh(interface_num) = addressing(iproc_xi,iproc_eta+1)
       num_elmnts_mesh(interface_num) = nspec_interface(N)
       ispec_interface = 1
       do ispec = 1,nspec
-        if(iMPIcut_eta(2,ispec)) then
+        if (iMPIcut_eta(2,ispec)) then
           interfaces_mesh(1, ispec_interface, interface_num) = ispec
           interfaces_mesh(2, ispec_interface, interface_num) = 4
           interfaces_mesh(3, ispec_interface, interface_num) &
@@ -385,12 +472,12 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
       interface_num = interface_num +1
     endif
 
-    if(interfaces(NW)) then
+    if (interfaces(NW)) then
       neighbours_mesh(interface_num) = addressing(iproc_xi-1,iproc_eta+1)
       num_elmnts_mesh(interface_num) = nspec_interface(NW)
       ispec_interface = 1
       do ispec = 1,nspec
-        if((iMPIcut_xi(1,ispec) .eqv. .true.) &
+        if ((iMPIcut_xi(1,ispec) .eqv. .true.) &
             .and. (iMPIcut_eta(2,ispec) .eqv. .true.))  then
           interfaces_mesh(1, ispec_interface, interface_num) = ispec
           interfaces_mesh(2, ispec_interface, interface_num) = 2
@@ -406,12 +493,12 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
       interface_num = interface_num +1
     endif
 
-    if(interfaces(NE)) then
+    if (interfaces(NE)) then
       neighbours_mesh(interface_num) = addressing(iproc_xi+1,iproc_eta+1)
       num_elmnts_mesh(interface_num) = nspec_interface(NE)
       ispec_interface = 1
       do ispec = 1,nspec
-        if((iMPIcut_xi(2,ispec) .eqv. .true.) &
+        if ((iMPIcut_xi(2,ispec) .eqv. .true.) &
             .and. (iMPIcut_eta(2,ispec) .eqv. .true.))  then
           interfaces_mesh(1, ispec_interface, interface_num) = ispec
           interfaces_mesh(2, ispec_interface, interface_num) = 2
@@ -427,12 +514,12 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
       interface_num = interface_num +1
     endif
 
-    if(interfaces(SE)) then
+    if (interfaces(SE)) then
       neighbours_mesh(interface_num) = addressing(iproc_xi+1,iproc_eta-1)
       num_elmnts_mesh(interface_num) = nspec_interface(SE)
       ispec_interface = 1
       do ispec = 1,nspec
-        if((iMPIcut_xi(2,ispec) .eqv. .true.) &
+        if ((iMPIcut_xi(2,ispec) .eqv. .true.) &
             .and. (iMPIcut_eta(1,ispec) .eqv. .true.))  then
           interfaces_mesh(1, ispec_interface, interface_num) = ispec
           interfaces_mesh(2, ispec_interface, interface_num) = 2
@@ -448,12 +535,12 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
       interface_num = interface_num +1
     endif
 
-    if(interfaces(SW)) then
+    if (interfaces(SW)) then
       neighbours_mesh(interface_num) = addressing(iproc_xi-1,iproc_eta-1)
       num_elmnts_mesh(interface_num) = nspec_interface(SW)
       ispec_interface = 1
       do ispec = 1,nspec
-        if((iMPIcut_xi(1,ispec) .eqv. .true.) &
+        if ((iMPIcut_xi(1,ispec) .eqv. .true.) &
             .and. (iMPIcut_eta(1,ispec) .eqv. .true.))  then
           interfaces_mesh(1, ispec_interface, interface_num) = ispec
           interfaces_mesh(2, ispec_interface, interface_num) = 2
@@ -468,7 +555,11 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
       enddo
       interface_num = interface_num +1
     endif
-
+  else
+    ! only single mpi process
+    call safe_alloc(neighbours_mesh, nb_interfaces, "neighbours_mesh")
+    call safe_alloc(num_elmnts_mesh, nb_interfaces, "num_elmnts_mesh")
+    call safe_alloc(interfaces_mesh, 6, nspec_interfaces_max, nb_interfaces, "interfaces_mesh")
   endif
 
   !-----------------------------------------------------------------.
@@ -488,9 +579,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   max_global_values(10) = nb_interfaces
   max_global_values(11) = nspec_interfaces_max
 
-  call MPI_Allreduce(MPI_IN_PLACE, max_global_values, num_vars, &
-                     MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ier)
-  if( ier /= 0 ) call exit_MPI(myrank,'Allreduce to get max values failed.')
+  call max_allreduce_i(max_global_values,num_vars)
 
   nglob_wmax          = max_global_values(1)
   nspec_wmax          = max_global_values(2)
@@ -526,10 +615,10 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   call define_adios_scalar(group, groupsize, "", STRINGIFY_VAR(ngnod2d))
 
   call define_adios_scalar(group, groupsize, "", STRINGIFY_VAR(nglob))
-  call define_adios_scalar(group, groupsize, "", STRINGIFY_VAR(nmaterials))
-  call define_adios_scalar(group, groupsize, "", &
-                           STRINGIFY_VAR(nundef_materials))
   call define_adios_scalar(group, groupsize, "", STRINGIFY_VAR(nspec))
+
+  call define_adios_scalar(group, groupsize, "", "nmaterials",ndef)
+  call define_adios_scalar(group, groupsize, "", "nundef_materials",nundef)
 
   call define_adios_scalar(group, groupsize, "", STRINGIFY_VAR(nspec2d_xmin))
   call define_adios_scalar(group, groupsize, "", STRINGIFY_VAR(nspec2d_xmax))
@@ -541,73 +630,70 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   call define_adios_scalar(group, groupsize, "", "nspec_cpml",dummy_nspec_cpml)
 
   call define_adios_scalar(group, groupsize, "", STRINGIFY_VAR(nb_interfaces))
-  call define_adios_scalar(group, groupsize, "", &
-                           STRINGIFY_VAR(nspec_interfaces_max))
+  call define_adios_scalar(group, groupsize, "", STRINGIFY_VAR(nspec_interfaces_max))
 
   local_dim = 3 * nglob_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, &
-                                   "", STRINGIFY_VAR(nodes_coords))
-  local_dim = 16 * nmaterials_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, &
-                                   "", STRINGIFY_VAR(matpropl))
+  call define_adios_global_array1D(group, groupsize, local_dim, "", STRINGIFY_VAR(nodes_coords))
+
+  if (ndef /= 0) then
+    local_dim = 16 * ndef
+    call define_adios_global_array1D(group, groupsize, local_dim, "", STRINGIFY_VAR(matpropl))
+  endif
+
+  if (nundef /= 0) then
+    local_dim = 6 * nundef * MAX_STRING_LEN
+    ! all processes will have an identical entry, uses "local" variable to store string
+    call define_adios_local_string_1D_array(group, groupsize, local_dim, "", "undef_mat_prop", undef_matpropl(1:local_dim))
+    ! note: global arrays with strings doesn't work yet... (segmentation fault)
+    !call define_adios_global_array1D(group, groupsize, local_dim, "", "undef_mat_prop",undef_matpropl)
+  endif
+
   local_dim = 2 * nspec_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, &
-                                   "", STRINGIFY_VAR(material_index))
+  call define_adios_global_array1D(group, groupsize, local_dim, "", STRINGIFY_VAR(material_index))
+
   local_dim = NGLLX_M * NGLLY_M * NGLLZ_M * nspec_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, &
-                                   "", STRINGIFY_VAR(elmnts_mesh))
+  call define_adios_global_array1D(group, groupsize, local_dim, "", STRINGIFY_VAR(elmnts_mesh))
 
   local_dim = nspec2d_xmin_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, &
-                                   "", STRINGIFY_VAR(ibelm_xmin))
-  local_dim = NGNOD2D * nspec2d_xmin_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, &
-                                   "", STRINGIFY_VAR(nodes_ibelm_xmin))
+  call define_adios_global_array1D(group, groupsize, local_dim, "", STRINGIFY_VAR(ibelm_xmin))
   local_dim = nspec2d_xmax_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, &
-                                   "", STRINGIFY_VAR(ibelm_xmax))
-  local_dim = NGNOD2D * nspec2d_xmax_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, &
-                                   "", STRINGIFY_VAR(nodes_ibelm_xmax))
+  call define_adios_global_array1D(group, groupsize, local_dim, "", STRINGIFY_VAR(ibelm_xmax))
   local_dim = nspec2d_ymin_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, &
-                                   "", STRINGIFY_VAR(ibelm_ymin))
-  local_dim = NGNOD2D * nspec2d_ymin_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, &
-                                   "", STRINGIFY_VAR(nodes_ibelm_ymin))
+  call define_adios_global_array1D(group, groupsize, local_dim, "", STRINGIFY_VAR(ibelm_ymin))
   local_dim = nspec2d_ymax_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, &
-                                   "", STRINGIFY_VAR(ibelm_ymax))
-  local_dim = NGNOD2D * nspec2d_ymax_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, &
-                                   "", STRINGIFY_VAR(nodes_ibelm_ymax))
+  call define_adios_global_array1D(group, groupsize, local_dim, "", STRINGIFY_VAR(ibelm_ymax))
   local_dim = nspec2d_bottom_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, &
-                                   "", STRINGIFY_VAR(ibelm_bottom))
-  local_dim = NGNOD2D * nspec2d_bottom_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, &
-                                   "", STRINGIFY_VAR(nodes_ibelm_bottom))
+  call define_adios_global_array1D(group, groupsize, local_dim, "", STRINGIFY_VAR(ibelm_bottom))
   local_dim = nspec2d_top_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, &
-                                   "", STRINGIFY_VAR(ibelm_top))
-  local_dim = NGNOD2D * nspec2d_top_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, &
-                                   "", STRINGIFY_VAR(nodes_ibelm_top))
+  call define_adios_global_array1D(group, groupsize, local_dim, "", STRINGIFY_VAR(ibelm_top))
 
-  local_dim = nb_interfaces_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, &
-                                   "", STRINGIFY_VAR(neighbours_mesh))
-  call define_adios_global_array1D(group, groupsize, local_dim, &
-                                   "", STRINGIFY_VAR(num_elmnts_mesh))
-  local_dim = 6 * nb_interfaces_wmax * nspec_interfaces_max_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, &
-                                    "", STRINGIFY_VAR(interfaces_mesh))
+  local_dim = NGNOD2D * nspec2d_xmin_wmax
+  call define_adios_global_array1D(group, groupsize, local_dim, "", STRINGIFY_VAR(nodes_ibelm_xmin))
+  local_dim = NGNOD2D * nspec2d_xmax_wmax
+  call define_adios_global_array1D(group, groupsize, local_dim, "", STRINGIFY_VAR(nodes_ibelm_xmax))
+  local_dim = NGNOD2D * nspec2d_ymin_wmax
+  call define_adios_global_array1D(group, groupsize, local_dim, "", STRINGIFY_VAR(nodes_ibelm_ymin))
+  local_dim = NGNOD2D * nspec2d_ymax_wmax
+  call define_adios_global_array1D(group, groupsize, local_dim, "", STRINGIFY_VAR(nodes_ibelm_ymax))
+  local_dim = NGNOD2D * nspec2d_bottom_wmax
+  call define_adios_global_array1D(group, groupsize, local_dim, "", STRINGIFY_VAR(nodes_ibelm_bottom))
+  local_dim = NGNOD2D * nspec2d_top_wmax
+  call define_adios_global_array1D(group, groupsize, local_dim, "", STRINGIFY_VAR(nodes_ibelm_top))
+
+  if (nb_interfaces_wmax > 0) then
+    local_dim = nb_interfaces_wmax
+    call define_adios_global_array1D(group, groupsize, local_dim, "", STRINGIFY_VAR(neighbours_mesh))
+    call define_adios_global_array1D(group, groupsize, local_dim, "", STRINGIFY_VAR(num_elmnts_mesh))
+    local_dim = 6 * nb_interfaces_wmax * nspec_interfaces_max_wmax
+    call define_adios_global_array1D(group, groupsize, local_dim, "", STRINGIFY_VAR(interfaces_mesh))
+  endif
 
   !------------------------------------------------------------.
   ! Open an handler to the ADIOS file and setup the group size |
   !------------------------------------------------------------'
-  call adios_open(handle, group_name, output_name, "w", &
-                  MPI_COMM_WORLD, ier);
+  call world_get_comm(comm)
+
+  call adios_open(handle, group_name, output_name, "w", comm, ier);
   call adios_group_size (handle, groupsize, totalsize, ier)
 
   !------------------------------------------.
@@ -624,9 +710,10 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   call adios_write(handle, STRINGIFY_VAR(ngnod2d), ier)
 
   call adios_write(handle, STRINGIFY_VAR(nglob), ier)
-  call adios_write(handle, STRINGIFY_VAR(nmaterials), ier)
-  call adios_write(handle, STRINGIFY_VAR(nundef_materials), ier)
   call adios_write(handle, STRINGIFY_VAR(nspec), ier)
+
+  call adios_write(handle, "nmaterials",ndef, ier)
+  call adios_write(handle, "nundef_materials",nundef, ier)
 
   call adios_write(handle, STRINGIFY_VAR(nspec2d_xmin), ier)
   call adios_write(handle, STRINGIFY_VAR(nspec2d_xmax), ier)
@@ -645,75 +732,97 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   local_dim = 3 * nglob
   call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                    "nodes_coords", transpose(nodes_coords))
-  local_dim = 16 * nmaterials
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   STRINGIFY_VAR(matpropl))
+
+  ! materials
+  if (ndef /= 0) then
+    local_dim = 16 * ndef
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
+                                     STRINGIFY_VAR(matpropl))
+  endif
+  if (nundef /= 0) then
+    local_dim = 6 * nundef * MAX_STRING_LEN
+    ! "local" variable, all process will write the same entry
+    call adios_write(handle, "undef_mat_prop", undef_matpropl(1:local_dim),ier)
+
+    ! note: global arrays don't work yet with strings, produces segmentation faults (ADIOS error?)...
+    !call write_adios_global_string_1d_array(handle, myrank, sizeprocs, local_dim, local_dim*sizeprocs, local_dim*myrank, &
+    !                                        "undef_mat_prop",undef_matpropl(1:local_dim))
+  endif
+
   local_dim = 2 * nspec
   call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                    STRINGIFY_VAR(material_index))
-  ! WARNING: the order is a little bit different than for Fortran outpu
+  ! WARNING: the order is a little bit different than for Fortran output
   !          It should not matter, but it may.
   local_dim = NGLLX_M * NGLLY_M * NGLLZ_M * nspec_wmax
   call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                    STRINGIFY_VAR(elmnts_mesh))
 
+  ! model boundary surfaces
   local_dim = nspec2d_xmin_wmax
   call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                    STRINGIFY_VAR(ibelm_xmin))
-  if (nspec2d_xmin .ne. 0) then
+  local_dim = nspec2d_xmax_wmax
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
+                                   STRINGIFY_VAR(ibelm_xmax))
+  local_dim = nspec2d_ymin_wmax
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
+                                   STRINGIFY_VAR(ibelm_ymin))
+  local_dim = nspec2d_ymax_wmax
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
+                                   STRINGIFY_VAR(ibelm_ymax))
+  local_dim = nspec2d_bottom_wmax
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
+                                   STRINGIFY_VAR(ibelm_bottom))
+  local_dim = nspec2d_top_wmax
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
+                                   STRINGIFY_VAR(ibelm_top))
+
+  ! needs surface boundary points
+  if (nspec2d_xmin > 0) then
     local_dim = NGNOD2D * nspec2d_xmin_wmax
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(nodes_ibelm_xmin))
   endif
-  local_dim = nspec2d_xmax_wmax
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   STRINGIFY_VAR(ibelm_xmax))
-  if (nspec2d_xmax .ne. 0) then
+
+  if (nspec2d_xmax > 0) then
     local_dim = NGNOD2D * nspec2d_xmax_wmax
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(nodes_ibelm_xmax))
   endif
-  local_dim = nspec2d_ymin_wmax
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   STRINGIFY_VAR(ibelm_ymin))
-  if (nspec2d_ymin .ne. 0) then
+
+  if (nspec2d_ymin > 0) then
     local_dim = NGNOD2D * nspec2d_ymin_wmax
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(nodes_ibelm_ymin))
   endif
-  local_dim = nspec2d_ymax_wmax
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   STRINGIFY_VAR(ibelm_ymax))
-  if (nspec2d_ymax .ne. 0) then
-  local_dim = NGNOD2D * nspec2d_ymax_wmax
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   STRINGIFY_VAR(nodes_ibelm_ymax))
+
+  if (nspec2d_ymax > 0) then
+    local_dim = NGNOD2D * nspec2d_ymax_wmax
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
+                                     STRINGIFY_VAR(nodes_ibelm_ymax))
   endif
-  local_dim = nspec2d_bottom_wmax
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   STRINGIFY_VAR(ibelm_bottom))
-  if (nspec2d_bottom .ne. 0) then
+
+  if (nspec2d_bottom > 0) then
     local_dim = NGNOD2D * nspec2d_bottom_wmax
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(nodes_ibelm_bottom))
   endif
-  local_dim = nspec2d_top_wmax
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   STRINGIFY_VAR(ibelm_top))
-  if (nspec2d_top .ne. 0) then
+
+  if (nspec2d_top > 0) then
     local_dim = NGNOD2D * nspec2d_top_wmax
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(nodes_ibelm_top))
   endif
 
-  local_dim = nb_interfaces_wmax
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   STRINGIFY_VAR(neighbours_mesh))
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   STRINGIFY_VAR(num_elmnts_mesh))
-  local_dim = 6 * nb_interfaces_wmax * nspec_interfaces_max_wmax
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   STRINGIFY_VAR(interfaces_mesh))
+  ! mpi interfaces
+  if (nb_interfaces > 0) then
+    local_dim = nb_interfaces_wmax
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(neighbours_mesh))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(num_elmnts_mesh))
+    local_dim = 6 * nb_interfaces_wmax * nspec_interfaces_max_wmax
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(interfaces_mesh))
+  endif
 
   !----------------------------------.
   ! Perform the actual write to disk |
@@ -735,5 +844,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   call safe_dealloc(num_elmnts_mesh, "num_elmnts_mesh")
   call safe_dealloc(interfaces_mesh, "interfaces_mesh")
   call safe_dealloc(elmnts_mesh, "elmnts_mesh")
+
+  call safe_dealloc(matpropl,"matpropl")
 
 end subroutine save_databases_adios

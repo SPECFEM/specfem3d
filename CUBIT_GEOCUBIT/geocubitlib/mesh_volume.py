@@ -7,18 +7,19 @@
 #                                                                           #
 #############################################################################
 #                                                                           #
-# GEOCUBIT is free software: you can redistribute it and/or modify          #
+# This program is free software; you can redistribute it and/or modify      #
 # it under the terms of the GNU General Public License as published by      #
-# the Free Software Foundation, either version 3 of the License, or         #
+# the Free Software Foundation; either version 2 of the License, or         #
 # (at your option) any later version.                                       #
 #                                                                           #
-# GEOCUBIT is distributed in the hope that it will be useful,               #
+# This program is distributed in the hope that it will be useful,           #
 # but WITHOUT ANY WARRANTY; without even the implied warranty of            #
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             #
 # GNU General Public License for more details.                              #
 #                                                                           #
-# You should have received a copy of the GNU General Public License         #
-# along with GEOCUBIT.  If not, see <http://www.gnu.org/licenses/>.         #
+# You should have received a copy of the GNU General Public License along   #
+# with this program; if not, write to the Free Software Foundation, Inc.,   #
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.               #
 #                                                                           #
 #############################################################################
 
@@ -364,7 +365,7 @@ def refinement(nvol,vol,filename=None):
                    cubitcommand= 'refine node in surf '+str(tsurf)+' numsplit 1 bias 1.0 depth '+str(idepth)
                 cubit.cmd(cubitcommand)
 
-        if not nvol and cfg.volume_type == 'verticalsandwich_volume_ascii_regulargrid_mpiregularmap':
+    if not nvol and cfg.volume_type == 'verticalsandwich_volume_ascii_regulargrid_mpiregularmap':
             # AAA
             # Volume 2 is always in between the 2nd and 3rd vertical surfaces from the left
             cubitcommand = "refine node in volume 2 numsplit 1 depth 0"

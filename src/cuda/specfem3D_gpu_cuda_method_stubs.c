@@ -4,10 +4,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and University of Pau / CNRS / INRIA
-! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
-!                            April 2011
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -36,6 +37,67 @@ typedef float realw;
 
 
 //
+// src/cuda/assemble_MPI_scalar_cuda.cu
+//
+
+void FC_FUNC_(transfer_boun_pot_from_device,
+              TRANSFER_BOUN_POT_FROM_DEVICE)(long* Mesh_pointer,
+                                             realw* potential_dot_dot_acoustic,
+                                             realw* send_potential_dot_dot_buffer,
+                                             const int* FORWARD_OR_ADJOINT){}
+
+void FC_FUNC_(transfer_asmbl_pot_to_device,
+              TRANSFER_ASMBL_POT_TO_DEVICE)(long* Mesh_pointer,
+                                            realw* potential_dot_dot_acoustic,
+                                            realw* buffer_recv_scalar_ext_mesh,
+                                            const int* FORWARD_OR_ADJOINT) {}
+
+
+//
+// src/cuda/assemble_MPI_vector_cuda.cu
+//
+
+void FC_FUNC_(transfer_boun_accel_from_device,
+              TRANSFER_BOUN_ACCEL_FROM_DEVICE)(long* Mesh_pointer,
+                                               realw* accel,
+                                               realw* send_accel_buffer,
+                                               const int* FORWARD_OR_ADJOINT){}
+
+void FC_FUNC_(transfer_boundary_from_device_a,
+              TRANSFER_BOUNDARY_FROM_DEVICE_A)(long* Mesh_pointer,
+                                               const int* nspec_outer_elastic) {}
+
+void FC_FUNC_(transfer_boundary_to_device_a,
+              TRANSFER_BOUNDARY_TO_DEVICE_A)(long* Mesh_pointer,
+                                             realw* buffer_recv_vector_ext_mesh,
+                                             const int* num_interfaces_ext_mesh,
+                                             const int* max_nibool_interfaces_ext_mesh) {}
+
+void FC_FUNC_(transfer_asmbl_accel_to_device,
+              TRANSFER_ASMBL_ACCEL_TO_DEVICE)(long* Mesh_pointer, realw* accel,
+                                              realw* buffer_recv_vector_ext_mesh,
+                                              const int* num_interfaces_ext_mesh,
+                                              const int* max_nibool_interfaces_ext_mesh,
+                                              const int* nibool_interfaces_ext_mesh,
+                                              const int* ibool_interfaces_ext_mesh,
+                                              const int* FORWARD_OR_ADJOINT) {}
+
+//void FC_FUNC_(assemble_accel_on_device,
+//              ASSEMBLE_ACCEL_on_DEVICE)(long* Mesh_pointer, realw* accel,
+//                                              realw* buffer_recv_vector_ext_mesh,
+//                                              int* num_interfaces_ext_mesh,
+//                                              int* max_nibool_interfaces_ext_mesh,
+//                                              int* nibool_interfaces_ext_mesh,
+//                                              int* ibool_interfaces_ext_mesh,
+//                                              int* FORWARD_OR_ADJOINT) {}
+
+void FC_FUNC_(sync_copy_from_device,
+              SYNC_copy_FROM_DEVICE)(long* Mesh_pointer,
+                                     int* iphase,
+                                     realw* send_buffer) {}
+
+
+//
 // src/cuda/check_fields_cuda.cu
 //
 
@@ -45,7 +107,7 @@ void FC_FUNC_(output_free_device_memory,
               OUTPUT_FREE_DEVICE_MEMORY)(int* myrank_f) {}
 
 void FC_FUNC_(get_free_device_memory,
-              get_FREE_DEVICE_MEMORY)(realw* free, realw* used, realw* total ) {}
+              get_FREE_DEVICE_MEMORY)(realw* free, realw* used, realw* total) {}
 
 void FC_FUNC_(get_norm_acoustic_from_device,
               GET_NORM_ACOUSTIC_FROM_DEVICE)(realw* norm,long* Mesh_pointer,int* sim_type) {}
@@ -174,18 +236,6 @@ void FC_FUNC_(compute_coupling_ocean_cuda,
 // src/cuda/compute_forces_acoustic_cuda.cu
 //
 
-void FC_FUNC_(transfer_boun_pot_from_device,
-              TRANSFER_BOUN_POT_FROM_DEVICE)(long* Mesh_pointer,
-                                             realw* potential_dot_dot_acoustic,
-                                             realw* send_potential_dot_dot_buffer,
-                                             int* FORWARD_OR_ADJOINT){}
-
-void FC_FUNC_(transfer_asmbl_pot_to_device,
-              TRANSFER_ASMBL_POT_TO_DEVICE)(long* Mesh_pointer,
-                                            realw* potential_dot_dot_acoustic,
-                                            realw* buffer_recv_scalar_ext_mesh,
-                                            int* FORWARD_OR_ADJOINT) {}
-
 void FC_FUNC_(compute_forces_acoustic_cuda,
               COMPUTE_FORCES_ACOUSTIC_CUDA)(long* Mesh_pointer,
                                             int* iphase,
@@ -201,40 +251,6 @@ void FC_FUNC_(acoustic_enforce_free_surf_cuda,
 // src/cuda/compute_forces_viscoelastic_cuda.cu
 //
 
-void FC_FUNC_(transfer_boun_accel_from_device,
-              TRANSFER_BOUN_ACCEL_FROM_DEVICE)(long* Mesh_pointer,
-                                               realw* accel,
-                                               realw* send_accel_buffer,
-                                               int* FORWARD_OR_ADJOINT){}
-
-void FC_FUNC_(transfer_boundary_from_device_a,
-              TRANSFER_BOUNDARY_FROM_DEVICE_A)(long* Mesh_pointer,
-                                               int* nspec_outer_elastic) {}
-
-void FC_FUNC_(transfer_boundary_to_device_a,
-              TRANSFER_BOUNDARY_TO_DEVICE_A)(long* Mesh_pointer,
-                                             realw* buffer_recv_vector_ext_mesh,
-                                             int* num_interfaces_ext_mesh,
-                                             int* max_nibool_interfaces_ext_mesh) {}
-
-void FC_FUNC_(transfer_asmbl_accel_to_device,
-              TRANSFER_ASMBL_ACCEL_TO_DEVICE)(long* Mesh_pointer, realw* accel,
-                                                    realw* buffer_recv_vector_ext_mesh,
-                                                    int* num_interfaces_ext_mesh,
-                                                    int* max_nibool_interfaces_ext_mesh,
-                                                    int* nibool_interfaces_ext_mesh,
-                                                    int* ibool_interfaces_ext_mesh,
-                                                    int* FORWARD_OR_ADJOINT) {}
-
-//void FC_FUNC_(assemble_accel_on_device,
-//              ASSEMBLE_ACCEL_on_DEVICE)(long* Mesh_pointer, realw* accel,
-//                                              realw* buffer_recv_vector_ext_mesh,
-//                                              int* num_interfaces_ext_mesh,
-//                                              int* max_nibool_interfaces_ext_mesh,
-//                                              int* nibool_interfaces_ext_mesh,
-//                                              int* ibool_interfaces_ext_mesh,
-//                                              int* FORWARD_OR_ADJOINT) {}
-
 void FC_FUNC_(compute_forces_viscoelastic_cuda,
               COMPUTE_FORCES_VISCOELASTIC_CUDA)(long* Mesh_pointer,
                                                 int* iphase,
@@ -244,11 +260,6 @@ void FC_FUNC_(compute_forces_viscoelastic_cuda,
                                                 int* COMPUTE_AND_STORE_STRAIN,
                                                 int* ATTENUATION,
                                                 int* ANISOTROPY) {}
-
-void FC_FUNC_(sync_copy_from_device,
-              SYNC_copy_FROM_DEVICE)(long* Mesh_pointer,
-                                     int* iphase,
-                                     realw* send_buffer) {}
 
 
 //
@@ -307,48 +318,6 @@ void FC_FUNC_(initialize_cuda_device,
 
 
 //
-// src/cuda/it_update_displacement_cuda.cu
-//
-
-void FC_FUNC_(it_update_displacement_cuda,
-              IT_UPDATE_DISPLACMENT_CUDA)(long* Mesh_pointer,
-                                          realw* deltat_F,
-                                          realw* deltatsqover2_F,
-                                          realw* deltatover2_F,
-                                          realw* b_deltat_F,
-                                          realw* b_deltatsqover2_F,
-                                          realw* b_deltatover2_F) {}
-
-void FC_FUNC_(it_update_displacement_ac_cuda,
-              it_update_displacement_ac_cuda)(long* Mesh_pointer,
-                                               realw* deltat_F,
-                                               realw* deltatsqover2_F,
-                                               realw* deltatover2_F,
-                                               realw* b_deltat_F,
-                                               realw* b_deltatsqover2_F,
-                                               realw* b_deltatover2_F) {}
-
-void FC_FUNC_(kernel_3_a_cuda,
-              KERNEL_3_A_CUDA)(long* Mesh_pointer,
-                               realw* deltatover2_F,
-                               realw* b_deltatover2_F,
-                               int* APPROXIMATE_OCEAN_LOAD) {}
-
-void FC_FUNC_(kernel_3_b_cuda,
-              KERNEL_3_B_CUDA)(long* Mesh_pointer,
-                               realw* deltatover2_F,
-                               realw* b_deltatover2_F) {}
-
-void FC_FUNC_(kernel_3_a_acoustic_cuda,
-              KERNEL_3_ACOUSTIC_CUDA)(long* Mesh_pointer ) {}
-
-void FC_FUNC_(kernel_3_b_acoustic_cuda,
-              KERNEL_3_ACOUSTIC_CUDA)(long* Mesh_pointer,
-                                      realw* deltatover2_F,
-                                      realw* b_deltatover2_F) {}
-
-
-//
 // src/cuda/noise_tomography_cuda.cu
 //
 
@@ -403,7 +372,7 @@ void FC_FUNC_(prepare_constants_device,
                                         int* USE_MESH_COLORING_GPU_f,
                                         int* nspec_acoustic,int* nspec_elastic,
                                         int* h_myrank,
-                                        int* SAVE_FORWARD ) {}
+                                        int* SAVE_FORWARD) {}
 
 void FC_FUNC_(prepare_fields_acoustic_device,
               PREPARE_FIELDS_ACOUSTIC_DEVICE)(long* Mesh_pointer,
@@ -658,6 +627,48 @@ void FC_FUNC_(transfer_compute_kernel_fields_from_device,
 
 
 //
+// src/cuda/update_displacement_cuda.cu
+//
+
+void FC_FUNC_(update_displacement_cuda,
+              UPDATE_DISPLACMENT_CUDA)(long* Mesh_pointer,
+                                          realw* deltat_F,
+                                          realw* deltatsqover2_F,
+                                          realw* deltatover2_F,
+                                          realw* b_deltat_F,
+                                          realw* b_deltatsqover2_F,
+                                          realw* b_deltatover2_F) {}
+
+void FC_FUNC_(it_update_displacement_ac_cuda,
+              it_update_displacement_ac_cuda)(long* Mesh_pointer,
+                                               realw* deltat_F,
+                                               realw* deltatsqover2_F,
+                                               realw* deltatover2_F,
+                                               realw* b_deltat_F,
+                                               realw* b_deltatsqover2_F,
+                                               realw* b_deltatover2_F) {}
+
+void FC_FUNC_(kernel_3_a_cuda,
+              KERNEL_3_A_CUDA)(long* Mesh_pointer,
+                               realw* deltatover2_F,
+                               realw* b_deltatover2_F,
+                               int* APPROXIMATE_OCEAN_LOAD) {}
+
+void FC_FUNC_(kernel_3_b_cuda,
+              KERNEL_3_B_CUDA)(long* Mesh_pointer,
+                               realw* deltatover2_F,
+                               realw* b_deltatover2_F) {}
+
+void FC_FUNC_(kernel_3_a_acoustic_cuda,
+              KERNEL_3_ACOUSTIC_CUDA)(long* Mesh_pointer) {}
+
+void FC_FUNC_(kernel_3_b_acoustic_cuda,
+              KERNEL_3_ACOUSTIC_CUDA)(long* Mesh_pointer,
+                                      realw* deltatover2_F,
+                                      realw* b_deltatover2_F) {}
+
+
+//
 // src/cuda/write_seismograms_cuda.cu
 //
 
@@ -674,7 +685,7 @@ void FC_FUNC_(transfer_station_el_from_device,
                                                    realw* b_displ, realw* b_veloc, realw* b_accel,
                                                    long* Mesh_pointer_f,int* number_receiver_global,
                                                    int* ispec_selected_rec,int* ispec_selected_source,
-                                                   int* ibool) {}
+                                                   int* h_ibool) {}
 
 void FC_FUNC_(transfer_station_ac_from_device,
               TRANSFER_STATION_AC_FROM_DEVICE)(realw* potential_acoustic,
@@ -687,5 +698,5 @@ void FC_FUNC_(transfer_station_ac_from_device,
                                                 int* number_receiver_global,
                                                 int* ispec_selected_rec,
                                                 int* ispec_selected_source,
-                                                int* ibool) {}
+                                                int* h_ibool) {}
 

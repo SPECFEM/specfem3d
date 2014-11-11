@@ -14,7 +14,7 @@ program random_model
   real(kind=4),dimension(:), allocatable :: adj
 
   !! input parameters
-  if( iargc() .ne. 3 ) stop 'Usage: ./xpostprocessing NSTEP DT NPROC'
+  if( iargc() /= 3 ) stop 'Usage: ./xpostprocessing NSTEP DT NPROC'
   j=1;  call getarg(j, arg); read(arg,*,iostat=ios) NSTEP;   if (ios /= 0) stop 'Error reading NSTEP'
   j=2;  call getarg(j, arg); read(arg,*,iostat=ios)    DT;   if (ios /= 0) stop 'Error reading DT'
   j=3;  call getarg(j, arg); read(arg,*,iostat=ios) NPROC;   if (ios /= 0) stop 'Error reading NPROC'

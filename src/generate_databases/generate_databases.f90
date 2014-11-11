@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -189,7 +190,6 @@
   subroutine generate_databases
 
   use adios_manager_mod
-  use mpi
   use generate_databases_par
 
   implicit none
@@ -201,17 +201,14 @@
   call world_size(sizeprocs)
   call world_rank(myrank)
 
-! get the base pathname for output files
-  call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)))
-
 ! open main output file, only written to by process 0
-  if(myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
-    open(unit=IMAIN,file=trim(OUTPUT_FILES)//'/output_mesher.txt',status='unknown')
+  if (myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
+    open(unit=IMAIN,file=trim(OUTPUT_FILES_PATH)//'/output_mesher.txt',status='unknown')
 
 ! get MPI starting time
   time_start = wtime()
 
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) '******************************************'
     write(IMAIN,*) '*** Specfem3D MPI Mesher - f90 version ***'
@@ -226,7 +223,7 @@
 ! reads topography and bathymetry file
   call gd_read_topography()
 
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) '**************************'
     write(IMAIN,*) 'creating mesh in the model'
@@ -271,44 +268,50 @@
 
 ! reads Par_file
   call read_parameter_file(NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT,NGNOD,NGNOD2D, &
-                        UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,TOMOGRAPHY_PATH, &
-                        ATTENUATION,USE_OLSEN_ATTENUATION,LOCAL_PATH,NSOURCES, &
-                        APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,ANISOTROPY,STACEY_ABSORBING_CONDITIONS,MOVIE_TYPE, &
-                        MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
-                        NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
-                        SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
-                        NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD, &
-                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
-                        USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE, &
-                        USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
-                        PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,FULL_ATTENUATION_SOLID,TRAC_PATH)
+                           UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,TOMOGRAPHY_PATH, &
+                           ATTENUATION,USE_OLSEN_ATTENUATION,LOCAL_PATH,NSOURCES, &
+                           APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,ANISOTROPY,STACEY_ABSORBING_CONDITIONS,MOVIE_TYPE, &
+                           MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
+                           NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
+                           SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
+                           NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD, &
+                           NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
+                           USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE, &
+                           USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
+                           PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,SEP_MODEL_DIRECTORY, &
+                           FULL_ATTENUATION_SOLID,TRACTION_PATH,COUPLE_WITH_EXTERNAL_CODE,EXTERNAL_CODE_TYPE, &
+                           MESH_A_CHUNK_OF_THE_EARTH)
 
-  call read_adios_parameters(ADIOS_ENABLED, ADIOS_FOR_DATABASES,       &
-                             ADIOS_FOR_FORWARD_ARRAYS, ADIOS_FOR_MESH, &
+  call read_adios_parameters(ADIOS_ENABLED, ADIOS_FOR_DATABASES, &
+                             ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, &
                              ADIOS_FOR_KERNELS)
 
 ! check that the code is running with the requested nb of processes
-  if(sizeprocs /= NPROC) then
-    if( myrank == 0 ) then
+  if (sizeprocs /= NPROC) then
+    if (myrank == 0) then
       write(IMAIN,*) 'error: number of processors supposed to run on: ',NPROC
       write(IMAIN,*) 'error: number of MPI processors actually run on: ',sizeprocs
       print*
       print*, 'error generate_databases: number of processors supposed to run on: ',NPROC
       print*, 'error generate_databases: number of MPI processors actually run on: ',sizeprocs
       print*
+      if (NPROC > 1 .and. sizeprocs == 1) then
+        print*,'this might be the serial version, please check if you have compiled all executables with MPI support...'
+        print*
+      endif
     endif
     call exit_MPI(myrank,'wrong number of MPI processes')
   endif
 
 ! there would be a problem with absorbing boundaries for different NGLLX,NGLLY,NGLLZ values
 ! just to be sure for now..
-  if(STACEY_ABSORBING_CONDITIONS) then
-    if( NGLLX /= NGLLY .and. NGLLY /= NGLLZ ) &
+  if (STACEY_ABSORBING_CONDITIONS) then
+    if (NGLLX /= NGLLY .and. NGLLY /= NGLLZ) &
       call exit_MPI(myrank,'must have NGLLX = NGLLY = NGLLZ for external meshes')
   endif
 
 ! info about external mesh simulation
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*) 'This is process ',myrank
     write(IMAIN,*) 'There are ',sizeprocs,' MPI processes'
     write(IMAIN,*) 'Processes are numbered from 0 to ',sizeprocs-1
@@ -326,65 +329,67 @@
     write(IMAIN,*)
 
 ! check that the constants.h file is correct
-    if ( NGNOD /= 8 .and. NGNOD /= 27 ) then
+    if (NGNOD /= 8 .and. NGNOD /= 27) then
        stop 'elements should have 8 or 27 control nodes, please modify NGNOD in Par_file'
     endif
 
     write(IMAIN,'(a)',advance='no') ' velocity model: '
-    select case(IMODEL)
-    case( IMODEL_DEFAULT )
+    select case (IMODEL)
+    case (IMODEL_DEFAULT )
     write(IMAIN,'(a)',advance='yes') '  default '
-    case( IMODEL_GLL )
+    case (IMODEL_GLL )
     write(IMAIN,'(a)',advance='yes') '  gll'
-    case( IMODEL_1D_PREM )
+    case (IMODEL_1D_PREM )
     write(IMAIN,'(a)',advance='yes') '  1d_prem'
-    case( IMODEL_1D_CASCADIA )
+    case (IMODEL_1D_CASCADIA )
     write(IMAIN,'(a)',advance='yes') '  1d_cascadia'
-    case( IMODEL_1D_SOCAL )
+    case (IMODEL_1D_SOCAL )
     write(IMAIN,'(a)',advance='yes') '  1d_socal'
-    case( IMODEL_SALTON_TROUGH )
+    case (IMODEL_SALTON_TROUGH )
     write(IMAIN,'(a)',advance='yes') '  salton_trough'
-    case( IMODEL_TOMO )
+    case (IMODEL_TOMO )
     write(IMAIN,'(a)',advance='yes') '  tomo'
-    case( IMODEL_USER_EXTERNAL )
+    case (IMODEL_USER_EXTERNAL )
     write(IMAIN,'(a)',advance='yes') '  external'
-    case( IMODEL_IPATI )
+    case (IMODEL_IPATI )
     write(IMAIN,'(a)',advance='yes') '  ipati'
-    case( IMODEL_IPATI_WATER )
+    case (IMODEL_IPATI_WATER )
     write(IMAIN,'(a)',advance='yes') '  ipati_water'
+    case (IMODEL_SEP)
+    write(IMAIN,'(a)',advance='yes') '  SEP'
     end select
 
     write(IMAIN,*)
   endif
 
 ! check that reals are either 4 or 8 bytes
-  if(CUSTOM_REAL /= SIZE_REAL .and. CUSTOM_REAL /= SIZE_DOUBLE) &
+  if (CUSTOM_REAL /= SIZE_REAL .and. CUSTOM_REAL /= SIZE_DOUBLE) &
     call exit_MPI(myrank,'wrong size of CUSTOM_REAL for reals')
 
 ! for the number of standard linear solids for attenuation
-  if(N_SLS /= 3) call exit_MPI(myrank,'number of SLS must be 3')
+  if (N_SLS /= 3) call exit_MPI(myrank,'number of SLS must be 3')
 
   ! for noise simulations, we need to save movies at the surface (where the noise is generated)
   ! and thus we force MOVIE_SURFACE to be .true., in order to use variables defined for surface movies later
-  if ( NOISE_TOMOGRAPHY /= 0 ) then
+  if (NOISE_TOMOGRAPHY /= 0) then
     MOVIE_TYPE = 1
     MOVIE_SURFACE = .true.
     USE_HIGHRES_FOR_MOVIES = .true.     ! we need to save surface movie everywhere, i.e. at all GLL points on the surface
   endif
 
-  if(myrank == 0) then
+  if (myrank == 0) then
 
     write(IMAIN,*)
-    if(SUPPRESS_UTM_PROJECTION) then
+    if (SUPPRESS_UTM_PROJECTION) then
       write(IMAIN,*) 'suppressing UTM projection'
     else
       write(IMAIN,*) 'using UTM projection in region ',UTM_PROJECTION_ZONE
     endif
 
     write(IMAIN,*)
-    if(ATTENUATION) then
+    if (ATTENUATION) then
       write(IMAIN,*) 'incorporating attenuation using ',N_SLS,' standard linear solids'
-      if(USE_OLSEN_ATTENUATION) then
+      if (USE_OLSEN_ATTENUATION) then
         write(IMAIN,*) 'using Olsen''s attenuation'
       else
         write(IMAIN,*) 'not using Olsen''s attenuation'
@@ -394,25 +399,25 @@
     endif
 
     write(IMAIN,*)
-    if(ANISOTROPY) then
+    if (ANISOTROPY) then
       write(IMAIN,*) 'incorporating anisotropy'
     else
       write(IMAIN,*) 'no anisotropy'
     endif
 
     write(IMAIN,*)
-    if(APPROXIMATE_OCEAN_LOAD) then
+    if (APPROXIMATE_OCEAN_LOAD) then
       write(IMAIN,*) 'incorporating the oceans using equivalent load'
-      if(TOPOGRAPHY) write(IMAIN,*) ' with elevation from topography file'
+      if (TOPOGRAPHY) write(IMAIN,*) ' with elevation from topography file'
     else
       write(IMAIN,*) 'no oceans'
     endif
 
     write(IMAIN,*)
-    if(STACEY_ABSORBING_CONDITIONS) then
+    if (STACEY_ABSORBING_CONDITIONS) then
       write(IMAIN,*) 'incorporating Stacey absorbing conditions'
     else
-      if(PML_CONDITIONS) then
+      if (PML_CONDITIONS) then
         write(IMAIN,*) 'incorporating absorbing conditions of perfectly matched layer'
       else
         write(IMAIN,*) 'no absorbing condition'
@@ -420,7 +425,7 @@
     endif
 
     write(IMAIN,*)
-    if(USE_FORCE_POINT_SOURCE) then
+    if (USE_FORCE_POINT_SOURCE) then
        write(IMAIN,*) 'using a FORCESOLUTION source instead of a CMTSOLUTION source'
     else
        write(IMAIN,*) 'using a CMTSOLUTION source'
@@ -428,10 +433,10 @@
     endif
 
     write(IMAIN,*)
-    if(USE_RICKER_TIME_FUNCTION) then
+    if (USE_RICKER_TIME_FUNCTION) then
        write(IMAIN,*) 'using a Ricker source time function'
     else
-       if(USE_FORCE_POINT_SOURCE) then
+       if (USE_FORCE_POINT_SOURCE) then
           write(IMAIN,*) 'using a quasi-Heaviside source time function'
           write(IMAIN,*)
        else
@@ -443,7 +448,7 @@
   endif
 
 ! makes sure processes are synchronized
-  call sync_all()
+  call synchronize_all()
 
   end subroutine gd_read_parameters
 
@@ -458,17 +463,18 @@
   use generate_databases_par
   implicit none
 
-  if( APPROXIMATE_OCEAN_LOAD .and. TOPOGRAPHY ) then
+  if (APPROXIMATE_OCEAN_LOAD .and. TOPOGRAPHY) then
 
     ! values given in constants.h
     NX_TOPO = NX_TOPO_FILE
     NY_TOPO = NY_TOPO_FILE
+
     allocate(itopo_bathy(NX_TOPO,NY_TOPO),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array itopo_bathy'
+    if (ier /= 0) stop 'error allocating array itopo_bathy'
 
     call read_topo_bathy_file(itopo_bathy,NX_TOPO,NY_TOPO)
 
-    if(myrank == 0) then
+    if (myrank == 0) then
       write(IMAIN,*)
       write(IMAIN,*) 'regional topography file read ranges in m from ',minval(itopo_bathy),' to ',maxval(itopo_bathy)
       write(IMAIN,*)
@@ -478,7 +484,7 @@
     NX_TOPO = 1
     NY_TOPO = 1
     allocate(itopo_bathy(NX_TOPO,NY_TOPO),stat=ier)
-    if( ier /= 0 ) stop 'error allocating dummy array itopo_bathy'
+    if (ier /= 0) stop 'error allocating dummy array itopo_bathy'
 
   endif
 

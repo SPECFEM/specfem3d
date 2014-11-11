@@ -44,14 +44,14 @@
    do ispec = 1, nelmnts_ext_mesh
      read(98,*) elmnts_ext_mesh(1,ispec), elmnts_ext_mesh(2,ispec), elmnts_ext_mesh(3,ispec), elmnts_ext_mesh(4,ispec), &
           elmnts_ext_mesh(5,ispec), elmnts_ext_mesh(6,ispec), elmnts_ext_mesh(7,ispec), elmnts_ext_mesh(8,ispec)
-  end do
+  enddo
   close(98)
 
   open(unit=98, file='./mat', status='old', form='formatted')
   allocate(mat_ext_mesh(nelmnts_ext_mesh))
    do ispec = 1, nelmnts_ext_mesh
      read(98,*) mat_ext_mesh(ispec)
-  end do
+  enddo
   close(98)
 
   open(unit=98, file='./nodes_coords', status='old', form='formatted')
@@ -59,7 +59,7 @@
   allocate(nodes_coords_ext_mesh(NDIM,nnodes_ext_mesh))
   do inode = 1, nnodes_ext_mesh
      read(98,*) nodes_coords_ext_mesh(1,inode), nodes_coords_ext_mesh(2,inode),nodes_coords_ext_mesh(3,inode)
-  end do
+  enddo
   close(98)
 
 
@@ -399,14 +399,14 @@ enddo
                   (temporary_nodes(3,ix,iy,iz)-nodes_coords_ext_mesh_sub(3,elmnts_ext_mesh_sub(inode,ispec_neighbours_sub)))**2 ) &
                      < xtol ) then
                   temporary_nodes_lookup(ix,iy,iz) = elmnts_ext_mesh_sub(inode,ispec_neighbours_sub)
-                end if
+                endif
 
               enddo
             enddo
             enddo
             enddo
           enddo
-        end if
+        endif
       enddo
 
       do ix = 1, NSUB+1
@@ -418,7 +418,7 @@ enddo
            nodes_coords_ext_mesh_sub(1,nnodes_ext_mesh_sub) = temporary_nodes(1,ix,iy,iz)
            nodes_coords_ext_mesh_sub(2,nnodes_ext_mesh_sub) = temporary_nodes(2,ix,iy,iz)
            nodes_coords_ext_mesh_sub(3,nnodes_ext_mesh_sub) = temporary_nodes(3,ix,iy,iz)
-        end if
+        endif
       enddo
       enddo
       enddo
@@ -470,13 +470,13 @@ enddo
      write(99,*) elmnts_ext_mesh_sub(1,ispec), elmnts_ext_mesh_sub(2,ispec), elmnts_ext_mesh_sub(3,ispec), &
           elmnts_ext_mesh_sub(4,ispec), elmnts_ext_mesh_sub(5,ispec), elmnts_ext_mesh_sub(6,ispec), &
           elmnts_ext_mesh_sub(7,ispec), elmnts_ext_mesh_sub(8,ispec)
-  end do
+  enddo
   close(99)
 
   open(unit=99, file='./mat_sub', status='unknown', form='formatted')
   do ispec = 1, nelmnts_ext_mesh*NSUB*NSUB*NSUB
      write(99,*) mat_ext_mesh_sub(ispec)
-  end do
+  enddo
   close(99)
 
 
@@ -484,7 +484,7 @@ enddo
   write(99,*) nnodes_ext_mesh_sub
   do inode = 1, nnodes_ext_mesh_sub
      write(99,*) nodes_coords_ext_mesh_sub(1,inode), nodes_coords_ext_mesh_sub(2,inode), nodes_coords_ext_mesh_sub(3,inode)
-  end do
+  enddo
   close(99)
 
   end program decimate_mesh
@@ -532,7 +532,7 @@ enddo
        nodes_elmnts(elmnts(i)*nsize+nnodes_elmnts(elmnts(i))) = i/esize
        nnodes_elmnts(elmnts(i)) = nnodes_elmnts(elmnts(i)) + 1
 
-    end do
+    enddo
 
     print *, 'nnodes_elmnts'
 
@@ -549,9 +549,9 @@ enddo
                 do m = 0, nnodes_elmnts(num_node)-1
                    if ( nodes_elmnts(m+num_node*nsize) == elem_target ) then
                       connectivity = connectivity + 1
-                   end if
-                end do
-             end do
+                   endif
+                enddo
+             enddo
 
              if ( connectivity >=  ncommonnodes) then
 
@@ -563,19 +563,19 @@ enddo
                          is_neighbour = .true.
 
 
-                      end if
-                   end if
-                end do
+                      endif
+                   endif
+                enddo
                 if ( .not.is_neighbour ) then
                    adjncy(nodes_elmnts(k+j*nsize)*MAX_NEIGHBOURS+xadj(nodes_elmnts(k+j*nsize))) = nodes_elmnts(l+j*nsize)
                    xadj(nodes_elmnts(k+j*nsize)) = xadj(nodes_elmnts(k+j*nsize)) + 1
                    adjncy(nodes_elmnts(l+j*nsize)*MAX_NEIGHBOURS+xadj(nodes_elmnts(l+j*nsize))) = nodes_elmnts(k+j*nsize)
                    xadj(nodes_elmnts(l+j*nsize)) = xadj(nodes_elmnts(l+j*nsize)) + 1
-                end if
-             end if
-          end do
-       end do
-    end do
+                endif
+             endif
+          enddo
+       enddo
+    enddo
 
     ! making adjacency arrays compact (to be used for partitioning)
     do i = 0, nelmnts-1
@@ -584,8 +584,8 @@ enddo
        do j = 0, k-1
           adjncy(nb_edges) = adjncy(i*MAX_NEIGHBOURS+j)
           nb_edges = nb_edges + 1
-       end do
-    end do
+       enddo
+    enddo
 
     xadj(nelmnts) = nb_edges
 

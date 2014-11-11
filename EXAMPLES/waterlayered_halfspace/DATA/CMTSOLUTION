@@ -2,8 +2,8 @@ PDE  1999 01 01 00 00 00.00  67000 67000 -25000 4.2 4.2 water_vertical
 event name:       water_vertical
 time shift:       0.0000
 half duration:    2.0
-latitude:       67000.0
-longitude:      66999.9
+latorUTM:       67000.0
+longorUTM:      66999.9
 depth:           1.0
 Mrr:       1.000000e+23
 Mtt:       1.000000e+23

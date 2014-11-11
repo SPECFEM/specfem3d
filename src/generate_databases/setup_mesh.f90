@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -39,13 +40,13 @@
 
 ! use dynamic allocation to allocate memory for arrays
   allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array ibool'
+  if (ier /= 0) stop 'error allocating array ibool'
   allocate(xstore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array xstore'
+  if (ier /= 0) stop 'error allocating array xstore'
   allocate(ystore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array ystore'
+  if (ier /= 0) stop 'error allocating array ystore'
   allocate(zstore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+  if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
   call memory_eval_mesher(myrank,NSPEC_AB,npointot,nnodes_ext_mesh, &
                         nelmnts_ext_mesh,nmat_ext_mesh,num_interfaces_ext_mesh, &
@@ -56,10 +57,10 @@
   max_memory_size = max_memory_size_request
 
 ! make sure everybody is synchronized
-  call sync_all()
+  call synchronize_all()
 
 ! main working routine to create all the regions of the mesh
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*) 'create regions: '
   endif
   call create_regions_mesh()
@@ -83,7 +84,7 @@
   call min_all_dp(min_elevation,min_elevation_all)
   call max_all_dp(max_elevation,max_elevation_all)
 
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) 'min and max of topography included in mesh in m is ',min_elevation_all,' ',max_elevation_all
     write(IMAIN,*)
@@ -94,6 +95,6 @@
   deallocate(xstore,ystore,zstore)
 
 ! make sure everybody is synchronized
-  call sync_all()
+  call synchronize_all()
 
   end subroutine setup_mesh

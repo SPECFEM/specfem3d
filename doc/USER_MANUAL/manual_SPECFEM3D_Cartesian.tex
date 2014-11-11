@@ -1,8 +1,11 @@
+% !TEX encoding = IsoLatin
 %% LyX 2.0.2 created this file.  For more info, see http://www.lyx.org/.
 %% Do not edit unless you really know what you are doing.
 \documentclass[oneside,english]{book}
 \usepackage[T1]{fontenc}
-\usepackage[latin1]{inputenc}
+%% DK DK we do not accept accented letters, use the old LaTeX syntax
+%% DK DK for them instead: \'e \`e  \"e \^e and so on.
+%% DK DK \usepackage[latin1]{inputenc}
 \usepackage[letterpaper]{geometry}
 \geometry{verbose,tmargin=1in,bmargin=1in,lmargin=1in,rmargin=1in}
 \setcounter{secnumdepth}{3}
@@ -67,17 +70,6 @@
 % biblio GJI
 \bibliographystyle{abbrvnat}
 
-\newcommand{\toall}[1]{\textbf{*** All: #1 ***}}
-\newcommand{\tojeroen}[1]{\textbf{*** Jeroen: #1 ***}}
-\newcommand{\tobrian}[1]{\textbf{*** Brian: #1 ***}}
-\newcommand{\tovala}[1]{\textbf{*** Vala: #1 ***}}
-\newcommand{\tovalabrian}[1]{\textbf{*** Vala \& Brian: #1 ***}}
-\newcommand{\tovalaqinya}[1]{\textbf{*** Vala \& Qinya: #1 ***}}
-\newcommand{\toqinya}[1]{\textbf{*** Qinya: #1 ***}}
-\newcommand{\tomin}[1]{\textbf{*** Min: #1 ***}}
-\newcommand{\toalessia}[1]{\textbf{*** Alessia: #1 ***}}
-\newcommand{\todimitri}[1]{\textbf{*** Dimitri: #1 ***}}
-
 \newcommand{\nexxi}{\mbox{\texttt{NEX\_XI\/}}}
 \newcommand{\nexeta}{\mbox{\texttt{NEX\_ETA\/}}}
 \newcommand{\nprocxi}{\mbox{\texttt{NPROC\_XI\/}}}
@@ -121,24 +113,60 @@ Version 2.1}
 \noindent The SPECFEM3D Cartesian package was first developed by Dimitri
 Komatitsch and Jean-Pierre Vilotte at Institut de Physique du Globe
 (IPGP) in Paris, France from 1995 to 1997 and then by Dimitri Komatitsch
-and Jeroen Tromp at Harvard University and Caltech, USA, starting
-in 1998. The story started on March 28, 1995, when Prof. Yvon Maday
-from CNRS and University of Paris, France, gave a lecture to Dimitri
-Komatitsch and Jean-Pierre Vilotte at IPG about the nice properties
-of the spectral-element method that he had used for other equations.
-We are deeply indebted and thankful to him for that.
+and Jeroen Tromp at Harvard University and Caltech, USA, starting in 1998.
+The story started on April 4, 1995, when Prof. Yvon Maday from CNRS and University of Paris, France, gave a lecture to
+Dimitri Komatitsch and Jean-Pierre Vilotte at IPG about the nice properties of the Legendre spectral-element method with diagonal mass matrix that he had used for
+other equations. We are deeply indebted and thankful to him for that.
+That followed a visit by Dimitri Komatitsch to OGS (Istituto Nazionale di Oceanografia e di Geofisica Sperimentale) in Trieste, Italy, in February 1995
+to meet with G\'eza Seriani and Enrico Priolo, who introduced him to their 2D Chebyshev version of the spectral-element method with a non-diagonal mass matrix.
+We are deeply indebted and thankful to them for that.
 
+%%%%%%%% please do NOT merge the lines of the paragraph below, it makes it difficult to insert new names in alphabetical order; leave a single name per line
+%%%%%%%% please do NOT merge the lines of the paragraph below, it makes it difficult to insert new names in alphabetical order; leave a single name per line
+%%%%%%%% please do NOT merge the lines of the paragraph below, it makes it difficult to insert new names in alphabetical order; leave a single name per line
 Since then it has been developed and maintained by a development team:
-in alphabetical order, Jean-Paul (Pablo) Ampuero, Piero Basini, Céline
-Blitz, Ebru Bozda\u{g}, Emanuele Casarotti, Joseph Charles, Min Chen,
-Percy Galvez, Dominik Göddeke, Vala Hjörleifsdóttir, Sue Kientz, Dimitri
-Komatitsch, Jesús Labarta, Nicolas Le Goff, Pieyre Le Loher, Qinya
-Liu, Yang Luo, Alessia Maggi, Federica Magnoni, Roland Martin, René
-Matzen, Dennis McRitchie, Matthias Meschede, Peter Messmer, David
-Michéa, Surendra Nadh Somala, Tarje Nissen-Meyer, Daniel Peter, Max
-Rietmann, Elliott Sales de Andrade, Brian Savage, Bernhard Schuberth,
-Anne Sieminski, Leif Strand, Carl Tape, Jeroen Tromp, Jean-Pierre
-Vilotte, Zhinan Xie, Hejun Zhu.\\
+in alphabetical order,
+Jean-Paul (Pablo) Ampuero,
+Kangchen Bai,
+Piero Basini,
+C\'eline Blitz,
+Ebru Bozda\u{g},
+Emanuele Casarotti,
+Joseph Charles,
+Min Chen,
+Percy Galvez,
+Dominik Göddeke,
+Vala Hjörleifsdóttir,
+Sue Kientz,
+Dimitri Komatitsch,
+Jesús Labarta,
+Nicolas Le Goff,
+Pieyre Le Loher,
+Matthieu Lefebvre,
+Qinya Liu,
+Yang Luo,
+Alessia Maggi,
+Federica Magnoni,
+Roland Martin,
+Ren\'e Matzen,
+Dennis McRitchie,
+Matthias Meschede,
+Peter Messmer,
+David Mich\'ea,
+Surendra Nadh Somala,
+Tarje Nissen-Meyer,
+Daniel Peter,
+Max Rietmann,
+Elliott Sales de Andrade,
+Brian Savage,
+Bernhard Schuberth,
+Anne Sieminski,
+Leif Strand,
+Carl Tape,
+Jeroen Tromp,
+Jean-Pierre Vilotte,
+Zhinan Xie,
+Hejun Zhu.\\
 
 
 The cover graphic of the manual was created by Santiago Lombeyda from
@@ -172,6 +200,7 @@ Caltech's Center for Advanced Computing Research (CACR) \urlwithparentheses{http
 \includegraphics[width=0.112\textwidth]{figures/logo_Univ_Toulouse}\vspace*{2truemm}
 \includegraphics[width=0.112\textwidth]{figures/logo_TOTAL}\vspace*{2truemm}
 \includegraphics[width=0.130\textwidth]{figures/logo_Fairbanks}
+\hspace*{3mm}\includegraphics[width=0.130\textwidth]{figures/logo_fondation_Del_Duca}
 \par\end{centering}
 \end{figure}
 
@@ -197,7 +226,7 @@ It has very good accuracy and convergence properties \citep{MaPa89,SePr94,DeFiMu
 The spectral element approach admits spectral rates of convergence
 and allows exploiting $hp$-convergence schemes. It is also very well
 suited to parallel implementation on very large supercomputers \citep{KoTsChTr03,TsKoChTr03,KoLaMi08a,CaKoLaTiMiLeSnTr08,KoViCh10}
-as well as on clusters of GPU accelerating graphics cards \citep{KoMiEr09,KoErGoMi10,Kom11}.
+as well as on clusters of GPU accelerating graphics cards \citep{Kom11,MiKo10,KoMiEr09,KoErGoMi10}.
 Tensor products inside each element can be optimized to reach very
 high efficiency \citep{DeFiMu02}, and mesh point and element numbering
 can be optimized to reduce processor cache misses and improve cache
@@ -255,11 +284,14 @@ of the `Jaguar' Cray XT5 system at Oak Ridge National Laboratories
 (USA) \citep{CaKoLaTiMiLeSnTr08}. It also won the BULL Joseph Fourier
 supercomputing award in 2010.\\
 
+It reached the sustained one petaflop performance level for the first time in February 2013
+on the Blue Waters Cray supercomputer at the National Center for Supercomputing Applications (NCSA), located at the University of Illinois at Urbana-Champaign (USA).\\
+
 
 This new release of the code (version 2.1) includes Convolution or
 Auxiliary Differential Equation Perfectly Matched absorbing Layers
 (C-PML or ADE-PML) \citep{MaKoEz08,MaKoGe08,MaKo09,MaKoGeBr10,KoMa07}.
-It also includes support for GPU graphics card acceleration \citep{KoMiEr09,KoErGoMi10,MiKo10,Kom11}.\\
+It also includes support for GPU graphics card acceleration \citep{Kom11,MiKo10,KoMiEr09,KoErGoMi10}.\\
 
 
 The next release of the code will use the PT-SCOTCH parallel and threaded
@@ -287,7 +319,7 @@ and excellent scaling up to 150,000 processor cores is shown for instance
 in \citet{CaKoLaTiMiLeSnTr08,KoLaMi08a,MaKoBlLe08,KoErGoMi10,Kom11},
 \item [{GPU computing}] ~\\
  Computing on GPU graphics cards for acoustic or seismic wave propagation
-applications is described in detail in \citet{KoMiEr09,KoErGoMi10,MiKo10,Kom11}.
+applications is described in detail in \citet{Kom11,MiKo10,KoMiEr09,KoErGoMi10}.
 \end{description}
 \noindent If you use this new version 2.1, which has non blocking
 MPI for much better performance for medium or large runs, please cite
@@ -332,13 +364,10 @@ Marie Curie program.
 
 \chapter{\label{cha:Getting-Started}Getting Started}
 
-The SPECFEM3D Cartesian software package comes in a gzipped tar ball.
-In the directory in which you want to install the package, type
+To download the SPECFEM3D\_Cartesian software package, type this:
 \begin{lyxcode}
-{\small tar~-zxvf~SPECFEM3D\_V2.1.0\_Cartesian.tar.gz}{\small \par}
+git clone --recursive --branch devel https://github.com/geodynamics/specfem3d.git
 \end{lyxcode}
-The directory \texttt{\small SPECFEM3D/}{\small{} will then contain
-the source code.}\\
 {\small \par}
 
 We recommend that you add {\texttt{ulimit -S -s unlimited}} to your
@@ -356,20 +385,18 @@ in your .bash\_profile or your .cshrc file):
 \begin{lyxcode}
 ./configure~FC=ifort~MPIFC=mpif90
 \end{lyxcode}
+Note that MPI must be installed with MPI-IO enabled because parts of SPECFEM3D perform I/Os through MPI-IO.
+
+
 Before running the \texttt{configure} script, you should probably
 edit file \texttt{flags.guess} to make sure that it contains the best
 compiler options for your system. Known issues or things to check
 are:
 \begin{description}
-\item [{\texttt{Intel ifort compiler}}] See if you need to add \texttt{-assume
-byterecl} for your machine.
+\item [{\texttt{Intel ifort compiler}}] See if you need to add \texttt{-assume byterecl} for your machine. \textbf{In the case of that compiler, we have noticed that versions dot zero sometimes have bugs or issues that can lead to wrong results when running the code, thus we \emph{strongly} recommend using versions dot one or above (for instance version 13.1 instead of 13.0, version 14.1 instead of 14.0 and so on)}.
 \item [{\texttt{IBM compiler}}] See if you need to add \texttt{-qsave}
 or \texttt{-qnosave} for your machine.
 \item [{\texttt{Mac OS}}] You will probably need to install \texttt{XCODE}.
-In addition, the \texttt{clock\_gettime} routine, which is used by
-the \texttt{SCOTCH} library that we use, does not exist in Mac OS.
-You will need to replace it with \texttt{clock\_get\_time} if you
-want to use \texttt{SCOTCH}.
 \end{description}
 When compiling on an IBM machine with the \texttt{xlf} and \texttt{xlc}
 compilers, we suggest running the \texttt{configure} script with the
@@ -385,6 +412,12 @@ On SGI systems, \texttt{flags.guess} automatically informs \texttt{configure}
 to insert `\texttt{`TRAP\_FPE=OFF}'' into the generated \texttt{Makefile}
 in order to turn underflow trapping off.\\
 
+You can add -DFORCE\_VECTORIZATION to the compiler options in \texttt{flags.guess} (for all compilers, except for IBM for which the syntax is -WF,-DFORCE\_VECTORIZATION )
+to speed up the code in the fluid (acoustic) parts (only; FORCE\_VECTORIZATION support for elastic parts has been discontinued in the source code).
+This works fine if (and only if) your computer always allocates a contiguous memory block for each allocatable array;
+this is the case for most machines and most compilers, but not all. For more details see https://github.com/geodynamics/specfem3d/issues/81 .
+To check if that option works fine on your machine, run the code with and without it for a model containing a significant fluid layer
+(or entirely fluid) and make sure the seismograms are identical.\\
 
 Note that we use CUBIT (now called Trelis) to create meshes of hexahedra, but other packages
 can be used as well, for instance GiD from \url{http://gid.cimne.upc.es}
@@ -410,7 +443,7 @@ and uncomment the METIS link flag in that file before running \texttt{configure}
 
 The SCOTCH library \citep{PeRo96} provides efficent static mapping,
 graph and mesh partitioning routines. SCOTCH is a free software package
-developed by François Pellegrini et al. from LaBRI and INRIA in Bordeaux,
+developed by Fran\c{c}ois Pellegrini et al. from LaBRI and INRIA in Bordeaux,
 France, downloadable from the web page \url{https://gforge.inria.fr/projects/scotch/}.
 In case no SCOTCH libraries can be found on the system, the configuration
 will bundle the version provided with the source code for compilation.
@@ -424,6 +457,11 @@ that you use the Intel icc C compiler to compile Scotch, i.e., use:
 \begin{lyxcode}
 ./configure~CC=icc~FC=ifort~MPIFC=mpif90
 \end{lyxcode}
+
+When compiling the SCOTCH source code, if you get a message such as: "ld: cannot find -lz",
+the Zlib compression development library is probably missing on your machine and you will need to install it or ask your system administrator to
+do so. On Linux machines the package is often called "zlib1g-dev" or similar. (thus "sudo apt-get install zlib1g-dev" would install it)
+
 To compile a serial version of the code for small meshes that fits
 on one compute node and can therefore be run serially, run \texttt{configure}
 with the \texttt{-{}-without-mpi} option to suppress all calls to
@@ -490,7 +528,7 @@ your system and compare the seismograms. If they are identical (and
 in most cases they will), you can select single precision for your
 future runs.\\
 
-If your compiler has problems with the \texttt{use mpi} statements that are used in the code, use the script called 
+If your compiler has problems with the \texttt{use mpi} statements that are used in the code, use the script called
 \texttt{replace\_use\_mpi\_with\_include\_mpif\_dot\_h.pl} in the root directory to replace all of them with \texttt{include 'mpif.h'} automatically.
 
 \section{Adding OpenMP support in addition to MPI}
@@ -568,7 +606,7 @@ with \texttt{CC=gcc} instead of \texttt{CC=bgxlc\_r}.
 \noindent \underline{Older installation instruction for IBM BlueGene, from 2011:}\\
 
 
-\noindent To compile the code on an IBM BlueGene, Laurent Léger from
+\noindent To compile the code on an IBM BlueGene, Laurent L\'eger from
 IDRIS, France, suggests the following: compile the code with
 
 \noindent \texttt{ FLAGS\_CHECK=\textquotedbl{}-O3 -qsave -qstrict
@@ -610,12 +648,102 @@ binary file manually rather than in the Makefile:
 
 \section{Visualizing the subroutine calling tree of the source code}
 
-Packages such as \texttt{doxywizard} can be used to visualize the
-subroutine calling tree of the source code. \texttt{Doxywizard} is
-a GUI front-end for configuring and running \texttt{doxygen}.
+\noindent
+Packages such as \texttt{Doxywizard} can be used to visualize the calling tree of the
+subroutines of the  source code. \texttt{Doxywizard} is
+a GUI front-end for configuring and running \texttt{Doxygen}.
+
+\bigskip
+
+\noindent To do your own call graphs, you can follow these simple steps below.
+
+\begin{enumerate}
+\setcounter{enumi}{-1}
+\item Install \texttt{Doxygen} \underline{and} \texttt{graphviz} (the two are usually in the package manager of classic Linux distribution).
+\item Run in the terminal : \texttt{doxygen -g}, which creates a \texttt{Doxyfile} that tells doxygen what you want it to do.
+\item Edit the Doxyfile. Two Doxyfile-type files have been already committed in the directory \\
+\noindent \texttt{specfem3d/doc/Call\_trees}:
+
+\begin{itemize}
+\item[\textbullet] \texttt{Doxyfile\_truncated\_call\_tree} will generate call graphs with maximum 3 or 4 levels of tree structure,
+\item[\textbullet] \texttt{Doxyfile\_complete\_call\_tree} will generate call graphs with complete tree structure.
+\end{itemize}
+
+The important entries in the Doxyfile are:
+
+\begin{description}
+\item [{\texttt{PROJECT\_NAME}}]
+\item [{\texttt{OPTIMIZE\_FOR\_FORTRAN}}] Set to YES
+\item [{\texttt{EXTRACT\_ALL}}] Set to YES
+\item [{\texttt{EXTRACT\_PRIVATE}}] Set to YES
+\item [{\texttt{EXTRACT\_STATIC}}] Set to YES
+\item [{\texttt{INPUT}}] From the directory \texttt{specfem3d/doc/Call\_trees}, it is \texttt{"../../src/"}
+\item [{\texttt{FILE\_PATTERNS}}] In SPECFEM case, it is \texttt{*.f90* *.F90* *.c* *.cu* *.h*}
+\item [{\texttt{HAVE\_DOT}}] Set to YES
+\item [{\texttt{CALL\_GRAPH}}] Set to YES
+\item [{\texttt{CALLER\_GRAPH}}] Set to YES
+\item [{\texttt{DOT\_PATH}}] The path where is located the dot program graphviz (if it is not in your \$PATH)
+\item [{\texttt{RECURSIVE}}] This tag can be used to turn specify whether or not subdirectories should be searched for input files as well. In the case of SPECFEM, set to YES.
+\item [{\texttt{EXCLUDE}}] Here, you can exclude:  \\
+\texttt{"../../src/specfem3D/older\_not\_maintained\_partial\_OpenMP\_port"}\\
+\texttt{"../../src/decompose\_mesh/scotch"}\\
+\texttt{"../../src/decompose\_mesh/scotch\_5.1.12b"}
+\item [{\texttt{DOT\_GRAPH\_MAX\_NODES}}] to set the maximum number of nodes that will be shown in the graph. If the number of nodes in a graph becomes larger than this value, doxygen will truncate the graph, which is visualized by representing a node as a red box. Minimum value: 0, maximum value: 10000, default value: 50.
+\item [{\texttt{MAX\_DOT\_GRAPH\_DEPTH}}] to set the maximum depth of the graphs generated by dot. A depth value of 3 means that only nodes reachable from the root by following a path via at most 3 edges will be shown. Using a depth of 0 means no depth restriction. Minimum value: 0, maximum value: 1000, default value: 0.
+
+\end{description}
+
+\item Run : \texttt{doxygen Doxyfile}, HTML and LaTeX files created by default in \texttt{html} and \texttt{latex} subdirectories.
+
+\item To see the call trees, you have to open the file \texttt{html/index.html} in your \underline{browser}. You will have many informations about each subroutines of SPECFEM (not only call graphs), you can click on every boxes / subroutines. It show you the call, and, the caller graph of each subroutine : the subroutines called by the concerned subroutine, and the previous subroutines who call this subroutine (the previous path), respectively. In the case of a truncated calling tree, the boxes with a red border indicates a node that has \underline{more} arrows than are shown (in other words: the graph is truncated with respect to this node).
+
+\end{enumerate}
+
+\medskip
+
+\noindent Finally, some useful links:
+
+\begin{itemize}
+\item[\textbullet] a good and short summary for the basic utilisation of Doxygen:
+
+\texttt{http://www.softeng.rl.ac.uk/blog/2010/jan/30/callgraph-fortran-doxygen/} ,
+
+\item[\textbullet] to configure the diagrams :
+
+\texttt{http://www.stack.nl/~dimitri/doxygen/manual/diagrams.html} ,
+
+\item[\textbullet] the complete alphabetical index of the tags in Doxyfile:
+
+\texttt{http://www.stack.nl/~dimitri/doxygen/manual/config.html} ,
+
+\item[\textbullet] more generally, the Doxygen manual:
+
+\texttt{http://www.stack.nl/~dimitri/doxygen/manual/index.html} .
+
+\end{itemize}
+
+\medskip
+
+\section{Using the ADIOS library for I/O}
+Regular POSIX I/O can be problematic when dealing with large simulations one large
+clusters (typically more than $10,000$ processes). SPECFEM3D use the ADIOS library~\cite{Liu2013}
+to deal transparently take advantage of advanced paralllel file system features. To enable
+ADIOS, the following steps should be done:
+\begin{enumerate}
+\item Install ADIOS (available from \url{https://www.olcf.ornl.gov/center-projects/adios/}).
+Make sure that your environment variables reference it.
+\item You may want to change ADIOS related values in the \texttt{constants.h.in} file.
+The default values probably suit most cases.
+\item Configure using the \texttt{--with-adios} flag.
+\end{enumerate}
+ADIOS is currently only usable for meshfem3D generated mesh (i.e. not for meshes generated
+with CUBTI). Additional control parameters are discussed in section~\ref{cha:Main-Parameter}.
+
+\section{Becoming a developer of the code, or making small modifications in the source code}
+
+If you want to develop new features in the code, and/or if you want to make small changes, improvements, or bug fixes, you are very welcome to contribute. To do so, i.e. to access the development branch of the source code with read/write access (in a safe way, no need to worry too much about breaking the package, there is a robot called BuildBot that is in charge of checking and validating all new contributions and changes), please visit this Web page: \url{https://github.com/geodynamics/specfem3d/wiki/Using-Hub}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 
 
 \chapter{\label{cha:Mesh-Generation}Mesh Generation}
@@ -661,7 +789,7 @@ and
 number of cores.
 \end{description}
 Examples are provided in the SPECFEM3D Cartesian package in the subdirectory
-\texttt{examples/}. We strongly encourage you to contribute your own
+\texttt{EXAMPLES/}. We strongly encourage you to contribute your own
 example to this package by contacting the CIG Computational Seismology
 Mailing List \urlwithparentheses{cig-seismo@geodynamics.org}.
 
@@ -672,7 +800,7 @@ For the installation and handling of the CUBIT meshing tool suite,
 please refer to the CUBIT user manual and documentation. In order
 to give you a basic understanding of how to use CUBIT for our purposes,
 examples are provided in the SPECFEM3D Cartesian package in the subdirectory
-\texttt{examples/}:
+\texttt{EXAMPLES/}:
 \begin{description}
 \item [{\texttt{homogeneous\_halfspace}}] Creates a single block model
 and assigns elastic material parameters.
@@ -694,7 +822,7 @@ file during the databases creation by \texttt{xgenerate\_databases}.
  \includegraphics[width=0.45\textwidth]{figures/example-water} \includegraphics[width=0.45\textwidth]{figures/example-tomo}
 \par\end{centering}
 
-\caption{Screenshots of the CUBIT examples provided in subdirectory \texttt{examples/}:
+\caption{Screenshots of the CUBIT examples provided in subdirectory \texttt{EXAMPLES/}:
 homogeneous halfspace (top-left), layered halfspace (top-right), water
 layered halfspace (bottom-left) and tomographic model (bottom-right).}
 
@@ -708,8 +836,11 @@ which explains in a step-by-step tutorial the workflow for the example.
 Please feel free to contribute your own example to this package by
 contacting the CIG Computational Seismology Mailing List \urlwithparentheses{cig-seismo@geodynamics.org}.
 
-In most cases, to re-create the meshes for the examples given, just type "claro ./block\_mesh.py" or similar 
+In some cases, to re-create the meshes for the examples given, just type "claro ./create\_mesh.py" or similar
 from the command line ("claro" is the command to run CUBIT from the command line).
+
+IMPORTANT note: in order to correctly set up GEOCUBIT and run the examples, please read the file called "EXAMPLES/README";
+in particular, please make sure you correctly set up the Python paths as indicated in that file.
 
 
 \subsection{Exporting the Mesh with \texttt{run\_cubit2specfem3d.py} }
@@ -971,7 +1102,7 @@ In directory "CUBIT\_GEOCUBIT" we provide a script that can help doing the above
 to SPECFEM3D format automatically for you: "run\_cubit2specfem3d.py".
 Just edit them to indicate the path to your local installation of CUBIT and also the name of the *.cub existing CUBIT mesh file
 that you want to export to SPECFEM3D format. These scripts will do the conversion for you automatically except assigning material properties
-to the different mesh layers. To do so, you will then need to edit the file 
+to the different mesh layers. To do so, you will then need to edit the file
 called "nummaterial\_velocity\_file" that will have just been created and change it from the prototype created:
 
     0 1 vol1 --> syntax: \#material\_domain\_id \#material\_id \#rho \#vp \#vs \#Q\_kappa \#Q\_mu \#anisotropy
@@ -1035,7 +1166,7 @@ of elements in each slice while minimizing the communication costs
 resulting from the placement of adjacent elements on different processors.
 \texttt{decompose\_mesh} depends on the SCOTCH library \citep{PeRo96},
 which provides efficent static mapping, graph and mesh partitioning
-routines. SCOTCH is a free software package developed by François
+routines. SCOTCH is a free software package developed by Fran\c{c}ois
 Pellegrini et al. from LaBRI and INRIA in Bordeaux, France, downloadable
 from the web page \url{https://gforge.inria.fr/projects/scotch/}.
 \\
@@ -1166,6 +1297,18 @@ for West).
 \item [{\texttt{\noun{UTM\_PROJECTION\_ZONE}}}] UTM projection zone in
 which your model resides, only valid when \texttt{SUPPRESS\_UTM\_}~\\
  \texttt{PROJECTION} is \texttt{.false.}.
+Use a negative zone number for the Southern hemisphere:
+the Northern hemisphere corresponds to zones +1 to +60,
+the Southern hemisphere to zones -1 to -60.
+We use the WGS84 (World Geodetic System 1984) reference ellipsoid for the UTM projection. If you prefer to use the Clarke 1866 ellipsoid,
+edit file \texttt{src/shared/utm\_geo.f90}, uncomment that ellipsoid and recompile the code.
+From http://en.wikipedia.org/wiki/Universal\_Transverse\_Mercator\_coordinate\_system :
+The Universal Transverse Mercator coordinate system was developed by the United States Army Corps of Engineers in the 1940s.
+The system was based on an ellipsoidal model of Earth. For areas within the contiguous United States
+the Clarke Ellipsoid of 1866 was used. For the remaining areas of Earth, including Hawaii, the International Ellipsoid was used.
+The WGS84 ellipsoid is now generally used to model the Earth in the UTM coordinate system,
+which means that current UTM northing at a given point can be 200+ meters different from the old one.
+For different geographic regions, other datum systems (e.g.: ED50, NAD83) can be used.
 \item [{\texttt{SUPPRESS\_UTM\_PROJECTION}}] set to be \texttt{.false.}
 when your model range is specified in geographical coordinates, and
 needs to be \texttt{.true.} when your model is specified in Cartesian
@@ -1280,7 +1423,7 @@ increasing order).
 \end{itemize}
 At the end of this file, you simply need to set the number of spectral
 elements in the vertical direction for each layer. We provide a few
-models in the {\texttt{examples/}} directory. \\
+models in the {\texttt{EXAMPLES/}} directory. \\
 
 
 Finally, depending on your system, you might need to provide a file
@@ -1494,7 +1637,7 @@ model using Olsen's empirical relation (see \citet{OlDaBr03}).
 in Olsen's empirical relation (see \citet{OlDaBr03}).
 \item [{\texttt{PML\_CONDITIONS}}] Set to \texttt{.true.} to turn on C-PML
 boundary conditions for a regional simulation. Both fluids and elastic
-solids are supported.
+solids are supported. Note that xmeshfem3d generated meshes do not support C-PML yet.
 \item [{\texttt{PML\_INSTEAD\_OF\_FREE\_SURFACE}}] Set to \texttt{.true.}
 to turn on C-PML boundary conditions on the top surface instead of
 the usual free surface.
@@ -1617,6 +1760,15 @@ Any other source-time function may then be obtained by convolution.
 information about the source time function in the file \texttt{OUTPUT\_FILES/plot\_source\_time\_function.txt}.
 This feature is only relevant for the solver.
 \item [{\texttt{GPU\_MODE}}] Turn this flag on to use GPUs.
+
+\item [\texttt{ADIOS\_ENABLED}] Turn this flag on to enable ADIOS. If set to \texttt{.false.}, subsequent ADIOS
+parameters will not be considered.
+\item [\texttt{ADIOS\_FOR\_DATABASES}] Turn this flag on to use ADIOS for xmeshfem3D output and
+xgenerate\_database input.
+\item [\texttt{ADIOS\_FOR\_MESH}]  Turn this flag on to use ADIOS for generated databases.
+\item [\texttt{ADIOS\_FOR\_FORWARD\_ARRAYS}] Turn this flag on to read and write forward arrays using ADIOS.
+\item [\texttt{ADIOS\_FOR\_KERNELS}] Turn this flag on to produce ADIOS kernels that can later be visualized with the ADIOS version of combine\_vol\_data.
+
 \end{description}
 If you use PML, the mesh elements that belong to the PML layers can
 be acoustic or elastic, but not viscoelastic nor poroelastic. Then,
@@ -1764,6 +1916,7 @@ magnitude.}
 \end{lyxcode}
 The \texttt{CMTSOLUTION} file should be edited in the following way:
 \begin{itemize}
+\item Set the latitude or UTM $x$ coordinate, longitude or UTM $y$ coordinate, depth of the source (in km).
 \item Set the \texttt{time shift} parameter equal to $0.0$ (the solver
 will not run otherwise.) The time shift parameter would simply apply
 an overall time shift to the synthetics, something that can be done
@@ -1883,7 +2036,7 @@ in the main parameter file {\texttt{Par\_file}}. In case that the
 solver uses a (pseudo) Dirac delta source time function to represent
 a force point source, a very short \texttt{half duration} parameter
 (hdur = 5 {*} DT) is automatically set by default.
-\item Set the latitude, longitude, depth of the source in geographical coordinates.
+\item Set the latitude or UTM $x$ coordinate, longitude or UTM $y$ coordinate, depth of the source (in km).
 \item Set the magnitude of the force source.
 \item Set the components of a (non-unitary) direction vector for the force
 source in the East/North/Vertical basis (see Appendix A for the orientation
@@ -2018,6 +2171,25 @@ file. There is no need to rerun the \texttt{xgenerate\_databases}
 executable. Of course it is best to include as many stations as possible,
 since this does not add to the cost of the simulation.
 
+We have also added the ability to run several calculations (several earthquakes)
+in an embarrassingly-parallel fashion from within the same run;
+this can be useful when using a very large supercomputer to compute
+many earthquakes in a catalog, in which case it can be better from
+a batch job submission point of view to start fewer and much larger jobs,
+each of them computing several earthquakes in parallel.
+To turn that option on, set parameter NUMBER\_OF\_SIMULTANEOUS\_RUNS
+to a value greater than 1 in file setup/constants.h.in before
+configuring and compiling the code.
+When that option is on, of course the number of processor cores used to start
+the code in the batch system must be a multiple of NUMBER\_OF\_SIMULTANEOUS\_RUNS,
+all the individual runs must use the same number of processor cores,
+which as usual is NPROC in the input file DATA/Par\_file,
+and thus the total number of processor cores to request from the batch system
+should be NUMBER\_OF\_SIMULTANEOUS\_RUNS $\times$ NPROC.
+All the runs to perform must be placed in directories called run0001, run0002, run0003 and so on (with exactly four digits)
+and you must create a link from the root directory of the code
+to the first copy of the executable programs by typing " ln -s run0001/bin bin ".
+
 
 \chapter{\label{cha:Fault-Kinematics-Dynamics}Kinematic and dynamic fault
 sources}
@@ -2103,7 +2275,7 @@ offset by a small distance on either side of the fault}
 \end{figure}
 
 
-The CUBIT scripts ({*}.jou and {*}.py) in the directory $\mathtt{examples}$
+The CUBIT scripts ({*}.jou and {*}.py) in the directory $\mathtt{EXAMPLES}$
 generate more complicated meshes. The {*}.py files are Python scripts
 that execute CUBIT commands and use the CUBIT-python interface for
 SPECFEM3D (see next section). The Python language allows to define
@@ -2179,10 +2351,10 @@ and
 \item Splay fault models from Wendt et al. (2009)\\
 
 \end{itemize}
-Read the documents in the directory $\mathtt{examples/*/description}$.
+Read the documents in the directory $\mathtt{EXAMPLES/*/description}$.
 They contain a description of the example and additional instructions
 to run it. Visualize the results with the Matlab scripts in the directory
-$\mathtt{examples/*/post}$
+$\mathtt{EXAMPLES/*/post}$
 
 
 \section{\label{sec:Sign-Convention-for}Sign Convention for Fault Quantities}
@@ -2360,7 +2532,7 @@ the index of appearance in the faults list after line 2 of Par\_file\_faults
 parameters are documented in page 10 of
 
 \begin{lyxlist}{00.00.0000}
-\item [{$\mathtt{examples/tpv16/description/TPV16\_17\_Description\_v03.pdf}$}]~
+\item [{$\mathtt{EXAMPLES/tpv16/description/TPV16\_17\_Description\_v03.pdf}$}]~
 \end{lyxlist}
 
 To activate this feature, in fault\_solver\_dynamic.f90 set \textbf{TPV16}
@@ -2482,7 +2654,7 @@ in directory $\mathtt{utils}$. The functions are internally documented
 \texttt{FSEM3D\_snapshot} reads a fault data snapshot\\
 
 
-The directories $\mathtt{examples/*/post}$ contain additional Matlab
+The directories $\mathtt{EXAMPLES/*/post}$ contain additional Matlab
 scripts to generate figures specific to each example.
 
 
@@ -2838,8 +3010,8 @@ statistics, e.g., the ensemble-averaged noise spectrum. Matlab scripts
 are provided to help you to generate the necessary file.
 
 
-\texttt{examples/noise\_tomography/NOISE\_TOMOGRAPHY.m} (main program)\\
- \texttt{examples/noise\_tomography/PetersonNoiseModel.m}
+\texttt{EXAMPLES/noise\_tomography/NOISE\_TOMOGRAPHY.m} (main program)\\
+ \texttt{EXAMPLES/noise\_tomography/PetersonNoiseModel.m}
 
 
 In Matlab, simply run:
@@ -3003,7 +3175,7 @@ given in \citet{trompetal2010}.
 \section{Example}
 
 In order to illustrate noise simulations in an easy way, one example
-is provided in \texttt{examples/noise\_tomography/}. See \texttt{examples/noise\_tomography/README}
+is provided in \texttt{EXAMPLES/noise\_tomography/}. See \texttt{EXAMPLES/noise\_tomography/README}
 for explanations. \\
 
 
@@ -3011,7 +3183,7 @@ Note, however, that they are created for a specific workstation (CLOVER@PRINCETO
 which has at least 4 cores with `mpif90' working properly. \\
 
 
-If your workstation is suitable, you can run the example in \texttt{examples/noise\_tomography/}
+If your workstation is suitable, you can run the example in \texttt{EXAMPLES/noise\_tomography/}
 using:\\
 
 
@@ -3153,9 +3325,7 @@ see Southern California ShakeMovie\textregistered{}\urlwithparentheses{www.shake
 When running xspecfem3D with the \texttt{\small MOVIE\_VOLUME}{\small{}
 flag turned on, the code outputs several files in }\texttt{\small LOCAL\_PATH}{\small{}
 specified in the main }\texttt{\small Par\_file}{\small , e.g. in
-directory }\texttt{\small OUTPUT\_FILES/DATABASES\_MPI}{\small . %As the files can be very large, there are several flags in the \texttt{\small Par\_file}
-%that control the region in space and time that is saved. These are:
-%\texttt{\small NTSTEP\_BETWEEN\_FRAMES}
+directory }\texttt{\small OUTPUT\_FILES/DATABASES\_MPI}{\small .
 The output is saved by each processor at the time interval specified
 by }\texttt{\small NTSTEP\_BETWEEN\_FRAMES}{\small . For all domains,
 the velocity field is output to files: }\texttt{\small proc??????\_velocity\_X\_it??????.bin}{\small ,
@@ -3195,28 +3365,55 @@ it in the root directory, type:
 \end{lyxcode}
 which will create the executable \texttt{xcombine\_vol\_data} in the
 directory \texttt{bin/}. To output the usage of this executable, type
-`./bin/xcombine\_vol\_data` without arguments. As an example, to run
-the executable you would use
 \begin{lyxcode}
-{\footnotesize cd~bin/~}{\footnotesize \par}
-
-~{\footnotesize ./xcombine\_vol\_data~0~3~velocity\_Z\_it000400~../OUTPUT\_FILES/DATABASES\_MPI~../OUTPUT\_FILES~0~}{\footnotesize \par}
+{\footnotesize ./bin/xcombine\_vol\_data~}{\footnotesize \par}
 \end{lyxcode}
-to create a low-resolution mesh file. The output mesh file will have
-the name \texttt{velocity\_Z\_it000400.mesh}. We next convert the
-\texttt{.mesh} file into the VTU (Unstructured grid file) format which
-can be viewed in ParaView. For this task, you can use and modify the
-script \texttt{mesh2vtu.pl} located in directory \texttt{utils/Visualization/Paraview/},
-for example:
+without arguments.
+
+\medskip
+
+\texttt{xcombine\_vol\_data} will combine the data on the different processors (located in \texttt{OUTPUT\_FILES/DATABASES\_MPI}), for a given quantity and a given iteration, to one file. For example, if you want to combine \texttt{velocity\_Z}, for the iteration 400 on 4 processors, i.e. if you want to combine these files :
+
+\medskip
+
+\texttt{proc000000\_velocity\_Z\_it000400.bin }
+
+\texttt{proc000001\_velocity\_Z\_it000400.bin }
+
+\texttt{proc000002\_velocity\_Z\_it000400.bin }
+
+\texttt{proc000003\_velocity\_Z\_it000400.bin}
+
+\medskip
+
+You have to go in the directory of the concerned example (where are the directories \texttt{DATA}, \texttt{OUTPUT\_FILES}, etc.).
+Then, you can launch \texttt{xcombine\_vol\_data}, specifying the path where it is located. As an example, if the \texttt{DATA} and \texttt{OUTPUT\_FILES} directories of the concerned example are in the root specfem3d directory, \texttt{xcombine\_vol\_data} is in \texttt{./bin}, and you have to type:
+
+\begin{lyxcode}
+~{\footnotesize ./bin/xcombine\_vol\_data~0~3~velocity\_Z\_it000400~./OUTPUT\_FILES/DATABASES\_MPI~./OUTPUT\_FILES~0~}{\footnotesize \par}
+\end{lyxcode}
+
+Here, $0$ is the number of the first processor, $3$ the number of the last one, \texttt{velocity\_Z\_it000400} the name of the files we want to combine without the prefix \texttt{proc000000*\_}, \texttt{./OUTPUT\_FILES/DATABASES\_MPI} the directory where the files are located, \texttt{./OUTPUT\_FILES} the directory where the combined file will be stored, and $0$ is the parameter to create a low-resolution mesh file ($1$ for a high-resolution).
+
+\medskip
+
+At the beginning of the source file \texttt{combine\_vol\_data.f90} (located in \texttt{src/auxiliaries/}), there is a logical constant parameter \texttt{USE\_VTK\_OUTPUT} whose default value is \texttt{.true.}, that which will provide the output combined file directly in the VTK format and you can use Paraview to visualize it.
+
+\medskip
+
+If the value of this parameter is \texttt{.false.}, the output mesh file will have the name \texttt{velocity\_Z\_it000400.mesh}. Then we next have to convert the
+\texttt{.mesh} file into the VTU (Unstructured grid file) format which can be viewed in ParaView. For this task, you can use and modify the
+script \texttt{mesh2vtu.pl} located in directory \texttt{utils/Visualization/Paraview/}, for example:
 \begin{lyxcode}
 {\footnotesize mesh2vtu.pl~-i~velocity\_Z\_it000400.mesh~-o~velocity\_Z\_it000400.vtu}{\footnotesize \par}
 \end{lyxcode}
-Notice that this Perl script uses a program \texttt{mesh2vtu} in the
-\texttt{utils/Visualization/Paraview/mesh2vtu} directory, which further
-uses the VTK \urlwithparentheses{http://www.vtk.org/} run-time library
-for its execution. Therefore, make sure you have them properly set
+Notice that this Perl script uses a program \texttt{mesh2vtu} in the \texttt{utils/Visualization/Paraview/mesh2vtu} directory, which further
+uses the VTK \urlwithparentheses{http://www.vtk.org/} run-time library for its execution. Therefore, make sure you have them properly set
 in the script according to your system.
 
+\bigskip
+
+Then, to do a movie with several iterations, you have to repeat this process for each iteration you want to put in your movie.
 
 \section{\label{sec:Finite-Frequency-Kernels}Finite-Frequency Kernels}
 
@@ -3408,176 +3605,6 @@ Examples of job scripts can be found in the \texttt{\small utils/Cluster/}{\smal
 directory and can straightforwardly be modified and adapted to meet
 more specific running needs.}{\small \par}
 
-We describe here in some detail a job submission procedure for the
-Caltech 1024-node cluster, CITerra, under the LSF scheduling system.
-We consider the submission of a regular forward simulation using the
-internal mesher to create mesh partitions. The two main scripts are
-\texttt{\small run\_lsf.bash}{\small , which compiles the Fortran
-code and submits the job to the scheduler, and }\texttt{\small go\_mesher\_solver\_lsf\_basin.forward}{\small ,
-which contains the instructions that make up the job itself. These
-scripts can be found in }\texttt{\small utils/Cluster/lsf/}{\small{}
-directory}{\small \par}
-
-
-\section{Job submission \texttt{run\_lsf.bash}}
-
-This script first sets the job queue to be `normal'. It then compiles
-the mesher, database generator and solver together, figures out the
-number of processors required for this simulation from the \texttt{DATA/Par\_file},
-and submits the LSF job.
-\begin{lyxcode}
-\#!/bin/bash
-
-\#~use~the~normal~queue~unless~otherwise~directed~queue=\textquotedbl{}-q~normal\textquotedbl{}~
-
-if~{[}~\$\#~-eq~1~{]};~then
-
-~~~~~~~~echo~\textquotedbl{}Setting~the~queue~to~\$1\textquotedbl{}
-
-~~~~~~~~queue=\textquotedbl{}-q~\$1\textquotedbl{}~
-
-fi~~\\
-~~~\\
-~\#~compile~the~mesher~and~the~solver~
-
-d=`date'~echo~\textquotedbl{}Starting~compilation~\$d\textquotedbl{}~
-
-make~clean~
-
-make~xmeshfem3D~
-
-make~xgenerate\_databases~
-
-make~xspecfem3D~
-
-d=`date'~
-
-echo~\textquotedbl{}Finished~compilation~\$d\textquotedbl{}~~\\
-~~~\\
-~\#~get~total~number~of~nodes~needed~for~solver~
-
-NPROC=`grep~NPROC~DATA/Par\_file~|~cut~-c~34-~'~~\\
-~~~\\
-
-
-\#~compute~total~number~of~nodes~needed~for~mesher~
-
-NPROC\_XI=`grep~NPROC\_XI~DATA/meshfem3D\_files/Mesh\_Par\_file~|~cut~-c~34-~'~~~~\\
-
-
-NPROC\_ETA=`grep~NPROC\_ETA~DATA/meshfem3D\_files/Mesh\_Par\_file~|~cut~-c~34-~'~~~~\\
-~\#~total~number~of~nodes~is~the~product~of~the~values~read~
-
-numnodes=\$((~\$NPROC\_XI~{*}~\$NPROC\_ETA~))~~\\
-~~~\\
-
-
-\#~checks~total~number~of~nodes~
-
-if~{[}~\$numnodes~-neq~\$NPROC~{]};~then
-
-~~~~~~~~echo~\textquotedbl{}error~number~of~procs~mismatch\textquotedbl{}
-
-~~~~~~~~exit~
-
-fi~~\\
-
-
-~~\\
-~echo~\textquotedbl{}Submitting~job\textquotedbl{}~
-
-bsub~\$queue~-n~\$numnodes~-W~60~-K~<go\_mesher\_solver\_lsf.forward~
-\end{lyxcode}
-
-\section{Job script \texttt{go\_mesher\_solver\_lsf.forward}}
-
-This script describes the job itself, including setup steps that can
-only be done once the scheduler has assigned a job-ID and a set of
-compute nodes to the job, the \texttt{run\_lsf.bash} commands used
-to run the mesher, database generator and the solver, and calls to
-scripts that collect the output seismograms from the compute nodes
-and perform clean-up operations.
-\begin{enumerate}
-\item First the script directs the scheduler to save its own output and
-output from \texttt{stdout} into ~\\
- \texttt{\small OUTPUT\_FILES/\%J.o}{\small , where }\texttt{\small \%J}{\small{}
-is short-hand for the job-ID; it also tells the scheduler what version
-of }\texttt{\small mpich}{\small{} to use (}\texttt{\small mpich\_gm}{\small )
-and how to name this job (}\texttt{\small go\_mesher\_solver\_lsf}{\small ). }{\small \par}
-\item The script then creates a list of the nodes allocated to this job
-by echoing the value of a dynamically set environment variable \texttt{LSB\_MCPU\_HOSTS}
-and parsing the output into a one-column list using the Perl script
-\texttt{utils/Cluster/lsf/remap\_lsf\_machines.pl}. It then creates
-a set of scratch directories on these nodes (\texttt{\small /scratch/}{\small ~}\\
-{\small{} }\texttt{\small \$USER/DATABASES\_MPI}{\small ) to be used
-as the }\texttt{\small LOCAL\_PATH}{\small{} for temporary storage
-of the database files. The scratch directories are created using }\texttt{\small shmux}{\small ,
-a shell multiplexor that can execute the same commands on many hosts
-in parallel. }\texttt{\small shmux}{\small{} is available from Shmux
-\urlwithparentheses{web.taranis.org/shmux/}. Make sure that the
-}\texttt{\small LOCAL\_PATH}{\small{} parameter in }\texttt{\small DATA/Par\_file}{\small{}
-is also set properly. }{\small \par}
-\item The next portion of the script launches the mesher, database generator
-and then the solver using \texttt{run\_lsf.bash}.
-\item The final portion of the script collects the seismograms and performs
-clean up on the nodes, using the Perl scripts \texttt{collect\_seismo\_lsf\_multi.pl}
-and \texttt{cleanmulti.pl}. \end{enumerate}
-\begin{lyxcode}
-\#!/bin/bash~-v~
-
-\#BSUB~-o~OUTPUT\_FILES/\%J.o~
-
-\#BSUB~-a~mpich\_gm~
-
-\#BSUB~-J~go\_mesher\_solver\_lsf~~\\
-~~~\\
-~\#~set~up~local~scratch~directories
-
-BASEMPIDIR=/scratch/\$USER/DATABASES\_MPI
-
-mkdir~-p~OUTPUT\_FILES~
-
-echo~\textquotedbl{}\$LSB\_MCPU\_HOSTS\textquotedbl{}~>~OUTPUT\_FILES/lsf\_machines~
-
-echo~\textquotedbl{}\$LSB\_JOBID\textquotedbl{}~>~OUTPUT\_FILES/jobid
-
-remap\_lsf\_machines.pl~OUTPUT\_FILES/lsf\_machines~>~OUTPUT\_FILES/machines
-
-shmux~-M50~-Sall~-c~\textquotedbl{}rm~-r~-f~/scratch/\$USER;~\textbackslash{}
-
-~~~~~~mkdir~-p~/scratch/\$USER;~mkdir~-p~\$BASEMPIDIR\textquotedbl{}~\textbackslash{}
-
-~~~~~~-~<~OUTPUT\_FILES/machines~>/dev/null~~\\
-~~~\\
-~\#~run~the~specfem~program
-
-current\_pwd=\$PWD~~\\
-
-
-cd~bin/~~\\
-
-
-run\_lsf.bash~-{}-gm-no-shmem~-{}-gm-copy-env~\$current\_pwd/xmeshfem3D~~\\
-
-
-run\_lsf.bash~-{}-gm-no-shmem~-{}-gm-copy-env~\$current\_pwd/xgenerate\_databases~~\\
-
-
-run\_lsf.bash~-{}-gm-no-shmem~-{}-gm-copy-env~\$current\_pwd/xspecfem3D~~\\
-~~~\\
-~\#~collect~seismograms~and~clean~up
-
-cd~current\_pwd/~~~\\
-
-
-mkdir~-p~SEM
-
-cd~SEM/~
-
-collect\_seismo.pl~../OUTPUT\_FILES/lsf\_machines
-
-cleanbase.pl~../OUTPUT\_FILES/machines
-\end{lyxcode}
 
 \chapter{{\normalsize \label{cha:-Changing-the}} Changing the Model}
 
@@ -3587,12 +3614,8 @@ that replace existing subroutines in the \texttt{SPECFEM3D Cartesian}
 package. Note that \texttt{SPECFEM3D Cartesian} can handle Earth models
 with material properties that vary within each spectral element.
 
-%% magnoni 6/12
 
-
-
-\section{{\normalsize \label{sec:Using-tomographic}}Using external tomographic
-Earth models}
+\section{{\normalsize \label{sec:Using-tomographic}}Using external tomographic Earth models}
 
 To implement your own external tomographic model(s), you must provide
 your own external tomography file(s), and choose between two possible
@@ -3683,6 +3706,30 @@ models that involve both fully defined materials and a tomography
 description, the \texttt{nummaterial\_velocity\_file} has multiple
 lines each with the corresponding suitable format described above.
 
+%==============
+
+\subsubsection*{Example: External tomography file with variable discretization intervals}
+
+The example in Figure~\ref{fig:tomography_file} is for an external tomography file with uniform spacing in the $x$, $y$, and $z$ directions. (Note that $\Delta x$, $\Delta y$, and $\Delta z$ need not be the same as in the example.) In that example, the  \texttt{nummaterial\_velocity\_file} is
+%
+\begin{lyxcode}
+2  -1 tomography elastic tomography\_model.xyz 1
+\end{lyxcode}
+%
+and the file \texttt{tomography\_model.xyz} will need to reside in \texttt{DATA/}. All entries in the second column of \texttt{materials\_file} will be \texttt{-1}, which means that each element in the mesh will be interpolated accordind to the values in \texttt{tomography\_model.xyz}.
+
+In some cases it may be desirable to have an external tomography model that is described in more than one file. For example, in cases like southern California, the length scale of variation in the structure of the wave speed model is much shorter in the sedimentary basin models within the upper 15~km. Therefore one might want to use an external tomography file that is sampled with, say, $\Delta x = 1000$~m, $\Delta y = 1000$~m, and $\Delta z = 250$~m in the uppermost 15~km, and then use $\Delta x = 2000$~m, $\Delta y = 2000$~m, and $\Delta z = 1000$~m below a depth of 15~km. If these intervals are chosen appropriately, then it will result in a pair of external tomography file that is much smaller than the alternative of having a single file with the fine discretization. In this case  \texttt{nummaterial\_velocity\_file} is
+%
+\begin{lyxcode}
+2  -1 tomography elastic file\_above\_15km.xyz 1 \\
+2  -2 tomography elastic file\_below\_15km.xyz 1
+\end{lyxcode}
+%
+and the files \texttt{file\_above\_15km.xyz} and \texttt{file\_below\_15km.xyz} will need to reside in \texttt{DATA/}.  All entries in the second column of \texttt{materials\_file} will need to be either \texttt{-1} or \texttt{-2}, depending on whether the element is above or below 15~km depth. In this sense, the construction of the mesh and the discretization of the external model will generally be done in tandem.
+
+Other more complicated discretizations can be used following the same procedure. (In particular, there is no limit on the number of different external files that are used.)
+
+%=============
 
 \section{{\normalsize \label{sec:Anelastic-Models}}External (an)elastic Models}
 
@@ -3750,6 +3797,34 @@ You can replace the \texttt{model\_aniso.f90} file by your own version
 i.e., the new routine should take exactly the same input and produce
 the required relative output.
 
+\section{{\normalsize \label{sec:Using-SEP}}Using external SEP models.}
+
+Stanford Exploration Project (SEP) models consists of two files per variables, one header file (\texttt{.H}) 
+and one binary file (\texttt{.H$@$}). 
+Among other information, the header file indicates, for each dimension, 
+the offset (\texttt{o1}, \texttt{o2} and \texttt{o3} fields), 
+the spatial step size (\texttt{d1}, \texttt{d2} and \texttt{d3} fields)
+and the number of samples (\texttt{n1}, \texttt{n2} and \texttt{n3}) necessary to read
+the linked binary file (\texttt{in} field).
+
+SEP model reading occurs during database generation. It it the user responsibility
+to ensure that proper interfaces between acoustic and elastic domains are set up
+during the meshing phase. For more information, refer to 
+section~\ref{cha:Running-the-Mesher-Meshfem3D}.
+
+In \texttt{DATA/Par\_file}, \texttt{\textbf{MODEL}} should be set to \texttt{\textbf{sep}},
+and \texttt{\textbf{SEP\_MODEL\_DIRECTORY}} should point to wherever your sep model files reside.
+
+Note that in order not to overload the parameter file, SEP header files
+should be named \texttt{vp.H}, \texttt{vs.H} and \texttt{rho.H}. The \texttt{in} field
+in these binary files can be any path as long as it is relative to
+the previously set \texttt{SEP\_MODEL\_DIRECTORY}.
+We also assume that any dimensional value inside SEP header files is given in meters and
+that binary files are single precision floating point numbers stored in little endian format.
+There is currently only support for \texttt{vp}, \texttt{vs} and \texttt{rho} variables.
+
+An example demonstrating the use SEP models is given in:
+\texttt{EXAMPLES/meshfem3D\_examples/sep\_bathymetry}.
 
 \chapter{Post-Processing Scripts}
 
@@ -4016,9 +4091,7 @@ The best single file to read is probably: \verb+ADJOINT_TOMO/iterate_adj/cluster
 \chapter*{\label{cha:Bug-Reports-and}Bug Reports and Suggestions for Improvements}
 
 To report bugs or suggest improvements to the code, please send an
-e-mail to the CIG Computational Seismology Mailing List \urlwithparentheses{cig-seismo@geodynamics.org}
-or Jeroen Tromp \urlwithparentheses{jtromp-AT-princeton.edu}, and/or
-use our online bug tracking system Roundup \urlwithparentheses{www.geodynamics.org/roundup}.
+e-mail to the CIG Computational Seismology Mailing List \urlwithparentheses{cig-seismo@geodynamics.org}.
 
 \addcontentsline{toc}{chapter}{Notes \& Acknowledgments}
 
@@ -4044,7 +4117,6 @@ is a trademark of Advanced Visualization Systems, and ParaView \urlwithparenthes
 is an open-source visualization platform.
 
 Please e-mail your feedback, questions, comments, and suggestions
-to Jeroen Tromp \urlwithparentheses{jtromp-AT-princeton.edu} or
 to the CIG Computational Seismology Mailing List \urlwithparentheses{cig-seismo@geodynamics.org}.
 
 \addcontentsline{toc}{chapter}{Copyright}
@@ -4054,10 +4126,9 @@ to the CIG Computational Seismology Mailing List \urlwithparentheses{cig-seismo@
 
 Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 
-Princeton University, USA, and CNRS / INRIA / University of Pau, France
+Princeton University, USA, and CNRS / University of Marseille, France
 
-$\copyright$ Princeton University and CNRS / INRIA / University of
-Pau, July 2012
+$\copyright$ Princeton University and CNRS / University of Marseille, July 2012
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published
@@ -4356,7 +4427,7 @@ fix: e.g. specify > ./configure FC=gfortran MPIF90=/usr/local/openmpi-gfortran/b
 
 \item [{after executing \texttt{xmeshfem3D} I've got elements with skewness of 81\% percent, what does this mean:}] Look
 at the skewness table printed in the \texttt{output\_mesher.txt} file
-after executing \texttt{xmeshfem3D} for the example given in \texttt{examples/meshfem3D\_examples/simple\_model/}:
+after executing \texttt{xmeshfem3D} for the example given in \texttt{EXAMPLES/meshfem3D\_examples/simple\_model/}:
 
 \begin{lyxcode}
 ...~~\\
@@ -4404,14 +4475,14 @@ are tolerable, above that you should consider remeshing...
 
 To give you an idea why some of the elements are distorted, see the
 following figure \ref{fig:mesh.vp} of the mesh you obtain in the
-example \texttt{examples/meshfem3D\_examples/simple\_model/}.
+example \texttt{EXAMPLES/meshfem3D\_examples/simple\_model/}.
 \begin{figure}[htbp]
 \noindent \begin{centering}
 \includegraphics[width=0.9\textwidth]{figures/mesh_vp}
 \par\end{centering}
 
 \caption{Paraview visualization using the mesh vtk-files for the example given
-in \texttt{examples/meshfem3D\_examples/simple\_model/}.}
+in \texttt{EXAMPLES/meshfem3D\_examples/simple\_model/}.}
 
 
 \label{fig:mesh.vp}

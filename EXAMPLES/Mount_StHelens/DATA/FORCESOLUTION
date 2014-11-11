@@ -1,8 +1,8 @@
 FORCE  001
 time shift:     0.0000
 hdur:           0.5
-latitude:       46.197
-longitude:      -122.186
+latorUTM:       46.197
+longorUTM:      -122.186
 depth:          5.0
 factor force source:             1.d15
 component dir vect source E:     1.d0

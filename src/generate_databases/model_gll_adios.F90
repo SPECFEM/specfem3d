@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -36,45 +37,52 @@
 ! \param LOCAL_PATH path where the '.bp' file is located
 subroutine model_gll_adios(myrank,nspec,LOCAL_PATH)
 
-  use mpi
   use adios_read_mod
+  use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,FOUR_THIRDS,IMAIN
   use create_regions_mesh_ext_par
-  use generate_databases_par, only: sizeprocs
 
   implicit none
 
   integer, intent(in) :: myrank,nspec
-  character(len=256) :: LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH
 
   ! local parameters
   real, dimension(:,:,:,:),allocatable :: vp_read,vs_read,rho_read
   integer :: ier
 
   ! ADIOS stuffs
-  character(len=256) :: database_name
+  character(len=MAX_STRING_LEN) :: database_name
   integer(kind=8) :: handle, sel
   integer(kind=8), dimension(1) :: start, count_ad
   integer :: local_dim_rho, local_dim_vp, local_dim_vs
+  integer :: comm
+
+  ! user output
+  if (myrank==0) then
+    write(IMAIN,*) '     using GLL model (ADIOS) from: ',trim(LOCAL_PATH)
+  endif
 
   ! density
   allocate( rho_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array rho_read'
+  if (ier /= 0) stop 'error allocating array rho_read'
   ! vp
   allocate( vp_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array vp_read'
+  if (ier /= 0) stop 'error allocating array vp_read'
   ! vs
   allocate( vs_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array vs_read'
+  if (ier /= 0) stop 'error allocating array vs_read'
 
   !-------------------------------------.
   ! Open ADIOS Database file, read mode |
   !-------------------------------------'
-  database_name = adjustl(LOCAL_PATH)
-  database_name = database_name(1:len_trim(database_name)) //"/model_values.bp"
+  database_name = LOCAL_PATH(1:len_trim(LOCAL_PATH)) //"/model_values.bp"
 
-  call adios_read_init_method (ADIOS_READ_METHOD_BP, MPI_COMM_WORLD, &
+  call world_get_comm(comm)
+
+  call adios_read_init_method (ADIOS_READ_METHOD_BP, comm, &
                                "verbose=1", ier)
-  call adios_read_open_file (handle, database_name, 0, MPI_COMM_WORLD, ier)
+  call adios_read_open_file (handle, database_name, 0, comm, ier)
+  if (ier /= 0) call stop_all()
 
   !------------------------.
   ! Get the 'chunks' sizes |
@@ -97,6 +105,7 @@ subroutine model_gll_adios(myrank,nspec,LOCAL_PATH)
   ! Perform read and close the adios file |
   !---------------------------------------'
   call adios_perform_reads(handle, ier)
+  if (ier /= 0) call stop_all()
   call adios_read_close(handle,ier)
   call adios_read_finalize_method(ADIOS_READ_METHOD_BP, ier)
 
@@ -110,7 +119,7 @@ subroutine model_gll_adios(myrank,nspec,LOCAL_PATH)
   !                      -0.4720 * (vp_read / 1000.0)**2  &
   !                      +0.0671 * (vp_read / 1000.0)**3  &
   !                      -0.0043 * (vp_read / 1000.0)**4  &
-  !                      +0.000106*(vp_read / 1000.0)**5 )*1000.0
+  !                      +0.000106*(vp_read / 1000.0)**5)*1000.0
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!! in cases where shear wavespeed structure is not given

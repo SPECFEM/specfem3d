@@ -1,0 +1,1 @@
+../EXAMPLES/homogeneous_halfspace_HEX8_elastic_absorbing_Stacey_5sides/DATA/observation_grid_to_use_for_gravity.txt

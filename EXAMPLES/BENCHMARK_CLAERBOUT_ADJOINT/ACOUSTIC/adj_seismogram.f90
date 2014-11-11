@@ -22,7 +22,7 @@ program adj_seismogram
   write(procname,"(i4)") myrank
 
   !! input parameters
-  if( iargc() .ne. 2 ) stop 'Usage: ./xadj NSTEP DT'
+  if( iargc() /= 2 ) stop 'Usage: ./xadj NSTEP DT'
   j=1;  call getarg(j, arg); read(arg,*,iostat=ios) NSTEP;   if (ios /= 0) stop 'Error reading NSTEP'
   j=2;  call getarg(j, arg); read(arg,*,iostat=ios)    DT;   if (ios /= 0) stop 'Error reading DT'
 

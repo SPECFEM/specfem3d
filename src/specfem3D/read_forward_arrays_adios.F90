@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -29,7 +30,6 @@
 !==============================================================================
 subroutine read_forward_arrays_adios()
 
-  use mpi
   use adios_read_mod
 
   use pml_par
@@ -41,10 +41,9 @@ subroutine read_forward_arrays_adios()
 
   implicit none
 
-  real(kind=CUSTOM_REAL):: minl,maxl,min_all,max_all
-  integer :: ier,inum
+  integer :: ier
 
-  character(len=256) :: database_name
+  character(len=MAX_STRING_LEN) :: database_name
   integer(kind=8) :: handle
 
   integer(kind=8), dimension(256),target :: selections
@@ -77,17 +76,21 @@ subroutine read_forward_arrays_adios()
              local_dim_velocw_poroelastic,            &
              local_dim_accelw_poroelastic
 
+  integer :: comm
+
   !-------------------------------------.
   ! Open ADIOS Database file, read mode |
   !-------------------------------------'
   sel_num = 0
 
-  database_name = adjustl(LOCAL_PATH)
-  database_name = database_name(1:len_trim(database_name)) // "/forward_arrays.bp"
+  database_name = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // "/forward_arrays.bp"
 
-  call adios_read_init_method (ADIOS_READ_METHOD_BP, MPI_COMM_WORLD, &
+  call world_get_comm(comm)
+
+  call adios_read_init_method (ADIOS_READ_METHOD_BP, comm, &
                                "verbose=1", ier)
-  call adios_read_open_file (handle, database_name, 0, MPI_COMM_WORLD, ier)
+  call adios_read_open_file (handle, database_name, 0, comm, ier)
+  if (ier /= 0) call stop_all()
 
   !------------------------.
   ! Get the 'chunks' sizes |
@@ -154,7 +157,7 @@ subroutine read_forward_arrays_adios()
   !-----------------------------------.
   ! Read arrays from forward_arrays.bp |
   !-----------------------------------'
-  if( ACOUSTIC_SIMULATION ) then
+  if (ACOUSTIC_SIMULATION) then
     start(1) = local_dim_potential_acoustic * myrank
     count_ad(1) = NGLOB_ADJOINT
     sel_num = sel_num+1
@@ -182,7 +185,7 @@ subroutine read_forward_arrays_adios()
   endif
 
   ! elastic wavefields
-  if( ELASTIC_SIMULATION ) then
+  if (ELASTIC_SIMULATION) then
     start(1) = local_dim_displ * myrank
     count_ad(1) = NDIM * NGLOB_ADJOINT
     sel_num = sel_num+1
@@ -208,7 +211,7 @@ subroutine read_forward_arrays_adios()
                              b_accel, ier)
 
     ! memory variables if attenuation
-    if( ATTENUATION ) then
+    if (ATTENUATION) then
       start(1) = local_dim_R_xx * myrank
       count_ad(1) = NGLLX * NGLLY * NGLLZ * NSPEC_ATTENUATION_AB * N_SLS
       sel_num = sel_num+1
@@ -289,7 +292,7 @@ subroutine read_forward_arrays_adios()
       call adios_schedule_read(handle, sel, "epsilondev_yz/array", 0, 1, &
                                b_epsilondev_yz, ier)
 
-      if(FULL_ATTENUATION_SOLID) then
+      if (FULL_ATTENUATION_SOLID) then
         start(1) = local_dim_R_trace * myrank
         count_ad(1) = NGLLX * NGLLY * NGLLZ * NSPEC_ATTENUATION_AB_kappa * N_SLS
         sel_num = sel_num+1
@@ -310,7 +313,7 @@ subroutine read_forward_arrays_adios()
   endif
 
   ! poroelastic wavefields
-  if( POROELASTIC_SIMULATION ) then
+  if (POROELASTIC_SIMULATION) then
     start(1) = local_dim_displs_poroelastic * myrank
     count_ad(1) = NDIM * NGLOB_ADJOINT
     sel_num = sel_num+1
@@ -364,6 +367,7 @@ subroutine read_forward_arrays_adios()
   ! Perform the reads and close the ADIOS 'external_mesh.bp' file |
   !---------------------------------------------------------------'
   call adios_perform_reads(handle, ier)
+  if (ier /= 0) call stop_all()
   call adios_read_close(handle,ier)
   call adios_read_finalize_method(ADIOS_READ_METHOD_BP, ier)
 

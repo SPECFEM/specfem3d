@@ -29,7 +29,7 @@ echo
 echo "(will take about 1 h 15 minutes)"
 echo
 
-# sets up directory structure in current example directoy
+# sets up directory structure in current example directory
 echo
 echo "   setting up example..."
 echo
@@ -61,7 +61,6 @@ echo
 echo "  meshing..."
 echo
 mpiexec -np $numnodes ./bin/xmeshfem3D
-mv OUTPUT_FILES/output_mesher.txt OUTPUT_FILES/output_meshfem3D.txt
 
 # stores setup
 cp DATA/Par_file OUTPUT_FILES/

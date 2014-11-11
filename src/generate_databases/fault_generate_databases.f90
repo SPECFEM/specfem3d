@@ -1,3 +1,30 @@
+!=====================================================================
+!
+!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               ---------------------------------------
+!
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
+!
+! This program is free software; you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation; either version 2 of the License, or
+! (at your option) any later version.
+!
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+!
+! You should have received a copy of the GNU General Public License along
+! with this program; if not, write to the Free Software Foundation, Inc.,
+! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+!
+!=====================================================================
+
 ! Generates database for faults (dynamic or kinematic)
 !
 ! Splitting fault nodes (with opening) is done in CUBIT.
@@ -9,8 +36,7 @@
 
 module fault_generate_databases
 
-  use create_regions_mesh_ext_par, only: NGLLX,NGLLY,NGLLZ,NGLLSQUARE,NDIM,CUSTOM_REAL,IMAIN
-  use generate_databases_par, only : NGNOD2D
+  use generate_databases_par, only : NGNOD2D,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,NDIM,CUSTOM_REAL,IMAIN
 
   implicit none
   private
@@ -65,7 +91,9 @@ contains
 !=================================================================================================================
 subroutine fault_read_input(prname,myrank)
 
-  character(len=256), intent(in) :: prname
+  use constants, only: MAX_STRING_LEN
+
+  character(len=MAX_STRING_LEN), intent(in) :: prname
   integer, intent(in) :: myrank
 
   integer :: nb,i,iflt,ier,nspec,dummy_node
@@ -94,7 +122,7 @@ subroutine fault_read_input(prname,myrank)
  ! read fault database file
   open(unit=IIN_PAR,file=prname(1:len_trim(prname))//'Database_fault', &
        status='old',action='read',form='unformatted',iostat=ier)
-  if( ier /= 0 ) then
+  if (ier /= 0) then
     write(IMAIN,*) 'error opening file: ',prname(1:len_trim(prname))//'Database_fault'
     write(IMAIN,*) 'make sure file exists'
     stop
@@ -156,7 +184,7 @@ subroutine fault_setup(ibool,nnodes_ext_mesh,nodes_coords_ext_mesh, &
 
   integer :: iflt
 
-  if (.not. ANY_FAULT_IN_THIS_PROC ) return
+  if (.not. ANY_FAULT_IN_THIS_PROC) return
 
   do iflt=1,size(fault_db)
 
@@ -285,12 +313,13 @@ subroutine setup_ibools(fdb,xstore,ystore,zstore,nspec,npointot)
 
   use generate_databases_par, only: nodes_coords_ext_mesh
 
+  implicit none
   type(fault_db_type), intent(inout) :: fdb
   integer, intent(in) :: nspec,npointot
   double precision, dimension(NGLLX,NGLLY,NGLLZ,nspec), intent(in) :: xstore,ystore,zstore
 
   double precision :: xp(npointot),yp(npointot),zp(npointot),xmin,xmax
-  integer :: loc(npointot)
+  integer :: locval(npointot)
   logical :: ifseg(npointot)
   integer :: ispec,k,igll,ie,je,ke,e
 
@@ -311,7 +340,7 @@ subroutine setup_ibools(fdb,xstore,ystore,zstore,nspec,npointot)
     enddo
   enddo
   allocate( fdb%ibool1(NGLLSQUARE,fdb%nspec) )
-  call get_global(fdb%nspec,xp,yp,zp,fdb%ibool1,loc,ifseg,fdb%nglob,npointot,xmin,xmax)
+  call get_global(npointot,xp,yp,zp,fdb%ibool1,locval,ifseg,fdb%nglob,xmin,xmax)
 
 ! xp,yp,zp need to be recomputed on side 2
 ! because they are generally not in the same order as on side 1,
@@ -331,7 +360,7 @@ subroutine setup_ibools(fdb,xstore,ystore,zstore,nspec,npointot)
     enddo
   enddo
   allocate( fdb%ibool2(NGLLSQUARE,fdb%nspec) )
-  call get_global(fdb%nspec,xp,yp,zp,fdb%ibool2,loc,ifseg,fdb%nglob,npointot,xmin,xmax)
+  call get_global(npointot,xp,yp,zp,fdb%ibool2,locval,ifseg,fdb%nglob,xmin,xmax)
 
 end subroutine setup_ibools
 
@@ -383,11 +412,11 @@ subroutine close_fault(fdb)
   do i=1,fdb%nglob
     K1 = fdb%ibulk1(i)
     K2 = fdb%ibulk2(i)
-    xstore_dummy(K1) = 0.5d0*( xstore_dummy(K1) + xstore_dummy(K2) )
+    xstore_dummy(K1) = 0.5_CUSTOM_REAL*( xstore_dummy(K1) + xstore_dummy(K2) )
     xstore_dummy(K2) = xstore_dummy(K1)
-    ystore_dummy(K1) = 0.5d0*( ystore_dummy(K1) + ystore_dummy(K2) )
+    ystore_dummy(K1) = 0.5_CUSTOM_REAL*( ystore_dummy(K1) + ystore_dummy(K2) )
     ystore_dummy(K2) = ystore_dummy(K1)
-    zstore_dummy(K1) = 0.5d0*( zstore_dummy(K1) + zstore_dummy(K2) )
+    zstore_dummy(K1) = 0.5_CUSTOM_REAL*( zstore_dummy(K1) + zstore_dummy(K2) )
     zstore_dummy(K2) = zstore_dummy(K1)
   enddo
 
@@ -432,9 +461,10 @@ end subroutine close_fault
   use create_regions_mesh_ext_par, only: xstore_dummy,ystore_dummy,zstore_dummy, &
                                          dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
                                          wgllwgll_xy,wgllwgll_xz,wgllwgll_yz
+
   use generate_databases_par, only : NGNOD2D
 
-
+  implicit none
   type(fault_db_type), intent(inout) :: fdb
   integer, intent(in) :: nspec,nglob, ibool(NGLLX,NGLLY,NGLLZ,nspec)
 
@@ -509,18 +539,21 @@ end subroutine setup_normal_jacobian
 ! saves all fault data in ASCII files for verification
 subroutine fault_save_arrays_test(prname)
 
-  character(len=256), intent(in) :: prname ! 'proc***'
+  use constants, only: MAX_STRING_LEN
+
+  implicit none
+  character(len=MAX_STRING_LEN), intent(in) :: prname ! 'proc***'
 
   integer, parameter :: IOUT = 121 !WARNING: not very robust. Could instead look for an available ID
   integer :: nbfaults,iflt,ier
-  character(len=256) :: filename
+  character(len=MAX_STRING_LEN) :: filename
 
   if (.not.ANY_FAULT) return
 
 ! saves mesh file proc***_fault_db.txt
   filename = prname(1:len_trim(prname))//'fault_db.txt'
   open(unit=IOUT,file=trim(filename),status='unknown',action='write',iostat=ier)
-  if( ier /= 0 ) stop 'error opening database proc######_external_mesh.bin'
+  if (ier /= 0) stop 'error opening database proc######_external_mesh.bin'
 
   nbfaults = size(fault_db)
   write(IOUT,*) 'NBFAULTS = ',nbfaults
@@ -537,6 +570,7 @@ end subroutine fault_save_arrays_test
 
 subroutine save_one_fault_test(f,IOUT)
 
+  implicit none
   type(fault_db_type), intent(in) :: f
   integer, intent(in) :: IOUT
 
@@ -582,11 +616,14 @@ end subroutine save_one_fault_test
 ! saves fault data needed by the solver in binary files
 subroutine fault_save_arrays(prname)
 
-  character(len=256), intent(in) :: prname ! 'proc***'
+  use constants, only: MAX_STRING_LEN
+
+  implicit none
+  character(len=MAX_STRING_LEN), intent(in) :: prname ! 'proc***'
 
   integer, parameter :: IOUT = 121 !WARNING: not very robust. Could instead look for an available ID
   integer :: nbfaults,iflt,ier
-  character(len=256) :: filename
+  character(len=MAX_STRING_LEN) :: filename
   integer :: size_Kelvin_Voigt
 
   if (.not.ANY_FAULT) return
@@ -595,7 +632,7 @@ subroutine fault_save_arrays(prname)
 ! if number of fault elements = 0 then the file is empty
   filename = prname(1:len_trim(prname))//'Kelvin_voigt_eta.bin'
   open(unit=IOUT,file=trim(filename),status='unknown',action='write',form='unformatted',iostat=ier)
-  if( ier /= 0 ) then
+  if (ier /= 0) then
     write(IMAIN,*) 'error opening file ',trim(filename)
     stop
   endif
@@ -607,13 +644,13 @@ subroutine fault_save_arrays(prname)
     size_Kelvin_Voigt = 0
   endif
   write(IOUT) size_Kelvin_Voigt
-  if (size_Kelvin_Voigt /= 0) Write(IOUT) Kelvin_Voigt_eta
+  if (size_Kelvin_Voigt /= 0) write(IOUT) Kelvin_Voigt_eta
   close(IOUT)
 
 ! saves mesh file proc***_fault_db.bin
   filename = prname(1:len_trim(prname))//'fault_db.bin'
   open(unit=IOUT,file=trim(filename),status='unknown',action='write',form='unformatted',iostat=ier)
-  if( ier /= 0 ) then
+  if (ier /= 0) then
     write(IMAIN,*) 'error opening file ',trim(filename)
     stop
   endif
@@ -632,6 +669,7 @@ end subroutine fault_save_arrays
 
 subroutine save_one_fault_bin(f,IOUT)
 
+  implicit none
   type(fault_db_type), intent(in) :: f
   integer, intent(in) :: IOUT
 

@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -25,28 +26,28 @@
 !=====================================================================
 
 module createRegMesh
+
 contains
 
   subroutine create_regions_mesh(xgrid,ygrid,zgrid,ibool, &
-                               xstore,ystore,zstore,iproc_xi,iproc_eta,addressing,nspec, &
-                               NGLOB_AB,npointot, &
-                               NEX_PER_PROC_XI,NEX_PER_PROC_ETA,NER, &
-                               NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-                               NPROC_XI,NPROC_ETA, &
-                               nsubregions,subregions,nblayers,ner_layer,NMATERIALS,material_properties, &
-                               myrank, sizeprocs, &
-                 LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
-                               CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
-                               USE_REGULAR_MESH,NDOUBLINGS,ner_doublings, &
-                               ADIOS_ENABLED, ADIOS_FOR_DATABASES)
+                                 xstore,ystore,zstore,iproc_xi,iproc_eta,addressing,nspec, &
+                                 NGLOB_AB,npointot, &
+                                 NEX_PER_PROC_XI,NEX_PER_PROC_ETA,NER, &
+                                 NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+                                 NPROC_XI,NPROC_ETA, &
+                                 nsubregions,subregions,NMATERIALS,material_properties, &
+                                 myrank, sizeprocs, &
+                                 LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
+                                 CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
+                                 USE_REGULAR_MESH,NDOUBLINGS,ner_doublings, &
+                                 ADIOS_ENABLED, ADIOS_FOR_DATABASES)
 
     ! create the different regions of the mesh
-  use adios_manager_mod
-  use mpi
+    use constants,only: MAX_STRING_LEN,NGNOD_EIGHT_CORNERS,IMAIN
+    use adios_manager_mod,only: adios_setup,adios_cleanup
 
     implicit none
 
-    include "constants.h"
     include "constants_meshfem3D.h"
 
     ! number of spectral elements in each block
@@ -68,7 +69,6 @@ contains
     integer, dimension(2) :: ner_doublings
 
     double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK
-    !double precision horiz_size,vert_size
 
     integer addressing(0:NPROC_XI-1,0:NPROC_ETA-1)
 
@@ -81,19 +81,17 @@ contains
 
     integer,dimension(NGLLX_M,NGLLY_M,NGLLZ_M,nspec) :: ibool
 
-    character(len=256) :: LOCAL_PATH
+    character(len=MAX_STRING_LEN) :: LOCAL_PATH
 
     ! auxiliary variables to generate the mesh
-    !  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: nodes_coords
     double precision, dimension(:,:), allocatable :: nodes_coords
     integer ix,iy,ir,ir1,ir2,dir
     integer ix1,ix2,dix,iy1,iy2,diy
     integer iax,iay,iar
     integer isubregion,nsubregions,doubling_index,nmeshregions
     integer imaterial_number
-    integer, dimension(nspec) :: true_material_num
+    integer, dimension(nspec) :: ispec_material_id
     integer, dimension(:,:,:), allocatable :: material_num
-    !integer material_num(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA)
 
     !  definition of the different regions of the model in the mesh (nx,ny,nz)
     !  #1 #2 : nx_begining,nx_end
@@ -101,10 +99,6 @@ contains
     !  #5 #6 : nz_begining,nz_end
     !     #7 : material number
     integer subregions(nsubregions,7)
-
-    ! layers of the model
-    integer nblayers
-    integer ner_layer(nblayers)
 
     ! topology of the elements
     integer iaddx(NGNOD_EIGHT_CORNERS)
@@ -136,7 +130,7 @@ contains
     logical, dimension(:,:), allocatable :: iMPIcut_xi,iMPIcut_eta
 
     ! name of the database file
-    character(len=256) prname !,prname2
+    character(len=MAX_STRING_LEN) :: prname
 
     ! number of elements on the boundaries
     integer nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax
@@ -153,8 +147,8 @@ contains
     integer :: NMATERIALS
     double precision :: VP_MAX
     ! first dimension  : material_id
-    ! second dimension : #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id
-    double precision , dimension(NMATERIALS,6) ::  material_properties
+    ! second dimension : #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id #material_id
+    double precision , dimension(NMATERIALS,7) ::  material_properties
 
     ! doublings zone
     integer :: nspec_sb
@@ -163,8 +157,6 @@ contains
     integer, dimension(NGNOD_EIGHT_CORNERS,NSPEC_DOUBLING_SUPERBRICK) :: ibool_superbrick
     double precision, dimension(NGLOB_DOUBLING_SUPERBRICK) :: x_superbrick,y_superbrick,z_superbrick
 
-    logical, parameter :: DEBUG = .true.
-
     ! **************
 
     ! create the name for the database of the current slide and region
@@ -172,63 +164,64 @@ contains
 
     ! flag indicating whether point is in the sediments
     allocate(flag_sediments(NGLLX_M,NGLLY_M,NGLLZ_M,nspec),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array flag_sediments'
+    if (ier /= 0) stop 'error allocating array flag_sediments'
     allocate(not_fully_in_bedrock(nspec),stat=ier)
-    if( ier /= 0 ) call exit_MPI(myrank,'not enough memory to allocate arrays')
+    if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
     ! boundary locator
     allocate(iboun(6,nspec),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array iboun'
+    if (ier /= 0) stop 'error allocating array iboun'
 
     ! boundary parameters locator
     allocate(ibelm_xmin(NSPEC2DMAX_XMIN_XMAX),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array ibelm_xmin'
+    if (ier /= 0) stop 'error allocating array ibelm_xmin'
     allocate(ibelm_xmax(NSPEC2DMAX_XMIN_XMAX),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array ibelm_xmax'
+    if (ier /= 0) stop 'error allocating array ibelm_xmax'
     allocate(ibelm_ymin(NSPEC2DMAX_YMIN_YMAX),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array ibelm_ymin'
+    if (ier /= 0) stop 'error allocating array ibelm_ymin'
     allocate(ibelm_ymax(NSPEC2DMAX_YMIN_YMAX),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array ibelm_ymax'
+    if (ier /= 0) stop 'error allocating array ibelm_ymax'
     allocate(ibelm_bottom(NSPEC2D_BOTTOM),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array ibelm_bottom'
+    if (ier /= 0) stop 'error allocating array ibelm_bottom'
     allocate(ibelm_top(NSPEC2D_TOP),stat=ier)
-    if( ier /= 0 ) call exit_MPI(myrank,'not enough memory to allocate arrays')
+    if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
     ! MPI cut-planes parameters along xi and along eta
     allocate(iMPIcut_xi(2,nspec),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array iMPIcut_xi'
+    if (ier /= 0) stop 'error allocating array iMPIcut_xi'
     allocate(iMPIcut_eta(2,nspec),stat=ier)
-    if( ier /= 0 ) call exit_MPI(myrank,'not enough memory to allocate arrays')
+    if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
     ! allocate memory for arrays
     allocate(iglob(npointot),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array iglob'
+    if (ier /= 0) stop 'error allocating array iglob'
     allocate(locval(npointot),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array locval'
+    if (ier /= 0) stop 'error allocating array locval'
     allocate(ifseg(npointot),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array ifseg'
+    if (ier /= 0) stop 'error allocating array ifseg'
     allocate(xp(npointot),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array xp'
+    if (ier /= 0) stop 'error allocating array xp'
     allocate(yp(npointot),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array yp'
+    if (ier /= 0) stop 'error allocating array yp'
     allocate(zp(npointot),stat=ier)
-    if( ier /= 0 ) call exit_MPI(myrank,'not enough memory to allocate arrays')
+    if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
     ! allocate material ids array
     allocate(material_num(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA),stat=ier)
-    if( ier /= 0 ) call exit_MPI(myrank,'not enough memory to allocate arrays')
+    if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
     ! generate the elements in all the regions of the mesh
     ispec = 0
 
     ! to check that we assign a material to each element
     material_num(:,:,:) = -1000 ! dummy value
+    ispec_material_id(:) = -1000
 
     do isubregion = 1,nsubregions
        call define_model_regions(NEX_PER_PROC_XI,NEX_PER_PROC_ETA,iproc_xi,iproc_eta,&
-            isubregion,nsubregions,subregions,nblayers,ner_layer, &
-            iaddx,iaddy,iaddz,ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir,iax,iay,iar, &
-            imaterial_number)
+                                 isubregion,nsubregions,subregions, &
+                                 iaddx,iaddy,iaddz,ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir,iax,iay,iar, &
+                                 imaterial_number)
 
        ! loop on all the mesh points in current subregion
        do ir = ir1,ir2,dir
@@ -245,14 +238,14 @@ contains
        ! end of loop on all the subregions of the current region the mesh
     enddo
 
-    if(USE_REGULAR_MESH) then
+    if (USE_REGULAR_MESH) then
        nmeshregions = 1
     else
        call define_superbrick(x_superbrick,y_superbrick,z_superbrick,ibool_superbrick,iboun_sb)
        nspec_sb = NSPEC_DOUBLING_SUPERBRICK
-       if(NDOUBLINGS == 1) then
+       if (NDOUBLINGS == 1) then
           nmeshregions = 3
-       else if(NDOUBLINGS == 2) then
+       else if (NDOUBLINGS == 2) then
           nmeshregions = 5
        else
           stop 'Wrong number of mesh regions'
@@ -262,15 +255,15 @@ contains
     do isubregion = 1,nmeshregions
       ! define shape of elements
       call define_mesh_regions(USE_REGULAR_MESH,isubregion,NER,NEX_PER_PROC_XI,NEX_PER_PROC_ETA,iproc_xi,iproc_eta,&
-            nblayers,ner_layer,NDOUBLINGS,ner_doublings,&
-            iaddx,iaddy,iaddz,ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir,iax,iay,iar)
+                               NDOUBLINGS,ner_doublings,&
+                               iaddx,iaddy,iaddz,ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir,iax,iay,iar)
 
       ! loop on all the mesh points in current subregion
       do ir = ir1,ir2,dir
         do iy = iy1,iy2,diy
           do ix = ix1,ix2,dix
 
-            if(modulo(isubregion,2) == 1) then
+            if (modulo(isubregion,2) == 1) then
 
               ! Regular subregion case
 
@@ -289,18 +282,19 @@ contains
 
               ! add one spectral element to the list and store its material number
               ispec = ispec + 1
-              if(ispec > nspec) then
+
+              if (ispec > nspec) then
                 call exit_MPI(myrank,'ispec greater than nspec in mesh creation')
               endif
 
               ! check if element is on topography
-              if((ir == ir2) .and. (isubregion == nmeshregions)) then
+              if ((ir == ir2) .and. (isubregion == nmeshregions)) then
                 doubling_index = IFLAG_ONE_LAYER_TOPOGRAPHY
               else
                 doubling_index = IFLAG_BASEMENT_TOPO
               endif
 
-              true_material_num(ispec) = material_num(ir,ix,iy)
+              ispec_material_id(ispec) = material_num(ir,ix,iy)
 
               ! store coordinates
               call store_coords(xstore,ystore,zstore,xelm,yelm,zelm,ispec,nspec)
@@ -320,9 +314,9 @@ contains
                 ! loop on all the corner nodes of this element
                 do ia = 1,NGNOD_EIGHT_CORNERS
                   ! define topological coordinates of this mesh point
-                  ioffset_x = ix + iax*x_superbrick(ibool_superbrick(ia,ispec_superbrick))
-                  ioffset_y = iy + iay*y_superbrick(ibool_superbrick(ia,ispec_superbrick))
-                  ioffset_z = ir + iar*z_superbrick(ibool_superbrick(ia,ispec_superbrick))
+                  ioffset_x = int(ix + iax*x_superbrick(ibool_superbrick(ia,ispec_superbrick)))
+                  ioffset_y = int(iy + iay*y_superbrick(ibool_superbrick(ia,ispec_superbrick)))
+                  ioffset_z = int(ir + iar*z_superbrick(ibool_superbrick(ia,ispec_superbrick)))
 
                   xelm(ia) = xgrid(ioffset_z,ioffset_x,ioffset_y)
                   yelm(ia) = ygrid(ioffset_z,ioffset_x,ioffset_y)
@@ -332,12 +326,13 @@ contains
 
                 ! add one spectral element to the list and store its material number
                 ispec = ispec + 1
-                if(ispec > nspec) then
+
+                if (ispec > nspec) then
                   call exit_MPI(myrank,'ispec greater than nspec in mesh creation')
                 endif
 
                 doubling_index = IFLAG_BASEMENT_TOPO
-                true_material_num(ispec) = material_num(ir,ix,iy)
+                ispec_material_id(ispec) = material_num(ir,ix,iy)
 
                 ! store coordinates
                 call store_coords(xstore,ystore,zstore,xelm,yelm,zelm,ispec,nspec)
@@ -360,10 +355,10 @@ contains
     enddo
 
     ! check total number of spectral elements created
-    if(ispec /= nspec) call exit_MPI(myrank,'ispec should equal nspec')
+    if (ispec /= nspec) call exit_MPI(myrank,'ispec should equal nspec')
 
     ! check that we assign a material to each element
-    if(any(true_material_num(:) == -1000)) stop 'Element of undefined material found'
+    if (any(ispec_material_id(:) == -1000)) stop 'Element of undefined material found'
 
     ! puts x,y,z locations into 1D arrays
     do ispec=1,nspec
@@ -382,15 +377,15 @@ contains
     enddo
 
     ! sorts xp,yp,zp in lexicographical order (increasing values)
-    call get_global(nspec,xp,yp,zp,iglob,locval,ifseg,nglob,npointot,UTM_X_MIN,UTM_X_MAX)
+    call get_global(npointot,xp,yp,zp,iglob,locval,ifseg,nglob,UTM_X_MIN,UTM_X_MAX)
 
     ! checks nglob range with pre-computed values
     ! note: if mesh squeezes elements such that we can't distinguish two close-by mesh points anymore
     !          the total number of mesh points might have changed
-    if(nglob /= NGLOB_AB) then
+    if (nglob /= NGLOB_AB) then
       ! user output
       print*,'error nglob: sorted value ',nglob,'differs from pre-computed ',NGLOB_AB
-      if(myrank == 0 ) then
+      if (myrank == 0) then
         write(IMAIN,*)
         write(IMAIN,*) 'error nglob: sorted value ',nglob,'differs from pre-computed ',NGLOB_AB
         write(IMAIN,*)
@@ -436,7 +431,7 @@ contains
       write(66,'(a)') "SCALARS elem_val float"
       write(66,'(a)') "LOOKUP_TABLE default"
       do ispec = 1,nspec
-        write(66,*) true_material_num(ispec)
+        write(66,*) ispec_material_id(ispec)
       enddo
       write(66,*) ""
       close(66)
@@ -447,7 +442,7 @@ contains
 
     ! put in classical format
     allocate(nodes_coords(nglob,3),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array nodes_coords'
+    if (ier /= 0) stop 'error allocating array nodes_coords'
     nodes_coords(:,:) = 0.0d0
     ibool(:,:,:,:) = 0
 
@@ -468,7 +463,7 @@ contains
     enddo
 
     ! checks ibool range
-    if(minval(ibool(:,:,:,:)) /= 1 .or. maxval(ibool(:,:,:,:)) /= nglob) then
+    if (minval(ibool(:,:,:,:)) /= 1 .or. maxval(ibool(:,:,:,:)) /= nglob) then
        print*,'error ibool: maximum value ',maxval(ibool(:,:,:,:)) ,'should be ',nglob
        call exit_MPI(myrank,'incorrect global ibool numbering')
     endif
@@ -481,7 +476,7 @@ contains
     ! outputs mesh file for visualization
     call create_visual_files(CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
                             nspec,nglob, &
-                            prname,nodes_coords,ibool,true_material_num)
+                            prname,nodes_coords,ibool,ispec_material_id)
 
     ! stores boundary informations
     call store_boundaries(myrank,iboun,nspec, &
@@ -499,18 +494,18 @@ contains
   ! saves mesh as databases file
   if (ADIOS_FOR_DATABASES) then
     call save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
-       nspec,nglob,iproc_xi,iproc_eta, &
-       NPROC_XI,NPROC_ETA,addressing,iMPIcut_xi,iMPIcut_eta,&
-       ibool,nodes_coords,true_material_num, &
-       nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
-       NSPEC2D_BOTTOM,NSPEC2D_TOP, NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
-       ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,&
-       NMATERIALS,material_properties)
+                              nspec,nglob,iproc_xi,iproc_eta, &
+                              NPROC_XI,NPROC_ETA,addressing,iMPIcut_xi,iMPIcut_eta,&
+                              ibool,nodes_coords,ispec_material_id, &
+                              nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
+                              NSPEC2D_BOTTOM,NSPEC2D_TOP, NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
+                              ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,&
+                              NMATERIALS,material_properties)
   else
     ! saves mesh as databases file
     call save_databases(prname,nspec,nglob,iproc_xi,iproc_eta, &
                       NPROC_XI,NPROC_ETA,addressing,iMPIcut_xi,iMPIcut_eta,&
-                      ibool,nodes_coords,true_material_num, &
+                      ibool,nodes_coords,ispec_material_id, &
                       nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP,&
                       NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
                       ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,&

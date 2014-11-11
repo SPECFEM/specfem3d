@@ -1,0 +1,31 @@
+
+-------- Original Message --------
+Subject: Re: une question sur la discontinuité de source pour DSM
+Date: Sun, 23 Mar 2014 14:05:47 +0100
+From: Vadim MONTEILLER
+To: Dimitri Komatitsch, Sébastien Chevrot, Yi Wang
+
+Salut Dimitri,
+
+Dans le papier il faut regarder l'équation (17) juste en dessous il est 
+mentionné un "JUMP" au niveau de la source. Ensuite dans le reste du 
+papier ils font la distinction entre les solutions en dessous de la 
+sources et celles au dessus. Mais c'est pas très détaillé dans ce 
+papier. Je me souviens de papier de Woodhouse où les équations sont plus 
+précises. J'ai plus les rèfs ici mais je crois que tu as du les 
+photocopier en même temps que le papier gemini. En fait, je n'avais 
+qu'une version papier de tout çà et je n'arrive plus à les retrouver.
+
+Vadim
+
+Le 23/03/2014 01:30, Dimitri Komatitsch a écrit :
+>
+> Salut Vadim,
+>
+> Stp dans le papier GEMINI de 1995 pourrais-tu nous dire à quel 
+> endroit du papier est décrite la façon de mettre la discontinuité de 
+> source dont tu me parlais ?
+>
+> Merci,
+> Dimitri.
+

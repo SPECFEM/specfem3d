@@ -1,0 +1,12 @@
+Carl Tape
+22-May-2009
+
+/ADJOINT_TOMO/iterate_adj/model_plot/matlab/
+
+Matlab scripts for generating plotting grids that are used to extract values from SEM meshes.  Then, back in Matlab, we create new data files that are read into GMT.
+
+The main script is socal_tomo_plots.m
+
+This calls several non-built-in Matlab scripts that could probably be cleaned up or, in some cases, replaced.
+
+------------------

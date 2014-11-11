@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -27,8 +28,14 @@
 
   subroutine get_model(myrank)
 
-  use generate_databases_par, only: IMODEL,nspec => NSPEC_AB,ibool,mat_ext_mesh, &
-       materials_ext_mesh,nmat_ext_mesh,undef_mat_prop,nundefMat_ext_mesh,ANISOTROPY
+  use generate_databases_par, only: IMODEL, &
+    IMODEL_DEFAULT,IMODEL_GLL,IMODEL_1D_PREM,IMODEL_1D_CASCADIA,IMODEL_1D_SOCAL, &
+    IMODEL_SALTON_TROUGH,IMODEL_TOMO,IMODEL_USER_EXTERNAL,IMODEL_IPATI,IMODEL_IPATI_WATER, &
+    IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC, &
+    nspec => NSPEC_AB,ibool,mat_ext_mesh, &
+    materials_ext_mesh,nmat_ext_mesh,undef_mat_prop,nundefMat_ext_mesh,ANISOTROPY,COUPLE_WITH_EXTERNAL_CODE, &
+    NGLLX,NGLLY,NGLLZ, &
+    FOUR_THIRDS,TWO,IMAIN
 
   use create_regions_mesh_ext_par
 
@@ -66,17 +73,33 @@
   ispec_is_poroelastic(:) = .false.
 
   ! prepares tomographic models if needed for elements with undefined material definitions
-  if( nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO ) then
+  if ((nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO) .and. (.not. COUPLE_WITH_EXTERNAL_CODE)) then
     call model_tomography_broadcast(myrank)
   endif
 
   ! prepares external model values if needed
-  select case( IMODEL )
-  case( IMODEL_USER_EXTERNAL )
+  select case (IMODEL)
+  case (IMODEL_USER_EXTERNAL )
     call model_external_broadcast(myrank)
-  case( IMODEL_SALTON_TROUGH )
+  case (IMODEL_SALTON_TROUGH )
     call model_salton_trough_broadcast(myrank)
   end select
+
+!! VM VM for coupling with DSM
+!! find the # layer where the middle of the element is located
+  if (COUPLE_WITH_EXTERNAL_CODE) then
+
+    if ((NGLLX == 5) .and. (NGLLY == 5) .and. (NGLLZ == 5)) then
+      ! gets xyz coordinates of GLL point
+      iglob = ibool(3,3,3,1)
+      xmesh = xstore_dummy(iglob)
+      ymesh = ystore_dummy(iglob)
+      zmesh = zstore_dummy(iglob)
+      call FindLayer(xmesh,ymesh,zmesh)
+    else
+      stop 'bad number of GLL points for coupling with DSM'
+    endif
+  endif
 
 ! !  Piero, read bedrock file
 ! in case, see file model_interface_bedrock.f90:
@@ -88,6 +111,15 @@
   ! material properties on all GLL points: taken from material values defined for
   ! each spectral element in input mesh
   do ispec = 1, nspec
+
+    if (COUPLE_WITH_EXTERNAL_CODE) then
+      iglob = ibool(3,3,3,ispec)
+      xmesh = xstore_dummy(iglob)
+      ymesh = ystore_dummy(iglob)
+      zmesh = zstore_dummy(iglob)
+      call FindLayer(xmesh,ymesh,zmesh)
+    endif
+
     ! loops over all gll points in element
     do k = 1, NGLLZ
       do j = 1, NGLLY
@@ -145,6 +177,10 @@
           ymesh = ystore_dummy(iglob)
           zmesh = zstore_dummy(iglob)
 
+          !! VM VM for coupling with DSM
+          !! find the # layer where the middle of the element is located
+          if (COUPLE_WITH_EXTERNAL_CODE .and. (i==3 .and. j==3 .and. k==3)) call FindLayer(xmesh,ymesh,zmesh)
+
           ! material index 1: associated material number
           ! 1 = acoustic, 2 = elastic, 3 = poroelastic, -1 = undefined tomographic
           imaterial_id = mat_ext_mesh(1,ispec)
@@ -166,10 +202,8 @@
                                c34,c35,c36,c44,c45,c46,c55,c56,c66, &
                                ANISOTROPY)
 
-
           ! stores velocity model
-
-          if(idomain_id == IDOMAIN_ACOUSTIC .or. idomain_id == IDOMAIN_ELASTIC) then
+          if (idomain_id == IDOMAIN_ACOUSTIC .or. idomain_id == IDOMAIN_ELASTIC) then
 
             ! elastic or acoustic material
 
@@ -240,10 +274,10 @@
             rho_vpII(i,j,k,ispec) = (rho_bar - phi/tort*rho_f)*sqrt(cpIIsquare)
             rho_vsI(i,j,k,ispec) = (rho_bar - phi/tort*rho_f)*sqrt(cssquare)
 
-          endif !if(idomain_id == IDOMAIN_ACOUSTIC .or. idomain_id == IDOMAIN_ELASTIC)
+          endif !if (idomain_id == IDOMAIN_ACOUSTIC .or. idomain_id == IDOMAIN_ELASTIC)
 
           ! stores anisotropic parameters
-          if( ANISOTROPY ) then
+          if (ANISOTROPY) then
             c11store(i,j,k,ispec) = c11
             c12store(i,j,k,ispec) = c12
             c13store(i,j,k,ispec) = c13
@@ -269,15 +303,15 @@
 
 
           ! stores material domain
-          select case( idomain_id )
-          case( IDOMAIN_ACOUSTIC )
+          select case (idomain_id )
+          case (IDOMAIN_ACOUSTIC )
             ispec_is_acoustic(ispec) = .true.
-          case( IDOMAIN_ELASTIC )
+          case (IDOMAIN_ELASTIC )
             ispec_is_elastic(ispec) = .true.
-          case( IDOMAIN_POROELASTIC )
+          case (IDOMAIN_POROELASTIC )
             ispec_is_poroelastic(ispec) = .true.
           case default
-            stop 'error material domain index'
+            stop 'Error material domain index'
           end select
 
         enddo
@@ -285,8 +319,8 @@
     enddo
 
     ! user output
-    if(myrank == 0 ) then
-      if( mod(ispec,nspec/10) == 0 ) then
+    if (myrank == 0) then
+      if (mod(ispec,nspec/10) == 0) then
         tCPU = wtime() - time_start
         ! remaining
         tCPU = (10.0-ispec/(nspec/10.0))/ispec/(nspec/10.0)*tCPU
@@ -303,26 +337,26 @@
   ! checks material domains
   do ispec=1,nspec
     ! checks if domain is set
-    if( (ispec_is_acoustic(ispec) .eqv. .false.) &
+    if ((ispec_is_acoustic(ispec) .eqv. .false.) &
           .and. (ispec_is_elastic(ispec) .eqv. .false.) &
-          .and. (ispec_is_poroelastic(ispec) .eqv. .false.) ) then
-      print*,'error material domain not assigned to element:',ispec
+          .and. (ispec_is_poroelastic(ispec) .eqv. .false.)) then
+      print*,'Error material domain not assigned to element:',ispec
       print*,'acoustic: ',ispec_is_acoustic(ispec)
       print*,'elastic: ',ispec_is_elastic(ispec)
       print*,'poroelastic: ',ispec_is_poroelastic(ispec)
-      stop 'error material domain index element'
+      stop 'Error material domain index element'
     endif
     ! checks if domain is unique
-    if( ((ispec_is_acoustic(ispec) .eqv. .true.) .and. (ispec_is_elastic(ispec) .eqv. .true.)) .or. &
+    if (((ispec_is_acoustic(ispec) .eqv. .true.) .and. (ispec_is_elastic(ispec) .eqv. .true.)) .or. &
        ((ispec_is_acoustic(ispec) .eqv. .true.) .and. (ispec_is_poroelastic(ispec) .eqv. .true.)) .or. &
        ((ispec_is_poroelastic(ispec) .eqv. .true.) .and. (ispec_is_elastic(ispec) .eqv. .true.)) .or. &
        ((ispec_is_acoustic(ispec) .eqv. .true.) .and. (ispec_is_elastic(ispec) .eqv. .true.) .and. &
-       (ispec_is_poroelastic(ispec) .eqv. .true.)) ) then
-      print*,'error material domain assigned twice to element:',ispec
+       (ispec_is_poroelastic(ispec) .eqv. .true.))) then
+      print*,'Error material domain assigned twice to element:',ispec
       print*,'acoustic: ',ispec_is_acoustic(ispec)
       print*,'elastic: ',ispec_is_elastic(ispec)
       print*,'poroelastic: ',ispec_is_poroelastic(ispec)
-      stop 'error material domain index element'
+      stop 'Error material domain index element'
     endif
   enddo
 
@@ -333,8 +367,8 @@
   call any_all_l( ANY(ispec_is_poroelastic), POROELASTIC_SIMULATION )
 
   ! deallocates tomographic arrays
-  if( nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO ) then
-     call deallocate_tomography_files()
+  if ((nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO) .and. (.not. COUPLE_WITH_EXTERNAL_CODE)) then
+    call deallocate_tomography_files()
   endif
 
   end subroutine get_model
@@ -344,18 +378,23 @@
 !
 
   subroutine get_model_values(materials_ext_mesh,nmat_ext_mesh, &
-                             undef_mat_prop,nundefMat_ext_mesh, &
-                             imaterial_id,imaterial_def, &
-                             xmesh,ymesh,zmesh, &
-                             rho,vp,vs,qkappa_atten,qmu_atten,idomain_id, &
-                             rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
-                             phi,tort,kxx,kxy,kxz,kyy,kyz,kzz, &
-                             c11,c12,c13,c14,c15,c16, &
-                             c22,c23,c24,c25,c26,c33, &
-                             c34,c35,c36,c44,c45,c46,c55,c56,c66, &
-                             ANISOTROPY)
+                              undef_mat_prop,nundefMat_ext_mesh, &
+                              imaterial_id,imaterial_def, &
+                              xmesh,ymesh,zmesh, &
+                              rho,vp,vs,qkappa_atten,qmu_atten,idomain_id, &
+                              rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
+                              phi,tort,kxx,kxy,kxz,kyy,kyz,kzz, &
+                              c11,c12,c13,c14,c15,c16, &
+                              c22,c23,c24,c25,c26,c33, &
+                              c34,c35,c36,c44,c45,c46,c55,c56,c66, &
+                              ANISOTROPY)
 
-  use generate_databases_par,only: IMODEL
+  use generate_databases_par,only: IMODEL, &
+    IMODEL_DEFAULT,IMODEL_GLL,IMODEL_1D_PREM,IMODEL_1D_CASCADIA,IMODEL_1D_SOCAL, &
+    IMODEL_SALTON_TROUGH,IMODEL_TOMO,IMODEL_USER_EXTERNAL,IMODEL_IPATI,IMODEL_IPATI_WATER, &
+    IMODEL_1D_PREM_PB,IMODEL_GLL, IMODEL_SEP, &
+    IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,ATTENUATION_COMP_MAXIMUM
+
   use create_regions_mesh_ext_par
   implicit none
 
@@ -363,7 +402,7 @@
   double precision, dimension(16,nmat_ext_mesh),intent(in) :: materials_ext_mesh
 
   integer, intent(in) :: nundefMat_ext_mesh
-  character (len=30), dimension(6,nundefMat_ext_mesh):: undef_mat_prop
+  character(len=MAX_STRING_LEN), dimension(6,nundefMat_ext_mesh) :: undef_mat_prop
 
   integer, intent(in) :: imaterial_id,imaterial_def
 
@@ -384,6 +423,7 @@
   ! local parameters
   integer :: iflag_aniso
   integer :: iundef,imaterial_PB
+  logical :: has_tomo_value
 
   ! use acoustic domains for simulation
   logical,parameter :: USE_PURE_ACOUSTIC_MOD = .false.
@@ -394,25 +434,25 @@
   idomain_id = IDOMAIN_ELASTIC
 
   ! selects chosen velocity model
-  select case( IMODEL )
+  select case (IMODEL)
 
-  case( IMODEL_DEFAULT,IMODEL_GLL,IMODEL_IPATI,IMODEL_IPATI_WATER )
+  case (IMODEL_DEFAULT,IMODEL_GLL,IMODEL_IPATI,IMODEL_IPATI_WATER, IMODEL_SEP )
     ! material values determined by mesh properties
     call model_default(materials_ext_mesh,nmat_ext_mesh, &
-                          undef_mat_prop,nundefMat_ext_mesh, &
-                          imaterial_id,imaterial_def, &
-                          xmesh,ymesh,zmesh, &
-                          rho,vp,vs, &
-                          iflag_aniso,qkappa_atten,qmu_atten,idomain_id, &
-                          rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
-                          phi,tort,kxx,kxy,kxz,kyy,kyz,kzz)
+                       undef_mat_prop,nundefMat_ext_mesh, &
+                       imaterial_id,imaterial_def, &
+                       xmesh,ymesh,zmesh, &
+                       rho,vp,vs, &
+                       iflag_aniso,qkappa_atten,qmu_atten,idomain_id, &
+                       rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
+                       phi,tort,kxx,kxy,kxz,kyy,kyz,kzz)
 
-  case( IMODEL_1D_PREM )
+  case (IMODEL_1D_PREM )
     ! 1D model profile from PREM
     call model_1D_prem_iso(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
     qkappa_atten = 9999.  ! undefined in this model
 
-  case( IMODEL_1D_PREM_PB )
+  case (IMODEL_1D_PREM_PB )
     ! 1D model profile from PREM modified by Piero
     imaterial_PB = abs(imaterial_id)
     call model_1D_PREM_routine_PB(xmesh,ymesh,zmesh,rho,vp,vs,imaterial_PB)
@@ -423,36 +463,43 @@
     read(undef_mat_prop(6,iundef),*) idomain_id
     qkappa_atten = 9999.  ! undefined in this model
 
-  case( IMODEL_1D_CASCADIA )
+  case (IMODEL_1D_CASCADIA )
     ! 1D model profile for Cascadia region
     call model_1D_cascadia(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
     qkappa_atten = 9999.  ! undefined in this model
 
-  case( IMODEL_1D_SOCAL )
+  case (IMODEL_1D_SOCAL )
     ! 1D model profile for Southern California
     call model_1D_socal(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
     qkappa_atten = 9999.  ! undefined in this model
 
-  case( IMODEL_SALTON_TROUGH )
+  case (IMODEL_SALTON_TROUGH )
     ! gets model values from tomography file
     call model_salton_trough(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
     qkappa_atten = 9999.  ! undefined in this model
 
-  case( IMODEL_TOMO )
+  case (IMODEL_TOMO )
     ! gets model values from tomography file
-    call model_tomography(xmesh,ymesh,zmesh,rho,vp,vs,qkappa_atten,qmu_atten,imaterial_id)
+    call model_tomography(xmesh,ymesh,zmesh,rho,vp,vs,qkappa_atten,qmu_atten,imaterial_id,has_tomo_value)
 
-  case( IMODEL_USER_EXTERNAL )
+    ! in case no tomography value defined for this region, fall back to defaults
+    if (.not. has_tomo_value) then
+      print*,'Error: tomography value not defined for model material id ',imaterial_id
+      print*,'Please check if Par_file setting MODEL = tomo is applicable, or try using MODEL = default ...'
+      stop 'Error tomo model not found for material'
+    endif
+
+  case (IMODEL_USER_EXTERNAL )
     ! user model from external routine
     ! adds/gets velocity model as specified in model_external_values.f90
     call model_external_values(xmesh,ymesh,zmesh,rho,vp,vs,qkappa_atten,qmu_atten,iflag_aniso,idomain_id)
 
   case default
-    stop 'error: model not implemented yet'
+    stop 'Error model not implemented yet'
   end select
 
   ! adds anisotropic default model
-  if( ANISOTROPY ) then
+  if (ANISOTROPY) then
     call model_aniso(iflag_aniso,rho,vp,vs, &
                     c11,c12,c13,c14,c15,c16, &
                     c22,c23,c24,c25,c26,c33, &
@@ -462,8 +509,17 @@
   ! for pure acoustic simulations (a way of avoiding re-mesh, re-partition etc.)
   ! can be used to compare elastic & acoustic reflections in exploration seismology
   ! do NOT use it unless you are confident
-  if( USE_PURE_ACOUSTIC_MOD ) then
+  if (USE_PURE_ACOUSTIC_MOD) then
     idomain_id = IDOMAIN_ACOUSTIC
+  endif
+
+  ! checks if valid vp value
+  if (idomain_id == IDOMAIN_ACOUSTIC .or. idomain_id == IDOMAIN_ELASTIC) then
+    if (vp <= 0._CUSTOM_REAL) then
+      print*,'Error: encountered zero Vp velocity in element! '
+      print*,'domain id = ',idomain_id,' material id = ',imaterial_id, 'vp/vs/rho = ',vp,vs,rho
+      stop 'Error zero Vp velocity found'
+    endif
   endif
 
   end subroutine get_model_values
@@ -476,15 +532,21 @@
 
 ! reads in material parameters from external binary files
 
-  use generate_databases_par,only: IMODEL, ADIOS_FOR_MESH
+  use generate_databases_par,only: IMAIN, IMODEL, &
+    IMODEL_GLL,IMODEL_IPATI,IMODEL_IPATI_WATER, IMODEL_SEP, &
+    ADIOS_FOR_MESH
 
   use create_regions_mesh_ext_par
+
+  use model_ipati_adios_mod,only: model_ipati_adios,model_ipati_water_adios
+
+  use model_sep_mod,only: model_sep
 
   implicit none
 
   ! number of spectral elements in each block
   integer :: myrank,nspec
-  character(len=256) :: LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH
 
   ! external GLL models
   ! variables for importing models from files in SPECFEM format, e.g.,  proc000000_vp.bin etc.
@@ -493,8 +555,8 @@
   ! note: we read in these binary files after mesh coloring, since mesh coloring is permuting arrays.
   !          here, the ordering in **_vp.bin etc. can be permuted as they are outputted when saving mesh files
 
-  select case( IMODEL )
-  case( IMODEL_GLL )
+  select case (IMODEL)
+  case (IMODEL_GLL)
     ! note:
     ! import the model from files in SPECFEM format
     ! note that those those files should be saved in LOCAL_PATH
@@ -504,7 +566,7 @@
       call model_gll(myrank,nspec,LOCAL_PATH)
     endif
 
-  case( IMODEL_IPATI )
+  case (IMODEL_IPATI)
     ! import the model from modified files in SPECFEM format
     if (ADIOS_FOR_MESH) then
       call model_ipati_adios(myrank,nspec,LOCAL_PATH)
@@ -512,7 +574,7 @@
       call model_ipati(myrank,nspec,LOCAL_PATH)
     endif
 
-  case( IMODEL_IPATI_WATER )
+  case (IMODEL_IPATI_WATER)
     ! import the model from modified files in SPECFEM format
     if (ADIOS_FOR_MESH) then
       call model_ipati_water_adios(myrank,nspec,LOCAL_PATH)
@@ -520,6 +582,15 @@
       call model_ipati_water(myrank,nspec,LOCAL_PATH)
     endif
 
+  case (IMODEL_SEP)
+    ! use values from SEP files
+    call model_sep()
+
+  case default
+    ! user output
+    if (myrank==0) then
+      write(IMAIN,*) '     no external binary model used '
+    endif
   end select
 
   end subroutine get_model_binaries

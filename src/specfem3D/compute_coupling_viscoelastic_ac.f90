@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -34,22 +35,22 @@
                         coupling_ac_el_jacobian2Dw, &
                         ispec_is_inner,phase_is_inner,&
                         PML_CONDITIONS,&
-                        SIMULATION_TYPE,backward_simulation,&                        
-                        potential_acoustic)
+                        SIMULATION_TYPE,backward_simulation,&
+                        potential_acoustic,potential_dot_acoustic)
 
 ! returns the updated acceleration array: accel
 
-  use pml_par,only : rmemory_coupling_el_ac_potential,rmemory_coupling_el_ac_potential_dot_dot,is_CPML,spec_to_CPML,&
-                     potential_acoustic_old,potential_dot_dot_acoustic_old,NSPEC_CPML
+  use constants
+  use pml_par,only : rmemory_coupling_el_ac_potential_dot_dot,is_CPML,spec_to_CPML,&
+                     potential_acoustic_old,NSPEC_CPML
   implicit none
-  include 'constants.h'
 
   integer :: NSPEC_AB,NGLOB_AB,SIMULATION_TYPE
   logical :: backward_simulation
 
 ! displacement and pressure
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: accel
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: potential_dot_dot_acoustic,potential_acoustic
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: potential_dot_dot_acoustic,potential_dot_acoustic,potential_acoustic
 
 ! global indexing
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
@@ -84,7 +85,7 @@
     !           no material properties are needed for this coupling term)
     ispec = coupling_ac_el_ispec(iface)
 
-    if( ispec_is_inner(ispec) .eqv. phase_is_inner ) then
+    if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
 
       ! loops over common GLL points
       do igll = 1, NGLLSQUARE
@@ -97,35 +98,37 @@
         iglob = ibool(i,j,k,ispec)
 
         ! acoustic pressure on global point
-        if(PML_CONDITIONS .and. NSPEC_CPML > 0)then
-          if(.not. backward_simulation)then
-            if(is_CPML(ispec))then
-              if(SIMULATION_TYPE == 1)then
+        if (PML_CONDITIONS .and. NSPEC_CPML > 0)then
+          if (.not. backward_simulation)then
+            if (is_CPML(ispec))then
+              if (SIMULATION_TYPE == 1)then
                 ispec_CPML = spec_to_CPML(ispec)
                 call pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,i,j,k,&
-                                                pressure,potential_dot_dot_acoustic,potential_dot_dot_acoustic_old,&
+                                                pressure,potential_acoustic,potential_acoustic_old,&
+                                                potential_dot_acoustic,potential_dot_dot_acoustic, &
                                                 num_coupling_ac_el_faces,rmemory_coupling_el_ac_potential_dot_dot)
                 pressure = - pressure
               endif
 
-              if(SIMULATION_TYPE == 3)then
+              if (SIMULATION_TYPE == 3)then
                 ispec_CPML = spec_to_CPML(ispec)
                 call pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,i,j,k,&
                                                 pressure,potential_acoustic,potential_acoustic_old,&
-                                                num_coupling_ac_el_faces,rmemory_coupling_el_ac_potential)
+                                                potential_dot_acoustic,potential_dot_dot_acoustic,&
+                                                num_coupling_ac_el_faces,rmemory_coupling_el_ac_potential_dot_dot)
               endif
             else
               pressure = - potential_dot_dot_acoustic(iglob)
             endif
           else
-            if(is_CPML(ispec))then
+            if (is_CPML(ispec))then
 ! left blank, since no operation needed
             else
               pressure = - potential_dot_dot_acoustic(iglob)
             endif
           endif
         else
-           pressure = - potential_dot_dot_acoustic(iglob)
+          pressure = - potential_dot_dot_acoustic(iglob)
         endif
 
         ! gets associated normal on GLL point
@@ -173,9 +176,9 @@ end subroutine compute_coupling_viscoelastic_ac
 ! approximates ocean-bottom continuity of pressure & displacement for longer period waves (> ~20s ),
 ! assuming incompressible fluid column above bathymetry ocean bottom
 
-  implicit none
+  use constants
 
-  include 'constants.h'
+  implicit none
 
   integer :: NSPEC_AB,NGLOB_AB
 
@@ -214,7 +217,7 @@ end subroutine compute_coupling_viscoelastic_ac
       iglob = ibool(i,j,k,ispec)
 
       ! only update once
-      if(.not. updated_dof_ocean_load(iglob)) then
+      if (.not. updated_dof_ocean_load(iglob)) then
 
         ! get normal
         nx = free_surface_normal(1,igll,iface)
@@ -258,9 +261,9 @@ end subroutine compute_coupling_viscoelastic_ac
 ! approximates ocean-bottom continuity of pressure & displacement for longer period waves (> ~20s ),
 ! assuming incompressible fluid column above bathymetry ocean bottom
 
-  implicit none
+  use constants
 
-  include 'constants.h'
+  implicit none
 
   integer :: NSPEC_AB,NGLOB_AB
 
@@ -306,7 +309,7 @@ end subroutine compute_coupling_viscoelastic_ac
       iglob = ibool(i,j,k,ispec)
 
       ! only update once
-      if(.not. updated_dof_ocean_load(iglob)) then
+      if (.not. updated_dof_ocean_load(iglob)) then
 
         ! get normal
         nx = free_surface_normal(1,igll,iface)

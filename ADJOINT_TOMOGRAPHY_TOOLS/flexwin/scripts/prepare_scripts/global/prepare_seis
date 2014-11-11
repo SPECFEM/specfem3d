@@ -1,0 +1,138 @@
+#!/bin/sh
+
+event_name=$1
+period_range=10-250
+
+#########################################################################
+#
+# Notes: 
+#
+# Files must be synchronized before this step, preferably using
+# the CMTSOLUTION file for the event and the process_data.pl and
+# process_syn.pl scripts (synthetics may need to be offset if made with 
+# specfem).
+#
+# There must be only one timeseries per net/sta/comp combination.
+# Ensure a single location id, and a single fragment of record per
+# combination before running this script.
+#
+# Ensure presence of three components (ENZ) for each net/sta combination.
+#
+#########################################################################
+
+DATA=/data/alessia/events_lh/${event_name}/${event_name}.${period_range}
+SYN=/data/alessia/specfem/${event_name}/${event_name}.${period_range}
+
+echo $DATA
+echo $SYN
+
+sac=sac.mac.$$
+
+echo echo on > $sac
+echo readerr badfile fatal >> $sac
+
+# rotate horizontal components
+
+tmp_file=/tmp/tmp.$$
+ls ${DATA}/*N.?.SAC > $tmp_file 
+
+for e_file in ${DATA}/*E.?.SAC ; do
+
+  net=`echo $e_file | awk -F"/" '{print $NF}' | awk -F"." '{print $7}'`
+  sta=`echo $e_file | awk -F"/" '{print $NF}' | awk -F"." '{print $8}'`
+  e_comp=`echo $e_file | awk -F"/" '{print $NF}' | awk -F"." '{print $10}'`
+  
+  n_comp=`echo $e_comp | sed s/E/N/`
+  r_comp=`echo $e_comp | sed s/E/R/`
+  t_comp=`echo $e_comp | sed s/E/T/`
+
+  r_file=`echo $e_file | sed s/$e_comp/$r_comp/`
+  t_file=`echo $e_file | sed s/$e_comp/$t_comp/`
+
+  synt_e=${SYN}/${sta}.${net}.${e_comp}.semd.sac
+  synt_n=${SYN}/${sta}.${net}.${n_comp}.semd.sac
+  synt_r=${SYN}/${sta}.${net}.${r_comp}.semd.sac
+  synt_t=${SYN}/${sta}.${net}.${t_comp}.semd.sac
+
+  # check corresponding N file exists
+  n_file=`grep "\.$sta\." $tmp_file | grep "\.$n_comp\." | grep "\.$net\."`
+  nchar=`echo $n_file | wc -c`
+  if [ $nchar -eq 1 ] ; then 
+    echo "No N component corresponding to $e_file.  Exiting" 
+    exit 
+  fi
+
+  # adapt the N component to the length of the E component (data)
+  echo "r $n_file" >> $sac
+  echo rtrend >> $sac
+  echo taper >> $sac
+  echo w over >> $sac
+  echo "r $e_file" >> $sac
+  echo "setbb btime &1,b" >> $sac
+  echo "setbb npoints &1,npts" >> $sac
+  echo cuterr fillz >> $sac
+  echo "cut %btime n %npoints" >> $sac
+  echo r $n_file >> $sac
+  echo cut off >> $sac
+  echo w over >> $sac
+
+  # adapt the N component to the length of the E component (synth)
+  echo "r $synt_n" >> $sac
+  echo rtrend >> $sac
+  echo taper >> $sac
+  echo w over >> $sac
+  echo "r $synt_e" >> $sac
+  echo "setbb btime &1,b" >> $sac
+  echo "setbb npoints &1,npts" >> $sac
+  echo cuterr fillz >> $sac
+  echo "cut %btime n %npoints" >> $sac
+  echo r $synt_n >> $sac
+  echo cut off >> $sac
+  echo w over >> $sac
+
+
+  # rotate both components of data
+  echo "r $n_file $e_file" >> $sac
+  echo "rot to gcp"        >> $sac
+  echo "w $r_file $t_file" >> $sac
+
+  # rotate both components of synthetic
+  echo "r $synt_n $synt_e" >> $sac
+  echo "rot to gcp"        >> $sac
+  echo "w $synt_r $synt_t" >> $sac
+  
+done
+rm $tmp_file
+
+
+# cut and fill the synthetic to match the start and end time of the data
+for file in ${DATA}/*[ZRT].?.SAC ; do
+
+  net=`echo $file | awk -F"/" '{print $NF}' | awk -F"." '{print $7}'`
+  sta=`echo $file | awk -F"/" '{print $NF}' | awk -F"." '{print $8}'`
+  comp=`echo $file | awk -F"/" '{print $NF}' | awk -F"." '{print $10}'`
+
+  synt=${SYN}/${sta}.${net}.${comp}.semd.sac
+  #echo $synt
+
+  if [ -e $synt ] ; then
+    echo r $file >> $sac
+    echo rtrend >> $sac
+    echo taper >> $sac
+    echo w over >> $sac
+    echo r $file $synt >> $sac
+    echo "setbb btime &1,b" >> $sac
+    echo "setbb npoints &1,npts" >> $sac
+    echo cuterr fillz >> $sac
+    echo "cut %btime n %npoints" >> $sac
+    echo r $synt >> $sac
+    echo cut off >> $sac
+    echo w over >> $sac
+  fi
+
+done
+echo quit >> $sac
+
+sac2000 $sac
+
+rm $sac

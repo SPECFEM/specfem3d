@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -54,7 +55,6 @@
 !!       file as an argument.
 subroutine define_kernel_adios_variables(handle, SAVE_WEIGHTS)
 
-  use mpi
   use adios_write_mod
 
   use adios_helpers_mod
@@ -70,9 +70,9 @@ subroutine define_kernel_adios_variables(handle, SAVE_WEIGHTS)
   integer(kind=8), intent(INOUT) :: handle
   logical, intent(IN) :: SAVE_WEIGHTS
   ! Variables
-  character(len=256) :: output_name, group_name
+  character(len=MAX_STRING_LEN) :: output_name, group_name
   integer(kind=8) :: group, groupsize, adios_totalsize
-  integer :: local_dim, comm, adios_err, ierr
+  integer :: local_dim, comm, adios_err
   !--- Variables to allreduce - wmax stands for world_max
   integer :: nspec_wmax, ier
   integer, parameter :: num_vars = 1
@@ -82,7 +82,8 @@ subroutine define_kernel_adios_variables(handle, SAVE_WEIGHTS)
 
   output_name = LOCAL_PATH(1:len_trim(LOCAL_PATH))// "/kernels.bp"
   group_name = "SPECFEM3D_KERNELS"
-  call MPI_Comm_dup (MPI_COMM_WORLD, comm, ierr)
+
+  call world_duplicate(comm)
 
   groupsize = 0
   call adios_declare_group(group, group_name, "", 0, adios_err)
@@ -90,9 +91,7 @@ subroutine define_kernel_adios_variables(handle, SAVE_WEIGHTS)
 
   max_global_values(1) = NSPEC_AB
 
-  call MPI_Allreduce(MPI_IN_PLACE, max_global_values, num_vars, &
-                     MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ier)
-  if( ier /= 0 ) call exit_MPI(myrank,'Allreduce to get max values failed.')
+  call max_allreduce_i(max_global_values,num_vars)
 
   nspec_wmax = max_global_values(1)
 
@@ -100,12 +99,12 @@ subroutine define_kernel_adios_variables(handle, SAVE_WEIGHTS)
 
   local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
 
-  if( SAVE_WEIGHTS ) then
+  if (SAVE_WEIGHTS) then
     call define_adios_global_array1D(group, groupsize, local_dim, &
                                      "", "weights_kernel", dummy_kernel)
   endif
 
-  if( ACOUSTIC_SIMULATION ) then
+  if (ACOUSTIC_SIMULATION) then
     call define_adios_global_array1D(group, groupsize, local_dim, &
                                      "", "rho_ac_kl", dummy_kernel)
     call define_adios_global_array1D(group, groupsize, local_dim, &
@@ -116,7 +115,7 @@ subroutine define_kernel_adios_variables(handle, SAVE_WEIGHTS)
                                      "", "alpha_ac_kl", dummy_kernel)
   endif
 
-  if( ELASTIC_SIMULATION ) then
+  if (ELASTIC_SIMULATION) then
     if (ANISOTROPIC_KL) then
       if (SAVE_TRANSVERSE_KL) then
         call define_adios_global_array1D(group, groupsize, local_dim, &
@@ -159,7 +158,7 @@ subroutine define_kernel_adios_variables(handle, SAVE_WEIGHTS)
     endif
   endif
 
-  if( POROELASTIC_SIMULATION ) then
+  if (POROELASTIC_SIMULATION) then
     call define_adios_global_array1D(group, groupsize, local_dim, &
                                      "", "rhot_kl", dummy_kernel)
     call define_adios_global_array1D(group, groupsize, local_dim, &
@@ -202,12 +201,12 @@ subroutine define_kernel_adios_variables(handle, SAVE_WEIGHTS)
                                      "", "ratio_kl", dummy_kernel)
   endif
 
-  if ( APPROXIMATE_HESS_KL ) then
-    if( ACOUSTIC_SIMULATION ) then
+  if (APPROXIMATE_HESS_KL) then
+    if (ACOUSTIC_SIMULATION) then
       call define_adios_global_array1D(group, groupsize, local_dim, &
                                        "", "hess_ac_kl", dummy_kernel)
     endif
-    if( ELASTIC_SIMULATION ) then
+    if (ELASTIC_SIMULATION) then
       call define_adios_global_array1D(group, groupsize, local_dim, &
                                        "", "hess_kl", dummy_kernel)
     endif
@@ -456,12 +455,12 @@ subroutine save_kernels_hessian_adios(handle)
   local_dim = NGLLX * NGLLY * NGLLZ * NSPEC_AB
 
   ! acoustic domains
-  if( ACOUSTIC_SIMULATION ) then
+  if (ACOUSTIC_SIMULATION) then
     call write_adios_global_1d_array(handle, myrank, sizeprocs, &
                                      local_dim, STRINGIFY_VAR(hess_ac_kl))
   endif
   ! elastic domains
-  if( ELASTIC_SIMULATION ) then
+  if (ELASTIC_SIMULATION) then
     call write_adios_global_1d_array(handle, myrank, sizeprocs, &
                                      local_dim, STRINGIFY_VAR(hess_kl))
   endif

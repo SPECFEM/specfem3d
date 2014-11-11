@@ -4,10 +4,11 @@
  !               S p e c f e m 3 D  V e r s i o n  2 . 1
  !               ---------------------------------------
  !
- !          Main authors: Dimitri Komatitsch and Jeroen Tromp
- !    Princeton University, USA and CNRS / INRIA / University of Pau
- ! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
- !                             July 2012
+ !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+ !                        Princeton University, USA
+ !                and CNRS / University of Marseille, France
+ !                 (there are currently many more authors!)
+ ! (c) Princeton University and CNRS / University of Marseille, July 2012
  !
  ! This program is free software; you can redistribute it and/or modify
  ! it under the terms of the GNU General Public License as published by
@@ -26,19 +27,7 @@
  !=====================================================================
  */
 
-#include <stdio.h>
-#include <cuda.h>
-#include <cublas.h>
-
-#include <sys/types.h>
-#include <unistd.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-
-#include "config.h"
 #include "mesh_constants_cuda.h"
-// #include "epik_user.h"
-
 
 /* ----------------------------------------------------------------------------------------------- */
 
@@ -47,7 +36,7 @@
 /* ----------------------------------------------------------------------------------------------- */
 
 __global__ void compute_add_sources_kernel(realw* accel,
-                                           int* ibool,
+                                           int* d_ibool,
                                            int* ispec_is_inner,
                                            int phase_is_inner,
                                            realw* sourcearrays,
@@ -66,23 +55,20 @@ __global__ void compute_add_sources_kernel(realw* accel,
   int ispec,iglob;
   realw stf;
 
-  if(isource < NSOURCES) { // when NSOURCES > 65535, but mod(nspec_top,2) > 0, we end up with an extra block.
+  if (isource < NSOURCES) { // when NSOURCES > 65535, but mod(nspec_top,2) > 0, we end up with an extra block.
 
-    if(myrank == islice_selected_source[isource]) {
+    if (myrank == islice_selected_source[isource]) {
 
       ispec = ispec_selected_source[isource]-1;
 
-      if(ispec_is_inner[ispec] == phase_is_inner && ispec_is_elastic[ispec] ) {
+      if (ispec_is_inner[ispec] == phase_is_inner && ispec_is_elastic[ispec]) {
 
         stf = (realw) stf_pre_compute[isource];
-        iglob = ibool[INDEX4(5,5,5,i,j,k,ispec)]-1;
+        iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
 
-        atomicAdd(&accel[iglob*3],
-                  sourcearrays[INDEX5(NSOURCES, 3, 5, 5,isource, 0, i,j,k)]*stf);
-        atomicAdd(&accel[iglob*3+1],
-                  sourcearrays[INDEX5(NSOURCES, 3, 5, 5,isource, 1, i,j,k)]*stf);
-        atomicAdd(&accel[iglob*3+2],
-                  sourcearrays[INDEX5(NSOURCES, 3, 5, 5,isource, 2, i,j,k)]*stf);
+        atomicAdd(&accel[iglob*3],sourcearrays[INDEX5(NSOURCES,NDIM,NGLLX,NGLLX,isource, 0,i,j,k)]*stf);
+        atomicAdd(&accel[iglob*3+1],sourcearrays[INDEX5(NSOURCES,NDIM,NGLLX,NGLLX,isource, 1,i,j,k)]*stf);
+        atomicAdd(&accel[iglob*3+2],sourcearrays[INDEX5(NSOURCES,NDIM,NGLLX,NGLLX,isource, 2,i,j,k)]*stf);
       }
     }
   }
@@ -104,7 +90,7 @@ void FC_FUNC_(compute_add_sources_el_cuda,
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
 
   // check if anything to do
-  if( mp->nsources_local == 0 ) return;
+  if (mp->nsources_local == 0) return;
 
   int NSOURCES = *h_NSOURCES;
   int phase_is_inner = *h_phase_is_inner;
@@ -186,14 +172,14 @@ void FC_FUNC_(compute_add_sources_el_s3_cuda,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-__global__ void add_source_master_rec_noise_cuda_kernel(int* ibool,
+__global__ void add_source_master_rec_noise_cuda_kernel(int* d_ibool,
                                                         int* ispec_selected_rec,
                                                         int irec_master_noise,
                                                         realw* accel,
                                                         realw* noise_sourcearray,
                                                         int it) {
   int tx = threadIdx.x;
-  int iglob = ibool[tx + NGLL3*(ispec_selected_rec[irec_master_noise-1]-1)]-1;
+  int iglob = d_ibool[tx + NGLL3_PADDED*(ispec_selected_rec[irec_master_noise-1]-1)]-1;
 
   // not sure if we need atomic operations but just in case...
   // accel[3*iglob] += noise_sourcearray[3*tx + 3*125*it];
@@ -225,7 +211,7 @@ TRACE("\tadd_source_master_rec_noise_cu");
   dim3 grid(1,1,1);
   dim3 threads(NGLL3,1,1);
 
-  if(mp->myrank == islice_selected_rec[irec_master_noise-1]) {
+  if (mp->myrank == islice_selected_rec[irec_master_noise-1]) {
     add_source_master_rec_noise_cuda_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_ibool,
                                                                                     mp->d_ispec_selected_rec,
                                                                                     irec_master_noise,
@@ -248,7 +234,7 @@ TRACE("\tadd_source_master_rec_noise_cu");
 __global__ void add_sources_el_SIM_TYPE_2_OR_3_kernel(realw* accel,
                                                      int nrec,
                                                      realw* adj_sourcearrays,
-                                                     int* ibool,
+                                                     int* d_ibool,
                                                      int* ispec_is_inner,
                                                      int* ispec_is_elastic,
                                                      int* ispec_selected_rec,
@@ -258,34 +244,23 @@ __global__ void add_sources_el_SIM_TYPE_2_OR_3_kernel(realw* accel,
 
   int irec_local = blockIdx.x + gridDim.x*blockIdx.y;
 
-  if(irec_local < nadj_rec_local) { // when nrec > 65535, but mod(nspec_top,2) > 0, we end up with an extra block.
+  if (irec_local < nadj_rec_local) { // when nrec > 65535, but mod(nspec_top,2) > 0, we end up with an extra block.
 
     int irec = pre_computed_irec[irec_local];
 
     int ispec = ispec_selected_rec[irec]-1;
-    if( ispec_is_elastic[ispec] ){
+    if (ispec_is_elastic[ispec]){
 
-      if(ispec_is_inner[ispec] == phase_is_inner) {
+      if (ispec_is_inner[ispec] == phase_is_inner) {
         int i = threadIdx.x;
         int j = threadIdx.y;
         int k = threadIdx.z;
-        int iglob = ibool[INDEX4(5,5,5,i,j,k,ispec)]-1;
+        int iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
 
         // atomic operations are absolutely necessary for correctness!
-        atomicAdd(&accel[3*iglob],adj_sourcearrays[INDEX5(5,5,5,3,
-                                                              i,j,k,
-                                                              0,
-                                                              irec_local)]);
-
-        atomicAdd(&accel[1+3*iglob], adj_sourcearrays[INDEX5(5,5,5,3,
-                                                             i,j,k,
-                                                             1,
-                                                             irec_local)]);
-
-        atomicAdd(&accel[2+3*iglob],adj_sourcearrays[INDEX5(5,5,5,3,
-                                                            i,j,k,
-                                                            2,
-                                                            irec_local)]);
+        atomicAdd(&accel[3*iglob],adj_sourcearrays[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,0,irec_local)]);
+        atomicAdd(&accel[1+3*iglob], adj_sourcearrays[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,1,irec_local)]);
+        atomicAdd(&accel[2+3*iglob],adj_sourcearrays[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,2,irec_local)]);
       }
     } // ispec_is_elastic
   }
@@ -313,7 +288,7 @@ void FC_FUNC_(add_sources_el_sim_type_2_or_3,
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
 
   // checks
-  if( *nadj_rec_local != mp->nadj_rec_local) exit_on_error("add_sources_el_sim_type_2_or_3: nadj_rec_local not equal\n");
+  if (*nadj_rec_local != mp->nadj_rec_local) exit_on_error("add_sources_el_sim_type_2_or_3: nadj_rec_local not equal\n");
 
   int num_blocks_x, num_blocks_y;
   get_blocks_xy(mp->nadj_rec_local,&num_blocks_x,&num_blocks_y);
@@ -324,51 +299,50 @@ void FC_FUNC_(add_sources_el_sim_type_2_or_3,
   // build slice of adj_sourcearrays because full array is *very* large.
   // note: this extracts array values for local adjoint sources at given time step "time_index"
   //          from large adj_sourcearrays array into h_adj_sourcearrays_slice
-  int ispec,i,j,k;
-  int irec_local = 0;
-  for(int irec = 0; irec < *nrec; irec++) {
-    if(mp->myrank == h_islice_selected_rec[irec]) {
-      irec_local++;
+  int ispec,i,j,k,irec_local,it_index;
 
+  it_index = (*time_index) - 1;
+  irec_local = 0;
+
+  for(int irec = 0; irec < *nrec; irec++) {
+    if (mp->myrank == h_islice_selected_rec[irec]) {
       // takes only elastic sources
       ispec = h_ispec_selected_rec[irec] - 1;
 
-      if( h_ispec_is_elastic[ispec] ){
+      // only for elastic elements
+      if (h_ispec_is_elastic[ispec]){
 
-        if( h_ispec_is_inner[ispec] == *phase_is_inner) {
-          for(k=0;k<5;k++) {
-            for(j=0;j<5;j++) {
-              for(i=0;i<5;i++) {
+        if (h_ispec_is_inner[ispec] == *phase_is_inner) {
+          for(k=0;k<NGLLX;k++) {
+            for(j=0;j<NGLLX;j++) {
+              for(i=0;i<NGLLX;i++) {
 
-                mp->h_adj_sourcearrays_slice[INDEX5(5,5,5,3,i,j,k,0,irec_local-1)]
+                mp->h_adj_sourcearrays_slice[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,0,irec_local)]
                         = h_adj_sourcearrays[INDEX6(*nadj_rec_local,
-                                                    *NTSTEP_BETWEEN_READ_ADJSRC,
-                                                    3,5,5,
-                                                    irec_local-1,(*time_index)-1,
-                                                    0,i,j,k)];
+                                                    *NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLX,
+                                                    irec_local,it_index,0,i,j,k)];
 
-                mp->h_adj_sourcearrays_slice[INDEX5(5,5,5,3,i,j,k,1,irec_local-1)]
+                mp->h_adj_sourcearrays_slice[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,1,irec_local)]
                         = h_adj_sourcearrays[INDEX6(*nadj_rec_local,
-                                                    *NTSTEP_BETWEEN_READ_ADJSRC,
-                                                    3,5,5,
-                                                    irec_local-1,(*time_index)-1,
-                                                    1,i,j,k)];
+                                                    *NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLX,
+                                                    irec_local,it_index,1,i,j,k)];
 
-                mp->h_adj_sourcearrays_slice[INDEX5(5,5,5,3,i,j,k,2,irec_local-1)]
+                mp->h_adj_sourcearrays_slice[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,2,irec_local)]
                         = h_adj_sourcearrays[INDEX6(*nadj_rec_local,
-                                                    *NTSTEP_BETWEEN_READ_ADJSRC,
-                                                    3,5,5,
-                                                    irec_local-1,(*time_index)-1,
-                                                    2,i,j,k)];
+                                                    *NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLX,
+                                                    irec_local,it_index,2,i,j,k)];
               }
             }
           }
         } // phase_is_inner
       } // h_ispec_is_elastic
+
+      // increases local receivers counter
+      irec_local++;
     }
   }
   // check all local sources were added
-  if( irec_local != mp->nadj_rec_local) exit_on_error("irec_local not equal to nadj_rec_local\n");
+  if (irec_local != mp->nadj_rec_local) exit_on_error("irec_local not equal to nadj_rec_local\n");
 
   // copies extracted array values onto GPU
   print_CUDA_error_if_any(cudaMemcpy(mp->d_adj_sourcearrays, mp->h_adj_sourcearrays_slice,

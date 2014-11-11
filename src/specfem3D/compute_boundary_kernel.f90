@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -47,7 +48,7 @@
     ispec_bot = ibelm_moho_bot(ispec2D)
 
     ! elements on both sides available
-    if( ispec_top > 0 .and. ispec_bot > 0 ) then
+    if (ispec_top > 0 .and. ispec_bot > 0) then
       ! loops over surface
       do igll=1,NGLLSQUARE
         i = ijk_moho_top(1,igll,ispec2D)
@@ -71,7 +72,7 @@
           k = ijk_moho_bot(3,jgll,ispec2D)
           iglob_bot = ibool(i,j,k,ispec_bot)
 
-          if( iglob_bot /= iglob_top ) cycle
+          if (iglob_bot /= iglob_top) cycle
           ! iglob_top == iglob_bot!
 
           ! computes contribution from bottom element
@@ -91,7 +92,7 @@
         enddo
 
         ! checks
-        if( .not. is_done ) then
+        if (.not. is_done) then
           print*,'error : moho kernel not computed'
           print*,'ispec:',ispec_top,ispec_bot,iglob_top,i,j,k
           call exit_mpi(myrank,'error moho kernel computation')
@@ -101,12 +102,12 @@
 
     ! only one element available
     ! e.g. free-surface: see Tromp et al. (2005), eq. (28)
-    else if( ispec_bot > 0 .or. ispec_top > 0 ) then
+    else if (ispec_bot > 0 .or. ispec_top > 0) then
 
       ! loops over surface
       do igll=1,NGLLSQUARE
 
-        if( ispec_top > 0 ) then
+        if (ispec_top > 0) then
           i = ijk_moho_top(1,igll,ispec2D)
           j = ijk_moho_top(2,igll,ispec2D)
           k = ijk_moho_top(3,igll,ispec2D)
@@ -158,8 +159,9 @@ subroutine compute_boundary_kernel_elem(kernel, mul, kappal, rho_vsl, &
 ! compute the boundary kernel contribution from one side of the boundary
 ! see e.g.: Tromp et al. (2005), eq. (25), or Liu & Tromp (2008), eq. (65)
 
+  use constants
+
   implicit none
-  include 'constants.h'
 
   real(kind=CUSTOM_REAL)  kernel, mul, kappal, rho_vsl
   real(kind=CUSTOM_REAL) :: accel(NDIM), b_displ(NDIM), ds(NDIM,NDIM), b_ds(NDIM,NDIM), norm(NDIM)

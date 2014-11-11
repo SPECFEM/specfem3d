@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -30,11 +31,9 @@
                           xstore,ystore,zstore, &
                           xelm,yelm,zelm,shape3D,dershape3D,ispec,nspec)
 
-  use generate_databases_par, only: NGNOD
+  use generate_databases_par, only: NGNOD,CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,SIZE_REAL,ZERO
 
   implicit none
-
-  include "constants.h"
 
   integer ispec,nspec,myrank
 
@@ -76,23 +75,26 @@
         xxi = xxi + dershape3D(1,ia,i,j,k)*xelm(ia)
         xeta = xeta + dershape3D(2,ia,i,j,k)*xelm(ia)
         xgamma = xgamma + dershape3D(3,ia,i,j,k)*xelm(ia)
+
         yxi = yxi + dershape3D(1,ia,i,j,k)*yelm(ia)
         yeta = yeta + dershape3D(2,ia,i,j,k)*yelm(ia)
         ygamma = ygamma + dershape3D(3,ia,i,j,k)*yelm(ia)
+
         zxi = zxi + dershape3D(1,ia,i,j,k)*zelm(ia)
         zeta = zeta + dershape3D(2,ia,i,j,k)*zelm(ia)
         zgamma = zgamma + dershape3D(3,ia,i,j,k)*zelm(ia)
+
         xmesh = xmesh + shape3D(ia,i,j,k)*xelm(ia)
         ymesh = ymesh + shape3D(ia,i,j,k)*yelm(ia)
         zmesh = zmesh + shape3D(ia,i,j,k)*zelm(ia)
       enddo
 
       jacobian = xxi*(yeta*zgamma-ygamma*zeta) - &
-             xeta*(yxi*zgamma-ygamma*zxi) + &
-             xgamma*(yxi*zeta-yeta*zxi)
+                 xeta*(yxi*zgamma-ygamma*zxi) + &
+                 xgamma*(yxi*zeta-yeta*zxi)
 
 ! check that the Jacobian transform is invertible, i.e. that the Jacobian never becomes negative or null
-      if(jacobian <= ZERO) call exit_MPI(myrank,'error: negative or null 3D Jacobian found')
+      if (jacobian <= ZERO) call exit_MPI(myrank,'error: negative or null 3D Jacobian found')
 
 !     invert the relation (Fletcher p. 50 vol. 2)
       xix = (yeta*zgamma-ygamma*zeta) / jacobian
@@ -113,7 +115,7 @@
 !     save the derivatives and the jacobian
 
 ! distinguish between single and double precision for reals
-      if(CUSTOM_REAL == SIZE_REAL) then
+      if (CUSTOM_REAL == SIZE_REAL) then
         xixstore(i,j,k,ispec) = sngl(xix)
         xiystore(i,j,k,ispec) = sngl(xiy)
         xizstore(i,j,k,ispec) = sngl(xiz)

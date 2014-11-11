@@ -1,0 +1,63 @@
+To run this benchmark, you need to : 
+
+=============================================================================================================================
+1. --------------------------------------------------------------------------------------------------------------------------
+=============================================================================================================================
+
+Read the file README_NEW_CHANGE
+
+=============================================================================================================================
+2. --------------------------------------------------------------------------------------------------------------------------
+=============================================================================================================================
+
+This benchmark was tested and works on Curie TGCC supercomputer
+
+All the option for launch this benchmark are in the head of ./batch_run_benchmark_all_process.sh
+
+=============================================================================================================================
+3. --------------------------------------------------------------------------------------------------------------------------
+=============================================================================================================================
+
+Configure in ./parfile_for_benchmark, l. 2, the path of your specfem3d home, for example :
+
+HOME_SPECFEM3D           =  /ccc/scratch/cont003/gen7165/durochtc/Codes/SPECFEM3Ds/specfem3d
+
+All the other paths in the different scripts depends on the variable HOME_SPECFEM3D.
+
+=============================================================================================================================
+4. --------------------------------------------------------------------------------------------------------------------------
+=============================================================================================================================
+
+This benchmark was tested and works for 32 procs (2 nodes of Curie)
+
+To change the number of procs for the job, you need to check/change : 
+
+- Change #MSUB -n (the number of procs) and #MSUB -N (the number of nodes) in ./batch_run_benchmark_all_process.sh (l. 7-8)
+
+- Search and check "#MSUB -n" and "#MSUB -N" in every scripts called by this benchmark 
+  (in the whole DSM_FOR_SPECFEM directory) and change if necessary (normally not) 
+
+- Change NPROC    in ./DATA/Par_file (l. 15)
+
+- Change MPI_CPUS in ./parfile_for_benchmark (l.85)
+
+- Change NRPOC and CPUS in ./batch_run_benchmark_all_process.sh (l. 73-74)
+
+- Search and check "NPROC=" and "CPUS=" in every scripts called by this benchmark 
+  (in the whole DSM_FOR_SPECFEM directory) and change if necessary
+
+=============================================================================================================================
+5. --------------------------------------------------------------------------------------------------------------------------
+=============================================================================================================================
+
+The command to launch the job is :
+
+ccc_msub -q standard ./batch_run_benchmark_all_process.sh
+
+=============================================================================================================================
+6. --------------------------------------------------------------------------------------------------------------------------
+=============================================================================================================================
+
+Remark : the batch_run_benchmark_all_process.sh have 6 steps. The step 6 is about making movies with results, this step 
+isn't executed (commented in the batch) for the moment due to a problem that will be fixed soon
+

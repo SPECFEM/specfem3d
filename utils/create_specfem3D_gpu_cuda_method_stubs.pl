@@ -14,16 +14,17 @@ $outfile = "src/cuda/specfem3D_gpu_cuda_method_stubs.c";
 open(IOUT,"> _____temp_tutu_____");
 
 $header = <<END;
-/* 
+/*
 !=====================================================================
 !
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and University of Pau / CNRS / INRIA
-! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
-!                            April 2011
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -57,7 +58,7 @@ $warning = <<END;
  exit(1);
 END
 
-print IOUT "$header \n";
+print IOUT "$header\n";
 
 $success = 0;
 
@@ -109,9 +110,9 @@ foreach $name (@objects) {
         # function declaration ends
         if( $line =~ /INITIALIZE_CUDA_DEVICE/ ){
           # adds warning
-          print IOUT "$line \n$warning\} \n\n";
+          print IOUT "$line\n$warning\}\n\n";
         }else{
-          print IOUT "$line\} \n\n";
+          print IOUT "$line\}\n\n";
         }
         $do_extract = 0;
       }else{

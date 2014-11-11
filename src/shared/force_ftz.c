@@ -1,30 +1,31 @@
 /*
-!=====================================================================
-!
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
-!               ---------------------------------------
-!
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
-!
-! This program is free software; you can redistribute it and/or modify
-! it under the terms of the GNU General Public License as published by
-! the Free Software Foundation; either version 2 of the License, or
-! (at your option) any later version.
-!
-! This program is distributed in the hope that it will be useful,
-! but WITHOUT ANY WARRANTY; without even the implied warranty of
-! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-! GNU General Public License for more details.
-!
-! You should have received a copy of the GNU General Public License along
-! with this program; if not, write to the Free Software Foundation, Inc.,
-! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-!
-!=====================================================================
-*/
+ !=====================================================================
+ !
+ !               S p e c f e m 3 D  V e r s i o n  2 . 1
+ !               ---------------------------------------
+ !
+ !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+ !                        Princeton University, USA
+ !                and CNRS / University of Marseille, France
+ !                 (there are currently many more authors!)
+ ! (c) Princeton University and CNRS / University of Marseille, July 2012
+ !
+ ! This program is free software; you can redistribute it and/or modify
+ ! it under the terms of the GNU General Public License as published by
+ ! the Free Software Foundation; either version 2 of the License, or
+ ! (at your option) any later version.
+ !
+ ! This program is distributed in the hope that it will be useful,
+ ! but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ ! GNU General Public License for more details.
+ !
+ ! You should have received a copy of the GNU General Public License along
+ ! with this program; if not, write to the Free Software Foundation, Inc.,
+ ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ !
+ !=====================================================================
+ */
 
 /* Dimitri Komatitsch, University of Toulouse, May 2011: */
 
@@ -45,6 +46,10 @@
 
 /*   * The FTZ bit (bit 15) in the MXCSR register must be masked (value = 1). */
 /*   * The underflow exception (bit 11) needs to be masked (value = 1). */
+
+/* This routine is not strictly necessary for SPECFEM, thus if it does not compile on your system
+   (since it calls some low-level system routines) just suppress all the lines below (i.e. make it an empty file)
+   and comment out the call to force_ftz() in the main SPECFEM program */
 
 #include "config.h"
 

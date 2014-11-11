@@ -8,6 +8,9 @@ NOISE_TOMOGRAPHY                = 2
 SAVE_FORWARD                    = .true.
 
 # UTM projection parameters
+# Use a negative zone number for the Southern hemisphere:
+# The Northern hemisphere corresponds to zones +1 to +60,
+# The Southern hemisphere corresponds to zones -1 to -60.
 UTM_PROJECTION_ZONE             = 11
 SUPPRESS_UTM_PROJECTION         = .true.
 
@@ -17,7 +20,6 @@ NPROC                           = 4
 # time step parameters
 NSTEP                           = 1500
 DT                              = 0.05d0
-NTSTEP_BETWEEN_READ_ADJSRC      = 0
 
 # models:
 # available options are:
@@ -28,8 +30,11 @@ NTSTEP_BETWEEN_READ_ADJSRC      = 0
 #   aniso,external,gll,salton_trough,tomo
 MODEL                           = default
 
+# if you are using a SEP model (oil-industry format)
+SEP_MODEL_DIRECTORY             = ./DATA/my_SEP_model/
+
 # parameters describing the model
-APPROXIMATE_OCEAN_LOAD                          = .false.
+APPROXIMATE_OCEAN_LOAD          = .false.
 TOPOGRAPHY                      = .false.
 ATTENUATION                     = .false.
 FULL_ATTENUATION_SOLID          = .false.
@@ -61,9 +66,26 @@ NTSTEP_BETWEEN_OUTPUT_INFO      = 1000
 # interval in time steps for writing of seismograms
 NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 10000
 
+# interval in time steps for reading adjoint traces
+# 0 = read the whole adjoint sources at the same time
+NTSTEP_BETWEEN_READ_ADJSRC      = 0
+
 # print source time function
 PRINT_SOURCE_TIME_FUNCTION      = .true.
 
+# to couple with an external code (such as DSM, AxiSEM, or FK)
+COUPLE_WITH_EXTERNAL_CODE       = .false.
+EXTERNAL_CODE_TYPE              = 1   # 1 = DSM, 2 = AxiSEM, 3 = FK
+TRACTION_PATH                   = ./DATA/DSM_tractions_for_specfem3D/
+MESH_A_CHUNK_OF_THE_EARTH       = .true.
+
 # set to true to use GPUs
 GPU_MODE                        = .false.
+
+# ADIOS Options for I/Os
+ADIOS_ENABLED                   = .false.
+ADIOS_FOR_DATABASES             = .false.
+ADIOS_FOR_MESH                  = .false.
+ADIOS_FOR_FORWARD_ARRAYS        = .false.
+ADIOS_FOR_KERNELS               = .false.
 

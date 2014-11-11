@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -33,6 +34,7 @@
 ! determines coupling surface for acoustic-elastic domains
 ! based on ispec_is_acoustic, ispec_is_elastic and ispec_is_poroelastic arrays
 
+  use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,IMAIN
   use create_regions_mesh_ext_par
   implicit none
 
@@ -63,11 +65,11 @@
 
   ! sets flags for acoustic / elastic / poroelastic on global points
   allocate(acoustic_flag(nglob_dummy),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array acoustic_flag'
+  if (ier /= 0) stop 'error allocating array acoustic_flag'
   allocate(elastic_flag(nglob_dummy),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array elastic_flag'
+  if (ier /= 0) stop 'error allocating array elastic_flag'
   allocate(poroelastic_flag(nglob_dummy),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array poroelastic_flag'
+  if (ier /= 0) stop 'error allocating array poroelastic_flag'
 
   acoustic_flag(:) = 0
   elastic_flag(:) = 0
@@ -79,9 +81,9 @@
 
   do ispec = 1, nspec
     ! counts elements
-    if( ispec_is_acoustic(ispec) ) count_acoustic = count_acoustic + 1
-    if( ispec_is_elastic(ispec) ) count_elastic = count_elastic + 1
-    if( ispec_is_poroelastic(ispec) ) count_poroelastic = count_poroelastic + 1
+    if (ispec_is_acoustic(ispec)) count_acoustic = count_acoustic + 1
+    if (ispec_is_elastic(ispec)) count_elastic = count_elastic + 1
+    if (ispec_is_poroelastic(ispec)) count_poroelastic = count_poroelastic + 1
 
     ! sets flags on global points
     do k = 1, NGLLZ
@@ -90,25 +92,25 @@
           ! global index
           iglob = ibool(i,j,k,ispec)
           ! sets acoustic flag
-          if( ispec_is_acoustic(ispec) ) acoustic_flag(iglob) =  myrank+1
+          if (ispec_is_acoustic(ispec)) acoustic_flag(iglob) =  myrank+1
           ! sets elastic flag
-          if( ispec_is_elastic(ispec) ) elastic_flag(iglob) =  myrank+1
+          if (ispec_is_elastic(ispec)) elastic_flag(iglob) =  myrank+1
           ! sets poroelastic flag
-          if( ispec_is_poroelastic(ispec) ) poroelastic_flag(iglob) =  myrank+1
+          if (ispec_is_poroelastic(ispec)) poroelastic_flag(iglob) =  myrank+1
         enddo
       enddo
     enddo
   enddo
   call sum_all_i(count_acoustic,inum)
-  if( myrank == 0 ) then
+  if (myrank == 0) then
     write(IMAIN,*) '     total acoustic elements   :',inum
   endif
   call sum_all_i(count_elastic,inum)
-  if( myrank == 0 ) then
+  if (myrank == 0) then
     write(IMAIN,*) '     total elastic elements    :',inum
   endif
   call sum_all_i(count_poroelastic,inum)
-  if( myrank == 0 ) then
+  if (myrank == 0) then
     write(IMAIN,*) '     total poroelastic elements:',inum
   endif
 
@@ -116,12 +118,12 @@
   ! sets up MPI communications
   max_nibool_interfaces_ext_mesh = maxval( nibool_interfaces_ext_mesh(:) )
   allocate(ibool_interfaces_ext_mesh_dummy(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array ibool_interfaces_ext_mesh_dummy'
+  if (ier /= 0) stop 'error allocating array ibool_interfaces_ext_mesh_dummy'
   do i = 1, num_interfaces_ext_mesh
      ibool_interfaces_ext_mesh_dummy(:,i) = ibool_interfaces_ext_mesh(1:max_nibool_interfaces_ext_mesh,i)
   enddo
   ! sums acoustic flags
-  if( ACOUSTIC_SIMULATION ) then
+  if (ACOUSTIC_SIMULATION) then
     call assemble_MPI_scalar_i_blocking(NPROC,nglob_dummy,acoustic_flag, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy,&
@@ -129,7 +131,7 @@
   endif
 
   ! sums elastic flags
-  if( ELASTIC_SIMULATION ) then
+  if (ELASTIC_SIMULATION) then
     call assemble_MPI_scalar_i_blocking(NPROC,nglob_dummy,elastic_flag, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy,&
@@ -137,7 +139,7 @@
   endif
 
   ! sums poroelastic flags
-  if( POROELASTIC_SIMULATION ) then
+  if (POROELASTIC_SIMULATION) then
     call assemble_MPI_scalar_i_blocking(NPROC,nglob_dummy,poroelastic_flag, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy,&
@@ -147,17 +149,17 @@
   ! determines common faces between different domains
 
   ! acoustic - elastic domain coupling
-  if( ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION ) then
+  if (ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION) then
     call get_coupling_surfaces_ac_el(myrank,nspec,ibool,elastic_flag)
   endif
 
   ! acoustic - poroelastic domain coupling
-  if( ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION ) then
+  if (ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION) then
     call get_coupling_surfaces_ac_poro(myrank,nspec,ibool,acoustic_flag)
   endif
 
   ! elastic - poroelastic domain coupling
-  if( ELASTIC_SIMULATION .and. POROELASTIC_SIMULATION ) then
+  if (ELASTIC_SIMULATION .and. POROELASTIC_SIMULATION) then
     call get_coupling_surfaces_el_poro(myrank,nspec,ibool,elastic_flag)
   endif
 
@@ -174,8 +176,9 @@
 
 ! determines coupling surface for acoustic-elastic domains
 
-  use generate_databases_par, only: NGNOD2D
+  use generate_databases_par, only: NGNOD2D,NGLLX,NGLLY,NGLLZ,NDIM,NGNOD2D_FOUR_CORNERS,NGLLSQUARE,IMAIN
   use create_regions_mesh_ext_par
+
   implicit none
 
 ! number of spectral elements in each block
@@ -225,20 +228,20 @@
 
   ! allocates temporary arrays
   allocate(tmp_normal(NDIM,NGLLSQUARE,nspec*6),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array tmp_normal'
+  if (ier /= 0) stop 'error allocating array tmp_normal'
   allocate(tmp_jacobian2Dw(NGLLSQUARE,nspec*6),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array tmp_jacobian2Dw'
+  if (ier /= 0) stop 'error allocating array tmp_jacobian2Dw'
   allocate(tmp_ijk(3,NGLLSQUARE,nspec*6),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array tmp_ijk'
+  if (ier /= 0) stop 'error allocating array tmp_ijk'
   allocate(tmp_ispec(nspec*6),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array tmp_ispec'
+  if (ier /= 0) stop 'error allocating array tmp_ispec'
   tmp_ispec(:) = 0
   tmp_ijk(:,:,:) = 0
   tmp_normal(:,:,:) = 0.0
   tmp_jacobian2Dw(:,:) = 0.0
 
   allocate(mask_ibool(nglob_dummy),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array mask_ibool'
+  if (ier /= 0) stop 'error allocating array mask_ibool'
   mask_ibool(:) = .false.
 
   ! loops over all element faces and
@@ -253,7 +256,7 @@
   !          density from acoustic element when coupling pressure in case of gravity
   do ispec=1,nspec
 
-    if( ispec_is_acoustic(ispec) ) then
+    if (ispec_is_acoustic(ispec)) then
 
       ! loops over each face
       do iface_ref= 1, 6
@@ -267,10 +270,10 @@
         ! note: this check also returns true if layer is only 1 element thick and face points are in touch with elastic elements,
         !       but faces are actually between acoustic elements;
         !       we therefore check again the midpoints and reset them once counted
-        if( elastic_flag( iglob_corners_ref(1) ) >= 1 .and. &
-           elastic_flag( iglob_corners_ref(2) ) >= 1 .and. &
-           elastic_flag( iglob_corners_ref(3) ) >= 1 .and. &
-           elastic_flag( iglob_corners_ref(4) ) >= 1) then
+        if (elastic_flag( iglob_corners_ref(1)) >= 1 .and. &
+            elastic_flag( iglob_corners_ref(2)) >= 1 .and. &
+            elastic_flag( iglob_corners_ref(3)) >= 1 .and. &
+            elastic_flag( iglob_corners_ref(4)) >= 1) then
 
           ! reference midpoint on face (used to avoid redundant face counting)
           i = iface_all_midpointijk(1,iface_ref)
@@ -282,8 +285,8 @@
           call get_element_face_gll_indices(iface_ref,ijk_face,NGLLX,NGLLY)
 
           ! checks if points on this face are masked already
-          if( .not. mask_ibool(iglob_midpoint) .and. &
-              (elastic_flag(iglob_midpoint) >= 1) ) then
+          if (.not. mask_ibool(iglob_midpoint) .and. &
+              (elastic_flag(iglob_midpoint) >= 1)) then
 
             ! gets face GLL 2Djacobian, weighted from element face
             call get_jacobian_boundary_face(myrank,nspec, &
@@ -304,7 +307,7 @@
                 ! makes sure that it always points away from acoustic element,
                 ! otherwise switch direction
                 ! note: this should not happen, since we only loop over acoustic elements
-                if( ispec_is_elastic(ispec) ) stop 'error acoustic-elastic coupling surface'
+                if (ispec_is_elastic(ispec)) stop 'error acoustic-elastic coupling surface'
               enddo
             enddo
 
@@ -349,13 +352,13 @@
 !          for acoustic-elastic interface
   num_coupling_ac_el_faces = inum
   allocate(coupling_ac_el_normal(NDIM,NGLLSQUARE,num_coupling_ac_el_faces),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array coupling_ac_el_normal'
+  if (ier /= 0) stop 'error allocating array coupling_ac_el_normal'
   allocate(coupling_ac_el_jacobian2Dw(NGLLSQUARE,num_coupling_ac_el_faces),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array coupling_ac_el_jacobian2Dw'
+  if (ier /= 0) stop 'error allocating array coupling_ac_el_jacobian2Dw'
   allocate(coupling_ac_el_ijk(3,NGLLSQUARE,num_coupling_ac_el_faces),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array coupling_ac_el_ijk'
+  if (ier /= 0) stop 'error allocating array coupling_ac_el_ijk'
   allocate(coupling_ac_el_ispec(num_coupling_ac_el_faces),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array coupling_ac_el_ispec'
+  if (ier /= 0) stop 'error allocating array coupling_ac_el_ispec'
   do inum = 1,num_coupling_ac_el_faces
     coupling_ac_el_normal(:,:,inum) = tmp_normal(:,:,inum)
     coupling_ac_el_jacobian2Dw(:,inum) = tmp_jacobian2Dw(:,inum)
@@ -365,7 +368,7 @@
 
 ! user output
   call sum_all_i(num_coupling_ac_el_faces,inum)
-  if( myrank == 0 ) then
+  if (myrank == 0) then
     write(IMAIN,*) '     acoustic-elastic coupling    : total number of faces = ',inum
   endif
 
@@ -382,7 +385,7 @@
 
 ! determines coupling surface for acoustic-poroelastic domains
 
-  use generate_databases_par, only: NGNOD2D
+  use generate_databases_par, only: NGNOD2D,NGLLX,NGLLY,NGLLZ,NDIM,NGNOD2D_FOUR_CORNERS,NGLLSQUARE,IMAIN
   use create_regions_mesh_ext_par
   implicit none
 
@@ -426,19 +429,16 @@
              reshape( (/ iface1_corner_ijk,iface2_corner_ijk, &
                  iface3_corner_ijk,iface4_corner_ijk, &
                  iface5_corner_ijk,iface6_corner_ijk /),(/3,4,6/))   ! all faces
-  ! midpoint indices for each face (xmin,xmax,ymin,ymax,zmin,zmax)
-  integer,dimension(3,6),parameter :: iface_all_midpointijk = &
-             reshape( (/ 1,2,2, NGLLX,2,2, 2,1,2, 2,NGLLY,2, 2,2,1, 2,2,NGLLZ  /),(/3,6/))   ! top
 
   ! allocates temporary arrays
   allocate(tmp_normal(NDIM,NGLLSQUARE,nspec*6),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array tmp_normal'
+  if (ier /= 0) stop 'error allocating array tmp_normal'
   allocate(tmp_jacobian2Dw(NGLLSQUARE,nspec*6),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array tmp_jacobian2Dw'
+  if (ier /= 0) stop 'error allocating array tmp_jacobian2Dw'
   allocate(tmp_ijk(3,NGLLSQUARE,nspec*6),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array tmp_ijk'
+  if (ier /= 0) stop 'error allocating array tmp_ijk'
   allocate(tmp_ispec(nspec*6),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array tmp_ispec'
+  if (ier /= 0) stop 'error allocating array tmp_ispec'
   tmp_ispec(:) = 0
   tmp_ijk(:,:,:) = 0
   tmp_normal(:,:,:) = 0.0
@@ -449,7 +449,7 @@
   inum = 0
   do ispec=1,nspec
 
-    if(ispec_is_poroelastic(ispec)) then
+    if (ispec_is_poroelastic(ispec)) then
 
       ! loops over each face
       do iface_ref= 1, 6
@@ -460,10 +460,10 @@
                                 iface_all_corner_ijk)
 
         ! checks if face has acoustic side
-        if( acoustic_flag( iglob_corners_ref(1) ) >= 1 .and. &
-           acoustic_flag( iglob_corners_ref(2) ) >= 1 .and. &
-           acoustic_flag( iglob_corners_ref(3) ) >= 1 .and. &
-           acoustic_flag( iglob_corners_ref(4) ) >= 1) then
+        if (acoustic_flag( iglob_corners_ref(1)) >= 1 .and. &
+            acoustic_flag( iglob_corners_ref(2)) >= 1 .and. &
+            acoustic_flag( iglob_corners_ref(3)) >= 1 .and. &
+            acoustic_flag( iglob_corners_ref(4)) >= 1) then
 
           ! gets face GLL points i,j,k indices from poroelastic element face
           call get_element_face_gll_indices(iface_ref,ijk_face,NGLLX,NGLLY)
@@ -518,13 +518,13 @@
 ! is pointing outward the acoustic element
   num_coupling_ac_po_faces = inum
   allocate(coupling_ac_po_normal(NDIM,NGLLSQUARE,num_coupling_ac_po_faces),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array coupling_ac_po_normal'
+  if (ier /= 0) stop 'error allocating array coupling_ac_po_normal'
   allocate(coupling_ac_po_jacobian2Dw(NGLLSQUARE,num_coupling_ac_po_faces),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array coupling_ac_po_jacobian2Dw'
+  if (ier /= 0) stop 'error allocating array coupling_ac_po_jacobian2Dw'
   allocate(coupling_ac_po_ijk(3,NGLLSQUARE,num_coupling_ac_po_faces),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array coupling_ac_po_ijk'
+  if (ier /= 0) stop 'error allocating array coupling_ac_po_ijk'
   allocate(coupling_ac_po_ispec(num_coupling_ac_po_faces),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array coupling_ac_po_ispec'
+  if (ier /= 0) stop 'error allocating array coupling_ac_po_ispec'
   do inum = 1,num_coupling_ac_po_faces
     coupling_ac_po_normal(:,:,inum) = tmp_normal(:,:,inum)
     coupling_ac_po_jacobian2Dw(:,inum) = tmp_jacobian2Dw(:,inum)
@@ -534,7 +534,7 @@
 
 ! user output
   call sum_all_i(num_coupling_ac_po_faces,inum)
-  if( myrank == 0 ) then
+  if (myrank == 0) then
     write(IMAIN,*) '     acoustic-poroelastic coupling: total number of faces = ',inum
   endif
 
@@ -548,7 +548,7 @@
 
 ! determines coupling surface for elastic-poroelastic domains
 
-  use generate_databases_par, only: NGNOD2D
+  use generate_databases_par, only: NGNOD2D,NGLLX,NGLLY,NGLLZ,NDIM,NGNOD2D_FOUR_CORNERS,NGLLSQUARE,IMAIN
   use create_regions_mesh_ext_par
   implicit none
 
@@ -593,23 +593,20 @@
              reshape( (/ iface1_corner_ijk,iface2_corner_ijk, &
                  iface3_corner_ijk,iface4_corner_ijk, &
                  iface5_corner_ijk,iface6_corner_ijk /),(/3,4,6/))   ! all faces
-  ! midpoint indices for each face (xmin,xmax,ymin,ymax,zmin,zmax)
-  integer,dimension(3,6),parameter :: iface_all_midpointijk = &
-             reshape( (/ 1,2,2, NGLLX,2,2, 2,1,2, 2,NGLLY,2, 2,2,1, 2,2,NGLLZ  /),(/3,6/))   ! top
 
 ! allocates temporary arrays
   allocate(tmp_normal(NDIM,NGLLSQUARE,nspec*6),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array tmp_normal'
+  if (ier /= 0) stop 'error allocating array tmp_normal'
   allocate(tmp_jacobian2Dw(NGLLSQUARE,nspec*6),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array tmp_jacobian2Dw'
+  if (ier /= 0) stop 'error allocating array tmp_jacobian2Dw'
   allocate(tmp_ijk(3,NGLLSQUARE,nspec*6),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array tmp_ijk'
+  if (ier /= 0) stop 'error allocating array tmp_ijk'
   allocate(tmp_ijk_el(3,NGLLSQUARE,nspec*6),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array tmp_ijk_el'
+  if (ier /= 0) stop 'error allocating array tmp_ijk_el'
   allocate(tmp_ispec(nspec*6),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array tmp_ispec'
+  if (ier /= 0) stop 'error allocating array tmp_ispec'
   allocate(tmp_ispec_el(nspec*6),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array tmp_ispec_el'
+  if (ier /= 0) stop 'error allocating array tmp_ispec_el'
   tmp_ispec(:) = 0
   tmp_ispec_el(:) = 0
   tmp_ijk(:,:,:) = 0
@@ -622,7 +619,7 @@
   inum = 0
   do ispec=1,nspec
 
-    if(ispec_is_poroelastic(ispec)) then
+    if (ispec_is_poroelastic(ispec)) then
 
       ! loops over each face
       do iface_ref= 1, 6
@@ -633,17 +630,17 @@
                                 iface_all_corner_ijk)
 
         ! checks if face has elastic side
-        if( elastic_flag( iglob_corners_ref(1) ) >= 1 .and. &
-           elastic_flag( iglob_corners_ref(2) ) >= 1 .and. &
-           elastic_flag( iglob_corners_ref(3) ) >= 1 .and. &
-           elastic_flag( iglob_corners_ref(4) ) >= 1) then
+        if (elastic_flag( iglob_corners_ref(1)) >= 1 .and. &
+            elastic_flag( iglob_corners_ref(2)) >= 1 .and. &
+            elastic_flag( iglob_corners_ref(3)) >= 1 .and. &
+            elastic_flag( iglob_corners_ref(4)) >= 1) then
 
           ! need to find elastic element for coupling
           !
           ! note: this assumes that both, elastic and poroelastic element, are in the same
           !          partition; check with decomposition that this is valid for this mesh partitioning
           do ispec_el=1,nspec
-            if(ispec_is_elastic(ispec_el))then
+            if (ispec_is_elastic(ispec_el))then
               do iface_el=6,1,-1
                 ! takes indices of corners of reference face
                 do icorner = 1,NGNOD2D_FOUR_CORNERS
@@ -654,8 +651,8 @@
                   iglob_corners_ref_el(icorner) = ibool(i,j,k,ispec_el)
                 enddo
 
-                if ( (iglob_corners_ref(1) == iglob_corners_ref_el(3)) .and. &
-                  (iglob_corners_ref(3) == iglob_corners_ref_el(1)) ) then
+                if ((iglob_corners_ref(1) == iglob_corners_ref_el(3)) .and. &
+                    (iglob_corners_ref(3) == iglob_corners_ref_el(1))) then
 
                   iface_ref_el = iface_el ![Christina Morency]: for some reason this shows a wrong orientation
                                           ! but the calculation is ok.
@@ -706,7 +703,7 @@
                 endif ! if
 
               enddo ! do iface_ref_el=1,6
-            endif ! if(ispec_is_elastic(ispec_el))then
+            endif ! if (ispec_is_elastic(ispec_el))then
           enddo ! do ispec_el=1,nspec
         endif ! elastic_flag
       enddo ! iface_ref
@@ -720,17 +717,17 @@
 ! is pointing outward the poroelastic element
   num_coupling_el_po_faces = inum
   allocate(coupling_el_po_normal(NDIM,NGLLSQUARE,num_coupling_el_po_faces),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array coupling_el_po_normal'
+  if (ier /= 0) stop 'error allocating array coupling_el_po_normal'
   allocate(coupling_el_po_jacobian2Dw(NGLLSQUARE,num_coupling_el_po_faces),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array coupling_el_po_jacobian2Dw'
+  if (ier /= 0) stop 'error allocating array coupling_el_po_jacobian2Dw'
   allocate(coupling_el_po_ijk(3,NGLLSQUARE,num_coupling_el_po_faces),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array coupling_el_po_ijk'
+  if (ier /= 0) stop 'error allocating array coupling_el_po_ijk'
   allocate(coupling_po_el_ijk(3,NGLLSQUARE,num_coupling_el_po_faces),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array coupling_po_el_ijk'
+  if (ier /= 0) stop 'error allocating array coupling_po_el_ijk'
   allocate(coupling_el_po_ispec(num_coupling_el_po_faces),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array coupling_el_po_ispec'
+  if (ier /= 0) stop 'error allocating array coupling_el_po_ispec'
   allocate(coupling_po_el_ispec(num_coupling_el_po_faces),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array coupling_po_el_ispec'
+  if (ier /= 0) stop 'error allocating array coupling_po_el_ispec'
   do inum = 1,num_coupling_el_po_faces
     coupling_el_po_normal(:,:,inum) = tmp_normal(:,:,inum)
     coupling_el_po_jacobian2Dw(:,inum) = tmp_jacobian2Dw(:,inum)
@@ -742,7 +739,7 @@
 
 ! user output
   call sum_all_i(num_coupling_el_po_faces,inum)
-  if( myrank == 0 ) then
+  if (myrank == 0) then
     write(IMAIN,*) '     elastic-poroelastic coupling : total number of faces = ',inum
   endif
 

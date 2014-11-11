@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -341,25 +342,28 @@
   else
     call read_mesh_databases()
   endif
-    !call read_mesh_databases()
-    !call read_mesh_databases_adios()
 
+  ! reads in moho mesh
+  if (ADIOS_FOR_MESH) then
+    call read_mesh_databases_moho_adios()
+  else
+    call read_mesh_databases_moho()
+  endif
+
+  ! reads adjoint parameters
+  call read_mesh_databases_adjoint()
 
 ! sets up reference element GLL points/weights/derivatives
   call setup_GLL_points()
 
-
 ! detects surfaces
   call detect_mesh_surfaces()
-
 
 ! prepares sources and receivers
   call setup_sources_receivers()
 
-
 ! sets up and precomputes simulation arrays
   call prepare_timerun()
-
 
 ! steps through time iterations
   call iterate_time()

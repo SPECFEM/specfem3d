@@ -1,0 +1,37 @@
+#
+#
+# variables and parameters used to set up the inversion proccess
+#
+# all the varialbles below shoulbe filled and the directories should be completed 
+# before runnig inversion 
+#  
+# number of earthquakes
+nb_eqks=2
+
+# shells deirectory 
+SHELL_SCRIPTS=
+
+# binary directory
+HYBRID_BINNARY=/ccc/work/cont003/gen6351/vmont/codes/SPECFEM3D_HYBRID/bin/
+SEM_BINNARY=/ccc/cont003/home/gen6351/vmont/progs/SPECFEM_REF/bin/
+
+# traction directory
+TRACTION=
+
+# DATA
+DATA=
+
+# earthquake 
+EARTHQUAKE=
+
+# PAR FILE DIRECTORY
+PAR_FILE_DIRECTORY=
+
+# DATABASES FOR INPUT MODEL
+DATABASES_INIT_MODEL=
+
+# for mpi 
+nproc=128
+MPIRUN=ccc_mprun
+OPTION_MPI=
+

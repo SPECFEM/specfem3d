@@ -1,0 +1,9 @@
+#!/bin/bash
+#compile.bash    # file is in the directory with the source code
+mkdir -p OUTPUT_FILES
+rm OUTPUT_FILES/*
+date
+bsub -q normal -W 30 -n 168  < go.bash
+#bsub -q test -W 30 -n 168  < go.bash
+#bsub -q normal -W 300 -n 168  < go.bash
+date

@@ -4,10 +4,11 @@
  !               S p e c f e m 3 D  V e r s i o n  2 . 1
  !               ---------------------------------------
  !
- !          Main authors: Dimitri Komatitsch and Jeroen Tromp
- !    Princeton University, USA and CNRS / INRIA / University of Pau
- ! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
- !                             July 2012
+ !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+ !                        Princeton University, USA
+ !                and CNRS / University of Marseille, France
+ !                 (there are currently many more authors!)
+ ! (c) Princeton University and CNRS / University of Marseille, July 2012
  !
  ! This program is free software; you can redistribute it and/or modify
  ! it under the terms of the GNU General Public License as published by
@@ -36,15 +37,30 @@
   ifort / gfortran caveat:
     to check whether it is true or false, do not check for == 1 to test for true values since ifort just uses
     non-zero values for true (e.g. can be -1 for true). however, false will be always == 0.
-  thus, rather use: if( var ) {...}  for testing if true instead of if( var == 1){...} (alternative: one could use if( var != 0 ){...}
+  thus, rather use: if (var ) {...}  for testing if true instead of if (var == 1){...} (alternative: one could use if (var != 0){...}
 
 */
 
-#ifndef GPU_MESH_
-#define GPU_MESH_
+#ifndef MESH_CONSTANTS_CUDA_H
+#define MESH_CONSTANTS_CUDA_H
 
-#include <sys/types.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
+#include <math.h>
+#include <sys/types.h>
+#include <sys/time.h>
+#include <sys/resource.h>
+
+#include "config.h"
+
+#ifdef WITH_MPI
+#include <mpi.h>
+#endif
+
+#include <cuda.h>
+#include <cuda_runtime.h>
+
 
 /* ----------------------------------------------------------------------------------------------- */
 
@@ -63,15 +79,20 @@
 #if MAXDEBUG == 1
 #define LOG(x) printf("%s\n",x)
 #define PRINT5(var,offset) for(;print_count<5;print_count++) printf("var(%d)=%2.20f\n",print_count,var[offset+print_count]);
-#define PRINT10(var) if(print_count<10) { printf("var=%1.20e\n",var); print_count++; }
-#define PRINT10i(var) if(print_count<10) { printf("var=%d\n",var); print_count++; }
+#define PRINT10(var) if (print_count<10) { printf("var=%1.20e\n",var); print_count++; }
+#define PRINT10i(var) if (print_count<10) { printf("var=%d\n",var); print_count++; }
 #else
 #define LOG(x) // printf("%s\n",x);
 #define PRINT5(var,offset) // for(i=0;i<10;i++) printf("var(%d)=%f\n",i,var[offset+i]);
 #endif
 
+// performance timers
+#define CUDA_TIMING 0
+#define CUDA_TIMING_UPDATE 0
+
 // error checking after cuda function calls
-#define ENABLE_VERY_SLOW_ERROR_CHECKING
+// (note: this synchronizes many calls, thus e.g. no asynchronuous memcpy possible)
+//#define ENABLE_VERY_SLOW_ERROR_CHECKING
 
 // maximum function
 #define MAX(x,y)                    (((x) < (y)) ? (y) : (x))
@@ -100,7 +121,12 @@
 
 /* ----------------------------------------------------------------------------------------------- */
 
-// (optional) pre-processing directive used in kernels: if defined check that it is also set in src/shared/constants.h:
+// Output paths, see setup/constants.h
+#define OUTPUT_FILES_PATH "./OUTPUT_FILES/"
+
+/* ----------------------------------------------------------------------------------------------- */
+
+// (optional) pre-processing directive used in kernels: if defined check that it is also set in setup/constants.h:
 // leads up to ~ 5% performance increase
 //#define USE_MESH_COLORING_GPU
 
@@ -134,6 +160,36 @@
 // leads up to ~1% performance increase
 //#define MANUALLY_UNROLLED_LOOPS
 
+// compiler specifications
+// (optional) use launch_bounds specification to increase compiler optimization
+// (depending on GPU type, register spilling might slow down the performance)
+// (uncomment if desired)
+#define USE_LAUNCH_BOUNDS
+
+// elastic kernel
+// note: main kernel is Kernel_2_***_impl() which is limited by shared memory usage to 8 active blocks
+//       while register usage might use up to 9 blocks
+//
+// performance statistics: kernel Kernel_2_noatt_impl():
+//       shared memory per block = 1700    for Kepler: total = 49152 -> limits active blocks to 16
+//       registers per thread    = 48
+//       registers per block     = 6144                total = 65536 -> limits active blocks to 10
+//
+// performance statistics: kernel Kernel_2_att_impl():
+//       shared memory per block = 6100    for Kepler: total = 49152 -> limits active blocks to 8
+//       registers per thread    = 59
+//       registers per block     = 8192                total = 65536 -> limits active blocks to 8
+#define LAUNCH_MIN_BLOCKS 10
+
+// acoustic kernel
+// performance statistics: kernel Kernel_2_acoustic_impl():
+//       shared memory per block = 2200    for Kepler: -> limits active blocks to 16 (maximum possible)
+//       registers per thread    = 40
+//       registers per block     = 5120                -> limits active blocks to 12
+// note: for K20x, using a minimum of 16 blocks leads to register spilling.
+//       this slows down the kernel by ~ 4%
+#define LAUNCH_MIN_BLOCKS_ACOUSTIC 16
+
 /* ----------------------------------------------------------------------------------------------- */
 
 // cuda kernel block size for updating displacements/potential (newmark time scheme)
@@ -149,13 +205,9 @@
 
 // indexing
 #define INDEX2(xsize,x,y) x + (y)*xsize
-
 #define INDEX3(xsize,ysize,x,y,z) x + xsize*(y + ysize*z)
-
 #define INDEX4(xsize,ysize,zsize,x,y,z,i) x + xsize*(y + ysize*(z + zsize*i))
-
 #define INDEX5(xsize,ysize,zsize,isize,x,y,z,i,j) x + xsize*(y + ysize*(z + zsize*(i + isize*(j))))
-
 #define INDEX6(xsize,ysize,zsize,isize,jsize,x,y,z,i,j,k) x + xsize*(y + ysize*(z + zsize*(i + isize*(j + jsize*k))))
 
 #define INDEX4_PADDED(xsize,ysize,zsize,x,y,z,i) x + xsize*(y + ysize*z) + (i)*NGLL3_PADDED
@@ -174,6 +226,30 @@ typedef float realw;
 // textures
 typedef texture<float, cudaTextureType1D, cudaReadModeElementType> realw_texture;
 
+// pointer declarations
+// restricted pointers: can improve performance on Kepler ~ 10%
+//   see: http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#restrict
+//   however, compiler tends to use texture loads for restricted memory arrays, which might slow down performance
+//
+// non-restricted (default)
+typedef const realw* realw_const_p;
+// restricted
+//typedef const realw* __restrict__ realw_const_p;
+//
+// non-restricted (default)
+typedef realw* realw_p;
+// restricted
+//typedef realw* __restrict__ realw_p;
+
+// wrapper for global memory load function
+// usage:  val = get_global_cr( &A[index] );
+#if __CUDA_ARCH__ >= 350
+// Device has ldg
+__device__ __forceinline__ realw get_global_cr(realw_const_p ptr) { return __ldg(ptr); }
+#else
+//Device does not, fall back.
+__device__ __forceinline__ realw get_global_cr(realw_const_p ptr) { return (*ptr); }
+#endif
 
 /* ----------------------------------------------------------------------------------------------- */
 
@@ -189,6 +265,9 @@ void exit_on_cuda_error(char* kernel_name);
 void exit_on_error(char* info);
 void synchronize_cuda();
 void synchronize_mpi();
+void start_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop);
+void stop_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop, char* info_str);
+void stop_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop, char* info_str,realw* t);
 void get_blocks_xy(int num_blocks,int* num_blocks_x,int* num_blocks_y);
 realw get_device_array_maximum_value(realw* array,int size);
 

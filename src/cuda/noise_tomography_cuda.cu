@@ -4,10 +4,11 @@
  !               S p e c f e m 3 D  V e r s i o n  2 . 1
  !               ---------------------------------------
  !
- !          Main authors: Dimitri Komatitsch and Jeroen Tromp
- !    Princeton University, USA and CNRS / INRIA / University of Pau
- ! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
- !                             July 2012
+ !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+ !                        Princeton University, USA
+ !                and CNRS / University of Marseille, France
+ !                 (there are currently many more authors!)
+ ! (c) Princeton University and CNRS / University of Marseille, July 2012
  !
  ! This program is free software; you can redistribute it and/or modify
  ! it under the terms of the GNU General Public License as published by
@@ -26,21 +27,7 @@
  !=====================================================================
  */
 
-#include <stdio.h>
-#include <cuda.h>
-#include <cublas.h>
-
-#ifdef WITH_MPI
-#include <mpi.h>
-#endif
-
-#include <sys/types.h>
-#include <unistd.h>
-
-#include "config.h"
 #include "mesh_constants_cuda.h"
-// #include "epik_user.h"
-
 
 /* ----------------------------------------------------------------------------------------------- */
 
@@ -118,7 +105,7 @@ TRACE("make_displ_rand");
 __global__ void transfer_surface_to_host_kernel(int* free_surface_ispec,
                                                 int* free_surface_ijk,
                                                 int num_free_surface_faces,
-                                                int* ibool,
+                                                int* d_ibool,
                                                 realw* displ,
                                                 realw* noise_surface_movie) {
   int igll = threadIdx.x;
@@ -126,14 +113,14 @@ __global__ void transfer_surface_to_host_kernel(int* free_surface_ispec,
 
   // int id = tx + blockIdx.x*blockDim.x + blockIdx.y*blockDim.x*gridDim.x;
 
-  if(iface < num_free_surface_faces) {
+  if (iface < num_free_surface_faces) {
     int ispec = free_surface_ispec[iface]-1; //-1 for C-based indexing
 
     int i = free_surface_ijk[INDEX3(NDIM,NGLL2,0,igll,iface)]-1;
     int j = free_surface_ijk[INDEX3(NDIM,NGLL2,1,igll,iface)]-1;
     int k = free_surface_ijk[INDEX3(NDIM,NGLL2,2,igll,iface)]-1;
 
-    int iglob = ibool[INDEX4(5,5,5,i,j,k,ispec)]-1;
+    int iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
 
     noise_surface_movie[INDEX3(NDIM,NGLL2,0,igll,iface)] = displ[iglob*3];
     noise_surface_movie[INDEX3(NDIM,NGLL2,1,igll,iface)] = displ[iglob*3+1];
@@ -174,7 +161,7 @@ TRACE("transfer_surface_to_host");
 
 /* ----------------------------------------------------------------------------------------------- */
 
-__global__ void noise_read_add_surface_movie_cuda_kernel(realw* accel, int* ibool,
+__global__ void noise_read_add_surface_movie_cuda_kernel(realw* accel, int* d_ibool,
                                                          int* free_surface_ispec,
                                                          int* free_surface_ijk,
                                                          int num_free_surface_faces,
@@ -188,7 +175,7 @@ __global__ void noise_read_add_surface_movie_cuda_kernel(realw* accel, int* iboo
   int iface = blockIdx.x + gridDim.x*blockIdx.y; // surface element id
 
   // when nspec_top > 65535, but mod(nspec_top,2) > 0, we end up with an extra block.
-  if(iface < num_free_surface_faces) {
+  if (iface < num_free_surface_faces) {
     int ispec = free_surface_ispec[iface]-1;
 
     int igll = threadIdx.x;
@@ -198,7 +185,7 @@ __global__ void noise_read_add_surface_movie_cuda_kernel(realw* accel, int* iboo
     int j=free_surface_ijk[INDEX3(NDIM,NGLL2,1,igll,iface)]-1;
     int k=free_surface_ijk[INDEX3(NDIM,NGLL2,2,igll,iface)]-1;
 
-    int iglob = ibool[INDEX4(5,5,5,i,j,k,ispec)]-1;
+    int iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
 
     realw normal_x = normal_x_noise[ipoin];
     realw normal_y = normal_y_noise[ipoin];
@@ -266,7 +253,7 @@ void FC_FUNC_(noise_read_add_surface_movie_cu,
   dim3 grid(num_blocks_x,num_blocks_y,1);
   dim3 threads(NGLL2,1,1);
 
-  if(NOISE_TOMOGRAPHY == 2) { // add surface source to forward field
+  if (NOISE_TOMOGRAPHY == 2) { // add surface source to forward field
     noise_read_add_surface_movie_cuda_kernel<<<grid,threads>>>(mp->d_accel,
                                                                mp->d_ibool,
                                                                mp->d_free_surface_ispec,
@@ -279,7 +266,7 @@ void FC_FUNC_(noise_read_add_surface_movie_cu,
                                                                mp->d_mask_noise,
                                                                mp->d_free_surface_jacobian2Dw);
   }
-  else if(NOISE_TOMOGRAPHY == 3) { // add surface source to adjoint (backward) field
+  else if (NOISE_TOMOGRAPHY == 3) { // add surface source to adjoint (backward) field
     noise_read_add_surface_movie_cuda_kernel<<<grid,threads>>>(mp->d_b_accel,
                                                                mp->d_ibool,
                                                                mp->d_free_surface_ispec,

@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -68,7 +69,7 @@
   kinetic_energy = 0.d0
   potential_energy = 0.d0
 
-  if(ANISOTROPY .or. ATTENUATION) &
+  if (ANISOTROPY .or. ATTENUATION) &
     call exit_MPI(myrank,'calculation of total energy currently implemented only for media with no anisotropy and no attenuation')
 
 ! loop over spectral elements
@@ -76,152 +77,154 @@
 
 ! if element is a CPML then do not compute energy in it, since it is non physical;
 ! thus, we compute energy in the main domain only, without absorbing elements
-    if(PML_CONDITIONS) then
+    if (PML_CONDITIONS) then
       ! do not merge this second line with the first using an ".and." statement
       ! because array is_CPML() is unallocated when PML_CONDITIONS is false
-      if(is_CPML(ispec)) cycle
+      if (is_CPML(ispec)) cycle
     endif
 
     !---
     !--- elastic spectral element
     !---
-    if(ispec_is_elastic(ispec)) then
+    if (ispec_is_elastic(ispec)) then
 
-     do k=1,NGLLZ
-       do j=1,NGLLY
-         do i=1,NGLLX
-           iglob = ibool(i,j,k,ispec)
-           dummyx_loc(i,j,k) = displ(1,iglob)
-           dummyy_loc(i,j,k) = displ(2,iglob)
-           dummyz_loc(i,j,k) = displ(3,iglob)
-         enddo
-       enddo
-     enddo
+      do k=1,NGLLZ
+        do j=1,NGLLY
+          do i=1,NGLLX
+            iglob = ibool(i,j,k,ispec)
+            dummyx_loc(i,j,k) = displ(1,iglob)
+            dummyy_loc(i,j,k) = displ(2,iglob)
+            dummyz_loc(i,j,k) = displ(3,iglob)
+          enddo
+        enddo
+      enddo
 
-     do k=1,NGLLZ
+      do k=1,NGLLZ
         do j=1,NGLLY
           do i=1,NGLLX
 
-          iglob = ibool(i,j,k,ispec)
+            iglob = ibool(i,j,k,ispec)
 
-          tempx1(i,j,k) = 0._CUSTOM_REAL
-          tempx2(i,j,k) = 0._CUSTOM_REAL
-          tempx3(i,j,k) = 0._CUSTOM_REAL
+            tempx1(i,j,k) = 0._CUSTOM_REAL
+            tempx2(i,j,k) = 0._CUSTOM_REAL
+            tempx3(i,j,k) = 0._CUSTOM_REAL
 
-          tempy1(i,j,k) = 0._CUSTOM_REAL
-          tempy2(i,j,k) = 0._CUSTOM_REAL
-          tempy3(i,j,k) = 0._CUSTOM_REAL
+            tempy1(i,j,k) = 0._CUSTOM_REAL
+            tempy2(i,j,k) = 0._CUSTOM_REAL
+            tempy3(i,j,k) = 0._CUSTOM_REAL
 
-          tempz1(i,j,k) = 0._CUSTOM_REAL
-          tempz2(i,j,k) = 0._CUSTOM_REAL
-          tempz3(i,j,k) = 0._CUSTOM_REAL
+            tempz1(i,j,k) = 0._CUSTOM_REAL
+            tempz2(i,j,k) = 0._CUSTOM_REAL
+            tempz3(i,j,k) = 0._CUSTOM_REAL
 
-          do l=1,NGLLX
-            hp1 = hprime_xx(i,l)
-            tempx1(i,j,k) = tempx1(i,j,k) + dummyx_loc(l,j,k)*hp1
-            tempy1(i,j,k) = tempy1(i,j,k) + dummyy_loc(l,j,k)*hp1
-            tempz1(i,j,k) = tempz1(i,j,k) + dummyz_loc(l,j,k)*hp1
+            do l=1,NGLLX
+              hp1 = hprime_xx(i,l)
+              tempx1(i,j,k) = tempx1(i,j,k) + dummyx_loc(l,j,k)*hp1
+              tempy1(i,j,k) = tempy1(i,j,k) + dummyy_loc(l,j,k)*hp1
+              tempz1(i,j,k) = tempz1(i,j,k) + dummyz_loc(l,j,k)*hp1
 
-            !!! can merge these loops because NGLLX = NGLLY = NGLLZ
-            hp2 = hprime_yy(j,l)
-            tempx2(i,j,k) = tempx2(i,j,k) + dummyx_loc(i,l,k)*hp2
-            tempy2(i,j,k) = tempy2(i,j,k) + dummyy_loc(i,l,k)*hp2
-            tempz2(i,j,k) = tempz2(i,j,k) + dummyz_loc(i,l,k)*hp2
+              !!! can merge these loops because NGLLX = NGLLY = NGLLZ
 
-            !!! can merge these loops because NGLLX = NGLLY = NGLLZ
-            hp3 = hprime_zz(k,l)
-            tempx3(i,j,k) = tempx3(i,j,k) + dummyx_loc(i,j,l)*hp3
-            tempy3(i,j,k) = tempy3(i,j,k) + dummyy_loc(i,j,l)*hp3
-            tempz3(i,j,k) = tempz3(i,j,k) + dummyz_loc(i,j,l)*hp3
-          enddo
+              hp2 = hprime_yy(j,l)
+              tempx2(i,j,k) = tempx2(i,j,k) + dummyx_loc(i,l,k)*hp2
+              tempy2(i,j,k) = tempy2(i,j,k) + dummyy_loc(i,l,k)*hp2
+              tempz2(i,j,k) = tempz2(i,j,k) + dummyz_loc(i,l,k)*hp2
 
-              ! get derivatives of ux, uy and uz with respect to x, y and z
-              xixl = xix(i,j,k,ispec)
-              xiyl = xiy(i,j,k,ispec)
-              xizl = xiz(i,j,k,ispec)
-              etaxl = etax(i,j,k,ispec)
-              etayl = etay(i,j,k,ispec)
-              etazl = etaz(i,j,k,ispec)
-              gammaxl = gammax(i,j,k,ispec)
-              gammayl = gammay(i,j,k,ispec)
-              gammazl = gammaz(i,j,k,ispec)
-              jacobianl = jacobian(i,j,k,ispec)
+              !!! can merge these loops because NGLLX = NGLLY = NGLLZ
 
-              duxdxl = xixl*tempx1(i,j,k) + etaxl*tempx2(i,j,k) + gammaxl*tempx3(i,j,k)
-              duxdyl = xiyl*tempx1(i,j,k) + etayl*tempx2(i,j,k) + gammayl*tempx3(i,j,k)
-              duxdzl = xizl*tempx1(i,j,k) + etazl*tempx2(i,j,k) + gammazl*tempx3(i,j,k)
+              hp3 = hprime_zz(k,l)
+              tempx3(i,j,k) = tempx3(i,j,k) + dummyx_loc(i,j,l)*hp3
+              tempy3(i,j,k) = tempy3(i,j,k) + dummyy_loc(i,j,l)*hp3
+              tempz3(i,j,k) = tempz3(i,j,k) + dummyz_loc(i,j,l)*hp3
+            enddo
 
-              duydxl = xixl*tempy1(i,j,k) + etaxl*tempy2(i,j,k) + gammaxl*tempy3(i,j,k)
-              duydyl = xiyl*tempy1(i,j,k) + etayl*tempy2(i,j,k) + gammayl*tempy3(i,j,k)
-              duydzl = xizl*tempy1(i,j,k) + etazl*tempy2(i,j,k) + gammazl*tempy3(i,j,k)
+            ! get derivatives of ux, uy and uz with respect to x, y and z
+            xixl = xix(i,j,k,ispec)
+            xiyl = xiy(i,j,k,ispec)
+            xizl = xiz(i,j,k,ispec)
+            etaxl = etax(i,j,k,ispec)
+            etayl = etay(i,j,k,ispec)
+            etazl = etaz(i,j,k,ispec)
+            gammaxl = gammax(i,j,k,ispec)
+            gammayl = gammay(i,j,k,ispec)
+            gammazl = gammaz(i,j,k,ispec)
+            jacobianl = jacobian(i,j,k,ispec)
 
-              duzdxl = xixl*tempz1(i,j,k) + etaxl*tempz2(i,j,k) + gammaxl*tempz3(i,j,k)
-              duzdyl = xiyl*tempz1(i,j,k) + etayl*tempz2(i,j,k) + gammayl*tempz3(i,j,k)
-              duzdzl = xizl*tempz1(i,j,k) + etazl*tempz2(i,j,k) + gammazl*tempz3(i,j,k)
+            duxdxl = xixl*tempx1(i,j,k) + etaxl*tempx2(i,j,k) + gammaxl*tempx3(i,j,k)
+            duxdyl = xiyl*tempx1(i,j,k) + etayl*tempx2(i,j,k) + gammayl*tempx3(i,j,k)
+            duxdzl = xizl*tempx1(i,j,k) + etazl*tempx2(i,j,k) + gammazl*tempx3(i,j,k)
 
-              ! precompute some sums to save CPU time
-              duxdxl_plus_duydyl = duxdxl + duydyl
-              duxdxl_plus_duzdzl = duxdxl + duzdzl
-              duydyl_plus_duzdzl = duydyl + duzdzl
-              duxdyl_plus_duydxl = duxdyl + duydxl
-              duzdxl_plus_duxdzl = duzdxl + duxdzl
-              duzdyl_plus_duydzl = duzdyl + duydzl
+            duydxl = xixl*tempy1(i,j,k) + etaxl*tempy2(i,j,k) + gammaxl*tempy3(i,j,k)
+            duydyl = xiyl*tempy1(i,j,k) + etayl*tempy2(i,j,k) + gammayl*tempy3(i,j,k)
+            duydzl = xizl*tempy1(i,j,k) + etazl*tempy2(i,j,k) + gammazl*tempy3(i,j,k)
 
-              ! compute the strain
-              epsilon_xx = duxdxl
-              epsilon_yy = duydyl
-              epsilon_zz = duzdzl
-              epsilon_xy = 0.5 * duxdyl_plus_duydxl
-              epsilon_xz = 0.5 * duzdxl_plus_duxdzl
-              epsilon_yz = 0.5 * duzdyl_plus_duydzl
+            duzdxl = xixl*tempz1(i,j,k) + etaxl*tempz2(i,j,k) + gammaxl*tempz3(i,j,k)
+            duzdyl = xiyl*tempz1(i,j,k) + etayl*tempz2(i,j,k) + gammayl*tempz3(i,j,k)
+            duzdzl = xizl*tempz1(i,j,k) + etazl*tempz2(i,j,k) + gammazl*tempz3(i,j,k)
 
-              ! define symmetric components of epsilon
-              epsilon_yx = epsilon_xy
-              epsilon_zx = epsilon_xz
-              epsilon_zy = epsilon_yz
+            ! precompute some sums to save CPU time
+            duxdxl_plus_duydyl = duxdxl + duydyl
+            duxdxl_plus_duzdzl = duxdxl + duzdzl
+            duydyl_plus_duzdzl = duydyl + duzdzl
+            duxdyl_plus_duydxl = duxdyl + duydxl
+            duzdxl_plus_duxdzl = duzdxl + duxdzl
+            duzdyl_plus_duydzl = duzdyl + duydzl
 
-              kappal = kappastore(i,j,k,ispec)
-              mul = mustore(i,j,k,ispec)
-              rhol = rhostore(i,j,k,ispec)
+            ! compute the strain
+            epsilon_xx = duxdxl
+            epsilon_yy = duydyl
+            epsilon_zz = duzdzl
+            epsilon_xy = 0.5 * duxdyl_plus_duydxl
+            epsilon_xz = 0.5 * duzdxl_plus_duxdzl
+            epsilon_yz = 0.5 * duzdyl_plus_duydzl
 
-              ! isotropic case
-              lambdalplus2mul = kappal + FOUR_THIRDS * mul
-              lambdal = lambdalplus2mul - 2.*mul
+            ! define symmetric components of epsilon
+            epsilon_yx = epsilon_xy
+            epsilon_zx = epsilon_xz
+            epsilon_zy = epsilon_yz
 
-              ! compute stress sigma
-              sigma_xx = lambdalplus2mul*duxdxl + lambdal*duydyl_plus_duzdzl
-              sigma_yy = lambdalplus2mul*duydyl + lambdal*duxdxl_plus_duzdzl
-              sigma_zz = lambdalplus2mul*duzdzl + lambdal*duxdxl_plus_duydyl
+            kappal = kappastore(i,j,k,ispec)
+            mul = mustore(i,j,k,ispec)
+            rhol = rhostore(i,j,k,ispec)
 
-              sigma_xy = mul*duxdyl_plus_duydxl
-              sigma_xz = mul*duzdxl_plus_duxdzl
-              sigma_yz = mul*duzdyl_plus_duydzl
+            ! isotropic case
+            lambdalplus2mul = kappal + FOUR_THIRDS * mul
+            lambdal = lambdalplus2mul - 2.*mul
 
-              ! define symmetric components of sigma
-              sigma_yx = sigma_xy
-              sigma_zx = sigma_xz
-              sigma_zy = sigma_yz
+            ! compute stress sigma
+            sigma_xx = lambdalplus2mul*duxdxl + lambdal*duydyl_plus_duzdzl
+            sigma_yy = lambdalplus2mul*duydyl + lambdal*duxdxl_plus_duzdzl
+            sigma_zz = lambdalplus2mul*duzdzl + lambdal*duxdxl_plus_duydyl
 
-              integration_weight = wxgll(i)*wygll(j)*wzgll(k)*jacobianl
+            sigma_xy = mul*duxdyl_plus_duydxl
+            sigma_xz = mul*duzdxl_plus_duxdzl
+            sigma_yz = mul*duzdyl_plus_duydzl
 
-              ! compute kinetic energy  1/2 rho ||v||^2
-              kinetic_energy = kinetic_energy + integration_weight * rhol*(veloc(1,iglob)**2 + &
-                                   veloc(2,iglob)**2 + veloc(3,iglob)**2) / 2.
+            ! define symmetric components of sigma
+            sigma_yx = sigma_xy
+            sigma_zx = sigma_xz
+            sigma_zy = sigma_yz
 
-              ! compute potential energy 1/2 sigma_ij epsilon_ij
-              potential_energy = potential_energy + integration_weight * &
-                (sigma_xx*epsilon_xx + sigma_xy*epsilon_xy + sigma_xz*epsilon_xz + &
-                 sigma_yx*epsilon_yx + sigma_yy*epsilon_yy + sigma_yz*epsilon_yz + &
-                 sigma_zx*epsilon_zx + sigma_zy*epsilon_zy + sigma_zz*epsilon_zz) / 2.
+            integration_weight = wxgll(i)*wygll(j)*wzgll(k)*jacobianl
+
+            ! compute kinetic energy  1/2 rho ||v||^2
+            kinetic_energy = kinetic_energy + integration_weight * rhol*(veloc(1,iglob)**2 + &
+                                 veloc(2,iglob)**2 + veloc(3,iglob)**2) / 2.
+
+            ! compute potential energy 1/2 sigma_ij epsilon_ij
+            potential_energy = potential_energy + integration_weight * &
+              (sigma_xx*epsilon_xx + sigma_xy*epsilon_xy + sigma_xz*epsilon_xz + &
+               sigma_yx*epsilon_yx + sigma_yy*epsilon_yy + sigma_yz*epsilon_yz + &
+               sigma_zx*epsilon_zx + sigma_zy*epsilon_zy + sigma_zz*epsilon_zz) / 2.
 
           enddo
         enddo
-     enddo
+      enddo
 
     !---
     !--- acoustic spectral element
     !---
-    else if(ispec_is_acoustic(ispec)) then
+    else if (ispec_is_acoustic(ispec)) then
 
       ! for the definition of potential energy in an acoustic fluid, see for instance
       ! equation (23) of M. Maess et al., Journal of Sound and Vibration 296 (2006) 264-276
@@ -234,77 +237,79 @@
       ! Velocity is then: v = grad(Chi_dot) / rho (Chi_dot being the time derivative of Chi)
       ! and pressure is: p = - Chi_dot_dot  (Chi_dot_dot being the time second derivative of Chi).
 
-     do k=1,NGLLZ
-       do j=1,NGLLY
-         do i=1,NGLLX
-           iglob = ibool(i,j,k,ispec)
-           dummyx_loc(i,j,k) = potential_dot_acoustic(iglob)
-         enddo
-       enddo
-     enddo
+      do k=1,NGLLZ
+        do j=1,NGLLY
+          do i=1,NGLLX
+            iglob = ibool(i,j,k,ispec)
+            dummyx_loc(i,j,k) = potential_dot_acoustic(iglob)
+          enddo
+        enddo
+      enddo
 
-     do k=1,NGLLZ
+      do k=1,NGLLZ
         do j=1,NGLLY
           do i=1,NGLLX
 
-          iglob = ibool(i,j,k,ispec)
+            iglob = ibool(i,j,k,ispec)
 
-          tempx1(i,j,k) = 0._CUSTOM_REAL
-          tempx2(i,j,k) = 0._CUSTOM_REAL
-          tempx3(i,j,k) = 0._CUSTOM_REAL
+            tempx1(i,j,k) = 0._CUSTOM_REAL
+            tempx2(i,j,k) = 0._CUSTOM_REAL
+            tempx3(i,j,k) = 0._CUSTOM_REAL
 
-          do l=1,NGLLX
-            hp1 = hprime_xx(i,l)
-            tempx1(i,j,k) = tempx1(i,j,k) + dummyx_loc(l,j,k)*hp1
+            do l=1,NGLLX
+              hp1 = hprime_xx(i,l)
+              tempx1(i,j,k) = tempx1(i,j,k) + dummyx_loc(l,j,k)*hp1
 
-            !!! can merge these loops because NGLLX = NGLLY = NGLLZ
-            hp2 = hprime_yy(j,l)
-            tempx2(i,j,k) = tempx2(i,j,k) + dummyx_loc(i,l,k)*hp2
+              !!! can merge these loops because NGLLX = NGLLY = NGLLZ
 
-            !!! can merge these loops because NGLLX = NGLLY = NGLLZ
-            hp3 = hprime_zz(k,l)
-            tempx3(i,j,k) = tempx3(i,j,k) + dummyx_loc(i,j,l)*hp3
-          enddo
+              hp2 = hprime_yy(j,l)
+              tempx2(i,j,k) = tempx2(i,j,k) + dummyx_loc(i,l,k)*hp2
 
-              ! get derivatives of ux, uy and uz with respect to x, y and z
-              xixl = xix(i,j,k,ispec)
-              xiyl = xiy(i,j,k,ispec)
-              xizl = xiz(i,j,k,ispec)
-              etaxl = etax(i,j,k,ispec)
-              etayl = etay(i,j,k,ispec)
-              etazl = etaz(i,j,k,ispec)
-              gammaxl = gammax(i,j,k,ispec)
-              gammayl = gammay(i,j,k,ispec)
-              gammazl = gammaz(i,j,k,ispec)
-              jacobianl = jacobian(i,j,k,ispec)
+              !!! can merge these loops because NGLLX = NGLLY = NGLLZ
 
-              duxdxl = xixl*tempx1(i,j,k) + etaxl*tempx2(i,j,k) + gammaxl*tempx3(i,j,k)
-              duxdyl = xiyl*tempx1(i,j,k) + etayl*tempx2(i,j,k) + gammayl*tempx3(i,j,k)
-              duxdzl = xizl*tempx1(i,j,k) + etazl*tempx2(i,j,k) + gammazl*tempx3(i,j,k)
+              hp3 = hprime_zz(k,l)
+              tempx3(i,j,k) = tempx3(i,j,k) + dummyx_loc(i,j,l)*hp3
+            enddo
 
-              rhol = rhostore(i,j,k,ispec)
-              kappal = kappastore(i,j,k,ispec)
-              cpl = sqrt(kappal / rhol)
+            ! get derivatives of ux, uy and uz with respect to x, y and z
+            xixl = xix(i,j,k,ispec)
+            xiyl = xiy(i,j,k,ispec)
+            xizl = xiz(i,j,k,ispec)
+            etaxl = etax(i,j,k,ispec)
+            etayl = etay(i,j,k,ispec)
+            etazl = etaz(i,j,k,ispec)
+            gammaxl = gammax(i,j,k,ispec)
+            gammayl = gammay(i,j,k,ispec)
+            gammazl = gammaz(i,j,k,ispec)
+            jacobianl = jacobian(i,j,k,ispec)
 
-              ! Velocity is v = grad(Chi_dot) / rho (Chi_dot being the time derivative of Chi)
-              vx = duxdxl / rhol
-              vy = duxdyl / rhol
-              vz = duxdzl / rhol
+            duxdxl = xixl*tempx1(i,j,k) + etaxl*tempx2(i,j,k) + gammaxl*tempx3(i,j,k)
+            duxdyl = xiyl*tempx1(i,j,k) + etayl*tempx2(i,j,k) + gammayl*tempx3(i,j,k)
+            duxdzl = xizl*tempx1(i,j,k) + etazl*tempx2(i,j,k) + gammazl*tempx3(i,j,k)
 
-              ! pressure is p = - Chi_dot_dot  (Chi_dot_dot being the time second derivative of Chi)
-              pressure = - potential_dot_dot_acoustic(iglob)
+            rhol = rhostore(i,j,k,ispec)
+            kappal = kappastore(i,j,k,ispec)
+            cpl = sqrt(kappal / rhol)
 
-              integration_weight = wxgll(i)*wygll(j)*wzgll(k)*jacobianl
+            ! Velocity is v = grad(Chi_dot) / rho (Chi_dot being the time derivative of Chi)
+            vx = duxdxl / rhol
+            vy = duxdyl / rhol
+            vz = duxdzl / rhol
 
-              ! compute kinetic energy  1/2 rho ||v||^2
-              kinetic_energy = kinetic_energy + integration_weight * rhol*(vx**2 + vy**2 + vz**2) / 2.
+            ! pressure is p = - Chi_dot_dot  (Chi_dot_dot being the time second derivative of Chi)
+            pressure = - potential_dot_dot_acoustic(iglob)
 
-              ! compute potential energy 1/2 sigma_ij epsilon_ij
-              potential_energy = potential_energy + integration_weight * pressure**2 / (2. * rhol * cpl**2)
+            integration_weight = wxgll(i)*wygll(j)*wzgll(k)*jacobianl
+
+            ! compute kinetic energy  1/2 rho ||v||^2
+            kinetic_energy = kinetic_energy + integration_weight * rhol*(vx**2 + vy**2 + vz**2) / 2.
+
+            ! compute potential energy 1/2 sigma_ij epsilon_ij
+            potential_energy = potential_energy + integration_weight * pressure**2 / (2. * rhol * cpl**2)
 
           enddo
         enddo
-     enddo
+      enddo
 
     else
 
@@ -320,6 +325,6 @@
   total_energy_glob = kinetic_energy_glob + potential_energy_glob
 
 ! write the total to disk from the master
-  if(myrank == 0) write(IOUT_ENERGY,*) it,sngl(kinetic_energy_glob),sngl(potential_energy_glob),sngl(total_energy_glob)
+  if (myrank == 0) write(IOUT_ENERGY,*) it,sngl(kinetic_energy_glob),sngl(potential_energy_glob),sngl(total_energy_glob)
 
   end subroutine compute_total_energy

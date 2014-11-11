@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -27,9 +28,25 @@
 
   module generate_databases_par
 
-  implicit none
+  use constants,only: NGLLX,NGLLY,NGLLZ,NGLLSQUARE,NGLLCUBE,NDIM,NDIM2D,NGNOD2D_FOUR_CORNERS,N_SLS, &
+    CUSTOM_REAL,SIZE_REAL,SIZE_DOUBLE, &
+    IMAIN,IIN,IOUT,ISTANDARD_OUTPUT, &
+    ZERO,TWO,FOUR_THIRDS,PI,GAUSSALPHA,GAUSSBETA, &
+    SMALLVAL_TOL,TINYVAL,HUGEVAL,R_EARTH, &
+    MAX_STRING_LEN,ATTENUATION_COMP_MAXIMUM, &
+    MINIMUM_THICKNESS_3D_OCEANS,RHO_APPROXIMATE_OCEAN_LOAD,SAVE_MOHO_MESH, &
+    CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
+    CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ, &
+    NPOWER,CPML_Rcoef, &
+    IMODEL_DEFAULT,IMODEL_GLL,IMODEL_1D_PREM,IMODEL_1D_CASCADIA,IMODEL_1D_SOCAL, &
+    IMODEL_SALTON_TROUGH,IMODEL_TOMO,IMODEL_USER_EXTERNAL,IMODEL_IPATI,IMODEL_IPATI_WATER, &
+    IMODEL_1D_PREM_PB,IMODEL_SEP, &
+    IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC, &
+    OUTPUT_FILES_PATH,NX_TOPO_FILE,NY_TOPO_FILE, &
+    USE_MESH_COLORING_GPU,MAX_NUMBER_OF_COLORS, &
+    ADIOS_TRANSPORT_METHOD
 
-  include "constants.h"
+  implicit none
 
 ! number of spectral elements in each block
   integer npointot
@@ -57,7 +74,7 @@
 ! parameters read from parameter file
   integer :: NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,SIMULATION_TYPE
   integer :: NSOURCES,NGNOD,NGNOD2D,MOVIE_TYPE
-  integer :: NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO,NTSTEP_BETWEEN_READ_ADJSRC
+  integer :: NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO,NTSTEP_BETWEEN_READ_ADJSRC,EXTERNAL_CODE_TYPE
 
   double precision :: DT,HDUR_MOVIE,OLSEN_ATTENUATION_RATIO,f0_FOR_PML
 
@@ -65,9 +82,10 @@
   logical :: ANISOTROPY,STACEY_ABSORBING_CONDITIONS,SAVE_MESH_FILES,STACEY_INSTEAD_OF_FREE_SURFACE
   logical :: PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID
   logical :: USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
-  logical :: MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
+  logical :: MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES, &
+             COUPLE_WITH_EXTERNAL_CODE,MESH_A_CHUNK_OF_THE_EARTH
 
-  character(len=256) OUTPUT_FILES,LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH,TOMOGRAPHY_PATH,TRACTION_PATH, SEP_MODEL_DIRECTORY
 
   logical :: ADIOS_ENABLED
   logical :: ADIOS_FOR_DATABASES, ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, &
@@ -110,7 +128,7 @@
   integer :: max_nibool_interfaces_ext_mesh
   integer, dimension(:,:), allocatable :: ibool_interfaces_ext_mesh_dummy
 
-  character(len=256) prname
+  character(len=MAX_STRING_LEN) :: prname
 
 ! boundaries and materials
   double precision, dimension(:,:), allocatable :: materials_ext_mesh
@@ -123,7 +141,7 @@
   integer, dimension(:,:), allocatable :: nodes_ibelm_xmin,nodes_ibelm_xmax, &
               nodes_ibelm_ymin, nodes_ibelm_ymax, nodes_ibelm_bottom, nodes_ibelm_top
 
-  character (len=30), dimension(:,:), allocatable :: undef_mat_prop
+  character(len=MAX_STRING_LEN), dimension(:,:), allocatable :: undef_mat_prop
 
 ! C-PML absorbing boundary conditions
 
@@ -162,7 +180,10 @@
   integer, dimension(:), allocatable  :: ibelm_moho
   integer, dimension(:,:), allocatable  :: nodes_ibelm_moho
 
-  integer :: nglob_total,nspec_total
+  integer :: nspec_total
+! this can overflow if more than 2 Gigapoints in the whole mesh, thus replaced with double precision version
+! integer :: nglob_total
+  double precision :: nglob_total
 
   logical,dimension(:),allocatable :: ispec_is_surface_external_mesh,iglob_is_surface_external_mesh
   integer :: nfaces_surface_ext_mesh,nfaces_surface_glob_ext_mesh
@@ -179,7 +200,7 @@
 
   module create_regions_mesh_ext_par
 
-  include 'constants.h'
+  use constants,only: CUSTOM_REAL,MAX_STRING_LEN
 
 ! global point coordinates
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: xstore_dummy
@@ -287,7 +308,7 @@
   logical, dimension(:), allocatable :: ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic
 
 ! name of the database file
-  character(len=256) prname
+  character(len=MAX_STRING_LEN) :: prname
 
 ! inner/outer elements
   logical,dimension(:),allocatable :: ispec_is_inner

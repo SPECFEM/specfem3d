@@ -1,0 +1,8 @@
+3  # is_mtm -- measurement type: 1 multi-taper; 2 cosine; 3 boxcar
+5  0.02  2.5 #  ntaper,wtr,npi
+2  # 1 multi-taper adjoint sources; 2 xcorr adjoint sources;
+40. 2.0  # longest and shortest periods of the freq-dep. measurements 
+-3.00 0.011 16400
+OUTPUT_FILES/
+.false.
+.true.

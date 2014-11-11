@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -45,16 +46,16 @@
   integer i
 
   f3 = zero
-  apb   = alpha+beta
+  apb = alpha+beta
   if (n == 0) then
-   endw1 = zero
-   return
+    endw1 = zero
+    return
   endif
   f1   = gammaf(alpha+two)*gammaf(beta+one)/gammaf(apb+three)
   f1   = f1*(apb+two)*two**(apb+two)/two
   if (n == 1) then
-   endw1 = f1
-   return
+    endw1 = f1
+    return
   endif
   fint1 = gammaf(alpha+two)*gammaf(beta+one)/gammaf(apb+three)
   fint1 = fint1*two**(apb+two)
@@ -62,19 +63,19 @@
   fint2 = fint2*two**(apb+three)
   f2    = (-two*(beta+two)*fint1 + (apb+four)*fint2) * (apb+three)/four
   if (n == 2) then
-   endw1 = f2
-   return
+    endw1 = f2
+    return
   endif
   do i=3,n
-   di   = dble(i-1)
-   abn  = alpha+beta+di
-   abnn = abn+di
-   a1   = -(two*(di+alpha)*(di+beta))/(abn*abnn*(abnn+one))
-   a2   =  (two*(alpha-beta))/(abnn*(abnn+two))
-   a3   =  (two*(abn+one))/((abnn+two)*(abnn+one))
-   f3   =  -(a2*f2+a1*f1)/a3
-   f1   = f2
-   f2   = f3
+    di   = dble(i-1)
+    abn  = alpha+beta+di
+    abnn = abn+di
+    a1   = -(two*(di+alpha)*(di+beta))/(abn*abnn*(abnn+one))
+    a2   =  (two*(alpha-beta))/(abnn*(abnn+two))
+    a3   =  (two*(abn+one))/((abnn+two)*(abnn+one))
+    f3   =  -(a2*f2+a1*f1)/a3
+    f1   = f2
+    f2   = f3
   enddo
   endw1  = f3
 
@@ -96,17 +97,17 @@
   double precision, external :: gammaf
   integer i
 
-  apb   = alpha+beta
+  apb = alpha+beta
   f3 = zero
   if (n == 0) then
-   endw2 = zero
-   return
+    endw2 = zero
+    return
   endif
   f1   = gammaf(alpha+one)*gammaf(beta+two)/gammaf(apb+three)
   f1   = f1*(apb+two)*two**(apb+two)/two
   if (n == 1) then
-   endw2 = f1
-   return
+    endw2 = f1
+    return
   endif
   fint1 = gammaf(alpha+one)*gammaf(beta+two)/gammaf(apb+three)
   fint1 = fint1*two**(apb+two)
@@ -114,19 +115,19 @@
   fint2 = fint2*two**(apb+three)
   f2    = (two*(alpha+two)*fint1 - (apb+four)*fint2) * (apb+three)/four
   if (n == 2) then
-   endw2 = f2
-   return
+    endw2 = f2
+    return
   endif
   do i=3,n
-   di   = dble(i-1)
-   abn  = alpha+beta+di
-   abnn = abn+di
-   a1   =  -(two*(di+alpha)*(di+beta))/(abn*abnn*(abnn+one))
-   a2   =  (two*(alpha-beta))/(abnn*(abnn+two))
-   a3   =  (two*(abn+one))/((abnn+two)*(abnn+one))
-   f3   =  -(a2*f2+a1*f1)/a3
-   f1   = f2
-   f2   = f3
+    di   = dble(i-1)
+    abn  = alpha+beta+di
+    abnn = abn+di
+    a1   =  -(two*(di+alpha)*(di+beta))/(abn*abnn*(abnn+one))
+    a2   =  (two*(alpha-beta))/(abnn*(abnn+two))
+    a3   =  (two*(abn+one))/((abnn+two)*(abnn+one))
+    f3   =  -(a2*f2+a1*f1)/a3
+    f1   = f2
+    f2   = f3
   enddo
   endw2  = f3
 
@@ -150,8 +151,8 @@
 
   if (x == -half) gammaf = -two*dsqrt(pi)
   if (x ==  half) gammaf =  dsqrt(pi)
-  if (x ==  one ) gammaf =  one
-  if (x ==  two ) gammaf =  one
+  if (x ==  one) gammaf =  one
+  if (x ==  two) gammaf =  one
   if (x ==  1.5d0) gammaf =  dsqrt(pi)/2.d0
   if (x ==  2.5d0) gammaf =  1.5d0*dsqrt(pi)/2.d0
   if (x ==  3.5d0) gammaf =  2.5d0*1.5d0*dsqrt(pi)/2.d0
@@ -204,63 +205,63 @@
   pd = 0.d0
 
   do j=1,np
-   if(j == 1) then
+    if (j == 1) then
       x = dcos((2.d0*(dble(j)-1.d0)+1.d0)*dth)
-   else
+    else
       x1 = dcos((2.d0*(dble(j)-1.d0)+1.d0)*dth)
       x2 = xlast
       x  = (x1+x2)/2.d0
-   endif
+    endif
 
-   do k=1,K_MAX_ITER
+    do k=1,K_MAX_ITER
       call jacobf (p,pd,pm1,pdm1,pm2,pdm2,np,alpha,beta,x)
       recsum = 0.d0
       jm = j-1
       do i=1,jm
-         recsum = recsum+1.d0/(x-xjac(np-i+1))
+        recsum = recsum+1.d0/(x-xjac(np-i+1))
       enddo
       delx = -p/(pd-recsum*p)
       x    = x+delx
 
       ! exits loop if increment too small
-      if(abs(delx) < eps) exit
+      if (abs(delx) < eps) exit
 
-   enddo
+    enddo
 
-   ! checks bounds
-   if( np-j+1 < 1 .or. np-j+1 > np ) stop 'error np-j+1-index in jacg'
+    ! checks bounds
+    if (np-j+1 < 1 .or. np-j+1 > np) stop 'error np-j+1-index in jacg'
 
-   xjac(np-j+1) = x
-   xlast        = x
+    xjac(np-j+1) = x
+    xlast        = x
   enddo
 
   jmin = 0
 
   ! orders xjac array in increasing values
   do i=1,np
-   xmin = 2.d0
-   jmin = i
+    xmin = 2.d0
+    jmin = i
 
-   ! looks for index with minimum value
-   do j=i,np
+    ! looks for index with minimum value
+    do j=i,np
       ! note: some compilers (cray) might be too aggressive in optimizing this loop,
       !       thus we need this temporary array value x to store and compare values
       x = xjac(j)
 
-      if( x < xmin) then
-         xmin = x
-         jmin = j
+      if (x < xmin) then
+        xmin = x
+        jmin = j
       endif
-   enddo
+    enddo
 
-   ! checks bounds
-   if(jmin < 1 .or. jmin > np ) stop 'error j-index in jacg'
+    ! checks bounds
+    if (jmin < 1 .or. jmin > np) stop 'error j-index in jacg'
 
-   if(jmin /= i) then
+    if (jmin /= i) then
       swap = xjac(i)
       xjac(i) = xjac(jmin)
       xjac(jmin) = swap
-   endif
+    endif
 
   enddo
 
@@ -486,9 +487,9 @@
   if ((alpha <= -one) .or. (beta <= -one)) stop 'alpha and beta must be greater than -1'
 
   if (np == 1) then
-   z(1) = (beta-alpha)/(apb+two)
-   w(1) = gammaf(alpha+one)*gammaf(beta+one)/gammaf(apb+two) * two**(apb+one)
-   return
+    z(1) = (beta-alpha)/(apb+two)
+    w(1) = gammaf(alpha+one)*gammaf(beta+one)/gammaf(apb+two) * two**(apb+one)
+    return
   endif
 
   call jacg(z,np,alpha,beta)
@@ -564,11 +565,16 @@
     call zwgjd(z(2:n),w(2:n),nm1,alpg,betg)
   endif
 
+! start and end point at exactly -1 and 1
   z(1)  = - one
   z(np) =  one
 
+! if number of points is odd, the middle abscissa is exactly zero
+  if (mod(np,2) /= 0) z((np-1)/2+1) = zero
+
+! weights
   do i=2,np-1
-   w(i) = w(i)/(one-z(i)**2)
+    w(i) = w(i)/(one-z(i)**2)
   enddo
 
   call jacobf(p,pd,pm1,pdm1,pm2,pdm2,n,alpha,beta,z(1))

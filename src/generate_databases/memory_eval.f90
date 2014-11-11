@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -32,12 +33,11 @@
  subroutine memory_eval(NSPEC_AB,NGLOB_AB,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh,&
                         APPROXIMATE_OCEAN_LOAD,memory_size)
 
+  use constants
   use generate_databases_par, only: PML_CONDITIONS,nspec_cpml
   use create_regions_mesh_ext_par,only: NSPEC_ANISO,ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic
 
   implicit none
-
-  include "constants.h"
 
   ! input
   integer, intent(in) :: NSPEC_AB,NGLOB_AB
@@ -73,7 +73,7 @@
   ! see: read_mesh_databases.f90
   ! acoustic arrays
   call any_all_l( ANY(ispec_is_acoustic), ACOUSTIC_SIMULATION )
-  if( ACOUSTIC_SIMULATION ) then
+  if (ACOUSTIC_SIMULATION) then
     ! potential_acoustic, potentical_dot_acoustic, potential_dot_dot_acoustic
     memory_size = memory_size + 3.d0*NGLOB_AB*dble(CUSTOM_REAL)
     ! rmass_acoustic
@@ -84,7 +84,7 @@
 
   ! see: read_mesh_databases.f90 and pml_allocate_arrays.f90
   ! C-PML arrays
-  if( PML_CONDITIONS ) then
+  if (PML_CONDITIONS) then
      ! CPML_regions,CPML_to_spec,CPML_type
      memory_size = memory_size + 3.d0*nspec_cpml*dble(SIZE_INTEGER)
 
@@ -135,7 +135,7 @@
 
   ! elastic arrays
   call any_all_l( ANY(ispec_is_elastic), ELASTIC_SIMULATION )
-  if( ELASTIC_SIMULATION ) then
+  if (ELASTIC_SIMULATION) then
     ! displacement,velocity,acceleration
     memory_size = memory_size + 3.d0*dble(NDIM)*NGLOB_AB*dble(CUSTOM_REAL)
 
@@ -151,7 +151,7 @@
     ! c11store,...c66store
     memory_size = memory_size + 21.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*NSPEC_ANISO*dble(CUSTOM_REAL)
 
-    if (APPROXIMATE_OCEAN_LOAD ) then
+    if (APPROXIMATE_OCEAN_LOAD) then
       ! rmass_ocean_load
       memory_size = memory_size + NGLOB_AB*dble(CUSTOM_REAL)
       ! updated_dof_ocean_load
@@ -161,7 +161,7 @@
 
   ! elastic arrays
   call any_all_l( ANY(ispec_is_poroelastic), POROELASTIC_SIMULATION )
-  if( POROELASTIC_SIMULATION ) then
+  if (POROELASTIC_SIMULATION) then
     ! displs_poroelastic,..
     memory_size = memory_size + 6.d0*dble(NDIM)*NGLOB_AB*dble(CUSTOM_REAL)
     ! rmass_solid_poroelastic,..
@@ -182,21 +182,21 @@
   memory_size = memory_size + max_nibool_interfaces_ext_mesh*num_interfaces_ext_mesh*dble(SIZE_INTEGER)
 
   ! MPI communications
-  if( ACOUSTIC_SIMULATION ) then
+  if (ACOUSTIC_SIMULATION) then
     ! buffer_send_scalar_ext_mesh,buffer_recv_scalar_ext_mesh
     memory_size = memory_size + 2.d0*max_nibool_interfaces_ext_mesh*num_interfaces_ext_mesh*dble(CUSTOM_REAL)
     ! request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh
     memory_size = memory_size + 2.d0*num_interfaces_ext_mesh*dble(SIZE_INTEGER)
   endif
 
-  if( ELASTIC_SIMULATION ) then
+  if (ELASTIC_SIMULATION) then
     ! buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh
     memory_size = memory_size + 2.d0*dble(NDIM)*max_nibool_interfaces_ext_mesh*num_interfaces_ext_mesh*dble(CUSTOM_REAL)
     ! request_send_vector_ext_mesh,request_recv_vector_ext_mesh
     memory_size = memory_size + 2.d0*num_interfaces_ext_mesh*dble(SIZE_INTEGER)
   endif
 
-  if( POROELASTIC_SIMULATION ) then
+  if (POROELASTIC_SIMULATION) then
     ! buffer_send_vector_ext_mesh_s,..
     memory_size = memory_size + 4.d0*dble(NDIM)*max_nibool_interfaces_ext_mesh*num_interfaces_ext_mesh*dble(CUSTOM_REAL)
     ! request_send_vector_ext_mesh_s,..
@@ -232,11 +232,10 @@
                               nspec2D_ymin,nspec2D_ymax,nspec2D_bottom,nspec2D_top, &
                               memory_size_request)
 
+  use constants
   use generate_databases_par, only: NGNOD,NGNOD2D
 
   implicit none
-
-  include "constants.h"
 
   integer,intent(in) :: myrank,nspec,npointot,nnodes_ext_mesh,nelmnts_ext_mesh, &
            nmat_ext_mesh,num_interfaces_ext_mesh, &
@@ -268,7 +267,7 @@
         + (1+NDIM)*NGLLX*NGLLY*NSPEC2D_BOTTOM*CUSTOM_REAL + (1+NDIM)*NGLLX*NGLLY*NSPEC2D_TOP*CUSTOM_REAL &
         + 2*npointot*4 + npointot + 3*npointot*8
 
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) '  minimum memory used so far     : ', &
                   memory_size / 1024. / 1024., &

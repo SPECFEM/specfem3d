@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -30,9 +31,10 @@
                               NSPEC2D_BOTTOM,NSPEC2D_TOP, &
                               NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX)
 
+  use constants
+
   implicit none
 
-  include "constants.h"
   include "constants_meshfem3D.h"
 
   integer nspec,myrank
@@ -63,54 +65,54 @@
   do ispec=1,nspec
 
     ! on boundary: xmin
-    if(iboun(1,ispec)) then
+    if (iboun(1,ispec)) then
       ispecb1=ispecb1+1
-      if( ispecb1 > NSPEC2DMAX_XMIN_XMAX ) stop 'error NSPEC2DMAX_XMIN_XMAX too small'
+      if (ispecb1 > NSPEC2DMAX_XMIN_XMAX) stop 'error NSPEC2DMAX_XMIN_XMAX too small'
       ibelm_xmin(ispecb1)=ispec
     endif
 
     ! on boundary: xmax
-    if(iboun(2,ispec)) then
+    if (iboun(2,ispec)) then
       ispecb2=ispecb2+1
-      if( ispecb2 > NSPEC2DMAX_XMIN_XMAX ) stop 'error NSPEC2DMAX_XMIN_XMAX too small'
+      if (ispecb2 > NSPEC2DMAX_XMIN_XMAX) stop 'error NSPEC2DMAX_XMIN_XMAX too small'
       ibelm_xmax(ispecb2)=ispec
     endif
 
     ! on boundary: ymin
-    if(iboun(3,ispec)) then
+    if (iboun(3,ispec)) then
       ispecb3=ispecb3+1
-      if( ispecb3 > NSPEC2DMAX_YMIN_YMAX ) stop 'error NSPEC2DMAX_YMIN_YMAX too small'
+      if (ispecb3 > NSPEC2DMAX_YMIN_YMAX) stop 'error NSPEC2DMAX_YMIN_YMAX too small'
       ibelm_ymin(ispecb3)=ispec
     endif
 
     ! on boundary: ymax
-    if(iboun(4,ispec)) then
+    if (iboun(4,ispec)) then
       ispecb4=ispecb4+1
-      if( ispecb4 > NSPEC2DMAX_YMIN_YMAX ) stop 'error NSPEC2DMAX_YMIN_YMAX too small'
+      if (ispecb4 > NSPEC2DMAX_YMIN_YMAX) stop 'error NSPEC2DMAX_YMIN_YMAX too small'
       ibelm_ymax(ispecb4)=ispec
     endif
 
     ! on boundary: bottom
-    if(iboun(5,ispec)) then
+    if (iboun(5,ispec)) then
       ispecb5=ispecb5+1
-      if( ispecb5 > NSPEC2D_BOTTOM ) stop 'error NSPEC2D_BOTTOM too small'
+      if (ispecb5 > NSPEC2D_BOTTOM) stop 'error NSPEC2D_BOTTOM too small'
       ibelm_bottom(ispecb5)=ispec
     endif
 
     ! on boundary: top
-    if(iboun(6,ispec)) then
+    if (iboun(6,ispec)) then
       ispecb6=ispecb6+1
-      if( ispecb6 > NSPEC2D_TOP ) stop 'error NSPEC2D_TOP too small'
+      if (ispecb6 > NSPEC2D_TOP) stop 'error NSPEC2D_TOP too small'
       ibelm_top(ispecb6)=ispec
     endif
 
   enddo
 
   ! check theoretical value of elements at the bottom
-  if(ispecb5 /= NSPEC2D_BOTTOM) call exit_MPI(myrank,'ispecb5 should equal NSPEC2D_BOTTOM')
+  if (ispecb5 /= NSPEC2D_BOTTOM) call exit_MPI(myrank,'ispecb5 should equal NSPEC2D_BOTTOM')
 
   ! check theoretical value of elements at the top
-  if(ispecb6 /= NSPEC2D_TOP) call exit_MPI(myrank,'ispecb6 should equal NSPEC2D_TOP')
+  if (ispecb6 /= NSPEC2D_TOP) call exit_MPI(myrank,'ispecb6 should equal NSPEC2D_TOP')
 
   nspec2D_xmin = ispecb1
   nspec2D_xmax = ispecb2
@@ -136,9 +138,10 @@
                             NSPEC2D_BOTTOM,NSPEC2D_TOP, &
                             NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX)
 
+  use constants
+
   implicit none
 
-  include "constants.h"
   include "constants_meshfem3D.h"
 
   integer nspec,myrank
@@ -195,7 +198,7 @@
 
 ! on boundary: xmin
 
-  if(iboun(1,ispec)) then
+  if (iboun(1,ispec)) then
 
     ispecb1=ispecb1+1
     ibelm_xmin(ispecb1)=ispec
@@ -221,7 +224,7 @@
 
 ! on boundary: xmax
 
-  if(iboun(2,ispec)) then
+  if (iboun(2,ispec)) then
 
     ispecb2=ispecb2+1
     ibelm_xmax(ispecb2)=ispec
@@ -247,7 +250,7 @@
 
 ! on boundary: ymin
 
-  if(iboun(3,ispec)) then
+  if (iboun(3,ispec)) then
 
     ispecb3=ispecb3+1
     ibelm_ymin(ispecb3)=ispec
@@ -273,7 +276,7 @@
 
 ! on boundary: ymax
 
-  if(iboun(4,ispec)) then
+  if (iboun(4,ispec)) then
 
     ispecb4=ispecb4+1
     ibelm_ymax(ispecb4)=ispec
@@ -299,7 +302,7 @@
 
 ! on boundary: bottom
 
-  if(iboun(5,ispec)) then
+  if (iboun(5,ispec)) then
 
     ispecb5=ispecb5+1
     ibelm_bottom(ispecb5)=ispec
@@ -324,7 +327,7 @@
 
 ! on boundary: top
 
-  if(iboun(6,ispec)) then
+  if (iboun(6,ispec)) then
 
     ispecb6=ispecb6+1
     ibelm_top(ispecb6)=ispec
@@ -350,10 +353,10 @@
   enddo
 
 ! check theoretical value of elements at the bottom
-  if(ispecb5 /= NSPEC2D_BOTTOM) call exit_MPI(myrank,'ispecb5 should equal NSPEC2D_BOTTOM')
+  if (ispecb5 /= NSPEC2D_BOTTOM) call exit_MPI(myrank,'ispecb5 should equal NSPEC2D_BOTTOM')
 
 ! check theoretical value of elements at the top
-  if(ispecb6 /= NSPEC2D_TOP) call exit_MPI(myrank,'ispecb6 should equal NSPEC2D_TOP')
+  if (ispecb6 /= NSPEC2D_TOP) call exit_MPI(myrank,'ispecb6 should equal NSPEC2D_TOP')
 
   nspec2D_xmin = ispecb1
   nspec2D_xmax = ispecb2
@@ -366,9 +369,10 @@
 
   subroutine compute_jacobian_2D(myrank,ispecb,xelm,yelm,zelm,dershape2D,jacobian2D,normal,NGLLA,NGLLB,NSPEC2DMAX_AB)
 
+  use constants
+
   implicit none
 
-  include "constants.h"
   include "constants_meshfem3D.h"
 
 ! generic routine that accepts any polynomial degree in each direction
@@ -408,12 +412,12 @@
     uny=zxi*xeta-zeta*xxi
     unz=xxi*yeta-xeta*yxi
     jacobian=dsqrt(unx**2+uny**2+unz**2)
-    if(jacobian == ZERO) call exit_MPI(myrank,'2D Jacobian undefined')
+    if (jacobian == ZERO) call exit_MPI(myrank,'2D Jacobian undefined')
 
 !   normalize normal vector and store surface jacobian
 
 ! distinguish if single or double precision for reals
-    if(CUSTOM_REAL == SIZE_REAL) then
+    if (CUSTOM_REAL == SIZE_REAL) then
       jacobian2D(i,j,ispecb)=sngl(jacobian)
       normal(1,i,j,ispecb)=sngl(unx/jacobian)
       normal(2,i,j,ispecb)=sngl(uny/jacobian)

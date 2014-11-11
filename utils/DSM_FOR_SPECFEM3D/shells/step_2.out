@@ -1,0 +1,13 @@
+parallel step
+ pwd 
+/tmpgpfs/SMP/loadl/ada338.idris.fr.234323
+ls 
+total 16M
+drwxr-xr-x 1232 root    root 16M Apr 30 19:46 ..
+drwxr-xr-x    2 rubv002 ubv  512 Apr 30 19:46 rep_test
+-rw-r--r--    1 rubv002 ubv  126 Apr 30 19:46 step_1.out
+drwx------    3 rubv002 ubv  512 Apr 30 19:46 .
+-rw-r--r--    1 rubv002 ubv   66 Apr 30 19:46 step_2.out
+pwd 
+/tmpgpfs/SMP/loadl/ada338.idris.fr.234323/rep_test
+fonction test 

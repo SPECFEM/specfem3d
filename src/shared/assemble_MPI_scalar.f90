@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -35,9 +36,9 @@
 
 ! assembles scalar field in a blocking way, returns only after values have been assembled
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: NPROC
   integer :: NGLOB_AB
@@ -60,16 +61,16 @@
 ! here we have to assemble all the contributions between partitions using MPI
 
 ! assemble only if more than one partition
-  if(NPROC > 1) then
+  if (NPROC > 1) then
 
     allocate(buffer_send_scalar(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array buffer_send_scalar'
+    if (ier /= 0) stop 'error allocating array buffer_send_scalar'
     allocate(buffer_recv_scalar(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array buffer_recv_scalar'
+    if (ier /= 0) stop 'error allocating array buffer_recv_scalar'
     allocate(request_send_scalar(num_interfaces_ext_mesh),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array request_send_scalar'
+    if (ier /= 0) stop 'error allocating array request_send_scalar'
     allocate(request_recv_scalar(num_interfaces_ext_mesh),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array request_recv_scalar'
+    if (ier /= 0) stop 'error allocating array request_recv_scalar'
 
     ! partition border copy into the buffer
     do iinterface = 1, num_interfaces_ext_mesh
@@ -85,13 +86,13 @@
                      nibool_interfaces_ext_mesh(iinterface), &
                      my_neighbours_ext_mesh(iinterface), &
                      itag, &
-                     request_send_scalar(iinterface) )
+                     request_send_scalar(iinterface))
       ! receive request
       call irecv_cr(buffer_recv_scalar(1:nibool_interfaces_ext_mesh(iinterface),iinterface), &
                      nibool_interfaces_ext_mesh(iinterface), &
                      my_neighbours_ext_mesh(iinterface), &
                      itag, &
-                     request_recv_scalar(iinterface) )
+                     request_recv_scalar(iinterface))
     enddo
 
     ! wait for communications completion (recv)
@@ -130,9 +131,9 @@
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         my_neighbours_ext_mesh)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: NPROC
   integer :: NGLOB_AB
@@ -154,16 +155,16 @@
 ! here we have to assemble all the contributions between partitions using MPI
 
 ! assemble only if more than one partition
-  if(NPROC > 1) then
+  if (NPROC > 1) then
 
     allocate(buffer_send_scalar(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array buffer_send_scalar'
+    if (ier /= 0) stop 'error allocating array buffer_send_scalar'
     allocate(buffer_recv_scalar(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array buffer_recv_scalar'
+    if (ier /= 0) stop 'error allocating array buffer_recv_scalar'
     allocate(request_send_scalar(num_interfaces_ext_mesh),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array request_send_scalar'
+    if (ier /= 0) stop 'error allocating array request_send_scalar'
     allocate(request_recv_scalar(num_interfaces_ext_mesh),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array request_recv_scalar'
+    if (ier /= 0) stop 'error allocating array request_recv_scalar'
 
     ! partition border copy into the buffer
     do iinterface = 1, num_interfaces_ext_mesh
@@ -179,13 +180,13 @@
                    nibool_interfaces_ext_mesh(iinterface), &
                    my_neighbours_ext_mesh(iinterface), &
                    itag, &
-                   request_send_scalar(iinterface) )
+                   request_send_scalar(iinterface))
       ! receive request
       call irecv_i(buffer_recv_scalar(1:nibool_interfaces_ext_mesh(iinterface),iinterface), &
                    nibool_interfaces_ext_mesh(iinterface), &
                    my_neighbours_ext_mesh(iinterface), &
                    itag, &
-                   request_recv_scalar(iinterface) )
+                   request_recv_scalar(iinterface))
     enddo
 
     ! wait for communications completion
@@ -228,9 +229,9 @@
 
 ! non-blocking MPI send
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: NPROC
   integer :: NGLOB_AB
@@ -250,7 +251,7 @@
   integer ipoin,iinterface
 
 ! sends only if more than one partition
-  if(NPROC > 1) then
+  if (NPROC > 1) then
 
     ! partition border copy into the buffer
     do iinterface = 1, num_interfaces_ext_mesh
@@ -264,18 +265,16 @@
     do iinterface = 1, num_interfaces_ext_mesh
       ! non-blocking synchronous send request
       call isend_cr(buffer_send_scalar_ext_mesh(1:nibool_interfaces_ext_mesh(iinterface),iinterface), &
-           nibool_interfaces_ext_mesh(iinterface), &
-           my_neighbours_ext_mesh(iinterface), &
-           itag, &
-           request_send_scalar_ext_mesh(iinterface) &
-           )
+                    nibool_interfaces_ext_mesh(iinterface), &
+                    my_neighbours_ext_mesh(iinterface), &
+                    itag, &
+                    request_send_scalar_ext_mesh(iinterface))
       ! receive request
       call irecv_cr(buffer_recv_scalar_ext_mesh(1:nibool_interfaces_ext_mesh(iinterface),iinterface), &
-           nibool_interfaces_ext_mesh(iinterface), &
-           my_neighbours_ext_mesh(iinterface), &
-           itag, &
-           request_recv_scalar_ext_mesh(iinterface) &
-           )
+                    nibool_interfaces_ext_mesh(iinterface), &
+                    my_neighbours_ext_mesh(iinterface), &
+                    itag, &
+                    request_recv_scalar_ext_mesh(iinterface))
 
     enddo
 
@@ -295,9 +294,9 @@
 
 ! waits for send/receiver to be completed and assembles contributions
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: NPROC
   integer :: NGLOB_AB
@@ -316,7 +315,7 @@
   integer ipoin,iinterface
 
 ! assemble only if more than one partition
-  if(NPROC > 1) then
+  if (NPROC > 1) then
 
     ! wait for communications completion (recv)
     do iinterface = 1, num_interfaces_ext_mesh

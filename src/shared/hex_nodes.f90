@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -26,9 +27,9 @@
 
   subroutine usual_hex_nodes(NGNOD,iaddx,iaddy,iaddz)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: NGNOD
   integer, dimension(NGNOD) :: iaddx,iaddy,iaddz
@@ -36,8 +37,8 @@
 ! define the topology of the hexahedral elements
 
 ! check that the parameter file is correct
-  if(NGNOD /= 8 .and. NGNOD /= 27) &
-       stop 'volume elements should have 8 or 27 control nodes'
+  if (NGNOD /= 8 .and. NGNOD /= 27) &
+    stop 'volume elements should have 8 or 27 control nodes'
 
 ! corner nodes
   iaddx(1)=0
@@ -72,7 +73,7 @@
   iaddy(8)=2
   iaddz(8)=2
 
-  if(NGNOD == 27) then
+  if (NGNOD == 27) then
 
     ! note: put further initialization into subroutine to avoid compilation errors
     !       in case NGNOD == 8
@@ -185,9 +186,9 @@
 
   subroutine unusual_hex_nodes1(iaddx,iaddy,iaddz)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer, dimension(NGNOD_EIGHT_CORNERS) :: iaddx,iaddy,iaddz
 
@@ -234,9 +235,9 @@
 
   subroutine unusual_hex_nodes1p(iaddx,iaddy,iaddz)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer, dimension(NGNOD_EIGHT_CORNERS) :: iaddx,iaddy,iaddz
 
@@ -283,9 +284,9 @@
 
   subroutine unusual_hex_nodes2(iaddx,iaddy,iaddz)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer, dimension(NGNOD_EIGHT_CORNERS) :: iaddx,iaddy,iaddz
 
@@ -332,9 +333,9 @@
 
   subroutine unusual_hex_nodes2p(iaddx,iaddy,iaddz)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer, dimension(NGNOD_EIGHT_CORNERS) :: iaddx,iaddy,iaddz
 
@@ -381,9 +382,9 @@
 
   subroutine unusual_hex_nodes3(iaddx,iaddy,iaddz)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer, dimension(NGNOD_EIGHT_CORNERS) :: iaddx,iaddy,iaddz
 
@@ -430,9 +431,9 @@
 
   subroutine unusual_hex_nodes4(iaddx,iaddy,iaddz)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer, dimension(NGNOD_EIGHT_CORNERS) :: iaddx,iaddy,iaddz
 
@@ -479,9 +480,9 @@
 
   subroutine unusual_hex_nodes4p(iaddx,iaddy,iaddz)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer, dimension(NGNOD_EIGHT_CORNERS) :: iaddx,iaddy,iaddz
 
@@ -528,9 +529,9 @@
 
   subroutine unusual_hex_nodes6(iaddx,iaddy,iaddz)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer, dimension(NGNOD_EIGHT_CORNERS) :: iaddx,iaddy,iaddz
 
@@ -577,9 +578,9 @@
 
   subroutine unusual_hex_nodes6p(iaddx,iaddy,iaddz)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer, dimension(NGNOD_EIGHT_CORNERS) :: iaddx,iaddy,iaddz
 

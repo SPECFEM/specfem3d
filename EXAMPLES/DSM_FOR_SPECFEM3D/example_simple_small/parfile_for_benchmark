@@ -1,0 +1,86 @@
+#  ABSOLUTE PATH FOR EXECUTABLES
+DSM_BINARY_PATH          =  ${HOME_SPECFEM3D}/utils/DSM_FOR_SPECFEM3D/bin
+SPECFEM3D_BINARY_PATH    =  ${HOME_SPECFEM3D}/bin
+SHELL_SCRIPT_PATH        =  ${HOME_SPECFEM3D}/utils/DSM_FOR_SPECFEM3D/shells
+
+# DIRECTORY CONTAINED INPUTS FILES (RELATIVE PATH FORM ./)
+DSM_INPUT_DIR            = input_dsm
+MESH_DIR                 = MESH
+
+
+# --------------------------------- DSM PARAMETERS ----------------------
+#
+# MODEL FILE NAME FOR DSM
+FILE_MODEL_1D            = iasp91_dsm
+
+# NAME FOR DSM OUTPUT FILES
+FILE_OUT_DSM             = iasp91_dsm
+
+# OUTPUT SEISMOGRAM TIME LENGTH (s) 
+# (set 2^n seconds, this value will be multiplied by 0.1 inside DSM)
+# This paramter is choosen to compute the frquency step for DSM
+TLEN                     = 16384.d0
+
+# SOURCE DEPTH (KM), LAT, LON (DEGREES)
+SRC_DEPTH                = 1500.d0
+SRC_LAT                  = 0.d0
+SRC_LON                  = 0.d0
+
+# SOURCE MOMENT TENSOR 
+# Mrr, Mtt, Mpp, Mrt, Mrp, Mtp
+MRR                     = 0.d0
+MTT                     = 0.d0
+MPP                     = 0.d0
+MRT                     = 1.d0
+MRP                     = 1.d0
+MTP                     = 1.d0
+
+
+# SAMPLING FOR OUTPUT SEISMOGRAMS (Hz)
+# SHOULD BE A MULTIPLE OF TEN (10Hz, 20Hz, 30Hz, 40 Hz,...)
+# TAKE INTO ACCUNT THAT MUST BE THE TIME STEP FOR SPECFEM3D
+SAMPLING                = 10. 
+
+# TEMPORAL WINDOW FOR DSM TRACTIONS AND SEISMOGRAMS 
+# SHOULD BEGIN BEFORE THE FIRST ARRIVAL AT THE CHUNK BOTTOM 
+# START TIME
+TSTART                  = 00.
+# END TIME
+TEND                    = 1600. 
+
+
+# BAND PASS FILTER FREQENCY  (Hz)
+FLOW                    = 0.003
+FHIGH                   = 0.09
+
+
+# TUNNING PARAMETER FOR PRECISION CALCULATION IN PART 2 (>1.)
+# THE HIGHER IS, MORE ACCURATE IS, BUT MORE EXPENSIVE
+ACCURACY_LEVEL         = 1.d0
+
+#
+# ----------------------------- CHUNK --------------------------------------
+#
+# CHUNK EXTENSION (degrees) 
+ANGULAR_WIDTH_XI_RAD    = 6.
+ANGULAR_WIDTH_ETA_RAD   = 3.
+
+# CHUNK CENTER (degrees)
+LON_CENTER              = 60.
+LAT_CENTER              = 0.
+AZI_CHUNK               = 0.
+
+# DEPTH CHUNK (km)
+DEPTH_CHUNK             = 240.
+
+# SEM DISCRETISATION
+NEL_LON                 = 30
+NEL_LAT                 = 15
+NEL_DEPTH               = 15
+
+
+#------------------- MPI  PARALLELISATION -----
+#
+MPI_CPUS                  = 32
+SUB_COMM                  = 1
+

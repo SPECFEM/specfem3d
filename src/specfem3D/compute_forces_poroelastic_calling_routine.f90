@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -43,92 +44,90 @@ subroutine compute_forces_poroelastic()
   do iphase=1,2
 
     !first for points on MPI interfaces
-    if( iphase == 1 ) then
+    if (iphase == 1) then
       phase_is_inner = .false.
     else
       phase_is_inner = .true.
     endif
 
 
-    if( .NOT. GPU_MODE ) then
-! solid phase
+    if (.NOT. GPU_MODE) then
 
-    call compute_forces_poro_solid_part( iphase, &
-                        NSPEC_AB,NGLOB_AB,displs_poroelastic,accels_poroelastic,&
-                        displw_poroelastic,velocw_poroelastic,&
-                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        hprime_xx,hprime_yy,hprime_zz,&
-                        hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,&
-                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,wxgll,wygll,wzgll,  &
-                        kappaarraystore,rhoarraystore,mustore,etastore,permstore, &
-                        phistore,tortstore,jacobian,ibool,&
-                        epsilonsdev_xx,epsilonsdev_yy,epsilonsdev_xy,&
-                        epsilonsdev_xz,epsilonsdev_yz,epsilons_trace_over_3, &
-                        SIMULATION_TYPE,NSPEC_ADJOINT, &
-                        num_phase_ispec_poroelastic,nspec_inner_poroelastic,nspec_outer_poroelastic,&
-                        phase_ispec_inner_poroelastic )
+      ! solid phase
+      call compute_forces_poro_solid_part( iphase, &
+                          NSPEC_AB,NGLOB_AB,displs_poroelastic,accels_poroelastic,&
+                          displw_poroelastic,velocw_poroelastic,&
+                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                          hprime_xx,hprime_yy,hprime_zz,&
+                          hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,&
+                          wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,wxgll,wygll,wzgll,  &
+                          kappaarraystore,rhoarraystore,mustore,etastore,permstore, &
+                          phistore,tortstore,jacobian,ibool,&
+                          epsilonsdev_xx,epsilonsdev_yy,epsilonsdev_xy,&
+                          epsilonsdev_xz,epsilonsdev_yz,epsilons_trace_over_3, &
+                          SIMULATION_TYPE,NSPEC_ADJOINT, &
+                          num_phase_ispec_poroelastic,nspec_inner_poroelastic,nspec_outer_poroelastic,&
+                          phase_ispec_inner_poroelastic )
 
-! fluid phase
+      ! fluid phase
+      call compute_forces_poro_fluid_part( iphase, &
+                          NSPEC_AB,NGLOB_AB,displw_poroelastic,accelw_poroelastic,&
+                          velocw_poroelastic,displs_poroelastic,&
+                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                          hprime_xx,hprime_yy,hprime_zz,&
+                          hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,&
+                          wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,wxgll,wygll,wzgll,  &
+                          kappaarraystore,rhoarraystore,mustore,etastore,permstore, &
+                          phistore,tortstore,jacobian,ibool,&
+                          epsilonwdev_xx,epsilonwdev_yy,epsilonwdev_xy,&
+                          epsilonwdev_xz,epsilonwdev_yz,epsilonw_trace_over_3, &
+                          SIMULATION_TYPE,NSPEC_ADJOINT, &
+                          num_phase_ispec_poroelastic,nspec_inner_poroelastic,nspec_outer_poroelastic,&
+                          phase_ispec_inner_poroelastic )
 
-    call compute_forces_poro_fluid_part( iphase, &
-                        NSPEC_AB,NGLOB_AB,displw_poroelastic,accelw_poroelastic,&
-                        velocw_poroelastic,displs_poroelastic,&
-                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        hprime_xx,hprime_yy,hprime_zz,&
-                        hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,&
-                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,wxgll,wygll,wzgll,  &
-                        kappaarraystore,rhoarraystore,mustore,etastore,permstore, &
-                        phistore,tortstore,jacobian,ibool,&
-                        epsilonwdev_xx,epsilonwdev_yy,epsilonwdev_xy,&
-                        epsilonwdev_xz,epsilonwdev_yz,epsilonw_trace_over_3, &
-                        SIMULATION_TYPE,NSPEC_ADJOINT, &
-                        num_phase_ispec_poroelastic,nspec_inner_poroelastic,nspec_outer_poroelastic,&
-                        phase_ispec_inner_poroelastic )
+      ! adjoint simulations: backward/reconstructed wavefield
+      if (SIMULATION_TYPE == 3) then
 
-    ! adjoint simulations: backward/reconstructed wavefield
-    if( SIMULATION_TYPE == 3 ) then
-! solid phase
+        ! solid phase
+        call compute_forces_poro_solid_part( iphase, &
+                            NSPEC_AB,NGLOB_AB,b_displs_poroelastic,b_accels_poroelastic,&
+                            b_displw_poroelastic,b_velocw_poroelastic,&
+                            xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                            hprime_xx,hprime_yy,hprime_zz,&
+                            hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,&
+                            wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,wxgll,wygll,wzgll,  &
+                            kappaarraystore,rhoarraystore,mustore,etastore,permstore, &
+                            phistore,tortstore,jacobian,ibool,&
+                            b_epsilonsdev_xx,b_epsilonsdev_yy,b_epsilonsdev_xy,&
+                            b_epsilonsdev_xz,b_epsilonsdev_yz,b_epsilons_trace_over_3, &
+                            SIMULATION_TYPE,NSPEC_ADJOINT, &
+                            num_phase_ispec_poroelastic,nspec_inner_poroelastic,nspec_outer_poroelastic,&
+                            phase_ispec_inner_poroelastic )
 
-    call compute_forces_poro_solid_part( iphase, &
-                        NSPEC_AB,NGLOB_AB,b_displs_poroelastic,b_accels_poroelastic,&
-                        b_displw_poroelastic,b_velocw_poroelastic,&
-                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        hprime_xx,hprime_yy,hprime_zz,&
-                        hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,&
-                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,wxgll,wygll,wzgll,  &
-                        kappaarraystore,rhoarraystore,mustore,etastore,permstore, &
-                        phistore,tortstore,jacobian,ibool,&
-                        b_epsilonsdev_xx,b_epsilonsdev_yy,b_epsilonsdev_xy,&
-                        b_epsilonsdev_xz,b_epsilonsdev_yz,b_epsilons_trace_over_3, &
-                        SIMULATION_TYPE,NSPEC_ADJOINT, &
-                        num_phase_ispec_poroelastic,nspec_inner_poroelastic,nspec_outer_poroelastic,&
-                        phase_ispec_inner_poroelastic )
-
-! fluid phase
-
-    call compute_forces_poro_fluid_part( iphase, &
-                        NSPEC_AB,NGLOB_AB,b_displw_poroelastic,b_accelw_poroelastic,&
-                        b_velocw_poroelastic,b_displs_poroelastic,&
-                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        hprime_xx,hprime_yy,hprime_zz,&
-                        hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,&
-                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,wxgll,wygll,wzgll,  &
-                        kappaarraystore,rhoarraystore,mustore,etastore,permstore, &
-                        phistore,tortstore,jacobian,ibool,&
-                        b_epsilonwdev_xx,b_epsilonwdev_yy,b_epsilonwdev_xy,&
-                        b_epsilonwdev_xz,b_epsilonwdev_yz,b_epsilonw_trace_over_3, &
-                        SIMULATION_TYPE,NSPEC_ADJOINT, &
-                        num_phase_ispec_poroelastic,nspec_inner_poroelastic,nspec_outer_poroelastic,&
-                        phase_ispec_inner_poroelastic )
-    endif
+        ! fluid phase
+        call compute_forces_poro_fluid_part( iphase, &
+                            NSPEC_AB,NGLOB_AB,b_displw_poroelastic,b_accelw_poroelastic,&
+                            b_velocw_poroelastic,b_displs_poroelastic,&
+                            xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                            hprime_xx,hprime_yy,hprime_zz,&
+                            hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,&
+                            wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,wxgll,wygll,wzgll,  &
+                            kappaarraystore,rhoarraystore,mustore,etastore,permstore, &
+                            phistore,tortstore,jacobian,ibool,&
+                            b_epsilonwdev_xx,b_epsilonwdev_yy,b_epsilonwdev_xy,&
+                            b_epsilonwdev_xz,b_epsilonwdev_yz,b_epsilonw_trace_over_3, &
+                            SIMULATION_TYPE,NSPEC_ADJOINT, &
+                            num_phase_ispec_poroelastic,nspec_inner_poroelastic,nspec_outer_poroelastic,&
+                            phase_ispec_inner_poroelastic )
+      endif
 
     else
       ! on GPU
       call exit_MPI(myrank,'GPU for poroelastic simulation not implemented')
     endif ! GPU_MODE
 
-! adds poroelastic absorbing boundary terms to accelerations (type Stacey conditions)
-    if(STACEY_ABSORBING_CONDITIONS) &
+    ! adds poroelastic absorbing boundary terms to accelerations (type Stacey conditions)
+    if (STACEY_ABSORBING_CONDITIONS) &
       call compute_stacey_poroelastic(NSPEC_AB,NGLOB_AB,accels_poroelastic,accelw_poroelastic, &
                         ibool,ispec_is_inner,phase_is_inner, &
                         abs_boundary_normal,abs_boundary_jacobian2Dw, &
@@ -141,8 +140,8 @@ subroutine compute_forces_poroelastic()
                         b_num_abs_boundary_faces,b_reclen_field_poro,b_absorb_fields, &
                         b_absorb_fieldw)
 
-! acoustic coupling
-    if( ACOUSTIC_SIMULATION ) then
+    ! acoustic coupling
+    if (ACOUSTIC_SIMULATION) then
       call compute_coupling_poroelastic_ac(NSPEC_AB,NGLOB_AB, &
                         ibool,accels_poroelastic,accelw_poroelastic, &
                         potential_dot_dot_acoustic, &
@@ -154,7 +153,7 @@ subroutine compute_forces_poroelastic()
                         ispec_is_inner,phase_is_inner)
 
       ! adjoint simulations
-      !if( SIMULATION_TYPE == 3 ) &
+      !if (SIMULATION_TYPE == 3) &
 ! chris:'adjoint acoustic-poroelastic simulation not implemented yet'
 !        call ccmpute_coupling_elastic_ac(NSPEC_ADJOINT,NGLOB_ADJOINT, &
 !                        ibool,b_accel,b_potential_dot_dot_acoustic, &
@@ -166,7 +165,7 @@ subroutine compute_forces_poroelastic()
     endif
 
 ! elastic coupling
-    if( ELASTIC_SIMULATION ) then
+    if (ELASTIC_SIMULATION) then
       call compute_coupling_poroelastic_el(NSPEC_AB,NGLOB_AB,ibool,&
                         displs_poroelastic,accels_poroelastic,displw_poroelastic,&
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
@@ -189,7 +188,7 @@ subroutine compute_forces_poroelastic()
 
       ! adjoint simulations
 ! chris:'adjoint elastic-poroelastic simulation not implemented yet'
-!      if( SIMULATION_TYPE == 3 ) &
+!      if (SIMULATION_TYPE == 3) &
 !        call compute_coupling_viscoelastic_ac(NSPEC_ADJOINT,NGLOB_ADJOINT, &
 !                        ibool,b_accel,b_potential_dot_dot_acoustic, &
 !                        num_coupling_ac_el_faces, &
@@ -205,14 +204,14 @@ subroutine compute_forces_poroelastic()
                         rhoarraystore,phistore,tortstore,&
                         ibool,ispec_is_inner,phase_is_inner, &
                         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                        hdur,hdur_gaussian,tshift_src,dt,t0,sourcearrays, &
+                        hdur,hdur_gaussian,hdur_tiny,tshift_src,dt,t0,sourcearrays, &
                         ispec_is_poroelastic,SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                         nrec,islice_selected_rec,ispec_selected_rec, &
                         nadj_rec_local,adj_sourcearrays,b_accels_poroelastic,b_accelw_poroelastic, &
                         NTSTEP_BETWEEN_READ_ADJSRC)
 
 ! assemble all the contributions between slices using MPI
-    if( phase_is_inner .eqv. .false. ) then
+    if (phase_is_inner .eqv. .false.) then
       ! sends accel values to corresponding MPI interface neighbors
       call assemble_MPI_vector_poro_s(NPROC,NGLOB_AB,accels_poroelastic, &
                         accelw_poroelastic,&
@@ -225,7 +224,7 @@ subroutine compute_forces_poroelastic()
                         request_send_vector_ext_mesh_w,request_recv_vector_ext_mesh_w)
 
       ! adjoint simulations
-      if( SIMULATION_TYPE == 3 ) then
+      if (SIMULATION_TYPE == 3) then
       call assemble_MPI_vector_poro_s(NPROC,NGLOB_ADJOINT,b_accels_poroelastic, &
                         b_accelw_poroelastic,&
                         b_buffer_send_vector_ext_meshs,b_buffer_recv_vector_ext_meshs, &
@@ -249,7 +248,7 @@ subroutine compute_forces_poroelastic()
                         request_send_vector_ext_mesh_w,request_recv_vector_ext_mesh_w)
 
       ! adjoint simulations
-      if( SIMULATION_TYPE == 3 ) then
+      if (SIMULATION_TYPE == 3) then
       call assemble_MPI_vector_poro_w(NPROC,NGLOB_ADJOINT,b_accels_poroelastic, &
                         b_accelw_poroelastic,&
                         b_buffer_recv_vector_ext_meshs,b_buffer_recv_vector_ext_meshw, &
@@ -321,7 +320,7 @@ subroutine compute_forces_poroelastic()
                                b_deltatover2*b_accelw_poroelastic(:,:)
 
 ! elastic coupling
-    if( ELASTIC_SIMULATION ) &
+    if (ELASTIC_SIMULATION) &
       call compute_continuity_disp_po_el(NSPEC_AB,NGLOB_AB,ibool,&
                         accel,veloc,&
                         accels_poroelastic,velocs_poroelastic,&
@@ -351,8 +350,9 @@ subroutine compute_continuity_disp_po_el(NSPEC_AB,NGLOB_AB,ibool,&
 !         assembling the displacements on the elastic-poro boundaries
 !*******************************************************************************
 
+  use constants
+
   implicit none
-  include 'constants.h'
 
   integer :: NSPEC_AB,NGLOB_AB
 
@@ -379,7 +379,7 @@ subroutine compute_continuity_disp_po_el(NSPEC_AB,NGLOB_AB,ibool,&
   integer, dimension(NGLOB_AB) :: icount
   integer :: ispec,i,j,k,l,iglob,igll,iface
 
-     icount(:)=ZERO
+  icount(:)=0
 
 ! loops on all coupling faces
   do iface = 1,num_coupling_el_po_faces
@@ -387,64 +387,64 @@ subroutine compute_continuity_disp_po_el(NSPEC_AB,NGLOB_AB,ibool,&
     ! gets corresponding poroelastic spectral element
     ispec = coupling_el_po_ispec(iface)
 
-      ! loops over common GLL points
-      do igll = 1, NGLLSQUARE
-        i = coupling_el_po_ijk(1,igll,iface)
-        j = coupling_el_po_ijk(2,igll,iface)
-        k = coupling_el_po_ijk(3,igll,iface)
+    ! loops over common GLL points
+    do igll = 1, NGLLSQUARE
+      i = coupling_el_po_ijk(1,igll,iface)
+      j = coupling_el_po_ijk(2,igll,iface)
+      k = coupling_el_po_ijk(3,igll,iface)
 
-        ! gets global index of this common GLL point
-        iglob = ibool(i,j,k,ispec)
-        icount(iglob) = icount(iglob) + 1
+      ! gets global index of this common GLL point
+      iglob = ibool(i,j,k,ispec)
+      icount(iglob) = icount(iglob) + 1
 
-        if(icount(iglob) ==1)then
+      if (icount(iglob) ==1) then
 
-! recovering original velocities and accelerations on boundaries (elastic side)
-          veloc(1,iglob) = veloc(1,iglob) - deltatover2*accel(1,iglob)
-          veloc(2,iglob) = veloc(2,iglob) - deltatover2*accel(2,iglob)
-          veloc(3,iglob) = veloc(3,iglob) - deltatover2*accel(3,iglob)
-          accel(1,iglob) = accel(1,iglob) / rmass(iglob)
-          accel(2,iglob) = accel(2,iglob) / rmass(iglob)
-          accel(3,iglob) = accel(3,iglob) / rmass(iglob)
-! recovering original velocities and accelerations on boundaries (poro side)
-          velocs_poroelastic(1,iglob) = velocs_poroelastic(1,iglob) - deltatover2*accels_poroelastic(1,iglob)
-          velocs_poroelastic(2,iglob) = velocs_poroelastic(2,iglob) - deltatover2*accels_poroelastic(2,iglob)
-          velocs_poroelastic(3,iglob) = velocs_poroelastic(3,iglob) - deltatover2*accels_poroelastic(3,iglob)
-          accels_poroelastic(1,iglob) = accels_poroelastic(1,iglob) / rmass_solid_poroelastic(iglob)
-          accels_poroelastic(2,iglob) = accels_poroelastic(2,iglob) / rmass_solid_poroelastic(iglob)
-          accels_poroelastic(3,iglob) = accels_poroelastic(3,iglob) / rmass_solid_poroelastic(iglob)
-! assembling accelerations
-          accel(1,iglob) = ( accel(1,iglob) + accels_poroelastic(1,iglob) ) / &
-                                   ( 1.0/rmass(iglob) +1.0/rmass_solid_poroelastic(iglob) )
-          accel(2,iglob) = ( accel(2,iglob) + accels_poroelastic(2,iglob) ) / &
-                                   ( 1.0/rmass(iglob) +1.0/rmass_solid_poroelastic(iglob) )
-          accel(3,iglob) = ( accel(3,iglob) + accels_poroelastic(3,iglob) ) / &
-                                   ( 1.0/rmass(iglob) +1.0/rmass_solid_poroelastic(iglob) )
-          accels_poroelastic(1,iglob) = accel(1,iglob)
-          accels_poroelastic(2,iglob) = accel(2,iglob)
-          accels_poroelastic(3,iglob) = accel(3,iglob)
-! updating velocities
-          velocs_poroelastic(1,iglob) = velocs_poroelastic(1,iglob) + deltatover2*accels_poroelastic(1,iglob)
-          velocs_poroelastic(2,iglob) = velocs_poroelastic(2,iglob) + deltatover2*accels_poroelastic(2,iglob)
-          velocs_poroelastic(3,iglob) = velocs_poroelastic(3,iglob) + deltatover2*accels_poroelastic(3,iglob)
-          veloc(1,iglob) = veloc(1,iglob) + deltatover2*accel(1,iglob)
-          veloc(2,iglob) = veloc(2,iglob) + deltatover2*accel(2,iglob)
-          veloc(3,iglob) = veloc(3,iglob) + deltatover2*accel(3,iglob)
-! zeros w
-          accelw_poroelastic(1,iglob) = 0.d0
-          accelw_poroelastic(2,iglob) = 0.d0
-          accelw_poroelastic(3,iglob) = 0.d0
-          velocw_poroelastic(1,iglob) = 0.d0
-          velocw_poroelastic(2,iglob) = 0.d0
-          velocw_poroelastic(3,iglob) = 0.d0
+        ! recovering original velocities and accelerations on boundaries (elastic side)
+        veloc(1,iglob) = veloc(1,iglob) - deltatover2*accel(1,iglob)
+        veloc(2,iglob) = veloc(2,iglob) - deltatover2*accel(2,iglob)
+        veloc(3,iglob) = veloc(3,iglob) - deltatover2*accel(3,iglob)
+        accel(1,iglob) = accel(1,iglob) / rmass(iglob)
+        accel(2,iglob) = accel(2,iglob) / rmass(iglob)
+        accel(3,iglob) = accel(3,iglob) / rmass(iglob)
+        ! recovering original velocities and accelerations on boundaries (poro side)
+        velocs_poroelastic(1,iglob) = velocs_poroelastic(1,iglob) - deltatover2*accels_poroelastic(1,iglob)
+        velocs_poroelastic(2,iglob) = velocs_poroelastic(2,iglob) - deltatover2*accels_poroelastic(2,iglob)
+        velocs_poroelastic(3,iglob) = velocs_poroelastic(3,iglob) - deltatover2*accels_poroelastic(3,iglob)
+        accels_poroelastic(1,iglob) = accels_poroelastic(1,iglob) / rmass_solid_poroelastic(iglob)
+        accels_poroelastic(2,iglob) = accels_poroelastic(2,iglob) / rmass_solid_poroelastic(iglob)
+        accels_poroelastic(3,iglob) = accels_poroelastic(3,iglob) / rmass_solid_poroelastic(iglob)
+        ! assembling accelerations
+        accel(1,iglob) = ( accel(1,iglob) + accels_poroelastic(1,iglob) ) / &
+                                 ( 1.0/rmass(iglob) +1.0/rmass_solid_poroelastic(iglob) )
+        accel(2,iglob) = ( accel(2,iglob) + accels_poroelastic(2,iglob) ) / &
+                                 ( 1.0/rmass(iglob) +1.0/rmass_solid_poroelastic(iglob) )
+        accel(3,iglob) = ( accel(3,iglob) + accels_poroelastic(3,iglob) ) / &
+                                 ( 1.0/rmass(iglob) +1.0/rmass_solid_poroelastic(iglob) )
+        accels_poroelastic(1,iglob) = accel(1,iglob)
+        accels_poroelastic(2,iglob) = accel(2,iglob)
+        accels_poroelastic(3,iglob) = accel(3,iglob)
+        ! updating velocities
+        velocs_poroelastic(1,iglob) = velocs_poroelastic(1,iglob) + deltatover2*accels_poroelastic(1,iglob)
+        velocs_poroelastic(2,iglob) = velocs_poroelastic(2,iglob) + deltatover2*accels_poroelastic(2,iglob)
+        velocs_poroelastic(3,iglob) = velocs_poroelastic(3,iglob) + deltatover2*accels_poroelastic(3,iglob)
+        veloc(1,iglob) = veloc(1,iglob) + deltatover2*accel(1,iglob)
+        veloc(2,iglob) = veloc(2,iglob) + deltatover2*accel(2,iglob)
+        veloc(3,iglob) = veloc(3,iglob) + deltatover2*accel(3,iglob)
+        ! zeros w
+        accelw_poroelastic(1,iglob) = 0.d0
+        accelw_poroelastic(2,iglob) = 0.d0
+        accelw_poroelastic(3,iglob) = 0.d0
+        velocw_poroelastic(1,iglob) = 0.d0
+        velocw_poroelastic(2,iglob) = 0.d0
+        velocw_poroelastic(3,iglob) = 0.d0
 
-   if(SIMULATION_TYPE == 3) then
-!chris: to do
-   l = NSPEC_ADJOINT ! to avoid compilation warnings
-   endif
+        if (SIMULATION_TYPE == 3) then
+          !chris: to do
+          l = NSPEC_ADJOINT ! to avoid compilation warnings
+        endif
 
-        endif !if(icount(iglob) ==1)
-     enddo ! igll
+      endif !if (icount(iglob) ==1)
+    enddo ! igll
   enddo ! iface
 
 end subroutine compute_continuity_disp_po_el

@@ -433,7 +433,7 @@
              vsv=vsv*(1.0d0+dvs)
              vsh=vsh*(1.0d0+dvs)
              rho=rho*(1.0d0+drho)
-           elseif(THREE_D_MODEL == THREE_D_MODEL_SEA99_JP3D) then
+           else if(THREE_D_MODEL == THREE_D_MODEL_SEA99_JP3D) then
 ! sea99 + jp3d1994
              dvs = ZERO
              dvp = ZERO
@@ -455,7 +455,7 @@
                    vsh=vsh*(1.0d0+dvs)
                 endif
              endif
-           elseif(THREE_D_MODEL == THREE_D_MODEL_SEA99) then
+           else if(THREE_D_MODEL == THREE_D_MODEL_SEA99) then
 ! sea99
              dvs = ZERO
              dvp = ZERO
@@ -466,7 +466,7 @@
              vsv=vsv*(1.0d0+dvs)
              vsh=vsh*(1.0d0+dvs)
              rho=rho*(1.0d0+drho)
-           elseif(THREE_D_MODEL == THREE_D_MODEL_JP3D) then
+           else if(THREE_D_MODEL == THREE_D_MODEL_JP3D) then
 ! jp3d1994
              dvs = ZERO
              dvp = ZERO
@@ -481,7 +481,7 @@
                    vsh=vsh*(1.0d0+dvs)
                 endif
              endif
-           elseif(THREE_D_MODEL == THREE_D_MODEL_S362ANI .or. THREE_D_MODEL == THREE_D_MODEL_S362WMANI &
+           else if(THREE_D_MODEL == THREE_D_MODEL_S362ANI .or. THREE_D_MODEL == THREE_D_MODEL_S362WMANI &
                   .or. THREE_D_MODEL == THREE_D_MODEL_S362ANI_PREM .or. THREE_D_MODEL == THREE_D_MODEL_S29EA) then
 ! 3D Harvard models s362ani, s362wmani, s362ani_prem and s2.9ea
              dvpv = 0.
@@ -534,7 +534,7 @@
              vsv=vsv*(1.0d0+dvs)
              vsh=vsh*(1.0d0+dvs)
              rho=rho*(1.0d0+drho)
-           elseif(THREE_D_MODEL == THREE_D_MODEL_SEA99_JP3D) then
+           else if(THREE_D_MODEL == THREE_D_MODEL_SEA99_JP3D) then
 ! sea99 + jp3d1994
              dvs = ZERO
              dvp = ZERO
@@ -554,7 +554,7 @@
                 vsv=vsv*(1.0d0+dvs)
                 vsh=vsh*(1.0d0+dvs)
              endif
-           elseif(THREE_D_MODEL == THREE_D_MODEL_SEA99) then
+           else if(THREE_D_MODEL == THREE_D_MODEL_SEA99) then
 ! sea99
              dvs = ZERO
              dvp = ZERO
@@ -565,7 +565,7 @@
              vsv=vsv*(1.0d0+dvs)
              vsh=vsh*(1.0d0+dvs)
              rho=rho*(1.0d0+drho)
-           elseif(THREE_D_MODEL == THREE_D_MODEL_JP3D) then
+           else if(THREE_D_MODEL == THREE_D_MODEL_JP3D) then
 ! jp3d1994
              dvs = ZERO
              dvp = ZERO
@@ -578,7 +578,7 @@
                 vsv=vsv*(1.0d0+dvs)
                 vsh=vsh*(1.0d0+dvs)
              endif
-           elseif(THREE_D_MODEL == THREE_D_MODEL_S362ANI .or. THREE_D_MODEL == THREE_D_MODEL_S362WMANI &
+           else if(THREE_D_MODEL == THREE_D_MODEL_S362ANI .or. THREE_D_MODEL == THREE_D_MODEL_S362WMANI &
                   .or. THREE_D_MODEL == THREE_D_MODEL_S362ANI_PREM .or. THREE_D_MODEL == THREE_D_MODEL_S29EA) then
 ! 3D Harvard models s362ani, s362wmani, s362ani_prem and s2.9ea
              dvpv = 0.
@@ -630,7 +630,7 @@
            call aniso_mantle_model(r_prem,theta,phi,rho,c11,c12,c13,c14,c15,c16, &
               c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66,AMM_V)
 ! extend 3-D mantle model above the Moho to the surface before adding the crust
-         elseif(r_prem >= RMOHO/R_EARTH) then
+         else if(r_prem >= RMOHO/R_EARTH) then
            call xyz_2_rthetaphi_dble(xmesh,ymesh,zmesh,r_dummy,theta,phi)
            call reduce(theta,phi)
            r_moho = RMOHO/R_EARTH

@@ -1,5 +1,5 @@
 #############################################################################
-# boundary_definition.py                                                    
+# boundary_definition.py                                                    #
 # this file is part of GEOCUBIT                                             #
 #                                                                           #
 # Created by Emanuele Casarotti                                             #
@@ -7,18 +7,19 @@
 #                                                                           #
 #############################################################################
 #                                                                           #
-# GEOCUBIT is free software: you can redistribute it and/or modify          #
+# This program is free software; you can redistribute it and/or modify      #
 # it under the terms of the GNU General Public License as published by      #
-# the Free Software Foundation, either version 3 of the License, or         #
+# the Free Software Foundation; either version 2 of the License, or         #
 # (at your option) any later version.                                       #
 #                                                                           #
-# GEOCUBIT is distributed in the hope that it will be useful,               #
+# This program is distributed in the hope that it will be useful,           #
 # but WITHOUT ANY WARRANTY; without even the implied warranty of            #
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             #
 # GNU General Public License for more details.                              #
 #                                                                           #
-# You should have received a copy of the GNU General Public License         #
-# along with GEOCUBIT.  If not, see <http://www.gnu.org/licenses/>.         #
+# You should have received a copy of the GNU General Public License along   #
+# with this program; if not, write to the Free Software Foundation, Inc.,   #
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.               #
 #                                                                           #
 #############################################################################
 try:
@@ -99,16 +100,16 @@ def lateral_boundary_are_absorbing(ip=0,cpuxmin=0,cpuxmax=1,cpuymin=0,cpuymax=1,
     abs_xmax=[]
     abs_ymax=[]
     #
-    if ip in ip_xmin: 
+    if ip in ip_xmin:
         abs_xmin=xmin
         print 'proc ',ip,' is has absorbing boundary xmin'
-    if ip in ip_ymin:     
+    if ip in ip_ymin:
         print 'proc ',ip,' is has absorbing boundary ymin'
         abs_ymin=ymin
-    if ip in ip_xmax:     
+    if ip in ip_xmax:
         print 'proc ',ip,' is has absorbing boundary xmax'
         abs_xmax=xmax
-    if ip in ip_ymax:     
+    if ip in ip_ymax:
         print 'proc ',ip,' is has absorbing boundary ymax'
         abs_ymax=ymax
     return abs_xmin,abs_xmax,abs_ymin,abs_ymax
@@ -146,17 +147,17 @@ def define_surf(ip=0,cpuxmin=0,cpuxmax=1,cpuymin=0,cpuymax=1,cpux=1,cpuy=1):
     bottom_surf=[]
     list_vol=cubit.parse_cubit_list("volume","all")
     zmax_box=cubit.get_total_bounding_box("volume",list_vol)[7]
-    zmin_box=cubit.get_total_bounding_box("volume",list_vol)[6] #it is the z_min of the box ... box= xmin,xmax,d,ymin,ymax,d,zmin...    
+    zmin_box=cubit.get_total_bounding_box("volume",list_vol)[6] #it is the z_min of the box ... box= xmin,xmax,d,ymin,ymax,d,zmin...
     xmin_box=cubit.get_total_bounding_box("volume",list_vol)[0]
     xmax_box=cubit.get_total_bounding_box("volume",list_vol)[1]
     ymin_box=cubit.get_total_bounding_box("volume",list_vol)[3]
     ymax_box=cubit.get_total_bounding_box("volume",list_vol)[4]
     list_surf=cubit.parse_cubit_list("surface","all")
-    
+
     absorbing_surface_distance_tolerance=0.001
     topographic_surface_distance_tolerance=0.1
     topographic_surface_normal_tolerance=0.4
-    
+
     lv=[]
     for k in list_surf:
         sbox=cubit.get_bounding_box('surface',k)
@@ -169,8 +170,8 @@ def define_surf(ip=0,cpuxmin=0,cpuxmax=1,cpuymin=0,cpuymax=1,cpux=1,cpuy=1):
         if zmin_box == 0 and sbox[6] == 0:
              dzmin=0
         elif zmin_box == 0 or sbox[6] == 0:
-            dzmin=abs(sbox[6] - zmin_box)                                            
-        else:                                                    
+            dzmin=abs(sbox[6] - zmin_box)
+        else:
             dzmin=abs(sbox[6] - zmin_box)/max(abs(sbox[6]),abs(zmin_box))
         normal=cubit.get_surface_normal(k)
         zn=normal[2]
@@ -199,8 +200,8 @@ def define_surf(ip=0,cpuxmin=0,cpuxmax=1,cpuymin=0,cpuymax=1,cpux=1,cpuy=1):
     for c in labelps:
         p=cubit.get_center_point("curve",c)
         lp.append(p)
-    
-    for k in list_surf: 
+
+    for k in list_surf:
         center_point = cubit.get_center_point("surface", k)
         for p in lp:
             try:
@@ -247,7 +248,7 @@ def build_block(vol_list,name,id_0=1,top_surf=None,optionsea=False):
         seaup=False
         sealevel=False
         seathres=False
-    
+
     #
     block_list=cubit.get_block_id_list()
     if len(block_list) > 0:
@@ -281,7 +282,7 @@ def build_block(vol_list,name,id_0=1,top_surf=None,optionsea=False):
             command= 'block '+str(id_block)+' hex in vol '+str(v)+' except hex in vol '+str(list(v_other))
             print command
             command = command.replace("["," ").replace("]"," ")
-            cubit.cmd(command) 
+            cubit.cmd(command)
             command = "block "+str(id_block)+" name '"+n+"'"
             cubit.cmd(command)
 
@@ -340,17 +341,77 @@ def define_bc(*args,**keys):
         id_0=cubit.get_next_block_id()
         v_list,name_list=define_block()
         build_block(v_list,name_list,id_0,top_surf,optionsea=optionsea)
-        #
+        # entities
+        entities=args[0]
+        print entities
+        for entity in entities:
+            print "##entity: "+str(entity)
+            # block for free surface (w/ topography)
+            #print '## topo surface block: ' + str(topo)
+            if len(top_surf) == 0:
+              print ""
+              print "no topo surface found, please create block face_topo manually..."
+              print ""
+            else:
+              build_block_side(top_surf,entity+'_topo',obj=entity,id_0=1001)
+            # model has parallel sides (e.g. a block model )
+            # xmin - blocks
+            if len(xmin) == 0:
+              print ""
+              print "no abs_xmin surface found, please create block manually..."
+              print ""
+            else:
+              build_block_side(xmin,entity+'_abs_xmin',obj=entity,id_0=1002)
+            # xmax - blocks
+            if len(xmax) == 0:
+              print ""
+              print "no abs_xmax surface found, please create block manually..."
+              print ""
+            else:
+              build_block_side(xmax,entity+'_abs_xmax',obj=entity,id_0=1003)
+            # ymin - blocks
+            if len(ymin) == 0:
+              print ""
+              print "no abs_xmin surface found, please create block manually..."
+              print ""
+            else:
+              build_block_side(ymin,entity+'_abs_ymin',obj=entity,id_0=1004)
+            # ymax - blocks
+            if len(ymax) == 0:
+              print ""
+              print "no abs_ymax surface found, please create block manually..."
+              print ""
+            else:
+              build_block_side(ymax,entity+'_abs_ymax',obj=entity,id_0=1005)
+            # bottom - blocks
+            if len(bottom_surf) == 0:
+              print ""
+              print "no abs_bottom surface found, please create block manually..."
+              print ""
+            else:
+              build_block_side(bottom_surf,entity+'_abs_bottom',obj=entity,id_0=1006)
+            # block for all sides together
+            # NOTE:
+            #    this might fail in some CUBIT versions, when elements are already
+            #    assigned to other blocks
+            #cubit.cmd('set duplicate block elements on')
+            #try:
+            #  build_block_side(absorbing_surf,entity+'_abs',obj=entity,id_0=2001)
+            #except:
+            #  print "no combined surface with all sides created"
     elif closed:
+        print "##closed region"
         surf=define_absorbing_surf_sphere()
         v_list,name_list=define_block()
         build_block(v_list,name_list,id_0)
+        # entities
         entities=args[0]
-        id_side=1
+        id_side=1001
+        print entities
         for entity in entities:
             build_block_side(surf,entity+'_closedvol',obj=entity,id_0=id_side)
             id_side=id_side+1
-            
+
 #########################################
 
 
@@ -398,10 +459,10 @@ def select_bottom_curve(lc):
 
 
 def get_ordered_node_surf(lsurface,icurve):
-    if not isinstance(lsurface,str): 
+    if not isinstance(lsurface,str):
         lsurf=list2str(lsurface)
     #
-    if not isinstance(icurve,str): 
+    if not isinstance(icurve,str):
         icurvestr=str(icurve)
     orient_nodes_surf=[]
     #
@@ -441,7 +502,7 @@ def get_ordered_node_surf(lsurface,icurve):
         try:
             nodes_ls.remove(n)
         except:
-            pass             
+            pass
     orient_nodes_surf=orient_nodes_surf+nodes2
     #
     while len(orient_nodes_surf) < nnode:
@@ -500,7 +561,7 @@ def check_bc(iproc,xmin,xmax,ymin,ymax,cpux,cpuy,cpuxmin,cpuxmax,cpuymin,cpuymax
     boundary=check_bc(iproc,xmin,xmax,ymin,ymax,cpux,cpuy,cpuxmin,cpuxmax,cpuymin,cpuymax)
     #
     set the boundary condition during the collecting phase and group the nodes of the vertical surface in groups for the merging phase
-    iproc is the value of the processor 
+    iproc is the value of the processor
     xmin,ymin,ymax,ymin are the list of iproc that have at least one absorbing boundary condition
     """
     #
@@ -511,7 +572,7 @@ def check_bc(iproc,xmin,xmax,ymin,ymax,cpux,cpuy,cpuxmin,cpuxmax,cpuymin,cpuymax
     #
     #
     from sets import Set #UPGRADE.... the sets module is deprecated after python 2.6
-    
+
     cubit.cmd('set info off')
     cubit.cmd('set echo off')
     nodes_curve_ymax,orient_nodes_surf_ymax=get_ordered_node_surf(surf_ymax,curve_bottom_ymax)
@@ -524,8 +585,8 @@ def check_bc(iproc,xmin,xmax,ymin,ymax,cpux,cpuy,cpuxmin,cpuxmax,cpuymin,cpuymax
     c_xmaxymax=Set(nodes_curve_xmax).intersection(nodes_curve_ymax)
     cubit.cmd('set info on')
     cubit.cmd('set echo on')
-    
-    
+
+
     #
     orient=[]
     nd=[]
@@ -538,7 +599,7 @@ def check_bc(iproc,xmin,xmax,ymin,ymax,cpux,cpuy,cpuxmin,cpuxmax,cpuymin,cpuymax
     c_xminymin=[c[1] for c in result]
     #
     orient=[]
-    nd=[]    
+    nd=[]
     for n in c_xminymax:
         v = cubit.get_nodal_coordinates(n)
         orient.append(v[2])
@@ -579,7 +640,7 @@ def check_bc(iproc,xmin,xmax,ymin,ymax,cpux,cpuy,cpuxmin,cpuxmax,cpuymin,cpuymax
     boundary['node_curve_xminymax']=c_xminymax
     boundary['node_curve_xmaxymin']=c_xmaxymin
     boundary['node_curve_xmaxymax']=c_xmaxymax
-    
+
     #print boundary['node_curve_xminymin']
     #print     boundary['node_curve_xminymax']
     #print     boundary['node_curve_xmaxymin']

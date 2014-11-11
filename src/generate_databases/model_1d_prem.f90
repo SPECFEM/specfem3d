@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -46,7 +47,7 @@
 
 ! given a GLL point, returns super-imposed velocity model values
 
-  use generate_databases_par,only: nspec => NSPEC_AB,ibool
+  use generate_databases_par,only: nspec => NSPEC_AB,ibool,HUGEVAL,R_EARTH
   use create_regions_mesh_ext_par
   implicit none
 
@@ -87,7 +88,7 @@
                     num_free_surface_faces,free_surface_ispec,free_surface_ijk)
 
   ! depth in Z-direction
-  if( distmin < HUGEVAL ) then
+  if (distmin < HUGEVAL) then
     depth = elevation - zloc
   else
     depth = - zloc
@@ -128,7 +129,7 @@
   !
   !--- inner core
   !
-  if(r >= 0.d0 .and. r <= RICB) then
+  if (r >= 0.d0 .and. r <= RICB) then
     drhodr=-2.0d0*8.8381d0*x
     rho=13.0885d0-8.8381d0*x*x
     vp=11.2622d0-6.3640d0*x*x
@@ -138,7 +139,7 @@
   !
   !--- outer core
   !
-  else if(r > RICB .and. r <= RCMB) then
+  else if (r > RICB .and. r <= RCMB) then
     drhodr=-1.2638d0-2.0d0*3.6426d0*x-3.0d0*5.5281d0*x*x
     rho=12.5815d0-1.2638d0*x-3.6426d0*x*x-5.5281d0*x*x*x
     vp=11.0487d0-4.0362d0*x+4.8023d0*x*x-13.5732d0*x*x*x
@@ -148,7 +149,7 @@
   !
   !--- D" at the base of the mantle
   !
-  else if(r > RCMB .and. r <= RTOPDDOUBLEPRIME) then
+  else if (r > RCMB .and. r <= RTOPDDOUBLEPRIME) then
     drhodr=-6.4761d0+2.0d0*5.5283d0*x-3.0d0*3.0807d0*x*x
     rho=7.9565d0-6.4761d0*x+5.5283d0*x*x-3.0807d0*x*x*x
     vp=15.3891d0-5.3181d0*x+5.5242d0*x*x-2.5514d0*x*x*x
@@ -158,14 +159,14 @@
   !
   !--- mantle: from top of D" to d670
   !
-  else if(r > RTOPDDOUBLEPRIME .and. r <= R771) then
+  else if (r > RTOPDDOUBLEPRIME .and. r <= R771) then
     drhodr=-6.4761d0+2.0d0*5.5283d0*x-3.0d0*3.0807d0*x*x
     rho=7.9565d0-6.4761d0*x+5.5283d0*x*x-3.0807d0*x*x*x
     vp=24.9520d0-40.4673d0*x+51.4832d0*x*x-26.6419d0*x*x*x
     vs=11.1671d0-13.7818d0*x+17.4575d0*x*x-9.2777d0*x*x*x
     Qmu=312.0d0
     Qkappa=57827.0d0
-  else if(r > R771 .and. r <= R670) then
+  else if (r > R771 .and. r <= R670) then
     drhodr=-6.4761d0+2.0d0*5.5283d0*x-3.0d0*3.0807d0*x*x
     rho=7.9565d0-6.4761d0*x+5.5283d0*x*x-3.0807d0*x*x*x
     vp=29.2766d0-23.6027d0*x+5.5242d0*x*x-2.5514d0*x*x*x
@@ -175,28 +176,28 @@
   !
   !--- mantle: above d670
   !
-  else if(r > R670 .and. r <= R600) then
+  else if (r > R670 .and. r <= R600) then
     drhodr=-1.4836d0
     rho=5.3197d0-1.4836d0*x
     vp=19.0957d0-9.8672d0*x
     vs=9.9839d0-4.9324d0*x
     Qmu=143.0d0
     Qkappa=57827.0d0
-  else if(r > R600 .and. r <= R400) then
+  else if (r > R600 .and. r <= R400) then
     drhodr=-8.0298d0
     rho=11.2494d0-8.0298d0*x
     vp=39.7027d0-32.6166d0*x
     vs=22.3512d0-18.5856d0*x
     Qmu=143.0d0
     Qkappa=57827.0d0
-  else if(r > R400 .and. r <= R220) then
+  else if (r > R400 .and. r <= R220) then
     drhodr=-3.8045d0
     rho=7.1089d0-3.8045d0*x
     vp=20.3926d0-12.2569d0*x
     vs=8.9496d0-4.4597d0*x
     Qmu=143.0d0
     Qkappa=57827.0d0
-  else if(r > R220 .and. r <= R80) then
+  else if (r > R220 .and. r <= R80) then
     drhodr=0.6924d0
     rho=2.6910d0+0.6924d0*x
     vp=4.1875d0+3.9382d0*x
@@ -204,9 +205,9 @@
     Qmu=80.0d0
     Qkappa=57827.0d0
   else
-  if(CRUSTAL .and. .not. SUPPRESS_CRUSTAL_MESH) then
+  if (CRUSTAL .and. .not. SUPPRESS_CRUSTAL_MESH) then
 ! fill with PREM mantle and later add CRUST2.0
-    if(r > R80) then
+    if (r > R80) then
       ! density/velocity from mantle just below moho
       drhodr=0.6924d0
       rho=2.6910d0+0.6924d0*x
@@ -218,7 +219,7 @@
     endif
   else
 ! use PREM crust
-    if(r > R80 .and. r <= RMOHO) then
+    if (r > R80 .and. r <= RMOHO) then
       drhodr=0.6924d0
       rho=2.6910d0+0.6924d0*x
       vp=4.1875d0+3.9382d0*x
@@ -235,7 +236,7 @@
       Qmu=600.0d0
       Qkappa=57827.0d0
 
-    else if(r > RMOHO .and. r <= RMIDDLE_CRUST) then
+    else if (r > RMOHO .and. r <= RMIDDLE_CRUST) then
       drhodr=0.0d0
       rho=2.9d0
       vp=6.8d0
@@ -244,7 +245,7 @@
       Qkappa=57827.0d0
 
       ! same properties everywhere in PREM crust if we decide to define only one layer in the crust
-      if(ONE_CRUST) then
+      if (ONE_CRUST) then
         drhodr=0.0d0
         rho=2.6d0
         vp=5.8d0
@@ -253,7 +254,7 @@
         Qkappa=57827.0d0
       endif
 
-    else if(r > RMIDDLE_CRUST .and. r <= ROCEAN) then
+    else if (r > RMIDDLE_CRUST .and. r <= ROCEAN) then
       drhodr=0.0d0
       rho=2.6d0
       vp=5.8d0
@@ -261,7 +262,7 @@
       Qmu=600.0d0
       Qkappa=57827.0d0
     ! for density profile for gravity, we do not check that r <= R_EARTH
-    else if(r > ROCEAN) then
+    else if (r > ROCEAN) then
       drhodr=0.0d0
       rho=2.6d0
       vp=5.8d0
@@ -301,62 +302,56 @@
 
   ! local parameters
   double precision             :: r0,r,x_prem
-  !double precision             :: ro_prem,vp_prem,vs_prem
-  !character(len=3), intent(in) :: param !rho, vs,vp
 
   r0=sqrt(xloc**2+yloc**2+zloc**2)
-  !  print*,'xloc,yloc,zloc,r0,idom',xloc,yloc,zloc,r0,idom
   r=r0/1000.
 
-  x_prem=r/6371.     ! Radius (normalized to x(surface)=1 )
-  !  print*,'x_prem',x_prem
-  IF(idom==1)THEN        ! upper crustal layer
-     !print*,'I am in domain 1'
+  x_prem=r/6371.     ! Radius (normalized to x(surface)=1)
+  if (idom==1)then        ! upper crustal layer
      ro_prem=2.6
      vp_prem=5.8
      vs_prem=3.2
-  !    print*,'ro,vp,vs form domain 1',ro_prem,vp_prem,vs_prem
-  else if(idom==2)THEN
+  else if (idom==2)then
      ro_prem=2.9                       ! lower crustal layer
      vp_prem=6.8
      vs_prem=3.9
-  else if(idom==3)THEN
+  else if (idom==3)then
      ro_prem=2.691+.6924*x_prem             ! upper mantle
      vp_prem=4.1875+3.9382*x_prem
      vs_prem=2.1519+2.3481*x_prem
-  else if(idom==4)THEN
+  else if (idom==4)then
      ro_prem=7.1089-3.8045*x_prem
      vp_prem=20.3926-12.2569*x_prem
      vs_prem=8.9496-4.4597*x_prem
-  else if(idom==5)THEN
+  else if (idom==5)then
      ro_prem=11.2494-8.0298*x_prem
      vp_prem=39.7027-32.6166*x_prem
      vs_prem=22.3512-18.5856*x_prem
-  else if(idom==6)THEN
+  else if (idom==6)then
      ro_prem=5.3197-1.4836*x_prem
      vp_prem=19.0957-9.8672*x_prem
      vs_prem=9.9839-4.9324*x_prem
-  else if(idom==7)THEN   !lower mantle
+  else if (idom==7)then   !lower mantle
      ro_prem=7.9565-6.4761*x_prem+5.5283*x_prem**2-3.0807*x_prem**3
      vp_prem=29.2766-23.6027*x_prem+5.5242*x_prem**2-2.5514*x_prem**3
      vs_prem=22.3459-17.2473*x_prem-2.0834*x_prem**2+0.9783*x_prem**3
-  else if(idom==8)THEN
+  else if (idom==8)then
      ro_prem=7.9565-6.4761*x_prem+5.5283*x_prem**2-3.0807*x_prem**3
      vp_prem=24.9520-40.4673*x_prem+51.4832*x_prem**2-26.6419*x_prem**3
      vs_prem=11.1671-13.7818*x_prem+17.4575*x_prem**2-9.2777*x_prem**3
-  else if(idom==9)THEN
+  else if (idom==9)then
      ro_prem=7.9565-6.4761*x_prem+5.5283*x_prem**2-3.0807*x_prem**3
      vp_prem=15.3891-5.3181*x_prem+5.5242*x_prem**2-2.5514*x_prem**3
      vs_prem=6.9254+1.4672*x_prem-2.0834*x_prem**2+.9783*x_prem**3
-  else if(idom==10)THEN  ! outer core
+  else if (idom==10)then  ! outer core
      ro_prem=12.5815-1.2638*x_prem-3.6426*x_prem**2-5.5281*x_prem**3
      vp_prem=11.0487-4.0362*x_prem+4.8023*x_prem**2-13.5732*x_prem**3
      vs_prem=0.00
-  else if(idom==11)THEN                        ! inner core
+  else if (idom==11)then                        ! inner core
      ro_prem=13.0885-8.8381*x_prem**2
      vp_prem=11.2622-6.3640*x_prem**2
      vs_prem=3.6678-4.4475*x_prem**2
-  ENDIF
+  endif
 
   !    print*,'ro,vp,vs passed from routine and not multiplied',ro_prem,vp_prem,vs_prem
 

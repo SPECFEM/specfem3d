@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -31,9 +32,9 @@
 
 ! returns iface_id of face in reference element, determined by corner locations xcoord/ycoord/zcoord;
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: ispec,nspec,nglob,iface_id
 
@@ -128,10 +129,10 @@
   iloc = minloc(midpoint_distances)
 
   ! checks that found midpoint is close enough
-  if( midpoint_distances(iloc(1)) > 1.e-4 * &
+  if (midpoint_distances(iloc(1)) > 1.e-4 * &
           (   (xcoord(1)-xcoord(2))**2 &
             + (ycoord(1)-ycoord(2))**2 &
-            + (zcoord(1)-zcoord(2))**2 ) ) then
+            + (zcoord(1)-zcoord(2))**2)) then
     print*,'error element face midpoint distance:',midpoint_distances(iloc(1)), &
           (xcoord(1)-xcoord(2))**2+(ycoord(1)-ycoord(2))**2+(zcoord(1)-zcoord(2))**2
     ! corner locations
@@ -162,9 +163,9 @@
 
 ! returns local indices in ijk_face for specified face
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: iface !,nspec,nglob
 
@@ -177,11 +178,11 @@
 
 ! sets i,j,k indices of GLL points on boundary face
   ngll = 0
-  select case( iface )
+  select case (iface)
 
   ! reference xmin face
-  case(1)
-    if( NGLLA /= NGLLY .or. NGLLB /= NGLLZ ) stop 'error absorbing face 1 indexing'
+  case (1)
+    if (NGLLA /= NGLLY .or. NGLLB /= NGLLZ) stop 'error absorbing face 1 indexing'
     i_gll = 1
     do k=1,NGLLZ
       do j=1,NGLLY
@@ -193,8 +194,8 @@
     enddo
 
   ! reference xmax face
-  case(2)
-    if( NGLLA /= NGLLY .or. NGLLB /= NGLLZ ) stop 'error absorbing face 2 indexing'
+  case (2)
+    if (NGLLA /= NGLLY .or. NGLLB /= NGLLZ) stop 'error absorbing face 2 indexing'
     i_gll = NGLLX
     do k=1,NGLLZ
       do j=1,NGLLY
@@ -206,8 +207,8 @@
     enddo
 
   ! reference ymin face
-  case(3)
-    if( NGLLA /= NGLLX .or. NGLLB /= NGLLZ ) stop 'error absorbing face 3 indexing'
+  case (3)
+    if (NGLLA /= NGLLX .or. NGLLB /= NGLLZ) stop 'error absorbing face 3 indexing'
     j_gll = 1
     do k=1,NGLLZ
       do i=1,NGLLX
@@ -219,8 +220,8 @@
     enddo
 
   ! reference ymax face
-  case(4)
-    if( NGLLA /= NGLLX .or. NGLLB /= NGLLZ ) stop 'error absorbing face 4 indexing'
+  case (4)
+    if (NGLLA /= NGLLX .or. NGLLB /= NGLLZ) stop 'error absorbing face 4 indexing'
     j_gll = NGLLY
     do k=1,NGLLZ
       do i=1,NGLLX
@@ -232,8 +233,8 @@
     enddo
 
   ! reference bottom face
-  case(5)
-    if( NGLLA /= NGLLX .or. NGLLB /= NGLLY ) stop 'error absorbing face 5 indexing'
+  case (5)
+    if (NGLLA /= NGLLX .or. NGLLB /= NGLLY) stop 'error absorbing face 5 indexing'
     k_gll = 1
     do j=1,NGLLY
       do i=1,NGLLX
@@ -245,8 +246,8 @@
     enddo
 
   ! reference bottom face
-  case(6)
-    if( NGLLA /= NGLLX .or. NGLLB /= NGLLY ) stop 'error absorbing face 6 indexing'
+  case (6)
+    if (NGLLA /= NGLLX .or. NGLLB /= NGLLY) stop 'error absorbing face 6 indexing'
     k_gll = NGLLZ
     do j=1,NGLLY
       do i=1,NGLLX
@@ -263,7 +264,7 @@
   end select
 
   ! checks number of gll points set on face
-  if( ngll /= NGLLA*NGLLB ) then
+  if (ngll /= NGLLA*NGLLB) then
     print*,'error element face ngll:',ngll,NGLLA,NGLLB
     stop 'error element face ngll'
   endif
@@ -281,9 +282,9 @@ end subroutine get_element_face_gll_indices
 
 ! only changes direction of normal to point outwards of element
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: ispec,iface,nspec,nglob
 
@@ -317,7 +318,7 @@ end subroutine get_element_face_gll_indices
   face_n(2) = - (xcoord(2)-xcoord(1))*(zcoord(3)-zcoord(1)) + (zcoord(2)-zcoord(1))*(xcoord(3)-xcoord(1))
   face_n(3) =   (xcoord(2)-xcoord(1))*(ycoord(3)-ycoord(1)) - (ycoord(2)-ycoord(1))*(xcoord(3)-xcoord(1))
   tmp = sqrt( face_n(1)*face_n(1) + face_n(2)*face_n(2) + face_n(3)*face_n(3) )
-  if( abs(tmp) < TINYVAL ) then
+  if (abs(tmp) < TINYVAL) then
     print*,'error get face normal: length',tmp
     print*,'normal:',face_n(:)
     call exit_mpi(0,'error get element face normal')
@@ -327,18 +328,18 @@ end subroutine get_element_face_gll_indices
 ! checks that this normal direction is outwards of element:
   ! takes additional corner out of face plane and determines scalar product (dot product) to normal
   iglob = 0
-  select case( iface )
-  case(1) ! opposite to xmin face
+  select case (iface)
+  case (1) ! opposite to xmin face
     iglob = ibool(NGLLX,1,1,ispec)
-  case(2) ! opposite to xmax face
+  case (2) ! opposite to xmax face
     iglob = ibool(1,1,1,ispec)
-  case(3) ! opposite to ymin face
+  case (3) ! opposite to ymin face
     iglob = ibool(1,NGLLY,1,ispec)
-  case(4) ! opposite to ymax face
+  case (4) ! opposite to ymax face
     iglob = ibool(1,1,1,ispec)
-  case(5) ! opposite to bottom
+  case (5) ! opposite to bottom
     iglob = ibool(1,1,NGLLZ,ispec)
-  case(6) ! opposite to top
+  case (6) ! opposite to top
     iglob = ibool(1,1,1,ispec)
   case default
     call exit_mpi(0,'error get element face iface value')
@@ -352,7 +353,7 @@ end subroutine get_element_face_gll_indices
   tmp = v_tmp(1)*face_n(1) + v_tmp(2)*face_n(2) + v_tmp(3)*face_n(3)
 
   ! makes sure normal points outwards, that is points away from this additional corner and scalar product (dot product) is negative
-  if( tmp > 0.0_CUSTOM_REAL ) then
+  if (tmp > 0.0_CUSTOM_REAL) then
     face_n(:) = - face_n(:)
   endif
 
@@ -360,14 +361,14 @@ end subroutine get_element_face_gll_indices
   ! note: to avoid floating-point exception we use dble()
   !         values of normal(:) could be very small, almost zero, and lead to underflow
   tmp = sngl(dble(normal(1))**2 + dble(normal(2))**2 + dble(normal(3))**2)
-  if( tmp < TINYVAL ) then
+  if (tmp < TINYVAL) then
     normal(:) = face_n(:)
     return
   endif
 
   ! otherwise determines orientation of normal and flips direction such that normal points outwards
   tmp = face_n(1)*normal(1) + face_n(2)*normal(2) + face_n(3)*normal(3)
-  if( tmp < 0.0_CUSTOM_REAL ) then
+  if (tmp < 0.0_CUSTOM_REAL) then
     !swap
     normal(:) = - normal(:)
   endif
@@ -387,9 +388,9 @@ end subroutine get_element_face_gll_indices
 !   idirect = 1 to point outwards of/away from element
 !   idirect = 2 to point into element
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: ispec,iface,nspec,nglob
 
@@ -425,8 +426,8 @@ end subroutine get_element_face_gll_indices
   face_n(1) =   (ycoord(2)-ycoord(1))*(zcoord(3)-zcoord(1)) - (zcoord(2)-zcoord(1))*(ycoord(3)-ycoord(1))
   face_n(2) = - (xcoord(2)-xcoord(1))*(zcoord(3)-zcoord(1)) + (zcoord(2)-zcoord(1))*(xcoord(3)-xcoord(1))
   face_n(3) =   (xcoord(2)-xcoord(1))*(ycoord(3)-ycoord(1)) - (ycoord(2)-ycoord(1))*(xcoord(3)-xcoord(1))
-  tmp = sqrt( face_n(1)**2 + face_n(2)**2 + face_n(3)**2 )
-  if( abs(tmp) < TINYVAL ) then
+  tmp = sqrt( face_n(1)**2 + face_n(2)**2 + face_n(3)**2)
+  if (abs(tmp) < TINYVAL) then
     print*,'error get face normal: length',tmp
     print*,'normal:',face_n(:)
     call exit_mpi(0,'error get element face normal')
@@ -436,18 +437,18 @@ end subroutine get_element_face_gll_indices
   ! checks that this normal direction is outwards of element:
   ! takes additional corner out of face plane and determines scalar product (dot product) to normal
   iglob = 0
-  select case( iface )
-  case(1) ! opposite to xmin face
+  select case (iface)
+  case (1) ! opposite to xmin face
     iglob = ibool(NGLLX,1,1,ispec)
-  case(2) ! opposite to xmax face
+  case (2) ! opposite to xmax face
     iglob = ibool(1,1,1,ispec)
-  case(3) ! opposite to ymin face
+  case (3) ! opposite to ymin face
     iglob = ibool(1,NGLLY,1,ispec)
-  case(4) ! opposite to ymax face
+  case (4) ! opposite to ymax face
     iglob = ibool(1,1,1,ispec)
-  case(5) ! opposite to bottom
+  case (5) ! opposite to bottom
     iglob = ibool(1,1,NGLLZ,ispec)
-  case(6) ! opposite to top
+  case (6) ! opposite to top
     iglob = ibool(1,1,1,ispec)
   case default
     call exit_mpi(0,'error get element face iface value')
@@ -461,12 +462,12 @@ end subroutine get_element_face_gll_indices
   tmp = v_tmp(1)*face_n(1) + v_tmp(2)*face_n(2) + v_tmp(3)*face_n(3)
 
   ! makes sure normal points outwards, that is points away from this additional corner and scalar product (dot product) is negative
-  if( tmp > 0.0 ) then
+  if (tmp > 0.0) then
     face_n(:) = - face_n(:)
   endif
 
   ! in case given normal has zero length, exit
-  if( ( normal(1)**2 + normal(2)**2 + normal(3)**2 ) < TINYVAL ) then
+  if (( normal(1)**2 + normal(2)**2 + normal(3)**2) < TINYVAL) then
     print*,'problem: given normal is zero'
     idirect = 0
     return
@@ -474,7 +475,7 @@ end subroutine get_element_face_gll_indices
 
 ! otherwise determines orientation of normal
   tmp = face_n(1)*normal(1) + face_n(2)*normal(2) + face_n(3)*normal(3)
-  if( tmp < 0.0 ) then
+  if (tmp < 0.0) then
     ! points into element
     idirect = 2
   else
@@ -492,9 +493,9 @@ end subroutine get_element_face_gll_indices
                                 ibool,nspec,nglob,xstore_dummy,ystore_dummy,zstore_dummy, &
                                 iface_all_corner_ijk)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer,intent(in) :: ispec,iface_ref,nspec,nglob
 

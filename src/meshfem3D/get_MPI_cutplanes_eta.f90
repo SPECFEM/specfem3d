@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -33,9 +34,10 @@
 ! and the right cut plane of the last slice are not used
 ! in the solver except if we want to have periodic conditions
 
+  use constants
+
   implicit none
 
-  include "constants.h"
   include "constants_meshfem3D.h"
 
   integer nspec,myrank
@@ -61,12 +63,12 @@
   integer nspec2Dtheor1,nspec2Dtheor2
 
 ! processor identification
-  character(len=256) prname
+  character(len=MAX_STRING_LEN) :: prname
 
 ! theoretical number of surface elements in the buffers
 ! cut planes along eta=constant correspond to XI faces
-      nspec2Dtheor1 = NSPEC2D_A_XI
-      nspec2Dtheor2 = NSPEC2D_B_XI
+  nspec2Dtheor1 = NSPEC2D_A_XI
+  nspec2Dtheor2 = NSPEC2D_B_XI
 
 ! write the MPI buffers for the left and right edges of the slice
 ! and the position of the points to check that the buffers are fine
@@ -88,28 +90,28 @@
   ispecc1=0
 
   do ispec=1,nspec
-  if(iMPIcut_eta(1,ispec)) then
+    if (iMPIcut_eta(1,ispec)) then
 
-    ispecc1=ispecc1+1
+      ispecc1=ispecc1+1
 
-! loop on all the points in that 2-D element, including edges
-  iy = 1
-  do ix=1,NGLLX_M
-      do iz=1,NGLLZ_M
+      ! loop on all the points in that 2-D element, including edges
+      iy = 1
+      do ix=1,NGLLX_M
+        do iz=1,NGLLZ_M
 
-! select point, if not already selected
-  if(.not. mask_ibool(ibool(ix,iy,iz,ispec))) then
-      mask_ibool(ibool(ix,iy,iz,ispec)) = .true.
-      npoin2D_eta = npoin2D_eta + 1
+          ! select point, if not already selected
+          if (.not. mask_ibool(ibool(ix,iy,iz,ispec))) then
+            mask_ibool(ibool(ix,iy,iz,ispec)) = .true.
+            npoin2D_eta = npoin2D_eta + 1
 
-      write(10,*) ibool(ix,iy,iz,ispec),xstore(ix,iy,iz,ispec), &
-              ystore(ix,iy,iz,ispec),zstore(ix,iy,iz,ispec)
-  endif
+            write(10,*) ibool(ix,iy,iz,ispec),xstore(ix,iy,iz,ispec), &
+                        ystore(ix,iy,iz,ispec),zstore(ix,iy,iz,ispec)
+          endif
 
+        enddo
       enddo
-  enddo
 
-  endif
+    endif
   enddo
 
 ! put flag to indicate end of the list of points
@@ -121,7 +123,7 @@
   close(10)
 
 ! compare number of surface elements detected to analytical value
-  if(ispecc1 /= nspec2Dtheor1 .and. ispecc1 /= nspec2Dtheor2) &
+  if (ispecc1 /= nspec2Dtheor1 .and. ispecc1 /= nspec2Dtheor2) &
     call exit_MPI(myrank,'error MPI cut-planes detection in eta=left')
 
 !
@@ -141,28 +143,28 @@
   ispecc2=0
 
   do ispec=1,nspec
-  if(iMPIcut_eta(2,ispec)) then
+    if (iMPIcut_eta(2,ispec)) then
 
-    ispecc2=ispecc2+1
+      ispecc2=ispecc2+1
 
-! loop on all the points in that 2-D element, including edges
-  iy = NGLLY_M
-  do ix=1,NGLLX_M
-      do iz=1,NGLLZ_M
+      ! loop on all the points in that 2-D element, including edges
+      iy = NGLLY_M
+      do ix=1,NGLLX_M
+        do iz=1,NGLLZ_M
 
-! select point, if not already selected
-  if(.not. mask_ibool(ibool(ix,iy,iz,ispec))) then
-      mask_ibool(ibool(ix,iy,iz,ispec)) = .true.
-      npoin2D_eta = npoin2D_eta + 1
+          ! select point, if not already selected
+          if (.not. mask_ibool(ibool(ix,iy,iz,ispec))) then
+            mask_ibool(ibool(ix,iy,iz,ispec)) = .true.
+            npoin2D_eta = npoin2D_eta + 1
 
-      write(10,*) ibool(ix,iy,iz,ispec),xstore(ix,iy,iz,ispec), &
-              ystore(ix,iy,iz,ispec),zstore(ix,iy,iz,ispec)
-  endif
+            write(10,*) ibool(ix,iy,iz,ispec),xstore(ix,iy,iz,ispec), &
+                        ystore(ix,iy,iz,ispec),zstore(ix,iy,iz,ispec)
+          endif
 
+        enddo
       enddo
-  enddo
 
-  endif
+    endif
   enddo
 
 ! put flag to indicate end of the list of points
@@ -174,7 +176,7 @@
   close(10)
 
 ! compare number of surface elements detected to analytical value
-  if(ispecc2 /= nspec2Dtheor1 .and. ispecc2 /= nspec2Dtheor2) &
+  if (ispecc2 /= nspec2Dtheor1 .and. ispecc2 /= nspec2Dtheor2) &
     call exit_MPI(myrank,'error MPI cut-planes detection in eta=right')
 
   end subroutine get_MPI_cutplanes_eta

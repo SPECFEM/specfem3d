@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -67,13 +68,13 @@
   ! time marching
 
   ! acoustic domain
-  if( ACOUSTIC_SIMULATION ) call update_displacement_acoustic()
+  if (ACOUSTIC_SIMULATION) call update_displacement_acoustic()
 
   ! elastic domain
-  if( ELASTIC_SIMULATION ) call update_displacement_elastic()
+  if (ELASTIC_SIMULATION) call update_displacement_elastic()
 
   ! poroelastic domain
-  if( POROELASTIC_SIMULATION ) call update_displacement_poroelastic()
+  if (POROELASTIC_SIMULATION) call update_displacement_poroelastic()
 
   ! adjoint simulations: moho kernel
   if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
@@ -99,42 +100,48 @@
 
   ! Newmark time marching
 
-  if( .not. GPU_MODE ) then
+  if (.not. GPU_MODE) then
     ! wavefields on CPU
     ! updates (forward) acoustic potentials
-    if(PML_CONDITIONS .and. NSPEC_CPML > 0)then
-      potential_acoustic_old(:) = potential_acoustic(:) + deltatsqover2*4._CUSTOM_REAL*potential_dot_dot_acoustic(:)
-      potential_dot_dot_acoustic_old(:) = potential_dot_dot_acoustic(:)
+    if (PML_CONDITIONS .and. NSPEC_CPML > 0)then
+      potential_acoustic_old(:) = potential_acoustic(:) &
+                                  + deltatover2 * (1._CUSTOM_REAL - 2.0_CUSTOM_REAL*theta) * potential_dot_acoustic(:) &
+                                  + deltatsqover2 * (1._CUSTOM_REAL - theta) * potential_dot_dot_acoustic(:)
     endif
     potential_acoustic(:) = potential_acoustic(:) &
-                          + deltat * potential_dot_acoustic(:) &
-                          + deltatsqover2 * potential_dot_dot_acoustic(:)
+                            + deltat * potential_dot_acoustic(:) &
+                            + deltatsqover2 * potential_dot_dot_acoustic(:)
     potential_dot_acoustic(:) = potential_dot_acoustic(:) &
-                              + deltatover2 * potential_dot_dot_acoustic(:)
+                                + deltatover2 * potential_dot_dot_acoustic(:)
     potential_dot_dot_acoustic(:) = 0._CUSTOM_REAL
 
+    if (PML_CONDITIONS .and. NSPEC_CPML > 0)then
+      potential_acoustic_new(:) = potential_acoustic(:) &
+                                  + deltatover2 * (1._CUSTOM_REAL - 2.0_CUSTOM_REAL*theta) * potential_dot_acoustic(:)
+    endif
+
     ! adjoint simulations
-    if( SIMULATION_TYPE == 3 ) then
+    if (SIMULATION_TYPE == 3) then
       ! updates acoustic backward/reconstructed fields
-      if( PML_CONDITIONS )then
-        if( nglob_interface_PML_acoustic > 0 )then
+      if (PML_CONDITIONS) then
+        if (nglob_interface_PML_acoustic > 0)then
           call read_potential_on_pml_interface(b_potential_dot_dot_acoustic,b_potential_dot_acoustic,b_potential_acoustic,&
                                                nglob_interface_PML_acoustic,b_PML_potential,b_reclen_PML_potential)
         endif
       endif
       b_potential_acoustic(:) = b_potential_acoustic(:) &
-                              + b_deltat * b_potential_dot_acoustic(:) &
-                              + b_deltatsqover2 * b_potential_dot_dot_acoustic(:)
+                                + b_deltat * b_potential_dot_acoustic(:) &
+                                + b_deltatsqover2 * b_potential_dot_dot_acoustic(:)
       b_potential_dot_acoustic(:) = b_potential_dot_acoustic(:) &
-                                  + b_deltatover2 * b_potential_dot_dot_acoustic(:)
+                                    + b_deltatover2 * b_potential_dot_dot_acoustic(:)
       b_potential_dot_dot_acoustic(:) = 0._CUSTOM_REAL
     endif
 
   else
     ! wavefields on GPU
     ! check
-    if( SIMULATION_TYPE == 3 ) then
-      if( PML_CONDITIONS )then
+    if (SIMULATION_TYPE == 3) then
+      if (PML_CONDITIONS) then
         call exit_MPI(myrank,'acoustic time marching scheme with PML_CONDITIONS on GPU not implemented yet...')
       endif
     endif
@@ -163,23 +170,29 @@
 
   ! Newmark time marching
 
-  if( .not. GPU_MODE ) then
+  if (.not. GPU_MODE) then
     ! wavefields on CPU
 
     ! updates elastic displacement and velocity
-    if(PML_CONDITIONS .and. NSPEC_CPML > 0)then
-      displ_old(:,:) = displ(:,:) + deltatsqover2*4._CUSTOM_REAL*accel(:,:)
+    if (PML_CONDITIONS .and. NSPEC_CPML > 0)then
+      displ_old(:,:) = displ(:,:) &
+                       + deltatover2 * (1._CUSTOM_REAL - 2.0_CUSTOM_REAL*theta) * veloc(:,:) &
+                       + deltatsqover2 * (1._CUSTOM_REAL - theta) * accel(:,:)
     endif
     displ(:,:) = displ(:,:) + deltat*veloc(:,:) + deltatsqover2*accel(:,:)
     veloc(:,:) = veloc(:,:) + deltatover2*accel(:,:)
-    if( SIMULATION_TYPE /= 1 ) accel_adj_coupling(:,:) = accel(:,:)
+    if (SIMULATION_TYPE /= 1) accel_adj_coupling(:,:) = accel(:,:)
     accel(:,:) = 0._CUSTOM_REAL
+    if (PML_CONDITIONS .and. NSPEC_CPML > 0)then
+      displ_new(:,:) = displ(:,:) &
+                       + deltatover2 * (1._CUSTOM_REAL - theta) * veloc(:,:)
+    endif
 
     ! adjoint simulations
-    if( SIMULATION_TYPE == 3 ) then
+    if (SIMULATION_TYPE == 3) then
       ! elastic backward fields
-      if(PML_CONDITIONS)then
-        if(nglob_interface_PML_elastic > 0)then
+      if (PML_CONDITIONS)then
+        if (nglob_interface_PML_elastic > 0)then
           call read_field_on_pml_interface(b_accel,b_veloc,b_displ,nglob_interface_PML_elastic,&
                                            b_PML_field,b_reclen_PML_field)
         endif
@@ -193,9 +206,9 @@
     ! wavefields on GPU
 
     ! check
-    if( SIMULATION_TYPE == 3 ) then
-      if( PML_CONDITIONS )then
-        if(nglob_interface_PML_elastic > 0)then
+    if (SIMULATION_TYPE == 3) then
+      if (PML_CONDITIONS) then
+        if (nglob_interface_PML_elastic > 0)then
           call exit_MPI(myrank,'elastic time marching scheme with PML_CONDITIONS on GPU not implemented yet...')
         endif
       endif
@@ -203,7 +216,7 @@
 
     ! updates elastic displacement and velocity
     ! Includes SIM_TYPE 1 & 3 (for noise tomography)
-    call it_update_displacement_cuda(Mesh_pointer,deltat,deltatsqover2,deltatover2,b_deltat,b_deltatsqover2,b_deltatover2)
+    call update_displacement_cuda(Mesh_pointer,deltat,deltatsqover2,deltatover2,b_deltat,b_deltatsqover2,b_deltatover2)
   endif ! GPU_MODE
 
   end subroutine update_displacement_elastic
@@ -223,7 +236,7 @@
 
   ! Newmark time marching
 
-  if( .not. GPU_MODE ) then
+  if (.not. GPU_MODE) then
     ! wavefields on CPU
 
     ! updates poroelastic displacements and velocities
@@ -240,7 +253,7 @@
     accelw_poroelastic(:,:) = 0._CUSTOM_REAL
 
     ! adjoint simulations
-    if( SIMULATION_TYPE == 3 ) then
+    if (SIMULATION_TYPE == 3) then
       ! poroelastic backward fields
       ! solid phase
       b_displs_poroelastic(:,:) = b_displs_poroelastic(:,:) + b_deltat*b_velocs_poroelastic(:,:) + &

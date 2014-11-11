@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -48,8 +49,9 @@
 
 ! returns the updated accelerations array: accels_poroelatsic (& accelw_poroelastic )
 
+  use constants
+
   implicit none
-  include 'constants.h'
 
   integer :: NSPEC_AB,NGLOB_AB
 
@@ -146,14 +148,14 @@
     ispec_po = coupling_el_po_ispec(iface)
     ispec_el = coupling_po_el_ispec(iface)
 
-    if( ispec_is_inner(ispec_po) .eqv. phase_is_inner ) then
+    if (ispec_is_inner(ispec_po) .eqv. phase_is_inner) then
 
       ! loops over common GLL points
       do igll = 1, NGLLSQUARE
 
-    !-----------------------
-    ! from the elastic side
-    !-----------------------
+        !-----------------------
+        ! from the elastic side
+        !-----------------------
         i = coupling_po_el_ijk(1,igll,iface)
         j = coupling_po_el_ijk(2,igll,iface)
         k = coupling_po_el_ijk(3,igll,iface)
@@ -162,133 +164,132 @@
         ! (note: should be the same as for corresponding i',j',k',ispec_poroelastic or ispec_elastic )
         iglob_el = ibool(i,j,k,ispec_el)
 
-          tempx1l = 0.
-          tempx2l = 0.
-          tempx3l = 0.
+        tempx1l = 0.
+        tempx2l = 0.
+        tempx3l = 0.
 
-          tempy1l = 0.
-          tempy2l = 0.
-          tempy3l = 0.
+        tempy1l = 0.
+        tempy2l = 0.
+        tempy3l = 0.
 
-          tempz1l = 0.
-          tempz2l = 0.
-          tempz3l = 0.
+        tempz1l = 0.
+        tempz2l = 0.
+        tempz3l = 0.
 
-          do l=1,NGLLX
-            hp1 = hprime_xx(i,l)
-            iglob = ibool(l,j,k,ispec_el)
-            tempx1l = tempx1l + displ(1,iglob)*hp1
-            tempy1l = tempy1l + displ(2,iglob)*hp1
-            tempz1l = tempz1l + displ(3,iglob)*hp1
+        do l=1,NGLLX
+          hp1 = hprime_xx(i,l)
+          iglob = ibool(l,j,k,ispec_el)
+          tempx1l = tempx1l + displ(1,iglob)*hp1
+          tempy1l = tempy1l + displ(2,iglob)*hp1
+          tempz1l = tempz1l + displ(3,iglob)*hp1
 
-            !!! can merge these loops because NGLLX = NGLLY = NGLLZ
-            hp2 = hprime_yy(j,l)
-            iglob = ibool(i,l,k,ispec_el)
-            tempx2l = tempx2l + displ(1,iglob)*hp2
-            tempy2l = tempy2l + displ(2,iglob)*hp2
-            tempz2l = tempz2l + displ(3,iglob)*hp2
+          !!! can merge these loops because NGLLX = NGLLY = NGLLZ
+          hp2 = hprime_yy(j,l)
+          iglob = ibool(i,l,k,ispec_el)
+          tempx2l = tempx2l + displ(1,iglob)*hp2
+          tempy2l = tempy2l + displ(2,iglob)*hp2
+          tempz2l = tempz2l + displ(3,iglob)*hp2
 
-            !!! can merge these loops because NGLLX = NGLLY = NGLLZ
-            hp3 = hprime_zz(k,l)
-            iglob = ibool(i,j,l,ispec_el)
-            tempx3l = tempx3l + displ(1,iglob)*hp3
-            tempy3l = tempy3l + displ(2,iglob)*hp3
-            tempz3l = tempz3l + displ(3,iglob)*hp3
-          enddo
+          !!! can merge these loops because NGLLX = NGLLY = NGLLZ
+          hp3 = hprime_zz(k,l)
+          iglob = ibool(i,j,l,ispec_el)
+          tempx3l = tempx3l + displ(1,iglob)*hp3
+          tempy3l = tempy3l + displ(2,iglob)*hp3
+          tempz3l = tempz3l + displ(3,iglob)*hp3
+        enddo
 
-          ! get derivatives of ux, uy and uz with respect to x, y and z
-          xixl = xix(i,j,k,ispec_el)
-          xiyl = xiy(i,j,k,ispec_el)
-          xizl = xiz(i,j,k,ispec_el)
-          etaxl = etax(i,j,k,ispec_el)
-          etayl = etay(i,j,k,ispec_el)
-          etazl = etaz(i,j,k,ispec_el)
-          gammaxl = gammax(i,j,k,ispec_el)
-          gammayl = gammay(i,j,k,ispec_el)
-          gammazl = gammaz(i,j,k,ispec_el)
-          jacobianl = jacobian(i,j,k,ispec_el)
+        ! get derivatives of ux, uy and uz with respect to x, y and z
+        xixl = xix(i,j,k,ispec_el)
+        xiyl = xiy(i,j,k,ispec_el)
+        xizl = xiz(i,j,k,ispec_el)
+        etaxl = etax(i,j,k,ispec_el)
+        etayl = etay(i,j,k,ispec_el)
+        etazl = etaz(i,j,k,ispec_el)
+        gammaxl = gammax(i,j,k,ispec_el)
+        gammayl = gammay(i,j,k,ispec_el)
+        gammazl = gammaz(i,j,k,ispec_el)
+        jacobianl = jacobian(i,j,k,ispec_el)
 
-          duxdxl = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
-          duxdyl = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
-          duxdzl = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
+        duxdxl = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
+        duxdyl = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
+        duxdzl = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
 
-          duydxl = xixl*tempy1l + etaxl*tempy2l + gammaxl*tempy3l
-          duydyl = xiyl*tempy1l + etayl*tempy2l + gammayl*tempy3l
-          duydzl = xizl*tempy1l + etazl*tempy2l + gammazl*tempy3l
+        duydxl = xixl*tempy1l + etaxl*tempy2l + gammaxl*tempy3l
+        duydyl = xiyl*tempy1l + etayl*tempy2l + gammayl*tempy3l
+        duydzl = xizl*tempy1l + etazl*tempy2l + gammazl*tempy3l
 
-          duzdxl = xixl*tempz1l + etaxl*tempz2l + gammaxl*tempz3l
-          duzdyl = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l
-          duzdzl = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l
+        duzdxl = xixl*tempz1l + etaxl*tempz2l + gammaxl*tempz3l
+        duzdyl = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l
+        duzdzl = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l
 
-          ! precompute some sums to save CPU time
-          duxdxl_plus_duydyl = duxdxl + duydyl
-          duxdxl_plus_duzdzl = duxdxl + duzdzl
-          duydyl_plus_duzdzl = duydyl + duzdzl
-          duxdyl_plus_duydxl = duxdyl + duydxl
-          duzdxl_plus_duxdzl = duzdxl + duxdzl
-          duzdyl_plus_duydzl = duzdyl + duydzl
+        ! precompute some sums to save CPU time
+        duxdxl_plus_duydyl = duxdxl + duydyl
+        duxdxl_plus_duzdzl = duxdxl + duzdzl
+        duydyl_plus_duzdzl = duydyl + duzdzl
+        duxdyl_plus_duydxl = duxdyl + duydxl
+        duzdxl_plus_duxdzl = duzdxl + duxdzl
+        duzdyl_plus_duydzl = duzdyl + duydzl
 
-          kappal = kappastore(i,j,k,ispec_el)
-          mul = mustore(i,j,k,ispec_el)
+        kappal = kappastore(i,j,k,ispec_el)
+        mul = mustore(i,j,k,ispec_el)
 
-          ! full anisotropic case, stress calculations
-          if(ANISOTROPY) then
-            c11 = c11store(i,j,k,ispec_el)
-            c12 = c12store(i,j,k,ispec_el)
-            c13 = c13store(i,j,k,ispec_el)
-            c14 = c14store(i,j,k,ispec_el)
-            c15 = c15store(i,j,k,ispec_el)
-            c16 = c16store(i,j,k,ispec_el)
-            c22 = c22store(i,j,k,ispec_el)
-            c23 = c23store(i,j,k,ispec_el)
-            c24 = c24store(i,j,k,ispec_el)
-            c25 = c25store(i,j,k,ispec_el)
-            c26 = c26store(i,j,k,ispec_el)
-            c33 = c33store(i,j,k,ispec_el)
-            c34 = c34store(i,j,k,ispec_el)
-            c35 = c35store(i,j,k,ispec_el)
-            c36 = c36store(i,j,k,ispec_el)
-            c44 = c44store(i,j,k,ispec_el)
-            c45 = c45store(i,j,k,ispec_el)
-            c46 = c46store(i,j,k,ispec_el)
-            c55 = c55store(i,j,k,ispec_el)
-            c56 = c56store(i,j,k,ispec_el)
-            c66 = c66store(i,j,k,ispec_el)
+        ! full anisotropic case, stress calculations
+        if (ANISOTROPY) then
+          c11 = c11store(i,j,k,ispec_el)
+          c12 = c12store(i,j,k,ispec_el)
+          c13 = c13store(i,j,k,ispec_el)
+          c14 = c14store(i,j,k,ispec_el)
+          c15 = c15store(i,j,k,ispec_el)
+          c16 = c16store(i,j,k,ispec_el)
+          c22 = c22store(i,j,k,ispec_el)
+          c23 = c23store(i,j,k,ispec_el)
+          c24 = c24store(i,j,k,ispec_el)
+          c25 = c25store(i,j,k,ispec_el)
+          c26 = c26store(i,j,k,ispec_el)
+          c33 = c33store(i,j,k,ispec_el)
+          c34 = c34store(i,j,k,ispec_el)
+          c35 = c35store(i,j,k,ispec_el)
+          c36 = c36store(i,j,k,ispec_el)
+          c44 = c44store(i,j,k,ispec_el)
+          c45 = c45store(i,j,k,ispec_el)
+          c46 = c46store(i,j,k,ispec_el)
+          c55 = c55store(i,j,k,ispec_el)
+          c56 = c56store(i,j,k,ispec_el)
+          c66 = c66store(i,j,k,ispec_el)
 
-            sigma_xx = c11*duxdxl + c16*duxdyl_plus_duydxl + c12*duydyl + &
-                      c15*duzdxl_plus_duxdzl + c14*duzdyl_plus_duydzl + c13*duzdzl
-            sigma_yy = c12*duxdxl + c26*duxdyl_plus_duydxl + c22*duydyl + &
-                      c25*duzdxl_plus_duxdzl + c24*duzdyl_plus_duydzl + c23*duzdzl
-            sigma_zz = c13*duxdxl + c36*duxdyl_plus_duydxl + c23*duydyl + &
-                      c35*duzdxl_plus_duxdzl + c34*duzdyl_plus_duydzl + c33*duzdzl
-            sigma_xy = c16*duxdxl + c66*duxdyl_plus_duydxl + c26*duydyl + &
-                      c56*duzdxl_plus_duxdzl + c46*duzdyl_plus_duydzl + c36*duzdzl
-            sigma_xz = c15*duxdxl + c56*duxdyl_plus_duydxl + c25*duydyl + &
-                      c55*duzdxl_plus_duxdzl + c45*duzdyl_plus_duydzl + c35*duzdzl
-            sigma_yz = c14*duxdxl + c46*duxdyl_plus_duydxl + c24*duydyl + &
-                      c45*duzdxl_plus_duxdzl + c44*duzdyl_plus_duydzl + c34*duzdzl
+          sigma_xx = c11*duxdxl + c16*duxdyl_plus_duydxl + c12*duydyl + &
+                    c15*duzdxl_plus_duxdzl + c14*duzdyl_plus_duydzl + c13*duzdzl
+          sigma_yy = c12*duxdxl + c26*duxdyl_plus_duydxl + c22*duydyl + &
+                    c25*duzdxl_plus_duxdzl + c24*duzdyl_plus_duydzl + c23*duzdzl
+          sigma_zz = c13*duxdxl + c36*duxdyl_plus_duydxl + c23*duydyl + &
+                    c35*duzdxl_plus_duxdzl + c34*duzdyl_plus_duydzl + c33*duzdzl
+          sigma_xy = c16*duxdxl + c66*duxdyl_plus_duydxl + c26*duydyl + &
+                    c56*duzdxl_plus_duxdzl + c46*duzdyl_plus_duydzl + c36*duzdzl
+          sigma_xz = c15*duxdxl + c56*duxdyl_plus_duydxl + c25*duydyl + &
+                    c55*duzdxl_plus_duxdzl + c45*duzdyl_plus_duydzl + c35*duzdzl
+          sigma_yz = c14*duxdxl + c46*duxdyl_plus_duydxl + c24*duydyl + &
+                    c45*duzdxl_plus_duxdzl + c44*duzdyl_plus_duydzl + c34*duzdzl
 
-          else
+        else
 
-            ! isotropic case
-            lambdalplus2mul = kappal + FOUR_THIRDS * mul
-            lambdal = lambdalplus2mul - 2.*mul
+          ! isotropic case
+          lambdalplus2mul = kappal + FOUR_THIRDS * mul
+          lambdal = lambdalplus2mul - 2.*mul
 
-            ! compute stress sigma
-            sigma_xx = lambdalplus2mul*duxdxl + lambdal*duydyl_plus_duzdzl
-            sigma_yy = lambdalplus2mul*duydyl + lambdal*duxdxl_plus_duzdzl
-            sigma_zz = lambdalplus2mul*duzdzl + lambdal*duxdxl_plus_duydyl
+          ! compute stress sigma
+          sigma_xx = lambdalplus2mul*duxdxl + lambdal*duydyl_plus_duzdzl
+          sigma_yy = lambdalplus2mul*duydyl + lambdal*duxdxl_plus_duzdzl
+          sigma_zz = lambdalplus2mul*duzdzl + lambdal*duxdxl_plus_duydyl
 
-            sigma_xy = mul*duxdyl_plus_duydxl
-            sigma_xz = mul*duzdxl_plus_duxdzl
-            sigma_yz = mul*duzdyl_plus_duydzl
+          sigma_xy = mul*duxdyl_plus_duydxl
+          sigma_xz = mul*duzdxl_plus_duxdzl
+          sigma_yz = mul*duzdyl_plus_duydzl
 
-          endif ! ANISOTROPY
+        endif ! ANISOTROPY
 
-
-    !-----------------------
-    ! from the poroelastic side
-    !-----------------------
+        !-----------------------
+        ! from the poroelastic side
+        !-----------------------
         i = coupling_el_po_ijk(1,igll,iface)
         j = coupling_el_po_ijk(2,igll,iface)
         k = coupling_el_po_ijk(3,igll,iface)
@@ -296,159 +297,156 @@
         iglob_po = ibool(i,j,k,ispec_po)
         if (iglob_el /= iglob_po) stop 'poroelastic-elastic coupling error'
 
-! get poroelastic parameters of current local GLL
-    phil = phistore(i,j,k,ispec_po)
-    tortl = tortstore(i,j,k,ispec_po)
-!solid properties
-    kappal_s = kappaarraystore(1,i,j,k,ispec_po)
-    rhol_s = rhoarraystore(1,i,j,k,ispec_po)
-!fluid properties
-    kappal_f = kappaarraystore(2,i,j,k,ispec_po)
-    rhol_f = rhoarraystore(2,i,j,k,ispec_po)
-!frame properties
-    mul_fr = mustore(i,j,k,ispec_po)
-    kappal_fr = kappaarraystore(3,i,j,k,ispec_po)
-    rhol_bar =  (1._CUSTOM_REAL - phil)*rhol_s + phil*rhol_f
-!Biot coefficients for the input phi
-      D_biot = kappal_s*(1._CUSTOM_REAL + phil*(kappal_s/kappal_f - 1._CUSTOM_REAL))
-      H_biot = (kappal_s - kappal_fr)*(kappal_s - kappal_fr)/(D_biot - kappal_fr) + &
-                kappal_fr + 4._CUSTOM_REAL*mul_fr/3._CUSTOM_REAL
-      C_biot = kappal_s*(kappal_s - kappal_fr)/(D_biot - kappal_fr)
-      M_biot = kappal_s*kappal_s/(D_biot - kappal_fr)
+        ! get poroelastic parameters of current local GLL
+        phil = phistore(i,j,k,ispec_po)
+        tortl = tortstore(i,j,k,ispec_po)
+        !solid properties
+        kappal_s = kappaarraystore(1,i,j,k,ispec_po)
+        rhol_s = rhoarraystore(1,i,j,k,ispec_po)
+        !fluid properties
+        kappal_f = kappaarraystore(2,i,j,k,ispec_po)
+        rhol_f = rhoarraystore(2,i,j,k,ispec_po)
+        !frame properties
+        mul_fr = mustore(i,j,k,ispec_po)
+        kappal_fr = kappaarraystore(3,i,j,k,ispec_po)
+        rhol_bar =  (1._CUSTOM_REAL - phil)*rhol_s + phil*rhol_f
+        !Biot coefficients for the input phi
+        D_biot = kappal_s*(1._CUSTOM_REAL + phil*(kappal_s/kappal_f - 1._CUSTOM_REAL))
+        H_biot = (kappal_s - kappal_fr)*(kappal_s - kappal_fr)/(D_biot - kappal_fr) + &
+                  kappal_fr + 4._CUSTOM_REAL*mul_fr/3._CUSTOM_REAL
+        C_biot = kappal_s*(kappal_s - kappal_fr)/(D_biot - kappal_fr)
+        M_biot = kappal_s*kappal_s/(D_biot - kappal_fr)
 
-!T = G:grad u_s + C_biot div w I
-!and T_f = C_biot div u_s I + M_biot div w I
-      mul_G = mul_fr
-      lambdal_G = H_biot - 2._CUSTOM_REAL*mul_fr
-      lambdalplus2mul_G = lambdal_G + 2._CUSTOM_REAL*mul_G
+        !T = G:grad u_s + C_biot div w I
+        !and T_f = C_biot div u_s I + M_biot div w I
+        mul_G = mul_fr
+        lambdal_G = H_biot - 2._CUSTOM_REAL*mul_fr
+        lambdalplus2mul_G = lambdal_G + 2._CUSTOM_REAL*mul_G
 
-! derivative along x,y,z for u_s and w
-              tempx1ls = 0.
-              tempx2ls = 0.
-              tempx3ls = 0.
+        ! derivative along x,y,z for u_s and w
+        tempx1ls = 0.
+        tempx2ls = 0.
+        tempx3ls = 0.
 
-              tempy1ls = 0.
-              tempy2ls = 0.
-              tempy3ls = 0.
+        tempy1ls = 0.
+        tempy2ls = 0.
+        tempy3ls = 0.
 
-              tempz1ls = 0.
-              tempz2ls = 0.
-              tempz3ls = 0.
+        tempz1ls = 0.
+        tempz2ls = 0.
+        tempz3ls = 0.
 
-              tempx1lw = 0.
-              tempx2lw = 0.
-              tempx3lw = 0.
+        tempx1lw = 0.
+        tempx2lw = 0.
+        tempx3lw = 0.
 
-              tempy1lw = 0.
-              tempy2lw = 0.
-              tempy3lw = 0.
+        tempy1lw = 0.
+        tempy2lw = 0.
+        tempy3lw = 0.
 
-              tempz1lw = 0.
-              tempz2lw = 0.
-              tempz3lw = 0.
+        tempz1lw = 0.
+        tempz2lw = 0.
+        tempz3lw = 0.
 
-! first double loop over GLL points to compute and store gradients
-          do l = 1,NGLLX
-                hp1 = hprime_xx(i,l)
-                iglob = ibool(l,j,k,ispec_po)
-                tempx1ls = tempx1ls + displs_poroelastic(1,iglob)*hp1
-                tempy1ls = tempy1ls + displs_poroelastic(2,iglob)*hp1
-                tempz1ls = tempz1ls + displs_poroelastic(3,iglob)*hp1
-                tempx1lw = tempx1lw + displw_poroelastic(1,iglob)*hp1
-                tempy1lw = tempy1lw + displw_poroelastic(2,iglob)*hp1
-                tempz1lw = tempz1lw + displw_poroelastic(3,iglob)*hp1
-                ! adjoint simulations
-                if (SIMULATION_TYPE == 3) then
-                  ! to do
-                  stop 'compute_coupling_poroelastic_el() : adjoint run not implemented yet'
+        ! first double loop over GLL points to compute and store gradients
+        do l = 1,NGLLX
+          hp1 = hprime_xx(i,l)
+          iglob = ibool(l,j,k,ispec_po)
+          tempx1ls = tempx1ls + displs_poroelastic(1,iglob)*hp1
+          tempy1ls = tempy1ls + displs_poroelastic(2,iglob)*hp1
+          tempz1ls = tempz1ls + displs_poroelastic(3,iglob)*hp1
+          tempx1lw = tempx1lw + displw_poroelastic(1,iglob)*hp1
+          tempy1lw = tempy1lw + displw_poroelastic(2,iglob)*hp1
+          tempz1lw = tempz1lw + displw_poroelastic(3,iglob)*hp1
+          ! adjoint simulations
+          if (SIMULATION_TYPE == 3) then
+            ! to do
+            stop 'compute_coupling_poroelastic_el() : adjoint run not implemented yet'
 
-                  ! dummy to avoid compiler warnings
-                  iglob = NGLOB_ADJOINT
-                  iglob = NSPEC_ADJOINT
-                endif ! adjoint
+            ! dummy to avoid compiler warnings
+            iglob = NGLOB_ADJOINT
+            iglob = NSPEC_ADJOINT
+          endif ! adjoint
 
-    !!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
+          !!! can merge these loops because NGLLX = NGLLY = NGLLZ
 
-    !!! can merge these loops because NGLLX = NGLLY = NGLLZ          do
-    !l=1,NGLLY
-                hp2 = hprime_yy(j,l)
-                iglob = ibool(i,l,k,ispec_po)
-                tempx2ls = tempx2ls + displs_poroelastic(1,iglob)*hp2
-                tempy2ls = tempy2ls + displs_poroelastic(2,iglob)*hp2
-                tempz2ls = tempz2ls + displs_poroelastic(3,iglob)*hp2
-                tempx2lw = tempx2lw + displw_poroelastic(1,iglob)*hp2
-                tempy2lw = tempy2lw + displw_poroelastic(2,iglob)*hp2
-                tempz2lw = tempz2lw + displw_poroelastic(3,iglob)*hp2
-                ! adjoint simulations
-                if (SIMULATION_TYPE == 3) then
-                endif ! adjoint
-    !!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
+          hp2 = hprime_yy(j,l)
+          iglob = ibool(i,l,k,ispec_po)
+          tempx2ls = tempx2ls + displs_poroelastic(1,iglob)*hp2
+          tempy2ls = tempy2ls + displs_poroelastic(2,iglob)*hp2
+          tempz2ls = tempz2ls + displs_poroelastic(3,iglob)*hp2
+          tempx2lw = tempx2lw + displw_poroelastic(1,iglob)*hp2
+          tempy2lw = tempy2lw + displw_poroelastic(2,iglob)*hp2
+          tempz2lw = tempz2lw + displw_poroelastic(3,iglob)*hp2
+          ! adjoint simulations
+          if (SIMULATION_TYPE == 3) then
+          endif ! adjoint
 
-    !!! can merge these loops because NGLLX = NGLLY = NGLLZ          do
-    !l=1,NGLLZ
-                hp3 = hprime_zz(k,l)
-                iglob = ibool(i,j,l,ispec_po)
-                tempx3ls = tempx3ls + displs_poroelastic(1,iglob)*hp3
-                tempy3ls = tempy3ls + displs_poroelastic(2,iglob)*hp3
-                tempz3ls = tempz3ls + displs_poroelastic(3,iglob)*hp3
-                tempx3lw = tempx3lw + displw_poroelastic(1,iglob)*hp3
-                tempy3lw = tempy3lw + displw_poroelastic(2,iglob)*hp3
-                tempz3lw = tempz3lw + displw_poroelastic(3,iglob)*hp3
-                ! adjoint simulations
-                if (SIMULATION_TYPE == 3) then
-                endif ! adjoint
-          enddo
+          !!! can merge these loops because NGLLX = NGLLY = NGLLZ
 
-              xixl = xix(i,j,k,ispec_po)
-              xiyl = xiy(i,j,k,ispec_po)
-              xizl = xiz(i,j,k,ispec_po)
-              etaxl = etax(i,j,k,ispec_po)
-              etayl = etay(i,j,k,ispec_po)
-              etazl = etaz(i,j,k,ispec_po)
-              gammaxl = gammax(i,j,k,ispec_po)
-              gammayl = gammay(i,j,k,ispec_po)
-              gammazl = gammaz(i,j,k,ispec_po)
-              jacobianl = jacobian(i,j,k,ispec_po)
+          hp3 = hprime_zz(k,l)
+          iglob = ibool(i,j,l,ispec_po)
+          tempx3ls = tempx3ls + displs_poroelastic(1,iglob)*hp3
+          tempy3ls = tempy3ls + displs_poroelastic(2,iglob)*hp3
+          tempz3ls = tempz3ls + displs_poroelastic(3,iglob)*hp3
+          tempx3lw = tempx3lw + displw_poroelastic(1,iglob)*hp3
+          tempy3lw = tempy3lw + displw_poroelastic(2,iglob)*hp3
+          tempz3lw = tempz3lw + displw_poroelastic(3,iglob)*hp3
+          ! adjoint simulations
+          if (SIMULATION_TYPE == 3) then
+          endif ! adjoint
+        enddo
 
-! derivatives of displacement
-              duxdxl = xixl*tempx1ls + etaxl*tempx2ls + gammaxl*tempx3ls
-              duxdyl = xiyl*tempx1ls + etayl*tempx2ls + gammayl*tempx3ls
-              duxdzl = xizl*tempx1ls + etazl*tempx2ls + gammazl*tempx3ls
+        xixl = xix(i,j,k,ispec_po)
+        xiyl = xiy(i,j,k,ispec_po)
+        xizl = xiz(i,j,k,ispec_po)
+        etaxl = etax(i,j,k,ispec_po)
+        etayl = etay(i,j,k,ispec_po)
+        etazl = etaz(i,j,k,ispec_po)
+        gammaxl = gammax(i,j,k,ispec_po)
+        gammayl = gammay(i,j,k,ispec_po)
+        gammazl = gammaz(i,j,k,ispec_po)
+        jacobianl = jacobian(i,j,k,ispec_po)
 
-              duydxl = xixl*tempy1ls + etaxl*tempy2ls + gammaxl*tempy3ls
-              duydyl = xiyl*tempy1ls + etayl*tempy2ls + gammayl*tempy3ls
-              duydzl = xizl*tempy1ls + etazl*tempy2ls + gammazl*tempy3ls
+        ! derivatives of displacement
+        duxdxl = xixl*tempx1ls + etaxl*tempx2ls + gammaxl*tempx3ls
+        duxdyl = xiyl*tempx1ls + etayl*tempx2ls + gammayl*tempx3ls
+        duxdzl = xizl*tempx1ls + etazl*tempx2ls + gammazl*tempx3ls
 
-              duzdxl = xixl*tempz1ls + etaxl*tempz2ls + gammaxl*tempz3ls
-              duzdyl = xiyl*tempz1ls + etayl*tempz2ls + gammayl*tempz3ls
-              duzdzl = xizl*tempz1ls + etazl*tempz2ls + gammazl*tempz3ls
+        duydxl = xixl*tempy1ls + etaxl*tempy2ls + gammaxl*tempy3ls
+        duydyl = xiyl*tempy1ls + etayl*tempy2ls + gammayl*tempy3ls
+        duydzl = xizl*tempy1ls + etazl*tempy2ls + gammazl*tempy3ls
 
-              dwxdxl = xixl*tempx1lw + etaxl*tempx2lw + gammaxl*tempx3lw
-              dwxdyl = xiyl*tempx1lw + etayl*tempx2lw + gammayl*tempx3lw
-              dwxdzl = xizl*tempx1lw + etazl*tempx2lw + gammazl*tempx3lw
+        duzdxl = xixl*tempz1ls + etaxl*tempz2ls + gammaxl*tempz3ls
+        duzdyl = xiyl*tempz1ls + etayl*tempz2ls + gammayl*tempz3ls
+        duzdzl = xizl*tempz1ls + etazl*tempz2ls + gammazl*tempz3ls
 
-              dwydxl = xixl*tempy1lw + etaxl*tempy2lw + gammaxl*tempy3lw
-              dwydyl = xiyl*tempy1lw + etayl*tempy2lw + gammayl*tempy3lw
-              dwydzl = xizl*tempy1lw + etazl*tempy2lw + gammazl*tempy3lw
+        dwxdxl = xixl*tempx1lw + etaxl*tempx2lw + gammaxl*tempx3lw
+        dwxdyl = xiyl*tempx1lw + etayl*tempx2lw + gammayl*tempx3lw
+        dwxdzl = xizl*tempx1lw + etazl*tempx2lw + gammazl*tempx3lw
 
-              dwzdxl = xixl*tempz1lw + etaxl*tempz2lw + gammaxl*tempz3lw
-              dwzdyl = xiyl*tempz1lw + etayl*tempz2lw + gammayl*tempz3lw
-              dwzdzl = xizl*tempz1lw + etazl*tempz2lw + gammazl*tempz3lw
+        dwydxl = xixl*tempy1lw + etaxl*tempy2lw + gammaxl*tempy3lw
+        dwydyl = xiyl*tempy1lw + etayl*tempy2lw + gammayl*tempy3lw
+        dwydzl = xizl*tempy1lw + etazl*tempy2lw + gammazl*tempy3lw
 
-    ! precompute some sums to save CPU time
-              duxdxl_plus_duydyl_plus_duzdzl = duxdxl + duydyl + duzdzl
-              dwxdxl_plus_dwydyl_plus_dwzdzl = dwxdxl + dwydyl + dwzdzl
-              duxdxl_plus_duydyl = duxdxl + duydyl
-              duxdxl_plus_duzdzl = duxdxl + duzdzl
-              duydyl_plus_duzdzl = duydyl + duzdzl
-              duxdyl_plus_duydxl = duxdyl + duydxl
-              duzdxl_plus_duxdzl = duzdxl + duxdzl
-              duzdyl_plus_duydzl = duzdyl + duydzl
+        dwzdxl = xixl*tempz1lw + etaxl*tempz2lw + gammaxl*tempz3lw
+        dwzdyl = xiyl*tempz1lw + etayl*tempz2lw + gammayl*tempz3lw
+        dwzdzl = xizl*tempz1lw + etazl*tempz2lw + gammazl*tempz3lw
 
-! compute stress tensor (include attenuation or anisotropy if needed)
+        ! precompute some sums to save CPU time
+        duxdxl_plus_duydyl_plus_duzdzl = duxdxl + duydyl + duzdzl
+        dwxdxl_plus_dwydyl_plus_dwzdzl = dwxdxl + dwydyl + dwzdzl
+        duxdxl_plus_duydyl = duxdxl + duydyl
+        duxdxl_plus_duzdzl = duxdxl + duzdzl
+        duydyl_plus_duzdzl = duydyl + duzdzl
+        duxdyl_plus_duydxl = duxdyl + duydxl
+        duzdxl_plus_duxdzl = duzdxl + duxdzl
+        duzdyl_plus_duydzl = duzdyl + duydzl
 
-!  if(VISCOATTENUATION) then
-!chris:check
+        ! compute stress tensor (include attenuation or anisotropy if needed)
+
+        !  if (VISCOATTENUATION) then
+        !chris:check
 
 ! Dissipation only controlled by frame share attenuation in poroelastic (see
 ! Morency & Tromp, GJI 2008).
@@ -460,22 +458,21 @@
 ! viscoelastic medium, Geophysical Journal International, vol. 95, p. 597-611
 ! (1988).
 
-!  else
+         !  else
 
-! no attenuation
-    sigma_xx = sigma_xx + &
-            lambdalplus2mul_G*duxdxl + lambdal_G*duydyl_plus_duzdzl + C_biot*dwxdxl_plus_dwydyl_plus_dwzdzl
-    sigma_yy = sigma_yy + &
-            lambdalplus2mul_G*duydyl + lambdal_G*duxdxl_plus_duzdzl + C_biot*dwxdxl_plus_dwydyl_plus_dwzdzl
-    sigma_zz = sigma_zz + &
-            lambdalplus2mul_G*duzdzl + lambdal_G*duxdxl_plus_duydyl + C_biot*dwxdxl_plus_dwydyl_plus_dwzdzl
+        ! no attenuation
+        sigma_xx = sigma_xx + &
+                lambdalplus2mul_G*duxdxl + lambdal_G*duydyl_plus_duzdzl + C_biot*dwxdxl_plus_dwydyl_plus_dwzdzl
+        sigma_yy = sigma_yy + &
+                lambdalplus2mul_G*duydyl + lambdal_G*duxdxl_plus_duzdzl + C_biot*dwxdxl_plus_dwydyl_plus_dwzdzl
+        sigma_zz = sigma_zz + &
+                lambdalplus2mul_G*duzdzl + lambdal_G*duxdxl_plus_duydyl + C_biot*dwxdxl_plus_dwydyl_plus_dwzdzl
 
-    sigma_xy = sigma_xy + mul_G*duxdyl_plus_duydxl
-    sigma_xz = sigma_xz + mul_G*duzdxl_plus_duxdzl
-    sigma_yz = sigma_yz + mul_G*duzdyl_plus_duydzl
+        sigma_xy = sigma_xy + mul_G*duxdyl_plus_duydxl
+        sigma_xz = sigma_xz + mul_G*duzdxl_plus_duxdzl
+        sigma_yz = sigma_yz + mul_G*duzdyl_plus_duydzl
 
-    sigmap = C_biot*duxdxl_plus_duydyl_plus_duzdzl + M_biot*dwxdxl_plus_dwydyl_plus_dwzdzl
-
+        sigmap = C_biot*duxdxl_plus_duydyl_plus_duzdzl + M_biot*dwxdxl_plus_dwydyl_plus_dwzdzl
 
         ! gets associated normal on GLL point
         ! (note convention: pointing outwards of poroelastic element)
@@ -490,7 +487,7 @@
         ! continuity of displacement and traction on global point
         !
         ! note: continuity of displacement is enforced after the velocity update
-! contribution to the solid phase
+        ! contribution to the solid phase
         accels_poroelastic(1,iglob_po) = accels_poroelastic(1,iglob_po) + jacobianw*&
             ( (sigma_xx*nx + sigma_xy*ny + sigma_xz*nz)/2.d0 - phil/tortl*sigmap*nx )
 
@@ -499,8 +496,8 @@
 
         accels_poroelastic(3,iglob_po) = accels_poroelastic(3,iglob_po) + jacobianw*&
             ( (sigma_xz*nx + sigma_yz*ny + sigma_zz*nz)/2.d0 - phil/tortl*sigmap*nz )
-! contribution to the fluid phase
-! w = 0
+        ! contribution to the fluid phase
+        ! w = 0
 
       enddo ! igll
 

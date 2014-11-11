@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -27,50 +28,52 @@
 ! United States and French Government Sponsorship Acknowledged.
 
 !==============================================================================
-subroutine read_mesh_for_init(nspec, nglob)
+subroutine read_mesh_for_init_ADIOS(nspec, nglob)
 
-  use mpi
   use adios_read_mod
-  use specfem_par, only : myrank, LOCAL_PATH
+  use specfem_par, only : myrank, LOCAL_PATH, MAX_STRING_LEN
 
   implicit none
   ! Paramters
   integer, intent(inout) :: nspec, nglob
   ! Local variables
-  character(len=256) :: database_name
+  character(len=MAX_STRING_LEN) :: database_name
   integer(kind=8) :: handle, sel
   integer         :: ier
+  integer :: comm
 
   !-------------------------------------.
   ! Open ADIOS Database file, read mode |
   !-------------------------------------'
-  database_name = adjustl(LOCAL_PATH)
-  database_name = database_name(1:len_trim(database_name)) // "/external_mesh.bp"
+  database_name = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // "/external_mesh.bp"
 
-  call adios_read_init_method (ADIOS_READ_METHOD_BP, MPI_COMM_WORLD, &
+  call world_get_comm(comm)
+
+  call adios_read_init_method (ADIOS_READ_METHOD_BP, comm, &
                                "verbose=1", ier)
-  call adios_read_open_file (handle, database_name, 0, MPI_COMM_WORLD, ier)
+  call adios_read_open_file (handle, database_name, 0, comm, ier)
+  if (ier /= 0) call stop_all()
 
   !------------------------------------.
   ! Read variables from the adios file |
   !------------------------------------'
   call adios_selection_writeblock(sel, myrank)
-  call adios_schedule_read(handle, sel, "/nspec", 0, 1, nspec, ier)
-  call adios_schedule_read(handle, sel, "/nglob", 0, 1, nglob, ier)
+  call adios_schedule_read(handle, sel, "nspec", 0, 1, nspec, ier)
+  call adios_schedule_read(handle, sel, "nglob", 0, 1, nglob, ier)
 
   !--------------------------------------------.
   ! Perform the reads and close the adios file |
   !--------------------------------------------'
   call adios_perform_reads(handle, ier)
+  if (ier /= 0) call stop_all()
   call adios_read_close(handle,ier)
   call adios_read_finalize_method(ADIOS_READ_METHOD_BP, ier)
 
-end subroutine read_mesh_for_init
+end subroutine read_mesh_for_init_ADIOS
 
 !==============================================================================
 subroutine read_mesh_databases_adios()
 
-  use mpi
   use adios_read_mod
 
   use pml_par
@@ -81,11 +84,9 @@ subroutine read_mesh_databases_adios()
   use specfem_par_poroelastic
 
   implicit none
+  integer :: ier !,inum
 
-  real(kind=CUSTOM_REAL):: minl,maxl,min_all,max_all
-  integer :: ier,inum
-
-  character(len=256) :: database_name
+  character(len=MAX_STRING_LEN) :: database_name
   integer(kind=8) :: handle
 
   integer(kind=8), dimension(256),target :: selections
@@ -103,7 +104,7 @@ subroutine read_mesh_databases_adios()
              local_dim_ispec_is_acoustic, local_dim_ispec_is_elastic,          &
              local_dim_ispec_is_poroelastic, local_dim_rmass,                  &
              local_dim_rmass_ocean_load, local_dim_rmass_acoustic,             &
-             local_dim_rmass_elastic,local_dim_rho_vp,                         &
+             local_dim_rho_vp,                                                 &
              local_dim_rho_vs, local_dim_abs_boundary_ispec,                   &
              local_dim_abs_boundary_ijk, local_dim_abs_boundary_jacobian2Dw,   &
              local_dim_abs_boundary_normal, local_dim_ibelm_xmin,              &
@@ -126,7 +127,9 @@ subroutine read_mesh_databases_adios()
              local_dim_CPML_regions, local_dim_CPML_to_spec, local_dim_is_CPML,&
              local_dim_d_store_x, local_dim_d_store_y, local_dim_d_store_z,    &
              local_dim_k_store_x, local_dim_k_store_y, local_dim_k_store_z,    &
-             local_dim_alpha_store, local_dim_points_interface_PML_acoustic,   &
+             local_dim_alpha_store_x, local_dim_alpha_store_y,                 &
+             local_dim_alpha_store_z,                                          &
+             local_dim_points_interface_PML_acoustic,                          &
              local_dim_points_interface_PML_elastic,                           &
              local_dim_rmassx, local_dim_rmassy, local_dim_rmassz,             &
              local_dim_rmassz_acoustic, local_dim_coupling_el_po_ispec,        &
@@ -141,17 +144,21 @@ subroutine read_mesh_databases_adios()
              local_dim_coupling_ac_po_jacobian2Dw,                             &
              local_dim_coupling_ac_po_normal
 
+  integer :: comm
+
   !-------------------------------------.
   ! Open ADIOS Database file, read mode |
   !-------------------------------------'
   sel_num = 0
 
-  database_name = adjustl(LOCAL_PATH)
-  database_name = database_name(1:len_trim(database_name)) // "/external_mesh.bp"
+  database_name = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // "/external_mesh.bp"
 
-  call adios_read_init_method (ADIOS_READ_METHOD_BP, MPI_COMM_WORLD, &
+  call world_get_comm(comm)
+
+  call adios_read_init_method (ADIOS_READ_METHOD_BP, comm, &
                                "verbose=1", ier)
-  call adios_read_open_file (handle, database_name, 0, MPI_COMM_WORLD, ier)
+  call adios_read_open_file (handle, database_name, 0, comm, ier)
+  if (ier /= 0) call stop_all()
 
   !------------------------------------------------------------------.
   ! Get scalar values. Might be differents for different processors. |
@@ -161,9 +168,10 @@ subroutine read_mesh_databases_adios()
   sel_num = sel_num+1
   sel => selections(sel_num)
   call adios_selection_writeblock(sel, myrank)
-  call adios_schedule_read(handle, sel, "/nspec", 0, 1, NSPEC_AB, ier)
-  call adios_schedule_read(handle, sel, "/nglob", 0, 1, NGLOB_AB, ier)
+  call adios_schedule_read(handle, sel, "nspec", 0, 1, NSPEC_AB, ier)
+  call adios_schedule_read(handle, sel, "nglob", 0, 1, NGLOB_AB, ier)
   call adios_perform_reads(handle, ier)
+  if (ier /= 0) call stop_all()
 
   !----------------------------------------------.
   ! Fetch values to compute the simulation type. |
@@ -189,6 +197,7 @@ subroutine read_mesh_databases_adios()
                            ispec_is_poroelastic, ier)
   ! Perform the read, so we can use the values.
   call adios_perform_reads(handle, ier)
+  if (ier /= 0) call stop_all()
   ! number of acoustic elements in this partition
   nspec_acoustic = count(ispec_is_acoustic(:))
   ! all processes will have acoustic_simulation set if any flag is .true.
@@ -201,25 +210,10 @@ subroutine read_mesh_databases_adios()
   call any_all_l( ANY(ispec_is_poroelastic), POROELASTIC_SIMULATION )
 
   ! checks simulation types are valid
-  if( (.not. ACOUSTIC_SIMULATION ) .and. &
-      (.not. ELASTIC_SIMULATION ) .and. &
-      (.not. POROELASTIC_SIMULATION ) ) then
-     call exit_mpi(myrank,'error no simulation type defined')
-  endif
-
-  ! outputs total element numbers
-  call sum_all_i(count(ispec_is_acoustic(:)),inum)
-  if( myrank == 0 ) then
-    write(IMAIN,*) 'total acoustic elements    :',inum
-  endif
-  call sum_all_i(count(ispec_is_elastic(:)),inum)
-  if( myrank == 0 ) then
-    write(IMAIN,*) 'total elastic elements     :',inum
-  endif
-  call sum_all_i(count(ispec_is_poroelastic(:)),inum)
-  if( myrank == 0 ) then
-    write(IMAIN,*) 'total poroelastic elements :',inum
-    call flush_IMAIN()
+  if ((.not. ACOUSTIC_SIMULATION) .and. &
+      (.not. ELASTIC_SIMULATION) .and. &
+      (.not. POROELASTIC_SIMULATION )) then
+    call exit_mpi(myrank,'error no simulation type defined')
   endif
 
   !------------------------------------------------------------------.
@@ -231,78 +225,78 @@ subroutine read_mesh_databases_adios()
   call adios_selection_writeblock(sel, myrank)
 
   NSPEC_CPML = 0
-  if( PML_CONDITIONS ) then
-    call adios_schedule_read(handle, sel, "/nspec_cpml", 0, 1, nspec_cpml, ier)
-    call adios_schedule_read(handle, sel, "/CPML_width_x", 0, 1, &
+  if (PML_CONDITIONS) then
+    call adios_schedule_read(handle, sel, "nspec_cpml", 0, 1, nspec_cpml, ier)
+    call adios_schedule_read(handle, sel, "CPML_width_x", 0, 1, &
                              CPML_width_x, ier)
-    call adios_schedule_read(handle, sel, "/CPML_width_y", 0, 1, &
+    call adios_schedule_read(handle, sel, "CPML_width_y", 0, 1, &
                              CPML_width_y, ier)
-    call adios_schedule_read(handle, sel, "/CPML_width_x", 0, 1, &
+    call adios_schedule_read(handle, sel, "CPML_width_x", 0, 1, &
                              CPML_width_z, ier)
-    if( nspec_cpml > 0 ) then
-      if((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) &
+    if (nspec_cpml > 0) then
+      if ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) &
           .or. SIMULATION_TYPE == 3) then
-        call adios_schedule_read(handle, sel, "/nglob_interface_PML_acoustic", &
+        call adios_schedule_read(handle, sel, "nglob_interface_PML_acoustic", &
                                  0, 1, nglob_interface_PML_acoustic, ier)
-        call adios_schedule_read(handle, sel, "/nglob_interface_PML_elastic", &
+        call adios_schedule_read(handle, sel, "nglob_interface_PML_elastic", &
                                  0, 1, nglob_interface_PML_elastic, ier)
       endif
     endif
   endif
 
-  call adios_schedule_read(handle, sel, "/num_abs_boundary_faces", 0, 1, &
+  call adios_schedule_read(handle, sel, "num_abs_boundary_faces", 0, 1, &
                            num_abs_boundary_faces, ier)
 
-  call adios_schedule_read(handle, sel, "/nspec2d_xmin", 0, 1, &
+  call adios_schedule_read(handle, sel, "nspec2d_xmin", 0, 1, &
                            nspec2d_xmin, ier)
-  call adios_schedule_read(handle, sel, "/nspec2d_xmax", 0, 1, &
+  call adios_schedule_read(handle, sel, "nspec2d_xmax", 0, 1, &
                            nspec2d_xmax, ier)
-  call adios_schedule_read(handle, sel, "/nspec2d_ymin", 0, 1, &
+  call adios_schedule_read(handle, sel, "nspec2d_ymin", 0, 1, &
                            nspec2d_ymin, ier)
-  call adios_schedule_read(handle, sel, "/nspec2d_ymax", 0, 1, &
+  call adios_schedule_read(handle, sel, "nspec2d_ymax", 0, 1, &
                            nspec2d_ymax, ier)
-  call adios_schedule_read(handle, sel, "/nspec2d_bottom", 0, 1, &
+  call adios_schedule_read(handle, sel, "nspec2d_bottom", 0, 1, &
                            nspec2d_bottom, ier)
-  call adios_schedule_read(handle, sel, "/nspec2d_top", 0, 1, &
+  call adios_schedule_read(handle, sel, "nspec2d_top", 0, 1, &
                            nspec2d_top, ier)
 
-  call adios_schedule_read(handle, sel, "/num_free_surface_faces", 0, 1, &
+  call adios_schedule_read(handle, sel, "num_free_surface_faces", 0, 1, &
                            num_free_surface_faces, ier)
-  call adios_schedule_read(handle, sel, "/num_coupling_ac_el_faces", 0, 1, &
+  call adios_schedule_read(handle, sel, "num_coupling_ac_el_faces", 0, 1, &
                            num_coupling_ac_el_faces, ier)
-  call adios_schedule_read(handle, sel, "/num_coupling_ac_po_faces", 0, 1, &
+  call adios_schedule_read(handle, sel, "num_coupling_ac_po_faces", 0, 1, &
                            num_coupling_ac_po_faces, ier)
-  call adios_schedule_read(handle, sel, "/num_coupling_el_po_faces", 0, 1, &
+  call adios_schedule_read(handle, sel, "num_coupling_el_po_faces", 0, 1, &
                            num_coupling_el_po_faces, ier)
-  call adios_schedule_read(handle, sel, "/num_interfaces_ext_mesh", 0, 1, &
+  call adios_schedule_read(handle, sel, "num_interfaces_ext_mesh", 0, 1, &
                            num_interfaces_ext_mesh, ier)
-  call adios_schedule_read(handle, sel, "/max_nibool_interfaces_ext_mesh", 0, 1, &
+  call adios_schedule_read(handle, sel, "max_nibool_interfaces_ext_mesh", 0, 1, &
                            max_nibool_interfaces_ext_mesh, ier)
 
-  if( ACOUSTIC_SIMULATION ) then
-    call adios_schedule_read(handle, sel, "/nspec_inner_acoustic", 0, 1, &
+  if (ACOUSTIC_SIMULATION) then
+    call adios_schedule_read(handle, sel, "nspec_inner_acoustic", 0, 1, &
                              nspec_inner_acoustic, ier)
-    call adios_schedule_read(handle, sel, "/nspec_outer_acoustic", 0, 1, &
+    call adios_schedule_read(handle, sel, "nspec_outer_acoustic", 0, 1, &
                              nspec_outer_acoustic, ier)
-    call adios_schedule_read(handle, sel, "/num_phase_ispec_acoustic", 0, 1, &
+    call adios_schedule_read(handle, sel, "num_phase_ispec_acoustic", 0, 1, &
                              num_phase_ispec_acoustic, ier)
   endif
 
-  if( ELASTIC_SIMULATION ) then
-    call adios_schedule_read(handle, sel, "/nspec_inner_elastic", 0, 1, &
+  if (ELASTIC_SIMULATION) then
+    call adios_schedule_read(handle, sel, "nspec_inner_elastic", 0, 1, &
                              nspec_inner_elastic, ier)
-    call adios_schedule_read(handle, sel, "/nspec_outer_elastic", 0, 1, &
+    call adios_schedule_read(handle, sel, "nspec_outer_elastic", 0, 1, &
                              nspec_outer_elastic, ier)
-    call adios_schedule_read(handle, sel, "/num_phase_ispec_elastic", 0, 1, &
+    call adios_schedule_read(handle, sel, "num_phase_ispec_elastic", 0, 1, &
                              num_phase_ispec_elastic, ier)
   endif
 
-  if( POROELASTIC_SIMULATION) then
-    call adios_schedule_read(handle, sel, "/nspec_inner_poroelastic", 0, 1, &
+  if (POROELASTIC_SIMULATION) then
+    call adios_schedule_read(handle, sel, "nspec_inner_poroelastic", 0, 1, &
                              nspec_inner_poroelastic, ier)
-    call adios_schedule_read(handle, sel, "/nspec_outer_poroelastic", 0, 1, &
+    call adios_schedule_read(handle, sel, "nspec_outer_poroelastic", 0, 1, &
                              nspec_outer_poroelastic, ier)
-    call adios_schedule_read(handle, sel, "/num_phase_ispec_poroelastic", 0, 1,&
+    call adios_schedule_read(handle, sel, "num_phase_ispec_poroelastic", 0, 1,&
                              num_phase_ispec_poroelastic, ier)
   endif
 
@@ -310,22 +304,23 @@ subroutine read_mesh_databases_adios()
   num_colors_inner_acoustic = 0
   num_colors_outer_elastic = 0
   num_colors_inner_elastic = 0
-  if( USE_MESH_COLORING_GPU ) then
-    if( ACOUSTIC_SIMULATION ) then
-      call adios_schedule_read(handle, sel, "/num_colors_outer_acoustic", &
+  if (USE_MESH_COLORING_GPU) then
+    if (ACOUSTIC_SIMULATION) then
+      call adios_schedule_read(handle, sel, "num_colors_outer_acoustic", &
                                0, 1, num_colors_outer_acoustic, ier)
-      call adios_schedule_read(handle, sel, "/num_colors_outer_acoustic", &
+      call adios_schedule_read(handle, sel, "num_colors_outer_acoustic", &
                                0, 1, num_colors_inner_acoustic, ier)
     endif
-    if( ELASTIC_SIMULATION ) then
-      call adios_schedule_read(handle, sel, "/num_colors_outer_elastic", &
+    if (ELASTIC_SIMULATION) then
+      call adios_schedule_read(handle, sel, "num_colors_outer_elastic", &
                                0, 1, num_colors_outer_elastic, ier)
-      call adios_schedule_read(handle, sel, "/num_colors_outer_elastic", &
+      call adios_schedule_read(handle, sel, "num_colors_outer_elastic", &
                                0, 1, num_colors_inner_elastic, ier)
     endif
   endif
   ! Perform the read, so we can use the values.
   call adios_perform_reads(handle, ier)
+  if (ier /= 0) call stop_all()
 
 
   !------------------------.
@@ -365,15 +360,15 @@ subroutine read_mesh_databases_adios()
                         local_dim_mustore,ier)
   call adios_get_scalar(handle, "rhostore/local_dim",&
                         local_dim_rhostore,ier)
-  if( ACOUSTIC_SIMULATION ) then
+  if (ACOUSTIC_SIMULATION) then
     call adios_get_scalar(handle, "rmass_acoustic/local_dim",&
                           local_dim_rmass_acoustic,ier)
   endif
-  if( ELASTIC_SIMULATION ) then
+  if (ELASTIC_SIMULATION) then
     call adios_get_scalar(handle, "rmass/local_dim",&
                           local_dim_rmass,ier)
 
-    if( APPROXIMATE_OCEAN_LOAD) then
+    if (APPROXIMATE_OCEAN_LOAD) then
       call adios_get_scalar(handle, "rmass_ocean_load/local_dim",&
                             local_dim_rmass_ocean_load,ier)
     endif
@@ -382,7 +377,7 @@ subroutine read_mesh_databases_adios()
     call adios_get_scalar(handle, "rho_vs/local_dim",&
                           local_dim_rho_vs,ier)
   endif
-  if( POROELASTIC_SIMULATION ) then
+  if (POROELASTIC_SIMULATION) then
     call adios_get_scalar(handle, "rmass_solid_poroelastic/local_dim",&
                           local_dim_rmass_solid_poroelastic,ier)
     call adios_get_scalar(handle, "rmass_fluid_poroelastic/local_dim",&
@@ -406,8 +401,8 @@ subroutine read_mesh_databases_adios()
     call adios_get_scalar(handle, "rho_vsI/local_dim",&
                           local_dim_rho_vsI,ier)
   endif
-  if( PML_CONDITIONS ) then
-    if( nspec_cpml > 0 ) then
+  if (PML_CONDITIONS) then
+    if (nspec_cpml > 0) then
       call adios_get_scalar(handle, "CPML_regions/local_dim",&
                             local_dim_CPML_regions, ier)
       call adios_get_scalar(handle, "CPML_to_spec/local_dim",&
@@ -426,15 +421,19 @@ subroutine read_mesh_databases_adios()
                             local_dim_k_store_y, ier)
       call adios_get_scalar(handle, "k_store_z/local_dim",&
                             local_dim_k_store_z, ier)
-      call adios_get_scalar(handle, "alpha_store/local_dim",&
-                            local_dim_alpha_store, ier)
-      if((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) &
+      call adios_get_scalar(handle, "alpha_store_x/local_dim",&
+                            local_dim_alpha_store_x, ier)
+      call adios_get_scalar(handle, "alpha_store_y/local_dim",&
+                            local_dim_alpha_store_y, ier)
+      call adios_get_scalar(handle, "alpha_store_z/local_dim",&
+                            local_dim_alpha_store_z, ier)
+      if ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) &
           .or. SIMULATION_TYPE == 3) then
-        if(nglob_interface_PML_acoustic > 0) then
+        if (nglob_interface_PML_acoustic > 0) then
           call adios_get_scalar(handle, "points_interface_PML_acoustic/local_dim",&
                                 local_dim_points_interface_PML_acoustic, ier)
         endif
-        if(nglob_interface_PML_elastic > 0) then
+        if (nglob_interface_PML_elastic > 0) then
           call adios_get_scalar(handle, "points_interface_PML_elastic/local_dim",&
                                 local_dim_points_interface_PML_elastic, ier)
         endif
@@ -442,8 +441,8 @@ subroutine read_mesh_databases_adios()
     endif
   endif
 
-  if(PML_CONDITIONS)then
-    if( num_abs_boundary_faces > 0 ) then
+  if (PML_CONDITIONS)then
+    if (num_abs_boundary_faces > 0) then
       call adios_get_scalar(handle, "abs_boundary_ispec/local_dim",&
                             local_dim_abs_boundary_ispec,ier)
       call adios_get_scalar(handle, "abs_boundary_ijk/local_dim",&
@@ -454,7 +453,7 @@ subroutine read_mesh_databases_adios()
                             local_dim_abs_boundary_normal,ier)
     endif
   else
-    if( num_abs_boundary_faces > 0 ) then
+    if (num_abs_boundary_faces > 0) then
       call adios_get_scalar(handle, "abs_boundary_ispec/local_dim",&
                             local_dim_abs_boundary_ispec,ier)
       call adios_get_scalar(handle, "abs_boundary_ijk/local_dim",&
@@ -463,9 +462,9 @@ subroutine read_mesh_databases_adios()
                             local_dim_abs_boundary_jacobian2Dw,ier)
       call adios_get_scalar(handle, "abs_boundary_normal/local_dim",&
                             local_dim_abs_boundary_normal,ier)
-      if( STACEY_ABSORBING_CONDITIONS ) then
+      if (STACEY_ABSORBING_CONDITIONS) then
         ! store mass matrix contributions
-        if(ELASTIC_SIMULATION ) then
+        if (ELASTIC_SIMULATION) then
           call adios_get_scalar(handle, "rmassx/local_dim",&
                                 local_dim_rmassx, ier)
           call adios_get_scalar(handle, "rmassy/local_dim",&
@@ -473,7 +472,7 @@ subroutine read_mesh_databases_adios()
           call adios_get_scalar(handle, "rmassz/local_dim",&
                                 local_dim_rmassz, ier)
         endif
-        if(ACOUSTIC_SIMULATION) then
+        if (ACOUSTIC_SIMULATION) then
           call adios_get_scalar(handle, "rmassz_acoustic/local_dim",&
                                 local_dim_rmassz_acoustic, ier)
         endif
@@ -494,7 +493,7 @@ subroutine read_mesh_databases_adios()
   call adios_get_scalar(handle, "ibelm_top/local_dim",&
                         local_dim_ibelm_top,ier)
 
-  if( num_free_surface_faces > 0 ) then
+  if (num_free_surface_faces > 0) then
     call adios_get_scalar(handle, "free_surface_ispec/local_dim",&
                           local_dim_free_surface_ispec,ier)
     call adios_get_scalar(handle, "free_surface_ijk/local_dim",&
@@ -504,7 +503,7 @@ subroutine read_mesh_databases_adios()
     call adios_get_scalar(handle, "free_surface_normal/local_dim",&
                           local_dim_free_surface_normal,ier)
   endif
-  if( num_coupling_ac_el_faces > 0 ) then
+  if (num_coupling_ac_el_faces > 0) then
     call adios_get_scalar(handle, "coupling_ac_el_ispec/local_dim",&
                           local_dim_coupling_ac_el_ispec,ier)
     call adios_get_scalar(handle, "coupling_ac_el_ijk/local_dim",&
@@ -514,7 +513,7 @@ subroutine read_mesh_databases_adios()
     call adios_get_scalar(handle, "coupling_ac_el_normal/local_dim",&
                           local_dim_coupling_ac_el_normal,ier)
   endif
-  if( num_coupling_ac_po_faces > 0 ) then
+  if (num_coupling_ac_po_faces > 0) then
     call adios_get_scalar(handle, "coupling_ac_po_ispec/local_dim",&
                           local_dim_coupling_ac_po_ispec, ier)
     call adios_get_scalar(handle, "coupling_ac_po_ijk/local_dim",&
@@ -524,7 +523,7 @@ subroutine read_mesh_databases_adios()
     call adios_get_scalar(handle, "coupling_ac_po_normal/local_dim",&
                           local_dim_coupling_ac_po_normal, ier)
   endif
-  if( num_coupling_el_po_faces > 0 ) then
+  if (num_coupling_el_po_faces > 0) then
     call adios_get_scalar(handle, "coupling_el_po_ispec/local_dim",&
                           local_dim_coupling_el_po_ispec, ier)
     call adios_get_scalar(handle, "coupling_po_el_ispec/local_dim",&
@@ -538,7 +537,7 @@ subroutine read_mesh_databases_adios()
     call adios_get_scalar(handle, "coupling_el_po_normal/local_dim",&
                           local_dim_coupling_el_po_normal, ier)
   endif
-  if( num_interfaces_ext_mesh > 0 ) then
+  if (num_interfaces_ext_mesh > 0) then
     call adios_get_scalar(handle, "my_neighbours_ext_mesh/local_dim",&
                           local_dim_my_neighbours_ext_mesh,ier)
     call adios_get_scalar(handle, "nibool_interfaces_ext_mesh/local_dim",&
@@ -546,36 +545,36 @@ subroutine read_mesh_databases_adios()
     call adios_get_scalar(handle, "ibool_interfaces_ext_mesh_dummy/local_dim",&
                           local_dim_ibool_interfaces_ext_mesh, ier)
   endif
-  if( ELASTIC_SIMULATION .and. ANISOTROPY ) then
+  if (ELASTIC_SIMULATION .and. ANISOTROPY) then
     call adios_get_scalar(handle, "c11store/local_dim",&
                           local_dim_c11store, ier)
   endif
   call adios_get_scalar(handle, "ispec_is_inner/local_dim",&
                         local_dim_ispec_is_inner,ier)
-  if( ACOUSTIC_SIMULATION ) then
-    if(num_phase_ispec_acoustic > 0 ) then
+  if (ACOUSTIC_SIMULATION) then
+    if (num_phase_ispec_acoustic > 0) then
       call adios_get_scalar(handle, "phase_ispec_inner_acoustic/local_dim",&
                             local_dim_phase_ispec_inner_acoustic,ier)
     endif
   endif
-  if( ELASTIC_SIMULATION ) then
-    if(num_phase_ispec_elastic > 0 ) then
+  if (ELASTIC_SIMULATION) then
+    if (num_phase_ispec_elastic > 0) then
       call adios_get_scalar(handle, "phase_ispec_inner_elastic/local_dim",&
                             local_dim_phase_ispec_inner_elastic,ier)
     endif
   endif
-  if( POROELASTIC_SIMULATION ) then
-    if(num_phase_ispec_poroelastic > 0 ) then
+  if (POROELASTIC_SIMULATION) then
+    if (num_phase_ispec_poroelastic > 0) then
       call adios_get_scalar(handle, "phase_ispec_inner_poroelastic/local_dim",&
                             local_dim_phase_ispec_inner_poroelastic,ier)
     endif
   endif
-  if( USE_MESH_COLORING_GPU ) then
-    if( ACOUSTIC_SIMULATION ) then
+  if (USE_MESH_COLORING_GPU) then
+    if (ACOUSTIC_SIMULATION) then
       call adios_get_scalar(handle, "num_elem_colors_acoustic/local_dim",&
                             local_dim_num_elem_colors_acoustic, ier)
     endif
-    if( ELASTIC_SIMULATION ) then
+    if (ELASTIC_SIMULATION) then
       call adios_get_scalar(handle, "num_elem_colors_elastic/local_dim",&
                             local_dim_num_elem_colors_elastic, ier)
     endif
@@ -586,25 +585,25 @@ subroutine read_mesh_databases_adios()
   !---------------------------------------------.
   ! Allocate arrays with previously read values |
   !---------------------------------------------'
-  if( ACOUSTIC_SIMULATION ) then
+  if (ACOUSTIC_SIMULATION) then
     ! potentials
     allocate(potential_acoustic(NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array potential_acoustic'
+    if (ier /= 0) stop 'error allocating array potential_acoustic'
     allocate(potential_dot_acoustic(NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array potential_dot_acoustic'
+    if (ier /= 0) stop 'error allocating array potential_dot_acoustic'
     allocate(potential_dot_dot_acoustic(NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array potential_dot_dot_acoustic'
-    if( SIMULATION_TYPE /= 1 ) then
+    if (ier /= 0) stop 'error allocating array potential_dot_dot_acoustic'
+    if (SIMULATION_TYPE /= 1) then
       allocate(potential_acoustic_adj_coupling(NGLOB_AB),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array potential_acoustic_adj_coupling'
+      if (ier /= 0) stop 'error allocating array potential_acoustic_adj_coupling'
     endif
     ! mass matrix, density
     allocate(rmass_acoustic(NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array rmass_acoustic'
+    if (ier /= 0) stop 'error allocating array rmass_acoustic'
 
     ! initializes mass matrix contribution
     allocate(rmassz_acoustic(NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array rmassz_acoustic'
+    if (ier /= 0) stop 'error allocating array rmassz_acoustic'
     rmassz_acoustic(:) = 0._CUSTOM_REAL
   endif
 
@@ -612,44 +611,44 @@ subroutine read_mesh_databases_adios()
   ! simulations with CPML, thus we now allocate it and read it in all
   ! cases (whether the simulation is acoustic, elastic, or acoustic/elastic)
   allocate(rhostore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array rhostore'
+  if (ier /= 0) stop 'error allocating array rhostore'
 
 !TODO
 #endif
   ! elastic simulation
-  if( ELASTIC_SIMULATION ) then
+  if (ELASTIC_SIMULATION) then
 !TODO
 #if 1
     ! displacement,velocity,acceleration
     allocate(displ(NDIM,NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array displ'
+    if (ier /= 0) stop 'error allocating array displ'
     allocate(veloc(NDIM,NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array veloc'
+    if (ier /= 0) stop 'error allocating array veloc'
     allocate(accel(NDIM,NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array accel'
-    if( SIMULATION_TYPE /= 1 ) then
+    if (ier /= 0) stop 'error allocating array accel'
+    if (SIMULATION_TYPE /= 1) then
       allocate(accel_adj_coupling(NDIM,NGLOB_AB),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array accel_adj_coupling'
+      if (ier /= 0) stop 'error allocating array accel_adj_coupling'
     endif
 
     ! allocates mass matrix
     allocate(rmass(NGLOB_AB),stat=ier)
 
-    if( ier /= 0 ) stop 'error allocating array rmass'
+    if (ier /= 0) stop 'error allocating array rmass'
     ! initializes mass matrix contributions
     allocate(rmassx(NGLOB_AB), &
              rmassy(NGLOB_AB), &
              rmassz(NGLOB_AB), &
              stat=ier)
-    if( ier /= 0 ) stop 'error allocating array rmassx,rmassy,rmassz'
+    if (ier /= 0) stop 'error allocating array rmassx,rmassy,rmassz'
     rmassx(:) = 0._CUSTOM_REAL
     rmassy(:) = 0._CUSTOM_REAL
     rmassz(:) = 0._CUSTOM_REAL
 
     allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array rho_vp'
+    if (ier /= 0) stop 'error allocating array rho_vp'
     allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array rho_vs'
+    if (ier /= 0) stop 'error allocating array rho_vs'
     rho_vp = 0.0_CUSTOM_REAL
     rho_vs = 0.0_CUSTOM_REAL
     allocate(c11store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
@@ -673,7 +672,7 @@ subroutine read_mesh_databases_adios()
             c55store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
             c56store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
             c66store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array c11store etc.'
+    if (ier /= 0) stop 'error allocating array c11store etc.'
 
     ! note: currently, they need to be defined, as they are used in the
     !       routine arguments for compute_forces_viscoelastic_Deville()
@@ -682,7 +681,7 @@ subroutine read_mesh_databases_adios()
             R_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
             R_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
             R_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array R_xx etc.'
+    if (ier /= 0) stop 'error allocating array R_xx etc.'
 
     ! needed for attenuation and/or kernel computations
     allocate(epsilondev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY), &
@@ -690,33 +689,33 @@ subroutine read_mesh_databases_adios()
             epsilondev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY), &
             epsilondev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY), &
             epsilondev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array epsilondev_xx etc.'
+    if (ier /= 0) stop 'error allocating array epsilondev_xx etc.'
 
     allocate(R_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa,N_SLS),&
              epsilondev_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array R_trace etc.'
+    if (ier /= 0) stop 'error allocating array R_trace etc.'
 
     ! note: needed for argument of deville routine
     allocate(epsilon_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array epsilon_trace_over_3'
+    if (ier /= 0) stop 'error allocating array epsilon_trace_over_3'
 
     ! needed for attenuation
     allocate(one_minus_sum_beta(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB), &
             factor_common(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array one_minus_sum_beta etc.'
+    if (ier /= 0) stop 'error allocating array one_minus_sum_beta etc.'
 
     allocate(one_minus_sum_beta_kappa(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa), &
              factor_common_kappa(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array one_minus_sum_beta_kappa etc.'
+    if (ier /= 0) stop 'error allocating array one_minus_sum_beta_kappa etc.'
 
-    if( APPROXIMATE_OCEAN_LOAD ) then
+    if (APPROXIMATE_OCEAN_LOAD) then
       ! ocean mass matrix
       allocate(rmass_ocean_load(NGLOB_AB),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array rmass_ocean_load'
+      if (ier /= 0) stop 'error allocating array rmass_ocean_load'
     else
       ! dummy allocation
       allocate(rmass_ocean_load(1),stat=ier)
-      if( ier /= 0 ) stop 'error allocating dummy array rmass_ocean_load'
+      if (ier /= 0) stop 'error allocating dummy array rmass_ocean_load'
     endif
 ! TODO
 #endif
@@ -726,29 +725,29 @@ subroutine read_mesh_databases_adios()
     ANISOTROPY = .false.
   endif
 
-  if( POROELASTIC_SIMULATION ) then
+  if (POROELASTIC_SIMULATION) then
 
-    if( GPU_MODE ) &
-        call exit_mpi(myrank,'POROELASTICITY not supported by GPU mode yet...')
+    if (GPU_MODE) &
+      call exit_mpi(myrank,'POROELASTICITY not supported by GPU mode yet...')
 
     ! displacement,velocity,acceleration for the solid (s) & fluid (w) phases
     allocate(displs_poroelastic(NDIM,NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array displs_poroelastic'
+    if (ier /= 0) stop 'error allocating array displs_poroelastic'
     allocate(velocs_poroelastic(NDIM,NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array velocs_poroelastic'
+    if (ier /= 0) stop 'error allocating array velocs_poroelastic'
     allocate(accels_poroelastic(NDIM,NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array accels_poroelastic'
+    if (ier /= 0) stop 'error allocating array accels_poroelastic'
     allocate(displw_poroelastic(NDIM,NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array displw_poroelastic'
+    if (ier /= 0) stop 'error allocating array displw_poroelastic'
     allocate(velocw_poroelastic(NDIM,NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array velocw_poroelastic'
+    if (ier /= 0) stop 'error allocating array velocw_poroelastic'
     allocate(accelw_poroelastic(NDIM,NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array accelw_poroelastic'
+    if (ier /= 0) stop 'error allocating array accelw_poroelastic'
 
     allocate(rmass_solid_poroelastic(NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array rmass_solid_poroelastic'
+    if (ier /= 0) stop 'error allocating array rmass_solid_poroelastic'
     allocate(rmass_fluid_poroelastic(NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array rmass_fluid_poroelastic'
+    if (ier /= 0) stop 'error allocating array rmass_fluid_poroelastic'
 
     allocate(rhoarraystore(2,NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
              kappaarraystore(3,NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
@@ -759,64 +758,68 @@ subroutine read_mesh_databases_adios()
              rho_vpI(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
              rho_vpII(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
              rho_vsI(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array poroelastic properties'
+    if (ier /= 0) stop 'error allocating array poroelastic properties'
 
     ! needed for kernel computations
     allocate(epsilonsdev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            epsilonsdev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            epsilonsdev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            epsilonsdev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            epsilonsdev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            epsilonwdev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            epsilonwdev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            epsilonwdev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            epsilonwdev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            epsilonwdev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array epsilonsdev_xx etc.'
+             epsilonsdev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             epsilonsdev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             epsilonsdev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             epsilonsdev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             epsilonwdev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             epsilonwdev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             epsilonwdev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             epsilonwdev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             epsilonwdev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+    if (ier /= 0) stop 'error allocating array epsilonsdev_xx etc.'
 
     allocate(epsilons_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-            epsilonw_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array epsilons_trace_over_3 etc.'
+             epsilonw_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+    if (ier /= 0) stop 'error allocating array epsilons_trace_over_3 etc.'
   endif
 
   ! C-PML absorbing boundary conditions
-  if( PML_CONDITIONS ) then
+  if (PML_CONDITIONS) then
     allocate(is_CPML(NSPEC_AB),stat=ier)
-    if(ier /= 0) stop 'error allocating array is_CPML'
+    if (ier /= 0) stop 'error allocating array is_CPML'
 
     ! make sure there are no PMLs by default,
     ! and then below if NSPEC_CPML > 0 we will need the real flags
     ! for this mesh from the disk
     is_CPML(:) = .false.
 
-    if( NSPEC_CPML > 0 ) then
+    if (NSPEC_CPML > 0) then
       allocate(CPML_regions(NSPEC_CPML),stat=ier)
-      if(ier /= 0) stop 'error allocating array CPML_regions'
+      if (ier /= 0) stop 'error allocating array CPML_regions'
       allocate(CPML_to_spec(NSPEC_CPML),stat=ier)
-      if(ier /= 0) stop 'error allocating array CPML_to_spec'
+      if (ier /= 0) stop 'error allocating array CPML_to_spec'
       allocate(d_store_x(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-      if(ier /= 0) stop 'error allocating array d_store_x'
+      if (ier /= 0) stop 'error allocating array d_store_x'
       allocate(d_store_y(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-      if(ier /= 0) stop 'error allocating array d_store_y'
+      if (ier /= 0) stop 'error allocating array d_store_y'
       allocate(d_store_z(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-      if(ier /= 0) stop 'error allocating array d_store_z'
+      if (ier /= 0) stop 'error allocating array d_store_z'
       allocate(K_store_x(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-      if(ier /= 0) stop 'error allocating array K_store_x'
+      if (ier /= 0) stop 'error allocating array K_store_x'
       allocate(K_store_y(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-      if(ier /= 0) stop 'error allocating array K_store_y'
+      if (ier /= 0) stop 'error allocating array K_store_y'
       allocate(K_store_z(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-      if(ier /= 0) stop 'error allocating array K_store_z'
-      allocate(alpha_store(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-      if(ier /= 0) stop 'error allocating array alpha_store'
+      if (ier /= 0) stop 'error allocating array K_store_z'
+      allocate(alpha_store_x(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+      if (ier /= 0) stop 'error allocating array alpha_store_x'
+      allocate(alpha_store_y(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+      if (ier /= 0) stop 'error allocating array alpha_store_y'
+      allocate(alpha_store_z(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+      if (ier /= 0) stop 'error allocating array alpha_store_z'
 
-      if((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3) then
-        if(nglob_interface_PML_acoustic > 0) then
+      if ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3) then
+        if (nglob_interface_PML_acoustic > 0) then
           allocate(points_interface_PML_acoustic(nglob_interface_PML_acoustic),stat=ier)
-          if(ier /= 0) stop 'error allocating array points_interface_PML_acoustic'
+          if (ier /= 0) stop 'error allocating array points_interface_PML_acoustic'
         endif
-        if(nglob_interface_PML_elastic > 0) then
+        if (nglob_interface_PML_elastic > 0) then
           allocate(points_interface_PML_elastic(nglob_interface_PML_elastic),stat=ier)
-          if(ier /= 0) stop 'error allocating array points_interface_PML_elastic'
+          if (ier /= 0) stop 'error allocating array points_interface_PML_elastic'
         endif
       endif
     endif
@@ -828,16 +831,13 @@ subroutine read_mesh_databases_adios()
 
   ! absorbing boundary surface
   allocate(abs_boundary_ispec(num_abs_boundary_faces), &
-          abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces), &
-          abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces), &
-          abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array abs_boundary_ispec etc.'
+           abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces), &
+           abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces), &
+           abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
+  if (ier /= 0) stop 'error allocating array abs_boundary_ispec etc.'
 
-  if (OLD_TEST_TO_FIX_ONE_DAY) then
-    ! VM for new method
-    !! DK DK for VM VM: these two arrays are undeclared, thus I comment them out i
-    ! for now otherwise the code does not compile
-    !! VM VM : I already declared these two array in the specfem_par module
+  !! CD CD !! For coupling with DSM
+  if (COUPLE_WITH_EXTERNAL_CODE) then
     allocate(Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
     allocate(Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
     open(unit=IIN_veloc_dsm,file=dsmname(1:len_trim(dsmname))//'vel.bin',status='old', &
@@ -845,53 +845,54 @@ subroutine read_mesh_databases_adios()
     open(unit=IIN_tract_dsm,file=dsmname(1:len_trim(dsmname))//'tract.bin',status='old', &
          action='read',form='unformatted',iostat=ier)
   else
-     allocate(Veloc_dsm_boundary(1,1,1,1))
-     allocate(Tract_dsm_boundary(1,1,1,1))
+    allocate(Veloc_dsm_boundary(1,1,1,1))
+    allocate(Tract_dsm_boundary(1,1,1,1))
   endif
+  !! CD CD
 
   allocate(ibelm_xmin(nspec2D_xmin),ibelm_xmax(nspec2D_xmax), &
-       ibelm_ymin(nspec2D_ymin),ibelm_ymax(nspec2D_ymax), &
-       ibelm_bottom(NSPEC2D_BOTTOM),ibelm_top(NSPEC2D_TOP),stat=ier)
-  if(ier /= 0) stop 'error allocating arrays ibelm_xmin,ibelm_xmax etc.'
+           ibelm_ymin(nspec2D_ymin),ibelm_ymax(nspec2D_ymax), &
+           ibelm_bottom(NSPEC2D_BOTTOM),ibelm_top(NSPEC2D_TOP),stat=ier)
+  if (ier /= 0) stop 'error allocating arrays ibelm_xmin,ibelm_xmax etc.'
 
   ! free surface
   allocate(free_surface_ispec(num_free_surface_faces), &
-          free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces), &
-          free_surface_jacobian2Dw(NGLLSQUARE,num_free_surface_faces), &
-          free_surface_normal(NDIM,NGLLSQUARE,num_free_surface_faces),stat=ier)
-  if(ier /= 0) stop 'error allocating arrays free_surface_ispec etc.'
+           free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces), &
+           free_surface_jacobian2Dw(NGLLSQUARE,num_free_surface_faces), &
+           free_surface_normal(NDIM,NGLLSQUARE,num_free_surface_faces),stat=ier)
+  if (ier /= 0) stop 'error allocating arrays free_surface_ispec etc.'
 
   ! acoustic-elastic coupling surface
   allocate(coupling_ac_el_normal(NDIM,NGLLSQUARE,num_coupling_ac_el_faces), &
-          coupling_ac_el_jacobian2Dw(NGLLSQUARE,num_coupling_ac_el_faces), &
-          coupling_ac_el_ijk(3,NGLLSQUARE,num_coupling_ac_el_faces), &
-          coupling_ac_el_ispec(num_coupling_ac_el_faces),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array coupling_ac_el_normal etc.'
+           coupling_ac_el_jacobian2Dw(NGLLSQUARE,num_coupling_ac_el_faces), &
+           coupling_ac_el_ijk(3,NGLLSQUARE,num_coupling_ac_el_faces), &
+           coupling_ac_el_ispec(num_coupling_ac_el_faces),stat=ier)
+  if (ier /= 0) stop 'error allocating array coupling_ac_el_normal etc.'
 
   ! acoustic-poroelastic coupling surface
   allocate(coupling_ac_po_normal(NDIM,NGLLSQUARE,num_coupling_ac_po_faces), &
-          coupling_ac_po_jacobian2Dw(NGLLSQUARE,num_coupling_ac_po_faces), &
-          coupling_ac_po_ijk(3,NGLLSQUARE,num_coupling_ac_po_faces), &
-          coupling_ac_po_ispec(num_coupling_ac_po_faces),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array coupling_ac_po_normal etc.'
+           coupling_ac_po_jacobian2Dw(NGLLSQUARE,num_coupling_ac_po_faces), &
+           coupling_ac_po_ijk(3,NGLLSQUARE,num_coupling_ac_po_faces), &
+           coupling_ac_po_ispec(num_coupling_ac_po_faces),stat=ier)
+  if (ier /= 0) stop 'error allocating array coupling_ac_po_normal etc.'
 
   ! elastic-poroelastic coupling surface
   allocate(coupling_el_po_normal(NDIM,NGLLSQUARE,num_coupling_el_po_faces), &
-          coupling_el_po_jacobian2Dw(NGLLSQUARE,num_coupling_el_po_faces), &
-          coupling_el_po_ijk(3,NGLLSQUARE,num_coupling_el_po_faces), &
-          coupling_po_el_ijk(3,NGLLSQUARE,num_coupling_el_po_faces), &
-          coupling_el_po_ispec(num_coupling_el_po_faces), &
-          coupling_po_el_ispec(num_coupling_el_po_faces),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array coupling_el_po_normal etc.'
+           coupling_el_po_jacobian2Dw(NGLLSQUARE,num_coupling_el_po_faces), &
+           coupling_el_po_ijk(3,NGLLSQUARE,num_coupling_el_po_faces), &
+           coupling_po_el_ijk(3,NGLLSQUARE,num_coupling_el_po_faces), &
+           coupling_el_po_ispec(num_coupling_el_po_faces), &
+           coupling_po_el_ispec(num_coupling_el_po_faces),stat=ier)
+  if (ier /= 0) stop 'error allocating array coupling_el_po_normal etc.'
 
   ! MPI interfaces
   allocate(my_neighbours_ext_mesh(num_interfaces_ext_mesh), &
-          nibool_interfaces_ext_mesh(num_interfaces_ext_mesh),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array my_neighbours_ext_mesh etc.'
-  if( num_interfaces_ext_mesh > 0 ) then
+           nibool_interfaces_ext_mesh(num_interfaces_ext_mesh),stat=ier)
+  if (ier /= 0) stop 'error allocating array my_neighbours_ext_mesh etc.'
+  if (num_interfaces_ext_mesh > 0) then
     allocate(ibool_interfaces_ext_mesh(max_nibool_interfaces_ext_mesh, &
                                        num_interfaces_ext_mesh),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array ibool_interfaces_ext_mesh'
+    if (ier /= 0) stop 'error allocating array ibool_interfaces_ext_mesh'
   else
     max_nibool_interfaces_ext_mesh = 0
     allocate(ibool_interfaces_ext_mesh(0,0),stat=ier)
@@ -899,57 +900,57 @@ subroutine read_mesh_databases_adios()
 
   ! inner / outer elements
   allocate(ispec_is_inner(NSPEC_AB),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array ispec_is_inner'
+  if (ier /= 0) stop 'error allocating array ispec_is_inner'
 
-  if( ACOUSTIC_SIMULATION ) then
-    if( num_phase_ispec_acoustic < 0 ) stop 'error acoustic simulation:' // &
+  if (ACOUSTIC_SIMULATION) then
+    if (num_phase_ispec_acoustic < 0) stop 'error acoustic simulation:' // &
                                     'num_phase_ispec_acoustic is < zero'
     allocate( phase_ispec_inner_acoustic(num_phase_ispec_acoustic,2),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array phase_ispec_inner_acoustic'
+    if (ier /= 0) stop 'error allocating array phase_ispec_inner_acoustic'
   endif
 
-  if( ELASTIC_SIMULATION ) then
-    if( num_phase_ispec_elastic < 0 ) stop 'error elastic simulation:' // &
+  if (ELASTIC_SIMULATION) then
+    if (num_phase_ispec_elastic < 0) stop 'error elastic simulation:' // &
                                    'num_phase_ispec_elastic is < zero'
     allocate( phase_ispec_inner_elastic(num_phase_ispec_elastic,2),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array phase_ispec_inner_elastic'
+    if (ier /= 0) stop 'error allocating array phase_ispec_inner_elastic'
   endif
 
-  if( POROELASTIC_SIMULATION ) then
-    if( num_phase_ispec_poroelastic < 0 ) stop 'error poroelastic simulation:'&
-                                       'num_phase_ispec_poroelastic is < zero'
+  if (POROELASTIC_SIMULATION) then
+    if (num_phase_ispec_poroelastic < 0) &
+      stop 'error poroelastic simulation:num_phase_ispec_poroelastic is < zero'
     allocate( phase_ispec_inner_poroelastic(num_phase_ispec_poroelastic,2), &
               stat=ier)
-    if( ier /= 0 ) stop 'error allocating array phase_ispec_inner_poroelastic'
+    if (ier /= 0) stop 'error allocating array phase_ispec_inner_poroelastic'
   endif
 
   ! mesh coloring for GPUs
-  if( USE_MESH_COLORING_GPU ) then
+  if (USE_MESH_COLORING_GPU) then
     ! acoustic domain colors
-    if( ACOUSTIC_SIMULATION ) then
+    if (ACOUSTIC_SIMULATION) then
       allocate(num_elem_colors_acoustic(num_colors_outer_acoustic &
                                       + num_colors_inner_acoustic),stat=ier)
-      if( ier /= 0 ) stop 'error allocating num_elem_colors_acoustic array'
+      if (ier /= 0) stop 'error allocating num_elem_colors_acoustic array'
     endif
     ! elastic domain colors
-    if( ELASTIC_SIMULATION ) then
+    if (ELASTIC_SIMULATION) then
       read(27) num_colors_outer_elastic,num_colors_inner_elastic
 
       allocate(num_elem_colors_elastic(num_colors_outer_elastic &
                                      + num_colors_inner_elastic),stat=ier)
-      if( ier /= 0 ) stop 'error allocating num_elem_colors_elastic array'
+      if (ier /= 0) stop 'error allocating num_elem_colors_elastic array'
     endif
   else
     ! allocates dummy arrays
-    if( ACOUSTIC_SIMULATION ) then
+    if (ACOUSTIC_SIMULATION) then
       allocate(num_elem_colors_acoustic(num_colors_outer_acoustic &
                                       + num_colors_inner_acoustic),stat=ier)
-      if( ier /= 0 ) stop 'error allocating num_elem_colors_acoustic array'
+      if (ier /= 0) stop 'error allocating num_elem_colors_acoustic array'
     endif
-    if( ELASTIC_SIMULATION ) then
+    if (ELASTIC_SIMULATION) then
       allocate(num_elem_colors_elastic(num_colors_outer_elastic &
                                      + num_colors_inner_elastic),stat=ier)
-      if( ier /= 0 ) stop 'error allocating num_elem_colors_elastic array'
+      if (ier /= 0) stop 'error allocating num_elem_colors_elastic array'
     endif
   endif
 
@@ -1017,7 +1018,7 @@ subroutine read_mesh_databases_adios()
   call adios_schedule_read(handle, sel, "rhostore/array", 0, 1, &
                            rhostore, ier)
 
-  if( ACOUSTIC_SIMULATION ) then
+  if (ACOUSTIC_SIMULATION) then
     start(1) = local_dim_rmass_acoustic * myrank
     count_ad(1) = NGLOB_AB
     sel_num = sel_num+1
@@ -1027,7 +1028,7 @@ subroutine read_mesh_databases_adios()
                              rmass_acoustic, ier)
   endif
 
-  if( ELASTIC_SIMULATION ) then
+  if (ELASTIC_SIMULATION) then
     start(1) = local_dim_rmass * myrank
     count_ad(1) = NGLOB_AB
     sel_num = sel_num+1
@@ -1036,7 +1037,7 @@ subroutine read_mesh_databases_adios()
     call adios_schedule_read(handle, sel, "rmass/array", 0, 1, &
                              rmass, ier)
 
-    if( APPROXIMATE_OCEAN_LOAD ) then
+    if (APPROXIMATE_OCEAN_LOAD) then
       ! ocean mass matrix
       start(1) = local_dim_rmass_ocean_load * myrank
       count_ad(1) = NGLOB_AB !nglob_ocean
@@ -1059,7 +1060,7 @@ subroutine read_mesh_databases_adios()
                              rho_vs, ier)
   endif
 
-  if( POROELASTIC_SIMULATION ) then
+  if (POROELASTIC_SIMULATION) then
     start(1) = local_dim_rmass_solid_poroelastic * myrank
     count_ad(1) = NGLOB_AB
     sel_num = sel_num+1
@@ -1114,8 +1115,8 @@ subroutine read_mesh_databases_adios()
   endif
 
   ! C-PML absorbing boundary conditions
-  if( PML_CONDITIONS ) then
-    if( NSPEC_CPML > 0 ) then
+  if (PML_CONDITIONS) then
+    if (NSPEC_CPML > 0) then
 
       start(1) = local_dim_CPML_regions * myrank
       count_ad(1) = nspec_cpml
@@ -1152,11 +1153,15 @@ subroutine read_mesh_databases_adios()
                                k_store_y, ier)
       call adios_schedule_read(handle, sel, "k_store_z/array", 0, 1, &
                                k_store_z, ier)
-      call adios_schedule_read(handle, sel, "alpha_store/array", 0, 1, &
-                               alpha_store, ier)
+      call adios_schedule_read(handle, sel, "alpha_store_x/array", 0, 1, &
+                               alpha_store_x, ier)
+      call adios_schedule_read(handle, sel, "alpha_store_y/array", 0, 1, &
+                               alpha_store_y, ier)
+      call adios_schedule_read(handle, sel, "alpha_store_z/array", 0, 1, &
+                               alpha_store_z, ier)
 
-      if((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3) then
-        if(nglob_interface_PML_acoustic > 0) then
+      if ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3) then
+        if (nglob_interface_PML_acoustic > 0) then
           start(1) = local_dim_points_interface_PML_acoustic* myrank
           count_ad(1) = nglob_interface_PML_acoustic
           sel_num = sel_num+1
@@ -1166,7 +1171,7 @@ subroutine read_mesh_databases_adios()
                                    "points_interface_PML_acoustic/array", &
                                    0, 1, points_interface_PML_acoustic , ier)
         endif
-        if(nglob_interface_PML_elastic > 0) then
+        if (nglob_interface_PML_elastic > 0) then
           start(1) = local_dim_points_interface_PML_elastic* myrank
           count_ad(1) = nglob_interface_PML_elastic
           sel_num = sel_num+1
@@ -1180,104 +1185,100 @@ subroutine read_mesh_databases_adios()
     endif
   endif
 
-  if(PML_CONDITIONS)then
-     if( num_abs_boundary_faces > 0 ) then
-        start(1) = local_dim_abs_boundary_ispec * myrank
-        count_ad(1) = num_abs_boundary_faces
-        sel_num = sel_num+1
-        sel => selections(sel_num)
-        call adios_selection_boundingbox (sel , 1, start, count_ad)
-        call adios_schedule_read(handle, sel, "abs_boundary_ispec/array", &
-                                 0, 1, abs_boundary_ispec, ier)
+  if (PML_CONDITIONS) then
+    if (num_abs_boundary_faces > 0) then
+      start(1) = local_dim_abs_boundary_ispec * myrank
+      count_ad(1) = num_abs_boundary_faces
+      sel_num = sel_num+1
+      sel => selections(sel_num)
+      call adios_selection_boundingbox (sel , 1, start, count_ad)
+      call adios_schedule_read(handle, sel, "abs_boundary_ispec/array", &
+                               0, 1, abs_boundary_ispec, ier)
 
-        start(1) = local_dim_abs_boundary_ijk * myrank
-        count_ad(1) = 3 * NGLLSQUARE * num_abs_boundary_faces
-        sel_num = sel_num+1
-        sel => selections(sel_num)
-        call adios_selection_boundingbox (sel , 1, start, count_ad)
-        call adios_schedule_read(handle, sel, "abs_boundary_ijk/array", &
-                                 0, 1, abs_boundary_ijk, ier)
+      start(1) = local_dim_abs_boundary_ijk * myrank
+      count_ad(1) = 3 * NGLLSQUARE * num_abs_boundary_faces
+      sel_num = sel_num+1
+      sel => selections(sel_num)
+      call adios_selection_boundingbox (sel , 1, start, count_ad)
+      call adios_schedule_read(handle, sel, "abs_boundary_ijk/array", &
+                               0, 1, abs_boundary_ijk, ier)
 
-        start(1) = local_dim_abs_boundary_jacobian2Dw * myrank
-        count_ad(1) = NGLLSQUARE * num_abs_boundary_faces
-        sel_num = sel_num+1
-        sel => selections(sel_num)
-        call adios_selection_boundingbox (sel , 1, start, count_ad)
-        call adios_schedule_read(handle, sel, "abs_boundary_jacobian2Dw/array", &
-                                 0, 1, abs_boundary_jacobian2Dw, ier)
+      start(1) = local_dim_abs_boundary_jacobian2Dw * myrank
+      count_ad(1) = NGLLSQUARE * num_abs_boundary_faces
+      sel_num = sel_num+1
+      sel => selections(sel_num)
+      call adios_selection_boundingbox (sel , 1, start, count_ad)
+      call adios_schedule_read(handle, sel, "abs_boundary_jacobian2Dw/array", &
+                               0, 1, abs_boundary_jacobian2Dw, ier)
 
-        start(1) = local_dim_abs_boundary_normal * myrank
-        count_ad(1) = NDIM * NGLLSQUARE * num_abs_boundary_faces
-        sel_num = sel_num+1
-        sel => selections(sel_num)
-        call adios_selection_boundingbox (sel , 1, start, count_ad)
-        call adios_schedule_read(handle, sel, "abs_boundary_normal/array", &
-                                 0, 1, abs_boundary_normal, ier)
-     endif
+      start(1) = local_dim_abs_boundary_normal * myrank
+      count_ad(1) = NDIM * NGLLSQUARE * num_abs_boundary_faces
+      sel_num = sel_num+1
+      sel => selections(sel_num)
+      call adios_selection_boundingbox (sel , 1, start, count_ad)
+      call adios_schedule_read(handle, sel, "abs_boundary_normal/array", &
+                               0, 1, abs_boundary_normal, ier)
+    endif
   else
-     if( num_abs_boundary_faces > 0 ) then
-        start(1) = local_dim_abs_boundary_ispec * myrank
-        count_ad(1) = num_abs_boundary_faces
-        sel_num = sel_num+1
-        sel => selections(sel_num)
-        call adios_selection_boundingbox (sel , 1, start, count_ad)
-        call adios_schedule_read(handle, sel, "abs_boundary_ispec/array", &
-                                 0, 1, abs_boundary_ispec, ier)
+    if (num_abs_boundary_faces > 0) then
+      start(1) = local_dim_abs_boundary_ispec * myrank
+      count_ad(1) = num_abs_boundary_faces
+      sel_num = sel_num+1
+      sel => selections(sel_num)
+      call adios_selection_boundingbox (sel , 1, start, count_ad)
+      call adios_schedule_read(handle, sel, "abs_boundary_ispec/array", &
+                               0, 1, abs_boundary_ispec, ier)
 
-        start(1) = local_dim_abs_boundary_ijk * myrank
-        count_ad(1) = 3 * NGLLSQUARE * num_abs_boundary_faces
-        sel_num = sel_num+1
-        sel => selections(sel_num)
-        call adios_selection_boundingbox (sel , 1, start, count_ad)
-        call adios_schedule_read(handle, sel, "abs_boundary_ijk/array", &
-                                 0, 1, abs_boundary_ijk, ier)
+      start(1) = local_dim_abs_boundary_ijk * myrank
+      count_ad(1) = 3 * NGLLSQUARE * num_abs_boundary_faces
+      sel_num = sel_num+1
+      sel => selections(sel_num)
+      call adios_selection_boundingbox (sel , 1, start, count_ad)
+      call adios_schedule_read(handle, sel, "abs_boundary_ijk/array", &
+                               0, 1, abs_boundary_ijk, ier)
 
-        start(1) = local_dim_abs_boundary_jacobian2Dw * myrank
-        count_ad(1) = NGLLSQUARE * num_abs_boundary_faces
-        sel_num = sel_num+1
-        sel => selections(sel_num)
-        call adios_selection_boundingbox (sel , 1, start, count_ad)
-        call adios_schedule_read(handle, sel, "abs_boundary_jacobian2Dw/array", &
-                                 0, 1, abs_boundary_jacobian2Dw, ier)
+      start(1) = local_dim_abs_boundary_jacobian2Dw * myrank
+      count_ad(1) = NGLLSQUARE * num_abs_boundary_faces
+      sel_num = sel_num+1
+      sel => selections(sel_num)
+      call adios_selection_boundingbox (sel , 1, start, count_ad)
+      call adios_schedule_read(handle, sel, "abs_boundary_jacobian2Dw/array", &
+                               0, 1, abs_boundary_jacobian2Dw, ier)
 
-        start(1) = local_dim_abs_boundary_normal * myrank
-        count_ad(1) = NDIM * NGLLSQUARE * num_abs_boundary_faces
-        sel_num = sel_num+1
-        sel => selections(sel_num)
-        call adios_selection_boundingbox (sel , 1, start, count_ad)
-        call adios_schedule_read(handle, sel, "abs_boundary_normal/array", &
-                                 0, 1, abs_boundary_normal, ier)
+      start(1) = local_dim_abs_boundary_normal * myrank
+      count_ad(1) = NDIM * NGLLSQUARE * num_abs_boundary_faces
+      sel_num = sel_num+1
+      sel => selections(sel_num)
+      call adios_selection_boundingbox (sel , 1, start, count_ad)
+      call adios_schedule_read(handle, sel, "abs_boundary_normal/array", &
+                               0, 1, abs_boundary_normal, ier)
 
-       if( STACEY_ABSORBING_CONDITIONS ) then
-          ! store mass matrix contributions
-          if(ELASTIC_SIMULATION) then
-            start(1) = local_dim_rmassx * myrank
-            count_ad(1) = NGLOB_AB  ! == nglob_xy in generate_databse
-            sel_num = sel_num+1
-            sel => selections(sel_num)
-            call adios_selection_boundingbox (sel , 1, start, count_ad)
-            call adios_schedule_read(handle, sel, "rmassx/array", 0, 1, &
-                                     rmassx, ier)
-            call adios_schedule_read(handle, sel, "rmassy/array", 0, 1, &
-                                     rmassy, ier)
-            call adios_schedule_read(handle, sel, "rmassz/array", 0, 1, &
-                                     rmassz, ier)
-          endif
-          if(ACOUSTIC_SIMULATION) then
-            start(1) = local_dim_rmassz_acoustic * myrank
-            count_ad(1) = NGLOB_AB ! == nglob_xy in generate_databse
-            sel_num = sel_num+1
-            sel => selections(sel_num)
-            call adios_selection_boundingbox (sel , 1, start, count_ad)
-            call adios_schedule_read(handle, sel, "rmassx/array", 0, 1, &
-                                     rmassx, ier)
-            call adios_schedule_read(handle, sel, "rmassy/array", 0, 1, &
-                                     rmassy, ier)
-            call adios_schedule_read(handle, sel, "rmassz_acoustic/array", &
-                                     0, 1, rmassz_acoustic, ier)
-          endif
-       endif
-     endif
+      if (STACEY_ABSORBING_CONDITIONS) then
+        ! store mass matrix contributions
+        if (ELASTIC_SIMULATION) then
+          start(1) = local_dim_rmassx * myrank
+          count_ad(1) = NGLOB_AB  ! == nglob_xy in generate_databse
+          sel_num = sel_num+1
+          sel => selections(sel_num)
+          call adios_selection_boundingbox (sel , 1, start, count_ad)
+          call adios_schedule_read(handle, sel, "rmassx/array", 0, 1, &
+                                   rmassx, ier)
+          call adios_schedule_read(handle, sel, "rmassy/array", 0, 1, &
+                                   rmassy, ier)
+          call adios_schedule_read(handle, sel, "rmassz/array", 0, 1, &
+                                   rmassz, ier)
+        endif
+        if (ACOUSTIC_SIMULATION) then
+          start(1) = local_dim_rmassz_acoustic * myrank
+          count_ad(1) = NGLOB_AB ! == nglob_xy in generate_databse
+          sel_num = sel_num+1
+          sel => selections(sel_num)
+          call adios_selection_boundingbox (sel , 1, start, count_ad)
+          call adios_schedule_read(handle, sel, "rmassz_acoustic/array", &
+                                   0, 1, rmassz_acoustic, ier)
+        endif
+      endif
+    endif
   endif
 
   start(1) = local_dim_ibelm_xmin * myrank
@@ -1329,7 +1330,7 @@ subroutine read_mesh_databases_adios()
                            ibelm_top, ier)
 
   ! free surface
-  if( num_free_surface_faces > 0 ) then
+  if (num_free_surface_faces > 0) then
 
     start(1) = local_dim_free_surface_ispec * myrank
     count_ad(1) = num_free_surface_faces
@@ -1365,7 +1366,7 @@ subroutine read_mesh_databases_adios()
   endif
 
   ! acoustic-elastic coupling surface
-  if( num_coupling_ac_el_faces > 0 ) then
+  if (num_coupling_ac_el_faces > 0) then
 
     start(1) = local_dim_coupling_ac_el_ispec * myrank
     count_ad(1) = num_coupling_ac_el_faces
@@ -1400,7 +1401,7 @@ subroutine read_mesh_databases_adios()
   endif
 
   ! acoustic-poroelastic coupling surface
-  if( num_coupling_ac_po_faces > 0 ) then
+  if (num_coupling_ac_po_faces > 0) then
 
     start(1) = local_dim_coupling_ac_po_ispec * myrank
     count_ad(1) = num_coupling_ac_po_faces
@@ -1436,7 +1437,7 @@ subroutine read_mesh_databases_adios()
   endif
 
   ! elastic-poroelastic coupling surface
-  if( num_coupling_el_po_faces > 0 ) then
+  if (num_coupling_el_po_faces > 0) then
 
     start(1) = local_dim_coupling_el_po_ispec * myrank
     count_ad(1) = num_coupling_el_po_faces
@@ -1476,7 +1477,7 @@ subroutine read_mesh_databases_adios()
   endif
 
   ! MPI interfaces
-  if( num_interfaces_ext_mesh > 0 ) then
+  if (num_interfaces_ext_mesh > 0) then
     start(1) = local_dim_my_neighbours_ext_mesh * myrank
     count_ad(1) = num_interfaces_ext_mesh
     sel_num = sel_num+1
@@ -1496,7 +1497,7 @@ subroutine read_mesh_databases_adios()
                              ibool_interfaces_ext_mesh, ier)
   endif
 
-  if( ELASTIC_SIMULATION .and. ANISOTROPY ) then
+  if (ELASTIC_SIMULATION .and. ANISOTROPY) then
     start(1) = local_dim_c11store * myrank
     count_ad(1) = NGLLX * NGLLY * NGLLZ * nspec_aniso
     sel_num = sel_num+1
@@ -1555,8 +1556,8 @@ subroutine read_mesh_databases_adios()
   call adios_schedule_read(handle, sel, "ispec_is_inner/array", 0, 1, &
                            ispec_is_inner, ier)
 
-  if( ACOUSTIC_SIMULATION ) then
-    if(num_phase_ispec_acoustic > 0 ) then
+  if (ACOUSTIC_SIMULATION) then
+    if (num_phase_ispec_acoustic > 0) then
       start(1) = local_dim_phase_ispec_inner_acoustic * myrank
       count_ad(1) = num_phase_ispec_acoustic * 2
       sel_num = sel_num+1
@@ -1567,8 +1568,8 @@ subroutine read_mesh_databases_adios()
     endif
   endif
 
-  if( ELASTIC_SIMULATION ) then
-    if(num_phase_ispec_elastic > 0 ) then
+  if (ELASTIC_SIMULATION) then
+    if (num_phase_ispec_elastic > 0) then
       start(1) = local_dim_phase_ispec_inner_elastic * myrank
       count_ad(1) = num_phase_ispec_elastic * 2
       sel_num = sel_num+1
@@ -1579,8 +1580,8 @@ subroutine read_mesh_databases_adios()
     endif
   endif
 
-  if( POROELASTIC_SIMULATION ) then
-    if(num_phase_ispec_poroelastic > 0 ) then
+  if (POROELASTIC_SIMULATION) then
+    if (num_phase_ispec_poroelastic > 0) then
       start(1) = local_dim_phase_ispec_inner_poroelastic * myrank
       count_ad(1) = num_phase_ispec_poroelastic * 2
       sel_num = sel_num+1
@@ -1592,9 +1593,9 @@ subroutine read_mesh_databases_adios()
   endif
 
   ! mesh coloring for GPUs
-  if( USE_MESH_COLORING_GPU ) then
+  if (USE_MESH_COLORING_GPU) then
     ! acoustic domain colors
-    if( ACOUSTIC_SIMULATION ) then
+    if (ACOUSTIC_SIMULATION) then
       start(1) = local_dim_num_elem_colors_acoustic * myrank
       count_ad(1) = num_colors_outer_acoustic + num_colors_inner_acoustic
       sel_num = sel_num+1
@@ -1604,7 +1605,7 @@ subroutine read_mesh_databases_adios()
                                num_elem_colors_acoustic, ier)
     endif
     ! elastic domain colors
-    if( ELASTIC_SIMULATION ) then
+    if (ELASTIC_SIMULATION) then
       start(1) = local_dim_num_elem_colors_elastic * myrank
       count_ad(1) = num_colors_outer_elastic + num_colors_inner_elastic
       sel_num = sel_num+1
@@ -1619,6 +1620,7 @@ subroutine read_mesh_databases_adios()
   ! Perform the reads and close the ADIOS 'external_mesh.bp' file |
   !---------------------------------------------------------------'
   call adios_perform_reads(handle, ier)
+  if (ier /= 0) call stop_all()
   call adios_read_close(handle,ier)
   call adios_read_finalize_method(ADIOS_READ_METHOD_BP, ier)
 
@@ -1627,7 +1629,7 @@ subroutine read_mesh_databases_adios()
 
   ! debug
   !call sum_all_i(num_interfaces_ext_mesh,inum)
-  !if(myrank == 0) then
+  !if (myrank == 0) then
   !  write(IMAIN,*) 'number of MPI partition interfaces: ',inum
   !  write(IMAIN,*)
   !endif
@@ -1649,66 +1651,15 @@ subroutine read_mesh_databases_adios()
     request_recv_vector_ext_mesh_s(num_interfaces_ext_mesh), &
     request_send_vector_ext_mesh_w(num_interfaces_ext_mesh), &
     request_recv_vector_ext_mesh_w(num_interfaces_ext_mesh),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array buffer_send_vector_ext_mesh etc.'
-
-  ! gets model dimensions
-  minl = minval( xstore )
-  maxl = maxval( xstore )
-  call min_all_all_cr(minl,min_all)
-  call max_all_all_cr(maxl,max_all)
-  LONGITUDE_MIN = min_all
-  LONGITUDE_MAX = max_all
-
-  minl = minval( ystore )
-  maxl = maxval( ystore )
-  call min_all_all_cr(minl,min_all)
-  call max_all_all_cr(maxl,max_all)
-  LATITUDE_MIN = min_all
-  LATITUDE_MAX = max_all
-
-  ! checks courant criteria on mesh
-  if( ELASTIC_SIMULATION ) then
-    call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB, &
-                              ibool,xstore,ystore,zstore, &
-                              kappastore,mustore,rho_vp,rho_vs, &
-                              DT,model_speed_max,min_resolved_period, &
-                              LOCAL_PATH,SAVE_MESH_FILES)
-
-  else if( POROELASTIC_SIMULATION ) then
-    allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    rho_vp = 0.0_CUSTOM_REAL
-    rho_vs = 0.0_CUSTOM_REAL
-    call check_mesh_resolution_poro(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
-                                    DT,model_speed_max,min_resolved_period, &
-                                    phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI, &
-                                    LOCAL_PATH,SAVE_MESH_FILES)
-    deallocate(rho_vp,rho_vs)
-  else if( ACOUSTIC_SIMULATION ) then
-    allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array rho_vp'
-    allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array rho_vs'
-    rho_vp = sqrt( kappastore / rhostore ) * rhostore
-    rho_vs = 0.0_CUSTOM_REAL
-    call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB, &
-                              ibool,xstore,ystore,zstore, &
-                              kappastore,mustore,rho_vp,rho_vs, &
-                              DT,model_speed_max,min_resolved_period, &
-                              LOCAL_PATH,SAVE_MESH_FILES)
-    deallocate(rho_vp,rho_vs)
-  endif
-
-  ! reads adjoint parameters
-  call read_mesh_databases_adjoint()
+  if (ier /= 0) stop 'error allocating array buffer_send_vector_ext_mesh etc.'
 
 end subroutine read_mesh_databases_adios
 
 
 !-------------------------------------------------------------------------------
 !> Reads in moho meshes
-subroutine read_moho_mesh_adjoint_adios()
-  use mpi
+subroutine read_mesh_databases_moho_adios()
+
   use adios_read_mod
 
   use specfem_par
@@ -1717,7 +1668,7 @@ subroutine read_moho_mesh_adjoint_adios()
   use specfem_par_poroelastic
   implicit none
 
-  character(len=256) :: database_name
+  character(len=MAX_STRING_LEN) :: database_name
   integer(kind=8) :: handle
 
   integer(kind=8), dimension(256),target :: selections
@@ -1731,134 +1682,161 @@ subroutine read_moho_mesh_adjoint_adios()
              local_dim_is_moho_bot,     local_dim_is_moho_top
 
   integer :: ier
+  integer :: comm
 
-  !-------------------------------------.
-  ! Open ADIOS Database file, read mode |
-  !-------------------------------------'
-  sel_num = 0
+  ! always needed to be allocated for routine arguments
+  allocate( is_moho_top(NSPEC_BOUN),is_moho_bot(NSPEC_BOUN),stat=ier)
+  if (ier /= 0) stop 'Error allocating array is_moho_top etc.'
 
-  database_name = adjustl(LOCAL_PATH)
-  database_name = database_name(1:len_trim(database_name)) // "/moho.bp"
+  ! checks if anything to do
+  if (ELASTIC_SIMULATION .and. SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
 
-  call adios_read_init_method (ADIOS_READ_METHOD_BP, MPI_COMM_WORLD, &
-                               "verbose=1", ier)
-  call adios_read_open_file (handle, database_name, 0, MPI_COMM_WORLD, ier)
+    !-------------------------------------.
+    ! Open ADIOS Database file, read mode |
+    !-------------------------------------'
+    sel_num = 0
 
-  !------------------------------------------------------------------.
-  ! Get scalar values. Might be differents for different processors. |
-  ! Hence the selection writeblock.                                  |
-  ! ONLY NSPEC_AB and NGLOB_AB
-  !------------------------------------------------------------------'
-  sel_num = sel_num+1
-  sel => selections(sel_num)
-  call adios_selection_writeblock(sel, myrank)
-  call adios_schedule_read(handle, sel, "/nspec2d_moho", 0, 1, &
-                           NSPEC2D_MOHO, ier)
-  call adios_perform_reads(handle, ier)
+    database_name = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // "/moho.bp"
 
-  !----------------------------------------------.
-  ! Fetch values to compute the simulation type. |
-  !----------------------------------------------'
-  sel_num = 0
-  call adios_get_scalar(handle, "ibelm_moho_bot/local_dim",&
-                        local_dim_ibelm_moho_bot ,ier)
-  call adios_get_scalar(handle, "ibelm_moho_top/local_dim",&
-                        local_dim_ibelm_moho_top ,ier)
+    call world_get_comm(comm)
 
-  call adios_get_scalar(handle, "ijk_moho_bot/local_dim",&
-                        local_dim_ijk_moho_bot ,ier)
-  call adios_get_scalar(handle, "ijk_moho_top/local_dim",&
-                        local_dim_ijk_moho_top ,ier)
+    call adios_read_init_method (ADIOS_READ_METHOD_BP, comm, &
+                                 "verbose=1", ier)
+    call adios_read_open_file (handle, database_name, 0, comm, ier)
+    if (ier /= 0) call stop_all()
 
-  call adios_get_scalar(handle,"normal_moho_bot /local_dim",&
-                        local_dim_normal_moho_bot ,ier)
-  call adios_get_scalar(handle, "normal_moho_top/local_dim",&
-                        local_dim_normal_moho_top ,ier)
+    !------------------------------------------------------------------.
+    ! Get scalar values. Might be differents for different processors. |
+    ! Hence the selection writeblock.                                  |
+    ! ONLY NSPEC_AB and NGLOB_AB
+    !------------------------------------------------------------------'
+    sel_num = sel_num+1
+    sel => selections(sel_num)
+    call adios_selection_writeblock(sel, myrank)
+    call adios_schedule_read(handle, sel, "nspec2d_moho", 0, 1, &
+                             NSPEC2D_MOHO, ier)
+    call adios_perform_reads(handle, ier)
+    if (ier /= 0) call stop_all()
 
-  call adios_get_scalar(handle, "is_moho_bot/local_dim",&
-                        local_dim_is_moho_bot ,ier)
-  call adios_get_scalar(handle, "is_moho_top/local_dim",&
-                        local_dim_is_moho_top ,ier)
+    !----------------------------------------------.
+    ! Fetch values to compute the simulation type. |
+    !----------------------------------------------'
+    sel_num = 0
+    call adios_get_scalar(handle, "ibelm_moho_bot/local_dim",&
+                          local_dim_ibelm_moho_bot ,ier)
+    call adios_get_scalar(handle, "ibelm_moho_top/local_dim",&
+                          local_dim_ibelm_moho_top ,ier)
 
-  !---------------------------------------------.
-  ! Allocate arrays with previously read values |
-  !---------------------------------------------'
-  allocate(ibelm_moho_bot(NSPEC2D_MOHO), &
-          ibelm_moho_top(NSPEC2D_MOHO), &
-          normal_moho_top(NDIM,NGLLSQUARE,NSPEC2D_MOHO), &
-          normal_moho_bot(NDIM,NGLLSQUARE,NSPEC2D_MOHO), &
-          ijk_moho_bot(3,NGLLSQUARE,NSPEC2D_MOHO), &
-          ijk_moho_top(3,NGLLSQUARE,NSPEC2D_MOHO),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array ibelm_moho_bot etc.'
+    call adios_get_scalar(handle, "ijk_moho_bot/local_dim",&
+                          local_dim_ijk_moho_bot ,ier)
+    call adios_get_scalar(handle, "ijk_moho_top/local_dim",&
+                          local_dim_ijk_moho_top ,ier)
 
-  !-----------------------------------.
-  ! Read arrays from external_mesh.bp |
-  !-----------------------------------'
-  start(1) = local_dim_ibelm_moho_bot * myrank
-  count_ad(1) = NSPEC2D_MOHO
-  sel_num = sel_num+1
-  sel => selections(sel_num)
-  call adios_selection_boundingbox (sel , 1, start, count_ad)
-  call adios_schedule_read(handle, sel, "ibelm_moho_bot/array", 0, 1, &
-                           ibelm_moho_bot, ier)
-  start(1) = local_dim_ibelm_moho_top * myrank
-  count_ad(1) = NSPEC2D_MOHO
-  sel_num = sel_num+1
-  sel => selections(sel_num)
-  call adios_selection_boundingbox (sel , 1, start, count_ad)
-  call adios_schedule_read(handle, sel, "ibelm_moho_top/array", 0, 1, &
-                           ibelm_moho_top, ier)
+    call adios_get_scalar(handle,"normal_moho_bot /local_dim",&
+                          local_dim_normal_moho_bot ,ier)
+    call adios_get_scalar(handle, "normal_moho_top/local_dim",&
+                          local_dim_normal_moho_top ,ier)
 
-  start(1) = local_dim_ijk_moho_bot * myrank
-  count_ad(1) = 3 * NGLLSQUARE * NSPEC2D_MOHO
-  sel_num = sel_num+1
-  sel => selections(sel_num)
-  call adios_selection_boundingbox (sel , 1, start, count_ad)
-  call adios_schedule_read(handle, sel, "ijk_moho_bot/array", 0, 1, &
-                           ijk_moho_bot, ier)
-  start(1) = local_dim_ijk_moho_top * myrank
-  count_ad(1) = 3 * NGLLSQUARE * NSPEC2D_MOHO
-  sel_num = sel_num+1
-  sel => selections(sel_num)
-  call adios_selection_boundingbox (sel , 1, start, count_ad)
-  call adios_schedule_read(handle, sel, "ijk_moho_top/array", 0, 1, &
-                           ijk_moho_top, ier)
+    call adios_get_scalar(handle, "is_moho_bot/local_dim",&
+                          local_dim_is_moho_bot ,ier)
+    call adios_get_scalar(handle, "is_moho_top/local_dim",&
+                          local_dim_is_moho_top ,ier)
 
-  start(1) = local_dim_normal_moho_bot * myrank
-  count_ad(1) = NDIM * NGLLSQUARE * NSPEC2D_MOHO
-  sel_num = sel_num+1
-  sel => selections(sel_num)
-  call adios_selection_boundingbox (sel , 1, start, count_ad)
-  call adios_schedule_read(handle, sel, "normal_moho_bot/array", 0, 1, &
-                           normal_moho_bot, ier)
-  start(1) = local_dim_normal_moho_top * myrank
-  count_ad(1) = NDIM * NGLLSQUARE * NSPEC2D_MOHO
-  sel_num = sel_num+1
-  sel => selections(sel_num)
-  call adios_selection_boundingbox (sel , 1, start, count_ad)
-  call adios_schedule_read(handle, sel, "normal_moho_top/array", 0, 1, &
-                           normal_moho_top, ier)
+    !---------------------------------------------.
+    ! Allocate arrays with previously read values |
+    !---------------------------------------------'
+    allocate(ibelm_moho_bot(NSPEC2D_MOHO), &
+             ibelm_moho_top(NSPEC2D_MOHO), &
+             normal_moho_top(NDIM,NGLLSQUARE,NSPEC2D_MOHO), &
+             normal_moho_bot(NDIM,NGLLSQUARE,NSPEC2D_MOHO), &
+             ijk_moho_bot(3,NGLLSQUARE,NSPEC2D_MOHO), &
+             ijk_moho_top(3,NGLLSQUARE,NSPEC2D_MOHO),stat=ier)
+    if (ier /= 0) stop 'error allocating array ibelm_moho_bot etc.'
 
-  start(1) = local_dim_is_moho_bot * myrank
-  count_ad(1) = NSPEC_AB
-  sel_num = sel_num+1
-  sel => selections(sel_num)
-  call adios_selection_boundingbox (sel , 1, start, count_ad)
-  call adios_schedule_read(handle, sel, "is_moho_bot/array", 0, 1, &
-                           is_moho_bot, ier)
-  start(1) = local_dim_is_moho_top * myrank
-  count_ad(1) = NSPEC_AB
-  sel_num = sel_num+1
-  sel => selections(sel_num)
-  call adios_selection_boundingbox (sel , 1, start, count_ad)
-  call adios_schedule_read(handle, sel, "is_moho_top/array", 0, 1, &
-                           is_moho_top, ier)
+    !-----------------------------------.
+    ! Read arrays from external_mesh.bp |
+    !-----------------------------------'
+    start(1) = local_dim_ibelm_moho_bot * myrank
+    count_ad(1) = NSPEC2D_MOHO
+    sel_num = sel_num+1
+    sel => selections(sel_num)
+    call adios_selection_boundingbox (sel , 1, start, count_ad)
+    call adios_schedule_read(handle, sel, "ibelm_moho_bot/array", 0, 1, &
+                             ibelm_moho_bot, ier)
+    start(1) = local_dim_ibelm_moho_top * myrank
+    count_ad(1) = NSPEC2D_MOHO
+    sel_num = sel_num+1
+    sel => selections(sel_num)
+    call adios_selection_boundingbox (sel , 1, start, count_ad)
+    call adios_schedule_read(handle, sel, "ibelm_moho_top/array", 0, 1, &
+                             ibelm_moho_top, ier)
 
-  !---------------------------------------------------------------.
-  ! Perform the reads and close the ADIOS 'external_mesh.bp' file |
-  !---------------------------------------------------------------'
-  call adios_perform_reads(handle, ier)
-  call adios_read_close(handle,ier)
-  call adios_read_finalize_method(ADIOS_READ_METHOD_BP, ier)
+    start(1) = local_dim_ijk_moho_bot * myrank
+    count_ad(1) = 3 * NGLLSQUARE * NSPEC2D_MOHO
+    sel_num = sel_num+1
+    sel => selections(sel_num)
+    call adios_selection_boundingbox (sel , 1, start, count_ad)
+    call adios_schedule_read(handle, sel, "ijk_moho_bot/array", 0, 1, &
+                             ijk_moho_bot, ier)
+    start(1) = local_dim_ijk_moho_top * myrank
+    count_ad(1) = 3 * NGLLSQUARE * NSPEC2D_MOHO
+    sel_num = sel_num+1
+    sel => selections(sel_num)
+    call adios_selection_boundingbox (sel , 1, start, count_ad)
+    call adios_schedule_read(handle, sel, "ijk_moho_top/array", 0, 1, &
+                             ijk_moho_top, ier)
 
-end subroutine read_moho_mesh_adjoint_adios
+    start(1) = local_dim_normal_moho_bot * myrank
+    count_ad(1) = NDIM * NGLLSQUARE * NSPEC2D_MOHO
+    sel_num = sel_num+1
+    sel => selections(sel_num)
+    call adios_selection_boundingbox (sel , 1, start, count_ad)
+    call adios_schedule_read(handle, sel, "normal_moho_bot/array", 0, 1, &
+                             normal_moho_bot, ier)
+    start(1) = local_dim_normal_moho_top * myrank
+    count_ad(1) = NDIM * NGLLSQUARE * NSPEC2D_MOHO
+    sel_num = sel_num+1
+    sel => selections(sel_num)
+    call adios_selection_boundingbox (sel , 1, start, count_ad)
+    call adios_schedule_read(handle, sel, "normal_moho_top/array", 0, 1, &
+                             normal_moho_top, ier)
+
+    start(1) = local_dim_is_moho_bot * myrank
+    count_ad(1) = NSPEC_AB
+    sel_num = sel_num+1
+    sel => selections(sel_num)
+    call adios_selection_boundingbox (sel , 1, start, count_ad)
+    call adios_schedule_read(handle, sel, "is_moho_bot/array", 0, 1, &
+                             is_moho_bot, ier)
+    start(1) = local_dim_is_moho_top * myrank
+    count_ad(1) = NSPEC_AB
+    sel_num = sel_num+1
+    sel => selections(sel_num)
+    call adios_selection_boundingbox (sel , 1, start, count_ad)
+    call adios_schedule_read(handle, sel, "is_moho_top/array", 0, 1, &
+                             is_moho_top, ier)
+
+    !---------------------------------------------------------------.
+    ! Perform the reads and close the ADIOS 'external_mesh.bp' file |
+    !---------------------------------------------------------------'
+    call adios_perform_reads(handle, ier)
+    if (ier /= 0) call stop_all()
+    call adios_read_close(handle,ier)
+    call adios_read_finalize_method(ADIOS_READ_METHOD_BP, ier)
+
+  else
+    ! dummy
+    NSPEC2D_MOHO = 1
+  endif
+
+  ! moho boundary
+  if (ELASTIC_SIMULATION) then
+    ! always needed to be allocated for routine arguments
+    allocate(dsdx_top(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO), &
+             dsdx_bot(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO), &
+             b_dsdx_top(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO), &
+             b_dsdx_bot(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO),stat=ier)
+    if (ier /= 0) stop 'Error allocating array dsdx_top etc.'
+  endif
+
+end subroutine read_mesh_databases_moho_adios

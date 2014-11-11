@@ -1,0 +1,20 @@
+Carl Tape
+09-Nov-2009
+
+This version of combine_vol_data.f90 is modified by Qinya Liu to allow the topology files to be read in from a base directory.  Probably this version should update the one residing in SPECFEM3D-1.4.3.
+
+To avoid confusion, the file has been renamed combine_vol_data_mod.f90
+
+Compiling with compile.bash generated the following warning messages:
+
+write_c_binary.c: In function 'open_file_':
+write_c_binary.c:45: warning: incompatible implicit declaration of built-in function 'exit'
+/n/sw/intel/ifort/11.1/046/lib/intel64/libimf.so: warning: warning: feupdateenv is not implemented and will always fail
+
+These do not appear to cause any problems.
+
+Note that the following files will differ for each user:
+    values_from_mesher.h
+    constants.h
+
+------------------------------------------

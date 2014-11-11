@@ -1,0 +1,1 @@
+gfortran -o rotate_adj_src rotate_adj_src.f90 -L/opt/sac/lib -lsacio

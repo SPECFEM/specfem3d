@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -30,9 +31,9 @@
              ATTENUATION,ANISOTROPY,NSTEP,DT,STACEY_INSTEAD_OF_FREE_SURFACE, &
              SIMULATION_TYPE,memory_size,nfaces_surface_glob_ext_mesh)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer NSPEC_AB,NGLOB_AB,NPROC,NSTEP,SIMULATION_TYPE
 
@@ -41,21 +42,20 @@
 
   double precision DT, memory_size
 
-  character(len=256) HEADER_FILE
+  character(len=MAX_STRING_LEN) :: HEADER_FILE
 
   integer nfaces_surface_glob_ext_mesh
 
   NAMELIST/MESHER/ABSORB_FREE_SURFACE_VAL
 
   if (STACEY_INSTEAD_OF_FREE_SURFACE) then
-      ABSORB_FREE_SURFACE_VAL = .true.
+    ABSORB_FREE_SURFACE_VAL = .true.
   else
-      ABSORB_FREE_SURFACE_VAL = .false.
+    ABSORB_FREE_SURFACE_VAL = .false.
   endif
 
 ! copy number of elements and points in an include file for the solver
-  call get_value_string(HEADER_FILE, 'solver.HEADER_FILE', &
-       OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))//'/values_from_mesher.h')
+  HEADER_FILE = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))//'/values_from_mesher.h'
 
   open(unit=IOUT,file=HEADER_FILE,status='unknown')
   write(IOUT,*)
@@ -92,14 +92,14 @@
   write(IOUT,*) '! time step = ',DT
   write(IOUT,*) '!'
   write(IOUT,*) '! attenuation uses:'
-  if(ATTENUATION) then
+  if (ATTENUATION) then
     write(IOUT,*) '!  NSPEC_ATTENUATION = ', NSPEC_AB
   else
     write(IOUT,*) '!  NSPEC_ATTENUATION = ', 1
   endif
   write(IOUT,*) '! '
   write(IOUT,*) '! anisotropy uses:'
-  if(ANISOTROPY) then
+  if (ANISOTROPY) then
     write(IOUT,*) '!  NSPEC_ANISO = ',NSPEC_AB
   else
     write(IOUT,*) '!  NSPEC_ANISO = ', 1
@@ -130,10 +130,9 @@
   close(IOUT)
 
 ! copy number of surface elements in an include file for the movies
-  if( nfaces_surface_glob_ext_mesh > 0 ) then
+  if (nfaces_surface_glob_ext_mesh > 0) then
 
-    call get_value_string(HEADER_FILE, 'solver.HEADER_FILE', &
-         OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))//'/surface_from_mesher.h')
+    HEADER_FILE = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))//'/surface_from_mesher.h'
 
     open(unit=IOUT,file=HEADER_FILE,status='unknown')
     write(IOUT,*) '!'

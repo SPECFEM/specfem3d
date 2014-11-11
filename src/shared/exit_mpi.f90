@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -28,33 +29,31 @@
 
   subroutine exit_MPI(myrank,error_msg)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
 ! identifier for error message file
   integer, parameter :: IERROR = 30
 
   integer myrank
-  character(len=*) error_msg
+  character(len=*) :: error_msg
 
-  character(len=80) outputname
-  character(len=256) OUTPUT_FILES
+  character(len=MAX_STRING_LEN) :: outputname
 
 ! write error message to screen
   write(*,*) error_msg(1:len(error_msg))
   write(*,*) 'Error detected, aborting MPI... proc ',myrank
 
 ! write error message to file
-  call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)))
   write(outputname,"('/error_message',i6.6,'.txt')") myrank
-  open(unit=IERROR,file=trim(OUTPUT_FILES)//outputname,status='unknown')
+  open(unit=IERROR,file=trim(OUTPUT_FILES_PATH)//outputname,status='unknown')
   write(IERROR,*) error_msg(1:len(error_msg))
   write(IERROR,*) 'Error detected, aborting MPI... proc ',myrank
   close(IERROR)
 
 ! close output file
-  if(myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) close(IMAIN)
+  if (myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) close(IMAIN)
 
   call stop_all()
 
@@ -68,9 +67,9 @@
 
   subroutine exit_MPI_without_rank(error_msg)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   character(len=*) error_msg
 
@@ -91,9 +90,9 @@
 
   subroutine flush_IMAIN()
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   ! only master process writes out to main output file
   ! file I/O in fortran is buffered by default

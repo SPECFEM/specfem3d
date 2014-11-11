@@ -42,9 +42,6 @@ Option 2: follow instructions below for submitting separate jobs with qsub (or b
     proc000000_.dx
     proc000000_.INP
 
-   - save output file:
-    > cp OUTPUT_FILES/output_mesher.txt OUTPUT_FILES/output_meshfem3D.txt
-
 3. generate databases:
 
    - compile and run generate_databases in directory SPECFEM3D/:

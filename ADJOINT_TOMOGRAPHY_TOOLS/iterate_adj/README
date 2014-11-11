@@ -1,0 +1,23 @@
+Carl Tape, 23-Nov-2008
+
+iterate_adj is a collection of scripts needed to do adjoint tomography.
+It is the third package in the sequence:
+
+flexwin
+measure_adj
+iterate_adj
+
+Several operations are done on pangu, like computing the Hessian matrix for the subspace method.  And several operations are done in Matlab, like choosing the damping parameter.  Thus, the two main directories for these processes are:
+
+cluster         -- scripts are executed on a cluster
+matlab          -- scripts are executed NOT on a cluster
+
+Other directories are:
+
+misfit_plot     -- directory for plotting seismogram comparisons from two different models
+UTILS           -- various scripts for ploting figures
+SEM2D_iterate   -- 2D test code for two inversion algorithms
+                      conjugate gradient
+                      source subspace method
+
+---------------------

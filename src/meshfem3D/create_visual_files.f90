@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -26,11 +27,12 @@
 
 
   subroutine create_visual_files(CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES,&
-                                nspec,nglob,prname,nodes_coords,ibool,true_material_num)
+                                nspec,nglob,prname,nodes_coords,ibool,ispec_material_id)
+
+  use constants
 
   implicit none
 
-  include "constants.h"
   include "constants_meshfem3D.h"
 
 ! Mesh files for visualization
@@ -43,25 +45,23 @@
   integer nglob
 
 ! name of the database files
-  character(len=256) prname
+  character(len=MAX_STRING_LEN) :: prname
 
 ! arrays with the mesh
-  integer true_material_num(nspec)
+  integer ispec_material_id(nspec)
   integer ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
   double precision :: nodes_coords(nglob,3)
 
 !  ---------------
   integer i,ipoin,ispec
 
-  if(CREATE_ABAQUS_FILES) then
+  if (CREATE_ABAQUS_FILES) then
 
      open(unit=64,file=prname(1:len_trim(prname))//'mesh.INP',status='unknown',action='write',form='formatted')
      write(64,'(a8)') '*HEADING'
-!     write(64,'(a52)') 'cubit(mesh): 04/17/2009: 18:11:24'
      write(64,'(a27)') 'SPECFEM3D meshfem3D(mesh): '
      write(64,'(a5)') '*NODE'
      do i=1,nglob
-!        write(64,*) i,',',nodes_coords(i,1),',',nodes_coords(i,2),',',nodes_coords(i,3)
          write(64,'(i10,3(a,e15.6))') i,',',nodes_coords(i,1),',',nodes_coords(i,2),',',nodes_coords(i,3)
      enddo
      write(64,'(a31)') '*ELEMENT, TYPE=C3D8R, ELSET=EB1'
@@ -75,7 +75,7 @@
   endif
 
 
-  if(CREATE_DX_FILES) then
+  if (CREATE_DX_FILES) then
 
      open(unit=66,file=prname(1:len_trim(prname))//'mesh.dx',status='unknown')
 
@@ -112,7 +112,7 @@
 
      ! loop on all the elements
      do ispec = 1,nspec
-        write(66,*)  true_material_num(ispec)
+        write(66,*)  ispec_material_id(ispec)
      enddo
 
      write(66,*) 'attribute "dep" string "connections"'
@@ -126,7 +126,7 @@
 
   endif
 
-  if( CREATE_VTK_FILES ) then
+  if (CREATE_VTK_FILES) then
     ! vtk file output
     open(66,file=prname(1:len_trim(prname))//'mesh.vtk',status='unknown')
     write(66,'(a)') '# vtk DataFile Version 3.1'
@@ -157,14 +157,14 @@
     write(66,'(a)') "SCALARS elem_val float"
     write(66,'(a)') "LOOKUP_TABLE default"
     do ispec = 1,nspec
-      write(66,*) true_material_num(ispec)
+      write(66,*) ispec_material_id(ispec)
     enddo
     write(66,*) ""
     close(66)
 
   endif
 
-  call sync_all()
+  call synchronize_all()
 
   end subroutine create_visual_files
 

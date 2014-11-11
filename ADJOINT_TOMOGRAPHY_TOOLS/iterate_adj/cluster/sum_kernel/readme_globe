@@ -1,0 +1,36 @@
+------------------------------------
+readme
+------------------------------------
+
+sum_kernels_globe:
+
+  reads in several event kernels, in parallel on all processors,  
+  and sums them all up
+
+
+0. compile executable 'sum_kernels': 
+    (source files have been moved to SPECFEM3D_GLOBE package in src/tomography/)
+    > cd ~/SPECFEM3D_GLOBE/
+    > make xsum_kernels
+    then copy binaries into this directory...
+
+   
+1. create symbolic link 'INPUT_KERNELS' to kernel directories:
+    > ln -s /my_OUTPUTS_KERNEL INPUT_KERNEL
+    or
+    > cd INPUT_KERNEL/
+    > ln -s /my_OUTPUTS_KERNEL/*.* ./
+
+2. copy each single kernel directory name to file 'kernels_run.globe':
+    > ls -1 INPUT_KERNELS/ > kernels_run.globe 
+    
+    
+    
+then, run job:    
+    
+    on sesame: > run_globe.bash        
+    
+    (will run for about 10 minutes)
+    
+
+    find summed event kernels in directory OUTPUT_SUM/

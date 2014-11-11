@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -29,9 +30,10 @@
 
   subroutine define_superbrick(x_superbrick,y_superbrick,z_superbrick,ibool_superbrick,iboun_sb)
 
+  use constants
+
   implicit none
 
-  include "constants.h"
   include "constants_meshfem3D.h"
 
   integer, dimension(NGNOD_EIGHT_CORNERS,NSPEC_DOUBLING_SUPERBRICK) :: ibool_superbrick
@@ -658,9 +660,10 @@
 
   subroutine define_superbrick_one_layer(x_superbrick,y_superbrick,z_superbrick,ibool_superbrick,iboun_sb)
 
+  use constants
+
   implicit none
 
-  include "constants.h"
   include "constants_meshfem3D.h"
 
   integer, dimension(NGNOD_EIGHT_CORNERS,NSPEC_DOUBLING_SUPERBRICK) :: ibool_superbrick
@@ -1205,9 +1208,10 @@
 
   subroutine define_basic_doubling_brick(x_superbrick,y_superbrick,z_superbrick,ibool_superbrick,iboun_sb,case_num)
 
+  use constants
+
   implicit none
 
-  include "constants.h"
   include "constants_meshfem3D.h"
 
   integer, dimension(NGNOD_EIGHT_CORNERS,NSPEC_DOUBLING_SUPERBRICK) :: ibool_superbrick
@@ -1215,8 +1219,8 @@
   logical, dimension(NSPEC_DOUBLING_SUPERBRICK,6) :: iboun_sb
   integer :: case_num
 
-  SELECT CASE (case_num)
-      CASE (1)
+  select case (case_num)
+      case (1)
           x_superbrick(1) = 1.d0 / 2.d0
           y_superbrick(1) = 1.d0
           z_superbrick(1) = 2.d0
@@ -1422,7 +1426,7 @@
           iboun_sb(8,3) = .true.
           iboun_sb(8,4) = .true.
           iboun_sb(8,5) = .true.
-      CASE (2)
+      case (2)
           x_superbrick(1) = 1.d0 / 2.d0
           y_superbrick(1) = 0.d0
           z_superbrick(1) = 2.d0
@@ -1628,7 +1632,7 @@
           iboun_sb(8,3) = .true.
           iboun_sb(8,4) = .true.
           iboun_sb(8,5) = .true.
-      CASE (3)
+      case (3)
           x_superbrick(1) = 1.d0 / 2.d0
           y_superbrick(1) = 1.d0
           z_superbrick(1) = 2.d0
@@ -1834,7 +1838,7 @@
           iboun_sb(8,3) = .true.
           iboun_sb(8,4) = .true.
           iboun_sb(8,5) = .true.
-      CASE (4)
+      case (4)
           x_superbrick(1) = 1.d0 / 2.d0
           y_superbrick(1) = 0.d0
           z_superbrick(1) = 2.d0
@@ -2040,7 +2044,7 @@
           iboun_sb(8,3) = .true.
           iboun_sb(8,4) = .true.
           iboun_sb(8,5) = .true.
-  END SELECT
+  end select
 
   end subroutine define_basic_doubling_brick
 

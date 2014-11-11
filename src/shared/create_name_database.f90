@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -28,21 +29,20 @@
 
 ! create the name of the database for the mesher and the solver
 
+  use constants, only: MAX_STRING_LEN
+
   implicit none
 
   integer iproc
 
 ! name of the database file
-  character(len=256) prname,procname,LOCAL_PATH,clean_LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: prname,procname,LOCAL_PATH
 
 ! create the name for the database of the current slide and region
   write(procname,"('/proc',i6.6,'_')") iproc
 
-! suppress white spaces if any
-  clean_LOCAL_PATH = adjustl(LOCAL_PATH)
-
 ! create full name with path
-  prname = clean_LOCAL_PATH(1:len_trim(clean_LOCAL_PATH)) // procname
+  prname = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // procname
 
   end subroutine create_name_database
 

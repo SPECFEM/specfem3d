@@ -52,4 +52,13 @@ echo "1" | awk '{ for(k=0;k<NZ;k++){ for(j=0;j<NY;j++){for(i=0;i<NX;i++){ x=i*SP
 
 mv tmp.xyz tomography_model.xyz
 
+# links to file
+mkdir -p DATA
+mkdir -p DATA/tomo_files
+cd DATA/tomo_files/
+if [ ! -e tomography_model.xyz ]; then
+ln -s ../../tomography_model.xyz
+fi
+cd ../../
+
 echo "created file: tomography_model.xyz"

@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -29,9 +30,9 @@
   subroutine recompute_jacobian(xelm,yelm,zelm,xi,eta,gamma,x,y,z, &
                    xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,NGNOD)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   double precision x,y,z,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz
   double precision xi,eta,gamma,jacobian
@@ -58,9 +59,9 @@
 ! recompute jacobian for any (xi,eta,gamma) point, not necessarily a GLL point
 
 ! check that the parameter file is correct
-  if(NGNOD /= 8 .and. NGNOD /= 27) &
-       stop 'elements should have 8 or 27 control nodes'
-  if(NGNOD == 8) then
+  if (NGNOD /= 8 .and. NGNOD /= 27) stop 'elements should have 8 or 27 control nodes'
+
+  if (NGNOD == 8) then
 
 ! ***
 ! *** create the 3D shape functions and the Jacobian for an 8-node element
@@ -118,6 +119,7 @@
     ! note: put further setup for ngnod == 27 into subroutine
     !       to avoid compilation errors in case ngnod == 8
     call recompute_jacobian_27(NGNOD,NDIM,xi,eta,gamma,shape3D,dershape3D)
+
   endif
 
 ! compute coordinates and jacobian matrix
@@ -152,7 +154,7 @@
 
   jacobian = xxi*(yeta*zgamma-ygamma*zeta) - xeta*(yxi*zgamma-ygamma*zxi) + xgamma*(yxi*zeta-yeta*zxi)
 
-  if(jacobian <= ZERO) stop '3D Jacobian undefined'
+  if (jacobian <= ZERO) stop '3D Jacobian undefined'
 
 ! invert the relation (Fletcher p. 50 vol. 2)
   xix=(yeta*zgamma-ygamma*zeta)/jacobian

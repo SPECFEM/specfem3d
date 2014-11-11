@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -38,9 +39,11 @@
                         SIMULATION_TYPE,backward_simulation)
 
 ! returns the updated pressure array: potential_dot_dot_acoustic
+
+  use constants
   use pml_par, only: NSPEC_CPML
+
   implicit none
-  include 'constants.h'
 
   integer :: NSPEC_AB,NGLOB_AB
 
@@ -83,7 +86,7 @@
     !           no material properties are needed for this coupling term)
     ispec = coupling_ac_el_ispec(iface)
 
-    if( ispec_is_inner(ispec) .eqv. phase_is_inner ) then
+    if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
 
       ! loops over common GLL points
       do igll = 1, NGLLSQUARE
@@ -96,38 +99,38 @@
         iglob = ibool(i,j,k,ispec)
 
         ! elastic displacement on global point
-        if(PML_CONDITIONS .and. NSPEC_CPML > 0)then
-           if(.not. backward_simulation)then
-               if(is_CPML(ispec))then
-                  if(SIMULATION_TYPE == 1)then
-                    ispec_CPML = spec_to_CPML(ispec)
-                    call pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,i,j,k,&
+        if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
+          if (.not. backward_simulation) then
+            if (is_CPML(ispec)) then
+              if (SIMULATION_TYPE == 1) then
+                ispec_CPML = spec_to_CPML(ispec)
+                call pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,i,j,k,&
                                                       displ_x,displ_y,displ_z,displ,&
                                                       num_coupling_ac_el_faces,rmemory_coupling_ac_el_displ)
-                  endif
-
-                  if(SIMULATION_TYPE == 3)then
-!left blank for change
-                  endif
-
-               else
-                  displ_x = displ(1,iglob)
-                  displ_y = displ(2,iglob)
-                  displ_z = displ(3,iglob)
-               endif
-           else
-              if(is_CPML(ispec))then
-! left blank, since no operation needed
-              else
-                displ_x = displ(1,iglob)
-                displ_y = displ(2,iglob)
-                displ_z = displ(3,iglob)
               endif
-           endif
+
+              if (SIMULATION_TYPE == 3) then
+                ! left blank for change
+              endif
+
+            else
+              displ_x = displ(1,iglob)
+              displ_y = displ(2,iglob)
+              displ_z = displ(3,iglob)
+            endif
+          else
+            if (is_CPML(ispec)) then
+              ! left blank, since no operation needed
+            else
+              displ_x = displ(1,iglob)
+              displ_y = displ(2,iglob)
+              displ_z = displ(3,iglob)
+            endif
+          endif
         else
-           displ_x = displ(1,iglob)
-           displ_y = displ(2,iglob)
-           displ_z = displ(3,iglob)
+          displ_x = displ(1,iglob)
+          displ_y = displ(2,iglob)
+          displ_z = displ(3,iglob)
         endif
 
         ! gets associated normal on GLL point

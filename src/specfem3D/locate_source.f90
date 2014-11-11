@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -34,23 +35,20 @@
                  DT,hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
                  islice_selected_source,ispec_selected_source, &
                  xi_source,eta_source,gamma_source, &
-                 UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,PRINT_SOURCE_TIME_FUNCTION, &
                  nu_source,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh, &
                  ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic, &
                  num_free_surface_faces,free_surface_ispec,free_surface_ijk)
 
-  use specfem_par,only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION,factor_force_source, &
-       comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP
+  use constants
+
+  use specfem_par,only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION, &
+      UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,COUPLE_WITH_EXTERNAL_CODE, &
+      factor_force_source,comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP
 
   implicit none
 
-  include "constants.h"
-
-  integer NPROC,UTM_PROJECTION_ZONE
+  integer NPROC
   integer NSPEC_AB,NGLOB_AB,NSOURCES,NGNOD
-
-  logical PRINT_SOURCE_TIME_FUNCTION
-  logical SUPPRESS_UTM_PROJECTION
 
   double precision DT
 
@@ -138,8 +136,6 @@
 
   double precision, dimension(6,NSOURCES) ::  moment_tensor
 
-  character(len=256) OUTPUT_FILES
-
   double precision, dimension(NSOURCES) :: x_found_source,y_found_source,z_found_source
   double precision, dimension(NSOURCES) :: elevation
   double precision distmin
@@ -161,19 +157,41 @@
   integer, dimension(NSOURCES) :: idomain
   integer, dimension(NGATHER_SOURCES,0:NPROC-1) :: idomain_all
 
+  double precision, external :: get_cmt_scalar_moment
+  double precision, external :: get_cmt_moment_magnitude
+
   !-----------------------------------------------------------------------------------
 
-  ! get the base pathname for output files
-  call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)))
-
-  ! read all the sources (note: each process reads the source file)
+  ! read all the sources
   if (USE_FORCE_POINT_SOURCE) then
-     call get_force(tshift_src,hdur,lat,long,depth,NSOURCES,min_tshift_src_original,factor_force_source, &
-                   comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP)
+    ! point forces
+    if (myrank == 0) then
+      ! only master process reads in FORCESOLUTION file
+      call get_force(tshift_src,hdur,lat,long,depth,NSOURCES,min_tshift_src_original,factor_force_source, &
+                     comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP)
+    endif
+    ! broadcasts specific point force infos
+    call bcast_all_dp(factor_force_source,NSOURCES)
+    call bcast_all_dp(comp_dir_vect_source_E,NSOURCES)
+    call bcast_all_dp(comp_dir_vect_source_N,NSOURCES)
+    call bcast_all_dp(comp_dir_vect_source_Z_UP,NSOURCES)
   else
-     call get_cmt(yr,jda,ho,mi,sec,tshift_src,hdur,lat,long,depth,moment_tensor, &
-                 DT,NSOURCES,min_tshift_src_original)
+    ! CMT moment tensors
+    if (myrank == 0) then
+      ! only master process reads in CMTSOLUTION file
+      call get_cmt(yr,jda,ho,mi,sec,tshift_src,hdur,lat,long,depth,moment_tensor, &
+                   DT,NSOURCES,min_tshift_src_original)
+    endif
+    ! broadcasts specific moment tensor infos
+    call bcast_all_dp(moment_tensor,6*NSOURCES)
   endif
+  ! broadcasts general source information read on the master to the nodes
+  call bcast_all_dp(tshift_src,NSOURCES)
+  call bcast_all_dp(hdur,NSOURCES)
+  call bcast_all_dp(lat,NSOURCES)
+  call bcast_all_dp(long,NSOURCES)
+  call bcast_all_dp(depth,NSOURCES)
+  call bcast_all_singledp(min_tshift_src_original)
 
   ! define topology of the control element
   call usual_hex_nodes(NGNOD,iaddx,iaddy,iaddz)
@@ -182,14 +200,14 @@
   time_start = wtime()
 
   ! user output
-  if( myrank == 0 ) then
-    if(SUPPRESS_UTM_PROJECTION ) then
+  if (myrank == 0) then
+    if (SUPPRESS_UTM_PROJECTION) then
       write(IMAIN,*) 'no UTM projection:'
     else
       write(IMAIN,*) 'UTM projection:'
       write(IMAIN,*) '  UTM zone: ',UTM_PROJECTION_ZONE
     endif
-    if( USE_SOURCES_RECEIVERS_Z ) then
+    if (USE_SOURCES_RECEIVERS_Z) then
       write(IMAIN,*) '  (depth) becomes directly (z) coordinate'
     endif
   endif
@@ -232,7 +250,7 @@
     call gather_all_dp(distmin_ele,1,distmin_ele_all,1,NPROC)
     call gather_all_dp(altitude_source,1,elevation_all,1,NPROC)
 
-    if(myrank == 0) then
+    if (myrank == 0) then
       iproc = minloc(distmin_ele_all)
       altitude_source(1) = elevation_all(iproc(1))
     endif
@@ -257,7 +275,7 @@
     y_target_source = utm_y_source(isource)
 
     ! source Z coordinate
-    if( USE_SOURCES_RECEIVERS_Z ) then
+    if (USE_SOURCES_RECEIVERS_Z) then
       ! alternative: depth is given as z value directly
       z_target_source = depth(isource)
     else
@@ -275,7 +293,7 @@
     do ispec=1,NSPEC_AB
 
       ! define the interval in which we look for points
-      if(USE_FORCE_POINT_SOURCE) then
+      if (USE_FORCE_POINT_SOURCE) then
         imin = 1
         imax = NGLLX
 
@@ -314,7 +332,7 @@
             dist = dsqrt((x_target_source-dble(xstore(iglob)))**2 &
                   +(y_target_source-dble(ystore(iglob)))**2 &
                   +(z_target_source-dble(zstore(iglob)))**2)
-            if(dist < distmin) then
+            if (dist < distmin) then
               distmin = dist
               ispec_selected_source(isource) = ispec
               ix_initial_guess_source = i
@@ -349,11 +367,11 @@
     endif
 
     ! sets whether acoustic (1) or elastic (2)
-    if( ispec_is_acoustic( ispec_selected_source(isource) ) ) then
+    if (ispec_is_acoustic( ispec_selected_source(isource) )) then
       idomain(isource) = IDOMAIN_ACOUSTIC
-    else if( ispec_is_elastic( ispec_selected_source(isource) ) ) then
+    else if (ispec_is_elastic( ispec_selected_source(isource) )) then
       idomain(isource) = IDOMAIN_ELASTIC
-    else if( ispec_is_poroelastic( ispec_selected_source(isource) ) ) then
+    else if (ispec_is_poroelastic( ispec_selected_source(isource) )) then
       idomain(isource) = IDOMAIN_POROELASTIC
     else
       idomain(isource) = 0
@@ -365,7 +383,7 @@
 
       ! note: at this point, xi_source,.. are in range [1.0d0,NGLLX/Y/Z] for point sources only,
       !            for non-point sources the range is limited to [2.0d0,NGLLX/Y/Z - 1]
-      if( .not. USE_FORCE_POINT_SOURCE ) call exit_MPI(myrank,'error locate source: no point source at surface')
+      if (.not. USE_FORCE_POINT_SOURCE) call exit_MPI(myrank,'error locate source: no point source at surface')
 
       ! initialize indices
       pt0_ix = -1
@@ -506,7 +524,7 @@
 ! *******************************************
 
     ! this tries to find best location
-    if( USE_BEST_LOCATION ) then
+    if (USE_BEST_LOCATION) then
 
       ! uses actual location interpolators, in range [-1,1]
       xi = xigll(ix_initial_guess_source)
@@ -518,31 +536,31 @@
         iax = 0
         iay = 0
         iaz = 0
-        if(iaddx(ia) == 0) then
+        if (iaddx(ia) == 0) then
           iax = 1
-        else if(iaddx(ia) == 1) then
+        else if (iaddx(ia) == 1) then
           iax = (NGLLX+1)/2
-        else if(iaddx(ia) == 2) then
+        else if (iaddx(ia) == 2) then
           iax = NGLLX
         else
           call exit_MPI(myrank,'incorrect value of iaddx')
         endif
 
-        if(iaddy(ia) == 0) then
+        if (iaddy(ia) == 0) then
           iay = 1
-        else if(iaddy(ia) == 1) then
+        else if (iaddy(ia) == 1) then
           iay = (NGLLY+1)/2
-        else if(iaddy(ia) == 2) then
+        else if (iaddy(ia) == 2) then
           iay = NGLLY
         else
           call exit_MPI(myrank,'incorrect value of iaddy')
         endif
 
-        if(iaddz(ia) == 0) then
+        if (iaddz(ia) == 0) then
           iaz = 1
-        else if(iaddz(ia) == 1) then
+        else if (iaddz(ia) == 1) then
           iaz = (NGLLZ+1)/2
-        else if(iaddz(ia) == 2) then
+        else if (iaddz(ia) == 2) then
           iaz = NGLLZ
         else
           call exit_MPI(myrank,'incorrect value of iaddz')
@@ -630,7 +648,7 @@
 
     ! avoids warnings about temporary creations of arrays for function call by compiler
     allocate(tmp_i_local(ng),tmp_i_all_local(ng,0:NPROC-1),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array tmp_i_local'
+    if (ier /= 0) stop 'error allocating array tmp_i_local'
     tmp_i_local(:) = ispec_selected_source(ns:ne)
     call gather_all_i(tmp_i_local,ng,tmp_i_all_local,ng,NPROC)
     ispec_selected_source_all(1:ng,:) = tmp_i_all_local(:,:)
@@ -644,7 +662,7 @@
 
     ! avoids warnings about temporary creations of arrays for function call by compiler
     allocate(tmp_local(ng),tmp_all_local(ng,0:NPROC-1),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array tmp_local'
+    if (ier /= 0) stop 'error allocating array tmp_local'
     tmp_local(:) = xi_source(ns:ne)
     call gather_all_dp(tmp_local,ng,tmp_all_local,ng,NPROC)
     xi_source_all(1:ng,:) = tmp_all_local(:,:)
@@ -683,10 +701,10 @@
     deallocate(tmp_local,tmp_all_local)
 
     ! this is executed by main process only
-    if(myrank == 0) then
+    if (myrank == 0) then
 
       ! check that the gather operation went well
-      if(any(ispec_selected_source_all(1:ng,:) == -1)) call exit_MPI(myrank,'gather operation failed for source')
+      if (any(ispec_selected_source_all(1:ng,:) == -1)) call exit_MPI(myrank,'gather operation failed for source')
 
       ! loop on all the sources
       do is = 1,ng
@@ -695,7 +713,7 @@
         ! loop on all the results to determine the best slice
         distmin = HUGEVAL
         do iprocloop = 0,NPROC-1
-          if(final_distance_source_all(is,iprocloop) < distmin) then
+          if (final_distance_source_all(is,iprocloop) < distmin) then
             distmin = final_distance_source_all(is,iprocloop)
             islice_selected_source(isource) = iprocloop
             ispec_selected_source(isource) = ispec_selected_source_all(is,iprocloop)
@@ -719,7 +737,7 @@
 
     do isource = 1,NSOURCES
 
-      if(SHOW_DETAILS_LOCATE_SOURCE .or. NSOURCES == 1) then
+      if (SHOW_DETAILS_LOCATE_SOURCE .or. NSOURCES == 1) then
 
         write(IMAIN,*)
         write(IMAIN,*) '*************************************'
@@ -729,18 +747,18 @@
         write(IMAIN,*) 'source located in slice ',islice_selected_source(isource)
         write(IMAIN,*) '               in element ',ispec_selected_source(isource)
 
-        if( idomain(isource) == IDOMAIN_ACOUSTIC ) then
+        if (idomain(isource) == IDOMAIN_ACOUSTIC) then
           write(IMAIN,*) '               in acoustic domain'
-        else if( idomain(isource) == IDOMAIN_ELASTIC ) then
+        else if (idomain(isource) == IDOMAIN_ELASTIC) then
           write(IMAIN,*) '               in elastic domain'
-        else if( idomain(isource) == IDOMAIN_POROELASTIC ) then
+        else if (idomain(isource) == IDOMAIN_POROELASTIC) then
           write(IMAIN,*) '               in poroelastic domain'
         else
           write(IMAIN,*) '               in unknown domain'
         endif
 
         write(IMAIN,*)
-        if(USE_FORCE_POINT_SOURCE) then
+        if (USE_FORCE_POINT_SOURCE) then
           write(IMAIN,*) 'using force point source: '
           write(IMAIN,*) '  xi coordinate of source in that element: ',xi_source(isource)
           write(IMAIN,*) '  eta coordinate of source in that element: ',eta_source(isource)
@@ -762,9 +780,9 @@
           write(IMAIN,*) '  using a source of dominant frequency ',f0
           write(IMAIN,*) '  lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
           write(IMAIN,*) '  lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
-          if( USE_RICKER_TIME_FUNCTION ) then
-             t0_ricker = 1.2d0/f0
-             write(IMAIN,*) '  t0_ricker = ',t0_ricker
+          if (USE_RICKER_TIME_FUNCTION) then
+            t0_ricker = 1.2d0/f0
+            write(IMAIN,*) '  t0_ricker = ',t0_ricker
           endif
           write(IMAIN,*) '  time shift = ',tshift_src(isource)
           write(IMAIN,*)
@@ -776,12 +794,27 @@
           write(IMAIN,*) '  gamma coordinate of source in that element: ',gamma_source(isource)
           write(IMAIN,*)
           ! add message if source is a Heaviside
-          if(hdur(isource) <= 5.*DT) then
+          if (hdur(isource) <= 5.*DT) then
             write(IMAIN,*)
             write(IMAIN,*) 'Source time function is a Heaviside, convolve later'
             write(IMAIN,*)
           endif
           write(IMAIN,*) '  half duration: ',hdur(isource),' seconds'
+
+          if (COUPLE_WITH_EXTERNAL_CODE) then
+            write(IMAIN,*)
+            write(IMAIN,*) 'Coupling with an external code activated, thus not including any internal source'
+            write(IMAIN,*)
+          else
+            write(IMAIN,*)
+            write(IMAIN,*) 'magnitude of the source:'
+            write(IMAIN,*) '     scalar moment M0 = ', &
+              get_cmt_scalar_moment(Mxx(isource),Myy(isource),Mzz(isource),Mxy(isource),Mxz(isource),Myz(isource)),' dyne-cm'
+            write(IMAIN,*) '  moment magnitude Mw = ', &
+              get_cmt_moment_magnitude(Mxx(isource),Myy(isource),Mzz(isource),Mxy(isource),Mxz(isource),Myz(isource))
+            write(IMAIN,*)
+          endif
+
         endif
         write(IMAIN,*) '  time shift: ',tshift_src(isource),' seconds'
         write(IMAIN,*)
@@ -790,14 +823,14 @@
         write(IMAIN,*) '          latitude: ',lat(isource)
         write(IMAIN,*) '         longitude: ',long(isource)
         write(IMAIN,*)
-        if( SUPPRESS_UTM_PROJECTION ) then
+        if (SUPPRESS_UTM_PROJECTION) then
           write(IMAIN,*) '             x: ',utm_x_source(isource)
           write(IMAIN,*) '             y: ',utm_y_source(isource)
         else
           write(IMAIN,*) '         UTM x: ',utm_x_source(isource)
           write(IMAIN,*) '         UTM y: ',utm_y_source(isource)
         endif
-        if( USE_SOURCES_RECEIVERS_Z ) then
+        if (USE_SOURCES_RECEIVERS_Z) then
           write(IMAIN,*) '         z: ',depth(isource),' km'
         else
           write(IMAIN,*) '         depth: ',depth(isource),' km'
@@ -807,14 +840,14 @@
         write(IMAIN,*)
         write(IMAIN,*) 'position of the source that will be used:'
         write(IMAIN,*)
-        if( SUPPRESS_UTM_PROJECTION ) then
+        if (SUPPRESS_UTM_PROJECTION) then
           write(IMAIN,*) '             x: ',x_found_source(isource)
           write(IMAIN,*) '             y: ',y_found_source(isource)
         else
           write(IMAIN,*) '         UTM x: ',x_found_source(isource)
           write(IMAIN,*) '         UTM y: ',y_found_source(isource)
         endif
-        if( USE_SOURCES_RECEIVERS_Z ) then
+        if (USE_SOURCES_RECEIVERS_Z) then
           write(IMAIN,*) '             z: ',z_found_source(isource)
         else
           write(IMAIN,*) '         depth: ',dabs(z_found_source(isource) - elevation(isource))/1000.,' km'
@@ -827,7 +860,7 @@
 
         ! add warning if estimate is poor
         ! (usually means source outside the mesh given by the user)
-        if(final_distance_source(isource) > 3000.d0) then
+        if (final_distance_source(isource) > 3000.d0) then
           write(IMAIN,*)
           write(IMAIN,*) '*****************************************************'
           write(IMAIN,*) '*****************************************************'
@@ -839,39 +872,39 @@
       endif  ! end of detailed output to locate source
 
       ! checks CMTSOLUTION format for acoustic case
-      if( idomain(isource) == IDOMAIN_ACOUSTIC ) then
-        if( Mxx(isource) /= Myy(isource) .or. Myy(isource) /= Mzz(isource) .or. &
-           Mxy(isource) > TINYVAL .or. Mxz(isource) > TINYVAL .or. Myz(isource) > TINYVAL ) then
-            write(IMAIN,*)
-            write(IMAIN,*) ' error CMTSOLUTION format for acoustic source:'
-            write(IMAIN,*) '   acoustic source needs explosive moment tensor with'
-            write(IMAIN,*) '      Mrr = Mtt = Mpp '
-            write(IMAIN,*) '   and '
-            write(IMAIN,*) '      Mrt = Mrp = Mtp = zero'
-            write(IMAIN,*)
-            call exit_mpi(myrank,'error acoustic source')
+      if (idomain(isource) == IDOMAIN_ACOUSTIC) then
+        if (Mxx(isource) /= Myy(isource) .or. Myy(isource) /= Mzz(isource) .or. &
+           Mxy(isource) > TINYVAL .or. Mxz(isource) > TINYVAL .or. Myz(isource) > TINYVAL) then
+          write(IMAIN,*)
+          write(IMAIN,*) ' error CMTSOLUTION format for acoustic source:'
+          write(IMAIN,*) '   acoustic source needs explosive moment tensor with'
+          write(IMAIN,*) '      Mrr = Mtt = Mpp '
+          write(IMAIN,*) '   and '
+          write(IMAIN,*) '      Mrt = Mrp = Mtp = zero'
+          write(IMAIN,*)
+          call exit_mpi(myrank,'error acoustic source')
         endif
       endif
 
       ! checks source domain
-      if( idomain(isource) /= IDOMAIN_ACOUSTIC .and. idomain(isource) /= IDOMAIN_ELASTIC .and. &
-         idomain(isource) /= IDOMAIN_POROELASTIC ) then
+      if (idomain(isource) /= IDOMAIN_ACOUSTIC .and. idomain(isource) /= IDOMAIN_ELASTIC .and. &
+         idomain(isource) /= IDOMAIN_POROELASTIC) then
         call exit_MPI(myrank,'source located in unknown domain')
       endif
 
     ! end of loop on all the sources
     enddo
 
-    if( .not. SHOW_DETAILS_LOCATE_SOURCE .and. NSOURCES > 1 ) then
-        write(IMAIN,*)
-        write(IMAIN,*) '*************************************'
-        write(IMAIN,*) ' using sources ',NSOURCES
-        write(IMAIN,*) '*************************************'
-        write(IMAIN,*)
-        call flush_IMAIN()
+    if (.not. SHOW_DETAILS_LOCATE_SOURCE .and. NSOURCES > 1) then
+      write(IMAIN,*)
+      write(IMAIN,*) '*************************************'
+      write(IMAIN,*) ' using sources ',NSOURCES
+      write(IMAIN,*) '*************************************'
+      write(IMAIN,*)
+      call flush_IMAIN()
     endif
 
-    if(PRINT_SOURCE_TIME_FUNCTION) then
+    if (PRINT_SOURCE_TIME_FUNCTION) then
       write(IMAIN,*)
       write(IMAIN,*) 'printing the source-time function'
     endif
@@ -898,7 +931,7 @@
   call bcast_all_dp(utm_y_source,NSOURCES)
 
   ! elapsed time since beginning of source detection
-  if(myrank == 0) then
+  if (myrank == 0) then
     tCPU = wtime() - time_start
     write(IMAIN,*)
     write(IMAIN,*) 'Elapsed time for detection of sources in seconds = ',tCPU
@@ -908,7 +941,7 @@
     call flush_IMAIN()
 
     ! output source information to a file so that we can load it and write to SU headers later
-    open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/output_list_sources.txt',status='unknown')
+    open(unit=IOUT_SU,file=trim(OUTPUT_FILES_PATH)//'/output_list_sources.txt',status='unknown')
     do isource=1,NSOURCES
       write(IOUT_SU,*) x_found_source(isource),y_found_source(isource),z_found_source(isource)
     enddo

@@ -1,0 +1,41 @@
+-----------------------------------------------
+readme
+-----------------------------------------------
+
+
+smooth_sem_globe:
+
+  reads in GLOBAL mesh and kernels, in parallel on all processors, and
+  smooths by a three-dimensional gaussian
+
+0. compile executable 'smooth_sem': 
+    (source files have been moved to SPECFEM3D_GLOBE package in src/tomography/)
+    > cd ~/SPECFEM3D_GLOBE/
+    > make xsmooth_sem
+    then copy binary into this directory...
+
+
+1. create symbolic link 'topo' to link to topography files:
+    > ln -s ../topo
+    (make sure ../topo links to files proc_**_save_data_1.bin and proc_**_save_data_2.bin)
+
+2. create symbolic link directory 'OUTPUT_SUM/'
+   which holds the summed kernel files proc**_alpha_kernel.bin, etc.as outputted by sum_kernel/ executable
+
+
+  run with:
+  ---------  
+  > ./run_globe.bash
+
+  (will run for about 2 hours...)
+
+  which creates smoothed kernel partitions "_smooth.bin" in the same directory
+  as the input ones.
+  
+  check size of smoothing in file go_globe_pbs.bash:
+   
+   - example: for periods 20s - 100s: minimum wavelength lambda ~ 4 km/s * 20 s = 80 km
+              then smoothing sizes become   
+                  horizontal = lambda
+                  vertical    = lambda/4
+  

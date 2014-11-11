@@ -4,10 +4,11 @@
  !               S p e c f e m 3 D  V e r s i o n  2 . 1
  !               ---------------------------------------
  !
- !          Main authors: Dimitri Komatitsch and Jeroen Tromp
- !    Princeton University, USA and CNRS / INRIA / University of Pau
- ! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
- !                             July 2012
+ !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+ !                        Princeton University, USA
+ !                and CNRS / University of Marseille, France
+ !                 (there are currently many more authors!)
+ ! (c) Princeton University and CNRS / University of Marseille, July 2012
  !
  ! This program is free software; you can redistribute it and/or modify
  ! it under the terms of the GNU General Public License as published by
@@ -26,16 +27,7 @@
  !=====================================================================
  */
 
-#include <stdio.h>
-#include <cuda.h>
-#include <cublas.h>
-
-#include <sys/time.h>
-#include <sys/resource.h>
-
-#include "config.h"
 #include "mesh_constants_cuda.h"
-
 
 /* ----------------------------------------------------------------------------------------------- */
 
@@ -45,7 +37,7 @@ __global__ void compute_stacey_elastic_kernel(realw* veloc,
                                               int* abs_boundary_ijk,
                                               realw* abs_boundary_normal,
                                               realw* abs_boundary_jacobian2Dw,
-                                              int* ibool,
+                                              int* d_ibool,
                                               realw* rho_vp,
                                               realw* rho_vs,
                                               int* ispec_is_inner,
@@ -68,19 +60,20 @@ __global__ void compute_stacey_elastic_kernel(realw* veloc,
 
   // don't compute points outside NGLLSQUARE==NGLL2==25
   // way 2: no further check needed since blocksize = 25
-  if( iface < num_abs_boundary_faces){
+  if (iface < num_abs_boundary_faces){
 
-  //if(igll < NGLL2 && iface < num_abs_boundary_faces) {
+  //if (igll < NGLL2 && iface < num_abs_boundary_faces) {
 
     // "-1" from index values to convert from Fortran-> C indexing
     ispec = abs_boundary_ispec[iface]-1;
 
-    if(ispec_is_inner[ispec] == phase_is_inner && ispec_is_elastic[ispec] ) {
+    if (ispec_is_inner[ispec] == phase_is_inner && ispec_is_elastic[ispec]) {
 
       i = abs_boundary_ijk[INDEX3(NDIM,NGLL2,0,igll,iface)]-1;
       j = abs_boundary_ijk[INDEX3(NDIM,NGLL2,1,igll,iface)]-1;
       k = abs_boundary_ijk[INDEX3(NDIM,NGLL2,2,igll,iface)]-1;
-      iglob = ibool[INDEX4(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
+
+      iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
 
       // gets associated velocity
 
@@ -109,7 +102,7 @@ __global__ void compute_stacey_elastic_kernel(realw* veloc,
       atomicAdd(&accel[iglob*3+1],-ty*jacobianw);
       atomicAdd(&accel[iglob*3+2],-tz*jacobianw);
 
-      if(SAVE_FORWARD && SIMULATION_TYPE == 1) {
+      if (SAVE_FORWARD && SIMULATION_TYPE == 1) {
         b_absorb_field[INDEX3(NDIM,NGLL2,0,igll,iface)] = tx*jacobianw;
         b_absorb_field[INDEX3(NDIM,NGLL2,1,igll,iface)] = ty*jacobianw;
         b_absorb_field[INDEX3(NDIM,NGLL2,2,igll,iface)] = tz*jacobianw;
@@ -123,7 +116,7 @@ __global__ void compute_stacey_elastic_kernel(realw* veloc,
 
 __global__ void compute_stacey_elastic_sim3_kernel(int* abs_boundary_ispec,
                                                    int* abs_boundary_ijk,
-                                                   int* ibool,
+                                                   int* d_ibool,
                                                    int* ispec_is_inner,
                                                    int* ispec_is_elastic,
                                                    int phase_is_inner,
@@ -138,20 +131,20 @@ __global__ void compute_stacey_elastic_sim3_kernel(int* abs_boundary_ispec,
 
   // don't compute points outside NGLLSQUARE==NGLL2==25
   // way 2: no further check needed since blocksize = 25
-  if( iface < num_abs_boundary_faces){
+  if (iface < num_abs_boundary_faces){
 
-  //if(igll < NGLL2 && iface < num_abs_boundary_faces) {
+  //if (igll < NGLL2 && iface < num_abs_boundary_faces) {
 
     // "-1" from index values to convert from Fortran-> C indexing
     ispec = abs_boundary_ispec[iface]-1;
 
-    if(ispec_is_inner[ispec] == phase_is_inner && ispec_is_elastic[ispec] ) {
+    if (ispec_is_inner[ispec] == phase_is_inner && ispec_is_elastic[ispec]) {
 
       i = abs_boundary_ijk[INDEX3(NDIM,NGLL2,0,igll,iface)]-1;
       j = abs_boundary_ijk[INDEX3(NDIM,NGLL2,1,igll,iface)]-1;
       k = abs_boundary_ijk[INDEX3(NDIM,NGLL2,2,igll,iface)]-1;
 
-      iglob = ibool[INDEX4(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
+      iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
 
       atomicAdd(&b_accel[iglob*3  ],-b_absorb_field[INDEX3(NDIM,NGLL2,0,igll,iface)]);
       atomicAdd(&b_accel[iglob*3+1],-b_absorb_field[INDEX3(NDIM,NGLL2,1,igll,iface)]);
@@ -175,7 +168,7 @@ void FC_FUNC_(compute_stacey_viscoelastic_cuda,
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
 
   // checks if anything to do
-  if( mp->d_num_abs_boundary_faces == 0 ) return;
+  if (mp->d_num_abs_boundary_faces == 0) return;
 
   int phase_is_inner    = *phase_is_innerf;
 
@@ -193,7 +186,7 @@ void FC_FUNC_(compute_stacey_viscoelastic_cuda,
   dim3 grid(num_blocks_x,num_blocks_y);
   dim3 threads(blocksize,1,1);
 
-  if(mp->simulation_type == 3 ) {
+  if (mp->simulation_type == 3) {
     // reading is done in fortran routine
     print_CUDA_error_if_any(cudaMemcpy(mp->d_b_absorb_field,b_absorb_field,
                                        mp->d_b_reclen_field,cudaMemcpyHostToDevice),7700);
@@ -221,7 +214,7 @@ void FC_FUNC_(compute_stacey_viscoelastic_cuda,
                                                   mp->d_b_absorb_field);
 
   // adjoint simulations
-  if(mp->simulation_type == 3 ){
+  if (mp->simulation_type == 3){
     compute_stacey_elastic_sim3_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_abs_boundary_ispec,
                                                          mp->d_abs_boundary_ijk,
                                                          mp->d_ibool,
@@ -237,11 +230,7 @@ void FC_FUNC_(compute_stacey_viscoelastic_cuda,
   exit_on_cuda_error("compute_stacey_elastic_kernel");
 #endif
 
-  // ! adjoint simulations: stores absorbed wavefield part
-  // if (mp->simulation_type == 1 .and. SAVE_FORWARD .and. num_abs_boundary_faces > 0 ) &
-  //   write(IOABS,rec=it) b_reclen_field,b_absorb_field,b_reclen_field
-
-  if(mp->simulation_type == 1 && mp->save_forward ) {
+  if (mp->simulation_type == 1 && mp->save_forward) {
     // explicitly wait until compute stream is done
     // (cudaMemcpy implicitly synchronizes all other cuda operations)
     cudaStreamSynchronize(mp->compute_stream);

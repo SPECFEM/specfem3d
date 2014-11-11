@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -27,7 +28,6 @@
 ! read a 3D CUBIT mesh file and display statistics about mesh quality;
 ! and create an OpenDX file showing a given range of elements or a single element
 
-
 ! Dimitri Komatitsch, University of Pau, France, March 2009.
 ! Modified by Pieyre Le Loher
 
@@ -38,9 +38,9 @@
   subroutine check_mesh_quality(myrank,VP_MAX,NGLOB,NSPEC,x,y,z,ibool, &
                                 CREATE_VTK_FILES,prname)
 
-  implicit none
+  use constants
 
-  include "constants.h"
+  implicit none
 
   integer :: myrank
 
@@ -53,7 +53,7 @@
   integer, dimension(NGNOD_EIGHT_CORNERS,NSPEC) :: ibool
 
   logical :: CREATE_VTK_FILES
-  character(len=256) prname
+  character(len=MAX_STRING_LEN) :: prname
 
   ! local parameters
   integer :: ispec,ispec_min_edge_length,ispec_max_edge_length,ispec_max_skewness, &
@@ -83,11 +83,6 @@
   integer :: iclass
   double precision :: current_percent,total_percent
 
-  ! to export elements that have a certain skewness range to OpenDX
-  !integer :: ntotspecAVS_DX
-  !logical :: USE_OPENDX
-
-  !character(len=256):: line
   integer,dimension(1) :: tmp_ispec_max_skewness,tmp_ispec_max_skewness_MPI
 
   ! debug: for vtk output
@@ -99,15 +94,16 @@
   integer NSOURCES,NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY
   logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
           USE_HIGHRES_FOR_MOVIES,SUPPRESS_UTM_PROJECTION
-  integer NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO,NGNOD,NGNOD2D
+  integer NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO,NGNOD,NGNOD2D,EXTERNAL_CODE_TYPE
   double precision DT
   double precision HDUR_MOVIE,OLSEN_ATTENUATION_RATIO,f0_FOR_PML
   logical ATTENUATION,USE_OLSEN_ATTENUATION, &
           APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,USE_FORCE_POINT_SOURCE
   logical STACEY_ABSORBING_CONDITIONS,SAVE_FORWARD,STACEY_INSTEAD_OF_FREE_SURFACE
   logical ANISOTROPY,SAVE_MESH_FILES,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
-  logical PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID
-  character(len=256) LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
+  logical PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID, &
+          COUPLE_WITH_EXTERNAL_CODE,MESH_A_CHUNK_OF_THE_EARTH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH,TOMOGRAPHY_PATH,TRACTION_PATH,SEP_MODEL_DIRECTORY
   integer NPROC
   integer MOVIE_TYPE,IMODEL
 
@@ -122,19 +118,21 @@
 
   ! read the parameter file
   call read_parameter_file(NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT,NGNOD,NGNOD2D, &
-                        UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,TOMOGRAPHY_PATH, &
-                        ATTENUATION,USE_OLSEN_ATTENUATION,LOCAL_PATH,NSOURCES, &
-                        APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,ANISOTROPY,STACEY_ABSORBING_CONDITIONS,MOVIE_TYPE, &
-                        MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
-                        NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
-                        SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
-                        NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD, &
-                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
-                        USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE, &
-                        USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
-                        PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,FULL_ATTENUATION_SOLID,TRAC_PATH)
+                           UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,TOMOGRAPHY_PATH, &
+                           ATTENUATION,USE_OLSEN_ATTENUATION,LOCAL_PATH,NSOURCES, &
+                           APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,ANISOTROPY,STACEY_ABSORBING_CONDITIONS,MOVIE_TYPE, &
+                           MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
+                           NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
+                           SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
+                           NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD, &
+                           NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
+                           USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE, &
+                           USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
+                           PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,SEP_MODEL_DIRECTORY, &
+                           FULL_ATTENUATION_SOLID,TRACTION_PATH,COUPLE_WITH_EXTERNAL_CODE,EXTERNAL_CODE_TYPE, &
+                           MESH_A_CHUNK_OF_THE_EARTH)
 
-  if(NGNOD /= 8) stop 'error: check_mesh_quality only supports NGNOD == 8 for now'
+  if (NGNOD /= 8) stop 'error: check_mesh_quality only supports NGNOD == 8 for now'
 
   ! ************* compute min and max of skewness and ratios ******************
 
@@ -157,9 +155,9 @@
   ispec_max_skewness = -1
 
   ! debug: for vtk output
-  if( CREATE_VTK_FILES ) then
+  if (CREATE_VTK_FILES) then
     allocate(tmp1(NSPEC),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array tmp'
+    if (ier /= 0) stop 'error allocating array tmp'
     tmp1(:) = 0.0
   endif
 
@@ -172,12 +170,12 @@
                                     stability,distmin,distmax)
 
      ! store element number in which the edge of minimum or maximum length is located
-     if(distmin < distance_min) ispec_min_edge_length = ispec
-     if(distmax > distance_max) ispec_max_edge_length = ispec
-     if(equiangle_skewness > equiangle_skewness_max) ispec_max_skewness = ispec
+     if (distmin < distance_min) ispec_min_edge_length = ispec
+     if (distmax > distance_max) ispec_max_edge_length = ispec
+     if (equiangle_skewness > equiangle_skewness_max) ispec_max_skewness = ispec
 
-     if( CREATE_VTK_FILES ) then
-        if(CUSTOM_REAL == SIZE_REAL) then
+     if (CREATE_VTK_FILES) then
+        if (CUSTOM_REAL == SIZE_REAL) then
           tmp1(ispec) = sngl(equiangle_skewness)
         else
           tmp1(ispec) = equiangle_skewness
@@ -200,7 +198,7 @@
 
   enddo
 
-  call sync_all()
+  call synchronize_all()
 
   call min_all_dp(distance_min,distance_min_MPI)
   call max_all_dp(distance_max,distance_max_MPI)
@@ -218,14 +216,14 @@
   call max_all_dp(edge_aspect_ratio_max,edge_aspect_ratio_max_MPI)
   call max_all_dp(diagonal_aspect_ratio_max,diagonal_aspect_ratio_max_MPI)
 
-  if((myrank == skewness_max_rank) .and. (myrank /= 0)) then
+  if ((myrank == skewness_max_rank) .and. (myrank /= 0)) then
      tmp_ispec_max_skewness(1) = ispec_max_skewness
      call send_i_t(tmp_ispec_max_skewness,1,0)
   endif
 
-  if(myrank == 0) then
+  if (myrank == 0) then
 
-     if(skewness_max_rank /= myrank) then
+     if (skewness_max_rank /= myrank) then
         call recv_i_t(tmp_ispec_max_skewness_MPI,1,skewness_max_rank)
         ispec_max_skewness_MPI = tmp_ispec_max_skewness_MPI(1)
      else
@@ -274,7 +272,7 @@
 !! DK DK we could probably increase this, now that the Stacey conditions have been fixed
   max_CFL_stability_limit = 0.55d0 !! DK DK increased this    0.48d0
 
-  if(stability_max_MPI >= max_CFL_stability_limit) then
+  if (stability_max_MPI >= max_CFL_stability_limit) then
      write(IMAIN,*) '*********************************************'
      write(IMAIN,*) '*********************************************'
      write(IMAIN,*) ' WARNING, that value is above the upper CFL limit of ',max_CFL_stability_limit
@@ -304,8 +302,8 @@
 
      ! store skewness in histogram
      iclass = int(equiangle_skewness * dble(NCLASS))
-     if(iclass < 0) iclass = 0
-     if(iclass > NCLASS-1) iclass = NCLASS-1
+     if (iclass < 0) iclass = 0
+     if (iclass > NCLASS-1) iclass = NCLASS-1
      classes_skewness(iclass) = classes_skewness(iclass) + 1
 
   enddo
@@ -317,7 +315,7 @@
 
   call sum_all_i(NSPEC,NSPEC_ALL_SLICES)
 
-  if(myrank == 0) then
+  if (myrank == 0) then
   ! create histogram of skewness and save in Gnuplot file
   write(IMAIN,*)
   write(IMAIN,*) 'histogram of skewness (0. good - 1. bad):'
@@ -350,7 +348,7 @@
   close(14)
 
   ! display warning if maximum skewness is too high
-  if(equiangle_skewness_max >= 0.75d0) then
+  if (equiangle_skewness_max >= 0.75d0) then
      write(IMAIN,*)
      write(IMAIN,*) '*********************************************'
      write(IMAIN,*) '*********************************************'
@@ -360,7 +358,7 @@
      write(IMAIN,*)
   endif
 
-  if(total_percent < 99.9d0 .or. total_percent > 100.1d0) then
+  if (total_percent < 99.9d0 .or. total_percent > 100.1d0) then
      write(IMAIN,*) 'total percentage = ',total_percent,' %'
      stop 'total percentage should be 100%'
   endif
@@ -368,7 +366,7 @@
   endif
 
   ! debug: for vtk output
-  if( CREATE_VTK_FILES ) then
+  if (CREATE_VTK_FILES) then
     ! vtk file output
     open(66,file=prname(1:len_trim(prname))//'skewness.vtk',status='unknown')
     write(66,'(a)') '# vtk DataFile Version 3.1'
@@ -420,9 +418,10 @@
                                         equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio, &
                                         stability,distmin,distmax)
 
+  use constants
+
   implicit none
 
-  include "constants.h"
   include "constants_meshfem3D.h"
 
   integer :: NSPEC,NGLOB
@@ -484,7 +483,7 @@
   percent_GLL(:) = percent_GLL(:) / 100.d0
 
   ! check that the degree is not above the threshold for list of percentages
-  if(NGLLX_M > NGLL_MAX_STABILITY) stop 'degree too high to compute stability value'
+  if (NGLLX_M > NGLL_MAX_STABILITY) stop 'degree too high to compute stability value'
 
   ! define topology of faces of cube for skewness
 
@@ -568,8 +567,6 @@
 
   ! compute edge aspect ratio
   edge_aspect_ratio = distmax / distmin
-
-  !stability = delta_t * VP_MAX / (distmin * percent_GLL(true_NGLLX))
 
   dt_suggested = ((1.d0 - 0.02d0)*0.48d0) * (distmin * percent_GLL(true_NGLLX)) / VP_MAX
   stability = dt_suggested * VP_MAX / (distmin * percent_GLL(true_NGLLX))

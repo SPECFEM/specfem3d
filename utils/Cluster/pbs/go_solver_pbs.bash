@@ -47,10 +47,9 @@ echo starting run in current directory $PWD
 echo " "
 
 sleep 2
-cd bin/
-mpiexec -np $NPROC ./xspecfem3D
+mpiexec -np $NPROC ./bin/xspecfem3D
 
-cp ../DATA/STATIONS_FILTERED ../OUTPUT_FILES/
+cp DATA/STATIONS_FILTERED OUTPUT_FILES/
 
 echo "finished successfully"
 

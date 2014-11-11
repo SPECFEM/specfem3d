@@ -44,18 +44,6 @@ echo starting MPI mesher on $NPROC processors
 echo " "
 
 sleep 2
-cd bin/
-mpiexec -np $NPROC ./xgenerate_databases
+mpiexec -np $NPROC ./bin/xgenerate_databases
 
 echo "done "
-
-# per instructions in manual, view low-res mesh with these commands
-# [there are other options for viewing the high-res mesh of any partitions]
-# > NPROC=`grep NPROC DATA/Par_file | cut -d = -f 2`
-# > LOCALPATH=`grep LOCAL_PATH DATA/Par_file | cut -d = -f 2`
-# > nmax=$(($NPROC-1))
-# > make xcombine_vol_data
-# > cd bin/
-# > ./xcombine_vol_data 0 $nmax vs $LOCALPATH/ $LOCALPATH 0
-# > cd $LOCALPATH
-# > paraview &

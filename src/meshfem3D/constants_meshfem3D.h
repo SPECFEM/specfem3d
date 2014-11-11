@@ -3,10 +3,11 @@
 !               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -53,7 +54,7 @@
   double precision, parameter :: ORIG_LAT_TOPO_SOCAL = 32.d0
   double precision, parameter :: ORIG_LONG_TOPO_SOCAL = -121.d0
   double precision, parameter :: DEGREES_PER_CELL_TOPO_SOCAL = 5.d0 / 1000.d0
-  character(len=100), parameter :: TOPO_FILE_SOCAL = 'DATA/la_topography/topo_bathy_final.dat'
+  character(len=*), parameter :: TOPO_FILE_SOCAL = 'DATA/la_topography/topo_bathy_final.dat'
 
 ! size of Lupei Zhu's Moho map file for Southern California
   integer, parameter :: NX_MOHO = 71,NY_MOHO = 51

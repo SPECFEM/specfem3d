@@ -1,0 +1,71 @@
+----------------------------
+readme
+----------------------------
+
+add_model_globe_iso:
+
+  takes ISOTROPIC model and ISOTROPIC kernels and
+  makes a steepest descent model update
+
+  the new models vp & vs are then computed from the old ones (in INPU_MODEL/), assuming
+  that the gradients/kernels relate relative model perturbations dln(m/m0) to traveltime/multitaper measurements.
+
+  setup:
+
+  input:
+    - step_fac : step length to update the models, f.e. 0.03 for plusminus 3% 
+
+    - INPUT_MODEL/  contains:
+       proc000***_reg1_vs.bin & proc000***_reg1_vp.bin etc.
+    - INPUT_GRADIENT/ contains: 
+       proc000***_reg1_alpha_kernel_smooth.bin & proc000***_reg1_beta_kernel_smooth.bin etc.
+    - topo/ contains:
+       proc000***_reg1_solver_data_1.bin
+
+  new models are stored in
+    - OUTPUT_MODEL/ as proc000***_reg1_vp_new.bin and proc000***_reg1_vs_new.bin
+
+
+  usage: > ./add_model_globe_iso 0.3
+
+
+
+add_model_tiso_iso:
+
+  takes TRANSVERSE ISOTROPIC model and ISOTROPIC kernels and
+  makes a steepest descent model update
+
+add_model_tiso:
+
+  takes TRANSVERSE ISOTROPIC model and TRANSVERSE ISOTROPIC kernels and
+  makes a steepest descent model update
+
+add_model_tiso_cg:
+
+  takes TRANSVERSE ISOTROPIC model and TRANSVERSE ISOTROPIC kernels and
+  makes a conjugate-gradient model update
+
+
+steps:
+------
+
+0. compile executables 'add_model_**': 
+    (source files have been moved to SPECFEM3D_GLOBE package in src/tomography/)
+    > cd ~/SPECFEM3D_GLOBE/
+    > make tomography
+    then copy binaries into this directory...
+
+1. setup input model links:
+   > ln -s /my_input_model/proc***.bin INPUT_MODEL/ 
+   
+2. setup gradient directory:
+   > ln -s /my_summed_smoothed_event_kernel_directory INPUT_GRADIENT   
+   
+3. run job: 
+   
+   modify step_length in go_globe_pbs.bash, 
+   then
+   > run_globe.bash
+
+   
+   

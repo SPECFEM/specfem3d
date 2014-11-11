@@ -79,7 +79,7 @@
     if(r >= RMOHO/R_EARTH) then
 ! stretching above the Moho
       gamma = (1.0d0 - r) / (1.0d0 - RMOHO/R_EARTH)
-    elseif(r>= R220/R_EARTH .and. r< RMOHO/R_EARTH) then
+    else if(r>= R220/R_EARTH .and. r< RMOHO/R_EARTH) then
 ! stretching between R220 and RMOHO
       gamma = (r - R220/R_EARTH) / (RMOHO/R_EARTH - R220/R_EARTH)
     endif

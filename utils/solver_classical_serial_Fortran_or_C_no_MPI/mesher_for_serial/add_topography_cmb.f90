@@ -68,7 +68,7 @@
     if(r >= RCMB/R_EARTH .and. r <= RTOPDDOUBLEPRIME/R_EARTH) then
 ! stretching between RCMB and RTOPDDOUBLEPRIME
       gamma = (RTOPDDOUBLEPRIME/R_EARTH - r) / (RTOPDDOUBLEPRIME/R_EARTH - RCMB/R_EARTH)
-    elseif(r>= r_start .and. r <= RCMB/R_EARTH) then
+    else if(r>= r_start .and. r <= RCMB/R_EARTH) then
 ! stretching between r_start and RCMB
       gamma = (r - r_start) / (RCMB/R_EARTH - r_start)
     endif

@@ -33,6 +33,7 @@
 bindir		= ../../bin
 includedir	= ../../include
 libdir		= ../../lib
+SCOTCHLIB=scotch
 
 ##
 ##  General inference rules.
@@ -55,7 +56,7 @@ include ../Makefile.inc
 
 .PHONY				:	ptscotch	scotch	ptinstall	install	clean	realclean
 
-scotch				:	
+scotch				:
 					$(MAKE) CC="$(CCS)" SCOTCHLIB=scotch	\
 					acpl$(EXE)				\
 					amk_ccc$(EXE)				\
@@ -86,7 +87,7 @@ scotch				:
 					mord$(EXE)				\
 					mtst$(EXE)
 
-ptscotch			:	clean
+ptscotch			:
 					$(MAKE) CC="$(CCP)" SCOTCHLIB=ptscotch	\
 					dggath$(EXE)				\
 					dgmap$(EXE)				\
@@ -95,67 +96,8 @@ ptscotch			:	clean
 					dgscat$(EXE)				\
 					dgtst$(EXE)
 
-# scotch replacement text for install line
-$(bindir)/acpl$(EXE): acpl$(EXE)
-	-$(CP) acpl$(EXE) $(bindir)/acpl$(EXE)
-$(bindir)/amk_ccc$(EXE): amk_ccc$(EXE)
-	-$(CP) amk_ccc$(EXE) $(bindir)/amk_ccc$(EXE)
-$(bindir)/amk_fft2$(EXE): amk_fft2$(EXE)
-	-$(CP) amk_fft2$(EXE) $(bindir)/amk_fft2$(EXE)
-$(bindir)/amk_grf$(EXE): amk_grf$(EXE)
-	-$(CP) amk_grf$(EXE) $(bindir)/amk_grf$(EXE)
-$(bindir)/amk_hy$(EXE): amk_hy$(EXE)
-	-$(CP) amk_hy$(EXE) $(bindir)/amk_hy$(EXE)
-$(bindir)/amk_m2$(EXE): amk_m2$(EXE)
-	-$(CP) amk_m2$(EXE) $(bindir)/amk_m2$(EXE)
-$(bindir)/amk_p2$(EXE): amk_p2$(EXE)
-	-$(CP) amk_p2$(EXE) $(bindir)/amk_p2$(EXE)
-$(bindir)/atst$(EXE): atst$(EXE)
-	-$(CP) atst$(EXE) $(bindir)/atst$(EXE)
-$(bindir)/gbase$(EXE): gbase$(EXE)
-	-$(CP) gbase$(EXE) $(bindir)/gbase$(EXE)
-$(bindir)/gcv$(EXE): gcv$(EXE)
-	-$(CP) gcv$(EXE) $(bindir)/gcv$(EXE)
-$(bindir)/gmap$(EXE): gmap$(EXE)
-	-$(CP) gmap$(EXE) $(bindir)/gmap$(EXE)
-$(bindir)/gmk_hy$(EXE): gmk_hy$(EXE)
-	-$(CP) gmk_hy$(EXE) $(bindir)/gmk_hy$(EXE)
-$(bindir)/gmk_m2$(EXE): gmk_m2$(EXE)
-	-$(CP) gmk_m2$(EXE) $(bindir)/gmk_m2$(EXE)
-$(bindir)/gmk_m3$(EXE): gmk_m3$(EXE)
-	-$(CP) gmk_m3$(EXE) $(bindir)/gmk_m3$(EXE)
-$(bindir)/gmk_msh$(EXE): gmk_msh$(EXE)
-	-$(CP) gmk_msh$(EXE) $(bindir)/gmk_msh$(EXE)
-$(bindir)/gmk_ub2$(EXE): gmk_ub2$(EXE)
-	-$(CP) gmk_ub2$(EXE) $(bindir)/gmk_ub2$(EXE)
-$(bindir)/gmtst$(EXE): gmtst$(EXE)
-	-$(CP) gmtst$(EXE) $(bindir)/gmtst$(EXE)
-$(bindir)/gord$(EXE): gord$(EXE)
-	-$(CP) gord$(EXE) $(bindir)/gord$(EXE)
-$(bindir)/gotst$(EXE): gotst$(EXE)
-	-$(CP) gotst$(EXE) $(bindir)/gotst$(EXE)
-$(bindir)/gout$(EXE): gout$(EXE)
-	-$(CP) gout$(EXE) $(bindir)/gout$(EXE)
-$(bindir)/gpart$(EXE): $(bindir)/gmap$(EXE)
-	-$(RM) $(bindir)/gpart$(EXE)
-	-$(LN) $(bindir)/gmap$(EXE) $(bindir)/gpart$(EXE)
-$(bindir)/gscat$(EXE): gscat$(EXE)
-	-$(CP) gscat$(EXE) $(bindir)/gscat$(EXE)
-$(bindir)/gtst$(EXE): gtst$(EXE)
-	-$(CP) gtst$(EXE) $(bindir)/gtst$(EXE)
-$(bindir)/mcv$(EXE): mcv$(EXE)
-	-$(CP) mcv$(EXE) $(bindir)/mcv$(EXE)
-$(bindir)/mmk_m2$(EXE): mmk_m2$(EXE)
-	-$(CP) mmk_m2$(EXE) $(bindir)/mmk_m2$(EXE)
-$(bindir)/mmk_m3$(EXE): mmk_m3$(EXE)
-	-$(CP) mmk_m3$(EXE) $(bindir)/mmk_m3$(EXE)
-$(bindir)/mord$(EXE): mord$(EXE)
-	-$(CP) mord$(EXE) $(bindir)/mord$(EXE)
-$(bindir)/mtst$(EXE): mtst$(EXE)
-	-$(CP) mtst$(EXE) $(bindir)/mtst$(EXE)
-
-
-install				: $(bindir)/acpl$(EXE) $(bindir)/amk_ccc$(EXE) \
+install				: \
+	$(bindir)/acpl$(EXE) $(bindir)/amk_ccc$(EXE) \
 	$(bindir)/amk_fft2$(EXE) $(bindir)/amk_grf$(EXE) \
 	$(bindir)/amk_hy$(EXE) $(bindir)/amk_m2$(EXE) \
 	$(bindir)/amk_p2$(EXE) $(bindir)/atst$(EXE) \
@@ -170,12 +112,22 @@ install				: $(bindir)/acpl$(EXE) $(bindir)/amk_ccc$(EXE) \
 	$(bindir)/mmk_m2$(EXE) $(bindir)/mmk_m3$(EXE) \
 	$(bindir)/mord$(EXE) $(bindir)/mtst$(EXE)
 
-					-$(CP) dggath$(EXE) dgmap$(EXE) dgord$(EXE) dgpart$(EXE) dgscat$(EXE) dgtst$(EXE) $(bindir)
+ptinstall			: \
+	$(bindir)/dggath$(EXE) $(bindir)/dgmap$(EXE) \
+	$(bindir)/dgord$(EXE) $(bindir)/dgpart$(EXE) \
+	$(bindir)/dgscat$(EXE) $(bindir)/dgtst$(EXE)
 
 clean				:
 					-$(RM) *~ *$(OBJ) acpl$(EXE) amk_ccc$(EXE) amk_fft2$(EXE) amk_grf$(EXE) amk_hy$(EXE) amk_m2$(EXE) amk_p2$(EXE) atst$(EXE) gbase$(EXE) gcv$(EXE) *ggath$(EXE) *gmap$(EXE) gmk_hy$(EXE) gmk_m2$(EXE) gmk_m3$(EXE) gmk_msh$(EXE) gmk_ub2$(EXE) gmtst$(EXE) *gord$(EXE) gotst$(EXE) gout$(EXE) *gpart$(EXE) *gscat$(EXE) *gtst$(EXE) mcv$(EXE) mmk_m2$(EXE) mmk_m3$(EXE) mord$(EXE) mtst$(EXE)
 
 realclean			:	clean
+
+##
+##  Installation dependencies.
+##
+
+$(bindir)/%$(EXE)		:	%$(EXE)
+					-$(CP) $? $@
 
 ##
 ##  Todo list.
