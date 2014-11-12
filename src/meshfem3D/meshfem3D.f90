@@ -362,7 +362,7 @@
   call world_rank(myrank)
 
 ! open main output file, only written to by process 0
-  if(myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) then
+  if (myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) then
     open(unit=IMAIN,file=trim(OUTPUT_FILES_PATH)//'/output_meshfem3D.txt',status='unknown',iostat=ier)
     if (ier /= 0) then
       print*,'Error could not open output file :',trim(OUTPUT_FILES_PATH)//'/output_meshfem3D.txt'
@@ -373,7 +373,7 @@
 ! get MPI starting time
   time_start = wtime()
 
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) '******************************************'
     write(IMAIN,*) '*** Specfem3D MPI meshfem3D - f90 version ***'
@@ -405,7 +405,7 @@
 ! if meshing a chunk of the Earth, call a specific internal mesher designed specifically for that
   if (COUPLE_WITH_EXTERNAL_CODE .and. MESH_A_CHUNK_OF_THE_EARTH) then
     ! user output
-    if(myrank == 0) then
+    if (myrank == 0) then
       write(IMAIN,*)
       write(IMAIN,*) 'creating chunk of the earth Mesh'
       write(IMAIN,*)
@@ -451,14 +451,14 @@
   call synchronize_all()
 
 ! get interface data from external file to count the spectral elements along Z
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*) 'Reading interface data from file ',trim(MF_IN_DATA_FILES_PATH)//trim(INTERFACES_FILE), &
                    ' to count the spectral elements'
     call flush_IMAIN()
   endif
 
   open(unit=IIN,file=trim(MF_IN_DATA_FILES_PATH)//trim(INTERFACES_FILE),status='old',iostat=ier)
-  if (ier /= 0 ) then
+  if (ier /= 0) then
     print*,'Error opening interface file: ',trim(MF_IN_DATA_FILES_PATH)//trim(INTERFACES_FILE)
     stop 'Error opening interface file'
   endif
@@ -486,7 +486,7 @@
     max_npx_interface = max(npx_interface_bottom,max_npx_interface)
     max_npy_interface = max(npy_interface_bottom,max_npy_interface)
 
-    if((max_npx_interface < 2) .or.(max_npy_interface < 2)) then
+    if ((max_npx_interface < 2) .or.(max_npy_interface < 2)) then
       print*,'Error interface ',interface_current,': has not enough interface points (minimum is 2x2)'
       stop 'Error not enough interface points (minimum is 2x2)'
     endif
@@ -495,7 +495,7 @@
   ! define number of layers
   number_of_layers = number_of_interfaces ! - 1
   allocate(ner_layer(number_of_layers),stat=ier)
-  if( ier /= 0 ) stop 'Error allocating array ner_layer'
+  if (ier /= 0) stop 'Error allocating array ner_layer'
 
 ! loop on all the layers
   do ilayer = 1,number_of_layers
@@ -504,7 +504,7 @@
     call read_value_integer_mesh(IIN,DONT_IGNORE_JUNK,ner_layer(ilayer),'NER_LAYER', ier)
     if (ier /= 0) stop 'Error reading interface parameter for NER_LAYER'
 
-    if(ner_layer(ilayer) < 1) stop 'not enough spectral elements along Z in layer (minimum is 1)'
+    if (ner_layer(ilayer) < 1) stop 'not enough spectral elements along Z in layer (minimum is 1)'
 
   enddo
 
@@ -523,8 +523,8 @@
                           USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
 
 ! check that the code is running with the requested nb of processes
-  if(sizeprocs /= NPROC) then
-    if( myrank == 0 ) then
+  if (sizeprocs /= NPROC) then
+    if (myrank == 0) then
       write(IMAIN,*) 'Error: number of processors supposed to run on: ',NPROC
       write(IMAIN,*) 'Error: number of MPI processors actually run on: ',sizeprocs
       print*
@@ -537,21 +537,21 @@
 
 ! dynamic allocation of mesh arrays
   allocate(rns(0:2*NER),stat=ier)
-  if( ier /= 0 ) stop 'Error allocating array rns'
+  if (ier /= 0) stop 'Error allocating array rns'
 
   allocate(xgrid(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA),stat=ier)
-  if( ier /= 0 ) stop 'Error allocating array xgrid'
+  if (ier /= 0) stop 'Error allocating array xgrid'
   allocate(ygrid(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA),stat=ier)
-  if( ier /= 0 ) stop 'Error allocating array ygrid'
+  if (ier /= 0) stop 'Error allocating array ygrid'
   allocate(zgrid(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA),stat=ier)
-  if( ier /= 0 ) call exit_MPI(myrank,'not enough memory to allocate arrays')
+  if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
   allocate(addressing(0:NPROC_XI-1,0:NPROC_ETA-1),stat=ier)
-  if( ier /= 0 ) stop 'Error allocating array addressing'
+  if (ier /= 0) stop 'Error allocating array addressing'
   allocate(iproc_xi_slice(0:NPROC-1),stat=ier)
-  if( ier /= 0 ) stop 'Error allocating array iproc_xi_slice'
+  if (ier /= 0) stop 'Error allocating array iproc_xi_slice'
   allocate(iproc_eta_slice(0:NPROC-1),stat=ier)
-  if( ier /= 0 ) stop 'Error allocating array iproc_eta_slice'
+  if (ier /= 0) stop 'Error allocating array iproc_eta_slice'
 
 ! clear arrays
   xgrid(:,:,:) = 0.d0
@@ -562,7 +562,7 @@
   iproc_eta_slice(:) = 0
 
 ! create global slice addressing for solver
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*) 'creating global slice addressing'
     write(IMAIN,*)
   endif
@@ -585,7 +585,7 @@
     enddo
   endif
 
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*) 'This is process ',myrank
     write(IMAIN,*) 'There are ',sizeprocs,' MPI processes'
     write(IMAIN,*) 'Processes are numbered from 0 to ',sizeprocs-1
@@ -609,35 +609,35 @@
   endif
 
   ! check that the constants.h file is correct
-  if(NGNOD /= 8) call exit_MPI(myrank,'volume elements should have 8 control nodes in our internal mesher')
-  if(NGNOD2D /= 4) call exit_MPI(myrank,'surface elements should have 4 control nodes in our internal mesher')
+  if (NGNOD /= 8) call exit_MPI(myrank,'volume elements should have 8 control nodes in our internal mesher')
+  if (NGNOD2D /= 4) call exit_MPI(myrank,'surface elements should have 4 control nodes in our internal mesher')
 
   ! check that reals are either 4 or 8 bytes
-  if(CUSTOM_REAL /= SIZE_REAL .and. CUSTOM_REAL /= SIZE_DOUBLE) call exit_MPI(myrank,'wrong size of CUSTOM_REAL for reals')
+  if (CUSTOM_REAL /= SIZE_REAL .and. CUSTOM_REAL /= SIZE_DOUBLE) call exit_MPI(myrank,'wrong size of CUSTOM_REAL for reals')
 
   ! for the number of standard linear solids for attenuation
-  if(N_SLS /= 3) call exit_MPI(myrank,'number of SLS must be 3')
+  if (N_SLS /= 3) call exit_MPI(myrank,'number of SLS must be 3')
 
   ! check that number of slices is at least 1 in each direction
-  if(NPROC_XI < 1) call exit_MPI(myrank,'NPROC_XI must be greater than 1')
-  if(NPROC_ETA < 1) call exit_MPI(myrank,'NPROC_ETA must be greater than 1')
+  if (NPROC_XI < 1) call exit_MPI(myrank,'NPROC_XI must be greater than 1')
+  if (NPROC_ETA < 1) call exit_MPI(myrank,'NPROC_ETA must be greater than 1')
 
   ! check that mesh can be cut into the right number of slices
-  if(mod(NEX_XI,NPROC_XI) /= 0) call exit_MPI(myrank,'NEX_XI must be a multiple of NPROC_XI for a regular mesh')
-  if(mod(NEX_ETA,NPROC_ETA) /= 0) call exit_MPI(myrank,'NEX_ETA must be a multiple of NPROC_ETA for a regular mesh')
+  if (mod(NEX_XI,NPROC_XI) /= 0) call exit_MPI(myrank,'NEX_XI must be a multiple of NPROC_XI for a regular mesh')
+  if (mod(NEX_ETA,NPROC_ETA) /= 0) call exit_MPI(myrank,'NEX_ETA must be a multiple of NPROC_ETA for a regular mesh')
 
   ! also check that mesh can be coarsened in depth twice (block size multiple of 8)
   ! i.e. check that NEX is divisible by 8 and that NEX_PER_PROC is divisible by 8
   ! This is not required for a regular mesh
-  if(.not. USE_REGULAR_MESH) then
-    if(mod(NEX_XI,8) /= 0) call exit_MPI(myrank,'NEX_XI must be a multiple of 8')
-    if(mod(NEX_ETA,8) /= 0) call exit_MPI(myrank,'NEX_ETA must be a multiple of 8')
+  if (.not. USE_REGULAR_MESH) then
+    if (mod(NEX_XI,8) /= 0) call exit_MPI(myrank,'NEX_XI must be a multiple of 8')
+    if (mod(NEX_ETA,8) /= 0) call exit_MPI(myrank,'NEX_ETA must be a multiple of 8')
 
-    if(mod(NEX_PER_PROC_XI,8) /= 0) call exit_MPI(myrank,'NEX_PER_PROC_XI must be a multiple of 8')
-    if(mod(NEX_PER_PROC_ETA,8) /= 0) call exit_MPI(myrank,'NEX_PER_PROC_ETA must be a multiple of 8')
+    if (mod(NEX_PER_PROC_XI,8) /= 0) call exit_MPI(myrank,'NEX_PER_PROC_XI must be a multiple of 8')
+    if (mod(NEX_PER_PROC_ETA,8) /= 0) call exit_MPI(myrank,'NEX_PER_PROC_ETA must be a multiple of 8')
   endif
 
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*) 'region selected:'
     write(IMAIN,*)
     write(IMAIN,*) 'latitude min = ',LATITUDE_MIN
@@ -664,7 +664,7 @@
     write(IMAIN,*) 'Bottom of the mesh is at a depth of ',dabs(Z_DEPTH_BLOCK)/1000.,' km'
     write(IMAIN,*)
     write(IMAIN,*)
-    if(SUPPRESS_UTM_PROJECTION) then
+    if (SUPPRESS_UTM_PROJECTION) then
       write(IMAIN,*) 'suppressing UTM projection'
     else
       write(IMAIN,*) 'using UTM projection in region ',UTM_PROJECTION_ZONE
@@ -683,19 +683,19 @@
   min_elevation = +HUGEVAL
   max_elevation = -HUGEVAL
 
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) 'Reading interface data from file ',trim(MF_IN_DATA_FILES_PATH)//trim(INTERFACES_FILE)
     write(IMAIN,*)
   endif
 
   open(unit=IIN,file=trim(MF_IN_DATA_FILES_PATH)//trim(INTERFACES_FILE),status='old',iostat=ier)
-  if (ier /= 0 ) stop 'Error opening interfaces file'
+  if (ier /= 0) stop 'Error opening interfaces file'
 
   allocate(interface_bottom(max_npx_interface,max_npy_interface),stat=ier)
-  if( ier /= 0 ) stop 'Error allocating array interface_bottom'
+  if (ier /= 0) stop 'Error allocating array interface_bottom'
   allocate(interface_top(max_npx_interface,max_npy_interface),stat=ier)
-  if( ier /= 0 ) stop 'Error allocating array interface_top'
+  if (ier /= 0) stop 'Error allocating array interface_top'
 
   ! read number of interfaces
   call read_value_integer_mesh(IIN,DONT_IGNORE_JUNK,number_of_interfaces,'NINTERFACES', ier)
@@ -721,7 +721,7 @@
     !npoints_interface_top = npx_interface_top * npy_interface
     ! loop on all the points describing this interface
     open(unit=45,file=trim(MF_IN_DATA_FILES_PATH)//trim(interface_top_file),status='old',iostat=ier)
-    if ( ier /= 0 ) stop 'Error opening interface_top file'
+    if (ier /= 0) stop 'Error opening interface_top file'
     do iy=1,npy_interface_top
       do ix=1,npx_interface_top
         call read_value_dble_precision_mesh(45,DONT_IGNORE_JUNK,interface_top(ix,iy),'Z_INTERFACE_TOP',ier)
@@ -730,7 +730,7 @@
     close(45)
 
     ! compute the offset of this layer in terms of number of spectral elements below along Z
-    if(ilayer > 1) then
+    if (ilayer > 1) then
        ioffset = sum(ner_layer(1:ilayer-1))
     else
        ioffset = 0
@@ -757,10 +757,10 @@
         icornerlat = int((lat - orig_y_interface_bottom) / spacing_y_interface_bottom) + 1
 
 ! avoid edge effects and extend with identical point if outside model
-        if(icornerlong < 1) icornerlong = 1
-        if(icornerlong > npx_interface_bottom-1) icornerlong = npx_interface_bottom-1
-        if(icornerlat < 1) icornerlat = 1
-        if(icornerlat > npy_interface_bottom-1) icornerlat = npy_interface_bottom-1
+        if (icornerlong < 1) icornerlong = 1
+        if (icornerlong > npx_interface_bottom-1) icornerlong = npx_interface_bottom-1
+        if (icornerlat < 1) icornerlat = 1
+        if (icornerlat > npy_interface_bottom-1) icornerlat = npy_interface_bottom-1
 
 ! compute coordinates of corner
         long_corner = orig_x_interface_bottom + (icornerlong-1)*spacing_x_interface_bottom
@@ -771,10 +771,10 @@
         ratio_eta = (lat - lat_corner) / spacing_y_interface_bottom
 
 ! avoid edge effects
-        if(ratio_xi < 0.) ratio_xi = 0.
-        if(ratio_xi > 1.) ratio_xi = 1.
-        if(ratio_eta < 0.) ratio_eta = 0.
-        if(ratio_eta > 1.) ratio_eta = 1.
+        if (ratio_xi < 0.) ratio_xi = 0.
+        if (ratio_xi > 1.) ratio_xi = 1.
+        if (ratio_eta < 0.) ratio_eta = 0.
+        if (ratio_eta > 1.) ratio_eta = 1.
 
 ! interpolate elevation at current point
         z_interface_bottom = &
@@ -792,10 +792,10 @@
         icornerlat = int((lat - orig_y_interface_top) / spacing_y_interface_top) + 1
 
 ! avoid edge effects and extend with identical point if outside model
-        if(icornerlong < 1) icornerlong = 1
-        if(icornerlong > npx_interface_top-1) icornerlong = npx_interface_top-1
-        if(icornerlat < 1) icornerlat = 1
-        if(icornerlat > npy_interface_top-1) icornerlat = npy_interface_top-1
+        if (icornerlong < 1) icornerlong = 1
+        if (icornerlong > npx_interface_top-1) icornerlong = npx_interface_top-1
+        if (icornerlat < 1) icornerlat = 1
+        if (icornerlat > npy_interface_top-1) icornerlat = npy_interface_top-1
 
 ! compute coordinates of corner
         long_corner = orig_x_interface_top + (icornerlong-1)*spacing_x_interface_top
@@ -806,10 +806,10 @@
         ratio_eta = (lat - lat_corner) / spacing_y_interface_top
 
 ! avoid edge effects
-        if(ratio_xi < 0.) ratio_xi = 0.
-        if(ratio_xi > 1.) ratio_xi = 1.
-        if(ratio_eta < 0.) ratio_eta = 0.
-        if(ratio_eta > 1.) ratio_eta = 1.
+        if (ratio_xi < 0.) ratio_xi = 0.
+        if (ratio_xi > 1.) ratio_xi = 1.
+        if (ratio_eta < 0.) ratio_eta = 0.
+        if (ratio_eta > 1.) ratio_eta = 1.
 
 ! interpolate elevation at current point
         z_interface_top = &
@@ -843,7 +843,7 @@
 
   enddo
 
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) '**************************'
     write(IMAIN,*) 'creating mesh in the model'
@@ -862,14 +862,14 @@
 
 ! use dynamic allocation to allocate memory for arrays
   allocate(ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec),stat=ier)
-  if( ier /= 0 ) stop 'Error allocating array ibool'
+  if (ier /= 0) stop 'Error allocating array ibool'
   allocate(xstore(NGLLX_M,NGLLY_M,NGLLZ_M,nspec),stat=ier)
-  if( ier /= 0 ) stop 'Error allocating array xstore'
+  if (ier /= 0) stop 'Error allocating array xstore'
   allocate(ystore(NGLLX_M,NGLLY_M,NGLLZ_M,nspec),stat=ier)
-  if( ier /= 0 ) stop 'Error allocating array ystore'
+  if (ier /= 0) stop 'Error allocating array ystore'
   allocate(zstore(NGLLX_M,NGLLY_M,NGLLZ_M,nspec),stat=ier)
   ! exit if there is not enough memory to allocate all the arrays
-  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+  if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
   call create_regions_mesh(xgrid,ygrid,zgrid,ibool, &
                            xstore,ystore,zstore,iproc_xi,iproc_eta,addressing,nspec, &
@@ -884,7 +884,7 @@
                            USE_REGULAR_MESH,NDOUBLINGS,ner_doublings, &
                            ADIOS_ENABLED, ADIOS_FOR_DATABASES)
 
-  if(myrank == 0) then
+  if (myrank == 0) then
 ! compare to exact theoretical value (bottom is always flat)
     write(IMAIN,*) '            exact area: ',(UTM_Y_MAX-UTM_Y_MIN)*(UTM_X_MAX-UTM_X_MIN)
   endif
@@ -894,7 +894,7 @@
 
 !--- print number of points and elements in the mesh
 
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) 'Repartition of elements:'
     write(IMAIN,*) '-----------------------'
@@ -913,7 +913,7 @@
                                              dble(NGLOB_AB)*dble(NPROC*NDIM)
     write(IMAIN,*)
     ! write information about precision used for floating-point operations
-    if(CUSTOM_REAL == SIZE_REAL) then
+    if (CUSTOM_REAL == SIZE_REAL) then
       write(IMAIN,*) 'using single precision for the calculations'
     else
       write(IMAIN,*) 'using double precision for the calculations'
@@ -924,7 +924,7 @@
   endif   ! end of section executed by main process only
 
 ! elapsed time since beginning of mesh generation
-  if(myrank == 0) then
+  if (myrank == 0) then
     tCPU = wtime() - time_start
     write(IMAIN,*)
     write(IMAIN,*) 'Elapsed time for mesh generation and buffer creation in seconds = ',tCPU
@@ -933,7 +933,7 @@
   endif
 
 ! close main output file
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*) 'done'
     write(IMAIN,*)
     close(IMAIN)

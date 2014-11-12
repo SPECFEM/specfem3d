@@ -66,10 +66,10 @@
 
 
   allocate(vp_array(GOCAD_ST_NU,GOCAD_ST_NV,GOCAD_ST_NW),stat=ier)
-  if( ier /= 0 ) call exit_mpi(myrank,'error allocating vp_array for salton')
+  if (ier /= 0) call exit_mpi(myrank,'error allocating vp_array for salton')
 
   ! the variables read are declared and stored in structure
-  if(myrank == 0) call read_salton_sea_model()
+  if (myrank == 0) call read_salton_sea_model()
 
   ! broadcast the information read on the master to the nodes
   call bcast_all_r(vp_array, size(vp_array))
@@ -87,7 +87,7 @@
   implicit none
 
   ! local parameter
-  integer :: ios, reclen
+  integer :: ier, reclen
   character(len=*), parameter :: SALTON_SEA_MODEL_FILE = 'DATA/st_3D_block_harvard/regrid3_vel_p.bin'
 
   ! array length
@@ -95,14 +95,14 @@
 
   ! reads in file values
   open(11,file=trim(SALTON_SEA_MODEL_FILE), &
-        status='old',action='read',form='unformatted',access='direct',recl=reclen,iostat=ios)
-  if (ios /= 0) then
-    print *,'error opening file: ',trim(SALTON_SEA_MODEL_FILE),' iostat = ', ios
+        status='old',action='read',form='unformatted',access='direct',recl=reclen,iostat=ier)
+  if (ier /= 0) then
+    print *,'error opening file: ',trim(SALTON_SEA_MODEL_FILE),' iostat = ', ier
     call exit_mpi(0,'Error opening file salton trough')
   endif
 
-  read(11,rec=1,iostat=ios) vp_array
-  if (ios /= 0) stop 'Error reading vp_array'
+  read(11,rec=1,iostat=ier) vp_array
+  if (ier /= 0) stop 'Error reading vp_array'
 
   close(11)
 
@@ -225,7 +225,7 @@
        (v5 - GOCAD_ST_NO_DATA_VALUE) > eps .and. &
        (v6 - GOCAD_ST_NO_DATA_VALUE) > eps .and. &
        (v7 - GOCAD_ST_NO_DATA_VALUE) > eps .and. &
-       (v8 - GOCAD_ST_NO_DATA_VALUE) > eps )  then
+       (v8 - GOCAD_ST_NO_DATA_VALUE) > eps)  then
       vp = dble(v1 * (1-xi) * (1-eta) * (1-ga) +&
                 v2 * xi * (1-eta) * (1-ga) +&
                 v3 * xi * eta * (1-ga) +&

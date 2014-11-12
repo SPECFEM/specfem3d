@@ -92,14 +92,14 @@
   write(IOUT,*) '! time step = ',DT
   write(IOUT,*) '!'
   write(IOUT,*) '! attenuation uses:'
-  if(ATTENUATION) then
+  if (ATTENUATION) then
     write(IOUT,*) '!  NSPEC_ATTENUATION = ', NSPEC_AB
   else
     write(IOUT,*) '!  NSPEC_ATTENUATION = ', 1
   endif
   write(IOUT,*) '! '
   write(IOUT,*) '! anisotropy uses:'
-  if(ANISOTROPY) then
+  if (ANISOTROPY) then
     write(IOUT,*) '!  NSPEC_ANISO = ',NSPEC_AB
   else
     write(IOUT,*) '!  NSPEC_ANISO = ', 1
@@ -130,7 +130,7 @@
   close(IOUT)
 
 ! copy number of surface elements in an include file for the movies
-  if( nfaces_surface_glob_ext_mesh > 0 ) then
+  if (nfaces_surface_glob_ext_mesh > 0) then
 
     HEADER_FILE = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))//'/surface_from_mesher.h'
 

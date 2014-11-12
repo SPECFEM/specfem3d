@@ -47,11 +47,11 @@
   integer :: i,ier
 
   allocate(x_found(nrec),y_found(nrec),z_found(nrec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating arrays x_found y_found z_found'
+  if (ier /= 0) stop 'error allocating arrays x_found y_found z_found'
 
   ! reads in station locations from output_list file
   open(unit=IIN_SU1,file=trim(OUTPUT_FILES_PATH)//'/output_list_stations.txt',status='old',iostat=ier)
-  if( ier /= 0 ) stop 'error opening output_list_stations.txt file'
+  if (ier /= 0) stop 'error opening output_list_stations.txt file'
 
   do irec=1,nrec
    read(IIN_SU1,*) station_name(irec),network_name(irec),x_found(irec),y_found(irec),z_found(irec)
@@ -60,7 +60,7 @@
 
   ! reads in source locations from output_list file
   open(unit=IIN_SU1,file=trim(OUTPUT_FILES_PATH)//'/output_list_sources.txt',status='old',iostat=ier)
-  if( ier /= 0 ) stop 'error opening output_list_sources.txt file'
+  if (ier /= 0) stop 'error opening output_list_sources.txt file'
 
   read(IIN_SU1,*) x_found_source,y_found_source,z_found_source
   close(IIN_SU1)
@@ -71,16 +71,16 @@
   procname = adjustl(procname)
 
   allocate(rtmpseis(NSTEP),stat=ier)
-  if( ier /= 0 ) stop 'error allocating rtmpseis array'
+  if (ier /= 0) stop 'error allocating rtmpseis array'
 
   ! write seismograms (dx)
   open(unit=IOUT_SU, file=trim(final_LOCAL_PATH)//trim(procname)//'_dx_SU' ,&
        status='unknown', access='direct', recl=4, iostat=ier)
 
-  if( ier /= 0 ) stop 'error opening ***_dx_SU file'
+  if (ier /= 0) stop 'error opening ***_dx_SU file'
 
   ! receiver interval
-  if( nrec > 1) then
+  if (nrec > 1) then
     dx = SNGL(x_found(2)-x_found(1))
   else
     dx = 0.0
@@ -106,7 +106,7 @@
   open(unit=IOUT_SU, file=trim(final_LOCAL_PATH)//trim(procname)//'_dy_SU' ,&
        status='unknown', access='direct', recl=4, iostat=ier)
 
-  if( ier /= 0 ) stop 'error opening ***_dy_SU file'
+  if (ier /= 0) stop 'error opening ***_dy_SU file'
 
   do irec_local = 1,nrec_local
     irec = number_receiver_global(irec_local)
@@ -127,7 +127,7 @@
   open(unit=IOUT_SU, file=trim(final_LOCAL_PATH)//trim(procname)//'_dz_SU' ,&
        status='unknown', access='direct', recl=4, iostat=ier)
 
-  if( ier /= 0 ) stop 'error opening ***_dz_SU file'
+  if (ier /= 0) stop 'error opening ***_dz_SU file'
 
   do irec_local = 1,nrec_local
     irec = number_receiver_global(irec_local)
@@ -189,9 +189,9 @@
   write(IOUT_SU,rec=(irec_local-1)*60+(irec_local-1)*NSTEP+29) header2
 
   ! time increment
-  if( NINT(DT*1.0d6) < 65536 ) then
+  if (NINT(DT*1.0d6) < 65536) then
     header2(1)=NINT(DT*1.0d6, kind=2)  ! deltat (unit: 10^{-6} second)
-  else if( NINT(DT*1.0d3) < 65536 ) then
+  else if (NINT(DT*1.0d3) < 65536) then
     header2(1)=NINT(DT*1.0d3, kind=2)  ! deltat (unit: 10^{-3} second)
   else
     header2(1)=NINT(DT, kind=2)  ! deltat (unit: 10^{0} second)

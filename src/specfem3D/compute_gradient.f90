@@ -109,7 +109,7 @@
         gammazl = gammaz(i,j,k,ispec)
 
         ! daniel: TODO - check gravity case here
-        if( GRAVITY ) then
+        if (GRAVITY) then
           rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
         else
           rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)

@@ -57,15 +57,15 @@
   call usual_hex_nodes(NGNOD_EIGHT_CORNERS,iaddx,iaddy,iaddz)
 
   ix1=2*(subregions(isubregion,1) - iproc_xi*NEX_PER_PROC_XI - 1)
-  if(ix1 < 0) ix1 = 0
+  if (ix1 < 0) ix1 = 0
   ix2=2*(subregions(isubregion,2) - iproc_xi*NEX_PER_PROC_XI - 1)
-  if(ix2 > 2*(NEX_PER_PROC_XI - 1)) ix2 = 2*(NEX_PER_PROC_XI - 1)
+  if (ix2 > 2*(NEX_PER_PROC_XI - 1)) ix2 = 2*(NEX_PER_PROC_XI - 1)
   dix=2
 
   iy1=2*(subregions(isubregion,3) - iproc_eta*NEX_PER_PROC_ETA - 1)
-  if(iy1 < 0) iy1 = 0
+  if (iy1 < 0) iy1 = 0
   iy2=2*(subregions(isubregion,4) - iproc_eta*NEX_PER_PROC_ETA - 1)
-  if(iy2 > 2*(NEX_PER_PROC_ETA - 1)) iy2 = 2*(NEX_PER_PROC_ETA - 1)
+  if (iy2 > 2*(NEX_PER_PROC_ETA - 1)) iy2 = 2*(NEX_PER_PROC_ETA - 1)
   diy=2
 
   ir1=2*(subregions(isubregion,5) - 1)
@@ -118,7 +118,7 @@
 !
 !--- case of a regular mesh
 !
-  if(USE_REGULAR_MESH) then
+  if (USE_REGULAR_MESH) then
 
      call usual_hex_nodes(NGNOD_EIGHT_CORNERS,iaddx,iaddy,iaddz)
 
@@ -140,7 +140,7 @@
      iar=1
 
   else
-     if(ndoublings == 1) then
+     if (ndoublings == 1) then
 
         select case (isubregion)
 
@@ -202,7 +202,7 @@
 
         end select
 
-     else if(ndoublings == 2) then
+     else if (ndoublings == 2) then
 
         select case (isubregion)
 

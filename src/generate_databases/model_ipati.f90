@@ -67,11 +67,11 @@
 
   ! density
   allocate( rho_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array rho_read'
+  if (ier /= 0) stop 'error allocating array rho_read'
 
   filename = prname_lp(1:len_trim(prname_lp))//'rho.bin'
   open(unit=28,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
-  if( ier /= 0 ) then
+  if (ier /= 0) then
     print*,'error opening file: ',trim(filename)
     stop 'error reading rho.bin file'
   endif
@@ -81,11 +81,11 @@
 
   ! vp
   allocate( vp_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array vp_read'
+  if (ier /= 0) stop 'error allocating array vp_read'
 
   filename = prname_lp(1:len_trim(prname_lp))//'vp.bin'
   open(unit=28,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
-  if( ier /= 0 ) then
+  if (ier /= 0) then
     print*,'error opening file: ',trim(filename)
     stop 'error reading vp.bin file'
   endif
@@ -95,7 +95,7 @@
 
   ! vs scaled from vp
   allocate( vs_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array vs_read'
+  if (ier /= 0) stop 'error allocating array vs_read'
 
   ! scaling
   vs_read = vp_read * SCALING_FACTOR
@@ -149,11 +149,11 @@
 
   ! density
   allocate( rho_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array rho_read'
+  if (ier /= 0) stop 'error allocating array rho_read'
 
   filename = prname_lp(1:len_trim(prname_lp))//'rho.bin'
   open(unit=28,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
-  if( ier /= 0 ) then
+  if (ier /= 0) then
     print*,'error opening file: ',trim(filename)
     stop 'error reading rho.bin file'
   endif
@@ -163,11 +163,11 @@
 
   ! vp
   allocate( vp_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array vp_read'
+  if (ier /= 0) stop 'error allocating array vp_read'
 
   filename = prname_lp(1:len_trim(prname_lp))//'vp.bin'
   open(unit=28,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
-  if( ier /= 0 ) then
+  if (ier /= 0) then
     print*,'error opening file: ',trim(filename)
     stop 'error reading vp.bin file'
   endif
@@ -177,7 +177,7 @@
 
   ! vs scaled from vp
   allocate( vs_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array vs_read'
+  if (ier /= 0) stop 'error allocating array vs_read'
 
   ! scaling
   vs_read = vp_read * SCALING_FACTOR
@@ -186,7 +186,7 @@
   do ispec=1,nspec
     ! assumes water layer with acoustic elements are set properly
     ! only overwrites elastic elements
-    if( ispec_is_elastic(ispec)) then
+    if (ispec_is_elastic(ispec)) then
       ! isotropic model parameters
       rhostore(:,:,:,ispec) = rho_read(:,:,:,ispec)
       kappastore(:,:,:,ispec) = rhostore(:,:,:,ispec) * ( vp_read(:,:,:,ispec) * vp_read(:,:,:,ispec) &

@@ -92,26 +92,26 @@
 
 ! on boundary 1: x=xmin
   target= UTM_X_MIN + TOLERANCE_METERS
-  if(xelm(1)<target .and. xelm(4)<target .and. xelm(5)<target .and. xelm(8)<target) iboun(1,ispec)=.true.
+  if (xelm(1)<target .and. xelm(4)<target .and. xelm(5)<target .and. xelm(8)<target) iboun(1,ispec)=.true.
 
 ! on boundary 2: xmax
   target= UTM_X_MAX - TOLERANCE_METERS
-  if(xelm(2)>target .and. xelm(3)>target .and. xelm(6)>target .and. xelm(7)>target) iboun(2,ispec)=.true.
+  if (xelm(2)>target .and. xelm(3)>target .and. xelm(6)>target .and. xelm(7)>target) iboun(2,ispec)=.true.
 
 ! on boundary 3: ymin
   target= UTM_Y_MIN + TOLERANCE_METERS
-  if(yelm(1)<target .and. yelm(2)<target .and. yelm(5)<target .and. yelm(6)<target) iboun(3,ispec)=.true.
+  if (yelm(1)<target .and. yelm(2)<target .and. yelm(5)<target .and. yelm(6)<target) iboun(3,ispec)=.true.
 
 ! on boundary 4: ymax
   target= UTM_Y_MAX - TOLERANCE_METERS
-  if(yelm(3)>target .and. yelm(4)>target .and. yelm(7)>target .and. yelm(8)>target) iboun(4,ispec)=.true.
+  if (yelm(3)>target .and. yelm(4)>target .and. yelm(7)>target .and. yelm(8)>target) iboun(4,ispec)=.true.
 
 ! on boundary 5: bottom
   target = Z_DEPTH_BLOCK + TOLERANCE_METERS
-  if(zelm(1)<target .and. zelm(2)<target .and. zelm(3)<target .and. zelm(4)<target) iboun(5,ispec)=.true.
+  if (zelm(1)<target .and. zelm(2)<target .and. zelm(3)<target .and. zelm(4)<target) iboun(5,ispec)=.true.
 
 ! on boundary 6: top
-  if(idoubling == IFLAG_ONE_LAYER_TOPOGRAPHY) iboun(6,ispec)=.true.
+  if (idoubling == IFLAG_ONE_LAYER_TOPOGRAPHY) iboun(6,ispec)=.true.
 
 ! *******************************************************************
 !     determine if the element falls on an MPI cut plane along xi
@@ -128,14 +128,14 @@
 ! and add geometrical tolerance
 
   target = UTM_X_MIN + iproc_xi*sizeslice + TOLERANCE_METERS
-  if(xelm(1)<target .and. xelm(4)<target .and. xelm(5)<target .and. xelm(8)<target) &
+  if (xelm(1)<target .and. xelm(4)<target .and. xelm(5)<target .and. xelm(8)<target) &
     iMPIcut_xi(1,ispec)=.true.
 
 ! right cut-plane in the current slice along X = constant (Xmax of this slice)
 ! and add geometrical tolerance
 
   target = UTM_X_MIN + (iproc_xi+1)*sizeslice - TOLERANCE_METERS
-  if(xelm(2)>target .and. xelm(3)>target .and. xelm(6)>target .and. xelm(7)>target) &
+  if (xelm(2)>target .and. xelm(3)>target .and. xelm(6)>target .and. xelm(7)>target) &
     iMPIcut_xi(2,ispec)=.true.
 
 ! ********************************************************************
@@ -151,14 +151,14 @@
 ! and add geometrical tolerance
 
   target = UTM_Y_MIN + iproc_eta*sizeslice + TOLERANCE_METERS
-  if(yelm(1)<target .and. yelm(2)<target .and. yelm(5)<target .and. yelm(6)<target) &
+  if (yelm(1)<target .and. yelm(2)<target .and. yelm(5)<target .and. yelm(6)<target) &
     iMPIcut_eta(1,ispec)=.true.
 
 ! right cut-plane in the current slice along Y = constant (Ymax of this slice)
 ! and add geometrical tolerance
 
   target = UTM_Y_MIN + (iproc_eta+1)*sizeslice - TOLERANCE_METERS
-  if(yelm(3)>target .and. yelm(4)>target .and. yelm(7)>target .and. yelm(8)>target) &
+  if (yelm(3)>target .and. yelm(4)>target .and. yelm(7)>target .and. yelm(8)>target) &
     iMPIcut_eta(2,ispec)=.true.
 
   end subroutine get_flags_boundaries

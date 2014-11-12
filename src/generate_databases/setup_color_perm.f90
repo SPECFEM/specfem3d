@@ -44,7 +44,7 @@
   integer :: ier
 
   ! user output
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*) '     use coloring = ',USE_MESH_COLORING_GPU
   endif
 
@@ -55,16 +55,16 @@
   num_colors_inner_elastic = 0
 
   ! mesh coloring
-  if( USE_MESH_COLORING_GPU ) then
+  if (USE_MESH_COLORING_GPU) then
 
     ! creates coloring of elements
     allocate(perm(nspec),stat=ier)
-    if( ier /= 0 ) stop 'error allocating temporary perm array'
+    if (ier /= 0) stop 'error allocating temporary perm array'
     perm(:) = 0
 
     ! acoustic domains
-    if( ACOUSTIC_SIMULATION ) then
-      if( myrank == 0) then
+    if (ACOUSTIC_SIMULATION) then
+      if (myrank == 0) then
         write(IMAIN,*) '     acoustic domains: '
       endif
       call setup_color(myrank,nspec,nglob,ibool,perm, &
@@ -74,12 +74,12 @@
     else
       ! allocates dummy arrays
       allocate(num_elem_colors_acoustic(num_colors_outer_acoustic + num_colors_inner_acoustic),stat=ier)
-      if( ier /= 0 ) stop 'error allocating num_elem_colors_acoustic array'
+      if (ier /= 0) stop 'error allocating num_elem_colors_acoustic array'
     endif
 
     ! elastic domains
-    if( ELASTIC_SIMULATION ) then
-      if( myrank == 0) then
+    if (ELASTIC_SIMULATION) then
+      if (myrank == 0) then
         write(IMAIN,*) '     elastic domains: '
       endif
       call setup_color(myrank,nspec,nglob,ibool,perm, &
@@ -88,18 +88,18 @@
                           SAVE_MESH_FILES)
     else
       allocate(num_elem_colors_elastic(num_colors_outer_elastic + num_colors_inner_elastic),stat=ier)
-      if( ier /= 0 ) stop 'error allocating num_elem_colors_elastic array'
+      if (ier /= 0) stop 'error allocating num_elem_colors_elastic array'
     endif
 
     ! checks: after all domains are done
-    if(minval(perm) /= 1) &
+    if (minval(perm) /= 1) &
       call exit_MPI(myrank, 'minval(perm) should be 1')
-    if(maxval(perm) /= max(num_phase_ispec_acoustic,num_phase_ispec_elastic)) &
+    if (maxval(perm) /= max(num_phase_ispec_acoustic,num_phase_ispec_elastic)) &
       call exit_MPI(myrank, 'maxval(perm) should be max(num_phase_ispec_..)')
 
     ! sorts array according to permutation
     call synchronize_all()
-    if(myrank == 0) then
+    if (myrank == 0) then
       write(IMAIN,*) '     mesh permutation:'
     endif
     call setup_permutation(myrank,nspec,nglob,ibool,ANISOTROPY,perm, &
@@ -111,9 +111,9 @@
 
     ! allocates dummy arrays
     allocate(num_elem_colors_acoustic(num_colors_outer_acoustic + num_colors_inner_acoustic),stat=ier)
-    if( ier /= 0 ) stop 'error allocating num_elem_colors_acoustic array'
+    if (ier /= 0) stop 'error allocating num_elem_colors_acoustic array'
     allocate(num_elem_colors_elastic(num_colors_outer_elastic + num_colors_inner_elastic),stat=ier)
-    if( ier /= 0 ) stop 'error allocating num_elem_colors_elastic array'
+    if (ier /= 0) stop 'error allocating num_elem_colors_elastic array'
 
   endif ! USE_MESH_COLORING_GPU
 
@@ -178,14 +178,14 @@
 
   ! allocates temporary array with colors
   allocate(color(nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating temporary color array'
+  if (ier /= 0) stop 'error allocating temporary color array'
   allocate(first_elem_number_in_this_color(MAX_NUMBER_OF_COLORS + 1),stat=ier)
-  if( ier /= 0 ) stop 'error allocating first_elem_number_in_this_color array'
+  if (ier /= 0) stop 'error allocating first_elem_number_in_this_color array'
 
   ! flags for elements on outer rims
   ! opposite to what is stored in ispec_is_inner
   allocate(is_on_a_slice_edge(nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating is_on_a_slice_edge array'
+  if (ier /= 0) stop 'error allocating is_on_a_slice_edge array'
   do ispec = 1,nspec
     is_on_a_slice_edge(ispec) = .not. ispec_is_inner(ispec)
   enddo
@@ -204,7 +204,7 @@
     = nspec_domain + 1
 
   allocate(num_of_elems_in_this_color(nb_colors_outer_elements + nb_colors_inner_elements),stat=ier)
-  if( ier /= 0 ) stop 'error allocating num_of_elems_in_this_color array'
+  if (ier /= 0) stop 'error allocating num_of_elems_in_this_color array'
 
   num_of_elems_in_this_color(:) = 0
   do icolor = 1, nb_colors_outer_elements + nb_colors_inner_elements
@@ -213,7 +213,7 @@
 
   ! check that the sum of all the numbers of elements found in each color is equal
   ! to the total number of elements in the mesh
-  if(sum(num_of_elems_in_this_color) /= nspec_domain) then
+  if (sum(num_of_elems_in_this_color) /= nspec_domain) then
     print *,'error number of elements in this color:',idomain
     print *,'rank: ',myrank,' nspec = ',nspec_domain
     print *,'  total number of elements in all the colors of the mesh = ', &
@@ -223,7 +223,7 @@
 
   ! check that the sum of all the numbers of elements found in each color for the outer elements is equal
   ! to the total number of outer elements found in the mesh
-  if(sum(num_of_elems_in_this_color(1:nb_colors_outer_elements)) /= nspec_outer) then
+  if (sum(num_of_elems_in_this_color(1:nb_colors_outer_elements)) /= nspec_outer) then
     print *,'error number of outer elements in this color:',idomain
     print *,'rank: ',myrank,' nspec_outer = ',nspec_outer
     print*,'nb_colors_outer_elements = ',nb_colors_outer_elements
@@ -233,7 +233,7 @@
   endif
 
   ! debug: file output
-  if( SAVE_MESH_FILES .and. DEBUG ) then
+  if (SAVE_MESH_FILES .and. DEBUG) then
     filename = prname(1:len_trim(prname))//'color_'//str_domain(idomain)
     call write_VTK_data_elem_i(nspec,nglob, &
                               xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
@@ -245,15 +245,15 @@
   deallocate(color)
 
   ! debug: no mesh coloring, only creates dummy coloring arrays
-  if( DEBUG ) then
+  if (DEBUG) then
     nb_colors_outer_elements = 0
     nb_colors_inner_elements = 0
     ispec_counter = 0
 
     ! first generate all the outer elements
     do ispec = 1,nspec
-      if( ispec_is_d(ispec) ) then
-        if( ispec_is_inner(ispec) .eqv. .false. ) then
+      if (ispec_is_d(ispec)) then
+        if (ispec_is_inner(ispec) .eqv. .false.) then
           ispec_counter = ispec_counter + 1
           perm(ispec) = ispec_counter
         endif
@@ -264,12 +264,12 @@
     nspec_outer = ispec_counter
 
     ! only single color
-    if(nspec_outer > 0 ) nb_colors_outer_elements = 1
+    if (nspec_outer > 0) nb_colors_outer_elements = 1
 
     ! then generate all the inner elements
     do ispec = 1,nspec
-      if( ispec_is_d(ispec) ) then
-        if( ispec_is_inner(ispec) .eqv. .true. ) then
+      if (ispec_is_d(ispec)) then
+        if (ispec_is_inner(ispec) .eqv. .true.) then
           ispec_counter = ispec_counter + 1
           perm(ispec) = ispec_counter - nspec_outer ! starts again at 1
         endif
@@ -278,21 +278,21 @@
     nspec_inner = ispec_counter - nspec_outer
 
     ! only single color
-    if(nspec_inner > 0 ) nb_colors_inner_elements = 1
+    if (nspec_inner > 0) nb_colors_inner_elements = 1
 
     allocate(num_of_elems_in_this_color(nb_colors_outer_elements + nb_colors_inner_elements),stat=ier)
-    if( ier /= 0 ) stop 'error allocating num_of_elems_in_this_color array'
+    if (ier /= 0) stop 'error allocating num_of_elems_in_this_color array'
 
-    if( nspec_outer > 0 ) num_of_elems_in_this_color(1) = nspec_outer
-    if( nspec_inner > 0 ) num_of_elems_in_this_color(2) = nspec_inner
+    if (nspec_outer > 0) num_of_elems_in_this_color(1) = nspec_outer
+    if (nspec_inner > 0) num_of_elems_in_this_color(2) = nspec_inner
   endif ! debug
 
   ! debug: saves mesh coloring numbers into files
-  if( DEBUG ) then
+  if (DEBUG) then
     ! debug file output
     filename = prname(1:len_trim(prname))//'num_of_elems_in_this_color_'//str_domain(idomain)//'.dat'
     open(unit=99,file=trim(filename),status='unknown',iostat=ier)
-    if( ier /= 0 ) stop 'error opening num_of_elems_in_this_color file'
+    if (ier /= 0) stop 'error opening num_of_elems_in_this_color file'
     ! number of colors for outer elements
     write(99,*) nb_colors_outer_elements
     ! number of colors for inner elements
@@ -306,24 +306,24 @@
   endif
 
   ! sets up domain coloring arrays
-  select case(idomain)
-  case( 1 )
+  select case (idomain)
+  case (1)
     ! acoustic domains
     num_colors_outer_acoustic = nb_colors_outer_elements
     num_colors_inner_acoustic = nb_colors_inner_elements
 
     allocate(num_elem_colors_acoustic(num_colors_outer_acoustic + num_colors_inner_acoustic),stat=ier)
-    if( ier /= 0 ) stop 'error allocating num_elem_colors_acoustic array'
+    if (ier /= 0) stop 'error allocating num_elem_colors_acoustic array'
 
     num_elem_colors_acoustic(:) = num_of_elems_in_this_color(:)
 
-  case( 2 )
+  case (2)
     ! elastic domains
     num_colors_outer_elastic = nb_colors_outer_elements
     num_colors_inner_elastic = nb_colors_inner_elements
 
     allocate(num_elem_colors_elastic(num_colors_outer_elastic + num_colors_inner_elastic),stat=ier)
-    if( ier /= 0 ) stop 'error allocating num_elem_colors_elastic array'
+    if (ier /= 0) stop 'error allocating num_elem_colors_elastic array'
 
     num_elem_colors_elastic(:) = num_of_elems_in_this_color(:)
 
@@ -336,15 +336,15 @@
   ispec_outer = 0
   do ispec = 1, nspec
     ! only elements in this domain
-    if( ispec_is_d(ispec) ) then
+    if (ispec_is_d(ispec)) then
 
       ! sets phase_ispec arrays with ordering of elements
-      if( ispec_is_inner(ispec) .eqv. .false. ) then
+      if (ispec_is_inner(ispec) .eqv. .false.) then
         ! outer elements
         ispec_outer = perm(ispec)
 
         ! checks
-        if( ispec_outer < 1 .or. ispec_outer > num_phase_ispec_d ) then
+        if (ispec_outer < 1 .or. ispec_outer > num_phase_ispec_d) then
           print*,'error outer permutation:',idomain
           print*,'rank:',myrank,'  ispec_inner = ',ispec_outer
           print*,'num_phase_ispec_d = ',num_phase_ispec_d
@@ -358,7 +358,7 @@
         ispec_inner = perm(ispec)
 
         ! checks
-        if( ispec_inner < 1 .or. ispec_inner > num_phase_ispec_d ) then
+        if (ispec_inner < 1 .or. ispec_inner > num_phase_ispec_d) then
           print*,'error inner permutation:',idomain
           print*,'rank:',myrank,'  ispec_inner = ',ispec_inner
           print*,'num_phase_ispec_d = ',num_phase_ispec_d
@@ -381,7 +381,7 @@
   call max_all_i(nspec_outer,nspec_outer_max_global)
   call min_all_i(nspec_outer,nspec_outer_min_global)
   call max_all_i(nspec_outer,nspec_outer_max_global)
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*) '       colors min = ',nb_colors_min
     write(IMAIN,*) '       colors max = ',nb_colors_max
     write(IMAIN,*) '       outer elements: min = ',nspec_outer_min_global
@@ -389,7 +389,7 @@
   endif
 
   ! debug: outputs permutation array as vtk file
-  if( DEBUG ) then
+  if (DEBUG) then
     filename = prname(1:len_trim(prname))//'perm_'//str_domain(idomain)
     call write_VTK_data_elem_i(nspec,nglob, &
                         xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
@@ -439,7 +439,7 @@
 
   ! sorts array according to permutation
   allocate(temp_perm_global(nspec),stat=ier)
-  if( ier /= 0 ) stop 'error temp_perm_global array'
+  if (ier /= 0) stop 'error temp_perm_global array'
 
   ! global ordering
   temp_perm_global(:) = 0
@@ -447,7 +447,7 @@
 
   ! fills global permutation array
   ! starts with elastic elements
-  if( ELASTIC_SIMULATION ) then
+  if (ELASTIC_SIMULATION) then
     ! first outer elements coloring
     ! phase element counter
     ielem = 0
@@ -480,7 +480,7 @@
   endif
 
   ! continues with acoustic elements
-  if( ACOUSTIC_SIMULATION ) then
+  if (ACOUSTIC_SIMULATION) then
     ! first outer elements coloring
     ! phase element counter
     ielem = 0
@@ -513,49 +513,49 @@
   endif
 
   ! checks
-  if( icounter /= nspec ) then
+  if (icounter /= nspec) then
     print*,'error temp perm: ',icounter,nspec
     stop 'error temporary global permutation incomplete'
   endif
 
   ! checks perm entries
-  if(minval(temp_perm_global) /= 1) call exit_MPI(myrank, 'minval(temp_perm_global) should be 1')
-  if(maxval(temp_perm_global) /= nspec) call exit_MPI(myrank, 'maxval(temp_perm_global) should be nspec')
+  if (minval(temp_perm_global) /= 1) call exit_MPI(myrank, 'minval(temp_perm_global) should be 1')
+  if (maxval(temp_perm_global) /= nspec) call exit_MPI(myrank, 'maxval(temp_perm_global) should be nspec')
 
   ! checks if every element was uniquely set
   allocate(mask_global(nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating temporary mask_global'
+  if (ier /= 0) stop 'error allocating temporary mask_global'
   mask_global(:) = .false.
   icounter = 0 ! counts permutations
   do ispec = 1, nspec
     new_ispec = temp_perm_global(ispec)
     ! checks bounds
-    if( new_ispec < 1 .or. new_ispec > nspec ) call exit_MPI(myrank,'error temp_perm_global ispec bounds')
+    if (new_ispec < 1 .or. new_ispec > nspec) call exit_MPI(myrank,'error temp_perm_global ispec bounds')
     ! checks if already set
-    if( mask_global(new_ispec) ) then
+    if (mask_global(new_ispec)) then
       print*,'error temp_perm_global:',ispec,new_ispec,'element already set'
       call exit_MPI(myrank,'error global permutation')
     else
       mask_global(new_ispec) = .true.
     endif
     ! counts permutations
-    if( new_ispec /= ispec ) icounter = icounter + 1
+    if (new_ispec /= ispec) icounter = icounter + 1
   enddo
 
   ! checks number of set elements
-  if( count(mask_global(:)) /= nspec ) then
+  if (count(mask_global(:)) /= nspec) then
     print*,'error temp_perm_global:',count(mask_global(:)),nspec,'permutation incomplete'
     call exit_MPI(myrank,'error global permutation incomplete')
   endif
   deallocate(mask_global)
 
   ! user output
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*) '       number of permutations = ',icounter
   endif
 
   ! outputs permutation array as vtk file
-  if( SAVE_MESH_FILES .and. DEBUG ) then
+  if (SAVE_MESH_FILES .and. DEBUG) then
     filename = prname(1:len_trim(prname))//'perm_global'
     call write_VTK_data_elem_i(nspec,nglob, &
                         xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
@@ -570,13 +570,13 @@
 
   ! permutation of ibool
   allocate(temp_array_int(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating temporary temp_array_int'
+  if (ier /= 0) stop 'error allocating temporary temp_array_int'
   call permute_elements_integer(ibool,temp_array_int,perm,nspec)
   deallocate(temp_array_int)
 
   ! element domain flags
   allocate(temp_array_logical_1D(nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating temporary temp_array_logical_1D'
+  if (ier /= 0) stop 'error allocating temporary temp_array_logical_1D'
   call permute_elements_logical1D(ispec_is_acoustic,temp_array_logical_1D,perm,nspec)
   call permute_elements_logical1D(ispec_is_elastic,temp_array_logical_1D,perm,nspec)
   call permute_elements_logical1D(ispec_is_poroelastic,temp_array_logical_1D,perm,nspec)
@@ -585,7 +585,7 @@
 
   ! mesh arrays
   allocate(temp_array_real(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating temporary temp_array_real'
+  if (ier /= 0) stop 'error allocating temporary temp_array_real'
   call permute_elements_real(xixstore,temp_array_real,perm,nspec)
   call permute_elements_real(xiystore,temp_array_real,perm,nspec)
   call permute_elements_real(xizstore,temp_array_real,perm,nspec)
@@ -602,15 +602,15 @@
   call permute_elements_real(mustore,temp_array_real,perm,nspec)
 
   ! acoustic arrays
-  if( ACOUSTIC_SIMULATION ) then
+  if (ACOUSTIC_SIMULATION) then
     call permute_elements_real(rhostore,temp_array_real,perm,nspec)
   endif
 
   ! elastic arrays
-  if( ELASTIC_SIMULATION ) then
+  if (ELASTIC_SIMULATION) then
     call permute_elements_real(rho_vp,temp_array_real,perm,nspec)
     call permute_elements_real(rho_vs,temp_array_real,perm,nspec)
-    if( ANISOTROPY ) then
+    if (ANISOTROPY) then
       call permute_elements_real(c11store,temp_array_real,perm,nspec)
       call permute_elements_real(c12store,temp_array_real,perm,nspec)
       call permute_elements_real(c13store,temp_array_real,perm,nspec)
@@ -636,12 +636,12 @@
   deallocate(temp_array_real)
 
   ! poroelastic arrays
-  if( POROELASTIC_SIMULATION ) then
+  if (POROELASTIC_SIMULATION) then
     stop 'mesh permutation for poroelastic simulations not supported yet'
   endif
 
   ! boundary surface
-  if( num_abs_boundary_faces > 0 ) then
+  if (num_abs_boundary_faces > 0) then
     do iface = 1,num_abs_boundary_faces
       old_ispec = abs_boundary_ispec(iface)
       new_ispec = perm(old_ispec)
@@ -650,7 +650,7 @@
   endif
 
   ! free surface
-  if( num_free_surface_faces > 0 ) then
+  if (num_free_surface_faces > 0) then
     do iface = 1,num_free_surface_faces
       old_ispec = free_surface_ispec(iface)
       new_ispec = perm(old_ispec)
@@ -659,21 +659,21 @@
   endif
 
   ! coupling surface
-  if( num_coupling_ac_el_faces > 0 ) then
+  if (num_coupling_ac_el_faces > 0) then
     do iface = 1,num_coupling_ac_el_faces
       old_ispec = coupling_ac_el_ispec(iface)
       new_ispec = perm(old_ispec)
       coupling_ac_el_ispec(iface) = new_ispec
     enddo
   endif
-  if( num_coupling_ac_po_faces > 0 ) then
+  if (num_coupling_ac_po_faces > 0) then
     do iface = 1,num_coupling_ac_po_faces
       old_ispec = coupling_ac_po_ispec(iface)
       new_ispec = perm(old_ispec)
       coupling_ac_po_ispec(iface) = new_ispec
     enddo
   endif
-  if( num_coupling_el_po_faces > 0 ) then
+  if (num_coupling_el_po_faces > 0) then
     do iface = 1,num_coupling_el_po_faces
       ! elastic-poroelastic
       old_ispec = coupling_el_po_ispec(iface)
@@ -687,9 +687,9 @@
   endif
 
   ! moho surface
-  if( NSPEC2D_MOHO > 0 ) then
+  if (NSPEC2D_MOHO > 0) then
     allocate(temp_array_logical_1D(nspec),stat=ier)
-    if( ier /= 0 ) stop 'error allocating temporary temp_array_logical_1D'
+    if (ier /= 0) stop 'error allocating temporary temp_array_logical_1D'
     call permute_elements_logical1D(is_moho_top,temp_array_logical_1D,perm,nspec)
     call permute_elements_logical1D(is_moho_bot,temp_array_logical_1D,perm,nspec)
     deallocate(temp_array_logical_1D)

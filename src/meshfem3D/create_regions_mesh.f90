@@ -164,51 +164,51 @@ contains
 
     ! flag indicating whether point is in the sediments
     allocate(flag_sediments(NGLLX_M,NGLLY_M,NGLLZ_M,nspec),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array flag_sediments'
+    if (ier /= 0) stop 'error allocating array flag_sediments'
     allocate(not_fully_in_bedrock(nspec),stat=ier)
-    if( ier /= 0 ) call exit_MPI(myrank,'not enough memory to allocate arrays')
+    if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
     ! boundary locator
     allocate(iboun(6,nspec),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array iboun'
+    if (ier /= 0) stop 'error allocating array iboun'
 
     ! boundary parameters locator
     allocate(ibelm_xmin(NSPEC2DMAX_XMIN_XMAX),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array ibelm_xmin'
+    if (ier /= 0) stop 'error allocating array ibelm_xmin'
     allocate(ibelm_xmax(NSPEC2DMAX_XMIN_XMAX),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array ibelm_xmax'
+    if (ier /= 0) stop 'error allocating array ibelm_xmax'
     allocate(ibelm_ymin(NSPEC2DMAX_YMIN_YMAX),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array ibelm_ymin'
+    if (ier /= 0) stop 'error allocating array ibelm_ymin'
     allocate(ibelm_ymax(NSPEC2DMAX_YMIN_YMAX),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array ibelm_ymax'
+    if (ier /= 0) stop 'error allocating array ibelm_ymax'
     allocate(ibelm_bottom(NSPEC2D_BOTTOM),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array ibelm_bottom'
+    if (ier /= 0) stop 'error allocating array ibelm_bottom'
     allocate(ibelm_top(NSPEC2D_TOP),stat=ier)
-    if( ier /= 0 ) call exit_MPI(myrank,'not enough memory to allocate arrays')
+    if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
     ! MPI cut-planes parameters along xi and along eta
     allocate(iMPIcut_xi(2,nspec),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array iMPIcut_xi'
+    if (ier /= 0) stop 'error allocating array iMPIcut_xi'
     allocate(iMPIcut_eta(2,nspec),stat=ier)
-    if( ier /= 0 ) call exit_MPI(myrank,'not enough memory to allocate arrays')
+    if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
     ! allocate memory for arrays
     allocate(iglob(npointot),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array iglob'
+    if (ier /= 0) stop 'error allocating array iglob'
     allocate(locval(npointot),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array locval'
+    if (ier /= 0) stop 'error allocating array locval'
     allocate(ifseg(npointot),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array ifseg'
+    if (ier /= 0) stop 'error allocating array ifseg'
     allocate(xp(npointot),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array xp'
+    if (ier /= 0) stop 'error allocating array xp'
     allocate(yp(npointot),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array yp'
+    if (ier /= 0) stop 'error allocating array yp'
     allocate(zp(npointot),stat=ier)
-    if( ier /= 0 ) call exit_MPI(myrank,'not enough memory to allocate arrays')
+    if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
     ! allocate material ids array
     allocate(material_num(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA),stat=ier)
-    if( ier /= 0 ) call exit_MPI(myrank,'not enough memory to allocate arrays')
+    if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
     ! generate the elements in all the regions of the mesh
     ispec = 0
@@ -238,14 +238,14 @@ contains
        ! end of loop on all the subregions of the current region the mesh
     enddo
 
-    if(USE_REGULAR_MESH) then
+    if (USE_REGULAR_MESH) then
        nmeshregions = 1
     else
        call define_superbrick(x_superbrick,y_superbrick,z_superbrick,ibool_superbrick,iboun_sb)
        nspec_sb = NSPEC_DOUBLING_SUPERBRICK
-       if(NDOUBLINGS == 1) then
+       if (NDOUBLINGS == 1) then
           nmeshregions = 3
-       else if(NDOUBLINGS == 2) then
+       else if (NDOUBLINGS == 2) then
           nmeshregions = 5
        else
           stop 'Wrong number of mesh regions'
@@ -263,7 +263,7 @@ contains
         do iy = iy1,iy2,diy
           do ix = ix1,ix2,dix
 
-            if(modulo(isubregion,2) == 1) then
+            if (modulo(isubregion,2) == 1) then
 
               ! Regular subregion case
 
@@ -283,12 +283,12 @@ contains
               ! add one spectral element to the list and store its material number
               ispec = ispec + 1
 
-              if(ispec > nspec) then
+              if (ispec > nspec) then
                 call exit_MPI(myrank,'ispec greater than nspec in mesh creation')
               endif
 
               ! check if element is on topography
-              if((ir == ir2) .and. (isubregion == nmeshregions)) then
+              if ((ir == ir2) .and. (isubregion == nmeshregions)) then
                 doubling_index = IFLAG_ONE_LAYER_TOPOGRAPHY
               else
                 doubling_index = IFLAG_BASEMENT_TOPO
@@ -327,7 +327,7 @@ contains
                 ! add one spectral element to the list and store its material number
                 ispec = ispec + 1
 
-                if(ispec > nspec) then
+                if (ispec > nspec) then
                   call exit_MPI(myrank,'ispec greater than nspec in mesh creation')
                 endif
 
@@ -355,10 +355,10 @@ contains
     enddo
 
     ! check total number of spectral elements created
-    if(ispec /= nspec) call exit_MPI(myrank,'ispec should equal nspec')
+    if (ispec /= nspec) call exit_MPI(myrank,'ispec should equal nspec')
 
     ! check that we assign a material to each element
-    if(any(ispec_material_id(:) == -1000)) stop 'Element of undefined material found'
+    if (any(ispec_material_id(:) == -1000)) stop 'Element of undefined material found'
 
     ! puts x,y,z locations into 1D arrays
     do ispec=1,nspec
@@ -382,10 +382,10 @@ contains
     ! checks nglob range with pre-computed values
     ! note: if mesh squeezes elements such that we can't distinguish two close-by mesh points anymore
     !          the total number of mesh points might have changed
-    if(nglob /= NGLOB_AB) then
+    if (nglob /= NGLOB_AB) then
       ! user output
       print*,'error nglob: sorted value ',nglob,'differs from pre-computed ',NGLOB_AB
-      if(myrank == 0 ) then
+      if (myrank == 0) then
         write(IMAIN,*)
         write(IMAIN,*) 'error nglob: sorted value ',nglob,'differs from pre-computed ',NGLOB_AB
         write(IMAIN,*)
@@ -442,7 +442,7 @@ contains
 
     ! put in classical format
     allocate(nodes_coords(nglob,3),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array nodes_coords'
+    if (ier /= 0) stop 'error allocating array nodes_coords'
     nodes_coords(:,:) = 0.0d0
     ibool(:,:,:,:) = 0
 
@@ -463,7 +463,7 @@ contains
     enddo
 
     ! checks ibool range
-    if(minval(ibool(:,:,:,:)) /= 1 .or. maxval(ibool(:,:,:,:)) /= nglob) then
+    if (minval(ibool(:,:,:,:)) /= 1 .or. maxval(ibool(:,:,:,:)) /= nglob) then
        print*,'error ibool: maximum value ',maxval(ibool(:,:,:,:)) ,'should be ',nglob
        call exit_MPI(myrank,'incorrect global ibool numbering')
     endif

@@ -70,7 +70,7 @@
 ! see if we are running several independent runs in parallel
 ! if so, add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
 ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
-  if(NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
+  if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
     write(path_to_add,"('run',i4.4,'/')") mygroup + 1
     FORCESOLUTION = path_to_add(1:len_trim(path_to_add))//FORCESOLUTION(1:len_trim(FORCESOLUTION))
   endif
@@ -86,7 +86,7 @@
 
     read(IIN,"(a)") string
     ! skips empty lines
-    do while( len_trim(string) == 0 )
+    do while (len_trim(string) == 0)
       read(IIN,"(a)") string
     enddo
 
@@ -134,7 +134,7 @@
   close(IIN)
 
   ! Sets tshift_force to zero to initiate the simulation!
-  if(NSOURCES == 1)then
+  if (NSOURCES == 1)then
     tshift_force = 0.d0
     min_tshift_force_original = t_shift(1)
   else
@@ -148,12 +148,12 @@
     ! point forces use a Ricker source time function
     ! null half-duration indicates a very low-frequency source
     ! (see constants.h: TINYVAL = 1.d-9 )
-    if( hdur(isource) < TINYVAL ) hdur(isource) = TINYVAL
+    if (hdur(isource) < TINYVAL) hdur(isource) = TINYVAL
 
     ! check (inclined) force source's direction vector
     length = sqrt( comp_dir_vect_source_E(isource)**2 + comp_dir_vect_source_N(isource)**2 + &
-         comp_dir_vect_source_Z_UP(isource)**2 )
-    if( length < TINYVAL) then
+         comp_dir_vect_source_Z_UP(isource)**2)
+    if (length < TINYVAL) then
       print *, 'normal length: ', length
       print *, 'isource: ',isource
       stop 'error set force point normal length, make sure all forces have a non null direction vector'

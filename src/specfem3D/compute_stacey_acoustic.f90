@@ -71,7 +71,7 @@
   !integer:: reclen1,reclen2
 
   ! checks if anything to do
-  if( num_abs_boundary_faces == 0 ) return
+  if (num_abs_boundary_faces == 0) return
 
   ! absorbs absorbing-boundary surface using Sommerfeld condition (vanishing field in the outer-space)
   do iface=1,num_abs_boundary_faces
@@ -80,7 +80,7 @@
 
     if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
 
-      if( ispec_is_acoustic(ispec) ) then
+      if (ispec_is_acoustic(ispec)) then
 
         ! reference gll points on boundary face
         do igll = 1,NGLLSQUARE
@@ -115,9 +115,9 @@
   enddo ! num_abs_boundary_faces
 
   ! adjoint simulations: stores absorbed wavefield part
-  if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD ) then
+  if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
     ! writes out absorbing boundary value only when second phase is running
-    if( phase_is_inner .eqv. .true. ) then
+    if (phase_is_inner .eqv. .true.) then
       call write_abs(IOABS_AC,b_absorb_potential,b_reclen_potential,it)
     endif
   endif
@@ -167,12 +167,12 @@
   !integer:: reclen1,reclen2
 
   ! checks if anything to do
-  if( num_abs_boundary_faces == 0 ) return
+  if (num_abs_boundary_faces == 0) return
 
   ! adjoint simulations:
-  if( SIMULATION_TYPE == 3 ) then
+  if (SIMULATION_TYPE == 3) then
     ! reads in absorbing boundary array when first phase is running
-    if( phase_is_inner .eqv. .false. ) then
+    if (phase_is_inner .eqv. .false.) then
       ! note: the index NSTEP-it+1 is valid if b_displ is read in after the Newmark scheme
       call read_abs(IOABS_AC,b_absorb_potential,b_reclen_potential,NSTEP-it+1)
     endif
@@ -185,7 +185,7 @@
 
     if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
 
-      if( ispec_is_acoustic(ispec) ) then
+      if (ispec_is_acoustic(ispec)) then
 
         ! reference gll points on boundary face
         do igll = 1,NGLLSQUARE
@@ -199,7 +199,7 @@
           iglob=ibool(i,j,k,ispec)
 
           ! adjoint simulations
-          if(SIMULATION_TYPE == 3) then
+          if (SIMULATION_TYPE == 3) then
             b_potential_dot_dot_acoustic(iglob) = b_potential_dot_dot_acoustic(iglob) &
                                                 - b_absorb_potential(igll,iface)
           endif !adjoint
@@ -242,12 +242,12 @@
   integer(kind=8) :: Mesh_pointer
 
   ! checks if anything to do
-  if( num_abs_boundary_faces == 0 ) return
+  if (num_abs_boundary_faces == 0) return
 
   ! adjoint simulations:
-  if( SIMULATION_TYPE == 3 ) then
+  if (SIMULATION_TYPE == 3) then
     ! reads in absorbing boundary array when first phase is running
-    if( phase_is_inner .eqv. .false. ) then
+    if (phase_is_inner .eqv. .false.) then
       ! note: the index NSTEP-it+1 is valid if b_displ is read in after the Newmark scheme
       call read_abs(IOABS_AC,b_absorb_potential,b_reclen_potential,NSTEP-it+1)
     endif
@@ -257,9 +257,9 @@
   call compute_stacey_acoustic_cuda(Mesh_pointer, phase_is_inner,b_absorb_potential)
 
   ! adjoint simulations: stores absorbed wavefield part
-  if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD ) then
+  if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
     ! writes out absorbing boundary value only when second phase is running
-    if( phase_is_inner .eqv. .true. ) then
+    if (phase_is_inner .eqv. .true.) then
       call write_abs(IOABS_AC,b_absorb_potential,b_reclen_potential,it)
     endif
   endif

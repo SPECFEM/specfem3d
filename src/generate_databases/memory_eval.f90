@@ -73,7 +73,7 @@
   ! see: read_mesh_databases.f90
   ! acoustic arrays
   call any_all_l( ANY(ispec_is_acoustic), ACOUSTIC_SIMULATION )
-  if( ACOUSTIC_SIMULATION ) then
+  if (ACOUSTIC_SIMULATION) then
     ! potential_acoustic, potentical_dot_acoustic, potential_dot_dot_acoustic
     memory_size = memory_size + 3.d0*NGLOB_AB*dble(CUSTOM_REAL)
     ! rmass_acoustic
@@ -84,7 +84,7 @@
 
   ! see: read_mesh_databases.f90 and pml_allocate_arrays.f90
   ! C-PML arrays
-  if( PML_CONDITIONS ) then
+  if (PML_CONDITIONS) then
      ! CPML_regions,CPML_to_spec,CPML_type
      memory_size = memory_size + 3.d0*nspec_cpml*dble(SIZE_INTEGER)
 
@@ -135,7 +135,7 @@
 
   ! elastic arrays
   call any_all_l( ANY(ispec_is_elastic), ELASTIC_SIMULATION )
-  if( ELASTIC_SIMULATION ) then
+  if (ELASTIC_SIMULATION) then
     ! displacement,velocity,acceleration
     memory_size = memory_size + 3.d0*dble(NDIM)*NGLOB_AB*dble(CUSTOM_REAL)
 
@@ -151,7 +151,7 @@
     ! c11store,...c66store
     memory_size = memory_size + 21.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*NSPEC_ANISO*dble(CUSTOM_REAL)
 
-    if (APPROXIMATE_OCEAN_LOAD ) then
+    if (APPROXIMATE_OCEAN_LOAD) then
       ! rmass_ocean_load
       memory_size = memory_size + NGLOB_AB*dble(CUSTOM_REAL)
       ! updated_dof_ocean_load
@@ -161,7 +161,7 @@
 
   ! elastic arrays
   call any_all_l( ANY(ispec_is_poroelastic), POROELASTIC_SIMULATION )
-  if( POROELASTIC_SIMULATION ) then
+  if (POROELASTIC_SIMULATION) then
     ! displs_poroelastic,..
     memory_size = memory_size + 6.d0*dble(NDIM)*NGLOB_AB*dble(CUSTOM_REAL)
     ! rmass_solid_poroelastic,..
@@ -182,21 +182,21 @@
   memory_size = memory_size + max_nibool_interfaces_ext_mesh*num_interfaces_ext_mesh*dble(SIZE_INTEGER)
 
   ! MPI communications
-  if( ACOUSTIC_SIMULATION ) then
+  if (ACOUSTIC_SIMULATION) then
     ! buffer_send_scalar_ext_mesh,buffer_recv_scalar_ext_mesh
     memory_size = memory_size + 2.d0*max_nibool_interfaces_ext_mesh*num_interfaces_ext_mesh*dble(CUSTOM_REAL)
     ! request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh
     memory_size = memory_size + 2.d0*num_interfaces_ext_mesh*dble(SIZE_INTEGER)
   endif
 
-  if( ELASTIC_SIMULATION ) then
+  if (ELASTIC_SIMULATION) then
     ! buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh
     memory_size = memory_size + 2.d0*dble(NDIM)*max_nibool_interfaces_ext_mesh*num_interfaces_ext_mesh*dble(CUSTOM_REAL)
     ! request_send_vector_ext_mesh,request_recv_vector_ext_mesh
     memory_size = memory_size + 2.d0*num_interfaces_ext_mesh*dble(SIZE_INTEGER)
   endif
 
-  if( POROELASTIC_SIMULATION ) then
+  if (POROELASTIC_SIMULATION) then
     ! buffer_send_vector_ext_mesh_s,..
     memory_size = memory_size + 4.d0*dble(NDIM)*max_nibool_interfaces_ext_mesh*num_interfaces_ext_mesh*dble(CUSTOM_REAL)
     ! request_send_vector_ext_mesh_s,..
@@ -267,7 +267,7 @@
         + (1+NDIM)*NGLLX*NGLLY*NSPEC2D_BOTTOM*CUSTOM_REAL + (1+NDIM)*NGLLX*NGLLY*NSPEC2D_TOP*CUSTOM_REAL &
         + 2*npointot*4 + npointot + 3*npointot*8
 
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) '  minimum memory used so far     : ', &
                   memory_size / 1024. / 1024., &

@@ -58,7 +58,7 @@ $warning = <<END;
  exit(1);
 END
 
-print IOUT "$header \n";
+print IOUT "$header\n";
 
 $success = 0;
 
@@ -110,9 +110,9 @@ foreach $name (@objects) {
         # function declaration ends
         if( $line =~ /INITIALIZE_CUDA_DEVICE/ ){
           # adds warning
-          print IOUT "$line \n$warning\} \n\n";
+          print IOUT "$line\n$warning\}\n\n";
         }else{
-          print IOUT "$line\} \n\n";
+          print IOUT "$line\}\n\n";
         }
         $do_extract = 0;
       }else{

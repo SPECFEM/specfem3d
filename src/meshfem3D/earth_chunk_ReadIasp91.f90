@@ -295,7 +295,7 @@ end subroutine StorePointZ
    nb = sum(nbbloc)
 
 
-   do while ( nb > NEX_GAMMA)
+   do while (nb > NEX_GAMMA)
 
       k  =  1
       test = .true.
@@ -305,7 +305,7 @@ end subroutine StorePointZ
          j =  maxval(nbbloc)
          ! on cherche l'indice du max
 
-         if (j == nbbloc(k) ) then
+         if (j == nbbloc(k)) then
             nbbloc(k ) = nbbloc(k) -1
             test = .false.
          endif
@@ -436,9 +436,9 @@ end subroutine StorePointZ
 ! sort within each segment
   ioff=1
   do iseg=1,nseg
-    if(j == 1) then
+    if (j == 1) then
       call rank(xp(ioff),ind,ninseg(iseg))
-    else if(j == 2) then
+    else if (j == 2) then
       call rank(yp(ioff),ind,ninseg(iseg))
     else
       call rank(zp(ioff),ind,ninseg(iseg))
@@ -449,24 +449,24 @@ end subroutine StorePointZ
 
 ! check for jumps in current coordinate
 ! compare the coordinates of the points within a small tolerance
-  if(j == 1) then
+  if (j == 1) then
     do i=2,npointot
-      if(dabs(xp(i)-xp(i-1)) > SMALLVALTOL) ifseg(i)=.true.
+      if (dabs(xp(i)-xp(i-1)) > SMALLVALTOL) ifseg(i)=.true.
     enddo
-  else if(j == 2) then
+  else if (j == 2) then
     do i=2,npointot
-      if(dabs(yp(i)-yp(i-1)) > SMALLVALTOL) ifseg(i)=.true.
+      if (dabs(yp(i)-yp(i-1)) > SMALLVALTOL) ifseg(i)=.true.
     enddo
   else
     do i=2,npointot
-      if(dabs(zp(i)-zp(i-1)) > SMALLVALTOL) ifseg(i)=.true.
+      if (dabs(zp(i)-zp(i-1)) > SMALLVALTOL) ifseg(i)=.true.
     enddo
   endif
 
 ! count up number of different segments
   nseg=0
   do i=1,npointot
-    if(ifseg(i)) then
+    if (ifseg(i)) then
       nseg=nseg+1
       ninseg(nseg)=1
     else
@@ -478,7 +478,7 @@ end subroutine StorePointZ
 ! assign global node numbers (now sorted lexicographically)
   ig=0
   do i=1,npointot
-    if(ifseg(i)) ig=ig+1
+    if (ifseg(i)) ig=ig+1
     iglob(loc(i))=ig
   enddo
 
@@ -547,7 +547,7 @@ end subroutine StorePointZ
   200    CONTINUE
    IF (J <= IR) THEN
       IF (J<IR) THEN
-         IF ( A(IND(j))<A(IND(j+1)) ) j=j+1
+         IF (A(IND(j))<A(IND(j+1))) j=j+1
       endif
       IF (q<A(IND(j))) THEN
          IND(I)=IND(J)
@@ -637,7 +637,7 @@ end subroutine StorePointZ
 !!$
 !!$! check that the parameter file is correct
 !!$  !myrank=0
-!!$  if(NGNOD /= 8) call exit_MPI(myrank,'elements should have 8 control nodes')
+!!$  if (NGNOD /= 8) call exit_MPI(myrank,'elements should have 8 control nodes')
 !!$
 !!$! ***
 !!$! *** create 3D shape functions and jacobian
@@ -722,10 +722,10 @@ end subroutine StorePointZ
 !!$
 !!$! sum of shape functions should be one
 !!$! sum of derivative of shape functions should be zero
-!!$  if(abs(sumshape-one) >  TINYVAL) call exit_MPI(myrank,'error shape functions')
-!!$  if(abs(sumdershapexi) >  TINYVAL) call exit_MPI(myrank,'error derivative xi shape functions')
-!!$  if(abs(sumdershapeeta) >  TINYVAL) call exit_MPI(myrank,'error derivative eta shape functions')
-!!$  if(abs(sumdershapegamma) >  TINYVAL) call exit_MPI(myrank,'error derivative gamma shape functions')
+!!$  if (abs(sumshape-one) >  TINYVAL) call exit_MPI(myrank,'error shape functions')
+!!$  if (abs(sumdershapexi) >  TINYVAL) call exit_MPI(myrank,'error derivative xi shape functions')
+!!$  if (abs(sumdershapeeta) >  TINYVAL) call exit_MPI(myrank,'error derivative eta shape functions')
+!!$  if (abs(sumdershapegamma) >  TINYVAL) call exit_MPI(myrank,'error derivative gamma shape functions')
 !!$
 !!$  enddo
 !!$  enddo

@@ -13,7 +13,7 @@ program test_partitioning
 
   ! allocates mesh elements
   allocate(elmnts(NGNOD,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array elmnts'
+  if (ier /= 0) stop 'error allocating array elmnts'
   elmnts(:,:) = 0
 
   print*,'nspec  = ',nspec
@@ -24,13 +24,13 @@ program test_partitioning
   do ispec = 1,nspec
     do i = 1,NGNOD
       ! connects last element with first one
-      if( ispec == nspec .and. i == 5 ) then
+      if (ispec == nspec .and. i == 5) then
         elmnts(i,ispec) = elmnts(1,1)
-      else if( ispec == nspec .and. i == 6 ) then
+      else if (ispec == nspec .and. i == 6) then
         elmnts(i,ispec) = elmnts(2,1)
-      else if( ispec == nspec .and. i == 7 ) then
+      else if (ispec == nspec .and. i == 7) then
         elmnts(i,ispec) = elmnts(3,1)
-      else if( ispec == nspec .and. i == 8 ) then
+      else if (ispec == nspec .and. i == 8) then
         elmnts(i,ispec) = elmnts(4,1)
       else
         inode = inode + 1
@@ -51,7 +51,7 @@ program test_partitioning
 
   ! checks
   print*,'nsize = ',nsize
-  if( nsize /= 2 ) then
+  if (nsize /= 2) then
     print*,'error valence: nsize =',nsize,'should be 2'
     stop 1
   else
@@ -60,7 +60,7 @@ program test_partitioning
 
   ! assigns elastic material
   allocate(mat(2,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array mat'
+  if (ier /= 0) stop 'error allocating array mat'
   mat(:,:) = 0
   do ispec = 1, nspec
     mat(1,ispec) = 1
@@ -69,9 +69,9 @@ program test_partitioning
   count_def_mat = 1
   count_undef_mat = 0
   allocate(mat_prop(16,count_def_mat),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array mat_prop'
+  if (ier /= 0) stop 'error allocating array mat_prop'
   allocate(undef_mat_prop(6,count_undef_mat),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array undef_mat_prop'
+  if (ier /= 0) stop 'error allocating array undef_mat_prop'
   mat_prop(:,:) = 0.d0
   undef_mat_prop(:,:) = ''
 
@@ -97,9 +97,9 @@ program test_partitioning
   do i = 0,nparts-1
     print*,'partition ',i
     do ispec = 1,nspec
-      if( part(ispec) == i ) print*,'  contains element ',ispec
+      if (part(ispec) == i) print*,'  contains element ',ispec
       ! checks if element belongs to no partition
-      if( part(ispec) < 0 ) then
+      if (part(ispec) < 0) then
         print*,'error partitioning: element ',ispec,'has invalid partition number: ',part(ispec)
         stop 1
       endif

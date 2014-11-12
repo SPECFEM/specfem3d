@@ -75,7 +75,7 @@
     ! gets corresponding elements
     ispec = coupling_ac_po_ispec(iface)
 
-    if( ispec_is_inner(ispec) .eqv. phase_is_inner ) then
+    if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
 
       ! loops over common GLL points
       do igll = 1, NGLLSQUARE

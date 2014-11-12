@@ -105,7 +105,7 @@
   eta_aniso = 1.0_CUSTOM_REAL
 
   ! checks flag
-  if( iflag_aniso > IANISOTROPY_MODEL2 ) then
+  if (iflag_aniso > IANISOTROPY_MODEL2) then
     print*,'error: aniso flag',iflag_aniso,' not supported'
     call exit_mpi(0,'error anisotropy model flag')
   endif
@@ -163,7 +163,7 @@
   F = 0._CUSTOM_REAL
 
 ! no anisotropic perturbation
-  if( iflag_aniso <= 0 ) then
+  if (iflag_aniso <= 0) then
     ! zeta-independant
     A = aa
     C = cc
@@ -199,7 +199,7 @@
   endif
 
 ! perturbation model 1
-  if( iflag_aniso == IANISOTROPY_MODEL1 ) then
+  if (iflag_aniso == IANISOTROPY_MODEL1) then
     ! zeta-independant
     A = aa*(1.0_CUSTOM_REAL + FACTOR_A)
     C = cc*(1.0_CUSTOM_REAL + FACTOR_C)
@@ -233,7 +233,7 @@
   endif
 
 ! perturbation model 2
-  if( iflag_aniso == IANISOTROPY_MODEL2 ) then
+  if (iflag_aniso == IANISOTROPY_MODEL2) then
     ! zeta-independant
     A = aa*(1.0_CUSTOM_REAL + FACTOR_A + 0.1)
     C = cc*(1.0_CUSTOM_REAL + FACTOR_C + 0.1)

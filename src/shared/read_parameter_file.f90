@@ -43,48 +43,49 @@
 
   implicit none
 
-  integer NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,SIMULATION_TYPE, NTSTEP_BETWEEN_READ_ADJSRC
-  integer NSOURCES,NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO,UTM_PROJECTION_ZONE
-  integer NOISE_TOMOGRAPHY,NGNOD,NGNOD2D,MOVIE_TYPE
-  integer IMODEL
-  integer EXTERNAL_CODE_TYPE
+  integer :: NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,SIMULATION_TYPE, NTSTEP_BETWEEN_READ_ADJSRC
+  integer :: NSOURCES,NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO,UTM_PROJECTION_ZONE
+  integer :: NOISE_TOMOGRAPHY,NGNOD,NGNOD2D,MOVIE_TYPE
+  integer :: IMODEL
+  integer :: EXTERNAL_CODE_TYPE
 
-  double precision DT,HDUR_MOVIE,OLSEN_ATTENUATION_RATIO,f0_FOR_PML
+  double precision :: DT,HDUR_MOVIE,OLSEN_ATTENUATION_RATIO,f0_FOR_PML
 
-  logical ATTENUATION,USE_OLSEN_ATTENUATION,APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,STACEY_ABSORBING_CONDITIONS,SAVE_FORWARD
-  logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
-  logical ANISOTROPY,SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION
-  logical USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE,USE_RICKER_TIME_FUNCTION
-  logical PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID,COUPLE_WITH_EXTERNAL_CODE,MESH_A_CHUNK_OF_THE_EARTH
+  logical :: ATTENUATION,USE_OLSEN_ATTENUATION,APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,STACEY_ABSORBING_CONDITIONS,SAVE_FORWARD
+  logical :: MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
+  logical :: ANISOTROPY,SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION
+  logical :: USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE,USE_RICKER_TIME_FUNCTION
+  logical :: PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID,COUPLE_WITH_EXTERNAL_CODE,MESH_A_CHUNK_OF_THE_EARTH
 
   character(len=MAX_STRING_LEN) :: LOCAL_PATH,TOMOGRAPHY_PATH,CMTSOLUTION,FORCESOLUTION, &
                                    TRACTION_PATH,path_to_add, SEP_MODEL_DIRECTORY
 
 ! local variables
-  integer ::ios,icounter,isource,idummy,nproc_eta_old,nproc_xi_old
+  integer :: icounter,isource,idummy,ier
+  integer :: nproc_eta_old,nproc_xi_old
   double precision :: hdur,minval_hdur
   character(len=MAX_STRING_LEN) :: dummystring
 
   character(len=MAX_STRING_LEN) :: MODEL
   !logical :: sep_dir_exists
-  integer :: i,irange,ierr
+  integer :: i,irange
 
   ! opens file Par_file
-  call open_parameter_file(ierr)
+  call open_parameter_file(ier)
 
   ! total number of processors
-  call read_value_integer(NPROC, 'NPROC', ierr)
-  if (ierr /= 0) then
+  call read_value_integer(NPROC, 'NPROC', ier)
+  if (ier /= 0) then
     ! checks if it's using an old Par_file format
-    call read_value_integer(nproc_eta_old, 'NPROC_ETA', ierr)
-    if (ierr /= 0) then
+    call read_value_integer(nproc_eta_old, 'NPROC_ETA', ier)
+    if (ier /= 0) then
       print*,'please specify the number of processes in Par_file as:'
       print*,'NPROC           =    <my_number_of_desired_processes> '
       return
     endif
     ! checks if it's using an old Par_file format
-    call read_value_integer(nproc_xi_old, 'NPROC_XI', ierr)
-    if (ierr /= 0) then
+    call read_value_integer(nproc_xi_old, 'NPROC_XI', ier)
+    if (ier /= 0) then
       print*,'please specify the number of processes in Par_file as:'
       print*,'NPROC           =    <my_number_of_desired_processes> '
       return
@@ -93,115 +94,115 @@
   endif
 
   ! reads in mandatory simulation parameters
-  call read_value_integer(SIMULATION_TYPE, 'SIMULATION_TYPE', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter SIMULATION_TYPE'
-  call read_value_integer(NOISE_TOMOGRAPHY, 'NOISE_TOMOGRAPHY', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter NOISE_TOMOGRAPHY'
-  call read_value_logical(SAVE_FORWARD, 'SAVE_FORWARD', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter SAVE_FORWARD'
-  call read_value_integer(UTM_PROJECTION_ZONE, 'UTM_PROJECTION_ZONE', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter UTM_PROJECTION_ZONE'
-  call read_value_logical(SUPPRESS_UTM_PROJECTION, 'SUPPRESS_UTM_PROJECTION', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter SUPPRESS_UTM_PROJECTION'
-  call read_value_integer(NSTEP, 'NSTEP', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter NSTEP'
-  call read_value_double_precision(DT, 'DT', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter DT'
-  call read_value_integer(NGNOD, 'NGNOD', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter NGNOD'
-  call read_value_string(MODEL, 'MODEL', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter MODEL'
+  call read_value_integer(SIMULATION_TYPE, 'SIMULATION_TYPE', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter SIMULATION_TYPE'
+  call read_value_integer(NOISE_TOMOGRAPHY, 'NOISE_TOMOGRAPHY', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter NOISE_TOMOGRAPHY'
+  call read_value_logical(SAVE_FORWARD, 'SAVE_FORWARD', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter SAVE_FORWARD'
+  call read_value_integer(UTM_PROJECTION_ZONE, 'UTM_PROJECTION_ZONE', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter UTM_PROJECTION_ZONE'
+  call read_value_logical(SUPPRESS_UTM_PROJECTION, 'SUPPRESS_UTM_PROJECTION', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter SUPPRESS_UTM_PROJECTION'
+  call read_value_integer(NSTEP, 'NSTEP', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter NSTEP'
+  call read_value_double_precision(DT, 'DT', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter DT'
+  call read_value_integer(NGNOD, 'NGNOD', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter NGNOD'
+  call read_value_string(MODEL, 'MODEL', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter MODEL'
   write(SEP_MODEL_DIRECTORY, '(a)') ''
-  call read_value_string(SEP_MODEL_DIRECTORY, 'SEP_MODEL_DIRECTORY', ierr)
-  if (ierr /= 0) write (0, '(a)') 'No SEP_MODEL_DIRECTORY defined in Par_file.'
-  !if (ierr /= 0) stop 'Error reading Par_file parameter SEP_MODEL_DIRECTORY'
-  call read_value_logical(APPROXIMATE_OCEAN_LOAD, 'APPROXIMATE_OCEAN_LOAD', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter APPROXIMATE_OCEAN_LOAD'
-  call read_value_logical(TOPOGRAPHY, 'TOPOGRAPHY', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter TOPOGRAPHY'
-  call read_value_logical(ATTENUATION, 'ATTENUATION', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter ATTENUATION'
-  call read_value_logical(FULL_ATTENUATION_SOLID, 'FULL_ATTENUATION_SOLID', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter FULL_ATTENUATION_SOLID'
-  call read_value_logical(ANISOTROPY, 'ANISOTROPY', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter ANISOTROPY'
-  call read_value_string(TOMOGRAPHY_PATH, 'TOMOGRAPHY_PATH', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter TOMOGRAPHY_PATH'
-  call read_value_logical(USE_OLSEN_ATTENUATION, 'USE_OLSEN_ATTENUATION', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter USE_OLSEN_ATTENUATION'
-  call read_value_double_precision(OLSEN_ATTENUATION_RATIO, 'OLSEN_ATTENUATION_RATIO', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter OLSEN_ATTENUATION_RATIO'
-  call read_value_logical(PML_CONDITIONS, 'PML_CONDITIONS', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter PML_CONDITIONS'
-  call read_value_logical(PML_INSTEAD_OF_FREE_SURFACE, 'PML_INSTEAD_OF_FREE_SURFACE', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter PML_INSTEAD_OF_FREE_SURFACE'
-  call read_value_double_precision(f0_FOR_PML, 'f0_FOR_PML', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter f0_FOR_PML'
-  call read_value_logical(STACEY_ABSORBING_CONDITIONS, 'STACEY_ABSORBING_CONDITIONS', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter STACEY_ABSORBING_CONDITIONS'
-  call read_value_logical(STACEY_INSTEAD_OF_FREE_SURFACE, 'STACEY_INSTEAD_OF_FREE_SURFACE', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter STACEY_INSTEAD_OF_FREE_SURFACE'
-  call read_value_logical(CREATE_SHAKEMAP, 'CREATE_SHAKEMAP', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter CREATE_SHAKEMAP'
-  call read_value_logical(MOVIE_SURFACE, 'MOVIE_SURFACE', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter MOVIE_SURFACE'
-  call read_value_integer(MOVIE_TYPE, 'MOVIE_TYPE', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter MOVIE_TYPE'
-  call read_value_logical(MOVIE_VOLUME, 'MOVIE_VOLUME', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter MOVIE_VOLUME'
-  call read_value_logical(SAVE_DISPLACEMENT, 'SAVE_DISPLACEMENT', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter SAVE_DISPLACEMENT'
-  call read_value_logical(USE_HIGHRES_FOR_MOVIES, 'USE_HIGHRES_FOR_MOVIES', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter USE_HIGHRES_FOR_MOVIES'
-  call read_value_integer(NTSTEP_BETWEEN_FRAMES, 'NTSTEP_BETWEEN_FRAMES', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter NTSTEP_BETWEEN_FRAMES'
-  call read_value_double_precision(HDUR_MOVIE, 'HDUR_MOVIE', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter HDUR_MOVIE'
-  call read_value_logical(SAVE_MESH_FILES, 'SAVE_MESH_FILES', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter SAVE_MESH_FILES'
-  call read_value_string(LOCAL_PATH, 'LOCAL_PATH', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter LOCAL_PATH'
-  call read_value_integer(NTSTEP_BETWEEN_OUTPUT_INFO, 'NTSTEP_BETWEEN_OUTPUT_INFO', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter NTSTEP_BETWEEN_OUTPUT_INFO'
-  call read_value_integer(NTSTEP_BETWEEN_OUTPUT_SEISMOS, 'NTSTEP_BETWEEN_OUTPUT_SEISMOS', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter NTSTEP_BETWEEN_OUTPUT_SEISMOS'
-  call read_value_integer(NTSTEP_BETWEEN_READ_ADJSRC, 'NTSTEP_BETWEEN_READ_ADJSRC', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter NTSTEP_BETWEEN_READ_ADJSRC'
-  call read_value_logical(USE_FORCE_POINT_SOURCE, 'USE_FORCE_POINT_SOURCE', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter USE_FORCE_POINT_SOURCE'
-  call read_value_logical(USE_RICKER_TIME_FUNCTION, 'USE_RICKER_TIME_FUNCTION', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter USE_RICKER_TIME_FUNCTION'
-  call read_value_logical(PRINT_SOURCE_TIME_FUNCTION, 'PRINT_SOURCE_TIME_FUNCTION', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter PRINT_SOURCE_TIME_FUNCTION'
-  call read_value_logical(COUPLE_WITH_EXTERNAL_CODE, 'COUPLE_WITH_EXTERNAL_CODE', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter COUPLE_WITH_EXTERNAL_CODE'
-  call read_value_integer(EXTERNAL_CODE_TYPE, 'EXTERNAL_CODE_TYPE', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter EXTERNAL_CODE_TYPE'
-  call read_value_string(TRACTION_PATH, 'TRACTION_PATH', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter TRACTION_PATH'
-  call read_value_logical(MESH_A_CHUNK_OF_THE_EARTH, 'MESH_A_CHUNK_OF_THE_EARTH', ierr)
-  if (ierr /= 0) stop 'Error reading Par_file parameter MESH_A_CHUNK_OF_THE_EARTH'
+  call read_value_string(SEP_MODEL_DIRECTORY, 'SEP_MODEL_DIRECTORY', ier)
+  if (ier /= 0) write (0, '(a)') 'No SEP_MODEL_DIRECTORY defined in Par_file.'
+  !if (ier /= 0) stop 'Error reading Par_file parameter SEP_MODEL_DIRECTORY'
+  call read_value_logical(APPROXIMATE_OCEAN_LOAD, 'APPROXIMATE_OCEAN_LOAD', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter APPROXIMATE_OCEAN_LOAD'
+  call read_value_logical(TOPOGRAPHY, 'TOPOGRAPHY', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter TOPOGRAPHY'
+  call read_value_logical(ATTENUATION, 'ATTENUATION', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter ATTENUATION'
+  call read_value_logical(FULL_ATTENUATION_SOLID, 'FULL_ATTENUATION_SOLID', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter FULL_ATTENUATION_SOLID'
+  call read_value_logical(ANISOTROPY, 'ANISOTROPY', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter ANISOTROPY'
+  call read_value_string(TOMOGRAPHY_PATH, 'TOMOGRAPHY_PATH', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter TOMOGRAPHY_PATH'
+  call read_value_logical(USE_OLSEN_ATTENUATION, 'USE_OLSEN_ATTENUATION', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter USE_OLSEN_ATTENUATION'
+  call read_value_double_precision(OLSEN_ATTENUATION_RATIO, 'OLSEN_ATTENUATION_RATIO', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter OLSEN_ATTENUATION_RATIO'
+  call read_value_logical(PML_CONDITIONS, 'PML_CONDITIONS', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter PML_CONDITIONS'
+  call read_value_logical(PML_INSTEAD_OF_FREE_SURFACE, 'PML_INSTEAD_OF_FREE_SURFACE', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter PML_INSTEAD_OF_FREE_SURFACE'
+  call read_value_double_precision(f0_FOR_PML, 'f0_FOR_PML', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter f0_FOR_PML'
+  call read_value_logical(STACEY_ABSORBING_CONDITIONS, 'STACEY_ABSORBING_CONDITIONS', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter STACEY_ABSORBING_CONDITIONS'
+  call read_value_logical(STACEY_INSTEAD_OF_FREE_SURFACE, 'STACEY_INSTEAD_OF_FREE_SURFACE', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter STACEY_INSTEAD_OF_FREE_SURFACE'
+  call read_value_logical(CREATE_SHAKEMAP, 'CREATE_SHAKEMAP', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter CREATE_SHAKEMAP'
+  call read_value_logical(MOVIE_SURFACE, 'MOVIE_SURFACE', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter MOVIE_SURFACE'
+  call read_value_integer(MOVIE_TYPE, 'MOVIE_TYPE', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter MOVIE_TYPE'
+  call read_value_logical(MOVIE_VOLUME, 'MOVIE_VOLUME', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter MOVIE_VOLUME'
+  call read_value_logical(SAVE_DISPLACEMENT, 'SAVE_DISPLACEMENT', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter SAVE_DISPLACEMENT'
+  call read_value_logical(USE_HIGHRES_FOR_MOVIES, 'USE_HIGHRES_FOR_MOVIES', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter USE_HIGHRES_FOR_MOVIES'
+  call read_value_integer(NTSTEP_BETWEEN_FRAMES, 'NTSTEP_BETWEEN_FRAMES', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter NTSTEP_BETWEEN_FRAMES'
+  call read_value_double_precision(HDUR_MOVIE, 'HDUR_MOVIE', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter HDUR_MOVIE'
+  call read_value_logical(SAVE_MESH_FILES, 'SAVE_MESH_FILES', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter SAVE_MESH_FILES'
+  call read_value_string(LOCAL_PATH, 'LOCAL_PATH', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter LOCAL_PATH'
+  call read_value_integer(NTSTEP_BETWEEN_OUTPUT_INFO, 'NTSTEP_BETWEEN_OUTPUT_INFO', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter NTSTEP_BETWEEN_OUTPUT_INFO'
+  call read_value_integer(NTSTEP_BETWEEN_OUTPUT_SEISMOS, 'NTSTEP_BETWEEN_OUTPUT_SEISMOS', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter NTSTEP_BETWEEN_OUTPUT_SEISMOS'
+  call read_value_integer(NTSTEP_BETWEEN_READ_ADJSRC, 'NTSTEP_BETWEEN_READ_ADJSRC', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter NTSTEP_BETWEEN_READ_ADJSRC'
+  call read_value_logical(USE_FORCE_POINT_SOURCE, 'USE_FORCE_POINT_SOURCE', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter USE_FORCE_POINT_SOURCE'
+  call read_value_logical(USE_RICKER_TIME_FUNCTION, 'USE_RICKER_TIME_FUNCTION', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter USE_RICKER_TIME_FUNCTION'
+  call read_value_logical(PRINT_SOURCE_TIME_FUNCTION, 'PRINT_SOURCE_TIME_FUNCTION', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter PRINT_SOURCE_TIME_FUNCTION'
+  call read_value_logical(COUPLE_WITH_EXTERNAL_CODE, 'COUPLE_WITH_EXTERNAL_CODE', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter COUPLE_WITH_EXTERNAL_CODE'
+  call read_value_integer(EXTERNAL_CODE_TYPE, 'EXTERNAL_CODE_TYPE', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter EXTERNAL_CODE_TYPE'
+  call read_value_string(TRACTION_PATH, 'TRACTION_PATH', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter TRACTION_PATH'
+  call read_value_logical(MESH_A_CHUNK_OF_THE_EARTH, 'MESH_A_CHUNK_OF_THE_EARTH', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter MESH_A_CHUNK_OF_THE_EARTH'
 
   ! close parameter file
   call close_parameter_file()
 
 ! check the type of external code to couple with, if any
-  if(COUPLE_WITH_EXTERNAL_CODE) then
-    if(EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_DSM .and. &
+  if (COUPLE_WITH_EXTERNAL_CODE) then
+    if (EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_DSM .and. &
        EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_AXISEM .and. &
        EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_FK) stop 'incorrect value of EXTERNAL_CODE_TYPE read'
 
-    if(EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) &
+    if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) &
          stop 'coupling with AxiSEM not implemented yet, but will soon be'
 
-    if(EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_FK) &
+    if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_FK) &
          stop 'coupling with F-K not implemented yet, but see work by Ping et al. (GJI 2014, GRL 2015)'
   endif
 
 ! see if we are running several independent runs in parallel
 ! if so, add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
 ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
-  if(NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
+  if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
     write(path_to_add,"('run',i4.4,'/')") mygroup + 1
     LOCAL_PATH = path_to_add(1:len_trim(path_to_add))//LOCAL_PATH(1:len_trim(LOCAL_PATH))
     TOMOGRAPHY_PATH = path_to_add(1:len_trim(path_to_add))//TOMOGRAPHY_PATH(1:len_trim(TOMOGRAPHY_PATH))
@@ -210,58 +211,58 @@
 
   ! noise simulations:
   ! double the number of time steps, if running noise simulations (+/- branches)
-  if( NOISE_TOMOGRAPHY /= 0 )   NSTEP = 2*NSTEP-1
+  if (NOISE_TOMOGRAPHY /= 0)   NSTEP = 2*NSTEP-1
 
   ! for noise simulations, we need to save movies at the surface (where the noise is generated)
   ! and thus we force MOVIE_SURFACE to be .true., in order to use variables defined for surface movies later
-  if( NOISE_TOMOGRAPHY /= 0 ) then
+  if (NOISE_TOMOGRAPHY /= 0) then
     MOVIE_TYPE = 1
     MOVIE_SURFACE = .true.
     USE_HIGHRES_FOR_MOVIES = .true.     ! we need to save surface movie everywhere, i.e. at all GLL points on the surface
   endif
 
   ! the default value of NTSTEP_BETWEEN_READ_ADJSRC (0) is to read the whole trace at the same time
-  if( NTSTEP_BETWEEN_READ_ADJSRC == 0 )  NTSTEP_BETWEEN_READ_ADJSRC = NSTEP
+  if (NTSTEP_BETWEEN_READ_ADJSRC == 0)  NTSTEP_BETWEEN_READ_ADJSRC = NSTEP
 
   ! total times steps must be dividable by adjoint source chunks/blocks
-  if ( mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) /= 0 ) then
+  if (mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) /= 0) then
     print*,'When NOISE_TOMOGRAPHY is not equal to zero, ACTUAL_NSTEP=2*NSTEP-1'
     stop 'error: mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) must be zero! Please modify Par_file and recompile solver'
   endif
 
   ! checks number of nodes for 2D and 3D shape functions for quadrilaterals and hexahedra
   ! curvature (i.e. HEX27 elements) is not handled by our internal mesher, for that use Gmsh (CUBIT does not handle it either)
-  if( NGNOD == 8 ) then
+  if (NGNOD == 8) then
     NGNOD2D = 4
-  else if( NGNOD == 27 ) then
+  else if (NGNOD == 27) then
     NGNOD2D = 9
-  else if( NGNOD /= 8 .and. NGNOD /= 27 ) then
+  else if (NGNOD /= 8 .and. NGNOD /= 27) then
     stop 'elements should have 8 or 27 control nodes, please modify NGNOD in Par_file and recompile solver'
   endif
 
-  if( USE_FORCE_POINT_SOURCE ) then
+  if (USE_FORCE_POINT_SOURCE) then
     ! compute the total number of sources in the FORCESOLUTION file
     ! there are NLINES_PER_FORCESOLUTION_SOURCE lines per source in that file
     FORCESOLUTION = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'FORCESOLUTION'
 ! see if we are running several independent runs in parallel
 ! if so, add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
 ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
-    if(NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
+    if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
       write(path_to_add,"('run',i4.4,'/')") mygroup + 1
       FORCESOLUTION = path_to_add(1:len_trim(path_to_add))//FORCESOLUTION(1:len_trim(FORCESOLUTION))
     endif
 
-    open(unit=21,file=trim(FORCESOLUTION),iostat=ios,status='old',action='read')
-    if (ios /= 0) stop 'error opening FORCESOLUTION file'
+    open(unit=21,file=trim(FORCESOLUTION),status='old',action='read',iostat=ier)
+    if (ier /= 0) stop 'error opening FORCESOLUTION file'
 
     icounter = 0
-    do while(ios == 0)
-      read(21,"(a)",iostat=ios) dummystring
-      if (ios == 0) icounter = icounter + 1
+    do while (ier == 0)
+      read(21,"(a)",iostat=ier) dummystring
+      if (ier == 0) icounter = icounter + 1
     enddo
     close(21)
 
-    if (mod(icounter,NLINES_PER_FORCESOLUTION_SOURCE) /= 0 ) &
+    if (mod(icounter,NLINES_PER_FORCESOLUTION_SOURCE) /= 0) &
       stop 'error: total number of lines in FORCESOLUTION file should be a multiple of NLINES_PER_FORCESOLUTION_SOURCE'
 
     NSOURCES = icounter / NLINES_PER_FORCESOLUTION_SOURCE
@@ -274,18 +275,18 @@
 ! see if we are running several independent runs in parallel
 ! if so, add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
 ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
-    if(NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
+    if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
       write(path_to_add,"('run',i4.4,'/')") mygroup + 1
       CMTSOLUTION = path_to_add(1:len_trim(path_to_add))//CMTSOLUTION(1:len_trim(CMTSOLUTION))
     endif
 
-    open(unit=21,file=trim(CMTSOLUTION),iostat=ios,status='old',action='read')
-    if (ios /= 0) stop 'error opening CMTSOLUTION file'
+    open(unit=21,file=trim(CMTSOLUTION),status='old',action='read',iostat=ier)
+    if (ier /= 0) stop 'error opening CMTSOLUTION file'
 
     icounter = 0
-    do while(ios == 0)
-      read(21,"(a)",iostat=ios) dummystring
-      if (ios == 0) icounter = icounter + 1
+    do while (ier == 0)
+      read(21,"(a)",iostat=ier) dummystring
+      if (ier == 0) icounter = icounter + 1
     enddo
     close(21)
 
@@ -326,45 +327,45 @@
   ! converts all string characters to lowercase
   irange = iachar('a') - iachar('A')
   do i = 1,len_trim(MODEL)
-    if( lge(MODEL(i:i),'A') .and. lle(MODEL(i:i),'Z') ) then
-      MODEL(i:i) = achar( iachar(MODEL(i:i)) + irange )
+    if (lge(MODEL(i:i),'A') .and. lle(MODEL(i:i),'Z')) then
+      MODEL(i:i) = achar(iachar(MODEL(i:i)) + irange)
     endif
   enddo
 
   ! determines velocity model
-  select case( trim(MODEL) )
+  select case (trim(MODEL))
 
   ! default mesh model
-  case( 'default' )
+  case ('default')
     IMODEL = IMODEL_DEFAULT
 
   ! 1-D models
-  case( '1d_prem' )
+  case ('1d_prem')
     IMODEL = IMODEL_1D_PREM
-  case( '1d_socal' )
+  case ('1d_socal')
     IMODEL = IMODEL_1D_SOCAL
-  case( '1d_cascadia')
+  case ('1d_cascadia')
     IMODEL = IMODEL_1D_CASCADIA
 
   ! user models
-  case( '1d_prem_pb' )
+  case ('1d_prem_pb')
     IMODEL = IMODEL_1D_PREM_PB
-  case( 'aniso' )
+  case ('aniso')
     IMODEL = IMODEL_DEFAULT
     ANISOTROPY = .true.
-  case( 'external' )
+  case ('external')
     IMODEL = IMODEL_USER_EXTERNAL
-  case( 'ipati' )
+  case ('ipati')
     IMODEL = IMODEL_IPATI
-  case( 'ipati_water' )
+  case ('ipati_water')
     IMODEL = IMODEL_IPATI_WATER
-  case( 'gll' )
+  case ('gll')
     IMODEL = IMODEL_GLL
-  case( 'salton_trough')
+  case ('salton_trough')
     IMODEL = IMODEL_SALTON_TROUGH
-  case( 'tomo' )
+  case ('tomo')
     IMODEL = IMODEL_TOMO
-  case( 'sep' )
+  case ('sep')
     IMODEL = IMODEL_SEP
     if (trim(SEP_MODEL_DIRECTORY) == '') then
       stop 'Error: Using sep model requires defining a SEP_MODEL_DIRECTORY.'
@@ -384,19 +385,19 @@
   end select
 
   ! check
-  if( IMODEL == IMODEL_IPATI .or. IMODEL == IMODEL_IPATI_WATER ) then
-    if( USE_RICKER_TIME_FUNCTION .eqv. .false. ) &
+  if (IMODEL == IMODEL_IPATI .or. IMODEL == IMODEL_IPATI_WATER) then
+    if (USE_RICKER_TIME_FUNCTION .eqv. .false.) &
       stop 'error: please set USE_RICKER_TIME_FUNCTION to .true. in Par_file and recompile solver'
   endif
 
 
   ! absorbing conditions
   ! stacey absorbing free surface must have also stacey turned on
-  if( STACEY_INSTEAD_OF_FREE_SURFACE ) STACEY_ABSORBING_CONDITIONS = .true.
+  if (STACEY_INSTEAD_OF_FREE_SURFACE) STACEY_ABSORBING_CONDITIONS = .true.
 
   ! only one absorbing condition is possible
-  if( PML_CONDITIONS ) then
-    if( STACEY_ABSORBING_CONDITIONS )&
+  if (PML_CONDITIONS) then
+    if (STACEY_ABSORBING_CONDITIONS) &
       stop 'error: please set STACEY_ABSORBING_CONDITIONS and STACEY_INSTEAD_OF_FREE_SURFACE to .false. in Par_file for PML'
   endif
 
@@ -415,17 +416,17 @@
   logical :: GPU_MODE
   logical :: GRAVITY
 
-  integer :: ierr
+  integer :: ier
 
   ! initializes flags
   GPU_MODE = .false.
   GRAVITY = .false.
 
   ! opens file Par_file
-  call open_parameter_file(ierr)
+  call open_parameter_file(ier)
 
-  call read_value_logical(GPU_MODE, 'GPU_MODE', ierr)
-  call read_value_logical(GRAVITY, 'GRAVITY', ierr)
+  call read_value_logical(GPU_MODE, 'GPU_MODE', ier)
+  call read_value_logical(GRAVITY, 'GRAVITY', ier)
 
   ! close parameter file
   call close_parameter_file()
@@ -457,7 +458,7 @@ subroutine read_adios_parameters(ADIOS_ENABLED, ADIOS_FOR_DATABASES,       &
                           ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, &
                           ADIOS_FOR_KERNELS
 
-  integer :: ierr
+  integer :: ier
 
   ! initialize flags to false
   ADIOS_ENABLED            = .false.
@@ -467,19 +468,19 @@ subroutine read_adios_parameters(ADIOS_ENABLED, ADIOS_FOR_DATABASES,       &
   ADIOS_FOR_KERNELS        = .false.
 
   ! opens file Par_file
-  call open_parameter_file(ierr)
-  call read_value_logical(ADIOS_ENABLED, 'ADIOS_ENABLED', ierr)
+  call open_parameter_file(ier)
+  call read_value_logical(ADIOS_ENABLED, 'ADIOS_ENABLED', ier)
 
-  if (ierr == 0 .and. ADIOS_ENABLED) then
-    call read_value_logical(ADIOS_FOR_DATABASES, 'ADIOS_FOR_DATABASES', ierr)
-    call read_value_logical(ADIOS_FOR_MESH, 'ADIOS_FOR_MESH', ierr)
-    call read_value_logical(ADIOS_FOR_FORWARD_ARRAYS, 'ADIOS_FOR_FORWARD_ARRAYS', ierr)
-    call read_value_logical(ADIOS_FOR_KERNELS, 'ADIOS_FOR_KERNELS', ierr)
+  if (ier == 0 .and. ADIOS_ENABLED) then
+    call read_value_logical(ADIOS_FOR_DATABASES, 'ADIOS_FOR_DATABASES', ier)
+    call read_value_logical(ADIOS_FOR_MESH, 'ADIOS_FOR_MESH', ier)
+    call read_value_logical(ADIOS_FOR_FORWARD_ARRAYS, 'ADIOS_FOR_FORWARD_ARRAYS', ier)
+    call read_value_logical(ADIOS_FOR_KERNELS, 'ADIOS_FOR_KERNELS', ier)
   endif
 
   call close_parameter_file()
 
-  if(NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. BROADCAST_SAME_MESH_AND_MODEL .and. ADIOS_ENABLED) &
+  if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. BROADCAST_SAME_MESH_AND_MODEL .and. ADIOS_ENABLED) &
     stop 'ADIOS not yet supported by option BROADCAST_SAME_MESH_AND_MODEL'
 
 end subroutine read_adios_parameters

@@ -572,7 +572,7 @@ subroutine compute_kernel_integral_tiso_iso()
           norm_rho = norm_rho + kernel_rho(i,j,k,ispec)**2
 
           ! checks number
-          if (integral_bulk /= integral_bulk ) then
+          if (integral_bulk /= integral_bulk) then
             print*,'Error NaN: ',integral_bulk
             print*,'rank:',myrank
             print*,'i,j,k,ispec:',i,j,k,ispec

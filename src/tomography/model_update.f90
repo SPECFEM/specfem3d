@@ -252,15 +252,15 @@ program model_update
         do j=1,NGLLY
           do i=1,NGLLX
             ! vs
-            if(model_vs(i,j,k,ispec) < VS_MIN) model_vs(i,j,k,ispec) = VS_MIN
-            if(model_vs(i,j,k,ispec) > VS_MAX) model_vs(i,j,k,ispec) = VS_MAX
+            if (model_vs(i,j,k,ispec) < VS_MIN) model_vs(i,j,k,ispec) = VS_MIN
+            if (model_vs(i,j,k,ispec) > VS_MAX) model_vs(i,j,k,ispec) = VS_MAX
             ! vp
-            if(model_vp(i,j,k,ispec) < VP_MIN) model_vp(i,j,k,ispec) = VP_MIN
-            if(model_vp(i,j,k,ispec) > VP_MAX) model_vp(i,j,k,ispec) = VP_MAX
+            if (model_vp(i,j,k,ispec) < VP_MIN) model_vp(i,j,k,ispec) = VP_MIN
+            if (model_vp(i,j,k,ispec) > VP_MAX) model_vp(i,j,k,ispec) = VP_MAX
             ! rho
             if (THRESHOLD_RHO) then
-              if(model_rho(i,j,k,ispec) < RHO_MIN) model_rho(i,j,k,ispec) = RHO_MIN
-              if(model_rho(i,j,k,ispec) > RHO_MAX) model_rho(i,j,k,ispec) = RHO_MAX
+              if (model_rho(i,j,k,ispec) < RHO_MIN) model_rho(i,j,k,ispec) = RHO_MIN
+              if (model_rho(i,j,k,ispec) > RHO_MAX) model_rho(i,j,k,ispec) = RHO_MAX
             endif
           enddo
         enddo
@@ -275,7 +275,7 @@ program model_update
     call min_all_cr(minval(model_rho(:,:,:,1:nspec)), rhomin_after)
     call max_all_cr(maxval(model_rho(:,:,:,1:nspec)), rhomax_after)
 
-    if( myrank == 0 ) then
+    if (myrank == 0) then
       print*,'current model values after thresholding:'
       print*,'  vs min/max: ',vsmin_after, vsmax_after
       print*,'  vp min/max: ',vpmin_after, vpmax_after
@@ -333,7 +333,7 @@ program model_update
   allocate(model_vp_new(NGLLX,NGLLY,NGLLZ,NSPEC), &
            model_vs_new(NGLLX,NGLLY,NGLLZ,NSPEC), &
            model_rho_new(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
-  if( ier /= 0 ) stop 'Error allocating model arrays'
+  if (ier /= 0) stop 'Error allocating model arrays'
 
   ! initializes arrays
   model_vp_new = 0.0_CUSTOM_REAL
@@ -344,12 +344,12 @@ program model_update
   model_vs_new = model_vs * exp( model_dbeta )
 
   ! P wavespeed model
-  if( USE_ALPHA_BETA_RHO ) then
+  if (USE_ALPHA_BETA_RHO) then
     ! new vp values use alpha model update
     model_vp_new = model_vp * exp( model_dbulk )
   else
     ! new vp values use bulk model update:
-    ! this is based on vp_new = sqrt( bulk_new**2 + 4/3 vs_new**2 )
+    ! this is based on vp_new = sqrt( bulk_new**2 + 4/3 vs_new**2)
     model_vp_new = sqrt( model_vp**2 * exp(2.0*model_dbulk) + FOUR_THIRDS * model_vs**2 *( &
                             exp(2.0*model_dbeta) - exp(2.0*model_dbulk) ) )
   endif
@@ -366,7 +366,7 @@ program model_update
   call min_all_cr(minval(model_rho_new(:,:,:,1:nspec)), rhomin_new_before)
   call max_all_cr(maxval(model_rho_new(:,:,:,1:nspec)), rhomax_new_before)
 
-  if( myrank == 0 ) then
+  if (myrank == 0) then
     if (MINMAX_THRESHOLD_NEW) then
       print*,'new model values before thresholding:'
     else
@@ -393,21 +393,21 @@ program model_update
   endif
 
   ! threshold model according to minmax values specified above
-  if(MINMAX_THRESHOLD_NEW) then
+  if (MINMAX_THRESHOLD_NEW) then
     do ispec=1,NSPEC
       do k=1,NGLLZ
         do j=1,NGLLY
           do i=1,NGLLX
             ! vs
-            if(model_vs_new(i,j,k,ispec) < VS_MIN) model_vs_new(i,j,k,ispec) = VS_MIN
-            if(model_vs_new(i,j,k,ispec) > VS_MAX) model_vs_new(i,j,k,ispec) = VS_MAX
+            if (model_vs_new(i,j,k,ispec) < VS_MIN) model_vs_new(i,j,k,ispec) = VS_MIN
+            if (model_vs_new(i,j,k,ispec) > VS_MAX) model_vs_new(i,j,k,ispec) = VS_MAX
             ! vp
-            if(model_vp_new(i,j,k,ispec) < VP_MIN) model_vp_new(i,j,k,ispec) = VP_MIN
-            if(model_vp_new(i,j,k,ispec) > VP_MAX) model_vp_new(i,j,k,ispec) = VP_MAX
+            if (model_vp_new(i,j,k,ispec) < VP_MIN) model_vp_new(i,j,k,ispec) = VP_MIN
+            if (model_vp_new(i,j,k,ispec) > VP_MAX) model_vp_new(i,j,k,ispec) = VP_MAX
             ! rho
             if (THRESHOLD_RHO) then
-              if(model_rho_new(i,j,k,ispec) < RHO_MIN) model_rho_new(i,j,k,ispec) = RHO_MIN
-              if(model_rho_new(i,j,k,ispec) > RHO_MAX) model_rho_new(i,j,k,ispec) = RHO_MAX
+              if (model_rho_new(i,j,k,ispec) < RHO_MIN) model_rho_new(i,j,k,ispec) = RHO_MIN
+              if (model_rho_new(i,j,k,ispec) > RHO_MAX) model_rho_new(i,j,k,ispec) = RHO_MAX
             endif
           enddo
         enddo
@@ -423,7 +423,7 @@ program model_update
     call min_all_cr(minval(model_rho_new(:,:,:,1:nspec)), rhomin_new_after)
     call max_all_cr(maxval(model_rho_new(:,:,:,1:nspec)), rhomax_new_after)
 
-    if( myrank == 0 ) then
+    if (myrank == 0) then
       print*,'new model values after thresholding:'
       print*,'  vs min/max : ',vsmin_new_after, vsmax_new_after
       print*,'  vp min/max : ',vpmin_new_after, vpmax_new_after
@@ -500,7 +500,7 @@ program model_update
 
   ! Poisson's ratio of current model
   total_model = 0.
-  total_model = ( model_vp**2 - 2.0*model_vs**2 ) / ( 2.0*model_vp**2 - 2.0*model_vs**2 )
+  total_model = ( model_vp**2 - 2.0*model_vs**2) / ( 2.0*model_vp**2 - 2.0*model_vs**2)
   fname = 'poisson'
   write(m_file,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',myrank,trim(REG)//trim(fname)//'.bin'
   open(12,file=trim(m_file),form='unformatted')
@@ -509,8 +509,8 @@ program model_update
 
   ! Poisson's ratio of new model
   total_model = 0.
-  total_model = ( model_vp_new**2 - 2.0*model_vs_new**2 ) / &
-                ( 2.0*model_vp_new**2 - 2.0*model_vs_new**2 )
+  total_model = ( model_vp_new**2 - 2.0*model_vs_new**2) / &
+                ( 2.0*model_vp_new**2 - 2.0*model_vs_new**2)
   fname = 'poisson_new'
   write(m_file,'(a,i6.6,a)') trim(OUTPUT_MODEL_DIR)//'/proc',myrank,trim(REG)//trim(fname)//'.bin'
   open(12,file=trim(m_file),form='unformatted')
@@ -524,7 +524,7 @@ program model_update
 
   ! bulk wavespeed of current model
   total_model = 0.
-  total_model = sqrt( model_vp**2 - (4.0/3.0)*model_vs**2 )
+  total_model = sqrt( model_vp**2 - (4.0/3.0)*model_vs**2)
   fname = 'vb'
   write(m_file,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',myrank,trim(REG)//trim(fname)//'.bin'
   open(12,file=trim(m_file),form='unformatted')
@@ -533,7 +533,7 @@ program model_update
 
   ! bulk wavespeed of new model
   total_model = 0.
-  total_model = sqrt( model_vp_new**2 - (4.0/3.0)*model_vs_new**2 )
+  total_model = sqrt( model_vp_new**2 - (4.0/3.0)*model_vs_new**2)
   fname = 'vb_new'
   write(m_file,'(a,i6.6,a)') trim(OUTPUT_MODEL_DIR)//'/proc',myrank,trim(REG)//trim(fname)//'.bin'
   open(12,file=trim(m_file),form='unformatted')
@@ -625,8 +625,8 @@ subroutine initialize()
   endif
 
   ! check that the code is running with the requested nb of processes
-  if(sizeprocs /= NPROC) then
-    if( myrank == 0 ) then
+  if (sizeprocs /= NPROC) then
+    if (myrank == 0) then
       print*, 'Error number of processors supposed to run on: ',NPROC
       print*, 'Error number of MPI processors actually run on: ',sizeprocs
       print*
@@ -684,24 +684,24 @@ subroutine get_external_mesh()
            gammay(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
            gammaz(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
            jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-  if( ier /= 0 ) stop 'Error allocating arrays for databases'
+  if (ier /= 0) stop 'Error allocating arrays for databases'
 
   ! mesh node locations
   allocate(xstore(NGLOB_AB), &
            ystore(NGLOB_AB), &
            zstore(NGLOB_AB),stat=ier)
-  if( ier /= 0 ) stop 'Error allocating arrays for mesh nodes'
+  if (ier /= 0) stop 'Error allocating arrays for mesh nodes'
 
   ! material properties
   allocate(kappastore(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
            mustore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-  if( ier /= 0 ) stop 'Error allocating arrays for material properties'
+  if (ier /= 0) stop 'Error allocating arrays for material properties'
 
   ! material flags
   allocate(ispec_is_acoustic(NSPEC_AB), &
            ispec_is_elastic(NSPEC_AB), &
            ispec_is_poroelastic(NSPEC_AB),stat=ier)
-  if( ier /= 0 ) stop 'Error allocating arrays for material flags'
+  if (ier /= 0) stop 'Error allocating arrays for material flags'
   ispec_is_acoustic(:) = .false.
   ispec_is_elastic(:) = .false.
   ispec_is_poroelastic(:) = .false.
@@ -716,7 +716,7 @@ subroutine get_external_mesh()
                             distance_min_glob,distance_max_glob)
 
   ! outputs infos
-  if ( myrank == 0 ) then
+  if (myrank == 0) then
     print*,'mesh dimensions:'
     print*,'  Xmin and Xmax of the model = ',x_min_glob,x_max_glob
     print*,'  Ymin and Ymax of the model = ',y_min_glob,y_max_glob
@@ -735,7 +735,7 @@ subroutine get_external_mesh()
 
   ! resolution check
   ! open main output file, only written to by process 0
-  if(myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
+  if (myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
     open(unit=IMAIN,file=trim(OUTPUT_MODEL_DIR)//'/output_mesh_resolution_initial.txt',status='unknown')
 
   if (ELASTIC_SIMULATION) then
@@ -745,7 +745,7 @@ subroutine get_external_mesh()
                                DT,model_speed_max,min_resolved_period, &
                                LOCAL_PATH,SAVE_MESH_FILES)
 
-  else if( POROELASTIC_SIMULATION ) then
+  else if (POROELASTIC_SIMULATION) then
     allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
     allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
     rho_vp = 0.0_CUSTOM_REAL
@@ -755,11 +755,11 @@ subroutine get_external_mesh()
                                     phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI, &
                                     LOCAL_PATH,SAVE_MESH_FILES)
     deallocate(rho_vp,rho_vs)
-  else if( ACOUSTIC_SIMULATION ) then
+  else if (ACOUSTIC_SIMULATION) then
     allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if( ier /= 0 ) stop 'Error allocating array rho_vp'
+    if (ier /= 0) stop 'Error allocating array rho_vp'
     allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if( ier /= 0 ) stop 'Error allocating array rho_vs'
+    if (ier /= 0) stop 'Error allocating array rho_vs'
     rho_vp = sqrt( kappastore / rhostore ) * rhostore
     rho_vs = 0.0_CUSTOM_REAL
     call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB, &
@@ -770,7 +770,7 @@ subroutine get_external_mesh()
     deallocate(rho_vp,rho_vs)
   endif
 
-  if(myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) close(IMAIN)
+  if (myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) close(IMAIN)
 
 end subroutine get_external_mesh
 
@@ -824,7 +824,7 @@ subroutine save_new_databases()
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_acoustic_new,rmass_solid_poroelastic_new,rmass_fluid_poroelastic_new
 
   ! user output
-  if( myrank == 0 ) then
+  if (myrank == 0) then
     print*,'saving new databases'
   endif
 
@@ -874,7 +874,7 @@ subroutine save_new_databases()
   rmass_new(:) = 0._CUSTOM_REAL
 
   ! user output
-  if( myrank == 0) then
+  if (myrank == 0) then
     print*, '  ...creating mass matrix '
   endif
   call synchronize_all()
@@ -882,7 +882,7 @@ subroutine save_new_databases()
   ! note: this does not update the absorbing boundary contributions to the mass matrix
   ! elastic mass matrix
   do ispec=1,NSPEC_AB
-    if( ispec_is_elastic(ispec) ) then
+    if (ispec_is_elastic(ispec)) then
       do k=1,NGLLZ
         do j=1,NGLLY
           do i=1,NGLLX
@@ -892,12 +892,12 @@ subroutine save_new_databases()
             jacobianl = jacobianstore(i,j,k,ispec)
 
             !debug
-            !if( myrank == 0) then
+            !if (myrank == 0) then
             !  print*, 'weight', weight
             !  print*, 'jacobianl', jacobianl
             !endif
 
-            if(CUSTOM_REAL == SIZE_REAL) then
+            if (CUSTOM_REAL == SIZE_REAL) then
               rmass_new(iglob) = rmass_new(iglob) + &
                       sngl( dble(jacobianl) * weight * dble(rhostore_new(i,j,k,ispec)) )
             else
@@ -922,7 +922,7 @@ subroutine save_new_databases()
 
   ! new resolution check
   ! open main output file, only written to by process 0
-  if(myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
+  if (myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
     open(unit=IMAIN,file=trim(OUTPUT_MODEL_DIR)//'/output_mesh_resolution_final.txt',status='unknown')
 
   ! calculate min_resolved_period (needed for attenuation model)
@@ -933,13 +933,13 @@ subroutine save_new_databases()
                                -1.0d0,model_speed_max,min_resolved_period, &
                                LOCAL_PATH,SAVE_MESH_FILES)
 
-  else if( POROELASTIC_SIMULATION ) then
+  else if (POROELASTIC_SIMULATION) then
     stop 'Error saving new databases for POROELASTIC models not implemented yet'
-  else if( ACOUSTIC_SIMULATION ) then
+  else if (ACOUSTIC_SIMULATION) then
     stop 'Error saving new databases for ACOUSTIC models not implemented yet'
   endif
 
-  if(myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) close(IMAIN)
+  if (myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) close(IMAIN)
 
   !-------- attenuation -------
   ! store the attenuation flag in qmu_attenuation_store
@@ -952,7 +952,7 @@ subroutine save_new_databases()
     ! read the proc*attenuation.vtk for the old model in LOCAL_PATH and store qmu_attenuation_store
     write(m_file,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',myrank,'_attenuation.vtk'
     open(12,file=trim(m_file),status='old',iostat=ier)
-    if( ier /= 0 ) then
+    if (ier /= 0) then
       print*,'Error opening: ',trim(m_file)
       call exit_mpi(myrank,'Error file not found')
     endif
@@ -963,7 +963,7 @@ subroutine save_new_databases()
     read(12,'(a,i12,a)') string5, idummy1, string6 !text
 
     allocate(dummy_g_1(NGLOB_AB),dummy_g_2(NGLOB_AB),dummy_g_3(NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'Error allocating array dummy etc.'
+    if (ier /= 0) stop 'Error allocating array dummy etc.'
 
     read(12,'(3e18.6)') dummy_g_1,dummy_g_2,dummy_g_3 !xstore,ystore,zstore for i=1,nglob
     read(12,*) !blank line
@@ -973,7 +973,7 @@ subroutine save_new_databases()
 
     allocate(dummy_num(NSPEC_AB),dummy_l_1(NSPEC_AB),dummy_l_2(NSPEC_AB),dummy_l_3(NSPEC_AB),dummy_l_4(NSPEC_AB), &
              dummy_l_5(NSPEC_AB),dummy_l_6(NSPEC_AB),dummy_l_7(NSPEC_AB),dummy_l_8(NSPEC_AB),stat=ier)
-    if( ier /= 0 ) stop 'Error allocating array dummy etc.'
+    if (ier /= 0) stop 'Error allocating array dummy etc.'
 
     read(12,'(9i12)') dummy_num,dummy_l_1,dummy_l_2,dummy_l_3,dummy_l_4, &
                     dummy_l_5,dummy_l_6,dummy_l_7,dummy_l_8 !8,ibool-1 for ispec=1,nspec
@@ -984,7 +984,7 @@ subroutine save_new_databases()
     read(12,'(a,i12)') string8, idummy4 !text
 
     allocate(dummy_num(NSPEC_AB),stat=ier)
-    if( ier /= 0 ) stop 'Error allocating array dummy etc.'
+    if (ier /= 0) stop 'Error allocating array dummy etc.'
 
     read(12,*) dummy_num !12 for ispec=1,nspec
     read(12,*) !blank line
@@ -996,14 +996,14 @@ subroutine save_new_databases()
     read(12,'(a)') string11 !text
 
     allocate(flag_val(NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'Error allocating flag_val'
+    if (ier /= 0) stop 'Error allocating flag_val'
 
     read(12,*) flag_val
     read(12,*) !blank line
     close(12)
 
     allocate(mask_ibool(NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'Error allocating mask'
+    if (ier /= 0) stop 'Error allocating mask'
 
     mask_ibool = .false.
     do ispec=1,NSPEC_AB
@@ -1011,7 +1011,7 @@ subroutine save_new_databases()
         do j=1,NGLLY
           do i=1,NGLLX
             iglob = ibool(i,j,k,ispec)
-            if( .not. mask_ibool(iglob) ) then
+            if (.not. mask_ibool(iglob)) then
               qmu_attenuation_store(i,j,k,ispec) = flag_val(iglob)
               mask_ibool(iglob) = .true.
             endif
@@ -1033,7 +1033,7 @@ subroutine save_new_databases()
   !----------------------------
 
   ! user output
-  if( myrank == 0 ) then
+  if (myrank == 0) then
     print*,'  writing new databases to directory: ',trim(OUTPUT_MODEL_DIR)
     print*
   endif

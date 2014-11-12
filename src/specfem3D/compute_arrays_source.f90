@@ -96,7 +96,7 @@
   enddo
 
 ! distinguish between single and double precision for reals
-  if(CUSTOM_REAL == SIZE_REAL) then
+  if (CUSTOM_REAL == SIZE_REAL) then
     sourcearray(:,:,:,:) = sngl(sourcearrayd(:,:,:,:))
   else
     sourcearray(:,:,:,:) = sourcearrayd(:,:,:,:)
@@ -135,7 +135,7 @@
 
   real(kind=CUSTOM_REAL), dimension(NTSTEP_BETWEEN_READ_ADJSRC,NDIM) :: adj_src
 
-  integer icomp, itime, i, j, k, ios, it_start, it_end
+  integer icomp, itime, i, j, k, ier, it_start, it_end
   double precision :: junk
   ! note: should have same order as orientation in write_seismograms_to_file()
   character(len=3),dimension(NDIM) :: comp != (/ "BHE", "BHN", "BHZ" /)
@@ -156,26 +156,26 @@
   do icomp = 1, NDIM
 
     filename = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))//'/../SEM/'//trim(adj_source_file)//'.'//comp(icomp)//'.adj'
-    open(unit=IIN,file=trim(filename),status='old',action='read',iostat = ios)
+    open(unit=IIN,file=trim(filename),status='old',action='read',iostat = ier)
     ! cycles to next file (this might be more error prone)
-    !if (ios /= 0) cycle
+    !if (ier /= 0) cycle
     ! requires adjoint files to exist (users will have to be more careful in setting up adjoint runs)
-    if (ios /= 0) call exit_MPI(myrank, ' file '//trim(filename)//' does not exist - required for adjoint runs')
+    if (ier /= 0) call exit_MPI(myrank, ' file '//trim(filename)//' does not exist - required for adjoint runs')
 
     ! reads in adjoint source trace
     !! skip unused blocks
     do itime = 1, it_start-1
-      read(IIN,*,iostat=ios) junk, junk
-      if( ios /= 0 ) &
+      read(IIN,*,iostat=ier) junk, junk
+      if (ier /= 0) &
         call exit_MPI(myrank, &
           'file '//trim(filename)//' has wrong length, please check with your simulation duration (1111)')
     enddo
     !! read the block we need
     do itime = it_start, it_end
-      read(IIN,*,iostat=ios) junk, adj_src(itime-it_start+1,icomp)
+      read(IIN,*,iostat=ier) junk, adj_src(itime-it_start+1,icomp)
       !!! used to check whether we read the correct block
       ! if (icomp==1)      print *, junk, adj_src(itime-it_start+1,icomp)
-      if( ios /= 0 ) &
+      if (ier /= 0) &
         call exit_MPI(myrank, &
           'file '//trim(filename)//' has wrong length, please check with your simulation duration (2222)')
     enddo
@@ -235,7 +235,7 @@ end subroutine compute_arrays_adjoint_source
   enddo
 
 ! distinguish between single and double precision for reals
-  if(CUSTOM_REAL == SIZE_REAL) then
+  if (CUSTOM_REAL == SIZE_REAL) then
     sourcearray(:,:,:,:) = sngl(sourcearrayd(:,:,:,:))
   else
     sourcearray(:,:,:,:) = sourcearrayd(:,:,:,:)

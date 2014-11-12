@@ -151,7 +151,7 @@
   write(IOVTK,'(a)') "SCALARS elem_flag integer"
   write(IOVTK,'(a)') "LOOKUP_TABLE default"
   do ispec = 1,nspec
-    if( elem_flag(ispec) .eqv. .true. ) then
+    if (elem_flag(ispec) .eqv. .true.) then
       write(IOVTK,*) 1
     else
       write(IOVTK,*) 0
@@ -226,7 +226,7 @@
   ! iflag field on global nodeset
   !allocate(mask_ibool(nglob),flag_val(nglob),stat=ier)
   if (.not. allocated(mask_ibool)) allocate(mask_ibool(nglob),flag_val(nglob),stat=ier)
-  if( ier /= 0 ) stop 'error allocating mask'
+  if (ier /= 0) stop 'error allocating mask'
 
   mask_ibool = .false.
   do ispec=1,nspec
@@ -234,7 +234,7 @@
       do j=1,NGLLY
         do i=1,NGLLX
           iglob = ibool(i,j,k,ispec)
-          if( .not. mask_ibool(iglob) ) then
+          if (.not. mask_ibool(iglob)) then
             flag_val(iglob) = gll_data(i,j,k,ispec)
             mask_ibool(iglob) = .true.
           endif
@@ -317,7 +317,7 @@
 
   ! iflag field on global nodeset
   allocate(mask_ibool(nglob),flag_val(nglob),stat=ier)
-  if( ier /= 0 ) stop 'error allocating mask'
+  if (ier /= 0) stop 'error allocating mask'
 
   mask_ibool = .false.
   do ispec=1,nspec
@@ -325,7 +325,7 @@
       do j=1,NGLLY
         do i=1,NGLLX
           iglob = ibool(i,j,k,ispec)
-          if( .not. mask_ibool(iglob) ) then
+          if (.not. mask_ibool(iglob)) then
             flag_val(iglob) = gll_data(i,j,k,ispec)
             mask_ibool(iglob) = .true.
           endif
@@ -387,7 +387,7 @@
   write(IOVTK, '(a,i12,a)') 'POINTS ', num_points_globalindices, ' float'
   do i=1,num_points_globalindices
     iglob = points_globalindices(i)
-    if( iglob <= 0 .or. iglob > nglob ) then
+    if (iglob <= 0 .or. iglob > nglob) then
       print*,'error: '//prname_file(1:len_trim(prname_file))//'.vtk'
       print*,'error global index: ',iglob,i
       close(IOVTK)

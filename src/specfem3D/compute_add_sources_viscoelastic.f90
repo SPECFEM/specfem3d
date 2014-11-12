@@ -108,7 +108,7 @@
   if (COUPLE_WITH_EXTERNAL_CODE) return
 
 ! plotting source time function
-  if(PRINT_SOURCE_TIME_FUNCTION .and. .not. phase_is_inner ) then
+  if (PRINT_SOURCE_TIME_FUNCTION .and. .not. phase_is_inner) then
     ! initializes total
     stf_used_total = 0.0_CUSTOM_REAL
   endif
@@ -192,7 +192,7 @@
 !             and convolve with the adjoint field at time (T-t)
 !
 ! backward/reconstructed wavefields:
-!       time for b_displ( it ) would correspond to (NSTEP - it - 1 )*DT - t0
+!       time for b_displ( it ) would correspond to (NSTEP - it - 1)*DT - t0
 !       if we read in saved wavefields b_displ() before Newmark time scheme
 !       (see sources for simulation_type 1 and seismograms)
 !       since at the beginning of the time loop, the numerical Newmark time scheme updates
@@ -215,7 +215,7 @@
   if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
 
     ! adds adjoint source in this partitions
-    if( nadj_rec_local > 0 ) then
+    if (nadj_rec_local > 0) then
 
       ! read in adjoint sources block by block (for memory consideration)
       ! e.g., in exploration experiments, both the number of receivers (nrec) and
@@ -236,7 +236,7 @@
 
         ! allocates temporary source array
         allocate(adj_sourcearray(NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
-        if( ier /= 0 ) stop 'error allocating array adj_sourcearray'
+        if (ier /= 0) stop 'error allocating array adj_sourcearray'
 
         if (.not. SU_FORMAT) then
           !!! read ascii adjoint sources
@@ -305,13 +305,13 @@
           close(IIN_SU1)
           close(IIN_SU2)
           close(IIN_SU3)
-        endif !if(.not. SU_FORMAT)
+        endif !if (.not. SU_FORMAT)
 
         deallocate(adj_sourcearray)
-      endif ! if(ibool_read_adj_arrays)
+      endif ! if (ibool_read_adj_arrays)
 
 
-      if( it < NSTEP ) then
+      if (it < NSTEP) then
         ! receivers act as sources
         irec_local = 0
         do irec = 1,nrec
@@ -321,7 +321,7 @@
             irec_local = irec_local + 1
 
             ispec = ispec_selected_rec(irec)
-            if( ispec_is_elastic(ispec) ) then
+            if (ispec_is_elastic(ispec)) then
 
               ! checks if element is in phase_is_inner run
               if (ispec_is_inner(ispec_selected_rec(irec)) .eqv. phase_is_inner) then
@@ -348,19 +348,19 @@
   endif !adjoint
 
   ! master prints out source time function to file
-  if(PRINT_SOURCE_TIME_FUNCTION .and. phase_is_inner) then
+  if (PRINT_SOURCE_TIME_FUNCTION .and. phase_is_inner) then
     time_source = (it-1)*DT - t0
     call sum_all_cr(stf_used_total,stf_used_total_all)
-    if( myrank == 0 ) write(IOSTF,*) time_source,stf_used_total_all
+    if (myrank == 0) write(IOSTF,*) time_source,stf_used_total_all
   endif
 
   ! for noise simulations
-  if( NOISE_TOMOGRAPHY > 0 ) then
+  if (NOISE_TOMOGRAPHY > 0) then
     ! we have two loops indicated by phase_is_inner ("inner elements/points" or "boundary elements/points")
     ! here, we only add those noise sources once, when we are calculating for boudanry points (phase_is_inner==.false.),
     ! because boundary points are claculated first!
-    if( .not. phase_is_inner ) then
-      if ( NOISE_TOMOGRAPHY == 1 ) then
+    if (.not. phase_is_inner) then
+      if (NOISE_TOMOGRAPHY == 1) then
         ! the first step of noise tomography is to use |S(\omega)|^2 as a point force source at one of the receivers.
         ! hence, instead of a moment tensor 'sourcearrays', a 'noise_sourcearray' for a point force is needed.
         ! furthermore, the CMTSOLUTION needs to be zero, i.e., no earthquakes.
@@ -370,7 +370,7 @@
                 ibool,islice_selected_rec,ispec_selected_rec, &
                 it,irec_master_noise, &
                 NSPEC_AB,NGLOB_AB)
-      else if ( NOISE_TOMOGRAPHY == 2 ) then
+      else if (NOISE_TOMOGRAPHY == 2) then
         ! second step of noise tomography, i.e., read the surface movie saved at every timestep
         ! use the movie to drive the ensemble forward wavefield
         call noise_read_add_surface_movie(NGLLSQUARE*num_free_surface_faces,accel, &
@@ -445,7 +445,7 @@
   if (COUPLE_WITH_EXTERNAL_CODE) return
 
 ! plotting source time function
-  if(PRINT_SOURCE_TIME_FUNCTION .and. .not. phase_is_inner ) then
+  if (PRINT_SOURCE_TIME_FUNCTION .and. .not. phase_is_inner) then
     ! initializes total
     stf_used_total = 0.0_CUSTOM_REAL
   endif
@@ -455,7 +455,7 @@
 !             and convolve with the adjoint field at time (T-t)
 !
 ! backward/reconstructed wavefields:
-!       time for b_displ( it ) would correspond to (NSTEP - it - 1 )*DT - t0
+!       time for b_displ( it ) would correspond to (NSTEP - it - 1)*DT - t0
 !       if we read in saved wavefields b_displ() before Newmark time scheme
 !       (see sources for simulation_type 1 and seismograms)
 !       since at the beginning of the time loop, the numerical Newmark time scheme updates
@@ -560,19 +560,19 @@
   endif ! adjoint
 
   ! master prints out source time function to file
-  if(PRINT_SOURCE_TIME_FUNCTION .and. phase_is_inner) then
+  if (PRINT_SOURCE_TIME_FUNCTION .and. phase_is_inner) then
     time_source = (it-1)*DT - t0
     call sum_all_cr(stf_used_total,stf_used_total_all)
-    if( myrank == 0 ) write(IOSTF,*) time_source,stf_used_total_all
+    if (myrank == 0) write(IOSTF,*) time_source,stf_used_total_all
   endif
 
   ! for noise simulations
-  if( NOISE_TOMOGRAPHY > 0 ) then
+  if (NOISE_TOMOGRAPHY > 0) then
     ! we have two loops indicated by phase_is_inner ("inner elements/points" or "boundary elements/points")
     ! here, we only add those noise sources once, when we are calculating for boudanry points (phase_is_inner==.false.),
     ! because boundary points are claculated first!
-    if( .not. phase_is_inner ) then
-      if ( NOISE_TOMOGRAPHY == 3 ) then
+    if (.not. phase_is_inner) then
+      if (NOISE_TOMOGRAPHY == 3) then
         ! third step of noise tomography, i.e., read the surface movie saved at every timestep
         ! use the movie to reconstruct the ensemble forward wavefield
         ! the ensemble adjoint wavefield is done as usual
@@ -666,14 +666,14 @@
   if (COUPLE_WITH_EXTERNAL_CODE) return
 
 ! plotting source time function
-  if(PRINT_SOURCE_TIME_FUNCTION .and. .not. phase_is_inner ) then
+  if (PRINT_SOURCE_TIME_FUNCTION .and. .not. phase_is_inner) then
     ! initializes total
     stf_used_total = 0.0_CUSTOM_REAL
   endif
 
   ! forward simulations
   if (SIMULATION_TYPE == 1 .and. NOISE_TOMOGRAPHY == 0 .and. nsources_local > 0) then
-    if( NSOURCES > 0 ) then
+    if (NSOURCES > 0) then
       do isource = 1,NSOURCES
         ! precomputes source time function factor
         if (USE_FORCE_POINT_SOURCE) then
@@ -706,7 +706,7 @@
 !             and convolve with the adjoint field at time (T-t)
 !
 ! backward/reconstructed wavefields:
-!       time for b_displ( it ) would correspond to (NSTEP - it - 1 )*DT - t0
+!       time for b_displ( it ) would correspond to (NSTEP - it - 1)*DT - t0
 !       if we read in saved wavefields b_displ() before Newmark time scheme
 !       (see sources for simulation_type 1 and seismograms)
 !       since at the beginning of the time loop, the numerical Newmark time scheme updates
@@ -728,7 +728,7 @@
 ! adjoint simulations
   if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
     ! adds adjoint source in this partitions
-    if( nadj_rec_local > 0 ) then
+    if (nadj_rec_local > 0) then
 
       ! read in adjoint sources block by block (for memory consideration)
       ! e.g., in exploration experiments, both the number of receivers (nrec) and
@@ -749,7 +749,7 @@
 
         ! allocates temporary source array
         allocate(adj_sourcearray(NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
-        if( ier /= 0 ) stop 'error allocating array adj_sourcearray'
+        if (ier /= 0) stop 'error allocating array adj_sourcearray'
 
         if (.not. SU_FORMAT) then
           !!! read ascii adjoint sources
@@ -818,13 +818,13 @@
           close(IIN_SU1)
           close(IIN_SU2)
           close(IIN_SU3)
-        endif !if(.not. SU_FORMAT)
+        endif !if (.not. SU_FORMAT)
 
         deallocate(adj_sourcearray)
-      endif ! if(ibool_read_adj_arrays)
+      endif ! if (ibool_read_adj_arrays)
 
 
-      if( it < NSTEP ) then
+      if (it < NSTEP) then
         call add_sources_el_sim_type_2_or_3(Mesh_pointer,adj_sourcearrays,phase_is_inner, &
                                             ispec_is_inner,ispec_is_elastic, &
                                             ispec_selected_rec, &
@@ -842,7 +842,7 @@
 
 ! adjoint simulations
   if (SIMULATION_TYPE == 3 .and. NOISE_TOMOGRAPHY == 0 .and. nsources_local > 0) then
-    if( NSOURCES > 0 ) then
+    if (NSOURCES > 0) then
       do isource = 1,NSOURCES
         ! precomputes source time function factors
         if (USE_FORCE_POINT_SOURCE) then
@@ -869,25 +869,25 @@
   endif ! adjoint
 
   ! master prints out source time function to file
-  if(PRINT_SOURCE_TIME_FUNCTION .and. phase_is_inner) then
+  if (PRINT_SOURCE_TIME_FUNCTION .and. phase_is_inner) then
     time_source = (it-1)*DT - t0
     call sum_all_cr(stf_used_total,stf_used_total_all)
-    if( myrank == 0 ) write(IOSTF,*) time_source,stf_used_total_all
+    if (myrank == 0) write(IOSTF,*) time_source,stf_used_total_all
   endif
 
   ! for noise simulations
-  if( NOISE_TOMOGRAPHY > 0 ) then
+  if (NOISE_TOMOGRAPHY > 0) then
     ! we have two loops indicated by phase_is_inner ("inner elements/points" or "boundary elements/points")
     ! here, we only add those noise sources once, when we are calculating for boudanry points (phase_is_inner==.false.),
     ! because boundary points are claculated first!
-    if( .not. phase_is_inner ) then
-      if ( NOISE_TOMOGRAPHY == 1 ) then
+    if (.not. phase_is_inner) then
+      if (NOISE_TOMOGRAPHY == 1) then
         ! the first step of noise tomography is to use |S(\omega)|^2 as a point force source at one of the receivers.
         ! hence, instead of a moment tensor 'sourcearrays', a 'noise_sourcearray' for a point force is needed.
         ! furthermore, the CMTSOLUTION needs to be zero, i.e., no earthquakes.
         ! now this must be manually set in DATA/CMTSOLUTION, by USERS.
         call add_source_master_rec_noise_cu(Mesh_pointer,it,irec_master_noise,islice_selected_rec)
-      else if ( NOISE_TOMOGRAPHY == 2 ) then
+      else if (NOISE_TOMOGRAPHY == 2) then
         ! second step of noise tomography, i.e., read the surface movie saved at every timestep
         ! use the movie to drive the ensemble forward wavefield
         call noise_read_add_surface_movie_GPU(noise_surface_movie,NSTEP-it+1,num_free_surface_faces, &
@@ -897,7 +897,7 @@
         ! note the ensemble forward sources are generally distributed on the surface of the earth
         ! that's to say, the ensemble forward source is kind of a surface force density, not a body force density
         ! therefore, we must add it here, before applying the inverse of mass matrix
-      else if ( NOISE_TOMOGRAPHY == 3 ) then
+      else if (NOISE_TOMOGRAPHY == 3) then
         ! third step of noise tomography, i.e., read the surface movie saved at every timestep
         ! use the movie to reconstruct the ensemble forward wavefield
         ! the ensemble adjoint wavefield is done as usual

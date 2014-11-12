@@ -57,9 +57,9 @@
   Q_mu = OLSEN_ATTENUATION_RATIO * vs_val
 
   ! uses a simple, 2-constant model mentioned in Olsen et al. (2003)
-  if( USE_SIMPLE_OLSEN ) then
+  if (USE_SIMPLE_OLSEN) then
     ! vs (in m/s)
-    if( vs_val < 2000.0_CUSTOM_REAL ) then
+    if (vs_val < 2000.0_CUSTOM_REAL) then
       Q_mu = 0.02 * vs_val
     else
       Q_mu = 0.1 * vs_val
@@ -67,35 +67,35 @@
   endif
 
   ! uses discrete values in sediment range
-  if( USE_DISCRETE_OLSEN ) then
+  if (USE_DISCRETE_OLSEN) then
     int_Q_mu = 10 * nint(Q_mu / 10.)
 
-    if(int_Q_mu < 40) int_Q_mu = 40
-    if(int_Q_mu > 150) int_Q_mu = 150
+    if (int_Q_mu < 40) int_Q_mu = 40
+    if (int_Q_mu > 150) int_Q_mu = 150
 
-    if(int_Q_mu == 40) then
+    if (int_Q_mu == 40) then
       Q_mu = 40.0d0
-    else if(int_Q_mu == 50) then
+    else if (int_Q_mu == 50) then
       Q_mu = 50.0d0
-    else if(int_Q_mu == 60) then
+    else if (int_Q_mu == 60) then
       Q_mu = 60.0d0
-    else if(int_Q_mu == 70) then
+    else if (int_Q_mu == 70) then
       Q_mu = 70.0d0
-    else if(int_Q_mu == 80) then
+    else if (int_Q_mu == 80) then
       Q_mu = 80.0d0
-    else if(int_Q_mu == 90) then
+    else if (int_Q_mu == 90) then
       Q_mu = 90.0d0
-    else if(int_Q_mu == 100) then
+    else if (int_Q_mu == 100) then
       Q_mu = 100.0d0
-    else if(int_Q_mu == 110) then
+    else if (int_Q_mu == 110) then
       Q_mu = 110.0d0
-    else if(int_Q_mu == 120) then
+    else if (int_Q_mu == 120) then
       Q_mu = 120.0d0
-    else if(int_Q_mu == 130) then
+    else if (int_Q_mu == 130) then
       Q_mu = 130.0d0
-    else if(int_Q_mu == 140) then
+    else if (int_Q_mu == 140) then
       Q_mu = 140.0d0
-    else if(int_Q_mu == 150) then
+    else if (int_Q_mu == 150) then
       Q_mu = 150.0d0
     else
       stop 'incorrect attenuation coefficient'
@@ -103,8 +103,8 @@
   endif
 
   ! limits Q_mu value range
-  if( Q_mu < 1.0d0 ) Q_mu = 1.0d0
-  if( Q_mu > ATTENUATION_COMP_MAXIMUM ) Q_mu = ATTENUATION_COMP_MAXIMUM
+  if (Q_mu < 1.0d0) Q_mu = 1.0d0
+  if (Q_mu > ATTENUATION_COMP_MAXIMUM) Q_mu = ATTENUATION_COMP_MAXIMUM
 
 
   end subroutine get_attenuation_model_olsen
@@ -163,18 +163,18 @@
   allocate(one_minus_sum_beta(NGLLX,NGLLY,NGLLZ,nspec), &
           factor_common(N_SLS,NGLLX,NGLLY,NGLLZ,nspec), &
           scale_factor(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if( ier /= 0 ) call exit_mpi(myrank,'error allocation attenuation arrays')
+  if (ier /= 0) call exit_mpi(myrank,'error allocation attenuation arrays')
 
-  if(FULL_ATTENUATION_SOLID)then
+  if (FULL_ATTENUATION_SOLID)then
     allocate(one_minus_sum_beta_kappa(NGLLX,NGLLY,NGLLZ,nspec), &
             factor_common_kappa(N_SLS,NGLLX,NGLLY,NGLLZ,nspec), &
             scale_factor_kappa(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-    if( ier /= 0 ) call exit_mpi(myrank,'error allocation attenuation arrays')
+    if (ier /= 0) call exit_mpi(myrank,'error allocation attenuation arrays')
   else
     allocate(one_minus_sum_beta_kappa(NGLLX,NGLLY,NGLLZ,1), &
             factor_common_kappa(N_SLS,NGLLX,NGLLY,NGLLZ,1), &
             scale_factor_kappa(NGLLX,NGLLY,NGLLZ,1),stat=ier)
-    if( ier /= 0 ) call exit_mpi(myrank,'error allocation attenuation arrays')
+    if (ier /= 0) call exit_mpi(myrank,'error allocation attenuation arrays')
   endif
 
   one_minus_sum_beta(:,:,:,:) = 1._CUSTOM_REAL
@@ -192,7 +192,7 @@
               f_c_source,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
 
   ! user output
-  if( myrank == 0 ) then
+  if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) "attenuation: "
     write(IMAIN,*) "  reference period (s)   : ",sngl(1.0/ATTENUATION_f0_REFERENCE), &
@@ -203,7 +203,7 @@
   endif
 
   ! determines inverse of tau_sigma
-  if(CUSTOM_REAL == SIZE_REAL) then
+  if (CUSTOM_REAL == SIZE_REAL) then
     tau_sigma(:) = sngl(tau_sigma_dble(:))
   else
     tau_sigma(:) = tau_sigma_dble(:)
@@ -217,7 +217,7 @@
   do ispec = 1,nspec
 
     ! skips non elastic elements
-    if( ispec_is_elastic(ispec) .eqv. .false. ) cycle
+    if (ispec_is_elastic(ispec) .eqv. .false.) cycle
 
     ! determines attenuation factors for each GLL point
     do k=1,NGLLZ
@@ -226,17 +226,17 @@
 
           ! shear moduli attenuation
           ! gets Q_mu value
-          if(USE_OLSEN_ATTENUATION) then
+          if (USE_OLSEN_ATTENUATION) then
             ! use scaling rule similar to Olsen et al. (2003)
             vs_val = mustore(i,j,k,ispec) / rho_vs(i,j,k,ispec)
             call get_attenuation_model_olsen(vs_val,Q_mu,OLSEN_ATTENUATION_RATIO)
-            if(FULL_ATTENUATION_SOLID)then
+            if (FULL_ATTENUATION_SOLID)then
               vp_val = (kappastore(i,j,k,ispec) + 2.0d0 * mustore(i,j,k,ispec) / 3.0d0) / rho_vp(i,j,k,ispec)
               Q_s = Q_mu
               Q_p = 1.5d0 * Q_s
               Q_kappa = 1.0d0 / ((1.0/Q_p - 4.0d0/3.0d0*(vp_val/vs_val)**2*(1.d0/Q_mu)) /(1.0d0 - 4.0d0/3.0d0*(vp_val/vs_val)**2))
-              if( Q_kappa < 1.0d0 ) Q_kappa = 1.0d0
-              if( Q_kappa > ATTENUATION_COMP_MAXIMUM ) Q_kappa = ATTENUATION_COMP_MAXIMUM
+              if (Q_kappa < 1.0d0) Q_kappa = 1.0d0
+              if (Q_kappa > ATTENUATION_COMP_MAXIMUM) Q_kappa = ATTENUATION_COMP_MAXIMUM
             endif
           else
             ! takes Q set in (CUBIT) mesh
@@ -244,21 +244,21 @@
             Q_kappa = qkappa_attenuation_store(i,j,k,ispec)
 
             ! attenuation zero
-            if( Q_mu <= 1.e-5 ) cycle
-            if( Q_kappa <= 1.e-5 ) cycle
+            if (Q_mu <= 1.e-5) cycle
+            if (Q_kappa <= 1.e-5) cycle
 
             ! limits Q
-            if( Q_mu < 1.0d0 ) Q_mu = 1.0d0
-            if( Q_mu > ATTENUATION_COMP_MAXIMUM ) Q_mu = ATTENUATION_COMP_MAXIMUM
+            if (Q_mu < 1.0d0) Q_mu = 1.0d0
+            if (Q_mu > ATTENUATION_COMP_MAXIMUM) Q_mu = ATTENUATION_COMP_MAXIMUM
 
-            if( Q_kappa < 1.0d0 ) Q_kappa = 1.0d0
-            if( Q_kappa > ATTENUATION_COMP_MAXIMUM ) Q_kappa = ATTENUATION_COMP_MAXIMUM
+            if (Q_kappa < 1.0d0) Q_kappa = 1.0d0
+            if (Q_kappa > ATTENUATION_COMP_MAXIMUM) Q_kappa = ATTENUATION_COMP_MAXIMUM
 
           endif
 
           ! statistics on Q_mu
-          if( Q_mu < qmin ) qmin = Q_mu
-          if( Q_mu > qmax ) qmax = Q_mu
+          if (Q_mu < qmin) qmin = Q_mu
+          if (Q_mu > qmax) qmax = Q_mu
 
           ! gets beta, on_minus_sum_beta and factor_scale
           ! based on calculation of strain relaxation times tau_eps
@@ -280,7 +280,7 @@
           ! stores scale factor for mu moduli
           scale_factor(i,j,k,ispec) = factor_scale_dble
 
-          if(FULL_ATTENUATION_SOLID)then
+          if (FULL_ATTENUATION_SOLID)then
             one_minus_sum_beta_kappa(i,j,k,ispec) = one_minus_sum_beta_dble_kappa
             beta_kappa(:) = beta_dble_kappa(:)
             factor_common_kappa(:,i,j,k,ispec) = beta_kappa(:) * tauinv(:)
@@ -297,7 +297,7 @@
   ! stores attenuation arrays into files
   open(unit=27, file=prname(1:len_trim(prname))//'attenuation.bin', &
         status='unknown',action='write',form='unformatted',iostat=ier)
-  if( ier /= 0 ) then
+  if (ier /= 0) then
     print*,'error: could not open ',prname(1:len_trim(prname))//'attenuation.bin'
     call exit_mpi(myrank,'error opening attenuation.bin file')
   endif
@@ -306,7 +306,7 @@
   write(27) factor_common
   write(27) scale_factor
 
-  if(FULL_ATTENUATION_SOLID)then
+  if (FULL_ATTENUATION_SOLID)then
     write(27) one_minus_sum_beta_kappa
     write(27) factor_common_kappa
     write(27) scale_factor_kappa
@@ -316,7 +316,7 @@
 
   deallocate(one_minus_sum_beta,factor_common,scale_factor)
 
-  if(FULL_ATTENUATION_SOLID)then
+  if (FULL_ATTENUATION_SOLID)then
     deallocate(one_minus_sum_beta_kappa,factor_common_kappa,scale_factor_kappa)
   endif
 
@@ -324,7 +324,7 @@
   call min_all_dp(qmin,qmin_all)
   call max_all_dp(qmax,qmax_all)
   ! user output
-  if( myrank == 0 ) then
+  if (myrank == 0) then
     write(IMAIN,*) "  Q_mu min/max           : ",sngl(qmin_all),sngl(qmax_all)
     write(IMAIN,*)
   endif
@@ -455,7 +455,7 @@
   ! determines the "scale factor"
   call get_attenuation_scale_factor(myrank,f_c_source,tau_eps,tau_sigma,Q_mu,factor_scale)
 
-  if(FULL_ATTENUATION_SOLID)then
+  if (FULL_ATTENUATION_SOLID)then
     ! determines tau_eps for Q_kappa
     call get_attenuation_tau_eps(Q_kappa,tau_sigma,tau_eps_kappa, &
                                 MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
@@ -574,7 +574,7 @@
   scale_factor = factor_scale_mu * factor_scale_mu0
 
   !--- check that the correction factor is close to one
-  if(scale_factor < 0.7 .or. scale_factor > 1.3) then
+  if (scale_factor < 0.7 .or. scale_factor > 1.3) then
     write(*,*) "error : in get_attenuation_scale_factor() "
     write(*,*) "  scale factor: ", scale_factor, " should be between 0.7 and 1.3"
     write(*,*) "  please check your reference frequency ATTENUATION_f0_REFERENCE in constants.h"
@@ -606,7 +606,7 @@
   double precision :: THETA(5)
 
   ! checks number of standard linear solids
-  if(N_SLS < 2 .OR. N_SLS > 5) then
+  if (N_SLS < 2 .OR. N_SLS > 5) then
      stop 'N_SLS must be greater than 1 or less than 6'
   endif
 
@@ -780,7 +780,7 @@
   ! READ
   rw = 1
   call model_attenuation_storage(Qmu_in, tau_eps, rw, AM_S)
-  if(rw > 0) return
+  if (rw > 0) return
 
   call attenuation_invert_by_simplex(min_period, max_period, N_SLS, Qmu_in, tau_s, tau_eps, AS_V)
 
@@ -822,7 +822,7 @@
   double precision, parameter :: ZERO_TOL = 1.e-5
   integer ier
 
-  if(first_time_called == 1) then
+  if (first_time_called == 1) then
      first_time_called       = 0
      AM_S%Q_resolution = 10**ATTENUATION_COMP_RESOLUTION
      AM_S%Q_max        = ATTENUATION_COMP_MAXIMUM
@@ -830,18 +830,18 @@
 
      allocate(AM_S%tau_eps_storage(N_SLS, Qtmp), &
              AM_S%Qmu_storage(Qtmp),stat=ier)
-     if( ier /= 0 ) stop 'error allocating arrays for attenuation storage'
+     if (ier /= 0) stop 'error allocating arrays for attenuation storage'
      AM_S%Qmu_storage(:) = -1
   endif
 
-  if(Qmu < 0.0d0 .OR. Qmu > AM_S%Q_max) then
+  if (Qmu < 0.0d0 .OR. Qmu > AM_S%Q_max) then
     write(IMAIN,*) 'Error attenuation_storage()'
     write(IMAIN,*) 'Attenuation Value out of Range: ', Qmu
     write(IMAIN,*) 'Attenuation Value out of Range: Min, Max ', 0, AM_S%Q_max
     call exit_MPI(0, 'Attenuation Value out of Range')
   endif
 
-  if(rw > 0 .AND. Qmu <= ZERO_TOL) then
+  if (rw > 0 .AND. Qmu <= ZERO_TOL) then
     Qmu = 0.0d0;
     tau_eps(:) = 0.0d0;
     return
@@ -862,9 +862,9 @@
   ! but Qmu_new is not used any further...
   Qmu_new = dble(Qtmp) / dble(AM_S%Q_resolution)
 
-  if(rw > 0) then
+  if (rw > 0) then
     ! READ
-    if(AM_S%Qmu_storage(Qtmp) > 0) then
+    if (AM_S%Qmu_storage(Qtmp) > 0) then
       ! READ SUCCESSFUL
       tau_eps(:)   = AM_S%tau_eps_storage(:, Qtmp)
       Qmu        = AM_S%Qmu_storage(Qtmp)
@@ -937,7 +937,7 @@
   exp1 = log10(f1)
   exp2 = log10(f2)
 
-!  if(f2 < f1 .OR. Q_real < 0.0d0 .OR. n < 1) then
+!  if (f2 < f1 .OR. Q_real < 0.0d0 .OR. n < 1) then
 !     call exit_MPI(0, 'frequencies flipped or Q less than zero or N_SLS < 0')
 !  endif
 
@@ -971,7 +971,7 @@
 
   ! Run a simplex search to determine the optimum values of tau_eps
   call fminsearch(attenuation_eval, tau_eps, n, iterations, min_value, prnt, err,AS_V)
-  if(err > 0) then
+  if (err > 0) then
     write(*,*)'Search did not converge for an attenuation of ', Q_real
     write(*,*)'    Iterations: ', iterations
     write(*,*)'    Min Value:  ', min_value
@@ -1021,7 +1021,7 @@
 
   allocate(AS_V%f(nf_in), &
           AS_V%tau_s(nsls_in),stat=ier)
-  if( ier /= 0 ) stop 'error allocating arrays for attenuation simplex'
+  if (ier /= 0) stop 'error allocating arrays for attenuation simplex'
 
   AS_V%nf    = nf_in
   AS_V%nsls  = nsls_in
@@ -1096,7 +1096,7 @@
   attenuation_eval = 0.0d0
   iQ2 = AS_V%iQ**2
   do i = 1,AS_V%nf
-    xi = sqrt(( ( (tan_delta(i) - AS_V%iQ) ** 2 ) / iQ2 ))
+    xi = sqrt(( ( (tan_delta(i) - AS_V%iQ) ** 2) / iQ2 ))
     attenuation_eval = attenuation_eval + xi
   enddo
 
@@ -1259,7 +1259,7 @@
   sigma = 0.5d0
 
 
-  if(itercount > 0) then
+  if (itercount > 0) then
      maxiter = itercount
   else
      maxiter = 200 * n
@@ -1267,7 +1267,7 @@
   itercount = 0
   maxfun  = 200 * n
 
-  if(tolf > 0.0d0) then
+  if (tolf > 0.0d0) then
      tolx = 1.0e-4
   else
      tolx = 1.0e-4
@@ -1290,7 +1290,7 @@
 
   do j = 1,n
      y = xin
-     if(y(j) /= 0.0d0) then
+     if (y(j) /= 0.0d0) then
         y(j) = (1.0d0 + usual_delta) * y(j)
      else
         y(j) = zero_term_delta
@@ -1310,11 +1310,11 @@
   how = initial
   itercount = 1
   func_evals = n+1
-  if(prnt == 3) then
+  if (prnt == 3) then
      write(*,*)'Iterations   Funk Evals   Value How'
      write(*,*)itercount, func_evals, fv(1), how
   endif
-  if(prnt == 4) then
+  if (prnt == 4) then
      write(*,*)'How: ',how
      write(*,*)'V: ', v
      write(*,*)'fv: ',fv
@@ -1323,7 +1323,7 @@
 
   do while (func_evals < maxfun .AND. itercount < maxiter)
 
-     if(max_size_simplex(v,n) <= tolx .AND. &
+     if (max_size_simplex(v,n) <= tolx .AND. &
           max_value(fv,n+1) <= tolf) then
         goto 666
      endif
@@ -1424,11 +1424,11 @@
      endif
   enddo
 
-  if(func_evals > maxfun) then
+  if (func_evals > maxfun) then
      write(*,*)'function evaluations exceeded prescribed limit', maxfun
      err = 1
   endif
-  if(itercount > maxiter) then
+  if (itercount > maxiter) then
      write(*,*)'iterations exceeded prescribed limit', maxiter
      err = 2
   endif
@@ -1468,7 +1468,7 @@
   m = 0.0d0
   do i = 2,n
      z = abs(fv(1) - fv(i))
-     if(z > m) then
+     if (z > m) then
         m = z
      endif
   enddo
@@ -1505,7 +1505,7 @@
   do i = 1,n
      do j = 2,n+1
         z = abs(v(i,j) - v(i,1))
-        if(z > m) then
+        if (z > m) then
            m = z
         endif
      enddo
@@ -1556,7 +1556,7 @@
 
   do j = 1,n
      do k = 1,n-j
-        if(X(k+1) < X(k)) then
+        if (X(k+1) < X(k)) then
            rtmp   = X(k)
            X(k)   = X(k+1)
            X(k+1) = rtmp

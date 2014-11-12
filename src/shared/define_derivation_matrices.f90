@@ -60,7 +60,7 @@
   call zwgljd(zigll,wzgll,NGLLZ,GAUSSALPHA,GAUSSBETA)
 
 ! distinguish between single and double precision for reals
-  if(CUSTOM_REAL == SIZE_REAL) then
+  if (CUSTOM_REAL == SIZE_REAL) then
 
 ! calculate derivatives of the Lagrange polynomials
 ! and precalculate some products in double precision

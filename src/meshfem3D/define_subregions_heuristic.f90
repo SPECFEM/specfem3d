@@ -54,7 +54,7 @@
 
 ! **************
 
-  if(isubregion == 8) then
+  if (isubregion == 8) then
 
     call unusual_hex_nodes1(iaddx,iaddy,iaddz)
 
@@ -79,7 +79,7 @@
 
     itype_element = ITYPE_UNUSUAL_1
 
-  else if(isubregion == 7) then
+  else if (isubregion == 7) then
 
     call unusual_hex_nodes1p(iaddx,iaddy,iaddz)
 
@@ -104,7 +104,7 @@
 
     itype_element = ITYPE_UNUSUAL_1p
 
-  else if(isubregion == 6) then
+  else if (isubregion == 6) then
 
     call unusual_hex_nodes4(iaddx,iaddy,iaddz)
 
@@ -129,7 +129,7 @@
 
     itype_element = ITYPE_UNUSUAL_4
 
-  else if(isubregion == 5) then
+  else if (isubregion == 5) then
 
     call unusual_hex_nodes4p(iaddx,iaddy,iaddz)
 
@@ -154,7 +154,7 @@
 
     itype_element = ITYPE_UNUSUAL_4p
 
-  else if(isubregion == 4) then
+  else if (isubregion == 4) then
 
     call unusual_hex_nodes1(iaddx,iaddy,iaddz)
 
@@ -179,7 +179,7 @@
 
     itype_element = ITYPE_UNUSUAL_1
 
-  else if(isubregion == 3) then
+  else if (isubregion == 3) then
 
     call unusual_hex_nodes1p(iaddx,iaddy,iaddz)
 
@@ -204,7 +204,7 @@
 
     itype_element = ITYPE_UNUSUAL_1p
 
-  else if(isubregion == 2) then
+  else if (isubregion == 2) then
 
     call unusual_hex_nodes4(iaddx,iaddy,iaddz)
 
@@ -229,7 +229,7 @@
 
     itype_element = ITYPE_UNUSUAL_4
 
-  else if(isubregion == 1) then
+  else if (isubregion == 1) then
 
     call unusual_hex_nodes4p(iaddx,iaddy,iaddz)
 

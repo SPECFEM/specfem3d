@@ -15,7 +15,7 @@ program test_valence
 
   ! allocates mesh elements
   allocate(elmnts(NGNOD,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array elmnts'
+  if (ier /= 0) stop 'error allocating array elmnts'
   elmnts(:,:) = 0
 
   print*,'nspec  = ',nspec
@@ -41,7 +41,7 @@ program test_valence
 
   ! checks
   print*,'nsize = ',nsize
-  if( nsize /= 1 ) then
+  if (nsize /= 1) then
     print*,'error valence: nsize =',nsize,'should be 1'
     stop 1
   else
@@ -58,7 +58,7 @@ program test_valence
 
   ! allocates mesh elements
   allocate(elmnts(NGNOD,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array elmnts'
+  if (ier /= 0) stop 'error allocating array elmnts'
   elmnts(:,:) = 0
   print*,'nspec  = ',nspec
   print*,'NGNOD  = ',NGNOD
@@ -68,15 +68,15 @@ program test_valence
   do ispec = 1,nspec
     do i = 1,NGNOD
       ! connects arbitrary nodes
-      if( ispec == 3 .and. i == 3) then
+      if (ispec == 3 .and. i == 3) then
         elmnts(i,ispec) = 2
-      else if( ispec == 4 .and. i == 9) then
+      else if (ispec == 4 .and. i == 9) then
         elmnts(i,ispec) = 2
-      else if( ispec == 5 .and. i == 12) then
+      else if (ispec == 5 .and. i == 12) then
         elmnts(i,ispec) = 2
-      else if( ispec == 9 .and. i == 17) then
+      else if (ispec == 9 .and. i == 17) then
         elmnts(i,ispec) = 2
-      else if( ispec == 12 .and. i == 27) then
+      else if (ispec == 12 .and. i == 27) then
         elmnts(i,ispec) = 2
       else
         inode = inode + 1
@@ -96,7 +96,7 @@ program test_valence
 
   ! checks
   print*,'nsize = ',nsize
-  if( nsize /= 6 ) then
+  if (nsize /= 6) then
     print*,'error valence: nsize =',nsize,'should be 6'
     stop 1
   else

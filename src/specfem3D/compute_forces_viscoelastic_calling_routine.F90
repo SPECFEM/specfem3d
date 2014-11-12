@@ -63,14 +63,14 @@ subroutine compute_forces_viscoelastic()
   do iphase=1,2
 
     !first for points on MPI interfaces
-    if( iphase == 1 ) then
+    if (iphase == 1) then
       phase_is_inner = .false.
     else
       phase_is_inner = .true.
     endif
 
 ! elastic term
-    if(USE_DEVILLE_PRODUCTS) then
+    if (USE_DEVILLE_PRODUCTS) then
       ! uses Deville (2002) optimizations
       call compute_forces_viscoelastic_Dev_sim1(iphase)
 
@@ -108,7 +108,7 @@ subroutine compute_forces_viscoelastic()
 
 
 ! adds elastic absorbing boundary term to acceleration (Stacey conditions)
-    if( STACEY_ABSORBING_CONDITIONS ) then
+    if (STACEY_ABSORBING_CONDITIONS) then
       call compute_stacey_viscoelastic(NSPEC_AB,NGLOB_AB,accel, &
                        ibool,ispec_is_inner,phase_is_inner, &
                        abs_boundary_normal,abs_boundary_jacobian2Dw, &
@@ -123,8 +123,8 @@ subroutine compute_forces_viscoelastic()
 
 
 ! acoustic coupling
-    if( ACOUSTIC_SIMULATION ) then
-      if( num_coupling_ac_el_faces > 0 ) then
+    if (ACOUSTIC_SIMULATION) then
+      if (num_coupling_ac_el_faces > 0) then
         if (SIMULATION_TYPE == 1) then
           ! forward definition: pressure=-potential_dot_dot
           call compute_coupling_viscoelastic_ac(NSPEC_AB,NGLOB_AB, &
@@ -164,7 +164,7 @@ subroutine compute_forces_viscoelastic()
 
 
 ! poroelastic coupling
-    if( POROELASTIC_SIMULATION ) then
+    if (POROELASTIC_SIMULATION) then
       call compute_coupling_viscoelastic_po(NSPEC_AB,NGLOB_AB,ibool,&
                         displs_poroelastic,displw_poroelastic,&
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
@@ -187,7 +187,7 @@ subroutine compute_forces_viscoelastic()
     endif
 
     !! CD CD !! For coupling with DSM
-    if(.not. COUPLE_WITH_EXTERNAL_CODE) then
+    if (.not. COUPLE_WITH_EXTERNAL_CODE) then
       ! adds source term (single-force/moment-tensor solution)
       call compute_add_sources_viscoelastic(NSPEC_AB,NGLOB_AB,accel, &
                                             ibool,ispec_is_inner,phase_is_inner, &
@@ -201,7 +201,7 @@ subroutine compute_forces_viscoelastic()
     !! CD CD
 
     ! assemble all the contributions between slices using MPI
-    if( phase_is_inner .eqv. .false. ) then
+    if (phase_is_inner .eqv. .false.) then
        ! sends accel values to corresponding MPI interface neighbors
        call assemble_MPI_vector_async_send(NPROC,NGLOB_AB,accel, &
                buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
@@ -233,7 +233,7 @@ subroutine compute_forces_viscoelastic()
   accel(3,:) = accel(3,:)*rmassz(:)
 
 ! updates acceleration with ocean load term
-  if(APPROXIMATE_OCEAN_LOAD) then
+  if (APPROXIMATE_OCEAN_LOAD) then
     call compute_coupling_ocean(NSPEC_AB,NGLOB_AB, &
                                 ibool,rmassx,rmassy,rmassz, &
                                 rmass_ocean_load,accel, &
@@ -242,12 +242,12 @@ subroutine compute_forces_viscoelastic()
   endif
 
   ! C-PML boundary
-  if( PML_CONDITIONS ) then
+  if (PML_CONDITIONS) then
     do iface=1,num_abs_boundary_faces
       ispec = abs_boundary_ispec(iface)
 !!! It is better to move this into do iphase=1,2 loop
 !!!        if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
-      if( ispec_is_elastic(ispec) .and. is_CPML(ispec)) then
+      if (ispec_is_elastic(ispec) .and. is_CPML(ispec)) then
         ! reference gll points on boundary face
         do igll = 1,NGLLSQUARE
           ! gets local indices for GLL point
@@ -274,7 +274,7 @@ subroutine compute_forces_viscoelastic()
 !
 ! u(t+delta_t) = u(t) + delta_t  v(t) + 1/2  delta_t**2 a(t)
 ! v(t+delta_t) = v(t) + 1/2 delta_t a(t) + 1/2 delta_t a(t+delta_t)
-! a(t+delta_t) = 1/M_elastic ( -K_elastic u(t+delta) + B_elastic chi_dot_dot(t+delta_t) + f( t+delta_t) )
+! a(t+delta_t) = 1/M_elastic ( -K_elastic u(t+delta) + B_elastic chi_dot_dot(t+delta_t) + f( t+delta_t))
 !
 ! where
 !   u, v, a are displacement,velocity & acceleration
@@ -286,9 +286,9 @@ subroutine compute_forces_viscoelastic()
 !   updates the velocity term which requires a(t+delta)
   veloc(:,:) = veloc(:,:) + deltatover2*accel(:,:)
 
-  if( PML_CONDITIONS ) then
-    if( SIMULATION_TYPE == 1 .and. SAVE_FORWARD ) then
-      if( nglob_interface_PML_elastic > 0 ) then
+  if (PML_CONDITIONS) then
+    if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
+      if (nglob_interface_PML_elastic > 0) then
         call save_field_on_pml_interface(displ,veloc,accel,nglob_interface_PML_elastic,&
                                          b_PML_field,b_reclen_PML_field)
       endif
@@ -319,14 +319,14 @@ subroutine compute_forces_viscoelastic_bpwf()
   logical:: phase_is_inner
 
   ! checks
-  if( SIMULATION_TYPE /= 3 ) &
+  if (SIMULATION_TYPE /= 3) &
     call exit_MPI(myrank,'error calling compute_forces_viscoelastic_bpwf() with wrong SIMULATION_TYPE')
 
   ! distinguishes two runs: for points on MPI interfaces, and points within the partitions
   do iphase=1,2
 
     !first for points on MPI interfaces
-    if( iphase == 1 ) then
+    if (iphase == 1) then
       phase_is_inner = .false.
     else
       phase_is_inner = .true.
@@ -334,7 +334,7 @@ subroutine compute_forces_viscoelastic_bpwf()
 
 
 ! elastic term
-    if(USE_DEVILLE_PRODUCTS) then
+    if (USE_DEVILLE_PRODUCTS) then
       ! adjoint simulations: backward/reconstructed wavefield
       call compute_forces_viscoelastic_Dev_sim3(iphase)
 
@@ -372,7 +372,7 @@ subroutine compute_forces_viscoelastic_bpwf()
 
 
 ! adds elastic absorbing boundary term to acceleration (Stacey conditions)
-    if( STACEY_ABSORBING_CONDITIONS ) then
+    if (STACEY_ABSORBING_CONDITIONS) then
       call compute_stacey_viscoelastic_bpwf(NSPEC_AB, &
                        ibool,ispec_is_inner,phase_is_inner, &
                        abs_boundary_ijk,abs_boundary_ispec, &
@@ -384,8 +384,8 @@ subroutine compute_forces_viscoelastic_bpwf()
 
 
 ! acoustic coupling
-    if( ACOUSTIC_SIMULATION ) then
-      if( num_coupling_ac_el_faces > 0 ) then
+    if (ACOUSTIC_SIMULATION) then
+      if (num_coupling_ac_el_faces > 0) then
         ! adjoint simulations
         call compute_coupling_viscoelastic_ac(NSPEC_ADJOINT,NGLOB_ADJOINT, &
                       ibool,b_accel,b_potential_dot_dot_acoustic, &
@@ -403,7 +403,7 @@ subroutine compute_forces_viscoelastic_bpwf()
 
 
 ! poroelastic coupling
-    if( POROELASTIC_SIMULATION ) then
+    if (POROELASTIC_SIMULATION) then
       stop 'poroelastic-elastic coupling error'
     endif
 
@@ -416,7 +416,7 @@ subroutine compute_forces_viscoelastic_bpwf()
                         b_accel,NOISE_TOMOGRAPHY)
 
     ! assemble all the contributions between slices using MPI
-    if( phase_is_inner .eqv. .false. ) then
+    if (phase_is_inner .eqv. .false.) then
       ! sends accel values to corresponding MPI interface neighbors
       ! adjoint simulations
       call assemble_MPI_vector_async_send(NPROC,NGLOB_ADJOINT,b_accel, &
@@ -445,7 +445,7 @@ subroutine compute_forces_viscoelastic_bpwf()
   b_accel(3,:) = b_accel(3,:)*rmassz(:)
 
 ! updates acceleration with ocean load term
-  if(APPROXIMATE_OCEAN_LOAD) then
+  if (APPROXIMATE_OCEAN_LOAD) then
     call compute_coupling_ocean_bpwf(NSPEC_AB,NGLOB_AB, &
                                      ibool,rmassx,rmassy,rmassz, &
                                      rmass_ocean_load, &
@@ -462,7 +462,7 @@ subroutine compute_forces_viscoelastic_bpwf()
 !
 ! u(t+delta_t) = u(t) + delta_t  v(t) + 1/2  delta_t**2 a(t)
 ! v(t+delta_t) = v(t) + 1/2 delta_t a(t) + 1/2 delta_t a(t+delta_t)
-! a(t+delta_t) = 1/M_elastic ( -K_elastic u(t+delta) + B_elastic chi_dot_dot(t+delta_t) + f( t+delta_t) )
+! a(t+delta_t) = 1/M_elastic ( -K_elastic u(t+delta) + B_elastic chi_dot_dot(t+delta_t) + f( t+delta_t))
 !
 ! where
 !   u, v, a are displacement,velocity & acceleration
@@ -498,7 +498,7 @@ subroutine compute_forces_viscoelastic_Dev_sim1(iphase)
 
   integer,intent(in) :: iphase
 
-  select case(NGLLX)
+  select case (NGLLX)
 
   case (5)
 
@@ -592,7 +592,7 @@ subroutine compute_forces_viscoelastic_Dev_sim3(iphase)
 
   integer,intent(in) :: iphase
 
-  select case(NGLLX)
+  select case (NGLLX)
 
   case (5)
     call compute_forces_viscoelastic_Dev_5p(iphase, NSPEC_AB,NGLOB_AB, &
@@ -652,14 +652,14 @@ subroutine compute_forces_viscoelastic_GPU()
   logical:: phase_is_inner
 
   ! check
-  if( PML_CONDITIONS ) &
+  if (PML_CONDITIONS) &
     call exit_MPI(myrank,'PML conditions not yet implemented for routine compute_forces_viscoelastic_GPU()')
 
   ! distinguishes two runs: for points on MPI interfaces, and points within the partitions
   do iphase=1,2
 
     !first for points on MPI interfaces
-    if( iphase == 1 ) then
+    if (iphase == 1) then
       phase_is_inner = .false.
     else
       phase_is_inner = .true.
@@ -674,7 +674,7 @@ subroutine compute_forces_viscoelastic_GPU()
 
     ! while inner elements compute "Kernel_2", we wait for MPI to
     ! finish and transfer the boundary terms to the device asynchronously
-    if(phase_is_inner .eqv. .true.) then
+    if (phase_is_inner .eqv. .true.) then
       !daniel: todo - this avoids calling the fortran vector send from CUDA routine
       ! wait for asynchronous copy to finish
       call sync_copy_from_device(Mesh_pointer,iphase,buffer_send_vector_ext_mesh)
@@ -694,7 +694,7 @@ subroutine compute_forces_viscoelastic_GPU()
     endif ! inner elements
 
     ! adds elastic absorbing boundary term to acceleration (Stacey conditions)
-    if( STACEY_ABSORBING_CONDITIONS ) then
+    if (STACEY_ABSORBING_CONDITIONS) then
       call compute_stacey_viscoelastic_GPU(phase_is_inner,num_abs_boundary_faces, &
                                            SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it, &
                                            b_num_abs_boundary_faces,b_reclen_field,b_absorb_field, &
@@ -703,15 +703,15 @@ subroutine compute_forces_viscoelastic_GPU()
     endif
 
     ! acoustic coupling
-    if( ACOUSTIC_SIMULATION ) then
-      if( num_coupling_ac_el_faces > 0 ) then
+    if (ACOUSTIC_SIMULATION) then
+      if (num_coupling_ac_el_faces > 0) then
         call compute_coupling_el_ac_cuda(Mesh_pointer,phase_is_inner, &
                                          num_coupling_ac_el_faces)
       endif
     endif
 
     ! poroelastic coupling
-    if( POROELASTIC_SIMULATION ) then
+    if (POROELASTIC_SIMULATION) then
       ! note:
       ! these routines are not implemented as CUDA kernels, we just transfer the fields
       ! from the GPU to the CPU and vice versa
@@ -755,7 +755,7 @@ subroutine compute_forces_viscoelastic_GPU()
                         Mesh_pointer)
 
     ! assemble all the contributions between slices using MPI
-    if( phase_is_inner .eqv. .false. ) then
+    if (phase_is_inner .eqv. .false.) then
       ! sends accel values to corresponding MPI interface neighbors
 
       ! transfers boundary region to host asynchronously. The
@@ -765,7 +765,7 @@ subroutine compute_forces_viscoelastic_GPU()
       call transfer_boundary_from_device_a(Mesh_pointer,nspec_outer_elastic)
 
       ! adjoint simulations
-      if( SIMULATION_TYPE == 3 ) then
+      if (SIMULATION_TYPE == 3) then
         call transfer_boun_accel_from_device(Mesh_pointer, b_accel,&
                         b_buffer_send_vector_ext_mesh,&
                         3) ! <-- 3 == adjoint b_accel
@@ -786,7 +786,7 @@ subroutine compute_forces_viscoelastic_GPU()
                       request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
                       1)
       ! adjoint simulations
-      if( SIMULATION_TYPE == 3 ) then
+      if (SIMULATION_TYPE == 3) then
         call assemble_MPI_vector_write_cuda(NPROC,NGLOB_AB,b_accel, Mesh_pointer,&
                               b_buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh,&
                               max_nibool_interfaces_ext_mesh, &
@@ -800,7 +800,7 @@ subroutine compute_forces_viscoelastic_GPU()
 
 !Percy , Fault boundary term B*tau is added to the assembled forces
 !        which at this point are stored in the array 'accel'
-  if (SIMULATION_TYPE_DYN .or. SIMULATION_TYPE_KIN ) then
+  if (SIMULATION_TYPE_DYN .or. SIMULATION_TYPE_KIN) then
     ! transfers wavefields to the CPU
     call transfer_fields_el_from_device(NDIM*NGLOB_AB,displ,veloc,accel, Mesh_pointer)
 
@@ -816,7 +816,7 @@ subroutine compute_forces_viscoelastic_GPU()
  call kernel_3_a_cuda(Mesh_pointer,deltatover2,b_deltatover2,APPROXIMATE_OCEAN_LOAD)
 
 ! updates acceleration with ocean load term
-  if(APPROXIMATE_OCEAN_LOAD) then
+  if (APPROXIMATE_OCEAN_LOAD) then
     call compute_coupling_ocean_cuda(Mesh_pointer)
 
     ! updates velocities
@@ -825,7 +825,7 @@ subroutine compute_forces_viscoelastic_GPU()
     !
     ! u(t+delta_t) = u(t) + delta_t  v(t) + 1/2  delta_t**2 a(t)
     ! v(t+delta_t) = v(t) + 1/2 delta_t a(t) + 1/2 delta_t a(t+delta_t)
-    ! a(t+delta_t) = 1/M_elastic ( -K_elastic u(t+delta) + B_elastic chi_dot_dot(t+delta_t) + f( t+delta_t) )
+    ! a(t+delta_t) = 1/M_elastic ( -K_elastic u(t+delta) + B_elastic chi_dot_dot(t+delta_t) + f( t+delta_t))
     !
     ! where
     !   u, v, a are displacement,velocity & acceleration

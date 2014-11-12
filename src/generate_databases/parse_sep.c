@@ -63,7 +63,7 @@ FC_FUNC_(parse_sep_header, PARSE_SEP_HEADER)
     EXIT_ON_ERR("regcomp");
 
   /* Apply the regex to every line of the sep header */
-  while(getline(&line, &len, fd) != -1) {
+  while (getline(&line, &len, fd) != -1) {
 
     char name[512], value[512];
     size_t nmatch = 3;

@@ -39,28 +39,28 @@
 
   ! outputs total element numbers
   call sum_all_i(count(ispec_is_acoustic(:)),inum)
-  if( myrank == 0 ) then
+  if (myrank == 0) then
     write(IMAIN,*) 'total acoustic elements    :',inum
   endif
   call sum_all_i(count(ispec_is_elastic(:)),inum)
-  if( myrank == 0 ) then
+  if (myrank == 0) then
     write(IMAIN,*) 'total elastic elements     :',inum
   endif
   call sum_all_i(count(ispec_is_poroelastic(:)),inum)
-  if( myrank == 0 ) then
+  if (myrank == 0) then
     write(IMAIN,*) 'total poroelastic elements :',inum
     call flush_IMAIN()
   endif
 
   ! checks Courant criteria on mesh
-  if( ELASTIC_SIMULATION ) then
+  if (ELASTIC_SIMULATION) then
     call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB, &
                                ibool,xstore,ystore,zstore, &
                                kappastore,mustore,rho_vp,rho_vs, &
                                DT,model_speed_max,min_resolved_period, &
                                LOCAL_PATH,SAVE_MESH_FILES)
 
-  else if( POROELASTIC_SIMULATION ) then
+  else if (POROELASTIC_SIMULATION) then
     allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
     allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
     rho_vp = 0.0_CUSTOM_REAL
@@ -70,11 +70,11 @@
                                     phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI, &
                                     LOCAL_PATH,SAVE_MESH_FILES)
     deallocate(rho_vp,rho_vs)
-  else if( ACOUSTIC_SIMULATION ) then
+  else if (ACOUSTIC_SIMULATION) then
     allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array rho_vp'
+    if (ier /= 0) stop 'error allocating array rho_vp'
     allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array rho_vs'
+    if (ier /= 0) stop 'error allocating array rho_vs'
     rho_vp = sqrt( kappastore / rhostore ) * rhostore
     rho_vs = 0.0_CUSTOM_REAL
     call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB, &
@@ -86,7 +86,7 @@
   endif
 
   ! user output
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*) '******************************************'
     write(IMAIN,*) 'There is a total of ',NPROC,' slices'
     write(IMAIN,*) '******************************************'
@@ -125,7 +125,7 @@
            hpetar(NGLLY), &
            hgammar(NGLLZ), &
            hpgammar(NGLLZ),stat=ier)
-  if( ier /= 0 ) stop 'error allocating arrays for interpolators'
+  if (ier /= 0) stop 'error allocating arrays for interpolators'
 
   ! create name of database
   call create_name_database(prname,myrank,LOCAL_PATH)

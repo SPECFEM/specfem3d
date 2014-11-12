@@ -63,12 +63,12 @@
   double precision xelm(NGNOD2D),yelm(NGNOD2D),zelm(NGNOD2D)
 
 ! check that the parameter file is correct
-  if(NGNOD2D /= 4 .and. NGNOD2D /= 9) &
+  if (NGNOD2D /= 4 .and. NGNOD2D /= 9) &
     call exit_MPI(myrank,'surface elements should have 4 or 9 control nodes')
 
-  select case ( iface )
+  select case (iface)
   ! on reference face: xmin
-  case(1)
+  case (1)
     xelm(1)=xstore_dummy( ibool(1,1,1,ispec) )
     yelm(1)=ystore_dummy( ibool(1,1,1,ispec) )
     zelm(1)=zstore_dummy( ibool(1,1,1,ispec) )
@@ -82,7 +82,7 @@
     yelm(4)=ystore_dummy( ibool(1,1,NGLLZ,ispec) )
     zelm(4)=zstore_dummy( ibool(1,1,NGLLZ,ispec) )
 
-    if(NGNOD2D == 9) then
+    if (NGNOD2D == 9) then
       xelm(5)=xstore_dummy( ibool(1,(NGLLY+1)/2,1,ispec) )
       yelm(5)=ystore_dummy( ibool(1,(NGLLY+1)/2,1,ispec) )
       zelm(5)=zstore_dummy( ibool(1,(NGLLY+1)/2,1,ispec) )
@@ -105,7 +105,7 @@
                   jacobian2Dw_face,normal_face,NGLLY,NGLLZ,NGNOD2D)
 
 ! on boundary: xmax
-  case(2)
+  case (2)
     xelm(1)=xstore_dummy( ibool(NGLLX,1,1,ispec) )
     yelm(1)=ystore_dummy( ibool(NGLLX,1,1,ispec) )
     zelm(1)=zstore_dummy( ibool(NGLLX,1,1,ispec) )
@@ -119,7 +119,7 @@
     yelm(4)=ystore_dummy( ibool(NGLLX,1,NGLLZ,ispec) )
     zelm(4)=zstore_dummy( ibool(NGLLX,1,NGLLZ,ispec) )
 
-    if(NGNOD2D == 9) then
+    if (NGNOD2D == 9) then
       xelm(5)=xstore_dummy( ibool(NGLLX,(NGLLY+1)/2,1,ispec) )
       yelm(5)=ystore_dummy( ibool(NGLLX,(NGLLY+1)/2,1,ispec) )
       zelm(5)=zstore_dummy( ibool(NGLLX,(NGLLY+1)/2,1,ispec) )
@@ -142,7 +142,7 @@
                   jacobian2Dw_face,normal_face,NGLLY,NGLLZ,NGNOD2D)
 
 ! on boundary: ymin
-  case(3)
+  case (3)
     xelm(1)=xstore_dummy( ibool(1,1,1,ispec) )
     yelm(1)=ystore_dummy( ibool(1,1,1,ispec) )
     zelm(1)=zstore_dummy( ibool(1,1,1,ispec) )
@@ -156,7 +156,7 @@
     yelm(4)=ystore_dummy( ibool(1,1,NGLLZ,ispec) )
     zelm(4)=zstore_dummy( ibool(1,1,NGLLZ,ispec) )
 
-    if(NGNOD2D == 9) then
+    if (NGNOD2D == 9) then
       xelm(5)=xstore_dummy( ibool((NGLLX+1)/2,1,1,ispec) )
       yelm(5)=ystore_dummy( ibool((NGLLX+1)/2,1,1,ispec) )
       zelm(5)=zstore_dummy( ibool((NGLLX+1)/2,1,1,ispec) )
@@ -179,7 +179,7 @@
                   jacobian2Dw_face,normal_face,NGLLX,NGLLZ,NGNOD2D)
 
 ! on boundary: ymax
-  case(4)
+  case (4)
     xelm(1)=xstore_dummy( ibool(1,NGLLY,1,ispec) )
     yelm(1)=ystore_dummy( ibool(1,NGLLY,1,ispec) )
     zelm(1)=zstore_dummy( ibool(1,NGLLY,1,ispec) )
@@ -193,7 +193,7 @@
     yelm(4)=ystore_dummy( ibool(1,NGLLY,NGLLZ,ispec) )
     zelm(4)=zstore_dummy( ibool(1,NGLLY,NGLLZ,ispec) )
 
-    if(NGNOD2D == 9) then
+    if (NGNOD2D == 9) then
       xelm(5)=xstore_dummy( ibool((NGLLX+1)/2,NGLLY,1,ispec) )
       yelm(5)=ystore_dummy( ibool((NGLLX+1)/2,NGLLY,1,ispec) )
       zelm(5)=zstore_dummy( ibool((NGLLX+1)/2,NGLLY,1,ispec) )
@@ -217,7 +217,7 @@
 
 
 ! on boundary: bottom
-  case(5)
+  case (5)
     xelm(1)=xstore_dummy( ibool(1,1,1,ispec) )
     yelm(1)=ystore_dummy( ibool(1,1,1,ispec) )
     zelm(1)=zstore_dummy( ibool(1,1,1,ispec) )
@@ -231,7 +231,7 @@
     yelm(4)=ystore_dummy( ibool(1,NGLLY,1,ispec) )
     zelm(4)=zstore_dummy( ibool(1,NGLLY,1,ispec) )
 
-    if(NGNOD2D == 9) then
+    if (NGNOD2D == 9) then
       xelm(5)=xstore_dummy( ibool((NGLLX+1)/2,1,1,ispec) )
       yelm(5)=ystore_dummy( ibool((NGLLX+1)/2,1,1,ispec) )
       zelm(5)=zstore_dummy( ibool((NGLLX+1)/2,1,1,ispec) )
@@ -254,7 +254,7 @@
                   jacobian2Dw_face,normal_face,NGLLX,NGLLY,NGNOD2D)
 
 ! on boundary: top
-  case(6)
+  case (6)
     xelm(1)=xstore_dummy( ibool(1,1,NGLLZ,ispec) )
     yelm(1)=ystore_dummy( ibool(1,1,NGLLZ,ispec) )
     zelm(1)=zstore_dummy( ibool(1,1,NGLLZ,ispec) )
@@ -268,7 +268,7 @@
     yelm(4)=ystore_dummy( ibool(1,NGLLY,NGLLZ,ispec) )
     zelm(4)=zstore_dummy( ibool(1,NGLLY,NGLLZ,ispec) )
 
-    if(NGNOD2D == 9) then
+    if (NGNOD2D == 9) then
       xelm(5)=xstore_dummy( ibool((NGLLX+1)/2,1,NGLLZ,ispec) )
       yelm(5)=ystore_dummy( ibool((NGLLX+1)/2,1,NGLLZ,ispec) )
       zelm(5)=zstore_dummy( ibool((NGLLX+1)/2,1,NGLLZ,ispec) )
@@ -347,12 +347,12 @@
       uny=zxi*xeta-zeta*xxi
       unz=xxi*yeta-xeta*yxi
       jacobian=dsqrt(unx*unx+uny*uny+unz*unz)
-      if(jacobian <= ZERO) call exit_MPI(myrank,'2D Jacobian undefined')
+      if (jacobian <= ZERO) call exit_MPI(myrank,'2D Jacobian undefined')
 
       !   normalize normal vector and store weighted surface jacobian
 
       ! distinguish if single or double precision for reals
-      if(CUSTOM_REAL == SIZE_REAL) then
+      if (CUSTOM_REAL == SIZE_REAL) then
         jacobian2Dw_face(i,j) = sngl(jacobian * wgllwgll(i,j))
         normal_face(1,i,j)=sngl(unx/jacobian)
         normal_face(2,i,j)=sngl(uny/jacobian)

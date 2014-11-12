@@ -107,7 +107,7 @@ void setConst_hprime_xx(realw* array,Mesh* mp)
 #else
   err = cudaGetSymbolAddress((void**)&(mp->d_hprime_xx),d_hprime_xx);
 #endif
-  if(err != cudaSuccess) {
+  if (err != cudaSuccess) {
     fprintf(stderr, "Error with d_hprime_xx: %s\n", cudaGetErrorString(err));
     exit(1);
   }
@@ -125,7 +125,7 @@ void setConst_hprime_xx(realw* array,Mesh* mp)
 //   }
 
 //   err = cudaGetSymbolAddress((void**)&(mp->d_hprime_yy),"d_hprime_yy");
-//   if(err != cudaSuccess) {
+//   if (err != cudaSuccess) {
 //     fprintf(stderr, "Error with d_hprime_yy: %s\n", cudaGetErrorString(err));
 //     exit(1);
 //   }
@@ -143,7 +143,7 @@ void setConst_hprime_xx(realw* array,Mesh* mp)
 //   }
 
 //   err = cudaGetSymbolAddress((void**)&(mp->d_hprime_zz),"d_hprime_zz");
-//   if(err != cudaSuccess) {
+//   if (err != cudaSuccess) {
 //     fprintf(stderr, "Error with d_hprime_zz: %s\n", cudaGetErrorString(err));
 //     exit(1);
 //   }
@@ -164,7 +164,7 @@ void setConst_hprimewgll_xx(realw* array,Mesh* mp)
 #else
   err = cudaGetSymbolAddress((void**)&(mp->d_hprimewgll_xx),d_hprimewgll_xx);
 #endif
-  if(err != cudaSuccess) {
+  if (err != cudaSuccess) {
     fprintf(stderr, "Error with d_hprimewgll_xx: %s\n", cudaGetErrorString(err));
     exit(1);
   }
@@ -182,7 +182,7 @@ void setConst_hprimewgll_yy(realw* array,Mesh* mp)
   }
 
   err = cudaGetSymbolAddress((void**)&(mp->d_hprimewgll_yy),"d_hprimewgll_yy");
-  if(err != cudaSuccess) {
+  if (err != cudaSuccess) {
     fprintf(stderr, "Error with d_hprimewgll_yy: %s\n", cudaGetErrorString(err));
     exit(1);
   }
@@ -201,7 +201,7 @@ void setConst_hprimewgll_zz(realw* array,Mesh* mp)
   }
 
   err = cudaGetSymbolAddress((void**)&(mp->d_hprimewgll_zz),"d_hprimewgll_zz");
-  if(err != cudaSuccess) {
+  if (err != cudaSuccess) {
     fprintf(stderr, "Error with d_hprimewgll_zz: %s\n", cudaGetErrorString(err));
     exit(1);
   }
@@ -222,7 +222,7 @@ void setConst_wgllwgll_xy(realw* array,Mesh* mp)
 #else
   err = cudaGetSymbolAddress((void**)&(mp->d_wgllwgll_xy),d_wgllwgll_xy);
 #endif
-  if(err != cudaSuccess) {
+  if (err != cudaSuccess) {
     fprintf(stderr, "Error with d_wgllwgll_xy: %s\n", cudaGetErrorString(err));
     exit(1);
   }
@@ -243,7 +243,7 @@ void setConst_wgllwgll_xz(realw* array,Mesh* mp)
 #else
   err = cudaGetSymbolAddress((void**)&(mp->d_wgllwgll_xz),d_wgllwgll_xz);
 #endif
-  if(err != cudaSuccess) {
+  if (err != cudaSuccess) {
     fprintf(stderr, "Error with d_wgllwgll_xz: %s\n", cudaGetErrorString(err));
     exit(1);
   }
@@ -264,7 +264,7 @@ void setConst_wgllwgll_yz(realw* array,Mesh* mp)
 #else
   err = cudaGetSymbolAddress((void**)&(mp->d_wgllwgll_yz),d_wgllwgll_yz);
 #endif
-  if(err != cudaSuccess) {
+  if (err != cudaSuccess) {
     fprintf(stderr, "Error with d_wgllwgll_yz: %s\n", cudaGetErrorString(err));
     exit(1);
   }
@@ -285,7 +285,7 @@ void setConst_wgll_cube(realw* array,Mesh* mp)
 #else
   err = cudaGetSymbolAddress((void**)&(mp->d_wgll_cube),d_wgll_cube);
 #endif
-  if(err != cudaSuccess) {
+  if (err != cudaSuccess) {
     fprintf(stderr, "Error with d_wgll_cube: %s\n", cudaGetErrorString(err));
     exit(1);
   }

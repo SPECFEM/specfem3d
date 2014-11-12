@@ -171,7 +171,7 @@ FC_FUNC_(param_read,PARAM_READ)(char * string_read, int * string_read_len, char 
       continue;
     }
     // If any error, bail out with an error message.
-    if(regret != 0) {
+    if (regret != 0) {
       printf("regexec returned error %d\n", regret);
       *ierr = 1;
       regfree(&compiled_pattern);

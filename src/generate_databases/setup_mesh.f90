@@ -40,13 +40,13 @@
 
 ! use dynamic allocation to allocate memory for arrays
   allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array ibool'
+  if (ier /= 0) stop 'error allocating array ibool'
   allocate(xstore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array xstore'
+  if (ier /= 0) stop 'error allocating array xstore'
   allocate(ystore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array ystore'
+  if (ier /= 0) stop 'error allocating array ystore'
   allocate(zstore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+  if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
   call memory_eval_mesher(myrank,NSPEC_AB,npointot,nnodes_ext_mesh, &
                         nelmnts_ext_mesh,nmat_ext_mesh,num_interfaces_ext_mesh, &
@@ -60,7 +60,7 @@
   call synchronize_all()
 
 ! main working routine to create all the regions of the mesh
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*) 'create regions: '
   endif
   call create_regions_mesh()
@@ -84,7 +84,7 @@
   call min_all_dp(min_elevation,min_elevation_all)
   call max_all_dp(max_elevation,max_elevation_all)
 
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) 'min and max of topography included in mesh in m is ',min_elevation_all,' ',max_elevation_all
     write(IMAIN,*)

@@ -155,7 +155,7 @@
 ! saves mesh file proc***_external_mesh.bin
   filename = prname(1:len_trim(prname))//'external_mesh.bin'
   open(unit=IOUT,file=trim(filename),status='unknown',action='write',form='unformatted',iostat=ier)
-  if( ier /= 0 ) stop 'error opening database proc######_external_mesh.bin'
+  if (ier /= 0) stop 'error opening database proc######_external_mesh.bin'
 
   write(IOUT) nspec
   write(IOUT) nglob
@@ -187,16 +187,16 @@
 ! acoustic
 ! all processes will have acoustic_simulation set if any flag is .true. somewhere
   call any_all_l( ANY(ispec_is_acoustic), ACOUSTIC_SIMULATION )
-  if( ACOUSTIC_SIMULATION ) then
+  if (ACOUSTIC_SIMULATION) then
     write(IOUT) rmass_acoustic
     write(IOUT) rhostore
   endif
 
 ! elastic
   call any_all_l( ANY(ispec_is_elastic), ELASTIC_SIMULATION )
-  if( ELASTIC_SIMULATION ) then
+  if (ELASTIC_SIMULATION) then
     write(IOUT) rmass
-    if( APPROXIMATE_OCEAN_LOAD) then
+    if (APPROXIMATE_OCEAN_LOAD) then
       write(IOUT) rmass_ocean_load
     endif
     !pll Stacey
@@ -206,7 +206,7 @@
 
 ! poroelastic
   call any_all_l( ANY(ispec_is_poroelastic), POROELASTIC_SIMULATION )
-  if( POROELASTIC_SIMULATION ) then
+  if (POROELASTIC_SIMULATION) then
     write(IOUT) rmass_solid_poroelastic
     write(IOUT) rmass_fluid_poroelastic
     stop 'model update with poroelastic domains not supported yet'
@@ -214,25 +214,25 @@
 
 ! absorbing boundary surface
   write(IOUT) num_abs_boundary_faces
-  if(num_abs_boundary_faces > 0 ) then
+  if (num_abs_boundary_faces > 0) then
     write(IOUT) abs_boundary_ispec
     write(IOUT) abs_boundary_ijk
     write(IOUT) abs_boundary_jacobian2Dw
     write(IOUT) abs_boundary_normal
     ! store mass matrix contributions
-    if(ELASTIC_SIMULATION) then
+    if (ELASTIC_SIMULATION) then
      write(IOUT) rmassx
      write(IOUT) rmassy
      write(IOUT) rmassz
     endif
-    if(ACOUSTIC_SIMULATION) then
+    if (ACOUSTIC_SIMULATION) then
       write(IOUT) rmassz_acoustic
     endif
   endif
 
 ! free surface
   write(IOUT) num_free_surface_faces
-  if( num_free_surface_faces > 0 ) then
+  if (num_free_surface_faces > 0) then
     write(IOUT) free_surface_ispec
     write(IOUT) free_surface_ijk
     write(IOUT) free_surface_jacobian2Dw
@@ -241,25 +241,25 @@
 
 ! acoustic-elastic coupling surface
   write(IOUT) num_coupling_ac_el_faces
-  if( num_coupling_ac_el_faces > 0 ) then
+  if (num_coupling_ac_el_faces > 0) then
     stop 'coupling ac_po not updated yet'
   endif
 
 ! acoustic-poroelastic coupling surface
   write(IOUT) num_coupling_ac_po_faces
-  if( num_coupling_ac_po_faces > 0 ) then
+  if (num_coupling_ac_po_faces > 0) then
     stop 'coupling ac_po not updated yet'
   endif
 
 ! elastic-poroelastic coupling surface
   write(IOUT) num_coupling_el_po_faces
-  if( num_coupling_el_po_faces > 0 ) then
+  if (num_coupling_el_po_faces > 0) then
     stop 'coupling ac_po not updated yet'
   endif
 
 !MPI interfaces
   write(IOUT) num_interfaces_ext_mesh
-  if( num_interfaces_ext_mesh > 0 ) then
+  if (num_interfaces_ext_mesh > 0) then
     write(IOUT) max_nibool_interfaces_ext_mesh
     write(IOUT) my_neighbours_ext_mesh
     write(IOUT) nibool_interfaces_ext_mesh
@@ -267,7 +267,7 @@
   endif
 
 ! anisotropy
-  if( ELASTIC_SIMULATION .and. ANISOTROPY ) then
+  if (ELASTIC_SIMULATION .and. ANISOTROPY) then
     write(IOUT) c11store
     write(IOUT) c12store
     write(IOUT) c13store
@@ -294,31 +294,31 @@
 ! inner/outer elements
   write(IOUT) ispec_is_inner
 
-  if( ACOUSTIC_SIMULATION ) then
+  if (ACOUSTIC_SIMULATION) then
     write(IOUT) nspec_inner_acoustic,nspec_outer_acoustic
     write(IOUT) num_phase_ispec_acoustic
-    if(num_phase_ispec_acoustic > 0 ) write(IOUT) phase_ispec_inner_acoustic
+    if (num_phase_ispec_acoustic > 0) write(IOUT) phase_ispec_inner_acoustic
   endif
 
-  if( ELASTIC_SIMULATION ) then
+  if (ELASTIC_SIMULATION) then
     write(IOUT) nspec_inner_elastic,nspec_outer_elastic
     write(IOUT) num_phase_ispec_elastic
-    if(num_phase_ispec_elastic > 0 ) write(IOUT) phase_ispec_inner_elastic
+    if (num_phase_ispec_elastic > 0) write(IOUT) phase_ispec_inner_elastic
   endif
 
-  if( POROELASTIC_SIMULATION ) then
+  if (POROELASTIC_SIMULATION) then
     write(IOUT) nspec_inner_poroelastic,nspec_outer_poroelastic
     write(IOUT) num_phase_ispec_poroelastic
-    if(num_phase_ispec_poroelastic > 0 ) write(IOUT) phase_ispec_inner_poroelastic
+    if (num_phase_ispec_poroelastic > 0) write(IOUT) phase_ispec_inner_poroelastic
   endif
 
   ! mesh coloring
-  if( USE_MESH_COLORING_GPU ) then
-    if( ACOUSTIC_SIMULATION ) then
+  if (USE_MESH_COLORING_GPU) then
+    if (ACOUSTIC_SIMULATION) then
       write(IOUT) num_colors_outer_acoustic,num_colors_inner_acoustic
       write(IOUT) num_elem_colors_acoustic
     endif
-    if( ELASTIC_SIMULATION ) then
+    if (ELASTIC_SIMULATION) then
       write(IOUT) num_colors_outer_elastic,num_colors_inner_elastic
       write(IOUT) num_elem_colors_elastic
     endif
@@ -328,7 +328,7 @@
 
 
 ! stores arrays in binary files
-  if( SAVE_MESH_FILES ) then
+  if (SAVE_MESH_FILES) then
 
     ! mesh arrays used for example in combine_vol_data.f90
     !--- x coordinate
@@ -351,11 +351,11 @@
     write(27) ibool
     close(27)
 
-    allocate( v_tmp(NGLLX,NGLLY,NGLLZ,nspec), stat=ier); if( ier /= 0 ) stop 'error allocating array '
+    allocate( v_tmp(NGLLX,NGLLY,NGLLZ,nspec), stat=ier); if (ier /= 0) stop 'error allocating array '
 
     ! vp (for checking the mesh and model)
     !minimum = minval( abs(rho_vp) )
-    !if( minimum(1) /= 0.0 ) then
+    !if (minimum(1) /= 0.0) then
     !  v_tmp = (FOUR_THIRDS * mustore + kappastore) / rho_vp
     !else
     !  v_tmp = 0.0
@@ -376,7 +376,7 @@
 
     ! vs (for checking the mesh and model)
     !minimum = minval( abs(rho_vs) )
-    !if( minimum(1) /= 0.0 ) then
+    !if (minimum(1) /= 0.0) then
     !  v_tmp = mustore / rho_vs
     !else
     !  v_tmp = 0.0
@@ -420,7 +420,7 @@
 
     ! VTK file output
     ! acoustic-elastic domains
-    if( ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION ) then
+    if (ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION) then
       ! saves points on acoustic-elastic coupling interface
       allocate( iglob_tmp(NGLLSQUARE*num_coupling_ac_el_faces))
       inum = 0
@@ -443,9 +443,9 @@
       ! saves acoustic/elastic flag
       allocate(v_tmp_i(nspec))
       do i=1,nspec
-        if( ispec_is_acoustic(i) ) then
+        if (ispec_is_acoustic(i)) then
           v_tmp_i(i) = 1
-        else if( ispec_is_elastic(i) ) then
+        else if (ispec_is_elastic(i)) then
           v_tmp_i(i) = 2
         else
           v_tmp_i(i) = 0
@@ -458,7 +458,7 @@
     endif
 
     !debug: saves 1. MPI interface
-    !    if( num_interfaces_ext_mesh >= 1 ) then
+    !    if (num_interfaces_ext_mesh >= 1) then
     !      filename = prname(1:len_trim(prname))//'MPI_1_points'
     !      call write_VTK_data_points(nglob, &
     !                        xstore_dummy,ystore_dummy,zstore_dummy, &

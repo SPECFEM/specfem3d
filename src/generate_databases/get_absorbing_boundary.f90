@@ -92,14 +92,14 @@
   character(len=27) namefile
 
   ! sets flag in array iboun for elements with an absorbing boundary faces
-  if(COUPLE_WITH_EXTERNAL_CODE) then
+  if (COUPLE_WITH_EXTERNAL_CODE) then
 
     ! allocate temporary flag array
     allocate(iboun(6,nspec), &
              xcoord_iboun(NGNOD2D,6,nspec), &
              ycoord_iboun(NGNOD2D,6,nspec), &
              zcoord_iboun(NGNOD2D,6,nspec),stat=ier)
-    if(ier /= 0) stop 'not enough memory to allocate arrays'
+    if (ier /= 0) stop 'not enough memory to allocate arrays'
 
     iboun(:,:) = .false.
 
@@ -137,7 +137,7 @@
                             iface)
 
     !! CD CD !! For coupling with DSM
-    if(COUPLE_WITH_EXTERNAL_CODE) iboun(iface,ispec) = .true.
+    if (COUPLE_WITH_EXTERNAL_CODE) iboun(iface,ispec) = .true.
     !! CD CD
 
     ! ijk indices of GLL points for face id
@@ -162,7 +162,7 @@
         normal_face(:,i,j) = lnormal(:)
 
         !! CD CD !! For coupling with DSM
-        if(COUPLE_WITH_EXTERNAL_CODE) write(123,'(i10,3f20.10)') ispec,xstore_dummy(ibool(i,j,1,ispec)),&
+        if (COUPLE_WITH_EXTERNAL_CODE) write(123,'(i10,3f20.10)') ispec,xstore_dummy(ibool(i,j,1,ispec)),&
                 ystore_dummy(ibool(i,j,1,ispec)),zstore_dummy(ibool(i,j,1,ispec))
         !! CD CD
 
@@ -187,7 +187,7 @@
   enddo ! nspec2D_xmin
 
   !! CD CD !! For coupling with DSM
-  if(COUPLE_WITH_EXTERNAL_CODE) close(123)
+  if (COUPLE_WITH_EXTERNAL_CODE) close(123)
   !! CD CD
 
   ! xmax
@@ -210,10 +210,10 @@
     call get_element_face_id(ispec,xcoord,ycoord,zcoord,&
                               ibool,nspec,nglob_dummy, &
                               xstore_dummy,ystore_dummy,zstore_dummy, &
-                              iface )
+                              iface)
 
     !! CD CD !! For coupling with DSM
-    if(COUPLE_WITH_EXTERNAL_CODE) iboun(iface,ispec) = .true.
+    if (COUPLE_WITH_EXTERNAL_CODE) iboun(iface,ispec) = .true.
     !! CD CD
 
     ! ijk indices of GLL points on face
@@ -276,10 +276,10 @@
     call get_element_face_id(ispec,xcoord,ycoord,zcoord,&
                               ibool,nspec,nglob_dummy, &
                               xstore_dummy,ystore_dummy,zstore_dummy, &
-                              iface )
+                              iface)
 
     !! CD CD !! For coupling with DSM
-    if(COUPLE_WITH_EXTERNAL_CODE) iboun(iface,ispec) = .true.
+    if (COUPLE_WITH_EXTERNAL_CODE) iboun(iface,ispec) = .true.
     !! CD CD
 
     ! ijk indices of GLL points on face
@@ -342,10 +342,10 @@
     call get_element_face_id(ispec,xcoord,ycoord,zcoord,&
                               ibool,nspec,nglob_dummy, &
                               xstore_dummy,ystore_dummy,zstore_dummy, &
-                              iface )
+                              iface)
 
     !! CD CD !! For coupling with DSM
-    if(COUPLE_WITH_EXTERNAL_CODE) iboun(iface,ispec) = .true.
+    if (COUPLE_WITH_EXTERNAL_CODE) iboun(iface,ispec) = .true.
     !! CD CD
 
     ! ijk indices of GLL points on face
@@ -408,10 +408,10 @@
     call get_element_face_id(ispec,xcoord,ycoord,zcoord,&
                               ibool,nspec,nglob_dummy, &
                               xstore_dummy,ystore_dummy,zstore_dummy, &
-                              iface )
+                              iface)
 
     !! CD CD !! For coupling with DSM
-    if(COUPLE_WITH_EXTERNAL_CODE) iboun(iface,ispec) = .true.
+    if (COUPLE_WITH_EXTERNAL_CODE) iboun(iface,ispec) = .true.
     !! CD CD
 
     ! ijk indices of GLL points on face
@@ -477,10 +477,10 @@
     call get_element_face_id(ispec,xcoord,ycoord,zcoord,&
                               ibool,nspec,nglob_dummy, &
                               xstore_dummy,ystore_dummy,zstore_dummy, &
-                              iface )
+                              iface)
 
     !! CD CD !! For coupling with DSM
-    if(COUPLE_WITH_EXTERNAL_CODE) iboun(iface,ispec) = .true.
+    if (COUPLE_WITH_EXTERNAL_CODE) iboun(iface,ispec) = .true.
     !! CD CD
 
     ! ijk indices of GLL points on face
@@ -507,8 +507,8 @@
     enddo
 
     ! stores surface infos
-    if(STACEY_ABSORBING_CONDITIONS)then
-       if( .not. STACEY_INSTEAD_OF_FREE_SURFACE ) then
+    if (STACEY_ABSORBING_CONDITIONS)then
+       if (.not. STACEY_INSTEAD_OF_FREE_SURFACE) then
          ! stores free surface
          ! sets face infos
          ifree = ifree + 1
@@ -559,8 +559,8 @@
          enddo
        endif
 
-    else if(PML_CONDITIONS)then
-       if( .not. PML_INSTEAD_OF_FREE_SURFACE ) then
+    else if (PML_CONDITIONS)then
+       if (.not. PML_INSTEAD_OF_FREE_SURFACE) then
          ! stores free surface
          ! sets face infos
          ifree = ifree + 1
@@ -632,31 +632,31 @@
   enddo
 
   ! checks counters
-  if( ifree /= num_free_surface_faces ) then
+  if (ifree /= num_free_surface_faces) then
     print*,'error number of free surface faces:',ifree,num_free_surface_faces
     stop 'error number of free surface faces'
   endif
 
-  if( iabsval /= num_abs_boundary_faces ) then
+  if (iabsval /= num_abs_boundary_faces) then
     print*,'error number of absorbing faces:',iabsval,num_abs_boundary_faces
     stop 'error number of absorbing faces'
   endif
 
   call sum_all_i(num_free_surface_faces,itop)
   call sum_all_i(num_abs_boundary_faces,iabsval)
-  if( myrank == 0 ) then
+  if (myrank == 0) then
     write(IMAIN,*) '     absorbing boundary:'
     write(IMAIN,*) '     total number of free faces = ',itop
     write(IMAIN,*) '     total number of faces = ',iabsval
-    if((PML_CONDITIONS .and. PML_INSTEAD_OF_FREE_SURFACE) .or. &
+    if ((PML_CONDITIONS .and. PML_INSTEAD_OF_FREE_SURFACE) .or. &
        (STACEY_ABSORBING_CONDITIONS .and. STACEY_INSTEAD_OF_FREE_SURFACE)) then
        write(IMAIN,*) '     absorbing boundary includes free surface (i.e., top surface converted from free to absorbing)'
     endif
 ! when users set PML_CONDITIONS and PML_INSTEAD_OF_FREE_SURFACE to be .true. they should also
 ! provide a non-empty free_or_absorbing_surface_file_zmax file, since we need it to determine ibelm_top(),
 ! which is the outer boundary of top CPML or Stacey layer.
-    if( ((PML_CONDITIONS .and. PML_INSTEAD_OF_FREE_SURFACE) .or. &
-         (STACEY_ABSORBING_CONDITIONS .and. STACEY_INSTEAD_OF_FREE_SURFACE)) .and. itop == 0 ) then
+    if (((PML_CONDITIONS .and. PML_INSTEAD_OF_FREE_SURFACE) .or. &
+         (STACEY_ABSORBING_CONDITIONS .and. STACEY_INSTEAD_OF_FREE_SURFACE)) .and. itop == 0) then
        print *,'the free_or_absorbing_surface_file_zmax contains no absorbing element, but Zmax absorption is turned on'
        stop 'error: number of Zmax absorbing elements cannot be zero in free_or_absorbing_surface_file_zmax in such a case'
     endif

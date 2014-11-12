@@ -478,10 +478,8 @@
    if ((jyear/4)*4 == jyear) then
       leap = 1
    endif
-   if ((ioptn > 0)               .and. &
-         ((jyear/100)*100 == jyear) .and. &
-         ((jyear/400)*400 /= jyear)     ) then
-         leap = 0
+   if ((ioptn > 0) .and. ((jyear/100)*100 == jyear) .and. ((jyear/400)*400 /= jyear)) then
+      leap = 0
    endif
   endif
 !
@@ -689,10 +687,8 @@
    if ((jyear/4)*4 == jyear) then
       leap = 1
    endif
-   if ((ioptn > 0)               .and. &
-      ((jyear/100)*100 == jyear) .and. &
-      ((jyear/400)*400 /= jyear)     ) then
-         leap = 0
+   if ((ioptn > 0) .and. ((jyear/100)*100 == jyear) .and. ((jyear/400)*400 /= jyear)) then
+      leap = 0
    endif
 !
 !        Now find the day number "iday".

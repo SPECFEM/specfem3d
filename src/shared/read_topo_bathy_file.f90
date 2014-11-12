@@ -45,7 +45,7 @@
 
   ! opens file
   open(unit=13,file=trim(TOPO_FILE),status='old',action='read',iostat=ier)
-  if( ier /= 0 ) then
+  if (ier /= 0) then
     print*,'error opening topography file: ',trim(TOPO_FILE)
     stop 'error opening topography file'
   endif
@@ -101,10 +101,10 @@
   icornerlat = int((lat - ORIG_LAT_TOPO) / DEGREES_PER_CELL_TOPO) + 1
 
   ! avoid edge effects and extend with identical point if outside model
-  if(icornerlong < 1) icornerlong = 1
-  if(icornerlong > NX_TOPO-1) icornerlong = NX_TOPO-1
-  if(icornerlat < 1) icornerlat = 1
-  if(icornerlat > NY_TOPO-1) icornerlat = NY_TOPO-1
+  if (icornerlong < 1) icornerlong = 1
+  if (icornerlong > NX_TOPO-1) icornerlong = NX_TOPO-1
+  if (icornerlat < 1) icornerlat = 1
+  if (icornerlat > NY_TOPO-1) icornerlat = NY_TOPO-1
 
   ! compute coordinates of corner
   long_corner = ORIG_LONG_TOPO + (icornerlong-1)*DEGREES_PER_CELL_TOPO
@@ -115,10 +115,10 @@
   ratio_eta = (lat - lat_corner) / DEGREES_PER_CELL_TOPO
 
   ! avoid edge effects
-  if(ratio_xi < 0.) ratio_xi = 0.
-  if(ratio_xi > 1.) ratio_xi = 1.
-  if(ratio_eta < 0.) ratio_eta = 0.
-  if(ratio_eta > 1.) ratio_eta = 1.
+  if (ratio_xi < 0.) ratio_xi = 0.
+  if (ratio_xi > 1.) ratio_xi = 1.
+  if (ratio_eta < 0.) ratio_eta = 0.
+  if (ratio_eta > 1.) ratio_eta = 1.
 
   ! interpolate elevation at current point
   target_elevation = &
@@ -182,10 +182,10 @@
   target_distmin = HUGEVAL
 
 
-  if(num_free_surface_faces > 0) then
+  if (num_free_surface_faces > 0) then
 
     ! computes typical size of elements at the surface (uses first element for estimation)
-    if( USE_DISTANCE_CRITERION ) then
+    if (USE_DISTANCE_CRITERION) then
       ispec = free_surface_ispec(1)
       typical_size =  (xstore(ibool(1,1,1,ispec)) - xstore(ibool(NGLLX,NGLLY,NGLLZ,ispec)))**2 &
                     + (ystore(ibool(1,1,1,ispec)) - ystore(ibool(NGLLX,NGLLY,NGLLZ,ispec)))**2
@@ -207,10 +207,10 @@
       ispec = free_surface_ispec(iface)
 
       ! exclude elements that are too far from target
-      if( USE_DISTANCE_CRITERION ) then
+      if (USE_DISTANCE_CRITERION) then
         iglob = ibool(MIDX,MIDY,MIDZ,ispec)
         dist = (x_target - xstore(iglob))**2 + (y_target - ystore(iglob))**2
-        if( dist > typical_size ) cycle
+        if (dist > typical_size) cycle
       endif
 
       ! loop only on points inside the element
@@ -229,7 +229,7 @@
                  ( y_target - ystore(iglob) )**2
 
           ! keep this point if it is closer to the receiver
-          if(dist < distmin) then
+          if (dist < distmin) then
             distmin = dist
             iface_selected = iface
             iselected = i
@@ -244,7 +244,7 @@
 
     ! if we have not located a target element, the point is not in this slice
     ! therefore use first element only for fictitious iterative search
-    if(.not. located_target) then
+    if (.not. located_target) then
       iselected = 2
       jselected = 2
       iface_selected = 1
@@ -269,20 +269,20 @@
             ! stores node infos
             inode = inode + 1
             elevation_node(inode) = zstore(iglob)
-            dist_node(inode) = sqrt( (x_target - xstore(iglob))**2 + (y_target - ystore(iglob))**2 )
+            dist_node(inode) = sqrt( (x_target - xstore(iglob))**2 + (y_target - ystore(iglob))**2)
           enddo
         enddo
 
         ! weighted elevation
         dist = sum( dist_node(:) )
-        if(dist < distmin) then
+        if (dist < distmin) then
 
           ! sets new minimum distance (of all 4 closest nodes)
           distmin = dist
           target_distmin = distmin
 
           ! interpolates elevation
-          if( dist > TINYVAL ) then
+          if (dist > TINYVAL) then
             target_elevation =  (dist_node(1)/dist)*elevation_node(1) + &
                                 (dist_node(2)/dist)*elevation_node(2) + &
                                 (dist_node(3)/dist)*elevation_node(3) + &
@@ -349,10 +349,10 @@
   target_distmin = HUGEVAL
 
 
-  if(num_free_surface_faces > 0) then
+  if (num_free_surface_faces > 0) then
 
     ! computes typical size of elements at the surface (uses first element for estimation)
-    if( USE_DISTANCE_CRITERION ) then
+    if (USE_DISTANCE_CRITERION) then
       ispec = free_surface_ispec(1)
       typical_size =  (xstore(ibool(1,1,1,ispec)) - xstore(ibool(NGLLX,NGLLY,NGLLZ,ispec)))**2 &
                     + (ystore(ibool(1,1,1,ispec)) - ystore(ibool(NGLLX,NGLLY,NGLLZ,ispec)))**2
@@ -371,10 +371,10 @@
       ispec = free_surface_ispec(iface)
 
       ! excludes elements that are too far from target
-      if( USE_DISTANCE_CRITERION ) then
+      if (USE_DISTANCE_CRITERION) then
         iglob = ibool(MIDX,MIDY,MIDZ,ispec)
         dist = (x_target - xstore(iglob))**2 + (y_target - ystore(iglob))**2
-        if( dist > typical_size ) cycle
+        if (dist > typical_size) cycle
       endif
 
       ! loop only on points inside the element
@@ -390,7 +390,7 @@
                ( y_target - ystore(iglob) )**2
 
         ! keep this point if it is closer to the receiver
-        if(dist < distmin) then
+        if (dist < distmin) then
           distmin = dist
 
           ! elevation (given in z - coordinate)
@@ -403,7 +403,7 @@
 
     ! if we have not located a target element, the point is not in this slice
     ! therefore use first element only for fictitious iterative search
-    if(.not. located_target) then
+    if (.not. located_target) then
       !stop 'error: point was not located in get_elevation_closest()'
       ! takes first point for estimation
       iglob = ibool(1,1,1,ispec)

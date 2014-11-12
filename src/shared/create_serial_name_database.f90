@@ -47,11 +47,11 @@
   write(procname,"('/proc',i6.6,'_')") iproc
 
 ! on a Beowulf-type machine, path on frontend can be different from local paths
-  if(.not. LOCAL_PATH_IS_ALSO_GLOBAL) then
+  if (.not. LOCAL_PATH_IS_ALSO_GLOBAL) then
 
 ! allocate array for active processors
     allocate(num_active_proc(0:nproc_max_loop),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array num_active_proc'
+    if (ier /= 0) stop 'error allocating array num_active_proc'
 
 ! read filtered file with name of active machines
     open(unit=48,file=trim(OUTPUT_FILES)//'/filtered_machines.txt',status='old',action='read')

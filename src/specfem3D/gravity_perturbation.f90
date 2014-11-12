@@ -75,9 +75,9 @@ subroutine gravity_init()
   integer nstep_grav
 
   open(unit=IIN_G,file='../DATA/gravity_stations',status='old',iostat=ier)
-  if( ier /= 0 ) then
+  if (ier /= 0) then
     ! user output
-    if( myrank == 0 ) then
+    if (myrank == 0) then
       write(IMAIN,*)
       write(IMAIN,*) 'no gravity simulation'
       write(IMAIN,*)
@@ -91,7 +91,7 @@ subroutine gravity_init()
   read(IIN_G,*) nstat,ntimgap
 
   ! user output
-  if( myrank == 0 ) then
+  if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) 'incorporating gravity simulation'
     write(IMAIN,*) '    gravity stations: ',nstat
@@ -214,7 +214,7 @@ subroutine recompute_jacobian_gravity(xelm,yelm,zelm,xi,eta,gamma,jacobian)
 ! recompute jacobian for any (xi,eta,gamma) point, not necessarily a GLL point
 
 ! check that the parameter file is correct
-  if(NGNOD /= 8 ) &
+  if (NGNOD /= 8) &
        stop 'elements should have 8  control nodes'
 
 ! ***
@@ -301,7 +301,7 @@ subroutine recompute_jacobian_gravity(xelm,yelm,zelm,xi,eta,gamma,jacobian)
 
   jacobian = xxi*(yeta*zgamma-ygamma*zeta) - xeta*(yxi*zgamma-ygamma*zxi) + xgamma*(yxi*zeta-yeta*zxi)
 
-  if(jacobian <= ZERO) stop '3D Jacobian undefined'
+  if (jacobian <= ZERO) stop '3D Jacobian undefined'
 
 
 end subroutine recompute_jacobian_gravity
@@ -320,7 +320,7 @@ subroutine gravity_timeseries()
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: Rg,dotP
   integer :: istat, it_grav
 
-  if( mod(it,ntimgap)==0 ) then
+  if (mod(it,ntimgap)==0) then
     it_grav = nint(dble(it/ntimgap))
     allocate(Rg(NGLOB_AB))
     allocate(dotP(NGLOB_AB))
@@ -371,7 +371,7 @@ subroutine gravity_output()
     close(IOUT)
   enddo
 
-  if(myrank==0) then !left-over stations
+  if (myrank==0) then !left-over stations
     do istat=NPROC*nstat_local,nstat
       write(sisname,"(a,I0,a)") trim(OUTPUT_FILES_PATH)//'/stat', istat, '.grav'
       open(unit=IOUT,file=sisname,status='replace')

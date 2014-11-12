@@ -69,7 +69,7 @@
   kinetic_energy = 0.d0
   potential_energy = 0.d0
 
-  if(ANISOTROPY .or. ATTENUATION) &
+  if (ANISOTROPY .or. ATTENUATION) &
     call exit_MPI(myrank,'calculation of total energy currently implemented only for media with no anisotropy and no attenuation')
 
 ! loop over spectral elements
@@ -77,16 +77,16 @@
 
 ! if element is a CPML then do not compute energy in it, since it is non physical;
 ! thus, we compute energy in the main domain only, without absorbing elements
-    if(PML_CONDITIONS) then
+    if (PML_CONDITIONS) then
       ! do not merge this second line with the first using an ".and." statement
       ! because array is_CPML() is unallocated when PML_CONDITIONS is false
-      if(is_CPML(ispec)) cycle
+      if (is_CPML(ispec)) cycle
     endif
 
     !---
     !--- elastic spectral element
     !---
-    if(ispec_is_elastic(ispec)) then
+    if (ispec_is_elastic(ispec)) then
 
       do k=1,NGLLZ
         do j=1,NGLLY
@@ -224,7 +224,7 @@
     !---
     !--- acoustic spectral element
     !---
-    else if(ispec_is_acoustic(ispec)) then
+    else if (ispec_is_acoustic(ispec)) then
 
       ! for the definition of potential energy in an acoustic fluid, see for instance
       ! equation (23) of M. Maess et al., Journal of Sound and Vibration 296 (2006) 264-276
@@ -325,6 +325,6 @@
   total_energy_glob = kinetic_energy_glob + potential_energy_glob
 
 ! write the total to disk from the master
-  if(myrank == 0) write(IOUT_ENERGY,*) it,sngl(kinetic_energy_glob),sngl(potential_energy_glob),sngl(total_energy_glob)
+  if (myrank == 0) write(IOUT_ENERGY,*) it,sngl(kinetic_energy_glob),sngl(potential_energy_glob),sngl(total_energy_glob)
 
   end subroutine compute_total_energy

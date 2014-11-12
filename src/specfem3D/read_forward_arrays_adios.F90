@@ -157,7 +157,7 @@ subroutine read_forward_arrays_adios()
   !-----------------------------------.
   ! Read arrays from forward_arrays.bp |
   !-----------------------------------'
-  if( ACOUSTIC_SIMULATION ) then
+  if (ACOUSTIC_SIMULATION) then
     start(1) = local_dim_potential_acoustic * myrank
     count_ad(1) = NGLOB_ADJOINT
     sel_num = sel_num+1
@@ -185,7 +185,7 @@ subroutine read_forward_arrays_adios()
   endif
 
   ! elastic wavefields
-  if( ELASTIC_SIMULATION ) then
+  if (ELASTIC_SIMULATION) then
     start(1) = local_dim_displ * myrank
     count_ad(1) = NDIM * NGLOB_ADJOINT
     sel_num = sel_num+1
@@ -211,7 +211,7 @@ subroutine read_forward_arrays_adios()
                              b_accel, ier)
 
     ! memory variables if attenuation
-    if( ATTENUATION ) then
+    if (ATTENUATION) then
       start(1) = local_dim_R_xx * myrank
       count_ad(1) = NGLLX * NGLLY * NGLLZ * NSPEC_ATTENUATION_AB * N_SLS
       sel_num = sel_num+1
@@ -292,7 +292,7 @@ subroutine read_forward_arrays_adios()
       call adios_schedule_read(handle, sel, "epsilondev_yz/array", 0, 1, &
                                b_epsilondev_yz, ier)
 
-      if(FULL_ATTENUATION_SOLID) then
+      if (FULL_ATTENUATION_SOLID) then
         start(1) = local_dim_R_trace * myrank
         count_ad(1) = NGLLX * NGLLY * NGLLZ * NSPEC_ATTENUATION_AB_kappa * N_SLS
         sel_num = sel_num+1
@@ -313,7 +313,7 @@ subroutine read_forward_arrays_adios()
   endif
 
   ! poroelastic wavefields
-  if( POROELASTIC_SIMULATION ) then
+  if (POROELASTIC_SIMULATION) then
     start(1) = local_dim_displs_poroelastic * myrank
     count_ad(1) = NDIM * NGLOB_ADJOINT
     sel_num = sel_num+1

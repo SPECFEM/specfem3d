@@ -52,12 +52,12 @@
   double precision sumshape,sumdershapexi,sumdershapeeta
 
 ! check that the parameter file is correct
-  if(NGNOD /= 8 .and. NGNOD /= 27) &
+  if (NGNOD /= 8 .and. NGNOD /= 27) &
     call exit_MPI(myrank,'volume elements should have 8 or 27 control nodes')
-  if(NGNOD2D /= 4 .and. NGNOD2D /= 9) &
+  if (NGNOD2D /= 4 .and. NGNOD2D /= 9) &
     call exit_MPI(myrank,'surface elements should have 4 or 9 control nodes')
 
-  if(NGNOD2D == 4) then
+  if (NGNOD2D == 4) then
 
     ! generate the 2D shape functions and their derivatives (4 nodes)
     do i=1,NGLLA
@@ -118,13 +118,13 @@
       enddo
 
 !   the sum of the shape functions should be 1
-      if(abs(sumshape-ONE)>TINYVAL) call exit_MPI(myrank,'error in 2D shape functions')
+      if (abs(sumshape-ONE)>TINYVAL) call exit_MPI(myrank,'error in 2D shape functions')
 
 !   the sum of the derivatives of the shape functions should be 0
-      if(abs(sumdershapexi)>TINYVAL) &
+      if (abs(sumdershapexi)>TINYVAL) &
         call exit_MPI(myrank,'error in xi derivatives of 2D shape function')
 
-      if(abs(sumdershapeeta)>TINYVAL) &
+      if (abs(sumdershapeeta)>TINYVAL) &
         call exit_MPI(myrank,'error in eta derivatives of 2D shape function')
 
     enddo
@@ -162,7 +162,7 @@
   double precision l1pxi,l2pxi,l3pxi,l1peta,l2peta,l3peta
 
   ! check that the parameter file is correct
-  if( NGNOD2D /= 9 ) stop 'surface elements should have 9 control nodes'
+  if (NGNOD2D /= 9) stop 'surface elements should have 9 control nodes'
 
   ! generate the 2D shape functions and their derivatives (9 nodes)
   do i=1,NGLLA

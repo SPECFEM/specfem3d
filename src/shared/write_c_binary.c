@@ -43,7 +43,7 @@ static int fd;
 void
 FC_FUNC_(open_file_create,OPEN_FILE)(char *file) {
   fd = open(file, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-  if(fd == -1) {
+  if (fd == -1) {
     fprintf(stderr, "Error opening file: %s exiting\n", file);
     exit(-1);
   }
@@ -52,7 +52,7 @@ FC_FUNC_(open_file_create,OPEN_FILE)(char *file) {
 void
 FC_FUNC_(open_file_append,OPEN_FILE)(char *file) {
   fd = open(file, O_WRONLY | O_CREAT | O_APPEND, 0644);
-  if(fd == -1) {
+  if (fd == -1) {
     fprintf(stderr, "Error opening file: %s exiting\n", file);
     exit(-1);
   }
@@ -86,7 +86,7 @@ FC_FUNC_(write_character,WRITE_CHARACTER)(char *z, int *lchar) {
 void
 FC_FUNC_(open_file_fd,OPEN_FILE_FD)(char *file, int *pfd) {
   *pfd = open(file, O_WRONLY | O_CREAT, 0644);
-  if(*pfd == -1) {
+  if (*pfd == -1) {
     fprintf(stderr, "Error opening file: %s exiting\n", file);
     exit(-1);
   }
@@ -171,7 +171,7 @@ void open_file_abs_r_fbin(int *fid, char *filename,int *length, long long *files
   int ret;
 
   // checks filesize
-  if( *filesize == 0 ){
+  if (*filesize == 0){
     perror("Error file size for reading");
     exit(EXIT_FAILURE);
   }
@@ -185,12 +185,12 @@ void open_file_abs_r_fbin(int *fid, char *filename,int *length, long long *files
 
   // opens file
   ft = fopen( fncopy, "rb+" );
-  if( ft == NULL ) { perror("fopen"); exit(-1); }
+  if (ft == NULL ) { perror("fopen"); exit(-1); }
 
   // sets mode for full buffering
   work_buffer[*fid] = (char *)malloc(MAX_B);
   ret = setvbuf( ft, work_buffer[*fid], _IOFBF, (size_t)MAX_B );
-  if( ret != 0 ){
+  if (ret != 0){
     perror("Error setting working buffer");
     exit(EXIT_FAILURE);
   }
@@ -212,7 +212,7 @@ void open_file_abs_w_fbin(int *fid, char *filename, int *length, long long *file
   int ret;
 
   // checks filesize
-  if( *filesize == 0 ){
+  if (*filesize == 0){
     perror("Error file size for writing");
     exit(EXIT_FAILURE);
   }
@@ -226,12 +226,12 @@ void open_file_abs_w_fbin(int *fid, char *filename, int *length, long long *file
 
   // opens file
   ft = fopen( fncopy, "wb+" );
-  if( ft == NULL ) { perror("fopen"); exit(-1); }
+  if (ft == NULL ) { perror("fopen"); exit(-1); }
 
   // sets mode for full buffering
   work_buffer[*fid] = (char *)malloc(MAX_B);
   ret = setvbuf( ft, work_buffer[*fid], _IOFBF, (size_t)MAX_B );
-  if( ret != 0 ){
+  if (ret != 0){
     perror("Error setting working buffer");
     exit(EXIT_FAILURE);
   }
@@ -290,10 +290,10 @@ void read_abs_fbin(int *fid, char *buffer, int *length, int *index){
   ft = fp_abs[*fid];
 
   // positions file pointer (for reverse time access)
-  pos = ((long long)*length) * (*index -1 );
+  pos = ((long long)*length) * (*index -1);
 
   ret = fseek(ft, pos , SEEK_SET);
-  if ( ret != 0 ) {
+  if (ret != 0) {
     perror("Error fseek");
     exit(EXIT_FAILURE);
   }
@@ -372,7 +372,7 @@ void open_file_abs_w_map(int *fid, char *filename, int *length, long long *files
   char *blank;
 
   // checks filesize
-  if( *filesize == 0 ){
+  if (*filesize == 0){
     perror("Error file size for writing");
     exit(EXIT_FAILURE);
   }
@@ -448,7 +448,7 @@ void open_file_abs_r_map(int *fid, char *filename,int *length, long long *filesi
   char *map;
 
   // checks filesize
-  if( *filesize == 0 ){
+  if (*filesize == 0){
     perror("Error file size for reading");
     exit(EXIT_FAILURE);
   }
@@ -505,7 +505,7 @@ void write_abs_map(int *fid, char *buffer, int *length , int *index){
   map = map_abs[*fid];
 
   // offset in bytes
-  offset =  ((long long)*index -1 ) * (*length) ;
+  offset =  ((long long)*index -1) * (*length) ;
 
   // copies buffer to map
   memcpy( &map[offset], buffer, *length );
@@ -518,7 +518,7 @@ void read_abs_map(int *fid, char *buffer, int *length , int *index){
   map = map_abs[*fid];
 
   // offset in bytes
-  offset =  ((long long)*index -1 ) * (*length) ;
+  offset =  ((long long)*index -1) * (*length) ;
 
   // copies map to buffer
   memcpy( buffer, &map[offset], *length );

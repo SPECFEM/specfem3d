@@ -258,12 +258,12 @@ subroutine interpolate_sep_on_mesh(sep_var, xmin, ymin, ni, nj, NZ, &
               ! in SEP, z-axis is downward; in SPECFEM, z-axis is upward
               k_target=NINT(-zstore(i, j, k, ispec)/DZ)+1; !NOT using (z_temp-zmin)
               ! Stay in the computational domain
-              if(i_target< 1)  i_target=  1
-              if(j_target< 1)  j_target=  1
-              if(k_target< 1)  k_target=  1
-              if(i_target>ni)  i_target= ni
-              if(j_target>nj)  j_target= nj
-              if(k_target>NZ)  k_target= NZ
+              if (i_target< 1)  i_target=  1
+              if (j_target< 1)  j_target=  1
+              if (k_target< 1)  k_target=  1
+              if (i_target>ni)  i_target= ni
+              if (j_target>nj)  j_target= nj
+              if (k_target>NZ)  k_target= NZ
 
               var(i,j,k,ispec) = sep_var(i_target,j_target,k_target)
            enddo
@@ -297,8 +297,8 @@ subroutine find_slice_bounds_sep(NX, NY, NZ, OX, OY, OZ, DX, DY, DZ, &
   imin=floor((xmin-OX)/DX+1); imax=ceiling((xmax-OX)/DX+1);
   jmin=floor((ymin-OY)/DY+1); jmax=ceiling((ymax-OY)/DY+1);
   kmin=floor((zmin-OZ)/DZ+1); kmax=ceiling((zmax-OZ)/DZ+1);
-  if(imin<1)  imin= 1;  if(jmin<1)  jmin= 1;  if(kmin<1)  kmin= 1;
-  if(imax>NX) imin=NX;  if(jmax>NY) jmax=NY;  if(kmax>NZ) kmax=NZ;
+  if (imin<1)  imin= 1;  if (jmin<1)  jmin= 1;  if (kmin<1)  kmin= 1;
+  if (imax>NX) imin=NX;  if (jmax>NY) jmax=NY;  if (kmax>NZ) kmax=NZ;
   ! Number of SEP indexes for the current slice
   ni=imax-imin+1
   nj=jmax-jmin+1

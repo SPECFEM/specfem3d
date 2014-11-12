@@ -67,13 +67,13 @@ subroutine model_ipati_adios(myrank,nspec,LOCAL_PATH)
 
   ! density
   allocate( rho_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array rho_read'
+  if (ier /= 0) stop 'error allocating array rho_read'
   ! vp
   allocate( vp_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array vp_read'
+  if (ier /= 0) stop 'error allocating array vp_read'
   ! vs scaled from vp
   allocate( vs_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array vs_read'
+  if (ier /= 0) stop 'error allocating array vs_read'
 
   call read_model_vp_rho_adios(myrank, nspec, LOCAL_PATH, &
                                rho_read, vp_read)
@@ -125,13 +125,13 @@ subroutine model_ipati_water_adios(myrank,nspec,LOCAL_PATH)
 
   ! density
   allocate( rho_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array rho_read'
+  if (ier /= 0) stop 'error allocating array rho_read'
   ! vp
   allocate( vp_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array vp_read'
+  if (ier /= 0) stop 'error allocating array vp_read'
   ! vs scaled from vp
   allocate( vs_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array vs_read'
+  if (ier /= 0) stop 'error allocating array vs_read'
 
   call read_model_vp_rho_adios(myrank, nspec, LOCAL_PATH, &
                                rho_read, vp_read)
@@ -143,7 +143,7 @@ subroutine model_ipati_water_adios(myrank,nspec,LOCAL_PATH)
   do ispec=1,nspec
     ! assumes water layer with acoustic elements are set properly
     ! only overwrites elastic elements
-    if( ispec_is_elastic(ispec)) then
+    if (ispec_is_elastic(ispec)) then
       ! isotropic model parameters
       rhostore(:,:,:,ispec) = rho_read(:,:,:,ispec)
       kappastore(:,:,:,ispec) = rhostore(:,:,:,ispec) * ( vp_read(:,:,:,ispec) * vp_read(:,:,:,ispec) &

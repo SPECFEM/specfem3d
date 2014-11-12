@@ -46,7 +46,7 @@ subroutine read_kernels_iso()
   allocate(kernel_bulk(NGLLX,NGLLY,NGLLZ,NSPEC), &
            kernel_beta(NGLLX,NGLLY,NGLLZ,NSPEC), &
            kernel_rho(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
-  if( ier /= 0 ) stop 'error allocating kernel arrays'
+  if (ier /= 0) stop 'error allocating kernel arrays'
 
   ! initializes arrays
   kernel_bulk = 0.0_CUSTOM_REAL
@@ -172,7 +172,7 @@ subroutine read_kernels_tiso()
            kernel_betav(NGLLX,NGLLY,NGLLZ,NSPEC), &
            kernel_betah(NGLLX,NGLLY,NGLLZ,NSPEC), &
            kernel_eta(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
-  if( ier /= 0 ) stop 'error allocating kernel arrays'
+  if (ier /= 0) stop 'error allocating kernel arrays'
 
   ! initializes arrays
   kernel_bulk = 0.0_CUSTOM_REAL

@@ -240,9 +240,9 @@
 !
 !--- if number of points is odd, the middle abscissa is exactly zero
 !
-  if(mod(NGLLX,2) /= 0) xigll((NGLLX - 1)/2 + 1) = ZERO
-  if(mod(NGLLY,2) /= 0) yigll((NGLLY - 1)/2 + 1) = ZERO
-  if(mod(NGLLZ,2) /= 0) zigll((NGLLZ - 1)/2 + 1) = ZERO
+  if (mod(NGLLX,2) /= 0) xigll((NGLLX - 1)/2 + 1) = ZERO
+  if (mod(NGLLY,2) /= 0) yigll((NGLLY - 1)/2 + 1) = ZERO
+  if (mod(NGLLZ,2) /= 0) zigll((NGLLZ - 1)/2 + 1) = ZERO
 
 !
 !--- get the 3-D shape functions
@@ -361,38 +361,38 @@
 
            ! get boundary
            ! on boundary 1: x=xmin
-           if(ilon == 0 ) then
+           if (ilon == 0) then
               iboun(1,ispec)=.true.
               ispec2Dxmin=ispec2Dxmin+1
               write(89,*) ispec,ispec2Dxmin,1
            endif
            ! on boundary 2: xmax
-           if(ilon == nel_lon-1) then
+           if (ilon == nel_lon-1) then
               iboun(2,ispec)=.true.
               ispec2Dxmax=ispec2Dxmax+1
               !write(*,*) '------ TOZ',ispec,ilon
               write(89,*) ispec,ispec2Dxmax,2
            endif
            ! on boundary 3: ymin
-           if(ilat == 0) then
+           if (ilat == 0) then
               iboun(3,ispec)=.true.
               ispec2Dymin=ispec2Dymin+1
               write(89,*) ispec,ispec2Dymin,3
            endif
            ! on boundary 4: ymax
-           if(ilat == nel_lat-1 ) then
+           if (ilat == nel_lat-1) then
               iboun(4,ispec) =.true.
               ispec2Dymax=ispec2Dymax+1
               write(89,*) ispec,ispec2Dymax,4
            endif
            ! on boundary 5: bottom
-           if(iz == 0) then
+           if (iz == 0) then
               iboun(5,ispec)=.true.
               ispec2Dzmin=ispec2Dzmin+1
               write(89,*) ispec,ispec2Dzmin,5
            endif
            ! on boundary 6: top
-           if(iz == nel_depth-1) then
+           if (iz == nel_depth-1) then
               ispec2Dzmax= ispec2Dzmax+1
               iboun(6,ispec)=.true.
            endif
@@ -771,18 +771,18 @@
   double precision profondeur
   integer current_layer(0:nel_depth-1),ilayer,k
   !write(*,*) ilayer,  current_layer(iz)
-  !profondeur = dsqrt(xstore(1,1,k)**2 + ystore(1,1,k)**2 + (zstore(1,1,k) )**2 )
+  !profondeur = dsqrt(xstore(1,1,k)**2 + ystore(1,1,k)**2 + (zstore(1,1,k) )**2)
   !write(27,*) profondeur/1000., ilayer
   if (ilayer ==  current_layer(iz)) then
      do k=2,NGLLZ
-        profondeur = dsqrt(xstore(1,1,k)**2 + ystore(1,1,k)**2 + (zstore(1,1,k) )**2 )
+        profondeur = dsqrt(xstore(1,1,k)**2 + ystore(1,1,k)**2 + (zstore(1,1,k) )**2)
         write(27,*) profondeur/1000., ilayer-1,1
         Ndepth=Ndepth+1
      enddo
   else ! new layer
 
      k=1
-     profondeur = dsqrt(xstore(1,1,k)**2 + ystore(1,1,k)**2 + (zstore(1,1,k) )**2 )
+     profondeur = dsqrt(xstore(1,1,k)**2 + ystore(1,1,k)**2 + (zstore(1,1,k) )**2)
      if (ilayer==0) then
         ilayer =  current_layer(iz)
         write(27,*)  profondeur/1000., ilayer-1,1
@@ -793,7 +793,7 @@
         Ndepth=Ndepth+1
      endif
      do k=2,NGLLZ ! on duplique le dernier point
-        profondeur = dsqrt(xstore(1,1,k)**2 + ystore(1,1,k)**2 + (zstore(1,1,k) )**2 )
+        profondeur = dsqrt(xstore(1,1,k)**2 + ystore(1,1,k)**2 + (zstore(1,1,k) )**2)
         write(27,*)  profondeur/1000., ilayer-1,1
         Ndepth=Ndepth+1
      enddo
@@ -839,7 +839,7 @@
   i=1
   write(27,*) z(i),zindex(i),ziflag(i)
   do i=2,Ndepth-1
-     if (ziflag(i-1) == -1 ) then
+     if (ziflag(i-1) == -1) then
         write(27,*) z(i),zindex(i),-1
      else
          write(27,*) z(i),zindex(i),1

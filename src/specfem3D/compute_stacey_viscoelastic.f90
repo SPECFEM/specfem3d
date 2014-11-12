@@ -99,7 +99,7 @@
   !! CD modif. : end
 
   ! checks if anything to do
-  if( num_abs_boundary_faces == 0 ) return
+  if (num_abs_boundary_faces == 0) return
 
   ! absorbs absorbing-boundary surface using Stacey condition (Clayton & Enquist)
   do iface=1,num_abs_boundary_faces
@@ -174,9 +174,9 @@
   enddo
 
   ! adjoint simulations: stores absorbed wavefield part
-  if( SIMULATION_TYPE == 1 .and. SAVE_FORWARD ) then
+  if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
     ! writes out absorbing boundary value only when second phase is running
-    if( phase_is_inner .eqv. .true. ) then
+    if (phase_is_inner .eqv. .true.) then
       call write_abs(IOABS,b_absorb_field,b_reclen_field,it)
     endif
   endif
@@ -237,15 +237,15 @@
   integer :: ispec,iglob,i,j,k,iface,igll
 
   ! checks
-  if (SIMULATION_TYPE /= 3 ) &
+  if (SIMULATION_TYPE /= 3) &
     call exit_MPI(myrank,'error calling routine compute_stacey_viscoelastic_bpwf() with wrong SIMULATION_TYPE')
 
   ! checks if anything to do
-  if( num_abs_boundary_faces == 0 ) return
+  if (num_abs_boundary_faces == 0) return
 
   ! adjoint simulations:
   ! reads in absorbing boundary array when first phase is running
-  if( phase_is_inner .eqv. .false. ) then
+  if (phase_is_inner .eqv. .false.) then
     ! note: the index NSTEP-it+1 is valid if b_displ is read in after the Newmark scheme
     call read_abs(IOABS,b_absorb_field,b_reclen_field,NSTEP-it+1)
   endif
@@ -257,7 +257,7 @@
 
     if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
 
-      if( ispec_is_elastic(ispec) ) then
+      if (ispec_is_elastic(ispec)) then
         ! reference gll points on boundary face
         do igll = 1,NGLLSQUARE
           ! gets local indices for GLL point
@@ -367,12 +367,12 @@
   !! CD CD : end
 
   ! checks if anything to do
-  if( num_abs_boundary_faces == 0 ) return
+  if (num_abs_boundary_faces == 0) return
 
 ! adjoint simulations:
-  if( SIMULATION_TYPE == 3 ) then
+  if (SIMULATION_TYPE == 3) then
     ! reads in absorbing boundary array when first phase is running
-    if( phase_is_inner .eqv. .false. ) then
+    if (phase_is_inner .eqv. .false.) then
       ! note: the index NSTEP-it+1 is valid if b_displ is read in after the Newmark scheme
       call read_abs(IOABS,b_absorb_field,b_reclen_field,NSTEP-it+1)
     endif
@@ -381,9 +381,9 @@
   call compute_stacey_viscoelastic_cuda(Mesh_pointer,phase_is_inner,b_absorb_field)
 
   ! adjoint simulations: stores absorbed wavefield part
-  if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD ) then
+  if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
     ! writes out absorbing boundary value only when second phase is running
-    if( phase_is_inner .eqv. .true. ) then
+    if (phase_is_inner .eqv. .true.) then
       call write_abs(IOABS,b_absorb_field,b_reclen_field,it)
     endif
   endif

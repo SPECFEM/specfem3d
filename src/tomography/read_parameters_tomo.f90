@@ -102,7 +102,7 @@ contains
 
   implicit none
 
-  if( myrank == 0 ) then
+  if (myrank == 0) then
     print*,'Usage: add_model step_factor [INPUT-KERNELS-DIR/] [OUTPUT-MODEL-DIR/]'
     print*
     print*,'with'

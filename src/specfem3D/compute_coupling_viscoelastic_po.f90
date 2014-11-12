@@ -148,7 +148,7 @@
     ispec_po = coupling_el_po_ispec(iface)
     ispec_el = coupling_po_el_ispec(iface)
 
-    if( ispec_is_inner(ispec_el) .eqv. phase_is_inner ) then
+    if (ispec_is_inner(ispec_el) .eqv. phase_is_inner) then
 
       ! loops over common GLL points
       do igll = 1, NGLLSQUARE
@@ -311,7 +311,7 @@
 
         ! compute stress tensor (include attenuation or anisotropy if needed)
 
-        !  if(VISCOATTENUATION) then
+        !  if (VISCOATTENUATION) then
         !chris:check
 
 ! Dissipation only controlled by frame share attenuation in poroelastic (see

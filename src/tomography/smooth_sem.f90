@@ -122,7 +122,7 @@ program smooth_sem
   do i = 1, 5
     call get_command_argument(i,arg(i))
     if (i <= 5 .and. trim(arg(i)) == '') then
-      if (myrank == 0 ) then
+      if (myrank == 0) then
         print *, 'Usage: '
         print *, '        xsmooth_data sigma_h sigma_v kernel_file_name input_dir/ output_dir/'
         print *
@@ -156,8 +156,8 @@ program smooth_sem
   sigma_v2 = 2.0 * sigma_v ** 2
 
   ! checks
-  if( sigma_h2 < 1.e-18 ) stop 'Error sigma_h2 zero, must non-zero'
-  if( sigma_v2 < 1.e-18 ) stop 'Error sigma_v2 zero, must non-zero'
+  if (sigma_h2 < 1.e-18) stop 'Error sigma_h2 zero, must non-zero'
+  if (sigma_v2 < 1.e-18) stop 'Error sigma_v2 zero, must non-zero'
 
   ! adds margin to search radius
   element_size = max(sigma_h,sigma_v) * 0.5
@@ -174,7 +174,7 @@ program smooth_sem
   norm   = norm_h * norm_v
 
   ! user output
-  if( myrank == 0 ) then
+  if (myrank == 0) then
     print*,"defaults:"
     print*,"  smoothing sigma_h , sigma_v                : ",sigma_h,sigma_v
     ! scalelength: approximately S ~ sigma * sqrt(8.0) for a gaussian smoothing
@@ -207,8 +207,8 @@ program smooth_sem
   if (ADIOS_ENABLED) stop 'Flag ADIOS_ENABLED not supported yet for smoothing, please rerun program...'
 
   ! check that the code is running with the requested nb of processes
-  if(sizeprocs /= NPROC) then
-    if( myrank == 0 ) then
+  if (sizeprocs /= NPROC) then
+    if (myrank == 0) then
       print*, 'Error number of processors supposed to run on: ',NPROC
       print*, 'Error number of MPI processors actually run on: ',sizeprocs
       print*
@@ -232,24 +232,24 @@ program smooth_sem
            gammay(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
            gammaz(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
            jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-  if( ier /= 0 ) stop 'Error allocating arrays for databases'
+  if (ier /= 0) stop 'Error allocating arrays for databases'
 
   ! mesh node locations
   allocate(xstore(NGLOB_AB), &
            ystore(NGLOB_AB), &
            zstore(NGLOB_AB),stat=ier)
-  if( ier /= 0 ) stop 'Error allocating arrays for mesh nodes'
+  if (ier /= 0) stop 'Error allocating arrays for mesh nodes'
 
   ! material properties
   allocate(kappastore(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
            mustore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-  if( ier /= 0 ) stop 'Error allocating arrays for material properties'
+  if (ier /= 0) stop 'Error allocating arrays for material properties'
 
   ! material flags
   allocate(ispec_is_acoustic(NSPEC_AB), &
            ispec_is_elastic(NSPEC_AB), &
            ispec_is_poroelastic(NSPEC_AB),stat=ier)
-  if( ier /= 0 ) stop 'Error allocating arrays for material flags'
+  if (ier /= 0) stop 'Error allocating arrays for material flags'
   ispec_is_acoustic(:) = .false.
   ispec_is_elastic(:) = .false.
   ispec_is_poroelastic(:) = .false.
@@ -264,7 +264,7 @@ program smooth_sem
                             distance_min_glob,distance_max_glob)
 
   ! outputs infos
-  if ( myrank == 0 ) then
+  if (myrank == 0) then
     print*,'mesh dimensions:'
     print*,'  Xmin and Xmax of the model = ',x_min_glob,x_max_glob
     print*,'  Ymin and Ymax of the model = ',y_min_glob,y_max_glob
@@ -280,14 +280,14 @@ program smooth_sem
     print*
   endif
 
-  if( ELASTIC_SIMULATION ) then
+  if (ELASTIC_SIMULATION) then
     call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB, &
                                ibool,xstore,ystore,zstore, &
                                kappastore,mustore,rho_vp,rho_vs, &
                                DT,model_speed_max,min_resolved_period, &
                                LOCAL_PATH,SAVE_MESH_FILES)
 
-  else if( POROELASTIC_SIMULATION ) then
+  else if (POROELASTIC_SIMULATION) then
     allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
     allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
     rho_vp = 0.0_CUSTOM_REAL
@@ -297,11 +297,11 @@ program smooth_sem
                                     phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI, &
                                     LOCAL_PATH,SAVE_MESH_FILES)
     deallocate(rho_vp,rho_vs)
-  else if( ACOUSTIC_SIMULATION ) then
+  else if (ACOUSTIC_SIMULATION) then
     allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if( ier /= 0 ) stop 'Error allocating array rho_vp'
+    if (ier /= 0) stop 'Error allocating array rho_vp'
     allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if( ier /= 0 ) stop 'Error allocating array rho_vs'
+    if (ier /= 0) stop 'Error allocating array rho_vs'
     rho_vp = sqrt( kappastore / rhostore ) * rhostore
     rho_vs = 0.0_CUSTOM_REAL
     call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB, &
@@ -321,7 +321,7 @@ program smooth_sem
            cx0(NSPEC_AB), &
            cy0(NSPEC_AB), &
            cz0(NSPEC_AB),stat=ier)
-  if( ier /= 0 ) stop 'Error allocating array xl etc.'
+  if (ier /= 0) stop 'Error allocating array xl etc.'
 
   ! sets element center location
   do ispec = 1, nspec_AB
@@ -357,14 +357,14 @@ program smooth_sem
   node_list(num_interfaces_ext_mesh+1) = myrank
 
   ! user output
-  if(myrank == 0) then
+  if (myrank == 0) then
   print*,'slices:'
   print*,'  rank:',myrank,'  smoothing slices'
   print*,node_list(1:num_interfaces_ext_mesh+1)
   endif
 
   !do i=0,sizeprocs-1
-  !  if( myrank == i ) then
+  !  if (myrank == i) then
   !    print*,'rank:',myrank,'  smoothing slices'
   !    print*,node_list(1:num_interfaces_ext_mesh+1)
   !    print*
@@ -390,7 +390,7 @@ program smooth_sem
 ! each process reads in his own neighbor slices and gaussian filters the values
   allocate(tk(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
            bk(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-  if( ier /= 0 ) stop 'Error allocating array tk and bk'
+  if (ier /= 0) stop 'Error allocating array tk and bk'
 
   tk = 0.0_CUSTOM_REAL
   bk = 0.0_CUSTOM_REAL
@@ -398,7 +398,7 @@ program smooth_sem
 
     iproc = node_list(inum)
 
-    if( myrank == 0 ) print*,'  reading slice:',iproc
+    if (myrank == 0) print*,'  reading slice:',iproc
 
     ! neighbor database file
     call create_name_database(prname,iproc,LOCAL_PATH)
@@ -406,7 +406,7 @@ program smooth_sem
 
     ! gets number of elements and global points for this partition
     open(unit=IIN,file=trim(prname_lp),status='old',action='read',form='unformatted',iostat=ier)
-    if( ier /= 0 ) then
+    if (ier /= 0) then
       print*,'Error could not open database file: ',trim(prname_lp)
       call exit_mpi(myrank, 'Error reading neighbors external mesh file')
     endif
@@ -416,17 +416,17 @@ program smooth_sem
 
     ! allocates arrays
     allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
-    if( ier /= 0 ) stop 'Error allocating array ibool'
+    if (ier /= 0) stop 'Error allocating array ibool'
     allocate(xstore(NGLOB_N),ystore(NGLOB_N),zstore(NGLOB_N),stat=ier)
-    if( ier /= 0 ) stop 'Error allocating array xstore etc.'
+    if (ier /= 0) stop 'Error allocating array xstore etc.'
     allocate(jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
-    if( ier /= 0 ) stop 'Error allocating array jacobian'
+    if (ier /= 0) stop 'Error allocating array jacobian'
     allocate(dummy(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
-    if( ier /= 0 ) stop 'Error allocating array dummy'
+    if (ier /= 0) stop 'Error allocating array dummy'
 
     ! gets number of point locations (and jacobian, but jacobian not used by default)
     open(unit=IIN,file=trim(prname_lp),status='old',action='read',form='unformatted',iostat=ier)
-    if( ier /= 0 ) then
+    if (ier /= 0) then
       print*,'Error: could not open database file: ',trim(prname_lp)
       call exit_mpi(myrank, 'Error reading neighbors external mesh file')
     endif
@@ -463,7 +463,7 @@ program smooth_sem
              cx(NSPEC_N), &
              cy(NSPEC_N), &
              cz(NSPEC_N),stat=ier)
-    if( ier /= 0 ) stop 'Error allocating array xx etc.'
+    if (ier /= 0) stop 'Error allocating array xx etc.'
 
     ! sets element center location
     do ispec = 1, nspec_N
@@ -496,15 +496,15 @@ program smooth_sem
     endif
 
     allocate(dat(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
-    if( ier /= 0 ) stop 'Error allocating dat array'
+    if (ier /= 0) stop 'Error allocating dat array'
 
     read(IIN) dat
     close(IIN)
 
-    if( iproc == myrank )  max_old = maxval(abs(dat(:,:,:,:)))
+    if (iproc == myrank)  max_old = maxval(abs(dat(:,:,:,:)))
 
     ! finds closest elements for smoothing
-    !if(myrank==0) print*, '  start looping over elements and points for smoothing ...'
+    !if (myrank==0) print*, '  start looping over elements and points for smoothing ...'
 
     ! loop over elements to be smoothed in the current slice
     do ispec = 1, nspec_AB
@@ -516,7 +516,7 @@ program smooth_sem
                           cx(ispec2),cy(ispec2),cz(ispec2))
 
         ! checks distance between centers of elements
-        if ( dist_h > sigma_h3 .or. dist_v > sigma_v3 ) cycle
+        if (dist_h > sigma_h3 .or. dist_v > sigma_v3) cycle
 
         ! integration factors
         !factor(:,:,:) = jacobian(:,:,:,ispec2) * wgll_cube(:,:,:)
@@ -558,7 +558,7 @@ program smooth_sem
     deallocate(dat)
 
   enddo ! iproc
-  if( myrank == 0 ) print *
+  if (myrank == 0) print *
 
   ! normalizes/scaling factor
   if (myrank == 0) print*, 'Scaling values: min/max = ',minval(bk),maxval(bk)
@@ -572,10 +572,10 @@ program smooth_sem
       do j = 1, NGLLY
         do i = 1, NGLLX
           ! checks the normalization criterion
-          !if (abs(bk(i,j,k,ispec) - norm) > 1.e-4 ) then
+          !if (abs(bk(i,j,k,ispec) - norm) > 1.e-4) then
           !  print *, 'Problem norm here --- ', ispec, i, j, k, bk(i,j,k,ispec), norm
           !endif
-          if (abs(bk(i,j,k,ispec)) < 1.e-18 ) then
+          if (abs(bk(i,j,k,ispec)) < 1.e-18) then
             print *, 'Problem norm here --- ', ispec, i, j, k, bk(i,j,k,ispec), norm
           endif
 
@@ -594,10 +594,10 @@ program smooth_sem
   write(ks_file,'(a,i6.6,a)') trim(outdir)//'/proc',myrank,'_'//trim(filename)//'_smooth.bin'
 
   open(IOUT,file=trim(ks_file),status='unknown',form='unformatted',iostat=ier)
-  if( ier /= 0 ) stop 'Error opening smoothed kernel file'
+  if (ier /= 0) stop 'Error opening smoothed kernel file'
   write(IOUT) dat_smooth(:,:,:,:)
   close(IOUT)
-  if( myrank == 0 ) print *,'written: ',trim(ks_file)
+  if (myrank == 0) print *,'written: ',trim(ks_file)
 
   ! frees memory
   deallocate(dat_smooth)
@@ -610,7 +610,7 @@ program smooth_sem
   call max_all_cr(norm, max_old)
   norm = max_new
   call max_all_cr(norm, max_new)
-  if( myrank == 0 ) then
+  if (myrank == 0) then
     print *
     print *,'  Maximum data value before smoothing = ', max_old
     print *,'  Maximum data value after smoothing  = ', max_new

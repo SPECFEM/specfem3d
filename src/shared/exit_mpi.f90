@@ -53,7 +53,7 @@
   close(IERROR)
 
 ! close output file
-  if(myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) close(IMAIN)
+  if (myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) close(IMAIN)
 
   call stop_all()
 

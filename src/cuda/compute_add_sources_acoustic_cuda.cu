@@ -56,13 +56,13 @@ __global__ void compute_add_sources_acoustic_kernel(realw* potential_dot_dot_aco
   int ispec,iglob;
   realw stf,kappal;
 
-  if( isource < NSOURCES ){
+  if (isource < NSOURCES){
 
-    if(myrank == islice_selected_source[isource]) {
+    if (myrank == islice_selected_source[isource]) {
 
       ispec = ispec_selected_source[isource]-1;
 
-      if(ispec_is_inner[ispec] == phase_is_inner && ispec_is_acoustic[ispec] ) {
+      if (ispec_is_inner[ispec] == phase_is_inner && ispec_is_acoustic[ispec]) {
 
         iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)] - 1;
 
@@ -95,7 +95,7 @@ void FC_FUNC_(compute_add_sources_ac_cuda,
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
 
   // check if anything to do
-  if( mp->nsources_local == 0 ) return;
+  if (mp->nsources_local == 0) return;
 
   int NSOURCES = *NSOURCESf;
   int phase_is_inner = *phase_is_innerf;
@@ -142,7 +142,7 @@ void FC_FUNC_(compute_add_sources_ac_s3_cuda,
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
 
   // check if anything to do
-  if( mp->nsources_local == 0 ) return;
+  if (mp->nsources_local == 0) return;
 
   int NSOURCES = *NSOURCESf;
   int phase_is_inner = *phase_is_innerf;
@@ -197,15 +197,15 @@ __global__ void add_sources_ac_SIM_TYPE_2_OR_3_kernel(realw* potential_dot_dot_a
   int irec_local = blockIdx.x + gridDim.x*blockIdx.y;
 
   // because of grid shape, irec_local can be too big
-  if(irec_local < nadj_rec_local) {
+  if (irec_local < nadj_rec_local) {
 
     int irec = pre_computed_irec[irec_local];
 
     int ispec = ispec_selected_rec[irec]-1;
-    if( ispec_is_acoustic[ispec] ){
+    if (ispec_is_acoustic[ispec]){
 
       // checks if element is in phase_is_inner run
-      if(ispec_is_inner[ispec] == phase_is_inner) {
+      if (ispec_is_inner[ispec] == phase_is_inner) {
         int i = threadIdx.x;
         int j = threadIdx.y;
         int k = threadIdx.z;
@@ -261,7 +261,7 @@ void FC_FUNC_(add_sources_ac_sim_2_or_3_cuda,
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
 
   // checks
-  if( *nadj_rec_local != mp->nadj_rec_local) exit_on_cuda_error("add_sources_ac_sim_type_2_or_3: nadj_rec_local not equal\n");
+  if (*nadj_rec_local != mp->nadj_rec_local) exit_on_cuda_error("add_sources_ac_sim_type_2_or_3: nadj_rec_local not equal\n");
 
   int num_blocks_x, num_blocks_y;
   get_blocks_xy(mp->nadj_rec_local,&num_blocks_x,&num_blocks_y);
@@ -278,13 +278,13 @@ void FC_FUNC_(add_sources_ac_sim_2_or_3_cuda,
   irec_local = 0;
 
   for(int irec = 0; irec < *nrec; irec++) {
-    if(mp->myrank == h_islice_selected_rec[irec]) {
+    if (mp->myrank == h_islice_selected_rec[irec]) {
       // takes only acoustic sources
       ispec = h_ispec_selected_rec[irec] - 1;
 
       // only for acoustic elements
-      if( h_ispec_is_acoustic[ispec] ){
-        if( h_ispec_is_inner[ispec] == *phase_is_inner) {
+      if (h_ispec_is_acoustic[ispec]){
+        if (h_ispec_is_inner[ispec] == *phase_is_inner) {
           for(k=0;k<5;k++) {
             for(j=0;j<5;j++) {
               for(i=0;i<5;i++) {
@@ -314,7 +314,7 @@ void FC_FUNC_(add_sources_ac_sim_2_or_3_cuda,
     }
   }
   // check all local sources were added
-  if( irec_local != mp->nadj_rec_local) exit_on_error("irec_local not equal to nadj_rec_local\n");
+  if (irec_local != mp->nadj_rec_local) exit_on_error("irec_local not equal to nadj_rec_local\n");
 
   // copies extracted array values onto GPU
   print_CUDA_error_if_any(cudaMemcpy(mp->d_adj_sourcearrays, mp->h_adj_sourcearrays_slice,

@@ -85,7 +85,7 @@
     !           no material properties are needed for this coupling term)
     ispec = coupling_ac_el_ispec(iface)
 
-    if( ispec_is_inner(ispec) .eqv. phase_is_inner ) then
+    if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
 
       ! loops over common GLL points
       do igll = 1, NGLLSQUARE
@@ -98,10 +98,10 @@
         iglob = ibool(i,j,k,ispec)
 
         ! acoustic pressure on global point
-        if(PML_CONDITIONS .and. NSPEC_CPML > 0)then
-          if(.not. backward_simulation)then
-            if(is_CPML(ispec))then
-              if(SIMULATION_TYPE == 1)then
+        if (PML_CONDITIONS .and. NSPEC_CPML > 0)then
+          if (.not. backward_simulation)then
+            if (is_CPML(ispec))then
+              if (SIMULATION_TYPE == 1)then
                 ispec_CPML = spec_to_CPML(ispec)
                 call pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,i,j,k,&
                                                 pressure,potential_acoustic,potential_acoustic_old,&
@@ -110,7 +110,7 @@
                 pressure = - pressure
               endif
 
-              if(SIMULATION_TYPE == 3)then
+              if (SIMULATION_TYPE == 3)then
                 ispec_CPML = spec_to_CPML(ispec)
                 call pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,i,j,k,&
                                                 pressure,potential_acoustic,potential_acoustic_old,&
@@ -121,7 +121,7 @@
               pressure = - potential_dot_dot_acoustic(iglob)
             endif
           else
-            if(is_CPML(ispec))then
+            if (is_CPML(ispec))then
 ! left blank, since no operation needed
             else
               pressure = - potential_dot_dot_acoustic(iglob)
@@ -217,7 +217,7 @@ end subroutine compute_coupling_viscoelastic_ac
       iglob = ibool(i,j,k,ispec)
 
       ! only update once
-      if(.not. updated_dof_ocean_load(iglob)) then
+      if (.not. updated_dof_ocean_load(iglob)) then
 
         ! get normal
         nx = free_surface_normal(1,igll,iface)
@@ -309,7 +309,7 @@ end subroutine compute_coupling_viscoelastic_ac
       iglob = ibool(i,j,k,ispec)
 
       ! only update once
-      if(.not. updated_dof_ocean_load(iglob)) then
+      if (.not. updated_dof_ocean_load(iglob)) then
 
         ! get normal
         nx = free_surface_normal(1,igll,iface)

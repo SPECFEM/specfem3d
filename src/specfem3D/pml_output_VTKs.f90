@@ -43,11 +43,11 @@ subroutine pml_output_VTKs()
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable:: temp_d_store_x,temp_d_store_y,temp_d_store_z
   character(len=MAX_STRING_LEN) :: vtkfilename
 
-  if(myrank == 0) write(IMAIN,*) 'Writing informations about C-PML elements in VTK-file format'
+  if (myrank == 0) write(IMAIN,*) 'Writing informations about C-PML elements in VTK-file format'
 
   ! C-PML regions
   allocate(temp_CPML_regions(NSPEC_AB),stat=ier)
-  if(ier /= 0) stop 'error allocating array temp_CPML_regions'
+  if (ier /= 0) stop 'error allocating array temp_CPML_regions'
 
   temp_CPML_regions(:) = 0
 
@@ -57,7 +57,7 @@ subroutine pml_output_VTKs()
     temp_CPML_regions(ispec) = CPML_regions(ispec_CPML)
   enddo
 
-  if(myrank == 0) write(IMAIN,*) 'Generating CPML_regions VTK file'
+  if (myrank == 0) write(IMAIN,*) 'Generating CPML_regions VTK file'
 
   vtkfilename = prname(1:len_trim(prname))//'CPML_regions'
   call write_VTK_data_elem_i(NSPEC_AB,NGLOB_AB,xstore,ystore,zstore,ibool,temp_CPML_regions,vtkfilename)
@@ -66,11 +66,11 @@ subroutine pml_output_VTKs()
 
   ! C-PML damping profile arrays
   allocate(temp_d_store_x(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-  if(ier /= 0) stop 'error allocating array temp_d_store_x'
+  if (ier /= 0) stop 'error allocating array temp_d_store_x'
   allocate(temp_d_store_y(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-  if(ier /= 0) stop 'error allocating array temp_d_store_y'
+  if (ier /= 0) stop 'error allocating array temp_d_store_y'
   allocate(temp_d_store_z(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-  if(ier /= 0) stop 'error allocating array temp_d_store_z'
+  if (ier /= 0) stop 'error allocating array temp_d_store_z'
 
   temp_d_store_x(:,:,:,:) = 0._CUSTOM_REAL
   temp_d_store_y(:,:,:,:) = 0._CUSTOM_REAL
@@ -84,7 +84,7 @@ subroutine pml_output_VTKs()
     temp_d_store_z(:,:,:,ispec) = d_store_z(:,:,:,ispec_CPML)
   enddo
 
-  if(myrank == 0) write(IMAIN,*) 'Generating CPML_damping_dx, CPML_damping_dy and CPML_damping_dz VTK files'
+  if (myrank == 0) write(IMAIN,*) 'Generating CPML_damping_dx, CPML_damping_dy and CPML_damping_dz VTK files'
 
   vtkfilename = prname(1:len_trim(prname))//'CPML_damping_dx'
   call write_VTK_data_gll_cr(NSPEC_AB,NGLOB_AB,xstore,ystore,zstore,ibool,temp_d_store_x,vtkfilename)

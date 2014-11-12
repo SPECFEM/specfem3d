@@ -166,7 +166,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
     ! material id
     material_index(1,ispec) = ispec_material_id(ispec)
     ! material definition: 1 = interface type / 2 = tomography type
-    if (ispec_material_id(ispec) > 0 ) then
+    if (ispec_material_id(ispec) > 0) then
       ! dummy value, not used any further
       material_index(2,ispec) = 1
     else
@@ -313,63 +313,63 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
 
   nb_interfaces = 0
   nspec_interfaces_max = 0
-  if(NPROC_XI >= 2 .or. NPROC_ETA >= 2) then
+  if (NPROC_XI >= 2 .or. NPROC_ETA >= 2) then
     nb_interfaces = 4
     interfaces(W:N) = .true.
     interfaces(NW:SW) = .false.
-    if(iproc_xi == 0) then
+    if (iproc_xi == 0) then
        nb_interfaces =  nb_interfaces -1
        interfaces(W) = .false.
     endif
-    if(iproc_xi == NPROC_XI-1) then
+    if (iproc_xi == NPROC_XI-1) then
        nb_interfaces =  nb_interfaces -1
        interfaces(E) = .false.
     endif
-    if(iproc_eta == 0) then
+    if (iproc_eta == 0) then
        nb_interfaces =  nb_interfaces -1
        interfaces(S) = .false.
     endif
-    if(iproc_eta == NPROC_ETA-1) then
+    if (iproc_eta == NPROC_ETA-1) then
        nb_interfaces =  nb_interfaces -1
        interfaces(N) = .false.
     endif
 
-    if((interfaces(W) .eqv. .true.) .and. (interfaces(N) .eqv. .true.)) then
+    if ((interfaces(W) .eqv. .true.) .and. (interfaces(N) .eqv. .true.)) then
          interfaces(NW) = .true.
          nb_interfaces =  nb_interfaces +1
     endif
-    if((interfaces(N) .eqv. .true.) .and. (interfaces(E) .eqv. .true.)) then
+    if ((interfaces(N) .eqv. .true.) .and. (interfaces(E) .eqv. .true.)) then
          interfaces(NE) = .true.
          nb_interfaces =  nb_interfaces +1
     endif
-    if((interfaces(E) .eqv. .true.) .and. (interfaces(S) .eqv. .true.)) then
+    if ((interfaces(E) .eqv. .true.) .and. (interfaces(S) .eqv. .true.)) then
          interfaces(SE) = .true.
          nb_interfaces =  nb_interfaces +1
     endif
-    if((interfaces(W) .eqv. .true.) .and. (interfaces(S) .eqv. .true.)) then
+    if ((interfaces(W) .eqv. .true.) .and. (interfaces(S) .eqv. .true.)) then
          interfaces(SW) = .true.
          nb_interfaces =  nb_interfaces +1
     endif
 
     nspec_interface(:) = 0
-    if(interfaces(W)) &
+    if (interfaces(W)) &
         nspec_interface(W) = count(iMPIcut_xi(1,:) .eqv. .true.)
-    if(interfaces(E)) &
+    if (interfaces(E)) &
         nspec_interface(E) = count(iMPIcut_xi(2,:) .eqv. .true.)
-    if(interfaces(S)) &
+    if (interfaces(S)) &
         nspec_interface(S) = count(iMPIcut_eta(1,:) .eqv. .true.)
-    if(interfaces(N)) &
+    if (interfaces(N)) &
         nspec_interface(N) = count(iMPIcut_eta(2,:) .eqv. .true.)
-    if(interfaces(NW)) &
+    if (interfaces(NW)) &
         nspec_interface(NW) = count((iMPIcut_xi(1,:) .eqv. .true.) &
             .and. (iMPIcut_eta(2,:) .eqv. .true.))
-    if(interfaces(NE)) &
+    if (interfaces(NE)) &
         nspec_interface(NE) = count((iMPIcut_xi(2,:) .eqv. .true.) &
             .and. (iMPIcut_eta(2,:) .eqv. .true.))
-    if(interfaces(SE)) &
+    if (interfaces(SE)) &
         nspec_interface(SE) = count((iMPIcut_xi(2,:) .eqv. .true.) &
             .and. (iMPIcut_eta(1,:) .eqv. .true.))
-    if(interfaces(SW)) &
+    if (interfaces(SW)) &
         nspec_interface(SW) = count((iMPIcut_xi(1,:) .eqv. .true.) &
             .and. (iMPIcut_eta(1,:) .eqv. .true.))
 
@@ -384,12 +384,12 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
     num_elmnts_mesh(:) = 0
     interfaces_mesh(:,:,:) = 0
 
-    if(interfaces(W)) then
+    if (interfaces(W)) then
       neighbours_mesh(interface_num) = addressing(iproc_xi-1,iproc_eta)
       num_elmnts_mesh(interface_num) = nspec_interface(W)
       ispec_interface = 1
       do ispec = 1,nspec
-        if(iMPIcut_xi(1,ispec)) then
+        if (iMPIcut_xi(1,ispec)) then
           interfaces_mesh(1, ispec_interface, interface_num) = ispec
           interfaces_mesh(2, ispec_interface, interface_num) = 4
           interfaces_mesh(3, ispec_interface, interface_num) &
@@ -406,12 +406,12 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
       interface_num = interface_num +1
     endif
 
-    if(interfaces(E)) then
+    if (interfaces(E)) then
       neighbours_mesh(interface_num) = addressing(iproc_xi+1,iproc_eta)
       num_elmnts_mesh(interface_num) = nspec_interface(E)
       ispec_interface = 1
       do ispec = 1,nspec
-        if(iMPIcut_xi(2,ispec)) then
+        if (iMPIcut_xi(2,ispec)) then
           interfaces_mesh(1, ispec_interface, interface_num) = ispec
           interfaces_mesh(2, ispec_interface, interface_num) = 4
           interfaces_mesh(3, ispec_interface, interface_num) &
@@ -428,12 +428,12 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
       interface_num = interface_num +1
     endif
 
-    if(interfaces(S)) then
+    if (interfaces(S)) then
       neighbours_mesh(interface_num) = addressing(iproc_xi,iproc_eta-1)
       num_elmnts_mesh(interface_num) = nspec_interface(S)
       ispec_interface = 1
       do ispec = 1,nspec
-        if(iMPIcut_eta(1,ispec)) then
+        if (iMPIcut_eta(1,ispec)) then
           interfaces_mesh(1, ispec_interface, interface_num) = ispec
           interfaces_mesh(2, ispec_interface, interface_num) = 4
           interfaces_mesh(3, ispec_interface, interface_num) &
@@ -450,12 +450,12 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
       interface_num = interface_num +1
     endif
 
-    if(interfaces(N)) then
+    if (interfaces(N)) then
       neighbours_mesh(interface_num) = addressing(iproc_xi,iproc_eta+1)
       num_elmnts_mesh(interface_num) = nspec_interface(N)
       ispec_interface = 1
       do ispec = 1,nspec
-        if(iMPIcut_eta(2,ispec)) then
+        if (iMPIcut_eta(2,ispec)) then
           interfaces_mesh(1, ispec_interface, interface_num) = ispec
           interfaces_mesh(2, ispec_interface, interface_num) = 4
           interfaces_mesh(3, ispec_interface, interface_num) &
@@ -472,12 +472,12 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
       interface_num = interface_num +1
     endif
 
-    if(interfaces(NW)) then
+    if (interfaces(NW)) then
       neighbours_mesh(interface_num) = addressing(iproc_xi-1,iproc_eta+1)
       num_elmnts_mesh(interface_num) = nspec_interface(NW)
       ispec_interface = 1
       do ispec = 1,nspec
-        if((iMPIcut_xi(1,ispec) .eqv. .true.) &
+        if ((iMPIcut_xi(1,ispec) .eqv. .true.) &
             .and. (iMPIcut_eta(2,ispec) .eqv. .true.))  then
           interfaces_mesh(1, ispec_interface, interface_num) = ispec
           interfaces_mesh(2, ispec_interface, interface_num) = 2
@@ -493,12 +493,12 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
       interface_num = interface_num +1
     endif
 
-    if(interfaces(NE)) then
+    if (interfaces(NE)) then
       neighbours_mesh(interface_num) = addressing(iproc_xi+1,iproc_eta+1)
       num_elmnts_mesh(interface_num) = nspec_interface(NE)
       ispec_interface = 1
       do ispec = 1,nspec
-        if((iMPIcut_xi(2,ispec) .eqv. .true.) &
+        if ((iMPIcut_xi(2,ispec) .eqv. .true.) &
             .and. (iMPIcut_eta(2,ispec) .eqv. .true.))  then
           interfaces_mesh(1, ispec_interface, interface_num) = ispec
           interfaces_mesh(2, ispec_interface, interface_num) = 2
@@ -514,12 +514,12 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
       interface_num = interface_num +1
     endif
 
-    if(interfaces(SE)) then
+    if (interfaces(SE)) then
       neighbours_mesh(interface_num) = addressing(iproc_xi+1,iproc_eta-1)
       num_elmnts_mesh(interface_num) = nspec_interface(SE)
       ispec_interface = 1
       do ispec = 1,nspec
-        if((iMPIcut_xi(2,ispec) .eqv. .true.) &
+        if ((iMPIcut_xi(2,ispec) .eqv. .true.) &
             .and. (iMPIcut_eta(1,ispec) .eqv. .true.))  then
           interfaces_mesh(1, ispec_interface, interface_num) = ispec
           interfaces_mesh(2, ispec_interface, interface_num) = 2
@@ -535,12 +535,12 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
       interface_num = interface_num +1
     endif
 
-    if(interfaces(SW)) then
+    if (interfaces(SW)) then
       neighbours_mesh(interface_num) = addressing(iproc_xi-1,iproc_eta-1)
       num_elmnts_mesh(interface_num) = nspec_interface(SW)
       ispec_interface = 1
       do ispec = 1,nspec
-        if((iMPIcut_xi(1,ispec) .eqv. .true.) &
+        if ((iMPIcut_xi(1,ispec) .eqv. .true.) &
             .and. (iMPIcut_eta(1,ispec) .eqv. .true.))  then
           interfaces_mesh(1, ispec_interface, interface_num) = ispec
           interfaces_mesh(2, ispec_interface, interface_num) = 2
@@ -635,12 +635,12 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   local_dim = 3 * nglob_wmax
   call define_adios_global_array1D(group, groupsize, local_dim, "", STRINGIFY_VAR(nodes_coords))
 
-  if (ndef /= 0 ) then
+  if (ndef /= 0) then
     local_dim = 16 * ndef
     call define_adios_global_array1D(group, groupsize, local_dim, "", STRINGIFY_VAR(matpropl))
   endif
 
-  if (nundef /= 0 ) then
+  if (nundef /= 0) then
     local_dim = 6 * nundef * MAX_STRING_LEN
     ! all processes will have an identical entry, uses "local" variable to store string
     call define_adios_local_string_1D_array(group, groupsize, local_dim, "", "undef_mat_prop", undef_matpropl(1:local_dim))
@@ -680,7 +680,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   local_dim = NGNOD2D * nspec2d_top_wmax
   call define_adios_global_array1D(group, groupsize, local_dim, "", STRINGIFY_VAR(nodes_ibelm_top))
 
-  if (nb_interfaces_wmax > 0 ) then
+  if (nb_interfaces_wmax > 0) then
     local_dim = nb_interfaces_wmax
     call define_adios_global_array1D(group, groupsize, local_dim, "", STRINGIFY_VAR(neighbours_mesh))
     call define_adios_global_array1D(group, groupsize, local_dim, "", STRINGIFY_VAR(num_elmnts_mesh))

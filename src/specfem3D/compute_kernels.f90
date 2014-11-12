@@ -38,22 +38,22 @@
   implicit none
 
   ! elastic simulations
-  if( ELASTIC_SIMULATION ) then
+  if (ELASTIC_SIMULATION) then
     call compute_kernels_el()
   endif
 
   ! acoustic simulations
-  if( ACOUSTIC_SIMULATION ) then
+  if (ACOUSTIC_SIMULATION) then
     call compute_kernels_ac()
   endif
 
   ! poroelastic simulations
-  if( POROELASTIC_SIMULATION ) then
+  if (POROELASTIC_SIMULATION) then
     call compute_kernels_po()
   endif
 
   ! computes an approximative hessian for preconditioning kernels
-  if ( APPROXIMATE_HESS_KL ) then
+  if (APPROXIMATE_HESS_KL) then
     call compute_kernels_hessian()
   endif
 
@@ -78,7 +78,7 @@
   real(kind=CUSTOM_REAL),dimension(21) :: prod
   real(kind=CUSTOM_REAL), dimension(5) :: epsilondev_loc,b_epsilondev_loc
 
-  if( .not. GPU_MODE ) then
+  if (.not. GPU_MODE) then
     ! updates kernels on CPU
     do ispec = 1, NSPEC_AB
 
@@ -155,8 +155,8 @@
   endif
 
   ! moho kernel
-  if( SAVE_MOHO_MESH ) then
-    if( GPU_MODE ) then
+  if (SAVE_MOHO_MESH) then
+    if (GPU_MODE) then
       call transfer_accel_from_device(NDIM*NGLOB_AB,accel,Mesh_pointer)
       call transfer_b_displ_from_device(NDIM*NGLOB_AB,b_displ,Mesh_pointer)
     endif
@@ -196,7 +196,7 @@
   integer :: i,j,k,ispec,iglob
 
   ! updates kernels on GPU
-  if(GPU_MODE) then
+  if (GPU_MODE) then
 
     ! computes contribution to density and bulk modulus kernel
     call compute_kernels_acoustic_cuda(Mesh_pointer,deltat)
@@ -209,7 +209,7 @@
   do ispec = 1, NSPEC_AB
 
     ! acoustic domains
-    if( ispec_is_acoustic(ispec) ) then
+    if (ispec_is_acoustic(ispec)) then
 
       ! backward fields: displacement vector
       call compute_gradient(ispec,NSPEC_ADJOINT,NGLOB_ADJOINT, &
@@ -271,12 +271,12 @@
   integer :: i,j,k,ispec,iglob
   real(kind=CUSTOM_REAL), dimension(5) :: epsilonsdev_loc,b_epsilonsdev_loc
 
-  if( .not. GPU_MODE ) then
+  if (.not. GPU_MODE) then
     ! updates kernels on CPU
     do ispec = 1, NSPEC_AB
 
       ! poroelastic domains
-      if( ispec_is_poroelastic(ispec) ) then
+      if (ispec_is_poroelastic(ispec)) then
 
         do k = 1, NGLLZ
           do j = 1, NGLLY
@@ -376,7 +376,7 @@
   integer :: i,j,k,ispec,iglob
 
   ! updates kernels on GPU
-  if(GPU_MODE) then
+  if (GPU_MODE) then
 
     ! computes contribution to density and bulk modulus kernel
     call compute_kernels_hess_cuda(Mesh_pointer,deltat, &
@@ -390,7 +390,7 @@
   do ispec = 1, NSPEC_AB
 
     ! acoustic domains
-    if( ispec_is_acoustic(ispec) ) then
+    if (ispec_is_acoustic(ispec)) then
 
       ! adjoint fields: acceleration vector
       call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
@@ -422,7 +422,7 @@
     endif
 
     ! elastic domains
-    if( ispec_is_elastic(ispec) ) then
+    if (ispec_is_elastic(ispec)) then
       do k = 1, NGLLZ
         do j = 1, NGLLY
           do i = 1, NGLLX
@@ -491,11 +491,11 @@
   do i=1,6
     do j=i,6
       prod(p)=eps(i)*b_eps(j)
-      if(j>i) then
+      if (j>i) then
         prod(p)=prod(p)+eps(j)*b_eps(i)
-        if(j>3 .and. i<4) prod(p)=prod(p)*2
+        if (j>3 .and. i<4) prod(p)=prod(p)*2
       endif
-      if(i>3) prod(p)=prod(p)*4
+      if (i>3) prod(p)=prod(p)*4
       p=p+1
     enddo
   enddo

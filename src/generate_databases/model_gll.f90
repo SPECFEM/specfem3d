@@ -64,11 +64,11 @@
 
   ! density
   allocate( rho_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array rho_read'
+  if (ier /= 0) stop 'error allocating array rho_read'
 
   filename = prname_lp(1:len_trim(prname_lp))//'rho.bin'
   open(unit=28,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
-  if( ier /= 0 ) then
+  if (ier /= 0) then
     print*,'error opening file: ',trim(filename)
     stop 'error reading rho.bin file'
   endif
@@ -78,11 +78,11 @@
 
   ! vp
   allocate( vp_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array vp_read'
+  if (ier /= 0) stop 'error allocating array vp_read'
 
   filename = prname_lp(1:len_trim(prname_lp))//'vp.bin'
   open(unit=28,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
-  if( ier /= 0 ) then
+  if (ier /= 0) then
     print*,'error opening file: ',trim(filename)
     stop 'error reading vp.bin file'
   endif
@@ -92,11 +92,11 @@
 
   ! vs
   allocate( vs_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array vs_read'
+  if (ier /= 0) stop 'error allocating array vs_read'
 
   filename = prname_lp(1:len_trim(prname_lp))//'vs.bin'
   open(unit=28,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
-  if( ier /= 0 ) then
+  if (ier /= 0) then
     print*,'error opening file: ',trim(filename)
     stop 'error reading vs.bin file'
   endif
@@ -114,7 +114,7 @@
   !                      -0.4720 * (vp_read / 1000.0)**2  &
   !                      +0.0671 * (vp_read / 1000.0)**3  &
   !                      -0.0043 * (vp_read / 1000.0)**4  &
-  !                      +0.000106*(vp_read / 1000.0)**5 )*1000.0
+  !                      +0.000106*(vp_read / 1000.0)**5)*1000.0
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!! in cases where shear wavespeed structure is not given

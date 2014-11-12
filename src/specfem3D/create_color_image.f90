@@ -131,27 +131,27 @@
   integer, dimension(1,0:NPROC-1) :: tmp_pixel_per_proc
 
   ! checks image type
-  if(IMAGE_TYPE > 4 .or. IMAGE_TYPE < 1) then
+  if (IMAGE_TYPE > 4 .or. IMAGE_TYPE < 1) then
     call exit_mpi(myrank,'That type is not implemented for PNM images yet')
   endif
 
   ! user output
-  if( myrank == 0 ) then
+  if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) '********'
     !   type = 1 : velocity V_x component
-    if( IMAGE_TYPE == 1 ) write(IMAIN,*) 'PNM image: velocity V_x component'
+    if (IMAGE_TYPE == 1) write(IMAIN,*) 'PNM image: velocity V_x component'
     !   type = 2 : velocity V_y component
-    if( IMAGE_TYPE == 2 ) write(IMAIN,*) 'PNM image: velocity V_y component'
+    if (IMAGE_TYPE == 2) write(IMAIN,*) 'PNM image: velocity V_y component'
     !   type = 3 : velocity V_z component
-    if( IMAGE_TYPE == 3 ) write(IMAIN,*) 'PNM image: velocity V_z component'
+    if (IMAGE_TYPE == 3) write(IMAIN,*) 'PNM image: velocity V_z component'
     !   type = 4 : velocity V norm
-    if( IMAGE_TYPE == 4 ) write(IMAIN,*) 'PNM image: velocity norm'
+    if (IMAGE_TYPE == 4) write(IMAIN,*) 'PNM image: velocity norm'
   endif
 
   ! finds global points on image surface
   allocate(ispec_is_image_surface(NSPEC_AB),iglob_is_image_surface(NGLOB_AB),stat=ier)
-  if( ier /= 0 ) call exit_mpi(myrank,'error allocating image ispec and iglob')
+  if (ier /= 0) call exit_mpi(myrank,'error allocating image ispec and iglob')
 
   call detect_surface_PNM_image(NPROC,NGLOB_AB,NSPEC_AB,ibool,&
                             ispec_is_image_surface, &
@@ -169,16 +169,16 @@
            zcoord(num_iglob_image_surface),&
            iglob_coord(num_iglob_image_surface),&
            ispec_coord(num_iglob_image_surface),stat=ier )
-  if( ier /= 0 ) call exit_mpi(myrank,'error allocating xyz image coordinates')
+  if (ier /= 0) call exit_mpi(myrank,'error allocating xyz image coordinates')
 
   countval=0
   do ispec=1,NSPEC_AB
-    if( ispec_is_image_surface(ispec) ) then
+    if (ispec_is_image_surface(ispec)) then
       do k=1,NGLLZ
         do j=1,NGLLY
           do i=1,NGLLX
             iglob = ibool(i,j,k,ispec)
-            if( iglob_is_image_surface(iglob) ) then
+            if (iglob_is_image_surface(iglob)) then
               countval = countval + 1
               ! coordinates with respect to horizontal and vertical direction
               xcoord(countval)= xstore(iglob)*section_hdirx &
@@ -199,7 +199,7 @@
     endif
   enddo
 
-  if( countval /= num_iglob_image_surface) call exit_mpi(myrank,'error image point number')
+  if (countval /= num_iglob_image_surface) call exit_mpi(myrank,'error image point number')
 
   ! horizontal size of the image
   xmin_color_image_loc = minval( xcoord(:) )
@@ -239,7 +239,7 @@
   NZ_IMAGE_color = 2 * (NZ_IMAGE_color / 2)
 
   ! check that image size is not too big
-  if( NX_IMAGE_color > 4096 .or. NZ_IMAGE_color > 4096 ) then
+  if (NX_IMAGE_color > 4096 .or. NZ_IMAGE_color > 4096) then
     ! half of it
     NX_IMAGE_color = NX_IMAGE_color / 2
     NZ_IMAGE_color = NZ_IMAGE_color / 2
@@ -250,7 +250,7 @@
 
   ! ...and not too small
   zoom = .false.
-  if( NX_IMAGE_color < 200 .or. NZ_IMAGE_color < 200 ) then
+  if (NX_IMAGE_color < 200 .or. NZ_IMAGE_color < 200) then
     ! increases it
     NX_IMAGE_color = NX_IMAGE_color * zoom_factor
     NZ_IMAGE_color = NZ_IMAGE_color * zoom_factor
@@ -258,13 +258,13 @@
   endif
 
   ! create all the pixels
-  if( NX_IMAGE_color /= 0 ) then
+  if (NX_IMAGE_color /= 0) then
     size_pixel_horizontal = (xmax_color_image - xmin_color_image) / dble(NX_IMAGE_color)
   else
     size_pixel_horizontal = 0.0
   endif
 
-  if( NZ_IMAGE_color /= 0 ) then
+  if (NZ_IMAGE_color /= 0) then
     size_pixel_vertical = (zmax_color_image - zmin_color_image) / dble(NZ_IMAGE_color)
   else
     size_pixel_vertical = 0.0
@@ -281,16 +281,16 @@
   ! allocate an array for the grid point that corresponds to a given image data point
   allocate(iglob_image_color(NX_IMAGE_color,NZ_IMAGE_color),&
           ispec_image_color(NX_IMAGE_color,NZ_IMAGE_color),stat=ier)
-  if( ier /= 0 ) call exit_mpi(myrank,'error allocating iglob_image_color')
+  if (ier /= 0) call exit_mpi(myrank,'error allocating iglob_image_color')
 
   allocate(dist_pixel_image(NX_IMAGE_color,NZ_IMAGE_color),stat=ier)
-  if( ier /= 0 ) call exit_mpi(myrank,'error allocating dist pixel image')
+  if (ier /= 0) call exit_mpi(myrank,'error allocating dist pixel image')
 
   iglob_image_color(:,:) = -1
   ispec_image_color(:,:) = 0
   dist_pixel_image(:,:) = HUGEVAL
 
-  if( zoom ) then
+  if (zoom) then
     distance_x1 = zoom_factor*size_pixel_horizontal
     distance_x2 = (zoom_factor+1)*size_pixel_horizontal
     distance_z1 = zoom_factor*size_pixel_vertical
@@ -311,10 +311,10 @@
       pixel_midpoint_z =  ztmp + 0.5*size_pixel_vertical
 
       ! avoid points on image border rim
-      if( pixel_midpoint_x < xmin_color_image_loc &
-        .or. pixel_midpoint_x > xmax_color_image_loc ) cycle
-      if( pixel_midpoint_z < zmin_color_image_loc &
-        .or. pixel_midpoint_z > zmax_color_image_loc ) cycle
+      if (pixel_midpoint_x < xmin_color_image_loc &
+        .or. pixel_midpoint_x > xmax_color_image_loc) cycle
+      if (pixel_midpoint_z < zmin_color_image_loc &
+        .or. pixel_midpoint_z > zmax_color_image_loc) cycle
 
       ! looks for closest point to midpoint of pixel
       dist_min_pixel = HUGEVAL
@@ -324,14 +324,14 @@
         z_loc = zcoord(iglob)
 
         ! checks if inside pixel range for larger numbers of points, minimizing computation time
-        if( x_loc < xtmp - distance_x1 .or. x_loc > xtmp + distance_x2 ) cycle
-        if( z_loc < ztmp - distance_z1 .or. z_loc > ztmp + distance_z2 ) cycle
+        if (x_loc < xtmp - distance_x1 .or. x_loc > xtmp + distance_x2) cycle
+        if (z_loc < ztmp - distance_z1 .or. z_loc > ztmp + distance_z2) cycle
 
         ! stores closest iglob
         x_loc = pixel_midpoint_x - x_loc
         z_loc = pixel_midpoint_z - z_loc
         dist_pixel = x_loc*x_loc + z_loc*z_loc
-        if( dist_pixel < dist_min_pixel) then
+        if (dist_pixel < dist_min_pixel) then
           dist_min_pixel = dist_pixel
           dist_pixel_image(i,j) = dist_min_pixel
           iglob_image_color(i,j) = iglob_coord(iglob)
@@ -344,7 +344,7 @@
 
   ! gather info from other processes as well
   allocate(dist_pixel_recv(NX_IMAGE_color,0:NPROC-1),stat=ier)
-  if(ier /= 0 ) call exit_mpi(myrank,'error allocating dist pixel recv')
+  if (ier /= 0) call exit_mpi(myrank,'error allocating dist pixel recv')
   dist_pixel_recv(:,:) = HUGEVAL
   nb_pixel_loc = 0
   do j=1,NZ_IMAGE_color
@@ -357,7 +357,7 @@
       locval = minloc(dist_pixel_recv(i,:))
       irank = locval(1) - 1
       ! store only own best points
-      if( irank == myrank .and. dist_pixel_recv(i,irank) < HUGEVAL) then
+      if (irank == myrank .and. dist_pixel_recv(i,irank) < HUGEVAL) then
         ! increases count
         nb_pixel_loc = nb_pixel_loc + 1
       else
@@ -371,41 +371,41 @@
 
   ! creating and filling array num_pixel_loc with the positions of each colored
   ! pixel owned by the local process (useful for parallel jobs)
-  if( nb_pixel_loc > 0 ) then
+  if (nb_pixel_loc > 0) then
     allocate(num_pixel_loc(nb_pixel_loc),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array num_pixel_loc'
+    if (ier /= 0) stop 'error allocating array num_pixel_loc'
   endif
   nb_pixel_loc = 0
   do i = 1, NX_IMAGE_color
     do j = 1, NZ_IMAGE_color
-      if ( iglob_image_color(i,j) /= -1 ) then
+      if (iglob_image_color(i,j) /= -1) then
         nb_pixel_loc = nb_pixel_loc + 1
         num_pixel_loc(nb_pixel_loc) = (j-1)*NX_IMAGE_color + i
       endif
     enddo
   enddo
   ! checks if array is allocated
-  if( nb_pixel_loc > 0 ) then
-    if( .not. allocated(num_pixel_loc) ) call exit_MPI(myrank,'error num_pixel_loc allocation')
+  if (nb_pixel_loc > 0) then
+    if (.not. allocated(num_pixel_loc)) call exit_MPI(myrank,'error num_pixel_loc allocation')
   endif
 
   ! filling array iglob_image_color, containing info on which process owns which pixels.
   allocate(nb_pixel_per_proc(0:NPROC-1),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array nb_pixel_per_proc'
+  if (ier /= 0) stop 'error allocating array nb_pixel_per_proc'
 
   call gather_all_singlei(nb_pixel_loc,tmp_pixel_per_proc,NPROC)
   nb_pixel_per_proc(:) = tmp_pixel_per_proc(1,:)
 
   ! allocates receiving array
-  if ( myrank == 0 ) then
+  if (myrank == 0) then
     allocate( num_pixel_recv(maxval(nb_pixel_per_proc(:)),0:NPROC-1),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array num_pixel_recv'
+    if (ier /= 0) stop 'error allocating array num_pixel_recv'
   endif
   ! fills iglob_image_color index array
-  if( NPROC > 1 ) then
+  if (NPROC > 1) then
     if (myrank == 0) then
       do iproc = 1, NPROC-1
-        if( nb_pixel_per_proc(iproc) > 0 ) then
+        if (nb_pixel_per_proc(iproc) > 0) then
           call recv_i(num_pixel_recv(:,iproc),nb_pixel_per_proc(iproc),iproc,42)
           ! stores proc number instead where iglob_image_color wouldn't be defined (=-1)
           do k = 1, nb_pixel_per_proc(iproc)
@@ -416,7 +416,7 @@
         endif
       enddo
     else
-      if( nb_pixel_loc > 0 ) then
+      if (nb_pixel_loc > 0) then
         call send_i(num_pixel_loc(:),nb_pixel_loc,0,42)
       endif
     endif
@@ -425,19 +425,19 @@
   ! allocate an array for image data
   allocate(image_color_data(NX_IMAGE_color,NZ_IMAGE_color), &
           image_color_vp_display(NX_IMAGE_color,NZ_IMAGE_color),stat=ier)
-  if( ier /= 0 ) call exit_mpi(myrank,'error allocating image data')
+  if (ier /= 0) call exit_mpi(myrank,'error allocating image data')
 
   image_color_data(:,:) = 0._CUSTOM_REAL
   image_color_vp_display(:,:) = 0._CUSTOM_REAL
 
-  if ( myrank == 0 ) then
+  if (myrank == 0) then
     allocate( data_pixel_recv(maxval(nb_pixel_per_proc(:))),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array data_pixel_recv'
+    if (ier /= 0) stop 'error allocating array data_pixel_recv'
     data_pixel_recv(:) = 0._CUSTOM_REAL
   endif
-  if( nb_pixel_loc > 0 ) then
+  if (nb_pixel_loc > 0) then
     allocate(data_pixel_send(nb_pixel_loc),stat=ier)
-    if(ier /= 0 ) call exit_mpi(myrank,'error allocating image send data')
+    if (ier /= 0) call exit_mpi(myrank,'error allocating image send data')
     data_pixel_send(:) = 0._CUSTOM_REAL
   endif
 
@@ -445,7 +445,7 @@
   call write_PNM_vp_background()
 
   ! user output
-  if( myrank == 0 ) then
+  if (myrank == 0) then
     write(IMAIN,*) '******** '
     write(IMAIN,*)
   endif
@@ -486,7 +486,7 @@
     ! master collects
     if (myrank == 0) then
       do iproc = 1, NPROC-1
-        if( nb_pixel_per_proc(iproc) > 0 ) then
+        if (nb_pixel_per_proc(iproc) > 0) then
           call recvv_cr(data_pixel_recv(1),nb_pixel_per_proc(iproc),iproc,43)
           ! fills vp display array
           do k = 1, nb_pixel_per_proc(iproc)
@@ -497,7 +497,7 @@
         endif
       enddo
     else
-      if( nb_pixel_loc > 0 ) then
+      if (nb_pixel_loc > 0) then
         ! slave processes send
         call sendv_cr(data_pixel_send,nb_pixel_loc,0,43)
       endif
@@ -541,9 +541,9 @@
     call get_iglob_veloc(iglob,ispec,val_vector)
 
     ! data type
-    if( IMAGE_TYPE == 4 ) then
+    if (IMAGE_TYPE == 4) then
       ! velocity norm
-      temp = sqrt( val_vector(1)**2 + val_vector(2)**2 + val_vector(3)**2 )
+      temp = sqrt( val_vector(1)**2 + val_vector(2)**2 + val_vector(3)**2)
     else
       ! velocity component
       temp = val_vector(IMAGE_TYPE)
@@ -558,7 +558,7 @@
   if (NPROC > 1) then
     if (myrank == 0) then
       do iproc = 1, NPROC-1
-        if( nb_pixel_per_proc(iproc) > 0 ) then
+        if (nb_pixel_per_proc(iproc) > 0) then
           call recvv_cr(data_pixel_recv(1),nb_pixel_per_proc(iproc),iproc,43)
           ! distributes on image pixels
           do k = 1, nb_pixel_per_proc(iproc)
@@ -569,7 +569,7 @@
         endif
       enddo
     else
-      if( nb_pixel_loc > 0 ) then
+      if (nb_pixel_loc > 0) then
         ! slave processes send
         call sendv_cr(data_pixel_send(1),nb_pixel_loc,0,43)
       endif
@@ -623,7 +623,7 @@
   open(unit=27,file=file_name,status='unknown')
   close(unit=27,status='delete')
 
-  if(BINARY_FILE) then
+  if (BINARY_FILE) then
     open(unit=27,file=file_name,status='unknown',access='direct',recl=1)
     write(27,rec=1) 'P'
     write(27,rec=2) '6' ! write P6 = binary PNM image format
@@ -697,20 +697,20 @@
   vpmax = TINYVAL
   do iy=1,NY
     do ix=1,NX
-      if ( iglob_image_color_2D(ix,iy) > -1 ) then
+      if (iglob_image_color_2D(ix,iy) > -1) then
         vpmin = min(vpmin,image_color_vp_display(ix,iy))
         vpmax = max(vpmax,image_color_vp_display(ix,iy))
       endif
     enddo
   enddo
   amplitude_max = maxval(abs(color_image_2D_data))
-  if( amplitude_max < TINYVAL ) amplitude_max = HUGEVAL
+  if (amplitude_max < TINYVAL) amplitude_max = HUGEVAL
 
   ! in the PNM format, the image starts in the upper-left corner
   do iy=NY,1,-1
     do ix=1,NX
       ! check if pixel is defined or not (can be above topography for instance)
-      if(iglob_image_color_2D(ix,iy) == -1) then
+      if (iglob_image_color_2D(ix,iy) == -1) then
         ! use black (/light blue) to display undefined region above topography
         R = 0 !204
         G = 0 !255
@@ -719,9 +719,9 @@
       ! suppress small amplitudes considered as noise
       else if (abs(color_image_2D_data(ix,iy)) < amplitude_max * cutsnaps) then
 
-        if( VP_BACKGROUND ) then
+        if (VP_BACKGROUND) then
           ! use P velocity model as background where amplitude is negligible
-          if((vpmax-vpmin)/vpmin > 0.02d0) then
+          if ((vpmax-vpmin)/vpmin > 0.02d0) then
             x1 = (image_color_vp_display(ix,iy)-vpmin)/(vpmax-vpmin)
           else
             x1 = 0.5_CUSTOM_REAL
@@ -729,7 +729,7 @@
 
           ! rescale to avoid very dark gray levels
           x1 = x1*0.7 + 0.2
-          if(x1 > 1.d0) x1=1._CUSTOM_REAL
+          if (x1 > 1.d0) x1=1._CUSTOM_REAL
 
           ! invert scale: white = vpmin, dark gray = vpmax
           x1 = 1._CUSTOM_REAL - x1
@@ -738,8 +738,8 @@
           x1 = x1 * 255._CUSTOM_REAL
 
           R = nint(x1)
-          if(R < 0) R = 0
-          if(R > 255) R = 255
+          if (R < 0) R = 0
+          if (R > 255) R = 255
           G = R
           B = R
         else
@@ -755,11 +755,11 @@
         normalized_value = color_image_2D_data(ix,iy) / amplitude_max
 
         ! suppress values outside of [-1:+1]
-        if(normalized_value < -1.d0) normalized_value = -1.d0
-        if(normalized_value > 1.d0) normalized_value = 1.d0
+        if (normalized_value < -1.d0) normalized_value = -1.d0
+        if (normalized_value > 1.d0) normalized_value = 1.d0
 
         ! use red if positive value, blue if negative, no green
-        if(normalized_value >= 0.d0) then
+        if (normalized_value >= 0.d0) then
           R = nint(255.d0*normalized_value**POWER_DISPLAY_COLOR)
           G = 0
           B = 0
@@ -771,7 +771,7 @@
       endif
 
       ! write color image
-      if(BINARY_FILE) then
+      if (BINARY_FILE) then
         ! first write red
         write(27,rec=current_rec) char(R)
         current_rec = current_rec + 1
@@ -812,11 +812,11 @@
   do k=1,NGLLZ
     do j=1,NGLLY
       do i=1,NGLLX
-        if( ibool(i,j,k,ispec) == iglob ) then
+        if (ibool(i,j,k,ispec) == iglob) then
           ! calculates vp
-          if( ELASTIC_SIMULATION ) then
+          if (ELASTIC_SIMULATION) then
             vp =  (FOUR_THIRDS * mustore(i,j,k,ispec) + kappastore(i,j,k,ispec)) / rho_vp(i,j,k,ispec)
-          else if( ACOUSTIC_SIMULATION ) then
+          else if (ACOUSTIC_SIMULATION) then
             vp = sqrt( kappastore(i,j,k,ispec) / rhostore(i,j,k,ispec) )
           else
             call exit_mpi(myrank,'error vp not implemented')
@@ -853,10 +853,10 @@
   integer :: i,j,k
 
   ! returns first element encountered for iglob index
-  if( ELASTIC_SIMULATION ) then
-    if( ispec_is_elastic(ispec) ) then
-      if(SAVE_DISPLACEMENT) then
-        if( SIMULATION_TYPE == 3 ) then
+  if (ELASTIC_SIMULATION) then
+    if (ispec_is_elastic(ispec)) then
+      if (SAVE_DISPLACEMENT) then
+        if (SIMULATION_TYPE == 3) then
           ! to display re-constructed wavefield
           !val_vector(:) = b_displ(:,iglob)
           ! to display adjoint wavefield
@@ -865,7 +865,7 @@
           val_vector(:) = displ(:,iglob)
         endif
       else
-        if( SIMULATION_TYPE == 3 ) then
+        if (SIMULATION_TYPE == 3) then
           ! to display re-constructed wavefield
           !val_vector(:) = b_veloc(:,iglob)
           ! to display adjoint wavefield
@@ -880,10 +880,10 @@
     endif
   endif
 
-  if( ACOUSTIC_SIMULATION ) then
-    if( ispec_is_acoustic(ispec) ) then
-      if(SAVE_DISPLACEMENT) then
-        if( SIMULATION_TYPE == 3 ) then
+  if (ACOUSTIC_SIMULATION) then
+    if (ispec_is_acoustic(ispec)) then
+      if (SAVE_DISPLACEMENT) then
+        if (SIMULATION_TYPE == 3) then
           ! displacement vector from backward potential
           call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
                           b_potential_acoustic, val_element,&
@@ -899,7 +899,7 @@
                           ibool,rhostore,GRAVITY)
         endif
       else
-        if( SIMULATION_TYPE == 3 ) then
+        if (SIMULATION_TYPE == 3) then
           ! velocity vector for backward/reconstructed wavefield
           call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
                           b_potential_dot_acoustic, val_element,&
@@ -920,7 +920,7 @@
       do k=1,NGLLZ
         do j=1,NGLLY
           do i=1,NGLLX
-            if( ibool(i,j,k,ispec) == iglob ) then
+            if (ibool(i,j,k,ispec) == iglob) then
               val_vector(:) = val_element(:,i,j,k)
               return
             endif

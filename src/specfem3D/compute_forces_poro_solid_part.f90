@@ -132,7 +132,7 @@
 
   real(kind=CUSTOM_REAL) :: mul_G,lambdal_G,lambdalplus2mul_G
 
-  if( iphase == 1 ) then
+  if (iphase == 1) then
     num_elements = nspec_outer_poroelastic
   else
     num_elements = nspec_inner_poroelastic
@@ -283,7 +283,7 @@
 
           ! compute stress tensor (include attenuation or anisotropy if needed)
 
-          !  if(VISCOATTENUATION) then
+          !  if (VISCOATTENUATION) then
           !chris:check
 
 ! Dissipation only controlled by frame share attenuation in poroelastic (see Morency & Tromp, GJI 2008).
@@ -306,9 +306,9 @@
 
           sigmap = C_biot*duxdxl_plus_duydyl_plus_duzdzl + M_biot*dwxdxl_plus_dwydyl_plus_dwzdzl
 
-          !  endif !if(ATTENUATION)
+          !  endif !if (ATTENUATION)
 
-          if(SIMULATION_TYPE == 3) then ! kernels calculation
+          if (SIMULATION_TYPE == 3) then ! kernels calculation
             epsilons_trace_over_3(i,j,k,ispec) = ONE_THIRD * (duxdxl + duydyl + duzdzl)
             epsilonsdev_xx(i,j,k,ispec) = duxdxl - ONE_THIRD * (duxdxl + duydyl + duzdzl)
             epsilonsdev_yy(i,j,k,ispec) = duydyl - ONE_THIRD * (duxdxl + duydyl + duzdzl)
@@ -480,7 +480,7 @@
             bl_relaxed(5) = etal_f*invpermlyz
             bl_relaxed(6) = etal_f*invpermlzz
 
-            ! if(VISCOATTENUATION) then
+            ! if (VISCOATTENUATION) then
             !   bl_unrelaxed(1) = etal_f*invpermlxx*theta_e/theta_s
             !   bl_unrelaxed(2) = etal_f*invpermlxz*theta_e/theta_s
             !   bl_unrelaxed(3) = etal_f*invpermlzz*theta_e/theta_s
@@ -522,7 +522,7 @@
                                         + phil/tortl*wxgll(i)*wygll(j)*wzgll(k)*jacobian(i,j,k,ispec)*viscodampz
 
             !      ! if isolver == 1 .and. save_forward then b_viscodamp is saved in compute_forces_poro_fluid_part.f90
-            !      if(isolver == 2) then ! kernels calculation
+            !      if (isolver == 2) then ! kernels calculation
             !        b_accels_poroelastic(1,iglob) = b_accels_poroelastic(1,iglob) + phil/tortl*b_viscodampx(iglob)
             !        b_accels_poroelastic(2,iglob) = b_accels_poroelastic(2,iglob) + phil/tortl*b_viscodampz(iglob)
             !      endif
@@ -531,7 +531,7 @@
             !    enddo
             !  enddo
 
-          endif ! if(etal_f >0.d0) then
+          endif ! if (etal_f >0.d0) then
 
         enddo ! second loop over the GLL points
       enddo

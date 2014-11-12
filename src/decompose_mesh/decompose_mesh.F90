@@ -185,14 +185,14 @@ module decompose_mesh
   ! reads node coordinates
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nodes_coords_file',&
           status='old', form='formatted', iostat = ier)
-    if( ier /= 0 ) then
+    if (ier /= 0) then
       print*,'could not open file:',localpath_name(1:len_trim(localpath_name))//'/nodes_coords_file'
       stop 'error file open'
     endif
     read(98,*) nnodes
-    if( nnodes < 1 ) stop 'error: nnodes < 1'
+    if (nnodes < 1) stop 'error: nnodes < 1'
     allocate(nodes_coords(3,nnodes),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array nodes_coords'
+    if (ier /= 0) stop 'error allocating array nodes_coords'
     do inode = 1, nnodes
     ! format: #id_node #x_coordinate #y_coordinate #z_coordinate
       read(98,*) num_node, nodes_coords(1,num_node), nodes_coords(2,num_node), nodes_coords(3,num_node)
@@ -206,11 +206,11 @@ module decompose_mesh
     ! the global coordinate file "nodes_coords_file"; it doesn't tell you which point is connected with others)
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/mesh_file', &
           status='old', form='formatted',iostat=ier)
-    if( ier /= 0 ) stop 'error opening mesh_file'
+    if (ier /= 0) stop 'error opening mesh_file'
     read(98,*) nspec_long
 
     ! debug check size limit
-    if( nspec_long > 2147483646 ) then
+    if (nspec_long > 2147483646) then
       print *,'size exceeds integer 4-byte limit: ',nspec_long
       print*,'bit size fortran: ',bit_size(nspec)
       stop 'error number of elements too large'
@@ -219,9 +219,9 @@ module decompose_mesh
     ! sets number of elements (integer 4-byte)
     nspec = nspec_long
 
-    if( nspec < 1 ) stop 'error: nspec < 1'
+    if (nspec < 1) stop 'error: nspec < 1'
     allocate(elmnts(NGNOD,nspec),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array elmnts'
+    if (ier /= 0) stop 'error allocating array elmnts'
     do ispec = 1, nspec
       ! format: # element_id  #id_node1 ... #id_node8
       !      or # element_id  #id_node1 ... #id_node27
@@ -237,14 +237,14 @@ module decompose_mesh
 
       read(98,*,iostat=ier) num_elmnt,(elmnts(inode,num_elmnt), inode=1,NGNOD)
 
-      if( ier /= 0 ) then
+      if (ier /= 0) then
         print *,'error while attempting to read ',NGNOD,'element data values from the mesh file'
-        if(NGNOD == 8) print *,'check if your mesh file is indeed composed of HEX8 elements'
-        if(NGNOD == 27) print *,'check if your mesh file is indeed composed of HEX27 elements'
+        if (NGNOD == 8) print *,'check if your mesh file is indeed composed of HEX8 elements'
+        if (NGNOD == 27) print *,'check if your mesh file is indeed composed of HEX27 elements'
         stop 'error reading element data from the mesh file'
       endif
 
-      if((num_elmnt > nspec) .or. (num_elmnt < 1) )  stop "ERROR : Invalid mesh file."
+      if ((num_elmnt > nspec) .or. (num_elmnt < 1))  stop "ERROR : Invalid mesh file."
 
     enddo
     close(98)
@@ -254,15 +254,15 @@ module decompose_mesh
   ! reads material associations
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/materials_file', &
           status='old', form='formatted',iostat=ier)
-    if( ier /= 0 ) stop 'error opening materials_file'
+    if (ier /= 0) stop 'error opening materials_file'
     allocate(mat(2,nspec),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array mat'
+    if (ier /= 0) stop 'error allocating array mat'
     mat(:,:) = 0
     do ispec = 1, nspec
       ! format: #id_element #flag
       ! note: be aware that elements may not be sorted in materials_file
       read(98,*) num_mat,mat(1,num_mat)
-      if((num_mat > nspec) .or. (num_mat < 1) ) stop "ERROR : Invalid mat file."
+      if ((num_mat > nspec) .or. (num_mat < 1)) stop "ERROR : Invalid mat file."
     enddo
     close(98)
 
@@ -288,7 +288,7 @@ module decompose_mesh
     count_undef_mat = 0
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nummaterial_velocity_file',&
           status='old', form='formatted',iostat=ier)
-    if( ier /= 0 ) stop 'error opening nummaterial_velocity_file'
+    if (ier /= 0) stop 'error opening nummaterial_velocity_file'
 
     ! note: format #material_domain_id #material_id #...
     read(98,*,iostat=ier) idummy,num_mat
@@ -296,7 +296,7 @@ module decompose_mesh
     ! counts materials (defined/undefined)
     do while (ier == 0)
        print*, '  num_mat = ',num_mat
-       if(num_mat > 0 ) then
+       if (num_mat > 0) then
           ! positive materials_id: velocity values will be defined
           count_def_mat = count_def_mat + 1
        else
@@ -308,23 +308,23 @@ module decompose_mesh
     close(98)
     print*, '  defined = ',count_def_mat, 'undefined = ',count_undef_mat
     ! check with material flags
-    if( count_def_mat > 0 .and. maxval(mat(1,:)) > count_def_mat ) then
+    if (count_def_mat > 0 .and. maxval(mat(1,:)) > count_def_mat) then
       print*,'error material definitions:'
       print*,'  materials associated in materials_file:',maxval(mat(1,:))
       print*,'  larger than defined materials in nummaterial_velocity_file:',count_def_mat
       stop 'error materials'
     endif
     allocate(mat_prop(16,count_def_mat),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array mat_prop'
+    if (ier /= 0) stop 'error allocating array mat_prop'
     allocate(undef_mat_prop(6,count_undef_mat),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array undef_mat_prop'
+    if (ier /= 0) stop 'error allocating array undef_mat_prop'
     mat_prop(:,:) = 0.d0
     undef_mat_prop(:,:) = ''
 
     ! reads in defined material properties
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nummaterial_velocity_file', &
           status='old', form='formatted', iostat=ier)
-    if( ier /= 0 ) stop 'error opening nummaterial_velocity_file'
+    if (ier /= 0) stop 'error opening nummaterial_velocity_file'
 
   ! modif to read poro parameters, added if loop on idomain_id
   ! note: format of nummaterial_poroelastic_file located in MESH must be
@@ -343,7 +343,7 @@ module decompose_mesh
     open(unit=97, file=localpath_name(1:len_trim(localpath_name))//'/nummaterial_poroelastic_file', &
           status='old', form='formatted', iostat=ier)
     ! checks if we can use file
-    if( ier /= 0 ) then
+    if (ier /= 0) then
       use_poroelastic_file = .false.
       !stop 'error opening nummaterial_poroelastic_file'
     else
@@ -353,7 +353,7 @@ module decompose_mesh
     ier = 0
 
     ! note: entries in nummaterial_velocity_file can be an unsorted list of all
-    !          defined materials (material_id > 0) and undefined materials (material_id < 0 )
+    !          defined materials (material_id > 0) and undefined materials (material_id < 0)
     do imat=1,count_def_mat
        ! material definitions
        !
@@ -361,31 +361,31 @@ module decompose_mesh
        !
        ! reads lines until it reaches a defined material
        num_mat = -1
-       do while( num_mat < 0 .and. ier == 0)
+       do while (num_mat < 0 .and. ier == 0)
          read(98,'(A)',iostat=ier) line
          read(line,*) idomain_id,num_mat
        enddo
-       if( ier /= 0 ) stop 'error reading in defined materials in nummaterial_velocity_file'
+       if (ier /= 0) stop 'error reading in defined materials in nummaterial_velocity_file'
 
        ! reads in defined material properties
        read(line,*) idomain_id,num_mat,rho,vp,vs,qkappa,qmu,aniso_flag
 
        ! sanity check: Q factor cannot be equal to zero, thus convert to 9999 to indicate no attenuation
        ! if users have used 0 to indicate that instead
-       if(qkappa <= 0.000001) qkappa = 9999.
-       if(qmu <= 0.000001) qmu = 9999.
+       if (qkappa <= 0.000001) qkappa = 9999.
+       if (qmu <= 0.000001) qmu = 9999.
 
        ! checks material_id bounds
-       if(num_mat < 1 .or. num_mat > count_def_mat)  stop "ERROR : Invalid nummaterial_velocity_file file."
+       if (num_mat < 1 .or. num_mat > count_def_mat)  stop "ERROR : Invalid nummaterial_velocity_file file."
 
-       if(idomain_id == 1 .or. idomain_id == 2) then ! material is elastic or acoustic
+       if (idomain_id == 1 .or. idomain_id == 2) then ! material is elastic or acoustic
 
          ! check that the S-wave velocity is zero if the material is acoustic
-         if(idomain_id == 1 .and. vs >= 0.0001) &
+         if (idomain_id == 1 .and. vs >= 0.0001) &
                 stop 'acoustic material defined with a non-zero shear-wave velocity Vs, exiting...'
 
          ! check that the S-wave velocity is not zero if the material is elastic
-         if(idomain_id == 2 .and. vs <= 0.0001) &
+         if (idomain_id == 2 .and. vs <= 0.0001) &
                 stop '(visco)elastic material defined with a zero shear-wave velocity Vs, exiting...'
 
          mat_prop(1,num_mat) = rho
@@ -396,9 +396,9 @@ module decompose_mesh
          mat_prop(6,num_mat) = idomain_id
          mat_prop(7,num_mat) = qkappa  ! this one is not stored next to qmu for historical reasons, because it was added later
 
-       else if(idomain_id == 3) then ! material is poroelastic
+       else if (idomain_id == 3) then ! material is poroelastic
 
-         if( use_poroelastic_file .eqv. .false. ) stop 'error poroelastic material requires nummaterial_poroelastic_file'
+         if (use_poroelastic_file .eqv. .false.) stop 'error poroelastic material requires nummaterial_poroelastic_file'
 
          read(97,*) rhos,rhof,phi,tort,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,eta,mufr
          mat_prop(1,num_mat) = rhos
@@ -421,7 +421,7 @@ module decompose_mesh
        else
          stop 'idomain_id must be 1, 2 or 3 for acoustic, elastic or poroelastic in nummaterial_velocity_file'
 
-       endif ! of if(idomain_id == ...)
+       endif ! of if (idomain_id == ...)
 
     enddo
 
@@ -440,21 +440,21 @@ module decompose_mesh
        !        example:     2 -1 tomography elastic tomography_model.xyz
        ! reads lines until it reaches a defined material
        num_mat = 1
-       do while( num_mat >= 0 .and. ier == 0 )
+       do while (num_mat >= 0 .and. ier == 0)
          read(98,'(A)',iostat=ier) line
          read(line,*) idomain_id,num_mat
        enddo
-       if( ier /= 0 ) stop 'error reading in undefined materials in nummaterial_velocity_file'
+       if (ier /= 0) stop 'error reading in undefined materials in nummaterial_velocity_file'
 
        ! checks if interface or tomography definition
        read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat)
        read(undef_mat_prop(1,imat),*) num_mat
-       if( trim(undef_mat_prop(2,imat)) == 'interface' ) then
+       if (trim(undef_mat_prop(2,imat)) == 'interface') then
          ! line will have 5 arguments, e.g.: 2 -1 interface 1 2
          read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat),&
                       undef_mat_prop(3,imat),undef_mat_prop(4,imat)
          undef_mat_prop(5,imat) = "0" ! dummy value
-       else if( trim(undef_mat_prop(2,imat)) == 'tomography' ) then
+       else if (trim(undef_mat_prop(2,imat)) == 'tomography') then
          ! line will have 6 arguments, e.g.: 2 -1 tomography elastic tomography_model.xyz 1
          read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat),&
                       undef_mat_prop(3,imat),undef_mat_prop(4,imat)
@@ -464,54 +464,54 @@ module decompose_mesh
        endif
 
        ! checks material_id
-       if( trim(undef_mat_prop(2,imat)) == 'interface' .or. trim(undef_mat_prop(2,imat)) == 'tomography' ) then
-          if(num_mat > 0 .or. -num_mat > count_undef_mat)  &
+       if (trim(undef_mat_prop(2,imat)) == 'interface' .or. trim(undef_mat_prop(2,imat)) == 'tomography') then
+          if (num_mat > 0 .or. -num_mat > count_undef_mat)  &
                stop "ERROR : Invalid nummaterial_velocity_file for undefined materials."
-          if(num_mat /= -imat)  &
+          if (num_mat /= -imat)  &
                stop "ERROR : Invalid material_id in nummaterial_velocity_file for undefined materials."
        endif
 
        ! checks interface: flag_down/flag_up
-       if( trim(undef_mat_prop(2,imat)) == 'interface' ) then
+       if (trim(undef_mat_prop(2,imat)) == 'interface') then
          ! flag_down
          read( undef_mat_prop(3,imat),*) num_mat
-         if( num_mat > 0 ) then
+         if (num_mat > 0) then
           ! must point to a defined material
-          if( num_mat > count_def_mat) &
+          if (num_mat > count_def_mat) &
                stop "ERROR: invalid flag_down in interface definition in nummaterial_velocity_file"
          else
           ! must point to an undefined material
-          if( -num_mat > count_undef_mat) &
+          if (-num_mat > count_undef_mat) &
                stop "ERROR: invalid flag_down in interface definition in nummaterial_velocity_file"
          endif
          ! flag_up
          read( undef_mat_prop(4,imat),*) num_mat
-         if( num_mat > 0 ) then
+         if (num_mat > 0) then
           ! must point to a defined material
-          if( num_mat > count_def_mat) &
+          if (num_mat > count_def_mat) &
                stop "ERROR: invalid flag_up in interface definition in nummaterial_velocity_file"
          else
           ! must point to an undefined material
-          if( -num_mat > count_undef_mat) &
+          if (-num_mat > count_undef_mat) &
                stop "ERROR: invalid flag_up in interface definition in nummaterial_velocity_file"
          endif
        endif
     enddo
-    if( use_poroelastic_file ) close(97)
+    if (use_poroelastic_file) close(97)
     close(98)
 
     do ispec=1,nspec
       ! get material_id
       num_mat = mat(1,ispec)
-      if( num_mat < 0 ) then
+      if (num_mat < 0) then
         ! finds undefined material property
         do imat=1,count_undef_mat
-          if( -imat == num_mat ) then
+          if (-imat == num_mat) then
             ! interface
-            if( trim(undef_mat_prop(2,imat)) == 'interface' ) then
+            if (trim(undef_mat_prop(2,imat)) == 'interface') then
               mat(2,ispec) = 1
             ! tomography
-            else if( trim(undef_mat_prop(2,imat)) == 'tomography' ) then
+            else if (trim(undef_mat_prop(2,imat)) == 'tomography') then
               mat(2,ispec) = 2
             else
               ! shouldn't encounter this case
@@ -532,7 +532,7 @@ module decompose_mesh
 ! beware that these files can also be used to set Dirichlet boundary conditions on the outer edges of CPML
 ! absorbing layers for elastic elements, not only for Stacey; thus these files may exist and be non-empty
 ! even when STACEY_ABSORBING_CONDITIONS is false
-    if( ier /= 0 ) then
+    if (ier /= 0) then
       nspec2D_xmin = 0
     else
       read(98,*) nspec2D_xmin
@@ -544,9 +544,9 @@ module decompose_mesh
 ! thus here the idea is that if some of the absorbing files do not exist because there are no absorbing
 ! conditions for this mesh then the array is created nonetheless, but with a dummy size of 0
     allocate(ibelm_xmin(nspec2D_xmin),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array ibelm_xmin'
+    if (ier /= 0) stop 'error allocating array ibelm_xmin'
     allocate(nodes_ibelm_xmin(NGNOD2D,nspec2D_xmin),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array nodes_ibelm_xmin'
+    if (ier /= 0) stop 'error allocating array nodes_ibelm_xmin'
     do ispec2D = 1,nspec2D_xmin
       ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
       ! note: ordering for CUBIT seems such that the normal of the face points outward of the element the face belongs to;
@@ -564,15 +564,15 @@ module decompose_mesh
   ! reads in absorbing boundary files
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_xmax', &
           status='old', form='formatted',iostat=ier)
-    if( ier /= 0 ) then
+    if (ier /= 0) then
       nspec2D_xmax = 0
     else
       read(98,*) nspec2D_xmax
     endif
     allocate(ibelm_xmax(nspec2D_xmax),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array ibelm_xmax'
+    if (ier /= 0) stop 'error allocating array ibelm_xmax'
     allocate(nodes_ibelm_xmax(NGNOD2D,nspec2D_xmax),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array nodes_ibelm_xmax'
+    if (ier /= 0) stop 'error allocating array nodes_ibelm_xmax'
     do ispec2D = 1,nspec2D_xmax
       ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
       read(98,*) ibelm_xmax(ispec2D), (nodes_ibelm_xmax(inode,ispec2D), inode=1,NGNOD2D)
@@ -583,15 +583,15 @@ module decompose_mesh
   ! reads in absorbing boundary files
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_ymin', &
           status='old', form='formatted',iostat=ier)
-    if( ier /= 0 ) then
+    if (ier /= 0) then
       nspec2D_ymin = 0
     else
       read(98,*) nspec2D_ymin
     endif
     allocate(ibelm_ymin(nspec2D_ymin),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array ibelm_ymin'
+    if (ier /= 0) stop 'error allocating array ibelm_ymin'
     allocate(nodes_ibelm_ymin(NGNOD2D,nspec2D_ymin),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array nodes_ibelm_ymin'
+    if (ier /= 0) stop 'error allocating array nodes_ibelm_ymin'
     do ispec2D = 1,nspec2D_ymin
       ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
       read(98,*) ibelm_ymin(ispec2D), (nodes_ibelm_ymin(inode,ispec2D), inode=1,NGNOD2D)
@@ -602,15 +602,15 @@ module decompose_mesh
   ! reads in absorbing boundary files
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_ymax', &
           status='old', form='formatted',iostat=ier)
-    if( ier /= 0 ) then
+    if (ier /= 0) then
       nspec2D_ymax = 0
     else
       read(98,*) nspec2D_ymax
     endif
     allocate(ibelm_ymax(nspec2D_ymax),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array ibelm_ymax'
+    if (ier /= 0) stop 'error allocating array ibelm_ymax'
     allocate(nodes_ibelm_ymax(NGNOD2D,nspec2D_ymax),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array nodes_ibelm_ymax'
+    if (ier /= 0) stop 'error allocating array nodes_ibelm_ymax'
     do ispec2D = 1,nspec2D_ymax
       ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
       read(98,*) ibelm_ymax(ispec2D), (nodes_ibelm_ymax(inode,ispec2D), inode=1,NGNOD2D)
@@ -621,15 +621,15 @@ module decompose_mesh
   ! reads in absorbing boundary files
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_bottom', &
           status='old', form='formatted',iostat=ier)
-    if( ier /= 0 ) then
+    if (ier /= 0) then
       nspec2D_bottom = 0
     else
       read(98,*) nspec2D_bottom
     endif
     allocate(ibelm_bottom(nspec2D_bottom),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array ibelm_bottom'
+    if (ier /= 0) stop 'error allocating array ibelm_bottom'
     allocate(nodes_ibelm_bottom(NGNOD2D,nspec2D_bottom),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array nodes_ibelm_bottom'
+    if (ier /= 0) stop 'error allocating array nodes_ibelm_bottom'
     do ispec2D = 1,nspec2D_bottom
       ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
       read(98,*) ibelm_bottom(ispec2D), (nodes_ibelm_bottom(inode,ispec2D), inode=1,NGNOD2D)
@@ -640,15 +640,15 @@ module decompose_mesh
   ! reads in free_surface boundary files
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/free_or_absorbing_surface_file_zmax', &
           status='old', form='formatted',iostat=ier)
-    if( ier /= 0 ) then
+    if (ier /= 0) then
       nspec2D_top = 0
     else
       read(98,*) nspec2D_top
     endif
     allocate(ibelm_top(nspec2D_top),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array ibelm_top'
+    if (ier /= 0) stop 'error allocating array ibelm_top'
     allocate(nodes_ibelm_top(NGNOD2D,nspec2D_top),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array nodes_ibelm_top'
+    if (ier /= 0) stop 'error allocating array nodes_ibelm_top'
     do ispec2D = 1,nspec2D_top
       ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
       read(98,*) ibelm_top(ispec2D), (nodes_ibelm_top(inode,ispec2D), inode=1,NGNOD2D)
@@ -666,25 +666,25 @@ module decompose_mesh
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_cpml_file', &
          status='old', form='formatted',iostat=ier)
 ! if the file does not exist but if there are PML_CONDITIONS then stop
-    if( ier /= 0 .and. PML_CONDITIONS) &
+    if (ier /= 0 .and. PML_CONDITIONS) &
         stop 'error: PML_CONDITIONS is set to true but file absorbing_cpml_file does not exist'
 ! if the file does not exist or if there are no PML_CONDITIONS then define the number of CPML elements as zero
-    if( ier /= 0 .or. .not. PML_CONDITIONS) then
+    if (ier /= 0 .or. .not. PML_CONDITIONS) then
        nspec_cpml = 0
     else
        read(98,*) nspec_cpml
     endif
 
 ! sanity check
-    if( PML_CONDITIONS .and. nspec_cpml <= 0) &
+    if (PML_CONDITIONS .and. nspec_cpml <= 0) &
         stop 'error: PML_CONDITIONS is set to true but nspec_cpml <= 0 in file absorbing_cpml_file'
 
     ! C-PML spectral elements global indexing
     allocate(CPML_to_spec(nspec_cpml),stat=ier)
-    if(ier /= 0) stop 'error allocating array CPML_to_spec'
+    if (ier /= 0) stop 'error allocating array CPML_to_spec'
     ! C-PML regions (see below)
     allocate(CPML_regions(nspec_cpml),stat=ier)
-    if(ier /= 0) stop 'error allocating array CPML_regions'
+    if (ier /= 0) stop 'error allocating array CPML_regions'
     do ispec_CPML=1,nspec_cpml
        ! elements are stored with #id_cpml_regions increasing order:
        !
@@ -700,14 +700,14 @@ module decompose_mesh
        read(98,*) CPML_to_spec(ispec_CPML), CPML_regions(ispec_CPML)
     enddo
     close(98)
-    if( nspec_cpml > 0 ) print*, '  nspec_cpml = ', nspec_cpml
+    if (nspec_cpml > 0) print*, '  nspec_cpml = ', nspec_cpml
 
     ! sets mask of C-PML elements for all elements in this partition
     allocate(is_CPML(nspec),stat=ier)
-    if(ier /= 0) stop 'error allocating array is_CPML'
+    if (ier /= 0) stop 'error allocating array is_CPML'
     is_CPML(:) = .false.
     do ispec_CPML=1,nspec_cpml
-       if( (CPML_regions(ispec_CPML)>=1) .and. (CPML_regions(ispec_CPML)<=7) ) then
+       if ((CPML_regions(ispec_CPML)>=1) .and. (CPML_regions(ispec_CPML)<=7)) then
           is_CPML(CPML_to_spec(ispec_CPML)) = .true.
        endif
     enddo
@@ -715,21 +715,21 @@ module decompose_mesh
   ! reads in moho_surface boundary files (optional)
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/moho_surface_file', &
           status='old', form='formatted',iostat=ier)
-    if( ier /= 0 ) then
+    if (ier /= 0) then
       nspec2D_moho = 0
     else
       read(98,*) nspec2D_moho
     endif
     allocate(ibelm_moho(nspec2D_moho),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array ibelm_moho'
+    if (ier /= 0) stop 'error allocating array ibelm_moho'
     allocate(nodes_ibelm_moho(NGNOD2D,nspec2D_moho),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array nodes_ibelm_moho'
+    if (ier /= 0) stop 'error allocating array nodes_ibelm_moho'
     do ispec2D = 1,nspec2D_moho
       ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
       read(98,*) ibelm_moho(ispec2D), (nodes_ibelm_moho(inode,ispec2D), inode=1,NGNOD2D)
     enddo
     close(98)
-    if( nspec2D_moho > 0 ) print*, '  nspec2D_moho = ', nspec2D_moho
+    if (nspec2D_moho > 0) print*, '  nspec2D_moho = ', nspec2D_moho
 
     call read_fault_files(localpath_name)
     if (ANY_FAULT) then
@@ -749,9 +749,9 @@ module decompose_mesh
 
     ! allocates temporary arrays
     allocate(mask_nodes_elmnts(nnodes),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array mask_nodes_elmnts'
+    if (ier /= 0) stop 'error allocating array mask_nodes_elmnts'
     allocate(used_nodes_elmnts(nnodes),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array used_nodes_elmnts'
+    if (ier /= 0) stop 'error allocating array used_nodes_elmnts'
 
     mask_nodes_elmnts(:) = .false.
     used_nodes_elmnts(:) = 0
@@ -787,14 +787,14 @@ module decompose_mesh
     ! debug check size limit
 !! DK DK this check will likely fail because sup_neighbour itself may become negative if going over the 4-byte integer limit;
 !! DK DK but this should never happen in practice (by far)...
-    if( sup_neighbour > 2147483646 ) then
+    if (sup_neighbour > 2147483646) then
       print *,'size exceeds integer 4-byte limit: ',sup_neighbour,nsize
       print *,'bit size fortran: ',bit_size(sup_neighbour)
       stop 'ERROR: sup_neighbour is too large'
     endif
 
     ! checks that no underestimation
-    if( sup_neighbour < nsize) sup_neighbour = nsize
+    if (sup_neighbour < nsize) sup_neighbour = nsize
 
     print *, '  nsize = ',nsize, 'sup_neighbour = ', sup_neighbour
 
@@ -816,13 +816,13 @@ module decompose_mesh
 
     ! determines maximum neighbors based on 1 common node
     allocate(xadj(1:nspec+1),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array xadj'
+    if (ier /= 0) stop 'error allocating array xadj'
     allocate(adjncy(1:sup_neighbour*nspec),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array adjncy'
+    if (ier /= 0) stop 'error allocating array adjncy'
     allocate(nnodes_elmnts(1:nnodes),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array nnodes_elmnts'
+    if (ier /= 0) stop 'error allocating array nnodes_elmnts'
     allocate(nodes_elmnts(1:nsize*nnodes),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array nodes_elmnts'
+    if (ier /= 0) stop 'error allocating array nodes_elmnts'
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!! DK DK added this in Oct 2012 to see if we first do 4 and then 1
@@ -846,23 +846,23 @@ module decompose_mesh
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !! DK DK Oct 2012: added this safety test
-    if(max_neighbour > sup_neighbour) stop 'found max_neighbour > sup_neighbour in domain decomposition'
+    if (max_neighbour > sup_neighbour) stop 'found max_neighbour > sup_neighbour in domain decomposition'
 
     nb_edges = xadj(nspec+1)
 
     ! allocates & initializes partioning of elements
     allocate(part(1:nspec),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array part'
+    if (ier /= 0) stop 'error allocating array part'
     part(:) = -1
 
     ! initializes
     ! elements load array
     allocate(elmnts_load(1:nspec),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array elmnts_load'
+    if (ier /= 0) stop 'error allocating array elmnts_load'
 
     ! gets materials id associations
     allocate(num_material(1:nspec),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array num_material'
+    if (ier /= 0) stop 'error allocating array num_material'
     ! note: num_material can be negative for tomographic material elements
     !       (which are counted then as elastic elements)
     num_material(:) = mat(1,:)
@@ -977,7 +977,7 @@ module decompose_mesh
 !! DK DK added this because poroelastic repartitioning routine of Christina Morency is currently broken
 ! implement mesh repartitioning of poroelastic-elastic interface
 ! (the risk being to break the nice load balancing created by the domain decomposer for high-performance computing)
-    if(PORO_INTERFACE_REPARTITIONING) then
+    if (PORO_INTERFACE_REPARTITIONING) then
       call poro_elastic_repartitioning (nspec, nnodes, elmnts, &
                        count_def_mat, num_material , mat_prop, &
                        sup_neighbour, nsize, &
@@ -992,7 +992,7 @@ module decompose_mesh
 
     ! re-partitioning puts moho-surface coupled elements into same partition
 ! (the risk being to break the nice load balancing created by the domain decomposer for high-performance computing)
-    if(SAVE_MOHO_MESH) call moho_surface_repartitioning (nspec, nnodes, elmnts, &
+    if (SAVE_MOHO_MESH) call moho_surface_repartitioning (nspec, nnodes, elmnts, &
                                         sup_neighbour, nsize, nparts, part, &
                                         nspec2D_moho,ibelm_moho,nodes_ibelm_moho, NGNOD, NGNOD2D)
 
@@ -1010,7 +1010,7 @@ module decompose_mesh
     print*, '  max_neighbour = ',max_neighbour
 
 !! DK DK Oct 2012: added this safety test
-    if(max_neighbour > sup_neighbour) stop 'found max_neighbour > sup_neighbour in domain decomposition'
+    if (max_neighbour > sup_neighbour) stop 'found max_neighbour > sup_neighbour in domain decomposition'
 
     nb_edges = xadj(nspec+1)
 
@@ -1053,9 +1053,9 @@ module decompose_mesh
     integer :: ier
 
     allocate(my_interfaces(0:ninterfaces-1),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array my_interfaces'
+    if (ier /= 0) stop 'error allocating array my_interfaces'
     allocate(my_nb_interfaces(0:ninterfaces-1),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array my_nb_interfaces'
+    if (ier /= 0) stop 'error allocating array my_nb_interfaces'
 
     if (COUPLE_WITH_EXTERNAL_CODE) open(124,file='Numglob2loc_elmn.txt')
 
@@ -1066,7 +1066,7 @@ module decompose_mesh
        write(prname, "(i6.6,'_Database')") ipart
        open(unit=IIN_database,file=outputpath_name(1:len_trim(outputpath_name))//'/proc'//prname,&
             status='unknown', action='write', form='unformatted', iostat = ier)
-       if( ier /= 0 ) then
+       if (ier /= 0) then
         print*,'error file open:',outputpath_name(1:len_trim(outputpath_name))//'/proc'//prname
         print*
         print*,'check if path exists:',outputpath_name(1:len_trim(outputpath_name))
@@ -1123,7 +1123,7 @@ module decompose_mesh
 
        ! writes out MPI interfaces elements
        !print*,' my interfaces:',my_ninterface,maxval(my_nb_interfaces)
-       if( my_ninterface == 0 ) then
+       if (my_ninterface == 0) then
         write(IIN_database) my_ninterface, 0       ! avoids problem with maxval for empty array my_nb_interfaces
        else
         write(IIN_database) my_ninterface, maxval(my_nb_interfaces)
@@ -1148,7 +1148,7 @@ module decompose_mesh
           write(prname, "(i6.6,'_Database_fault')") ipart
           open(unit=16,file=outputpath_name(1:len_trim(outputpath_name))//'/proc'//prname,&
                status='replace', action='write', form='unformatted', iostat = ier)
-          if( ier /= 0 ) then
+          if (ier /= 0) then
             print*,'error file open:',outputpath_name(1:len_trim(outputpath_name))//'/proc'//prname
             print*
             print*,'check if path exists:',outputpath_name(1:len_trim(outputpath_name))
@@ -1169,9 +1169,9 @@ module decompose_mesh
     enddo
 
     ! cleanup
-    deallocate(CPML_to_spec,stat=ier); if( ier /= 0 ) stop 'error deallocating array CPML_to_spec'
-    deallocate(CPML_regions,stat=ier); if( ier /= 0 ) stop 'error deallocating array CPML_regions'
-    deallocate(is_CPML,stat=ier); if( ier /= 0 ) stop 'error deallocating array is_CPML'
+    deallocate(CPML_to_spec,stat=ier); if (ier /= 0) stop 'error deallocating array CPML_to_spec'
+    deallocate(CPML_regions,stat=ier); if (ier /= 0) stop 'error deallocating array CPML_regions'
+    deallocate(is_CPML,stat=ier); if (ier /= 0) stop 'error deallocating array is_CPML'
 
     if (COUPLE_WITH_EXTERNAL_CODE) close(124)
 

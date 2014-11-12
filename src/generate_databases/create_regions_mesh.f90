@@ -67,7 +67,7 @@
 
 ! initializes arrays
   call synchronize_all()
-  if( myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) '  ...allocating arrays '
     call flush_IMAIN()
@@ -83,7 +83,7 @@
 ! returns jacobianstore,xixstore,...gammazstore
 ! and GLL-point locations in xstore,ystore,zstore
   call synchronize_all()
-  if( myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*) '  ...setting up jacobian '
     call flush_IMAIN()
   endif
@@ -103,7 +103,7 @@
 
 ! creates ibool index array for projection from local to global points
   call synchronize_all()
-  if( myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*) '  ...indexing global points'
     call flush_IMAIN()
   endif
@@ -141,7 +141,7 @@
 
 ! sets up MPI interfaces between partitions
   call synchronize_all()
-  if( myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*) '  ...preparing MPI interfaces '
     call flush_IMAIN()
   endif
@@ -166,7 +166,7 @@
 
 ! sets up absorbing/free surface boundaries
   call synchronize_all()
-  if( myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*) '  ...setting up absorbing boundaries '
     call flush_IMAIN()
   endif
@@ -179,9 +179,9 @@
                               nspec2D_bottom,nspec2D_top)
 
 ! sets up up Moho surface
-  if( SAVE_MOHO_MESH ) then
+  if (SAVE_MOHO_MESH) then
     call synchronize_all()
-    if( myrank == 0) then
+    if (myrank == 0) then
       write(IMAIN,*) '  ...setting up Moho surface'
       call flush_IMAIN()
     endif
@@ -192,7 +192,7 @@
 
 ! sets material velocities
   call synchronize_all()
-  if( myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*) '  ...determining velocity model'
     call flush_IMAIN()
   endif
@@ -200,7 +200,7 @@
 
 ! sets up acoustic-elastic-poroelastic coupling surfaces
   call synchronize_all()
-  if( myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*) '  ...detecting acoustic-elastic-poroelastic surfaces '
     call flush_IMAIN()
   endif
@@ -212,7 +212,7 @@
 
 ! locates inner and outer elements
   call synchronize_all()
-  if( myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*) '  ...element inner/outer separation '
     call flush_IMAIN()
   endif
@@ -223,7 +223,7 @@
 
 ! colors mesh if requested
   call synchronize_all()
-  if( myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*) '  ...element mesh coloring '
     call flush_IMAIN()
   endif
@@ -231,16 +231,16 @@
 
 ! overwrites material parameters from external binary files
   call synchronize_all()
-  if( myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*) '  ...external binary models '
     call flush_IMAIN()
   endif
   call get_model_binaries(myrank,nspec,LOCAL_PATH)
 
 ! calculates damping profiles and auxiliary coefficients on all C-PML points
-  if( PML_CONDITIONS ) then
+  if (PML_CONDITIONS) then
     call synchronize_all()
-    if( myrank == 0) then
+    if (myrank == 0) then
       write(IMAIN,*) '  ...creating C-PML damping profiles '
       call flush_IMAIN()
     endif
@@ -249,7 +249,7 @@
 
 ! creates mass matrix
   call synchronize_all()
-  if( myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*) '  ...creating mass matrix '
     call flush_IMAIN()
   endif
@@ -257,7 +257,7 @@
 
 ! saves the binary mesh files
   call synchronize_all()
-  if( myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*) '  ...saving databases'
     call flush_IMAIN()
   endif
@@ -279,9 +279,9 @@
   endif
 
 ! saves faults
-  if( ANY_FAULT ) then
+  if (ANY_FAULT) then
     call synchronize_all()
-    if( myrank == 0) then
+    if (myrank == 0) then
       write(IMAIN,*) '  ...saving fault databases'
       call flush_IMAIN()
     endif
@@ -290,9 +290,9 @@
   endif
 
 ! saves moho surface
-  if( SAVE_MOHO_MESH ) then
+  if (SAVE_MOHO_MESH) then
     call synchronize_all()
-    if( myrank == 0) then
+    if (myrank == 0) then
       write(IMAIN,*) '  ...saving Moho surfaces'
       call flush_IMAIN()
     endif
@@ -307,12 +307,12 @@
 
 ! checks the mesh, stability and resolved period
   call synchronize_all()
-  if( myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*) '  ...checking mesh resolution'
     call flush_IMAIN()
   endif
 
-  if( POROELASTIC_SIMULATION ) then
+  if (POROELASTIC_SIMULATION) then
     !chris: check for poro: At the moment cpI & cpII are for eta=0
     call check_mesh_resolution_poro(myrank,nspec,nglob_dummy,ibool,&
                                     xstore_dummy,ystore_dummy,zstore_dummy, &
@@ -328,9 +328,9 @@
   endif
 
 ! saves binary mesh files for attenuation
-  if( ATTENUATION ) then
+  if (ATTENUATION) then
     call synchronize_all()
-    if( myrank == 0) then
+    if (myrank == 0) then
       write(IMAIN,*) '  ...saving attenuation databases'
       call flush_IMAIN()
     endif
@@ -348,27 +348,27 @@
   deallocate(rho_vpI,rho_vpII,rho_vsI)
   deallocate(rhoarraystore,kappaarraystore,etastore,phistore,tortstore,permstore)
 
-  if( .not. SAVE_MOHO_MESH ) then
+  if (.not. SAVE_MOHO_MESH) then
     deallocate(xstore_dummy,ystore_dummy,zstore_dummy)
   endif
 
-  if( ACOUSTIC_SIMULATION) then
+  if (ACOUSTIC_SIMULATION) then
     deallocate(rmass_acoustic)
   endif
 
-  if( ELASTIC_SIMULATION ) then
+  if (ELASTIC_SIMULATION) then
     deallocate(rmass)
   endif
 
-  if( POROELASTIC_SIMULATION) then
+  if (POROELASTIC_SIMULATION) then
     deallocate(rmass_solid_poroelastic,rmass_fluid_poroelastic)
   endif
 
-  if(STACEY_ABSORBING_CONDITIONS)then
-     if( ELASTIC_SIMULATION ) then
+  if (STACEY_ABSORBING_CONDITIONS)then
+     if (ELASTIC_SIMULATION) then
        deallocate(rmassx,rmassy,rmassz)
      endif
-     if( ACOUSTIC_SIMULATION) then
+     if (ACOUSTIC_SIMULATION) then
        deallocate(rmassz_acoustic)
      endif
   endif
@@ -401,58 +401,58 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
   integer :: ier
 
   allocate(xelm(NGNOD),yelm(NGNOD),zelm(NGNOD),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array xelm etc.'
+  if (ier /= 0) stop 'error allocating array xelm etc.'
 
   allocate(qkappa_attenuation_store(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if( ier /= 0 ) call exit_MPI(myrank,'not enough memory to allocate arrays')
+  if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
   allocate(qmu_attenuation_store(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if( ier /= 0 ) call exit_MPI(myrank,'not enough memory to allocate arrays')
+  if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
 ! create the name for the database of the current slide and region
   call create_name_database(prname,myrank,LOCAL_PATH)
 
 ! Gauss-Lobatto-Legendre points of integration
   allocate(xigll(NGLLX),yigll(NGLLY),zigll(NGLLZ),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array xigll etc.'
+  if (ier /= 0) stop 'error allocating array xigll etc.'
 
 ! Gauss-Lobatto-Legendre weights of integration
   allocate(wxgll(NGLLX),wygll(NGLLY),wzgll(NGLLZ),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array wxgll etc.'
+  if (ier /= 0) stop 'error allocating array wxgll etc.'
 
 ! 3D shape functions and their derivatives
   allocate(shape3D(NGNOD,NGLLX,NGLLY,NGLLZ), &
            dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array shape3D etc.'
+  if (ier /= 0) stop 'error allocating array shape3D etc.'
 
 ! 2D shape functions and their derivatives
   allocate(shape2D_x(NGNOD2D,NGLLY,NGLLZ), &
            shape2D_y(NGNOD2D,NGLLX,NGLLZ), &
            shape2D_bottom(NGNOD2D,NGLLX,NGLLY), &
            shape2D_top(NGNOD2D,NGLLX,NGLLY),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array shape2D_x etc.'
+  if (ier /= 0) stop 'error allocating array shape2D_x etc.'
 
   allocate(dershape2D_x(NDIM2D,NGNOD2D,NGLLY,NGLLZ), &
            dershape2D_y(NDIM2D,NGNOD2D,NGLLX,NGLLZ), &
            dershape2D_bottom(NDIM2D,NGNOD2D,NGLLX,NGLLY), &
            dershape2D_top(NDIM2D,NGNOD2D,NGLLX,NGLLY),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array dershape2D_x etc.'
+  if (ier /= 0) stop 'error allocating array dershape2D_x etc.'
 
   allocate(wgllwgll_xy(NGLLX,NGLLY), &
            wgllwgll_xz(NGLLX,NGLLZ), &
            wgllwgll_yz(NGLLY,NGLLZ),stat=ier)
-  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+  if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
 ! Stacey
   allocate(rho_vp(NGLLX,NGLLY,NGLLZ,nspec), &
            rho_vs(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+  if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
 ! array with model density
   allocate(rhostore(NGLLX,NGLLY,NGLLZ,nspec), &
            kappastore(NGLLX,NGLLY,NGLLZ,nspec), &
            mustore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+  if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
 ! array with poroelastic model
   allocate(rhoarraystore(2,NGLLX,NGLLY,NGLLZ,nspec), &
@@ -464,7 +464,7 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
            rho_vpII(NGLLX,NGLLY,NGLLZ,nspec), &
            rho_vsI(NGLLX,NGLLY,NGLLZ,nspec), &
            permstore(6,NGLLX,NGLLY,NGLLZ,nspec), stat=ier)
-  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+  if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
 ! arrays with mesh parameters
   allocate(xixstore(NGLLX,NGLLY,NGLLZ,nspec), &
@@ -477,13 +477,13 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
            gammaystore(NGLLX,NGLLY,NGLLZ,nspec), &
            gammazstore(NGLLX,NGLLY,NGLLZ,nspec), &
            jacobianstore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+  if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
 ! absorbing boundary
   ! absorbing faces
   num_abs_boundary_faces = nspec2D_xmin + nspec2D_xmax + nspec2D_ymin + nspec2D_ymax + nspec2D_bottom
   ! adds faces of free surface if it also absorbs
-  if( STACEY_INSTEAD_OF_FREE_SURFACE .or. PML_INSTEAD_OF_FREE_SURFACE)then
+  if (STACEY_INSTEAD_OF_FREE_SURFACE .or. PML_INSTEAD_OF_FREE_SURFACE)then
      num_abs_boundary_faces = num_abs_boundary_faces + nspec2D_top
   endif
   ! allocates arrays to store info for each face (assumes NGLLX=NGLLY=NGLLZ)
@@ -491,7 +491,7 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
             abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces), &
             abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces), &
             abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
-  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+  if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
   ! free surface faces
   num_free_surface_faces = nspec2D_top
@@ -501,10 +501,10 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
             free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces), &
             free_surface_jacobian2Dw(NGLLSQUARE,num_free_surface_faces), &
             free_surface_normal(NDIM,NGLLSQUARE,num_free_surface_faces),stat=ier)
-  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+  if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
 ! array with anisotropy
-  if( ANISOTROPY ) then
+  if (ANISOTROPY) then
     NSPEC_ANISO = nspec
   else
     NSPEC_ANISO = 1
@@ -530,13 +530,13 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
            c55store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
            c56store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
            c66store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
-  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+  if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
   ! material flags
   allocate( ispec_is_acoustic(nspec), &
             ispec_is_elastic(nspec), &
             ispec_is_poroelastic(nspec), stat=ier)
-  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+  if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
   ! initializes Moho surface
   NSPEC2D_MOHO = 0
@@ -671,7 +671,7 @@ subroutine crm_ext_setup_indexing(ibool, &
            xp(npointot), &
            yp(npointot), &
            zp(npointot),stat=ier)
-  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+  if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
 ! creates temporary global point arrays
   locval = 0
@@ -703,18 +703,18 @@ subroutine crm_ext_setup_indexing(ibool, &
   call get_global_indirect_addressing(nspec,nglob,ibool)
 
 !cleanup
-  deallocate(xp,stat=ier); if(ier /= 0) stop 'error in deallocate'
-  deallocate(yp,stat=ier); if(ier /= 0) stop 'error in deallocate'
-  deallocate(zp,stat=ier); if(ier /= 0) stop 'error in deallocate'
-  deallocate(locval,stat=ier); if(ier /= 0) stop 'error in deallocate'
-  deallocate(ifseg,stat=ier); if(ier /= 0) stop 'error in deallocate'
+  deallocate(xp,stat=ier); if (ier /= 0) stop 'error in deallocate'
+  deallocate(yp,stat=ier); if (ier /= 0) stop 'error in deallocate'
+  deallocate(zp,stat=ier); if (ier /= 0) stop 'error in deallocate'
+  deallocate(locval,stat=ier); if (ier /= 0) stop 'error in deallocate'
+  deallocate(ifseg,stat=ier); if (ier /= 0) stop 'error in deallocate'
 
 ! unique global point locations
   nglob_dummy = nglob
   allocate(xstore_dummy(nglob_dummy), &
            ystore_dummy(nglob_dummy), &
            zstore_dummy(nglob_dummy),stat=ier)
-  if(ier /= 0) stop 'error in allocate'
+  if (ier /= 0) stop 'error in allocate'
   do ispec = 1, nspec
      do k = 1, NGLLZ
         do j = 1, NGLLY
@@ -796,7 +796,7 @@ subroutine crm_ext_setup_indexing(ibool, &
   ! temporary arrays for passing information
   allocate(iglob_is_surface(nglob_dummy), &
           iglob_normals(NDIM,nglob_dummy),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array iglob_is_surface'
+  if (ier /= 0) stop 'error allocating array iglob_is_surface'
 
   iglob_is_surface = 0
   iglob_normals = 0._CUSTOM_REAL
@@ -866,7 +866,7 @@ subroutine crm_ext_setup_indexing(ibool, &
           normal_moho_bot(NDIM,NGLLSQUARE,NSPEC2D_MOHO), &
           ijk_moho_bot(3,NGLLSQUARE,NSPEC2D_MOHO), &
           ijk_moho_top(3,NGLLSQUARE,NSPEC2D_MOHO),stat=ier)
-  if( ier /= 0 ) stop 'error allocating ibelm_moho_bot'
+  if (ier /= 0) stop 'error allocating ibelm_moho_bot'
 
   ibelm_moho_bot = 0
   ibelm_moho_top = 0
@@ -874,7 +874,7 @@ subroutine crm_ext_setup_indexing(ibool, &
   ! element flags
   allocate(is_moho_top(nspec), &
           is_moho_bot(nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating is_moho_top'
+  if (ier /= 0) stop 'error allocating is_moho_top'
   is_moho_top = .false.
   is_moho_bot = .false.
 
@@ -894,7 +894,7 @@ subroutine crm_ext_setup_indexing(ibool, &
         iglob = ibool(i,j,k,ispec)
 
         ! checks if point on surface
-        if( iglob_is_surface(iglob) > 0 ) then
+        if (iglob_is_surface(iglob) > 0) then
           counter = counter+1
 
           ! reference corner coordinates
@@ -905,7 +905,7 @@ subroutine crm_ext_setup_indexing(ibool, &
       enddo
 
       ! stores moho informations
-      if( counter == NGNOD2D_FOUR_CORNERS ) then
+      if (counter == NGNOD2D_FOUR_CORNERS) then
 
         ! gets face GLL points i,j,k indices from element face
         call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLY)
@@ -946,10 +946,10 @@ subroutine crm_ext_setup_indexing(ibool, &
         ispec2D = iglob_is_surface(iglob_midpoint)
 
         ! sets face infos for bottom (normal points away from element)
-        if( idirect == 1 ) then
+        if (idirect == 1) then
 
           ! checks validity
-          if( is_moho_bot( ispec) .eqv. .true. ) then
+          if (is_moho_bot( ispec) .eqv. .true.) then
             print*,'error: moho surface geometry bottom'
             print*,'  does not allow for mulitple element faces in kernel computation'
             call exit_mpi(myrank,'error moho bottom elements')
@@ -970,10 +970,10 @@ subroutine crm_ext_setup_indexing(ibool, &
           enddo
 
         ! sets face infos for top element
-        else if( idirect == 2 ) then
+        else if (idirect == 2) then
 
           ! checks validity
-          if( is_moho_top( ispec) .eqv. .true. ) then
+          if (is_moho_top( ispec) .eqv. .true.) then
             print*,'error: moho surface geometry top'
             print*,'  does not allow for mulitple element faces kernel computation'
             call exit_mpi(myrank,'error moho top elements')
@@ -1000,7 +1000,7 @@ subroutine crm_ext_setup_indexing(ibool, &
     enddo ! iface
 
     ! checks validity of top/bottom distinction
-    if( is_moho_top(ispec) .and. is_moho_bot(ispec) ) then
+    if (is_moho_top(ispec) .and. is_moho_bot(ispec)) then
       print*,'error: moho surface elements confusing'
       print*,'  element:',ispec,'has top and bottom surface'
       call exit_mpi(myrank,'error moho surface element')
@@ -1013,7 +1013,7 @@ subroutine crm_ext_setup_indexing(ibool, &
   call sum_all_i( imoho_top, imoho_top_all )
   call sum_all_i( imoho_bot, imoho_bot_all )
   call sum_all_i( NSPEC2D_MOHO, imoho_all )
-  if( myrank == 0 ) then
+  if (myrank == 0) then
     write(IMAIN,*) '     Moho surface:'
     write(IMAIN,*) '     total surface elements: ',imoho_all
     write(IMAIN,*) '     top elements   :',imoho_top_all
@@ -1046,7 +1046,7 @@ subroutine crm_ext_setup_indexing(ibool, &
     ! saves moho files: total number of elements, corner points, all points
     open(unit=IOUT,file=prname(1:len_trim(prname))//'ibelm_moho.bin', &
           status='unknown',form='unformatted',iostat=ier)
-    if( ier /= 0 ) stop 'error opening ibelm_moho.bin file'
+    if (ier /= 0) stop 'error opening ibelm_moho.bin file'
     write(IOUT) NSPEC2D_MOHO
     write(IOUT) ibelm_moho_top
     write(IOUT) ibelm_moho_bot
@@ -1055,13 +1055,13 @@ subroutine crm_ext_setup_indexing(ibool, &
     close(IOUT)
     open(unit=IOUT,file=prname(1:len_trim(prname))//'normal_moho.bin', &
           status='unknown',form='unformatted',iostat=ier)
-    if( ier /= 0 ) stop 'error opening normal_moho.bin file'
+    if (ier /= 0) stop 'error opening normal_moho.bin file'
     write(IOUT) normal_moho_top
     write(IOUT) normal_moho_bot
     close(IOUT)
     open(unit=IOUT,file=prname(1:len_trim(prname))//'is_moho.bin', &
       status='unknown',form='unformatted',iostat=ier)
-    if( ier /= 0 ) stop 'error opening is_moho.bin file'
+    if (ier /= 0) stop 'error opening is_moho.bin file'
     write(IOUT) is_moho_top
     write(IOUT) is_moho_bot
     close(IOUT)
@@ -1108,11 +1108,11 @@ subroutine crm_ext_setup_indexing(ibool, &
 
   ! allocates arrays
   allocate(ispec_is_inner(nspec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array ispec_is_inner'
+  if (ier /= 0) stop 'error allocating array ispec_is_inner'
 
   ! temporary array
   allocate(iglob_is_inner(nglob_dummy),stat=ier)
-  if( ier /= 0 ) stop 'error allocating temporary array  iglob_is_inner'
+  if (ier /= 0) stop 'error allocating temporary array  iglob_is_inner'
 
   ! initialize flags
   ispec_is_inner(:) = .true.
@@ -1139,7 +1139,7 @@ subroutine crm_ext_setup_indexing(ibool, &
   ! frees temporary array
   deallocate( iglob_is_inner )
 
-  if( SAVE_MESH_FILES .and. DEBUG ) then
+  if (SAVE_MESH_FILES .and. DEBUG) then
     filename = prname(1:len_trim(prname))//'ispec_is_inner'
     call write_VTK_data_elem_l(nspec,nglob_dummy, &
                         xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
@@ -1150,11 +1150,11 @@ subroutine crm_ext_setup_indexing(ibool, &
   ! sets up elements for loops in acoustic simulations
   nspec_inner_acoustic = 0
   nspec_outer_acoustic = 0
-  if( ACOUSTIC_SIMULATION ) then
+  if (ACOUSTIC_SIMULATION) then
     ! counts inner and outer elements
     do ispec = 1, nspec
-      if( ispec_is_acoustic(ispec) ) then
-        if( ispec_is_inner(ispec) .eqv. .true. ) then
+      if (ispec_is_acoustic(ispec)) then
+        if (ispec_is_inner(ispec) .eqv. .true.) then
           nspec_inner_acoustic = nspec_inner_acoustic + 1
         else
           nspec_outer_acoustic = nspec_outer_acoustic + 1
@@ -1164,17 +1164,17 @@ subroutine crm_ext_setup_indexing(ibool, &
 
     ! stores indices of inner and outer elements for faster(?) computation
     num_phase_ispec_acoustic = max(nspec_inner_acoustic,nspec_outer_acoustic)
-    if( num_phase_ispec_acoustic < 0 ) stop 'error acoustic simulation: num_phase_ispec_acoustic is < zero'
+    if (num_phase_ispec_acoustic < 0) stop 'error acoustic simulation: num_phase_ispec_acoustic is < zero'
 
     allocate( phase_ispec_inner_acoustic(num_phase_ispec_acoustic,2),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array phase_ispec_inner_acoustic'
+    if (ier /= 0) stop 'error allocating array phase_ispec_inner_acoustic'
     phase_ispec_inner_acoustic(:,:) = 0
 
     ispec_inner = 0
     ispec_outer = 0
     do ispec = 1, nspec
-      if( ispec_is_acoustic(ispec) ) then
-        if( ispec_is_inner(ispec) .eqv. .true. ) then
+      if (ispec_is_acoustic(ispec)) then
+        if (ispec_is_inner(ispec) .eqv. .true.) then
           ispec_inner = ispec_inner + 1
           phase_ispec_inner_acoustic(ispec_inner,2) = ispec
         else
@@ -1187,18 +1187,18 @@ subroutine crm_ext_setup_indexing(ibool, &
     ! allocates dummy array
     num_phase_ispec_acoustic = 0
     allocate( phase_ispec_inner_acoustic(num_phase_ispec_acoustic,2),stat=ier)
-    if( ier /= 0 ) stop 'error allocating dummy array phase_ispec_inner_acoustic'
+    if (ier /= 0) stop 'error allocating dummy array phase_ispec_inner_acoustic'
     phase_ispec_inner_acoustic(:,:) = 0
   endif
 
   ! sets up elements for loops in acoustic simulations
   nspec_inner_elastic = 0
   nspec_outer_elastic = 0
-  if( ELASTIC_SIMULATION ) then
+  if (ELASTIC_SIMULATION) then
     ! counts inner and outer elements
     do ispec = 1, nspec
-      if( ispec_is_elastic(ispec) ) then
-        if( ispec_is_inner(ispec) .eqv. .true. ) then
+      if (ispec_is_elastic(ispec)) then
+        if (ispec_is_inner(ispec) .eqv. .true.) then
           nspec_inner_elastic = nspec_inner_elastic + 1
         else
           nspec_outer_elastic = nspec_outer_elastic + 1
@@ -1208,17 +1208,17 @@ subroutine crm_ext_setup_indexing(ibool, &
 
     ! stores indices of inner and outer elements for faster(?) computation
     num_phase_ispec_elastic = max(nspec_inner_elastic,nspec_outer_elastic)
-    if( num_phase_ispec_elastic < 0 ) stop 'error elastic simulation: num_phase_ispec_elastic is < zero'
+    if (num_phase_ispec_elastic < 0) stop 'error elastic simulation: num_phase_ispec_elastic is < zero'
 
     allocate( phase_ispec_inner_elastic(num_phase_ispec_elastic,2),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array phase_ispec_inner_elastic'
+    if (ier /= 0) stop 'error allocating array phase_ispec_inner_elastic'
     phase_ispec_inner_elastic(:,:) = 0
 
     ispec_inner = 0
     ispec_outer = 0
     do ispec = 1, nspec
-      if( ispec_is_elastic(ispec) ) then
-        if( ispec_is_inner(ispec) .eqv. .true. ) then
+      if (ispec_is_elastic(ispec)) then
+        if (ispec_is_inner(ispec) .eqv. .true.) then
           ispec_inner = ispec_inner + 1
           phase_ispec_inner_elastic(ispec_inner,2) = ispec
         else
@@ -1231,18 +1231,18 @@ subroutine crm_ext_setup_indexing(ibool, &
     ! allocates dummy array
     num_phase_ispec_elastic = 0
     allocate( phase_ispec_inner_elastic(num_phase_ispec_elastic,2),stat=ier)
-    if( ier /= 0 ) stop 'error allocating dummy array phase_ispec_inner_elastic'
+    if (ier /= 0) stop 'error allocating dummy array phase_ispec_inner_elastic'
     phase_ispec_inner_elastic(:,:) = 0
   endif
 
   ! sets up elements for loops in poroelastic simulations
   nspec_inner_poroelastic = 0
   nspec_outer_poroelastic = 0
-  if( POROELASTIC_SIMULATION ) then
+  if (POROELASTIC_SIMULATION) then
     ! counts inner and outer elements
     do ispec = 1, nspec
-      if( ispec_is_poroelastic(ispec) ) then
-        if( ispec_is_inner(ispec) .eqv. .true. ) then
+      if (ispec_is_poroelastic(ispec)) then
+        if (ispec_is_inner(ispec) .eqv. .true.) then
           nspec_inner_poroelastic = nspec_inner_poroelastic + 1
         else
           nspec_outer_poroelastic = nspec_outer_poroelastic + 1
@@ -1253,12 +1253,12 @@ subroutine crm_ext_setup_indexing(ibool, &
     ! stores indices of inner and outer elements for faster(?) computation
     num_phase_ispec_poroelastic = max(nspec_inner_poroelastic,nspec_outer_poroelastic)
     allocate( phase_ispec_inner_poroelastic(num_phase_ispec_poroelastic,2),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array phase_ispec_inner_poroelastic'
+    if (ier /= 0) stop 'error allocating array phase_ispec_inner_poroelastic'
     nspec_inner_poroelastic = 0
     nspec_outer_poroelastic = 0
     do ispec = 1, nspec
-      if( ispec_is_poroelastic(ispec) ) then
-        if( ispec_is_inner(ispec) .eqv. .true. ) then
+      if (ispec_is_poroelastic(ispec)) then
+        if (ispec_is_inner(ispec) .eqv. .true.) then
           nspec_inner_poroelastic = nspec_inner_poroelastic + 1
           phase_ispec_inner_poroelastic(nspec_inner_poroelastic,2) = ispec
         else
@@ -1271,12 +1271,12 @@ subroutine crm_ext_setup_indexing(ibool, &
     ! allocates dummy array
     num_phase_ispec_poroelastic = 0
     allocate( phase_ispec_inner_poroelastic(num_phase_ispec_poroelastic,2),stat=ier)
-    if( ier /= 0 ) stop 'error allocating dummy array phase_ispec_inner_poroelastic'
+    if (ier /= 0) stop 'error allocating dummy array phase_ispec_inner_poroelastic'
     phase_ispec_inner_poroelastic(:,:) = 0
   endif
 
   ! user output
-  if(myrank == 0) then
+  if (myrank == 0) then
     percentage_edge = 100.*count(ispec_is_inner(:))/real(nspec)
     write(IMAIN,*) '     for overlapping of communications with calculations:'
     write(IMAIN,*) '     percentage of   edge elements ',100. -percentage_edge,'%'

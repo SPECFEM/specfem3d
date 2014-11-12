@@ -30,7 +30,7 @@ program test_read
 
   ! punctual check of values for given default Par_file in SPECFEM3D/DATA/ directory
   print*,'NPROC = ',NPROC
-  if( NPROC /= PAR_FILE_NPROC ) then
+  if (NPROC /= PAR_FILE_NPROC) then
     print*,'ERROR: NPROC value invalid'
     stop 1
   else
@@ -38,7 +38,7 @@ program test_read
   endif
 
   print*,'NSTEP = ',NSTEP
-  if( NSTEP /= PAR_FILE_NSTEP ) then
+  if (NSTEP /= PAR_FILE_NSTEP) then
     print*,'ERROR: NSTEP value invalid'
     stop 1
   else
@@ -46,7 +46,7 @@ program test_read
   endif
 
   print*,'DT = ',DT
-  if( abs(DT - PAR_FILE_DT) > 1.e-9 ) then
+  if (abs(DT - PAR_FILE_DT) > 1.e-9) then
     print*,'ERROR: DT value invalid'
     stop 1
   else
@@ -54,7 +54,7 @@ program test_read
   endif
 
   print*,'NTSTEP_BETWEEN_OUTPUT_INFO = ',NTSTEP_BETWEEN_OUTPUT_INFO
-  if( NTSTEP_BETWEEN_OUTPUT_INFO /= PAR_FILE_NTSTEP_BETWEEN_OUTPUT_INFO ) then
+  if (NTSTEP_BETWEEN_OUTPUT_INFO /= PAR_FILE_NTSTEP_BETWEEN_OUTPUT_INFO) then
     print*,'ERROR: NPROC value invalid'
     stop 1
   else
@@ -62,7 +62,7 @@ program test_read
   endif
 
   print*,'USE_RICKER_TIME_FUNCTION = ',USE_RICKER_TIME_FUNCTION
-  if( USE_RICKER_TIME_FUNCTION .neqv. PAR_FILE_USE_RICKER_TIME_FUNCTION ) then
+  if (USE_RICKER_TIME_FUNCTION .neqv. PAR_FILE_USE_RICKER_TIME_FUNCTION) then
     print*,'ERROR: NPROC value invalid'
     stop 1
   else

@@ -65,12 +65,12 @@
   call setup_sources_receivers_VTKfile()
 
   ! user output
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) 'Total number of samples for seismograms = ',NSTEP
     write(IMAIN,*)
     write(IMAIN,*) 'found a total of ',nrec_tot_found,' receivers in all the slices'
-    if(NSOURCES > 1) write(IMAIN,*) 'Using ',NSOURCES,' point sources'
+    if (NSOURCES > 1) write(IMAIN,*) 'Using ',NSOURCES,' point sources'
     write(IMAIN,*)
   endif
 
@@ -129,7 +129,7 @@
 
   ! for source encoding (acoustic sources so far only)
   allocate(pm1_source_encoding(NSOURCES),stat=ier)
-  if( ier /= 0 ) stop 'error allocating arrays for sources'
+  if (ier /= 0) stop 'error allocating arrays for sources'
 
 ! locate sources in the mesh
 !
@@ -145,12 +145,12 @@
           ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic, &
           num_free_surface_faces,free_surface_ispec,free_surface_ijk)
 
-  if(abs(minval(tshift_src)) > TINYVAL) call exit_MPI(myrank,'one tshift_src must be zero, others must be positive')
+  if (abs(minval(tshift_src)) > TINYVAL) call exit_MPI(myrank,'one tshift_src must be zero, others must be positive')
 
 ! filter source time function by Gaussian with hdur = HDUR_MOVIE when outputing movies or shakemaps
   if (MOVIE_SURFACE .or. MOVIE_VOLUME .or. CREATE_SHAKEMAP) then
     hdur = sqrt(hdur**2 + HDUR_MOVIE**2)
-    if(myrank == 0) then
+    if (myrank == 0) then
       write(IMAIN,*)
       write(IMAIN,*) 'Each source is being convolved with HDUR_MOVIE = ',HDUR_MOVIE
       write(IMAIN,*)
@@ -171,12 +171,12 @@
   ! uses an earlier start time if source is acoustic with a gaussian source time function
   t0_acoustic = 0.0d0
   do isource = 1,NSOURCES
-    if( myrank == islice_selected_source(isource) ) then
+    if (myrank == islice_selected_source(isource)) then
       ispec = ispec_selected_source(isource)
-      if( ispec_is_acoustic(ispec) ) then
+      if (ispec_is_acoustic(ispec)) then
         ! uses an earlier start time
         t0_acoustic = - 3.0d0 * ( tshift_src(isource) - hdur(isource) )
-        if(  t0_acoustic > t0 ) t0 = t0_acoustic
+        if (t0_acoustic > t0 ) t0 = t0_acoustic
       endif
     endif
   enddo
@@ -186,23 +186,23 @@
   call max_all_all_dp(t0_acoustic,t0)
 
   ! point force sources will start depending on the frequency given by hdur
-  if( USE_FORCE_POINT_SOURCE .or. USE_RICKER_TIME_FUNCTION ) then
+  if (USE_FORCE_POINT_SOURCE .or. USE_RICKER_TIME_FUNCTION) then
     ! note: point force sources will give the dominant frequency in hdur,
     !       thus the main period is 1/hdur.
     !       also, these sources use a Ricker source time function instead of a gaussian.
-    !       for a Ricker source time function, a start time ~1.2 * main_period is a good choice
+    !       for a Ricker source time function, a start time ~1.2 * dominant_period is a good choice
     t0 = - 1.2d0 * minval(tshift_src(:) - 1.0d0/hdur(:))
   endif
 
   ! checks if user set USER_T0 to fix simulation start time
   ! note: USER_T0 has to be positive
-  if( USER_T0 > 0.d0 ) then
+  if (USER_T0 > 0.d0) then
     ! user cares about origin time and time shifts of the CMTSOLUTION
     ! and wants to fix simulation start time to a constant start time
     ! time 0 on time axis will correspond to given origin time
 
     ! notifies user
-    if( myrank == 0 ) then
+    if (myrank == 0) then
       write(IMAIN,*) 'USER_T0: ',USER_T0
       write(IMAIN,*) 't0: ',t0,'min_tshift_src_original: ',min_tshift_src_original
       write(IMAIN,*)
@@ -210,7 +210,7 @@
 
     ! checks if automatically set t0 is too small
     ! note: min_tshift_src_original can be a positive or negative time shift (minimum from all tshift)
-    if( t0 <= USER_T0 + min_tshift_src_original ) then
+    if (t0 <= USER_T0 + min_tshift_src_original) then
       ! by default, tshift_src(:) holds relative time shifts with a minimum time shift set to zero
       ! re-adds (minimum) original time shift such that sources will kick in
       ! according to their absolute time shift
@@ -221,14 +221,14 @@
       t0 = USER_T0
 
       ! notifies user
-      if( myrank == 0 ) then
+      if (myrank == 0) then
         write(IMAIN,*) '  set new simulation start time: ', - t0
         write(IMAIN,*)
       endif
     else
       ! start time needs to be at least t0 for numerical stability
       ! notifies user
-      if( myrank == 0 ) then
+      if (myrank == 0) then
         write(IMAIN,*) 'error: USER_T0 is too small'
         write(IMAIN,*) '       must make one of three adjustements:'
         write(IMAIN,*) '       - increase USER_T0 to be at least: ',t0-min_tshift_src_original
@@ -237,8 +237,8 @@
       endif
       call exit_mpi(myrank,'error USER_T0 is set but too small')
     endif
-  else if( USER_T0 < 0.d0 ) then
-    if( myrank == 0 ) then
+  else if (USER_T0 < 0.d0) then
+    if (myrank == 0) then
       write(IMAIN,*) 'error: USER_T0 is negative, must be set zero or positive!'
     endif
     call exit_mpi(myrank,'error negative USER_T0 parameter in constants.h')
@@ -247,7 +247,7 @@
   ! count number of sources located in this slice
   nsources_local = 0
   do isource = 1, NSOURCES
-    if(myrank == islice_selected_source(isource)) nsources_local = nsources_local + 1
+    if (myrank == islice_selected_source(isource)) nsources_local = nsources_local + 1
   enddo
 
   ! checks if source is in an acoustic element and exactly on the free surface because pressure is zero there
@@ -277,16 +277,16 @@
     is_on = .false.
 
     ! only receivers in this process
-    if( myrank == islice_selected_source(isource) ) then
+    if (myrank == islice_selected_source(isource)) then
 
       ispec = ispec_selected_source(isource)
       ! only if receiver is in an acoustic element
-      if( ispec_is_acoustic(ispec) ) then
+      if (ispec_is_acoustic(ispec)) then
 
         ! checks with free surface face
         do iface = 1,num_free_surface_faces
 
-          if( ispec == free_surface_ispec(iface) ) then
+          if (ispec == free_surface_ispec(iface)) then
 
             ! determine face
             ixmin = minval( free_surface_ijk(1,:,iface) )
@@ -299,23 +299,23 @@
             izmax = maxval( free_surface_ijk(3,:,iface) )
 
             ! xmin face
-            if(ixmin==1 .and. ixmax==1) then
-              if( xi_source(isource) < -0.99d0) is_on = .true.
+            if (ixmin==1 .and. ixmax==1) then
+              if (xi_source(isource) < -0.99d0) is_on = .true.
             ! xmax face
-            else if(ixmin==NGLLX .and. ixmax==NGLLX) then
-              if( xi_source(isource) > 0.99d0) is_on = .true.
+            else if (ixmin==NGLLX .and. ixmax==NGLLX) then
+              if (xi_source(isource) > 0.99d0) is_on = .true.
             ! ymin face
-            else if(iymin==1 .and. iymax==1) then
-              if( eta_source(isource) < -0.99d0) is_on = .true.
+            else if (iymin==1 .and. iymax==1) then
+              if (eta_source(isource) < -0.99d0) is_on = .true.
             ! ymax face
-            else if(iymin==NGLLY .and. iymax==NGLLY) then
-              if( eta_source(isource) > 0.99d0) is_on = .true.
+            else if (iymin==NGLLY .and. iymax==NGLLY) then
+              if (eta_source(isource) > 0.99d0) is_on = .true.
             ! zmin face
-            else if(izmin==1 .and. izmax==1 ) then
-              if( gamma_source(isource) < -0.99d0) is_on = .true.
+            else if (izmin==1 .and. izmax==1) then
+              if (gamma_source(isource) < -0.99d0) is_on = .true.
             ! zmax face
-            else if(izmin==NGLLZ .and. izmax==NGLLZ ) then
-              if( gamma_source(isource) > 0.99d0) is_on = .true.
+            else if (izmin==NGLLZ .and. izmax==NGLLZ) then
+              if (gamma_source(isource) > 0.99d0) is_on = .true.
             endif
 
           endif ! free_surface_ispec
@@ -325,12 +325,12 @@
 
     ! user output
     call any_all_l( is_on, is_on_all )
-    if( myrank == 0 .and. is_on_all ) then
-      write(IMAIN,*) '**********************************************************************'
+    if (myrank == 0 .and. is_on_all) then
+      write(IMAIN,*) '********************************************************************'
       write(IMAIN,*) '*** source: ',isource,'                                          ***'
       write(IMAIN,*) '*** Warning: acoustic source located exactly on the free surface ***'
-      write(IMAIN,*) '*** will be zeroed                                                                           ***'
-      write(IMAIN,*) '**********************************************************************'
+      write(IMAIN,*) '*** will be zeroed                                               ***'
+      write(IMAIN,*) '********************************************************************'
       write(IMAIN,*)
     endif
 
@@ -362,7 +362,7 @@
 ! see if we are running several independent runs in parallel
 ! if so, add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
 ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
-    if(NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
+    if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
       write(path_to_add,"('run',i4.4,'/')") mygroup + 1
       rec_filename = path_to_add(1:len_trim(path_to_add))//rec_filename(1:len_trim(rec_filename))
       filtered_rec_filename = path_to_add(1:len_trim(path_to_add))//filtered_rec_filename(1:len_trim(filtered_rec_filename))
@@ -371,7 +371,7 @@
     call station_filter(SUPPRESS_UTM_PROJECTION,UTM_PROJECTION_ZONE,myrank,rec_filename,filtered_rec_filename,nrec, &
            LATITUDE_MIN, LATITUDE_MAX, LONGITUDE_MIN, LONGITUDE_MAX)
 
-    if(nrec < 1) call exit_MPI(myrank,'need at least one receiver')
+    if (nrec < 1) call exit_MPI(myrank,'need at least one receiver')
     call synchronize_all()
 
   else
@@ -381,7 +381,7 @@
 ! see if we are running several independent runs in parallel
 ! if so, add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
 ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
-    if(NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
+    if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
       write(path_to_add,"('run',i4.4,'/')") mygroup + 1
       rec_filename = path_to_add(1:len_trim(path_to_add))//rec_filename(1:len_trim(rec_filename))
       filtered_rec_filename = path_to_add(1:len_trim(path_to_add))//filtered_rec_filename(1:len_trim(filtered_rec_filename))
@@ -393,7 +393,7 @@
     call synchronize_all()
   endif
 
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*)
     if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
       write(IMAIN,*) 'Total number of receivers = ', nrec
@@ -403,7 +403,7 @@
     write(IMAIN,*)
   endif
 
-  if(nrec < 1) call exit_MPI(myrank,'need at least one receiver')
+  if (nrec < 1) call exit_MPI(myrank,'need at least one receiver')
 
 ! allocate memory for receiver arrays
   allocate(islice_selected_rec(nrec), &
@@ -414,7 +414,7 @@
            station_name(nrec), &
            network_name(nrec), &
            nu(NDIM,NDIM,nrec),stat=ier)
-  if( ier /= 0 ) stop 'error allocating arrays for receivers'
+  if (ier /= 0) stop 'error allocating arrays for receivers'
 
 ! locate receivers in the mesh
   call locate_receivers(ibool,myrank,NSPEC_AB,NGLOB_AB,NGNOD, &
@@ -431,20 +431,20 @@
   if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
     nrec_simulation = nrec
     do irec = 1,nrec
-      if(myrank == islice_selected_rec(irec)) nrec_local = nrec_local + 1
+      if (myrank == islice_selected_rec(irec)) nrec_local = nrec_local + 1
     enddo
   else
     ! adjoint simulation: receivers become adjoint sources
     nrec_simulation = NSOURCES
     do isource = 1, NSOURCES
-      if(myrank == islice_selected_source(isource)) nrec_local = nrec_local + 1
+      if (myrank == islice_selected_source(isource)) nrec_local = nrec_local + 1
     enddo
   endif
 
 ! check that the sum of the number of receivers in each slice is nrec
   call sum_all_i(nrec_local,nrec_tot_found)
-  if( myrank == 0 ) then
-    if(nrec_tot_found /= nrec_simulation) then
+  if (myrank == 0) then
+    if (nrec_tot_found /= nrec_simulation) then
       call exit_MPI(myrank,'problem when dispatching the receivers')
     endif
   endif
@@ -478,16 +478,16 @@
     is_on = .false.
 
     ! only receivers in this process
-    if( myrank == islice_selected_rec(irec) ) then
+    if (myrank == islice_selected_rec(irec)) then
 
       ispec = ispec_selected_rec(irec)
       ! only if receiver is in an acoustic element
-      if( ispec_is_acoustic(ispec) ) then
+      if (ispec_is_acoustic(ispec)) then
 
         ! checks with free surface face
         do iface = 1,num_free_surface_faces
 
-          if( ispec == free_surface_ispec(iface) ) then
+          if (ispec == free_surface_ispec(iface)) then
 
             ! determine face
             ixmin = minval( free_surface_ijk(1,:,iface) )
@@ -500,23 +500,23 @@
             izmax = maxval( free_surface_ijk(3,:,iface) )
 
             ! xmin face
-            if(ixmin==1 .and. ixmax==1) then
-              if( xi_receiver(irec) < -0.99d0) is_on = .true.
+            if (ixmin==1 .and. ixmax==1) then
+              if (xi_receiver(irec) < -0.99d0) is_on = .true.
             ! xmax face
-            else if(ixmin==NGLLX .and. ixmax==NGLLX) then
-              if( xi_receiver(irec) > 0.99d0) is_on = .true.
+            else if (ixmin==NGLLX .and. ixmax==NGLLX) then
+              if (xi_receiver(irec) > 0.99d0) is_on = .true.
             ! ymin face
-            else if(iymin==1 .and. iymax==1) then
-              if( eta_receiver(irec) < -0.99d0) is_on = .true.
+            else if (iymin==1 .and. iymax==1) then
+              if (eta_receiver(irec) < -0.99d0) is_on = .true.
             ! ymax face
-            else if(iymin==NGLLY .and. iymax==NGLLY) then
-              if( eta_receiver(irec) > 0.99d0) is_on = .true.
+            else if (iymin==NGLLY .and. iymax==NGLLY) then
+              if (eta_receiver(irec) > 0.99d0) is_on = .true.
             ! zmin face
-            else if(izmin==1 .and. izmax==1 ) then
-              if( gamma_receiver(irec) < -0.99d0) is_on = .true.
+            else if (izmin==1 .and. izmax==1) then
+              if (gamma_receiver(irec) < -0.99d0) is_on = .true.
             ! zmax face
-            else if(izmin==NGLLZ .and. izmax==NGLLZ ) then
-              if( gamma_receiver(irec) > 0.99d0) is_on = .true.
+            else if (izmin==NGLLZ .and. izmax==NGLLZ) then
+              if (gamma_receiver(irec) > 0.99d0) is_on = .true.
             endif
 
           endif ! free_surface_ispec
@@ -526,11 +526,11 @@
 
     ! user output
     call any_all_l( is_on, is_on_all )
-    if( myrank == 0 .and. is_on_all ) then
+    if (myrank == 0 .and. is_on_all) then
       ! limits user output if too many receivers
-      if( nrec < 1000 .and. (.not. SU_FORMAT ) ) then
+      if (nrec < 1000 .and. (.not. SU_FORMAT )) then
         write(IMAIN,*) '**********************************************************************'
-        write(IMAIN,*) '*** station:',irec,'                                          ***'
+        write(IMAIN,*) '*** station:',irec,'                                               ***'
         write(IMAIN,*) '*** Warning: acoustic receiver located exactly on the free surface ***'
         write(IMAIN,*) '*** Warning: tangential component will be zero there               ***'
         write(IMAIN,*) '**********************************************************************'
@@ -577,17 +577,17 @@
   if (SIMULATION_TYPE == 1  .or. SIMULATION_TYPE == 3) then
     allocate(sourcearray(NDIM,NGLLX,NGLLY,NGLLZ), &
              sourcearrays(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array sourcearray'
+    if (ier /= 0) stop 'error allocating array sourcearray'
 
     ! compute source arrays
     do isource = 1,NSOURCES
 
       !   check that the source slice number is okay
-      if(islice_selected_source(isource) < 0 .or. islice_selected_source(isource) > NPROC-1) &
+      if (islice_selected_source(isource) < 0 .or. islice_selected_source(isource) > NPROC-1) &
         call exit_MPI(myrank,'something is wrong with the source slice number')
 
       !   compute source arrays in source slice
-      if(myrank == islice_selected_source(isource)) then
+      if (myrank == islice_selected_source(isource)) then
 
         ispec = ispec_selected_source(isource)
 
@@ -611,16 +611,16 @@
 
                 ! acoustic source
                 ! identical source array components in x,y,z-direction
-                if( ispec_is_acoustic(ispec) ) then
+                if (ispec_is_acoustic(ispec)) then
                   sourcearrayd(:,i,j,k) = factor_force_source(isource) * hlagrange
                 endif
 
                 ! elastic source
-                if( ispec_is_elastic(ispec) ) then
+                if (ispec_is_elastic(ispec)) then
                   ! checks norm of component vector
-                  if( sqrt( comp_dir_vect_source_E(isource)**2 &
+                  if (sqrt( comp_dir_vect_source_E(isource)**2 &
                           + comp_dir_vect_source_N(isource)**2 &
-                          + comp_dir_vect_source_Z_UP(isource)**2 ) < TINYVAL ) then
+                          + comp_dir_vect_source_Z_UP(isource)**2) < TINYVAL) then
                     call exit_MPI(myrank,'error force point source: component vector has (almost) zero norm')
                   endif
 
@@ -631,14 +631,14 @@
                                             nu_source(2,:,isource) * comp_dir_vect_source_N(isource) + &
                                             nu_source(3,:,isource) * comp_dir_vect_source_Z_UP(isource) ) / &
                                           sqrt( comp_dir_vect_source_E(isource)**2 + comp_dir_vect_source_N(isource)**2 + &
-                                                comp_dir_vect_source_Z_UP(isource)**2 )
+                                                comp_dir_vect_source_Z_UP(isource)**2)
                 endif
               enddo
             enddo
           enddo
 
           ! distinguish between single and double precision for reals
-          if(CUSTOM_REAL == SIZE_REAL) then
+          if (CUSTOM_REAL == SIZE_REAL) then
             sourcearray(:,:,:,:) = sngl(sourcearrayd(:,:,:,:))
           else
             sourcearray(:,:,:,:) = sourcearrayd(:,:,:,:)
@@ -659,7 +659,7 @@
             ! scalar moment of moment tensor values read in from CMTSOLUTION
             ! note: M0 by Dahlen and Tromp, eq. 5.91
             factor_source = 1.0/sqrt(2.0) * sqrt( Mxx(isource)**2 + Myy(isource)**2 + Mzz(isource)**2 &
-                 + 2*( Myz(isource)**2 + Mxz(isource)**2 + Mxy(isource)**2 ) )
+                 + 2*( Myz(isource)**2 + Mxz(isource)**2 + Mxy(isource)**2) )
 
             ! scales source such that it would be equivalent to explosion source moment tensor,
             ! where Mxx=Myy=Mzz, others Mxy,.. = zero, in equivalent elastic media
@@ -687,7 +687,7 @@
     ! SIMULATION_TYPE == 2
     ! allocate dummy array (needed for subroutine calls)
     allocate(sourcearrays(1,1,1,1,1),stat=ier)
-    if( ier /= 0 ) stop 'error allocating dummy sourcearrays'
+    if (ier /= 0) stop 'error allocating dummy sourcearrays'
   endif
 
   ! ADJOINT simulations
@@ -721,7 +721,7 @@
             if (ier == 0) then
               ! checks length of file
               itime = 0
-              do while(ier == 0)
+              do while (ier == 0)
                 read(IIN,*,iostat=ier) junk,junk
                 if (ier == 0) itime = itime + 1
               enddo
@@ -787,7 +787,7 @@
 
   ! needs to be allocate for subroutine calls (even if nrec_local == 0)
   allocate(number_receiver_global(nrec_local),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array number_receiver_global'
+  if (ier /= 0) stop 'error allocating array number_receiver_global'
 
   ! stores local receivers interpolation factors
   if (nrec_local > 0) then
@@ -795,14 +795,14 @@
     allocate(hxir_store(nrec_local,NGLLX), &
              hetar_store(nrec_local,NGLLY), &
              hgammar_store(nrec_local,NGLLZ),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array hxir_store etc.'
+    if (ier /= 0) stop 'error allocating array hxir_store etc.'
 
     ! allocates derivatives
-    if (SIMULATION_TYPE == 2 ) then
+    if (SIMULATION_TYPE == 2) then
       allocate(hpxir_store(nrec_local,NGLLX), &
                hpetar_store(nrec_local,NGLLY), &
                hpgammar_store(nrec_local,NGLLZ),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array hpxir_store'
+      if (ier /= 0) stop 'error allocating array hpxir_store'
     endif
 
     ! define local to global receiver numbering mapping
@@ -816,7 +816,7 @@
       enddo
     else
       do isource = 1,NSOURCES
-        if(myrank == islice_selected_source(isource)) then
+        if (myrank == islice_selected_source(isource)) then
           irec_local = irec_local + 1
           number_receiver_global(irec_local) = isource
         endif
@@ -873,7 +873,7 @@
   character(len=MAX_STRING_LEN) :: filename,filename_new,system_command,system_command1,system_command2
 
   ! determines number of points for vtk file
-  if( SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
+  if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
     totalpoints = NSOURCES + nrec
   else
     ! pure adjoint simulation only needs receivers
@@ -883,7 +883,7 @@
   if (myrank == 0) then
     ! vtk file
     open(IOVTK,file=trim(OUTPUT_FILES_PATH)//'/sr.vtk',status='unknown',iostat=ier)
-    if( ier /= 0 ) stop 'error opening sr.vtk file'
+    if (ier /= 0) stop 'error opening sr.vtk file'
     ! vtk header
     write(IOVTK,'(a)') '# vtk DataFile Version 2.0'
     write(IOVTK,'(a)') 'Source and Receiver VTK file'
@@ -893,32 +893,32 @@
   endif
 
   ! sources
-  if( SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
+  if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
     do isource=1,NSOURCES
       ! spectral element id
       ispec = ispec_selected_source(isource)
 
       ! gets element ancor nodes
-      if( myrank == islice_selected_source(isource) ) then
+      if (myrank == islice_selected_source(isource)) then
         ! find the coordinates of the eight corner nodes of the element
         call eval_shape3D_element_corners(xelm,yelm,zelm,ispec,&
                         ibool,xstore,ystore,zstore,NSPEC_AB,NGLOB_AB)
 
       endif
       ! master collects corner locations
-      if( islice_selected_source(isource) /= 0 ) then
-        if( myrank == 0 ) then
+      if (islice_selected_source(isource) /= 0) then
+        if (myrank == 0) then
           call recvv_cr(xelm,NGNOD,islice_selected_source(isource),0)
           call recvv_cr(yelm,NGNOD,islice_selected_source(isource),0)
           call recvv_cr(zelm,NGNOD,islice_selected_source(isource),0)
-        else if( myrank == islice_selected_source(isource) ) then
+        else if (myrank == islice_selected_source(isource)) then
           call sendv_cr(xelm,NGNOD,0,0)
           call sendv_cr(yelm,NGNOD,0,0)
           call sendv_cr(zelm,NGNOD,0,0)
         endif
       endif
 
-      if( myrank == 0 ) then
+      if (myrank == 0) then
         ! get the 3-D shape functions
         xil = xi_source(isource)
         etal = eta_source(isource)
@@ -946,24 +946,24 @@
     ispec = ispec_selected_rec(irec)
 
     ! find the coordinates of the eight corner nodes of the element
-    if( myrank == islice_selected_rec(irec) ) then
+    if (myrank == islice_selected_rec(irec)) then
       call eval_shape3D_element_corners(xelm,yelm,zelm,ispec,&
                       ibool,xstore,ystore,zstore,NSPEC_AB,NGLOB_AB)
     endif
     ! master collects corner locations
-    if( islice_selected_rec(irec) /= 0 ) then
-      if( myrank == 0 ) then
+    if (islice_selected_rec(irec) /= 0) then
+      if (myrank == 0) then
         call recvv_cr(xelm,NGNOD,islice_selected_rec(irec),0)
         call recvv_cr(yelm,NGNOD,islice_selected_rec(irec),0)
         call recvv_cr(zelm,NGNOD,islice_selected_rec(irec),0)
-      else if( myrank == islice_selected_rec(irec) ) then
+      else if (myrank == islice_selected_rec(irec)) then
         call sendv_cr(xelm,NGNOD,0,0)
         call sendv_cr(yelm,NGNOD,0,0)
         call sendv_cr(zelm,NGNOD,0,0)
       endif
     endif
 
-    if( myrank == 0 ) then
+    if (myrank == 0) then
       ! get the 3-D shape functions
       xil = xi_receiver(irec)
       etal = eta_receiver(irec)
@@ -986,30 +986,30 @@
   enddo
 
   ! closes vtk file
-  if( myrank == 0 ) then
+  if (myrank == 0) then
     write(IOVTK,*)
     close(IOVTK)
 
     ! creates additional receiver and source files
-    if( SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
+    if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
       ! extracts receiver locations
       filename = trim(OUTPUT_FILES_PATH)//'/sr.vtk'
       filename_new = trim(OUTPUT_FILES_PATH)//'/receiver.vtk'
 
       ! vtk file for receivers only
       write(system_command, &
-  "('awk ',a1,'{if(NR<5) print $0;if(NR==5)print ',a1,'POINTS',i6,' float',a1,';if(NR>5+',i6,')print $0}',a1,' < ',a,' > ',a)")&
+  "('awk ',a1,'{if (NR<5) print $0;if (NR==5)print ',a1,'POINTS',i6,' float',a1,';if (NR>5+',i6,')print $0}',a1,' < ',a,' > ',a)")&
       "'",'"',nrec,'"',NSOURCES,"'",trim(filename),trim(filename_new)
 
       ! extracts source locations
       filename_new = trim(OUTPUT_FILES_PATH)//'/source.vtk'
 
       write(system_command1, &
-  "('awk ',a1,'{if(NR<5) print $0;if(NR==5)print ',a1,'POINTS',i6,' float',a1,';')") &
+  "('awk ',a1,'{if (NR<5) print $0;if (NR==5)print ',a1,'POINTS',i6,' float',a1,';')") &
         "'",'"',NSOURCES,'"'
 
       write(system_command2, &
-  "('if(NR>5 && NR <6+',i6,')print $0}END{print ',a,'}',a1,' < ',a,' > ',a)") &
+  "('if (NR>5 && NR <6+',i6,')print $0}END{print ',a,'}',a1,' < ',a,' > ',a)") &
         NSOURCES,'" "',"'",trim(filename),trim(filename_new)
 
       system_command = trim(system_command1)//trim(system_command2)

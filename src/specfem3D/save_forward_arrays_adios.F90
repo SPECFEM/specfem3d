@@ -116,7 +116,7 @@ subroutine save_forward_arrays_adios()
   call define_adios_scalar(group, groupsize, "", &
                            STRINGIFY_VAR(N_SLS))
 
-  if( ACOUSTIC_SIMULATION ) then
+  if (ACOUSTIC_SIMULATION) then
     local_dim = nglob_wmax
     call define_adios_global_array1D(group, groupsize, local_dim, "", &
                                      STRINGIFY_VAR(potential_acoustic))
@@ -205,7 +205,7 @@ subroutine save_forward_arrays_adios()
   call adios_write(handle, STRINGIFY_VAR(NSPEC_ATTENUATION_AB_kappa), ier)
   call adios_write(handle, STRINGIFY_VAR(N_SLS), ier)
 
-  if( ACOUSTIC_SIMULATION ) then
+  if (ACOUSTIC_SIMULATION) then
     local_dim = nglob_wmax
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(potential_acoustic))

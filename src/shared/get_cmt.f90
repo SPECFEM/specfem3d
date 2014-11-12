@@ -66,7 +66,7 @@
 ! see if we are running several independent runs in parallel
 ! if so, add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
 ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
-  if(NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
+  if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
     write(path_to_add,"('run',i4.4,'/')") mygroup + 1
     CMTSOLUTION = path_to_add(1:len_trim(path_to_add))//CMTSOLUTION(1:len_trim(CMTSOLUTION))
   endif
@@ -95,7 +95,7 @@
     endif
 
     ! skips empty lines
-    do while( len_trim(string) == 0 )
+    do while (len_trim(string) == 0)
       read(IIN,"(a256)",iostat=ier) string
       if (ier /= 0) then
         print*, 'Error reading header line in source ',isource
@@ -121,18 +121,18 @@
     do itype = 1,6
       ! determines where first number starts
       do i = istart,len_trim(string)
-        if (is_numeric(string(i:i)) ) then
+        if (is_numeric(string(i:i))) then
           istart = i
           exit
         endif
       enddo
-      if ( istart >= len_trim(string) ) stop 'Error determining datasource length in header line in CMTSOLUTION file'
-      if ( istart <= 1 ) stop 'Error determining datasource length in header line in CMTSOLUTION file'
+      if (istart >= len_trim(string)) stop 'Error determining datasource length in header line in CMTSOLUTION file'
+      if (istart <= 1) stop 'Error determining datasource length in header line in CMTSOLUTION file'
 
       ! determines end and length of number
       iend = istart
       do i = istart,len_trim(string)
-        if (itype /= 6 ) then
+        if (itype /= 6) then
           ! integer values
           if (.not. is_numeric(string(i:i))) then
             iend = i
@@ -148,30 +148,30 @@
         endif
       enddo
       iend = iend-1
-      if ( iend >= len_trim(string) ) stop 'Error determining number length in header line in CMTSOLUTION file'
-      if ( iend < istart ) stop 'Error determining number with negative length in header line in CMTSOLUTION file'
+      if (iend >= len_trim(string)) stop 'Error determining number length in header line in CMTSOLUTION file'
+      if (iend < istart) stop 'Error determining number with negative length in header line in CMTSOLUTION file'
 
       ! debug
       !print*,itype,'line ----',string(istart:iend),'----'
 
       ! reads in event time information
-      select case( itype )
-      case( 1 )
+      select case (itype)
+      case (1)
         ! year (as integer value)
         read(string(istart:iend),*) yr
-      case( 2 )
+      case (2)
         ! month (as integer value)
         read(string(istart:iend),*) mo
-      case( 3 )
+      case (3)
         ! day (as integer value)
         read(string(istart:iend),*) da
-      case( 4 )
+      case (4)
         ! hour (as integer value)
         read(string(istart:iend),*) ho
-      case( 5 )
+      case (5)
         ! minutes (as integer value)
         read(string(istart:iend),*) mi
-      case( 6 )
+      case (6)
         ! seconds (as float value)
         read(string(istart:iend),*) sec
       end select
@@ -311,14 +311,14 @@
     ! checks half-duration
     ! null half-duration indicates a Heaviside
     ! replace with very short error function
-    if (hdur(isource) < 5. * DT ) hdur(isource) = 5. * DT
+    if (hdur(isource) < 5. * DT) hdur(isource) = 5. * DT
 
   enddo
 
   close(IIN)
 
   ! Sets tshift_cmt to zero to initiate the simulation!
-  if(NSOURCES == 1)then
+  if (NSOURCES == 1)then
       tshift_cmt = 0.d0
       min_tshift_cmt_original = t_shift(1)
   else
@@ -350,7 +350,7 @@
 
   is_numeric = .false.
 
-  if ( index('0123456789', char) /= 0) then
+  if (index('0123456789', char) /= 0) then
     is_numeric = .true.
   endif
 
@@ -367,7 +367,7 @@
 
   is_digit = .false.
 
-  if ( index('0123456789.', char) /= 0) then
+  if (index('0123456789.', char) /= 0) then
     is_digit = .true.
   endif
 
@@ -404,7 +404,7 @@
   ! or
   !   Mrr,Mtt,Mpp,Mrt,Mrp,Mtp
   !
-  ! euclidean (or Frobenius) norm of a matrix: M0**2 = sum( Mij**2 )
+  ! euclidean (or Frobenius) norm of a matrix: M0**2 = sum( Mij**2)
   scalar_moment = Mxx**2 + Myy**2 + Mzz**2 + 2.d0 * Mxy**2 + 2.d0 * Mxz**2 + 2.d0 * Myz**2
 
   ! adds 1/2 to be coherent with double couple or point sources
@@ -479,7 +479,7 @@
   data mon /0,31,59,90,120,151,181,212,243,273,304,334/
 
   julian_day = da + mon(mo)
-  if(mo>2) julian_day = julian_day + lpyr(yr)
+  if (mo>2) julian_day = julian_day + lpyr(yr)
 
   end function julian_day
 
@@ -494,11 +494,11 @@
 !---- returns 1 if leap year
 !
   lpyr=0
-  if(mod(yr,400) == 0) then
+  if (mod(yr,400) == 0) then
     lpyr=1
-  else if(mod(yr,4) == 0) then
+  else if (mod(yr,4) == 0) then
     lpyr=1
-    if(mod(yr,100) == 0) lpyr=0
+    if (mod(yr,100) == 0) lpyr=0
   endif
 
   end function lpyr

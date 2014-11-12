@@ -52,7 +52,7 @@ subroutine adios_setup()
   ! note: return codes for this function have been fixed for ADIOS versions >= 1.6
   !       e.g., version 1.5.0 returns 1 here
   !print*,'adios init return: ',adios_err
-  !if (adios_err /= 0 ) stop 'Error setting up ADIOS: calling adios_init_noxml() routine failed'
+  !if (adios_err /= 0) stop 'Error setting up ADIOS: calling adios_init_noxml() routine failed'
 
 
   call adios_allocate_buffer (ADIOS_BUFFER_SIZE_IN_MB, adios_err)
@@ -79,7 +79,7 @@ subroutine adios_cleanup()
   call synchronize_all()
 
   call adios_finalize (myrank, adios_err)
-  if (adios_err /= 0 ) stop 'Error cleaning up ADIOS: calling adios_finalize() routine failed'
+  if (adios_err /= 0) stop 'Error cleaning up ADIOS: calling adios_finalize() routine failed'
 
 end subroutine adios_cleanup
 

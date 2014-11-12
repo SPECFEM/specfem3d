@@ -77,7 +77,7 @@
   !
   !--- case of a regular mesh
   !
-  if(USE_REGULAR_MESH) then
+  if (USE_REGULAR_MESH) then
 
      ! exact number of spectral elements without doubling layers
      NSPEC_NO_DOUBLING = NEX_XI*NEX_ETA*NER
@@ -127,7 +127,7 @@
      !
      !--- case of a non-regular mesh with mesh doublings
      !
-  else if(NDOUBLINGS == 1) then
+  else if (NDOUBLINGS == 1) then
 
      ! number of spectral elements at the bottom of the doubling below the moho
      NEX_DOUBLING_ABOVE_XI=NEX_XI/2

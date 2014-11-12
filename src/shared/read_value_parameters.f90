@@ -27,61 +27,61 @@
 
 ! read values from parameter file, ignoring white lines and comments
 
-  subroutine read_value_integer(value_to_read, name, ierr)
+  subroutine read_value_integer(value_to_read, name, ier)
 
   use constants, only: MAX_STRING_LEN
   implicit none
 
-  integer value_to_read
+  integer :: value_to_read
   character(len=*) :: name
   character(len=MAX_STRING_LEN) :: string_read
-  integer ierr
+  integer :: ier
 
-  call param_read(string_read, len(string_read), name, len(name), ierr)
-  if (ierr /= 0) return
-  read(string_read,*,iostat=ierr) value_to_read
+  call param_read(string_read, len(string_read), name, len(name), ier)
+  if (ier /= 0) return
+  read(string_read,*,iostat=ier) value_to_read
 
   end subroutine read_value_integer
 
 !--------------------
 
-  subroutine read_value_double_precision(value_to_read, name, ierr)
+  subroutine read_value_double_precision(value_to_read, name, ier)
 
   use constants, only: MAX_STRING_LEN
   implicit none
 
-  double precision value_to_read
+  double precision :: value_to_read
   character(len=*) :: name
   character(len=MAX_STRING_LEN) :: string_read
-  integer ierr
+  integer :: ier
 
-  call param_read(string_read, len(string_read), name, len(name), ierr)
-  if (ierr /= 0) return
-  read(string_read,*,iostat=ierr) value_to_read
+  call param_read(string_read, len(string_read), name, len(name), ier)
+  if (ier /= 0) return
+  read(string_read,*,iostat=ier) value_to_read
 
   end subroutine read_value_double_precision
 
 !--------------------
 
-  subroutine read_value_logical(value_to_read, name, ierr)
+  subroutine read_value_logical(value_to_read, name, ier)
 
   use constants, only: MAX_STRING_LEN
   implicit none
 
-  logical value_to_read
+  logical :: value_to_read
   character(len=*) :: name
   character(len=MAX_STRING_LEN) :: string_read
-  integer ierr
+  integer :: ier
 
-  call param_read(string_read, len(string_read), name, len(name), ierr)
-  if (ierr /= 0) return
-  read(string_read,*,iostat=ierr) value_to_read
+  call param_read(string_read, len(string_read), name, len(name), ier)
+  if (ier /= 0) return
+  read(string_read,*,iostat=ier) value_to_read
 
   end subroutine read_value_logical
 
 !--------------------
 
-  subroutine read_value_string(value_to_read, name, ierr)
+  subroutine read_value_string(value_to_read, name, ier)
 
   use constants, only: MAX_STRING_LEN
   implicit none
@@ -89,36 +89,36 @@
   character(len=*) :: value_to_read
   character(len=*) :: name
   character(len=MAX_STRING_LEN) :: string_read
-  integer ierr
+  integer :: ier
 
-  call param_read(string_read, len(string_read), name, len(name), ierr)
-  if (ierr /= 0) return
+  call param_read(string_read, len(string_read), name, len(name), ier)
+  if (ier /= 0) return
   value_to_read = string_read
 
   end subroutine read_value_string
 
 !--------------------
 
-  subroutine open_parameter_file(ierr)
+  subroutine open_parameter_file(ier)
 
   use constants, only: MAX_STRING_LEN,IN_DATA_FILES_PATH,NUMBER_OF_SIMULTANEOUS_RUNS,mygroup
 
   implicit none
 
-  integer ierr
+  integer :: ier
   character(len=MAX_STRING_LEN) :: filename,path_to_add
 
   filename = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'Par_file'
 ! see if we are running several independent runs in parallel
 ! if so, add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
 ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
-  if(NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
+  if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
     write(path_to_add,"('run',i4.4,'/')") mygroup + 1
     filename = path_to_add(1:len_trim(path_to_add))//filename(1:len_trim(filename))
   endif
 
-  call param_open(filename, len(filename), ierr)
-  if (ierr /= 0) then
+  call param_open(filename, len(filename), ier)
+  if (ier /= 0) then
     print*
     print*,'opening file failed, please check your file path and run-directory.'
     stop 'error opening Par_file'

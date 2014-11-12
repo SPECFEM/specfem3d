@@ -48,7 +48,7 @@ subroutine get_gradient_steepest_iso()
   allocate(model_dbulk(NGLLX,NGLLY,NGLLZ,NSPEC), &
            model_dbeta(NGLLX,NGLLY,NGLLZ,NSPEC), &
            model_drho(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
-  if( ier /= 0 ) stop 'error allocating gradient arrays'
+  if (ier /= 0) stop 'error allocating gradient arrays'
 
   ! initializes arrays
   model_dbulk = 0.0_CUSTOM_REAL
@@ -258,7 +258,7 @@ subroutine get_gradient_steepest_tiso()
            model_dbetav(NGLLX,NGLLY,NGLLZ,NSPEC), &
            model_dbetah(NGLLX,NGLLY,NGLLZ,NSPEC), &
            model_deta(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
-  if( ier /= 0 ) stop 'error allocating gradient arrays'
+  if (ier /= 0) stop 'error allocating gradient arrays'
 
   ! initializes arrays
   model_dbulk = 0.0_CUSTOM_REAL
