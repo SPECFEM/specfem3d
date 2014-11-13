@@ -189,10 +189,10 @@ def layercake_volume_ascii_regulargrid_mpiregularmap(filename=None,verticalsandw
         ystep=ylength
         if verticalsandwich:
             for i in range(0,cfg.nxvol):
-                elev[:,:,i] = cfg.zdepth[i]
+                elev[:,:,i] = cfg.xwidth[i]
         else:
             for i in range(0,cfg.nz):
-                elev[:,:,i] = cfg.xwidth[i]
+                elev[:,:,i] = cfg.zdepth[i]
         
         icoord=0
         for iy in range(0,ny):

@@ -11,11 +11,11 @@ Dimitri.
 
 =====================================================
 
-/seismo/3D/ADJOINT_TOMO/README
-
 These directories contain tools needed for a seismic tomographic inversion using adjoint methods.
 
 flexwin     -- FLEXWIN algorithm for automated picking of time windows
+            -- THIS IS NOW STORED AS A STAND-ALONE CODE AT CIG
+               https://github.com/geodynamics/flexwin
 measure_adj -- reads FLEXWIN output file and makes measurements, 
                   with the option for computing adjoint sources
 iterate_adj -- various tools for iterative inversion
