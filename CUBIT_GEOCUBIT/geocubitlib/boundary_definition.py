@@ -361,14 +361,14 @@ def define_bc(*args,**keys):
               print "no abs_xmin surface found, please create block manually..."
               print ""
             else:
-              build_block_side(xmin,entity+'_abs_xmin',obj=entity,id_0=1002)
+              build_block_side(xmin,entity+'_abs_xmin',obj=entity,id_0=1003)
             # xmax - blocks
             if len(xmax) == 0:
               print ""
               print "no abs_xmax surface found, please create block manually..."
               print ""
             else:
-              build_block_side(xmax,entity+'_abs_xmax',obj=entity,id_0=1003)
+              build_block_side(xmax,entity+'_abs_xmax',obj=entity,id_0=1005)
             # ymin - blocks
             if len(ymin) == 0:
               print ""
@@ -382,14 +382,14 @@ def define_bc(*args,**keys):
               print "no abs_ymax surface found, please create block manually..."
               print ""
             else:
-              build_block_side(ymax,entity+'_abs_ymax',obj=entity,id_0=1005)
+              build_block_side(ymax,entity+'_abs_ymax',obj=entity,id_0=1006)
             # bottom - blocks
             if len(bottom_surf) == 0:
               print ""
               print "no abs_bottom surface found, please create block manually..."
               print ""
             else:
-              build_block_side(bottom_surf,entity+'_abs_bottom',obj=entity,id_0=1006)
+              build_block_side(bottom_surf,entity+'_abs_bottom',obj=entity,id_0=1002)
             # block for all sides together
             # NOTE:
             #    this might fail in some CUBIT versions, when elements are already
