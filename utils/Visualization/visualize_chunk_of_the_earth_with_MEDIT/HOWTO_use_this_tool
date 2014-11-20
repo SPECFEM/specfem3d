@@ -1,0 +1,110 @@
+!======================================================================================================================!
+
+This tool allows to visualize a chunk of the earth (with HEX8 or HEX27 elements) with the software Medit
+
+Reminder : to create a mesh of a earth chunk (in the case of coupling with DSM), the parameter MESH_A_CHUNK_OF_THE_EARTH 
+in DATA/Par_file have to set .true., and this will be call a specific internal for that in meshfem3D.f90
+
+!======================================================================================================================!
+
+Step 1 : Install Medit
+----------------------
+
+Medit is a visualization software for meshes, created by Pascal Frey.
+
+To install it go to this page, section 'SCIENTIFIC VISUALIZATION' : https://www.ljll.math.upmc.fr/frey/software.html
+
+The Medit documentation (Caution : it is in french, and the html links in the page are obsolete) : https://www.ljll.math.upmc.fr/frey/logiciels/Docmedit.dir/index.html
+
+!======================================================================================================================!
+
+a/ HEX8 case (for HEX27 case, go l. 65) : 
+
+!======================================================================================================================!
+
+Step 2a : Run the earth chunk mesher with NGNOD=8, for coupling with DSM
+------------------------------------------------------------------------
+
+In the case of coupling with DSM, when you run xmeshfem3D, a subdirectory MESH is created in the directory of 
+the concerned example, and several files appears. 
+
+Among them, copy the files below in utils/Visualization/visualize_chunk_of_the_earth_with_MEDIT/HEX8 
+(path from the specfem3d main directory) :
+
+- nodes_coords_file
+- mesh_file
+- absorbing_surface_file_bottom
+- absorbing_surface_file_xmax
+- absorbing_surface_file_xmin
+- absorbing_surface_file_ymax
+- absorbing_surface_file_ymin
+- free_surface
+
+!======================================================================================================================!
+
+Step 3a : compile and run the tool
+----------------------------------
+
+From the directory utils/Visualization/visualize_chunk_of_the_earth_with_MEDIT/HEX8, type :
+
+$ gfortran -o executable_name visualize_HEX8_chunk_w_medit.f90
+$ ./executable_name
+
+A file 'test_out_HEX8.mesh' will be created
+
+!======================================================================================================================!
+
+Step 4a : visualize with Medit
+------------------------------
+
+If the version of Medit you installed is aliased to 'medit', type :
+
+$ medit test_out_HEX8.mesh &
+
+!======================================================================================================================!
+
+b/ HEX27 case : 
+
+!======================================================================================================================!
+
+Step 2b : Run the earth chunk mesher with NGNOD=27, for coupling with DSM
+-------------------------------------------------------------------------
+
+In the case of coupling with DSM, when you run xmeshfem3D, a subdirectory MESH is created in the directory of 
+the concerned example, and several files appears. 
+
+Among them, copy the files below in utils/Visualization/visualize_chunk_of_the_earth_with_MEDIT/HEX27 
+(path from the specfem3d main directory) :
+
+- nodes_coords_file
+- mesh_file
+- absorbing_surface_file_bottom
+- absorbing_surface_file_xmax
+- absorbing_surface_file_xmin
+- absorbing_surface_file_ymax
+- absorbing_surface_file_ymin
+- free_surface
+
+!======================================================================================================================!
+
+Step 3b : compile and run the tool
+----------------------------------
+
+From the directory utils/Visualization/visualize_chunk_of_the_earth_with_MEDIT/HEX27, type :
+
+$ gfortran -o executable_name visualize_HEX27_chunk_w_medit.f90
+$ ./executable_name
+
+A file 'test_out_HEX27.mesh' will be created
+
+!======================================================================================================================!
+
+Step 4b : visualize with Medit
+------------------------------
+
+If the version of Medit you installed is aliased to 'medit', type :
+
+$ medit test_out_HEX27.mesh &
+
+CAUTION : the principle of this visualization in HEX27 elements, is to decompose
+HEX27 elements into eight HEX8 elements. So you will see HEX27 elements as eight HEX8 elements
