@@ -14,7 +14,7 @@ Medit is a visualization software for meshes, created by Pascal Frey.
 
 To install it go to this page, section 'SCIENTIFIC VISUALIZATION' : https://www.ljll.math.upmc.fr/frey/software.html
 
-The Medit documentation (Caution : it is in french, and the html links in the page are obsolete) : https://www.ljll.math.upmc.fr/frey/logiciels/Docmedit.dir/index.html
+The Medit documentation (Caution : it is in French, and the HTML links in the page are obsolete) : https://www.ljll.math.upmc.fr/frey/logiciels/Docmedit.dir/index.html
 
 !======================================================================================================================!
 
