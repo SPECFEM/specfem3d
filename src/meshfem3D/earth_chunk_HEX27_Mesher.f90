@@ -179,17 +179,17 @@
 
   nlon_dsm = (ngllx - 1) * NX + 1
   nlat_dsm = (nglly - 1) * NY + 1
-  nglob    = (nel_lat + 1) * (nel_lon + 1) * (nel_depth + 1)
+  nglob    = (2*nel_lat + 1) * (2*nel_lon + 1) * (2*nel_depth + 1)
   nspec    = nel_lat * nel_lon * nel_depth
-  npointot = 8 * nspec
+  npointot = 27 * nspec
 
   allocate(xp(npointot), yp(npointot), zp(npointot))
   allocate(iglob(npointot), loc(npointot))
   allocate(ifseg(npointot))
   allocate(ProfForGemini(0:NZ-1,3))
   allocate(current_layer(0:NZ-1))
-  allocate(inum_loc(2,2,2,nspec))
-  allocate(xgrid(2,2,2,nspec), ygrid(2,2,2,nspec), zgrid(2,2,2,nspec))
+  allocate(inum_loc(3,3,3,nspec))
+  allocate(xgrid(3,3,3,nspec), ygrid(3,3,3,nspec), zgrid(3,3,3,nspec))
   allocate(lon_zmin(nlon_dsm,nlat_dsm), lat_zmin(nlon_dsm,nlat_dsm))
   allocate(iboun(6,nspec)) ! boundary locator
 
@@ -630,8 +630,9 @@
   ! on stocke touts les points de tous les elements
   do ispec=1,nspec
 
-     ieoff = 8 * (ispec - 1)
+     ieoff = 27 * (ispec - 1)
      ilocnum = 0
+
      do k=1,3
         do j=1,3
            do i=1,3
@@ -647,7 +648,7 @@
   enddo
 
   ! on identifie les points semblables et on les numerote
-  call get_global1(nspec,xp,yp,zp,iglob,loc,ifseg,nglob,npointot,UTM_X_MIN,UTM_X_MAX)
+  call get_global1(nspec,xp,yp,zp,iglob,loc,ifseg,nglob,npointot,NGNOD,UTM_X_MIN,UTM_X_MAX)
 
   deallocate(xp,yp,zp)
   allocate(xp(nglob),yp(nglob),zp(nglob))
@@ -656,16 +657,20 @@
 
   ! on ne stocke que les points de la grille et leur numeros
   do ispec=1,nspec
-     ieoff = 8 * (ispec - 1)
+
+     ieoff = 27 * (ispec - 1)
      ilocnum = 0
+
      do k=1,3
         do j=1,3
            do i=1,3
+
               ilocnum                  = ilocnum + 1
               inum_loc(i,j,k,ispec)    = iglob(ilocnum+ieoff)
               xp(iglob(ilocnum+ieoff)) = xgrid(i,j,k,ispec)
               yp(iglob(ilocnum+ieoff)) = ygrid(i,j,k,ispec)
               zp(iglob(ilocnum+ieoff)) = zgrid(i,j,k,ispec)
+
            enddo
         enddo
      enddo
@@ -803,9 +808,6 @@
 
   ! all processes done
   write(*,*) 'END '
-
-  ! nothing to do anymore... bailing out
-  stop
 
   end subroutine earth_chunk_HEX27_Mesher
 
