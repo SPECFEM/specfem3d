@@ -478,7 +478,9 @@
   integer, parameter :: NLINES_PER_FORCESOLUTION_SOURCE = 10
 
 ! number of iterations to solve the system for xi and eta
-  integer, parameter :: NUM_ITER = 4
+! setting it to 5 instead of 4 ensures that the result obtained is not compiler dependent
+! (when using 4 only some small discrepancies were observed)
+  integer, parameter :: NUM_ITER = 5
 
 ! size of topography and bathymetry file for Southern California
   integer, parameter :: NX_TOPO_FILE = 1401,NY_TOPO_FILE = 1001
