@@ -584,7 +584,7 @@
            if (iz==0) then ! pas besoin du test comme précédemment car je stocke tout dans des tableaux et c'est pas
                              ! grave si on récrit les memes choses
               call calc_gll_points(xelm,yelm,zelm,xstore,ystore,zstore,shape3D,NGNOD,NGLLX,NGLLY,NGLLZ)
-              
+
               call write_Igm_file(42,ispec2Dzmin,NGLLX,NGLLY,ilon,ilat,0,ilayer_current)
 
               call store_zmin_points(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,rotation_matrix,&
