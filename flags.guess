@@ -167,6 +167,7 @@ case $my_FC in
         # CFLAGS = -Wl,-relax
         #
 # deleted -qxflag=dvz because it requires handler function __xl_dzx and thus linking will fail.
+#
 # The -qstrict option prevents some minor differences of results between xlf and
 # other compilers. There is a small decrease in performance, but generally
 # it is small or negligible compared to other issues like slow I/O.
