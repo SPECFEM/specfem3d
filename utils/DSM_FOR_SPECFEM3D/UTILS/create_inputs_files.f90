@@ -476,7 +476,10 @@ end program create_input_files
 
  subroutine open_parameter_file(filename)
    character(len=250) filename
-   call param_open(filename, len(filename), ierr);
+   integer ier
+
+   ier = 0
+   call param_open(filename, len(filename), ier);
  end subroutine open_parameter_file
 
 

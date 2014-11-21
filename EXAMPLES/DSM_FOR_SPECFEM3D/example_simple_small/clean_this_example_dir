@@ -1,0 +1,3 @@
+#!/bin/bash
+
+rm -rf *~ Tract/ OUTPUT_FILES/ DSM_tractions/ MESH/* xmin_gll_for_dsm_0000* *.out
