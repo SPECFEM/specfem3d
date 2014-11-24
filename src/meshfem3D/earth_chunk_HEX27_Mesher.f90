@@ -795,7 +795,7 @@
   open(27,file=trim(MESH)//'free_surface')
   write(27,*) ispec2Dzmax
   do ispec=1,nspec
-     if (iboun(1,ispec)) write(27,'(10(i10,1x))') ispec, &
+     if (iboun(6,ispec)) write(27,'(10(i10,1x))') ispec, &
                                                   inum_loc(1,1,3,ispec), inum_loc(3,1,3,ispec), &
                                                   inum_loc(3,3,3,ispec), inum_loc(1,3,3,ispec), &
                                                   inum_loc(2,1,3,ispec), inum_loc(3,2,3,ispec), &
