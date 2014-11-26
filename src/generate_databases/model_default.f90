@@ -194,7 +194,7 @@
       !idomain_id = IDOMAIN_ELASTIC    ! forces to be elastic domain
 
     case default
-      print*,'Error: material definition = ',imaterial_def,'not recognized'
+      print*,'Error: material id ',imaterial_id,' has material definition ',imaterial_def,' which is not recognized'
       stop 'Error material definition: unknown material definition'
     end select
 
