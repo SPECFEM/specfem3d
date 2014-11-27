@@ -27,10 +27,6 @@ PROGRAM visualize_HEX8_chunk_w_medit
   READ(35,*) nq5
   READ(36,*) nq6
 
-  PRINT*, 'CAUTION : the value for the number of faces on the free surface is hard imposed (225) !' 
-
-  nq6 = 225 !! pourquoi ??
-
   nquad = nq1 + nq2 + nq3 + nq4 + nq5 + nq6
 
   WRITE(20,*) 'MeshVersionFormatted 1'

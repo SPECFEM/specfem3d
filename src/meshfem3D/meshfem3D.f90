@@ -419,8 +419,6 @@
       stop 'Done creating a chunk of the earth Mesh (HEX8 elements), see directory MESH/'
 
     else if (NGNOD == 27) then
-      ! provisional
-      stop 'Creating a chunk of the earth Mesh with HEX27 elements is implmented but not validated yet for coupling with DSM'
 
       ! creates mesh in MESH/
       call earth_chunk_HEX27_Mesher(NGNOD)

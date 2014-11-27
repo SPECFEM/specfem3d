@@ -3,13 +3,13 @@
 
 #             ------------ BACTH AND SPECIFIC CLUSTER DIRECTIVES  ------ 
 
-#MSUB -r Benchmark_finalcouple32_SPECFEM3D_DSM        # Nom du job  
+#MSUB -r Benchmark_SPECFEM3D_DSM_HEX27_32p        # Nom du job  
 #MSUB -n 32
 #MSUB -N 2
 #MSUB -T 5400
 #MSUB -q standard
-#MSUB -e Benchmark_finalcouple_run_32.e
-#MSUB -o Benchmark_finalcouple_run_32.o
+#MSUB -e Benchmark_SPECFEM3D_DSM_HEX27_32p_run.e
+#MSUB -o Benchmark_SPECFEM3D_DSM_HEX27_32p_run.o
 #MSUB -A ra2410 
       
 set -x
@@ -152,7 +152,7 @@ clean_and_make_dir
 # clean and make directories DSM
 clean_and_make_dir_dsm
 
-# mv some input files in rigth place
+# mv some input files in right place
 mv input_dsm_for_write_coef $IN_DSM/inputIASP.infTra_for_coef
 mv input_dsm_for_read_xmin  $IN_DSM/inputIASP.infTra_stxmin
 mv input_dsm_for_read_xmax  $IN_DSM/inputIASP.infTra_stxmax
@@ -169,12 +169,15 @@ echo " BENCHMARK RUN  " >> $flog_file
 echo >> $flog_file
 echo $(date) >> $flog_file
 
-
-# 1 / ------- create mesh  
+# ----------------------------------------------------
+# 1 / ------- create mesh
+# ----------------------------------------------------
 run_create_mesh
 
 
+# ----------------------------------------------------
 # 2 / ----- compute DSM tractions
+# ----------------------------------------------------
 cd $DSM_tractions
 make_dir_exp
 copy_input_files_exp
@@ -182,9 +185,9 @@ compute_exp_coeff
 run_dsm_traction
 
 
-
-
+# ----------------------------------------------------
 # 3 / ------- create specfem3D data base
+# ----------------------------------------------------
 echo "" >> $flog_file
 echo $(date) >> $flog_file
 run_create_specfem_databases
@@ -192,7 +195,9 @@ echo " create specfem3D data base" >> $flog_file
 echo $(date) >> $flog_file
 
 
+# ----------------------------------------------------
 # 4 / -------- create tractions for specfem3D from DSM
+# ----------------------------------------------------
 echo "" >> $flog_file
 echo " create traction database" >> $flog_file
 echo $(date) >> $flog_file
@@ -202,10 +207,9 @@ run_create_tractions_for_specfem
 echo $(date) >> $flog_file
 
 
-
-
-
-# 5 / --------------- run simulation 
+# ----------------------------------------------------
+# 5 / --------------- run simulation
+# ----------------------------------------------------
 echo "" >> $flog_file
 echo " simulation" >> $flog_file
 echo $(date) >> $flog_file

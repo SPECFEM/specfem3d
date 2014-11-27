@@ -484,7 +484,6 @@
               iboun(6,ispec)=.true.
            endif
 
-          ! 8 vertices of the element ispec
            do ia=1,NGNOD
 
 !! MODIF HEX27 LA -----------------------------
@@ -493,21 +492,28 @@
               j=iaddy(ia)
               k=iaddz(ia)
 
-              z = 1000d0*ProfForGemini(iz,1+k)
+              SELECT CASE (k)
+                CASE(0)
+                  z = 1000d0*ProfForGemini(iz,1)
+                CASE(1)
+                  z = 1000d0*ProfForGemini(iz,3)
+                CASE(2)
+                  z = 1000d0*ProfForGemini(iz,2)
+              END SELECT
 
               ! longitude
-              ratio_xi = (dble(ilon+i)) / dble(NX)
+              ratio_xi = (dble(ilon) + dble(i)/2.d0 ) / dble(NX)
               x = 2.d0*ratio_xi-1.d0
               x = tan((ANGULAR_WIDTH_XI_RAD/2.d0) * x)
 
               ! latitude
-              ratio_eta = (dble(ilat+j)) / dble(NY)
+              ratio_eta = (dble(ilat) + dble(j)/2.d0 ) / dble(NY)
               y = 2.d0*ratio_eta-1.d0
               y = tan((ANGULAR_WIDTH_ETA_RAD/2.d0) * y)
 
               ! mapping cubic sphere (k=6, Chevrot at al 2012, avec -z)
 
-              pz=  z/dsqrt(1.d0 + y*y + x*x) !(=r/s)
+              pz= z/dsqrt(1.d0 + y*y + x*x) !(=r/s)
               px= pz * x !(tan(xi) * r/s)
               py= pz * y !(tan(eta) * r/s)
 

@@ -28,10 +28,6 @@ PROGRAM visualize_HEX27_chunk_w_medit
   READ(35,*) nq5
   READ(36,*) nq6
 
-  PRINT*, 'CAUTION : the value for the number of faces on the free surface is hard imposed (225) !' 
-
-  nq6 = 225 !! pourquoi ??
-
   nhexdecoup  = 8*nhex
   nqdecoup    = 4*(nq1 + nq2 + nq3 + nq4 + nq5 + nq6)
 

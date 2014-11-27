@@ -42,8 +42,6 @@ cp $MESH/model_1D.in DATA/
 function run_create_specfem_databases ()
 {
 
-cp ParFileInterface bin/.
-
 $BINSEM/xdecompose_mesh $NPROC $MESH OUTPUT_FILES/DATABASES_MPI/
 mv Numglob2loc_elmn.txt $MESH/.
 

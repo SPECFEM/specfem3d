@@ -1011,17 +1011,18 @@ end subroutine StorePointZ
     enddo
   enddo
 
-  ifseg(:)=.false.
-
-  nseg=1
-  ifseg(1)=.true.
-  ninseg(1)=npointot
+  ifseg(:)  = .false.
+  nseg      = 1
+  ifseg(1)  = .true.
+  ninseg(1) = npointot
 
   do j=1,3 !,NDIM
 
 ! sort within each segment
-  ioff=1
+  ioff = 1
+
   do iseg=1,nseg
+
     if (j == 1) then
       call rank(xp(ioff),ind,ninseg(iseg))
     else if (j == 2) then
@@ -1029,46 +1030,58 @@ end subroutine StorePointZ
     else
       call rank(zp(ioff),ind,ninseg(iseg))
     endif
+
     call swap_all(loc(ioff),xp(ioff),yp(ioff),zp(ioff),iwork,work,ind,ninseg(iseg))
-    ioff=ioff+ninseg(iseg)
+    
+    ioff = ioff + ninseg(iseg)
+
   enddo
 
 ! check for jumps in current coordinate
 ! compare the coordinates of the points within a small tolerance
   if (j == 1) then
+
     do i=2,npointot
-      if (dabs(xp(i)-xp(i-1)) > SMALLVALTOL) ifseg(i)=.true.
+      if (dabs(xp(i)-xp(i-1)) > SMALLVALTOL) ifseg(i) = .true.
     enddo
+
   else if (j == 2) then
+
     do i=2,npointot
-      if (dabs(yp(i)-yp(i-1)) > SMALLVALTOL) ifseg(i)=.true.
+      if (dabs(yp(i)-yp(i-1)) > SMALLVALTOL) ifseg(i) = .true.
     enddo
+
   else
+
     do i=2,npointot
-      if (dabs(zp(i)-zp(i-1)) > SMALLVALTOL) ifseg(i)=.true.
+      if (dabs(zp(i)-zp(i-1)) > SMALLVALTOL) ifseg(i) = .true.
     enddo
+
   endif
 
 ! count up number of different segments
-  nseg=0
+  nseg = 0
+
   do i=1,npointot
     if (ifseg(i)) then
-      nseg=nseg+1
-      ninseg(nseg)=1
+      nseg = nseg + 1
+      ninseg(nseg) = 1
     else
-      ninseg(nseg)=ninseg(nseg)+1
+      ninseg(nseg) = ninseg(nseg) + 1
     endif
   enddo
   enddo
 
 ! assign global node numbers (now sorted lexicographically)
-  ig=0
+  ig = 0
+
   do i=1,npointot
-    if (ifseg(i)) ig=ig+1
-    iglob(loc(i))=ig
+    if (ifseg(i)) ig = ig + 1
+
+    iglob(loc(i)) = ig
   enddo
 
-  nglob=ig
+  nglob = ig
 
 ! deallocate arrays
   deallocate(ind)
