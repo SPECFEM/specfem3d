@@ -364,26 +364,28 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
   use specfem_par, only: wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,&
                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian,&
                          it,deltat,rhostore
+
   use pml_par, only: NSPEC_CPML,CPML_regions,k_store_x,k_store_y,k_store_z,&
                      d_store_x,d_store_y,d_store_z,&
                      alpha_store_x,alpha_store_y,alpha_store_z,&
                      PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl,&
                      PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old,&
                      PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new
-  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS,USE_DEVILLE_PRODUCTS, &
+
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS, &
                        CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
   implicit none
 
   integer, intent(in) :: ispec,ispec_CPML
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ), intent(out) :: temp1,temp2,temp3
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3) :: &
-                               rmemory_dpotential_dxl, rmemory_dpotential_dyl, rmemory_dpotential_dzl
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3),intent(inout) :: &
+    rmemory_dpotential_dxl, rmemory_dpotential_dyl, rmemory_dpotential_dzl
 
   ! local parameters
   integer :: i,j,k
   real(kind=CUSTOM_REAL) :: xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl
-  real(kind=CUSTOM_REAL) :: rho_invl_jacob,rhoin_jacob_jk,rhoin_jacob_ik,rhoin_jacob_ij
+  real(kind=CUSTOM_REAL) :: rho_invl_jacob
   real(kind=CUSTOM_REAL) :: dpotentialdxl,dpotentialdyl,dpotentialdzl
   real(kind=CUSTOM_REAL) :: time_nplus1,time_n
   real(kind=CUSTOM_REAL) :: A6,A7,A8,A9      ! L231
@@ -401,27 +403,6 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
   do k=1,NGLLZ
     do j=1,NGLLY
       do i=1,NGLLX
-        xixl = xix(i,j,k,ispec)
-        xiyl = xiy(i,j,k,ispec)
-        xizl = xiz(i,j,k,ispec)
-        etaxl = etax(i,j,k,ispec)
-        etayl = etay(i,j,k,ispec)
-        etazl = etaz(i,j,k,ispec)
-        gammaxl = gammax(i,j,k,ispec)
-        gammayl = gammay(i,j,k,ispec)
-        gammazl = gammaz(i,j,k,ispec)
-        jacobianl = jacobian(i,j,k,ispec)
-        rho_invl_jacob = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec) * jacobianl
-        if (USE_DEVILLE_PRODUCTS) then
-          rhoin_jacob_jk = rho_invl_jacob
-          rhoin_jacob_ik = rho_invl_jacob
-          rhoin_jacob_ij = rho_invl_jacob
-        else
-          rhoin_jacob_jk = rho_invl_jacob * wgllwgll_yz(j,k)
-          rhoin_jacob_ik = rho_invl_jacob * wgllwgll_xz(i,k)
-          rhoin_jacob_ij = rho_invl_jacob * wgllwgll_xy(i,j)
-        endif
-
         !---------------------- A6, A7, A8, A9 --------------------------
         kappa_x = k_store_x(i,j,k,ispec_CPML)
         kappa_y = k_store_y(i,j,k,ispec_CPML)
@@ -432,12 +413,12 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
         alpha_x = alpha_store_x(i,j,k,ispec_CPML)
         alpha_y = alpha_store_y(i,j,k,ispec_CPML)
         alpha_z = alpha_store_z(i,j,k,ispec_CPML)
+
         call lijk_parameter_computation(time_nplus1,deltat,&
                                         kappa_z,d_z,alpha_z,kappa_y,d_y,alpha_y,kappa_x,d_x,alpha_x,&
                                         CPML_region_local,231,A6,A7,A8,A9,&
                                         coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,&
                                         coef0_3,coef1_3,coef2_3,singularity_type_2,singularity_type_3)
-
 
         rmemory_dpotential_dxl(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,1) + &
                 coef1_1 * PML_dpotential_dxl_new(i,j,k) + coef2_1 * PML_dpotential_dxl_old(i,j,k)
@@ -458,6 +439,7 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
         alpha_x = alpha_store_x(i,j,k,ispec_CPML)
         alpha_y = alpha_store_y(i,j,k,ispec_CPML)
         alpha_z = alpha_store_z(i,j,k,ispec_CPML)
+
         call lijk_parameter_computation(time_nplus1,deltat,&
                                         kappa_x,d_x,alpha_x,kappa_z,d_z,alpha_z,kappa_y,d_y,alpha_y,&
                                         CPML_region_local,132,A10,A11,A12,A13,&
@@ -483,6 +465,7 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
         alpha_x = alpha_store_x(i,j,k,ispec_CPML)
         alpha_y = alpha_store_y(i,j,k,ispec_CPML)
         alpha_z = alpha_store_z(i,j,k,ispec_CPML)
+
         call lijk_parameter_computation(time_nplus1,deltat,&
                                         kappa_x,d_x,alpha_x,kappa_y,d_y,alpha_y,kappa_z,d_z,alpha_z,&
                                         CPML_region_local,123,A14,A15,A16,A17,&
@@ -510,10 +493,23 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
                         A15 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,1) + &
                         A16 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) + &
                         A17 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,3)
-        temp1(i,j,k) = rhoin_jacob_jk * (xixl*dpotentialdxl + xiyl*dpotentialdyl + xizl*dpotentialdzl)
-        temp2(i,j,k) = rhoin_jacob_ik * (etaxl*dpotentialdxl + etayl*dpotentialdyl + etazl*dpotentialdzl)
-        temp3(i,j,k) = rhoin_jacob_ij * (gammaxl*dpotentialdxl + gammayl*dpotentialdyl + gammazl*dpotentialdzl)
 
+        xixl = xix(i,j,k,ispec)
+        xiyl = xiy(i,j,k,ispec)
+        xizl = xiz(i,j,k,ispec)
+        etaxl = etax(i,j,k,ispec)
+        etayl = etay(i,j,k,ispec)
+        etazl = etaz(i,j,k,ispec)
+        gammaxl = gammax(i,j,k,ispec)
+        gammayl = gammay(i,j,k,ispec)
+        gammazl = gammaz(i,j,k,ispec)
+
+        jacobianl = jacobian(i,j,k,ispec)
+        rho_invl_jacob = jacobianl / rhostore(i,j,k,ispec)
+
+        temp1(i,j,k) = rho_invl_jacob * (xixl*dpotentialdxl + xiyl*dpotentialdyl + xizl*dpotentialdzl)
+        temp2(i,j,k) = rho_invl_jacob * (etaxl*dpotentialdxl + etayl*dpotentialdyl + etazl*dpotentialdzl)
+        temp3(i,j,k) = rho_invl_jacob * (gammaxl*dpotentialdxl + gammayl*dpotentialdyl + gammazl*dpotentialdzl)
       enddo
     enddo
   enddo
