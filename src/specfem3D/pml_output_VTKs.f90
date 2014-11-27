@@ -43,7 +43,10 @@ subroutine pml_output_VTKs()
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable:: temp_d_store_x,temp_d_store_y,temp_d_store_z
   character(len=MAX_STRING_LEN) :: vtkfilename
 
-  if (myrank == 0) write(IMAIN,*) 'Writing informations about C-PML elements in VTK-file format'
+  if (myrank == 0) then
+    write(IMAIN,*)
+    write(IMAIN,*) 'Writing informations about C-PML elements in VTK-file format'
+  endif
 
   ! C-PML regions
   allocate(temp_CPML_regions(NSPEC_AB),stat=ier)

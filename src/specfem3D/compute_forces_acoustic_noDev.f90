@@ -43,50 +43,54 @@
 !     p = - Chi_dot_dot
 !
   use specfem_par,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,PML_CONDITIONS
+
   use pml_par, only: is_CPML, spec_to_CPML, NSPEC_CPML, &
                      PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl,&
                      PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old,&
                      PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new,&
                      potential_dot_dot_acoustic_CPML,rmemory_dpotential_dxl,rmemory_dpotential_dyl,&
-                     rmemory_dpotential_dzl,rmemory_potential_acoustic,potential_acoustic_old,potential_acoustic_new
+                     rmemory_dpotential_dzl,rmemory_potential_acoustic, &
+                     potential_acoustic_old,potential_acoustic_new
 
   implicit none
 
-  integer :: NSPEC_AB,NGLOB_AB
+  integer,intent(in) :: NSPEC_AB,NGLOB_AB
 
   ! acoustic potentials
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: &
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(inout) :: &
         potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic
 
   ! arrays with mesh parameters per slice
-  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
+  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: &
         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: &
         rhostore,jacobian
 
   ! array with derivatives of Lagrange polynomials and precalculated products
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xx,hprimewgll_xx
-  real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLY) :: hprime_yy,hprimewgll_yy
-  real(kind=CUSTOM_REAL), dimension(NGLLZ,NGLLZ) :: hprime_zz,hprimewgll_zz
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX),intent(in) :: hprime_xx,hprimewgll_xx
+  real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLY),intent(in) :: hprime_yy,hprimewgll_yy
+  real(kind=CUSTOM_REAL), dimension(NGLLZ,NGLLZ),intent(in) :: hprime_zz,hprimewgll_zz
 
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY) :: wgllwgll_xy
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ) :: wgllwgll_xz
-  real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ) :: wgllwgll_yz
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY),intent(in) :: wgllwgll_xy
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ),intent(in) :: wgllwgll_xz
+  real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ),intent(in) :: wgllwgll_yz
 
-  integer :: iphase
-  integer :: num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic
-  integer, dimension(num_phase_ispec_acoustic,2) :: phase_ispec_inner_acoustic
+  integer,intent(in) :: iphase
+  integer,intent(in) :: num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic
+  integer, dimension(num_phase_ispec_acoustic,2),intent(in) :: phase_ispec_inner_acoustic
 
-! CPML adjoint
-  logical :: backward_simulation
+  ! CPML adjoint
+  logical,intent(in) :: backward_simulation
 
-! local variables
-  real(kind=CUSTOM_REAL) :: hp1,hp2,hp3
-
+  ! local variables
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: chi_elem
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: temp1,temp2,temp3
   real(kind=CUSTOM_REAL) :: temp1l,temp2l,temp3l
+  real(kind=CUSTOM_REAL) :: hp1,hp2,hp3
+  real(kind=CUSTOM_REAL) :: fac1,fac2,fac3
+
+  ! CPML
   real(kind=CUSTOM_REAL) :: temp1l_old,temp2l_old,temp3l_old
   real(kind=CUSTOM_REAL) :: temp1l_new,temp2l_new,temp3l_new
 
@@ -203,7 +207,6 @@
               PML_dpotential_dxl_new(i,j,k) = xixl*temp1l_new + etaxl*temp2l_new + gammaxl*temp3l_new
               PML_dpotential_dyl_new(i,j,k) = xiyl*temp1l_new + etayl*temp2l_new + gammayl*temp3l_new
               PML_dpotential_dzl_new(i,j,k) = xizl*temp1l_new + etazl*temp2l_new + gammazl*temp3l_new
-
             endif
           endif
 
@@ -211,13 +214,9 @@
           rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
 
           ! for acoustic medium
-          ! also add GLL integration weights
-          temp1(i,j,k) = rho_invl * wgllwgll_yz(j,k) * jacobianl* &
-                        (xixl*dpotentialdxl + xiyl*dpotentialdyl + xizl*dpotentialdzl)
-          temp2(i,j,k) = rho_invl * wgllwgll_xz(i,k) * jacobianl* &
-                        (etaxl*dpotentialdxl + etayl*dpotentialdyl + etazl*dpotentialdzl)
-          temp3(i,j,k) = rho_invl * wgllwgll_xy(i,j) * jacobianl* &
-                        (gammaxl*dpotentialdxl + gammayl*dpotentialdyl + gammazl*dpotentialdzl)
+          temp1(i,j,k) = rho_invl * jacobianl * (xixl*dpotentialdxl + xiyl*dpotentialdyl + xizl*dpotentialdzl)
+          temp2(i,j,k) = rho_invl * jacobianl * (etaxl*dpotentialdxl + etayl*dpotentialdyl + etazl*dpotentialdzl)
+          temp3(i,j,k) = rho_invl * jacobianl * (gammaxl*dpotentialdxl + gammayl*dpotentialdyl + gammazl*dpotentialdzl)
         enddo
       enddo
     enddo
@@ -242,7 +241,6 @@
     do k = 1,NGLLZ
       do j = 1,NGLLY
         do i = 1,NGLLX
-
           ! along x,y,z direction
           ! and assemble the contributions
           !!! can merge these loops because NGLLX = NGLLY = NGLLZ
@@ -256,11 +254,14 @@
             temp3l = temp3l + temp3(i,j,l) * hprimewgll_zz(l,k)
           enddo
 
+          ! also add GLL integration weights
+          fac1 = wgllwgll_yz(j,k)
+          fac2 = wgllwgll_xz(i,k)
+          fac3 = wgllwgll_xy(i,j)
+
           ! sum contributions from each element to the global values
           iglob = ibool(i,j,k,ispec)
-
-          potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) - ( temp1l + temp2l + temp3l )
-
+          potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) - ( fac1*temp1l + fac2*temp2l + fac3*temp3l )
         enddo
       enddo
     enddo
@@ -269,14 +270,11 @@
       ! do not merge this second line with the first using an ".and." statement
       ! because array is_CPML() is unallocated when PML_CONDITIONS is false
       if (is_CPML(ispec)) then
-
         do k = 1,NGLLZ
           do j = 1,NGLLY
             do i = 1,NGLLX
               iglob = ibool(i,j,k,ispec)
-              potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) - &
-                     potential_dot_dot_acoustic_CPML(i,j,k)
-
+              potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) - potential_dot_dot_acoustic_CPML(i,j,k)
            enddo
          enddo
        enddo
