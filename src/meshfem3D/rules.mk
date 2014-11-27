@@ -70,7 +70,7 @@ meshfem3D_MODULES = \
 
 meshfem3D_SHARED_OBJECTS = \
 	$O/create_name_database.shared.o \
-	$O/constants_mod.shared_module.o \
+	$O/shared_par.shared_module.o \
 	$O/exit_mpi.shared.o \
 	$O/get_global.shared.o \
 	$O/get_shape3D.shared.o \
@@ -145,7 +145,7 @@ $E/xmeshfem3D: $(XMESHFEM_OBJECTS)
 $O/meshfem3D.mesh.o: $O/create_regions_mesh.mesh.o $O/read_mesh_parameter_file.mesh.o
 
 ## adios
-$O/meshfem3D_adios_stubs.mesh_noadios.o: $O/constants_mod.shared_module.o $O/unused_mod.shared_module.o $O/adios_manager_stubs.shared_noadios.o
+$O/meshfem3D_adios_stubs.mesh_noadios.o: $O/shared_par.shared_module.o $O/unused_mod.shared_module.o $O/adios_manager_stubs.shared_noadios.o
 
 $O/save_databases_adios.mesh_adios.o: $O/safe_alloc_mod.shared.o $(adios_meshfem3D_PREOBJECTS)
 $O/create_regions_mesh.mesh.o: $(adios_meshfem3D_PREOBJECTS)
@@ -159,7 +159,7 @@ $O/adios_helpers.shared_adios.o: \
 #### rule to build each .o file below
 ####
 
-$O/%.mesh.o: $S/%.f90 $O/constants_mod.shared_module.o
+$O/%.mesh.o: $S/%.f90 $O/shared_par.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 
@@ -167,10 +167,10 @@ $O/%.mesh.o: $S/%.f90 $O/constants_mod.shared_module.o
 ### ADIOS compilation
 ###
 
-$O/%.mesh_adios.o: $S/%.F90 $O/constants_mod.shared_module.o
+$O/%.mesh_adios.o: $S/%.F90 $O/shared_par.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.mesh_adios.o: $S/%.f90 $O/constants_mod.shared_module.o
+$O/%.mesh_adios.o: $S/%.f90 $O/shared_par.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90}  -c -o $@ $<
 
 $O/%.mesh_noadios.o: $S/%.F90

@@ -23,8 +23,8 @@
 ! with this program; if not, write to the Free Software Foundation, Inc.,
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
-!===========================================================================
-!
+!=====================================================================
+
 
   subroutine earth_chunk_ReadIasp91(vp,vs,rho,rb,n)
 

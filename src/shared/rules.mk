@@ -39,7 +39,7 @@ shared_TARGETS = \
 shared_OBJECTS = \
 	$O/assemble_MPI_scalar.shared.o \
 	$O/check_mesh_resolution.shared.o \
-	$O/constants_mod.shared_module.o \
+	$O/shared_par.shared_module.o \
 	$O/create_name_database.shared.o \
 	$O/create_serial_name_database.shared.o \
 	$O/define_derivation_matrices.shared.o \
@@ -129,7 +129,7 @@ endif
 #### rule for each .o file below
 ####
 
-$O/unused_mod.shared_module.o: $O/constants_mod.shared_module.o
+$O/unused_mod.shared_module.o: $O/shared_par.shared_module.o
 
 ##
 ## shared
@@ -138,13 +138,13 @@ $O/unused_mod.shared_module.o: $O/constants_mod.shared_module.o
 $O/%.shared_module.o: $S/%.f90 ${SETUP}/constants.h
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.shared.o: $S/%.f90 $O/constants_mod.shared_module.o $O/unused_mod.shared_module.o
+$O/%.shared.o: $S/%.f90 $O/shared_par.shared_module.o $O/unused_mod.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.shared.o: $S/%.F90 $O/constants_mod.shared_module.o $O/unused_mod.shared_module.o
+$O/%.shared.o: $S/%.F90 $O/shared_par.shared_module.o $O/unused_mod.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.sharedmpi.o: $S/%.f90 ${SETUP}/constants.h $O/constants_mod.shared_module.o
+$O/%.sharedmpi.o: $S/%.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o
 	${MPIFCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 
@@ -155,10 +155,10 @@ $O/%.sharedmpi.o: $S/%.f90 ${SETUP}/constants.h $O/constants_mod.shared_module.o
 $O/%.shared_adios_module.o: $S/%.f90
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.shared_adios.o: $S/%.f90 $O/adios_helpers_writers.shared_adios_module.o $O/adios_helpers_definitions.shared_adios_module.o $O/constants_mod.shared_module.o
+$O/%.shared_adios.o: $S/%.f90 $O/adios_helpers_writers.shared_adios_module.o $O/adios_helpers_definitions.shared_adios_module.o $O/shared_par.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.shared_adios.o: $S/%.F90 $O/adios_helpers_writers.shared_adios_module.o $O/adios_helpers_definitions.shared_adios_module.o $O/constants_mod.shared_module.o
+$O/%.shared_adios.o: $S/%.F90 $O/adios_helpers_writers.shared_adios_module.o $O/adios_helpers_definitions.shared_adios_module.o $O/shared_par.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 $O/%.shared_noadios.o: $S/%.f90

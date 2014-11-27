@@ -89,7 +89,7 @@ $E/xmultiply_CUBIT_Abaqus_mesh_by_1000: $O/multiply_CUBIT_Abaqus_mesh_by_1000.ch
 #### rule to build each .o file below
 ####
 
-$O/%.check.o: $S/%.f90 $O/constants_mod.shared_module.o  $O/unused_mod.shared_module.o
+$O/%.check.o: $S/%.f90 $O/shared_par.shared_module.o  $O/unused_mod.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 
