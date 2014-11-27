@@ -393,7 +393,9 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
   real(kind=CUSTOM_REAL) :: coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,coef0_3,coef1_3,coef2_3
   integer :: CPML_region_local
   integer :: singularity_type_2,singularity_type_3
-  real(kind=CUSTOM_REAL) :: kappa_x,kappa_y,kappa_z,d_x,d_y,d_z,alpha_x,alpha_y,alpha_z
+  real(kind=CUSTOM_REAL) :: kappa_x,kappa_y,kappa_z
+  real(kind=CUSTOM_REAL) :: d_x,d_y,d_z,alpha_x,alpha_y,alpha_z
+
 
   CPML_region_local = CPML_regions(ispec_CPML)
   time_nplus1 = (it-1) * deltat
@@ -402,7 +404,6 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
   do k=1,NGLLZ
     do j=1,NGLLY
       do i=1,NGLLX
-        !---------------------- A6, A7, A8, A9 --------------------------
         kappa_x = k_store_x(i,j,k,ispec_CPML)
         kappa_y = k_store_y(i,j,k,ispec_CPML)
         kappa_z = k_store_z(i,j,k,ispec_CPML)
@@ -413,6 +414,7 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
         alpha_y = alpha_store_y(i,j,k,ispec_CPML)
         alpha_z = alpha_store_z(i,j,k,ispec_CPML)
 
+        !---------------------- A6, A7, A8, A9 --------------------------
         call lijk_parameter_computation(time_nplus1,deltat,&
                                         kappa_z,d_z,alpha_z,kappa_y,d_y,alpha_y,kappa_x,d_x,alpha_x,&
                                         CPML_region_local,231,A6,A7,A8,A9,&
@@ -429,16 +431,6 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
                 coef1_3 * PML_dpotential_dxl_new(i,j,k) + coef2_3 * PML_dpotential_dxl_old(i,j,k)
 
         !---------------------- A10,A11,A12,A13 --------------------------
-        kappa_x = k_store_x(i,j,k,ispec_CPML)
-        kappa_y = k_store_y(i,j,k,ispec_CPML)
-        kappa_z = k_store_z(i,j,k,ispec_CPML)
-        d_x = d_store_x(i,j,k,ispec_CPML)
-        d_y = d_store_y(i,j,k,ispec_CPML)
-        d_z = d_store_z(i,j,k,ispec_CPML)
-        alpha_x = alpha_store_x(i,j,k,ispec_CPML)
-        alpha_y = alpha_store_y(i,j,k,ispec_CPML)
-        alpha_z = alpha_store_z(i,j,k,ispec_CPML)
-
         call lijk_parameter_computation(time_nplus1,deltat,&
                                         kappa_x,d_x,alpha_x,kappa_z,d_z,alpha_z,kappa_y,d_y,alpha_y,&
                                         CPML_region_local,132,A10,A11,A12,A13,&
@@ -455,16 +447,6 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
                 coef1_3 * PML_dpotential_dyl_new(i,j,k) + coef2_3 * PML_dpotential_dyl_old(i,j,k)
 
         !---------------------- A14,A15,A16,A17 --------------------------
-        kappa_x = k_store_x(i,j,k,ispec_CPML)
-        kappa_y = k_store_y(i,j,k,ispec_CPML)
-        kappa_z = k_store_z(i,j,k,ispec_CPML)
-        d_x = d_store_x(i,j,k,ispec_CPML)
-        d_y = d_store_y(i,j,k,ispec_CPML)
-        d_z = d_store_z(i,j,k,ispec_CPML)
-        alpha_x = alpha_store_x(i,j,k,ispec_CPML)
-        alpha_y = alpha_store_y(i,j,k,ispec_CPML)
-        alpha_z = alpha_store_z(i,j,k,ispec_CPML)
-
         call lijk_parameter_computation(time_nplus1,deltat,&
                                         kappa_x,d_x,alpha_x,kappa_y,d_y,alpha_y,kappa_z,d_z,alpha_z,&
                                         CPML_region_local,123,A14,A15,A16,A17,&
@@ -480,6 +462,7 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
         rmemory_dpotential_dzl(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,3) + &
                 coef1_3 * PML_dpotential_dzl_new(i,j,k) + coef2_3 * PML_dpotential_dzl_old(i,j,k)
 
+        ! derivatives
         dpotentialdxl = A6 * PML_dpotential_dxl(i,j,k)  + &
                         A7 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,1) + &
                         A8 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) + &
@@ -689,9 +672,10 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
   implicit none
 
   real(kind=CUSTOM_REAL), intent(in) :: timeval,deltat
-  real(kind=CUSTOM_REAL) :: kappa_x,d_x,alpha_x,beta_x, &
-                            kappa_y,d_y,alpha_y,beta_y, &
-                            kappa_z,d_z,alpha_z,beta_z
+  real(kind=CUSTOM_REAL), intent(in) :: kappa_x,d_x,alpha_x, &
+                                        kappa_y,d_y,alpha_y, &
+                                        kappa_z,d_z,alpha_z
+
   integer, intent(in) :: CPML_region_local,index_ijk
 
   real(kind=CUSTOM_REAL), intent(out) :: A_0,A_1,A_2,A_3
@@ -700,6 +684,8 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
   integer, intent(out) :: singularity_type_2,singularity_type_3
 
   !local variable
+  real(kind=CUSTOM_REAL) :: a_x,a_y
+  real(kind=CUSTOM_REAL) :: beta_x,beta_y,beta_z
   real(kind=CUSTOM_REAL) :: time_nplus1,time_n
   real(kind=CUSTOM_REAL) :: bar_A_0,bar_A_1,bar_A_2,bar_A_3,alpha_0
 
@@ -775,11 +761,11 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
       !----------------A1,2,3-------------------------
       alpha_0 = max(alpha_x,alpha_y)
 
-      alpha_x = alpha_0
-      alpha_y = alpha_0
+      a_x = alpha_0
+      a_y = alpha_0
 
-      beta_x = alpha_x + d_x / kappa_x
-      beta_y = alpha_y + d_y / kappa_y
+      beta_x = a_x + d_x / kappa_x
+      beta_y = a_y + d_y / kappa_y
       beta_z = alpha_z + d_z / kappa_z
 
       bar_A_1 = bar_A_0 * (-2._CUSTOM_REAL * alpha_0**3 + beta_x*beta_y*beta_z &
@@ -799,8 +785,8 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
       singularity_type_2 = 1 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
       singularity_type_3 = 0 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
 
-      call compute_convolution_coef(alpha_x, deltat, coef0_1, coef1_1, coef2_1, 0, time_nplus1,time_n)
-      call compute_convolution_coef(alpha_y, deltat, coef0_2, coef1_2, coef2_2, singularity_type_2, time_nplus1,time_n)
+      call compute_convolution_coef(a_x, deltat, coef0_1, coef1_1, coef2_1, 0, time_nplus1,time_n)
+      call compute_convolution_coef(a_y, deltat, coef0_2, coef1_2, coef2_2, singularity_type_2, time_nplus1,time_n)
       call compute_convolution_coef(beta_z, deltat, coef0_3, coef1_3, coef2_3, singularity_type_3, time_nplus1,time_n)
 
     else if (abs(alpha_x-alpha_y) >= 1.e-5_CUSTOM_REAL .and. abs(alpha_x-beta_z) < 1.e-5_CUSTOM_REAL &
@@ -808,9 +794,9 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
       !----------------A1,2,3-------------------------
       alpha_0 = max(alpha_x,beta_z)
 
-      alpha_x = alpha_0
+      a_x = alpha_0
 
-      beta_x = alpha_x + d_x / kappa_x
+      beta_x = a_x + d_x / kappa_x
       beta_y = alpha_y + d_y / kappa_y
       beta_z = alpha_0
 
@@ -831,7 +817,7 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
       singularity_type_2 = 0 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
       singularity_type_3 = 1 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
 
-      call compute_convolution_coef(alpha_x, deltat, coef0_1, coef1_1, coef2_1, 0, time_nplus1,time_n)
+      call compute_convolution_coef(a_x, deltat, coef0_1, coef1_1, coef2_1, 0, time_nplus1,time_n)
       call compute_convolution_coef(alpha_y, deltat, coef0_2, coef1_2, coef2_2, singularity_type_2, time_nplus1,time_n)
       call compute_convolution_coef(beta_z, deltat, coef0_3, coef1_3, coef2_3, singularity_type_3, time_nplus1,time_n)
 
@@ -840,10 +826,10 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
       !----------------A1,2,3-------------------------
       alpha_0 = max(alpha_y,beta_z)
 
-      alpha_y = alpha_0
+      a_y = alpha_0
 
       beta_x = alpha_x + d_x / kappa_x
-      beta_y = alpha_y + d_y / kappa_y
+      beta_y = a_y + d_y / kappa_y
       beta_z  = alpha_0
 
       bar_A_1 = - bar_A_0 * (alpha_x-alpha_z) * (alpha_x - beta_x) * (alpha_x - beta_y) / &
@@ -864,7 +850,7 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
       singularity_type_3 = 1 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
 
       call compute_convolution_coef(alpha_x, deltat, coef0_1, coef1_1, coef2_1, 0, time_nplus1,time_n)
-      call compute_convolution_coef(alpha_y, deltat, coef0_2, coef1_2, coef2_2, singularity_type_2, time_nplus1,time_n)
+      call compute_convolution_coef(a_y, deltat, coef0_2, coef1_2, coef2_2, singularity_type_2, time_nplus1,time_n)
       call compute_convolution_coef(beta_z, deltat, coef0_3, coef1_3, coef2_3, singularity_type_3, time_nplus1,time_n)
 
     else if ((abs(alpha_x-alpha_y) < 1.e-5_CUSTOM_REAL .and. abs(alpha_x-beta_z) < 1.e-5_CUSTOM_REAL &
@@ -881,11 +867,11 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
       !----------------A1,2,3-------------------------
       alpha_0 = max(alpha_x,alpha_y,beta_z)
 
-      alpha_x = alpha_0
-      alpha_y = alpha_0
+      a_x = alpha_0
+      a_y = alpha_0
 
-      beta_x = alpha_x + d_x / kappa_x
-      beta_y = alpha_y + d_y / kappa_y
+      beta_x = a_x + d_x / kappa_x
+      beta_y = a_y + d_y / kappa_y
       beta_z  = alpha_0
 
       bar_A_1 = bar_A_0 * (-3._CUSTOM_REAL * alpha_0 + alpha_z + beta_x + beta_y)
@@ -900,8 +886,8 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
       singularity_type_2 = 1 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
       singularity_type_3 = 2 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
 
-      call compute_convolution_coef(alpha_x, deltat, coef0_1, coef1_1, coef2_1, 0, time_nplus1,time_n)
-      call compute_convolution_coef(alpha_y, deltat, coef0_2, coef1_2, coef2_2, singularity_type_2, time_nplus1,time_n)
+      call compute_convolution_coef(a_x, deltat, coef0_1, coef1_1, coef2_1, 0, time_nplus1,time_n)
+      call compute_convolution_coef(a_y, deltat, coef0_2, coef1_2, coef2_2, singularity_type_2, time_nplus1,time_n)
       call compute_convolution_coef(beta_z, deltat, coef0_3, coef1_3, coef2_3, singularity_type_3, time_nplus1,time_n)
 
     else
@@ -940,10 +926,10 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
       !----------------A1,2,3-------------------------
       alpha_0 = max(alpha_y,beta_z)
 
-      alpha_y = alpha_0
+      a_y = alpha_0
 
       beta_x = alpha_x + d_x / kappa_x
-      beta_y = alpha_y + d_y / kappa_y
+      beta_y = a_y + d_y / kappa_y
       beta_z  = alpha_0
 
       bar_A_1 =  0._CUSTOM_REAL
@@ -958,7 +944,7 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
       singularity_type_3 = 1 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
 
       call compute_convolution_coef(alpha_x, deltat, coef0_1, coef1_1, coef2_1, 0, time_nplus1,time_n)
-      call compute_convolution_coef(alpha_y, deltat, coef0_2, coef1_2, coef2_2, singularity_type_2, time_nplus1,time_n)
+      call compute_convolution_coef(a_y, deltat, coef0_2, coef1_2, coef2_2, singularity_type_2, time_nplus1,time_n)
       call compute_convolution_coef(beta_z, deltat, coef0_3, coef1_3, coef2_3, singularity_type_3, time_nplus1,time_n)
 
     else
@@ -997,9 +983,9 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
       !----------------A1,2,3-------------------------
       alpha_0 = max(alpha_x,beta_z)
 
-      alpha_x = alpha_0
+      a_x = alpha_0
 
-      beta_x = alpha_x + d_x / kappa_x
+      beta_x = a_x + d_x / kappa_x
       beta_y = alpha_y + d_y / kappa_y
       beta_z = alpha_0
 
@@ -1014,7 +1000,7 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
       singularity_type_2 = 0 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
       singularity_type_3 = 1 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
 
-      call compute_convolution_coef(alpha_x, deltat, coef0_1, coef1_1, coef2_1, 0, time_nplus1,time_n)
+      call compute_convolution_coef(a_x, deltat, coef0_1, coef1_1, coef2_1, 0, time_nplus1,time_n)
       call compute_convolution_coef(alpha_y, deltat, coef0_2, coef1_2, coef2_2, singularity_type_2, time_nplus1,time_n)
       call compute_convolution_coef(beta_z, deltat, coef0_3, coef1_3, coef2_3, singularity_type_3, time_nplus1,time_n)
 
@@ -1055,11 +1041,11 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
       !----------------A1,2,3-------------------------
       alpha_0 = max(alpha_x,alpha_y)
 
-      alpha_x = alpha_0
-      alpha_y = alpha_0
+      a_x = alpha_0
+      a_y = alpha_0
 
-      beta_x = alpha_x + d_x / kappa_x
-      beta_y = alpha_y + d_y / kappa_y
+      beta_x = a_x + d_x / kappa_x
+      beta_y = a_y + d_y / kappa_y
       beta_z = alpha_z + d_z / kappa_z
 
       bar_A_1 = bar_A_0 * (-2._CUSTOM_REAL * alpha_0 + (beta_x + beta_y))
@@ -1073,8 +1059,8 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
       singularity_type_2 = 1 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
       singularity_type_3 = 0 ! 0 means no singularity, 1 means first order singularity, 2 means second order singularity
 
-      call compute_convolution_coef(alpha_x, deltat, coef0_1, coef1_1, coef2_1, 0, time_nplus1,time_n)
-      call compute_convolution_coef(alpha_y, deltat, coef0_2, coef1_2, coef2_2, singularity_type_2, time_nplus1,time_n)
+      call compute_convolution_coef(a_x, deltat, coef0_1, coef1_1, coef2_1, 0, time_nplus1,time_n)
+      call compute_convolution_coef(a_y, deltat, coef0_2, coef1_2, coef2_2, singularity_type_2, time_nplus1,time_n)
       call compute_convolution_coef(beta_z, deltat, coef0_3, coef1_3, coef2_3, singularity_type_3, time_nplus1,time_n)
 
     else
