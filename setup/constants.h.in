@@ -104,7 +104,7 @@
   integer, parameter :: MAX_STRING_LEN = 512
 
 ! use inlined products of Deville et al. (2002) to speedup the calculations to compute internal forces
-  logical, parameter :: USE_DEVILLE_PRODUCTS = .false.
+  logical, parameter :: USE_DEVILLE_PRODUCTS = .true.
 
 ! number of GLL points in each direction of an element (degree plus one)
   integer, parameter :: NGLLX = 5
