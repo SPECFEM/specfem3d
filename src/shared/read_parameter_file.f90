@@ -25,40 +25,13 @@
 !
 !=====================================================================
 
-  subroutine read_parameter_file(NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT,NGNOD,NGNOD2D, &
-                        UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,TOMOGRAPHY_PATH, &
-                        ATTENUATION,USE_OLSEN_ATTENUATION,LOCAL_PATH,NSOURCES, &
-                        APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,ANISOTROPY,STACEY_ABSORBING_CONDITIONS,MOVIE_TYPE, &
-                        MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
-                        NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
-                        SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,NTSTEP_BETWEEN_OUTPUT_INFO, &
-                        SIMULATION_TYPE,SAVE_FORWARD,NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
-                        USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE, &
-                        USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
-                        PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,SEP_MODEL_DIRECTORY, &
-                        FULL_ATTENUATION_SOLID,TRACTION_PATH,COUPLE_WITH_EXTERNAL_CODE,EXTERNAL_CODE_TYPE, &
-                        MESH_A_CHUNK_OF_THE_EARTH)
+  subroutine read_parameter_file()
 
   use constants
 
+  use shared_parameters
+
   implicit none
-
-  integer :: NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,SIMULATION_TYPE, NTSTEP_BETWEEN_READ_ADJSRC
-  integer :: NSOURCES,NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO,UTM_PROJECTION_ZONE
-  integer :: NOISE_TOMOGRAPHY,NGNOD,NGNOD2D,MOVIE_TYPE
-  integer :: IMODEL
-  integer :: EXTERNAL_CODE_TYPE
-
-  double precision :: DT,HDUR_MOVIE,OLSEN_ATTENUATION_RATIO,f0_FOR_PML
-
-  logical :: ATTENUATION,USE_OLSEN_ATTENUATION,APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,STACEY_ABSORBING_CONDITIONS,SAVE_FORWARD
-  logical :: MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
-  logical :: ANISOTROPY,SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION
-  logical :: USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE,USE_RICKER_TIME_FUNCTION
-  logical :: PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID,COUPLE_WITH_EXTERNAL_CODE,MESH_A_CHUNK_OF_THE_EARTH
-
-  character(len=MAX_STRING_LEN) :: LOCAL_PATH,TOMOGRAPHY_PATH,CMTSOLUTION,FORCESOLUTION, &
-                                   TRACTION_PATH,path_to_add, SEP_MODEL_DIRECTORY
 
 ! local variables
   integer :: icounter,isource,idummy,ier
@@ -67,6 +40,9 @@
   character(len=MAX_STRING_LEN) :: dummystring
 
   character(len=MAX_STRING_LEN) :: MODEL
+  character(len=MAX_STRING_LEN) :: CMTSOLUTION,FORCESOLUTION
+  character(len=MAX_STRING_LEN) :: path_to_add
+
   !logical :: sep_dir_exists
   integer :: i,irange
 
@@ -112,10 +88,12 @@
   if (ier /= 0) stop 'Error reading Par_file parameter NGNOD'
   call read_value_string(MODEL, 'MODEL', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter MODEL'
+
   write(SEP_MODEL_DIRECTORY, '(a)') ''
   call read_value_string(SEP_MODEL_DIRECTORY, 'SEP_MODEL_DIRECTORY', ier)
   if (ier /= 0) write (0, '(a)') 'No SEP_MODEL_DIRECTORY defined in Par_file.'
   !if (ier /= 0) stop 'Error reading Par_file parameter SEP_MODEL_DIRECTORY'
+
   call read_value_logical(APPROXIMATE_OCEAN_LOAD, 'APPROXIMATE_OCEAN_LOAD', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter APPROXIMATE_OCEAN_LOAD'
   call read_value_logical(TOPOGRAPHY, 'TOPOGRAPHY', ier)
@@ -409,13 +387,12 @@
 
   subroutine read_gpu_mode(GPU_MODE,GRAVITY)
 
-  use constants
-
   implicit none
 
-  logical :: GPU_MODE
-  logical :: GRAVITY
+  logical,intent(out) :: GPU_MODE
+  logical,intent(out) :: GRAVITY
 
+  ! local parameters
   integer :: ier
 
   ! initializes flags
@@ -446,18 +423,16 @@
 !! \param ADIOS_FOR_KERNELS flag to indicate if the kernels are saved using
 !!                          adios
 !! \author MPBL
-subroutine read_adios_parameters(ADIOS_ENABLED, ADIOS_FOR_DATABASES,       &
-                                 ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, &
-                                 ADIOS_FOR_KERNELS)
 
-  use constants
+subroutine read_adios_parameters()
+
+  use constants,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
+
+  use shared_input_parameters
 
   implicit none
 
-  logical, intent(out) :: ADIOS_ENABLED, ADIOS_FOR_DATABASES,       &
-                          ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, &
-                          ADIOS_FOR_KERNELS
-
+  ! local parameters
   integer :: ier
 
   ! initialize flags to false

@@ -361,8 +361,7 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
   ! Anisotropic-Medium PML for Vector FETD With Modified Basis Functions,
   ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
 
-  use specfem_par, only: wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,&
-                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian,&
+  use specfem_par, only: xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian,&
                          it,deltat,rhostore
 
   use pml_par, only: NSPEC_CPML,CPML_regions,k_store_x,k_store_y,k_store_z,&

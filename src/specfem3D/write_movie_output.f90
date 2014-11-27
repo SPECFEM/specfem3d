@@ -506,7 +506,7 @@
 
   ! put into this separate routine to make compilation faster
 
-  use specfem_par,only: NDIM,ibool
+  use specfem_par,only: NDIM,ibool,SAVE_DISPLACEMENT
   use specfem_par_elastic,only: displ,veloc,ispec_is_elastic
   use specfem_par_acoustic,only: ispec_is_acoustic
   use specfem_par_movie

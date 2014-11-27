@@ -38,6 +38,8 @@
 
 module decompose_mesh
 
+  use shared_parameters
+
   use part_decompose_mesh,only: long,MAX_STRING_LEN,ACOUSTIC_LOAD,SAVE_MOHO_MESH,nfaces,NGNOD_EIGHT_CORNERS, &
     write_interfaces_database,write_moho_surface_database,write_glob2loc_nodes_database, &
     write_material_props_database,write_boundaries_database, &
@@ -145,28 +147,6 @@ module decompose_mesh
   double precision :: rhos,rhof,phi,tort,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,eta,mufr
 
   integer, parameter :: IIN_database = 15
-
-  double precision :: DT
-  double precision :: HDUR_MOVIE,OLSEN_ATTENUATION_RATIO,f0_FOR_PML
-
-  integer :: NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP, &
-            UTM_PROJECTION_ZONE,SIMULATION_TYPE,NGNOD,NGNOD2D,EXTERNAL_CODE_TYPE
-
-  integer :: NSOURCES,NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY
-  integer :: NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO,MOVIE_TYPE
-
-  logical :: MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
-            USE_HIGHRES_FOR_MOVIES,SUPPRESS_UTM_PROJECTION
-
-  logical :: ATTENUATION,USE_OLSEN_ATTENUATION,PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE, &
-            APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,USE_FORCE_POINT_SOURCE,FULL_ATTENUATION_SOLID
-  logical :: STACEY_ABSORBING_CONDITIONS,SAVE_FORWARD,STACEY_INSTEAD_OF_FREE_SURFACE
-  logical :: ANISOTROPY,SAVE_MESH_FILES,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION, &
-             COUPLE_WITH_EXTERNAL_CODE,MESH_A_CHUNK_OF_THE_EARTH
-
-  character(len=MAX_STRING_LEN) :: LOCAL_PATH,TOMOGRAPHY_PATH,TRACTION_PATH, SEP_MODEL_DIRECTORY
-
-  integer :: IMODEL
 
   contains
 

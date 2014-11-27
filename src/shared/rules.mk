@@ -77,6 +77,9 @@ shared_OBJECTS = \
 shared_MODULES = \
 	$(FC_MODDIR)/constants.$(FC_MODEXT) \
 	$(FC_MODDIR)/safe_alloc_mod.$(FC_MODEXT) \
+	$(FC_MODDIR)/shared_input_parameters.$(FC_MODEXT) \
+	$(FC_MODDIR)/shared_compute_parameters.$(FC_MODEXT) \
+	$(FC_MODDIR)/shared_parameters.$(FC_MODEXT) \
 	$(FC_MODDIR)/unused_mod.$(FC_MODEXT) \
 	$(EMPTY_MACRO)
 
