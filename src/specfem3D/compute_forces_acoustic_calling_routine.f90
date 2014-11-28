@@ -59,7 +59,7 @@ subroutine compute_forces_acoustic()
   use specfem_par_elastic
   use specfem_par_poroelastic
   use pml_par,only: spec_to_CPML,is_CPML,rmemory_coupling_ac_el_displ,nglob_interface_PML_acoustic,&
-                    b_PML_potential,b_reclen_PML_potential,potential_dot_dot_acoustic_old,potential_acoustic_old
+                    b_PML_potential,b_reclen_PML_potential,potential_acoustic_old ! potential_dot_dot_acoustic_old
   implicit none
 
   ! local parameters
@@ -235,7 +235,7 @@ subroutine compute_forces_acoustic()
             potential_dot_acoustic(iglob) = 0.0
             potential_acoustic(iglob) = 0.0
             if (ELASTIC_SIMULATION) then
-              potential_dot_dot_acoustic_old(iglob) = 0.0
+              !potential_dot_dot_acoustic_old(iglob) = 0.0
               potential_acoustic_old(iglob) = 0.0
             endif
           enddo

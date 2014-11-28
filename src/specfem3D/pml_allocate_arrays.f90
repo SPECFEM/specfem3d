@@ -176,8 +176,8 @@ subroutine pml_allocate_arrays()
     if (ier /= 0) stop 'error allocating potential_acoustic_new array'
 
     ! store the potential acoustic field at n-1 time step
-    allocate(potential_dot_dot_acoustic_old(NGLOB_AB),stat=ier)
-    if (ier /= 0) stop 'error allocating potential_dot_dot_acoustic_old array'
+!    allocate(potential_dot_dot_acoustic_old(NGLOB_AB),stat=ier)
+!    if (ier /= 0) stop 'error allocating potential_dot_dot_acoustic_old array'
 
     ! stores derivatives of potential with respect to x, y and z
     allocate(PML_dpotential_dxl(NGLLX,NGLLY,NGLLZ),stat=ier)
@@ -302,7 +302,7 @@ subroutine pml_allocate_arrays()
   if (ACOUSTIC_SIMULATION) then
     potential_acoustic_old(:) = 0._CUSTOM_REAL
     potential_acoustic_new(:) = 0._CUSTOM_REAL
-    potential_dot_dot_acoustic_old(:) = 0._CUSTOM_REAL
+!    potential_dot_dot_acoustic_old(:) = 0._CUSTOM_REAL
     PML_dpotential_dxl(:,:,:) = 0._CUSTOM_REAL
     PML_dpotential_dyl(:,:,:) = 0._CUSTOM_REAL
     PML_dpotential_dzl(:,:,:) = 0._CUSTOM_REAL
@@ -529,7 +529,7 @@ subroutine pml_allocate_arrays_dummy()
   if (.not. allocated(rmemory_dpotential_dzl)) allocate(rmemory_dpotential_dzl(1,1,1,1,3))
   if (.not. allocated(potential_acoustic_old)) allocate(potential_acoustic_old(1))
   if (.not. allocated(potential_acoustic_new)) allocate(potential_acoustic_new(1))
-  if (.not. allocated(potential_dot_dot_acoustic_old)) allocate(potential_dot_dot_acoustic_old(1))
+!  if (.not. allocated(potential_dot_dot_acoustic_old)) allocate(potential_dot_dot_acoustic_old(1))
   if (.not. allocated(rmemory_potential_acoustic)) allocate(rmemory_potential_acoustic(1,1,1,1,3))
   if (.not. allocated(potential_dot_dot_acoustic_CPML)) allocate(potential_dot_dot_acoustic_CPML(1,1,1))
   if (.not. allocated(rmemory_coupling_ac_el_displ)) allocate(rmemory_coupling_ac_el_displ(3,1,1,1,1,2))
