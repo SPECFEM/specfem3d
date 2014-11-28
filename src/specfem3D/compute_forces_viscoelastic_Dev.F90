@@ -152,118 +152,73 @@
   logical,dimension(NSPEC_BOUN) :: is_moho_top,is_moho_bot
   integer :: ispec2D_moho_top, ispec2D_moho_bot
 
+  ! C-PML absorbing boundary conditions
+  logical :: PML_CONDITIONS
+
+  ! CPML adjoint
+  logical :: backward_simulation
+
 ! local parameters
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dummyx_loc,dummyy_loc,dummyz_loc, &
-    newtempx1,newtempx2,newtempx3,newtempy1,newtempy2,newtempy3,newtempz1,newtempz2,newtempz3
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &
     tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3
 
-  real(kind=CUSTOM_REAL) duxdxl_att,duxdyl_att,duxdzl_att,duydxl_att
-  real(kind=CUSTOM_REAL) duydyl_att,duydzl_att,duzdxl_att,duzdyl_att,duzdzl_att
-  real(kind=CUSTOM_REAL) duxdyl_plus_duydxl_att,duzdxl_plus_duxdzl_att,duzdyl_plus_duydzl_att
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &
+    newtempx1,newtempx2,newtempx3,newtempy1,newtempy2,newtempy3,newtempz1,newtempz2,newtempz3
 
-  ! manually inline the calls to the Deville et al. (2002) routines
-  real(kind=CUSTOM_REAL), dimension(m1,m2) :: B1_m1_m2_5points,B2_m1_m2_5points,B3_m1_m2_5points
-  real(kind=CUSTOM_REAL), dimension(m1,m2) :: C1_m1_m2_5points,C2_m1_m2_5points,C3_m1_m2_5points
-  real(kind=CUSTOM_REAL), dimension(m1,m2) :: E1_m1_m2_5points,E2_m1_m2_5points,E3_m1_m2_5points
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dummyx_loc,dummyy_loc,dummyz_loc
 
-  equivalence(dummyx_loc,B1_m1_m2_5points)
-  equivalence(dummyy_loc,B2_m1_m2_5points)
-  equivalence(dummyz_loc,B3_m1_m2_5points)
-  equivalence(tempx1,C1_m1_m2_5points)
-  equivalence(tempy1,C2_m1_m2_5points)
-  equivalence(tempz1,C3_m1_m2_5points)
-  equivalence(newtempx1,E1_m1_m2_5points)
-  equivalence(newtempy1,E2_m1_m2_5points)
-  equivalence(newtempz1,E3_m1_m2_5points)
-
+  ! attenuation
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &
     tempx1_att,tempx2_att,tempx3_att,tempy1_att,tempy2_att,tempy3_att,tempz1_att,tempz2_att,tempz3_att
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dummyx_loc_att,dummyy_loc_att,dummyz_loc_att
-  real(kind=CUSTOM_REAL), dimension(m1,m2) :: B1_m1_m2_5points_att,B2_m1_m2_5points_att,B3_m1_m2_5points_att
-  real(kind=CUSTOM_REAL), dimension(m1,m2) :: C1_m1_m2_5points_att,C2_m1_m2_5points_att,C3_m1_m2_5points_att
-
-  equivalence(dummyx_loc_att,B1_m1_m2_5points_att)
-  equivalence(dummyy_loc_att,B2_m1_m2_5points_att)
-  equivalence(dummyz_loc_att,B3_m1_m2_5points_att)
-  equivalence(tempx1_att,C1_m1_m2_5points_att)
-  equivalence(tempy1_att,C2_m1_m2_5points_att)
-  equivalence(tempz1_att,C3_m1_m2_5points_att)
-
-  real(kind=CUSTOM_REAL), dimension(m2,m1) :: &
-    A1_mxm_m2_m1_5points,A2_mxm_m2_m1_5points,A3_mxm_m2_m1_5points
-  real(kind=CUSTOM_REAL), dimension(m2,m1) :: &
-    C1_mxm_m2_m1_5points,C2_mxm_m2_m1_5points,C3_mxm_m2_m1_5points
-  real(kind=CUSTOM_REAL), dimension(m2,m1) :: &
-    E1_mxm_m2_m1_5points,E2_mxm_m2_m1_5points,E3_mxm_m2_m1_5points
-
-  equivalence(dummyx_loc,A1_mxm_m2_m1_5points)
-  equivalence(dummyy_loc,A2_mxm_m2_m1_5points)
-  equivalence(dummyz_loc,A3_mxm_m2_m1_5points)
-  equivalence(tempx3,C1_mxm_m2_m1_5points)
-  equivalence(tempy3,C2_mxm_m2_m1_5points)
-  equivalence(tempz3,C3_mxm_m2_m1_5points)
-  equivalence(newtempx3,E1_mxm_m2_m1_5points)
-  equivalence(newtempy3,E2_mxm_m2_m1_5points)
-  equivalence(newtempz3,E3_mxm_m2_m1_5points)
-
-  real(kind=CUSTOM_REAL), dimension(m2,m1) :: &
-    A1_mxm_m2_m1_5points_att,A2_mxm_m2_m1_5points_att,A3_mxm_m2_m1_5points_att
-  real(kind=CUSTOM_REAL), dimension(m2,m1) :: &
-    C1_mxm_m2_m1_5points_att,C2_mxm_m2_m1_5points_att,C3_mxm_m2_m1_5points_att
-
-  equivalence(dummyx_loc_att,A1_mxm_m2_m1_5points_att)
-  equivalence(dummyy_loc_att,A2_mxm_m2_m1_5points_att)
-  equivalence(dummyz_loc_att,A3_mxm_m2_m1_5points_att)
-  equivalence(tempx3_att,C1_mxm_m2_m1_5points_att)
-  equivalence(tempy3_att,C2_mxm_m2_m1_5points_att)
-  equivalence(tempz3_att,C3_mxm_m2_m1_5points_att)
-
-! C-PML absorbing boundary conditions
-  logical :: PML_CONDITIONS
-  integer :: ispec_CPML
-! CPML adjoint
-  logical :: backward_simulation
+  real(kind=CUSTOM_REAL) :: duxdxl_att,duxdyl_att,duxdzl_att,duydxl_att
+  real(kind=CUSTOM_REAL) :: duydyl_att,duydzl_att,duzdxl_att,duzdyl_att,duzdzl_att
+  real(kind=CUSTOM_REAL) :: duxdyl_plus_duydxl_att,duzdxl_plus_duxdzl_att,duzdyl_plus_duydzl_att
 
   ! local attenuation parameters
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: epsilondev_trace_loc,epsilondev_xx_loc, &
-       epsilondev_yy_loc, epsilondev_xy_loc, epsilondev_xz_loc, epsilondev_yz_loc
-  real(kind=CUSTOM_REAL) R_xx_val1,R_yy_val1,R_xx_val2,R_yy_val2,R_xx_val3,R_yy_val3, &
-                         R_trace_val1,R_trace_val2,R_trace_val3
-  real(kind=CUSTOM_REAL) factor_loc,alphaval_loc,betaval_loc,gammaval_loc
-  real(kind=CUSTOM_REAL) Sn,Snp1
-  real(kind=CUSTOM_REAL) templ
+    epsilondev_yy_loc, epsilondev_xy_loc, epsilondev_xz_loc, epsilondev_yz_loc
 
-  real(kind=CUSTOM_REAL) xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl
-  real(kind=CUSTOM_REAL) duxdxl,duxdyl,duxdzl,duydxl,duydyl,duydzl,duzdxl,duzdyl,duzdzl
+  real(kind=CUSTOM_REAL) :: R_xx_val1,R_yy_val1,R_xx_val2,R_yy_val2,R_xx_val3,R_yy_val3, &
+                            R_trace_val1,R_trace_val2,R_trace_val3
+  real(kind=CUSTOM_REAL) :: factor_loc,alphaval_loc,betaval_loc,gammaval_loc
+  real(kind=CUSTOM_REAL) :: Sn,Snp1
+  real(kind=CUSTOM_REAL) :: templ
 
-  real(kind=CUSTOM_REAL) duxdxl_plus_duydyl,duxdxl_plus_duzdzl,duydyl_plus_duzdzl
-  real(kind=CUSTOM_REAL) duxdyl_plus_duydxl,duzdxl_plus_duxdzl,duzdyl_plus_duydzl
+  real(kind=CUSTOM_REAL) :: xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl
+  real(kind=CUSTOM_REAL) :: duxdxl,duxdyl,duxdzl,duydxl,duydyl,duydzl,duzdxl,duzdyl,duzdzl
 
-  real(kind=CUSTOM_REAL) sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz,sigma_yx,sigma_zx,sigma_zy
+  real(kind=CUSTOM_REAL) :: duxdxl_plus_duydyl,duxdxl_plus_duzdzl,duydyl_plus_duzdzl
+  real(kind=CUSTOM_REAL) :: duxdyl_plus_duydxl,duzdxl_plus_duxdzl,duzdyl_plus_duydzl
 
-  real(kind=CUSTOM_REAL) fac1,fac2,fac3
+  real(kind=CUSTOM_REAL) :: sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz,sigma_yx,sigma_zx,sigma_zy
 
-  real(kind=CUSTOM_REAL) lambdal,mul,lambdalplus2mul
-  real(kind=CUSTOM_REAL) kappal
+  real(kind=CUSTOM_REAL) :: fac1,fac2,fac3
+
+  real(kind=CUSTOM_REAL) :: lambdal,mul,lambdalplus2mul
+  real(kind=CUSTOM_REAL) :: kappal
 
   ! local anisotropy parameters
-  real(kind=CUSTOM_REAL) c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,&
-                        c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
+  real(kind=CUSTOM_REAL) :: c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,&
+                            c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
 
-  integer i_SLS,imodulo_N_SLS
-  integer ispec,iglob,ispec_p,num_elements
+  integer :: i_SLS,imodulo_N_SLS
+  integer :: ispec,iglob,ispec_p,num_elements
 
   real(kind=CUSTOM_REAL) :: eta
 
   real(kind=CUSTOM_REAL) :: epsilon_trace,epsilon_trace_squared
   real(kind=CUSTOM_REAL) :: mul_plus_A_over_4,lambdal_plus_B,lambdal_over_two_plus_B_over_2
 
-  integer :: i,j,k
+  ! C-PML absorbing boundary conditions
+  integer :: ispec_CPML
+
 #ifdef FORCE_VECTORIZATION
 ! this will (purposely) give out-of-bound array accesses if run through range checking,
 ! thus use only for production runs with no bound checking
   integer :: ijk
+#else
+  integer :: i,j,k
 #endif
 
   imodulo_N_SLS = mod(N_SLS,3)
@@ -358,269 +313,78 @@
     ! subroutines adapted from Deville, Fischer and Mund, High-order methods
     ! for incompressible fluid flow, Cambridge University Press (2002),
     ! pages 386 and 389 and Figure 8.3.1
-    ! call mxm_m1_m2_5points(hprime_xx,dummyx_loc,dummyy_loc,dummyz_loc,tempx1,tempy1,tempz1)
-    do j=1,m2
-      do i=1,m1
-        C1_m1_m2_5points(i,j) = hprime_xx(i,1)*B1_m1_m2_5points(1,j) + &
-                                hprime_xx(i,2)*B1_m1_m2_5points(2,j) + &
-                                hprime_xx(i,3)*B1_m1_m2_5points(3,j) + &
-                                hprime_xx(i,4)*B1_m1_m2_5points(4,j) + &
-                                hprime_xx(i,5)*B1_m1_m2_5points(5,j)
-        C2_m1_m2_5points(i,j) = hprime_xx(i,1)*B2_m1_m2_5points(1,j) + &
-                                hprime_xx(i,2)*B2_m1_m2_5points(2,j) + &
-                                hprime_xx(i,3)*B2_m1_m2_5points(3,j) + &
-                                hprime_xx(i,4)*B2_m1_m2_5points(4,j) + &
-                                hprime_xx(i,5)*B2_m1_m2_5points(5,j)
-        C3_m1_m2_5points(i,j) = hprime_xx(i,1)*B3_m1_m2_5points(1,j) + &
-                                hprime_xx(i,2)*B3_m1_m2_5points(2,j) + &
-                                hprime_xx(i,3)*B3_m1_m2_5points(3,j) + &
-                                hprime_xx(i,4)*B3_m1_m2_5points(4,j) + &
-                                hprime_xx(i,5)*B3_m1_m2_5points(5,j)
-      enddo
-    enddo
+
+    ! computes 1. matrix multiplication for tempx1,..
+    call mxm5_3comp_singleA(hprime_xx,m1,dummyx_loc,dummyy_loc,dummyz_loc,tempx1,tempy1,tempz1,m2)
 
 ! counts:
 ! + m1 * m2 * 3 * 9 = 5 * 25 * 3 * 9 = 3375 FLOP
 !
 ! + m1 * 5 float = 100 BYTE  (hprime_xx once, assuming B3_** in cache)
 
-    if (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) then
-      ! temporary variables used for fixing attenuation in a consistent way
-      do j=1,m2
-        do i=1,m1
-          C1_m1_m2_5points_att(i,j) = C1_m1_m2_5points(i,j) + &
-               hprime_xx(i,1)*B1_m1_m2_5points_att(1,j) + &
-               hprime_xx(i,2)*B1_m1_m2_5points_att(2,j) + &
-               hprime_xx(i,3)*B1_m1_m2_5points_att(3,j) + &
-               hprime_xx(i,4)*B1_m1_m2_5points_att(4,j) + &
-               hprime_xx(i,5)*B1_m1_m2_5points_att(5,j)
-
-          C2_m1_m2_5points_att(i,j) = C2_m1_m2_5points(i,j) + &
-               hprime_xx(i,1)*B2_m1_m2_5points_att(1,j) + &
-               hprime_xx(i,2)*B2_m1_m2_5points_att(2,j) + &
-               hprime_xx(i,3)*B2_m1_m2_5points_att(3,j) + &
-               hprime_xx(i,4)*B2_m1_m2_5points_att(4,j) + &
-               hprime_xx(i,5)*B2_m1_m2_5points_att(5,j)
-
-          C3_m1_m2_5points_att(i,j) = C3_m1_m2_5points(i,j) + &
-               hprime_xx(i,1)*B3_m1_m2_5points_att(1,j) + &
-               hprime_xx(i,2)*B3_m1_m2_5points_att(2,j) + &
-               hprime_xx(i,3)*B3_m1_m2_5points_att(3,j) + &
-               hprime_xx(i,4)*B3_m1_m2_5points_att(4,j) + &
-               hprime_xx(i,5)*B3_m1_m2_5points_att(5,j)
-        enddo
-      enddo
-    else if (PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
-      ! do not merge this second line with the first using an ".and." statement
-      ! because array is_CPML() is unallocated when PML_CONDITIONS is false
-      if (is_CPML(ispec)) then
-        do j=1,m2
-          do i=1,m1
-            C1_m1_m2_5points_att(i,j) = &
-                 hprime_xx(i,1)*B1_m1_m2_5points_att(1,j) + &
-                 hprime_xx(i,2)*B1_m1_m2_5points_att(2,j) + &
-                 hprime_xx(i,3)*B1_m1_m2_5points_att(3,j) + &
-                 hprime_xx(i,4)*B1_m1_m2_5points_att(4,j) + &
-                 hprime_xx(i,5)*B1_m1_m2_5points_att(5,j)
-
-            C2_m1_m2_5points_att(i,j) = &
-                 hprime_xx(i,1)*B2_m1_m2_5points_att(1,j) + &
-                 hprime_xx(i,2)*B2_m1_m2_5points_att(2,j) + &
-                 hprime_xx(i,3)*B2_m1_m2_5points_att(3,j) + &
-                 hprime_xx(i,4)*B2_m1_m2_5points_att(4,j) + &
-                 hprime_xx(i,5)*B2_m1_m2_5points_att(5,j)
-
-            C3_m1_m2_5points_att(i,j) = &
-                 hprime_xx(i,1)*B3_m1_m2_5points_att(1,j) + &
-                 hprime_xx(i,2)*B3_m1_m2_5points_att(2,j) + &
-                 hprime_xx(i,3)*B3_m1_m2_5points_att(3,j) + &
-                 hprime_xx(i,4)*B3_m1_m2_5points_att(4,j) + &
-                 hprime_xx(i,5)*B3_m1_m2_5points_att(5,j)
-          enddo
-        enddo
-      endif
-    endif
-
-    !   call mxm_m1_m1_5points(dummyx_loc(1,1,k),dummyy_loc(1,1,k),dummyz_loc(1,1,k), &
-    !          hprime_xxT,tempx2(1,1,k),tempy2(1,1,k),tempz2(1,1,k))
-    do j=1,m1
-      do i=1,m1
-        ! for efficiency it is better to leave this loop on k inside, it leads to slightly faster code
-        do k = 1,NGLLX
-          tempx2(i,j,k) = dummyx_loc(i,1,k)*hprime_xxT(1,j) + &
-                          dummyx_loc(i,2,k)*hprime_xxT(2,j) + &
-                          dummyx_loc(i,3,k)*hprime_xxT(3,j) + &
-                          dummyx_loc(i,4,k)*hprime_xxT(4,j) + &
-                          dummyx_loc(i,5,k)*hprime_xxT(5,j)
-          tempy2(i,j,k) = dummyy_loc(i,1,k)*hprime_xxT(1,j) + &
-                          dummyy_loc(i,2,k)*hprime_xxT(2,j) + &
-                          dummyy_loc(i,3,k)*hprime_xxT(3,j) + &
-                          dummyy_loc(i,4,k)*hprime_xxT(4,j) + &
-                          dummyy_loc(i,5,k)*hprime_xxT(5,j)
-          tempz2(i,j,k) = dummyz_loc(i,1,k)*hprime_xxT(1,j) + &
-                          dummyz_loc(i,2,k)*hprime_xxT(2,j) + &
-                          dummyz_loc(i,3,k)*hprime_xxT(3,j) + &
-                          dummyz_loc(i,4,k)*hprime_xxT(4,j) + &
-                          dummyz_loc(i,5,k)*hprime_xxT(5,j)
-        enddo
-      enddo
-    enddo
-
-
+    ! computes 2. matrix multiplication for tempx2,..
+    call mxm5_3comp_3dmat_singleB(dummyx_loc,dummyy_loc,dummyz_loc,m1,hprime_xxT,m1,tempx2,tempy2,tempz2,NGLLX)
 
 ! counts:
 ! + m1 * m1 * NGLLX * 3 * 9 = 5 * 5 * 5 * 3 * 9 = 3375 FLOP
 !
 ! + m1 * 5 float = 100 BYTE  (hprime_xxT once, assuming dummy*_** in cache)
 
-
-    if (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) then
-      ! temporary variables used for fixing attenuation in a consistent way
-      do j=1,m1
-        do i=1,m1
-          ! for efficiency it is better to leave this loop on k inside, it leads to slightly faster code
-          do k = 1,NGLLX
-            tempx2_att(i,j,k) = tempx2(i,j,k) + &
-                 dummyx_loc_att(i,1,k)*hprime_xxT(1,j) + &
-                 dummyx_loc_att(i,2,k)*hprime_xxT(2,j) + &
-                 dummyx_loc_att(i,3,k)*hprime_xxT(3,j) + &
-                 dummyx_loc_att(i,4,k)*hprime_xxT(4,j) + &
-                 dummyx_loc_att(i,5,k)*hprime_xxT(5,j)
-
-            tempy2_att(i,j,k) = tempy2(i,j,k) + &
-                 dummyy_loc_att(i,1,k)*hprime_xxT(1,j) + &
-                 dummyy_loc_att(i,2,k)*hprime_xxT(2,j) + &
-                 dummyy_loc_att(i,3,k)*hprime_xxT(3,j) + &
-                 dummyy_loc_att(i,4,k)*hprime_xxT(4,j) + &
-                 dummyy_loc_att(i,5,k)*hprime_xxT(5,j)
-
-            tempz2_att(i,j,k) = tempz2(i,j,k) + &
-                 dummyz_loc_att(i,1,k)*hprime_xxT(1,j) + &
-                 dummyz_loc_att(i,2,k)*hprime_xxT(2,j) + &
-                 dummyz_loc_att(i,3,k)*hprime_xxT(3,j) + &
-                 dummyz_loc_att(i,4,k)*hprime_xxT(4,j) + &
-                 dummyz_loc_att(i,5,k)*hprime_xxT(5,j)
-          enddo
-        enddo
-      enddo
-    else if (PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
-      ! do not merge this second line with the first using an ".and." statement
-      ! because array is_CPML() is unallocated when PML_CONDITIONS is false
-      ! temporary variables used for fixing attenuation in a consistent way
-      if (is_CPML(ispec)) then
-        do j=1,m1
-          do i=1,m1
-            ! for efficiency it is better to leave this loop on k inside, it leads to slightly faster code
-            do k = 1,NGLLX
-              tempx2_att(i,j,k) = &
-                   dummyx_loc_att(i,1,k)*hprime_xxT(1,j) + &
-                   dummyx_loc_att(i,2,k)*hprime_xxT(2,j) + &
-                   dummyx_loc_att(i,3,k)*hprime_xxT(3,j) + &
-                   dummyx_loc_att(i,4,k)*hprime_xxT(4,j) + &
-                   dummyx_loc_att(i,5,k)*hprime_xxT(5,j)
-
-              tempy2_att(i,j,k) = &
-                   dummyy_loc_att(i,1,k)*hprime_xxT(1,j) + &
-                   dummyy_loc_att(i,2,k)*hprime_xxT(2,j) + &
-                   dummyy_loc_att(i,3,k)*hprime_xxT(3,j) + &
-                   dummyy_loc_att(i,4,k)*hprime_xxT(4,j) + &
-                   dummyy_loc_att(i,5,k)*hprime_xxT(5,j)
-
-              tempz2_att(i,j,k) = &
-                   dummyz_loc_att(i,1,k)*hprime_xxT(1,j) + &
-                   dummyz_loc_att(i,2,k)*hprime_xxT(2,j) + &
-                   dummyz_loc_att(i,3,k)*hprime_xxT(3,j) + &
-                   dummyz_loc_att(i,4,k)*hprime_xxT(4,j) + &
-                   dummyz_loc_att(i,5,k)*hprime_xxT(5,j)
-            enddo
-          enddo
-        enddo
-      endif
-    endif
-
-    ! call mxm_m2_m1_5points(dummyx_loc,dummyy_loc,dummyz_loc,tempx3,tempy3,tempz3)
-    do j=1,m1
-      do i=1,m2
-        C1_mxm_m2_m1_5points(i,j) = A1_mxm_m2_m1_5points(i,1)*hprime_xxT(1,j) + &
-                                    A1_mxm_m2_m1_5points(i,2)*hprime_xxT(2,j) + &
-                                    A1_mxm_m2_m1_5points(i,3)*hprime_xxT(3,j) + &
-                                    A1_mxm_m2_m1_5points(i,4)*hprime_xxT(4,j) + &
-                                    A1_mxm_m2_m1_5points(i,5)*hprime_xxT(5,j)
-        C2_mxm_m2_m1_5points(i,j) = A2_mxm_m2_m1_5points(i,1)*hprime_xxT(1,j) + &
-                                    A2_mxm_m2_m1_5points(i,2)*hprime_xxT(2,j) + &
-                                    A2_mxm_m2_m1_5points(i,3)*hprime_xxT(3,j) + &
-                                    A2_mxm_m2_m1_5points(i,4)*hprime_xxT(4,j) + &
-                                    A2_mxm_m2_m1_5points(i,5)*hprime_xxT(5,j)
-        C3_mxm_m2_m1_5points(i,j) = A3_mxm_m2_m1_5points(i,1)*hprime_xxT(1,j) + &
-                                    A3_mxm_m2_m1_5points(i,2)*hprime_xxT(2,j) + &
-                                    A3_mxm_m2_m1_5points(i,3)*hprime_xxT(3,j) + &
-                                    A3_mxm_m2_m1_5points(i,4)*hprime_xxT(4,j) + &
-                                    A3_mxm_m2_m1_5points(i,5)*hprime_xxT(5,j)
-      enddo
-    enddo
+    ! computes 3. matrix multiplication for tempx1,..
+    call mxm5_3comp_singleB(dummyx_loc,dummyy_loc,dummyz_loc,m2,hprime_xxT,tempx3,tempy3,tempz3,m1)
 
 ! counts:
 ! + m1 * m2 * 3 * 9 = 5 * 25 * 3 * 9 = 3375 FLOP
 !
 ! + 0 BYTE  (assuming A3_**, hprime_xxT in cache)
 
+
     if (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) then
       ! temporary variables used for fixing attenuation in a consistent way
-      do j=1,m1
-        do i=1,m2
-          C1_mxm_m2_m1_5points_att(i,j) = C1_mxm_m2_m1_5points(i,j) + &
-               A1_mxm_m2_m1_5points_att(i,1)*hprime_xxT(1,j) + &
-               A1_mxm_m2_m1_5points_att(i,2)*hprime_xxT(2,j) + &
-               A1_mxm_m2_m1_5points_att(i,3)*hprime_xxT(3,j) + &
-               A1_mxm_m2_m1_5points_att(i,4)*hprime_xxT(4,j) + &
-               A1_mxm_m2_m1_5points_att(i,5)*hprime_xxT(5,j)
 
-          C2_mxm_m2_m1_5points_att(i,j) = C2_mxm_m2_m1_5points(i,j) + &
-               A2_mxm_m2_m1_5points_att(i,1)*hprime_xxT(1,j) + &
-               A2_mxm_m2_m1_5points_att(i,2)*hprime_xxT(2,j) + &
-               A2_mxm_m2_m1_5points_att(i,3)*hprime_xxT(3,j) + &
-               A2_mxm_m2_m1_5points_att(i,4)*hprime_xxT(4,j) + &
-               A2_mxm_m2_m1_5points_att(i,5)*hprime_xxT(5,j)
+      ! computes 1. matrix multiplication for tempx1,..
+      call mxm5_3comp_singleA(hprime_xx,m1,dummyx_loc_att,dummyy_loc_att,dummyz_loc_att, &
+                              tempx1_att,tempy1_att,tempz1_att,m2)
 
-          C3_mxm_m2_m1_5points_att(i,j) = C3_mxm_m2_m1_5points(i,j) + &
-               A3_mxm_m2_m1_5points_att(i,1)*hprime_xxT(1,j) + &
-               A3_mxm_m2_m1_5points_att(i,2)*hprime_xxT(2,j) + &
-               A3_mxm_m2_m1_5points_att(i,3)*hprime_xxT(3,j) + &
-               A3_mxm_m2_m1_5points_att(i,4)*hprime_xxT(4,j) + &
-               A3_mxm_m2_m1_5points_att(i,5)*hprime_xxT(5,j)
-        enddo
-      enddo
+      tempx1_att(:,:,:) = tempx1_att(:,:,:) + tempx1(:,:,:)
+      tempy1_att(:,:,:) = tempy1_att(:,:,:) + tempy1(:,:,:)
+      tempz1_att(:,:,:) = tempz1_att(:,:,:) + tempz1(:,:,:)
+
+      ! computes 2. matrix multiplication for tempx2,..
+      call mxm5_3comp_3dmat_singleB(dummyx_loc_att,dummyy_loc_att,dummyz_loc_att,m1,hprime_xxT,m1, &
+                                    tempx2_att,tempy2_att,tempz2_att,NGLLX)
+
+      tempx2_att(:,:,:) = tempx2_att(:,:,:) + tempx2(:,:,:)
+      tempy2_att(:,:,:) = tempy2_att(:,:,:) + tempy2(:,:,:)
+      tempz2_att(:,:,:) = tempz2_att(:,:,:) + tempz2(:,:,:)
+
+      ! computes 3. matrix multiplication for tempx1,..
+      call mxm5_3comp_singleB(dummyx_loc_att,dummyy_loc_att,dummyz_loc_att,m2,hprime_xxT, &
+                              tempx3_att,tempy3_att,tempz3_att,m1)
+
+      tempx3_att(:,:,:) = tempx3_att(:,:,:) + tempx3(:,:,:)
+      tempy3_att(:,:,:) = tempy3_att(:,:,:) + tempy3(:,:,:)
+      tempz3_att(:,:,:) = tempz3_att(:,:,:) + tempz3(:,:,:)
+
     else if (PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
       ! do not merge this second line with the first using an ".and." statement
       ! because array is_CPML() is unallocated when PML_CONDITIONS is false
       if (is_CPML(ispec)) then
-        do j=1,m1
-          do i=1,m2
-            C1_mxm_m2_m1_5points_att(i,j) = &
-                 A1_mxm_m2_m1_5points_att(i,1)*hprime_xxT(1,j) + &
-                 A1_mxm_m2_m1_5points_att(i,2)*hprime_xxT(2,j) + &
-                 A1_mxm_m2_m1_5points_att(i,3)*hprime_xxT(3,j) + &
-                 A1_mxm_m2_m1_5points_att(i,4)*hprime_xxT(4,j) + &
-                 A1_mxm_m2_m1_5points_att(i,5)*hprime_xxT(5,j)
-
-            C2_mxm_m2_m1_5points_att(i,j) = &
-                 A2_mxm_m2_m1_5points_att(i,1)*hprime_xxT(1,j) + &
-                 A2_mxm_m2_m1_5points_att(i,2)*hprime_xxT(2,j) + &
-                 A2_mxm_m2_m1_5points_att(i,3)*hprime_xxT(3,j) + &
-                 A2_mxm_m2_m1_5points_att(i,4)*hprime_xxT(4,j) + &
-                 A2_mxm_m2_m1_5points_att(i,5)*hprime_xxT(5,j)
-
-            C3_mxm_m2_m1_5points_att(i,j) = &
-                 A3_mxm_m2_m1_5points_att(i,1)*hprime_xxT(1,j) + &
-                 A3_mxm_m2_m1_5points_att(i,2)*hprime_xxT(2,j) + &
-                 A3_mxm_m2_m1_5points_att(i,3)*hprime_xxT(3,j) + &
-                 A3_mxm_m2_m1_5points_att(i,4)*hprime_xxT(4,j) + &
-                 A3_mxm_m2_m1_5points_att(i,5)*hprime_xxT(5,j)
-          enddo
-        enddo
+        ! computes 1. matrix multiplication for tempx1,..
+        call mxm5_3comp_singleA(hprime_xx,m1,dummyx_loc_att,dummyy_loc_att,dummyz_loc_att, &
+                                tempx1_att,tempy1_att,tempz1_att,m2)
+        ! computes 2. matrix multiplication for tempx2,..
+        call mxm5_3comp_3dmat_singleB(dummyx_loc_att,dummyy_loc_att,dummyz_loc_att,m1,hprime_xxT,m1, &
+                                      tempx2_att,tempy2_att,tempz2_att,NGLLX)
+        ! computes 3. matrix multiplication for tempx1,..
+        call mxm5_3comp_singleB(dummyx_loc_att,dummyy_loc_att,dummyz_loc_att,m2,hprime_xxT, &
+                                tempx3_att,tempy3_att,tempz3_att,m1)
       endif
     endif
 
+    !
+    ! computes either isotropic or fully anisotropic (visco-)elastic elements
+    !
     DO_LOOP_IJK
 
       ! get derivatives of ux, uy and uz with respect to x, y and z
@@ -1042,7 +806,9 @@
       if (is_CPML(ispec)) then
         ispec_CPML = spec_to_CPML(ispec)
         ! sets C-PML elastic memory variables to compute stress sigma and form dot product with test vector
-        call pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,tempz1,tempx2,tempy2,tempz2, &
+        call pml_compute_memory_variables_elastic(ispec,ispec_CPML, &
+                                   tempx1,tempy1,tempz1, &
+                                   tempx2,tempy2,tempz2, &
                                    tempx3,tempy3,tempz3, &
                                    rmemory_dux_dxl_x, rmemory_duy_dyl_x, rmemory_duz_dzl_x, &
                                    rmemory_dux_dyl_x, rmemory_dux_dzl_x, rmemory_duz_dxl_x, rmemory_duy_dxl_x, &
@@ -1059,84 +825,32 @@
     ! subroutines adapted from Deville, Fischer and Mund, High-order methods
     ! for incompressible fluid flow, Cambridge University Press (2002),
     ! pages 386 and 389 and Figure 8.3.1
-    do j=1,m2
-      do i=1,m1
-        E1_m1_m2_5points(i,j) = hprimewgll_xxT(i,1)*C1_m1_m2_5points(1,j) + &
-                                hprimewgll_xxT(i,2)*C1_m1_m2_5points(2,j) + &
-                                hprimewgll_xxT(i,3)*C1_m1_m2_5points(3,j) + &
-                                hprimewgll_xxT(i,4)*C1_m1_m2_5points(4,j) + &
-                                hprimewgll_xxT(i,5)*C1_m1_m2_5points(5,j)
-        E2_m1_m2_5points(i,j) = hprimewgll_xxT(i,1)*C2_m1_m2_5points(1,j) + &
-                                hprimewgll_xxT(i,2)*C2_m1_m2_5points(2,j) + &
-                                hprimewgll_xxT(i,3)*C2_m1_m2_5points(3,j) + &
-                                hprimewgll_xxT(i,4)*C2_m1_m2_5points(4,j) + &
-                                hprimewgll_xxT(i,5)*C2_m1_m2_5points(5,j)
-        E3_m1_m2_5points(i,j) = hprimewgll_xxT(i,1)*C3_m1_m2_5points(1,j) + &
-                                hprimewgll_xxT(i,2)*C3_m1_m2_5points(2,j) + &
-                                hprimewgll_xxT(i,3)*C3_m1_m2_5points(3,j) + &
-                                hprimewgll_xxT(i,4)*C3_m1_m2_5points(4,j) + &
-                                hprimewgll_xxT(i,5)*C3_m1_m2_5points(5,j)
-      enddo
-    enddo
+
+    ! computes 1. matrix multiplication for newtempx1,..
+    call mxm5_3comp_singleA(hprimewgll_xxT,m1,tempx1,tempy1,tempz1,newtempx1,newtempy1,newtempz1,m2)
 
 ! counts:
 ! + m1 * m2 * 3 * 9 = 3375 FLOP
 !
 ! + m1 * 5 float = 100 BYTE (hprimewgll_xxT once, assumes E3*, C1* in cache)
 
-    do i=1,m1
-      do j=1,m1
-        ! for efficiency it is better to leave this loop on k inside, it leads to slightly faster code
-        do k = 1,NGLLX
-          newtempx2(i,j,k) = tempx2(i,1,k)*hprimewgll_xx(1,j) + &
-                             tempx2(i,2,k)*hprimewgll_xx(2,j) + &
-                             tempx2(i,3,k)*hprimewgll_xx(3,j) + &
-                             tempx2(i,4,k)*hprimewgll_xx(4,j) + &
-                             tempx2(i,5,k)*hprimewgll_xx(5,j)
-          newtempy2(i,j,k) = tempy2(i,1,k)*hprimewgll_xx(1,j) + &
-                             tempy2(i,2,k)*hprimewgll_xx(2,j) + &
-                             tempy2(i,3,k)*hprimewgll_xx(3,j) + &
-                             tempy2(i,4,k)*hprimewgll_xx(4,j) + &
-                             tempy2(i,5,k)*hprimewgll_xx(5,j)
-          newtempz2(i,j,k) = tempz2(i,1,k)*hprimewgll_xx(1,j) + &
-                             tempz2(i,2,k)*hprimewgll_xx(2,j) + &
-                             tempz2(i,3,k)*hprimewgll_xx(3,j) + &
-                             tempz2(i,4,k)*hprimewgll_xx(4,j) + &
-                             tempz2(i,5,k)*hprimewgll_xx(5,j)
-        enddo
-      enddo
-    enddo
+    ! computes 2. matrix multiplication for tempx2,..
+    call mxm5_3comp_3dmat_singleB(tempx2,tempy2,tempz2,m1,hprimewgll_xx,m1,newtempx2,newtempy2,newtempz2,NGLLX)
 
 ! counts:
 ! + m1 * m1 * NGLLX * 3 * 9 = 3375 FLOP
 !
 ! + m1 * 5 float = 100 BYTE (hprimewgll_xx once, assumes E3*, C1* in cache)
 
-    do j=1,m1
-      do i=1,m2
-        E1_mxm_m2_m1_5points(i,j) = C1_mxm_m2_m1_5points(i,1)*hprimewgll_xx(1,j) + &
-                                    C1_mxm_m2_m1_5points(i,2)*hprimewgll_xx(2,j) + &
-                                    C1_mxm_m2_m1_5points(i,3)*hprimewgll_xx(3,j) + &
-                                    C1_mxm_m2_m1_5points(i,4)*hprimewgll_xx(4,j) + &
-                                    C1_mxm_m2_m1_5points(i,5)*hprimewgll_xx(5,j)
-        E2_mxm_m2_m1_5points(i,j) = C2_mxm_m2_m1_5points(i,1)*hprimewgll_xx(1,j) + &
-                                    C2_mxm_m2_m1_5points(i,2)*hprimewgll_xx(2,j) + &
-                                    C2_mxm_m2_m1_5points(i,3)*hprimewgll_xx(3,j) + &
-                                    C2_mxm_m2_m1_5points(i,4)*hprimewgll_xx(4,j) + &
-                                    C2_mxm_m2_m1_5points(i,5)*hprimewgll_xx(5,j)
-        E3_mxm_m2_m1_5points(i,j) = C3_mxm_m2_m1_5points(i,1)*hprimewgll_xx(1,j) + &
-                                    C3_mxm_m2_m1_5points(i,2)*hprimewgll_xx(2,j) + &
-                                    C3_mxm_m2_m1_5points(i,3)*hprimewgll_xx(3,j) + &
-                                    C3_mxm_m2_m1_5points(i,4)*hprimewgll_xx(4,j) + &
-                                    C3_mxm_m2_m1_5points(i,5)*hprimewgll_xx(5,j)
-      enddo
-    enddo
+    ! computes 3. matrix multiplication for newtempx3,..
+    call mxm5_3comp_singleB(tempx3,tempy3,tempz3,m2,hprimewgll_xx,newtempx3,newtempy3,newtempz3,m1)
 
 ! counts:
 ! + m1 * m2 * 3 * 9 = 3375 FLOP
 !
 ! + 0 BYTE (assumes E1*, C1*, hprime* in cache)
 
+    ! sums contributions
     DO_LOOP_IJK
       fac1 = wgllwgll_yz_3D(INDEX_IJK)
       fac2 = wgllwgll_xz_3D(INDEX_IJK)
@@ -1252,6 +966,155 @@
 
 
   enddo  ! spectral element loop
+
+  contains
+
+!--------------------------------------------------------------------------------------------
+!
+! matrix-matrix multiplications
+!
+! subroutines adapted from Deville, Fischer and Mund, High-order methods
+! for incompressible fluid flow, Cambridge University Press (2002),
+! pages 386 and 389 and Figure 8.3.1
+!
+!--------------------------------------------------------------------------------------------
+!
+! note: the matrix-matrix multiplications are used for very small matrices ( 5 x 5 x 5 elements);
+!       thus, calling external optimized libraries for these multiplications are in general slower
+!
+! please leave the routines here to help compilers inlining the code
+
+  subroutine mxm5_3comp_singleA(A,n1,B1,B2,B3,C1,C2,C3,n3)
+
+! 3 different arrays for x/y/z-components, 2-dimensional arrays (25,5)/(5,25), same B matrix for all 3 component arrays
+
+  use constants,only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n3
+  real(kind=CUSTOM_REAL),dimension(n1,5),intent(in) :: A
+  real(kind=CUSTOM_REAL),dimension(5,n3),intent(in) :: B1,B2,B3
+  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C1,C2,C3
+
+  ! local parameters
+  integer :: i,j
+
+  ! matrix-matrix multiplication
+  do j = 1,n3
+    do i = 1,n1
+      C1(i,j) =  A(i,1) * B1(1,j) &
+               + A(i,2) * B1(2,j) &
+               + A(i,3) * B1(3,j) &
+               + A(i,4) * B1(4,j) &
+               + A(i,5) * B1(5,j)
+
+      C2(i,j) =  A(i,1) * B2(1,j) &
+               + A(i,2) * B2(2,j) &
+               + A(i,3) * B2(3,j) &
+               + A(i,4) * B2(4,j) &
+               + A(i,5) * B2(5,j)
+
+      C3(i,j) =  A(i,1) * B3(1,j) &
+               + A(i,2) * B3(2,j) &
+               + A(i,3) * B3(3,j) &
+               + A(i,4) * B3(4,j) &
+               + A(i,5) * B3(5,j)
+    enddo
+  enddo
+
+  end subroutine mxm5_3comp_singleA
+
+
+!--------------------------------------------------------------------------------------------
+
+  subroutine mxm5_3comp_singleB(A1,A2,A3,n1,B,C1,C2,C3,n3)
+
+! 3 different arrays for x/y/z-components, 2-dimensional arrays (25,5)/(5,25), same B matrix for all 3 component arrays
+
+  use constants,only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n3
+  real(kind=CUSTOM_REAL),dimension(n1,5),intent(in) :: A1,A2,A3
+  real(kind=CUSTOM_REAL),dimension(5,n3),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C1,C2,C3
+
+  ! local parameters
+  integer :: i,j
+
+  ! matrix-matrix multiplication
+  do j = 1,n3
+    do i = 1,n1
+      C1(i,j) =  A1(i,1) * B(1,j) &
+               + A1(i,2) * B(2,j) &
+               + A1(i,3) * B(3,j) &
+               + A1(i,4) * B(4,j) &
+               + A1(i,5) * B(5,j)
+
+      C2(i,j) =  A2(i,1) * B(1,j) &
+               + A2(i,2) * B(2,j) &
+               + A2(i,3) * B(3,j) &
+               + A2(i,4) * B(4,j) &
+               + A2(i,5) * B(5,j)
+
+      C3(i,j) =  A3(i,1) * B(1,j) &
+               + A3(i,2) * B(2,j) &
+               + A3(i,3) * B(3,j) &
+               + A3(i,4) * B(4,j) &
+               + A3(i,5) * B(5,j)
+    enddo
+  enddo
+
+  end subroutine mxm5_3comp_singleB
+
+
+!--------------------------------------------------------------------------------------------
+
+  subroutine mxm5_3comp_3dmat_singleB(A1,A2,A3,n1,B,n2,C1,C2,C3,n3)
+
+! 3 different arrays for x/y/z-components, 3-dimensional arrays (5,5,5), same B matrix for all 3 component arrays
+
+  use constants,only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n2,n3
+  real(kind=CUSTOM_REAL),dimension(n1,5,n3),intent(in) :: A1,A2,A3
+  real(kind=CUSTOM_REAL),dimension(5,n2),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n2,n3),intent(out) :: C1,C2,C3
+
+  ! local parameters
+  integer :: i,j,k
+
+  ! matrix-matrix multiplication
+  do j = 1,n2
+    do i = 1,n1
+      ! for efficiency it is better to leave this loop on k inside, it leads to slightly faster code
+      do k = 1,n3
+        C1(i,j,k) =  A1(i,1,k) * B(1,j) &
+                   + A1(i,2,k) * B(2,j) &
+                   + A1(i,3,k) * B(3,j) &
+                   + A1(i,4,k) * B(4,j) &
+                   + A1(i,5,k) * B(5,j)
+
+        C2(i,j,k) =  A2(i,1,k) * B(1,j) &
+                   + A2(i,2,k) * B(2,j) &
+                   + A2(i,3,k) * B(3,j) &
+                   + A2(i,4,k) * B(4,j) &
+                   + A2(i,5,k) * B(5,j)
+
+        C3(i,j,k) =  A3(i,1,k) * B(1,j) &
+                   + A3(i,2,k) * B(2,j) &
+                   + A3(i,3,k) * B(3,j) &
+                   + A3(i,4,k) * B(4,j) &
+                   + A3(i,5,k) * B(5,j)
+      enddo
+    enddo
+  enddo
+
+  end subroutine mxm5_3comp_3dmat_singleB
 
   end subroutine compute_forces_viscoelastic_Dev_5p
 

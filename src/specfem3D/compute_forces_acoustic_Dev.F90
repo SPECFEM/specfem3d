@@ -86,6 +86,7 @@
   logical,intent(in) :: backward_simulation
 
   ! local parameters
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: chi_elem
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: tempx1,tempx2,tempx3
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: newtempx1,newtempx2,newtempx3
 
@@ -95,55 +96,18 @@
 
   integer :: ispec,iglob,ispec_p,num_elements
 
-  ! manually inline the calls to the Deville et al. (2002) routines
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: chi_elem
-
-  real(kind=CUSTOM_REAL), dimension(NGLLX,m2) :: B1_m1_m2_5points
-  real(kind=CUSTOM_REAL), dimension(m1,m2) :: C1_m1_m2_5points
-  real(kind=CUSTOM_REAL), dimension(m1,m2) :: E1_m1_m2_5points
-
-  equivalence(chi_elem,B1_m1_m2_5points)
-  equivalence(tempx1,C1_m1_m2_5points)
-  equivalence(newtempx1,E1_m1_m2_5points)
-
-  real(kind=CUSTOM_REAL), dimension(m2,NGLLX) :: A1_mxm_m2_m1_5points
-  real(kind=CUSTOM_REAL), dimension(m2,m1) :: C1_mxm_m2_m1_5points
-  real(kind=CUSTOM_REAL), dimension(m2,m1) :: E1_mxm_m2_m1_5points
-
-  equivalence(chi_elem,A1_mxm_m2_m1_5points)
-  equivalence(tempx3,C1_mxm_m2_m1_5points)
-  equivalence(newtempx3,E1_mxm_m2_m1_5points)
-
   ! CPML
   integer :: ispec_CPML
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: chi_elem_old,chi_elem_new
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: tempx1_old,tempx2_old,tempx3_old
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: tempx1_new,tempx2_new,tempx3_new
 
-  ! CPML Deville
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: chi_elem_old,chi_elem_new
-  real(kind=CUSTOM_REAL), dimension(NGLLX,m2) :: B1_m1_m2_5points_old,B1_m1_m2_5points_new
-  real(kind=CUSTOM_REAL), dimension(m1,m2) :: C1_m1_m2_5points_old,C1_m1_m2_5points_new
-
-  equivalence(chi_elem_old,B1_m1_m2_5points_old)
-  equivalence(tempx1_old,C1_m1_m2_5points_old)
-
-  equivalence(chi_elem_new,B1_m1_m2_5points_new)
-  equivalence(tempx1_new,C1_m1_m2_5points_new)
-
-  real(kind=CUSTOM_REAL), dimension(m2,NGLLX) :: A1_mxm_m2_m1_5points_old,A1_mxm_m2_m1_5points_new
-  real(kind=CUSTOM_REAL), dimension(m2,m1) :: C1_mxm_m2_m1_5points_old,C1_mxm_m2_m1_5points_new
-
-  equivalence(chi_elem_old,A1_mxm_m2_m1_5points_old)
-  equivalence(tempx3_old,C1_mxm_m2_m1_5points_old)
-
-  equivalence(chi_elem_new,A1_mxm_m2_m1_5points_new)
-  equivalence(tempx3_new,C1_mxm_m2_m1_5points_new)
-
-  integer :: i,j,k
 #ifdef FORCE_VECTORIZATION
 ! this will (purposely) give out-of-bound array accesses if run through range checking,
 ! thus use only for production runs with no bound checking
   integer :: ijk
+#else
+  integer :: i,j,k
 #endif
 
 
@@ -166,42 +130,17 @@
     ! subroutines adapted from Deville, Fischer and Mund, High-order methods
     ! for incompressible fluid flow, Cambridge University Press (2002),
     ! pages 386 and 389 and Figure 8.3.1
-    do j=1,m2
-      do i=1,m1
-        C1_m1_m2_5points(i,j) = hprime_xx(i,1)*B1_m1_m2_5points(1,j) + &
-                                hprime_xx(i,2)*B1_m1_m2_5points(2,j) + &
-                                hprime_xx(i,3)*B1_m1_m2_5points(3,j) + &
-                                hprime_xx(i,4)*B1_m1_m2_5points(4,j) + &
-                                hprime_xx(i,5)*B1_m1_m2_5points(5,j)
-      enddo
-    enddo
 
-    do k = 1,NGLLX
-      do j=1,m1
-        do i=1,m1
-          tempx2(i,j,k) = chi_elem(i,1,k)*hprime_xxT(1,j) + &
-                          chi_elem(i,2,k)*hprime_xxT(2,j) + &
-                          chi_elem(i,3,k)*hprime_xxT(3,j) + &
-                          chi_elem(i,4,k)*hprime_xxT(4,j) + &
-                          chi_elem(i,5,k)*hprime_xxT(5,j)
-        enddo
-      enddo
-    enddo
-
-    do j=1,m1
-      do i=1,m2
-        C1_mxm_m2_m1_5points(i,j) = A1_mxm_m2_m1_5points(i,1)*hprime_xxT(1,j) + &
-                                    A1_mxm_m2_m1_5points(i,2)*hprime_xxT(2,j) + &
-                                    A1_mxm_m2_m1_5points(i,3)*hprime_xxT(3,j) + &
-                                    A1_mxm_m2_m1_5points(i,4)*hprime_xxT(4,j) + &
-                                    A1_mxm_m2_m1_5points(i,5)*hprime_xxT(5,j)
-      enddo
-    enddo
+    ! computes 1. matrix multiplication for tempx1,..
+    call mxm5_single(hprime_xx,m1,chi_elem,tempx1,m2)
+    ! computes 2. matrix multiplication for tempx2,..
+    call mxm5_3dmat_single(chi_elem,m1,hprime_xxT,m1,tempx2,NGLLX)
+    ! computes 3. matrix multiplication for tempx1,..
+    call mxm5_single(chi_elem,m2,hprime_xxT,tempx3,m1)
 
     if (PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
       ! do not merge this second line with the first using an ".and." statement
       ! because array is_CPML() is unallocated when PML_CONDITIONS is false
-
       if (is_CPML(ispec)) then
       ! gets values for element
         DO_LOOP_IJK
@@ -212,56 +151,20 @@
         ! subroutines adapted from Deville, Fischer and Mund, High-order methods
         ! for incompressible fluid flow, Cambridge University Press (2002),
         ! pages 386 and 389 and Figure 8.3.1
-        do j=1,m2
-          do i=1,m1
-            C1_m1_m2_5points_old(i,j) = hprime_xx(i,1)*B1_m1_m2_5points_old(1,j) + &
-                                        hprime_xx(i,2)*B1_m1_m2_5points_old(2,j) + &
-                                        hprime_xx(i,3)*B1_m1_m2_5points_old(3,j) + &
-                                        hprime_xx(i,4)*B1_m1_m2_5points_old(4,j) + &
-                                        hprime_xx(i,5)*B1_m1_m2_5points_old(5,j)
 
-            C1_m1_m2_5points_new(i,j) = hprime_xx(i,1)*B1_m1_m2_5points_new(1,j) + &
-                                        hprime_xx(i,2)*B1_m1_m2_5points_new(2,j) + &
-                                        hprime_xx(i,3)*B1_m1_m2_5points_new(3,j) + &
-                                        hprime_xx(i,4)*B1_m1_m2_5points_new(4,j) + &
-                                        hprime_xx(i,5)*B1_m1_m2_5points_new(5,j)
-          enddo
-        enddo
+        ! computes 1. matrix multiplication for tempx1,..
+        call mxm5_single(hprime_xx,m1,chi_elem_old,tempx1_old,m2)
+        ! computes 2. matrix multiplication for tempx2,..
+        call mxm5_3dmat_single(chi_elem_old,m1,hprime_xxT,m1,tempx2_old,NGLLX)
+        ! computes 3. matrix multiplication for tempx1,..
+        call mxm5_single(chi_elem_old,m2,hprime_xxT,tempx3_old,m1)
 
-        do k = 1,NGLLX
-          do j=1,m1
-            do i=1,m1
-              tempx2_old(i,j,k) = chi_elem_old(i,1,k)*hprime_xxT(1,j) + &
-                                  chi_elem_old(i,2,k)*hprime_xxT(2,j) + &
-                                  chi_elem_old(i,3,k)*hprime_xxT(3,j) + &
-                                  chi_elem_old(i,4,k)*hprime_xxT(4,j) + &
-                                  chi_elem_old(i,5,k)*hprime_xxT(5,j)
-
-              tempx2_new(i,j,k) = chi_elem_new(i,1,k)*hprime_xxT(1,j) + &
-                                  chi_elem_new(i,2,k)*hprime_xxT(2,j) + &
-                                  chi_elem_new(i,3,k)*hprime_xxT(3,j) + &
-                                  chi_elem_new(i,4,k)*hprime_xxT(4,j) + &
-                                  chi_elem_new(i,5,k)*hprime_xxT(5,j)
-            enddo
-          enddo
-        enddo
-
-        do j=1,m1
-          do i=1,m2
-            C1_mxm_m2_m1_5points_old(i,j) = A1_mxm_m2_m1_5points_old(i,1)*hprime_xxT(1,j) + &
-                                            A1_mxm_m2_m1_5points_old(i,2)*hprime_xxT(2,j) + &
-                                            A1_mxm_m2_m1_5points_old(i,3)*hprime_xxT(3,j) + &
-                                            A1_mxm_m2_m1_5points_old(i,4)*hprime_xxT(4,j) + &
-                                            A1_mxm_m2_m1_5points_old(i,5)*hprime_xxT(5,j)
-
-            C1_mxm_m2_m1_5points_new(i,j) = A1_mxm_m2_m1_5points_new(i,1)*hprime_xxT(1,j) + &
-                                            A1_mxm_m2_m1_5points_new(i,2)*hprime_xxT(2,j) + &
-                                            A1_mxm_m2_m1_5points_new(i,3)*hprime_xxT(3,j) + &
-                                            A1_mxm_m2_m1_5points_new(i,4)*hprime_xxT(4,j) + &
-                                            A1_mxm_m2_m1_5points_new(i,5)*hprime_xxT(5,j)
-          enddo
-        enddo
-
+        ! computes 1. matrix multiplication for tempx1,..
+        call mxm5_single(hprime_xx,m1,chi_elem_new,tempx1_new,m2)
+        ! computes 2. matrix multiplication for tempx2,..
+        call mxm5_3dmat_single(chi_elem_new,m1,hprime_xxT,m1,tempx2_new,NGLLX)
+        ! computes 3. matrix multiplication for tempx1,..
+        call mxm5_single(chi_elem_new,m2,hprime_xxT,tempx3_new,m1)
       endif ! is_CPML
     endif ! PML_CONDITIONS
 
@@ -325,7 +228,8 @@
         ispec_CPML = spec_to_CPML(ispec)
 
         ! sets C-PML elastic memory variables to compute stress sigma and form dot product with test vector
-        call pml_compute_memory_variables_acoustic(ispec,ispec_CPML,tempx1,tempx2,tempx3,&
+        call pml_compute_memory_variables_acoustic(ispec,ispec_CPML, &
+                                                   tempx1,tempx2,tempx3,&
                                                    rmemory_dpotential_dxl,rmemory_dpotential_dyl,rmemory_dpotential_dzl)
 
         ! calculates contribution from each C-PML element to update acceleration
@@ -337,37 +241,13 @@
     ! subroutines adapted from Deville, Fischer and Mund, High-order methods
     ! for incompressible fluid flow, Cambridge University Press (2002),
     ! pages 386 and 389 and Figure 8.3.1
-    do j=1,m2
-      do i=1,m1
-        E1_m1_m2_5points(i,j) = hprimewgll_xxT(i,1)*C1_m1_m2_5points(1,j) + &
-                                hprimewgll_xxT(i,2)*C1_m1_m2_5points(2,j) + &
-                                hprimewgll_xxT(i,3)*C1_m1_m2_5points(3,j) + &
-                                hprimewgll_xxT(i,4)*C1_m1_m2_5points(4,j) + &
-                                hprimewgll_xxT(i,5)*C1_m1_m2_5points(5,j)
-      enddo
-    enddo
 
-    do k = 1,NGLLX
-      do j=1,m1
-        do i=1,m1
-          newtempx2(i,j,k) = tempx2(i,1,k)*hprimewgll_xx(1,j) + &
-                             tempx2(i,2,k)*hprimewgll_xx(2,j) + &
-                             tempx2(i,3,k)*hprimewgll_xx(3,j) + &
-                             tempx2(i,4,k)*hprimewgll_xx(4,j) + &
-                             tempx2(i,5,k)*hprimewgll_xx(5,j)
-        enddo
-      enddo
-    enddo
-
-    do j=1,m1
-      do i=1,m2
-        E1_mxm_m2_m1_5points(i,j) = C1_mxm_m2_m1_5points(i,1)*hprimewgll_xx(1,j) + &
-                                    C1_mxm_m2_m1_5points(i,2)*hprimewgll_xx(2,j) + &
-                                    C1_mxm_m2_m1_5points(i,3)*hprimewgll_xx(3,j) + &
-                                    C1_mxm_m2_m1_5points(i,4)*hprimewgll_xx(4,j) + &
-                                    C1_mxm_m2_m1_5points(i,5)*hprimewgll_xx(5,j)
-      enddo
-    enddo
+    ! computes 1. matrix multiplication for newtempx1,..
+    call mxm5_single(hprimewgll_xxT,m1,tempx1,newtempx1,m2)
+    ! computes 2. matrix multiplication for tempx2,..
+    call mxm5_3dmat_single(tempx2,m1,hprimewgll_xx,m1,newtempx2,NGLLX)
+    ! computes 3. matrix multiplication for newtempx3,..
+    call mxm5_single(tempx3,m2,hprimewgll_xx,newtempx3,m1)
 
     ! second double-loop over GLL to compute all the terms
 #ifdef FORCE_VECTORIZATION
@@ -404,6 +284,87 @@
 ! Thus, there is nothing to enforce explicitly here.
 ! There is something to enforce explicitly only in the case of elastic elements, for which a Dirichlet
 ! condition is needed for the displacement vector, which is the vectorial unknown for these elements.
+
+  contains
+
+!--------------------------------------------------------------------------------------------
+!
+! matrix-matrix multiplications
+!
+! subroutines adapted from Deville, Fischer and Mund, High-order methods
+! for incompressible fluid flow, Cambridge University Press (2002),
+! pages 386 and 389 and Figure 8.3.1
+!
+!--------------------------------------------------------------------------------------------
+!
+! note: the matrix-matrix multiplications are used for very small matrices ( 5 x 5 x 5 elements);
+!       thus, calling external optimized libraries for these multiplications are in general slower
+!
+! please leave the routines here to help compilers inlining the code
+
+  subroutine mxm5_single(A,n1,B,C,n3)
+
+! 2-dimensional arrays (25,5)/(5,25)
+
+  use constants,only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n3
+  real(kind=CUSTOM_REAL),dimension(n1,5),intent(in) :: A
+  real(kind=CUSTOM_REAL),dimension(5,n3),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C
+
+  ! local parameters
+  integer :: i,j
+
+  ! matrix-matrix multiplication
+  do j = 1,n3
+    do i = 1,n1
+      C(i,j) =  A(i,1) * B(1,j) &
+              + A(i,2) * B(2,j) &
+              + A(i,3) * B(3,j) &
+              + A(i,4) * B(4,j) &
+              + A(i,5) * B(5,j)
+    enddo
+  enddo
+
+  end subroutine mxm5_single
+
+
+!--------------------------------------------------------------------------------------------
+
+  subroutine mxm5_3dmat_single(A,n1,B,n2,C,n3)
+
+! 3-dimensional arrays (5,5,5) for A and C
+
+  use constants,only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n2,n3
+  real(kind=CUSTOM_REAL),dimension(n1,5,n3),intent(in) :: A
+  real(kind=CUSTOM_REAL),dimension(5,n2),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n2,n3),intent(out) :: C
+
+  ! local parameters
+  integer :: i,j,k
+
+  ! matrix-matrix multiplication
+  do j = 1,n2
+    do i = 1,n1
+      ! for efficiency it is better to leave this loop on k inside, it leads to slightly faster code
+      do k = 1,n3
+        C(i,j,k) =  A(i,1,k) * B(1,j) &
+                  + A(i,2,k) * B(2,j) &
+                  + A(i,3,k) * B(3,j) &
+                  + A(i,4,k) * B(4,j) &
+                  + A(i,5,k) * B(5,j)
+      enddo
+    enddo
+  enddo
+
+  end subroutine mxm5_3dmat_single
 
   end subroutine compute_forces_acoustic_Dev
 
