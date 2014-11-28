@@ -33,18 +33,8 @@
 !! \brief Save kernels arrays to file with the help of the ADIOS library.
 !! \author MPBL
 !==============================================================================
+#include "config.fh"
 
-!> \def STRINGIFY_VAR(a)
-!! Macro taking a variable and returning the stringified variable and
-!! the variable itself.
-!! STRINGIFY_VAR(x) expand as:
-!!   "x", x
-!! x being the variable name inside the code.
-#ifdef __INTEL_COMPILER
-#define STRINGIFY_VAR(a) #a, a
-#else
-#define STRINGIFY_VAR(a) "a", a
-#endif
 
 !==============================================================================
 !> Define all the kernels that will be written to the ADIOS file.

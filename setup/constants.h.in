@@ -103,22 +103,20 @@
 ! maximum length of strings used for paths, reading from files, etc.
   integer, parameter :: MAX_STRING_LEN = 512
 
-! use inlined products of Deville et al. (2002) to speedup the calculations to compute internal forces
-  logical, parameter :: USE_DEVILLE_PRODUCTS = .true.
+!!-----------------------------------------------------------
+!!
+!! Gauss-Lobatto-Legendre resolution
+!!
+!!-----------------------------------------------------------
 
 ! number of GLL points in each direction of an element (degree plus one)
   integer, parameter :: NGLLX = 5
   integer, parameter :: NGLLY = NGLLX
   integer, parameter :: NGLLZ = NGLLX
 
-! number of points per surface element
-  integer, parameter :: NGLLSQUARE = NGLLX * NGLLY
-
-! number of points per spectral element
-  integer, parameter :: NGLLCUBE = NGLLX * NGLLY * NGLLZ
-
-! for optimized routines by Deville et al. (2002)
-  integer, parameter :: m1 = NGLLX, m2 = NGLLX * NGLLY
+! use inlined products of Deville et al. (2002) to speedup the calculations to compute internal forces
+! Deville routines only implemented for NGLLX = NGLLY = NGLLZ = 5
+  logical, parameter :: USE_DEVILLE_PRODUCTS = .true.
 
 !!-----------------------------------------------------------
 !!
@@ -424,6 +422,13 @@
 
 ! number of points in each AVS or OpenDX quadrangular cell for movies
   integer, parameter :: NGNOD2D_FOUR_CORNERS_AVS_DX = NGNOD2D_FOUR_CORNERS
+
+! number of points per surface element
+  integer, parameter :: NGLLSQUARE = NGLLX * NGLLY
+
+! for optimized routines by Deville et al. (2002)
+  integer, parameter :: m1 = NGLLX, m2 = NGLLX * NGLLY
+  integer, parameter :: NGLLCUBE = NGLLX * NGLLY * NGLLZ
 
 ! a few useful constants
   double precision, parameter :: ZERO = 0.d0, ONE = 1.d0, TWO = 2.d0, HALF = 0.5d0

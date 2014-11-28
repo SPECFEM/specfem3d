@@ -36,7 +36,7 @@
   implicit none
 
   ! compute maximum number of points
-  npointot = NSPEC_AB * NGLLCUBE
+  npointot = NSPEC_AB * NGLLX * NGLLY * NGLLZ
 
 ! use dynamic allocation to allocate memory for arrays
   allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
