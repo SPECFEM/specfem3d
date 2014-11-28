@@ -37,7 +37,7 @@
                                     xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                                     hprime_xx,hprime_xxT, &
                                     hprimewgll_xx,hprimewgll_xxT, &
-                                    wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                                    wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D, &
                                     kappastore,mustore,jacobian,ibool, &
                                     ATTENUATION,deltat,PML_CONDITIONS, &
                                     one_minus_sum_beta,factor_common,&
@@ -69,7 +69,6 @@
   use fault_solver_dynamic, only : Kelvin_Voigt_eta
 
   use specfem_par, only: FULL_ATTENUATION_SOLID
-  use specfem_par, only: wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D
 
   use pml_par, only: is_CPML, spec_to_CPML, accel_elastic_CPML,NSPEC_CPML, &
                      PML_dux_dxl, PML_dux_dyl, PML_dux_dzl, PML_duy_dxl, PML_duy_dyl, PML_duy_dzl, &
@@ -105,9 +104,9 @@
 ! array with derivatives of Lagrange polynomials and precalculated products
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xx,hprimewgll_xxT
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xxT,hprimewgll_xx
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY) :: wgllwgll_xy
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ) :: wgllwgll_xz
-  real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ) :: wgllwgll_yz
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: wgllwgll_xy_3D
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ,NGLLZ) :: wgllwgll_xz_3D
+  real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ,NGLLZ) :: wgllwgll_yz_3D
 
 ! memory variables and standard linear solids for attenuation
   logical :: ATTENUATION

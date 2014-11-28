@@ -40,38 +40,40 @@
 
 ! returns the updated pressure array: potential_dot_dot_acoustic
 
-  use constants
+  use constants,only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ,NGLLSQUARE
+
   use pml_par, only: NSPEC_CPML
 
   implicit none
 
-  integer :: NSPEC_AB,NGLOB_AB
+  integer,intent(in) :: NSPEC_AB,NGLOB_AB
 
 ! displacement and pressure
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displ
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: potential_dot_dot_acoustic
-  integer :: SIMULATION_TYPE
-  logical :: backward_simulation
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB),intent(in) :: displ
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(inout) :: potential_dot_dot_acoustic
+  integer,intent(in) :: SIMULATION_TYPE
+  logical,intent(in) :: backward_simulation
 
 ! global indexing
-  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
+  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
 
 ! acoustic-elastic coupling surface
-  integer :: num_coupling_ac_el_faces
-  real(kind=CUSTOM_REAL) :: coupling_ac_el_normal(NDIM,NGLLSQUARE,num_coupling_ac_el_faces)
-  real(kind=CUSTOM_REAL) :: coupling_ac_el_jacobian2Dw(NGLLSQUARE,num_coupling_ac_el_faces)
-  integer :: coupling_ac_el_ijk(3,NGLLSQUARE,num_coupling_ac_el_faces)
-  integer :: coupling_ac_el_ispec(num_coupling_ac_el_faces)
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ,num_coupling_ac_el_faces,2) :: rmemory_coupling_ac_el_displ
+  integer,intent(in) :: num_coupling_ac_el_faces
+  real(kind=CUSTOM_REAL),intent(in) :: coupling_ac_el_normal(NDIM,NGLLSQUARE,num_coupling_ac_el_faces)
+  real(kind=CUSTOM_REAL),intent(in) :: coupling_ac_el_jacobian2Dw(NGLLSQUARE,num_coupling_ac_el_faces)
+  integer,intent(in) :: coupling_ac_el_ijk(3,NGLLSQUARE,num_coupling_ac_el_faces)
+  integer,intent(in) :: coupling_ac_el_ispec(num_coupling_ac_el_faces)
 
 ! communication overlap
-  logical, dimension(NSPEC_AB) :: ispec_is_inner
-  logical :: phase_is_inner
+  logical, dimension(NSPEC_AB),intent(in) :: ispec_is_inner
+  logical,intent(in) :: phase_is_inner
 
 ! CPML
-  logical :: PML_CONDITIONS
-  integer :: spec_to_CPML(NSPEC_AB)
-  logical :: is_CPML(NSPEC_AB)
+  logical,intent(in) :: PML_CONDITIONS
+  integer,intent(in) :: spec_to_CPML(NSPEC_AB)
+  logical,intent(in) :: is_CPML(NSPEC_AB)
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ,num_coupling_ac_el_faces,2),intent(inout) :: &
+    rmemory_coupling_ac_el_displ
 
 ! local parameters
   real(kind=CUSTOM_REAL) :: displ_x,displ_y,displ_z,displ_n
@@ -99,38 +101,34 @@
         iglob = ibool(i,j,k,ispec)
 
         ! elastic displacement on global point
-        if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-          if (.not. backward_simulation) then
-            if (is_CPML(ispec)) then
-              if (SIMULATION_TYPE == 1) then
-                ispec_CPML = spec_to_CPML(ispec)
-                call pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,i,j,k,&
-                                                      displ_x,displ_y,displ_z,displ,&
-                                                      num_coupling_ac_el_faces,rmemory_coupling_ac_el_displ)
-              endif
+        displ_x = displ(1,iglob)
+        displ_y = displ(2,iglob)
+        displ_z = displ(3,iglob)
 
-              if (SIMULATION_TYPE == 3) then
-                ! left blank for change
-              endif
+        ! adjoint wavefield case
+        if (SIMULATION_TYPE /= 1 .and. (.not. backward_simulation)) then
+          ! handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
+          ! adjoint definition: \partial_t^2 \bfs^\dagger=-\frac{1}{\rho}\bfnabla\phi^\dagger
+          displ_x = - displ_x
+          displ_y = - displ_y
+          displ_z = - displ_z
+        endif
 
-            else
-              displ_x = displ(1,iglob)
-              displ_y = displ(2,iglob)
-              displ_z = displ(3,iglob)
+        ! CPML overwrite cases
+        if (PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
+          if (is_CPML(ispec)) then
+            if (SIMULATION_TYPE == 1) then
+              ispec_CPML = spec_to_CPML(ispec)
+              call pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,i,j,k,&
+                                                    displ_x,displ_y,displ_z,displ,&
+                                                    num_coupling_ac_el_faces,rmemory_coupling_ac_el_displ)
             endif
-          else
-            if (is_CPML(ispec)) then
-              ! left blank, since no operation needed
-            else
-              displ_x = displ(1,iglob)
-              displ_y = displ(2,iglob)
-              displ_z = displ(3,iglob)
+
+            if (SIMULATION_TYPE == 3) then
+              ! safety stop
+              stop 'TODO: Coupling acoustic-elastic for CPML in compute_coupling_acoustic_el() not implemented yet...'
             endif
           endif
-        else
-          displ_x = displ(1,iglob)
-          displ_y = displ(2,iglob)
-          displ_z = displ(3,iglob)
         endif
 
         ! gets associated normal on GLL point

@@ -519,10 +519,10 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
   implicit none
 
   integer, intent(in) :: ispec_CPML,iface,iglob,num_coupling_ac_el_faces
-  real(kind=CUSTOM_REAL) :: displ_x,displ_y,displ_z
+  real(kind=CUSTOM_REAL),intent(out) :: displ_x,displ_y,displ_z
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB), intent(in) :: displ
-  real(kind=CUSTOM_REAL), dimension(3,NGLLX,NGLLY,NGLLZ,num_coupling_ac_el_faces,2) :: &
-                                    rmemory_coupling_ac_el_displ
+  real(kind=CUSTOM_REAL), dimension(3,NGLLX,NGLLY,NGLLZ,num_coupling_ac_el_faces,2),intent(inout) :: &
+    rmemory_coupling_ac_el_displ
 
   ! local parameters
   integer :: i,j,k,CPML_region_local,singularity_type_2
@@ -603,7 +603,7 @@ subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,
   implicit none
 
   integer, intent(in) :: ispec_CPML,iface,iglob,num_coupling_ac_el_faces
-  real(kind=CUSTOM_REAL) :: pressure
+  real(kind=CUSTOM_REAL),intent(out) :: pressure
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB), intent(in) :: potential_acoustic,potential_acoustic_old, &
                                                              potential_dot_acoustic,potential_dot_dot_acoustic
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,num_coupling_ac_el_faces,2) :: &

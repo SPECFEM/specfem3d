@@ -158,8 +158,8 @@ create_movie_shakemap_AVS_DX_GMT: xcreate_movie_shakemap_AVS_DX_GMT
 xcreate_movie_shakemap_AVS_DX_GMT: $E/xcreate_movie_shakemap_AVS_DX_GMT
 
 
-$E/xconvolve_source_timefunction: $O/convolve_source_timefunction.aux.o
-	${FCCOMPILE_CHECK} -o  ${E}/xconvolve_source_timefunction $O/convolve_source_timefunction.aux.o
+$E/xconvolve_source_timefunction: $O/convolve_source_timefunction.aux.o $O/shared_par.shared_module.o
+	${FCCOMPILE_CHECK} -o  ${E}/xconvolve_source_timefunction $O/convolve_source_timefunction.aux.o $O/shared_par.shared_module.o
 
 $E/xcombine_surf_data: $(combine_surf_data_auxiliaries_OBJECTS) $(combine_surf_data_auxiliaries_SHARED_OBJECTS)
 	${FCLINK} -o $@ $+
