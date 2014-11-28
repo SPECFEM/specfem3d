@@ -1089,10 +1089,9 @@
   integer :: i,j,k
 
   ! matrix-matrix multiplication
-  do j = 1,n2
-    do i = 1,n1
-      ! for efficiency it is better to leave this loop on k inside, it leads to slightly faster code
-      do k = 1,n3
+  do k = 1,n3
+    do j = 1,n2
+      do i = 1,n1
         C1(i,j,k) =  A1(i,1,k) * B(1,j) &
                    + A1(i,2,k) * B(2,j) &
                    + A1(i,3,k) * B(3,j) &
