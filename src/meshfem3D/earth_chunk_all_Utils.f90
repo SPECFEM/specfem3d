@@ -1032,7 +1032,7 @@ end subroutine StorePointZ
     endif
 
     call swap_all(loc(ioff),xp(ioff),yp(ioff),zp(ioff),iwork,work,ind,ninseg(iseg))
-    
+
     ioff = ioff + ninseg(iseg)
 
   enddo
