@@ -41,7 +41,7 @@ cd ${BRIDGE_MSUB_PWD}
 #             -- CMTSOLUTION
 #  
 #
-# the script runs : 
+# The script runs : 
 #   
 #   1/ MESHER 
 #   2/ DSM to compute tractions on the chunk boundary 
@@ -49,7 +49,6 @@ cd ${BRIDGE_MSUB_PWD}
 #   4/ ADD DSM TRACTION TO THE SPECFEM3D DATABASE
 #   5/ RUN SPECFEM3D
 #   6/ MAKE MOVIE
-#
 #
 #
 #  Vadim Monteiller April 2013. 
@@ -61,9 +60,6 @@ cd ${BRIDGE_MSUB_PWD}
 #
 #####################################################################################################################
 #
-### ----- First thing to do : the home of SPECFEM3D is in parmans.in ---------
-##source params.in
-
 ## ------------------ INPUTS -----------------------------
 
 # NBPROC is declared as integer (important do not change)
