@@ -1,0 +1,50 @@
+
+Dimitri Komatitsch, September 2014:
+
+for a detailed discussion about how the tomography tools are going to evolve, please see https://github.com/geodynamics/specfem3d/issues/23
+
+The text below is probably obsolete (at least in part), while the GitHub discussion is up to date.
+
+The GitHub discussion also gives the URLs where these tools are developed and maintained.
+
+Dimitri.
+
+=====================================================
+
+These directories contain tools needed for a seismic tomographic inversion using adjoint methods.
+
+flexwin     -- FLEXWIN algorithm for automated picking of time windows
+            -- THIS IS NOW STORED AS A STAND-ALONE CODE AT CIG
+               https://github.com/geodynamics/flexwin
+measure_adj -- reads FLEXWIN output file and makes measurements, 
+                  with the option for computing adjoint sources
+iterate_adj -- various tools for iterative inversion
+                  (requires pre-computed "event kernels")
+
+These tools were used within Tape-Liu-Maggi-Tromp (2009, 2010) for a topographic inversion of the southern California crust.
+
+flexwin is a "finished" code release
+measure_adj and iterate_adj are working directories
+
+--------------
+
+For a tomographic inversion, the suggested organizational structure is for each user to have the directory ADJOINT_TOMO_OUTPUT one directory up (but not on svn) and containing (at least) these directories:
+
+ADJOINT_TOMO_OUTPUT
+   model_plot_gmt_OUTPUT
+   model_plot_matlab_OUTPUT
+   misfit_plot_OUTPUT
+   misfit_plot_INPUT
+   vtkfiles
+
+These are all associated with making plots of seismograms and cross sections from tomographic models.
+
+To set this up, type these commands:
+
+> mkdir ../ADJOINT_TOMO_OUTPUT
+> ln -s ../ADJOINT_TOMO_OUTPUT .
+> cd ADJOINT_TOMO_OUTPUT
+> mkdir model_plot_gmt_OUTPUT model_plot_matlab_OUTPUT misfit_plot_OUTPUT misfit_plot_INPUT vtkfiles
+> cd -
+
+--------------

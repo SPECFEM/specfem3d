@@ -841,8 +841,7 @@
                                 ispec_is_elastic ! ,b_displ,b_veloc
   use specfem_par,only: NSPEC_AB,NGLOB_AB,hprime_xx,hprime_yy,hprime_zz, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        ibool,rhostore,SIMULATION_TYPE,GRAVITY
-  use specfem_par_movie,only:SAVE_DISPLACEMENT
+                        ibool,rhostore,SIMULATION_TYPE,GRAVITY,SAVE_DISPLACEMENT
   implicit none
 
   integer,intent(in) :: iglob,ispec

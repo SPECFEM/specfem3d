@@ -25,6 +25,11 @@
 !
 !=====================================================================
 
+! we switch between vectorized and non-vectorized version by using pre-processor flag FORCE_VECTORIZATION
+! and macros INDEX_IJK, DO_LOOP_IJK, ENDDO_LOOP_IJK defined in config.fh
+#include "config.fh"
+
+
 ! Deville routine for NGLL == 5 (default)
 
   subroutine compute_forces_viscoelastic_Dev_5p(iphase,NSPEC_AB,NGLOB_AB, &
@@ -32,7 +37,7 @@
                                     xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                                     hprime_xx,hprime_xxT, &
                                     hprimewgll_xx,hprimewgll_xxT, &
-                                    wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                                    wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D, &
                                     kappastore,mustore,jacobian,ibool, &
                                     ATTENUATION,deltat,PML_CONDITIONS, &
                                     one_minus_sum_beta,factor_common,&
@@ -58,11 +63,13 @@
 
 ! computes elastic tensor term
 
-  use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM, &
+  use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,NGLLCUBE, &
                       N_SLS,SAVE_MOHO_MESH, &
                       ONE_THIRD,FOUR_THIRDS,m1,m2,MAKE_HOOKE_LAW_WEAKLY_NONLINEAR,A,B,C,A_over_4,B_over_2
   use fault_solver_dynamic, only : Kelvin_Voigt_eta
-  use specfem_par, only : FULL_ATTENUATION_SOLID
+
+  use specfem_par, only: FULL_ATTENUATION_SOLID
+
   use pml_par, only: is_CPML, spec_to_CPML, accel_elastic_CPML,NSPEC_CPML, &
                      PML_dux_dxl, PML_dux_dyl, PML_dux_dzl, PML_duy_dxl, PML_duy_dyl, PML_duy_dzl, &
                      PML_duz_dxl, PML_duz_dyl, PML_duz_dzl, &
@@ -97,9 +104,9 @@
 ! array with derivatives of Lagrange polynomials and precalculated products
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xx,hprimewgll_xxT
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xxT,hprimewgll_xx
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY) :: wgllwgll_xy
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ) :: wgllwgll_xz
-  real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ) :: wgllwgll_yz
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: wgllwgll_xy_3D
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ,NGLLZ) :: wgllwgll_xz_3D
+  real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ,NGLLZ) :: wgllwgll_yz_3D
 
 ! memory variables and standard linear solids for attenuation
   logical :: ATTENUATION
@@ -144,113 +151,74 @@
   logical,dimension(NSPEC_BOUN) :: is_moho_top,is_moho_bot
   integer :: ispec2D_moho_top, ispec2D_moho_bot
 
+  ! C-PML absorbing boundary conditions
+  logical :: PML_CONDITIONS
+
+  ! CPML adjoint
+  logical :: backward_simulation
+
 ! local parameters
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dummyx_loc,dummyy_loc,dummyz_loc, &
-    newtempx1,newtempx2,newtempx3,newtempy1,newtempy2,newtempy3,newtempz1,newtempz2,newtempz3
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &
     tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3
 
-  real(kind=CUSTOM_REAL) duxdxl_att,duxdyl_att,duxdzl_att,duydxl_att
-  real(kind=CUSTOM_REAL) duydyl_att,duydzl_att,duzdxl_att,duzdyl_att,duzdzl_att
-  real(kind=CUSTOM_REAL) duxdyl_plus_duydxl_att,duzdxl_plus_duxdzl_att,duzdyl_plus_duydzl_att
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &
+    newtempx1,newtempx2,newtempx3,newtempy1,newtempy2,newtempy3,newtempz1,newtempz2,newtempz3
 
-  ! manually inline the calls to the Deville et al. (2002) routines
-  real(kind=CUSTOM_REAL), dimension(m1,m2) :: B1_m1_m2_5points,B2_m1_m2_5points,B3_m1_m2_5points
-  real(kind=CUSTOM_REAL), dimension(m1,m2) :: C1_m1_m2_5points,C2_m1_m2_5points,C3_m1_m2_5points
-  real(kind=CUSTOM_REAL), dimension(m1,m2) :: E1_m1_m2_5points,E2_m1_m2_5points,E3_m1_m2_5points
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dummyx_loc,dummyy_loc,dummyz_loc
 
-  equivalence(dummyx_loc,B1_m1_m2_5points)
-  equivalence(dummyy_loc,B2_m1_m2_5points)
-  equivalence(dummyz_loc,B3_m1_m2_5points)
-  equivalence(tempx1,C1_m1_m2_5points)
-  equivalence(tempy1,C2_m1_m2_5points)
-  equivalence(tempz1,C3_m1_m2_5points)
-  equivalence(newtempx1,E1_m1_m2_5points)
-  equivalence(newtempy1,E2_m1_m2_5points)
-  equivalence(newtempz1,E3_m1_m2_5points)
-
+  ! attenuation
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &
     tempx1_att,tempx2_att,tempx3_att,tempy1_att,tempy2_att,tempy3_att,tempz1_att,tempz2_att,tempz3_att
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dummyx_loc_att,dummyy_loc_att,dummyz_loc_att
-  real(kind=CUSTOM_REAL), dimension(m1,m2) :: B1_m1_m2_5points_att,B2_m1_m2_5points_att,B3_m1_m2_5points_att
-  real(kind=CUSTOM_REAL), dimension(m1,m2) :: C1_m1_m2_5points_att,C2_m1_m2_5points_att,C3_m1_m2_5points_att
-
-  equivalence(dummyx_loc_att,B1_m1_m2_5points_att)
-  equivalence(dummyy_loc_att,B2_m1_m2_5points_att)
-  equivalence(dummyz_loc_att,B3_m1_m2_5points_att)
-  equivalence(tempx1_att,C1_m1_m2_5points_att)
-  equivalence(tempy1_att,C2_m1_m2_5points_att)
-  equivalence(tempz1_att,C3_m1_m2_5points_att)
-
-  real(kind=CUSTOM_REAL), dimension(m2,m1) :: &
-    A1_mxm_m2_m1_5points,A2_mxm_m2_m1_5points,A3_mxm_m2_m1_5points
-  real(kind=CUSTOM_REAL), dimension(m2,m1) :: &
-    C1_mxm_m2_m1_5points,C2_mxm_m2_m1_5points,C3_mxm_m2_m1_5points
-  real(kind=CUSTOM_REAL), dimension(m2,m1) :: &
-    E1_mxm_m2_m1_5points,E2_mxm_m2_m1_5points,E3_mxm_m2_m1_5points
-
-  equivalence(dummyx_loc,A1_mxm_m2_m1_5points)
-  equivalence(dummyy_loc,A2_mxm_m2_m1_5points)
-  equivalence(dummyz_loc,A3_mxm_m2_m1_5points)
-  equivalence(tempx3,C1_mxm_m2_m1_5points)
-  equivalence(tempy3,C2_mxm_m2_m1_5points)
-  equivalence(tempz3,C3_mxm_m2_m1_5points)
-  equivalence(newtempx3,E1_mxm_m2_m1_5points)
-  equivalence(newtempy3,E2_mxm_m2_m1_5points)
-  equivalence(newtempz3,E3_mxm_m2_m1_5points)
-
-  real(kind=CUSTOM_REAL), dimension(m2,m1) :: &
-    A1_mxm_m2_m1_5points_att,A2_mxm_m2_m1_5points_att,A3_mxm_m2_m1_5points_att
-  real(kind=CUSTOM_REAL), dimension(m2,m1) :: &
-    C1_mxm_m2_m1_5points_att,C2_mxm_m2_m1_5points_att,C3_mxm_m2_m1_5points_att
-
-  equivalence(dummyx_loc_att,A1_mxm_m2_m1_5points_att)
-  equivalence(dummyy_loc_att,A2_mxm_m2_m1_5points_att)
-  equivalence(dummyz_loc_att,A3_mxm_m2_m1_5points_att)
-  equivalence(tempx3_att,C1_mxm_m2_m1_5points_att)
-  equivalence(tempy3_att,C2_mxm_m2_m1_5points_att)
-  equivalence(tempz3_att,C3_mxm_m2_m1_5points_att)
-
-! C-PML absorbing boundary conditions
-  logical :: PML_CONDITIONS
-  integer :: ispec_CPML
-! CPML adjoint
-  logical :: backward_simulation
+  real(kind=CUSTOM_REAL) :: duxdxl_att,duxdyl_att,duxdzl_att,duydxl_att
+  real(kind=CUSTOM_REAL) :: duydyl_att,duydzl_att,duzdxl_att,duzdyl_att,duzdzl_att
+  real(kind=CUSTOM_REAL) :: duxdyl_plus_duydxl_att,duzdxl_plus_duxdzl_att,duzdyl_plus_duydzl_att
 
   ! local attenuation parameters
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: epsilondev_trace_loc,epsilondev_xx_loc, &
-       epsilondev_yy_loc, epsilondev_xy_loc, epsilondev_xz_loc, epsilondev_yz_loc
-  real(kind=CUSTOM_REAL) R_xx_val1,R_yy_val1,R_xx_val2,R_yy_val2,R_xx_val3,R_yy_val3, &
-                         R_trace_val1,R_trace_val2,R_trace_val3
-  real(kind=CUSTOM_REAL) factor_loc,alphaval_loc,betaval_loc,gammaval_loc
-  real(kind=CUSTOM_REAL) Sn,Snp1
-  real(kind=CUSTOM_REAL) templ
+    epsilondev_yy_loc, epsilondev_xy_loc, epsilondev_xz_loc, epsilondev_yz_loc
 
-  real(kind=CUSTOM_REAL) xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl
-  real(kind=CUSTOM_REAL) duxdxl,duxdyl,duxdzl,duydxl,duydyl,duydzl,duzdxl,duzdyl,duzdzl
+  real(kind=CUSTOM_REAL) :: R_xx_val1,R_yy_val1,R_xx_val2,R_yy_val2,R_xx_val3,R_yy_val3, &
+                            R_trace_val1,R_trace_val2,R_trace_val3
+  real(kind=CUSTOM_REAL) :: factor_loc,alphaval_loc,betaval_loc,gammaval_loc
+  real(kind=CUSTOM_REAL) :: Sn,Snp1
+  real(kind=CUSTOM_REAL) :: templ
 
-  real(kind=CUSTOM_REAL) duxdxl_plus_duydyl,duxdxl_plus_duzdzl,duydyl_plus_duzdzl
-  real(kind=CUSTOM_REAL) duxdyl_plus_duydxl,duzdxl_plus_duxdzl,duzdyl_plus_duydzl
+  real(kind=CUSTOM_REAL) :: xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl
+  real(kind=CUSTOM_REAL) :: duxdxl,duxdyl,duxdzl,duydxl,duydyl,duydzl,duzdxl,duzdyl,duzdzl
 
-  real(kind=CUSTOM_REAL) sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz,sigma_yx,sigma_zx,sigma_zy
+  real(kind=CUSTOM_REAL) :: duxdxl_plus_duydyl,duxdxl_plus_duzdzl,duydyl_plus_duzdzl
+  real(kind=CUSTOM_REAL) :: duxdyl_plus_duydxl,duzdxl_plus_duxdzl,duzdyl_plus_duydzl
 
-  real(kind=CUSTOM_REAL) fac1,fac2,fac3
+  real(kind=CUSTOM_REAL) :: sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz,sigma_yx,sigma_zx,sigma_zy
 
-  real(kind=CUSTOM_REAL) lambdal,mul,lambdalplus2mul
-  real(kind=CUSTOM_REAL) kappal
+  real(kind=CUSTOM_REAL) :: fac1,fac2,fac3
+
+  real(kind=CUSTOM_REAL) :: lambdal,mul,lambdalplus2mul
+  real(kind=CUSTOM_REAL) :: kappal
 
   ! local anisotropy parameters
-  real(kind=CUSTOM_REAL) c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,&
-                        c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
+  real(kind=CUSTOM_REAL) :: c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,&
+                            c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
 
-  integer i_SLS,imodulo_N_SLS
-  integer ispec,iglob,ispec_p,num_elements
-  integer i,j,k
+  integer :: i_SLS,imodulo_N_SLS
+  integer :: ispec,iglob,ispec_p,num_elements
 
   real(kind=CUSTOM_REAL) :: eta
 
   real(kind=CUSTOM_REAL) :: epsilon_trace,epsilon_trace_squared
   real(kind=CUSTOM_REAL) :: mul_plus_A_over_4,lambdal_plus_B,lambdal_over_two_plus_B_over_2
+
+  ! C-PML absorbing boundary conditions
+  integer :: ispec_CPML
+
+#ifdef FORCE_VECTORIZATION
+! this will (purposely) give out-of-bound array accesses if run through range checking,
+! thus use only for production runs with no bound checking
+  integer :: ijk
+#else
+  integer :: i,j,k
+#endif
 
   imodulo_N_SLS = mod(N_SLS,3)
 
@@ -298,28 +266,19 @@
     ! stores displacment values in local array
     if (allocated(Kelvin_Voigt_eta)) then
       eta = Kelvin_Voigt_eta(ispec)
-      do k=1,NGLLZ
-        do j=1,NGLLY
-          do i=1,NGLLX
-            iglob = ibool(i,j,k,ispec)
-            dummyx_loc(i,j,k) = displ(1,iglob) + eta*veloc(1,iglob)
-            dummyy_loc(i,j,k) = displ(2,iglob) + eta*veloc(2,iglob)
-            dummyz_loc(i,j,k) = displ(3,iglob) + eta*veloc(3,iglob)
-          enddo
-        enddo
-      enddo
-
+      DO_LOOP_IJK
+        iglob = ibool(INDEX_IJK,ispec)
+        dummyx_loc(INDEX_IJK) = displ(1,iglob) + eta*veloc(1,iglob)
+        dummyy_loc(INDEX_IJK) = displ(2,iglob) + eta*veloc(2,iglob)
+        dummyz_loc(INDEX_IJK) = displ(3,iglob) + eta*veloc(3,iglob)
+      ENDDO_LOOP_IJK
     else
-      do k=1,NGLLZ
-        do j=1,NGLLY
-          do i=1,NGLLX
-            iglob = ibool(i,j,k,ispec)
-            dummyx_loc(i,j,k) = displ(1,iglob)
-            dummyy_loc(i,j,k) = displ(2,iglob)
-            dummyz_loc(i,j,k) = displ(3,iglob)
-          enddo
-        enddo
-      enddo
+      DO_LOOP_IJK
+        iglob = ibool(INDEX_IJK,ispec)
+        dummyx_loc(INDEX_IJK) = displ(1,iglob)
+        dummyy_loc(INDEX_IJK) = displ(2,iglob)
+        dummyz_loc(INDEX_IJK) = displ(3,iglob)
+      ENDDO_LOOP_IJK
     endif
 
 ! counts:
@@ -331,717 +290,514 @@
     ! use first order Taylor expansion of displacement for local storage of stresses
     ! at this current time step, to fix attenuation in a consistent way
     if (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) then
-      do k=1,NGLLZ
-        do j=1,NGLLY
-          do i=1,NGLLX
-            iglob = ibool(i,j,k,ispec)
-            dummyx_loc_att(i,j,k) = deltat*veloc(1,iglob)
-            dummyy_loc_att(i,j,k) = deltat*veloc(2,iglob)
-            dummyz_loc_att(i,j,k) = deltat*veloc(3,iglob)
-          enddo
-        enddo
-      enddo
+      DO_LOOP_IJK
+        iglob = ibool(INDEX_IJK,ispec)
+        dummyx_loc_att(INDEX_IJK) = deltat*veloc(1,iglob)
+        dummyy_loc_att(INDEX_IJK) = deltat*veloc(2,iglob)
+        dummyz_loc_att(INDEX_IJK) = deltat*veloc(3,iglob)
+      ENDDO_LOOP_IJK
     else if (PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
       ! do not merge this second line with the first using an ".and." statement
       ! because array is_CPML() is unallocated when PML_CONDITIONS is false
       if (is_CPML(ispec)) then
-        do k=1,NGLLZ
-          do j=1,NGLLY
-            do i=1,NGLLX
-              iglob = ibool(i,j,k,ispec)
-              dummyx_loc_att(i,j,k) = displ_old(1,iglob)
-              dummyy_loc_att(i,j,k) = displ_old(2,iglob)
-              dummyz_loc_att(i,j,k) = displ_old(3,iglob)
-            enddo
-          enddo
-        enddo
+        DO_LOOP_IJK
+          iglob = ibool(INDEX_IJK,ispec)
+          dummyx_loc_att(INDEX_IJK) = displ_old(1,iglob)
+          dummyy_loc_att(INDEX_IJK) = displ_old(2,iglob)
+          dummyz_loc_att(INDEX_IJK) = displ_old(3,iglob)
+        ENDDO_LOOP_IJK
       endif
     endif
 
     ! subroutines adapted from Deville, Fischer and Mund, High-order methods
     ! for incompressible fluid flow, Cambridge University Press (2002),
     ! pages 386 and 389 and Figure 8.3.1
-    ! call mxm_m1_m2_5points(hprime_xx,dummyx_loc,dummyy_loc,dummyz_loc,tempx1,tempy1,tempz1)
-    do j=1,m2
-      do i=1,m1
-        C1_m1_m2_5points(i,j) = hprime_xx(i,1)*B1_m1_m2_5points(1,j) + &
-                                hprime_xx(i,2)*B1_m1_m2_5points(2,j) + &
-                                hprime_xx(i,3)*B1_m1_m2_5points(3,j) + &
-                                hprime_xx(i,4)*B1_m1_m2_5points(4,j) + &
-                                hprime_xx(i,5)*B1_m1_m2_5points(5,j)
-        C2_m1_m2_5points(i,j) = hprime_xx(i,1)*B2_m1_m2_5points(1,j) + &
-                                hprime_xx(i,2)*B2_m1_m2_5points(2,j) + &
-                                hprime_xx(i,3)*B2_m1_m2_5points(3,j) + &
-                                hprime_xx(i,4)*B2_m1_m2_5points(4,j) + &
-                                hprime_xx(i,5)*B2_m1_m2_5points(5,j)
-        C3_m1_m2_5points(i,j) = hprime_xx(i,1)*B3_m1_m2_5points(1,j) + &
-                                hprime_xx(i,2)*B3_m1_m2_5points(2,j) + &
-                                hprime_xx(i,3)*B3_m1_m2_5points(3,j) + &
-                                hprime_xx(i,4)*B3_m1_m2_5points(4,j) + &
-                                hprime_xx(i,5)*B3_m1_m2_5points(5,j)
-      enddo
-    enddo
+
+    ! computes 1. matrix multiplication for tempx1,..
+    call mxm5_3comp_singleA(hprime_xx,m1,dummyx_loc,dummyy_loc,dummyz_loc,tempx1,tempy1,tempz1,m2)
 
 ! counts:
 ! + m1 * m2 * 3 * 9 = 5 * 25 * 3 * 9 = 3375 FLOP
 !
 ! + m1 * 5 float = 100 BYTE  (hprime_xx once, assuming B3_** in cache)
 
-    if (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) then
-      ! temporary variables used for fixing attenuation in a consistent way
-      do j=1,m2
-        do i=1,m1
-          C1_m1_m2_5points_att(i,j) = C1_m1_m2_5points(i,j) + &
-               hprime_xx(i,1)*B1_m1_m2_5points_att(1,j) + &
-               hprime_xx(i,2)*B1_m1_m2_5points_att(2,j) + &
-               hprime_xx(i,3)*B1_m1_m2_5points_att(3,j) + &
-               hprime_xx(i,4)*B1_m1_m2_5points_att(4,j) + &
-               hprime_xx(i,5)*B1_m1_m2_5points_att(5,j)
-
-          C2_m1_m2_5points_att(i,j) = C2_m1_m2_5points(i,j) + &
-               hprime_xx(i,1)*B2_m1_m2_5points_att(1,j) + &
-               hprime_xx(i,2)*B2_m1_m2_5points_att(2,j) + &
-               hprime_xx(i,3)*B2_m1_m2_5points_att(3,j) + &
-               hprime_xx(i,4)*B2_m1_m2_5points_att(4,j) + &
-               hprime_xx(i,5)*B2_m1_m2_5points_att(5,j)
-
-          C3_m1_m2_5points_att(i,j) = C3_m1_m2_5points(i,j) + &
-               hprime_xx(i,1)*B3_m1_m2_5points_att(1,j) + &
-               hprime_xx(i,2)*B3_m1_m2_5points_att(2,j) + &
-               hprime_xx(i,3)*B3_m1_m2_5points_att(3,j) + &
-               hprime_xx(i,4)*B3_m1_m2_5points_att(4,j) + &
-               hprime_xx(i,5)*B3_m1_m2_5points_att(5,j)
-        enddo
-      enddo
-    else if (PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
-      ! do not merge this second line with the first using an ".and." statement
-      ! because array is_CPML() is unallocated when PML_CONDITIONS is false
-      if (is_CPML(ispec)) then
-        do j=1,m2
-          do i=1,m1
-            C1_m1_m2_5points_att(i,j) = &
-                 hprime_xx(i,1)*B1_m1_m2_5points_att(1,j) + &
-                 hprime_xx(i,2)*B1_m1_m2_5points_att(2,j) + &
-                 hprime_xx(i,3)*B1_m1_m2_5points_att(3,j) + &
-                 hprime_xx(i,4)*B1_m1_m2_5points_att(4,j) + &
-                 hprime_xx(i,5)*B1_m1_m2_5points_att(5,j)
-
-            C2_m1_m2_5points_att(i,j) = &
-                 hprime_xx(i,1)*B2_m1_m2_5points_att(1,j) + &
-                 hprime_xx(i,2)*B2_m1_m2_5points_att(2,j) + &
-                 hprime_xx(i,3)*B2_m1_m2_5points_att(3,j) + &
-                 hprime_xx(i,4)*B2_m1_m2_5points_att(4,j) + &
-                 hprime_xx(i,5)*B2_m1_m2_5points_att(5,j)
-
-            C3_m1_m2_5points_att(i,j) = &
-                 hprime_xx(i,1)*B3_m1_m2_5points_att(1,j) + &
-                 hprime_xx(i,2)*B3_m1_m2_5points_att(2,j) + &
-                 hprime_xx(i,3)*B3_m1_m2_5points_att(3,j) + &
-                 hprime_xx(i,4)*B3_m1_m2_5points_att(4,j) + &
-                 hprime_xx(i,5)*B3_m1_m2_5points_att(5,j)
-          enddo
-        enddo
-      endif
-    endif
-
-    !   call mxm_m1_m1_5points(dummyx_loc(1,1,k),dummyy_loc(1,1,k),dummyz_loc(1,1,k), &
-    !          hprime_xxT,tempx2(1,1,k),tempy2(1,1,k),tempz2(1,1,k))
-    do j=1,m1
-      do i=1,m1
-        ! for efficiency it is better to leave this loop on k inside, it leads to slightly faster code
-        do k = 1,NGLLX
-          tempx2(i,j,k) = dummyx_loc(i,1,k)*hprime_xxT(1,j) + &
-                          dummyx_loc(i,2,k)*hprime_xxT(2,j) + &
-                          dummyx_loc(i,3,k)*hprime_xxT(3,j) + &
-                          dummyx_loc(i,4,k)*hprime_xxT(4,j) + &
-                          dummyx_loc(i,5,k)*hprime_xxT(5,j)
-          tempy2(i,j,k) = dummyy_loc(i,1,k)*hprime_xxT(1,j) + &
-                          dummyy_loc(i,2,k)*hprime_xxT(2,j) + &
-                          dummyy_loc(i,3,k)*hprime_xxT(3,j) + &
-                          dummyy_loc(i,4,k)*hprime_xxT(4,j) + &
-                          dummyy_loc(i,5,k)*hprime_xxT(5,j)
-          tempz2(i,j,k) = dummyz_loc(i,1,k)*hprime_xxT(1,j) + &
-                          dummyz_loc(i,2,k)*hprime_xxT(2,j) + &
-                          dummyz_loc(i,3,k)*hprime_xxT(3,j) + &
-                          dummyz_loc(i,4,k)*hprime_xxT(4,j) + &
-                          dummyz_loc(i,5,k)*hprime_xxT(5,j)
-        enddo
-      enddo
-    enddo
-
-
+    ! computes 2. matrix multiplication for tempx2,..
+    call mxm5_3comp_3dmat_singleB(dummyx_loc,dummyy_loc,dummyz_loc,m1,hprime_xxT,m1,tempx2,tempy2,tempz2,NGLLX)
 
 ! counts:
 ! + m1 * m1 * NGLLX * 3 * 9 = 5 * 5 * 5 * 3 * 9 = 3375 FLOP
 !
 ! + m1 * 5 float = 100 BYTE  (hprime_xxT once, assuming dummy*_** in cache)
 
-
-    if (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) then
-      ! temporary variables used for fixing attenuation in a consistent way
-      do j=1,m1
-        do i=1,m1
-          ! for efficiency it is better to leave this loop on k inside, it leads to slightly faster code
-          do k = 1,NGLLX
-            tempx2_att(i,j,k) = tempx2(i,j,k) + &
-                 dummyx_loc_att(i,1,k)*hprime_xxT(1,j) + &
-                 dummyx_loc_att(i,2,k)*hprime_xxT(2,j) + &
-                 dummyx_loc_att(i,3,k)*hprime_xxT(3,j) + &
-                 dummyx_loc_att(i,4,k)*hprime_xxT(4,j) + &
-                 dummyx_loc_att(i,5,k)*hprime_xxT(5,j)
-
-            tempy2_att(i,j,k) = tempy2(i,j,k) + &
-                 dummyy_loc_att(i,1,k)*hprime_xxT(1,j) + &
-                 dummyy_loc_att(i,2,k)*hprime_xxT(2,j) + &
-                 dummyy_loc_att(i,3,k)*hprime_xxT(3,j) + &
-                 dummyy_loc_att(i,4,k)*hprime_xxT(4,j) + &
-                 dummyy_loc_att(i,5,k)*hprime_xxT(5,j)
-
-            tempz2_att(i,j,k) = tempz2(i,j,k) + &
-                 dummyz_loc_att(i,1,k)*hprime_xxT(1,j) + &
-                 dummyz_loc_att(i,2,k)*hprime_xxT(2,j) + &
-                 dummyz_loc_att(i,3,k)*hprime_xxT(3,j) + &
-                 dummyz_loc_att(i,4,k)*hprime_xxT(4,j) + &
-                 dummyz_loc_att(i,5,k)*hprime_xxT(5,j)
-          enddo
-        enddo
-      enddo
-    else if (PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
-      ! do not merge this second line with the first using an ".and." statement
-      ! because array is_CPML() is unallocated when PML_CONDITIONS is false
-      ! temporary variables used for fixing attenuation in a consistent way
-      if (is_CPML(ispec)) then
-        do j=1,m1
-          do i=1,m1
-            ! for efficiency it is better to leave this loop on k inside, it leads to slightly faster code
-            do k = 1,NGLLX
-              tempx2_att(i,j,k) = &
-                   dummyx_loc_att(i,1,k)*hprime_xxT(1,j) + &
-                   dummyx_loc_att(i,2,k)*hprime_xxT(2,j) + &
-                   dummyx_loc_att(i,3,k)*hprime_xxT(3,j) + &
-                   dummyx_loc_att(i,4,k)*hprime_xxT(4,j) + &
-                   dummyx_loc_att(i,5,k)*hprime_xxT(5,j)
-
-              tempy2_att(i,j,k) = &
-                   dummyy_loc_att(i,1,k)*hprime_xxT(1,j) + &
-                   dummyy_loc_att(i,2,k)*hprime_xxT(2,j) + &
-                   dummyy_loc_att(i,3,k)*hprime_xxT(3,j) + &
-                   dummyy_loc_att(i,4,k)*hprime_xxT(4,j) + &
-                   dummyy_loc_att(i,5,k)*hprime_xxT(5,j)
-
-              tempz2_att(i,j,k) = &
-                   dummyz_loc_att(i,1,k)*hprime_xxT(1,j) + &
-                   dummyz_loc_att(i,2,k)*hprime_xxT(2,j) + &
-                   dummyz_loc_att(i,3,k)*hprime_xxT(3,j) + &
-                   dummyz_loc_att(i,4,k)*hprime_xxT(4,j) + &
-                   dummyz_loc_att(i,5,k)*hprime_xxT(5,j)
-            enddo
-          enddo
-        enddo
-      endif
-    endif
-
-    ! call mxm_m2_m1_5points(dummyx_loc,dummyy_loc,dummyz_loc,tempx3,tempy3,tempz3)
-    do j=1,m1
-      do i=1,m2
-        C1_mxm_m2_m1_5points(i,j) = A1_mxm_m2_m1_5points(i,1)*hprime_xxT(1,j) + &
-                                    A1_mxm_m2_m1_5points(i,2)*hprime_xxT(2,j) + &
-                                    A1_mxm_m2_m1_5points(i,3)*hprime_xxT(3,j) + &
-                                    A1_mxm_m2_m1_5points(i,4)*hprime_xxT(4,j) + &
-                                    A1_mxm_m2_m1_5points(i,5)*hprime_xxT(5,j)
-        C2_mxm_m2_m1_5points(i,j) = A2_mxm_m2_m1_5points(i,1)*hprime_xxT(1,j) + &
-                                    A2_mxm_m2_m1_5points(i,2)*hprime_xxT(2,j) + &
-                                    A2_mxm_m2_m1_5points(i,3)*hprime_xxT(3,j) + &
-                                    A2_mxm_m2_m1_5points(i,4)*hprime_xxT(4,j) + &
-                                    A2_mxm_m2_m1_5points(i,5)*hprime_xxT(5,j)
-        C3_mxm_m2_m1_5points(i,j) = A3_mxm_m2_m1_5points(i,1)*hprime_xxT(1,j) + &
-                                    A3_mxm_m2_m1_5points(i,2)*hprime_xxT(2,j) + &
-                                    A3_mxm_m2_m1_5points(i,3)*hprime_xxT(3,j) + &
-                                    A3_mxm_m2_m1_5points(i,4)*hprime_xxT(4,j) + &
-                                    A3_mxm_m2_m1_5points(i,5)*hprime_xxT(5,j)
-      enddo
-    enddo
+    ! computes 3. matrix multiplication for tempx1,..
+    call mxm5_3comp_singleB(dummyx_loc,dummyy_loc,dummyz_loc,m2,hprime_xxT,tempx3,tempy3,tempz3,m1)
 
 ! counts:
 ! + m1 * m2 * 3 * 9 = 5 * 25 * 3 * 9 = 3375 FLOP
 !
 ! + 0 BYTE  (assuming A3_**, hprime_xxT in cache)
 
+
     if (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) then
       ! temporary variables used for fixing attenuation in a consistent way
-      do j=1,m1
-        do i=1,m2
-          C1_mxm_m2_m1_5points_att(i,j) = C1_mxm_m2_m1_5points(i,j) + &
-               A1_mxm_m2_m1_5points_att(i,1)*hprime_xxT(1,j) + &
-               A1_mxm_m2_m1_5points_att(i,2)*hprime_xxT(2,j) + &
-               A1_mxm_m2_m1_5points_att(i,3)*hprime_xxT(3,j) + &
-               A1_mxm_m2_m1_5points_att(i,4)*hprime_xxT(4,j) + &
-               A1_mxm_m2_m1_5points_att(i,5)*hprime_xxT(5,j)
 
-          C2_mxm_m2_m1_5points_att(i,j) = C2_mxm_m2_m1_5points(i,j) + &
-               A2_mxm_m2_m1_5points_att(i,1)*hprime_xxT(1,j) + &
-               A2_mxm_m2_m1_5points_att(i,2)*hprime_xxT(2,j) + &
-               A2_mxm_m2_m1_5points_att(i,3)*hprime_xxT(3,j) + &
-               A2_mxm_m2_m1_5points_att(i,4)*hprime_xxT(4,j) + &
-               A2_mxm_m2_m1_5points_att(i,5)*hprime_xxT(5,j)
+      ! computes 1. matrix multiplication for tempx1,..
+      call mxm5_3comp_singleA(hprime_xx,m1,dummyx_loc_att,dummyy_loc_att,dummyz_loc_att, &
+                              tempx1_att,tempy1_att,tempz1_att,m2)
 
-          C3_mxm_m2_m1_5points_att(i,j) = C3_mxm_m2_m1_5points(i,j) + &
-               A3_mxm_m2_m1_5points_att(i,1)*hprime_xxT(1,j) + &
-               A3_mxm_m2_m1_5points_att(i,2)*hprime_xxT(2,j) + &
-               A3_mxm_m2_m1_5points_att(i,3)*hprime_xxT(3,j) + &
-               A3_mxm_m2_m1_5points_att(i,4)*hprime_xxT(4,j) + &
-               A3_mxm_m2_m1_5points_att(i,5)*hprime_xxT(5,j)
-        enddo
-      enddo
+      tempx1_att(:,:,:) = tempx1_att(:,:,:) + tempx1(:,:,:)
+      tempy1_att(:,:,:) = tempy1_att(:,:,:) + tempy1(:,:,:)
+      tempz1_att(:,:,:) = tempz1_att(:,:,:) + tempz1(:,:,:)
+
+      ! computes 2. matrix multiplication for tempx2,..
+      call mxm5_3comp_3dmat_singleB(dummyx_loc_att,dummyy_loc_att,dummyz_loc_att,m1,hprime_xxT,m1, &
+                                    tempx2_att,tempy2_att,tempz2_att,NGLLX)
+
+      tempx2_att(:,:,:) = tempx2_att(:,:,:) + tempx2(:,:,:)
+      tempy2_att(:,:,:) = tempy2_att(:,:,:) + tempy2(:,:,:)
+      tempz2_att(:,:,:) = tempz2_att(:,:,:) + tempz2(:,:,:)
+
+      ! computes 3. matrix multiplication for tempx1,..
+      call mxm5_3comp_singleB(dummyx_loc_att,dummyy_loc_att,dummyz_loc_att,m2,hprime_xxT, &
+                              tempx3_att,tempy3_att,tempz3_att,m1)
+
+      tempx3_att(:,:,:) = tempx3_att(:,:,:) + tempx3(:,:,:)
+      tempy3_att(:,:,:) = tempy3_att(:,:,:) + tempy3(:,:,:)
+      tempz3_att(:,:,:) = tempz3_att(:,:,:) + tempz3(:,:,:)
+
     else if (PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
       ! do not merge this second line with the first using an ".and." statement
       ! because array is_CPML() is unallocated when PML_CONDITIONS is false
       if (is_CPML(ispec)) then
-        do j=1,m1
-          do i=1,m2
-            C1_mxm_m2_m1_5points_att(i,j) = &
-                 A1_mxm_m2_m1_5points_att(i,1)*hprime_xxT(1,j) + &
-                 A1_mxm_m2_m1_5points_att(i,2)*hprime_xxT(2,j) + &
-                 A1_mxm_m2_m1_5points_att(i,3)*hprime_xxT(3,j) + &
-                 A1_mxm_m2_m1_5points_att(i,4)*hprime_xxT(4,j) + &
-                 A1_mxm_m2_m1_5points_att(i,5)*hprime_xxT(5,j)
-
-            C2_mxm_m2_m1_5points_att(i,j) = &
-                 A2_mxm_m2_m1_5points_att(i,1)*hprime_xxT(1,j) + &
-                 A2_mxm_m2_m1_5points_att(i,2)*hprime_xxT(2,j) + &
-                 A2_mxm_m2_m1_5points_att(i,3)*hprime_xxT(3,j) + &
-                 A2_mxm_m2_m1_5points_att(i,4)*hprime_xxT(4,j) + &
-                 A2_mxm_m2_m1_5points_att(i,5)*hprime_xxT(5,j)
-
-            C3_mxm_m2_m1_5points_att(i,j) = &
-                 A3_mxm_m2_m1_5points_att(i,1)*hprime_xxT(1,j) + &
-                 A3_mxm_m2_m1_5points_att(i,2)*hprime_xxT(2,j) + &
-                 A3_mxm_m2_m1_5points_att(i,3)*hprime_xxT(3,j) + &
-                 A3_mxm_m2_m1_5points_att(i,4)*hprime_xxT(4,j) + &
-                 A3_mxm_m2_m1_5points_att(i,5)*hprime_xxT(5,j)
-          enddo
-        enddo
+        ! computes 1. matrix multiplication for tempx1,..
+        call mxm5_3comp_singleA(hprime_xx,m1,dummyx_loc_att,dummyy_loc_att,dummyz_loc_att, &
+                                tempx1_att,tempy1_att,tempz1_att,m2)
+        ! computes 2. matrix multiplication for tempx2,..
+        call mxm5_3comp_3dmat_singleB(dummyx_loc_att,dummyy_loc_att,dummyz_loc_att,m1,hprime_xxT,m1, &
+                                      tempx2_att,tempy2_att,tempz2_att,NGLLX)
+        ! computes 3. matrix multiplication for tempx1,..
+        call mxm5_3comp_singleB(dummyx_loc_att,dummyy_loc_att,dummyz_loc_att,m2,hprime_xxT, &
+                                tempx3_att,tempy3_att,tempz3_att,m1)
       endif
     endif
 
-    do k=1,NGLLZ
-      do j=1,NGLLY
-        do i=1,NGLLX
+    !
+    ! computes either isotropic or fully anisotropic (visco-)elastic elements
+    !
+    DO_LOOP_IJK
 
-          ! get derivatives of ux, uy and uz with respect to x, y and z
-          xixl = xix(i,j,k,ispec)
-          xiyl = xiy(i,j,k,ispec)
-          xizl = xiz(i,j,k,ispec)
-          etaxl = etax(i,j,k,ispec)
-          etayl = etay(i,j,k,ispec)
-          etazl = etaz(i,j,k,ispec)
-          gammaxl = gammax(i,j,k,ispec)
-          gammayl = gammay(i,j,k,ispec)
-          gammazl = gammaz(i,j,k,ispec)
-          jacobianl = jacobian(i,j,k,ispec)
+      ! get derivatives of ux, uy and uz with respect to x, y and z
+      xixl = xix(INDEX_IJK,ispec)
+      xiyl = xiy(INDEX_IJK,ispec)
+      xizl = xiz(INDEX_IJK,ispec)
+      etaxl = etax(INDEX_IJK,ispec)
+      etayl = etay(INDEX_IJK,ispec)
+      etazl = etaz(INDEX_IJK,ispec)
+      gammaxl = gammax(INDEX_IJK,ispec)
+      gammayl = gammay(INDEX_IJK,ispec)
+      gammazl = gammaz(INDEX_IJK,ispec)
+      jacobianl = jacobian(INDEX_IJK,ispec)
 
 ! counts:
 ! + 0 FLOP
 !
 ! + NGLLX * NGLLY * NGLLZ * 10 float = 5000 BYTE  (assuming A3_**, hprime_xxT in cache)
 
-          duxdxl = xixl*tempx1(i,j,k) + etaxl*tempx2(i,j,k) + gammaxl*tempx3(i,j,k)
-          duxdyl = xiyl*tempx1(i,j,k) + etayl*tempx2(i,j,k) + gammayl*tempx3(i,j,k)
-          duxdzl = xizl*tempx1(i,j,k) + etazl*tempx2(i,j,k) + gammazl*tempx3(i,j,k)
+      duxdxl = xixl*tempx1(INDEX_IJK) + etaxl*tempx2(INDEX_IJK) + gammaxl*tempx3(INDEX_IJK)
+      duxdyl = xiyl*tempx1(INDEX_IJK) + etayl*tempx2(INDEX_IJK) + gammayl*tempx3(INDEX_IJK)
+      duxdzl = xizl*tempx1(INDEX_IJK) + etazl*tempx2(INDEX_IJK) + gammazl*tempx3(INDEX_IJK)
 
-          duydxl = xixl*tempy1(i,j,k) + etaxl*tempy2(i,j,k) + gammaxl*tempy3(i,j,k)
-          duydyl = xiyl*tempy1(i,j,k) + etayl*tempy2(i,j,k) + gammayl*tempy3(i,j,k)
-          duydzl = xizl*tempy1(i,j,k) + etazl*tempy2(i,j,k) + gammazl*tempy3(i,j,k)
+      duydxl = xixl*tempy1(INDEX_IJK) + etaxl*tempy2(INDEX_IJK) + gammaxl*tempy3(INDEX_IJK)
+      duydyl = xiyl*tempy1(INDEX_IJK) + etayl*tempy2(INDEX_IJK) + gammayl*tempy3(INDEX_IJK)
+      duydzl = xizl*tempy1(INDEX_IJK) + etazl*tempy2(INDEX_IJK) + gammazl*tempy3(INDEX_IJK)
 
-          duzdxl = xixl*tempz1(i,j,k) + etaxl*tempz2(i,j,k) + gammaxl*tempz3(i,j,k)
-          duzdyl = xiyl*tempz1(i,j,k) + etayl*tempz2(i,j,k) + gammayl*tempz3(i,j,k)
-          duzdzl = xizl*tempz1(i,j,k) + etazl*tempz2(i,j,k) + gammazl*tempz3(i,j,k)
+      duzdxl = xixl*tempz1(INDEX_IJK) + etaxl*tempz2(INDEX_IJK) + gammaxl*tempz3(INDEX_IJK)
+      duzdyl = xiyl*tempz1(INDEX_IJK) + etayl*tempz2(INDEX_IJK) + gammayl*tempz3(INDEX_IJK)
+      duzdzl = xizl*tempz1(INDEX_IJK) + etazl*tempz2(INDEX_IJK) + gammazl*tempz3(INDEX_IJK)
 
 ! counts:
 ! + NGLLX * NGLLY * NGLLZ * 9 * 5 = 5625 FLOP
 !
 ! + 0 BYTE  (assuming temp*_** in cache)
 
-          ! save strain on the Moho boundary
-          if (SIMULATION_TYPE == 3 .and. SAVE_MOHO_MESH) then
-            if (is_moho_top(ispec)) then
-              dsdx_top(1,1,i,j,k,ispec2D_moho_top) = duxdxl
-              dsdx_top(1,2,i,j,k,ispec2D_moho_top) = duxdyl
-              dsdx_top(1,3,i,j,k,ispec2D_moho_top) = duxdzl
-              dsdx_top(2,1,i,j,k,ispec2D_moho_top) = duydxl
-              dsdx_top(2,2,i,j,k,ispec2D_moho_top) = duydyl
-              dsdx_top(2,3,i,j,k,ispec2D_moho_top) = duydzl
-              dsdx_top(3,1,i,j,k,ispec2D_moho_top) = duzdxl
-              dsdx_top(3,2,i,j,k,ispec2D_moho_top) = duzdyl
-              dsdx_top(3,3,i,j,k,ispec2D_moho_top) = duzdzl
-            else if (is_moho_bot(ispec)) then
-              dsdx_bot(1,1,i,j,k,ispec2D_moho_bot) = duxdxl
-              dsdx_bot(1,2,i,j,k,ispec2D_moho_bot) = duxdyl
-              dsdx_bot(1,3,i,j,k,ispec2D_moho_bot) = duxdzl
-              dsdx_bot(2,1,i,j,k,ispec2D_moho_bot) = duydxl
-              dsdx_bot(2,2,i,j,k,ispec2D_moho_bot) = duydyl
-              dsdx_bot(2,3,i,j,k,ispec2D_moho_bot) = duydzl
-              dsdx_bot(3,1,i,j,k,ispec2D_moho_bot) = duzdxl
-              dsdx_bot(3,2,i,j,k,ispec2D_moho_bot) = duzdyl
-              dsdx_bot(3,3,i,j,k,ispec2D_moho_bot) = duzdzl
-            endif
-          endif
+      ! save strain on the Moho boundary
+      if (SIMULATION_TYPE == 3 .and. SAVE_MOHO_MESH) then
+        if (is_moho_top(ispec)) then
+          dsdx_top(1,1,INDEX_IJK,ispec2D_moho_top) = duxdxl
+          dsdx_top(1,2,INDEX_IJK,ispec2D_moho_top) = duxdyl
+          dsdx_top(1,3,INDEX_IJK,ispec2D_moho_top) = duxdzl
+          dsdx_top(2,1,INDEX_IJK,ispec2D_moho_top) = duydxl
+          dsdx_top(2,2,INDEX_IJK,ispec2D_moho_top) = duydyl
+          dsdx_top(2,3,INDEX_IJK,ispec2D_moho_top) = duydzl
+          dsdx_top(3,1,INDEX_IJK,ispec2D_moho_top) = duzdxl
+          dsdx_top(3,2,INDEX_IJK,ispec2D_moho_top) = duzdyl
+          dsdx_top(3,3,INDEX_IJK,ispec2D_moho_top) = duzdzl
+        else if (is_moho_bot(ispec)) then
+          dsdx_bot(1,1,INDEX_IJK,ispec2D_moho_bot) = duxdxl
+          dsdx_bot(1,2,INDEX_IJK,ispec2D_moho_bot) = duxdyl
+          dsdx_bot(1,3,INDEX_IJK,ispec2D_moho_bot) = duxdzl
+          dsdx_bot(2,1,INDEX_IJK,ispec2D_moho_bot) = duydxl
+          dsdx_bot(2,2,INDEX_IJK,ispec2D_moho_bot) = duydyl
+          dsdx_bot(2,3,INDEX_IJK,ispec2D_moho_bot) = duydzl
+          dsdx_bot(3,1,INDEX_IJK,ispec2D_moho_bot) = duzdxl
+          dsdx_bot(3,2,INDEX_IJK,ispec2D_moho_bot) = duzdyl
+          dsdx_bot(3,3,INDEX_IJK,ispec2D_moho_bot) = duzdzl
+        endif
+      endif
 
-          ! precompute some sums to save CPU time
-          duxdxl_plus_duydyl = duxdxl + duydyl
-          duxdxl_plus_duzdzl = duxdxl + duzdzl
-          duydyl_plus_duzdzl = duydyl + duzdzl
-          duxdyl_plus_duydxl = duxdyl + duydxl
-          duzdxl_plus_duxdzl = duzdxl + duxdzl
-          duzdyl_plus_duydzl = duzdyl + duydzl
+      ! precompute some sums to save CPU time
+      duxdxl_plus_duydyl = duxdxl + duydyl
+      duxdxl_plus_duzdzl = duxdxl + duzdzl
+      duydyl_plus_duzdzl = duydyl + duzdzl
+      duxdyl_plus_duydxl = duxdyl + duydxl
+      duzdxl_plus_duxdzl = duzdxl + duxdzl
+      duzdyl_plus_duydzl = duzdyl + duydzl
 
 ! counts:
 ! + NGLLX * NGLLY * NGLLZ * 6 * 1 = 750 FLOP
 !
 ! + 0 BYTE  (assuming registers)
 
-          if (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) then
-            ! temporary variables used for fixing attenuation in a consistent way
-            duxdxl_att = xixl*tempx1_att(i,j,k) + etaxl*tempx2_att(i,j,k) + gammaxl*tempx3_att(i,j,k)
-            duxdyl_att = xiyl*tempx1_att(i,j,k) + etayl*tempx2_att(i,j,k) + gammayl*tempx3_att(i,j,k)
-            duxdzl_att = xizl*tempx1_att(i,j,k) + etazl*tempx2_att(i,j,k) + gammazl*tempx3_att(i,j,k)
+      if (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) then
+        ! temporary variables used for fixing attenuation in a consistent way
+        duxdxl_att = xixl*tempx1_att(INDEX_IJK) + etaxl*tempx2_att(INDEX_IJK) + gammaxl*tempx3_att(INDEX_IJK)
+        duxdyl_att = xiyl*tempx1_att(INDEX_IJK) + etayl*tempx2_att(INDEX_IJK) + gammayl*tempx3_att(INDEX_IJK)
+        duxdzl_att = xizl*tempx1_att(INDEX_IJK) + etazl*tempx2_att(INDEX_IJK) + gammazl*tempx3_att(INDEX_IJK)
 
-            duydxl_att = xixl*tempy1_att(i,j,k) + etaxl*tempy2_att(i,j,k) + gammaxl*tempy3_att(i,j,k)
-            duydyl_att = xiyl*tempy1_att(i,j,k) + etayl*tempy2_att(i,j,k) + gammayl*tempy3_att(i,j,k)
-            duydzl_att = xizl*tempy1_att(i,j,k) + etazl*tempy2_att(i,j,k) + gammazl*tempy3_att(i,j,k)
+        duydxl_att = xixl*tempy1_att(INDEX_IJK) + etaxl*tempy2_att(INDEX_IJK) + gammaxl*tempy3_att(INDEX_IJK)
+        duydyl_att = xiyl*tempy1_att(INDEX_IJK) + etayl*tempy2_att(INDEX_IJK) + gammayl*tempy3_att(INDEX_IJK)
+        duydzl_att = xizl*tempy1_att(INDEX_IJK) + etazl*tempy2_att(INDEX_IJK) + gammazl*tempy3_att(INDEX_IJK)
 
-            duzdxl_att = xixl*tempz1_att(i,j,k) + etaxl*tempz2_att(i,j,k) + gammaxl*tempz3_att(i,j,k)
-            duzdyl_att = xiyl*tempz1_att(i,j,k) + etayl*tempz2_att(i,j,k) + gammayl*tempz3_att(i,j,k)
-            duzdzl_att = xizl*tempz1_att(i,j,k) + etazl*tempz2_att(i,j,k) + gammazl*tempz3_att(i,j,k)
+        duzdxl_att = xixl*tempz1_att(INDEX_IJK) + etaxl*tempz2_att(INDEX_IJK) + gammaxl*tempz3_att(INDEX_IJK)
+        duzdyl_att = xiyl*tempz1_att(INDEX_IJK) + etayl*tempz2_att(INDEX_IJK) + gammayl*tempz3_att(INDEX_IJK)
+        duzdzl_att = xizl*tempz1_att(INDEX_IJK) + etazl*tempz2_att(INDEX_IJK) + gammazl*tempz3_att(INDEX_IJK)
 
-            ! precompute some sums to save CPU time
-            duxdyl_plus_duydxl_att = duxdyl_att + duydxl_att
-            duzdxl_plus_duxdzl_att = duzdxl_att + duxdzl_att
-            duzdyl_plus_duydzl_att = duzdyl_att + duydzl_att
+        ! precompute some sums to save CPU time
+        duxdyl_plus_duydxl_att = duxdyl_att + duydxl_att
+        duzdxl_plus_duxdzl_att = duzdxl_att + duxdzl_att
+        duzdyl_plus_duydzl_att = duzdyl_att + duydzl_att
 
-            ! compute deviatoric strain
-            templ = ONE_THIRD * (duxdxl_att + duydyl_att + duzdzl_att)
-            if (SIMULATION_TYPE == 3) epsilon_trace_over_3(i,j,k,ispec) = templ
-            if (FULL_ATTENUATION_SOLID) epsilondev_trace_loc(i,j,k) = 3.0 * templ
-            epsilondev_xx_loc(i,j,k) = duxdxl_att - templ
-            epsilondev_yy_loc(i,j,k) = duydyl_att - templ
-            epsilondev_xy_loc(i,j,k) = 0.5 * duxdyl_plus_duydxl_att
-            epsilondev_xz_loc(i,j,k) = 0.5 * duzdxl_plus_duxdzl_att
-            epsilondev_yz_loc(i,j,k) = 0.5 * duzdyl_plus_duydzl_att
-          else if (PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
-            ! do not merge this second line with the first using an ".and." statement
-            ! because array is_CPML() is unallocated when PML_CONDITIONS is false
-            if (is_CPML(ispec)) then
-              PML_dux_dxl(i,j,k) = duxdxl
-              PML_dux_dyl(i,j,k) = duxdyl
-              PML_dux_dzl(i,j,k) = duxdzl
+        ! compute deviatoric strain
+        templ = ONE_THIRD * (duxdxl_att + duydyl_att + duzdzl_att)
+        if (SIMULATION_TYPE == 3) epsilon_trace_over_3(INDEX_IJK,ispec) = templ
+        if (FULL_ATTENUATION_SOLID) epsilondev_trace_loc(INDEX_IJK) = 3.0 * templ
+        epsilondev_xx_loc(INDEX_IJK) = duxdxl_att - templ
+        epsilondev_yy_loc(INDEX_IJK) = duydyl_att - templ
+        epsilondev_xy_loc(INDEX_IJK) = 0.5 * duxdyl_plus_duydxl_att
+        epsilondev_xz_loc(INDEX_IJK) = 0.5 * duzdxl_plus_duxdzl_att
+        epsilondev_yz_loc(INDEX_IJK) = 0.5 * duzdyl_plus_duydzl_att
+      else if (PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
+        ! do not merge this second line with the first using an ".and." statement
+        ! because array is_CPML() is unallocated when PML_CONDITIONS is false
+        if (is_CPML(ispec)) then
+          PML_dux_dxl(INDEX_IJK) = duxdxl
+          PML_dux_dyl(INDEX_IJK) = duxdyl
+          PML_dux_dzl(INDEX_IJK) = duxdzl
 
-              PML_duy_dxl(i,j,k) = duydxl
-              PML_duy_dyl(i,j,k) = duydyl
-              PML_duy_dzl(i,j,k) = duydzl
+          PML_duy_dxl(INDEX_IJK) = duydxl
+          PML_duy_dyl(INDEX_IJK) = duydyl
+          PML_duy_dzl(INDEX_IJK) = duydzl
 
-              PML_duz_dxl(i,j,k) = duzdxl
-              PML_duz_dyl(i,j,k) = duzdyl
-              PML_duz_dzl(i,j,k) = duzdzl
+          PML_duz_dxl(INDEX_IJK) = duzdxl
+          PML_duz_dyl(INDEX_IJK) = duzdyl
+          PML_duz_dzl(INDEX_IJK) = duzdzl
 
-              PML_dux_dxl_old(i,j,k) = xixl*tempx1_att(i,j,k) + etaxl*tempx2_att(i,j,k) + gammaxl*tempx3_att(i,j,k)
-              PML_dux_dyl_old(i,j,k) = xiyl*tempx1_att(i,j,k) + etayl*tempx2_att(i,j,k) + gammayl*tempx3_att(i,j,k)
-              PML_dux_dzl_old(i,j,k) = xizl*tempx1_att(i,j,k) + etazl*tempx2_att(i,j,k) + gammazl*tempx3_att(i,j,k)
+          PML_dux_dxl_old(INDEX_IJK) = xixl*tempx1_att(INDEX_IJK) + etaxl*tempx2_att(INDEX_IJK) + gammaxl*tempx3_att(INDEX_IJK)
+          PML_dux_dyl_old(INDEX_IJK) = xiyl*tempx1_att(INDEX_IJK) + etayl*tempx2_att(INDEX_IJK) + gammayl*tempx3_att(INDEX_IJK)
+          PML_dux_dzl_old(INDEX_IJK) = xizl*tempx1_att(INDEX_IJK) + etazl*tempx2_att(INDEX_IJK) + gammazl*tempx3_att(INDEX_IJK)
 
-              PML_duy_dxl_old(i,j,k) = xixl*tempy1_att(i,j,k) + etaxl*tempy2_att(i,j,k) + gammaxl*tempy3_att(i,j,k)
-              PML_duy_dyl_old(i,j,k) = xiyl*tempy1_att(i,j,k) + etayl*tempy2_att(i,j,k) + gammayl*tempy3_att(i,j,k)
-              PML_duy_dzl_old(i,j,k) = xizl*tempy1_att(i,j,k) + etazl*tempy2_att(i,j,k) + gammazl*tempy3_att(i,j,k)
+          PML_duy_dxl_old(INDEX_IJK) = xixl*tempy1_att(INDEX_IJK) + etaxl*tempy2_att(INDEX_IJK) + gammaxl*tempy3_att(INDEX_IJK)
+          PML_duy_dyl_old(INDEX_IJK) = xiyl*tempy1_att(INDEX_IJK) + etayl*tempy2_att(INDEX_IJK) + gammayl*tempy3_att(INDEX_IJK)
+          PML_duy_dzl_old(INDEX_IJK) = xizl*tempy1_att(INDEX_IJK) + etazl*tempy2_att(INDEX_IJK) + gammazl*tempy3_att(INDEX_IJK)
 
-              PML_duz_dxl_old(i,j,k) = xixl*tempz1_att(i,j,k) + etaxl*tempz2_att(i,j,k) + gammaxl*tempz3_att(i,j,k)
-              PML_duz_dyl_old(i,j,k) = xiyl*tempz1_att(i,j,k) + etayl*tempz2_att(i,j,k) + gammayl*tempz3_att(i,j,k)
-              PML_duz_dzl_old(i,j,k) = xizl*tempz1_att(i,j,k) + etazl*tempz2_att(i,j,k) + gammazl*tempz3_att(i,j,k)
-            endif
-          else
-            ! computes deviatoric strain attenuation and/or for kernel calculations
-            if (COMPUTE_AND_STORE_STRAIN) then
-              templ = ONE_THIRD * (duxdxl + duydyl + duzdzl)
-              if (SIMULATION_TYPE == 3) epsilon_trace_over_3(i,j,k,ispec) = templ
-              if (FULL_ATTENUATION_SOLID) epsilondev_trace_loc(i,j,k) = 3.0 * templ
-              epsilondev_xx_loc(i,j,k) = duxdxl - templ
-              epsilondev_yy_loc(i,j,k) = duydyl - templ
-              epsilondev_xy_loc(i,j,k) = 0.5 * duxdyl_plus_duydxl
-              epsilondev_xz_loc(i,j,k) = 0.5 * duzdxl_plus_duxdzl
-              epsilondev_yz_loc(i,j,k) = 0.5 * duzdyl_plus_duydzl
-            endif
-          endif
+          PML_duz_dxl_old(INDEX_IJK) = xixl*tempz1_att(INDEX_IJK) + etaxl*tempz2_att(INDEX_IJK) + gammaxl*tempz3_att(INDEX_IJK)
+          PML_duz_dyl_old(INDEX_IJK) = xiyl*tempz1_att(INDEX_IJK) + etayl*tempz2_att(INDEX_IJK) + gammayl*tempz3_att(INDEX_IJK)
+          PML_duz_dzl_old(INDEX_IJK) = xizl*tempz1_att(INDEX_IJK) + etazl*tempz2_att(INDEX_IJK) + gammazl*tempz3_att(INDEX_IJK)
+        endif
+      else
+        ! computes deviatoric strain attenuation and/or for kernel calculations
+        if (COMPUTE_AND_STORE_STRAIN) then
+          templ = ONE_THIRD * (duxdxl + duydyl + duzdzl)
+          if (SIMULATION_TYPE == 3) epsilon_trace_over_3(INDEX_IJK,ispec) = templ
+          if (FULL_ATTENUATION_SOLID) epsilondev_trace_loc(INDEX_IJK) = 3.0 * templ
+          epsilondev_xx_loc(INDEX_IJK) = duxdxl - templ
+          epsilondev_yy_loc(INDEX_IJK) = duydyl - templ
+          epsilondev_xy_loc(INDEX_IJK) = 0.5 * duxdyl_plus_duydxl
+          epsilondev_xz_loc(INDEX_IJK) = 0.5 * duzdxl_plus_duxdzl
+          epsilondev_yz_loc(INDEX_IJK) = 0.5 * duzdyl_plus_duydzl
+        endif
+      endif
 
-          kappal = kappastore(i,j,k,ispec)
-          mul = mustore(i,j,k,ispec)
+      kappal = kappastore(INDEX_IJK,ispec)
+      mul = mustore(INDEX_IJK,ispec)
 
 ! counts:
 ! + 0 FLOP
 !
 ! + NGLLX * NGLLY * NGLLZ * 2 float = 1000 BYTE
 
-          ! attenuation
-          if (ATTENUATION) then
-            ! use unrelaxed parameters if attenuation
-            mul  = mul * one_minus_sum_beta(i,j,k,ispec)
-            if (FULL_ATTENUATION_SOLID) kappal  = kappal * one_minus_sum_beta_kappa(i,j,k,ispec)
-          endif
+      ! attenuation
+      if (ATTENUATION) then
+        ! use unrelaxed parameters if attenuation
+        mul  = mul * one_minus_sum_beta(INDEX_IJK,ispec)
+        if (FULL_ATTENUATION_SOLID) kappal  = kappal * one_minus_sum_beta_kappa(INDEX_IJK,ispec)
+      endif
 
-          ! full anisotropic case, stress calculations
-          if (ANISOTROPY) then
-            c11 = c11store(i,j,k,ispec)
-            c12 = c12store(i,j,k,ispec)
-            c13 = c13store(i,j,k,ispec)
-            c14 = c14store(i,j,k,ispec)
-            c15 = c15store(i,j,k,ispec)
-            c16 = c16store(i,j,k,ispec)
-            c22 = c22store(i,j,k,ispec)
-            c23 = c23store(i,j,k,ispec)
-            c24 = c24store(i,j,k,ispec)
-            c25 = c25store(i,j,k,ispec)
-            c26 = c26store(i,j,k,ispec)
-            c33 = c33store(i,j,k,ispec)
-            c34 = c34store(i,j,k,ispec)
-            c35 = c35store(i,j,k,ispec)
-            c36 = c36store(i,j,k,ispec)
-            c44 = c44store(i,j,k,ispec)
-            c45 = c45store(i,j,k,ispec)
-            c46 = c46store(i,j,k,ispec)
-            c55 = c55store(i,j,k,ispec)
-            c56 = c56store(i,j,k,ispec)
-            c66 = c66store(i,j,k,ispec)
+      ! full anisotropic case, stress calculations
+      if (ANISOTROPY) then
+        c11 = c11store(INDEX_IJK,ispec)
+        c12 = c12store(INDEX_IJK,ispec)
+        c13 = c13store(INDEX_IJK,ispec)
+        c14 = c14store(INDEX_IJK,ispec)
+        c15 = c15store(INDEX_IJK,ispec)
+        c16 = c16store(INDEX_IJK,ispec)
+        c22 = c22store(INDEX_IJK,ispec)
+        c23 = c23store(INDEX_IJK,ispec)
+        c24 = c24store(INDEX_IJK,ispec)
+        c25 = c25store(INDEX_IJK,ispec)
+        c26 = c26store(INDEX_IJK,ispec)
+        c33 = c33store(INDEX_IJK,ispec)
+        c34 = c34store(INDEX_IJK,ispec)
+        c35 = c35store(INDEX_IJK,ispec)
+        c36 = c36store(INDEX_IJK,ispec)
+        c44 = c44store(INDEX_IJK,ispec)
+        c45 = c45store(INDEX_IJK,ispec)
+        c46 = c46store(INDEX_IJK,ispec)
+        c55 = c55store(INDEX_IJK,ispec)
+        c56 = c56store(INDEX_IJK,ispec)
+        c66 = c66store(INDEX_IJK,ispec)
 
-            sigma_xx = c11*duxdxl + c16*duxdyl_plus_duydxl + c12*duydyl + &
-                      c15*duzdxl_plus_duxdzl + c14*duzdyl_plus_duydzl + c13*duzdzl
-            sigma_yy = c12*duxdxl + c26*duxdyl_plus_duydxl + c22*duydyl + &
-                      c25*duzdxl_plus_duxdzl + c24*duzdyl_plus_duydzl + c23*duzdzl
-            sigma_zz = c13*duxdxl + c36*duxdyl_plus_duydxl + c23*duydyl + &
-                      c35*duzdxl_plus_duxdzl + c34*duzdyl_plus_duydzl + c33*duzdzl
-            sigma_xy = c16*duxdxl + c66*duxdyl_plus_duydxl + c26*duydyl + &
-                      c56*duzdxl_plus_duxdzl + c46*duzdyl_plus_duydzl + c36*duzdzl
-            sigma_xz = c15*duxdxl + c56*duxdyl_plus_duydxl + c25*duydyl + &
-                      c55*duzdxl_plus_duxdzl + c45*duzdyl_plus_duydzl + c35*duzdzl
-            sigma_yz = c14*duxdxl + c46*duxdyl_plus_duydxl + c24*duydyl + &
-                      c45*duzdxl_plus_duxdzl + c44*duzdyl_plus_duydzl + c34*duzdzl
+        sigma_xx = c11*duxdxl + c16*duxdyl_plus_duydxl + c12*duydyl + &
+                  c15*duzdxl_plus_duxdzl + c14*duzdyl_plus_duydzl + c13*duzdzl
+        sigma_yy = c12*duxdxl + c26*duxdyl_plus_duydxl + c22*duydyl + &
+                  c25*duzdxl_plus_duxdzl + c24*duzdyl_plus_duydzl + c23*duzdzl
+        sigma_zz = c13*duxdxl + c36*duxdyl_plus_duydxl + c23*duydyl + &
+                  c35*duzdxl_plus_duxdzl + c34*duzdyl_plus_duydzl + c33*duzdzl
+        sigma_xy = c16*duxdxl + c66*duxdyl_plus_duydxl + c26*duydyl + &
+                  c56*duzdxl_plus_duxdzl + c46*duzdyl_plus_duydzl + c36*duzdzl
+        sigma_xz = c15*duxdxl + c56*duxdyl_plus_duydxl + c25*duydyl + &
+                  c55*duzdxl_plus_duxdzl + c45*duzdyl_plus_duydzl + c35*duzdzl
+        sigma_yz = c14*duxdxl + c46*duxdyl_plus_duydxl + c24*duydyl + &
+                  c45*duzdxl_plus_duxdzl + c44*duzdyl_plus_duydzl + c34*duzdzl
 
-          else
+      else
 
-          ! isotropic case
-            lambdalplus2mul = kappal + FOUR_THIRDS * mul
-            lambdal = lambdalplus2mul - 2._CUSTOM_REAL*mul
+      ! isotropic case
+        lambdalplus2mul = kappal + FOUR_THIRDS * mul
+        lambdal = lambdalplus2mul - 2._CUSTOM_REAL*mul
 
-            ! compute stress sigma
-            if (.not. MAKE_HOOKE_LAW_WEAKLY_NONLINEAR) then
+        ! compute stress sigma
+        if (.not. MAKE_HOOKE_LAW_WEAKLY_NONLINEAR) then
 
-              sigma_xx = lambdalplus2mul*duxdxl + lambdal*duydyl_plus_duzdzl
-              sigma_yy = lambdalplus2mul*duydyl + lambdal*duxdxl_plus_duzdzl
-              sigma_zz = lambdalplus2mul*duzdzl + lambdal*duxdxl_plus_duydyl
+          sigma_xx = lambdalplus2mul*duxdxl + lambdal*duydyl_plus_duzdzl
+          sigma_yy = lambdalplus2mul*duydyl + lambdal*duxdxl_plus_duzdzl
+          sigma_zz = lambdalplus2mul*duzdzl + lambdal*duxdxl_plus_duydyl
 
-              sigma_xy = mul*duxdyl_plus_duydxl
-              sigma_xz = mul*duzdxl_plus_duxdzl
-              sigma_yz = mul*duzdyl_plus_duydzl
+          sigma_xy = mul*duxdyl_plus_duydxl
+          sigma_xz = mul*duzdxl_plus_duxdzl
+          sigma_yz = mul*duzdyl_plus_duydzl
 
-            else
+        else
 
-            ! in the case of weakly nonlinear materials the stress tensor becomes non-symmetric, see for instance equation (A9) in
-            ! D. L. Johnson, S. Kostek and A. N. Norris, Nonlinear tube waves, J. Acoust. Soc. Am. vol. 96, p. 1829-1843 (1994).
+        ! in the case of weakly nonlinear materials the stress tensor becomes non-symmetric, see for instance equation (A9) in
+        ! D. L. Johnson, S. Kostek and A. N. Norris, Nonlinear tube waves, J. Acoust. Soc. Am. vol. 96, p. 1829-1843 (1994).
 
-              epsilon_trace = duxdxl + duydyl + duzdzl
-              epsilon_trace_squared = epsilon_trace * epsilon_trace
+          epsilon_trace = duxdxl + duydyl + duzdzl
+          epsilon_trace_squared = epsilon_trace * epsilon_trace
 
-              mul_plus_A_over_4 = mul + A_over_4
-              lambdal_plus_B = lambdal + B
-              lambdal_over_two_plus_B_over_2 = 0.5_CUSTOM_REAL * lambdal + B_over_2
+          mul_plus_A_over_4 = mul + A_over_4
+          lambdal_plus_B = lambdal + B
+          lambdal_over_two_plus_B_over_2 = 0.5_CUSTOM_REAL * lambdal + B_over_2
 
-              sigma_xx = lambdal * epsilon_trace + mul * (duxdxl + duxdxl) + B * epsilon_trace * duxdxl + &
-                         lambdal_plus_B * epsilon_trace * duxdxl + C * epsilon_trace_squared + A_over_4 * &
-                         (duxdxl * duxdxl + duxdyl * duydxl + duxdzl * duzdxl) + mul_plus_A_over_4 * &
-                         (duxdxl * duxdxl + duxdxl * duxdxl + duxdxl * duxdxl + duxdyl * duxdyl + &
-                         duydxl * duydxl + duxdyl * duydxl + duxdzl * duxdzl + duzdxl * duzdxl + &
-                         duxdzl * duzdxl) + lambdal_over_two_plus_B_over_2 * (duxdxl * duxdxl + &
-                         duydxl * duydxl + duzdxl * duzdxl + duxdyl * duxdyl + duydyl * duydyl + &
-                         duzdyl * duzdyl + duxdzl * duxdzl + duydzl * duydzl + duzdzl * duzdzl) + &
-                         B_over_2 * (duxdxl * duxdxl + duydxl * duxdyl + duzdxl * duxdzl + &
-                         duxdyl * duydxl + duydyl * duydyl + duzdyl * duydzl + &
-                         duxdzl * duzdxl + duydzl * duzdyl + duzdzl * duzdzl)
+          sigma_xx = lambdal * epsilon_trace + mul * (duxdxl + duxdxl) + B * epsilon_trace * duxdxl + &
+                     lambdal_plus_B * epsilon_trace * duxdxl + C * epsilon_trace_squared + A_over_4 * &
+                     (duxdxl * duxdxl + duxdyl * duydxl + duxdzl * duzdxl) + mul_plus_A_over_4 * &
+                     (duxdxl * duxdxl + duxdxl * duxdxl + duxdxl * duxdxl + duxdyl * duxdyl + &
+                     duydxl * duydxl + duxdyl * duydxl + duxdzl * duxdzl + duzdxl * duzdxl + &
+                     duxdzl * duzdxl) + lambdal_over_two_plus_B_over_2 * (duxdxl * duxdxl + &
+                     duydxl * duydxl + duzdxl * duzdxl + duxdyl * duxdyl + duydyl * duydyl + &
+                     duzdyl * duzdyl + duxdzl * duxdzl + duydzl * duydzl + duzdzl * duzdzl) + &
+                     B_over_2 * (duxdxl * duxdxl + duydxl * duxdyl + duzdxl * duxdzl + &
+                     duxdyl * duydxl + duydyl * duydyl + duzdyl * duydzl + &
+                     duxdzl * duzdxl + duydzl * duzdyl + duzdzl * duzdzl)
 
-              sigma_xy = mul * (duxdyl + duydxl) + B * epsilon_trace * duydxl + lambdal_plus_B * &
-                         epsilon_trace * duxdyl + A_over_4 * (duydxl * duxdxl + duydyl * duydxl + &
-                         duydzl * duzdxl) + mul_plus_A_over_4 * (duxdxl * duydxl + duxdxl * duxdyl + &
-                         duxdxl * duxdyl + duxdyl * duydyl + duydxl * duydyl + duxdyl * duydyl + &
-                         duxdzl * duydzl + duzdxl * duzdyl + duxdzl * duzdyl)
+          sigma_xy = mul * (duxdyl + duydxl) + B * epsilon_trace * duydxl + lambdal_plus_B * &
+                     epsilon_trace * duxdyl + A_over_4 * (duydxl * duxdxl + duydyl * duydxl + &
+                     duydzl * duzdxl) + mul_plus_A_over_4 * (duxdxl * duydxl + duxdxl * duxdyl + &
+                     duxdxl * duxdyl + duxdyl * duydyl + duydxl * duydyl + duxdyl * duydyl + &
+                     duxdzl * duydzl + duzdxl * duzdyl + duxdzl * duzdyl)
 
-              sigma_xz = mul * (duxdzl + duzdxl) + B * epsilon_trace * duzdxl + lambdal_plus_B * &
-                         epsilon_trace * duxdzl + A_over_4 * (duzdxl * duxdxl + duzdyl * duydxl + &
-                         duzdzl * duzdxl) + mul_plus_A_over_4 * (duxdxl * duzdxl + duxdxl * duxdzl + &
-                         duxdxl * duxdzl + duxdyl * duzdyl + duydxl * duydzl + duxdyl * duydzl + &
-                         duxdzl * duzdzl + duzdxl * duzdzl + duxdzl * duzdzl)
+          sigma_xz = mul * (duxdzl + duzdxl) + B * epsilon_trace * duzdxl + lambdal_plus_B * &
+                     epsilon_trace * duxdzl + A_over_4 * (duzdxl * duxdxl + duzdyl * duydxl + &
+                     duzdzl * duzdxl) + mul_plus_A_over_4 * (duxdxl * duzdxl + duxdxl * duxdzl + &
+                     duxdxl * duxdzl + duxdyl * duzdyl + duydxl * duydzl + duxdyl * duydzl + &
+                     duxdzl * duzdzl + duzdxl * duzdzl + duxdzl * duzdzl)
 
-              sigma_yx = mul * (duydxl + duxdyl) + B * epsilon_trace * duxdyl + lambdal_plus_B * &
-                         epsilon_trace * duydxl + A_over_4 * (duxdxl * duxdyl + duxdyl * duydyl + &
-                         duxdzl * duzdyl) + mul_plus_A_over_4 * (duydxl * duxdxl + duxdyl * duxdxl + &
-                         duydxl * duxdxl + duydyl * duxdyl + duydyl * duydxl + duydyl * duydxl + &
-                         duydzl * duxdzl + duzdyl * duzdxl + duydzl * duzdxl)
+          sigma_yx = mul * (duydxl + duxdyl) + B * epsilon_trace * duxdyl + lambdal_plus_B * &
+                     epsilon_trace * duydxl + A_over_4 * (duxdxl * duxdyl + duxdyl * duydyl + &
+                     duxdzl * duzdyl) + mul_plus_A_over_4 * (duydxl * duxdxl + duxdyl * duxdxl + &
+                     duydxl * duxdxl + duydyl * duxdyl + duydyl * duydxl + duydyl * duydxl + &
+                     duydzl * duxdzl + duzdyl * duzdxl + duydzl * duzdxl)
 
-              sigma_yy = lambdal * epsilon_trace + mul * (duydyl + duydyl) + B * epsilon_trace * duydyl + &
-                         lambdal_plus_B * epsilon_trace * duydyl + C * epsilon_trace_squared + A_over_4 * &
-                         (duydxl * duxdyl + duydyl * duydyl + duydzl * duzdyl) + mul_plus_A_over_4 * &
-                         (duydxl * duydxl + duxdyl * duxdyl + duydxl * duxdyl + duydyl * duydyl + &
-                         duydyl * duydyl + duydyl * duydyl + duydzl * duydzl + duzdyl * duzdyl + &
-                         duydzl * duzdyl) + lambdal_over_two_plus_B_over_2 * (duxdxl * duxdxl + &
-                         duydxl * duydxl + duzdxl * duzdxl + duxdyl * duxdyl + duydyl * duydyl + &
-                         duzdyl * duzdyl + duxdzl * duxdzl + duydzl * duydzl + duzdzl * duzdzl) + &
-                         B_over_2 * (duxdxl * duxdxl + duydxl * duxdyl + duzdxl * duxdzl + &
-                         duxdyl * duydxl + duydyl * duydyl + duzdyl * duydzl + &
-                         duxdzl * duzdxl + duydzl * duzdyl + duzdzl * duzdzl)
+          sigma_yy = lambdal * epsilon_trace + mul * (duydyl + duydyl) + B * epsilon_trace * duydyl + &
+                     lambdal_plus_B * epsilon_trace * duydyl + C * epsilon_trace_squared + A_over_4 * &
+                     (duydxl * duxdyl + duydyl * duydyl + duydzl * duzdyl) + mul_plus_A_over_4 * &
+                     (duydxl * duydxl + duxdyl * duxdyl + duydxl * duxdyl + duydyl * duydyl + &
+                     duydyl * duydyl + duydyl * duydyl + duydzl * duydzl + duzdyl * duzdyl + &
+                     duydzl * duzdyl) + lambdal_over_two_plus_B_over_2 * (duxdxl * duxdxl + &
+                     duydxl * duydxl + duzdxl * duzdxl + duxdyl * duxdyl + duydyl * duydyl + &
+                     duzdyl * duzdyl + duxdzl * duxdzl + duydzl * duydzl + duzdzl * duzdzl) + &
+                     B_over_2 * (duxdxl * duxdxl + duydxl * duxdyl + duzdxl * duxdzl + &
+                     duxdyl * duydxl + duydyl * duydyl + duzdyl * duydzl + &
+                     duxdzl * duzdxl + duydzl * duzdyl + duzdzl * duzdzl)
 
-              sigma_yz = mul * (duydzl + duzdyl) + B * epsilon_trace * duzdyl + lambdal_plus_B * &
-                         epsilon_trace * duydzl + A_over_4 * (duzdxl * duxdyl + duzdyl * duydyl + &
-                         duzdzl * duzdyl) + mul_plus_A_over_4 * (duydxl * duzdxl + duxdyl * duxdzl + &
-                         duydxl * duxdzl + duydyl * duzdyl + duydyl * duydzl + duydyl * duydzl + &
-                         duydzl * duzdzl + duzdyl * duzdzl + duydzl * duzdzl)
+          sigma_yz = mul * (duydzl + duzdyl) + B * epsilon_trace * duzdyl + lambdal_plus_B * &
+                     epsilon_trace * duydzl + A_over_4 * (duzdxl * duxdyl + duzdyl * duydyl + &
+                     duzdzl * duzdyl) + mul_plus_A_over_4 * (duydxl * duzdxl + duxdyl * duxdzl + &
+                     duydxl * duxdzl + duydyl * duzdyl + duydyl * duydzl + duydyl * duydzl + &
+                     duydzl * duzdzl + duzdyl * duzdzl + duydzl * duzdzl)
 
-              sigma_zx = mul * (duzdxl + duxdzl) + B * epsilon_trace * duxdzl + lambdal_plus_B * &
-                         epsilon_trace * duzdxl + A_over_4 * (duxdxl * duxdzl + duxdyl * duydzl + &
-                         duxdzl * duzdzl) + mul_plus_A_over_4 * (duzdxl * duxdxl + duxdzl * duxdxl + &
-                         duzdxl * duxdxl + duzdyl * duxdyl + duydzl * duydxl + duzdyl * duydxl + &
-                         duzdzl * duxdzl + duzdzl * duzdxl + duzdzl * duzdxl)
+          sigma_zx = mul * (duzdxl + duxdzl) + B * epsilon_trace * duxdzl + lambdal_plus_B * &
+                     epsilon_trace * duzdxl + A_over_4 * (duxdxl * duxdzl + duxdyl * duydzl + &
+                     duxdzl * duzdzl) + mul_plus_A_over_4 * (duzdxl * duxdxl + duxdzl * duxdxl + &
+                     duzdxl * duxdxl + duzdyl * duxdyl + duydzl * duydxl + duzdyl * duydxl + &
+                     duzdzl * duxdzl + duzdzl * duzdxl + duzdzl * duzdxl)
 
-              sigma_zy = mul * (duzdyl + duydzl) + B * epsilon_trace * duydzl + lambdal_plus_B * &
-                         epsilon_trace * duzdyl + A_over_4 * (duydxl * duxdzl + duydyl * duydzl + &
-                         duydzl * duzdzl) + mul_plus_A_over_4 * (duzdxl * duydxl + duxdzl * duxdyl + &
-                         duzdxl * duxdyl + duzdyl * duydyl + duydzl * duydyl + duzdyl * duydyl + &
-                         duzdzl * duydzl + duzdzl * duzdyl + duzdzl * duzdyl)
+          sigma_zy = mul * (duzdyl + duydzl) + B * epsilon_trace * duydzl + lambdal_plus_B * &
+                     epsilon_trace * duzdyl + A_over_4 * (duydxl * duxdzl + duydyl * duydzl + &
+                     duydzl * duzdzl) + mul_plus_A_over_4 * (duzdxl * duydxl + duxdzl * duxdyl + &
+                     duzdxl * duxdyl + duzdyl * duydyl + duydzl * duydyl + duzdyl * duydyl + &
+                     duzdzl * duydzl + duzdzl * duzdyl + duzdzl * duzdyl)
 
-              sigma_zz = lambdal * epsilon_trace + mul * (duzdzl + duzdzl) + B * epsilon_trace * &
-                         duzdzl + lambdal_plus_B * epsilon_trace * duzdzl + C * epsilon_trace_squared + &
-                         A_over_4 * (duzdxl * duxdzl + duzdyl * duydzl + duzdzl * duzdzl) + &
-                         mul_plus_A_over_4 * (duzdxl * duzdxl + duxdzl * duxdzl + duzdxl * duxdzl + &
-                         duzdyl * duzdyl + duydzl * duydzl + duzdyl * duydzl + duzdzl * duzdzl + &
-                         duzdzl * duzdzl + duzdzl * duzdzl) + lambdal_over_two_plus_B_over_2 * (duxdxl * duxdxl + &
-                         duydxl * duydxl + duzdxl * duzdxl + duxdyl * duxdyl + duydyl * duydyl + duzdyl * duzdyl + &
-                         duxdzl * duxdzl + duydzl * duydzl + duzdzl * duzdzl) + B_over_2 * (duxdxl * duxdxl + &
-                         duydxl * duxdyl + duzdxl * duxdzl + duxdyl * duydxl + duydyl * duydyl + duzdyl * duydzl + &
-                         duxdzl * duzdxl + duydzl * duzdyl + duzdzl * duzdzl)
+          sigma_zz = lambdal * epsilon_trace + mul * (duzdzl + duzdzl) + B * epsilon_trace * &
+                     duzdzl + lambdal_plus_B * epsilon_trace * duzdzl + C * epsilon_trace_squared + &
+                     A_over_4 * (duzdxl * duxdzl + duzdyl * duydzl + duzdzl * duzdzl) + &
+                     mul_plus_A_over_4 * (duzdxl * duzdxl + duxdzl * duxdzl + duzdxl * duxdzl + &
+                     duzdyl * duzdyl + duydzl * duydzl + duzdyl * duydzl + duzdzl * duzdzl + &
+                     duzdzl * duzdzl + duzdzl * duzdzl) + lambdal_over_two_plus_B_over_2 * (duxdxl * duxdxl + &
+                     duydxl * duydxl + duzdxl * duzdxl + duxdyl * duxdyl + duydyl * duydyl + duzdyl * duzdyl + &
+                     duxdzl * duxdzl + duydzl * duydzl + duzdzl * duzdzl) + B_over_2 * (duxdxl * duxdxl + &
+                     duydxl * duxdyl + duzdxl * duxdzl + duxdyl * duydxl + duydyl * duydyl + duzdyl * duydzl + &
+                     duxdzl * duzdxl + duydzl * duzdyl + duzdzl * duzdzl)
 
-            endif
+        endif
 
-          endif ! of if (ANISOTROPY)
+      endif ! of if (ANISOTROPY)
 
 ! counts:
 ! + NGLLX * NGLLY * NGLLZ * 16 =  2000 FLOP
 !
 ! + 0 BYTE
 
-          ! subtract memory variables if attenuation
-          if (ATTENUATION) then
+      ! subtract memory variables if attenuation
+      if (ATTENUATION) then
 ! way 1
 !            do i_sls = 1,N_SLS
-!              R_xx_val = R_xx(i,j,k,ispec,i_sls)
-!              R_yy_val = R_yy(i,j,k,ispec,i_sls)
+!              R_xx_val = R_xx(INDEX_IJK,ispec,i_sls)
+!              R_yy_val = R_yy(INDEX_IJK,ispec,i_sls)
 !              sigma_xx = sigma_xx - R_xx_val
 !              sigma_yy = sigma_yy - R_yy_val
 !              sigma_zz = sigma_zz + R_xx_val + R_yy_val
-!              sigma_xy = sigma_xy - R_xy(i,j,k,ispec,i_sls)
-!              sigma_xz = sigma_xz - R_xz(i,j,k,ispec,i_sls)
-!              sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls)
+!              sigma_xy = sigma_xy - R_xy(INDEX_IJK,ispec,i_sls)
+!              sigma_xz = sigma_xz - R_xz(INDEX_IJK,ispec,i_sls)
+!              sigma_yz = sigma_yz - R_yz(INDEX_IJK,ispec,i_sls)
 !            enddo
 
 ! way 2
 ! note: this should help compilers to pipeline the code and make better use of the cache;
 !          depending on compilers, it can further decrease the computation time by ~ 30%.
 !          by default, N_SLS = 3, therefore we take steps of 3
-            if (imodulo_N_SLS >= 1) then
-              do i_sls = 1,imodulo_N_SLS
-                if (FULL_ATTENUATION_SOLID) then
-                  R_trace_val1 = R_trace(i,j,k,ispec,i_sls)
-                else
-                  R_trace_val1 = 0.
-                endif
-                R_xx_val1 = R_xx(i,j,k,ispec,i_sls)
-                R_yy_val1 = R_yy(i,j,k,ispec,i_sls)
-                sigma_xx = sigma_xx - R_xx_val1 - R_trace_val1
-                sigma_yy = sigma_yy - R_yy_val1 - R_trace_val1
-                sigma_zz = sigma_zz + R_xx_val1 + R_yy_val1 - R_trace_val1
-                sigma_xy = sigma_xy - R_xy(i,j,k,ispec,i_sls)
-                sigma_xz = sigma_xz - R_xz(i,j,k,ispec,i_sls)
-                sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls)
-              enddo
+        if (imodulo_N_SLS >= 1) then
+          do i_sls = 1,imodulo_N_SLS
+            if (FULL_ATTENUATION_SOLID) then
+              R_trace_val1 = R_trace(INDEX_IJK,ispec,i_sls)
+            else
+              R_trace_val1 = 0.
             endif
+            R_xx_val1 = R_xx(INDEX_IJK,ispec,i_sls)
+            R_yy_val1 = R_yy(INDEX_IJK,ispec,i_sls)
+            sigma_xx = sigma_xx - R_xx_val1 - R_trace_val1
+            sigma_yy = sigma_yy - R_yy_val1 - R_trace_val1
+            sigma_zz = sigma_zz + R_xx_val1 + R_yy_val1 - R_trace_val1
+            sigma_xy = sigma_xy - R_xy(INDEX_IJK,ispec,i_sls)
+            sigma_xz = sigma_xz - R_xz(INDEX_IJK,ispec,i_sls)
+            sigma_yz = sigma_yz - R_yz(INDEX_IJK,ispec,i_sls)
+          enddo
+        endif
 
-            if (N_SLS >= imodulo_N_SLS+1) then
-              do i_sls = imodulo_N_SLS+1,N_SLS,3
-                if (FULL_ATTENUATION_SOLID) then
-                  R_trace_val1 = R_trace(i,j,k,ispec,i_sls)
-                else
-                  R_trace_val1 = 0.
-                endif
-                R_xx_val1 = R_xx(i,j,k,ispec,i_sls)
-                R_yy_val1 = R_yy(i,j,k,ispec,i_sls)
-                sigma_xx = sigma_xx - R_xx_val1 - R_trace_val1
-                sigma_yy = sigma_yy - R_yy_val1 - R_trace_val1
-                sigma_zz = sigma_zz + R_xx_val1 + R_yy_val1 - R_trace_val1
-                sigma_xy = sigma_xy - R_xy(i,j,k,ispec,i_sls)
-                sigma_xz = sigma_xz - R_xz(i,j,k,ispec,i_sls)
-                sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls)
-                if (FULL_ATTENUATION_SOLID) then
-                  R_trace_val2 = R_trace(i,j,k,ispec,i_sls+1)
-                else
-                  R_trace_val2 = 0.
-                endif
-                R_xx_val2 = R_xx(i,j,k,ispec,i_sls+1)
-                R_yy_val2 = R_yy(i,j,k,ispec,i_sls+1)
-                sigma_xx = sigma_xx - R_xx_val2 - R_trace_val2
-                sigma_yy = sigma_yy - R_yy_val2 - R_trace_val2
-                sigma_zz = sigma_zz + R_xx_val2 + R_yy_val2 - R_trace_val2
-                sigma_xy = sigma_xy - R_xy(i,j,k,ispec,i_sls+1)
-                sigma_xz = sigma_xz - R_xz(i,j,k,ispec,i_sls+1)
-                sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls+1)
-
-                if (FULL_ATTENUATION_SOLID) then
-                  R_trace_val3 = R_trace(i,j,k,ispec,i_sls+2)
-                else
-                  R_trace_val3 = 0.
-                endif
-                R_xx_val3 = R_xx(i,j,k,ispec,i_sls+2)
-                R_yy_val3 = R_yy(i,j,k,ispec,i_sls+2)
-                sigma_xx = sigma_xx - R_xx_val3 - R_trace_val3
-                sigma_yy = sigma_yy - R_yy_val3 - R_trace_val3
-                sigma_zz = sigma_zz + R_xx_val3 + R_yy_val3 - R_trace_val3
-                sigma_xy = sigma_xy - R_xy(i,j,k,ispec,i_sls+2)
-                sigma_xz = sigma_xz - R_xz(i,j,k,ispec,i_sls+2)
-                sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls+2)
-              enddo
+        if (N_SLS >= imodulo_N_SLS+1) then
+          do i_sls = imodulo_N_SLS+1,N_SLS,3
+            if (FULL_ATTENUATION_SOLID) then
+              R_trace_val1 = R_trace(INDEX_IJK,ispec,i_sls)
+            else
+              R_trace_val1 = 0.
             endif
+            R_xx_val1 = R_xx(INDEX_IJK,ispec,i_sls)
+            R_yy_val1 = R_yy(INDEX_IJK,ispec,i_sls)
+            sigma_xx = sigma_xx - R_xx_val1 - R_trace_val1
+            sigma_yy = sigma_yy - R_yy_val1 - R_trace_val1
+            sigma_zz = sigma_zz + R_xx_val1 + R_yy_val1 - R_trace_val1
+            sigma_xy = sigma_xy - R_xy(INDEX_IJK,ispec,i_sls)
+            sigma_xz = sigma_xz - R_xz(INDEX_IJK,ispec,i_sls)
+            sigma_yz = sigma_yz - R_yz(INDEX_IJK,ispec,i_sls)
+            if (FULL_ATTENUATION_SOLID) then
+              R_trace_val2 = R_trace(INDEX_IJK,ispec,i_sls+1)
+            else
+              R_trace_val2 = 0.
+            endif
+            R_xx_val2 = R_xx(INDEX_IJK,ispec,i_sls+1)
+            R_yy_val2 = R_yy(INDEX_IJK,ispec,i_sls+1)
+            sigma_xx = sigma_xx - R_xx_val2 - R_trace_val2
+            sigma_yy = sigma_yy - R_yy_val2 - R_trace_val2
+            sigma_zz = sigma_zz + R_xx_val2 + R_yy_val2 - R_trace_val2
+            sigma_xy = sigma_xy - R_xy(INDEX_IJK,ispec,i_sls+1)
+            sigma_xz = sigma_xz - R_xz(INDEX_IJK,ispec,i_sls+1)
+            sigma_yz = sigma_yz - R_yz(INDEX_IJK,ispec,i_sls+1)
 
-          endif
+            if (FULL_ATTENUATION_SOLID) then
+              R_trace_val3 = R_trace(INDEX_IJK,ispec,i_sls+2)
+            else
+              R_trace_val3 = 0.
+            endif
+            R_xx_val3 = R_xx(INDEX_IJK,ispec,i_sls+2)
+            R_yy_val3 = R_yy(INDEX_IJK,ispec,i_sls+2)
+            sigma_xx = sigma_xx - R_xx_val3 - R_trace_val3
+            sigma_yy = sigma_yy - R_yy_val3 - R_trace_val3
+            sigma_zz = sigma_zz + R_xx_val3 + R_yy_val3 - R_trace_val3
+            sigma_xy = sigma_xy - R_xy(INDEX_IJK,ispec,i_sls+2)
+            sigma_xz = sigma_xz - R_xz(INDEX_IJK,ispec,i_sls+2)
+            sigma_yz = sigma_yz - R_yz(INDEX_IJK,ispec,i_sls+2)
+          enddo
+        endif
 
-          ! define symmetric components of sigma
-          if (.not. MAKE_HOOKE_LAW_WEAKLY_NONLINEAR) then
-            sigma_yx = sigma_xy
-            sigma_zx = sigma_xz
-            sigma_zy = sigma_yz
-          endif
+      endif
 
-          ! form dot product with test vector, non-symmetric form (which is useful in the case of PML)
-          tempx1(i,j,k) = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl) ! this goes to accel_x
-          tempy1(i,j,k) = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_zy*xizl) ! this goes to accel_y
-          tempz1(i,j,k) = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl) ! this goes to accel_z
+      ! define symmetric components of sigma
+      if (.not. MAKE_HOOKE_LAW_WEAKLY_NONLINEAR) then
+        sigma_yx = sigma_xy
+        sigma_zx = sigma_xz
+        sigma_zy = sigma_yz
+      endif
 
-          tempx2(i,j,k) = jacobianl * (sigma_xx*etaxl + sigma_yx*etayl + sigma_zx*etazl) ! this goes to accel_x
-          tempy2(i,j,k) = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_zy*etazl) ! this goes to accel_y
-          tempz2(i,j,k) = jacobianl * (sigma_xz*etaxl + sigma_yz*etayl + sigma_zz*etazl) ! this goes to accel_z
+      ! form dot product with test vector, non-symmetric form (which is useful in the case of PML)
+      tempx1(INDEX_IJK) = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl) ! this goes to accel_x
+      tempy1(INDEX_IJK) = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_zy*xizl) ! this goes to accel_y
+      tempz1(INDEX_IJK) = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl) ! this goes to accel_z
 
-          tempx3(i,j,k) = jacobianl * (sigma_xx*gammaxl + sigma_yx*gammayl + sigma_zx*gammazl) ! this goes to accel_x
-          tempy3(i,j,k) = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_zy*gammazl) ! this goes to accel_y
-          tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl) ! this goes to accel_z
+      tempx2(INDEX_IJK) = jacobianl * (sigma_xx*etaxl + sigma_yx*etayl + sigma_zx*etazl) ! this goes to accel_x
+      tempy2(INDEX_IJK) = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_zy*etazl) ! this goes to accel_y
+      tempz2(INDEX_IJK) = jacobianl * (sigma_xz*etaxl + sigma_yz*etayl + sigma_zz*etazl) ! this goes to accel_z
+
+      tempx3(INDEX_IJK) = jacobianl * (sigma_xx*gammaxl + sigma_yx*gammayl + sigma_zx*gammazl) ! this goes to accel_x
+      tempy3(INDEX_IJK) = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_zy*gammazl) ! this goes to accel_y
+      tempz3(INDEX_IJK) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl) ! this goes to accel_z
 
 ! counts:
 ! + NGLLX * NGLLY * NGLLZ * 9 * 6 = 6750 FLOP
 !
 ! + NGLLX * NGLLY * NGLLZ * 9 float = 4500 BYTE (temp* stores)
 
-        enddo
-      enddo
-    enddo
+    ENDDO_LOOP_IJK
 
     if (PML_CONDITIONS .and. (.not. backward_simulation)  .and. NSPEC_CPML > 0) then
       ! do not merge this second line with the first using an ".and." statement
@@ -1049,7 +805,9 @@
       if (is_CPML(ispec)) then
         ispec_CPML = spec_to_CPML(ispec)
         ! sets C-PML elastic memory variables to compute stress sigma and form dot product with test vector
-        call pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,tempz1,tempx2,tempy2,tempz2, &
+        call pml_compute_memory_variables_elastic(ispec,ispec_CPML, &
+                                   tempx1,tempy1,tempz1, &
+                                   tempx2,tempy2,tempz2, &
                                    tempx3,tempy3,tempz3, &
                                    rmemory_dux_dxl_x, rmemory_duy_dyl_x, rmemory_duz_dzl_x, &
                                    rmemory_dux_dyl_x, rmemory_dux_dzl_x, rmemory_duz_dxl_x, rmemory_duy_dxl_x, &
@@ -1066,100 +824,45 @@
     ! subroutines adapted from Deville, Fischer and Mund, High-order methods
     ! for incompressible fluid flow, Cambridge University Press (2002),
     ! pages 386 and 389 and Figure 8.3.1
-    do j=1,m2
-      do i=1,m1
-        E1_m1_m2_5points(i,j) = hprimewgll_xxT(i,1)*C1_m1_m2_5points(1,j) + &
-                                hprimewgll_xxT(i,2)*C1_m1_m2_5points(2,j) + &
-                                hprimewgll_xxT(i,3)*C1_m1_m2_5points(3,j) + &
-                                hprimewgll_xxT(i,4)*C1_m1_m2_5points(4,j) + &
-                                hprimewgll_xxT(i,5)*C1_m1_m2_5points(5,j)
-        E2_m1_m2_5points(i,j) = hprimewgll_xxT(i,1)*C2_m1_m2_5points(1,j) + &
-                                hprimewgll_xxT(i,2)*C2_m1_m2_5points(2,j) + &
-                                hprimewgll_xxT(i,3)*C2_m1_m2_5points(3,j) + &
-                                hprimewgll_xxT(i,4)*C2_m1_m2_5points(4,j) + &
-                                hprimewgll_xxT(i,5)*C2_m1_m2_5points(5,j)
-        E3_m1_m2_5points(i,j) = hprimewgll_xxT(i,1)*C3_m1_m2_5points(1,j) + &
-                                hprimewgll_xxT(i,2)*C3_m1_m2_5points(2,j) + &
-                                hprimewgll_xxT(i,3)*C3_m1_m2_5points(3,j) + &
-                                hprimewgll_xxT(i,4)*C3_m1_m2_5points(4,j) + &
-                                hprimewgll_xxT(i,5)*C3_m1_m2_5points(5,j)
-      enddo
-    enddo
+
+    ! computes 1. matrix multiplication for newtempx1,..
+    call mxm5_3comp_singleA(hprimewgll_xxT,m1,tempx1,tempy1,tempz1,newtempx1,newtempy1,newtempz1,m2)
 
 ! counts:
 ! + m1 * m2 * 3 * 9 = 3375 FLOP
 !
 ! + m1 * 5 float = 100 BYTE (hprimewgll_xxT once, assumes E3*, C1* in cache)
 
-    do i=1,m1
-      do j=1,m1
-        ! for efficiency it is better to leave this loop on k inside, it leads to slightly faster code
-        do k = 1,NGLLX
-          newtempx2(i,j,k) = tempx2(i,1,k)*hprimewgll_xx(1,j) + &
-                             tempx2(i,2,k)*hprimewgll_xx(2,j) + &
-                             tempx2(i,3,k)*hprimewgll_xx(3,j) + &
-                             tempx2(i,4,k)*hprimewgll_xx(4,j) + &
-                             tempx2(i,5,k)*hprimewgll_xx(5,j)
-          newtempy2(i,j,k) = tempy2(i,1,k)*hprimewgll_xx(1,j) + &
-                             tempy2(i,2,k)*hprimewgll_xx(2,j) + &
-                             tempy2(i,3,k)*hprimewgll_xx(3,j) + &
-                             tempy2(i,4,k)*hprimewgll_xx(4,j) + &
-                             tempy2(i,5,k)*hprimewgll_xx(5,j)
-          newtempz2(i,j,k) = tempz2(i,1,k)*hprimewgll_xx(1,j) + &
-                             tempz2(i,2,k)*hprimewgll_xx(2,j) + &
-                             tempz2(i,3,k)*hprimewgll_xx(3,j) + &
-                             tempz2(i,4,k)*hprimewgll_xx(4,j) + &
-                             tempz2(i,5,k)*hprimewgll_xx(5,j)
-        enddo
-      enddo
-    enddo
+    ! computes 2. matrix multiplication for tempx2,..
+    call mxm5_3comp_3dmat_singleB(tempx2,tempy2,tempz2,m1,hprimewgll_xx,m1,newtempx2,newtempy2,newtempz2,NGLLX)
 
 ! counts:
 ! + m1 * m1 * NGLLX * 3 * 9 = 3375 FLOP
 !
 ! + m1 * 5 float = 100 BYTE (hprimewgll_xx once, assumes E3*, C1* in cache)
 
-    do j=1,m1
-      do i=1,m2
-        E1_mxm_m2_m1_5points(i,j) = C1_mxm_m2_m1_5points(i,1)*hprimewgll_xx(1,j) + &
-                                    C1_mxm_m2_m1_5points(i,2)*hprimewgll_xx(2,j) + &
-                                    C1_mxm_m2_m1_5points(i,3)*hprimewgll_xx(3,j) + &
-                                    C1_mxm_m2_m1_5points(i,4)*hprimewgll_xx(4,j) + &
-                                    C1_mxm_m2_m1_5points(i,5)*hprimewgll_xx(5,j)
-        E2_mxm_m2_m1_5points(i,j) = C2_mxm_m2_m1_5points(i,1)*hprimewgll_xx(1,j) + &
-                                    C2_mxm_m2_m1_5points(i,2)*hprimewgll_xx(2,j) + &
-                                    C2_mxm_m2_m1_5points(i,3)*hprimewgll_xx(3,j) + &
-                                    C2_mxm_m2_m1_5points(i,4)*hprimewgll_xx(4,j) + &
-                                    C2_mxm_m2_m1_5points(i,5)*hprimewgll_xx(5,j)
-        E3_mxm_m2_m1_5points(i,j) = C3_mxm_m2_m1_5points(i,1)*hprimewgll_xx(1,j) + &
-                                    C3_mxm_m2_m1_5points(i,2)*hprimewgll_xx(2,j) + &
-                                    C3_mxm_m2_m1_5points(i,3)*hprimewgll_xx(3,j) + &
-                                    C3_mxm_m2_m1_5points(i,4)*hprimewgll_xx(4,j) + &
-                                    C3_mxm_m2_m1_5points(i,5)*hprimewgll_xx(5,j)
-      enddo
-    enddo
+    ! computes 3. matrix multiplication for newtempx3,..
+    call mxm5_3comp_singleB(tempx3,tempy3,tempz3,m2,hprimewgll_xx,newtempx3,newtempy3,newtempz3,m1)
 
 ! counts:
 ! + m1 * m2 * 3 * 9 = 3375 FLOP
 !
 ! + 0 BYTE (assumes E1*, C1*, hprime* in cache)
 
-    do k=1,NGLLZ
-      do j=1,NGLLY
-        do i=1,NGLLX
+    ! sums contributions
+    DO_LOOP_IJK
+      fac1 = wgllwgll_yz_3D(INDEX_IJK)
+      fac2 = wgllwgll_xz_3D(INDEX_IJK)
+      fac3 = wgllwgll_xy_3D(INDEX_IJK)
 
-          fac1 = wgllwgll_yz(j,k)
-          fac2 = wgllwgll_xz(i,k)
-          fac3 = wgllwgll_xy(i,j)
-
-          ! sum contributions from each element to the global mesh using indirect addressing
-          iglob = ibool(i,j,k,ispec)
-          accel(1,iglob) = accel(1,iglob) - fac1*newtempx1(i,j,k) - &
-                            fac2*newtempx2(i,j,k) - fac3*newtempx3(i,j,k)
-          accel(2,iglob) = accel(2,iglob) - fac1*newtempy1(i,j,k) - &
-                            fac2*newtempy2(i,j,k) - fac3*newtempy3(i,j,k)
-          accel(3,iglob) = accel(3,iglob) - fac1*newtempz1(i,j,k) - &
-                            fac2*newtempz2(i,j,k) - fac3*newtempz3(i,j,k)
+      ! sum contributions from each element to the global mesh using indirect addressing
+      iglob = ibool(INDEX_IJK,ispec)
+      accel(1,iglob) = accel(1,iglob) &
+        - fac1*newtempx1(INDEX_IJK) - fac2*newtempx2(INDEX_IJK) - fac3*newtempx3(INDEX_IJK)
+      accel(2,iglob) = accel(2,iglob) &
+        - fac1*newtempy1(INDEX_IJK) - fac2*newtempy2(INDEX_IJK) - fac3*newtempy3(INDEX_IJK)
+      accel(3,iglob) = accel(3,iglob) &
+        - fac1*newtempz1(INDEX_IJK) - fac2*newtempz2(INDEX_IJK) - fac3*newtempz3(INDEX_IJK)
 
 ! counts:
 ! + NGLLX * NGLLY * NGLLZ * 3 * 6 = 2250 FLOP
@@ -1167,78 +870,72 @@
 ! + NGLLX * NGLLY * 3 float = 300 BYTE (wgllwgll once)
 ! + NGLLX * NGLLY * NGLLZ * (1 + 3) float = 2000 BYTE (ibool & accel, assumes newtemp* in cache)
 
-          !  update memory variables based upon the Runge-Kutta scheme
-          if (ATTENUATION) then
+      !  update memory variables based upon the Runge-Kutta scheme
+      if (ATTENUATION) then
 
-            ! use Runge-Kutta scheme to march in time
-            do i_sls = 1,N_SLS
+        ! use Runge-Kutta scheme to march in time
+        do i_sls = 1,N_SLS
 
-              alphaval_loc = alphaval(i_sls)
-              betaval_loc = betaval(i_sls)
-              gammaval_loc = gammaval(i_sls)
+          alphaval_loc = alphaval(i_sls)
+          betaval_loc = betaval(i_sls)
+          gammaval_loc = gammaval(i_sls)
 
-              if (FULL_ATTENUATION_SOLID) then
-                ! term in trace
-                factor_loc = kappastore(i,j,k,ispec) * factor_common_kappa(i_sls,i,j,k,ispec)
+          if (FULL_ATTENUATION_SOLID) then
+            ! term in trace
+            factor_loc = kappastore(INDEX_IJK,ispec) * factor_common_kappa(i_sls,INDEX_IJK,ispec)
 
-                Sn   = factor_loc * epsilondev_trace(i,j,k,ispec)
-                Snp1   = factor_loc * epsilondev_trace_loc(i,j,k)
-                R_trace(i,j,k,ispec,i_sls) = alphaval_loc * R_trace(i,j,k,ispec,i_sls) + &
-                                  betaval_loc * Sn + gammaval_loc * Snp1
-              endif
+            Sn   = factor_loc * epsilondev_trace(INDEX_IJK,ispec)
+            Snp1   = factor_loc * epsilondev_trace_loc(INDEX_IJK)
+            R_trace(INDEX_IJK,ispec,i_sls) = alphaval_loc * R_trace(INDEX_IJK,ispec,i_sls) + &
+                              betaval_loc * Sn + gammaval_loc * Snp1
+          endif
 
-              ! term in xx yy zz xy xz yz
-              factor_loc = mustore(i,j,k,ispec) * factor_common(i_sls,i,j,k,ispec)
+          ! term in xx yy zz xy xz yz
+          factor_loc = mustore(INDEX_IJK,ispec) * factor_common(i_sls,INDEX_IJK,ispec)
 
-              ! term in xx
-              Sn   = factor_loc * epsilondev_xx(i,j,k,ispec)
-              Snp1   = factor_loc * epsilondev_xx_loc(i,j,k)
-              R_xx(i,j,k,ispec,i_sls) = alphaval_loc * R_xx(i,j,k,ispec,i_sls) + &
-                                betaval_loc * Sn + gammaval_loc * Snp1
-              ! term in yy
-              Sn   = factor_loc * epsilondev_yy(i,j,k,ispec)
-              Snp1   = factor_loc * epsilondev_yy_loc(i,j,k)
-              R_yy(i,j,k,ispec,i_sls) = alphaval_loc * R_yy(i,j,k,ispec,i_sls) + &
-                                betaval_loc * Sn + gammaval_loc * Snp1
-              ! term in zz not computed since zero trace
-              ! term in xy
-              Sn   = factor_loc * epsilondev_xy(i,j,k,ispec)
-              Snp1   = factor_loc * epsilondev_xy_loc(i,j,k)
-              R_xy(i,j,k,ispec,i_sls) = alphaval_loc * R_xy(i,j,k,ispec,i_sls) + &
-                                betaval_loc * Sn + gammaval_loc * Snp1
-              ! term in xz
-              Sn   = factor_loc * epsilondev_xz(i,j,k,ispec)
-              Snp1   = factor_loc * epsilondev_xz_loc(i,j,k)
-              R_xz(i,j,k,ispec,i_sls) = alphaval_loc * R_xz(i,j,k,ispec,i_sls) + &
-                                betaval_loc * Sn + gammaval_loc * Snp1
-              ! term in yz
-              Sn   = factor_loc * epsilondev_yz(i,j,k,ispec)
-              Snp1   = factor_loc * epsilondev_yz_loc(i,j,k)
-              R_yz(i,j,k,ispec,i_sls) = alphaval_loc * R_yz(i,j,k,ispec,i_sls) + &
-                                betaval_loc * Sn + gammaval_loc * Snp1
-            enddo   ! end of loop on memory variables
+          ! term in xx
+          Sn   = factor_loc * epsilondev_xx(INDEX_IJK,ispec)
+          Snp1   = factor_loc * epsilondev_xx_loc(INDEX_IJK)
+          R_xx(INDEX_IJK,ispec,i_sls) = alphaval_loc * R_xx(INDEX_IJK,ispec,i_sls) + &
+                            betaval_loc * Sn + gammaval_loc * Snp1
+          ! term in yy
+          Sn   = factor_loc * epsilondev_yy(INDEX_IJK,ispec)
+          Snp1   = factor_loc * epsilondev_yy_loc(INDEX_IJK)
+          R_yy(INDEX_IJK,ispec,i_sls) = alphaval_loc * R_yy(INDEX_IJK,ispec,i_sls) + &
+                            betaval_loc * Sn + gammaval_loc * Snp1
+          ! term in zz not computed since zero trace
+          ! term in xy
+          Sn   = factor_loc * epsilondev_xy(INDEX_IJK,ispec)
+          Snp1   = factor_loc * epsilondev_xy_loc(INDEX_IJK)
+          R_xy(INDEX_IJK,ispec,i_sls) = alphaval_loc * R_xy(INDEX_IJK,ispec,i_sls) + &
+                            betaval_loc * Sn + gammaval_loc * Snp1
+          ! term in xz
+          Sn   = factor_loc * epsilondev_xz(INDEX_IJK,ispec)
+          Snp1   = factor_loc * epsilondev_xz_loc(INDEX_IJK)
+          R_xz(INDEX_IJK,ispec,i_sls) = alphaval_loc * R_xz(INDEX_IJK,ispec,i_sls) + &
+                            betaval_loc * Sn + gammaval_loc * Snp1
+          ! term in yz
+          Sn   = factor_loc * epsilondev_yz(INDEX_IJK,ispec)
+          Snp1   = factor_loc * epsilondev_yz_loc(INDEX_IJK)
+          R_yz(INDEX_IJK,ispec,i_sls) = alphaval_loc * R_yz(INDEX_IJK,ispec,i_sls) + &
+                            betaval_loc * Sn + gammaval_loc * Snp1
+        enddo   ! end of loop on memory variables
 
-          endif  !  end of if attenuation
+      endif  !  end of if attenuation
 
-        enddo
-      enddo
-    enddo
+    ENDDO_LOOP_IJK
 
     if (PML_CONDITIONS .and. (.not. backward_simulation)  .and. NSPEC_CPML > 0) then
       ! do not merge this second line with the first using an ".and." statement
       ! because array is_CPML() is unallocated when PML_CONDITIONS is false
       if (is_CPML(ispec)) then
 
-        do k = 1,NGLLZ
-          do j = 1,NGLLY
-            do i = 1,NGLLX
-              iglob = ibool(i,j,k,ispec)
-              accel(1,iglob) = accel(1,iglob) - accel_elastic_CPML(1,i,j,k)
-              accel(2,iglob) = accel(2,iglob) - accel_elastic_CPML(2,i,j,k)
-              accel(3,iglob) = accel(3,iglob) - accel_elastic_CPML(3,i,j,k)
-            enddo
-          enddo
-        enddo
+        DO_LOOP_IJK
+          iglob = ibool(INDEX_IJK,ispec)
+          accel(1,iglob) = accel(1,iglob) - accel_elastic_CPML(1,INDEX_IJK)
+          accel(2,iglob) = accel(2,iglob) - accel_elastic_CPML(2,INDEX_IJK)
+          accel(3,iglob) = accel(3,iglob) - accel_elastic_CPML(3,INDEX_IJK)
+        ENDDO_LOOP_IJK
       endif
     endif
 
@@ -1268,6 +965,154 @@
 
 
   enddo  ! spectral element loop
+
+  contains
+
+!--------------------------------------------------------------------------------------------
+!
+! matrix-matrix multiplications
+!
+! subroutines adapted from Deville, Fischer and Mund, High-order methods
+! for incompressible fluid flow, Cambridge University Press (2002),
+! pages 386 and 389 and Figure 8.3.1
+!
+!--------------------------------------------------------------------------------------------
+!
+! note: the matrix-matrix multiplications are used for very small matrices ( 5 x 5 x 5 elements);
+!       thus, calling external optimized libraries for these multiplications are in general slower
+!
+! please leave the routines here to help compilers inlining the code
+
+  subroutine mxm5_3comp_singleA(A,n1,B1,B2,B3,C1,C2,C3,n3)
+
+! 3 different arrays for x/y/z-components, 2-dimensional arrays (25,5)/(5,25), same B matrix for all 3 component arrays
+
+  use constants,only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n3
+  real(kind=CUSTOM_REAL),dimension(n1,5),intent(in) :: A
+  real(kind=CUSTOM_REAL),dimension(5,n3),intent(in) :: B1,B2,B3
+  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C1,C2,C3
+
+  ! local parameters
+  integer :: i,j
+
+  ! matrix-matrix multiplication
+  do j = 1,n3
+    do i = 1,n1
+      C1(i,j) =  A(i,1) * B1(1,j) &
+               + A(i,2) * B1(2,j) &
+               + A(i,3) * B1(3,j) &
+               + A(i,4) * B1(4,j) &
+               + A(i,5) * B1(5,j)
+
+      C2(i,j) =  A(i,1) * B2(1,j) &
+               + A(i,2) * B2(2,j) &
+               + A(i,3) * B2(3,j) &
+               + A(i,4) * B2(4,j) &
+               + A(i,5) * B2(5,j)
+
+      C3(i,j) =  A(i,1) * B3(1,j) &
+               + A(i,2) * B3(2,j) &
+               + A(i,3) * B3(3,j) &
+               + A(i,4) * B3(4,j) &
+               + A(i,5) * B3(5,j)
+    enddo
+  enddo
+
+  end subroutine mxm5_3comp_singleA
+
+
+!--------------------------------------------------------------------------------------------
+
+  subroutine mxm5_3comp_singleB(A1,A2,A3,n1,B,C1,C2,C3,n3)
+
+! 3 different arrays for x/y/z-components, 2-dimensional arrays (25,5)/(5,25), same B matrix for all 3 component arrays
+
+  use constants,only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n3
+  real(kind=CUSTOM_REAL),dimension(n1,5),intent(in) :: A1,A2,A3
+  real(kind=CUSTOM_REAL),dimension(5,n3),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C1,C2,C3
+
+  ! local parameters
+  integer :: i,j
+
+  ! matrix-matrix multiplication
+  do j = 1,n3
+    do i = 1,n1
+      C1(i,j) =  A1(i,1) * B(1,j) &
+               + A1(i,2) * B(2,j) &
+               + A1(i,3) * B(3,j) &
+               + A1(i,4) * B(4,j) &
+               + A1(i,5) * B(5,j)
+
+      C2(i,j) =  A2(i,1) * B(1,j) &
+               + A2(i,2) * B(2,j) &
+               + A2(i,3) * B(3,j) &
+               + A2(i,4) * B(4,j) &
+               + A2(i,5) * B(5,j)
+
+      C3(i,j) =  A3(i,1) * B(1,j) &
+               + A3(i,2) * B(2,j) &
+               + A3(i,3) * B(3,j) &
+               + A3(i,4) * B(4,j) &
+               + A3(i,5) * B(5,j)
+    enddo
+  enddo
+
+  end subroutine mxm5_3comp_singleB
+
+
+!--------------------------------------------------------------------------------------------
+
+  subroutine mxm5_3comp_3dmat_singleB(A1,A2,A3,n1,B,n2,C1,C2,C3,n3)
+
+! 3 different arrays for x/y/z-components, 3-dimensional arrays (5,5,5), same B matrix for all 3 component arrays
+
+  use constants,only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n2,n3
+  real(kind=CUSTOM_REAL),dimension(n1,5,n3),intent(in) :: A1,A2,A3
+  real(kind=CUSTOM_REAL),dimension(5,n2),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n2,n3),intent(out) :: C1,C2,C3
+
+  ! local parameters
+  integer :: i,j,k
+
+  ! matrix-matrix multiplication
+  do k = 1,n3
+    do j = 1,n2
+      do i = 1,n1
+        C1(i,j,k) =  A1(i,1,k) * B(1,j) &
+                   + A1(i,2,k) * B(2,j) &
+                   + A1(i,3,k) * B(3,j) &
+                   + A1(i,4,k) * B(4,j) &
+                   + A1(i,5,k) * B(5,j)
+
+        C2(i,j,k) =  A2(i,1,k) * B(1,j) &
+                   + A2(i,2,k) * B(2,j) &
+                   + A2(i,3,k) * B(3,j) &
+                   + A2(i,4,k) * B(4,j) &
+                   + A2(i,5,k) * B(5,j)
+
+        C3(i,j,k) =  A3(i,1,k) * B(1,j) &
+                   + A3(i,2,k) * B(2,j) &
+                   + A3(i,3,k) * B(3,j) &
+                   + A3(i,4,k) * B(4,j) &
+                   + A3(i,5,k) * B(5,j)
+      enddo
+    enddo
+  enddo
+
+  end subroutine mxm5_3comp_3dmat_singleB
 
   end subroutine compute_forces_viscoelastic_Dev_5p
 

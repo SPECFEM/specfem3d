@@ -28,7 +28,7 @@
 
   module generate_databases_par
 
-  use constants,only: NGLLX,NGLLY,NGLLZ,NGLLSQUARE,NGLLCUBE,NDIM,NDIM2D,NGNOD2D_FOUR_CORNERS,N_SLS, &
+  use constants,only: NGLLX,NGLLY,NGLLZ,NGLLSQUARE,NDIM,NDIM2D,NGNOD2D_FOUR_CORNERS,N_SLS, &
     CUSTOM_REAL,SIZE_REAL,SIZE_DOUBLE, &
     IMAIN,IIN,IOUT,ISTANDARD_OUTPUT, &
     ZERO,TWO,FOUR_THIRDS,PI,GAUSSALPHA,GAUSSBETA, &
@@ -46,6 +46,8 @@
     USE_MESH_COLORING_GPU,MAX_NUMBER_OF_COLORS, &
     ADIOS_TRANSPORT_METHOD
 
+  use shared_parameters
+
   implicit none
 
 ! number of spectral elements in each block
@@ -60,39 +62,12 @@
 ! proc numbers for MPI
   integer :: myrank,sizeprocs,ier
 
-! use integer array to store topography values
-  integer :: UTM_PROJECTION_ZONE
-  logical :: SUPPRESS_UTM_PROJECTION
-
   integer :: NX_TOPO,NY_TOPO
   integer, dimension(:,:), allocatable :: itopo_bathy
 
 ! timer MPI
   double precision, external :: wtime
   double precision :: time_start,tCPU
-
-! parameters read from parameter file
-  integer :: NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,SIMULATION_TYPE
-  integer :: NSOURCES,NGNOD,NGNOD2D,MOVIE_TYPE
-  integer :: NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO,NTSTEP_BETWEEN_READ_ADJSRC,EXTERNAL_CODE_TYPE
-
-  double precision :: DT,HDUR_MOVIE,OLSEN_ATTENUATION_RATIO,f0_FOR_PML
-
-  logical :: ATTENUATION,USE_OLSEN_ATTENUATION,APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,SAVE_FORWARD,USE_FORCE_POINT_SOURCE
-  logical :: ANISOTROPY,STACEY_ABSORBING_CONDITIONS,SAVE_MESH_FILES,STACEY_INSTEAD_OF_FREE_SURFACE
-  logical :: PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID
-  logical :: USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
-  logical :: MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES, &
-             COUPLE_WITH_EXTERNAL_CODE,MESH_A_CHUNK_OF_THE_EARTH
-
-  character(len=MAX_STRING_LEN) :: LOCAL_PATH,TOMOGRAPHY_PATH,TRACTION_PATH, SEP_MODEL_DIRECTORY
-
-  logical :: ADIOS_ENABLED
-  logical :: ADIOS_FOR_DATABASES, ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, &
-             ADIOS_FOR_KERNELS
-
-! parameters deduced from parameters read from file
-  integer :: NPROC
 
 ! memory size that will be needed by the solver
   double precision :: max_memory_size,max_memory_size_request
@@ -187,10 +162,6 @@
 
   logical,dimension(:),allocatable :: ispec_is_surface_external_mesh,iglob_is_surface_external_mesh
   integer :: nfaces_surface_ext_mesh,nfaces_surface_glob_ext_mesh
-
-! flag for noise simulation
-  integer :: NOISE_TOMOGRAPHY
-  integer :: IMODEL
 
   end module generate_databases_par
 

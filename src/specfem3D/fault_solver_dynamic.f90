@@ -311,6 +311,8 @@ subroutine init_2d_distribution(a,coord,iin,n)
   character(len=MAX_STRING_LEN) :: shapeval
   real(kind=CUSTOM_REAL) :: val,valh, xc, yc, zc, r, l, lx,ly,lz
   real(kind=CUSTOM_REAL) :: r1(size(a))
+  real(kind=CUSTOM_REAL) :: tmp1(size(a)),tmp2(size(a)),tmp3(size(a))
+
   integer :: i
   real(kind=CUSTOM_REAL) :: SMALLVAL
 
@@ -334,46 +336,48 @@ subroutine init_2d_distribution(a,coord,iin,n)
     lz = 0e0_CUSTOM_REAL
 
     read(iin,DIST2D)
+
     select case (shapeval)
     case ('circle')
-!! DK DK: beware: function or procedure arguments that contain a calculation produce a memory copy
-!! DK DK: created by the compiler; The code is fine, but the hidden copy may slow it down.
-!! DK DK: here is the warning from the Cray compiler:
-!! DK DK: ftn-1438 crayftn: CAUTION INIT_2D_DISTRIBUTION, File = src/specfem3D/fault_solver_dynamic.f90, Line = 355, Column = 24
-!! DK DK: This argument produces a copy in to a temporary variable.
-      b = heaviside( r - sqrt((coord(1,:)-xc)**2 + (coord(2,:)-yc)**2 + (coord(3,:)-zc)**2) ) *val
+      tmp1 = r - sqrt((coord(1,:)-xc)**2 + (coord(2,:)-yc)**2 + (coord(3,:)-zc)**2)
+      b = heaviside( tmp1 ) * val
+
     case ('circle-exp')
       r1 = sqrt((coord(1,:)-xc)**2 + (coord(2,:)-yc)**2 + (coord(3,:)-zc)**2)
       where(r1<r)
-        b =exp(r1**2/(r1**2 - r**2) ) *val + valh
+        b = exp(r1**2/(r1**2 - r**2) ) * val + valh
       elsewhere
-        b =0._CUSTOM_REAL
+        b = 0._CUSTOM_REAL
       endwhere
+
     case ('ellipse')
-!! DK DK: beware: function or procedure arguments that contain a calculation produce a memory copy
-!! DK DK: created by the compiler; The code is fine, but the hidden copy may slow it down.
-      b = heaviside( 1e0_CUSTOM_REAL - sqrt( (coord(1,:)-xc)**2/lx**2 + (coord(2,:)-yc)**2/ly**2 + (coord(3,:)-zc)**2/lz**2) ) *val
+      tmp1 = 1.0_CUSTOM_REAL - sqrt( (coord(1,:)-xc)**2/lx**2 + (coord(2,:)-yc)**2/ly**2 + (coord(3,:)-zc)**2/lz**2)
+      b = heaviside( tmp1 ) * val
+
     case ('square')
-!! DK DK: beware: function or procedure arguments that contain a calculation produce a memory copy
-!! DK DK: created by the compiler; The code is fine, but the hidden copy may slow it down.
-      b = heaviside((l/2._CUSTOM_REAL)-abs(coord(1,:)-xc)+SMALLVAL)  * &
-           heaviside((l/2._CUSTOM_REAL)-abs(coord(2,:)-yc)+SMALLVAL) * &
-           heaviside((l/2._CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL) * &
-           val
+      tmp1 = (l/2._CUSTOM_REAL)-abs(coord(1,:)-xc)+SMALLVAL
+      tmp2 = (l/2._CUSTOM_REAL)-abs(coord(2,:)-yc)+SMALLVAL
+      tmp3 = (l/2._CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL
+      b = heaviside( tmp1 ) * heaviside( tmp2 ) * heaviside( tmp3) * val
+
     case ('cylinder')
-      b = heaviside(r - sqrt((coord(1,:)-xc)**2 + (coord(2,:)-yc)**2)) * &
-           heaviside((lz/2._CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL)  * &
-           val
+      tmp1 = r - sqrt((coord(1,:)-xc)**2 + (coord(2,:)-yc)**2)
+      tmp2 = (lz/2._CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL
+      b = heaviside( tmp1 ) * heaviside( tmp2 ) * val
+
     case ('rectangle')
-      b = heaviside((lx/2._CUSTOM_REAL)-abs(coord(1,:)-xc)+SMALLVAL)  * &
-           heaviside((ly/2._CUSTOM_REAL)-abs(coord(2,:)-yc)+SMALLVAL) * &
-           heaviside((lz/2._CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL) * &
-           val
+      tmp1 = (lx/2._CUSTOM_REAL)-abs(coord(1,:)-xc)+SMALLVAL
+      tmp2 = (ly/2._CUSTOM_REAL)-abs(coord(2,:)-yc)+SMALLVAL
+      tmp3 = (lz/2._CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL
+      b = heaviside( tmp1 ) * heaviside( tmp2 ) * heaviside( tmp3 ) * val
+
     case ('rectangle-taper')
-      b = heaviside((lx/2._CUSTOM_REAL)-abs(coord(1,:)-xc)+SMALLVAL)  * &
-           heaviside((ly/2._CUSTOM_REAL)-abs(coord(2,:)-yc)+SMALLVAL) * &
-           heaviside((lz/2._CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL) * &
-           (val + ( coord(3,:) - zc + lz/2._CUSTOM_REAL ) * (valh-val)/lz )
+      tmp1 = (lx/2._CUSTOM_REAL)-abs(coord(1,:)-xc)+SMALLVAL
+      tmp2 = (ly/2._CUSTOM_REAL)-abs(coord(2,:)-yc)+SMALLVAL
+      tmp3 = (lz/2._CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL
+      b = heaviside( tmp1 ) * heaviside( tmp2 ) * heaviside( tmp3 ) &
+          * (val + ( coord(3,:) - zc + lz/2._CUSTOM_REAL ) * (valh-val)/lz )
+
     case default
       stop 'bc_dynflt_3d::init_2d_distribution:: unknown shape'
     end select
@@ -428,10 +432,10 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
   real(kind=CUSTOM_REAL), intent(in) :: V(:,:),D(:,:)
   integer, intent(in) :: iflt
 
+  ! local parameters
   real(kind=CUSTOM_REAL), dimension(3,bc%nglob) :: T,dD,dV,dA
   real(kind=CUSTOM_REAL), dimension(bc%nglob) :: strength,tStick,tnew, &
-                                                 theta_old, theta_new, dc, &
-                                                 Vf_old,Vf_new,TxExt
+    theta_old, theta_new, dc, Vf_old, Vf_new, TxExt, tmp_Vf
   real(kind=CUSTOM_REAL) :: half_dt,TLoad,DTau0,GLoad,timeval
   integer :: i
 
@@ -521,7 +525,8 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
 
       ! second pass
       bc%rsf%theta = theta_old
-      call rsf_update_state(0.5_CUSTOM_REAL*(Vf_old + Vf_new),bc%dt,bc%rsf)
+      tmp_Vf(:) = 0.5_CUSTOM_REAL*(Vf_old(:) + Vf_new(:))
+      call rsf_update_state(tmp_Vf,bc%dt,bc%rsf)
       do i=1,bc%nglob
         Vf_new(i)=rtsafe(funcd,0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
                          bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
@@ -1021,6 +1026,10 @@ subroutine init_dataXZ(dataXZ,bc)
       allocate(bc%dataXZ_all%stg(npoin_all))
       allocate(bc%dataXZ_all%sta(npoin_all))
     endif
+
+!note: crayftn compiler warns about possible copy which may slow down the code for dataXZ%npoin,dataXZ%xcoord,..
+!ftn-1438 crayftn: CAUTION INIT_DATAXZ, File = src/specfem3D/fault_solver_dynamic.f90, Line = 1036, Column = 45
+!  This argument produces a possible copy in and out to a temporary variable.
 
     allocate(bc%npoin_perproc(NPROC))
     bc%npoin_perproc=0

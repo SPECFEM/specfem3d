@@ -32,22 +32,6 @@
   use specfem_par
 
   implicit none
-  real(kind=CUSTOM_REAL):: minl,maxl,min_all,max_all
-
-  ! gets model dimensions
-  minl = minval( xstore )
-  maxl = maxval( xstore )
-  call min_all_all_cr(minl,min_all)
-  call max_all_all_cr(maxl,max_all)
-  LONGITUDE_MIN = min_all
-  LONGITUDE_MAX = max_all
-
-  minl = minval( ystore )
-  maxl = maxval( ystore )
-  call min_all_all_cr(minl,min_all)
-  call max_all_all_cr(maxl,max_all)
-  LATITUDE_MIN = min_all
-  LATITUDE_MAX = max_all
 
   ! locates sources and determines simulation start time t0
   call setup_sources()
@@ -354,6 +338,24 @@
   integer :: irec,isource,ier
   character(len=MAX_STRING_LEN) :: path_to_add
 
+  real(kind=CUSTOM_REAL):: minl,maxl,min_all,max_all
+  double precision :: LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX
+
+  ! gets model dimensions
+  minl = minval( xstore )
+  maxl = maxval( xstore )
+  call min_all_all_cr(minl,min_all)
+  call max_all_all_cr(maxl,max_all)
+  LONGITUDE_MIN = min_all
+  LONGITUDE_MAX = max_all
+
+  minl = minval( ystore )
+  maxl = maxval( ystore )
+  call min_all_all_cr(minl,min_all)
+  call max_all_all_cr(maxl,max_all)
+  LATITUDE_MIN = min_all
+  LATITUDE_MAX = max_all
+
 ! reads in station file
   if (SIMULATION_TYPE == 1) then
     rec_filename = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'STATIONS'
@@ -369,7 +371,7 @@
     endif
 
     call station_filter(SUPPRESS_UTM_PROJECTION,UTM_PROJECTION_ZONE,myrank,rec_filename,filtered_rec_filename,nrec, &
-           LATITUDE_MIN, LATITUDE_MAX, LONGITUDE_MIN, LONGITUDE_MAX)
+                        LATITUDE_MIN, LATITUDE_MAX, LONGITUDE_MIN, LONGITUDE_MAX)
 
     if (nrec < 1) call exit_MPI(myrank,'need at least one receiver')
     call synchronize_all()
@@ -388,7 +390,7 @@
     endif
 
     call station_filter(SUPPRESS_UTM_PROJECTION,UTM_PROJECTION_ZONE,myrank,rec_filename,filtered_rec_filename,nrec, &
-           LATITUDE_MIN, LATITUDE_MAX, LONGITUDE_MIN, LONGITUDE_MAX)
+                        LATITUDE_MIN, LATITUDE_MAX, LONGITUDE_MIN, LONGITUDE_MAX)
     if (nrec < 1) call exit_MPI(myrank, 'adjoint simulation needs at least one receiver')
     call synchronize_all()
   endif

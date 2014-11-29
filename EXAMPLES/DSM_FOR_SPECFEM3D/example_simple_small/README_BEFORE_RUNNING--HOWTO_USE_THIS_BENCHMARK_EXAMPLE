@@ -1,0 +1,103 @@
+=============================================================================================================================
+
+To run this benchmark, you need to : 
+
+
+=============================================================================================================================
+1. --------------------------------------------------------------------------------------------------------------------------
+=============================================================================================================================
+
+* Compile SpecFEM3D in your specfem3d home directory
+* Install DSM from the directory specfem3d/utils/DSM_FOR_SPECFEM3D ==> type : ./install.sh
+
+
+=============================================================================================================================
+2. --------------------------------------------------------------------------------------------------------------------------
+=============================================================================================================================
+
+* Define the variable HOME_SPECFEM3D, i.e. the path of your specfem3d home, in ./batch_run_benchmark_all_process.sh, l.90
+
+All the other paths in the different scripts depends on the variable HOME_SPECFEM3D
+
+At this moment, the path of specfem3d home is defined as:
+HOME_SPECFEM3D=/ccc/scratch/cont003/gen7165/durochtc/Codes/SPECFEM3Ds/specfem3d
+
+
+=============================================================================================================================
+3. --------------------------------------------------------------------------------------------------------------------------
+=============================================================================================================================
+
+You can change different parameter settings:
+
+* The computation parameter settings are in file: ./batch_run_benchmark_all_process.sh
+
+All the option for launch this benchmark are in the head of this file. This script have 6 steps : the step 6 is about making
+movies with results, this step isn't executed (commented in the batch) for the moment due to a problem that will be fixed soon
+
+* The basic parameter settings for the source and receiver are in file: ./parfile_for_benchmark
+
+* The DSM computation settings and input model are contained in:
+./input_dsm/Double_para.txt
+./input_dsm/FrqsMpi.txt
+./input_dsm/iasp91
+./input_dsm/iasp91_dsm
+./input_dsm/st
+
+* The SpecFEM3D computation parameters settings are in file:
+./DATA/Par_file
+./DATA/STATIONS
+./DATA/CMTSOLUTION
+
+* The script called during the 6 steps (controlling the hybrid computation) are in the directory: 
+specfem3d/utils/DSM_FOR_SPECFEM3D/shells/
+
+
+=============================================================================================================================
+4. --------------------------------------------------------------------------------------------------------------------------
+=============================================================================================================================
+
+This benchmark was tested and works on Curie TGCC supercomputer, for 32 procs (2 nodes of Curie)
+
+To change the number of procs for the job, you need to check/change : 
+
+* Change #MSUB -n (the number of procs) and #MSUB -N (the number of nodes) in ./batch_run_benchmark_all_process.sh (l. 7-8)
+
+* Search and check "#MSUB -n" and "#MSUB -N" in every scripts called by this benchmark 
+  (in the whole DSM_FOR_SPECFEM directory) and change if necessary (normally not) 
+
+* Change NPROC    in ./DATA/Par_file (l. 15)
+
+* Change MPI_CPUS in ./parfile_for_benchmark (l.85)
+
+* Change NRPOC and CPUS in ./batch_run_benchmark_all_process.sh (l. 73-74)
+
+* Search and check "NPROC=" and "CPUS=" in every scripts called by this benchmark 
+  (in the whole DSM_FOR_SPECFEM directory) and change if necessary
+
+
+=============================================================================================================================
+5. --------------------------------------------------------------------------------------------------------------------------
+=============================================================================================================================
+
+* The command to launch the job is :
+
+ccc_msub -q standard ./batch_run_benchmark_all_process.sh
+
+
+=============================================================================================================================
+6. --------------------------------------------------------------------------------------------------------------------------
+=============================================================================================================================
+
+* You can change the wavefield computation type: 
+If you want to choose the computation include SH(only) / PSV(only) / FULL(SH+PSV) wavefields, 
+please change the CHOICE variable to 1/2/3 separately in script: ./batch_run_benchmark_all_process.sh
+
+
+=============================================================================================================================
+7. --------------------------------------------------------------------------------------------------------------------------
+=============================================================================================================================
+
+After running, you can clean the directory, erasing all the generated files ==> type: ./clean_this_example_dir
+
+
+=============================================================================================================================

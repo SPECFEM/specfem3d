@@ -631,6 +631,7 @@ CUDA_LIB
 CUDA_INC
 CUDA_FLAGS
 NVCC
+CONFIGURE_FLAGS
 ADIOS_LIBS
 ADIOS_FCFLAGS
 ADIOS_CONFIG
@@ -667,6 +668,9 @@ LEX
 EGREP
 GREP
 CPP
+FCFLAGS_F90
+FC_DEFINE
+FCFLAGS_F
 FCFLAGS_f90
 ac_ct_CC
 CPPFLAGS
@@ -689,6 +693,10 @@ COND_CUDA5_FALSE
 COND_CUDA5_TRUE
 COND_CUDA_FALSE
 COND_CUDA_TRUE
+COND_VECTORIZATION_FALSE
+COND_VECTORIZATION_TRUE
+COND_DEBUG_FALSE
+COND_DEBUG_TRUE
 CUSTOM_MPI_TYPE
 CUSTOM_REAL
 COND_MPI_FALSE
@@ -744,6 +752,8 @@ ac_user_opts='
 enable_option_checking
 with_mpi
 enable_double_precision
+enable_debug
+enable_vectorization
 with_cuda
 with_adios
 with_openmp
@@ -1399,6 +1409,9 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --enable-double-precision
                           solver in double precision [default=no]
+  --enable-debug          build with debugging options enabled [default=no]
+  --enable-vectorization  build FORCE_VECTORIZATION enabled version
+                          [default=auto]
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -2715,6 +2728,59 @@ else
     CUSTOM_MPI_TYPE=MPI_DOUBLE_PRECISION
 fi
 
+
+
+###
+### debugging
+###
+
+# Check whether --enable-debug was given.
+if test "${enable_debug+set}" = set; then :
+  enableval=$enable_debug; want_debug="$enableval"
+else
+  want_debug=no
+fi
+
+ if test x"$want_debug" != xno; then
+  COND_DEBUG_TRUE=
+  COND_DEBUG_FALSE='#'
+else
+  COND_DEBUG_TRUE='#'
+  COND_DEBUG_FALSE=
+fi
+
+export COND_DEBUG_FALSE
+export COND_DEBUG_TRUE
+
+###
+### FORCE_VECTORIZATION
+###
+
+# Check whether --enable-vectorization was given.
+if test "${enable_vectorization+set}" = set; then :
+  enableval=$enable_vectorization; want_vec="$enableval"
+else
+  want_vec=auto
+fi
+
+if test x"$want_vec" == xauto; then
+    if test x"$want_debug" != xno; then
+        want_vec=no
+    else
+        want_vec=yes
+    fi
+else
+    if test x"$want_vec" != xno && test x"$want_debug" != xno; then
+        as_fn_error $? "--enable-debug and --enable-vectorization cannot be specified simultaneously." "$LINENO" 5
+    fi
+fi
+ if test x"$want_vec" != xno; then
+  COND_VECTORIZATION_TRUE=
+  COND_VECTORIZATION_FALSE='#'
+else
+  COND_VECTORIZATION_TRUE='#'
+  COND_VECTORIZATION_FALSE=
+fi
 
 
 ###
@@ -4635,6 +4701,204 @@ ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
 ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
+
+ac_ext=${ac_fc_srcext-f}
+ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
+ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_fc_compiler_gnu
+ac_fc_pp_define_srcext_save=$ac_fc_srcext
+ac_ext=${ac_fc_srcext-f}
+ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
+ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_fc_compiler_gnu
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for Fortran flag to compile preprocessed .F files" >&5
+$as_echo_n "checking for Fortran flag to compile preprocessed .F files... " >&6; }
+if ${ac_cv_fc_pp_srcext_F+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_ext=F
+ac_fcflags_pp_srcext_save=$ac_fcflags_srcext
+ac_fcflags_srcext=
+ac_cv_fc_pp_srcext_F=unknown
+case $ac_ext in #(
+  [fF]77) ac_try=f77-cpp-input;; #(
+  *) ac_try=f95-cpp-input;;
+esac
+for ac_flag in none -ftpp -fpp -Tf "-fpp -Tf" -xpp=fpp -Mpreprocess "-e Z" \
+               -cpp -xpp=cpp -qsuffix=cpp=F "-x $ac_try" +cpp -Cpp; do
+  test "x$ac_flag" != xnone && ac_fcflags_srcext="$ac_flag"
+  cat > conftest.$ac_ext <<_ACEOF
+      program main
+
+#if 0
+#include <ac_nonexistent.h>
+      choke me
+#endif
+      end
+_ACEOF
+if ac_fn_fc_try_compile "$LINENO"; then :
+  cat > conftest.$ac_ext <<_ACEOF
+      program main
+
+#if 1
+#include <ac_nonexistent.h>
+      choke me
+#endif
+      end
+_ACEOF
+if ac_fn_fc_try_compile "$LINENO"; then :
+
+else
+  ac_cv_fc_pp_srcext_F=$ac_flag; break
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+done
+rm -f conftest.$ac_objext conftest.F
+ac_fcflags_srcext=$ac_fcflags_pp_srcext_save
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_fc_pp_srcext_F" >&5
+$as_echo "$ac_cv_fc_pp_srcext_F" >&6; }
+if test "x$ac_cv_fc_pp_srcext_F" = xunknown; then
+  as_fn_error $? "Fortran could not compile preprocessed .F files" "$LINENO" 5
+else
+  ac_fc_srcext=F
+  if test "x$ac_cv_fc_pp_srcext_F" = xnone; then
+    ac_fcflags_srcext=""
+    FCFLAGS_F=""
+  else
+    ac_fcflags_srcext=$ac_cv_fc_pp_srcext_F
+    FCFLAGS_F=$ac_cv_fc_pp_srcext_F
+  fi
+
+
+fi
+ac_ext=${ac_fc_srcext-f}
+ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
+ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_fc_compiler_gnu
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking how to define symbols for preprocessed Fortran" >&5
+$as_echo_n "checking how to define symbols for preprocessed Fortran... " >&6; }
+if ${ac_cv_fc_pp_define+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_fc_pp_define_srcext_save=$ac_fc_srcext
+ac_cv_fc_pp_define=unknown
+ac_fc_pp_define_FCFLAGS_save=$FCFLAGS
+for ac_flag in -D -WF,-D -Wp,-D -Wc,-D
+do
+  FCFLAGS="$ac_fc_pp_define_FCFLAGS_save ${ac_flag}FOOBAR ${ac_flag}ZORK=42"
+  cat > conftest.$ac_ext <<_ACEOF
+      program main
+
+#ifndef FOOBAR
+      choke me
+#endif
+#if ZORK != 42
+      choke me
+#endif
+      end
+_ACEOF
+if ac_fn_fc_try_compile "$LINENO"; then :
+  ac_cv_fc_pp_define=$ac_flag
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  test x"$ac_cv_fc_pp_define" != xunknown && break
+done
+FCFLAGS=$ac_fc_pp_define_FCFLAGS_save
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_fc_pp_define" >&5
+$as_echo "$ac_cv_fc_pp_define" >&6; }
+ac_fc_srcext=$ac_fc_pp_define_srcext_save
+if test "x$ac_cv_fc_pp_define" = xunknown; then
+  FC_DEFINE=
+  as_fn_error 77 "Fortran does not allow to define preprocessor symbols" "$LINENO" 5
+else
+  FC_DEFINE=$ac_cv_fc_pp_define
+
+fi
+ac_ext=${ac_fc_srcext-f}
+ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
+ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_fc_compiler_gnu
+
+
+ac_ext=${ac_fc_srcext-f}
+ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
+ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_fc_compiler_gnu
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for Fortran flag to compile preprocessed .F90 files" >&5
+$as_echo_n "checking for Fortran flag to compile preprocessed .F90 files... " >&6; }
+if ${ac_cv_fc_pp_srcext_F90+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_ext=F90
+ac_fcflags_pp_srcext_save=$ac_fcflags_srcext
+ac_fcflags_srcext=
+ac_cv_fc_pp_srcext_F90=unknown
+case $ac_ext in #(
+  [fF]77) ac_try=f77-cpp-input;; #(
+  *) ac_try=f95-cpp-input;;
+esac
+for ac_flag in none -ftpp -fpp -Tf "-fpp -Tf" -xpp=fpp -Mpreprocess "-e Z" \
+               -cpp -xpp=cpp -qsuffix=cpp=F90 "-x $ac_try" +cpp -Cpp; do
+  test "x$ac_flag" != xnone && ac_fcflags_srcext="$ac_flag"
+  cat > conftest.$ac_ext <<_ACEOF
+      program main
+
+#if 0
+#include <ac_nonexistent.h>
+      choke me
+#endif
+      end
+_ACEOF
+if ac_fn_fc_try_compile "$LINENO"; then :
+  cat > conftest.$ac_ext <<_ACEOF
+      program main
+
+#if 1
+#include <ac_nonexistent.h>
+      choke me
+#endif
+      end
+_ACEOF
+if ac_fn_fc_try_compile "$LINENO"; then :
+
+else
+  ac_cv_fc_pp_srcext_F90=$ac_flag; break
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+done
+rm -f conftest.$ac_objext conftest.F90
+ac_fcflags_srcext=$ac_fcflags_pp_srcext_save
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_fc_pp_srcext_F90" >&5
+$as_echo "$ac_cv_fc_pp_srcext_F90" >&6; }
+if test "x$ac_cv_fc_pp_srcext_F90" = xunknown; then
+  as_fn_error $? "Fortran could not compile preprocessed .F90 files" "$LINENO" 5
+else
+  ac_fc_srcext=F90
+  if test "x$ac_cv_fc_pp_srcext_F90" = xnone; then
+    ac_fcflags_srcext=""
+    FCFLAGS_F90=""
+  else
+    ac_fcflags_srcext=$ac_cv_fc_pp_srcext_F90
+    FCFLAGS_F90=$ac_cv_fc_pp_srcext_F90
+  fi
+
+
+fi
+ac_ext=${ac_fc_srcext-f}
+ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
+ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
@@ -6606,11 +6870,7 @@ ac_empty=""
 ### MPI
 ###
 
-if test "$want_mpi" = yes; then
-    $as_echo "## --- ##
-## MPI ##
-## --- ##"
-    ac_ext=cpp
+ac_ext=cpp
 ac_cpp='$CXXCPP $CPPFLAGS'
 ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
@@ -7034,6 +7294,11 @@ ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ex
 ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
 
+if test "$want_mpi" = yes; then :
+
+    $as_echo "## --- ##
+## MPI ##
+## --- ##"
 
 
   ac_ext=cpp
@@ -7075,14 +7340,15 @@ ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
 
 
+
 fi
 
 
 ###
 ### ADIOS
 ###
+if test x"$want_adios" != xno; then :
 
-if test "$want_adios" = yes; then
     $as_echo "## ----- ##
 ## ADIOS ##
 ## ----- ##"
@@ -7212,14 +7478,22 @@ ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
 
 
+
 fi
+
+#mpbl: adding flags to config.h.in through autoheader in order to save them into the adios file.
+#configure_flags_str="FC=$FC FCFLAGS=$FCFLAGS $FLAGS_CHECK"
+#AC_DEFINE_UNQUOTED([CONFIGURE_FLAGS],["${configure_flags_str}"],
+ #         [configuration flags to be saved in the adios output file.])
+CONFIGURE_FLAGS="FC=$FC FCFLAGS=$FCFLAGS"
 
 
 ###
 ### CUDA
 ###
 
-if test "$want_cuda" != no; then
+if test x"$want_cuda" != xno; then :
+
     $as_echo "## ---- ##
 ## CUDA ##
 ## ---- ##"
@@ -7488,6 +7762,7 @@ ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
 
 
+
 fi
 
 
@@ -7495,7 +7770,8 @@ fi
 ### OPENMP
 ###
 
-if test "$want_openmp" = yes; then
+if test "$want_openmp" = yes; then :
+
     $as_echo "## ------ ##
 ## OPENMP ##
 ## ------ ##"
@@ -7566,6 +7842,24 @@ ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest
 ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
 
+
+fi
+
+###
+### FORCE_VECTORIZATION
+###
+
+if test x"$want_vec" != xno; then :
+
+  $as_echo "## ------------------- ##
+## FORCE VECTORIZATION ##
+## ------------------- ##"
+  { $as_echo "$as_me:${as_lineno-$LINENO}: FORCE_VECTORIZATION is enabled" >&5
+$as_echo "$as_me: FORCE_VECTORIZATION is enabled" >&6;}
+
+  FLAGS_CHECK="${FLAGS_CHECK} ${FC_DEFINE}FORCE_VECTORIZATION"
+  CPPFLAGS="${CPPFLAGS} -DFORCE_VECTORIZATION"
+
 fi
 
 ############################################################
@@ -7574,17 +7868,8 @@ $as_echo "## ----------------------------------- ##
 ## setting up default simulation setup ##
 ## ----------------------------------- ##"
 
-#mpbl: adding flags to config.h.in through autoheader in order to save them into the adios file.
-configure_flags_str="FC=$FC FCFLAGS=$FLAGS_CHECK"
-
-cat >>confdefs.h <<_ACEOF
-#define CONFIGURE_FLAGS "${configure_flags_str}"
-_ACEOF
-
-
 # Output results.
-
-ac_config_files="$ac_config_files Makefile setup/constants.h setup/constants_tomography.h setup/precision.h"
+ac_config_files="$ac_config_files Makefile setup/constants.h setup/constants_tomography.h setup/precision.h setup/config.fh"
 
 
 if test "$USE_BUNDLED_SCOTCH" = 1; then
@@ -7714,6 +7999,14 @@ LTLIBOBJS=$ac_ltlibobjs
 
 if test -z "${COND_MPI_TRUE}" && test -z "${COND_MPI_FALSE}"; then
   as_fn_error $? "conditional \"COND_MPI\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${COND_DEBUG_TRUE}" && test -z "${COND_DEBUG_FALSE}"; then
+  as_fn_error $? "conditional \"COND_DEBUG\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${COND_VECTORIZATION_TRUE}" && test -z "${COND_VECTORIZATION_FALSE}"; then
+  as_fn_error $? "conditional \"COND_VECTORIZATION\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${COND_CUDA_TRUE}" && test -z "${COND_CUDA_FALSE}"; then
@@ -8327,6 +8620,7 @@ do
     "setup/constants.h") CONFIG_FILES="$CONFIG_FILES setup/constants.h" ;;
     "setup/constants_tomography.h") CONFIG_FILES="$CONFIG_FILES setup/constants_tomography.h" ;;
     "setup/precision.h") CONFIG_FILES="$CONFIG_FILES setup/precision.h" ;;
+    "setup/config.fh") CONFIG_FILES="$CONFIG_FILES setup/config.fh" ;;
     "${SCOTCH_DIR}/src/Makefile.inc") CONFIG_FILES="$CONFIG_FILES ${SCOTCH_DIR}/src/Makefile.inc" ;;
     "bin") CONFIG_COMMANDS="$CONFIG_COMMANDS bin" ;;
     "obj") CONFIG_COMMANDS="$CONFIG_COMMANDS obj" ;;

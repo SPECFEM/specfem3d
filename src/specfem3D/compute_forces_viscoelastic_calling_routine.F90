@@ -141,13 +141,9 @@ subroutine compute_forces_viscoelastic()
 
         else
           ! handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
-          ! adoint definition: pressure^\dagger=potential^\dagger
+          ! adjoint definition: pressure^\dagger = potential^\dagger
           call compute_coupling_viscoelastic_ac(NSPEC_AB,NGLOB_AB, &
-!! DK DK: beware: function or procedure arguments that contain a calculation produce a memory copy
-!! DK DK: created by the compiler; The code is fine, but the hidden copy may slow it down.
-!! DK DK: here is the warning from the Cray compiler:
-!! DK DK: ftn-1438 crayftn: This argument produces a copy in to a temporary variable.
-                              ibool,accel,-potential_acoustic, &
+                              ibool,accel,potential_acoustic, &
                               num_coupling_ac_el_faces, &
                               coupling_ac_el_ispec,coupling_ac_el_ijk, &
                               coupling_ac_el_normal, &
@@ -543,7 +539,7 @@ subroutine compute_forces_viscoelastic_Dev_sim1(iphase)
     call compute_forces_viscoelastic_Dev_5p(iphase, NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
              xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
              hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
-             wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+             wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D, &
              kappastore,mustore,jacobian,ibool, &
              ATTENUATION,deltat,PML_CONDITIONS, &
              one_minus_sum_beta,factor_common, &
@@ -599,7 +595,7 @@ subroutine compute_forces_viscoelastic_Dev_sim3(iphase)
                   b_displ,b_veloc,b_accel, &
                   xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                   hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
-                  wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                  wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D, &
                   kappastore,mustore,jacobian,ibool, &
                   ATTENUATION,deltat,PML_CONDITIONS, &
                   one_minus_sum_beta,factor_common, &

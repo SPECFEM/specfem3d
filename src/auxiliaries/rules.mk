@@ -47,7 +47,7 @@ auxiliaries_OBJECTS = \
 
 # These files come from the shared directory
 auxiliaries_SHARED_OBJECTS = \
-	$O/constants_mod.shared_module.o \
+	$O/shared_par.shared_module.o \
 	$O/check_mesh_resolution.shared.o \
 	$O/create_name_database.shared.o \
 	$O/exit_mpi.shared.o \
@@ -76,7 +76,7 @@ combine_surf_data_auxiliaries_OBJECTS = \
 	$(EMPTY_MACRO)
 
 combine_surf_data_auxiliaries_SHARED_OBJECTS = \
-	$O/constants_mod.shared_module.o \
+	$O/shared_par.shared_module.o \
 	$O/param_reader.cc.o \
 	$O/write_c_binary.cc.o \
 	$(EMPTY_MACRO)
@@ -93,7 +93,7 @@ combine_vol_data_auxiliaries_OBJECTS = \
 	$(EMPTY_MACRO)
 
 combine_vol_data_auxiliaries_SHARED_OBJECTS = \
-	$O/constants_mod.shared_module.o \
+	$O/shared_par.shared_module.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \
 	$O/param_reader.cc.o \
@@ -125,7 +125,7 @@ create_movie_shakemap_AVS_DX_GMT_auxiliaries_OBJECTS = \
 	$(EMPTY_MACRO)
 
 create_movie_shakemap_AVS_DX_GMT_auxiliaries_SHARED_OBJECTS = \
-	$O/constants_mod.shared_module.o \
+	$O/shared_par.shared_module.o \
 	$O/get_global.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
@@ -158,8 +158,8 @@ create_movie_shakemap_AVS_DX_GMT: xcreate_movie_shakemap_AVS_DX_GMT
 xcreate_movie_shakemap_AVS_DX_GMT: $E/xcreate_movie_shakemap_AVS_DX_GMT
 
 
-$E/xconvolve_source_timefunction: $O/convolve_source_timefunction.aux.o
-	${FCCOMPILE_CHECK} -o  ${E}/xconvolve_source_timefunction $O/convolve_source_timefunction.aux.o
+$E/xconvolve_source_timefunction: $O/convolve_source_timefunction.aux.o $O/shared_par.shared_module.o
+	${FCCOMPILE_CHECK} -o  ${E}/xconvolve_source_timefunction $O/convolve_source_timefunction.aux.o $O/shared_par.shared_module.o
 
 $E/xcombine_surf_data: $(combine_surf_data_auxiliaries_OBJECTS) $(combine_surf_data_auxiliaries_SHARED_OBJECTS)
 	${FCLINK} -o $@ $+
@@ -202,7 +202,7 @@ endif
 ## auxiliaries
 ##
 
-$O/%.aux.o: $S/%.f90 $O/constants_mod.shared_module.o
+$O/%.aux.o: $S/%.f90 $O/shared_par.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 
@@ -210,9 +210,9 @@ $O/%.aux.o: $S/%.f90 $O/constants_mod.shared_module.o
 ### ADIOS compilation
 ###
 
-$O/%.aux_adios.o: $S/%.f90 $O/constants_mod.shared_module.o
+$O/%.aux_adios.o: $S/%.f90 $O/shared_par.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.aux_noadios.o: $S/%.f90 $O/constants_mod.shared_module.o
+$O/%.aux_noadios.o: $S/%.f90 $O/shared_par.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 

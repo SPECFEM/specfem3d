@@ -1021,81 +1021,117 @@ Subroutine compute_convolution_coef(bb, deltat, coef0, coef1, coef2, singularity
 
   use constants, only: CUSTOM_REAL
 
-  logical,parameter :: FIRST_ORDER_CONVOLUTION = .false.
-  real(kind=CUSTOM_REAL) :: bb, deltat, coef0, coef1, coef2, time_nplus1, time_n
-  integer :: singularity_type
+  implicit none
 
-  coef0 = exp(-bb * deltat)
+  real(kind=CUSTOM_REAL),intent(in) :: bb, deltat
+  real(kind=CUSTOM_REAL),intent(out) :: coef0, coef1, coef2
+  integer,intent(in) :: singularity_type
+  real(kind=CUSTOM_REAL),intent(in) :: time_nplus1, time_n
+
+  ! local parameters
+  logical,parameter :: FIRST_ORDER_CONVOLUTION = .false.
+  real(kind=CUSTOM_REAL) :: bbpow2,bbpow3
+  real(kind=CUSTOM_REAL) :: deltatpow2,deltatpow3,deltatpow4,deltatpow5,deltatpow6,deltat_half
+  real(kind=CUSTOM_REAL) :: prod1,prod1_half
+
+  ! permanent factors (avoids divisions which are computationally expensive)
+  real(kind=CUSTOM_REAL),parameter :: ONE_OVER_8 = 0.125_CUSTOM_REAL
+  real(kind=CUSTOM_REAL),parameter :: ONE_OVER_12 = 1._CUSTOM_REAL / 12._CUSTOM_REAL
+  real(kind=CUSTOM_REAL),parameter :: ONE_OVER_24 = 1._CUSTOM_REAL / 24._CUSTOM_REAL
+  real(kind=CUSTOM_REAL),parameter :: ONE_OVER_48 = 1._CUSTOM_REAL / 48._CUSTOM_REAL
+  real(kind=CUSTOM_REAL),parameter :: ONE_OVER_128 = 0.0078125_CUSTOM_REAL
+  real(kind=CUSTOM_REAL),parameter :: ONE_OVER_384 = 1._CUSTOM_REAL / 384._CUSTOM_REAL
+  real(kind=CUSTOM_REAL),parameter :: ONE_OVER_960 = 1._CUSTOM_REAL / 960._CUSTOM_REAL
+  real(kind=CUSTOM_REAL),parameter :: ONE_OVER_1920 = 1._CUSTOM_REAL / 1920._CUSTOM_REAL
+  real(kind=CUSTOM_REAL),parameter :: SEVEN_OVER_3840 = 7._CUSTOM_REAL / 3840._CUSTOM_REAL
+  real(kind=CUSTOM_REAL),parameter :: FIVE_OVER_11520 = 5._CUSTOM_REAL/11520._CUSTOM_REAL
+
+  ! helper variables
+  bbpow2 = bb**2
+  bbpow3 = bb**3
+
+  deltatpow2 = deltat**2
+  deltatpow3 = deltat**3
+  deltatpow4 = deltat**4
+  deltatpow5 = deltat**5
+  deltatpow6 = deltat**6
+  deltat_half = deltat * 0.5_CUSTOM_REAL
+
+  prod1 = bb * deltat
+  prod1_half = prod1 * 0.5_CUSTOM_REAL
+
+  ! calculates coefficients
+  coef0 = exp(-prod1)
 
   if (singularity_type == 0)then
     if (abs(bb) >= 1.e-5_CUSTOM_REAL) then
       if (FIRST_ORDER_CONVOLUTION) then
-         coef1 = (1._CUSTOM_REAL - exp(-bb * deltat) ) / bb
+         coef1 = (1._CUSTOM_REAL - exp(-prod1) ) / bb
          coef2 = 0._CUSTOM_REAL
       else
-         coef1 = (1._CUSTOM_REAL - exp(-bb * deltat/2._CUSTOM_REAL) ) / bb
-         coef2 = (1._CUSTOM_REAL - exp(-bb * deltat/2._CUSTOM_REAL) ) * exp(-bb * deltat/2._CUSTOM_REAL) / bb
+         coef1 = (1._CUSTOM_REAL - exp(-prod1_half) ) / bb
+         coef2 = (1._CUSTOM_REAL - exp(-prod1_half) ) * exp(-prod1_half) / bb
       endif
     else
       if (FIRST_ORDER_CONVOLUTION) then
         coef1 = deltat
         coef2 = 0._CUSTOM_REAL
       else
-        coef1 = deltat/2._CUSTOM_REAL + &
-                (- deltat**2*bb/8._CUSTOM_REAL + &
-                 (deltat**3*bb**2/48._CUSTOM_REAL - &
-                  deltat**4*bb**3/384._CUSTOM_REAL))
-        coef2 = deltat/2._CUSTOM_REAL + &
-                (- 3._CUSTOM_REAL*deltat**2*bb/8._CUSTOM_REAL + &
-                 (7._CUSTOM_REAL*deltat**3*bb**2/48._CUSTOM_REAL - &
-                  5._CUSTOM_REAL*deltat**4*bb**3/128._CUSTOM_REAL))
+        coef1 = deltat_half + &
+                (- deltatpow2*bb*ONE_OVER_8 + &
+                 (deltatpow3*bbpow2*ONE_OVER_48 - &
+                  deltatpow4*bbpow3*ONE_OVER_384))
+        coef2 = deltat_half + &
+                (- 3._CUSTOM_REAL*deltatpow2*bb*ONE_OVER_8 + &
+                 (7._CUSTOM_REAL*deltatpow3*bbpow2*ONE_OVER_48 - &
+                  5._CUSTOM_REAL*deltatpow4*bbpow3*ONE_OVER_128))
       endif
     endif
   else if (singularity_type == 1)then
     if (abs(bb) >= 1.e-5_CUSTOM_REAL) then
-      coef1 = (1._CUSTOM_REAL - exp(-bb * deltat/2._CUSTOM_REAL) ) / bb
-      coef1 = time_nplus1 * coef1 + (deltat/2._CUSTOM_REAL*exp(-bb * deltat/2._CUSTOM_REAL) - coef1) / bb
+      coef1 = (1._CUSTOM_REAL - exp(-prod1_half) ) / bb
+      coef1 = time_nplus1 * coef1 + (deltat_half*exp(-prod1_half) - coef1) / bb
 
-      coef2 = (1._CUSTOM_REAL - exp(-bb * deltat/2._CUSTOM_REAL) ) * exp(-bb * deltat/2._CUSTOM_REAL) / bb
-      coef2 = time_n * coef2 + ( deltat/2._CUSTOM_REAL*exp(-bb * deltat/2._CUSTOM_REAL) - coef2) / bb
+      coef2 = (1._CUSTOM_REAL - exp(-prod1_half) ) * exp(-prod1_half) / bb
+      coef2 = time_n * coef2 + ( deltat_half*exp(-prod1_half) - coef2) / bb
     else
-      coef1 = -deltat**2/8._CUSTOM_REAL + (deltat**3*bb/24._CUSTOM_REAL + &
-              (- deltat**4*bb**2/128._CUSTOM_REAL + deltat**5*bb**3/960._CUSTOM_REAL)) + &
-               time_nplus1* (deltat/2._CUSTOM_REAL + (- deltat**2*bb/8._CUSTOM_REAL + &
-                     (deltat**3*bb**2/48._CUSTOM_REAL - deltat**4*bb**3/384._CUSTOM_REAL)))
-      coef2 = deltat**2/8._CUSTOM_REAL + (-deltat**3*bb/12._CUSTOM_REAL + &
-              (11._CUSTOM_REAL*deltat**4*bb**2/384._CUSTOM_REAL - 13._CUSTOM_REAL*deltat**5*bb**3/1920._CUSTOM_REAL)) + &
-               time_n * (deltat/2._CUSTOM_REAL + (- 3._CUSTOM_REAL*deltat**2*bb/8._CUSTOM_REAL + &
-                                    (7._CUSTOM_REAL*deltat**3*bb**2/48._CUSTOM_REAL - &
-                                     5._CUSTOM_REAL*deltat**4*bb**3/128._CUSTOM_REAL)))
+      coef1 = -deltatpow2*ONE_OVER_8 + (deltatpow3*bb*ONE_OVER_24 + &
+              (- deltatpow4*bbpow2*ONE_OVER_128 + deltatpow5*bbpow3*ONE_OVER_960)) + &
+               time_nplus1* (deltat_half + (- deltatpow2*bb*ONE_OVER_8 + &
+                     (deltatpow3*bbpow2*ONE_OVER_48 - deltatpow4*bbpow3*ONE_OVER_384)))
+      coef2 = deltatpow2*ONE_OVER_8 + (-deltatpow3*bb*ONE_OVER_12 + &
+              (11._CUSTOM_REAL*deltatpow4*bbpow2*ONE_OVER_384 - 13._CUSTOM_REAL*deltatpow5*bbpow3*ONE_OVER_1920)) + &
+               time_n * (deltat_half + (- 3._CUSTOM_REAL*deltatpow2*bb*ONE_OVER_8 + &
+                                    (7._CUSTOM_REAL*deltatpow3*bbpow2*ONE_OVER_48 - &
+                                     5._CUSTOM_REAL*deltatpow4*bbpow3*ONE_OVER_128)))
      endif
   else if (singularity_type == 2)then
     if (abs(bb) >= 1.e-5_CUSTOM_REAL) then
-      coef1 = (1._CUSTOM_REAL - exp(-bb * deltat/2._CUSTOM_REAL) ) / bb
-      coef1 = time_nplus1**2 * coef1 + (time_nplus1*(-2._CUSTOM_REAL/bb*coef1 + deltat/bb*exp(-bb * deltat/2._CUSTOM_REAL)) + &
-              ((2._CUSTOM_REAL/bb**2* coef1 - exp(-bb * deltat/2._CUSTOM_REAL)*deltat/bb**2) - &
-               (deltat/2._CUSTOM_REAL)**2/bb*exp(-bb * deltat/2._CUSTOM_REAL)))
+      coef1 = (1._CUSTOM_REAL - exp(-prod1_half) ) / bb
+      coef1 = time_nplus1**2 * coef1 + (time_nplus1*(-2._CUSTOM_REAL/bb*coef1 + deltat/bb*exp(-prod1_half)) + &
+              ((2._CUSTOM_REAL/bbpow2* coef1 - exp(-prod1_half)*deltat/bbpow2) - &
+               (deltat_half)**2/bb*exp(-prod1_half)))
 
-      coef2 = (1._CUSTOM_REAL - exp(-bb * deltat/2._CUSTOM_REAL) ) * exp(-bb * deltat/2._CUSTOM_REAL) / bb
+      coef2 = (1._CUSTOM_REAL - exp(-prod1_half) ) * exp(-prod1_half) / bb
       coef2 = time_n**2 * coef2 + &
-              (time_n*(-2._CUSTOM_REAL/bb*coef2 + deltat/bb*exp(-bb * deltat/2._CUSTOM_REAL)) + &
-              ((2._CUSTOM_REAL/bb**2* coef2 - exp(-bb * deltat/2._CUSTOM_REAL)*deltat/bb**2) - &
-               (deltat/2._CUSTOM_REAL)**2/bb*exp(-bb * deltat/2._CUSTOM_REAL)))
+              (time_n*(-2._CUSTOM_REAL/bb*coef2 + deltat/bb*exp(-prod1_half)) + &
+              ((2._CUSTOM_REAL/bbpow2* coef2 - exp(-prod1_half)*deltat/bbpow2) - &
+               (deltat_half)**2/bb*exp(-prod1_half)))
 
     else
-      coef1 = deltat**3/24._CUSTOM_REAL + (- deltat**4*bb*3._CUSTOM_REAL/192._CUSTOM_REAL &
-              + (deltat**5*bb**2*3._CUSTOM_REAL/960._CUSTOM_REAL - deltat**6*bb**3*5._CUSTOM_REAL/11520._CUSTOM_REAL)) + &
-               time_nplus1*2._CUSTOM_REAL*(-deltat**2/8._CUSTOM_REAL + (deltat**3*bb/24._CUSTOM_REAL + &
-                (- deltat**4*bb**2/128._CUSTOM_REAL + deltat**5*bb**3/960._CUSTOM_REAL))) + &
-               time_nplus1**2*(deltat/2._CUSTOM_REAL + (- deltat**2*bb/8._CUSTOM_REAL + &
-                       (deltat**3*bb**2/48._CUSTOM_REAL - deltat**4*bb**3/384._CUSTOM_REAL)))
-      coef2 = deltat**3/24._CUSTOM_REAL + (- deltat**4*bb*5._CUSTOM_REAL/192._CUSTOM_REAL &
-              + (deltat**5*bb**2*8._CUSTOM_REAL/960._CUSTOM_REAL - deltat**6*bb**3*7._CUSTOM_REAL/3840._CUSTOM_REAL)) + &
-               time_n*2._CUSTOM_REAL*(deltat**2/8._CUSTOM_REAL + (-deltat**3*bb/12._CUSTOM_REAL + &
-                (11._CUSTOM_REAL*deltat**4*bb**2/384._CUSTOM_REAL - 13._CUSTOM_REAL*deltat**5*bb**3/1920._CUSTOM_REAL))) + &
-                time_n**2 * (deltat/2._CUSTOM_REAL + (- 3._CUSTOM_REAL*deltat**2*bb/8._CUSTOM_REAL + &
-                                       (7._CUSTOM_REAL*deltat**3*bb**2/48._CUSTOM_REAL - &
-                                        5._CUSTOM_REAL*deltat**4*bb**3/128._CUSTOM_REAL)))
+      coef1 = deltatpow3*ONE_OVER_24 + (- deltatpow4*bb*3._CUSTOM_REAL/192._CUSTOM_REAL &
+              + (deltatpow5*bbpow2*3._CUSTOM_REAL*ONE_OVER_960 - deltatpow6*bbpow3*FIVE_OVER_11520)) + &
+               time_nplus1*2._CUSTOM_REAL*(-deltatpow2*ONE_OVER_8 + (deltatpow3*bb*ONE_OVER_24 + &
+                (- deltatpow4*bbpow2*ONE_OVER_128 + deltatpow5*bbpow3*ONE_OVER_960))) + &
+               time_nplus1**2*(deltat_half + (- deltatpow2*bb*ONE_OVER_8 + &
+                       (deltatpow3*bbpow2*ONE_OVER_48 - deltatpow4*bbpow3*ONE_OVER_384)))
+      coef2 = deltatpow3*ONE_OVER_24 + (- deltatpow4*bb*5._CUSTOM_REAL/192._CUSTOM_REAL &
+              + (deltatpow5*bbpow2*8._CUSTOM_REAL*ONE_OVER_960 - deltatpow6*bbpow3*SEVEN_OVER_3840)) + &
+               time_n*2._CUSTOM_REAL*(deltatpow2*ONE_OVER_8 + (-deltatpow3*bb*ONE_OVER_12 + &
+                (11._CUSTOM_REAL*deltatpow4*bbpow2*ONE_OVER_384 - 13._CUSTOM_REAL*deltatpow5*bbpow3*ONE_OVER_1920))) + &
+                time_n**2 * (deltat_half + (- 3._CUSTOM_REAL*deltatpow2*bb*ONE_OVER_8 + &
+                                       (7._CUSTOM_REAL*deltatpow3*bbpow2*ONE_OVER_48 - &
+                                        5._CUSTOM_REAL*deltatpow4*bbpow3*ONE_OVER_128)))
     endif
   else
      stop "error in singularity_type in compute_convolution_coefficient"

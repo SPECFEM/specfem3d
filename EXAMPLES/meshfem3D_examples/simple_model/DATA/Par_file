@@ -69,7 +69,7 @@ f0_FOR_PML                      = 12.7
 # ROTATE_PML_ANGLE              = 0.
 
 # absorbing boundary conditions for a regional simulation
-STACEY_ABSORBING_CONDITIONS     = .false.
+STACEY_ABSORBING_CONDITIONS     = .true.
 
 # absorbing top surface (defined in mesh as 'free_surface_file')
 STACEY_INSTEAD_OF_FREE_SURFACE  = .false.

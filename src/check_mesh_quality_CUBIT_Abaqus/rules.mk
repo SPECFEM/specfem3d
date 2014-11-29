@@ -73,11 +73,11 @@ xmultiply_CUBIT_Abaqus_mesh_by_1000: $E/xmultiply_CUBIT_Abaqus_mesh_by_1000
 
 # rules for the pure Fortran version
 
-$E/xcheck_mesh_quality_CUBIT_Abaqus: $O/check_mesh_quality_CUBIT_Abaqus.check.o
-	${FCLINK} -o  $E/xcheck_mesh_quality_CUBIT_Abaqus $O/check_mesh_quality_CUBIT_Abaqus.check.o
+$E/xcheck_mesh_quality_CUBIT_Abaqus: $O/check_mesh_quality_CUBIT_Abaqus.check.o $O/shared_par.shared_module.o
+	${FCLINK} -o  $E/xcheck_mesh_quality_CUBIT_Abaqus $O/check_mesh_quality_CUBIT_Abaqus.check.o $O/shared_par.shared_module.o
 
-$E/xconvert_skewness_to_angle: $O/convert_skewness_to_angle.check.o
-	${FCLINK} -o  $E/xconvert_skewness_to_angle $O/convert_skewness_to_angle.check.o
+$E/xconvert_skewness_to_angle: $O/convert_skewness_to_angle.check.o $O/shared_par.shared_module.o
+	${FCLINK} -o  $E/xconvert_skewness_to_angle $O/convert_skewness_to_angle.check.o $O/shared_par.shared_module.o
 
 $E/xmultiply_CUBIT_Abaqus_mesh_by_1000: $O/multiply_CUBIT_Abaqus_mesh_by_1000.check.o
 	${FCLINK} -o  $E/xmultiply_CUBIT_Abaqus_mesh_by_1000 $O/multiply_CUBIT_Abaqus_mesh_by_1000.check.o
@@ -89,7 +89,7 @@ $E/xmultiply_CUBIT_Abaqus_mesh_by_1000: $O/multiply_CUBIT_Abaqus_mesh_by_1000.ch
 #### rule to build each .o file below
 ####
 
-$O/%.check.o: $S/%.f90 $O/constants_mod.shared_module.o  $O/unused_mod.shared_module.o
+$O/%.check.o: $S/%.f90 $O/shared_par.shared_module.o  $O/unused_mod.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 

@@ -14,13 +14,11 @@ delete_directory_if_exist $MESH
 delete_directory_if_exist OUTPUT_FILES
 delete_directory_if_exist OUTPUT_FILES/DATABASES_MPI
 delete_directory_if_exist DATA/DSM_tractions_for_specfem3D
-delete_directory_if_exist bin
 
 mkdir -p $MESH
 mkdir -p OUTPUT_FILES/
 mkdir -p OUTPUT_FILES/DATABASES_MPI/
 mkdir -p DATA/DSM_tractions_for_specfem3D
-mkdir bin/
 }
 
 
@@ -37,50 +35,32 @@ cp $IN_DSM/$MODELE_1D $MESH/.
 ###cd $MESH
 ###$BIN/xmesh_chunk_vm
 cd $current_dir
-$BINSEM/xmeshfem3D
-cp $MESH/model_1D.in ../DATA/.
-cd $current_dir
-
+$BINSEM/xmeshfem3D > Step1-create_mesh.out
+cp $MESH/model_1D.in DATA/
 }
-
 
 function run_create_specfem_databases ()
 {
 
-cp ParFileInterface bin/.
-
 $BINSEM/xdecompose_mesh $NPROC $MESH OUTPUT_FILES/DATABASES_MPI/
 mv Numglob2loc_elmn.txt $MESH/.
 
-###cd bin
-###echo '!!!!!!!!!!!!!!!!!!!!! SCRPITS 1 !!!!!!!!!!!!!!!!'
 pwd
-$MPIRUN $OPTION_SIMU $BINSEM/xgenerate_databases
-###cd ..
+$MPIRUN $OPTION_SIMU $BINSEM/xgenerate_databases > Step3-create_specfem3d_database.out
 }
 
 function run_create_tractions_for_specfem ()
 {
-cp ParFileInterface bin/. 
 
-###cd bin
-###echo '!!!!!!!!!!!!!!!!!!!!! SCRPITS 2 !!!!!!!!!!!!!!!!'
 pwd
-$MPIRUN $OPTION_SIMU $BIN/xread_absorbing_interfaces > out_read.txt
-###cd ..
-cp out_read.txt bin/
+$MPIRUN $OPTION_SIMU $BIN/xread_absorbing_interfaces > Step4-create_tractions_for_specfem3D_from_DSM.out
 }
 
 function run_simu ()
 {
-
-###cd bin
-###echo '!!!!!!!!!!!!!!!!!!!!! SCRPITS 3 !!!!!!!!!!!!!!!!'
 pwd
-$MPIRUN $OPTION_SIMU $BINSEM/xspecfem3D > tmp_sem.out
-###cd ..
-cp out_read.txt bin/
-###echo '!!!!!!!!!!!!!!!!!!!!! SCRPITS 4 !!!!!!!!!!!!!!!!'
+$MPIRUN $OPTION_SIMU $BINSEM/xspecfem3D > Step5-run_specfem3d_simulation.out
+
 pwd
 }
 

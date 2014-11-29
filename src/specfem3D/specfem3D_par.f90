@@ -33,10 +33,11 @@ module specfem_par
 
   use constants
 
+  use shared_parameters
+
   implicit none
 
-! parameters deduced from parameters read from file
-  integer :: NPROC
+! number of spectral element and global points
   integer :: NSPEC_AB, NGLOB_AB
 
 ! mesh parameters
@@ -53,11 +54,9 @@ module specfem_par
 ! density
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rhostore
 
+! GPU
 ! CUDA mesh pointer<->integer wrapper
   integer(kind=8) :: Mesh_pointer
-
-! Global GPU toggle. Set in Par_file
-  logical :: GPU_MODE
 
 ! use integer array to store topography values
   integer :: NX_TOPO,NY_TOPO
@@ -110,7 +109,7 @@ module specfem_par
   double precision, external :: comp_source_time_function
   double precision :: t0
   real(kind=CUSTOM_REAL) :: stf_used_total
-  integer :: NSOURCES,nsources_local
+  integer :: nsources_local
   ! source encoding
   ! for acoustic sources: takes +/- 1 sign, depending on sign(Mxx)[ = sign(Myy) = sign(Mzz)
   ! since they have to equal in the acoustic setting]
@@ -159,46 +158,17 @@ module specfem_par
   double precision :: time_start
 
 ! parameters for a force source located exactly at a grid point
-  logical :: USE_FORCE_POINT_SOURCE
   double precision, dimension(:), allocatable :: factor_force_source
   double precision, dimension(:), allocatable :: comp_dir_vect_source_E
   double precision, dimension(:), allocatable :: comp_dir_vect_source_N
   double precision, dimension(:), allocatable :: comp_dir_vect_source_Z_UP
 
-! parameters
-  integer :: SIMULATION_TYPE
-  integer :: NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE
-  integer :: IMODEL,NGNOD,NGNOD2D
-
-  double precision :: DT,OLSEN_ATTENUATION_RATIO,f0_FOR_PML
-
-  logical :: ATTENUATION,USE_OLSEN_ATTENUATION, &
-            APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,STACEY_ABSORBING_CONDITIONS,ANISOTROPY, &
-            STACEY_INSTEAD_OF_FREE_SURFACE
-
-  logical :: FULL_ATTENUATION_SOLID,PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE
-
-  logical :: GRAVITY
-
-  logical :: SAVE_FORWARD,SAVE_MESH_FILES
-
-  logical :: USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
-
-  logical :: SUPPRESS_UTM_PROJECTION
-
-  integer :: NTSTEP_BETWEEN_OUTPUT_INFO
 
 ! parameters read from mesh parameter file
-  integer :: NPROC_XI,NPROC_ETA
-  double precision :: LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX
+!  integer :: NPROC_XI,NPROC_ETA
+!  double precision :: LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX
 
-  logical :: COUPLE_WITH_EXTERNAL_CODE,MESH_A_CHUNK_OF_THE_EARTH
-  integer :: EXTERNAL_CODE_TYPE
-
-  character(len=MAX_STRING_LEN) :: LOCAL_PATH,TOMOGRAPHY_PATH,prname,dsmname,TRACTION_PATH,SEP_MODEL_DIRECTORY
-
-  logical :: ADIOS_ENABLED
-  logical :: ADIOS_FOR_DATABASES, ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, ADIOS_FOR_KERNELS
+  character(len=MAX_STRING_LEN) :: prname,dsmname
 
 ! for assembling in case of external mesh
   integer :: num_interfaces_ext_mesh
@@ -267,11 +237,8 @@ module specfem_par
   ! adjoint elements
   integer :: NSPEC_ADJOINT, NGLOB_ADJOINT
 
-  ! length of reading blocks
-  integer :: NTSTEP_BETWEEN_READ_ADJSRC
-
   ! parameter module for noise simulations
-  integer :: irec_master_noise, NOISE_TOMOGRAPHY
+  integer :: irec_master_noise
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: sigma_kl
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: noise_sourcearray
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: noise_surface_movie
@@ -539,6 +506,11 @@ module specfem_par_movie
 
   use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NGNOD2D_FOUR_CORNERS
 
+!  use shared_parameters,only: &
+!    NTSTEP_BETWEEN_FRAMES, &
+!    CREATE_SHAKEMAP,MOVIE_SURFACE,MOVIE_VOLUME,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES, &
+!    MOVIE_TYPE,HDUR_MOVIE
+
   implicit none
 
 ! to save full 3D snapshot of velocity (movie volume
@@ -579,10 +551,6 @@ module specfem_par_movie
   integer :: iorderi(NGNOD2D_FOUR_CORNERS),iorderj(NGNOD2D_FOUR_CORNERS)
 
 ! movie parameters
-  double precision :: HDUR_MOVIE
-  integer :: NTSTEP_BETWEEN_FRAMES,MOVIE_TYPE
-  logical :: MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
-            USE_HIGHRES_FOR_MOVIES
   logical :: MOVIE_SIMULATION
 
 end module specfem_par_movie

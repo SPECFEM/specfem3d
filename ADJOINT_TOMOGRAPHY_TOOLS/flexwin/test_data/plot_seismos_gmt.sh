@@ -1,1 +1,0 @@
-../scripts/plot_seismos_gmt.sh

@@ -89,7 +89,7 @@ generate_databases_MODULES = \
 
 generate_databases_SHARED_OBJECTS = \
 	$O/assemble_MPI_scalar.shared.o \
-	$O/constants_mod.shared_module.o \
+	$O/shared_par.shared_module.o \
 	$O/check_mesh_resolution.shared.o \
 	$O/create_name_database.shared.o \
 	$O/create_serial_name_database.shared.o \
@@ -253,10 +253,10 @@ $O/adios_helpers.shared_adios.o: \
 ####
 
 
-$O/%.gen.o: $S/%.f90 $O/constants_mod.shared_module.o
+$O/%.gen.o: $S/%.f90 $O/shared_par.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.mpi_gen.o: $S/%.f90 $O/constants_mod.shared_module.o
+$O/%.mpi_gen.o: $S/%.f90 $O/shared_par.shared_module.o
 	${MPIFCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 
@@ -267,10 +267,10 @@ $O/%.genc.o: $S/%.c
 ### ADIOS compilation
 ###
 
-$O/%.gen_adios.o: $S/%.F90 $O/constants_mod.shared_module.o
+$O/%.gen_adios.o: $S/%.F90 $O/shared_par.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.gen_adios.o: $S/%.f90 $O/constants_mod.shared_module.o
+$O/%.gen_adios.o: $S/%.f90 $O/shared_par.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 $O/%.gen_noadios.o: $S/%.F90

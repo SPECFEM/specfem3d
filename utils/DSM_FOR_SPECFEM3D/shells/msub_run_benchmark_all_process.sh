@@ -11,7 +11,7 @@
 #MSUB -q standard
 #MSUB -e Benchmark_couple_run.e
 #MSUB -o Benchmark_couple_run.o
-#MSUB -A gen7165 
+#MSUB -A ra2410 
 
 set -x
 cd $BRIDGE_MSUB_PWD

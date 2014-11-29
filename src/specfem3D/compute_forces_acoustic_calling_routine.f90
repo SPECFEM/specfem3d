@@ -59,7 +59,7 @@ subroutine compute_forces_acoustic()
   use specfem_par_elastic
   use specfem_par_poroelastic
   use pml_par,only: spec_to_CPML,is_CPML,rmemory_coupling_ac_el_displ,nglob_interface_PML_acoustic,&
-                    b_PML_potential,b_reclen_PML_potential,potential_dot_dot_acoustic_old,potential_acoustic_old
+                    b_PML_potential,b_reclen_PML_potential,potential_acoustic_old ! potential_dot_dot_acoustic_old
   implicit none
 
   ! local parameters
@@ -136,11 +136,7 @@ subroutine compute_forces_acoustic()
           ! handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
           ! adjoint definition: \partial_t^2 \bfs^\dagger=-\frac{1}{\rho}\bfnabla\phi^\dagger
           call compute_coupling_acoustic_el(NSPEC_AB,NGLOB_AB, &
-!! DK DK: beware: function or procedure arguments that contain a calculation produce a memory copy
-!! DK DK: created by the compiler; The code is fine, but the hidden copy may slow it down.
-!! DK DK: here is the warning from the Cray compiler:
-!! DK DK: ftn-1438 crayftn: This argument produces a copy in to a temporary variable.
-                              ibool,-accel,potential_dot_dot_acoustic, &
+                              ibool,accel,potential_dot_dot_acoustic, &
                               num_coupling_ac_el_faces, &
                               coupling_ac_el_ispec,coupling_ac_el_ijk, &
                               coupling_ac_el_normal, &
@@ -235,7 +231,7 @@ subroutine compute_forces_acoustic()
             potential_dot_acoustic(iglob) = 0.0
             potential_acoustic(iglob) = 0.0
             if (ELASTIC_SIMULATION) then
-              potential_dot_dot_acoustic_old(iglob) = 0.0
+              !potential_dot_dot_acoustic_old(iglob) = 0.0
               potential_acoustic_old(iglob) = 0.0
             endif
           enddo

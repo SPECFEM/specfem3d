@@ -319,9 +319,6 @@ end subroutine init_tomography_files
       read(undef_mat_prop(4,iundef),*) filename
     endif
 
-    ! counter
-    imat = imat + 1
-
     ! sets filename with path (e.g. "DATA/tomo_files/" + "tomo.xyz")
     ! corrects the path and filename of tomography model
     if (TOMOGRAPHY_PATH(len_trim(TOMOGRAPHY_PATH):len_trim(TOMOGRAPHY_PATH)) == "/") then
@@ -330,18 +327,19 @@ end subroutine init_tomography_files
       tomo_filename = TOMOGRAPHY_PATH(1:len_trim(TOMOGRAPHY_PATH)) // '/' // trim(filename)
     endif
 
+    ! counter
+    imat = imat + 1
+
     ! user output
     if (myrank_tomo == 0) then
-       write(IMAIN,*) '     reading: ',trim(tomo_filename)
+       write(IMAIN,*) '     material id: ',-imat
+       write(IMAIN,*) '     file       : ',trim(tomo_filename)
        call flush_IMAIN()
     endif
 
     ! opens file for reading
     open(unit=IIN,file=trim(tomo_filename),status='old',action='read',iostat=ier)
-    if (ier /= 0) call exit_MPI(myrank_tomo,'error reading tomography file')
-
-    rewind(unit=IIN,iostat=ier)
-    if (ier /= 0) call exit_MPI(myrank_tomo,'error rewinding tomography file')
+    if (ier /= 0) call exit_MPI(myrank_tomo,'Error opening tomography file')
 
     !--------------------------------------
     ! header infos
@@ -471,7 +469,7 @@ end subroutine init_tomography_files
   logical,intent(out) :: has_tomo_value
 
   ! local parameters
-  integer :: ix,iy,iz,imat,iundef
+  integer :: ix,iy,iz,imat
   integer :: p0,p1,p2,p3,p4,p5,p6,p7
 
   double precision :: spac_x,spac_y,spac_z
@@ -483,231 +481,219 @@ end subroutine init_tomography_files
     vs1,vs2,vs3,vs4,vs5,vs6,vs7,vs8,rho1,rho2,rho3,rho4,rho5,rho6,rho7,rho8
 
   real(kind=CUSTOM_REAL), dimension(NFILES_TOMO) :: vp_final,vs_final,rho_final
-  integer :: nmaterials,imaterial
 
   ! initializes flag
   has_tomo_value = .false.
 
-  ! sets number of materials to loop over
-  nmaterials = nundefMat_ext_mesh
-
-  ! sets material number
-  imaterial = abs(imaterial_id)
-
   ! checks if we over-impose a tomography model by Par_file setting: MODEL = tomo
   if (nundefMat_ext_mesh == 0 .and. IMODEL == IMODEL_TOMO) then
-    nmaterials = 1
-    imaterial = 1
+    ! sets material number
+    imat = 1
   else
     ! checks if material is a tomographic material (negative id)
     if (imaterial_id >= 0) return
 
+    ! sets material number
+    imat = abs(imaterial_id)
+
     ! checks if associated type is a tomography model
-    if (trim(undef_mat_prop(2,abs(imaterial_id))) /= 'tomography') return
+    if (trim(undef_mat_prop(2,imat)) /= 'tomography') return
+
+    ! checks material
+    if (imat < 1 .or. imat > nundefMat_ext_mesh) then
+      print*,'Error tomography model: unknown material id ',imaterial_id,' for ',nundefMat_ext_mesh,' undefined materials'
+      stop 'Error unknown material id in tomography model'
+    endif
   endif
 
-  ! loops over all undefined materials
-  imat = 0
-  do iundef = 1, nmaterials
+  ! determine spacing and cell for linear interpolation
+  spac_x = (xmesh - ORIG_X(imat)) / SPACING_X(imat)
+  spac_y = (ymesh - ORIG_Y(imat)) / SPACING_Y(imat)
+  spac_z = (zmesh - ORIG_Z(imat)) / SPACING_Z(imat)
 
-    ! counter
-    imat = imat + 1
+  ix = int(spac_x)
+  iy = int(spac_y)
+  iz = int(spac_z)
 
-    if (imat /= imaterial) cycle
+  gamma_interp_x = spac_x - dble(ix)
+  gamma_interp_y = spac_y - dble(iy)
 
-    ! determine spacing and cell for linear interpolation
-    spac_x = (xmesh - ORIG_X(imat)) / SPACING_X(imat)
-    spac_y = (ymesh - ORIG_Y(imat)) / SPACING_Y(imat)
-    spac_z = (zmesh - ORIG_Z(imat)) / SPACING_Z(imat)
+  ! suppress edge effects for points outside of the model SPOSTARE DOPO
+  if (ix < 0) then
+     ix = 0
+     gamma_interp_x = 0.d0
+  endif
+  if (ix > NX(imat)-2) then
+     ix = NX(imat)-2
+     gamma_interp_x = 1.d0
+  endif
 
-    ix = int(spac_x)
-    iy = int(spac_y)
-    iz = int(spac_z)
+  if (iy < 0) then
+     iy = 0
+     gamma_interp_y = 0.d0
+  endif
+  if (iy > NY(imat)-2) then
+     iy = NY(imat)-2
+     gamma_interp_y = 1.d0
+  endif
 
-    gamma_interp_x = spac_x - dble(ix)
-    gamma_interp_y = spac_y - dble(iy)
-
-    ! suppress edge effects for points outside of the model SPOSTARE DOPO
-    if (ix < 0) then
-       ix = 0
-       gamma_interp_x = 0.d0
-    endif
-    if (ix > NX(imat)-2) then
-       ix = NX(imat)-2
-       gamma_interp_x = 1.d0
-    endif
-
-    if (iy < 0) then
-       iy = 0
-       gamma_interp_y = 0.d0
-    endif
-    if (iy > NY(imat)-2) then
-       iy = NY(imat)-2
-       gamma_interp_y = 1.d0
-    endif
-
-    if (iz < 0) then
-       iz = 0
-       !   gamma_interp_z = 0.d0
-    endif
-    if (iz > NZ(imat)-2) then
-       iz = NZ(imat)-2
-       !  gamma_interp_z = 1.d0
-    endif
+  if (iz < 0) then
+     iz = 0
+     !   gamma_interp_z = 0.d0
+  endif
+  if (iz > NZ(imat)-2) then
+     iz = NZ(imat)-2
+     !  gamma_interp_z = 1.d0
+  endif
 
 
-    ! define 8 corners of interpolation element
-    p0 = ix+iy*NX(imat)+iz*(NX(imat)*NY(imat))
-    p1 = (ix+1)+iy*NX(imat)+iz*(NX(imat)*NY(imat))
-    p2 = (ix+1)+(iy+1)*NX(imat)+iz*(NX(imat)*NY(imat))
-    p3 = ix+(iy+1)*NX(imat)+iz*(NX(imat)*NY(imat))
-    p4 = ix+iy*NX(imat)+(iz+1)*(NX(imat)*NY(imat))
-    p5 = (ix+1)+iy*NX(imat)+(iz+1)*(NX(imat)*NY(imat))
-    p6 = (ix+1)+(iy+1)*NX(imat)+(iz+1)*(NX(imat)*NY(imat))
-    p7 = ix+(iy+1)*NX(imat)+(iz+1)*(NX(imat)*NY(imat))
+  ! define 8 corners of interpolation element
+  p0 = ix+iy*NX(imat)+iz*(NX(imat)*NY(imat))
+  p1 = (ix+1)+iy*NX(imat)+iz*(NX(imat)*NY(imat))
+  p2 = (ix+1)+(iy+1)*NX(imat)+iz*(NX(imat)*NY(imat))
+  p3 = ix+(iy+1)*NX(imat)+iz*(NX(imat)*NY(imat))
+  p4 = ix+iy*NX(imat)+(iz+1)*(NX(imat)*NY(imat))
+  p5 = (ix+1)+iy*NX(imat)+(iz+1)*(NX(imat)*NY(imat))
+  p6 = (ix+1)+(iy+1)*NX(imat)+(iz+1)*(NX(imat)*NY(imat))
+  p7 = ix+(iy+1)*NX(imat)+(iz+1)*(NX(imat)*NY(imat))
 
-    if (p0 < 0 .or. p1 < 0 .or. p2 < 0 .or. p3 < 0 .or. p4 < 0 .or. p5 < 0 .or. p6 < 0 .or. p7 < 0) then
-       print*,'model: ',imat
-       print*,'error rank: ',myrank_tomo
-       print*,'corner index: ',p0,p1,p2,p3,p4,p5,p6,p7
-       print*,'location: ',sngl(xmesh),sngl(ymesh),sngl(zmesh)
-       print*,'origin: ',sngl(ORIG_X(imat)),sngl(ORIG_Y(imat)),sngl(ORIG_Z(imat))
-       call exit_MPI(myrank_tomo,'error corner index in tomography routine')
-    endif
+  if (p0 < 0 .or. p1 < 0 .or. p2 < 0 .or. p3 < 0 .or. p4 < 0 .or. p5 < 0 .or. p6 < 0 .or. p7 < 0) then
+     print*,'model: ',imat
+     print*,'error rank: ',myrank_tomo
+     print*,'corner index: ',p0,p1,p2,p3,p4,p5,p6,p7
+     print*,'location: ',sngl(xmesh),sngl(ymesh),sngl(zmesh)
+     print*,'origin: ',sngl(ORIG_X(imat)),sngl(ORIG_Y(imat)),sngl(ORIG_Z(imat))
+     call exit_MPI(myrank_tomo,'error corner index in tomography routine')
+  endif
 
-    if (z_tomography(imat,p4+1) == z_tomography(imat,p0+1)) then
-       gamma_interp_z1 = 1.d0
-    else
-       gamma_interp_z1 = (zmesh-z_tomography(imat,p0+1))/(z_tomography(imat,p4+1)-z_tomography(imat,p0+1))
-    endif
-    if (gamma_interp_z1 > 1.d0) then
-       gamma_interp_z1 = 1.d0
-    endif
-    if (gamma_interp_z1 < 0.d0) then
-       gamma_interp_z1 = 0.d0
-    endif
-
-
-    if (z_tomography(imat,p5+1) == z_tomography(imat,p1+1)) then
-       gamma_interp_z2 = 1.d0
-    else
-       gamma_interp_z2 = (zmesh-z_tomography(imat,p1+1))/(z_tomography(imat,p5+1)-z_tomography(imat,p1+1))
-    endif
-    if (gamma_interp_z2 > 1.d0) then
-       gamma_interp_z2 = 1.d0
-    endif
-    if (gamma_interp_z2 < 0.d0) then
-       gamma_interp_z2 = 0.d0
-    endif
+  if (z_tomography(imat,p4+1) == z_tomography(imat,p0+1)) then
+     gamma_interp_z1 = 1.d0
+  else
+     gamma_interp_z1 = (zmesh-z_tomography(imat,p0+1))/(z_tomography(imat,p4+1)-z_tomography(imat,p0+1))
+  endif
+  if (gamma_interp_z1 > 1.d0) then
+     gamma_interp_z1 = 1.d0
+  endif
+  if (gamma_interp_z1 < 0.d0) then
+     gamma_interp_z1 = 0.d0
+  endif
 
 
-    if (z_tomography(imat,p6+1) == z_tomography(imat,p2+1)) then
-       gamma_interp_z3 = 1.d0
-    else
-       gamma_interp_z3 = (zmesh-z_tomography(imat,p2+1))/(z_tomography(imat,p6+1)-z_tomography(imat,p2+1))
-    endif
-    if (gamma_interp_z3 > 1.d0) then
-       gamma_interp_z3 = 1.d0
-    endif
-    if (gamma_interp_z3 < 0.d0) then
-       gamma_interp_z3 = 0.d0
-    endif
+  if (z_tomography(imat,p5+1) == z_tomography(imat,p1+1)) then
+     gamma_interp_z2 = 1.d0
+  else
+     gamma_interp_z2 = (zmesh-z_tomography(imat,p1+1))/(z_tomography(imat,p5+1)-z_tomography(imat,p1+1))
+  endif
+  if (gamma_interp_z2 > 1.d0) then
+     gamma_interp_z2 = 1.d0
+  endif
+  if (gamma_interp_z2 < 0.d0) then
+     gamma_interp_z2 = 0.d0
+  endif
 
 
-    if (z_tomography(imat,p7+1) == z_tomography(imat,p3+1)) then
-       gamma_interp_z4 = 1.d0
-    else
-       gamma_interp_z4 = (zmesh-z_tomography(imat,p3+1))/(z_tomography(imat,p7+1)-z_tomography(imat,p3+1))
-    endif
-    if (gamma_interp_z4 > 1.d0) then
-       gamma_interp_z4 = 1.d0
-    endif
-    if (gamma_interp_z4 < 0.d0) then
-       gamma_interp_z4 = 0.d0
-    endif
+  if (z_tomography(imat,p6+1) == z_tomography(imat,p2+1)) then
+     gamma_interp_z3 = 1.d0
+  else
+     gamma_interp_z3 = (zmesh-z_tomography(imat,p2+1))/(z_tomography(imat,p6+1)-z_tomography(imat,p2+1))
+  endif
+  if (gamma_interp_z3 > 1.d0) then
+     gamma_interp_z3 = 1.d0
+  endif
+  if (gamma_interp_z3 < 0.d0) then
+     gamma_interp_z3 = 0.d0
+  endif
 
-    gamma_interp_z5 = 1.d0 - gamma_interp_z1
-    gamma_interp_z6 = 1.d0 - gamma_interp_z2
-    gamma_interp_z7 = 1.d0 - gamma_interp_z3
-    gamma_interp_z8 = 1.d0 - gamma_interp_z4
 
-    vp1 = vp_tomography(imat,p0+1)
-    vp2 = vp_tomography(imat,p1+1)
-    vp3 = vp_tomography(imat,p2+1)
-    vp4 = vp_tomography(imat,p3+1)
-    vp5 = vp_tomography(imat,p4+1)
-    vp6 = vp_tomography(imat,p5+1)
-    vp7 = vp_tomography(imat,p6+1)
-    vp8 = vp_tomography(imat,p7+1)
+  if (z_tomography(imat,p7+1) == z_tomography(imat,p3+1)) then
+     gamma_interp_z4 = 1.d0
+  else
+     gamma_interp_z4 = (zmesh-z_tomography(imat,p3+1))/(z_tomography(imat,p7+1)-z_tomography(imat,p3+1))
+  endif
+  if (gamma_interp_z4 > 1.d0) then
+     gamma_interp_z4 = 1.d0
+  endif
+  if (gamma_interp_z4 < 0.d0) then
+     gamma_interp_z4 = 0.d0
+  endif
 
-    vs1 = vs_tomography(imat,p0+1)
-    vs2 = vs_tomography(imat,p1+1)
-    vs3 = vs_tomography(imat,p2+1)
-    vs4 = vs_tomography(imat,p3+1)
-    vs5 = vs_tomography(imat,p4+1)
-    vs6 = vs_tomography(imat,p5+1)
-    vs7 = vs_tomography(imat,p6+1)
-    vs8 = vs_tomography(imat,p7+1)
+  gamma_interp_z5 = 1.d0 - gamma_interp_z1
+  gamma_interp_z6 = 1.d0 - gamma_interp_z2
+  gamma_interp_z7 = 1.d0 - gamma_interp_z3
+  gamma_interp_z8 = 1.d0 - gamma_interp_z4
 
-    rho1 = rho_tomography(imat,p0+1)
-    rho2 = rho_tomography(imat,p1+1)
-    rho3 = rho_tomography(imat,p2+1)
-    rho4 = rho_tomography(imat,p3+1)
-    rho5 = rho_tomography(imat,p4+1)
-    rho6 = rho_tomography(imat,p5+1)
-    rho7 = rho_tomography(imat,p6+1)
-    rho8 = rho_tomography(imat,p7+1)
+  vp1 = vp_tomography(imat,p0+1)
+  vp2 = vp_tomography(imat,p1+1)
+  vp3 = vp_tomography(imat,p2+1)
+  vp4 = vp_tomography(imat,p3+1)
+  vp5 = vp_tomography(imat,p4+1)
+  vp6 = vp_tomography(imat,p5+1)
+  vp7 = vp_tomography(imat,p6+1)
+  vp8 = vp_tomography(imat,p7+1)
 
-    ! use trilinear interpolation in cell to define Vp Vs and rho
-    vp_final(imat) = &
-         vp1*(1.-gamma_interp_x)*(1.-gamma_interp_y)*(1.-gamma_interp_z1) + &
-         vp2*gamma_interp_x*(1.-gamma_interp_y)*(1.-gamma_interp_z2) + &
-         vp3*gamma_interp_x*gamma_interp_y*(1.-gamma_interp_z3) + &
-         vp4*(1.-gamma_interp_x)*gamma_interp_y*(1.-gamma_interp_z4) + &
-         vp5*(1.-gamma_interp_x)*(1.-gamma_interp_y)*gamma_interp_z1 + &
-         vp6*gamma_interp_x*(1.-gamma_interp_y)*gamma_interp_z2 + &
-         vp7*gamma_interp_x*gamma_interp_y*gamma_interp_z3 + &
-         vp8*(1.-gamma_interp_x)*gamma_interp_y*gamma_interp_z4
+  vs1 = vs_tomography(imat,p0+1)
+  vs2 = vs_tomography(imat,p1+1)
+  vs3 = vs_tomography(imat,p2+1)
+  vs4 = vs_tomography(imat,p3+1)
+  vs5 = vs_tomography(imat,p4+1)
+  vs6 = vs_tomography(imat,p5+1)
+  vs7 = vs_tomography(imat,p6+1)
+  vs8 = vs_tomography(imat,p7+1)
 
-    vs_final(imat) = &
-         vs1*(1.-gamma_interp_x)*(1.-gamma_interp_y)*(1.-gamma_interp_z1) + &
-         vs2*gamma_interp_x*(1.-gamma_interp_y)*(1.-gamma_interp_z2) + &
-         vs3*gamma_interp_x*gamma_interp_y*(1.-gamma_interp_z3) + &
-         vs4*(1.-gamma_interp_x)*gamma_interp_y*(1.-gamma_interp_z4) + &
-         vs5*(1.-gamma_interp_x)*(1.-gamma_interp_y)*gamma_interp_z1 + &
-         vs6*gamma_interp_x*(1.-gamma_interp_y)*gamma_interp_z2 + &
-         vs7*gamma_interp_x*gamma_interp_y*gamma_interp_z3 + &
-         vs8*(1.-gamma_interp_x)*gamma_interp_y*gamma_interp_z4
+  rho1 = rho_tomography(imat,p0+1)
+  rho2 = rho_tomography(imat,p1+1)
+  rho3 = rho_tomography(imat,p2+1)
+  rho4 = rho_tomography(imat,p3+1)
+  rho5 = rho_tomography(imat,p4+1)
+  rho6 = rho_tomography(imat,p5+1)
+  rho7 = rho_tomography(imat,p6+1)
+  rho8 = rho_tomography(imat,p7+1)
 
-    rho_final(imat) = &
-         rho1*(1.-gamma_interp_x)*(1.-gamma_interp_y)*(1.-gamma_interp_z1) + &
-         rho2*gamma_interp_x*(1.-gamma_interp_y)*(1.-gamma_interp_z2) + &
-         rho3*gamma_interp_x*gamma_interp_y*(1.-gamma_interp_z3) + &
-         rho4*(1.-gamma_interp_x)*gamma_interp_y*(1.-gamma_interp_z4) + &
-         rho5*(1.-gamma_interp_x)*(1.-gamma_interp_y)*gamma_interp_z1 + &
-         rho6*gamma_interp_x*(1.-gamma_interp_y)*gamma_interp_z2 + &
-         rho7*gamma_interp_x*gamma_interp_y*gamma_interp_z3 + &
-         rho8*(1.-gamma_interp_x)*gamma_interp_y*gamma_interp_z4
+  ! use trilinear interpolation in cell to define Vp Vs and rho
+  vp_final(imat) = &
+       vp1*(1.-gamma_interp_x)*(1.-gamma_interp_y)*(1.-gamma_interp_z1) + &
+       vp2*gamma_interp_x*(1.-gamma_interp_y)*(1.-gamma_interp_z2) + &
+       vp3*gamma_interp_x*gamma_interp_y*(1.-gamma_interp_z3) + &
+       vp4*(1.-gamma_interp_x)*gamma_interp_y*(1.-gamma_interp_z4) + &
+       vp5*(1.-gamma_interp_x)*(1.-gamma_interp_y)*gamma_interp_z1 + &
+       vp6*gamma_interp_x*(1.-gamma_interp_y)*gamma_interp_z2 + &
+       vp7*gamma_interp_x*gamma_interp_y*gamma_interp_z3 + &
+       vp8*(1.-gamma_interp_x)*gamma_interp_y*gamma_interp_z4
 
-    ! impose minimum and maximum velocity and density if needed
-    if (vp_final(imat) < VP_MIN(imat)) vp_final(imat) = VP_MIN(imat)
-    if (vp_final(imat) > VP_MAX(imat)) vp_final(imat) = VP_MAX(imat)
+  vs_final(imat) = &
+       vs1*(1.-gamma_interp_x)*(1.-gamma_interp_y)*(1.-gamma_interp_z1) + &
+       vs2*gamma_interp_x*(1.-gamma_interp_y)*(1.-gamma_interp_z2) + &
+       vs3*gamma_interp_x*gamma_interp_y*(1.-gamma_interp_z3) + &
+       vs4*(1.-gamma_interp_x)*gamma_interp_y*(1.-gamma_interp_z4) + &
+       vs5*(1.-gamma_interp_x)*(1.-gamma_interp_y)*gamma_interp_z1 + &
+       vs6*gamma_interp_x*(1.-gamma_interp_y)*gamma_interp_z2 + &
+       vs7*gamma_interp_x*gamma_interp_y*gamma_interp_z3 + &
+       vs8*(1.-gamma_interp_x)*gamma_interp_y*gamma_interp_z4
 
-    if (vs_final(imat) < VS_MIN(imat)) vs_final(imat) = VS_MIN(imat)
-    if (vs_final(imat) > VS_MAX(imat)) vs_final(imat) = VS_MAX(imat)
+  rho_final(imat) = &
+       rho1*(1.-gamma_interp_x)*(1.-gamma_interp_y)*(1.-gamma_interp_z1) + &
+       rho2*gamma_interp_x*(1.-gamma_interp_y)*(1.-gamma_interp_z2) + &
+       rho3*gamma_interp_x*gamma_interp_y*(1.-gamma_interp_z3) + &
+       rho4*(1.-gamma_interp_x)*gamma_interp_y*(1.-gamma_interp_z4) + &
+       rho5*(1.-gamma_interp_x)*(1.-gamma_interp_y)*gamma_interp_z1 + &
+       rho6*gamma_interp_x*(1.-gamma_interp_y)*gamma_interp_z2 + &
+       rho7*gamma_interp_x*gamma_interp_y*gamma_interp_z3 + &
+       rho8*(1.-gamma_interp_x)*gamma_interp_y*gamma_interp_z4
 
-    if (rho_final(imat) > RHO_MAX(imat)) rho_final(imat) = RHO_MAX(imat)
-    if (rho_final(imat) < RHO_MIN(imat)) rho_final(imat) = RHO_MIN(imat)
+  ! impose minimum and maximum velocity and density if needed
+  if (vp_final(imat) < VP_MIN(imat)) vp_final(imat) = VP_MIN(imat)
+  if (vp_final(imat) > VP_MAX(imat)) vp_final(imat) = VP_MAX(imat)
 
-  enddo
+  if (vs_final(imat) < VS_MIN(imat)) vs_final(imat) = VS_MIN(imat)
+  if (vs_final(imat) > VS_MAX(imat)) vs_final(imat) = VS_MAX(imat)
 
-  ! checks that material was found
-  if (imat /= imaterial) stop 'Error specified tomographic material id was not found'
+  if (rho_final(imat) > RHO_MAX(imat)) rho_final(imat) = RHO_MAX(imat)
+  if (rho_final(imat) < RHO_MIN(imat)) rho_final(imat) = RHO_MIN(imat)
 
   ! model parameters for the associated negative imaterial_id index in materials file
-  rho_model = rho_final(imaterial)
-  vp_model = vp_final(imaterial)
-  vs_model = vs_final(imaterial)
+  rho_model = rho_final(imat)
+  vp_model = vp_final(imat)
+  vs_model = vs_final(imat)
 
   ! attenuation: arbitrary value, see maximum in constants.h
   qmu_atten = ATTENUATION_COMP_MAXIMUM

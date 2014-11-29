@@ -55,6 +55,41 @@ AC_SUBST([CUSTOM_REAL])
 AC_SUBST([CUSTOM_MPI_TYPE])
 
 ###
+### debugging
+###
+
+AC_ARG_ENABLE([debug],
+    [AC_HELP_STRING([--enable-debug],
+        [build with debugging options enabled @<:@default=no@:>@])],
+    [want_debug="$enableval"],
+    [want_debug=no])
+AM_CONDITIONAL([COND_DEBUG], [test x"$want_debug" != xno])
+export COND_DEBUG_FALSE
+export COND_DEBUG_TRUE
+
+###
+### FORCE_VECTORIZATION
+###
+
+AC_ARG_ENABLE([vectorization],
+    [AC_HELP_STRING([--enable-vectorization],
+        [build FORCE_VECTORIZATION enabled version @<:@default=auto@:>@])],
+    [want_vec="$enableval"],
+    [want_vec=auto])
+if test x"$want_vec" == xauto; then
+    if test x"$want_debug" != xno; then
+        want_vec=no
+    else
+        want_vec=yes
+    fi
+else
+    if test x"$want_vec" != xno && test x"$want_debug" != xno; then
+        AC_MSG_ERROR([--enable-debug and --enable-vectorization cannot be specified simultaneously.])
+    fi
+fi
+AM_CONDITIONAL([COND_VECTORIZATION], [test x"$want_vec" != xno])
+
+###
 ### CUDA
 ###
 
@@ -125,6 +160,10 @@ AC_FC_WRAPPERS
 AC_LANG(Fortran)
 AC_FC_SRCEXT(f90)
 AC_FC_FREEFORM()
+
+AC_FC_PP_DEFINE()
+AC_SUBST([FC_DEFINE])
+AC_FC_PP_SRCEXT(F90)dnl Because AC_FC_PP_DEFINE messes with things.
 
 AC_PROG_CC
 
@@ -290,60 +329,72 @@ AC_SUBST([FC_MODDIR])
 ### MPI
 ###
 
-if test "$want_mpi" = yes; then
+AS_IF([test "$want_mpi" = yes], [
     AS_BOX([MPI])
     CIT_MPI_INCDIR([$MPIFC])
-fi
+])
 
 
 ###
 ### ADIOS
 ###
-
-if test "$want_adios" = yes; then
+AS_IF([test x"$want_adios" != xno], [
     AS_BOX([ADIOS])
     if test "$want_mpi" != yes; then
         AC_MSG_ERROR([Cannot compile with ADIOS without MPI.])
     fi
     CIT_ADIOS_CONFIG
-fi	
+])
 
+#mpbl: adding flags to config.h.in through autoheader in order to save them into the adios file.
+#configure_flags_str="FC=$FC FCFLAGS=$FCFLAGS $FLAGS_CHECK"
+#AC_DEFINE_UNQUOTED([CONFIGURE_FLAGS],["${configure_flags_str}"],
+ #         [configuration flags to be saved in the adios output file.])
+CONFIGURE_FLAGS="FC=$FC FCFLAGS=$FCFLAGS"
+AC_SUBST([CONFIGURE_FLAGS])
 
 ###
 ### CUDA
 ###
 
-if test "$want_cuda" != no; then
+AS_IF([test x"$want_cuda" != xno], [
     AS_BOX([CUDA])
     CIT_CUDA_CONFIG
-fi
+])
 
 
 ###
 ### OPENMP
 ###
 
-if test "$want_openmp" = yes; then
+AS_IF([test "$want_openmp" = yes], [
     AS_BOX([OPENMP])
     CIT_FC_OPENMP_MODULE([$FC],[$FLAGS_CHECK])        
-fi
+])
+
+###
+### FORCE_VECTORIZATION
+###
+
+AS_IF([test x"$want_vec" != xno],[
+  AS_BOX([FORCE VECTORIZATION])
+  AC_MSG_NOTICE([FORCE_VECTORIZATION is enabled])
+
+  FLAGS_CHECK="${FLAGS_CHECK} ${FC_DEFINE}FORCE_VECTORIZATION"
+  CPPFLAGS="${CPPFLAGS} -DFORCE_VECTORIZATION"
+])
 
 ############################################################
 
 AS_BOX([setting up default simulation setup])
 
-#mpbl: adding flags to config.h.in through autoheader in order to save them into the adios file.
-configure_flags_str="FC=$FC FCFLAGS=$FLAGS_CHECK"
-AC_DEFINE_UNQUOTED([CONFIGURE_FLAGS],["${configure_flags_str}"],
-          [configuration flags to be save in the adios output file.])
-
 # Output results.
-
 AC_CONFIG_FILES([
     Makefile
     setup/constants.h
     setup/constants_tomography.h
     setup/precision.h
+    setup/config.fh
 ])
 
 if test "$USE_BUNDLED_SCOTCH" = 1; then

@@ -40,31 +40,32 @@
 
 ! returns the updated acceleration array: accel
 
-  use constants
+  use constants,only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ,NGLLSQUARE
+
   use pml_par,only : rmemory_coupling_el_ac_potential_dot_dot,is_CPML,spec_to_CPML,&
                      potential_acoustic_old,NSPEC_CPML
   implicit none
 
-  integer :: NSPEC_AB,NGLOB_AB,SIMULATION_TYPE
-  logical :: backward_simulation
+  integer,intent(in) :: NSPEC_AB,NGLOB_AB,SIMULATION_TYPE
+  logical,intent(in) :: backward_simulation
 
 ! displacement and pressure
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: accel
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: potential_dot_dot_acoustic,potential_dot_acoustic,potential_acoustic
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB),intent(inout) :: accel
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(in) :: potential_dot_dot_acoustic,potential_dot_acoustic,potential_acoustic
 
 ! global indexing
-  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
+  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
 
 ! acoustic-elastic coupling surface
-  integer :: num_coupling_ac_el_faces
-  real(kind=CUSTOM_REAL) :: coupling_ac_el_normal(NDIM,NGLLSQUARE,num_coupling_ac_el_faces)
-  real(kind=CUSTOM_REAL) :: coupling_ac_el_jacobian2Dw(NGLLSQUARE,num_coupling_ac_el_faces)
-  integer :: coupling_ac_el_ijk(3,NGLLSQUARE,num_coupling_ac_el_faces)
-  integer :: coupling_ac_el_ispec(num_coupling_ac_el_faces)
+  integer,intent(in) :: num_coupling_ac_el_faces
+  real(kind=CUSTOM_REAL),intent(in) :: coupling_ac_el_normal(NDIM,NGLLSQUARE,num_coupling_ac_el_faces)
+  real(kind=CUSTOM_REAL),intent(in) :: coupling_ac_el_jacobian2Dw(NGLLSQUARE,num_coupling_ac_el_faces)
+  integer,intent(in) :: coupling_ac_el_ijk(3,NGLLSQUARE,num_coupling_ac_el_faces)
+  integer,intent(in) :: coupling_ac_el_ispec(num_coupling_ac_el_faces)
 
 ! communication overlap
-  logical, dimension(NSPEC_AB) :: ispec_is_inner
-  logical :: phase_is_inner
+  logical, dimension(NSPEC_AB),intent(in) :: ispec_is_inner
+  logical,intent(in) :: phase_is_inner
 
 ! local parameters
   real(kind=CUSTOM_REAL) :: pressure
@@ -98,37 +99,35 @@
         iglob = ibool(i,j,k,ispec)
 
         ! acoustic pressure on global point
-        if (PML_CONDITIONS .and. NSPEC_CPML > 0)then
-          if (.not. backward_simulation)then
-            if (is_CPML(ispec))then
-              if (SIMULATION_TYPE == 1)then
-                ispec_CPML = spec_to_CPML(ispec)
-                call pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,i,j,k,&
-                                                pressure,potential_acoustic,potential_acoustic_old,&
-                                                potential_dot_acoustic,potential_dot_dot_acoustic, &
-                                                num_coupling_ac_el_faces,rmemory_coupling_el_ac_potential_dot_dot)
-                pressure = - pressure
-              endif
+        pressure = - potential_dot_dot_acoustic(iglob)
 
-              if (SIMULATION_TYPE == 3)then
-                ispec_CPML = spec_to_CPML(ispec)
-                call pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,i,j,k,&
-                                                pressure,potential_acoustic,potential_acoustic_old,&
-                                                potential_dot_acoustic,potential_dot_dot_acoustic,&
-                                                num_coupling_ac_el_faces,rmemory_coupling_el_ac_potential_dot_dot)
-              endif
-            else
-              pressure = - potential_dot_dot_acoustic(iglob)
+        ! adjoint wavefield case
+        if (SIMULATION_TYPE /= 1 .and. (.not. backward_simulation)) then
+          ! handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
+          ! adjoint definition: pressure^\dagger = potential^\dagger
+          pressure = - pressure
+        endif
+
+        ! CPML overwrite cases
+        if (PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
+          if (is_CPML(ispec))then
+            if (SIMULATION_TYPE == 1) then
+              ispec_CPML = spec_to_CPML(ispec)
+              call pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,i,j,k,&
+                                              pressure,potential_acoustic,potential_acoustic_old,&
+                                              potential_dot_acoustic,potential_dot_dot_acoustic, &
+                                              num_coupling_ac_el_faces,rmemory_coupling_el_ac_potential_dot_dot)
+              pressure = - pressure
             endif
-          else
-            if (is_CPML(ispec))then
-! left blank, since no operation needed
-            else
-              pressure = - potential_dot_dot_acoustic(iglob)
+
+            if (SIMULATION_TYPE == 3)then
+              ispec_CPML = spec_to_CPML(ispec)
+              call pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,i,j,k,&
+                                              pressure,potential_acoustic,potential_acoustic_old,&
+                                              potential_dot_acoustic,potential_dot_dot_acoustic,&
+                                              num_coupling_ac_el_faces,rmemory_coupling_el_ac_potential_dot_dot)
             endif
           endif
-        else
-          pressure = - potential_dot_dot_acoustic(iglob)
         endif
 
         ! gets associated normal on GLL point
@@ -180,7 +179,7 @@ end subroutine compute_coupling_viscoelastic_ac
 
   implicit none
 
-  integer :: NSPEC_AB,NGLOB_AB
+  integer,intent(in) :: NSPEC_AB,NGLOB_AB
 
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLOB_AB),intent(inout) :: accel
   real(kind=CUSTOM_REAL),dimension(NGLOB_AB),intent(in) :: rmassx,rmassy,rmassz
@@ -189,10 +188,10 @@ end subroutine compute_coupling_viscoelastic_ac
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
 
   ! free surface
-  integer :: num_free_surface_faces
-  real(kind=CUSTOM_REAL) :: free_surface_normal(NDIM,NGLLSQUARE,num_free_surface_faces)
-  integer :: free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces)
-  integer :: free_surface_ispec(num_free_surface_faces)
+  integer,intent(in) :: num_free_surface_faces
+  real(kind=CUSTOM_REAL),intent(in) :: free_surface_normal(NDIM,NGLLSQUARE,num_free_surface_faces)
+  integer,intent(in) :: free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces)
+  integer,intent(in) :: free_surface_ispec(num_free_surface_faces)
 
 ! local parameters
   real(kind=CUSTOM_REAL) :: nx,ny,nz

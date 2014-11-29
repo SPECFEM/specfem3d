@@ -65,15 +65,21 @@ case $my_FC in
         #
         # Cray Fortran
         #
-        DEF_FFLAGS="-O3 -Onoaggress -Oipa0 -hfp2 -Ovector3 -Oscalar3 -Ocache2 -Ounroll2 -Ofusion2 -p \$O -eF -em -rm" # turn on optimization; -Oaggress -Oipa4 would make it even more aggressive
+        DEF_FFLAGS="-M 1193 -M 1438"
+        OPT_FFLAGS="-O3 -Onoaggress -Oipa0 -hfp2 -Ovector3 -Oscalar3 -Ocache2 -Ounroll2 -Ofusion2"
+        # -Oaggress -Oipa4 would make it even more aggressive
+        DEBUG_FFLAGS="-eC -eD -ec -en -eI -ea -g -G0"
+        #
+        #DEF_FFLAGS="-O3 -Onoaggress -Oipa0 -hfp2 -Ovector3 -Oscalar3 -Ocache2 -Ounroll2 -Ofusion2 -p \$O -eF -em -rm" # turn on optimization; -Oaggress -Oipa4 would make it even more aggressive
         # -eC -eD -ec -en -eI -ea -g -G0 -M 1193 -M 1438 # turn on full debugging and range checking
         ;;
     pgf95|*/pgf95|pgf90|*/pgf90|pgfortran|*/pgfortran)
         #
         # Portland PGI
         #
-        DEF_FFLAGS="-Mdclchk -Minform=warn -mcmodel=medium -Mnobounds -fast "
-        # for debugging: add -Mbounds and change -fast to -O0
+        DEF_FFLAGS="-Mdclchk -Minform=warn -mcmodel=medium"
+        OPT_FFLAGS="-Mnobounds -fast"
+        DEBUG_FFLAGS="-Mbounds"
         ;;
     ifort|*/ifort)
         #
@@ -84,23 +90,25 @@ case $my_FC in
 # parallel file systems like SFS 3.2 / Lustre 1.8. If omitted
 # I/O throughput lingers at 2.5 MB/s, with it it can increase to ~44 MB/s
 # However it does not make much of a difference on NFS mounted volumes or with SFS 3.1.1 / Lustre 1.6.7.1 
-        DEF_FFLAGS="-O3 -check nobounds -xHost -fpe0 -ftz -assume buffered_io -assume byterecl -align sequence -vec-report0 -std03 -diag-disable 6477 -implicitnone -gen-interfaces -warn all"
-        # useful for debugging...
-        # for debugging: change "-O3 -check nobounds" to  "-check all -debug -g -O0 -fp-stack-check -traceback -ftrapuv"
+        DEF_FFLAGS="-xHost -fpe0 -ftz -assume buffered_io -assume byterecl -align sequence -vec-report0 -std03 -diag-disable 6477 -implicitnone -gen-interfaces -warn all" # -mcmodel=medium -shared-intel
+        OPT_FFLAGS="-O3 -check nobounds"
+        DEBUG_FFLAGS="-check all -debug -g -O0 -fp-stack-check -traceback -ftrapuv"
         ;;
     gfortran|*/gfortran|f95|*/f95)
         #
         # GNU gfortran
         #
-        DEF_FFLAGS="-std=f2003 -fimplicit-none -frange-check -O2 -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -ffpe-trap=invalid,zero,overflow"
-        # useful for debugging: add   -ggdb -fbacktrace -fbounds-check
-        # useful to track loss of accuracy because of automatic double to single precision conversion:  -Wconversion  (this may generate many warnings...)
+        DEF_FFLAGS="-std=f2003 -fimplicit-none -frange-check -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -ffpe-trap=invalid,zero,overflow" # -mcmodel=medium
+        OPT_FFLAGS="-O2"
+        DEBUG_FFLAGS="-g -O0 -ggdb -fbacktrace -fbounds-check"
         ;;
     g95|*/g95)
         #
         # g95 (free f95 compiler from http://www.g95.org)
         #
-        DEF_FFLAGS="-O"
+        DEF_FFLAGS="-fimplicit-none"
+        OPT_FFLAGS="-O"
+        DEBUG_FFLAGS="-g -O0 -fbounds-check -ftrace"
         ;;
     f90|*/f90)
         case $host_os in
@@ -110,21 +118,26 @@ case $my_FC in
                 #
                 case $host_cpu in
                     i*86 | x86_64)
-                        DEF_FFLAGS="-W132 -s -O3 -cpu:p7 -v -YDEALLOC=ALL"
+                        DEF_FFLAGS="-W132 -s -cpu:p7 -v -YDEALLOC=ALL"
+                        OPT_FFLAGS="-O3"
+                        DEBUG_FFLAGS=""
                     ;;
                 esac
                 ;;
             irix)
                 ################ SGI Irix #################
                 DEF_MPIFC=$FC
-                DEF_FMPILIBS="-lmpi -lfastm -lfpe"
-                DEF_FFLAGS="-ansi -u -64 -O3 -OPT:Olimit=0 -OPT:roundoff=3 -OPT:IEEE_arithmetic=3 -r10000 -mips4"
-                #   -check_bounds
+                DEF_MPILIBS="-lmpi -lfastm -lfpe"
+                DEF_FFLAGS="-ansi -u -64 -OPT:Olimit=0 -OPT:roundoff=3 -OPT:IEEE_arithmetic=3 -r10000 -mips4"
+                OPT_FFLAGS="-O3"
+                DEBUG_FFLAGS="-check_bounds"
                 ;;
             superux*)
                 ################## NEC SX ##################
                 DEF_MPIFC=$FC
                 DEF_FFLAGS="-C hopt -R2 -Wf\" -L nostdout noinclist mrgmsg noeject -msg b -pvctl loopcnt=14000000 expand=10 fullmsg vecthreshold=20 -s\" -pi auto line=100 exp=swap_all,rank"
+                OPT_FFLAGS=""
+                DEBUG_FFLAGS=""
                 ;;
         esac
         ;;
@@ -132,8 +145,9 @@ case $my_FC in
         #
         # Lahey f90
         #
-        DEF_FFLAGS="--warn --wo --tpp --f95 --dal -O"
-        #    --chk
+        DEF_FFLAGS="--warn --wo --tpp --f95 --dal"
+        OPT_FFLAGS="-O"
+        DEBUG_FFLAGS="--chk"
         ;;
     ######## IBM ######
     mpxlf*|*/mpxlf*)
@@ -166,8 +180,16 @@ case $my_FC in
         # one should also use additional flags:
         # CFLAGS = -Wl,-relax
         #
-# deleted -qxflag=dvz because it requires handler function __xl_dzx and thus linking will fail 
-        DEF_FFLAGS="-O4 -qnostrict -qassert=contig -qhot -q64 -qtune=auto -qarch=auto -qcache=auto -qfree=f90 -qsuffix=f=f90 -qhalt=w -qlanglvl=2003std -g -qsuppress=1518-234 -qsuppress=1518-317 -qsuppress=1518-318 -qsuppress=1500-036 -Q -Q+rank,swap_all -Wl,-relax"
+# deleted -qxflag=dvz because it requires handler function __xl_dzx and thus linking will fail.
+#
+# The -qstrict option prevents some minor differences of results between xlf and
+# other compilers. There is a small decrease in performance, but generally
+# it is small or negligible compared to other issues like slow I/O.
+        DEF_FFLAGS="-qassert=contig -qhot -q64 -qtune=auto -qarch=auto -qcache=auto -qfree=f90 -qsuffix=f=f90 -qhalt=w -qlanglvl=2003std -g -qsuppress=1518-234 -qsuppress=1518-317 -qsuppress=1518-318 -qsuppress=1500-036"
+        OPT_FFLAGS="-O4 -qstrict -Q -Q+rank,swap_all -Wl,-relax"
+        # Options -qreport -qsource -qlist create a *.lst file containing detailed information about vectorization.
+        DEBUG_FFLAGS="-g -O0 -C -qddim -qfullpath -qflttrap=overflow:zerodivide:invalid:enable -qfloat=nans -qinitauto=7FBFFFFF"
+        #
         # Options -qreport -qsource -qlist create a *.lst file containing detailed information about vectorization.
         # On IBM BlueGene at IDRIS (France) use:
         # -qtune=auto -qarch=450d -qsave     instead of -qtune=auto -qarch=auto
@@ -183,7 +205,9 @@ case $my_FC in
         # CC = pathcc
         # CFLAGS = -O2
         #
-        DEF_FFLAGS="-O3 -OPT:Ofast -fno-math-errno -ffast-math -LNO:fusion=2 -LNO:simd=2 -LNO:simd_verbose=ON -msse3 -march=auto -fno-second-underscore -align64"
+        DEF_FFLAGS="-fno-math-errno -ffast-math -msse3 -march=auto -fno-second-underscore -align64"
+        OPT_FFLAGS="-O3 -OPT:Ofast -LNO:fusion=2 -LNO:simd=2 -LNO:simd_verbose=ON"
+        DEBUG_FFLAGS="-g2"
         ;;
 
 esac
@@ -199,7 +223,11 @@ case $build_os in
 esac
 
 if test "x$FLAGS_CHECK" = "x"; then
-    FLAGS_CHECK="$DEF_FFLAGS"
+    if test "x$COND_DEBUG_TRUE" = "x"; then
+        FLAGS_CHECK="$DEF_FFLAGS $DEBUG_FFLAGS"
+    else
+        FLAGS_CHECK="$DEF_FFLAGS $OPT_FFLAGS"
+    fi
 fi
 if test "x$MPIFC" = "x"; then
     MPIFC="$DEF_MPIFC"

@@ -123,7 +123,7 @@ xadd_model_SHARED_OBJECTS = \
 	$O/specfem3D_par.spec.o \
 	$O/pml_par.spec.o \
 	$O/read_mesh_databases.spec.o \
-	$O/constants_mod.shared_module.o \
+	$O/shared_par.shared_module.o \
 	$O/create_name_database.shared.o \
 	$O/exit_mpi.shared.o \
 	$O/gll_library.shared.o \
@@ -168,7 +168,7 @@ xmodel_update_SHARED_OBJECTS = \
 	$O/pml_par.spec.o \
 	$O/initialize_simulation.spec.o \
 	$O/read_mesh_databases.spec.o \
-	$O/constants_mod.shared_module.o \
+	$O/shared_par.shared_module.o \
 	$O/check_mesh_resolution.shared.o \
 	$O/create_name_database.shared.o \
 	$O/exit_mpi.shared.o \
@@ -231,7 +231,7 @@ xsmooth_sem_SHARED_OBJECTS = \
 	$O/specfem3D_par.spec.o \
 	$O/pml_par.spec.o \
 	$O/read_mesh_databases.spec.o \
-	$O/constants_mod.shared_module.o \
+	$O/shared_par.shared_module.o \
 	$O/check_mesh_resolution.shared.o \
 	$O/create_name_database.shared.o \
 	$O/exit_mpi.shared.o \
@@ -259,7 +259,7 @@ xsum_kernels_OBJECTS = \
 	$(EMPTY_MACRO)
 
 xsum_kernels_SHARED_OBJECTS = \
-	$O/constants_mod.shared_module.o \
+	$O/shared_par.shared_module.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \
@@ -289,13 +289,13 @@ ${E}/xsum_preconditioned_kernels: $(xsum_preconditioned_kernels_OBJECTS) $(xsum_
 ###
 ### Module dependencies
 ###
-$O/tomography_par.tomo_module.o: $O/constants_mod.shared_module.o
+$O/tomography_par.tomo_module.o: $O/shared_par.shared_module.o
 
 ####
 #### rule for each .o file below
 ####
 
-$O/%.tomo_module.o: $S/%.f90 ${SETUP}/constants_tomography.h $O/constants_mod.shared_module.o
+$O/%.tomo_module.o: $S/%.f90 ${SETUP}/constants_tomography.h $O/shared_par.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 $O/%.tomo.o: $S/%.f90 ${SETUP}/constants_tomography.h $O/tomography_par.tomo_module.o
