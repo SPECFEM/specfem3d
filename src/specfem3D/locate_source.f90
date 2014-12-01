@@ -162,6 +162,14 @@
 
   !-----------------------------------------------------------------------------------
 
+  ! clear the arrays
+  Mxx(:) = 0.d0
+  Myy(:) = 0.d0
+  Mzz(:) = 0.d0
+  Mxy(:) = 0.d0
+  Mxz(:) = 0.d0
+  Myz(:) = 0.d0
+
   ! read all the sources
   if (USE_FORCE_POINT_SOURCE) then
     ! point forces
@@ -872,7 +880,7 @@
       endif  ! end of detailed output to locate source
 
       ! checks CMTSOLUTION format for acoustic case
-      if (idomain(isource) == IDOMAIN_ACOUSTIC) then
+      if (idomain(isource) == IDOMAIN_ACOUSTIC .and. .not. USE_FORCE_POINT_SOURCE) then
         if (Mxx(isource) /= Myy(isource) .or. Myy(isource) /= Mzz(isource) .or. &
            Mxy(isource) > TINYVAL .or. Mxz(isource) > TINYVAL .or. Myz(isource) > TINYVAL) then
           write(IMAIN,*)

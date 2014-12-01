@@ -30,7 +30,7 @@
   subroutine compute_add_sources_viscoelastic(NSPEC_AB,NGLOB_AB,accel, &
                         ibool,ispec_is_inner,phase_is_inner, &
                         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                        hdur,hdur_gaussian,hdur_tiny,tshift_src,dt,t0,sourcearrays, &
+                        hdur,hdur_gaussian,tshift_src,dt,t0,sourcearrays, &
                         ispec_is_elastic,SIMULATION_TYPE,NSTEP, &
                         nrec,islice_selected_rec,ispec_selected_rec, &
                         nadj_rec_local,adj_sourcearrays, &
@@ -66,7 +66,7 @@
 ! source
   integer :: NSOURCES,myrank,it
   integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
-  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,hdur_tiny,tshift_src
+  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,tshift_src
   double precision :: dt,t0
   real(kind=CUSTOM_REAL), dimension(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrays
 
@@ -132,10 +132,11 @@
               if (USE_RICKER_TIME_FUNCTION) then
                 stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
               else
-                stf = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_tiny(isource))
+                ! use a very small duration of 5*DT to mimic a Dirac in time
+                stf = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),5.d0*DT)
               endif
 
-              ! add the inclined force source array
+              ! add the tilted force source array
               ! distinguish between single and double precision for reals
               if (CUSTOM_REAL == SIZE_REAL) then
                 stf_used = sngl(stf)
@@ -395,7 +396,7 @@
   subroutine compute_add_sources_viscoelastic_bpwf( NSPEC_AB,NGLOB_AB, &
                         ibool,ispec_is_inner,phase_is_inner, &
                         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                        hdur,hdur_gaussian,hdur_tiny,tshift_src,dt,t0,sourcearrays, &
+                        hdur,hdur_gaussian,tshift_src,dt,t0,sourcearrays, &
                         ispec_is_elastic,SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                         b_accel,NOISE_TOMOGRAPHY)
 
@@ -422,7 +423,7 @@
 ! source
   integer :: NSOURCES,myrank,it
   integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
-  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,hdur_tiny,tshift_src
+  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,tshift_src
   double precision :: dt,t0
   real(kind=CUSTOM_REAL), dimension(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrays
 
@@ -491,20 +492,14 @@
 
             if (USE_FORCE_POINT_SOURCE) then
 
-              !f0 = hdur(isource) !! using hdur as a FREQUENCY
-              !if (it == 1 .and. myrank == 0) then
-              !   write(IMAIN,*) 'using a source of dominant frequency ',f0
-              !   write(IMAIN,*) 'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
-              !   write(IMAIN,*) 'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
-              !endif
-
               if (USE_RICKER_TIME_FUNCTION) then
                 stf = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
               else
-                stf = comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_tiny(isource))
+                ! use a very small duration of 5*DT to mimic a Dirac in time
+                stf = comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),5.d0*DT)
               endif
 
-              ! add the inclined force source array
+              ! add the tilted force source array
               ! distinguish between single and double precision for reals
               if (CUSTOM_REAL == SIZE_REAL) then
                 stf_used = sngl(stf)
@@ -594,7 +589,7 @@
 
   subroutine compute_add_sources_viscoelastic_GPU(NSPEC_AB, &
                         ispec_is_inner,phase_is_inner,NSOURCES,myrank,it,&
-                        hdur,hdur_gaussian,hdur_tiny,tshift_src,dt,t0, &
+                        hdur,hdur_gaussian,tshift_src,dt,t0, &
                         ispec_is_elastic,SIMULATION_TYPE,NSTEP, &
                         nrec,islice_selected_rec,ispec_selected_rec, &
                         nadj_rec_local,adj_sourcearrays, &
@@ -623,7 +618,7 @@
 
 ! source
   integer :: NSOURCES,myrank,it
-  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,hdur_tiny,tshift_src
+  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,tshift_src
   double precision :: dt,t0
 
   double precision, external :: comp_source_time_function,comp_source_time_function_gauss,comp_source_time_function_rickr
@@ -678,19 +673,16 @@
         ! precomputes source time function factor
         if (USE_FORCE_POINT_SOURCE) then
           if (USE_RICKER_TIME_FUNCTION) then
-            stf_pre_compute(isource) = &
-                 comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+            stf_pre_compute(isource) = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
           else
-            stf_pre_compute(isource) = &
-                 comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_tiny(isource))
+            ! use a very small duration of 5*DT to mimic a Dirac in time
+            stf_pre_compute(isource) = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),5.d0*DT)
           endif
         else
           if (USE_RICKER_TIME_FUNCTION) then
-            stf_pre_compute(isource) = &
-                 comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+            stf_pre_compute(isource) = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
           else
-            stf_pre_compute(isource) = &
-                 comp_source_time_function(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+            stf_pre_compute(isource) = comp_source_time_function(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
           endif
         endif
       enddo
@@ -847,19 +839,16 @@
         ! precomputes source time function factors
         if (USE_FORCE_POINT_SOURCE) then
           if (USE_RICKER_TIME_FUNCTION) then
-            stf_pre_compute(isource) = &
-                 comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
+            stf_pre_compute(isource) = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
           else
-            stf_pre_compute(isource) = &
-                 comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_tiny(isource))
+            ! use a very small duration of 5*DT to mimic a Dirac in time
+            stf_pre_compute(isource) = comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),5.d0*DT)
           endif
         else
           if (USE_RICKER_TIME_FUNCTION) then
-            stf_pre_compute(isource) = &
-                 comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
+            stf_pre_compute(isource) = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
           else
-            stf_pre_compute(isource) = &
-                 comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+            stf_pre_compute(isource) = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
           endif
         endif
       enddo

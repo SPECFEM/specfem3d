@@ -25,7 +25,6 @@
 !
 !=====================================================================
 
-
 ! for poroelastic solver
 
   subroutine compute_add_sources_poroelastic(NSPEC_AB,NGLOB_AB, &
@@ -33,7 +32,7 @@
                         rhoarraystore,phistore,tortstore,&
                         ibool,ispec_is_inner,phase_is_inner, &
                         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                        hdur,hdur_gaussian,hdur_tiny,tshift_src,dt,t0,sourcearrays, &
+                        hdur,hdur_gaussian,tshift_src,dt,t0,sourcearrays, &
                         ispec_is_poroelastic,SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                         nrec,islice_selected_rec,ispec_selected_rec, &
                         nadj_rec_local,adj_sourcearrays,b_accels,b_accelw, &
@@ -65,7 +64,7 @@
 ! source
   integer :: NSOURCES,myrank,it
   integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
-  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,hdur_tiny,tshift_src
+  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,tshift_src
   double precision :: dt,t0
   real(kind=CUSTOM_REAL), dimension(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrays
 
@@ -119,10 +118,11 @@
               if (USE_RICKER_TIME_FUNCTION) then
                 stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
               else
-                stf = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_tiny(isource))
+                ! use a very small duration of 5*DT to mimic a Dirac in time
+                stf = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),5.d0*DT)
               endif
 
-              ! add the inclined force source array
+              ! add the tilted force source array
               ! the source is applied to both solid and fluid phase: bulk source.
 
               ! distinguish between single and double precision for reals
@@ -356,10 +356,11 @@
                if (USE_RICKER_TIME_FUNCTION) then
                  stf = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
                else
-                 stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_tiny(isource))
+                 ! use a very small duration of 5*DT to mimic a Dirac in time
+                 stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(isource),5.d0*DT)
                endif
 
-               ! add the inclined force source array
+               ! add the tilted force source array
                ! the source is applied to both solid and fluid phase: bulk source
                ! note: time step is now at NSTEP-it
 

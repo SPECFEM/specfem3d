@@ -1732,7 +1732,7 @@ using Lagrange interpolants. This can be useful e.g. for oil industry
 foothills simulations in which the source is a vertical force, normal
 force, tilted force, or an impact etc. Note that in the \texttt{FORCESOLUTION}
 file, you will need to edit the East, North and vertical components
-of an arbitrary (non-unitary) direction vector of the force vector;
+of an arbitrary (not necessarily unitary, the code will normalize it automatically) direction vector of the force vector;
 thus refer to Appendix~\ref{cha:Coordinates} for the orientation
 of the reference frame. This vector is made unitary internally in
 the solver and thus only its direction matters here; its norm is ignored
@@ -2030,12 +2030,11 @@ following way:
 will not run otherwise.) The time shift parameter would simply apply
 an overall time shift to the synthetics, something that can be done
 in the post-processing (see Section \ref{sec:Process-data-and-syn}).
-\item Set the \texttt{half duration} parameter of the Ricker source time
+\item Set the \texttt{f0} parameter (the dominant frequency) of the Ricker source time
 function when {\texttt{USE\_RICKER\_TIME\_FUNCTION}} is turned on
 in the main parameter file {\texttt{Par\_file}}. In case that the
 solver uses a (pseudo) Dirac delta source time function to represent
-a force point source, a very short \texttt{half duration} parameter
-(hdur = 5 {*} DT) is automatically set by default.
+a force point source, a very short duration of five time steps is automatically set by default.
 \item Set the latitude or UTM $x$ coordinate, longitude or UTM $y$ coordinate, depth of the source (in km).
 \item Set the magnitude of the force source.
 \item Set the components of a (non-unitary) direction vector for the force

@@ -108,9 +108,6 @@
     if (ier /= 0) stop 'error allocating arrays for force point sources'
   endif
 
-  allocate(hdur_tiny(NSOURCES),stat=ier)
-  if (ier /= 0) stop 'error allocating arrays for force point sources'
-
   ! for source encoding (acoustic sources so far only)
   allocate(pm1_source_encoding(NSOURCES),stat=ier)
   if (ier /= 0) stop 'error allocating arrays for sources'
@@ -143,9 +140,6 @@
 
   ! convert the half duration for triangle STF to the one for gaussian STF
   hdur_gaussian(:) = hdur(:)/SOURCE_DECAY_MIMIC_TRIANGLE
-
-  ! initialize a very short (but non-zero) half duration to use a pseudo-Dirac function
-  hdur_tiny(:) = 5*DT
 
   ! define t0 as the earliest start time
   ! note: an earlier start time also reduces numerical noise due to a
@@ -626,8 +620,8 @@
                     call exit_MPI(myrank,'error force point source: component vector has (almost) zero norm')
                   endif
 
-                  ! we use an inclined force defined by its magnitude and the projections
-                  ! of an arbitrary (non-unitary) direction vector on the E/N/Z_UP basis:
+                  ! we use an tilted force defined by its magnitude and the projections
+                  ! of an arbitrary (non-unitary) direction vector on the E/N/Z_UP basis
                   sourcearrayd(:,i,j,k) = factor_force_source(isource) * hlagrange * &
                                           ( nu_source(1,:,isource) * comp_dir_vect_source_E(isource) + &
                                             nu_source(2,:,isource) * comp_dir_vect_source_N(isource) + &

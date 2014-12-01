@@ -97,9 +97,9 @@
     read(IIN,"(a)") string
     read(string(12:len_trim(string)),*) t_shift(isource)
 
-    ! read half duration
+    ! read f0 (stored in hdur() array for convenience, to use the same array as for CMTSOLUTION)
     read(IIN,"(a)") string
-    read(string(6:len_trim(string)),*) hdur(isource)
+    read(string(4:len_trim(string)),*) hdur(isource)
 
     ! read latitude
     read(IIN,"(a)") string
@@ -150,7 +150,7 @@
     ! (see constants.h: TINYVAL = 1.d-9 )
     if (hdur(isource) < TINYVAL) hdur(isource) = TINYVAL
 
-    ! check (inclined) force source's direction vector
+    ! check (tilted) force source direction vector
     length = sqrt( comp_dir_vect_source_E(isource)**2 + comp_dir_vect_source_N(isource)**2 + &
          comp_dir_vect_source_Z_UP(isource)**2)
     if (length < TINYVAL) then

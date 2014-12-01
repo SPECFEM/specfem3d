@@ -30,7 +30,7 @@
   subroutine compute_add_sources_acoustic(NSPEC_AB,NGLOB_AB,potential_dot_dot_acoustic, &
                                   ibool,ispec_is_inner,phase_is_inner, &
                                   NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                                  hdur,hdur_gaussian,hdur_tiny,tshift_src,dt,t0, &
+                                  hdur,hdur_gaussian,tshift_src,dt,t0, &
                                   sourcearrays,kappastore,ispec_is_acoustic,&
                                   SIMULATION_TYPE,NSTEP, &
                                   nrec,islice_selected_rec,ispec_selected_rec, &
@@ -61,7 +61,7 @@
 ! source
   integer :: NSOURCES,myrank,it
   integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
-  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,hdur_tiny,tshift_src
+  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,tshift_src
   double precision :: dt,t0
   real(kind=CUSTOM_REAL), dimension(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrays
 
@@ -123,13 +123,14 @@
 
             if (USE_FORCE_POINT_SOURCE) then
 
-!! DK DK note from DK DK: the statement below is very weird
-              f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing FORCESOLUTION file format
+              ! f0 has been stored in the hdur() array in the case of FORCESOLUTION, to use the same array as for CMTSOLUTION
+              f0 = hdur(isource)
 
               if (USE_RICKER_TIME_FUNCTION) then
                 stf_used = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),f0)
               else
-                stf_used = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_tiny(isource))
+                ! use a very small duration of 5*DT to mimic a Dirac in time
+                stf_used = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),5.d0*DT)
               endif
 
               ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
@@ -364,7 +365,7 @@
   subroutine compute_add_sources_acoustic_bpwf(NSPEC_AB, &
                                   ibool,ispec_is_inner,phase_is_inner, &
                                   NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                                  hdur,hdur_gaussian,hdur_tiny,tshift_src,dt,t0, &
+                                  hdur,hdur_gaussian,tshift_src,dt,t0, &
                                   sourcearrays,kappastore,ispec_is_acoustic,&
                                   SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                                   b_potential_dot_dot_acoustic)
@@ -389,7 +390,7 @@
 ! source
   integer :: NSOURCES,myrank,it
   integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
-  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,hdur_tiny,tshift_src
+  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,tshift_src
   double precision :: dt,t0
   real(kind=CUSTOM_REAL), dimension(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrays
 
@@ -462,13 +463,14 @@
 
             if (USE_FORCE_POINT_SOURCE) then
 
-!! DK DK note from DK DK: the statement below is very weird
-              f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing FORCESOLUTION file format
+              ! f0 has been stored in the hdur() array in the case of FORCESOLUTION, to use the same array as for CMTSOLUTION
+              f0 = hdur(isource)
 
               if (USE_RICKER_TIME_FUNCTION) then
                 stf_used = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),f0)
               else
-                stf_used = comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_tiny(isource))
+               ! use a very small duration of 5*DT to mimic a Dirac in time
+                stf_used = comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),5.d0*DT)
               endif
 
               ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
@@ -551,7 +553,7 @@
 ! for acoustic solver on GPU
   subroutine compute_add_sources_acoustic_GPU(NSPEC_AB,ispec_is_inner,phase_is_inner, &
                                   NSOURCES,myrank,it,&
-                                  hdur,hdur_gaussian,hdur_tiny,tshift_src,dt,t0, &
+                                  hdur,hdur_gaussian,tshift_src,dt,t0, &
                                   ispec_is_acoustic,SIMULATION_TYPE,NSTEP, &
                                   nrec,islice_selected_rec,ispec_selected_rec, &
                                   nadj_rec_local,adj_sourcearrays, &
@@ -577,7 +579,7 @@
 
 ! source
   integer :: NSOURCES,myrank,it
-  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,hdur_tiny,tshift_src
+  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,tshift_src
   double precision :: dt,t0
 
   double precision, external :: comp_source_time_function,comp_source_time_function_rickr,&
@@ -629,19 +631,16 @@
         ! precomputes source time function factor
         if (USE_FORCE_POINT_SOURCE) then
           if (USE_RICKER_TIME_FUNCTION) then
-            stf_pre_compute(isource) = &
-                 comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+            stf_pre_compute(isource) = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
           else
-            stf_pre_compute(isource) = &
-                 comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_tiny(isource))
+            ! use a very small duration of 5*DT to mimic a Dirac in time
+            stf_pre_compute(isource) = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),5.d0*DT)
           endif
         else
           if (USE_RICKER_TIME_FUNCTION) then
-            stf_pre_compute(isource) = &
-                 comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+            stf_pre_compute(isource) = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
           else
-            stf_pre_compute(isource) = &
-                 comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+            stf_pre_compute(isource) = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
           endif
         endif
       enddo
@@ -791,19 +790,17 @@
         ! precomputes source time function factors
         if (USE_FORCE_POINT_SOURCE) then
            if (USE_RICKER_TIME_FUNCTION) then
-             stf_pre_compute(isource) = &
-                  comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
+             stf_pre_compute(isource) = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
            else
-             stf_pre_compute(isource) = &
-                  comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_tiny(isource))
+             ! use a very small duration of 5*DT to mimic a Dirac in time
+             stf_pre_compute(isource) = comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),5.d0*DT)
            endif
         else
           if (USE_RICKER_TIME_FUNCTION) then
-            stf_pre_compute(isource) = &
-                 comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
+            stf_pre_compute(isource) = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
           else
             stf_pre_compute(isource) = &
-                 comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+                   comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
           endif
         endif
       enddo

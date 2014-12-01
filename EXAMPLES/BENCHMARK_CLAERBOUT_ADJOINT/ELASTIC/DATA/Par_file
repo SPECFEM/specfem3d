@@ -104,7 +104,7 @@ NTSTEP_BETWEEN_READ_ADJSRC      = 0
 
 # use a (tilted) FORCESOLUTION force point source (or several) instead of a CMTSOLUTION moment-tensor source.
 # This can be useful e.g. for oil industry foothills simulations or asteroid simulations
-# in which the source is a vertical force, normal force, inclined force, impact etc.
+# in which the source is a vertical force, normal force, tilted force, impact etc.
 # If this flag is turned on, the FORCESOLUTION file must be edited by precising:
 # - the corresponding time-shift parameter,
 # - the half duration parameter of the source,

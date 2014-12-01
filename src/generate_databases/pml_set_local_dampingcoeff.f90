@@ -52,8 +52,6 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
   ! local parameters
   integer :: i,j,k,ispec,iglob,ispec_CPML,ier
 
-  ! JC JC: Remove the parameter definition here and make the calculation of ALPHA_MAX_PML automatic
-  !        by recovering the value of hdur in FORCESOLUTION/CMTSOLUTION
   real(kind=CUSTOM_REAL) :: ALPHA_MAX_PML
   real(kind=CUSTOM_REAL), parameter :: K_MAX_PML = 1.0d0,K_MIN_PML=1.0d0
   real(kind=CUSTOM_REAL) :: pml_damping_profile_l,dist,vp
