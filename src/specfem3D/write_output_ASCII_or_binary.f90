@@ -25,7 +25,7 @@
 !
 !=====================================================================
 
-  subroutine write_output_ASCII(one_seismogram, &
+  subroutine write_output_ASCII_or_binary(one_seismogram, &
               NSTEP,it,SIMULATION_TYPE,DT,t0,myrank, &
               iorientation,irecord,sisname,final_LOCAL_PATH)
 
@@ -36,6 +36,8 @@
 ! the results with the source time function
 
   use constants
+
+  use specfem_par,only: USE_BINARY_FOR_SEISMOGRAMS
 
   implicit none
 
@@ -56,11 +58,11 @@
   real(kind=CUSTOM_REAL) :: time_t
 
   ! opens seismogram file
-  if (SEISMOGRAMS_BINARY)then
+  if (USE_BINARY_FOR_SEISMOGRAMS)then
     ! allocate trace
     nt_s = min(it,NSTEP)
     allocate(tr(nt_s),stat=ier)
-    if (ier /= 0) stop 'error allocating array tr'
+    if (ier /= 0) stop 'error allocating array tr()'
 
     ! binary format case
     open(unit=IOUT, file=final_LOCAL_PATH(1:len_trim(final_LOCAL_PATH))//&
@@ -98,13 +100,11 @@
         endif
       endif
 
-      if (SEISMOGRAMS_BINARY) then
+      if (USE_BINARY_FOR_SEISMOGRAMS) then
         ! binary format case
-        !tr(isample)=seismograms(iorientation,irec_local,isample)
         tr(isample) = one_seismogram(iorientation,isample)
       else
         ! ASCII format case
-        !write(IOUT,*) time_t,' ',seismograms(iorientation,irec_local,isample)
         write(IOUT,*) time_t,' ',one_seismogram(iorientation,isample)
       endif
 
@@ -114,7 +114,7 @@
   enddo
 
   ! binary format case
-  if (SEISMOGRAMS_BINARY) then
+  if (USE_BINARY_FOR_SEISMOGRAMS) then
     ! writes out whole trace into binary file
     write(IOUT,rec=1) tr
     deallocate(tr)
@@ -122,5 +122,5 @@
 
   close(IOUT)
 
-  end subroutine write_output_ASCII
+  end subroutine write_output_ASCII_or_binary
 

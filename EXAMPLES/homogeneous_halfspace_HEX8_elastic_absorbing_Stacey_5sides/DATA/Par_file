@@ -87,7 +87,7 @@ NTSTEP_BETWEEN_FRAMES           = 200
 HDUR_MOVIE                      = 0.0
 
 # save AVS or OpenDX mesh files to check the mesh
-SAVE_MESH_FILES                 = .true.
+SAVE_MESH_FILES                 = .false.
 
 # path to store the local database file on each node
 LOCAL_PATH                      = ./OUTPUT_FILES/DATABASES_MPI
@@ -110,7 +110,7 @@ NTSTEP_BETWEEN_READ_ADJSRC      = 0
 # - the half duration parameter of the source,
 # - the coordinates of the source,
 # - the magnitude of the force source,
-# - the components of a direction vector for the force source in the E/N/Z_UP basis.
+# - the components of a (non necessarily unitary) direction vector for the force source in the E/N/Z_UP basis.
 # The direction vector is made unitary internally in the code and thus only its direction matters here;
 # its norm is ignored and the norm of the force used is the factor force source times the source time function.
 USE_FORCE_POINT_SOURCE          = .false.
@@ -118,6 +118,24 @@ USE_FORCE_POINT_SOURCE          = .false.
 # set to true to use a Ricker source time function instead of the source time functions set by default
 # to represent a (tilted) FORCESOLUTION force point source or a CMTSOLUTION moment-tensor source.
 USE_RICKER_TIME_FUNCTION        = .false.
+
+# decide if we save displacement, velocity and/or acceleration in forward runs (they can be set to true simultaneously)
+SAVE_SEISMOGRAMS_DISPLACEMENT   = .true.
+SAVE_SEISMOGRAMS_VELOCITY       = .true.
+SAVE_SEISMOGRAMS_ACCELERATION   = .true.
+
+# save seismograms in binary or ASCII format (binary is smaller but may not be portable between machines)
+USE_BINARY_FOR_SEISMOGRAMS      = .false.
+
+# output seismograms in Seismic Unix format (binary with 240-byte-headers)
+SU_FORMAT                       = .false.
+
+# decide if master process writes all the seismograms or if all processes do it in parallel
+WRITE_SEISMOGRAMS_BY_MASTER     = .false.
+
+# save all seismograms in one large combined file instead of one file per seismogram
+# to avoid overloading shared non-local file systems such as LUSTRE or GPFS for instance
+SAVE_ALL_SEISMOS_IN_ONE_FILE    = .false.
 
 # print source time function
 PRINT_SOURCE_TIME_FUNCTION      = .false.

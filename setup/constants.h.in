@@ -120,14 +120,9 @@
 
 !!-----------------------------------------------------------
 !!
-!! seismogram and i/o output
+!! I/O output
 !!
 !!-----------------------------------------------------------
-! ouput format of seismograms, ASCII or binary
-  logical, parameter :: SEISMOGRAMS_BINARY = .false.
-
-! output format of seismograms, Seismic Unix (binary with 240-byte-headers)
-  logical, parameter :: SU_FORMAT = .false.
 
 ! input, output and main MPI I/O files
   integer, parameter :: ISTANDARD_OUTPUT = 6
@@ -262,9 +257,6 @@
 ! of the manual. This source decay rate to mimic an equivalent triangle
 ! was found by trial and error
   double precision, parameter :: SOURCE_DECAY_MIMIC_TRIANGLE = 1.628d0
-
-! decide if master process writes all the seismograms or if all processes do it in parallel
-  logical, parameter :: WRITE_SEISMOGRAMS_BY_MASTER = .false.
 
 !!-----------------------------------------------------------
 !!

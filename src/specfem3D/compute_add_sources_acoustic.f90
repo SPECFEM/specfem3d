@@ -41,7 +41,7 @@
                         xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
                         station_name,network_name,adj_source_file,nrec_local,number_receiver_global, &
                         pm1_source_encoding,nsources_local,USE_FORCE_POINT_SOURCE, &
-                        USE_RICKER_TIME_FUNCTION
+                        USE_RICKER_TIME_FUNCTION,SU_FORMAT
   implicit none
 
   integer :: NSPEC_AB,NGLOB_AB
@@ -564,7 +564,7 @@
                         xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
                         station_name,network_name,adj_source_file,nrec_local,number_receiver_global, &
                         nsources_local,USE_FORCE_POINT_SOURCE, &
-                        USE_RICKER_TIME_FUNCTION
+                        USE_RICKER_TIME_FUNCTION,SU_FORMAT
   implicit none
 
   integer :: NSPEC_AB

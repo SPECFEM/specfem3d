@@ -35,7 +35,7 @@
                  NPROC,utm_x_source,utm_y_source, &
                  UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
                  iglob_is_surface_external_mesh,ispec_is_surface_external_mesh, &
-                 num_free_surface_faces,free_surface_ispec,free_surface_ijk)
+                 num_free_surface_faces,free_surface_ispec,free_surface_ijk,SU_FORMAT)
 
   use constants
 
@@ -67,7 +67,7 @@
 
   integer :: NPROC,UTM_PROJECTION_ZONE
   double precision :: utm_x_source,utm_y_source
-  logical :: SUPPRESS_UTM_PROJECTION
+  logical :: SUPPRESS_UTM_PROJECTION,SU_FORMAT
 
   ! free surface
   integer :: num_free_surface_faces

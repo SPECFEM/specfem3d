@@ -46,7 +46,7 @@
   double precision :: stf
 
   ! TODO: Test and Fix CUDA seismograms code.
-  logical,parameter :: USE_CUDA_SEISMOGRAMS = .false.
+  logical, parameter :: USE_CUDA_SEISMOGRAMS = .false.
 
   ! gets resulting array values onto CPU
   if (GPU_MODE) then
@@ -226,7 +226,7 @@
                           dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
         endif ! acoustic
 
-      !adjoint simulations
+      ! adjoint simulations
       case (3)
 
         ispec = ispec_selected_rec(irec)
@@ -288,11 +288,11 @@
   endif
 
   ! write the current or final seismograms
-  if ((mod(it,NTSTEP_BETWEEN_OUTPUT_SEISMOS) == 0 .or. it == NSTEP) .and. (.not.SU_FORMAT)) then
+  if ((mod(it,NTSTEP_BETWEEN_OUTPUT_SEISMOS) == 0 .or. it == NSTEP) .and. .not. SU_FORMAT) then
     if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
-      call write_seismograms_to_file(seismograms_d,1)
-      call write_seismograms_to_file(seismograms_v,2)
-      call write_seismograms_to_file(seismograms_a,3)
+      if(SAVE_SEISMOGRAMS_DISPLACEMENT) call write_seismograms_to_file(seismograms_d,1)
+      if(SAVE_SEISMOGRAMS_VELOCITY) call write_seismograms_to_file(seismograms_v,2)
+      if(SAVE_SEISMOGRAMS_ACCELERATION) call write_seismograms_to_file(seismograms_a,3)
     else
       call write_adj_seismograms_to_file(myrank,seismograms_d,number_receiver_global, &
                                          nrec_local,it,DT,NSTEP,t0,1)
@@ -319,7 +319,7 @@
   use specfem_par,only: &
           myrank,number_receiver_global,station_name,network_name, &
           nrec,nrec_local,islice_selected_rec, &
-          it,DT,NSTEP,t0,SIMULATION_TYPE
+          it,DT,NSTEP,t0,SIMULATION_TYPE,WRITE_SEISMOGRAMS_BY_MASTER
 
   implicit none
 
@@ -371,7 +371,7 @@
       call write_one_seismogram(one_seismogram,irec, &
                                 station_name,network_name,nrec, &
                                 DT,t0,it,NSTEP,SIMULATION_TYPE, &
-                                myrank,irecord,component)
+                                myrank,irecord,component,irec_local)
 
     enddo ! nrec_local
 
@@ -435,7 +435,7 @@
             call write_one_seismogram(one_seismogram,irec, &
                                       station_name,network_name,nrec, &
                                       DT,t0,it,NSTEP,SIMULATION_TYPE, &
-                                      myrank,irecord,component)
+                                      myrank,irecord,component,total_seismos)
 
           enddo ! nrec_local_received
         endif ! if (nrec_local_received > 0)
@@ -477,13 +477,13 @@
   subroutine write_one_seismogram(one_seismogram,irec, &
               station_name,network_name,nrec, &
               DT,t0,it,NSTEP,SIMULATION_TYPE, &
-              myrank,irecord,component)
+              myrank,irecord,component,number_of_current_seismogram)
 
   use constants
 
   implicit none
 
-  integer :: NSTEP,it,SIMULATION_TYPE
+  integer :: NSTEP,it,SIMULATION_TYPE,number_of_current_seismogram
   real(kind=CUSTOM_REAL), dimension(NDIM,NSTEP) :: one_seismogram
 
   integer myrank,irecord
@@ -499,6 +499,10 @@
   integer length_station_name,length_network_name
   character(len=MAX_STRING_LEN) :: sisname,final_LOCAL_PATH
   character(len=3) :: channel
+
+!! DK DK temporary dummy statement to avoid a compiler warning, the time for me
+!! DK DK to implement option SAVE_ALL_SEISMOS_IN_ONE_FILE tomorrow
+  iorientation = number_of_current_seismogram !!!!!!!!!!! dummy statement
 
   ! loops over each seismogram component
   do iorientation = 1,NDIM
@@ -525,7 +529,7 @@
     final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'
 
     ! ASCII output format
-    call write_output_ASCII(one_seismogram, &
+    call write_output_ASCII_or_binary(one_seismogram, &
                             NSTEP,it,SIMULATION_TYPE,DT,t0,myrank, &
                             iorientation,irecord,sisname,final_LOCAL_PATH)
 

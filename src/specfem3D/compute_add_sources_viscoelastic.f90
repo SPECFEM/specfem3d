@@ -47,7 +47,7 @@
                         mask_noise,noise_surface_movie, &
                         nrec_local,number_receiver_global, &
                         nsources_local,USE_FORCE_POINT_SOURCE, &
-                        USE_RICKER_TIME_FUNCTION,COUPLE_WITH_EXTERNAL_CODE
+                        USE_RICKER_TIME_FUNCTION,COUPLE_WITH_EXTERNAL_CODE,SU_FORMAT
 
   implicit none
 
@@ -604,7 +604,7 @@
                         irec_master_noise,noise_surface_movie, &
                         nrec_local,number_receiver_global, &
                         nsources_local,USE_FORCE_POINT_SOURCE, &
-                        USE_RICKER_TIME_FUNCTION,COUPLE_WITH_EXTERNAL_CODE
+                        USE_RICKER_TIME_FUNCTION,COUPLE_WITH_EXTERNAL_CODE,SU_FORMAT
 
   implicit none
 

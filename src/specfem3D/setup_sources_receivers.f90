@@ -420,7 +420,7 @@
             NPROC,utm_x_source(1),utm_y_source(1), &
             UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
             iglob_is_surface_external_mesh,ispec_is_surface_external_mesh, &
-            num_free_surface_faces,free_surface_ispec,free_surface_ijk)
+            num_free_surface_faces,free_surface_ispec,free_surface_ijk,SU_FORMAT)
 
 ! count number of receivers located in this slice
   nrec_local = 0

@@ -150,6 +150,28 @@
   if (ier /= 0) stop 'Error reading Par_file parameter USE_FORCE_POINT_SOURCE'
   call read_value_logical(USE_RICKER_TIME_FUNCTION, 'USE_RICKER_TIME_FUNCTION', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter USE_RICKER_TIME_FUNCTION'
+
+  call read_value_logical(SAVE_SEISMOGRAMS_DISPLACEMENT, 'SAVE_SEISMOGRAMS_DISPLACEMENT', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter SAVE_SEISMOGRAMS_DISPLACEMENT'
+  call read_value_logical(SAVE_SEISMOGRAMS_VELOCITY, 'SAVE_SEISMOGRAMS_VELOCITY', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter SAVE_SEISMOGRAMS_VELOCITY'
+  call read_value_logical(SAVE_SEISMOGRAMS_ACCELERATION, 'SAVE_SEISMOGRAMS_ACCELERATION', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter SAVE_SEISMOGRAMS_ACCELERATION'
+  if(.not. SAVE_SEISMOGRAMS_DISPLACEMENT .and. .not. SAVE_SEISMOGRAMS_VELOCITY .and. .not. SAVE_SEISMOGRAMS_ACCELERATION) &
+   stop 'Error: at least one of SAVE_SEISMOGRAMS_DISPLACEMENT SAVE_SEISMOGRAMS_VELOCITY SAVE_SEISMOGRAMS_ACCELERATION must be true'
+
+  call read_value_logical(USE_BINARY_FOR_SEISMOGRAMS, 'USE_BINARY_FOR_SEISMOGRAMS', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter USE_BINARY_FOR_SEISMOGRAMS'
+
+  call read_value_logical(SU_FORMAT, 'SU_FORMAT', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter SU_FORMAT'
+
+  call read_value_logical(WRITE_SEISMOGRAMS_BY_MASTER, 'WRITE_SEISMOGRAMS_BY_MASTER', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter WRITE_SEISMOGRAMS_BY_MASTER'
+
+  call read_value_logical(SAVE_ALL_SEISMOS_IN_ONE_FILE, 'SAVE_ALL_SEISMOS_IN_ONE_FILE', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter SAVE_ALL_SEISMOS_IN_ONE_FILE'
+
   call read_value_logical(PRINT_SOURCE_TIME_FUNCTION, 'PRINT_SOURCE_TIME_FUNCTION', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter PRINT_SOURCE_TIME_FUNCTION'
   call read_value_logical(COUPLE_WITH_EXTERNAL_CODE, 'COUPLE_WITH_EXTERNAL_CODE', ier)

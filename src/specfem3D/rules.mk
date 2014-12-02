@@ -107,7 +107,7 @@ specfem3D_OBJECTS = \
 	$O/specfem3D_par.spec.o \
 	$O/update_displacement_scheme.spec.o \
 	$O/write_movie_output.spec.o \
-	$O/write_output_ASCII.spec.o \
+	$O/write_output_ASCII_or_binary.spec.o \
 	$O/write_output_SU.spec.o \
 	$O/write_seismograms.spec.o \
 	$(EMPTY_MACRO)
@@ -309,7 +309,7 @@ $O/locate_receivers.spec.o: $O/shared_par.shared_module.o
 $O/make_gravity.spec.o: $O/shared_par.shared_module.o
 $O/multiply_arrays_source.spec.o: $O/shared_par.shared_module.o
 $O/noise_tomography.spec.o: $O/shared_par.shared_module.o
-$O/write_output_ASCII.spec.o: $O/shared_par.shared_module.o
+$O/write_output_ASCII_or_binary.spec.o: $O/shared_par.shared_module.o $O/specfem3D_par.spec.o
 
 $O/assemble_MPI_vector.spec.o: $O/specfem3D_par.spec.o
 $O/check_stability.spec.o: $O/specfem3D_par.spec.o
