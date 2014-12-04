@@ -7,7 +7,7 @@ echo
 echo "(will take about 15 minutes)"
 echo
 
-# sets up directory structure in current example directory
+# sets up directory structure in current example directoy
 echo
 echo "   setting up example..."
 echo
@@ -27,11 +27,12 @@ cp -fr DATA/* ../../DATA/.
 
 cd ../../
 
-# note: ./configure will default to gfortran configuration, unless you uncomment the line below
-# ./configure FC=ifort CC=icc MPIFC=mpif90
-./configure
-make clean
-make all > $currentdir/tmp.log
+
+# echo "(won't work if specfem3d is not already configured)"
+
+#make clean
+#./configure CC=icc FC=ifort MPIFC=mpif90 --with-mpi --enable-double-precision --with-scotch-dir=/home/cristini/CODES/scotch_6.0.0
+make all # > $currentdir/tmp.log
 cd $currentdir
 
 # links executables
@@ -72,6 +73,6 @@ echo
 echo "see results in directory: OUTPUT_FILES/"
 echo
 echo "done"
-echo `date`
+date
 
 

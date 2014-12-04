@@ -1,1 +1,10 @@
-../EXAMPLES/homogeneous_halfspace_HEX8_elastic_absorbing_Stacey_5sides/DATA/FORCESOLUTION
+FORCE  001
+time shift:     0.0000
+hdur:           0.05
+latitude:       67000.0
+longitude:      67000.0
+depth:          30.0
+factor force source:             -3.546629d22
+component dir vect source E:     0.d0
+component dir vect source N:     0.d0
+component dir vect source Z_UP:  1.d0

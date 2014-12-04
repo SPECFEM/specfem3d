@@ -19,7 +19,7 @@ NPROC                           = 4
 
 # time step parameters
 NSTEP                           = 2000
-DT                              = 0.03
+DT                              = 0.03 #0.03
 
 # number of nodes for 2D and 3D shape functions for hexahedra
 # we use either 8-node mesh elements (bricks) or 27-node elements.
@@ -69,7 +69,7 @@ f0_FOR_PML                      = 12.7
 # ROTATE_PML_ANGLE              = 0.
 
 # absorbing boundary conditions for a regional simulation
-STACEY_ABSORBING_CONDITIONS     = .true.
+STACEY_ABSORBING_CONDITIONS     = .false.
 
 # absorbing top surface (defined in mesh as 'free_surface_file')
 STACEY_INSTEAD_OF_FREE_SURFACE  = .false.
@@ -120,8 +120,8 @@ USE_FORCE_POINT_SOURCE          = .false.
 USE_RICKER_TIME_FUNCTION        = .false.
 
 # decide if we save displacement, velocity and/or acceleration in forward runs (they can be set to true simultaneously)
-SAVE_SEISMOGRAMS_DISPLACEMENT   = .true.
-SAVE_SEISMOGRAMS_VELOCITY       = .true.
+SAVE_SEISMOGRAMS_DISPLACEMENT   = .false.
+SAVE_SEISMOGRAMS_VELOCITY       = .false.
 SAVE_SEISMOGRAMS_ACCELERATION   = .true.
 
 # save seismograms in binary or ASCII format (binary is smaller but may not be portable between machines)
@@ -144,7 +144,7 @@ PRINT_SOURCE_TIME_FUNCTION      = .false.
 COUPLE_WITH_EXTERNAL_CODE       = .false.
 EXTERNAL_CODE_TYPE              = 1   # 1 = DSM, 2 = AxiSEM, 3 = FK
 TRACTION_PATH                   = ./DATA/DSM_tractions_for_specfem3D/
-MESH_A_CHUNK_OF_THE_EARTH       = .true.
+MESH_A_CHUNK_OF_THE_EARTH       = .false.
 
 # set to true to use GPUs
 GPU_MODE                        = .false.

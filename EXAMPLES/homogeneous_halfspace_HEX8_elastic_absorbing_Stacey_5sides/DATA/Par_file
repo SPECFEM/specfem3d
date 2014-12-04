@@ -15,11 +15,11 @@ UTM_PROJECTION_ZONE             = 11
 SUPPRESS_UTM_PROJECTION         = .true.
 
 # number of MPI processors
-NPROC                           = 4
+NPROC                           = 20
 
 # time step parameters
 NSTEP                           = 5000
-DT                              = 0.05
+DT                              = 0.0000001 # 0.015
 
 # number of nodes for 2D and 3D shape functions for hexahedra
 # we use either 8-node mesh elements (bricks) or 27-node elements.
@@ -34,7 +34,7 @@ NGNOD                           = 8
 # 1D models available are:
 #   1d_prem,1d_socal,1d_cascadia
 # 3D models available are:
-#   aniso,external,gll,salton_trough,tomo,SEP...
+#   aniso,external,gll,salton_trough,tomo
 MODEL                           = default
 
 # if you are using a SEP model (oil-industry format)
@@ -69,7 +69,7 @@ f0_FOR_PML                      = 0.05555
 # ROTATE_PML_ANGLE              = 0.
 
 # absorbing boundary conditions for a regional simulation
-STACEY_ABSORBING_CONDITIONS     = .true.
+STACEY_ABSORBING_CONDITIONS     = .false.
 
 # absorbing top surface (defined in mesh as 'free_surface_file')
 STACEY_INSTEAD_OF_FREE_SURFACE  = .false.
@@ -87,7 +87,7 @@ NTSTEP_BETWEEN_FRAMES           = 200
 HDUR_MOVIE                      = 0.0
 
 # save AVS or OpenDX mesh files to check the mesh
-SAVE_MESH_FILES                 = .false.
+SAVE_MESH_FILES                 = .true.
 
 # path to store the local database file on each node
 LOCAL_PATH                      = ./OUTPUT_FILES/DATABASES_MPI
@@ -104,20 +104,20 @@ NTSTEP_BETWEEN_READ_ADJSRC      = 0
 
 # use a (tilted) FORCESOLUTION force point source (or several) instead of a CMTSOLUTION moment-tensor source.
 # This can be useful e.g. for oil industry foothills simulations or asteroid simulations
-# in which the source is a vertical force, normal force, tilted force, impact etc.
-# If this flag is turned on, the FORCESOLUTION file must be edited by giving:
+# in which the source is a vertical force, normal force, inclined force, impact etc.
+# If this flag is turned on, the FORCESOLUTION file must be edited by precising:
 # - the corresponding time-shift parameter,
 # - the half duration parameter of the source,
 # - the coordinates of the source,
 # - the magnitude of the force source,
-# - the components of a (non necessarily unitary) direction vector for the force source in the E/N/Z_UP basis.
+# - the components of a (non-unitary) direction vector for the force source in the E/N/Z_UP basis.
 # The direction vector is made unitary internally in the code and thus only its direction matters here;
 # its norm is ignored and the norm of the force used is the factor force source times the source time function.
-USE_FORCE_POINT_SOURCE          = .false.
+USE_FORCE_POINT_SOURCE          = .true.
 
 # set to true to use a Ricker source time function instead of the source time functions set by default
 # to represent a (tilted) FORCESOLUTION force point source or a CMTSOLUTION moment-tensor source.
-USE_RICKER_TIME_FUNCTION        = .false.
+USE_RICKER_TIME_FUNCTION        = .true.
 
 # decide if we save displacement, velocity and/or acceleration in forward runs (they can be set to true simultaneously)
 SAVE_SEISMOGRAMS_DISPLACEMENT   = .true.
@@ -138,9 +138,9 @@ WRITE_SEISMOGRAMS_BY_MASTER     = .false.
 SAVE_ALL_SEISMOS_IN_ONE_FILE    = .false.
 
 # print source time function
-PRINT_SOURCE_TIME_FUNCTION      = .false.
+PRINT_SOURCE_TIME_FUNCTION      = .true.
 
-# to couple with an external code (such as DSM, AxiSEM, or FK)
+# to couple with DSM
 COUPLE_WITH_EXTERNAL_CODE       = .false.
 EXTERNAL_CODE_TYPE              = 1   # 1 = DSM, 2 = AxiSEM, 3 = FK
 TRACTION_PATH                   = ./DATA/DSM_tractions_for_specfem3D/
