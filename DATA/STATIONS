@@ -1,1 +1,2 @@
-../EXAMPLES/homogeneous_halfspace_HEX8_elastic_absorbing_Stacey_5sides/DATA/STATIONS
+STAT DB 67000.00 100000.00 0.0 30000.0
+SOURCE DB 67000.00 67000.00 0.0 30000.0

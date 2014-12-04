@@ -70,13 +70,13 @@ if [ ! -e "${ROOT}/src/specfem3D/specfem3D.f90" ]; then echo "please check if RO
 echo "-------------------------------------"
 echo "tests in directory : $testdir "
 echo "-------------------------------------"
-echo "`date`"
+date
 
 # test names
 title="tests in $testdir"
 
 echo "$title" > results.log
-echo "`date`" >> results.log
+date >> results.log
 echo >> results.log
 
 files=`echo ./*.sh`
@@ -105,7 +105,7 @@ fi
 
 echo >> results.log
 echo "tests completed" >> results.log
-echo "`date`" >> results.log
+date >> results.log
 
 cd ../
 

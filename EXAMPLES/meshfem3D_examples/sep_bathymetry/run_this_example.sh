@@ -31,8 +31,9 @@ rm -rf OUTPUT_FILES/DATABASES_MPI/*
 
 # compiles executables in root directory
 cd ../../../
-make clean
-make -j 4 #> $currentdir/tmp.log
+#make clean
+#./configure CC=icc FC=ifort MPIFC=mpif90 --with-mpi --enable-double-precision --with-scotch-dir=/home/cristini/CODES/scotch_6.0.0
+make #> $currentdir/tmp.log
 cd $currentdir
 
 # links executables
@@ -65,12 +66,12 @@ mpirun -np $NPROC ./bin/xgenerate_databases
 echo
 echo "  running solver..."
 echo
-#mpirun -np $NPROC ./bin/xspecfem3D
+mpirun -np $NPROC ./bin/xspecfem3D
 
 echo
 echo "see results in directory: OUTPUT_FILES/"
 echo
 echo "done"
-echo `date`
+date
 
 

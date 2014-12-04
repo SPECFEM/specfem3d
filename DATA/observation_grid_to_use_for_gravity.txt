@@ -1,1 +1,4 @@
-../EXAMPLES/homogeneous_halfspace_HEX8_elastic_absorbing_Stacey_5sides/DATA/observation_grid_to_use_for_gravity.txt
+13437.34  27329.12  13789.847
+7893.893  73523.342  1235.3524
+62341.3425  87283.35262  2178.3773
+98326.37287 53298.35626 3129.7183

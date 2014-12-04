@@ -24,15 +24,14 @@ echo "   setting up example..."
 echo
 
 mkdir -p bin
-mkdir -p OUTPUT_FILES/DATABASES_MPI
-
 rm -f OUTPUT_FILES/*
 rm -rf OUTPUT_FILES/DATABASES_MPI/*
+mkdir -p OUTPUT_FILES/DATABASES_MPI
 
 # compiles executables in root directory
 cd ../../../
-make clean
-make > $currentdir/tmp.log
+#make clean
+make #> $currentdir/tmp.log
 cd $currentdir
 
 # links executables
@@ -69,6 +68,6 @@ echo
 echo "see results in directory: OUTPUT_FILES/"
 echo
 echo "done"
-echo `date`
+date
 
 
