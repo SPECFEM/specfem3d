@@ -393,6 +393,7 @@ AC_CONFIG_FILES([
     Makefile
     setup/constants.h
     setup/constants_tomography.h
+    setup/constants_inverse_problem.h
     setup/precision.h
     setup/config.fh
 ])
