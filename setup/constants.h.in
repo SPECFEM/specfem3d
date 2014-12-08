@@ -84,7 +84,7 @@
 !!
   integer, parameter :: NUMBER_OF_SIMULTANEOUS_RUNS = 1
 
-!! DK DK if we perform simultaneous runs in parallel, in only the source and receivers vary between these runs
+!! DK DK if we perform simultaneous runs in parallel, if only the source and receivers vary between these runs
 !! DK DK but not the mesh nor the model (velocity and density) then we can also read the mesh and model files
 !! DK DK from a single run in the beginning and broadcast them to all the others; for a large number of simultaneous
 !! DK DK runs for instance when solving inverse problems iteratively this can DRASTICALLY reduce I/Os to disk in the solver
