@@ -40,13 +40,6 @@ rm -fr DATA/*
 cd $currentdir
 cp -fr DATA/* ../../DATA/.
 
-cd ../../
-
-./configure
-make clean
-make all > $currentdir/tmp.log
-cd $currentdir
-
 # links executables
 cd bin/
 rm -f *

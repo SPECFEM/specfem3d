@@ -18,21 +18,11 @@ mkdir -p bin
 mkdir -p OUTPUT_FILES
 mkdir -p OUTPUT_FILES/DATABASES_MPI
 
-# compiles executables in root directory
 cd ../../
 
 rm -fr DATA/*
 cd $currentdir
 cp -fr DATA/* ../../DATA/.
-
-cd ../../
-
-# note: ./configure will default to gfortran configuration, unless you uncomment the line below
-# ./configure FC=ifort CC=icc MPIFC=mpif90
-./configure
-make clean
-make all > $currentdir/tmp.log
-cd $currentdir
 
 # links executables
 cd bin/

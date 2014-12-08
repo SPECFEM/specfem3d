@@ -37,10 +37,6 @@ rm -rf OUTPUT_FILES/DATABASES_MPI/*
 mv tomography_model.xyz DATA/
 echo
 
-# compiles executables in root directory
-cd ../../
-make clean
-make > $currentdir/tmp.log
 cd $currentdir
 
 # links executables

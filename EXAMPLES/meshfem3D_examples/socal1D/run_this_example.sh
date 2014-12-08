@@ -29,11 +29,6 @@ mkdir -p OUTPUT_FILES/DATABASES_MPI
 rm -f OUTPUT_FILES/*
 rm -rf OUTPUT_FILES/DATABASES_MPI/*
 
-# compiles executables in root directory
-cd ../../../
-make clean
-make > $currentdir/tmp.log
-#make combine_vol_data
 cd $currentdir
 
 # links executables
@@ -76,7 +71,7 @@ echo
 echo "done"
 echo `date`
 
-# To make a full mesh using combine_vol_data:
+# To create a full mesh using combine_vol_data:
 # cd bin
 # xcombine_vol_data 0 0 vs ../OUTPUT_FILES/DATABASES_MPI/ ../OUTPUT_FILES/DATABASES_MPI/ 1
 # cd ../OUTPUT_FILES/DATABASES_MPI/

@@ -18,12 +18,6 @@ mkdir -p bin
 mkdir -p OUTPUT_FILES
 mkdir -p OUTPUT_FILES/DATABASES_MPI
 
-# note: ./configure will default to gfortran configuration, unless you uncomment the line below
-# ./configure FC=ifort CC=icc MPIFC=mpif90
-./configure
-make clean
-make all
-
 # stores setup
 cp DATA/Par_file OUTPUT_FILES/
 cp DATA/CMTSOLUTION OUTPUT_FILES/

@@ -32,10 +32,6 @@ mkdir -p OUTPUT_FILES/DATABASES_MPI
 rm -f OUTPUT_FILES/*
 rm -rf OUTPUT_FILES/DATABASES_MPI/*
 
-# compiles executables in root directory
-cd ../../
-make clean
-make > $currentdir/tmp.log
 cd $currentdir
 
 # links executables
