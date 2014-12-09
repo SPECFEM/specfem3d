@@ -25,7 +25,6 @@
 !
 !=====================================================================
 
-
 ! @configure_input@
 
 !
@@ -45,55 +44,6 @@
   integer, parameter :: CUSTOM_REAL = @CUSTOM_REAL@
 
 !----------- parameters that can be changed by the user -----------
-
-!! DK DK July 2014, CNRS Marseille, France:
-!! DK DK added the ability to run several calculations (several earthquakes)
-!! DK DK in an embarrassingly-parallel fashion from within the same run;
-!! DK DK this can be useful when using a very large supercomputer to compute
-!! DK DK many earthquakes in a catalog, in which case it can be better from
-!! DK DK a batch job submission point of view to start fewer and much larger jobs,
-!! DK DK each of them computing several earthquakes in parallel.
-!! DK DK To turn that option on, set parameter NUMBER_OF_SIMULTANEOUS_RUNS
-!! DK DK to a value greater than 1 in file setup/constants.h.in before
-!! DK DK configuring and compiling the code.
-!! DK DK To implement that, we create NUMBER_OF_SIMULTANEOUS_RUNS MPI sub-communicators,
-!! DK DK each of them being labeled "my_local_mpi_comm_world", and we use them
-!! DK DK in all the routines in "src/shared/parallel.f90", except in MPI_ABORT() because in that case
-!! DK DK we need to kill the entire run.
-!! DK DK When that option is on, of course the number of processor cores used to start
-!! DK DK the code in the batch system must be a multiple of NUMBER_OF_SIMULTANEOUS_RUNS,
-!! DK DK all the individual runs must use the same number of processor cores,
-!! DK DK which as usual is NPROC in the input file DATA/Par_file,
-!! DK DK and thus the total number of processor cores to request from the batch system
-!! DK DK should be NUMBER_OF_SIMULTANEOUS_RUNS * NPROC.
-!! DK DK All the runs to perform must be placed in directories called run0001, run0002, run0003 and so on
-!! DK DK (with exactly four digits).
-!!
-!! DK DK Imagine you have 10 independent calculations to do, each of them on 100 cores; you have three options:
-!!
-!! DK DK 1/ submit 10 jobs to the batch system
-!!
-!! DK DK 2/ submit a single job on 1000 cores to the batch, and in that script create a sub-array of jobs to start 10 jobs,
-!! DK DK each running on 100 cores (see e.g. http://www.schedmd.com/slurmdocs/job_array.html )
-!!
-!! DK DK 3/ submit a single job on 1000 cores to the batch, start SPECFEM3D on 1000 cores, create 10 sub-communicators,
-!! DK DK cd into one of 10 subdirectories (called e.g. run0001, run0002,... run0010) depending on the sub-communicator
-!! DK DK your MPI rank belongs to, and run normally on 100 cores using that sub-communicator.
-!!
-!! DK DK The option below implements 3/.
-!!
-  integer, parameter :: NUMBER_OF_SIMULTANEOUS_RUNS = 1
-
-!! DK DK if we perform simultaneous runs in parallel, if only the source and receivers vary between these runs
-!! DK DK but not the mesh nor the model (velocity and density) then we can also read the mesh and model files
-!! DK DK from a single run in the beginning and broadcast them to all the others; for a large number of simultaneous
-!! DK DK runs for instance when solving inverse problems iteratively this can DRASTICALLY reduce I/Os to disk in the solver
-!! DK DK (by a factor equal to NUMBER_OF_SIMULTANEOUS_RUNS), and reducing I/Os is crucial in the case of huge runs.
-!! DK DK Thus, always set this option to .true. if the mesh and the model are the same for all simultaneous runs.
-!! DK DK In that case there is no need to duplicate the mesh and model file database (the content of the DATABASES_MPI
-!! DK DK directories) in each of the run0001, run0002,... directories, it is sufficient to have one in run0001
-!! DK DK and the code will broadcast it to the others)
-  logical, parameter :: BROADCAST_SAME_MESH_AND_MODEL = .false.
 
 ! set to .false.  if running on a Beowulf-type machine with local disks
 ! set to .true. if running on a shared-memory machine with common file system

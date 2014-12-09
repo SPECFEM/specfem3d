@@ -174,6 +174,8 @@
 
   call read_value_logical(PRINT_SOURCE_TIME_FUNCTION, 'PRINT_SOURCE_TIME_FUNCTION', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter PRINT_SOURCE_TIME_FUNCTION'
+
+  ! for coupling with an external code
   call read_value_logical(COUPLE_WITH_EXTERNAL_CODE, 'COUPLE_WITH_EXTERNAL_CODE', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter COUPLE_WITH_EXTERNAL_CODE'
   call read_value_integer(EXTERNAL_CODE_TYPE, 'EXTERNAL_CODE_TYPE', ier)
@@ -182,6 +184,12 @@
   if (ier /= 0) stop 'Error reading Par_file parameter TRACTION_PATH'
   call read_value_logical(MESH_A_CHUNK_OF_THE_EARTH, 'MESH_A_CHUNK_OF_THE_EARTH', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter MESH_A_CHUNK_OF_THE_EARTH'
+
+  ! for simultaneous runs from the same batch job
+  call read_value_integer(NUMBER_OF_SIMULTANEOUS_RUNS, 'NUMBER_OF_SIMULTANEOUS_RUNS', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter NUMBER_OF_SIMULTANEOUS_RUNS'
+  call read_value_logical(BROADCAST_SAME_MESH_AND_MODEL, 'BROADCAST_SAME_MESH_AND_MODEL', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter BROADCAST_SAME_MESH_AND_MODEL'
 
   ! close parameter file
   call close_parameter_file()
@@ -448,7 +456,7 @@
 
 subroutine read_adios_parameters()
 
-  use constants,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
+  use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
 
   use shared_input_parameters
 

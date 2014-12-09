@@ -235,7 +235,7 @@ end module my_mpi
   subroutine bcast_all_i_for_database(buffer, countval)
 
   use my_mpi
-  use constants,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
+  use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
 
   implicit none
 
@@ -260,7 +260,7 @@ end module my_mpi
   subroutine bcast_all_l_for_database(buffer, countval)
 
   use my_mpi
-  use constants,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
+  use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
 
   implicit none
 
@@ -285,7 +285,8 @@ end module my_mpi
   subroutine bcast_all_cr_for_database(buffer, countval)
 
   use my_mpi
-  use constants,only: CUSTOM_REAL,NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
+  use constants,only: CUSTOM_REAL
+  use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
 
   implicit none
 
@@ -312,7 +313,7 @@ end module my_mpi
   subroutine bcast_all_dp_for_database(buffer, countval)
 
   use my_mpi
-  use constants,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
+  use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
 
   implicit none
 
@@ -337,7 +338,7 @@ end module my_mpi
   subroutine bcast_all_r_for_database(buffer, countval)
 
   use my_mpi
-  use constants,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
+  use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
 
   implicit none
 
@@ -1317,8 +1318,9 @@ end module my_mpi
   subroutine world_split()
 
   use my_mpi
-  use constants,only: MAX_STRING_LEN,NUMBER_OF_SIMULTANEOUS_RUNS,OUTPUT_FILES_PATH, &
-    IMAIN,ISTANDARD_OUTPUT,mygroup,BROADCAST_SAME_MESH_AND_MODEL,I_should_read_the_database
+  use constants,only: MAX_STRING_LEN,OUTPUT_FILES_PATH, &
+    IMAIN,ISTANDARD_OUTPUT,mygroup,I_should_read_the_database
+  use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
 
   implicit none
 
@@ -1401,7 +1403,7 @@ end module my_mpi
   subroutine world_unsplit()
 
   use my_mpi
-  use constants,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
+  use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
 
   implicit none
 

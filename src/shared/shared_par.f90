@@ -92,6 +92,10 @@ end module constants
 
   logical :: STACEY_ABSORBING_CONDITIONS,STACEY_INSTEAD_OF_FREE_SURFACE
 
+  ! for simultaneous runs from the same batch job
+  integer :: NUMBER_OF_SIMULTANEOUS_RUNS
+  logical :: BROADCAST_SAME_MESH_AND_MODEL
+
   ! movies
   logical :: CREATE_SHAKEMAP
   logical :: MOVIE_SURFACE,MOVIE_VOLUME,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES

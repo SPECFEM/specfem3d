@@ -101,7 +101,8 @@
 
   subroutine open_parameter_file(ier)
 
-  use constants, only: MAX_STRING_LEN,IN_DATA_FILES_PATH,NUMBER_OF_SIMULTANEOUS_RUNS,mygroup
+  use constants, only: MAX_STRING_LEN,IN_DATA_FILES_PATH,mygroup
+  use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS
 
   implicit none
 
