@@ -376,7 +376,7 @@
 
   subroutine init_mpi()
 
-  use constants, only: NUMBER_OF_SIMULTANEOUS_RUNS
+  use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS
 
   if (NUMBER_OF_SIMULTANEOUS_RUNS <= 0) stop 'NUMBER_OF_SIMULTANEOUS_RUNS <= 0 makes no sense'
 
