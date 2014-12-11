@@ -22,7 +22,7 @@
 cd $PBS_O_WORKDIR
 
 # number of cores for the job
-NPROC=`grep NPROC DATA/Par_file | cut -d = -f 2`
+NPROC=`grep NPROC DATA/Par_file | grep -v -E '^[[:space:]]*#' | cut -d = -f 2`
 
 mkdir -p OUTPUT_FILES
 mkdir -p OUTPUT_FILES/DATABASES_MPI
