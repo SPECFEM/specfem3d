@@ -37,8 +37,8 @@ cp DATA/Par_file OUTPUT_FILES/
 cp DATA/CMTSOLUTION OUTPUT_FILES/
 cp DATA/STATIONS OUTPUT_FILES/
 
-# get the number of processors
-NPROC=`grep NPROC DATA/Par_file | cut -d = -f 2`
+# get the number of processors, ignoring comments in the Par_file
+NPROC=`grep NPROC DATA/Par_file | grep -v ^# | cut -d = -f 2`
 
 # decomposes mesh using the pre-saved mesh files in MESH-default
 echo
