@@ -25,28 +25,26 @@
 !
 !=====================================================================
 
-!! DK DK July 2014, CNRS Marseille, France:
-!! DK DK added the ability to run several calculations (several earthquakes)
-!! DK DK in an embarrassingly-parallel fashion from within the same run;
-!! DK DK this can be useful when using a very large supercomputer to compute
-!! DK DK many earthquakes in a catalog, in which case it can be better from
-!! DK DK a batch job submission point of view to start fewer and much larger jobs,
-!! DK DK each of them computing several earthquakes in parallel.
-!! DK DK To turn that option on, set parameter NUMBER_OF_SIMULTANEOUS_RUNS
-!! DK DK to a value greater than 1 in file setup/constants.h.in before
-!! DK DK configuring and compiling the code.
-!! DK DK To implement that, we create NUMBER_OF_SIMULTANEOUS_RUNS MPI sub-communicators,
-!! DK DK each of them being labeled "my_local_mpi_comm_world", and we use them
-!! DK DK in all the routines in "src/shared/parallel.f90", except in MPI_ABORT() because in that case
-!! DK DK we need to kill the entire run.
-!! DK DK When that option is on, of course the number of processor cores used to start
-!! DK DK the code in the batch system must be a multiple of NUMBER_OF_SIMULTANEOUS_RUNS,
-!! DK DK all the individual runs must use the same number of processor cores,
-!! DK DK which as usual is NPROC in the input file DATA/Par_file,
-!! DK DK and thus the total number of processor cores to request from the batch system
-!! DK DK should be NUMBER_OF_SIMULTANEOUS_RUNS * NPROC.
-!! DK DK All the runs to perform must be placed in directories called run0001, run0002, run0003 and so on
-!! DK DK (with exactly four digits).
+! Dimitri Komatitsch, July 2014, CNRS Marseille, France:
+! added the ability to run several calculations (several earthquakes)
+! in an embarrassingly-parallel fashion from within the same run;
+! this can be useful when using a very large supercomputer to compute
+! many earthquakes in a catalog, in which case it can be better from
+! a batch job submission point of view to start fewer and much larger jobs,
+! each of them computing several earthquakes in parallel.
+! To turn that option on, set parameter NUMBER_OF_SIMULTANEOUS_RUNS to a value greater than 1 in the Par_file.
+! To implement that, we create NUMBER_OF_SIMULTANEOUS_RUNS MPI sub-communicators,
+! each of them being labeled "my_local_mpi_comm_world", and we use them
+! in all the routines in "src/shared/parallel.f90", except in MPI_ABORT() because in that case
+! we need to kill the entire run.
+! When that option is on, of course the number of processor cores used to start
+! the code in the batch system must be a multiple of NUMBER_OF_SIMULTANEOUS_RUNS,
+! all the individual runs must use the same number of processor cores,
+! which as usual is NPROC in the input file DATA/Par_file,
+! and thus the total number of processor cores to request from the batch system
+! should be NUMBER_OF_SIMULTANEOUS_RUNS * NPROC.
+! All the runs to perform must be placed in directories called run0001, run0002, run0003 and so on
+! (with exactly four digits).
 
 module my_mpi
 
@@ -126,6 +124,42 @@ end module my_mpi
   call MPI_BCAST(buffer,countval,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
 
   end subroutine bcast_all_i
+
+!
+!----
+!
+
+  subroutine bcast_all_singlei(buffer)
+
+  use my_mpi
+
+  implicit none
+
+  integer :: buffer
+
+  integer :: ier
+
+  call MPI_BCAST(buffer,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
+
+  end subroutine bcast_all_singlei
+
+!
+!----
+!
+
+  subroutine bcast_all_singlel(buffer)
+
+  use my_mpi
+
+  implicit none
+
+  logical :: buffer
+
+  integer :: ier
+
+  call MPI_BCAST(buffer,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
+
+  end subroutine bcast_all_singlel
 
 !
 !----
@@ -503,13 +537,24 @@ end module my_mpi
   subroutine init_mpi()
 
   use my_mpi
+  use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
 
   implicit none
 
-  integer ier
+  integer :: myrank,ier
 
 ! initialize the MPI communicator and start the NPROCTOT MPI processes.
   call MPI_INIT(ier)
+  if (ier /= 0 ) stop 'Error initializing MPI'
+
+  ! we need to make sure that NUMBER_OF_SIMULTANEOUS_RUNS and BROADCAST_SAME_MESH_AND_MODEL are read before calling world_split()
+  ! thus read the parameter file
+  call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
+  if (myrank == 0) call read_parameter_file()
+  ! broadcast parameters read from master to all processes
+  my_local_mpi_comm_world = MPI_COMM_WORLD
+  call bcast_all_singlei(NUMBER_OF_SIMULTANEOUS_RUNS)
+  call bcast_all_singlel(BROADCAST_SAME_MESH_AND_MODEL)
 
 ! create sub-communicators if needed, if running more than one earthquake from the same job
   call world_split()
@@ -1313,8 +1358,8 @@ end module my_mpi
 !
 
 ! create sub-communicators if needed, if running more than one earthquake from the same job.
-!! DK DK create a sub-communicator for each independent run;
-!! DK DK if there is a single run to do, then just copy the default communicator to the new one
+! create a sub-communicator for each independent run;
+! if there is a single run to do, then just copy the default communicator to the new one
   subroutine world_split()
 
   use my_mpi

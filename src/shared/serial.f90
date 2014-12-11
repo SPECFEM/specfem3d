@@ -378,6 +378,9 @@
 
   use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS
 
+  ! we need to make sure that NUMBER_OF_SIMULTANEOUS_RUNS is read, thus read the parameter file
+  call read_parameter_file()
+
   if (NUMBER_OF_SIMULTANEOUS_RUNS <= 0) stop 'NUMBER_OF_SIMULTANEOUS_RUNS <= 0 makes no sense'
 
   if (NUMBER_OF_SIMULTANEOUS_RUNS > 1) stop 'serial runs require NUMBER_OF_SIMULTANEOUS_RUNS == 1'
