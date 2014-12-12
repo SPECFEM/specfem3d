@@ -17,14 +17,17 @@
 #ifndef _CHECK_ERRORS_H_
 #define _CHECK_ERRORS_H_
 
-#include "err.h"
-
-
 /**
  * \brief Macro to be called in case a function return an error code,
  *        print a message on stderr and exit.
  */
+#ifdef HAVE_ERR
+#include "err.h"
 #define EXIT_ON_ERR(msg) \
     err(1, "%s(%d) -- %s: %s", __FILE__, __LINE__, __func__, msg);
+#else
+#define EXIT_ON_ERR(msg) \
+    printf("%s(%d) -- %s: %s", __FILE__, __LINE__, __func__, msg); exit(1);
+#endif
 
 #endif /* end of include guard: _CHECK_ERRORS_H_ */

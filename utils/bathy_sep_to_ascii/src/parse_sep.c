@@ -19,7 +19,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <regex.h>
-#include "err.h"
 
 #include "parse_sep.h"
 #include "check_errors.h"

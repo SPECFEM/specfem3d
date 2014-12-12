@@ -170,6 +170,8 @@ AC_PROG_CC
 AC_LANG_PUSH(C)
 AC_CHECK_HEADER(emmintrin.h,AC_DEFINE([HAVE_EMMINTRIN],[1],[Define if emmintrin.h]))
 AC_CHECK_HEADER(xmmintrin.h,AC_DEFINE([HAVE_XMMINTRIN],[1],[Define if xmmintrin.h]))
+# AIX doesn't have err.h so we need to check
+AC_CHECK_HEADER(err.h,      AC_DEFINE([HAVE_ERR],      [1],[Define if err.h]))
 AC_LANG_POP(C)
 
 

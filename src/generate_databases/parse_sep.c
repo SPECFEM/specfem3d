@@ -20,11 +20,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <regex.h>
+#ifdef HAVE_ERR
 #include "err.h"
-
 #define EXIT_ON_ERR(msg) \
     err(1, "%s(%d) -- %s: %s", __FILE__, __LINE__, __func__, msg);
-
+#else
+#define EXIT_ON_ERR(msg) \
+    printf("%s(%d) -- %s: %s", __FILE__, __LINE__, __func__, msg); exit(1);
+#endif
 
 /*****************************************************************************/
 /**

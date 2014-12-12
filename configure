@@ -5906,6 +5906,15 @@ $as_echo "#define HAVE_XMMINTRIN 1" >>confdefs.h
 fi
 
 
+# AIX doesn't have err.h so we need to check
+ac_fn_c_check_header_mongrel "$LINENO" "err.h" "ac_cv_header_err_h" "$ac_includes_default"
+if test "x$ac_cv_header_err_h" = xyes; then :
+
+$as_echo "#define HAVE_ERR 1" >>confdefs.h
+
+fi
+
+
 ac_ext=${ac_fc_srcext-f}
 ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
 ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
@@ -8619,7 +8628,7 @@ do
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "setup/constants.h") CONFIG_FILES="$CONFIG_FILES setup/constants.h" ;;
     "setup/constants_tomography.h") CONFIG_FILES="$CONFIG_FILES setup/constants_tomography.h" ;;
-    "setup/constants_inverse_problem") CONFIG_FILES="$CONFIG_FILES setup/constants_inverse_problem" ;;
+    "setup/constants_inverse_problem.h") CONFIG_FILES="$CONFIG_FILES setup/constants_inverse_problem.h" ;;
     "setup/precision.h") CONFIG_FILES="$CONFIG_FILES setup/precision.h" ;;
     "setup/config.fh") CONFIG_FILES="$CONFIG_FILES setup/config.fh" ;;
     "${SCOTCH_DIR}/src/Makefile.inc") CONFIG_FILES="$CONFIG_FILES ${SCOTCH_DIR}/src/Makefile.inc" ;;
