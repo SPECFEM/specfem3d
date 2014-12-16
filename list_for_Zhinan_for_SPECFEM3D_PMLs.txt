@@ -168,10 +168,37 @@ Zhinan
 -------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------
 
-4/ (less urgent, optional) study the possibility to have no damping profile paramater to define the PML and just make the damping tend to exactly zero on the outer edges of the PML, as in Bermudez et al (2007); I am not sure if that could be useful or not (the only advantage I see is that then there is no need to select any damping factor d0 or d(x) apart from the thickness of the PML)
+4/ add support for the LDDRK time scheme in addition to Newmark; that is easy to do because LDDRK is already implemented in SPECFEM3D_GLOBE (using the flag USE_LDDRK), thus it would be easy to cut and paste it from there. That would be extremely useful because for fluid/solid media (for instance in ocean acoustics) we will often need high accuracy.
 
 -------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------
 
-5/ (less urgent, optional) use weights in Scotch decomposition for C-PML elements in the code, see https://github.com/geodynamics/specfem3d/issues/18
+5/ (less urgent, optional) study the possibility to have no damping profile paramater to define the PML and just make the damping tend to exactly zero on the outer edges of the PML, as in Bermudez et al (2007); I am not sure if that could be useful or not (the only advantage I see is that then there is no need to select any damping factor d0 or d(x) apart from the thickness of the PML)
+
+Subject: Bermudez (2007)
+Date: Sat, 29 Nov 2014 17:34:46 +0100
+From: Dimitri Komatitsch
+Organization: CNRS, Marseille, France
+To: Zhinan Xie 谢志南,  René Matzen, Paul Cristini
+
+Hi Zhinan and René,
+
+What do you think of the approach of Bermudez et al (2007) to make the 
+damping profile linear and also reach zero on the outer edge of the 
+domain in order to reduce the number of damping parameters to adjust in 
+the PML model? (i.e. when doing so the only thing to optimize / to 
+choose is the thickness of the PML, but there is no more damping profile 
+to choose / to optimize for).
+
+http://dl.acm.org/citation.cfm?id=1233233
+
+Thanks,
+Best wishes,
+
+Dimitri.
+
+-------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------
+
+6/ (less urgent, optional) use weights in Scotch decomposition for C-PML elements in the code, see https://github.com/geodynamics/specfem3d/issues/18
 
