@@ -198,13 +198,13 @@
   if (COUPLE_WITH_EXTERNAL_CODE) then
     if (EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_DSM .and. &
        EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_AXISEM .and. &
-       EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_FK) stop 'incorrect value of EXTERNAL_CODE_TYPE read'
+       EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_FK) stop 'Error incorrect value of EXTERNAL_CODE_TYPE read'
 
     if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) &
-         stop 'coupling with AxiSEM not implemented yet, but will soon be'
+         stop 'Error coupling with AxiSEM not implemented yet, but will soon be'
 
     if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_FK) &
-         stop 'coupling with F-K not implemented yet, but see work by Ping et al. (GJI 2014, GRL 2015)'
+         stop 'Error coupling with F-K not implemented yet, but see work by Ping et al. (GJI 2014, GRL 2015)'
   endif
 
 ! see if we are running several independent runs in parallel
@@ -235,7 +235,7 @@
   ! total times steps must be dividable by adjoint source chunks/blocks
   if (mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) /= 0) then
     print*,'When NOISE_TOMOGRAPHY is not equal to zero, ACTUAL_NSTEP=2*NSTEP-1'
-    stop 'error: mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) must be zero! Please modify Par_file and recompile solver'
+    stop 'Error: mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) must be zero! Please modify Par_file and recompile solver'
   endif
 
   ! checks number of nodes for 2D and 3D shape functions for quadrilaterals and hexahedra
@@ -245,7 +245,7 @@
   else if (NGNOD == 27) then
     NGNOD2D = 9
   else if (NGNOD /= 8 .and. NGNOD /= 27) then
-    stop 'elements should have 8 or 27 control nodes, please modify NGNOD in Par_file and recompile solver'
+    stop 'Error elements should have 8 or 27 control nodes, please modify NGNOD in Par_file and recompile solver'
   endif
 
   if (USE_FORCE_POINT_SOURCE) then
@@ -261,7 +261,7 @@
     endif
 
     open(unit=21,file=trim(FORCESOLUTION),status='old',action='read',iostat=ier)
-    if (ier /= 0) stop 'error opening FORCESOLUTION file'
+    if (ier /= 0) stop 'Error opening FORCESOLUTION file'
 
     icounter = 0
     do while (ier == 0)
@@ -271,10 +271,10 @@
     close(21)
 
     if (mod(icounter,NLINES_PER_FORCESOLUTION_SOURCE) /= 0) &
-      stop 'error: total number of lines in FORCESOLUTION file should be a multiple of NLINES_PER_FORCESOLUTION_SOURCE'
+      stop 'Error total number of lines in FORCESOLUTION file should be a multiple of NLINES_PER_FORCESOLUTION_SOURCE'
 
     NSOURCES = icounter / NLINES_PER_FORCESOLUTION_SOURCE
-    if (NSOURCES < 1) stop 'error: need at least one source in FORCESOLUTION file'
+    if (NSOURCES < 1) stop 'Error need at least one source in FORCESOLUTION file'
 
   else
     ! compute the total number of sources in the CMTSOLUTION file
@@ -289,7 +289,7 @@
     endif
 
     open(unit=21,file=trim(CMTSOLUTION),status='old',action='read',iostat=ier)
-    if (ier /= 0) stop 'error opening CMTSOLUTION file'
+    if (ier /= 0) stop 'Error opening CMTSOLUTION file'
 
     icounter = 0
     do while (ier == 0)
@@ -299,10 +299,10 @@
     close(21)
 
     if (mod(icounter,NLINES_PER_CMTSOLUTION_SOURCE) /= 0) &
-      stop 'error: total number of lines in CMTSOLUTION file should be a multiple of NLINES_PER_CMTSOLUTION_SOURCE'
+      stop 'Error total number of lines in CMTSOLUTION file should be a multiple of NLINES_PER_CMTSOLUTION_SOURCE'
 
     NSOURCES = icounter / NLINES_PER_CMTSOLUTION_SOURCE
-    if (NSOURCES < 1) stop 'error: need at least one source in CMTSOLUTION file'
+    if (NSOURCES < 1) stop 'Error need at least one source in CMTSOLUTION file'
 
     ! compute the minimum value of hdur in CMTSOLUTION file
     open(unit=21,file=trim(CMTSOLUTION),status='old',action='read')
@@ -329,7 +329,7 @@
 
     ! one cannot use a Heaviside source for the movies
     if ((MOVIE_SURFACE .or. MOVIE_VOLUME) .and. sqrt(minval_hdur**2 + HDUR_MOVIE**2) < TINYVAL) &
-      stop 'error: hdur too small for movie creation, movies do not make sense for Heaviside source'
+      stop 'Error hdur too small for movie creation, movies do not make sense for Heaviside source'
   endif
 
   ! converts all string characters to lowercase
@@ -376,14 +376,12 @@
   case ('sep')
     IMODEL = IMODEL_SEP
     if (trim(SEP_MODEL_DIRECTORY) == '') then
-      stop 'Error: Using sep model requires defining a SEP_MODEL_DIRECTORY.'
+      stop 'Error using sep model requires defining a SEP_MODEL_DIRECTORY.'
     endif
     !inquire(directory=trim(SEP_MODEL_DIRECTORY), exists=sep_dir_exists)
     !if (.not. sep_dir_exists) then
     !  stop 'Error: SEP_MODEL_DIRECTORY should exist.'
     !endif
-
-
   case default
     print*
     print*,'********** model not recognized: ',trim(MODEL),' **************'
@@ -395,18 +393,20 @@
   ! check
   if (IMODEL == IMODEL_IPATI .or. IMODEL == IMODEL_IPATI_WATER) then
     if (USE_RICKER_TIME_FUNCTION .eqv. .false.) &
-      stop 'error: please set USE_RICKER_TIME_FUNCTION to .true. in Par_file and recompile solver'
+      stop 'Error for IPATI model, please set USE_RICKER_TIME_FUNCTION to .true. in Par_file and recompile solver'
   endif
-
 
   ! absorbing conditions
   ! stacey absorbing free surface must have also stacey turned on
   if (STACEY_INSTEAD_OF_FREE_SURFACE) STACEY_ABSORBING_CONDITIONS = .true.
 
+  ! safety check
   ! only one absorbing condition is possible
   if (PML_CONDITIONS) then
     if (STACEY_ABSORBING_CONDITIONS) &
-      stop 'error: please set STACEY_ABSORBING_CONDITIONS and STACEY_INSTEAD_OF_FREE_SURFACE to .false. in Par_file for PML'
+      stop 'Error for PML, please set STACEY_ABSORBING_CONDITIONS and STACEY_INSTEAD_OF_FREE_SURFACE to .false. in Par_file'
+    if (USE_MESH_COLORING_GPU) &
+      stop 'Error for PML, please set USE_MESH_COLORING_GPU to .false. in constants.h'
   endif
 
   end subroutine read_parameter_file
@@ -485,8 +485,9 @@ subroutine read_adios_parameters()
 
   call close_parameter_file()
 
+  ! safety check
   if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. BROADCAST_SAME_MESH_AND_MODEL .and. ADIOS_ENABLED) &
-    stop 'ADIOS not yet supported by option BROADCAST_SAME_MESH_AND_MODEL'
+    stop 'Error ADIOS not yet supported by option BROADCAST_SAME_MESH_AND_MODEL'
 
 end subroutine read_adios_parameters
 
