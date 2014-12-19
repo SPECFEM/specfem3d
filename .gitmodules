@@ -1,3 +1,6 @@
 [submodule "m4"]
 	path = m4
 	url = https://github.com/geodynamics/autoconf_cig.git
+[submodule "utils/ADJOINT_TOMOGRAPHY_TOOLS/flexwin"]
+	path = utils/ADJOINT_TOMOGRAPHY_TOOLS/flexwin
+	url = https://github.com/geodynamics/flexwin.git
