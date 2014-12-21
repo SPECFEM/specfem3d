@@ -373,6 +373,7 @@
   use specfem_par_elastic
   use specfem_par_acoustic
   use specfem_par_poroelastic
+
   implicit none
 
   ! check simulation parameters
@@ -385,6 +386,8 @@
   ! If that is still too low, you can increase it further (if so, change all the occurrences of (.., i6.6,..) in the code).
   if (SIMULATION_TYPE /= 1 .and. NSOURCES > 999999) &
     call exit_MPI(myrank,'for adjoint simulations, NSOURCES <= 999999, if you need more change i6.6 in write_seismograms.f90')
+
+  if (SIMULATION_TYPE /= 1 .and. POROELASTIC_SIMULATION) stop 'poroelastic simulations for adjoint runs not supported yet'
 
   ! snapshot file names: ADJOINT attenuation
   if (ATTENUATION .and. ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3)) &
@@ -446,7 +449,7 @@
       stop 'GPU mode does not support N_SLS /= 3 yet'
   endif
 
-  if (POROELASTIC_SIMULATION) stop 'poroelastic simulations on GPU not supported yet'
+  if (POROELASTIC_SIMULATION) stop 'poroelastic simulations on GPUs not supported yet'
 
   ! initializes GPU and outputs info to files for all processes
   call initialize_cuda_device(myrank,ncuda_devices)
