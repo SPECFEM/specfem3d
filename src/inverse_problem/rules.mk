@@ -49,7 +49,7 @@ inverse_problem_OBJECTS = \
 
 # These files come from the shared directory
 inverse_problem_SHARED_OBJECTS = \
-	$(xadd_model_SHARED_OBJECTS) \
+	$(xprogram01_add_model_SHARED_OBJECTS) \
 	$(xprogram02_model_update_SHARED_OBJECTS) \
 	$(xprogram03_smooth_sem_SHARED_OBJECTS) \
 	$(xprogram04_sum_kernels_SHARED_OBJECTS) \
@@ -105,7 +105,7 @@ xprogram05_sum_preconditioned_kernels: $E/xprogram05_sum_preconditioned_kernels
 ##
 ## add_model
 ##
-xadd_model_OBJECTS = \
+xprogram01_add_model_OBJECTS = \
 	$O/inverse_problem_par.invprob_module.o \
 	$O/subroutine01_compute_kernel_integral.invprob.o \
 	$O/subroutine02_get_gradient_cg.invprob.o \
@@ -119,7 +119,7 @@ xadd_model_OBJECTS = \
 	$O/subroutine11_write_new_model_perturbations.invprob.o \
 	$(EMPTY_MACRO)
 
-xadd_model_SHARED_OBJECTS = \
+xprogram01_add_model_SHARED_OBJECTS = \
 	$O/specfem3D_par.spec.o \
 	$O/pml_par.spec.o \
 	$O/read_mesh_databases.spec.o \
@@ -138,13 +138,13 @@ xadd_model_SHARED_OBJECTS = \
 ##
 xprogram01_add_model_iso_OBJECTS = \
 	$O/program01_add_model_iso.invprob.o \
-	$(xadd_model_OBJECTS) \
+	$(xprogram01_add_model_OBJECTS) \
 	$(EMPTY_MACRO)
 
 # extra dependencies
 $O/program01_add_model_iso.invprob.o: $O/specfem3D_par.spec.o $O/inverse_problem_par.invprob_module.o
 
-${E}/xprogram01_add_model_iso: $(xprogram01_add_model_iso_OBJECTS) $(xadd_model_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
+${E}/xprogram01_add_model_iso: $(xprogram01_add_model_iso_OBJECTS) $(xprogram01_add_model_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
 	${FCLINK} -o $@ $+ $(MPILIBS)
 
 
