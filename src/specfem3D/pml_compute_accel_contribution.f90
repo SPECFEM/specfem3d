@@ -61,11 +61,13 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,displ,veloc,r
   do k=1,NGLLZ
     do j=1,NGLLY
       do i=1,NGLLX
+        iglob = ibool(i,j,k,ispec)
+
         rhol = rhostore(i,j,k,ispec)
         jacobianl = jacobian(i,j,k,ispec)
-        iglob = ibool(i,j,k,ispec)
         wgllcube = wgll_cube(i,j,k)
 
+        ! pml coefficient values
         CPML_region_local = CPML_regions(ispec_CPML)
 
         kappa_x = k_store_x(i,j,k,ispec_CPML)
@@ -80,7 +82,7 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,displ,veloc,r
         alpha_y = alpha_store_y(i,j,k,ispec_CPML)
         alpha_z = alpha_store_z(i,j,k,ispec_CPML)
 
-        time_nplus1 = (it - 1._CUSTOM_REAL) * deltat
+        time_nplus1 = (it - 1) * deltat
 
         call l_parameter_computation( &
                time_nplus1, deltat, &
@@ -94,6 +96,7 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,displ,veloc,r
                coef0_z, coef1_z, coef2_z, &
                singularity_type_4, singularity_type_5)
 
+        ! updates memory variables
         rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) = coef0_x * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) &
                 + displ_new(1,iglob) * coef1_x + displ_old(1,iglob) * coef2_x
         rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) = coef0_x * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) &
@@ -115,6 +118,7 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,displ,veloc,r
         rmemory_displ_elastic(3,i,j,k,ispec_CPML,3) = coef0_z * rmemory_displ_elastic(3,i,j,k,ispec_CPML,3) &
                 + displ_new(3,iglob) * coef1_z + displ_old(3,iglob) * coef2_z
 
+        ! updates pml acceleration
         accel_elastic_CPML(1,i,j,k) =  wgllcube * rhol * jacobianl * &
              ( A_1 * veloc(1,iglob) + A_2 * displ(1,iglob) + &
                A_3 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) + &
@@ -180,11 +184,13 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_ac
   do k=1,NGLLZ
     do j=1,NGLLY
       do i=1,NGLLX
-        kappal_inv = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
-        jacobianl = jacobian(i,j,k,ispec)
         iglob = ibool(i,j,k,ispec)
-        wgllcube = wgll_cube(i,j,k)
 
+        wgllcube = wgll_cube(i,j,k)
+        jacobianl = jacobian(i,j,k,ispec)
+        kappal_inv = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
+
+        ! pml coefficient values
         CPML_region_local = CPML_regions(ispec_CPML)
 
         kappa_x = k_store_x(i,j,k,ispec_CPML)
@@ -199,7 +205,7 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_ac
         alpha_y = alpha_store_y(i,j,k,ispec_CPML)
         alpha_z = alpha_store_z(i,j,k,ispec_CPML)
 
-        time_nplus1 = (it - 1._CUSTOM_REAL) * deltat
+        time_nplus1 = (it - 1) * deltat
 
         call l_parameter_computation( &
                time_nplus1, deltat, &
@@ -213,6 +219,7 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_ac
                coef0_z, coef1_z, coef2_z, &
                singularity_type_4, singularity_type_5)
 
+        ! updates memory variables
         rmemory_potential_acoustic(i,j,k,ispec_CPML,1) = coef0_x * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) &
                 + coef1_x * potential_acoustic_new(iglob) + coef2_x * potential_acoustic_old(iglob)
 
@@ -222,7 +229,7 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_ac
         rmemory_potential_acoustic(i,j,k,ispec_CPML,3) = coef0_z * rmemory_potential_acoustic(i,j,k,ispec_CPML,3) &
                 + coef1_z * potential_acoustic_new(iglob) + coef2_z * potential_acoustic_old(iglob)
 
-
+        ! updates pml potential
         potential_dot_dot_acoustic_CPML(i,j,k) =  wgllcube * kappal_inv * jacobianl * &
                   ( A_1 * potential_dot_acoustic(iglob) + A_2 * potential_acoustic(iglob) &
                   + A_3 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) &

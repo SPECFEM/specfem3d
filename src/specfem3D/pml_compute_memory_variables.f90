@@ -353,7 +353,10 @@ end subroutine pml_compute_memory_variables_elastic
 !=====================================================================
 !
 subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,temp3,&
-                                                 rmemory_dpotential_dxl,rmemory_dpotential_dyl,rmemory_dpotential_dzl)
+                                                 rmemory_dpotential_dxl,rmemory_dpotential_dyl,rmemory_dpotential_dzl, &
+                                                 PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl,&
+                                                 PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old,&
+                                                 PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new)
   ! calculates C-PML elastic memory variables and computes stress sigma
 
   ! second-order accurate convolution term calculation from equation (21) of
@@ -366,10 +369,7 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
 
   use pml_par, only: NSPEC_CPML,CPML_regions,k_store_x,k_store_y,k_store_z,&
                      d_store_x,d_store_y,d_store_z,&
-                     alpha_store_x,alpha_store_y,alpha_store_z,&
-                     PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl,&
-                     PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old,&
-                     PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new
+                     alpha_store_x,alpha_store_y,alpha_store_z !,&
 
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS, &
                        CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
@@ -378,8 +378,24 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
 
   integer, intent(in) :: ispec,ispec_CPML
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ), intent(out) :: temp1,temp2,temp3
+
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3),intent(inout) :: &
     rmemory_dpotential_dxl, rmemory_dpotential_dyl, rmemory_dpotential_dzl
+
+  ! derivatives of potential with respect to x, y and z
+  ! in computation potential_acoustic at "n" time step is used
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ),intent(in) :: &
+    PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl
+
+  ! in computation of PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old
+  ! we replace potential_acoustic with potential_acoustic_old
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ),intent(in) :: &
+    PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old
+
+  ! we replace potential_acoustic at "n" time step with
+  ! we replace potential_acoustic with potential_acoustic_old with potential_acoustic_new
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ),intent(in) :: &
+    PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new
 
   ! local parameters
   integer :: i,j,k

@@ -45,9 +45,6 @@
   use specfem_par,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,PML_CONDITIONS
 
   use pml_par, only: is_CPML, spec_to_CPML, NSPEC_CPML, &
-                     PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl,&
-                     PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old,&
-                     PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new,&
                      potential_dot_dot_acoustic_CPML,rmemory_dpotential_dxl,rmemory_dpotential_dyl,&
                      rmemory_dpotential_dzl,rmemory_potential_acoustic, &
                      potential_acoustic_old,potential_acoustic_new
@@ -90,18 +87,25 @@
   real(kind=CUSTOM_REAL) :: hp1,hp2,hp3
   real(kind=CUSTOM_REAL) :: fac1,fac2,fac3
 
+  integer :: ispec,iglob,i,j,k,l,ispec_p,num_elements
+
   ! CPML
+  integer :: ispec_CPML
   real(kind=CUSTOM_REAL) :: temp1l_old,temp2l_old,temp3l_old
   real(kind=CUSTOM_REAL) :: temp1l_new,temp2l_new,temp3l_new
 
   real(kind=CUSTOM_REAL) :: xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl
   real(kind=CUSTOM_REAL) :: dpotentialdxl,dpotentialdyl,dpotentialdzl
   real(kind=CUSTOM_REAL) :: rho_invl
-
-  integer :: ispec,iglob,i,j,k,l,ispec_p,num_elements
-
-  ! local C-PML absorbing boundary conditions parameters
-  integer :: ispec_CPML
+  ! derivatives of potential with respect to x, y and z
+  ! in computation potential_acoustic at "n" time step is used
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl
+  ! in computation of PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old
+  ! we replace potential_acoustic with potential_acoustic_old
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old
+  ! we replace potential_acoustic at "n" time step with
+  ! we replace potential_acoustic with potential_acoustic_old with potential_acoustic_new
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new
 
   if (iphase == 1) then
     num_elements = nspec_outer_acoustic
@@ -229,7 +233,10 @@
 
         ! sets C-PML elastic memory variables to compute stress sigma and form dot product with test vector
         call pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,temp3,&
-                                                   rmemory_dpotential_dxl,rmemory_dpotential_dyl,rmemory_dpotential_dzl)
+                                                   rmemory_dpotential_dxl,rmemory_dpotential_dyl,rmemory_dpotential_dzl, &
+                                                   PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl,&
+                                                   PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old,&
+                                                   PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new)
 
         ! calculates contribution from each C-PML element to update acceleration
         call pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_acoustic,&

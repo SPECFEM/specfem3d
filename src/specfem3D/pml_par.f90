@@ -100,18 +100,6 @@ module pml_par
   !and potential_dot_acoustic is predicted potential_dot_acoustic at "n" time step
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: potential_acoustic_new
 
-  ! derivatives of potential with respect to x, y and z
-  ! in computation potential_acoustic at "n" time step is used
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl
-
-  ! in computation of PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old
-  ! we replace potential_acoustic with potential_acoustic_old
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old
-
-  ! we replace potential_acoustic at "n" time step with
-  ! we replace potential_acoustic with potential_acoustic_old with potential_acoustic_new
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new
-
   ! C-PML memory variables
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_dux_dxl_x,rmemory_dux_dyl_x,rmemory_dux_dzl_x
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rmemory_duy_dxl_x,rmemory_duy_dyl_x

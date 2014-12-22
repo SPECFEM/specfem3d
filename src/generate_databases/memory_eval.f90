@@ -105,10 +105,6 @@
      ! PML_duz_dxl_old,PML_duz_dyl_old,PML_duz_dzl_old
      memory_size = memory_size + 18.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*nspec_cpml*dble(CUSTOM_REAL)
 
-     ! PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl
-     ! PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old
-     memory_size = memory_size + 6.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*nspec_cpml*dble(CUSTOM_REAL)
-
      ! rmemory_dux_dxl_x,rmemory_dux_dyl_x,rmemory_dux_dzl_x,rmemory_duy_dxl_x,
      ! rmemory_duy_dyl_x,rmemory_duz_dxl_x,rmemory_duz_dzl_x,
      ! rmemory_dux_dxl_y,rmemory_dux_dyl_y,rmemory_duy_dxl_y,rmemory_duy_dyl_y,

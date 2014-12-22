@@ -190,28 +190,6 @@
 !    allocate(potential_dot_dot_acoustic_old(NGLOB_AB),stat=ier)
 !    if (ier /= 0) stop 'error allocating potential_dot_dot_acoustic_old array'
 
-    ! stores derivatives of potential with respect to x, y and z
-    allocate(PML_dpotential_dxl(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) stop 'error allocating PML_dpotential_dxl array'
-    allocate(PML_dpotential_dyl(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) stop 'error allocating PML_dpotential_dxl array'
-    allocate(PML_dpotential_dzl(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) stop 'error allocating PML_dpotential_dxl array'
-
-    allocate(PML_dpotential_dxl_old(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) stop 'error allocating PML_dpotential_dxl_old array'
-    allocate(PML_dpotential_dyl_old(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) stop 'error allocating PML_dpotential_dxl_old array'
-    allocate(PML_dpotential_dzl_old(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) stop 'error allocating PML_dpotential_dxl_old array'
-
-    allocate(PML_dpotential_dxl_new(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) stop 'error allocating PML_dpotential_dxl_new array'
-    allocate(PML_dpotential_dyl_new(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) stop 'error allocating PML_dpotential_dxl_new array'
-    allocate(PML_dpotential_dzl_new(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) stop 'error allocating PML_dpotential_dxl_new array'
-
     ! stores C-PML memory variables
     allocate(rmemory_dpotential_dxl(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3),stat=ier)
     if (ier /= 0) stop 'error allocating rmemory_dpotential_dxl array'
@@ -311,17 +289,6 @@
     potential_acoustic_old(:) = 0._CUSTOM_REAL
     potential_acoustic_new(:) = 0._CUSTOM_REAL
 !    potential_dot_dot_acoustic_old(:) = 0._CUSTOM_REAL
-    PML_dpotential_dxl(:,:,:) = 0._CUSTOM_REAL
-    PML_dpotential_dyl(:,:,:) = 0._CUSTOM_REAL
-    PML_dpotential_dzl(:,:,:) = 0._CUSTOM_REAL
-
-    PML_dpotential_dxl_old(:,:,:) = 0._CUSTOM_REAL
-    PML_dpotential_dyl_old(:,:,:) = 0._CUSTOM_REAL
-    PML_dpotential_dzl_old(:,:,:) = 0._CUSTOM_REAL
-
-    PML_dpotential_dxl_new(:,:,:) = 0._CUSTOM_REAL
-    PML_dpotential_dyl_new(:,:,:) = 0._CUSTOM_REAL
-    PML_dpotential_dzl_new(:,:,:) = 0._CUSTOM_REAL
 
     rmemory_dpotential_dxl(:,:,:,:,:) = 0._CUSTOM_REAL
     rmemory_dpotential_dyl(:,:,:,:,:) = 0._CUSTOM_REAL
@@ -517,15 +484,6 @@
     if (.not. allocated(potential_acoustic_new)) allocate(potential_acoustic_new(1))
     !if (.not. allocated(potential_dot_dot_acoustic_old)) allocate(potential_dot_dot_acoustic_old(1))
 
-    if (.not. allocated(PML_dpotential_dxl)) allocate(PML_dpotential_dxl(1,1,1))
-    if (.not. allocated(PML_dpotential_dyl)) allocate(PML_dpotential_dyl(1,1,1))
-    if (.not. allocated(PML_dpotential_dzl)) allocate(PML_dpotential_dzl(1,1,1))
-    if (.not. allocated(PML_dpotential_dxl_old)) allocate(PML_dpotential_dxl_old(1,1,1))
-    if (.not. allocated(PML_dpotential_dyl_old)) allocate(PML_dpotential_dyl_old(1,1,1))
-    if (.not. allocated(PML_dpotential_dzl_old)) allocate(PML_dpotential_dzl_old(1,1,1))
-    if (.not. allocated(PML_dpotential_dxl_new)) allocate(PML_dpotential_dxl_new(1,1,1))
-    if (.not. allocated(PML_dpotential_dyl_new)) allocate(PML_dpotential_dyl_new(1,1,1))
-    if (.not. allocated(PML_dpotential_dzl_new)) allocate(PML_dpotential_dzl_new(1,1,1))
     if (.not. allocated(rmemory_dpotential_dxl)) allocate(rmemory_dpotential_dxl(1,1,1,1,3))
     if (.not. allocated(rmemory_dpotential_dyl)) allocate(rmemory_dpotential_dyl(1,1,1,1,3))
     if (.not. allocated(rmemory_dpotential_dzl)) allocate(rmemory_dpotential_dzl(1,1,1,1,3))
@@ -638,15 +596,6 @@
   if (ACOUSTIC_SIMULATION) then
     deallocate(potential_acoustic_old)
     deallocate(potential_acoustic_new)
-    deallocate(PML_dpotential_dxl)
-    deallocate(PML_dpotential_dyl)
-    deallocate(PML_dpotential_dzl)
-    deallocate(PML_dpotential_dxl_old)
-    deallocate(PML_dpotential_dyl_old)
-    deallocate(PML_dpotential_dzl_old)
-    deallocate(PML_dpotential_dxl_new)
-    deallocate(PML_dpotential_dyl_new)
-    deallocate(PML_dpotential_dzl_new)
     deallocate(rmemory_dpotential_dxl)
     deallocate(rmemory_dpotential_dyl)
     deallocate(rmemory_dpotential_dzl)
