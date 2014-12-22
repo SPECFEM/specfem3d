@@ -30,9 +30,9 @@
 #include "config.fh"
 
 
-! Deville routine for NGLL == 5 (default)
+! Deville routine for NGLL == 5, 6 or 7 (default in constants.h is 5)
 
-  subroutine compute_forces_viscoelastic_Dev_5p(iphase,NSPEC_AB,NGLOB_AB, &
+  subroutine compute_forces_viscoelastic_Dev(iphase,NSPEC_AB,NGLOB_AB, &
                                     displ,veloc,accel, &
                                     xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                                     hprime_xx,hprime_xxT, &
@@ -314,7 +314,7 @@
     ! pages 386 and 389 and Figure 8.3.1
 
     ! computes 1. matrix multiplication for tempx1,..
-    call mxm5_3comp_singleA(hprime_xx,m1,dummyx_loc,dummyy_loc,dummyz_loc,tempx1,tempy1,tempz1,m2)
+    call mxm_3comp_singleA(hprime_xx,m1,dummyx_loc,dummyy_loc,dummyz_loc,tempx1,tempy1,tempz1,m2)
 
 ! counts:
 ! + m1 * m2 * 3 * 9 = 5 * 25 * 3 * 9 = 3375 FLOP
@@ -322,7 +322,7 @@
 ! + m1 * 5 float = 100 BYTE  (hprime_xx once, assuming B3_** in cache)
 
     ! computes 2. matrix multiplication for tempx2,..
-    call mxm5_3comp_3dmat_singleB(dummyx_loc,dummyy_loc,dummyz_loc,m1,hprime_xxT,m1,tempx2,tempy2,tempz2,NGLLX)
+    call mxm_3comp_3dmat_singleB(dummyx_loc,dummyy_loc,dummyz_loc,m1,hprime_xxT,m1,tempx2,tempy2,tempz2,NGLLX)
 
 ! counts:
 ! + m1 * m1 * NGLLX * 3 * 9 = 5 * 5 * 5 * 3 * 9 = 3375 FLOP
@@ -330,7 +330,7 @@
 ! + m1 * 5 float = 100 BYTE  (hprime_xxT once, assuming dummy*_** in cache)
 
     ! computes 3. matrix multiplication for tempx1,..
-    call mxm5_3comp_singleB(dummyx_loc,dummyy_loc,dummyz_loc,m2,hprime_xxT,tempx3,tempy3,tempz3,m1)
+    call mxm_3comp_singleB(dummyx_loc,dummyy_loc,dummyz_loc,m2,hprime_xxT,tempx3,tempy3,tempz3,m1)
 
 ! counts:
 ! + m1 * m2 * 3 * 9 = 5 * 25 * 3 * 9 = 3375 FLOP
@@ -342,7 +342,7 @@
       ! temporary variables used for fixing attenuation in a consistent way
 
       ! computes 1. matrix multiplication for tempx1,..
-      call mxm5_3comp_singleA(hprime_xx,m1,dummyx_loc_att,dummyy_loc_att,dummyz_loc_att, &
+      call mxm_3comp_singleA(hprime_xx,m1,dummyx_loc_att,dummyy_loc_att,dummyz_loc_att, &
                               tempx1_att,tempy1_att,tempz1_att,m2)
 
       tempx1_att(:,:,:) = tempx1_att(:,:,:) + tempx1(:,:,:)
@@ -350,7 +350,7 @@
       tempz1_att(:,:,:) = tempz1_att(:,:,:) + tempz1(:,:,:)
 
       ! computes 2. matrix multiplication for tempx2,..
-      call mxm5_3comp_3dmat_singleB(dummyx_loc_att,dummyy_loc_att,dummyz_loc_att,m1,hprime_xxT,m1, &
+      call mxm_3comp_3dmat_singleB(dummyx_loc_att,dummyy_loc_att,dummyz_loc_att,m1,hprime_xxT,m1, &
                                     tempx2_att,tempy2_att,tempz2_att,NGLLX)
 
       tempx2_att(:,:,:) = tempx2_att(:,:,:) + tempx2(:,:,:)
@@ -358,7 +358,7 @@
       tempz2_att(:,:,:) = tempz2_att(:,:,:) + tempz2(:,:,:)
 
       ! computes 3. matrix multiplication for tempx1,..
-      call mxm5_3comp_singleB(dummyx_loc_att,dummyy_loc_att,dummyz_loc_att,m2,hprime_xxT, &
+      call mxm_3comp_singleB(dummyx_loc_att,dummyy_loc_att,dummyz_loc_att,m2,hprime_xxT, &
                               tempx3_att,tempy3_att,tempz3_att,m1)
 
       tempx3_att(:,:,:) = tempx3_att(:,:,:) + tempx3(:,:,:)
@@ -370,13 +370,13 @@
       ! because array is_CPML() is unallocated when PML_CONDITIONS is false
       if (is_CPML(ispec)) then
         ! computes 1. matrix multiplication for tempx1,..
-        call mxm5_3comp_singleA(hprime_xx,m1,dummyx_loc_att,dummyy_loc_att,dummyz_loc_att, &
+        call mxm_3comp_singleA(hprime_xx,m1,dummyx_loc_att,dummyy_loc_att,dummyz_loc_att, &
                                 tempx1_att,tempy1_att,tempz1_att,m2)
         ! computes 2. matrix multiplication for tempx2,..
-        call mxm5_3comp_3dmat_singleB(dummyx_loc_att,dummyy_loc_att,dummyz_loc_att,m1,hprime_xxT,m1, &
+        call mxm_3comp_3dmat_singleB(dummyx_loc_att,dummyy_loc_att,dummyz_loc_att,m1,hprime_xxT,m1, &
                                       tempx2_att,tempy2_att,tempz2_att,NGLLX)
         ! computes 3. matrix multiplication for tempx1,..
-        call mxm5_3comp_singleB(dummyx_loc_att,dummyy_loc_att,dummyz_loc_att,m2,hprime_xxT, &
+        call mxm_3comp_singleB(dummyx_loc_att,dummyy_loc_att,dummyz_loc_att,m2,hprime_xxT, &
                                 tempx3_att,tempy3_att,tempz3_att,m1)
       endif
     endif
@@ -826,7 +826,7 @@
     ! pages 386 and 389 and Figure 8.3.1
 
     ! computes 1. matrix multiplication for newtempx1,..
-    call mxm5_3comp_singleA(hprimewgll_xxT,m1,tempx1,tempy1,tempz1,newtempx1,newtempy1,newtempz1,m2)
+    call mxm_3comp_singleA(hprimewgll_xxT,m1,tempx1,tempy1,tempz1,newtempx1,newtempy1,newtempz1,m2)
 
 ! counts:
 ! + m1 * m2 * 3 * 9 = 3375 FLOP
@@ -834,7 +834,7 @@
 ! + m1 * 5 float = 100 BYTE (hprimewgll_xxT once, assumes E3*, C1* in cache)
 
     ! computes 2. matrix multiplication for tempx2,..
-    call mxm5_3comp_3dmat_singleB(tempx2,tempy2,tempz2,m1,hprimewgll_xx,m1,newtempx2,newtempy2,newtempz2,NGLLX)
+    call mxm_3comp_3dmat_singleB(tempx2,tempy2,tempz2,m1,hprimewgll_xx,m1,newtempx2,newtempy2,newtempz2,NGLLX)
 
 ! counts:
 ! + m1 * m1 * NGLLX * 3 * 9 = 3375 FLOP
@@ -842,7 +842,7 @@
 ! + m1 * 5 float = 100 BYTE (hprimewgll_xx once, assumes E3*, C1* in cache)
 
     ! computes 3. matrix multiplication for newtempx3,..
-    call mxm5_3comp_singleB(tempx3,tempy3,tempz3,m2,hprimewgll_xx,newtempx3,newtempy3,newtempz3,m1)
+    call mxm_3comp_singleB(tempx3,tempy3,tempz3,m2,hprimewgll_xx,newtempx3,newtempy3,newtempz3,m1)
 
 ! counts:
 ! + m1 * m2 * 3 * 9 = 3375 FLOP
@@ -978,10 +978,36 @@
 !
 !--------------------------------------------------------------------------------------------
 !
-! note: the matrix-matrix multiplications are used for very small matrices ( 5 x 5 x 5 elements);
+! note: the matrix-matrix multiplications are used for very small matrices ( default 5 x 5 x 5 elements);
 !       thus, calling external optimized libraries for these multiplications are in general slower
 !
 ! please leave the routines here to help compilers inlining the code
+  subroutine mxm_3comp_singleA(A,n1,B1,B2,B3,C1,C2,C3,n3)
+
+! 3 different arrays for x/y/z-components, 2-dimensional arrays e.g. (25,5)/(5,25), same B matrix for all 3 component arrays
+
+  use constants,only: CUSTOM_REAL,NGLLX
+
+  implicit none
+
+  integer,intent(in) :: n1,n3
+  real(kind=CUSTOM_REAL),dimension(n1,NGLLX),intent(in) :: A
+  real(kind=CUSTOM_REAL),dimension(NGLLX,n3),intent(in) :: B1,B2,B3
+  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C1,C2,C3
+
+  ! matrix-matrix multiplication wrapper
+
+  if (NGLLX == 5) then
+    call mxm5_3comp_singleA(A,n1,B1,B2,B3,C1,C2,C3,n3)
+  else if (NGLLX == 6) then
+    call mxm6_3comp_singleA(A,n1,B1,B2,B3,C1,C2,C3,n3)
+  else if (NGLLX == 7) then
+    call mxm7_3comp_singleA(A,n1,B1,B2,B3,C1,C2,C3,n3)
+  endif
+
+  end subroutine mxm_3comp_singleA
+
+  !-------------
 
   subroutine mxm5_3comp_singleA(A,n1,B1,B2,B3,C1,C2,C3,n3)
 
@@ -1024,8 +1050,129 @@
 
   end subroutine mxm5_3comp_singleA
 
+  !-------------
+
+  subroutine mxm6_3comp_singleA(A,n1,B1,B2,B3,C1,C2,C3,n3)
+
+! 3 different arrays for x/y/z-components, 2-dimensional arrays (36,6)/(6,36), same B matrix for all 3 component arrays
+
+  use constants,only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n3
+  real(kind=CUSTOM_REAL),dimension(n1,6),intent(in) :: A
+  real(kind=CUSTOM_REAL),dimension(6,n3),intent(in) :: B1,B2,B3
+  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C1,C2,C3
+
+  ! local parameters
+  integer :: i,j
+
+  ! matrix-matrix multiplication
+  do j = 1,n3
+    do i = 1,n1
+      C1(i,j) =  A(i,1) * B1(1,j) &
+               + A(i,2) * B1(2,j) &
+               + A(i,3) * B1(3,j) &
+               + A(i,4) * B1(4,j) &
+               + A(i,5) * B1(5,j) &
+               + A(i,6) * B1(6,j)
+
+      C2(i,j) =  A(i,1) * B2(1,j) &
+               + A(i,2) * B2(2,j) &
+               + A(i,3) * B2(3,j) &
+               + A(i,4) * B2(4,j) &
+               + A(i,5) * B2(5,j) &
+               + A(i,6) * B2(6,j)
+
+      C3(i,j) =  A(i,1) * B3(1,j) &
+               + A(i,2) * B3(2,j) &
+               + A(i,3) * B3(3,j) &
+               + A(i,4) * B3(4,j) &
+               + A(i,5) * B3(5,j) &
+               + A(i,6) * B3(6,j)
+    enddo
+  enddo
+
+  end subroutine mxm6_3comp_singleA
+
+  !-------------
+
+  subroutine mxm7_3comp_singleA(A,n1,B1,B2,B3,C1,C2,C3,n3)
+
+! 3 different arrays for x/y/z-components, 2-dimensional arrays (49,7)/(7,49), same B matrix for all 3 component arrays
+
+  use constants,only: CUSTOM_REAL,NGLLX
+
+  implicit none
+
+  integer,intent(in) :: n1,n3
+  real(kind=CUSTOM_REAL),dimension(n1,7),intent(in) :: A
+  real(kind=CUSTOM_REAL),dimension(7,n3),intent(in) :: B1,B2,B3
+  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C1,C2,C3
+
+  ! local parameters
+  integer :: i,j
+
+  ! matrix-matrix multiplication
+  do j = 1,n3
+    do i = 1,n1
+      C1(i,j) =  A(i,1) * B1(1,j) &
+               + A(i,2) * B1(2,j) &
+               + A(i,3) * B1(3,j) &
+               + A(i,4) * B1(4,j) &
+               + A(i,5) * B1(5,j) &
+               + A(i,6) * B1(6,j) &
+               + A(i,7) * B1(7,j)
+
+      C2(i,j) =  A(i,1) * B2(1,j) &
+               + A(i,2) * B2(2,j) &
+               + A(i,3) * B2(3,j) &
+               + A(i,4) * B2(4,j) &
+               + A(i,5) * B2(5,j) &
+               + A(i,6) * B2(6,j) &
+               + A(i,7) * B2(7,j)
+
+      C3(i,j) =  A(i,1) * B3(1,j) &
+               + A(i,2) * B3(2,j) &
+               + A(i,3) * B3(3,j) &
+               + A(i,4) * B3(4,j) &
+               + A(i,5) * B3(5,j) &
+               + A(i,6) * B3(6,j) &
+               + A(i,7) * B3(7,j)
+    enddo
+  enddo
+
+  end subroutine mxm7_3comp_singleA
+
 
 !--------------------------------------------------------------------------------------------
+
+  subroutine mxm_3comp_singleB(A1,A2,A3,n1,B,C1,C2,C3,n3)
+
+! 3 different arrays for x/y/z-components, 2-dimensional arrays e.g. (25,5)/(5,25), same B matrix for all 3 component arrays
+
+  use constants,only: CUSTOM_REAL,NGLLX
+
+  implicit none
+
+  integer,intent(in) :: n1,n3
+  real(kind=CUSTOM_REAL),dimension(n1,NGLLX),intent(in) :: A1,A2,A3
+  real(kind=CUSTOM_REAL),dimension(NGLLX,n3),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C1,C2,C3
+
+  ! matrix-matrix multiplication wrapper
+  if (NGLLX == 5) then
+    call mxm5_3comp_singleB(A1,A2,A3,n1,B,C1,C2,C3,n3)
+  else if (NGLLX == 6) then
+    call mxm6_3comp_singleB(A1,A2,A3,n1,B,C1,C2,C3,n3)
+  else if (NGLLX == 7) then
+    call mxm7_3comp_singleB(A1,A2,A3,n1,B,C1,C2,C3,n3)
+  endif
+
+  end subroutine mxm_3comp_singleB
+
+  !-------------
 
   subroutine mxm5_3comp_singleB(A1,A2,A3,n1,B,C1,C2,C3,n3)
 
@@ -1068,8 +1215,129 @@
 
   end subroutine mxm5_3comp_singleB
 
+  !-------------
+
+  subroutine mxm6_3comp_singleB(A1,A2,A3,n1,B,C1,C2,C3,n3)
+
+! 3 different arrays for x/y/z-components, 2-dimensional arrays (36,6)/(6,36), same B matrix for all 3 component arrays
+
+  use constants,only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n3
+  real(kind=CUSTOM_REAL),dimension(n1,6),intent(in) :: A1,A2,A3
+  real(kind=CUSTOM_REAL),dimension(6,n3),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C1,C2,C3
+
+  ! local parameters
+  integer :: i,j
+
+  ! matrix-matrix multiplication
+  do j = 1,n3
+    do i = 1,n1
+      C1(i,j) =  A1(i,1) * B(1,j) &
+               + A1(i,2) * B(2,j) &
+               + A1(i,3) * B(3,j) &
+               + A1(i,4) * B(4,j) &
+               + A1(i,5) * B(5,j) &
+               + A1(i,6) * B(6,j)
+
+      C2(i,j) =  A2(i,1) * B(1,j) &
+               + A2(i,2) * B(2,j) &
+               + A2(i,3) * B(3,j) &
+               + A2(i,4) * B(4,j) &
+               + A2(i,5) * B(5,j) &
+               + A2(i,6) * B(6,j)
+
+      C3(i,j) =  A3(i,1) * B(1,j) &
+               + A3(i,2) * B(2,j) &
+               + A3(i,3) * B(3,j) &
+               + A3(i,4) * B(4,j) &
+               + A3(i,5) * B(5,j) &
+               + A3(i,6) * B(6,j)
+    enddo
+  enddo
+
+  end subroutine mxm6_3comp_singleB
+
+  !-------------
+
+  subroutine mxm7_3comp_singleB(A1,A2,A3,n1,B,C1,C2,C3,n3)
+
+! 3 different arrays for x/y/z-components, 2-dimensional arrays (49,7)/(7,49), same B matrix for all 3 component arrays
+
+  use constants,only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n3
+  real(kind=CUSTOM_REAL),dimension(n1,7),intent(in) :: A1,A2,A3
+  real(kind=CUSTOM_REAL),dimension(7,n3),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C1,C2,C3
+
+  ! local parameters
+  integer :: i,j
+
+  ! matrix-matrix multiplication
+  do j = 1,n3
+    do i = 1,n1
+      C1(i,j) =  A1(i,1) * B(1,j) &
+               + A1(i,2) * B(2,j) &
+               + A1(i,3) * B(3,j) &
+               + A1(i,4) * B(4,j) &
+               + A1(i,5) * B(5,j) &
+               + A1(i,6) * B(6,j) &
+               + A1(i,7) * B(7,j)
+
+      C2(i,j) =  A2(i,1) * B(1,j) &
+               + A2(i,2) * B(2,j) &
+               + A2(i,3) * B(3,j) &
+               + A2(i,4) * B(4,j) &
+               + A2(i,5) * B(5,j) &
+               + A2(i,6) * B(6,j) &
+               + A2(i,7) * B(7,j)
+
+      C3(i,j) =  A3(i,1) * B(1,j) &
+               + A3(i,2) * B(2,j) &
+               + A3(i,3) * B(3,j) &
+               + A3(i,4) * B(4,j) &
+               + A3(i,5) * B(5,j) &
+               + A3(i,6) * B(6,j) &
+               + A3(i,7) * B(7,j)
+    enddo
+  enddo
+
+  end subroutine mxm7_3comp_singleB
+
 
 !--------------------------------------------------------------------------------------------
+
+  subroutine mxm_3comp_3dmat_singleB(A1,A2,A3,n1,B,n2,C1,C2,C3,n3)
+
+! 3 different arrays for x/y/z-components, 3-dimensional arrays e.g. (5,5,5), same B matrix for all 3 component arrays
+
+  use constants,only: CUSTOM_REAL,NGLLX
+
+  implicit none
+
+  integer,intent(in) :: n1,n2,n3
+  real(kind=CUSTOM_REAL),dimension(n1,NGLLX,n3),intent(in) :: A1,A2,A3
+  real(kind=CUSTOM_REAL),dimension(NGLLX,n2),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n2,n3),intent(out) :: C1,C2,C3
+
+  ! matrix-matrix multiplication wrapper
+  if (NGLLX == 5) then
+    call mxm5_3comp_3dmat_singleB(A1,A2,A3,n1,B,n2,C1,C2,C3,n3)
+  else if (NGLLX == 6) then
+    call mxm6_3comp_3dmat_singleB(A1,A2,A3,n1,B,n2,C1,C2,C3,n3)
+  else if (NGLLX == 7) then
+    call mxm7_3comp_3dmat_singleB(A1,A2,A3,n1,B,n2,C1,C2,C3,n3)
+  endif
+
+  end subroutine mxm_3comp_3dmat_singleB
+
+  !-------------
 
   subroutine mxm5_3comp_3dmat_singleB(A1,A2,A3,n1,B,n2,C1,C2,C3,n3)
 
@@ -1114,5 +1382,104 @@
 
   end subroutine mxm5_3comp_3dmat_singleB
 
-  end subroutine compute_forces_viscoelastic_Dev_5p
+  !-------------
+
+  subroutine mxm6_3comp_3dmat_singleB(A1,A2,A3,n1,B,n2,C1,C2,C3,n3)
+
+! 3 different arrays for x/y/z-components, 3-dimensional arrays (6,6,6), same B matrix for all 3 component arrays
+
+  use constants,only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n2,n3
+  real(kind=CUSTOM_REAL),dimension(n1,6,n3),intent(in) :: A1,A2,A3
+  real(kind=CUSTOM_REAL),dimension(6,n2),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n2,n3),intent(out) :: C1,C2,C3
+
+  ! local parameters
+  integer :: i,j,k
+
+  ! matrix-matrix multiplication
+  do k = 1,n3
+    do j = 1,n2
+      do i = 1,n1
+        C1(i,j,k) =  A1(i,1,k) * B(1,j) &
+                   + A1(i,2,k) * B(2,j) &
+                   + A1(i,3,k) * B(3,j) &
+                   + A1(i,4,k) * B(4,j) &
+                   + A1(i,5,k) * B(5,j) &
+                   + A1(i,6,k) * B(6,j)
+
+        C2(i,j,k) =  A2(i,1,k) * B(1,j) &
+                   + A2(i,2,k) * B(2,j) &
+                   + A2(i,3,k) * B(3,j) &
+                   + A2(i,4,k) * B(4,j) &
+                   + A2(i,5,k) * B(5,j) &
+                   + A2(i,6,k) * B(6,j)
+
+        C3(i,j,k) =  A3(i,1,k) * B(1,j) &
+                   + A3(i,2,k) * B(2,j) &
+                   + A3(i,3,k) * B(3,j) &
+                   + A3(i,4,k) * B(4,j) &
+                   + A3(i,5,k) * B(5,j) &
+                   + A3(i,6,k) * B(6,j)
+      enddo
+    enddo
+  enddo
+
+  end subroutine mxm6_3comp_3dmat_singleB
+
+  !-------------
+
+  subroutine mxm7_3comp_3dmat_singleB(A1,A2,A3,n1,B,n2,C1,C2,C3,n3)
+
+! 3 different arrays for x/y/z-components, 3-dimensional arrays (7,7,7), same B matrix for all 3 component arrays
+
+  use constants,only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n2,n3
+  real(kind=CUSTOM_REAL),dimension(n1,7,n3),intent(in) :: A1,A2,A3
+  real(kind=CUSTOM_REAL),dimension(7,n2),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n2,n3),intent(out) :: C1,C2,C3
+
+  ! local parameters
+  integer :: i,j,k
+
+  ! matrix-matrix multiplication
+  do k = 1,n3
+    do j = 1,n2
+      do i = 1,n1
+        C1(i,j,k) =  A1(i,1,k) * B(1,j) &
+                   + A1(i,2,k) * B(2,j) &
+                   + A1(i,3,k) * B(3,j) &
+                   + A1(i,4,k) * B(4,j) &
+                   + A1(i,5,k) * B(5,j) &
+                   + A1(i,6,k) * B(6,j) &
+                   + A1(i,7,k) * B(7,j)
+
+        C2(i,j,k) =  A2(i,1,k) * B(1,j) &
+                   + A2(i,2,k) * B(2,j) &
+                   + A2(i,3,k) * B(3,j) &
+                   + A2(i,4,k) * B(4,j) &
+                   + A2(i,5,k) * B(5,j) &
+                   + A2(i,6,k) * B(6,j) &
+                   + A2(i,7,k) * B(7,j)
+
+        C3(i,j,k) =  A3(i,1,k) * B(1,j) &
+                   + A3(i,2,k) * B(2,j) &
+                   + A3(i,3,k) * B(3,j) &
+                   + A3(i,4,k) * B(4,j) &
+                   + A3(i,5,k) * B(5,j) &
+                   + A3(i,6,k) * B(6,j) &
+                   + A3(i,7,k) * B(7,j)
+      enddo
+    enddo
+  enddo
+
+  end subroutine mxm7_3comp_3dmat_singleB
+
+  end subroutine compute_forces_viscoelastic_Dev
 

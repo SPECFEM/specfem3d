@@ -496,7 +496,7 @@ subroutine compute_forces_viscoelastic_Dev_sim1(iphase)
 
   select case (NGLLX)
 
-  case (5)
+  case (5,6,7)
 
 !----------------------------------------------------------------------------------------------
 
@@ -536,7 +536,7 @@ subroutine compute_forces_viscoelastic_Dev_sim1(iphase)
 !          phase_ispec_inner_elastic,&
 !          num_colors_outer_elastic,num_colors_inner_elastic)
 #else
-    call compute_forces_viscoelastic_Dev_5p(iphase, NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
+    call compute_forces_viscoelastic_Dev(iphase, NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
              xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
              hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
              wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D, &
@@ -590,8 +590,8 @@ subroutine compute_forces_viscoelastic_Dev_sim3(iphase)
 
   select case (NGLLX)
 
-  case (5)
-    call compute_forces_viscoelastic_Dev_5p(iphase, NSPEC_AB,NGLOB_AB, &
+  case (5,6,7)
+    call compute_forces_viscoelastic_Dev(iphase, NSPEC_AB,NGLOB_AB, &
                   b_displ,b_veloc,b_accel, &
                   xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                   hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &

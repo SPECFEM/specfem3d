@@ -65,7 +65,7 @@
   integer, parameter :: NGLLZ = NGLLX
 
 ! use inlined products of Deville et al. (2002) to speedup the calculations to compute internal forces
-! Deville routines only implemented for NGLLX = NGLLY = NGLLZ = 5
+! Deville routines only implemented for NGLLX = NGLLY = NGLLZ = 5, 6 or 7
   logical, parameter :: USE_DEVILLE_PRODUCTS = .true.
 
 !!-----------------------------------------------------------
