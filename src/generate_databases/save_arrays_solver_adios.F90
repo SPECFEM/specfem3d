@@ -439,63 +439,42 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob,                   &
   ! absorbing boundary surface
   call define_adios_scalar(group, groupsize, "", &
                            STRINGIFY_VAR(num_abs_boundary_faces))
-  if (PML_CONDITIONS)then
-    if (num_abs_boundary_faces > 0) then
-      local_dim = num_abs_boundary_faces_wmax
-      call define_adios_global_array1D(group, groupsize, &
-                                       local_dim, "",               &
-                                       STRINGIFY_VAR(abs_boundary_ispec))
-      local_dim = 3 * NGLLSQUARE * num_abs_boundary_faces_wmax
-      call define_adios_global_array1D(group, groupsize, &
-                                       local_dim, "",               &
-                                       STRINGIFY_VAR(abs_boundary_ijk))
-      local_dim = NGLLSQUARE * num_abs_boundary_faces_wmax
-      call define_adios_global_array1D(group, groupsize, &
-                                       local_dim, "",               &
-                                       STRINGIFY_VAR(abs_boundary_jacobian2Dw))
-      local_dim = NDIM * NGLLSQUARE * num_abs_boundary_faces_wmax
-      call define_adios_global_array1D(group, groupsize, &
-                                       local_dim, "",               &
-                                       STRINGIFY_VAR(abs_boundary_normal))
-    endif
-  else
-    if (num_abs_boundary_faces > 0) then
-      local_dim = num_abs_boundary_faces_wmax
-      call define_adios_global_array1D(group, groupsize, &
-                                       local_dim, "",               &
-                                       STRINGIFY_VAR(abs_boundary_ispec))
-      local_dim = 3 * NGLLSQUARE * num_abs_boundary_faces_wmax
-      call define_adios_global_array1D(group, groupsize, &
-                                       local_dim, "",               &
-                                       STRINGIFY_VAR(abs_boundary_ijk))
-      local_dim = NGLLSQUARE * num_abs_boundary_faces_wmax
-      call define_adios_global_array1D(group, groupsize, &
-                                       local_dim, "",               &
-                                       STRINGIFY_VAR(abs_boundary_jacobian2Dw))
-      local_dim = NDIM * NGLLSQUARE * num_abs_boundary_faces_wmax
-      call define_adios_global_array1D(group, groupsize, &
-                                       local_dim, "",               &
-                                       STRINGIFY_VAR(abs_boundary_normal))
-      if (STACEY_ABSORBING_CONDITIONS) then
-        ! store mass matrix contributions
-        if (ELASTIC_SIMULATION) then
-          local_dim = nglob_xy_wmax
-          call define_adios_global_array1D(group, groupsize, &
-                                           local_dim, "",               &
-                                           STRINGIFY_VAR(rmassx))
-          call define_adios_global_array1D(group, groupsize, &
-                                           local_dim, "",               &
-                                           STRINGIFY_VAR(rmassy))
-          call define_adios_global_array1D(group, groupsize, &
-                                           local_dim, "",               &
-                                           STRINGIFY_VAR(rmassz))
-        endif
-        if (ACOUSTIC_SIMULATION) then
-          local_dim = nglob_xy_wmax
-          call define_adios_global_array1D(group, groupsize, &
-                                           local_dim, "",               &
-                                           STRINGIFY_VAR(rmassz_acoustic))
-        endif
+  if (num_abs_boundary_faces > 0) then
+    local_dim = num_abs_boundary_faces_wmax
+    call define_adios_global_array1D(group, groupsize, &
+                                     local_dim, "",               &
+                                     STRINGIFY_VAR(abs_boundary_ispec))
+    local_dim = 3 * NGLLSQUARE * num_abs_boundary_faces_wmax
+    call define_adios_global_array1D(group, groupsize, &
+                                     local_dim, "",               &
+                                     STRINGIFY_VAR(abs_boundary_ijk))
+    local_dim = NGLLSQUARE * num_abs_boundary_faces_wmax
+    call define_adios_global_array1D(group, groupsize, &
+                                     local_dim, "",               &
+                                     STRINGIFY_VAR(abs_boundary_jacobian2Dw))
+    local_dim = NDIM * NGLLSQUARE * num_abs_boundary_faces_wmax
+    call define_adios_global_array1D(group, groupsize, &
+                                     local_dim, "",               &
+                                     STRINGIFY_VAR(abs_boundary_normal))
+    if (STACEY_ABSORBING_CONDITIONS .and. (.not. PML_CONDITIONS)) then
+      ! store mass matrix contributions
+      if (ELASTIC_SIMULATION) then
+        local_dim = nglob_xy_wmax
+        call define_adios_global_array1D(group, groupsize, &
+                                         local_dim, "",               &
+                                         STRINGIFY_VAR(rmassx))
+        call define_adios_global_array1D(group, groupsize, &
+                                         local_dim, "",               &
+                                         STRINGIFY_VAR(rmassy))
+        call define_adios_global_array1D(group, groupsize, &
+                                         local_dim, "",               &
+                                         STRINGIFY_VAR(rmassz))
+      endif
+      if (ACOUSTIC_SIMULATION) then
+        local_dim = nglob_xy_wmax
+        call define_adios_global_array1D(group, groupsize, &
+                                         local_dim, "",               &
+                                         STRINGIFY_VAR(rmassz_acoustic))
       endif
     endif
   endif

@@ -72,6 +72,19 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                             CPML_width_z_top_max_all,CPML_width_z_bottom_max_all,&
                             vp_max,vp_max_all
 
+
+  ! checks number of PML elements
+  if (count(is_CPML(:)) /= NSPEC_CPML) then
+    print*,'Error in slice ',myrank,': number of PML elements ',NSPEC_CPML,' but only ',count(is_CPML(:)),' flags set'
+    stop 'Error C-PML array has invalid number of PML flags set'
+  endif
+
+  ! checks if C-PML flags assigned correctly
+  do ispec_CPML = 1,NSPEC_CPML
+    ispec = CPML_to_spec(ispec_CPML)
+    if (.not. is_CPML(ispec)) stop 'Error found C-PML element with invalid PML flag'
+  enddo
+
   ! stores damping profiles
   allocate(d_store_x(NGLLX,NGLLY,NGLLZ,nspec_cpml),stat=ier)
   if (ier /= 0) stop 'error allocating array d_store_x'
@@ -94,17 +107,17 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
   allocate(alpha_store_z(NGLLX,NGLLY,NGLLZ,nspec_cpml),stat=ier)
   if (ier /= 0) stop 'error allocating array alpha_store_z'
 
-  d_store_x = 0._CUSTOM_REAL
-  d_store_y = 0._CUSTOM_REAL
-  d_store_z = 0._CUSTOM_REAL
+  d_store_x(:,:,:,:) = 0._CUSTOM_REAL
+  d_store_y(:,:,:,:) = 0._CUSTOM_REAL
+  d_store_z(:,:,:,:) = 0._CUSTOM_REAL
 
-  K_store_x = 0._CUSTOM_REAL
-  K_store_y = 0._CUSTOM_REAL
-  K_store_z = 0._CUSTOM_REAL
+  K_store_x(:,:,:,:) = 0._CUSTOM_REAL
+  K_store_y(:,:,:,:) = 0._CUSTOM_REAL
+  K_store_z(:,:,:,:) = 0._CUSTOM_REAL
 
-  alpha_store_x = 0._CUSTOM_REAL
-  alpha_store_y = 0._CUSTOM_REAL
-  alpha_store_z = 0._CUSTOM_REAL
+  alpha_store_x(:,:,:,:) = 0._CUSTOM_REAL
+  alpha_store_y(:,:,:,:) = 0._CUSTOM_REAL
+  alpha_store_z(:,:,:,:) = 0._CUSTOM_REAL
 
 ! from Festa and Vilotte (2005)
   ALPHA_MAX_PML = PI*f0_FOR_PML

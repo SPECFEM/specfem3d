@@ -73,18 +73,7 @@
   call prepare_timerun_gravity()
 
   ! prepares C-PML arrays
-  if (PML_CONDITIONS) then
-    if (SIMULATION_TYPE /= 1)  then
-      stop 'error: C-PML for adjoint simulations not supported yet'
-    else if (GPU_MODE) then
-      stop 'error: C-PML only supported in CPU mode'
-    else
-      call prepare_timerun_pml()
-    endif
-  endif
-  ! dummy allocation with a size of 1 for all the PML arrays that have not yet been allocated
-  ! in order to be able to use these arrays as arguments in subroutine calls
-  call pml_allocate_arrays_dummy()
+  if (PML_CONDITIONS) call prepare_timerun_pml()
 
   ! prepares ADJOINT simulations
   call prepare_timerun_adjoint()
@@ -715,7 +704,7 @@
   subroutine prepare_timerun_pml()
 
   use pml_par
-  use specfem_par, only: NSPEC_AB,NGNOD,myrank
+  use specfem_par, only: NGNOD,myrank,SIMULATION_TYPE,GPU_MODE
   use constants, only: IMAIN,NGNOD_EIGHT_CORNERS
 
   implicit none
@@ -723,6 +712,13 @@
   ! local parameters
   integer :: ispec,ispec_CPML,NSPEC_CPML_GLOBAL
 
+  ! safety stops
+  if (SIMULATION_TYPE /= 1) &
+    stop 'Error C-PML for adjoint simulations not supported yet'
+  if (GPU_MODE) &
+    stop 'Error C-PML only supported in CPU mode'
+
+  ! total number of pml elements
   call sum_all_i(NSPEC_CPML,NSPEC_CPML_GLOBAL)
 
   ! user output
@@ -745,18 +741,12 @@
     stop 'error: the C-PML code works for 8-node bricks only; should be made more general'
 
   ! allocates and initializes C-PML arrays
-  if (NSPEC_CPML > 0) call pml_allocate_arrays()
-  ! dummy allocation with a size of 1 for all the PML arrays that have not yet been allocated
-  ! in order to be able to use these arrays as arguments in subroutine calls
-  call pml_allocate_arrays_dummy()
+  call pml_allocate_arrays()
 
   ! defines C-PML spectral elements local indexing
-  ispec_CPML = 0
-  do ispec=1,NSPEC_AB
-    if (is_CPML(ispec)) then
-      ispec_CPML = ispec_CPML + 1
-      spec_to_CPML(ispec) = ispec_CPML
-    endif
+  do ispec_CPML = 1,NSPEC_CPML
+    ispec = CPML_to_spec(ispec_CPML)
+    spec_to_CPML(ispec) = ispec_CPML
   enddo
 
   ! defines C-PML element type array: 1 = face, 2 = edge, 3 = corner

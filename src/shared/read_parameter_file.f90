@@ -405,8 +405,6 @@
   if (PML_CONDITIONS) then
     if (STACEY_ABSORBING_CONDITIONS) &
       stop 'Error for PML, please set STACEY_ABSORBING_CONDITIONS and STACEY_INSTEAD_OF_FREE_SURFACE to .false. in Par_file'
-    if (USE_MESH_COLORING_GPU) &
-      stop 'Error for PML, please set USE_MESH_COLORING_GPU to .false. in constants.h'
   endif
 
   end subroutine read_parameter_file

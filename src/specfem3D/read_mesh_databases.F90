@@ -395,6 +395,7 @@
       if (ier /= 0) stop 'Error allocating array CPML_regions'
       allocate(CPML_to_spec(NSPEC_CPML),stat=ier)
       if (ier /= 0) stop 'Error allocating array CPML_to_spec'
+
       allocate(d_store_x(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
       if (ier /= 0) stop 'Error allocating array d_store_x'
       allocate(d_store_y(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
@@ -496,56 +497,37 @@
   endif
   !! CD CD
 
-  if (PML_CONDITIONS)then
-    if (num_abs_boundary_faces > 0) then
-      if (I_should_read_the_database) then
-        read(27) abs_boundary_ispec
-        read(27) abs_boundary_ijk
-        read(27) abs_boundary_jacobian2Dw
-        read(27) abs_boundary_normal
-      endif
-      if (size(abs_boundary_ispec) > 0) &
-        call bcast_all_i_for_database(abs_boundary_ispec(1), size(abs_boundary_ispec))
-      if (size(abs_boundary_ijk) > 0) &
-        call bcast_all_i_for_database(abs_boundary_ijk(1,1,1), size(abs_boundary_ijk))
-      if (size(abs_boundary_jacobian2Dw) > 0) &
-        call bcast_all_cr_for_database(abs_boundary_jacobian2Dw(1,1), size(abs_boundary_jacobian2Dw))
-      if (size(abs_boundary_normal) > 0) &
-        call bcast_all_cr_for_database(abs_boundary_normal(1,1,1), size(abs_boundary_normal))
+  if (num_abs_boundary_faces > 0) then
+    if (I_should_read_the_database) then
+      read(27) abs_boundary_ispec
+      read(27) abs_boundary_ijk
+      read(27) abs_boundary_jacobian2Dw
+      read(27) abs_boundary_normal
     endif
-  else
-    if (num_abs_boundary_faces > 0) then
-      if (I_should_read_the_database) then
-        read(27) abs_boundary_ispec
-        read(27) abs_boundary_ijk
-        read(27) abs_boundary_jacobian2Dw
-        read(27) abs_boundary_normal
-      endif
-      if (size(abs_boundary_ispec) > 0) &
-        call bcast_all_i_for_database(abs_boundary_ispec(1), size(abs_boundary_ispec))
-      if (size(abs_boundary_ijk) > 0) &
-        call bcast_all_i_for_database(abs_boundary_ijk(1,1,1), size(abs_boundary_ijk))
-      if (size(abs_boundary_jacobian2Dw) > 0) &
-        call bcast_all_cr_for_database(abs_boundary_jacobian2Dw(1,1), size(abs_boundary_jacobian2Dw))
-      if (size(abs_boundary_normal) > 0) &
-        call bcast_all_cr_for_database(abs_boundary_normal(1,1,1), size(abs_boundary_normal))
+    if (size(abs_boundary_ispec) > 0) &
+      call bcast_all_i_for_database(abs_boundary_ispec(1), size(abs_boundary_ispec))
+    if (size(abs_boundary_ijk) > 0) &
+      call bcast_all_i_for_database(abs_boundary_ijk(1,1,1), size(abs_boundary_ijk))
+    if (size(abs_boundary_jacobian2Dw) > 0) &
+      call bcast_all_cr_for_database(abs_boundary_jacobian2Dw(1,1), size(abs_boundary_jacobian2Dw))
+    if (size(abs_boundary_normal) > 0) &
+      call bcast_all_cr_for_database(abs_boundary_normal(1,1,1), size(abs_boundary_normal))
 
-      if (STACEY_ABSORBING_CONDITIONS) then
-        ! store mass matrix contributions
-        if (ELASTIC_SIMULATION) then
-          if (I_should_read_the_database) then
-            read(27) rmassx
-            read(27) rmassy
-            read(27) rmassz
-          endif
-          if (size(rmassx) > 0) call bcast_all_cr_for_database(rmassx(1), size(rmassx))
-          if (size(rmassy) > 0) call bcast_all_cr_for_database(rmassy(1), size(rmassy))
-          if (size(rmassz) > 0) call bcast_all_cr_for_database(rmassz(1), size(rmassz))
+    if (STACEY_ABSORBING_CONDITIONS .and. (.not. PML_CONDITIONS)) then
+      ! store mass matrix contributions
+      if (ELASTIC_SIMULATION) then
+        if (I_should_read_the_database) then
+          read(27) rmassx
+          read(27) rmassy
+          read(27) rmassz
         endif
-        if (ACOUSTIC_SIMULATION) then
-          if (I_should_read_the_database) read(27) rmassz_acoustic
-          if (size(rmassz_acoustic) > 0) call bcast_all_cr_for_database(rmassz_acoustic(1), size(rmassz_acoustic))
-        endif
+        if (size(rmassx) > 0) call bcast_all_cr_for_database(rmassx(1), size(rmassx))
+        if (size(rmassy) > 0) call bcast_all_cr_for_database(rmassy(1), size(rmassy))
+        if (size(rmassz) > 0) call bcast_all_cr_for_database(rmassz(1), size(rmassz))
+      endif
+      if (ACOUSTIC_SIMULATION) then
+        if (I_should_read_the_database) read(27) rmassz_acoustic
+        if (size(rmassz_acoustic) > 0) call bcast_all_cr_for_database(rmassz_acoustic(1), size(rmassz_acoustic))
       endif
     endif
   endif

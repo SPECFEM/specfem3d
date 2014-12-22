@@ -364,7 +364,7 @@
     deallocate(rmass_solid_poroelastic,rmass_fluid_poroelastic)
   endif
 
-  if (STACEY_ABSORBING_CONDITIONS)then
+  if (STACEY_ABSORBING_CONDITIONS) then
      if (ELASTIC_SIMULATION) then
        deallocate(rmassx,rmassy,rmassz)
      endif
@@ -483,7 +483,7 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
   ! absorbing faces
   num_abs_boundary_faces = nspec2D_xmin + nspec2D_xmax + nspec2D_ymin + nspec2D_ymax + nspec2D_bottom
   ! adds faces of free surface if it also absorbs
-  if (STACEY_INSTEAD_OF_FREE_SURFACE .or. PML_INSTEAD_OF_FREE_SURFACE)then
+  if (STACEY_INSTEAD_OF_FREE_SURFACE .or. PML_INSTEAD_OF_FREE_SURFACE) then
      num_abs_boundary_faces = num_abs_boundary_faces + nspec2D_top
   endif
   ! allocates arrays to store info for each face (assumes NGLLX=NGLLY=NGLLZ)
@@ -664,6 +664,7 @@ subroutine crm_ext_setup_indexing(ibool, &
 
   integer :: ieoff,ilocnum,ier
   integer :: i,j,k,ispec,iglobnum
+  double precision :: x_min,x_max
 
 ! allocate memory for arrays
   allocate(locval(npointot), &
@@ -695,9 +696,12 @@ subroutine crm_ext_setup_indexing(ibool, &
     enddo
   enddo
 
+  ! min/max values in x-direction
+  x_min = minval(nodes_coords_ext_mesh(1,:))
+  x_max = maxval(nodes_coords_ext_mesh(1,:))
+
 ! gets ibool indexing from local (GLL points) to global points
-  call get_global(npointot,xp,yp,zp,ibool,locval,ifseg,nglob, &
-       minval(nodes_coords_ext_mesh(1,:)),maxval(nodes_coords_ext_mesh(1,:)))
+  call get_global(npointot,xp,yp,zp,ibool,locval,ifseg,nglob,x_min,x_max)
 
 !- we can create a new indirect addressing to reduce cache misses
   call get_global_indirect_addressing(nspec,nglob,ibool)

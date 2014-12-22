@@ -407,7 +407,9 @@
   subroutine setup_permutation(myrank,nspec,nglob,ibool,ANISOTROPY,perm, &
                                   SAVE_MESH_FILES)
 
-  use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,IMAIN
+  use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,IMAIN, &
+    PML_CONDITIONS,is_CPML,CPML_to_spec,NSPEC_CPML
+
   use create_regions_mesh_ext_par
 
   implicit none
@@ -703,6 +705,23 @@
       new_ispec = perm(old_ispec)
       ibelm_moho_bot(iface) = new_ispec
     enddo
+  endif
+
+  ! C-PML
+  if (PML_CONDITIONS) then
+    ! element flag
+    allocate(temp_array_logical_1D(nspec),stat=ier)
+    if (ier /= 0) stop 'error allocating temporary temp_array_logical_1D'
+    call permute_elements_logical1D(is_CPML,temp_array_logical_1D,perm,nspec)
+    deallocate(temp_array_logical_1D)
+    if (NSPEC_CPML > 0) then
+      ! CPML_to_spec
+      do ielem = 1,NSPEC_CPML
+        old_ispec = CPML_to_spec(ielem)
+        new_ispec = perm(old_ispec)
+        CPML_to_spec(ielem) = new_ispec
+      enddo
+    endif
   endif
 
   end subroutine setup_permutation

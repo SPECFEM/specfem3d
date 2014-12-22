@@ -27,7 +27,7 @@
 !
 ! United States and French Government Sponsorship Acknowledged.
 
-subroutine pml_allocate_arrays()
+  subroutine pml_allocate_arrays()
 
   use pml_par
   use specfem_par, only: NSPEC_AB,NGLOB_AB,PML_CONDITIONS,SIMULATION_TYPE,SAVE_FORWARD,NSTEP,myrank,prname !
@@ -40,6 +40,17 @@ subroutine pml_allocate_arrays()
   ! local parameters
   integer :: ier,b_nglob_interface_PML_elastic,b_nglob_interface_PML_acoustic
   integer(kind=8) :: filesize
+
+  ! checks PML flag
+  if (.not. PML_CONDITIONS) return
+
+  ! slices without pml elements
+  if (NSPEC_CPML == 0) then
+    ! dummy allocation with a size of 1 for all the PML arrays that have not yet been allocated
+    ! in order to be able to use these arrays as arguments in subroutine calls
+    call pml_allocate_arrays_dummy()
+    return
+  endif
 
   ! C-PML spectral elements local indexing
   allocate(spec_to_CPML(NSPEC_AB),stat=ier)
@@ -224,17 +235,14 @@ subroutine pml_allocate_arrays()
     if (ier /= 0) stop 'error allocating rmemory_coupling_ac_el_displ array'
     allocate(rmemory_coupling_el_ac_potential_dot_dot(NGLLX,NGLLY,NGLLZ,num_coupling_ac_el_faces,2),stat=ier)
     if (ier /= 0) stop 'error allocating rmemory_coupling_el_ac_potential_dot_dot array'
-  endif
-
-  if (SIMULATION_TYPE == 3) then
-    if (ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION) then
+    if (SIMULATION_TYPE == 3) then
       allocate(rmemory_coupling_el_ac_potential(NGLLX,NGLLY,NGLLZ,num_coupling_ac_el_faces,2),stat=ier)
       if (ier /= 0) stop 'error allocating rmemory_coupling_el_ac_potential array'
     endif
   endif
 
+  ! initializes arrays
   spec_to_CPML(:) = 0
-
   CPML_type(:) = 0
 
   if (ELASTIC_SIMULATION) then
@@ -336,126 +344,107 @@ subroutine pml_allocate_arrays()
 
 ! fields on PML interface will be reconstructed for adjoint simulations
 ! using snapshot files of wavefields
-  if (PML_CONDITIONS) then
+
+! elastic domains
+  if (ELASTIC_SIMULATION) then
     ! opens absorbing wavefield saved/to-be-saved by forward simulations
     if (nglob_interface_PML_elastic > 0 .and. (SIMULATION_TYPE == 3 .or. &
           (SIMULATION_TYPE == 1 .and. SAVE_FORWARD))) then
 
       b_nglob_interface_PML_elastic = nglob_interface_PML_elastic
 
-      ! elastic domains
-      if (ELASTIC_SIMULATION) then
-        ! allocates wavefield
-        allocate(b_PML_field(9,b_nglob_interface_PML_elastic),stat=ier)
-        if (ier /= 0) stop 'error allocating array b_PML_field'
+      ! allocates wavefield
+      allocate(b_PML_field(9,b_nglob_interface_PML_elastic),stat=ier)
+      if (ier /= 0) stop 'error allocating array b_PML_field'
 
-        ! size of single record
-        b_reclen_PML_field = CUSTOM_REAL * 9 * nglob_interface_PML_elastic
+      ! size of single record
+      b_reclen_PML_field = CUSTOM_REAL * 9 * nglob_interface_PML_elastic
 
-        ! check integer size limit: size of b_reclen_PML_field must fit onto an 4-byte integer
-        if (nglob_interface_PML_elastic > 2147483646 / (CUSTOM_REAL * 9)) then
-          print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_PML_field
-          print *,'  ',CUSTOM_REAL, NDIM, 9, nglob_interface_PML_elastic
-          print*,'bit size fortran: ',bit_size(b_reclen_PML_field)
-          call exit_MPI(myrank,"error b_reclen_PML_field integer limit")
-        endif
+      ! check integer size limit: size of b_reclen_PML_field must fit onto an 4-byte integer
+      if (nglob_interface_PML_elastic > 2147483646 / (CUSTOM_REAL * 9)) then
+        print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_PML_field
+        print *,'  ',CUSTOM_REAL, NDIM, 9, nglob_interface_PML_elastic
+        print*,'bit size fortran: ',bit_size(b_reclen_PML_field)
+        call exit_MPI(myrank,"error b_reclen_PML_field integer limit")
+      endif
 
-        ! total file size
-        filesize = b_reclen_PML_field
-        filesize = filesize*NSTEP
+      ! total file size
+      filesize = b_reclen_PML_field
+      filesize = filesize*NSTEP
 
-        if (SIMULATION_TYPE == 3) then
-          call open_file_abs_r(0,trim(prname)//'absorb_PML_field.bin', &
-                              len_trim(trim(prname)//'absorb_PML_field.bin'), &
-                              filesize)
+      if (SIMULATION_TYPE == 3) then
+        call open_file_abs_r(0,trim(prname)//'absorb_PML_field.bin', &
+                            len_trim(trim(prname)//'absorb_PML_field.bin'), &
+                            filesize)
 
-        else
-          call open_file_abs_w(0,trim(prname)//'absorb_PML_field.bin', &
-                              len_trim(trim(prname)//'absorb_PML_field.bin'), &
-                              filesize)
-        endif
+      else
+        call open_file_abs_w(0,trim(prname)//'absorb_PML_field.bin', &
+                            len_trim(trim(prname)//'absorb_PML_field.bin'), &
+                            filesize)
       endif
     else
       ! needs dummy array
-      b_nglob_interface_PML_elastic = 1
-      if (ELASTIC_SIMULATION) then
-        allocate(b_PML_field(9,b_nglob_interface_PML_elastic),stat=ier)
-        if (ier /= 0) stop 'error allocating array b_PML_field'
-      endif
-    endif
-  else ! PML_CONDITIONS
-    b_nglob_interface_PML_elastic = 1
-    if (ELASTIC_SIMULATION) then
-      allocate(b_PML_field(9,b_nglob_interface_PML_elastic),stat=ier)
+      allocate(b_PML_field(9,1),stat=ier)
       if (ier /= 0) stop 'error allocating array b_PML_field'
     endif
   endif
 
-! acoustic domain
-
-  if (PML_CONDITIONS) then
+! acoustic domains
+  if (ACOUSTIC_SIMULATION) then
     ! opens absorbing wavefield saved/to-be-saved by forward simulations
     if (nglob_interface_PML_acoustic > 0 .and. (SIMULATION_TYPE == 3 .or. &
-          (SIMULATION_TYPE == 1 .and. SAVE_FORWARD))) then
+        (SIMULATION_TYPE == 1 .and. SAVE_FORWARD))) then
 
       b_nglob_interface_PML_acoustic = nglob_interface_PML_acoustic
 
-      ! elastic domains
-      if (ACOUSTIC_SIMULATION) then
-        ! allocates wavefield
-        allocate(b_PML_potential(3,b_nglob_interface_PML_acoustic),stat=ier)
-        if (ier /= 0) stop 'error allocating array b_PML_potential'
+      ! allocates wavefield
+      allocate(b_PML_potential(3,b_nglob_interface_PML_acoustic),stat=ier)
+      if (ier /= 0) stop 'error allocating array b_PML_potential'
 
-        ! size of single record
-        b_reclen_PML_potential = CUSTOM_REAL * nglob_interface_PML_acoustic
+      ! size of single record
+      b_reclen_PML_potential = CUSTOM_REAL * nglob_interface_PML_acoustic
 
-        ! check integer size limit: size of b_reclen_PML_field must fit onto an 4-byte integer
-        if (nglob_interface_PML_acoustic > 2147483646 / (CUSTOM_REAL)) then
-          print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_PML_potential
-          print *,'  ',CUSTOM_REAL, nglob_interface_PML_acoustic
-          print*,'bit size fortran: ',bit_size(b_reclen_PML_potential)
-          call exit_MPI(myrank,"error b_reclen_PML_potential integer limit")
-        endif
+      ! check integer size limit: size of b_reclen_PML_field must fit onto an 4-byte integer
+      if (nglob_interface_PML_acoustic > 2147483646 / (CUSTOM_REAL)) then
+        print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_PML_potential
+        print *,'  ',CUSTOM_REAL, nglob_interface_PML_acoustic
+        print*,'bit size fortran: ',bit_size(b_reclen_PML_potential)
+        call exit_MPI(myrank,"error b_reclen_PML_potential integer limit")
+      endif
 
-        ! total file size
-        filesize = b_reclen_PML_potential
-        filesize = filesize*NSTEP
+      ! total file size
+      filesize = b_reclen_PML_potential
+      filesize = filesize*NSTEP
 
-        if (SIMULATION_TYPE == 3) then
-          call open_file_abs_r(1,trim(prname)//'absorb_PML_potential.bin', &
-                              len_trim(trim(prname)//'absorb_PML_potential.bin'), &
-                              filesize)
+      if (SIMULATION_TYPE == 3) then
+        call open_file_abs_r(1,trim(prname)//'absorb_PML_potential.bin', &
+                            len_trim(trim(prname)//'absorb_PML_potential.bin'), &
+                            filesize)
 
-        else
-          call open_file_abs_w(1,trim(prname)//'absorb_PML_potential.bin', &
-                              len_trim(trim(prname)//'absorb_PML_potential.bin'), &
-                              filesize)
-        endif
+      else
+        call open_file_abs_w(1,trim(prname)//'absorb_PML_potential.bin', &
+                            len_trim(trim(prname)//'absorb_PML_potential.bin'), &
+                            filesize)
       endif
     else
       ! needs dummy array
-      b_nglob_interface_PML_acoustic = 1
-      if (ACOUSTIC_SIMULATION) then
-        allocate(b_PML_potential(3,b_nglob_interface_PML_acoustic),stat=ier)
-        if (ier /= 0) stop 'error allocating array b_PML_potential'
-      endif
-    endif
-  else ! PML_CONDITIONS
-    b_nglob_interface_PML_acoustic = 1
-    if (ACOUSTIC_SIMULATION) then
-      allocate(b_PML_potential(3,b_nglob_interface_PML_acoustic),stat=ier)
+      allocate(b_PML_potential(3,1),stat=ier)
       if (ier /= 0) stop 'error allocating array b_PML_potential'
     endif
   endif
 
-end subroutine pml_allocate_arrays
+  end subroutine pml_allocate_arrays
 
 !=====================================================================
 
-subroutine pml_allocate_arrays_dummy()
+  subroutine pml_allocate_arrays_dummy()
 
   ! dummy allocation with a size of 1 for all the PML arrays that have not yet been allocated
   ! in order to be able to use these arrays as arguments in subroutine calls
+
+  use specfem_par, only: SIMULATION_TYPE
+  use specfem_par_acoustic, only: ACOUSTIC_SIMULATION
+  use specfem_par_elastic, only: ELASTIC_SIMULATION
 
   use pml_par
 
@@ -463,82 +452,212 @@ subroutine pml_allocate_arrays_dummy()
 
   if (.not. allocated(spec_to_CPML)) allocate(spec_to_CPML(1))
   if (.not. allocated(CPML_type)) allocate(CPML_type(1))
-  if (.not. allocated(PML_dux_dxl)) allocate(PML_dux_dxl(1,1,1))
-  if (.not. allocated(PML_dux_dyl)) allocate(PML_dux_dyl(1,1,1))
-  if (.not. allocated(PML_dux_dzl)) allocate(PML_dux_dzl(1,1,1))
-  if (.not. allocated(PML_duy_dxl)) allocate(PML_duy_dxl(1,1,1))
-  if (.not. allocated(PML_duy_dyl)) allocate(PML_duy_dyl(1,1,1))
-  if (.not. allocated(PML_duy_dzl)) allocate(PML_duy_dzl(1,1,1))
-  if (.not. allocated(PML_duz_dxl)) allocate(PML_duz_dxl(1,1,1))
-  if (.not. allocated(PML_duz_dyl)) allocate(PML_duz_dyl(1,1,1))
-  if (.not. allocated(PML_duz_dzl)) allocate(PML_duz_dzl(1,1,1))
-  if (.not. allocated(PML_dux_dxl_old)) allocate(PML_dux_dxl_old(1,1,1))
-  if (.not. allocated(PML_dux_dyl_old)) allocate(PML_dux_dyl_old(1,1,1))
-  if (.not. allocated(PML_dux_dzl_old)) allocate(PML_dux_dzl_old(1,1,1))
-  if (.not. allocated(PML_duy_dxl_old)) allocate(PML_duy_dxl_old(1,1,1))
-  if (.not. allocated(PML_duy_dyl_old)) allocate(PML_duy_dyl_old(1,1,1))
-  if (.not. allocated(PML_duy_dzl_old)) allocate(PML_duy_dzl_old(1,1,1))
-  if (.not. allocated(PML_duz_dxl_old)) allocate(PML_duz_dxl_old(1,1,1))
-  if (.not. allocated(PML_duz_dyl_old)) allocate(PML_duz_dyl_old(1,1,1))
-  if (.not. allocated(PML_duz_dzl_old)) allocate(PML_duz_dzl_old(1,1,1))
-  if (.not. allocated(PML_dux_dxl_new)) allocate(PML_dux_dxl_new(1,1,1))
-  if (.not. allocated(PML_dux_dyl_new)) allocate(PML_dux_dyl_new(1,1,1))
-  if (.not. allocated(PML_dux_dzl_new)) allocate(PML_dux_dzl_new(1,1,1))
-  if (.not. allocated(PML_duy_dxl_new)) allocate(PML_duy_dxl_new(1,1,1))
-  if (.not. allocated(PML_duy_dyl_new)) allocate(PML_duy_dyl_new(1,1,1))
-  if (.not. allocated(PML_duy_dzl_new)) allocate(PML_duy_dzl_new(1,1,1))
-  if (.not. allocated(PML_duz_dxl_new)) allocate(PML_duz_dxl_new(1,1,1))
-  if (.not. allocated(PML_duz_dyl_new)) allocate(PML_duz_dyl_new(1,1,1))
-  if (.not. allocated(PML_duz_dzl_new)) allocate(PML_duz_dzl_new(1,1,1))
-  if (.not. allocated(rmemory_dux_dxl_x)) allocate(rmemory_dux_dxl_x(1,1,1,1,3))
-  if (.not. allocated(rmemory_dux_dyl_x)) allocate(rmemory_dux_dyl_x(1,1,1,1,3))
-  if (.not. allocated(rmemory_dux_dzl_x)) allocate(rmemory_dux_dzl_x(1,1,1,1,3))
-  if (.not. allocated(rmemory_duy_dxl_x)) allocate(rmemory_duy_dxl_x(1,1,1,1))
-  if (.not. allocated(rmemory_duy_dyl_x)) allocate(rmemory_duy_dyl_x(1,1,1,1))
-  if (.not. allocated(rmemory_duz_dxl_x)) allocate(rmemory_duz_dxl_x(1,1,1,1))
-  if (.not. allocated(rmemory_duz_dzl_x)) allocate(rmemory_duz_dzl_x(1,1,1,1))
-  if (.not. allocated(rmemory_dux_dxl_y)) allocate(rmemory_dux_dxl_y(1,1,1,1))
-  if (.not. allocated(rmemory_dux_dyl_y)) allocate(rmemory_dux_dyl_y(1,1,1,1))
-  if (.not. allocated(rmemory_duy_dxl_y)) allocate(rmemory_duy_dxl_y(1,1,1,1,3))
-  if (.not. allocated(rmemory_duy_dyl_y)) allocate(rmemory_duy_dyl_y(1,1,1,1,3))
-  if (.not. allocated(rmemory_duy_dzl_y)) allocate(rmemory_duy_dzl_y(1,1,1,1,3))
-  if (.not. allocated(rmemory_duz_dyl_y)) allocate(rmemory_duz_dyl_y(1,1,1,1))
-  if (.not. allocated(rmemory_duz_dzl_y)) allocate(rmemory_duz_dzl_y(1,1,1,1))
-  if (.not. allocated(rmemory_dux_dxl_z)) allocate(rmemory_dux_dxl_z(1,1,1,1))
-  if (.not. allocated(rmemory_dux_dzl_z)) allocate(rmemory_dux_dzl_z(1,1,1,1))
-  if (.not. allocated(rmemory_duy_dyl_z)) allocate(rmemory_duy_dyl_z(1,1,1,1))
-  if (.not. allocated(rmemory_duy_dzl_z)) allocate(rmemory_duy_dzl_z(1,1,1,1))
-  if (.not. allocated(rmemory_duz_dxl_z)) allocate(rmemory_duz_dxl_z(1,1,1,1,3))
-  if (.not. allocated(rmemory_duz_dyl_z)) allocate(rmemory_duz_dyl_z(1,1,1,1,3))
-  if (.not. allocated(rmemory_duz_dzl_z)) allocate(rmemory_duz_dzl_z(1,1,1,1,3))
-  if (.not. allocated(displ_old)) allocate(displ_old(3,1))
-  if (.not. allocated(displ_new)) allocate(displ_new(3,1))
-  if (.not. allocated(rmemory_displ_elastic)) allocate(rmemory_displ_elastic(1,1,1,1,1,3))
-  if (.not. allocated(accel_elastic_CPML)) allocate(accel_elastic_CPML(1,1,1,1))
-  if (.not. allocated(PML_dpotential_dxl)) allocate(PML_dpotential_dxl(1,1,1))
-  if (.not. allocated(PML_dpotential_dyl)) allocate(PML_dpotential_dyl(1,1,1))
-  if (.not. allocated(PML_dpotential_dzl)) allocate(PML_dpotential_dzl(1,1,1))
-  if (.not. allocated(PML_dpotential_dxl_old)) allocate(PML_dpotential_dxl_old(1,1,1))
-  if (.not. allocated(PML_dpotential_dyl_old)) allocate(PML_dpotential_dyl_old(1,1,1))
-  if (.not. allocated(PML_dpotential_dzl_old)) allocate(PML_dpotential_dzl_old(1,1,1))
-  if (.not. allocated(PML_dpotential_dxl_new)) allocate(PML_dpotential_dxl_new(1,1,1))
-  if (.not. allocated(PML_dpotential_dyl_new)) allocate(PML_dpotential_dyl_new(1,1,1))
-  if (.not. allocated(PML_dpotential_dzl_new)) allocate(PML_dpotential_dzl_new(1,1,1))
-  if (.not. allocated(rmemory_dpotential_dxl)) allocate(rmemory_dpotential_dxl(1,1,1,1,3))
-  if (.not. allocated(rmemory_dpotential_dyl)) allocate(rmemory_dpotential_dyl(1,1,1,1,3))
-  if (.not. allocated(rmemory_dpotential_dzl)) allocate(rmemory_dpotential_dzl(1,1,1,1,3))
-  if (.not. allocated(potential_acoustic_old)) allocate(potential_acoustic_old(1))
-  if (.not. allocated(potential_acoustic_new)) allocate(potential_acoustic_new(1))
-!  if (.not. allocated(potential_dot_dot_acoustic_old)) allocate(potential_dot_dot_acoustic_old(1))
-  if (.not. allocated(rmemory_potential_acoustic)) allocate(rmemory_potential_acoustic(1,1,1,1,3))
-  if (.not. allocated(potential_dot_dot_acoustic_CPML)) allocate(potential_dot_dot_acoustic_CPML(1,1,1))
-  if (.not. allocated(rmemory_coupling_ac_el_displ)) allocate(rmemory_coupling_ac_el_displ(3,1,1,1,1,2))
-  if (.not. allocated(rmemory_coupling_el_ac_potential)) allocate(rmemory_coupling_el_ac_potential(1,1,1,1,2))
-  if (.not. allocated(rmemory_coupling_el_ac_potential_dot_dot)) allocate(rmemory_coupling_el_ac_potential_dot_dot(1,1,1,1,2))
-  ! allocates wavefield
-  if (.not. allocated(b_PML_field)) allocate(b_PML_field(9,1))
-  ! allocates wavefield
-  if (.not. allocated(b_PML_potential)) allocate(b_PML_potential(3,1))
 
-end subroutine pml_allocate_arrays_dummy
+  if (ELASTIC_SIMULATION) then
+    if (.not. allocated(displ_old)) allocate(displ_old(3,1))
+    if (.not. allocated(displ_new)) allocate(displ_new(3,1))
 
+    if (.not. allocated(PML_dux_dxl)) allocate(PML_dux_dxl(1,1,1))
+    if (.not. allocated(PML_dux_dyl)) allocate(PML_dux_dyl(1,1,1))
+    if (.not. allocated(PML_dux_dzl)) allocate(PML_dux_dzl(1,1,1))
+    if (.not. allocated(PML_duy_dxl)) allocate(PML_duy_dxl(1,1,1))
+    if (.not. allocated(PML_duy_dyl)) allocate(PML_duy_dyl(1,1,1))
+    if (.not. allocated(PML_duy_dzl)) allocate(PML_duy_dzl(1,1,1))
+    if (.not. allocated(PML_duz_dxl)) allocate(PML_duz_dxl(1,1,1))
+    if (.not. allocated(PML_duz_dyl)) allocate(PML_duz_dyl(1,1,1))
+    if (.not. allocated(PML_duz_dzl)) allocate(PML_duz_dzl(1,1,1))
+    if (.not. allocated(PML_dux_dxl_old)) allocate(PML_dux_dxl_old(1,1,1))
+    if (.not. allocated(PML_dux_dyl_old)) allocate(PML_dux_dyl_old(1,1,1))
+    if (.not. allocated(PML_dux_dzl_old)) allocate(PML_dux_dzl_old(1,1,1))
+    if (.not. allocated(PML_duy_dxl_old)) allocate(PML_duy_dxl_old(1,1,1))
+    if (.not. allocated(PML_duy_dyl_old)) allocate(PML_duy_dyl_old(1,1,1))
+    if (.not. allocated(PML_duy_dzl_old)) allocate(PML_duy_dzl_old(1,1,1))
+    if (.not. allocated(PML_duz_dxl_old)) allocate(PML_duz_dxl_old(1,1,1))
+    if (.not. allocated(PML_duz_dyl_old)) allocate(PML_duz_dyl_old(1,1,1))
+    if (.not. allocated(PML_duz_dzl_old)) allocate(PML_duz_dzl_old(1,1,1))
+    if (.not. allocated(PML_dux_dxl_new)) allocate(PML_dux_dxl_new(1,1,1))
+    if (.not. allocated(PML_dux_dyl_new)) allocate(PML_dux_dyl_new(1,1,1))
+    if (.not. allocated(PML_dux_dzl_new)) allocate(PML_dux_dzl_new(1,1,1))
+    if (.not. allocated(PML_duy_dxl_new)) allocate(PML_duy_dxl_new(1,1,1))
+    if (.not. allocated(PML_duy_dyl_new)) allocate(PML_duy_dyl_new(1,1,1))
+    if (.not. allocated(PML_duy_dzl_new)) allocate(PML_duy_dzl_new(1,1,1))
+    if (.not. allocated(PML_duz_dxl_new)) allocate(PML_duz_dxl_new(1,1,1))
+    if (.not. allocated(PML_duz_dyl_new)) allocate(PML_duz_dyl_new(1,1,1))
+    if (.not. allocated(PML_duz_dzl_new)) allocate(PML_duz_dzl_new(1,1,1))
+    if (.not. allocated(rmemory_dux_dxl_x)) allocate(rmemory_dux_dxl_x(1,1,1,1,3))
+    if (.not. allocated(rmemory_dux_dyl_x)) allocate(rmemory_dux_dyl_x(1,1,1,1,3))
+    if (.not. allocated(rmemory_dux_dzl_x)) allocate(rmemory_dux_dzl_x(1,1,1,1,3))
+    if (.not. allocated(rmemory_duy_dxl_x)) allocate(rmemory_duy_dxl_x(1,1,1,1))
+    if (.not. allocated(rmemory_duy_dyl_x)) allocate(rmemory_duy_dyl_x(1,1,1,1))
+    if (.not. allocated(rmemory_duz_dxl_x)) allocate(rmemory_duz_dxl_x(1,1,1,1))
+    if (.not. allocated(rmemory_duz_dzl_x)) allocate(rmemory_duz_dzl_x(1,1,1,1))
+    if (.not. allocated(rmemory_dux_dxl_y)) allocate(rmemory_dux_dxl_y(1,1,1,1))
+    if (.not. allocated(rmemory_dux_dyl_y)) allocate(rmemory_dux_dyl_y(1,1,1,1))
+    if (.not. allocated(rmemory_duy_dxl_y)) allocate(rmemory_duy_dxl_y(1,1,1,1,3))
+    if (.not. allocated(rmemory_duy_dyl_y)) allocate(rmemory_duy_dyl_y(1,1,1,1,3))
+    if (.not. allocated(rmemory_duy_dzl_y)) allocate(rmemory_duy_dzl_y(1,1,1,1,3))
+    if (.not. allocated(rmemory_duz_dyl_y)) allocate(rmemory_duz_dyl_y(1,1,1,1))
+    if (.not. allocated(rmemory_duz_dzl_y)) allocate(rmemory_duz_dzl_y(1,1,1,1))
+    if (.not. allocated(rmemory_dux_dxl_z)) allocate(rmemory_dux_dxl_z(1,1,1,1))
+    if (.not. allocated(rmemory_dux_dzl_z)) allocate(rmemory_dux_dzl_z(1,1,1,1))
+    if (.not. allocated(rmemory_duy_dyl_z)) allocate(rmemory_duy_dyl_z(1,1,1,1))
+    if (.not. allocated(rmemory_duy_dzl_z)) allocate(rmemory_duy_dzl_z(1,1,1,1))
+    if (.not. allocated(rmemory_duz_dxl_z)) allocate(rmemory_duz_dxl_z(1,1,1,1,3))
+    if (.not. allocated(rmemory_duz_dyl_z)) allocate(rmemory_duz_dyl_z(1,1,1,1,3))
+    if (.not. allocated(rmemory_duz_dzl_z)) allocate(rmemory_duz_dzl_z(1,1,1,1,3))
+    if (.not. allocated(rmemory_displ_elastic)) allocate(rmemory_displ_elastic(1,1,1,1,1,3))
+    if (.not. allocated(accel_elastic_CPML)) allocate(accel_elastic_CPML(1,1,1,1))
+
+    ! allocates wavefield
+    if (.not. allocated(b_PML_field)) allocate(b_PML_field(9,1))
+  endif
+
+  if (ACOUSTIC_SIMULATION) then
+    if (.not. allocated(potential_acoustic_old)) allocate(potential_acoustic_old(1))
+    if (.not. allocated(potential_acoustic_new)) allocate(potential_acoustic_new(1))
+    !if (.not. allocated(potential_dot_dot_acoustic_old)) allocate(potential_dot_dot_acoustic_old(1))
+
+    if (.not. allocated(PML_dpotential_dxl)) allocate(PML_dpotential_dxl(1,1,1))
+    if (.not. allocated(PML_dpotential_dyl)) allocate(PML_dpotential_dyl(1,1,1))
+    if (.not. allocated(PML_dpotential_dzl)) allocate(PML_dpotential_dzl(1,1,1))
+    if (.not. allocated(PML_dpotential_dxl_old)) allocate(PML_dpotential_dxl_old(1,1,1))
+    if (.not. allocated(PML_dpotential_dyl_old)) allocate(PML_dpotential_dyl_old(1,1,1))
+    if (.not. allocated(PML_dpotential_dzl_old)) allocate(PML_dpotential_dzl_old(1,1,1))
+    if (.not. allocated(PML_dpotential_dxl_new)) allocate(PML_dpotential_dxl_new(1,1,1))
+    if (.not. allocated(PML_dpotential_dyl_new)) allocate(PML_dpotential_dyl_new(1,1,1))
+    if (.not. allocated(PML_dpotential_dzl_new)) allocate(PML_dpotential_dzl_new(1,1,1))
+    if (.not. allocated(rmemory_dpotential_dxl)) allocate(rmemory_dpotential_dxl(1,1,1,1,3))
+    if (.not. allocated(rmemory_dpotential_dyl)) allocate(rmemory_dpotential_dyl(1,1,1,1,3))
+    if (.not. allocated(rmemory_dpotential_dzl)) allocate(rmemory_dpotential_dzl(1,1,1,1,3))
+    if (.not. allocated(rmemory_potential_acoustic)) allocate(rmemory_potential_acoustic(1,1,1,1,3))
+    if (.not. allocated(potential_dot_dot_acoustic_CPML)) allocate(potential_dot_dot_acoustic_CPML(1,1,1))
+
+    ! allocates wavefield
+    if (.not. allocated(b_PML_potential)) allocate(b_PML_potential(3,1))
+  endif
+
+  if (ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION) then
+    if (.not. allocated(rmemory_coupling_ac_el_displ)) allocate(rmemory_coupling_ac_el_displ(3,1,1,1,1,2))
+    if (.not. allocated(rmemory_coupling_el_ac_potential_dot_dot)) allocate(rmemory_coupling_el_ac_potential_dot_dot(1,1,1,1,2))
+    if (SIMULATION_TYPE == 3) then
+      if (.not. allocated(rmemory_coupling_el_ac_potential)) allocate(rmemory_coupling_el_ac_potential(1,1,1,1,2))
+    endif
+  endif
+
+  end subroutine pml_allocate_arrays_dummy
+
+!=====================================================================
+
+  subroutine pml_cleanup()
+
+! deallocates C_PML arrays
+
+  use specfem_par, only: SIMULATION_TYPE
+  use specfem_par_acoustic, only: ACOUSTIC_SIMULATION
+  use specfem_par_elastic, only: ELASTIC_SIMULATION
+
+  use pml_par
+
+  implicit none
+
+  deallocate(is_CPML)
+
+  if (NSPEC_CPML > 0) then
+    deallocate(CPML_regions)
+    deallocate(CPML_to_spec)
+
+    deallocate(d_store_x)
+    deallocate(d_store_y)
+    deallocate(d_store_z)
+    deallocate(k_store_x)
+    deallocate(k_store_y)
+    deallocate(k_store_z)
+    deallocate(alpha_store_x)
+    deallocate(alpha_store_y)
+    deallocate(alpha_store_z)
+  endif
+
+  deallocate(spec_to_CPML)
+  deallocate(CPML_type)
+
+  if (ELASTIC_SIMULATION) then
+    deallocate(displ_old)
+    deallocate(displ_new)
+    deallocate(PML_dux_dxl)
+    deallocate(PML_dux_dyl)
+    deallocate(PML_dux_dzl)
+    deallocate(PML_duy_dxl)
+    deallocate(PML_duy_dyl)
+    deallocate(PML_duy_dzl)
+    deallocate(PML_duz_dxl)
+    deallocate(PML_duz_dyl)
+    deallocate(PML_duz_dzl)
+    deallocate(PML_dux_dxl_old)
+    deallocate(PML_dux_dyl_old)
+    deallocate(PML_dux_dzl_old)
+    deallocate(PML_duy_dxl_old)
+    deallocate(PML_duy_dyl_old)
+    deallocate(PML_duy_dzl_old)
+    deallocate(PML_duz_dxl_old)
+    deallocate(PML_duz_dyl_old)
+    deallocate(PML_duz_dzl_old)
+    deallocate(PML_dux_dxl_new)
+    deallocate(PML_dux_dyl_new)
+    deallocate(PML_dux_dzl_new)
+    deallocate(PML_duy_dxl_new)
+    deallocate(PML_duy_dyl_new)
+    deallocate(PML_duy_dzl_new)
+    deallocate(PML_duz_dxl_new)
+    deallocate(PML_duz_dyl_new)
+    deallocate(PML_duz_dzl_new)
+    deallocate(rmemory_dux_dxl_x)
+    deallocate(rmemory_dux_dyl_x)
+    deallocate(rmemory_dux_dzl_x)
+    deallocate(rmemory_duy_dxl_x)
+    deallocate(rmemory_duy_dyl_x)
+    deallocate(rmemory_duz_dxl_x)
+    deallocate(rmemory_duz_dzl_x)
+    deallocate(rmemory_dux_dxl_y)
+    deallocate(rmemory_dux_dyl_y)
+    deallocate(rmemory_duy_dxl_y)
+    deallocate(rmemory_duy_dyl_y)
+    deallocate(rmemory_duy_dzl_y)
+    deallocate(rmemory_duz_dyl_y)
+    deallocate(rmemory_duz_dzl_y)
+    deallocate(rmemory_dux_dxl_z)
+    deallocate(rmemory_dux_dzl_z)
+    deallocate(rmemory_duy_dyl_z)
+    deallocate(rmemory_duy_dzl_z)
+    deallocate(rmemory_duz_dxl_z)
+    deallocate(rmemory_duz_dyl_z)
+    deallocate(rmemory_duz_dzl_z)
+    deallocate(rmemory_displ_elastic)
+    deallocate(accel_elastic_CPML)
+  endif
+
+  if (ACOUSTIC_SIMULATION) then
+    deallocate(potential_acoustic_old)
+    deallocate(potential_acoustic_new)
+    deallocate(PML_dpotential_dxl)
+    deallocate(PML_dpotential_dyl)
+    deallocate(PML_dpotential_dzl)
+    deallocate(PML_dpotential_dxl_old)
+    deallocate(PML_dpotential_dyl_old)
+    deallocate(PML_dpotential_dzl_old)
+    deallocate(PML_dpotential_dxl_new)
+    deallocate(PML_dpotential_dyl_new)
+    deallocate(PML_dpotential_dzl_new)
+    deallocate(rmemory_dpotential_dxl)
+    deallocate(rmemory_dpotential_dyl)
+    deallocate(rmemory_dpotential_dzl)
+    deallocate(rmemory_potential_acoustic)
+    deallocate(potential_dot_dot_acoustic_CPML)
+  endif
+
+  if (ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION) then
+    deallocate(rmemory_coupling_ac_el_displ)
+    deallocate(rmemory_coupling_el_ac_potential_dot_dot)
+    if (SIMULATION_TYPE == 3) deallocate(rmemory_coupling_el_ac_potential)
+  endif
+
+  end subroutine pml_cleanup

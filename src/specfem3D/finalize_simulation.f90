@@ -151,102 +151,14 @@
   endif
 
   ! C-PML absorbing boundary conditions
-  if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
+  if (PML_CONDITIONS) then
     ! outputs informations about C-PML elements in VTK-file format
-    call pml_output_VTKs()
-
+    if (NSPEC_CPML > 0) call pml_output_VTKs()
     ! deallocates C_PML arrays
-    deallocate(CPML_regions)
-    deallocate(CPML_to_spec)
-    deallocate(is_CPML)
-    deallocate(d_store_x)
-    deallocate(d_store_y)
-    deallocate(d_store_z)
-    deallocate(k_store_x)
-    deallocate(k_store_y)
-    deallocate(k_store_z)
-    deallocate(alpha_store_x)
-    deallocate(alpha_store_y)
-    deallocate(alpha_store_z)
-    deallocate(spec_to_CPML)
-    deallocate(CPML_type)
-
-    if (ELASTIC_SIMULATION) then
-      deallocate(displ_old)
-      deallocate(displ_new)
-      deallocate(PML_dux_dxl)
-      deallocate(PML_dux_dyl)
-      deallocate(PML_dux_dzl)
-      deallocate(PML_duy_dxl)
-      deallocate(PML_duy_dyl)
-      deallocate(PML_duy_dzl)
-      deallocate(PML_duz_dxl)
-      deallocate(PML_duz_dyl)
-      deallocate(PML_duz_dzl)
-      deallocate(PML_dux_dxl_old)
-      deallocate(PML_dux_dyl_old)
-      deallocate(PML_dux_dzl_old)
-      deallocate(PML_duy_dxl_old)
-      deallocate(PML_duy_dyl_old)
-      deallocate(PML_duy_dzl_old)
-      deallocate(PML_duz_dxl_old)
-      deallocate(PML_duz_dyl_old)
-      deallocate(PML_duz_dzl_old)
-      deallocate(PML_dux_dxl_new)
-      deallocate(PML_dux_dyl_new)
-      deallocate(PML_dux_dzl_new)
-      deallocate(PML_duy_dxl_new)
-      deallocate(PML_duy_dyl_new)
-      deallocate(PML_duy_dzl_new)
-      deallocate(PML_duz_dxl_new)
-      deallocate(PML_duz_dyl_new)
-      deallocate(PML_duz_dzl_new)
-      deallocate(rmemory_dux_dxl_x)
-      deallocate(rmemory_dux_dyl_x)
-      deallocate(rmemory_dux_dzl_x)
-      deallocate(rmemory_duy_dxl_x)
-      deallocate(rmemory_duy_dyl_x)
-      deallocate(rmemory_duz_dxl_x)
-      deallocate(rmemory_duz_dzl_x)
-      deallocate(rmemory_dux_dxl_y)
-      deallocate(rmemory_dux_dyl_y)
-      deallocate(rmemory_duy_dxl_y)
-      deallocate(rmemory_duy_dyl_y)
-      deallocate(rmemory_duy_dzl_y)
-      deallocate(rmemory_duz_dyl_y)
-      deallocate(rmemory_duz_dzl_y)
-      deallocate(rmemory_dux_dxl_z)
-      deallocate(rmemory_dux_dzl_z)
-      deallocate(rmemory_duy_dyl_z)
-      deallocate(rmemory_duy_dzl_z)
-      deallocate(rmemory_duz_dxl_z)
-      deallocate(rmemory_duz_dyl_z)
-      deallocate(rmemory_duz_dzl_z)
-      deallocate(rmemory_displ_elastic)
-      deallocate(accel_elastic_CPML)
-    endif
-
-    if (ACOUSTIC_SIMULATION) then
-      deallocate(potential_acoustic_old)
-      deallocate(potential_acoustic_new)
-      deallocate(PML_dpotential_dxl)
-      deallocate(PML_dpotential_dyl)
-      deallocate(PML_dpotential_dzl)
-      deallocate(PML_dpotential_dxl_old)
-      deallocate(PML_dpotential_dyl_old)
-      deallocate(PML_dpotential_dzl_old)
-      deallocate(PML_dpotential_dxl_new)
-      deallocate(PML_dpotential_dyl_new)
-      deallocate(PML_dpotential_dzl_new)
-      deallocate(rmemory_dpotential_dxl)
-      deallocate(rmemory_dpotential_dyl)
-      deallocate(rmemory_dpotential_dzl)
-      deallocate(rmemory_potential_acoustic)
-      deallocate(potential_dot_dot_acoustic_CPML)
-    endif
-
+    call pml_cleanup()
   endif
 
+  ! boundary surfaces
   deallocate(ibelm_xmin)
   deallocate(ibelm_xmax)
   deallocate(ibelm_ymin)
@@ -254,6 +166,7 @@
   deallocate(ibelm_bottom)
   deallocate(ibelm_top)
 
+  ! ADIOS file i/o
   if (ADIOS_ENABLED) then
     call adios_cleanup()
   endif

@@ -165,7 +165,7 @@
           scale_factor(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
   if (ier /= 0) call exit_mpi(myrank,'error allocation attenuation arrays')
 
-  if (FULL_ATTENUATION_SOLID)then
+  if (FULL_ATTENUATION_SOLID) then
     allocate(one_minus_sum_beta_kappa(NGLLX,NGLLY,NGLLZ,nspec), &
             factor_common_kappa(N_SLS,NGLLX,NGLLY,NGLLZ,nspec), &
             scale_factor_kappa(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
@@ -230,7 +230,7 @@
             ! use scaling rule similar to Olsen et al. (2003)
             vs_val = mustore(i,j,k,ispec) / rho_vs(i,j,k,ispec)
             call get_attenuation_model_olsen(vs_val,Q_mu,OLSEN_ATTENUATION_RATIO)
-            if (FULL_ATTENUATION_SOLID)then
+            if (FULL_ATTENUATION_SOLID) then
               vp_val = (kappastore(i,j,k,ispec) + 2.0d0 * mustore(i,j,k,ispec) / 3.0d0) / rho_vp(i,j,k,ispec)
               Q_s = Q_mu
               Q_p = 1.5d0 * Q_s
@@ -280,7 +280,7 @@
           ! stores scale factor for mu moduli
           scale_factor(i,j,k,ispec) = factor_scale_dble
 
-          if (FULL_ATTENUATION_SOLID)then
+          if (FULL_ATTENUATION_SOLID) then
             one_minus_sum_beta_kappa(i,j,k,ispec) = one_minus_sum_beta_dble_kappa
             beta_kappa(:) = beta_dble_kappa(:)
             factor_common_kappa(:,i,j,k,ispec) = beta_kappa(:) * tauinv(:)
@@ -306,7 +306,7 @@
   write(27) factor_common
   write(27) scale_factor
 
-  if (FULL_ATTENUATION_SOLID)then
+  if (FULL_ATTENUATION_SOLID) then
     write(27) one_minus_sum_beta_kappa
     write(27) factor_common_kappa
     write(27) scale_factor_kappa
@@ -316,7 +316,7 @@
 
   deallocate(one_minus_sum_beta,factor_common,scale_factor)
 
-  if (FULL_ATTENUATION_SOLID)then
+  if (FULL_ATTENUATION_SOLID) then
     deallocate(one_minus_sum_beta_kappa,factor_common_kappa,scale_factor_kappa)
   endif
 
@@ -455,7 +455,7 @@
   ! determines the "scale factor"
   call get_attenuation_scale_factor(myrank,f_c_source,tau_eps,tau_sigma,Q_mu,factor_scale)
 
-  if (FULL_ATTENUATION_SOLID)then
+  if (FULL_ATTENUATION_SOLID) then
     ! determines tau_eps for Q_kappa
     call get_attenuation_tau_eps(Q_kappa,tau_sigma,tau_eps_kappa, &
                                 MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)

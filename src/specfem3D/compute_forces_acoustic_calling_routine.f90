@@ -212,7 +212,7 @@ subroutine compute_forces_acoustic()
 ! in case of long-time simulation
 
 ! C-PML boundary
-  if (PML_CONDITIONS)then
+  if (PML_CONDITIONS) then
     do iface=1,num_abs_boundary_faces
       ispec = abs_boundary_ispec(iface)
 !!! It is better to move this into do iphase=1,2 loop
@@ -270,9 +270,9 @@ subroutine compute_forces_acoustic()
                             + deltatsqover2 * potential_dot_dot_acoustic(:)
   endif
 
-  if (PML_CONDITIONS)then
-    if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD)then
-      if (nglob_interface_PML_acoustic > 0)then
+  if (PML_CONDITIONS) then
+    if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
+      if (nglob_interface_PML_acoustic > 0) then
         call save_potential_on_pml_interface(potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic,&
                                              nglob_interface_PML_acoustic,b_PML_potential,b_reclen_PML_potential)
       endif

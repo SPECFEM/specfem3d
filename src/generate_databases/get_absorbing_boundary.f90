@@ -507,7 +507,7 @@
     enddo
 
     ! stores surface infos
-    if (STACEY_ABSORBING_CONDITIONS)then
+    if (STACEY_ABSORBING_CONDITIONS) then
        if (.not. STACEY_INSTEAD_OF_FREE_SURFACE) then
          ! stores free surface
          ! sets face infos
@@ -559,7 +559,7 @@
          enddo
        endif
 
-    else if (PML_CONDITIONS)then
+    else if (PML_CONDITIONS) then
        if (.not. PML_INSTEAD_OF_FREE_SURFACE) then
          ! stores free surface
          ! sets face infos
