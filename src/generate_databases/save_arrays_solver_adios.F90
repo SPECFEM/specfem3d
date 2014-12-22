@@ -920,7 +920,7 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob,                   &
 
   ! absorbing boundary surface
   call adios_write(handle, STRINGIFY_VAR(num_abs_boundary_faces), ier)
-  if (PML_CONDITIONS)then
+  if (PML_CONDITIONS) then
     if (num_abs_boundary_faces > 0) then
       local_dim = num_abs_boundary_faces_wmax
       call write_adios_global_1d_array(handle, myrank, sizeprocs, &

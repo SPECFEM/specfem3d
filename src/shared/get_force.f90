@@ -135,7 +135,7 @@
   close(IIN)
 
   ! Sets tshift_force to zero to initiate the simulation!
-  if (NSOURCES == 1)then
+  if (NSOURCES == 1) then
     tshift_force = 0.d0
     min_tshift_force_original = t_shift(1)
   else

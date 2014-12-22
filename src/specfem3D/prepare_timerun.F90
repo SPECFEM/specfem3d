@@ -508,7 +508,7 @@
     read(27) factor_common
     read(27) scale_factor
 
-    if (FULL_ATTENUATION_SOLID)then
+    if (FULL_ATTENUATION_SOLID) then
       read(27) one_minus_sum_beta_kappa
       read(27) factor_common_kappa
       read(27) scale_factor_kappa
@@ -546,7 +546,7 @@
             scale_factorl = scale_factor(i,j,k,ispec)
             mustore(i,j,k,ispec) = mustore(i,j,k,ispec) * scale_factorl
 
-            if (FULL_ATTENUATION_SOLID)then
+            if (FULL_ATTENUATION_SOLID) then
               ! scales kappa moduli
               scale_factorl = scale_factor_kappa(i,j,k,ispec)
               kappastore(i,j,k,ispec) = kappastore(i,j,k,ispec) * scale_factorl

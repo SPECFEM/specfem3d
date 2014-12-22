@@ -183,12 +183,12 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
         iglob = ibool(i,j,k,ispec)
         if (CPML_regions(ispec_CPML) == CPML_X_ONLY .or. CPML_regions(ispec_CPML) == CPML_XY_ONLY .or. &
            CPML_regions(ispec_CPML) == CPML_XZ_ONLY .or.  CPML_regions(ispec_CPML) == CPML_XYZ) then
-           if (xstore(iglob) - x_origin > 0._CUSTOM_REAL)then
-              if (xstore(iglob) - x_origin <= CPML_x_right - x_origin)then
+           if (xstore(iglob) - x_origin > 0._CUSTOM_REAL) then
+              if (xstore(iglob) - x_origin <= CPML_x_right - x_origin) then
                  CPML_x_right = xstore(iglob)
               endif
            else
-              if (abs(xstore(iglob) - x_origin) <= abs(CPML_x_left-x_origin))then
+              if (abs(xstore(iglob) - x_origin) <= abs(CPML_x_left-x_origin)) then
                  CPML_x_left = xstore(iglob)
               endif
            endif
@@ -196,12 +196,12 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
 
         if (CPML_regions(ispec_CPML) == CPML_Y_ONLY .or. CPML_regions(ispec_CPML) == CPML_XY_ONLY .or. &
            CPML_regions(ispec_CPML) == CPML_YZ_ONLY .or.  CPML_regions(ispec_CPML) == CPML_XYZ) then
-           if (ystore(iglob) - y_origin > 0._CUSTOM_REAL)then
-              if (ystore(iglob) - y_origin <= CPML_y_front - y_origin)then
+           if (ystore(iglob) - y_origin > 0._CUSTOM_REAL) then
+              if (ystore(iglob) - y_origin <= CPML_y_front - y_origin) then
                  CPML_y_front = ystore(iglob)
               endif
            else
-              if (abs(ystore(iglob) - y_origin) <= abs(CPML_y_back-y_origin))then
+              if (abs(ystore(iglob) - y_origin) <= abs(CPML_y_back-y_origin)) then
                  CPML_y_back = ystore(iglob)
               endif
            endif
@@ -209,12 +209,12 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
 
         if (CPML_regions(ispec_CPML) == CPML_Z_ONLY .or. CPML_regions(ispec_CPML) == CPML_YZ_ONLY .or. &
            CPML_regions(ispec_CPML) == CPML_XZ_ONLY .or.  CPML_regions(ispec_CPML) == CPML_XYZ) then
-           if (zstore(iglob) - z_origin > 0._CUSTOM_REAL)then
-              if (zstore(iglob) - z_origin <= CPML_z_top - z_origin)then
+           if (zstore(iglob) - z_origin > 0._CUSTOM_REAL) then
+              if (zstore(iglob) - z_origin <= CPML_z_top - z_origin) then
                  CPML_z_top = zstore(iglob)
               endif
            else
-              if (abs(zstore(iglob) - z_origin) <= abs(CPML_z_bottom-z_origin))then
+              if (abs(zstore(iglob) - z_origin) <= abs(CPML_z_bottom-z_origin)) then
                  CPML_z_bottom = zstore(iglob)
               endif
            endif
@@ -256,7 +256,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
      ispec = CPML_to_spec(ispec_CPML)
      do k=1,NGLLZ; do j=1,NGLLY; do i=1,NGLLX
         vp = rho_vp(i,j,k,ispec)/rhostore(i,j,k,ispec)
-        if (vp >= vp_max)then
+        if (vp >= vp_max) then
            vp_max = vp
         endif
      enddo; enddo; enddo
@@ -621,7 +621,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
 
                  !! DK DK define an alias for y and z variable names (which are the same)
                  !  stores damping profiles and auxiliary coefficients at the C-PML element's GLL points
-                 if (alpha_x < 0._CUSTOM_REAL .or. alpha_y < 0._CUSTOM_REAL)then
+                 if (alpha_x < 0._CUSTOM_REAL .or. alpha_y < 0._CUSTOM_REAL) then
                    stop "there is error in mesh of CPML-layer xy"
                  endif
 
@@ -775,7 +775,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
 
                  !! DK DK define an alias for y and z variable names (which are the same)
                  !  stores damping profiles and auxiliary coefficients at the C-PML element's GLL points
-                 if (alpha_x < 0._CUSTOM_REAL .or. alpha_z < 0._CUSTOM_REAL)then
+                 if (alpha_x < 0._CUSTOM_REAL .or. alpha_z < 0._CUSTOM_REAL) then
                     stop "there is error in mesh of CPML-layer xz"
                  endif
 
@@ -929,7 +929,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                  endif
 
                  !! DK DK define an alias for y and z variable names (which are the same)
-                 if (alpha_y < 0._CUSTOM_REAL .or. alpha_z < 0._CUSTOM_REAL)then
+                 if (alpha_y < 0._CUSTOM_REAL .or. alpha_z < 0._CUSTOM_REAL) then
                     stop "there is error in mesh of CPML-layer yz"
                  endif
                  K_store_x(i,j,k,ispec_CPML) = 1._CUSTOM_REAL
@@ -1349,7 +1349,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                  endif
 
                  !! DK DK define an alias for y and z variable names (which are the same)
-                 if (alpha_x < 0._CUSTOM_REAL .or. alpha_y < 0._CUSTOM_REAL .or. alpha_z < 0._CUSTOM_REAL)then
+                 if (alpha_x < 0._CUSTOM_REAL .or. alpha_y < 0._CUSTOM_REAL .or. alpha_z < 0._CUSTOM_REAL) then
                     stop "there is error in mesh of CPML-layer xyz"
                  endif
 
@@ -1401,14 +1401,14 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
       do ispec=1,nspec
         if (ispec_is_acoustic(ispec) .and. is_CPML(ispec)) then
           do k=1,NGLLZ; do j=1,NGLLY; do i=1,NGLLX
-            if (mask_ibool_interior_domain(ibool(i,j,k,ispec)))then
+            if (mask_ibool_interior_domain(ibool(i,j,k,ispec))) then
               nglob_interface_PML_acoustic = nglob_interface_PML_acoustic + 1
             endif
           enddo; enddo; enddo
         endif
       enddo
 
-      if (nglob_interface_PML_acoustic > 0)then
+      if (nglob_interface_PML_acoustic > 0) then
         allocate(points_interface_PML_acoustic(nglob_interface_PML_acoustic),stat=ier)
         if (ier /= 0) stop 'error allocating array points_interface_PML_acoustic'
         points_interface_PML_acoustic = 0
@@ -1416,7 +1416,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
         do ispec=1,nspec
           if (ispec_is_acoustic(ispec) .and. is_CPML(ispec)) then
             do k=1,NGLLZ; do j=1,NGLLY; do i=1,NGLLX
-              if (mask_ibool_interior_domain(ibool(i,j,k,ispec)))then
+              if (mask_ibool_interior_domain(ibool(i,j,k,ispec))) then
                 nglob_interface_PML_acoustic = nglob_interface_PML_acoustic + 1
                 points_interface_PML_acoustic(nglob_interface_PML_acoustic) = ibool(i,j,k,ispec)
               endif
@@ -1440,14 +1440,14 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
       do ispec=1,nspec
         if (ispec_is_elastic(ispec) .and. is_CPML(ispec)) then
           do k=1,NGLLZ; do j=1,NGLLY; do i=1,NGLLX
-            if (mask_ibool_interior_domain(ibool(i,j,k,ispec)))then
+            if (mask_ibool_interior_domain(ibool(i,j,k,ispec))) then
               nglob_interface_PML_elastic = nglob_interface_PML_elastic + 1
             endif
           enddo; enddo; enddo
         endif
       enddo
 
-      if (nglob_interface_PML_elastic > 0)then
+      if (nglob_interface_PML_elastic > 0) then
         allocate(points_interface_PML_elastic(nglob_interface_PML_elastic),stat=ier)
         if (ier /= 0) stop 'error allocating array points_interface_PML_elastic'
         points_interface_PML_elastic = 0
@@ -1455,7 +1455,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
         do ispec=1,nspec
           if (ispec_is_elastic(ispec) .and. is_CPML(ispec)) then
             do k=1,NGLLZ; do j=1,NGLLY; do i=1,NGLLX
-              if (mask_ibool_interior_domain(ibool(i,j,k,ispec)))then
+              if (mask_ibool_interior_domain(ibool(i,j,k,ispec))) then
                 nglob_interface_PML_elastic = nglob_interface_PML_elastic + 1
                 points_interface_PML_elastic(nglob_interface_PML_elastic) = ibool(i,j,k,ispec)
               endif

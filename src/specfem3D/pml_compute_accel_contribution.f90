@@ -525,7 +525,7 @@ subroutine l_parameter_computation( &
 
      else if (abs( alpha_x - alpha_y ) >= 1.e-5_CUSTOM_REAL .AND. &
               abs( alpha_x - alpha_z ) < 1.e-5_CUSTOM_REAL  .AND. &
-              abs( alpha_y - alpha_z ) >= 1.e-5_CUSTOM_REAL)then
+              abs( alpha_y - alpha_z ) >= 1.e-5_CUSTOM_REAL) then
 
        alpha_0 = max(alpha_x,alpha_z)
 
@@ -574,7 +574,7 @@ subroutine l_parameter_computation( &
 
      else if (abs( alpha_x - alpha_y ) >= 1.e-5_CUSTOM_REAL .AND. &
               abs( alpha_x - alpha_z ) >= 1.e-5_CUSTOM_REAL .AND. &
-              abs( alpha_y - alpha_z ) < 1.e-5_CUSTOM_REAL)then
+              abs( alpha_y - alpha_z ) < 1.e-5_CUSTOM_REAL) then
 
        alpha_0 = max(alpha_y,alpha_z)
 
@@ -1063,7 +1063,7 @@ Subroutine compute_convolution_coef(bb, deltat, coef0, coef1, coef2, singularity
   ! calculates coefficients
   coef0 = exp(-prod1)
 
-  if (singularity_type == 0)then
+  if (singularity_type == 0) then
     if (abs(bb) >= 1.e-5_CUSTOM_REAL) then
       if (FIRST_ORDER_CONVOLUTION) then
          coef1 = (1._CUSTOM_REAL - exp(-prod1) ) / bb
@@ -1087,7 +1087,7 @@ Subroutine compute_convolution_coef(bb, deltat, coef0, coef1, coef2, singularity
                   5._CUSTOM_REAL*deltatpow4*bbpow3*ONE_OVER_128))
       endif
     endif
-  else if (singularity_type == 1)then
+  else if (singularity_type == 1) then
     if (abs(bb) >= 1.e-5_CUSTOM_REAL) then
       coef1 = (1._CUSTOM_REAL - exp(-prod1_half) ) / bb
       coef1 = time_nplus1 * coef1 + (deltat_half*exp(-prod1_half) - coef1) / bb
@@ -1105,7 +1105,7 @@ Subroutine compute_convolution_coef(bb, deltat, coef0, coef1, coef2, singularity
                                     (7._CUSTOM_REAL*deltatpow3*bbpow2*ONE_OVER_48 - &
                                      5._CUSTOM_REAL*deltatpow4*bbpow3*ONE_OVER_128)))
      endif
-  else if (singularity_type == 2)then
+  else if (singularity_type == 2) then
     if (abs(bb) >= 1.e-5_CUSTOM_REAL) then
       coef1 = (1._CUSTOM_REAL - exp(-prod1_half) ) / bb
       coef1 = time_nplus1**2 * coef1 + (time_nplus1*(-2._CUSTOM_REAL/bb*coef1 + deltat/bb*exp(-prod1_half)) + &

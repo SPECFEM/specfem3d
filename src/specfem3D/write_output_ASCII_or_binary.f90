@@ -58,7 +58,7 @@
   real(kind=CUSTOM_REAL) :: time_t
 
   ! opens seismogram file
-  if (USE_BINARY_FOR_SEISMOGRAMS)then
+  if (USE_BINARY_FOR_SEISMOGRAMS) then
     ! allocate trace
     nt_s = min(it,NSTEP)
     allocate(tr(nt_s),stat=ier)

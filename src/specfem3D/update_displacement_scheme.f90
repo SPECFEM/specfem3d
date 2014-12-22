@@ -103,7 +103,7 @@
   if (.not. GPU_MODE) then
     ! wavefields on CPU
     ! updates (forward) acoustic potentials
-    if (PML_CONDITIONS .and. NSPEC_CPML > 0)then
+    if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
       potential_acoustic_old(:) = potential_acoustic(:) &
                                   + deltatover2 * (1._CUSTOM_REAL - 2.0_CUSTOM_REAL*theta) * potential_dot_acoustic(:) &
                                   + deltatsqover2 * (1._CUSTOM_REAL - theta) * potential_dot_dot_acoustic(:)
@@ -115,7 +115,7 @@
                                 + deltatover2 * potential_dot_dot_acoustic(:)
     potential_dot_dot_acoustic(:) = 0._CUSTOM_REAL
 
-    if (PML_CONDITIONS .and. NSPEC_CPML > 0)then
+    if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
       potential_acoustic_new(:) = potential_acoustic(:) &
                                   + deltatover2 * (1._CUSTOM_REAL - 2.0_CUSTOM_REAL*theta) * potential_dot_acoustic(:)
     endif
@@ -124,7 +124,7 @@
     if (SIMULATION_TYPE == 3) then
       ! updates acoustic backward/reconstructed fields
       if (PML_CONDITIONS) then
-        if (nglob_interface_PML_acoustic > 0)then
+        if (nglob_interface_PML_acoustic > 0) then
           call read_potential_on_pml_interface(b_potential_dot_dot_acoustic,b_potential_dot_acoustic,b_potential_acoustic,&
                                                nglob_interface_PML_acoustic,b_PML_potential,b_reclen_PML_potential)
         endif
@@ -174,7 +174,7 @@
     ! wavefields on CPU
 
     ! updates elastic displacement and velocity
-    if (PML_CONDITIONS .and. NSPEC_CPML > 0)then
+    if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
       displ_old(:,:) = displ(:,:) &
                        + deltatover2 * (1._CUSTOM_REAL - 2.0_CUSTOM_REAL*theta) * veloc(:,:) &
                        + deltatsqover2 * (1._CUSTOM_REAL - theta) * accel(:,:)
@@ -183,7 +183,7 @@
     veloc(:,:) = veloc(:,:) + deltatover2*accel(:,:)
     if (SIMULATION_TYPE /= 1) accel_adj_coupling(:,:) = accel(:,:)
     accel(:,:) = 0._CUSTOM_REAL
-    if (PML_CONDITIONS .and. NSPEC_CPML > 0)then
+    if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
       displ_new(:,:) = displ(:,:) &
                        + deltatover2 * (1._CUSTOM_REAL - theta) * veloc(:,:)
     endif
@@ -191,8 +191,8 @@
     ! adjoint simulations
     if (SIMULATION_TYPE == 3) then
       ! elastic backward fields
-      if (PML_CONDITIONS)then
-        if (nglob_interface_PML_elastic > 0)then
+      if (PML_CONDITIONS) then
+        if (nglob_interface_PML_elastic > 0) then
           call read_field_on_pml_interface(b_accel,b_veloc,b_displ,nglob_interface_PML_elastic,&
                                            b_PML_field,b_reclen_PML_field)
         endif
@@ -208,7 +208,7 @@
     ! check
     if (SIMULATION_TYPE == 3) then
       if (PML_CONDITIONS) then
-        if (nglob_interface_PML_elastic > 0)then
+        if (nglob_interface_PML_elastic > 0) then
           call exit_MPI(myrank,'elastic time marching scheme with PML_CONDITIONS on GPU not implemented yet...')
         endif
       endif

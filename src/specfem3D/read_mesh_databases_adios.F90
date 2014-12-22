@@ -441,7 +441,7 @@ subroutine read_mesh_databases_adios()
     endif
   endif
 
-  if (PML_CONDITIONS)then
+  if (PML_CONDITIONS) then
     if (num_abs_boundary_faces > 0) then
       call adios_get_scalar(handle, "abs_boundary_ispec/local_dim",&
                             local_dim_abs_boundary_ispec,ier)

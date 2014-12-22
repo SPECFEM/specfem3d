@@ -640,7 +640,7 @@
           ! note: this assumes that both, elastic and poroelastic element, are in the same
           !          partition; check with decomposition that this is valid for this mesh partitioning
           do ispec_el=1,nspec
-            if (ispec_is_elastic(ispec_el))then
+            if (ispec_is_elastic(ispec_el)) then
               do iface_el=6,1,-1
                 ! takes indices of corners of reference face
                 do icorner = 1,NGNOD2D_FOUR_CORNERS
@@ -703,7 +703,7 @@
                 endif ! if
 
               enddo ! do iface_ref_el=1,6
-            endif ! if (ispec_is_elastic(ispec_el))then
+            endif ! if (ispec_is_elastic(ispec_el)) then
           enddo ! do ispec_el=1,nspec
         endif ! elastic_flag
       enddo ! iface_ref
