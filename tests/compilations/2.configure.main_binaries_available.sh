@@ -20,7 +20,12 @@ echo "directory: `pwd`" >> $testdir/results.log
 
 # checks if all main executables exist
 echo "checking if main binaries exist" >> $testdir/results.log
-exec=( xdecompose_mesh xmeshfem3D xgenerate_databases xspecfem3D )
+exec=( xdecompose_mesh \
+       xmeshfem3D \
+       xgenerate_databases \
+       xspecfem3D \
+      )
+
 for var in ${exec[@]};
 do
   # single compilation
@@ -36,6 +41,7 @@ do
     echo "binary exists: $var" >> $testdir/results.log
   fi
 done
+echo "" >> $testdir/results.log
 
 cd $testdir/
 echo "successful compilation" >> $testdir/results.log

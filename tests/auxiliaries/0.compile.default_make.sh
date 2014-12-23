@@ -25,19 +25,31 @@ rm -rf ./bin ./obj ./setup ./OUTPUT_FILES
 $srcdir/configure >> $testdir/results.log 2>&1
 
 # single compilation
-echo "compilation: auxiliaries" >> $testdir/results.log
+echo "compilation: $testdir" >> $testdir/results.log
 make clean >> $testdir/results.log 2>&1
 
 make -j 4 aux >> $testdir/results.log 2>&1
 
-# check
-if [ ! -e bin/xcombine_vol_data ]; then
-  echo "binary does not exist! xcombine_vol_data" >> $testdir/results.log
-  echo "compilation of auxiliaries failed, please check..." >> $testdir/results.log
-  exit 1
-else
-  echo "binary exists: xcombine_vol_data" >> $testdir/results.log
-fi
+echo "" >> $testdir/results.log
+
+# checks executable availability
+exec=( xcombine_vol_data \
+       xcombine_surf_data \
+       xcreate_movie_shakemap_AVS_DX_GMT \
+      )
+
+for var in ${exec[@]};
+do
+  # check
+  if [ ! -e bin/$var ]; then
+    echo "binary does not exist! $var" >> $testdir/results.log
+    echo "compilation of $testdir failed, please check..." >> $testdir/results.log
+    exit 1
+  else
+    echo "binary exists: $var" >> $testdir/results.log
+  fi
+done
+echo "" >> $testdir/results.log
 
 #cleanup
 rm -rf ./bin/* 

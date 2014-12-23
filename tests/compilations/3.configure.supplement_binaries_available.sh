@@ -29,7 +29,9 @@ exec=( xcombine_surf_data \
        xmodel_update \
        xsmooth_sem \
        xsum_kernels \
-       xsum_preconditioned_kernels )
+       xsum_preconditioned_kernels \
+      )
+
 for var in ${exec[@]};
 do
   # single compilation
@@ -37,6 +39,7 @@ do
   make clean >> $testdir/results.log 2>&1
   make -j 4 $var >> $testdir/results.log 2>&1
 
+  echo "" >> $testdir/results.log
   # check
   if [ ! -e bin/$var ]; then 
     echo "compilation of $var failed, please check..." >> $testdir/results.log
@@ -45,6 +48,7 @@ do
     echo "binary exists: $var" >> $testdir/results.log
   fi
 done
+echo "" >> $testdir/results.log
 
 echo "successful compilation" >> $testdir/results.log
 

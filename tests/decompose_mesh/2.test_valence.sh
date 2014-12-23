@@ -20,6 +20,8 @@ echo "compilation: $var" >> $testdir/results.log
 
 make -f $var.makefile $var >> $testdir/results.log 2>&1
 
+echo "" >> $testdir/results.log
+
 # check
 if [ ! -e ./bin/$var ]; then
   echo "compilation of $var failed, please check..." >> $testdir/results.log

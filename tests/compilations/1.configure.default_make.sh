@@ -34,6 +34,8 @@ make clean >> $testdir/results.log 2>&1
 # parallel make
 make -j 4 all >> $testdir/results.log 2>&1
 
+echo "" >> $testdir/results.log
+
 # checks exit code
 if [[ $? -ne 0 ]]; then
   echo >> $testdir/results.log

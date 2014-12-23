@@ -1,9 +1,6 @@
 #!/bin/bash
 testdir=`pwd`
 
-# executable
-var=xdecompose_mesh
-
 #checks if ROOT valid
 if [ -z "${ROOT}" ]; then export ROOT=../../ ; fi
 
@@ -27,10 +24,15 @@ rm -rf ./bin ./obj ./setup ./OUTPUT_FILES
 # default configuration
 $srcdir/configure >> $testdir/results.log 2>&1
 
+# executable
+var=xdecompose_mesh
+
 # single compilation
 echo "compilation: $var" >> $testdir/results.log
 make clean >> $testdir/results.log 2>&1
 make -j 4 $var >> $testdir/results.log 2>&1
+
+echo "" >> $testdir/results.log
 
 # check
 if [ ! -e bin/$var ]; then
@@ -39,6 +41,7 @@ if [ ! -e bin/$var ]; then
 else
   echo "binary exists: $var" >> $testdir/results.log
 fi
+echo "" >> $testdir/results.log
 
 #cleanup
 rm -rf ./bin/* 
