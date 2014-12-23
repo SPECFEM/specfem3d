@@ -3,5 +3,5 @@
 set xlabel "time (s)"
 set ylabel "displacement (m)"
 
-plot 'X10.DB.HXZ.semd' w l,'X20.DB.HXZ.semd' w l,'X30.DB.HXZ.semd' w l
+plot 'DB.X10.HXZ.semd' w l,'DB.X20.HXZ.semd' w l,'DB.X30.HXZ.semd' w l
 
