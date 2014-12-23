@@ -10,8 +10,8 @@ backwardSourceComponent=[1 1 1];
 
 switch sourceType
 case 'FORWARD'
-[nt_status nt] = system('grep NSTEP ../DATAs/Par_file | cut -d = -f 2');
-[dt_status dt] = system('grep DT ../DATAs/Par_file | cut -d = -f 2');
+[nt_status nt] = system('grep ^NSTEP ../DATAs/Par_file | cut -d = -f 2');
+[dt_status dt] = system('grep ^DT ../DATAs/Par_file | cut -d = -f 2');
 [f_status f] = system('grep half\ duration ../DATAs/backup/CMTSOLUTION_FORWARD | cut -d : -f 2');
 
 nt=str2num(nt);
@@ -40,7 +40,7 @@ end
 
 
 case 'BACKWARD'
-[nt_status nt] = system('grep NSTEP ../DATAs/Par_file | cut -d = -f 2');
+[nt_status nt] = system('grep ^NSTEP ../DATAs/Par_file | cut -d = -f 2');
 nt=str2num(nt);
 
 fid=fopen('../DATAs/backup/STATIONS_FORWARD');
@@ -63,13 +63,13 @@ cutShift = 0;
 totalCutTrace=zeros(cutLength,stationNumber);
 
 benchStation=floor((1+stationNumber)/2);
-bench=load(['../OUTPUT_FILES/' c{1,1}{benchStation} '.' c{1,2}{benchStation} '.' band 'Z' '.' variable]);
+bench=load(['../OUTPUT_FILES/' c{1,2}{benchStation} '.' c{1,1}{benchStation} '.' band 'Z' '.' variable]);
 [benchMax benchMaxIndex] = max(bench(:,2));
 
 for nStation = 1:stationNumber
-trace_x = load(['../OUTPUT_FILES/' c{1,1}{nStation} '.' c{1,2}{nStation} '.' band 'X' '.' variable]);
-trace_y = load(['../OUTPUT_FILES/' c{1,1}{nStation} '.' c{1,2}{nStation} '.' band 'Y' '.' variable]);
-trace_z = load(['../OUTPUT_FILES/' c{1,1}{nStation} '.' c{1,2}{nStation} '.' band 'Z' '.' variable]);
+trace_x = load(['../OUTPUT_FILES/' c{1,2}{nStation} '.' c{1,1}{nStation} '.' band 'X' '.' variable]);
+trace_y = load(['../OUTPUT_FILES/' c{1,2}{nStation} '.' c{1,1}{nStation} '.' band 'Y' '.' variable]);
+trace_z = load(['../OUTPUT_FILES/' c{1,2}{nStation} '.' c{1,1}{nStation} '.' band 'Z' '.' variable]);
 cutTrace_x = trace_x(benchMaxIndex - cutLength/2+cutShift:benchMaxIndex + cutLength/2 -1+cutShift,2);
 cutTrace_y = trace_y(benchMaxIndex - cutLength/2+cutShift:benchMaxIndex + cutLength/2 -1+cutShift,2);
 cutTrace_z = trace_z(benchMaxIndex - cutLength/2+cutShift:benchMaxIndex + cutLength/2 -1+cutShift,2);

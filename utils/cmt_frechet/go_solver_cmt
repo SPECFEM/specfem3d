@@ -4,7 +4,7 @@
 
 # name of the file that contains the list of machines
 set list_of_machines = `grep MACHINE_FILE DATA/Par_file | cut -c 27- `
-set my_local_path = `grep LOCAL_PATH DATA/Par_file | cut -c 27- `
+set my_local_path = `grep ^LOCAL_PATH DATA/Par_file | cut -c 27- `
 
 # read Par_file to get total number of processors needed
 

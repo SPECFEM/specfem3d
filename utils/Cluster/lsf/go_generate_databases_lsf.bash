@@ -25,7 +25,7 @@ fi
 # script to run the mesher and the solver
 # read Par_file to get information about the run
 # compute total number of nodes needed
-NPROC=`grep NPROC DATA/Par_file | cut -d = -f 2 `
+NPROC=`grep ^NPROC DATA/Par_file | cut -d = -f 2 `
 
 # total number of nodes is the product of the values read
 numnodes=$NPROC

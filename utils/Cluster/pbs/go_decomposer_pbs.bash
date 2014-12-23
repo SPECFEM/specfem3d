@@ -23,10 +23,10 @@ cd $PBS_O_WORKDIR
 
 # script to decompose mesh
 # read Par_file to get information about the run
-NPROC=`grep NPROC DATA/Par_file | grep -v -E '^[[:space:]]*#' | cut -d = -f 2`
+NPROC=`grep ^NPROC DATA/Par_file | grep -v -E '^[[:space:]]*#' | cut -d = -f 2`
 
 # path to database files for mesh
-LOCALPATH=`grep LOCAL_PATH DATA/Par_file | grep -v -E '^[[:space:]]*#' | cut -d = -f 2`
+LOCALPATH=`grep ^LOCAL_PATH DATA/Par_file | grep -v -E '^[[:space:]]*#' | cut -d = -f 2`
 
 echo starting decomposer for $NPROC partitions
 echo " "

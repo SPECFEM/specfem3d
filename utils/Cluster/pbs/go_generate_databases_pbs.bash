@@ -23,7 +23,7 @@ cd $PBS_O_WORKDIR
 
 # script to generate databases
 # read Par_file to get information about the run
-NPROC=`grep NPROC DATA/Par_file | grep -v -E '^[[:space:]]*#' | cut -d = -f 2`
+NPROC=`grep ^NPROC DATA/Par_file | grep -v -E '^[[:space:]]*#' | cut -d = -f 2`
 
 mkdir -p OUTPUT_FILES
 
