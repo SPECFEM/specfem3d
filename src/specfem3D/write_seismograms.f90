@@ -589,7 +589,7 @@
 
       ! create the name of the seismogram file for each slice
       ! file name includes the name of the station, the network and the component
-      write(sisname,"(a2,i6.6,'.',a,'.',a3,'.sem',a1)") '/S',irec,'NT',channel,component
+      write(sisname,"(a3,'.',a1,i6.6,'.',a3,'.sem',a1)") '/NT','S',irec,channel,component
 
       ! save seismograms in text format with no subsampling.
       ! Because we do not subsample the output, this can result in large files
@@ -676,7 +676,7 @@
 
         ! create the name of the seismogram file for each slice
         ! file name includes the name of the station, the network and the component
-        write(sisname,"(a2,i6.6,'.',a,'.',a3,'.sem',a1)") '/S',irec,'NT',chn,component
+        write(sisname,"(a3,'.',a1,i6.6,'.',a3,'.sem',a1)") '/NT','S',irec,chn,component
 
         ! save seismograms in text format with no subsampling.
         ! Because we do not subsample the output, this can result in large files
