@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -273,6 +273,13 @@
 !
 ! Evolution of the code:
 ! ---------------------
+!
+! MPI v. 3.0, December 2014: many developers.
+! Convolutional PML, LDDRK time scheme, bulk attenuation support, simultaneous MPI runs,
+! ADIOS file I/O support, coupling with external codes, new seismogram names,
+! Deville routines for additional GLL degrees, tomography tools, unit/regression test framework,
+! improved CUDA GPUs performance, additonal GEOCUBIT support, better make compilation,
+! git versioning system.
 !
 ! MPI v. 2.1, July 2012:
 ! Max Rietmann, Peter Messmer, Daniel Peter, Dimitri Komatitsch, Joseph Charles, Zhinan Xie:

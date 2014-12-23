@@ -101,7 +101,7 @@
 
 \author{$\copyright$ Princeton University (USA), CNRS and University of Marseille (France),\\
 and ETH Z\"urich (Switzerland)\\
-Version 2.1}
+Version 3.0}
 
 
 \date{\today}
@@ -288,7 +288,7 @@ It reached the sustained one petaflop performance level for the first time in Fe
 on the Blue Waters Cray supercomputer at the National Center for Supercomputing Applications (NCSA), located at the University of Illinois at Urbana-Champaign (USA).\\
 
 
-This new release of the code (version 2.1) includes Convolution or
+This new release of the code includes Convolution or
 Auxiliary Differential Equation Perfectly Matched absorbing Layers
 (C-PML or ADE-PML) \citep{MaKoEz08,MaKoGe08,MaKo09,MaKoGeBr10,KoMa07}.
 It also includes support for GPU graphics card acceleration \citep{Kom11,MiKo10,KoMiEr09,KoErGoMi10}.\\
@@ -321,7 +321,7 @@ in \citet{CaKoLaTiMiLeSnTr08,KoLaMi08a,MaKoBlLe08,KoErGoMi10,Kom11},
  Computing on GPU graphics cards for acoustic or seismic wave propagation
 applications is described in detail in \citet{Kom11,MiKo10,KoMiEr09,KoErGoMi10}.
 \end{description}
-\noindent If you use this new version 2.1, which has non blocking
+\noindent If you use this new version, which has non blocking
 MPI for much better performance for medium or large runs, please cite
 at least one of these six articles, in which results of non blocking
 MPI runs are presented: \citet{PeKoLuMaLeCaLeMaLiBlNiBaTr11,KoErGoMi10,KoViCh10,Kom11,CaKoLaTiMiLeSnTr08,MaKoBlLe08}.\\
@@ -4066,14 +4066,17 @@ of \citet{TaLiMaTr09,TaLiMaTr2010} used SPECFEM3D Cartesian as well
 as several additional components which are also stored on the CIG
 svn server, described next.
 
-The directory containing utilities for tomographic inversion using
+The directory containing external utilities for tomographic inversion using
 SPECFEM3D Cartesian (or other packages that evaluate misfit functions
-and gradients) is here on the CIG svn server: \begin{verbatim} /cig/seismo/3D/ADJOINTTOMO/
-flexwin/ -- FLEXWIN algorithm for automated picking of time windows
-measureadj/ -- reads FLEXWIN output file and makes measurements, with
-the option for computing adjoint sources iterateadj/ -- various tools
-for iterative inversion (requires pre-computed \textquotedbl{}event
-kernels\textquotedbl{}) \end{verbatim} This directory also contains
+and gradients) is in directory \texttt{utils/ADJOINT\_TOMOGRAPHY\_TOOLS/}:
+\begin{verbatim}
+flexwin/     -- FLEXWIN algorithm for automated picking of time windows
+measure_adj/ -- reads FLEXWIN output file and makes measurements,
+                with the option for computing adjoint sources
+iterate_adj/ -- various tools for iterative inversion
+                (requires pre-computed "event kernels")
+\end{verbatim}
+This directory also contains
 a brief \verb+README+ file indicating the role of the three subdirectories,
 \verb+flexwin+ \citep{Maggi2009}, \verb+measure_adj+, and \verb+iterate_adj+.
 The components for making the model update are there; however, there
@@ -4139,8 +4142,15 @@ by the Free Software Foundation (see Appendix \ref{cha:License}).\\
 
 \textbf{\underline{Evolution of the code:}}\\
 
+MPI v. 3.0, December 2014: many developers.
+Convolutional PML, LDDRK time scheme, bulk attenuation support, simultaneous MPI runs,
+ADIOS file I/O support, coupling with external codes, new seismogram names,
+Deville routines for additional GLL degrees, tomography tools, unit/regression test framework,
+improved CUDA GPUs performance, additonal GEOCUBIT support, better make compilation,
+git versioning system. \\
 
-MPI v 2.1, July 2012: Max Rietmann, Peter Messmer, Daniel Peter, Dimitri
+
+MPI v. 2.1, July 2012: Max Rietmann, Peter Messmer, Daniel Peter, Dimitri
 Komatitsch, Joseph Charles, Zhinan Xie: support for CUDA GPUs, better
 CFL stability for the Stacey absorbing conditions. \\
 
