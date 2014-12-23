@@ -261,8 +261,8 @@
           ! compute source arrays
           if (myrank == islice_selected_rec(irec)) then
             irec_local = irec_local + 1
-            ! reads in **sta**.**net**.**LH**.adj files
-            adj_source_file = trim(station_name(irec))//'.'//trim(network_name(irec))
+            ! reads in **net**.**sta**.**BH**.adj files
+            adj_source_file = trim(network_name(irec))//'.'//trim(station_name(irec))
             call compute_arrays_adjoint_source(myrank,adj_source_file, &
                                                xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
                                                adj_sourcearray, xigll,yigll,zigll, &

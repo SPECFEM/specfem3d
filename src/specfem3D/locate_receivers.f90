@@ -180,7 +180,7 @@
   ! define topology of the control element
   call usual_hex_nodes(NGNOD,iaddx,iaddy,iaddz)
 
-  ! opens STATIONS file
+  ! opens STATIONS or STATIONS_ADJOINT file
   open(unit=IIN,file=trim(rec_filename),status='old',action='read',iostat=ier)
   if (ier /= 0) call exit_mpi(myrank,'error opening file '//trim(rec_filename))
 
@@ -250,39 +250,39 @@
 
   ! allocate memory for arrays using number of stations
   allocate(stlat(nrec), &
-          stlon(nrec), &
-          stele(nrec), &
-          stbur(nrec), &
-          stutm_x(nrec), &
-          stutm_y(nrec), &
-          horiz_dist(nrec), &
-          elevation(nrec), &
-          ix_initial_guess(nrec), &
-          iy_initial_guess(nrec), &
-          iz_initial_guess(nrec), &
-          x_target(nrec), &
-          y_target(nrec), &
-          z_target(nrec), &
-          x_found(nrec), &
-          y_found(nrec), &
-          z_found(nrec), &
-          final_distance(nrec), &
-          ispec_selected_rec_all(nrec), &
-          xi_receiver_all(nrec), &
-          eta_receiver_all(nrec), &
-          gamma_receiver_all(nrec), &
-          x_found_all(nrec), &
-          y_found_all(nrec), &
-          z_found_all(nrec), &
-          final_distance_all(nrec), &
-          nu_all(3,3,nrec),stat=ier)
+           stlon(nrec), &
+           stele(nrec), &
+           stbur(nrec), &
+           stutm_x(nrec), &
+           stutm_y(nrec), &
+           horiz_dist(nrec), &
+           elevation(nrec), &
+           ix_initial_guess(nrec), &
+           iy_initial_guess(nrec), &
+           iz_initial_guess(nrec), &
+           x_target(nrec), &
+           y_target(nrec), &
+           z_target(nrec), &
+           x_found(nrec), &
+           y_found(nrec), &
+           z_found(nrec), &
+           final_distance(nrec), &
+           ispec_selected_rec_all(nrec), &
+           xi_receiver_all(nrec), &
+           eta_receiver_all(nrec), &
+           gamma_receiver_all(nrec), &
+           x_found_all(nrec), &
+           y_found_all(nrec), &
+           z_found_all(nrec), &
+           final_distance_all(nrec), &
+           nu_all(3,3,nrec),stat=ier)
   if (ier /= 0) stop 'error allocating arrays for locating receivers'
 
   ! loop on all the stations
   do irec=1,nrec
 
     read(IIN,*,iostat=ier) station_name(irec),network_name(irec), &
-                          stlat(irec),stlon(irec),stele(irec),stbur(irec)
+                           stlat(irec),stlon(irec),stele(irec),stbur(irec)
 
     if (ier /= 0) call exit_mpi(myrank, 'Error reading station file '//trim(rec_filename))
 
@@ -298,9 +298,9 @@
     if (myrank == 0) then
       ! limits user output if too many receivers
       if (nrec < 1000 .and. (.not. SU_FORMAT)) then
-        write(IMAIN,*) 'Station #',irec,': ',station_name(irec)(1:len_trim(station_name(irec))), &
-                       '.',network_name(irec)(1:len_trim(network_name(irec))), &
-                       '    horizontal distance:  ',sngl(horiz_dist(irec)),' km'
+        write(IMAIN,*) 'Station #',irec,': ', &
+            network_name(irec)(1:len_trim(network_name(irec)))//'.'//station_name(irec)(1:len_trim(station_name(irec))), &
+            '    horizontal distance:  ',sngl(horiz_dist(irec)),' km'
       endif
     endif
 
@@ -820,7 +820,7 @@
 
       ! checks stations location
       if (final_distance(irec) == HUGEVAL) then
-        write(IMAIN,*) 'error locating station # ',irec,'    ',station_name(irec),network_name(irec)
+        write(IMAIN,*) 'error locating station # ',irec,'    ',trim(network_name(irec)),'    ',trim(station_name(irec))
         call exit_MPI(myrank,'error locating receiver')
       endif
 
@@ -828,7 +828,7 @@
       if (nrec < 1000 .and. (.not. SU_FORMAT )) then
 
       write(IMAIN,*)
-      write(IMAIN,*) 'station # ',irec,'    ',station_name(irec),network_name(irec)
+      write(IMAIN,*) 'station # ',irec,'    ',trim(network_name(irec)),'    ',trim(station_name(irec))
 
       write(IMAIN,*) '     original latitude: ',sngl(stlat(irec))
       write(IMAIN,*) '     original longitude: ',sngl(stlon(irec))

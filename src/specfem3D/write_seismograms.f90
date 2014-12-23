@@ -522,8 +522,9 @@
     if (length_network_name < 1 .or. length_network_name > MAX_LENGTH_NETWORK_NAME) &
       call exit_MPI(myrank,'wrong length of network name')
 
-    write(sisname,"(a,'.',a,'.',a3,'.sem',a1)") station_name(irec)(1:length_station_name),&
-       network_name(irec)(1:length_network_name),channel,component
+    ! writes out **net**.**sta**.**BH**.sem* files
+    write(sisname,"(a,'.',a,'.',a3,'.sem',a1)") network_name(irec)(1:length_network_name), &
+       station_name(irec)(1:length_station_name),channel,component
 
     ! directory to store seismograms
     final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'

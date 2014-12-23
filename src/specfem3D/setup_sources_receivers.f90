@@ -708,8 +708,8 @@
           ! updates counter
           nadj_rec_local = nadj_rec_local + 1
 
-          ! checks **sta**.**net**.**BH**.adj files for correct number of time steps
-          adj_source_file = trim(station_name(irec))//'.'//trim(network_name(irec))
+          ! checks **net**.**sta**.**BH**.adj files for correct number of time steps
+          adj_source_file = trim(network_name(irec))//'.'//trim(station_name(irec))
           do icomp = 1,NDIM
             filename = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))// &
                        '/../SEM/'//trim(adj_source_file) // '.'// comp(icomp) // '.adj'
