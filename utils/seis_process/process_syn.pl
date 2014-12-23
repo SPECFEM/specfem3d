@@ -101,7 +101,8 @@ foreach $file (@ARGV) {
   if (not defined $begin_time) {die("Check if the file is SAC format\n")};
 
   ($filename) = split(" ",`basename $file`);
-  ($sta,$net,$comp)=split(/\./,$filename);
+  ($net,$sta,$comp)=split(/\./,$filename);
+
   if (not $opt_d) {$outfile = $file.$ext;}
   else {$outfile = "$opt_d/${filename}${ext}";}
   if ($ext or $opt_d) {system("\\cp -f $file $outfile");}

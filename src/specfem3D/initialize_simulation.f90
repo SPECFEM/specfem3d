@@ -382,7 +382,7 @@
 
   ! checks number of sources for adjoint simulations
   ! The limit below is somewhat arbitrary. For pure adjoint simulations (SIMULATION_TYPE == 2),
-  ! the code outputs displacement (S00001.NT.BXX.semd,..) and strains (S00001.NT.SEE.semd,..)
+  ! the code outputs displacement (NT.S00001.BXX.semd,..) and strains (NT.S00001.SEE.semd,..)
   ! as well as source derivative kernels (src_frechet.00001,..) all for each point source.
   ! The naming convention for these files uses (.., i6.6,..), which limits the number of sources to 999999.
   ! If that is still too low, you can increase it further (if so, change all the occurrences of (.., i6.6,..) in the code).

@@ -84,9 +84,13 @@ foreach $file (@ARGV) {
   $no_resp=0;
   if (! -f $file) {die("No such file to be processed!!\n"); }
   print "Processing data file $file \n";
+
+  ($filename) = split(" ",`basename $file`);
+  ($net,$sta,$comp)=split(/\./,$filename);
+
   if (not $opt_d) {$outfile = $file.$ext;}
-  else { ($filename) = split(" ",`basename $file`);
-	 $outfile = "$out_dir/${filename}${ext}";}
+  else {$outfile = "$out_dir/${filename}${ext}";}
+
   ($filedir) = split(" ",`dirname $file`);
   if ($ext or $opt_d) {system("\\cp -f $file $outfile");}
 
