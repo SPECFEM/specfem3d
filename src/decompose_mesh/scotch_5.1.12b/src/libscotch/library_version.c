@@ -76,12 +76,7 @@ int * const                 versptr,
 int * const                 relaptr,
 int * const                 patcptr)
 {
-//  *versptr = SCOTCH_VERSION;
-//  *relaptr = SCOTCH_RELEASE;
-//  *patcptr = SCOTCH_PATCHLEVEL;
-
-// DK DK hardwired this to avoid compilation problems on some machines
-  *versptr = 5;
-  *relaptr = 1;
-  *patcptr = 12;
+  *versptr = SCOTCH_VERSION;
+  *relaptr = SCOTCH_RELEASE;
+  *patcptr = SCOTCH_PATCHLEVEL;
 }
