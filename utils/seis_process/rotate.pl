@@ -33,6 +33,7 @@ if (!$opt_l) {$opt_l = 0;}
 #$saclst = "/opt/seismo-util/bin/saclst";
 #if (not -f $saclst) {die("No such file as $saclst\n");}
 $saclst = "saclst";
+if (system("which $saclst >/dev/null") != 0) {die(" No $saclst file\n");}
 
 $undef=-12345.0;
 $eps=0.1;
