@@ -9,10 +9,7 @@
 # List of source code beautifiers found by Dimitri, June 2014:
 # -----------------------------------------------------------
 
-# My own Perl script (below), which cannot hurt anyway, and which I already run manually on the three source codes a few 
-# times a year:
-
-# clean_listing_specfem.pl
+# This Perl script (below), which we developed ourselves and cannot hurt anyway, and which BuildBot runs on the three source codes.
 
 # Basic, but replaces all tabs, removes useless white spaces, switches all comparison operators to their modern syntax 
 # (changing .GE. to >= and so on), and a few other useful things.
@@ -59,8 +56,7 @@
 
 # Conclusions:
 
-# - BuildBot could already automatically run my Perl script (on every pull request? or on the whole code, from time to 
-# time, independently of pull requests?). It cannot hurt.
+# - BuildBot already automatically runs this Perl script on every pull request.
 
 # - see if calling prettify.py from CP2K (with upper case conversion turned off?) for our Fortran files
 # could be a good idea.
@@ -143,7 +139,7 @@
 
       foreach $name (@objects) {
             chop $name;
-# transformer les tabulations en caracteres blancs
+# change tabs to white spaces
             system("expand -2 < $name > _____temp08_____");
             $cname = $name;
             print STDOUT "Cleaning $cname ...\n";
@@ -151,7 +147,7 @@
             open(FILEDEPART,"<_____temp08_____");
             open(FILEC,">$cname");
 
-# lecture proprement dite du fichier C et changements
+# open the input C file
       while($line = <FILEDEPART>) {
 
 # suppress trailing white spaces and carriage return
