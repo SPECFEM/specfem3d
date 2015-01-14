@@ -1,0 +1,29 @@
+
+Subject: it could be that the source discontinuity is already handled (?)
+From: Dimitri Komatitsch
+Date: 24/03/2014 11:54
+To: ywang
+CC: Sébastien Chevrot, Vadim Monteiller
+
+Hi all,
+
+it could be that the source discontinuity is already handled as suggested by Vadim (following eq 17 of Friederich_Dalkolmo_GEMINI_GJI_1995.pdf) because the source code of Takeuchi contains this in file param.f90:
+
+    if ( itmp>maxngrid_r ) call error_handling(11)
+    grid_r(itmp) = rmin_structure_zone(i_zone) + rh * dble(i) / dble( ngrid )
+
+! ------ putting an additional node on the source location
+    if ( itmp>2 ) then
+      if ( ( grid_r(itmp-1)<source_r ).and. &
+                   ( source_r<grid_r(itmp) ) ) then
+
+
+but I am not sure if this just adds a point at the source location (which is *not* sufficient) or if there are more code lines in the rest of the code that handle the explicit treatment of the source discontinuity. It will be important to check that.
+
+Thanks,
+Dimitri.
+
+-- 
+Dimitri Komatitsch
+CNRS Research Director (DR CNRS), Laboratory of Mechanics and Acoustics,
+UPR 7051, Marseille, France    http://komatitsch.free.fr
