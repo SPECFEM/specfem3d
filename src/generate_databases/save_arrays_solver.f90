@@ -317,7 +317,7 @@
   close(IOUT)
 
   ! stores arrays in binary files
-  if (SAVE_MESH_FILES) then
+  if (SAVE_MESH_FILES .or. COUPLE_WITH_EXTERNAL_CODE) then
     call save_arrays_solver_files(nspec,nglob,ibool)
 
     ! debug: saves 1. MPI interface
