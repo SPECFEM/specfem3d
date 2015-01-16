@@ -41,7 +41,7 @@
     SIMULATION_TYPE,SAVE_FORWARD,mask_ibool_interior_domain, &
     nglob_interface_PML_acoustic,points_interface_PML_acoustic,&
     nglob_interface_PML_elastic,points_interface_PML_elastic, &
-    STACEY_ABSORBING_CONDITIONS, &
+    STACEY_ABSORBING_CONDITIONS, COUPLE_WITH_EXTERNAL_CODE, &
     NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN,IOUT,USE_MESH_COLORING_GPU
   use create_regions_mesh_ext_par
 
