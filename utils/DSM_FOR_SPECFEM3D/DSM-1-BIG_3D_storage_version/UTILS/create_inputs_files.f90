@@ -523,7 +523,7 @@ end program create_input_files
 !       Vadim Monteiller Mars 2013
 !
 !---------------------------------------------------------------------------------------------------------------------------------------------------------
-! matrice de rotation 3D d'axe "axe" et d'angle theta (d°)
+! matrice de rotation 3D d'axe "axe" et d'angle theta (degres)
 !
 subroutine rotation_matrix_axe(R,axe,theta)
   implicit none

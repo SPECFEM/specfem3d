@@ -391,10 +391,10 @@
 
 ! From Vadim Monteiller, April 2013:
 ! TO DO (DK DK: NOW DONE): on pourrait gagner ici sans stocker les harmoniques spheriques.
-! Ce commentaire date du moment où j'essayais de gagner de la mémoire. J'avais vu la possibilité de réduire la taille
-! du tableau plm() sans le pré-calculer mais en calculant les harmoniques sphériques à l'intérieur de la boucle sur l
-! (comme on le fait pour la face zmin). Mais comme jusqu'à présent pour les faces verticales j'arrive à stocker ce tableau,
-! je l'ai laissé tel quel.
+! Ce commentaire date du moment ou j'essayais de gagner de la memoire. J'avais vu la possibilite de reduire la taille
+! du tableau plm() sans le pre-calculer mais en calculant les harmoniques spheriques a l'interieur de la boucle sur l
+! (comme on le fait pour la face zmin). Mais comme jusqu'a present pour les faces verticales j'arrive a stocker ce tableau,
+! je l'ai laisse tel quel.
 !! DK DK April 2013: I have now removed it and I recompute the plm() array inside, thus this optimization is now implemented.
 ! call clPLM(plm,maxlmax,theta,theta_n,myrank)
 !! VM VM initialisation

@@ -1,27 +1,27 @@
 
 !! From Vadim Monteiller, April 2013:
 
-! Je n'ai jamais réussi à comprendre ce qu'il y a dans le système de ces deux routines.
-! En dépit des apparences et des commentaires dans le code, le système n'est pas
-! symétrique. Nobuaki m'a dit qu'à l'origine ce système était bien
-! symétrique mais qu'à la suite des travaux de Ohminato, le système à été
-! modifié en ajoutant des coefficients qu'il a trouvé de manière empirique
-! qui le rend non symétrique.
+! Je n'ai jamais reussi a comprendre ce qu'il y a dans le systeme de ces deux routines.
+! En depit des apparences et des commentaires dans le code, le systeme n'est pas
+! symetrique. Nobuaki m'a dit qu'a l'origine ce systeme etait bien
+! symetrique mais qu'a la suite des travaux de Ohminato, le systeme a ete
+! modifie en ajoutant des coefficients qu'il a trouve de maniere empirique
+! qui le rend non symetrique.
 !
-! Il y a un moment j'avais envisagé d'utiliser MKL, mais je n'ai pas réussi à
-! le faire. Roland avait essayé de tester les routines  dcsymbdl0 et dcsbdlv0
+! Il y a un moment j'avais envisage d'utiliser MKL, mais je n'ai pas reussi a
+! le faire. Roland avait essaye de tester les routines  dcsymbdl0 et dcsbdlv0
 ! sur un de ses pb, mais il n'obtenait pas la solution voulue, nous avons alors
-! conclu que ces routines avaient été modifiées pour les rendre
-! opérationnelles sur leur système particulier et que elles ne résolvent
-! plus des systèmes symétriques à bandes  diagonales.
+! conclu que ces routines avaient ete modifiees pour les rendre
+! operationnelles sur leur systeme particulier et que elles ne resolvent
+! plus des systemes symetriques a bandes  diagonales.
 !
-! Du coup c'est très dur de savoir ce qu'il y a dans les tableaux, même en
-! discutant avec Nobuaki j'ai pas du tout compris comment étaient stockées
-! les différentes diagonales, j'ai juste cru comprendre que c'était pas la
-! même convention que les routines de MKL.  Du coup, je ne sais pas si ça
-! vaut le coup de regarder çà à fond, surtout que l'essentiel du coût
-! était dans le relecture des coefs et sur ce point-là on a beaucoup
-! gagné. Je pense qu'il vaut mieux qu'on regarde les I/O parallèles.
+! Du coup c'est tres dur de savoir ce qu'il y a dans les tableaux, meme en
+! discutant avec Nobuaki j'ai pas du tout compris comment etaient stockees
+! les differentes diagonales, j'ai juste cru comprendre que c'etait pas la
+! meme convention que les routines de MKL.  Du coup, je ne sais pas si ca
+! vaut le coup de regarder ca a fond, surtout que l'essentiel du cout
+! etait dans le relecture des coefs et sur ce point-la on a beaucoup
+! gagne. Je pense qu'il vaut mieux qu'on regarde les I/O paralleles.
 
 subroutine dcsymbdl0_m_equals_3_nn_equals_6(a,n,eps,z,w,ier)
 

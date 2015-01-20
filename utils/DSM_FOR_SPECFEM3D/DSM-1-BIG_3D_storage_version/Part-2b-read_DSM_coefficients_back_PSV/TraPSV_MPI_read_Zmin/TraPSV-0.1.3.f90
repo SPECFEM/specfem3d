@@ -993,21 +993,21 @@
         if (myrank==0.and.SLOW_DEBUG_MODE) write(24,*) 'TIME :',mybigrank,time_to_read, time_to_plm,time_to_project
 
 ! Sur le cas des data de Pyrope (sur CURIE), j'ai un nsta = ~4000 pour chaque
-! proc. J'ai un nsta_global qui vaut ~200000 que je répartis en 48. Je fais
-! par ailleurs aussi une parallélisation sur les fréquences. Je me retrouve
+! proc. J'ai un nsta_global qui vaut ~200000 que je repartis en 48. Je fais
+! par ailleurs aussi une parallelisation sur les frequences. Je me retrouve
 ! avec 10 sous communicateurs de 48 procs (480 procs au total sur CURIE).
-! Chaque sous communicateur calcule sur une plage de fréquence spécifique et
-! à l'intérieur de chaque sous communicateur les procs se partagent le
-! nsta_global. J'ai fait ce type de découpage car c'était le seul moyen d'arriver
-! à faire passer le code avec le code non optimisé.
+! Chaque sous communicateur calcule sur une plage de frequence specifique et
+! a l'interieur de chaque sous communicateur les procs se partagent le
+! nsta_global. J'ai fait ce type de decoupage car c'etait le seul moyen d'arriver
+! a faire passer le code avec le code non optimise.
 
-! Maintenant ça doit valoir le coup de réfléchir à optimiser les boucles
+! Maintenant ca doit valoir le coup de reflechir a optimiser les boucles
 ! de copies car on ne va pas toujours tourner sur autant de procs, je dirais
-! que nsta va aller de 1000 (pour ~2000 procs) à 20000 (~100 procs). Si dans
-! le futur quelqu'un fait tourner le code sur un centre régional, il va
-! plutôt utiliser 100 procs. Dans l'immédiat pour nos deux prochains papiers, on
+! que nsta va aller de 1000 (pour ~2000 procs) a 20000 (~100 procs). Si dans
+! le futur quelqu'un fait tourner le code sur un centre regional, il va
+! plutot utiliser 100 procs. Dans l'immediat pour nos deux prochains papiers, on
 ! va faire tous les calculs sur les centres nationaux, donc ce n'est pas crucial
-! de faire l'optimisation maintenant, mais il faudra y penser à terme.
+! de faire l'optimisation maintenant, mais il faudra y penser a terme.
 
 !! DK DK not a good idea to put indices when working on the whole array
 !! DK DK because some compilers will then perform loops instead of memory copies

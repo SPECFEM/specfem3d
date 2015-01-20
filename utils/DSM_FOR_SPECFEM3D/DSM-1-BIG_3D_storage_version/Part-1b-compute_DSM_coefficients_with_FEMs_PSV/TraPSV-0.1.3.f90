@@ -893,10 +893,10 @@ endif
 
            ! on ecrit ici les fichiers des coefficients
 !! From Vadim Monteiller, April 2013:
-! je n'écris pas tous les ir_ en une seule fois car le lmax dépend des ir_.
-! Au cours de la boucle sur l, au début, il est vrai que l'on doit écrire le tableau tabg0 pour tous les ir_,
-! mais au fur et à mesure que l grandit, on perd des  ir_ (i.e. les coefs sont considérés comme nuls),
-! donc j'évite d'écrire des zéros, et pour l'instant la seule solution que j'ai trouvée c'est celle que j'ai implémentée.
+! je n'ecris pas tous les ir_ en une seule fois car le lmax depend des ir_.
+! Au cours de la boucle sur l, au debut, il est vrai que l'on doit ecrire le tableau tabg0 pour tous les ir_,
+! mais au fur et a mesure que l grandit, on perd des  ir_ (i.e. les coefs sont consideres comme nuls),
+! donc j'evite d'ecrire des zeros, et pour l'instant la seule solution que j'ai trouvee c'est celle que j'ai implementee.
            if (index_l == maxlmax_g) then
 if(SLOW_DEBUG_MODE) then
               write(24,*) 'partial writing of the coefficients'
@@ -944,7 +944,7 @@ endif
 !! le test "if (SUM(arret(:)) == 0) exit" mais que la boucle s'est poursuivie jusqu'au bout sans arret,
 !! alors je crois que ce que tu ecris en complement de datas ci-dessous aura deja ete ecrit une fois ci-dessous
 !! a la fin de la boucle, et apparaitra donc deux fois. Solution: soit imposer que maxlmax ne soit jamais un
-!! multiple de maxlmax_g (et s'il l'est, lui ajouter 1 au début du code), soit tester avec un flag logique
+!! multiple de maxlmax_g (et s'il l'est, lui ajouter 1 au debut du code), soit tester avec un flag logique
 !! si tu es sorti de la boucle par le exit ou non, et si non et si en plus maxlmax est un multiple de maxlmax_g
 !! alors il ne faudrait pas faire l'ecriture ci-dessous? Stp verifie.
 !********************************************************************************************

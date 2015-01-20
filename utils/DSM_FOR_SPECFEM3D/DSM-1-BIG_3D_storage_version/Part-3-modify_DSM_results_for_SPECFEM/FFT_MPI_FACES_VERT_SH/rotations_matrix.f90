@@ -5,7 +5,7 @@
 ! Vadim Monteiller Mars 2013
 !
 !-------------------------------------------------------------------------------
-! matrice de rotation 3D d'axe "axe" et d'angle theta (d°)
+! matrice de rotation 3D d'axe "axe" et d'angle theta (degres)
 ! cette matrice est en complexe
 subroutine rotation_matrix(R,axe,theta)
   implicit none
