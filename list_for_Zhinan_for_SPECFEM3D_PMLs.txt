@@ -1,4 +1,152 @@
 
+---------- DK DK new issues added by Dimitri on January 21, 2015, following some emails I exchanged with Zhinan:
+
+Subject: Re: specfem3d
+Date: Thu, 22 Jan 2015 00:02:29 +0100
+From: Dimitri Komatitsch
+Organization: CNRS, Marseille, France
+To: Zhang, Chang-Hua
+CC: Zhinan Xie
+
+Dear Chang-hua,
+
+Thanks! Let me forward this to Zhinan, so that he can have a look at
+page 4 of the PDF file you sent me, which shows that SPECFEM3D currently
+stops when one tries to use CPML when the interior of the domain has
+viscoelasticity.
+
+Thanks,
+Best regards,
+
+Dimitri.
+
+-------------------------
+
+Subject:  Re: [specfem3d] Runing both PML and attenuation causes error
+results (#356)
+Date:   Tue, 20 Jan 2015 15:11:47 -0800
+From:   specfem3d-zhang-ksu
+To:   geodynamics/specfem3d
+CC:   Dimitri Komatitsch
+
+Thanks, Dimitri. I have replaced the code segment by the following one,
+
+|  ! if both PML and attenuation are used, the PML region must be elastic
+  if (PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
+     ! do not merge this second line with the first using an ".and." statement
+     ! because array is_CPML() is unallocated when PML_CONDITIONS is false
+     if (is_CPML(ispec)) then
+        ! PML region
+        ispec_CPML = spec_to_CPML(ispec)
+        DO_LOOP_IJK
+
+          dummyx_loc_att(INDEX_IJK) = PML_displ_old(1,INDEX_IJK,ispec_CPML)
+          dummyy_loc_att(INDEX_IJK) = PML_displ_old(2,INDEX_IJK,ispec_CPML)
+          dummyz_loc_att(INDEX_IJK) = PML_displ_old(3,INDEX_IJK,ispec_CPML)
+
+        ENDDO_LOOP_IJK
+     else if (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) then
+        ! attenuation region
+        DO_LOOP_IJK
+           iglob = ibool(INDEX_IJK,ispec)
+           dummyx_loc_att(INDEX_IJK) = deltat*veloc(1,iglob)
+           dummyy_loc_att(INDEX_IJK) = deltat*veloc(2,iglob)
+           dummyz_loc_att(INDEX_IJK) = deltat*veloc(3,iglob)
+
+        ENDDO_LOOP_IJK
+     endif
+  else if (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) then
+     ! only attenuation
+     ! use first order Taylor expansion of displacement for local storage of stresses
+     ! at this current time step, to fix attenuation in a consistent way
+     DO_LOOP_IJK
+        iglob = ibool(INDEX_IJK,ispec)
+        dummyx_loc_att(INDEX_IJK) = deltat*veloc(1,iglob)
+        dummyy_loc_att(INDEX_IJK) = deltat*veloc(2,iglob)
+        dummyz_loc_att(INDEX_IJK) = deltat*veloc(3,iglob)
+     ENDDO_LOOP_IJK
+
+  endif
+|
+
+And similarly the other places, the results are much better, but I have
+a strong spike at the source location all the time, no idea what is
+going on.
+
+----------------------------------------------------------
+
+Subject: Re: [specfem3d] Runing both PML and attenuation causes error results (#356)
+Date: Tue, 20 Jan 2015 23:58:21 +0100
+From: Dimitri Komatitsch <komatitsch@lma.cnrs-mrs.fr>
+Organization: CNRS, Marseille, France
+To: geodynamics/specfem3d , specfem3d-zhang-ksu
+CC: Zhinan Xie
+
+Hi,
+
+Yes, PML in the 3D code is currently for acoustic/elastic media only
+(i.e. viscoelasticity cannot be turned on).
+
+Let me cc my colleague Zhinan Xie because he is currently working on the
+code and thus he could probably remove that constraint (note that if so
+PML will *not* be perfectly matched strictly speaking because it is
+written without attenuation, thus the viscoelastic medium will be in
+contact with an elastic PML; but that works fine in practice if Q
+factors are not too small (typically not below 50 or so).
+
+PS for Zhinan: Zhang Ksu is right, there is no reason to stop the code
+in that case, we should just run with an elastic PML in contact with the
+viscoelastic medium, as we do in the 2D code. Thus the code in his email
+below should be slightly modified (and the PML arrays should be
+allocated even if attenuation is on I guess).
+
+Thanks,
+Dimitri.
+
+On 01/20/2015 12:00 AM, specfem3d-zhang-ksu wrote:
+> I am running the example of
+> homogeneous_halfspace_HEX8_elastic_absorbing_CPML_5sides by turning
+> ATTENUATION false or true in the Par_file and change Qmu in the
+> nummaterial_velocity_file.
+>
+> The result with ATTENUATION=.true. is totally wrong. Is it a problem
+> that the example is only setup for CPML or there is a bug in the code?
+>
+> By examining the source code, I think that there is a bug is more
+> probable. For example, in the
+> subroutine compute_forces_viscoelastic_Dev_5p, there is code segment
+> ! use first order Taylor expansion of displacement for local storage of
+> stresses
+> ! at this current time step, to fix attenuation in a consistent way
+> if (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) then
+> DO_LOOP_IJK
+> iglob = ibool(INDEX_IJK,ispec)
+> dummyx_loc_att(INDEX_IJK) = deltat/veloc(1,iglob)
+> dummyy_loc_att(INDEX_IJK) = deltat/veloc(2,iglob)
+> dummyz_loc_att(INDEX_IJK) = deltat*veloc(3,iglob)
+> ENDDO_LOOP_IJK
+> else if (PML_CONDITIONS .and. (.not. backward_simulation) .and.
+> NSPEC_CPML > 0) then
+> ! do not merge this second line with the first using an ".and." statement
+> ! because array is_CPML() is unallocated when PML_CONDITIONS is false
+> if (is_CPML(ispec)) then
+> DO_LOOP_IJK
+> iglob = ibool(INDEX_IJK,ispec)
+> dummyx_loc_att(INDEX_IJK) = displ_old(1,iglob)
+> dummyy_loc_att(INDEX_IJK) = displ_old(2,iglob)
+> dummyz_loc_att(INDEX_IJK) = displ_old(3,iglob)
+> ENDDO_LOOP_IJK
+> endif
+> endif
+>
+> which seams to indicate we can not have both CPML and attenuation.
+>
+> Has anyone experienced this issue?
+
+==============================================================================
+==============================================================================
+==============================================================================
+
 For SPECFEM3D PMLs:
 -------------------
 
@@ -183,11 +331,11 @@ To: Zhinan Xie 谢志南,  René Matzen, Paul Cristini
 
 Hi Zhinan and René,
 
-What do you think of the approach of Bermudez et al (2007) to make the 
-damping profile linear and also reach zero on the outer edge of the 
-domain in order to reduce the number of damping parameters to adjust in 
-the PML model? (i.e. when doing so the only thing to optimize / to 
-choose is the thickness of the PML, but there is no more damping profile 
+What do you think of the approach of Bermudez et al (2007) to make the
+damping profile linear and also reach zero on the outer edge of the
+domain in order to reduce the number of damping parameters to adjust in
+the PML model? (i.e. when doing so the only thing to optimize / to
+choose is the thickness of the PML, but there is no more damping profile
 to choose / to optimize for).
 
 http://dl.acm.org/citation.cfm?id=1233233
