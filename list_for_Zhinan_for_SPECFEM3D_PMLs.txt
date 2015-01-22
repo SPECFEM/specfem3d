@@ -49,6 +49,24 @@ Thanks,
 Best regards,
 Zhinan
 
+------------------------------------------------
+
+Subject: Re: PML
+Date: Thu, 22 Jan 2015 01:43:52 +0100
+From: Dimitri Komatitsch <komatitsch@lma.cnrs-mrs.fr>
+Organization: CNRS, Marseille, France
+To: xiezhinan
+CC:   Jeroen Tromp , Matthieu Lefebvre , Ryan Modrak , Alexis Bottero , Daniel Peter , Mathilde Griveaux , Paul Cristini , Clément Durochat , Yi Wang , Vadim Monteiller
+
+Dear Zhinan, dear all,
+
+I would add one more thing to the list (we discussed it in the Skype 
+call of Dec 22):  committing the fluid-solid boundary kernels that are 
+currently implemented in a local version in your account of the 
+Marseille supercomputer but not committed to Git yet.
+
+Thanks,
+Dimitri.
 
 ------------------------------------------------
 
