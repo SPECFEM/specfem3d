@@ -1238,7 +1238,7 @@
   endif
 
   ! prepares fields on GPU for elastic simulations
-  !§!§ JC JC here we will need to add GPU support for the new C-PML routines
+  !! JC JC here we will need to add GPU support for the C-PML routines
   if (ELASTIC_SIMULATION) then
     call prepare_fields_elastic_device(Mesh_pointer, &
                                 rmassx,rmassy,rmassz, &
