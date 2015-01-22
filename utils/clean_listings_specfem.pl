@@ -224,7 +224,8 @@
             print STDOUT "Cleaning $name ...\n";
 
 # this preserves file permissions of executable files
-            system("cp -p $name _____temp08_____ ; iconv -f utf-8 -t ASCII//TRANSLIT _____temp08_____ -o _____temp09_____ ; cp _____temp09_____ $name");
+# the second "cp" is there just to be safe: if "iconv" is not installed on a system, then the last "cp", if executed, will copy the file identical to itself
+            system("cp -p $name _____temp08_____ ; cp -p $name _____temp09_____ ; iconv -f utf-8 -t ASCII//TRANSLIT _____temp08_____ -o _____temp09_____ ; cp _____temp09_____ $name");
 
       }
 
