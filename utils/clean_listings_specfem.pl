@@ -184,9 +184,10 @@
             chop $name;
             print STDOUT "Cleaning $name ...\n";
 
-            system("iconv -f utf-8 -t ASCII//TRANSLIT $name -o _____temp08_____ ; mv _____temp08_____ $name");
+# this preserves file permissions of executable files
+            system("cp -p $name _____temp08_____ ; iconv -f utf-8 -t ASCII//TRANSLIT _____temp08_____ -o _____temp09_____ ; cp _____temp09_____ $name");
 
       }
 
-            system("rm -f _____temp08_____");
+            system("rm -f _____temp08_____ _____temp09_____");
 
