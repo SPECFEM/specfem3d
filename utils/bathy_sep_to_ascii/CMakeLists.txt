@@ -24,5 +24,5 @@ set(sources
 add_executable(
   create_ascii_bathy_from_sep_vs
   src/create_ascii_bathy_from_sep_vs.c
-  ${sources} 
+  ${sources}
 )

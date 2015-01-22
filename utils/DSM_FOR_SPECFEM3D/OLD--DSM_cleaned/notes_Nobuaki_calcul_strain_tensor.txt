@@ -5,35 +5,35 @@ Dimitri Komatitsch <dimitri.komatitsch@univ-pau.fr>
 Date:
 Thu, 02 Jul 2009 13:00:49 +0200
 To:
-冨士延章 <fuji@eps.s.u-tokyo.ac.jp>
+???? <fuji@eps.s.u-tokyo.ac.jp>
 CC:
-Sébastien Chevrot <chevrot@dtp.obs-mip.fr>, Vadim Monteiller <vadim.monteiller@dtp.obs-mip.fr>
+Sebastien Chevrot <chevrot@dtp.obs-mip.fr>, Vadim Monteiller <vadim.monteiller@dtp.obs-mip.fr>
 
 
 Bonjour Nobuaki,
 
-Ce n'est pas comme cela qu'il faut faire. Tu n'as pas besoin de nouveaux polynomes de Legendre locaux comme en SEM. Je te l'ai dit plusieurs fois déjà. Il te suffit de dériver spatialement les fonctions de base de DSM, c'est-à-dire de dériver les fonctions des équations (1), (12) et (13) de
+Ce n'est pas comme cela qu'il faut faire. Tu n'as pas besoin de nouveaux polynomes de Legendre locaux comme en SEM. Je te l'ai dit plusieurs fois deja. Il te suffit de deriver spatialement les fonctions de base de DSM, c'est-a-dire de deriver les fonctions des equations (1), (12) et (13) de
 cet article :
 
 http://depot.univ-pau.fr/files/15_days/200972_1246532347CvPRG1/kawai_geller_dsm_2hz_seismograms_gji_2006.pdf
 
-A bientôt,
+A bientot,
 Dimitri.
 
-冨士延章 wrote:
+???? wrote:
 > Cher Dimitri:
 >
-> Ok je vois ça (et puis désolé j'ai oublié ce que tu m'a dit
-> parce que pour des dérivées partielles, ça semble marcher...
-> donc en ce moment pour moi c'était très réalistique)
+> Ok je vois ca (et puis desole j'ai oublie ce que tu m'a dit
+> parce que pour des derivees partielles, ca semble marcher...
+> donc en ce moment pour moi c'etait tres realistique)
 >
-> Je peux discuter avec Dr. Takeuchi (il est maintenant l'assistant à ERI)
-> demain ou la semaine prochaine, après un séminaire.
-> Mais voilà ce qu'on a déjà discuté sur ce problème avec Dr. Mizutani
+> Je peux discuter avec Dr. Takeuchi (il est maintenant l'assistant a ERI)
+> demain ou la semaine prochaine, apres un seminaire.
+> Mais voila ce qu'on a deja discute sur ce probleme avec Dr. Mizutani
 > qui aussi travaille sur le coding de DSM:
 >
 > Si on choisit une fonction de Legendre comme une "trial function" comme
-> les gens de SEM font, c'est possible à analytiquement dériver le strain tensor.
+> les gens de SEM font, c'est possible a analytiquement deriver le strain tensor.
 >
 > En fait, je vais discuter profondement avec Dr. Takeuchi, attendez-vous svp
 >
@@ -46,39 +46,39 @@ Dimitri.
 >
 >     Bonjour Nobuaki,
 >
->     Ce n'est pas du tout une bonne idée d'utiliser une interpolation
->     sur trois points pour calculer le strain tensor, comme je te l'ai déjà
->     dit quand on a discuté à Toulouse. Car ce ne sera pas précis du tout.
->     Ce qu'il faut c'est dériver analytiquement la base de fonctions
->     utilisées
->     dans le DSM afin de calculer des dérivées consistantes avec la technique
+>     Ce n'est pas du tout une bonne idee d'utiliser une interpolation
+>     sur trois points pour calculer le strain tensor, comme je te l'ai deja
+>     dit quand on a discute a Toulouse. Car ce ne sera pas precis du tout.
+>     Ce qu'il faut c'est deriver analytiquement la base de fonctions
+>     utilisees
+>     dans le DSM afin de calculer des derivees consistantes avec la technique
 >     DSM. Les autres approches (interpolation par exemple) ne sont pas
 >     bonnes.
 >     Donc il faut que tu parles au Prof. Takeuchi pour voir comment faire
 >     cela.
 >
 >     Merci,
->     Amitiés,
+>     Amities,
 >
 >     Dimitri.
 >
->     冨士延章 wrote:
+>     ???? wrote:
 >      > Cher Dimitri:
 >      >
->      > Pour faire des dérivées partielles 3-D, je dois modifier le code
+>      > Pour faire des derivees partielles 3-D, je dois modifier le code
 >     de DSM
 >      > pour gagner les "strain tensors" aussi. Donc automatiquement
 >      > je suis en train de faire des strains avec l'interpolation des
 >     trois points.
 >      >
->      > Amitiés,
+>      > Amities,
 >      >
 >      > Nobuaki
 >      >
 >      >
 >      > --
 >      > *****************************************************
->      > FUJI Nobuaki (冨士　延章)
+>      > FUJI Nobuaki (?? ??)
 >      >      seismobassoon@gmail.com <mailto:seismobassoon@gmail.com>
 >     <mailto:seismobassoon@gmail.com <mailto:seismobassoon@gmail.com>>
 >     (primary)
@@ -105,9 +105,9 @@ Dimitri.
 >
 >
 >
-> -- 
+> --
 > *****************************************************
-> FUJI Nobuaki (冨士　延章)       seismobassoon@gmail.com <mailto:seismobassoon@gmail.com> (primary)
+> FUJI Nobuaki (?? ??)       seismobassoon@gmail.com <mailto:seismobassoon@gmail.com> (primary)
 >      fuji@eps.s.u-tokyo.ac.jp <mailto:fuji@eps.s.u-tokyo.ac.jp> (will be expired in a year ihope)
 > Ph.D student 3rd at Lab. of Prof. R.J. Geller
 > Dept. of Earth and Planetary Science,
@@ -118,7 +118,7 @@ Dimitri.
 > fax: +81-(0)3-5841-8318
 > mobile: +81-(0)90-9995-9859
 
--- 
+--
 Dimitri Komatitsch - dimitri.komatitsch aT univ-pau.fr
 Professor, University of Pau, Institut universitaire de France,
 CNRS and INRIA Magique3D, France   http://www.univ-pau.fr/~dkomati1

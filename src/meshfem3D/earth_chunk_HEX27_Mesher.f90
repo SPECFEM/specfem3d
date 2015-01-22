@@ -587,8 +587,8 @@
            if (ilat==nel_lat-1) call write_Igm_file(41,ispec2Dymax,NGLLX,NGLLZ,ilon,iz,izshift,ilayer_current)
 
            ! stzmin
-           if (iz==0) then ! pas besoin du test comme précédemment car je stocke tout dans des tableaux et c'est pas
-                             ! grave si on récrit les memes choses
+           if (iz==0) then ! pas besoin du test comme precedemment car je stocke tout dans des tableaux et c'est pas
+                             ! grave si on recrit les memes choses
               call calc_gll_points(xelm,yelm,zelm,xstore,ystore,zstore,shape3D,NGNOD,NGLLX,NGLLY,NGLLZ)
 
               call write_Igm_file(42,ispec2Dzmin,NGLLX,NGLLY,ilon,ilat,0,ilayer_current)

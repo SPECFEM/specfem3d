@@ -317,7 +317,7 @@ end subroutine write_recdepth_dsm
       long=atan2(y,x)
       lati=asin(z/rayon)
 
-      ! passage de geocentique à géographique
+      ! passage de geocentique a geographique
       !!theta = PI/2.D0 - lati
       ! convert the geocentric colatitude to a geographic colatitude
       !!colat = PI/2.0d0 - datan(1.006760466d0*dcos(theta)/dmax1(TINYVAL,dsin(theta)))
@@ -375,7 +375,7 @@ end subroutine write_recdepth_dsm
       long=atan2(y,x)
       lati=asin(z/rayon)
 
-      ! passage de geocentique à géographique
+      ! passage de geocentique a geographique
       !!theta = PI/2.D0 - lati
       ! convert the geocentric colatitude to a geographic colatitude
       !!colat = PI/2.0d0 - datan(1.006760466d0*dcos(theta)/dmax1(TINYVAL,dsin(theta)))
@@ -428,7 +428,7 @@ end subroutine write_recdepth_dsm
       long=atan2(y,x)
       lati=asin(z/rayon)
 
-      ! passage de geocentique à géographique
+      ! passage de geocentique a geographique
       !!theta = PI/2.D0 - lati
       ! convert the geocentric colatitude to a geographic colatitude
       !!colat = PI/2.0d0 - datan(1.006760466d0*dcos(theta)/dmax1(TINYVAL,dsin(theta)))
@@ -481,7 +481,7 @@ end subroutine write_recdepth_dsm
       long=atan2(y,x)
       lati=asin(z/rayon)
 
-      ! passage de geocentique à géographique
+      ! passage de geocentique a geographique
       !!theta = PI/2.D0 - lati
       ! convert the geocentric colatitude to a geographic colatitude
       !!colat = PI/2.0d0 - datan(1.006760466d0*dcos(theta)/dmax1(TINYVAL,dsin(theta)))
@@ -532,7 +532,7 @@ end subroutine write_recdepth_dsm
         long=atan2(y,x)
         lati=asin(z/rayon)
 
-      ! passage de geocentique à géographique
+      ! passage de geocentique a geographique
       !!theta = PI/2.D0 - lati
       ! convert the geocentric colatitude to a geographic colatitude
       !!colat = PI/2.0d0 - datan(1.006760466d0*dcos(theta)/dmax1(TINYVAL,dsin(theta)))
@@ -627,7 +627,7 @@ end subroutine write_recdepth_dsm
 ! Vadim Monteiller Mars 2013
 !
 !-------------------------------------------------------------------------------
-! matrice de rotation 3D d'axe "axe" et d'angle theta (d°)
+! matrice de rotation 3D d'axe "axe" et d'angle theta (en degres)
 ! cette matrice est en complexe
 !
 !=======================================================================================================

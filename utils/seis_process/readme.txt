@@ -8,7 +8,7 @@ To compare synthetics and data, the following steps are recommended:
    correct station/event and timing information.
 
 2. Convolve synthetic seismograms with a source time function with the
-   half duration speciﬁed in the CMTSOLUTION ﬁle, provided, as recommended,
+   half duration specified in the CMTSOLUTION file, provided, as recommended,
    you used a zero half duration in the SEM simulations.
 
 3. Resample both observed and synthetic seismograms to a common sampling rate.
@@ -20,8 +20,8 @@ To compare synthetics and data, the following steps are recommended:
 6. Remove the instrument response from the observed seismograms (recommended)
    or convolve the synthetic seismograms with the instrument response.
 
-7. Make sure that you apply the same ﬁlters to both observed and synthetic seismograms.
-   Preferably, avoid ﬁltering your records more than once.
+7. Make sure that you apply the same filters to both observed and synthetic seismograms.
+   Preferably, avoid filtering your records more than once.
 
 8. Now, you are ready to compare your synthetic and observed seismograms.
 

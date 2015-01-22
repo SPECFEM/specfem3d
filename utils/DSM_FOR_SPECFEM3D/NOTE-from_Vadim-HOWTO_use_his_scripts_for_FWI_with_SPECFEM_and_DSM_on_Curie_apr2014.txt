@@ -3,7 +3,7 @@ Subject: scripts for Full Waveform Inversion (FWI)
 From: Vadim MONTEILLER
 Date: 09/04/2014 15:39
 To: ywang
-CC: Sébastien Chevrot, Dimitri Komatitsch
+CC: Sebastien Chevrot, Dimitri Komatitsch
 
 Hi Yi,
 

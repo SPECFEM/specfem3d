@@ -173,12 +173,51 @@
 ################################################################################################
 
 #
+#  Clean spaces in text and LaTeX files
+#
+#  Author : Dimitri Komatitsch, EPS - Harvard University, USA, January 1998
+#
+
+      @objects = `ls *.txt */*.txt */*/*.txt */*/*/*.txt */*.tex */*/*.tex */*/*/*.tex `;
+
+      foreach $name (@objects) {
+            chop $name;
+# change tabs to white spaces
+            system("expand -2 < $name > _____temp08_____");
+            $cname = $name;
+            print STDOUT "Cleaning $cname ...\n";
+
+            open(FILEDEPART,"<_____temp08_____");
+            open(FILEC,">$cname");
+
+# open the input C file
+      while($line = <FILEDEPART>) {
+
+# suppress trailing white spaces and carriage return
+      $line =~ s/\s*$//;
+
+      print FILEC "$line\n";
+
+      }
+
+            close(FILEDEPART);
+            close(FILEC);
+
+      }
+
+            system("rm -f _____temp08_____");
+
+################################################################################################
+################################################################################################
+################################################################################################
+
+#
 #  Clean all accented letters and non-ASCII characters to remain portable
 #
 #  Authors : David Luet, Princeton University, USA and Dimitri Komatitsch, CNRS, France, January 2015
 #
 
-      @objects = `ls *.c *.cu *.h *.h.in *.fh */*.c */*.cu */*.h */*.h.in */*.fh */*/*.c */*/*.cu */*/*.h */*/*.h.in */*/*.fh */*/*/*.c */*/*/*.cu */*/*/*.h */*/*/*.h.in */*/*/*.fh *.f90 *.F90 *.h *.h.in *.fh */*.f90 */*.F90 */*.h */*.h.in */*.fh */*/*.f90 */*/*.F90 */*/*.h */*/*.h.in */*/*.fh */*/*/*.f90 */*/*/*.F90 */*/*/*.h */*/*/*.h.in */*/*/*.fh */*.txt */*/*.txt */*/*/*.txt */*.tex */*/*.tex */*/*/*.tex */*.sh */*/*.sh */*/*/*.sh */*.csh */*/*.csh */*/*/*.csh */*.bash */*/*.bash */*/*/*.bash */*.pl */*/*.pl */*/*/*.pl `;
+      @objects = `ls *.txt *.c *.cu *.h *.h.in *.fh */*.c */*.cu */*.h */*.h.in */*.fh */*/*.c */*/*.cu */*/*.h */*/*.h.in */*/*.fh */*/*/*.c */*/*/*.cu */*/*/*.h */*/*/*.h.in */*/*/*.fh *.f90 *.F90 *.h *.h.in *.fh */*.f90 */*.F90 */*.h */*.h.in */*.fh */*/*.f90 */*/*.F90 */*/*.h */*/*.h.in */*/*.fh */*/*/*.f90 */*/*/*.F90 */*/*/*.h */*/*/*.h.in */*/*/*.fh */*.txt */*/*.txt */*/*/*.txt */*.tex */*/*.tex */*/*/*.tex */*.sh */*/*.sh */*/*/*.sh */*.csh */*/*.csh */*/*/*.csh */*.bash */*/*.bash */*/*/*.bash */*.pl */*/*.pl */*/*/*.pl `;
 
       foreach $name (@objects) {
             chop $name;

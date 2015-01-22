@@ -1190,7 +1190,7 @@
   call memory_eval_gpu()
 
   ! prepares general fields on GPU
-  !§!§ JC JC here we will need to add GPU support for the new C-PML routines
+  !! JC JC here we will need to add GPU support for the C-PML routines
   call prepare_constants_device(Mesh_pointer, &
                                 NGLLX, NSPEC_AB, NGLOB_AB, &
                                 xix, xiy, xiz, etax,etay,etaz, gammax, gammay, gammaz, &

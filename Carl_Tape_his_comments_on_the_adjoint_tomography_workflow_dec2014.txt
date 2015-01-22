@@ -10,19 +10,19 @@ Hi Ryan and all,
 I met with Ebru, Emanuele, Frederica, Elliott, and Lion on Thursday
 night at AGU. (We scheduled at the last minute and missed Min and
 Hejun, unfortunately.) Below are some discussion points and questions.
-You already have plenty to discuss anyway, so you don’t have to
+You already have plenty to discuss anyway, so you don't have to
 consider any of these, of course. I cced Emanuele and Frederica,
-though I don’t think they’ll be back by Monday.
+though I don't think they'll be back by Monday.
 
 + It seems like those in our discussion were supportive of the move
-from “legacy” utilities (perl, sac, flexwin, measure_adj) to
+from "legacy" utilities (perl, sac, flexwin, measure_adj) to
 python-based utilities (obspy, pyflex, pyadj). Lion seemed quite
-willing to rewrite measure_adj into python (pyadj) – the multitaper
+willing to rewrite measure_adj into python (pyadj) - the multitaper
 measurement is the key piece, and there are Slepian tapers within
 python libraries, apparently.
 
 + Lion suggested that, in his opinion, the hdf5 file format would be
-optimal for seismograms and adjoint sources. I don’t know the details
+optimal for seismograms and adjoint sources. I don't know the details
 about this. But clearly this is an important decision, since it
 impacts the processing scripts, adjoint sources, the moment tensor
 inversion codes, etc.
@@ -63,10 +63,10 @@ little regarding the adjoint tomography workflow since 2009. But I
 have several projects that will move forward in 2015, lead by me
 (southern California), my student Vipul Silwal (Alaska), my postdoc
 Amir Allam (fault zones up to 5-10 Hz), and Yoshihiro Kaneko (New
-Zealand). I’d like to get these folks on the right track and am open
+Zealand). I'd like to get these folks on the right track and am open
 to trying out new things. Hopefully we can help in this effort.
 
-I’ll talk to you soon. Thanks for including me in the call.
+I'll talk to you soon. Thanks for including me in the call.
 
 Carl
 

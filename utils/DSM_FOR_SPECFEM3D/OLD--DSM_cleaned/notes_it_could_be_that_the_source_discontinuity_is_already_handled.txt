@@ -3,7 +3,7 @@ Subject: it could be that the source discontinuity is already handled (?)
 From: Dimitri Komatitsch
 Date: 24/03/2014 11:54
 To: ywang
-CC: Sébastien Chevrot, Vadim Monteiller
+CC: Sebastien Chevrot, Vadim Monteiller
 
 Hi all,
 
@@ -23,7 +23,7 @@ but I am not sure if this just adds a point at the source location (which is *no
 Thanks,
 Dimitri.
 
--- 
+--
 Dimitri Komatitsch
 CNRS Research Director (DR CNRS), Laboratory of Mechanics and Acoustics,
 UPR 7051, Marseille, France    http://komatitsch.free.fr

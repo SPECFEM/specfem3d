@@ -16,7 +16,7 @@ and errors of other operators cancel with each
 other.)   What we meant in the 1996 paper is that
 we have to modify 0th or 1st derivative operators
 to achieve optimal accuracy because we have no
-way to tune errors of the 2nd derivative operators.    
+way to tune errors of the 2nd derivative operators.
 
 At the moment, I'm not very sure whether higher order
 basis functions will improve the performance.
@@ -69,45 +69,45 @@ Thank you very much.
 
 
 c variables for a source
-	integer idim_rs_sph,idim_rs_tor,idim_rs_sph0,idim_rs_tor0
+  integer idim_rs_sph,idim_rs_tor,idim_rs_sph0,idim_rs_tor0
 c variables for stations
-	integer idim_station_sph,idim_station_tor,
-     &	 idim_station_sph0,idim_station_tor0
+  integer idim_station_sph,idim_station_tor,
+     &   idim_station_sph0,idim_station_tor0
 c variables for matrix elements
-	real*8 submatrix_I0(4,maxngrid_r)
-	real*8 submatrix_I1k(4,maxngrid_r),submatrix_I1m(4,maxngrid_r)
-	real*8 submatrix_I2(4,maxngrid_r)
-	real*8 submatrix_I3k(4,maxngrid_r),submatrix_I3m(4,maxngrid_r)
-	real*8 submatrix_I4(4,maxngrid_r)
-	real*8 submatrix_I5k(4,maxngrid_r),submatrix_I5m(4,maxngrid_r)
-	real*8 submatrix_I6(4,maxngrid_r)
-	real*8 submatrix_I7(4,maxngrid_r)
-	real*8 submatrix_I3k_mod(6,maxngrid_r)
-	real*8 submatrix_I3m_mod(6,maxngrid_r)
-	real*8 submatrix_I4_mod(6,maxngrid_r)
+  real*8 submatrix_I0(4,maxngrid_r)
+  real*8 submatrix_I1k(4,maxngrid_r),submatrix_I1m(4,maxngrid_r)
+  real*8 submatrix_I2(4,maxngrid_r)
+  real*8 submatrix_I3k(4,maxngrid_r),submatrix_I3m(4,maxngrid_r)
+  real*8 submatrix_I4(4,maxngrid_r)
+  real*8 submatrix_I5k(4,maxngrid_r),submatrix_I5m(4,maxngrid_r)
+  real*8 submatrix_I6(4,maxngrid_r)
+  real*8 submatrix_I7(4,maxngrid_r)
+  real*8 submatrix_I3k_mod(6,maxngrid_r)
+  real*8 submatrix_I3m_mod(6,maxngrid_r)
+  real*8 submatrix_I4_mod(6,maxngrid_r)
 c variables for wavefield
-	integer idim0,init_npos_sph,init_npos_tor
-	complex*16 whole_matrix_sph(4,2*maxngrid_r)
-	complex*16 whole_matrix_tor(2,maxngrid_r)
-	complex*16 whole_matrix_dr_sph(2*maxngrid_r)
-	complex*16 whole_matrix_dr_tor(maxngrid_r)
-	complex*16 whole_vector_sph(2*maxngrid_r,-2:2)
-	complex*16 whole_vector_tor(maxngrid_r,-2:2)
+  integer idim0,init_npos_sph,init_npos_tor
+  complex*16 whole_matrix_sph(4,2*maxngrid_r)
+  complex*16 whole_matrix_tor(2,maxngrid_r)
+  complex*16 whole_matrix_dr_sph(2*maxngrid_r)
+  complex*16 whole_matrix_dr_tor(maxngrid_r)
+  complex*16 whole_vector_sph(2*maxngrid_r,-2:2)
+  complex*16 whole_vector_tor(maxngrid_r,-2:2)
 
 
 
-2014-04-01 (火) の 15:36 +0200 に Dimitri Komatitsch さんは書きました:
+2014-04-01 (?) ? 15:36 +0200 ? Dimitri Komatitsch ????????:
 > Dear Nozomu,
-> 
-> PS: I am also not sure if the optimized operators with a 1/12.d0 
-> coefficient would also need to change when going to higher-order basis 
+>
+> PS: I am also not sure if the optimized operators with a 1/12.d0
+> coefficient would also need to change when going to higher-order basis
 > functions.
-> 
+>
 > Thank you,
 > Best regards,
-> 
+>
 > Dimitri.
-> 
+>
 > On 01/04/2014 15:13, Dimitri Komatitsch wrote:
 > >
 > > Dear Nozomu,
