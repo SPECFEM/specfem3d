@@ -1,6 +1,57 @@
 
 ---------- DK DK new issues added by Dimitri on January 21, 2015, following some emails I exchanged with Zhinan:
 
+Subject:  Re:Re: PML
+Date:   Wed, 17 Dec 2014 19:41:23 +0800 (CST)
+From:   xiezhinan
+To:   Dimitri Komatitsch
+CC:   Jeroen Tromp , Matthieu Lefebvre , Ryan Modrak , Alexis Bottero , Daniel Peter , Mathilde Griveaux , Paul Cristini , Clément Durochat , Yi Wang , Vadim Monteiller
+
+Dear Dimitri, dear all,
+
+Thank you so much for understanding my delay in work of SPECFEM source development.
+I would like to summarize some previous email about the missing things
+in SPECFEM that need further some research work and things have been done but do not committed in SPECFEM:
+
+
+Missing things:
+
+(1): The PML formulation and implementation for wave simulation in Chunk of earth with SPECFEM_globe.
+
+(2): The computational part of PML code in SPECFEM2D and SPCFEM3D_Cartesian is not well documented and also not clean, in
+particular for adjoint wave simulation.
+
+(3): make the PML code work with inner_mesher in SPCFEM3D_Cartesian.
+
+(4): The LDDRK scheme implementation in SPCFEM3D_Cartesian.
+
+(5): plane wave incident with PML in case of layered infinite domain.
+
+
+Uncommitted things (or committed some unclean code):
+
+(1): PML implementation in SPECFEM2D and SPCFEM3D_Cartesian for forward and adjoint acoustic/elastic simulation with source excitation.
+
+(2): boundary kernel computation with PML.
+
+(3): plane wave incident with PML in case of uniform infinite domain.
+
+
+Also some problems have been reported and already realized by the team of developers:
+
+(1): The SPECFEM2D code is not clean due to many development.
+
+(2): some examples in SPECFEM2D are broken, such as the nice example done by LuoYang: noise_layered and noise_uniform.
+
+(3): an clean adjoint inversion example with PML.
+
+Thanks,
+Best regards,
+Zhinan
+
+
+------------------------------------------------
+
 Subject: Re: specfem3d
 Date: Thu, 22 Jan 2015 00:02:29 +0100
 From: Dimitri Komatitsch
