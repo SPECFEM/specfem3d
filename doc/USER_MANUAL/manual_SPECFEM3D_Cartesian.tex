@@ -135,11 +135,11 @@ Emanuele Casarotti,
 Joseph Charles,
 Min Chen,
 Percy Galvez,
-Dominik Göddeke,
-Vala Hjörleifsdóttir,
+Dominik G\"oddeke,
+Vala Hj\"orleifsd\'ottir,
 Sue Kientz,
 Dimitri Komatitsch,
-Jesús Labarta,
+Jes\'us Labarta,
 Nicolas Le Goff,
 Pieyre Le Loher,
 Matthieu Lefebvre,
@@ -437,7 +437,7 @@ in order to turn underflow trapping off.\\
 
 You can add \texttt{--enable-vectorization} to the configuration options to speed up the code in the fluid (acoustic) and elastic parts.
 This works fine if (and only if) your computer always allocates a contiguous memory block for each allocatable array;
-this is the case for most machines and most compilers, but not all. To disable this feature, use option \texttt{--disable-vectorization}. 
+this is the case for most machines and most compilers, but not all. To disable this feature, use option \texttt{--disable-vectorization}.
 For more details see \href{https://github.com/geodynamics/specfem3d/issues/81}{github.com/geodynamics/specfem3d/issues/81} .
 To check if that option works fine on your machine, run the code with and without it for an acoustic/elastic model and make sure the seismograms are identical.\\
 
@@ -952,7 +952,7 @@ blocks above, e.g. 'face\_abs\_xmin'.
 
 After the block definitions are done, you export the mesh using the
 script \texttt{cubit2specfem3d.py} provided in each of the example
-directories (linked to the common script \texttt{CUBIT\_GEOCUBIT/cubit2specfem3d.py}). 
+directories (linked to the common script \texttt{CUBIT\_GEOCUBIT/cubit2specfem3d.py}).
 If the export was successful, you should find the following
 files in a subdirectory \texttt{MESH/}:
 \begin{description}
@@ -1152,7 +1152,7 @@ block IDs belonging to volumes in order to check the quality of the
 hexahedral elements. You also have to determine a number of parameters
 of your mesh, such as the number of nodes and number of elements and
 modify the header of the \texttt{check\_mesh\_quality\_CUBIT\_Abaqus.f90}
-source file in directory \texttt{src/check\_mesh\_quality\_CUBIT\_Abaqus/}. 
+source file in directory \texttt{src/check\_mesh\_quality\_CUBIT\_Abaqus/}.
 
 \noindent
 Then, in the main directory, type
@@ -1799,14 +1799,14 @@ xgenerate\_database input.
 \end{description}
 
 
-The present version of SPECFEM can handle fully saturated porous simulations, Christina Morency implemented Biot equation. 
+The present version of SPECFEM can handle fully saturated porous simulations, Christina Morency implemented Biot equation.
 But the code cannot calculate partially saturated cases in its state.
 Christina Morency is presently working on a dual porosity, dual permeability formulation, type Pride and Berryman, for an other project, but it will not be available for some time.\\
 
 The way we prescribe material property for porous material in SPECFEM3D is as follow:
 We use a file name nummaterial\_poroelastic\_file, which is located in the directory MESH, the format is as follow:\\
  rhos rhof phi c kxx kxy kxz kyy kyz kzz Ks Kf Kfr etaf mufr\\
-where\\ 
+where\\
 rho\_s = solid density\\
 rho\_f = fluid density\\
 phi = porosity\\
@@ -1956,7 +1956,7 @@ Centroid-Moment Tensor (CMT) web page \urlwithparentheses{www.seismology.harvard
 It looks like the example shown in Fig. \ref{fig:CMTSOLUTION-file}.
 %\begin{lyxcode}
 \begin{figure}[htp]
-\noindent 
+\noindent
 \begin{centering}
 {\small \includegraphics[width=0.8\textwidth]{figures/Hollywood_CMT}
 }
@@ -3417,7 +3417,7 @@ it in the root directory, type:
 \begin{lyxcode}
 {\footnotesize make~xcombine\_vol\_data~}{\footnotesize \par}
 \end{lyxcode}
-which will create the executable \texttt{bin/xcombine\_vol\_data}. 
+which will create the executable \texttt{bin/xcombine\_vol\_data}.
 To output the usage of this executable, type
 \begin{lyxcode}
 {\footnotesize ./bin/xcombine\_vol\_data~}{\footnotesize \par}
@@ -3853,17 +3853,17 @@ the required relative output.
 
 \section{{\normalsize \label{sec:Using-SEP}}Using external SEP models.}
 
-Stanford Exploration Project (SEP) models consists of two files per variables, one header file (\texttt{.H}) 
-and one binary file (\texttt{.H$@$}). 
-Among other information, the header file indicates, for each dimension, 
-the offset (\texttt{o1}, \texttt{o2} and \texttt{o3} fields), 
+Stanford Exploration Project (SEP) models consists of two files per variables, one header file (\texttt{.H})
+and one binary file (\texttt{.H$@$}).
+Among other information, the header file indicates, for each dimension,
+the offset (\texttt{o1}, \texttt{o2} and \texttt{o3} fields),
 the spatial step size (\texttt{d1}, \texttt{d2} and \texttt{d3} fields)
 and the number of samples (\texttt{n1}, \texttt{n2} and \texttt{n3}) necessary to read
 the linked binary file (\texttt{in} field).
 
 SEP model reading occurs during database generation. It it the user responsibility
 to ensure that proper interfaces between acoustic and elastic domains are set up
-during the meshing phase. For more information, refer to 
+during the meshing phase. For more information, refer to
 section~\ref{cha:Running-the-Mesher-Meshfem3D}.
 
 In \texttt{DATA/Par\_file}, \texttt{\textbf{MODEL}} should be set to \texttt{\textbf{sep}},
