@@ -3,7 +3,7 @@ Subject: Re: More to say about Takeuchi's code
 From: Dimitri Komatitsch
 Date: 02/04/2014 13:42
 To: martinr
-CC: Yi Wang, Sébastien Chevrot, Roland Martin
+CC: Yi Wang, Sebastien Chevrot, Roland Martin
 
 Hi Roland, Hi all,
 
@@ -33,10 +33,10 @@ On 02/04/2014 13:25, martinr wrote:
 > ROland
 >
 
--- 
+--
 Dimitri Komatitsch
 CNRS Research Director (DR CNRS), Laboratory of Mechanics and Acoustics,
 UPR 7051, Marseille, France    http://komatitsch.free.fr
 
 Attachments:
-Takeuchi_Geller_Cummins_GRL_1996.pdf	410 KB
+Takeuchi_Geller_Cummins_GRL_1996.pdf  410 KB

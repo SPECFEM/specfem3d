@@ -93,9 +93,9 @@ sub geo2utm {
 
 #! some extracts about UTM:
 #!
-#! There are 60 longitudinal projection zones numbered 1 to 60 starting at 180°W.
+#! There are 60 longitudinal projection zones numbered 1 to 60 starting at 180 degrees W.
 #! Each of these zones is 6 degrees wide, apart from a few exceptions around Norway and Svalbard.
-#! There are 20 latitudinal zones spanning the latitudes 80°S to 84°N and denoted
+#! There are 20 latitudinal zones spanning the latitudes 80 degrees S to 84 degrees N and denoted
 #! by the letters C to X, ommitting the letter O.
 #! Each of these is 8 degrees south-north, apart from zone X which is 12 degrees south-north.
 #!

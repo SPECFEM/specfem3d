@@ -378,7 +378,7 @@ It follows that velocity $\bv$ and pressure $p$ may be expressed as:
  \bv   =   \rho^{-1}\,\bnabla \partial_t \phi\, ,
  \eequ
 \bequ
-  p  =   \mbox{} - \kappa\, (\bnabla \cdot \bs ) =  \mbox{}- \partial_t^2 \phi\, .	\label{equ:pressure}
+  p  =   \mbox{} - \kappa\, (\bnabla \cdot \bs ) =  \mbox{}- \partial_t^2 \phi\, .  \label{equ:pressure}
 \eequ
 The resulting formulation for pressure $p$ is the reason why we choose to define the potential $\phi$ as in equation (\ref{equ:acousticdisplacement}).
 Since pressure is continuous across first-order discontinuities,
@@ -899,7 +899,7 @@ that is, to address the seismological inverse problem.
 The goal is to harness the power of forward and adjoint modeling tools,
 such as \href{http://www.geodynamics.org/cig/software/specfem3d}{SPECFEM3D},
 together with modern computers to enhance
-the quality of images of Earth’s interior and the earthquake rupture process.
+the quality of images of Earth's interior and the earthquake rupture process.
 Most traditional tomographic methods utilize traveltime or phase information measured by comparing data with simulations,
 and interpret such measurements based on ray theory or other approximate methods.
 Because of the limitations of these approximate theories, only parts of seismograms can be used,
@@ -963,7 +963,7 @@ which follows from the definition of the scalar potential $\phi$ in eq. (\ref{eq
 The corresponding action in the acoustic case is given by
 \bequ
 \chi = \frac{1}{2} \sum_i \int || p_i^{\mathrm{syn}} - p_i^{\mathrm{obs}} ||^2 \, \mathrm{d}t
-						- \int \int_{\Omega} \lambda\, \left[ \kappa^{-1}\, \partial_t^2 \phi - \bnabla \cdot \left( \rho^{-1} \,\bnabla \phi \right) - f  \right] \,\mathrm{d}^3\bx \, \mathrm{d}t\,,
+            - \int \int_{\Omega} \lambda\, \left[ \kappa^{-1}\, \partial_t^2 \phi - \bnabla \cdot \left( \rho^{-1} \,\bnabla \phi \right) - f  \right] \,\mathrm{d}^3\bx \, \mathrm{d}t\,,
 \eequ
 where $\lambda$ denotes a scalar Lagrange multiplier.
 Setting $ \Delta p_i = p_i^{\mathrm{syn}}  - p_i^{\mathrm{obs}}$

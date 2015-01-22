@@ -585,8 +585,8 @@ void FC_FUNC_(get_norm_acoustic_from_device,
    }
 
    // cublas function: cublasIsamax
-   //       finds the smallest index of the maximum magnitude element of single 
-   //      precision vector x
+   //       finds the smallest index of the maximum magnitude element of single
+   //      precision vector x
    int incr = 1;
    int imax = 0;
    imax = cublasIsamax(mp->NGLOB_AB,(realw*)mp->d_potential_dot_dot_acoustic, incr);

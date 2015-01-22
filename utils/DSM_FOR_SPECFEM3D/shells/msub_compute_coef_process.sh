@@ -62,7 +62,7 @@ cd $BRIDGE_MSUB_PWD
 
 ## ------------------ INPUTS -----------------------------
 
-# DSM BINARY : (to do supprimer peut-être çà de params.in??)
+# DSM BINARY : (to do supprimer peut-etre ca de params.in??)
 # NBPROC is declared as integer (important do not change)
 declare -i NPROC NPROC_MINUS_ONE
 

@@ -5,7 +5,7 @@ Subject:  Re:Re: PML
 Date:   Wed, 17 Dec 2014 19:41:23 +0800 (CST)
 From:   xiezhinan
 To:   Dimitri Komatitsch
-CC:   Jeroen Tromp , Matthieu Lefebvre , Ryan Modrak , Alexis Bottero , Daniel Peter , Mathilde Griveaux , Paul Cristini , Clément Durochat , Yi Wang , Vadim Monteiller
+CC:   Jeroen Tromp , Matthieu Lefebvre , Ryan Modrak , Alexis Bottero , Daniel Peter , Mathilde Griveaux , Paul Cristini , Clement Durochat , Yi Wang , Vadim Monteiller
 
 Dear Dimitri, dear all,
 
@@ -53,16 +53,16 @@ Zhinan
 
 Subject: Re: PML
 Date: Thu, 22 Jan 2015 01:43:52 +0100
-From: Dimitri Komatitsch <komatitsch@lma.cnrs-mrs.fr>
+From: Dimitri Komatitsch
 Organization: CNRS, Marseille, France
 To: xiezhinan
-CC:   Jeroen Tromp , Matthieu Lefebvre , Ryan Modrak , Alexis Bottero , Daniel Peter , Mathilde Griveaux , Paul Cristini , Clément Durochat , Yi Wang , Vadim Monteiller
+CC:   Jeroen Tromp , Matthieu Lefebvre , Ryan Modrak , Alexis Bottero , Daniel Peter , Mathilde Griveaux , Paul Cristini , Clement Durochat , Yi Wang , Vadim Monteiller
 
 Dear Zhinan, dear all,
 
-I would add one more thing to the list (we discussed it in the Skype 
-call of Dec 22):  committing the fluid-solid boundary kernels that are 
-currently implemented in a local version in your account of the 
+I would add one more thing to the list (we discussed it in the Skype
+call of Dec 22):  committing the fluid-solid boundary kernels that are
+currently implemented in a local version in your account of the
 Marseille supercomputer but not committed to Git yet.
 
 Thanks,
@@ -146,7 +146,7 @@ going on.
 
 Subject: Re: [specfem3d] Runing both PML and attenuation causes error results (#356)
 Date: Tue, 20 Jan 2015 23:58:21 +0100
-From: Dimitri Komatitsch <komatitsch@lma.cnrs-mrs.fr>
+From: Dimitri Komatitsch
 Organization: CNRS, Marseille, France
 To: geodynamics/specfem3d , specfem3d-zhang-ksu
 CC: Zhinan Xie
@@ -239,7 +239,7 @@ Hi Zhinan,
 
 OK, thank you very much for your answer. I suggest we proceed as you
 plan below, i.e. in the next few days you can start cleaning the code
-(please do a git pull because Clément and Yi as well as Vadim have
+(please do a git pull because Clement and Yi as well as Vadim have
 changed many things in the code)  and you can start merging all your
 contributions from the last few months, which are not committed yet.
 Then, as soon as all of this is merged Vadim can have a look at how to
@@ -305,9 +305,9 @@ On 10/28/2014 01:52 PM, xiezhinan wrote:
 3/ add a more flexible function for scale factor and fix one error in create_mass_matrices.f90:
 
 Date:   Tue, 24 Jun 2014 07:15:03 +0800
-From:   谢志南 <xiezhinan1984
+From:   ??? <xiezhinan1984
 To:   Dimitri Komatitsch
-CC:   Clément Durochat, Paul Cristini, Elliott Sales de Andrade
+CC:   Clement Durochat, Paul Cristini, Elliott Sales de Andrade
 
 Dear Dimitri,
 
@@ -396,9 +396,9 @@ Subject: Bermudez (2007)
 Date: Sat, 29 Nov 2014 17:34:46 +0100
 From: Dimitri Komatitsch
 Organization: CNRS, Marseille, France
-To: Zhinan Xie 谢志南,  René Matzen, Paul Cristini
+To: Zhinan Xie ???,  Rene Matzen, Paul Cristini
 
-Hi Zhinan and René,
+Hi Zhinan and Rene,
 
 What do you think of the approach of Bermudez et al (2007) to make the
 damping profile linear and also reach zero on the outer edge of the

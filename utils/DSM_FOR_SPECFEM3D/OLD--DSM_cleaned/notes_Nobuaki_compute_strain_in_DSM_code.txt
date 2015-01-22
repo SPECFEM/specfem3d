@@ -5,7 +5,7 @@ Dimitri Komatitsch <dimitri.komatitsch@univ-pau.fr>
 Date:
 Mon, 04 May 2009 18:27:29 +0200
 To:
-冨士延章 <fuji@eps.s.u-tokyo.ac.jp>
+???? <fuji@eps.s.u-tokyo.ac.jp>
 CC:
 Sebastien Chevrot <chevrot@dtp.obs-mip.fr>, Vadim Monteiller <vadim.monteiller@dtp.obs-mip.fr>
 
@@ -14,27 +14,27 @@ Bonjour,
 
 Parfait, merci beaucoup.
 
-Entre temps N. Takeuchi vient de trouver le bug que je lui avais signalé
+Entre temps N. Takeuchi vient de trouver le bug que je lui avais signale
 donc je vais essayer la nouvelle version de son code.
 
-Je suis d'accord qu'il faut calculer dU/dx pour le strain, mais la question est de savoir quelle est la façon simple de le faire dans le code DSM. Le mieux à mon avis serait de dériver les fonctions de base
+Je suis d'accord qu'il faut calculer dU/dx pour le strain, mais la question est de savoir quelle est la facon simple de le faire dans le code DSM. Le mieux a mon avis serait de deriver les fonctions de base
 ("compute the derivative of the basis functions").
 
 Merci,
-A bientôt,
+A bientot,
 
 Dimitri.
 
-冨士延章 wrote:
+???? wrote:
 > Cher Dimitri Komatitsch,
 >
-> C'était vraiment bonne discussion avec vous hier.
-> DSM, bien sûr, calcule des displacements pour l'éspace
+> C'etait vraiment bonne discussion avec vous hier.
+> DSM, bien sur, calcule des displacements pour l'espace
 > entier, donc c'est facile a calculer:
 >
 > strain: dU/dx
-> stress: multiplé par le constant élastique
-> traction: le produit intérieur avec le vecteur normal
+> stress: multiple par le constant elastique
+> traction: le produit interieur avec le vecteur normal
 >
 > ben, soit moi ou mon collegue ou aussi Vadim peuvent modifier des codes:
 >
@@ -44,12 +44,12 @@ Dimitri.
 >
 > Merci de patienter.
 >
-> Amitiés,
+> Amities,
 >
 > Nobuaki
-> -- 
+> --
 > *****************************************************
-> FUJI Nobuaki (冨士　延章)       seismobassoon@gmail.com <mailto:seismobassoon@gmail.com> (primary)
+> FUJI Nobuaki (?? ??)       seismobassoon@gmail.com <mailto:seismobassoon@gmail.com> (primary)
 >      fuji@eps.s.u-tokyo.ac.jp <mailto:fuji@eps.s.u-tokyo.ac.jp> (will be expired in a year ihope)
 > Ph.D student 3rd at Lab. of Prof. R.J. Geller
 > Dept. of Earth and Planetary Science,
@@ -60,7 +60,7 @@ Dimitri.
 > fax: +81-(0)3-5841-8318
 > mobile: +81-(0)90-9995-9859
 
--- 
+--
 Dimitri Komatitsch - dimitri.komatitsch aT univ-pau.fr
 Professor, University of Pau, Institut universitaire de France,
 CNRS and INRIA Magique3D, France   http://www.univ-pau.fr/~dkomati1

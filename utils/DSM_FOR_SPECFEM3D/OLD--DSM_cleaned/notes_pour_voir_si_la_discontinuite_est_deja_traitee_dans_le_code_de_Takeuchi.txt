@@ -1,13 +1,13 @@
 
-Subject: pour voir si la discontinuité est déjà traitée de la bonne façon dans le code de Takeuchi
+Subject: pour voir si la discontinuite est deja traitee de la bonne facon dans le code de Takeuchi
 From: Dimitri Komatitsch
 Date: 23/03/2014 19:17
-To: Vadim MONTEILLER, Sébastien Chevrot, Yi Wang
+To: Vadim MONTEILLER, Sebastien Chevrot, Yi Wang
 
 Salut Vadim,
 
-Si tu veux dans le répertoire 'DSM_cleaned' tu trouveras les fichiers *.f90 du code de Takeuchi (que j'ai commencé à nettoyer et aussi à convertir en F90 au lieu de F77). Son code est super clair et super facile à lire, donc peut-être qu'il a déjà mis le bon traitement de cette discontinuité dedans, faudrait regarder à l'occasion
-(Yi va regarder dans les prochaines semaines, si jamais tu ouvres les fichiers *.f90 et que tu vois si la réponse est oui ou non (son code est court, et facile à lire) stp dis-le nous et on le dira à Yi.
+Si tu veux dans le repertoire 'DSM_cleaned' tu trouveras les fichiers *.f90 du code de Takeuchi (que j'ai commence a nettoyer et aussi a convertir en F90 au lieu de F77). Son code est super clair et super facile a lire, donc peut-etre qu'il a deja mis le bon traitement de cette discontinuite dedans, faudrait regarder a l'occasion
+(Yi va regarder dans les prochaines semaines, si jamais tu ouvres les fichiers *.f90 et que tu vois si la reponse est oui ou non (son code est court, et facile a lire) stp dis-le nous et on le dira a Yi.
 
 Merci,
 Dimitri.

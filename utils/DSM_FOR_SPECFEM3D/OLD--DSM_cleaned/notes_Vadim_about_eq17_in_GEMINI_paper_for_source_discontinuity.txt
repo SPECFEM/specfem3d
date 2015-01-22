@@ -1,29 +1,29 @@
 
 -------- Original Message --------
-Subject: Re: une question sur la discontinuité de source pour DSM
+Subject: Re: une question sur la discontinuite de source pour DSM
 Date: Sun, 23 Mar 2014 14:05:47 +0100
 From: Vadim MONTEILLER
-To: Dimitri Komatitsch, Sébastien Chevrot, Yi Wang
+To: Dimitri Komatitsch, Sebastien Chevrot, Yi Wang
 
 Salut Dimitri,
 
-Dans le papier il faut regarder l'équation (17) juste en dessous il est 
-mentionné un "JUMP" au niveau de la source. Ensuite dans le reste du 
-papier ils font la distinction entre les solutions en dessous de la 
-sources et celles au dessus. Mais c'est pas très détaillé dans ce 
-papier. Je me souviens de papier de Woodhouse où les équations sont plus 
-précises. J'ai plus les rèfs ici mais je crois que tu as du les 
-photocopier en même temps que le papier gemini. En fait, je n'avais 
-qu'une version papier de tout çà et je n'arrive plus à les retrouver.
+Dans le papier il faut regarder l'equation (17) juste en dessous il est
+mentionne un "JUMP" au niveau de la source. Ensuite dans le reste du
+papier ils font la distinction entre les solutions en dessous de la
+sources et celles au dessus. Mais c'est pas tres detaille dans ce
+papier. Je me souviens de papier de Woodhouse ou les equations sont plus
+precises. J'ai plus les refs ici mais je crois que tu as du les
+photocopier en meme temps que le papier gemini. En fait, je n'avais
+qu'une version papier de tout ca et je n'arrive plus a les retrouver.
 
 Vadim
 
-Le 23/03/2014 01:30, Dimitri Komatitsch a écrit :
+Le 23/03/2014 01:30, Dimitri Komatitsch a ecrit :
 >
 > Salut Vadim,
 >
-> Stp dans le papier GEMINI de 1995 pourrais-tu nous dire à quel 
-> endroit du papier est décrite la façon de mettre la discontinuité de 
+> Stp dans le papier GEMINI de 1995 pourrais-tu nous dire a quel
+> endroit du papier est decrite la facon de mettre la discontinuite de
 > source dont tu me parlais ?
 >
 > Merci,

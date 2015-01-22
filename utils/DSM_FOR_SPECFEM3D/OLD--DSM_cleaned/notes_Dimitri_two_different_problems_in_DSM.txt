@@ -2,7 +2,7 @@
 Subject: two different problems in DSM
 From: Dimitri Komatitsch
 Date: 01/04/2014 14:41
-To: Sébastien Chevrot, Yi Wang, Vadim Monteiller, Roland Martin
+To: Sebastien Chevrot, Yi Wang, Vadim Monteiller, Roland Martin
 
 Hi all,
 
@@ -36,8 +36,8 @@ On 01/04/2014 13:25, Dimitri Komatitsch wrote:
 > Cheers,
 > Dimitri.
 >
-> On 01/04/2014 07:23, Sébastien Chevrot wrote:
->> Le 01/04/14 01:26, Dimitri Komatitsch a écrit :
+> On 01/04/2014 07:23, Sebastien Chevrot wrote:
+>> Le 01/04/14 01:26, Dimitri Komatitsch a ecrit :
 >>>
 >>> Hi all,
 >>>
@@ -69,10 +69,10 @@ On 01/04/2014 13:25, Dimitri Komatitsch wrote:
 >> When do you want to do this ?
 >
 
--- 
+--
 Dimitri Komatitsch
 CNRS Research Director (DR CNRS), Laboratory of Mechanics and Acoustics,
 UPR 7051, Marseille, France    http://komatitsch.free.fr
 
 Attachments:
-Takeuchi_Geller_Cummins_GRL_1996.pdf	410 KB
+Takeuchi_Geller_Cummins_GRL_1996.pdf  410 KB

@@ -6,7 +6,7 @@
 !  Vadim Monteiler, Fevrier 2013
 !
 !
-! J'ai une convention propre pour le mapping de la sphere cubique (a compléter ... ) !!!!!!
+! J'ai une convention propre pour le mapping de la sphere cubique (a completer ... ) !!!!!!
 !
 program mesh_chunk
   implicit none
@@ -40,7 +40,7 @@ program mesh_chunk
 
   ! nb couches dans modele iasp91 ou ak135 ou prem
   integer nlayer
-  parameter (nlayer=12) ! 1 couche de plus que le modèle
+  parameter (nlayer=12) ! 1 couche de plus que le modele
   double precision zlayer(nlayer),vpv(nlayer,4),vsv(nlayer,4),density(nlayer,4)
   double precision, dimension(:,:), allocatable :: ProfForGemini
   double precision Z_DEPTH_BLOCK,UTM_X_MIN,UTM_X_MAX
@@ -57,7 +57,7 @@ program mesh_chunk
   character(len=250) model1D_file
 
   !! CONVENTION : (lon,lat) -> (xi,eta) (k=6 avec -z pour le mapping sphere cubique (cf Chervot 2012)
-   ! on definit le maillage d'un chunk dans la sphère cubique-------------------------------------------------------
+   ! on definit le maillage d'un chunk dans la sphere cubique-------------------------------------------------------
   PI = 3.141592653589793d0
   deg2rad = 3.141592653589793d0/180.d0
   R_EARTH=6371000.d0
@@ -75,7 +75,7 @@ program mesh_chunk
      chunk_azi=0.d0 !90.d0 !80.d0 !10.d0  !* deg2rad
      ! depth
      chunk_depth = 1000.d0 *1000.d0 ! 250.d0 * 1000.d0
-     ! nb d'éléments
+     ! nb d'elements
      nel_lat = 20 !120
      nel_lon = 40 !96
      nel_depth = 20 !100
@@ -99,7 +99,7 @@ program mesh_chunk
      ANGULAR_WIDTH_XI_RAD = deg2rad * ANGULAR_WIDTH_XI_RAD
      ANGULAR_WIDTH_ETA_RAD = deg2rad * ANGULAR_WIDTH_ETA_RAD
      chunk_depth = chunk_depth * 1000.d0
-  endif   !这里是读入chunk的尺寸和网点间隔，需要ParFileMeshChunk文件
+  endif   !?????chunk????????,??ParFileMeshChunk??
 
  NX = nel_lon
  NY = nel_lat
@@ -299,12 +299,12 @@ program mesh_chunk
               y = tan((ANGULAR_WIDTH_ETA_RAD/2.d0) * y)
               !if (ilat==0.and.iz==0) write(49,*) ia,i,ratio_xi
 
-              !mapping sphere cubique (k=5) (Chevrot et al 2012) (il y a un signe opposé)
+              !mapping sphere cubique (k=5) (Chevrot et al 2012) (il y a un signe oppose)
               !pz = z/dsqrt(1.d0 + y*y + x*x)
               !px = x*pz
               !py = y*pz
               ! mapping qui permet d'avoir le chunk au pole Nord
-              ! mapping sphère cubique (k=6, Chevrot at al 2012, avec -z)
+              ! mapping sphere cubique (k=6, Chevrot at al 2012, avec -z)
               pz=  z/dsqrt(1.d0 + y*y + x*x) !(=r/s)
               px= pz * x !(tan(xi) * r/s)
               py= pz * y !(tan(eta) * r/s)
@@ -384,8 +384,8 @@ program mesh_chunk
            if (ilat==nel_lat-1) call write_Igm_file(41,ispec2Dymax,NGLLX,NGLLZ,ilon,iz,izshift,ilayer_current)
 
            ! stzmin
-           if (iz==0) then ! pas besoin du test comme précédemment car je stocke tout dans des tableaux et c'est pas
-                                      ! grave si on récrit les memes choses
+           if (iz==0) then ! pas besoin du test comme precedemment car je stocke tout dans des tableaux et c'est pas
+                                      ! grave si on recrit les memes choses
               call calc_gll_points(xelm,yelm,zelm,xstore,ystore,zstore,shape3D,NGNOD,NGLLX,NGLLY,NGLLZ)
                call write_Igm_file(42,ispec2Dzmin,NGLLX,NGLLY,ilon,ilat,0,ilayer_current)
               !open(125,file='ggl_elemts')
@@ -749,7 +749,7 @@ subroutine write_stxmin(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,rotation_matrix,t
       long=atan2(y,x)
       lati=asin(z/rayon)
 
-      ! passage de geocentique à géographique
+      ! passage de geocentique a geographique
       !!theta = PI/2.D0 - lati
       ! convert the geocentric colatitude to a geographic colatitude
       !!colat = PI/2.0d0 - datan(1.006760466d0*dcos(theta)/dmax1(TINYVAL,dsin(theta)))
@@ -802,7 +802,7 @@ subroutine write_stxmax(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,rotation_matrix,t
       long=atan2(y,x)
       lati=asin(z/rayon)
 
-      ! passage de geocentique à géographique
+      ! passage de geocentique a geographique
       !!theta = PI/2.D0 - lati
       ! convert the geocentric colatitude to a geographic colatitude
       !!colat = PI/2.0d0 - datan(1.006760466d0*dcos(theta)/dmax1(TINYVAL,dsin(theta)))
@@ -855,7 +855,7 @@ subroutine write_stymin(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,rotation_matrix,t
       long=atan2(y,x)
       lati=asin(z/rayon)
 
-      ! passage de geocentique à géographique
+      ! passage de geocentique a geographique
       !!theta = PI/2.D0 - lati
       ! convert the geocentric colatitude to a geographic colatitude
       !!colat = PI/2.0d0 - datan(1.006760466d0*dcos(theta)/dmax1(TINYVAL,dsin(theta)))
@@ -903,7 +903,7 @@ subroutine write_stymax(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,rotation_matrix,t
       long=atan2(y,x)
       lati=asin(z/rayon)
 
-      ! passage de geocentique à géographique
+      ! passage de geocentique a geographique
       !!theta = PI/2.D0 - lati
       ! convert the geocentric colatitude to a geographic colatitude
       !!colat = PI/2.0d0 - datan(1.006760466d0*dcos(theta)/dmax1(TINYVAL,dsin(theta)))
@@ -954,7 +954,7 @@ subroutine store_zmin_points(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,rotation_mat
         long=atan2(y,x)
         lati=asin(z/rayon)
 
-      ! passage de geocentique à géographique
+      ! passage de geocentique a geographique
       !!theta = PI/2.D0 - lati
       ! convert the geocentric colatitude to a geographic colatitude
       !!colat = PI/2.0d0 - datan(1.006760466d0*dcos(theta)/dmax1(TINYVAL,dsin(theta)))
@@ -1034,7 +1034,7 @@ end subroutine compute_rotation_matrix
 ! Vadim Monteiller Mars 2013
 !
 !-------------------------------------------------------------------------------
-! matrice de rotation 3D d'axe "axe" et d'angle theta (d°)
+! matrice de rotation 3D d'axe "axe" et d'angle theta (d?)
 ! cette matrice est en complexe
 subroutine rotation_matrix_axe(R,axe,theta)
   implicit none

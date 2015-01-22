@@ -53,7 +53,7 @@
 
 ## ------------------ INPUTS -----------------------------
 
-# DSM BINARY : (to do supprimer peut-être çà de params.in??)
+# DSM BINARY : (to do supprimer peut-etre ca de params.in??)
 BIN_DSM=$HOME_SPECFEM3D/utils/DSM_FOR_SPECFEM3D/bin
 # NBPROC is declared as integer (important do not change)
 declare -i NPROC NPROC_MINUS_ONE
