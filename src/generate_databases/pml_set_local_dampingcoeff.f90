@@ -340,7 +340,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
               dist = abscissa_in_PML_x / CPML_width_x
 
               ! gets damping profile at the C-PML element's GLL point
-              K_x = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+              K_x = K_MIN_PML  + (K_MAX_PML - ONE) * dist
               d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
               alpha_x = ALPHA_MAX_PML_x * (ONE - dist)
 
@@ -357,7 +357,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
               dist = abscissa_in_PML_x / CPML_width_x
 
               ! gets damping profile at the C-PML grid point
-              K_x = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+              K_x = K_MIN_PML  + (K_MAX_PML - ONE) * dist
               d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
               alpha_x = ALPHA_MAX_PML_x * (ONE - dist)
 
@@ -396,7 +396,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
               dist = abscissa_in_PML_y / CPML_width_y
 
               ! gets damping profile at the C-PML element's GLL point
-              K_y = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+              K_y = K_MIN_PML  + (K_MAX_PML - ONE) * dist
               d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
               alpha_y = ALPHA_MAX_PML_y * (ONE - dist)
 
@@ -412,7 +412,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
               dist = abscissa_in_PML_y / CPML_width_y
 
               ! gets damping profile at the C-PML element's GLL point
-              K_y = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+              K_y = K_MIN_PML  + (K_MAX_PML - ONE) * dist
               d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
               alpha_y = ALPHA_MAX_PML_y * (ONE - dist)
 
@@ -453,7 +453,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                 dist = abscissa_in_PML_z / CPML_width_z
 
                 ! gets damping profile at the C-PML element's GLL point
-                K_z = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+                K_z = K_MIN_PML  + (K_MAX_PML - ONE) * dist
                 d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
                 alpha_z = ALPHA_MAX_PML_z * (ONE - dist)
 
@@ -466,12 +466,12 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
             else if (zstore(iglob) - z_origin < ZERO) then
               ! gets abscissa of current grid point along the damping profile
               abscissa_in_PML_z = zoriginbottom - zstore(iglob)
- 
+
               ! determines distance to C-PML/mesh interface
               dist = abscissa_in_PML_z / CPML_width_z
 
               ! gets damping profile at the C-PML element's GLL point
-              K_z = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+              K_z = K_MIN_PML  + (K_MAX_PML - ONE) * dist
               d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
               alpha_z = ALPHA_MAX_PML_z * (ONE - dist)
 
@@ -510,7 +510,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
               dist = abscissa_in_PML_x / CPML_width_x
 
               ! gets damping profile at the C-PML element's GLL point
-              K_x = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+              K_x = K_MIN_PML  + (K_MAX_PML - ONE) * dist
               d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
               alpha_x = ALPHA_MAX_PML_x * (ONE - dist)
 
@@ -521,7 +521,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
               dist = abscissa_in_PML_y / CPML_width_y
 
               ! gets damping profile at the C-PML element's GLL point
-              K_y = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+              K_y = K_MIN_PML  + (K_MAX_PML - ONE) * dist
               d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
               alpha_y = ALPHA_MAX_PML_y * (ONE - dist)
 
@@ -541,7 +541,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
               dist = abscissa_in_PML_x / CPML_width_x
 
               ! gets damping profile at the C-PML element's GLL point
-              K_x = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+              K_x = K_MIN_PML  + (K_MAX_PML - ONE) * dist
               d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
               alpha_x = ALPHA_MAX_PML_x * (ONE - dist)
 
@@ -554,7 +554,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
               ! gets damping profile at the C-PML element's GLL point
               K_y = K_MIN_PML  + (K_MAX_PML - ONE) * dist
               d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
-              alpha_y = ALPHA_MAX_PML_y * (ONE - dist) 
+              alpha_y = ALPHA_MAX_PML_y * (ONE - dist)
 
               if (K_x < ONE .or. d_x < ZERO) then
                 d_x = ZERO; K_x = ONE
@@ -572,7 +572,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
               dist = abscissa_in_PML_x / CPML_width_x
 
               ! gets damping profile at the C-PML element's GLL point
-              K_x = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+              K_x = K_MIN_PML  + (K_MAX_PML - ONE) * dist
               d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
               alpha_x = ALPHA_MAX_PML_x * (ONE - dist)
 
@@ -583,7 +583,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
               dist = abscissa_in_PML_y / CPML_width_y
 
               ! gets damping profile at the C-PML element's GLL point
-              K_y = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+              K_y = K_MIN_PML  + (K_MAX_PML - ONE) * dist
               d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
               alpha_y = ALPHA_MAX_PML_y * (ONE - dist)
 
@@ -603,7 +603,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
               dist = abscissa_in_PML_x / CPML_width_x
 
               ! gets damping profile at the C-PML element's GLL point
-              K_x = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+              K_x = K_MIN_PML  + (K_MAX_PML - ONE) * dist
               d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
               alpha_x = ALPHA_MAX_PML_x * (ONE - dist)
 
@@ -616,7 +616,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
               ! gets damping profile at the C-PML element's GLL point
               d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
               alpha_y = ALPHA_MAX_PML_y * (ONE - dist)
-              K_y = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+              K_y = K_MIN_PML  + (K_MAX_PML - ONE) * dist
 
               if (K_x < ONE .or. d_x < ZERO) then
                 d_x = ZERO; K_x = ONE
@@ -658,7 +658,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                 dist = abscissa_in_PML_x / CPML_width_x
 
                 ! gets damping profile at the C-PML element's GLL point
-                K_x = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+                K_x = K_MIN_PML  + (K_MAX_PML - ONE) * dist
                 d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
                 alpha_x = ALPHA_MAX_PML_x * (ONE - dist)
 
@@ -669,7 +669,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                 dist = abscissa_in_PML_z / CPML_width_z
 
                 ! gets damping profile at the C-PML element's GLL point
-                K_z = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+                K_z = K_MIN_PML  + (K_MAX_PML - ONE) * dist
                 d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
                 alpha_z = ALPHA_MAX_PML_z * (ONE - dist)
 
@@ -691,7 +691,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
               dist = abscissa_in_PML_x / CPML_width_x
 
               ! gets damping profile at the C-PML element's GLL point
-              K_x = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+              K_x = K_MIN_PML  + (K_MAX_PML - ONE) * dist
               d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
               alpha_x = ALPHA_MAX_PML_x * (ONE - dist)
 
@@ -702,7 +702,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
               dist = abscissa_in_PML_z / CPML_width_z
 
               ! gets damping profile at the C-PML element's GLL point
-              K_z = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+              K_z = K_MIN_PML  + (K_MAX_PML - ONE) * dist
               d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
               alpha_z = ALPHA_MAX_PML_z * (ONE - dist)
 
@@ -723,7 +723,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                 dist = abscissa_in_PML_x / CPML_width_x
 
                 ! gets damping profile at the C-PML element's GLL point
-                K_x = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+                K_x = K_MIN_PML  + (K_MAX_PML - ONE) * dist
                 d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
                 alpha_x = ALPHA_MAX_PML_x * (ONE - dist)
 
@@ -734,7 +734,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                 dist = abscissa_in_PML_z / CPML_width_z
 
                 ! gets damping profile at the C-PML element's GLL point
-                K_z = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+                K_z = K_MIN_PML  + (K_MAX_PML - ONE) * dist
                 d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
                 alpha_z = ALPHA_MAX_PML_z * (ONE - dist)
 
@@ -755,7 +755,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
               dist = abscissa_in_PML_x / CPML_width_x
 
               ! gets damping profile at the C-PML element's GLL point
-              K_x = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+              K_x = K_MIN_PML  + (K_MAX_PML - ONE) * dist
               d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
               alpha_x = ALPHA_MAX_PML_x * (ONE - dist)
 
@@ -768,7 +768,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
               ! gets damping profile at the C-PML element's GLL point
               K_z = K_MIN_PML  + (K_MAX_PML - ONE) * dist
               d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
-              alpha_z = ALPHA_MAX_PML_z * (ONE - dist) 
+              alpha_z = ALPHA_MAX_PML_z * (ONE - dist)
 
               if (K_x < ONE .or. d_x < ZERO) then
                 d_x = ZERO; K_x = ONE
@@ -809,7 +809,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                 dist = abscissa_in_PML_y / CPML_width_y
 
                 ! gets damping profile at the C-PML element's GLL point
-                K_y = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+                K_y = K_MIN_PML  + (K_MAX_PML - ONE) * dist
                 d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
                 alpha_y = ALPHA_MAX_PML_y * (ONE - dist)
 
@@ -820,7 +820,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                 dist = abscissa_in_PML_z / CPML_width_z
 
                 ! gets damping profile at the C-PML element's GLL point
-                K_z = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+                K_z = K_MIN_PML  + (K_MAX_PML - ONE) * dist
                 d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
                 alpha_z = ALPHA_MAX_PML_z * (ONE - dist)
 
@@ -843,7 +843,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
               ! gets damping profile at the C-PML element's GLL point
               K_y = K_MIN_PML  + (K_MAX_PML - ONE) * dist
               d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
-              alpha_y = ALPHA_MAX_PML_y * (ONE - dist) 
+              alpha_y = ALPHA_MAX_PML_y * (ONE - dist)
 
               ! gets abscissa of current grid point along the damping profile
               abscissa_in_PML_z = zoriginbottom - zstore(iglob)
@@ -852,7 +852,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
               dist = abscissa_in_PML_z / CPML_width_z
 
               ! gets damping profile at the C-PML element's GLL point
-              K_z = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+              K_z = K_MIN_PML  + (K_MAX_PML - ONE) * dist
               d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
               alpha_z = ALPHA_MAX_PML_z * (ONE - dist)
 
@@ -873,7 +873,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                 dist = abscissa_in_PML_y / CPML_width_y
 
                 ! gets damping profile at the C-PML element's GLL point
-                K_y = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+                K_y = K_MIN_PML  + (K_MAX_PML - ONE) * dist
                 d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
                 alpha_y = ALPHA_MAX_PML_y * (ONE - dist)
 
@@ -886,7 +886,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                 ! gets damping profile at the C-PML element's GLL point
                 K_z = K_MIN_PML  + (K_MAX_PML - ONE) * dist
                 d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
-                alpha_z = ALPHA_MAX_PML_z * (ONE - dist) 
+                alpha_z = ALPHA_MAX_PML_z * (ONE - dist)
 
                 if (K_y < ONE .or. d_y < ZERO) then
                   d_y = ZERO; K_y = ONE
@@ -905,7 +905,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
               dist = abscissa_in_PML_y / CPML_width_y
 
               ! gets damping profile at the C-PML element's GLL point
-              K_y = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+              K_y = K_MIN_PML  + (K_MAX_PML - ONE) * dist
               d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
               alpha_y = ALPHA_MAX_PML_y * (ONE - dist)
 
@@ -916,7 +916,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
               dist = abscissa_in_PML_z / CPML_width_z
 
               ! gets damping profile at the C-PML element's GLL point
-              K_z = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+              K_z = K_MIN_PML  + (K_MAX_PML - ONE) * dist
               d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
               alpha_z = ALPHA_MAX_PML_z * (ONE - dist)
 
@@ -934,7 +934,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
 
             !! DK DK define an alias for y and z variable names (which are the same)
             if (alpha_y < ZERO .or. alpha_z < ZERO) stop "there is error in mesh of CPML-layer yz"
-            
+
             K_store_x(i,j,k,ispec_CPML) = ONE
             d_store_x(i,j,k,ispec_CPML) = ZERO
             alpha_store_x(i,j,k,ispec_CPML) = ZERO
@@ -961,7 +961,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                 dist = abscissa_in_PML_x / CPML_width_x
 
                 ! gets damping profile at the C-PML grid point
-                K_x = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+                K_x = K_MIN_PML  + (K_MAX_PML - ONE) * dist
                 d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
                 alpha_x = ALPHA_MAX_PML_x * (ONE - dist)
 
@@ -974,7 +974,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                 ! gets damping profile at the C-PML element's GLL point
                 K_y = K_MIN_PML  + (K_MAX_PML - ONE) * dist
                 d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
-                alpha_y = ALPHA_MAX_PML_y * (ONE - dist) 
+                alpha_y = ALPHA_MAX_PML_y * (ONE - dist)
 
                 ! gets abscissa of current grid point along the damping profile
                 abscissa_in_PML_z = zstore(iglob) - zorigintop
@@ -985,7 +985,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                 ! gets damping profile at the C-PML element's GLL point
                 K_z = K_MIN_PML  + (K_MAX_PML - ONE) * dist
                 d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
-                alpha_z = ALPHA_MAX_PML_z * (ONE - dist) 
+                alpha_z = ALPHA_MAX_PML_z * (ONE - dist)
 
                 if (K_x < ONE .or. d_x < ZERO) then
                   d_x = ZERO; K_x = ONE
@@ -1010,7 +1010,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
               dist = abscissa_in_PML_x / CPML_width_x
 
               ! gets damping profile at the C-PML grid point
-              K_x = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+              K_x = K_MIN_PML  + (K_MAX_PML - ONE) * dist
               d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
               alpha_x = ALPHA_MAX_PML_x * (ONE - dist)
 
@@ -1021,7 +1021,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
               dist = abscissa_in_PML_y / CPML_width_y
 
               ! gets damping profile at the C-PML element's GLL point
-              K_y = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+              K_y = K_MIN_PML  + (K_MAX_PML - ONE) * dist
               d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
               alpha_y = ALPHA_MAX_PML_y * (ONE - dist)
 
@@ -1032,7 +1032,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
               dist = abscissa_in_PML_z / CPML_width_z
 
               ! gets damping profile at the C-PML element's GLL point
-              K_z = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+              K_z = K_MIN_PML  + (K_MAX_PML - ONE) * dist
               d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
               alpha_z = ALPHA_MAX_PML_z * (ONE - dist)
 
@@ -1058,7 +1058,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                 dist = abscissa_in_PML_x / CPML_width_x
 
                 ! gets damping profile at the C-PML element's GLL point
-                K_x = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+                K_x = K_MIN_PML  + (K_MAX_PML - ONE) * dist
                 d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
                 alpha_x = ALPHA_MAX_PML_x * (ONE - dist)
 
@@ -1080,7 +1080,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                 dist = abscissa_in_PML_z / CPML_width_z
 
                 ! gets damping profile at the C-PML element's GLL point
-                K_z = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+                K_z = K_MIN_PML  + (K_MAX_PML - ONE) * dist
                 d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
                 alpha_z = ALPHA_MAX_PML_z * (ONE - dist)
 
@@ -1108,7 +1108,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
               ! gets damping profile at the C-PML element's GLL point
               K_x = K_MIN_PML  + (K_MAX_PML - ONE) * dist
               d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
-              alpha_x = ALPHA_MAX_PML_x * (ONE - dist) 
+              alpha_x = ALPHA_MAX_PML_x * (ONE - dist)
 
               ! gets abscissa of current grid point along the damping profile
               abscissa_in_PML_y = yoriginback - ystore(iglob)
@@ -1119,7 +1119,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
               ! gets damping profile at the C-PML element's GLL point
               K_y = K_MIN_PML  + (K_MAX_PML - ONE) * dist
               d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
-              alpha_y = ALPHA_MAX_PML_y * (ONE - dist) 
+              alpha_y = ALPHA_MAX_PML_y * (ONE - dist)
 
               ! gets abscissa of current grid point along the damping profile
               abscissa_in_PML_z = zoriginbottom - zstore(iglob)
@@ -1128,7 +1128,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
               dist = abscissa_in_PML_z / CPML_width_z
 
               ! gets damping profile at the C-PML element's GLL point
-              K_z = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+              K_z = K_MIN_PML  + (K_MAX_PML - ONE) * dist
               d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
               alpha_z = ALPHA_MAX_PML_z * (ONE - dist)
 
@@ -1154,7 +1154,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                 dist = abscissa_in_PML_x / CPML_width_x
 
                 ! gets damping profile at the C-PML grid point
-                K_x = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+                K_x = K_MIN_PML  + (K_MAX_PML - ONE) * dist
                 d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
                 alpha_x = ALPHA_MAX_PML_x * (ONE - dist)
 
@@ -1167,7 +1167,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                 ! gets damping profile at the C-PML element's GLL point
                 K_y = K_MIN_PML  + (K_MAX_PML - ONE) * dist
                 d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
-                alpha_y = ALPHA_MAX_PML_y * (ONE - dist) 
+                alpha_y = ALPHA_MAX_PML_y * (ONE - dist)
 
                 ! gets abscissa of current grid point along the damping profile
                 abscissa_in_PML_z = zstore(iglob) - zorigintop
@@ -1176,7 +1176,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                 dist = abscissa_in_PML_z / CPML_width_z
 
                 ! gets damping profile at the C-PML element's GLL point
-                K_z = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+                K_z = K_MIN_PML  + (K_MAX_PML - ONE) * dist
                 d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
                 alpha_z = ALPHA_MAX_PML_z * (ONE - dist)
 
@@ -1204,7 +1204,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
               ! gets damping profile at the C-PML grid point
               K_x = K_MIN_PML  + (K_MAX_PML - ONE) * dist
               d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
-              alpha_x = ALPHA_MAX_PML_x * (ONE - dist) 
+              alpha_x = ALPHA_MAX_PML_x * (ONE - dist)
 
               ! gets abscissa of current grid point along the damping profile
               abscissa_in_PML_y = ystore(iglob) - yoriginfront
@@ -1213,7 +1213,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
               dist = abscissa_in_PML_y / CPML_width_y
 
               ! gets damping profile at the C-PML element's GLL point
-              K_y = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+              K_y = K_MIN_PML  + (K_MAX_PML - ONE) * dist
               d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
               alpha_y = ALPHA_MAX_PML_y * (ONE - dist)
 
@@ -1226,7 +1226,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
               ! gets damping profile at the C-PML element's GLL point
               K_z = K_MIN_PML  + (K_MAX_PML - ONE) * dist
               d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
-              alpha_z = ALPHA_MAX_PML_z * (ONE - dist)  
+              alpha_z = ALPHA_MAX_PML_z * (ONE - dist)
 
               if (K_x < ONE .or. d_x < ZERO) then
                 d_x = ZERO; K_x = ONE
@@ -1250,7 +1250,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                 dist = abscissa_in_PML_x / CPML_width_x
 
                 ! gets damping profile at the C-PML element's GLL point
-                K_x = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+                K_x = K_MIN_PML  + (K_MAX_PML - ONE) * dist
                 d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
                 alpha_x = ALPHA_MAX_PML_x * (ONE - dist)
 
@@ -1263,7 +1263,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                 ! gets damping profile at the C-PML element's GLL point
                 K_y = K_MIN_PML  + (K_MAX_PML - ONE) * dist
                 d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
-                alpha_y = ALPHA_MAX_PML_y * (ONE - dist) 
+                alpha_y = ALPHA_MAX_PML_y * (ONE - dist)
 
                 ! gets abscissa of current grid point along the damping profile
                 abscissa_in_PML_z = zstore(iglob) - zorigintop
@@ -1272,9 +1272,9 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                 dist = abscissa_in_PML_z / CPML_width_z
 
                 ! gets damping profile at the C-PML element's GLL point
-                K_z = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+                K_z = K_MIN_PML  + (K_MAX_PML - ONE) * dist
                 d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
-                alpha_z = ALPHA_MAX_PML_z * (ONE - dist) 
+                alpha_z = ALPHA_MAX_PML_z * (ONE - dist)
 
                 if (K_x < ONE .or. d_x < ZERO) then
                   d_x = ZERO; K_x = ONE
@@ -1300,7 +1300,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
               ! gets damping profile at the C-PML element's GLL point
               K_x = K_MIN_PML  + (K_MAX_PML - ONE) * dist
               d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
-              alpha_x = ALPHA_MAX_PML_x * (ONE - dist) 
+              alpha_x = ALPHA_MAX_PML_x * (ONE - dist)
 
               ! gets abscissa of current grid point along the damping profile
               abscissa_in_PML_y = yoriginback - ystore(iglob)
@@ -1309,7 +1309,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
               dist = abscissa_in_PML_y / CPML_width_y
 
               ! gets damping profile at the C-PML element's GLL point
-              K_y = K_MIN_PML  + (K_MAX_PML - ONE) * dist 
+              K_y = K_MIN_PML  + (K_MAX_PML - ONE) * dist
               d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
               alpha_y = ALPHA_MAX_PML_y * (ONE - dist)
 
@@ -1322,7 +1322,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
               ! gets damping profile at the C-PML element's GLL point
               K_z = K_MIN_PML  + (K_MAX_PML - ONE) * dist
               d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
-              alpha_z = ALPHA_MAX_PML_z * (ONE - dist) 
+              alpha_z = ALPHA_MAX_PML_z * (ONE - dist)
 
               if (K_x < ONE .or. d_x < ZERO) then
                 d_x = ZERO; K_x = ONE
@@ -1380,7 +1380,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
 
             if (abs(alpha_x - alpha_y) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y) then
               stop 'there is error in seperation of alpha_x, alpha_y'
-            endif 
+            endif
 
             beta_x = alpha_x + d_x / K_x
             beta_y = alpha_y + d_y / K_y
@@ -1391,16 +1391,16 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
             if (abs(beta_x - alpha_y) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y .or. &
                 abs(beta_y - alpha_x) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y) then
               stop 'there is error in seperation of beta_x and alpha_y, beta_y and alpha_x'
-            endif 
+            endif
 
             d_x = (beta_x - alpha_x) * K_x
-            d_y = (beta_y - alpha_y) * K_y    
+            d_y = (beta_y - alpha_y) * K_y
 
-            d_store_x(i,j,k,ispec_CPML) = d_x    
+            d_store_x(i,j,k,ispec_CPML) = d_x
             alpha_store_x(i,j,k,ispec_CPML) = alpha_x
 
-            d_store_y(i,j,k,ispec_CPML) = d_y   
-            alpha_store_y(i,j,k,ispec_CPML) = alpha_y     
+            d_store_y(i,j,k,ispec_CPML) = d_y
+            alpha_store_y(i,j,k,ispec_CPML) = alpha_y
 
           else if (CPML_regions(ispec_CPML) == CPML_XZ_ONLY) then
 
@@ -1416,7 +1416,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
 
             if (abs(alpha_x - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y) then
               stop 'there is error in seperation of alpha_x, alpha_z'
-            endif 
+            endif
 
             beta_x = alpha_x + d_x / K_x
             beta_z = alpha_z + d_z / K_z
@@ -1427,16 +1427,16 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
             if (abs(beta_x - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y .or. &
                 abs(beta_z - alpha_x) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y) then
               stop 'there is error in seperation of beta_x and alpha_z, beta_z and alpha_z'
-            endif 
+            endif
 
             d_x = (beta_x - alpha_x) * K_x
-            d_z = (beta_z - alpha_z) * K_z    
+            d_z = (beta_z - alpha_z) * K_z
 
-            d_store_x(i,j,k,ispec_CPML) = d_x    
+            d_store_x(i,j,k,ispec_CPML) = d_x
             alpha_store_x(i,j,k,ispec_CPML) = alpha_x
 
-            d_store_z(i,j,k,ispec_CPML) = d_z   
-            alpha_store_z(i,j,k,ispec_CPML) = alpha_z  
+            d_store_z(i,j,k,ispec_CPML) = d_z
+            alpha_store_z(i,j,k,ispec_CPML) = alpha_z
 
           else if (CPML_regions(ispec_CPML) == CPML_YZ_ONLY) then
 
@@ -1452,7 +1452,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
 
             if (abs(alpha_y - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y) then
               stop 'there is error in seperation of alpha_y, alpha_z'
-            endif 
+            endif
 
             beta_y = alpha_y + d_y / K_y
             beta_z = alpha_z + d_z / K_z
@@ -1463,16 +1463,16 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
             if (abs(beta_y - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y .or. &
                 abs(beta_z - alpha_y) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y) then
               stop 'there is error in seperation of beta_y and alpha_z, beta_z and alpha_y'
-            endif 
+            endif
 
             d_y = (beta_y - alpha_y) * K_y
-            d_z = (beta_z - alpha_z) * K_z    
+            d_z = (beta_z - alpha_z) * K_z
 
-            d_store_y(i,j,k,ispec_CPML) = d_y    
+            d_store_y(i,j,k,ispec_CPML) = d_y
             alpha_store_y(i,j,k,ispec_CPML) = alpha_y
 
-            d_store_z(i,j,k,ispec_CPML) = d_z   
-            alpha_store_z(i,j,k,ispec_CPML) = alpha_z 
+            d_store_z(i,j,k,ispec_CPML) = d_z
+            alpha_store_z(i,j,k,ispec_CPML) = alpha_z
 
           else if(CPML_regions(ispec_CPML) == CPML_XYZ) then
 
@@ -1490,8 +1490,8 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
 
             if (alpha_x == alpha_y .and. alpha_y == alpha_z) then
               meanval_1 = (alpha_x + alpha_y + alpha_z) / 3.0_CUSTOM_REAL + 0.011_CUSTOM_REAL * ALPHA_MAX_PML_y
-              alpha_x = meanval_1 - 0.01_CUSTOM_REAL * ALPHA_MAX_PML_y 
-              alpha_y = meanval_1  
+              alpha_x = meanval_1 - 0.01_CUSTOM_REAL * ALPHA_MAX_PML_y
+              alpha_y = meanval_1
               alpha_z = meanval_1 + 0.01_CUSTOM_REAL * ALPHA_MAX_PML_y
 
               if (abs(alpha_x - alpha_y) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y .or. &
@@ -1528,7 +1528,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
               endif
 
             else if (alpha_x > alpha_y .and. alpha_y > alpha_z) then
-              call seperate_three_sequential_changeable_value(alpha_x,alpha_y,alpha_z,ALPHA_MAX_PML_y)       
+              call seperate_three_sequential_changeable_value(alpha_x,alpha_y,alpha_z,ALPHA_MAX_PML_y)
 
               if (abs(alpha_x - alpha_y) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y .or. &
                   abs(alpha_y - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y .or. &
@@ -1545,7 +1545,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                 stop 'error in seperation of alpha_x, alpha_y, alpha_z in case alpha_x > alpha_z .and. alpha_z > alpha_y'
               endif
 
-            elseif (alpha_y > alpha_z .and. alpha_z > alpha_x) then
+            else if (alpha_y > alpha_z .and. alpha_z > alpha_x) then
               call seperate_three_sequential_changeable_value(alpha_y,alpha_z,alpha_x,ALPHA_MAX_PML_y)
 
               if(abs(alpha_x - alpha_y) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y .or. &
@@ -1580,7 +1580,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                   abs(alpha_x - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y) then
                 stop 'error in seperation of alpha_x, alpha_y, alpha_z in case alpha_z > alpha_y .and. alpha_y > alpha_x'
               endif
-            
+
             else
               stop 'there is error in alpha division'
             endif
@@ -1589,7 +1589,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                 abs(alpha_y - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y .or. &
                 abs(alpha_x - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y) then
               stop 'there is error in seperation of alpha_x, alpha_y, alpha_z '
-            endif 
+            endif
 
             beta_x = alpha_x + d_x / K_x
             beta_y = alpha_y + d_y / K_y
@@ -1602,12 +1602,12 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
             if (abs(beta_x - alpha_y) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y .or. &
                 abs(beta_x - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y) then
               stop 'there is error in seperation of beta_x, alpha_y,alpha_z '
-            endif 
+            endif
 
             if (abs(beta_y - alpha_x) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y .or. &
                 abs(beta_y - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y) then
               stop 'there is error in seperation of beta_y, alpha_x,alpha_z '
-            endif 
+            endif
 
             if (abs(beta_z - alpha_x) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y.or. &
                 abs(beta_z - alpha_y) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y) then
@@ -1615,15 +1615,15 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
             endif
 
             d_x = (beta_x - alpha_x) * K_x
-            d_y = (beta_y - alpha_y) * K_y 
-            d_z = (beta_z - alpha_z) * K_z 
+            d_y = (beta_y - alpha_y) * K_y
+            d_z = (beta_z - alpha_z) * K_z
 
-            d_store_x(i,j,k,ispec_CPML) = d_x    
+            d_store_x(i,j,k,ispec_CPML) = d_x
             alpha_store_x(i,j,k,ispec_CPML) = alpha_x
-            d_store_y(i,j,k,ispec_CPML) = d_y    
+            d_store_y(i,j,k,ispec_CPML) = d_y
             alpha_store_y(i,j,k,ispec_CPML) = alpha_y
-            d_store_z(i,j,k,ispec_CPML) = d_z   
-            alpha_store_z(i,j,k,ispec_CPML) = alpha_z                  
+            d_store_z(i,j,k,ispec_CPML) = d_z
+            alpha_store_z(i,j,k,ispec_CPML) = alpha_z
 
           endif
 
@@ -1633,7 +1633,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
 
   enddo
 
- 
+
 ! --------------------------------------------------------------------------------------------
 ! for adjoint tomography
 ! create the array store the points on interface between PML and interior computational domain
@@ -1785,11 +1785,11 @@ subroutine seperate_two_changeable_value(value_a,value_b,ALPHA_MAX_PML_y)
   real(kind=CUSTOM_REAL), parameter :: const_for_sepertation_two = 0.01_CUSTOM_REAL
   if (abs(value_a - value_b) < const_for_sepertation * ALPHA_MAX_PML_y) then
      if(value_a >= value_b) then
-        value_a = (value_a + value_b) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y  
+        value_a = (value_a + value_b) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y
      else
-        value_b = (value_a + value_b) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y 
+        value_b = (value_a + value_b) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y
      endif
-  endif  
+  endif
 
 end subroutine seperate_two_changeable_value
 
@@ -1811,10 +1811,10 @@ subroutine seperate_three_changeable_value_with_two_equal(value_a,value_b,value_
   if (abs(value_b - value_c) < const_for_sepertation * ALPHA_MAX_PML_y) then
     if (value_b >= value_c) then
       value_b = (value_b + value_c) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y
-      value_a = value_b + const_for_sepertation_two * ALPHA_MAX_PML_y  
+      value_a = value_b + const_for_sepertation_two * ALPHA_MAX_PML_y
     else
-      value_c = (value_b + value_c) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y 
-      value_a = value_c + const_for_sepertation_two * ALPHA_MAX_PML_y 
+      value_c = (value_b + value_c) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y
+      value_a = value_c + const_for_sepertation_two * ALPHA_MAX_PML_y
     endif
   endif
 
@@ -1832,11 +1832,11 @@ subroutine seperate_two_value_with_one_changeable(value_a,value_b,ALPHA_MAX_PML_
 
   if (abs(value_a - value_b) < const_for_sepertation * ALPHA_MAX_PML_y) then
     if (value_a >= value_b) then
-      value_a = (value_a + value_b) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y 
+      value_a = (value_a + value_b) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y
     else
-      value_a = (value_a + value_b) / TWO + const_for_sepertation_three * ALPHA_MAX_PML_y 
+      value_a = (value_a + value_b) / TWO + const_for_sepertation_three * ALPHA_MAX_PML_y
     endif
-  endif 
+  endif
 
 end subroutine seperate_two_value_with_one_changeable
 
@@ -1845,7 +1845,7 @@ subroutine seperate_three_sequential_changeable_value(value_max,value_mean,value
   use generate_databases_par, only: CUSTOM_REAL,TWO
   implicit none
   real(kind=CUSTOM_REAL), intent(in) :: ALPHA_MAX_PML_y
-  real(kind=CUSTOM_REAL) :: value_max,value_mean,value_min 
+  real(kind=CUSTOM_REAL) :: value_max,value_mean,value_min
   real(kind=CUSTOM_REAL), parameter :: const_for_sepertation = 0.009_CUSTOM_REAL
   real(kind=CUSTOM_REAL), parameter :: const_for_sepertation_two = 0.01_CUSTOM_REAL
   real(kind=CUSTOM_REAL), parameter :: const_for_sepertation_three = 0.015_CUSTOM_REAL
@@ -1862,7 +1862,7 @@ subroutine seperate_three_sequential_changeable_value(value_max,value_mean,value
     value_max = (value_max + value_mean) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y
   else if (abs(value_max - value_mean) >= const_for_sepertation * ALPHA_MAX_PML_y .and. &
            abs(value_mean - value_min) < const_for_sepertation * ALPHA_MAX_PML_y) then
-    value_mean = (value_mean + value_min) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y  
+    value_mean = (value_mean + value_min) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y
     if (abs(value_max - value_mean) < const_for_sepertation * ALPHA_MAX_PML_y) then
       if (max(value_max,value_mean) == value_max) then
         value_max = (value_max + value_mean) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y
@@ -1872,7 +1872,7 @@ subroutine seperate_three_sequential_changeable_value(value_max,value_mean,value
     endif
   else if (abs(value_max - value_mean) < const_for_sepertation * ALPHA_MAX_PML_y .and. &
            abs(value_mean - value_min) < const_for_sepertation * ALPHA_MAX_PML_y) then
-    value_mean = (value_mean + value_min) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y  
+    value_mean = (value_mean + value_min) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y
 
     if (abs(value_max - value_min) < const_for_sepertation * ALPHA_MAX_PML_y) then
       if (max(value_max,value_min) == value_max) then
@@ -1880,7 +1880,7 @@ subroutine seperate_three_sequential_changeable_value(value_max,value_mean,value
       else if (max(value_max,value_min) == value_min) then
         value_max = (value_max + value_min) / TWO + const_for_sepertation_three * ALPHA_MAX_PML_y
       endif
-    endif   
+    endif
 
     if (abs(value_max - value_mean) < const_for_sepertation * ALPHA_MAX_PML_y) then
       if (max(value_max,value_mean) == value_max) then
@@ -1888,16 +1888,16 @@ subroutine seperate_three_sequential_changeable_value(value_max,value_mean,value
       else if (max(value_max,value_mean) == value_mean) then
         value_max = (value_max + value_mean) / TWO + const_for_sepertation_three * ALPHA_MAX_PML_y
       endif
-    endif  
+    endif
 
-  endif 
+  endif
 end subroutine seperate_three_sequential_changeable_value
 
 subroutine seperate_three_sequential_value_with_only_meanvalue_changeable(value_max,value_mean,value_min,ALPHA_MAX_PML_y)
 
   use generate_databases_par, only: CUSTOM_REAL,TWO
   implicit none
-  real(kind=CUSTOM_REAL), intent(in) :: ALPHA_MAX_PML_y,value_max,value_min 
+  real(kind=CUSTOM_REAL), intent(in) :: ALPHA_MAX_PML_y,value_max,value_min
   real(kind=CUSTOM_REAL) :: value_mean
   real(kind=CUSTOM_REAL), parameter :: const_for_sepertation = 0.009_CUSTOM_REAL
   real(kind=CUSTOM_REAL), parameter :: const_for_sepertation_two = 0.01_CUSTOM_REAL
@@ -1922,29 +1922,29 @@ subroutine seperate_three_sequential_value_with_only_meanvalue_changeable(value_
     value_mean = (value_min + value_mean) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y
     if (abs(value_max - value_mean) < const_for_sepertation * ALPHA_MAX_PML_y) then
       if (value_mean >= value_max) then
-        value_mean = (value_mean + value_max) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y 
+        value_mean = (value_mean + value_max) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y
       else
-        value_mean = (value_mean + value_max) / TWO + const_for_sepertation_three * ALPHA_MAX_PML_y 
+        value_mean = (value_mean + value_max) / TWO + const_for_sepertation_three * ALPHA_MAX_PML_y
       endif
-    endif  
+    endif
   else if (abs(value_max - value_mean) < const_for_sepertation * ALPHA_MAX_PML_y .and. &
            abs(value_mean - value_min) < const_for_sepertation * ALPHA_MAX_PML_y) then
     value_mean = (value_min + value_mean) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y
     if (abs(value_max - value_mean) < const_for_sepertation * ALPHA_MAX_PML_y) then
       if (value_mean >= value_max) then
-        value_mean = (value_mean + value_max) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y 
+        value_mean = (value_mean + value_max) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y
       else
-        value_mean = (value_mean + value_max) / TWO + const_for_sepertation_three * ALPHA_MAX_PML_y 
+        value_mean = (value_mean + value_max) / TWO + const_for_sepertation_three * ALPHA_MAX_PML_y
       endif
-    endif  
-  endif  
+    endif
+  endif
 end subroutine seperate_three_sequential_value_with_only_meanvalue_changeable
 
 subroutine seperate_three_sequential_value_with_only_minvalue_changeable(value_max,value_mean,value_min,ALPHA_MAX_PML_y)
 
   use generate_databases_par, only: CUSTOM_REAL,TWO
   implicit none
-  real(kind=CUSTOM_REAL), intent(in) :: ALPHA_MAX_PML_y,value_max,value_mean 
+  real(kind=CUSTOM_REAL), intent(in) :: ALPHA_MAX_PML_y,value_max,value_mean
   real(kind=CUSTOM_REAL) :: value_min
   real(kind=CUSTOM_REAL), parameter :: const_for_sepertation = 0.009_CUSTOM_REAL
   real(kind=CUSTOM_REAL), parameter :: const_for_sepertation_two = 0.01_CUSTOM_REAL
@@ -1959,14 +1959,14 @@ subroutine seperate_three_sequential_value_with_only_minvalue_changeable(value_m
   endif
 
   if (abs(value_mean - value_min) < const_for_sepertation * ALPHA_MAX_PML_y) then
-    value_min = (value_mean + value_min) / TWO + const_for_sepertation_three * ALPHA_MAX_PML_y 
+    value_min = (value_mean + value_min) / TWO + const_for_sepertation_three * ALPHA_MAX_PML_y
   endif
 
   if (abs(value_max - value_min) < const_for_sepertation * ALPHA_MAX_PML_y) then
     if (value_min >= value_max) then
-      value_min = (value_min + value_max) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y 
+      value_min = (value_min + value_max) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y
     else
-      value_min = (value_min + value_max) / TWO + const_for_sepertation_three * ALPHA_MAX_PML_y 
+      value_min = (value_min + value_max) / TWO + const_for_sepertation_three * ALPHA_MAX_PML_y
     endif
   endif
 end subroutine seperate_three_sequential_value_with_only_minvalue_changeable
@@ -1985,7 +1985,7 @@ subroutine seperate_betai_alphaj_alphak(beta_x,alpha_y,alpha_z,ALPHA_MAX_PML_y)
     call seperate_two_value_with_one_changeable(beta_x,alpha_z,ALPHA_MAX_PML_y)
   else if (beta_x == alpha_z) then
     beta_x = beta_x + const_for_sepertation_two * ALPHA_MAX_PML_y
-    call seperate_two_value_with_one_changeable(beta_x,alpha_y,ALPHA_MAX_PML_y) 
+    call seperate_two_value_with_one_changeable(beta_x,alpha_y,ALPHA_MAX_PML_y)
   else if (beta_x > alpha_y .and. alpha_y > alpha_z) then
     if (abs(beta_x - alpha_y) < const_for_sepertation * ALPHA_MAX_PML_y) then
       beta_x = (beta_x + alpha_y) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y
@@ -2002,7 +2002,7 @@ subroutine seperate_betai_alphaj_alphak(beta_x,alpha_y,alpha_z,ALPHA_MAX_PML_y)
                   (alpha_z,alpha_y,beta_x,ALPHA_MAX_PML_y)
   else if (alpha_y > beta_x .and. beta_x > alpha_z) then
     call seperate_three_sequential_value_with_only_meanvalue_changeable &
-                  (alpha_y,beta_x,alpha_z,ALPHA_MAX_PML_y) 
+                  (alpha_y,beta_x,alpha_z,ALPHA_MAX_PML_y)
   else if (alpha_y > alpha_z .and. alpha_z > beta_x) then
     call seperate_three_sequential_value_with_only_minvalue_changeable &
                   (alpha_y,alpha_z,beta_x,ALPHA_MAX_PML_y)
