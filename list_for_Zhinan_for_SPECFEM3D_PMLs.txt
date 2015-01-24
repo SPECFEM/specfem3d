@@ -8,11 +8,11 @@ CC: Hom Nath Gharti, xiezhinan1984
 
 Hi Jeroen and Hom Nath,
 
-Sure, Zhinan is working hard on that. PML in the 2D code is now 100% 
-clean, and Zhinan is about to be done with the 3D version as well; that 
-was a significant amount of work because it turns out that designing a 
-clean CPML for the weak form of the equation is difficult. However that 
-is now done, it is just a matter of cleaning the source code (Zhinan is 
+Sure, Zhinan is working hard on that. PML in the 2D code is now 100%
+clean, and Zhinan is about to be done with the 3D version as well; that
+was a significant amount of work because it turns out that designing a
+clean CPML for the weak form of the equation is difficult. However that
+is now done, it is just a matter of cleaning the source code (Zhinan is
 on it).
 
 As soon as he is 100% done we'll send you an email.
