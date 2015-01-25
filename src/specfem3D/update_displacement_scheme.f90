@@ -104,20 +104,20 @@
     ! wavefields on CPU
     ! updates (forward) acoustic potentials
     if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-      potential_acoustic_old(:) = potential_acoustic(:) &
-                                  + deltatover2 * (1._CUSTOM_REAL - 2.0_CUSTOM_REAL*theta) * potential_dot_acoustic(:) &
-                                  + deltatsqover2 * (1._CUSTOM_REAL - theta) * potential_dot_dot_acoustic(:)
+      potential_acoustic_old(:) = potential_acoustic(:) + &
+                                  deltatover2 * (1._CUSTOM_REAL - 2._CUSTOM_REAL * theta) * potential_dot_acoustic(:) + &
+                                  deltatsqover2 * (1._CUSTOM_REAL - theta) * potential_dot_dot_acoustic(:)
     endif
-    potential_acoustic(:) = potential_acoustic(:) &
-                            + deltat * potential_dot_acoustic(:) &
-                            + deltatsqover2 * potential_dot_dot_acoustic(:)
-    potential_dot_acoustic(:) = potential_dot_acoustic(:) &
-                                + deltatover2 * potential_dot_dot_acoustic(:)
+    potential_acoustic(:) = potential_acoustic(:) + &
+                            deltat * potential_dot_acoustic(:) + &
+                            deltatsqover2 * potential_dot_dot_acoustic(:)
+    potential_dot_acoustic(:) = potential_dot_acoustic(:) + &
+                                deltatover2 * potential_dot_dot_acoustic(:)
     potential_dot_dot_acoustic(:) = 0._CUSTOM_REAL
 
     if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-      potential_acoustic_new(:) = potential_acoustic(:) &
-                                  + deltatover2 * (1._CUSTOM_REAL - 2.0_CUSTOM_REAL*theta) * potential_dot_acoustic(:)
+      potential_acoustic_new(:) = potential_acoustic(:) + &
+                                  deltatover2 * (1._CUSTOM_REAL - 2._CUSTOM_REAL * theta) * potential_dot_acoustic(:)
     endif
 
     ! adjoint simulations
@@ -129,11 +129,11 @@
                                                nglob_interface_PML_acoustic,b_PML_potential,b_reclen_PML_potential)
         endif
       endif
-      b_potential_acoustic(:) = b_potential_acoustic(:) &
-                                + b_deltat * b_potential_dot_acoustic(:) &
-                                + b_deltatsqover2 * b_potential_dot_dot_acoustic(:)
-      b_potential_dot_acoustic(:) = b_potential_dot_acoustic(:) &
-                                    + b_deltatover2 * b_potential_dot_dot_acoustic(:)
+      b_potential_acoustic(:) = b_potential_acoustic(:) + &
+                                b_deltat * b_potential_dot_acoustic(:) + &
+                                b_deltatsqover2 * b_potential_dot_dot_acoustic(:)
+      b_potential_dot_acoustic(:) = b_potential_dot_acoustic(:) + &
+                                    b_deltatover2 * b_potential_dot_dot_acoustic(:)
       b_potential_dot_dot_acoustic(:) = 0._CUSTOM_REAL
     endif
 
@@ -175,12 +175,12 @@
 
     ! updates elastic displacement and velocity
     if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-      displ_old(:,:) = displ(:,:) &
-                       + deltatover2 * (1._CUSTOM_REAL - 2.0_CUSTOM_REAL*theta) * veloc(:,:) &
-                       + deltatsqover2 * (1._CUSTOM_REAL - theta) * accel(:,:)
+      displ_old(:,:) = displ(:,:) + &
+                       deltatover2 * (1._CUSTOM_REAL - 2._CUSTOM_REAL*theta) * veloc(:,:) + &
+                       deltatsqover2 * (1._CUSTOM_REAL - theta) * accel(:,:)
     endif
-    displ(:,:) = displ(:,:) + deltat*veloc(:,:) + deltatsqover2*accel(:,:)
-    veloc(:,:) = veloc(:,:) + deltatover2*accel(:,:)
+    displ(:,:) = displ(:,:) + deltat * veloc(:,:) + deltatsqover2 * accel(:,:)
+    veloc(:,:) = veloc(:,:) + deltatover2 * accel(:,:)
     if (SIMULATION_TYPE /= 1) accel_adj_coupling(:,:) = accel(:,:)
     accel(:,:) = 0._CUSTOM_REAL
     if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
@@ -197,8 +197,8 @@
                                            b_PML_field,b_reclen_PML_field)
         endif
       endif
-      b_displ(:,:) = b_displ(:,:) + b_deltat*b_veloc(:,:) + b_deltatsqover2*b_accel(:,:)
-      b_veloc(:,:) = b_veloc(:,:) + b_deltatover2*b_accel(:,:)
+      b_displ(:,:) = b_displ(:,:) + b_deltat * b_veloc(:,:) + b_deltatsqover2 * b_accel(:,:)
+      b_veloc(:,:) = b_veloc(:,:) + b_deltatover2 * b_accel(:,:)
       b_accel(:,:) = 0._CUSTOM_REAL
     endif
 
@@ -241,30 +241,30 @@
 
     ! updates poroelastic displacements and velocities
     ! solid phase
-    displs_poroelastic(:,:) = displs_poroelastic(:,:) + deltat*velocs_poroelastic(:,:) + &
-                              deltatsqover2*accels_poroelastic(:,:)
-    velocs_poroelastic(:,:) = velocs_poroelastic(:,:) + deltatover2*accels_poroelastic(:,:)
+    displs_poroelastic(:,:) = displs_poroelastic(:,:) + deltat * velocs_poroelastic(:,:) + &
+                              deltatsqover2 * accels_poroelastic(:,:)
+    velocs_poroelastic(:,:) = velocs_poroelastic(:,:) + deltatover2 * accels_poroelastic(:,:)
     accels_poroelastic(:,:) = 0._CUSTOM_REAL
 
     ! fluid phase
-    displw_poroelastic(:,:) = displw_poroelastic(:,:) + deltat*velocw_poroelastic(:,:) + &
-                              deltatsqover2*accelw_poroelastic(:,:)
-    velocw_poroelastic(:,:) = velocw_poroelastic(:,:) + deltatover2*accelw_poroelastic(:,:)
+    displw_poroelastic(:,:) = displw_poroelastic(:,:) + deltat * velocw_poroelastic(:,:) + &
+                              deltatsqover2 * accelw_poroelastic(:,:)
+    velocw_poroelastic(:,:) = velocw_poroelastic(:,:) + deltatover2 * accelw_poroelastic(:,:)
     accelw_poroelastic(:,:) = 0._CUSTOM_REAL
 
     ! adjoint simulations
     if (SIMULATION_TYPE == 3) then
       ! poroelastic backward fields
       ! solid phase
-      b_displs_poroelastic(:,:) = b_displs_poroelastic(:,:) + b_deltat*b_velocs_poroelastic(:,:) + &
-                                b_deltatsqover2*b_accels_poroelastic(:,:)
-      b_velocs_poroelastic(:,:) = b_velocs_poroelastic(:,:) + b_deltatover2*b_accels_poroelastic(:,:)
+      b_displs_poroelastic(:,:) = b_displs_poroelastic(:,:) + b_deltat * b_velocs_poroelastic(:,:) + &
+                                  b_deltatsqover2 * b_accels_poroelastic(:,:)
+      b_velocs_poroelastic(:,:) = b_velocs_poroelastic(:,:) + b_deltatover2 * b_accels_poroelastic(:,:)
       b_accels_poroelastic(:,:) = 0._CUSTOM_REAL
 
       ! fluid phase
-      b_displw_poroelastic(:,:) = b_displw_poroelastic(:,:) + b_deltat*b_velocw_poroelastic(:,:) + &
-                                b_deltatsqover2*b_accelw_poroelastic(:,:)
-      b_velocw_poroelastic(:,:) = b_velocw_poroelastic(:,:) + b_deltatover2*b_accelw_poroelastic(:,:)
+      b_displw_poroelastic(:,:) = b_displw_poroelastic(:,:) + b_deltat * b_velocw_poroelastic(:,:) + &
+                                  b_deltatsqover2 * b_accelw_poroelastic(:,:)
+      b_velocw_poroelastic(:,:) = b_velocw_poroelastic(:,:) + b_deltatover2 * b_accelw_poroelastic(:,:)
       b_accelw_poroelastic(:,:) = 0._CUSTOM_REAL
     endif
 
