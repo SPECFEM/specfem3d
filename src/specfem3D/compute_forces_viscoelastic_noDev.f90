@@ -160,7 +160,6 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 
   real(kind=CUSTOM_REAL) :: sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz,sigma_yx,sigma_zx,sigma_zy
 
-!ZN  real(kind=CUSTOM_REAL) :: hp1,hp2,hp3
   real(kind=CUSTOM_REAL) :: fac1,fac2,fac3
 
   real(kind=CUSTOM_REAL) :: lambdal,mul,lambdalplus2mul
@@ -197,7 +196,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
             tempy1_att_new,tempy2_att_new,tempy3_att_new, &
             tempz1_att_new,tempz2_att_new,tempz3_att_new
 
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: Zero_array !ZN
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: Zero_array 
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dummyx_loc_att,dummyy_loc_att,dummyz_loc_att
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dummyx_loc_att_new,dummyy_loc_att_new,dummyz_loc_att_new
@@ -245,11 +244,11 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 
       eta = Kelvin_Voigt_eta(ispec)
 
-      if (PML_CONDITIONS .and. NSPEC_CPML > 0) then  !ZN
-        if (is_CPML(ispec) .and. eta /= 0._CUSTOM_REAL) then  !ZN
-          stop 'you cannot put fault in PML region'  !ZN
-        endif  !ZN
-      endif  !ZN
+      if (PML_CONDITIONS .and. NSPEC_CPML > 0) then  
+        if (is_CPML(ispec) .and. eta /= 0._CUSTOM_REAL) then 
+          stop 'you cannot put fault in PML region' 
+        endif 
+      endif  
 
       do k=1,NGLLZ
         do j=1,NGLLY
@@ -274,7 +273,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
       enddo
     endif
 
-    if (PML_CONDITIONS .and. NSPEC_CPML > 0) then !ZN
+    if (PML_CONDITIONS .and. NSPEC_CPML > 0) then 
       ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an ".and." statement
       ! because array is_CPML() is unallocated when PML_CONDITIONS is false
       if (is_CPML(ispec)) then
@@ -297,12 +296,12 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
           enddo
         endif
       endif
-    endif !ZN
+    endif 
 
     ! use first order Taylor expansion of displacement for local storage of stresses
     ! at this current time step, to fix attenuation in a consistent way
     if (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) then
-      if (PML_CONDITIONS .and. NSPEC_CPML > 0) then !ZN
+      if (PML_CONDITIONS .and. NSPEC_CPML > 0) then 
         ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an ".and." statement
         ! because array is_CPML() is unallocated when PML_CONDITIONS is false
         if (.not. is_CPML(ispec)) then
@@ -334,7 +333,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
             enddo
           enddo
         enddo
-      endif  !ZN
+      endif  
     endif
 
     !--------------------------------------------------------------------------------------
@@ -348,7 +347,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                  dummyx_loc,dummyy_loc,dummyz_loc,&
                  hprime_xx,hprime_yy,hprime_zz)
 
-    if (PML_CONDITIONS .and. NSPEC_CPML > 0) then !ZN
+    if (PML_CONDITIONS .and. NSPEC_CPML > 0) then 
       ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an ".and." statement
       ! because array is_CPML() is unallocated when PML_CONDITIONS is false
       if (is_CPML(ispec)) then
@@ -368,11 +367,11 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                        hprime_xx,hprime_yy,hprime_zz)
         endif
       endif
-    endif !ZN
+    endif 
 
     if (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) then
       ! it is noteworthy here that if ATTENUATION == .true., COMPUTE_AND_STORE_STRAIN == .true.
-      if (PML_CONDITIONS .and. NSPEC_CPML > 0) then !ZN
+      if (PML_CONDITIONS .and. NSPEC_CPML > 0) then 
         ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an ".and." statement
         ! because array is_CPML() is unallocated when PML_CONDITIONS is false
         if (.not. is_CPML(ispec)) then
@@ -390,7 +389,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                      tempz1_att,tempz2_att,tempz3_att,tempz1,tempz2,tempz3,&
                      dummyx_loc_att,dummyy_loc_att,dummyz_loc_att,&
                      hprime_xx,hprime_yy,hprime_zz) 
-      endif  !ZN
+      endif  
     endif
 
     !--------------------------------------------------------------------------------------
@@ -428,7 +427,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
           duzdzl = xizl*tempz1(i,j,k) + etazl*tempz2(i,j,k) + gammazl*tempz3(i,j,k)
 
           ! stores derivatives of ux, uy and uz with respect to x, y and z
-          if (PML_CONDITIONS .and. NSPEC_CPML > 0) then !ZN
+          if (PML_CONDITIONS .and. NSPEC_CPML > 0) then 
           ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an ".and." statement
           ! because array is_CPML() is unallocated when PML_CONDITIONS is false
             if (is_CPML(ispec)) then
@@ -542,7 +541,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 
           if (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) then
             ! temporary variables used for fixing attenuation in a consistent way
-            if (PML_CONDITIONS .and. NSPEC_CPML > 0) then !ZN
+            if (PML_CONDITIONS .and. NSPEC_CPML > 0) then 
               ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an ".and." statement
               ! because array is_CPML() is unallocated when PML_CONDITIONS is false
               if (.not. is_CPML(ispec)) then
@@ -621,7 +620,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
           ! attenuation
           if (ATTENUATION) then
             ! use unrelaxed parameters if attenuation
-            if (PML_CONDITIONS .and. NSPEC_CPML > 0) then !ZN
+            if (PML_CONDITIONS .and. NSPEC_CPML > 0) then 
               ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an ".and." statement
               ! because array is_CPML() is unallocated when PML_CONDITIONS is false
               if (.not. is_CPML(ispec)) then
@@ -793,7 +792,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 ! note: this should help compilers to pipeline the code and make better use of the cache;
 !       depending on compilers, it can further decrease the computation time by ~ 30%.
 !       by default, N_SLS = 3, therefore we take steps of 3
-            if (PML_CONDITIONS .and. NSPEC_CPML > 0) then !ZN
+            if (PML_CONDITIONS .and. NSPEC_CPML > 0) then 
               ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an ".and." statement
               ! because array is_CPML() is unallocated when PML_CONDITIONS is false
               if (.not. is_CPML(ispec)) then
@@ -985,7 +984,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
       enddo
     enddo
 
-    if (PML_CONDITIONS .and. NSPEC_CPML > 0) then !ZN
+    if (PML_CONDITIONS .and. NSPEC_CPML > 0) then 
       ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an ".and." statement
       ! because array is_CPML() is unallocated when PML_CONDITIONS is false
       if (is_CPML(ispec)) then
@@ -1062,7 +1061,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 
           !  update memory variables based upon the Runge-Kutta scheme
           if (ATTENUATION) then
-            if (PML_CONDITIONS .and. NSPEC_CPML > 0) then !ZN
+            if (PML_CONDITIONS .and. NSPEC_CPML > 0) then 
               ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an ".and." statement
               ! because array is_CPML() is unallocated when PML_CONDITIONS is false
               if (.not. is_CPML(ispec)) then
@@ -1170,7 +1169,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
       enddo
     enddo
 
-    if (PML_CONDITIONS .and. NSPEC_CPML > 0) then !ZN
+    if (PML_CONDITIONS .and. NSPEC_CPML > 0) then 
       ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an ".and." statement
       ! because array is_CPML() is unallocated when PML_CONDITIONS is false
       if (is_CPML(ispec)) then

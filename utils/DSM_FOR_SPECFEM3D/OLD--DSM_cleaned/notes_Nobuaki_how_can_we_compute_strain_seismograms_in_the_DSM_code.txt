@@ -1,19 +1,13 @@
 
 Date: Mon, 29 Jun 2009 13:45:40 +0200
-From: Dimitri Komatitsch <dimitri.komatitsch@univ-pau.fr>
+From: Dimitri Komatitsch
 Organization: University of Pau, France
-User-Agent: Thunderbird 2.0.0.21 (X11/20090320)
-MIME-Version: 1.0
-To: =?UTF-8?B?5Yao5aOr5bu256ug?= <fuji@eps.s.u-tokyo.ac.jp>,
- seismobassoon@gmail.com
-CC: Vadim Monteiller <vadim.monteiller@dtp.obs-mip.fr>, =?UTF-8?B?U8OpYmFz?=
- =?UTF-8?B?dGllbiBDaGV2cm90?= <chevrot@dtp.obs-mip.fr>,
- Dimitri Komatitsch <dimitri.komatitsch@univ-pau.fr>,
- Nozomu Takeuchi <takeuchi@eri.u-tokyo.ac.jp>
+To: fuji
+CC: Vadim Monteiller
+chevrot
+ Dimitri Komatitsch
+ Nozomu Takeuchi
 Subject: how can we compute strain "seismograms" in the DSM code?
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-
 
 Dear Nobuaki,
 

@@ -1,4 +1,36 @@
 
+Subject: Re: PML
+Date: Thu, 22 Jan 2015 17:02:21 +0100
+From: Dimitri Komatitsch
+Organization: CNRS, Marseille, France
+To: Jeroen Tromp
+CC: Hom Nath Gharti, xiezhinan1984
+
+Hi Jeroen and Hom Nath,
+
+Sure, Zhinan is working hard on that. PML in the 2D code is now 100%
+clean, and Zhinan is about to be done with the 3D version as well; that
+was a significant amount of work because it turns out that designing a
+clean CPML for the weak form of the equation is difficult. However that
+is now done, it is just a matter of cleaning the source code (Zhinan is
+on it).
+
+As soon as he is 100% done we'll send you an email.
+
+Thanks,
+Dimitri.
+
+
+On 01/22/2015 02:48 AM, Jeroen Tromp wrote:
+> Hi Dimitri:
+>
+> Hom Nath and I would appreciate it if you guys could make PML work for the tunnel model we are working with.
+>
+> Best regards,
+>
+> Jeroen
+
+
 ---------- DK DK new issues added by Dimitri on January 21, 2015, following some emails I exchanged with Zhinan:
 
 Subject:  Re:Re: PML
@@ -67,6 +99,178 @@ Marseille supercomputer but not committed to Git yet.
 
 Thanks,
 Dimitri.
+
+------------------------------------------------
+
+Subject: Re: specfem3d (PS)
+Date: Sat, 24 Jan 2015 00:06:04 +0100
+From: Dimitri Komatitsch
+Organization: CNRS, Marseille, France
+To: Zhang, Chang-Hua
+CC: Zhinan Xie
+
+Hi Chang-hua,
+
+PS: please note that more traditionally we tend to indicate "no
+attenuation" with a test such as Q > 9999. rather than Q < 0.0001 or Q == 0;
+this is because low values of Q mean high attenuation, thus no
+attenuation means Q tending to infinity rather than to zero.
+
+Thus, in the whole code tests such as
+
+if (Q_mu <=1.e-5) cycle
+
+should be changed to   if(Q > 9999.) then
+
+and if the code detects Q = 0   (or Q < 1.e-5) in an input file it
+should instead stop with an error message, since a Q = 0 (or close to
+zero) value would be physically meaningless.
+
+Thanks,
+Best regards,
+
+Dimitri.
+
+------------------------------------------------
+
+Subject: Re: specfem3d
+Date: Sat, 24 Jan 2015 00:00:38 +0100
+From: Dimitri Komatitsch
+Organization: CNRS, Marseille, France
+To: Zhang, Chang-Hua
+CC: Zhinan Xie
+
+Hi Chang-hua,
+
+Thank you very much! Your tests and your modifications are going to be
+very useful.
+
+Could you please send your modified routines to Zhinan, so that he can
+commit them to the official Git version of the code?
+
+Thank you,
+Best regards,
+
+Dimitri.
+
+------------------------------------------------
+
+Subject: RE: specfem3d
+Date: Fri, 23 Jan 2015 21:23:39 +0000
+From: Zhang, Chang-Hua
+To: Dimitri Komatitsch
+CC: Zhinan Xie
+
+Hi Dimitri and Zhinan,
+
+Now I have done more tests, and it seems to me that by choosing Qs=35 in the example (homogeneous_halfspace_HEX8_elastic_absorbing_CPML_5sides) is not appropriate because of the large element size, or the large resolved period. By creating a small element size (25 m) homogenous model, and Qs=35, the spike appearing in the snap shot shown in slide 5 disappears. So only the PML needs to be fix, which I have done that.
+
+There are two more bugs:
+1)  The solver crashes for an acoustic-elastic coupling model with PML because of the reallocating an allocated arrays in  pml_allocate_arrays_dummy(). In order to fix it, I have replaced the "call  pml_allocate_arrays_dummy()" with if(.not.PML_CONDITIONS) call pml_allocate_arrays_dummy() in prepare_timerun.F90
+
+2)  There is no Q_kappa input in the mesh_file for the internal mesher. Therefore, the "if (Q_kappa <=1.e-5) cycle" statement in get_attenuation_model.f90  always works, and not attenuation for both S and P waves even Q_mu is given. I think neither "if (Q_kappa <=1.e-5) cycle"  nor "if (Q_mu <=1.e-5) cycle" serves the purpose if Q=0 means no attenuation.
+
+So my conclusion is that attenuation and CPML can now be both turned on.
+
+Best Regards,
+Chang-hua
+
+------------------------------------------------
+
+Subject: Re: specfem3d
+Date: Fri, 23 Jan 2015 23:59:16 +0100
+From: Dimitri Komatitsch
+Organization: CNRS, Marseille, France
+To: Zhang, Chang-Hua, xiezhinan
+
+Hi Chang-hua,
+
+Yes, you are right, in the current 3D code there is always this problem
+that attenuation and PML cannot be turned on simultaneously (Zhinan will
+soon remove that (unneeded, as you pointed out) constraint based on your
+suggestions.
+
+What Zhinan meant below in that in the 2D that unneeded constraint is
+not present and then when you use both viscoelasticity in the main
+domain and PML you get correct matching and correct absorption if Q is
+moderate (above 70 or so), however for very strong attenuation (Q below
+50 or so) then you start to see spurious reflections from the edge
+between the PML and the main domain because the main domain is
+viscoelastic but the PML is only elastic, thus there is a jump from Q =
+50 or so in the domain to Q = infinity in the PML, and that jump acts as
+an interface (an interface between two layers with different Q
+properties) that generates low-frequency reflections, as an absorbing
+sponge would do.
+
+Thus, in practice, using an elastic PML in contact with a viscoelastic
+domain leads to good results for moderate or low attenuation, but to
+results that start to show spurious reflections if attenuation is high
+
+(and that is normal; the only clean solution would be to implement PML
+for viscoelastic materials inside the PML, but as you said in your email
+that is complicated)
+
+Best regards,
+Dimitri.
+
+
+------------------------------------------------
+
+Subject: RE: Re:Re: specfem3d
+Date: Thu, 22 Jan 2015 23:25:35 +0000
+From: Zhang, Chang-Hua
+To: xiezhinan, Dimitri Komatitsch
+
+Hi Zhinan,
+
+If I understand correctly, the stress tensor T_ij in the CPML region is not symmetric any more, that is, Txy /= Tyx.  Therefore, in the code, pml_compute_memory_variables.f90, the duxdy (labeled by duxdy_y) for calculating Txy is not the same duxdy (labeled as duxdy_x) as for Tyx. This label convention is fine for isotropic case. However, for the anisotropic case, this is not convenient because the derivatives and the PML memory functions are the same for calculating for example for T_xx, Txy and Txz, but different for Txx, Tyx and Tzx.  If I use the the original convention as in the code, I need rmemory_duxdy_dx for calculating T_xx, rmemory_duxdy_dy for T_xy, and rmemory_duxdy_dz for Txz. After I relabel them, just rmemory_duxdy_dx is needed for all T_xx, Txy and Txz. Now this is just an example. The other stress components are dealt with the same idea. Hope this can clarity.
+
+Yes, I understand that the CPML region is treated as elastic. This is understandable again because of the asymmetric of the strain and stress in the CPML region. I actually have tried to see if I can use viscoelastic in the CPML, but get pretty messy, so I have to give up.
+
+When you said you had tested for Q not too small case, what do you mean? Isn't that true that the result is not correct when both CPML and attenuation are turned on, as shown in my slides?
+
+Of cause you can use my idea to reduce the memory cost in CPML implementation. I should thank you guys for that open source code, and I am happy to contribute to it.
+
+Best Regards,
+Chang-hua
+
+------------------------------------------------
+
+Subject:  Re:Re: specfem3d
+Date:   Fri, 23 Jan 2015 06:03:10 +0800 (CST)
+From:   xiezhinan
+To:   Dimitri Komatitsch
+CC:   Zhang, Chang-Hua
+
+Dear Chang hua and Dimitri,
+
+Chang hua, first, thank you so much for your comment in CPML
+  implementation in SPECFEM2D, which is not optimized.
+As you have already seen that we waste a lot of memory.
+If you do not mind, I will use your idea to reduce the memory cost in
+CPML implementation.
+
+I do not get your point of following paragraph
+
+Redefine the CPML memory variables: CPML memory variables for
+calculation of Txx, Txy, and Txzare labeled by _x, and for Tyx, Tyy, and
+Tyzlabeled by _y, and for Tzx, Tzy, and Tzzlabeled by _z. These
+redefinitions are convenient and necessary for the extension to the
+anisotropic case.
+
+Could you please make it more clear? I am new to anisotropic wave equations.
+
+Concerning the CPML in 3D do not work for viscoelastic wave simulation.
+We will fix that. But the way we current use is that we will use a PML
+formulated on basis of elastic wave equation to absorb the outgoing wave
+from interior domain governed by viscoelastic wave equation.
+
+Though the way is poor, it works when the Q is not too low. We have
+tested for Q>70, the result is quite well.
+
+Thank you so much.
+Best regards,
+Zhinan
 
 ------------------------------------------------
 
