@@ -1837,6 +1837,13 @@ model will change from viscoelastic or poroelastic to elastic at the
 entrance of the PML, but in practice this is sufficient and produces
 only tiny / negligible spurious reflections.
 
+If you use PML and an external mesh (created using an external meshing tool 
+such as CUBIT/TRELIS or similar), try to have elements inside the PML as regular as possible, 
+i.e. ideally non-deformed cubes obtained by `extrusion' of regular surface mesh elements meshing the
+outer edges of the computational domain without PML; by doing so, the PMLs obtained will be far more stable
+in time (PML being weakly unstable from a mathematical point of view, very deformed mesh elements
+inside the PMLs can trigger instabilities much more quickly).
+
 If you use PML and an external tomographic velocity and density model,
 you should be careful because mathematically a PML cannot handle heterogeneities
 along the normal to the PML edge inside the PML layer. This comes
