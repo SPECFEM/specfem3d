@@ -433,6 +433,10 @@ def layercake_volume_ascii_regulargrid_mpiregularmap(filename=None,verticalsandw
             cubitcommand= 'del surface all'
             cubit.cmd(cubitcommand)
             list_vol=cubit.parse_cubit_list("volume","all")
+            for v in list_vol:
+                sv=cubit.get_relatives("volume",v,"surface")
+                if len(sv) <=1: cubit.cmd("del vol "+str(v))
+            list_vol=cubit.parse_cubit_list("volume","all")
             if len(list_vol) > 1:     
                 cubitcommand= 'imprint volume all'
                 cubit.cmd(cubitcommand)
@@ -637,7 +641,7 @@ def create_volume(surf1,surf2,method='loft'):
             cmd='create surface skin curve '+str(cs[1])+' '+str(cs[0])
             cubit.cmd(cmd)
         is_stop=cubit.get_last_id('surface')
-        cmd="create volume surface "+str(surf1)+' '+str(surf2)+' '+str(is_start)+' to '+str(is_stop)+"  heal keep"
+        cmd="create volume surface "+str(surf1)+' '+str(surf2)+' '+str(is_start)+' to '+str(is_stop)+"  heal"
         cubit.cmd(cmd)
 
 
