@@ -492,29 +492,44 @@
     scale_factor_kappa(:,:,:,:) = 1._CUSTOM_REAL
 
     ! reads in attenuation arrays
-    open(unit=27, file=prname(1:len_trim(prname))//'attenuation.bin', &
-          status='old',action='read',form='unformatted',iostat=ier)
-    if (ier /= 0) then
-      print*,'error: could not open ',prname(1:len_trim(prname))//'attenuation.bin'
-      call exit_mpi(myrank,'error opening attenuation.bin file')
+    call create_name_database(prname,myrank,LOCAL_PATH)
+    if (I_should_read_the_database) then
+        open(unit=27, file=prname(1:len_trim(prname))//'attenuation.bin', status='old',action='read',form='unformatted',iostat=ier)
+        if (ier /= 0) then
+            print*,'error: could not open ',prname(1:len_trim(prname))//'attenuation.bin'
+            call exit_mpi(myrank,'error opening attenuation.bin file')
+        endif
     endif
-    read(27) ispec
-    if (ispec /= NSPEC_ATTENUATION_AB) then
-      close(27)
-      print*,'error: attenuation file array ',ispec,'should be ',NSPEC_ATTENUATION_AB
-      call exit_mpi(myrank,'error attenuation array dimensions, please recompile and rerun generate_databases')
-    endif
-    read(27) one_minus_sum_beta
-    read(27) factor_common
-    read(27) scale_factor
+    
+    if (I_should_read_the_database) then
+        read(27) ispec
+        if (ispec /= NSPEC_ATTENUATION_AB) then
+            close(27)
+            print*,'error: attenuation file array ',ispec,'should be ',NSPEC_ATTENUATION_AB
+            call exit_mpi(myrank,'error attenuation array dimensions, please recompile and rerun generate_databases')
+        endif
+        read(27) one_minus_sum_beta
+        read(27) factor_common
+        read(27) scale_factor
 
+        if (FULL_ATTENUATION_SOLID) then
+            read(27) one_minus_sum_beta_kappa
+            read(27) factor_common_kappa
+            read(27) scale_factor_kappa
+        endif
+
+        close(27)
+    endif
+    
+    call bcast_all_i_for_database(ispec, 1)
+    if (size(one_minus_sum_beta) > 0) call bcast_all_cr_for_database(one_minus_sum_beta(1,1,1,1), size(one_minus_sum_beta))
+    if (size(factor_common) > 0) call bcast_all_cr_for_database(factor_common(1,1,1,1,1), size(factor_common))
+    if (size(scale_factor) > 0) call bcast_all_cr_for_database(scale_factor(1,1,1,1), size(scale_factor))
     if (FULL_ATTENUATION_SOLID) then
-      read(27) one_minus_sum_beta_kappa
-      read(27) factor_common_kappa
-      read(27) scale_factor_kappa
+        call bcast_all_cr_for_database(one_minus_sum_beta_kappa(1,1,1,1), size(one_minus_sum_beta_kappa))
+        call bcast_all_cr_for_database(factor_common_kappa(1,1,1,1,1), size(factor_common_kappa))
+        call bcast_all_cr_for_database(scale_factor_kappa(1,1,1,1), size(scale_factor_kappa))
     endif
-
-    close(27)
 
 
     ! gets stress relaxation times tau_sigma, i.e.
