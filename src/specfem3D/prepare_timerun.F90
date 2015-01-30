@@ -500,7 +500,7 @@
             call exit_mpi(myrank,'error opening attenuation.bin file')
         endif
     endif
-    
+
     if (I_should_read_the_database) then
         read(27) ispec
         if (ispec /= NSPEC_ATTENUATION_AB) then
@@ -520,7 +520,7 @@
 
         close(27)
     endif
-    
+
     call bcast_all_i_for_database(ispec, 1)
     if (size(one_minus_sum_beta) > 0) call bcast_all_cr_for_database(one_minus_sum_beta(1,1,1,1), size(one_minus_sum_beta))
     if (size(factor_common) > 0) call bcast_all_cr_for_database(factor_common(1,1,1,1,1), size(factor_common))
