@@ -340,13 +340,13 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
     endif
 
     !--------------------------------------------------------------------------------------
-    !---------------------computation the stain in parent element--------------------------
+    !---------------------computation the strain in parent element-------------------------
     !--------------------------------------------------------------------------------------
     ! The concept of parent element can be found in
     ! O.C.Zienkiewicz, R.L.Taylor & J.Z. Zhu, The finite element method its basis and fundamentals 6th ed.,
     ! Elsevier Press (2005) ! pages 141
 
-    call compute_stain_in_parent_element( &
+    call compute_strain_in_parent_element( &
                  tempx1,tempx2,tempx3,zero_array,zero_array,zero_array,&
                  tempy1,tempy2,tempy3,zero_array,zero_array,zero_array,&
                  tempz1,tempz2,tempz3,zero_array,zero_array,zero_array,&
@@ -358,14 +358,14 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
       ! because array is_CPML() is unallocated when PML_CONDITIONS is false
       if (is_CPML(ispec)) then
         if (.not. backward_simulation) then
-          call compute_stain_in_parent_element( &
+          call compute_strain_in_parent_element( &
                        tempx1_att,tempx2_att,tempx3_att,zero_array,zero_array,zero_array,&
                        tempy1_att,tempy2_att,tempy3_att,zero_array,zero_array,zero_array,&
                        tempz1_att,tempz2_att,tempz3_att,zero_array,zero_array,zero_array,&
                        dummyx_loc_att,dummyy_loc_att,dummyz_loc_att,&
                        hprime_xx,hprime_yy,hprime_zz)
 
-          call compute_stain_in_parent_element( &
+          call compute_strain_in_parent_element( &
                        tempx1_att_new,tempx2_att_new,tempx3_att_new,zero_array,zero_array,zero_array,&
                        tempy1_att_new,tempy2_att_new,tempy3_att_new,zero_array,zero_array,zero_array,&
                        tempz1_att_new,tempz2_att_new,tempz3_att_new,zero_array,zero_array,zero_array,&
@@ -381,7 +381,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
         ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an ".and." statement
         ! because array is_CPML() is unallocated when PML_CONDITIONS is false
         if (.not. is_CPML(ispec)) then
-          call compute_stain_in_parent_element( &
+          call compute_strain_in_parent_element( &
                        tempx1_att,tempx2_att,tempx3_att,tempx1,tempx2,tempx3,&
                        tempy1_att,tempy2_att,tempy3_att,tempy1,tempy2,tempy3,&
                        tempz1_att,tempz2_att,tempz3_att,tempz1,tempz2,tempz3,&
@@ -389,7 +389,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                        hprime_xx,hprime_yy,hprime_zz)
         endif
       else
-        call compute_stain_in_parent_element( &
+        call compute_strain_in_parent_element( &
                      tempx1_att,tempx2_att,tempx3_att,tempx1,tempx2,tempx3,&
                      tempy1_att,tempy2_att,tempy3_att,tempy1,tempy2,tempy3,&
                      tempz1_att,tempz2_att,tempz3_att,tempz1,tempz2,tempz3,&
@@ -399,7 +399,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
     endif
 
     !--------------------------------------------------------------------------------------
-    !----------------finish the computation the stain in parent element--------------------
+    !----------------finish the computation the strain in parent element-------------------
     !--------------------------------------------------------------------------------------
 
     do k=1,NGLLZ
@@ -1212,7 +1212,7 @@ end subroutine compute_forces_viscoelastic_noDev
 ! The concept of parent element can be found in
 ! O.C.Zienkiewicz, R.L.Taylor & J.Z. Zhu, The finite element method its basis and fundamentals 6th ed.,
 ! Elsevier Press (2005) ! pages 141
-Subroutine compute_stain_in_parent_element(tempx1_att,tempx2_att,tempx3_att,tempx1,tempx2,tempx3,&
+Subroutine compute_strain_in_parent_element(tempx1_att,tempx2_att,tempx3_att,tempx1,tempx2,tempx3,&
                                            tempy1_att,tempy2_att,tempy3_att,tempy1,tempy2,tempy3,&
                                            tempz1_att,tempz2_att,tempz3_att,tempz1,tempz2,tempz3,&
                                            dummyx_loc,dummyy_loc,dummyz_loc,hprime_xx,hprime_yy,hprime_zz)
@@ -1279,5 +1279,5 @@ Subroutine compute_stain_in_parent_element(tempx1_att,tempx2_att,tempx3_att,temp
     enddo
   enddo
 
-end subroutine compute_stain_in_parent_element
+end subroutine compute_strain_in_parent_element
 
