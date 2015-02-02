@@ -1,6 +1,6 @@
 #!/bin/bash -eu
 echo
-echo `date`
+date
 echo
 
 NSTEP=`grep ^NSTEP   ./DATA/Par_file | cut -d = -f 2 | sed 's/ //g'`

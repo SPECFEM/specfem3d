@@ -22,7 +22,7 @@ percentage=0.03
 
 # (takes about 10 min...)
 
-echo `date`
+date
 
 cd $PBS_O_WORKDIR
 
@@ -35,4 +35,4 @@ mpiexec -np $numnodes $PWD/xadd_model_iso $percentage
 
 
 echo "done successfully"
-echo `date`
+date

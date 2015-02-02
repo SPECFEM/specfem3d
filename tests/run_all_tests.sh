@@ -66,5 +66,5 @@ done
 
 echo
 echo "all tests completed"
-echo "`date`"
+date
 echo

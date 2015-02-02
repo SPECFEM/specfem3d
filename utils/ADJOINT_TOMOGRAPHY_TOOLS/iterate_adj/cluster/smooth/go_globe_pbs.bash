@@ -28,8 +28,7 @@ kernel=bulk_c_kernel
 # (takes about: 1h 48 min for sigmah=160/sigmav=40 ...)
 #                            25 min for sigmah=40/sigmav=40 ... )
 
-
-echo `date`
+date
 echo "kernel: $kernel"
 cd $PBS_O_WORKDIR
 
@@ -56,4 +55,4 @@ echo
 
 
 echo "done successfully"
-echo `date`
+date

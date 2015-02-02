@@ -69,7 +69,7 @@ echo
 echo "see results in directory: OUTPUT_FILES/"
 echo
 echo "done"
-echo `date`
+date
 
 # To create a full mesh using combine_vol_data:
 # cd bin

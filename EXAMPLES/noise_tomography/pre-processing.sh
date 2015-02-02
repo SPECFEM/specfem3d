@@ -7,7 +7,7 @@
 # save this path as "script_dir", later we will copy default files from this folder
 script_dir=`pwd`
 
-echo `date`
+date
 echo "running directory: $script_dir"
 echo
 
@@ -81,7 +81,7 @@ cd ..
 
 #################### first contribution ###########################################################################
 # in this part, we start noise simulations for 1st contribution of the noise sensitivity kernels
-echo `date`
+date
 echo "1. contribution..."
 echo
 # the master receiver is receiver 1
@@ -138,7 +138,7 @@ echo
 #################### second contribution ###########################################################################
 # in this part, we start noise simulations for 2nd contribution of the noise sensitivity kernels
 
-echo `date`
+date
 echo "2. contribution..."
 echo
 
@@ -186,5 +186,5 @@ cp $OUTPUT_FILES/DATABASES_MPI/*kernel*                  $OUTPUT_FILES/NOISE_TOM
 # $OUTPUT_FILES/NOISE_TOMOGRAPHY/2nd_$kernel.vtu
 
 echo
-echo `date`
+date
 echo "done"
