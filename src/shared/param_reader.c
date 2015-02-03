@@ -56,7 +56,9 @@ by Dennis McRitchie (Princeton University, USA)
 #include <string.h>
 #include <regex.h>
 
+#ifndef LINE_MAX
 #define LINE_MAX 255
+#endif
 
 /*
  * Mac OS X's gcc does not support strnlen and strndup.
@@ -125,6 +127,7 @@ FC_FUNC_(param_read,PARAM_READ)(char * string_read, int * string_read_len, char 
   regmatch_t parameter[3];
   char * keyword;
   char * value;
+  size_t value_len;
 
   // Trim the keyword name we're looking for.
   namecopy = strndup(name, *name_len);
@@ -151,7 +154,7 @@ FC_FUNC_(param_read,PARAM_READ)(char * string_read, int * string_read_len, char 
   }
   // Position the open file to the beginning.
   if (fseek(fid, 0, SEEK_SET) != 0) {
-    printf("Can't seek to begining of parameter file\n");
+    printf("Can't seek to beginning of parameter file\n");
     *ierr = 1;
     regfree(&compiled_pattern);
     return;
@@ -191,7 +194,10 @@ FC_FUNC_(param_read,PARAM_READ)(char * string_read, int * string_read_len, char 
     value = strndup(line+parameter[2].rm_so, parameter[2].rm_eo-parameter[2].rm_so);
     // Clear out the return string with blanks, copy the value into it, and return.
     memset(string_read, ' ', *string_read_len);
-    strncpy(string_read, value, strlen(value));
+    value_len = strlen(value);
+    if (value_len > (size_t)*string_read_len)
+      value_len = *string_read_len;
+    strncpy(string_read, value, value_len);
     free(value);
     free(namecopy);
     *ierr = 0;
