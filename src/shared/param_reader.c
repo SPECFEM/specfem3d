@@ -99,7 +99,7 @@ FC_FUNC_(param_open,PARAM_OPEN)(char * filename, int * length, int * ierr)
     fncopy[blank - fncopy] = '\0';
   }
   if ((fid = fopen(fncopy, "r")) == NULL) {
-    printf("Can't open '%s'\n", fncopy);
+// DK DK purposely suppressed this      printf("Can't open '%s'\n", fncopy);
     *ierr = 1;
     return;
   }

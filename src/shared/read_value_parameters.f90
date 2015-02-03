@@ -99,6 +99,58 @@
 
 !--------------------
 
+  subroutine open_parameter_file_from_master_only(ier)
+
+  use constants, only: MAX_STRING_LEN,IN_DATA_FILES_PATH
+
+  implicit none
+
+  integer :: ier
+  character(len=MAX_STRING_LEN) :: filename_main,filename_run0001
+  logical :: exists_main_Par_file,exists_run0001_Par_file
+
+  filename_main = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'Par_file'
+
+! also see if we are running several independent runs in parallel
+! to do so, add the right directory for that run for the master process only here
+  filename_run0001 = 'run0001/'//filename_main(1:len_trim(filename_main))
+
+  call param_open(filename_main, len(filename_main), ier)
+  if (ier == 0) then
+    exists_main_Par_file = .true.
+    call close_parameter_file()
+  else
+    exists_main_Par_file    = .false.
+  endif
+
+  call param_open(filename_run0001, len(filename_run0001), ier)
+  if (ier == 0) then
+    exists_run0001_Par_file = .true.
+    call close_parameter_file()
+  else
+    exists_run0001_Par_file = .false.
+  endif
+
+  if (exists_main_Par_file .and. exists_run0001_Par_file) then
+    print *
+    print *,'cannot have both DATA/Par_file and run0001/DATA/Par_file present, please remove one of them'
+    stop 'error: two different copies of the Par_file'
+  endif
+
+  call param_open(filename_main, len(filename_main), ier)
+  if (ier /= 0) then
+    call param_open(filename_run0001, len(filename_run0001), ier)
+    if (ier /= 0) then
+      print *
+      print *,'opening file failed, please check your file path and run-directory.'
+      stop 'error opening Par_file'
+    endif
+  endif
+
+  end subroutine open_parameter_file_from_master_only
+
+!--------------------
+
   subroutine open_parameter_file(ier)
 
   use constants, only: MAX_STRING_LEN,IN_DATA_FILES_PATH,mygroup
