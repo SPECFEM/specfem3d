@@ -240,19 +240,14 @@
   character(len=*), parameter :: OUTPUT_FILES_PATH_BASE = './OUTPUT_FILES/'
 
 ! ---------------------------------------------------------------------------------------
-! LQY -- Following 3 variables stays here temporarily,
-!        we need to move them to Par_file at a proper time
+! LQY -- the following two variables stay here temporarily,
+!        we will need to move them to Par_file at a proper time
 ! ---------------------------------------------------------------------------------------
-! save moho mesh and compute Moho boundary kernels
+! save Moho mesh and compute Moho boundary kernels
   logical, parameter :: SAVE_MOHO_MESH = .false.
 
-! outputs approximate hessian for preconditioning
+! outputs approximate Hessian for preconditioning
   logical, parameter :: APPROXIMATE_HESS_KL = .false.
-
-!! DK DK this is now unused, we now undo attenuation properly
-!! DK DK ! number of steps to save the state variables in the forward simulation,
-!! DK DK ! to be used in the backward reconstruction in the presence of attenuation
-!! DK DK   integer, parameter :: NSTEP_Q_SAVE = 50 ! depending on stability of reconstruction, up to 200
 
 !------------------------------------------------------
 
