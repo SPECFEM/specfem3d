@@ -249,16 +249,14 @@
 ! outputs approximate hessian for preconditioning
   logical, parameter :: APPROXIMATE_HESS_KL = .false.
 
-! number of steps to save the state variables in the forward simulation,
-! to be used in the backward reconstruction in the presence of attenuation
-  integer, parameter :: NSTEP_Q_SAVE = 50 ! depending on stability of reconstruction, up to 200
+!! DK DK this is now unused, we now undo attenuation properly
+!! DK DK ! number of steps to save the state variables in the forward simulation,
+!! DK DK ! to be used in the backward reconstruction in the presence of attenuation
+!! DK DK   integer, parameter :: NSTEP_Q_SAVE = 50 ! depending on stability of reconstruction, up to 200
 
 !------------------------------------------------------
-! Nicolas Legoff -- Variables that should be read/computed elsewhere.
-!            Temporarily declared here.
-!------------------------------------------------------
 
-! no lagrange interpolation on seismograms (we take the value on one NGLL point)
+! no Lagrange interpolation on seismograms (we then take the value at the closest NGLL point, which is less accurate)
   logical, parameter :: FASTER_RECEIVERS_POINTS_ONLY = .false.
 
 ! use this t0 as earliest starting time rather than the automatically calculated one

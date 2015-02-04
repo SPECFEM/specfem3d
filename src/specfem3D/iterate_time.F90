@@ -173,10 +173,11 @@
     ! calculating gravity field at current timestep
     if (GRAVITY_SIMULATION) call gravity_timeseries()
 
-    ! resetting d/v/a/R/eps for the backward reconstruction with attenuation
-    if (ATTENUATION) then
-      call it_store_attenuation_arrays()
-    endif
+!! DK DK this is now unused, we now undo attenuation properly
+!   ! resetting d/v/a/R/eps for the backward reconstruction with attenuation
+!   if (ATTENUATION) then
+!     call it_store_attenuation_arrays()
+!   endif
 
     ! adjoint simulations: kernels
     if (SIMULATION_TYPE == 3) then
@@ -313,21 +314,23 @@
 
 !=====================================================================
 
-  subroutine it_store_attenuation_arrays()
+!! DK DK this is now unused, we now undo attenuation properly
+
+! subroutine it_store_attenuation_arrays()
 
 ! resetting d/v/a/R/eps for the backward reconstruction with attenuation
 
-  use specfem_par
-  use specfem_par_elastic
-  use specfem_par_acoustic
+! use specfem_par
+! use specfem_par_elastic
+! use specfem_par_acoustic
 
-  implicit none
+! implicit none
 
-  integer :: ier
-  character(len=MAX_STRING_LEN) :: outputname
+! integer :: ier
+! character(len=MAX_STRING_LEN) :: outputname
 
-  if (it > 1 .and. it < NSTEP) then
-    ! adjoint simulations
+! if (it > 1 .and. it < NSTEP) then
+!   ! adjoint simulations
 
 ! note backward/reconstructed wavefields:
 !       storing wavefield displ() at time step it, corresponds to time (it-1)*DT - t0 (see routine write_seismograms_to_file )
@@ -335,128 +338,128 @@
 !       we read in the reconstructed wavefield at the end of the time iteration loop, i.e. after the Newmark scheme,
 !       thus, indexing is NSTEP-it (rather than something like NSTEP-(it-1) )
 
-    if (SIMULATION_TYPE == 3 .and. mod(NSTEP-it,NSTEP_Q_SAVE) == 0) then
-      ! reads files content
-      write(outputname,"('save_Q_arrays_',i6.6,'.bin')") NSTEP-it
-      open(unit=IIN,file=trim(prname_Q)//trim(outputname),status='old',&
-            action='read',form='unformatted',iostat=ier)
-      if (ier /= 0) then
-        print*,'error: opening save_Q_arrays'
-        print*,'path: ',trim(prname_Q)//trim(outputname)
-        call exit_mpi(myrank,'error open file save_Q_arrays_***.bin for reading')
-      endif
+!   if (SIMULATION_TYPE == 3 .and. mod(NSTEP-it,NSTEP_Q_SAVE) == 0) then
+!     ! reads files content
+!     write(outputname,"('save_Q_arrays_',i6.6,'.bin')") NSTEP-it
+!     open(unit=IIN,file=trim(prname_Q)//trim(outputname),status='old',&
+!           action='read',form='unformatted',iostat=ier)
+!     if (ier /= 0) then
+!       print*,'error: opening save_Q_arrays'
+!       print*,'path: ',trim(prname_Q)//trim(outputname)
+!       call exit_mpi(myrank,'error open file save_Q_arrays_***.bin for reading')
+!     endif
 
-      if (ELASTIC_SIMULATION) then
-        ! reads arrays from disk files
-        read(IIN) b_displ
-        read(IIN) b_veloc
-        read(IIN) b_accel
+!     if (ELASTIC_SIMULATION) then
+!       ! reads arrays from disk files
+!       read(IIN) b_displ
+!       read(IIN) b_veloc
+!       read(IIN) b_accel
 
-        ! puts elastic fields onto GPU
-        if (GPU_MODE) then
-          ! wavefields
-          call transfer_b_fields_to_device(NDIM*NGLOB_AB,b_displ,b_veloc,b_accel, Mesh_pointer)
-        endif
+!       ! puts elastic fields onto GPU
+!       if (GPU_MODE) then
+!         ! wavefields
+!         call transfer_b_fields_to_device(NDIM*NGLOB_AB,b_displ,b_veloc,b_accel, Mesh_pointer)
+!       endif
 
-        if (FULL_ATTENUATION_SOLID) read(IIN) b_R_trace
-        read(IIN) b_R_xx
-        read(IIN) b_R_yy
-        read(IIN) b_R_xy
-        read(IIN) b_R_xz
-        read(IIN) b_R_yz
-        if (FULL_ATTENUATION_SOLID) read(IIN) b_epsilondev_trace
-        read(IIN) b_epsilondev_xx
-        read(IIN) b_epsilondev_yy
-        read(IIN) b_epsilondev_xy
-        read(IIN) b_epsilondev_xz
-        read(IIN) b_epsilondev_yz
+!       if (FULL_ATTENUATION_SOLID) read(IIN) b_R_trace
+!       read(IIN) b_R_xx
+!       read(IIN) b_R_yy
+!       read(IIN) b_R_xy
+!       read(IIN) b_R_xz
+!       read(IIN) b_R_yz
+!       if (FULL_ATTENUATION_SOLID) read(IIN) b_epsilondev_trace
+!       read(IIN) b_epsilondev_xx
+!       read(IIN) b_epsilondev_yy
+!       read(IIN) b_epsilondev_xy
+!       read(IIN) b_epsilondev_xz
+!       read(IIN) b_epsilondev_yz
 
-        ! puts elastic fields onto GPU
-        if (GPU_MODE) then
-          ! attenuation arrays
-          call transfer_b_fields_att_to_device(Mesh_pointer, &
-                  b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz,size(b_R_xx), &
-                  b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy,b_epsilondev_xz,b_epsilondev_yz, &
-                  size(b_epsilondev_xx))
-        endif
-      endif
+!       ! puts elastic fields onto GPU
+!       if (GPU_MODE) then
+!         ! attenuation arrays
+!         call transfer_b_fields_att_to_device(Mesh_pointer, &
+!                 b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz,size(b_R_xx), &
+!                 b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy,b_epsilondev_xz,b_epsilondev_yz, &
+!                 size(b_epsilondev_xx))
+!       endif
+!     endif
 
-      if (ACOUSTIC_SIMULATION) then
-        ! reads arrays from disk files
-        read(IIN) b_potential_acoustic
-        read(IIN) b_potential_dot_acoustic
-        read(IIN) b_potential_dot_dot_acoustic
+!     if (ACOUSTIC_SIMULATION) then
+!       ! reads arrays from disk files
+!       read(IIN) b_potential_acoustic
+!       read(IIN) b_potential_dot_acoustic
+!       read(IIN) b_potential_dot_dot_acoustic
 
-        ! puts acoustic fields onto GPU
-        if (GPU_MODE) &
-          call transfer_b_fields_ac_to_device(NGLOB_AB,b_potential_acoustic, &
-                              b_potential_dot_acoustic, b_potential_dot_dot_acoustic, Mesh_pointer)
+!       ! puts acoustic fields onto GPU
+!       if (GPU_MODE) &
+!         call transfer_b_fields_ac_to_device(NGLOB_AB,b_potential_acoustic, &
+!                             b_potential_dot_acoustic, b_potential_dot_dot_acoustic, Mesh_pointer)
 
-      endif
-      close(IIN)
+!     endif
+!     close(IIN)
 
-    else if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD .and. mod(it,NSTEP_Q_SAVE) == 0) then
-      ! stores files content
-      write(outputname,"('save_Q_arrays_',i6.6,'.bin')") it
-      open(unit=IOUT,file=trim(prname_Q)//trim(outputname),status='unknown',&
-           action='write',form='unformatted',iostat=ier)
-      if (ier /= 0) then
-        print*,'error: opening save_Q_arrays'
-        print*,'path: ',trim(prname_Q)//trim(outputname)
-        call exit_mpi(myrank,'error open file save_Q_arrays_***.bin for writing')
-      endif
+!   else if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD .and. mod(it,NSTEP_Q_SAVE) == 0) then
+!     ! stores files content
+!     write(outputname,"('save_Q_arrays_',i6.6,'.bin')") it
+!     open(unit=IOUT,file=trim(prname_Q)//trim(outputname),status='unknown',&
+!          action='write',form='unformatted',iostat=ier)
+!     if (ier /= 0) then
+!       print*,'error: opening save_Q_arrays'
+!       print*,'path: ',trim(prname_Q)//trim(outputname)
+!       call exit_mpi(myrank,'error open file save_Q_arrays_***.bin for writing')
+!     endif
 
-      if (ELASTIC_SIMULATION) then
-        ! gets elastic fields from GPU onto CPU
-        if (GPU_MODE) then
-          call transfer_fields_el_from_device(NDIM*NGLOB_AB,displ,veloc, accel, Mesh_pointer)
-        endif
+!     if (ELASTIC_SIMULATION) then
+!       ! gets elastic fields from GPU onto CPU
+!       if (GPU_MODE) then
+!         call transfer_fields_el_from_device(NDIM*NGLOB_AB,displ,veloc, accel, Mesh_pointer)
+!       endif
 
-        ! writes to disk file
-        write(IOUT) displ
-        write(IOUT) veloc
-        write(IOUT) accel
+!       ! writes to disk file
+!       write(IOUT) displ
+!       write(IOUT) veloc
+!       write(IOUT) accel
 
-        if (GPU_MODE) then
-          ! attenuation arrays
-          call transfer_fields_att_from_device(Mesh_pointer, &
-                     R_xx,R_yy,R_xy,R_xz,R_yz,size(R_xx), &
-                     epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
-                     size(epsilondev_xx))
-        endif
+!       if (GPU_MODE) then
+!         ! attenuation arrays
+!         call transfer_fields_att_from_device(Mesh_pointer, &
+!                    R_xx,R_yy,R_xy,R_xz,R_yz,size(R_xx), &
+!                    epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
+!                    size(epsilondev_xx))
+!       endif
 
-        if (FULL_ATTENUATION_SOLID) write(IOUT) R_trace
-        write(IOUT) R_xx
-        write(IOUT) R_yy
-        write(IOUT) R_xy
-        write(IOUT) R_xz
-        write(IOUT) R_yz
-        if (FULL_ATTENUATION_SOLID) write(IOUT) epsilondev_trace
-        write(IOUT) epsilondev_xx
-        write(IOUT) epsilondev_yy
-        write(IOUT) epsilondev_xy
-        write(IOUT) epsilondev_xz
-        write(IOUT) epsilondev_yz
-      endif
+!       if (FULL_ATTENUATION_SOLID) write(IOUT) R_trace
+!       write(IOUT) R_xx
+!       write(IOUT) R_yy
+!       write(IOUT) R_xy
+!       write(IOUT) R_xz
+!       write(IOUT) R_yz
+!       if (FULL_ATTENUATION_SOLID) write(IOUT) epsilondev_trace
+!       write(IOUT) epsilondev_xx
+!       write(IOUT) epsilondev_yy
+!       write(IOUT) epsilondev_xy
+!       write(IOUT) epsilondev_xz
+!       write(IOUT) epsilondev_yz
+!     endif
 
-      if (ACOUSTIC_SIMULATION) then
-        ! gets acoustic fields from GPU onto CPU
-        if (GPU_MODE) then
-          call transfer_fields_ac_from_device(NGLOB_AB,potential_acoustic, &
-                                              potential_dot_acoustic, potential_dot_dot_acoustic, Mesh_pointer)
-        endif
+!     if (ACOUSTIC_SIMULATION) then
+!       ! gets acoustic fields from GPU onto CPU
+!       if (GPU_MODE) then
+!         call transfer_fields_ac_from_device(NGLOB_AB,potential_acoustic, &
+!                                             potential_dot_acoustic, potential_dot_dot_acoustic, Mesh_pointer)
+!       endif
 
-        ! writes to disk file
-        write(IOUT) potential_acoustic
-        write(IOUT) potential_dot_acoustic
-        write(IOUT) potential_dot_dot_acoustic
-      endif
-      close(IOUT)
+!       ! writes to disk file
+!       write(IOUT) potential_acoustic
+!       write(IOUT) potential_dot_acoustic
+!       write(IOUT) potential_dot_dot_acoustic
+!     endif
+!     close(IOUT)
 
-    endif ! SIMULATION_TYPE
-  endif ! it
+!   endif ! SIMULATION_TYPE
+! endif ! it
 
-  end subroutine it_store_attenuation_arrays
+! end subroutine it_store_attenuation_arrays
 
 !=====================================================================
 
