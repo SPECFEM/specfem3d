@@ -319,16 +319,6 @@
   ! stores arrays in binary files
   if (SAVE_MESH_FILES .or. COUPLE_WITH_EXTERNAL_CODE) then
     call save_arrays_solver_files(nspec,nglob,ibool)
-
-    ! debug: saves 1. MPI interface
-    !if (num_interfaces_ext_mesh >= 1) then
-    !  filename = prname(1:len_trim(prname))//'MPI_1_points'
-    !  call write_VTK_data_points(nglob, &
-    !                    xstore_dummy,ystore_dummy,zstore_dummy, &
-    !                    ibool_interfaces_ext_mesh_dummy(1:nibool_interfaces_ext_mesh(1),1), &
-    !                    nibool_interfaces_ext_mesh(1), &
-    !                    filename)
-    !endif
   endif
 
   ! cleanup
@@ -580,19 +570,6 @@
     write(IOUT) ispec_is_inner
     write(IOUT) ispec_is_elastic
     close(IOUT)
-
-    !endif
-
-    !! Don't delete this comment for the moment
-    !!
-    !! saves 1. MPI interface
-    !!
-    !!if (num_interfaces_ext_mesh >= 1) then
-    !!  filename = prname(1:len_trim(prname))//'MPI_1_points'
-    !!  call write_VTK_data_points(nglob, xstore_dummy,ystore_dummy,zstore_dummy, &
-    !!                             ibool_interfaces_ext_mesh_dummy(1:nibool_interfaces_ext_mesh(1),1), &
-    !!                             nibool_interfaces_ext_mesh(1), filename)
-    !!endif
 
   endif !  if (COUPLE_WITH_EXTERNAL_CODE)
   !! CD CD

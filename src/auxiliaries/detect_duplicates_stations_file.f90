@@ -18,7 +18,7 @@
   use constants
 
 ! input station file to filter
-  character(len=150), parameter :: STATIONS_FILE = 'STATIONS'
+  character(len=150), parameter :: STATIONS_FILE = '../../DATA/STATIONS'
 ! character(len=150), parameter :: STATIONS_FILE = 'STATIONS_all_20June2008'
 ! character(len=150), parameter :: STATIONS_FILE = 'STATIONS_SUBSET_35'
 ! character(len=150), parameter :: STATIONS_FILE = 'STATIONS_FULL_758'
