@@ -13,9 +13,9 @@
 !
 ! should remove multiples.
 
-  implicit none
-
   use constants
+
+  implicit none
 
 ! input station file to filter
   character(len=150), parameter :: STATIONS_FILE = '../../DATA/STATIONS'
