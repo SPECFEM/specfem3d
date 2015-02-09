@@ -108,8 +108,12 @@
     if (ier /= 0) stop 'error allocating arrays for force point sources'
   endif
 
-  ! for source encoding (acoustic sources so far only)
-  allocate(pm1_source_encoding(NSOURCES),stat=ier)
+  ! for source encoding (acoustic sources only so far)
+  if(USE_SOURCE_ENCODING) then
+    allocate(pm1_source_encoding(NSOURCES),stat=ier)
+  else
+    allocate(pm1_source_encoding(1),stat=ier)
+  endif
   if (ier /= 0) stop 'error allocating arrays for sources'
 
 ! locate sources in the mesh
@@ -666,7 +670,7 @@
             ! determines factor +/-1 depending on sign of moment tensor
             ! (see e.g. Krebs et al., 2009. Fast full-wavefield seismic inversion using encoded sources,
             !   Geophysics, 74 (6), WCC177-WCC188.)
-            pm1_source_encoding(isource) = sign(1.0d0,Mxx(isource))
+            if(USE_SOURCE_ENCODING) pm1_source_encoding(isource) = sign(1.0d0,Mxx(isource))
 
             ! source array interpolated on all element gll points (only used for non point sources)
             call compute_arrays_source_acoustic(sourcearray,hxis,hetas,hgammas,factor_source)

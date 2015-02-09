@@ -159,10 +159,10 @@
               endif
 
               ! quasi-Heaviside
-              !stf = comp_source_time_function(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+              ! stf = comp_source_time_function(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
 
               ! source encoding
-              stf = stf * pm1_source_encoding(isource)
+              if(USE_SOURCE_ENCODING) stf = stf * pm1_source_encoding(isource)
 
               ! distinguishes between single and double precision for reals
               if (CUSTOM_REAL == SIZE_REAL) then
@@ -175,7 +175,7 @@
               ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
               ! to add minus the source to Chi_dot_dot to get plus the source in pressure
 
-              !     add source array
+              ! add source array
               do k=1,NGLLZ
                 do j=1,NGLLY
                   do i=1,NGLLX
@@ -503,7 +503,7 @@
               !stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
 
               ! source encoding
-              stf = stf * pm1_source_encoding(isource)
+              if(USE_SOURCE_ENCODING) stf = stf * pm1_source_encoding(isource)
 
               ! distinguishes between single and double precision for reals
               if (CUSTOM_REAL == SIZE_REAL) then

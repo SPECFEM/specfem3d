@@ -138,6 +138,16 @@
 
 !!-----------------------------------------------------------
 !!
+!! source encoding
+!!
+!!-----------------------------------------------------------
+
+! determines source encoding factor +/-1 depending on sign of moment tensor
+! (see e.g. Krebs et al., 2009. Fast full-wavefield seismic inversion using encoded sources, Geophysics, 74 (6), WCC177-WCC188.)
+  logical, parameter :: USE_SOURCE_ENCODING = .false. ! .true.
+
+!!-----------------------------------------------------------
+!!
 !! Roland_Sylvain gravity calculations
 !!
 !!-----------------------------------------------------------
