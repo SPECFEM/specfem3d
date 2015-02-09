@@ -1,7 +1,7 @@
 
  Bug in xgeneratedatabes with C-PML? #273
 Open
-m8hpw opened this Issue on Oct 20, 2014 · 2 comments
+m8hpw opened this Issue on Oct 20, 2014 ? 2 comments
 
 When I use generate_databases on the mesh I made, an error "C-PML error: distance to C-PML/mesh interface is bigger than thickness of C-PML layer". But I think it is a bug. Indeed,
 
@@ -38,7 +38,7 @@ Could you maybe have a look when you have time? (since I think that part of the 
 
 Best regards, Dimitri.
 
-…
+...
 Dimitri Komatitsch komatits added bug question labels on Oct 27, 2014
 Dimitri Komatitsch
 Owner
