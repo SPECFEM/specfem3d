@@ -143,19 +143,19 @@
 
     if (ispec_is_acoustic(ispec)) then
       ! displacement vector
-      call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+      call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
                           potential_acoustic, displ_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           ibool,rhostore,GRAVITY)
       ! velocity vector
-      call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+      call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
                           potential_dot_acoustic, veloc_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           ibool,rhostore,GRAVITY)
       ! accel ?
-      call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+      call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
                           potential_dot_dot_acoustic, accel_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
@@ -391,14 +391,14 @@
     if (ispec_is_acoustic(ispec)) then
       if (SAVE_DISPLACEMENT) then
         ! displacement vector
-        call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+        call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
                           potential_acoustic, val_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           ibool,rhostore,GRAVITY)
       else
         ! velocity vector
-        call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+        call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
                           potential_dot_acoustic, val_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
@@ -630,14 +630,14 @@
     if (ispec_is_acoustic(ispec)) then
       if (SAVE_DISPLACEMENT) then
         ! displacement vector
-        call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+        call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
              potential_acoustic, val_element,&
              hprime_xx,hprime_yy,hprime_zz, &
              xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
              ibool,rhostore,GRAVITY)
       else
         ! velocity vector
-        call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+        call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
              potential_dot_acoustic, val_element,&
              hprime_xx,hprime_yy,hprime_zz, &
              xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
@@ -786,19 +786,19 @@
 
     if (ispec_is_acoustic(ispec)) then
       ! displacement vector
-      call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+      call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
                           potential_acoustic, displ_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           ibool,rhostore,GRAVITY)
       ! velocity vector
-      call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+      call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
                           potential_dot_acoustic, veloc_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           ibool,rhostore,GRAVITY)
       ! accel ?
-      call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+      call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
                           potential_dot_dot_acoustic, accel_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
@@ -1033,7 +1033,7 @@
       if (.not. ispec_is_acoustic(ispec)) cycle
 
       ! calculates velocity
-      call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+      call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
                         potential_dot_acoustic, veloc_element,&
                         hprime_xx,hprime_yy,hprime_zz, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &

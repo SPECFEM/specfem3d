@@ -884,14 +884,14 @@
       if (SAVE_DISPLACEMENT) then
         if (SIMULATION_TYPE == 3) then
           ! displacement vector from backward potential
-          call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+          call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
                           b_potential_acoustic, val_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           ibool,rhostore,GRAVITY)
         else
           ! displacement vector
-          call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+          call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
                           potential_acoustic, val_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
@@ -900,14 +900,14 @@
       else
         if (SIMULATION_TYPE == 3) then
           ! velocity vector for backward/reconstructed wavefield
-          call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+          call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
                           b_potential_dot_acoustic, val_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           ibool,rhostore,GRAVITY)
         else
           ! velocity vector
-          call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+          call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
                           potential_dot_acoustic, val_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &

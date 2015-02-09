@@ -120,30 +120,27 @@ end subroutine compute_interpolated_dva
 !-------------------------------------------------------------------------------------------------
 !
 
-subroutine compute_interpolated_dva_ac(displ_element,veloc_element,&
-                        potential_dot_dot_acoustic,potential_dot_acoustic,&
-                        potential_acoustic,NGLOB_AB, &
+subroutine compute_interpolated_dva_acoust(displ_element,veloc_element,accel_element, &
+                        potential_dot_dot_acoustic,NGLOB_AB, &
                         ispec,NSPEC_AB,ibool, &
                         xi_r,eta_r,gamma_r, &
                         hxir,hetar,hgammar, &
-                        dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
+                        dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd)
 
-! acoustic elements
-! returns displacement/velocity/pressure (dxd,..,vxd,..,axd,.. ) at receiver location
+! for acoustic elements
+! returns displacement/velocity/acceleration/pressure (dxd,..,vxd,..,axd,..,pd) at receiver location
 
   use constants
 
   implicit none
 
-  double precision,intent(out) :: dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd
+  double precision,intent(out) :: dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd
 
   integer :: ispec
 
   integer :: NSPEC_AB,NGLOB_AB
-  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: displ_element,veloc_element
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: displ_element,veloc_element,accel_element
   real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: potential_dot_dot_acoustic
-  real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: potential_dot_acoustic
-  real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: potential_acoustic
 
   integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB):: ibool
 
@@ -167,6 +164,7 @@ subroutine compute_interpolated_dva_ac(displ_element,veloc_element,&
   axd = ZERO
   ayd = ZERO
   azd = ZERO
+  pd  = ZERO
 
 ! takes closest GLL point only (no interpolation)
   if (FASTER_RECEIVERS_POINTS_ONLY) then
@@ -175,20 +173,22 @@ subroutine compute_interpolated_dva_ac(displ_element,veloc_element,&
     dxd = displ_element(1,nint(xi_r),nint(eta_r),nint(gamma_r))
     dyd = displ_element(2,nint(xi_r),nint(eta_r),nint(gamma_r))
     dzd = displ_element(3,nint(xi_r),nint(eta_r),nint(gamma_r))
+
     ! velocity
     vxd = veloc_element(1,nint(xi_r),nint(eta_r),nint(gamma_r))
     vyd = veloc_element(2,nint(xi_r),nint(eta_r),nint(gamma_r))
     vzd = veloc_element(3,nint(xi_r),nint(eta_r),nint(gamma_r))
 
+    ! acceleration
+    axd = accel_element(1,nint(xi_r),nint(eta_r),nint(gamma_r))
+    ayd = accel_element(2,nint(xi_r),nint(eta_r),nint(gamma_r))
+    azd = accel_element(3,nint(xi_r),nint(eta_r),nint(gamma_r))
+
     ! global index
     iglob = ibool(nint(xi_r),nint(eta_r),nint(gamma_r),ispec)
 
-    ! x component -> acoustic potential
-    axd = potential_acoustic(iglob)
-    ! y component -> first time derivative of potential
-    ayd = potential_dot_acoustic(iglob)
-    ! z component -> pressure
-    azd = - potential_dot_dot_acoustic(iglob)
+    ! pressure
+    pd = - potential_dot_dot_acoustic(iglob)
 
   else
 
@@ -204,17 +204,19 @@ subroutine compute_interpolated_dva_ac(displ_element,veloc_element,&
           dxd = dxd + hlagrange*displ_element(1,i,j,k)
           dyd = dyd + hlagrange*displ_element(2,i,j,k)
           dzd = dzd + hlagrange*displ_element(3,i,j,k)
+
           ! velocity
           vxd = vxd + hlagrange*veloc_element(1,i,j,k)
           vyd = vyd + hlagrange*veloc_element(2,i,j,k)
           vzd = vzd + hlagrange*veloc_element(3,i,j,k)
 
-          ! x component -> acoustic potential
-          axd = axd + hlagrange*potential_acoustic(iglob)
-          ! y component -> first time derivative of potential
-          ayd = ayd + hlagrange*potential_dot_acoustic(iglob)
-          ! z component -> pressure
-          azd = azd - hlagrange*potential_dot_dot_acoustic(iglob)
+          ! acceleration
+          axd = axd + hlagrange*accel_element(1,i,j,k)
+          ayd = ayd + hlagrange*accel_element(2,i,j,k)
+          azd = azd + hlagrange*accel_element(3,i,j,k)
+
+          ! pressure
+          pd = pd - hlagrange*potential_dot_dot_acoustic(iglob)
 
         enddo
       enddo
@@ -222,4 +224,5 @@ subroutine compute_interpolated_dva_ac(displ_element,veloc_element,&
 
   endif
 
-end subroutine compute_interpolated_dva_ac
+end subroutine compute_interpolated_dva_acoust
+

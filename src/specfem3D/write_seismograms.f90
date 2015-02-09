@@ -33,10 +33,12 @@
   use specfem_par_acoustic
   use specfem_par_elastic
   use specfem_par_poroelastic
+
   implicit none
+
   ! local parameters
-  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: displ_element,veloc_element
-  double precision :: dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: displ_element,veloc_element,accel_element
+  double precision :: dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd
   integer :: irec_local,irec
   integer :: iglob,ispec,i,j,k
   ! adjoint locals
@@ -47,6 +49,20 @@
 
   ! TODO: Test and Fix CUDA seismograms code.
   logical, parameter :: USE_CUDA_SEISMOGRAMS = .false.
+
+  dxd = ZERO
+  dyd = ZERO
+  dzd = ZERO
+
+  vxd = ZERO
+  vyd = ZERO
+  vzd = ZERO
+
+  axd = ZERO
+  ayd = ZERO
+  azd = ZERO
+
+  pd  = ZERO
 
   ! gets resulting array values onto CPU
   if (GPU_MODE) then
@@ -102,7 +118,7 @@
       select case (SIMULATION_TYPE)
       case (1)
 
-        ! receiver's spectral element
+        ! spectral element in which the receiver is located
         ispec = ispec_selected_rec(irec)
 
         ! elastic wave field
@@ -118,26 +134,33 @@
         ! acoustic wave field
         if (ispec_is_acoustic(ispec)) then
           ! displacement vector
-          call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
-                          potential_acoustic, displ_element,&
-                          hprime_xx,hprime_yy,hprime_zz, &
-                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          ibool,rhostore,GRAVITY)
-          ! velocity vector
-          call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
-                          potential_dot_acoustic, veloc_element,&
+          call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
+                          potential_acoustic,displ_element, &
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           ibool,rhostore,GRAVITY)
 
-          ! interpolates displ/veloc/pressure at receiver locations
-          call compute_interpolated_dva_ac(displ_element,veloc_element,&
-                          potential_dot_dot_acoustic,potential_dot_acoustic,&
-                          potential_acoustic,NGLOB_AB, &
+          ! velocity vector
+          call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
+                          potential_dot_acoustic,veloc_element, &
+                          hprime_xx,hprime_yy,hprime_zz, &
+                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                          ibool,rhostore,GRAVITY)
+
+          ! acceleration vector
+          call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
+                          potential_dot_dot_acoustic,accel_element, &
+                          hprime_xx,hprime_yy,hprime_zz, &
+                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                          ibool,rhostore,GRAVITY)
+
+          ! interpolates displ/veloc/accel/pressure at receiver locations
+          call compute_interpolated_dva_acoust(displ_element,veloc_element,accel_element, &
+                          potential_dot_dot_acoustic,NGLOB_AB, &
                           ispec,NSPEC_AB,ibool, &
                           xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
                           hxir,hetar,hgammar, &
-                          dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
+                          dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd)
         endif ! acoustic
 
         ! poroelastic wave field
@@ -148,9 +171,9 @@
                           xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
                           hxir,hetar,hgammar, &
                           dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
-        endif !poroelastic
+        endif ! poroelastic
 
-      !adjoint simulations
+      ! adjoint simulations
       case (2)
 
         ! adjoint source is placed at receiver
@@ -204,26 +227,33 @@
         ! acoustic wave field
         if (ispec_is_acoustic(ispec)) then
           ! displacement vector
-          call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
-                          potential_acoustic, displ_element,&
-                          hprime_xx,hprime_yy,hprime_zz, &
-                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          ibool,rhostore,GRAVITY)
-          ! velocity vector
-          call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
-                          potential_dot_acoustic, veloc_element,&
+          call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
+                          potential_acoustic,displ_element, &
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           ibool,rhostore,GRAVITY)
 
-          ! interpolates displ/veloc/pressure at receiver locations
-          call compute_interpolated_dva_ac(displ_element,veloc_element,&
-                          potential_dot_dot_acoustic,potential_dot_acoustic,&
-                          potential_acoustic,NGLOB_AB, &
+          ! velocity vector
+          call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
+                          potential_dot_acoustic,veloc_element, &
+                          hprime_xx,hprime_yy,hprime_zz, &
+                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                          ibool,rhostore,GRAVITY)
+
+          ! acceleration vector
+          call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
+                          potential_dot_dot_acoustic,accel_element, &
+                          hprime_xx,hprime_yy,hprime_zz, &
+                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                          ibool,rhostore,GRAVITY)
+
+          ! interpolates displ/veloc/accel/pressure at receiver locations
+          call compute_interpolated_dva_acoust(displ_element,veloc_element,accel_element, &
+                          potential_dot_dot_acoustic,NGLOB_AB, &
                           ispec,NSPEC_AB,ibool, &
                           xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
                           hxir,hetar,hgammar, &
-                          dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
+                          dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd)
         endif ! acoustic
 
       ! adjoint simulations
@@ -233,7 +263,7 @@
 
         ! elastic wave field
         if (ispec_is_elastic(ispec)) then
-          ! backward fields: interpolates displ/veloc/accel at receiver locations
+          ! backward field: interpolates displ/veloc/accel at receiver locations
           call compute_interpolated_dva(b_displ,b_veloc,b_accel,NGLOB_ADJOINT,&
                           ispec,NSPEC_AB,ibool, &
                           xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
@@ -243,27 +273,34 @@
 
         ! acoustic wave field
         if (ispec_is_acoustic(ispec)) then
-          ! backward fields: displacement vector
-          call compute_gradient(ispec,NSPEC_AB,NGLOB_ADJOINT, &
-                          b_potential_acoustic, displ_element,&
-                          hprime_xx,hprime_yy,hprime_zz, &
-                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          ibool,rhostore,GRAVITY)
-          ! backward fields: velocity vector
-          call compute_gradient(ispec,NSPEC_AB,NGLOB_ADJOINT, &
-                          b_potential_dot_acoustic, veloc_element,&
+          ! backward field: displacement vector
+          call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_ADJOINT, &
+                          b_potential_acoustic,displ_element, &
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           ibool,rhostore,GRAVITY)
 
-          ! backward fields: interpolates displ/veloc/pressure at receiver locations
-          call compute_interpolated_dva_ac(displ_element,veloc_element,&
-                          b_potential_dot_dot_acoustic,b_potential_dot_acoustic,&
-                          b_potential_acoustic,NGLOB_ADJOINT, &
+          ! backward field: velocity vector
+          call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_ADJOINT, &
+                          b_potential_dot_acoustic,veloc_element, &
+                          hprime_xx,hprime_yy,hprime_zz, &
+                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                          ibool,rhostore,GRAVITY)
+
+          ! backward field: acceleration vector
+          call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
+                          b_potential_dot_dot_acoustic,accel_element, &
+                          hprime_xx,hprime_yy,hprime_zz, &
+                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                          ibool,rhostore,GRAVITY)
+
+          ! backward field: interpolates displ/veloc/accel/pressure at receiver locations
+          call compute_interpolated_dva_acoust(displ_element,veloc_element,accel_element, &
+                          b_potential_dot_dot_acoustic,NGLOB_ADJOINT, &
                           ispec,NSPEC_AB,ibool, &
                           xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
                           hxir,hetar,hgammar, &
-                          dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
+                          dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd)
         endif ! acoustic
 
       end select ! SIMULATION_TYPE

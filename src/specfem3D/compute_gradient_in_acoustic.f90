@@ -25,8 +25,7 @@
 !
 !=====================================================================
 
-
-  subroutine compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+  subroutine compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
                         scalar_field, vector_field_element,&
                         hprime_xx,hprime_yy,hprime_zz, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
@@ -35,11 +34,11 @@
 ! calculates gradient of given acoustic scalar (potential) field on all GLL points in one, single element
 ! note:
 !   displacement s = (rho)^{-1} \del \chi
-!   velocity          v = (rho)^{-1} \del \ddot \chi
+!   velocity     v = (rho)^{-1} \del \ddot \chi
 !
 !  in case of gravity:
 !   displacement s = \del \chi
-!   velocity          v = \del \ddot \chi
+!   velocity     v = \del \ddot \chi
 ! returns: (1/rho) times gradient vector field (vector_field_element) in specified element
 !             or in gravity case, just gradient vector field
 
@@ -124,6 +123,6 @@
     enddo
   enddo
 
-  end subroutine compute_gradient
+  end subroutine compute_gradient_in_acoustic
 
 

@@ -72,7 +72,7 @@ specfem3D_OBJECTS = \
 	$O/compute_forces_poro_fluid_part.spec.o \
 	$O/compute_forces_poroelastic_calling_routine.spec.o \
 	$O/compute_forces_poro_solid_part.spec.o \
-	$O/compute_gradient.spec.o \
+	$O/compute_gradient_in_acoustic.spec.o \
 	$O/compute_interpolated_dva.spec.o \
 	$O/compute_kernels.spec.o \
 	$O/compute_stacey_acoustic.spec.o \
@@ -327,7 +327,7 @@ $O/compute_coupling_poroelastic_el.spec.o: $O/specfem3D_par.spec.o
 $O/compute_forces_poroelastic_calling_routine.spec.o: $O/specfem3D_par.spec.o
 $O/compute_forces_poro_fluid_part.spec.o: $O/specfem3D_par.spec.o
 $O/compute_forces_poro_solid_part.spec.o: $O/specfem3D_par.spec.o
-$O/compute_gradient.spec.o: $O/specfem3D_par.spec.o
+$O/compute_gradient_in_acoustic.spec.o: $O/specfem3D_par.spec.o
 $O/compute_interpolated_dva.spec.o: $O/specfem3D_par.spec.o
 $O/compute_kernels.spec.o: $O/specfem3D_par.spec.o
 $O/compute_stacey_viscoelastic.spec.o: $O/specfem3D_par.spec.o
