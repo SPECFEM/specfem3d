@@ -119,10 +119,12 @@ USE_FORCE_POINT_SOURCE          = .true.
 # to represent a (tilted) FORCESOLUTION force point source or a CMTSOLUTION moment-tensor source.
 USE_RICKER_TIME_FUNCTION        = .true.
 
-# decide if we save displacement, velocity and/or acceleration in forward runs (they can be set to true simultaneously)
+# decide if we save displacement, velocity, acceleration and/or pressure in forward runs (they can be set to true simultaneously)
+# currently pressure seismograms are implemented in acoustic (i.e. fluid) elements only
 SAVE_SEISMOGRAMS_DISPLACEMENT   = .true.
 SAVE_SEISMOGRAMS_VELOCITY       = .true.
 SAVE_SEISMOGRAMS_ACCELERATION   = .true.
+SAVE_SEISMOGRAMS_PRESSURE       = .false.  # currently implemented in acoustic (i.e. fluid) elements only
 
 # save seismograms in binary or ASCII format (binary is smaller but may not be portable between machines)
 USE_BINARY_FOR_SEISMOGRAMS      = .false.

@@ -129,7 +129,7 @@ module specfem_par
   character(len=MAX_LENGTH_NETWORK_NAME), allocatable, dimension(:) :: network_name
 
 ! seismograms
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: seismograms_d,seismograms_v,seismograms_a
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: seismograms_d,seismograms_v,seismograms_a,seismograms_p
 
 ! Gauss-Lobatto-Legendre points of integration and weights
   double precision, dimension(NGLLX) :: xigll,wxgll

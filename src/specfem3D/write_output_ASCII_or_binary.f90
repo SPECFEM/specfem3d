@@ -26,8 +26,8 @@
 !=====================================================================
 
   subroutine write_output_ASCII_or_binary(one_seismogram, &
-              NSTEP,it,SIMULATION_TYPE,DT,t0,myrank, &
-              iorientation,irecord,sisname,final_LOCAL_PATH)
+              NSTEP,it,SIMULATION_TYPE,DT,t0, &
+              iorientation,sisname,final_LOCAL_PATH)
 
 ! save seismograms in text format with no subsampling.
 ! Because we do not subsample the output, this can result in large files
@@ -47,8 +47,7 @@
 
   double precision t0,DT
 
-  integer myrank
-  integer iorientation,irecord
+  integer iorientation
 
   character(len=MAX_STRING_LEN) :: sisname,final_LOCAL_PATH
 
@@ -77,7 +76,6 @@
   ! make sure we never write more than the maximum number of time steps
   ! subtract half duration of the source to make sure travel time is correct
   do isample = 1,min(it,NSTEP)
-    if (irecord == 1) then
 
       ! forward simulation
       if (SIMULATION_TYPE == 1) then
@@ -108,9 +106,6 @@
         write(IOUT,*) time_t,' ',one_seismogram(iorientation,isample)
       endif
 
-    else
-      call exit_MPI(myrank,'incorrect record label')
-    endif
   enddo
 
   ! binary format case

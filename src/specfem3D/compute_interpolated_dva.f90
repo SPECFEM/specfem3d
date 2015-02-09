@@ -158,12 +158,15 @@ subroutine compute_interpolated_dva_acoust(displ_element,veloc_element,accel_ele
   dxd = ZERO
   dyd = ZERO
   dzd = ZERO
+
   vxd = ZERO
   vyd = ZERO
   vzd = ZERO
+
   axd = ZERO
   ayd = ZERO
   azd = ZERO
+
   pd  = ZERO
 
 ! takes closest GLL point only (no interpolation)
@@ -196,7 +199,6 @@ subroutine compute_interpolated_dva_acoust(displ_element,veloc_element,accel_ele
     do k = 1,NGLLZ
       do j = 1,NGLLY
         do i = 1,NGLLX
-          iglob = ibool(i,j,k,ispec)
 
           hlagrange = hxir(i)*hetar(j)*hgammar(k)
 
@@ -214,6 +216,9 @@ subroutine compute_interpolated_dva_acoust(displ_element,veloc_element,accel_ele
           axd = axd + hlagrange*accel_element(1,i,j,k)
           ayd = ayd + hlagrange*accel_element(2,i,j,k)
           azd = azd + hlagrange*accel_element(3,i,j,k)
+
+          ! global index
+          iglob = ibool(i,j,k,ispec)
 
           ! pressure
           pd = pd - hlagrange*potential_dot_dot_acoustic(iglob)

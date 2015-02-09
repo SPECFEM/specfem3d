@@ -157,8 +157,12 @@
   if (ier /= 0) stop 'Error reading Par_file parameter SAVE_SEISMOGRAMS_VELOCITY'
   call read_value_logical(SAVE_SEISMOGRAMS_ACCELERATION, 'SAVE_SEISMOGRAMS_ACCELERATION', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter SAVE_SEISMOGRAMS_ACCELERATION'
-  if(.not. SAVE_SEISMOGRAMS_DISPLACEMENT .and. .not. SAVE_SEISMOGRAMS_VELOCITY .and. .not. SAVE_SEISMOGRAMS_ACCELERATION) &
-   stop 'Error: at least one of SAVE_SEISMOGRAMS_DISPLACEMENT SAVE_SEISMOGRAMS_VELOCITY SAVE_SEISMOGRAMS_ACCELERATION must be true'
+  call read_value_logical(SAVE_SEISMOGRAMS_PRESSURE, 'SAVE_SEISMOGRAMS_PRESSURE', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter SAVE_SEISMOGRAMS_PRESSURE'
+  if(.not. SAVE_SEISMOGRAMS_DISPLACEMENT .and. .not. SAVE_SEISMOGRAMS_VELOCITY .and. &
+     .not. SAVE_SEISMOGRAMS_ACCELERATION .and. .not. SAVE_SEISMOGRAMS_PRESSURE) &
+   stop 'Error: at least one of SAVE_SEISMOGRAMS_DISPLACEMENT SAVE_SEISMOGRAMS_VELOCITY SAVE_SEISMOGRAMS_ACCELERATION &
+             &SAVE_SEISMOGRAMS_PRESSURE must be true'
 
   call read_value_logical(USE_BINARY_FOR_SEISMOGRAMS, 'USE_BINARY_FOR_SEISMOGRAMS', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter USE_BINARY_FOR_SEISMOGRAMS'
