@@ -217,7 +217,7 @@
 #  Authors : David Luet, Princeton University, USA and Dimitri Komatitsch, CNRS, France, January 2015
 #
 
-      @objects = `ls *.txt *.c *.cu *.h *.h.in *.fh */*.c */*.cu */*.h */*.h.in */*.fh */*/*.c */*/*.cu */*/*.h */*/*.h.in */*/*.fh */*/*/*.c */*/*/*.cu */*/*/*.h */*/*/*.h.in */*/*/*.fh *.f90 *.F90 *.h *.h.in *.fh */*.f90 */*.F90 */*.h */*.h.in */*.fh */*/*.f90 */*/*.F90 */*/*.h */*/*.h.in */*/*.fh */*/*/*.f90 */*/*/*.F90 */*/*/*.h */*/*/*.h.in */*/*/*.fh */*.txt */*/*.txt */*/*/*.txt */*.tex */*/*.tex */*/*/*.tex */*.sh */*/*.sh */*/*/*.sh */*.csh */*/*.csh */*/*/*.csh */*.bash */*/*.bash */*/*/*.bash */*.pl */*/*.pl */*/*/*.pl `;
+      @objects = `ls *.txt *.c *.cu *.h *.h.in *.fh */*.c */*.cu */*.h */*.h.in */*.fh */*/*.c */*/*.cu */*/*.h */*/*.h.in */*/*.fh */*/*/*.c */*/*/*.cu */*/*/*.h */*/*/*.h.in */*/*/*.fh *.f90 *.F90 *.h *.h.in *.fh */*.f90 */*.F90 */*.h */*.h.in */*.fh */*/*.f90 */*/*.F90 */*/*.h */*/*.h.in */*/*.fh */*/*/*.f90 */*/*/*.F90 */*/*/*.h */*/*/*.h.in */*/*/*.fh */*.txt */*/*.txt */*/*/*.txt */*.tex */*/*.tex */*/*/*.tex */*.sh */*/*.sh */*/*/*.sh */*.csh */*/*.csh */*/*/*.csh */*.bash */*/*.bash */*/*/*.bash */*.pl */*/*.pl */*/*/*.pl */*.py */*/*.py */*/*/*.py`;
 
       foreach $name (@objects) {
             chop $name;
