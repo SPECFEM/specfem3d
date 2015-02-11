@@ -122,7 +122,7 @@ These expressions may be used both in singular and plural form.
 The purpose of the Agreement is the grant by the Licensor to the
 Licensee of a non-exclusive, transferable and worldwide license for the
 Software as set forth in Article 5 hereinafter for the whole term of the
-protection granted by the rights over said Software. 
+protection granted by the rights over said Software.
 
 
     Article 3 - ACCEPTANCE
@@ -268,7 +268,7 @@ When the Licensee creates Derivative Software, this Derivative Software
 may be distributed under a license agreement other than this Agreement,
 subject to compliance with the requirement to include a notice
 concerning the rights over the Software as defined in Article 6.4.
-In the event the creation of the Derivative Software required modification 
+In the event the creation of the Derivative Software required modification
 of the Source Code, the Licensee undertakes that:
 
    1. the resulting Modified Software will be governed by this Agreement,

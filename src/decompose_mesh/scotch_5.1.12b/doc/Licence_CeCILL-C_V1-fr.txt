@@ -273,7 +273,7 @@ etre distribue sous un contrat de licence autre que le present Contrat a
 condition de respecter les obligations de mention des droits sur le
 Logiciel telles que definies a l'article 6.4. Dans le cas ou la creation du
 Logiciel Derive a necessite une modification du Code Source le licencie
-s'engage a ce que: 
+s'engage a ce que:
 
    1. le Logiciel Modifie correspondant a cette modification soit regi
       par le present Contrat,
@@ -370,7 +370,7 @@ Concedant et le Licencie.
 
     Article 8 - RESPONSABILITE
 
-8.1 Sous reserve des dispositions de l'article 8.2, le Licencie a la 
+8.1 Sous reserve des dispositions de l'article 8.2, le Licencie a la
 faculte, sous reserve de prouver la faute du Concedant concerne, de
 solliciter la reparation du prejudice direct qu'il subirait du fait du
 Logiciel et dont il apportera la preuve.
