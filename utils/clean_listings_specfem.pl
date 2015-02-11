@@ -11,11 +11,11 @@
 
 # This Perl script (below), which we developed ourselves and cannot hurt anyway, and which BuildBot runs on the three source codes.
 
-# Basic, but replaces all tabs, removes useless white spaces, switches all comparison operators to their modern syntax 
+# Basic, but replaces all tabs, removes useless white spaces, switches all comparison operators to their modern syntax
 # (changing .GE. to >= and so on), and a few other useful things.
 # It does not analyze indenting though.
 
-# For C files we could use "A-Style" instead ( http://astyle.sourceforge.net/ ) as we mentioned (I am not sure if it 
+# For C files we could use "A-Style" instead ( http://astyle.sourceforge.net/ ) as we mentioned (I am not sure if it
 # handles CUDA in addition to C; it does NOT support Fortran for sure).
 
 # --------------------
@@ -23,15 +23,15 @@
 # For Fortran:
 
 # https://www.freelancer.com/projects/Python-Fortran/Fortran-source-code-beautifier-Python.html
-# Quote from that page: "NOTE: as example of beautiful Fortran code refer to http://www.cp2k.org/. By the way, as part of 
+# Quote from that page: "NOTE: as example of beautiful Fortran code refer to http://www.cp2k.org/. By the way, as part of
 # CP2K there is Python normalizer which performs good Fortran beautification and can be used as a baseline."
 # http://www.cp2k.org
 # http://www.cp2k.org/dev:codingconventions
 
 # It contains a Python script called prettify.py, which calls another Python program called normalizeFortranFile.py.
-# We could try it (I am not sure I like their idea of converting all Fortran keywords to uppercase, but I think there is 
+# We could try it (I am not sure I like their idea of converting all Fortran keywords to uppercase, but I think there is
 # a flag to turn that off).
-# Not clear if it takes care of indenting, it probably does but we should check (if not then it is probably not very 
+# Not clear if it takes care of indenting, it probably does but we should check (if not then it is probably not very
 # useful for SPECFEM because my simple Perl script below is then probably sufficient).
 
 # --------------------
@@ -40,8 +40,8 @@
 # http://dev.eclipse.org/mhonarc/lists/photran/msg01767.html
 # http://www.ifremer.fr/ditigo/molagnon/fortran90/
 
-# Was nice, but written in 2001 and unsupported since then (although the language has not changed that much since then, 
-# thus it may not be a problem; but Fortran2003 has a few extra keywords, and it seems this package only supports F90 but 
+# Was nice, but written in 2001 and unsupported since then (although the language has not changed that much since then,
+# thus it may not be a problem; but Fortran2003 has a few extra keywords, and it seems this package only supports F90 but
 # not F95, which we use a lot).
 # I would tend to favor the Python program above because it is actively maintained and was written much more recently.
 # And it is used routinely by CP2K developers, CP2K being a well-known open-source project for molecular dynamics.
@@ -68,16 +68,18 @@
 
 
 #
-#  Clean spaces, tabs and other non-standard or obsolete things in f90 files
+#  Clean spaces, tabs and other non-standard or obsolete things in Fortran files
 #
 #  Author : Dimitri Komatitsch, EPS - Harvard University, USA, January 1998
 #
 
 #
-# read and clean all f90 files in the current directory and subdirectories
+# read and clean all Fortran files in the current directory and subdirectories
 #
 
-      @objects = `ls *.f90 *.F90 *.h *.h.in *.fh */*.f90 */*.F90 */*.h */*.h.in */*.fh */*/*.f90 */*/*.F90 */*/*.h */*/*.h.in */*/*.fh */*/*/*.f90 */*/*/*.F90 */*/*/*.h */*/*/*.h.in */*/*/*.fh`;
+#     @objects = `ls *.f90 *.F90 *.h *.h.in *.fh */*.f90 */*.F90 */*.h */*.h.in */*.fh */*/*.f90 */*/*.F90 */*/*.h */*/*.h.in */*/*.fh */*/*/*.f90 */*/*/*.F90 */*/*/*.h */*/*/*.h.in */*/*/*.fh`;
+# when using this "find" command from Perl we need to use \\ instead of \ below otherwise Perl tries to interpret it
+      @objects = `find . -name '.git' -prune -o -name 'm4' -prune -o -type f -regextype posix-extended -regex '.*\\.(fh|f90|F90|h|h\\.in)' -print`;
 
       foreach $name (@objects) {
             chop $name;
@@ -130,55 +132,19 @@
 ################################################################################################
 
 #
-#  Clean spaces in C files
+#  Clean spaces in different ASCII files
 #
 #  Author : Dimitri Komatitsch, EPS - Harvard University, USA, January 1998
 #
 
 #
-# read and clean all C and CUDA files in the current directory
+# read and clean all these files in the current directory and subdirectories
 #
 
-      @objects = `ls *.c *.cu *.h *.h.in *.fh */*.c */*.cu */*.h */*.h.in */*.fh */*/*.c */*/*.cu */*/*.h */*/*.h.in */*/*.fh */*/*/*.c */*/*/*.cu */*/*/*.h */*/*/*.h.in */*/*/*.fh`;
-
-      foreach $name (@objects) {
-            chop $name;
-# change tabs to white spaces
-            system("expand -2 < $name > _____temp08_____");
-            $cname = $name;
-            print STDOUT "Cleaning $cname ...\n";
-
-            open(FILEDEPART,"<_____temp08_____");
-            open(FILEC,">$cname");
-
-# open the input C file
-      while($line = <FILEDEPART>) {
-
-# suppress trailing white spaces and carriage return
-      $line =~ s/\s*$//;
-
-      print FILEC "$line\n";
-
-      }
-
-            close(FILEDEPART);
-            close(FILEC);
-
-      }
-
-            system("rm -f _____temp08_____");
-
-################################################################################################
-################################################################################################
-################################################################################################
-
-#
-#  Clean spaces in text and LaTeX files
-#
-#  Author : Dimitri Komatitsch, EPS - Harvard University, USA, January 1998
-#
-
-      @objects = `ls *.txt */*.txt */*/*.txt */*/*/*.txt */*.tex */*/*.tex */*/*/*.tex `;
+#     @objects = `ls *.c *.cu *.h *.h.in *.fh */*.c */*.cu */*.h */*.h.in */*.fh */*/*.c */*/*.cu */*/*.h */*/*.h.in */*/*.fh */*/*/*.c */*/*/*.cu */*/*/*.h */*/*/*.h.in */*/*/*.fh`;
+# when using this "find" command from Perl we need to use \\ instead of \ below otherwise Perl tries to interpret it
+# purposely excluding Python files from this list, since (I think) Python can use tabs for indentation (?) and thus they should not be converted to two spaces (?)
+      @objects = `find . -name '.git' -prune -o -name 'm4' -prune -o -type f -regextype posix-extended -regex '.*\\.(bash|c|csh|cu|fh|f90|F90|h|h\\.in|pl|tex|txt|sh)' -print`;
 
       foreach $name (@objects) {
             chop $name;
@@ -214,10 +180,14 @@
 #
 #  Clean all accented letters and non-ASCII characters to remain portable
 #
-#  Authors : David Luet, Princeton University, USA and Dimitri Komatitsch, CNRS, France, January 2015
+#  Authors : David Luet, Princeton University, USA and Dimitri Komatitsch, CNRS, France, February 2015; "find" command from Elliott Sales de Andrade
 #
 
-      @objects = `ls *.txt *.c *.cu *.h *.h.in *.fh */*.c */*.cu */*.h */*.h.in */*.fh */*/*.c */*/*.cu */*/*.h */*/*.h.in */*/*.fh */*/*/*.c */*/*/*.cu */*/*/*.h */*/*/*.h.in */*/*/*.fh *.f90 *.F90 *.h *.h.in *.fh */*.f90 */*.F90 */*.h */*.h.in */*.fh */*/*.f90 */*/*.F90 */*/*.h */*/*.h.in */*/*.fh */*/*/*.f90 */*/*/*.F90 */*/*/*.h */*/*/*.h.in */*/*/*.fh */*.txt */*/*.txt */*/*/*.txt */*.tex */*/*.tex */*/*/*.tex *.sh */*.sh */*/*.sh */*/*/*.sh *.csh */*.csh */*/*.csh */*/*/*.csh *.bash */*.bash */*/*.bash */*/*/*.bash *.pl */*.pl */*/*.pl */*/*/*.pl *.py */*.py */*/*.py */*/*/*.py`;
+#     @objects = `ls *.txt *.c *.cu *.h *.h.in *.fh */*.c */*.cu */*.h */*.h.in */*.fh */*/*.c */*/*.cu */*/*.h */*/*.h.in */*/*.fh */*/*/*.c */*/*/*.cu */*/*/*.h */*/*/*.h.in */*/*/*.fh *.f90 *.F90 *.h *.h.in *.fh */*.f90 */*.F90 */*.h */*.h.in */*.fh */*/*.f90 */*/*.F90 */*/*.h */*/*.h.in */*/*.fh */*/*/*.f90 */*/*/*.F90 */*/*/*.h */*/*/*.h.in */*/*/*.fh */*.txt */*/*.txt */*/*/*.txt */*.tex */*/*.tex */*/*/*.tex *.sh */*.sh */*/*.sh */*/*/*.sh *.csh */*.csh */*/*.csh */*/*/*.csh *.bash */*.bash */*/*.bash */*/*/*.bash *.pl */*.pl */*/*.pl */*/*/*.pl *.py */*.py */*/*.py */*/*/*.py`;
+# when using this "find" command from Perl we need to use \\ instead of \ below otherwise Perl tries to interpret it
+      @objects = `find . -name '.git' -prune -o -name 'm4' -prune -o -type f -regextype posix-extended -regex '.*\\.(bash|c|csh|cu|fh|f90|F90|h|h\\.in|pl|py|tex|txt|sh)' -print`;
+
+      system("rm -f _____temp08_____ _____temp09_____");
 
       foreach $name (@objects) {
             chop $name;
@@ -229,5 +199,5 @@
 
       }
 
-            system("rm -f _____temp08_____ _____temp09_____");
+      system("rm -f _____temp08_____ _____temp09_____");
 
