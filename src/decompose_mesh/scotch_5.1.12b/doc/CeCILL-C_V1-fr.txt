@@ -1,8 +1,0 @@
-
-CONTRAT DE LICENCE DE LOGICIEL LIBRE CeCILL-C
-
-
-    Avertissement
-
-Ce contrat est une licence de logiciel libre issue d'une concertation
-entre ses auteurs afin que le respect de deux grands principes pr
