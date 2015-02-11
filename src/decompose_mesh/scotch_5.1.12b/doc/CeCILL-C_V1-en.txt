@@ -19,4 +19,4 @@ the two main principles guiding its drafting:
 The authors of the CeCILL-C (for Ce[a] C[nrs] I[nria] L[ogiciel] L[ibre])
 license are:
 
-Commissariat 
+Commissariat
