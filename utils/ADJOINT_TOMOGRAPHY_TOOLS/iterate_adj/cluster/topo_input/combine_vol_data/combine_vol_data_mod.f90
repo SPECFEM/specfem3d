@@ -339,7 +339,7 @@
       if (it == 1) then
         nee = nelement * num_node
         call write_integer(nee)
-      end if
+      endif
 
       do i = 1, nelement
         read(26,*) njunk, njunk2, n1, n2, n3, n4, n5, n6, n7, n8

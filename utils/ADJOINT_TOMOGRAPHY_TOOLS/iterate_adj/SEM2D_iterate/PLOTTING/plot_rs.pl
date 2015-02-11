@@ -41,9 +41,9 @@ print STDERR <<EOF;
          -C : cutting of trace, default no cutting
          -J : projection, default [-JX6/-8]
          -E : alignment of traces , like -Ekt5 default [-Ek8.0]
-	 -M : scale of trace, default [0.03/1]
+   -M : scale of trace, default [0.03/1]
          -W : data trace property
-	 -w : syn trace property
+   -w : syn trace property
          -d data_file, data_ext, comp
          -D data_dir, data_ext, comp, station_file
          -S syn_dir, syn_ext, shift_hdr
@@ -80,7 +80,7 @@ if ($opt_d) {
 
 elsif ($opt_D) {
   ($data_dir,$data_ext,$comp,$station_used) = split(/\,/,$opt_D);
-  if (not $comp ) {die("need to specfiy component to plot\n");} 
+  if (not $comp ) {die("need to specfiy component to plot\n");}
   if (not $data_dir) {die("need to specify the data directory\n");}
   if (not $data_ext) {die("need to specify the data extensions\n");}
   @data_files = ();
@@ -174,7 +174,7 @@ if ($plot_syn) {
       (undef,$datamax) = split(" ",`saclst depmax f $data_files[$i]`);
       (undef,$synmax) = split(" ",`saclst depmax f $syn_files[$i]`);
       if ($datamax > $synmax * $opt_T or $synmax > $datamax * $opt_T) {
-	print "skip $data_files[$i] and $syn_files[$i] -- too large amp. ratio\n";}
+  print "skip $data_files[$i] and $syn_files[$i] -- too large amp. ratio\n";}
       else {push(@datatmp,$data_files[$i]); push(@syntmp,$syn_files[$i]);}
     } @data_files = @datatmp; @syn_files = @syntmp;
   }
@@ -195,7 +195,7 @@ foreach $data (@data_files) {
 
    # use saclst to extract various quantities (evel, evdp not accessible)
   (undef,$sta,$dist,$az,$stla,$stlo,$net)=split(" ", `saclst kstnm dist az stla stlo knetwk f $data`);
- 
+
   #$text .= sprintf("$R1 %6.1f 10 0 4 BC %s\n $R2 %6.1f 10 0 4 BC %6.1f    %6.1f \n",$dist,$sta,$dist,$dist,$az);
 
   $R2p = $R2 + 0.01*($R2-$R1);                          # x-coordinate for label at right

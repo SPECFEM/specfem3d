@@ -248,7 +248,7 @@ for ($i = $imin; $i <= $imax; $i++) {
   `ln -s $datadir/*$sta*HHZ* DATA`; `ln -s $datadir/*$sta*HHR* DATA`; `ln -s $datadir/*$sta*HHT* DATA`;
 
   #$lcut = "0/200";  # KEY
-  #$lcut = "0/150"; 
+  #$lcut = "0/150";
 
   if ($imulti==0) {
     # KEY: plot 1, 2, or 3 sets of ZRT seismograms with map

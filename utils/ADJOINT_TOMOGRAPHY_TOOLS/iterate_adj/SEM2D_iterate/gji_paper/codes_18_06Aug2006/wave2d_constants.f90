@@ -37,7 +37,7 @@ module wave2d_constants
 ! STATION_COAST_BUFFER : exclude stations within this distance from edge of coast
   integer, parameter          :: IREC_SPACE = 2 ! see wave2d.f90
   integer, parameter          :: NMESH_REC = 10
-  double precision, parameter :: SOURCE_GRID_BUFFER   = 4.0d+03  ! m 
+  double precision, parameter :: SOURCE_GRID_BUFFER   = 4.0d+03  ! m
   double precision, parameter :: STATION_GRID_BUFFER  = 15.0d+03 ! m
   double precision, parameter :: STATION_COAST_BUFFER = 0.0d+03  ! m
 
@@ -85,13 +85,13 @@ module wave2d_constants
   logical, parameter :: WRITE_SPECTRAL_MAP_F  = .false.
 
   logical, parameter :: WRITE_STF_A           = .false.
-  logical, parameter :: WRITE_SEISMO_A        = .false. 
-  logical, parameter :: WRITE_SPECTRA_A       = .false. 
+  logical, parameter :: WRITE_SEISMO_A        = .false.
+  logical, parameter :: WRITE_SPECTRA_A       = .false.
   logical, parameter :: WRITE_SPECTRAL_MAP_A  = .false.
 
   logical, parameter :: WRITE_KERNELS = .false.    ! kernel snapshots
   logical, parameter :: WRITE_SNAPSHOTS = .false.  ! wavefield snapshots
-  
+
 
 ! MODEL (S.I. units)
   double precision, parameter :: DENSITY = 2.6d+03 ! kg/m^3
@@ -101,7 +101,7 @@ module wave2d_constants
 !---------------------------------------------------------------
 ! CHT: do not change these
 
-! UTM zone for Southern California region 
+! UTM zone for Southern California region
 !  integer, parameter :: UTM_PROJECTION_ZONE = 11
 
 ! to suppress UTM projection for SCEC benchmarks
@@ -154,7 +154,7 @@ module wave2d_constants
 ! number of nodes for 2D and 3D shape functions for hexahedra
 ! we use 8-node mesh bricks, which are more stable than 27-node elements
   integer, parameter :: NGNOD = 8, NGNOD2D = 4
-  
+
 ! number of iterations to solve the system for xi and eta
   integer, parameter :: NUM_ITER = 1
 

@@ -56,13 +56,13 @@ PROGRAM Scotch_test
     if (ierr /= 0) then
       write(6,*) 'Scotch error : cannot initialize graph'
       STOP
-    end if
+    endif
 
     call ScotchFgraphInit ( Scotchgraph(1), ierr )
     if (ierr /= 0) then
       write(6,*) 'Scotch error : cannot initialize strat'
       STOP
-    end if
+    endif
 
     open(10,iostat=ierr,file="bump.grf")
 
@@ -75,7 +75,7 @@ PROGRAM Scotch_test
     if (ierr /= 0) then
       write(6,*) 'Scotch error : cannot load graph'
       STOP
-    end if
+    endif
 
     close(10)
 
@@ -97,7 +97,7 @@ PROGRAM Scotch_test
     if (ierr /= 0) then
       write(6,*) 'ERROR Scotch : Invalid check'
       STOP
-    end if
+    endif
 
     open (10,iostat=ierr,file="test.grf")
 
@@ -108,7 +108,7 @@ PROGRAM Scotch_test
     if (ierr /= 0) then
       write(6,*) 'ERROR Scotch : Invalid save '
       STOP
-    end if
+    endif
 
     close(10)
 
@@ -119,7 +119,7 @@ PROGRAM Scotch_test
       write(6,*) 'ERROR Scotch : Cannot initialize partitioning&
         &strategy'
       STOP
-    end if
+    endif
 
     allocate(part(1:vertnbr + 1))
 
@@ -128,11 +128,11 @@ PROGRAM Scotch_test
     if (ierr /= 0) then
       write(6,*) 'ERROR Scotch : Cannot partition graph'
       STOP
-    end if
+    endif
 
     do i=1,vertnbr + 1
         write(10,*) i,part(i)
-    end do
+    enddo
 
     call ScotchFgraphExit ( Scotchgraph(1) )
 

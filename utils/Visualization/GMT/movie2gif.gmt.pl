@@ -42,7 +42,7 @@ exit(1);
 if (@ARGV == 0) {Usage();}
 if (not getopts('m:f:pg2xns:R:d:')) {die("Check options\n");}
 if ($opt_m) {$cmt_file = $opt_m;
-	     ($elat,$elon) = get_cmt_location($cmt_file);}
+       ($elat,$elon) = get_cmt_location($cmt_file);}
 
 if (not defined $opt_f) {die("give the start and end of frame\n");}
 ($start,$end) = split(/\//,$opt_f);

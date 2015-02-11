@@ -18,5 +18,5 @@ bash ./commande_linux.sh
 rm liste.txt
 rm commande_linux.sh
 
-cd ..  
+cd ..
 }

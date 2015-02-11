@@ -15,11 +15,11 @@
 /bin/rm -rf *.tit >  /dev/null
 /bin/rm -rf *.spl >  /dev/null
 
-	pdflatex paper_GJI_2011_about_the_code
-	bibtex paper_GJI_2011_about_the_code
-	pdflatex paper_GJI_2011_about_the_code
-	pdflatex paper_GJI_2011_about_the_code
-	pdflatex paper_GJI_2011_about_the_code
+  pdflatex paper_GJI_2011_about_the_code
+  bibtex paper_GJI_2011_about_the_code
+  pdflatex paper_GJI_2011_about_the_code
+  pdflatex paper_GJI_2011_about_the_code
+  pdflatex paper_GJI_2011_about_the_code
 
 /bin/rm -rf *.dvi >  /dev/null
 /bin/rm -rf *.log >  /dev/null

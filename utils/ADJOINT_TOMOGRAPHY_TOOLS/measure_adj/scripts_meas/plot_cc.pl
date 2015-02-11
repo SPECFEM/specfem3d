@@ -43,7 +43,7 @@ for ($i=0;$i< @dlnA_files;$i++) {
 
   ($filebase) = split("dlnA",`basename $dlnA_files[$i]`); chop($filebase);
   ($inputdir) = split(" ",`dirname $dlnA_files[$i]`);
-  `sac2ascii.pl $inputdir/$filebase.obs.sac $inputdir/$filebase.syn.sac $inputdir/$filebase.recon_syn_cc.sac $inputdir/$filebase.recon_syn_cc_dt.sac`; 
+  `sac2ascii.pl $inputdir/$filebase.obs.sac $inputdir/$filebase.syn.sac $inputdir/$filebase.recon_syn_cc.sac $inputdir/$filebase.recon_syn_cc_dt.sac`;
   $psfile = "$inputdir/${filebase}_measure_cc.eps";
 
   (undef,$stname,$stnetwk,$comp,$az,$gcarc)=split(" ",`saclst kstnm knetwk kcmpnm az gcarc f $inputdir/${filebase}.obs.sac`);
@@ -56,7 +56,7 @@ for ($i=0;$i< @dlnA_files;$i++) {
 
   # read cross-correlation measurements
   print MATLAB "dlnA_cc=dlmread('$inputdir/$filebase.dlnA_cc');\n";
-  print MATLAB "dt_cc  =dlmread('$inputdir/$filebase.dt_cc');\n";  
+  print MATLAB "dt_cc  =dlmread('$inputdir/$filebase.dt_cc');\n";
 
   print MATLAB "title = '$stname.$stnetwk.$comp \Delta = $gcarc^\\circ Az = $az^\\circ';\n";
   print MATLAB "figure;\n";

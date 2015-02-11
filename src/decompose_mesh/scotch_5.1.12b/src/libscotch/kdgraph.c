@@ -8,13 +8,13 @@
 ** use, modify and/or redistribute the software under the terms of the
 ** CeCILL-C license as circulated by CEA, CNRS and INRIA at the following
 ** URL: "http://www.cecill.info".
-** 
+**
 ** As a counterpart to the access to the source code and rights to copy,
 ** modify and redistribute granted by the license, users are provided
 ** only with a limited warranty and the software's author, the holder of
 ** the economic rights, and the successive licensors have only limited
 ** liability.
-** 
+**
 ** In this respect, the user's attention is drawn to the risks associated
 ** with loading, using, modifying and/or developing or reproducing the
 ** software by the user in light of its specific status of free software,
@@ -25,7 +25,7 @@
 ** their requirements in conditions enabling the security of their
 ** systems and/or data to be ensured and, more generally, to use and
 ** operate it in the same conditions as regards security.
-** 
+**
 ** The fact that you are presently reading this means that you have had
 ** knowledge of the CeCILL-C license and that you accept its terms.
 */
@@ -40,7 +40,7 @@
 /**                mapper.                                 **/
 /**                This module handles the k-way active    **/
 /**                distributed graph and save data struct- **/
-/**		   ure handling routines.                  **/
+/**      ure handling routines.                  **/
 /**                                                        **/
 /**   DATES      : # Version 5.1  : from : 31 mar 2008     **/
 /**                                 to     01 jul 2008     **/
@@ -84,7 +84,7 @@ Dmapping * restrict const        dmapptr)         /* Mapping      */
 /*   ArchDom               domfrst;                  /\* First, largest domain           *\/ */
 /*   Gnum                  domfrstload;              /\* Load of first domain            *\/ */
 /*   Anum                  termnum; */
- 
+
   actgrafptr->s          = *srcgrafptr;           /* Clone source graph */
   actgrafptr->s.flagval &= ~DGRAPHFREEALL;
   actgrafptr->levlnum    = 0;
@@ -118,7 +118,7 @@ Dmapping * restrict const        dmapptr)         /* Mapping      */
 }
 
 /* This routine frees the contents
-** of the given active graph 
+** of the given active graph
 ** It returns:
 ** - VOID  : in all cases.
 */

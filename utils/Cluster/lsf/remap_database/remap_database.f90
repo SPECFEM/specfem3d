@@ -1,7 +1,7 @@
 program remap_databases
 
 ! this program remaps the databases to resume a solver calculation after
-! the mesher 
+! the mesher
 ! Qinya Liu, May 2007, Caltech
 
 implicit none
@@ -48,7 +48,7 @@ implicit none
   close(11)
 
   mymachine = slice_to_old_machine(myrank+1)
- 
+
   local_data_base = '/scratch/lqy/DATABASES_MPI'
 
   write(scp_outfile,'(a,i4.4)') 'OUTPUT_FILES/scp_out.',myrank
@@ -57,11 +57,11 @@ implicit none
              myrank, '*  '//trim(local_data_base)
 
   call system('echo '//trim(command_string)//' > '//trim(scp_outfile))
-  
+
   call system(trim(command_string)//' >> '//trim(scp_outfile))
-           
+
 ! stop all the MPI processes, and exit
   call MPI_FINALIZE(ier)
 
 end program remap_databases
-          
+

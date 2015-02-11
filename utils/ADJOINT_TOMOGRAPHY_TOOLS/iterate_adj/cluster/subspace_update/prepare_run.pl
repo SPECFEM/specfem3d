@@ -9,7 +9,7 @@
 #
 # After you view the possible models, you pick one.
 # Make sure you have both the mu and the kappa update.
-# 
+#
 # EXAMPLE:
 #    prepare_run.pl 60/4/80 m14 mu_kernel both 1 window 1
 #    prepare_run.pl 20/4/60 m10 mu_kernel both 1 window 1
@@ -109,7 +109,7 @@ for ($i = 1; $i <= $npmax; $i++) {
   ($lamval,$invlamval,$index) = split(" ",$lamlines[$pmax-1]); chomp($lamval);
   print LAM "$lamval\n";
 
-}  
+}
 
 close(LAM);
 

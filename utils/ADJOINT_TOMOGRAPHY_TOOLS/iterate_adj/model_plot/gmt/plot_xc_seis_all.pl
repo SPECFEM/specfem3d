@@ -53,7 +53,7 @@ for ($p = 1; $p <= $nump; $p ++ ) {
 #die("TESTING");
 
 $pmin = 1; $pmax = $nump;
-#$pmin = 1; $pmax = 10; 
+#$pmin = 1; $pmax = 10;
 $pmin = 77; $pmax = $pmin;
 
 for ($p = $pmin; $p <= $pmax; $p ++ ) {

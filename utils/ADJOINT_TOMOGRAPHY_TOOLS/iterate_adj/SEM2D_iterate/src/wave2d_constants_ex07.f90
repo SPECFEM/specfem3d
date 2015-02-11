@@ -75,7 +75,7 @@ module wave2d_constants
   ! mesh specifications: membrane surface waves
   double precision, parameter :: LENGTH = 480.0d3 ! m
   double precision, parameter :: HEIGHT = 480.0d3 ! m
-  double precision, parameter :: AREA = LENGTH*HEIGHT  
+  double precision, parameter :: AREA = LENGTH*HEIGHT
   integer, parameter :: NEX = 40
   integer, parameter :: NEZ = 40
 !!$
@@ -100,13 +100,13 @@ module wave2d_constants
   integer, parameter :: IMODEL_SYN = 0
   integer, parameter :: IMODEL_DAT = 2
   !-----------------------------------------------------------------------------------------
-  !                               0           1                2              3          
+  !                               0           1                2              3
   !-----------------------------------------------------------------------------------------
   ! ISURFACE=1, IMODEL_SYN : homo                         checker          het
   ! ISURFACE=1, IMODEL_DAT : homo pert                    checker pert     het
   !-----------------------------------------------------------------------------------------
-  ! ISURFACE=0, IMODEL_SYN : homo         1D model        checker          NA       
-  ! ISURFACE=0, IMODEL_DAT : homo pert    1D model        checker pert     NA  
+  ! ISURFACE=0, IMODEL_SYN : homo         1D model        checker          NA
+  ! ISURFACE=0, IMODEL_DAT : homo pert    1D model        checker pert     NA
   !-----------------------------------------------------------------------------------------
 
   ! smooth the structure model or kernels
@@ -121,7 +121,7 @@ module wave2d_constants
   ! body waves : 10
   double precision, parameter :: SIGMA_SMOOTH_KERNEL = 2.121320d4
   double precision, parameter :: SIGMA_SMOOTH_MODEL  = 1.060660d4
-  double precision, parameter :: GAMMA_SMOOTH_KERNEL = sqrt(8.0)*SIGMA_SMOOTH_KERNEL 
+  double precision, parameter :: GAMMA_SMOOTH_KERNEL = sqrt(8.0)*SIGMA_SMOOTH_KERNEL
   double precision, parameter :: GAMMA_SMOOTH_MODEL  = sqrt(8.0)*SIGMA_SMOOTH_MODEL
 
   ! parameters for smoothing
@@ -158,7 +158,7 @@ module wave2d_constants
 
   logical, parameter :: WRITE_STF_A           = .false.
   logical, parameter :: WRITE_SEISMO_A        = .false.     ! source inversions
-  !  logical, parameter :: WRITE_SPECTRA_A       = .false. 
+  !  logical, parameter :: WRITE_SPECTRA_A       = .false.
   !  logical, parameter :: WRITE_SPECTRAL_MAP_A  = .false.
 
   logical, parameter :: WRITE_KERNELS = .true.             ! write all nine kernels
@@ -178,11 +178,11 @@ module wave2d_constants
   ! stopping criteria
   ! NITERATION  : number of iterations
   ! VAR_RED_MIN : minimum variance reduction
-  ! SIGMA_FAC   : stop if a model value exceeds SIGMA_FAC * sigma_m 
+  ! SIGMA_FAC   : stop if a model value exceeds SIGMA_FAC * sigma_m
   ! CONV_STOP   : stop when the misfit value is this fraction of the INITIAL misfit value
   integer, parameter :: NITERATION = 0
   double precision, parameter :: VAR_RED_MIN = 0.05d0
-  !double precision, parameter :: SIGMA_FAC = 2.0d0 
+  !double precision, parameter :: SIGMA_FAC = 2.0d0
   !double precision, parameter :: CONV_STOP = 1.0d-4
 
   ! Gaussian errors containted in input file
@@ -210,7 +210,7 @@ module wave2d_constants
   integer, parameter ::  INV_SOURCE_X = 0
 
   ! whether to include the model norm term in the misfit function, which acts like damping
-  logical, parameter :: INCLUDE_MODEL_NORM = .true.  
+  logical, parameter :: INCLUDE_MODEL_NORM = .true.
 
   ! log file showing source loactions
   logical, parameter :: ISOURCE_LOG = .true.
@@ -249,7 +249,7 @@ module wave2d_constants
   !---------------------------------------------------------------
   ! CHT: do not change these
 
-  ! UTM zone for Southern California region 
+  ! UTM zone for Southern California region
   !  integer, parameter :: UTM_PROJECTION_ZONE = 11
 
   ! to suppress UTM projection for SCEC benchmarks
@@ -321,7 +321,7 @@ module wave2d_constants
 !!$  double precision, parameter :: trbdndw = 0.3, a = 30.0
 !!$  integer, parameter :: passes = 2, iord = 4
 !!$
-!!$! 
+!!$!
 !!$! MULTI-TAPER PARAMETERS
 !!$!
 !!$! Ying Zhou: The fit between the recovered data and the data can be improved

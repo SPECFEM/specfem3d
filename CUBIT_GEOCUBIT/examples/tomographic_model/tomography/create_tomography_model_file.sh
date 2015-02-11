@@ -1,21 +1,21 @@
 #!/bin/sh
 
-# creates a simple, formatted tomography model with a constant velocity gradient 
+# creates a simple, formatted tomography model with a constant velocity gradient
 # for a block model with dimensions 134000 x 134000 x 60000
 
 # origin points
 ORIG_X=0.
-ORIG_Y=0. 
-ORIG_Z=0. 
+ORIG_Y=0.
+ORIG_Z=0.
 
 # end points
-END_X=134000. 
-END_Y=134000. 
+END_X=134000.
+END_Y=134000.
 END_Z=-60000.  # depth in negative z-direction
 
 # spacing of given tomography points
-SPACING_X=2000. 
-SPACING_Y=2000. 
+SPACING_X=2000.
+SPACING_Y=2000.
 SPACING_Z=-2000.
 
 # number of cell increments
@@ -24,11 +24,11 @@ NY=68
 NZ=31
 
 # min/max values
-VP_MIN=2500. 
-VP_MAX=8500. 
+VP_MIN=2500.
+VP_MAX=8500.
 VS_MIN=1500.
-VS_MAX=7500. 
-RHO_MIN=1500. 
+VS_MAX=7500.
+RHO_MIN=1500.
 RHO_MAX=1500.
 
 

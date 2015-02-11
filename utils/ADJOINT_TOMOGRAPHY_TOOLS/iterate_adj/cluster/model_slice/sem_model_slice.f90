@@ -42,7 +42,7 @@ program sem_model_slice
   ! read points to be interpolated
   open(11,file=xyz_infile,iostat=ios)
   i=0
-  do while (1 == 1) 
+  do while (1 == 1)
     i=i+1
     read(11,*,iostat=ios) x(i),y(i),z(i)
     if (ios /= 0) exit

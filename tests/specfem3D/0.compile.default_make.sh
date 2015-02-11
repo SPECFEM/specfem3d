@@ -43,7 +43,7 @@ else
 fi
 
 #cleanup
-rm -rf ./bin/* 
+rm -rf ./bin/*
 
 echo "successful compilation" >> $testdir/results.log
 

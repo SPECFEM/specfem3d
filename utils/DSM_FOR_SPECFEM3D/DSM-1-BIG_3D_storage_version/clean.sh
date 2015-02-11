@@ -37,7 +37,7 @@ cd ${HOME_DSM_MAIN_DIR}/DSM-1-BIG_3D_storage_version/Part-3-modify_DSM_results_f
 cd ${HOME_DSM_MAIN_DIR}/DSM-1-BIG_3D_storage_version/Part-3-modify_DSM_results_for_SPECFEM/ChangeFormat ; rm *~ ; make clean
 cd ${HOME_DSM_MAIN_DIR}/DSM-1-BIG_3D_storage_version/Part-3-modify_DSM_results_for_SPECFEM/Interf_SPECFEM3D_DSM ; rm *~ ; make clean
 
-cd ${HOME_DSM_MAIN_DIR}/DSM-1-BIG_3D_storage_version/UTILS/ ; rm *~ ; make clean 
+cd ${HOME_DSM_MAIN_DIR}/DSM-1-BIG_3D_storage_version/UTILS/ ; rm *~ ; make clean
 
 rm -rf ${HOME_DSM_MAIN_DIR}/bin/
 

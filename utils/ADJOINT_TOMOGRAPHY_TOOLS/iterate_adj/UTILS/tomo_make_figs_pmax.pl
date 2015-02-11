@@ -6,7 +6,7 @@
 #
 # This script plots model updates from the subspace method
 # by calling vtk scripts.
-# 
+#
 # EXAMPLE:
 #    ~/UTILS/tomo_make_figs_pmax.pl 1 0 dm15 0.80 0.0 mu_kernel_smooth beta_window
 #
@@ -30,7 +30,7 @@ $pwd = $ENV{PWD};
 # dir_vtk -- to run vtk script
 # dir_ker_out -- collect copies of the figures
 $dir_vtk = "/net/denali/scratch1/carltape/vtk/carl_new";
-$dir_ker_out = "/net/sierra/raid1/carltape/socal/socal_3D/RUNS/MODELS/${smodel}/${fdir}"; 
+$dir_ker_out = "/net/sierra/raid1/carltape/socal/socal_3D/RUNS/MODELS/${smodel}/${fdir}";
 $dir_mesh = $dir_ker_out;
 if (not -e $dir_vtk) {die("check if dir_vtk $dir_vtk exist or not\n")}
 if (not -e $dir_ker_out) {die("check if dir_ker_out $dir_ker_out exist or not\n")}
@@ -82,12 +82,12 @@ for ($i = $imin; $i <= $imax; $i++) {
       if ( $nmesh == $nmesh0) {
         print "--> making vtu files\n";
         @files = glob("${mesh_files}");
-	foreach $ifile (@files) {
+  foreach $ifile (@files) {
           $ofile = `echo $ifile | sed s/mesh/vtu/`; chomp($ofile);
           `mesh2vtu.pl -i $ifile -o $ofile`;
-	  print "mesh2vtu.pl -i $ifile -o $ofile\n";
-	}
-	#die("testing");
+    print "mesh2vtu.pl -i $ifile -o $ofile\n";
+  }
+  #die("testing");
       }
     }
   }

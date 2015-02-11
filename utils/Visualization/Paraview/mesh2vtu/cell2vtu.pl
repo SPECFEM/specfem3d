@@ -29,7 +29,7 @@ Usage: $progname -i input-file -o output-file
     This is a wrapper around cell2vtu
 
     Brian Savage 6/26/2004
-    
+
 END
     exit(-1);
 }

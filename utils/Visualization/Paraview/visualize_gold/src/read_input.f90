@@ -2,7 +2,7 @@
 ! REVISION:
 !   April 09,2010, Hom Nath Gharti
 ! FEEDBACK:
-!   homnath_AT_norsar_DOT_no 
+!   homnath_AT_norsar_DOT_no
 subroutine read_input (inp_fname)
 use visualize_par
 use string_process
@@ -41,10 +41,10 @@ endif
 do
   read(11,'(a)',iostat=ios)line ! This will read a line and proceed to next line
   if (ios/=0)exit
-  
+
   ! check for blank and comment line
-  if (isblank(line) .or. iscomment(line,'#'))cycle 
-   
+  if (isblank(line) .or. iscomment(line,'#'))cycle
+
   ! look for line continuation
   tag=trim(line)
   call last_char(line,tmp_char,ind)
@@ -52,9 +52,9 @@ do
         slen=len(line)
         tag=trim(line(1:ind-1))
         read(11,'(a)',iostat=ios)line ! This will read a line and proceed to next line
-        tag=trim(tag)//trim(line)         
+        tag=trim(tag)//trim(line)
   endif
-  
+
   call first_token(tag,token)
   ! read input information
   if (trim(token)=='input:')then
@@ -68,9 +68,9 @@ do
     inp_ncomp=get_integer('ncomp',args,narg); allocate(inp_head(inp_ncomp))
     if (inp_ncomp==1)then
       inp_head=get_string('head',args,narg)
-    elseif (inp_ncomp==3)then ! vector
+    else if (inp_ncomp==3)then ! vector
       inp_head=get_string_vect('head',inp_ncomp,args,narg)
-    elseif (inp_ncomp==6)then ! tensor
+    else if (inp_ncomp==6)then ! tensor
       inp_head=get_string_vect('head',inp_ncomp,args,narg)
     else
       write(*,'(/,a)')'ERROR: wrong ncomp value in input: line!'
@@ -79,49 +79,49 @@ do
     inp_ext=get_string('ext',args,narg); inp_ext='.'//trim(inp_ext)
     dat_topo=get_integer('topo',args,narg)
     !print*,narg,arg
-    input_stat=0      
-    cycle      
+    input_stat=0
+    cycle
   endif
-  
+
   ! read output information
   if (trim(token)=='output:')then
     call split_string(tag,',',args,narg)
-    !out_path=get_string('path',args,narg)     
+    !out_path=get_string('path',args,narg)
     call seek_string('path',strval,args,narg)
     if (.not. isblank(strval))out_path=trim(strval)
     out_ncomp=get_integer('ncomp',args,narg)
     !stop
     out_head=get_string('head',args,narg)
-    out_vname=get_string('vname',args,narg)       
+    out_vname=get_string('vname',args,narg)
     out_res=get_integer('res',args,narg)
     out_format=get_integer('form',args,narg)
     !print*,narg,arg
-    output_stat=0      
-    cycle      
+    output_stat=0
+    cycle
   endif
-  
+
   ! read processor information
   if (trim(token)=='procinfo:')then
-    call split_string(tag,',',args,narg)      
+    call split_string(tag,',',args,narg)
     proc_head=get_string('head',args,narg)
-    proc_width=get_integer('width',args,narg)            
+    proc_width=get_integer('width',args,narg)
     out_nslice=get_integer('nslice',args,narg)
     slice_npmax=get_integer('npmax',args,narg)
       allocate(slice_nproc(out_nslice))
-      allocate(slice_proc_list(out_nslice,slice_npmax)) 
+      allocate(slice_proc_list(out_nslice,slice_npmax))
       if (out_format==1 .and. out_nslice>1)then
         ! allocate memory for server_name and server_exec
         allocate(server_name(out_nslice))
         allocate(server_exec(out_nslice))
-      endif    
-    procinfo_stat=0      
-    cycle      
+      endif
+    procinfo_stat=0
+    cycle
   endif
-  
+
   ! read processor list
   if (trim(token)=='proclist:')then
     proclist_stat=-1
-    call split_string(tag,',',args,narg)      
+    call split_string(tag,',',args,narg)
     slice_count1=slice_count1+1
     if (slice_count1>out_nslice)then
       write(*,'(/,a)')'ERROR: number of slices exceeds the actual number!'
@@ -131,10 +131,10 @@ do
     proc_mode=get_integer('mode',args,narg)
     if (proc_mode==0)then
       slice_proc_list(slice_count1,1:slice_nproc(slice_count1)) &
-      =get_integer_vect('list',slice_nproc(slice_count1),args,narg)        
-    elseif (proc_mode==1)then ! Indicial
+      =get_integer_vect('list',slice_nproc(slice_count1),args,narg)
+    else if (proc_mode==1)then ! Indicial
       proc_ind=get_integer_vect('list',3,args,narg) ! start, end, step
-                
+
       proc_count=0
       do i_proc=proc_ind(1),proc_ind(2),proc_ind(3)
         proc_count=proc_count+1
@@ -145,32 +145,32 @@ do
         slice_proc_list(slice_count1,proc_count)=i_proc
       enddo
       slice_nproc(slice_count1)=proc_count
-      
+
     else
       write(*,'(/,a)')'ERROR: wrong proc_mode value!'
       stop
-    endif            
-                
-    proclist_stat=0      
-    cycle      
+    endif
+
+    proclist_stat=0
+    cycle
   endif
-  
+
   ! read server information
-  if (output_stat==0 .and. out_format==1 .and. out_nslice>1)then    
-    if (trim(token)=='server:')then      
-      server_stat=-1        
+  if (output_stat==0 .and. out_format==1 .and. out_nslice>1)then
+    if (trim(token)=='server:')then
+      server_stat=-1
       call split_string(tag,',',args,narg)
       slice_count2=slice_count2+1
       if (slice_count2>out_nslice)then
         write(*,'(/,a)')'ERROR: number of slices exceeds the actual number!'
         stop
-      endif          
+      endif
       server_name(slice_count2)=get_string('name',args,narg)
-      server_exec(slice_count2)=get_string('exec',args,narg)      
-      server_stat=0      
-      cycle      
+      server_exec(slice_count2)=get_string('exec',args,narg)
+      server_stat=0
+      cycle
     endif
-  endif  
+  endif
 
 
 enddo ! do
@@ -191,7 +191,7 @@ endif
 if (out_format==1 .and. slice_count2==1 .and. out_nslice>1)then
   ! set server name and executable for all other
   server_name(2:out_nslice)=server_name(1)
-  server_exec(2:out_nslice)=server_exec(1)    
+  server_exec(2:out_nslice)=server_exec(1)
 endif
 
 ! check input status

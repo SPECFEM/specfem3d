@@ -15,8 +15,8 @@ close(FILE);
 for($i=0;$i<@junk;$i++) {
   @node_array = split(" ",$junk[$i]);
   foreach $node (@node_array) {
-	next if ( $node =~ /^[0-9]/ );
-  	push(@nodes, $node);
+  next if ( $node =~ /^[0-9]/ );
+    push(@nodes, $node);
   }
 }
 foreach $node (@nodes) {

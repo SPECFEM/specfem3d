@@ -41,7 +41,7 @@ do
 
   echo "" >> $testdir/results.log
   # check
-  if [ ! -e bin/$var ]; then 
+  if [ ! -e bin/$var ]; then
     echo "compilation of $var failed, please check..." >> $testdir/results.log
     exit 1
   else

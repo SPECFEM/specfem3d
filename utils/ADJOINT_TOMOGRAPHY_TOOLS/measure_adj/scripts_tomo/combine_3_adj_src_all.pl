@@ -6,7 +6,7 @@
 #
 # This script calls combine_adj_src.pl to plot make composite adjoint sources
 # for a set of events.
-# 
+#
 # EXAMPLE:
 #   combine_3_adj_src_all.pl 2/30 3/30 6/30 mtm mtm mtm m15
 #   combine_3_adj_src_all.pl 2/30 3/30 6/30 cc cc cc m14
@@ -78,7 +78,7 @@ for ($i = $imin; $i <= $imax; $i = $i+1) {
   $sta_file1 = "${dir_adj1}/STATIONS_ADJOINT";
   $sta_file2 = "${dir_adj2}/STATIONS_ADJOINT";
   $sta_file3 = "${dir_adj3}/STATIONS_ADJOINT";
-  
+
   # combined output directory
   $odir = "${dir_run_eid}/ADJOINT_all";
 

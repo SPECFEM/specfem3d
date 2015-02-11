@@ -12,14 +12,14 @@ rm -f OUTPUT_FILES/*
 # runs job
 date
 
-# creates job scripts from template: 
+# creates job scripts from template:
 template=go_globe_pbs.bash
 
 for tag in "bulk_c" "bulk_beta" "rho"
 do
 
   echo "kernel: $tag"
-  
+
   # prepares job script from template
   sed -e "s:bulk_c:$tag:" $template > go_globe_pbs.${tag}.bash
 

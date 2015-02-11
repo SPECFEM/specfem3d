@@ -90,7 +90,7 @@ $xwid = 2.5;
 $ywid = 9/$nrec;
 $J = "-JX$xwid/$ywid";
 
-$dx0 = $xwid;                      
+$dx0 = $xwid;
 $dy0 = $ywid;
 $dx1 = $dx0 + 0.1;
 $dy1 = $dy0 + 0.;
@@ -116,11 +116,11 @@ $nplots = $nrec*$ncomp;
 
 # loop over two selected components
 for ($j = 0; $j < $ncomp; $j++) {
-   
+
   $icomp = $comps[$j];
   $comp = $clabs[$icomp-1];
   print "\n component to plot is $comp ($icomp) \n";
-  
+
   if($j==0){$locate = $origin}
   if($j==1){$locate = $shift2}
   if($j==2){$locate = $shift2}
@@ -154,7 +154,7 @@ for ($i = $rmin-1; $i <= $rmax-1; $i++) {
 
    $tinc1 = 20;
    $tinc2 = 10;
-    
+
    $B0 = sprintf("-Ba{%3.3f}f{%3.3f}:\" \":/%3.3f:\" \"::.\" \":wesn",$tinc1,$tinc2,$ss/2);
    $Bfull = sprintf("-Ba{%3.3f}f{%3.3f}:\"Time  (s)\":/%3.3f:\" z, h (t) \"::.\" \":weSn",$tinc1,$tinc2,$ss/2);
    if ($i == $rmax-1) {$B = $Bfull.$Bopts[4]} else {$B = $B0.$Bopts[15]}

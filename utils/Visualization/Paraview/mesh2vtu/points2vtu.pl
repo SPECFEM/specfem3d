@@ -19,15 +19,15 @@ Usage: $progname -i input-file -o output-file
     -L - input is in lon lat depth scalar
 
     Input ascii files have this structure:
-      number_of_points          
-      x_1 y_1 z_1 scalar_1   
+      number_of_points
+      x_1 y_1 z_1 scalar_1
       ...
-      x_n y_n z_n scalar_n   
+      x_n y_n z_n scalar_n
 
     This is a wrapper around $ugrid
 
     Brian Savage 6/26/2004
-    
+
 END
     exit(-1);
 }
@@ -77,7 +77,7 @@ sub lat_lon_depth_2_xyz {
     $theta = ($PI/2.0) - atan(0.99329534*tan($lat*$D2R));
     $phi = $lon * $D2R;
     $r0 = 1.0;
-    
+
     $r = ($R_EARTH_KM - $depth) / $R_EARTH_KM;
     $x = $r * sin($theta) * cos($phi);
     $y = $r * sin($theta) * sin($phi);

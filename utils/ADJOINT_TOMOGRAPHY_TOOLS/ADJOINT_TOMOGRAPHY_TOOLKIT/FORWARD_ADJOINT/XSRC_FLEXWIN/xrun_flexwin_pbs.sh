@@ -18,10 +18,10 @@ dir=CMTSOLUTION_200604121652A_WIN_T025_150
 
 ./flexwin < $input > $output
 cd $syndir
-if [ -f $dir.tar.gz ]; then 
-	echo rm $dir.tar.gz
-	rm $dir.tar.gz 
-fi 
+if [ -f $dir.tar.gz ]; then
+  echo rm $dir.tar.gz
+  rm $dir.tar.gz
+fi
 tar -czvf $dir.tar.gz $dir
 rm -rf $dir
 echo flexwin done successfully

@@ -8,13 +8,13 @@
 ** use, modify and/or redistribute the software under the terms of the
 ** CeCILL-C license as circulated by CEA, CNRS and INRIA at the following
 ** URL: "http://www.cecill.info".
-** 
+**
 ** As a counterpart to the access to the source code and rights to copy,
 ** modify and redistribute granted by the license, users are provided
 ** only with a limited warranty and the software's author, the holder of
 ** the economic rights, and the successive licensors have only limited
 ** liability.
-** 
+**
 ** In this respect, the user's attention is drawn to the risks associated
 ** with loading, using, modifying and/or developing or reproducing the
 ** software by the user in light of its specific status of free software,
@@ -25,7 +25,7 @@
 ** their requirements in conditions enabling the security of their
 ** systems and/or data to be ensured and, more generally, to use and
 ** operate it in the same conditions as regards security.
-** 
+**
 ** The fact that you are presently reading this means that you have had
 ** knowledge of the CeCILL-C license and that you accept its terms.
 */
@@ -129,9 +129,9 @@ const KgraphMapRbParam * restrict const paraptr)
   else
     poolptr->grafptr = &grafptr->s;               /* We will need top-level graph data */
 
-  poolptr->linktab[0].prev = 
+  poolptr->linktab[0].prev =
   poolptr->linktab[0].next =
-  poolptr->linktab[1].prev = 
+  poolptr->linktab[1].prev =
   poolptr->linktab[1].next = &kgraphmaprbmappooldummy;
   poolptr->pooltab[0] = &poolptr->linktab[0];
   poolptr->pooltab[1] = (paraptr->flagjobtie != 0) ? &poolptr->linktab[0] : &poolptr->linktab[1];
@@ -350,7 +350,7 @@ const GraphPart                 partval)
     topverttax = poolptr->grafptr->verttax;       /* Point to top-level graph arrays */
     topvendtax = poolptr->grafptr->vendtax;
     topedgetax = poolptr->grafptr->edgetax;
-  
+
     prioold = joboldptr->prioval;
 
     if (joboldptr->grafdat.vertnbr < poolptr->grafptr->vertnbr) { /* If subgraph is not top graph */

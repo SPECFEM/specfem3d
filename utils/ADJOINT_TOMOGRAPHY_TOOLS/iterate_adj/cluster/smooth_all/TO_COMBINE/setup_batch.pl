@@ -82,11 +82,11 @@ for ($i = $imin; $i <= $imax; $i++) {
     if ($nmesh == $nmesh0) {
       print "--> $nmesh mesh files already exist\n";
     } else {
-      print "$nmesh mesh files\n";  
+      print "$nmesh mesh files\n";
       @sfiles = `ls -1 -d $eid/inout_smooth/*smooth.bin`;
       $nbin = @sfiles;
       if ($nbin != $nbin0) {
-	print "--> re-run the smoothing, since you have $nbin not $nbin0 files\n";
+  print "--> re-run the smoothing, since you have $nbin not $nbin0 files\n";
       } else {
         print "--> ready to set this up\n";
         `cp go_process.bash $eid`;
@@ -94,11 +94,11 @@ for ($i = $imin; $i <= $imax; $i++) {
 
         # modify the EID label for the post-processing script
         # eid=9818433
-	$processfile = "$eid/go_process.bash";
-	$ptemp = "$eid/go_process_temp.bash";
-	`sed '/^eid=/s/^.*\$/eid=$eid/' $processfile > $ptemp`;
-	`mv $ptemp $processfile`;
-	`chmod +x $processfile`;
+  $processfile = "$eid/go_process.bash";
+  $ptemp = "$eid/go_process_temp.bash";
+  `sed '/^eid=/s/^.*\$/eid=$eid/' $processfile > $ptemp`;
+  `mv $ptemp $processfile`;
+  `chmod +x $processfile`;
       }
     }
   }   # icheck

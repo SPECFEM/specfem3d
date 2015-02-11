@@ -23,7 +23,7 @@ if [ ! -e $sta.BXZ.semd.adj ]; then echo "error creating adjoint sources, please
 
 rename .semd.adj .adj *semd.adj
 
-# uses Z-component source for all 
+# uses Z-component source for all
 # (acoustic adjoint sources are read from component 1 -> BXX.adj)
 cp $sta.BXZ.adj $sta.BXX.adj
 cp $sta.BXZ.adj $sta.BXY.adj

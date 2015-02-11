@@ -197,7 +197,7 @@ print CSH "gmtset COLOR_NAN $sky_color PAPER_MEDIA letter BASEMAP_TYPE plain PLO
     if (not -f ${outer_boundary}) {
       die("Check if outer_boundary ${outer_boundary} exist or not\n");
     }
-    print CSH "psxy ${outer_boundary} $Jmap $Rmap -W2p,0/0/0 -K -O -V $omap >> $psfile\n";  
+    print CSH "psxy ${outer_boundary} $Jmap $Rmap -W2p,0/0/0 -K -O -V $omap >> $psfile\n";
   }
 
 #==============================================
@@ -266,7 +266,7 @@ for ($ip = 1; $ip <= $nump; $ip ++ ) {
 #       print CSH "pstext $R_title $J_title $textinfo -K -O -V $olab2 >>$psfile<<EOF\n0 0 10 0 $fontno TC $stanet\nEOF\n";
 #     }
 
-}				# loop over p
+}       # loop over p
 
   # fault labels
   $fault_labs = "$dir0/faults/socal_fault_labs.lonlat";
@@ -274,7 +274,7 @@ for ($ip = 1; $ip <= $nump; $ip ++ ) {
   print CSH "awk '{print \$1,\$2,10,0,1,\"CM\",\$3}' ${fault_labs} | pstext $textinfo $Jmap $Rmap -K -V -O $omap >> $psfile\n";
 
   print CSH "pstext -N $R_title $J_title -K -O -V >>$psfile<<EOF\n 10 10 16 0 $fontno CM \nEOF\n";
-  print CSH "psbasemap $Jmap $Rmap $Bmap -O -V $omap >> $psfile\n";	# FINISH (no K)
+  print CSH "psbasemap $Jmap $Rmap $Bmap -O -V $omap >> $psfile\n"; # FINISH (no K)
 
   #if($ixv==1) {print CSH "convert $psfile -rotate $rotangle $jpgfile\n";}
   if ($ixv==1) {print CSH "gv $psfile &\n";}

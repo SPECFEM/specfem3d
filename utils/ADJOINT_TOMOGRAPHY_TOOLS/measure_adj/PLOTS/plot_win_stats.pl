@@ -8,7 +8,7 @@
 #
 # CALLED BY:
 #    plot_win_stats_all.pl
-# 
+#
 # EXAMPLE:
 #    plot_win_stats.pl ...
 #

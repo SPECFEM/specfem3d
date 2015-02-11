@@ -72,7 +72,7 @@ contains
 !!$       wseis_syn(1:nlen) = cmplx(syn_displ(1:nlen),0.)
 !!$       call fft(lnpt,wseis_syn,FORWARD_FFT,DT)   ! displacement
 !!$
-!!$       ! KEY: assemble omega vector 
+!!$       ! KEY: assemble omega vector
 !!$       wvec(:) = 0.
 !!$       do j = 1,npt
 !!$          if(j > npt/2) then
@@ -322,7 +322,7 @@ contains
              do j = 1, nlen
                 if((j+i) > 1 .and. (j+i) < nlen) cc = cc + dzr_win(j) * dzr2_win(j+i)   ! cross-correlation
              enddo
-             if( cc > cc_max) then 
+             if( cc > cc_max) then
                 cc_max = cc
                 ishift = i
              endif
@@ -359,7 +359,7 @@ contains
           !dlnAd = sqrt( (DT * sum( dat_displ(:) * dat_displ(:) )) / (DT * sum( syn_displ(:) * syn_displ(:) )) ) - 1.
           !dlnAv = sqrt( (DT * sum( dat_veloc(:) * dat_veloc(:) )) / (DT * sum( syn_veloc(:) * syn_veloc(:) )) ) - 1.
 
-          ! modified to avoid first-order approximation 
+          ! modified to avoid first-order approximation
           dlnAd = 0.5 * log( sum(dat_displ(:)*dat_displ(:)) / sum(syn_displ(:)*syn_displ(:)) )
           dlnAv = 0.5 * log( sum(dat_veloc(:)*dat_veloc(:)) / sum(syn_veloc(:)*syn_veloc(:)) )
 
@@ -384,7 +384,7 @@ contains
 
           ! cross-correlation traveltime adjoint source for banana-doughnut kernel
           ft_bar_t(:) = -syn_veloc(:) / Nnorm
- 
+
           ! cross-correlation traveltime adjoint source for misfit kernel
           ! NOTE 1: sign convention
           ! NOTE 2: weighted by measurement and (diagonal) data covariance matrix
@@ -394,7 +394,7 @@ contains
           ! You have TWO OPTIONS: measure the amplitudes based on DISPLACEMENT or VELOCITY
           ! Default option has been IAMP_VEL = 0
           if(IAMP_VEL == 0) then     ! DISPLACEMENT
-             fa_bar_t(:) = syn_displ(:) / Mnorm 
+             fa_bar_t(:) = syn_displ(:) / Mnorm
              dlnA = dlnAd
           else                        ! VELOCITY
              fa_bar_t(:) = -syn_accel(:) / Nnorm
@@ -459,7 +459,7 @@ contains
 !!$             dw = twopi / (npt*DT)
 !!$             fnum = npt/2 + 1
 !!$
-!!$             ! KEY: assemble omega vector 
+!!$             ! KEY: assemble omega vector
 !!$             wvec(:) = 0.
 !!$             do j = 1,npt
 !!$                if(j > npt/2) then
@@ -480,7 +480,7 @@ contains
 !!$             do i = 1, nlen
 !!$                dzr3_win(i) = 0.
 !!$                if( (ishift+i) > 1 .and. (ishift+i) < nlen ) dzr3_win(i) = dzr2_win(i+ishift)
-!!$                dzr30_win(i) = dzr3_win(i) 
+!!$                dzr30_win(i) = dzr3_win(i)
 !!$             enddo
 !!$
 !!$             ! create complex synthetic seismogram and complex data seismogram
@@ -510,7 +510,7 @@ contains
 !!$
 !!$             do ictaper = 1, NTAPER  ! loop over tapers
 !!$
-!!$                ! time domain: apply taper ictaper to synth and obs windowed seismograms 
+!!$                ! time domain: apply taper ictaper to synth and obs windowed seismograms
 !!$                ! these get written over at each loop iteration of ictaper
 !!$                do i = 1, nlen
 !!$                   dzr_win(i)  =  dzr0_win(i) * tas(i,ictaper)   ! syn(t), single-tapered and windowed
@@ -546,18 +546,18 @@ contains
 !!$                wtr_use     = cmplx(ampmax * WTR, 0.)       ! syn
 !!$                wtr_use_unw = cmplx(ampmax_unw * WTR, 0.)   ! syn, single-tapered
 !!$
-!!$                ! determine i_right values using the power in the (untapered) synthetic 
+!!$                ! determine i_right values using the power in the (untapered) synthetic
 !!$                ! these variables define maximum frequency for measurement
 !!$                ! i_right_stop = 1 --> stop at frequency i_right, not fnum
-!!$                i_right = fnum 
-!!$                i_right_stop = 0 
+!!$                i_right = fnum
+!!$                i_right_stop = 0
 !!$                do i = 1,fnum             ! loop over frequencies
-!!$                   if(i > i_amp_max_unw .and. abs(wseis_syn(i)) <= abs(wtr_use_unw) .and. i_right_stop == 0) then 
+!!$                   if(i > i_amp_max_unw .and. abs(wseis_syn(i)) <= abs(wtr_use_unw) .and. i_right_stop == 0) then
 !!$                      i_right_stop = 1
 !!$                      i_right = i
 !!$                   endif
-!!$                   if(i > i_amp_max_unw .and. abs(wseis_syn(i)) >= 10.*abs(wtr_use_unw) .and. i_right_stop == 1) then 
-!!$                      i_right_stop = 0 
+!!$                   if(i > i_amp_max_unw .and. abs(wseis_syn(i)) >= 10.*abs(wtr_use_unw) .and. i_right_stop == 1) then
+!!$                      i_right_stop = 0
 !!$                      i_right = i
 !!$                   endif
 !!$                enddo  ! frequencies: i = 1,fnum
@@ -591,7 +591,7 @@ contains
 !!$             ! find water level for multi-taper measurement
 !!$             ampmax = 0.
 !!$             do i = 1, fnum
-!!$                if( abs(bot_mtm(i)) > ampmax) then 
+!!$                if( abs(bot_mtm(i)) > ampmax) then
 !!$                   ampmax =  abs(bot_mtm(i))
 !!$                   i_amp_max = i
 !!$                endif
@@ -652,7 +652,7 @@ contains
 !!$                ! write transfer function to file
 !!$                write(filename,'(a,i5.5,a)') 'transfer_freq_', irec, '.dat'
 !!$                open(91,file=filename,status='unknown')
-!!$                do i = 1, i_right 
+!!$                do i = 1, i_right
 !!$                   write(91,'(4e18.8)') wvec(i)/twopi, dtau_w(i), dlnA_w(i), w_taper(i)
 !!$                enddo
 !!$                close(91)
@@ -706,7 +706,7 @@ contains
 !!$                ! Note that the transfer function (trans_mtm) deals with the SHIFTED synthetics.
 !!$                write(filename,'(a,i5.5,a)') 'recovered_seis_freq_', irec, '.dat'
 !!$                open(91,file=filename,status='unknown')
-!!$                do i = 1,i_right 
+!!$                do i = 1,i_right
 !!$
 !!$                   omega = wvec(i)
 !!$                   wseis_rec(i) = wseis_syn(i) * (1.+ dlnA_w(i)) * exp(-cci*omega*dtau_w(i))
@@ -812,7 +812,7 @@ contains
 !!$             ! It also stores the displacement field sj(w), which is in the NUMERATOR term of p(w).
 !!$             do ictaper = 1,NTAPER
 !!$
-!!$                ! apply TAPER ictaper to windowed synthetics 
+!!$                ! apply TAPER ictaper to windowed synthetics
 !!$                dzr_win(:) = 0.
 !!$                do i = 1,nlen   ! time domain
 !!$                   dzr_win(i) = dzr0_win(i) * tas(i,ictaper)
@@ -830,7 +830,7 @@ contains
 !!$                enddo
 !!$
 !!$                ! term in numerator (sj) (complex)
-!!$                top_p_ntaper(:,ictaper) = wseis(:)     
+!!$                top_p_ntaper(:,ictaper) = wseis(:)
 !!$
 !!$             enddo  ! loop over tapers
 !!$
@@ -903,7 +903,7 @@ contains
 !!$                enddo
 !!$                close(21)
 !!$
-!!$                ! time domain : tapers and other time series 
+!!$                ! time domain : tapers and other time series
 !!$                open(18,file='test_hj_t.dat',status='unknown')
 !!$                open(19,file='test_pj_t.dat',status='unknown')
 !!$                open(20,file='test_Pj_t.dat',status='unknown')
@@ -920,7 +920,7 @@ contains
 !!$
 !!$                   write(22,hfmt) ( sngl(qt_adj(i,ictaper)), ictaper=1,NTAPER )                      ! qj(t)
 !!$                   write(23,hfmt) ( sngl(dlnA_qj_t(i,ictaper)), ictaper=1,NTAPER )                   ! Qj(t)
-!!$                   write(24,hfmt) ( sngl(dlnA_qj_t(i,ictaper) * tas(i,ictaper)), ictaper=1,NTAPER )  ! hj(t) Qj(t) 
+!!$                   write(24,hfmt) ( sngl(dlnA_qj_t(i,ictaper) * tas(i,ictaper)), ictaper=1,NTAPER )  ! hj(t) Qj(t)
 !!$                enddo
 !!$
 !!$                close(18) ; close(19) ; close(20) ; close(21) ; close(22) ; close(23) ; close(24)
@@ -951,24 +951,24 @@ contains
              if(IKER==0) then
                 adj_syn(i1,icomp,irec) = ( syn(i1,icomp,irec) -  data(i1,icomp,irec) ) * time_window(i)
 
-             elseif(IKER==1) then
+             else if(IKER==1) then
                 adj_syn(i1,icomp,irec) = ft_t(i) * time_window(i)
 
-             elseif(IKER==2) then
+             else if(IKER==2) then
                 adj_syn(i1,icomp,irec) = fa_t(i) * time_window(i)
 
-             elseif(IKER==3) then
+             else if(IKER==3) then
                 stop 'Multitaper measurements NOT an option'
                 !adj_syn(i1,icomp,irec) = fp(i) * time_window(i)
 
-             elseif(IKER==4) then
+             else if(IKER==4) then
                 stop 'Multitaper measurements NOT an option'
                 !adj_syn(i1,icomp,irec) = fq(i) * time_window(i)
 
-             elseif(IKER==5) then
+             else if(IKER==5) then
                 adj_syn(i1,icomp,irec) = ft_bar_t(i) * time_window(i)
 
-             elseif(IKER==6) then
+             else if(IKER==6) then
                 adj_syn(i1,icomp,irec) = fa_bar_t(i) * time_window(i)
              endif
 
@@ -1004,16 +1004,16 @@ contains
              ! crude integration of the waveform difference
              chi_data(ievent,irec,icomp,1) = DT*sum( adj_syn(:,icomp,irec)**2 ) / cov_data(imeasure)
 
-          elseif(IKER==1) then
+          else if(IKER==1) then
              chi_data(ievent,irec,icomp,1) = (tshift_xc_pert )**2 / cov_data(imeasure)
 
-          elseif(IKER==2) then
+          else if(IKER==2) then
              chi_data(ievent,irec,icomp,1) = (dlnA_pert)**2 / cov_data(imeasure)
 
-!!$          elseif(IKER==3) then
+!!$          else if(IKER==3) then
 !!$             chi_data(ievent,irec,icomp,1) = 2.*dw*sum( wp_taper(1:i_right) * (dtau_w(1:i_right)**2) )
 !!$
-!!$          elseif(IKER==4) then
+!!$          else if(IKER==4) then
 !!$             chi_data(ievent,irec,icomp,1) = 2.*dw*sum( wq_taper(1:i_right) * (dlnA_w(1:i_right)**2) )
 
           endif
@@ -1027,7 +1027,7 @@ contains
   !------------------------------------------------------------------
   ! END MAIN PROGRAM
   !------------------------------------------------------------------
-        
+
 !!$!------------------------------------------------------------------
 !!$  subroutine fft(n,xi,zign,dt)
 !!$! Fourier transform
@@ -1095,13 +1095,13 @@ contains
 !!$
 !!$      ! final steps deal with dt factors
 !!$      if(zign > 0.) then       ! FORWARD FFT
-!!$         do i = 1,lx 
+!!$         do i = 1,lx
 !!$            xi(i) = xi(i)*dt   ! multiplication by dt
 !!$         enddo
 !!$
 !!$      else                     ! REVERSE FFT
 !!$         flx = flx*dt
-!!$         do i = 1,lx 
+!!$         do i = 1,lx
 !!$            xi(i) = xi(i)/flx  ! division by dt
 !!$         enddo
 !!$      endif
@@ -1133,7 +1133,7 @@ contains
 !!$      do i = 1,nsmp
 !!$        r(i) = real(s(i))     ! REAL part
 !!$      enddo
-!!$ 
+!!$
 !!$  end subroutine fftinv
 !!$
 !!$!------------------------------------------------------------------

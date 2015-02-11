@@ -5,14 +5,14 @@
 #MSUB -T 1800
 #MSUB -q standard
 #MSUB -o run_simu.o
-#MSUB -e run_simu.e 
+#MSUB -e run_simu.e
 #
 #
 set -x
 cd $BRIDGE_MSUB_PWD
 
 #
-## Chargement des modules module load ... 
+## Chargement des modules module load ...
 
 # load parameters
 source ./global_parameters.in

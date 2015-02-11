@@ -6,7 +6,7 @@
 foreach file ($*)
         echo $file
 
-        sac2000 << FIN 
+        sac2000 << FIN
 qdp off
 read alpha ${file}
 bandpass butter corners 0.1 1.0 npoles 4 passes 2

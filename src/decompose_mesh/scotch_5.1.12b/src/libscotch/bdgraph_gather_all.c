@@ -8,13 +8,13 @@
 ** use, modify and/or redistribute the software under the terms of the
 ** CeCILL-C license as circulated by CEA, CNRS and INRIA at the following
 ** URL: "http://www.cecill.info".
-** 
+**
 ** As a counterpart to the access to the source code and rights to copy,
 ** modify and redistribute granted by the license, users are provided
 ** only with a limited warranty and the software's author, the holder of
 ** the economic rights, and the successive licensors have only limited
 ** liability.
-** 
+**
 ** In this respect, the user's attention is drawn to the risks associated
 ** with loading, using, modifying and/or developing or reproducing the
 ** software by the user in light of its specific status of free software,
@@ -25,7 +25,7 @@
 ** their requirements in conditions enabling the security of their
 ** systems and/or data to be ensured and, more generally, to use and
 ** operate it in the same conditions as regards security.
-** 
+**
 ** The fact that you are presently reading this means that you have had
 ** knowledge of the CeCILL-C license and that you accept its terms.
 */
@@ -134,7 +134,7 @@ Bgraph * restrict              cgrfptr)            /* Centralized graph */
   }
   else {
     cgrfptr->parttax -= cgrfptr->s.baseval;
-  
+
     if (dgrfptr->veexloctax != NULL) {
       if ((cgrfptr->veextax = (Gnum *) memAlloc (cgrfptr->s.vertnbr * sizeof (Gnum))) == NULL) {
         errorPrint ("bdgraphGatherAll: out of memory (3)");
@@ -180,12 +180,12 @@ Bgraph * restrict              cgrfptr)            /* Centralized graph */
   cgrfptr->compload0min  = dgrfptr->compglbload0min; /* Set constant fields of the centralized graph as those of the distibuted graph */
   cgrfptr->compload0max  = dgrfptr->compglbload0max;
   cgrfptr->compload0avg  = dgrfptr->compglbload0avg;
-  cgrfptr->commloadextn0 = dgrfptr->commglbloadextn0; 
+  cgrfptr->commloadextn0 = dgrfptr->commglbloadextn0;
   cgrfptr->commgainextn0 = dgrfptr->commglbgainextn0;
-  cgrfptr->domdist       = dgrfptr->domdist; 
-  cgrfptr->domwght[0]    = dgrfptr->domwght[0]; 
-  cgrfptr->domwght[1]    = dgrfptr->domwght[1]; 
-  cgrfptr->levlnum       = dgrfptr->levlnum;           
+  cgrfptr->domdist       = dgrfptr->domdist;
+  cgrfptr->domwght[0]    = dgrfptr->domwght[0];
+  cgrfptr->domwght[1]    = dgrfptr->domwght[1];
+  cgrfptr->levlnum       = dgrfptr->levlnum;
 
   if (dgrfptr->partgsttax == NULL) {              /* If distributed graph does not have a part array yet */
     bgraphZero (cgrfptr);
@@ -198,7 +198,7 @@ Bgraph * restrict              cgrfptr)            /* Centralized graph */
     errorPrint ("bdgraphGatherAll: communication error (4)");
     return     (1);
   }
-  
+
   if (dgrfptr->veexloctax != NULL) {
     if (commAllgatherv (dgrfptr->veexloctax + dgrfptr->s.baseval, dgrfptr->s.vertlocnbr, GNUM_MPI, /* Get veextax of distributed graph */
                         cgrfptr->veextax, dgrfptr->s.proccnttab, dgrfptr->s.procdsptab, GNUM_MPI, dgrfptr->s.proccomm) != MPI_SUCCESS) {
@@ -243,7 +243,7 @@ Bgraph * restrict              cgrfptr)            /* Centralized graph */
   cgrfptr->compsize0     = dgrfptr->compglbsize0;
   cgrfptr->commload      = dgrfptr->commglbload;
   cgrfptr->commgainextn  = dgrfptr->commglbgainextn;
-  cgrfptr->commgainextn0 = dgrfptr->commglbgainextn0; 
+  cgrfptr->commgainextn0 = dgrfptr->commglbgainextn0;
   cgrfptr->fronnbr       = dgrfptr->fronglbnbr;
 
 #ifdef SCOTCH_DEBUG_BDGRAPH2

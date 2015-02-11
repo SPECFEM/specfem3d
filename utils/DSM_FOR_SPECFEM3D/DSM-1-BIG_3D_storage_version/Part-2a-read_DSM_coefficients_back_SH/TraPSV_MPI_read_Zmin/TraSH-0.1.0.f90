@@ -2,18 +2,18 @@ program TraSH_Zmin
 
 
 !-----------------------------------------------------------------------
-!     
 !
-!  
 !
-!       
+!
+!
+!
 !                                               2002.10.KAWAI Kenji
 !                                               2009.6. FUJI Nobuaki
 !                                               2011.9. FUJI Nobuaki
 !                                               2013.11 YI WANG (MPI)
 !
 !
-!                 
+!
 !
 !-----------------------------------------------------------------------
 
@@ -37,8 +37,8 @@ integer, allocatable :: key(:),color(:)
   real(kind(0d0)), parameter :: re=1.d-2, ratc=1.d-10, ratl=1.d-4
   integer, parameter :: maxlmax = 25000, maxlmax_g = 1000
   !change to 30000 for possible high frequency calculation.
- 
-  real(kind(0d0)) :: tlen 
+
+  real(kind(0d0)) :: tlen
   real(kind(0d0)) :: r0min, r0max, r0delta  !!! JUST FOR ONE DEPTH FOR THIS MOMENT !!
   real(kind(0d0)) :: r0lat, r0lon,stla_curr,stlo_curr
   real(kind(0d0)), allocatable :: stla(:),stlo(:),stla_g(:),stlo_g(:)
@@ -48,7 +48,7 @@ integer, allocatable :: key(:),color(:)
   real(kind(0d0)), allocatable :: rrsta(:,:)
   integer, allocatable :: iista(:,:)
   integer :: r_n,r0_n, ir_,ir0,imt,itheta,ista
-  
+
   character(120) :: coutfile, coutfile1,cinfile,coutfile2,coutfile3
   integer :: imin,imax
   integer :: itranslat
@@ -59,41 +59,41 @@ integer, allocatable :: key(:),color(:)
   real(kind(0d0)) :: dummy
   real(kind(0d0)), allocatable :: vrmin(:), vrmax(:)
   real(kind(0d0)), allocatable :: rrho(:,:), vsv(:,:), vsh(:,:),qmu(:),vpv(:,:),vph(:,:),eta(:,:)
-  double precision, parameter :: convert_to_radians = pi/180.d0 
-  
+  double precision, parameter :: convert_to_radians = pi/180.d0
+
   complex(kind(0d0)), allocatable :: coef(:)
   real(kind(0d0)) :: rmin, rmax
   real(kind(0d0)), allocatable :: vmin(:), gridpar(:), dzpar(:)
-  
-  
+
+
   real(kind(0d0)) :: omegai
-  
-  
+
+
   integer, allocatable :: nlayer(:), iphase(:)
   integer :: ioutercore
 
-  ! variables pour des points stackes 
+  ! variables pour des points stackes
   integer, allocatable :: isp(:),jsp(:)
 
   ! variables pour la source
- 
-  
+
+
   real(kind(0d0)) :: lsq,Aval,Cval,Fval,Lval,Nval,rval,thetasin,thetaval
-  
+
 !-----------------------------------------------------------------------
-  ! variables pour des elements de matrice 
+  ! variables pour des elements de matrice
 
   complex(kind(0d0)) :: g0tmp(6), g0dertmp(6),inv_lsq,inv_rval,thetacot_complex,inv_thetasin,inverse_of_omega_complex
   complex(kind(0d0)) :: u1,u2,u3,udr1,udr2,udr3,udt1,udt2,udt3,udp1,udp2,udp3
   complex(kind(0d0)) :: uder11 , uder12 , uder13 , uder21 , uder22 , uder23 , uder31 , uder32 , uder33
   ! la frequence
   real(kind(0d0)) :: omega
-  
 
-  ! des autres 
-  
+
+  ! des autres
+
   integer :: llog,m, l
- 
+
 
 !-----------------------------------------------------------------------
   complex(kind(0d0)), allocatable :: dvec(:,:,:),dvecdt(:,:,:),dvecdp(:,:,:)
@@ -106,7 +106,7 @@ integer, allocatable :: key(:),color(:)
 !-----------------------------------------------------------------------
  ! variables for the MPI communications.
   integer, allocatable :: Ifrq2(:,:)
-  
+
   integer imin_glob, imax_glob
 
 !-----------------------------------------------------------------------
@@ -118,7 +118,7 @@ integer:: index_l,lref,irank,nsta_global,nsta,ifrequ_min,ifrequ_max,lmax_lu
 real(kind(0d0)):: bazi,l2
 integer, allocatable :: Ind(:),NbInd(:),IndSt(:),NbIndSt(:)
 integer :: istamin,istamax,k,ifq,c8,coeff,r_n_dum,theta_n
-  
+
 
 !write(*,*) "routine is starting to run!@@@@@@@@@@@"
   call MPI_INIT(ierr)
@@ -130,7 +130,7 @@ integer :: istamin,istamax,k,ifq,c8,coeff,r_n_dum,theta_n
 allocate(key(0:nbbigproc-1))
 allocate(color(0:nbbigproc-1))
 allocate(Ifrq2(2,0:nbbigproc-1))
-  
+
   if (mybigrank==0) then
        open(25,file='Double_para.txt')
        read(25,*) nb_colors,nb_tot_proc
@@ -159,13 +159,13 @@ call MPI_Bcast(color,nbbigproc,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
 call MPI_Bcast(Ifrq2,2*nbbigproc,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
 
 
- if (mybigrank==0) then 
+ if (mybigrank==0) then
    call pinputTra_part2(ifrequ_min,ifrequ_max,inputdir,outputDir,psvmodel,modelname,stationsinf,tlen,imin_glob,imax_glob,r0min,r0max,r0delta,r0lat,r0lon,itranslat)
 !!here i delete the last myrank para in the vadim's routine,because the myrank para is not used.
    if (nbbigproc==0) then
     imin=imin_glob
     imax=imax_glob
-   endif 
+   endif
 !   call WriteFrqByproc(nbproc,imin_glob,imax_glob)  !distributing the task into every processors evenly.
  endif !only the root can excute this function call.
 
@@ -208,7 +208,7 @@ if (mybigrank==0) then
 
 !  call MPI_Bcast(nzone,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
 
-  
+
   allocate(vrmin(1:nzone))
   allocate(vrmax(1:nzone))
   allocate(rrho(1:4,1:nzone))
@@ -223,10 +223,10 @@ if (mybigrank==0) then
   allocate(isp(1:nzone))
   allocate(jsp(1:nzone))
   allocate(coef(1:nzone))
- 
+
    do i = 1, nzone
      read (20, *) vrmin(i), vrmax(i), rrho(1,i), rrho(2,i), rrho(3,i), rrho(4,i), dummy, dummy, dummy, dummy, dummy, dummy, dummy, dummy, vsv(1,i), vsv(2,i), vsv(3,i), vsv(4,i), vsh(1,i), vsh(2,i), vsh(3,i), vsh(4,i), dummy, dummy, dummy, dummy, qmu(i), dummy
-      if ((vsv(1,i).eq.0.d0).and.(vsv(2,i).eq.0.d0).and.(vsv(3,i).eq.0.d0).and.(vsv(4,i).eq.0.d0)) then
+      if ((vsv(1,i)==0.d0).and.(vsv(2,i)==0.d0).and.(vsv(3,i)==0.d0).and.(vsv(4,i)==0.d0)) then
          iphase(i) = 2
          ioutercore = i
       else
@@ -240,12 +240,12 @@ if (mybigrank==0) then
    nzone = nzone - ioutercore
 
   deallocate(vrmin,vrmax,rrho,vsv,vsh,qmu,vmin,gridpar,dzpar,nlayer,iphase,isp,jsp,coef)
- 
+
 endif ! only root can read file for inputing the setting parameters.
- 
+
  call MPI_Bcast(nzone,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr) !nzone changed
  call MPI_Bcast(ioutercore,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
- 
+
  call MPI_Barrier(MPI_COMM_WORLD,ierr)
 
   allocate(vrmin(1:nzone))
@@ -295,9 +295,9 @@ endif ! only root can read file for inputing the setting parameters.
   rmax = vrmax(nzone)
   omegai = - dlog(1.d-2) / tlen
 
- if (mybigrank==0) then 
+ if (mybigrank==0) then
   open (1,file=stationsinf,status='old',action='read',position='rewind')
-  if(itranslat.eq.1) call translat (r0lat,r0lat)
+  if(itranslat==1) call translat (r0lat,r0lat)
   open(2,file='recdepth')
   read(2,*) r_n   !now the r_n is not only the number of receivers,it's the receriver plane depth index.
   read(1,*) nsta_global
@@ -328,13 +328,13 @@ endif ! only root can read file for inputing the setting parameters.
   allocate(stla_g(1:nsta_global))
   allocate(stlo_g(1:nsta_global))
 ! now the size allocated is nsta_global
-  
+
   allocate(updown(1:r_n))
   allocate(idum(1:r_n))
 ! it is sufficient for us to save the final result to disk in single precision
   allocate(stresssngl_global(1:6,1:6,1:nsta_global))
   allocate(displacementsngl_global(1:3,1:6,1:nsta_global))
-  
+
   allocate(tabg0(1:maxlmax_g,1,1:6,-2:2))
   allocate(tabg0der(1:maxlmax_g,1,6,-2:2))
   allocate(tmp_tabg0(1:maxlmax_g,1,1:6,-2:2))
@@ -457,7 +457,7 @@ do i = 1,nsta_global
   allocate(dvecdp(1:theta_n,1:3,-2:2))
   allocate(plm(1:theta_n,1:3,0:3),stat=ier)
   if(ier /= 0) stop 'error: not enough memory to allocate array'
- 
+
   phi(:)=phi_g(istamin:istamax)
   theta(:)=theta_g(istamin:istamax)
   stla(:)=stla_g(istamin:istamax)
@@ -473,22 +473,22 @@ do i = 1,nsta_global
 
   write(list, '(I6,".",I6)'), imin_glob,imax_glob
   do j = 1,15
-     if(list(j:j).eq.' ')list(j:j) = '0'
+     if(list(j:j)==' ')list(j:j) = '0'
   enddo
   list = trim(outputDir)//"/log/calLogSH"//"."//trim(modelname)//"."//trim(list)
- 
+
   if (mybigrank == 0) then
    open(1,file =list, status = 'unknown', form = 'formatted')
    call date_and_time(datex,timex)
    write(1,'(/a,a4,a,a2,a,a2,a,a2,a,a2,a,a4)') &
        '    Starting date and time:                     ', &
        datex(1:4),'-',datex(5:6),'-',datex(7:8),'.  ', &
-       timex(1:2),':',timex(3:4),':',timex(5:8)   
+       timex(1:2),':',timex(3:4),':',timex(5:8)
    close (1)
-  
-  endif 
 
-  
+  endif
+
+
 !  allocate(bvec(1:3,-2:2,1:theta_n))
 !  allocate(bvecdt(1:3,-2:2,1:theta_n))
 !  allocate(bvecdp(1:3,-2:2,1:theta_n))
@@ -497,7 +497,7 @@ do i = 1,nsta_global
 
 ! source depths,currently we do not put any necessary allocation
   r0_n =  int((r0max-r0min)/r0delta)+1
-  allocate(r0(1:r0_n)) 
+  allocate(r0(1:r0_n))
   do i = 1, r0_n
      r0(i) = r0min + dble(i-1)*r0delta
   enddo
@@ -506,11 +506,11 @@ do i = 1,nsta_global
 
   write(list1, '(I6,".",I6)'), imin_glob,imax_glob  !!unify scanning file for the process
   do j = 1,15
-     if(list1(j:j).eq.' ')list1(j:j) = '0'
+     if(list1(j:j)==' ')list1(j:j) = '0'
   enddo
   list1 = trim(outputDir)//"/log/listSH"//"."//trim(modelname)//"."//trim(list1)
   open(24, file = list1, status = 'unknown', form = 'formatted')
-  write(24,*) 
+  write(24,*)
   close(24)
 
 
@@ -518,19 +518,19 @@ do i = 1,nsta_global
  if (mybigrank == 0) then
   write(list, '(I6,".",I6)'), imin_glob,imax_glob  !unify scanning file for the process
   do j = 1,15
-     if(list(j:j).eq.' ')list(j:j) = '0'
+     if(list(j:j)==' ')list(j:j) = '0'
   enddo
   list = trim(outputDir)//"/log/calLogSH"//"."//trim(modelname)//"."//trim(list)
-  
+
   open(1,file =list, status = 'unknown', form = 'formatted')
   call date_and_time(datex,timex)
   write(1,'(/a,a4,a,a2,a,a2,a,a2,a,a2,a,a4)') &
        '    Starting date and time:                     ', &
        datex(1:4),'-',datex(5:6),'-',datex(7:8),'.  ', &
-       timex(1:2),':',timex(3:4),':',timex(5:8)   
+       timex(1:2),':',timex(3:4),':',timex(5:8)
   close (1)
  endif
-  
+
 
 
   llog = 0
@@ -542,13 +542,13 @@ do i = 1,nsta_global
 
 
     ir0 = r0_n
-!write(*,*) mybigrank,"th !!!!!!!!!!!!!!!start frequency calculation!!!!!!----" 
+!write(*,*) mybigrank,"th !!!!!!!!!!!!!!!start frequency calculation!!!!!!----"
 
-  do ifq = ifrequ_min,ifrequ_max 
+  do ifq = ifrequ_min,ifrequ_max
 !!frequency loop start now for every proc
 
 
- 
+
    ir0 = r0_n  !Be careful with this declaration
    write(cinfile, '(I5.5,".G0_SH_",I5.5)') int(r0(ir0)*10.d0),ifq
 ! Noticing that now for the file constrction,i use ifq instead of ifq-1!
@@ -566,7 +566,7 @@ do i = 1,nsta_global
      displacementsngl = (0.e0,0.e0)
      stresssngl_global = (0.e0,0.e0)
      displacementsngl_global = (0.e0,0.e0)
-     
+
      plm = 0.d0
      dvec = (0.d0,0.d0)
      dvecdp = (0.d0,0.d0)
@@ -576,112 +576,112 @@ do i = 1,nsta_global
   lmax_r(:)=0
   omega = 2.d0 * pi * dble(Ifq)/tlen
 !for this part of routines.the omega won't be used.
-     if ( Ifq .ne. 0 ) then !!frequency don't equal to 0
+     if ( Ifq /= 0 ) then !!frequency don't equal to 0
         lref=0
         index_l=0
         lmax_lu=0
 
         do l = 0, maxlmax ! l-loop commence
-         call MPI_Barrier(SubCommunicators,ierr) 
-       
+         call MPI_Barrier(SubCommunicators,ierr)
+
          if (mod(l,maxlmax_g)==0) then
             lref=l
             tabg0=(0.d0,0.d0)
-	    tabg0der=(0.d0,0.d0)
+      tabg0der=(0.d0,0.d0)
            if (myrank==0) then
 
-            do 
+            do
 
                read(34) ir_,llog
-	      if (ir_ == -1) then ! this flag indicates the end of all the data to read
-	        exit
-	      elseif (ir_ == r_n) then
+        if (ir_ == -1) then ! this flag indicates the end of all the data to read
+          exit
+        else if (ir_ == r_n) then
 ! in the case of the Zmin face, we read but ignore all the data from the input file except the last one;
 ! in the other code (for vertical faces) we use all the data read, but in this code we use the last one only from the same file
                 read(34) tabg0(1:llog,1,:,:) !here only SH coefficients is read.so second para =1 fixed.
-		read(34) tabg0der(1:llog,1,:,:)
-		lmax_r(ir_) = llog + lref ! recover the computed number of l-order cofficients.
-	        lmax_lu=max(lmax_lu,lmax_r(r_n))  ! just for test.
-	      else !!! VM VM : we need ir_=r_n which is not nessesary the last one thus I test it
-	        read(34) tmp_tabg0(1:llog,1,:,:) !here only SH coefficients is read.so second para =1 fixed
-		read(34) tmp_tabg0der(1:llog,1,:,:)
+    read(34) tabg0der(1:llog,1,:,:)
+    lmax_r(ir_) = llog + lref ! recover the computed number of l-order cofficients.
+          lmax_lu=max(lmax_lu,lmax_r(r_n))  ! just for test.
+        else !!! VM VM : we need ir_=r_n which is not nessesary the last one thus I test it
+          read(34) tmp_tabg0(1:llog,1,:,:) !here only SH coefficients is read.so second para =1 fixed
+    read(34) tmp_tabg0der(1:llog,1,:,:)
                 lmax_r(ir_) = llog + lref ! lmax courant pour ir_
-	        lmax_lu=max(lmax_lu,lmax_r(r_n))
+          lmax_lu=max(lmax_lu,lmax_r(r_n))
               endif
-	    enddo
-	   endif ! rank 0 proc reading process is over
+      enddo
+     endif ! rank 0 proc reading process is over
 
-	    index_l=0
-	    call MPI_Bcast(lmax_r,r_n,MPI_INTEGER,0,SubCommunicators,ierr)
-	    call MPI_Bcast(tabg0,30*maxlmax_g,MPI_DOUBLE_COMPLEX,0,SubCommunicators,ierr)
-	    call MPI_Bcast(tabg0der,30*maxlmax_g,MPI_DOUBLE_COMPLEX,0,SubCommunicators,ierr)
-	    call MPI_Bcast(ir_,1,MPI_INTEGER,0,SubCommunicators,ierr)
-	    call MPI_Bcast(llog,1,MPI_INTEGER,0,SubCommunicators,ierr)
-	    !I have to change the size of tabg0/tabg0der from 60 in PSV to 30 in SH.
-	   endif ! mod(l,maxlmax_g)==0 judgement over
+      index_l=0
+      call MPI_Bcast(lmax_r,r_n,MPI_INTEGER,0,SubCommunicators,ierr)
+      call MPI_Bcast(tabg0,30*maxlmax_g,MPI_DOUBLE_COMPLEX,0,SubCommunicators,ierr)
+      call MPI_Bcast(tabg0der,30*maxlmax_g,MPI_DOUBLE_COMPLEX,0,SubCommunicators,ierr)
+      call MPI_Bcast(ir_,1,MPI_INTEGER,0,SubCommunicators,ierr)
+      call MPI_Bcast(llog,1,MPI_INTEGER,0,SubCommunicators,ierr)
+      !I have to change the size of tabg0/tabg0der from 60 in PSV to 30 in SH.
+     endif ! mod(l,maxlmax_g)==0 judgement over
 
-	   if (l>=lmax_r(r_n)) exit  !! general speaking,l <lmax_r(r_n) when computation is continuing.
-	   if (ir_==-1 .and. llog == -1) exit  !! VM VM: I add this test because of bugs 
-	   !! VM VM: when mod(maxval(lmax_r),maxlmax_g)==0 
-	   !! in fact this condition means that the final data-block of coefficients reading is over now.
+     if (l>=lmax_r(r_n)) exit  !! general speaking,l <lmax_r(r_n) when computation is continuing.
+     if (ir_==-1 .and. llog == -1) exit  !! VM VM: I add this test because of bugs
+     !! VM VM: when mod(maxval(lmax_r),maxlmax_g)==0
+     !! in fact this condition means that the final data-block of coefficients reading is over now.
 
            index_l=index_l+1
 ! the initial value of index_l is set to 0 before the l-loop start. then if the mod(l,maxlmax_g) /=0
 ! the index_l will add 1 until the if judgement mod(l,maxlmax_g) =0 valid. if this condition is valid.
 ! then the index_l is set to 0 again.
-! because the loop is start from 0.so at first when index_l = 0,the first llog number of coefficients is 
+! because the loop is start from 0.so at first when index_l = 0,the first llog number of coefficients is
 ! read and saved. So next the index_l =1.2.3.4.....until l= maxlmax_g. which means the index_l = maxlmax_g
 ! at the moment. so the coefficients is available in the array tabg0(:,:,:,:).
 ! and remembering that first para is set from 1 to llog.
-	   l2 = dble(l)*dble(l+1)
-	   lsq = dsqrt( l2 )
-	   inv_lsq = 1.d0 / dcmplx(lsq)
-!	   write(*,*) l,'inv_lsq is',inv_lsq
+     l2 = dble(l)*dble(l+1)
+     lsq = dsqrt( l2 )
+     inv_lsq = 1.d0 / dcmplx(lsq)
+!    write(*,*) l,'inv_lsq is',inv_lsq
 
 
-!      if (ifq ==512 .and. l==1800 .and. myrank==0) then  
+!      if (ifq ==512 .and. l==1800 .and. myrank==0) then
 !            !plm = 0.d0
-!	    !call calbvec_vector_test(l,theta/180.d0*pi,phi/180.d0*pi,plm,dvec,dvecdt,dvecdp,theta_n)
-!	                 itheta = 1
-!			 write(*,*) 'before itheta th plm components are:0',plm(itheta,:,0)
-!	                 write(*,*) 'before itheta th plm components are:1',plm(itheta,:,1)
+!     !call calbvec_vector_test(l,theta/180.d0*pi,phi/180.d0*pi,plm,dvec,dvecdt,dvecdp,theta_n)
+!                  itheta = 1
+!      write(*,*) 'before itheta th plm components are:0',plm(itheta,:,0)
+!                  write(*,*) 'before itheta th plm components are:1',plm(itheta,:,1)
 !                        write(*,*) 'before itheta th plm components are:2',plm(itheta,:,2)
-!			 write(*,*) 'before itheta th plm components are:3',plm(itheta,:,3)
-!			 write(*,*) 'before before before'
+!      write(*,*) 'before itheta th plm components are:3',plm(itheta,:,3)
+!      write(*,*) 'before before before'
 !      endif
 
           call calbvec_vector(l,theta/180.d0*pi,phi/180.d0*pi,plm(1:theta_n,:,:),dvec,dvecdt,dvecdp,theta_n)
- 
-!	   do itheta=1,theta_n
-!	   call calbvec(l,theta(itheta)/180.d0*pi,phi(itheta)/180.d0*pi,plm(itheta,:,:),dvec(itheta,:,:),dvecdt(itheta,:,:),dvecdp(itheta,:,:))
-!	   enddo
 
-!      if (ifq ==512 .and. l==1800 .and. myrank==0) then  
+!    do itheta=1,theta_n
+!    call calbvec(l,theta(itheta)/180.d0*pi,phi(itheta)/180.d0*pi,plm(itheta,:,:),dvec(itheta,:,:),dvecdt(itheta,:,:),dvecdp(itheta,:,:))
+!    enddo
+
+!      if (ifq ==512 .and. l==1800 .and. myrank==0) then
 !            !plm = 0.d0
-!	    !call calbvec_vector_test(l,theta/180.d0*pi,phi/180.d0*pi,plm,dvec,dvecdt,dvecdp,theta_n)
-!	                 itheta = 1
-!			 write(*,*) 'itheta th plm components are:0',plm(itheta,:,0)
-!	                 write(*,*) 'itheta th plm components are:1',plm(itheta,:,1)
+!     !call calbvec_vector_test(l,theta/180.d0*pi,phi/180.d0*pi,plm,dvec,dvecdt,dvecdp,theta_n)
+!                  itheta = 1
+!      write(*,*) 'itheta th plm components are:0',plm(itheta,:,0)
+!                  write(*,*) 'itheta th plm components are:1',plm(itheta,:,1)
 !                         write(*,*) 'itheta th plm components are:2',plm(itheta,:,2)
-!			 write(*,*) 'itheta th plm components are:3',plm(itheta,:,3)
+!      write(*,*) 'itheta th plm components are:3',plm(itheta,:,3)
 !      endif
 
-	   !! this is the vectorized calbvec subroutine.but i just make a little change different from PSV case.So i don't need to separate the routine into for_l_less_than_5_ or for_l_more_than_5_ case.
+     !! this is the vectorized calbvec subroutine.but i just make a little change different from PSV case.So i don't need to separate the routine into for_l_less_than_5_ or for_l_more_than_5_ case.
            !! be careful here.i should multiplay the degree to rad factor for the theta and phi array.
-           do m = -2, 2 ! m-loop commence      
-	   !remembering that the computation for SH has no l=0 components, don't like the PSV part. 
-	   !and only the nonzero m components are excited by the source.
-	     g0tmp(:) = tabg0(index_l,1,:,m) !noticing again for the second para =1 fixed.
-	     g0dertmp(:) = tabg0der(index_l,1,:,m) !index_l =l+1 actually, is the proper index for the array tabg0/tabg0der.
+           do m = -2, 2 ! m-loop commence
+     !remembering that the computation for SH has no l=0 components, don't like the PSV part.
+     !and only the nonzero m components are excited by the source.
+       g0tmp(:) = tabg0(index_l,1,:,m) !noticing again for the second para =1 fixed.
+       g0dertmp(:) = tabg0der(index_l,1,:,m) !index_l =l+1 actually, is the proper index for the array tabg0/tabg0der.
 
-              if ( ( m.ne.0 ).and.( iabs(m).le.iabs(l) ) ) then
-  
+              if ( ( m/=0 ).and.( iabs(m)<=iabs(l) ) ) then
+
                  do ir0 = 1,r0_n  ! for the source number cycle.
-                    
-!                    do imt = 2,6 !! DK DK this loop cannot be vectorized because the call to "interpolate" that it contains cannot be inlined                   
+
+!                    do imt = 2,6 !! DK DK this loop cannot be vectorized because the call to "interpolate" that it contains cannot be inlined
 ! Here we don't need to consider the imt loop any more.
 
-                    do ir_= r_n,r_n  !it is the z-normal surface.only the last r_n depth is considered.                         
+                    do ir_= r_n,r_n  !it is the z-normal surface.only the last r_n depth is considered.
                       if (l <= lmax_r(ir_)) then ! it is decided by the llog data-block length.
 
                              Aval = A0sta(ir_)
@@ -691,7 +691,7 @@ do i = 1,nsta_global
                              Nval = N0sta(ir_)
 
                              rval = r_(ir_)
-                             inv_rval = 1.d0 / cmplx(rval)     
+                             inv_rval = 1.d0 / cmplx(rval)
 
 
 !! DK DK added a compiler directive for the xlf compiler on IBM Blue Gene
@@ -700,9 +700,9 @@ do i = 1,nsta_global
 !DIR$ loop count min(1000)
 
                        do itheta = 1,theta_n  ! loop for stations computation by every proc.
-!! In fact,above is setting the exit judgement:if (l>=lmax_r(r_n)) exit 
+!! In fact,above is setting the exit judgement:if (l>=lmax_r(r_n)) exit
 !! So l = lmax_r(r_n) can't be valid any more at the moment.
-		       
+
 !!#                          g0tmp = (0.d0,0.d0)
 !!#                          g0dertmp = (0.d0,0.d0)
 !!#                        call interpolate(1,0,r_(ir_),rrsta(1:3,ir_),g0(iista(1:3,ir_)),g0tmp)
@@ -712,21 +712,21 @@ do i = 1,nsta_global
 !! this part is different from the PSV part,only SH coefficients is needed.So we don't need so much space to save the g0tmp like PSV routine. in fact the g0tmp and g0dertmp are scalar only.
 
 !         if (ifq ==502 .and. l==1500 .and. m==2 .and. myrank==0 .and. itheta ==1) then
-! 	    write(*,*) 'g0tmp',imt,g0tmp(imt)
-!	    write(*,*) 'g0dertmp',imt,g0dertmp(imt)
-!	 if(imt==6)  write(*,*) 'theta',theta(itheta)
-!	 if(imt==6)  write(*,*) 'dvec',dvec(itheta,2,:)
-!	 if(imt==6)  write(*,*) 'dvec',dvec(itheta,3,:)
-!	 if(imt==6)  write(*,*) 'dvecdt 2',dvecdt(itheta,3,:)
-!	 if(imt==6)  write(*,*) 'dvecdp 2',dvecdp(itheta,3,:)
-!	 endif
+!       write(*,*) 'g0tmp',imt,g0tmp(imt)
+!     write(*,*) 'g0dertmp',imt,g0dertmp(imt)
+!  if(imt==6)  write(*,*) 'theta',theta(itheta)
+!  if(imt==6)  write(*,*) 'dvec',dvec(itheta,2,:)
+!  if(imt==6)  write(*,*) 'dvec',dvec(itheta,3,:)
+!  if(imt==6)  write(*,*) 'dvecdt 2',dvecdt(itheta,3,:)
+!  if(imt==6)  write(*,*) 'dvecdp 2',dvecdp(itheta,3,:)
+!  endif
 
 !                          itheta = ir_
 
               thetaval = theta(itheta) * convert_to_radians
-	      thetasin = sin(thetaval)
-	      thetacot_complex = cmplx(cos(thetaval)/thetasin)
-	      inv_thetasin = 1.d0 / cmplx(thetasin)
+        thetasin = sin(thetaval)
+        thetacot_complex = cmplx(cos(thetaval)/thetasin)
+        inv_thetasin = 1.d0 / cmplx(thetasin)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!! case imt = 1 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -774,7 +774,7 @@ do i = 1,nsta_global
 !                                    displacement(1,1,itheta) = u1 + displacement(1,1,itheta)
 !                                    displacement(2,1,itheta) = u2 + displacement(2,1,itheta)
 !                                    displacement(3,1,itheta) = u3 + displacement(3,1,itheta)
-    
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!! case imt = 2 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -821,7 +821,7 @@ do i = 1,nsta_global
                                     displacement(1,2,itheta) = u1 + displacement(1,2,itheta)
                                     displacement(2,2,itheta) = u2 + displacement(2,2,itheta)
                                     displacement(3,2,itheta) = u3 + displacement(3,2,itheta)
-    
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!! case imt = 3 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -915,7 +915,7 @@ do i = 1,nsta_global
                                     displacement(1,4,itheta) = u1 + displacement(1,4,itheta)
                                     displacement(2,4,itheta) = u2 + displacement(2,4,itheta)
                                     displacement(3,4,itheta) = u3 + displacement(3,4,itheta)
-    
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!! case imt = 5 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -962,7 +962,7 @@ do i = 1,nsta_global
                                     displacement(1,5,itheta) = u1 + displacement(1,5,itheta)
                                     displacement(2,5,itheta) = u2 + displacement(2,5,itheta)
                                     displacement(3,5,itheta) = u3 + displacement(3,5,itheta)
-    
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!! case imt = 6 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1010,7 +1010,7 @@ do i = 1,nsta_global
                                     displacement(2,6,itheta) = u2 + displacement(2,6,itheta)
                                     displacement(3,6,itheta) = u3 + displacement(3,6,itheta)
 
-! 33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333
+! 33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333
 
 
 !                             u = cmplx(0.d0)
@@ -1019,10 +1019,10 @@ do i = 1,nsta_global
 !                             udp = cmplx(0.d0)
 !                             uder = cmplx(0.d0)
 !                             call calu(g0tmp(imt),lsq,dvec(itheta,1:3,m),u(1:3)) !noticing that the first para of dvec array is the station index now which is different from the original TraSH routine.
-!!	   if (ifq ==347 .and. l<=4 .and. myrank==0 .and. itheta ==6 .and. imt==3) then
-!!	      write(*,*) 'u(2) is',l,m,displacement(2,imt,itheta),u(2)
-!!	     ! write(*,*) 'u(2) is',l,m,imt,u(2)
-!!	   endif
+!!     if (ifq ==347 .and. l<=4 .and. myrank==0 .and. itheta ==6 .and. imt==3) then
+!!        write(*,*) 'u(2) is',l,m,displacement(2,imt,itheta),u(2)
+!!       ! write(*,*) 'u(2) is',l,m,imt,u(2)
+!!     endif
 !                             call calu(g0dertmp(imt),lsq,dvec(itheta,1:3,m),udr(1:3))
 !                             call calu(g0tmp(imt),lsq,dvecdt(itheta,1:3,m),udt(1:3))
 !                             call calu(g0tmp(imt),lsq,dvecdp(itheta,1:3,m),udp(1:3))
@@ -1031,32 +1031,32 @@ do i = 1,nsta_global
 !                             call udertoStress(uder(1:3,1:3),stress(1:6,imt,itheta),A0sta(ir_),C0sta(ir_),F0sta(ir_),L0sta(ir_),N0sta(ir_))
 !                             displacement(1:3,imt,itheta) = u(1:3)+displacement(1:3,imt,itheta)
 
-                       enddo ! for the  itheta = 1,theta_n  loop       
+                       enddo ! for the  itheta = 1,theta_n  loop
                       endif !for the condition (l <= lmax_r(ir_))
                     enddo ! ir_= r_n,r_n  loop termine
 !                    enddo ! imt-loop termine
-                 enddo !ir0-loop termine     
-              endif !for the condition  ( m.ne.0 ).and.( iabs(m).le.iabs(l) )
-           enddo ! m-loop termine             
+                 enddo !ir0-loop termine
+              endif !for the condition  ( m/=0 ).and.( iabs(m)<=iabs(l) )
+           enddo ! m-loop termine
 
-        enddo !l-loop termine                       
+        enddo !l-loop termine
 
         open(24,file =list1, status = 'old',access='append', form = 'formatted')
-        write(24,*) ifq, dble(ifq)/tlen, llog-1     
+        write(24,*) ifq, dble(ifq)/tlen, llog-1
         close(24)
 
 !**************************************************************************************
 
   inverse_of_omega_complex = 1.d0 / dcmplx(0,omega)
 !  write(*,*) 'inverse_of_omega_complex',ifq
-  
+
 !IBM* ASSERT (MINITERCNT(1000))
 !DIR$ SIMD
 !DIR$ loop count min(1000)
 
    do ista = 1,theta_n
-  
-!        stress(1:6,1:6,1:theta_n) = stress(1:6,1:6,1:theta_n)/cmplx(0,omega) 
+
+!        stress(1:6,1:6,1:theta_n) = stress(1:6,1:6,1:theta_n)/cmplx(0,omega)
 !        stresssngl(1:6,1:6,1:theta_n) = stress(1:6,1:6,1:theta_n)
     stresssngl(1,1,ista) = stress(1,1,ista) * inverse_of_omega_complex
     stresssngl(2,1,ista) = stress(2,1,ista) * inverse_of_omega_complex
@@ -1094,14 +1094,14 @@ do i = 1,nsta_global
     stresssngl(4,6,ista) = stress(4,6,ista) * inverse_of_omega_complex
     stresssngl(5,6,ista) = stress(5,6,ista) * inverse_of_omega_complex
     stresssngl(6,6,ista) = stress(6,6,ista) * inverse_of_omega_complex
-    
+
    enddo
 
 !IBM* ASSERT (MINITERCNT(1000))
 !DIR$ SIMD
 !DIR$ loop count min(1000)
-       
-   do ista = 1,theta_n    
+
+   do ista = 1,theta_n
 !        displacementsngl(1:3,1:6,1:theta_n) = displacement(1:3,1:6,1:theta_n)
     displacementsngl(1,1,ista) = displacement(1,1,ista)
     displacementsngl(2,1,ista) = displacement(2,1,ista)
@@ -1122,7 +1122,7 @@ do i = 1,nsta_global
     displacementsngl(2,6,ista) = displacement(2,6,ista)
     displacementsngl(3,6,ista) = displacement(3,6,ista)
    enddo
-        
+
         Coeff = 3*6*nsta
         call mpi_gatherv(displacementsngl,Coeff,MPI_COMPLEX,displacementsngl_global,NbInd,Ind,MPI_COMPLEX,0,SubCommunicators,ierr)
 !! here the 0 is the receiving proc in every sub-group.The NbInd is the size of data-block of every proc in sub-group.Ind is similar to the displacement in the mpi_gatherv which represent the display of the receiving data-block in the root to the 1st element of displacementsngl_global array.
@@ -1135,13 +1135,13 @@ do i = 1,nsta_global
 !   write(*,*) 'displacement(2,:,ir_)',displacementsngl_global(2,1:6,ir_)
 !endif
      endif !!for the condition ifrq /= 0
-   
+
    if (myrank==0) then
-    ir0 = r0_n    
+    ir0 = r0_n
     write(coutfile, '(I5.5,".Stress_SH_",I5.5)') int(r0(ir0)*10.d0),ifq
     coutfile = trim(modelname)//"."//coutfile
     coutfile = trim(outputDir)//"/Stress/"//coutfile
-    
+
 !! DK DK not a good idea to give indices when writing the whole array: some compilers could create copies or use loops in such a case
 !! DK DK unformatted sequential I/Os (because sequential I/O is usually faster than direct-access I/O)
 !! DK DK and writing a single big file is also much better
@@ -1163,20 +1163,20 @@ do i = 1,nsta_global
    if (myrank==0) close(34)
 !! Only the myrank==0 proc can start the 34 file reading.
 
-     
-     if(mod(i,8).eq.0) then
-     
+
+     if(mod(i,8)==0) then
+
         open(1,file =list, status = 'old',access='append', form = 'formatted')
         call date_and_time(datex,timex)
         write(1,'(/a,i,a,a4,a,a2,a,a2,a,a2,a,a2,a,a4)') &
              '    Frequency-index ', i, ' :', &
              datex(1:4),'-',datex(5:6),'-',datex(7:8),'.  ', &
-             timex(1:2),':',timex(3:4),':',timex(5:8)   
+             timex(1:2),':',timex(3:4),':',timex(5:8)
         close (1)
      endif
 
 
-  enddo ! omega-loop termine   
+  enddo ! omega-loop termine
 
 !  write(*,*) 'write the radius of the last plane',r_(r_n)  !!test the depth of the computed plane
   call MPI_Barrier(MPI_COMM_WORLD,ierr)
@@ -1190,17 +1190,17 @@ if (mybigrank == 0) then
    ir0 = r0_n
    write(coutfile, '(I5,".Stress_SH")'), int(r0(ir0)*10.d0)
    do j = 1,7
-     if (coutfile(j:j).eq.' ')coutfile(j:j) = '0'
+     if (coutfile(j:j)==' ')coutfile(j:j) = '0'
    enddo
-    
+
          coutfile = trim(modelname)//"."//coutfile
          coutfile = trim(outputDir)//"Stress/"//coutfile
-    
+
     write(coutfile1, '(I5,".Displacement_SH")'), int(r0(ir0)*10.d0)
     do j = 1,7
-      if (coutfile1(j:j).eq.' ')coutfile1(j:j) = '0'
+      if (coutfile1(j:j)==' ')coutfile1(j:j) = '0'
     enddo
-    
+
          coutfile1 = trim(modelname)//"."//coutfile1
          coutfile1 = trim(outputDir)//"Displacement/"//coutfile1
 
@@ -1220,14 +1220,14 @@ if (mybigrank == 0) then
 !      coutfile3 = trim(outputdir)//"/Stress/"//coutfile3  ! TO DO : il faudrait mettre un inputdir
 !          open(35,file=coutfile3, form='unformatted',action='read')
 !!!coutifle2 and coutfile3 are the file used for storing the Stress and Displacement for SH every frequency computation
-   
+
        read(34) stresssngl_global(1:6,1:6,1:nsta_global)
        read(34) displacementsngl_global(1:3,1:6,1:nsta_global)
        close(34)
 
 !       read(35) displacementsngl_global(1:3,1:6,1:nsta_global)
 !       close(35)
-   
+
         open(1,file=coutfile,status='unknown',form='unformatted', access = 'direct', recl=2*6*6*kind(0e0)*nsta_global)
         write(1,rec=i+1) stresssngl_global(1:6,1:6,1:nsta_global)
         close(1)
@@ -1247,7 +1247,7 @@ endif
    write(1,'(/a,a4,a,a2,a,a2,a,a2,a,a2,a,a4)') &
         '    Finishing date and time:                     ', &
         datex(1:4),'-',datex(5:6),'-',datex(7:8),'.  ', &
-        timex(1:2),':',timex(3:4),':',timex(5:8)   
+        timex(1:2),':',timex(3:4),':',timex(5:8)
    close (1)
  endif  !using the last processor to write the final statement.
 
@@ -1258,8 +1258,8 @@ call MPI_FINALIZE(ierr)
 
   stop
 
-  
-  
+
+
 
 
 

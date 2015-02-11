@@ -58,7 +58,7 @@
 # scripts/plot_ker_mod.pl OUTPUT/run_ event_ socal_vel_dat.dat socal_vel_syn.dat kernel_basis -7/3.0/0/10 1 1/25 1 460 16
 # scripts/plot_ker_mod.pl OUTPUT/run_ event_ socal_vel_dat.dat socal_vel_syn.dat kernel_basis -7/3.0/0/10 1 1/25 1 480 16
 # scripts/plot_ker_mod.pl OUTPUT/run_ event_ socal_vel_dat.dat socal_vel_syn.dat kernel_basis -7/3.0/0/10 1 1/25 1 500 16
-# 
+#
 # PERTURBED CONDITIONS (Rayleigh, gamma = 30)
 # scripts/plot_ker_mod.pl OUTPUT/run_ event_ socal_vel_dat.dat socal_vel_syn.dat kernel_basis -7/3.0/0/10 1 1/25 1 280 16  # reference
 # scripts/plot_ker_mod.pl OUTPUT/run_ event_ socal_vel_dat.dat socal_vel_syn.dat kernel_basis -6/1.0/1/2  1 1/25 1 520 16  # pert source

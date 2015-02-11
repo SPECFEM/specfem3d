@@ -28,7 +28,7 @@ function run_create_mesh ()
 {
 # fonction to create MESH for a chunk
 # the output files for mesh are put in $MESH directory
-# 
+#
 
 current_dir=$(pwd)
 
@@ -60,7 +60,7 @@ $MPIRUN $OPTION_SIMU $BINSEM/xgenerate_databases
 
 function run_create_tractions_for_specfem ()
 {
-cp ParFileInterface bin/. 
+cp ParFileInterface bin/.
 
 ###cd bin
 echo '!!!!!!!!!!!!!!!!!!!!! SCRPITS 2 !!!!!!!!!!!!!!!!'
@@ -138,5 +138,5 @@ done;
 tar -jcvf $OUT.tar.bz2 $OUT
 
 cd ..
- 
+
 }

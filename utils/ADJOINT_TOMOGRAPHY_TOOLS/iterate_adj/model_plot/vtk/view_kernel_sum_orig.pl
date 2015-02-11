@@ -83,9 +83,9 @@ $y_center = ($utm_ymin + $utm_ymax)/2;
 $z_center = ($utm_zmin + $utm_zmax)/2;
 
 # increment between cross sections
-$dxinc = 50000;			# meters
-$dyinc = 50000;			# meters
-$dzinc = 5000;			# meters
+$dxinc = 50000;     # meters
+$dyinc = 50000;     # meters
+$dzinc = 5000;      # meters
 
 # number of cuts
 $Nx = int($xran/$dxinc) + 1;
@@ -146,14 +146,14 @@ for ($i = $imin; $i <= $imax; $i++) {
 
   # open file for replacing the cross-section line
   open(SED,">sed.txt");
- 
+
   # file names
   print SED "/kReader1 SetFileName/s/SetFileName.*\$/SetFileName $file1/ \n";
   #print SED "/kReader2 SetFileName/s/SetFileName.*\$/SetFileName $file2/ \n";
   #print SED "/kReader3 SetFileName/s/SetFileName.*\$/SetFileName $file3/ \n";
 
   # color scale
-  print SED "/scalarBar SetTitle/s/SetTitle.*\$/SetTitle \"$clabel\"/ \n";  
+  print SED "/scalarBar SetTitle/s/SetTitle.*\$/SetTitle \"$clabel\"/ \n";
 
   $scalar_low  = sprintf("%.4e",-$cmax);
   $scalar_high = sprintf("%.4e",$cmax);
@@ -208,7 +208,7 @@ for ($i = $imin; $i <= $imax; $i++) {
 
   # file name
   $filename = sprintf("${ftag}_%2.2i.ps",$i);
-  print SED "/writer SetFileName/s/SetFileName.*\$/SetFileName \"$filename\"/ \n";  
+  print SED "/writer SetFileName/s/SetFileName.*\$/SetFileName \"$filename\"/ \n";
 
   # close SED file
   close(SED);

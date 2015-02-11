@@ -1,17 +1,17 @@
 #!/bin/bash
 
 
-#             ------------ BACTH AND SPECIFIC CLUSTER DIRECTIVES  ------ 
+#             ------------ BACTH AND SPECIFIC CLUSTER DIRECTIVES  ------
 
-#MSUB -r Benchmark_SPECFEM3D_DSM_HEX27_32p        # Nom du job  
+#MSUB -r Benchmark_SPECFEM3D_DSM_HEX27_32p        # Nom du job
 #MSUB -n 32
 #MSUB -N 2
 #MSUB -T 5400
 #MSUB -q standard
 #MSUB -e Benchmark_SPECFEM3D_DSM_HEX27_32p_run.e
 #MSUB -o Benchmark_SPECFEM3D_DSM_HEX27_32p_run.o
-#MSUB -A ra2410 
-      
+#MSUB -A ra2410
+
 set -x
 cd ${BRIDGE_MSUB_PWD}
 
@@ -20,16 +20,16 @@ cd ${BRIDGE_MSUB_PWD}
 #
 #
 #      BENCHMARK FOR HYBRID DSM/SPECFEM3D METHOD
-#      
+#
 # INPUTS :
 #
 #   1/ input directory : ./input_dsm
-#      containts  
+#      containts
 #             -- Double_para.txt
 #             -- FrqsMpi.txt
 #             -- iasp91
 #             -- iasp91_dsm
-#             -- st 
+#             -- st
 #
 #   2/ input file : parfile_for_benchmark
 #
@@ -39,24 +39,24 @@ cd ${BRIDGE_MSUB_PWD}
 #             -- Par_file
 #             -- STATIONS
 #             -- CMTSOLUTION
-#  
 #
-# The script runs : 
-#   
-#   1/ MESHER 
-#   2/ DSM to compute tractions on the chunk boundary 
+#
+# The script runs :
+#
+#   1/ MESHER
+#   2/ DSM to compute tractions on the chunk boundary
 #   3/ SCHOTCH + CREATE DATABASE FOR SPECFEM3D
 #   4/ ADD DSM TRACTION TO THE SPECFEM3D DATABASE
 #   5/ RUN SPECFEM3D
 #   6/ MAKE MOVIE
 #
 #
-#  Vadim Monteiller April 2013. 
-# 
-# reference : 
+#  Vadim Monteiller April 2013.
+#
+# reference :
 # "A hybrid method to compute short-period synthetic seismograms of teleseismic body waves in a 3-D regional model"
 # Monteiller, V; Chevrot, S; Komatitsch, D; Fuji, N
-# GEOPHYSICAL JOURNAL INTERNATIONAL Volume:192 Issue:1 Pages:230-247 DOI:10.1093/gji/ggs006 Published: JAN 2013 
+# GEOPHYSICAL JOURNAL INTERNATIONAL Volume:192 Issue:1 Pages:230-247 DOI:10.1093/gji/ggs006 Published: JAN 2013
 #
 #####################################################################################################################
 #
@@ -69,12 +69,12 @@ declare -i NPROC NPROC_MINUS_ONE CPUS CHOICE MIDDLE
 NPROC=32
 CPUS=32
 
-# MPIRUN COMMAND 
+# MPIRUN COMMAND
 MPIRUN=ccc_mprun
 
-# ENTER OPTION FOR MPIRUN 
+# ENTER OPTION FOR MPIRUN
 OPTION=
- 
+
 ###OPTION=" -np "${NPROC}
 ###OPTION_SIMU=" -np "${CPUS}
 ###OPTION=" -np "${CPUS}"  -machinefile "${OAR_NODEFILE}" -bysocket -bind-to-core"
@@ -83,7 +83,7 @@ OPTION=
 # do not change
 NPROC_MINUS_ONE="$NPROC-1"
 
-# log file for output 
+# log file for output
 flog_file=$(pwd)/log.benchmark
 
 # Define the home of specfem3d
@@ -92,15 +92,15 @@ HOME_SPECFEM3D=/ccc/scratch/cont003/gen7165/durochtc/Codes/SPECFEM3Ds/specfem3d
 # choose the movie
 PREFIX_MOVIE=velocity_Z_it
 
-# directory where SPECFEM3D writes outputs  
+# directory where SPECFEM3D writes outputs
 IN_MOVIE=$(pwd)/OUTPUT_FILES/DATABASES_MPI/
 
-# output movie directory 
+# output movie directory
 OUT_MOVIE=$(pwd)/movie/
 
-#------- input files creation 
+#------- input files creation
 # you must write the absolute path for : xcreate_input
-# you must edit and complete : parfile_for_benchmark  
+# you must edit and complete : parfile_for_benchmark
 ${HOME_SPECFEM3D}/utils/DSM_FOR_SPECFEM3D/bin/xcreate_inputs_files<<EOF
 parfile_for_benchmark
 EOF
@@ -128,7 +128,7 @@ echo 'The value of CHOICE variable is' $CHOICE >  $flog_file
 #
 # ------------------------ FROM HERE DO NOT CHANGE ANYTHING --------------------
 
-# ----- load script and path --- 
+# ----- load script and path ---
 source params.in
 source $SCRIPTS/scripts_specfem3D.sh
 ###echo '!!!!!!!!!!!!!!!!!! SHELLS STEP2 : fin de lecture scripts_specfem3D.sh !!!!!!!!!!!!!!!!'
@@ -155,11 +155,11 @@ mv input_dsm_for_read_xmax  $IN_DSM/inputIASP.infTra_stxmax
 mv input_dsm_for_read_ymin  $IN_DSM/inputIASP.infTra_stymin
 mv input_dsm_for_read_ymax  $IN_DSM/inputIASP.infTra_stymax
 mv input_dsm_for_read_zmin  $IN_DSM/inputIASP.infTra_stzmin
-# copy model file 
+# copy model file
 cp $IN_DSM/iasp91 $MESH/.
 
 
-## open the log file 
+## open the log file
 echo >> $flog_file
 echo " BENCHMARK RUN  " >> $flog_file
 echo >> $flog_file
@@ -221,9 +221,9 @@ echo $(date) >> $flog_file
 ###echo "" >> $flog_file
 ###echo " MAKE movie" >> $flog_file
 ###echo $(date) >> $flog_file
-###create_movie $PREFIX_MOVIE $IN_MOVIE $OUT_MOVIE 25 8500 
+###create_movie $PREFIX_MOVIE $IN_MOVIE $OUT_MOVIE 25 8500
 
 #### to do chane 25 and 8500
 ###echo $(date) >> $flog_file
 
-                               
+

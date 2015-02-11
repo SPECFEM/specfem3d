@@ -3,7 +3,7 @@ Subject: validation benchmark from our 2010 JGR paper with Lev Vinnik added
 From: Dimitri Komatitsch
 Date: 24/03/2014 13:11
 To: Yi Wang
-CC: Clément Durochat, Vadim Monteiller, Sébastien Chevrot
+CC: Clement Durochat, Vadim Monteiller, Sebastien Chevrot
 
 Dear Yi,
 
@@ -31,7 +31,7 @@ Best regards,
 
 Dimitri.
 
--- 
+--
 Dimitri Komatitsch
 CNRS Research Director (DR CNRS), Laboratory of Mechanics and Acoustics,
 UPR 7051, Marseille, France    http://komatitsch.free.fr

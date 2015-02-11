@@ -100,18 +100,18 @@ if ($istation==1) {
       @files = glob("*${ftag}.pdf");
       $numf = @files;
       if ($numf == 0) {
-	#print "$j -- $eid --> no pdf file exists\n";
+  #print "$j -- $eid --> no pdf file exists\n";
       } elsif ($numf == 1) {
-	#print "$j -- $eid --> pdf file exists\n";
-	$pdffile = $files[0]; chomp($pdffile);
-	$pdcat[$k] = $pdffile;
+  #print "$j -- $eid --> pdf file exists\n";
+  $pdffile = $files[0]; chomp($pdffile);
+  $pdcat[$k] = $pdffile;
         $k = $k+1;
         print OUT "$ftag\n";
       } else {
-	print "$eid\n";
-	die("more than one pdf file exists\n");
+  print "$eid\n";
+  die("more than one pdf file exists\n");
       }
-    }				# for
+    }       # for
   }
 
   # make composite PDF file
@@ -166,18 +166,18 @@ if ($ievent==1) {
       @files = glob("*${ftag}.pdf");
       $numf = @files;
       if ($numf == 0) {
-	#print "$j -- $eid --> no pdf file exists\n";
+  #print "$j -- $eid --> no pdf file exists\n";
       } elsif ($numf == 1) {
-	#print "$j -- $eid --> pdf file exists\n";
-	$pdffile = $files[0]; chomp($pdffile);
-	$pdcat[$k] = $pdffile;
+  #print "$j -- $eid --> pdf file exists\n";
+  $pdffile = $files[0]; chomp($pdffile);
+  $pdcat[$k] = $pdffile;
         $k = $k+1;
         print OUT "$ftag\n";
       } else {
-	print "$eid\n";
-	die("more than one pdf file exists\n");
+  print "$eid\n";
+  die("more than one pdf file exists\n");
       }
-    }				# for
+    }       # for
   }
 
   # make composite PDF file

@@ -5,14 +5,14 @@
 #MSUB -T 84000
 #MSUB -q standard
 #MSUB -o run_inversion.o
-#MSUB -e run_inversion.e 
+#MSUB -e run_inversion.e
 #
 #
 set -x
 cd $BRIDGE_MSUB_PWD
 
 #
-## Chargement des modules module load ... 
+## Chargement des modules module load ...
 
 # load parameters
 source ./global_parameters.in

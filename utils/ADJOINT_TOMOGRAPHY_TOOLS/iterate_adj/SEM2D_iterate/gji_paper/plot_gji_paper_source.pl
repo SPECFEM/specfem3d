@@ -304,7 +304,7 @@ if ($ifig01 == 1) {
 
   #===============================================
   print "\nWriting CSH file...\n";
-  
+
   open(CSH,">$cshfile");
   print CSH "gmtset BASEMAP_TYPE plain TICK_LENGTH $tick LABEL_FONT_SIZE $fsize2 ANOT_FONT_SIZE $fsize2 PLOT_DEGREE_FORMAT D HEADER_FONT $fontno ANOT_FONT $fontno LABEL_FONT $fontno HEADER_FONT_SIZE $fsize1 FRAME_PEN $fpen TICK_PEN $tpen\n";
   #===============================================
@@ -498,7 +498,7 @@ if ($ifig02 == 1) {
 
   #===============================================
   print "\nWriting CSH file...\n";
-  
+
   open(CSH,">$cshfile");
   print CSH "gmtset BASEMAP_TYPE plain TICK_LENGTH $tick LABEL_FONT_SIZE $fsize2 ANOT_FONT_SIZE $fsize2 PLOT_DEGREE_FORMAT D HEADER_FONT $fontno ANOT_FONT $fontno LABEL_FONT $fontno HEADER_FONT_SIZE $fsize1 FRAME_PEN $fpen TICK_PEN $tpen\n";
   #===============================================
@@ -514,7 +514,7 @@ if ($ifig02 == 1) {
       if($ii == 0) {$irun0 = 2600; $qmax = 14; @labs = ("a","b","c"); @tags = (" ","(fixed)");}
       else         {$irun0 = 2650; $qmax = 3; @labs = ("d","e","f");  @tags = ("(fixed)"," "); }
     }
-    
+
     $irun = $irun0 + $iter;
     $strun0 = sprintf("%4.4i",$irun0);
     $strun = sprintf("%4.4i",$irun);
@@ -690,8 +690,8 @@ EOF\n";
     ($elon,$elat,$num) = split(" ",$events[$ievent-1]);
     print "\n $elon $elat $num \n";
 
-    $xtxt = $elon-0.05; 
-    $ytxt = $elat+0.3; 
+    $xtxt = $elon-0.05;
+    $ytxt = $elat+0.3;
     print CSH "pstext -N $J $R -K -O -V -P >>$psfile<<EOF\n $xtxt $ytxt 10 0 1 CM S \nEOF\n";
     #print CSH "psxy -N $J $R -K -O -V -P $src -G0/255/0 >>$psfile<<EOF\n $xtxt $ytxt\nEOF\n";
   }

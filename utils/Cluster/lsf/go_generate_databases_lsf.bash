@@ -18,8 +18,8 @@
 ###########################################################
 
 if [ -z $USER ]; then
-	echo "could not run go_mesher_...bash as no USER env is set"
-	exit 2
+  echo "could not run go_mesher_...bash as no USER env is set"
+  exit 2
 fi
 
 # script to run the mesher and the solver

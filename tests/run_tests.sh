@@ -88,7 +88,7 @@ else
   do
     if [[ "$file" == *run_tests.sh* ]]; then
       # skips this run script
-      : 
+      :
     else
       step "  processing $file : "
       try ./$file

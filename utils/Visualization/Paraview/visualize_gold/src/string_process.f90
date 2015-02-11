@@ -133,7 +133,7 @@ integer,dimension(100) :: ind
 slen=len_trim(str)
 tmp_str=trim(str)
 
-! find and count indices of all delimeters 
+! find and count indices of all delimeters
 narg=0
 do i=1,slen
   if(tmp_str(i:i)==delm)then
@@ -156,19 +156,19 @@ end subroutine split_string
 !=====================================================
 
 ! get string value from string list which contain a character '=' that separates
-! variable name and variable vlue 
+! variable name and variable vlue
 character(len=80) function get_string(vname,slist,nvar)
 character(len=*),intent(in) :: vname
 character(len=*),dimension(*) :: slist
 integer,intent(in) :: nvar
-character(len=80),dimension(2) :: args 
+character(len=80),dimension(2) :: args
 integer :: i,narg
 
 do i=1,nvar
   call split_string(slist(i),'=',args,narg)
   if (narg/=2)cycle
   if (vname==trim(adjustl(args(1))))then
-     read(args(2),*)get_string     
+     read(args(2),*)get_string
      return
   endif
 enddo
@@ -185,7 +185,7 @@ character(len=*),intent(in) :: vname
 character(len=*),intent(out) :: strval
 character(len=*),dimension(*) :: slist
 integer,intent(in) :: nvar
-character(len=80),dimension(2) :: args 
+character(len=80),dimension(2) :: args
 integer :: i,narg
 
 strval=''
@@ -213,7 +213,7 @@ character(len=*),intent(in) :: vname
 integer,intent(in) :: n
 character(len=*),dimension(*),intent(in) :: slist
 integer,intent(in) :: nvar
-character(len=80),dimension(2) :: args 
+character(len=80),dimension(2) :: args
 integer :: i,narg
 
 do i=1,nvar
@@ -236,7 +236,7 @@ integer function get_integer(vname,slist,nvar)
 character(len=*),intent(in) :: vname
 character(len=*),dimension(*),intent(in) :: slist
 integer,intent(in) :: nvar
-character(len=80),dimension(2) :: args 
+character(len=80),dimension(2) :: args
 integer :: i,narg
 
 do i=1,nvar
@@ -262,7 +262,7 @@ integer,dimension(n) :: get_integer_vect
 character(len=*),intent(in) :: vname
 character(len=*),dimension(*),intent(in) :: slist
 integer,intent(in) :: nvar
-character(len=80),dimension(2) :: args 
+character(len=80),dimension(2) :: args
 integer :: i,narg
 
 do i=1,nvar
@@ -285,7 +285,7 @@ real function get_real(vname,slist,nvar)
 character(len=*),intent(in) :: vname
 character(len=*),dimension(*),intent(in) :: slist
 integer,intent(in) :: nvar
-character(len=80),dimension(2) :: args 
+character(len=80),dimension(2) :: args
 integer :: i,narg
 
 do i=1,nvar

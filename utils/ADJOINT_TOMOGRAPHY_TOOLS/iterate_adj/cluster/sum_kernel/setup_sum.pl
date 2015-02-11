@@ -5,7 +5,7 @@
 # setup_sum.pl
 #
 # Example script for setting up this directory; this will vary for each user.
-# 
+#
 # EXAMPLE:
 #    setup_sum.pl 168 rho_cbr_kernel
 #
@@ -45,7 +45,7 @@ $neid = @eids;
 # open list for subset of EIDs
 open(KEIDS,">${kernel_list_sub}");
 
-$imin = 1; $imax = $neid;	# default
+$imin = 1; $imax = $neid; # default
 #$imin = 1; $imax = 2;
 #$imin = 18; $imax = $imin;
 

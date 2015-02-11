@@ -419,13 +419,13 @@ program TraFFT
 !! just for the output test.
 !         write(coutfile1, '("green_record",i3.3)') myrank
 !             do j = 1,15
-!                      if (coutfile1(j:j).eq. ' ')coutfile1(j:j) = '0'
+!                      if (coutfile1(j:j)== ' ')coutfile1(j:j) = '0'
 !                  enddo
 !           coutfile1 = trim(parentDir)//"/"//trim(coutfile1)
 !            open(111,file=coutfile1, form='formatted')
-!    !       if (myrank ==0) then 
+!    !       if (myrank ==0) then
 !    !         open(111,file=coutfile1,status='unknown', form='formatted')
-!    !         write(111,*) 
+!    !         write(111,*)
 !    !        close(111)
 !    !       endif
 !    ! this green_record file is used for reserving the station information
@@ -461,12 +461,12 @@ order=1
 
 !      do jj = 1,9
 !          write(coutfile, '("green",I5.5,I3.3)') ,i,jj
-!	  do j = 1,9
-!	  if (coutfile(j:j).eq.' ')coutfile(j:j) = '0'
-!	  enddo
-!	  coutfile = trim(parentDir)//"/"//trim(coutfile)
-!	  
-!	  open(1,file=coutfile,status='unknown', form='formatted')
+!   do j = 1,9
+!   if (coutfile(j:j)==' ')coutfile(j:j) = '0'
+!   enddo
+!   coutfile = trim(parentDir)//"/"//trim(coutfile)
+!
+!   open(1,file=coutfile,status='unknown', form='formatted')
 
 !          do j = iWindowStart,11999
 !              write(1,*) dble(j)/samplingHz,ygt(jj,j)

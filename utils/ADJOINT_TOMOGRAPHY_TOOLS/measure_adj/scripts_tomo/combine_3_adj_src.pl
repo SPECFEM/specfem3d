@@ -60,9 +60,9 @@ for ($i=1; $i<@sta; $i++){
     $adj{$sta}{num} = 1;
     $adj{$sta}{net} = "$nt";
     $adj{$sta}{info} = "$nt $lat $lon $dep $bur";}
-  else {$adj{$sta}{num} ++ ; 
+  else {$adj{$sta}{num} ++ ;
         # NOTE: this crashes if HAST.TA and HAST.BK are included
-	if ($nt ne $adj{$sta}{net}) {die("Check if network name same for $sta\n");}
+  if ($nt ne $adj{$sta}{net}) {die("Check if network name same for $sta\n");}
   }
   @files = glob("$dir2/$sta.$nt.BH?.*adj");
   if (@files == 0) {print("Check if $dir2/$sta.$nt.BH?.*adj exist or not\n");}
@@ -78,9 +78,9 @@ for ($i=1; $i<@sta; $i++){
     $adj{$sta}{num} = 1;
     $adj{$sta}{net} = "$nt";
     $adj{$sta}{info} = "$nt $lat $lon $dep $bur";}
-  else {$adj{$sta}{num} ++ ; 
+  else {$adj{$sta}{num} ++ ;
         # NOTE: this crashes if HAST.TA and HAST.BK are included
-	if ($nt ne $adj{$sta}{net}) {die("Check if network name same for $sta\n");}
+  if ($nt ne $adj{$sta}{net}) {die("Check if network name same for $sta\n");}
   }
   @files = glob("$dir3/$sta.$nt.BH?.*adj");
   if (@files == 0) {print("Check if $dir3/$sta.$nt.BH?.*adj exist or not\n");}
@@ -104,24 +104,24 @@ foreach $sta (keys %adj) {
     $afile2 = "$dir2/$snc.$type2.adj";
     $afile3 = "$dir3/$snc.$type3.adj";
 
-    if ($nmatch == 3) {		# sum the three adjoint sources
+    if ($nmatch == 3) {   # sum the three adjoint sources
       system("paste $afile1 $afile2 $afile3 | awk '{print \$1, \$2+\$4+\$6}' > $dir_new/$snc.adj");
-    
-    } elsif ($nmatch == 2) {	# sum the two adjoint sources
+
+    } elsif ($nmatch == 2) {  # sum the two adjoint sources
       if (-f $afile1 && -f $afile2) {
         system("paste $afile1 $afile2 | awk '{print \$1, \$2+\$4}' > $dir_new/$snc.adj");
       } elsif (-f $afile1 && -f $afile3) {
-	system("paste $afile1 $afile3 | awk '{print \$1, \$2+\$4}' > $dir_new/$snc.adj");
+  system("paste $afile1 $afile3 | awk '{print \$1, \$2+\$4}' > $dir_new/$snc.adj");
       } elsif (-f $afile2 && -f $afile3) {
-	system("paste $afile2 $afile3 | awk '{print \$1, \$2+\$4}' > $dir_new/$snc.adj");
+  system("paste $afile2 $afile3 | awk '{print \$1, \$2+\$4}' > $dir_new/$snc.adj");
       }
-    
+
     } elsif ($nmatch == 1) {    # copy over the lone-station adjoint sources
       if (-f $afile1) {system("cp -f $afile1  $dir_new/$snc.adj >& /dev/null");}
       if (-f $afile2) {system("cp -f $afile2  $dir_new/$snc.adj >& /dev/null");}
       if (-f $afile3) {system("cp -f $afile3  $dir_new/$snc.adj >& /dev/null");}
 
-    } else {			# error
+    } else {      # error
       die("combine_3_adj_src.pl: NO MATCHES\n");
     }
   }

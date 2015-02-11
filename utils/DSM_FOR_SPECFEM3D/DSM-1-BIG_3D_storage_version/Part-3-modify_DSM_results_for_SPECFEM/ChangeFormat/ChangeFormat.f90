@@ -28,12 +28,12 @@ program ChangeFormat
    if (SLOW_DEBUG_MODE) then
      write(debug,'(a6,i5.5)') 'dg_Cgh',myrank
      open(100,file=debug)
-   end if
+   endif
 
    if (myrank==0) then
      call pinputTra(outputDir,psvmodel,modelname,stationsinf,tlen,imin_global,imax_global,r0min,r0max,&
          r0delta,r0lat,r0lon,itranslat,mt,dt,f0,f1,myrank)
-! Here stationsinf is the name of the file for stock the point information on the surface of the chunk which is 
+! Here stationsinf is the name of the file for stock the point information on the surface of the chunk which is
 ! required to be computed. tlen is the time length for the computation.
 ! imin_global and imax_global is used for the grid number computation
 ! mt is moment tensor. dt is the sampling frequency, f0 and f1 are the lower and upper frequency bound for the filter.
@@ -63,10 +63,10 @@ program ChangeFormat
    call MPI_Bcast(f0,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
    call MPI_Bcast(f1,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
 
-   !! 
+   !!
    norder = 4
    irek = 1
-   
+
 
    call DistribDepth(r_n,r_n_global,myrank,nbproc,iprofmin,iprofmax)
 ! distributing the total r_n_global depth plane into every proccess.
@@ -106,7 +106,7 @@ program ChangeFormat
     !read(10) i1,i2,i3,i4
     do ista = 1, nsta
 
-      read(10) sig 
+      read(10) sig
       !call convolve_src_function(dt,sig,sigf,gauss,nt,ng)
       call  bwfilt (sig, sigf, dt, nt, irek, norder, f0, f1)
       SeiLoc(1:nt ,1,ista,ir)=sigf

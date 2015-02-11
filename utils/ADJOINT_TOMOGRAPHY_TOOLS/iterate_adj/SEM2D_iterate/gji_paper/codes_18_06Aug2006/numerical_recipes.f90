@@ -220,9 +220,9 @@
       KHI=K
     ELSE
       KLO=K
-    ENDIF
+    endif
   goto 1
-  ENDIF
+  endif
   H=XA(KHI)-XA(KLO)
   IF (H == 0.d0) stop 'Bad input in spline evaluation'
   A=(XA(KHI)-X)/H

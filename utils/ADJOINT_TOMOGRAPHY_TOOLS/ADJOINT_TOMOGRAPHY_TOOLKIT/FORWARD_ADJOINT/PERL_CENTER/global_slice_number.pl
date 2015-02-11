@@ -35,7 +35,7 @@ if ($nchunk != 6) {
   print "xi_width = $xi_width, eta_width = $eta_width; clat = $clat, clon = $clon; grot = $grot\n";
 }
 
-# minor 
+# minor
 print "compute slices along minor arc ...\n";
 if ($nchunk == 6) {
   $command = "./xglobal_slice_number $elon $elat $slon $slat $nproc 0";

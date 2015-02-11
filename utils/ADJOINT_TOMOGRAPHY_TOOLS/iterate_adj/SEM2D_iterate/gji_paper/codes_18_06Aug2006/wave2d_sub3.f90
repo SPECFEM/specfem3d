@@ -1,13 +1,13 @@
 module wave2d_sub3
- 
+
   use wave2d_constants
   use wave2d_variables
- 
+
   implicit none
 
 ! this module contains subroutines pertaining to filtering gridpoints
 ! and converting amoung UTM, mesh, and index coordinates
- 
+
 contains
 
   !------------------------------------------
@@ -134,13 +134,13 @@ contains
       do j = 1, nlen
         if((j+i) > 1 .and. (j+i) < nlen) cc = cc + dzr_win(j) * dzr2_win(j+i)
       enddo
-      if( cc > cc_max) then 
+      if( cc > cc_max) then
         cc_max = cc
         ishift = i
         endif
-    enddo   
+    enddo
     tshift_xc = ishift*DT  ! KEY: cross-correlation time shift
- 
+
     !===================================================
     ! if you want a MTM measurement, then go here
     if(IKER==3 .or. IKER==4) then
@@ -150,14 +150,14 @@ contains
     do i = 1, nlen
       dzr3_win(i) = 0
       if( (ishift+i) > 1 .and. (ishift+i) < nlen ) dzr3_win(i) = dzr2_win(i+ishift)
-      dzr30_win(i) = dzr3_win(i) 
+      dzr30_win(i) = dzr3_win(i)
     enddo
 
     ! create complex synthetic seismogram
     do i = 1,npt
-      if (i <= nlen) then 
+      if (i <= nlen) then
         wseis1(i) = cmplx(dzr0_win(i),0)
-      else 
+      else
         wseis1(i) = 0
       endif
     enddo
@@ -182,7 +182,7 @@ contains
 
     do ictaper = 1, ntaper  ! loop over tapers
 
-      ! apply taper ictaper to synth and obs windowed seismograms 
+      ! apply taper ictaper to synth and obs windowed seismograms
       do i = 1, nlen
         dzr_win(i) = dzr0_win(i) * tas(i,ictaper)
         dzr3_win(i) = dzr30_win(i) * tas(i,ictaper)
@@ -190,10 +190,10 @@ contains
 
       ! create complex seismograms
       do i = 1,npt
-        if (i <= nlen) then 
+        if (i <= nlen) then
           wseis(i) = cmplx(dzr_win(i),0)
           wseis3(i) = cmplx(dzr3_win(i),0)
-        else 
+        else
           wseis(i) = 0
           wseis3(i) = 0
         endif
@@ -211,22 +211,22 @@ contains
       ampmax = 0
       ampmax_unw = 0
       do i = 1, fnum
-        if( abs(wseis(i)) > ampmax) then 
+        if( abs(wseis(i)) > ampmax) then
           ampmax =  abs(wseis(i))
           i_amp_max = i
-        endif         
-        if( abs(wseis1(i)) > ampmax_unw) then 
+        endif
+        if( abs(wseis1(i)) > ampmax_unw) then
           ampmax_unw =  abs(wseis1(i))
           i_amp_max_unw = i
-        endif         
+        endif
       enddo
       wtr_use = cmplx(ampmax * wtr, 0)
       wtr_use_unw = cmplx(ampmax_unw * wtr, 0)
 
       ! these variables define maximum frequency for measurement
       ! i_right_stop = 1 --> stop at frequency i_right, not fnum
-      i_right = fnum 
-      i_right_stop = 0 
+      i_right = fnum
+      i_right_stop = 0
 
       ! loop over frequencies
       do i = 1, fnum
@@ -240,15 +240,15 @@ contains
         if(abs(wseis(i))  >  abs(wtr_use))  trans(i) = wseis3(i) / wseis(i)
         if(abs(wseis(i))  <=  abs(wtr_use))  trans(i) = wseis3(i) / (wseis(i)+wtr_use)
 
-        ! determine i_right values using the power in the un-tapered synthetic 
-        if(abs(wseis1(i)) <= abs(wtr_use_unw) .and. i_right_stop == 0 .and. i > i_amp_max_unw) then 
+        ! determine i_right values using the power in the un-tapered synthetic
+        if(abs(wseis1(i)) <= abs(wtr_use_unw) .and. i_right_stop == 0 .and. i > i_amp_max_unw) then
           i_right_stop = 1
           i_right = i
-        endif        
-        if(abs(wseis1(i))  >=  10*abs(wtr_use_unw) .and. i_right_stop == 1 .and. i > i_amp_max_unw) then 
-          i_right_stop = 0 
+        endif
+        if(abs(wseis1(i))  >=  10*abs(wtr_use_unw) .and. i_right_stop == 1 .and. i > i_amp_max_unw) then
+          i_right_stop = 0
           i_right = i
-        endif 
+        endif
 
       enddo  ! loop over frequencies (i=1,fnum)
 
@@ -272,10 +272,10 @@ contains
     ! find water level for multi taper measurement
     ampmax = 0
     do i = 1, fnum
-      if( abs(bot_mtm(i)) > ampmax) then 
+      if( abs(bot_mtm(i)) > ampmax) then
         ampmax =  abs(bot_mtm(i))
         i_amp_max = i
-      endif         
+      endif
     enddo
     wtr_use = cmplx(ampmax * wtr_mtm**2, 0)
 
@@ -287,7 +287,7 @@ contains
 
     !=======================================================
     ! construct time series : tau(omega), dlnA(omega)
- 
+
     ! taper function for the freq domain
     nw = dble(i_right - 1)
 
@@ -297,7 +297,7 @@ contains
     dlnA_w(:) = 0.
     w_taper(:) = 0.
     open(91,file='transfer_freq.dat',status='unknown')
-    do i = 1, i_right 
+    do i = 1, i_right
 
       fvec(i)     = df*i     ! do not divide by zero
       !dtau_w(i)   = -atan2(aimag(trans_mtm(i)), real(trans_mtm(i))) - ZZIGN*tshift_xc
@@ -411,7 +411,7 @@ contains
        ! It also stores the displacement field sj(w), which is in the numerator of p(w).
        do ictaper = 1,ntaper
 
-          ! apply TAPER ictaper to windowed synthetics 
+          ! apply TAPER ictaper to windowed synthetics
           do i = 1,nlen
              dzr_win(i)  = dzr0_win(i) * tas(i,ictaper)
           enddo
@@ -428,7 +428,7 @@ contains
           enddo
 
           ! term in numerator (sj)
-          top_p_ntaper(:,ictaper) = wseis(:)     
+          top_p_ntaper(:,ictaper) = wseis(:)
 
        enddo  ! loop over tapers
 
@@ -478,7 +478,7 @@ contains
        enddo
        close(21)
 
-       ! time domain : tapers and other time series 
+       ! time domain : tapers and other time series
        open(18,file='test_hj_t.dat',status='unknown')
        open(19,file='test_pj_t.dat',status='unknown')
        open(20,file='test_Pj_t.dat',status='unknown')
@@ -495,7 +495,7 @@ contains
 
           write(22,hfmt) ( sngl(qt_adj(i,ictaper)), ictaper=1,ntaper )                      ! qj(t)
           write(23,hfmt) ( sngl(dlnA_qj_t(i,ictaper)), ictaper=1,ntaper )                   ! Qj(t)
-          write(24,hfmt) ( sngl(dlnA_qj_t(i,ictaper) * tas(i,ictaper)), ictaper=1,ntaper )  ! hj(t) Qj(t) 
+          write(24,hfmt) ( sngl(dlnA_qj_t(i,ictaper) * tas(i,ictaper)), ictaper=1,ntaper )  ! hj(t) Qj(t)
        enddo
 
        close(18) ; close(19) ; close(20) ; close(21) ; close(22) ; close(23) ; close(24)
@@ -520,23 +520,23 @@ contains
       if(ipick==0) then
         adj_syn(i1,icomp,irec) = ( syn(i1,icomp,irec) -  data(i1,icomp,irec) ) * time_window(i) * meas_pert
 
-      elseif(ipick==1) then
+      else if(ipick==1) then
         ! meas_pert = 1.0 for most runs
         adj_syn(i1,icomp,irec) = -tshift_xc * ft_bar_t(i) * time_window(i) * meas_pert
 
-      elseif(ipick==2) then
+      else if(ipick==2) then
         adj_syn(i1,icomp,irec) = -dlna * fa_bar_t(i) * time_window(i) * meas_pert
 
-      elseif(ipick==3) then
+      else if(ipick==3) then
         adj_syn(i1,icomp,irec) = fp(i) * time_window(i)
 
-      elseif(ipick==4) then
+      else if(ipick==4) then
         adj_syn(i1,icomp,irec) = fq(i) * time_window(i)
 
-      elseif(ipick==5) then
+      else if(ipick==5) then
         adj_syn(i1,icomp,irec) = ft_bar_t(i) * time_window(i)
 
-      elseif(ipick==6) then
+      else if(ipick==6) then
         adj_syn(i1,icomp,irec) = fa_bar_t(i) * time_window(i)
       endif
 
@@ -552,27 +552,27 @@ contains
         chi(ievent,irec,icomp,1) = 0.5 * sum( adj_syn(:,icomp,irec)**2 ) * DT
         measure_vec(imeasure)    = chi(ievent,irec,icomp,1)
 
-      elseif(ipick==1) then
+      else if(ipick==1) then
         chi(ievent,irec,icomp,1) = 0.5 * (tshift_xc * meas_pert)**2
         measure_vec(imeasure)    = tshift_xc * meas_pert
 
-      elseif(ipick==2) then
+      else if(ipick==2) then
         chi(ievent,irec,icomp,1) = 0.5 * (dlna * meas_pert)**2
         measure_vec(imeasure)    = dlna * meas_pert
 
-      elseif(ipick==3) then
+      else if(ipick==3) then
         chi(ievent,irec,icomp,1) = 0.
         measure_vec(imeasure)    = 0.
 
-      elseif(ipick==4) then
+      else if(ipick==4) then
         chi(ievent,irec,icomp,1) = 0.
         measure_vec(imeasure)    = 0.
 
-      elseif(ipick==5) then
+      else if(ipick==5) then
         chi(ievent,irec,icomp,1) = 0.
         measure_vec(imeasure)    = 0.
 
-      elseif(ipick==6) then
+      else if(ipick==6) then
         chi(ievent,irec,icomp,1) = 0.
         measure_vec(imeasure)    = 0.
 
@@ -586,7 +586,7 @@ contains
 !------------------------------------------------------------------
 ! END MAIN PROGRAM
 !------------------------------------------------------------------
-        
+
 !------------------------------------------------------------------
   subroutine clogc(n,xi,zzign,dt)
 !------------------------------------------------------------------
@@ -675,7 +675,7 @@ contains
       do 10 i=1,nsmp
 10    r(i)=real(s(i))
       return
- 
+
   end subroutine ftinv
 
 !------------------------------------------------------------------

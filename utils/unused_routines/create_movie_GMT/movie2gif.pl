@@ -18,7 +18,7 @@ sub Usage {
       -p add topography to the plot
       -2 2d plot, otherwise 3d plot
       -s station name file to plot
-      -n -- run nearneighbor command to interpolate xyz file into grd file, 
+      -n -- run nearneighbor command to interpolate xyz file into grd file,
             since this is the step that takes most of the time, you can choose
             to skip this step if you have already run it.
       -d -- distance to average for nearneighbor command option -S (default 5 km)
@@ -26,14 +26,14 @@ sub Usage {
 
 EOF
 exit(1);
-}	
+}
 #$bindir = "/opt/seismo-util/source/basin_inversion/bin";
 
 
 if (@ARGV == 0) {Usage();}
 if (not getopts('m:f:pg2xns:R:d:')) {die("Check options\n");}
 if ($opt_m) {$cmt_file = $opt_m;
-	     ($elat,$elon) = get_cmt_location($cmt_file);}
+       ($elat,$elon) = get_cmt_location($cmt_file);}
 
 if (not defined $opt_f) {die("give the start and end of frame\n");}
 ($start,$end) = split(/\//,$opt_f);
@@ -153,8 +153,8 @@ foreach $frame ($start .. $end) {
       print CSH "psxy $JM $R -M -W2 -K -O -P -V $fault_file >> $ps_file\n";
       if ($opt_m) {print CSH "psxy $JM $R -Sa0.15 -W1 -G255/0/0 -K -O -P -V <<EOF >> $ps_file\n$elon $elat\nEOF\n";}
       if ($opt_s) {
-	print CSH "awk '{print \$4, \$3}' sta.tmp | psxy $JM $R -St0.12 -W0.8 -G0/255/0 -K -O -P -V >> $ps_file\n";
-	print CSH "awk '{print \$4, \$3+0.1, 12, 0, 4, \"CM\", \$1}' sta.tmp | pstext $JM $R -G0/0/255 -N -P -K -O -V >> $ps_file \n";
+  print CSH "awk '{print \$4, \$3}' sta.tmp | psxy $JM $R -St0.12 -W0.8 -G0/255/0 -K -O -P -V >> $ps_file\n";
+  print CSH "awk '{print \$4, \$3+0.1, 12, 0, 4, \"CM\", \$1}' sta.tmp | pstext $JM $R -G0/0/255 -N -P -K -O -V >> $ps_file \n";
       }
     print CSH "pstext $JM $R -N -W255/255/255 -O  -P -V <<EOF >>$ps_file \n -114.8 36.5 12 0 0 RT time = $time s \nEOF\n";
   } else {

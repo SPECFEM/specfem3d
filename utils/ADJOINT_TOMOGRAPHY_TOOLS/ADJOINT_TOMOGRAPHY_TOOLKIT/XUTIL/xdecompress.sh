@@ -5,7 +5,7 @@
 
 
 for dir in CMTSOLUTION_*
-do 
+do
 
-	tar -xzvf $dir 
-done 
+  tar -xzvf $dir
+done

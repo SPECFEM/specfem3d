@@ -4,7 +4,7 @@
 #
 #  multi_plot_rs.pl
 #  Carl Tape, 22-Sept-2005
-#  
+#
 #  This script repeatedly calls plot_rs.pl to make sub record sections.
 #  It then concatenates the record sections into a single pdf document.
 #

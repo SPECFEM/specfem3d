@@ -28,7 +28,7 @@ program ChangeFormat
    if (myrank==0) then
    call pinputTra(outputDir,psvmodel,modelname,stationsinf,tlen,imin_global,imax_global,r0min,r0max,&
         r0delta,r0lat,r0lon,itranslat,mt,dt,f0,f1,myrank)
- 
+
    open(2,file='recdepth')
    read(2,*) r_n_global
    close(2)
@@ -53,7 +53,7 @@ program ChangeFormat
    call MPI_Bcast(dt,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
    call MPI_Bcast(f0,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
    call MPI_Bcast(f1,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
- !! 
+ !!
    norder = 4
    irek = 1
    write(*,*) myrank,nsta_global

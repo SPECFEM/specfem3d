@@ -344,10 +344,10 @@ if (myrank==0) then
         !open(1,file=coutfile,status='unknown',form='unformatted', &
         !     access = 'direct', recl=2*6*6*kind(0e0)*nsta_global*r_n_global)
         !read(1,rec=k) tmpsngl(1:6,1:6,1:nsta_global)
-        if (myrank.eq.0) then
+        if (myrank==0) then
         open(1,file=coutfile,form='unformatted',action='read')
         read(1) tmpsngl
-        end if
+        endif
         call mpi_bcast(tmpsngl,36*nsta_global,MPI_COMPLEX,0,MPI_COMM_WORLD,ierr)
         stresssngl(1:6,1:6,1:nsta,i)=stresssngl(1:6,1:6,1:nsta,i)+tmpsngl(1:6,1:6,istamin:istamax)
         !write(100,*) '                suite >'
@@ -363,8 +363,8 @@ if (myrank==0) then
         !open(1,file=coutfile,status='unknown',form='unformatted', &
         !     access = 'direct', recl=2*3*6*kind(0e0)*nsta_global*r_n_global)
         !read (1,rec=k) tmpsngl1(1:3,1:6,1:nsta_global)
-        !open(1,file=coutfile,form='unformatted',action='read') 
-        if (myrank.eq.0) read(1) tmpsngl1
+        !open(1,file=coutfile,form='unformatted',action='read')
+        if (myrank==0) read(1) tmpsngl1
         call mpi_bcast(tmpsngl1,18*nsta_global,MPI_COMPLEX,0,MPI_COMM_WORLD,ierr)
         displacementsngl(1:3,1:6,1:nsta,i)=displacementsngl(1:3,1:6,1:nsta,i)+tmpsngl1(1:3,1:6,istamin:istamax)
 
@@ -440,20 +440,20 @@ if (myrank==0) then
         call tensorFFT_real(9,imin,np1,gt,ygt,omegai,tlen)
 
            do jj = 1,9
-	     write(coutfile, '("green",I5.5,I3.3)') ,i+istamin-1,jj
-	     do j = 1,9
-	       if (coutfile(j:j).eq.' ')coutfile(j:j) = '0'
-	     enddo
-	     coutfile = trim(parentDir)//"/"//trim(coutfile)
-	     !print *, coutfile
-!             
+       write(coutfile, '("green",I5.5,I3.3)') ,i+istamin-1,jj
+       do j = 1,9
+         if (coutfile(j:j)==' ')coutfile(j:j) = '0'
+       enddo
+       coutfile = trim(parentDir)//"/"//trim(coutfile)
+       !print *, coutfile
+!
 
              open(1,file=coutfile,status='unknown', form='formatted')
              do j = iWindowStart,iWindowEnd
-	        write(1,*) dble(j)/samplingHz,ygt(jj,j)
+          write(1,*) dble(j)/samplingHz,ygt(jj,j)
              enddo
              close(1)
-	   enddo
+     enddo
 
 
      Lon_current=stlo(i)
