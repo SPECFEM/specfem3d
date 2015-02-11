@@ -344,10 +344,10 @@ if (myrank==0) then
         !open(1,file=coutfile,status='unknown',form='unformatted', &
         !     access = 'direct', recl=2*6*6*kind(0e0)*nsta_global*r_n_global)
         !read(1,rec=k) tmpsngl(1:6,1:6,1:nsta_global)
-        if (myrank.eq.0) then
+        if (myrank==0) then
         open(1,file=coutfile,form='unformatted',action='read')
         read(1) tmpsngl
-        end if
+        endif
         call mpi_bcast(tmpsngl,36*nsta_global,MPI_COMPLEX,0,MPI_COMM_WORLD,ierr)
         !write(100,*) k,istamin,tmpsngl(1:6,1:6,istamin)
         stresssngl(1:6,1:6,1:nsta,i)=stresssngl(1:6,1:6,1:nsta,i)+tmpsngl(1:6,1:6,istamin:istamax)
@@ -364,8 +364,8 @@ if (myrank==0) then
         !open(1,file=coutfile,status='unknown',form='unformatted', &
         !     access = 'direct', recl=2*3*6*kind(0e0)*nsta_global*r_n_global)
         !read (1,rec=k) tmpsngl1(1:3,1:6,1:nsta_global)
-        !open(1,file=coutfile,form='unformatted',action='read') 
-        if (myrank.eq.0) read(1) tmpsngl1
+        !open(1,file=coutfile,form='unformatted',action='read')
+        if (myrank==0) read(1) tmpsngl1
         call mpi_bcast(tmpsngl1,18*nsta_global,MPI_COMPLEX,0,MPI_COMM_WORLD,ierr)
         displacementsngl(1:3,1:6,1:nsta,i)=displacementsngl(1:3,1:6,1:nsta,i)+tmpsngl1(1:3,1:6,istamin:istamax)
 
@@ -425,17 +425,17 @@ if (myrank==0) then
    open(20,file=coutfile,form='unformatted')
 
 !! just for the output test.
-!         write(coutfile1, '("green_record",i3.3)') myrank     
+!         write(coutfile1, '("green_record",i3.3)') myrank
 !            do j = 1,15
-!                 if (coutfile1(j:j).eq. ' ')coutfile1(j:j) = '0'                            
+!                 if (coutfile1(j:j)== ' ')coutfile1(j:j) = '0'
 !            enddo
 !         coutfile1 = trim(parentDir)//"/"//trim(coutfile1)
-!	 open(111,file=coutfile1, form='formatted')
-!!       if (myrank ==0) then 
+!  open(111,file=coutfile1, form='formatted')
+!!       if (myrank ==0) then
 !!         open(111,file=coutfile1,status='unknown', form='formatted')
-!!         write(111,*) 
-!!	 close(111)
-!!	endif
+!!         write(111,*)
+!!   close(111)
+!!  endif
 !! this green_record file is used for reserving the station information
 
 
@@ -468,12 +468,12 @@ order=1
 ! endif
 
 !  do jj = 1,9
-!	  write(coutfile, '("green",I5.5,I3.3)') ,i+istamin-1,jj
-!	    do j = 1,9
-!	      if (coutfile(j:j).eq.' ')coutfile(j:j) = '0' 				
-!	    enddo
-!	
-!	  coutfile = trim(parentDir)//"/"//trim(coutfile)
+!   write(coutfile, '("green",I5.5,I3.3)') ,i+istamin-1,jj
+!     do j = 1,9
+!       if (coutfile(j:j)==' ')coutfile(j:j) = '0'
+!     enddo
+!
+!   coutfile = trim(parentDir)//"/"//trim(coutfile)
 
 !   open(1,file=coutfile,status='unknown', form='formatted')
 !   do j = iWindowStart,11999
@@ -522,7 +522,7 @@ order=1
    close(10)
    close(20)
    close(100)
-    
+
 !   call MPI_Barrier(MPI_COMM_WORLD,ierr)
 !   close(111)
 

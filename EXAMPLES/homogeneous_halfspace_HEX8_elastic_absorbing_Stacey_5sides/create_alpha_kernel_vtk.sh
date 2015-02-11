@@ -11,7 +11,7 @@ if [ ! -e OUTPUT_FILES/DATABASES_MPI/proc000000_alpha_kernel.bin ]; then echo "p
 
 # creates kernel as vtk-file
 cd bin.xcombine/
-./xcombine_vol_data 0 3 alpha_kernel ../OUTPUT_FILES/DATABASES_MPI/ ../OUTPUT_FILES/ 1 
+./xcombine_vol_data 0 3 alpha_kernel ../OUTPUT_FILES/DATABASES_MPI/ ../OUTPUT_FILES/ 1
 cd ../
 
 echo

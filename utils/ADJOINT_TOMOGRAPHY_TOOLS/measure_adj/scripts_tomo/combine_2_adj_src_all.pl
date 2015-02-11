@@ -6,7 +6,7 @@
 #
 # This script calls combine_adj_src.pl to plot make composite adjoint sources.
 # for a set of events.
-# 
+#
 # EXAMPLE:
 #    combine_2_adj_src_all.pl 2/30 6/30 cc cc m07
 #
@@ -74,7 +74,7 @@ for ($i = $imin; $i <= $imax; $i = $i+1) {
   # name of stations file
   $sta_file1 = "${dir_adj1}/STATIONS_ADJOINT";
   $sta_file2 = "${dir_adj2}/STATIONS_ADJOINT";
-  
+
   # combined output directory
   $odir = "${dir_run_eid}/ADJOINT_all";
 
@@ -94,25 +94,25 @@ for ($i = $imin; $i <= $imax; $i = $i+1) {
       print CSH "rm -rf $odir\n mkdir $odir\n";
 
       if ( (-f $sta_file1) && (-f $sta_file2) ) {
-	# Case 1: both STATIONS_ADJOINT files exist: execute combine_adj_src.pl
-	print CSH "echo running combine_adj_src.pl...\n";
-	print CSH "combine_adj_src.pl $dir_adj1 $dir_adj2 $odir $tag1 $tag2\n";
+  # Case 1: both STATIONS_ADJOINT files exist: execute combine_adj_src.pl
+  print CSH "echo running combine_adj_src.pl...\n";
+  print CSH "combine_adj_src.pl $dir_adj1 $dir_adj2 $odir $tag1 $tag2\n";
 
       } else {
 
-	# Case 2: one STATIONS_ADJOINT file: move files into output directory
+  # Case 2: one STATIONS_ADJOINT file: move files into output directory
 
         # NOTE: mv_files.pl DOES NOT SEEM TO WORK FOR THE LONG FILE NAMES (06-FEB-2008)
-	print CSH "echo copying adjoint sources from one directory...\n";
-	print CSH "echo CHECK THAT THE FILE NAME EXTENSIONS HAVE BEEN REMOVED...\n";
-	if ( -f $sta_file1 ) {
-	  print CSH "cp ${dir_adj1}/* $odir\n";
-	  print CSH "mv_files.pl -x \"$odir/*.cc.adj\" \"$odir/*.adj\"\n";
+  print CSH "echo copying adjoint sources from one directory...\n";
+  print CSH "echo CHECK THAT THE FILE NAME EXTENSIONS HAVE BEEN REMOVED...\n";
+  if ( -f $sta_file1 ) {
+    print CSH "cp ${dir_adj1}/* $odir\n";
+    print CSH "mv_files.pl -x \"$odir/*.cc.adj\" \"$odir/*.adj\"\n";
 
-	} elsif ( -f $sta_file2 ) {
-	  print CSH "cp ${dir_adj2}/* $odir\n";
-	  print CSH "mv_files.pl -x \"$odir/*.mtm.adj\" \"$odir/*.adj\"\n";
-	}
+  } elsif ( -f $sta_file2 ) {
+    print CSH "cp ${dir_adj2}/* $odir\n";
+    print CSH "mv_files.pl -x \"$odir/*.mtm.adj\" \"$odir/*.adj\"\n";
+  }
       }
 
     } else {

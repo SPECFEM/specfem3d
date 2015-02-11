@@ -276,7 +276,7 @@ if ($ifig00 == 1 || $ifig01 == 1) {
 
   #===============================================
   print "\nWriting CSH file...\n";
-  
+
   open(CSH,">$cshfile");
   print CSH "gmtset BASEMAP_TYPE plain PLOT_DEGREE_FORMAT D TICK_LENGTH $tick LABEL_FONT_SIZE $fsize2 ANOT_FONT_SIZE $fsize2  HEADER_FONT $fontno ANOT_FONT $fontno LABEL_FONT $fontno HEADER_FONT_SIZE $fsize1 FRAME_PEN $fpen TICK_PEN $tpen \n";
   #===============================================
@@ -370,7 +370,7 @@ if ($ifig02 == 1) {
 
   #===============================================
   print "\nWriting CSH file...\n";
-  
+
   open(CSH,">$cshfile");
   print CSH "gmtset BASEMAP_TYPE plain PLOT_DEGREE_FORMAT D TICK_LENGTH $tick LABEL_FONT_SIZE $fsize2 ANOT_FONT_SIZE $fsize2  HEADER_FONT $fontno ANOT_FONT $fontno LABEL_FONT $fontno HEADER_FONT_SIZE $fsize1 FRAME_PEN $fpen TICK_PEN $tpen \n";
   #===============================================
@@ -466,7 +466,7 @@ if ($ifig03 == 1) {
 
   #===============================================
   print "\nWriting CSH file...\n";
-  
+
   open(CSH,">$cshfile");
   print CSH "gmtset BASEMAP_TYPE plain TICK_LENGTH $tick LABEL_FONT_SIZE $fsize2 ANOT_FONT_SIZE $fsize2 PLOT_DEGREE_FORMAT D HEADER_FONT $fontno ANOT_FONT $fontno LABEL_FONT $fontno HEADER_FONT_SIZE $fsize1 FRAME_PEN $fpen TICK_PEN $tpen\n";
   #===============================================
@@ -589,7 +589,7 @@ if ($ifig04 == 1) {
 
   #===============================================
   print "\nWriting CSH file...\n";
-  
+
   open(CSH,">$cshfile");
   print CSH "gmtset BASEMAP_TYPE plain TICK_LENGTH $tick LABEL_FONT_SIZE $fsize2 ANOT_FONT_SIZE $fsize2 PLOT_DEGREE_FORMAT D HEADER_FONT $fontno ANOT_FONT $fontno LABEL_FONT $fontno HEADER_FONT_SIZE $fsize1 FRAME_PEN $fpen TICK_PEN $tpen\n";
   #===============================================

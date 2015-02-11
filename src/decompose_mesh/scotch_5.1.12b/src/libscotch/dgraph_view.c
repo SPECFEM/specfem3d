@@ -8,13 +8,13 @@
 ** use, modify and/or redistribute the software under the terms of the
 ** CeCILL-C license as circulated by CEA, CNRS and INRIA at the following
 ** URL: "http://www.cecill.info".
-** 
+**
 ** As a counterpart to the access to the source code and rights to copy,
 ** modify and redistribute granted by the license, users are provided
 ** only with a limited warranty and the software's author, the holder of
 ** the economic rights, and the successive licensors have only limited
 ** liability.
-** 
+**
 ** In this respect, the user's attention is drawn to the risks associated
 ** with loading, using, modifying and/or developing or reproducing the
 ** software by the user in light of its specific status of free software,
@@ -25,7 +25,7 @@
 ** their requirements in conditions enabling the security of their
 ** systems and/or data to be ensured and, more generally, to use and
 ** operate it in the same conditions as regards security.
-** 
+**
 ** The fact that you are presently reading this means that you have had
 ** knowledge of the CeCILL-C license and that you accept its terms.
 */
@@ -97,68 +97,68 @@ FILE * const                  stream)
     MPI_Barrier (proccomm);
     if (procngbnbr == proclocnum) {
       fprintf (stream, "Process %d:\n",
-	       proclocnum);
+         proclocnum);
       fprintf (stream, "  vertglbnbr: " GNUMSTRING "\n  vertgstnbr: " GNUMSTRING "\n vertgstnnd: " GNUMSTRING "\n  vertlocnbr: " GNUMSTRING "\n vertlocnnd: " GNUMSTRING "\n",
-	       (Gnum) grafptr->vertglbnbr,
-	       (Gnum) grafptr->vertgstnbr,
-	       (Gnum) grafptr->vertgstnnd,
-	       (Gnum) grafptr->vertlocnbr,
-	       (Gnum) grafptr->vertlocnnd);
+         (Gnum) grafptr->vertglbnbr,
+         (Gnum) grafptr->vertgstnbr,
+         (Gnum) grafptr->vertgstnnd,
+         (Gnum) grafptr->vertlocnbr,
+         (Gnum) grafptr->vertlocnnd);
       fprintf (stream, "  vertloctax:");
       if (grafptr->vendloctax == grafptr->vertloctax + 1) {
-	for (vertlocnum = grafptr->baseval; vertlocnum <= grafptr->vertlocnnd; vertlocnum ++)/**/
-	  fprintf (stream, " " GNUMSTRING,
-		   (Gnum) grafptr->vertloctax[vertlocnum]);
-	fprintf (stream, " x\n  vendloctax: = vertloctax + 1");
+  for (vertlocnum = grafptr->baseval; vertlocnum <= grafptr->vertlocnnd; vertlocnum ++)/**/
+    fprintf (stream, " " GNUMSTRING,
+       (Gnum) grafptr->vertloctax[vertlocnum]);
+  fprintf (stream, " x\n  vendloctax: = vertloctax + 1");
       }
       else {
-	for (vertlocnum = grafptr->baseval; vertlocnum < grafptr->vertlocnnd; vertlocnum ++)
-	  fprintf (stream, " " GNUMSTRING,
-		   (Gnum) grafptr->vertloctax[vertlocnum]);
-	fprintf (stream, "  vendloctax: x");
-	for (vertlocnum = grafptr->baseval; vertlocnum < grafptr->vertlocnnd; vertlocnum ++)
-	  fprintf (stream, " " GNUMSTRING,
-		   (Gnum) grafptr->vendloctax[vertlocnum]);
+  for (vertlocnum = grafptr->baseval; vertlocnum < grafptr->vertlocnnd; vertlocnum ++)
+    fprintf (stream, " " GNUMSTRING,
+       (Gnum) grafptr->vertloctax[vertlocnum]);
+  fprintf (stream, "  vendloctax: x");
+  for (vertlocnum = grafptr->baseval; vertlocnum < grafptr->vertlocnnd; vertlocnum ++)
+    fprintf (stream, " " GNUMSTRING,
+       (Gnum) grafptr->vendloctax[vertlocnum]);
       }
       fprintf (stream, "\n  edgeglbnbr: " GNUMSTRING "\n  edgelocnbr: " GNUMSTRING "\n",
-	       (Gnum) grafptr->edgeglbnbr,
-	       (Gnum) grafptr->edgelocnbr);
+         (Gnum) grafptr->edgeglbnbr,
+         (Gnum) grafptr->edgelocnbr);
       fprintf (stream, "  edgeloctax:");
       for (edgelocnum = grafptr->baseval, edgelocptr = grafptr->edgeloctax;
-	   edgelocnum < grafptr->edgelocnbr + grafptr->baseval;
-	   edgelocnum ++, edgelocptr ++)
-	fprintf (stream, " " GNUMSTRING,
-		 (Gnum) *edgelocptr);
+     edgelocnum < grafptr->edgelocnbr + grafptr->baseval;
+     edgelocnum ++, edgelocptr ++)
+  fprintf (stream, " " GNUMSTRING,
+     (Gnum) *edgelocptr);
       if ((grafptr->flagval & DGRAPHHASEDGEGST) != 0) {
-	fprintf (stream, "\n  edgegsttax:");
-	for (edgelocnum = grafptr->baseval, edgelocptr = grafptr->edgegsttax;
-	     edgelocnum < grafptr->edgelocnbr + grafptr->baseval;
-	     edgelocnum ++, edgelocptr ++)
-	  fprintf (stream, " " GNUMSTRING,
-		   (Gnum) *edgelocptr);
+  fprintf (stream, "\n  edgegsttax:");
+  for (edgelocnum = grafptr->baseval, edgelocptr = grafptr->edgegsttax;
+       edgelocnum < grafptr->edgelocnbr + grafptr->baseval;
+       edgelocnum ++, edgelocptr ++)
+    fprintf (stream, " " GNUMSTRING,
+       (Gnum) *edgelocptr);
       }
       fprintf (stream, "\n  procdsptab:");
       for (procngbnum = 0; procngbnum <= procglbnbr ; procngbnum ++)
-	fprintf (stream, " " GNUMSTRING,
-		 (Gnum) grafptr->procdsptab[procngbnum]);
+  fprintf (stream, " " GNUMSTRING,
+     (Gnum) grafptr->procdsptab[procngbnum]);
       fprintf (stream, "\n  procngbnbr: %d",
-	       grafptr->procngbnbr);
+         grafptr->procngbnbr);
       fprintf (stream, "\n  procngbtab:");
       for (procngbnum = 0; procngbnum < grafptr->procngbnbr; procngbnum ++)
-	fprintf (stream, " %d",
-		 grafptr->procngbtab[procngbnum]);
+  fprintf (stream, " %d",
+     grafptr->procngbtab[procngbnum]);
       fprintf (stream, "\n  procrcvtab:");
       for (procngbnum = 0; procngbnum < grafptr->procglbnbr; procngbnum ++)
-	fprintf (stream, " %d",
-		 grafptr->procrcvtab[procngbnum]);
+  fprintf (stream, " %d",
+     grafptr->procrcvtab[procngbnum]);
       fprintf (stream, "\n  procsndnbr: %d",
-	       grafptr->procsndnbr);
+         grafptr->procsndnbr);
       fprintf (stream, "\n  procsndtab:");
       for (procngbnum = 0; procngbnum < grafptr->procglbnbr; procngbnum ++)
-	fprintf (stream, " %d",
-		 grafptr->procsndtab[procngbnum]);
+  fprintf (stream, " %d",
+     grafptr->procsndtab[procngbnum]);
       fprintf (stream, "\n  degrglbmax: " GNUMSTRING,
-	       (Gnum) grafptr->degrglbmax);
+         (Gnum) grafptr->degrglbmax);
       fprintf (stream, "\n");
       fflush  (stream);                           /* Flush data */
     }

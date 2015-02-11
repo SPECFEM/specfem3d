@@ -1,16 +1,16 @@
 /*******************************************************************
-*			sacio.c
+*     sacio.c
 * SAC I/O functions:
-*	read_sachead	read SAC header
-*	read_sac	read SAC binary data
-*	read_sac2	read SAC data with cut option
-*	write_sac	write SAC binary data
-*	wrtsac0		write 1D array as evenly-spaced SAC binary data
-*	wrtsac0_	fortran wrap for wrtsac0
-*	wrtsac2		write 2 1D arrays as XY SAC data
-*	wrtsac2_	fortran wrap for wrtsac2
-*	swab4		reverse byte order for integer/float
-*	rtrend		remove trend
+* read_sachead  read SAC header
+* read_sac  read SAC binary data
+* read_sac2 read SAC data with cut option
+* write_sac write SAC binary data
+* wrtsac0   write 1D array as evenly-spaced SAC binary data
+* wrtsac0_  fortran wrap for wrtsac0
+* wrtsac2   write 2 1D arrays as XY SAC data
+* wrtsac2_  fortran wrap for wrtsac2
+* swab4   reverse byte order for integer/float
+* rtrend    remove trend
 *********************************************************************/
 
 
@@ -27,25 +27,25 @@
 
   read_sachead
 
-  Description:	read binary SAC header from file.
+  Description:  read binary SAC header from file.
 
-  Author:	Lupei Zhu
+  Author: Lupei Zhu
 
-  Arguments:	const char *name 	file name
-		SACHEAD *hd		SAC header to be filled
+  Arguments:  const char *name  file name
+    SACHEAD *hd   SAC header to be filled
 
-  Return:	0 if success, -1 if failed
+  Return: 0 if success, -1 if failed
 
   Modify history:
-	05/29/97	Lupei Zhu	Initial coding
+  05/29/97  Lupei Zhu Initial coding
 ************************************************************/
 
-int	read_sachead(const char	*name,
-		SACHEAD		*hd
-	)
+int read_sachead(const char *name,
+    SACHEAD   *hd
+  )
 {
-  FILE		*strm;
-  
+  FILE    *strm;
+
   if ((strm = fopen(name, "rb")) == NULL) {
      fprintf(stderr, "Unable to open %s\n",name);
      return -1;
@@ -71,30 +71,30 @@ int	read_sachead(const char	*name,
 
   read_sac
 
-  Description:	read binary data from file. If succeed, it will return
-		a float pointer to the read data array. The SAC header
-		is also filled. A NULL pointer is returned if failed.
+  Description:  read binary data from file. If succeed, it will return
+    a float pointer to the read data array. The SAC header
+    is also filled. A NULL pointer is returned if failed.
 
-  Author:	Lupei Zhu
+  Author: Lupei Zhu
 
-  Arguments:	const char *name 	file name
-		SACHEAD *hd		SAC header to be filled
+  Arguments:  const char *name  file name
+    SACHEAD *hd   SAC header to be filled
 
-  Return:	float pointer to the data array, NULL if failed
+  Return: float pointer to the data array, NULL if failed
 
   Modify history:
-	09/20/93	Lupei Zhu	Initial coding
-	12/05/96	Lupei Zhu	adding error handling
-	12/06/96	Lupei Zhu	swap byte-order on PC
+  09/20/93  Lupei Zhu Initial coding
+  12/05/96  Lupei Zhu adding error handling
+  12/06/96  Lupei Zhu swap byte-order on PC
 ************************************************************/
 
-float*	read_sac(const char	*name,
-		SACHEAD		*hd
-	)
+float*  read_sac(const char *name,
+    SACHEAD   *hd
+  )
 {
-  FILE		*strm;
-  float		*ar;
-  unsigned	sz;
+  FILE    *strm;
+  float   *ar;
+  unsigned  sz;
 
   if ((strm = fopen(name, "rb")) == NULL) {
      fprintf(stderr, "Unable to open %s\n",name);
@@ -138,7 +138,7 @@ float*	read_sac(const char	*name,
             = 0 Do not byte swap
    Returns:
               0 - No swapping needs to be done
-	      1 - Swapping is needed
+        1 - Swapping is needed
 */
 int
 sac_byte_order(SACHEAD *hd) {
@@ -150,16 +150,16 @@ sac_byte_order(SACHEAD *hd) {
 }
 
 
-float*	read_sac_swap(const char	*name,
-		      SACHEAD	*hd,
-		      int           do_swap
-	)
+float*  read_sac_swap(const char  *name,
+          SACHEAD *hd,
+          int           do_swap
+  )
 {
-  FILE		*strm;
-  float		*ar;
-  unsigned	sz;
+  FILE    *strm;
+  float   *ar;
+  unsigned  sz;
   int           swap;
-  
+
   if ((strm = fopen(name, "rb")) == NULL) {
      fprintf(stderr, "Unable to open %s\n",name);
      fclose(strm);
@@ -176,9 +176,9 @@ float*	read_sac_swap(const char	*name,
     if(do_swap) {
       swab4((char *) hd, HD_SIZE);
       if(sac_byte_order(hd)) {
-	fprintf(stderr, "Error deciphering SAC header %s\n", name);
-	fclose(strm);
-	return(NULL);
+  fprintf(stderr, "Error deciphering SAC header %s\n", name);
+  fclose(strm);
+  return(NULL);
       }
     } else {
       fprintf(stderr, "Error deciphering SAC header %s\n", name);
@@ -187,7 +187,7 @@ float*	read_sac_swap(const char	*name,
     }
   }
 
-  
+
   sz = hd->npts*sizeof(float);
   if ((ar = (float *) malloc(sz)) == NULL) {
      fprintf(stderr, "Error in allocating memory for reading %s\n",name);
@@ -216,7 +216,7 @@ float*	read_sac_swap(const char	*name,
   }
 
   return ar;
-  
+
 }
 
 
@@ -224,31 +224,31 @@ float*	read_sac_swap(const char	*name,
 
   write_sac
 
-  Description:	write SAC binary data.
+  Description:  write SAC binary data.
 
-  Author:	Lupei Zhu
+  Author: Lupei Zhu
 
-  Arguments:	const char *name 	file name
-		SACHEAD hd		SAC header
-		const float *ar		pointer to the data
+  Arguments:  const char *name  file name
+    SACHEAD hd    SAC header
+    const float *ar   pointer to the data
 
-  Return:	0 if succeed; -1 if failed
+  Return: 0 if succeed; -1 if failed
 
   Modify history:
-	09/20/93	Lupei Zhu	Initial coding
-	12/05/96	Lupei Zhu	adding error handling
-	12/06/96	Lupei Zhu	swap byte-order on PC
+  09/20/93  Lupei Zhu Initial coding
+  12/05/96  Lupei Zhu adding error handling
+  12/06/96  Lupei Zhu swap byte-order on PC
 ************************************************************/
 
-int	write_sac(const char	*name,
-		SACHEAD		hd,
-		const float	*ar
-	)
+int write_sac(const char  *name,
+    SACHEAD   hd,
+    const float *ar
+  )
 {
-  FILE		*strm;
-  unsigned	sz;
-  float		*data;
-  int		error = 0;
+  FILE    *strm;
+  unsigned  sz;
+  float   *data;
+  int   error = 0;
 
   strm = NULL;
   sz = hd.npts*sizeof(float);
@@ -297,23 +297,23 @@ int	write_sac(const char	*name,
 
   swab4
 
-  Description:	reverse byte order for float/integer
+  Description:  reverse byte order for float/integer
 
-  Author:	Lupei Zhu
+  Author: Lupei Zhu
 
-  Arguments:	char *pt	pointer to byte array
-		int    n	number of bytes
+  Arguments:  char *pt  pointer to byte array
+    int    n  number of bytes
 
-  Return:	none
+  Return: none
 
   Modify history:
-	12/03/96	Lupei Zhu	Initial coding
+  12/03/96  Lupei Zhu Initial coding
 
 ************************************************************/
 
-void	swab4(	char	*pt,
-		int	n
-	)
+void  swab4(  char  *pt,
+    int n
+  )
 {
   int i;
   char temp;
@@ -333,35 +333,35 @@ void	swab4(	char	*pt,
 
   wrtsac0
 
-  Description:	write 1D array into evenly spaced SAC data.
+  Description:  write 1D array into evenly spaced SAC data.
 
-  Author:	Lupei Zhu
+  Author: Lupei Zhu
 
-  Arguments:	const char *name	file name
-		float	dt		sampling interval
-		int	ns		number of points
-		float	b0		starting time
-		float	dist		distance range
-		const float *ar		data array
+  Arguments:  const char *name  file name
+    float dt    sampling interval
+    int ns    number of points
+    float b0    starting time
+    float dist    distance range
+    const float *ar   data array
 
-  Return:	0 if succeed; -1 if failed
+  Return: 0 if succeed; -1 if failed
 
   Modify history:
-	09/20/93	Lupei Zhu	Initial coding
-	12/05/96	Lupei Zhu	adding error handling
-	12/06/96	Lupei Zhu	swab byte-order on PC
+  09/20/93  Lupei Zhu Initial coding
+  12/05/96  Lupei Zhu adding error handling
+  12/06/96  Lupei Zhu swab byte-order on PC
 ************************************************************/
 
-int    wrtsac0(const char	*name,
-		float		dt,
-		int		ns,
-		float		b0,
-		float		dist,
-		const float	*ar
-	)
+int    wrtsac0(const char *name,
+    float   dt,
+    int   ns,
+    float   b0,
+    float   dist,
+    const float *ar
+  )
 {
 
-  SACHEAD	hd = sac_null;
+  SACHEAD hd = sac_null;
 
   hd.npts = ns;
   hd.delta = dt;
@@ -376,40 +376,40 @@ int    wrtsac0(const char	*name,
   return write_sac(name, hd, ar);
 
 }
- 
+
 
 
 /***********************************************************
 
   wrtsac2
 
-  Description:	write 2 arrays into XY SAC data.
+  Description:  write 2 arrays into XY SAC data.
 
-  Author:	Lupei Zhu
+  Author: Lupei Zhu
 
-  Arguments:	const char *name	file name
-		int	ns		number of points
-		const float *x		x data array
-		const float *y		y data array
+  Arguments:  const char *name  file name
+    int ns    number of points
+    const float *x    x data array
+    const float *y    y data array
 
-  Return:	0 succeed, -1 fail
+  Return: 0 succeed, -1 fail
 
   Modify history:
-	09/20/93	Lupei Zhu	Initial coding
-	12/05/96	Lupei Zhu	adding error handling
-	12/06/96	Lupei Zhu	swap byte-order on PC
+  09/20/93  Lupei Zhu Initial coding
+  12/05/96  Lupei Zhu adding error handling
+  12/06/96  Lupei Zhu swap byte-order on PC
 ************************************************************/
 
-int	wrtsac2(const char	*name,
-		int		n,
-		const float	*x,
-		const float	*y
-	)
+int wrtsac2(const char  *name,
+    int   n,
+    const float *x,
+    const float *y
+  )
 {
-  SACHEAD	hd = sac_null;
-  float		*ar;
-  unsigned	sz;
-  int		exit_code;
+  SACHEAD hd = sac_null;
+  float   *ar;
+  unsigned  sz;
+  int   exit_code;
 
   hd.npts = n;
   hd.iftype = IXY;
@@ -434,9 +434,9 @@ int	wrtsac2(const char	*name,
   }
 
   exit_code = write_sac(name, hd, ar);
-  
+
   free(ar);
-  
+
   return exit_code;
 
 }
@@ -466,35 +466,35 @@ void    wrtsac2_(const char *name, int n, const float *x, const float *y) {
 
   read_sac2
 
-  Description:	read portion ofdata from file. If succeed, it will return
-		a float pointer to the read data array. The SAC header
-		is also filled. A NULL pointer is returned if failed.
+  Description:  read portion ofdata from file. If succeed, it will return
+    a float pointer to the read data array. The SAC header
+    is also filled. A NULL pointer is returned if failed.
 
-  Author:	Lupei Zhu
+  Author: Lupei Zhu
 
-  Arguments:	const char *name 	file name
-		SACHEAD *hd		SAC header to be filled
-		int	tmark,		time mark in sac header
-		float	t1		begin time is tmark + t1
-		int	npts		number of points
+  Arguments:  const char *name  file name
+    SACHEAD *hd   SAC header to be filled
+    int tmark,    time mark in sac header
+    float t1    begin time is tmark + t1
+    int npts    number of points
 
-  Return:	float pointer to the data array, NULL if failed
+  Return: float pointer to the data array, NULL if failed
 
   Modify history:
-	11/08/00	Lupei Zhu	Initial coding
+  11/08/00  Lupei Zhu Initial coding
 ************************************************************/
 
-float*	read_sac2(const char	*name,
-		SACHEAD		*hd,
-		int		tmark,
-		float		t1,
-		int		npts
-	)
+float*  read_sac2(const char  *name,
+    SACHEAD   *hd,
+    int   tmark,
+    float   t1,
+    int   npts
+  )
 {
-  FILE		*strm;
-  int		i, nt1, nt2;
-  float		*ar, *fpt;
-  void		rtrend(float *, int);
+  FILE    *strm;
+  int   i, nt1, nt2;
+  float   *ar, *fpt;
+  void    rtrend(float *, int);
 
   if ((strm = fopen(name, "rb")) == NULL) {
      fprintf(stderr, "Unable to open %s\n",name);
@@ -525,8 +525,8 @@ float*	read_sac2(const char	*name,
 
   if (nt1 > 0 ) {
      if (fseek(strm,nt1*sizeof(float),SEEK_CUR) < 0) {
-	fprintf(stderr, "error in seek %s\n",name);
-	return NULL;
+  fprintf(stderr, "error in seek %s\n",name);
+  return NULL;
      }
      fpt = ar;
   } else {
@@ -556,7 +556,7 @@ float*	read_sac2(const char	*name,
 }
 
 /* remove trend a*i + b */
-void	rtrend(float *y, int n) {
+void  rtrend(float *y, int n) {
      int i;
      double a, b, a11, a12, a22, y1, y2;
      y1 = y2 = 0.;
@@ -568,7 +568,7 @@ void	rtrend(float *y, int n) {
      a11 = a12*(2*n-1)/3.;
      a22 = n;
      b = a11*a22-a12*a12;
-     a = (a22*y1-a12*y2)/b; 
+     a = (a22*y1-a12*y2)/b;
      b = (a11*y2-a12*y1)/b;
      for(i=0;i<n;i++) {
        y[i] = y[i] - a*i - b;

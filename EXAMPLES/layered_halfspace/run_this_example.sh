@@ -38,9 +38,9 @@ cd $currentdir
 # links executables
 cd bin/
 rm -f ./x*
-ln -s ../../../bin/xdecompose_mesh 
-ln -s ../../../bin/xgenerate_databases 
-ln -s ../../../bin/xspecfem3D 
+ln -s ../../../bin/xdecompose_mesh
+ln -s ../../../bin/xgenerate_databases
+ln -s ../../../bin/xspecfem3D
 cd ../
 
 # stores setup

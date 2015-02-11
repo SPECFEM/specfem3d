@@ -51,7 +51,7 @@ if (0==1) {
 
 #===================================
 
-$imin = 1; $imax = $neid;	# default
+$imin = 1; $imax = $neid; # default
 #$imin = 1; $imax = 10;
 #$imin = 1; $imax = $imin;
 
@@ -66,7 +66,7 @@ for ($i = $imin; $i <= $imax; $i++) {
   # (1) check if job is done
   # (2) check if mesh files are off pangu
   # (3) check if mesh files are in smooth_all
-   
+
   $mfiles = "${ftag}_smooth_${stg}.mesh";
   $bfiles = "*${ftag}_smooth.bin";
 
@@ -87,11 +87,11 @@ for ($i = $imin; $i <= $imax; $i++) {
       # check that there are 168 files there
       $ncheck = `ls -1 $pdir/$bfiles | wc | awk '{print \$1}'`; chomp($ncheck);
       if ($ncheck != $nproc) {
-	die("ncheck ($ncheck) not equal to nproc ($nproc)");
+  die("ncheck ($ncheck) not equal to nproc ($nproc)");
       }
 
     } else {
- 
+
       # low-res mesh files
       $mfiles2 = "$sdir/$mfiles";
       $mfile_out2 = `ls -1 $mfiles2 | wc | awk '{print \$1}'`; chomp($mfile_out2);
@@ -99,21 +99,21 @@ for ($i = $imin; $i <= $imax; $i++) {
       # high-res binary files
       $bfiles2 = "$sdir/inout_smooth/$bfiles";
       $bfile_out2 = `ls -1 $bfiles2 | wc | awk '{print \$1}'`; chomp($bfile_out2);
-      
+
       if ( (${mfile_out2} == 1) && (${bfile_out2} == $nproc) ) {
-	# (1) copy the mesh files off pangu
-	# (2) copy the bin files to event_kernels_smooth
+  # (1) copy the mesh files off pangu
+  # (2) copy the bin files to event_kernels_smooth
         # NOTE: cp is a safer operation than mv -- especially for the sensitive IBRIX system
-	print "--> copying the mesh and binary files\n";
-	`mkdir -p $odir`;
-	`cp $mfiles2 $odir`;
+  print "--> copying the mesh and binary files\n";
+  `mkdir -p $odir`;
+  `cp $mfiles2 $odir`;
         `sleep 3s`;
         `mkdir -p $pdir`;
         if (0==1) {
-	  `cp $bfiles2 $pdir`;
-	} else {
-	  `mv $bfiles2 $pdir`;
-	}
+    `cp $bfiles2 $pdir`;
+  } else {
+    `mv $bfiles2 $pdir`;
+  }
         `sleep 3s`;
 
         # check that all the binary files made it
@@ -122,31 +122,31 @@ for ($i = $imin; $i <= $imax; $i++) {
         $bfiles3 = "$pdir/$bfiles";
         $bfile_out3 = `ls -1 $bfiles3 | wc | awk '{print \$1}'`; chomp($bfile_out3);
         if ( ${bfile_out3} != $nproc ) {
-	  #die("only ${bfile_out3} out of $nproc made it into $pdir");
-	  print "only ${bfile_out3} out of $nproc made it into $pdir\n";
-	  @leftfiles = glob("$bfiles2");
+    #die("only ${bfile_out3} out of $nproc made it into $pdir");
+    print "only ${bfile_out3} out of $nproc made it into $pdir\n";
+    @leftfiles = glob("$bfiles2");
           print "leftfiles are @leftfiles\n";
-	  `cp @leftfiles $pdir`;
-	  `sleep 3s`;
+    `cp @leftfiles $pdir`;
+    `sleep 3s`;
 
           # check the numbers again
-	  $bfiles3 = "$pdir/$bfiles";
-	  $bfile_out3 = `ls -1 $bfiles3 | wc | awk '{print \$1}'`; chomp($bfile_out3);
-	  if ( ${bfile_out3} != $nproc ) {
-	    die("only ${bfile_out3} out of $nproc made it into $pdir");
-	  }
-	}
+    $bfiles3 = "$pdir/$bfiles";
+    $bfile_out3 = `ls -1 $bfiles3 | wc | awk '{print \$1}'`; chomp($bfile_out3);
+    if ( ${bfile_out3} != $nproc ) {
+      die("only ${bfile_out3} out of $nproc made it into $pdir");
+    }
+  }
 
       } else {
         if( ${mfile_out2} == 1 ) {
           die("mesh file was made but only ${bfile_out2} out of $nproc binary files");
         }
-	if ( ${bfile_out2} == $nproc ) {
-	  die("$nproc binary files but no $mesh file\n");
-	}
+  if ( ${bfile_out2} == $nproc ) {
+    die("$nproc binary files but no $mesh file\n");
+  }
         if ( (${mfile_out2} == 0) && (${bfile_out2} == 0) ) {
-	  print "--> this event has not been setup yet\n";
-	}
+    print "--> this event has not been setup yet\n";
+  }
       }
     }
   }

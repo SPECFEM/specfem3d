@@ -70,7 +70,7 @@
 ! otherwise: there is no standard behaviour to exit with an error code in fortran,
 ! however most compilers do recognize this as an error code stop statement;
 ! to check stop code in terminal: > echo $?
-  stop 30 
+  stop 30
 
   ! or just exit with message:
   !stop 'error, program ended in exit_MPI'

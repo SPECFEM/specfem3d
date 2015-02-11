@@ -1,16 +1,16 @@
 #!/usr/bin/perl
 
-# change the SIMULATION_TYPE setting in DATA/Par_file 
+# change the SIMULATION_TYPE setting in DATA/Par_file
 
 # Qinya Liu, Caltech, May 2007
 
 use Time::Local;
 use Getopt::Std;
 use POSIX;
- 
+
 sub Usage{
 print STDERR <<END;
- 
+
 Usage:   change_simulation_type.pl  [-a|-f|-b|-F]
          Changes SIMULATION_TYPE in DATA/Par_file
          -a -- change type to run adjoint calculation(2)
@@ -20,10 +20,10 @@ Usage:   change_simulation_type.pl  [-a|-f|-b|-F]
 END
 exit(1);
 }
- 
+
 @ARGV == 1 or Usage();
 if(!getopts('abfF')) {die(" check input arguments\n");}
- 
+
 open(IN,"DATA/Par_file");
 @vfm=<IN>;
 close(IN);
@@ -52,7 +52,7 @@ foreach $vfm (@vfm){
     }
   }
   if ($vfm=~/SAVE_FORWARD/) {
-    if ($opt_F) { $vfm=~s/false/true/; } 
+    if ($opt_F) { $vfm=~s/false/true/; }
     else {$vfm=~s/true/false/;}
 
   }

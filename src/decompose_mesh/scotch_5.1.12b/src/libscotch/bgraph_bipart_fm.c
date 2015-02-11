@@ -8,13 +8,13 @@
 ** use, modify and/or redistribute the software under the terms of the
 ** CeCILL-C license as circulated by CEA, CNRS and INRIA at the following
 ** URL: "http://www.cecill.info".
-** 
+**
 ** As a counterpart to the access to the source code and rights to copy,
 ** modify and redistribute granted by the license, users are provided
 ** only with a limited warranty and the software's author, the holder of
 ** the economic rights, and the successive licensors have only limited
 ** liability.
-** 
+**
 ** In this respect, the user's attention is drawn to the risks associated
 ** with loading, using, modifying and/or developing or reproducing the
 ** software by the user in light of its specific status of free software,
@@ -25,7 +25,7 @@
 ** their requirements in conditions enabling the security of their
 ** systems and/or data to be ensured and, more generally, to use and
 ** operate it in the same conditions as regards security.
-** 
+**
 ** The fact that you are presently reading this means that you have had
 ** knowledge of the CeCILL-C license and that you accept its terms.
 */
@@ -240,7 +240,7 @@ const BgraphBipartFmParam * const paraptr)        /*+ Method parameters +*/
     hashtab = hashtmp;
   }
   else
-    return (1);  
+    return (1);
   memset (hashtab, ~0, hashsiz * sizeof (BgraphBipartFmVertex)); /* Set all vertex numbers to ~0 */
 
   domdist = grafptr->domdist;
@@ -525,7 +525,7 @@ const BgraphBipartFmParam * const paraptr)        /*+ Method parameters +*/
           compload0dltbst = compload0dlt;         /* Forget backtracking */
           commgainextnbst = commgainextn;
           swapvalbst      = swapval;
-          savenbr         = 0;                   
+          savenbr         = 0;
           mswpnum ++;
         }
       }

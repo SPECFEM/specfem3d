@@ -13,7 +13,7 @@ make_dir_exp
 copy_input_files_exp
 compute_exp_coeff
 
-# faces 
+# faces
 make_dir_faces
 copy_input_files_faces
 
@@ -37,7 +37,7 @@ read_exp_vert inputIASP.infTra
 fft_vert inputIASP.infTra
 change_format_vertical
 
-cd ../STZMIN 
+cd ../STZMIN
 read_exp_zmin inputIASP.infTra
 fft_zmin  inputIASP.infTra
 change_format_zmin
@@ -50,15 +50,15 @@ move_output
 }
 
 
-# 1. Compute expansion coefficients 
+# 1. Compute expansion coefficients
 #
 # NPROC : number of MPI processes
 # BIN   : binary directory
-# OTPION: mpirun options  
+# OTPION: mpirun options
 #
 function compute_exp_coeff ()
 {
-echo $NPROC 
+echo $NPROC
 echo $OPTION
 echo $BIN/TraPSV_write_ceof_mpi
 mpirun -np $NPROC $OPTION $BIN/xTraPSV_write_ceof_mpi
@@ -78,7 +78,7 @@ rm ascii/*
 
 
 #
-# make directories to store expansion coefficients 
+# make directories to store expansion coefficients
 #
 function make_dir_exp ()
 {
@@ -90,7 +90,7 @@ mkdir ascii
 
 
 #
-# make directories for each face 
+# make directories for each face
 #
 function make_dir_faces ()
 {
@@ -158,7 +158,7 @@ mpirun -np $NPROC $OPTION $BIN/TraFFT_MPI_face_zmin $1
 
 
 #
-# change format vertical 
+# change format vertical
 #
 function change_format_vertical ()
 {
@@ -176,7 +176,7 @@ mpirun -np $NPROC $OPTION $BIN/ChangeFormat_zmin_disp
 }
 
 #
-# move outputs from $OUT (DSM_tractions) to $REP (Tract for SPECFEM) 
+# move outputs from $OUT (DSM_tractions) to $REP (Tract for SPECFEM)
 #
 function move_output ()
 {

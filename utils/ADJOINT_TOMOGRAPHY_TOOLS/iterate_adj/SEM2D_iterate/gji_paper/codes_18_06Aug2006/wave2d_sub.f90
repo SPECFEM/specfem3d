@@ -7,7 +7,7 @@ module wave2d_sub
 
 contains
 
-  !-----------------------------------------------------  
+  !-----------------------------------------------------
 
   subroutine write_parameters(filename)
 
@@ -16,14 +16,14 @@ contains
     print *, 'writing out parameters'
 
     open(unit=12, file=filename, status='unknown', iostat=ios)
-        
+
     write(12,*) 'hey you'
 
     close(12)
 
   end subroutine write_parameters
 
-  !-----------------------------------------------------  
+  !-----------------------------------------------------
 
 !!$  subroutine get_source_function(nsrc,origin_time,f0,samp,ti)
 !!$
@@ -50,7 +50,7 @@ contains
 !!$
 !!$  end subroutine get_source_function
 
-  !-----------------------------------------------------  
+  !-----------------------------------------------------
 
   subroutine get_source_time_function(origin_time,stf_vec,ti)
 
@@ -87,10 +87,10 @@ contains
   if(ISRC_TIME==1) then ! Ricker
      amp = -2.*(alpha**3)/dsqrt(PI)
 
-  elseif(ISRC_TIME==2) then ! Gaussian
+  else if(ISRC_TIME==2) then ! Gaussian
      amp = alpha/dsqrt(PI)
 
-  elseif(ISRC_TIME==3) then ! truncated sine
+  else if(ISRC_TIME==3) then ! truncated sine
      cyc = 3
      per = 2.*hdur
      !t1 = -0.50*per
@@ -98,11 +98,11 @@ contains
      t2 = t1 + per*dble(cyc)
      amp = alpha**2*dsqrt(2./PI)*exp(-0.5d0)
 
-  elseif(ISRC_TIME==4) then ! sine
+  else if(ISRC_TIME==4) then ! sine
      per = 2.*hdur
      amp = alpha**2*dsqrt(2./PI)*exp(-0.5d0)
 
-!!$  elseif(ISRC_TIME==5) then ! plane wave field
+!!$  else if(ISRC_TIME==5) then ! plane wave field
 !!$
 !!$     amp = alpha**2*dsqrt(2./PI)*exp(-0.5d0)   ! amplitude
 !!$     az = 25.*PI/180.                          ! azimuth of vector (from north)
@@ -115,7 +115,7 @@ contains
 !!$     ! probably the speed should be based on the slope of the seafloor
 !!$     !c_source = 9.81*per/(2*PI)  ! T=16s, c=25 m/s
 !!$     c_source = c0
-!!$   
+!!$
 !!$     ! projection of each source point vector onto the directional vector k
 !!$     allocate(d_vec(nsrc))
 !!$     d_vec(:) = 0.
@@ -125,7 +125,7 @@ contains
 !!$     print *, '   period         : ', sngl(per), ' s'
 !!$     print *, '   phase velocity : ', sngl(c_source/1000.), ' km/s'
 !!$     print *, '   wavelength     : ', sngl(c_source*per/1000.), ' km'
-!!$     print *, 'relative distance from plane wave wavefront to each source point:' 
+!!$     print *, 'relative distance from plane wave wavefront to each source point:'
 !!$     do i=1,nsrc
 !!$        d_vec(i) = kx*x(sglob(i)) + ky*z(sglob(i))
 !!$        write(*,'(i6,3f12.3)') i, x(sglob(i))/1000., z(sglob(i))/1000., d_vec(i)/1000.
@@ -137,7 +137,7 @@ contains
        ti(itime) = dble(itime-1)*DT
 
        t = ti(itime) - origin_time  ! time shift
-    
+
        if(ISRC_TIME==1) then
           ! d/dt[Gaussian] wavelet
           if(t >= -dgaus .and. t <= dgaus) then
@@ -146,7 +146,7 @@ contains
              stf = 0.
           endif
 
-       elseif(ISRC_TIME==2) then
+       else if(ISRC_TIME==2) then
           ! Error function
           ! source_time_function = 0.5d0*(1.0d0+erf(decay_rate*t/hdur))
 
@@ -157,7 +157,7 @@ contains
              stf = 0.
           endif
 
-       elseif(ISRC_TIME==3) then
+       else if(ISRC_TIME==3) then
           ! truncated sine function (duration is cyc*per seconds)
           if(t >= t1 .and. t <= t2) then
              stf = amp*sin(2*PI*(t-t1)/per)
@@ -165,22 +165,22 @@ contains
              stf = 0.
           endif
 
-       elseif(ISRC_TIME==4) then
+       else if(ISRC_TIME==4) then
           ! sine function
           stf = amp*sin(2*PI*t/per)
           !stf = amp/2.*sin(2*PI*t/per) + amp/2.*sin(2*PI*t/(1.1*per))
 
-       !elseif(ISRC_TIME==5) then
+       !else if(ISRC_TIME==5) then
        !   ! plane wavefield, dependant on source position
        !   tmp = t - d_vec(i)/c_source
        !   !stf = amp*sin( 2*PI/per*tmp )
        !   stf = amp/2.*sin(2*PI*tmp/per) + amp/2.*sin(2*PI*tmp/(1.1*per))
 
        endif
-  
+
        ! fill source time function
        stf_vec(itime) = stf
-    
+
     enddo
 
 
@@ -190,7 +190,7 @@ contains
 
   end subroutine get_source_time_function
 
-  !-----------------------------------------------------  
+  !-----------------------------------------------------
 
   subroutine taper_series(x,nt)
 
@@ -199,7 +199,7 @@ contains
 
   double precision :: ntemp,jtemp,wtemp,cfac
   integer :: i,pwr
- 
+
   ntemp = dble(nt)/2.0
 
   ! KEY COMMAND: power of polynomial taper
@@ -208,18 +208,18 @@ contains
 
   ! Welch taper (in time)
   do i = 1,nt
-     
+
      jtemp = dble(i-1)
      wtemp = (jtemp - ntemp) / ntemp
      cfac = 1. - wtemp**pwr
      !cfac = 1 - (2*(i - 1)/(nt - 1) - 1) ** pwr  ! see Qinya code below
- 
+
      x(i) = cfac*x(i)
-  enddo 
+  enddo
 
   end subroutine taper_series
 
-  !-----------------------------------------------------  
+  !-----------------------------------------------------
 
   subroutine write_snapshot(disp, filename)
 
@@ -242,7 +242,7 @@ contains
 
   end subroutine write_snapshot
 
-  !-----------------------------------------------------   
+  !-----------------------------------------------------
 
 !!$  subroutine write_source_function(nsrc, ti, seis, sglob, seis_name)
 !!$
@@ -275,7 +275,7 @@ contains
 !!$
 !!$  end subroutine write_source_function
 
-  !-----------------------------------------------------   
+  !-----------------------------------------------------
 
   subroutine write_seismogram(seis, nrec, seis_name)
 
@@ -304,7 +304,7 @@ contains
 
   end subroutine write_seismogram
 
-  !-----------------------------------------------------   
+  !-----------------------------------------------------
 
   subroutine write_spectral_map(seis, nrec, rglob, seis_name, write_spectra)
 
@@ -380,18 +380,18 @@ contains
              ! if within the frequency band
              if(w >= wmin_win .and. w <= wmax_win) abs_int = abs_int + abs_val
 
-             if(write_spectra) write(12,'(2e16.6)') w, abs_val 
-             !if(write_spectra.and.w/=0.) write(12,'(2e16.6)') (2*PI)/w, abs_val 
+             if(write_spectra) write(12,'(2e16.6)') w, abs_val
+             !if(write_spectra.and.w/=0.) write(12,'(2e16.6)') (2*PI)/w, abs_val
           enddo
           if(write_spectra) close(12)
- 
+
           if(0==1) then
             write(*,'(a,3f12.4)') ' T, s     (min/0/max) :', (2*PI)/wmax_win , 2*hdur        , (2*PI)/wmin_win
             write(*,'(a,3f12.4)') ' f, Hz    (min/0/max) :', wmin_win/(2*PI) , 1/(2*hdur)    , wmax_win/(2*PI)
             write(*,'(a,3f12.4)') ' w, rad/s (min/0/max) :', wmin_win        , 2*PI/(2*hdur) , wmax_win
             write(*,'(a,e24.8)')  '     integrated power :', dw*abs_int
-            print * 
-          endif   
+            print *
+          endif
 
           call dfftw_destroy_plan(plan)
 
@@ -405,14 +405,14 @@ contains
 
   end subroutine write_spectral_map
 
-  !-----------------------------------------------------   
+  !-----------------------------------------------------
 
   subroutine filter(ti, seis, nrec)
 
     integer, intent(in) :: nrec
     double precision, intent(in) :: ti(NSTEP)
     double precision, intent(inout) :: seis(NSTEP,NCOMP,nrec)
-    
+
     character(len=200) :: filename
     double precision :: data(NSTEP)
     double precision :: dt
@@ -517,14 +517,14 @@ contains
 
           adj_syn(:,i,irec) = ( syn(:,i,irec) -  data(:,i,irec) ) * time_window(:)
 
-       elseif(IKER==5) then   ! traveltime
+       else if(IKER==5) then   ! traveltime
 
           ! minus sign is shifted from norm to adj_syn, in comparison with Tromp et al (2005)
           ! thus, norm is ensured to be POSITIVE (N > 0)
           norm = -DT * sum( time_window(:) * syn(:,i,irec) * syn_accel(:,i,irec) )
           if (abs(norm) > EPS) adj_syn(:,i,irec) = -syn_veloc(:,i,irec) * time_window(:) / norm
 
-       elseif(IKER==6) then  ! amplitude
+       else if(IKER==6) then  ! amplitude
 
           ! norm is ensured to be POSITIVE (M > 0)
           norm = DT * sum( time_window(:) * syn(:,i,irec) * syn(:,i,irec) )
@@ -589,7 +589,7 @@ contains
 !!$
 !!$      ! assign adjoint force
 !!$      do i = 1,NCOMP
-!!$       
+!!$
 !!$         adj_syn(:,i,irec) = ( syn(:,i,irec) -  data(:,i,irec) ) * time_window(:)
 !!$
 !!$      enddo

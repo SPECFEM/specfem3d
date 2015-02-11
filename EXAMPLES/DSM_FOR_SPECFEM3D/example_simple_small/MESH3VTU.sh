@@ -13,7 +13,7 @@ it=0
 
 while [ "$it" -le "$itmax" ] ; do
 
-   if [ "$it" -lt 1000000 ]; then 
+   if [ "$it" -lt 1000000 ]; then
      FICHIER=$PREFIX${it}
    fi;
 

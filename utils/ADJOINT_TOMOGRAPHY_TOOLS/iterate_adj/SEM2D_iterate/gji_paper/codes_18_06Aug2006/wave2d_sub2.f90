@@ -1,10 +1,10 @@
 module wave2d_sub2
- 
+
   use wave2d_constants
   use wave2d_variables
- 
+
   implicit none
- 
+
 ! this module contains subroutines pertaining to filtering gridpoints
 ! and converting amoung UTM, mesh, and index coordinates
 
@@ -111,13 +111,13 @@ contains
 !!$       if(ia==1) then
 !!$          iax = 1
 !!$          iaz = 1
-!!$       elseif(ia==2) then
+!!$       else if(ia==2) then
 !!$          iax = NGLLX
 !!$          iaz = 1
-!!$       elseif(ia==3) then
+!!$       else if(ia==3) then
 !!$          iax = NGLLX
 !!$          iaz = NGLLZ
-!!$       elseif(ia==4) then
+!!$       else if(ia==4) then
 !!$          iax = 1
 !!$          iaz = NGLLZ
 !!$       endif
@@ -262,7 +262,7 @@ contains
   !---------------------------------------------
   !
   ! jacobian = | dx/dxi dx/dgamma | = (z2-z1)*(x2-x1)/4  as dx/dgamma=dz/dxi = 0
-  !            | dz/dxi dz/dgamma | 
+  !            | dz/dxi dz/dgamma |
 
   ! jacobian, integration weight
   xix = 2. / (x2(ispec)-x1(ispec))
@@ -270,7 +270,7 @@ contains
   gammax = 0.
   gammaz = 2. / (z2(ispec)-z1(ispec))
 
-  jacob = (z2(ispec)-z1(ispec))*(x2(ispec)-x1(ispec)) / 4. 
+  jacob = (z2(ispec)-z1(ispec))*(x2(ispec)-x1(ispec)) / 4.
 
   ! find the (x,z) corresponding to (xi,gamma,ispec)
   xtemp = 0.5*(1.-    xi)*x1(ispec) + 0.5*(1.+   xi)*x2(ispec)
@@ -371,7 +371,7 @@ contains
     integer, intent(inout) :: nrec
     double precision, intent(in) :: x_rec(nrec), z_rec(nrec)
     integer, intent(out) :: rglob(nrec)
-    
+
     double precision :: dmin, d
     integer, dimension(nrec) :: rglobtemp
     integer :: irec, ispec, i, j, k, iglob, itemp, iflag
@@ -381,7 +381,7 @@ contains
     print *, nrec,' input target points into set_glob.f90'
 
     if(nrec/=0) then
-       
+
        ! find the closest gridpoint to the target point
        do irec = 1, nrec
           dmin = sqrt(LENGTH**2+HEIGHT**2)  ! max possible distance
@@ -479,7 +479,7 @@ contains
           !x_rec(j) = xtar
           !z_rec(j) = ztar
           ifilter(j) = irec
-          
+
           ! obtain the coastal point closest to the target point
           !dmin = sqrt(LENGTH**2+HEIGHT**2)
           !do i=1,ncoast
@@ -490,13 +490,13 @@ contains
           !   endif
           !enddo
 
-          !! if target point is at least dmin_trsh from the coast, then keep it 
+          !! if target point is at least dmin_trsh from the coast, then keep it
           !if ( dmin >= dmin_trsh ) then
           !  j = j+1
           !  x_rec(j) = xtar
           !  z_rec(j) = ztar
           !endif
-          
+
        endif
     enddo
     nrec = j
@@ -555,7 +555,7 @@ contains
        z_div    = mp*x_div + bp
        !write(*,'(4f16.6)') xtar/1000., ztar/1000., x_div/1000., z_div/1000
 
-       ! if target point is at least dmin_trsh from the coast, then keep it 
+       ! if target point is at least dmin_trsh from the coast, then keep it
        if ( 0 < dble(ieast)*(xtar - x_div) ) then
          j = j+1
          x_rec(j) = xtar
@@ -573,7 +573,7 @@ contains
 
   integer, intent(in) :: npt, UTM_PROJECTION_ZONE, iway
   double precision, intent(inout) :: rx(npt),rz(npt),rlon(npt),rlat(npt)
-  
+
   double precision :: xtemp,ztemp
   integer i
 
@@ -666,7 +666,7 @@ contains
   e2  = 1.0-(semimin/semimaj)**2.0
   e4  = e2*e2
   e6  = e2*e4
-  e8  = e4*e4  
+  e8  = e4*e4
   ep2 = e2/(1.-e2)
 
   if (iway == IUTM2LONGLAT) then
@@ -683,7 +683,7 @@ contains
   cmr  = cm*degrad
 
   if (iway == ILONGLAT2UTM) then  ! lat-lon to UTM
-     
+
      rlon = degrad*dlon
      rlat = degrad*dlat
 
@@ -730,7 +730,7 @@ contains
      yy = yy + north
 
   else  ! UTM to lat-lon
-     
+
      ! remove false easting and northing
      xx = xx - east
      yy = yy - north

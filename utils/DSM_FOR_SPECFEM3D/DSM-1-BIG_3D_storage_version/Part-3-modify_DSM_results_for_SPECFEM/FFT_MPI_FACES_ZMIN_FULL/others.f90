@@ -1079,7 +1079,7 @@ subroutine Local2chunk(vec,n,np1,Orign_Lon_Chunk,Origin_Lat_Chunk,azi_chunk,Lat_
   integer icomp,itime,imin,imax
 
   call  RotationMatrix_RT2Local(Rot_RT_NE,Bazi)
-  Bazi_chunk=270.d0-azi_chunk ! car on fait cette operation dans la subroutine ci dessous ca annule le truc, reflechir 
+  Bazi_chunk=270.d0-azi_chunk ! car on fait cette operation dans la subroutine ci dessous ca annule le truc, reflechir
   ! a un truc pour mieux faire !! !! VM VM
   call RotationMatrix_RT2local(Rot_azi_chunk,Bazi_chunk)  !! c'est l'azimuth du chunk
 

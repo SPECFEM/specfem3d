@@ -65,15 +65,15 @@ cp $IN_DSM/$stf $STD/.
 cp $MESH/recdepth $STD/.
 cp $MESH/OrigRepSpecfm $STD/.
 }
-# 1. Compute expansion coefficients 
+# 1. Compute expansion coefficients
 #
 # NPROC : number of MPI processes
 # BIN   : binary directory
-# OTPION: mpirun options  
+# OTPION: mpirun options
 #
 function compute_exp_coeff ()
 {
-echo $NPROC 
+echo $NPROC
 echo $OPTION
 echo $BIN/xTraPSV_write_ceof_mpi
 mpirun -np $NPROC $OPTION $BIN/xTraPSV_write_ceof_mpi
@@ -95,7 +95,7 @@ mpirun -np $NPROC $OPTION $BIN/fft_face_vert $1
 }
 
 #
-# change format vertical 
+# change format vertical
 #
 function change_format_vertical ()
 {

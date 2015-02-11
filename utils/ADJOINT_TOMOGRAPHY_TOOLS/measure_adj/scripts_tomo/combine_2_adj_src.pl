@@ -53,9 +53,9 @@ for ($i=1; $i<@sta; $i++){
     $adj{$sta}{num} = 1;
     $adj{$sta}{net} = "$nt";
     $adj{$sta}{info} = "$nt $lat $lon $dep $bur";}
-  else {$adj{$sta}{num} ++ ; 
+  else {$adj{$sta}{num} ++ ;
         # NOTE: this crashes if HAST.TA and HAST.BK are included
-	if ($nt ne $adj{$sta}{net}) {die("Check if network name same for $sta\n");}
+  if ($nt ne $adj{$sta}{net}) {die("Check if network name same for $sta\n");}
   }
   @files = glob("$dir2/$sta.$nt.BH?.*adj");
   if (@files == 0) {print("Check if $dir2/$sta.$nt.BH?.*adj exist or not\n");}

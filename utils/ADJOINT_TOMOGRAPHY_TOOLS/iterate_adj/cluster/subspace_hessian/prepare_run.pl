@@ -6,7 +6,7 @@
 #
 # This prepares a run for computing the subspace hessian matrix
 # from a set of event kernels.
-# 
+#
 # EXAMPLE:
 #    prepare_run.pl m14 1
 #

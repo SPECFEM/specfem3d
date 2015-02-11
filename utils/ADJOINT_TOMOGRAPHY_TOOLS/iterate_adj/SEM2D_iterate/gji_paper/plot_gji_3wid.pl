@@ -411,7 +411,7 @@ if ($ifig01 == 1) {
 
   #===============================================
   print "\nWriting CSH file...\n";
-  
+
   open(CSH,">$cshfile");
   print CSH "gmtset BASEMAP_TYPE plain PLOT_DEGREE_FORMAT D TICK_LENGTH $tick LABEL_FONT_SIZE $fsize2 ANOT_FONT_SIZE $fsize2  HEADER_FONT $fontno ANOT_FONT $fontno LABEL_FONT $fontno HEADER_FONT_SIZE $fsize1 FRAME_PEN $fpen TICK_PEN $tpen \n";
   #===============================================
@@ -838,7 +838,7 @@ if ($ifig02 == 1) {
 
   #===============================================
   print "\nWriting CSH file...\n";
-  
+
   open(CSH,">$cshfile");
   print CSH "gmtset BASEMAP_TYPE plain TICK_LENGTH $tick LABEL_FONT_SIZE $fsize2 ANOT_FONT_SIZE $fsize2 PLOT_DEGREE_FORMAT D HEADER_FONT $fontno ANOT_FONT $fontno LABEL_FONT $fontno HEADER_FONT_SIZE $fsize1 FRAME_PEN $fpen TICK_PEN $tpen\n";
   #===============================================
@@ -1086,7 +1086,7 @@ if ($ifig03 == 1) {
 
   #===============================================
   print "\nWriting CSH file...\n";
-  
+
   open(CSH,">$cshfile");
   print CSH "gmtset BASEMAP_TYPE plain TICK_LENGTH $tick LABEL_FONT_SIZE $fsize2 ANOT_FONT_SIZE $fsize2 PLOT_DEGREE_FORMAT D HEADER_FONT $fontno ANOT_FONT $fontno LABEL_FONT $fontno HEADER_FONT_SIZE $fsize1 FRAME_PEN $fpen TICK_PEN $tpen\n";
   #===============================================
@@ -1233,7 +1233,7 @@ if ($ifig04 == 1) {
 
   #===============================================
   print "\nWriting CSH file...\n";
-  
+
   open(CSH,">$cshfile");
   print CSH "gmtset BASEMAP_TYPE plain TICK_LENGTH $tick LABEL_FONT_SIZE $fsize2 ANOT_FONT_SIZE $fsize2 PLOT_DEGREE_FORMAT D HEADER_FONT $fontno ANOT_FONT $fontno LABEL_FONT $fontno HEADER_FONT_SIZE $fsize1 FRAME_PEN $fpen TICK_PEN $tpen\n";
   #===============================================
@@ -1389,7 +1389,7 @@ if ($ifig04b == 1) {
 
   #===============================================
   print "\nWriting CSH file...\n";
-  
+
   open(CSH,">$cshfile");
   print CSH "gmtset BASEMAP_TYPE plain TICK_LENGTH $tick LABEL_FONT_SIZE $fsize2 ANOT_FONT_SIZE $fsize2 PLOT_DEGREE_FORMAT D HEADER_FONT $fontno ANOT_FONT $fontno LABEL_FONT $fontno HEADER_FONT_SIZE $fsize1 FRAME_PEN $fpen TICK_PEN $tpen\n";
   #===============================================
@@ -1470,7 +1470,7 @@ if ($ifig05 == 1) {
 
   #===============================================
   print "\nWriting CSH file...\n";
-  
+
   open(CSH,">$cshfile");
   print CSH "gmtset BASEMAP_TYPE plain TICK_LENGTH $tick LABEL_FONT_SIZE $fsize2 ANOT_FONT_SIZE $fsize2 PLOT_DEGREE_FORMAT D HEADER_FONT $fontno ANOT_FONT $fontno LABEL_FONT $fontno HEADER_FONT_SIZE $fsize1 FRAME_PEN $fpen TICK_PEN $tpen\n";
   #===============================================
@@ -1587,7 +1587,7 @@ if ($ifig05 == 1) {
   print CSH "awk '\$1 == \"R\" {print \$2,\$3}' $recfile |psxy -N $J $R -K -O -P -V $rec >> $psfile\n";
   print CSH "awk '{print \$1,\$2}' $evefile |psxy -N $J $R -K -O -P -V $src >> $psfile\n";
   print CSH "pstext -N $J_title $R_title -K -O -V -P >>$psfile<<EOF\n $x_title $z_title $fsize_title 0 $fontno CM $title \nEOF\n";
-  
+
   #------------------------------------------
   # make colorpoint file for Gaussian
   #$cmax2 = 1/(2*3.14159*$sigma*$sigma);
@@ -1652,7 +1652,7 @@ if ($ifig06 == 1) {
 
   #===============================================
   print "\nWriting CSH file...\n";
-  
+
   open(CSH,">$cshfile");
   print CSH "gmtset BASEMAP_TYPE plain TICK_LENGTH $tick LABEL_FONT_SIZE $fsize2 ANOT_FONT_SIZE $fsize2 PLOT_DEGREE_FORMAT D HEADER_FONT $fontno ANOT_FONT $fontno LABEL_FONT $fontno HEADER_FONT_SIZE $fsize1 FRAME_PEN $fpen TICK_PEN $tpen\n";
   #===============================================
@@ -1786,7 +1786,7 @@ if ($ifig07 == 1) {
 
   #===============================================
   print "\nWriting CSH file...\n";
-  
+
   open(CSH,">$cshfile");
   print CSH "gmtset BASEMAP_TYPE plain TICK_LENGTH $tick LABEL_FONT_SIZE $fsize2 ANOT_FONT_SIZE $fsize2 PLOT_DEGREE_FORMAT D HEADER_FONT $fontno ANOT_FONT $fontno LABEL_FONT $fontno HEADER_FONT_SIZE $fsize1 FRAME_PEN $fpen TICK_PEN $tpen\n";
   #===============================================
@@ -1859,7 +1859,7 @@ for ($k = 0; $k < $nevent_plot; $k = $k+1) {
 }  # for k < nevent
 
   # summed event kernel
-  
+
   # get the summed kernel and chi files
   $file2 = "$dir/summed_ker.dat";
   $recfile = "$dir/${edir}/sr.txt";     # src-rec for first event
@@ -1925,7 +1925,7 @@ if ($ifig08 == 1) {
 
   #===============================================
   print "\nWriting CSH file...\n";
-  
+
   open(CSH,">$cshfile");
   print CSH "gmtset BASEMAP_TYPE plain TICK_LENGTH $tick LABEL_FONT_SIZE $fsize2 ANOT_FONT_SIZE $fsize2 PLOT_DEGREE_FORMAT D HEADER_FONT $fontno ANOT_FONT $fontno LABEL_FONT $fontno HEADER_FONT_SIZE $fsize1 FRAME_PEN $fpen TICK_PEN $tpen\n";
   #===============================================
@@ -2054,7 +2054,7 @@ if ($ifig08b == 1) {
 
   #===============================================
   print "\nWriting CSH file...\n";
-  
+
   open(CSH,">$cshfile");
   print CSH "gmtset BASEMAP_TYPE plain TICK_LENGTH $tick LABEL_FONT_SIZE $fsize2 ANOT_FONT_SIZE $fsize2 PLOT_DEGREE_FORMAT D HEADER_FONT $fontno ANOT_FONT $fontno LABEL_FONT $fontno HEADER_FONT_SIZE $fsize1 FRAME_PEN $fpen TICK_PEN $tpen\n";
   #===============================================
@@ -2163,7 +2163,7 @@ if ($ifig09 == 1) {
 
   #===============================================
   print "\nWriting CSH file...\n";
-  
+
   open(CSH,">$cshfile");
   print CSH "gmtset BASEMAP_TYPE plain TICK_LENGTH $tick LABEL_FONT_SIZE $fsize2 ANOT_FONT_SIZE $fsize2 PLOT_DEGREE_FORMAT D HEADER_FONT $fontno ANOT_FONT $fontno LABEL_FONT $fontno HEADER_FONT_SIZE $fsize1 FRAME_PEN $fpen TICK_PEN $tpen\n";
   #===============================================
@@ -2294,7 +2294,7 @@ if ($ifig10 == 1) {
 
   #===============================================
   print "\nWriting CSH file...\n";
-  
+
   open(CSH,">$cshfile");
   print CSH "gmtset BASEMAP_TYPE plain TICK_LENGTH $tick LABEL_FONT_SIZE $fsize2 ANOT_FONT_SIZE $fsize2 PLOT_DEGREE_FORMAT D HEADER_FONT $fontno ANOT_FONT $fontno LABEL_FONT $fontno HEADER_FONT_SIZE $fsize1 FRAME_PEN $fpen TICK_PEN $tpen\n";
   #===============================================
@@ -2332,7 +2332,7 @@ if ($ifig10 == 1) {
   for ($i = 0; $i < $numk; $i = $i+1) {
 
     $k = $kvec[$i];
-    $mod = $mods[$k*2]; $smod = "m\@+$mod\@+"; 
+    $mod = $mods[$k*2]; $smod = "m\@+$mod\@+";
     $title = "($labs[$i])  Phase speed model $smod";
     if ($k== 0) {$title = "($labs[$i])  Initial phase speed model $smod"}
     if ($k % 3 == 0) {$shift = $shift2} else {$shift = $shift1}
@@ -2484,7 +2484,7 @@ if ($ifig10b == 1) {
 
   #===============================================
   print "\nWriting CSH file...\n";
-  
+
   open(CSH,">$cshfile");
   print CSH "gmtset BASEMAP_TYPE plain TICK_LENGTH $tick LABEL_FONT_SIZE $fsize1 ANOT_FONT_SIZE $fsize2 PLOT_DEGREE_FORMAT D HEADER_FONT $fontno ANOT_FONT $fontno LABEL_FONT $fontno HEADER_FONT_SIZE $fsize1 FRAME_PEN $fpen TICK_PEN $tpen\n";
   #===============================================
@@ -2560,7 +2560,7 @@ EOF\n";
 
   $ker_file = "${dir_hess}/run_0020/lcurve05/m_IMODEL_3_rayleigh_id03_plot";
   if (not -f $ker_file)   { die("Check if $ker_file exist or not\n") }
- 
+
   $title = "(c)  Model from kernels, $stgam";
   $shift = $shift1;
 
@@ -2672,7 +2672,7 @@ if ($ifig20 == 1) {
 
   #===============================================
   print "\nWriting CSH file...\n";
-  
+
   open(CSH,">$cshfile");
   print CSH "gmtset BASEMAP_TYPE plain TICK_LENGTH $tick LABEL_FONT_SIZE $fsize2 ANOT_FONT_SIZE $fsize2 PLOT_DEGREE_FORMAT D HEADER_FONT $fontno ANOT_FONT $fontno LABEL_FONT $fontno HEADER_FONT_SIZE $fsize1 FRAME_PEN $fpen TICK_PEN $tpen\n";
   #===============================================
@@ -2868,7 +2868,7 @@ if ($ifig20b == 1) {
 
   #===============================================
   print "\nWriting CSH file...\n";
-  
+
   open(CSH,">$cshfile");
   print CSH "gmtset BASEMAP_TYPE plain TICK_LENGTH $tick LABEL_FONT_SIZE $fsize2 ANOT_FONT_SIZE $fsize2 PLOT_DEGREE_FORMAT D HEADER_FONT $fontno ANOT_FONT $fontno LABEL_FONT $fontno HEADER_FONT_SIZE $fsize1 FRAME_PEN $fpen TICK_PEN $tpen\n";
   #===============================================

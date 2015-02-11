@@ -33,7 +33,7 @@ contains
           ! loop over GLL points to calculate jacobian, and set up numbering
           !
           ! jacobian = | dx/dxi dx/dgamma | = (z2-z1)*(x2-x1)/4  as dx/dgamma=dz/dxi = 0
-          !            | dz/dxi dz/dgamma | 
+          !            | dz/dxi dz/dgamma |
           !
           do j = 1,NGLLZ
              do i = 1,NGLLX
@@ -43,16 +43,16 @@ contains
                 dxidz(i,j,ispec) = 0.
                 dgammadx(i,j,ispec) = 0.
                 dgammadz(i,j,ispec) = 2. / (z2(ispec)-z1(ispec))
-                jacobian(i,j,ispec) = (z2(ispec)-z1(ispec))*(x2(ispec)-x1(ispec)) / 4. 
+                jacobian(i,j,ispec) = (z2(ispec)-z1(ispec))*(x2(ispec)-x1(ispec)) / 4.
 
                 ! set up local to global numbering
-                if ( (i.eq.1).and.(ix.gt.1) ) then
+                if ( (i==1).and.(ix>1) ) then
                    ibool(i,j,ispec) = ibool(NGLLX,j,ispec-1)
-                else if ( (j.eq.1).and.(iz.gt.1) ) then
+                else if ( (j==1).and.(iz>1) ) then
                    ibool(i,j,ispec) = ibool(i,NGLLZ,ispec-NEX)
                 else
                    iglob = iglob + 1
-                   ibool(i,j,ispec) = iglob         
+                   ibool(i,j,ispec) = iglob
                 endif
 
                 ! get the global gridpoints
@@ -61,42 +61,42 @@ contains
                 z(iglob1) = 0.5*(1.-zigll(j))*z1(ispec)+0.5*(1.+zigll(j))*z2(ispec)
 
                 ! end loop over GLL points
-             end do
-          end do
+             enddo
+          enddo
 
           ! if boundary element
           ! 1,2,3,4 --> left, right, bottom, top
-          if (ix.eq.1) then      ! left boundary
+          if (ix==1) then      ! left boundary
              nspecb(1) = nspecb(1) + 1
              ibelm(1,nspecb(1)) = ispec
              do j = 1,NGLLZ
                 jacobianb(1,j,nspecb(1))= (z2(ispec)-z1(ispec))/2.
-             end do
+             enddo
           endif
-          if (ix.eq.NEX) then    ! right boundary
+          if (ix==NEX) then    ! right boundary
              nspecb(2) = nspecb(2) + 1
              ibelm(2,nspecb(2)) = ispec
              do j = 1,NGLLZ
                 jacobianb(2,j,nspecb(2))= (z2(ispec)-z1(ispec))/2.
-             end do
+             enddo
           endif
-          if (iz.eq.1) then      ! bottom boundary
+          if (iz==1) then      ! bottom boundary
              nspecb(3) = nspecb(3) + 1
              ibelm(3,nspecb(3)) = ispec
              do i = 1,NGLLX
                 jacobianb(3,i,nspecb(3))= (x2(ispec)-x1(ispec))/2.
-             end do
+             enddo
           endif
-          if (iz.eq.NEZ) then    ! top boundary
+          if (iz==NEZ) then    ! top boundary
              nspecb(4) = nspecb(4) + 1
              ibelm(4,nspecb(4)) = ispec
              do i = 1,NGLLX
                 jacobianb(4,i,nspecb(4))= (x2(ispec)-x1(ispec))/2.
-             end do
+             enddo
           endif
           ! end loop over elements
-       end do
-    end do
+       enddo
+    enddo
 
 !!$    do ibb=1,4
 !!$       print *, ibb, nspecb(ibb)
@@ -119,7 +119,7 @@ contains
     print *,'space step (km):', sngl(dh/1000.)
     print *,'time step estimate from courant = 0.2: ',sngl(time_step),' seconds'
     print *,'  actual time step: ',sngl(DT),' seconds'
-   
+
   end subroutine mesher
 
   !-------------------------------------------------------
@@ -145,14 +145,14 @@ contains
     ! fill local arrays from global vectors
     do ispec = 1,NSPEC
        do j = 1,NGLLZ
-          do i = 1,NGLLX 
+          do i = 1,NGLLX
              iglob = ibool(i,j,ispec)
              rho(i,j,ispec)   = rho_global(iglob)
              kappa(i,j,ispec) = kappa_global(iglob)
              mu(i,j,ispec)    = mu_global(iglob)
-          end do
-       end do
-    end do
+          enddo
+       enddo
+    enddo
 
 !!$    ! properties
 !!$    do ispec = 1,NSPEC
@@ -171,9 +171,9 @@ contains
 !!$                kappa(i,j,ispec) = 1.3d+11
 !!$                mu(i,j,ispec) = 6.8d+10
 !!$             endif
-!!$          end do
-!!$       end do
-!!$    end do
+!!$          enddo
+!!$       enddo
+!!$    enddo
 
 !!$    ! create vectors from the arrays
 !!$    do ispec = 1,NSPEC
@@ -251,7 +251,7 @@ contains
     if (solver_type == 1) then
        if (present(last_frame) .and. present(absorbfield)) save_forward = .true.
     endif
-    
+
     if (solver_type == 3) then
        if (.not. (present(last_frame) .and. present(absorbfield)  &
             .and. present(rhop_kernel) .and. present(beta_kernel) .and. present(alpha_kernel))) &
@@ -276,8 +276,8 @@ contains
        samp(:,:,:) = 0.
 
     endif
-  
-    ! gridpoints per wavelength estimation 
+
+    ! gridpoints per wavelength estimation
     print *
     print *, 'space step (km):', sngl(dh/1000.)
     if(ISURFACE) then
@@ -293,7 +293,7 @@ contains
        c = sqrt(RIGIDITY/DENSITY)
        print *, 'number of gridpoints per wavelength for S:', floor(hdur*c/dh)
     endif
-    
+
     NINT = NSTEP/NSAVE
     if (NINT * NSAVE > NSTEP) stop 'NSTEP should equal to NINT * NSAVE'
 
@@ -306,9 +306,9 @@ contains
              mass_local = wxgll(i)*wzgll(j)*rho(i,j,ispec)*jacobian(i,j,ispec)
              iglob = ibool(i,j,ispec)
              mass_global(iglob) = mass_global(iglob) + mass_local
-          end do
-       end do
-    end do
+          enddo
+       enddo
+    enddo
 
     ! time marching parameters
     deltat = DT
@@ -330,11 +330,11 @@ contains
        open(11,file = trim(last_frame),status='old',iostat=ios)
        if (ios /= 0) stop 'Error reading the last frame'
        do i = 1, NGLOB
-          !read(11,*) b_displ(1,i), b_displ(2,i), b_displ(3,i), & 
+          !read(11,*) b_displ(1,i), b_displ(2,i), b_displ(3,i), &
           !           b_veloc(1,i), b_veloc(2,i), b_veloc(3,i), &
           !           b_accel(1,i), b_accel(2,i), b_accel(3,i)
           read(11,fm) (b_displ(j,i), j = 1,NCOMP), &
-                       (b_veloc(j,i), j = 1,NCOMP), & 
+                       (b_veloc(j,i), j = 1,NCOMP), &
                        (b_accel(j,i), j = 1,NCOMP)
        enddo
        close(11)
@@ -366,7 +366,7 @@ contains
        !
        do ispec = 1,NSPEC
 
-          ! first double loop over GLL 
+          ! first double loop over GLL
           ! compute and store gradients
           do j = 1,NGLLZ
              do i = 1,NGLLX
@@ -383,7 +383,7 @@ contains
                    if (solver_type == 3) then
                       b_tempy1l = b_tempy1l + b_displ(1,iglob)*hp1
                    endif
-                end do
+                enddo
 
                 ! derivative along z
                 tempy2l = 0.
@@ -395,7 +395,7 @@ contains
                    if (solver_type == 3) then
                       b_tempy2l = b_tempy2l + b_displ(1,iglob)*hp2
                    endif
-                end do
+                enddo
 
                 ! from mesher
                 dxidxl = dxidx(i,j,ispec)
@@ -406,7 +406,7 @@ contains
                 ! spatial gradients
                 dsydxl = tempy1l*dxidxl + tempy2l*dgammadxl
                 dsydzl = tempy1l*dxidzl + tempy2l*dgammadzl
-              
+
                 ! save spatial gradient for (point) source perturbations
                 if(solver_type == 3 .and. ispec == ispec_src(1)) then
                    displ_grad(i,j,1) = dsydxl
@@ -434,7 +434,7 @@ contains
                    !mu_k(iglob2) = sum(ds * b_ds) - ONE_THIRD * kappa_k(iglob2)   ! (12-July-2006)
                    mu_k(iglob2) = sum(ds * b_ds)
                 endif
- 
+
                 mul = mu(i,j,ispec)      ! model heterogeneity
                 sigma_xy = mul*dsydxl
                 sigma_zy = mul*dsydzl
@@ -472,7 +472,7 @@ contains
                    if (solver_type == 3) then
                       b_tempy1l = b_tempy1l + b_tempy1(k,j)*fac1
                    endif
-                end do
+                enddo
 
                 ! along z direction
                 tempy2l = 0.
@@ -483,7 +483,7 @@ contains
                    if (solver_type == 3) then
                       b_tempy2l = b_tempy2l + b_tempy2(i,k)*fac2
                    endif
-                end do
+                enddo
 
                 fac1 = wzgll(j)
                 fac2 = wxgll(i)
@@ -494,10 +494,10 @@ contains
                    b_accel(1,iglob) = b_accel(1,iglob) - (fac1* b_tempy1l + fac2* b_tempy2l)
                 endif
 
-             end do ! second loop over the GLL points
-          end do
+             enddo ! second loop over the GLL points
+          enddo
 
-       end do ! end loop over all spectral elements
+       enddo ! end loop over all spectral elements
 
        !
        ! boundary conditions
@@ -511,11 +511,11 @@ contains
        do ibb = 1,NABSORB  ! index of grid boundary
           if(ibb == 1) then
              i = 1
-          elseif(ibb == 2) then
+          else if(ibb == 2) then
              i = NGLLX
-          elseif(ibb == 3) then
+          else if(ibb == 3) then
              i = 1
-          elseif(ibb == 4) then
+          else if(ibb == 4) then
              i = NGLLZ
           endif
 
@@ -525,9 +525,9 @@ contains
              if (ibb == 1 .or. ibb == 2) then ! left or right boundary element
                 j1 = 1; j2 = NGLLZ
              else if (ib == 1) then           ! top left corner element
-                j1 = 2; j2 = NGLLX 
+                j1 = 2; j2 = NGLLX
              else if (ib == nspecb(ibb)) then ! top right corner element
-                j1 = 1; j2 = NGLLX-1  
+                j1 = 1; j2 = NGLLX-1
              else                             ! top or bottom boundary (excluding corner elements)
                 j1 = 1; j2 = NGLLX
              endif
@@ -548,8 +548,8 @@ contains
                 if (save_forward) then
                    absorbfield(itime,1,j,ib,ibb) = ty*weight
                 endif
-              end do
-            end do
+              enddo
+            enddo
           enddo
 
 else  ! NCOMP==3
@@ -559,7 +559,7 @@ else  ! NCOMP==3
        !
        do ispec = 1,NSPEC
 
-          ! first double loop over GLL 
+          ! first double loop over GLL
           ! compute and store gradients
           do j = 1,NGLLZ
              do i = 1,NGLLX
@@ -586,7 +586,7 @@ else  ! NCOMP==3
                       b_tempy1l = b_tempy1l + b_displ(2,iglob)*hp1
                       b_tempz1l = b_tempz1l + b_displ(3,iglob)*hp1
                    endif
-                end do
+                enddo
 
                 ! derivative along z
                 tempx2l = 0.
@@ -608,7 +608,7 @@ else  ! NCOMP==3
                       b_tempy2l = b_tempy2l + b_displ(2,iglob)*hp2
                       b_tempz2l = b_tempz2l + b_displ(3,iglob)*hp2
                    endif
-                end do
+                enddo
 
                 dxidxl = dxidx(i,j,ispec)
                 dxidzl = dxidz(i,j,ispec)
@@ -702,8 +702,8 @@ else  ! NCOMP==3
                    b_tempz2(i,j) = jacobianl*(b_sigma_xz*dgammadxl+b_sigma_zz*dgammadzl)
                 endif
 
-             end do
-          end do
+             enddo
+          enddo
           !
           ! second double-loop over GLL
           ! compute all rhs terms
@@ -730,7 +730,7 @@ else  ! NCOMP==3
                       b_tempy1l = b_tempy1l + b_tempy1(k,j)*fac1
                       b_tempz1l = b_tempz1l + b_tempz1(k,j)*fac1
                    endif
-                end do
+                enddo
 
                 ! along z direction
                 tempx2l = 0.
@@ -745,13 +745,13 @@ else  ! NCOMP==3
                    fac2 = wzgll(k)*hprime_zz(j,k)
                    tempx2l = tempx2l + tempx2(i,k)*fac2
                    tempy2l = tempy2l + tempy2(i,k)*fac2
-                   tempz2l = tempz2l + tempz2(i,k)*fac2 
+                   tempz2l = tempz2l + tempz2(i,k)*fac2
                    if (solver_type == 3) then
                       b_tempx2l = b_tempx2l + b_tempx2(i,k)*fac2
                       b_tempy2l = b_tempy2l + b_tempy2(i,k)*fac2
-                      b_tempz2l = b_tempz2l + b_tempz2(i,k)*fac2 
+                      b_tempz2l = b_tempz2l + b_tempz2(i,k)*fac2
                    endif
-                end do
+                enddo
 
                 fac1 = wzgll(j)
                 fac2 = wxgll(i)
@@ -768,10 +768,10 @@ else  ! NCOMP==3
                    b_accel(3,iglob) = b_accel(3,iglob) - (fac1* b_tempz1l + fac2* b_tempz2l)
                 endif
 
-             end do ! second loop over the GLL points
-          end do
+             enddo ! second loop over the GLL points
+          enddo
 
-       end do ! end loop over all spectral elements
+       enddo ! end loop over all spectral elements
 
        !
        ! boundary conditions
@@ -782,11 +782,11 @@ else  ! NCOMP==3
        do ibb = 1,NABSORB  ! index of grid boundary (CHT)
           if (ibb == 1) then
              i = 1; nx = -1.; nz = 0.
-          elseif (ibb == 2) then
+          else if (ibb == 2) then
              i = NGLLX; nx = 1.; nz = 0.
-          elseif (ibb == 3) then
+          else if (ibb == 3) then
              i = 1; nx = 0.; nz = -1.
-          elseif (ibb == 4) then       ! CHT
+          else if (ibb == 4) then       ! CHT
              i = NGLLZ; nx = 0.; nz = 1.
           endif
 
@@ -796,9 +796,9 @@ else  ! NCOMP==3
              if (ibb == 1 .or. ibb == 2) then ! left or right boundary element
                 j1 = 1; j2 = NGLLZ
              else if (ib == 1) then           ! top left corner element
-                j1 = 2; j2 = NGLLX 
+                j1 = 2; j2 = NGLLX
              else if (ib == nspecb(ibb)) then ! top right corner element
-                j1 = 1; j2 = NGLLX-1  
+                j1 = 1; j2 = NGLLX-1
              else                             ! top or bottom boundary (excluding corner elements)
                 j1 = 1; j2 = NGLLX
              endif
@@ -834,8 +834,8 @@ else  ! NCOMP==3
                    absorbfield(itime,2,j,ib,ibb) = ty*weight
                    absorbfield(itime,3,j,ib,ibb) = tz*weight
                 endif
-              end do
-            end do
+              enddo
+            enddo
           enddo
 
 endif  ! NCOMP
@@ -845,22 +845,22 @@ endif  ! NCOMP
           do ibb = 1,NABSORB     ! CHT : add 4th boundary
              if (ibb == 1) then
                 i = 1
-             elseif (ibb == 2) then
+             else if (ibb == 2) then
                 i = NGLLX
-             elseif (ibb == 3) then
+             else if (ibb == 3) then
                 i = 1
-             elseif (ibb == 4) then
+             else if (ibb == 4) then
                 i = NGLLZ
-             end if
+             endif
 
              ! see comments above
              do ib = 1,nspecb(ibb)
                 if (ibb == 1 .or. ibb == 2) then
                    j1 = 1; j2 = NGLLZ
-                elseif (ib == 1) then
-                   j1 = 2; j2 = NGLLX 
-                elseif (ib == nspecb(ibb)) then
-                   j1 = 1; j2 = NGLLX-1  
+                else if (ib == 1) then
+                   j1 = 2; j2 = NGLLX
+                else if (ib == nspecb(ibb)) then
+                   j1 = 1; j2 = NGLLX-1
                 else
                    j1 = 1; j2 = NGLLX
                 endif
@@ -894,7 +894,7 @@ endif  ! NCOMP
 
            ! take the value at the closest gridpoint -- OLD METHOD
            !iglob = sglob(isrc)
-           !accel(:,iglob) = accel(:,iglob) + samp(itime,:,isrc) 
+           !accel(:,iglob) = accel(:,iglob) + samp(itime,:,isrc)
 
          enddo  ! isrc
 
@@ -910,9 +910,9 @@ endif  ! NCOMP
              enddo
            enddo
            !iglob = rglob(irec)
-           !accel(:,iglob) = accel(:,iglob) + ramp(NSTEP-itime+1,:,irec) 
+           !accel(:,iglob) = accel(:,iglob) + ramp(NSTEP-itime+1,:,irec)
          enddo
-  
+
          ! forward wavefield, but computed in reverse
          if (solver_type == 3) then
            do isrc = 1,nsrc
@@ -926,12 +926,12 @@ endif  ! NCOMP
                enddo
              enddo
              !iglob = sglob(isrc)
-             !b_accel(:,iglob) = b_accel(:,iglob) + samp(NSTEP-itime+1,:,isrc) 
+             !b_accel(:,iglob) = b_accel(:,iglob) + samp(NSTEP-itime+1,:,isrc)
            enddo
          endif
 
        endif
-       
+
        ! above here, accel(:) are actually the RHS!
        ! divide by the mass matrix
        do i = 1,NGLOB
@@ -982,7 +982,7 @@ endif  ! NCOMP
        ! note that samp above is copied to stf_for
        ! we fill the record 'in reverse' so that the max arrival will coincide
        ! with the forward source time function pulse
-       elseif (solver_type==2 .or. solver_type==3) then
+       else if (solver_type==2 .or. solver_type==3) then
 
          do isrc = 1,nsrc
            temp1 = 0; temp2 = 0. ; temp3 = 0.
@@ -1046,24 +1046,24 @@ endif  ! NCOMP
        endif  ! solver_type
 
        ! save last frame
-       if (mod(itime, NSAVE) == 0) then      
+       if (mod(itime, NSAVE) == 0) then
 
           if (save_forward) then
              open(11,file = trim(last_frame),status='unknown',iostat=ios)
              if (ios /= 0) stop 'Error reading the last frame'
              do i = 1,NGLOB
-                write(11,fm) (sngl(displ(j,i)), j = 1,NCOMP), & 
+                write(11,fm) (sngl(displ(j,i)), j = 1,NCOMP), &
                              (sngl(veloc(j,i)), j = 1,NCOMP), &
                              (sngl(accel(j,i)), j = 1,NCOMP)
              enddo
              close(11)
           endif
- 
+
           ! ONE KERNEL: for basis function analysis
           ! take the integrated kernel at the FINAL TIME STEP
           if (solver_type == 3 .and. itime == NSTEP) then
              filename5 = trim(out_dir)//'kernel_basis'
-             open(unit = 13, file = trim(filename5), status = 'unknown',iostat=ios) 
+             open(unit = 13, file = trim(filename5), status = 'unknown',iostat=ios)
              if (ios /= 0) stop 'Error writing snapshot to disk'
              do iglob = 1, NGLOB
                 write(13,'(3e16.6)') x_lon(iglob), z_lat(iglob), sngl(beta_kernel(iglob))
@@ -1076,7 +1076,7 @@ endif  ! NCOMP
           endif  ! solver_type == 3
 
        endif
- 
+
        !stop 'testing'
 
        !===================================
@@ -1088,7 +1088,7 @@ endif  ! NCOMP
        !if (mod(itime, NSAVE) == 0) then
           if (solver_type == 1) then
              write(filename1,'(a,i5.5)') trim(out_dir)//'forward_',tlab
-          elseif (solver_type == 2) then
+          else if (solver_type == 2) then
              write(filename1,'(a,i5.5)') trim(out_dir)//'adjoint_',tlab
           else
              write(filename1,'(a,i5.5)') trim(out_dir)//'adjoint_',tlab      ! adjoint wavefield
@@ -1107,7 +1107,7 @@ endif  ! NCOMP
              if (ios /= 0) stop 'Error writing snapshot to disk'
              do iglob = 1, NGLOB
                 xtemp = x_lon(iglob) ; ztemp = z_lat(iglob)
-                write(11,'(5e16.6)') sngl(xtemp), sngl(ztemp), (sngl(displ(j,iglob)),j=1,NCOMP) 
+                write(11,'(5e16.6)') sngl(xtemp), sngl(ztemp), (sngl(displ(j,iglob)),j=1,NCOMP)
              enddo
              close(11)
           endif
@@ -1118,7 +1118,7 @@ endif  ! NCOMP
              if (ios /= 0) stop 'Error writing snapshot to disk'
              do iglob = 1, NGLOB
                 xtemp = x_lon(iglob) ; ztemp = z_lat(iglob)
-                write(11,'(5e16.6)') sngl(xtemp), sngl(ztemp), (sngl(b_displ(j,iglob)),j=1,NCOMP) 
+                write(11,'(5e16.6)') sngl(xtemp), sngl(ztemp), (sngl(b_displ(j,iglob)),j=1,NCOMP)
              enddo
              close(11)
              open(unit = 11, file = trim(filename3), status = 'unknown',iostat=ios)

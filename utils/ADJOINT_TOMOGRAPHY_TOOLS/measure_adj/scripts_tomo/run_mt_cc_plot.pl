@@ -101,7 +101,7 @@ $par3 = "$itaper/$v2/$v3/$v4/$v5/$v6/$v7";
 print CSH "\\rm -rf OUTPUT_FILES ; mkdir OUTPUT_FILES\n";
 
 # copy chi values into PLOTS
-print CSH "cp window_chi PLOTS\n"; 
+print CSH "cp window_chi PLOTS\n";
 
 # create MEASUREMENT.PAR file
 print CSH "write_par_file.pl $tvec $imeas $chan $Ts $iparbools $par1 $par2 $par3\n";

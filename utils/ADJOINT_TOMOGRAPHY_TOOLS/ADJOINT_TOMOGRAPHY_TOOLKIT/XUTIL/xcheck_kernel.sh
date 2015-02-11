@@ -5,8 +5,8 @@
 
 
 for dir in CMTSOLUTION_*
-do 
-	n=`ls $dir/KERNEL/*.bin | wc -l`
-	echo $dir $n
+do
+  n=`ls $dir/KERNEL/*.bin | wc -l`
+  echo $dir $n
 
-done 
+done

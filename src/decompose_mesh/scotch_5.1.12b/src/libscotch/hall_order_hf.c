@@ -8,13 +8,13 @@
 ** use, modify and/or redistribute the software under the terms of the
 ** CeCILL-C license as circulated by CEA, CNRS and INRIA at the following
 ** URL: "http://www.cecill.info".
-** 
+**
 ** As a counterpart to the access to the source code and rights to copy,
 ** modify and redistribute granted by the license, users are provided
 ** only with a limited warranty and the software's author, the holder of
 ** the economic rights, and the successive licensors have only limited
 ** liability.
-** 
+**
 ** In this respect, the user's attention is drawn to the risks associated
 ** with loading, using, modifying and/or developing or reproducing the
 ** software by the user in light of its specific status of free software,
@@ -25,7 +25,7 @@
 ** their requirements in conditions enabling the security of their
 ** systems and/or data to be ensured and, more generally, to use and
 ** operate it in the same conditions as regards security.
-** 
+**
 ** The fact that you are presently reading this means that you have had
 ** knowledge of the CeCILL-C license and that you accept its terms.
 */
@@ -86,7 +86,7 @@
 /**       All 3 sets are disjoint, Ve and V1 can be empty                **/
 /**                                                                      **/
 /**  Modifications w.r.t. previous version :                             **/
-/**                                                                      **/  
+/**                                                                      **/
 /**  New Input:                                                          **/
 /**  ---------                                                           **/
 /**         nbelts : integer holding size of Ve                          **/
@@ -163,10 +163,10 @@ Gnum * restrict     next /* [] */,                /* Linked list structure      
 Gnum * restrict     w /* [] */,                   /* Flag array                               */
 Gnum * restrict     head /* [] */)                /* Linked list structure                    */
 {
-  Gnum                hash, pend, hmod, lenj, dmax, wflg, dext, psrc, pdst, 
-                      wnvi, e, i, j, k, p, degme, x, nelme, nreal, lastd, nleft, 
+  Gnum                hash, pend, hmod, lenj, dmax, wflg, dext, psrc, pdst,
+                      wnvi, e, i, j, k, p, degme, x, nelme, nreal, lastd, nleft,
                       ilast, jlast, inext, jnext, n2, p1, nvpiv, p2, p3, me = 0, nbflag, ln,
-                      we, pj, pn, mindeg, elenme, slenme, maxmem, newmem, wf3, wf4, 
+                      we, pj, pn, mindeg, elenme, slenme, maxmem, newmem, wf3, wf4,
                       deg, eln, mem, nel, pme, pas, nvi, nvj, pme1, pme2, knt1, knt2, knt3;
   float               rmf, rmf1;
 
@@ -421,7 +421,7 @@ Gnum * restrict     head /* [] */)                /* Linked list structure      
   memSet (last + 1, 0, n * sizeof (Gnum));
 
   if (nbelts == 0) {                              /* Patch 8/12/03 <PA> */
-    memSet (elen + 1, 0, n * sizeof (Gnum));      
+    memSet (elen + 1, 0, n * sizeof (Gnum));
     for (i = 1; i <= n; i ++) {
       nv[i] = 1;
       w[i]  = 1;
@@ -915,7 +915,7 @@ L240:
             deg       = degree[i];
             rmf1      = (float) deg * (float) (deg - 1 + (2 * degme)) - (float) wf[i];
             degree[i] = nleft - nvi;
-	    deg       = degree[i];
+      deg       = degree[i];
             rmf = (float) deg * (float) (deg - 1) - (float) (degme - nvi) * (float) (degme - nvi - 1);
             rmf = MIN (rmf, rmf1);
           }

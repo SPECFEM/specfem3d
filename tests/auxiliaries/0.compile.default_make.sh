@@ -52,7 +52,7 @@ done
 echo "" >> $testdir/results.log
 
 #cleanup
-rm -rf ./bin/* 
+rm -rf ./bin/*
 
 echo "successful compilation" >> $testdir/results.log
 

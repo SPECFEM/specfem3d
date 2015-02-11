@@ -39,9 +39,9 @@ $y_center = ($utm_ymin + $utm_ymax)/2;
 $z_center = ($utm_zmin + $utm_zmax)/2;
 
 # increment between cross sections
-$dxinc = 50000;			# meters
-$dyinc = 50000;			# meters
-$dzinc = 5000;			# meters
+$dxinc = 50000;     # meters
+$dyinc = 50000;     # meters
+$dzinc = 5000;      # meters
 
 # number of cuts
 $Nx = int($xran/$dxinc) + 1;
@@ -110,7 +110,7 @@ if ( $iew == 1 ) {
 
     # file name
     $filename = sprintf("${tcl_tag}_%2.2i.ps",$i);
-    print SED "/writer SetFileName/s/SetFileName.*\$/SetFileName \"$filename\"/ \n";  
+    print SED "/writer SetFileName/s/SetFileName.*\$/SetFileName \"$filename\"/ \n";
 
     # close SED file
     close(SED);
@@ -177,7 +177,7 @@ if ( $ihr == 1 ) {
 
     # open file for replacing the cross-section line
     open(SED,">sed.txt");
- 
+
     # file names
     print SED "/kReader1 SetFileName/s/SetFileName.*\$/SetFileName $file1/ \n";
     print SED "/kReader2 SetFileName/s/SetFileName.*\$/SetFileName $file2/ \n";
@@ -219,7 +219,7 @@ if ( $ihr == 1 ) {
 
     # file name
     $filename = sprintf("${tcl_tag}_%2.2i.ps",$i);
-    print SED "/writer SetFileName/s/SetFileName.*\$/SetFileName \"$filename\"/ \n";  
+    print SED "/writer SetFileName/s/SetFileName.*\$/SetFileName \"$filename\"/ \n";
 
     # close SED file
     close(SED);

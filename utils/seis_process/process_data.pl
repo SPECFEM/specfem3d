@@ -33,7 +33,7 @@ sub Usage{
        data_sac_files --- names of the data sac files to be processed
 
  Notice:
-  1. We require that polezero files in the same directory as the sac 
+  1. We require that polezero files in the same directory as the sac
      data files which is generally satisfied. We require that resp dir
      be specified even if it is current(.). All needed info is
      taken from sac headers
@@ -42,10 +42,10 @@ sub Usage{
   4. For BH? components, please set -s 20, otherwise interpolation to
      1 sample/second will be performed
 
- NOTE: Please make sure that SAC, saclst and IASP91 packages are installed properly on 
+ NOTE: Please make sure that SAC, saclst and IASP91 packages are installed properly on
        your system, and that all related env variables are set properly before
        running the script.
- 
+
   Qinya Liu, originally written in Oct 2002; updated in Jan 2011
 END
   exit(1);
@@ -60,7 +60,7 @@ if ($opt_a and not -f $opt_a) {$opt_a="/opt/seismo-util/data/STATIONS_new";}
 if ($opt_R and not -d $opt_R) {die("Check if dir $opt_R exists\n");}
 
 if ($opt_t) {($tmin, $tmax) = split(/\//,$opt_t);
-	     $f1 = 1./$tmax;  $f2=1./$tmin;}
+       $f1 = 1./$tmax;  $f2=1./$tmin;}
 if ($opt_d) {
   $out_dir=$opt_d; if (not -d $out_dir) {mkdir($out_dir,0777);}
 }
@@ -136,7 +136,7 @@ foreach $file (@ARGV) {
      print SAC "echo on\n";
      print SAC "r $outfile\n";}
 
-  if ($opt_l){  # cut record 
+  if ($opt_l){  # cut record
     print "    Cut the record from o+$lmin to o+$lmax\n";
     (undef,$tmp_o)=split(" ",`$saclst o f $outfile`);
     if (abs($tmp_o-$undef) < $eps) {die("O has not been set to cut record\n");}
@@ -170,17 +170,17 @@ foreach $file (@ARGV) {
       chomp($pzfile);
       if (!-f $pzfile) {print " **** No pzfile $pzfile **** \n"; $no_resp=1;}
       else {print "    Transfer instrument response using pz file $pzfile\n";
-	    printf SAC ("trans from polezero s %20s to none freq %12.6f%12.6f%12.6f%12.6f \n",
-			$pzfile,$f0,$f1,$f2,$f3);}
+      printf SAC ("trans from polezero s %20s to none freq %12.6f%12.6f%12.6f%12.6f \n",
+      $pzfile,$f0,$f1,$f2,$f3);}
     } else { # assume resp file in opt_R
       @respfiles=glob("$opt_R/${network}.${sta}.${khole}.${comp}*.RESP");
       $respfile = find_resp_file($outfile,@respfiles);
       if (! -f $respfile or @respfiles == 0) {print " **** No respfile $respfiles for $network, $sta, $khole, $comp ****\n";  $no_resp=1;}
       else {
-	print "    Transfer instrument response using response file $respfile\n";
-	printf SAC ("trans from evalresp fname $respfile to none freq %12.6f%12.6f%12.6f%12.6f \n",
-		  $f0,$f1,$f2,$f3);
-	printf SAC "mul 1e-9\n"; }}
+  print "    Transfer instrument response using response file $respfile\n";
+  printf SAC ("trans from evalresp fname $respfile to none freq %12.6f%12.6f%12.6f%12.6f \n",
+      $f0,$f1,$f2,$f3);
+  printf SAC "mul 1e-9\n"; }}
     printf SAC " rtrend\n rmean\n taper width $opt_T\n";
   }
 
@@ -217,7 +217,7 @@ foreach $file (@ARGV) {
   print SAC "echo off\nquit\n";
   close(SAC);
   if ($no_resp and defined $opt_d) {
-    print "Deleting $outfile\n"; 
+    print "Deleting $outfile\n";
     system("rm -f $outfile");}
 }
 print "  Done! \n";

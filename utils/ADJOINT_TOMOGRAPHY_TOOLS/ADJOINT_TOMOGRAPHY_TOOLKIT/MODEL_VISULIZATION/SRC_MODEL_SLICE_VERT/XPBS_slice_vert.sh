@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #PBS -q tromp
-#PBS -N XSLICE 
+#PBS -N XSLICE
 #PBS -l nodes=12:ppn=8+1:ppn=4
 #PBS -l walltime=15:00:00
 #PBS -j oe
@@ -19,8 +19,8 @@ gmtout=/scratch/lustre/hejunzhu/2011EUROPE_SHOW_MODEL/XSRC_MODEL_SLICE_VERT/MODE
 echo $PBS_O_WORKDIR
 cd $PBS_O_WORKDIR
 
-echo submit slicing 
-mpiexec -np 100 ./xsem_model_slice $depthslice $topo_path $model_path $tag $gmtout 
-echo done successfully 
+echo submit slicing
+mpiexec -np 100 ./xsem_model_slice $depthslice $topo_path $model_path $tag $gmtout
+echo done successfully
 
 

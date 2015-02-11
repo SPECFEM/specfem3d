@@ -113,10 +113,10 @@
   include "../../SHARE_FILES/HEADER_FILES/constants.h"
 
   real(kind=CUSTOM_REAL) x,y,z,r,theta,phi
-  
+
   x = r * sin(theta) * cos(phi)
   y = r * sin(theta) * sin(phi)
   z = r * cos(theta)
-  
+
   end subroutine rthetaphi_2_xyz
 

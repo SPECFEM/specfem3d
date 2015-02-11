@@ -52,17 +52,17 @@ foreach $stanet (keys(%adj)) {
     if (defined  $adj{$stanet}{$tname} ) {
       $tcomp = $adj{$stanet}{$tname}; $rcomp = $tcomp; $zcomp = $tcomp;
       $ncomp = $rcomp; $ecomp = $tcomp; $zcomp=~s/$tname/$zname/;
-      $rcomp =~s/$tname/$rname/; $ncomp=~s/$tname/$nname/; 
+      $rcomp =~s/$tname/$rname/; $ncomp=~s/$tname/$nname/;
       $ecomp=~s/$tname/$ename/;}
     elsif (defined $adj{$stanet}{$rname}) {
       $rcomp = $adj{$stanet}{$rname}; $tcomp = $rcomp; $zcomp = $rcomp;
       $ncomp = $rcomp; $ecomp = $rcomp; $zcomp=~s/$rname/$zname/;
-      $tcomp =~s/$rname/$tname/; $ncomp=~s/$rname/$nname/; 
+      $tcomp =~s/$rname/$tname/; $ncomp=~s/$rname/$nname/;
       $ecomp=~s/$rname/$ename/;}
     else {
       $zcomp = $adj{$stanet}{$zname}; $tcomp = $zcomp; $rcomp = $zcomp;
       $ncomp = $rcomp; $ecomp = $rcomp; $rcomp=~s/$zname/$rname/;
-      $tcomp =~s/$zname/$tname/; $ncomp=~s/$zname/$nname/; 
+      $tcomp =~s/$zname/$tname/; $ncomp=~s/$zname/$nname/;
       $ecomp=~s/$zname/$ename/;}
 
     # write station info

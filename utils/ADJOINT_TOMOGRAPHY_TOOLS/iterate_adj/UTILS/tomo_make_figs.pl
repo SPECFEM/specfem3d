@@ -5,7 +5,7 @@
 # tomo_make_figs.pl
 #
 # This script makes the event kernel plots by calling vtk scripts.
-# 
+#
 # EXAMPLE (unsmoothed kernels):
 #    ~/UTILS/tomo_make_figs.pl 1 1 all m16 0 0
 #    ~/UTILS/tomo_make_figs.pl 1 0 all m16 0 0 (make vtu files only)
@@ -49,7 +49,7 @@ if (not -f $file_eids) {die("\n check if $file_eids exists\n")}
 open(IN,$file_eids); @eids = <IN>; $nevent = @eids;
 
 # COLOR SCALE for kernels
-$cmax0 = 2.5e-11;	# default value 5.0e-11
+$cmax0 = 2.5e-11; # default value 5.0e-11
 #$cmax0 = 15.0e-11;
 
 #========================================================
@@ -137,12 +137,12 @@ for ($i = $imin; $i <= $imax; $i = $i+1) {
       if ( $nmesh == $nmesh0) {
         print "--> making vtu files\n";
         @files = glob("${mesh_files}");
-	foreach $ifile (@files) {
+  foreach $ifile (@files) {
           $ofile = `echo $ifile | sed s/mesh/vtu/`; chomp($ofile);
           `mesh2vtu.pl -i $ifile -o $ofile`;
-	  print "mesh2vtu.pl -i $ifile -o $ofile\n";
-	}
-	#die("testing");
+    print "mesh2vtu.pl -i $ifile -o $ofile\n";
+  }
+  #die("testing");
       }
     }
   }
@@ -174,58 +174,58 @@ for ($i = $imin; $i <= $imax; $i = $i+1) {
 
       } else {
 
-	# RUN output directory
-        if ($ismooth == 0) {  
+  # RUN output directory
+        if ($ismooth == 0) {
 
-	  # first, generate the source and receiver vtk files
-	  #print CSH "\n/opt/seismo-util/source/perl/split_sr_vtk/split_sr_vtk.pl $srvtk ${dir_output}";
-	  `split_sr_vtk.pl $srvtk ${dir_output}`;
+    # first, generate the source and receiver vtk files
+    #print CSH "\n/opt/seismo-util/source/perl/split_sr_vtk/split_sr_vtk.pl $srvtk ${dir_output}";
+    `split_sr_vtk.pl $srvtk ${dir_output}`;
 
-	  # color scale value
-	  $cfile = "${dir_mesh}/cmax_kernel";
+    # color scale value
+    $cfile = "${dir_mesh}/cmax_kernel";
 
-	  `echo $cmax0 > $cfile`;
-	  #if(not -f $cfile) {
-	  #  $cmax0 = 1.0e-11;   # default value
-	  #  `echo $cmax0 > $cfile`;
-	  #}
-      
-	  `mkdir -p ${dir_fig1}`;
-	  `rm ${dir_fig1}/*`;	# remove all figures (for now)
+    `echo $cmax0 > $cfile`;
+    #if(not -f $cfile) {
+    #  $cmax0 = 1.0e-11;   # default value
+    #  `echo $cmax0 > $cfile`;
+    #}
 
-	  # second, make figures
-	  # view_kernel.pl deletes all figures in its local dir each time
-	  cd_directory($dir_vtk);
-	  `rm ${dir_vtk}/*.vtk`;
-	  `cp ${dir_output}/*.vtk ${dir_vtk}`;
+    `mkdir -p ${dir_fig1}`;
+    `rm ${dir_fig1}/*`; # remove all figures (for now)
 
-	  #`${dir_vtk}/view_kernel.pl $eid 1 $smodel $ftag $elab`;   # kappa kernel
-	  #`cp ${dir_vtk}/*ps ${dir_vtk}/*pdf ${dir_fig1}`;          # kappa kernel
+    # second, make figures
+    # view_kernel.pl deletes all figures in its local dir each time
+    cd_directory($dir_vtk);
+    `rm ${dir_vtk}/*.vtk`;
+    `cp ${dir_output}/*.vtk ${dir_vtk}`;
 
-	  `${dir_vtk}/view_kernel.pl $eid 2 $smodel $ftag $elab`; # mu kernel
-	  `cp ${dir_vtk}/*ps ${dir_vtk}/*pdf ${dir_fig1}`; # mu kernel
+    #`${dir_vtk}/view_kernel.pl $eid 1 $smodel $ftag $elab`;   # kappa kernel
+    #`cp ${dir_vtk}/*ps ${dir_vtk}/*pdf ${dir_fig1}`;          # kappa kernel
 
-	  `cp ${dir_vtk}/view_kernel*pl ${dir_vtk}/view_kernel*tcl ${dir_fig1}`;
+    `${dir_vtk}/view_kernel.pl $eid 2 $smodel $ftag $elab`; # mu kernel
+    `cp ${dir_vtk}/*ps ${dir_vtk}/*pdf ${dir_fig1}`; # mu kernel
 
-	  # copy some files to the extra directory
-	  # the index denotes which depth cross-section to take
-	  $index = 3; $sti = sprintf("%2.2i",$index);
-	  `cp ${dir_fig1}/*set.pdf ${dir_fig1}/*${sti}.pdf ${dir_fig1}/*${sti}.ps ${dir_fig2}`;
+    `cp ${dir_vtk}/view_kernel*pl ${dir_vtk}/view_kernel*tcl ${dir_fig1}`;
+
+    # copy some files to the extra directory
+    # the index denotes which depth cross-section to take
+    $index = 3; $sti = sprintf("%2.2i",$index);
+    `cp ${dir_fig1}/*set.pdf ${dir_fig1}/*${sti}.pdf ${dir_fig1}/*${sti}.ps ${dir_fig2}`;
 
         } else {
 
-	  cd_directory($dir_vtk);
-	  `rm ${dir_vtk}/*.vtk`;
-	  `cp ${dir_output}/*.vtk ${dir_vtk}`;
+    cd_directory($dir_vtk);
+    `rm ${dir_vtk}/*.vtk`;
+    `cp ${dir_output}/*.vtk ${dir_vtk}`;
 
-	  #`${dir_vtk}/view_kernel_smooth.pl $eid 1 $smodel $ftag $elab $hsmooth $vsmooth`;   # kappa kernel
-	  #`cp ${dir_vtk}/*ps ${dir_vtk}/*pdf ${dir_fig1}`;                          # kappa kernel
+    #`${dir_vtk}/view_kernel_smooth.pl $eid 1 $smodel $ftag $elab $hsmooth $vsmooth`;   # kappa kernel
+    #`cp ${dir_vtk}/*ps ${dir_vtk}/*pdf ${dir_fig1}`;                          # kappa kernel
 
-	  `${dir_vtk}/view_kernel_smooth.pl $eid 2 $smodel $ftag $elab $hsmooth $vsmooth`; # mu kernel
-	  `cp ${dir_vtk}/*ps ${dir_vtk}/*pdf ${dir_fig1}`;                        # mu kernel
+    `${dir_vtk}/view_kernel_smooth.pl $eid 2 $smodel $ftag $elab $hsmooth $vsmooth`; # mu kernel
+    `cp ${dir_vtk}/*ps ${dir_vtk}/*pdf ${dir_fig1}`;                        # mu kernel
 
-	  `cp ${dir_vtk}/view_kernel_smooth*pl ${dir_vtk}/view_kernel_smooth*tcl ${dir_fig1}`;
-	}
+    `cp ${dir_vtk}/view_kernel_smooth*pl ${dir_vtk}/view_kernel_smooth*tcl ${dir_fig1}`;
+  }
       }
 
       # write the event to an output file

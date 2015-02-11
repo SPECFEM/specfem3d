@@ -8,13 +8,13 @@
 ** use, modify and/or redistribute the software under the terms of the
 ** CeCILL-C license as circulated by CEA, CNRS and INRIA at the following
 ** URL: "http://www.cecill.info".
-** 
+**
 ** As a counterpart to the access to the source code and rights to copy,
 ** modify and redistribute granted by the license, users are provided
 ** only with a limited warranty and the software's author, the holder of
 ** the economic rights, and the successive licensors have only limited
 ** liability.
-** 
+**
 ** In this respect, the user's attention is drawn to the risks associated
 ** with loading, using, modifying and/or developing or reproducing the
 ** software by the user in light of its specific status of free software,
@@ -25,7 +25,7 @@
 ** their requirements in conditions enabling the security of their
 ** systems and/or data to be ensured and, more generally, to use and
 ** operate it in the same conditions as regards security.
-** 
+**
 ** The fact that you are presently reading this means that you have had
 ** knowledge of the CeCILL-C license and that you accept its terms.
 */
@@ -247,7 +247,7 @@ const BdgraphBipartSqParam * const  paraptr)      /*+ Method parameters +*/
     return     (1);
   }
 
-  complocsize1 = 
+  complocsize1 =
   complocload1 = 0;
   for (vertlocnum = dgrfptr->s.baseval, fronlocnbr = 0;
        vertlocnum < dgrfptr->s.vertlocnnd; vertlocnum ++) {
@@ -266,7 +266,7 @@ const BdgraphBipartSqParam * const  paraptr)      /*+ Method parameters +*/
       complocload1 += (-partval1) & veloval;      /* Superscalar update */
     }
     for (edgelocnum = dgrfptr->s.vertloctax[vertlocnum], commcut = 0;
-       	 edgelocnum < dgrfptr->s.vendloctax[vertlocnum]; edgelocnum ++) { /* Build local frontier */
+         edgelocnum < dgrfptr->s.vendloctax[vertlocnum]; edgelocnum ++) { /* Build local frontier */
       int                 partend;
       int                 partdlt;
 
@@ -279,12 +279,12 @@ const BdgraphBipartSqParam * const  paraptr)      /*+ Method parameters +*/
   }
   dgrfptr->complocsize0   = dgrfptr->s.vertlocnbr - complocsize1;
   dgrfptr->fronlocnbr     = fronlocnbr;
-  if (dgrfptr->s.veloloctax != NULL) 
+  if (dgrfptr->s.veloloctax != NULL)
     dgrfptr->complocload0 = dgrfptr->s.velolocsum - complocload1;
-  
-  else 
+
+  else
     dgrfptr->complocload0 = dgrfptr->complocsize0;
-  
+
   bgraphExit (&cgrfdat);
 
 #ifdef SCOTCH_DEBUG_BDGRAPH2

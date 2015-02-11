@@ -222,13 +222,13 @@ for ($p = $pmin; $p <= $pmax; $p ++ ) {
       # faults
       $faultfile = "/home/carltape/gmt/faults/jennings_more.xy";
       if (not -f $faultfile) {
-	die("Check if faultfile $faultfile exist or not\n");
+  die("Check if faultfile $faultfile exist or not\n");
       }
       print CSH "psxy $faultfile $J1 $R -W0.75p -M -K -V -O >> $psfile\n";
 
       # sources and receivers, plus chi label
       if ($ibest==1) {
-	print CSH "pstext -N $J1 $R -K -O -V -Xa-0 -Ya-0.9 >>$psfile<<EOF\n $xmin $zmin $fsize0 0 $fontno CM $schi\nEOF\n";
+  print CSH "pstext -N $J1 $R -K -O -V -Xa-0 -Ya-0.9 >>$psfile<<EOF\n $xmin $zmin $fsize0 0 $fontno CM $schi\nEOF\n";
         print CSH "awk '{print \$1,\$2}' $efile | psxy $R $J1 $src -K -O -V >> $psfile\n";
         print CSH "awk '{print \$1,\$2}' $rfile | psxy $R $J1 $rec -K -O -V >> $psfile\n";
       }

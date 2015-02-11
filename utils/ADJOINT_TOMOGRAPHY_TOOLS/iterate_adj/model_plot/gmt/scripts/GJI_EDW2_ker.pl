@@ -20,9 +20,9 @@ if (@ARGV < 6) {
 ($zran,$ivel,$cpert2,$vexag,$irun,$heightxc0) = @ARGV;
 
 $icolor = 1;
-$ivertlab = 0;			# vertical exaggeration label
-$isimbox = 1;			# box around simulation region
-$iletter = 1;			# label for publication figures
+$ivertlab = 0;      # vertical exaggeration label
+$isimbox = 1;     # box around simulation region
+$iletter = 1;     # label for publication figures
 $letter = "a";
 
 $pmin = 11; $pmax = 11;
@@ -47,11 +47,11 @@ $dirdat = "INPUT/vert_${stirun}";
 #---------------------------------------------------------
 # absolute origins
 
-$widmap = 2.5;			# with of horizontal cross sections
-$height = 2.1;			# approximate (depends on projection)
+$widmap = 2.5;      # with of horizontal cross sections
+$height = 2.1;      # approximate (depends on projection)
 $dxgap = 0.5;
 $dygap = 0.5;
-$x1 = 1.5; $y1 = 7.5;		# Vs m16 horizontal cross section
+$x1 = 1.5; $y1 = 7.5;   # Vs m16 horizontal cross section
 $or1 = "-Xa${x1} -Ya${y1}";
 
 $x2 = $x1 + $widmap + $dxgap; $y2 = $y1; $or2 = "-Xa${x2} -Ya${y2}";
@@ -61,7 +61,7 @@ $x5 = $x1; $y5 = $y3 - $ygap - $height; $or5 = "-Xa${x5} -Ya${y5}";
 $x6 = $x2; $y6 = $y5; $or6 = "-Xa${x6} -Ya${y6}";
 @omaps = ($or1,$or2,$or3,$or4,$or5,$or6);
 
-$Dthick = 0.1;			# thickness of colorbar
+$Dthick = 0.1;      # thickness of colorbar
 $xgap = 0.2;
 $ygap = 0.5;
 $xo1 = $x1 - $xgap - $Dthick; $yo1 = $y1 + $ygap; $ocb1 = "-Xa${xo1} -Ya${yo1}";
@@ -85,11 +85,11 @@ $overt = "-Xa${xvert} -Ya${yvert}";
 # parameters for color scales
 #$cpert1 = 0.2;
 #$cpert2 = 0.2;
-$scale_color = 65.0;		# 65.0
+$scale_color = 65.0;    # 65.0
 $colorbar = "seis";
 
 # KEY: resolution of color plots
-$interp = "-I0.5/0.5 -S1.5";	# nearneighbor
+$interp = "-I0.5/0.5 -S1.5";  # nearneighbor
 #$interp = "-I1/1 -S2";   # nearneighbor
 #$interp = "-I1.0";            # xyz2grd
 $grdfile = "temp.grd";
@@ -145,7 +145,7 @@ $fsize0 = "14";
 $fsize1 = "12";
 $fsize2 = "9";
 $fsize3 = "6";
-$fontno = "1";			# 1 or 4
+$fontno = "1";      # 1 or 4
 $tlen   = "6p";
 $fpen   = "1p";
 $tpen   = "1p";
@@ -211,7 +211,7 @@ $cshfile = "GJI_EDW2.csh";
 open(CSH,">$cshfile");
 print CSH "gmtset COLOR_NAN $sky_color PAPER_MEDIA letter MEASURE_UNIT inch BASEMAP_TYPE plain PLOT_DEGREE_FORMAT D TICK_LENGTH $tlen LABEL_FONT_SIZE $fsize2 ANOT_FONT_SIZE $fsize2  HEADER_FONT $fontno ANOT_FONT $fontno LABEL_FONT $fontno HEADER_FONT_SIZE $fsize1 FRAME_PEN $fpen TICK_PEN $tpen \n";
 
-#@iBs = (9,3,14,6,14,6);	 # what sides of each cross section to show tick marks
+#@iBs = (9,3,14,6,14,6);   # what sides of each cross section to show tick marks
 @iBs = (7,4,7,4,7,4);
 
 # modify the height of each cross-section based on the length
@@ -272,14 +272,14 @@ $x0_map = 1;
 $y0_map = 8;
 $x0_xc = $x0_map + 3.5; $y0_xc = $y0_map;
 $ygap_lab = 0.1; $xgap_lab = 0.6*$ygap_lab; # labels on the xc
-$xgap_cbar = 0.2;		# gap between plot and cbar
+$xgap_cbar = 0.2;   # gap between plot and cbar
 
 # factors (times $heightxc) controlling y position of colorbar and labels
 $fygap_bot = 0.0;
 $f_cbar = 0.9;
 $fygap_top = 0.0;
 $f_lab = $fygap_bot + $f_cbar + $fygap_top;
-$Dlen = $heightxc*$f_cbar;	# length of colorbar
+$Dlen = $heightxc*$f_cbar;  # length of colorbar
 $Dscale0 = "-D0/0/${Dlen}/${Dthick}";
 
 #---------------------------------------------------------
@@ -323,7 +323,7 @@ $cpert1 = $vpert;
 $cptfile1 = "color1.cpt";
 $dc = ($vmax-$vmin)/${scale_color};
 $T = sprintf("-T%3.3e/%3.3e/%3.3e",$vmin,$vmax,$dc);
-print CSH "makecpt -C$colorbar $T -D -Z > color.cpt\n";	# -Z for continuous (not for pscontour)
+print CSH "makecpt -C$colorbar $T -D -Z > color.cpt\n"; # -Z for continuous (not for pscontour)
 print CSH "sed 's/^F.*/F       200     200     200/' color.cpt > $cptfile1\n";
 
 # colorbars for cross sections
@@ -470,7 +470,7 @@ if ($iletter==1) {
 #---------------------
 # 2: HORIZONTAL CROSS SECTIONS OF MODEL
 
-$icut = 13;			# depth to plot
+$icut = 13;     # depth to plot
 $sticut = sprintf("%3.3i",$icut);
 $irunh = 2; $stirunh = sprintf("%2.2i",$irunh);
 $dirdath = "INPUT/horz_${stirunh}";
@@ -483,15 +483,15 @@ if (not -f $fcuts) {
 open(IN,$fcuts); @lines = <IN>; $nump = @lines;
 
 # factors (times $heightxc) controlling y position of colorbar and labels
-$Dthick = 0.1;			# thickness of colorbar
-$Dlen = 1.0;	# length of colorbar
+$Dthick = 0.1;      # thickness of colorbar
+$Dlen = 1.0;  # length of colorbar
 $Dscale = "-D0/0/${Dlen}/${Dthick}";
 
 #---------------------
 # 3: HORIZONTAL CROSS SECTIONS OF KERNELS
 
 # parameters controlling which kernel slices to plot
-@icols = (4,4, 3,3,4,5);	# column in the datafile
+@icols = (4,4, 3,3,4,5);  # column in the datafile
 @icuts = (1,13, 1,13,13,13);    # index into depth slice
 @letters = ("b","c","d","e","f","g");
 
@@ -527,7 +527,7 @@ for ($ik = 1; $ik <= 6; $ik ++ ) {
   $icut = $icuts[$ik-1]; $sticut = sprintf("%3.3i",$icut);
 
   # minmax for color scale
-  if ($ik <= 2) { 
+  if ($ik <= 2) {
     # load values and check that the files exist
     (undef,$zcut,$vs_norm,$vb_norm,$vpert) = split(" ",$lines[$icut-1]);
     $cnorm = $vs_norm;
@@ -541,7 +541,7 @@ for ($ik = 1; $ik <= 6; $ik ++ ) {
   } else {
     $cmin = -$cmax;
   }
-  
+
   # data file
   if($ik <= 2) {
      $dfileh = "${dirdath}/horz_${stirunh}_xc_${dtag}_${sticut}_mask1.dat";
@@ -619,7 +619,7 @@ print CSH "pstext -N $R_title $J_title -K -O -V $ocb >>$psfile<<EOF\n$xtxs[$ik-1
 
 #------------------------------------
 
-print CSH "pstext -N $R_title $J_title -O -V >>$psfile<<EOF\n 10 10 16 0 $fontno CM \nEOF\n"; # FINISH 
+print CSH "pstext -N $R_title $J_title -O -V >>$psfile<<EOF\n 10 10 16 0 $fontno CM \nEOF\n"; # FINISH
 #if($ixv==1) {print CSH "convert $psfile -rotate $rotangle $jpgfile\n";}
 if ($ixv==1) {print CSH "gv $psfile &\n";}
 if ($ipdf==1) {print CSH "ps2pdf $psfile\n";}

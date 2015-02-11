@@ -6,7 +6,7 @@
 #
 # Text here.
 #
-# 
+#
 # EXAMPLE:
 #
 # plot_seis.pl -m CMTSOLUTION_3321590 -n PHL/CI -l 10/190 -a 3321590_T006_T030_m16_STATIONS_ADJOINT -d DATA -s SYN -w MEASUREMENT_WINDOWS_3321590_T006_T030_m16/MEASUREMENT_WINDOWS_3321590_T006_T030_m00 -x 3321590_T006_T030_m16_window_chi/3321590_T006_T030_m00_window_chi -i 3321590/m16/m00/6/30
@@ -112,7 +112,7 @@ $sdX = 4.5; $sdY = 1.4; $origin = "-X2.25 -Y5.5";
 $labfsize = 10;               # font size for model tag (e.g., "Z-m16")
 $tpen = "1.0p";
 $fpen = "1.0p";
-$pen = "1.0p";		      # KEY: line thickness for seismograms (1.5 for slides, 1.0 for figures)
+$pen = "1.0p";          # KEY: line thickness for seismograms (1.5 for slides, 1.0 for figures)
 $scale = 1.2;                 # KEY: scaling for plotting seismograms
 $winfo = "-W0.5p -G230/230/230"; # specs for gray windows
 $winfo2 = "-W3p";              # specs for secondary windows (bold outlines)
@@ -287,16 +287,16 @@ if ($imap == 1) {
   #`pstext $bounds $proj $tick -N -K -O >> $ps_file <<EOF\n $x1 $y5 12 0 $fontno LM $staz \nEOF\n`;
 
   # plot ray path, station, and CMT source
-  `psxy $bounds $proj -W1.5p -K -O >> $ps_file <<EOF\n$elon $elat\n$slon $slat\nEOF\n`;	# ray path
+  `psxy $bounds $proj -W1.5p -K -O >> $ps_file <<EOF\n$elon $elat\n$slon $slat\nEOF\n`; # ray path
   $cmtfont = 10; $cmt_scale = 0.35;
   $cmtinfo = "-Sm${cmt_scale}/$cmtfont -L0.5p/0/0/0 -G255/0/0";
-  `psmeca $cmtpsmeca $bounds $proj $cmtinfo -O -K >> $ps_file`;	# CMT source
+  `psmeca $cmtpsmeca $bounds $proj $cmtinfo -O -K >> $ps_file`; # CMT source
   `rm $cmtpsmeca`;
   `psxy $bounds $proj -St0.15 -W2 -G255/0/0 -K -O>> $ps_file <<EOF\n$slon $slat\nEOF\n`; # red station
   $slat_shift=$slat-0.35;
   `pstext $bounds $proj $textinfo4 -K -O>> $ps_file <<EOF\n $slon $slat_shift 8 0 $fontno CM $sta \nEOF\n`; # station label
 
-}				# imap
+}       # imap
 
 #-----------------------------------
 # limits for seismogram axes
@@ -309,15 +309,15 @@ $xtextpos2 = $tmin + 0.02*$trange; # first window measurement label
 $xtextpos3 = $tmin + 0.50*$trange; # title position
 $xtextpos4 = $tmin + 0.98*$trange; # final window measurement label
 
-$ytextpos5 = 1.35*$Srange;	# titles
+$ytextpos5 = 1.35*$Srange;  # titles
 #$ytextpos4 = 1.03*$Srange;    # dT label
 #$ytextpos3 = 0.90*$Srange;    # dlnA label
-$ytextpos4 = 0.90*$Srange;	# dT label
-$ytextpos3 = 0.80*$Srange;	# dlnA label
-$ytextpos2 = 0.35*$Srange;	# Z, R, T label
-$ytextpos1 = 0.10*$Srange;	# ymax label
+$ytextpos4 = 0.90*$Srange;  # dT label
+$ytextpos3 = 0.80*$Srange;  # dlnA label
+$ytextpos2 = 0.35*$Srange;  # Z, R, T label
+$ytextpos1 = 0.10*$Srange;  # ymax label
 
-$ytextpos4 = 0.85*$Srange;	# lower dT label
+$ytextpos4 = 0.85*$Srange;  # lower dT label
 
 # dimension of seismograms
 $proj = "-JX${sdX}/${sdY}";
@@ -436,11 +436,11 @@ for ($kk = $kmin; $kk <= $kmax; $kk++) {
 
       (undef,undef,undef,undef,undef,$kplotT,undef,undef,$chi2T,$chi3T,$chi4T,$chi5T,$meas2T,$meas3T,$meas4T,$meas5T,$sigma2T,$sigma3T,$sigma4T,$sigma5T) = split(" ",$mlines[$i]);
       if ($iplot_sigma==1) {
-	$stlabT_dT[$i] = sprintf("\@~D\@~T = %.2f \\261 %.2f s",$meas4T,$sigma4T);
-	$stlabT_dA[$i] = sprintf("\@~D\@~A = %.2f \\261 %.2f",$meas5T,$sigma5T);
+  $stlabT_dT[$i] = sprintf("\@~D\@~T = %.2f \\261 %.2f s",$meas4T,$sigma4T);
+  $stlabT_dA[$i] = sprintf("\@~D\@~A = %.2f \\261 %.2f",$meas5T,$sigma5T);
       } else {
-	$stlabT_dT[$i] = sprintf("\@~D\@~T = %.2f s",$meas4T);
-	$stlabT_dA[$i] = sprintf("\@~D\@~A = %.2f",$meas5T);
+  $stlabT_dT[$i] = sprintf("\@~D\@~T = %.2f s",$meas4T);
+  $stlabT_dA[$i] = sprintf("\@~D\@~A = %.2f",$meas5T);
       }
     }
   }
@@ -468,11 +468,11 @@ for ($kk = $kmin; $kk <= $kmax; $kk++) {
 
       (undef,undef,undef,undef,undef,$kplotR,undef,undef,$chi2R,$chi3R,$chi4R,$chi5R,$meas2R,$meas3R,$meas4R,$meas5R,$sigma2R,$sigma3R,$sigma4R,$sigma5R) = split(" ",$mlines[$i]);
       if ($iplot_sigma==1) {
-	$stlabR_dT[$i] = sprintf("\@~D\@~T = %.2f \\261 %.2f s",$meas4R,$sigma4R);
-	$stlabR_dA[$i] = sprintf("\@~D\@~A = %.2f \\261 %.2f",$meas5R,$sigma5R);
+  $stlabR_dT[$i] = sprintf("\@~D\@~T = %.2f \\261 %.2f s",$meas4R,$sigma4R);
+  $stlabR_dA[$i] = sprintf("\@~D\@~A = %.2f \\261 %.2f",$meas5R,$sigma5R);
       } else {
-	$stlabR_dT[$i] = sprintf("\@~D\@~T = %.2f s",$meas4R);
-	$stlabR_dA[$i] = sprintf("\@~D\@~A = %.2f",$meas5R);
+  $stlabR_dT[$i] = sprintf("\@~D\@~T = %.2f s",$meas4R);
+  $stlabR_dA[$i] = sprintf("\@~D\@~A = %.2f",$meas5R);
       }
     }
   }
@@ -500,11 +500,11 @@ for ($kk = $kmin; $kk <= $kmax; $kk++) {
 
       (undef,undef,undef,undef,undef,$kplotZ,undef,undef,$chi2Z,$chi3Z,$chi4Z,$chi5Z,$meas2Z,$meas3Z,$meas4Z,$meas5Z,$sigma2Z,$sigma3Z,$sigma4Z,$sigma5Z) = split(" ",$mlines[$i]);
       if ($iplot_sigma==1) {
-	$stlabZ_dT[$i] = sprintf("\@~D\@~T = %.2f \\261 %.2f s",$meas4Z,$sigma4Z);
-	$stlabZ_dA[$i] = sprintf("\@~D\@~A = %.2f \\261 %.2f",$meas5Z,$sigma5Z);
+  $stlabZ_dT[$i] = sprintf("\@~D\@~T = %.2f \\261 %.2f s",$meas4Z,$sigma4Z);
+  $stlabZ_dA[$i] = sprintf("\@~D\@~A = %.2f \\261 %.2f",$meas5Z,$sigma5Z);
       } else {
-	$stlabZ_dT[$i] = sprintf("\@~D\@~T = %.2f s",$meas4Z);
-	$stlabZ_dA[$i] = sprintf("\@~D\@~A = %.2f",$meas5Z);
+  $stlabZ_dT[$i] = sprintf("\@~D\@~T = %.2f s",$meas4Z);
+  $stlabZ_dA[$i] = sprintf("\@~D\@~A = %.2f",$meas5Z);
       }
     }
   }
@@ -519,11 +519,11 @@ for ($kk = $kmin; $kk <= $kmax; $kk++) {
       $nline=$nline+1;
       $nT2=`sed -n ${nline}p $winfile2`;
       for ($i=0; $i < $nT2; $i++) {
-	$nline=$nline+1;
-	$win=`sed -n ${nline}p $winfile2`; chomp($win);
-	(undef,$winb,$wine)=split(/ +/,$win);
-	push @Twinb2, "$winb";
-	push @Twine2, "$wine";
+  $nline=$nline+1;
+  $win=`sed -n ${nline}p $winfile2`; chomp($win);
+  (undef,$winb,$wine)=split(/ +/,$win);
+  push @Twinb2, "$winb";
+  push @Twine2, "$wine";
       }
     }
 
@@ -534,12 +534,12 @@ for ($kk = $kmin; $kk <= $kmax; $kk++) {
       $nline=$nline+1;
       $nR2=`sed -n ${nline}p $winfile2`;
       for ($i=0; $i < $nR2; $i++) {
-	$nline=$nline+1;
-	$win=`sed -n ${nline}p $winfile2`;
-	chomp($win);
-	(undef,$winb,$wine)=split(/ +/,$win);
-	push @Rwinb2, "$winb";
-	push @Rwine2, "$wine";
+  $nline=$nline+1;
+  $win=`sed -n ${nline}p $winfile2`;
+  chomp($win);
+  (undef,$winb,$wine)=split(/ +/,$win);
+  push @Rwinb2, "$winb";
+  push @Rwine2, "$wine";
       }
     }
 
@@ -550,12 +550,12 @@ for ($kk = $kmin; $kk <= $kmax; $kk++) {
       $nline=$nline+1;
       $nZ2=`sed -n ${nline}p $winfile2`;
       for ($i=0; $i < $nZ2; $i++) {
-	$nline=$nline+1;
-	$win=`sed -n ${nline}p $winfile2`;
-	chomp($win);
-	(undef,$winb,$wine)=split(/ +/,$win);
-	push @Zwinb2, "$winb";
-	push @Zwine2, "$wine";
+  $nline=$nline+1;
+  $win=`sed -n ${nline}p $winfile2`;
+  chomp($win);
+  (undef,$winb,$wine)=split(/ +/,$win);
+  push @Zwinb2, "$winb";
+  push @Zwine2, "$wine";
       }
     }
   }
@@ -653,22 +653,22 @@ for ($kk = $kmin; $kk <= $kmax; $kk++) {
   if ($ntline) {
     if ($iplot_win==1) {
       for ($i=0; $i<$nT; $i++) {
-	open(GMT,"|psxy $proj $bounds $winfo -O -K >> $ps_file");
-	print GMT "$Twinb[$i] 0\n $Twine[$i] 0\n $Twine[$i] 2\n $Twinb[$i] 2\n $Twinb[$i] 0\n";
-	close(GMT);
+  open(GMT,"|psxy $proj $bounds $winfo -O -K >> $ps_file");
+  print GMT "$Twinb[$i] 0\n $Twine[$i] 0\n $Twine[$i] 2\n $Twinb[$i] 2\n $Twinb[$i] 0\n";
+  close(GMT);
       }
     }
     if ($iplot_win2==1) {
       for ($i=0; $i<$nT2; $i++) {
-	open(GMT,"|psxy $proj $bounds $winfo2 -O -K >> $ps_file");
-	print GMT "$Twinb2[$i] 0\n $Twine2[$i] 0\n $Twine2[$i] 2\n $Twinb2[$i] 2\n $Twinb2[$i] 0\n";
-	close(GMT);
+  open(GMT,"|psxy $proj $bounds $winfo2 -O -K >> $ps_file");
+  print GMT "$Twinb2[$i] 0\n $Twine2[$i] 0\n $Twine2[$i] 2\n $Twinb2[$i] 2\n $Twinb2[$i] 0\n";
+  close(GMT);
       }
     }
   }
   if ($Tflag==1) {
     `pssac2 $proj $Tdat $bounds -Ent-3 -M${sizeT} $black_pen -N -K -O >> $ps_file`;
-  }				# data
+  }       # data
   `pssac2 $proj $Tsyn $bounds -Ent-3 -M${sizeT2} $red_pen -N -K -O >> $ps_file`; # synthetics
   #if ($ntline && ($iplot_recon==1)) {`pssac2 $proj $Trecon $bounds -Ent-3 -M${sizeT3} $recon_pen -N -K -O >> $ps_file`;}   # reconstructed
   `psbasemap $proj $bounds -K -O $Bseis >> $ps_file`; # replot basemap
@@ -677,19 +677,19 @@ for ($kk = $kmin; $kk <= $kmax; $kk++) {
   if ($ntline) {
     if ($iplot_dAlabel || $iplot_dTlabel) {
       for ($i=0; $i<$nT; $i++) {
-	$xtext = $Twinb[$i]; $just = "LB";
-	if ($i == 0) {
-	  $xtext = $xtextpos2; $just = "LB";
-	}
-	if ($i == $nT-1) {
-	  $xtext = $xtextpos4; $just = "RB";
-	}
-	if ($iplot_dTlabel) {
-	  `echo \"$xtext $ytextpos4 $dTfsize 0 1 $just $stlabT_dT[$i]\" | pstext $textinfo1 $proj $bounds -N -O -K >> $ps_file`;
-	}
-	if ($iplot_dAlabel) {
-	  `echo \"$xtext $ytextpos3 $dTfsize 0 1 $just $stlabT_dA[$i]\" | pstext $textinfo1 $proj $bounds -N -O -K >> $ps_file`;
-	}
+  $xtext = $Twinb[$i]; $just = "LB";
+  if ($i == 0) {
+    $xtext = $xtextpos2; $just = "LB";
+  }
+  if ($i == $nT-1) {
+    $xtext = $xtextpos4; $just = "RB";
+  }
+  if ($iplot_dTlabel) {
+    `echo \"$xtext $ytextpos4 $dTfsize 0 1 $just $stlabT_dT[$i]\" | pstext $textinfo1 $proj $bounds -N -O -K >> $ps_file`;
+  }
+  if ($iplot_dAlabel) {
+    `echo \"$xtext $ytextpos3 $dTfsize 0 1 $just $stlabT_dA[$i]\" | pstext $textinfo1 $proj $bounds -N -O -K >> $ps_file`;
+  }
       }
     }
   }
@@ -708,16 +708,16 @@ for ($kk = $kmin; $kk <= $kmax; $kk++) {
   if ($nrline) {
     if ($iplot_win==1) {
       for ($i=0; $i<$nR; $i++) {
-	open(GMT,"|psxy $proj $bounds $winfo -O -K >> $ps_file");
-	print GMT "$Rwinb[$i] 0\n $Rwine[$i] 0\n $Rwine[$i] 2\n $Rwinb[$i] 2\n $Rwinb[$i] 0\n";
-	close(GMT);
+  open(GMT,"|psxy $proj $bounds $winfo -O -K >> $ps_file");
+  print GMT "$Rwinb[$i] 0\n $Rwine[$i] 0\n $Rwine[$i] 2\n $Rwinb[$i] 2\n $Rwinb[$i] 0\n";
+  close(GMT);
       }
     }
     if ($iplot_win2==1) {
       for ($i=0; $i<$nR2; $i++) {
-	open(GMT,"|psxy $proj $bounds $winfo2 -O -K >> $ps_file");
-	print GMT "$Rwinb2[$i] 0\n $Rwine2[$i] 0\n $Rwine2[$i] 2\n $Rwinb2[$i] 2\n $Rwinb2[$i] 0";
-	close(GMT);
+  open(GMT,"|psxy $proj $bounds $winfo2 -O -K >> $ps_file");
+  print GMT "$Rwinb2[$i] 0\n $Rwine2[$i] 0\n $Rwine2[$i] 2\n $Rwinb2[$i] 2\n $Rwinb2[$i] 0";
+  close(GMT);
       }
     }
   }
@@ -732,19 +732,19 @@ for ($kk = $kmin; $kk <= $kmax; $kk++) {
   if ($nrline) {
     if ($iplot_dTlabel==1 || $iplot_dAlabel==1) {
       for ($i=0; $i<$nR; $i++) {
-	$xtext = $Rwinb[$i]; $just = "LB";
-	if ($i == 0) {
-	  $xtext = $xtextpos2; $just = "LB";
-	}
-	if ($i == $nR-1) {
-	  $xtext = $xtextpos4; $just = "RB";
-	}
-	if ($iplot_dTlabel==1) {
-	  `echo \"$xtext $ytextpos4 $dTfsize 0 1 $just $stlabR_dT[$i]\" | pstext $textinfo1 $proj $bounds -N -O -K >> $ps_file`;
-	}
-	if ($iplot_dAlabel==1) {
-	  `echo \"$xtext $ytextpos3 $dTfsize 0 1 $just $stlabR_dA[$i]\" | pstext $textinfo1 $proj $bounds -N -O -K >> $ps_file`;
-	}
+  $xtext = $Rwinb[$i]; $just = "LB";
+  if ($i == 0) {
+    $xtext = $xtextpos2; $just = "LB";
+  }
+  if ($i == $nR-1) {
+    $xtext = $xtextpos4; $just = "RB";
+  }
+  if ($iplot_dTlabel==1) {
+    `echo \"$xtext $ytextpos4 $dTfsize 0 1 $just $stlabR_dT[$i]\" | pstext $textinfo1 $proj $bounds -N -O -K >> $ps_file`;
+  }
+  if ($iplot_dAlabel==1) {
+    `echo \"$xtext $ytextpos3 $dTfsize 0 1 $just $stlabR_dA[$i]\" | pstext $textinfo1 $proj $bounds -N -O -K >> $ps_file`;
+  }
       }
     }
   }
@@ -763,16 +763,16 @@ for ($kk = $kmin; $kk <= $kmax; $kk++) {
   if ($nzline) {
     if ($iplot_win==1) {
       for ($i=0; $i<$nZ; $i++) {
-	open(GMT,"|psxy $proj $bounds $winfo -O -K >> $ps_file");
-	print GMT "$Zwinb[$i] 0\n $Zwine[$i] 0\n $Zwine[$i] 2\n $Zwinb[$i] 2\n $Zwinb[$i] 0\n";
-	close(GMT);
+  open(GMT,"|psxy $proj $bounds $winfo -O -K >> $ps_file");
+  print GMT "$Zwinb[$i] 0\n $Zwine[$i] 0\n $Zwine[$i] 2\n $Zwinb[$i] 2\n $Zwinb[$i] 0\n";
+  close(GMT);
       }
     }
     if ($iplot_win2==1) {
       for ($i=0; $i<$nZ2; $i++) {
-	open(GMT,"|psxy $proj $bounds $winfo2 -O -K >> $ps_file");
-	print GMT "$Zwinb2[$i] 0\n $Zwine2[$i] 0\n $Zwine2[$i] 2\n $Zwinb2[$i] 2\n $Zwinb2[$i] 0\n";
-	close(GMT);
+  open(GMT,"|psxy $proj $bounds $winfo2 -O -K >> $ps_file");
+  print GMT "$Zwinb2[$i] 0\n $Zwine2[$i] 0\n $Zwine2[$i] 2\n $Zwinb2[$i] 2\n $Zwinb2[$i] 0\n";
+  close(GMT);
       }
     }
   }
@@ -795,19 +795,19 @@ for ($kk = $kmin; $kk <= $kmax; $kk++) {
   if ($nzline) {
     if ($iplot_dTlabel==1 || $iplot_dAlabel==1) {
       for ($i=0; $i<$nZ; $i++) {
-	$xtext = $Zwinb[$i]; $just = "LB";
-	if ($i == 0) {
-	  $xtext = $xtextpos2; $just = "LB";
-	}
-	if ($i == $nZ-1) {
-	  $xtext = $xtextpos4; $just = "RB";
-	}
-	if ($iplot_dTlabel==1) {
-	  `echo \"$xtext $ytextpos4 $dTfsize 0 1 $just $stlabZ_dT[$i]\" | pstext $textinfo1 $proj $bounds -N -O -K >> $ps_file`;
-	}
-	if ($iplot_dAlabel==1) {
-	  `echo \"$xtext $ytextpos3 $dTfsize 0 1 $just $stlabZ_dA[$i]\" | pstext $textinfo1 $proj $bounds -N -O -K >> $ps_file`;
-	}
+  $xtext = $Zwinb[$i]; $just = "LB";
+  if ($i == 0) {
+    $xtext = $xtextpos2; $just = "LB";
+  }
+  if ($i == $nZ-1) {
+    $xtext = $xtextpos4; $just = "RB";
+  }
+  if ($iplot_dTlabel==1) {
+    `echo \"$xtext $ytextpos4 $dTfsize 0 1 $just $stlabZ_dT[$i]\" | pstext $textinfo1 $proj $bounds -N -O -K >> $ps_file`;
+  }
+  if ($iplot_dAlabel==1) {
+    `echo \"$xtext $ytextpos3 $dTfsize 0 1 $just $stlabZ_dA[$i]\" | pstext $textinfo1 $proj $bounds -N -O -K >> $ps_file`;
+  }
       }
     }
   }
@@ -852,7 +852,7 @@ print "done with ${name}.pdf\n";
 # Input: number1, number2
 # returns greater of 2 numbers
 sub max {
-	if ($_[0]<$_[1]) {return $_[1]} else {return $_[0]};
+  if ($_[0]<$_[1]) {return $_[1]} else {return $_[0]};
 }
 
 sub get_cmt {

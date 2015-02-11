@@ -23,7 +23,7 @@ sub lat_lon_depth_2_xyz {
     $theta = ($PI/2.0) - atan(0.99329534*tan($lat*$D2R));
     $phi = $lon * $D2R;
     $r0 = 1.0;
-    
+
     $r = ($R_EARTH_KM - $depth) / $R_EARTH_KM;
     $x = $r * sin($theta) * cos($phi);
     $y = $r * sin($theta) * sin($phi);

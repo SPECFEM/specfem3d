@@ -1,4 +1,4 @@
- 
+
  !
  ! this is the parameter file for static compilation of the solver
  !
@@ -7,9 +7,9 @@
  !
  ! number of processors =          168
  !
- ! number of ES nodes =    21.00000    
+ ! number of ES nodes =    21.00000
  ! percentage of total 640 ES nodes =    3.281250      %
- ! total memory available on these ES nodes (Gb) =    336.0000    
+ ! total memory available on these ES nodes (Gb) =    336.0000
  !
  ! max points per processor = max vector length =       163941
  ! min vector length =           25
@@ -24,12 +24,12 @@
  ! total for full mesh:
  ! -------------------
  !
- ! exact total number of spectral elements in entire mesh = 
+ ! exact total number of spectral elements in entire mesh =
  !       405216
- ! approximate total number of points in entire mesh = 
- !    27542088.0000000     
- ! approximate total number of degrees of freedom in entire mesh = 
- !    82626264.0000000     
+ ! approximate total number of points in entire mesh =
+ !    27542088.0000000
+ ! approximate total number of degrees of freedom in entire mesh =
+ !    82626264.0000000
  !
  ! resolution of the mesh at the surface:
  ! -------------------------------------
@@ -38,17 +38,17 @@
  ! spectral elements along Y =          288
  ! GLL points along X =         1345
  ! GLL points along Y =         1153
- ! average distance between points along X in m =    475.4175    
- ! average distance between points along Y in m =    436.8476    
+ ! average distance between points along X in m =    475.4175
+ ! average distance between points along Y in m =    436.8476
  !
- 
+
  integer, parameter :: NSPEC_AB =         2412
  integer, parameter :: NGLOB_AB =       163941
- 
+
  !
  ! number of time steps =        27300
  !
  integer, parameter :: NSPEC_ATTENUATION = 1
  logical, parameter :: ATTENUATION_VAL = .false.
  logical, parameter :: ANISOTROPY_VAL = .false.
- 
+

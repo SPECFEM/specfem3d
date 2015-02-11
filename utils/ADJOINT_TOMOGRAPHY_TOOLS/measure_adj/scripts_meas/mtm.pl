@@ -14,7 +14,7 @@ sub Usage{
 
        -s syn_dir,syn_suffix -- plot synthetics corresponding to datafiles
                            with names: syn_dir/sta.netw.comp.syn_suffix
-       -w wave -- wave is one of r, l, v1/v2, or t?/dt1/dt2 
+       -w wave -- wave is one of r, l, v1/v2, or t?/dt1/dt2
                            (r:v1=3.4,v2=3.8 l: v1=4.2, v2=4.6)
                       the last option cuts from header t?-dt1 to t?+dt2
 

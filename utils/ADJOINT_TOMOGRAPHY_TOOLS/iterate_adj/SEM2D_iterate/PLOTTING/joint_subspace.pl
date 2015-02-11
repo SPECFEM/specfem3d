@@ -305,7 +305,7 @@ $Dscale = "-D$Dx/$Dy/$Dlen/0.10h";
 
 #===============================================
 print "\nWriting CSH file...\n";
-  
+
 open(CSH,">$cshfile");
 print CSH "gmtset BASEMAP_TYPE plain PAPER_MEDIA letter TICK_LENGTH $tick LABEL_FONT_SIZE $fsize2 ANOT_FONT_SIZE $fsize2 PLOT_DEGREE_FORMAT D HEADER_FONT $fontno ANOT_FONT $fontno LABEL_FONT $fontno HEADER_FONT_SIZE $fsize1 FRAME_PEN $fpen TICK_PEN $tpen\n";
 #===============================================
@@ -313,12 +313,12 @@ print CSH "gmtset BASEMAP_TYPE plain PAPER_MEDIA letter TICK_LENGTH $tick LABEL_
 # iteration index (subset of all possible)
 @kvec = (0,$qmax);
 $numk = @kvec;
-$niter_max = $kvec[$numk-1];	# max iteration is the last in the list
+$niter_max = $kvec[$numk-1];  # max iteration is the last in the list
 
 # load all possible files
 for ($k = 0; $k <= $niter_max; $k = $k+1) {
 
-  $irun = $irun0_cg + 2*$k;	# wave2d run number
+  $irun = $irun0_cg + 2*$k; # wave2d run number
   $strun = sprintf("%4.4i",$irun);
   $dir = "${odir}${strun}";
 
@@ -415,7 +415,7 @@ $title = "(b)  Target source";
 $shift = "-X$dX1p";
 $src_file = $file1dat_src;
 $dots_file = "temp";
-print CSH "awk '{print \$1,\$2,\$8,${ref_rad} + sqrt(\$6*\$6 + \$7*\$7)*$fac/1000}' $src_file > $dots_file\n"; 
+print CSH "awk '{print \$1,\$2,\$8,${ref_rad} + sqrt(\$6*\$6 + \$7*\$7)*$fac/1000}' $src_file > $dots_file\n";
 print CSH "psbasemap $B $R $J -K -O -V $shift >> $psfile\n";
 print CSH "pscoast $J $R $coast_info2 -K -O -V >> $psfile\n";
 print CSH "awk '\$1 == \"R\" {print \$2,\$3}' $recfile |psxy -N $J $R -K -O -V $rec >> $psfile\n";
@@ -523,7 +523,7 @@ for ($i = 0; $i < $numk; $i = $i+1) {
 
   $source_error_file = $src_files[$k];
   $dots_file = "temp";
-  print CSH "awk '{print \$1,\$2,\$8,${ref_rad} + sqrt(\$6*\$6 + \$7*\$7)*$fac/1000}' $source_error_file > $dots_file\n"; 
+  print CSH "awk '{print \$1,\$2,\$8,${ref_rad} + sqrt(\$6*\$6 + \$7*\$7)*$fac/1000}' $source_error_file > $dots_file\n";
   print CSH "awk '{print \$1,\$2,\$8,sqrt(\$6*\$6 + \$7*\$7)/1000}' $source_error_file > source_error\n";
   #print "\n $source_error_file \n $dots_file \n"; die("testing");
   #-------------------
@@ -569,7 +569,7 @@ for ($i = 0; $i < $numk; $i = $i+1) {
   $source_error_file = $src_files_hess[$k];
 
   $dots_file = "temp";
-  print CSH "awk '{print \$1,\$2,\$8,${ref_rad} + sqrt(\$6*\$6 + \$7*\$7)*$fac/1000}' $source_error_file > $dots_file\n"; 
+  print CSH "awk '{print \$1,\$2,\$8,${ref_rad} + sqrt(\$6*\$6 + \$7*\$7)*$fac/1000}' $source_error_file > $dots_file\n";
   print CSH "awk '{print \$1,\$2,\$8,sqrt(\$6*\$6 + \$7*\$7)/1000}' $source_error_file > source_error\n";
   #print "\n $source_error_file \n $dots_file \n"; die("testing");
   #-------------------
@@ -617,9 +617,9 @@ for ($i = 0; $i < $numk; $i = $i+1) {
       $ndot = @misloc_dots;
       $xlon0 = -117; $dlon = 1.0;
       for ($j = 0; $j < $ndot; $j = $j+1) {
-	$misloc = $misloc_dots[$j];
-	$misloc_size[$j] = $ref_rad + $misloc*$fac; # KEY: use same formula as above
-	$xlon[$j] = $xlon0 + $j*$dlon;
+  $misloc = $misloc_dots[$j];
+  $misloc_size[$j] = $ref_rad + $misloc*$fac; # KEY: use same formula as above
+  $xlon[$j] = $xlon0 + $j*$dlon;
       }
 
       # source error scale -- symbols
@@ -731,7 +731,7 @@ for ($i = 0; $i < $numk; $i = $i+1) {
   }
 
   # plot the structure
-  print CSH "psbasemap $B $R $J -K -O -V $shift >> $psfile\n"; 
+  print CSH "psbasemap $B $R $J -K -O -V $shift >> $psfile\n";
   if ($icolor==1) {
     #print CSH "awk '{print \$1,\$2,\$6}' $str_file | pscontour $R $J -A- -C$cpt_vel -I -O -K -V >> $psfile\n";
     print CSH "awk '{print \$1,\$2,\$7}' $str_file | nearneighbor -G$grdfile $R $interp\n";
@@ -745,7 +745,7 @@ for ($i = 0; $i < $numk; $i = $i+1) {
   }
 
   print CSH "pstext -N $J_title $R_title -K -O -V >>$psfile<<EOF\n $x_title $z_title $fsize_title 0 $fontno CM $title \nEOF\n";
- 
+
 }
 
 # plot the target map
@@ -753,7 +753,7 @@ $B = "$B0".$Bopts[8];
 $t = $t+1;
 $shift = "-X$dX1m -Y$dY1mB";
 $title = "($labs[$t-1])  Target structure";
-print CSH "psbasemap $B $R $J -K -O -V $shift >> $psfile\n"; 
+print CSH "psbasemap $B $R $J -K -O -V $shift >> $psfile\n";
 if ($icolor==1) {
   print CSH "awk '{print \$1,\$2,\$7}' $file1dat_str | nearneighbor -G$grdfile $R $interp\n";
   print CSH "grdimage $grdfile -C${cpt_vel} $J -K -O -V -Q >> $psfile\n";

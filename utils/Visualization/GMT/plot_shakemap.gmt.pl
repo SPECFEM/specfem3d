@@ -109,7 +109,7 @@ sub convert_linear {
       ($v1,$r1,$g1,$b1,$v2,$r2,$g2,$b2) = split(" ",$line);
       $v1 = $v1 ** $power, $v2 = $v2 ** $power;
       printf CPT2  ("%-10.8f\t%s\t%s\t%s\t%-10.8f\t%s\t%s\t%s\n",
-		    $v1,$r1,$g1,$b1,$v2,$r2,$g2,$b2);
+        $v1,$r1,$g1,$b1,$v2,$r2,$g2,$b2);
     }else {print CPT2 "$line";}
   }
   close(CPT2);

@@ -4,7 +4,7 @@
 # plot_win_adj_all.pl
 #
 # This calls plot_win_adj.pl to make plots of data, syn, windows, measurements, and adjoint sources.
-# 
+#
 # EXAMPLE:
 #   plot_win_adj_all.pl -l -10/200 -m ../CMTSOLUTION_9818433 -n BH -b 0 -k 7/1 -a STATIONS_ADJOINT -d DATA -s SYN -c RECON -w MEASUREMENT.WINDOWS -i m16 -j 6/30
 #
@@ -37,7 +37,7 @@ if($opt_c) {$recon_dir=$opt_c;}
 if($opt_i) {$smodel=$opt_i;}
 if($opt_j) {$Ts=$opt_j;}
 
-print "\nplot_win_adj_all.pl:\n"; 
+print "\nplot_win_adj_all.pl:\n";
 
 # loop over STATIONS -- first line is the number of stations
 $ns = `sed -n 1p $opt_a`;

@@ -15,12 +15,12 @@
 /bin/rm -rf *.tit >  /dev/null
 /bin/rm -rf *.spl >  /dev/null
 
-	pdflatex HowtoUseToolkit
-	bibtex HowtoUseToolkit
-	pdflatex HowtoUseToolkit
-	pdflatex HowtoUseToolkit
-	pdflatex HowtoUseToolkit
-	pdflatex HowtoUseToolkit
+  pdflatex HowtoUseToolkit
+  bibtex HowtoUseToolkit
+  pdflatex HowtoUseToolkit
+  pdflatex HowtoUseToolkit
+  pdflatex HowtoUseToolkit
+  pdflatex HowtoUseToolkit
 
 /bin/rm -rf *.dvi >  /dev/null
 /bin/rm -rf *.log >  /dev/null

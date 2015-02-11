@@ -6,7 +6,7 @@
 #
 # Start with one vp and vs model, and then add a perturbation and compute new vp and vs models.
 # Note the minmax wavespeed specifications within the fortran code.
-# 
+#
 # EXAMPLE:
 #    setup_model_vp_vs.pl 168 m15 dm15 vp_m15 vs_m15 dm_kappa_kernel_smooth_p090 dm_mu_kernel_smooth_p090
 #    setup_model_vp_vs.pl 168 m14 dm14 vp_m14 vs_m14 dm_kappa_kernel_smooth_p080 dm_mu_kernel_smooth_p080

@@ -145,8 +145,8 @@ $jpgfile = "$name.jpg";
   print CSH "psbasemap $B1syn $R $J1 -P -K -V $origin > $psfile\n";  # START
 
   # phase velocity map
-  #print CSH "awk '{print \$1,\$2,\$3/1000}' $file_msyn | pscontour $R $J1 -A- -C$cptfile1 -I -P -K -O -V >> $psfile\n"; 
-  print CSH "awk '{print \$1,\$2,\$3 / $norm}' $file_ker | pscontour $R $J1 -A- -C$cptfile1 -I -P -K -O -V >> $psfile\n"; 
+  #print CSH "awk '{print \$1,\$2,\$3/1000}' $file_msyn | pscontour $R $J1 -A- -C$cptfile1 -I -P -K -O -V >> $psfile\n";
+  print CSH "awk '{print \$1,\$2,\$3 / $norm}' $file_ker | pscontour $R $J1 -A- -C$cptfile1 -I -P -K -O -V >> $psfile\n";
 
   print CSH "pscoast $J1 $R $B1syn -W1p -Na/1p -Dh -P -K -O -V >> $psfile\n";
   #print CSH "awk '{print \$2,\$1}' INPUT/oms_shelf |psxy $J1 $R $Wshelf -K -O -P -V >> $psfile\n";

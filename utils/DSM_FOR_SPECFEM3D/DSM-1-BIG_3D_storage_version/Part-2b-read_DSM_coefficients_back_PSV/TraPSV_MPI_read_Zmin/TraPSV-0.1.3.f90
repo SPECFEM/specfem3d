@@ -31,7 +31,7 @@
   character(40) :: datex,timex
   real(kind(0d0)), parameter :: pi=3.1415926535897932d0
   real(kind(0d0)), parameter :: re=1.d-2, ratc=1.d-10, ratl=1.d-4
-  !integer, parameter :: maxlmax = 35000, maxlmax_g=1000 !! VM VM I moved this in constants.h 
+  !integer, parameter :: maxlmax = 35000, maxlmax_g=1000 !! VM VM I moved this in constants.h
 
   real(kind(0d0)) :: tlen
   real(kind(0d0)) :: r0min, r0max, r0delta  !!! JUST FOR ONE DEPTH FOR THE MOMENT !!
@@ -129,7 +129,7 @@
      time_to_project=0.
      time_to_plm=0.
      time_total=0.
-  end if
+  endif
 
   allocate(key(0:nbbigproc-1))
   allocate(color(0:nbbigproc-1))
@@ -422,8 +422,8 @@
          '    Starting date and time:                     ', &
          datex(1:4),'-',datex(5:6),'-',datex(7:8),'.  ', &
          timex(1:2),':',timex(3:4),':',timex(5:8)
-   
- 
+
+
     write(list1, '(I6.6,".",I6.6)') ifrequ_min, ifrequ_max
     list1 = trim(outputDir)//"/log/list"//"."//trim(modelname)//"."//trim(list1)
     open(24, file = list1, status = 'unknown', form = 'formatted')
@@ -445,9 +445,9 @@
      ! write(36,*) 'theta ', theta(:)
      !write(36,*) 'stla ',   stla(:)
      !write(36,*) 'stlo ',   stlo(:)
-    end do
+    enddo
    close(36)
-  end if
+  endif
   llog = 0
   ! boucle sur les freqs
   do ifq=ifrequ_min+1, ifrequ_max+1
@@ -505,16 +505,16 @@
                 if (SLOW_DEBUG_MODE) then
                   write(24,*)
                   write(24,*) 'reading l = ',l
-                end if
+                endif
                 if (USE_TIMER) call cpu_time(start_time_to_read)
 
                 do
-             
+
                    read(34) ir_,llog
-                   
+
                    if (ir_ == -1) then ! this flag indicates the end of all the data to read
                       exit
-                   elseif (ir_ == r_n) then
+                   else if (ir_ == r_n) then
 ! in the case of the Zmin face, we read but ignore all the data from the input file except the last one;
 ! in the other code (for vertical faces) we use all the data read, but in this code we use the last one only from the same file
                       read(34) tabg0(1:llog,:,:,:)
@@ -527,12 +527,12 @@
                       lmax_r(ir_) = llog + lref ! lmax courant pour ir_
                       lmax_lu=max(lmax_lu,lmax_r(r_n))
                    endif
-                enddo  
-        
+                enddo
+
                 if (USE_TIMER) then
                   call cpu_time(finish_time_to_read)
                   time_to_read = time_to_read + finish_time_to_read - start_time_to_read
-                 end if
+                 endif
               endif
 
               index_l=0
@@ -544,7 +544,7 @@
               call MPI_Bcast(time_to_read,1,MPI_REAL,0,SubCommunicators,ierr)
            endif
            if (l>=lmax_r(r_n)) exit ! si jamais on atteind le lmax du dernier ir_
-           if (ir_==-1 .and. llog == -1) exit  !! VM VM: I add this test because of bugs 
+           if (ir_==-1 .and. llog == -1) exit  !! VM VM: I add this test because of bugs
                                                !! VM VM: when mod(maxval(lmax_r),maxlmax_g)==0
 
            index_l=index_l+1
@@ -552,7 +552,7 @@
            lsq = dsqrt( l2 )
            if (USE_TIMER) call cpu_time(start_time_to_plm)
 
-! 33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333
+! 33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333
 !! DK DK when l is greater than 5 we can get rid of all the "if" tests in this subroutine to make it much faster
            if(l <= 5) then
              call caldvec_for_l_less_than_5_no_store_l(l,theta,phi,plm,dvec,dvecdt,dvecdp,theta_n)
@@ -560,13 +560,13 @@
              call caldvec_for_l_more_than_5_no_store_l(l,theta,phi,plm,dvec,dvecdt,dvecdp,theta_n)
            endif
 
-! 33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333
+! 33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333
 
            if (USE_TIMER) then
               call cpu_time(finish_time_to_plm)
               time_to_plm =  time_to_plm + finish_time_to_plm - start_time_to_plm
               call cpu_time(start_time_to_project)
-           end if
+           endif
 
            do m=-2,2        ! m-loop start
 
@@ -578,7 +578,7 @@
 
                  if ( l==0 ) then ! l-branch for calu (l=0)
 
-! 33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333
+! 33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333
                     !  rearranging the matrix elements
                        do ir_ = r_n,r_n
 
@@ -635,11 +635,11 @@
                             enddo ! of loop on imt (mt-loop)
                           endif ! of if (l <= lmax_r(ir_)) then ... i.e. on the stack point
                        enddo ! of loop on ir_
-! 33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333
+! 33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333
 
                  else ! for l /= 0
 
-! 33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333
+! 33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333
 
 !! DK DK added this to precompute the inverse
                     inv_lsq = 1.d0 / dcmplx(lsq)
@@ -975,7 +975,7 @@
 !                           enddo ! of loop on imt (mt-loop)
                           endif ! of if (l <= lmax_r(ir_)) then ... i.e. on the stack point
                        enddo ! of loop on ir_
-! 33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333
+! 33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333
 
                  endif   ! l-branch for calu
               endif
@@ -1104,7 +1104,7 @@
         !write(36,*) 'i ', i
        ! write(36,*)  '1 :',displacement(1,:,:)
         !write(36,*)  'nsta :',displacement(nsta,:,:)
-     end if
+     endif
      !*!******** ECRITURE SUR LE DISQUE
      if (myrank==0) then
 
@@ -1153,16 +1153,16 @@
      time_to_plm = total_global_time
      call mpi_allreduce( time_to_project, total_global_time,1, MPI_REAL ,MPI_SUM, MPI_COMM_WORLD, ierr)
      time_to_project = total_global_time
-      if(myrank.eq.0) then
+      if(myrank==0) then
         open(25,file='timer_part3_zmin.txt')
         write(25,*) 'Total :',time_total
         write(25,*) 'plm calculation :',time_to_plm,100*time_to_plm/time_total,' %'
         write(25,*) 'reading :', time_to_read,100* time_to_read/time_total
         write(25,*) 'projection  :', time_to_project,100*time_to_project/time_total
         close(25)
-     end if
+     endif
 
-  end if
+  endif
   call MPI_Barrier(MPI_COMM_WORLD,ierr)
   call MPI_COMM_FREE(SubCommunicators,ierr)
   call MPI_FINALIZE(ierr)

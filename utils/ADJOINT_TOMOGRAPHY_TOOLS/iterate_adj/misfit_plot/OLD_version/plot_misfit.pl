@@ -158,14 +158,14 @@ $slabinfo = "-C3p -W255/255/255o,0/0/0 -G0/0/0 -N";
 @comps = ("Z","R","T");
 for ($k = 1; $k <= 3; $k = $k+1) {
   $comp = $comps[$k-1];
-  
+
   $Pfile = "GMT_time_series_${Ttag}_${comp}.dat";
   $bounds = "GMT_axes_${Ttag}_${comp}.dat";
   $Nfile = "GMT_norms_${Ttag}_${comp}.dat";
 
   # if the seismograms exist, then plot them
   if ( (-f $Pfile) && (-f $bounds) ) {
-    
+
     open(IN,"$bounds"); @lines = <IN>;
     ($tmin,$tmax,$ymin,$ymax) = split(" ",$lines[0]);
     $tmin = -10;
@@ -182,25 +182,25 @@ for ($k = 1; $k <= 3; $k = $k+1) {
 
       $y_seis_lab = $y_seis + $ywid - 0.05;
       $originPlab = "-Xa${x_seis_lab} -Ya${y_seis_lab}";
-      
+
       if($j==1) {`psbasemap $J $R $B0 -O -K $originP >> $psfile`}
       else {`psbasemap $J $R $B -O -K $originP >> $psfile`}
       if ($j==1) {
-	`awk \'{print \$1,\$2}\' $Pfile | psxy $J $R -W0.5p,0/0/0   -O -K $originP >> $psfile`;
-	`awk \'{print \$1,\$3}\' $Pfile | psxy $J $R -W0.5p,255/0/0 -O -K $originP >> $psfile`;
+  `awk \'{print \$1,\$2}\' $Pfile | psxy $J $R -W0.5p,0/0/0   -O -K $originP >> $psfile`;
+  `awk \'{print \$1,\$3}\' $Pfile | psxy $J $R -W0.5p,255/0/0 -O -K $originP >> $psfile`;
         `pstext -R0/1/0/1 -JX1 $slabinfo -K -O $originPlab >> $psfile <<EOF\n0 0 8 0 $fontno RT $slabs[0]\nEOF\n`;
       } elsif ($j==2) {
-	`awk \'{print \$1,\$2}\' $Pfile | psxy $J $R -W0.5p,0/0/0   -O -K $originP >> $psfile`;
-	`awk \'{print \$1,\$4}\' $Pfile | psxy $J $R -W0.5p,255/0/0 -O -K $originP >> $psfile`;
+  `awk \'{print \$1,\$2}\' $Pfile | psxy $J $R -W0.5p,0/0/0   -O -K $originP >> $psfile`;
+  `awk \'{print \$1,\$4}\' $Pfile | psxy $J $R -W0.5p,255/0/0 -O -K $originP >> $psfile`;
         `pstext -R0/1/0/1 -JX1 $slabinfo -K -O $originPlab >> $psfile <<EOF\n0 0 8 0 $fontno RT $slabs[1]\nEOF\n`;
       } elsif ($j==3) {
-	`awk \'{print \$1,\$5}\' $Pfile | psxy $J $R -W0.5p,0/0/0 -O -K $originP >> $psfile`;
+  `awk \'{print \$1,\$5}\' $Pfile | psxy $J $R -W0.5p,0/0/0 -O -K $originP >> $psfile`;
         `pstext -R0/1/0/1 -JX1 $slabinfo -K -O $originPlab >> $psfile <<EOF\n0 0 8 0 $fontno RT $slabs[2]\nEOF\n`;
       } elsif ($j==4) {
-	`awk \'{print \$1,\$6}\' $Pfile | psxy $J $R -W0.5p,0/0/0 -O -K $originP >> $psfile`;
+  `awk \'{print \$1,\$6}\' $Pfile | psxy $J $R -W0.5p,0/0/0 -O -K $originP >> $psfile`;
         `pstext -R0/1/0/1 -JX1 $slabinfo -K -O $originPlab >> $psfile <<EOF\n0 0 8 0 $fontno RT $slabs[3]\nEOF\n`;
       } elsif ($j==5) {
-	`awk \'{print \$1,\$7}\' $Pfile | psxy $J $R -W0.5p,0/0/0 -O -K $originP >> $psfile`;
+  `awk \'{print \$1,\$7}\' $Pfile | psxy $J $R -W0.5p,0/0/0 -O -K $originP >> $psfile`;
          `pstext -R0/1/0/1 -JX1 $slabinfo -K -O $originPlab >> $psfile <<EOF\n0 0 8 0 $fontno RT $slabs[4]\nEOF\n`;
       }
     }
@@ -232,7 +232,7 @@ print "B option --> $B\n";
 @comps = ("Z","R","T");
 for ($k = 1; $k <= 3; $k = $k+1) {
   $comp = $comps[$k-1];
-  
+
   $Nfile = "GMT_norms_${Ttag}_${comp}.dat";
 
   # if the norms file exists

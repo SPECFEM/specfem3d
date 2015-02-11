@@ -19,7 +19,7 @@ ifort -o xspecfem3D_C -O3 -xSSE4.1 -ftz -implicitnone -warn truncated_source -wa
 # gcc -c -fbounds-check -Wall -fno-trapping-math -fno-signaling-nans -std=gnu99 -O3 serial_specfem3D_single_with_Deville.c
 # gfortran -o xspecfem3D_C -O3 -std=f95 -fimplicit-none -frange-check -O3 -pedantic -pedantic-errors -Waliasing -Wampersand -Wline-truncation -Wsurprising -Wunderflow -fno-trapping-math serial_specfem3D_single_with_Deville.o read_arrays_solver.f90
 
-# g++ -fno-trapping-math -O3 -o xspecfem3D_C serial_specfem3D_single_with_Deville.c -lm 
+# g++ -fno-trapping-math -O3 -o xspecfem3D_C serial_specfem3D_single_with_Deville.c -lm
 
 # pgcc -fast -Mnobounds -Minline -Mneginfo -Knoieee -Minform=warn -fastsse -tp amd64e -o xspecfem3D_C serial_specfem3D_single_with_Deville.c -lm
 

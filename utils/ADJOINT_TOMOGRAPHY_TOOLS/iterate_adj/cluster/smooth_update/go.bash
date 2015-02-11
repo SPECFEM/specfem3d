@@ -9,7 +9,7 @@ remap_lsf_machines.pl OUTPUT_FILES/lsf_machines >OUTPUT_FILES/machines
 
 # number of slices 14x12, 0 stands for basin code (1 would be 1-chunk global,
 # and 6 would be 6-chunk global)
-# element size on the surface would be 2 km, 
+# element size on the surface would be 2 km,
 # the smoothing 'radius' sigma = 5 km
 
 # the neigboring points within 3*sigma+element_size are used for the smoothing

@@ -68,7 +68,7 @@ $fsize0 = "14";
 $fsize1 = "11";
 $fsize2 = "9";
 $fsize3 = "5";
-$fontno = "1";			# 1 or 4
+$fontno = "1";      # 1 or 4
 $tick   = "0.2c";
 
 # plot symbols for sources, receivers, and shelf
@@ -90,7 +90,7 @@ if ($ibody == 1) {
   ($xmin,$xmax,$zmin,$zmax) = split(" ",`minmax -C -I2 $file1syn`);
   $xmin = $xmin/1000; $xmax = $xmax/1000;
   $zmin = $zmin/1000; $zmax = $zmax/1000;
-  $pinc = 0.0;			# buffer around min/max
+  $pinc = 0.0;      # buffer around min/max
   $B = "-B20:.\" \":WESn";
   @stflabs = ("x, h (t)","y, h (t)","z, h (t)");
   $xtick1 = 1; $xtick2 = 1;
@@ -186,7 +186,7 @@ print CSH "pstext -N $J $R $Utag -K -O -V $shift >>$psfile<<EOF\n $xmin $zmin $f
 
 # source time function
 print "\n Source time function is $stffile1\n";
-  
+
 # determine the max value among the source time functions
 for ($k = 1; $k <= $nstf; $k ++ ) {
   $sfile = "${edir}/${stf_tag}_${k}";
@@ -196,7 +196,7 @@ for ($k = 1; $k <= $nstf; $k ++ ) {
 }
 if ($ss==0) {
   $ss = 1;
-}				# do not normalize by zero
+}       # do not normalize by zero
 print "tmin = $tmin\ntmax = $tmax\nss = $ss\n";
 $tinc = 20;
 

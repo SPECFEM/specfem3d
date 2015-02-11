@@ -5,7 +5,7 @@
 # setup_smooth_all.pl
 #
 # This script takes a template smoothing directory and sets up many copies.
-# 
+#
 # EXAMPLE:
 #    setup_smooth_all.pl m16 168 rho_cbr_kernel
 #
@@ -38,7 +38,7 @@ $neid = @eids;
 
 print "number of event kernels : $neid\n";
 
-$imin = 1; $imax = $neid;	# default
+$imin = 1; $imax = $neid; # default
 #$imin = 1; $imax = 2;
 #$imin = 14; $imax = $imin;
 
@@ -74,7 +74,7 @@ for ($i = $imin; $i <= $imax; $i++) {
 
      # check if mesh files have been made
      $mesh_local = "${edir_local}/${ftag}_smooth*";
-     $mesh_out   = "$edir0/${ftag}_smooth*";    
+     $mesh_out   = "$edir0/${ftag}_smooth*";
      $nmesh_local = `ls -1 ${mesh_local} | wc | awk '{print \$1}'`; chomp($nmesh_local);
      $nmesh_out = `ls -1 ${mesh_out} | wc | awk '{print \$1}'`; chomp($nmesh_out);
      if ($nmesh_out == 1) {
@@ -92,7 +92,7 @@ for ($i = $imin; $i <= $imax; $i++) {
      print "no unsmoothed files or smoothed files\n";
 
    } else {
-     print "unsmoothed files present but no smoothed files\n";    
+     print "unsmoothed files present but no smoothed files\n";
 
      if (-e $edir_local) {
        print "--> READY TO EXECUTE SMOOTHING\n";
@@ -100,7 +100,7 @@ for ($i = $imin; $i <= $imax; $i++) {
 
        `mkdir -p ${edir_local}`;
        `mkdir -p ${edir_local}/OUTPUT_FILES`;
-       `ln -s $edir ${edir_local}/inout_smooth`; # KEY LINK 
+       `ln -s $edir ${edir_local}/inout_smooth`; # KEY LINK
        # NOTE: the link leaves the danger of over-writing input files
 
        # copy run scripts and link executable file

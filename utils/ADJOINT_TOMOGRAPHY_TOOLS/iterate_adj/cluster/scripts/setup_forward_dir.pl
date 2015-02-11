@@ -73,31 +73,31 @@ for ($i = $imin; $i <= $imax; $i++) {
 
       $cmtfile = "${cmt_dir}/CMTSOLUTION_$eid";
       if (not -f $cmtfile) {
-	print "\n --> cmtfile does not exist";
+  print "\n --> cmtfile does not exist";
 
       } else {
 
-	# copy in a new CMTSOLUTION
-	$cmtfile1 = "$eid/DATA/CMTSOLUTION";
-	`${scripts_dir}/copy_basin_sem_dir.bash ${master_dir} $eid`;
-	`cp $cmtfile $cmtfile1`;
-      
-	# change the half-duration
-	$hdur_st = sprintf("%8.4f",$hdur);
-	$ctemp   = "${cmtfile}_temp";
-	`sed '/^half duration:/s/^.*\$/half duration: ${hdur_st}/' $cmtfile1 > $ctemp`;
-	`mv $ctemp $cmtfile1`;
+  # copy in a new CMTSOLUTION
+  $cmtfile1 = "$eid/DATA/CMTSOLUTION";
+  `${scripts_dir}/copy_basin_sem_dir.bash ${master_dir} $eid`;
+  `cp $cmtfile $cmtfile1`;
 
-	# change the simulation time in the Par_file
-	$sdur = sprintf("%.1f",$sdur_round);
-	$parfile = "$eid/DATA/Par_file";
-	$ptemp   = "$eid/DATA/Par_file_temp";
-	`sed '/^RECORD_LENGTH_IN_SECONDS        =/s/^.*\$/RECORD_LENGTH_IN_SECONDS        = $sdur/' $parfile > $ptemp`;
-	`mv $ptemp $parfile`;
+  # change the half-duration
+  $hdur_st = sprintf("%8.4f",$hdur);
+  $ctemp   = "${cmtfile}_temp";
+  `sed '/^half duration:/s/^.*\$/half duration: ${hdur_st}/' $cmtfile1 > $ctemp`;
+  `mv $ctemp $cmtfile1`;
 
-	# change the label for the run
-	`sed "/socal_earthquakes/s/socal_earthquakes/${eid}_earthquake/" $eid/go_mesher_solver_lsf_basin.bash > $eid/run.tmp`;
-	`mv -f $eid/run.tmp $eid/go_mesher_solver_lsf_basin.bash`;
+  # change the simulation time in the Par_file
+  $sdur = sprintf("%.1f",$sdur_round);
+  $parfile = "$eid/DATA/Par_file";
+  $ptemp   = "$eid/DATA/Par_file_temp";
+  `sed '/^RECORD_LENGTH_IN_SECONDS        =/s/^.*\$/RECORD_LENGTH_IN_SECONDS        = $sdur/' $parfile > $ptemp`;
+  `mv $ptemp $parfile`;
+
+  # change the label for the run
+  `sed "/socal_earthquakes/s/socal_earthquakes/${eid}_earthquake/" $eid/go_mesher_solver_lsf_basin.bash > $eid/run.tmp`;
+  `mv -f $eid/run.tmp $eid/go_mesher_solver_lsf_basin.bash`;
       }
     }
   }

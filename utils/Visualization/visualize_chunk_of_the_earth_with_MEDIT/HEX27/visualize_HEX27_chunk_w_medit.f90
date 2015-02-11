@@ -40,7 +40,7 @@ PROGRAM visualize_HEX27_chunk_w_medit
   DO i=1,np
     READ(10,*) nsph, p1, p2, p3
     WRITE(20,*) p1, p2, p3, 1
-  ENDDO
+  enddo
 
   WRITE(20,*) ' '
   WRITE(20,*) 'Quadrilaterals'
@@ -53,42 +53,42 @@ PROGRAM visualize_HEX27_chunk_w_medit
     WRITE(20,*) sf5, sf2, sf6, sf9, 2
     WRITE(20,*) sf9, sf6, sf3, sf7, 2
     WRITE(20,*) sf8, sf9, sf7, sf4, 2
-  ENDDO
+  enddo
   DO i=1,nq2
     READ(32,*) nsph, sf1, sf2, sf3, sf4, sf5, sf6, sf7, sf8, sf9
     WRITE(20,*) sf1, sf5, sf9, sf8, 2
     WRITE(20,*) sf5, sf2, sf6, sf9, 2
     WRITE(20,*) sf9, sf6, sf3, sf7, 2
     WRITE(20,*) sf8, sf9, sf7, sf4, 2
-  ENDDO
+  enddo
   DO i=1,nq3
     READ(33,*) nsph, sf1, sf2, sf3, sf4, sf5, sf6, sf7, sf8, sf9
     WRITE(20,*) sf1, sf5, sf9, sf8, 2
     WRITE(20,*) sf5, sf2, sf6, sf9, 2
     WRITE(20,*) sf9, sf6, sf3, sf7, 2
     WRITE(20,*) sf8, sf9, sf7, sf4, 2
-  ENDDO
+  enddo
   DO i=1,nq4
     READ(34,*) nsph, sf1, sf2, sf3, sf4, sf5, sf6, sf7, sf8, sf9
     WRITE(20,*) sf1, sf5, sf9, sf8, 2
     WRITE(20,*) sf5, sf2, sf6, sf9, 2
     WRITE(20,*) sf9, sf6, sf3, sf7, 2
     WRITE(20,*) sf8, sf9, sf7, sf4, 2
-  ENDDO
+  enddo
   DO i=1,nq5
     READ(35,*) nsph, sf1, sf2, sf3, sf4, sf5, sf6, sf7, sf8, sf9
     WRITE(20,*) sf1, sf5, sf9, sf8, 2
     WRITE(20,*) sf5, sf2, sf6, sf9, 2
     WRITE(20,*) sf9, sf6, sf3, sf7, 2
     WRITE(20,*) sf8, sf9, sf7, sf4, 2
-  ENDDO
+  enddo
   DO i=1,nq6
     READ(36,*) nsph, sf1, sf2, sf3, sf4, sf5, sf6, sf7, sf8, sf9
     WRITE(20,*) sf1, sf5, sf9, sf8, 3
     WRITE(20,*) sf5, sf2, sf6, sf9, 3
     WRITE(20,*) sf9, sf6, sf3, sf7, 3
     WRITE(20,*) sf8, sf9, sf7, sf4, 3
-  ENDDO
+  enddo
 
   WRITE(20,*) ' '
   WRITE(20,*) 'Hexahedra'
@@ -106,8 +106,8 @@ PROGRAM visualize_HEX27_chunk_w_medit
     WRITE(20,*) s22, s14, s23, s27, s17, s6 , s18, s26, 1
     WRITE(20,*) s27, s23, s15, s24, s26, s18, s7 , s19, 1
     WRITE(20,*) s25, s27, s24, s16, s20, s26, s19, s8 , 1
-  ENDDO
-  
+  enddo
+
   WRITE(20,*) ' '
   WRITE(20,*) 'End'
 

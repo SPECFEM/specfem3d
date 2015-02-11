@@ -345,10 +345,10 @@ if (myrank==0) then
         !open(1,file=coutfile,status='unknown',form='unformatted', &
         !     access = 'direct', recl=2*6*6*kind(0e0)*nsta_global*r_n_global)
         !read(1,rec=k) tmpsngl(1:6,1:6,1:nsta_global)
-        if (myrank.eq.0) then
+        if (myrank==0) then
         open(1,file=coutfile,form='unformatted',action='read')
         read(1) tmpsngl
-        end if
+        endif
         call mpi_bcast(tmpsngl,36*nsta_global,MPI_COMPLEX,0,MPI_COMM_WORLD,ierr)
         !write(100,*) k,istamin,tmpsngl(1:6,1:6,istamin)
         stresssngl(1:6,1:6,1:nsta,i)=stresssngl(1:6,1:6,1:nsta,i)+tmpsngl(1:6,1:6,istamin:istamax)
@@ -365,8 +365,8 @@ if (myrank==0) then
         !open(1,file=coutfile,status='unknown',form='unformatted', &
         !     access = 'direct', recl=2*3*6*kind(0e0)*nsta_global*r_n_global)
         !read (1,rec=k) tmpsngl1(1:3,1:6,1:nsta_global)
-        !open(1,file=coutfile,form='unformatted',action='read') 
-        if (myrank.eq.0) read(1) tmpsngl1
+        !open(1,file=coutfile,form='unformatted',action='read')
+        if (myrank==0) read(1) tmpsngl1
         call mpi_bcast(tmpsngl1,18*nsta_global,MPI_COMPLEX,0,MPI_COMM_WORLD,ierr)
         displacementsngl(1:3,1:6,1:nsta,i)=displacementsngl(1:3,1:6,1:nsta,i)+tmpsngl1(1:3,1:6,istamin:istamax)
 
@@ -377,17 +377,17 @@ if (myrank==0) then
         write(coutfile, '(I5.5,".Stress_SH_",i5.5)') int(r0(ir0)*10.d0),irank-1
         coutfile = trim(modelname)//"."//coutfile
         coutfile = trim(outputDir)//"/Stress/"//coutfile
-        
-        if (myrank.eq.0) then
+
+        if (myrank==0) then
         open(1,file=coutfile,form='unformatted',action='read')
         read(1) tmpsngl
-        end if
+        endif
         call mpi_bcast(tmpsngl,36*nsta_global,MPI_COMPLEX,0,MPI_COMM_WORLD,ierr)
-        
+
         stresssngl(1:6,1:6,1:nsta,i)=stresssngl(1:6,1:6,1:nsta,i)+tmpsngl(1:6,1:6,istamin:istamax)
 
 
-        if (myrank.eq.0) read(1) tmpsngl1
+        if (myrank==0) read(1) tmpsngl1
         call mpi_bcast(tmpsngl1,18*nsta_global,MPI_COMPLEX,0,MPI_COMM_WORLD,ierr)
         displacementsngl(1:3,1:6,1:nsta,i)=displacementsngl(1:3,1:6,1:nsta,i)+tmpsngl1(1:3,1:6,istamin:istamax)
 

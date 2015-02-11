@@ -5,9 +5,9 @@
 
 
 for dir in CMTSOLUTION_*
-do 
-	echo $dir 
-	tar -czvf $dir.tar.gz $dir 
-	rm -rf $dir 
+do
+  echo $dir
+  tar -czvf $dir.tar.gz $dir
+  rm -rf $dir
 
-done 
+done

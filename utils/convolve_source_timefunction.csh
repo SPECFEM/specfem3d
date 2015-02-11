@@ -11,11 +11,11 @@ set use_triangle_source = ".false" # Use .true. for a triangle and .false. for a
 ########### DO NOT CHANGE ANYTHING BELOW ###########
 
 foreach file ( $* ) # Loop on all files (and directories) given in argument
- 
+
   set nlines = `wc -l $file`                              # nlines is the number of lines in the file considered
-  echo $nlines > input_convolve_code.txt                  # Create a new temp file input_convolve_code.txt (or recreate it if it exists) and write nlines on it 
+  echo $nlines > input_convolve_code.txt                  # Create a new temp file input_convolve_code.txt (or recreate it if it exists) and write nlines on it
   echo $half_duration_triangle >> input_convolve_code.txt # Write half_duration_triangle after that...
-  echo $use_triangle_source >> input_convolve_code.txt    #  ... and write .true. or false at the end depending on the source chosen 
+  echo $use_triangle_source >> input_convolve_code.txt    #  ... and write .true. or false at the end depending on the source chosen
   echo convolving $file with half_duration_triangle = $half_duration_triangle using lines $nlines # A small print
   $SPECFEM_PATH/bin/xconvolve_source_timefunction < $file > ${file}.convolved                     # Execute xconvolve_source_timefunction with argument $file and write the output on ${file}.convolved
   rm input_convolve_code.txt                              # Remove the temp file input_convolve_code.txt

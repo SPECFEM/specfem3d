@@ -57,7 +57,7 @@ $ifig02  = 0;   # CG sequence 2
 $ifig03  = 0;   # banana-doughnut kernels
 $ifig03p = 0;   # banana-doughnut kernels
 $ifig04  = 0;   # mod, mod, ker
-$ifig04p = 0;   # 
+$ifig04p = 0;   #
 $ifig05  = 0;   # 4x1 forward wavefield
 $ifig05p = 0;   # seismograms
 
@@ -365,7 +365,7 @@ if ($ipoly==1) {
   # spline
   $cpt_spl = "color5.cpt";
   $cmin = -1; $cmax = 1;
-  $cran = $cmax - $cmin; 
+  $cran = $cmax - $cmin;
   $dc = $cran/${scale_color};
   $T_spline = "-T$cmin/$cmax/$dc";
   print CSH "makecpt -C$colorbar $T_spline > $cpt_spl \n";
@@ -394,7 +394,7 @@ if ($ifig01 == 1) {
 
   #===============================================
   print "\nWriting CSH file...\n";
-  
+
   open(CSH,">$cshfile");
   print CSH "gmtset BASEMAP_TYPE plain PLOT_DEGREE_FORMAT D TICK_LENGTH $tick LABEL_FONT_SIZE $fsize2 ANOT_FONT_SIZE $fsize2  HEADER_FONT $fontno ANOT_FONT $fontno LABEL_FONT $fontno HEADER_FONT_SIZE $fsize1 FRAME_PEN $fpen TICK_PEN $tpen \n";
   #===============================================
@@ -1006,7 +1006,7 @@ if ($ifig02 == 1) {
 
   #===============================================
   print "\nWriting CSH file...\n";
-  
+
   open(CSH,">$cshfile");
   print CSH "gmtset BASEMAP_TYPE plain TICK_LENGTH $tick LABEL_FONT_SIZE $fsize2 ANOT_FONT_SIZE $fsize2 PLOT_DEGREE_FORMAT D HEADER_FONT $fontno ANOT_FONT $fontno LABEL_FONT $fontno HEADER_FONT_SIZE $fsize1 FRAME_PEN $fpen TICK_PEN $tpen\n";
   #===============================================
@@ -1074,7 +1074,7 @@ for ($k = 0; $k <= $niter; $k = $k+1) {
   print CSH "awk '\$1 == \"R\" {print \$2,\$3}' $recfile |psxy -N $J $R -K -O -V $rec >> $psfile\n";
   print CSH "awk '{print \$1,\$2}' $evefile |psxy -N $J $R -K -O -V $src >> $psfile\n";
   #print CSH "psscale -C$cpt_vel $Dscale $Bscale1 -K -O -V >> $psfile \n";
-  print CSH "pstext -N $J_title $R_title -K -O -V >>$psfile<<EOF\n $x_title $z_title $fsize_title 0 $fontno CM $title \nEOF\n"; 
+  print CSH "pstext -N $J_title $R_title -K -O -V >>$psfile<<EOF\n $x_title $z_title $fsize_title 0 $fontno CM $title \nEOF\n";
 
   # misfit vs iteration
   $shift = $shift1;
@@ -1118,7 +1118,7 @@ if ($ifig03 == 1) {
 
   #===============================================
   print "\nWriting CSH file...\n";
-  
+
   open(CSH,">$cshfile");
   print CSH "gmtset BASEMAP_TYPE plain TICK_LENGTH $tick LABEL_FONT_SIZE $fsize2 ANOT_FONT_SIZE $fsize2 PLOT_DEGREE_FORMAT D HEADER_FONT $fontno ANOT_FONT $fontno LABEL_FONT $fontno HEADER_FONT_SIZE $fsize1 FRAME_PEN $fpen TICK_PEN $tpen\n";
   #===============================================
@@ -1190,7 +1190,7 @@ if ($ifig03 == 1) {
     print "\nT2b = $T2b\n";
     $bs2b = sprintf("%2.2e",0.9*$ss);
     $Bscale2c  = sprintf("-B${bs2b}:\" K * B  ( 10\@+%2.2i\@+ ) \": -E10p",$kpwr);
-  
+
     $cpt_kerb = "color1b.cpt";
     print CSH "makecpt -C$colorbar $T2b > temp1\n";
     print CSH "sed 's/^B.*/B       170     0      0  /' temp1 >  temp2\n";
@@ -1279,7 +1279,7 @@ if ($ifig03p == 1) {
 
   #===============================================
   print "\nWriting CSH file...\n";
-  
+
   open(CSH,">$cshfile");
   print CSH "gmtset BASEMAP_TYPE plain TICK_LENGTH $tick LABEL_FONT_SIZE 9 ANOT_FONT_SIZE 9 PLOT_DEGREE_FORMAT D HEADER_FONT $fontno ANOT_FONT $fontno LABEL_FONT $fontno HEADER_FONT_SIZE 12 FRAME_PEN $fpen TICK_PEN $tpen\n";
   #===============================================
@@ -1352,7 +1352,7 @@ if ($ifig03p == 1) {
     print "\nT2b = $T2b\n";
     $bs2b = sprintf("%2.2e",0.9*$ss);
     $Bscale2c  = sprintf("-B${bs2b}:\" K * B  ( 10\@+%2.2i\@+  m\@+-2\@+ s ) \": -E10p",$kpwr);
-  
+
     $cpt_kerb = "color1b.cpt";
     print CSH "makecpt -C$colorbar $T2b > temp1\n";
     print CSH "sed 's/^B.*/B       170     0      0  /' temp1 >  temp2\n";
@@ -1454,7 +1454,7 @@ if ($ifig03p == 1) {
   ($blon2,$blat2) = split(" ",$splines[$ispl2-1]);
 
   # ray path
-  $title = "($labs[3])  Ray : i = ${iray} / ${nmeas} (event ${ieve}, rec ${irec})"; 
+  $title = "($labs[3])  Ray : i = ${iray} / ${nmeas} (event ${ieve}, rec ${irec})";
   $B = "$B0".$Bopts[$Baxes[3]];
   #print CSH "psbasemap $B $R $J -K -V -P $origin > $psfile\n"; # START
   print CSH "psbasemap $B $R $J -K -O -V -P $shift2 >> $psfile\n";
@@ -1553,7 +1553,7 @@ if ($ifig04 == 1) {
 
   #===============================================
   print "\nWriting CSH file...\n";
-  
+
   open(CSH,">$cshfile");
   print CSH "gmtset BASEMAP_TYPE plain TICK_LENGTH $tick LABEL_FONT_SIZE $fsize2 ANOT_FONT_SIZE $fsize2 PLOT_DEGREE_FORMAT D HEADER_FONT $fontno ANOT_FONT $fontno LABEL_FONT $fontno HEADER_FONT_SIZE $fsize1 FRAME_PEN $fpen TICK_PEN $tpen\n";
   #===============================================
@@ -1674,7 +1674,7 @@ if ($ifig04p == 1) {
 
   #===============================================
   print "\nWriting CSH file...\n";
-  
+
   open(CSH,">$cshfile");
   print CSH "gmtset BASEMAP_TYPE plain TICK_LENGTH $tick LABEL_FONT_SIZE $fsize2 ANOT_FONT_SIZE $fsize2 PLOT_DEGREE_FORMAT D HEADER_FONT $fontno ANOT_FONT $fontno LABEL_FONT $fontno HEADER_FONT_SIZE $fsize1 FRAME_PEN $fpen TICK_PEN $tpen\n";
   #===============================================
@@ -1766,7 +1766,7 @@ if ($ifig05 == 1) {
 
   #===============================================
   print "\nWriting CSH file...\n";
-  
+
   open(CSH,">$cshfile");
   print CSH "gmtset BASEMAP_TYPE plain TICK_LENGTH 0.1c LABEL_FONT_SIZE $fsize3 ANOT_FONT_SIZE $fsize3 PLOT_DEGREE_FORMAT D HEADER_FONT $fontno ANOT_FONT $fontno LABEL_FONT $fontno HEADER_FONT_SIZE $fsize2 FRAME_PEN $fpen TICK_PEN $tpen\n";
   #===============================================
@@ -1822,7 +1822,7 @@ for ($i = 0; $i < $numf; $i++) {
 
    print CSH "echo $psfile\n";
    print CSH "echo $snapshot_f\n";
-    
+
    $B = "-B1/1:\"t = $time s\"::.\"  \":wsne";
    $B_row1 = "-B1/1:\"t = $time s\"::.\"  \":wsne";
    if ($i == 0) { $B = $B_row1}
@@ -1848,7 +1848,7 @@ for ($i = 0; $i < $numf; $i++) {
 #-----------------------------
 
   if($irun == 1 || $irun == 2) {      # data file generated in gji_figs.m (11-28-05)
-    
+
     # get axes limits
     $ax_file     = "${dir}/time_series_axes.dat";
     if (not -f $ax_file) { die("Check if $ax_file exist or not\n") }
@@ -1858,7 +1858,7 @@ for ($i = 0; $i < $numf; $i++) {
     ($tmin,$tmax,$junk,$junk) = split(" ",$axlims[2]);
     print "\n $tmin $tmax \n @pwr_vec \n @cmx_vec \n\n";
     @norm = ("1e$pwr_vec[0]","1e$pwr_vec[1]","1e$pwr_vec[2]","1e$pwr_vec[3]");
-    
+
     # make plot bounds
     $R1 = "-R${tmin}/${tmax}/-${cmx_vec[0]}/${cmx_vec[0]}";
     $R2 = "-R${tmin}/${tmax}/-${cmx_vec[1]}/${cmx_vec[1]}";
@@ -1960,7 +1960,7 @@ if ($ifig06 == 1) {
 
   #===============================================
   print "\nWriting CSH file...\n";
-  
+
   open(CSH,">$cshfile");
   print CSH "gmtset BASEMAP_TYPE plain TICK_LENGTH 0.2c LABEL_FONT_SIZE $fsize1 ANOT_FONT_SIZE $fsize1 PLOT_DEGREE_FORMAT D HEADER_FONT $fontno ANOT_FONT $fontno LABEL_FONT $fontno HEADER_FONT_SIZE $fsize0 FRAME_PEN $fpen TICK_PEN $tpen\n";
   #===============================================
@@ -2064,7 +2064,7 @@ if ($ifig07 == 1) {
 
   #===============================================
   print "\nWriting CSH file...\n";
-  
+
   open(CSH,">$cshfile");
   print CSH "gmtset BASEMAP_TYPE plain TICK_LENGTH 0.15c LABEL_FONT_SIZE $fsize2 ANOT_FONT_SIZE 10 PLOT_DEGREE_FORMAT D HEADER_FONT $fontno ANOT_FONT $fontno LABEL_FONT $fontno HEADER_FONT_SIZE $fsize1 FRAME_PEN $fpen TICK_PEN $tpen\n";
   #===============================================
@@ -2255,7 +2255,7 @@ if ($ifig05p == 1) {
 
   #===============================================
   print "\nWriting CSH file...\n";
-  
+
   open(CSH,">$cshfile");
   print CSH "gmtset BASEMAP_TYPE plain TICK_LENGTH 0.1c LABEL_FONT_SIZE $fsize2 ANOT_FONT_SIZE $fsize3 PLOT_DEGREE_FORMAT D HEADER_FONT $fontno ANOT_FONT $fontno LABEL_FONT $fontno HEADER_FONT_SIZE $fsize1 FRAME_PEN $fpen TICK_PEN $tpen\n";
   #===============================================
@@ -2282,7 +2282,7 @@ if ($ifig05p == 1) {
     ($tmin,$tmax,$junk,$junk) = split(" ",$axlims[2]);
     print "\n $tmin $tmax \n @pwr_vec \n @cmx_vec \n\n";
     @norm = ("1e$pwr_vec[0]","1e$pwr_vec[1]","1e$pwr_vec[2]","1e$pwr_vec[3]");
-    
+
     # make plot bounds
     $R1 = "-R${tmin}/${tmax}/-${cmx_vec[0]}/${cmx_vec[0]}";
     $R2 = "-R${tmin}/${tmax}/-${cmx_vec[1]}/${cmx_vec[1]}";
@@ -2379,7 +2379,7 @@ if ($ifig10 == 1) {
 
   #===============================================
   print "\nWriting CSH file...\n";
-  
+
   open(CSH,">$cshfile");
   print CSH "gmtset BASEMAP_TYPE plain TICK_LENGTH $tick LABEL_FONT_SIZE $fsize3 ANOT_FONT_SIZE $fsize3 PLOT_DEGREE_FORMAT D HEADER_FONT $fontno ANOT_FONT $fontno LABEL_FONT $fontno HEADER_FONT_SIZE $fsize2 FRAME_PEN $fpen TICK_PEN $tpen\n";
   #===============================================
@@ -2398,7 +2398,7 @@ if ($ifig10 == 1) {
   if (not -f $chifile) { die("Check if $chifile exist or not\n") }
 
   # file names for figures
-  $name = "talk_cg10_${strun0}"; $psfile = "$name.ps"; $jpgfile = "$name.jpg"; $epsfile = "$name.eps"; 
+  $name = "talk_cg10_${strun0}"; $psfile = "$name.ps"; $jpgfile = "$name.jpg"; $epsfile = "$name.eps";
 
   # number of receivers
   open(IN,$file3); @temp = <IN>; $nrec = @temp;

@@ -1,4 +1,4 @@
-#!/bin/csh 
+#!/bin/csh
 
    sed -e '1,$s/D-00/e-/g' < gmt_shaking_hollywood_veloc.irreg > tutu
    mv tutu gmt_shaking_hollywood_veloc.irreg
