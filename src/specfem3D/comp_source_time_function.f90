@@ -27,8 +27,6 @@
 
   double precision function comp_source_time_function(t,hdur)
 
-  use constants
-
   implicit none
 
   double precision t,hdur
@@ -47,27 +45,28 @@
 
   double precision function comp_source_time_function_gauss(t,hdur)
 
-  use constants
+  use constants, only : PI, SOURCE_DECAY_MIMIC_TRIANGLE
 
   implicit none
 
-  double precision :: t,hdur
-  double precision :: hdur_decay
+  double precision, intent(in) :: t,hdur
+  double precision :: hdur_decay,a
   double precision,parameter :: SOURCE_DECAY_STRONG = 2.0d0/SOURCE_DECAY_MIMIC_TRIANGLE
 
   ! note: hdur given is hdur_gaussian = hdur/SOURCE_DECAY_MIMIC_TRIANGLE
   !           and SOURCE_DECAY_MIMIC_TRIANGLE ~ 1.68
   hdur_decay = hdur
 
-  ! this here uses a stronger gaussian decay rate (empirical value) to avoid non-zero onset times;
+  ! this here uses a stronger Gaussian decay rate (empirical value) to avoid non-zero onset times;
   ! however, it should mimik a triangle source time function...
   !hdur_decay = hdur  / SOURCE_DECAY_STRONG
 
   ! note: a nonzero time to start the simulation with would lead to more high-frequency noise
   !          due to the (spatial) discretization of the point source on the mesh
 
-  ! gaussian
-  comp_source_time_function_gauss = exp(-(t/hdur_decay)**2)/(sqrt(PI)*hdur_decay)
+  ! Gaussian wavelet
+  a = 1.d0 / (hdur_decay**2)
+  comp_source_time_function_gauss = exp(-a*t**2) / (sqrt(PI)*hdur_decay)
 
   end function comp_source_time_function_gauss
 
@@ -75,17 +74,82 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  double precision function comp_source_time_function_rickr(t,f0)
+  double precision function comp_source_time_function_dgau(t,hdur)
 
-  use constants
+  use constants, only : PI, SOURCE_DECAY_MIMIC_TRIANGLE
 
   implicit none
 
-  double precision t,f0
+  double precision, intent(in) :: t,hdur
+  double precision :: hdur_decay,a
+  double precision,parameter :: SOURCE_DECAY_STRONG = 2.0d0/SOURCE_DECAY_MIMIC_TRIANGLE
 
-  ! ricker
-  comp_source_time_function_rickr = (1.d0 - 2.d0*PI*PI*f0*f0*t*t ) &
-                                    * exp( -PI*PI*f0*f0*t*t )
+  ! note: hdur given is hdur_gaussian = hdur/SOURCE_DECAY_MIMIC_TRIANGLE
+  !           and SOURCE_DECAY_MIMIC_TRIANGLE ~ 1.68
+  hdur_decay = hdur
+
+  ! this here uses a stronger Gaussian decay rate (empirical value) to avoid non-zero onset times;
+  ! however, it should mimik a triangle source time function...
+  !hdur_decay = hdur  / SOURCE_DECAY_STRONG
+
+  ! note: a nonzero time to start the simulation with would lead to more high-frequency noise
+  !          due to the (spatial) discretization of the point source on the mesh
+
+  ! first derivative of a Gaussian wavelet
+  a = 1.d0 / (hdur_decay**2)
+  comp_source_time_function_dgau = - 2.d0 * a * t * exp(-a*t**2) / (sqrt(PI)*hdur_decay)
+
+  end function comp_source_time_function_dgau
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  double precision function comp_source_time_function_d2gau(t,hdur)
+
+  use constants, only : PI, SOURCE_DECAY_MIMIC_TRIANGLE
+
+  implicit none
+
+  double precision, intent(in) :: t,hdur
+  double precision :: hdur_decay,a
+  double precision,parameter :: SOURCE_DECAY_STRONG = 2.0d0/SOURCE_DECAY_MIMIC_TRIANGLE
+
+  ! note: hdur given is hdur_gaussian = hdur/SOURCE_DECAY_MIMIC_TRIANGLE
+  !           and SOURCE_DECAY_MIMIC_TRIANGLE ~ 1.68
+  hdur_decay = hdur
+
+  ! this here uses a stronger Gaussian decay rate (empirical value) to avoid non-zero onset times;
+  ! however, it should mimik a triangle source time function...
+  !hdur_decay = hdur  / SOURCE_DECAY_STRONG
+
+  ! note: a nonzero time to start the simulation with would lead to more high-frequency noise
+  !          due to the (spatial) discretization of the point source on the mesh
+
+  ! second derivative of a Gaussian wavelet
+  a = 1.d0 / (hdur_decay**2)
+  comp_source_time_function_d2gau = 2.d0 * a * (-1.d0 + 2.d0*a*t**2) * exp(-a*t**2) / (sqrt(PI)*hdur_decay)
+
+  end function comp_source_time_function_d2gau
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  double precision function comp_source_time_function_rickr(t,f0)
+
+  use constants, only : PI
+
+  implicit none
+
+  double precision, intent(in) :: t,f0
+
+  ! local variables
+  double precision :: a
+
+  ! Ricker wavelet
+  a = PI**2 * f0**2
+  comp_source_time_function_rickr = (1.d0 - 2.d0*a*t*t) * exp( -a*t*t )
 
   !!! another source time function they have called 'ricker' in some old papers,
   !!! e.g., 'Finite-Frequency Kernels Based on Adjoint Methods' by Liu & Tromp, BSSA (2006)
@@ -93,4 +157,46 @@
   ! comp_source_time_function_rickr = -2.d0*PI*PI*f0*f0*f0*t * exp(-PI*PI*f0*f0*t*t)
 
   end function comp_source_time_function_rickr
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  double precision function comp_source_time_function_drck(t,f0)
+
+  use constants, only : PI
+
+  implicit none
+
+  double precision, intent(in) :: t,f0
+
+  ! local variables
+  double precision :: a
+
+  ! first derivative of a Ricker wavelet
+  a = PI**2 * f0**2
+  comp_source_time_function_drck = 2.d0*a*t * (-3.d0 + 2.d0*a*t*t) * exp( -a*t*t )
+
+  end function comp_source_time_function_drck
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  double precision function comp_source_time_function_d2rck(t,f0)
+
+  use constants, only : PI
+
+  implicit none
+
+  double precision, intent(in) :: t,f0
+
+  ! local variables
+  double precision :: a
+
+  ! second derivative of a Ricker wavelet
+  a = PI**2 * f0**2
+  comp_source_time_function_d2rck = -2.d0*a * (3.d0 - 12.d0*a*t*t + 4.d0*a**2*t*t*t*t) * exp( -a*t*t )
+
+  end function comp_source_time_function_d2rck
 

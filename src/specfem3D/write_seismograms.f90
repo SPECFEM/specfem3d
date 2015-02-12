@@ -156,7 +156,7 @@
 
           ! interpolates displ/veloc/accel/pressure at receiver locations
           call compute_interpolated_dva_acoust(displ_element,veloc_element,accel_element, &
-                          potential_dot_dot_acoustic,NGLOB_AB, &
+                          potential_dot_dot_acoustic,potential_acoustic,NGLOB_AB, &
                           ispec,NSPEC_AB,ibool, &
                           xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
                           hxir,hetar,hgammar, &
@@ -249,7 +249,7 @@
 
           ! interpolates displ/veloc/accel/pressure at receiver locations
           call compute_interpolated_dva_acoust(displ_element,veloc_element,accel_element, &
-                          potential_dot_dot_acoustic,NGLOB_AB, &
+                          potential_dot_dot_acoustic,potential_acoustic,NGLOB_AB, &
                           ispec,NSPEC_AB,ibool, &
                           xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
                           hxir,hetar,hgammar, &
@@ -296,7 +296,7 @@
 
           ! backward field: interpolates displ/veloc/accel/pressure at receiver locations
           call compute_interpolated_dva_acoust(displ_element,veloc_element,accel_element, &
-                          b_potential_dot_dot_acoustic,NGLOB_ADJOINT, &
+                          b_potential_dot_dot_acoustic,b_potential_acoustic,NGLOB_ADJOINT, &
                           ispec,NSPEC_AB,ibool, &
                           xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
                           hxir,hetar,hgammar, &

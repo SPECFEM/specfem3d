@@ -65,8 +65,8 @@
   double precision :: dt,t0
   real(kind=CUSTOM_REAL), dimension(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrays
 
-  double precision, external :: comp_source_time_function,comp_source_time_function_rickr,&
-   comp_source_time_function_gauss
+  double precision, external :: comp_source_time_function,comp_source_time_function_rickr, &
+   comp_source_time_function_d2rck,comp_source_time_function_gauss,comp_source_time_function_d2gau
 
   logical, dimension(NSPEC_AB) :: ispec_is_acoustic
 
@@ -127,10 +127,32 @@
               f0 = hdur(isource)
 
               if (USE_RICKER_TIME_FUNCTION) then
-                stf_used = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),f0)
+! use a trick to increase accuracy of pressure seismograms in fluid (acoustic) elements:
+! use the second derivative of the source for the source time function instead of the source itself,
+! and then record -potential_acoustic() as pressure seismograms instead of -potential_dot_dot_acoustic();
+! this is mathematically equivalent, but numerically significantly more accurate because in the explicit
+! Newmark time scheme acceleration is accurate at zeroth order while displacement is accurate at second order,
+! thus in fluid elements potential_dot_dot_acoustic() is accurate at zeroth order while potential_acoustic()
+! is accurate at second order and thus contains significantly less numerical noise.
+                if(USE_TRICK_FOR_BETTER_PRESSURE) then
+                  stf_used = comp_source_time_function_d2rck(dble(it-1)*DT-t0-tshift_src(isource),f0)
+                else
+                  stf_used = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),f0)
+                endif
               else
                 ! use a very small duration of 5*DT to mimic a Dirac in time
-                stf_used = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),5.d0*DT)
+! use a trick to increase accuracy of pressure seismograms in fluid (acoustic) elements:
+! use the second derivative of the source for the source time function instead of the source itself,
+! and then record -potential_acoustic() as pressure seismograms instead of -potential_dot_dot_acoustic();
+! this is mathematically equivalent, but numerically significantly more accurate because in the explicit
+! Newmark time scheme acceleration is accurate at zeroth order while displacement is accurate at second order,
+! thus in fluid elements potential_dot_dot_acoustic() is accurate at zeroth order while potential_acoustic()
+! is accurate at second order and thus contains significantly less numerical noise.
+                if(USE_TRICK_FOR_BETTER_PRESSURE) then
+                  stf_used = comp_source_time_function_d2gau(dble(it-1)*DT-t0-tshift_src(isource),5.d0*DT)
+                else
+                  stf_used = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),5.d0*DT)
+                endif
               endif
 
               ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
@@ -152,10 +174,32 @@
             else
 
               if (USE_RICKER_TIME_FUNCTION) then
-                stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+! use a trick to increase accuracy of pressure seismograms in fluid (acoustic) elements:
+! use the second derivative of the source for the source time function instead of the source itself,
+! and then record -potential_acoustic() as pressure seismograms instead of -potential_dot_dot_acoustic();
+! this is mathematically equivalent, but numerically significantly more accurate because in the explicit
+! Newmark time scheme acceleration is accurate at zeroth order while displacement is accurate at second order,
+! thus in fluid elements potential_dot_dot_acoustic() is accurate at zeroth order while potential_acoustic()
+! is accurate at second order and thus contains significantly less numerical noise.
+                if(USE_TRICK_FOR_BETTER_PRESSURE) then
+                  stf = comp_source_time_function_d2rck(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+                else
+                  stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+                endif
               else
-                ! gaussian source time
-                stf = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+                ! Gaussian source time
+! use a trick to increase accuracy of pressure seismograms in fluid (acoustic) elements:
+! use the second derivative of the source for the source time function instead of the source itself,
+! and then record -potential_acoustic() as pressure seismograms instead of -potential_dot_dot_acoustic();
+! this is mathematically equivalent, but numerically significantly more accurate because in the explicit
+! Newmark time scheme acceleration is accurate at zeroth order while displacement is accurate at second order,
+! thus in fluid elements potential_dot_dot_acoustic() is accurate at zeroth order while potential_acoustic()
+! is accurate at second order and thus contains significantly less numerical noise.
+                if(USE_TRICK_FOR_BETTER_PRESSURE) then
+                  stf = comp_source_time_function_d2gau(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+                else
+                  stf = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+                endif
               endif
 
               ! quasi-Heaviside
@@ -494,7 +538,7 @@
                 stf = comp_source_time_function_rickr( &
                       dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
               else
-                ! gaussian source time
+                ! Gaussian source time
                 stf = comp_source_time_function_gauss( &
                       dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
               endif

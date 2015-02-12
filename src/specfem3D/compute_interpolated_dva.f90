@@ -121,7 +121,7 @@ end subroutine compute_interpolated_dva
 !
 
 subroutine compute_interpolated_dva_acoust(displ_element,veloc_element,accel_element, &
-                        potential_dot_dot_acoustic,NGLOB_AB, &
+                        potential_dot_dot_acoustic,potential_acoustic,NGLOB_AB, &
                         ispec,NSPEC_AB,ibool, &
                         xi_r,eta_r,gamma_r, &
                         hxir,hetar,hgammar, &
@@ -140,7 +140,7 @@ subroutine compute_interpolated_dva_acoust(displ_element,veloc_element,accel_ele
 
   integer :: NSPEC_AB,NGLOB_AB
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: displ_element,veloc_element,accel_element
-  real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: potential_dot_dot_acoustic
+  real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: potential_dot_dot_acoustic,potential_acoustic
 
   integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB):: ibool
 
@@ -191,7 +191,32 @@ subroutine compute_interpolated_dva_acoust(displ_element,veloc_element,accel_ele
     iglob = ibool(nint(xi_r),nint(eta_r),nint(gamma_r),ispec)
 
     ! pressure
-    pd = - potential_dot_dot_acoustic(iglob)
+    if(USE_TRICK_FOR_BETTER_PRESSURE) then
+      ! use a trick to increase accuracy of pressure seismograms in fluid (acoustic) elements:
+      ! use the second derivative of the source for the source time function instead of the source itself,
+      ! and then record -potential_acoustic() as pressure seismograms instead of -potential_dot_dot_acoustic();
+      ! this is mathematically equivalent, but numerically significantly more accurate because in the explicit
+      ! Newmark time scheme acceleration is accurate at zeroth order while displacement is accurate at second order,
+      ! thus in fluid elements potential_dot_dot_acoustic() is accurate at zeroth order while potential_acoustic()
+      ! is accurate at second order and thus contains significantly less numerical noise.
+      pd = - potential_acoustic(iglob)
+      ! that trick is not implemented for the calculation of displacement, velocity nor acceleration seismograms
+      ! in acoustic elements yet; to do so we would need to recompute them using the second integral in time of the
+      ! current formulas in that case. Same remark for recording stations located in solid (elastic/viscoelastic) elements
+      ! in the case of fluid/solid models when that trick is used; thus for now we erase these seismograms here just in case
+      ! because they would be wrong
+      dxd = ZERO
+      dyd = ZERO
+      dzd = ZERO
+      vxd = ZERO
+      vyd = ZERO
+      vzd = ZERO
+      axd = ZERO
+      ayd = ZERO
+      azd = ZERO
+    else
+      pd = - potential_dot_dot_acoustic(iglob) ! this is the standard expression
+    endif
 
   else
 
@@ -221,7 +246,32 @@ subroutine compute_interpolated_dva_acoust(displ_element,veloc_element,accel_ele
           iglob = ibool(i,j,k,ispec)
 
           ! pressure
-          pd = pd - hlagrange*potential_dot_dot_acoustic(iglob)
+          if(USE_TRICK_FOR_BETTER_PRESSURE) then
+            ! use a trick to increase accuracy of pressure seismograms in fluid (acoustic) elements:
+            ! use the second derivative of the source for the source time function instead of the source itself,
+            ! and then record -potential_acoustic() as pressure seismograms instead of -potential_dot_dot_acoustic();
+            ! this is mathematically equivalent, but numerically significantly more accurate because in the explicit
+            ! Newmark time scheme acceleration is accurate at zeroth order while displacement is accurate at second order,
+            ! thus in fluid elements potential_dot_dot_acoustic() is accurate at zeroth order while potential_acoustic()
+            ! is accurate at second order and thus contains significantly less numerical noise.
+            pd = pd - hlagrange*potential_acoustic(iglob)
+            ! that trick is not implemented for the calculation of displacement, velocity nor acceleration seismograms
+            ! in acoustic elements yet; to do so we would need to recompute them using the second integral in time of the
+            ! current formulas in that case. Same remark for recording stations located in solid (elastic/viscoelastic) elements
+            ! in the case of fluid/solid models when that trick is used; thus for now we erase these seismograms here just in case
+            ! because they would be wrong
+            dxd = ZERO
+            dyd = ZERO
+            dzd = ZERO
+            vxd = ZERO
+            vyd = ZERO
+            vzd = ZERO
+            axd = ZERO
+            ayd = ZERO
+            azd = ZERO
+          else
+            pd = pd - hlagrange*potential_dot_dot_acoustic(iglob)
+          endif
 
         enddo
       enddo
