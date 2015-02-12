@@ -79,7 +79,7 @@
 
 #     @objects = `ls *.f90 *.F90 *.h *.h.in *.fh */*.f90 */*.F90 */*.h */*.h.in */*.fh */*/*.f90 */*/*.F90 */*/*.h */*/*.h.in */*/*.fh */*/*/*.f90 */*/*/*.F90 */*/*/*.h */*/*/*.h.in */*/*/*.fh`;
 # when using this "find" command from Perl we need to use \\ instead of \ below otherwise Perl tries to interpret it
-      @objects = `find . -name '.git' -prune -o -name 'm4' -prune -o -name 'utils/ADJOINT_TOMOGRAPHY_TOOLS/flexwin' -prune -o -type f -regextype posix-extended -regex '.*\\.(fh|f90|F90|h|h\\.in)' -print`;
+      @objects = `find . -name '.git' -prune -o -name 'm4' -prune -o -path './utils/ADJOINT_TOMOGRAPHY_TOOLS/flexwin' -prune -o -type f -regextype posix-extended -regex '.*\\.(fh|f90|F90|h|h\\.in)' -print`;
 
       foreach $name (@objects) {
             chop $name;
@@ -144,7 +144,7 @@
 #     @objects = `ls *.c *.cu *.h *.h.in *.fh */*.c */*.cu */*.h */*.h.in */*.fh */*/*.c */*/*.cu */*/*.h */*/*.h.in */*/*.fh */*/*/*.c */*/*/*.cu */*/*/*.h */*/*/*.h.in */*/*/*.fh`;
 # when using this "find" command from Perl we need to use \\ instead of \ below otherwise Perl tries to interpret it
 # purposely excluding Python files from this list, since (I think) Python can use tabs for indentation (?) and thus they should not be converted to two spaces (?)
-      @objects = `find . -name '.git' -prune -o -name 'm4' -prune -o -name 'utils/ADJOINT_TOMOGRAPHY_TOOLS/flexwin' -prune -o -type f -regextype posix-extended -regex '.*\\.(bash|c|csh|cu|fh|f90|F90|h|h\\.in|pl|tex|txt|sh)' -print`;
+      @objects = `find . -name '.git' -prune -o -name 'm4' -prune -o -path './utils/ADJOINT_TOMOGRAPHY_TOOLS/flexwin' -prune -o -type f -regextype posix-extended -regex '.*\\.(bash|c|csh|cu|fh|f90|F90|h|h\\.in|pl|tex|txt|sh)' -print`;
 
       foreach $name (@objects) {
             chop $name;
@@ -185,7 +185,7 @@
 
 #     @objects = `ls *.txt *.c *.cu *.h *.h.in *.fh */*.c */*.cu */*.h */*.h.in */*.fh */*/*.c */*/*.cu */*/*.h */*/*.h.in */*/*.fh */*/*/*.c */*/*/*.cu */*/*/*.h */*/*/*.h.in */*/*/*.fh *.f90 *.F90 *.h *.h.in *.fh */*.f90 */*.F90 */*.h */*.h.in */*.fh */*/*.f90 */*/*.F90 */*/*.h */*/*.h.in */*/*.fh */*/*/*.f90 */*/*/*.F90 */*/*/*.h */*/*/*.h.in */*/*/*.fh */*.txt */*/*.txt */*/*/*.txt */*.tex */*/*.tex */*/*/*.tex *.sh */*.sh */*/*.sh */*/*/*.sh *.csh */*.csh */*/*.csh */*/*/*.csh *.bash */*.bash */*/*.bash */*/*/*.bash *.pl */*.pl */*/*.pl */*/*/*.pl *.py */*.py */*/*.py */*/*/*.py`;
 # when using this "find" command from Perl we need to use \\ instead of \ below otherwise Perl tries to interpret it
-      @objects = `find . -name '.git' -prune -o -name 'm4' -prune -o -name 'utils/ADJOINT_TOMOGRAPHY_TOOLS/flexwin' -prune -o -type f -regextype posix-extended -regex '.*\\.(bash|c|csh|cu|fh|f90|F90|h|h\\.in|pl|py|tex|txt|sh)' -print`;
+      @objects = `find . -name '.git' -prune -o -name 'm4' -prune -o -path './utils/ADJOINT_TOMOGRAPHY_TOOLS/flexwin' -prune -o -type f -regextype posix-extended -regex '.*\\.(bash|c|csh|cu|fh|f90|F90|h|h\\.in|pl|py|tex|txt|sh)' -print`;
 
       system("rm -f _____temp08_____ _____temp09_____");
 
