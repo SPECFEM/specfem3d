@@ -40,7 +40,7 @@ module decompose_mesh
 
   use shared_parameters
 
-  use part_decompose_mesh,only: long,MAX_STRING_LEN,ACOUSTIC_LOAD,SAVE_MOHO_MESH,nfaces,NGNOD_EIGHT_CORNERS, &
+  use part_decompose_mesh,only: long,MAX_STRING_LEN,ACOUSTIC_LOAD,nfaces,NGNOD_EIGHT_CORNERS, &
     write_interfaces_database,write_moho_surface_database,write_glob2loc_nodes_database, &
     write_material_props_database,write_boundaries_database, &
     write_partition_database,write_cpml_database, &
