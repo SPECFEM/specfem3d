@@ -124,63 +124,6 @@
   real(kind=CUSTOM_REAL), parameter :: A_over_4 = 0.25_CUSTOM_REAL * A
   real(kind=CUSTOM_REAL), parameter :: B_over_2 = 0.50_CUSTOM_REAL * B
 
-!!! 33333333333333333333333333333333333333333333333333
-
-!!!!!!!!!! DK DK will move this below to the Par_file
-
-! use a trick to increase accuracy of pressure seismograms in fluid (acoustic) elements:
-! use the second derivative of the source for the source time function instead of the source itself,
-! and then record -potential_acoustic() as pressure seismograms instead of -potential_dot_dot_acoustic();
-! this is mathematically equivalent, but numerically significantly more accurate because in the explicit
-! Newmark time scheme acceleration is accurate at zeroth order while displacement is accurate at second order,
-! thus in fluid elements potential_dot_dot_acoustic() is accurate at zeroth order while potential_acoustic()
-! is accurate at second order and thus contains significantly less numerical noise.
-  logical, parameter :: USE_TRICK_FOR_BETTER_PRESSURE = .false.
-
-!!-----------------------------------------------------------
-!!
-!! source encoding
-!!
-!!-----------------------------------------------------------
-
-! determines source encoding factor +/-1 depending on sign of moment tensor
-! (see e.g. Krebs et al., 2009. Fast full-wavefield seismic inversion using encoded sources, Geophysics, 74 (6), WCC177-WCC188.)
-  logical, parameter :: USE_SOURCE_ENCODING = .false. ! .true.
-
-!!-----------------------------------------------------------
-!!
-!! total energy calculation
-!!
-!!-----------------------------------------------------------
-
-! to plot total energy curves, for instance to monitor how CPML absorbing layers behave;
-! should be turned OFF in most cases because expensive
-  logical, parameter :: OUTPUT_ENERGY = .false. ! .true.
-  integer, parameter :: NTSTEP_BETWEEN_OUTPUT_ENERGY = 10  ! how often we compute energy (which is expensive to compute)
-
-!!-----------------------------------------------------------
-!!
-!! adjoint kernel outputs
-!!
-!!-----------------------------------------------------------
-
-! this parameter must be set to .true. to compute anisotropic kernels
-! in crust and mantle (related to the 21 Cij in geographical coordinates)
-! default is .false. to compute isotropic kernels (related to alpha and beta)
-  logical, parameter :: ANISOTROPIC_KL = .false.
-
-! compute transverse isotropic kernels (alpha_v,alpha_h,beta_v,beta_h,eta,rho)
-! rather than fully anisotropic kernels in case ANISOTROPIC_KL is set to .true.
-  logical, parameter :: SAVE_TRANSVERSE_KL = .false.
-
-! outputs approximate Hessian for preconditioning
-  logical, parameter :: APPROXIMATE_HESS_KL = .false.
-
-! save Moho mesh and compute Moho boundary kernels
-  logical, parameter :: SAVE_MOHO_MESH = .false.
-
-!!! 33333333333333333333333333333333333333333333333333
-
 !!-----------------------------------------------------------
 !!
 !! Roland_Sylvain gravity calculations

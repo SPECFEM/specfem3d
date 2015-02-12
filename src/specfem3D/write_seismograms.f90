@@ -160,7 +160,7 @@
                           ispec,NSPEC_AB,ibool, &
                           xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
                           hxir,hetar,hgammar, &
-                          dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd)
+                          dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd,USE_TRICK_FOR_BETTER_PRESSURE)
         endif ! acoustic
 
         ! poroelastic wave field
@@ -253,7 +253,7 @@
                           ispec,NSPEC_AB,ibool, &
                           xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
                           hxir,hetar,hgammar, &
-                          dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd)
+                          dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd,USE_TRICK_FOR_BETTER_PRESSURE)
         endif ! acoustic
 
       ! adjoint simulations
@@ -300,7 +300,7 @@
                           ispec,NSPEC_AB,ibool, &
                           xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
                           hxir,hetar,hgammar, &
-                          dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd)
+                          dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd,USE_TRICK_FOR_BETTER_PRESSURE)
         endif ! acoustic
 
       end select ! SIMULATION_TYPE

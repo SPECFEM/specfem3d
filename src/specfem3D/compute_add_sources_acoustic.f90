@@ -41,7 +41,8 @@
                         xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
                         station_name,network_name,adj_source_file,nrec_local,number_receiver_global, &
                         pm1_source_encoding,nsources_local,USE_FORCE_POINT_SOURCE, &
-                        USE_RICKER_TIME_FUNCTION,SU_FORMAT
+                        USE_RICKER_TIME_FUNCTION,SU_FORMAT,USE_TRICK_FOR_BETTER_PRESSURE,USE_SOURCE_ENCODING
+
   implicit none
 
   integer :: NSPEC_AB,NGLOB_AB
@@ -417,7 +418,8 @@
   use constants
   use specfem_par,only: PRINT_SOURCE_TIME_FUNCTION,stf_used_total, &
                         pm1_source_encoding,nsources_local,USE_FORCE_POINT_SOURCE, &
-                        USE_RICKER_TIME_FUNCTION
+                        USE_RICKER_TIME_FUNCTION,USE_SOURCE_ENCODING
+
   implicit none
 
   integer :: NSPEC_AB

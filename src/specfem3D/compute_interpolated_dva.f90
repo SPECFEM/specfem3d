@@ -125,7 +125,7 @@ subroutine compute_interpolated_dva_acoust(displ_element,veloc_element,accel_ele
                         ispec,NSPEC_AB,ibool, &
                         xi_r,eta_r,gamma_r, &
                         hxir,hetar,hgammar, &
-                        dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd)
+                        dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd,USE_TRICK_FOR_BETTER_PRESSURE)
 
 ! for acoustic elements
 ! returns displacement/velocity/acceleration/pressure (dxd,..,vxd,..,axd,..,pd) at receiver location
@@ -142,7 +142,9 @@ subroutine compute_interpolated_dva_acoust(displ_element,veloc_element,accel_ele
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: displ_element,veloc_element,accel_element
   real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: potential_dot_dot_acoustic,potential_acoustic
 
-  integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB):: ibool
+  integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
+
+  logical :: USE_TRICK_FOR_BETTER_PRESSURE
 
   ! receiver information
   double precision :: xi_r,eta_r,gamma_r

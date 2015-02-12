@@ -184,6 +184,30 @@
   call read_value_logical(SAVE_ALL_SEISMOS_IN_ONE_FILE, 'SAVE_ALL_SEISMOS_IN_ONE_FILE', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter SAVE_ALL_SEISMOS_IN_ONE_FILE'
 
+  call read_value_logical(USE_TRICK_FOR_BETTER_PRESSURE, 'USE_TRICK_FOR_BETTER_PRESSURE', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter USE_TRICK_FOR_BETTER_PRESSURE'
+
+  call read_value_logical(USE_SOURCE_ENCODING, 'USE_SOURCE_ENCODING', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter USE_SOURCE_ENCODING'
+
+  call read_value_logical(OUTPUT_ENERGY, 'OUTPUT_ENERGY', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter OUTPUT_ENERGY'
+
+  call read_value_integer(NTSTEP_BETWEEN_OUTPUT_ENERGY, 'NTSTEP_BETWEEN_OUTPUT_ENERGY', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter NTSTEP_BETWEEN_OUTPUT_ENERGY'
+
+  call read_value_logical(ANISOTROPIC_KL, 'ANISOTROPIC_KL', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter ANISOTROPIC_KL'
+
+  call read_value_logical(SAVE_TRANSVERSE_KL, 'SAVE_TRANSVERSE_KL', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter SAVE_TRANSVERSE_KL'
+
+  call read_value_logical(APPROXIMATE_HESS_KL, 'APPROXIMATE_HESS_KL', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter APPROXIMATE_HESS_KL'
+
+  call read_value_logical(SAVE_MOHO_MESH, 'SAVE_MOHO_MESH', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter SAVE_MOHO_MESH'
+
   call read_value_logical(PRINT_SOURCE_TIME_FUNCTION, 'PRINT_SOURCE_TIME_FUNCTION', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter PRINT_SOURCE_TIME_FUNCTION'
 
