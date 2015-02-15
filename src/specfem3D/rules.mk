@@ -116,7 +116,6 @@ specfem3D_SHARED_OBJECTS = \
 	$O/assemble_MPI_scalar.shared.o \
 	$O/check_mesh_resolution.shared.o \
 	$O/create_name_database.shared.o \
-	$O/create_serial_name_database.shared.o \
 	$O/define_derivation_matrices.shared.o \
 	$O/detect_surface.shared.o \
 	$O/exit_mpi.shared.o \

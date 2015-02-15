@@ -958,7 +958,7 @@ subroutine save_kernels_acoustic(adios_handle)
 
   ! writes out derivative kernels
   do irec_local = 1, nrec_local
-    write(outputname,'(a,i6.6)') OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // &
+    write(outputname,'(a,i6.6)') OUTPUT_FILES(1:len_trim(OUTPUT_FILES)) // &
         '/src_frechet.',number_receiver_global(irec_local)
 
     open(unit=IOUT,file=trim(outputname),status='unknown',iostat=ier)

@@ -28,7 +28,7 @@
   subroutine get_cmt(yr,jda,ho,mi,sec,tshift_cmt,hdur,lat,long,depth,moment_tensor,&
                     DT,NSOURCES,min_tshift_cmt_original)
 
-  use constants,only: IIN,IN_DATA_FILES_PATH,MAX_STRING_LEN,mygroup
+  use constants,only: IIN,IN_DATA_FILES,MAX_STRING_LEN,mygroup
   use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS
 
   implicit none
@@ -63,7 +63,7 @@
 !
 !---- read hypocenter info
 !
-  CMTSOLUTION = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'CMTSOLUTION'
+  CMTSOLUTION = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'CMTSOLUTION'
 ! see if we are running several independent runs in parallel
 ! if so, add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
 ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off

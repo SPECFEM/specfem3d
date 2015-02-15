@@ -1,3 +1,7 @@
+
+!! DK DK put this because I do not know how to fix the rules.mk dependencies
+  include "../../src/shared/serial.f90"
+
 program test_partitioning
 
   use decompose_mesh

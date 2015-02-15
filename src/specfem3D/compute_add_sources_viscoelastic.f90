@@ -266,17 +266,17 @@
           write(procname,"(i4)") myrank
           procname = adjustl(procname)
           ! read adjoint sources
-          open(unit=IIN_SU1, file=trim(OUTPUT_FILES_PATH)//'../SEM/'//trim(procname)//'_dx_SU.adj', &
+          open(unit=IIN_SU1, file=trim(OUTPUT_FILES)//'../SEM/'//trim(procname)//'_dx_SU.adj', &
                status='old', access='direct', recl=240+4*NSTEP, iostat=ier)
-          if (ier /= 0) call exit_MPI(myrank,'file '//trim(OUTPUT_FILES_PATH) &
+          if (ier /= 0) call exit_MPI(myrank,'file '//trim(OUTPUT_FILES) &
                                     //'../SEM/'//trim(procname)//'_dx_SU.adj does not exist')
-          open(unit=IIN_SU2, file=trim(OUTPUT_FILES_PATH)//'../SEM/'//trim(procname)//'_dy_SU.adj', &
+          open(unit=IIN_SU2, file=trim(OUTPUT_FILES)//'../SEM/'//trim(procname)//'_dy_SU.adj', &
                status='old', access='direct', recl=240+4*NSTEP, iostat=ier)
-          if (ier /= 0) call exit_MPI(myrank,'file '//trim(OUTPUT_FILES_PATH) &
+          if (ier /= 0) call exit_MPI(myrank,'file '//trim(OUTPUT_FILES) &
                                     //'../SEM/'//trim(procname)//'_dy_SU.adj does not exist')
-          open(unit=IIN_SU3, file=trim(OUTPUT_FILES_PATH)//'../SEM/'//trim(procname)//'_dz_SU.adj', &
+          open(unit=IIN_SU3, file=trim(OUTPUT_FILES)//'../SEM/'//trim(procname)//'_dz_SU.adj', &
                status='old', access='direct', recl=240+4*NSTEP, iostat=ier)
-          if (ier /= 0) call exit_MPI(myrank,'file '//trim(OUTPUT_FILES_PATH) &
+          if (ier /= 0) call exit_MPI(myrank,'file '//trim(OUTPUT_FILES) &
                                     //'../SEM/'//trim(procname)//'_dz_SU.adj does not exist')
 
           do irec_local = 1,nrec_local
@@ -770,17 +770,17 @@
           write(procname,"(i4)") myrank
           procname = adjustl(procname)
           ! read adjoint sources
-          open(unit=IIN_SU1, file=trim(OUTPUT_FILES_PATH)//'../SEM/'//trim(procname)//'_dx_SU.adj', &
+          open(unit=IIN_SU1, file=trim(OUTPUT_FILES)//'../SEM/'//trim(procname)//'_dx_SU.adj', &
                status='old', access='direct', recl=240+4*NSTEP, iostat=ier)
-          if (ier /= 0) call exit_MPI(myrank,'file '//trim(OUTPUT_FILES_PATH) &
+          if (ier /= 0) call exit_MPI(myrank,'file '//trim(OUTPUT_FILES) &
                                     //'../SEM/'//trim(procname)//'_dx_SU.adj does not exist')
-          open(unit=IIN_SU2, file=trim(OUTPUT_FILES_PATH)//'../SEM/'//trim(procname)//'_dy_SU.adj', &
+          open(unit=IIN_SU2, file=trim(OUTPUT_FILES)//'../SEM/'//trim(procname)//'_dy_SU.adj', &
                status='old', access='direct', recl=240+4*NSTEP, iostat=ier)
-          if (ier /= 0) call exit_MPI(myrank,'file '//trim(OUTPUT_FILES_PATH) &
+          if (ier /= 0) call exit_MPI(myrank,'file '//trim(OUTPUT_FILES) &
                                     //'../SEM/'//trim(procname)//'_dy_SU.adj does not exist')
-          open(unit=IIN_SU3, file=trim(OUTPUT_FILES_PATH)//'../SEM/'//trim(procname)//'_dz_SU.adj', &
+          open(unit=IIN_SU3, file=trim(OUTPUT_FILES)//'../SEM/'//trim(procname)//'_dz_SU.adj', &
                status='old', access='direct', recl=240+4*NSTEP, iostat=ier)
-          if (ier /= 0) call exit_MPI(myrank,'file '//trim(OUTPUT_FILES_PATH) &
+          if (ier /= 0) call exit_MPI(myrank,'file '//trim(OUTPUT_FILES) &
                                     //'../SEM/'//trim(procname)//'_dz_SU.adj does not exist')
 
           do irec_local = 1,nrec_local

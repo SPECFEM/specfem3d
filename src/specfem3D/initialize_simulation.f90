@@ -55,7 +55,7 @@
 
   ! open main output file, only written to by process 0
   if (myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
-    open(unit=IMAIN,file=trim(OUTPUT_FILES_PATH)//'/output_solver.txt',status='unknown')
+    open(unit=IMAIN,file=trim(OUTPUT_FILES)//'/output_solver.txt',status='unknown')
 
   ! user output
   if (myrank == 0) then
@@ -311,7 +311,7 @@
 
   ! check that the code has been compiled with the right values
   if (myrank == 0) then
-    HEADER_FILE = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))//'/values_from_mesher.h'
+    HEADER_FILE = OUTPUT_FILES(1:len_trim(OUTPUT_FILES))//'/values_from_mesher.h'
 
     open(unit=IOUT,file=trim(HEADER_FILE),status='old',iostat=ier)
     if (ier /= 0) then
@@ -334,10 +334,10 @@
   if (myrank == 0) then
     ! tests if OUTPUT_FILES directory exists
     ! note: inquire behaves differently when using intel ifort or gfortran compilers
-    !INQUIRE( FILE = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))//'/.', EXIST = exists)
-    open(IOUT,file=trim(OUTPUT_FILES_PATH)//'/dummy.txt',status='unknown',iostat=ier)
+    !INQUIRE( FILE = OUTPUT_FILES(1:len_trim(OUTPUT_FILES))//'/.', EXIST = exists)
+    open(IOUT,file=trim(OUTPUT_FILES)//'/dummy.txt',status='unknown',iostat=ier)
     if (ier /= 0) then
-      print*,"OUTPUT_FILES directory does not work: ",trim(OUTPUT_FILES_PATH)
+      print*,"OUTPUT_FILES directory does not work: ",trim(OUTPUT_FILES)
       call exit_MPI(myrank,'error OUTPUT_FILES directory')
     endif
     close(IOUT,status='delete')
@@ -384,7 +384,7 @@
 
   ! snapshot file names: ADJOINT attenuation
   if (ATTENUATION .and. ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3)) &
-    call create_name_database(prname_Q,myrank,OUTPUT_FILES_PATH)
+    call create_name_database(prname_Q,myrank,OUTPUT_FILES)
 
   ! number of elements and points for adjoint arrays
   if (SIMULATION_TYPE == 3) then

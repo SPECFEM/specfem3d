@@ -269,7 +269,7 @@
 
 ! creates shakemap file
     if (myrank == 0) then
-      open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/shakingdata',status='unknown',form='unformatted',iostat=ier)
+      open(unit=IOUT,file=trim(OUTPUT_FILES)//'/shakingdata',status='unknown',form='unformatted',iostat=ier)
       if (ier /= 0) stop 'error opening file shakingdata'
       write(IOUT) store_val_x_all_external_mesh   ! x coordinates
       write(IOUT) store_val_y_all_external_mesh   ! y coordinates
@@ -482,7 +482,7 @@
 ! file output
   if (myrank == 0) then
     write(outputname,"('/moviedata',i6.6)") it
-    open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//outputname,status='unknown',form='unformatted',iostat=ier)
+    open(unit=IOUT,file=trim(OUTPUT_FILES)//outputname,status='unknown',form='unformatted',iostat=ier)
     if (ier /= 0) stop 'error opening file moviedata'
     write(IOUT) store_val_x_all_external_mesh   ! x coordinate
     write(IOUT) store_val_y_all_external_mesh   ! y coordinate
@@ -739,7 +739,7 @@
   ! file output: note that values are only stored on free surface
   if (myrank == 0) then
     write(outputname,"('/moviedata',i6.6)") it
-    open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//outputname,status='unknown',form='unformatted',iostat=ier)
+    open(unit=IOUT,file=trim(OUTPUT_FILES)//outputname,status='unknown',form='unformatted',iostat=ier)
     if (ier /= 0) stop 'error opening file moviedata'
     write(IOUT) store_val_x_all_external_mesh   ! x coordinate
     write(IOUT) store_val_y_all_external_mesh   ! y coordinate
@@ -922,7 +922,7 @@
 
     ! creates shakemap file: note that values are only stored on free surface
     if (myrank == 0) then
-      open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/shakingdata',status='unknown',form='unformatted',iostat=ier)
+      open(unit=IOUT,file=trim(OUTPUT_FILES)//'/shakingdata',status='unknown',form='unformatted',iostat=ier)
       if (ier /= 0) stop 'error opening file shakingdata'
       write(IOUT) store_val_x_all_external_mesh   ! x coordinates
       write(IOUT) store_val_y_all_external_mesh   ! y coordinates

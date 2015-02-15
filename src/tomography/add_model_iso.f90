@@ -207,9 +207,9 @@ subroutine initialize()
 
   use specfem_par,only: NSPEC_AB,NGLOB_AB,NPROC,ADIOS_ENABLED
 
-  logical :: BROADCAST_AFTER_READ
-
   implicit none
+
+  logical :: BROADCAST_AFTER_READ
 
   ! initialize the MPI communicator and start the NPROCTOT MPI processes
   call init_mpi()

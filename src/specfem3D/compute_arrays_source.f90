@@ -155,7 +155,7 @@
   ! loops over components
   do icomp = 1, NDIM
 
-    filename = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))//'/../SEM/'//trim(adj_source_file)//'.'//comp(icomp)//'.adj'
+    filename = OUTPUT_FILES(1:len_trim(OUTPUT_FILES))//'/../SEM/'//trim(adj_source_file)//'.'//comp(icomp)//'.adj'
     open(unit=IIN,file=trim(filename),status='old',action='read',iostat = ier)
     ! cycles to next file (this might be more error prone)
     !if (ier /= 0) cycle

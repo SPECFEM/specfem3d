@@ -1,3 +1,7 @@
+
+!! DK DK put this because I do not know how to fix the rules.mk dependencies
+  include "../../src/shared/serial.f90"
+
 program test_read
 
   use decompose_mesh
@@ -12,8 +16,13 @@ program test_read
   double precision,parameter :: PAR_FILE_DT = 0.05
   logical,parameter :: PAR_FILE_USE_RICKER_TIME_FUNCTION = .false.
 
+  integer :: myrank
+  logical :: BROADCAST_AFTER_READ
+
   ! reads ../DATA/Par_file
-  call read_parameter_file()
+  myrank = 0
+  BROADCAST_AFTER_READ = .false.
+  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
 
   ! punctual check of values for given default Par_file in SPECFEM3D/DATA/ directory
   print*,'NPROC = ',NPROC

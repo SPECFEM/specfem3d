@@ -40,7 +40,7 @@
 
   !----  create a Gnuplot script to display the energy curve in log scale
   if (OUTPUT_ENERGY .and. myrank == 0) then
-    open(unit=IOUT_ENERGY,file=trim(OUTPUT_FILES_PATH)//'plot_energy.gnu',status='unknown',action='write')
+    open(unit=IOUT_ENERGY,file=trim(OUTPUT_FILES)//'plot_energy.gnu',status='unknown',action='write')
     write(IOUT_ENERGY,*) 'set term wxt'
     write(IOUT_ENERGY,*) '#set term postscript landscape color solid "Helvetica" 22'
     write(IOUT_ENERGY,*) '#set output "energy.ps"'
@@ -61,7 +61,7 @@
 
   ! open the file in which we will store the energy curve
   if (OUTPUT_ENERGY .and. myrank == 0) &
-    open(unit=IOUT_ENERGY,file=trim(OUTPUT_FILES_PATH)//'energy.dat',status='unknown',action='write')
+    open(unit=IOUT_ENERGY,file=trim(OUTPUT_FILES)//'energy.dat',status='unknown',action='write')
 
 !
 !   s t a r t   t i m e   i t e r a t i o n s
@@ -80,7 +80,7 @@
 
   ! create an empty file to monitor the start of the simulation
   if (myrank == 0) then
-    open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/starttimeloop.txt',status='unknown',action='write')
+    open(unit=IOUT,file=trim(OUTPUT_FILES)//'/starttimeloop.txt',status='unknown',action='write')
     write(IOUT,*) 'hello, starting time loop'
     close(IOUT)
   endif
@@ -338,7 +338,9 @@
 
   end subroutine it_print_elapsed_time
 
-!=====================================================================
+!
+!-------------------------------------------------------------------------------------------------
+!
 
   subroutine it_transfer_from_GPU()
 

@@ -573,7 +573,7 @@
        station_name(irec)(1:length_station_name),channel,component
 
     ! directory to store seismograms
-    final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'
+    final_LOCAL_PATH = OUTPUT_FILES(1:len_trim(OUTPUT_FILES)) // '/'
 
     ! ASCII output format
     call write_output_ASCII_or_binary(one_seismogram, &
@@ -653,7 +653,7 @@
       ! if the simulation uses many time steps. However, subsampling the output
       ! here would result in a loss of accuracy when one later convolves
       ! the results with the source time function
-      open(unit=IOUT,file=OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))//sisname(1:len_trim(sisname)),status='unknown')
+      open(unit=IOUT,file=OUTPUT_FILES(1:len_trim(OUTPUT_FILES))//sisname(1:len_trim(sisname)),status='unknown')
 
       ! make sure we never write more than the maximum number of time steps
       ! subtract half duration of the source to make sure travel time is correct
@@ -733,7 +733,7 @@
         ! if the simulation uses many time steps. However, subsampling the output
         ! here would result in a loss of accuracy when one later convolves
         ! the results with the source time function
-        open(unit=IOUT,file=OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))//sisname(1:len_trim(sisname)),status='unknown')
+        open(unit=IOUT,file=OUTPUT_FILES(1:len_trim(OUTPUT_FILES))//sisname(1:len_trim(sisname)),status='unknown')
 
         ! make sure we never write more than the maximum number of time steps
         ! subtract half duration of the source to make sure travel time is correct

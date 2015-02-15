@@ -101,7 +101,7 @@
 
   subroutine open_parameter_file_from_master_only(ier)
 
-  use constants, only: MAX_STRING_LEN,IN_DATA_FILES_PATH
+  use constants, only: MAX_STRING_LEN,IN_DATA_FILES
 
   implicit none
 
@@ -109,7 +109,7 @@
   character(len=MAX_STRING_LEN) :: filename_main,filename_run0001
   logical :: exists_main_Par_file,exists_run0001_Par_file
 
-  filename_main = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'Par_file'
+  filename_main = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'Par_file'
 
 ! also see if we are running several independent runs in parallel
 ! to do so, add the right directory for that run for the master process only here
@@ -153,7 +153,7 @@
 
   subroutine open_parameter_file(ier)
 
-  use constants, only: MAX_STRING_LEN,IN_DATA_FILES_PATH,mygroup
+  use constants, only: MAX_STRING_LEN,IN_DATA_FILES,mygroup
   use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS
 
   implicit none
@@ -161,7 +161,7 @@
   integer :: ier
   character(len=MAX_STRING_LEN) :: filename,path_to_add
 
-  filename = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'Par_file'
+  filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'Par_file'
 ! see if we are running several independent runs in parallel
 ! if so, add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
 ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off

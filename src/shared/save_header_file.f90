@@ -55,7 +55,7 @@
   endif
 
 ! copy number of elements and points in an include file for the solver
-  HEADER_FILE = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))//'/values_from_mesher.h'
+  HEADER_FILE = OUTPUT_FILES(1:len_trim(OUTPUT_FILES))//'/values_from_mesher.h'
 
   open(unit=IOUT,file=HEADER_FILE,status='unknown')
   write(IOUT,*)
@@ -132,7 +132,7 @@
 ! copy number of surface elements in an include file for the movies
   if (nfaces_surface_glob_ext_mesh > 0) then
 
-    HEADER_FILE = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))//'/surface_from_mesher.h'
+    HEADER_FILE = OUTPUT_FILES(1:len_trim(OUTPUT_FILES))//'/surface_from_mesher.h'
 
     open(unit=IOUT,file=HEADER_FILE,status='unknown')
     write(IOUT,*) '!'

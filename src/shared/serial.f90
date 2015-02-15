@@ -285,7 +285,7 @@
 !
 
   subroutine bcast_all_singlel_world(buffer)
-  
+
   implicit none
 
   logical :: buffer,ldummy
@@ -299,7 +299,7 @@
 !
 
   subroutine bcast_all_singledp_world(buffer)
-  
+
   implicit none
 
   double precision :: buffer,dpdummy
@@ -313,7 +313,7 @@
 !
 
   subroutine bcast_all_string_world(buffer)
-  
+
   use constants,only: MAX_STRING_LEN
 
   implicit none

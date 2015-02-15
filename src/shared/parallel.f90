@@ -1446,7 +1446,7 @@ end module my_mpi
   subroutine world_split()
 
   use my_mpi
-  use constants,only: MAX_STRING_LEN,OUTPUT_FILES_PATH, &
+  use constants,only: MAX_STRING_LEN,OUTPUT_FILES, &
     IMAIN,ISTANDARD_OUTPUT,mygroup,I_should_read_the_database
   use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
 
@@ -1492,7 +1492,7 @@ end module my_mpi
 
 !   add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
     write(path_to_add,"('run',i4.4,'/')") mygroup + 1
-    OUTPUT_FILES_PATH = path_to_add(1:len_trim(path_to_add))//OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))
+    OUTPUT_FILES = path_to_add(1:len_trim(path_to_add))//OUTPUT_FILES(1:len_trim(OUTPUT_FILES))
 
 !--- create a subcommunicator to broadcast the identical mesh and model databases if needed
     if (BROADCAST_SAME_MESH_AND_MODEL) then

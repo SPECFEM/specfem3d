@@ -356,8 +356,8 @@
 
 ! reads in station file
   if (SIMULATION_TYPE == 1) then
-    rec_filename = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'STATIONS'
-    filtered_rec_filename = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'STATIONS_FILTERED'
+    rec_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'STATIONS'
+    filtered_rec_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'STATIONS_FILTERED'
 
 ! see if we are running several independent runs in parallel
 ! if so, add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
@@ -375,8 +375,8 @@
     call synchronize_all()
 
   else
-    rec_filename = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'STATIONS_ADJOINT'
-    filtered_rec_filename = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'STATIONS_ADJOINT_FILTERED'
+    rec_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'STATIONS_ADJOINT'
+    filtered_rec_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'STATIONS_ADJOINT_FILTERED'
 
 ! see if we are running several independent runs in parallel
 ! if so, add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
@@ -715,7 +715,7 @@
           ! checks **net**.**sta**.**BH**.adj files for correct number of time steps
           adj_source_file = trim(network_name(irec))//'.'//trim(station_name(irec))
           do icomp = 1,NDIM
-            filename = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))// &
+            filename = OUTPUT_FILES(1:len_trim(OUTPUT_FILES))// &
                        '/../SEM/'//trim(adj_source_file) // '.'// comp(icomp) // '.adj'
             open(unit=IIN,file=trim(filename),status='old',action='read',iostat=ier)
             if (ier == 0) then
@@ -881,7 +881,7 @@
 
   if (myrank == 0) then
     ! vtk file
-    open(IOVTK,file=trim(OUTPUT_FILES_PATH)//'/sr.vtk',status='unknown',iostat=ier)
+    open(IOVTK,file=trim(OUTPUT_FILES)//'/sr.vtk',status='unknown',iostat=ier)
     if (ier /= 0) stop 'error opening sr.vtk file'
     ! vtk header
     write(IOVTK,'(a)') '# vtk DataFile Version 2.0'
@@ -992,8 +992,8 @@
     ! creates additional receiver and source files
     if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
       ! extracts receiver locations
-      filename = trim(OUTPUT_FILES_PATH)//'/sr.vtk'
-      filename_new = trim(OUTPUT_FILES_PATH)//'/receiver.vtk'
+      filename = trim(OUTPUT_FILES)//'/sr.vtk'
+      filename_new = trim(OUTPUT_FILES)//'/receiver.vtk'
 
       ! vtk file for receivers only
       write(system_command, &
@@ -1001,7 +1001,7 @@
       "'",'"',nrec,'"',NSOURCES,"'",trim(filename),trim(filename_new)
 
       ! extracts source locations
-      filename_new = trim(OUTPUT_FILES_PATH)//'/source.vtk'
+      filename_new = trim(OUTPUT_FILES)//'/source.vtk'
 
       write(system_command1, &
   "('awk ',a1,'{if (NR<5) print $0;if (NR==5)print ',a1,'POINTS',i6,' float',a1,';')") &

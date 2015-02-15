@@ -36,7 +36,7 @@ module constants
 
   ! create a copy of the original output file path, to which we may add a "run0001/", "run0002/", "run0003/" prefix later
   ! if NUMBER_OF_SIMULTANEOUS_RUNS > 1
-  character(len=MAX_STRING_LEN) :: OUTPUT_FILES_PATH = OUTPUT_FILES_PATH_BASE
+  character(len=MAX_STRING_LEN) :: OUTPUT_FILES = OUTPUT_FILES_BASE
 
   ! if doing simultaneous runs for the same mesh and model, see who should read the mesh and the model and broadcast it to others
   ! we put a default value here

@@ -596,7 +596,7 @@
 ! display a given field as a red and blue color image
 ! to display the snapshots : display image*.gif
 ! when compiling with Intel ifort, use " -assume byterecl " option to create binary PNM images
-  use constants,only: HUGEVAL,TINYVAL,CUSTOM_REAL,OUTPUT_FILES_PATH,MAX_STRING_LEN
+  use constants,only: HUGEVAL,TINYVAL,CUSTOM_REAL,OUTPUT_FILES,MAX_STRING_LEN
   use image_PNM_par,only: BINARY_FILE,VP_BACKGROUND,&
                         POWER_DISPLAY_COLOR
   implicit none
@@ -617,7 +617,7 @@
   integer, parameter :: ascii_code_of_zero = 48, ascii_code_of_carriage_return = 10
 
   ! open the image file
-  write(file_name,"(a,'/image',i7.7,'.pnm')") OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)),it
+  write(file_name,"(a,'/image',i7.7,'.pnm')") OUTPUT_FILES(1:len_trim(OUTPUT_FILES)),it
 
 ! first delete the file, just in case it was previously bigger
   open(unit=27,file=file_name,status='unknown')

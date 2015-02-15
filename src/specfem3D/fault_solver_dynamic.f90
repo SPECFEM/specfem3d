@@ -929,7 +929,7 @@ end subroutine rsf_update_state
 
 subroutine SCEC_Write_RuptureTime(dataXZ,iflt)
 
-  use specfem_par, only: OUTPUT_FILES_PATH
+  use specfem_par, only: OUTPUT_FILES
   type(dataXZ_type), intent(in) :: dataXZ
   integer, intent(in) :: iflt
 
@@ -940,7 +940,7 @@ subroutine SCEC_Write_RuptureTime(dataXZ,iflt)
 
   call date_and_time(VALUES=time_values)
 
-  write(filename,'(a,I0)') trim(OUTPUT_FILES_PATH)//'/RuptureTime_Fault', iflt
+  write(filename,'(a,I0)') trim(OUTPUT_FILES)//'/RuptureTime_Fault', iflt
 
   IOUT = 121 !WARNING: not very robust. Could instead look for an available ID
 
@@ -1106,13 +1106,13 @@ end subroutine store_dataXZ
 !---------------------------------------------------------------
 subroutine write_dataXZ(dataXZ,itime,iflt)
 
-  use specfem_par, only: OUTPUT_FILES_PATH
+  use specfem_par, only: OUTPUT_FILES
   type(dataXZ_type), intent(in) :: dataXZ
   integer, intent(in) :: itime,iflt
 
   character(len=MAX_STRING_LEN) :: filename
 
-  write(filename,"(a,I0,'_F',I0,'.bin')") trim(OUTPUT_FILES_PATH)//'/Snapshot',itime,iflt
+  write(filename,"(a,I0,'_F',I0,'.bin')") trim(OUTPUT_FILES)//'/Snapshot',itime,iflt
 
   open(unit=IOUT, file= trim(filename), status='replace', form='unformatted',action='write')
 
