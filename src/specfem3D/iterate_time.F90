@@ -34,7 +34,7 @@
   use specfem_par_elastic
   use specfem_par_poroelastic
   use specfem_par_movie
-  use gravity_perturbation, only : gravity_timeseries, GRAVITY_SIMULATION
+  use gravity_perturbation, only: gravity_timeseries, GRAVITY_SIMULATION
 
   implicit none
 
@@ -67,7 +67,7 @@
 !   s t a r t   t i m e   i t e r a t i o n s
 !
 
-! synchronize all processes to make sure everybody is ready to start time loop
+  ! synchronize all processes to make sure everybody is ready to start time loop
   call synchronize_all()
   if (myrank == 0) write(IMAIN,*) 'All processes are synchronized before time loop'
 
@@ -78,20 +78,19 @@
     call flush_IMAIN()
   endif
 
-! create an empty file to monitor the start of the simulation
+  ! create an empty file to monitor the start of the simulation
   if (myrank == 0) then
-    open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/starttimeloop.txt',status='unknown')
-    write(IOUT,*) 'starting time loop'
+    open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/starttimeloop.txt',status='unknown',action='write')
+    write(IOUT,*) 'hello, starting time loop'
     close(IOUT)
   endif
 
-! get MPI starting time
+  ! get MPI starting time
   time_start = wtime()
 
-
-! *********************************************************
-! ************* MAIN LOOP OVER THE TIME STEPS *************
-! *********************************************************
+  ! *********************************************************
+  ! ************* MAIN LOOP OVER THE TIME STEPS *************
+  ! *********************************************************
 
   do it = 1,NSTEP
 
@@ -184,6 +183,7 @@
     endif
 
     ! first step of noise tomography, i.e., save a surface movie at every time step
+    ! modified from the subroutine 'write_movie_surface'
     if (NOISE_TOMOGRAPHY == 1) then
       if (num_free_surface_faces > 0) then
         call noise_save_surface_movie(displ,ibool, &
@@ -194,9 +194,9 @@
       endif
     endif
 
-!
-!---- end of time iteration loop
-!
+  !
+  !---- end of time iteration loop
+  !
   enddo   ! end of main time loop
 
   call it_print_elapsed_time()
@@ -210,7 +210,9 @@
   end subroutine iterate_time
 
 
-!=====================================================================
+!
+!-------------------------------------------------------------------------------------------------
+!
 
 
   subroutine it_read_forward_arrays()
@@ -306,7 +308,9 @@
 
   end subroutine it_read_forward_arrays
 
-!=====================================================================
+!
+!-------------------------------------------------------------------------------------------------
+!
 
   subroutine it_print_elapsed_time()
 
