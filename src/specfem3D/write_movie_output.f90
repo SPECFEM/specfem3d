@@ -33,7 +33,10 @@
   use specfem_par_movie
   use specfem_par_elastic
   use specfem_par_acoustic
+
   implicit none
+
+  if (.not. MOVIE_SIMULATION) return
 
   ! gets resulting array values onto CPU
   if (GPU_MODE .and. &
