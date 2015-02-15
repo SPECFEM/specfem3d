@@ -130,7 +130,6 @@ xadd_model_SHARED_OBJECTS = \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \
-	$O/unused_mod.shared_module.o \
 	$(EMPTY_MACRO)
 
 ##
@@ -177,7 +176,6 @@ xmodel_update_SHARED_OBJECTS = \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \
-	$O/unused_mod.shared_module.o \
 	$O/write_VTK_data.shared.o \
 	$(EMPTY_MACRO)
 
@@ -239,7 +237,6 @@ xsmooth_sem_SHARED_OBJECTS = \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \
-	$O/unused_mod.shared_module.o \
 	$O/write_VTK_data.shared.o \
 	$(EMPTY_MACRO)
 
@@ -263,7 +260,6 @@ xsum_kernels_SHARED_OBJECTS = \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \
-	$O/unused_mod.shared_module.o \
 	$(EMPTY_MACRO)
 
 ${E}/xsum_kernels: $(xsum_kernels_OBJECTS) $(xsum_kernels_SHARED_OBJECTS) $(COND_MPI_OBJECTS)

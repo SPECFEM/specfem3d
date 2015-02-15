@@ -66,7 +66,10 @@ program sum_preconditioned_kernels
   integer :: nker
   integer :: ier
 
+  logical :: BROADCAST_AFTER_READ
+
   ! ============ program starts here =====================
+
   ! initialize the MPI communicator and start the NPROCTOT MPI processes
   call init_mpi()
   call world_size(sizeprocs)
@@ -100,7 +103,8 @@ program sum_preconditioned_kernels
   endif
 
   ! needs local_path for mesh files
-  call read_parameter_file()
+  BROADCAST_AFTER_READ = .true.
+  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
 
   ! checks if number of MPI process as specified
   if (sizeprocs /= NPROC) then

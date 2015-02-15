@@ -207,6 +207,8 @@ subroutine initialize()
 
   use specfem_par,only: NSPEC_AB,NGLOB_AB,NPROC,ADIOS_ENABLED
 
+  logical :: BROADCAST_AFTER_READ
+
   implicit none
 
   ! initialize the MPI communicator and start the NPROCTOT MPI processes
@@ -215,7 +217,8 @@ subroutine initialize()
   call world_rank(myrank)
 
   ! reads the parameter file
-  call read_parameter_file()
+  BROADCAST_AFTER_READ = .true.
+  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
 
   if (ADIOS_ENABLED) stop 'Flag ADIOS_ENABLED not supported yet for xadd_model, please rerun program...'
 

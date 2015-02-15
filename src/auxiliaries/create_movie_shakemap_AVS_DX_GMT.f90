@@ -31,6 +31,9 @@
 !---  of the velocity vector) in AVS, OpenDX or GMT format
 !
 
+!! DK DK put this because I do not know how to fix the rules.mk dependencies
+  include "../shared/serial.f90"
+
   program create_movie_shakemap
 
   use constants
@@ -97,7 +100,8 @@
   ! order of points representing the 2D square element
   integer,dimension(NGNOD2D_FOUR_CORNERS_AVS_DX),parameter :: iorder = (/1,3,2,4/)
 
-  integer :: NSPEC_SURFACE_EXT_MESH
+  integer :: NSPEC_SURFACE_EXT_MESH,myrank
+  logical :: BROADCAST_AFTER_READ
 
 ! ************** PROGRAM STARTS HERE **************
 
@@ -110,7 +114,9 @@
   print *
 
   ! read the parameter file
-  call read_parameter_file()
+  myrank = 0
+  BROADCAST_AFTER_READ = .false.
+  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
 
   ! only one global array for movie data, but stored for all surfaces defined
   ! in file 'surface_from_mesher.h'

@@ -39,6 +39,7 @@
   implicit none
 
   integer :: ier
+  logical :: BROADCAST_AFTER_READ
 
   ! myrank is the rank of each process, between 0 and NPROC-1.
   ! as usual in MPI, process 0 is in charge of coordinating everything
@@ -46,7 +47,8 @@
   call world_rank(myrank)
 
   ! read the parameter file
-  call read_parameter_file()
+  BROADCAST_AFTER_READ = .true.
+  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
 
   ! checks flags
   call initialize_simulation_check()

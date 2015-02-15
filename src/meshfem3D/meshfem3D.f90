@@ -343,6 +343,8 @@
 ! second dimension : #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id
   double precision , dimension(:,:), pointer :: material_properties
 
+  logical :: BROADCAST_AFTER_READ
+
 ! ************** PROGRAM STARTS HERE **************
 
 ! sizeprocs returns number of processes started (should be equal to NPROC).
@@ -374,7 +376,8 @@
   endif
 
 ! read the parameter file (DATA/Par_file)
-  call read_parameter_file()
+  BROADCAST_AFTER_READ = .true.
+  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
 
 ! if meshing a chunk of the Earth, call a specific internal mesher designed specifically for that
   if (COUPLE_WITH_EXTERNAL_CODE .and. MESH_A_CHUNK_OF_THE_EARTH) then

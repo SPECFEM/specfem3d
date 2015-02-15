@@ -114,7 +114,6 @@ generate_databases_SHARED_OBJECTS = \
 	$O/recompute_jacobian.shared.o \
 	$O/save_header_file.shared.o \
 	$O/sort_array_coordinates.shared.o \
-	$O/unused_mod.shared_module.o \
 	$O/utm_geo.shared.o \
 	$O/write_VTK_data.shared.o \
 	$(EMPTY_MACRO)
@@ -238,7 +237,7 @@ else
 $O/get_model.gen.o: $O/generate_databases_par.gen.o $O/model_ipati_adios.gen_adios.o
 endif
 
-$O/generate_databases_adios_stubs.gen_noadios.o: $O/generate_databases_par.gen.o $O/unused_mod.shared_module.o $(adios_generate_databases_PRESTUBS)
+$O/generate_databases_adios_stubs.gen_noadios.o: $O/generate_databases_par.gen.o $(adios_generate_databases_PRESTUBS)
 
 $O/adios_helpers.shared_adios.o: \
 	$O/adios_helpers_definitions.shared_adios_module.o \

@@ -82,7 +82,6 @@ meshfem3D_SHARED_OBJECTS = \
 	$O/read_value_parameters.shared.o \
 	$O/safe_alloc_mod.shared.o \
 	$O/sort_array_coordinates.shared.o \
-	$O/unused_mod.shared_module.o \
 	$O/utm_geo.shared.o \
 	$(EMPTY_MACRO)
 
@@ -145,7 +144,7 @@ $E/xmeshfem3D: $(XMESHFEM_OBJECTS)
 $O/meshfem3D.mesh.o: $O/create_regions_mesh.mesh.o $O/read_mesh_parameter_file.mesh.o
 
 ## adios
-$O/meshfem3D_adios_stubs.mesh_noadios.o: $O/shared_par.shared_module.o $O/unused_mod.shared_module.o $O/adios_manager_stubs.shared_noadios.o
+$O/meshfem3D_adios_stubs.mesh_noadios.o: $O/shared_par.shared_module.o $O/adios_manager_stubs.shared_noadios.o
 
 $O/save_databases_adios.mesh_adios.o: $O/safe_alloc_mod.shared.o $(adios_meshfem3D_PREOBJECTS)
 $O/create_regions_mesh.mesh.o: $(adios_meshfem3D_PREOBJECTS)

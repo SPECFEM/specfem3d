@@ -91,8 +91,8 @@
   character(len=MAX_STRING_LEN) :: prname, prname_lp
   character(len=MAX_STRING_LEN*2) :: mesh_file,local_data_file
   character(len=MAX_STRING_LEN) :: data_array_name
-  logical :: HIGH_RESOLUTION_MESH
-  integer :: ires
+  logical :: HIGH_RESOLUTION_MESH,BROADCAST_AFTER_READ
+  integer :: ires,myrank
 
   ! Variables to read ADIOS files
   integer :: sizeprocs
@@ -112,7 +112,9 @@
   print *
 
   ! needs local_path for mesh files
-  call read_parameter_file()
+  myrank = 0
+  BROADCAST_AFTER_READ = .false.
+  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
 
   ! reads in arguments
   do i = 1, command_argument_count()

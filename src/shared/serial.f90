@@ -63,11 +63,11 @@
 
   subroutine bcast_all_i(buffer, countval)
 
-  use unused_mod
   implicit none
 
   integer countval
   integer, dimension(countval) :: buffer
+  integer(kind=4) :: unused_i4
 
   unused_i4 = buffer(1)
 
@@ -79,13 +79,13 @@
 
   subroutine bcast_all_cr(buffer, countval)
 
-  use unused_mod
   use constants,only: CUSTOM_REAL
 
   implicit none
 
   integer countval
   real(kind=CUSTOM_REAL), dimension(countval) :: buffer
+  real(kind=CUSTOM_REAL) :: unused_cr
 
   unused_cr = buffer(1)
 
@@ -97,12 +97,12 @@
 
   subroutine bcast_all_singlecr(buffer)
 
-  use unused_mod
   use constants,only: CUSTOM_REAL
 
   implicit none
 
   real(kind=CUSTOM_REAL) :: buffer
+  real(kind=CUSTOM_REAL) :: unused_cr
 
   unused_cr = buffer
 
@@ -114,11 +114,11 @@
 
   subroutine bcast_all_dp(buffer, countval)
 
-  use unused_mod
   implicit none
 
   integer countval
   double precision, dimension(countval) :: buffer
+  double precision :: unused_dp
 
   unused_dp = buffer(1)
 
@@ -130,11 +130,10 @@
 
   subroutine bcast_all_singledp(buffer)
 
-  use unused_mod
-
   implicit none
 
   double precision :: buffer
+  double precision :: unused_dp
 
   unused_dp = buffer
 
@@ -146,11 +145,11 @@
 
   subroutine bcast_all_r(buffer, countval)
 
-  use unused_mod
   implicit none
 
   integer countval
   real, dimension(countval) :: buffer
+  real :: unused_r
 
   unused_r = buffer(1)
 
@@ -162,7 +161,6 @@
 
   subroutine bcast_all_i_for_database(buffer, countval)
 
-  use unused_mod
   implicit none
 
   integer countval
@@ -170,6 +168,7 @@
   ! of indices, provided we call the routine using the first memory cell of that multidimensional array,
   ! i.e. for instance buffer(1,1,1) if the array has three dimensions with indices that all start at 1.
   integer :: buffer
+  integer(kind=4) :: unused_i4
 
   unused_i4 = countval
 
@@ -183,7 +182,6 @@
 
   subroutine bcast_all_l_for_database(buffer, countval)
 
-  use unused_mod
   implicit none
 
   integer countval
@@ -191,6 +189,8 @@
   ! of indices, provided we call the routine using the first memory cell of that multidimensional array,
   ! i.e. for instance buffer(1,1,1) if the array has three dimensions with indices that all start at 1.
   logical :: buffer
+  integer(kind=4) :: unused_i4
+  logical :: unused_l
 
   unused_i4 = countval
 
@@ -204,7 +204,6 @@
 
   subroutine bcast_all_cr_for_database(buffer, countval)
 
-  use unused_mod
   use constants,only: CUSTOM_REAL
 
   implicit none
@@ -214,6 +213,8 @@
   ! of indices, provided we call the routine using the first memory cell of that multidimensional array,
   ! i.e. for instance buffer(1,1,1) if the array has three dimensions with indices that all start at 1.
   real(kind=CUSTOM_REAL) :: buffer
+  integer(kind=4) :: unused_i4
+  real(kind=CUSTOM_REAL) :: unused_cr
 
   unused_i4 = countval
 
@@ -227,7 +228,6 @@
 
   subroutine bcast_all_dp_for_database(buffer, countval)
 
-  use unused_mod
   implicit none
 
   integer countval
@@ -235,6 +235,8 @@
   ! of indices, provided we call the routine using the first memory cell of that multidimensional array,
   ! i.e. for instance buffer(1,1,1) if the array has three dimensions with indices that all start at 1.
   double precision :: buffer
+  integer(kind=4) :: unused_i4
+  double precision :: unused_dp
 
   unused_i4 = countval
 
@@ -248,7 +250,6 @@
 
   subroutine bcast_all_r_for_database(buffer, countval)
 
-  use unused_mod
   implicit none
 
   integer countval
@@ -256,12 +257,72 @@
   ! of indices, provided we call the routine using the first memory cell of that multidimensional array,
   ! i.e. for instance buffer(1,1,1) if the array has three dimensions with indices that all start at 1.
   real :: buffer
+  integer(kind=4) :: unused_i4
+  real :: unused_r
 
   unused_i4 = countval
 
   unused_r = buffer
 
   end subroutine bcast_all_r_for_database
+
+!
+!----
+!
+
+  subroutine bcast_all_singlei_world(buffer)
+
+  implicit none
+
+  integer :: buffer,idummy
+
+  idummy = buffer
+
+  end subroutine bcast_all_singlei_world
+
+!
+!----
+!
+
+  subroutine bcast_all_singlel_world(buffer)
+  
+  implicit none
+
+  logical :: buffer,ldummy
+
+  ldummy = buffer
+
+  end subroutine bcast_all_singlel_world
+
+!
+!----
+!
+
+  subroutine bcast_all_singledp_world(buffer)
+  
+  implicit none
+
+  double precision :: buffer,dpdummy
+
+  dpdummy = buffer
+
+  end subroutine bcast_all_singledp_world
+
+!
+!----
+!
+
+  subroutine bcast_all_string_world(buffer)
+  
+  use constants,only: MAX_STRING_LEN
+
+  implicit none
+
+  character(len=MAX_STRING_LEN) :: buffer,stringdummy
+
+  stringdummy = buffer
+
+  end subroutine bcast_all_string_world
 
 !
 !----
@@ -353,7 +414,6 @@
 
  subroutine gatherv_all_cr(sendbuf, sendcnt, recvbuf, recvcount, recvoffset,recvcounttot, NPROC)
 
-  use unused_mod
   use constants,only: CUSTOM_REAL
 
   implicit none
@@ -362,6 +422,8 @@
   integer, dimension(NPROC) :: recvcount,recvoffset
   real(kind=CUSTOM_REAL), dimension(sendcnt) :: sendbuf
   real(kind=CUSTOM_REAL), dimension(recvcounttot) :: recvbuf
+
+  integer(kind=4) :: unused_i4
 
   recvbuf(:) = sendbuf(:)
 
@@ -378,8 +440,13 @@
 
   use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS
 
+  integer :: myrank
+  logical :: BROADCAST_AFTER_READ
+
   ! we need to make sure that NUMBER_OF_SIMULTANEOUS_RUNS is read, thus read the parameter file
-  call read_parameter_file()
+  myrank = 0
+  BROADCAST_AFTER_READ = .false.
+  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
 
   if (NUMBER_OF_SIMULTANEOUS_RUNS <= 0) stop 'NUMBER_OF_SIMULTANEOUS_RUNS <= 0 makes no sense'
 
@@ -532,11 +599,12 @@
 
   subroutine max_allreduce_i(buffer,countval)
 
-  use unused_mod
   implicit none
 
   integer :: countval
   integer,dimension(countval),intent(inout) :: buffer
+
+  integer(kind=4) :: unused_i4
 
   unused_i4 = buffer(1)
 
@@ -711,7 +779,6 @@
   subroutine sendrecv_all_cr(sendbuf, sendcount, dest, sendtag, &
                              recvbuf, recvcount, source, recvtag)
 
-  use unused_mod
   use constants,only: CUSTOM_REAL
 
   implicit none
@@ -719,6 +786,10 @@
   integer sendcount, recvcount, dest, sendtag, source, recvtag
   real(kind=CUSTOM_REAL), dimension(sendcount) :: sendbuf
   real(kind=CUSTOM_REAL), dimension(recvcount) :: recvbuf
+
+  integer(kind=4) :: unused_i4
+
+  real(kind=CUSTOM_REAL) :: unused_cr
 
   stop 'sendrecv_all_cr not implemented for serial code'
   unused_i4 = dest
@@ -748,13 +819,15 @@
 
   subroutine isend_cr(sendbuf, sendcount, dest, sendtag, req)
 
-  use unused_mod
   use constants,only: CUSTOM_REAL
 
   implicit none
 
   integer sendcount, dest, sendtag, req
   real(kind=CUSTOM_REAL), dimension(sendcount) :: sendbuf
+
+  integer(kind=4) :: unused_i4
+  real(kind=CUSTOM_REAL) :: unused_cr
 
   stop 'isend_cr not implemented for serial code'
   unused_i4 = dest
@@ -770,13 +843,15 @@
 
   subroutine irecv_cr(recvbuf, recvcount, dest, recvtag, req)
 
-  use unused_mod
   use constants,only: CUSTOM_REAL
 
   implicit none
 
   integer recvcount, dest, recvtag, req
   real(kind=CUSTOM_REAL), dimension(recvcount) :: recvbuf
+
+  integer(kind=4) :: unused_i4
+  real(kind=CUSTOM_REAL) :: unused_cr
 
   stop 'irecv_cr not implemented for serial code'
   unused_i4 = dest
@@ -792,12 +867,12 @@
 
   subroutine isend_i(sendbuf, sendcount, dest, sendtag, req)
 
-  use unused_mod
-
   implicit none
 
   integer sendcount, dest, sendtag, req
   integer, dimension(sendcount) :: sendbuf
+
+  integer(kind=4) :: unused_i4
 
   stop 'isend_i not implemented for serial code'
   unused_i4 = dest
@@ -813,12 +888,12 @@
 
   subroutine irecv_i(recvbuf, recvcount, dest, recvtag, req)
 
-  use unused_mod
-
   implicit none
 
   integer recvcount, dest, recvtag, req
   integer, dimension(recvcount) :: recvbuf
+
+  integer(kind=4) :: unused_i4
 
   stop 'irecv_i not implemented for serial code'
   unused_i4 = dest
@@ -835,13 +910,13 @@
 
   subroutine recv_i(recvbuf, recvcount, dest, recvtag )
 
-  use unused_mod
-
   implicit none
 
   integer dest,recvtag
   integer recvcount
   integer,dimension(recvcount):: recvbuf
+
+  integer(kind=4) :: unused_i4
 
   stop 'recv_i not implemented for serial code'
   unused_i4 = dest
@@ -856,13 +931,15 @@
 
   subroutine recvv_cr(recvbuf, recvcount, dest, recvtag )
 
-  use unused_mod
   use constants,only: CUSTOM_REAL
 
   implicit none
 
   integer recvcount,dest,recvtag
   real(kind=CUSTOM_REAL),dimension(recvcount) :: recvbuf
+
+  integer(kind=4) :: unused_i4
+  real(kind=CUSTOM_REAL) :: unused_cr
 
   stop 'recvv_cr not implemented for serial code'
   unused_i4 = dest
@@ -878,13 +955,13 @@
 
   subroutine send_i(sendbuf, sendcount, dest, sendtag)
 
-  use unused_mod
-
   implicit none
 
   integer dest,sendtag
   integer sendcount
   integer, dimension(sendcount) :: sendbuf
+
+  integer(kind=4) :: unused_i4
 
   stop 'send_i not implemented for serial code'
   unused_i4 = dest
@@ -900,12 +977,12 @@
 
   subroutine send_i_t(sendbuf,sendcount,dest)
 
-  use unused_mod
-
   implicit none
 
   integer :: dest,sendcount
   integer, dimension(sendcount) :: sendbuf
+
+  integer(kind=4) :: unused_i4
 
   stop 'send_i_t not implemented for serial code'
   unused_i4 = dest
@@ -920,12 +997,12 @@
 
   subroutine recv_i_t(recvbuf,recvcount,source)
 
-  use unused_mod
-
   implicit none
 
   integer :: source,recvcount
   integer, dimension(recvcount) :: recvbuf
+
+  integer(kind=4) :: unused_i4
 
   stop 'recv_i_t not implemented for serial code'
   unused_i4 = source
@@ -971,13 +1048,14 @@
 !  the following two subroutines are needed by locate_receivers.f90
   subroutine send_dp(sendbuf, sendcount, dest, sendtag)
 
-  use unused_mod
-
   implicit none
 
   integer dest,sendtag
   integer sendcount
   double precision,dimension(sendcount):: sendbuf
+
+  integer(kind=4) :: unused_i4
+  double precision :: unused_dp
 
   stop 'send_dp not implemented for serial code'
   unused_i4 = dest
@@ -990,13 +1068,14 @@
 !
   subroutine recv_dp(recvbuf, recvcount, dest, recvtag)
 
-  use unused_mod
-
   implicit none
 
   integer dest,recvtag
   integer recvcount
   double precision,dimension(recvcount):: recvbuf
+
+  integer(kind=4) :: unused_i4
+  double precision :: unused_dp
 
   stop 'recv_dp not implemented for serial code'
   unused_i4 = dest
@@ -1011,14 +1090,15 @@
 
   subroutine sendv_cr(sendbuf, sendcount, dest, sendtag)
 
-  use unused_mod
-
   use constants,only: CUSTOM_REAL
 
   implicit none
 
   integer sendcount,dest,sendtag
   real(kind=CUSTOM_REAL),dimension(sendcount) :: sendbuf
+
+  integer(kind=4) :: unused_i4
+  real(kind=CUSTOM_REAL) :: unused_cr
 
   stop 'sendv_cr not implemented for serial code'
   unused_i4 = dest
@@ -1032,11 +1112,11 @@
 
   subroutine wait_req(req)
 
-  use unused_mod
-
   implicit none
 
   integer :: req
+
+  integer(kind=4) :: unused_i4
 
   unused_i4 = req
 

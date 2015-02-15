@@ -391,6 +391,79 @@ end module my_mpi
   end subroutine bcast_all_r_for_database
 
 !
+!---- broadcast using MPI_COMM_WORLD
+!
+
+  subroutine bcast_all_singlei_world(buffer)
+
+  use my_mpi
+
+  implicit none
+
+  integer :: buffer
+
+  integer :: ier
+
+  call MPI_BCAST(buffer,1,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
+
+  end subroutine bcast_all_singlei_world
+
+!
+!----
+!
+
+  subroutine bcast_all_singlel_world(buffer)
+
+  use my_mpi
+
+  implicit none
+
+  logical :: buffer
+
+  integer :: ier
+
+  call MPI_BCAST(buffer,1,MPI_LOGICAL,0,MPI_COMM_WORLD,ier)
+
+  end subroutine bcast_all_singlel_world
+
+!
+!----
+!
+
+  subroutine bcast_all_singledp_world(buffer)
+
+  use my_mpi
+
+  implicit none
+
+  double precision :: buffer
+
+  integer :: ier
+
+  call MPI_BCAST(buffer,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
+
+  end subroutine bcast_all_singledp_world
+
+!
+!----
+!
+
+  subroutine bcast_all_string_world(buffer)
+
+  use my_mpi
+  use constants,only: MAX_STRING_LEN
+
+  implicit none
+
+  character(len=MAX_STRING_LEN) :: buffer
+
+  integer :: ier
+
+  call MPI_BCAST(buffer,MAX_STRING_LEN,MPI_CHARACTER,0,MPI_COMM_WORLD,ier)
+
+  end subroutine bcast_all_string_world
+
+!
 !----
 !
 
