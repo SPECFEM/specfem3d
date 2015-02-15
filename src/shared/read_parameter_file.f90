@@ -25,13 +25,16 @@
 !
 !=====================================================================
 
-  subroutine read_parameter_file()
+  subroutine read_parameter_file(myrank,BROADCAST_AFTER_READ)
 
   use constants
 
   use shared_parameters
 
   implicit none
+
+  integer, intent(in) :: myrank
+  logical, intent(in) :: BROADCAST_AFTER_READ
 
 ! local variables
   integer :: icounter,isource,idummy,ier
@@ -45,6 +48,10 @@
 
   !logical :: sep_dir_exists
   integer :: i,irange
+
+! read from a single processor (the master) and then use MPI to broadcast to others
+! to avoid an I/O bottleneck in the case of very large runs
+  if(myrank == 0) then
 
   ! opens file Par_file
   call open_parameter_file(ier)
@@ -481,6 +488,93 @@
 
   ! close parameter file
   call close_parameter_file()
+
+  endif ! of if(myrank == 0) then
+
+! read from a single processor (the master) and then use MPI to broadcast to others
+! to avoid an I/O bottleneck in the case of very large runs
+  if(BROADCAST_AFTER_READ) then
+
+    call bcast_all_singlei_world(NPROC)
+    call bcast_all_singlei_world(SIMULATION_TYPE)
+    call bcast_all_singlei_world(NOISE_TOMOGRAPHY)
+    call bcast_all_singlel_world(SAVE_FORWARD)
+    call bcast_all_singlei_world(UTM_PROJECTION_ZONE)
+    call bcast_all_singlel_world(SUPPRESS_UTM_PROJECTION)
+    call bcast_all_singlei_world(NSTEP)
+    call bcast_all_singledp_world(DT)
+    call bcast_all_singlei_world(NGNOD)
+    call bcast_all_string_world(MODEL)
+    call bcast_all_string_world(SEP_MODEL_DIRECTORY)
+    call bcast_all_singlel_world(APPROXIMATE_OCEAN_LOAD)
+    call bcast_all_singlel_world(TOPOGRAPHY)
+    call bcast_all_singlel_world(ATTENUATION)
+    call bcast_all_singlel_world(FULL_ATTENUATION_SOLID)
+    call bcast_all_singlel_world(ANISOTROPY)
+    call bcast_all_singlel_world(GRAVITY)
+    call bcast_all_string_world(TOMOGRAPHY_PATH)
+    call bcast_all_singlel_world(USE_OLSEN_ATTENUATION)
+    call bcast_all_singledp_world(OLSEN_ATTENUATION_RATIO)
+    call bcast_all_singlel_world(PML_CONDITIONS)
+    call bcast_all_singlel_world(PML_INSTEAD_OF_FREE_SURFACE)
+    call bcast_all_singledp_world(f0_FOR_PML)
+    call bcast_all_singlel_world(STACEY_ABSORBING_CONDITIONS)
+    call bcast_all_singlel_world(STACEY_INSTEAD_OF_FREE_SURFACE)
+    call bcast_all_singlel_world(CREATE_SHAKEMAP)
+    call bcast_all_singlel_world(MOVIE_SURFACE)
+    call bcast_all_singlei_world(MOVIE_TYPE)
+    call bcast_all_singlel_world(MOVIE_VOLUME)
+    call bcast_all_singlel_world(SAVE_DISPLACEMENT)
+    call bcast_all_singlel_world(USE_HIGHRES_FOR_MOVIES)
+    call bcast_all_singlei_world(NTSTEP_BETWEEN_FRAMES)
+    call bcast_all_singledp_world(HDUR_MOVIE)
+    call bcast_all_singlel_world(SAVE_MESH_FILES)
+    call bcast_all_string_world(LOCAL_PATH)
+    call bcast_all_singlei_world(NTSTEP_BETWEEN_OUTPUT_INFO)
+    call bcast_all_singlei_world(NTSTEP_BETWEEN_OUTPUT_SEISMOS)
+    call bcast_all_singlei_world(NTSTEP_BETWEEN_READ_ADJSRC)
+    call bcast_all_singlel_world(USE_FORCE_POINT_SOURCE)
+    call bcast_all_singlel_world(USE_RICKER_TIME_FUNCTION)
+    call bcast_all_singlel_world(SAVE_SEISMOGRAMS_DISPLACEMENT)
+    call bcast_all_singlel_world(SAVE_SEISMOGRAMS_VELOCITY)
+    call bcast_all_singlel_world(SAVE_SEISMOGRAMS_ACCELERATION)
+    call bcast_all_singlel_world(SAVE_SEISMOGRAMS_PRESSURE)
+    call bcast_all_singlel_world(USE_BINARY_FOR_SEISMOGRAMS)
+    call bcast_all_singlel_world(SU_FORMAT)
+    call bcast_all_singlel_world(WRITE_SEISMOGRAMS_BY_MASTER)
+    call bcast_all_singlel_world(SAVE_ALL_SEISMOS_IN_ONE_FILE)
+    call bcast_all_singlel_world(USE_TRICK_FOR_BETTER_PRESSURE)
+    call bcast_all_singlel_world(USE_SOURCE_ENCODING)
+    call bcast_all_singlel_world(OUTPUT_ENERGY)
+    call bcast_all_singlei_world(NTSTEP_BETWEEN_OUTPUT_ENERGY)
+    call bcast_all_singlel_world(ANISOTROPIC_KL)
+    call bcast_all_singlel_world(SAVE_TRANSVERSE_KL)
+    call bcast_all_singlel_world(APPROXIMATE_HESS_KL)
+    call bcast_all_singlel_world(SAVE_MOHO_MESH)
+    call bcast_all_singlel_world(PRINT_SOURCE_TIME_FUNCTION)
+    call bcast_all_singlel_world(COUPLE_WITH_EXTERNAL_CODE)
+    call bcast_all_singlei_world(EXTERNAL_CODE_TYPE)
+    call bcast_all_string_world(TRACTION_PATH)
+    call bcast_all_singlel_world(MESH_A_CHUNK_OF_THE_EARTH)
+    call bcast_all_singlei_world(NUMBER_OF_SIMULTANEOUS_RUNS)
+    call bcast_all_singlel_world(BROADCAST_SAME_MESH_AND_MODEL)
+    call bcast_all_singlel_world(GPU_MODE)
+    call bcast_all_singlel_world(ADIOS_ENABLED)
+    call bcast_all_singlel_world(ADIOS_FOR_DATABASES)
+    call bcast_all_singlel_world(ADIOS_FOR_MESH)
+    call bcast_all_singlel_world(ADIOS_FOR_FORWARD_ARRAYS)
+    call bcast_all_singlel_world(ADIOS_FOR_KERNELS)
+
+! broadcast all parameters computed from others
+
+    call bcast_all_singlei_world(IMODEL)
+    call bcast_all_singlei_world(NGNOD2D)
+    call bcast_all_singlei_world(NSOURCES)
+    call bcast_all_singledp_world(minval_hdur)
+    call bcast_all_string_world(FORCESOLUTION)
+    call bcast_all_string_world(CMTSOLUTION)
+
+  endif ! of if(BROADCAST_AFTER_READ) then
 
   end subroutine read_parameter_file
 

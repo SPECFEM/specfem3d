@@ -110,6 +110,8 @@ program smooth_sem
   real(kind=CUSTOM_REAL) :: y_min_glob,y_max_glob
   real(kind=CUSTOM_REAL) :: z_min_glob,z_max_glob
 
+  logical :: BROADCAST_AFTER_READ
+
   ! initialize the MPI communicator and start the NPROCTOT MPI processes
   call init_mpi()
   call world_size(sizeprocs)
@@ -185,7 +187,8 @@ program smooth_sem
   endif
 
   ! reads the parameter file
-  call read_parameter_file()
+  BROADCAST_AFTER_READ = .true.
+  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
 
   if (ADIOS_ENABLED) stop 'Flag ADIOS_ENABLED not supported yet for smoothing, please rerun program...'
 

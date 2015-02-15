@@ -99,7 +99,6 @@ combine_vol_data_auxiliaries_SHARED_OBJECTS = \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \
 	$O/param_reader.cc.o \
-	$O/unused_mod.shared_module.o \
 	$O/write_c_binary.cc.o \
 	$(EMPTY_MACRO)
 
@@ -188,7 +187,7 @@ $E/xcreate_movie_shakemap_AVS_DX_GMT: $(create_movie_shakemap_AVS_DX_GMT_auxilia
 ###
 
 # combine_vol_data
-$O/combine_vol_data_adios_stubs.aux_noadios.o: $O/unused_mod.shared_module.o $O/adios_manager_stubs.shared_noadios.o
+$O/combine_vol_data_adios_stubs.aux_noadios.o: $O/adios_manager_stubs.shared_noadios.o
 ifeq ($(ADIOS),yes)
 $O/combine_vol_data.aux.o: $O/combine_vol_data_impl.aux.o $O/combine_vol_data_adios_impl.aux_adios.o
 $O/adios_helpers.shared_adios.o: \

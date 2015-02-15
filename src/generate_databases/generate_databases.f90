@@ -264,10 +264,14 @@
 ! reads and checks user input parameters
 
   use generate_databases_par
+
   implicit none
 
+  logical :: BROADCAST_AFTER_READ
+
 ! reads Par_file
-  call read_parameter_file()
+  BROADCAST_AFTER_READ = .true.
+  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
 
 ! check that the code is running with the requested nb of processes
   if (sizeprocs /= NPROC) then
