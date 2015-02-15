@@ -80,7 +80,7 @@
 
   ! create an empty file to monitor the start of the simulation
   if (myrank == 0) then
-    open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/starttimeloop.txt',status='unknown'',action='write')
+    open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/starttimeloop.txt',status='unknown',action='write')
     write(IOUT,*) 'hello, starting time loop'
     close(IOUT)
   endif
