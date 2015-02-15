@@ -40,24 +40,13 @@
 
   integer :: ier
 
-  ! read the parameter file
-  call read_parameter_file()
-
-  call read_adios_parameters()
-
-!! DK DK added this for now (March 2013)
-!! DK DK we will soon add it
-  if (PML_CONDITIONS .and. (SAVE_FORWARD .or. SIMULATION_TYPE==3)) stop 'PML_CONDITIONS is still under test for adjoint simulation'
-
-  ! GPU_MODE is in par_file
-  call read_gpu_mode(GPU_MODE,GRAVITY)
-
-  if (GPU_MODE .and. COUPLE_WITH_EXTERNAL_CODE) stop 'Coupling with DSM currently not implemented for GPUs'
-
   ! myrank is the rank of each process, between 0 and NPROC-1.
   ! as usual in MPI, process 0 is in charge of coordinating everything
   ! and also takes care of the main output
   call world_rank(myrank)
+
+  ! read the parameter file
+  call read_parameter_file()
 
   ! checks flags
   call initialize_simulation_check()

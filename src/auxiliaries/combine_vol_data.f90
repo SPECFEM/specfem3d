@@ -114,9 +114,6 @@
   ! needs local_path for mesh files
   call read_parameter_file()
 
-  ! gets adios parameters in Par_file
-  call read_adios_parameters()
-
   ! reads in arguments
   do i = 1, command_argument_count()
     call get_command_argument(i,arg(i))

@@ -52,14 +52,14 @@
   ! total number of processors
   call read_value_integer(NPROC, 'NPROC', ier)
   if (ier /= 0) then
-    ! checks if it's using an old Par_file format
+    ! checks if it uses an old Par_file format
     call read_value_integer(nproc_eta_old, 'NPROC_ETA', ier)
     if (ier /= 0) then
       print*,'please specify the number of processes in Par_file as:'
       print*,'NPROC           =    <my_number_of_desired_processes> '
       return
     endif
-    ! checks if it's using an old Par_file format
+    ! checks if it uses an old Par_file format
     call read_value_integer(nproc_xi_old, 'NPROC_XI', ier)
     if (ier /= 0) then
       print*,'please specify the number of processes in Par_file as:'
@@ -104,8 +104,12 @@
   if (ier /= 0) stop 'Error reading Par_file parameter FULL_ATTENUATION_SOLID'
   call read_value_logical(ANISOTROPY, 'ANISOTROPY', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter ANISOTROPY'
+  call read_value_logical(GRAVITY, 'GRAVITY', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter GRAVITY'
+
   call read_value_string(TOMOGRAPHY_PATH, 'TOMOGRAPHY_PATH', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter TOMOGRAPHY_PATH'
+
   call read_value_logical(USE_OLSEN_ATTENUATION, 'USE_OLSEN_ATTENUATION', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter USE_OLSEN_ATTENUATION'
   call read_value_double_precision(OLSEN_ATTENUATION_RATIO, 'OLSEN_ATTENUATION_RATIO', ier)
@@ -226,9 +230,6 @@
   if (ier /= 0) stop 'Error reading Par_file parameter NUMBER_OF_SIMULTANEOUS_RUNS'
   call read_value_logical(BROADCAST_SAME_MESH_AND_MODEL, 'BROADCAST_SAME_MESH_AND_MODEL', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter BROADCAST_SAME_MESH_AND_MODEL'
-
-  ! close parameter file
-  call close_parameter_file()
 
 ! check the type of external code to couple with, if any
   if (COUPLE_WITH_EXTERNAL_CODE) then
@@ -443,38 +444,13 @@
       stop 'Error for PML, please set STACEY_ABSORBING_CONDITIONS and STACEY_INSTEAD_OF_FREE_SURFACE to .false. in Par_file'
   endif
 
-  end subroutine read_parameter_file
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-  subroutine read_gpu_mode(GPU_MODE,GRAVITY)
-
-  implicit none
-
-  logical,intent(out) :: GPU_MODE
-  logical,intent(out) :: GRAVITY
-
-  ! local parameters
-  integer :: ier
-
-  ! initializes flags
-  GPU_MODE = .false.
-  GRAVITY = .false.
-
-  ! opens file Par_file
-  call open_parameter_file(ier)
+!! DK DK added this for now (March 2013)
+!! DK DK we will soon add it
+  if (PML_CONDITIONS .and. (SAVE_FORWARD .or. SIMULATION_TYPE==3)) stop 'PML_CONDITIONS is still under test for adjoint simulation'
 
   call read_value_logical(GPU_MODE, 'GPU_MODE', ier)
-  call read_value_logical(GRAVITY, 'GRAVITY', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter GPU_MODE'
 
-  ! close parameter file
-  call close_parameter_file()
-
-  end subroutine read_gpu_mode
-
-!===============================================================================
 !> Read ADIOS related flags from the Par_file
 !! \param ADIOS_ENABLED Main flag to decide if ADIOS is used. If setted to
 !!                      false no other parameter is taken into account.
@@ -488,40 +464,23 @@
 !!                          adios
 !! \author MPBL
 
-subroutine read_adios_parameters()
-
-  use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
-
-  use shared_input_parameters
-
-  implicit none
-
-  ! local parameters
-  integer :: ier
-
-  ! initialize flags to false
-  ADIOS_ENABLED            = .false.
-  ADIOS_FOR_DATABASES      = .false.
-  ADIOS_FOR_MESH           = .false.
-  ADIOS_FOR_FORWARD_ARRAYS = .false.
-  ADIOS_FOR_KERNELS        = .false.
-
-  ! opens file Par_file
-  call open_parameter_file(ier)
   call read_value_logical(ADIOS_ENABLED, 'ADIOS_ENABLED', ier)
-
-  if (ier == 0 .and. ADIOS_ENABLED) then
-    call read_value_logical(ADIOS_FOR_DATABASES, 'ADIOS_FOR_DATABASES', ier)
-    call read_value_logical(ADIOS_FOR_MESH, 'ADIOS_FOR_MESH', ier)
-    call read_value_logical(ADIOS_FOR_FORWARD_ARRAYS, 'ADIOS_FOR_FORWARD_ARRAYS', ier)
-    call read_value_logical(ADIOS_FOR_KERNELS, 'ADIOS_FOR_KERNELS', ier)
-  endif
-
-  call close_parameter_file()
+  if (ier /= 0) stop 'Error reading Par_file parameter ADIOS_ENABLED'
+  call read_value_logical(ADIOS_FOR_DATABASES, 'ADIOS_FOR_DATABASES', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter ADIOS_FOR_DATABASES'
+  call read_value_logical(ADIOS_FOR_MESH, 'ADIOS_FOR_MESH', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter ADIOS_FOR_MESH'
+  call read_value_logical(ADIOS_FOR_FORWARD_ARRAYS, 'ADIOS_FOR_FORWARD_ARRAYS', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter ADIOS_FOR_FORWARD_ARRAYS'
+  call read_value_logical(ADIOS_FOR_KERNELS, 'ADIOS_FOR_KERNELS', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter ADIOS_FOR_KERNELS'
 
   ! safety check
   if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. BROADCAST_SAME_MESH_AND_MODEL .and. ADIOS_ENABLED) &
     stop 'Error ADIOS not yet supported by option BROADCAST_SAME_MESH_AND_MODEL'
 
-end subroutine read_adios_parameters
+  ! close parameter file
+  call close_parameter_file()
+
+  end subroutine read_parameter_file
 

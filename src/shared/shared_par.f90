@@ -72,7 +72,6 @@ end module constants
   double precision :: DT
 
   integer :: NGNOD
-!  character(len=MAX_STRING_LEN) :: MODEL
 
   character(len=MAX_STRING_LEN) :: SEP_MODEL_DIRECTORY
 

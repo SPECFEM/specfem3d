@@ -62,9 +62,6 @@ program pre_meshfem3D
  ! needs local_path for mesh files
   call read_parameter_file()
 
-  ! gets adios parameters in Par_file
-  call read_adios_parameters()
-
   ! checks adios parameters
   if (ADIOS_FOR_DATABASES) then
     print *, 'Error: ADIOS_FOR_DATABASES set to .true. in Par_file'

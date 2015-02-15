@@ -376,8 +376,6 @@
 ! read the parameter file (DATA/Par_file)
   call read_parameter_file()
 
-  call read_adios_parameters()
-
 ! if meshing a chunk of the Earth, call a specific internal mesher designed specifically for that
   if (COUPLE_WITH_EXTERNAL_CODE .and. MESH_A_CHUNK_OF_THE_EARTH) then
     ! user output

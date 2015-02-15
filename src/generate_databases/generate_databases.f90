@@ -269,8 +269,6 @@
 ! reads Par_file
   call read_parameter_file()
 
-  call read_adios_parameters()
-
 ! check that the code is running with the requested nb of processes
   if (sizeprocs /= NPROC) then
     if (myrank == 0) then

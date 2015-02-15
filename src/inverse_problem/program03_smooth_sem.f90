@@ -187,9 +187,6 @@ program smooth_sem
   ! reads the parameter file
   call read_parameter_file()
 
-  ! reads ADIOS flags
-  call read_adios_parameters()
-
   if (ADIOS_ENABLED) stop 'Flag ADIOS_ENABLED not supported yet for smoothing, please rerun program...'
 
   ! check that the code is running with the requested nb of processes
