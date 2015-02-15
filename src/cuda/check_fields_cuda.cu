@@ -100,7 +100,7 @@ void exit_on_cuda_error(char* kernel_name) {
 #else
     myrank = 0;
 #endif
-    sprintf(filename,OUTPUT_FILES_PATH"/error_message_%06d.txt",myrank);
+    sprintf(filename,OUTPUT_FILES"/error_message_%06d.txt",myrank);
     fp = fopen(filename,"a+");
     if (fp != NULL){
       fprintf(fp,"Error after %s: %s\n", kernel_name, cudaGetErrorString(err));
@@ -131,7 +131,7 @@ void exit_on_error(char* info) {
 #else
   myrank = 0;
 #endif
-  sprintf(filename,OUTPUT_FILES_PATH"/error_message_%06d.txt",myrank);
+  sprintf(filename,OUTPUT_FILES"/error_message_%06d.txt",myrank);
   fp = fopen(filename,"a+");
   if (fp != NULL){
     fprintf(fp,"ERROR: %s\n",info);
@@ -164,7 +164,7 @@ void print_CUDA_error_if_any(cudaError_t err, int num) {
 #else
     myrank = 0;
 #endif
-    sprintf(filename,OUTPUT_FILES_PATH"/error_message_%06d.txt",myrank);
+    sprintf(filename,OUTPUT_FILES"/error_message_%06d.txt",myrank);
     fp = fopen(filename,"a+");
     if (fp != NULL){
       fprintf(fp,"\nCUDA error !!!!! <%s> !!!!! \nat CUDA call error code: # %d\n",cudaGetErrorString(err),num);
@@ -312,12 +312,12 @@ void output_free_memory(int myrank,char* info_str) {
   do_output_info = 0;
   if (myrank == 0){
     do_output_info = 1;
-    sprintf(filename,OUTPUT_FILES_PATH"/gpu_device_mem_usage.txt");
+    sprintf(filename,OUTPUT_FILES"/gpu_device_mem_usage.txt");
   }
   // debugging
   if (DEBUG){
     do_output_info = 1;
-    sprintf(filename,OUTPUT_FILES_PATH"/gpu_device_mem_usage_proc_%06d.txt",myrank);
+    sprintf(filename,OUTPUT_FILES"/gpu_device_mem_usage_proc_%06d.txt",myrank);
   }
 
   // outputs to file
