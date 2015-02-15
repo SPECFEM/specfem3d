@@ -45,6 +45,13 @@
 
 !----------- parameters that can be changed by the user -----------
 
+!! DK DK added this temporarily here to make SPECFEM3D and SPECFEM3D_GLOBE much more similar
+!! DK DK in terms of the structure of their main time iteration loop; these are future features
+!! DK DK that are missing in this code but implemented in the other and that could thus be cut and pasted one day
+  logical, parameter :: UNDO_ATTENUATION = .false.
+  logical, parameter :: EXACT_UNDOING_TO_DISK = .false.
+  integer, parameter :: IFILE_FOR_EXACT_UNDOING = 244
+
 ! set to .false.  if running on a Beowulf-type machine with local disks
 ! set to .true. if running on a shared-memory machine with common file system
 ! if running on a Beowulf, also modify name of nodes in filter_machine_file.f90

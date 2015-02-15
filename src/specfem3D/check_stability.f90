@@ -401,3 +401,36 @@
 
   end subroutine check_stability
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine it_print_elapsed_time()
+
+  use specfem_par
+  use specfem_par_elastic
+  use specfem_par_acoustic
+
+  implicit none
+
+  ! local parameters
+  integer :: ihours,iminutes,iseconds,int_tCPU
+  ! timing
+  double precision :: tCPU
+
+  if (myrank == 0) then
+    ! elapsed time since beginning of the simulation
+    tCPU = wtime() - time_start
+
+    int_tCPU = int(tCPU)
+    ihours = int_tCPU / 3600
+    iminutes = (int_tCPU - 3600*ihours) / 60
+    iseconds = int_tCPU - 3600*ihours - 60*iminutes
+    write(IMAIN,*) 'Time-Loop Complete. Timing info:'
+    write(IMAIN,*) 'Total elapsed time in seconds = ',tCPU
+    write(IMAIN,"(' Total elapsed time in hh:mm:ss = ',i6,' h ',i2.2,' m ',i2.2,' s')") ihours,iminutes,iseconds
+    call flush_IMAIN()
+  endif
+
+  end subroutine it_print_elapsed_time
+
