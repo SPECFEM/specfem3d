@@ -363,6 +363,18 @@
 !-------------------------------------------------------------------------------------------------
 !
 
+  subroutine it_update_vtkwindow()
+
+  implicit none
+
+  stop 'it_update_vtkwindow() not implemented for this code yet'
+
+  end subroutine it_update_vtkwindow
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
   subroutine it_read_forward_arrays()
 
   use specfem_par
@@ -456,16 +468,3 @@
   endif
 
   end subroutine it_read_forward_arrays
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-  subroutine it_update_vtkwindow()
-
-  implicit none
-
-  stop 'it_update_vtkwindow() not implemented for this code yet'
-
-  end subroutine it_update_vtkwindow
-
