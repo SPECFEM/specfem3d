@@ -51,6 +51,7 @@
   logical, parameter :: UNDO_ATTENUATION = .false.
   logical, parameter :: EXACT_UNDOING_TO_DISK = .false.
   integer, parameter :: IFILE_FOR_EXACT_UNDOING = 244
+  logical, parameter :: VTK_MODE = .false.
 
 ! set to .false.  if running on a Beowulf-type machine with local disks
 ! set to .true. if running on a shared-memory machine with common file system

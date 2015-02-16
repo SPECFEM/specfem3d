@@ -461,7 +461,7 @@ program model_update
 
   ! call write_new_model_iso()
 
-! vtk file output
+! VTK file output
 !   ! vs model
 !   fname = 'vs_new'
 !   write(m_file,'(a,i6.6,a)') trim(OUTPUT_MODEL_DIR)//'/proc',myrank,trim(REG)//trim(fname)

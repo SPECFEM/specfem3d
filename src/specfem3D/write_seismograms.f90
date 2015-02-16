@@ -50,6 +50,8 @@
   ! TODO: Test and Fix CUDA seismograms code.
   logical, parameter :: USE_CUDA_SEISMOGRAMS = .false.
 
+  if (.not. (nrec_local > 0 .or. (WRITE_SEISMOGRAMS_BY_MASTER .and. myrank == 0))) return
+
   ! gets resulting array values onto CPU
   if (GPU_MODE) then
     if (nrec_local > 0) then

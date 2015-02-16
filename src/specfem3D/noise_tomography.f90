@@ -623,6 +623,8 @@ end module user_noise_distribution
   integer(kind=8) :: Mesh_pointer
   logical :: GPU_MODE
 
+  if (.not. (num_free_surface_faces > 0)) return
+
   ! writes out wavefield at surface
   if (num_free_surface_faces > 0) then
 

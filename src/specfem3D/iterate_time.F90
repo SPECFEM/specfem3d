@@ -236,13 +236,11 @@
       call it_read_forward_arrays()
     endif
 
-    ! write the seismograms with time shift (GPU_MODE transfer included)
-    if (nrec_local > 0 .or. (WRITE_SEISMOGRAMS_BY_MASTER .and. myrank == 0)) then
-      call write_seismograms()
-    endif
-
     ! calculating gravity field at current timestep
     if (GRAVITY_SIMULATION) call gravity_timeseries()
+
+    ! write the seismograms with time shift (GPU_MODE transfer included)
+    call write_seismograms()
 
     ! adjoint simulations: kernels
     if (SIMULATION_TYPE == 3) then
@@ -255,10 +253,13 @@
     ! first step of noise tomography, i.e., save a surface movie at every time step
     ! modified from the subroutine 'write_movie_surface'
     if (NOISE_TOMOGRAPHY == 1) then
-      if (num_free_surface_faces > 0) then
-        call noise_save_surface_movie(displ,ibool,noise_surface_movie,it,NSPEC_AB,NGLOB_AB, &
+      call noise_save_surface_movie(displ,ibool,noise_surface_movie,it,NSPEC_AB,NGLOB_AB, &
                             num_free_surface_faces,free_surface_ispec,free_surface_ijk,Mesh_pointer,GPU_MODE)
-      endif
+    endif
+
+    ! updates VTK window
+    if (VTK_MODE) then
+      call it_update_vtkwindow()
     endif
 
   !
@@ -368,6 +369,7 @@
   use specfem_par_acoustic
   use specfem_par_elastic
   use specfem_par_poroelastic
+
   implicit none
 
   integer :: ier
@@ -454,4 +456,16 @@
   endif
 
   end subroutine it_read_forward_arrays
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine it_update_vtkwindow()
+
+  implicit none
+
+  stop 'it_update_vtkwindow() not implemented for this code yet'
+
+  end subroutine it_update_vtkwindow
 
