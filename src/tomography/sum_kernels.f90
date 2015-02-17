@@ -41,7 +41,7 @@
 !
 !
 ! DESCRIPTION
-!   Sums kernels from directories specified in INPUT_FILE with names given by KERNEL_NAMES. 
+!   Sums kernels from directories specified in INPUT_FILE with names given by KERNEL_NAMES.
 !   Writes the resulting sum to OUTPUT_DIR.
 !
 !   INPUT_FILE is a text file containing a list of absolute or relative paths to
@@ -97,7 +97,7 @@ program sum_kernels
   delimiter = ','
   iker = 1
   kernel_names(iker) = trim(strtok(kernel_names_comma_delimited, delimiter))
-  do while (token .ne. char(0))
+  do while (token /= char(0))
      iker = iker + 1
      kernel_names(iker) = trim(strtok(char(0), delimiter))
   enddo
@@ -306,7 +306,7 @@ end subroutine sum_kernel
 !
 character*255 function strtok (source_string, delimiters)
 
-!     @(#) Tokenize a string in a similar manner to C routine strtok(3c). 
+!     @(#) Tokenize a string in a similar manner to C routine strtok(3c).
 !
 !     Usage:  First call STRTOK() with the string to tokenize as SOURCE_STRING,
 !             and the delimiter list used to tokenize SOURCE_STRING in DELIMITERS.
@@ -315,9 +315,9 @@ character*255 function strtok (source_string, delimiters)
 !             with SOURCE_STRING set to char(0).
 !
 !            STRTOK will return a token on each call until the entire line is processed,
-!            which it signals by returning char(0). 
+!            which it signals by returning char(0).
 !
-!     Input:  source_string =   Source string to tokenize. 
+!     Input:  source_string =   Source string to tokenize.
 !             delimiters    =   delimiter string.  Used to determine the beginning/end of each token in a string.
 !
 !     Output: strtok()
@@ -342,7 +342,7 @@ character*255 function strtok (source_string, delimiters)
       integer :: ifinish       ! end of token to return
 
       ! initialize stored copy of input string and pointer into input string on first call
-      if (source_string(1:1) .NE. char(0)) then
+      if (source_string(1:1) /= char(0)) then
           isaved_start = 1                 ! beginning of unprocessed data
           saved_string = source_string     ! save input string from first call in series
           isource_len = LEN(saved_string)  ! length of input string from first call
@@ -351,14 +351,14 @@ character*255 function strtok (source_string, delimiters)
       ibegin = isaved_start
 
       do
-         if ( (ibegin .LE. isource_len) .AND. (index(delimiters,saved_string(ibegin:ibegin)) .NE. 0)) then
+         if ( (ibegin <= isource_len) .AND. (index(delimiters,saved_string(ibegin:ibegin)) /= 0)) then
              ibegin = ibegin + 1
          else
              exit
          endif
       enddo
 
-      if (ibegin .GT. isource_len) then
+      if (ibegin > isource_len) then
           strtok = char(0)
           RETURN
       endif
@@ -366,7 +366,7 @@ character*255 function strtok (source_string, delimiters)
       ifinish = ibegin
 
       do
-         if ((ifinish .LE. isource_len) .AND.  (index(delimiters,saved_string(ifinish:ifinish)) .EQ. 0)) then
+         if ((ifinish <= isource_len) .AND.  (index(delimiters,saved_string(ifinish:ifinish)) == 0)) then
              ifinish = ifinish + 1
          else
              exit
