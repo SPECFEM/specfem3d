@@ -61,14 +61,13 @@ program sum_kernels
 
   implicit none
 
-  character(len=255) :: strtok
-  character(len=MAX_STRING_LEN) :: kernel_list(MAX_NUM_NODES), kernel_names(10)
-  character(len=MAX_STRING_LEN) :: sline,kernel_name,prname_lp,output_dir,input_file,kernel_names_comma_delimited
+  character(len=MAX_STRING_LEN) :: kernel_list(MAX_NUM_NODES), kernel_names(MAX_NUM_NODES)
+  character(len=MAX_STRING_LEN) :: sline,prname_lp,output_dir,input_file,kernel_names_comma_delimited
   character(len=MAX_STRING_LEN) :: arg(3)
-  character(len=MAX_STRING_LEN) :: token
+  character(len=255) :: strtok
   character(len=1) :: delimiter
-  integer :: nker
-  integer :: i,ier,iker
+  integer :: nker,nmat
+  integer :: i,ier,imat
 
   logical :: BROADCAST_AFTER_READ
 
@@ -95,12 +94,13 @@ program sum_kernels
 
   ! tokenize comma-delimited list of kernel names
   delimiter = ','
-  iker = 1
-  kernel_names(iker) = trim(strtok(kernel_names_comma_delimited, delimiter))
-  do while (token /= char(0))
-     iker = iker + 1
-     kernel_names(iker) = trim(strtok(char(0), delimiter))
+  imat = 1
+  kernel_names(imat) = trim(strtok(kernel_names_comma_delimited, delimiter))
+  do while (kernel_names(imat) /= char(0))
+     imat = imat + 1
+     kernel_names(imat) = trim(strtok(char(0), delimiter))
   enddo
+  nmat = imat-1
 
   if (myrank==0) then
     write(*,*) 'sum_kernels:'
@@ -170,7 +170,7 @@ program sum_kernels
 
   ! user output
   if (myrank == 0) then
-    print*,'summing kernels:'
+    print*,'summing kernels in:'
     print*,kernel_list(1:nker)
     print*
   endif
@@ -178,14 +178,10 @@ program sum_kernels
   ! synchronizes
   call synchronize_all()
 
-  kernel_name = 'vp_kernel'
-  call sum_kernel(kernel_name,kernel_list,output_dir,nker)
+  do imat=1,nmat
+      call sum_kernel(kernel_names(imat),kernel_list,output_dir,nker)
+  enddo
 
-  kernel_name = 'vs_kernel'
-  call sum_kernel(kernel_name,kernel_list,output_dir,nker)
-
-  !kernel_name = 'rho_kernel'
-  !call sum_kernel(kernel_name,kernel_list,output_dir,nker)
 
   if (myrank==0) write(*,*) 'done writing all kernels, see directory', output_dir
 
