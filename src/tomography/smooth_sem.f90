@@ -25,38 +25,35 @@
 !
 !=====================================================================
 
-! this program can be used for smoothing a kernel,
-! where it smooths files with a given input kernel name:
+! xsmooth_sem
 !
-! compile with:
+! USAGE
+!   mpirun -np NPROC ./xsmooth_sem SIGMA_H SIGMA_V INPUT_DIR OUPUT_DIR MATERIAL_NAME
 !
-!     make xsmooth_sem
+!  e.g.,
+!   mpirun -np 8 ./xsmooth_sem 100 20 DATABASES_MPI/ OUTPUT_DIR/ alpha_kernel
 !
-! Usage:
-!   mpirun -np nprocs ./xsmooth_sem sigma_h sigma_v kernel_file_name scratch_file_dir output_dir
-!   e.g.
-!   mpirun -np 8 ./xsmooth_sem 100 20 alpha_kernel DATABASES_MPI/ OUTPUT_SUM/
 !
-! where:
-!   sigma_h                - gaussian width for horizontal smoothing
-!   sigma_v                - gaussian width for vertical smoothing
-!   kernel_file_name       - takes file with this kernel name,
-!                                      e.g. "alpha_kernel"
-!   scratch_file_dir       - directory containing kernel files,
-!                                      e.g. proc***_alpha_kernel.bin
-!   output_dir             - directory for outputting files,
-!                                      e.g. proc***_alpha_kernel_smooth.bin
-! outputs:
-!    puts the resulting, smoothed kernel files into the output_dir directory,
-!    with a file ending "proc***_kernel_smooth.bin"
+! COMMAND LINE ARGUMENTS
+!   SIGMA_H                - horizontal smoothing radius
+!   SIGMA_V                - vertical smoothing radius
+!   INPUT_DIR              - directory from which arrays are read
+!   OUTPUT_DIR             - directory to which smoothed array are written
+!   MATERIAL_NAME          - material parmater name, e.g. alpha_kernel
+!
+! DESCRIPTION
+!   Smooths arrays defined on GLL points by convolution with a Gaussian. Writes
+!   the resulting smoothed arrays to OUTPUT_DIR, with the suffix '_smooth'
+!   appended to each filename, e.g. proc***alpha_kernel.bin becomes
+!   proc***alpha_kernel_smooth.bin
+!
+!   This program works on any  scalar field of appropriate dimension,
+!   i.e. (NGLLX,NGLLY,NGLLZ,NSPEC). Its primary use case is to smooth kernels.
+!
+!   This is an embarassingly-parallel program.
+
 
 program smooth_sem
-
-! this is the embarassingly-parallel program that smooths any specfem function (primarily the kernels)
-! that has the dimension of (NGLLX,NGLLY,NGLLZ,NSPEC)
-!
-! NOTE:  smoothing can be different in vertical & horizontal directions; mesh is in Cartesian geometry.
-!              algorithm uses vertical as Z, horizontal as X/Y direction
 
   use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,NGLLSQUARE, &
     MAX_STRING_LEN,IIN,IOUT, &
@@ -83,9 +80,20 @@ program smooth_sem
   integer :: node_list(MAX_NODE_LIST)
 
   character(len=MAX_STRING_LEN) :: arg(5)
-  character(len=MAX_STRING_LEN) :: filename, indir, outdir
+  character(len=MAX_STRING_LEN) :: material_name, input_dir, output_dir
   character(len=MAX_STRING_LEN) :: prname_lp
   character(len=MAX_STRING_LEN*2) :: local_data_file
+
+  ! machinery for tokenizing comma-delimited list of kernel names
+  character(len=255) :: strtok
+  character(len=1) :: delimiter
+  integer :: imat,nmat
+
+  ! given that there are a maximum of 21 elastic moduli plus density, 
+  ! it is unlikely there will ever be a need for more than 22 kernel names
+  integer,parameter :: MAX_material_nameS = 22
+  character(len=MAX_STRING_LEN) :: material_names(MAX_material_names)
+  character(len=MAX_STRING_LEN) :: material_names_comma_delimited
 
   ! smoothing parameters
   character(len=MAX_STRING_LEN*2) :: ks_file
@@ -117,7 +125,7 @@ program smooth_sem
   call world_size(sizeprocs)
   call world_rank(myrank)
 
-  if (myrank == 0) print*,"smooth_sem:"
+  if (myrank == 0) print*,"Running SMOOTH_SEM"
   call synchronize_all()
 
   ! reads arguments
@@ -125,21 +133,7 @@ program smooth_sem
     call get_command_argument(i,arg(i))
     if (i <= 5 .and. trim(arg(i)) == '') then
       if (myrank == 0) then
-        print *, 'Usage: '
-        print *, '        xsmooth_data sigma_h sigma_v kernel_file_name input_dir/ output_dir/'
-        print *
-        print *, 'with '
-        print *, ' sigma_h                - gaussian width for horizontal smoothing'
-        print *, ' sigma_v                - gaussian width for vertical smoothing'
-        print *
-        print *, ' possible kernel_file_names are: '
-        print *, '   alpha_kernel, beta_kernel, .., rho_vp, rho_vs, kappastore, mustore, etc.'
-        print *
-        print *, '   that are stored in the local directory as real(kind=CUSTOM_REAL) filename(NGLLX,NGLLY,NGLLZ,NSPEC_AB)  '
-        print *, '   in filename.bin'
-        print *
-        print *, ' files have been collected in input_dir/, smooth output mesh file goes to output_dir/ '
-        print *
+        print *, 'USAGE:  mpirun -np NPROC ./xsmooth_sem SIGMA_H SIGMA_V INPUT_DIR OUPUT_DIR MATERIAL_NAME'
       endif
       call synchronize_all()
       stop ' Reenter command line options'
@@ -149,9 +143,32 @@ program smooth_sem
   ! gets arguments
   read(arg(1),*) sigma_h
   read(arg(2),*) sigma_v
-  filename = arg(3)
-  indir= arg(4)
-  outdir = arg(5)
+  input_dir= arg(3)
+  output_dir = arg(4)
+  material_names_comma_delimited = arg(5)
+
+  ! tokenize comma-delimited list of kernel names
+  delimiter = ','
+  imat = 1
+  material_names(imat) = trim(strtok(material_names_comma_delimited, delimiter))
+  do while (material_names(imat) /= char(0))
+     imat = imat + 1
+     material_names(imat) = trim(strtok(char(0), delimiter))
+  enddo
+  nmat = imat-1
+
+  if ((myrank == 0) .and. (nmat > 1)) then
+      ! Print the following warning message if more than one material name was 
+      ! read in from command line.
+      !
+      ! (The machinery for reading multiple material names from the command line
+      ! is in place, but the smoothing subroutines themselves have not yet been
+      ! modified to work on multiple arrays.)
+      if (myrank == 0) print *
+      if (myrank == 0) print *, 'WARNING: multiple material names supplied - smoothing only first one in list'
+      if (myrank == 0) print *
+  endif
+  material_name = trim(material_names(1))
 
   ! initializes lengths
   sigma_h2 = 2.0 * sigma_h ** 2  ! factor two for gaussian distribution with standard variance sigma
@@ -177,12 +194,12 @@ program smooth_sem
 
   ! user output
   if (myrank == 0) then
-    print*,"defaults:"
+    print*,"command line arguments:"
     print*,"  smoothing sigma_h , sigma_v                : ",sigma_h,sigma_v
     ! scalelength: approximately S ~ sigma * sqrt(8.0) for a gaussian smoothing
     print*,"  smoothing scalelengths horizontal, vertical: ",sigma_h*sqrt(8.0),sigma_v*sqrt(8.0)
-    print*,"  input dir : ",trim(indir)
-    print*,"  output dir: ",trim(outdir)
+    print*,"  input dir : ",trim(input_dir)
+    print*,"  output dir: ",trim(output_dir)
     print*
   endif
 
@@ -472,8 +489,8 @@ program smooth_sem
     deallocate(ibool)
 
     ! data file
-    write(prname,'(a,i6.6,a)') trim(indir)//'proc',iproc,'_'
-    local_data_file = trim(prname) // trim(filename) // '.bin'
+    write(prname,'(a,i6.6,a)') trim(input_dir)//'proc',iproc,'_'
+    local_data_file = trim(prname) // trim(material_name) // '.bin'
 
     open(unit = IIN,file = trim(local_data_file),status='old',action='read',form ='unformatted',iostat=ier)
     if (ier /= 0) then
@@ -577,7 +594,7 @@ program smooth_sem
 
   ! file output
   ! smoothed kernel file name
-  write(ks_file,'(a,i6.6,a)') trim(outdir)//'/proc',myrank,'_'//trim(filename)//'_smooth.bin'
+  write(ks_file,'(a,i6.6,a)') trim(output_dir)//'/proc',myrank,'_'//trim(material_name)//'_smooth.bin'
 
   open(IOUT,file=trim(ks_file),status='unknown',form='unformatted',iostat=ier)
   if (ier /= 0) stop 'Error opening smoothed kernel file'
@@ -670,4 +687,87 @@ end program smooth_sem
   dist_h = sqrt( (x0-x1)*(x0-x1) + (y0-y1)*(y0-y1) )
 
   end subroutine get_distance_vec
+
+
+
+!-------------------------------------------------------------------------------------------------
+!
+
+! The following utility function was made freely available by the Fortran Wiki:
+! http://fortranwiki.org/fortran/show/strtok
+!
+character*255 function strtok (source_string, delimiters)
+
+!     @(#) Tokenize a string in a similar manner to C routine strtok(3c).
+!
+!     Usage:  First call STRTOK() with the string to tokenize as SOURCE_STRING,
+!             and the delimiter list used to tokenize SOURCE_STRING in DELIMITERS.
+!
+!             then, if the returned value is not equal to char(0), keep calling until it is
+!             with SOURCE_STRING set to char(0).
+!
+!            STRTOK will return a token on each call until the entire line is processed,
+!            which it signals by returning char(0).
+!
+!     Input:  source_string =   Source string to tokenize.
+!             delimiters    =   delimiter string.  Used to determine the beginning/end of each token in a string.
+!
+!     Output: strtok()
+!
+!     LIMITATIONS:
+!     can not be called with a different string until current string is totally processed, even from different procedures
+!     input string length limited to set size
+!     function returns fixed 255 character length
+!     length of returned string not given
+
+!     PARAMETERS:
+      character(len=*),intent(in)  :: source_string
+      character(len=*),intent(in)  :: delimiters
+
+!     SAVED VALUES:
+      character(len=255),save :: saved_string
+      integer,save :: isaved_start  ! points to beginning of unprocessed data
+      integer,save :: isource_len   ! length of original input string
+
+!     LOCAL VALUES:
+      integer :: ibegin        ! beginning of token to return
+      integer :: ifinish       ! end of token to return
+
+      ! initialize stored copy of input string and pointer into input string on first call
+      if (source_string(1:1) /= char(0)) then
+          isaved_start = 1                 ! beginning of unprocessed data
+          saved_string = source_string     ! save input string from first call in series
+          isource_len = LEN(saved_string)  ! length of input string from first call
+      endif
+
+      ibegin = isaved_start
+
+      do
+         if ( (ibegin <= isource_len) .AND. (index(delimiters,saved_string(ibegin:ibegin)) /= 0)) then
+             ibegin = ibegin + 1
+         else
+             exit
+         endif
+      enddo
+
+      if (ibegin > isource_len) then
+          strtok = char(0)
+          RETURN
+      endif
+
+      ifinish = ibegin
+
+      do
+         if ((ifinish <= isource_len) .AND.  (index(delimiters,saved_string(ifinish:ifinish)) == 0)) then
+             ifinish = ifinish + 1
+         else
+             exit
+         endif
+      enddo
+
+      !strtok = "["//saved_string(ibegin:ifinish-1)//"]"
+      strtok = saved_string(ibegin:ifinish-1)
+      isaved_start = ifinish
+
+end function strtok
 
