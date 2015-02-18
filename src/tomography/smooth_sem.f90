@@ -89,7 +89,7 @@ program smooth_sem
   character(len=1) :: delimiter
   integer :: imat,nmat
 
-  ! given that there are a maximum of 21 elastic moduli plus density, 
+  ! given that there are a maximum of 21 elastic moduli plus density,
   ! it is unlikely there will ever be a need for more than 22 kernel names
   integer,parameter :: MAX_material_nameS = 22
   character(len=MAX_STRING_LEN) :: material_names(MAX_material_names)
@@ -158,7 +158,7 @@ program smooth_sem
   nmat = imat-1
 
   if ((myrank == 0) .and. (nmat > 1)) then
-      ! Print the following warning message if more than one material name was 
+      ! Print the following warning message if more than one material name was
       ! read in from command line.
       !
       ! (The machinery for reading multiple material names from the command line
