@@ -117,7 +117,7 @@ program add_model
 
   ! calculates gradient
   ! steepest descent method
-  call get_gradient_steepest_iso()
+  call get_sd_direction_iso()
 
   ! computes new model values for alpha, beta and rho
   ! and stores new model files

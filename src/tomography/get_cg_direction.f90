@@ -26,7 +26,7 @@
 !=====================================================================
 
 
-subroutine get_gradient_cg_tiso()
+subroutine get_cg_direction_tiso()
 
 ! calculates TI gradient based on a conjugate gradient method
 !
@@ -59,7 +59,7 @@ subroutine get_gradient_cg_tiso()
   integer :: iglob
   integer :: i,j,k,ispec,ier
 
-  ! allocate arrays for storing gradients
+  ! allocate arrays for storing gradient
   ! transversely isotropic arrays
   allocate(model_dbulk(NGLLX,NGLLY,NGLLZ,NSPEC), &
            model_dbetav(NGLLX,NGLLY,NGLLZ,NSPEC), &
@@ -92,7 +92,7 @@ subroutine get_gradient_cg_tiso()
   norm_eta_old = norm_eta_sum
 
   if (myrank == 0) then
-    print*,'norm squared old gradients:'
+    print*,'norm squared old gradient:'
     print*,'  bulk : ',norm_bulk_old
     print*,'  betav: ',norm_betav_old
     print*,'  betah: ',norm_betah_old
@@ -106,7 +106,7 @@ subroutine get_gradient_cg_tiso()
     if (norm_eta_old < 1.e-22) call exit_mpi(myrank,'norm old gradient eta is zero')
   endif
 
-  ! Powell, 1977: checks orthogonality between old and new gradients
+  ! Powell, 1977: checks orthogonality between old and new gradient
   ! gets length of ( gamma_(n-1)^T * gamma_n )
   norm_bulk = sum( kernel_bulk_old * kernel_bulk )
   norm_betav = sum( kernel_betav_old * kernel_betav )
@@ -145,7 +145,7 @@ subroutine get_gradient_cg_tiso()
   endif
 
 
-  ! difference kernel/gradients
+  ! difference kernel/gradient
   ! length ( ( gamma_n - gamma_(n-1))^T * lambda_n )
   norm_bulk = sum( (kernel_bulk - kernel_bulk_old) * kernel_bulk )
   norm_betav = sum( (kernel_betav - kernel_betav_old) * kernel_betav )
@@ -165,7 +165,7 @@ subroutine get_gradient_cg_tiso()
   norm_eta = norm_eta_sum
 
   if (myrank == 0) then
-    print*,'norm squared difference gradients:'
+    print*,'norm squared difference gradient:'
     print*,'  bulk : ',norm_bulk
     print*,'  betav: ',norm_betav
     print*,'  betah: ',norm_betah
@@ -215,7 +215,7 @@ subroutine get_gradient_cg_tiso()
       alpha_eta = alpha_all
     endif
     ! user output
-    print*,'alpha gradients:'
+    print*,'alpha gradient:'
     print*,'  bulk : ',alpha_bulk
     print*,'  betav: ',alpha_betav
     print*,'  betah: ',alpha_betah
@@ -286,7 +286,7 @@ subroutine get_gradient_cg_tiso()
       enddo
     enddo
   else
-    ! uses only old kernel/gradients
+    ! uses only old kernel/gradient
     do ispec = 1, NSPEC
       do k = 1, NGLLZ
         do j = 1, NGLLY
@@ -341,8 +341,8 @@ subroutine get_gradient_cg_tiso()
   endif
 
   ! stores model_dbulk, ... arrays
-  ! note: stores these new gradients before we scale them with the step length
-  call write_gradients_tiso()
+  ! note: stores these new gradient before we scale them with the step length
+  call write_gradient_tiso()
 
   ! statistics
   call min_all_cr(minval(model_dbulk),min_bulk)
@@ -466,7 +466,7 @@ subroutine get_gradient_cg_tiso()
   call max_all_cr(maxval(model_deta),max_eta)
 
   if (myrank == 0) then
-    print*,'scaled gradients:'
+    print*,'scaled gradient:'
     print*,'  bulk min/max : ',min_bulk,max_bulk
     print*,'  betav min/max: ',min_vsv,max_vsv
     print*,'  betah min/max: ',min_vsh,max_vsh
@@ -475,5 +475,5 @@ subroutine get_gradient_cg_tiso()
   endif
   call synchronize_all()
 
-end subroutine get_gradient_cg_tiso
+end subroutine get_cg_direction_tiso
 

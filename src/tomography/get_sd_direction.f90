@@ -26,7 +26,7 @@
 !=====================================================================
 
 
-subroutine get_gradient_steepest_iso()
+subroutine get_sd_direction_iso()
 
 ! calculates gradient by steepest descent method
 
@@ -43,7 +43,7 @@ subroutine get_gradient_steepest_iso()
   integer :: iglob
   integer :: i,j,k,ispec,ier
 
-  ! allocate arrays for storing gradients
+  ! allocate arrays for storing gradient
   ! isotropic arrays
   allocate(model_dbulk(NGLLX,NGLLY,NGLLZ,NSPEC), &
            model_dbeta(NGLLX,NGLLY,NGLLZ,NSPEC), &
@@ -96,7 +96,7 @@ subroutine get_gradient_steepest_iso()
   enddo
 
   ! stores model_dbulk, ... arrays
-  call write_gradients_iso()
+  call write_gradient_iso()
 
   ! statistics
   call min_all_cr(minval(model_dbulk),min_bulk)
@@ -109,7 +109,7 @@ subroutine get_gradient_steepest_iso()
   call max_all_cr(maxval(model_drho),max_rho)
 
   if (myrank == 0) then
-    print*,'initial gradients:'
+    print*,'initial gradient:'
     print*,'  a min/max   : ',min_bulk,max_bulk
     print*,'  beta min/max: ',min_beta,max_beta
     print*,'  rho min/max : ',min_rho,max_rho
@@ -118,7 +118,7 @@ subroutine get_gradient_steepest_iso()
 
   ! statistics output
   if (PRINT_STATISTICS_FILES .and. myrank == 0) then
-    open(IOUT,file=trim(OUTPUT_STATISTICS_DIR)//'statistics_gradients_minmax',status='unknown')
+    open(IOUT,file=trim(OUTPUT_STATISTICS_DIR)//'statistics_gradient_minmax',status='unknown')
     write(IOUT,*) '#min_beta #max_beta #min_bulk #max_bulk #min_rho #max_rho'
     write(IOUT,'(6e24.12)') min_beta, max_beta, min_bulk, max_bulk, min_rho, max_rho
     close(IOUT)
@@ -211,7 +211,7 @@ subroutine get_gradient_steepest_iso()
   call max_all_cr(maxval(model_drho),max_rho)
 
   if (myrank == 0) then
-    print*,'scaled gradients:'
+    print*,'scaled gradient:'
     print*,'  a min/max   : ',min_bulk,max_bulk
     print*,'  beta min/max: ',min_beta,max_beta
     print*,'  rho min/max : ',min_rho,max_rho
@@ -221,20 +221,20 @@ subroutine get_gradient_steepest_iso()
 
   ! statistics output
   if (PRINT_STATISTICS_FILES .and. myrank == 0) then
-    open(IOUT,file=trim(OUTPUT_STATISTICS_DIR)//'statistics_scaled_gradients',status='unknown')
+    open(IOUT,file=trim(OUTPUT_STATISTICS_DIR)//'statistics_scaled_gradient',status='unknown')
     write(IOUT,*) '#min_beta #max_beta #min_bulk #max_bulk #min_rho #max_rho'
     write(IOUT,'(6e24.12)') min_beta,max_beta,min_bulk,max_bulk,min_rho,max_rho
     close(IOUT)
   endif
 
-end subroutine get_gradient_steepest_iso
+end subroutine get_sd_direction_iso
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
 
-subroutine get_gradient_steepest_tiso()
+subroutine get_sd_direction_tiso()
 
 ! calculates gradient by steepest descent method
 
@@ -252,7 +252,7 @@ subroutine get_gradient_steepest_tiso()
   integer :: iglob
   integer :: i,j,k,ispec,ier
 
-  ! allocate arrays for storing gradients
+  ! allocate arrays for storing gradient
   ! transversely isotropic arrays
   allocate(model_dbulk(NGLLX,NGLLY,NGLLZ,NSPEC), &
            model_dbetav(NGLLX,NGLLY,NGLLZ,NSPEC), &
@@ -308,7 +308,7 @@ subroutine get_gradient_steepest_tiso()
   enddo
 
   ! stores model_dbulk, ... arrays
-  call write_gradients_tiso()
+  call write_gradient_tiso()
 
   ! statistics
   call min_all_cr(minval(model_dbulk),min_bulk)
@@ -324,7 +324,7 @@ subroutine get_gradient_steepest_tiso()
   call max_all_cr(maxval(model_deta),max_eta)
 
   if (myrank == 0) then
-    print*,'initial gradients:'
+    print*,'initial gradient:'
     print*,'  bulk min/max : ',min_bulk,max_bulk
     print*,'  betav min/max: ',min_vsv,max_vsv
     print*,'  betah min/max: ',min_vsh,max_vsh
@@ -422,7 +422,7 @@ subroutine get_gradient_steepest_tiso()
   call max_all_cr(maxval(model_deta),max_eta)
 
   if (myrank == 0) then
-    print*,'scaled gradients:'
+    print*,'scaled gradient:'
     print*,'  bulk min/max : ',min_bulk,max_bulk
     print*,'  betav min/max: ',min_vsv,max_vsv
     print*,'  betah min/max: ',min_vsh,max_vsh
@@ -431,5 +431,5 @@ subroutine get_gradient_steepest_tiso()
   endif
   call synchronize_all()
 
-end subroutine get_gradient_steepest_tiso
+end subroutine get_sd_direction_tiso
 

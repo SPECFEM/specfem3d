@@ -181,13 +181,13 @@ subroutine read_kernels_cg_tiso_old()
     call exit_mpi(myrank,'flags old model not consistent')
   endif
 
-  ! reads in old gradients
+  ! reads in old gradient
   if (USE_OLD_GRADIENT) then
 
     ! user output
-    if (myrank == 0) print*,'reading old gradients...'
+    if (myrank == 0) print*,'reading old gradient...'
 
-    ! allocate arrays for storing old gradients
+    ! allocate arrays for storing old gradient
     ! transversely isotropic arrays
     allocate(model_dbulk_old(NGLLX,NGLLY,NGLLZ,NSPEC), &
              model_dbetav_old(NGLLX,NGLLY,NGLLZ,NSPEC), &

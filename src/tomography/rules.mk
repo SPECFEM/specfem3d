@@ -108,13 +108,13 @@ xsum_preconditioned_kernels: $E/xsum_preconditioned_kernels
 xadd_model_OBJECTS = \
 	$O/tomography_par.tomo_module.o \
 	$O/compute_kernel_integral.tomo.o \
-	$O/get_gradient_cg.tomo.o \
-	$O/get_gradient_steepest.tomo.o \
+	$O/get_cg_direction.tomo.o \
+	$O/get_sd_direction.tomo.o \
 	$O/read_kernels.tomo.o \
 	$O/read_kernels_cg.tomo.o \
 	$O/read_model.tomo.o \
 	$O/read_parameters_tomo.tomo.o \
-	$O/write_gradients.tomo.o \
+	$O/write_gradient.tomo.o \
 	$O/write_new_model.tomo.o \
 	$O/write_new_model_perturbations.tomo.o \
 	$(EMPTY_MACRO)
@@ -152,12 +152,12 @@ ${E}/xadd_model_iso: $(xadd_model_iso_OBJECTS) $(xadd_model_SHARED_OBJECTS) $(CO
 ##
 xmodel_update_OBJECTS = \
 	$O/tomography_par.tomo_module.o \
-	$O/get_gradient_steepest.tomo.o \
+	$O/get_sd_direction.tomo.o \
 	$O/model_update.tomo.o \
 	$O/read_kernels.tomo.o \
 	$O/read_parameters_tomo.tomo.o \
 	$O/save_external_bin_m_up.tomo.o \
-	$O/write_gradients.tomo.o \
+	$O/write_gradient.tomo.o \
 	$O/write_new_model.tomo.o \
 	$O/write_new_model_perturbations.tomo.o \
 	$(EMPTY_MACRO)

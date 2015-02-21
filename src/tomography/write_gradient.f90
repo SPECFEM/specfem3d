@@ -26,7 +26,7 @@
 !=====================================================================
 
 
-subroutine write_gradients_iso()
+subroutine write_gradient_iso()
 
 ! file output for new model
 
@@ -35,7 +35,7 @@ subroutine write_gradients_iso()
   character(len=MAX_STRING_LEN) :: m_file, fname
 
   ! user output
-  if (myrank == 0) print*,'writing out gradients...'
+  if (myrank == 0) print*,'writing out gradient...'
 
   ! kernel updates
   fname = 'dbulk'
@@ -64,13 +64,13 @@ subroutine write_gradients_iso()
 
   if (myrank == 0) print*
 
-end subroutine write_gradients_iso
+end subroutine write_gradient_iso
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-subroutine write_gradients_tiso()
+subroutine write_gradient_tiso()
 
 ! file output for new model
 
@@ -80,7 +80,7 @@ subroutine write_gradients_tiso()
   character(len=MAX_STRING_LEN) :: m_file, fname
 
   ! user output
-  if (myrank == 0) print*,'writing out gradients...'
+  if (myrank == 0) print*,'writing out gradient...'
 
   ! kernel updates
   fname = 'dbulk_c'
@@ -117,6 +117,6 @@ subroutine write_gradients_tiso()
 
   if (myrank == 0) print*
 
-end subroutine write_gradients_tiso
+end subroutine write_gradient_tiso
 
 
