@@ -69,7 +69,7 @@ program clip_sem
   character(len=1) :: delimiter
   integer :: imat,nmat
 
-  ! given that there are a maximum of 21 elastic moduli plus density, 
+  ! given that there are a maximum of 21 elastic moduli plus density,
   ! it is unlikely there will ever be a need for more than 22 names
   integer,parameter :: MAX_MATERIAL_NAMES = 22
   character(len=MAX_STRING_LEN) :: material_names(MAX_MATERIAL_NAMES)
@@ -221,7 +221,7 @@ subroutine clip_sem_array(sem_array,min_val,max_val)
       enddo
     enddo
   enddo
-  
+
 end subroutine clip_sem_array
 
 
