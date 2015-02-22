@@ -37,6 +37,7 @@ tomography_TARGETS = \
 	$E/xsum_kernels \
 	$E/xsum_preconditioned_kernels \
 	$E/xclip_sem \
+	$E/xcombine_sem \
 	$E/xsmooth_sem \
 	$(EMPTY_MACRO)
 
@@ -66,16 +67,19 @@ tomography_MODULES = \
 
 postprocess_TARGETS = \
 	$E/xclip_sem \
+	$E/xcombine_sem \
 	$E/xsmooth_sem \
 	$(EMPTY_MACRO)
 
 postprocess_OBJECTS = \
 	$(xclip_sem_OBJECTS) \
+	$(xcombine_sem_OBJECTS) \
 	$(xsmooth_sem_OBJECTS) \
 	$(EMPTY_MACRO)
 
 postprocess_SHARED_OBJECTS = \
 	$(xclip_sem_SHARED_OBJECTS) \
+	$(xcombine_sem_SHARED_OBJECTS) \
 	$(xsmooth_sem_SHARED_OBJECTS) \
 	$(EMPTY_MACRO)
 
@@ -112,6 +116,9 @@ xsum_preconditioned_kernels: $E/xsum_preconditioned_kernels
 
 clip_sem: xclip_sem
 xclip_sem: $E/xclip_sem
+
+combine_sem: xcombine_sem
+xcombine_sem: $E/xcombine_sem
 
 smooth_sem: xsmooth_sem
 xsmooth_sem: $E/xsmooth_sem
@@ -186,6 +193,25 @@ xclip_sem_SHARED_OBJECTS = \
 	$(EMPTY_MACRO)
 
 ${E}/xclip_sem: $(xclip_sem_OBJECTS) $(xclip_sem_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
+	${FCLINK} -o $@ $+ $(MPILIBS)
+
+
+##
+## xcombine_sem
+##
+xcombine_sem_OBJECTS = \
+	$O/tomography_par.tomo_module.o \
+	$O/combine_sem.tomo.o \
+	$(EMPTY_MACRO)
+
+xcombine_sem_SHARED_OBJECTS = \
+	$O/shared_par.shared_module.o \
+	$O/param_reader.cc.o \
+	$O/read_parameter_file.shared.o \
+	$O/read_value_parameters.shared.o \
+	$(EMPTY_MACRO)
+
+${E}/xcombine_sem: $(xcombine_sem_OBJECTS) $(xcombine_sem_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
 	${FCLINK} -o $@ $+ $(MPILIBS)
 
 
