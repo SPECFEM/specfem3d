@@ -34,15 +34,15 @@ $(tomography_OBJECTS): S := ${S_TOP}/src/tomography
 tomography_TARGETS = \
 	$E/xadd_model_iso \
 	$E/xmodel_update \
-	$E/xsmooth_sem \
 	$E/xsum_kernels \
 	$E/xsum_preconditioned_kernels \
+	$E/xclip_sem \
+	$E/xsmooth_sem \
 	$(EMPTY_MACRO)
 
 tomography_OBJECTS = \
 	$(xadd_model_iso_OBJECTS) \
 	$(xmodel_update_OBJECTS) \
-	$(xsmooth_sem_OBJECTS) \
 	$(xsum_kernels_OBJECTS) \
 	$(xsum_preconditioned_kernels_OBJECTS) \
 	$(EMPTY_MACRO)
@@ -51,7 +51,6 @@ tomography_OBJECTS = \
 tomography_SHARED_OBJECTS = \
 	$(xadd_model_SHARED_OBJECTS) \
 	$(xmodel_update_SHARED_OBJECTS) \
-	$(xsmooth_sem_SHARED_OBJECTS) \
 	$(xsum_kernels_SHARED_OBJECTS) \
 	$(xsum_preconditioned_kernels_SHARED_OBJECTS) \
 	$(EMPTY_MACRO)
@@ -63,6 +62,21 @@ tomography_MODULES = \
 	$(FC_MODDIR)/tomography_kernels_tiso_cg.$(FC_MODEXT) \
 	$(FC_MODDIR)/tomography_model_tiso.$(FC_MODEXT) \
 	$(FC_MODDIR)/tomography_model_iso.$(FC_MODEXT) \
+	$(EMPTY_MACRO)
+
+postprocess_TARGETS = \
+	$E/xclip_sem \
+	$E/xsmooth_sem \
+	$(EMPTY_MACRO)
+
+postprocess_OBJECTS = \
+	$(xclip_sem_OBJECTS) \
+	$(xsmooth_sem_OBJECTS) \
+	$(EMPTY_MACRO)
+
+postprocess_SHARED_OBJECTS = \
+	$(xclip_sem_SHARED_OBJECTS) \
+	$(xsmooth_sem_SHARED_OBJECTS) \
 	$(EMPTY_MACRO)
 
 ####
@@ -77,21 +91,31 @@ tomo: $(tomography_TARGETS)
 
 tomography: $(tomography_TARGETS)
 
-## single targets
+postprocess: $(postprocess_TARGETS)
+
+
+### single targets
 add_model_iso: xadd_model_iso
 xadd_model_iso: $E/xadd_model_iso
 
 model_update: xmodel_update
 xmodel_update: $E/xmodel_update
 
-smooth_sem: xsmooth_sem
-xsmooth_sem: $E/xsmooth_sem
-
 sum_kernels: xsum_kernels
 xsum_kernels: $E/xsum_kernels
 
 sum_preconditioned_kernels: xsum_preconditioned_kernels
 xsum_preconditioned_kernels: $E/xsum_preconditioned_kernels
+
+
+###
+
+clip_sem: xclip_sem
+xclip_sem: $E/xclip_sem
+
+smooth_sem: xsmooth_sem
+xsmooth_sem: $E/xsmooth_sem
+
 
 
 #######################################
@@ -144,6 +168,24 @@ xadd_model_iso_OBJECTS = \
 $O/add_model_iso.tomo.o: $O/specfem3D_par.spec.o $O/tomography_par.tomo_module.o
 
 ${E}/xadd_model_iso: $(xadd_model_iso_OBJECTS) $(xadd_model_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
+	${FCLINK} -o $@ $+ $(MPILIBS)
+
+##
+## xclip_sem
+##
+xclip_sem_OBJECTS = \
+	$O/tomography_par.tomo_module.o \
+	$O/clip_sem.tomo.o \
+	$(EMPTY_MACRO)
+
+xclip_sem_SHARED_OBJECTS = \
+	$O/shared_par.shared_module.o \
+	$O/param_reader.cc.o \
+	$O/read_parameter_file.shared.o \
+	$O/read_value_parameters.shared.o \
+	$(EMPTY_MACRO)
+
+${E}/xclip_sem: $(xclip_sem_OBJECTS) $(xclip_sem_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
 	${FCLINK} -o $@ $+ $(MPILIBS)
 
 
