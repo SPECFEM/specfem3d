@@ -25,49 +25,42 @@
 !
 !=====================================================================
 
-! XSUM_KERNELS
-!
-! USAGE
-!   mpirun -np NPROC bin/xsum_kernels INPUT_FILE OUTPUT_DIR KERNEL_NAMES
-!
-! e.g.
-!   mpirun -np 8 bin/xsum_kernels kernels_list.txt OUTPUT_SUM/ alpha_kernel,rho_kernel
-!
-!
-! COMMAND LINE ARGUMENTS
-!   INPUT_FILE             - text file containing list of kernel directories
-!   OUTPUT_PATH            - directory to which summed kernels are written
-!   KERNEL_NAMES           - one or more kernel names separated by commas
-!
-!
-! DESCRIPTION
-!   Sums kernels from directories specified in INPUT_FILE with names given by KERNEL_NAMES.
-!   Writes the resulting sum to OUTPUT_DIR.
-!
-!   INPUT_FILE is a text file containing a list of absolute or relative paths to
-!   kernel direcotires, one directoy per line. In legacy versions XSUM_KERNELS,
-!   INPUT_FILE had the hardwired name 'kernels_list.txt'
-!
-!   KERNEL_NAMES is comma-delimited list of kernel names, e.g.'alpha_kernel,rho_kernel'.
 
+! sum_kernels
+!
+! this program can be used for event kernel summation,
+! where it sums up transverse isotropic kernel files:
+!
+!   - proc***_reg1_bulk_c_kernel.bin
+!   - proc***_reg1_bulk_betav_kernel.bin
+!   - proc***_reg1_bulk_betah_kernel.bin
+!   - proc***_reg1_eta_kernel.bin
+!
+! input file: kernels_list.txt
+!   lists all event kernel directories which should be summed together
+!
+! input directory:  INPUT_KERNELS/
+!    contains links to all event kernel directories (listed in "kernels_list.txt")
+!
+! output directory: OUTPUT_SUM/
+!    the resulting kernel files will be stored in this directory
 
 
 program sum_kernels
 
-  use tomography_par,only: MAX_STRING_LEN,MAX_NUM_NODES,IIN, &
-    myrank,sizeprocs,NGLOB,NSPEC
+  use tomography_par,only: MAX_STRING_LEN,MAX_NUM_NODES,KERNEL_FILE_LIST,IIN, &
+    myrank,sizeprocs, &
+    NGLOB,NSPEC, &
+    USE_ALPHA_BETA_RHO,USE_ISO_KERNELS
 
   use shared_parameters
 
   implicit none
 
-  character(len=MAX_STRING_LEN) :: kernel_list(MAX_NUM_NODES), kernel_names(MAX_NUM_NODES)
-  character(len=MAX_STRING_LEN) :: sline,prname_lp,output_dir,input_file,kernel_names_comma_delimited
-  character(len=MAX_STRING_LEN) :: arg(3)
-  character(len=255) :: strtok
-  character(len=1) :: delimiter
-  integer :: nker,nmat
-  integer :: i,ier,imat
+  character(len=MAX_STRING_LEN) :: kernel_list(MAX_NUM_NODES)
+  character(len=MAX_STRING_LEN) :: sline, kernel_name,prname_lp
+  integer :: nker
+  integer :: ier
 
   logical :: BROADCAST_AFTER_READ
 
@@ -78,30 +71,6 @@ program sum_kernels
   call world_size(sizeprocs)
   call world_rank(myrank)
 
-  do i = 1, 3
-    call get_command_argument(i,arg(i), status=ier)
-    if (i <= 1 .and. trim(arg(i)) == '') then
-      if (myrank == 0) then
-      stop ' Reenter command line options'
-      endif
-    endif
-  enddo
-
-  ! gets arguments
-  read(arg(1),'(a)') input_file
-  read(arg(2),'(a)') output_dir
-  read(arg(3),'(a)') kernel_names_comma_delimited
-
-  ! tokenize comma-delimited list of kernel names
-  delimiter = ','
-  imat = 1
-  kernel_names(imat) = trim(strtok(kernel_names_comma_delimited, delimiter))
-  do while (kernel_names(imat) /= char(0))
-     imat = imat + 1
-     kernel_names(imat) = trim(strtok(char(0), delimiter))
-  enddo
-  nmat = imat-1
-
   if (myrank==0) then
     write(*,*) 'sum_kernels:'
     write(*,*)
@@ -111,9 +80,9 @@ program sum_kernels
 
   ! reads in event list
   nker=0
-  open(unit = IIN, file = trim(input_file), status = 'old',iostat = ier)
+  open(unit = IIN, file = trim(KERNEL_FILE_LIST), status = 'old',iostat = ier)
   if (ier /= 0) then
-     print *,'Error opening ',trim(input_file), myrank
+     print *,'Error opening ',trim(KERNEL_FILE_LIST),myrank
      stop 1
   endif
   do while (1 == 1)
@@ -170,7 +139,7 @@ program sum_kernels
 
   ! user output
   if (myrank == 0) then
-    print*,'summing kernels in:'
+    print*,'summing kernels in INPUT_KERNELS/ directories:'
     print*,kernel_list(1:nker)
     print*
   endif
@@ -178,12 +147,55 @@ program sum_kernels
   ! synchronizes
   call synchronize_all()
 
-  do imat=1,nmat
-      call sum_kernel(kernel_names(imat),kernel_list,output_dir,nker)
-  enddo
+  ! sums up kernels
+  if (USE_ISO_KERNELS) then
 
+    !  isotropic kernels
+    if (myrank == 0) write(*,*) 'isotropic kernels: bulk_c, bulk_beta, rho'
 
-  if (myrank==0) write(*,*) 'done writing all kernels, see directory', output_dir
+    kernel_name = 'bulk_c_kernel'
+    call sum_kernel(kernel_name,kernel_list,nker)
+
+    kernel_name = 'bulk_beta_kernel'
+    call sum_kernel(kernel_name,kernel_list,nker)
+
+    kernel_name = 'rho_kernel'
+    call sum_kernel(kernel_name,kernel_list,nker)
+
+  else if (USE_ALPHA_BETA_RHO) then
+
+    ! isotropic kernels
+    if (myrank == 0) write(*,*) 'isotropic kernels: alpha, beta, rho'
+
+    kernel_name = 'alpha_kernel'
+    call sum_kernel(kernel_name,kernel_list,nker)
+
+    kernel_name = 'beta_kernel'
+    call sum_kernel(kernel_name,kernel_list,nker)
+
+    kernel_name = 'rho_kernel'
+    call sum_kernel(kernel_name,kernel_list,nker)
+
+  else
+
+    ! transverse isotropic kernels
+    if (myrank == 0) write(*,*) 'transverse isotropic kernels: bulk_c, bulk_betav, bulk_betah,eta'
+
+    kernel_name = 'bulk_c_kernel'
+    call sum_kernel(kernel_name,kernel_list,nker)
+
+    kernel_name = 'bulk_betav_kernel'
+    call sum_kernel(kernel_name,kernel_list,nker)
+
+    kernel_name = 'bulk_betah_kernel'
+    call sum_kernel(kernel_name,kernel_list,nker)
+
+    kernel_name = 'eta_kernel'
+    call sum_kernel(kernel_name,kernel_list,nker)
+
+  endif
+
+  if (myrank==0) write(*,*) 'done writing all kernels, see directory OUTPUT_SUM/'
 
   ! stop all the processes, and exit
   call finalize_mpi()
@@ -194,13 +206,13 @@ end program sum_kernels
 !-------------------------------------------------------------------------------------------------
 !
 
-subroutine sum_kernel(kernel_name,kernel_list,output_dir,nker)
+subroutine sum_kernel(kernel_name,kernel_list,nker)
 
   use tomography_par
 
   implicit none
 
-  character(len=MAX_STRING_LEN) :: kernel_name,kernel_list(MAX_NUM_NODES),output_dir
+  character(len=MAX_STRING_LEN) :: kernel_name,kernel_list(MAX_NUM_NODES)
   integer :: nker
 
   ! local parameters
@@ -231,7 +243,7 @@ subroutine sum_kernel(kernel_name,kernel_list,output_dir,nker)
 
     ! sensitivity kernel / frechet derivative
     kernel = 0._CUSTOM_REAL
-    write(k_file,'(a,i6.6,a)') trim(kernel_list(iker)) &
+    write(k_file,'(a,i6.6,a)') 'INPUT_KERNELS/'//trim(kernel_list(iker)) &
                           //'/proc',myrank,trim(REG)//trim(kernel_name)//'.bin'
 
     open(IIN,file=trim(k_file),status='old',form='unformatted',action='read',iostat=ier)
@@ -253,7 +265,7 @@ subroutine sum_kernel(kernel_name,kernel_list,output_dir,nker)
     ! source mask
     if (USE_SOURCE_MASK) then
       ! reads in mask
-      write(k_file,'(a,i6.6,a)') trim(kernel_list(iker)) &
+      write(k_file,'(a,i6.6,a)') 'INPUT_KERNELS/'//trim(kernel_list(iker)) &
                             //'/proc',myrank,trim(REG)//'mask_source.bin'
       open(IIN,file=trim(k_file),status='old',form='unformatted',action='read',iostat=ier)
       if (ier /= 0) then
@@ -274,7 +286,7 @@ subroutine sum_kernel(kernel_name,kernel_list,output_dir,nker)
   ! stores summed kernels
   if (myrank==0) write(*,*) 'writing out summed kernel for: ',trim(kernel_name)
 
-  write(k_file,'(a,i6.6,a)') trim(output_dir)//'/'//'proc',myrank,trim(REG)//trim(kernel_name)//'.bin'
+  write(k_file,'(a,i6.6,a)') 'OUTPUT_SUM/proc',myrank,trim(REG)//trim(kernel_name)//'.bin'
 
   open(IOUT,file=trim(k_file),form='unformatted',status='unknown',action='write',iostat=ier)
   if (ier /= 0) then
@@ -292,86 +304,4 @@ subroutine sum_kernel(kernel_name,kernel_list,output_dir,nker)
 
 end subroutine sum_kernel
 
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-! The following utility function was made freely available by the Fortran Wiki:
-! http://fortranwiki.org/fortran/show/strtok
-!
-character*255 function strtok (source_string, delimiters)
-
-!     @(#) Tokenize a string in a similar manner to C routine strtok(3c).
-!
-!     Usage:  First call STRTOK() with the string to tokenize as SOURCE_STRING,
-!             and the delimiter list used to tokenize SOURCE_STRING in DELIMITERS.
-!
-!             then, if the returned value is not equal to char(0), keep calling until it is
-!             with SOURCE_STRING set to char(0).
-!
-!            STRTOK will return a token on each call until the entire line is processed,
-!            which it signals by returning char(0).
-!
-!     Input:  source_string =   Source string to tokenize.
-!             delimiters    =   delimiter string.  Used to determine the beginning/end of each token in a string.
-!
-!     Output: strtok()
-!
-!     LIMITATIONS:
-!     can not be called with a different string until current string is totally processed, even from different procedures
-!     input string length limited to set size
-!     function returns fixed 255 character length
-!     length of returned string not given
-
-!     PARAMETERS:
-      character(len=*),intent(in)  :: source_string
-      character(len=*),intent(in)  :: delimiters
-
-!     SAVED VALUES:
-      character(len=255),save :: saved_string
-      integer,save :: isaved_start  ! points to beginning of unprocessed data
-      integer,save :: isource_len   ! length of original input string
-
-!     LOCAL VALUES:
-      integer :: ibegin        ! beginning of token to return
-      integer :: ifinish       ! end of token to return
-
-      ! initialize stored copy of input string and pointer into input string on first call
-      if (source_string(1:1) /= char(0)) then
-          isaved_start = 1                 ! beginning of unprocessed data
-          saved_string = source_string     ! save input string from first call in series
-          isource_len = LEN(saved_string)  ! length of input string from first call
-      endif
-
-      ibegin = isaved_start
-
-      do
-         if ( (ibegin <= isource_len) .AND. (index(delimiters,saved_string(ibegin:ibegin)) /= 0)) then
-             ibegin = ibegin + 1
-         else
-             exit
-         endif
-      enddo
-
-      if (ibegin > isource_len) then
-          strtok = char(0)
-          RETURN
-      endif
-
-      ifinish = ibegin
-
-      do
-         if ((ifinish <= isource_len) .AND.  (index(delimiters,saved_string(ifinish:ifinish)) == 0)) then
-             ifinish = ifinish + 1
-         else
-             exit
-         endif
-      enddo
-
-      !strtok = "["//saved_string(ibegin:ifinish-1)//"]"
-      strtok = saved_string(ibegin:ifinish-1)
-      isaved_start = ifinish
-
-end function strtok
 
