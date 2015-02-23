@@ -34,7 +34,7 @@ $(tomography_OBJECTS): S := ${S_TOP}/src/tomography
 tomography_TARGETS = \
 	$E/xadd_model_iso \
 	$E/xmodel_update \
-	$E/xsum_kernels \
+	$E/xsum_kernels_old_deprecated \
 	$E/xsum_preconditioned_kernels \
 	$E/xclip_sem \
 	$E/xcombine_sem \
@@ -44,7 +44,7 @@ tomography_TARGETS = \
 tomography_OBJECTS = \
 	$(xadd_model_iso_OBJECTS) \
 	$(xmodel_update_OBJECTS) \
-	$(xsum_kernels_OBJECTS) \
+	$(xsum_kernels_old_deprecated_OBJECTS) \
 	$(xsum_preconditioned_kernels_OBJECTS) \
 	$(EMPTY_MACRO)
 
@@ -52,7 +52,7 @@ tomography_OBJECTS = \
 tomography_SHARED_OBJECTS = \
 	$(xadd_model_SHARED_OBJECTS) \
 	$(xmodel_update_SHARED_OBJECTS) \
-	$(xsum_kernels_SHARED_OBJECTS) \
+	$(xsum_kernels_old_deprecated_SHARED_OBJECTS) \
 	$(xsum_preconditioned_kernels_SHARED_OBJECTS) \
 	$(EMPTY_MACRO)
 
@@ -105,8 +105,8 @@ xadd_model_iso: $E/xadd_model_iso
 model_update: xmodel_update
 xmodel_update: $E/xmodel_update
 
-sum_kernels: xsum_kernels
-xsum_kernels: $E/xsum_kernels
+sum_kernels_old_deprecated: xsum_kernels_old_deprecated
+xsum_kernels_old_deprecated: $E/xsum_kernels_old_deprecated
 
 sum_preconditioned_kernels: xsum_preconditioned_kernels
 xsum_preconditioned_kernels: $E/xsum_preconditioned_kernels
@@ -316,21 +316,21 @@ ${E}/xsmooth_sem: $(xsmooth_sem_OBJECTS) $(xsmooth_sem_SHARED_OBJECTS) $(COND_MP
 
 
 ##
-## xsum_kernels
+## xsum_kernels_old_deprecated
 ##
-xsum_kernels_OBJECTS = \
+xsum_kernels_old_deprecated_OBJECTS = \
 	$O/tomography_par.tomo_module.o \
-	$O/sum_kernels.tomo.o \
+	$O/sum_kernels_old_deprecated.tomo.o \
 	$(EMPTY_MACRO)
 
-xsum_kernels_SHARED_OBJECTS = \
+xsum_kernels_old_deprecated_SHARED_OBJECTS = \
 	$O/shared_par.shared_module.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \
 	$(EMPTY_MACRO)
 
-${E}/xsum_kernels: $(xsum_kernels_OBJECTS) $(xsum_kernels_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
+${E}/xsum_kernels_old_deprecated: $(xsum_kernels_old_deprecated_OBJECTS) $(xsum_kernels_old_deprecated_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
 	${FCLINK} -o $@ $+ $(MPILIBS)
 
 
@@ -342,7 +342,7 @@ xsum_preconditioned_kernels_OBJECTS = \
 	$O/sum_preconditioned_kernels.tomo.o \
 	$(EMPTY_MACRO)
 
-xsum_preconditioned_kernels_SHARED_OBJECTS = $(xsum_kernels_SHARED_OBJECTS)
+xsum_preconditioned_kernels_SHARED_OBJECTS = $(xsum_kernels_old_deprecated_SHARED_OBJECTS)
 
 ${E}/xsum_preconditioned_kernels: $(xsum_preconditioned_kernels_OBJECTS) $(xsum_preconditioned_kernels_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
 	${FCLINK} -o $@ $+ $(MPILIBS)
