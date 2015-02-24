@@ -53,7 +53,7 @@
 
 program combine_sem
 
-  use tomography_par,only: MAX_STRING_LEN,MAX_NUM_NODES,IIN, &
+  use postprocess_par,only: MAX_STRING_LEN,MAX_NUM_NODES,IIN, &
     myrank,sizeprocs,NGLOB,NSPEC
 
   use shared_parameters
@@ -195,7 +195,7 @@ end program combine_sem
 
 subroutine combine_sem_array(material_name,paths_list,output_dir,nker)
 
-  use tomography_par
+  use postprocess_par
 
   implicit none
 

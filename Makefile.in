@@ -220,6 +220,7 @@ SUBDIRS = \
 	decompose_mesh \
 	generate_databases \
 	meshfem3D \
+	postprocess \
 	shared \
 	specfem3D \
 	tomography \

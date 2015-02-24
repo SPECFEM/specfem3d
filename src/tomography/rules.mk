@@ -36,9 +36,6 @@ tomography_TARGETS = \
 	$E/xmodel_update \
 	$E/xsum_kernels_old_deprecated \
 	$E/xsum_preconditioned_kernels \
-	$E/xclip_sem \
-	$E/xcombine_sem \
-	$E/xsmooth_sem \
 	$(EMPTY_MACRO)
 
 tomography_OBJECTS = \
@@ -65,24 +62,6 @@ tomography_MODULES = \
 	$(FC_MODDIR)/tomography_model_iso.$(FC_MODEXT) \
 	$(EMPTY_MACRO)
 
-postprocess_TARGETS = \
-	$E/xclip_sem \
-	$E/xcombine_sem \
-	$E/xsmooth_sem \
-	$(EMPTY_MACRO)
-
-postprocess_OBJECTS = \
-	$(xclip_sem_OBJECTS) \
-	$(xcombine_sem_OBJECTS) \
-	$(xsmooth_sem_OBJECTS) \
-	$(EMPTY_MACRO)
-
-postprocess_SHARED_OBJECTS = \
-	$(xclip_sem_SHARED_OBJECTS) \
-	$(xcombine_sem_SHARED_OBJECTS) \
-	$(xsmooth_sem_SHARED_OBJECTS) \
-	$(EMPTY_MACRO)
-
 ####
 #### rules for executables
 ####
@@ -94,8 +73,6 @@ all_tomo: $(tomography_TARGETS)
 tomo: $(tomography_TARGETS)
 
 tomography: $(tomography_TARGETS)
-
-postprocess: $(postprocess_TARGETS)
 
 
 ### single targets
@@ -110,18 +87,6 @@ xsum_kernels_old_deprecated: $E/xsum_kernels_old_deprecated
 
 sum_preconditioned_kernels: xsum_preconditioned_kernels
 xsum_preconditioned_kernels: $E/xsum_preconditioned_kernels
-
-
-###
-
-clip_sem: xclip_sem
-xclip_sem: $E/xclip_sem
-
-combine_sem: xcombine_sem
-xcombine_sem: $E/xcombine_sem
-
-smooth_sem: xsmooth_sem
-xsmooth_sem: $E/xsmooth_sem
 
 
 
@@ -175,43 +140,6 @@ xadd_model_iso_OBJECTS = \
 $O/add_model_iso.tomo.o: $O/specfem3D_par.spec.o $O/tomography_par.tomo_module.o
 
 ${E}/xadd_model_iso: $(xadd_model_iso_OBJECTS) $(xadd_model_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
-	${FCLINK} -o $@ $+ $(MPILIBS)
-
-##
-## xclip_sem
-##
-xclip_sem_OBJECTS = \
-	$O/tomography_par.tomo_module.o \
-	$O/clip_sem.tomo.o \
-	$(EMPTY_MACRO)
-
-xclip_sem_SHARED_OBJECTS = \
-	$O/shared_par.shared_module.o \
-	$O/param_reader.cc.o \
-	$O/read_parameter_file.shared.o \
-	$O/read_value_parameters.shared.o \
-	$(EMPTY_MACRO)
-
-${E}/xclip_sem: $(xclip_sem_OBJECTS) $(xclip_sem_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
-	${FCLINK} -o $@ $+ $(MPILIBS)
-
-
-##
-## xcombine_sem
-##
-xcombine_sem_OBJECTS = \
-	$O/tomography_par.tomo_module.o \
-	$O/combine_sem.tomo.o \
-	$(EMPTY_MACRO)
-
-xcombine_sem_SHARED_OBJECTS = \
-	$O/shared_par.shared_module.o \
-	$O/param_reader.cc.o \
-	$O/read_parameter_file.shared.o \
-	$O/read_value_parameters.shared.o \
-	$(EMPTY_MACRO)
-
-${E}/xcombine_sem: $(xcombine_sem_OBJECTS) $(xcombine_sem_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
 	${FCLINK} -o $@ $+ $(MPILIBS)
 
 
@@ -282,36 +210,6 @@ $O/model_update.tomo.o: $O/specfem3D_par.spec.o $O/tomography_par.tomo_module.o
 $O/save_external_bin_m_up.tomo.o: $O/specfem3D_par.spec.o
 
 ${E}/xmodel_update: $(xmodel_update_OBJECTS) $(xmodel_update_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
-	${FCLINK} -o $@ $+ $(MPILIBS)
-
-
-##
-## xsmooth_sem
-##
-xsmooth_sem_OBJECTS = \
-	$O/tomography_par.tomo_module.o \
-	$O/smooth_sem.tomo.o \
-	$(EMPTY_MACRO)
-
-xsmooth_sem_SHARED_OBJECTS = \
-	$O/specfem3D_par.spec.o \
-	$O/pml_par.spec.o \
-	$O/read_mesh_databases.spec.o \
-	$O/shared_par.shared_module.o \
-	$O/check_mesh_resolution.shared.o \
-	$O/create_name_database.shared.o \
-	$O/exit_mpi.shared.o \
-	$O/gll_library.shared.o \
-	$O/param_reader.cc.o \
-	$O/read_parameter_file.shared.o \
-	$O/read_value_parameters.shared.o \
-	$O/write_VTK_data.shared.o \
-	$(EMPTY_MACRO)
-
-# extra dependencies
-$O/smooth_sem.tomo.o: $O/specfem3D_par.spec.o $O/tomography_par.tomo_module.o
-
-${E}/xsmooth_sem: $(xsmooth_sem_OBJECTS) $(xsmooth_sem_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
 	${FCLINK} -o $@ $+ $(MPILIBS)
 
 

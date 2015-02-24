@@ -53,7 +53,7 @@
 
 program clip_sem
 
-  use tomography_par,only: MAX_STRING_LEN,MAX_NUM_NODES,IIN,IOUT, &
+  use postprocess_par,only: MAX_STRING_LEN,MAX_NUM_NODES,IIN,IOUT, &
     myrank,sizeprocs,NGLOB,NSPEC,REG,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL
 
   use shared_parameters
@@ -201,7 +201,7 @@ end program clip_sem
 
 subroutine clip_sem_array(sem_array,min_val,max_val)
 
-  use tomography_par
+  use postprocess_par
 
   implicit none
 
