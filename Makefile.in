@@ -246,7 +246,7 @@ all: default \
 	xclip_sem \
 	xcombine_sem \
 	xsmooth_sem \
-	xsum_kernels \
+	xsum_kernels_old_deprecated \
 	xsum_preconditioned_kernels \
 	xcheck_mesh_quality_CUBIT_Abaqus \
 	xconvert_skewness_to_angle \
@@ -327,7 +327,7 @@ help:
 	@echo "- tomography tools: [make tomography]"
 	@echo "    xmodel_update"
 	@echo "    xsmooth_sem"
-	@echo "    xsum_kernels"
+	@echo "    xsum_kernels_old_deprecated"
 	@echo "    xsum_preconditioned_kernels"
 	@echo ""
 	@echo "- inverse problem: [make inverse_problem]"
@@ -349,7 +349,7 @@ help:
 	clip_sem xclip_sem \
 	combine_sem xcombine_sem \
 	smooth_sem xsmooth_sem \
-	sum_kernels xsum_kernels \
+	sum_kernels_old_deprecated xsum_kernels_old_deprecated \
 	sum_preconditioned_kernels xsum_preconditioned_kernels \
 	model_update xmodel_update \
 	check_mesh_quality_CUBIT_Abaqus xcheck_mesh_quality_CUBIT_Abaqus \

@@ -696,7 +696,7 @@ end program smooth_sem
 ! The following utility function was made freely available by the Fortran Wiki:
 ! http://fortranwiki.org/fortran/show/strtok
 !
-character*255 function strtok (source_string, delimiters)
+character(len=255) function strtok (source_string, delimiters)
 
 !     @(#) Tokenize a string in a similar manner to C routine strtok(3c).
 !
