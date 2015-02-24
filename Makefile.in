@@ -243,6 +243,8 @@ all: default \
 	xconvolve_source_timefunction \
 	xcreate_movie_shakemap_AVS_DX_GMT \
 	xmodel_update \
+	xclip_sem \
+	xcombine_sem \
 	xsmooth_sem \
 	xsum_kernels_old_deprecated \
 	xsum_preconditioned_kernels \
@@ -344,6 +346,8 @@ help:
 	create_movie_shakemap_AVS_DX_GMT xcreate_movie_shakemap_AVS_DX_GMT \
 	combine_vol_data xcombine_vol_data \
 	combine_surf_data xcombine_surf_data \
+	clip_sem xclip_sem \
+	combine_sem xcombine_sem \
 	smooth_sem xsmooth_sem \
 	sum_kernels_old_deprecated xsum_kernels_old_deprecated \
 	sum_preconditioned_kernels xsum_preconditioned_kernels \
