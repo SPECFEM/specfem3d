@@ -35,7 +35,6 @@ echo "" >> $testdir/results.log
 # checks executable availability
 exec=( xadd_model_iso \
        xmodel_update \
-       xsmooth_sem \
        xsum_preconditioned_kernels \
       )
 
