@@ -46,7 +46,7 @@
 !    the resulting kernel files will be stored in this directory
 !
 !
-! DEPRECATION WARNING: Eventually, all of the following routines, or at lesast 
+! DEPRECATION WARNING: Eventually, all of the following routines, or at lesast
 ! some the subroutines, will be merged with src/tomography/xcombine_sem
 !
 
