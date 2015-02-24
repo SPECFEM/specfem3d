@@ -27,7 +27,7 @@ exec=( xcombine_surf_data \
        xconvert_skewness_to_angle \
        xmultiply_CUBIT_Abaqus_mesh_by_1000 \
        xmodel_update \
-       xsum_kernels_old_deprecated \
+       xsum_kernels \
        xsum_preconditioned_kernels \
       )
 
