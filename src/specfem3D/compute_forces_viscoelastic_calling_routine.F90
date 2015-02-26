@@ -505,6 +505,7 @@ subroutine compute_forces_viscoelastic_Dev_sim1(iphase)
 
 !----------------------------------------------------------------------------------------------
 #ifdef OPENMP_MODE
+    print *,iphase !! DK DK this dummy statement just to avoid a warning by the compiler about "iphase" being unused
     stop 'OpenMP support has been discontinued for now'
 !! DK DK Jan 2013: beware, that OpenMP version is not maintained / supported and thus probably does not work
 !   call compute_forces_viscoelastic_Dev_openmp(iphase, NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
