@@ -28,7 +28,7 @@
 ! XCLIP_SEM
 !
 ! USAGE
-!   mpirun -np NPROC bin/xclip_sem MIN_VAL MAX_VAL INPUT_FILE OUTPUT_DIR MATERIAL_NAMES
+!   mpirun -np NPROC bin/xclip_sem MIN_VAL MAX_VAL INPUT_FILE OUTPUT_DIR KERNEL_NAMES
 !
 !
 ! COMMAND LINE ARGUMENTS
@@ -36,22 +36,32 @@
 !   MAX_VAL                - threshold above which array values are clipped
 !   INPUT_DIR              - directory from which arrays are read
 !   OUTPUT_DIR             - directory to which clipped array are written
-!   MATERIAL_NAMES         - one or more material parameter names separated by commas
+!   KERNEL_NAMES         - one or more material parameter names separated by commas
 !
 !
 ! DESCRIPTION
-!   MATERIAL_NAMES is comma-delimited list of material names, e.g.'alpha_kernel,beta_kernel'.
+!   For each name in KERNEL_NAMES, reads kernels from INPUT_DIR, applies 
+!   thresholds, and writes the resulting clipped kernels to OUTPUT_DIR.
 !
-!   This program works on any  scalar field of appropriate dimension,
-!   i.e. (NGLLX,NGLLY,NGLLZ,NSPEC). Its primary use case though is to clip kernels.
+!   KERNEL_NAMES is comma-delimited list of material names, 
+!   e.g. 'alpha_kernel,beta_kernel,rho_kernel'
 !
-!   This is an embarassingly-parallel program.
+!   Files written to OUTPUT_DIR have the suffix 'clip' appended, 
+!   e.g. proc***alpha_kernel.bin becomes proc***alpha_kernel_clip.bin
+!
+!   This program's primary use case is to clip kernels. It can be used though on
+!   any scalar field of dimension (NGLLX,NGLLY,NGLLZ,NSPEC). 
+!
+!   This is a parrallel program -- it must be invoked with mpirun or other
+!   appropriate utility.  Operations are performed in embarassingly-parallel
+!   fashion.
 
 
 program clip_sem
 
   use postprocess_par,only: MAX_STRING_LEN,IIN,IOUT, &
-    myrank,sizeprocs,NGLOB,NSPEC,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL
+    myrank,sizeprocs,NGLOB,NSPEC,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL, &
+    MAX_KERNEL_NAMES
 
   use shared_parameters
 
@@ -59,18 +69,15 @@ program clip_sem
 
   character(len=MAX_STRING_LEN) :: input_dir,output_dir,filename
   character(len=MAX_STRING_LEN) :: arg(5)
-  integer :: i,ier
+  integer :: ier
 
   ! machinery for tokenizing comma-delimited list of material names
   character(len=255) :: strtok
   character(len=1) :: delimiter
-  integer :: imat,nmat
+  integer :: imat,nmat,i,j,k,ispec
 
-  ! given that there are a maximum of 21 elastic moduli plus density,
-  ! it is unlikely there will ever be a need for more than 22 names
-  integer,parameter :: MAX_MATERIAL_NAMES = 22
-  character(len=MAX_STRING_LEN) :: material_names(MAX_MATERIAL_NAMES)
-  character(len=MAX_STRING_LEN) :: material_names_comma_delimited
+  character(len=MAX_STRING_LEN) :: kernel_names(MAX_KERNEL_NAMES)
+  character(len=MAX_STRING_LEN) :: kernel_names_comma_delimited
   character(len=MAX_STRING_LEN) :: mat
 
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: sem_array
@@ -81,68 +88,67 @@ program clip_sem
 
   ! ============ program starts here =====================
 
-  ! initialize the MPI communicator and start the NPROCTOT MPI processes
   call init_mpi()
   call world_size(sizeprocs)
   call world_rank(myrank)
 
+  ! parse command line arguments
   do i = 1, 5
     call get_command_argument(i,arg(i), status=ier)
     if (i <= 1 .and. trim(arg(i)) == '') then
       if (myrank == 0) then
-      print *, 'USAGE: mpirun -np NPROC bin/xclip_sem MIN_VAL MAX_VAL INPUT_FILE OUTPUT_DIR MATERIAL_NAMES'
-      stop ' Reenter command line options'
+      print *, 'USAGE: mpirun -np NPROC bin/xclip_sem MIN_VAL MAX_VAL INPUT_FILE OUTPUT_DIR KERNEL_NAMES'
+      print *, ''
+      stop 'Please check command line arguments'
       endif
     endif
   enddo
 
-  ! gets arguments
   read(arg(1),*) min_val
   read(arg(2),*) max_val
   read(arg(3),'(a)') input_dir
   read(arg(4),'(a)') output_dir
-  read(arg(5),'(a)') material_names_comma_delimited
+  read(arg(5),'(a)') kernel_names_comma_delimited
 
-  ! tokenize comma-delimited list of material names
+  ! parse kernel names
   delimiter = ','
   imat = 1
-  material_names(imat) = trim(strtok(material_names_comma_delimited, delimiter))
-  do while (material_names(imat) /= char(0))
+  kernel_names(imat) = trim(strtok(kernel_names_comma_delimited, delimiter))
+  do while (kernel_names(imat) /= char(0))
      imat = imat + 1
-     material_names(imat) = trim(strtok(char(0), delimiter))
+     kernel_names(imat) = trim(strtok(char(0), delimiter))
   enddo
   nmat = imat-1
 
+  ! print status update
   if (myrank==0) then
     write(*,*) 'Running XCLIP_SEM'
   endif
   call synchronize_all()
 
-  ! needs local_path for mesh files
+  ! read simulation parameters
   BROADCAST_AFTER_READ = .true.
   call read_parameter_file(myrank,BROADCAST_AFTER_READ)
 
-  ! checks if number of MPI process as specified
+  ! checks number of MPI processes
   if (sizeprocs /= NPROC) then
     if (myrank == 0) then
       print*,''
-      print*,'Error: run xclip_sem with the same number of MPI processes '
-      print*,'       as specified in Par_file by NPROC when slices were created'
-      print*,''
-      print*,'for example: mpirun -np ',NPROC,' ./xlcip_sem ...'
+      print*,'Expected number of MPI processes: ', NPROC
+      print*,'Actual number of MPI processes: ', sizeprocs
       print*,''
     endif
     call synchronize_all()
-    stop 'Error total number of slices'
+    stop 'Error wrong number of MPI processes'
   endif
   call synchronize_all()
 
-  ! opens external mesh file
+  ! read mesh dimensions
   write(filename,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',myrank,'_'//'external_mesh.bin'
   open(unit=27,file=trim(filename),&
           status='old',action='read',form='unformatted',iostat=ier)
   if (ier /= 0) then
-    print*,'Error: could not open database '
+    print*,'Error: could not open external mesh file '
     print*,'path: ',trim(filename)
     stop 'Error reading external mesh file'
   endif
@@ -150,13 +156,14 @@ program clip_sem
   read(27) NSPEC
   read(27) NGLOB
   close(27)
-
+  call synchronize_all()
 
   allocate(sem_array(NGLLX,NGLLY,NGLLZ,NSPEC))
 
+  ! clip kernels
   do imat=1,nmat
 
-      mat = trim(material_names(imat))
+      mat = trim(kernel_names(imat))
       write(filename,'(a,i6.6,a)') trim(input_dir)//'/proc',myrank,'_'//trim(mat)//'.bin'
 
       ! read array
@@ -168,10 +175,21 @@ program clip_sem
       read(IIN) sem_array
       close(IIN)
 
-      call clip_sem_array(sem_array,min_val,max_val)
+     ! apply thresholds
+      do ispec=1,NSPEC
+        do k=1,NGLLZ
+          do j=1,NGLLY
+            do i=1,NGLLX
+              if (sem_array(i,j,k,ispec) < min_val) sem_array(i,j,k,ispec) = min_val
+              if (sem_array(i,j,k,ispec) > max_val) sem_array(i,j,k,ispec) = max_val
+            enddo
+          enddo
+        enddo
+      enddo
 
       ! write clipped array
-      mat = trim(material_names(imat))//'_clip'
+      if (myrank==0) write(*,*) 'writing array: ',trim(kernel_names(imat))
+      mat = trim(kernel_names(imat))//'_clip'
       write(filename,'(a,i6.6,a)') trim(input_dir)//'/proc',myrank,'_'//trim(mat)//'.bin'
 
       open(IOUT,file=trim(filename),status='unknown',form='unformatted',action='write',iostat=ier)
@@ -186,39 +204,8 @@ program clip_sem
 
 
   if (myrank==0) write(*,*) 'done clipping all arrays, see directory', trim(output_dir)
-
-  ! stop all the processes, and exit
+  deallocate(sem_array)
   call finalize_mpi()
 
 end program clip_sem
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-subroutine clip_sem_array(sem_array,min_val,max_val)
-
-  use postprocess_par
-
-  implicit none
-
-  ! local parameters
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC) :: sem_array
-  double precision :: min_val, max_val
-  integer :: i,j,k,ispec
-
-  ! apply threshold
-  do ispec=1,NSPEC
-    do k=1,NGLLZ
-      do j=1,NGLLY
-        do i=1,NGLLX
-          if (sem_array(i,j,k,ispec) < min_val) sem_array(i,j,k,ispec) = min_val
-          if (sem_array(i,j,k,ispec) > max_val) sem_array(i,j,k,ispec) = max_val
-        enddo
-      enddo
-    enddo
-  enddo
-
-end subroutine clip_sem_array
-
 
