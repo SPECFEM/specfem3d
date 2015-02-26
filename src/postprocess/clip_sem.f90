@@ -69,16 +69,10 @@ program clip_sem
 
   character(len=MAX_STRING_LEN) :: input_dir,output_dir,filename
   character(len=MAX_STRING_LEN) :: arg(5)
-  integer :: ier
-
-  ! machinery for tokenizing comma-delimited list of material names
-  character(len=255) :: strtok
-  character(len=1) :: delimiter
-  integer :: imat,nmat,i,j,k,ispec
+  integer :: ier, iker,nker,i,j,k,ispec
 
   character(len=MAX_STRING_LEN) :: kernel_names(MAX_KERNEL_NAMES)
-  character(len=MAX_STRING_LEN) :: kernel_names_comma_delimited
-  character(len=MAX_STRING_LEN) :: mat
+  character(len=MAX_STRING_LEN) :: kernel_names_comma_delimited, kernel_name
 
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: sem_array
 
@@ -110,15 +104,7 @@ program clip_sem
   read(arg(4),'(a)') output_dir
   read(arg(5),'(a)') kernel_names_comma_delimited
 
-  ! parse kernel names
-  delimiter = ','
-  imat = 1
-  kernel_names(imat) = trim(strtok(kernel_names_comma_delimited, delimiter))
-  do while (kernel_names(imat) /= char(0))
-     imat = imat + 1
-     kernel_names(imat) = trim(strtok(char(0), delimiter))
-  enddo
-  nmat = imat-1
+  call parse_kernel_names(kernel_names_comma_delimited,kernel_names,nker)
 
   ! print status update
   if (myrank==0) then
@@ -161,10 +147,10 @@ program clip_sem
   allocate(sem_array(NGLLX,NGLLY,NGLLZ,NSPEC))
 
   ! clip kernels
-  do imat=1,nmat
+  do iker=1,nker
 
-      mat = trim(kernel_names(imat))
-      write(filename,'(a,i6.6,a)') trim(input_dir)//'/proc',myrank,'_'//trim(mat)//'.bin'
+      kernel_name = trim(kernel_names(iker))
+      write(filename,'(a,i6.6,a)') trim(input_dir)//'/proc',myrank,'_'//trim(kernel_name)//'.bin'
 
       ! read array
       open(IIN,file=trim(filename),status='old',form='unformatted',action='read',iostat=ier)
@@ -174,6 +160,8 @@ program clip_sem
       endif
       read(IIN) sem_array
       close(IIN)
+
+     if (myrank==0) write(*,*) 'clipping array: ',trim(kernel_names(iker))
 
      ! apply thresholds
       do ispec=1,NSPEC
@@ -188,9 +176,8 @@ program clip_sem
       enddo
 
       ! write clipped array
-      if (myrank==0) write(*,*) 'writing array: ',trim(kernel_names(imat))
-      mat = trim(kernel_names(imat))//'_clip'
-      write(filename,'(a,i6.6,a)') trim(input_dir)//'/proc',myrank,'_'//trim(mat)//'.bin'
+      kernel_name = trim(kernel_names(iker))//'_clip'
+      write(filename,'(a,i6.6,a)') trim(input_dir)//'/proc',myrank,'_'//trim(kernel_name)//'.bin'
 
       open(IOUT,file=trim(filename),status='unknown',form='unformatted',action='write',iostat=ier)
       if (ier /= 0) then
@@ -203,7 +190,7 @@ program clip_sem
   enddo
 
 
-  if (myrank==0) write(*,*) 'done clipping all arrays, see directory', trim(output_dir)
+  if (myrank==0) write(*,*) 'done clipping all arrays, see directory: ', trim(output_dir)
   deallocate(sem_array)
   call finalize_mpi()
 

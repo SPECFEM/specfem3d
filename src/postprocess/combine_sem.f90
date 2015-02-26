@@ -64,13 +64,12 @@ program combine_sem
 
   implicit none
 
-  character(len=MAX_STRING_LEN) :: kernel_paths(MAX_KERNEL_PATHS), kernel_names(MAX_KERNEL_PATHS)
-  character(len=MAX_STRING_LEN) :: sline,prname_lp,output_dir,input_file,kernel_names_comma_delimited
+  character(len=MAX_STRING_LEN) :: kernel_paths(MAX_KERNEL_PATHS), kernel_names(MAX_KERNEL_PATHS), &
+                                   kernel_names_comma_delimited
+  character(len=MAX_STRING_LEN) :: sline,prname_lp,output_dir,input_file
   character(len=MAX_STRING_LEN) :: arg(3)
-  character(len=255) :: strtok
-  character(len=1) :: delimiter
-  integer :: npath,nmat
-  integer :: i,ier,imat
+  integer :: npath,nker
+  integer :: i,ier,iker
 
   logical :: BROADCAST_AFTER_READ
 
@@ -98,14 +97,7 @@ program combine_sem
   read(arg(3),'(a)') kernel_names_comma_delimited
 
   ! parse names from KERNEL_NAMES
-  delimiter = ','
-  imat = 1
-  kernel_names(imat) = trim(strtok(kernel_names_comma_delimited, delimiter))
-  do while (kernel_names(imat) /= char(0))
-     imat = imat + 1
-     kernel_names(imat) = trim(strtok(char(0), delimiter))
-  enddo
-  nmat = imat-1
+  call parse_kernel_names(kernel_names_comma_delimited,kernel_names,nker)
 
   ! parse paths from INPUT_FILE
   npath=0
@@ -172,12 +164,12 @@ program combine_sem
     print*
   endif
 
-  do imat=1,nmat
-      call combine_sem_array(kernel_names(imat),kernel_paths,output_dir,npath)
+  do iker=1,nker
+      call combine_sem_array(kernel_names(iker),kernel_paths,output_dir,npath)
   enddo
 
 
-  if (myrank==0) write(*,*) 'done writing all arrays, see directory', output_dir
+  if (myrank==0) write(*,*) 'done writing all arrays, see directory: ', output_dir
   call finalize_mpi()
 
 end program combine_sem

@@ -85,13 +85,10 @@ program smooth_sem
   character(len=MAX_STRING_LEN) :: prname_lp
   character(len=MAX_STRING_LEN*2) :: local_data_file
 
-  ! machinery for tokenizing comma-delimited list of kernel names
-  character(len=255) :: strtok
-  character(len=1) :: delimiter
-  integer :: imat,nmat
 
   character(len=MAX_STRING_LEN) :: kernel_names(MAX_KERNEL_NAMES)
   character(len=MAX_STRING_LEN) :: kernel_names_comma_delimited
+  integer :: nker
 
   ! smoothing parameters
   character(len=MAX_STRING_LEN*2) :: ks_file
@@ -118,7 +115,6 @@ program smooth_sem
 
   logical :: BROADCAST_AFTER_READ
 
-  ! initialize the MPI communicator and start the NPROCTOT MPI processes
   call init_mpi()
   call world_size(sizeprocs)
   call world_rank(myrank)
@@ -126,7 +122,7 @@ program smooth_sem
   if (myrank == 0) print*,"Running SMOOTH_SEM"
   call synchronize_all()
 
-  ! reads arguments
+  ! parse command line arguments
   do i = 1, 5
     call get_command_argument(i,arg(i))
     if (i <= 5 .and. trim(arg(i)) == '') then
@@ -134,28 +130,19 @@ program smooth_sem
         print *, 'USAGE:  mpirun -np NPROC ./xsmooth_sem SIGMA_H SIGMA_V INPUT_DIR OUPUT_DIR KERNEL_NAME'
       endif
       call synchronize_all()
-      stop ' Reenter command line options'
+      stop ' Please check command line arguments'
     endif
   enddo
 
-  ! gets arguments
   read(arg(1),*) sigma_h
   read(arg(2),*) sigma_v
   input_dir= arg(3)
   output_dir = arg(4)
   kernel_names_comma_delimited = arg(5)
 
-  ! tokenize comma-delimited list of kernel names
-  delimiter = ','
-  imat = 1
-  kernel_names(imat) = trim(strtok(kernel_names_comma_delimited, delimiter))
-  do while (kernel_names(imat) /= char(0))
-     imat = imat + 1
-     kernel_names(imat) = trim(strtok(char(0), delimiter))
-  enddo
-  nmat = imat-1
+  call parse_kernel_names(kernel_names_comma_delimited,kernel_names,nker)
 
-  if ((myrank == 0) .and. (nmat > 1)) then
+  if ((myrank == 0) .and. (nker > 1)) then
       ! The machinery for reading multiple kernel names from the command line
       ! is in place, but the smoothing routines themselves have not yet been
       ! modified to work on multiple arrays.

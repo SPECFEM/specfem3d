@@ -25,19 +25,40 @@
 !
 !=====================================================================
 
+
+subroutine parse_kernel_names(kernel_names_comma_delimited,kernel_names,nker)
+
+  use postprocess_par,only: MAX_STRING_LEN, MAX_KERNEL_NAMES
+
+  implicit none
+
+  character,parameter :: delimiter = ','
+  character(len=MAX_STRING_LEN) :: kernel_names_comma_delimited, kernel_names(MAX_KERNEL_NAMES)
+  integer :: iker, nker
+
+  iker = 1
+  call strtok(kernel_names_comma_delimited, delimiter, kernel_names(iker))
+  do while (kernel_names(iker) /= char(0))
+     iker = iker + 1
+     call strtok(char(0), delimiter, kernel_names(iker))
+  enddo
+  nker = iker-1
+
+end subroutine
+
+
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-! The following utility function was made freely available by the Fortran Wiki:
-! http://fortranwiki.org/fortran/show/strtok
+! The following utility function was modified from http://fortranwiki.org/fortran/show/strtok
 !
-character(len=255) function strtok (source_string, delimiters)
+subroutine strtok (source_string, delimiter, token)
 
 !     @(#) Tokenize a string in a similar manner to C routine strtok(3c).
 !
 !     Usage:  First call STRTOK() with the string to tokenize as SOURCE_STRING,
-!             and the delimiter list used to tokenize SOURCE_STRING in DELIMITERS.
+!             and the delimiter list used to tokenize SOURCE_STRING in delimiter.
 !
 !             then, if the returned value is not equal to char(0), keep calling until it is
 !             with SOURCE_STRING set to char(0).
@@ -46,22 +67,22 @@ character(len=255) function strtok (source_string, delimiters)
 !            which it signals by returning char(0).
 !
 !     Input:  source_string =   Source string to tokenize.
-!             delimiters    =   delimiter string.  Used to determine the beginning/end of each token in a string.
+!             delimiter    =   delimiter string.  Used to determine the beginning/end of each token in a string.
 !
 !     Output: strtok()
 !
 !     LIMITATIONS:
 !     can not be called with a different string until current string is totally processed, even from different procedures
-!     input string length limited to set size
-!     function returns fixed 255 character length
-!     length of returned string not given
+
+      use postprocess_par,only: MAX_STRING_LEN
 
 !     PARAMETERS:
-      character(len=*),intent(in)  :: source_string
-      character(len=*),intent(in)  :: delimiters
+      character(len=MAX_STRING_LEN), intent(in)  :: source_string
+      character(len=1), intent(in)  :: delimiter
+      character(len=MAX_STRING_LEN), intent(out) :: token
 
 !     SAVED VALUES:
-      character(len=255),save :: saved_string
+      character(len=MAX_STRING_LEN),save :: saved_string
       integer,save :: isaved_start  ! points to beginning of unprocessed data
       integer,save :: isource_len   ! length of original input string
 
@@ -79,7 +100,7 @@ character(len=255) function strtok (source_string, delimiters)
       ibegin = isaved_start
 
       do
-         if ( (ibegin <= isource_len) .AND. (index(delimiters,saved_string(ibegin:ibegin)) /= 0)) then
+         if ( (ibegin <= isource_len) .AND. (index(delimiter,saved_string(ibegin:ibegin)) /= 0)) then
              ibegin = ibegin + 1
          else
              exit
@@ -87,14 +108,14 @@ character(len=255) function strtok (source_string, delimiters)
       enddo
 
       if (ibegin > isource_len) then
-          strtok = char(0)
+          token = char(0)
           RETURN
       endif
 
       ifinish = ibegin
 
       do
-         if ((ifinish <= isource_len) .AND.  (index(delimiters,saved_string(ifinish:ifinish)) == 0)) then
+         if ((ifinish <= isource_len) .AND.  (index(delimiter,saved_string(ifinish:ifinish)) == 0)) then
              ifinish = ifinish + 1
          else
              exit
@@ -102,8 +123,8 @@ character(len=255) function strtok (source_string, delimiters)
       enddo
 
       !strtok = "["//saved_string(ibegin:ifinish-1)//"]"
-      strtok = saved_string(ibegin:ifinish-1)
+      token = saved_string(ibegin:ifinish-1)
       isaved_start = ifinish
 
-end function strtok
+end subroutine strtok
 
