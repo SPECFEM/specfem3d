@@ -25,13 +25,10 @@
 !
 !=====================================================================
 
-! xsmooth_sem
+! XSMOOTH_SEM
 !
 ! USAGE
-!   mpirun -np NPROC ./xsmooth_sem SIGMA_H SIGMA_V INPUT_DIR OUPUT_DIR MATERIAL_NAME
-!
-!  e.g.,
-!   mpirun -np 8 ./xsmooth_sem 100 20 DATABASES_MPI/ OUTPUT_DIR/ alpha_kernel
+!   mpirun -np NPROC ./xsmooth_sem SIGMA_H SIGMA_V INPUT_DIR OUPUT_DIR KERNEL_NAME
 !
 !
 ! COMMAND LINE ARGUMENTS
@@ -39,25 +36,29 @@
 !   SIGMA_V                - vertical smoothing radius
 !   INPUT_DIR              - directory from which arrays are read
 !   OUTPUT_DIR             - directory to which smoothed array are written
-!   MATERIAL_NAME          - material parmater name, e.g. alpha_kernel
+!   KERNEL_NAME            - kernel name, e.g. alpha_kernel
 !
 ! DESCRIPTION
-!   Smooths arrays defined on GLL points by convolution with a Gaussian. Writes
-!   the resulting smoothed arrays to OUTPUT_DIR, with the suffix '_smooth'
-!   appended to each filename, e.g. proc***alpha_kernel.bin becomes
-!   proc***alpha_kernel_smooth.bin
+!   Smooths kernels by convolution with a Gaussian. Writes the resulting
+!   smoothed kernels to OUTPUT_DIR.
 !
-!   This program works on any  scalar field of appropriate dimension,
-!   i.e. (NGLLX,NGLLY,NGLLZ,NSPEC). Its primary use case is to smooth kernels.
+!   Files written to OUTPUT_DIR have the suffix 'smooth' appended, 
+!   e.g. proc***alpha_kernel.bin becomes proc***alpha_kernel_smooth.bin
 !
-!   This is an embarassingly-parallel program.
+!   This program's primary use case is to smooth kernels. It can be used though on
+!   any scalar field of dimension (NGLLX,NGLLY,NGLLZ,NSPEC). 
+!
+!   This is a parrallel program -- it must be invoked with mpirun or other
+!   appropriate utility.  Operations are performed in embarassingly-parallel
+!   fashion.
 
 
 program smooth_sem
 
-  use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,NGLLSQUARE, &
+  use postprocess_par,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,NGLLSQUARE, &
     MAX_STRING_LEN,IIN,IOUT, &
-    GAUSSALPHA,GAUSSBETA,PI,TWO_PI
+    GAUSSALPHA,GAUSSBETA,PI,TWO_PI, &
+    MAX_KERNEL_NAMES
 
   use specfem_par
   use specfem_par_elastic,only: ELASTIC_SIMULATION,ispec_is_elastic,rho_vp,rho_vs,min_resolved_period
@@ -80,7 +81,7 @@ program smooth_sem
   integer :: node_list(MAX_NODE_LIST)
 
   character(len=MAX_STRING_LEN) :: arg(5)
-  character(len=MAX_STRING_LEN) :: material_name, input_dir, output_dir
+  character(len=MAX_STRING_LEN) :: kernel_name, input_dir, output_dir
   character(len=MAX_STRING_LEN) :: prname_lp
   character(len=MAX_STRING_LEN*2) :: local_data_file
 
@@ -89,11 +90,8 @@ program smooth_sem
   character(len=1) :: delimiter
   integer :: imat,nmat
 
-  ! given that there are a maximum of 21 elastic moduli plus density,
-  ! it is unlikely there will ever be a need for more than 22 kernel names
-  integer,parameter :: MAX_material_nameS = 22
-  character(len=MAX_STRING_LEN) :: material_names(MAX_material_names)
-  character(len=MAX_STRING_LEN) :: material_names_comma_delimited
+  character(len=MAX_STRING_LEN) :: kernel_names(MAX_KERNEL_NAMES)
+  character(len=MAX_STRING_LEN) :: kernel_names_comma_delimited
 
   ! smoothing parameters
   character(len=MAX_STRING_LEN*2) :: ks_file
@@ -133,7 +131,7 @@ program smooth_sem
     call get_command_argument(i,arg(i))
     if (i <= 5 .and. trim(arg(i)) == '') then
       if (myrank == 0) then
-        print *, 'USAGE:  mpirun -np NPROC ./xsmooth_sem SIGMA_H SIGMA_V INPUT_DIR OUPUT_DIR MATERIAL_NAME'
+        print *, 'USAGE:  mpirun -np NPROC ./xsmooth_sem SIGMA_H SIGMA_V INPUT_DIR OUPUT_DIR KERNEL_NAME'
       endif
       call synchronize_all()
       stop ' Reenter command line options'
@@ -145,30 +143,28 @@ program smooth_sem
   read(arg(2),*) sigma_v
   input_dir= arg(3)
   output_dir = arg(4)
-  material_names_comma_delimited = arg(5)
+  kernel_names_comma_delimited = arg(5)
 
   ! tokenize comma-delimited list of kernel names
   delimiter = ','
   imat = 1
-  material_names(imat) = trim(strtok(material_names_comma_delimited, delimiter))
-  do while (material_names(imat) /= char(0))
+  kernel_names(imat) = trim(strtok(kernel_names_comma_delimited, delimiter))
+  do while (kernel_names(imat) /= char(0))
      imat = imat + 1
-     material_names(imat) = trim(strtok(char(0), delimiter))
+     kernel_names(imat) = trim(strtok(char(0), delimiter))
   enddo
   nmat = imat-1
 
   if ((myrank == 0) .and. (nmat > 1)) then
-      ! Print the following warning message if more than one material name was
-      ! read in from command line.
-      !
-      ! (The machinery for reading multiple material names from the command line
-      ! is in place, but the smoothing subroutines themselves have not yet been
-      ! modified to work on multiple arrays.)
+      ! The machinery for reading multiple kernel names from the command line
+      ! is in place, but the smoothing routines themselves have not yet been
+      ! modified to work on multiple arrays.
       if (myrank == 0) print *
-      if (myrank == 0) print *, 'WARNING: multiple material names supplied - smoothing only first one in list'
+      if (myrank == 0) print *, 'Multiple kernel names supplied'
+      if (myrank == 0) print *, 'Smoothing only first one in list: ', kernel_names(1)
       if (myrank == 0) print *
   endif
-  material_name = trim(material_names(1))
+  kernel_name = trim(kernel_names(1))
 
   ! initializes lengths
   sigma_h2 = 2.0 * sigma_h ** 2  ! factor two for gaussian distribution with standard variance sigma
@@ -490,7 +486,7 @@ program smooth_sem
 
     ! data file
     write(prname,'(a,i6.6,a)') trim(input_dir)//'proc',iproc,'_'
-    local_data_file = trim(prname) // trim(material_name) // '.bin'
+    local_data_file = trim(prname) // trim(kernel_name) // '.bin'
 
     open(unit = IIN,file = trim(local_data_file),status='old',action='read',form ='unformatted',iostat=ier)
     if (ier /= 0) then
@@ -594,7 +590,7 @@ program smooth_sem
 
   ! file output
   ! smoothed kernel file name
-  write(ks_file,'(a,i6.6,a)') trim(output_dir)//'/proc',myrank,'_'//trim(material_name)//'_smooth.bin'
+  write(ks_file,'(a,i6.6,a)') trim(output_dir)//'/proc',myrank,'_'//trim(kernel_name)//'_smooth.bin'
 
   open(IOUT,file=trim(ks_file),status='unknown',form='unformatted',iostat=ier)
   if (ier /= 0) stop 'Error opening smoothed kernel file'
