@@ -40,17 +40,17 @@
 !
 !
 ! DESCRIPTION
-!   For each name in KERNEL_NAMES, reads kernels from INPUT_DIR, applies 
+!   For each name in KERNEL_NAMES, reads kernels from INPUT_DIR, applies
 !   thresholds, and writes the resulting clipped kernels to OUTPUT_DIR.
 !
-!   KERNEL_NAMES is comma-delimited list of material names, 
+!   KERNEL_NAMES is comma-delimited list of material names,
 !   e.g. 'alpha_kernel,beta_kernel,rho_kernel'
 !
-!   Files written to OUTPUT_DIR have the suffix 'clip' appended, 
+!   Files written to OUTPUT_DIR have the suffix 'clip' appended,
 !   e.g. proc***alpha_kernel.bin becomes proc***alpha_kernel_clip.bin
 !
 !   This program's primary use case is to clip kernels. It can be used though on
-!   any scalar field of dimension (NGLLX,NGLLY,NGLLZ,NSPEC). 
+!   any scalar field of dimension (NGLLX,NGLLY,NGLLZ,NSPEC).
 !
 !   This is a parrallel program -- it must be invoked with mpirun or other
 !   appropriate utility.  Operations are performed in embarassingly-parallel

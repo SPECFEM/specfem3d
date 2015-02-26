@@ -42,11 +42,11 @@
 !   Smooths kernels by convolution with a Gaussian. Writes the resulting
 !   smoothed kernels to OUTPUT_DIR.
 !
-!   Files written to OUTPUT_DIR have the suffix 'smooth' appended, 
+!   Files written to OUTPUT_DIR have the suffix 'smooth' appended,
 !   e.g. proc***alpha_kernel.bin becomes proc***alpha_kernel_smooth.bin
 !
 !   This program's primary use case is to smooth kernels. It can be used though on
-!   any scalar field of dimension (NGLLX,NGLLY,NGLLZ,NSPEC). 
+!   any scalar field of dimension (NGLLX,NGLLY,NGLLZ,NSPEC).
 !
 !   This is a parrallel program -- it must be invoked with mpirun or other
 !   appropriate utility.  Operations are performed in embarassingly-parallel
