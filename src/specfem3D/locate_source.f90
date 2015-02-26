@@ -807,9 +807,9 @@
             write(IMAIN,*) 'Source time function is a Heaviside, convolve later'
             write(IMAIN,*)
           endif
-          write(IMAIN,*) '  half duration: ',hdur(isource),' seconds'
+          write(IMAIN,*) '  half duration: ', hdur(isource),' seconds'
 
-          if (COUPLE_WITH_EXTERNAL_CODE) then
+          if (COUPLE_WITH_EXTERNAL_CODE) then !! To verify for NOBU version
             write(IMAIN,*)
             write(IMAIN,*) 'Coupling with an external code activated, thus not including any internal source'
             write(IMAIN,*)
