@@ -204,7 +204,7 @@ cuda_specfem3D_DEVICE_OBJ = \
 
 ifeq ($(CUDA),yes)
 specfem3D_OBJECTS += $(cuda_specfem3D_OBJECTS)
-ifeq ($(CUDA5),yes)
+ifeq ($(CUDA_PLUS),yes)
 specfem3D_OBJECTS += $(cuda_specfem3D_DEVICE_OBJ)
 endif
 else
@@ -258,9 +258,9 @@ specfem3D_SHARED_OBJECTS += $(adios_specfem3D_PREOBJECTS)
 ifeq ($(CUDA),yes)
 ## cuda version
 
-ifeq ($(CUDA5),yes)
+ifeq ($(CUDA_PLUS),yes)
 
-## cuda 5 version
+## cuda 5x & 6x version
 ${E}/xspecfem3D: $(specfem3D_OBJECTS) $(specfem3D_SHARED_OBJECTS)
 	@echo ""
 	@echo "building xspecfem3D with CUDA 5 support"
