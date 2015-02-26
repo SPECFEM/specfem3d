@@ -28,39 +28,39 @@
 ! XCOMBINE_SEM
 !
 ! USAGE
-!   mpirun -np NPROC bin/xcombine_sem INPUT_FILE OUTPUT_DIR MATERIAL_NAMES
-!
-! e.g.
-!   mpirun -np 8 bin/xcombine_sem kernel_paths.txt KERNELS_SUM/ alpha_kernel,beta_kernel
+!   mpirun -np NPROC bin/xcombine_sem INPUT_FILE OUTPUT_DIR KERNELL_NAMES
 !
 !
 ! COMMAND LINE ARGUMENTS
 !   INPUT_FILE             - text file containing list of kernel directories
 !   OUTPUT_PATH            - directory to which summed kernels are written
-!   MATERIAL_NAMES         - one or more material parameter names separated by commas
+!   KERNEL_NAMES           - one or more material parameter names separated by
+!   commas
 !
 !
 ! DESCRIPTION
-!   Sums kernels from directories specified in INPUT_FILE with names given by MATERIAL_NAMES.
-!   Writes the resulting sum to OUTPUT_DIR.
+!   For each name in KERNEL_NAMES, sums kernels from directories specified in
+!   INPUT_FILE.
+!   Writes the resulting sums to OUTPUT_DIR.
 !
 !   INPUT_FILE is a text file containing a list of absolute or relative paths to
 !   kernel direcotires, one directoy per line.
 !
-!   MATERIAL_NAMES is comma-delimited list of kernel names, e.g.'alpha_kernel,beta_kernel'.
+!   KERNEL_NAMES is comma-delimited list of kernel names, 
+!   e.g.'alpha_kernel,beta_kernel,rho_kernel'.
 
 
 
 program combine_sem
 
-  use postprocess_par,only: MAX_STRING_LEN,MAX_NUM_NODES,IIN, &
+  use postprocess_par,only: MAX_STRING_LEN,MAX_KERNEL_PATHS,IIN, &
     myrank,sizeprocs,NGLOB,NSPEC
 
   use shared_parameters
 
   implicit none
 
-  character(len=MAX_STRING_LEN) :: paths_list(MAX_NUM_NODES), material_names(MAX_NUM_NODES)
+  character(len=MAX_STRING_LEN) :: paths_list(MAX_KERNEL_PATHS), material_names(MAX_KERNEL_PATHS)
   character(len=MAX_STRING_LEN) :: sline,prname_lp,output_dir,input_file,material_names_comma_delimited
   character(len=MAX_STRING_LEN) :: arg(3)
   character(len=255) :: strtok
@@ -119,7 +119,7 @@ program combine_sem
      read(IIN,'(a)',iostat=ier) sline
      if (ier /= 0) exit
      nker = nker+1
-     if (nker > MAX_NUM_NODES) stop 'Error number of paths exceeds MAX_NUM_NODES'
+     if (nker > MAX_KERNEL_PATHS) stop 'Error number of paths exceeds MAX_KERNEL_PATHS'
      paths_list(nker) = sline
   enddo
   close(IIN)
@@ -199,7 +199,7 @@ subroutine combine_sem_array(material_name,paths_list,output_dir,nker)
 
   implicit none
 
-  character(len=MAX_STRING_LEN) :: material_name,paths_list(MAX_NUM_NODES),output_dir
+  character(len=MAX_STRING_LEN) :: material_name,paths_list(MAX_KERNEL_PATHS),output_dir
   integer :: nker
 
   ! local parameters
@@ -207,17 +207,11 @@ subroutine combine_sem_array(material_name,paths_list,output_dir,nker)
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: array,sum_arrays
   double precision :: norm,norm_sum
   integer :: iker,ier
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: mask_source
 
   ! initializes arrays
   allocate(array(NGLLX,NGLLY,NGLLZ,NSPEC), &
            sum_arrays(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
   if (ier /= 0) stop 'Error allocating array'
-
-  if (USE_SOURCE_MASK) then
-    allocate( mask_source(NGLLX,NGLLY,NGLLZ,NSPEC) )
-    mask_source(:,:,:,:) = 1.0_CUSTOM_REAL
-  endif
 
  ! loop over array paths
   sum_arrays = 0._CUSTOM_REAL
@@ -230,7 +224,7 @@ subroutine combine_sem_array(material_name,paths_list,output_dir,nker)
 
     ! read array
     array = 0._CUSTOM_REAL
-    write(filename,'(a,i6.6,a)') trim(paths_list(iker)) //'/proc',myrank,trim(REG)//trim(material_name)//'.bin'
+    write(filename,'(a,i6.6,a)') trim(paths_list(iker)) //'/proc',myrank,'_'//trim(material_name)//'.bin'
 
     open(IIN,file=trim(filename),status='old',form='unformatted',action='read',iostat=ier)
     if (ier /= 0) then
@@ -255,7 +249,7 @@ subroutine combine_sem_array(material_name,paths_list,output_dir,nker)
   ! stores summed arrays
   if (myrank==0) write(*,*) 'writing out summed array for: ',trim(material_name)
 
-  write(filename,'(a,i6.6,a)') trim(output_dir)//'/'//'proc',myrank,trim(REG)//trim(material_name)//'.bin'
+  write(filename,'(a,i6.6,a)') trim(output_dir)//'/'//'proc',myrank,'_'//trim(material_name)//'.bin'
 
   open(IOUT,file=trim(filename),form='unformatted',status='unknown',action='write',iostat=ier)
   if (ier /= 0) then

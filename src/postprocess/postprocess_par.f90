@@ -34,10 +34,8 @@ module postprocess_par
 
   implicit none
 
-  include "constants_tomography.h"
-  ! since most values in constants_tomography are not used, we should look into
-  ! replacing the above line with one of the form
-  ! use constants_tomography,only: ...
+  integer,parameter :: MAX_KERNEL_NAMES = 255
+  integer,parameter :: MAX_KERNEL_PATHS = 65535
 
   ! mesh size
   integer :: NSPEC, NGLOB

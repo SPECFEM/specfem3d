@@ -30,9 +30,6 @@
 ! USAGE
 !   mpirun -np NPROC bin/xclip_sem MIN_VAL MAX_VAL INPUT_FILE OUTPUT_DIR MATERIAL_NAMES
 !
-! e.g.
-!   mpirun -np 8 bin/xclip_sem 1000. 6000. INPUT_KERNELS KERNELS_CLIPPED alpha_kernel,beta_kernel
-!
 !
 ! COMMAND LINE ARGUMENTS
 !   MIN_VAL                - threshold below which array values are clipped
@@ -53,8 +50,8 @@
 
 program clip_sem
 
-  use postprocess_par,only: MAX_STRING_LEN,MAX_NUM_NODES,IIN,IOUT, &
-    myrank,sizeprocs,NGLOB,NSPEC,REG,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL
+  use postprocess_par,only: MAX_STRING_LEN,IIN,IOUT, &
+    myrank,sizeprocs,NGLOB,NSPEC,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL
 
   use shared_parameters
 
@@ -160,7 +157,7 @@ program clip_sem
   do imat=1,nmat
 
       mat = trim(material_names(imat))
-      write(filename,'(a,i6.6,a)') trim(input_dir)//'/proc',myrank,trim(REG)//trim(mat)//'.bin'
+      write(filename,'(a,i6.6,a)') trim(input_dir)//'/proc',myrank,'_'//trim(mat)//'.bin'
 
       ! read array
       open(IIN,file=trim(filename),status='old',form='unformatted',action='read',iostat=ier)
@@ -175,7 +172,7 @@ program clip_sem
 
       ! write clipped array
       mat = trim(material_names(imat))//'_clip'
-      write(filename,'(a,i6.6,a)') trim(input_dir)//'/proc',myrank,trim(REG)//trim(mat)//'.bin'
+      write(filename,'(a,i6.6,a)') trim(input_dir)//'/proc',myrank,'_'//trim(mat)//'.bin'
 
       open(IOUT,file=trim(filename),status='unknown',form='unformatted',action='write',iostat=ier)
       if (ier /= 0) then
