@@ -81,7 +81,7 @@ void pause_for_debugger(int pause) {
 
 /* ----------------------------------------------------------------------------------------------- */
 
-void exit_on_cuda_error(char* kernel_name) {
+void exit_on_cuda_error(const char* kernel_name) {
   // sync and check to catch errors from previous async operations
   synchronize_cuda();
   cudaError_t err = cudaGetLastError();
@@ -118,7 +118,7 @@ void exit_on_cuda_error(char* kernel_name) {
 
 /* ----------------------------------------------------------------------------------------------- */
 
-void exit_on_error(char* info) {
+void exit_on_error(const char* info) {
   printf("\nERROR: %s\n",info);
   fflush(stdout);
 
@@ -217,7 +217,7 @@ void start_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop){
 
 /* ----------------------------------------------------------------------------------------------- */
 
-void stop_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop, char* info_str){
+void stop_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop, const char* info_str){
   realw time;
   // stops events
   cudaEventRecord( *stop, 0);
@@ -231,7 +231,7 @@ void stop_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop, char* info_str){
 
 /* ----------------------------------------------------------------------------------------------- */
 
-void stop_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop, char* info_str,realw* t){
+void stop_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop, const char* info_str,realw* t){
   realw time;
   // stops events
   cudaEventRecord( *stop, 0);
