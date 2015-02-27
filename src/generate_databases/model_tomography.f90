@@ -180,8 +180,8 @@
 
     !! WANGYI test for the benchmark of hybrid DSM-SPECFEM3D coupling
     if (COUPLE_WITH_EXTERNAL_CODE) then
-       write(*,*) 'iundef',iundef  ! add by WANGYI for test
-       write(*,*) 'tomo_filename',tomo_filename ! add by WANGYI for test
+       write(*,*) 'iundef', iundef  ! add by WANGYI for test
+       write(*,*) 'tomo_filename', tomo_filename ! add by WANGYI for test
     endif
 
     ! opens file for reading
