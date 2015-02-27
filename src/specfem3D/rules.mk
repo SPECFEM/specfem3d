@@ -257,35 +257,27 @@ specfem3D_SHARED_OBJECTS += $(adios_specfem3D_PREOBJECTS)
 
 ifeq ($(CUDA),yes)
 ## cuda version
-
 ifeq ($(CUDA_PLUS),yes)
-
 ## cuda 5x & 6x version
-${E}/xspecfem3D: $(specfem3D_OBJECTS) $(specfem3D_SHARED_OBJECTS)
-	@echo ""
-	@echo "building xspecfem3D with CUDA 5 support"
-	@echo ""
-	${FCLINK} -o ${E}/xspecfem3D $(specfem3D_OBJECTS) $(specfem3D_SHARED_OBJECTS) $(MPILIBS) $(CUDA_LINK)
-	@echo ""
-
+INFO_CUDA="building xspecfem3D with CUDA support"
 else
-
 ## cuda 4 version
+INFO_CUDA="building xspecfem3D with CUDA 4 support"
+endif
+
 ${E}/xspecfem3D: $(specfem3D_OBJECTS) $(specfem3D_SHARED_OBJECTS)
 	@echo ""
-	@echo "building xspecfem3D with CUDA 4 support"
+	@echo $(INFO_CUDA)
 	@echo ""
 	${FCLINK} -o ${E}/xspecfem3D $(specfem3D_OBJECTS) $(specfem3D_SHARED_OBJECTS) $(MPILIBS) $(CUDA_LINK)
 	@echo ""
-
-endif
 
 else
 
 ## non-cuda version
 ${E}/xspecfem3D: $(specfem3D_OBJECTS) $(specfem3D_SHARED_OBJECTS)
 	@echo ""
-	@echo "building xspecfem3D without CUDA support"
+	@echo "building xspecfem3D"
 	@echo ""
 	${FCLINK} -o ${E}/xspecfem3D $(specfem3D_OBJECTS) $(specfem3D_SHARED_OBJECTS) $(MPILIBS)
 	@echo ""
