@@ -90,6 +90,7 @@ xsmooth_sem: $E/xsmooth_sem
 ##
 xclip_sem_OBJECTS = \
 	$O/postprocess_par.postprocess_module.o \
+	$O/parse_kernel_names.postprocess.o \
 	$O/clip_sem.postprocess.o \
 	$(EMPTY_MACRO)
 
@@ -109,6 +110,7 @@ ${E}/xclip_sem: $(xclip_sem_OBJECTS) $(xclip_sem_SHARED_OBJECTS) $(COND_MPI_OBJE
 ##
 xcombine_sem_OBJECTS = \
 	$O/postprocess_par.postprocess_module.o \
+	$O/parse_kernel_names.postprocess.o \
 	$O/combine_sem.postprocess.o \
 	$(EMPTY_MACRO)
 
@@ -128,6 +130,7 @@ ${E}/xcombine_sem: $(xcombine_sem_OBJECTS) $(xcombine_sem_SHARED_OBJECTS) $(COND
 ##
 xsmooth_sem_OBJECTS = \
 	$O/postprocess_par.postprocess_module.o \
+	$O/parse_kernel_names.postprocess.o \
 	$O/smooth_sem.postprocess.o \
 	$(EMPTY_MACRO)
 
