@@ -409,7 +409,7 @@
   scalar_moment = Mxx**2 + Myy**2 + Mzz**2 + 2.d0 * Mxy**2 + 2.d0 * Mxz**2 + 2.d0 * Myz**2
 
   ! adds 1/2 to be coherent with double couple or point sources
-  scalar_moment = dsqrt(scalar_moment/2.0d0)
+  scalar_moment = dsqrt(0.5d0*scalar_moment)
 
   ! scale factor for the moment tensor
   !
@@ -460,7 +460,8 @@
   !  for converting from scalar moment M0 to moment magnitude. (..)"
   ! see: http://earthquake.usgs.gov/aboutus/docs/020204mag_policy.php
 
-  Mw = 2.d0/3.d0 * log10( M0 ) - 10.7
+  Mw = 2.d0/3.d0 * log10( max(M0,tiny(M0)) ) - 10.7
+  ! this is to ensure M0>0.0 inorder to avoid arithmatic error.
 
   ! return value
   get_cmt_moment_magnitude = Mw
