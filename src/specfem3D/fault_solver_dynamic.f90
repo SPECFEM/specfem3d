@@ -231,11 +231,13 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
 
   if (RATE_AND_STATE) then
     call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt,8,iflt)
+    if (bc%dataT%npoin>0) then
     bc%dataT%longFieldNames(8) = "log10 of state variable (log-seconds)"
     if (bc%rsf%StateLaw==1) then
       bc%dataT%shortFieldNames = trim(bc%dataT%shortFieldNames)//" log-theta"
     else
       bc%dataT%shortFieldNames = trim(bc%dataT%shortFieldNames)//" psi"
+    endif
     endif
   else
     call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt,7,iflt)
@@ -712,11 +714,11 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
 
   real(kind=CUSTOM_REAL) :: V0,f0,a,b,L,theta_init,V_init,fw,Vw, C,T
   integer :: nV0,nf0,na,nb,nL,nV_init,ntheta_init,nfw,nVw, nC,nForcedRup
-  real(kind=CUSTOM_REAL) :: W1,W2,w,hypo_z
-  real(kind=CUSTOM_REAL) :: x,z
-  logical :: c1,c2,c3,c4
-  real(kind=CUSTOM_REAL) :: b11,b12,b21,b22,B1,B2
-  integer :: i !,nglob_bulk
+!  real(kind=CUSTOM_REAL) :: W1,W2,w,hypo_z
+!  real(kind=CUSTOM_REAL) :: x,z
+!  logical :: c1,c2,c3,c4
+!  real(kind=CUSTOM_REAL) :: b11,b12,b21,b22,B1,B2
+!  integer :: i !,nglob_bulk
   real(kind=CUSTOM_REAL) :: Fload
   integer :: nFload
 !  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: init_vel
@@ -803,54 +805,55 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
 
  ! WARNING: below is an ad-hoc setting of a(x,z) for some SCEC benchmark
  !          This should be instead an option in init_2d_distribution
-  W1=15000._CUSTOM_REAL
-  W2=7500._CUSTOM_REAL
-  w=3000._CUSTOM_REAL
-  hypo_z = -7500._CUSTOM_REAL
-  do i=1,nglob
-    x=coord(1,i)
-    z=coord(3,i)
-    c1=abs(x)<W1+w
-    c2=abs(x)>W1
-    c3=abs(z-hypo_z)<W2+w
-    c4=abs(z-hypo_z)>W2
-    if ((c1 .and. c2 .and. c3) .or. (c3 .and. c4 .and. c1)) then
-
-      if (c1 .and. c2) then
-        b11 = w/(abs(x)-W1-w)
-        b12 = w/(abs(x)-W1)
-        B1 = HALF * (ONE + tanh(b11 + b12))
-      else if (abs(x)<=W1) then
-        B1 = 1._CUSTOM_REAL
-      else
-        B1 = 0._CUSTOM_REAL
-      endif
-
-      if (c3 .and. c4) then
-        b21 = w/(abs(z-hypo_z)-W2-w)
-        b22 = w/(abs(z-hypo_z)-W2)
-        B2 = HALF * (ONE + tanh(b21 + b22))
-      else if (abs(z-hypo_z)<=W2) then
-        B2 = 1._CUSTOM_REAL
-      else
-        B2 = 0._CUSTOM_REAL
-      endif
-
-      f%a(i) = 0.008 + 0.008 * (ONE - B1*B2)
-      f%Vw(i) = 0.1 + 0.9 * (ONE - B1*B2)
-
-    else if (abs(x)<=W1 .and. abs(z-hypo_z)<=W2) then
-      f%a(i) = 0.008
-      f%Vw(i) = 0.1_CUSTOM_REAL
-    else
-      f%a(i) = 0.016
-      f%Vw(i) = 1.0_CUSTOM_REAL
-    endif
-
-  enddo
+!  W1=15000._CUSTOM_REAL
+!  W2=7500._CUSTOM_REAL
+!  w=3000._CUSTOM_REAL
+!  hypo_z = -7500._CUSTOM_REAL
+!  do i=1,nglob
+!    x=coord(1,i)
+!    z=coord(3,i)
+!    c1=abs(x)<W1+w
+!    c2=abs(x)>W1
+!    c3=abs(z-hypo_z)<W2+w
+!    c4=abs(z-hypo_z)>W2
+!    if ((c1 .and. c2 .and. c3) .or. (c3 .and. c4 .and. c1)) then
+!
+!      if (c1 .and. c2) then
+!        b11 = w/(abs(x)-W1-w)
+!        b12 = w/(abs(x)-W1)
+!        B1 = HALF * (ONE + tanh(b11 + b12))
+!      else if (abs(x)<=W1) then
+!        B1 = 1._CUSTOM_REAL
+!      else
+!        B1 = 0._CUSTOM_REAL
+!      endif
+!
+!      if (c3 .and. c4) then
+!        b21 = w/(abs(z-hypo_z)-W2-w)
+!        b22 = w/(abs(z-hypo_z)-W2)
+!        B2 = HALF * (ONE + tanh(b21 + b22))
+!      else if (abs(z-hypo_z)<=W2) then
+!        B2 = 1._CUSTOM_REAL
+!      else
+!        B2 = 0._CUSTOM_REAL
+!      endif
+!
+!      f%a(i) = 0.008 + 0.008 * (ONE - B1*B2)
+!      f%Vw(i) = 0.1 + 0.9 * (ONE - B1*B2)
+!
+!    else if (abs(x)<=W1 .and. abs(z-hypo_z)<=W2) then
+!      f%a(i) = 0.008
+!      f%Vw(i) = 0.1_CUSTOM_REAL
+!    else
+!      f%a(i) = 0.016
+!      f%Vw(i) = 1.0_CUSTOM_REAL
+!    endif
+!
+!  enddo
 
   ! WARNING: The line below scratches an earlier initialization of theta through theta_init
   !          We should implement it as an option for the user
+ if(TPV16) then
   if (f%stateLaw == 1) then
     f%theta = f%L/f%V0 &
               * exp( ( f%a * log(TWO*sinh(-sqrt(T0(1,:)**2+T0(2,:)**2)/T0(3,:)/f%a)) &
@@ -859,7 +862,7 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
   else
     f%theta =  f%a * log(TWO*f%V0/f%V_init * sinh(-sqrt(T0(1,:)**2+T0(2,:)**2)/T0(3,:)/f%a))
   endif
-
+ endif
  ! WARNING : ad hoc for SCEC benchmark TPV10x
   allocate( nucFload(nglob) )
   Fload = 0.e0_CUSTOM_REAL
