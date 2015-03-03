@@ -28,15 +28,15 @@
 ! XSMOOTH_SEM
 !
 ! USAGE
-!   mpirun -np NPROC ./xsmooth_sem SIGMA_H SIGMA_V INPUT_DIR OUPUT_DIR KERNEL_NAME
+!   mpirun -np NPROC bin/xsmooth_sem SIGMA_H SIGMA_V KERNEL_NAME INPUT_DIR OUPUT_DIR 
 !
 !
 ! COMMAND LINE ARGUMENTS
 !   SIGMA_H                - horizontal smoothing radius
 !   SIGMA_V                - vertical smoothing radius
-!   INPUT_DIR              - directory from which arrays are read
-!   OUTPUT_DIR             - directory to which smoothed array are written
 !   KERNEL_NAME            - kernel name, e.g. alpha_kernel
+!   INPUT_DIR              - directory from which kernels are read
+!   OUTPUT_DIR             - directory to which smoothed kernels are written
 !
 ! DESCRIPTION
 !   Smooths kernels by convolution with a Gaussian. Writes the resulting
@@ -127,7 +127,7 @@ program smooth_sem
     call get_command_argument(i,arg(i))
     if (i <= 5 .and. trim(arg(i)) == '') then
       if (myrank == 0) then
-        print *, 'USAGE:  mpirun -np NPROC ./xsmooth_sem SIGMA_H SIGMA_V INPUT_DIR OUPUT_DIR KERNEL_NAME'
+        print *, 'USAGE:  mpirun -np NPROC bin/xsmooth_sem SIGMA_H SIGMA_V KERNEL_NAME INPUT_DIR OUPUT_DIR'
       endif
       call synchronize_all()
       stop ' Please check command line arguments'
@@ -136,21 +136,24 @@ program smooth_sem
 
   read(arg(1),*) sigma_h
   read(arg(2),*) sigma_v
-  input_dir= arg(3)
-  output_dir = arg(4)
-  kernel_names_comma_delimited = arg(5)
+  kernel_names_comma_delimited = arg(3)
+  input_dir= arg(4)
+  output_dir = arg(5)
 
+  ! parse kernel names
   call parse_kernel_names(kernel_names_comma_delimited,kernel_names,nker)
-
   if ((myrank == 0) .and. (nker > 1)) then
-      ! The machinery for reading multiple kernel names from the command line
-      ! is in place, but the smoothing routines themselves have not yet been
-      ! modified to work on multiple arrays.
       if (myrank == 0) print *
       if (myrank == 0) print *, 'Multiple kernel names supplied'
-      if (myrank == 0) print *, 'Smoothing only first one in list: ', kernel_names(1)
+      if (myrank == 0) print *
+      if (myrank == 0) print *, 'The machinery for reading multiple names from the command line'
+      if (myrank == 0) print *, 'is in place, but the smoothing routines themselves have not yet been'
+      if (myrank == 0) print *, 'modified to work on multiple arrays.'
+      if (myrank == 0) print *
+      if (myrank == 0) print *, 'Smoothing only first name in list: ', kernel_names(1)
       if (myrank == 0) print *
   endif
+  call synchronize_all()
   kernel_name = trim(kernel_names(1))
 
   ! initializes lengths

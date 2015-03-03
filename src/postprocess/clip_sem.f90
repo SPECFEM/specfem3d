@@ -28,15 +28,15 @@
 ! XCLIP_SEM
 !
 ! USAGE
-!   mpirun -np NPROC bin/xclip_sem MIN_VAL MAX_VAL INPUT_FILE OUTPUT_DIR KERNEL_NAMES
+!   mpirun -np NPROC bin/xclip_sem MIN_VAL MAX_VAL KERNEL_NAMES INPUT_FILE OUTPUT_DIR
 !
 !
 ! COMMAND LINE ARGUMENTS
 !   MIN_VAL                - threshold below which array values are clipped
 !   MAX_VAL                - threshold above which array values are clipped
+!   KERNEL_NAMES           - one or more material parameter names separated by commas
 !   INPUT_DIR              - directory from which arrays are read
 !   OUTPUT_DIR             - directory to which clipped array are written
-!   KERNEL_NAMES         - one or more material parameter names separated by commas
 !
 !
 ! DESCRIPTION
@@ -44,7 +44,7 @@
 !   thresholds, and writes the resulting clipped kernels to OUTPUT_DIR.
 !
 !   KERNEL_NAMES is comma-delimited list of material names,
-!   e.g. 'alpha_kernel,beta_kernel,rho_kernel'
+!   e.g. 'reg1_alpha_kernel,reg1_beta_kernel,reg1_rho_kernel'
 !
 !   Files written to OUTPUT_DIR have the suffix 'clip' appended,
 !   e.g. proc***alpha_kernel.bin becomes proc***alpha_kernel_clip.bin
@@ -91,7 +91,7 @@ program clip_sem
     call get_command_argument(i,arg(i), status=ier)
     if (i <= 1 .and. trim(arg(i)) == '') then
       if (myrank == 0) then
-      print *, 'USAGE: mpirun -np NPROC bin/xclip_sem MIN_VAL MAX_VAL INPUT_FILE OUTPUT_DIR KERNEL_NAMES'
+      print *, 'USAGE: mpirun -np NPROC bin/xclip_sem MIN_VAL MAX_VAL KERNEL_NAMES INPUT_FILE OUTPUT_DIR'
       print *, ''
       stop 'Please check command line arguments'
       endif
@@ -100,15 +100,16 @@ program clip_sem
 
   read(arg(1),*) min_val
   read(arg(2),*) max_val
-  read(arg(3),'(a)') input_dir
-  read(arg(4),'(a)') output_dir
-  read(arg(5),'(a)') kernel_names_comma_delimited
+  read(arg(3),'(a)') kernel_names_comma_delimited
+  read(arg(4),'(a)') input_dir
+  read(arg(5),'(a)') output_dir
 
   call parse_kernel_names(kernel_names_comma_delimited,kernel_names,nker)
 
   ! print status update
   if (myrank==0) then
     write(*,*) 'Running XCLIP_SEM'
+    write(*,*)
   endif
   call synchronize_all()
 

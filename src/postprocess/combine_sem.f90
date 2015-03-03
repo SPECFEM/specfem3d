@@ -28,13 +28,13 @@
 ! XCOMBINE_SEM
 !
 ! USAGE
-!   mpirun -np NPROC bin/xcombine_sem INPUT_FILE OUTPUT_DIR KERNELL_NAMES
+!   mpirun -np NPROC bin/xcombine_sem KERNEL_NAMES INPUT_FILE OUTPUT_DIR
 !
 !
 ! COMMAND LINE ARGUMENTS
+!   KERNEL_NAMES           - one or more material parameter names separated by commas
 !   INPUT_FILE             - text file containing list of kernel directories
 !   OUTPUT_PATH            - directory to which summed kernels are written
-!   KERNEL_NAMES           - one or more material parameter names separated by commas
 !
 !
 ! DESCRIPTION
@@ -85,16 +85,16 @@ program combine_sem
     call get_command_argument(i,arg(i), status=ier)
     if (i <= 1 .and. trim(arg(i)) == '') then
       if (myrank == 0) then
-      print *, 'USAGE: mpirun -np NPROC bin/xcombine_sem INPUT_FILE OUTPUT_DIR kernel_names'
+      print *, 'USAGE: mpirun -np NPROC bin/xcombine_sem KERNEL_NAMES INPUT_FILE OUTPUT_DIR'
       print *, ''
       stop 'Please check command line arguments'
       endif
     endif
   enddo
 
-  read(arg(1),'(a)') input_file
-  read(arg(2),'(a)') output_dir
-  read(arg(3),'(a)') kernel_names_comma_delimited
+  read(arg(1),'(a)') kernel_names_comma_delimited
+  read(arg(2),'(a)') input_file
+  read(arg(3),'(a)') output_dir
 
   ! parse names from KERNEL_NAMES
   call parse_kernel_names(kernel_names_comma_delimited,kernel_names,nker)
