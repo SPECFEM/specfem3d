@@ -1,5 +1,5 @@
 
-! I send you my projections routines (attacehd file). This routines are working, I used for the last paper.
+! Below are my projection routines. These routines are working, I used them for the submitted GJI paper on inversion.
 ! I did some changes: to avoid projections artifacts
 ! I am minimizing the number of projections SEM mesh <-> tomo grid. So now I process like this  (-> means projection) :
 
@@ -26,7 +26,7 @@
 ! Since you want to perform inversion as soon as possible,
 ! probably the temporary solution is that you update your projection subroutines to use mine.
 
-! Vadim Monteiller (March 2015)
+! Vadim Monteiller (March 2015).
 
 module project_tomo_grid_mod
 
