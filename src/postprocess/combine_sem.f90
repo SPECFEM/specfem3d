@@ -42,12 +42,12 @@
 !   INPUT_FILE. Writes the resulting sums to OUTPUT_DIR.
 !
 !   INPUT_FILE is a text file containing a list of absolute or relative paths to
-!   kernel direcotires, one directoy per line.
+!   kernel directories, one directory per line.
 !
 !   KERNEL_NAMES is comma-delimited list of kernel names,
 !   e.g.'alpha_kernel,beta_kernel,rho_kernel'.
 !
-!   This program's primary use case is to clip kernels. It can be used though on
+!   This program's primary use case is to sum kernels. It can be used though on
 !   any scalar field of dimension (NGLLX,NGLLY,NGLLZ,NSPEC).
 !
 !   This is a parrallel program -- it must be invoked with mpirun or other

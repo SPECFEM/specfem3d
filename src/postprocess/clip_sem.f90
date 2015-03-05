@@ -44,7 +44,7 @@
 !   thresholds, and writes the resulting clipped kernels to OUTPUT_DIR.
 !
 !   KERNEL_NAMES is comma-delimited list of material names,
-!   e.g. 'reg1_alpha_kernel,reg1_beta_kernel,reg1_rho_kernel'
+!   e.g. 'alpha_kernel,beta_kernel,rho_kernel'
 !
 !   Files written to OUTPUT_DIR have the suffix 'clip' appended,
 !   e.g. proc***alpha_kernel.bin becomes proc***alpha_kernel_clip.bin
