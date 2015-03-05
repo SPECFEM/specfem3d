@@ -34,7 +34,7 @@
 ! COMMAND LINE ARGUMENTS
 !   MIN_VAL                - threshold below which array values are clipped
 !   MAX_VAL                - threshold above which array values are clipped
-!   KERNEL_NAMES           - one or more material parameter names separated by commas
+!   KERNEL_NAMES           - one or more kernel names separated by commas
 !   INPUT_DIR              - directory from which arrays are read
 !   OUTPUT_DIR             - directory to which clipped array are written
 !
@@ -43,8 +43,8 @@
 !   For each name in KERNEL_NAMES, reads kernels from INPUT_DIR, applies
 !   thresholds, and writes the resulting clipped kernels to OUTPUT_DIR.
 !
-!   KERNEL_NAMES is comma-delimited list of material names,
-!   e.g. 'alpha_kernel,beta_kernel,rho_kernel'
+!   KERNEL_NAMES is comma-delimited list of kernel names,
+!   e.g. 'alphav_kernel,alphah_kernel'
 !
 !   Files written to OUTPUT_DIR have the suffix 'clip' appended,
 !   e.g. proc***alpha_kernel.bin becomes proc***alpha_kernel_clip.bin
@@ -67,8 +67,10 @@ program clip_sem
 
   implicit none
 
+  integer, parameter :: NARGS = 5
+
   character(len=MAX_STRING_LEN) :: input_dir,output_dir,filename
-  character(len=MAX_STRING_LEN) :: arg(5)
+  character(len=MAX_STRING_LEN) :: arg(NARGS)
   integer :: ier, iker,nker,i,j,k,ispec
 
   character(len=MAX_STRING_LEN) :: kernel_names(MAX_KERNEL_NAMES)
@@ -80,22 +82,28 @@ program clip_sem
 
   logical :: BROADCAST_AFTER_READ
 
-  ! ============ program starts here =====================
 
   call init_mpi()
   call world_size(sizeprocs)
   call world_rank(myrank)
 
-  ! parse command line arguments
-  do i = 1, 5
-    call get_command_argument(i,arg(i), status=ier)
-    if (i <= 1 .and. trim(arg(i)) == '') then
-      if (myrank == 0) then
+  if (myrank==0) then
+    write(*,*) 'Running XCLIP_SEM'
+    write(*,*)
+  endif
+  call synchronize_all()
+
+  ! check command line arguments
+  if (command_argument_count() /= NARGS) then
+    if (myrank == 0) then
       print *, 'USAGE: mpirun -np NPROC bin/xclip_sem MIN_VAL MAX_VAL KERNEL_NAMES INPUT_FILE OUTPUT_DIR'
-      print *, ''
-      stop 'Please check command line arguments'
-      endif
     endif
+  endif
+  call synchronize_all()
+
+  ! parse command line arguments
+  do i = 1, NARGS
+    call get_command_argument(i,arg(i), status=ier)
   enddo
 
   read(arg(1),*) min_val
@@ -105,13 +113,6 @@ program clip_sem
   read(arg(5),'(a)') output_dir
 
   call parse_kernel_names(kernel_names_comma_delimited,kernel_names,nker)
-
-  ! print status update
-  if (myrank==0) then
-    write(*,*) 'Running XCLIP_SEM'
-    write(*,*)
-  endif
-  call synchronize_all()
 
   ! read simulation parameters
   BROADCAST_AFTER_READ = .true.

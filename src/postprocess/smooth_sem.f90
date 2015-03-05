@@ -69,6 +69,8 @@ program smooth_sem
 
   implicit none
 
+  integer, parameter :: NARGS = 5
+
   ! data must be of dimension: (NGLLX,NGLLY,NGLLZ,NSPEC_AB)
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: dat,dat_smooth
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: dummy
@@ -119,19 +121,20 @@ program smooth_sem
   call world_size(sizeprocs)
   call world_rank(myrank)
 
-  if (myrank == 0) print*,"Running SMOOTH_SEM"
+  if (myrank == 0) print*,"Running XSMOOTH_SEM"
   call synchronize_all()
 
   ! parse command line arguments
-  do i = 1, 5
-    call get_command_argument(i,arg(i))
-    if (i <= 5 .and. trim(arg(i)) == '') then
-      if (myrank == 0) then
+  if (command_argument_count() /= NARGS) then
+    if (myrank == 0) then
         print *, 'USAGE:  mpirun -np NPROC bin/xsmooth_sem SIGMA_H SIGMA_V KERNEL_NAME INPUT_DIR OUPUT_DIR'
-      endif
-      call synchronize_all()
       stop ' Please check command line arguments'
     endif
+  endif
+  call synchronize_all()
+
+  do i = 1, NARGS
+    call get_command_argument(i,arg(i), status=ier)
   enddo
 
   read(arg(1),*) sigma_h
@@ -140,27 +143,24 @@ program smooth_sem
   input_dir= arg(4)
   output_dir = arg(5)
 
-  ! parse kernel names
   call parse_kernel_names(kernel_names_comma_delimited,kernel_names,nker)
-  if ((myrank == 0) .and. (nker > 1)) then
-      if (myrank == 0) print *
-      if (myrank == 0) print *, 'Multiple kernel names supplied'
-      if (myrank == 0) print *
-      if (myrank == 0) print *, 'The machinery for reading multiple names from the command line'
-      if (myrank == 0) print *, 'is in place, but the smoothing routines themselves have not yet been'
-      if (myrank == 0) print *, 'modified to work on multiple arrays.'
-      if (myrank == 0) print *
-      if (myrank == 0) print *, 'Smoothing only first name in list: ', kernel_names(1)
-      if (myrank == 0) print *
-  endif
-  call synchronize_all()
   kernel_name = trim(kernel_names(1))
 
-  ! initializes lengths
+  if (nker > 1) then
+    if (myrank == 0) then
+      ! The machinery for reading multiple names from the command line is in place, 
+      ! but the smoothing routines themselves have not yet been modified to work
+      !  on multiple arrays.
+      if (myrank == 0) print *, 'Smoothing only first name in list: ', trim(kernel_name)
+      if (myrank == 0) print *
+    endif
+  endif
+  call synchronize_all()
+
+  ! check smoothing radii
   sigma_h2 = 2.0 * sigma_h ** 2  ! factor two for gaussian distribution with standard variance sigma
   sigma_v2 = 2.0 * sigma_v ** 2
 
-  ! checks
   if (sigma_h2 < 1.e-18) stop 'Error sigma_h2 zero, must non-zero'
   if (sigma_v2 < 1.e-18) stop 'Error sigma_v2 zero, must non-zero'
 

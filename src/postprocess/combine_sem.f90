@@ -32,7 +32,7 @@
 !
 !
 ! COMMAND LINE ARGUMENTS
-!   KERNEL_NAMES           - one or more material parameter names separated by commas
+!   KERNEL_NAMES           - one or more kernel names separated by commas
 !   INPUT_FILE             - text file containing list of kernel directories
 !   OUTPUT_PATH            - directory to which summed kernels are written
 !
@@ -64,32 +64,38 @@ program combine_sem
 
   implicit none
 
+  integer, parameter :: NARGS = 3
+
   character(len=MAX_STRING_LEN) :: kernel_paths(MAX_KERNEL_PATHS), kernel_names(MAX_KERNEL_PATHS), &
-                                   kernel_names_comma_delimited
+    kernel_names_comma_delimited
   character(len=MAX_STRING_LEN) :: sline,prname_lp,output_dir,input_file
-  character(len=MAX_STRING_LEN) :: arg(3)
+  character(len=MAX_STRING_LEN) :: arg(NARGS)
   integer :: npath,nker
   integer :: i,ier,iker
 
   logical :: BROADCAST_AFTER_READ
 
-  ! ============ program starts here =====================
-
-  ! initialize the MPI communicator and start the NPROCTOT MPI processes
   call init_mpi()
   call world_size(sizeprocs)
   call world_rank(myrank)
 
-  ! parse command line arguments
-  do i = 1, 3
-    call get_command_argument(i,arg(i), status=ier)
-    if (i <= 1 .and. trim(arg(i)) == '') then
-      if (myrank == 0) then
+  if (myrank==0) then
+    write(*,*) 'Running XCOMBINE_SEM'
+    write(*,*)
+  endif
+  call synchronize_all()
+
+  ! check command line arguments
+  if (command_argument_count() /= NARGS) then
+    if (myrank == 0) then
       print *, 'USAGE: mpirun -np NPROC bin/xcombine_sem KERNEL_NAMES INPUT_FILE OUTPUT_DIR'
-      print *, ''
-      stop 'Please check command line arguments'
-      endif
+      stop ' Please check command line arguments'
     endif
+  endif
+  call synchronize_all()
+
+  do i = 1, NARGS
+    call get_command_argument(i,arg(i), status=ier)
   enddo
 
   read(arg(1),'(a)') kernel_names_comma_delimited
@@ -118,13 +124,6 @@ program combine_sem
     write(*,*) '  ',npath,' events'
     write(*,*)
   endif
-
-  ! print status update
-  if (myrank==0) then
-    write(*,*) 'Running COMBINE_SEM'
-    write(*,*)
-  endif
-  call synchronize_all()
 
   ! read simulation parameters
   BROADCAST_AFTER_READ = .true.
