@@ -117,7 +117,7 @@ program add_model
 
   ! compute minmax values of current model
   ! NOTE: mpi_reduce operates on the values from all procs,
-  !       but the reduced value only exists on the root proc. 
+  !       but the reduced value only exists on the root proc.
   call mpi_reduce(minval(model_vs(:,:,:,1:nspec)), vsmin_before, 1, CUSTOM_MPI_TYPE, MPI_MIN, 0, MPI_COMM_WORLD,ier)
   call mpi_reduce(maxval(model_vs(:,:,:,1:nspec)), vsmax_before, 1, CUSTOM_MPI_TYPE, MPI_MAX, 0, MPI_COMM_WORLD,ier)
   call mpi_reduce(minval(model_vp(:,:,:,1:nspec)), vpmin_before, 1, CUSTOM_MPI_TYPE, MPI_MIN, 0, MPI_COMM_WORLD,ier)
@@ -191,11 +191,11 @@ program add_model
   !-----------------------------------------------------
 
   ! S wavespeed model
-  model_vs_new = 0.  
+  model_vs_new = 0.
   model_vs_new = model_vs * exp( model_dB )
 
   ! P wavespeed model
-  model_vp_new = 0. 
+  model_vp_new = 0.
   model_vp_new = sqrt( (4.0/3.0)* model_vs**2 * exp( 2.0*model_dB ) + &
                       (model_vp**2 - (4.0/3.0)* model_vs**2) * exp( 2.0*model_dC ) )
 
@@ -261,7 +261,7 @@ program add_model
   ! compute Poisson's ratio and bulk wavespeed of the current model and new model
 
   ! Poisson's ratio of current model
-  total_model = 0. 
+  total_model = 0.
   total_model = ( model_vp**2 - 2.0*model_vs**2 ) / ( 2.0*model_vp**2 - 2.0*model_vs**2 )
   fname = 'poisson'
   write(m_file,'(a,i6.6,a)') 'OUTPUT_MODEL/proc',myrank,'_'//trim(fname)//'.bin'
@@ -270,7 +270,7 @@ program add_model
   close(12)
 
   ! Poisson's ratio of new model
-  total_model = 0. 
+  total_model = 0.
   total_model = ( model_vp_new**2 - 2.0*model_vs_new**2 ) / &
                 ( 2.0*model_vp_new**2 - 2.0*model_vs_new**2 )
   fname = 'poisson_new'
@@ -280,7 +280,7 @@ program add_model
   close(12)
 
   ! bulk wavespeed of current model
-  total_model = 0. 
+  total_model = 0.
   total_model = sqrt( model_vp**2 - (4.0/3.0)*model_vs**2 )
   fname = 'vb'
   write(m_file,'(a,i6.6,a)') 'OUTPUT_MODEL/proc',myrank,'_'//trim(fname)//'.bin'
@@ -289,7 +289,7 @@ program add_model
   close(12)
 
   ! bulk wavespeed of new model
-  total_model = 0. 
+  total_model = 0.
   total_model = sqrt( model_vp_new**2 - (4.0/3.0)*model_vs_new**2 )
   fname = 'vb_new'
   write(m_file,'(a,i6.6,a)') 'OUTPUT_MODEL/proc',myrank,'_'//trim(fname)//'.bin'

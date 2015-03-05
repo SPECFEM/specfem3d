@@ -596,7 +596,7 @@
 ! display a given field as a red and blue color image
 ! to display the snapshots : display image*.gif
 ! when compiling with Intel ifort, use " -assume byterecl " option to create binary PNM images
-  use constants,only: HUGEVAL,TINYVAL,CUSTOM_REAL,OUTPUT_FILES_PATH,MAX_STRING_LEN
+  use constants,only: HUGEVAL,TINYVAL,CUSTOM_REAL,OUTPUT_FILES,MAX_STRING_LEN
   use image_PNM_par,only: BINARY_FILE,VP_BACKGROUND,&
                         POWER_DISPLAY_COLOR
   implicit none
@@ -617,7 +617,7 @@
   integer, parameter :: ascii_code_of_zero = 48, ascii_code_of_carriage_return = 10
 
   ! open the image file
-  write(file_name,"(a,'/image',i7.7,'.pnm')") OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)),it
+  write(file_name,"(a,'/image',i7.7,'.pnm')") OUTPUT_FILES(1:len_trim(OUTPUT_FILES)),it
 
 ! first delete the file, just in case it was previously bigger
   open(unit=27,file=file_name,status='unknown')
@@ -884,14 +884,14 @@
       if (SAVE_DISPLACEMENT) then
         if (SIMULATION_TYPE == 3) then
           ! displacement vector from backward potential
-          call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+          call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
                           b_potential_acoustic, val_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           ibool,rhostore,GRAVITY)
         else
           ! displacement vector
-          call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+          call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
                           potential_acoustic, val_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
@@ -900,14 +900,14 @@
       else
         if (SIMULATION_TYPE == 3) then
           ! velocity vector for backward/reconstructed wavefield
-          call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+          call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
                           b_potential_dot_acoustic, val_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           ibool,rhostore,GRAVITY)
         else
           ! velocity vector
-          call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+          call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
                           potential_dot_acoustic, val_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &

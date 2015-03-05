@@ -10,13 +10,13 @@ subroutine pinputTra(outputDir,psvmodel,modelname,stationsinf,tlen,imin,imax,r0m
 100 continue
   read(5,110) dummy
 110 format(a120)
-  if(dummy(1:1).eq.'#') goto 100
-  if(dummy(1:3).eq.'end') goto 120
+  if(dummy(1:1)=='#') goto 100
+  if(dummy(1:3)=='end') goto 120
   write(1,110) dummy
   goto 100
 120 continue
   close(1)
-  
+
   open(unit=1,file=tmpfile,status='unknown')
   read(1,110) outputDir
   read(1,110) psvmodel
@@ -99,13 +99,13 @@ subroutine pinput(outputDir,psvmodel,modelname,tlen,rmin_,rmax_,rdelta_,r0min,r0
 100 continue
   read(5,110) dummy
 110 format(a120)
-  if(dummy(1:1).eq.'#') goto 100
-  if(dummy(1:3).eq.'end') goto 120
+  if(dummy(1:1)=='#') goto 100
+  if(dummy(1:3)=='end') goto 120
   write(1,110) dummy
   goto 100
 120 continue
   close(1)
-  
+
   open(unit=1,file=tmpfile,status='unknown')
   read(1,110) outputDir
   read(1,110) psvmodel
@@ -124,31 +124,31 @@ subroutine pinput(outputDir,psvmodel,modelname,tlen,rmin_,rmax_,rdelta_,r0min,r0
   close(1)
 end subroutine pinput
 
-  
+
 
 
 subroutine udertoStress(uder,stress,A,C,F,L,N)
   implicit none
   complex(kind(0d0)) :: uder(1:3,1:3), stress(1:6)
   real(kind(0d0)) :: A,C,F,L,N
- 
+
   !write(*,*) 'stress(1) ',stress(1)
   !write(*,*) 'C',C
   !write(*,*) 'F', F
   !write(*,*) 'uder(1,1)', uder(1,1)
   !write(*,*) 'uder(2,2)',uder(2,2)
-  !write(*,*) 'uder(3,3)',uder(3,3) 
+  !write(*,*) 'uder(3,3)',uder(3,3)
   stress(1) = stress(1)+C*uder(1,1)+F*uder(2,2)+F*uder(3,3)
   stress(2) = stress(2)+F*uder(1,1)+A*uder(2,2)+A*uder(3,3)-2.d0*N*uder(3,3)
   stress(3) = stress(3)+F*uder(1,1)+A*uder(2,2)+A*uder(3,3)-2.d0*N*uder(2,2)
   stress(4) = stress(4)+L*(uder(1,2)+uder(2,1))
   stress(5) = stress(5)+L*(uder(1,3)+uder(3,1))
   stress(6) = stress(6)+N*(uder(2,3)+uder(3,2))
-  
+
   return
 
 end subroutine udertoStress
-  
+
 
 !
 
@@ -159,12 +159,12 @@ subroutine setmt(imt,mt)
   real(kind(0d0)) :: mt(3,3)
   integer :: imt
   mt = 0.d0
-  if(imt.eq.1) mt(1,1) = 1.d0
-  if(imt.eq.2) mt(2,2) = 1.d0
-  if(imt.eq.3) mt(3,3) = 1.d0
-  if(imt.eq.4) mt(1,2) = 1.d0
-  if(imt.eq.5) mt(1,3) = 1.d0
-  if(imt.eq.6) mt(2,3) = 1.d0
+  if(imt==1) mt(1,1) = 1.d0
+  if(imt==2) mt(2,2) = 1.d0
+  if(imt==3) mt(3,3) = 1.d0
+  if(imt==4) mt(1,2) = 1.d0
+  if(imt==5) mt(1,3) = 1.d0
+  if(imt==6) mt(2,3) = 1.d0
   return
 end subroutine setmt
 
@@ -176,7 +176,7 @@ subroutine udertotsgtSH(imt,uder,ttsgt)
   complex(kind(0d0)) :: uder(1:3,1:3),tsgt(1:20),ttsgt(1:10)
 
   tsgt = cmplx(0.d0)
-  
+
   tsgt(7)  = ttsgt(1)
   tsgt(12) = ttsgt(2)
   tsgt(13) = ttsgt(3)
@@ -189,17 +189,17 @@ subroutine udertotsgtSH(imt,uder,ttsgt)
   tsgt(20) = ttsgt(10)
 
 
-  if(imt.eq.1) then ! rr source
+  if(imt==1) then ! rr source
      tsgt(1) = tsgt(1) + uder(1,1)
      tsgt(3) = tsgt(3) - 5.d-1*uder(2,2) - 5.d-1*uder(3,3)
      tsgt(6) = tsgt(6) + uder(1,2) + uder(2,1)
      tsgt(10)= tsgt(10)+ 5.d-1*uder(2,2) - 5.d-1*uder(3,3)
   endif
-  if(imt.eq.2) then ! tt source
+  if(imt==2) then ! tt source
      tsgt(2) = tsgt(2) - 5.d-1*uder(1,1)
      tsgt(4) = tsgt(4) + 2.5d-1*uder(2,2) + 2.5d-1*uder(3,3)
      tsgt(8) = tsgt(8) - 5.d-1*uder(1,2) - 5.d-1*uder(2,1)
-     tsgt(9) = tsgt(9) + 5.d-1*uder(1,1) 
+     tsgt(9) = tsgt(9) + 5.d-1*uder(1,1)
      tsgt(11)= tsgt(11)- 2.5d-1*uder(2,2) + 2.5d-1*uder(3,3)
      tsgt(12)= tsgt(12)- 2.5d-1*uder(2,2) - 2.5d-1*uder(3,3)
      tsgt(17)= tsgt(17)+ 2.5d-1*uder(1,2) + 2.5d-1*uder(2,1)
@@ -207,7 +207,7 @@ subroutine udertotsgtSH(imt,uder,ttsgt)
      tsgt(19)= tsgt(19)+ 1.25d-1*uder(2,2) - 1.25d-1*uder(3,3)
      tsgt(20)= tsgt(20)+ 1.25d-1*uder(2,2) - 1.25d-1*uder(3,3)
   endif
-  if(imt.eq.3) then ! pp source
+  if(imt==3) then ! pp source
      tsgt(2) = tsgt(2) - 5.d-1*uder(1,1)
      tsgt(4) = tsgt(4) + 2.5d-1*uder(2,2) + 2.5d-1*uder(3,3)
      tsgt(8) = tsgt(8) - 5.d-1*uder(1,2) - 5.d-1*uder(2,1)
@@ -219,7 +219,7 @@ subroutine udertotsgtSH(imt,uder,ttsgt)
      tsgt(19)= tsgt(19) -1.25d-1*uder(2,2) + 1.25d-1*uder(3,3)
      tsgt(20)= tsgt(20) -1.25d-1*uder(2,2) + 1.25d-1*uder(3,3)
   endif
-  if(imt.eq.4) then ! rt source
+  if(imt==4) then ! rt source
      tsgt(5) = tsgt(5) - uder(1,1)
      tsgt(7) = tsgt(7) + 5.d-1*uder(2,2) + 5.d-1*uder(3,3)
      tsgt(13)= tsgt(13)- 5.d-1*uder(1,2) - 5.d-1*uder(2,1)
@@ -227,13 +227,13 @@ subroutine udertotsgtSH(imt,uder,ttsgt)
      tsgt(15)= tsgt(15)- 2.5d-1*uder(2,2) + 2.5d-1*uder(3,3)
      tsgt(16)= tsgt(16)+ 2.5d-1*uder(2,2) - 2.5d-1*uder(3,3)
   endif
-  if(imt.eq.5) then ! rp source
+  if(imt==5) then ! rp source
      tsgt(13)= tsgt(13)+ 5.d-1*uder(1,3) + 5.d-1*uder(3,1)
      tsgt(14)= tsgt(14)+ 5.d-1*uder(1,3) + 5.d-1*uder(3,1)
      tsgt(15)= tsgt(15)+ 5.d-1*uder(2,3) + 5.d-1*uder(3,2)
      tsgt(16)= tsgt(16)+ 5.d-1*uder(2,3) + 5.d-1*uder(3,2)
   endif
-  if(imt.eq.6) then ! tp source
+  if(imt==6) then ! tp source
      tsgt(17)= tsgt(17)- 5.d-1*uder(1,3) - 5.d-1*uder(3,1)
      tsgt(18)= tsgt(18)- 5.d-1*uder(1,3) - 5.d-1*uder(3,1)
      tsgt(19)= tsgt(19)- 5.d-1*uder(2,3) - 5.d-1*uder(3,2)
@@ -276,7 +276,7 @@ subroutine locallyCartesianDerivatives (u,udr,udt,udp,uder,r,theta)
   uder(3,3) = (udp(3)/cmplx(thetasin)+u(1)+u(2)*cmplx(thetacot))/cmplx(r)
   return
 end subroutine locallyCartesianDerivatives
-  
+
 
 subroutine normalisetoKM(u,r)
   implicit none
@@ -294,7 +294,7 @@ end subroutine normalisetoKM
 subroutine calgrid( nzone,vrmin,vrmax,vs,rmin,rmax, &
      & imax,lmin,tlen,vmin,gridpar,dzpar )
   implicit none
-  real(kind(0d0)), parameter :: pi=3.1415926535897932d0 
+  real(kind(0d0)), parameter :: pi=3.1415926535897932d0
   integer :: nzone,imax,lmin
   real(kind(0d0)) :: vrmin(*),vrmax(*),vs(4,*)
   real(kind(0d0)) :: rmin,rmax,tlen,vmin(*),gridpar(*),dzpar(*)
@@ -308,12 +308,12 @@ subroutine calgrid( nzone,vrmin,vrmax,vs,rmin,rmax, &
      vs1 = 0.d0
      vs2 = 0.d0
      do j=1,4
-        if ( j.eq.1 ) then
+        if ( j==1 ) then
            coef1 = 1.d0
         else
            coef1 = coef1 * ( vrmin(izone) / rmax )
         endif
-        if ( j.eq.1 ) then
+        if ( j==1 ) then
            coef2 = 1.d0
         else
            coef2 = coef2 * ( vrmax(izone) / rmax )
@@ -325,7 +325,7 @@ subroutine calgrid( nzone,vrmin,vrmax,vs,rmin,rmax, &
      rh = vrmax(izone) - vrmin(izone)
      !      computing omega,amax
      omega = 2.d0 * pi * dble(imax) / tlen
-     if ( vs1.ge.vs2 ) then
+     if ( vs1>=vs2 ) then
         vmin(izone) = vs2
      else
         vmin(izone) = vs1
@@ -334,7 +334,7 @@ subroutine calgrid( nzone,vrmin,vrmax,vs,rmin,rmax, &
      gtmp = ( omega * omega ) / ( vmin(izone) * vmin(izone) ) &
           &        - ( (dble(lmin)+0.5d0) * (dble(lmin)+0.5d0) )&
           &        / ( amax * amax )
-     if ( gtmp.gt.0.d0 ) then
+     if ( gtmp>0.d0 ) then
         dzpar(izone)   = dsqrt( 1.d0/gtmp )
         gridpar(izone) = rh / dzpar(izone)
      else
@@ -349,7 +349,7 @@ subroutine calgrid( nzone,vrmin,vrmax,vs,rmin,rmax, &
   enddo
 
   do izone=1,nzone
-     if ( gridpar(izone).gt.0.d0 ) then
+     if ( gridpar(izone)>0.d0 ) then
         gridpar(izone) = gridpar(izone) / gtmp
      else
         rh = vrmax(izone) - vrmin(izone)
@@ -366,7 +366,7 @@ subroutine calgrid( nzone,vrmin,vrmax,vs,rmin,rmax, &
      gridpar(izone) = gridpar(izone) / gtmp
   enddo
 
-  
+
 end subroutine calgrid
 
 !-----------------------------------------------------------------------------
@@ -374,7 +374,7 @@ end subroutine calgrid
 subroutine calra(nlayer,gridpar,dzpar,nzone,vrmin,vrmax,rmin,rmax,nnl,re )
 
   implicit none
-  real(kind(0d0)), parameter :: pi=3.1415926535897932d0 
+  real(kind(0d0)), parameter :: pi=3.1415926535897932d0
   integer :: nlayer,inlayer
   integer :: nzone, nnl(nzone)
   real(kind(0d0)) :: gridpar(*),dzpar(*),vrmin(*),vrmax(*),rmin,rmax
@@ -386,22 +386,22 @@ subroutine calra(nlayer,gridpar,dzpar,nzone,vrmin,vrmax,rmin,rmax,nnl,re )
   do izone=1,nzone
      rh = vrmax(izone) - vrmin(izone)
 
-     if(dzpar(izone).eq.0.d0) then
+     if(dzpar(izone)==0.d0) then
         ntmp = 1
      else
         ntmp = int( sqrt(3.3d0 / re ) * rh / dzpar(izone) &
              &                    / 2.d0 / pi  / 7.d-1 + 1 )
      endif
-     ! ntmp (see Geller & Takeuchi 1995 6.2)     
+     ! ntmp (see Geller & Takeuchi 1995 6.2)
      nnl(izone) = ntmp
-     if ( nnl(izone).lt.5 ) nnl(izone)=5
+     if ( nnl(izone)<5 ) nnl(izone)=5
   enddo
 
   inlayer = 0
   do izone=1,nzone
      inlayer = inlayer + nnl(izone)
   enddo
-  nlayer = inlayer 
+  nlayer = inlayer
 
 end subroutine calra
 
@@ -411,7 +411,7 @@ end subroutine calra
 subroutine calra2(nlayer,gridpar,dzpar,nzone,vrmin,vrmax,rmin,rmax,nnl,ra,re,nsta,rsta,rrsta, iista,updown)
 
   implicit none
-  real(kind(0d0)), parameter :: pi=3.1415926535897932d0 
+  real(kind(0d0)), parameter :: pi=3.1415926535897932d0
   integer :: nlayer
   integer :: nzone,nnl(nzone)
   real(kind(0d0)) :: gridpar(*),dzpar(*),vrmin(*),vrmax(*),rmin,rmax,ra(nlayer+nzone+1)
@@ -431,7 +431,7 @@ subroutine calra2(nlayer,gridpar,dzpar,nzone,vrmin,vrmax,rmin,rmax,nnl,ra,re,nst
      do i=1,nnl(izone)
         itmp = itmp + 1
         ra(itmp) = vrmin(izone) &
-             &	+ rh * dble(i) / dble( nnl(izone) )
+             &  + rh * dble(i) / dble( nnl(izone) )
      enddo
   enddo
 
@@ -442,19 +442,19 @@ subroutine calra2(nlayer,gridpar,dzpar,nzone,vrmin,vrmax,rmin,rmax,nnl,ra,re,nst
 !write(*,*) 'check for the last a few ra elements'
 !do ii=itmp,nlayer+nzone+1,1
 !write(*,*) ii,'th radiu of the model is:',ra(ii)
-!end do
+!enddo
 
   itmp = 1
   do izone=1,nzone
      rh = vrmax(izone) - vrmin(izone)
      do i=1,nnl(izone)
         do ista = 1, nsta
-           if( (ra(itmp).lt.rsta(ista)) .and.(rsta(ista).le.ra(itmp+1))) then
-              if(i.ne.nnl(izone)) then
+           if( (ra(itmp)<rsta(ista)) .and.(rsta(ista)<=ra(itmp+1))) then
+              if(i/=nnl(izone)) then
                  rrsta(1,ista) = ra(itmp)
                  rrsta(2,ista) = ra(itmp+1)
                  rrsta(3,ista) = ra(itmp+2)
-                     
+
                  iista(1,ista) = itmp
                  iista(2,ista) = itmp + 1
                  iista(3,ista) = itmp + 2
@@ -462,20 +462,20 @@ subroutine calra2(nlayer,gridpar,dzpar,nzone,vrmin,vrmax,rmin,rmax,nnl,ra,re,nst
                  rrsta(1,ista) = ra(itmp-1)
                  rrsta(2,ista) = ra(itmp)
                  rrsta(3,ista) = ra(itmp+1)
-                 
+
                  iista(1,ista) = itmp - 1
                  iista(2,ista) = itmp
                  iista(3,ista) = itmp + 1
              ! write(*,*) 'i == nnl(izone)',izone,rsta(ista),rrsta(2,ista),ii
               endif
 
-              !if((abs(rs-rsta(ista)).lt.ctmp).and.(abs(rs-rsta(ista)).ge.chikasa)) then
+              !if((abs(rs-rsta(ista))<ctmp).and.(abs(rs-rsta(ista))>=chikasa)) then
               !   ciista = ista
               !   ctmp = abs(rs-rsta(ista))
               !endif
-           endif          
+           endif
         enddo
-        itmp = itmp + 1     
+        itmp = itmp + 1
      enddo
   enddo
 
@@ -486,29 +486,29 @@ subroutine calra2(nlayer,gridpar,dzpar,nzone,vrmin,vrmax,rmin,rmax,nnl,ra,re,nst
      do i=1,nnl(izone)
         do ista = 1, nsta
          if (updown(ista)/=-1) then
-           if( (ra(itmp).lt.rsta(ista)) .and.(rsta(ista).le.ra(itmp+1))) then
+           if( (ra(itmp)<rsta(ista)) .and.(rsta(ista)<=ra(itmp+1))) then
                  rrsta(1,ista) = ra(itmp)
                  rrsta(2,ista) = ra(itmp+1)
                  rrsta(3,ista) = ra(itmp+2)
-                     
+
                  iista(1,ista) = itmp
                  iista(2,ista) = itmp + 1
                  iista(3,ista) = itmp + 2
-                 
+
            endif
          endif
 
-              !if((abs(rs-rsta(ista)).lt.ctmp).and.(abs(rs-rsta(ista)).ge.chikasa)) then
+              !if((abs(rs-rsta(ista))<ctmp).and.(abs(rs-rsta(ista))>=chikasa)) then
               !   ciista = ista
               !   ctmp = abs(rs-rsta(ista))
               !endif
         enddo
-        itmp = itmp + 1     
+        itmp = itmp + 1
      enddo
   enddo
 
-  if(ciista.eq.0) ciista = 1
-  
+  if(ciista==0) ciista = 1
+
 end subroutine calra2
 
 
@@ -540,41 +540,41 @@ subroutine calspo( ndc,rdc,nlayer,r0,rmin,rmax,ra, isp,spo,spn )
   integer :: ndc,nlayer,isp(*),spn
   real(kind(0d0)) :: rdc(*),r0,rmin,rmax,ra(*),spo
   integer :: itmp
-  
+
 
   ! checquer des parameters
-  if ( (r0.lt.rmin).or.(r0.gt.rmax) ) &
+  if ( (r0<rmin).or.(r0>rmax) ) &
        & pause 'The source location is improper.(calspo)'
   ! computing 'spo'
-  if ( r0.eq.rmax ) then
+  if ( r0==rmax ) then
      spo = dble(nlayer) - 0.01d0
      r0 = ra(nlayer) &
-          & + (spo-dble(nlayer-1)) * ( ra(nlayer+1)-ra(nlayer) )   
+          & + (spo-dble(nlayer-1)) * ( ra(nlayer+1)-ra(nlayer) )
   else
-     do itmp = 2, ndc+nlayer+2        
-        if ( r0.lt.ra(itmp) ) exit
+     do itmp = 2, ndc+nlayer+2
+        if ( r0<ra(itmp) ) exit
      enddo
      spo = dble(itmp-2) + ( r0-ra(itmp-1) ) / ( ra(itmp)-ra(itmp-1) )
      ! temporal handling
-     if ( (spo-dble(itmp-2)).lt.0.01d0 ) then
+     if ( (spo-dble(itmp-2))<0.01d0 ) then
         spo = dble(itmp-2) + 0.01d0
-        r0 = ra(itmp-1) + (spo-dble(itmp-2)) * ( ra(itmp)-ra(itmp-1) )    
+        r0 = ra(itmp-1) + (spo-dble(itmp-2)) * ( ra(itmp)-ra(itmp-1) )
      endif
-     if ( (spo-dble(itmp-2)).gt.0.99d0 ) then
+     if ( (spo-dble(itmp-2))>0.99d0 ) then
         spo = dble(itmp-2) + 0.99d0
-        r0 = ra(itmp-1) + (spo-dble(itmp-2)) * ( ra(itmp)-ra(itmp-1) )     
+        r0 = ra(itmp-1) + (spo-dble(itmp-2)) * ( ra(itmp)-ra(itmp-1) )
      endif
-     
+
   endif
   ! computing 'spn'
   spn = 0
-  do itmp = 1, ndc+1    
+  do itmp = 1, ndc+1
      spn = spn + 1
-     if ( r0.le.rdc(itmp) ) exit
+     if ( r0<=rdc(itmp) ) exit
   enddo
   ! changing 'spo'
   spo = spo - dble( isp(spn) - 1 )
-  
+
 
 
 end subroutine calspo
@@ -584,15 +584,15 @@ end subroutine calspo
 
 
 subroutine calgra( isp,ra,r0,spn,spo,gra )
-  
+
   integer :: isp(*),spn,itmp
   real(kind(0d0)) :: ra(*),r0,spo,gra(*)
-  
+
   itmp = isp(spn) + dint( spo )
   gra(1) = ra(itmp)
   gra(2) = r0
   gra(3) = ra(itmp+1)
-  
+
 end subroutine calgra
 
 !-----------------------------------------------------------------------------
@@ -623,7 +623,7 @@ subroutine calstg( nzone,rrho,vsv,vsh,nlayer,nnl,ra,rmax,vnp,vra,rho,ecL,ecN )
         tvsv = 0.d0
         tvsh = 0.d0
         do j=1,4
-           if ( j.eq.1 ) then
+           if ( j==1 ) then
               coef = 1.d0
            else
               coef = coef * ( vra(itmp) / rmax )
@@ -632,7 +632,7 @@ subroutine calstg( nzone,rrho,vsv,vsh,nlayer,nnl,ra,rmax,vnp,vra,rho,ecL,ecN )
            tvsv  = tvsv  + vsv(j,izone)   * coef
            tvsh  = tvsh  + vsh(j,izone)   * coef
         enddo
-        rho(itmp) = trho 
+        rho(itmp) = trho
         ecL(itmp)  = rho(itmp) * tvsv * tvsv
         ecN(itmp)  = rho(itmp) * tvsh * tvsh
 
@@ -669,7 +669,7 @@ subroutine calgstg(nzone,nlayer,spn,rrho,vsv,vsh, ra,vra,rmax,rho,ecL,ecN,r0,mu0
      tvsv = 0.d0
      tvsh = 0.d0
      do j=1,4
-        if ( j.eq.1 ) then
+        if ( j==1 ) then
            coef = 1.d0
         else
            coef = coef * ( vra(i) / rmax )
@@ -681,7 +681,7 @@ subroutine calgstg(nzone,nlayer,spn,rrho,vsv,vsh, ra,vra,rmax,rho,ecL,ecN,r0,mu0
      rho(i) = trho
      ecL(i)  = rho(i) * tvsv * tvsv
      ecN(i)  = rho(i) * tvsh * tvsh
-    
+
   enddo
 
   mu0 = ecL(2)
@@ -701,17 +701,17 @@ subroutine callsuf(omega,nzone,vrmax,vsv,lsuf)
   real(kind(0d0)) :: omega, vrmax(*), vsv(4,*)
   real(kind(0d0)) :: tvs, coef
   integer :: i
-  
+
   tvs = 0.d0
   do i=1,4
-     if(i.eq.1) then
+     if(i==1) then
         coef = 1.d0
      else
-        coef = coef 
+        coef = coef
      endif
-     tvs = tvs + ( vsv(i,nzone) ) * coef     
+     tvs = tvs + ( vsv(i,nzone) ) * coef
   enddo
-  
+
   lsuf = int(omega * vrmax(nzone) / tvs - 0.5d0) + 1
 end subroutine callsuf
 
@@ -721,17 +721,17 @@ end subroutine callsuf
 
 subroutine calcoef( nzone,omega,q,coef )
   implicit none
-  real(kind(0d0)), parameter ::  pi = 3.1415926535897932d0   
+  real(kind(0d0)), parameter ::  pi = 3.1415926535897932d0
   integer :: izone,nzone
   real(kind(0d0)) :: omega,q(*)
   complex(kind(0d0)) :: coef(*)
   real(kind(0d0)) :: aa,bb
-  
-  do izone=1,nzone 
-     if(q(izone).le.0.d0) then
+
+  do izone=1,nzone
+     if(q(izone)<=0.d0) then
         coef(izone) = dcmplx(1.d0)
      else
-        if ( omega.eq.0.d0 ) then
+        if ( omega==0.d0 ) then
            aa = 1.d0
         else
            aa = 1.d0 + dlog( omega / ( 2.d0 * pi ) ) / ( pi * q(izone) )
@@ -746,24 +746,24 @@ end subroutine calcoef
 !-----------------------------------------------------------------------------
 
 subroutine calamp(g,l,lsuf,maxamp,ismall,ratl)
-  
+
   implicit none
   integer :: l,lsuf,ismall
   real(kind(0d0)) :: maxamp,ratl
   complex(kind(0d0)) :: g
-  real(kind(0d0)) :: amp,ampratio    
+  real(kind(0d0)) :: amp,ampratio
   ampratio = 0.d0
   amp = abs(g)
-  if( amp.gt.maxamp ) maxamp = amp
-  if ( (amp.ne.0.d0).and.(maxamp.ne.0.d0) ) then
+  if( amp>maxamp ) maxamp = amp
+  if ( (amp/=0.d0).and.(maxamp/=0.d0) ) then
      ampratio = amp / maxamp
   endif
-  if( (ampratio.lt.ratl).and.(l.gt.lsuf) ) then
+  if( (ampratio<ratl).and.(l>lsuf) ) then
      ismall = ismall + 1
   else
      ismall = 0
   endif
-  
+
 end subroutine calamp
 
 
@@ -773,7 +773,7 @@ subroutine calu(c0,lsq,bvec,u)
   implicit none
   real(kind(0d0)) :: lsq
   complex(kind(0d0)) :: c0, bvec(3), u(1:3)
-  
+
   u(1) = dcmplx( 0.d0 )
   u(2) = u(2) + c0 * bvec(2) / dcmplx(lsq)
   u(3) = u(3) + c0 * bvec(3) / dcmplx(lsq)
@@ -788,23 +788,23 @@ subroutine interpolate( ncomp,nderiv,rsta,rrsta,g,u )
   implicit none
   integer :: ncomp,nderiv
   real(kind(0d0)) :: rsta,rrsta(3)
-  complex(kind(0d0)) :: g(3*ncomp),u(ncomp)    
-  real(kind(0d0)):: dh(3)     
+  complex(kind(0d0)) :: g(3*ncomp),u(ncomp)
+  real(kind(0d0)):: dh(3)
   integer :: ip(3),ier,i,itmp,icomp
   complex(kind(0d0)) :: a(3,3),b(3),wk(3)
-  real(kind(0d0)) :: eps 
+  real(kind(0d0)) :: eps
   data eps / -1.d0 /
 
   do icomp=1,ncomp
      u(icomp) = dcmplx(0.d0)
   enddo
-      
+
   do i=1,3
      dh(i) = rrsta(i) - rsta
   enddo
-      
 
-  if( (dh(2).eq.0.d0).and.(nderiv.eq.0)) then
+
+  if( (dh(2)==0.d0).and.(nderiv==0)) then
      itmp = ncomp + 1
      do icomp=1,ncomp
         u(icomp) = g(itmp)
@@ -812,18 +812,18 @@ subroutine interpolate( ncomp,nderiv,rsta,rrsta,g,u )
      enddo
      return
   endif
-    
+
   do i=1,3
      a(1,i) = dcmplx( 1.d0 )
      a(2,i) = dcmplx( dh(i) )
      a(3,i) = dcmplx( dh(i) * dh(i) / 2.d0 )
   enddo
-     
+
   call fillinpb(nderiv,b)
 
   call glu(a,3,3,b,eps,wk,ip,ier)
- 
-  
+
+
   do icomp=1,ncomp
      do i=1,3
         u(icomp) = u(icomp) + b(i) * g( ncomp * (i-1) + icomp )
@@ -843,23 +843,23 @@ subroutine fillinpb( nderiv,b )
 
   integer :: nderiv
   complex(kind(0d0)) :: b(3)
-     
-  if( (nderiv.ne.0).and.(nderiv.ne.1).and.(nderiv.ne.2) ) &
+
+  if( (nderiv/=0).and.(nderiv/=1).and.(nderiv/=2) ) &
        &     pause 'invalid argument (fillinpb)'
-  if(nderiv.eq.0) then
+  if(nderiv==0) then
      b(1) = dcmplx( 1.d0 )
      b(2) = dcmplx( 0.d0 )
      b(3) = dcmplx( 0.d0 )
-  elseif(nderiv.eq.1) then
+  else if(nderiv==1) then
      b(1) = dcmplx( 0.d0 )
      b(2) = dcmplx( 1.d0 )
      b(3) = dcmplx( 0.d0 )
-  elseif(nderiv.eq.2) then
+  else if(nderiv==2) then
      b(1) = dcmplx( 0.d0 )
      b(2) = dcmplx( 0.d0 )
      b(3) = dcmplx( 1.d0 )
   endif
-    
+
   return
 end subroutine fillinpb
 
@@ -878,11 +878,11 @@ subroutine calcutd(nzone,nnl,tmpr,rat,nn,ra,kc)
   real(kind(0d0)):: cU(nn),rc
   real(kind(0d0)) :: maxamp,amp(nn)
   integer :: iz,jz,jj,i,ml(nzone),tzone
-  
+
   do jj=1,nn
      cU(jj) = 0.d0
   enddo
-  
+
   iz = 2
   jz = 1
   do jj=1,nn
@@ -892,34 +892,34 @@ subroutine calcutd(nzone,nnl,tmpr,rat,nn,ra,kc)
   maxamp = -1.d0
   do i=1,nn
      amp(i) = cU(i)
-     if(maxamp.lt.amp(i)) maxamp = amp(i)
+     if(maxamp<amp(i)) maxamp = amp(i)
   enddo
   maxamp = maxamp * rat ! threshold value
-  if(maxamp.eq.0.d0) then
+  if(maxamp==0.d0) then
      kc = 1
      return
   endif
-  
+
   do i=1,nn
-     if(amp(i).gt.maxamp) then
+     if(amp(i)>maxamp) then
         nc = i
         exit
      endif
   enddo
-  
+
   i = 1
   do jj=1,nzone
      i = i + nnl(jj)
      ml(jj) = i
   enddo
-  
+
   do jj=nzone,1,-1
-     if(ml(jj).gt.nc) tzone = jj
+     if(ml(jj)>nc) tzone = jj
   enddo
 
   rc = ra(nc)
   kc = nc
-  
+
 
   return
 end subroutine calcutd
@@ -987,25 +987,25 @@ subroutine calstg4onedepth( maxnlay,maxnzone,nzone,vrmin,vrmax,iphase,rrho,vpv,v
   real(kind(0d0)):: ecA,ecC,ecF
   real(kind(0d0)):: trho,tvpv,tvph,tvsv,tvsh,teta,coef
   integer:: izone,j,itmp,jtmp,spn
-     
+
   ! computing the structure grid points
   itmp = 0
   jtmp = 0
   spn = 0
 
   do izone=1,nzone
-     if((vrmin(izone).le.r).and.(vrmax(izone).gt.r)) then
+     if((vrmin(izone)<=r).and.(vrmax(izone)>r)) then
         spn = izone
      endif
   enddo
 
-  if (vrmax(nzone).eq.r) spn = nzone
-  if((vrmin(spn).eq.r).and.(updown.eq.-1)) then
+  if (vrmax(nzone)==r) spn = nzone
+  if((vrmin(spn)==r).and.(updown==-1)) then
      spn = spn - 1
   endif
-  
 
-  
+
+
   trho = 0.d0
   tvpv = 0.d0
   tvph = 0.d0
@@ -1013,7 +1013,7 @@ subroutine calstg4onedepth( maxnlay,maxnzone,nzone,vrmin,vrmax,iphase,rrho,vpv,v
   tvsh = 0.d0
   teta = 0.d0
   do j=1,4
-     if ( j.eq.1 ) then
+     if ( j==1 ) then
         coef = 1.d0
      else
         coef = coef * ( r / rmax )
@@ -1030,7 +1030,7 @@ subroutine calstg4onedepth( maxnlay,maxnzone,nzone,vrmin,vrmax,iphase,rrho,vpv,v
   ecA = trho * tvph * tvph
   ecC = trho * tvpv * tvpv
   ecF = teta * ( ecA - 2.d0 * ecL )
-  
+
   return
 end subroutine calstg4onedepth
 
@@ -1042,21 +1042,21 @@ subroutine translat(geodetic,geocentric)
 
   implicit none
   real(kind(0d0)),parameter ::  flattening = 1.d0 / 298.25d0
-  real(kind(0d0)), parameter :: pi = 3.1415926535897932d0 
-  real(kind(0d0)) :: geocentric, geodetic 
+  real(kind(0d0)), parameter :: pi = 3.1415926535897932d0
+  real(kind(0d0)) :: geocentric, geodetic
 !  real(kind(0d0)) :: tmp
   integer :: flag
   flag = 0
-  if(geodetic .gt. 90.d0) then
+  if(geodetic > 90.d0) then
      geodetic = 1.8d2 - geodetic
      flag = 1
   endif
-  
+
   geodetic = geodetic / 1.8d2 * pi
   geocentric = datan((1.d0-flattening)*(1.d0-flattening)* dtan(geodetic) )
   geocentric = geocentric * 1.8d2 / pi
-  
-  if(flag .eq. 1) then
+
+  if(flag == 1) then
      geocentric = 1.8d2 - geocentric
   endif
 
@@ -1065,10 +1065,10 @@ end subroutine translat
 
 
 subroutine calthetaphi(ievla,ievlo,istla,istlo,theta,phi)
-  
+
   implicit none
-  real(kind(0d0)), parameter:: pi = 3.1415926535897932d0 
-  
+  real(kind(0d0)), parameter:: pi = 3.1415926535897932d0
+
   real(kind(0d0)) ::  ievla,ievlo,istla,istlo
   real(kind(0d0)) ::  evla,evlo,stla,stlo
   real(kind(0d0)) :: theta,phi
@@ -1076,25 +1076,25 @@ subroutine calthetaphi(ievla,ievlo,istla,istlo,theta,phi)
   real(kind(0d0)) :: tc,ts
 
   ! transformation to spherical coordinates
-  
+
   evla = 90.d0 - ievla
   stla = 90.d0 - istla
-  
+
   evla = evla / 1.8d2 * pi
   evlo = ievlo / 1.8d2 * pi
   stla = stla / 1.8d2 * pi
   stlo = istlo / 1.8d2 * pi
-  
+
   gcarc = dacos( dcos(evla) * dcos(stla) + dsin(evla) * dsin(stla) * dcos(evlo - stlo) )
-  
+
   tc = (dcos(stla)*dsin(evla)-dsin(stla)*dcos(evla)*dcos(stlo-evlo))/dsin(gcarc)
   ts = dsin(stla) * dsin(stlo - evlo) / dsin(gcarc)
 
   az = dacos(tc)
-  if( ts .lt. 0.d0 ) az = -1.d0 * az
-  
+  if( ts < 0.d0 ) az = -1.d0 * az
+
   az = az * 1.8d2 / pi
-  
+
   gcarc = gcarc * 1.8d2 / pi
 
   theta = gcarc
@@ -1133,13 +1133,13 @@ write(*,*) 'dis, imin and imax is :',dis,imin,imax
 write(20,"(i2)") 2
 
 
-if ( abs(imax-imin)-proc*dis > 0 ) then 
+if ( abs(imax-imin)-proc*dis > 0 ) then
   write(*,*) 'wrong task distribution.please check the code WriteFrqByproc!'
   stop
 else
   redun = abs(imax-imin)-proc*(dis-1)
    summ = 0
-   f1 = 0 
+   f1 = 0
    f2 = dis
   do k=0,redun-1,1
    summ = f2
@@ -1147,7 +1147,7 @@ else
   write(*,*) 'summ is',summ
    f1 = f2+1
    f2 = f2+dis
-  end do
+  enddo
 
   if (redun == 0) then
    f2 = f1+dis-1
@@ -1162,7 +1162,7 @@ else
      f1 = f2+1
      f2 = f2+dis-1
   enddo
- 
+
   if ( summ /= abs(imax-imin) ) then
   write(*,*) 'wrong task distribution.please check the code WriteFrqByproc!'
   stop
@@ -1270,7 +1270,7 @@ subroutine epitra(SourceLat,SourceLong,RecLat,RecLong,delta,azi,bazi)
     azi = 180.d0 - azi
 
 end subroutine epitra
- 
+
 !-----------------------------------------------------------------
  subroutine DistribSta(n,n_global,myrank,nbproc,irmin,irmax)
  implicit none
@@ -1278,14 +1278,14 @@ end subroutine epitra
 
           n = int(n_global/nbproc)
           coef = mod(n_global,nbproc)
-    
+
           if ( myrank < mod(n_global,nbproc) .and. mod(n_global,nbproc) /=0) then
                  n = n + 1
-		 coef = 0
+     coef = 0
           endif
 
             irmin = (myrank ) * n + 1 + coef
-	    irmax = (myrank + 1 ) * n + coef
+      irmax = (myrank + 1 ) * n + coef
 
  end subroutine DistribSta
 
@@ -1308,35 +1308,35 @@ subroutine write_a_block_of_coefs_to_disk(tabg0,tabg0der,tabg0_small_buffer,ir_,
       !   tabg0_small_buffer(illog,:,:,:) = tabg0(illog,:,:,:,ir_)
       !! DK DK unrolled the loops to allow for vectorization of the outer loop on "illog"
         tabg0_small_buffer(illog,1,1,-2) = tabg0(illog,1,1,-2,ir_)
-	tabg0_small_buffer(illog,1,2,-2) = tabg0(illog,1,2,-2,ir_)
-	tabg0_small_buffer(illog,1,3,-2) = tabg0(illog,1,3,-2,ir_)
-	tabg0_small_buffer(illog,1,4,-2) = tabg0(illog,1,4,-2,ir_)
-	tabg0_small_buffer(illog,1,5,-2) = tabg0(illog,1,5,-2,ir_)
-	tabg0_small_buffer(illog,1,6,-2) = tabg0(illog,1,6,-2,ir_)
-	tabg0_small_buffer(illog,1,1,-1) = tabg0(illog,1,1,-1,ir_)
-	tabg0_small_buffer(illog,1,2,-1) = tabg0(illog,1,2,-1,ir_)
-	tabg0_small_buffer(illog,1,3,-1) = tabg0(illog,1,3,-1,ir_)
-	tabg0_small_buffer(illog,1,4,-1) = tabg0(illog,1,4,-1,ir_)
-	tabg0_small_buffer(illog,1,5,-1) = tabg0(illog,1,5,-1,ir_)
-	tabg0_small_buffer(illog,1,6,-1) = tabg0(illog,1,6,-1,ir_)
-	tabg0_small_buffer(illog,1,1,0) = tabg0(illog,1,1,0,ir_)
-	tabg0_small_buffer(illog,1,2,0) = tabg0(illog,1,2,0,ir_)
-	tabg0_small_buffer(illog,1,3,0) = tabg0(illog,1,3,0,ir_)
-	tabg0_small_buffer(illog,1,4,0) = tabg0(illog,1,4,0,ir_)
-	tabg0_small_buffer(illog,1,5,0) = tabg0(illog,1,5,0,ir_)
-	tabg0_small_buffer(illog,1,6,0) = tabg0(illog,1,6,0,ir_)
-	tabg0_small_buffer(illog,1,1,1) = tabg0(illog,1,1,1,ir_)
-	tabg0_small_buffer(illog,1,2,1) = tabg0(illog,1,2,1,ir_)
-	tabg0_small_buffer(illog,1,3,1) = tabg0(illog,1,3,1,ir_)
-	tabg0_small_buffer(illog,1,4,1) = tabg0(illog,1,4,1,ir_)
-	tabg0_small_buffer(illog,1,5,1) = tabg0(illog,1,5,1,ir_)
-	tabg0_small_buffer(illog,1,6,1) = tabg0(illog,1,6,1,ir_)
-	tabg0_small_buffer(illog,1,1,2) = tabg0(illog,1,1,2,ir_)
-	tabg0_small_buffer(illog,1,2,2) = tabg0(illog,1,2,2,ir_)
-	tabg0_small_buffer(illog,1,3,2) = tabg0(illog,1,3,2,ir_)
-	tabg0_small_buffer(illog,1,4,2) = tabg0(illog,1,4,2,ir_)
-	tabg0_small_buffer(illog,1,5,2) = tabg0(illog,1,5,2,ir_)
-	tabg0_small_buffer(illog,1,6,2) = tabg0(illog,1,6,2,ir_)
+  tabg0_small_buffer(illog,1,2,-2) = tabg0(illog,1,2,-2,ir_)
+  tabg0_small_buffer(illog,1,3,-2) = tabg0(illog,1,3,-2,ir_)
+  tabg0_small_buffer(illog,1,4,-2) = tabg0(illog,1,4,-2,ir_)
+  tabg0_small_buffer(illog,1,5,-2) = tabg0(illog,1,5,-2,ir_)
+  tabg0_small_buffer(illog,1,6,-2) = tabg0(illog,1,6,-2,ir_)
+  tabg0_small_buffer(illog,1,1,-1) = tabg0(illog,1,1,-1,ir_)
+  tabg0_small_buffer(illog,1,2,-1) = tabg0(illog,1,2,-1,ir_)
+  tabg0_small_buffer(illog,1,3,-1) = tabg0(illog,1,3,-1,ir_)
+  tabg0_small_buffer(illog,1,4,-1) = tabg0(illog,1,4,-1,ir_)
+  tabg0_small_buffer(illog,1,5,-1) = tabg0(illog,1,5,-1,ir_)
+  tabg0_small_buffer(illog,1,6,-1) = tabg0(illog,1,6,-1,ir_)
+  tabg0_small_buffer(illog,1,1,0) = tabg0(illog,1,1,0,ir_)
+  tabg0_small_buffer(illog,1,2,0) = tabg0(illog,1,2,0,ir_)
+  tabg0_small_buffer(illog,1,3,0) = tabg0(illog,1,3,0,ir_)
+  tabg0_small_buffer(illog,1,4,0) = tabg0(illog,1,4,0,ir_)
+  tabg0_small_buffer(illog,1,5,0) = tabg0(illog,1,5,0,ir_)
+  tabg0_small_buffer(illog,1,6,0) = tabg0(illog,1,6,0,ir_)
+  tabg0_small_buffer(illog,1,1,1) = tabg0(illog,1,1,1,ir_)
+  tabg0_small_buffer(illog,1,2,1) = tabg0(illog,1,2,1,ir_)
+  tabg0_small_buffer(illog,1,3,1) = tabg0(illog,1,3,1,ir_)
+  tabg0_small_buffer(illog,1,4,1) = tabg0(illog,1,4,1,ir_)
+  tabg0_small_buffer(illog,1,5,1) = tabg0(illog,1,5,1,ir_)
+  tabg0_small_buffer(illog,1,6,1) = tabg0(illog,1,6,1,ir_)
+  tabg0_small_buffer(illog,1,1,2) = tabg0(illog,1,1,2,ir_)
+  tabg0_small_buffer(illog,1,2,2) = tabg0(illog,1,2,2,ir_)
+  tabg0_small_buffer(illog,1,3,2) = tabg0(illog,1,3,2,ir_)
+  tabg0_small_buffer(illog,1,4,2) = tabg0(illog,1,4,2,ir_)
+  tabg0_small_buffer(illog,1,5,2) = tabg0(illog,1,5,2,ir_)
+  tabg0_small_buffer(illog,1,6,2) = tabg0(illog,1,6,2,ir_)
 
   enddo
   write(34) ir_,llog0
@@ -1351,34 +1351,34 @@ subroutine write_a_block_of_coefs_to_disk(tabg0,tabg0der,tabg0_small_buffer,ir_,
 !! DK DK unrolled the loops to allow for vectorization of the outer loop on "illog"
         tabg0_small_buffer(illog,1,1,-2) = tabg0der(illog,1,1,-2,ir_)
         tabg0_small_buffer(illog,1,2,-2) = tabg0der(illog,1,2,-2,ir_)
-	tabg0_small_buffer(illog,1,3,-2) = tabg0der(illog,1,3,-2,ir_)
-	tabg0_small_buffer(illog,1,4,-2) = tabg0der(illog,1,4,-2,ir_)
-	tabg0_small_buffer(illog,1,5,-2) = tabg0der(illog,1,5,-2,ir_)
-	tabg0_small_buffer(illog,1,6,-2) = tabg0der(illog,1,6,-2,ir_)
-	tabg0_small_buffer(illog,1,1,-1) = tabg0der(illog,1,1,-1,ir_)
-	tabg0_small_buffer(illog,1,2,-1) = tabg0der(illog,1,2,-1,ir_)
-	tabg0_small_buffer(illog,1,3,-1) = tabg0der(illog,1,3,-1,ir_)
-	tabg0_small_buffer(illog,1,4,-1) = tabg0der(illog,1,4,-1,ir_)
-	tabg0_small_buffer(illog,1,5,-1) = tabg0der(illog,1,5,-1,ir_)
-	tabg0_small_buffer(illog,1,6,-1) = tabg0der(illog,1,6,-1,ir_)
-	tabg0_small_buffer(illog,1,1,0) = tabg0der(illog,1,1,0,ir_)
-	tabg0_small_buffer(illog,1,2,0) = tabg0der(illog,1,2,0,ir_)
-	tabg0_small_buffer(illog,1,3,0) = tabg0der(illog,1,3,0,ir_)
+  tabg0_small_buffer(illog,1,3,-2) = tabg0der(illog,1,3,-2,ir_)
+  tabg0_small_buffer(illog,1,4,-2) = tabg0der(illog,1,4,-2,ir_)
+  tabg0_small_buffer(illog,1,5,-2) = tabg0der(illog,1,5,-2,ir_)
+  tabg0_small_buffer(illog,1,6,-2) = tabg0der(illog,1,6,-2,ir_)
+  tabg0_small_buffer(illog,1,1,-1) = tabg0der(illog,1,1,-1,ir_)
+  tabg0_small_buffer(illog,1,2,-1) = tabg0der(illog,1,2,-1,ir_)
+  tabg0_small_buffer(illog,1,3,-1) = tabg0der(illog,1,3,-1,ir_)
+  tabg0_small_buffer(illog,1,4,-1) = tabg0der(illog,1,4,-1,ir_)
+  tabg0_small_buffer(illog,1,5,-1) = tabg0der(illog,1,5,-1,ir_)
+  tabg0_small_buffer(illog,1,6,-1) = tabg0der(illog,1,6,-1,ir_)
+  tabg0_small_buffer(illog,1,1,0) = tabg0der(illog,1,1,0,ir_)
+  tabg0_small_buffer(illog,1,2,0) = tabg0der(illog,1,2,0,ir_)
+  tabg0_small_buffer(illog,1,3,0) = tabg0der(illog,1,3,0,ir_)
         tabg0_small_buffer(illog,1,4,0) = tabg0der(illog,1,4,0,ir_)
-	tabg0_small_buffer(illog,1,5,0) = tabg0der(illog,1,5,0,ir_)
-	tabg0_small_buffer(illog,1,6,0) = tabg0der(illog,1,6,0,ir_)
-	tabg0_small_buffer(illog,1,1,1) = tabg0der(illog,1,1,1,ir_)
-	tabg0_small_buffer(illog,1,2,1) = tabg0der(illog,1,2,1,ir_)
-	tabg0_small_buffer(illog,1,3,1) = tabg0der(illog,1,3,1,ir_)
-	tabg0_small_buffer(illog,1,4,1) = tabg0der(illog,1,4,1,ir_)
-	tabg0_small_buffer(illog,1,5,1) = tabg0der(illog,1,5,1,ir_)
-	tabg0_small_buffer(illog,1,6,1) = tabg0der(illog,1,6,1,ir_)
-	tabg0_small_buffer(illog,1,1,2) = tabg0der(illog,1,1,2,ir_)
-	tabg0_small_buffer(illog,1,2,2) = tabg0der(illog,1,2,2,ir_)
-	tabg0_small_buffer(illog,1,3,2) = tabg0der(illog,1,3,2,ir_)
-	tabg0_small_buffer(illog,1,4,2) = tabg0der(illog,1,4,2,ir_)
-	tabg0_small_buffer(illog,1,5,2) = tabg0der(illog,1,5,2,ir_)
-	tabg0_small_buffer(illog,1,6,2) = tabg0der(illog,1,6,2,ir_)
+  tabg0_small_buffer(illog,1,5,0) = tabg0der(illog,1,5,0,ir_)
+  tabg0_small_buffer(illog,1,6,0) = tabg0der(illog,1,6,0,ir_)
+  tabg0_small_buffer(illog,1,1,1) = tabg0der(illog,1,1,1,ir_)
+  tabg0_small_buffer(illog,1,2,1) = tabg0der(illog,1,2,1,ir_)
+  tabg0_small_buffer(illog,1,3,1) = tabg0der(illog,1,3,1,ir_)
+  tabg0_small_buffer(illog,1,4,1) = tabg0der(illog,1,4,1,ir_)
+  tabg0_small_buffer(illog,1,5,1) = tabg0der(illog,1,5,1,ir_)
+  tabg0_small_buffer(illog,1,6,1) = tabg0der(illog,1,6,1,ir_)
+  tabg0_small_buffer(illog,1,1,2) = tabg0der(illog,1,1,2,ir_)
+  tabg0_small_buffer(illog,1,2,2) = tabg0der(illog,1,2,2,ir_)
+  tabg0_small_buffer(illog,1,3,2) = tabg0der(illog,1,3,2,ir_)
+  tabg0_small_buffer(illog,1,4,2) = tabg0der(illog,1,4,2,ir_)
+  tabg0_small_buffer(illog,1,5,2) = tabg0der(illog,1,5,2,ir_)
+  tabg0_small_buffer(illog,1,6,2) = tabg0der(illog,1,6,2,ir_)
   enddo
     write(34) tabg0_small_buffer
 

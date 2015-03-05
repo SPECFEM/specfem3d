@@ -431,11 +431,14 @@
     if (ier /= 0) stop 'error allocating array seismograms_v'
     allocate(seismograms_a(NDIM,nrec_local,NSTEP),stat=ier)
     if (ier /= 0) stop 'error allocating array seismograms_a'
+    allocate(seismograms_p(NDIM,nrec_local,NSTEP),stat=ier)
+    if (ier /= 0) stop 'error allocating array seismograms_p'
 
     ! initialize seismograms
     seismograms_d(:,:,:) = 0._CUSTOM_REAL
     seismograms_v(:,:,:) = 0._CUSTOM_REAL
     seismograms_a(:,:,:) = 0._CUSTOM_REAL
+    seismograms_p(:,:,:) = 0._CUSTOM_REAL
   endif
 
   ! opens source time function file
@@ -446,7 +449,7 @@
     else
       write(plot_file,"('/plot_source_time_function',i7.7,'.txt')") NSOURCES
     endif
-    open(unit=IOSTF,file=trim(OUTPUT_FILES_PATH)//plot_file,status='unknown',iostat=ier)
+    open(unit=IOSTF,file=trim(OUTPUT_FILES)//plot_file,status='unknown',iostat=ier)
     if (ier /= 0) call exit_mpi(myrank,'error opening plot_source_time_function file')
   endif
 
@@ -1690,7 +1693,7 @@
        ! write time stamp file to give information about progression of the calculation of gravity integrals
        write(outputname,"('/timestamp_gravity_calculations_ispec',i7.7,'_out_of_',i7.7)") ispec,NSPEC_AB
        ! timestamp file output
-       open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//outputname,status='unknown',action='write')
+       open(unit=IOUT,file=trim(OUTPUT_FILES)//outputname,status='unknown',action='write')
        write(IOUT,*) ispec,' elements done for gravity calculations out of ',NSPEC_AB
        close(unit=IOUT)
     endif
@@ -1879,61 +1882,61 @@
       write(IMAIN,*) 'computed G_yz = ',G_yz(iobs_receiver),' Eotvos'
 
       ! save the results
-      open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/results_g_x_for_GMT.txt',status='unknown',action='write')
+      open(unit=IOUT,file=trim(OUTPUT_FILES)//'/results_g_x_for_GMT.txt',status='unknown',action='write')
       do iobservation = 1,NTOTAL_OBSERVATION
         write(IOUT,*) g_x(iobservation)
       enddo
       close(unit=IOUT)
 
-      open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/results_g_y_for_GMT.txt',status='unknown',action='write')
+      open(unit=IOUT,file=trim(OUTPUT_FILES)//'/results_g_y_for_GMT.txt',status='unknown',action='write')
       do iobservation = 1,NTOTAL_OBSERVATION
         write(IOUT,*) g_y(iobservation)
       enddo
       close(unit=IOUT)
 
-      open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/results_g_z_for_GMT.txt',status='unknown',action='write')
+      open(unit=IOUT,file=trim(OUTPUT_FILES)//'/results_g_z_for_GMT.txt',status='unknown',action='write')
       do iobservation = 1,NTOTAL_OBSERVATION
         write(IOUT,*) g_z(iobservation)
       enddo
       close(unit=IOUT)
 
-      open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/results_norm_of_g_for_GMT.txt',status='unknown',action='write')
+      open(unit=IOUT,file=trim(OUTPUT_FILES)//'/results_norm_of_g_for_GMT.txt',status='unknown',action='write')
       do iobservation = 1,NTOTAL_OBSERVATION
         write(IOUT,*) sqrt(g_x(iobservation)**2 + g_y(iobservation)**2 + g_z(iobservation)**2)
       enddo
       close(unit=IOUT)
 
-      open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/results_G_xx_for_GMT.txt',status='unknown',action='write')
+      open(unit=IOUT,file=trim(OUTPUT_FILES)//'/results_G_xx_for_GMT.txt',status='unknown',action='write')
       do iobservation = 1,NTOTAL_OBSERVATION
         write(IOUT,*) G_xx(iobservation)
       enddo
       close(unit=IOUT)
 
-      open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/results_G_yy_for_GMT.txt',status='unknown',action='write')
+      open(unit=IOUT,file=trim(OUTPUT_FILES)//'/results_G_yy_for_GMT.txt',status='unknown',action='write')
       do iobservation = 1,NTOTAL_OBSERVATION
         write(IOUT,*) G_yy(iobservation)
       enddo
       close(unit=IOUT)
 
-      open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/results_G_zz_for_GMT.txt',status='unknown',action='write')
+      open(unit=IOUT,file=trim(OUTPUT_FILES)//'/results_G_zz_for_GMT.txt',status='unknown',action='write')
       do iobservation = 1,NTOTAL_OBSERVATION
         write(IOUT,*) G_zz(iobservation)
       enddo
       close(unit=IOUT)
 
-      open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/results_G_xy_for_GMT.txt',status='unknown',action='write')
+      open(unit=IOUT,file=trim(OUTPUT_FILES)//'/results_G_xy_for_GMT.txt',status='unknown',action='write')
       do iobservation = 1,NTOTAL_OBSERVATION
         write(IOUT,*) G_xy(iobservation)
       enddo
       close(unit=IOUT)
 
-      open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/results_G_xz_for_GMT.txt',status='unknown',action='write')
+      open(unit=IOUT,file=trim(OUTPUT_FILES)//'/results_G_xz_for_GMT.txt',status='unknown',action='write')
       do iobservation = 1,NTOTAL_OBSERVATION
         write(IOUT,*) G_xz(iobservation)
       enddo
       close(unit=IOUT)
 
-      open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/results_G_yz_for_GMT.txt',status='unknown',action='write')
+      open(unit=IOUT,file=trim(OUTPUT_FILES)//'/results_G_yz_for_GMT.txt',status='unknown',action='write')
       do iobservation = 1,NTOTAL_OBSERVATION
         write(IOUT,*) G_yz(iobservation)
       enddo

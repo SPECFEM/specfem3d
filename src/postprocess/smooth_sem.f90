@@ -25,42 +25,40 @@
 !
 !=====================================================================
 
-! this program can be used for smoothing a kernel,
-! where it smooths files with a given input kernel name:
+! XSMOOTH_SEM
 !
-! compile with:
+! USAGE
+!   mpirun -np NPROC bin/xsmooth_sem SIGMA_H SIGMA_V KERNEL_NAME INPUT_DIR OUPUT_DIR
 !
-!     make xsmooth_sem
 !
-! Usage:
-!   mpirun -np nprocs ./xsmooth_sem sigma_h sigma_v kernel_file_name scratch_file_dir output_dir
-!   e.g.
-!   mpirun -np 8 ./xsmooth_sem 100 20 alpha_kernel DATABASES_MPI/ OUTPUT_SUM/
+! COMMAND LINE ARGUMENTS
+!   SIGMA_H                - horizontal smoothing radius
+!   SIGMA_V                - vertical smoothing radius
+!   KERNEL_NAME            - kernel name, e.g. alpha_kernel
+!   INPUT_DIR              - directory from which kernels are read
+!   OUTPUT_DIR             - directory to which smoothed kernels are written
 !
-! where:
-!   sigma_h                - gaussian width for horizontal smoothing
-!   sigma_v                - gaussian width for vertical smoothing
-!   kernel_file_name       - takes file with this kernel name,
-!                                      e.g. "alpha_kernel"
-!   scratch_file_dir       - directory containing kernel files,
-!                                      e.g. proc***_alpha_kernel.bin
-!   output_dir             - directory for outputting files,
-!                                      e.g. proc***_alpha_kernel_smooth.bin
-! outputs:
-!    puts the resulting, smoothed kernel files into the output_dir directory,
-!    with a file ending "proc***_kernel_smooth.bin"
+! DESCRIPTION
+!   Smooths kernels by convolution with a Gaussian. Writes the resulting
+!   smoothed kernels to OUTPUT_DIR.
+!
+!   Files written to OUTPUT_DIR have the suffix 'smooth' appended,
+!   e.g. proc***alpha_kernel.bin becomes proc***alpha_kernel_smooth.bin
+!
+!   This program's primary use case is to smooth kernels. It can be used though on
+!   any scalar field of dimension (NGLLX,NGLLY,NGLLZ,NSPEC).
+!
+!   This is a parrallel program -- it must be invoked with mpirun or other
+!   appropriate utility.  Operations are performed in embarassingly-parallel
+!   fashion.
+
 
 program smooth_sem
 
-! this is the embarassingly-parallel program that smooths any specfem function (primarily the kernels)
-! that has the dimension of (NGLLX,NGLLY,NGLLZ,NSPEC)
-!
-! NOTE:  smoothing can be different in vertical & horizontal directions; mesh is in Cartesian geometry.
-!              algorithm uses vertical as Z, horizontal as X/Y direction
-
-  use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,NGLLSQUARE, &
+  use postprocess_par,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,NGLLSQUARE, &
     MAX_STRING_LEN,IIN,IOUT, &
-    GAUSSALPHA,GAUSSBETA,PI,TWO_PI
+    GAUSSALPHA,GAUSSBETA,PI,TWO_PI, &
+    MAX_KERNEL_NAMES
 
   use specfem_par
   use specfem_par_elastic,only: ELASTIC_SIMULATION,ispec_is_elastic,rho_vp,rho_vs,min_resolved_period
@@ -83,9 +81,14 @@ program smooth_sem
   integer :: node_list(MAX_NODE_LIST)
 
   character(len=MAX_STRING_LEN) :: arg(5)
-  character(len=MAX_STRING_LEN) :: filename, indir, outdir
+  character(len=MAX_STRING_LEN) :: kernel_name, input_dir, output_dir
   character(len=MAX_STRING_LEN) :: prname_lp
   character(len=MAX_STRING_LEN*2) :: local_data_file
+
+
+  character(len=MAX_STRING_LEN) :: kernel_names(MAX_KERNEL_NAMES)
+  character(len=MAX_STRING_LEN) :: kernel_names_comma_delimited
+  integer :: nker
 
   ! smoothing parameters
   character(len=MAX_STRING_LEN*2) :: ks_file
@@ -110,46 +113,48 @@ program smooth_sem
   real(kind=CUSTOM_REAL) :: y_min_glob,y_max_glob
   real(kind=CUSTOM_REAL) :: z_min_glob,z_max_glob
 
-  ! initialize the MPI communicator and start the NPROCTOT MPI processes
+  logical :: BROADCAST_AFTER_READ
+
   call init_mpi()
   call world_size(sizeprocs)
   call world_rank(myrank)
 
-  if (myrank == 0) print*,"smooth_sem:"
+  if (myrank == 0) print*,"Running SMOOTH_SEM"
   call synchronize_all()
 
-  ! reads arguments
+  ! parse command line arguments
   do i = 1, 5
     call get_command_argument(i,arg(i))
     if (i <= 5 .and. trim(arg(i)) == '') then
       if (myrank == 0) then
-        print *, 'Usage: '
-        print *, '        xsmooth_data sigma_h sigma_v kernel_file_name input_dir/ output_dir/'
-        print *
-        print *, 'with '
-        print *, ' sigma_h                - gaussian width for horizontal smoothing'
-        print *, ' sigma_v                - gaussian width for vertical smoothing'
-        print *
-        print *, ' possible kernel_file_names are: '
-        print *, '   alpha_kernel, beta_kernel, .., rho_vp, rho_vs, kappastore, mustore, etc.'
-        print *
-        print *, '   that are stored in the local directory as real(kind=CUSTOM_REAL) filename(NGLLX,NGLLY,NGLLZ,NSPEC_AB)  '
-        print *, '   in filename.bin'
-        print *
-        print *, ' files have been collected in input_dir/, smooth output mesh file goes to output_dir/ '
-        print *
+        print *, 'USAGE:  mpirun -np NPROC bin/xsmooth_sem SIGMA_H SIGMA_V KERNEL_NAME INPUT_DIR OUPUT_DIR'
       endif
       call synchronize_all()
-      stop ' Reenter command line options'
+      stop ' Please check command line arguments'
     endif
   enddo
 
-  ! gets arguments
   read(arg(1),*) sigma_h
   read(arg(2),*) sigma_v
-  filename = arg(3)
-  indir= arg(4)
-  outdir = arg(5)
+  kernel_names_comma_delimited = arg(3)
+  input_dir= arg(4)
+  output_dir = arg(5)
+
+  ! parse kernel names
+  call parse_kernel_names(kernel_names_comma_delimited,kernel_names,nker)
+  if ((myrank == 0) .and. (nker > 1)) then
+      if (myrank == 0) print *
+      if (myrank == 0) print *, 'Multiple kernel names supplied'
+      if (myrank == 0) print *
+      if (myrank == 0) print *, 'The machinery for reading multiple names from the command line'
+      if (myrank == 0) print *, 'is in place, but the smoothing routines themselves have not yet been'
+      if (myrank == 0) print *, 'modified to work on multiple arrays.'
+      if (myrank == 0) print *
+      if (myrank == 0) print *, 'Smoothing only first name in list: ', kernel_names(1)
+      if (myrank == 0) print *
+  endif
+  call synchronize_all()
+  kernel_name = trim(kernel_names(1))
 
   ! initializes lengths
   sigma_h2 = 2.0 * sigma_h ** 2  ! factor two for gaussian distribution with standard variance sigma
@@ -175,20 +180,18 @@ program smooth_sem
 
   ! user output
   if (myrank == 0) then
-    print*,"defaults:"
+    print*,"command line arguments:"
     print*,"  smoothing sigma_h , sigma_v                : ",sigma_h,sigma_v
     ! scalelength: approximately S ~ sigma * sqrt(8.0) for a gaussian smoothing
     print*,"  smoothing scalelengths horizontal, vertical: ",sigma_h*sqrt(8.0),sigma_v*sqrt(8.0)
-    print*,"  input dir : ",trim(indir)
-    print*,"  output dir: ",trim(outdir)
+    print*,"  input dir : ",trim(input_dir)
+    print*,"  output dir: ",trim(output_dir)
     print*
   endif
 
   ! reads the parameter file
-  call read_parameter_file()
-
-  ! reads ADIOS flags
-  call read_adios_parameters()
+  BROADCAST_AFTER_READ = .true.
+  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
 
   if (ADIOS_ENABLED) stop 'Flag ADIOS_ENABLED not supported yet for smoothing, please rerun program...'
 
@@ -472,8 +475,8 @@ program smooth_sem
     deallocate(ibool)
 
     ! data file
-    write(prname,'(a,i6.6,a)') trim(indir)//'proc',iproc,'_'
-    local_data_file = trim(prname) // trim(filename) // '.bin'
+    write(prname,'(a,i6.6,a)') trim(input_dir)//'proc',iproc,'_'
+    local_data_file = trim(prname) // trim(kernel_name) // '.bin'
 
     open(unit = IIN,file = trim(local_data_file),status='old',action='read',form ='unformatted',iostat=ier)
     if (ier /= 0) then
@@ -577,7 +580,7 @@ program smooth_sem
 
   ! file output
   ! smoothed kernel file name
-  write(ks_file,'(a,i6.6,a)') trim(outdir)//'/proc',myrank,'_'//trim(filename)//'_smooth.bin'
+  write(ks_file,'(a,i6.6,a)') trim(output_dir)//'/proc',myrank,'_'//trim(kernel_name)//'_smooth.bin'
 
   open(IOUT,file=trim(ks_file),status='unknown',form='unformatted',iostat=ier)
   if (ier /= 0) stop 'Error opening smoothed kernel file'
@@ -670,4 +673,5 @@ end program smooth_sem
   dist_h = sqrt( (x0-x1)*(x0-x1) + (y0-y1)*(y0-y1) )
 
   end subroutine get_distance_vec
+
 

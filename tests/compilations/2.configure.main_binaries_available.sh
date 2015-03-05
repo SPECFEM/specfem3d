@@ -34,7 +34,7 @@ do
   #make -j 4 $var >> $testdir/results.log 2>&1
 
   # check
-  if [ ! -e bin/$var ]; then 
+  if [ ! -e bin/$var ]; then
     echo "compilation of $var failed, please check..." >> $testdir/results.log
     exit 1
   else

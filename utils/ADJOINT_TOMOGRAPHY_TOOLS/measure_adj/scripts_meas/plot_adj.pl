@@ -41,7 +41,7 @@ print MATLAB "amps=[];phs=[];dlnAs=[];dts=[];gcarcs=[];azs=[];stats=[];\n";
 print MATLAB "stats=char('first line');\n";
 
 for($i=0;$i< @mtm_adj_files;$i++){
-  ($filebase) = split("mtm",`basename $mtm_adj_files[$i]`); chop($filebase); 
+  ($filebase) = split("mtm",`basename $mtm_adj_files[$i]`); chop($filebase);
   $filebase2 = $filebase; $filebase = "$filebase.01";
   ($inputdir) = split(" ",`dirname $mtm_adj_files[$i]`);
   `sac2ascii.pl $inputdir/$filebase.mtm.obs.sac $inputdir/$filebase.mtm.syn.sac $inputdir/$filebase.mtm.recon_syn.sac $inputdir/$filebase.?tp.obs.sac $inputdir/$filebase.?tp.syn.sac $inputdir/$filebase.?tp.recon_syn.sac`;

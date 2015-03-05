@@ -807,9 +807,9 @@
             write(IMAIN,*) 'Source time function is a Heaviside, convolve later'
             write(IMAIN,*)
           endif
-          write(IMAIN,*) '  half duration: ',hdur(isource),' seconds'
+          write(IMAIN,*) '  half duration: ', hdur(isource),' seconds'
 
-          if (COUPLE_WITH_EXTERNAL_CODE) then
+          if (COUPLE_WITH_EXTERNAL_CODE) then !! To verify for NOBU version
             write(IMAIN,*)
             write(IMAIN,*) 'Coupling with an external code activated, thus not including any internal source'
             write(IMAIN,*)
@@ -949,7 +949,7 @@
     call flush_IMAIN()
 
     ! output source information to a file so that we can load it and write to SU headers later
-    open(unit=IOUT_SU,file=trim(OUTPUT_FILES_PATH)//'/output_list_sources.txt',status='unknown')
+    open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/output_list_sources.txt',status='unknown')
     do isource=1,NSOURCES
       write(IOUT_SU,*) x_found_source(isource),y_found_source(isource),z_found_source(isource)
     enddo

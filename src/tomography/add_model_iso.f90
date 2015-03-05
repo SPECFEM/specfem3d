@@ -117,7 +117,7 @@ program add_model
 
   ! calculates gradient
   ! steepest descent method
-  call get_gradient_steepest_iso()
+  call get_sd_direction_iso()
 
   ! computes new model values for alpha, beta and rho
   ! and stores new model files
@@ -209,16 +209,16 @@ subroutine initialize()
 
   implicit none
 
+  logical :: BROADCAST_AFTER_READ
+
   ! initialize the MPI communicator and start the NPROCTOT MPI processes
   call init_mpi()
   call world_size(sizeprocs)
   call world_rank(myrank)
 
   ! reads the parameter file
-  call read_parameter_file()
-
-  ! reads ADIOS flags
-  call read_adios_parameters()
+  BROADCAST_AFTER_READ = .true.
+  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
 
   if (ADIOS_ENABLED) stop 'Flag ADIOS_ENABLED not supported yet for xadd_model, please rerun program...'
 

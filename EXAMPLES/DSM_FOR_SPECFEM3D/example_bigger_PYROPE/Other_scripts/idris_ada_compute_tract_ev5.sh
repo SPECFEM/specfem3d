@@ -85,9 +85,9 @@
 # @ class = archive
 # @ queue
 
-# loading setup fonctions 
+# loading setup fonctions
 
-# loading setup fonctions 
+# loading setup fonctions
 SHELL_DSM=/smphome/rech/ubv/rubv002/progs/shells_specfem3D_hybrid
 
 declare -i NPROC NPROC_MINUS_ONE
@@ -98,13 +98,13 @@ NPROC=12
 # MPI COMMAND
 MPIRUN=poe
 
-# ENTER OPTION FOR MPIRUN 
+# ENTER OPTION FOR MPIRUN
 OPTION=
 
 # do not change
 NPROC_MINUS_ONE="$NPROC-1"
 
-# log file for output 
+# log file for output
 flog_file=$(pwd)/log.benchmark
 
 BIN_DSM=/smphome/rech/ubv/rubv002/progs/DSM_FOR_SPECFEM3D/bin/
@@ -118,14 +118,14 @@ export MP_DEBUG_TIMEOUT_SECONDS=84000
 
 
 
-case ${LOADL_STEP_NAME} in 
+case ${LOADL_STEP_NAME} in
 
   #============ Step 1 commands ============
   #======= Sequential preprocessing ========
   sequential_setup )
     set -x
     cd $TMPDIR
-    printenv | sort 
+    printenv | sort
     # on recupere les datas
     cp ${LOADL_STEP_INITDIR}/input.data.tar.bz2 .
     tar -jxvf input.data.tar.bz2
@@ -241,14 +241,14 @@ case ${LOADL_STEP_NAME} in
 
 
     move_output_wihtout_change
-    
+
     # on ecrit les resumtats
     mfput XMIN.tar.bz2 EV5/.
-    
+
     mfput XMAX.tar.bz2 EV5/.
-    
+
     mfput YMIN.tar.bz2 EV5/.
-      
+
     mfput YMAX.tar.bz2 EV5/.
 
     mfput ZMIN.tar.bz2 EV5/.

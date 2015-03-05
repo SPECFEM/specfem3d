@@ -161,7 +161,7 @@ for ($j = 0; $j < $ncomp; $j++) {
 
 # write plotting scripts
 $hwid = $wid/2;
-$dx0 = $wid;                      
+$dx0 = $wid;
 $dy0 = $dx0*($zran/$xran);
 $J = "-JX${dx0}i/${dy0}i";
 
@@ -186,14 +186,14 @@ $nplots = $numf*$ncomp;
 
 # loop over two selected components
 for ($j = 0; $j < $ncomp; $j++) {
-   
+
   $comp = $clabs[$comps[$j]-1];
   print "\n component to plot is $comp ($comps[$j]) \n";
-  
+
   if($j==0){$locate = $origin}
   if($j==1){$locate = $shift2}
   if($j==2){$locate = $shift2}
- 
+
   # color bar
   $BscaleS1 = sprintf("-B%2.2e:\" s\@-$comp\@- ( x, z, t )  ( 10\@+-%2.2i\@+  m )\": -E10p",$bs[$j]/2,$pwr[$j]);
 
@@ -210,7 +210,7 @@ for ($i = 0; $i < $numf; $i++) {
 
    $iplot = $j*$numf + ($i+1);
    print CSH "echo plot $iplot out of $nplots \n";
-    
+
    $Bfull = "-B50/50:\"t = $time s\"::.\"  \":";
    $B = $Bfull.$Bopts[15];
    if ($j == 0) {$B = $Bfull.$Bopts[1]}
@@ -244,9 +244,9 @@ for ($i = 0; $i < $numf; $i++) {
    print CSH "awk '{print \$1/1000,\$2/1000}' $recfile |psxy -N $J $R -K -O $orient -V $rec >> $psfile\n";
    #print CSH "awk '\$1 == \"R\" {print \$2/1000,\$3/1000}' $dir/sr.txt |psxy -N $J $R -K -O $orient -V $rec >> $psfile\n";
    #print CSH "awk '\$1 == \"S\" {print \$2/1000,\$3/1000}' $dir/sr.txt |psxy -N $J $R -K -O $orient -V $src >> $psfile\n";
-   
+
    # plot title
-   $xtx = $xmin+0.5*($xmax-$xmin); $ztx = $zmin+1.15*($zmax-$zmin); 
+   $xtx = $xmin+0.5*($xmax-$xmin); $ztx = $zmin+1.15*($zmax-$zmin);
    #if ($i == $numf-1) {print CSH "pstext -N $J $R -K -O $orient -V >>$psfile<<EOF\n $xtx $ztx $fsize1 0 $fontno CM $titles[0]\nEOF\n";}
 
 # plot title and GMT header

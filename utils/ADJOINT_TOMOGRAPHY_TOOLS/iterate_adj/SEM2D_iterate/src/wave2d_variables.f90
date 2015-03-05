@@ -90,14 +90,14 @@ module wave2d_variables
 ! displacement, velocity and acceleration
   double precision, dimension(NCOMP,NGLOB) :: displ,veloc,accel
   double precision, dimension(NCOMP,NGLOB) :: b_displ,b_veloc,b_accel
-  
+
 ! plotting
 !  double precision, dimension(NGLOB) :: norm
 
 ! space derivatives
   double precision tempx1l,tempx2l,tempy1l,tempy2l,tempz1l,tempz2l
   double precision fac1,fac2,hp1,hp2
-  double precision dsxdxl,dszdxl,dsydxl,dsydzl,dsxdzl,dszdzl 
+  double precision dsxdxl,dszdxl,dsydxl,dsydzl,dsxdzl,dszdzl
   double precision sigma_xx,sigma_xy,sigma_xz,sigma_zx,sigma_zy,sigma_zz
   double precision, dimension(NGLLX,NGLLZ) :: tempx1,tempx2,tempy1,tempy2,tempz1,tempz2
   double precision, dimension(3,3) :: ds
@@ -152,7 +152,7 @@ module wave2d_variables
   integer ios
 
 ! number of time steps to store wavefield
-  integer NINT 
+  integer NINT
 
 ! input/output directory
   character(len=100) :: in_dir,out_dir

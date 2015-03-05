@@ -1,7 +1,7 @@
 program wave2d
 
   use wave2d_variables  ! global variables
-  use wave2d_solver     ! 
+  use wave2d_solver     !
   use wave2d_sub        ! source time function, write seismograms, etc
   use wave2d_sub2       ! UTM conversion
   use wave2d_sub3       ! measurements, including multitaper
@@ -176,7 +176,7 @@ program wave2d
   !double precision :: meas_pert, rand1,  meas, ppert
 
   !********* PROGRAM STARTS HERE *********************
- 
+
   call random_seed()        ! random number generator
 
   out_dir3   = "OUTPUT/"
@@ -298,7 +298,7 @@ program wave2d
   valence(:) = 0
   do ispec = 1,NSPEC
     do j = 1,NGLLZ
-      do i = 1,NGLLX 
+      do i = 1,NGLLX
         iglob     = ibool(i,j,ispec)
         !da_local(iglob) = wxgll(i)*wzgll(j)*jacobian(i,j,ispec)
 
@@ -387,7 +387,7 @@ program wave2d
 
   ! convert global gridpoint mesh coordinates to lat-lon
   x_lon(:) = 0.
-  z_lat(:) = 0. 
+  z_lat(:) = 0.
   call mesh_geo(NGLOB,x_lon,z_lat,x,z,UTM_PROJECTION_ZONE,IMESH2LONLAT)
   !write(*,'(2f16.6)') (x_lon(iglob), z_lat(iglob), iglob=1,NGLOB)
 
@@ -448,14 +448,14 @@ program wave2d
      open(unit=17,file=filename,status='unknown')
      read(17,*) c0
      close(17)
-     
+
      ! convert km/s --> m/s
      c_glob(:) = 1000.*c_glob(:)
      c0 = c0*1000.
 
      c_glob_syn(:) = c0       ! c-maps for synthetics
 
-  elseif(IMODEL==2) then   ! checkerboard
+  else if(IMODEL==2) then   ! checkerboard
 
      c0 = 3500.    ! reference phase velocity (m/s) (should be obtained based on hdur)
      !Nfac = 3      ! scalelength of map = N * (wavelength of surface waves for hdur)
@@ -472,7 +472,7 @@ program wave2d
 
      c_glob_syn(:) = c0       ! c-maps for synthetics
 
-  elseif(IMODEL==3) then   ! read c-map for synthetics and data for a 'middle' iteration
+  else if(IMODEL==3) then   ! read c-map for synthetics and data for a 'middle' iteration
 
      ! read in phase velocity map for data
      open(unit=16,file=trim(model_dir)//'socal_vel_dat.dat', status='unknown')
@@ -490,14 +490,14 @@ program wave2d
 !!$     close(16)
 
      ! compute c0 by finding the average of the phase velocity map
-     c0 = 0.     
+     c0 = 0.
      do iglob = 1,NGLOB
         c0 = c0 + c_glob(iglob) * da(iglob)
      enddo
      c0 = c0 / (LENGTH * HEIGHT)
 
      c_glob_syn(:) = c0
-    
+
   else
      stop 'IMODEL must be 0,1,2,3'
   endif
@@ -685,7 +685,7 @@ program wave2d
   !do ievent=1,nevent
   !   print *, x_eve_lon_dat(ievent),z_eve_lat_dat(ievent)
   !enddo
-  
+
 !stop 'testing'
 
 !--------------------------------------
@@ -699,9 +699,9 @@ program wave2d
 
   if(PERT_SOURCE == 1) then  ! source perturbations
 
-    if(1==1) then   ! read in perturbed events from another file 
+    if(1==1) then   ! read in perturbed events from another file
 
-      open(19,file='/home/store2/carltape/'//trim(out_dir3)//'run_2550/events_xy.dat',status='unknown') 
+      open(19,file='/home/store2/carltape/'//trim(out_dir3)//'run_2550/events_xy.dat',status='unknown')
       do ievent = 1,25
          read(19,'(3f20.10,1i12)') x_eve(ievent), z_eve(ievent), otime(ievent), itemp1
       enddo
@@ -723,7 +723,7 @@ program wave2d
           ! origin time perturbation
           call random_number(rand1)
           ptime = (ptmax - ptmin)*rand1 + ptmin
-          !ptime = src_pert_time   
+          !ptime = src_pert_time
 
           ! azimuthal perturbation (in radians)
           call random_number(rand1)
@@ -733,7 +733,7 @@ program wave2d
           ! radial perturbation (in meters)
           call random_number(rand1)
           prad = (rmax - rmin)*rand1 + rmin
-          !prad = rmax    
+          !prad = rmax
 
           ! fill vectors
           otime(ievent) = otime_dat(ievent) - ptime                ! NOTE THE SIGN
@@ -778,11 +778,11 @@ program wave2d
      eglob(:) = eglob_dat(:)
      x_eve(:) = x_eve_dat(:)
      z_eve(:) = z_eve_dat(:)
-     x_eve_lon(:) = x_eve_lon_dat(:) 
+     x_eve_lon(:) = x_eve_lon_dat(:)
      z_eve_lat(:) = z_eve_lat_dat(:)
      ispec_eve(:) = ispec_eve_dat(:)
      xi_eve(:) = xi_eve_dat(:)
-     gamma_eve(:) = gamma_eve_dat(:) 
+     gamma_eve(:) = gamma_eve_dat(:)
 
      otime(:) = otime_dat(:)   ! origin time
 
@@ -833,7 +833,7 @@ if(IREC_SPACE==1) then  ! individual receivers
 
   nrec = 3
 
-elseif(IREC_SPACE==2) then  ! actual station locations
+else if(IREC_SPACE==2) then  ! actual station locations
 
   ! read in (target) receivers
   recfile = trim(in_dir)//'STATION_149_full'
@@ -845,7 +845,7 @@ elseif(IREC_SPACE==2) then  ! actual station locations
   read(88,*) (x_rec_lon0(i),z_rec_lat0(i),i=1,nrec)
   close(88)
 
-elseif(IREC_SPACE==4) then ! 'regular' mesh of receivers
+else if(IREC_SPACE==4) then ! 'regular' mesh of receivers
 
    ! calculate mesh spacing
    dx = LENGTH/NMESH_REC
@@ -1195,7 +1195,7 @@ itest = 0
   if(INV_SOURCE==1) print *, '  inverting for source parameters'
   print *,'=============================================================='
 
-!enddo 
+!enddo
 !stop 'itesting'
 !do istep = 0,2*NITERATION
 
@@ -1217,7 +1217,7 @@ itest = 0
      !m_vel(:) = m0_vel(:)
      !m_src(:) = m0_src(:)
 
-  elseif(itest==1) then
+  else if(itest==1) then
      c_glob_syn(:) = mt_vec(1:nmod_str)
      m_src(:)      = mt_vec(nmod_str+1:nmod)
 
@@ -1247,7 +1247,7 @@ itest = 0
 !  do ievent = ievent_min, ievent_max
   do ievent = 5,5    ! 1,5
 !============================================
-  
+
   print *,'------------------------------------'
   print *,'  EVENT NUMBER ',ievent
   print *,'------------------------------------'
@@ -1288,7 +1288,7 @@ itest = 0
         z_src_lat0(1) = z_eve_lat(ievent)
         nsrc = 1
 
-     elseif (ISRC_SPACE==2) then  ! finite source segment
+     else if (ISRC_SPACE==2) then  ! finite source segment
 
         ! specify the target starting point of the fault, the azimuth, and the length
         x_src_lon_i = -119.    ;  z_src_lat_i = 33.   ;   flen   = 100.0d+03  ! short fault
@@ -1316,19 +1316,19 @@ itest = 0
         ! get target fault points in lat-lon
         call mesh_geo(MAX_SR,x_src_lon0,z_src_lat0,x_src0,z_src0,UTM_PROJECTION_ZONE,IUTM2LONGLAT)
 
-     elseif (ISRC_SPACE==3) then  ! California continental shelf (OMS)
+     else if (ISRC_SPACE==3) then  ! California continental shelf (OMS)
 
         x_src_lon0(1:nshelf) = shelf_lon(1:nshelf)
         z_src_lat0(1:nshelf) = shelf_lat(1:nshelf)
-        nsrc = nshelf      
+        nsrc = nshelf
 
-     elseif (ISRC_SPACE==4) then  ! California coastline (OMS)
+     else if (ISRC_SPACE==4) then  ! California coastline (OMS)
 
         x_src_lon0(1:ncoast) = coast_lon(1:ncoast)
         z_src_lat0(1:ncoast) = coast_lat(1:ncoast)
         nsrc = ncoast
 
-     elseif (ISRC_SPACE==5) then  ! finite circular region
+     else if (ISRC_SPACE==5) then  ! finite circular region
 
         ! lat-lon of the center point
         xcen_lon = -119.0
@@ -1492,7 +1492,7 @@ itest = 0
 !!$           !origin_time = origin_time_dat     ! testing
 !!$
 !!$        endif
- 
+
 !!$     ! write model vector to file
 !!$     open(unit=19,file=trim(out_dir1)//'test.dat',status='unknown')
 !!$     do i = 1,nmod
@@ -1574,7 +1574,7 @@ itest = 0
   ! source magnitude (same for data and synthetics)
   if(NCOMP==3) then
      f0(1) = 0.0    ;  f0(2) = FNORM    ; f0(3) = 0.0
-  elseif(NCOMP==1) then
+  else if(NCOMP==1) then
      f0(1) = FNORM
   else
      stop 'NCOMP must be 1 or 3'
@@ -1582,12 +1582,12 @@ itest = 0
 
   ! source time function for DATA
   stf_dat(:) = 0.
-  call get_source_time_function(origin_time_dat,stf_dat,ti) 
+  call get_source_time_function(origin_time_dat,stf_dat,ti)
   !call get_source_time_function(nsrc,origin_time_dat,f0,samp_dat,ti)
 
   ! source function for data
   allocate(samp_dat(NSTEP,NCOMP,nsrc))
-  samp_dat(:,:,:) = 0.0 
+  samp_dat(:,:,:) = 0.0
   do i = 1,nsrc
     do icomp = 1,NCOMP
        samp_dat(:, icomp, i) = stf_dat(:) * f0(icomp)
@@ -1596,12 +1596,12 @@ itest = 0
 
   ! source time function for SYNTHETICS (allows for origin time perturbation)
   stf(:) = 0.
-  call get_source_time_function(origin_time,stf,ti) 
+  call get_source_time_function(origin_time,stf,ti)
   !call get_source_time_function(nsrc,origin_time,f0,samp,ti)
 
   ! source function for synthetics
   allocate(samp(NSTEP,NCOMP,nsrc))
-  samp(:,:,:) = 0.0 
+  samp(:,:,:) = 0.0
   do i = 1,nsrc
     do icomp = 1,NCOMP
        samp(:, icomp, i) = stf(:) * f0(icomp)
@@ -1640,9 +1640,9 @@ itest = 0
 !!$    ti(itime) = dble(itime-1)*DT
 !!$    stf = source_time_function(ti(itime)-tshift, hdur, istf)  ! note time shift (constants)
 !!$    do i = 1, nsrc
-!!$      samp(itime, :, i) = stf * f0(:)  
+!!$      samp(itime, :, i) = stf * f0(:)
 !!$    enddo
-!!$  enddo  
+!!$  enddo
 
 !--------------------------------------
 ! testing filter routines
@@ -1659,7 +1659,7 @@ itest = 0
 !!$stop
 
 !--------------------------------------
-  
+
   ! write source and receivers to file
   ! NOTE THAT THE RECEIVER LABELING IS SIMPLY NUMERICAL ORDER (FOR NOW)
   !write(filename,'(a,i3.3,a)') trim(out_dir)//'sr_e',ievent,'.txt'
@@ -1718,7 +1718,7 @@ itest = 0
      enddo
      close(18)
 
-     ! write source vectors to file (data is always the same) 
+     ! write source vectors to file (data is always the same)
      open(unit=19,file=trim(out_dir1)//'socal_src_dat.dat',status='unknown')
      do i = 1,nevent
         write(19,'(i8,3f20.12)') i, m_src_dat((i-1)*3 + 1)/1000., &
@@ -1775,7 +1775,7 @@ itest = 0
 
 !=========================
 ! SYNTHETICS (forward wavefield)
-  
+
   if(WRITE_STF_F) call write_seismogram(samp, nsrc, trim(out_dir)//'stffor_syn')
 
   !stop 'testing'
@@ -1852,7 +1852,7 @@ itest = 0
 !!$     open(19,file=filename1,status='unknown')
 !!$         if(IKER <= 4) write(19,'(7a,f12.6)') trim(script_dir)//trim(filename2),' ', &
 !!$             trim(out_dir),' ', trim(data_tag)  ,' ','1', tshift
-!!$                       write(19,'(7a,f12.6)') trim(script_dir)//trim(filename2),' ', & 
+!!$                       write(19,'(7a,f12.6)') trim(script_dir)//trim(filename2),' ', &
 !!$             trim(out_dir),' ', trim(syn_tag)   ,' ','1', tshift
 !!$     if(WRITE_STF_A)   write(19,'(7a,f12.6)') trim(script_dir)//trim(filename2),' ', &
 !!$             trim(out_dir),' ', trim(stfadj_tag),' ','1', tshift
@@ -1922,7 +1922,7 @@ itest = 0
                          nrec, rglob, ispec_rec, hxir_store, hgammar_store, adj_syn, &
                  trim(last_frame_name), absorb_field, &
                  rho_kernel, mu_kernel, kappa_kernel, three_source_model, stf, f0)
-    
+
       !call write_seismogram(three_source_model(:,:,:,1), nsrc, trim(out_dir)//'pert_src_m01')
       !call write_seismogram(three_source_model(:,:,:,2), nsrc, trim(out_dir)//'pert_src_m02')
       !call write_seismogram(three_source_model(:,:,:,3), nsrc, trim(out_dir)//'pert_src_m03')
@@ -1932,7 +1932,7 @@ itest = 0
       !call write_seismogram(three_source_model(:,:,:,6), nsrc, trim(out_dir)//'pert_src_m06')
       !call write_seismogram(three_source_model(:,:,:,7), nsrc, trim(out_dir)//'pert_src_m07')
       !call write_seismogram(three_source_model(:,:,:,8), nsrc, trim(out_dir)//'pert_src_m08')
-        
+
       print *
       print *, ' to make the gradient for the source (unscaled)'
       print *, DT*sum(three_source_model(:,1,1,1))
@@ -2050,7 +2050,7 @@ itest = 0
 
         ! Gaussian half-width controlling the smoothing (m)
         !dtrsh2 = (3.*sigma)**2  ! all points outside d^2 are set to zero
-        dtrsh2 = (9./8.)*gamma**2 
+        dtrsh2 = (9./8.)*gamma**2
 
         ! EXAMPLE gaussian smoothing function for one point
         ! find the closest gridpoint to the target point
@@ -2094,7 +2094,7 @@ itest = 0
 !!$     k_temp(:,:,:) = 0.
 !!$     do ispec = 1,NSPEC
 !!$       do j = 1,NGLLZ
-!!$         do i = 1,NGLLX 
+!!$         do i = 1,NGLLX
 !!$           itemp = ibool(i,j,ispec)
 !!$           k_temp(i,j,ispec) = k_rough_global(itemp) * k_gaus_global(itemp) * wxgll(i)*wzgll(j)*jacobian(i,j,ispec)
 !!$         enddo
@@ -2107,7 +2107,7 @@ itest = 0
            k_temp(:,:,:) = 0.
            do ispec = 1,NSPEC
               do j = 1,NGLLZ
-                 do i = 1,NGLLX 
+                 do i = 1,NGLLX
                     itemp = ibool(i,j,ispec)
                     k_temp(i,j,ispec) = k_gaus_global(itemp) * wxgll(i)*wzgll(j)*jacobian(i,j,ispec)
                  enddo
@@ -2120,7 +2120,7 @@ itest = 0
            k_temp(:,:,:) = 0.
            do ispec = 1,NSPEC
               do j = 1,NGLLZ
-                 do i = 1,NGLLX 
+                 do i = 1,NGLLX
                     itemp = ibool(i,j,ispec)
                     k_temp(i,j,ispec) = k_rough_global(itemp) * k_gaus_global(itemp) * wxgll(i)*wzgll(j)*jacobian(i,j,ispec)
                  enddo
@@ -2196,7 +2196,7 @@ itest = 0
      endif
 
   endif  ! itest==0 .or. POLY_ORDER==3
-  
+
   !====================
   ! update search direction and model
 
@@ -2242,7 +2242,7 @@ itest = 0
      !istep_switch = 6
      !if(istep < istep_switch)  lam_t_val = -2.*chi_k_val / dot_product(gk, pk)    ! quadratic extrapolation
      !if(istep >= istep_switch) lam_t_val =    -chi_k_val / dot_product(gk, pk)    ! linear extrapolation
-     lam_t_val = -2.*chi_k_val / dot_product(gk, pk) 
+     lam_t_val = -2.*chi_k_val / dot_product(gk, pk)
      mt(:)     = m0(:) + lam_t_val * pk(:)
      !mt(:)     = m0(:) + lam_t_val * pk(:) / da(:)    ! structure only (g = K da)
      itest     = 1
@@ -2253,13 +2253,13 @@ itest = 0
           ! get the new (test) structure model in terms of fractional perturbation
           if(INV_STRUCT == 0) then
              mt_vec(i) = c_glob_syn(i)  ! use same structure always
- 
+
           else
              !mt_vec(i) = c0 * (1. + mt(i))
              !mt_vec(i) = c0 * (1. + mt(i)/ da(i) )
              mt_vec(i) = c0 * (1. + mt(i)/sqrt(da(i))*m_scale_str )    ! old version
           endif
-         
+
        else                      ! source
           ! get the new source model in terms of (xs, zs, t0)
           if(INV_SOURCE == 0) then
@@ -2267,7 +2267,7 @@ itest = 0
              mt_vec(i) = m_src_syn(i - nmod_str)
 
           else
-             !mt_vec(i) = m0_vec(i) + mt(i)          
+             !mt_vec(i) = m0_vec(i) + mt(i)
              !mt_vec(i) = m0_vec(i) + mt(i)*m_scale_src(i - nmod_str)
              !mt_vec(i) = m_src_syn(i - nmod_str) * (1. + mt(i))
 
@@ -2284,7 +2284,7 @@ itest = 0
      g0(:) = gk(:)
      p0(:) = pk(:)
 
-  elseif(itest==1) then  ! if present kernel is for a test model
+  else if(itest==1) then  ! if present kernel is for a test model
 
      chi_t_val = chi_val
 
@@ -2317,7 +2317,7 @@ itest = 0
         qfac = Pb**2 - 3.*Pa*Pc;
         if(Pa /= 0 .and. qfac >= 0) then
            xmin = (-Pb + sqrt(qfac)) / (3.*Pa)
-        elseif(Pa == 0 .and. Pb /= 0) then
+        else if(Pa == 0 .and. Pb /= 0) then
            xmin = -Pc/(2.*Pb)
         else
            stop 'check the input polynomial'
@@ -2363,13 +2363,13 @@ itest = 0
           ! get the new structure model in terms of fractional perturbation
           if(INV_STRUCT == 0) then
              m0_vec(i) = c_glob_syn(i)  ! use same structure always
-          
+
           else
              !m0_vec(i) = c0 * (1. + m0(i))
              !m0_vec(i) = c0 * (1. + m0(i)/ da(i) )
              m0_vec(i) = c0 * (1. + m0(i)/sqrt(da(i))*m_scale_str )    ! old version
           endif
-         
+
        else                      ! source
           ! get the new source model in terms of (xs, zs, t0)
           if(INV_SOURCE == 0) then
@@ -2387,7 +2387,7 @@ itest = 0
 
        endif
      enddo
-     
+
      print *, 'lam_0_val = ', sngl(lam_0_val)
 
   endif
@@ -2523,4 +2523,4 @@ enddo  ! istep
   enddo  ! do iq
 
 end program wave2d
- 
+

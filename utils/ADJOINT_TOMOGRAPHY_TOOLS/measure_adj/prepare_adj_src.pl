@@ -1,4 +1,4 @@
-#!/usr/bin/perl 
+#!/usr/bin/perl
 #
 #--------------------------------------------------------------------
 # prepare_adj_src.pl
@@ -65,7 +65,7 @@ if (-f ${stafile_temp}) {system("rm -f ${stafile_temp}");}
 $nstation = 0;
 print "Copying station adjoint source files to $outdir ...\n";
 foreach $stanet (keys(%adj)) {
-  ($sta,$net) = split(/\./,$stanet); 
+  ($sta,$net) = split(/\./,$stanet);
 
   if (defined $adj{$stanet}{$cmpT} or defined $adj{$stanet}{$cmpR} or defined $adj{$stanet}{$cmpZ}) {
     if (defined $adj{$stanet}{$cmpT} ) {
@@ -110,7 +110,7 @@ foreach $stanet (keys(%adj)) {
       #print "***$tcomp***\nbin/rotate_adj_src $baz $zcomp $tcomp $rcomp $ecomp $ncomp\n\n";
       system("rotate_adj_src $baz $zcomp $tcomp $rcomp $ecomp $ncomp");
       if ($? != 0) {
-	die("Error: rotate_adj_src $baz $tcomp $rcomp $ecomp $ncomp\n");
+  die("Error: rotate_adj_src $baz $tcomp $rcomp $ecomp $ncomp\n");
       }
       system("cp -f $ecomp $ncomp $zcomp $outdir");
     }

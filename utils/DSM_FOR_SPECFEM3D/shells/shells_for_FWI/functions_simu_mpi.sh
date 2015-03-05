@@ -4,7 +4,7 @@ function forward_simu ()
 
 #
 # arguement $1 is name of output directory where the results are
-# saved 
+# saved
 #
 
 isrc=1
@@ -13,15 +13,15 @@ while [ "$isrc" -le "$nsrc" ]; do
   # forward simu for earthquake isrc
   cp ./DATA/Par_file_${isrc} ./DATA/Par_file
   cd bin
-  $MPIRUN $OPTION_MPI $HYBRID_BINNARY/xspecfem3D > tmp.out 
+  $MPIRUN $OPTION_MPI $HYBRID_BINNARY/xspecfem3D > tmp.out
   cd ..
 
-  # copy and save outputs 
+  # copy and save outputs
   mkdir -p in_out_files_${isrc}/OUTPUT_FILES/$1
-  mv  OUTPUT_FILES/* in_out_files_${isrc}/OUTPUT_FILES/$1/.  
+  mv  OUTPUT_FILES/* in_out_files_${isrc}/OUTPUT_FILES/$1/.
   cp in_out_files_${isrc}/OUTPUT_FILES/$1/*semd in_out_files_${isrc}/OUTPUT_FILES/.
 
-  # save direct field to prepare adjoint simu 
+  # save direct field to prepare adjoint simu
   mv OUTPUT_FILES/DATABASES_MPI/*save_forward_arrays.bin $TRACTION/$EARTHQUAKE${isrc}/.
   mv OUTPUT_FILES/DATABASES_MPI/*_absorb_field.bin $TRACTION/$EARTHQUAKE${isrc}/.
 
@@ -36,15 +36,15 @@ isrc=1
 while [ "$isrc" -le "$nsrc" ]; do
 
   # copy adjoint source
-  cp in_out_files_${isrc}/OUTPUT_FILES/WF/*.adj ./in_out_files/SEM/. 
+  cp in_out_files_${isrc}/OUTPUT_FILES/WF/*.adj ./in_out_files/SEM/.
 
   # forward simu for earthquake isrc
   cp ./DATA/Par_file_adj_${isrc} ./DATA/Par_file
   cd bin
   $MPIRUN $OPTION_MPI $SEM_BINNARY/xspecfem3D > tmp.out
   cd ..
-  
-  # save kernel 
+
+  # save kernel
   mv ./OUTPUT_FILES/DATABASES_MPI/*kernel.bin in_out_files_${isrc}/OUTPUT_FILES/WF/.
   mv ./OUTPUT_FILES/DATABASES_MPI/*vp.bin in_out_files_${isrc}/OUTPUT_FILES/WF/.
   mv ./OUTPUT_FILES/DATABASES_MPI/*vs.bin in_out_files_${isrc}/OUTPUT_FILES/WF/.
@@ -66,18 +66,18 @@ cd bin
 
 echo $nsrc > path_file_for_gradient_0_alpha.par
 while [ "$isrc" -le "$nsrc" ]; do
-  
+
   IN=../in_out_files_${isrc}/OUTPUT_FILES/WF/
   OUT=../in_out_files_${isrc}/OUTPUT_FILES/WF/
   echo $OUT >> path_file_for_gradient_0_alpha.par
 
   $MPIRUN $OPTION_MPI $HYBRID_BINNARY/xproject_tomo_grid 0 $SLICE $PREFIX0 $IN $OUT 0
 
-  mv data_tomo.bin $OUT/grad_alpha_$1.bin 
+  mv data_tomo.bin $OUT/grad_alpha_$1.bin
 
   isrc="$isrc+1"
 
-done 
+done
 
 
 echo $nsrc > path_file_for_gradient_0_beta.par

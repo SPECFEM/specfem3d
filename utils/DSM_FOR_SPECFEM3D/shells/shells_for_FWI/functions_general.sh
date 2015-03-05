@@ -39,7 +39,7 @@ done
 #============================================================================
 function copy_initial_database ()
 {
-cp $DATABASES_INIT_MODEL/* OUTPUT_FILES/DATABASES_MPI/. 
+cp $DATABASES_INIT_MODEL/* OUTPUT_FILES/DATABASES_MPI/.
 }
 #============================================================================
 function copy_current_database ()

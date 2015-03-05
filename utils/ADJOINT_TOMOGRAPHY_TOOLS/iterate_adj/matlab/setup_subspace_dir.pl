@@ -58,10 +58,10 @@ for ($h = $minm; $h <= $maxm; $h = $h+1) {
       print "$dir \n";
 
       if (-e $dir) {
-	#print "--> dir exists -- now deleting and remaking\n"; `rm -rf $dir`;
+  #print "--> dir exists -- now deleting and remaking\n"; `rm -rf $dir`;
         print "--> dir exists\n";
       } else {
-	print "--> dir does not exist -- now making\n";
+  print "--> dir does not exist -- now making\n";
       }
       `mkdir -p $dir`;
       `mkdir -p $dir/mu_all`;

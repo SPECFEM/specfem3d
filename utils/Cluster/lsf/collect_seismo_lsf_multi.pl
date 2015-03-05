@@ -14,7 +14,7 @@ close(FILE);
 (@junk2) = split(" ",$junk1);
 for($i=0;$i<@junk2/2;$i++) {
 $junk[$i] = $junk2[2*$i];}
-  
+
 
 for($i=0;$i<@junk;$i++) {
   ($node) = split(" ",$junk[$i]);
@@ -25,13 +25,13 @@ for($i=0;$i<@junk;$i++) {
 open(FILE3,"<$par_file") or die ("Fatal Error openning file $par_file\n");
 while (<FILE3>) {
    if ($_ =~ /^LOCAL_PATH/) {
-	chop;	
-	@vals = split("=", $_);
-	$mpidir = $vals[1];
-	$mpidir =~ s/^\s+//;
-	$mpidir =~ s/\s+$//;
-	close(FILE3);
-	last;
+  chop;
+  @vals = split("=", $_);
+  $mpidir = $vals[1];
+  $mpidir =~ s/^\s+//;
+  $mpidir =~ s/\s+$//;
+  close(FILE3);
+  last;
    }
 }
 

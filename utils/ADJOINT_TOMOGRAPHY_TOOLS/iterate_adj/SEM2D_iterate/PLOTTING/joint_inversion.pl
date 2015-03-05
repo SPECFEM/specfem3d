@@ -370,7 +370,7 @@ $Dscale = "-D$Dx/$Dy/$Dlen/0.10h";
 
 #===============================================
 print "\nWriting CSH file...\n";
-  
+
 open(CSH,">$cshfile");
 print CSH "gmtset BASEMAP_TYPE plain PAPER_MEDIA letter TICK_LENGTH $tick LABEL_FONT_SIZE $fsize2 ANOT_FONT_SIZE $fsize2 PLOT_DEGREE_FORMAT D HEADER_FONT $fontno ANOT_FONT $fontno LABEL_FONT $fontno HEADER_FONT_SIZE $fsize1 FRAME_PEN $fpen TICK_PEN $tpen\n";
 #===============================================
@@ -378,12 +378,12 @@ print CSH "gmtset BASEMAP_TYPE plain PAPER_MEDIA letter TICK_LENGTH $tick LABEL_
 # iteration index (subset of all possible)
 @kvec = (0,$qmax);
 $numk = @kvec;
-$niter_max = $kvec[$numk-1];	# max iteration is the last in the list
+$niter_max = $kvec[$numk-1];  # max iteration is the last in the list
 
 # load all possible files
 for ($k = 0; $k <= $niter_max; $k = $k+1) {
 
-  $irun = $irun0_cg + 2*$k;	# wave2d run number
+  $irun = $irun0_cg + 2*$k; # wave2d run number
   $strun = sprintf("%4.4i",$irun);
   $dir = "$odir$strun";
 
@@ -458,7 +458,7 @@ $B = "$B0".$Bopts[1];
 if($qmax > 1) { @kvec = (0,1,$qmax); $numk = @kvec; }
 
 for ($i = 0; $i < $numk; $i = $i+1) {
-    
+
   $t = $i;
   $k = $kvec[$i];
   $mod = $mods[2*$k];
@@ -470,7 +470,7 @@ for ($i = 0; $i < $numk; $i = $i+1) {
   if ($i == 0) {
     print CSH "psbasemap $B $R $J -P -K -V $origin > $psfile\n"; # START
   } else {
-    print CSH "psbasemap $B $R $J -K -O -V $shift >> $psfile\n"; 
+    print CSH "psbasemap $B $R $J -K -O -V $shift >> $psfile\n";
   }
   if ($icolor==1) {
     #print CSH "awk '{print \$1,\$2,\$6}' $str_files[$k] | pscontour $R $J -A- -C$cpt_vel -I -O -K -V >> $psfile\n";
@@ -525,7 +525,7 @@ $t = $t+1;
 $shift = "-X$dX1p";
 $title = "($labs[$t])  $tlabs[$t]";
 
-print CSH "psbasemap $B $R $J -K -O -V $shift >> $psfile\n"; 
+print CSH "psbasemap $B $R $J -K -O -V $shift >> $psfile\n";
 if ($icolor==1) {
   print CSH "awk '{print \$1,\$2,\$6}' $file1dat_str | nearneighbor -G$grdfile $R $interp\n";
   print CSH "grdimage $grdfile -C${cpt_vel} $J -K -O -V -Q >> $psfile\n";
@@ -573,12 +573,12 @@ for ($i = 0; $i < $numk; $i = $i+1) {
   #$smod = "m\@+${mod}\@+";
   $t = $t+1;
   $title = "($labs[$t])  $tlabs[$i] ${smod}";
- 
+
   #-------------------
   # KEY COMMAND -- formula to scale from mislocation to dot size
   # THIS MUST BE REPEATED FOR THE KEY BELOW!
 
-#  $irun = $irun0_cg + 2*$k;	# wave2d run number (CG)
+#  $irun = $irun0_cg + 2*$k;  # wave2d run number (CG)
 #  $strun = sprintf("%4.4i",$irun);
 #  $dir = "$odir$strun";
 
@@ -596,7 +596,7 @@ for ($i = 0; $i < $numk; $i = $i+1) {
 
   $source_error_file = $src_files[$k];
   $dots_file = "temp";
-  print CSH "awk '{print \$1,\$2,\$6,${ref_rad} + sqrt(\$7*\$7 + \$8*\$8)*$fac/1000}' $source_error_file > $dots_file\n"; 
+  print CSH "awk '{print \$1,\$2,\$6,${ref_rad} + sqrt(\$7*\$7 + \$8*\$8)*$fac/1000}' $source_error_file > $dots_file\n";
   print CSH "awk '{print \$1,\$2,\$6,sqrt(\$7*\$7 + \$8*\$8)/1000}' $source_error_file > source_error\n";
   #print "\n $source_error_file \n $dots_file \n"; die("testing");
   #-------------------

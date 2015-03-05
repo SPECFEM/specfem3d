@@ -487,10 +487,15 @@
   if (COUPLE_WITH_EXTERNAL_CODE) then
     allocate(Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
     allocate(Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
-    open(unit=IIN_veloc_dsm,file=dsmname(1:len_trim(dsmname))//'vel.bin',status='old', &
-         action='read',form='unformatted',iostat=ier)
-    open(unit=IIN_tract_dsm,file=dsmname(1:len_trim(dsmname))//'tract.bin',status='old', &
-         action='read',form='unformatted',iostat=ier)
+
+    if (old_DSM_coupling_from_Vadim) then
+      open(unit=IIN_veloc_dsm,file=dsmname(1:len_trim(dsmname))//'vel.bin',status='old', &
+           action='read',form='unformatted',iostat=ier)
+      open(unit=IIN_tract_dsm,file=dsmname(1:len_trim(dsmname))//'tract.bin',status='old', &
+           action='read',form='unformatted',iostat=ier)
+    else
+      !! To verify for NOBU version (normally, remains empty)
+    endif
   else
     allocate(Veloc_dsm_boundary(1,1,1,1))
     allocate(Tract_dsm_boundary(1,1,1,1))

@@ -48,7 +48,7 @@ cd ${HOME_DSM_MAIN_DIR}/DSM-1-BIG_3D_storage_version/Part-3-modify_DSM_results_f
 cd ${HOME_DSM_MAIN_DIR}/DSM-1-BIG_3D_storage_version/Part-3-modify_DSM_results_for_SPECFEM/ChangeFormat ; make
 cd ${HOME_DSM_MAIN_DIR}/DSM-1-BIG_3D_storage_version/Part-3-modify_DSM_results_for_SPECFEM/Interf_SPECFEM3D_DSM ; make
 
-cd ${HOME_DSM_MAIN_DIR}/DSM-1-BIG_3D_storage_version/UTILS/ ; make 
+cd ${HOME_DSM_MAIN_DIR}/DSM-1-BIG_3D_storage_version/UTILS/ ; make
 
 mv ${HOME_DSM_MAIN_DIR}/DSM-1-BIG_3D_storage_version/bin ${HOME_DSM_MAIN_DIR}
 

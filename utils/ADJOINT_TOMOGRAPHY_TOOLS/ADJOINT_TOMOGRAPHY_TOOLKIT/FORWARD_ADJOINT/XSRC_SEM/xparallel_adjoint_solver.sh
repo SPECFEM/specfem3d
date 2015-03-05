@@ -19,42 +19,42 @@ cat $PBS_NODEFILE > OUTPUT_FILES/compute_nodes
 echo "$PBS_JOBID" > OUTPUT_FILES/jobid
 
 if [ -d /scratch/hejunzhu ]; then
-	echo rm /scratch/hejunzhu
-	pbsdsh -u rm -rf /scratch/hejunzhu
-fi 
+  echo rm /scratch/hejunzhu
+  pbsdsh -u rm -rf /scratch/hejunzhu
+fi
 echo mkdir local dir...
-pbsdsh -u mkdir -p /scratch/hejunzhu 
+pbsdsh -u mkdir -p /scratch/hejunzhu
 
 echo change simulation type...
-./change_simulation_type.pl -F 
+./change_simulation_type.pl -F
 
 echo copying mesh file...
-mpiexec -np 100 ./xcopy_local_forward 
+mpiexec -np 100 ./xcopy_local_forward
 
 echo submit job...
 mpiexec -np 100 ./xspecfem3D
-echo solver done 
+echo solver done
 
-echo tar the synthetics 
+echo tar the synthetics
 cd OUTPUT_FILES
-#tar -czvf SEM.forward.tar.gz *.sac 
+#tar -czvf SEM.forward.tar.gz *.sac
 rm *.sac
 cd ../
-echo end tar 
+echo end tar
 
 echo change simulation type again...
-./change_simulation_type.pl -b 
+./change_simulation_type.pl -b
 
-echo sumit adjoint simulation 
-mpiexec -np 100 ./xspecfem3D 
+echo sumit adjoint simulation
+mpiexec -np 100 ./xspecfem3D
 
 
-echo tar the synthetics 
+echo tar the synthetics
 cd OUTPUT_FILES
-#tar -czvf SEM.backward.tar.gz *.sac 
-rm *.sac 
-cd ../ 
-echo end tar 
+#tar -czvf SEM.backward.tar.gz *.sac
+rm *.sac
+cd ../
+echo end tar
 
 echo collect kernels...
 pbsdsh -u bash -c 'cp -p /scratch/hejunzhu/proc*_reg1_bulk_betav_kernel.bin $PBS_O_WORKDIR/KERNEL/'
@@ -62,7 +62,7 @@ pbsdsh -u bash -c 'cp -p /scratch/hejunzhu/proc*_reg1_bulk_betah_kernel.bin $PBS
 pbsdsh -u bash -c 'cp -p /scratch/hejunzhu/proc*_reg1_bulk_c_kernel.bin $PBS_O_WORKDIR/KERNEL/'
 pbsdsh -u bash -c 'cp -p /scratch/hejunzhu/proc*_reg1_eta_kernel.bin $PBS_O_WORKDIR/KERNEL/'
 pbsdsh -u bash -c 'cp -p /scratch/hejunzhu/proc*_reg1_rho_kernel.bin $PBS_O_WORKDIR/KERNEL/'
-pbsdsh -u bash -c 'cp -p /scratch/hejunzhu/proc*_reg1_hess_kernel.bin $PBS_O_WORKDIR/KERNEL/' 
+pbsdsh -u bash -c 'cp -p /scratch/hejunzhu/proc*_reg1_hess_kernel.bin $PBS_O_WORKDIR/KERNEL/'
 
 
 

@@ -7,7 +7,7 @@
 # Start with one vp and vs model, and then add a perturbation to new vp and vs models.
 #
 # Removed linked files in INPUT_MODEL prior to running.
-# 
+#
 # EXAMPLE:
 #    setup_model_pert.pl 168 m16 m00 vs_m16 vs_m00 vs_m16_m00
 #    setup_model_pert.pl 168 m16 m15 vs_m16 vs_m15 vs_m16_m15

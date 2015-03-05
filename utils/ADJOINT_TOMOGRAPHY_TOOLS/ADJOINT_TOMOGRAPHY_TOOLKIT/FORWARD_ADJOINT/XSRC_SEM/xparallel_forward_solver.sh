@@ -20,20 +20,20 @@ echo "$PBS_JOBID" > OUTPUT_FILES/jobid
 
 
 if [ -d /scratch/hejunzhu ]; then
-	echo rm /scratch/hejunzhu
-	pbsdsh -u rm -rf /scratch/hejunzhu
-fi 
+  echo rm /scratch/hejunzhu
+  pbsdsh -u rm -rf /scratch/hejunzhu
+fi
 echo mkdir local dir...
-pbsdsh -u mkdir -p /scratch/hejunzhu 
+pbsdsh -u mkdir -p /scratch/hejunzhu
 
 echo copying mesh file...
-mpiexec -np 100 ./xcopy_local_forward 
+mpiexec -np 100 ./xcopy_local_forward
 
 echo submit job...
 mpiexec -np 100 ./xspecfem3D
 echo solver done successfully
 
-#echo clean the folder 
+#echo clean the folder
 #mv OUTPUT_FILES/*.sac SYN/tmp/
 
 

@@ -12,7 +12,7 @@
 #    hdur_lab  label for the measurements (T02, T06, all)
 #    nproc     number of processors
 #    ftag      type of files you want to copy
-# 
+#
 # EXAMPLE:
 #    copy_bin_dirs.pl m10 all 168 mu_kernel ; copy_bin_dirs.pl m10 all 168 kappa_kernel
 #
@@ -43,7 +43,7 @@ if (0==1) {
   die("testing");
 }
 
-$imin = 1; $imax = $neid;	# default
+$imin = 1; $imax = $neid; # default
 #$imin = 1; $imax = 30;
 #$imin = 89; $imax = $imin;
 
@@ -82,12 +82,12 @@ for ($i = $imin; $i <= $imax; $i++) {
       `mkdir -p $odir`;
       `cp $bin_files $odir`;
       `sleep 10s`;
-    
+
       $nfile_out = `ls -1 $odir/*$ftag*.bin | wc | awk '{print \$1}'`; chomp($nfile_out);
 
       if ($nfile_out != $nproc) {
-	print "\n -- nfile_out = $nfile_out -- nproc = $nproc --\n";
-	die("mismatch of expected vs actual bin files\n");
+  print "\n -- nfile_out = $nfile_out -- nproc = $nproc --\n";
+  die("mismatch of expected vs actual bin files\n");
       }
     }
 

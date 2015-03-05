@@ -120,32 +120,31 @@ end subroutine compute_interpolated_dva
 !-------------------------------------------------------------------------------------------------
 !
 
-subroutine compute_interpolated_dva_ac(displ_element,veloc_element,&
-                        potential_dot_dot_acoustic,potential_dot_acoustic,&
-                        potential_acoustic,NGLOB_AB, &
+subroutine compute_interpolated_dva_acoust(displ_element,veloc_element,accel_element, &
+                        potential_dot_dot_acoustic,potential_acoustic,NGLOB_AB, &
                         ispec,NSPEC_AB,ibool, &
                         xi_r,eta_r,gamma_r, &
                         hxir,hetar,hgammar, &
-                        dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
+                        dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd,USE_TRICK_FOR_BETTER_PRESSURE)
 
-! acoustic elements
-! returns displacement/velocity/pressure (dxd,..,vxd,..,axd,.. ) at receiver location
+! for acoustic elements
+! returns displacement/velocity/acceleration/pressure (dxd,..,vxd,..,axd,..,pd) at receiver location
 
   use constants
 
   implicit none
 
-  double precision,intent(out) :: dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd
+  double precision,intent(out) :: dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd
 
   integer :: ispec
 
   integer :: NSPEC_AB,NGLOB_AB
-  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: displ_element,veloc_element
-  real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: potential_dot_dot_acoustic
-  real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: potential_dot_acoustic
-  real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: potential_acoustic
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: displ_element,veloc_element,accel_element
+  real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: potential_dot_dot_acoustic,potential_acoustic
 
-  integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB):: ibool
+  integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
+
+  logical :: USE_TRICK_FOR_BETTER_PRESSURE
 
   ! receiver information
   double precision :: xi_r,eta_r,gamma_r
@@ -161,12 +160,16 @@ subroutine compute_interpolated_dva_ac(displ_element,veloc_element,&
   dxd = ZERO
   dyd = ZERO
   dzd = ZERO
+
   vxd = ZERO
   vyd = ZERO
   vzd = ZERO
+
   axd = ZERO
   ayd = ZERO
   azd = ZERO
+
+  pd  = ZERO
 
 ! takes closest GLL point only (no interpolation)
   if (FASTER_RECEIVERS_POINTS_ONLY) then
@@ -175,20 +178,47 @@ subroutine compute_interpolated_dva_ac(displ_element,veloc_element,&
     dxd = displ_element(1,nint(xi_r),nint(eta_r),nint(gamma_r))
     dyd = displ_element(2,nint(xi_r),nint(eta_r),nint(gamma_r))
     dzd = displ_element(3,nint(xi_r),nint(eta_r),nint(gamma_r))
+
     ! velocity
     vxd = veloc_element(1,nint(xi_r),nint(eta_r),nint(gamma_r))
     vyd = veloc_element(2,nint(xi_r),nint(eta_r),nint(gamma_r))
     vzd = veloc_element(3,nint(xi_r),nint(eta_r),nint(gamma_r))
 
+    ! acceleration
+    axd = accel_element(1,nint(xi_r),nint(eta_r),nint(gamma_r))
+    ayd = accel_element(2,nint(xi_r),nint(eta_r),nint(gamma_r))
+    azd = accel_element(3,nint(xi_r),nint(eta_r),nint(gamma_r))
+
     ! global index
     iglob = ibool(nint(xi_r),nint(eta_r),nint(gamma_r),ispec)
 
-    ! x component -> acoustic potential
-    axd = potential_acoustic(iglob)
-    ! y component -> first time derivative of potential
-    ayd = potential_dot_acoustic(iglob)
-    ! z component -> pressure
-    azd = - potential_dot_dot_acoustic(iglob)
+    ! pressure
+    if(USE_TRICK_FOR_BETTER_PRESSURE) then
+      ! use a trick to increase accuracy of pressure seismograms in fluid (acoustic) elements:
+      ! use the second derivative of the source for the source time function instead of the source itself,
+      ! and then record -potential_acoustic() as pressure seismograms instead of -potential_dot_dot_acoustic();
+      ! this is mathematically equivalent, but numerically significantly more accurate because in the explicit
+      ! Newmark time scheme acceleration is accurate at zeroth order while displacement is accurate at second order,
+      ! thus in fluid elements potential_dot_dot_acoustic() is accurate at zeroth order while potential_acoustic()
+      ! is accurate at second order and thus contains significantly less numerical noise.
+      pd = - potential_acoustic(iglob)
+      ! that trick is not implemented for the calculation of displacement, velocity nor acceleration seismograms
+      ! in acoustic elements yet; to do so we would need to recompute them using the second integral in time of the
+      ! current formulas in that case. Same remark for recording stations located in solid (elastic/viscoelastic) elements
+      ! in the case of fluid/solid models when that trick is used; thus for now we erase these seismograms here just in case
+      ! because they would be wrong
+      dxd = ZERO
+      dyd = ZERO
+      dzd = ZERO
+      vxd = ZERO
+      vyd = ZERO
+      vzd = ZERO
+      axd = ZERO
+      ayd = ZERO
+      azd = ZERO
+    else
+      pd = - potential_dot_dot_acoustic(iglob) ! this is the standard expression
+    endif
 
   else
 
@@ -196,7 +226,6 @@ subroutine compute_interpolated_dva_ac(displ_element,veloc_element,&
     do k = 1,NGLLZ
       do j = 1,NGLLY
         do i = 1,NGLLX
-          iglob = ibool(i,j,k,ispec)
 
           hlagrange = hxir(i)*hetar(j)*hgammar(k)
 
@@ -204,17 +233,47 @@ subroutine compute_interpolated_dva_ac(displ_element,veloc_element,&
           dxd = dxd + hlagrange*displ_element(1,i,j,k)
           dyd = dyd + hlagrange*displ_element(2,i,j,k)
           dzd = dzd + hlagrange*displ_element(3,i,j,k)
+
           ! velocity
           vxd = vxd + hlagrange*veloc_element(1,i,j,k)
           vyd = vyd + hlagrange*veloc_element(2,i,j,k)
           vzd = vzd + hlagrange*veloc_element(3,i,j,k)
 
-          ! x component -> acoustic potential
-          axd = axd + hlagrange*potential_acoustic(iglob)
-          ! y component -> first time derivative of potential
-          ayd = ayd + hlagrange*potential_dot_acoustic(iglob)
-          ! z component -> pressure
-          azd = azd - hlagrange*potential_dot_dot_acoustic(iglob)
+          ! acceleration
+          axd = axd + hlagrange*accel_element(1,i,j,k)
+          ayd = ayd + hlagrange*accel_element(2,i,j,k)
+          azd = azd + hlagrange*accel_element(3,i,j,k)
+
+          ! global index
+          iglob = ibool(i,j,k,ispec)
+
+          ! pressure
+          if(USE_TRICK_FOR_BETTER_PRESSURE) then
+            ! use a trick to increase accuracy of pressure seismograms in fluid (acoustic) elements:
+            ! use the second derivative of the source for the source time function instead of the source itself,
+            ! and then record -potential_acoustic() as pressure seismograms instead of -potential_dot_dot_acoustic();
+            ! this is mathematically equivalent, but numerically significantly more accurate because in the explicit
+            ! Newmark time scheme acceleration is accurate at zeroth order while displacement is accurate at second order,
+            ! thus in fluid elements potential_dot_dot_acoustic() is accurate at zeroth order while potential_acoustic()
+            ! is accurate at second order and thus contains significantly less numerical noise.
+            pd = pd - hlagrange*potential_acoustic(iglob)
+            ! that trick is not implemented for the calculation of displacement, velocity nor acceleration seismograms
+            ! in acoustic elements yet; to do so we would need to recompute them using the second integral in time of the
+            ! current formulas in that case. Same remark for recording stations located in solid (elastic/viscoelastic) elements
+            ! in the case of fluid/solid models when that trick is used; thus for now we erase these seismograms here just in case
+            ! because they would be wrong
+            dxd = ZERO
+            dyd = ZERO
+            dzd = ZERO
+            vxd = ZERO
+            vyd = ZERO
+            vzd = ZERO
+            axd = ZERO
+            ayd = ZERO
+            azd = ZERO
+          else
+            pd = pd - hlagrange*potential_dot_dot_acoustic(iglob)
+          endif
 
         enddo
       enddo
@@ -222,4 +281,5 @@ subroutine compute_interpolated_dva_ac(displ_element,veloc_element,&
 
   endif
 
-end subroutine compute_interpolated_dva_ac
+end subroutine compute_interpolated_dva_acoust
+

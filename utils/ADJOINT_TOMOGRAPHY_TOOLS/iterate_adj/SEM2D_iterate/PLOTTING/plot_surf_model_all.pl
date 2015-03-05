@@ -159,8 +159,8 @@ $R_title = "-R0/1/0/1";
 # loop over models
 for ($m = $imodelmin; $m <= $imodelmax; $m = $m+1) {
 
-  $imodel = $m;			# current model
-  $mtest = $m % 2;		# =1 for a test model
+  $imodel = $m;     # current model
+  $mtest = $m % 2;    # =1 for a test model
 
   $stirun = sprintf("%4.4i",$irun0+$imodel);
   if ($mtest==1) {
@@ -187,7 +187,7 @@ for ($m = $imodelmin; $m <= $imodelmax; $m = $m+1) {
 
     # write plotting scripts
     $wid = $wid1;
-    $J1 = "-JM${wid}i";		# in lat-lon
+    $J1 = "-JM${wid}i";   # in lat-lon
     $origin = "-X1.5 -Y7.25";
     $Dlen = 2.0; $Dx = $wid/2; $Dy = -0.35;
     $Dscale1 = "-D$Dx/$Dy/$Dlen/0.15h";
@@ -200,13 +200,13 @@ for ($m = $imodelmin; $m <= $imodelmax; $m = $m+1) {
     print "\n----FIGURE 1--model $stmod----\n";
 
     @files = ("$dir0/${mfile_syn}","$dir0/${mfile_syn}",
-	      "$dir1/${mfile_syn}","$dir1/${mfile_syn}",
-	      "$dir0/${mfile_dat}","$dir0/${mfile_dat}");
+        "$dir1/${mfile_syn}","$dir1/${mfile_syn}",
+        "$dir0/${mfile_dat}","$dir0/${mfile_dat}");
     @stlabs = ("m00","mtar - m00",$stmod,"mtar - $stmod","mtar","mtar - mtar");
 
     # only plot even models (m04 = iteration 8)
     $kmaxt = 6;
-    $kmaxm = 6*(1 - $mtest);	# =0 for test model
+    $kmaxm = 6*(1 - $mtest);  # =0 for test model
     if ($itest == 1) {
       $kmax = $kmaxt;
     } else {
@@ -224,62 +224,62 @@ for ($m = $imodelmin; $m <= $imodelmax; $m = $m+1) {
 
       $file1 = $files[$k];
       if (not -f $file1) {
-	die("Check if $file1 exist or not\n");
+  die("Check if $file1 exist or not\n");
       }
 
       # column-concatenate target model and current model
       if ($k % 2 == 1) {
-	$file2 = "ftemp";
-	print CSH "paste $filedat $file1 > $file2\n";
+  $file2 = "ftemp";
+  print CSH "paste $filedat $file1 > $file2\n";
       }
 
       # phase velocity map
       if ($k==0 && $m==$imodelmin) {
-	# set bounds for the plotting
-	#$xmin = -121; $xmax = -115.0; $zmin = 31.75; $zmax = 36.5;
-	($xmin,$xmax,$zmin,$zmax,$smin,$smax,$tmin,$tmax) = split(" ",`minmax -C $file1`);
-	$dinc = 0.25;		# buffer around min/max
-	$xmin = $xmin-$dinc;  $xmax = $xmax+$dinc;
-	$zmin = $zmin-$dinc;  $zmax = $zmax+$dinc;
-	$R = "-R$xmin/$xmax/$zmin/$zmax";
-	print "\n$R\n";
+  # set bounds for the plotting
+  #$xmin = -121; $xmax = -115.0; $zmin = 31.75; $zmax = 36.5;
+  ($xmin,$xmax,$zmin,$zmax,$smin,$smax,$tmin,$tmax) = split(" ",`minmax -C $file1`);
+  $dinc = 0.25;   # buffer around min/max
+  $xmin = $xmin-$dinc;  $xmax = $xmax+$dinc;
+  $zmin = $zmin-$dinc;  $zmax = $zmax+$dinc;
+  $R = "-R$xmin/$xmax/$zmin/$zmax";
+  print "\n$R\n";
       }
 
       if ($k==0) {
-	print CSH "psbasemap $B $R $J1 -K -V -P $origin > $psfile0\n"; # START
+  print CSH "psbasemap $B $R $J1 -K -V -P $origin > $psfile0\n"; # START
       } else {
-	print CSH "psbasemap $B $R $J1 -K -O -V $shift >> $psfile0\n";
+  print CSH "psbasemap $B $R $J1 -K -O -V $shift >> $psfile0\n";
       }
 
       if ($icolor == 1) {
-	#print CSH "awk '{print \$1,\$2,\$7}' $file1 | pscontour $R $J1 -A- -C$cptfile1 -I -K -O -V >> $psfile0\n";
-	if ($k % 2 == 0) {
-	  print CSH "awk '{print \$1,\$2,\$${find}}' $file1 | nearneighbor -G$grdfile $R $interp\n";
-	} else {
-	  print CSH "awk '{print \$1,\$2,\$${find}-\$${find2}}' $file2 | nearneighbor -G$grdfile $R $interp\n";
-	}
-	print CSH "grdimage $grdfile -C$cptfile1 $J1 -K -O -V -Q >> $psfile0\n";
+  #print CSH "awk '{print \$1,\$2,\$7}' $file1 | pscontour $R $J1 -A- -C$cptfile1 -I -K -O -V >> $psfile0\n";
+  if ($k % 2 == 0) {
+    print CSH "awk '{print \$1,\$2,\$${find}}' $file1 | nearneighbor -G$grdfile $R $interp\n";
+  } else {
+    print CSH "awk '{print \$1,\$2,\$${find}-\$${find2}}' $file2 | nearneighbor -G$grdfile $R $interp\n";
+  }
+  print CSH "grdimage $grdfile -C$cptfile1 $J1 -K -O -V -Q >> $psfile0\n";
       }
       print CSH "pscoast $J1 $R $B -W1p -Na/1p -Dh -K -O -V >> $psfile0\n";
 
       # plot receivers
-      if (0==1) {		# numbered large circles
-	print CSH "awk '\$1 == \"R\" {print \$2,\$3}' $rec_file | psxy -N $J1 $R -K -O -V $rec0 >> $psfile0\n";
-	$rec_file2 = text_rec; $angle = 0; $just = "CM";
-	print CSH "awk '\$1 == \"R\" {print \$2,\$3,$fsize3,$angle,$fontno,\"$just\",\$4}' $rec_file > $rec_file2\n";
-	print CSH "pstext $rec_file2 -N $J1 $R -K -O -V >> $psfile0\n";
+      if (0==1) {   # numbered large circles
+  print CSH "awk '\$1 == \"R\" {print \$2,\$3}' $rec_file | psxy -N $J1 $R -K -O -V $rec0 >> $psfile0\n";
+  $rec_file2 = text_rec; $angle = 0; $just = "CM";
+  print CSH "awk '\$1 == \"R\" {print \$2,\$3,$fsize3,$angle,$fontno,\"$just\",\$4}' $rec_file > $rec_file2\n";
+  print CSH "pstext $rec_file2 -N $J1 $R -K -O -V >> $psfile0\n";
 
-      } else {			# small circles
-	print CSH "awk '\$1 == \"R\" {print \$2,\$3}' $rec_file | psxy -N -Sc5p -W0.5p $J1 $R -K -O -V >> $psfile0\n";
+      } else {      # small circles
+  print CSH "awk '\$1 == \"R\" {print \$2,\$3}' $rec_file | psxy -N -Sc5p -W0.5p $J1 $R -K -O -V >> $psfile0\n";
 
       }
 
       # plot sources
       if ($ievent_one) {
-	print CSH "awk '\$1 == \"S\" {print \$2,\$3}' $rec_file | psxy $src0 -N $J1 $R -K -O -V >> $psfile0\n";
+  print CSH "awk '\$1 == \"S\" {print \$2,\$3}' $rec_file | psxy $src0 -N $J1 $R -K -O -V >> $psfile0\n";
       }
       if ($ievent_all) {
-	print CSH "awk '{print \$1,\$2}' $evefile | psxy $src -N $J1 $R -K -O -V >> $psfile0\n";
+  print CSH "awk '{print \$1,\$2}' $evefile | psxy $src -N $J1 $R -K -O -V >> $psfile0\n";
       }
 
       # plot label
@@ -289,28 +289,28 @@ for ($m = $imodelmin; $m <= $imodelmax; $m = $m+1) {
 
       # colorscale bars
       if ($k==4) {
-	print CSH "psscale -C$cptfile1 $Dscale1 $Bscale1 -K -O -V >> $psfile0\n";
+  print CSH "psscale -C$cptfile1 $Dscale1 $Bscale1 -K -O -V >> $psfile0\n";
       }
       if ($k==5) {
-	print CSH "psscale -C$cptfile1 $Dscale1 $Bscale2 -K -O -V >> $psfile0\n";
+  print CSH "psscale -C$cptfile1 $Dscale1 $Bscale2 -K -O -V >> $psfile0\n";
       }
 
       # plot title and GMT header
       if ($k==5) {
-	$plot_title = "Model m00, model $stmod, and target model (run_${stirun})";
-	$Utag = "-U/0/0.25/$plabel";
-	$shift = "-Xa-3.5 -Ya8.5";
-	print CSH "pstext -N $J1 $R $Utag -O -V $shift >>$psfile0<<EOF\n $xmin $zmin $fsize0 0 $fontno LM $plot_title\nEOF\n"; # FINISH
+  $plot_title = "Model m00, model $stmod, and target model (run_${stirun})";
+  $Utag = "-U/0/0.25/$plabel";
+  $shift = "-Xa-3.5 -Ya8.5";
+  print CSH "pstext -N $J1 $R $Utag -O -V $shift >>$psfile0<<EOF\n $xmin $zmin $fsize0 0 $fontno LM $plot_title\nEOF\n"; # FINISH
 
-	if ($ijpg == 1) {
-	  print CSH "convert $psfile0 $jpgfile\n";
-	}
-	if ($ipdf == 1) {
-	  print CSH "ps2pdf $psfile0\n";
-	}
+  if ($ijpg == 1) {
+    print CSH "convert $psfile0 $jpgfile\n";
+  }
+  if ($ipdf == 1) {
+    print CSH "ps2pdf $psfile0\n";
+  }
 
       }
-    }				# loop over subplots
+    }       # loop over subplots
   }
 
   #-----------------------------
@@ -324,7 +324,7 @@ for ($m = $imodelmin; $m <= $imodelmax; $m = $m+1) {
 
     # write plotting scripts
     $wid = $wid1;
-    $J1 = "-JM${wid}i";		# in lat-lon
+    $J1 = "-JM${wid}i";   # in lat-lon
     $origin = "-X1.5 -Y7.25";
     $Dlen = 2.0; $Dx = $wid/2; $Dy = -0.35;
     $Dscale1 = "-D$Dx/$Dy/$Dlen/0.15h";
@@ -337,13 +337,13 @@ for ($m = $imodelmin; $m <= $imodelmax; $m = $m+1) {
     print "\n----FIGURE 1--model $stmod----\n";
 
     @files = ("$dir0/${mfile_syn}","$dir0/${mfile_syn}",
-	      "$dir1/${mfile_syn}","$dir1/${mfile_syn}",
-	      "$dir0/${mfile_dat}","$dir0/${mfile_dat}");
+        "$dir1/${mfile_syn}","$dir1/${mfile_syn}",
+        "$dir0/${mfile_dat}","$dir0/${mfile_dat}");
     @stlabs = ("m00","m00 - m00",$stmod,"$stmod - m00","mtar","mtar - m00");
 
     # only plot even models (m04 = iteration 8)
     $kmaxt = 6;
-    $kmaxm = 6*(1 - $mtest);	# =0 for test model
+    $kmaxm = 6*(1 - $mtest);  # =0 for test model
     if ($itest == 1) {
       $kmax = $kmaxt;
     } else {
@@ -359,65 +359,65 @@ for ($m = $imodelmin; $m <= $imodelmax; $m = $m+1) {
       $find = $fcol;
       $find2 = 2*$fcol;
 
-      $file0 = $files[0];	# initial model
+      $file0 = $files[0]; # initial model
       $file1 = $files[$k];
       if (not -f $file1) {
-	die("Check if $file1 exist or not\n");
+  die("Check if $file1 exist or not\n");
       }
 
       # column-concatenate current model and initial model
       if ($k % 2 == 1) {
-	$file2 = "ftemp";
-	print CSH "paste $file1 $file0 > $file2\n";
+  $file2 = "ftemp";
+  print CSH "paste $file1 $file0 > $file2\n";
       }
 
       # phase velocity map
       if ($k==0 && $m==$imodelmin) {
-	# set bounds for the plotting
-	#$xmin = -121; $xmax = -115.0; $zmin = 31.75; $zmax = 36.5;
-	($xmin,$xmax,$zmin,$zmax,$smin,$smax,$tmin,$tmax) = split(" ",`minmax -C $file1`);
-	$dinc = 0.25;		# buffer around min/max
-	$xmin = $xmin-$dinc;  $xmax = $xmax+$dinc;
-	$zmin = $zmin-$dinc;  $zmax = $zmax+$dinc;
-	$R = "-R$xmin/$xmax/$zmin/$zmax";
-	print "\n$R\n";
+  # set bounds for the plotting
+  #$xmin = -121; $xmax = -115.0; $zmin = 31.75; $zmax = 36.5;
+  ($xmin,$xmax,$zmin,$zmax,$smin,$smax,$tmin,$tmax) = split(" ",`minmax -C $file1`);
+  $dinc = 0.25;   # buffer around min/max
+  $xmin = $xmin-$dinc;  $xmax = $xmax+$dinc;
+  $zmin = $zmin-$dinc;  $zmax = $zmax+$dinc;
+  $R = "-R$xmin/$xmax/$zmin/$zmax";
+  print "\n$R\n";
       }
 
       if ($k==0) {
-	print CSH "psbasemap $B $R $J1 -K -V -P $origin > $psfile1\n"; # START
+  print CSH "psbasemap $B $R $J1 -K -V -P $origin > $psfile1\n"; # START
       } else {
-	print CSH "psbasemap $B $R $J1 -K -O -V $shift >> $psfile1\n";
+  print CSH "psbasemap $B $R $J1 -K -O -V $shift >> $psfile1\n";
       }
 
       if ($icolor == 1) {
-	#print CSH "awk '{print \$1,\$2,\$7}' $file1 | pscontour $R $J1 -A- -C$cptfile1 -I -K -O -V >> $psfile1\n";
-	if ($k % 2 == 0) {
-	  print CSH "awk '{print \$1,\$2,\$${find}}' $file1 | nearneighbor -G$grdfile $R $interp\n";
-	} else {
-	  print CSH "awk '{print \$1,\$2,\$${find}-\$${find2}}' $file2 | nearneighbor -G$grdfile $R $interp\n";
-	}
-	print CSH "grdimage $grdfile -C$cptfile1 $J1 -K -O -V -Q >> $psfile1\n";
+  #print CSH "awk '{print \$1,\$2,\$7}' $file1 | pscontour $R $J1 -A- -C$cptfile1 -I -K -O -V >> $psfile1\n";
+  if ($k % 2 == 0) {
+    print CSH "awk '{print \$1,\$2,\$${find}}' $file1 | nearneighbor -G$grdfile $R $interp\n";
+  } else {
+    print CSH "awk '{print \$1,\$2,\$${find}-\$${find2}}' $file2 | nearneighbor -G$grdfile $R $interp\n";
+  }
+  print CSH "grdimage $grdfile -C$cptfile1 $J1 -K -O -V -Q >> $psfile1\n";
       }
       print CSH "pscoast $J1 $R $B -W1p -Na/1p -Dh -K -O -V >> $psfile1\n";
 
       # plot receivers
-      if (0==1) {		# numbered large circles
-	print CSH "awk '\$1 == \"R\" {print \$2,\$3}' $rec_file | psxy -N $J1 $R -K -O -V $rec0 >> $psfile1\n";
-	$rec_file2 = text_rec; $angle = 0; $just = "CM";
-	print CSH "awk '\$1 == \"R\" {print \$2,\$3,$fsize3,$angle,$fontno,\"$just\",\$4}' $rec_file > $rec_file2\n";
-	print CSH "pstext $rec_file2 -N $J1 $R -K -O -V >> $psfile1\n";
+      if (0==1) {   # numbered large circles
+  print CSH "awk '\$1 == \"R\" {print \$2,\$3}' $rec_file | psxy -N $J1 $R -K -O -V $rec0 >> $psfile1\n";
+  $rec_file2 = text_rec; $angle = 0; $just = "CM";
+  print CSH "awk '\$1 == \"R\" {print \$2,\$3,$fsize3,$angle,$fontno,\"$just\",\$4}' $rec_file > $rec_file2\n";
+  print CSH "pstext $rec_file2 -N $J1 $R -K -O -V >> $psfile1\n";
 
-      } else {			# small circles
-	print CSH "awk '\$1 == \"R\" {print \$2,\$3}' $rec_file | psxy -N -Sc5p -W0.5p $J1 $R -K -O -V >> $psfile1\n";
+      } else {      # small circles
+  print CSH "awk '\$1 == \"R\" {print \$2,\$3}' $rec_file | psxy -N -Sc5p -W0.5p $J1 $R -K -O -V >> $psfile1\n";
 
       }
 
       # plot sources
       if ($ievent_one) {
-	print CSH "awk '\$1 == \"S\" {print \$2,\$3}' $rec_file | psxy $src0 -N $J1 $R -K -O -V >> $psfile1\n";
+  print CSH "awk '\$1 == \"S\" {print \$2,\$3}' $rec_file | psxy $src0 -N $J1 $R -K -O -V >> $psfile1\n";
       }
       if ($ievent_all) {
-	print CSH "awk '{print \$1,\$2}' $evefile | psxy $src -N $J1 $R -K -O -V >> $psfile1\n";
+  print CSH "awk '{print \$1,\$2}' $evefile | psxy $src -N $J1 $R -K -O -V >> $psfile1\n";
       }
 
       # plot label
@@ -427,28 +427,28 @@ for ($m = $imodelmin; $m <= $imodelmax; $m = $m+1) {
 
       # colorscale bars
       if ($k==4) {
-	print CSH "psscale -C$cptfile1 $Dscale1 $Bscale1 -K -O -V >> $psfile1\n";
+  print CSH "psscale -C$cptfile1 $Dscale1 $Bscale1 -K -O -V >> $psfile1\n";
       }
       if ($k==5) {
-	print CSH "psscale -C$cptfile1 $Dscale1 $Bscale2 -K -O -V >> $psfile1\n";
+  print CSH "psscale -C$cptfile1 $Dscale1 $Bscale2 -K -O -V >> $psfile1\n";
       }
 
       # plot title and GMT header
       if ($k==5) {
-	$plot_title = "Model m00, model $stmod, and target model (run_${stirun})";
-	$Utag = "-U/0/0.25/$plabel";
-	$shift = "-Xa-3.5 -Ya8.5";
-	print CSH "pstext -N $J1 $R $Utag -O -V $shift >>$psfile1<<EOF\n $xmin $zmin $fsize0 0 $fontno LM $plot_title\nEOF\n"; # FINISH
+  $plot_title = "Model m00, model $stmod, and target model (run_${stirun})";
+  $Utag = "-U/0/0.25/$plabel";
+  $shift = "-Xa-3.5 -Ya8.5";
+  print CSH "pstext -N $J1 $R $Utag -O -V $shift >>$psfile1<<EOF\n $xmin $zmin $fsize0 0 $fontno LM $plot_title\nEOF\n"; # FINISH
 
-	if ($ijpg == 1) {
-	  print CSH "convert $psfile1 $jpgfile\n";
-	}
-	if ($ipdf == 1) {
-	  print CSH "ps2pdf $psfile1\n";
-	}
+  if ($ijpg == 1) {
+    print CSH "convert $psfile1 $jpgfile\n";
+  }
+  if ($ipdf == 1) {
+    print CSH "ps2pdf $psfile1\n";
+  }
 
       }
-    }				# loop over subplots
+    }       # loop over subplots
   }
 
   #-----------------------------
@@ -477,7 +477,7 @@ for ($m = $imodelmin; $m <= $imodelmax; $m = $m+1) {
 
     # write plotting scripts
     $wid = $wid2;
-    $J1 = "-JM${wid}i";		# in lat-lon
+    $J1 = "-JM${wid}i";   # in lat-lon
     $origin = "-X1 -Y7.25";
     $Dlen = 1.5; $Dx = $wid/2; $Dy = -0.35;
     $Dscale1 = "-D$Dx/$Dy/$Dlen/0.15h";
@@ -517,66 +517,66 @@ for ($m = $imodelmin; $m <= $imodelmax; $m = $m+1) {
       $file0 = $files0[$k];
       $file1 = $files1[$k];
       if (not -f $file0) {
-	die("Check if file0 $file0 exist or not\n");
+  die("Check if file0 $file0 exist or not\n");
       }
 
       # column-concatenate two files (columns 2 and 3)
       if ($kmod > 0) {
-	if (not -f $file1) {
-	  die("Check if file1 $file1 exist or not\n");
-	}
-	$file2 = "ftemp";
+  if (not -f $file1) {
+    die("Check if file1 $file1 exist or not\n");
+  }
+  $file2 = "ftemp";
         print "concatenating two files:\n  $file0\n  $file1\n";
-	print CSH "paste $file1 $file0 > $file2\n";
+  print CSH "paste $file1 $file0 > $file2\n";
       }
 
       # phase velocity map
       if ($k==0) {
-	# set bounds for the plotting
-	#$xmin = -121; $xmax = -115.0; $zmin = 31.75; $zmax = 36.5;
-	($xmin,$xmax,$zmin,$zmax,$smin,$smax,$tmin,$tmax) = split(" ",`minmax -C $file1`);
-	$dinc = 0.25;		# buffer around min/max
-	$xmin = $xmin-$dinc;  $xmax = $xmax+$dinc;
-	$zmin = $zmin-$dinc;  $zmax = $zmax+$dinc;
-	$R = "-R$xmin/$xmax/$zmin/$zmax";
-	print "\n$R\n";
+  # set bounds for the plotting
+  #$xmin = -121; $xmax = -115.0; $zmin = 31.75; $zmax = 36.5;
+  ($xmin,$xmax,$zmin,$zmax,$smin,$smax,$tmin,$tmax) = split(" ",`minmax -C $file1`);
+  $dinc = 0.25;   # buffer around min/max
+  $xmin = $xmin-$dinc;  $xmax = $xmax+$dinc;
+  $zmin = $zmin-$dinc;  $zmax = $zmax+$dinc;
+  $R = "-R$xmin/$xmax/$zmin/$zmax";
+  print "\n$R\n";
       }
 
       if ($k==0) {
-	print CSH "psbasemap $B $R $J1 -K -V -P $origin > $psfile2\n"; # START
+  print CSH "psbasemap $B $R $J1 -K -V -P $origin > $psfile2\n"; # START
       } else {
-	print CSH "psbasemap $B $R $J1 -K -O -V $shift >> $psfile2\n";
+  print CSH "psbasemap $B $R $J1 -K -O -V $shift >> $psfile2\n";
       }
 
       if ($icolor == 1) {
-	#print CSH "awk '{print \$1,\$2,\$7}' $file1 | pscontour $R $J1 -A- -C$cptfile1 -I -K -O -V >> $psfile2\n";
-	if ($kmod == 0) {
-	  print CSH "awk '{print \$1,\$2,\$${find}}' $file1 | nearneighbor -G$grdfile $R $interp\n";
-	} else {
-	  print CSH "awk '{print \$1,\$2,\$${find}-\$${find2}}' $file2 | nearneighbor -G$grdfile $R $interp\n";
-	}
-	print CSH "grdimage $grdfile -C$cptfile1 $J1 -K -O -V -Q >> $psfile2\n";
+  #print CSH "awk '{print \$1,\$2,\$7}' $file1 | pscontour $R $J1 -A- -C$cptfile1 -I -K -O -V >> $psfile2\n";
+  if ($kmod == 0) {
+    print CSH "awk '{print \$1,\$2,\$${find}}' $file1 | nearneighbor -G$grdfile $R $interp\n";
+  } else {
+    print CSH "awk '{print \$1,\$2,\$${find}-\$${find2}}' $file2 | nearneighbor -G$grdfile $R $interp\n";
+  }
+  print CSH "grdimage $grdfile -C$cptfile1 $J1 -K -O -V -Q >> $psfile2\n";
       }
       print CSH "pscoast $J1 $R $B -W1p -Na/1p -Dh -K -O -V >> $psfile2\n";
 
       # plot receivers
-      if (0==1) {		# numbered large circles
-	print CSH "awk '\$1 == \"R\" {print \$2,\$3}' $rec_file | psxy -N $J1 $R -K -O -V $rec0 >> $psfile2\n";
-	$rec_file2 = text_rec; $angle = 0; $just = "CM";
-	print CSH "awk '\$1 == \"R\" {print \$2,\$3,$fsize3,$angle,$fontno,\"$just\",\$4}' $rec_file > $rec_file2\n";
-	print CSH "pstext $rec_file2 -N $J1 $R -K -O -V >> $psfile2\n";
+      if (0==1) {   # numbered large circles
+  print CSH "awk '\$1 == \"R\" {print \$2,\$3}' $rec_file | psxy -N $J1 $R -K -O -V $rec0 >> $psfile2\n";
+  $rec_file2 = text_rec; $angle = 0; $just = "CM";
+  print CSH "awk '\$1 == \"R\" {print \$2,\$3,$fsize3,$angle,$fontno,\"$just\",\$4}' $rec_file > $rec_file2\n";
+  print CSH "pstext $rec_file2 -N $J1 $R -K -O -V >> $psfile2\n";
 
-      } else {			# small circles
-	print CSH "awk '\$1 == \"R\" {print \$2,\$3}' $rec_file | psxy -N -Sc5p -W0.5p $J1 $R -K -O -V >> $psfile2\n";
+      } else {      # small circles
+  print CSH "awk '\$1 == \"R\" {print \$2,\$3}' $rec_file | psxy -N -Sc5p -W0.5p $J1 $R -K -O -V >> $psfile2\n";
 
       }
 
       # plot sources
       if ($ievent_one) {
-	print CSH "awk '\$1 == \"S\" {print \$2,\$3}' $rec_file | psxy $src0 -N $J1 $R -K -O -V >> $psfile2\n";
+  print CSH "awk '\$1 == \"S\" {print \$2,\$3}' $rec_file | psxy $src0 -N $J1 $R -K -O -V >> $psfile2\n";
       }
       if ($ievent_all) {
-	print CSH "awk '{print \$1,\$2}' $evefile | psxy $src -N $J1 $R -K -O -V >> $psfile2\n";
+  print CSH "awk '{print \$1,\$2}' $evefile | psxy $src -N $J1 $R -K -O -V >> $psfile2\n";
       }
 
       # plot label
@@ -586,37 +586,37 @@ for ($m = $imodelmin; $m <= $imodelmax; $m = $m+1) {
 
       # colorscale bars
       if ($k==6) {
-	print CSH "psscale -C$cptfile1 $Dscale1 $Bscale1 -K -O -V >> $psfile2\n";
+  print CSH "psscale -C$cptfile1 $Dscale1 $Bscale1 -K -O -V >> $psfile2\n";
       }
       if ($k==7) {
-	print CSH "psscale -C$cptfile1 $Dscale1 $Bscale2 -K -O -V >> $psfile2\n";
+  print CSH "psscale -C$cptfile1 $Dscale1 $Bscale2 -K -O -V >> $psfile2\n";
       }
       if ($k==8) {
-	print CSH "psscale -C$cptfile1 $Dscale1 $Bscale3 -K -O -V >> $psfile2\n";
+  print CSH "psscale -C$cptfile1 $Dscale1 $Bscale3 -K -O -V >> $psfile2\n";
       }
 
       # plot title and GMT header
       if ($k==8) {
-	$plot_title = "Models $stmodp, $stmodt, $stmod (run_${stirun})";
-	$Utag = "-U/0/0.25/$plabel";
-	$shift = "-Xa-4.5 -Ya7";
-	print CSH "pstext -N $J1 $R $Utag -O -V $shift >>$psfile2<<EOF\n $xmin $zmin $fsize0 0 $fontno LM $plot_title\nEOF\n"; # FINISH
+  $plot_title = "Models $stmodp, $stmodt, $stmod (run_${stirun})";
+  $Utag = "-U/0/0.25/$plabel";
+  $shift = "-Xa-4.5 -Ya7";
+  print CSH "pstext -N $J1 $R $Utag -O -V $shift >>$psfile2<<EOF\n $xmin $zmin $fsize0 0 $fontno LM $plot_title\nEOF\n"; # FINISH
 
-	if ($ijpg == 1) {
-	  print CSH "convert $psfile2 $jpgfile\n";
-	}
-	if ($ipdf == 1) {
-	  print CSH "ps2pdf $psfile2\n";
-	}
+  if ($ijpg == 1) {
+    print CSH "convert $psfile2 $jpgfile\n";
+  }
+  if ($ipdf == 1) {
+    print CSH "ps2pdf $psfile2\n";
+  }
 
       }
-    }				# loop over subplots
+    }       # loop over subplots
 
   }
 
   #-----------------------------
 
-}				# loop over models
+}       # loop over models
 
 close (CSH);
 system("csh -f $cshfile");

@@ -72,7 +72,7 @@ specfem3D_OBJECTS = \
 	$O/compute_forces_poro_fluid_part.spec.o \
 	$O/compute_forces_poroelastic_calling_routine.spec.o \
 	$O/compute_forces_poro_solid_part.spec.o \
-	$O/compute_gradient.spec.o \
+	$O/compute_gradient_in_acoustic.spec.o \
 	$O/compute_interpolated_dva.spec.o \
 	$O/compute_kernels.spec.o \
 	$O/compute_stacey_acoustic.spec.o \
@@ -116,7 +116,6 @@ specfem3D_SHARED_OBJECTS = \
 	$O/assemble_MPI_scalar.shared.o \
 	$O/check_mesh_resolution.shared.o \
 	$O/create_name_database.shared.o \
-	$O/create_serial_name_database.shared.o \
 	$O/define_derivation_matrices.shared.o \
 	$O/detect_surface.shared.o \
 	$O/exit_mpi.shared.o \
@@ -139,7 +138,6 @@ specfem3D_SHARED_OBJECTS = \
 	$O/recompute_jacobian.shared.o \
 	$O/save_header_file.shared.o \
 	$O/sort_array_coordinates.shared.o \
-	$O/unused_mod.shared_module.o \
 	$O/utm_geo.shared.o \
 	$O/write_VTK_data.shared.o \
 	$O/write_c_binary.cc.o \
@@ -302,7 +300,7 @@ endif
 ### Module dependencies
 ###
 
-$O/specfem3D_par.spec.o: $O/shared_par.shared_module.o $O/unused_mod.shared_module.o
+$O/specfem3D_par.spec.o: $O/shared_par.shared_module.o
 $O/compute_stacey_acoustic.spec.o: $O/shared_par.shared_module.o
 $O/compute_stacey_poroelastic.spec.o: $O/shared_par.shared_module.o
 $O/locate_receivers.spec.o: $O/shared_par.shared_module.o
@@ -327,7 +325,7 @@ $O/compute_coupling_poroelastic_el.spec.o: $O/specfem3D_par.spec.o
 $O/compute_forces_poroelastic_calling_routine.spec.o: $O/specfem3D_par.spec.o
 $O/compute_forces_poro_fluid_part.spec.o: $O/specfem3D_par.spec.o
 $O/compute_forces_poro_solid_part.spec.o: $O/specfem3D_par.spec.o
-$O/compute_gradient.spec.o: $O/specfem3D_par.spec.o
+$O/compute_gradient_in_acoustic.spec.o: $O/specfem3D_par.spec.o
 $O/compute_interpolated_dva.spec.o: $O/specfem3D_par.spec.o
 $O/compute_kernels.spec.o: $O/specfem3D_par.spec.o
 $O/compute_stacey_viscoelastic.spec.o: $O/specfem3D_par.spec.o
@@ -366,7 +364,7 @@ $O/compute_forces_viscoelastic_Dev.spec.o: $O/specfem3D_par.spec.o $O/pml_par.sp
 $O/compute_forces_viscoelastic_noDev.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o $O/fault_solver_dynamic.spec.o
 $O/compute_forces_viscoelastic_calling_routine.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o $O/fault_solver_dynamic.spec.o $O/fault_solver_kinematic.spec.o
 $O/iterate_time.spec.o: $O/specfem3D_par.spec.o $O/gravity_perturbation.spec.o
-$O/prepare_timerun.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o $O/fault_solver_dynamic.spec.o $O/fault_solver_kinematic.spec.o $O/gravity_perturbation.spec.o $O/unused_mod.shared_module.o
+$O/prepare_timerun.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o $O/fault_solver_dynamic.spec.o $O/fault_solver_kinematic.spec.o $O/gravity_perturbation.spec.o
 
 ## adios
 $O/read_forward_arrays_adios.spec_adios.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o
@@ -375,7 +373,7 @@ $O/initialize_simulation.spec.o: $O/specfem3D_par.spec.o $(adios_specfem3D_PREOB
 $O/save_kernels_adios.spec_adios.o: $O/specfem3D_par.spec.o $(adios_specfem3D_PREOBJECTS)
 $O/save_forward_arrays_adios.spec_adios.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o $(adios_specfem3D_PREOBJECTS)
 $O/finalize_simulation.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o $O/gravity_perturbation.spec.o $(adios_specfem3D_PREOBJECTS)
-$O/specfem3D_adios_stubs.spec_noadios.o: $O/specfem3D_par.spec.o $O/unused_mod.shared_module.o $O/adios_manager_stubs.shared_noadios.o
+$O/specfem3D_adios_stubs.spec_noadios.o: $O/specfem3D_par.spec.o $O/adios_manager_stubs.shared_noadios.o
 $O/adios_helpers.shared_adios.o: \
 	$O/adios_helpers_definitions.shared_adios_module.o \
 	$O/adios_helpers_writers.shared_adios_module.o

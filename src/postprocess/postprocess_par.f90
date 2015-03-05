@@ -25,19 +25,27 @@
 !
 !=====================================================================
 
-module unused_mod
 
-  use constants, only: CUSTOM_REAL
+module postprocess_par
+
+  use constants,only: CUSTOM_REAL,MAX_STRING_LEN,IIN,IOUT, &
+    NGLLX,NGLLY,NGLLZ,NGLLSQUARE,NDIM, &
+    FOUR_THIRDS,R_EARTH_KM,GAUSSALPHA,GAUSSBETA,PI,TWO_PI
 
   implicit none
 
-  private :: CUSTOM_REAL
+  integer,parameter :: MAX_KERNEL_NAMES = 255
+  integer,parameter :: MAX_KERNEL_PATHS = 65535
 
-  integer(kind=4) :: unused_i4
-  integer(kind=8) :: unused_i8
-  real :: unused_r
-  double precision :: unused_dp
-  real(kind=CUSTOM_REAL) :: unused_cr
-  logical :: unused_l
+  ! mesh size
+  integer :: NSPEC, NGLOB
 
-end module unused_mod
+  ! volume
+  real(kind=CUSTOM_REAL), dimension(:),allocatable :: x, y, z
+  integer, dimension(:,:,:,:),allocatable :: ibool
+
+  ! mpi process
+  integer :: myrank,sizeprocs
+
+end module postprocess_par
+

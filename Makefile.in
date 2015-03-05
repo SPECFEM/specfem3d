@@ -220,6 +220,7 @@ SUBDIRS = \
 	decompose_mesh \
 	generate_databases \
 	meshfem3D \
+	postprocess \
 	shared \
 	specfem3D \
 	tomography \
@@ -243,6 +244,8 @@ all: default \
 	xconvolve_source_timefunction \
 	xcreate_movie_shakemap_AVS_DX_GMT \
 	xmodel_update \
+	xclip_sem \
+	xcombine_sem \
 	xsmooth_sem \
 	xsum_kernels \
 	xsum_preconditioned_kernels \
@@ -322,9 +325,13 @@ help:
 	@echo "    xconvert_skewness_to_angle"
 	@echo "    xmultiply_CUBIT_Abaqus_mesh_by_1000"
 	@echo ""
+	@echo "- postprocessing tools: [make postprocess]"
+	@echo "    xclip_sem"
+	@echo "    xcombine_sem"
+	@echo "    xsmooth_sem"
+	@echo ""
 	@echo "- tomography tools: [make tomography]"
 	@echo "    xmodel_update"
-	@echo "    xsmooth_sem"
 	@echo "    xsum_kernels"
 	@echo "    xsum_preconditioned_kernels"
 	@echo ""
@@ -344,6 +351,8 @@ help:
 	create_movie_shakemap_AVS_DX_GMT xcreate_movie_shakemap_AVS_DX_GMT \
 	combine_vol_data xcombine_vol_data \
 	combine_surf_data xcombine_surf_data \
+	clip_sem xclip_sem \
+	combine_sem xcombine_sem \
 	smooth_sem xsmooth_sem \
 	sum_kernels xsum_kernels \
 	sum_preconditioned_kernels xsum_preconditioned_kernels \

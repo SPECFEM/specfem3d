@@ -226,7 +226,7 @@ $jpgfile = "$name.jpg";
 
 #------------------------------------------------------------------------
 # covariance matrices -- NOTE plotting j,i,Cij
-  
+
   $file1syn = "$idir/C_Cest.dat";
   if (not -f $file1syn) {die("Check if file1syn $file1syn exist or not\n");}
   $B1syn = "-Ba256f32:.\" \":WesN";

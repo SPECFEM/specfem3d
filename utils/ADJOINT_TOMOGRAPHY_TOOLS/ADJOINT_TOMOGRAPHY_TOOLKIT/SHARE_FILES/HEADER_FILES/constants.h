@@ -103,7 +103,7 @@
 !! pathname of the topography file
 !  character (len=*), parameter :: PATHNAME_TOPO_FILE = 'DATA/topo_bathy/topo_bathy_etopo2_smoothed_window7.dat'
 
-!!--- ETOPO1 1-minute model, implemented now, but data file must be created first 
+!!--- ETOPO1 1-minute model, implemented now, but data file must be created first
 !! size of topography and bathymetry file
   integer, parameter :: NX_BATHY = 21600,NY_BATHY = 10800
 !! resolution of topography file in minutes
@@ -124,21 +124,21 @@
 ! minimum thickness in meters to include the effect of the oceans and topo
   double precision, parameter :: MINIMUM_THICKNESS_3D_OCEANS = 100.d0
 
-!-- crustal models 
+!-- crustal models
   integer, parameter :: ICRUST_CRUST2 = 1
   integer, parameter :: ICRUST_CRUSTMAPS = 2
 !> Hejun Zhu
   integer, parameter :: ICRUST_EPCRUST=3
 !< Hejun Zhu
-  
+
 
 ! increase smoothing for critical regions  (increases mesh stability)
-  logical, parameter :: SMOOTH_CRUST = .true.  
+  logical, parameter :: SMOOTH_CRUST = .true.
 
 ! use sedimentary layers in crustal model
   logical, parameter :: INCLUDE_SEDIMENTS_CRUST = .true.
   double precision, parameter :: MINIMUM_SEDIMENT_THICKNESS = 2.d0 ! minimim thickness in km
-  
+
 !-- uncomment for using Crust2.0 (used when CRUSTAL flag is set for simulation)
 !  integer, parameter :: ITYPE_CRUSTAL_MODEL = ICRUST_CRUST2
 !!-- uncomment for using General Crustmaps instead
@@ -194,8 +194,8 @@
 ! default is .false. to compute isotropic kernels (related to alpha and beta)
   logical, parameter :: ANISOTROPIC_KL = .true.
 
-! output only transverse isotropic kernels (alpha_v,alpha_h,beta_v,beta_h,eta,rho) 
-! rather than fully anisotropic kernels in case ANISOTROPIC_KL is set to .true. 
+! output only transverse isotropic kernels (alpha_v,alpha_h,beta_v,beta_h,eta,rho)
+! rather than fully anisotropic kernels in case ANISOTROPIC_KL is set to .true.
   logical, parameter :: SAVE_TRANSVERSE_KL = .true.
 
 ! print date and time estimate of end of run in another country,
@@ -507,9 +507,9 @@
 
 ! General Crustmaps parameters
   integer, parameter :: CRUSTMAP_RESOLUTION = 4 !means 1/4 degrees
-  integer, parameter :: NLAYERS_CRUSTMAP = 5 
+  integer, parameter :: NLAYERS_CRUSTMAP = 5
 
-!> Hejun Zhu, parameters for EPCRUST , from Molinari et al's model(2010) 
+!> Hejun Zhu, parameters for EPCRUST , from Molinari et al's model(2010)
 !       latitude :  9.0N - 89.5N
 !       longitude:  56.0W - 70.0E
   character(len=*), parameter:: PATHNAME_EPCRUST='DATA/EPCRUST_EXTEND/EPcrust_0_5.txt'
@@ -517,11 +517,11 @@
   double precision, parameter:: EPCRUST_LON_MIN=-56.0d0
   double precision, parameter:: EPCRUST_LON_MAX=70.0d0
   double precision, parameter:: EPCRUST_LAT_MIN=9.0d0
-  double precision, parameter:: EPCRUST_LAT_MAX=89.5d0 
-  double precision, parameter:: EPCRUST_SAMPLE=0.5d0 
+  double precision, parameter:: EPCRUST_LAT_MAX=89.5d0
+  double precision, parameter:: EPCRUST_SAMPLE=0.5d0
   logical, parameter:: flag_smooth_epcrust=.true.
   integer, parameter:: NTHETA_EP=4, NPHI_EP=20
-  double precision, parameter:: cap_degree_EP=0.2d0 
+  double precision, parameter:: cap_degree_EP=0.2d0
 !< Hejun Zhu
 
 
@@ -541,12 +541,12 @@
   logical, parameter :: REGIONAL_MOHO_MESH_ASIA = .false.   ! used only for fixing time step
   logical, parameter :: HONOR_DEEP_MOHO = .false.
 ! uncomment for e.g. Europe case, where deep moho is rare
-  double precision, parameter :: RMOHO_STRETCH_ADJUSTEMENT = -15000.d0  ! moho mesh boundary down to 55km  
+  double precision, parameter :: RMOHO_STRETCH_ADJUSTEMENT = -15000.d0  ! moho mesh boundary down to 55km
 ! uncomment for deep moho cases, e.g. Asia case (Himalayan moho)
-!!  double precision, parameter :: RMOHO_STRETCH_ADJUSTEMENT = -20000.d0  ! moho mesh boundary down to 60km 
+!!  double precision, parameter :: RMOHO_STRETCH_ADJUSTEMENT = -20000.d0  ! moho mesh boundary down to 60km
 
-  
-! to suppress the crustal layers 
+
+! to suppress the crustal layers
 ! (replaced by an extension of the mantle: R_EARTH is not modified, but no more crustal doubling)
   logical, parameter :: SUPPRESS_CRUSTAL_MESH = .false.
 

@@ -343,7 +343,7 @@ end subroutine init_dataXZ
 
 subroutine load_vslip_snapshots(dataXZ,itime,iflt)
 
-  use specfem_par, only: OUTPUT_FILES_PATH
+  use specfem_par, only: OUTPUT_FILES
   integer, intent(in) :: itime,iflt
   type(dataXZ_type), intent(inout) :: dataXZ
   character(len=MAX_STRING_LEN) :: filename
@@ -352,7 +352,7 @@ subroutine load_vslip_snapshots(dataXZ,itime,iflt)
   IIN_BIN=101
   IOUT = 102
 
-  write(filename,"(a,I0,'_F',I0,'.bin')") trim(OUTPUT_FILES_PATH)//'/Snapshot',itime,iflt
+  write(filename,"(a,I0,'_F',I0,'.bin')") trim(OUTPUT_FILES)//'/Snapshot',itime,iflt
   print*, trim(filename)
 
   open(unit=IIN_BIN, file= trim(filename), status='old', form='formatted',&

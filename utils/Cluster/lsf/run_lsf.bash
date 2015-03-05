@@ -7,8 +7,8 @@
 
 queue="-q normal"
 if [ $# -eq 1 ]; then
-	echo "Setting the queue to $1"
-	queue="-q $1"
+  echo "Setting the queue to $1"
+  queue="-q $1"
 fi
 
 d=`date`

@@ -372,42 +372,42 @@ program TraFFT
      endif
      if(iPS/=2) then ! SH calculation  ! TO DO changer l'ordre ista,irpof dans tmpsngl(1)
         write(coutfile, '(I5.5,".Stress_SH_",i5.5)') int(r0(ir0)*10.d0),irank-1
-	coutfile = trim(modelname)//"."//coutfile
-	coutfile = trim(outputDir)//"/Stress/"//coutfile
-	if (myrank==0) then
-	 
-	  open(1,file=coutfile,form='unformatted',action='read')
-	  read(1)  tmpsngl
-!	  write(100,*)
-!	  write(100,*)  'rec ,frq, ',k,i
-!	  write(100,*)  'nb rec,profmin profmax :', r_n,iprofmin,iprofmax
-!	  write(100,'(a)') trim( coutfile)
-	endif
-	size_of_array=6*6*r_n_global*nsta  !  il faudrait faire un mpi_scatterv
-	!call MPI_Bcast()
-	call MPI_Bcast(tmpsngl,size_of_array,MPI_COMPLEX,0,MPI_COMM_WORLD,ierr)
-	do ista=1,nsta
-	   kkk=0
-	   do iproff=iprofmin,iprofmax
-	      kkk=kkk+1
-	      stresssngl(1:6,1:6,ista,kkk,i)=stresssngl(1:6,1:6,ista,kkk,i)+tmpsngl(1:6,1:6,iproff,ista)
-	   enddo
-	enddo
+  coutfile = trim(modelname)//"."//coutfile
+  coutfile = trim(outputDir)//"/Stress/"//coutfile
+  if (myrank==0) then
 
-	if (myrank==0) then
-	   read(1)  tmpsngl1
-	   close(1)
-	endif
-	size_of_array=3*6*r_n_global*nsta
-	call MPI_Bcast(tmpsngl1,size_of_array,MPI_COMPLEX,0,MPI_COMM_WORLD,ierr)
-	kkk=0
-	do iproff=iprofmin,iprofmax !! VM VM : It's seems to be useless to perfrom sumation because of initilisation of displacementsngl??
-	   kkk=kkk+1
-	   do ista=1,nsta
-	      displacementsngl(1:3,1:6,ista,kkk,i)=displacementsngl(1:3,1:6,ista,kkk,i)+tmpsngl1(1:3,1:6,iproff,ista)
+    open(1,file=coutfile,form='unformatted',action='read')
+    read(1)  tmpsngl
+!   write(100,*)
+!   write(100,*)  'rec ,frq, ',k,i
+!   write(100,*)  'nb rec,profmin profmax :', r_n,iprofmin,iprofmax
+!   write(100,'(a)') trim( coutfile)
+  endif
+  size_of_array=6*6*r_n_global*nsta  !  il faudrait faire un mpi_scatterv
+  !call MPI_Bcast()
+  call MPI_Bcast(tmpsngl,size_of_array,MPI_COMPLEX,0,MPI_COMM_WORLD,ierr)
+  do ista=1,nsta
+     kkk=0
+     do iproff=iprofmin,iprofmax
+        kkk=kkk+1
+        stresssngl(1:6,1:6,ista,kkk,i)=stresssngl(1:6,1:6,ista,kkk,i)+tmpsngl(1:6,1:6,iproff,ista)
+     enddo
+  enddo
+
+  if (myrank==0) then
+     read(1)  tmpsngl1
+     close(1)
+  endif
+  size_of_array=3*6*r_n_global*nsta
+  call MPI_Bcast(tmpsngl1,size_of_array,MPI_COMPLEX,0,MPI_COMM_WORLD,ierr)
+  kkk=0
+  do iproff=iprofmin,iprofmax !! VM VM : It's seems to be useless to perfrom sumation because of initilisation of displacementsngl??
+     kkk=kkk+1
+     do ista=1,nsta
+        displacementsngl(1:3,1:6,ista,kkk,i)=displacementsngl(1:3,1:6,ista,kkk,i)+tmpsngl1(1:3,1:6,iproff,ista)
            enddo
         enddo
-	if (myrank==0) write(100,'(a)') trim(coutfile)
+  if (myrank==0) write(100,'(a)') trim(coutfile)
 
      endif
      call MPI_Barrier(MPI_COMM_WORLD,ierr) !! test

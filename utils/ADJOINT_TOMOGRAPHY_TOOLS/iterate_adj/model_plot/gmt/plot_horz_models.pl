@@ -89,7 +89,7 @@ $colorbar = "seis";
 
 # resolution of color plots
 #$interp = "-I2m/2m -S4m";   # key information
-$interp = "-I2m"; 
+$interp = "-I2m";
 $grdfile = "temp.grd";
 
 # position of titles and labels
@@ -139,7 +139,7 @@ $iregion = 1;
 
 if ($iregion==1) {
   # southern California
-  $wid = 2.8;			# width of figure (inches)
+  $wid = 2.8;     # width of figure (inches)
   $xmin = -122; $xmax = -114; $ymin = 31.5; $ymax = 37;
   $xmin = -121.2; $xmax = -114.8; $ymin = 32.3; $ymax = 36.7;   # SPECFEM
   $tick1 = 1; $tick2 = 0.5;
@@ -150,14 +150,14 @@ if ($iregion==1) {
   $topo_labels  = "$dir0/socal_2005/socal_topo_labs.xyz";
   $fault_labels = "$dir0/socal_2005/socal_fault_labs.xyz";
   $name = "plot_horz_models";
-  $origin = "-X1i -Y5i"; 
+  $origin = "-X1i -Y5i";
 
   # inset map
   $iinset = 1;
   $origin_inset = "-Xa7.5 -Ya4.5";
   $Jinset = "-JM1.5";
   $Rinset = "-R-132/-110/25/50";
-  $Binset = "-B100wesn"; 
+  $Binset = "-B100wesn";
   $coast_res = "-Df -A0/0/4";
 }
 
@@ -238,10 +238,10 @@ for ($p = $pmin; $p <= $pmax; $p ++ ) {
   $fname = $fname0;
   $psfile = "$fname.ps"; $jpgfile = "$fname.jpg";
 
-  $vsnorm = $vsnorms[$p-1];	# reference velocity for m00 and m16
-  $vbnorm = $vbnorms[$p-1];	# reference velocity for m00 and m16
+  $vsnorm = $vsnorms[$p-1]; # reference velocity for m00 and m16
+  $vbnorm = $vbnorms[$p-1]; # reference velocity for m00 and m16
   $vpert = $vperts[$p-1];       # perturbation from reference velocity to plot
-  $zdep = $zcuts[$p-1];		# depth of the cross-section (m)
+  $zdep = $zcuts[$p-1];   # depth of the cross-section (m)
 
   # make less of a range for Vb compared with Vs -- factor
   if($ivs == 0) {$vpert = 1.0*$vpert;}
@@ -259,7 +259,7 @@ for ($p = $pmin; $p <= $pmax; $p ++ ) {
 
   # colorpoint file for m00 and m16 -- VARIES with depth -- in ln(m00/cnorm)
   $cptfile1a = "color1a.cpt";
-  $cmin = -$cpert1*1.01; $cmax = $cpert1*1.01; 
+  $cmin = -$cpert1*1.01; $cmax = $cpert1*1.01;
   $dc = ($cmax-$cmin)/${scale_color};
   $T = sprintf("-T%3.3e/%3.3e/%3.3e",$cmin,$cmax,$dc);
   print CSH "makecpt -C$colorbar $T -D > $cptfile1a\n";
@@ -276,7 +276,7 @@ for ($p = $pmin; $p <= $pmax; $p ++ ) {
 
   # colorpoint file for perturbation ln(m16/m00) -- FIXED with depth
   $cptfile2 = "color2.cpt";
-  $cmin = -$cpert2*1.01; $cmax = $cpert2*1.01; 
+  $cmin = -$cpert2*1.01; $cmax = $cpert2*1.01;
   $dc = ($cmax-$cmin)/${scale_color};
   $T = sprintf("-T%3.3e/%3.3e/%3.3e",$cmin,$cmax,$dc);
   print CSH "makecpt -C$colorbar $T -D > $cptfile2\n";
@@ -299,19 +299,19 @@ for ($p = $pmin; $p <= $pmax; $p ++ ) {
     $title = $titles[$k-1];
 
     if ($k==1) {
-      print CSH "psbasemap $J $R $B -K -V $orient $origin > $psfile\n";	# START
+      print CSH "psbasemap $J $R $B -K -V $orient $origin > $psfile\n"; # START
     } else {
       print CSH "psbasemap $J $R $B -K -O -V $shift >> $psfile\n";
     }
     print CSH "psbasemap $J $R $B $cgray -K -O -V >> $psfile\n";  # mask color
     if ($icolor==1) {
       if ($k == 1) {
-	##print CSH "awk '{print \$1,\$2,log(\$3/$cnorm)}' $dfile | nearneighbor -G$grdfile $R $interp\n";
+  ##print CSH "awk '{print \$1,\$2,log(\$3/$cnorm)}' $dfile | nearneighbor -G$grdfile $R $interp\n";
         #print CSH "awk '{print \$1,\$2,log(\$3/$cnorm)}' $dfile | xyz2grd -G$grdfile $R $interp\n";
-	#print CSH "grdimage $grdfile -C$cptfile1a $J -Q -K -O -V >> $psfile\n";
+  #print CSH "grdimage $grdfile -C$cptfile1a $J -Q -K -O -V >> $psfile\n";
         #print CSH "awk '{print \$1,\$2,\$3/1000}' $dfile | xyz2grd -G$grdfile $R $interp\n";
         print CSH "grep -v NaN $dfile | awk '{print \$1,\$2,\$3/1000}' | xyz2grd -G$grdfile $R $interp\n";
-	print CSH "grdimage $grdfile -C$cptfile1b $J -Q -K -O -V >> $psfile\n";
+  print CSH "grdimage $grdfile -C$cptfile1b $J -Q -K -O -V >> $psfile\n";
 
         #print CSH "psscale -C${cptfile1a} $Dscale $Bscale1a -K -O -V >> $psfile\n";
         print CSH "psscale -C${cptfile1b} $Dscale2 $Bscale1b -K -O -V >> $psfile\n";
@@ -323,11 +323,11 @@ for ($p = $pmin; $p <= $pmax; $p ++ ) {
         print CSH "pstext -N $R_title $J_title -K -O -V >>$psfile<<EOF\n$xtx4 $ytx4 $fsize2 0 $fontno LM $slab2\nEOF\n";
 
       } elsif ($k == 2) {
-	##print CSH "awk '{print \$1,\$2,log(\$4/$cnorm)}' $dfile | nearneighbor -G$grdfile $R $interp\n";
+  ##print CSH "awk '{print \$1,\$2,log(\$4/$cnorm)}' $dfile | nearneighbor -G$grdfile $R $interp\n";
         #print CSH "awk '{print \$1,\$2,log(\$4/$cnorm)}' $dfile | xyz2grd -G$grdfile $R $interp\n";
-	#print CSH "grdimage $grdfile -C$cptfile1a $J -Q -K -O -V >> $psfile\n";
+  #print CSH "grdimage $grdfile -C$cptfile1a $J -Q -K -O -V >> $psfile\n";
         print CSH "grep -v NaN $dfile | awk '{print \$1,\$2,\$4/1000}' | xyz2grd -G$grdfile $R $interp\n";
-	print CSH "grdimage $grdfile -C$cptfile1b $J -Q -K -O -V >> $psfile\n";
+  print CSH "grdimage $grdfile -C$cptfile1b $J -Q -K -O -V >> $psfile\n";
 
         #print CSH "psscale -C${cptfile1a} $Dscale $Bscale1a -K -O -V >> $psfile\n";
         print CSH "psscale -C${cptfile1b} $Dscale2 $Bscale1b -K -O -V >> $psfile\n";
@@ -338,10 +338,10 @@ for ($p = $pmin; $p <= $pmax; $p ++ ) {
         print CSH "pstext -N $R_title $J_title -K -O -V >>$psfile<<EOF\n$xtx4 $ytx4 $fsize2 0 $fontno LM $slab2\nEOF\n";
 
       } elsif ($k == 3) {
-	#print CSH "awk '{print \$1,\$2,log(\$4/\$3)}' $dfile | nearneighbor -G$grdfile $R $interp\n";
+  #print CSH "awk '{print \$1,\$2,log(\$4/\$3)}' $dfile | nearneighbor -G$grdfile $R $interp\n";
         #print CSH "awk '{print \$1,\$2,\$5}' $dfile | nearneighbor -G$grdfile $R $interp\n";
         print CSH "awk '{print \$1,\$2,\$5}' $dfile | xyz2grd -G$grdfile $R $interp\n";
-	print CSH "grdimage $grdfile -C$cptfile2 $J -K -O -V -Q >> $psfile\n";
+  print CSH "grdimage $grdfile -C$cptfile2 $J -K -O -V -Q >> $psfile\n";
 
         print CSH "psscale -C${cptfile2} $Dscale $Bscale2 -K -O -V >> $psfile\n";
         $slab1 = "ln($smodel2 / $smodel1)";
@@ -361,16 +361,16 @@ for ($p = $pmin; $p <= $pmax; $p ++ ) {
 
     if (0==1) {
       # boundaries of simulation
-      print CSH "psxy ${outer_boundary} $J $R -W2p,0/0/0 -K -O -V >>$psfile\n";  
-      print CSH "psxy ${inner_boundary} $J $R -W1.5p,0/0/0,-- -K -O -V >>$psfile\n";  
+      print CSH "psxy ${outer_boundary} $J $R -W2p,0/0/0 -K -O -V >>$psfile\n";
+      print CSH "psxy ${inner_boundary} $J $R -W1.5p,0/0/0,-- -K -O -V >>$psfile\n";
 
       $ibox = 0;
       if ($ibox==1) {
-	$boxinfo = "-W1.5p,0/0/255"; # -A : suppress drawing line segments as great circle arcs
+  $boxinfo = "-W1.5p,0/0/255"; # -A : suppress drawing line segments as great circle arcs
 
-	# Lin model (2007) box
-	$lin_boundary = "/net/denali/home2/carltape/gmt/tomography/lin_2007/lin_boundary_points.dat";
-	print CSH "psxy ${lin_boundary} $J $R $boxinfo -K -O -V >>$psfile\n";  
+  # Lin model (2007) box
+  $lin_boundary = "/net/denali/home2/carltape/gmt/tomography/lin_2007/lin_boundary_points.dat";
+  print CSH "psxy ${lin_boundary} $J $R $boxinfo -K -O -V >>$psfile\n";
       }
     }
 
@@ -382,24 +382,24 @@ for ($p = $pmin; $p <= $pmax; $p ++ ) {
 
       # plot a line at -119 longitude
       if ($p==11 && $ivs==1) {
-	$xmark = -119;
-	print CSH "psxy $J $R $finfo1 -K -O -V >>$psfile<<EOF\n$xmark $ymin\n$xmark $ymax\nEOF\n";
-	print CSH "psxy $J $R $finfo2 -K -O -V >>$psfile<<EOF\n$xmark $ymin\n$xmark $ymax\nEOF\n";
+  $xmark = -119;
+  print CSH "psxy $J $R $finfo1 -K -O -V >>$psfile<<EOF\n$xmark $ymin\n$xmark $ymax\nEOF\n";
+  print CSH "psxy $J $R $finfo2 -K -O -V >>$psfile<<EOF\n$xmark $ymin\n$xmark $ymax\nEOF\n";
       }
 
       # plot two cross section ray paths
       if ($p==21 && $ivs==1) {
-	@irs = (2,5); $nray = @irs ;
-	for ($ik = 1; $ik <= $nray; $ik ++ ) {
-	  $ir = $irs[$ik-1];
-	  $stir = sprintf("%3.3i",$ir);
-	  $pfile = "./INPUT/vert_01/vert_xc_${stir}_ray_path";
-	  if (not -f $pfile) {
-	    die("Check if pfile $pfile exist or not\n");
-	  }
-	  print CSH "awk '{print \$1,\$2}' ${pfile} | psxy $J $R $finfo1 -K -O -V >> $psfile\n";
-	  print CSH "awk '{print \$1,\$2}' ${pfile} | psxy $J $R $finfo2 -K -O -V >> $psfile\n";
-	}
+  @irs = (2,5); $nray = @irs ;
+  for ($ik = 1; $ik <= $nray; $ik ++ ) {
+    $ir = $irs[$ik-1];
+    $stir = sprintf("%3.3i",$ir);
+    $pfile = "./INPUT/vert_01/vert_xc_${stir}_ray_path";
+    if (not -f $pfile) {
+      die("Check if pfile $pfile exist or not\n");
+    }
+    print CSH "awk '{print \$1,\$2}' ${pfile} | psxy $J $R $finfo1 -K -O -V >> $psfile\n";
+    print CSH "awk '{print \$1,\$2}' ${pfile} | psxy $J $R $finfo2 -K -O -V >> $psfile\n";
+  }
       }
     }
 
@@ -421,7 +421,7 @@ for ($p = $pmin; $p <= $pmax; $p ++ ) {
     if ($itoplab==1) {
       print CSH "pstext -N $R_title $J_title -K -O -V >>$psfile<<EOF\n$xtx1 $ytx1 $fsize0 0 $fontno CM $title\nEOF\n";
     }
- 
+
     # inset label for each plot
     if ($iinsetlab==1) {
       $lab = $labs[$k-1];
@@ -432,7 +432,7 @@ for ($p = $pmin; $p <= $pmax; $p ++ ) {
     # plot vertical title left of the row
     if ($isidelab==1 && $k==1) {
       print CSH "pstext -N $R_title $J_title -K -O -V >>$psfile<<EOF\n$xtx2 $ytx2 $fsize0 90 $fontno CM $dtitle\nEOF\n";
-    } 
+    }
 
     # plot overall label (for publication)
     if ($iletter==1 && $k==1) {
@@ -440,9 +440,9 @@ for ($p = $pmin; $p <= $pmax; $p ++ ) {
       print CSH "pstext $R_title $J_title $textinfo -K -O -V >>$psfile<<EOF\n$xtx5 $ytx5 18 0 $fontno TL $letter\nEOF\n";
     }
 
-  }				# loop over k
+  }       # loop over k
 
-  print CSH "pstext -N $R_title $J_title -O -V >>$psfile<<EOF\n $x_title $y_title 16 0 $fontno CM \nEOF\n"; # FINISH 
+  print CSH "pstext -N $R_title $J_title -O -V >>$psfile<<EOF\n $x_title $y_title 16 0 $fontno CM \nEOF\n"; # FINISH
   #if($ixv==1) {print CSH "convert $psfile -rotate $rotangle $jpgfile\n";}
   #if($ixv==1) {print CSH "gv $psfile &\n";}
   if($ipdf==1) {print CSH "ps2pdf $psfile\n";}
@@ -460,12 +460,12 @@ for ($p = $pmin; $p <= $pmax; $p ++ ) {
     $B = "$B0"."wENs";
     $title = $titles[$k-1];
 
-    print CSH "psbasemap $J $R $B -K -V $orient $origin > $psfile\n";	# START
-   
+    print CSH "psbasemap $J $R $B -K -V $orient $origin > $psfile\n"; # START
+
     print CSH "psbasemap $J $R $B $cgray -K -O -V >> $psfile\n";
     if ($icolor==1) {
         print CSH "awk '{print \$1,\$2,\$4/1000}' $dfile | xyz2grd -G$grdfile $R $interp\n";
-	print CSH "grdimage $grdfile -C$cptfile1b $J -Q -K -O -V >> $psfile\n";
+  print CSH "grdimage $grdfile -C$cptfile1b $J -Q -K -O -V >> $psfile\n";
         print CSH "psscale -C${cptfile1b} $Dscale2 $Bscale1b -K -O -V >> $psfile\n";
         $slab1 = sprintf("(%.2f \\261 %.0f \\045)",$cnorm/1000,$cpert1*100);
         $slab2 = "$mtit  km/s";
@@ -497,7 +497,7 @@ for ($p = $pmin; $p <= $pmax; $p ++ ) {
     if ($itoplab==1) {
       print CSH "pstext -N $R_title $J_title -K -O -V >>$psfile<<EOF\n$xtx1 $ytx1 $fsize0 0 $fontno CM $title\nEOF\n";
     }
- 
+
     # inset label for each plot
     if ($iinsetlab==1) {
       $lab = $labs[$k-1];
@@ -508,7 +508,7 @@ for ($p = $pmin; $p <= $pmax; $p ++ ) {
     # plot vertical title left of the row
     if ($isidelab==1) {
       print CSH "pstext -N $R_title $J_title -K -O -V >>$psfile<<EOF\n$xtx2 $ytx2 $fsize0 90 $fontno CM $dtitle\nEOF\n";
-    } 
+    }
 
     # plot overall label (for publication)
     if ($iletter==1) {
@@ -516,15 +516,15 @@ for ($p = $pmin; $p <= $pmax; $p ++ ) {
       print CSH "pstext $R_title $J_title $textinfo -K -O -V >>$psfile<<EOF\n$xtx5 $ytx5 18 0 $fontno TL $letter\nEOF\n";
     }
 
-  print CSH "pstext -N $R_title $J_title -O -V >>$psfile<<EOF\n $x_title $y_title 16 0 $fontno CM \nEOF\n"; # FINISH 
+  print CSH "pstext -N $R_title $J_title -O -V >>$psfile<<EOF\n $x_title $y_title 16 0 $fontno CM \nEOF\n"; # FINISH
   if($ixv==1) {print CSH "convert $psfile -rotate $rotangle $jpgfile\n";}
   if($ixv==1) {print CSH "gv $psfile &\n";}
   if($ipdf==1) {print CSH "ps2pdf $psfile\n";}
 
   }
 
-}				# loop over p
-  
+}       # loop over p
+
 #------------------------------------
 close (CSH);
 system("csh -f $cshfile");

@@ -1,4 +1,4 @@
-#             ------------ BACTH AND SPECIFIC CLUSTER DIRECTIVES  ------ 
+#             ------------ BACTH AND SPECIFIC CLUSTER DIRECTIVES  ------
 #=========== Global directives ===========
 # @ job_name = benchmark_hybrid
 # @ output = $(job_name).$(step_name).$(jobid)
@@ -46,7 +46,7 @@
 # Repertoire temporaire de travail
 cd $TMPDIR
 
-# La variable LOADL_STEP_INITDIR est automatiquement positionnee par 
+# La variable LOADL_STEP_INITDIR est automatiquement positionnee par
 # LoadLeveler au repertoire dans lequel on tape la commande llsubmit
 cp  $LOADL_STEP_INITDIR/input_data.tar.bz2 .
 tar -jxvf input_data.tar.bz2
@@ -55,16 +55,16 @@ tar -jxvf input_data.tar.bz2
 #
 #
 #      BENCHMARK FOR HYBRID DSM/SPECFEM3D METHOD
-#      
+#
 # INPUTS :
 #
 #   1/ input directoy : ./input_dsm
-#      containts  
+#      containts
 #             -- Double_para.txt
 #             -- FrqsMpi.txt
 #             -- iasp91
 #             -- iasp91_dsm
-#             -- st 
+#             -- st
 #
 #   2/ input file : parfile_for_benchmark
 #
@@ -74,12 +74,12 @@ tar -jxvf input_data.tar.bz2
 #             -- Par_file
 #             -- STATIONS
 #             -- CMTSOLUTION
-#  
 #
-# the script runs : 
-#   
-#   1/ MESHER 
-#   2/ DSM to compute tractions on the chunk boundary 
+#
+# the script runs :
+#
+#   1/ MESHER
+#   2/ DSM to compute tractions on the chunk boundary
 #   3/ SCHOTCH + CREATE DATABASE FOR SPECFEM3D
 #   4/ ADD DSM TRACTION TO THE SPECFEM3D DATABASE
 #   5/ RUN SPECFEM3D
@@ -87,12 +87,12 @@ tar -jxvf input_data.tar.bz2
 #
 #
 #
-#  Vadim Monteiller April 2013. 
-# 
-# reference : 
+#  Vadim Monteiller April 2013.
+#
+# reference :
 # "A hybrid method to compute short-period synthetic seismograms of teleseismic body waves in a 3-D regional model"
 # Monteiller, V; Chevrot, S; Komatitsch, D; Fuji, N
-# GEOPHYSICAL JOURNAL INTERNATIONAL Volume:192 Issue:1 Pages:230-247 DOI:10.1093/gji/ggs006 Published: JAN 2013 
+# GEOPHYSICAL JOURNAL INTERNATIONAL Volume:192 Issue:1 Pages:230-247 DOI:10.1093/gji/ggs006 Published: JAN 2013
 #
 #####################################################################################################################
 
@@ -106,27 +106,27 @@ declare -i NPROC NPROC_MINUS_ONE
 # NUMBER OF MPI PROCESSES
 NPROC=32
 
-# ENTER OPTION FOR MPIRUN 
+# ENTER OPTION FOR MPIRUN
 OPTION=
 
 # do not change
 NPROC_MINUS_ONE="$NPROC-1"
 
-# log file for output 
+# log file for output
 flog_file=$(pwd)/log.benchmark
 
 # choose the movie
 PREFIX_MOVIE=velocity_Z_it
 
-# directory where SPECFEM3D writes outputs  
+# directory where SPECFEM3D writes outputs
 IN_MOVIE=$(pwd)/OUTPUT_FILES/DATABASES_MPI/
 
-# output movie directory 
+# output movie directory
 OUT_MOVIE=$(pwd)/movie
 
-#------- input files creation 
+#------- input files creation
 # you must write the absolute path for : xcreate_input
-# you must edit and complete : parfile_for_benchmark  
+# you must edit and complete : parfile_for_benchmark
 $HOME_SPECFEM3D/utils/DSM_FOR_SPECFEM3D/bin/xcreate_inputs_files<<EOF
 parfile_for_benchmark
 EOF
@@ -135,7 +135,7 @@ EOF
 #
 # ------------------------ FROM HERE DO NOT CHANGE ANYTHING --------------------
 
-# ----- load script and path --- 
+# ----- load script and path ---
 source params.in
 source $SCRIPTS/scripts_specfem3D.sh
 source $SCRIPTS/scripts_dsm.sh
@@ -153,18 +153,18 @@ mv input_dsm_for_read_xmax  $IN_DSM/inputIASP.infTra_stxmax
 mv input_dsm_for_read_ymin  $IN_DSM/inputIASP.infTra_stymin
 mv input_dsm_for_read_ymax  $IN_DSM/inputIASP.infTra_stymax
 mv input_dsm_for_read_zmin  $IN_DSM/inputIASP.infTra_stzmin
-# copy model file 
+# copy model file
 cp $IN_DSM/iasp91 $MESH/.
 
 
-## open the log file 
+## open the log file
 echo > $flog_file
 echo " BENCHMARK RUN  " >> $flog_file
 echo >> $flog_file
 echo $(date) >> $flog_file
 
 
-# 1 / ------- create mesh  
+# 1 / ------- create mesh
 run_create_mesh
 
 
@@ -195,7 +195,7 @@ echo $(date) >> $flog_file
 
 
 
-# 5 / --------------- run simulation 
+# 5 / --------------- run simulation
 echo "" >> $flog_file
 echo " simulation" >> $flog_file
 echo $(date) >> $flog_file
@@ -212,9 +212,9 @@ echo "" >> $flog_file
 echo " MAKE movie" >> $flog_file
 echo $(date) >> $flog_file
 
-create_movie $PREFIX_MOVIE $IN_MOVIE $OUT_MOVIE 25 8500 
+create_movie $PREFIX_MOVIE $IN_MOVIE $OUT_MOVIE 25 8500
 
 # to do chane 25 and 8500
 echo $(date) >> $flog_file
 
-                               
+

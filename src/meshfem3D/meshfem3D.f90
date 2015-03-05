@@ -343,6 +343,8 @@
 ! second dimension : #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id
   double precision , dimension(:,:), pointer :: material_properties
 
+  logical :: BROADCAST_AFTER_READ
+
 ! ************** PROGRAM STARTS HERE **************
 
 ! sizeprocs returns number of processes started (should be equal to NPROC).
@@ -354,9 +356,9 @@
 
 ! open main output file, only written to by process 0
   if (myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) then
-    open(unit=IMAIN,file=trim(OUTPUT_FILES_PATH)//'/output_meshfem3D.txt',status='unknown',iostat=ier)
+    open(unit=IMAIN,file=trim(OUTPUT_FILES)//'/output_meshfem3D.txt',status='unknown',iostat=ier)
     if (ier /= 0) then
-      print*,'Error could not open output file :',trim(OUTPUT_FILES_PATH)//'/output_meshfem3D.txt'
+      print*,'Error could not open output file :',trim(OUTPUT_FILES)//'/output_meshfem3D.txt'
       stop 'Error opening output file'
     endif
   endif
@@ -374,9 +376,8 @@
   endif
 
 ! read the parameter file (DATA/Par_file)
-  call read_parameter_file()
-
-  call read_adios_parameters()
+  BROADCAST_AFTER_READ = .true.
+  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
 
 ! if meshing a chunk of the Earth, call a specific internal mesher designed specifically for that
   if (COUPLE_WITH_EXTERNAL_CODE .and. MESH_A_CHUNK_OF_THE_EARTH) then
@@ -428,14 +429,14 @@
 
 ! get interface data from external file to count the spectral elements along Z
   if (myrank == 0) then
-    write(IMAIN,*) 'Reading interface data from file ',trim(MF_IN_DATA_FILES_PATH)//trim(INTERFACES_FILE), &
+    write(IMAIN,*) 'Reading interface data from file ',trim(MF_IN_DATA_FILES)//trim(INTERFACES_FILE), &
                    ' to count the spectral elements'
     call flush_IMAIN()
   endif
 
-  open(unit=IIN,file=trim(MF_IN_DATA_FILES_PATH)//trim(INTERFACES_FILE),status='old',iostat=ier)
+  open(unit=IIN,file=trim(MF_IN_DATA_FILES)//trim(INTERFACES_FILE),status='old',iostat=ier)
   if (ier /= 0) then
-    print*,'Error opening interface file: ',trim(MF_IN_DATA_FILES_PATH)//trim(INTERFACES_FILE)
+    print*,'Error opening interface file: ',trim(MF_IN_DATA_FILES)//trim(INTERFACES_FILE)
     stop 'Error opening interface file'
   endif
 
@@ -661,11 +662,11 @@
 
   if (myrank == 0) then
     write(IMAIN,*)
-    write(IMAIN,*) 'Reading interface data from file ',trim(MF_IN_DATA_FILES_PATH)//trim(INTERFACES_FILE)
+    write(IMAIN,*) 'Reading interface data from file ',trim(MF_IN_DATA_FILES)//trim(INTERFACES_FILE)
     write(IMAIN,*)
   endif
 
-  open(unit=IIN,file=trim(MF_IN_DATA_FILES_PATH)//trim(INTERFACES_FILE),status='old',iostat=ier)
+  open(unit=IIN,file=trim(MF_IN_DATA_FILES)//trim(INTERFACES_FILE),status='old',iostat=ier)
   if (ier /= 0) stop 'Error opening interfaces file'
 
   allocate(interface_bottom(max_npx_interface,max_npy_interface),stat=ier)
@@ -696,7 +697,7 @@
 
     !npoints_interface_top = npx_interface_top * npy_interface
     ! loop on all the points describing this interface
-    open(unit=45,file=trim(MF_IN_DATA_FILES_PATH)//trim(interface_top_file),status='old',iostat=ier)
+    open(unit=45,file=trim(MF_IN_DATA_FILES)//trim(interface_top_file),status='old',iostat=ier)
     if (ier /= 0) stop 'Error opening interface_top file'
     do iy=1,npy_interface_top
       do ix=1,npx_interface_top

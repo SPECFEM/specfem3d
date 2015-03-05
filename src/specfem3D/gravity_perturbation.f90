@@ -352,7 +352,7 @@ end subroutine gravity_timeseries
 
 subroutine gravity_output()
 
-  use specfem_par, only : myrank,NPROC,NSTEP,DT,OUTPUT_FILES_PATH
+  use specfem_par, only : myrank,NPROC,NSTEP,DT,OUTPUT_FILES
   implicit none
 
   integer :: isample,istat,nstep_grav
@@ -363,7 +363,7 @@ subroutine gravity_output()
 
   do istat=1,nstat
     if (istat < myrank*nstat_local+1 .or. istat > (myrank+1)*nstat_local) cycle
-    write(sisname,"(a,I0,a)") trim(OUTPUT_FILES_PATH)//'/stat', istat, '.grav'
+    write(sisname,"(a,I0,a)") trim(OUTPUT_FILES)//'/stat', istat, '.grav'
     open(unit=IOUT,file=sisname,status='replace')
     do isample = 1,nstep_grav
       write(IOUT,*) isample*DT*ntimgap, accE(isample,istat),accN(isample,istat),accZ(isample,istat)
@@ -373,7 +373,7 @@ subroutine gravity_output()
 
   if (myrank==0) then !left-over stations
     do istat=NPROC*nstat_local,nstat
-      write(sisname,"(a,I0,a)") trim(OUTPUT_FILES_PATH)//'/stat', istat, '.grav'
+      write(sisname,"(a,I0,a)") trim(OUTPUT_FILES)//'/stat', istat, '.grav'
       open(unit=IOUT,file=sisname,status='replace')
       do isample = 1,nstep_grav
         write(IOUT,*) isample*DT*ntimgap, accE(isample,istat),accN(isample,istat),accZ(isample,istat)

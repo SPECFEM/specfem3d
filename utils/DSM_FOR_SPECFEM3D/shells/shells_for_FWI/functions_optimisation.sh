@@ -5,7 +5,7 @@ function compute_direction ()
 # arguments : $1 = iter
 #             $2 = 'alpha', 'beta' or 'gamma'
 #             $3 = long_liss
-#             $4 = long_lissv  
+#             $4 = long_lissv
 #             $5 = sigma
 #
 cd bin
@@ -21,7 +21,7 @@ cd ..
 function gradient_v_2_gradient_poisson ()
 {
 #
-# argument $1 : iter or -1 when linear search is used 
+# argument $1 : iter or -1 when linear search is used
 #
 
 cd bin
@@ -62,7 +62,7 @@ while [ "$ssiter" -le "$nssiter" ] ; do
   # on copie la base de donnee sauvee
   cp ./OUTPUT_FILES/DATABASES_MPI_CURRENT/* ./OUTPUT_FILES/DATABASES_MPI/.
 
-  update_model $pas 
+  update_model $pas
   forward_simu ss_iter
 
 
@@ -88,7 +88,7 @@ while [ "$ssiter" -le "$nssiter" ] ; do
   echo $tg "  " $td "  " $pas > t_guess.txt
   fin=$(< fin)
 
-  # sortie  
+  # sortie
   cd ..
 
   ssiter="$ssiter+1"
@@ -123,14 +123,14 @@ cd bin
 # 1. on projette la direction de descente de la grille tomo a la grille SEM
 $MPIRUN $OPTION_MPI $HYBRID_BINNARY/xproject_sem 0 $SLICE
 #mpirun -np $NPROC ./xproject_sem 0 $SLICE
-# on calcule le nouveau modèle 
+# on calcule le nouveau modele
 $MPIRUN $OPTION_MPI $HYBRID_BINNARY/xmodel_update $1
 #mpirun -np  $NPROC ./xmodel_update $1
 cd ..
 }
 #==================================================================================
 function compute_adjoint_source_FWI ()
-{ 
+{
 cd bin
 cp ../DATA/define_adjoint_sources_for_FWI.par define_adjoint_sources.par
 isrc=1

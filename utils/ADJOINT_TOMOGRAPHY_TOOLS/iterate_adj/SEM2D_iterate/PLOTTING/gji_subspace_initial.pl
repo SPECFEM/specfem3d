@@ -155,8 +155,8 @@ $R_title = "-R0/1/0/1";
 # loop over models
 for ($m = $imodelmin; $m <= $imodelmax; $m = $m+1) {
 
-  $imodel = $m;			# current model
-  $mtest = $m % 2;		# =1 for a test model
+  $imodel = $m;     # current model
+  $mtest = $m % 2;    # =1 for a test model
 
   $stirun = sprintf("%4.4i",$irun0+$imodel);
   if ($mtest==1) {
@@ -192,7 +192,7 @@ $olab = "-Xa$xlab -Ya$ylab";
 
     # only plot even models (m04 = iteration 8)
     $kmaxt = 4;
-    $kmaxm = 4*(1 - $mtest);	# =0 for test model
+    $kmaxm = 4*(1 - $mtest);  # =0 for test model
     if ($itest == 1) {
       $kmax = $kmaxt;
     } else {
@@ -208,67 +208,67 @@ $olab = "-Xa$xlab -Ya$ylab";
       $find = $fcol;
       $find2 = 2*$fcol;
 
-      $file0 = $files[0];	# initial model
+      $file0 = $files[0]; # initial model
       $file1 = $files[$k];
       if (not -f $file1) {
-	die("Check if $file1 exist or not\n");
+  die("Check if $file1 exist or not\n");
       }
 
       # phase velocity map
       if ($k==0 && $m==$imodelmin) {
-	# set bounds for the plotting
-	#$xmin = -121; $xmax = -115.0; $zmin = 31.75; $zmax = 36.5;
-	($xmin,$xmax,$zmin,$zmax,$smin,$smax,$tmin,$tmax) = split(" ",`minmax -C $file1`);
-	$dinc = 0.25;		# buffer around min/max
-	$xmin = $xmin-$dinc;  $xmax = $xmax+$dinc;
-	$zmin = $zmin-$dinc;  $zmax = $zmax+$dinc;
-	$R = "-R$xmin/$xmax/$zmin/$zmax";
-	print "\n$R\n";
+  # set bounds for the plotting
+  #$xmin = -121; $xmax = -115.0; $zmin = 31.75; $zmax = 36.5;
+  ($xmin,$xmax,$zmin,$zmax,$smin,$smax,$tmin,$tmax) = split(" ",`minmax -C $file1`);
+  $dinc = 0.25;   # buffer around min/max
+  $xmin = $xmin-$dinc;  $xmax = $xmax+$dinc;
+  $zmin = $zmin-$dinc;  $zmax = $zmax+$dinc;
+  $R = "-R$xmin/$xmax/$zmin/$zmax";
+  print "\n$R\n";
       }
 
       if ($k==0) {
-	print CSH "psbasemap $B $R $J1 -K -V -P $origin > $psfile\n"; # START
+  print CSH "psbasemap $B $R $J1 -K -V -P $origin > $psfile\n"; # START
       } else {
-	print CSH "psbasemap $B $R $J1 -K -O -V $shift >> $psfile\n";
+  print CSH "psbasemap $B $R $J1 -K -O -V $shift >> $psfile\n";
       }
 
       if ($icolor == 1) {
-	#print CSH "awk '{print \$1,\$2,\$7}' $file1 | pscontour $R $J1 -A- -C$cptfile1 -I -K -O -V >> $psfile\n";
-	if ($k == 0) {
+  #print CSH "awk '{print \$1,\$2,\$7}' $file1 | pscontour $R $J1 -A- -C$cptfile1 -I -K -O -V >> $psfile\n";
+  if ($k == 0) {
           print CSH "awk '{print \$1,\$2,0}' $file0 | nearneighbor -G$grdfile $R $interp\n";
-	} elsif ($k == 1) {
-	  print CSH "awk '{print \$1,\$2,\$${find}}' $file0 | nearneighbor -G$grdfile $R $interp\n";
-	} elsif ($k == 2) {
+  } elsif ($k == 1) {
+    print CSH "awk '{print \$1,\$2,\$${find}}' $file0 | nearneighbor -G$grdfile $R $interp\n";
+  } elsif ($k == 2) {
           print CSH "awk '{print \$1,\$2,\$${find}}' $file1 | nearneighbor -G$grdfile $R $interp\n";
         } elsif ($k == 3) {
           $file2 = "ftemp";
-	  print CSH "paste $file1 $file0 > $file2\n";
-	  print CSH "awk '{print \$1,\$2,\$${find}-\$${find2}}' $file2 | nearneighbor -G$grdfile $R $interp\n";
+    print CSH "paste $file1 $file0 > $file2\n";
+    print CSH "awk '{print \$1,\$2,\$${find}-\$${find2}}' $file2 | nearneighbor -G$grdfile $R $interp\n";
         } else {
           die("k ($k) must be 0,1,2,3");
-	}
-	print CSH "grdimage $grdfile -C$cptfile1 $J1 -K -O -V -Q >> $psfile\n";
+  }
+  print CSH "grdimage $grdfile -C$cptfile1 $J1 -K -O -V -Q >> $psfile\n";
       }
       print CSH "pscoast $J1 $R $B -W1p -Na/1p -Dh -K -O -V >> $psfile\n";
 
       # plot receivers
-      if (0==1) {		# numbered large circles
-	print CSH "awk '\$1 == \"R\" {print \$2,\$3}' $rec_file | psxy -N $J1 $R -K -O -V $rec0 >> $psfile\n";
-	$rec_file2 = text_rec; $angle = 0; $just = "CM";
-	print CSH "awk '\$1 == \"R\" {print \$2,\$3,$fsize3,$angle,$fontno,\"$just\",\$4}' $rec_file > $rec_file2\n";
-	print CSH "pstext $rec_file2 -N $J1 $R -K -O -V >> $psfile\n";
+      if (0==1) {   # numbered large circles
+  print CSH "awk '\$1 == \"R\" {print \$2,\$3}' $rec_file | psxy -N $J1 $R -K -O -V $rec0 >> $psfile\n";
+  $rec_file2 = text_rec; $angle = 0; $just = "CM";
+  print CSH "awk '\$1 == \"R\" {print \$2,\$3,$fsize3,$angle,$fontno,\"$just\",\$4}' $rec_file > $rec_file2\n";
+  print CSH "pstext $rec_file2 -N $J1 $R -K -O -V >> $psfile\n";
 
-      } else {			# small circles
-	print CSH "awk '\$1 == \"R\" {print \$2,\$3}' $rec_file | psxy -N -Sc5p -W0.5p $J1 $R -K -O -V >> $psfile\n";
+      } else {      # small circles
+  print CSH "awk '\$1 == \"R\" {print \$2,\$3}' $rec_file | psxy -N -Sc5p -W0.5p $J1 $R -K -O -V >> $psfile\n";
 
       }
 
       # plot sources
       if ($ievent_one) {
-	print CSH "awk '\$1 == \"S\" {print \$2,\$3}' $rec_file | psxy $src0 -N $J1 $R -K -O -V >> $psfile\n";
+  print CSH "awk '\$1 == \"S\" {print \$2,\$3}' $rec_file | psxy $src0 -N $J1 $R -K -O -V >> $psfile\n";
       }
       if ($ievent_all) {
-	print CSH "awk '{print \$1,\$2}' $evefile | psxy $src -N $J1 $R -K -O -V >> $psfile\n";
+  print CSH "awk '{print \$1,\$2}' $evefile | psxy $src -N $J1 $R -K -O -V >> $psfile\n";
       }
 
       # plot label
@@ -283,22 +283,22 @@ $olab = "-Xa$xlab -Ya$ylab";
 
       # plot title and GMT header
       if ($k==3) {
-	$plot_title = "Model m00, model $stmod, and target model (run_${stirun})";
-	$Utag = "-U/0/0.25/$plabel";
-	$shift = "-Xa-3.5 -Ya8.5";
-	print CSH "pstext -N $J1 $R $Utag -O -V $shift >>$psfile<<EOF\n $xmin $zmin $fsize0 0 $fontno LM $plot_title\nEOF\n"; # FINISH
+  $plot_title = "Model m00, model $stmod, and target model (run_${stirun})";
+  $Utag = "-U/0/0.25/$plabel";
+  $shift = "-Xa-3.5 -Ya8.5";
+  print CSH "pstext -N $J1 $R $Utag -O -V $shift >>$psfile<<EOF\n $xmin $zmin $fsize0 0 $fontno LM $plot_title\nEOF\n"; # FINISH
 
-	if ($ijpg == 1) {
-	  print CSH "convert $psfile $jpgfile\n";
-	}
-	if ($ipdf == 1) {
-	  print CSH "ps2pdf $psfile\n";
-	}
+  if ($ijpg == 1) {
+    print CSH "convert $psfile $jpgfile\n";
+  }
+  if ($ipdf == 1) {
+    print CSH "ps2pdf $psfile\n";
+  }
 
       }
-    }				# loop over subplots
+    }       # loop over subplots
 
-}				# loop over models
+}       # loop over models
 
 close (CSH);
 system("csh -f $cshfile");

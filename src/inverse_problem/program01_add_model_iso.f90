@@ -209,16 +209,16 @@ subroutine initialize()
 
   implicit none
 
+  logical :: BROADCAST_AFTER_READ
+
   ! initialize the MPI communicator and start the NPROCTOT MPI processes
   call init_mpi()
   call world_size(sizeprocs)
   call world_rank(myrank)
 
   ! reads the parameter file
-  call read_parameter_file()
-
-  ! reads ADIOS flags
-  call read_adios_parameters()
+  BROADCAST_AFTER_READ = .true.
+  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
 
   if (ADIOS_ENABLED) stop 'Flag ADIOS_ENABLED not supported yet for xadd_model, please rerun program...'
 

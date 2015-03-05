@@ -41,13 +41,14 @@
 subroutine model_gll_adios(myrank,nspec,LOCAL_PATH)
 
   use constants, only: MAX_STRING_LEN
-  use unused_mod
   use adios_manager_mod
 
   implicit none
 
   integer, intent(in) :: myrank,nspec
   character(len=MAX_STRING_LEN) :: LOCAL_PATH
+
+  integer(kind=4) :: unused_i4
 
   unused_i4 = myrank
   unused_i4 = nspec
@@ -65,13 +66,14 @@ contains
 
 subroutine model_ipati_adios(myrank,nspec,LOCAL_PATH)
   use constants, only: MAX_STRING_LEN
-  use unused_mod
   use adios_manager_mod
 
   implicit none
 
   integer, intent(in) :: myrank,nspec
   character(len=MAX_STRING_LEN), intent(in) :: LOCAL_PATH
+
+  integer(kind=4) :: unused_i4
 
   unused_i4 = myrank
   unused_i4 = nspec
@@ -82,13 +84,14 @@ end subroutine model_ipati_adios
 
 subroutine model_ipati_water_adios(myrank,nspec,LOCAL_PATH)
   use constants, only: MAX_STRING_LEN
-  use unused_mod
   use adios_manager_mod
 
   implicit none
 
   integer, intent(in) :: myrank,nspec
   character(len=MAX_STRING_LEN), intent(in) :: LOCAL_PATH
+
+  integer(kind=4) :: unused_i4
 
   unused_i4 = myrank
   unused_i4 = nspec
@@ -100,7 +103,6 @@ end subroutine model_ipati_water_adios
 subroutine read_model_vp_rho_adios(myrank, nspec, LOCAL_PATH, &
                                    rho_read, vp_read)
   use constants, only: MAX_STRING_LEN
-  use unused_mod
   use adios_manager_mod
 
   implicit none
@@ -108,6 +110,9 @@ subroutine read_model_vp_rho_adios(myrank, nspec, LOCAL_PATH, &
   integer, intent(in) :: myrank,nspec
   character(len=MAX_STRING_LEN), intent(in) :: LOCAL_PATH
   real, dimension(:,:,:,:), intent(inout) :: vp_read,rho_read
+
+  integer(kind=4) :: unused_i4
+  real :: unused_r
 
   unused_i4 = myrank
   unused_i4 = nspec
@@ -143,7 +148,6 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob,                   &
                                              ibool_interfaces_ext_mesh,      &
                                              SAVE_MESH_FILES,ANISOTROPY)
 
-  use unused_mod
   use adios_manager_mod
   use generate_databases_par, only: NGLLX,NGLLY,NGLLZ
 
@@ -159,6 +163,9 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob,                   &
                      num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
   logical :: SAVE_MESH_FILES
   logical :: ANISOTROPY
+
+  integer(kind=4) :: unused_i4
+  logical :: unused_l
 
   unused_i4 = nglob
   unused_l  = APPROXIMATE_OCEAN_LOAD

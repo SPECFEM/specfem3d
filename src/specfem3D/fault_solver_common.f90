@@ -516,7 +516,7 @@ end subroutine store_dataT
 !------------------------------------------------------------------------
 subroutine SCEC_write_dataT(dataT)
 
-  use specfem_par, only: OUTPUT_FILES_PATH
+  use specfem_par, only: OUTPUT_FILES
 !! DK DK use type() instead of class() for compatibility with some current compilers
   type(dataT_type), intent(in) :: dataT
 
@@ -532,7 +532,7 @@ subroutine SCEC_write_dataT(dataT)
   write(my_fmt,'(a,i1,a)') '(',dataT%ndat+1,'(E15.7))'
 
   do i=1,dataT%npoin
-    open(IOUT,file=trim(OUTPUT_FILES_PATH)//trim(dataT%name(i))//'.dat',status='replace')
+    open(IOUT,file=trim(OUTPUT_FILES)//trim(dataT%name(i))//'.dat',status='replace')
     write(IOUT,*) "# problem=TPV104" ! WARNING: this should be a user input
     write(IOUT,*) "# author=Surendra Nadh Somala" ! WARNING: this should be a user input
     write(IOUT,1000) time_values(2), time_values(3), time_values(1), time_values(5), time_values(6), time_values(7)

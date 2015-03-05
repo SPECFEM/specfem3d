@@ -447,13 +447,13 @@
    if (SLOW_DEBUG_MODE) then
      open(24, file = list1, status = 'unknown', form = 'formatted')
      write(24,*)
-  
+
 
      call date_and_time(datex,timex)
      write(25,'(/a,a4,a,a2,a,a2,a,a2,a,a2,a,a4)') '    PLM calculation done:                     ', &
          datex(1:4),'-',datex(5:6),'-',datex(7:8),'.  ',timex(1:2),':',timex(3:4),':',timex(5:8)
-   end if
-   
+   endif
+
   endif
 
 !***************************************************************************************************
@@ -502,7 +502,7 @@
      displacementsngl=cmplx(0.e0)
      stresssngl_global=cmplx(0.e0)
      displacementsngl_global=cmplx(0.e0)
-     lmax_r(:)=maxlmax !! VM VM je dois initialiser au max a priori 
+     lmax_r(:)=maxlmax !! VM VM je dois initialiser au max a priori
      omega = 2.d0 * pi * dble(i) / tlen
 
      if ( i/=0 ) then
@@ -514,7 +514,7 @@
 !***************************************************************************************************
         do l = 0,maxlmax  ! on parcourt tous les l a priori
 !***************************************************************************************************
-           if (myrank.eq.0.and.SLOW_DEBUG_MODE) write(*,*) 'l= ',l
+           if (myrank==0.and.SLOW_DEBUG_MODE) write(*,*) 'l= ',l
            call MPI_Barrier(SubCommunicators,ierr)  ! je veux que tous les procs aillent a la meme vitesse
 
            ! lecture des tableaux
@@ -526,28 +526,28 @@
                 if (SLOW_DEBUG_MODE) then
                   write(24,*)
                   write(24,*) myrank,' reading l = ',l
-                end if
- 
+                endif
+
                 do
                    if (SLOW_DEBUG_MODE) then
                       write(24,*) 'I want to read for l=',l
                       write(24,*) 'max(lmax_r)=',maxval(lmax_r)
-                   end if
+                   endif
                    read(34) ir_,llog
                    if (SLOW_DEBUG_MODE) then
                       write(24,*) 'I already read for l=',l,' and ir_= ',ir_,llog
-                   end if
+                   endif
 
 
                    if (SLOW_DEBUG_MODE) then
-                      write(24,*) 
+                      write(24,*)
                       write(24,*) mybigrank,'is reading for ir,llog',ir_,llog
-                   end if
+                   endif
 
                    if (ir_==-1) then ! this flag indicates the end of all the data to read for the current block
                       if (SLOW_DEBUG_MODE) then
                         write(24,*) mybigrank,ir_,llog, ' exit '
-                      end if
+                      endif
 
                       exit
                    else
@@ -557,12 +557,12 @@
                       lmax_lu=max(lmax_lu,lmax_r(ir_))
                       if (SLOW_DEBUG_MODE) then
                         write(24,*) mybigrank,'allready read TABS',ir_,llog,lmax_r(ir_),lmax_lu
-                      end if
+                      endif
 
                    endif
-                
+
                 enddo
-                if (SLOW_DEBUG_MODE) write(24,*) 'end reading block' 
+                if (SLOW_DEBUG_MODE) write(24,*) 'end reading block'
               endif
               index_l=0
               call MPI_Bcast(lmax_r,r_n,MPI_INTEGER,0,SubCommunicators,ierr)
@@ -571,17 +571,17 @@
               call MPI_Bcast(ir_,1,MPI_INTEGER,0,SubCommunicators,ierr)
               call MPI_Bcast(llog,1,MPI_INTEGER,0,SubCommunicators,ierr)
            endif
-           !! VM VM : bug ici quand mod(maxval(lmax_r),maxlmax_g)==0 : on sort a maxval(lmax_r)+1 
+           !! VM VM : bug ici quand mod(maxval(lmax_r),maxlmax_g)==0 : on sort a maxval(lmax_r)+1
            !! mais on passe dans la boucle de lecture juste au dessus, ca plante car il y a
-           !! plus rien a lire.  
+           !! plus rien a lire.
            if (l > maxval(lmax_r)) then !!exit          !! VM VM : this mean we reach the big l that wee need
               if (SLOW_DEBUG_MODE) write(24,*) 'I exit because l too big'
               exit
-           end if
-           if (ir_==-1 .and. llog == -1) then !!exit  !! VM VM I add this test because of bugs 
+           endif
+           if (ir_==-1 .and. llog == -1) then !!exit  !! VM VM I add this test because of bugs
                if (SLOW_DEBUG_MODE) write(24,*) 'I exit because end of file'
                exit
-           end if                                  !! VM VM when mod(maxval(lmax_r),maxlmax_g)==0
+           endif                                  !! VM VM when mod(maxval(lmax_r),maxlmax_g)==0
            index_l = index_l+1
            l2 = dble(l)*dble(l+1)
            lsq = dsqrt( l2 )
@@ -1104,9 +1104,9 @@
        write(25,*) 'ir_ lmax'
        do ir_=1,r_n
           write(25,*) ir_,lmax_r(ir_)
-       end do
+       enddo
        close(25)
-     end if
+     endif
   endif
 
   call MPI_Barrier(MPI_COMM_WORLD,ierr)

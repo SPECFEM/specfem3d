@@ -19,32 +19,32 @@ ext="T"$ext1"_"$ext2
 
 
 
-if [ ! -f $eventfile ]; then 
-	echo WRONG! NO $eventfile 
-	exit
-fi 
-while read line 
-do 
+if [ ! -f $eventfile ]; then
+  echo WRONG! NO $eventfile
+  exit
+fi
+while read line
+do
 
-	cmtid=`echo $line | awk -F"_" '{print $NF}'`
-	flexwin_output="XFLEXWIN_OUTPUT_"$iter"/OUTPUT_FLEXWIN_"$cmtid"_"$ext
-	mefile="../MEASUREMENT_CENTER/MEASUREMENT_"$cmtid
+  cmtid=`echo $line | awk -F"_" '{print $NF}'`
+  flexwin_output="XFLEXWIN_OUTPUT_"$iter"/OUTPUT_FLEXWIN_"$cmtid"_"$ext
+  mefile="../MEASUREMENT_CENTER/MEASUREMENT_"$cmtid
 
-	if [ ! -f $flexwin_output ]; then 
-		echo WRONG! NO $flexwin_output
-		exit
-	fi 
-	if [ ! -f $mefile ]; then 
-		echo WRONG! NO $mefile 
-		exit
-	fi 
-
-
-	lastline=`tail -1 $mefile`
-	tag=`echo $lastline| awk -F" " '{print $1}'`
-	
-	exist=`grep $tag $flexwin_output | awk '{print $1}'`
-	echo $line $exist 
+  if [ ! -f $flexwin_output ]; then
+    echo WRONG! NO $flexwin_output
+    exit
+  fi
+  if [ ! -f $mefile ]; then
+    echo WRONG! NO $mefile
+    exit
+  fi
 
 
-done < $eventfile 
+  lastline=`tail -1 $mefile`
+  tag=`echo $lastline| awk -F" " '{print $1}'`
+
+  exist=`grep $tag $flexwin_output | awk '{print $1}'`
+  echo $line $exist
+
+
+done < $eventfile

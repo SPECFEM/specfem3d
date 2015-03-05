@@ -1,5 +1,5 @@
-/* Functions below are intended to be called from fortran routines to write 
-binary files. 
+/* Functions below are intended to be called from fortran routines to write
+binary files.
 
 - First, any number of files (usually 1) are opened using:
   call open_file(filename, fd)
@@ -7,7 +7,7 @@ binary files.
   written to the file/s corresponding to the file descriptor fd using, e.g.,
   call write_string(string,fd) or
   call write_integer(integer,fd) or
-  call write_float(float,fd) 
+  call write_float(float,fd)
 - Then the file/s are closed using:
   close_file(fd)
 ! COMPILE
@@ -28,14 +28,14 @@ binary files.
 
 /* fname: file name */
 /* fd   : file descriptor */
- 
+
 /* open file to read as a file descriptor (not FILE pointer!)*/
 void open_file2read_(char *fname, int *fd) {
   *fd = open(fname, O_RDONLY, 0);
   if(*fd == -1) {
     fprintf(stderr, "ERROR: file %s cannot be opened!\n", fname);
     exit(-1);
-  }  
+  }
 }
 
 /* open file to write as a file descriptor (not FILE pointer!)*/
@@ -44,7 +44,7 @@ void open_file2write_(char *fname, int *fd) {
   if(*fd == -1) {
     fprintf(stderr, "ERROR: file %s cannot be opened!\n", fname);
     exit(-1);
-  }  
+  }
 }
 
 /* open file to append as a file descriptor (not FILE pointer!)*/
@@ -53,7 +53,7 @@ void open_file2append_(char *fname, int *fd) {
   if(*fd == -1) {
     fprintf(stderr, "ERROR: file %s cannot be opened!\n", fname);
     exit(-1);
-  }  
+  }
 }
 
 /* close file */
@@ -73,7 +73,7 @@ void close_delete_file_(char *fname, int *fd) {
 }
 
 /* write a string */
-void write_string_(char *string, int *fd) {  
+void write_string_(char *string, int *fd) {
   int slen;
   slen=strlen(string);
   write(*fd, string, slen);
@@ -107,7 +107,7 @@ void read_float_(float *z, int *fd) {
 
 /* This function determines the byte order of the processor architecture
 source: http://www.ibm.com/developerworks/aix/library/au-endianc/index.html?ca=drs-
-Use a character pointer to the bytes of an int and then check its first byte to 
+Use a character pointer to the bytes of an int and then check its first byte to
 see if it is 0 or 1.
 HISTORY
   Hom Nath Gharti

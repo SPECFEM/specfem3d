@@ -27,7 +27,6 @@ exec=( xcombine_surf_data \
        xconvert_skewness_to_angle \
        xmultiply_CUBIT_Abaqus_mesh_by_1000 \
        xmodel_update \
-       xsmooth_sem \
        xsum_kernels \
        xsum_preconditioned_kernels \
       )
@@ -41,7 +40,7 @@ do
 
   echo "" >> $testdir/results.log
   # check
-  if [ ! -e bin/$var ]; then 
+  if [ ! -e bin/$var ]; then
     echo "compilation of $var failed, please check..." >> $testdir/results.log
     exit 1
   else

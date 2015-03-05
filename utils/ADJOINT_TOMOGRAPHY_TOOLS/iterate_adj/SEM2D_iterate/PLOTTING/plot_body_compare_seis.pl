@@ -151,7 +151,7 @@ $jpgfile = "$name.jpg";
 
   # source time function
   print "\n seismogram file is $seisfile\n";
-  
+
   # determine the max value among the source time functions
   ($tmin,$tmax,$junk1,$junk2,$junk3,$junk4,$rmin,$rmax) = split(" ",`minmax -C $seisfile`);
   ($ss) = sort{$b <=> $a} (abs($rmin),abs($rmax));
@@ -197,7 +197,7 @@ if(0==1) {
              "s0 - s2 (NGLL=5, 33 el, NOT honoring mesh)",
              "s0 - s3 (NGLL=5, 34 el, NOT honoring mesh, but GLL pts equidistant from discontinuities)");
   print CSH "pstext -N -JX1 -R0/1/0/1 -K -O -P -V $txtinfo >>$psfile<<EOF\n $wid $ytxt $fsize2 0 $fontno RM $titles[0]\nEOF\n";
-  
+
   # plot residuals
   print CSH "awk '{print \$1,\$3}' $seisfile |psxy $Rs2 $Js $Bs1 -W0.5p,0/0/255,-- -P -K -O -V $shift2 >> $psfile\n";
   print CSH "awk '{print \$1,\$4}' $seisfile |psxy $Rs2 $Js $Bs1 -W0.5p,0/0/255 -P -K -O -V >> $psfile\n";
@@ -219,7 +219,7 @@ if(0==1) {
              "s1 - s2 (NGLL=5, NOT honoring mesh, 33 el)",
              "s1 - s3 (NGLL=5, NOT honoring mesh, but GLL pts equidistant from discontinuities, 34 el)");
   print CSH "pstext -N -JX1 -R0/1/0/1 -K -O -P -V $txtinfo >>$psfile<<EOF\n $wid $ytxt $fsize2 0 $fontno RM $titles[0]\nEOF\n";
-  
+
   # plot residuals
   print CSH "awk '{print \$1,\$2-\$3}' $seisfile |psxy $Rs2 $Js $Bs1 -W0.5p,255/0/0 -P -K -O -V $shift2 >> $psfile\n";
   print CSH "pstext -N -JX1 -R0/1/0/1 -K -O -P -V $txtinfo >>$psfile<<EOF\n $wid $ytxt $fsize2 0 $fontno RM $titles[1]\nEOF\n";

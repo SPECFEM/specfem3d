@@ -752,9 +752,9 @@
 !     ierr           error indicator (OUTPUT)
 !
 !     errors:
-!     1              input tensor not symmetrical: am(1,2).ne.am(2,1)
-!     2              input tensor not symmetrical: am(1,3).ne.am(3,1)
-!     3              input tensor not symmetrical: am(2,3).ne.am(3,2)
+!     1              input tensor not symmetrical: am(1,2)/=am(2,1)
+!     2              input tensor not symmetrical: am(1,3)/=am(3,1)
+!     3              input tensor not symmetrical: am(2,3)/=am(3,2)
 !
        implicit none
 !-------------------------------------------------------------------------------
@@ -937,9 +937,9 @@
 !     ierr           error indicator (OUTPUT)
 !
 !     errors:
-!     1              input tensor not symmetrical: am(1,2).ne.am(2,1)
-!     2              input tensor not symmetrical: am(1,3).ne.am(3,1)
-!     3              input tensor not symmetrical: am(2,3).ne.am(3,2)
+!     1              input tensor not symmetrical: am(1,2)/=am(2,1)
+!     2              input tensor not symmetrical: am(1,3)/=am(3,1)
+!     3              input tensor not symmetrical: am(2,3)/=am(3,2)
 !
        implicit none
 !-------------------------------------------------------------------------------
@@ -1301,9 +1301,9 @@
 !     ierr           error indicator (OUTPUT)
 !
 !     errors:
-!     1              input tensor not symmetrical: am(1,2).ne.am(2,1)
-!     2              input tensor not symmetrical: am(1,3).ne.am(3,1)
-!     3              input tensor not symmetrical: am(2,3).ne.am(3,2)
+!     1              input tensor not symmetrical: am(1,2)/=am(2,1)
+!     2              input tensor not symmetrical: am(1,3)/=am(3,1)
+!     3              input tensor not symmetrical: am(2,3)/=am(3,2)
 !     5,6,7,8,9,10   internal errors
 !
        implicit none
@@ -1425,9 +1425,9 @@
 !     ierr           error indicator (OUTPUT)
 !
 !     errors:
-!     1              input tensor not symmetrical: am(1,2).ne.am(2,1)
-!     2              input tensor not symmetrical: am(1,3).ne.am(3,1)
-!     3              input tensor not symmetrical: am(2,3).ne.am(3,2)
+!     1              input tensor not symmetrical: am(1,2)/=am(2,1)
+!     2              input tensor not symmetrical: am(1,3)/=am(3,1)
+!     3              input tensor not symmetrical: am(2,3)/=am(3,2)
 !     5,6,7,8,9,10   internal errors
 !
        implicit none

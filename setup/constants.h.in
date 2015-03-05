@@ -45,6 +45,14 @@
 
 !----------- parameters that can be changed by the user -----------
 
+!! DK DK added this temporarily here to make SPECFEM3D and SPECFEM3D_GLOBE much more similar
+!! DK DK in terms of the structure of their main time iteration loop; these are future features
+!! DK DK that are missing in this code but implemented in the other and that could thus be cut and pasted one day
+  logical, parameter :: UNDO_ATTENUATION = .false.
+  logical, parameter :: EXACT_UNDOING_TO_DISK = .false.
+  integer, parameter :: IFILE_FOR_EXACT_UNDOING = 244
+  logical, parameter :: VTK_MODE = .false.
+
 ! set to .false.  if running on a Beowulf-type machine with local disks
 ! set to .true. if running on a shared-memory machine with common file system
 ! if running on a Beowulf, also modify name of nodes in filter_machine_file.f90
@@ -126,18 +134,6 @@
 
 !!-----------------------------------------------------------
 !!
-!! total energy calculation
-!!
-!!-----------------------------------------------------------
-
-! to plot total energy curves, for instance to monitor how CPML absorbing layers behave;
-! should be turned OFF in most cases
-  logical, parameter :: OUTPUT_ENERGY = .false. ! .true.
-  integer, parameter :: IOUT_ENERGY = 937  ! file number for the energy file
-  integer, parameter :: NTSTEP_BETWEEN_OUTPUT_ENERGY = 10  ! how often we compute energy (which is expensive to compute)
-
-!!-----------------------------------------------------------
-!!
 !! Roland_Sylvain gravity calculations
 !!
 !!-----------------------------------------------------------
@@ -179,6 +175,9 @@
   integer, parameter :: EXTERNAL_CODE_IS_AXISEM = 2
   integer, parameter :: EXTERNAL_CODE_IS_FK     = 3
 
+! Big storage version of coupling with DSM (will always set to .false. after the light storage version will be validated)
+  logical, parameter :: old_DSM_coupling_from_Vadim = .true.
+
 ! some old tests (currently unstable; do not remove them though, we might fix this one day)
   integer, parameter :: IIN_veloc_dsm = 51, IIN_tract_dsm = 52, Ntime_step_dsm = 100
 
@@ -213,6 +212,8 @@
 !! C-PML absorbing boundary conditions
 !!
 !!-----------------------------------------------------------
+
+! power (exponent) used for the PML damping profile
   real(kind=CUSTOM_REAL), parameter :: NPOWER = 1._CUSTOM_REAL
 
 ! C-PML theoretical reflection coefficient
@@ -235,30 +236,15 @@
 !!-----------------------------------------------------------
 
 ! paths for inputs and outputs files
-  character(len=*), parameter :: IN_DATA_FILES_PATH = './DATA/'
-  character(len=*), parameter :: MF_IN_DATA_FILES_PATH = './DATA/meshfem3D_files/'
-  character(len=*), parameter :: OUTPUT_FILES_PATH_BASE = './OUTPUT_FILES/'
+  character(len=*), parameter :: IN_DATA_FILES = './DATA/'
+  character(len=*), parameter :: MF_IN_DATA_FILES = './DATA/meshfem3D_files/'
+  character(len=*), parameter :: OUTPUT_FILES_BASE = './OUTPUT_FILES/'
 
-! ---------------------------------------------------------------------------------------
-! LQY -- Following 3 variables stays here temporarily,
-!        we need to move them to Par_file at a proper time
-! ---------------------------------------------------------------------------------------
-! save moho mesh and compute Moho boundary kernels
-  logical, parameter :: SAVE_MOHO_MESH = .false.
-
-! outputs approximate hessian for preconditioning
-  logical, parameter :: APPROXIMATE_HESS_KL = .false.
-
-! number of steps to save the state variables in the forward simulation,
-! to be used in the backward reconstruction in the presence of attenuation
-  integer, parameter :: NSTEP_Q_SAVE = 50 ! depending on stability of reconstruction, up to 200
-
+!
 !------------------------------------------------------
-! Nicolas Legoff -- Variables that should be read/computed elsewhere.
-!            Temporarily declared here.
-!------------------------------------------------------
+!
 
-! no lagrange interpolation on seismograms (we take the value on one NGLL point)
+! no Lagrange interpolation for seismograms (we then take the value at the closest NGLL point, which is less accurate but faster)
   logical, parameter :: FASTER_RECEIVERS_POINTS_ONLY = .false.
 
 ! use this t0 as earliest starting time rather than the automatically calculated one
@@ -281,7 +267,7 @@
 
 !!-----------------------------------------------------------
 !!
-!! image outputs
+!! image output
 !!
 !!-----------------------------------------------------------
 
@@ -307,7 +293,7 @@
 
 !!-----------------------------------------------------------
 !!
-!! mesh optimization
+!! mesh coloring for GPUs (not needed any more, obsolete)
 !!
 !!-----------------------------------------------------------
 
@@ -324,21 +310,6 @@
 !
 ! postprocess the colors to balance them if Droux (1993) algorithm is not used
   logical, parameter :: BALANCE_COLORS_SIMPLE_ALGO = .false.
-
-!!-----------------------------------------------------------
-!!
-!! adjoint kernel outputs
-!!
-!!-----------------------------------------------------------
-
-! this parameter must be set to .true. to compute anisotropic kernels
-! in crust and mantle (related to the 21 Cij in geographical coordinates)
-! default is .false. to compute isotropic kernels (related to alpha and beta)
-  logical, parameter :: ANISOTROPIC_KL = .false.
-
-! compute transverse isotropic kernels (alpha_v,alpha_h,beta_v,beta_h,eta,rho)
-! rather than fully anisotropic kernels in case ANISOTROPIC_KL is set to .true.
-  logical, parameter :: SAVE_TRANSVERSE_KL = .false.
 
 !------------------------------------------------------
 !----------- do not modify anything below -------------
@@ -446,6 +417,9 @@
 
 ! flag for projection from latitude/longitude to UTM, and back
   integer, parameter :: ILONGLAT2UTM = 0, IUTM2LONGLAT = 1
+
+! for total energy calculation
+  integer, parameter :: IOUT_ENERGY = 937  ! file number for the energy file
 
 !!-----------------------------------------------------------
 !!

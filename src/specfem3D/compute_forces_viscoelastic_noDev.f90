@@ -54,11 +54,11 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                         phase_ispec_inner_elastic,backward_simulation)
 
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM, &
-                       N_SLS,SAVE_MOHO_MESH,ONE_THIRD,FOUR_THIRDS, &
+                       N_SLS,ONE_THIRD,FOUR_THIRDS, &
                        MAKE_HOOKE_LAW_WEAKLY_NONLINEAR,A,B,C,A_over_4,B_over_2
   use fault_solver_dynamic, only : Kelvin_Voigt_eta
 
-  use specfem_par, only: FULL_ATTENUATION_SOLID
+  use specfem_par, only: FULL_ATTENUATION_SOLID,SAVE_MOHO_MESH
 
   use pml_par, only: is_CPML,spec_to_CPML,accel_elastic_CPML,NSPEC_CPML, &
                      PML_dux_dxl,PML_dux_dyl,PML_dux_dzl,PML_duy_dxl,PML_duy_dyl,PML_duy_dzl, &

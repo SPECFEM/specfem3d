@@ -30,7 +30,7 @@
 #  socal m10, MAX: 2.0 pm 0.6 (2-30s), 3.0 pm 0.8 (3-30s), 5.0 pm 0.8 (6-30s)
 #  socal m12, MAX: 2.0 pm 0.6 (2-30s), 3.0 pm 0.8 (3-30s), 5.0 pm 1.0 (6-30s)
 #  socal m13 --> m16, MAX: 2.0 pm 1.0 (2-30s), 3.0 pm 1.0 (3-30s), 5.0 pm 1.0 (6-30s)
-#  
+#
 #==========================================================
 
 if (@ARGV < 10) {die("Usage: run_tomo.pl xxx\n")}
@@ -190,8 +190,8 @@ for ($ievent = $imin; $ievent <= $imax; $ievent++) {
        $outfile5 = "${dir_meas}/${infile5}";
        print CSH "cp $infile5 $outfile5\n";        # composite PDF into RUN
        if (0==1) {
-	 print CSH "mv $infile5 ${dir_pdf_eid}\n"; # composite PDF into single directory
-	 print CSH "mv *.pdf ${dir_pdf_all}\n";	   # individual PDFs into single directory
+   print CSH "mv $infile5 ${dir_pdf_eid}\n"; # composite PDF into single directory
+   print CSH "mv *.pdf ${dir_pdf_all}\n";    # individual PDFs into single directory
        }
        print CSH "cd $pwd\n";
 

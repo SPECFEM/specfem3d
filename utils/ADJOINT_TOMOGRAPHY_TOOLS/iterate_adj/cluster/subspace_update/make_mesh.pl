@@ -70,7 +70,7 @@ for ($i = $imin; $i <= $imax; $i++) {
   $mfile = sprintf("make_mesh_%2.2i.bash",$i);
   open(MFILE,">$mfile");
   print MFILE "#!/bin/bash\n";
-  print MFILE "cd $pwd\n"; 
+  print MFILE "cd $pwd\n";
   print MFILE "$pwd/xcombine_vol_data $slicefile $dmtag topo $odir . 0\n";
   close(MFILE);
   `chmod +x $mfile`;

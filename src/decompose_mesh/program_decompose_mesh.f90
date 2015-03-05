@@ -37,7 +37,8 @@ program pre_meshfem3D
 
   implicit none
 
-  integer :: i
+  integer :: i,myrank
+  logical :: BROADCAST_AFTER_READ
   character(len=MAX_STRING_LEN) :: arg(3)
 
 ! check usage
@@ -60,10 +61,9 @@ program pre_meshfem3D
   outputpath_name = arg(3)
 
  ! needs local_path for mesh files
-  call read_parameter_file()
-
-  ! gets adios parameters in Par_file
-  call read_adios_parameters()
+  myrank = 0
+  BROADCAST_AFTER_READ = .false.
+  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
 
   ! checks adios parameters
   if (ADIOS_FOR_DATABASES) then

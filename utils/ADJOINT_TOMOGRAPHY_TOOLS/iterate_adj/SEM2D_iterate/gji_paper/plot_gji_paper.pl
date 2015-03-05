@@ -89,7 +89,7 @@ $tpen   = "1.0p";
 
   #===============================================
   print "\nWriting CSH file...\n";
-  
+
   open(CSH,">$cshfile");
   print CSH "gmtset BASEMAP_TYPE plain TICK_LENGTH $tick LABEL_FONT_SIZE $fsize1 ANOT_FONT_SIZE $fsize2 PLOT_DEGREE_FORMAT D HEADER_FONT $fontno ANOT_FONT $fontno LABEL_FONT $fontno HEADER_FONT_SIZE $fsize1 FRAME_PEN $fpen TICK_PEN $tpen\n";
   #===============================================

@@ -24,7 +24,8 @@ cp DATA/CMTSOLUTION OUTPUT_FILES/
 cp DATA/STATIONS OUTPUT_FILES/
 
 # get the number of processors, ignoring comments in the Par_file
-NPROC=`grep ^NPROC DATA/Par_file | grep -v -E '^[[:space:]]*#' | cut -d = -f 2`
+NPROC=`grep ^NPROC DATA/Par_file | grep -v -E '^[[:space:]]*#' | cut -d = -f 2 | cut -d \# -f 1`
+echo "The simulation will run on NPROC = " $NPROC " MPI tasks"
 
 # decomposes mesh using the pre-saved mesh files in MESH-default
 echo

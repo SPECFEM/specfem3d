@@ -28,7 +28,7 @@
   subroutine get_cmt(yr,jda,ho,mi,sec,tshift_cmt,hdur,lat,long,depth,moment_tensor,&
                     DT,NSOURCES,min_tshift_cmt_original)
 
-  use constants,only: IIN,IN_DATA_FILES_PATH,MAX_STRING_LEN,mygroup
+  use constants,only: IIN,IN_DATA_FILES,MAX_STRING_LEN,mygroup
   use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS
 
   implicit none
@@ -63,7 +63,7 @@
 !
 !---- read hypocenter info
 !
-  CMTSOLUTION = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'CMTSOLUTION'
+  CMTSOLUTION = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'CMTSOLUTION'
 ! see if we are running several independent runs in parallel
 ! if so, add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
 ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
@@ -409,7 +409,7 @@
   scalar_moment = Mxx**2 + Myy**2 + Mzz**2 + 2.d0 * Mxy**2 + 2.d0 * Mxz**2 + 2.d0 * Myz**2
 
   ! adds 1/2 to be coherent with double couple or point sources
-  scalar_moment = dsqrt(scalar_moment/2.0d0)
+  scalar_moment = dsqrt(0.5d0*scalar_moment)
 
   ! scale factor for the moment tensor
   !
@@ -460,7 +460,8 @@
   !  for converting from scalar moment M0 to moment magnitude. (..)"
   ! see: http://earthquake.usgs.gov/aboutus/docs/020204mag_policy.php
 
-  Mw = 2.d0/3.d0 * log10( M0 ) - 10.7
+  Mw = 2.d0/3.d0 * log10( max(M0,tiny(M0)) ) - 10.7
+  ! this is to ensure M0>0.0 inorder to avoid arithmatic error.
 
   ! return value
   get_cmt_moment_magnitude = Mw

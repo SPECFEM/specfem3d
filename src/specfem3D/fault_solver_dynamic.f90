@@ -231,11 +231,13 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
 
   if (RATE_AND_STATE) then
     call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt,8,iflt)
+    if (bc%dataT%npoin>0) then
     bc%dataT%longFieldNames(8) = "log10 of state variable (log-seconds)"
     if (bc%rsf%StateLaw==1) then
       bc%dataT%shortFieldNames = trim(bc%dataT%shortFieldNames)//" log-theta"
     else
       bc%dataT%shortFieldNames = trim(bc%dataT%shortFieldNames)//" psi"
+    endif
     endif
   else
     call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt,7,iflt)
@@ -519,7 +521,7 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
       theta_old = bc%rsf%theta
       call rsf_update_state(Vf_old,bc%dt,bc%rsf)
       do i=1,bc%nglob
-        Vf_new(i)=rtsafe(funcd,0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
+        Vf_new(i)=rtsafe(0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
                          bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
       enddo
 
@@ -528,7 +530,7 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
       tmp_Vf(:) = 0.5_CUSTOM_REAL*(Vf_old(:) + Vf_new(:))
       call rsf_update_state(tmp_Vf,bc%dt,bc%rsf)
       do i=1,bc%nglob
-        Vf_new(i)=rtsafe(funcd,0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
+        Vf_new(i)=rtsafe(0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
                          bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
       enddo
 
@@ -712,11 +714,11 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
 
   real(kind=CUSTOM_REAL) :: V0,f0,a,b,L,theta_init,V_init,fw,Vw, C,T
   integer :: nV0,nf0,na,nb,nL,nV_init,ntheta_init,nfw,nVw, nC,nForcedRup
-  real(kind=CUSTOM_REAL) :: W1,W2,w,hypo_z
-  real(kind=CUSTOM_REAL) :: x,z
-  logical :: c1,c2,c3,c4
-  real(kind=CUSTOM_REAL) :: b11,b12,b21,b22,B1,B2
-  integer :: i !,nglob_bulk
+!  real(kind=CUSTOM_REAL) :: W1,W2,w,hypo_z
+!  real(kind=CUSTOM_REAL) :: x,z
+!  logical :: c1,c2,c3,c4
+!  real(kind=CUSTOM_REAL) :: b11,b12,b21,b22,B1,B2
+!  integer :: i !,nglob_bulk
   real(kind=CUSTOM_REAL) :: Fload
   integer :: nFload
 !  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: init_vel
@@ -803,54 +805,55 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
 
  ! WARNING: below is an ad-hoc setting of a(x,z) for some SCEC benchmark
  !          This should be instead an option in init_2d_distribution
-  W1=15000._CUSTOM_REAL
-  W2=7500._CUSTOM_REAL
-  w=3000._CUSTOM_REAL
-  hypo_z = -7500._CUSTOM_REAL
-  do i=1,nglob
-    x=coord(1,i)
-    z=coord(3,i)
-    c1=abs(x)<W1+w
-    c2=abs(x)>W1
-    c3=abs(z-hypo_z)<W2+w
-    c4=abs(z-hypo_z)>W2
-    if ((c1 .and. c2 .and. c3) .or. (c3 .and. c4 .and. c1)) then
-
-      if (c1 .and. c2) then
-        b11 = w/(abs(x)-W1-w)
-        b12 = w/(abs(x)-W1)
-        B1 = HALF * (ONE + tanh(b11 + b12))
-      else if (abs(x)<=W1) then
-        B1 = 1._CUSTOM_REAL
-      else
-        B1 = 0._CUSTOM_REAL
-      endif
-
-      if (c3 .and. c4) then
-        b21 = w/(abs(z-hypo_z)-W2-w)
-        b22 = w/(abs(z-hypo_z)-W2)
-        B2 = HALF * (ONE + tanh(b21 + b22))
-      else if (abs(z-hypo_z)<=W2) then
-        B2 = 1._CUSTOM_REAL
-      else
-        B2 = 0._CUSTOM_REAL
-      endif
-
-      f%a(i) = 0.008 + 0.008 * (ONE - B1*B2)
-      f%Vw(i) = 0.1 + 0.9 * (ONE - B1*B2)
-
-    else if (abs(x)<=W1 .and. abs(z-hypo_z)<=W2) then
-      f%a(i) = 0.008
-      f%Vw(i) = 0.1_CUSTOM_REAL
-    else
-      f%a(i) = 0.016
-      f%Vw(i) = 1.0_CUSTOM_REAL
-    endif
-
-  enddo
+!  W1=15000._CUSTOM_REAL
+!  W2=7500._CUSTOM_REAL
+!  w=3000._CUSTOM_REAL
+!  hypo_z = -7500._CUSTOM_REAL
+!  do i=1,nglob
+!    x=coord(1,i)
+!    z=coord(3,i)
+!    c1=abs(x)<W1+w
+!    c2=abs(x)>W1
+!    c3=abs(z-hypo_z)<W2+w
+!    c4=abs(z-hypo_z)>W2
+!    if ((c1 .and. c2 .and. c3) .or. (c3 .and. c4 .and. c1)) then
+!
+!      if (c1 .and. c2) then
+!        b11 = w/(abs(x)-W1-w)
+!        b12 = w/(abs(x)-W1)
+!        B1 = HALF * (ONE + tanh(b11 + b12))
+!      else if (abs(x)<=W1) then
+!        B1 = 1._CUSTOM_REAL
+!      else
+!        B1 = 0._CUSTOM_REAL
+!      endif
+!
+!      if (c3 .and. c4) then
+!        b21 = w/(abs(z-hypo_z)-W2-w)
+!        b22 = w/(abs(z-hypo_z)-W2)
+!        B2 = HALF * (ONE + tanh(b21 + b22))
+!      else if (abs(z-hypo_z)<=W2) then
+!        B2 = 1._CUSTOM_REAL
+!      else
+!        B2 = 0._CUSTOM_REAL
+!      endif
+!
+!      f%a(i) = 0.008 + 0.008 * (ONE - B1*B2)
+!      f%Vw(i) = 0.1 + 0.9 * (ONE - B1*B2)
+!
+!    else if (abs(x)<=W1 .and. abs(z-hypo_z)<=W2) then
+!      f%a(i) = 0.008
+!      f%Vw(i) = 0.1_CUSTOM_REAL
+!    else
+!      f%a(i) = 0.016
+!      f%Vw(i) = 1.0_CUSTOM_REAL
+!    endif
+!
+!  enddo
 
   ! WARNING: The line below scratches an earlier initialization of theta through theta_init
   !          We should implement it as an option for the user
+ if(TPV16) then
   if (f%stateLaw == 1) then
     f%theta = f%L/f%V0 &
               * exp( ( f%a * log(TWO*sinh(-sqrt(T0(1,:)**2+T0(2,:)**2)/T0(3,:)/f%a)) &
@@ -859,7 +862,7 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
   else
     f%theta =  f%a * log(TWO*f%V0/f%V_init * sinh(-sqrt(T0(1,:)**2+T0(2,:)**2)/T0(3,:)/f%a))
   endif
-
+ endif
  ! WARNING : ad hoc for SCEC benchmark TPV10x
   allocate( nucFload(nglob) )
   Fload = 0.e0_CUSTOM_REAL
@@ -929,7 +932,7 @@ end subroutine rsf_update_state
 
 subroutine SCEC_Write_RuptureTime(dataXZ,iflt)
 
-  use specfem_par, only: OUTPUT_FILES_PATH
+  use specfem_par, only: OUTPUT_FILES
   type(dataXZ_type), intent(in) :: dataXZ
   integer, intent(in) :: iflt
 
@@ -940,7 +943,7 @@ subroutine SCEC_Write_RuptureTime(dataXZ,iflt)
 
   call date_and_time(VALUES=time_values)
 
-  write(filename,'(a,I0)') trim(OUTPUT_FILES_PATH)//'/RuptureTime_Fault', iflt
+  write(filename,'(a,I0)') trim(OUTPUT_FILES)//'/RuptureTime_Fault', iflt
 
   IOUT = 121 !WARNING: not very robust. Could instead look for an available ID
 
@@ -1106,13 +1109,13 @@ end subroutine store_dataXZ
 !---------------------------------------------------------------
 subroutine write_dataXZ(dataXZ,itime,iflt)
 
-  use specfem_par, only: OUTPUT_FILES_PATH
+  use specfem_par, only: OUTPUT_FILES
   type(dataXZ_type), intent(in) :: dataXZ
   integer, intent(in) :: itime,iflt
 
   character(len=MAX_STRING_LEN) :: filename
 
-  write(filename,"(a,I0,'_F',I0,'.bin')") trim(OUTPUT_FILES_PATH)//'/Snapshot',itime,iflt
+  write(filename,"(a,I0,'_F',I0,'.bin')") trim(OUTPUT_FILES)//'/Snapshot',itime,iflt
 
   open(unit=IOUT, file= trim(filename), status='replace', form='unformatted',action='write')
 
@@ -1306,11 +1309,10 @@ subroutine funcd(x,fn,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
 end subroutine funcd
 
 !---------------------------------------------------------------------
-function rtsafe(funcd,x1,x2,xacc,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
+function rtsafe(x1,x2,xacc,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
 
   integer, parameter :: MAXIT=200
   real(kind=CUSTOM_REAL) :: x1,x2,xacc
-  EXTERNAL funcd
   integer :: j
   !real(kind=CUSTOM_REAL) :: df,dx,dxold,f,fh,fl,temp,xh,xl
   double precision :: df,dx,dxold,f,fh,fl,temp,xh,xl,rtsafe
@@ -1364,6 +1366,5 @@ function rtsafe(funcd,x1,x2,xacc,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
 
 end function rtsafe
 
-
-
 end module fault_solver_dynamic
+

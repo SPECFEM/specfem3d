@@ -391,6 +391,79 @@ end module my_mpi
   end subroutine bcast_all_r_for_database
 
 !
+!---- broadcast using MPI_COMM_WORLD
+!
+
+  subroutine bcast_all_singlei_world(buffer)
+
+  use my_mpi
+
+  implicit none
+
+  integer :: buffer
+
+  integer :: ier
+
+  call MPI_BCAST(buffer,1,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
+
+  end subroutine bcast_all_singlei_world
+
+!
+!----
+!
+
+  subroutine bcast_all_singlel_world(buffer)
+
+  use my_mpi
+
+  implicit none
+
+  logical :: buffer
+
+  integer :: ier
+
+  call MPI_BCAST(buffer,1,MPI_LOGICAL,0,MPI_COMM_WORLD,ier)
+
+  end subroutine bcast_all_singlel_world
+
+!
+!----
+!
+
+  subroutine bcast_all_singledp_world(buffer)
+
+  use my_mpi
+
+  implicit none
+
+  double precision :: buffer
+
+  integer :: ier
+
+  call MPI_BCAST(buffer,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
+
+  end subroutine bcast_all_singledp_world
+
+!
+!----
+!
+
+  subroutine bcast_all_string_world(buffer)
+
+  use my_mpi
+  use constants,only: MAX_STRING_LEN
+
+  implicit none
+
+  character(len=MAX_STRING_LEN) :: buffer
+
+  integer :: ier
+
+  call MPI_BCAST(buffer,MAX_STRING_LEN,MPI_CHARACTER,0,MPI_COMM_WORLD,ier)
+
+  end subroutine bcast_all_string_world
+
+!
 !----
 !
 
@@ -550,7 +623,17 @@ end module my_mpi
   ! we need to make sure that NUMBER_OF_SIMULTANEOUS_RUNS and BROADCAST_SAME_MESH_AND_MODEL are read before calling world_split()
   ! thus read the parameter file
   call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
-  if (myrank == 0) call read_parameter_file()
+  if (myrank == 0) then
+    call open_parameter_file_from_master_only(ier)
+    ! we need to make sure that NUMBER_OF_SIMULTANEOUS_RUNS and BROADCAST_SAME_MESH_AND_MODEL are read
+    call read_value_integer(NUMBER_OF_SIMULTANEOUS_RUNS, 'NUMBER_OF_SIMULTANEOUS_RUNS', ier)
+    if (ier /= 0) stop 'Error reading Par_file parameter NUMBER_OF_SIMULTANEOUS_RUNS'
+    call read_value_logical(BROADCAST_SAME_MESH_AND_MODEL, 'BROADCAST_SAME_MESH_AND_MODEL', ier)
+    if (ier /= 0) stop 'Error reading Par_file parameter BROADCAST_SAME_MESH_AND_MODEL'
+    ! close parameter file
+    call close_parameter_file()
+  endif
+
   ! broadcast parameters read from master to all processes
   my_local_mpi_comm_world = MPI_COMM_WORLD
   call bcast_all_singlei(NUMBER_OF_SIMULTANEOUS_RUNS)
@@ -1363,7 +1446,7 @@ end module my_mpi
   subroutine world_split()
 
   use my_mpi
-  use constants,only: MAX_STRING_LEN,OUTPUT_FILES_PATH, &
+  use constants,only: MAX_STRING_LEN,OUTPUT_FILES, &
     IMAIN,ISTANDARD_OUTPUT,mygroup,I_should_read_the_database
   use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
 
@@ -1409,7 +1492,7 @@ end module my_mpi
 
 !   add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
     write(path_to_add,"('run',i4.4,'/')") mygroup + 1
-    OUTPUT_FILES_PATH = path_to_add(1:len_trim(path_to_add))//OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))
+    OUTPUT_FILES = path_to_add(1:len_trim(path_to_add))//OUTPUT_FILES(1:len_trim(OUTPUT_FILES))
 
 !--- create a subcommunicator to broadcast the identical mesh and model databases if needed
     if (BROADCAST_SAME_MESH_AND_MODEL) then

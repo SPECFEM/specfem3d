@@ -272,7 +272,7 @@ end module user_noise_distribution
   character(len=MAX_STRING_LEN) :: filename
 
   ! read master receiver ID -- the ID in "STATIONS"
-  filename = trim(OUTPUT_FILES_PATH)//'/..//NOISE_TOMOGRAPHY/irec_master_noise'
+  filename = trim(OUTPUT_FILES)//'/..//NOISE_TOMOGRAPHY/irec_master_noise'
   open(unit=IIN_NOISE,file=trim(filename),status='old',action='read',iostat=ier)
   if (ier /= 0) &
     call exit_MPI(myrank, 'file '//trim(filename)//' does NOT exist! This file contains the ID of the master receiver')
@@ -289,9 +289,9 @@ end module user_noise_distribution
   endif
 
   if (myrank == 0) then
-    open(unit=IOUT_NOISE,file=trim(OUTPUT_FILES_PATH)//'/irec_master_noise', &
+    open(unit=IOUT_NOISE,file=trim(OUTPUT_FILES)//'/irec_master_noise', &
             status='unknown',action='write',iostat=ier)
-    if (ier /= 0) call exit_MPI(myrank,'error opening file '//trim(OUTPUT_FILES_PATH)//'/irec_master_noise')
+    if (ier /= 0) call exit_MPI(myrank,'error opening file '//trim(OUTPUT_FILES)//'/irec_master_noise')
     write(IOUT_NOISE,*) 'The master receiver is: (RECEIVER ID)', irec_master_noise
     close(IOUT_NOISE)
   endif
@@ -364,7 +364,7 @@ end module user_noise_distribution
   character(len=MAX_STRING_LEN) :: outputname
 
   if (myrank == 0) then
-    open(unit=IOUT_NOISE,file=trim(OUTPUT_FILES_PATH)//'NOISE_SIMULATION', &
+    open(unit=IOUT_NOISE,file=trim(OUTPUT_FILES)//'NOISE_SIMULATION', &
          status='unknown',action='write')
     write(IOUT_NOISE,*) '*******************************************************************************'
     write(IOUT_NOISE,*) '*******************************************************************************'
@@ -478,7 +478,7 @@ end module user_noise_distribution
 
   noise_src(:) = 0._CUSTOM_REAL
   ! noise file (source time function)
-  filename = trim(OUTPUT_FILES_PATH)//'/..//NOISE_TOMOGRAPHY/S_squared'
+  filename = trim(OUTPUT_FILES)//'/..//NOISE_TOMOGRAPHY/S_squared'
   open(unit=IIN_NOISE,file=trim(filename),status='old',action='read',iostat=ier)
   if (ier /= 0 .and. myrank == 0)  &
     call exit_MPI(myrank, 'file '//trim(filename)//' does NOT exist! This file should have been generated using Matlab scripts')
@@ -493,7 +493,7 @@ end module user_noise_distribution
 
 
   ! master receiver component direction, \nu_master
-  filename = trim(OUTPUT_FILES_PATH)//'/..//NOISE_TOMOGRAPHY/nu_master'
+  filename = trim(OUTPUT_FILES)//'/..//NOISE_TOMOGRAPHY/nu_master'
   open(unit=IIN_NOISE,file=trim(filename),status='old',action='read',iostat=ier)
   if (ier /= 0 .and. myrank == 0) &
     call exit_MPI(myrank,&
@@ -508,7 +508,7 @@ end module user_noise_distribution
   close(IIN_NOISE)
 
   if (myrank == 0) then
-    open(unit=IOUT_NOISE,file=trim(OUTPUT_FILES_PATH)//'nu_master',status='unknown',action='write')
+    open(unit=IOUT_NOISE,file=trim(OUTPUT_FILES)//'nu_master',status='unknown',action='write')
     write(IOUT_NOISE,*) 'The direction (ENZ) of selected component of master receiver is', nu_master
     close(IOUT_NOISE)
   endif
@@ -622,6 +622,8 @@ end module user_noise_distribution
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLSQUARE,num_free_surface_faces) :: noise_surface_movie
   integer(kind=8) :: Mesh_pointer
   logical :: GPU_MODE
+
+  if (.not. (num_free_surface_faces > 0)) return
 
   ! writes out wavefield at surface
   if (num_free_surface_faces > 0) then

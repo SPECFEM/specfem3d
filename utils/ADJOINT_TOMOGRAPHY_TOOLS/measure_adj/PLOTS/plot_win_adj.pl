@@ -1,4 +1,4 @@
-#!/usr/bin/perl 
+#!/usr/bin/perl
 #
 #-----------------------------------
 # plot_win_adj.pl
@@ -8,7 +8,7 @@
 #
 # NOTE: USER must change the file suffixes below, depending on the dataset.
 #       (Search for "USER".)
-# 
+#
 # EXAMPLE:
 #   plot_win_adj.pl -M ../CMTSOLUTION_9818433 -n MPM/CI/BH -b 0 -l -10/200 -k 7/1 -a STATIONS_ADJOINT -d DATA -s SYN -c RECON -w MEASUREMENT.WINDOWS -i m16 -j 6/30
 #
@@ -471,7 +471,7 @@ $strZ = sprintf('%.2e',$maxZ2/$sizeZ2);
 # TRANSVERSE component: data, synthetics, and windows
 #print "pssac2 $Tsyn -X-2 -Y4.5 $proj $bounds -Ent-3 -M${sizeT2} $red_pen -N -K -O $tick \n";
 if (-f $Tsyn){
-`pssac2 $Tsyn -X-2 -Y4.5 $proj $bounds -Ent-3 -M${sizeT2} $red_pen -N -K -O $tick >> $ps_file`;	# synthetics
+`pssac2 $Tsyn -X-2 -Y4.5 $proj $bounds -Ent-3 -M${sizeT2} $red_pen -N -K -O $tick >> $ps_file`; # synthetics
 if ($ntline) {
   if ($iplot_win==1) {
     for ($i=0; $i<$nT; $i++) {
@@ -488,10 +488,10 @@ if ($ntline) {
     for ($i=0; $i<$nT; $i++) {
       $xtext = $Twinb[$i]; $just = "LB";
       if ($i == 0) {
-	$xtext = $xtextpos2; $just = "LB";
+  $xtext = $xtextpos2; $just = "LB";
       }
       if ($i == $nT-1) {
-	$xtext = $xtextpos4; $just = "RB";
+  $xtext = $xtextpos4; $just = "RB";
       }
       `echo \"$xtext $ytextpos4 7 0 1 $just $stlabT_dT[$i]\" | pstext $textinfo $proj $bounds -N -O -K >> $ps_file`;
       `echo \"$xtext $ytextpos3 7 0 1 $just $stlabT_dA[$i]\" | pstext $textinfo $proj $bounds -N -O -K >> $ps_file`;
@@ -520,10 +520,10 @@ if ($nrline) {
     for ($i=0; $i<$nR; $i++) {
       $xtext = $Rwinb[$i]; $just = "LB";
       if ($i == 0) {
-	$xtext = $xtextpos2; $just = "LB";
+  $xtext = $xtextpos2; $just = "LB";
       }
       if ($i == $nR-1) {
-	$xtext = $xtextpos4; $just = "RB";
+  $xtext = $xtextpos4; $just = "RB";
       }
       `echo \"$xtext $ytextpos4 7 0 1 $just $stlabR_dT[$i]\" | pstext $textinfo $proj $bounds -N -O -K >> $ps_file`;
       `echo \"$xtext $ytextpos3 7 0 1 $just $stlabR_dA[$i]\" | pstext $textinfo $proj $bounds -N -O -K >> $ps_file`;
@@ -553,10 +553,10 @@ if ($nzline) {
     for ($i=0; $i<$nZ; $i++) {
       $xtext = $Zwinb[$i]; $just = "LB";
       if ($i == 0) {
-	$xtext = $xtextpos2; $just = "LB";
+  $xtext = $xtextpos2; $just = "LB";
       }
       if ($i == $nZ-1) {
-	$xtext = $xtextpos4; $just = "RB";
+  $xtext = $xtextpos4; $just = "RB";
       }
       `echo \"$xtext $ytextpos4 7 0 1 $just $stlabZ_dT[$i]\" | pstext $textinfo $proj $bounds -N -O -K >> $ps_file`;
       `echo \"$xtext $ytextpos3 7 0 1 $just $stlabZ_dA[$i]\" | pstext $textinfo $proj $bounds -N -O -K >> $ps_file`;
@@ -594,7 +594,7 @@ if($iplot_adj == 1) {
 
   #$maxZ=1.0; $maxR=1.0; $maxT=1.0;
 
-  $scale=1.2;			# adjust for plotting (this times max gives the axis limits)
+  $scale=1.2;     # adjust for plotting (this times max gives the axis limits)
   if (-f $Zadj) {
     ($minZ,$maxZ)=split(/\//,`minmax $Zadj | awk '{print \$6}'`);
     (undef,$minZ)=split(/</,$minZ);($maxZ,undef)=split(/>/,$maxZ);
@@ -642,7 +642,7 @@ if($iplot_adj == 1) {
     $Zadj2="ADJOINT_SOURCES/$sta.$net.${chan}Z.${klab2}.adj";
     $Radj2="ADJOINT_SOURCES/$sta.$net.${chan}R.${klab2}.adj";
     $Tadj2="ADJOINT_SOURCES/$sta.$net.${chan}T.${klab2}.adj";
-    
+
   }
 
   # VERTICAL component: adjoint source and windows
@@ -651,12 +651,12 @@ if($iplot_adj == 1) {
   if ($iplot_win==1) {
     if ($nzline) {
       for ($i =0; $i<$nZ; $i++) {
-	open(GMT,"|psxy $proj $bounds -W2 -G220/220/220 -O -K >> $ps_file");
-	print GMT "$Zwinb[$i] -$maxZ\n";
-	print GMT "$Zwine[$i] -$maxZ\n";
-	print GMT "$Zwine[$i] $maxZ\n";
-	print GMT "$Zwinb[$i] $maxZ\n";
-	close(GMT);
+  open(GMT,"|psxy $proj $bounds -W2 -G220/220/220 -O -K >> $ps_file");
+  print GMT "$Zwinb[$i] -$maxZ\n";
+  print GMT "$Zwine[$i] -$maxZ\n";
+  print GMT "$Zwine[$i] $maxZ\n";
+  print GMT "$Zwinb[$i] $maxZ\n";
+  close(GMT);
       }
     }
   }
@@ -676,12 +676,12 @@ if($iplot_adj == 1) {
   if ($iplot_win==1) {
     if ($nrline) {
       for ($i =0; $i<$nR; $i++) {
-	open(GMT,"|psxy $proj $bounds -W2 -G220/220/220 -O -K >> $ps_file");
-	print GMT "$Rwinb[$i] -$maxR\n";
-	print GMT "$Rwine[$i] -$maxR\n";
-	print GMT "$Rwine[$i] $maxR\n";
-	print GMT "$Rwinb[$i] $maxR\n";
-	close(GMT);
+  open(GMT,"|psxy $proj $bounds -W2 -G220/220/220 -O -K >> $ps_file");
+  print GMT "$Rwinb[$i] -$maxR\n";
+  print GMT "$Rwine[$i] -$maxR\n";
+  print GMT "$Rwine[$i] $maxR\n";
+  print GMT "$Rwinb[$i] $maxR\n";
+  close(GMT);
       }
     }
   }
@@ -701,12 +701,12 @@ if($iplot_adj == 1) {
   if ($iplot_win==1) {
     if ($ntline) {
       for ($i =0; $i<$nT; $i++) {
-	open(GMT,"|psxy $proj $bounds -W2 -G220/220/220 -O -K >> $ps_file");
-	print GMT "$Twinb[$i] -$maxT\n";
-	print GMT "$Twine[$i] -$maxT\n";
-	print GMT "$Twine[$i] $maxT\n";
-	print GMT "$Twinb[$i] $maxT\n";
-	close(GMT);
+  open(GMT,"|psxy $proj $bounds -W2 -G220/220/220 -O -K >> $ps_file");
+  print GMT "$Twinb[$i] -$maxT\n";
+  print GMT "$Twine[$i] -$maxT\n";
+  print GMT "$Twine[$i] $maxT\n";
+  print GMT "$Twinb[$i] $maxT\n";
+  close(GMT);
       }
     }
   }
@@ -740,7 +740,7 @@ if($iplot_adj == 1) {
 # Input: number1, number2
 # returns greater of 2 numbers
 #sub max {
-#	if ($_[0]<$_[1]) {return $_[1]} else {return $_[0]};
+# if ($_[0]<$_[1]) {return $_[1]} else {return $_[0]};
 #}
 
 sub get_cmt {

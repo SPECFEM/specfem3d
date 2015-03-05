@@ -164,7 +164,7 @@ $cshfile = "plot_vert_models_one.csh";
 open(CSH,">$cshfile");
 print CSH "gmtset COLOR_NAN $sky_color PAPER_MEDIA letter MEASURE_UNIT inch BASEMAP_TYPE plain PLOT_DEGREE_FORMAT D TICK_LENGTH $tlen LABEL_FONT_SIZE $fsize2 ANOT_FONT_SIZE $fsize2  HEADER_FONT $fontno ANOT_FONT $fontno LABEL_FONT $fontno HEADER_FONT_SIZE $fsize1 FRAME_PEN $fpen TICK_PEN $tpen \n";
 
-@iBs = (5,8,4);	 # what sides of each cross section to show tick marks
+@iBs = (5,8,4);  # what sides of each cross section to show tick marks
 
 # modify the height of each cross-section based on the length
 for ($p = $pmin; $p <= $pmax; $p ++ ) {
@@ -217,14 +217,14 @@ for ($p = $pmin; $p <= $pmax; $p ++ ) {
   # USER INPUT
 
   # parameters controlling the placement of subplots and labels
-  $x0_xc = 0.75; $y0_xc = 3;	# lower left of m00 cross section
+  $x0_xc = 0.75; $y0_xc = 3;  # lower left of m00 cross section
   #$x0_map = 0.6;
   #$y0_map = 5;
   #$xgap_map_xc = 0.8;
   #$x0_xc = $x0_map + $widmap + $xgap_map_xc;
   #$y0_xc = $y0_map;
   $ygap_lab = 0.1; $xgap_lab = 0.6*$ygap_lab; # labels on the xc
-  $xgap_cbar = 0.2;		# gap between plot and cbar
+  $xgap_cbar = 0.2;   # gap between plot and cbar
   #$omap = "-Xa${x0_map} -Ya${y0_map}";
   #$oxc  = "-Xa${x0_xc} -Ya${y0_xc}";
 
@@ -233,8 +233,8 @@ for ($p = $pmin; $p <= $pmax; $p ++ ) {
   $f_cbar = 0.6;
   $fygap_top = 0.20;
   $f_lab = $fygap_bot + $f_cbar + $fygap_top;
-  $Dthick = 0.20;		# thickness of colorbar
-  $Dlen = $heightxc*$f_cbar;	# length of colorbar
+  $Dthick = 0.20;   # thickness of colorbar
+  $Dlen = $heightxc*$f_cbar;  # length of colorbar
   $Dscale0 = "-D0/0/${Dlen}/${Dthick}";
   #@Dscales = ($Dscale0,$Dscale0,"${Dscale0}h");
   @Dscales = ($Dscale0,$Dscale0,$Dscale0);
@@ -263,7 +263,7 @@ for ($p = $pmin; $p <= $pmax; $p ++ ) {
   # absolute origins -- these depend on the WIDTH of the cross section
 
   # cross sections
-  $xgap_xc = 0.5;		# hspace between cross sections
+  $xgap_xc = 0.5;   # hspace between cross sections
   #if($wid < 3.5) {$xgap_xc = 1.0;}
   $x1 = $x0_xc; $y1 = $y0_xc; $oxc1 = "-Xa${x1} -Ya${y1}";
   $x2 = $x0_xc; $y2 = $y0_xc; $oxc2 = "-Xa${x2} -Ya${y2}";
@@ -281,8 +281,8 @@ for ($p = $pmin; $p <= $pmax; $p ++ ) {
   $xcb1 = $x1 + $wid + $xgap_cbar; $ycb1 = $y1 + $fac; $ocb1 = "-Xa${xcb1} -Ya${ycb1}";
   $xcb2 = $x2 + $wid + $xgap_cbar; $ycb2 = $y2 + $fac; $ocb2 = "-Xa${xcb2} -Ya${ycb2}";
   $xcb3 = $x3 - $xgap_cbar - $Dthick; $ycb3 = $y3 + $fac; $ocb3 = "-Xa${xcb3} -Ya${ycb3}";
-  #$xcb3 = $x0_map + $widmap + $Dlen/2 + 0.4; $ycb3 = $y3 + $heightxc + 1.0; $ocb3 = "-Xa${xcb3} -Ya${ycb3}";  
-  #$xcb3 = $x3 + $wid - $Dlen/2; $ycb3 = $y3 + $heightxc + 1.0; $ocb3 = "-Xa${xcb3} -Ya${ycb3}";  
+  #$xcb3 = $x0_map + $widmap + $Dlen/2 + 0.4; $ycb3 = $y3 + $heightxc + 1.0; $ocb3 = "-Xa${xcb3} -Ya${ycb3}";
+  #$xcb3 = $x3 + $wid - $Dlen/2; $ycb3 = $y3 + $heightxc + 1.0; $ocb3 = "-Xa${xcb3} -Ya${ycb3}";
   @ocbs = ($ocb1,$ocb2,$ocb3);
 
   # label for colorbar
@@ -306,7 +306,7 @@ for ($p = $pmin; $p <= $pmax; $p ++ ) {
 
   # colorpoint file for perturbation ln(m16/m00) -- FIXED with depth
   $cptfile2 = "color2.cpt";
-  $cmin = -$cpert2; $cmax = $cpert2; 
+  $cmin = -$cpert2; $cmax = $cpert2;
   $dc = ($cmax-$cmin)/${scale_color};
   $T = sprintf("-T%3.3e/%3.3e/%3.3e",$cmin*1.01,$cmax*1.01,$dc);
   print CSH "makecpt -C$colorbar $T -D > $cptfile2\n";
@@ -314,7 +314,7 @@ for ($p = $pmin; $p <= $pmax; $p ++ ) {
   # colorbars for cross sections
   $Bscale1 = sprintf("-B%2.2ef0.5:\"  \": -E10p",$vtick);
   #$Bscale2  = sprintf("-Ba%2.2ef0.05:\"$titles[2]\": -E10p",$cpert2);
-  $Bscale2  = sprintf("-Ba%2.2ef0.05:\" \": -E10p -A",$cpert2);	# -A for ticks on other side
+  $Bscale2  = sprintf("-Ba%2.2ef0.05:\" \": -E10p -A",$cpert2); # -A for ticks on other side
 
   #------------------------------------
 
@@ -426,11 +426,11 @@ if ($imfinal == 1) {
       print CSH "psbasemap $J $R $B -G${sky_color} -K -O -V $oxc >> $psfile\n";
 
       if ($icolor==1) {
-	print CSH "awk '{print \$1,\$2,\$($icol+$k-1)}' $dfile | nearneighbor -G$grdfile $R $interp\n";
+  print CSH "awk '{print \$1,\$2,\$($icol+$k-1)}' $dfile | nearneighbor -G$grdfile $R $interp\n";
         #print CSH "awk '{print \$1,\$2,\$4}' $dfile | xyz2grd -G$grdfile $R $interp\n";
-	print CSH "grdimage $grdfile -C$cptfile1 $J -Q -K -O -V $oxc >> $psfile\n";
+  print CSH "grdimage $grdfile -C$cptfile1 $J -Q -K -O -V $oxc >> $psfile\n";
 
-	print CSH "grdcontour $grdfile -Cconfile1 -A- -W1.5p -Q100 $J -K -O -V $oxc >> $psfile\n";
+  print CSH "grdcontour $grdfile -Cconfile1 -A- -W1.5p -Q100 $J -K -O -V $oxc >> $psfile\n";
       }
 
       print CSH "psscale -C${cptfile1} $Dscale $Bscale1 -K -O -V $ocb >> $psfile\n";
@@ -439,12 +439,12 @@ if ($imfinal == 1) {
 
       # details for specific cross-sections
       #if ($irun==1) {
-	# positions of five faults along each profile
-	# (1) SAF, (2) GF, (3) SGF, (4) MCF, (5) SYF, (6) CRF
-	#(undef,undef,undef,$saf,$gf,$sgf,$mcf,$syf,$crf) = split(" ",$faults[$p-1]);
-	#print "$p -- SAF $saf -- GF -- $gf -- SGF $sgf -- MCF $mcf -- SYF $syf\n"; die("TESTING");
+  # positions of five faults along each profile
+  # (1) SAF, (2) GF, (3) SGF, (4) MCF, (5) SYF, (6) CRF
+  #(undef,undef,undef,$saf,$gf,$sgf,$mcf,$syf,$crf) = split(" ",$faults[$p-1]);
+  #print "$p -- SAF $saf -- GF -- $gf -- SGF $sgf -- MCF $mcf -- SYF $syf\n"; die("TESTING");
 
-	# vertical lines
+  # vertical lines
       print CSH "psxy $J $R $finfo -K -O -V $oxc >>$psfile<<EOF\n$saf $zmax0\n$saf $zminf0\nEOF\n";
       print CSH "psxy $J $R $finfo -K -O -V $oxc >>$psfile<<EOF\n$gf $zmax0\n$gf $zminf0\nEOF\n";
       print CSH "psxy $J $R $finfo -K -O -V $oxc >>$psfile<<EOF\n$sgf $zmax0\n$sgf $zminf0\nEOF\n";
@@ -459,13 +459,13 @@ if ($imfinal == 1) {
 
       # plot source and receiver
       if ($irun == 1) {
-	print CSH "awk '{print \$3,-\$4}' $rfile | psxy $J $R $srcinfo_xc -K -O -V $oxc >> $psfile\n";
-	print CSH "awk '{print \$7,$zmax0}' $rfile | psxy $J $R $recinfo_xc -K -O -V $oxc >> $psfile\n";
+  print CSH "awk '{print \$3,-\$4}' $rfile | psxy $J $R $srcinfo_xc -K -O -V $oxc >> $psfile\n";
+  print CSH "awk '{print \$7,$zmax0}' $rfile | psxy $J $R $recinfo_xc -K -O -V $oxc >> $psfile\n";
       }
 
       # details for specific cross-sections
       #if ($irun==1) {
-	#(undef,undef,undef,$saf,$gf,$sgf,$mcf,$syf) = split(" ",$faults[$p-1]);
+  #(undef,undef,undef,$saf,$gf,$sgf,$mcf,$syf) = split(" ",$faults[$p-1]);
       $talign = "CB";
       $flsize = $fsize1;
       $textinfo = "-N -C4p -W255/255/255o,1.0p,0/0/0,solid -G0/0/0";
@@ -486,9 +486,9 @@ if ($imfinal == 1) {
       print CSH "pstext $R_title $J_title $textinfo -K -O -V $olab >>$psfile<<EOF\n0 0 18 0 $fontno TL $letter\nEOF\n";
     } else {
       if ($irun==1) {
-	$textinfo = "-N";
-	print CSH "pstext $R_title $J_title $textinfo -K -O -V $olab >>$psfile<<EOF\n0 0 $fsize1 0 $fontno TC $eid\nEOF\n";
-	print CSH "pstext $R_title $J_title $textinfo -K -O -V $olab2 >>$psfile<<EOF\n0 0 $fsize1 0 $fontno TC $stanet\nEOF\n";
+  $textinfo = "-N";
+  print CSH "pstext $R_title $J_title $textinfo -K -O -V $olab >>$psfile<<EOF\n0 0 $fsize1 0 $fontno TC $eid\nEOF\n";
+  print CSH "pstext $R_title $J_title $textinfo -K -O -V $olab2 >>$psfile<<EOF\n0 0 $fsize1 0 $fontno TC $stanet\nEOF\n";
       }
     }
 
@@ -504,7 +504,7 @@ if ($imfinal == 1) {
 
     #------------------------------------
 
-    print CSH "pstext -N $R_title $J_title -O -V >>$psfile<<EOF\n 10 10 16 0 $fontno CM \nEOF\n"; # FINISH 
+    print CSH "pstext -N $R_title $J_title -O -V >>$psfile<<EOF\n 10 10 16 0 $fontno CM \nEOF\n"; # FINISH
     #if($ixv==1) {print CSH "convert $psfile -rotate $rotangle $jpgfile\n";}
     if ($ixv==1) {print CSH "gv $psfile &\n";}
     #if ($ipdf==1) {print CSH "ps2pdf $psfile\n";}
@@ -512,8 +512,8 @@ if ($imfinal == 1) {
     #if ($ijpg==1) {print CSH "convert -rotate $rotangle $psfile $jpgfile\n";}
     if ($ijpg==1) {print CSH "convert $epsfile $jpgfile\n";}
 
-  }				# imfinal == 1
-}				# loop over p
+  }       # imfinal == 1
+}       # loop over p
 
 #==================================================
 

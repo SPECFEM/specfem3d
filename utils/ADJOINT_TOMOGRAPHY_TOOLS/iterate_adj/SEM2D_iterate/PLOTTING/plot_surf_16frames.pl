@@ -10,7 +10,7 @@
 #  adjoint wavefield, interaction field, and kernel.
 #
 #  copied from plot_oms_kernel.pl and plot_for_adj_oms.pl on 09-June-2005
-# 
+#
 #-------------------------
 #  EXAMPLES (GJI figures):
 #    (27-Nov-2005, traveltime) -- socal kernels
@@ -236,7 +236,7 @@ for ($i = 0; $i < $numf; $i++) {
    $snap1 = sprintf("%05d",$j1);
    $snap2 = sprintf("%05d",$j2);
    $time = sprintf("%04d",$j1*$dt);
-   
+
    $snapshot_f = "${basedir}/$wavefield[0]_${snap1}";
    $snapshot_a = "${basedir}/$wavefield[1]_${snap2}";
    $snapshot_k = "${basedir}/$wavefield[2]_${snap2}";
@@ -244,13 +244,13 @@ for ($i = 0; $i < $numf; $i++) {
    if (not -f $snapshot_f) {die("check if snapshot_f $snapshot_f exist or not\n");}
    if (not -f $snapshot_a) {die("check if snapshot_a $snapshot_a exist or not\n");}
    if (not -f $snapshot_k) {die("check if snapshot_k $snapshot_k exist or not\n");}
-    
+
    $k = 0;
    $R = $Rc[$k];
 
    print CSH "echo $psfile\n";
    print CSH "echo $snapshot_f\n";
-    
+
    $B = "-B1/1:\"t = $time s\"::.\"  \":Wsne";
    $B_row1 = "-B1/1:\"t = $time s\"::.\"  \":WSne";
    if ($i == 0) { $B = $B_row1;}
@@ -275,9 +275,9 @@ for ($i = 0; $i < $numf; $i++) {
    $ztext = $zmin+0.5*($zmax-$zmin);
    $tstr = "t = $time s";
    print CSH "pstext -N $J $R -K -O -P -V >>$psfile<<EOF\n $xtext $ztext $fsize1 90 $fontno CM $tstr\nEOF\n";
-      
+
    # plot title
-   $xtx = $xmin+0.5*($xmax-$xmin); $ztx = $zmin+1.15*($zmax-$zmin); 
+   $xtx = $xmin+0.5*($xmax-$xmin); $ztx = $zmin+1.15*($zmax-$zmin);
    if ($i == $numf-1) {print CSH "pstext -N $J $R -K -O -P -V >>$psfile<<EOF\n $xtx $ztx $fsize1 0 $fontno CM $titles[0]\nEOF\n";}
 
    #-------------------------
@@ -287,7 +287,7 @@ for ($i = 0; $i < $numf; $i++) {
 
    print CSH "echo $psfile\n";
    print CSH "echo $snapshot_a\n";
-    
+
    $B = "-B1/1:.\" \":wesn";
    $B_row1 = "-B1/1:.\" \":weSn";
    if ($i == 0) { $B = $B_row1;}
@@ -310,7 +310,7 @@ for ($i = 0; $i < $numf; $i++) {
 
    print CSH "echo $psfile\n";
    print CSH "echo $snapshot_k\n";
-    
+
    # PLOT THE INTERACTION FIELD
    print CSH "psbasemap $J $R $B -K -O -P -V $dX >> $psfile\n";
    if($icolor==1) {

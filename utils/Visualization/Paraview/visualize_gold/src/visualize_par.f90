@@ -51,7 +51,7 @@ integer,parameter :: NGLLZ_MID = NGLLX_MID
 integer, parameter :: NDIM = 3
 integer, parameter :: NGNOD = 8
 !----------------------------------------------
-  
+
 integer, parameter :: SIZE_INT = 4
 integer, parameter :: SIZE_FLOAT = 4
 character(len=1),parameter :: CR = achar(13) ! Carriage-return for overwriting
@@ -63,13 +63,13 @@ end module visualize_constants
 module visualize_par
 use visualize_constants
 
-implicit none  
+implicit none
 
 ! mesh coordinates
 real(kind=CUSTOM_REAL),dimension(:),allocatable :: xstore, ystore, zstore
 integer, dimension(:,:,:,:),allocatable :: ibool
 
-integer :: NSPEC_AB, NGLOB_AB    
+integer :: NSPEC_AB, NGLOB_AB
 
 ! input information
 integer :: inp_ncomp
@@ -82,7 +82,7 @@ character(len=80) :: inp_path
 ! output information
 integer :: out_format,out_ncomp,out_res,out_nslice
 character(len=20) :: out_ext
-character(len=80) :: out_path,out_fname,out_head,out_vname    
+character(len=80) :: out_path,out_fname,out_head,out_vname
 
 ! File descriptors
 integer :: fd,fd_con,fd_x,fd_y,fd_z
@@ -92,16 +92,16 @@ integer :: dat_topo
 ! processor and slice infromation
 integer :: proc_width
 character(len=20) :: proc_form,proc_width_str
-character(len=60) :: proc_head  
-integer,dimension(:),allocatable :: slice_nnode,slice_nelmt ! Number of nodes and element in output slice 
+character(len=60) :: proc_head
+integer,dimension(:),allocatable :: slice_nnode,slice_nelmt ! Number of nodes and element in output slice
 integer,allocatable,dimension(:,:) :: slice_proc_list ! Procesor list in ouput slice
 integer,allocatable,dimension(:) :: slice_nproc ! Number of input procesors in output slice
 character(len=60),allocatable,dimension(:) :: server_name, server_exec
 
-character(len=80) :: format_str1,format_str2,format_str3,num_str1,num_str2,tmp_str     
-real :: tmp_real  
+character(len=80) :: format_str1,format_str2,format_str3,num_str1,num_str2,tmp_str
+real :: tmp_real
 integer :: tmp_int
 
 end module visualize_par
 !=====================================================================
-  
+

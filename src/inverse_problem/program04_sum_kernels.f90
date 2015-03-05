@@ -62,11 +62,33 @@ program sum_kernels
   integer :: nker
   integer :: ier
 
+  logical :: BROADCAST_AFTER_READ
+
   ! ============ program starts here =====================
+
   ! initialize the MPI communicator and start the NPROCTOT MPI processes
   call init_mpi()
   call world_size(sizeprocs)
   call world_rank(myrank)
+
+  ! needs local_path for mesh files
+  BROADCAST_AFTER_READ = .true.
+  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
+
+  ! checks if number of MPI process as specified
+  if (sizeprocs /= NPROC) then
+    if (myrank == 0) then
+      print*,''
+      print*,'Error: run xsum_kernels with the same number of MPI processes '
+      print*,'       as specified in Par_file by NPROC when slices were created'
+      print*,''
+      print*,'for example: mpirun -np ',NPROC,' ./xsum_kernels ...'
+      print*,''
+    endif
+    call synchronize_all()
+    stop 'Error total number of slices'
+  endif
+  call synchronize_all()
 
   if (myrank==0) then
     write(*,*) 'sum_kernels:'
@@ -95,22 +117,6 @@ program sum_kernels
     write(*,*)
   endif
 
-  ! needs local_path for mesh files
-  call read_parameter_file()
-
-  ! checks if number of MPI process as specified
-  if (sizeprocs /= NPROC) then
-    if (myrank == 0) then
-      print*,''
-      print*,'Error: run xsum_kernels with the same number of MPI processes '
-      print*,'       as specified in Par_file by NPROC when slices were created'
-      print*,''
-      print*,'for example: mpirun -np ',NPROC,' ./xsum_kernels ...'
-      print*,''
-    endif
-    call synchronize_all()
-    stop 'Error total number of slices'
-  endif
   call synchronize_all()
 
   ! reads mesh file

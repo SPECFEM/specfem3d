@@ -238,7 +238,7 @@ $jpgfile = "$filename.jpg";
   } else {
      print CSH "awk '{print \$($icol[0])/1000,\$($icol[1])/1000,\$($icol[2])/$cnorm }' $datafile > $dfile\n";
   }
-  
+
 
   #print CSH "awk '{print \$($icol[0]),\$($icol[1]),\$($icol[2])/$cnorm }' $datafile | pscontour $R $J -A- -C$cptfile -I -K -O -V >> $psfile\n";
   #print CSH "pscontour $dfile $R $J -A- -C$cptfile -I -K -O -V >> $psfile\n";

@@ -1,6 +1,6 @@
 #!/bin/csh
 #
-# script to output travel times 
+# script to output travel times
 # based on iaspei-tau package
 # intended to work for P and S phases
 #
@@ -8,9 +8,9 @@
 #
 #  e.g.  ./phtimes.csh 611 52.474 P
 #        ./phtimes.csh 611 52.474 S
-# 
+#
 ###########################################
-# MODEL PARAMETER 
+# MODEL PARAMETER
 
 # locates your IASPEI-TAU installation
 set dir="/opt/seismo-util/source/iaspei-tau"
@@ -53,7 +53,7 @@ $delta
 -1
 EOF
 
-# outputs single line with phase name and traveltime 
+# outputs single line with phase name and traveltime
 fgrep -A 1 "#" tmp.log | tail -n 1 | awk '{print $3,$4}'
 
 

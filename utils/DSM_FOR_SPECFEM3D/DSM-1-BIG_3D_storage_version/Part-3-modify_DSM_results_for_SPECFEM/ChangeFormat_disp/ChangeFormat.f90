@@ -28,7 +28,7 @@ program ChangeFormat
    if (SLOW_DEBUG_MODE) then
      write(debug,'(a6,i5.5)') 'dg_Cgh',myrank
      open(100,file=debug)
-   end if
+   endif
 
    if (myrank==0) then
      call pinputTra(outputDir,psvmodel,modelname,stationsinf,tlen,imin_global,imax_global,r0min,r0max,&
@@ -60,10 +60,10 @@ program ChangeFormat
    call MPI_Bcast(f1,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
 
    call DistribDepth(r_n,r_n_global,myrank,nbproc,iprofmin,iprofmax)
- !! 
+ !!
    norder = 4
    irek = 1
-   
+
    parentdir = trim(outputDir)//"/out/"
 
    coef  =  3 * nsta * nbrc
@@ -101,7 +101,7 @@ program ChangeFormat
  order = 1
     do ista = 1, nsta
 
-      read(10) sig 
+      read(10) sig
       !call convolve_src_function(dt,sig,sigf,gauss,nt,ng)
       call  bwfilt (sig, sigf, dt, nt, irek, norder, f0, f1)
       SeiLoc(1:nt ,1,ista,ir)=sigf
@@ -125,7 +125,7 @@ program ChangeFormat
 !   do jj = 1,3
 !            write(coutfile, '("green",I5.5,I3.3)') order+myrank*4, mod(jj,3)+7
 !               do j = 1,9
-!                    if (coutfile(j:j).eq.' ')coutfile(j:j) = '0'
+!                    if (coutfile(j:j)==' ')coutfile(j:j) = '0'
 !               enddo
 
 !                coutfile = trim(parentDir)//"/"//trim(coutfile)

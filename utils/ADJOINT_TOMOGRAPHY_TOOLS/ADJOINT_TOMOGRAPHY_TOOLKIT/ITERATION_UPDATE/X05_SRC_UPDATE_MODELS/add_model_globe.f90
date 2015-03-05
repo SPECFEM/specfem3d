@@ -239,7 +239,7 @@ program add_model
   ! stores new model in files
   call store_new_model()
 
-  ! stores relative model perturbations 
+  ! stores relative model perturbations
   call store_perturbations()
 
   ! stop all the MPI processes, and exit
@@ -317,18 +317,18 @@ subroutine read_parameters()
   call getarg(2,input_model)
   call getarg(3,input_kernel)
   call getarg(4,output_model)
-!< Hejun Zhu 
+!< Hejun Zhu
 
 
-!> Hejun Zhu 
+!> Hejun Zhu
 !  if (trim(s_step_fac) == '') then
 !    call exit_MPI(myrank,'Usage: add_model_globe_tiso step_factor')
 !  endif
   if (trim(s_step_fac) == '' .or. trim(input_model) == '' &
-      .or. trim(input_kernel) == ''.or. trim(output_model) == '') then 
-      call exit_MPI(myrank, 'Usage: add model_globe_tiso step_factor input_model input_kernel output_model') 
+      .or. trim(input_kernel) == ''.or. trim(output_model) == '') then
+      call exit_MPI(myrank, 'Usage: add model_globe_tiso step_factor input_model input_kernel output_model')
   endif
-!< Hejun Zhu 
+!< Hejun Zhu
 
 
   ! read in parameter information
@@ -577,7 +577,7 @@ subroutine compute_volume()
   enddo
 
   ! global addressing
-  write(m_file,'(a,i6.6,a)') & 
+  write(m_file,'(a,i6.6,a)') &
       '/tigress-hsm/hejunzhu/2011EUROPE_ITERATION_UPDATE/EUROPE_TOPOLOGY_FILE/proc',myrank,'_reg1_solver_data_2.bin'
   open(11,file=trim(m_file),status='old',form='unformatted',iostat=ier)
   if( ier /= 0 ) then
@@ -772,7 +772,7 @@ subroutine get_gradient()
         do i = 1, NGLLX
 
             ! for bulk
-            model_dbulk(i,j,k,ispec) =  kernel_bulk(i,j,k,ispec) ! no negative sign, in conjugate direction subroutine 
+            model_dbulk(i,j,k,ispec) =  kernel_bulk(i,j,k,ispec) ! no negative sign, in conjugate direction subroutine
 
             ! for shear
             model_dbetav(i,j,k,ispec) =  kernel_betav(i,j,k,ispec)
@@ -803,10 +803,10 @@ subroutine get_gradient()
     enddo
   enddo
 
-!> Hejun Zhu   
+!> Hejun Zhu
   ! stores model_dbulk, ... arrays
 !  call store_kernel_updates()
-!< Hejun Zhu 
+!< Hejun Zhu
 
   ! statistics
   call mpi_reduce(minval(model_dbulk),min_bulk,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
@@ -898,7 +898,7 @@ subroutine get_gradient()
   ! multiply model updates by a subjective factor that will change the step
   model_dbulk(:,:,:,:) = step_length * model_dbulk(:,:,:,:)
   model_dbetav(:,:,:,:) = step_length * model_dbetav(:,:,:,:)
-  model_dbetah(:,:,:,:) = step_length * model_dbetah(:,:,:,:)  
+  model_dbetah(:,:,:,:) = step_length * model_dbetah(:,:,:,:)
   model_deta(:,:,:,:) = step_length * model_deta(:,:,:,:)
 
 

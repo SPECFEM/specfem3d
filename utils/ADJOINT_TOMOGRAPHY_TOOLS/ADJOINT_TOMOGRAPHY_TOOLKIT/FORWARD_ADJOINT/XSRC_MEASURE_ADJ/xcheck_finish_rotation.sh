@@ -15,31 +15,31 @@ ext="T"$ext1"_"$ext2
 
 
 
-if [ ! -f $eventfile ]; then 
-	echo WRONG! NO $eventfile 
-	exit
-fi 
-while read line 
-do 
+if [ ! -f $eventfile ]; then
+  echo WRONG! NO $eventfile
+  exit
+fi
+while read line
+do
 
 
-	cmtid=`echo $line | awk -F"_" '{print $NF}'`
-	mea_output="../SYN_"$iter"/"$line"_ADJ_"$ext 
-	adjstafile="../SYN_"$iter"/"$line"_ADJ_"$ext"/STATIONS_ADJOINT"
+  cmtid=`echo $line | awk -F"_" '{print $NF}'`
+  mea_output="../SYN_"$iter"/"$line"_ADJ_"$ext
+  adjstafile="../SYN_"$iter"/"$line"_ADJ_"$ext"/STATIONS_ADJOINT"
 
-	if [ ! -f $adjstafile ] ;then 
-		echo WRONG!!!
-	fi 
+  if [ ! -f $adjstafile ] ;then
+    echo WRONG!!!
+  fi
 
-	n=`wc -l $adjstafile | awk '{print $1}'`
-	n1=`echo "($n*3)" | bc -l`
+  n=`wc -l $adjstafile | awk '{print $1}'`
+  n1=`echo "($n*3)" | bc -l`
 
-	nadj=`ls $mea_output/*LH[ENZ].adj | wc -l` 
-	
-	echo $line $n1 $nadj 
+  nadj=`ls $mea_output/*LH[ENZ].adj | wc -l`
 
-	if [ $n1 -ne $nadj ]; then 
-		echo WRONG!!!!
-	fi 
+  echo $line $n1 $nadj
 
-done < $eventfile 
+  if [ $n1 -ne $nadj ]; then
+    echo WRONG!!!!
+  fi
+
+done < $eventfile
