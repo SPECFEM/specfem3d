@@ -53,7 +53,7 @@
 
 program sum_kernels
 
-  use tomography_par,only: MAX_STRING_LEN,MAX_NUM_NODES,KERNEL_FILE_LIST,IIN, &
+  use tomography_par,only: MAX_STRING_LEN,MAX_KERNEL_PATHS,KERNEL_FILE_LIST,IIN, &
     myrank,sizeprocs, &
     NGLOB,NSPEC, &
     USE_ALPHA_BETA_RHO,USE_ISO_KERNELS
@@ -62,7 +62,7 @@ program sum_kernels
 
   implicit none
 
-  character(len=MAX_STRING_LEN) :: kernel_list(MAX_NUM_NODES)
+  character(len=MAX_STRING_LEN) :: kernel_list(MAX_KERNEL_PATHS)
   character(len=MAX_STRING_LEN) :: sline, kernel_name,prname_lp
   integer :: nker
   integer :: ier
@@ -94,7 +94,7 @@ program sum_kernels
      read(IIN,'(a)',iostat=ier) sline
      if (ier /= 0) exit
      nker = nker+1
-     if (nker > MAX_NUM_NODES) stop 'Error number of kernels exceeds MAX_NUM_NODES'
+     if (nker > MAX_KERNEL_PATHS) stop 'Error number of kernels exceeds MAX_KERNEL_PATHS'
      kernel_list(nker) = sline
   enddo
   close(IIN)
@@ -217,7 +217,7 @@ subroutine sum_kernel(kernel_name,kernel_list,nker)
 
   implicit none
 
-  character(len=MAX_STRING_LEN) :: kernel_name,kernel_list(MAX_NUM_NODES)
+  character(len=MAX_STRING_LEN) :: kernel_name,kernel_list(MAX_KERNEL_PATHS)
   integer :: nker
 
   ! local parameters
