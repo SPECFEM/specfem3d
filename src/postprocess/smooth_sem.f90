@@ -148,7 +148,7 @@ program smooth_sem
 
   if (nker > 1) then
     if (myrank == 0) then
-      ! The machinery for reading multiple names from the command line is in place, 
+      ! The machinery for reading multiple names from the command line is in place,
       ! but the smoothing routines themselves have not yet been modified to work
       !  on multiple arrays.
       if (myrank == 0) print *, 'Smoothing only first name in list: ', trim(kernel_name)
