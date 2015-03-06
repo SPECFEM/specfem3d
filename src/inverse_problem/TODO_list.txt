@@ -1,0 +1,36 @@
+ 1/ generate a correct makefile that can compile program_inverse_problem.90
+
+  this program need almost routines used by specfem3D, since specfem3D is
+  called inside. Additionnaly this program require :
+
+   inversion_mod.f90
+   adjoint_source_mod.f90
+   deriv_DF_mod.f90
+   dsm_coupling_mod.f90
+   tv_reg.f90
+   project_tomo_grid_mod.f90
+
+ 2/ need to add a flag USE_INVERSE_PROBLEM in specfem3D. When this flag is
+true, we need to avoid writing kernels in the disk (previouly the writing was
+in save adjoint_kernels.f90).
+
+
+ 3/ we need to duplicate some routines :
+     init_simu
+     prepare_timerun
+     init_simu_adj
+
+  those subroutine are used in program_inverse_problem.90 but the problem
+  comming from allocation done inside. For the first call allocation aer done,
+  the problem occurs in the second call because the arrays are already
+  allocated. So I just copied/pasted thoses subroutines and commented the
+  allocation and renamed them:
+     re_init_simu
+     re_prepare_timerun
+     re_init_simu_adj
+ We need to think what is the good impelentation way for the current version
+  on specfem3D.
+
+4/ the paralellisation is not done on sources only on domain decomposition.
+
+
