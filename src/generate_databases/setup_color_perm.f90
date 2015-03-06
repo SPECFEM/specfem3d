@@ -405,10 +405,10 @@
 !
 
   subroutine setup_permutation(myrank,nspec,nglob,ibool,ANISOTROPY,perm, &
-                                  SAVE_MESH_FILES)
+                               SAVE_MESH_FILES)
 
   use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,IMAIN, &
-    PML_CONDITIONS,is_CPML,CPML_to_spec,NSPEC_CPML
+    PML_CONDITIONS,is_CPML,CPML_to_spec,NSPEC_CPML,ATTENUATION
 
   use create_regions_mesh_ext_par
 
@@ -603,15 +603,17 @@
   call permute_elements_real(kappastore,temp_array_real,perm,nspec)
   call permute_elements_real(mustore,temp_array_real,perm,nspec)
 
-  ! acoustic arrays
-  if (ACOUSTIC_SIMULATION) then
-    call permute_elements_real(rhostore,temp_array_real,perm,nspec)
+  if(ATTENUATION) then
+     call permute_elements_real(qmu_attenuation_store,temp_array_real,perm,nspec)
+     call permute_elements_real(qkappa_attenuation_store,temp_array_real,perm,nspec)
   endif
+  call permute_elements_real(rhostore,temp_array_real,perm,nspec)
 
   ! elastic arrays
   if (ELASTIC_SIMULATION) then
     call permute_elements_real(rho_vp,temp_array_real,perm,nspec)
     call permute_elements_real(rho_vs,temp_array_real,perm,nspec)
+
     if (ANISOTROPY) then
       call permute_elements_real(c11store,temp_array_real,perm,nspec)
       call permute_elements_real(c12store,temp_array_real,perm,nspec)
