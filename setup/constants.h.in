@@ -298,6 +298,9 @@
 !!-----------------------------------------------------------
 
 ! add mesh coloring for the GPU + MPI implementation
+! this is needed on NVIDIA hardware up to FERMI boards, included.
+! Starting on KEPLER boards you can leave it off because on KEPLER hardware
+! or higher atomic reduction operations have become as fast as resorting to mesh coloring.
   logical, parameter :: USE_MESH_COLORING_GPU = .false.
   integer, parameter :: MAX_NUMBER_OF_COLORS = 1000
 

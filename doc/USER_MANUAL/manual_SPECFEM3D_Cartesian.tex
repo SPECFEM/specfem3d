@@ -1273,9 +1273,7 @@ the program.
 
 In case you successfully ran the configuration script, you are also
 ready to compile the internal mesher. This is an alternative to CUBIT
-for the mesh generation of relatively simple geological models. The
-mesher is no longer dedicated to Southern California and more flexiblity
-is provided in this version of the package.
+for the mesh generation of relatively simple models.
 
 \begin{figure}[htbp]
 \noindent \begin{centering}
@@ -1300,6 +1298,7 @@ directory, as most of the binaries of the package.
 
 Input for the mesh generation program is provided through the parameter
 file \texttt{Mesh\_Par\_file}, which resides in the subdirectory \texttt{DATA/meshfem3D\_files/}.
+(to see how to use it, see the EXAMPLES specific to the internal mesher in directory \texttt{EXAMPLES/meshfem3D\_examples/}.
 Before running the mesher, a number of parameters need to be set in
 the \texttt{Mesh\_Par\_file}. This requires a basic understanding
 of how the SEM is implemented, and we encourage you to read \citet{KoVi98,KoTr99}
