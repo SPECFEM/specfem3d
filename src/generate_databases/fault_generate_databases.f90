@@ -138,9 +138,9 @@ subroutine fault_read_input(prname,myrank)
     ANY_FAULT_IN_THIS_PROC = .true.
 
     allocate(fault_db(iflt)%ispec1(nspec))
-    allocate(fault_db(iflt)%inodes1(4,nspec))
+    allocate(fault_db(iflt)%inodes1(NGNOD2D,nspec))
     allocate(fault_db(iflt)%ispec2(nspec))
-    allocate(fault_db(iflt)%inodes2(4,nspec))
+    allocate(fault_db(iflt)%inodes2(NGNOD2D,nspec))
 
     do i=1,nspec
       read(IIN_PAR) fault_db(iflt)%ispec1(i), fault_db(iflt)%inodes1(:,i)
