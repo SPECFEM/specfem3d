@@ -178,10 +178,11 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
   real(kind=CUSTOM_REAL), intent(in)  :: dt
   integer, intent(in) :: myrank
 
-  real(kind=CUSTOM_REAL) :: S1,S2,S3
+  real(kind=CUSTOM_REAL) :: S1,S2,S3,Sigma(6)
   integer :: n1,n2,n3
 
   NAMELIST / INIT_STRESS / S1,S2,S3,n1,n2,n3
+  NAMELIST /STRESS_TENSOR / Sigma 
 
   call initialize_fault(bc,IIN_BIN)
 
@@ -202,6 +203,7 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
     n1=0
     n2=0
     n3=0
+    read(IIN_PAR, nml=STRESS_TENSOR)
     read(IIN_PAR, nml=INIT_STRESS)
     bc%T0(1,:) = S1
     bc%T0(2,:) = S2
@@ -209,6 +211,8 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
     call init_2d_distribution(bc%T0(1,:),bc%coord,IIN_PAR,n1)
     call init_2d_distribution(bc%T0(2,:),bc%coord,IIN_PAR,n2)
     call init_2d_distribution(bc%T0(3,:),bc%coord,IIN_PAR,n3)
+    call init_fault_traction(bc,Sigma) !added the fault traction caused by a regional stress field 
+
     bc%T = bc%T0
 
     !WARNING : Quick and dirty free surface condition at z=0
@@ -389,6 +393,31 @@ subroutine init_2d_distribution(a,coord,iin,n)
   enddo
 
 end subroutine init_2d_distribution
+
+
+
+!---------------------------------------------------------------------
+!init_fault_traction subroutine computes the traction on the fault plane
+!according to a uniform regional stress field.
+subroutine init_fault_traction(bc,Sigma)
+
+  type(bc_dynandkinflt_type), intent(inout) :: bc
+  real(kind=CUSTOM_REAL),dimension(6), intent(in) :: Sigma
+  real(kind=CUSTOM_REAL),dimension(3,bc%nglob) :: Traction
+  !sigma_xx => sigma(1)
+  !sigma_yy => sigma(2)
+  !sigma_zz => sigma(3)
+  !sigma_xy => sigma(4)
+  !sigma_yz => sigma(5)
+  !sigma_xz => sigma(6) negative means compression
+  Traction(1,:) = Sigma(1)*bc%R(3,1,:)+Sigma(4)*bc%R(3,2,:)+Sigma(6)*bc%R(3,3,:)
+  Traction(2,:) = Sigma(4)*bc%R(3,1,:)+Sigma(2)*bc%R(3,2,:)+Sigma(5)*bc%R(3,3,:)
+  Traction(3,:) = Sigma(6)*bc%R(3,1,:)+Sigma(5)*bc%R(3,2,:)+Sigma(3)*bc%R(3,3,:)
+  Traction = rotate(bc,Traction,1)    
+  bc%T0 = bc%T0 + Traction
+ 
+end subroutine init_fault_traction
+
 
 !---------------------------------------------------------------------
 elemental function heaviside(x)
