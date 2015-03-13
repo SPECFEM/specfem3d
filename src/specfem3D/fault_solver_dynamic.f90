@@ -182,7 +182,7 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
   integer :: n1,n2,n3
 
   NAMELIST / INIT_STRESS / S1,S2,S3,n1,n2,n3
-  NAMELIST /STRESS_TENSOR / Sigma 
+  NAMELIST /STRESS_TENSOR / Sigma
 
   call initialize_fault(bc,IIN_BIN)
 
@@ -211,7 +211,7 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
     call init_2d_distribution(bc%T0(1,:),bc%coord,IIN_PAR,n1)
     call init_2d_distribution(bc%T0(2,:),bc%coord,IIN_PAR,n2)
     call init_2d_distribution(bc%T0(3,:),bc%coord,IIN_PAR,n3)
-    call init_fault_traction(bc,Sigma) !added the fault traction caused by a regional stress field 
+    call init_fault_traction(bc,Sigma) !added the fault traction caused by a regional stress field
 
     bc%T = bc%T0
 
@@ -413,9 +413,9 @@ subroutine init_fault_traction(bc,Sigma)
   Traction(1,:) = Sigma(1)*bc%R(3,1,:)+Sigma(4)*bc%R(3,2,:)+Sigma(6)*bc%R(3,3,:)
   Traction(2,:) = Sigma(4)*bc%R(3,1,:)+Sigma(2)*bc%R(3,2,:)+Sigma(5)*bc%R(3,3,:)
   Traction(3,:) = Sigma(6)*bc%R(3,1,:)+Sigma(5)*bc%R(3,2,:)+Sigma(3)*bc%R(3,3,:)
-  Traction = rotate(bc,Traction,1)    
+  Traction = rotate(bc,Traction,1)
   bc%T0 = bc%T0 + Traction
- 
+
 end subroutine init_fault_traction
 
 
