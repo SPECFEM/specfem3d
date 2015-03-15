@@ -79,7 +79,7 @@ subroutine BC_KINFLT_init(prname,DTglobal,myrank)
 
   dummy_idfault = 0
 
-  open(unit=IIN_PAR,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'DATA/Par_file_faults',status='old',iostat=ier)
+  open(unit=IIN_PAR,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'Par_file_faults',status='old',iostat=ier)
   if (ier /= 0) then
     if (myrank==0) write(IMAIN,*) 'no kinematic faults'
     close(IIN_PAR)
