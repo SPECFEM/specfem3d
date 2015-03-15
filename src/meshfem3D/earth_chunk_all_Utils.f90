@@ -25,7 +25,6 @@
 !
 !=====================================================================
 
-
   subroutine earth_chunk_ReadIasp91(vp,vs,rho,rb,n)
 
   implicit none
@@ -33,7 +32,11 @@
   integer i,j,n,iunit,nlay,nco(n),ifanis
   double precision vp(n,4),vs(n,4),rho(n,4),rb(n)
   real fref,vph,vsh,qm,qk,eta
-  character text*80,cnlay*2,form*11
+
+  character(len=80) text
+  character(len=2) cnlay
+  character(len=11) format_to_use
+
   do i=1,n
      !qm(i)=0.d0
         !qk(i)=0.d0
@@ -62,9 +65,9 @@
 
   read(iunit,'(i2)') nlay                ! Number of layers
 
-  write(cnlay,'(i2)') nlay               !
-  form='('//cnlay//'i2)'                 ! Number of polynomal
-  read(iunit,form) (nco(i),i=1,nlay)     ! coefficients for each layer
+  write(cnlay,'(i2)') nlay
+  format_to_use='('//cnlay//'i2)'                 ! Number of polynomial
+  read(iunit,format_to_use) (nco(i),i=1,nlay)     ! coefficients for each layer
 
   read(iunit,*) fref               ! reference frequency of Qs in Hertz
   read(iunit,*) ifanis             ! Transversal isotropic? 1=y, else=n
