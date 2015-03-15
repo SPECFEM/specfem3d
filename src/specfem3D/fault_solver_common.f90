@@ -372,7 +372,7 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
   IIN = 251 ! WARNING: not safe, should check that unit is not aleady opened
 
  ! count the number of output points on the current fault (#iflt)
-  open(IIN,file='../DATA/FAULT_STATIONS',status='old',action='read',iostat=ier)
+  open(IIN,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'FAULT_STATIONS',status='old',action='read',iostat=ier)
   if (ier /= 0) then
     if (myrank==0) write(IMAIN,*) 'Fatal error opening FAULT_STATIONS file. Abort.'
     stop
@@ -391,7 +391,7 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
   allocate(dataT%name(dataT%npoin))
   allocate(dist_loc(dataT%npoin)) !Surendra : for parallel fault
 
-  open(IIN,file='../DATA/FAULT_STATIONS',status='old',action='read')
+  open(IIN,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'FAULT_STATIONS',status='old',action='read')
   read(IIN,*) np
   k = 0
   do i=1,np
