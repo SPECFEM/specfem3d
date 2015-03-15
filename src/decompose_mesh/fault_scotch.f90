@@ -27,7 +27,7 @@
 
 module fault_scotch
 
-  use constants,only: MAX_STRING_LEN
+  use constants,only: MAX_STRING_LEN, IN_DATA_FILES
   use shared_parameters,only: NGNOD2D
   implicit none
 
@@ -65,7 +65,7 @@ CONTAINS
   character(len=MAX_STRING_LEN), intent(in) :: localpath_name
   integer :: nbfaults, iflt, ier
 
-  open(101,file='../DATA/Par_file_faults',status='old',action='read',iostat=ier)
+  open(101,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'Par_file_faults',status='old',action='read',iostat=ier)
   if (ier==0) then
     read(101,*) nbfaults
   else

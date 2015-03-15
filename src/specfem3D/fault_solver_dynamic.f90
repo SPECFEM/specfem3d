@@ -96,7 +96,7 @@ subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
 
   dummy_idfault = 0
 
-  open(unit=IIN_PAR,file='../DATA/Par_file_faults',status='old',iostat=ier)
+  open(unit=IIN_PAR,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'Par_file_faults',status='old',iostat=ier)
   if (ier /= 0) then
     if (myrank==0) write(IMAIN,*) 'no dynamic faults'
     close(IIN_PAR)
@@ -270,7 +270,7 @@ subroutine TPV16_init
   integer :: relz_num,sub_relz_num, num_cell_str,num_cell_dip, hypo_cell_str,hypo_cell_dip
   integer :: i
 
-  open(unit=IIN_NUC,file='DATA/input_file.txt',status='old',iostat=ier)
+  open(unit=IIN_NUC,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'input_file.txt',status='old',iostat=ier)
   read(IIN_NUC,*) relz_num,sub_relz_num
   read(IIN_NUC,*) num_cell_str,num_cell_dip,siz_str,siz_dip
   read(IIN_NUC,*) hypo_cell_str,hypo_cell_dip,hypo_loc_str,hypo_loc_dip,rad_T_str,rad_T_dip
