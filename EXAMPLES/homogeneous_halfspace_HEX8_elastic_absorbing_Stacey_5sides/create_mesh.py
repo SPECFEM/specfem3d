@@ -62,7 +62,7 @@ print sys.path
 print ""
 
 ##
-from geocubitlib import boundary_definition,cubit2specfem3d,exportlib
+from geocubitlib import boundary_definition
 
 # bounding faces
 boundary_definition.entities=['face']
@@ -118,6 +118,7 @@ else:
     # Export to SPECFEM3D format
     # note: exportlib-commands will overwrite material properties
     exportlib.collect(outdir='MESH/')
+    exportlib.e2SEM('MESH/')
     # Define material properties
     print "#### DEFINE MATERIAL PROPERTIES #######################"
     # elastic material
