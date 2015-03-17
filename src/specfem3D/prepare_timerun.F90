@@ -826,9 +826,9 @@
   if (nrec_local > 0 .and. SIMULATION_TYPE == 2) then
     ! allocate Frechet derivatives array
     allocate(Mxx_der(nrec_local),Myy_der(nrec_local), &
-            Mzz_der(nrec_local),Mxy_der(nrec_local), &
-            Mxz_der(nrec_local),Myz_der(nrec_local), &
-            sloc_der(NDIM,nrec_local),stat=ier)
+             Mzz_der(nrec_local),Mxy_der(nrec_local), &
+             Mxz_der(nrec_local),Myz_der(nrec_local), &
+             sloc_der(NDIM,nrec_local),stat=ier)
     if (ier /= 0) stop 'error allocating array Mxx_der and following arrays'
     Mxx_der = 0._CUSTOM_REAL
     Myy_der = 0._CUSTOM_REAL
