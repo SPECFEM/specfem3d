@@ -838,7 +838,7 @@ void FC_FUNC_(compute_forces_acoustic_cuda,
       nb_blocks_to_compute = mp->h_num_elem_colors_acoustic[icolor];
 
       Kernel_2_acoustic(nb_blocks_to_compute,mp,*iphase,
-                         mp->d_ibool + offset_nonpadded,
+                         mp->d_ibool + offset,
                          mp->d_xix + offset,mp->d_xiy + offset,mp->d_xiz + offset,
                          mp->d_etax + offset,mp->d_etay + offset,mp->d_etaz + offset,
                          mp->d_gammax + offset,mp->d_gammay + offset,mp->d_gammaz + offset,
