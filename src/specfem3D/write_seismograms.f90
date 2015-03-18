@@ -351,7 +351,6 @@
 
 !================================================================
 
-
 ! write seismograms to text files
 
   subroutine write_seismograms_to_file(seismograms,istore)
@@ -361,7 +360,7 @@
   use specfem_par,only: &
           myrank,number_receiver_global,station_name,network_name, &
           nrec,nrec_local,islice_selected_rec, &
-          it,DT,NSTEP,t0,SIMULATION_TYPE,WRITE_SEISMOGRAMS_BY_MASTER
+          it,DT,NSTEP,t0,SIMULATION_TYPE,WRITE_SEISMOGRAMS_BY_MASTER,SAVE_ALL_SEISMOS_IN_ONE_FILE,USE_BINARY_FOR_SEISMOGRAMS
 
   implicit none
 
@@ -380,6 +379,8 @@
   integer,dimension(1) :: tmp_nrec_local_received,tmp_irec,tmp_nrec_local
   integer,dimension(:),allocatable:: islice_num_rec_local
 
+  character(len=MAX_STRING_LEN) :: sisname
+
   ! saves displacement, velocity, acceleration, or pressure
   if (istore == 1) then
     component = 'd'
@@ -396,8 +397,17 @@
   allocate(one_seismogram(NDIM,NSTEP),stat=ier)
   if (ier /= 0) stop 'error while allocating one temporary seismogram'
 
-  ! all processes write their local seismograms themselves
+  ! write out seismograms: all processes write their local seismograms themselves
   if (.not. WRITE_SEISMOGRAMS_BY_MASTER) then
+
+    if (SAVE_ALL_SEISMOS_IN_ONE_FILE) then
+      write(sisname,'(A,I5.5)') '/all_seismograms_node_',myrank
+      if (USE_BINARY_FOR_SEISMOGRAMS) then
+        open(unit=IOUT,file=trim(OUTPUT_FILES)//trim(sisname)//'.bin',status='unknown',form='unformatted',action='write')
+      else
+        open(unit=IOUT,file=trim(OUTPUT_FILES)//trim(sisname)//'.ascii',status='unknown',form='formatted',action='write')
+      endif
+    endif
 
     ! loop on all the local receivers
     do irec_local = 1,nrec_local
@@ -411,15 +421,29 @@
       call write_one_seismogram(one_seismogram,irec, &
                                 station_name,network_name,nrec, &
                                 DT,t0,it,NSTEP,SIMULATION_TYPE, &
-                                myrank,component,istore,irec_local)
+                                myrank,component,istore)
 
     enddo ! nrec_local
 
-! now only the master process does the writing of seismograms and
-! collects the data from all other processes
-  else ! WRITE_SEISMOGRAMS_BY_MASTER
+    ! create one large file instead of one small file per station to avoid file system overload
+    if (SAVE_ALL_SEISMOS_IN_ONE_FILE) close(IOUT)
 
-    if (myrank == 0) then ! on the master, gather all the seismograms
+! only the master process does the writing of seismograms and
+! collects the data from all other processes
+  else ! if WRITE_SEISMOGRAMS_BY_MASTER
+
+    if (myrank == 0) then
+      ! on the master, gather all the seismograms
+
+      ! create one large file instead of one small file per station to avoid file system overload
+      if (SAVE_ALL_SEISMOS_IN_ONE_FILE) then
+        write(sisname,'(A)') '/all_seismograms'
+        if (USE_BINARY_FOR_SEISMOGRAMS) then
+          open(unit=IOUT,file=trim(OUTPUT_FILES)//trim(sisname)//'.bin',status='unknown',form='unformatted',action='write')
+        else
+          open(unit=IOUT,file=trim(OUTPUT_FILES)//trim(sisname)//'.ascii',status='unknown',form='formatted',action='write')
+        endif
+      endif
 
       total_seismos = 0
 
@@ -472,7 +496,7 @@
             call write_one_seismogram(one_seismogram,irec, &
                                       station_name,network_name,nrec, &
                                       DT,t0,it,NSTEP,SIMULATION_TYPE, &
-                                      myrank,component,istore,total_seismos)
+                                      myrank,component,istore)
 
           enddo ! nrec_local_received
         endif ! if (nrec_local_received > 0)
@@ -485,7 +509,11 @@
 
       if (total_seismos /= nrec) call exit_MPI(myrank,'incorrect total number of receivers saved')
 
-    else  ! on the nodes, send the seismograms to the master
+     ! create one large file instead of one small file per station to avoid file system overload
+      if (SAVE_ALL_SEISMOS_IN_ONE_FILE) close(IOUT)
+
+    else
+      ! on the nodes, send the seismograms to the master
       receiver = 0
       tmp_nrec_local(1) = nrec_local
       call send_i(tmp_nrec_local,1,receiver,itag)
@@ -503,7 +531,7 @@
       endif
     endif ! myrank
 
-  endif ! WRITE_SEISMOGRAMS_BY_MASTER
+  endif ! of if (WRITE_SEISMOGRAMS_BY_MASTER)
 
   deallocate(one_seismogram)
 
@@ -514,13 +542,13 @@
   subroutine write_one_seismogram(one_seismogram,irec, &
               station_name,network_name,nrec, &
               DT,t0,it,NSTEP,SIMULATION_TYPE, &
-              myrank,component,istore,number_of_current_seismogram)
+              myrank,component,istore)
 
   use constants
 
   implicit none
 
-  integer, intent(in) :: NSTEP,it,SIMULATION_TYPE,number_of_current_seismogram,istore
+  integer, intent(in) :: NSTEP,it,SIMULATION_TYPE,istore
   real(kind=CUSTOM_REAL), dimension(NDIM,NSTEP) :: one_seismogram
 
   integer myrank
@@ -536,10 +564,6 @@
   integer :: length_station_name,length_network_name
   character(len=MAX_STRING_LEN) :: sisname,final_LOCAL_PATH
   character(len=3) :: channel
-
-!! DK DK temporary dummy statement to avoid a compiler warning, the time for me
-!! DK DK to implement option SAVE_ALL_SEISMOS_IN_ONE_FILE tomorrow
-  iorientation = number_of_current_seismogram !!!!!!!!!!! dummy statement
 
   ! see how many components we need to store: 1 for pressure, NDIM for a vector
   if(istore == 4) then ! this is for pressure

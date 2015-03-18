@@ -37,7 +37,7 @@
 
   use constants
 
-  use specfem_par,only: USE_BINARY_FOR_SEISMOGRAMS
+  use specfem_par,only: USE_BINARY_FOR_SEISMOGRAMS,SAVE_ALL_SEISMOS_IN_ONE_FILE
 
   implicit none
 
@@ -58,19 +58,31 @@
 
   ! opens seismogram file
   if (USE_BINARY_FOR_SEISMOGRAMS) then
+
     ! allocate trace
     nt_s = min(it,NSTEP)
     allocate(tr(nt_s),stat=ier)
     if (ier /= 0) stop 'error allocating array tr()'
 
     ! binary format case
-    open(unit=IOUT, file=final_LOCAL_PATH(1:len_trim(final_LOCAL_PATH))//&
+    if(.not. SAVE_ALL_SEISMOS_IN_ONE_FILE) then
+      open(unit=IOUT, file=final_LOCAL_PATH(1:len_trim(final_LOCAL_PATH))//&
          sisname(1:len_trim(sisname)), form='unformatted', access='direct', recl=4*(nt_s))
+    else
+      write(IOUT) sisname
+    endif
     tr(:)=0
+
   else
+
     ! ASCII format case
-    open(unit=IOUT,file=final_LOCAL_PATH(1:len_trim(final_LOCAL_PATH))//&
+    if(.not. SAVE_ALL_SEISMOS_IN_ONE_FILE) then
+      open(unit=IOUT,file=final_LOCAL_PATH(1:len_trim(final_LOCAL_PATH))//&
          sisname(1:len_trim(sisname)),status='unknown')
+    else
+      write(IOUT,*) sisname(1:len_trim(sisname))
+    endif
+
   endif
 
   ! make sure we never write more than the maximum number of time steps
@@ -100,7 +112,11 @@
 
       if (USE_BINARY_FOR_SEISMOGRAMS) then
         ! binary format case
-        tr(isample) = one_seismogram(iorientation,isample)
+        if(.not. SAVE_ALL_SEISMOS_IN_ONE_FILE) then
+          tr(isample) = one_seismogram(iorientation,isample)
+        else
+          write(IOUT) time_t,one_seismogram(iorientation,isample)
+        endif
       else
         ! ASCII format case
         write(IOUT,*) time_t,' ',one_seismogram(iorientation,isample)
@@ -111,11 +127,11 @@
   ! binary format case
   if (USE_BINARY_FOR_SEISMOGRAMS) then
     ! writes out whole trace into binary file
-    write(IOUT,rec=1) tr
+    if(.not. SAVE_ALL_SEISMOS_IN_ONE_FILE) write(IOUT,rec=1) tr
     deallocate(tr)
   endif
 
-  close(IOUT)
+  if(.not. SAVE_ALL_SEISMOS_IN_ONE_FILE) close(IOUT)
 
   end subroutine write_output_ASCII_or_binary
 
