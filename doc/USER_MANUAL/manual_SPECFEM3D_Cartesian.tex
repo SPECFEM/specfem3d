@@ -1788,6 +1788,56 @@ Any other source-time function may then be obtained by convolution.
 \item [{\texttt{PRINT\_SOURCE\_TIME\_FUNCTION}}] Turn this flag on to print
 information about the source time function in the file \texttt{OUTPUT\_FILES/plot\_source\_time\_function.txt}.
 This feature is only relevant for the solver.
+
+\item [{\texttt{NUMBER\_OF\_SIMULTANEOUS\_RUNS}}] adds the ability to run several calculations (several earthquakes)
+in an embarrassingly-parallel fashion from within the same run;
+this can be useful when using a very large supercomputer to compute
+many earthquakes in a catalog, in which case it can be better from
+a batch job submission point of view to start fewer and much larger jobs,
+each of them computing several earthquakes in parallel.
+To turn that option on, set parameter NUMBER\_OF\_SIMULTANEOUS\_RUNS to a value greater than 1.
+To implement that, we create NUMBER\_OF\_SIMULTANEOUS\_RUNS MPI sub-communicators,
+each of them being labeled "my\_local\_mpi\_comm\_world", and we use them
+in all the routines in "src/shared/parallel.f90", except in MPI\_ABORT() because in that case
+we need to kill the entire run.
+When that option is on, of course the number of processor cores used to start
+the code in the batch system must be a multiple of NUMBER\_OF\_SIMULTANEOUS\_RUNS,
+all the individual runs must use the same number of processor cores,
+which as usual is NPROC in the Par\_file,
+and thus the total number of processor cores to request from the batch system
+should be NUMBER\_OF\_SIMULTANEOUS\_RUNS * NPROC.
+All the runs to perform must be placed in directories called run0001, run0002, run0003 and so on
+(with exactly four digits).
+
+Imagine you have 10 independent calculations to do, each of them on 100 cores; you have three options:
+
+1/ submit 10 jobs to the batch system
+
+2/ submit a single job on 1000 cores to the batch, and in that script create a sub-array of jobs to start 10 jobs,
+each running on 100 cores (see e.g. http://www.schedmd.com/slurmdocs/job\_array.html )
+
+3/ submit a single job on 1000 cores to the batch, start SPECFEM3D on 1000 cores, create 10 sub-communicators,
+cd into one of 10 subdirectories (called e.g. run0001, run0002,... run0010) depending on the sub-communicator
+your MPI rank belongs to, and run normally on 100 cores using that sub-communicator.
+
+The option NUMBER\_OF\_SIMULTANEOUS\_RUNS implements 3/.
+
+\item [{\texttt{BROADCAST\_SAME\_MESH\_AND\_MODEL}}]: 
+if we perform simultaneous runs in parallel, if only the source and receivers vary between these runs
+but not the mesh nor the model (velocity and density) then we can also read the mesh and model files
+from a single run in the beginning and broadcast them to all the others; for a large number of simultaneous
+runs for instance when solving inverse problems iteratively this can DRASTICALLY reduce I/Os to disk in the solver
+(by a factor equal to NUMBER\_OF\_SIMULTANEOUS\_RUNS), and reducing I/Os is crucial in the case of huge runs.
+Thus, always set this option to .true. if the mesh and the model are the same for all simultaneous runs.
+In that case there is no need to duplicate the mesh and model file database (the content of the DATABASES\_MPI
+directories) in each of the run0001, run0002,... directories, it is sufficient to have one in run0001
+and the code will broadcast it to the others).
+
+TODO / future work to do: currently the BROADCAST\_SAME\_MESH\_AND\_MODEL option assumes to have the (master) mesh files in run0001/DATABASES\_MPI or run0001/OUTPUT\_FILES/DATABASES\_MPI. However, for adjoint runs you still need a DATABASES\_MPI folder in each of the sub-runs directories, e.g. run0002/DATABASES\_MPI, etc. to store the forward wavefields, kernels etc. of each sub-run. This would not be needed for forward simulations.
+
+TODO / future work to do: the sensitivity kernel summing and smoothing tools in directory src/tomography are currently not ported to this new option to do many runs simultaneously, only the solver (src/specfem3d) is. Thus these tools should work, but in their current version will need to be run for each simulation result independently. 
+More precisely, the current kernel summing and smoothing routines work fine, with the exception that you need to move out the mesh files (and also the parameters). This works because these routines consider multiple runs by design. You simply have to provide them the directories where the kernels are. 
+
 \item [{\texttt{GPU\_MODE}}] Turn this flag on to use GPUs.
 
 \item [\texttt{ADIOS\_ENABLED}] Turn this flag on to enable ADIOS. If set to \texttt{.false.}, subsequent ADIOS
@@ -1799,7 +1849,6 @@ xgenerate\_database input.
 \item [\texttt{ADIOS\_FOR\_KERNELS}] Turn this flag on to produce ADIOS kernels that can later be visualized with the ADIOS version of combine\_vol\_data.
 
 \end{description}
-
 
 The present version of SPECFEM can handle fully saturated porous simulations, Christina Morency implemented Biot equation.
 But the code cannot calculate partially saturated cases in its state.
