@@ -1822,7 +1822,7 @@ your MPI rank belongs to, and run normally on 100 cores using that sub-communica
 
 The option NUMBER\_OF\_SIMULTANEOUS\_RUNS implements 3/.
 
-\item [{\texttt{BROADCAST\_SAME\_MESH\_AND\_MODEL}}]: 
+\item [{\texttt{BROADCAST\_SAME\_MESH\_AND\_MODEL}}]:
 if we perform simultaneous runs in parallel, if only the source and receivers vary between these runs
 but not the mesh nor the model (velocity and density) then we can also read the mesh and model files
 from a single run in the beginning and broadcast them to all the others; for a large number of simultaneous
@@ -1835,8 +1835,8 @@ and the code will broadcast it to the others).
 
 TODO / future work to do: currently the BROADCAST\_SAME\_MESH\_AND\_MODEL option assumes to have the (master) mesh files in run0001/DATABASES\_MPI or run0001/OUTPUT\_FILES/DATABASES\_MPI. However, for adjoint runs you still need a DATABASES\_MPI folder in each of the sub-runs directories, e.g. run0002/DATABASES\_MPI, etc. to store the forward wavefields, kernels etc. of each sub-run. This would not be needed for forward simulations.
 
-TODO / future work to do: the sensitivity kernel summing and smoothing tools in directory src/tomography are currently not ported to this new option to do many runs simultaneously, only the solver (src/specfem3d) is. Thus these tools should work, but in their current version will need to be run for each simulation result independently. 
-More precisely, the current kernel summing and smoothing routines work fine, with the exception that you need to move out the mesh files (and also the parameters). This works because these routines consider multiple runs by design. You simply have to provide them the directories where the kernels are. 
+TODO / future work to do: the sensitivity kernel summing and smoothing tools in directory src/tomography are currently not ported to this new option to do many runs simultaneously, only the solver (src/specfem3d) is. Thus these tools should work, but in their current version will need to be run for each simulation result independently.
+More precisely, the current kernel summing and smoothing routines work fine, with the exception that you need to move out the mesh files (and also the parameters). This works because these routines consider multiple runs by design. You simply have to provide them the directories where the kernels are.
 
 \item [{\texttt{GPU\_MODE}}] Turn this flag on to use GPUs.
 
