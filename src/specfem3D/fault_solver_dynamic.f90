@@ -366,7 +366,19 @@ subroutine init_2d_distribution(a,coord,iin,n)
       tmp3 = (l/2._CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL
       b = heaviside( tmp1 ) * heaviside( tmp2 ) * heaviside( tmp3) * val
 
-    case ('cylinder')
+    case ('x-cylinder')
+      tmp1 = r - sqrt((coord(1,:)-yc)**2 + (coord(2,:)-zc)**2)
+      tmp2 = (lz/2._CUSTOM_REAL)-abs(coord(3,:)-xc)+SMALLVAL
+      b = heaviside( tmp1 ) * heaviside( tmp2 ) * val
+
+
+    case ('y-cylinder')
+      tmp1 = r - sqrt((coord(1,:)-zc)**2 + (coord(2,:)-xc)**2)
+      tmp2 = (lz/2._CUSTOM_REAL)-abs(coord(3,:)-yc)+SMALLVAL
+      b = heaviside( tmp1 ) * heaviside( tmp2 ) * val
+
+
+    case ('z-cylinder')
       tmp1 = r - sqrt((coord(1,:)-xc)**2 + (coord(2,:)-yc)**2)
       tmp2 = (lz/2._CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL
       b = heaviside( tmp1 ) * heaviside( tmp2 ) * val
