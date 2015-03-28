@@ -134,12 +134,12 @@
 
 !!-----------------------------------------------------------
 !!
-!! Roland_Sylvain gravity calculations
+!! gravity integral calculations
 !!
 !!-----------------------------------------------------------
 
-!! DK DK for Roland_Sylvain
-  logical, parameter :: ROLAND_SYLVAIN = .false. !!! .true.
+!! DK DK for gravity integrals
+  logical, parameter :: GRAVITY_INTEGRALS = .false. !!! .true.
 
 ! check for negative Jacobians in the calculation of integrals or not
 ! (can safely be done once to check that the mesh is OK at a given resolution, and then permanently

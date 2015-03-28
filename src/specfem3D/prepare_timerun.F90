@@ -89,14 +89,14 @@
   call prepare_timerun_OpenMP()
 #endif
 
-  ! compute the Roland_Sylvain gravity integrals if needed
-  if (ROLAND_SYLVAIN) then
+  ! compute the gravity integrals if needed
+  if (GRAVITY_INTEGRALS) then
     if (myrank == 0) then
       write(IMAIN,*)
-      write(IMAIN,*) '  ...computing Roland_Sylvain gravity integrals'
+      write(IMAIN,*) '  ...computing gravity integrals'
       call flush_IMAIN()
     endif
-    call compute_Roland_Sylvain_integr()
+    call compute_gravity_integrals()
   endif
 
   ! elapsed time since beginning of preparation
@@ -1629,9 +1629,9 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  ! compute Roland_Sylvain integrals of that slice, and then total integrals for the whole mesh
+  ! compute gravity integrals of that slice, and then total integrals for the whole mesh
 
-  subroutine compute_Roland_Sylvain_integr()
+  subroutine compute_gravity_integrals()
 
   use constants
 
@@ -1689,7 +1689,7 @@
 
     ! print information about number of elements done so far
     if (myrank == 0 .and. (mod(ispec,NSPEC_DISPLAY_INTERVAL) == 0 .or. ispec == 1 .or. ispec == NSPEC_AB)) then
-       write(IMAIN,*) 'for Roland_Sylvain integrals, ',ispec,' elements computed out of ',NSPEC_AB
+       write(IMAIN,*) 'for gravity integrals, ',ispec,' elements computed out of ',NSPEC_AB
        ! write time stamp file to give information about progression of the calculation of gravity integrals
        write(outputname,"('/timestamp_gravity_calculations_ispec',i7.7,'_out_of_',i7.7)") ispec,NSPEC_AB
        ! timestamp file output
@@ -1944,5 +1944,5 @@
 
   endif
 
-  end subroutine compute_Roland_Sylvain_integr
+  end subroutine compute_gravity_integrals
 
