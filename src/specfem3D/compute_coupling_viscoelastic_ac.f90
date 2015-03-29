@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -110,7 +110,7 @@
 
         ! CPML overwrite cases
         if (PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
-          if (is_CPML(ispec))then
+          if (is_CPML(ispec)) then
             if (SIMULATION_TYPE == 1) then
               ispec_CPML = spec_to_CPML(ispec)
               call pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,i,j,k,&
@@ -120,7 +120,7 @@
               pressure = - pressure
             endif
 
-            if (SIMULATION_TYPE == 3)then
+            if (SIMULATION_TYPE == 3) then
               ispec_CPML = spec_to_CPML(ispec)
               call pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,i,j,k,&
                                               pressure,potential_acoustic,potential_acoustic_old,&

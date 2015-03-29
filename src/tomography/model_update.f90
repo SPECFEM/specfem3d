@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -28,7 +28,7 @@
 program model_update
 
   use specfem_par,only: kappastore,mustore !,ibool
-  use specfem_par,only: NPROC,OUTPUT_FILES_PATH,LOCAL_PATH
+  use specfem_par,only: NPROC,OUTPUT_FILES,LOCAL_PATH
   use specfem_par_elastic,only: rho_vp,rho_vs
 
   use tomography_model_iso
@@ -89,26 +89,26 @@ program model_update
 
   ! default input/output directories
   ! directory where the summed and smoothed input kernels are linked
-  if (OUTPUT_FILES_PATH(len_trim(OUTPUT_FILES_PATH):len_trim(OUTPUT_FILES_PATH)) /= '/') then
-    INPUT_KERNELS_DIR = trim(OUTPUT_FILES_PATH)//'/'//trim(INPUT_KERNELS_DIR_NAME)
+  if (OUTPUT_FILES(len_trim(OUTPUT_FILES):len_trim(OUTPUT_FILES)) /= '/') then
+    INPUT_KERNELS_DIR = trim(OUTPUT_FILES)//'/'//trim(INPUT_KERNELS_DIR_NAME)
   else
-    INPUT_KERNELS_DIR = trim(OUTPUT_FILES_PATH)//trim(INPUT_KERNELS_DIR_NAME)
+    INPUT_KERNELS_DIR = trim(OUTPUT_FILES)//trim(INPUT_KERNELS_DIR_NAME)
   endif
 
   ! directory where the mesh files for the NEW model will be written
-  if (OUTPUT_FILES_PATH(len_trim(OUTPUT_FILES_PATH):len_trim(OUTPUT_FILES_PATH)) /= '/') then
-    OUTPUT_MODEL_DIR = trim(OUTPUT_FILES_PATH)//'/'//trim(LOCAL_PATH_NEW_NAME)
+  if (OUTPUT_FILES(len_trim(OUTPUT_FILES):len_trim(OUTPUT_FILES)) /= '/') then
+    OUTPUT_MODEL_DIR = trim(OUTPUT_FILES)//'/'//trim(LOCAL_PATH_NEW_NAME)
   else
-    OUTPUT_MODEL_DIR = trim(OUTPUT_FILES_PATH)//trim(LOCAL_PATH_NEW_NAME)
+    OUTPUT_MODEL_DIR = trim(OUTPUT_FILES)//trim(LOCAL_PATH_NEW_NAME)
   endif
 
   ! directory where the output files of model_update will be written
   PRINT_STATISTICS_FILES = .true.
 
-  if (OUTPUT_FILES_PATH(len_trim(OUTPUT_FILES_PATH):len_trim(OUTPUT_FILES_PATH)) /= '/') then
-    OUTPUT_STATISTICS_DIR = trim(OUTPUT_FILES_PATH)//'/'//trim(OUTPUT_STATISTICS_DIR_NAME)
+  if (OUTPUT_FILES(len_trim(OUTPUT_FILES):len_trim(OUTPUT_FILES)) /= '/') then
+    OUTPUT_STATISTICS_DIR = trim(OUTPUT_FILES)//'/'//trim(OUTPUT_STATISTICS_DIR_NAME)
   else
-    OUTPUT_STATISTICS_DIR = trim(OUTPUT_FILES_PATH)//trim(OUTPUT_STATISTICS_DIR_NAME)
+    OUTPUT_STATISTICS_DIR = trim(OUTPUT_FILES)//trim(OUTPUT_STATISTICS_DIR_NAME)
   endif
 
   ! reads in parameters needed
@@ -320,9 +320,9 @@ program model_update
   call read_kernels_iso()
 
   !---------------------------------------------------------------------------------------------
-  ! calculates gradient
+  ! computes search direction
   !---------------------------------------------------------------------------------------------
-  call get_gradient_steepest_iso()
+  call get_sd_direction_iso()
 
   !---------------------------------------------------------------------------------------------
   ! new model
@@ -461,7 +461,7 @@ program model_update
 
   ! call write_new_model_iso()
 
-! vtk file output
+! VTK file output
 !   ! vs model
 !   fname = 'vs_new'
 !   write(m_file,'(a,i6.6,a)') trim(OUTPUT_MODEL_DIR)//'/proc',myrank,trim(REG)//trim(fname)
@@ -569,16 +569,16 @@ subroutine initialize()
 
   implicit none
 
+  logical :: BROADCAST_AFTER_READ
+
   ! initialize the MPI communicator and start the NPROCTOT MPI processes
   call init_mpi()
   call world_size(sizeprocs)
   call world_rank(myrank)
 
   ! reads the parameter file
-  call read_parameter_file()
-
-  ! reads ADIOS flags
-  call read_adios_parameters()
+  BROADCAST_AFTER_READ = .true.
+  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
 
   if (ADIOS_ENABLED) stop 'Flag ADIOS_ENABLED set to .true. not supported yet for xmodel_update, please rerun program...'
 

@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -30,7 +30,7 @@
   subroutine compute_add_sources_viscoelastic(NSPEC_AB,NGLOB_AB,accel, &
                         ibool,ispec_is_inner,phase_is_inner, &
                         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                        hdur,hdur_gaussian,hdur_tiny,tshift_src,dt,t0,sourcearrays, &
+                        hdur,hdur_gaussian,tshift_src,dt,t0,sourcearrays, &
                         ispec_is_elastic,SIMULATION_TYPE,NSTEP, &
                         nrec,islice_selected_rec,ispec_selected_rec, &
                         nadj_rec_local,adj_sourcearrays, &
@@ -47,7 +47,7 @@
                         mask_noise,noise_surface_movie, &
                         nrec_local,number_receiver_global, &
                         nsources_local,USE_FORCE_POINT_SOURCE, &
-                        USE_RICKER_TIME_FUNCTION,COUPLE_WITH_EXTERNAL_CODE
+                        USE_RICKER_TIME_FUNCTION,COUPLE_WITH_EXTERNAL_CODE,SU_FORMAT
 
   implicit none
 
@@ -66,7 +66,7 @@
 ! source
   integer :: NSOURCES,myrank,it
   integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
-  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,hdur_tiny,tshift_src
+  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,tshift_src
   double precision :: dt,t0
   real(kind=CUSTOM_REAL), dimension(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrays
 
@@ -132,10 +132,11 @@
               if (USE_RICKER_TIME_FUNCTION) then
                 stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
               else
-                stf = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_tiny(isource))
+                ! use a very small duration of 5*DT to mimic a Dirac in time
+                stf = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),5.d0*DT)
               endif
 
-              ! add the inclined force source array
+              ! add the tilted force source array
               ! distinguish between single and double precision for reals
               if (CUSTOM_REAL == SIZE_REAL) then
                 stf_used = sngl(stf)
@@ -245,8 +246,8 @@
             ! compute source arrays
             if (myrank == islice_selected_rec(irec)) then
               irec_local = irec_local + 1
-              ! reads in **sta**.**net**.**LH**.adj files
-              adj_source_file = trim(station_name(irec))//'.'//trim(network_name(irec))
+              ! reads in **net**.**sta**.**BH**.adj files
+              adj_source_file = trim(network_name(irec))//'.'//trim(station_name(irec))
               call compute_arrays_adjoint_source(myrank,adj_source_file, &
                                                  xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
                                                  adj_sourcearray, xigll,yigll,zigll, &
@@ -265,17 +266,17 @@
           write(procname,"(i4)") myrank
           procname = adjustl(procname)
           ! read adjoint sources
-          open(unit=IIN_SU1, file=trim(OUTPUT_FILES_PATH)//'../SEM/'//trim(procname)//'_dx_SU.adj', &
+          open(unit=IIN_SU1, file=trim(OUTPUT_FILES)//'../SEM/'//trim(procname)//'_dx_SU.adj', &
                status='old', access='direct', recl=240+4*NSTEP, iostat=ier)
-          if (ier /= 0) call exit_MPI(myrank,'file '//trim(OUTPUT_FILES_PATH) &
+          if (ier /= 0) call exit_MPI(myrank,'file '//trim(OUTPUT_FILES) &
                                     //'../SEM/'//trim(procname)//'_dx_SU.adj does not exist')
-          open(unit=IIN_SU2, file=trim(OUTPUT_FILES_PATH)//'../SEM/'//trim(procname)//'_dy_SU.adj', &
+          open(unit=IIN_SU2, file=trim(OUTPUT_FILES)//'../SEM/'//trim(procname)//'_dy_SU.adj', &
                status='old', access='direct', recl=240+4*NSTEP, iostat=ier)
-          if (ier /= 0) call exit_MPI(myrank,'file '//trim(OUTPUT_FILES_PATH) &
+          if (ier /= 0) call exit_MPI(myrank,'file '//trim(OUTPUT_FILES) &
                                     //'../SEM/'//trim(procname)//'_dy_SU.adj does not exist')
-          open(unit=IIN_SU3, file=trim(OUTPUT_FILES_PATH)//'../SEM/'//trim(procname)//'_dz_SU.adj', &
+          open(unit=IIN_SU3, file=trim(OUTPUT_FILES)//'../SEM/'//trim(procname)//'_dz_SU.adj', &
                status='old', access='direct', recl=240+4*NSTEP, iostat=ier)
-          if (ier /= 0) call exit_MPI(myrank,'file '//trim(OUTPUT_FILES_PATH) &
+          if (ier /= 0) call exit_MPI(myrank,'file '//trim(OUTPUT_FILES) &
                                     //'../SEM/'//trim(procname)//'_dz_SU.adj does not exist')
 
           do irec_local = 1,nrec_local
@@ -395,7 +396,7 @@
   subroutine compute_add_sources_viscoelastic_bpwf( NSPEC_AB,NGLOB_AB, &
                         ibool,ispec_is_inner,phase_is_inner, &
                         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                        hdur,hdur_gaussian,hdur_tiny,tshift_src,dt,t0,sourcearrays, &
+                        hdur,hdur_gaussian,tshift_src,dt,t0,sourcearrays, &
                         ispec_is_elastic,SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                         b_accel,NOISE_TOMOGRAPHY)
 
@@ -422,7 +423,7 @@
 ! source
   integer :: NSOURCES,myrank,it
   integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
-  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,hdur_tiny,tshift_src
+  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,tshift_src
   double precision :: dt,t0
   real(kind=CUSTOM_REAL), dimension(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrays
 
@@ -491,20 +492,14 @@
 
             if (USE_FORCE_POINT_SOURCE) then
 
-              !f0 = hdur(isource) !! using hdur as a FREQUENCY
-              !if (it == 1 .and. myrank == 0) then
-              !   write(IMAIN,*) 'using a source of dominant frequency ',f0
-              !   write(IMAIN,*) 'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
-              !   write(IMAIN,*) 'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
-              !endif
-
               if (USE_RICKER_TIME_FUNCTION) then
                 stf = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
               else
-                stf = comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_tiny(isource))
+                ! use a very small duration of 5*DT to mimic a Dirac in time
+                stf = comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),5.d0*DT)
               endif
 
-              ! add the inclined force source array
+              ! add the tilted force source array
               ! distinguish between single and double precision for reals
               if (CUSTOM_REAL == SIZE_REAL) then
                 stf_used = sngl(stf)
@@ -594,7 +589,7 @@
 
   subroutine compute_add_sources_viscoelastic_GPU(NSPEC_AB, &
                         ispec_is_inner,phase_is_inner,NSOURCES,myrank,it,&
-                        hdur,hdur_gaussian,hdur_tiny,tshift_src,dt,t0, &
+                        hdur,hdur_gaussian,tshift_src,dt,t0, &
                         ispec_is_elastic,SIMULATION_TYPE,NSTEP, &
                         nrec,islice_selected_rec,ispec_selected_rec, &
                         nadj_rec_local,adj_sourcearrays, &
@@ -609,7 +604,7 @@
                         irec_master_noise,noise_surface_movie, &
                         nrec_local,number_receiver_global, &
                         nsources_local,USE_FORCE_POINT_SOURCE, &
-                        USE_RICKER_TIME_FUNCTION,COUPLE_WITH_EXTERNAL_CODE
+                        USE_RICKER_TIME_FUNCTION,COUPLE_WITH_EXTERNAL_CODE,SU_FORMAT
 
   implicit none
 
@@ -623,7 +618,7 @@
 
 ! source
   integer :: NSOURCES,myrank,it
-  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,hdur_tiny,tshift_src
+  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,tshift_src
   double precision :: dt,t0
 
   double precision, external :: comp_source_time_function,comp_source_time_function_gauss,comp_source_time_function_rickr
@@ -678,19 +673,16 @@
         ! precomputes source time function factor
         if (USE_FORCE_POINT_SOURCE) then
           if (USE_RICKER_TIME_FUNCTION) then
-            stf_pre_compute(isource) = &
-                 comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+            stf_pre_compute(isource) = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
           else
-            stf_pre_compute(isource) = &
-                 comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_tiny(isource))
+            ! use a very small duration of 5*DT to mimic a Dirac in time
+            stf_pre_compute(isource) = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),5.d0*DT)
           endif
         else
           if (USE_RICKER_TIME_FUNCTION) then
-            stf_pre_compute(isource) = &
-                 comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+            stf_pre_compute(isource) = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
           else
-            stf_pre_compute(isource) = &
-                 comp_source_time_function(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+            stf_pre_compute(isource) = comp_source_time_function(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
           endif
         endif
       enddo
@@ -758,8 +750,8 @@
             ! compute source arrays
             if (myrank == islice_selected_rec(irec)) then
               irec_local = irec_local + 1
-              ! reads in **sta**.**net**.**LH**.adj files
-              adj_source_file = trim(station_name(irec))//'.'//trim(network_name(irec))
+              ! reads in **net**.**sta**.**BH**.adj files
+              adj_source_file = trim(network_name(irec))//'.'//trim(station_name(irec))
               call compute_arrays_adjoint_source(myrank,adj_source_file, &
                                                  xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
                                                  adj_sourcearray, xigll,yigll,zigll, &
@@ -778,17 +770,17 @@
           write(procname,"(i4)") myrank
           procname = adjustl(procname)
           ! read adjoint sources
-          open(unit=IIN_SU1, file=trim(OUTPUT_FILES_PATH)//'../SEM/'//trim(procname)//'_dx_SU.adj', &
+          open(unit=IIN_SU1, file=trim(OUTPUT_FILES)//'../SEM/'//trim(procname)//'_dx_SU.adj', &
                status='old', access='direct', recl=240+4*NSTEP, iostat=ier)
-          if (ier /= 0) call exit_MPI(myrank,'file '//trim(OUTPUT_FILES_PATH) &
+          if (ier /= 0) call exit_MPI(myrank,'file '//trim(OUTPUT_FILES) &
                                     //'../SEM/'//trim(procname)//'_dx_SU.adj does not exist')
-          open(unit=IIN_SU2, file=trim(OUTPUT_FILES_PATH)//'../SEM/'//trim(procname)//'_dy_SU.adj', &
+          open(unit=IIN_SU2, file=trim(OUTPUT_FILES)//'../SEM/'//trim(procname)//'_dy_SU.adj', &
                status='old', access='direct', recl=240+4*NSTEP, iostat=ier)
-          if (ier /= 0) call exit_MPI(myrank,'file '//trim(OUTPUT_FILES_PATH) &
+          if (ier /= 0) call exit_MPI(myrank,'file '//trim(OUTPUT_FILES) &
                                     //'../SEM/'//trim(procname)//'_dy_SU.adj does not exist')
-          open(unit=IIN_SU3, file=trim(OUTPUT_FILES_PATH)//'../SEM/'//trim(procname)//'_dz_SU.adj', &
+          open(unit=IIN_SU3, file=trim(OUTPUT_FILES)//'../SEM/'//trim(procname)//'_dz_SU.adj', &
                status='old', access='direct', recl=240+4*NSTEP, iostat=ier)
-          if (ier /= 0) call exit_MPI(myrank,'file '//trim(OUTPUT_FILES_PATH) &
+          if (ier /= 0) call exit_MPI(myrank,'file '//trim(OUTPUT_FILES) &
                                     //'../SEM/'//trim(procname)//'_dz_SU.adj does not exist')
 
           do irec_local = 1,nrec_local
@@ -847,19 +839,16 @@
         ! precomputes source time function factors
         if (USE_FORCE_POINT_SOURCE) then
           if (USE_RICKER_TIME_FUNCTION) then
-            stf_pre_compute(isource) = &
-                 comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
+            stf_pre_compute(isource) = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
           else
-            stf_pre_compute(isource) = &
-                 comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_tiny(isource))
+            ! use a very small duration of 5*DT to mimic a Dirac in time
+            stf_pre_compute(isource) = comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),5.d0*DT)
           endif
         else
           if (USE_RICKER_TIME_FUNCTION) then
-            stf_pre_compute(isource) = &
-                 comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
+            stf_pre_compute(isource) = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
           else
-            stf_pre_compute(isource) = &
-                 comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+            stf_pre_compute(isource) = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
           endif
         endif
       enddo

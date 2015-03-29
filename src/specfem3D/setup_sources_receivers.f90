@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -108,11 +108,12 @@
     if (ier /= 0) stop 'error allocating arrays for force point sources'
   endif
 
-  allocate(hdur_tiny(NSOURCES),stat=ier)
-  if (ier /= 0) stop 'error allocating arrays for force point sources'
-
-  ! for source encoding (acoustic sources so far only)
-  allocate(pm1_source_encoding(NSOURCES),stat=ier)
+  ! for source encoding (acoustic sources only so far)
+  if(USE_SOURCE_ENCODING) then
+    allocate(pm1_source_encoding(NSOURCES),stat=ier)
+  else
+    allocate(pm1_source_encoding(1),stat=ier)
+  endif
   if (ier /= 0) stop 'error allocating arrays for sources'
 
 ! locate sources in the mesh
@@ -143,9 +144,6 @@
 
   ! convert the half duration for triangle STF to the one for gaussian STF
   hdur_gaussian(:) = hdur(:)/SOURCE_DECAY_MIMIC_TRIANGLE
-
-  ! initialize a very short (but non-zero) half duration to use a pseudo-Dirac function
-  hdur_tiny(:) = 5*DT
 
   ! define t0 as the earliest start time
   ! note: an earlier start time also reduces numerical noise due to a
@@ -358,8 +356,8 @@
 
 ! reads in station file
   if (SIMULATION_TYPE == 1) then
-    rec_filename = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'STATIONS'
-    filtered_rec_filename = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'STATIONS_FILTERED'
+    rec_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'STATIONS'
+    filtered_rec_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'STATIONS_FILTERED'
 
 ! see if we are running several independent runs in parallel
 ! if so, add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
@@ -377,8 +375,8 @@
     call synchronize_all()
 
   else
-    rec_filename = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'STATIONS_ADJOINT'
-    filtered_rec_filename = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'STATIONS_ADJOINT_FILTERED'
+    rec_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'STATIONS_ADJOINT'
+    filtered_rec_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'STATIONS_ADJOINT_FILTERED'
 
 ! see if we are running several independent runs in parallel
 ! if so, add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
@@ -426,7 +424,7 @@
             NPROC,utm_x_source(1),utm_y_source(1), &
             UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
             iglob_is_surface_external_mesh,ispec_is_surface_external_mesh, &
-            num_free_surface_faces,free_surface_ispec,free_surface_ijk)
+            num_free_surface_faces,free_surface_ispec,free_surface_ijk,SU_FORMAT)
 
 ! count number of receivers located in this slice
   nrec_local = 0
@@ -626,8 +624,8 @@
                     call exit_MPI(myrank,'error force point source: component vector has (almost) zero norm')
                   endif
 
-                  ! we use an inclined force defined by its magnitude and the projections
-                  ! of an arbitrary (non-unitary) direction vector on the E/N/Z_UP basis:
+                  ! we use an tilted force defined by its magnitude and the projections
+                  ! of an arbitrary (non-unitary) direction vector on the E/N/Z_UP basis
                   sourcearrayd(:,i,j,k) = factor_force_source(isource) * hlagrange * &
                                           ( nu_source(1,:,isource) * comp_dir_vect_source_E(isource) + &
                                             nu_source(2,:,isource) * comp_dir_vect_source_N(isource) + &
@@ -672,7 +670,7 @@
             ! determines factor +/-1 depending on sign of moment tensor
             ! (see e.g. Krebs et al., 2009. Fast full-wavefield seismic inversion using encoded sources,
             !   Geophysics, 74 (6), WCC177-WCC188.)
-            pm1_source_encoding(isource) = sign(1.0d0,Mxx(isource))
+            if(USE_SOURCE_ENCODING) pm1_source_encoding(isource) = sign(1.0d0,Mxx(isource))
 
             ! source array interpolated on all element gll points (only used for non point sources)
             call compute_arrays_source_acoustic(sourcearray,hxis,hetas,hgammas,factor_source)
@@ -714,10 +712,10 @@
           ! updates counter
           nadj_rec_local = nadj_rec_local + 1
 
-          ! checks **sta**.**net**.**BH**.adj files for correct number of time steps
-          adj_source_file = trim(station_name(irec))//'.'//trim(network_name(irec))
+          ! checks **net**.**sta**.**BH**.adj files for correct number of time steps
+          adj_source_file = trim(network_name(irec))//'.'//trim(station_name(irec))
           do icomp = 1,NDIM
-            filename = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))// &
+            filename = OUTPUT_FILES(1:len_trim(OUTPUT_FILES))// &
                        '/../SEM/'//trim(adj_source_file) // '.'// comp(icomp) // '.adj'
             open(unit=IIN,file=trim(filename),status='old',action='read',iostat=ier)
             if (ier == 0) then
@@ -774,7 +772,6 @@
   endif
 
   end subroutine setup_sources_precompute_arrays
-
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -884,7 +881,7 @@
 
   if (myrank == 0) then
     ! vtk file
-    open(IOVTK,file=trim(OUTPUT_FILES_PATH)//'/sr.vtk',status='unknown',iostat=ier)
+    open(IOVTK,file=trim(OUTPUT_FILES)//'/sr.vtk',status='unknown',iostat=ier)
     if (ier /= 0) stop 'error opening sr.vtk file'
     ! vtk header
     write(IOVTK,'(a)') '# vtk DataFile Version 2.0'
@@ -995,8 +992,8 @@
     ! creates additional receiver and source files
     if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
       ! extracts receiver locations
-      filename = trim(OUTPUT_FILES_PATH)//'/sr.vtk'
-      filename_new = trim(OUTPUT_FILES_PATH)//'/receiver.vtk'
+      filename = trim(OUTPUT_FILES)//'/sr.vtk'
+      filename_new = trim(OUTPUT_FILES)//'/receiver.vtk'
 
       ! vtk file for receivers only
       write(system_command, &
@@ -1004,7 +1001,7 @@
       "'",'"',nrec,'"',NSOURCES,"'",trim(filename),trim(filename_new)
 
       ! extracts source locations
-      filename_new = trim(OUTPUT_FILES_PATH)//'/source.vtk'
+      filename_new = trim(OUTPUT_FILES)//'/source.vtk'
 
       write(system_command1, &
   "('awk ',a1,'{if (NR<5) print $0;if (NR==5)print ',a1,'POINTS',i6,' float',a1,';')") &

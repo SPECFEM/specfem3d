@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -188,7 +188,7 @@ subroutine compute_forces_viscoelastic()
       call compute_add_sources_viscoelastic(NSPEC_AB,NGLOB_AB,accel, &
                                             ibool,ispec_is_inner,phase_is_inner, &
                                             NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                                            hdur,hdur_gaussian,hdur_tiny,tshift_src,dt,t0,sourcearrays, &
+                                            hdur,hdur_gaussian,tshift_src,dt,t0,sourcearrays, &
                                             ispec_is_elastic,SIMULATION_TYPE,NSTEP, &
                                             nrec,islice_selected_rec,ispec_selected_rec, &
                                             nadj_rec_local,adj_sourcearrays, &
@@ -407,7 +407,7 @@ subroutine compute_forces_viscoelastic_bpwf()
     call compute_add_sources_viscoelastic_bpwf( NSPEC_AB,NGLOB_AB, &
                         ibool,ispec_is_inner,phase_is_inner, &
                         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                        hdur,hdur_gaussian,hdur_tiny,tshift_src,dt,t0,sourcearrays, &
+                        hdur,hdur_gaussian,tshift_src,dt,t0,sourcearrays, &
                         ispec_is_elastic,SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                         b_accel,NOISE_TOMOGRAPHY)
 
@@ -496,7 +496,7 @@ subroutine compute_forces_viscoelastic_Dev_sim1(iphase)
 
   select case (NGLLX)
 
-  case (5)
+  case (5,6,7)
 
 !----------------------------------------------------------------------------------------------
 
@@ -505,6 +505,7 @@ subroutine compute_forces_viscoelastic_Dev_sim1(iphase)
 
 !----------------------------------------------------------------------------------------------
 #ifdef OPENMP_MODE
+    print *,iphase !! DK DK this dummy statement just to avoid a warning by the compiler about "iphase" being unused
     stop 'OpenMP support has been discontinued for now'
 !! DK DK Jan 2013: beware, that OpenMP version is not maintained / supported and thus probably does not work
 !   call compute_forces_viscoelastic_Dev_openmp(iphase, NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
@@ -536,7 +537,7 @@ subroutine compute_forces_viscoelastic_Dev_sim1(iphase)
 !          phase_ispec_inner_elastic,&
 !          num_colors_outer_elastic,num_colors_inner_elastic)
 #else
-    call compute_forces_viscoelastic_Dev_5p(iphase, NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
+    call compute_forces_viscoelastic_Dev(iphase, NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
              xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
              hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
              wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D, &
@@ -590,8 +591,8 @@ subroutine compute_forces_viscoelastic_Dev_sim3(iphase)
 
   select case (NGLLX)
 
-  case (5)
-    call compute_forces_viscoelastic_Dev_5p(iphase, NSPEC_AB,NGLOB_AB, &
+  case (5,6,7)
+    call compute_forces_viscoelastic_Dev(iphase, NSPEC_AB,NGLOB_AB, &
                   b_displ,b_veloc,b_accel, &
                   xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                   hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
@@ -743,7 +744,7 @@ subroutine compute_forces_viscoelastic_GPU()
     ! adds source term (single-force/moment-tensor solution)
     call compute_add_sources_viscoelastic_GPU(NSPEC_AB, &
                         ispec_is_inner,phase_is_inner,NSOURCES,myrank,it,&
-                        hdur,hdur_gaussian,hdur_tiny,tshift_src,dt,t0, &
+                        hdur,hdur_gaussian,tshift_src,dt,t0, &
                         ispec_is_elastic,SIMULATION_TYPE,NSTEP, &
                         nrec,islice_selected_rec,ispec_selected_rec, &
                         nadj_rec_local,adj_sourcearrays, &

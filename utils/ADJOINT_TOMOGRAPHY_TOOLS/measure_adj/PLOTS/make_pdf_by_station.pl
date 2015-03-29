@@ -87,7 +87,7 @@ for ($ik = $imin; $ik <= $imax; $ik = $ik+1) {
   if (-f $ofile) {
     print "--> $ofile already exists\n";
 
-  } else {    
+  } else {
     # loop over all possible events
     for ($j = 1; $j <= $nevent; $j = $j+1) {
 
@@ -98,30 +98,30 @@ for ($ik = $imin; $ik <= $imax; $ik = $ik+1) {
       ($nmatch,undef,undef) = split(" ",`grep $eid ${file_eid_sub} | wc`);
 
       if ($nmatch == 1) {
-	# EXAMPLE: 9828889_T006_T030_GSC_CI_m16_cc_win_adj.pdf
-	@files = glob("${eid}_${Ttag}_${station}_${network}_${smodel}*pdf");
-	$numf = @files;
-	if ($numf == 0) {
-	  #print "$j -- $eid --> no pdf file exists\n";
+  # EXAMPLE: 9828889_T006_T030_GSC_CI_m16_cc_win_adj.pdf
+  @files = glob("${eid}_${Ttag}_${station}_${network}_${smodel}*pdf");
+  $numf = @files;
+  if ($numf == 0) {
+    #print "$j -- $eid --> no pdf file exists\n";
 
-	} elsif ($numf == 1) {
-	  #print "$j -- $eid --> pdf file exists\n";
-	  $pdffile = $files[0]; chomp($pdffile);
-	  $pdcat[$k] = $pdffile; $k = $k+1;
+  } elsif ($numf == 1) {
+    #print "$j -- $eid --> pdf file exists\n";
+    $pdffile = $files[0]; chomp($pdffile);
+    $pdcat[$k] = $pdffile; $k = $k+1;
 
-	} else {
-	  print "$eid\n";
-	  die("more than one pdf file exists\n");
-	}
+  } else {
+    print "$eid\n";
+    die("more than one pdf file exists\n");
+  }
       }
-    }				# for
+    }       # for
 
     # if there is at least one file, then make the composite PDF
     if ($k > $emin+1) {
       print "output file is $ofile\n";
       $pdcat[$k] = "./$ofile";
       print "@pdcat\n";
-      `@pdcat`;			# execute
+      `@pdcat`;     # execute
       `sleep 5s`;
 
     } else {

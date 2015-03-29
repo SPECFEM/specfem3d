@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -33,7 +33,10 @@
   use specfem_par_movie
   use specfem_par_elastic
   use specfem_par_acoustic
+
   implicit none
+
+  if (.not. MOVIE_SIMULATION) return
 
   ! gets resulting array values onto CPU
   if (GPU_MODE .and. &
@@ -143,19 +146,19 @@
 
     if (ispec_is_acoustic(ispec)) then
       ! displacement vector
-      call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+      call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
                           potential_acoustic, displ_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           ibool,rhostore,GRAVITY)
       ! velocity vector
-      call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+      call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
                           potential_dot_acoustic, veloc_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           ibool,rhostore,GRAVITY)
       ! accel ?
-      call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+      call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
                           potential_dot_dot_acoustic, accel_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
@@ -269,7 +272,7 @@
 
 ! creates shakemap file
     if (myrank == 0) then
-      open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/shakingdata',status='unknown',form='unformatted',iostat=ier)
+      open(unit=IOUT,file=trim(OUTPUT_FILES)//'/shakingdata',status='unknown',form='unformatted',iostat=ier)
       if (ier /= 0) stop 'error opening file shakingdata'
       write(IOUT) store_val_x_all_external_mesh   ! x coordinates
       write(IOUT) store_val_y_all_external_mesh   ! y coordinates
@@ -391,14 +394,14 @@
     if (ispec_is_acoustic(ispec)) then
       if (SAVE_DISPLACEMENT) then
         ! displacement vector
-        call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+        call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
                           potential_acoustic, val_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           ibool,rhostore,GRAVITY)
       else
         ! velocity vector
-        call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+        call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
                           potential_dot_acoustic, val_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
@@ -482,7 +485,7 @@
 ! file output
   if (myrank == 0) then
     write(outputname,"('/moviedata',i6.6)") it
-    open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//outputname,status='unknown',form='unformatted',iostat=ier)
+    open(unit=IOUT,file=trim(OUTPUT_FILES)//outputname,status='unknown',form='unformatted',iostat=ier)
     if (ier /= 0) stop 'error opening file moviedata'
     write(IOUT) store_val_x_all_external_mesh   ! x coordinate
     write(IOUT) store_val_y_all_external_mesh   ! y coordinate
@@ -630,14 +633,14 @@
     if (ispec_is_acoustic(ispec)) then
       if (SAVE_DISPLACEMENT) then
         ! displacement vector
-        call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+        call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
              potential_acoustic, val_element,&
              hprime_xx,hprime_yy,hprime_zz, &
              xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
              ibool,rhostore,GRAVITY)
       else
         ! velocity vector
-        call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+        call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
              potential_dot_acoustic, val_element,&
              hprime_xx,hprime_yy,hprime_zz, &
              xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
@@ -739,7 +742,7 @@
   ! file output: note that values are only stored on free surface
   if (myrank == 0) then
     write(outputname,"('/moviedata',i6.6)") it
-    open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//outputname,status='unknown',form='unformatted',iostat=ier)
+    open(unit=IOUT,file=trim(OUTPUT_FILES)//outputname,status='unknown',form='unformatted',iostat=ier)
     if (ier /= 0) stop 'error opening file moviedata'
     write(IOUT) store_val_x_all_external_mesh   ! x coordinate
     write(IOUT) store_val_y_all_external_mesh   ! y coordinate
@@ -786,19 +789,19 @@
 
     if (ispec_is_acoustic(ispec)) then
       ! displacement vector
-      call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+      call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
                           potential_acoustic, displ_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           ibool,rhostore,GRAVITY)
       ! velocity vector
-      call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+      call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
                           potential_dot_acoustic, veloc_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           ibool,rhostore,GRAVITY)
       ! accel ?
-      call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+      call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
                           potential_dot_dot_acoustic, accel_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
@@ -922,7 +925,7 @@
 
     ! creates shakemap file: note that values are only stored on free surface
     if (myrank == 0) then
-      open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/shakingdata',status='unknown',form='unformatted',iostat=ier)
+      open(unit=IOUT,file=trim(OUTPUT_FILES)//'/shakingdata',status='unknown',form='unformatted',iostat=ier)
       if (ier /= 0) stop 'error opening file shakingdata'
       write(IOUT) store_val_x_all_external_mesh   ! x coordinates
       write(IOUT) store_val_y_all_external_mesh   ! y coordinates
@@ -1033,7 +1036,7 @@
       if (.not. ispec_is_acoustic(ispec)) cycle
 
       ! calculates velocity
-      call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+      call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
                         potential_dot_acoustic, veloc_element,&
                         hprime_xx,hprime_yy,hprime_zz, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &

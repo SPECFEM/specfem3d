@@ -1,11 +1,11 @@
 #!/bin/bash -eu
 echo
-echo `date`
+date
 echo
 
-NSTEP=`grep NSTEP   ./DATA/Par_file | cut -d = -f 2 | sed 's/ //g'`
-DT=`grep       DT   ./DATA/Par_file | cut -d = -f 2 | sed 's/ //g'`
-NPROC=`grep NPROC   ./DATA/Par_file | cut -d = -f 2 `
+NSTEP=`grep ^NSTEP   ./DATA/Par_file | cut -d = -f 2 | sed 's/ //g'`
+DT=`grep       ^DT   ./DATA/Par_file | cut -d = -f 2 | sed 's/ //g'`
+NPROC=`grep ^NPROC   ./DATA/Par_file | cut -d = -f 2 `
 
 #daniel:
 echo "Par_file parameters:"

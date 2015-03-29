@@ -55,7 +55,7 @@ program wave2d_cmap
   integer :: isolver, irun0, irun, idat, iopt, ispec, istep
 
   !********* PROGRAM STARTS HERE *********************
- 
+
   irun0 = 420
 
   !out_dir2   = "OUTPUT/"
@@ -85,7 +85,7 @@ program wave2d_cmap
   da(:) = 0.
   do ispec = 1,NSPEC
     do j = 1,NGLLZ
-      do i = 1,NGLLX 
+      do i = 1,NGLLX
         iglob     = ibool(i,j,ispec)
         da(iglob) = da(iglob) + wxgll(i)*wzgll(j)*jacobian(i,j,ispec)
       enddo
@@ -173,7 +173,7 @@ program wave2d_cmap
 
   ! convert global gridpoint mesh coordinates to lat-lon
   x_lon(:) = 0.
-  z_lat(:) = 0. 
+  z_lat(:) = 0.
   call mesh_geo(NGLOB,x_lon,z_lat,x,z,UTM_PROJECTION_ZONE,IMESH2LONLAT)
   !write(*,'(2f16.6)') (x_lon(iglob), z_lat(iglob), iglob=1,NGLOB)
 
@@ -211,7 +211,7 @@ program wave2d_cmap
      open(unit=17,file=filename,status='unknown')
      read(17,*) c0
      close(17)
-     
+
      ! convert km/s --> m/s
      c_glob(:) = 1000.*c_glob(:)
      c0 = c0*1000.
@@ -266,7 +266,7 @@ program wave2d_cmap
      k_temp(:,:,:) = 0.
      do ispec = 1,NSPEC
        do j = 1,NGLLZ
-         do i = 1,NGLLX 
+         do i = 1,NGLLX
            itemp = ibool(i,j,ispec)
            k_temp(i,j,ispec) = k_gaus_global(itemp) * wxgll(i)*wzgll(j)*jacobian(i,j,ispec)
          enddo
@@ -279,7 +279,7 @@ program wave2d_cmap
      k_temp(:,:,:) = 0.
      do ispec = 1,NSPEC
        do j = 1,NGLLZ
-         do i = 1,NGLLX 
+         do i = 1,NGLLX
            itemp = ibool(i,j,ispec)
            k_temp(i,j,ispec) = k_rough_global(itemp) * k_gaus_global(itemp) * wxgll(i)*wzgll(j)*jacobian(i,j,ispec)
          enddo
@@ -293,7 +293,7 @@ program wave2d_cmap
   enddo
 
   !============================================
-  
+
   !k_smooth_global(:) = c_glob(:)
 
   ! c-maps for data
@@ -365,4 +365,4 @@ program wave2d_cmap
   !deallocate(x,z,x_lon,z_lat,c_glob,c_glob_syn,c_glob_dat)
 
 end program wave2d_cmap
- 
+

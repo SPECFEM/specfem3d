@@ -1,0 +1,11 @@
+
+From http://www.aptest.com/testtypes.html :
+
+UNIT TESTING:
+
+Functional and reliability testing in an Engineering environment. Producing tests for the behavior of components of a product to ensure their correct behavior prior to system integration.
+
+REGRESSION TESTING:
+
+Similar in scope to a functional test, a regression test allows a consistent, repeatable validation of each new release of a product or Web site. Such testing ensures reported product defects have been corrected for each new release and that no new quality problems were introduced in the maintenance process. Though regression testing can be performed manually an automated test suite is often used to reduce the time and resources needed to perform the required testing.
+

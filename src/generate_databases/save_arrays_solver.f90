@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -41,7 +41,7 @@
     SIMULATION_TYPE,SAVE_FORWARD,mask_ibool_interior_domain, &
     nglob_interface_PML_acoustic,points_interface_PML_acoustic,&
     nglob_interface_PML_elastic,points_interface_PML_elastic, &
-    STACEY_ABSORBING_CONDITIONS, &
+    STACEY_ABSORBING_CONDITIONS, COUPLE_WITH_EXTERNAL_CODE, &
     NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN,IOUT,USE_MESH_COLORING_GPU
   use create_regions_mesh_ext_par
 
@@ -170,29 +170,20 @@
 
 ! absorbing boundary surface
   write(IOUT) num_abs_boundary_faces
-  if (PML_CONDITIONS)then
-    if (num_abs_boundary_faces > 0) then
-      write(IOUT) abs_boundary_ispec
-      write(IOUT) abs_boundary_ijk
-      write(IOUT) abs_boundary_jacobian2Dw
-      write(IOUT) abs_boundary_normal
-    endif
-  else
-    if (num_abs_boundary_faces > 0) then
-      write(IOUT) abs_boundary_ispec
-      write(IOUT) abs_boundary_ijk
-      write(IOUT) abs_boundary_jacobian2Dw
-      write(IOUT) abs_boundary_normal
-      if (STACEY_ABSORBING_CONDITIONS) then
-        ! store mass matrix contributions
-        if (ELASTIC_SIMULATION) then
-          write(IOUT) rmassx
-          write(IOUT) rmassy
-          write(IOUT) rmassz
-        endif
-        if (ACOUSTIC_SIMULATION) then
-          write(IOUT) rmassz_acoustic
-        endif
+  if (num_abs_boundary_faces > 0) then
+    write(IOUT) abs_boundary_ispec
+    write(IOUT) abs_boundary_ijk
+    write(IOUT) abs_boundary_jacobian2Dw
+    write(IOUT) abs_boundary_normal
+    if (STACEY_ABSORBING_CONDITIONS .and. (.not. PML_CONDITIONS)) then
+      ! store mass matrix contributions
+      if (ELASTIC_SIMULATION) then
+        write(IOUT) rmassx
+        write(IOUT) rmassy
+        write(IOUT) rmassz
+      endif
+      if (ACOUSTIC_SIMULATION) then
+        write(IOUT) rmassz_acoustic
       endif
     endif
   endif
@@ -326,18 +317,8 @@
   close(IOUT)
 
   ! stores arrays in binary files
-  if (SAVE_MESH_FILES) then
+  if (SAVE_MESH_FILES .or. COUPLE_WITH_EXTERNAL_CODE) then
     call save_arrays_solver_files(nspec,nglob,ibool)
-
-    ! debug: saves 1. MPI interface
-    !if (num_interfaces_ext_mesh >= 1) then
-    !  filename = prname(1:len_trim(prname))//'MPI_1_points'
-    !  call write_VTK_data_points(nglob, &
-    !                    xstore_dummy,ystore_dummy,zstore_dummy, &
-    !                    ibool_interfaces_ext_mesh_dummy(1:nibool_interfaces_ext_mesh(1),1), &
-    !                    nibool_interfaces_ext_mesh(1), &
-    !                    filename)
-    !endif
   endif
 
   ! cleanup
@@ -589,19 +570,6 @@
     write(IOUT) ispec_is_inner
     write(IOUT) ispec_is_elastic
     close(IOUT)
-
-    !endif
-
-    !! Don't delete this comment for the moment
-    !!
-    !! saves 1. MPI interface
-    !!
-    !!if (num_interfaces_ext_mesh >= 1) then
-    !!  filename = prname(1:len_trim(prname))//'MPI_1_points'
-    !!  call write_VTK_data_points(nglob, xstore_dummy,ystore_dummy,zstore_dummy, &
-    !!                             ibool_interfaces_ext_mesh_dummy(1:nibool_interfaces_ext_mesh(1),1), &
-    !!                             nibool_interfaces_ext_mesh(1), filename)
-    !!endif
 
   endif !  if (COUPLE_WITH_EXTERNAL_CODE)
   !! CD CD

@@ -1,0 +1,33 @@
+
+Date: Mon, 29 Jun 2009 13:45:40 +0200
+From: Dimitri Komatitsch
+Organization: University of Pau, France
+To: fuji
+CC: Vadim Monteiller
+chevrot
+ Dimitri Komatitsch
+ Nozomu Takeuchi
+Subject: how can we compute strain "seismograms" in the DSM code?
+
+Dear Nobuaki,
+
+Did you have time to talk to Prof. Takeuchi or Prof. Kawai
+about how to output values of strain instead of displacement or velocity
+in the DSM code, i.e. compute strain "seismograms" in addition to more
+classical velocity or displacement seismograms?
+Because as we discussed when you came to Toulouse, for some applications
+it would be interesting to be able to output the components of the
+strain tensor.
+
+I copy this email to Prof. Takeuchi for information.
+
+Thank you,
+Best regards,
+
+Dimitri.
+
+--
+Dimitri Komatitsch - dimitri.komatitsch aT univ-pau.fr
+Professor, University of Pau, Institut universitaire de France,
+CNRS and INRIA Magique3D, France   http://www.univ-pau.fr/~dkomati1
+

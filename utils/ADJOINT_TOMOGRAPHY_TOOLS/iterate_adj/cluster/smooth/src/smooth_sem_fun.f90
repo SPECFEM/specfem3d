@@ -2,9 +2,9 @@ program smooth_specfem_function
 
 ! this is the embarassingly-parallel program that smooth any specfem function (primarily
 ! the kernels) that has the dimension of (NGLLX,NGLLY,NGLLZ,NSPEC_MAX), notice that it
-! uses the constants.h and precision.h files from the original SEM package, and the 
+! uses the constants.h and precision.h files from the original SEM package, and the
 ! values_from_mesher.h file from the output of the mesher (or create_header_file),
-! therefore, you need to compile it for your specific case 
+! therefore, you need to compile it for your specific case
 
   implicit none
   include 'mpif.h'
@@ -16,7 +16,7 @@ program smooth_specfem_function
 
   integer, parameter :: NSPEC_MAX=NSPEC_AB
   integer, parameter :: NGLOB_MAX=NGLOB_AB
- 
+
 ! only include the neighboring 3 x 3 slices
   integer, parameter :: NSLICES = 3
   integer ,parameter :: NSLICES2 = NSLICES * NSLICES
@@ -103,8 +103,8 @@ program smooth_specfem_function
   sigma_v2 = sigma_v ** 2
 
   ! search radius
-  sigma_h3 = 3.0  * sigma_h + element_size 
-  sigma_v3 = 3.0  * sigma_v + element_size 
+  sigma_h3 = 3.0  * sigma_h + element_size
+  sigma_v3 = 3.0  * sigma_v + element_size
 
   ! theoretic normal value
   norm_h = 2.0*PI*sigma_h**2
@@ -142,7 +142,7 @@ program smooth_specfem_function
       islice(j) = islice0(i)
     endif
   enddo
-  ns = j 
+  ns = j
 
   ! read in the topology files of the current and neighboring slices
   do i = 1, ns
@@ -166,9 +166,9 @@ program smooth_specfem_function
   close(11)
   open(11,file=z_file(1),status='old',form='unformatted')
   read(11) z(1:nglob(1))
-  close(11) 
-  open(11,file=i_file(1),status='old',form='unformatted') 
-  read(11) ibool(:,:,:,1:nspec(1)) 
+  close(11)
+  open(11,file=i_file(1),status='old',form='unformatted')
+  read(11) ibool(:,:,:,1:nspec(1))
   close(11)
 
   ! get the location of the center of the elements
@@ -196,7 +196,7 @@ program smooth_specfem_function
 
   ! loop over all the slices
   do ii = 1, ns
-   
+
     ! read in the topology, kernel files, calculate center of elements
     open(11,file=x_file(ii),status='old',form='unformatted')
     read(11) x(1:nglob(ii))
@@ -206,10 +206,10 @@ program smooth_specfem_function
     close(11)
     open(11,file=z_file(ii),status='old',form='unformatted')
     read(11) z(1:nglob(ii))
-    close(11) 
-    open(11,file=i_file(ii),status='old',form='unformatted') 
-    read(11) ibool(:,:,:,1:nspec(ii)) 
-    close(11) 
+    close(11)
+    open(11,file=i_file(ii),status='old',form='unformatted')
+    read(11) ibool(:,:,:,1:nspec(ii))
+    close(11)
     open(11,file=j_file(ii),status='old',form='unformatted')
     read(11) jacobian(:,:,:,1:nspec(ii))
     close(11)
@@ -242,22 +242,22 @@ program smooth_specfem_function
     if (myrank == 0) write(*,*) 'slice number = ', ii
 
     ! loop over elements to be smoothed in the current slice
-    do ispec = 1, nspec(1) 
+    do ispec = 1, nspec(1)
       if (mod(ispec,100) == 0 .and. myrank == 0) write(*,*) 'ispec=', ispec
 
       ! --- only double loop over the elements in the search radius ---
       do ispec2 = 1, nspec(ii)
-            
+
         !if ( sqrt( (cx(ispec2)-cx0(ispec)) **2 + (cy(ispec2)-cy0(ispec)) ** 2 + (cz(ispec2)-cz0(ispec)) ** 2) > sigma3) cycle
         if ( sqrt( (cx(ispec2)-cx0(ispec)) **2 + (cy(ispec2)-cy0(ispec)) ** 2 ) > sigma_h3 .or. sqrt( (cz(ispec2)-cz0(ispec)) ** 2) > sigma_v3 ) cycle
 
         factor(:,:,:) = jacobian(:,:,:,ispec2) * wgll_cube(:,:,:) ! integration factors
 
         ! loop over GLL points of the elements in current slice (ispec)
-        do k = 1, NGLLZ 
+        do k = 1, NGLLZ
           do j = 1, NGLLY
             do i = 1, NGLLX
-              
+
               x0 = xl(i,j,k,ispec); y0 = yl(i,j,k,ispec); z0 = zl(i,j,k,ispec) ! current point (i,j,k,ispec)
 
               !exp_val(:,:,:) = exp( -((xx(:,:,:,ispec2)-x0)**2+(yy(:,:,:,ispec2)-y0)**2 &
@@ -270,7 +270,7 @@ program smooth_specfem_function
               tk(i,j,k,ispec) = tk(i,j,k,ispec) + sum(exp_val(:,:,:) * kernel(:,:,:,ispec2))
               bk(i,j,k,ispec) = bk(i,j,k,ispec) + sum(exp_val(:,:,:))
 
-            enddo 
+            enddo
           enddo
         enddo ! (i,j,k)
       enddo ! (ispec2)
@@ -290,8 +290,8 @@ program smooth_specfem_function
             call exit_mpi(myrank, 'Error computing Gaussian function on the grid')
           endif
 
-          kernel_smooth(i,j,k,ispec) = tk(i,j,k,ispec)/bk(i,j,k,ispec)   
-      
+          kernel_smooth(i,j,k,ispec) = tk(i,j,k,ispec)/bk(i,j,k,ispec)
+
         enddo
       enddo
     enddo
@@ -300,7 +300,7 @@ program smooth_specfem_function
   open(11,file=trim(ks_file),status='unknown',form='unformatted')
   ! Note: output the following instead of kernel_smooth(:,:,:,1:nspec(1)) to create files of the same sizes
   write(11) kernel_smooth(:,:,:,:)
-  close(11)       
+  close(11)
 
   ! the maximum value for the smoothed kernel
   call mpi_reduce(maxval(abs(kernel_smooth(:,:,:,1:nspec(1)))), max_new, 1, &

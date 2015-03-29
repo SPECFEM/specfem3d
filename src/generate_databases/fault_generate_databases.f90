@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -91,7 +91,7 @@ contains
 !=================================================================================================================
 subroutine fault_read_input(prname,myrank)
 
-  use constants, only: MAX_STRING_LEN
+  use constants, only: MAX_STRING_LEN, IN_DATA_FILES
 
   character(len=MAX_STRING_LEN), intent(in) :: prname
   integer, intent(in) :: myrank
@@ -101,7 +101,7 @@ subroutine fault_read_input(prname,myrank)
 
  ! read fault input file
   nb = 0
-  open(unit=IIN_PAR,file='../DATA/Par_file_faults',status='old',action='read',iostat=ier)
+  open(unit=IIN_PAR,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'Par_file_faults',status='old',action='read',iostat=ier)
   if (ier==0) then
     read(IIN_PAR,*) nb
     if (myrank==0) write(IMAIN,*) '  ... reading ', nb,' faults from file DATA/Par_file_faults'
@@ -138,9 +138,9 @@ subroutine fault_read_input(prname,myrank)
     ANY_FAULT_IN_THIS_PROC = .true.
 
     allocate(fault_db(iflt)%ispec1(nspec))
-    allocate(fault_db(iflt)%inodes1(4,nspec))
+    allocate(fault_db(iflt)%inodes1(NGNOD2D,nspec))
     allocate(fault_db(iflt)%ispec2(nspec))
-    allocate(fault_db(iflt)%inodes2(4,nspec))
+    allocate(fault_db(iflt)%inodes2(NGNOD2D,nspec))
 
     do i=1,nspec
       read(IIN_PAR) fault_db(iflt)%ispec1(i), fault_db(iflt)%inodes1(:,i)

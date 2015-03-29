@@ -89,7 +89,7 @@
   double precision, parameter :: SOURCE_DECAY_RATE = 1.628d0
 
 ! ---------------------------------------------------------------------------------------
-! LQY -- Following 3 variables stays here temporarily, 
+! LQY -- Following 3 variables stays here temporarily,
 !        we need to move them to Par_file at a proper time
 ! ---------------------------------------------------------------------------------------
 ! save moho mesh and compute Moho boundary kernels
@@ -99,7 +99,7 @@
 ! to be used in the backward reconstruction in the presence of attenuation
   integer, parameter :: NSTEP_Q_SAVE = 200
 
-! the scratch disk to save the state variables saved in the forward 
+! the scratch disk to save the state variables saved in the forward
 ! simulation, this can be a global scratch disk in case you run out of
 ! space on the local scratch disk
   character(len=150), parameter :: LOCAL_PATH_Q = '/ibrixfs1/scratch/lqy'

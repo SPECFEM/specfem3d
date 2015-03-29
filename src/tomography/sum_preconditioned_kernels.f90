@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -52,7 +52,7 @@
 
 program sum_preconditioned_kernels
 
-  use tomography_par,only: MAX_STRING_LEN,MAX_NUM_NODES,KERNEL_FILE_LIST,IIN, &
+  use tomography_par,only: MAX_STRING_LEN,MAX_KERNEL_PATHS,KERNEL_FILE_LIST,IIN, &
     myrank,sizeprocs, &
     NGLOB,NSPEC, &
     USE_ALPHA_BETA_RHO,USE_ISO_KERNELS
@@ -61,12 +61,15 @@ program sum_preconditioned_kernels
 
   implicit none
 
-  character(len=MAX_STRING_LEN) :: kernel_list(MAX_NUM_NODES)
+  character(len=MAX_STRING_LEN) :: kernel_list(MAX_KERNEL_PATHS)
   character(len=MAX_STRING_LEN) :: sline, kernel_name,prname_lp
   integer :: nker
   integer :: ier
 
+  logical :: BROADCAST_AFTER_READ
+
   ! ============ program starts here =====================
+
   ! initialize the MPI communicator and start the NPROCTOT MPI processes
   call init_mpi()
   call world_size(sizeprocs)
@@ -90,7 +93,7 @@ program sum_preconditioned_kernels
      read(IIN,'(a)',iostat=ier) sline
      if (ier /= 0) exit
      nker = nker+1
-     if (nker > MAX_NUM_NODES) stop 'Error number of kernels exceeds MAX_NUM_NODES'
+     if (nker > MAX_KERNEL_PATHS) stop 'Error number of kernels exceeds MAX_KERNEL_PATHS'
      kernel_list(nker) = sline
   enddo
   close(IIN)
@@ -100,7 +103,8 @@ program sum_preconditioned_kernels
   endif
 
   ! needs local_path for mesh files
-  call read_parameter_file()
+  BROADCAST_AFTER_READ = .true.
+  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
 
   ! checks if number of MPI process as specified
   if (sizeprocs /= NPROC) then
@@ -212,7 +216,7 @@ subroutine sum_kernel_pre(kernel_name,kernel_list,nker)
 
   implicit none
 
-  character(len=MAX_STRING_LEN) :: kernel_name,kernel_list(MAX_NUM_NODES)
+  character(len=MAX_STRING_LEN) :: kernel_name,kernel_list(MAX_KERNEL_PATHS)
   integer :: nker
 
   ! local parameters

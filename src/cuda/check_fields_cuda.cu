@@ -1,7 +1,7 @@
 /*
  !=====================================================================
  !
- !               S p e c f e m 3 D  V e r s i o n  2 . 1
+ !               S p e c f e m 3 D  V e r s i o n  3 . 0
  !               ---------------------------------------
  !
  !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -81,7 +81,7 @@ void pause_for_debugger(int pause) {
 
 /* ----------------------------------------------------------------------------------------------- */
 
-void exit_on_cuda_error(char* kernel_name) {
+void exit_on_cuda_error(const char* kernel_name) {
   // sync and check to catch errors from previous async operations
   synchronize_cuda();
   cudaError_t err = cudaGetLastError();
@@ -100,7 +100,7 @@ void exit_on_cuda_error(char* kernel_name) {
 #else
     myrank = 0;
 #endif
-    sprintf(filename,OUTPUT_FILES_PATH"/error_message_%06d.txt",myrank);
+    sprintf(filename,OUTPUT_FILES"/error_message_%06d.txt",myrank);
     fp = fopen(filename,"a+");
     if (fp != NULL){
       fprintf(fp,"Error after %s: %s\n", kernel_name, cudaGetErrorString(err));
@@ -118,7 +118,7 @@ void exit_on_cuda_error(char* kernel_name) {
 
 /* ----------------------------------------------------------------------------------------------- */
 
-void exit_on_error(char* info) {
+void exit_on_error(const char* info) {
   printf("\nERROR: %s\n",info);
   fflush(stdout);
 
@@ -131,7 +131,7 @@ void exit_on_error(char* info) {
 #else
   myrank = 0;
 #endif
-  sprintf(filename,OUTPUT_FILES_PATH"/error_message_%06d.txt",myrank);
+  sprintf(filename,OUTPUT_FILES"/error_message_%06d.txt",myrank);
   fp = fopen(filename,"a+");
   if (fp != NULL){
     fprintf(fp,"ERROR: %s\n",info);
@@ -164,7 +164,7 @@ void print_CUDA_error_if_any(cudaError_t err, int num) {
 #else
     myrank = 0;
 #endif
-    sprintf(filename,OUTPUT_FILES_PATH"/error_message_%06d.txt",myrank);
+    sprintf(filename,OUTPUT_FILES"/error_message_%06d.txt",myrank);
     fp = fopen(filename,"a+");
     if (fp != NULL){
       fprintf(fp,"\nCUDA error !!!!! <%s> !!!!! \nat CUDA call error code: # %d\n",cudaGetErrorString(err),num);
@@ -217,7 +217,7 @@ void start_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop){
 
 /* ----------------------------------------------------------------------------------------------- */
 
-void stop_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop, char* info_str){
+void stop_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop, const char* info_str){
   realw time;
   // stops events
   cudaEventRecord( *stop, 0);
@@ -231,7 +231,7 @@ void stop_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop, char* info_str){
 
 /* ----------------------------------------------------------------------------------------------- */
 
-void stop_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop, char* info_str,realw* t){
+void stop_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop, const char* info_str,realw* t){
   realw time;
   // stops events
   cudaEventRecord( *stop, 0);
@@ -312,12 +312,12 @@ void output_free_memory(int myrank,char* info_str) {
   do_output_info = 0;
   if (myrank == 0){
     do_output_info = 1;
-    sprintf(filename,OUTPUT_FILES_PATH"/gpu_device_mem_usage.txt");
+    sprintf(filename,OUTPUT_FILES"/gpu_device_mem_usage.txt");
   }
   // debugging
   if (DEBUG){
     do_output_info = 1;
-    sprintf(filename,OUTPUT_FILES_PATH"/gpu_device_mem_usage_proc_%06d.txt",myrank);
+    sprintf(filename,OUTPUT_FILES"/gpu_device_mem_usage_proc_%06d.txt",myrank);
   }
 
   // outputs to file
@@ -585,8 +585,8 @@ void FC_FUNC_(get_norm_acoustic_from_device,
    }
 
    // cublas function: cublasIsamax
-   //       finds the smallest index of the maximum magnitude element of single 
-   //      precision vector x
+   //       finds the smallest index of the maximum magnitude element of single
+   //      precision vector x
    int incr = 1;
    int imax = 0;
    imax = cublasIsamax(mp->NGLOB_AB,(realw*)mp->d_potential_dot_dot_acoustic, incr);

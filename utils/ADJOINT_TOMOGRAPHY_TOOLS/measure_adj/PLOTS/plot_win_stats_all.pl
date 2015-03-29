@@ -7,7 +7,7 @@
 # It also compiles all the measurements into one histogram, with the option of plotting here.
 #
 # The set of final histograms are copied to an output directory.
-# 
+#
 # EXAMPLE:
 #    plot_win_stats_all.pl 6/30 m16 0
 #    plot_win_stats_all.pl 6/30 m16 1 (plot histogram)
@@ -101,7 +101,7 @@ for ($i = $imin; $i <= $imax; $i = $i+1) {
     #die("TESTING");
     `plot_win_stats.pl $Ts $eid $name $meas_file $sta_file $eid_text ${cmtall_psmeca}`;
 
-    # check if the figure was made 
+    # check if the figure was made
     if (-f "${name}.pdf") {
       $k = $k+1;
       print "$i, $eid, ${name}.pdf was made\n";

@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -50,9 +50,6 @@
                         m1,m2,NGLLCUBE,PML_CONDITIONS
 
   use pml_par, only: is_CPML, spec_to_CPML, NSPEC_CPML, &
-                     PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl,&
-                     PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old,&
-                     PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new,&
                      potential_dot_dot_acoustic_CPML,rmemory_dpotential_dxl,rmemory_dpotential_dyl,&
                      rmemory_dpotential_dzl,rmemory_potential_acoustic, &
                      potential_acoustic_old,potential_acoustic_new
@@ -101,6 +98,16 @@
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: chi_elem_old,chi_elem_new
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: tempx1_old,tempx2_old,tempx3_old
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: tempx1_new,tempx2_new,tempx3_new
+  ! derivatives of potential with respect to x, y and z
+  ! in computation potential_acoustic at "n" time step is used
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl
+  ! in computation of PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old
+  ! we replace potential_acoustic with potential_acoustic_old
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old
+  ! we replace potential_acoustic at "n" time step with
+  ! we replace potential_acoustic with potential_acoustic_old with potential_acoustic_new
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new
+
 
 #ifdef FORCE_VECTORIZATION
 ! this will (purposely) give out-of-bound array accesses if run through range checking,
@@ -132,11 +139,11 @@
     ! pages 386 and 389 and Figure 8.3.1
 
     ! computes 1. matrix multiplication for tempx1,..
-    call mxm5_single(hprime_xx,m1,chi_elem,tempx1,m2)
+    call mxm_single(hprime_xx,m1,chi_elem,tempx1,m2)
     ! computes 2. matrix multiplication for tempx2,..
-    call mxm5_3dmat_single(chi_elem,m1,hprime_xxT,m1,tempx2,NGLLX)
+    call mxm_3dmat_single(chi_elem,m1,hprime_xxT,m1,tempx2,NGLLX)
     ! computes 3. matrix multiplication for tempx1,..
-    call mxm5_single(chi_elem,m2,hprime_xxT,tempx3,m1)
+    call mxm_single(chi_elem,m2,hprime_xxT,tempx3,m1)
 
     if (PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
       ! do not merge this second line with the first using an ".and." statement
@@ -153,18 +160,18 @@
         ! pages 386 and 389 and Figure 8.3.1
 
         ! computes 1. matrix multiplication for tempx1,..
-        call mxm5_single(hprime_xx,m1,chi_elem_old,tempx1_old,m2)
+        call mxm_single(hprime_xx,m1,chi_elem_old,tempx1_old,m2)
         ! computes 2. matrix multiplication for tempx2,..
-        call mxm5_3dmat_single(chi_elem_old,m1,hprime_xxT,m1,tempx2_old,NGLLX)
+        call mxm_3dmat_single(chi_elem_old,m1,hprime_xxT,m1,tempx2_old,NGLLX)
         ! computes 3. matrix multiplication for tempx1,..
-        call mxm5_single(chi_elem_old,m2,hprime_xxT,tempx3_old,m1)
+        call mxm_single(chi_elem_old,m2,hprime_xxT,tempx3_old,m1)
 
         ! computes 1. matrix multiplication for tempx1,..
-        call mxm5_single(hprime_xx,m1,chi_elem_new,tempx1_new,m2)
+        call mxm_single(hprime_xx,m1,chi_elem_new,tempx1_new,m2)
         ! computes 2. matrix multiplication for tempx2,..
-        call mxm5_3dmat_single(chi_elem_new,m1,hprime_xxT,m1,tempx2_new,NGLLX)
+        call mxm_3dmat_single(chi_elem_new,m1,hprime_xxT,m1,tempx2_new,NGLLX)
         ! computes 3. matrix multiplication for tempx1,..
-        call mxm5_single(chi_elem_new,m2,hprime_xxT,tempx3_new,m1)
+        call mxm_single(chi_elem_new,m2,hprime_xxT,tempx3_new,m1)
       endif ! is_CPML
     endif ! PML_CONDITIONS
 
@@ -230,7 +237,10 @@
         ! sets C-PML elastic memory variables to compute stress sigma and form dot product with test vector
         call pml_compute_memory_variables_acoustic(ispec,ispec_CPML, &
                                                    tempx1,tempx2,tempx3,&
-                                                   rmemory_dpotential_dxl,rmemory_dpotential_dyl,rmemory_dpotential_dzl)
+                                                   rmemory_dpotential_dxl,rmemory_dpotential_dyl,rmemory_dpotential_dzl, &
+                                                   PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl,&
+                                                   PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old,&
+                                                   PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new)
 
         ! calculates contribution from each C-PML element to update acceleration
         call pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_acoustic,&
@@ -243,11 +253,11 @@
     ! pages 386 and 389 and Figure 8.3.1
 
     ! computes 1. matrix multiplication for newtempx1,..
-    call mxm5_single(hprimewgll_xxT,m1,tempx1,newtempx1,m2)
+    call mxm_single(hprimewgll_xxT,m1,tempx1,newtempx1,m2)
     ! computes 2. matrix multiplication for tempx2,..
-    call mxm5_3dmat_single(tempx2,m1,hprimewgll_xx,m1,newtempx2,NGLLX)
+    call mxm_3dmat_single(tempx2,m1,hprimewgll_xx,m1,newtempx2,NGLLX)
     ! computes 3. matrix multiplication for newtempx3,..
-    call mxm5_single(tempx3,m2,hprimewgll_xx,newtempx3,m1)
+    call mxm_single(tempx3,m2,hprimewgll_xx,newtempx3,m1)
 
     ! second double-loop over GLL to compute all the terms
 #ifdef FORCE_VECTORIZATION
@@ -302,6 +312,32 @@
 !
 ! please leave the routines here to help compilers inlining the code
 
+  subroutine mxm_single(A,n1,B,C,n3)
+
+! 2-dimensional arrays e.g. (25,5)/(5,25)
+
+  use constants,only: CUSTOM_REAL,NGLLX
+
+  implicit none
+
+  integer,intent(in) :: n1,n3
+  real(kind=CUSTOM_REAL),dimension(n1,NGLLX),intent(in) :: A
+  real(kind=CUSTOM_REAL),dimension(NGLLX,n3),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C
+
+  ! matrix-matrix multiplication wrapper
+  if (NGLLX == 5) then
+    call mxm5_single(A,n1,B,C,n3)
+  else if (NGLLX == 6) then
+    call mxm6_single(A,n1,B,C,n3)
+  else if (NGLLX == 7) then
+    call mxm7_single(A,n1,B,C,n3)
+  endif
+
+  end subroutine mxm_single
+
+  !-------------
+
   subroutine mxm5_single(A,n1,B,C,n3)
 
 ! 2-dimensional arrays (25,5)/(5,25)
@@ -331,8 +367,99 @@
 
   end subroutine mxm5_single
 
+  !-------------
+
+  subroutine mxm6_single(A,n1,B,C,n3)
+
+! 2-dimensional arrays (36,6)/(6,36)
+
+  use constants,only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n3
+  real(kind=CUSTOM_REAL),dimension(n1,6),intent(in) :: A
+  real(kind=CUSTOM_REAL),dimension(6,n3),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C
+
+  ! local parameters
+  integer :: i,j
+
+  ! matrix-matrix multiplication
+  do j = 1,n3
+    do i = 1,n1
+      C(i,j) =  A(i,1) * B(1,j) &
+              + A(i,2) * B(2,j) &
+              + A(i,3) * B(3,j) &
+              + A(i,4) * B(4,j) &
+              + A(i,5) * B(5,j) &
+              + A(i,6) * B(6,j)
+    enddo
+  enddo
+
+  end subroutine mxm6_single
+
+  !-------------
+
+  subroutine mxm7_single(A,n1,B,C,n3)
+
+! 2-dimensional arrays (49,7)/(7,49)
+
+  use constants,only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n3
+  real(kind=CUSTOM_REAL),dimension(n1,7),intent(in) :: A
+  real(kind=CUSTOM_REAL),dimension(7,n3),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C
+
+  ! local parameters
+  integer :: i,j
+
+  ! matrix-matrix multiplication
+  do j = 1,n3
+    do i = 1,n1
+      C(i,j) =  A(i,1) * B(1,j) &
+              + A(i,2) * B(2,j) &
+              + A(i,3) * B(3,j) &
+              + A(i,4) * B(4,j) &
+              + A(i,5) * B(5,j) &
+              + A(i,6) * B(6,j) &
+              + A(i,7) * B(7,j)
+    enddo
+  enddo
+
+  end subroutine mxm7_single
+
 
 !--------------------------------------------------------------------------------------------
+
+  subroutine mxm_3dmat_single(A,n1,B,n2,C,n3)
+
+! 3-dimensional arrays e.g. (5,5,5) for A and C
+
+  use constants,only: CUSTOM_REAL,NGLLX
+
+  implicit none
+
+  integer,intent(in) :: n1,n2,n3
+  real(kind=CUSTOM_REAL),dimension(n1,NGLLX,n3),intent(in) :: A
+  real(kind=CUSTOM_REAL),dimension(NGLLX,n2),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n2,n3),intent(out) :: C
+
+  ! matrix-matrix multiplication wrapper
+  if (NGLLX == 5) then
+    call mxm5_3dmat_single(A,n1,B,n2,C,n3)
+  else if (NGLLX == 6) then
+    call mxm6_3dmat_single(A,n1,B,n2,C,n3)
+  else if (NGLLX == 7) then
+    call mxm7_3dmat_single(A,n1,B,n2,C,n3)
+  endif
+
+  end subroutine mxm_3dmat_single
+
+  !-------------
 
   subroutine mxm5_3dmat_single(A,n1,B,n2,C,n3)
 
@@ -364,6 +491,75 @@
   enddo
 
   end subroutine mxm5_3dmat_single
+
+  !-------------
+
+  subroutine mxm6_3dmat_single(A,n1,B,n2,C,n3)
+
+! 3-dimensional arrays (6,6,6) for A and C
+
+  use constants,only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n2,n3
+  real(kind=CUSTOM_REAL),dimension(n1,6,n3),intent(in) :: A
+  real(kind=CUSTOM_REAL),dimension(6,n2),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n2,n3),intent(out) :: C
+
+  ! local parameters
+  integer :: i,j,k
+
+  ! matrix-matrix multiplication
+  do k = 1,n3
+    do j = 1,n2
+      do i = 1,n1
+        C(i,j,k) =  A(i,1,k) * B(1,j) &
+                  + A(i,2,k) * B(2,j) &
+                  + A(i,3,k) * B(3,j) &
+                  + A(i,4,k) * B(4,j) &
+                  + A(i,5,k) * B(5,j) &
+                  + A(i,6,k) * B(6,j)
+      enddo
+    enddo
+  enddo
+
+  end subroutine mxm6_3dmat_single
+
+  !-------------
+
+  subroutine mxm7_3dmat_single(A,n1,B,n2,C,n3)
+
+! 3-dimensional arrays (6,6,6) for A and C
+
+  use constants,only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n2,n3
+  real(kind=CUSTOM_REAL),dimension(n1,7,n3),intent(in) :: A
+  real(kind=CUSTOM_REAL),dimension(7,n2),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n2,n3),intent(out) :: C
+
+  ! local parameters
+  integer :: i,j,k
+
+  ! matrix-matrix multiplication
+  do k = 1,n3
+    do j = 1,n2
+      do i = 1,n1
+        C(i,j,k) =  A(i,1,k) * B(1,j) &
+                  + A(i,2,k) * B(2,j) &
+                  + A(i,3,k) * B(3,j) &
+                  + A(i,4,k) * B(4,j) &
+                  + A(i,5,k) * B(5,j) &
+                  + A(i,6,k) * B(6,j) &
+                  + A(i,7,k) * B(7,j)
+      enddo
+    enddo
+  enddo
+
+  end subroutine mxm7_3dmat_single
 
   end subroutine compute_forces_acoustic_Dev
 

@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -73,18 +73,7 @@
   call prepare_timerun_gravity()
 
   ! prepares C-PML arrays
-  if (PML_CONDITIONS) then
-    if (SIMULATION_TYPE /= 1)  then
-      stop 'error: C-PML for adjoint simulations not supported yet'
-    else if (GPU_MODE) then
-      stop 'error: C-PML only supported in CPU mode'
-    else
-      call prepare_timerun_pml()
-    endif
-  endif
-  ! dummy allocation with a size of 1 for all the PML arrays that have not yet been allocated
-  ! in order to be able to use these arrays as arguments in subroutine calls
-  call pml_allocate_arrays_dummy()
+  if (PML_CONDITIONS) call prepare_timerun_pml()
 
   ! prepares ADJOINT simulations
   call prepare_timerun_adjoint()
@@ -100,14 +89,14 @@
   call prepare_timerun_OpenMP()
 #endif
 
-  ! compute the Roland_Sylvain gravity integrals if needed
-  if (ROLAND_SYLVAIN) then
+  ! compute the gravity integrals if needed
+  if (GRAVITY_INTEGRALS) then
     if (myrank == 0) then
       write(IMAIN,*)
-      write(IMAIN,*) '  ...computing Roland_Sylvain gravity integrals'
+      write(IMAIN,*) '  ...computing gravity integrals'
       call flush_IMAIN()
     endif
-    call compute_Roland_Sylvain_integr()
+    call compute_gravity_integrals()
   endif
 
   ! elapsed time since beginning of preparation
@@ -442,11 +431,14 @@
     if (ier /= 0) stop 'error allocating array seismograms_v'
     allocate(seismograms_a(NDIM,nrec_local,NSTEP),stat=ier)
     if (ier /= 0) stop 'error allocating array seismograms_a'
+    allocate(seismograms_p(NDIM,nrec_local,NSTEP),stat=ier)
+    if (ier /= 0) stop 'error allocating array seismograms_p'
 
     ! initialize seismograms
     seismograms_d(:,:,:) = 0._CUSTOM_REAL
     seismograms_v(:,:,:) = 0._CUSTOM_REAL
     seismograms_a(:,:,:) = 0._CUSTOM_REAL
+    seismograms_p(:,:,:) = 0._CUSTOM_REAL
   endif
 
   ! opens source time function file
@@ -457,7 +449,7 @@
     else
       write(plot_file,"('/plot_source_time_function',i7.7,'.txt')") NSOURCES
     endif
-    open(unit=IOSTF,file=trim(OUTPUT_FILES_PATH)//plot_file,status='unknown',iostat=ier)
+    open(unit=IOSTF,file=trim(OUTPUT_FILES)//plot_file,status='unknown',iostat=ier)
     if (ier /= 0) call exit_mpi(myrank,'error opening plot_source_time_function file')
   endif
 
@@ -503,29 +495,44 @@
     scale_factor_kappa(:,:,:,:) = 1._CUSTOM_REAL
 
     ! reads in attenuation arrays
-    open(unit=27, file=prname(1:len_trim(prname))//'attenuation.bin', &
-          status='old',action='read',form='unformatted',iostat=ier)
-    if (ier /= 0) then
-      print*,'error: could not open ',prname(1:len_trim(prname))//'attenuation.bin'
-      call exit_mpi(myrank,'error opening attenuation.bin file')
-    endif
-    read(27) ispec
-    if (ispec /= NSPEC_ATTENUATION_AB) then
-      close(27)
-      print*,'error: attenuation file array ',ispec,'should be ',NSPEC_ATTENUATION_AB
-      call exit_mpi(myrank,'error attenuation array dimensions, please recompile and rerun generate_databases')
-    endif
-    read(27) one_minus_sum_beta
-    read(27) factor_common
-    read(27) scale_factor
-
-    if (FULL_ATTENUATION_SOLID)then
-      read(27) one_minus_sum_beta_kappa
-      read(27) factor_common_kappa
-      read(27) scale_factor_kappa
+    call create_name_database(prname,myrank,LOCAL_PATH)
+    if (I_should_read_the_database) then
+        open(unit=27, file=prname(1:len_trim(prname))//'attenuation.bin', status='old',action='read',form='unformatted',iostat=ier)
+        if (ier /= 0) then
+            print*,'error: could not open ',prname(1:len_trim(prname))//'attenuation.bin'
+            call exit_mpi(myrank,'error opening attenuation.bin file')
+        endif
     endif
 
-    close(27)
+    if (I_should_read_the_database) then
+        read(27) ispec
+        if (ispec /= NSPEC_ATTENUATION_AB) then
+            close(27)
+            print*,'error: attenuation file array ',ispec,'should be ',NSPEC_ATTENUATION_AB
+            call exit_mpi(myrank,'error attenuation array dimensions, please recompile and rerun generate_databases')
+        endif
+        read(27) one_minus_sum_beta
+        read(27) factor_common
+        read(27) scale_factor
+
+        if (FULL_ATTENUATION_SOLID) then
+            read(27) one_minus_sum_beta_kappa
+            read(27) factor_common_kappa
+            read(27) scale_factor_kappa
+        endif
+
+        close(27)
+    endif
+
+    call bcast_all_i_for_database(ispec, 1)
+    if (size(one_minus_sum_beta) > 0) call bcast_all_cr_for_database(one_minus_sum_beta(1,1,1,1), size(one_minus_sum_beta))
+    if (size(factor_common) > 0) call bcast_all_cr_for_database(factor_common(1,1,1,1,1), size(factor_common))
+    if (size(scale_factor) > 0) call bcast_all_cr_for_database(scale_factor(1,1,1,1), size(scale_factor))
+    if (FULL_ATTENUATION_SOLID) then
+        call bcast_all_cr_for_database(one_minus_sum_beta_kappa(1,1,1,1), size(one_minus_sum_beta_kappa))
+        call bcast_all_cr_for_database(factor_common_kappa(1,1,1,1,1), size(factor_common_kappa))
+        call bcast_all_cr_for_database(scale_factor_kappa(1,1,1,1), size(scale_factor_kappa))
+    endif
 
 
     ! gets stress relaxation times tau_sigma, i.e.
@@ -557,7 +564,7 @@
             scale_factorl = scale_factor(i,j,k,ispec)
             mustore(i,j,k,ispec) = mustore(i,j,k,ispec) * scale_factorl
 
-            if (FULL_ATTENUATION_SOLID)then
+            if (FULL_ATTENUATION_SOLID) then
               ! scales kappa moduli
               scale_factorl = scale_factor_kappa(i,j,k,ispec)
               kappastore(i,j,k,ispec) = kappastore(i,j,k,ispec) * scale_factorl
@@ -715,7 +722,7 @@
   subroutine prepare_timerun_pml()
 
   use pml_par
-  use specfem_par, only: NSPEC_AB,NGNOD,myrank
+  use specfem_par, only: NGNOD,myrank,SIMULATION_TYPE,GPU_MODE
   use constants, only: IMAIN,NGNOD_EIGHT_CORNERS
 
   implicit none
@@ -723,6 +730,13 @@
   ! local parameters
   integer :: ispec,ispec_CPML,NSPEC_CPML_GLOBAL
 
+  ! safety stops
+  if (SIMULATION_TYPE /= 1) &
+    stop 'Error C-PML for adjoint simulations not supported yet'
+  if (GPU_MODE) &
+    stop 'Error C-PML only supported in CPU mode'
+
+  ! total number of pml elements
   call sum_all_i(NSPEC_CPML,NSPEC_CPML_GLOBAL)
 
   ! user output
@@ -745,18 +759,12 @@
     stop 'error: the C-PML code works for 8-node bricks only; should be made more general'
 
   ! allocates and initializes C-PML arrays
-  if (NSPEC_CPML > 0) call pml_allocate_arrays()
-  ! dummy allocation with a size of 1 for all the PML arrays that have not yet been allocated
-  ! in order to be able to use these arrays as arguments in subroutine calls
-  call pml_allocate_arrays_dummy()
+  call pml_allocate_arrays()
 
   ! defines C-PML spectral elements local indexing
-  ispec_CPML = 0
-  do ispec=1,NSPEC_AB
-    if (is_CPML(ispec)) then
-      ispec_CPML = ispec_CPML + 1
-      spec_to_CPML(ispec) = ispec_CPML
-    endif
+  do ispec_CPML = 1,NSPEC_CPML
+    ispec = CPML_to_spec(ispec_CPML)
+    spec_to_CPML(ispec) = ispec_CPML
   enddo
 
   ! defines C-PML element type array: 1 = face, 2 = edge, 3 = corner
@@ -818,9 +826,9 @@
   if (nrec_local > 0 .and. SIMULATION_TYPE == 2) then
     ! allocate Frechet derivatives array
     allocate(Mxx_der(nrec_local),Myy_der(nrec_local), &
-            Mzz_der(nrec_local),Mxy_der(nrec_local), &
-            Mxz_der(nrec_local),Myz_der(nrec_local), &
-            sloc_der(NDIM,nrec_local),stat=ier)
+             Mzz_der(nrec_local),Mxy_der(nrec_local), &
+             Mxz_der(nrec_local),Myz_der(nrec_local), &
+             sloc_der(NDIM,nrec_local),stat=ier)
     if (ier /= 0) stop 'error allocating array Mxx_der and following arrays'
     Mxx_der = 0._CUSTOM_REAL
     Myy_der = 0._CUSTOM_REAL
@@ -1200,7 +1208,7 @@
   call memory_eval_gpu()
 
   ! prepares general fields on GPU
-  !§!§ JC JC here we will need to add GPU support for the new C-PML routines
+  !! JC JC here we will need to add GPU support for the C-PML routines
   call prepare_constants_device(Mesh_pointer, &
                                 NGLLX, NSPEC_AB, NGLOB_AB, &
                                 xix, xiy, xiz, etax,etay,etaz, gammax, gammay, gammaz, &
@@ -1248,7 +1256,7 @@
   endif
 
   ! prepares fields on GPU for elastic simulations
-  !§!§ JC JC here we will need to add GPU support for the new C-PML routines
+  !! JC JC here we will need to add GPU support for the C-PML routines
   if (ELASTIC_SIMULATION) then
     call prepare_fields_elastic_device(Mesh_pointer, &
                                 rmassx,rmassy,rmassz, &
@@ -1621,9 +1629,9 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  ! compute Roland_Sylvain integrals of that slice, and then total integrals for the whole mesh
+  ! compute gravity integrals of that slice, and then total integrals for the whole mesh
 
-  subroutine compute_Roland_Sylvain_integr()
+  subroutine compute_gravity_integrals()
 
   use constants
 
@@ -1681,11 +1689,11 @@
 
     ! print information about number of elements done so far
     if (myrank == 0 .and. (mod(ispec,NSPEC_DISPLAY_INTERVAL) == 0 .or. ispec == 1 .or. ispec == NSPEC_AB)) then
-       write(IMAIN,*) 'for Roland_Sylvain integrals, ',ispec,' elements computed out of ',NSPEC_AB
+       write(IMAIN,*) 'for gravity integrals, ',ispec,' elements computed out of ',NSPEC_AB
        ! write time stamp file to give information about progression of the calculation of gravity integrals
        write(outputname,"('/timestamp_gravity_calculations_ispec',i7.7,'_out_of_',i7.7)") ispec,NSPEC_AB
        ! timestamp file output
-       open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//outputname,status='unknown',action='write')
+       open(unit=IOUT,file=trim(OUTPUT_FILES)//outputname,status='unknown',action='write')
        write(IOUT,*) ispec,' elements done for gravity calculations out of ',NSPEC_AB
        close(unit=IOUT)
     endif
@@ -1874,61 +1882,61 @@
       write(IMAIN,*) 'computed G_yz = ',G_yz(iobs_receiver),' Eotvos'
 
       ! save the results
-      open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/results_g_x_for_GMT.txt',status='unknown',action='write')
+      open(unit=IOUT,file=trim(OUTPUT_FILES)//'/results_g_x_for_GMT.txt',status='unknown',action='write')
       do iobservation = 1,NTOTAL_OBSERVATION
         write(IOUT,*) g_x(iobservation)
       enddo
       close(unit=IOUT)
 
-      open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/results_g_y_for_GMT.txt',status='unknown',action='write')
+      open(unit=IOUT,file=trim(OUTPUT_FILES)//'/results_g_y_for_GMT.txt',status='unknown',action='write')
       do iobservation = 1,NTOTAL_OBSERVATION
         write(IOUT,*) g_y(iobservation)
       enddo
       close(unit=IOUT)
 
-      open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/results_g_z_for_GMT.txt',status='unknown',action='write')
+      open(unit=IOUT,file=trim(OUTPUT_FILES)//'/results_g_z_for_GMT.txt',status='unknown',action='write')
       do iobservation = 1,NTOTAL_OBSERVATION
         write(IOUT,*) g_z(iobservation)
       enddo
       close(unit=IOUT)
 
-      open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/results_norm_of_g_for_GMT.txt',status='unknown',action='write')
+      open(unit=IOUT,file=trim(OUTPUT_FILES)//'/results_norm_of_g_for_GMT.txt',status='unknown',action='write')
       do iobservation = 1,NTOTAL_OBSERVATION
         write(IOUT,*) sqrt(g_x(iobservation)**2 + g_y(iobservation)**2 + g_z(iobservation)**2)
       enddo
       close(unit=IOUT)
 
-      open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/results_G_xx_for_GMT.txt',status='unknown',action='write')
+      open(unit=IOUT,file=trim(OUTPUT_FILES)//'/results_G_xx_for_GMT.txt',status='unknown',action='write')
       do iobservation = 1,NTOTAL_OBSERVATION
         write(IOUT,*) G_xx(iobservation)
       enddo
       close(unit=IOUT)
 
-      open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/results_G_yy_for_GMT.txt',status='unknown',action='write')
+      open(unit=IOUT,file=trim(OUTPUT_FILES)//'/results_G_yy_for_GMT.txt',status='unknown',action='write')
       do iobservation = 1,NTOTAL_OBSERVATION
         write(IOUT,*) G_yy(iobservation)
       enddo
       close(unit=IOUT)
 
-      open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/results_G_zz_for_GMT.txt',status='unknown',action='write')
+      open(unit=IOUT,file=trim(OUTPUT_FILES)//'/results_G_zz_for_GMT.txt',status='unknown',action='write')
       do iobservation = 1,NTOTAL_OBSERVATION
         write(IOUT,*) G_zz(iobservation)
       enddo
       close(unit=IOUT)
 
-      open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/results_G_xy_for_GMT.txt',status='unknown',action='write')
+      open(unit=IOUT,file=trim(OUTPUT_FILES)//'/results_G_xy_for_GMT.txt',status='unknown',action='write')
       do iobservation = 1,NTOTAL_OBSERVATION
         write(IOUT,*) G_xy(iobservation)
       enddo
       close(unit=IOUT)
 
-      open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/results_G_xz_for_GMT.txt',status='unknown',action='write')
+      open(unit=IOUT,file=trim(OUTPUT_FILES)//'/results_G_xz_for_GMT.txt',status='unknown',action='write')
       do iobservation = 1,NTOTAL_OBSERVATION
         write(IOUT,*) G_xz(iobservation)
       enddo
       close(unit=IOUT)
 
-      open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/results_G_yz_for_GMT.txt',status='unknown',action='write')
+      open(unit=IOUT,file=trim(OUTPUT_FILES)//'/results_G_yz_for_GMT.txt',status='unknown',action='write')
       do iobservation = 1,NTOTAL_OBSERVATION
         write(IOUT,*) G_yz(iobservation)
       enddo
@@ -1936,5 +1944,5 @@
 
   endif
 
-  end subroutine compute_Roland_Sylvain_integr
+  end subroutine compute_gravity_integrals
 

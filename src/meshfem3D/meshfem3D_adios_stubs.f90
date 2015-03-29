@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -44,7 +44,6 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
                                 NMATERIALS,material_properties)
 
   use constants
-  use unused_mod
   use adios_manager_mod
 
   implicit none
@@ -68,6 +67,10 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   integer, dimension(NSPEC2D_TOP) :: ibelm_top
   integer :: NMATERIALS
   double precision, dimension(NMATERIALS,7) ::  material_properties
+
+  integer(kind=4) :: unused_i4
+  logical :: unused_l
+  double precision :: unused_dp
 
   unused_i4 = len_trim(LOCAL_PATH)
   unused_i4 = myrank

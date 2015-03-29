@@ -1,0 +1,42 @@
+
+Subject: Re: More to say about Takeuchi's code
+From: Dimitri Komatitsch
+Date: 02/04/2014 13:42
+To: martinr
+CC: Yi Wang, Sebastien Chevrot, Roland Martin
+
+Hi Roland, Hi all,
+
+Yes, what is really strange about their "mass lumping" is that in the attached 1996 paper they solve equation (1) with finite elements but at the end of the same page in the last paragraph in the red box they say that H and T are already tridiagonal, and thus the matrix system is obvious to solve and there is no need to mass lump because solving a tridiagonal system is extremely easy.
+
+Thus I think what they call mass lumping is in fact not mass lumping but rather a sum that they do on their sub-grid of ns = 256 points, thus it is "a bit the same philosophy" as mass lumping because it means using an integral on all the points of the sub-grid to compute the sum, and then ignoring this sub-grid and using that sum at a single point instead. But strictly speaking it is not mass lumping, it is just "a bit similar" I think. In any case, if T is banded (tridiagonal) there is no need to mass lump to solve the matrix system.
+
+Thanks,
+Dimitri.
+
+On 02/04/2014 13:25, martinr wrote:
+> Mass lumped matrices are generally used as preconditionners to solve
+> huge matrix systems (this is detailed in different books of
+> Zienkiewicz). The mass-lumping consists in performing summations of all
+> the terms of each line of the matrix and putting this sum in the
+> diagonal and thus building a new matrix. This is what is done in some
+> way in specfem when we sum the local mass matrices and due to the GLL
+> points and Lagrange polynomila this mass matrix is natural lumped and
+> then diagonal. But it is a physical and "exact mass-lumping". Now, this
+> is true for the mass matrix but not for the stiffness matrix.
+>
+> So, Dimitri is right, we do not understand why they are using the
+> mass-lumping technique ... It is better to solve all a similar system of
+> figure 1 without mass-lumping and that is it.
+>
+> Cheers
+> ROland
+>
+
+--
+Dimitri Komatitsch
+CNRS Research Director (DR CNRS), Laboratory of Mechanics and Acoustics,
+UPR 7051, Marseille, France    http://komatitsch.free.fr
+
+Attachments:
+Takeuchi_Geller_Cummins_GRL_1996.pdf  410 KB

@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -108,7 +108,6 @@
 
 ! copy number of elements and points in an include file for the solver
   if (myrank == 0) then
-
     call save_header_file(NSPEC_AB,NGLOB_AB,NPROC, &
                ATTENUATION,ANISOTROPY,NSTEP,DT,STACEY_INSTEAD_OF_FREE_SURFACE, &
                SIMULATION_TYPE,max_memory_size,nfaces_surface_glob_ext_mesh)

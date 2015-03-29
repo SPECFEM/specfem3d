@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -441,7 +441,7 @@ subroutine read_mesh_databases_adios()
     endif
   endif
 
-  if (PML_CONDITIONS)then
+  if (PML_CONDITIONS) then
     if (num_abs_boundary_faces > 0) then
       call adios_get_scalar(handle, "abs_boundary_ispec/local_dim",&
                             local_dim_abs_boundary_ispec,ier)
@@ -840,10 +840,16 @@ subroutine read_mesh_databases_adios()
   if (COUPLE_WITH_EXTERNAL_CODE) then
     allocate(Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
     allocate(Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
-    open(unit=IIN_veloc_dsm,file=dsmname(1:len_trim(dsmname))//'vel.bin',status='old', &
-         action='read',form='unformatted',iostat=ier)
-    open(unit=IIN_tract_dsm,file=dsmname(1:len_trim(dsmname))//'tract.bin',status='old', &
-         action='read',form='unformatted',iostat=ier)
+
+    if (old_DSM_coupling_from_Vadim) then
+      open(unit=IIN_veloc_dsm,file=dsmname(1:len_trim(dsmname))//'vel.bin',status='old', &
+           action='read',form='unformatted',iostat=ier)
+      open(unit=IIN_tract_dsm,file=dsmname(1:len_trim(dsmname))//'tract.bin',status='old', &
+           action='read',form='unformatted',iostat=ier)
+    else
+      !! To verify for NOBU version (normally, remains empty)
+    endif
+
   else
     allocate(Veloc_dsm_boundary(1,1,1,1))
     allocate(Tract_dsm_boundary(1,1,1,1))
@@ -1185,98 +1191,62 @@ subroutine read_mesh_databases_adios()
     endif
   endif
 
-  if (PML_CONDITIONS) then
-    if (num_abs_boundary_faces > 0) then
-      start(1) = local_dim_abs_boundary_ispec * myrank
-      count_ad(1) = num_abs_boundary_faces
-      sel_num = sel_num+1
-      sel => selections(sel_num)
-      call adios_selection_boundingbox (sel , 1, start, count_ad)
-      call adios_schedule_read(handle, sel, "abs_boundary_ispec/array", &
-                               0, 1, abs_boundary_ispec, ier)
+  if (num_abs_boundary_faces > 0) then
+    start(1) = local_dim_abs_boundary_ispec * myrank
+    count_ad(1) = num_abs_boundary_faces
+    sel_num = sel_num+1
+    sel => selections(sel_num)
+    call adios_selection_boundingbox (sel , 1, start, count_ad)
+    call adios_schedule_read(handle, sel, "abs_boundary_ispec/array", &
+                             0, 1, abs_boundary_ispec, ier)
 
-      start(1) = local_dim_abs_boundary_ijk * myrank
-      count_ad(1) = 3 * NGLLSQUARE * num_abs_boundary_faces
-      sel_num = sel_num+1
-      sel => selections(sel_num)
-      call adios_selection_boundingbox (sel , 1, start, count_ad)
-      call adios_schedule_read(handle, sel, "abs_boundary_ijk/array", &
-                               0, 1, abs_boundary_ijk, ier)
+    start(1) = local_dim_abs_boundary_ijk * myrank
+    count_ad(1) = 3 * NGLLSQUARE * num_abs_boundary_faces
+    sel_num = sel_num+1
+    sel => selections(sel_num)
+    call adios_selection_boundingbox (sel , 1, start, count_ad)
+    call adios_schedule_read(handle, sel, "abs_boundary_ijk/array", &
+                             0, 1, abs_boundary_ijk, ier)
 
-      start(1) = local_dim_abs_boundary_jacobian2Dw * myrank
-      count_ad(1) = NGLLSQUARE * num_abs_boundary_faces
-      sel_num = sel_num+1
-      sel => selections(sel_num)
-      call adios_selection_boundingbox (sel , 1, start, count_ad)
-      call adios_schedule_read(handle, sel, "abs_boundary_jacobian2Dw/array", &
-                               0, 1, abs_boundary_jacobian2Dw, ier)
+    start(1) = local_dim_abs_boundary_jacobian2Dw * myrank
+    count_ad(1) = NGLLSQUARE * num_abs_boundary_faces
+    sel_num = sel_num+1
+    sel => selections(sel_num)
+    call adios_selection_boundingbox (sel , 1, start, count_ad)
+    call adios_schedule_read(handle, sel, "abs_boundary_jacobian2Dw/array", &
+                             0, 1, abs_boundary_jacobian2Dw, ier)
 
-      start(1) = local_dim_abs_boundary_normal * myrank
-      count_ad(1) = NDIM * NGLLSQUARE * num_abs_boundary_faces
-      sel_num = sel_num+1
-      sel => selections(sel_num)
-      call adios_selection_boundingbox (sel , 1, start, count_ad)
-      call adios_schedule_read(handle, sel, "abs_boundary_normal/array", &
-                               0, 1, abs_boundary_normal, ier)
-    endif
-  else
-    if (num_abs_boundary_faces > 0) then
-      start(1) = local_dim_abs_boundary_ispec * myrank
-      count_ad(1) = num_abs_boundary_faces
-      sel_num = sel_num+1
-      sel => selections(sel_num)
-      call adios_selection_boundingbox (sel , 1, start, count_ad)
-      call adios_schedule_read(handle, sel, "abs_boundary_ispec/array", &
-                               0, 1, abs_boundary_ispec, ier)
+    start(1) = local_dim_abs_boundary_normal * myrank
+    count_ad(1) = NDIM * NGLLSQUARE * num_abs_boundary_faces
+    sel_num = sel_num+1
+    sel => selections(sel_num)
+    call adios_selection_boundingbox (sel , 1, start, count_ad)
+    call adios_schedule_read(handle, sel, "abs_boundary_normal/array", &
+                             0, 1, abs_boundary_normal, ier)
 
-      start(1) = local_dim_abs_boundary_ijk * myrank
-      count_ad(1) = 3 * NGLLSQUARE * num_abs_boundary_faces
-      sel_num = sel_num+1
-      sel => selections(sel_num)
-      call adios_selection_boundingbox (sel , 1, start, count_ad)
-      call adios_schedule_read(handle, sel, "abs_boundary_ijk/array", &
-                               0, 1, abs_boundary_ijk, ier)
-
-      start(1) = local_dim_abs_boundary_jacobian2Dw * myrank
-      count_ad(1) = NGLLSQUARE * num_abs_boundary_faces
-      sel_num = sel_num+1
-      sel => selections(sel_num)
-      call adios_selection_boundingbox (sel , 1, start, count_ad)
-      call adios_schedule_read(handle, sel, "abs_boundary_jacobian2Dw/array", &
-                               0, 1, abs_boundary_jacobian2Dw, ier)
-
-      start(1) = local_dim_abs_boundary_normal * myrank
-      count_ad(1) = NDIM * NGLLSQUARE * num_abs_boundary_faces
-      sel_num = sel_num+1
-      sel => selections(sel_num)
-      call adios_selection_boundingbox (sel , 1, start, count_ad)
-      call adios_schedule_read(handle, sel, "abs_boundary_normal/array", &
-                               0, 1, abs_boundary_normal, ier)
-
-      if (STACEY_ABSORBING_CONDITIONS) then
-        ! store mass matrix contributions
-        if (ELASTIC_SIMULATION) then
-          start(1) = local_dim_rmassx * myrank
-          count_ad(1) = NGLOB_AB  ! == nglob_xy in generate_databse
-          sel_num = sel_num+1
-          sel => selections(sel_num)
-          call adios_selection_boundingbox (sel , 1, start, count_ad)
-          call adios_schedule_read(handle, sel, "rmassx/array", 0, 1, &
-                                   rmassx, ier)
-          call adios_schedule_read(handle, sel, "rmassy/array", 0, 1, &
-                                   rmassy, ier)
-          call adios_schedule_read(handle, sel, "rmassz/array", 0, 1, &
-                                   rmassz, ier)
-        endif
-        if (ACOUSTIC_SIMULATION) then
-          start(1) = local_dim_rmassz_acoustic * myrank
-          count_ad(1) = NGLOB_AB ! == nglob_xy in generate_databse
-          sel_num = sel_num+1
-          sel => selections(sel_num)
-          call adios_selection_boundingbox (sel , 1, start, count_ad)
-          call adios_schedule_read(handle, sel, "rmassz_acoustic/array", &
-                                   0, 1, rmassz_acoustic, ier)
-        endif
+    if (STACEY_ABSORBING_CONDITIONS .and. (.not. PML_CONDITIONS)) then
+      ! store mass matrix contributions
+      if (ELASTIC_SIMULATION) then
+        start(1) = local_dim_rmassx * myrank
+        count_ad(1) = NGLOB_AB  ! == nglob_xy in generate_databse
+        sel_num = sel_num+1
+        sel => selections(sel_num)
+        call adios_selection_boundingbox (sel , 1, start, count_ad)
+        call adios_schedule_read(handle, sel, "rmassx/array", 0, 1, &
+                                 rmassx, ier)
+        call adios_schedule_read(handle, sel, "rmassy/array", 0, 1, &
+                                 rmassy, ier)
+        call adios_schedule_read(handle, sel, "rmassz/array", 0, 1, &
+                                 rmassz, ier)
+      endif
+      if (ACOUSTIC_SIMULATION) then
+        start(1) = local_dim_rmassz_acoustic * myrank
+        count_ad(1) = NGLOB_AB ! == nglob_xy in generate_databse
+        sel_num = sel_num+1
+        sel => selections(sel_num)
+        call adios_selection_boundingbox (sel , 1, start, count_ad)
+        call adios_schedule_read(handle, sel, "rmassz_acoustic/array", &
+                                 0, 1, rmassz_acoustic, ier)
       endif
     endif
   endif

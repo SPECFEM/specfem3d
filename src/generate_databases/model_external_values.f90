@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -140,7 +140,7 @@
     integer i,cc
     double precision aa,bb
 
-    filename = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'/coeff_poly_deg12'
+    filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'/coeff_poly_deg12'
     open(27,file=trim(filename))
     read(27,*) ndeg_poly
     allocate(smooth_vp(0:ndeg_poly),smooth_vs(0:ndeg_poly))
@@ -151,7 +151,7 @@
        !write(*,*) a,b
     enddo
 
-    filename = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'/model_1D.in'
+    filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'/model_1D.in'
     open(27,file=trim(filename))
     read(27,*) nlayer,ncoeff
     allocate(vpv_1D(nlayer,ncoeff))

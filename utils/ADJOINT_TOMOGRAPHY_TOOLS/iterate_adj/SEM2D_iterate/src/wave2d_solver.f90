@@ -65,7 +65,7 @@ contains
 !!$            do j = 1,NGLLZ
 !!$               ! present GLL height (upper layer)
 !!$               ztemp2 = 0.5*(1.0-zigll(j))*z1temp + 0.5*(1.0+zigll(j))*z2temp
-!!$               
+!!$
 !!$               if(j > 1) then
 !!$                  ! previous GLL z height (lower layer)
 !!$                  ztemp1 = 0.5*(1.0-zigll(j-1))*z1temp + 0.5*(1.0+zigll(j-1))*z2temp
@@ -129,7 +129,7 @@ contains
           ! loop over GLL points to calculate jacobian, and set up numbering
           !
           ! jacobian = | dx/dxi dx/dgamma | = (z2-z1)*(x2-x1)/4  as dx/dgamma=dz/dxi = 0
-          !            | dz/dxi dz/dgamma | 
+          !            | dz/dxi dz/dgamma |
           !
           do j = 1,NGLLZ
              do i = 1,NGLLX
@@ -139,16 +139,16 @@ contains
                 dxidz(i,j,ispec) = 0.0
                 dgammadx(i,j,ispec) = 0.0
                 dgammadz(i,j,ispec) = 2.0 / (z2(ispec)-z1(ispec))
-                jacobian(i,j,ispec) = (z2(ispec)-z1(ispec))*(x2(ispec)-x1(ispec)) / 4. 
+                jacobian(i,j,ispec) = (z2(ispec)-z1(ispec))*(x2(ispec)-x1(ispec)) / 4.
 
                 ! set up local to global numbering
-                if ( (i.eq.1).and.(ix.gt.1) ) then
+                if ( (i==1).and.(ix>1) ) then
                    ibool(i,j,ispec) = ibool(NGLLX,j,ispec-1)
-                else if ( (j.eq.1).and.(iz.gt.1) ) then
+                else if ( (j==1).and.(iz>1) ) then
                    ibool(i,j,ispec) = ibool(i,NGLLZ,ispec-NEX)
                 else
                    iglob = iglob + 1
-                   ibool(i,j,ispec) = iglob         
+                   ibool(i,j,ispec) = iglob
                 endif
 
                 ! get the global gridpoints
@@ -162,33 +162,33 @@ contains
 
           ! if boundary element
           ! 1,2,3,4 --> left, right, bottom, top
-          if (ix.eq.1) then      ! left boundary
+          if (ix==1) then      ! left boundary
              nspecb(1) = nspecb(1) + 1
              ibelm(1,nspecb(1)) = ispec
              do j = 1,NGLLZ
                 jacobianb(1,j,nspecb(1))= (z2(ispec)-z1(ispec))/2.0
-             end do
+             enddo
           endif
-          if (ix.eq.NEX) then    ! right boundary
+          if (ix==NEX) then    ! right boundary
              nspecb(2) = nspecb(2) + 1
              ibelm(2,nspecb(2)) = ispec
              do j = 1,NGLLZ
                 jacobianb(2,j,nspecb(2))= (z2(ispec)-z1(ispec))/2.0
-             end do
+             enddo
           endif
-          if (iz.eq.1) then      ! bottom boundary
+          if (iz==1) then      ! bottom boundary
              nspecb(3) = nspecb(3) + 1
              ibelm(3,nspecb(3)) = ispec
              do i = 1,NGLLX
                 jacobianb(3,i,nspecb(3))= (x2(ispec)-x1(ispec))/2.0
-             end do
+             enddo
           endif
-          if (iz.eq.NEZ) then    ! top boundary
+          if (iz==NEZ) then    ! top boundary
              nspecb(4) = nspecb(4) + 1
              ibelm(4,nspecb(4)) = ispec
              do i = 1,NGLLX
                 jacobianb(4,i,nspecb(4))= (x2(ispec)-x1(ispec))/2.0
-             end do
+             enddo
           endif
           ! end loop over elements
        enddo
@@ -240,7 +240,7 @@ contains
     k = 0
     do ispec = 1,NSPEC
        do j = 1,NGLLZ
-          do i = 1,NGLLX 
+          do i = 1,NGLLX
              iglob = ibool(i,j,ispec)
              da_local(i,j,ispec) = wxgll(i)*wzgll(j)*jacobian(i,j,ispec)
 
@@ -329,7 +329,7 @@ contains
 
     do ispec = 1,NSPEC
        do j = 1,NGLLZ
-          do i = 1,NGLLX 
+          do i = 1,NGLLX
              iglob = ibool(i,j,ispec)
 
              ! structure for reference model (synthetics)
@@ -345,7 +345,7 @@ contains
                    mu_syn(i,j,ispec)    = DENSITY*beta0*beta0
                    rho_syn(i,j,ispec)   = DENSITY
 
-                elseif(IMODEL_SYN == 1) then  ! 1D model (body waves)
+                else if(IMODEL_SYN == 1) then  ! 1D model (body waves)
 
                    if(ISURFACE==0) then
                       call make_1D_model(i,j,ispec,ktemp,mtemp,rtemp)       ! 1D model
@@ -356,11 +356,11 @@ contains
                       stop 'check model in set_model_property.f90'
                    endif
 
-                elseif(IMODEL_SYN == 2) then  ! checkerboard model
+                else if(IMODEL_SYN == 2) then  ! checkerboard model
                    if(ISURFACE==0) then
                       stop 'check model in set_model_property.f90'
 
-                   elseif(ISURFACE==1) then
+                   else if(ISURFACE==1) then
                       ! checkerboard S-wave velocity (= membrane wave phase velocity)
                       ! GLOBALLY defined (not at the elemental level)
                       btemp2 = beta0 * (1.0 + afac/100.0*(sin(x(iglob)*w_scale) * sin(z(iglob)*w_scale)) )
@@ -370,7 +370,7 @@ contains
                       rho_syn(i,j,ispec)   = DENSITY
                    endif
 
-                elseif(IMODEL_SYN == 3) then  ! heterogeneous model
+                else if(IMODEL_SYN == 3) then  ! heterogeneous model
                    if(ISURFACE==0) then
                       stop 'check model in set_model_property.f90'
 
@@ -413,7 +413,7 @@ contains
                    kappa_dat(i,j,ispec) = ktemp + dkappa2
                    mu_dat(i,j,ispec)    = mtemp + dmu2
 
-                elseif(IMODEL_DAT == 1) then         ! 1D model (NOT a 1D perturbation)
+                else if(IMODEL_DAT == 1) then         ! 1D model (NOT a 1D perturbation)
 
                    if(ISURFACE==0) then
                       call make_1D_model(i,j,ispec,ktemp,mtemp,rtemp)       ! 1D model
@@ -425,7 +425,7 @@ contains
                    mu_dat(i,j,ispec)    = mtemp
                    rho_dat(i,j,ispec)   = rtemp
 
-                elseif(IMODEL_DAT == 2) then         ! checkerboard perturbation
+                else if(IMODEL_DAT == 2) then         ! checkerboard perturbation
 
                    if(ISURFACE==0) then
                       stop 'check model in set_model_property.f90'
@@ -443,7 +443,7 @@ contains
                       !rho_dat(i,j,ispec)   = DENSITY
                    endif
 
-                elseif(IMODEL_DAT == 3) then         ! heterogeneous perturbation
+                else if(IMODEL_DAT == 3) then         ! heterogeneous perturbation
 
                    if(ISURFACE==0) then
                       stop 'check model in set_model_property.f90'
@@ -496,36 +496,36 @@ contains
     if(dtemp < z_breaks(1)) then                                  ! shallow surface
        rtemp = r_layers(1) ; atemp = a_layers(1) ; btemp = b_layers(1)
 
-    elseif(dtemp == z_breaks(1)) then                             ! 'basin' reflector
+    else if(dtemp == z_breaks(1)) then                             ! 'basin' reflector
        if(HEIGHT-z1(ispec) == dtemp) then
           rtemp = r_layers(1) ; atemp = a_layers(1) ; btemp = b_layers(1)
-       elseif(HEIGHT-z2(ispec) == dtemp) then
+       else if(HEIGHT-z2(ispec) == dtemp) then
           rtemp = r_layers(2) ; atemp = a_layers(2) ; btemp = b_layers(2)
        else
           print *, dtemp, z_breaks(1), z1(ispec), z2(ispec)
           stop 'error in make_1D_model.f90'
        endif
 
-    elseif(dtemp > z_breaks(1) .and. dtemp < z_breaks(2)) then    ! upper crust
+    else if(dtemp > z_breaks(1) .and. dtemp < z_breaks(2)) then    ! upper crust
        rtemp = r_layers(2) ; atemp = a_layers(2) ; btemp = b_layers(2)
 
-    elseif(dtemp == z_breaks(2)) then                             ! mid-crust reflector
+    else if(dtemp == z_breaks(2)) then                             ! mid-crust reflector
        if(HEIGHT-z1(ispec) == dtemp) then
           rtemp = r_layers(2) ; atemp = a_layers(2) ; btemp = b_layers(2)
-       elseif(HEIGHT-z2(ispec) == dtemp) then
+       else if(HEIGHT-z2(ispec) == dtemp) then
           rtemp = r_layers(3) ; atemp = a_layers(3) ; btemp = b_layers(3)
        else
           print *, dtemp, z_breaks(2), z1(ispec), z2(ispec)
           stop 'error in make_1D_model.f90'
        endif
 
-    elseif(dtemp > z_breaks(2) .and. dtemp < z_breaks(3)) then    ! lower crust
+    else if(dtemp > z_breaks(2) .and. dtemp < z_breaks(3)) then    ! lower crust
        rtemp = r_layers(3) ; atemp = a_layers(3) ; btemp = b_layers(3)
 
-    elseif(dtemp == z_breaks(3)) then                             ! Moho
+    else if(dtemp == z_breaks(3)) then                             ! Moho
        if(HEIGHT-z1(ispec) == dtemp) then
           rtemp = r_layers(3) ; atemp = a_layers(3) ; btemp = b_layers(3)
-       elseif(HEIGHT-z2(ispec) == dtemp) then
+       else if(HEIGHT-z2(ispec) == dtemp) then
           rtemp = r_layers(4) ; atemp = a_layers(4) ; btemp = b_layers(4)
        else
           print *, dtemp, z_breaks(3), z1(ispec), z2(ispec)
@@ -565,7 +565,7 @@ contains
     character(len=*), optional :: last_frame
     double precision, intent(inout), optional :: absorbfield(NSTEP, NCOMP, NGLL, NELE, NABSORB)
     double precision, intent(out), optional :: three_source_model(NSTEP,NCOMP,nsrc,NVAR_SOURCE)   ! 3 : ts, xs, zs
-    !double precision, intent(out), optional :: three_source_model(NSTEP,NCOMP,nsrc,10)    ! testing 
+    !double precision, intent(out), optional :: three_source_model(NSTEP,NCOMP,nsrc,10)    ! testing
     double precision, intent(out), dimension(NGLLX,NGLLZ,NSPEC), optional :: rtype_kernel, btype_kernel, atype_kernel
     double precision, intent(in), optional :: stf_syn(NSTEP), f0(NCOMP)
 
@@ -684,9 +684,9 @@ contains
              mass_local = wxgll(i)*wzgll(j)*rho(i,j,ispec)*jacobian(i,j,ispec)
              iglob = ibool(i,j,ispec)
              mass_global(iglob) = mass_global(iglob) + mass_local
-          end do
-       end do
-    end do
+          enddo
+       enddo
+    enddo
 
     ! time marching parameters
     deltat = DT
@@ -703,16 +703,16 @@ contains
     displ(:,:) = 0.0
     veloc(:,:) = 0.0
     accel(:,:) = 0.0
-    
+
     if (solver_type == 3) then
        open(11,file = trim(last_frame),status='old',iostat=ios)
        if (ios /= 0) stop 'Error reading the last frame'
        do i = 1, NGLOB
-          !read(11,*) b_displ(1,i), b_displ(2,i), b_displ(3,i), & 
+          !read(11,*) b_displ(1,i), b_displ(2,i), b_displ(3,i), &
           !           b_veloc(1,i), b_veloc(2,i), b_veloc(3,i), &
           !           b_accel(1,i), b_accel(2,i), b_accel(3,i)
           read(11,fm) (b_displ(j,i), j = 1,NCOMP), &
-               (b_veloc(j,i), j = 1,NCOMP), & 
+               (b_veloc(j,i), j = 1,NCOMP), &
                (b_accel(j,i), j = 1,NCOMP)
        enddo
        close(11)
@@ -787,7 +787,7 @@ contains
           !
           do ispec = 1,NSPEC
 
-             ! first double loop over GLL 
+             ! first double loop over GLL
              ! compute and store gradients
              do j = 1,NGLLZ
                 do i = 1,NGLLX
@@ -804,7 +804,7 @@ contains
                       if (solver_type == 3) then
                          b_tempy1l = b_tempy1l + b_displ(1,iglob)*hp1
                       endif
-                   end do
+                   enddo
 
                    ! derivative along z
                    tempy2l = 0.0
@@ -816,7 +816,7 @@ contains
                       if (solver_type == 3) then
                          b_tempy2l = b_tempy2l + b_displ(1,iglob)*hp2
                       endif
-                   end do
+                   enddo
 
                    ! from mesher
                    dxidxl = dxidx(i,j,ispec)
@@ -854,9 +854,9 @@ contains
                       b_ds(2,1) = b_ds(1,2)
                       b_ds(3,2) = b_ds(2,3)
 
-                      ! mu kernel : K-mu = double-dot-product of deviatoric strains 
+                      ! mu kernel : K-mu = double-dot-product of deviatoric strains
                       ! kappa kernel : not used for SH case (see kappa_k below)
-                      ! (see below for kappa kernel) 
+                      ! (see below for kappa kernel)
                       mu_k(i,j,ispec) = sum(ds * b_ds)
                       !mu_k(iglob2) = sum(ds * b_ds)                                 ! (09-Jan-2007)
                       !mu_k(iglob2) = sum(ds * b_ds) - ONE_THIRD * kappa_k(iglob2)   ! (12-July-2006)
@@ -899,7 +899,7 @@ contains
                       if (solver_type == 3) then
                          b_tempy1l = b_tempy1l + b_tempy1(k,j)*fac1
                       endif
-                   end do
+                   enddo
 
                    ! along z direction
                    tempy2l = 0.0
@@ -910,7 +910,7 @@ contains
                       if (solver_type == 3) then
                          b_tempy2l = b_tempy2l + b_tempy2(i,k)*fac2
                       endif
-                   end do
+                   enddo
 
                    fac1 = wzgll(j)
                    fac2 = wxgll(i)
@@ -921,10 +921,10 @@ contains
                       b_accel(1,iglob) = b_accel(1,iglob) - (fac1* b_tempy1l + fac2* b_tempy2l)
                    endif
 
-                end do ! second loop over the GLL points
-             end do
+                enddo ! second loop over the GLL points
+             enddo
 
-          end do ! end loop over all spectral elements
+          enddo ! end loop over all spectral elements
 
           !
           ! boundary conditions
@@ -938,11 +938,11 @@ contains
           do ibb = 1,NABSORB  ! index of grid boundary
              if(ibb == 1) then
                 i = 1
-             elseif(ibb == 2) then
+             else if(ibb == 2) then
                 i = NGLLX
-             elseif(ibb == 3) then
+             else if(ibb == 3) then
                 i = 1
-             elseif(ibb == 4) then
+             else if(ibb == 4) then
                 i = NGLLZ
              endif
 
@@ -952,9 +952,9 @@ contains
                 if (ibb == 1 .or. ibb == 2) then ! left or right boundary element
                    j1 = 1; j2 = NGLLZ
                 else if (ib == 1) then           ! top left corner element
-                   j1 = 2; j2 = NGLLX 
+                   j1 = 2; j2 = NGLLX
                 else if (ib == nspecb(ibb)) then ! top right corner element
-                   j1 = 1; j2 = NGLLX-1  
+                   j1 = 1; j2 = NGLLX-1
                 else                             ! top or bottom boundary (excluding corner elements)
                    j1 = 1; j2 = NGLLX
                 endif
@@ -975,8 +975,8 @@ contains
                    if (save_forward) then
                       absorbfield(itime,1,j,ib,ibb) = ty*weight
                    endif
-                end do
-             end do
+                enddo
+             enddo
           enddo
 
        else  ! NCOMP==3
@@ -988,7 +988,7 @@ contains
           !
           do ispec = 1,NSPEC
 
-             ! first double loop over GLL 
+             ! first double loop over GLL
              ! compute and store gradients
              do j = 1,NGLLZ
                 do i = 1,NGLLX
@@ -1015,7 +1015,7 @@ contains
                          b_tempy1l = b_tempy1l + b_displ(2,iglob)*hp1
                          b_tempz1l = b_tempz1l + b_displ(3,iglob)*hp1
                       endif
-                   end do
+                   enddo
 
                    ! derivative along z
                    tempx2l = 0.0
@@ -1037,7 +1037,7 @@ contains
                          b_tempy2l = b_tempy2l + b_displ(2,iglob)*hp2
                          b_tempz2l = b_tempz2l + b_displ(3,iglob)*hp2
                       endif
-                   end do
+                   enddo
 
                    ! from the mesher
                    dxidxl = dxidx(i,j,ispec)
@@ -1146,8 +1146,8 @@ contains
                       b_tempz2(i,j) = jacobianl*(b_sigma_xz*dgammadxl+b_sigma_zz*dgammadzl)
                    endif
 
-                end do
-             end do
+                enddo
+             enddo
              !
              ! second double-loop over GLL
              ! compute all rhs terms
@@ -1174,7 +1174,7 @@ contains
                          b_tempy1l = b_tempy1l + b_tempy1(k,j)*fac1
                          b_tempz1l = b_tempz1l + b_tempz1(k,j)*fac1
                       endif
-                   end do
+                   enddo
 
                    ! along z direction
                    tempx2l = 0.0
@@ -1189,13 +1189,13 @@ contains
                       fac2 = wzgll(k)*hprime_zz(j,k)
                       tempx2l = tempx2l + tempx2(i,k)*fac2
                       tempy2l = tempy2l + tempy2(i,k)*fac2
-                      tempz2l = tempz2l + tempz2(i,k)*fac2 
+                      tempz2l = tempz2l + tempz2(i,k)*fac2
                       if (solver_type == 3) then
                          b_tempx2l = b_tempx2l + b_tempx2(i,k)*fac2
                          b_tempy2l = b_tempy2l + b_tempy2(i,k)*fac2
-                         b_tempz2l = b_tempz2l + b_tempz2(i,k)*fac2 
+                         b_tempz2l = b_tempz2l + b_tempz2(i,k)*fac2
                       endif
-                   end do
+                   enddo
 
                    fac1 = wzgll(j)
                    fac2 = wxgll(i)
@@ -1212,10 +1212,10 @@ contains
                       b_accel(3,iglob) = b_accel(3,iglob) - (fac1* b_tempz1l + fac2* b_tempz2l)
                    endif
 
-                end do ! second loop over the GLL points
-             end do
+                enddo ! second loop over the GLL points
+             enddo
 
-          end do ! end loop over all spectral elements
+          enddo ! end loop over all spectral elements
 
           !
           ! boundary conditions
@@ -1226,11 +1226,11 @@ contains
           do ibb = 1,NABSORB  ! index of grid boundary (CHT)
              if (ibb == 1) then
                 i = 1; nx = -1.0; nz = 0.0
-             elseif (ibb == 2) then
+             else if (ibb == 2) then
                 i = NGLLX; nx = 1.0; nz = 0.0
-             elseif (ibb == 3) then
+             else if (ibb == 3) then
                 i = 1; nx = 0.0; nz = -1.0
-             elseif (ibb == 4) then       ! CHT
+             else if (ibb == 4) then       ! CHT
                 i = NGLLZ; nx = 0.0; nz = 1.0
              endif
 
@@ -1240,9 +1240,9 @@ contains
                 if (ibb == 1 .or. ibb == 2) then ! left or right boundary element
                    j1 = 1; j2 = NGLLZ
                 else if (ib == 1) then           ! top left corner element
-                   j1 = 2; j2 = NGLLX 
+                   j1 = 2; j2 = NGLLX
                 else if (ib == nspecb(ibb)) then ! top right corner element
-                   j1 = 1; j2 = NGLLX-1  
+                   j1 = 1; j2 = NGLLX-1
                 else                             ! top or bottom boundary (excluding corner elements)
                    j1 = 1; j2 = NGLLX
                 endif
@@ -1278,8 +1278,8 @@ contains
                       absorbfield(itime,2,j,ib,ibb) = ty*weight
                       absorbfield(itime,3,j,ib,ibb) = tz*weight
                    endif
-                end do
-             end do
+                enddo
+             enddo
           enddo
 
        endif  ! NCOMP
@@ -1289,22 +1289,22 @@ contains
           do ibb = 1,NABSORB     ! CHT : add 4th boundary
              if (ibb == 1) then
                 i = 1
-             elseif (ibb == 2) then
+             else if (ibb == 2) then
                 i = NGLLX
-             elseif (ibb == 3) then
+             else if (ibb == 3) then
                 i = 1
-             elseif (ibb == 4) then
+             else if (ibb == 4) then
                 i = NGLLZ
-             end if
+             endif
 
              ! see comments above
              do ib = 1,nspecb(ibb)
                 if (ibb == 1 .or. ibb == 2) then
                    j1 = 1; j2 = NGLLZ
-                elseif (ib == 1) then
-                   j1 = 2; j2 = NGLLX 
-                elseif (ib == nspecb(ibb)) then
-                   j1 = 1; j2 = NGLLX-1  
+                else if (ib == 1) then
+                   j1 = 2; j2 = NGLLX
+                else if (ib == nspecb(ibb)) then
+                   j1 = 1; j2 = NGLLX-1
                 else
                    j1 = 1; j2 = NGLLX
                 endif
@@ -1338,7 +1338,7 @@ contains
 
              ! take the value at the closest gridpoint -- OLD METHOD
              !iglob = sglob(isrc)
-             !accel(:,iglob) = accel(:,iglob) + samp(itime,:,isrc) 
+             !accel(:,iglob) = accel(:,iglob) + samp(itime,:,isrc)
 
           enddo  ! isrc
 
@@ -1354,7 +1354,7 @@ contains
                 enddo
              enddo
              !iglob = rglob(irec)
-             !accel(:,iglob) = accel(:,iglob) + ramp(NSTEP-itime+1,:,irec) 
+             !accel(:,iglob) = accel(:,iglob) + ramp(NSTEP-itime+1,:,irec)
           enddo
 
           ! forward wavefield, but computed in reverse
@@ -1370,7 +1370,7 @@ contains
                    enddo
                 enddo
                 !iglob = sglob(isrc)
-                !b_accel(:,iglob) = b_accel(:,iglob) + samp(NSTEP-itime+1,:,isrc) 
+                !b_accel(:,iglob) = b_accel(:,iglob) + samp(NSTEP-itime+1,:,isrc)
              enddo
           endif
 
@@ -1421,14 +1421,14 @@ contains
 
           enddo  ! irec
 
-       elseif (solver_type == 2 .or. solver_type == 3) then
+       else if (solver_type == 2 .or. solver_type == 3) then
 
           ! ADJOINT SEISMOGRAMS (adjoint wavefield recorded at the original source)
           ! These are needed for the source (and joint) inversions.
           ! note that samp above is copied to stf_for
           ! We fill the record 'in reverse' so that the max arrival will coincide
           ! with the forward source time function pulse.
-          
+
           do isrc = 1,nsrc
              do icomp = 1,NCOMP
 
@@ -1487,7 +1487,7 @@ contains
 
              do ispec = 1,NSPEC
                 do j = 1,NGLLZ
-                   do i = 1,NGLLX 
+                   do i = 1,NGLLX
                       iglob = ibool(i,j,ispec)
 
                       ! kappa-mu-rho -- THESE ARE THE TWO KERNELS FOR AN ISOTROPIC ELASTIC MEDIUM, PLUS DENSITY
@@ -1545,13 +1545,13 @@ contains
        endif  ! solver_type = 2 or 3
 
        ! save FINAL SNAPSHOT
-       if (mod(itime, NSAVE) == 0) then      
+       if (mod(itime, NSAVE) == 0) then
 
           if (save_forward) then
              open(11,file = trim(last_frame),status='unknown',iostat=ios)
              if (ios /= 0) stop 'Error reading the last frame'
              do i = 1,NGLOB
-                write(11,fm) (sngl(displ(j,i)), j = 1,NCOMP), & 
+                write(11,fm) (sngl(displ(j,i)), j = 1,NCOMP), &
                      (sngl(veloc(j,i)), j = 1,NCOMP), &
                      (sngl(accel(j,i)), j = 1,NCOMP)
              enddo
@@ -1569,7 +1569,7 @@ contains
           if (solver_type == 1) then
              if(idata==0) write(filename1,'(a,i5.5)') trim(out_dir)//'forward_syn_',tlab
              if(idata==1) write(filename1,'(a,i5.5)') trim(out_dir)//'forward_dat_',tlab
-          elseif (solver_type == 2) then
+          else if (solver_type == 2) then
              write(filename1,'(a,i5.5)') trim(out_dir)//'adjoint_',tlab
           else
              write(filename1,'(a,i5.5)') trim(out_dir)//'adjoint_',tlab      ! adjoint wavefield
@@ -1584,7 +1584,7 @@ contains
              open(unit=11, file=trim(filename1), status='unknown', iostat=ios)
              if (ios /= 0) stop 'Error writing snapshot to disk'
              do iglob = 1, NGLOB
-                write(11,'(5e16.6)') sngl(x_plot(iglob)), sngl(z_plot(iglob)), (sngl(displ(j,iglob)),j=1,NCOMP) 
+                write(11,'(5e16.6)') sngl(x_plot(iglob)), sngl(z_plot(iglob)), (sngl(displ(j,iglob)),j=1,NCOMP)
              enddo
              close(11)
           endif
@@ -1594,7 +1594,7 @@ contains
                 open(unit=11, file=trim(filename2), status='unknown', iostat=ios)
                 if (ios /= 0) stop 'Error writing snapshot to disk'
                 do iglob = 1, NGLOB
-                   write(11,'(5e16.6)') sngl(x_plot(iglob)), sngl(z_plot(iglob)), (sngl(b_displ(j,iglob)),j=1,NCOMP) 
+                   write(11,'(5e16.6)') sngl(x_plot(iglob)), sngl(z_plot(iglob)), (sngl(b_displ(j,iglob)),j=1,NCOMP)
                 enddo
                 close(11)
 
@@ -1605,7 +1605,7 @@ contains
 
                 do ispec = 1,NSPEC
                    do j = 1,NGLLZ
-                      do i = 1,NGLLX 
+                      do i = 1,NGLLX
                          iglob = ibool(i,j,ispec)
 
                          ! kappa-mu-rho : three kernels and three interaction fields
@@ -1662,11 +1662,11 @@ contains
        ! (Using local2global is a bit safer.)
        if(WRITE_KERNELS) then
           filename5 = trim(out_dir)//'kernel_basis'
-          open(unit = 13, file = trim(filename5), status = 'unknown',iostat=ios) 
+          open(unit = 13, file = trim(filename5), status = 'unknown',iostat=ios)
           if (ios /= 0) stop 'Error writing all nine kernels to disk'
           do ispec = 1,NSPEC
              do j = 1,NGLLZ
-                do i = 1,NGLLX 
+                do i = 1,NGLLX
                    iglob = ibool(i,j,ispec)
 
                    ! x, z, -- kappa, mu, rho -- alpha, beta, rho -- c, beta rho
@@ -1692,12 +1692,12 @@ contains
           btype_kernel = mu_kappa_rho_kernel
           rtype_kernel = rho_kappa_mu_kernel
 
-       elseif (STRUCTURE_PARAMETER_TYPE == 2) then
+       else if (STRUCTURE_PARAMETER_TYPE == 2) then
           atype_kernel = alpha_beta_rho_kernel
           btype_kernel = beta_alpha_rho_kernel
           rtype_kernel = rho_alpha_beta_kernel
 
-       elseif (STRUCTURE_PARAMETER_TYPE == 3) then
+       else if (STRUCTURE_PARAMETER_TYPE == 3) then
           atype_kernel = c_beta_rho_kernel
           btype_kernel = beta_c_rho_kernel
           rtype_kernel = rho_c_beta_kernel

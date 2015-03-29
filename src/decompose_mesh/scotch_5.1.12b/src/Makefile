@@ -33,6 +33,7 @@
 VERSION	= 5
 RELEASE = 1
 PATCHLEVEL = 12
+export VERSION RELEASE PATCHLEVEL
 
 .PHONY				:	clean	default	install	realclean	required	scotch
 

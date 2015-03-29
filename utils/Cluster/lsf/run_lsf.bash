@@ -7,8 +7,8 @@
 
 queue="-q normal"
 if [ $# -eq 1 ]; then
-	echo "Setting the queue to $1"
-	queue="-q $1"
+  echo "Setting the queue to $1"
+  queue="-q $1"
 fi
 
 d=`date`
@@ -25,7 +25,7 @@ d=`date`
 echo "Finished compilation $d"
 
 # get total number of nodes needed for solver
-NPROC=`grep NPROC DATA/Par_file | cut -d = -f 2 `
+NPROC=`grep ^NPROC DATA/Par_file | cut -d = -f 2 `
 
 # compute total number of nodes needed for mesher
 NPROC_XI=`grep NPROC_XI DATA/meshfem3D_files/Mesh_Par_file | cut -d = -f 2 `

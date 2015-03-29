@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -56,7 +56,7 @@
 !                                         ( block ids: 1 2 3) volumes only
 !                                         (optional: uncheck 'Export Using Cubit IDs' to have element IDs in increasing order)
   character(len=*), parameter :: cubit_mesh_file = 'examples/layered_halfspace/layered_halfspace_mesh.inp'
-  integer, parameter :: NPOIN = 76819                    ! number of nodes
+  integer, parameter :: NGLOB = 76819                    ! number of nodes
   integer, parameter :: NSPEC = 70200                    ! number of elements (only volumes, i.e. block ids 1,2,3 )
   integer, parameter :: NGNOD = 8                        ! hexahedral elements
   logical, parameter :: IGNORE_OTHER_HEADERS = .false.
@@ -65,7 +65,7 @@
 
 !------------------------------------------------------------------------------------------------
 
-  double precision, dimension(NPOIN) :: x,y,z
+  double precision, dimension(NGLOB) :: x,y,z
 
   integer, dimension(NGNOD,NSPEC) :: ibool
 
@@ -146,7 +146,7 @@
 ! read the mesh
   print *
   print *,'start reading the CUBIT file: ',cubit_mesh_file(1:len_trim(cubit_mesh_file))
-  print *,'  number of points: ',NPOIN
+  print *,'  number of points: ',NGLOB
   print *,'  number of elements: ',NSPEC
   print *
 
@@ -171,7 +171,7 @@
   x(:) = 0.d0
   y(:) = 0.d0
   z(:) = 0.d0
-  do i = 1,NPOIN
+  do i = 1,NGLOB
 
     ! reads in text line
     read(10,'(a)',iostat=ier) line
@@ -201,7 +201,7 @@
       stop 'error read points from current line'
     endif
     ! checks if out-of-range
-    if (iread < 1 .or. iread > NPOIN) then
+    if (iread < 1 .or. iread > NGLOB) then
       print *,'error at i,iread = ',i,iread
       stop 'wrong ID input for a point'
     endif
@@ -221,7 +221,7 @@
   read(10,'(a)',iostat=ier) line
   if (line(1:1) /= "*") then
     print*,'  new line: ',trim(line)
-    print*,'  not a header line, check the number of points NPOIN specified'
+    print*,'  not a header line, check the number of points NGLOB specified'
     stop 'error reading elements'
   endif
 
@@ -234,56 +234,7 @@
   do i = 1,NSPEC
 
     ! reads in element connectivity
-    if (NGNOD == 4) then
-
-      ! quadrangles
-
-      !! DK DK ignore other headers for 2D mesh of Eros with fractures, which has multiple material sets
-      if (IGNORE_OTHER_HEADERS .and. cubit_mesh_file == 'eros_complexe_2d_regolite_fractures_modifie_in_meters.inp' &
-                 .and. i == 5709) read(10,*)
-
-      if (IGNORE_OTHER_HEADERS .and. cubit_mesh_file == 'REGOLITE_only_no_fractures_2D_in_meters.inp' &
-                 .and. i == 28429) read(10,*)
-
-      ! reads in line
-      read(10,'(a)',iostat=ier) line
-      if (ier /= 0) then
-        print *,'error read:',iread
-        stop 'error read elements line'
-      endif
-
-      ! checks if line is a comment line (starts with *), and reads until it finds a non-comment line
-      do while (line(1:1) == "*")
-        ! skips comment line and goes to next line
-        print*,'  comment: ',trim(line)
-        read(10,'(a)',iostat=ier) line
-        if (ier /= 0) then
-          print *,'error read:',i
-          stop 'error read non-comment elements line'
-        endif
-      enddo
-
-      ! gets element connection nodes
-      read(line,*,iostat=ier) iread,n1,n2,n3,n4
-
-      ! checks
-      if (ier /= 0) then
-        print *,'error read:',iread
-        stop 'error read elements'
-      endif
-      ! requires that elements are in increasing order
-      if (iread /= i) then
-        print *,'error at i,iread = ',i,iread
-        stop 'wrong input ID for an element'
-      endif
-
-      ! stores element nodes
-      ibool(1,iread) = n1
-      ibool(2,iread) = n2
-      ibool(3,iread) = n3
-      ibool(4,iread) = n4
-
-    else if (NGNOD == 8) then
+    if (NGNOD == 8) then
 
       ! hexahedra
 
@@ -372,13 +323,8 @@
 
     if (mod(ispec,100000) == 0) print *,'processed ',ispec,' elements out of ',NSPEC
 
-    if (NGNOD == 4) then
-      call create_mesh_quality_data_2D(x,y,z,ibool,ispec,NSPEC,NPOIN,NGNOD,VP_MAX,delta_t, &
+    call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NGLOB,VP_MAX,delta_t, &
                equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax)
-    else
-      call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NPOIN,NGNOD,VP_MAX,delta_t, &
-               equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax)
-    endif
 
 ! store element number in which the edge of minimum or maximum length is located
     if (distmin < distance_min) ispec_min_edge_length = ispec
@@ -433,14 +379,8 @@
   print *,'computed using VP_MAX = ',VP_MAX
 ! print *,'min stability = ',stability_min
 
-! max stability CFL value is different in 2D and in 3D
-  if (NGNOD == 8) then
-    max_CFL_stability_limit = 0.48d0
-  else if (NGNOD == 4) then
-    max_CFL_stability_limit = 0.68d0
-  else
-    stop 'NGNOD must be 4 or 8'
-  endif
+! max stability CFL value
+  max_CFL_stability_limit = 0.48d0
 
   if (stability_max >= max_CFL_stability_limit) then
     print *,'*********************************************'
@@ -464,13 +404,8 @@
 ! loop on all the elements
   do ispec = 1,NSPEC
 
-    if (NGNOD == 4) then
-      call create_mesh_quality_data_2D(x,y,z,ibool,ispec,NSPEC,NPOIN,NGNOD,VP_MAX,delta_t, &
+    call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NGLOB,VP_MAX,delta_t, &
                equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax)
-    else
-      call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NPOIN,NGNOD,VP_MAX,delta_t, &
-               equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax)
-    endif
 
 ! store skewness in histogram
     iclass = int(equiangle_skewness * dble(NCLASS))
@@ -552,13 +487,8 @@
 
   do ispec = 1,NSPEC
 
-    if (NGNOD == 4) then
-      call create_mesh_quality_data_2D(x,y,z,ibool,ispec,NSPEC,NPOIN,NGNOD,VP_MAX,delta_t, &
+    call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NGLOB,VP_MAX,delta_t, &
                equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax)
-    else
-      call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NPOIN,NGNOD,VP_MAX,delta_t, &
-               equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax)
-    endif
 
 ! check if element belongs to requested skewness range
     if (equiangle_skewness >= skewness_AVS_DX_min .and. equiangle_skewness <= skewness_AVS_DX_max) &
@@ -584,10 +514,10 @@
 ! ************* generate points ******************
 
 ! write OpenDX header
-  write(11,*) 'object 1 class array type float rank 1 shape 3 items ',NPOIN,' data follows'
+  write(11,*) 'object 1 class array type float rank 1 shape 3 items ',NGLOB,' data follows'
 
 ! write all the points
-  do i = 1,NPOIN
+  do i = 1,NGLOB
     write(11,*) sngl(x(i)),sngl(y(i)),sngl(z(i))
   enddo
 
@@ -606,13 +536,8 @@
 
   do ispec = ispec_begin,ispec_end
 
-    if (NGNOD == 4) then
-      call create_mesh_quality_data_2D(x,y,z,ibool,ispec,NSPEC,NPOIN,NGNOD,VP_MAX,delta_t, &
+    call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NGLOB,VP_MAX,delta_t, &
                equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax)
-    else
-      call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NPOIN,NGNOD,VP_MAX,delta_t, &
-               equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax)
-    endif
 
 ! check if element needs to be output
     if (iformat == 2 .or. (iformat == 1 .and. &
@@ -620,14 +545,9 @@
 ! point order in OpenDX in 2D is 1,4,2,3 *not* 1,2,3,4 as in AVS
 ! point order in OpenDX in 3D is 4,1,8,5,3,2,7,6, *not* 1,2,3,4,5,6,7,8 as in AVS
 ! in the case of OpenDX, node numbers start at zero
-      if (NGNOD == 4) then
-        write(11,"(i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9)") &
-            ibool(1,ispec)-1, ibool(4,ispec)-1, ibool(2,ispec)-1, ibool(3,ispec)-1
-      else
-        write(11,"(i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9)") &
+      write(11,"(i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9)") &
             ibool(4,ispec)-1, ibool(1,ispec)-1, ibool(8,ispec)-1, ibool(5,ispec)-1, &
             ibool(3,ispec)-1, ibool(2,ispec)-1, ibool(7,ispec)-1, ibool(6,ispec)-1
-      endif
       if (iformat == 1) print *,'element ',ispec,' belongs to the range and has skewness = ',sngl(equiangle_skewness)
     endif
 
@@ -636,24 +556,15 @@
 ! ************* generate element data values ******************
 
 ! output OpenDX header for data
-  if (NGNOD == 4) then
-    write(11,*) 'attribute "element type" string "quads"'
-  else
-    write(11,*) 'attribute "element type" string "cubes"'
-  endif
+  write(11,*) 'attribute "element type" string "cubes"'
   write(11,*) 'attribute "ref" string "positions"'
   write(11,*) 'object 3 class array type float rank 0 items ',ntotspecAVS_DX,' data follows'
 
 ! loop on all the elements
   do ispec = ispec_begin,ispec_end
 
-    if (NGNOD == 4) then
-      call create_mesh_quality_data_2D(x,y,z,ibool,ispec,NSPEC,NPOIN,NGNOD,VP_MAX,delta_t, &
+    call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NGLOB,VP_MAX,delta_t, &
                equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax)
-    else
-      call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NPOIN,NGNOD,VP_MAX,delta_t, &
-               equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax)
-    endif
 
 ! check if element needs to be output
     if (iformat == 2 .or. (iformat == 1 .and. &
@@ -683,16 +594,18 @@
 
 ! create mesh quality data for a given 3D spectral element
 
-  subroutine create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NPOIN,NGNOD,VP_MAX,delta_t, &
+  subroutine create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NGLOB,VP_MAX,delta_t, &
                equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax)
 
   use constants
 
   implicit none
 
-  integer :: iface,icorner,ispec,NSPEC,NPOIN,NGNOD,i
+  integer, parameter :: NGNOD = 8                        ! hexahedral elements
 
-  double precision, dimension(NPOIN) :: x,y,z
+  integer :: iface,icorner,ispec,NSPEC,NGLOB,i
+
+  double precision, dimension(NGLOB) :: x,y,z
 
   integer, dimension(NGNOD,NSPEC) :: ibool
 
@@ -838,132 +751,4 @@
    diagonal_aspect_ratio = max(dist1,dist2,dist3,dist4) / min(dist1,dist2,dist3,dist4)
 
   end subroutine create_mesh_quality_data_3D
-
-!
-!=====================================================================
-!
-
-! create mesh quality data for a given 2D spectral element
-
-  subroutine create_mesh_quality_data_2D(x,y,z,ibool,ispec,NSPEC,NPOIN,NGNOD,VP_MAX,delta_t, &
-               equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax)
-
-  use constants
-
-  implicit none
-
-  integer :: icorner,ispec,NSPEC,NPOIN,NGNOD,i
-
-  double precision, dimension(NPOIN) :: x,y,z
-
-  integer, dimension(NGNOD,NSPEC) :: ibool
-
-  double precision, dimension(NGNOD) :: xelm,yelm,zelm
-
-  double precision vectorA_x,vectorA_y,vectorA_z
-  double precision vectorB_x,vectorB_y,vectorB_z
-  double precision norm_A,norm_B,angle_vectors
-  double precision distmin,distmax,dist,dist1,dist2
-  double precision equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio
-
-! for stability
-  double precision :: stability,VP_MAX,delta_t
-
-! maximum polynomial degree for which we can compute the stability condition
-  integer, parameter :: NGLL_MAX_STABILITY = 15
-  double precision, dimension(NGLL_MAX_STABILITY) :: percent_GLL
-
-! topology of faces of cube for skewness
-! only one face in 2D
-  integer faces_topo(6)
-
-! store the corners of this element for the skewness routine
-  do i = 1,NGNOD
-    xelm(i) = x(ibool(i,ispec))
-    yelm(i) = y(ibool(i,ispec))
-    zelm(i) = z(ibool(i,ispec))
-  enddo
-
-! define percentage of smallest distance between GLL points for NGLL points
-! percentages were computed by calling the GLL points routine for each degree
-  percent_GLL(2) = 100.d0
-  percent_GLL(3) = 50.d0
-  percent_GLL(4) = 27.639320225002102d0
-  percent_GLL(5) = 17.267316464601141d0
-  percent_GLL(6) = 11.747233803526763d0
-  percent_GLL(7) = 8.4888051860716516d0
-  percent_GLL(8) = 6.4129925745196719d0
-  percent_GLL(9) = 5.0121002294269914d0
-  percent_GLL(10) = 4.0233045916770571d0
-  percent_GLL(11) = 3.2999284795970416d0
-  percent_GLL(12) = 2.7550363888558858d0
-  percent_GLL(13) = 2.3345076678918053d0
-  percent_GLL(14) = 2.0032477366369594d0
-  percent_GLL(15) = 1.7377036748080721d0
-
-! convert to real percentage
-  percent_GLL(:) = percent_GLL(:) / 100.d0
-
-! check that the degree is not above the threshold for list of percentages
-  if (NGLLX > NGLL_MAX_STABILITY) stop 'degree too high to compute stability value'
-
-! define topology of faces of cube for skewness
-
-! only one face in 2D
-  faces_topo(1) = 1
-  faces_topo(2) = 2
-  faces_topo(3) = 3
-  faces_topo(4) = 4
-
-! define wraparound for angles for skewness calculation
-  faces_topo(5) = faces_topo(1)
-  faces_topo(6) = faces_topo(2)
-
-! compute equiangle skewness (as defined in Fluent/Gambit manual)
-! and compute edge aspect ratio using the corners of the element
-     distmin = + HUGEVAL
-     distmax = - HUGEVAL
-     equiangle_skewness = - HUGEVAL
-
-     do icorner = 1,4
-
-! first vector of angle
-       vectorA_x = xelm(faces_topo(icorner)) - xelm(faces_topo(icorner+1))
-       vectorA_y = yelm(faces_topo(icorner)) - yelm(faces_topo(icorner+1))
-       vectorA_z = zelm(faces_topo(icorner)) - zelm(faces_topo(icorner+1))
-
-! second vector of angle
-       vectorB_x = xelm(faces_topo(icorner+2)) - xelm(faces_topo(icorner+1))
-       vectorB_y = yelm(faces_topo(icorner+2)) - yelm(faces_topo(icorner+1))
-       vectorB_z = zelm(faces_topo(icorner+2)) - zelm(faces_topo(icorner+1))
-
-! norm of vectors A and B
-       norm_A = sqrt(vectorA_x**2 + vectorA_y**2 + vectorA_z**2)
-       norm_B = sqrt(vectorB_x**2 + vectorB_y**2 + vectorB_z**2)
-
-! angle formed by the two vectors
-       angle_vectors = dacos((vectorA_x*vectorB_x + vectorA_y*vectorB_y + vectorA_z*vectorB_z) / (norm_A * norm_B))
-
-! compute equiangle skewness
-       equiangle_skewness = max(equiangle_skewness,dabs(2.d0 * angle_vectors - PI) / PI)
-
-! compute min and max size of an edge
-       dist = sqrt(vectorA_x**2 + vectorA_y**2 + vectorA_z**2)
-
-       distmin = min(distmin,dist)
-       distmax = max(distmax,dist)
-
-     enddo
-
-! compute edge aspect ratio
-   edge_aspect_ratio = distmax / distmin
-
-   stability = delta_t * VP_MAX / (distmin * percent_GLL(NGLLX))
-
-! compute diagonal aspect ratio
-   dist1 = sqrt((xelm(1) - xelm(3))**2 + (yelm(1) - yelm(3))**2 + (zelm(1) - zelm(3))**2)
-   dist2 = sqrt((xelm(2) - xelm(4))**2 + (yelm(2) - yelm(4))**2 + (zelm(2) - zelm(4))**2)
-   diagonal_aspect_ratio = max(dist1,dist2) / min(dist1,dist2)
-
-  end subroutine create_mesh_quality_data_2D
 

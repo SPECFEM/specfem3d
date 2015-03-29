@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -25,7 +25,6 @@
 !
 !=====================================================================
 
-
 ! @configure_input@
 
 !
@@ -46,54 +45,13 @@
 
 !----------- parameters that can be changed by the user -----------
 
-!! DK DK July 2014, CNRS Marseille, France:
-!! DK DK added the ability to run several calculations (several earthquakes)
-!! DK DK in an embarrassingly-parallel fashion from within the same run;
-!! DK DK this can be useful when using a very large supercomputer to compute
-!! DK DK many earthquakes in a catalog, in which case it can be better from
-!! DK DK a batch job submission point of view to start fewer and much larger jobs,
-!! DK DK each of them computing several earthquakes in parallel.
-!! DK DK To turn that option on, set parameter NUMBER_OF_SIMULTANEOUS_RUNS
-!! DK DK to a value greater than 1 in file setup/constants.h.in before
-!! DK DK configuring and compiling the code.
-!! DK DK To implement that, we create NUMBER_OF_SIMULTANEOUS_RUNS MPI sub-communicators,
-!! DK DK each of them being labeled "my_local_mpi_comm_world", and we use them
-!! DK DK in all the routines in "src/shared/parallel.f90", except in MPI_ABORT() because in that case
-!! DK DK we need to kill the entire run.
-!! DK DK When that option is on, of course the number of processor cores used to start
-!! DK DK the code in the batch system must be a multiple of NUMBER_OF_SIMULTANEOUS_RUNS,
-!! DK DK all the individual runs must use the same number of processor cores,
-!! DK DK which as usual is NPROC in the input file DATA/Par_file,
-!! DK DK and thus the total number of processor cores to request from the batch system
-!! DK DK should be NUMBER_OF_SIMULTANEOUS_RUNS * NPROC.
-!! DK DK All the runs to perform must be placed in directories called run0001, run0002, run0003 and so on
-!! DK DK (with exactly four digits).
-!!
-!! DK DK Imagine you have 10 independent calculations to do, each of them on 100 cores; you have three options:
-!!
-!! DK DK 1/ submit 10 jobs to the batch system
-!!
-!! DK DK 2/ submit a single job on 1000 cores to the batch, and in that script create a sub-array of jobs to start 10 jobs,
-!! DK DK each running on 100 cores (see e.g. http://www.schedmd.com/slurmdocs/job_array.html )
-!!
-!! DK DK 3/ submit a single job on 1000 cores to the batch, start SPECFEM3D on 1000 cores, create 10 sub-communicators,
-!! DK DK cd into one of 10 subdirectories (called e.g. run0001, run0002,... run0010) depending on the sub-communicator
-!! DK DK your MPI rank belongs to, and run normally on 100 cores using that sub-communicator.
-!!
-!! DK DK The option below implements 3/.
-!!
-  integer, parameter :: NUMBER_OF_SIMULTANEOUS_RUNS = 1
-
-!! DK DK if we perform simultaneous runs in parallel, in only the source and receivers vary between these runs
-!! DK DK but not the mesh nor the model (velocity and density) then we can also read the mesh and model files
-!! DK DK from a single run in the beginning and broadcast them to all the others; for a large number of simultaneous
-!! DK DK runs for instance when solving inverse problems iteratively this can DRASTICALLY reduce I/Os to disk in the solver
-!! DK DK (by a factor equal to NUMBER_OF_SIMULTANEOUS_RUNS), and reducing I/Os is crucial in the case of huge runs.
-!! DK DK Thus, always set this option to .true. if the mesh and the model are the same for all simultaneous runs.
-!! DK DK In that case there is no need to duplicate the mesh and model file database (the content of the DATABASES_MPI
-!! DK DK directories) in each of the run0001, run0002,... directories, it is sufficient to have one in run0001
-!! DK DK and the code will broadcast it to the others)
-  logical, parameter :: BROADCAST_SAME_MESH_AND_MODEL = .false.
+!! DK DK added this temporarily here to make SPECFEM3D and SPECFEM3D_GLOBE much more similar
+!! DK DK in terms of the structure of their main time iteration loop; these are future features
+!! DK DK that are missing in this code but implemented in the other and that could thus be cut and pasted one day
+  logical, parameter :: UNDO_ATTENUATION = .false.
+  logical, parameter :: EXACT_UNDOING_TO_DISK = .false.
+  integer, parameter :: IFILE_FOR_EXACT_UNDOING = 244
+  logical, parameter :: VTK_MODE = .false.
 
 ! set to .false.  if running on a Beowulf-type machine with local disks
 ! set to .true. if running on a shared-memory machine with common file system
@@ -115,19 +73,14 @@
   integer, parameter :: NGLLZ = NGLLX
 
 ! use inlined products of Deville et al. (2002) to speedup the calculations to compute internal forces
-! Deville routines only implemented for NGLLX = NGLLY = NGLLZ = 5
+! Deville routines only implemented for NGLLX = NGLLY = NGLLZ = 5, 6 or 7
   logical, parameter :: USE_DEVILLE_PRODUCTS = .true.
 
 !!-----------------------------------------------------------
 !!
-!! seismogram and i/o output
+!! I/O output
 !!
 !!-----------------------------------------------------------
-! ouput format of seismograms, ASCII or binary
-  logical, parameter :: SEISMOGRAMS_BINARY = .false.
-
-! output format of seismograms, Seismic Unix (binary with 240-byte-headers)
-  logical, parameter :: SU_FORMAT = .false.
 
 ! input, output and main MPI I/O files
   integer, parameter :: ISTANDARD_OUTPUT = 6
@@ -181,24 +134,12 @@
 
 !!-----------------------------------------------------------
 !!
-!! total energy calculation
+!! gravity integral calculations
 !!
 !!-----------------------------------------------------------
 
-! to plot total energy curves, for instance to monitor how CPML absorbing layers behave;
-! should be turned OFF in most cases
-  logical, parameter :: OUTPUT_ENERGY = .false. ! .true.
-  integer, parameter :: IOUT_ENERGY = 937  ! file number for the energy file
-  integer, parameter :: NTSTEP_BETWEEN_OUTPUT_ENERGY = 10  ! how often we compute energy (which is expensive to compute)
-
-!!-----------------------------------------------------------
-!!
-!! Roland_Sylvain gravity calculations
-!!
-!!-----------------------------------------------------------
-
-!! DK DK for Roland_Sylvain
-  logical, parameter :: ROLAND_SYLVAIN = .false. !!! .true.
+!! DK DK for gravity integrals
+  logical, parameter :: GRAVITY_INTEGRALS = .false. !!! .true.
 
 ! check for negative Jacobians in the calculation of integrals or not
 ! (can safely be done once to check that the mesh is OK at a given resolution, and then permanently
@@ -234,6 +175,9 @@
   integer, parameter :: EXTERNAL_CODE_IS_AXISEM = 2
   integer, parameter :: EXTERNAL_CODE_IS_FK     = 3
 
+! Big storage version of coupling with DSM (will always set to .false. after the light storage version will be validated)
+  logical, parameter :: old_DSM_coupling_from_Vadim = .true.
+
 ! some old tests (currently unstable; do not remove them though, we might fix this one day)
   integer, parameter :: IIN_veloc_dsm = 51, IIN_tract_dsm = 52, Ntime_step_dsm = 100
 
@@ -263,14 +207,13 @@
 ! was found by trial and error
   double precision, parameter :: SOURCE_DECAY_MIMIC_TRIANGLE = 1.628d0
 
-! decide if master process writes all the seismograms or if all processes do it in parallel
-  logical, parameter :: WRITE_SEISMOGRAMS_BY_MASTER = .false.
-
 !!-----------------------------------------------------------
 !!
 !! C-PML absorbing boundary conditions
 !!
 !!-----------------------------------------------------------
+
+! power (exponent) used for the PML damping profile
   real(kind=CUSTOM_REAL), parameter :: NPOWER = 1._CUSTOM_REAL
 
 ! C-PML theoretical reflection coefficient
@@ -293,30 +236,15 @@
 !!-----------------------------------------------------------
 
 ! paths for inputs and outputs files
-  character(len=*), parameter :: IN_DATA_FILES_PATH = './DATA/'
-  character(len=*), parameter :: MF_IN_DATA_FILES_PATH = './DATA/meshfem3D_files/'
-  character(len=*), parameter :: OUTPUT_FILES_PATH_BASE = './OUTPUT_FILES/'
+  character(len=*), parameter :: IN_DATA_FILES = './DATA/'
+  character(len=*), parameter :: MF_IN_DATA_FILES = './DATA/meshfem3D_files/'
+  character(len=*), parameter :: OUTPUT_FILES_BASE = './OUTPUT_FILES/'
 
-! ---------------------------------------------------------------------------------------
-! LQY -- Following 3 variables stays here temporarily,
-!        we need to move them to Par_file at a proper time
-! ---------------------------------------------------------------------------------------
-! save moho mesh and compute Moho boundary kernels
-  logical, parameter :: SAVE_MOHO_MESH = .false.
-
-! outputs approximate hessian for preconditioning
-  logical, parameter :: APPROXIMATE_HESS_KL = .false.
-
-! number of steps to save the state variables in the forward simulation,
-! to be used in the backward reconstruction in the presence of attenuation
-  integer, parameter :: NSTEP_Q_SAVE = 50 ! depending on stability of reconstruction, up to 200
-
+!
 !------------------------------------------------------
-! Nicolas Legoff -- Variables that should be read/computed elsewhere.
-!            Temporarily declared here.
-!------------------------------------------------------
+!
 
-! no lagrange interpolation on seismograms (we take the value on one NGLL point)
+! no Lagrange interpolation for seismograms (we then take the value at the closest NGLL point, which is less accurate but faster)
   logical, parameter :: FASTER_RECEIVERS_POINTS_ONLY = .false.
 
 ! use this t0 as earliest starting time rather than the automatically calculated one
@@ -339,7 +267,7 @@
 
 !!-----------------------------------------------------------
 !!
-!! image outputs
+!! image output
 !!
 !!-----------------------------------------------------------
 
@@ -365,11 +293,14 @@
 
 !!-----------------------------------------------------------
 !!
-!! mesh optimization
+!! mesh coloring for GPUs (not needed any more, obsolete)
 !!
 !!-----------------------------------------------------------
 
 ! add mesh coloring for the GPU + MPI implementation
+! this is needed on NVIDIA hardware up to FERMI boards, included.
+! Starting on KEPLER boards you can leave it off because on KEPLER hardware
+! or higher atomic reduction operations have become as fast as resorting to mesh coloring.
   logical, parameter :: USE_MESH_COLORING_GPU = .false.
   integer, parameter :: MAX_NUMBER_OF_COLORS = 1000
 
@@ -382,21 +313,6 @@
 !
 ! postprocess the colors to balance them if Droux (1993) algorithm is not used
   logical, parameter :: BALANCE_COLORS_SIMPLE_ALGO = .false.
-
-!!-----------------------------------------------------------
-!!
-!! adjoint kernel outputs
-!!
-!!-----------------------------------------------------------
-
-! this parameter must be set to .true. to compute anisotropic kernels
-! in crust and mantle (related to the 21 Cij in geographical coordinates)
-! default is .false. to compute isotropic kernels (related to alpha and beta)
-  logical, parameter :: ANISOTROPIC_KL = .false.
-
-! compute transverse isotropic kernels (alpha_v,alpha_h,beta_v,beta_h,eta,rho)
-! rather than fully anisotropic kernels in case ANISOTROPIC_KL is set to .true.
-  logical, parameter :: SAVE_TRANSVERSE_KL = .false.
 
 !------------------------------------------------------
 !----------- do not modify anything below -------------
@@ -504,6 +420,9 @@
 
 ! flag for projection from latitude/longitude to UTM, and back
   integer, parameter :: ILONGLAT2UTM = 0, IUTM2LONGLAT = 1
+
+! for total energy calculation
+  integer, parameter :: IOUT_ENERGY = 937  ! file number for the energy file
 
 !!-----------------------------------------------------------
 !!

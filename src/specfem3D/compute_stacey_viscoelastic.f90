@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -89,10 +89,14 @@
   integer :: it_dsm
 
   if (COUPLE_WITH_EXTERNAL_CODE) then
-    if (phase_is_inner .eqv. .false.) then
-      if (mod(it_dsm,Ntime_step_dsm+1) == 0 .or. it == 1) then
-        call read_dsm_file(Veloc_dsm_boundary,Tract_dsm_boundary,num_abs_boundary_faces,it_dsm)
+    if (old_DSM_coupling_from_Vadim) then
+      if (phase_is_inner .eqv. .false.) then
+        if (mod(it_dsm,Ntime_step_dsm+1) == 0 .or. it == 1) then
+          call read_dsm_file(Veloc_dsm_boundary,Tract_dsm_boundary,num_abs_boundary_faces,it_dsm)
+        endif
       endif
+    else
+      !! MODIFS DE NOBU 2D
     endif
   endif
 
@@ -125,7 +129,7 @@
           vz=veloc(3,iglob)
 
           !! CD CD !! For coupling with DSM
-          if (COUPLE_WITH_EXTERNAL_CODE) then
+          if (COUPLE_WITH_EXTERNAL_CODE) then !! To verify for NOBU version
             vx = vx - Veloc_dsm_boundary(1,it_dsm,igll,iface)
             vy = vy - Veloc_dsm_boundary(2,it_dsm,igll,iface)
             vz = vz - Veloc_dsm_boundary(3,it_dsm,igll,iface)
@@ -146,7 +150,7 @@
           tz = rho_vp(i,j,k,ispec)*vn*nz + rho_vs(i,j,k,ispec)*(vz-vn*nz)
 
           !! CD CD !! For coupling with DSM
-          if (COUPLE_WITH_EXTERNAL_CODE) then
+          if (COUPLE_WITH_EXTERNAL_CODE) then !! To verify for NOBU version
             tx = tx - Tract_dsm_boundary(1,it_dsm,igll,iface)
             ty = ty - Tract_dsm_boundary(2,it_dsm,igll,iface)
             tz = tz - Tract_dsm_boundary(3,it_dsm,igll,iface)
@@ -182,7 +186,7 @@
   endif
 
   !! CD CD !! For coupling with DSM
-  if (COUPLE_WITH_EXTERNAL_CODE) then
+  if (COUPLE_WITH_EXTERNAL_CODE) then !! To verify for NOBU version
     if (phase_is_inner .eqv. .true.) then
       it_dsm = it_dsm + 1
     endif
@@ -357,10 +361,14 @@
   integer :: it_dsm
 
   if (COUPLE_WITH_EXTERNAL_CODE) then
-    if (phase_is_inner .eqv. .false.) then
-      if (mod(it_dsm,Ntime_step_dsm+1) == 0 .or. it == 1) then
-        call read_dsm_file(Veloc_dsm_boundary,Tract_dsm_boundary,num_abs_boundary_faces,it_dsm)
+    if (old_DSM_coupling_from_Vadim) then
+      if (phase_is_inner .eqv. .false.) then
+        if (mod(it_dsm,Ntime_step_dsm+1) == 0 .or. it == 1) then
+          call read_dsm_file(Veloc_dsm_boundary,Tract_dsm_boundary,num_abs_boundary_faces,it_dsm)
+        endif
       endif
+    else
+      !! MODIFS DE NOBU 2D
     endif
   endif
 
@@ -389,7 +397,7 @@
   endif
 
   !! CD CD : begin !! For coupling with DSM
-  if (COUPLE_WITH_EXTERNAL_CODE) then
+  if (COUPLE_WITH_EXTERNAL_CODE) then !! To verify for NOBU version
     if (phase_is_inner .eqv. .true.) then
       it_dsm = it_dsm + 1
     endif

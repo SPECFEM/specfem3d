@@ -33,11 +33,11 @@ where
 
     names of files -- name of syn files to be processed
 
- NOTE: Please make sure that SAC, saclst and IASP91 packages are installed properly on 
+ NOTE: Please make sure that SAC, saclst and IASP91 packages are installed properly on
        your system, and that all the environment variables are set properly before
        running the script.
 
-    
+
     Qinya Liu, originally written in Oct 2002, most recently updated in Feb 2010.
 
 END
@@ -55,7 +55,7 @@ if (!$opt_s) {$dt=1.0;} else {$dt = 1.0/$opt_s;}
 if (!$opt_P) {$poles=4;$pass=2;}
 else{($poles,$pass)=split(/\//,$opt_P);
      if(not defined $pass or $pass<1){$pass=2;}}
-if ($opt_l) {($lmin,$lmax) = split(/\//,$opt_l);} 
+if ($opt_l) {($lmin,$lmax) = split(/\//,$opt_l);}
 else {$lmin = 0; $lmax = 3600;}
 if ($opt_a and not -f $opt_a) {$opt_a="/opt/seismo/data/STATIONS_new";}
 if ($opt_o and not $opt_m) {die("Specify centroid time first\n");}
@@ -87,7 +87,7 @@ $sta_text="";
 
 foreach $file (@ARGV) {
 
-  print "\nProcessing file            $file\n"; 
+  print "\nProcessing file            $file\n";
   if (! -f $file) {die(" No such file : $file\n");}
 
   # transfer ascii file to sac file according to name of files
@@ -169,7 +169,7 @@ foreach $file (@ARGV) {
     else {
       printf SAC ("bp n $poles p $pass co %10.5f %10.5f\n",$f1,$f2);}
     print SAC "rtrend\n rmean\n taper\n";}
- 
+
   if ($opt_i) {# convolve with instrument response
     print "Convolving instrument response...\n";
     $pzfile="SAC_PZs_${net}_${sta}_${comp}_";

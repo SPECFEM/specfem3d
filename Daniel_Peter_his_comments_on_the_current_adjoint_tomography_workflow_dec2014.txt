@@ -1,0 +1,37 @@
+
+Subject: Re: Skype call reminder
+From: daniel peter
+Date: 12/22/2014 06:01 PM
+To: Carl Tape
+CC: Ryan Modrak, Dimitri Komatitsch, David Luet, Ebru Bozdag, Zhinan Xie, Matthieu Lefebvre , Jeroen Tromp , Federica Magnoni , Emanuele Casarotti , lion.krischer
+
+Hi Carl,
+
+for 1.
+i kept the routines very similar, some differences occur when reading in mesh files and e.g. where the maximum of the gradient is taken for the update step length. in future, i want to have them also merged into the same set of SPECFEM function library.
+
+for 2.
+good point, the jacobian is used for smoothing of the kernels in the global code, but isn't currently used for the cartesian code. that is one of the differences that has to be checked again (thus smoothing in the cartesian is based solely on point distance, not volume)
+
+best wishes,
+daniel
+
+
+> > On 22 Dec 2014, at 5:50 pm, Carl Tape wrote:
+> >
+> > Hi all,
+> >
+> > Thanks for the call. I wanted to ask two questions.
+> >
+> > 1. Daniel, can you briefly describe the differences between the
+> > src/tomograhy/ files in SPECFEM3D and SPECFEM3D_GLOBE? Would it be
+> > simpler to have only one set of files?
+> >
+> > 2. Isn't the jacobian of the mesh needed for many of the optimization
+> > operations (dot product, integration, etc)? So my impression is that
+> > you need more than just the kernel name to do something like smoothing
+> > -- you also need the jacobian. Probably this is already in the
+> > scripts, but the discussion in the call did not mention it.
+> >
+> > Carl
+> >

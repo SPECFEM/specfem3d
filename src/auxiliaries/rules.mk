@@ -1,6 +1,6 @@
 #=====================================================================
 #
-#               S p e c f e m 3 D  V e r s i o n  2 . 1
+#               S p e c f e m 3 D  V e r s i o n  3 . 0
 #               ---------------------------------------
 #
 #     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -35,6 +35,7 @@ auxiliaries_TARGETS = \
 	$E/xcombine_surf_data \
 	$E/xcombine_vol_data \
 	$E/xconvolve_source_timefunction \
+	$E/xdetect_duplicates_stations_file \
 	$E/xcreate_movie_shakemap_AVS_DX_GMT \
 	$(EMPTY_MACRO)
 
@@ -42,6 +43,7 @@ auxiliaries_OBJECTS = \
 	$O/combine_surf_data.aux.o \
 	$O/combine_vol_data.aux.o \
 	$O/convolve_source_timefunction.aux.o \
+	$O/detect_duplicates_stations_file.aux.o \
 	$O/create_movie_shakemap_AVS_DX_GMT.aux.o \
 	$(EMPTY_MACRO)
 
@@ -97,7 +99,6 @@ combine_vol_data_auxiliaries_SHARED_OBJECTS = \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \
 	$O/param_reader.cc.o \
-	$O/unused_mod.shared_module.o \
 	$O/write_c_binary.cc.o \
 	$(EMPTY_MACRO)
 
@@ -148,6 +149,9 @@ aux: $(auxiliaries_TARGETS)
 convolve_source_timefunction: xconvolve_source_timefunction
 xconvolve_source_timefunction: $E/xconvolve_source_timefunction
 
+detect_duplicates_stations_file: xdetect_duplicates_stations_file
+xdetect_duplicates_stations_file: $E/xdetect_duplicates_stations_file
+
 combine_surf_data: xcombine_surf_data
 xcombine_surf_data: $E/xcombine_surf_data
 
@@ -160,6 +164,9 @@ xcreate_movie_shakemap_AVS_DX_GMT: $E/xcreate_movie_shakemap_AVS_DX_GMT
 
 $E/xconvolve_source_timefunction: $O/convolve_source_timefunction.aux.o $O/shared_par.shared_module.o
 	${FCCOMPILE_CHECK} -o  ${E}/xconvolve_source_timefunction $O/convolve_source_timefunction.aux.o $O/shared_par.shared_module.o
+
+$E/xdetect_duplicates_stations_file: $O/detect_duplicates_stations_file.aux.o $O/shared_par.shared_module.o
+	${FCCOMPILE_CHECK} -o  ${E}/xdetect_duplicates_stations_file $O/detect_duplicates_stations_file.aux.o $O/shared_par.shared_module.o
 
 $E/xcombine_surf_data: $(combine_surf_data_auxiliaries_OBJECTS) $(combine_surf_data_auxiliaries_SHARED_OBJECTS)
 	${FCLINK} -o $@ $+
@@ -180,7 +187,7 @@ $E/xcreate_movie_shakemap_AVS_DX_GMT: $(create_movie_shakemap_AVS_DX_GMT_auxilia
 ###
 
 # combine_vol_data
-$O/combine_vol_data_adios_stubs.aux_noadios.o: $O/unused_mod.shared_module.o $O/adios_manager_stubs.shared_noadios.o
+$O/combine_vol_data_adios_stubs.aux_noadios.o: $O/adios_manager_stubs.shared_noadios.o
 ifeq ($(ADIOS),yes)
 $O/combine_vol_data.aux.o: $O/combine_vol_data_impl.aux.o $O/combine_vol_data_adios_impl.aux_adios.o
 $O/adios_helpers.shared_adios.o: \

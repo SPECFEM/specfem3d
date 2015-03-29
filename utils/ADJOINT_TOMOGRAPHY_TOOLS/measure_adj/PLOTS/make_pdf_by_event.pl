@@ -29,7 +29,7 @@ for ($ik = 1; $ik <= $nrec; $ik = $ik+1) {
   ($stanet,$stalon,$stlat,undef,undef,undef,undef,undef) = split(" ",$stalines[$ik-1]);
   ($station,$network) = split("\\.",$stanet);
   #print "$ik out of $nrec : $station $network\n";
-  
+
   @files = glob("*${station}_${network}*pdf");
   $numf = @files;
   if ($numf == 0) {

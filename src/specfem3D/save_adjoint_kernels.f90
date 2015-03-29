@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -40,10 +40,10 @@
 
   subroutine save_adjoint_kernels()
 
-  use constants, only: CUSTOM_REAL, SAVE_TRANSVERSE_KL, ANISOTROPIC_KL, &
-                       APPROXIMATE_HESS_KL, NGLLX, NGLLY, NGLLZ
-  use specfem_par, only: LOCAL_PATH, myrank, sigma_kl, NSPEC_AB, &
-                         ADIOS_FOR_KERNELS, NOISE_TOMOGRAPHY, NSPEC_ADJOINT
+  use constants, only: CUSTOM_REAL, NGLLX, NGLLY, NGLLZ
+  use specfem_par, only: LOCAL_PATH, myrank, sigma_kl, NSPEC_AB, ADIOS_FOR_KERNELS, NOISE_TOMOGRAPHY, NSPEC_ADJOINT, &
+                         APPROXIMATE_HESS_KL, ANISOTROPIC_KL, SAVE_TRANSVERSE_KL
+
   use specfem_par_acoustic, only: ACOUSTIC_SIMULATION
   use specfem_par_elastic, only: ELASTIC_SIMULATION
   use specfem_par_poroelastic, only: POROELASTIC_SIMULATION
@@ -958,7 +958,7 @@ subroutine save_kernels_acoustic(adios_handle)
 
   ! writes out derivative kernels
   do irec_local = 1, nrec_local
-    write(outputname,'(a,i6.6)') OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // &
+    write(outputname,'(a,i6.6)') OUTPUT_FILES(1:len_trim(OUTPUT_FILES)) // &
         '/src_frechet.',number_receiver_global(irec_local)
 
     open(unit=IOUT,file=trim(outputname),status='unknown',iostat=ier)

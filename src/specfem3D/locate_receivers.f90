@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -35,7 +35,7 @@
                  NPROC,utm_x_source,utm_y_source, &
                  UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
                  iglob_is_surface_external_mesh,ispec_is_surface_external_mesh, &
-                 num_free_surface_faces,free_surface_ispec,free_surface_ijk)
+                 num_free_surface_faces,free_surface_ispec,free_surface_ijk,SU_FORMAT)
 
   use constants
 
@@ -67,7 +67,7 @@
 
   integer :: NPROC,UTM_PROJECTION_ZONE
   double precision :: utm_x_source,utm_y_source
-  logical :: SUPPRESS_UTM_PROJECTION
+  logical :: SUPPRESS_UTM_PROJECTION,SU_FORMAT
 
   ! free surface
   integer :: num_free_surface_faces
@@ -180,14 +180,14 @@
   ! define topology of the control element
   call usual_hex_nodes(NGNOD,iaddx,iaddy,iaddz)
 
-  ! opens STATIONS file
+  ! opens STATIONS or STATIONS_ADJOINT file
   open(unit=IIN,file=trim(rec_filename),status='old',action='read',iostat=ier)
   if (ier /= 0) call exit_mpi(myrank,'error opening file '//trim(rec_filename))
 
   ! checks if station locations already available
   if (SU_FORMAT) then
     ! checks if file with station infos located from previous run exists
-    inquire(file=trim(OUTPUT_FILES_PATH)//'/SU_stations_info.bin',exist=SU_station_file_exists)
+    inquire(file=trim(OUTPUT_FILES)//'/SU_stations_info.bin',exist=SU_station_file_exists)
     if (SU_station_file_exists) then
       ! all processes read in stations names from STATIONS file
       do irec=1,nrec
@@ -197,7 +197,7 @@
       close(IIN)
       ! master reads in available station information
       if (myrank == 0) then
-        open(unit=IOUT_SU,file=trim(OUTPUT_FILES_PATH)//'/SU_stations_info.bin', &
+        open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/SU_stations_info.bin', &
               status='old',action='read',form='unformatted',iostat=ier)
         if (ier /= 0) call exit_mpi(myrank,'error opening file '//trim(rec_filename))
 
@@ -212,10 +212,10 @@
         read(IOUT_SU) nu
         close(IOUT_SU)
         ! write the locations of stations, so that we can load them and write them to SU headers later
-        open(unit=IOUT_SU,file=trim(OUTPUT_FILES_PATH)//'/output_list_stations.txt', &
+        open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/output_list_stations.txt', &
               status='unknown',action='write',iostat=ier)
         if (ier /= 0) &
-          call exit_mpi(myrank,'error opening file '//trim(OUTPUT_FILES_PATH)//'/output_list_stations.txt')
+          call exit_mpi(myrank,'error opening file '//trim(OUTPUT_FILES)//'/output_list_stations.txt')
 
         do irec=1,nrec
           write(IOUT_SU,*) station_name(irec),network_name(irec),x_found(irec),y_found(irec),z_found(irec)
@@ -250,39 +250,39 @@
 
   ! allocate memory for arrays using number of stations
   allocate(stlat(nrec), &
-          stlon(nrec), &
-          stele(nrec), &
-          stbur(nrec), &
-          stutm_x(nrec), &
-          stutm_y(nrec), &
-          horiz_dist(nrec), &
-          elevation(nrec), &
-          ix_initial_guess(nrec), &
-          iy_initial_guess(nrec), &
-          iz_initial_guess(nrec), &
-          x_target(nrec), &
-          y_target(nrec), &
-          z_target(nrec), &
-          x_found(nrec), &
-          y_found(nrec), &
-          z_found(nrec), &
-          final_distance(nrec), &
-          ispec_selected_rec_all(nrec), &
-          xi_receiver_all(nrec), &
-          eta_receiver_all(nrec), &
-          gamma_receiver_all(nrec), &
-          x_found_all(nrec), &
-          y_found_all(nrec), &
-          z_found_all(nrec), &
-          final_distance_all(nrec), &
-          nu_all(3,3,nrec),stat=ier)
+           stlon(nrec), &
+           stele(nrec), &
+           stbur(nrec), &
+           stutm_x(nrec), &
+           stutm_y(nrec), &
+           horiz_dist(nrec), &
+           elevation(nrec), &
+           ix_initial_guess(nrec), &
+           iy_initial_guess(nrec), &
+           iz_initial_guess(nrec), &
+           x_target(nrec), &
+           y_target(nrec), &
+           z_target(nrec), &
+           x_found(nrec), &
+           y_found(nrec), &
+           z_found(nrec), &
+           final_distance(nrec), &
+           ispec_selected_rec_all(nrec), &
+           xi_receiver_all(nrec), &
+           eta_receiver_all(nrec), &
+           gamma_receiver_all(nrec), &
+           x_found_all(nrec), &
+           y_found_all(nrec), &
+           z_found_all(nrec), &
+           final_distance_all(nrec), &
+           nu_all(3,3,nrec),stat=ier)
   if (ier /= 0) stop 'error allocating arrays for locating receivers'
 
   ! loop on all the stations
   do irec=1,nrec
 
     read(IIN,*,iostat=ier) station_name(irec),network_name(irec), &
-                          stlat(irec),stlon(irec),stele(irec),stbur(irec)
+                           stlat(irec),stlon(irec),stele(irec),stbur(irec)
 
     if (ier /= 0) call exit_mpi(myrank, 'Error reading station file '//trim(rec_filename))
 
@@ -298,9 +298,9 @@
     if (myrank == 0) then
       ! limits user output if too many receivers
       if (nrec < 1000 .and. (.not. SU_FORMAT)) then
-        write(IMAIN,*) 'Station #',irec,': ',station_name(irec)(1:len_trim(station_name(irec))), &
-                       '.',network_name(irec)(1:len_trim(network_name(irec))), &
-                       '    horizontal distance:  ',sngl(horiz_dist(irec)),' km'
+        write(IMAIN,*) 'Station #',irec,': ', &
+            network_name(irec)(1:len_trim(network_name(irec)))//'.'//station_name(irec)(1:len_trim(station_name(irec))), &
+            '    horizontal distance:  ',sngl(horiz_dist(irec)),' km'
       endif
     endif
 
@@ -385,6 +385,12 @@
             do i = imin,imax
 
               iglob = ibool(i,j,k,ispec)
+
+              !debug: outputs specific gll point location (needs to adapt kmin,kmax,..)
+              !if (irec == 1 .and. ispec == 3789 .and. i == 3 .and. j == 3 .and. k == 5) then
+              !  print*,'gll point: ',i,j,k,ispec,' x/y/z = ',xstore(iglob),ystore(iglob),zstore(iglob), &
+              !          'target: ',x_target(1),y_target(1),z_target(1)
+              !endif
 
               if (.not. RECEIVERS_CAN_BE_BURIED) then
                 if ((.not. iglob_is_surface_external_mesh(iglob)) &
@@ -820,7 +826,7 @@
 
       ! checks stations location
       if (final_distance(irec) == HUGEVAL) then
-        write(IMAIN,*) 'error locating station # ',irec,'    ',station_name(irec),network_name(irec)
+        write(IMAIN,*) 'error locating station # ',irec,'    ',trim(network_name(irec)),'    ',trim(station_name(irec))
         call exit_MPI(myrank,'error locating receiver')
       endif
 
@@ -828,7 +834,7 @@
       if (nrec < 1000 .and. (.not. SU_FORMAT )) then
 
       write(IMAIN,*)
-      write(IMAIN,*) 'station # ',irec,'    ',station_name(irec),network_name(irec)
+      write(IMAIN,*) 'station # ',irec,'    ',trim(network_name(irec)),'    ',trim(station_name(irec))
 
       write(IMAIN,*) '     original latitude: ',sngl(stlat(irec))
       write(IMAIN,*) '     original longitude: ',sngl(stlon(irec))
@@ -908,10 +914,10 @@
     endif
 
     ! write the locations of stations, so that we can load them and write them to SU headers later
-    open(unit=IOUT_SU,file=trim(OUTPUT_FILES_PATH)//'/output_list_stations.txt', &
+    open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/output_list_stations.txt', &
          status='unknown',action='write',iostat=ier)
     if (ier /= 0) &
-      call exit_mpi(myrank,'error opening file '//trim(OUTPUT_FILES_PATH)//'/output_list_stations.txt')
+      call exit_mpi(myrank,'error opening file '//trim(OUTPUT_FILES)//'/output_list_stations.txt')
 
     do irec=1,nrec
       write(IOUT_SU,*) station_name(irec),network_name(irec),x_found(irec),y_found(irec),z_found(irec)
@@ -921,7 +927,7 @@
 
     ! stores station infos for later runs
     if (SU_FORMAT) then
-      open(unit=IOUT_SU,file=trim(OUTPUT_FILES_PATH)//'/SU_stations_info.bin', &
+      open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/SU_stations_info.bin', &
            status='unknown',action='write',form='unformatted',iostat=ier)
       if (ier == 0) then
         write(IOUT_SU) islice_selected_rec,ispec_selected_rec

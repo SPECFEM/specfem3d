@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -50,7 +50,7 @@
   if (ier /= 0) stop 'error allocating arrays x_found y_found z_found'
 
   ! reads in station locations from output_list file
-  open(unit=IIN_SU1,file=trim(OUTPUT_FILES_PATH)//'/output_list_stations.txt',status='old',iostat=ier)
+  open(unit=IIN_SU1,file=trim(OUTPUT_FILES)//'/output_list_stations.txt',status='old',iostat=ier)
   if (ier /= 0) stop 'error opening output_list_stations.txt file'
 
   do irec=1,nrec
@@ -59,14 +59,14 @@
   close(IIN_SU1)
 
   ! reads in source locations from output_list file
-  open(unit=IIN_SU1,file=trim(OUTPUT_FILES_PATH)//'/output_list_sources.txt',status='old',iostat=ier)
+  open(unit=IIN_SU1,file=trim(OUTPUT_FILES)//'/output_list_sources.txt',status='old',iostat=ier)
   if (ier /= 0) stop 'error opening output_list_sources.txt file'
 
   read(IIN_SU1,*) x_found_source,y_found_source,z_found_source
   close(IIN_SU1)
 
   ! directory to store seismograms
-  final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'
+  final_LOCAL_PATH = OUTPUT_FILES(1:len_trim(OUTPUT_FILES)) // '/'
   write(procname,"(i4)") myrank
   procname = adjustl(procname)
 

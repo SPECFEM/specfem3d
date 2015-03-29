@@ -1,0 +1,80 @@
+Subject:
+Re: how can we compute strain "seismograms" in the DSM code?
+From:
+???? <fuji@eps.s.u-tokyo.ac.jp>
+Date:
+Tue, 30 Jun 2009 15:15:48 +0900
+To:
+Dimitri Komatitsch <dimitri.komatitsch@univ-pau.fr>
+CC:
+Vadim Monteiller <vadim.monteiller@dtp.obs-mip.fr>, Sebastien Chevrot <chevrot@dtp.obs-mip.fr>, Nozomu Takeuchi <takeuchi@eri.u-tokyo.ac.jp>
+
+Dear Dimitri:
+
+Ok I will talk with him this week but this is what I am trying to do right now.
+I am now making catalogs of coefficient-vectors ( c in our papers) for
+easily calculating the wavefields wherever you are.
+For this moment my purpose of this coding is just to make it easy to get
+kernels for arbitrary portion in the earth.
+For strains you can calculate those by taking spatial partial derivatives
+for those wavefields. After completing this project I will let you know how to
+derive those tensors.
+
+Cher Sebastien:
+
+J'etais desole mais j'ai manque vous repondre la semaine derniere...
+Comme vous lisez dans ce mel, je suis maintenant en train de faire du
+re-coding de DSM pour faciliter la computation, pour l'inversion 3-D.
+Pour la decomposition en onglettes, j'ai aussi travaille mais en ce moment
+j'ai pas vraiment reussi: il me semble qu'on doit transformer la matrice A
+dans la domaine du temps... je vais essayer maintenant.
+Ce que je vous ai envoye est le resultat avec la methode du gradient conjugue:
+Avec moins de parametres que la methode de SVD, j'ai reussi a expliquer des donnees.
+Je vais ecrire sur cette methode et je veux travailler sur la combination de
+onglettes et du gradient conjugue, ca peux faire mieux.
+Pour des donnees de Hi-net, il semble possible a utiiser avec vous, si on met
+des noms des staffs la-bas.
+
+Amities,
+
+Nobuaki
+
+2009/6/29 Dimitri Komatitsch <dimitri.komatitsch@univ-pau.fr>
+
+
+    Dear Nobuaki,
+
+    Did you have time to talk to Prof. Takeuchi or Prof. Kawai
+    about how to output values of strain instead of displacement or velocity in the DSM code, i.e. compute strain "seismograms" in addition to more
+    classical velocity or displacement seismograms?
+    Because as we discussed when you came to Toulouse, for some applications
+    it would be interesting to be able to output the components of the strain tensor.
+
+    I copy this email to Prof. Takeuchi for information.
+
+    Thank you,
+    Best regards,
+
+    Dimitri.
+
+    --
+    Dimitri Komatitsch - dimitri.komatitsch aT univ-pau.fr
+    Professor, University of Pau, Institut universitaire de France,
+    CNRS and INRIA Magique3D, France   http://www.univ-pau.fr/~dkomati1
+
+
+
+
+--
+*****************************************************
+FUJI Nobuaki (?? ??)
+     seismobassoon@gmail.com (primary)
+     fuji@eps.s.u-tokyo.ac.jp (will be expired in a year ihope)
+Ph.D student 3rd at Lab. of Prof. R.J. Geller
+Dept. of Earth and Planetary Science,
+Graduate School of Science
+Univ. of Tokyo
+Tokyo 113-0033 Japan
+tel: +81-(0)3-5841-8331
+fax: +81-(0)3-5841-8318
+mobile: +81-(0)90-9995-9859

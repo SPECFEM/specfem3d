@@ -40,13 +40,6 @@ rm -fr DATA/*
 cd $currentdir
 cp -fr DATA/* ../../../DATA/.
 
-cd ../../../
-
-make clean
-./configure
-make all > $currentdir/tmp.log
-cd $currentdir
-
 # links executables
 cd bin/
 rm -f *
@@ -83,6 +76,6 @@ echo
 echo "see results in directory: OUTPUT_FILES/"
 echo
 echo "done"
-echo `date`
+date
 
 

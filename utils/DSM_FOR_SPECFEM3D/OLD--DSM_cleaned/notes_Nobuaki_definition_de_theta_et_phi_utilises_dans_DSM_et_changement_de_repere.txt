@@ -1,0 +1,92 @@
+Subject:
+Re: Question sur theta et phi utilise dans DSM
+From:
+Nobuaki FUJI <Nobuaki.Fuji@irap.omp.eu>
+Date:
+Thu, 17 Nov 2011 00:20:48 +0100
+To:
+Vadim Monteiller <vadim.monteiller@univ-pau.fr>
+CC:
+Dimitri Komatitsch <komatitsch@lma.cnrs-mrs.fr>, Sebastien Chevrot <Sebastien.Chevrot@irap.omp.eu>
+
+Salut Vadim,
+
+Je m'excuserais si cette explication pourra etre un peu repetitive et
+un peu trop pedagogique mais
+donc
+
+1) tu definis ta source (EVLA, EVLO) et ton recepteur (STLA, STLO)
+dans le fichier d'entree. (latitude, longitude)
+1') si tu veux prendre l'effet de l'ellipticite, on convertit EVLA et STLA.
+2) on pivote la source a (pi/2,0) (pole nord) et on redefinit (STLA*,STLO*)
+
+theta = pi/2 - STLA*
+phi = STLO*
+
+apres ce que tu obtiens comme u(1:3) est
+u(1): le composant vertical (sens graine -> surface) (PSV)
+u(2): le composant radial (sens nord a sud dans les coordonnees*: si
+tu le suis, tu augmentes la valeur de theta) (PSV)
+u(3): le composant transverse (sens ouest a est dans les coordonnees*:
+si tu le suis, tu augmentes la valeur de phi) (SH)
+
+ce qui est connu est qu'il y a des petits bruits numeriques avant le
+temps d'arrivee sur u(2) et u(3) si on ne calcule que PSV ou SH a
+cause du mode de rotation et de symetrie
+(qui vont etre tues quand tu calcule les deux) mais ca n'arrive pas au
+cas de la source explosive.
+
+Et je ne suis pas bien sur si on a besoin de 'deplacements' et
+'tractions' ou ses derivees temporelles, j'ai laisse comme
+stress (:) = stress (:) / cmplx(0.d0,omega)
+displacement (:) = displacement (:)
+mais naturellement ce qu'on obtient dans le code est la vitesse (la
+derivee temporelle).
+
+Merci pour l'installation de svn aussi,
+A+
+Nobuaki
+
+2011/11/16 Vadim Monteiller <vadim.monteiller@univ-pau.fr>:
+> > Salut Nobuaki,
+> >
+> > Je suis en train de regarder les passages de reprere :
+> >
+> >
+> > (r,theta,phi) -> (r,Est, Nord)-> (X,Y,Z)
+> >
+> >
+> > le repere 1 est celui que tu utilises pour le calcul des coeffs dans DSM.
+> > le repere 2 est  un repre local defini que je defini ainsi pour qu'il soit
+> > direct et qu'il corresponde au repere 3 lorsqu'on se trouve au centre du
+> > chunk.
+> > le repere 3 est celui de specfem avec (X=Est, Y=Nord, Z=Haut) au centre du
+> > chunk.
+> >
+> > Visiblement j'ai un pb dans mes changement de reprere, peux-tu me preciser
+> > stp la definition de theta et phi.
+> >
+> >
+> > Jusqu'a present j'ai utilise:
+> >
+> > theta : vecteur de direction (source -> recepteur) et sens (source ->
+> > recepeur)
+> > phi : vecteur orthogonal a theta avec une rotation de pi/2 dans le sens
+> > trigonometique direct de maniere a ce que (r,theta,phi) soit un repere
+> > direct.
+> >
+> > mais je ne suis plus tres sur de ca.
+> >
+> > Merci
+> >
+> > A+
+> >
+> > Vadim
+> >
+> >
+> >
+> >
+
+
+
+-- *****************************************************    FUJI Nobuaki    Nobuaki.Fuji@irap.omp.eu    seismobassoon@gmail.com    Institut de Recherche en Astrophysique et Planetologie    14 Avenue Edouard Belin     31400 Toulouse, France bureau: +33 (0)5.61.33.29.73 home: +33(0)9.81.03.60.67 mobile: +33 (0)6.67.29.61.09

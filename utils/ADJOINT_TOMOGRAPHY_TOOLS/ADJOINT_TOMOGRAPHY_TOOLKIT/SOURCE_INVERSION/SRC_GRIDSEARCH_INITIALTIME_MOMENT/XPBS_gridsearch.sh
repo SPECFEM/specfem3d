@@ -12,4 +12,4 @@ cd $PBS_O_WORKDIR
 
 input=XGRIDSEARCH_INPUT_M42/PAR_201105192015A
 
-./xgridsearch_time_moment < $input  
+./xgridsearch_time_moment < $input

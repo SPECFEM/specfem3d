@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -34,13 +34,19 @@
   use specfem_par_elastic
   use specfem_par_poroelastic
   use specfem_par_movie
-  use gravity_perturbation, only : gravity_timeseries, GRAVITY_SIMULATION
+  use gravity_perturbation, only: gravity_timeseries, GRAVITY_SIMULATION
 
   implicit none
 
+  ! for EXACT_UNDOING_TO_DISK
+  integer :: ispec,iglob,i,j,k,counter,record_length
+  integer, dimension(:), allocatable :: integer_mask_ibool_exact_undo
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: buffer_for_disk
+  character(len=MAX_STRING_LEN) outputname
+
   !----  create a Gnuplot script to display the energy curve in log scale
   if (OUTPUT_ENERGY .and. myrank == 0) then
-    open(unit=IOUT_ENERGY,file=trim(OUTPUT_FILES_PATH)//'plot_energy.gnu',status='unknown',action='write')
+    open(unit=IOUT_ENERGY,file=trim(OUTPUT_FILES)//'plot_energy.gnu',status='unknown',action='write')
     write(IOUT_ENERGY,*) 'set term wxt'
     write(IOUT_ENERGY,*) '#set term postscript landscape color solid "Helvetica" 22'
     write(IOUT_ENERGY,*) '#set output "energy.ps"'
@@ -61,13 +67,13 @@
 
   ! open the file in which we will store the energy curve
   if (OUTPUT_ENERGY .and. myrank == 0) &
-    open(unit=IOUT_ENERGY,file=trim(OUTPUT_FILES_PATH)//'energy.dat',status='unknown',action='write')
+    open(unit=IOUT_ENERGY,file=trim(OUTPUT_FILES)//'energy.dat',status='unknown',action='write')
 
 !
 !   s t a r t   t i m e   i t e r a t i o n s
 !
 
-! synchronize all processes to make sure everybody is ready to start time loop
+  ! synchronize all processes to make sure everybody is ready to start time loop
   call synchronize_all()
   if (myrank == 0) write(IMAIN,*) 'All processes are synchronized before time loop'
 
@@ -78,26 +84,91 @@
     call flush_IMAIN()
   endif
 
-! create an empty file to monitor the start of the simulation
+  ! create an empty file to monitor the start of the simulation
   if (myrank == 0) then
-    open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//'/starttimeloop.txt',status='unknown')
-    write(IOUT,*) 'starting time loop'
+    open(unit=IOUT,file=trim(OUTPUT_FILES)//'/starttimeloop.txt',status='unknown',action='write')
+    write(IOUT,*) 'hello, starting time loop'
     close(IOUT)
   endif
 
-! get MPI starting time
+  ! initialize variables for writing seismograms
+  seismo_offset = it_begin-1
+  seismo_current = 0
+
+  ! get MPI starting time
   time_start = wtime()
 
+  ! *********************************************************
+  ! ************* MAIN LOOP OVER THE TIME STEPS *************
+  ! *********************************************************
 
-! *********************************************************
-! ************* MAIN LOOP OVER THE TIME STEPS *************
-! *********************************************************
+  if (EXACT_UNDOING_TO_DISK) then
 
-  do it = 1,NSTEP
+    if (GPU_MODE) call exit_MPI(myrank,'EXACT_UNDOING_TO_DISK not supported for GPUs')
+
+    if (UNDO_ATTENUATION) &
+      call exit_MPI(myrank,'EXACT_UNDOING_TO_DISK needs UNDO_ATTENUATION to be off because it computes the kernel directly instead')
+
+    if (SIMULATION_TYPE == 1 .and. .not. SAVE_FORWARD) &
+      call exit_MPI(myrank,'EXACT_UNDOING_TO_DISK requires SAVE_FORWARD if SIMULATION_TYPE == 1')
+
+    if (ANISOTROPIC_KL) call exit_MPI(myrank,'EXACT_UNDOING_TO_DISK requires ANISOTROPIC_KL to be turned off')
+
+!! DK DK determine the largest value of iglob that we need to save to disk,
+!! DK DK since we save the upper part of the mesh only in the case of surface-wave kernels
+    ! crust_mantle
+    allocate(integer_mask_ibool_exact_undo(NGLOB_AB))
+    integer_mask_ibool_exact_undo(:) = -1
+
+    counter = 0
+    do ispec = 1, NSPEC_AB
+      do k = 1, NGLLZ
+        do j = 1, NGLLY
+          do i = 1, NGLLX
+            iglob = ibool(i,j,k,ispec)
+!           height = xstore(iglob)
+            ! save that element only if it is in the upper part of the mesh
+!           if (height >= 3000.d0) then
+            if (.true.) then
+              ! if this point has not yet been found before
+              if (integer_mask_ibool_exact_undo(iglob) == -1) then
+                ! create a new unique point
+                counter = counter + 1
+                integer_mask_ibool_exact_undo(iglob) = counter
+              endif
+            endif
+          enddo
+        enddo
+      enddo
+    enddo
+
+    ! allocate the buffer used to dump a single time step
+    allocate(buffer_for_disk(counter))
+
+    ! open the file in which we will dump all the time steps (in a single file)
+    write(outputname,"('huge_dumps/proc',i6.6,'_huge_dump_of_all_time_steps.bin')") myrank
+    inquire(iolength=record_length) buffer_for_disk
+    ! we write to or read from the file depending on the simulation type
+    if (SIMULATION_TYPE == 1) then
+      open(file=outputname, unit=IFILE_FOR_EXACT_UNDOING, action='write', status='unknown', &
+                      form='unformatted', access='direct', recl=record_length)
+    else if (SIMULATION_TYPE == 3) then
+      open(file=outputname, unit=IFILE_FOR_EXACT_UNDOING, action='read', status='old', &
+                      form='unformatted', access='direct', recl=record_length)
+    else
+      call exit_MPI(myrank,'EXACT_UNDOING_TO_DISK can only be used with SIMULATION_TYPE == 1 or SIMULATION_TYPE == 3')
+    endif
+
+  endif ! of if (EXACT_UNDOING_TO_DISK)
+
+  it_begin = 1
+  it_end = NSTEP
+  do it = it_begin,it_end
 
     ! simulation status output and stability check
-    if (mod(it,NTSTEP_BETWEEN_OUTPUT_INFO) == 0 .or. it == 5 .or. it == NSTEP) &
+    if (mod(it,NTSTEP_BETWEEN_OUTPUT_INFO) == 0 .or. it == it_begin + 4 .or. it == it_end) then
       call check_stability()
+    endif
 
     ! simulation status output and stability check
     if (OUTPUT_ENERGY) then
@@ -165,18 +236,11 @@
       call it_read_forward_arrays()
     endif
 
-    ! write the seismograms with time shift (GPU_MODE transfer included)
-    if (nrec_local > 0 .or. ( WRITE_SEISMOGRAMS_BY_MASTER .and. myrank == 0)) then
-      call write_seismograms()
-    endif
-
     ! calculating gravity field at current timestep
     if (GRAVITY_SIMULATION) call gravity_timeseries()
 
-    ! resetting d/v/a/R/eps for the backward reconstruction with attenuation
-    if (ATTENUATION) then
-      call it_store_attenuation_arrays()
-    endif
+    ! write the seismograms with time shift (GPU_MODE transfer included)
+    call write_seismograms()
 
     ! adjoint simulations: kernels
     if (SIMULATION_TYPE == 3) then
@@ -184,25 +248,27 @@
     endif
 
     ! outputs movie files
-    if (MOVIE_SIMULATION) then
-      call write_movie_output()
-    endif
+    call write_movie_output()
 
     ! first step of noise tomography, i.e., save a surface movie at every time step
+    ! modified from the subroutine 'write_movie_surface'
     if (NOISE_TOMOGRAPHY == 1) then
-      if (num_free_surface_faces > 0) then
-        call noise_save_surface_movie(displ,ibool, &
-                            noise_surface_movie,it, &
-                            NSPEC_AB,NGLOB_AB, &
-                            num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
-                            Mesh_pointer,GPU_MODE)
-      endif
+      call noise_save_surface_movie(displ,ibool,noise_surface_movie,it,NSPEC_AB,NGLOB_AB, &
+                            num_free_surface_faces,free_surface_ispec,free_surface_ijk,Mesh_pointer,GPU_MODE)
     endif
 
-!
-!---- end of time iteration loop
-!
+    ! updates VTK window
+    if (VTK_MODE) then
+      call it_update_vtkwindow()
+    endif
+
+  !
+  !---- end of time iteration loop
+  !
   enddo   ! end of main time loop
+
+  ! close the huge file that contains a dump of all the time steps to disk
+  if (EXACT_UNDOING_TO_DISK) close(IFILE_FOR_EXACT_UNDOING)
 
   call it_print_elapsed_time()
 
@@ -214,9 +280,100 @@
 
   end subroutine iterate_time
 
+!
+!-------------------------------------------------------------------------------------------------
+!
 
-!=====================================================================
+  subroutine it_transfer_from_GPU()
 
+! transfers fields on GPU back onto CPU
+
+  use specfem_par
+  use specfem_par_elastic
+  use specfem_par_acoustic
+
+  implicit none
+
+  ! to store forward wave fields
+  if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
+
+    ! acoustic potentials
+    if (ACOUSTIC_SIMULATION) &
+      call transfer_fields_ac_from_device(NGLOB_AB,potential_acoustic, &
+                                          potential_dot_acoustic, potential_dot_dot_acoustic, &
+                                          Mesh_pointer)
+
+    ! elastic wavefield
+    if (ELASTIC_SIMULATION) then
+      call transfer_fields_el_from_device(NDIM*NGLOB_AB,displ,veloc,accel,Mesh_pointer)
+
+      if (ATTENUATION) &
+        call transfer_fields_att_from_device(Mesh_pointer, &
+                    R_xx,R_yy,R_xy,R_xz,R_yz,size(R_xx), &
+                    epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
+                    size(epsilondev_xx))
+
+    endif
+
+  else if (SIMULATION_TYPE == 3) then
+
+    ! to store kernels
+    ! acoustic domains
+    if (ACOUSTIC_SIMULATION) then
+      ! only in case needed...
+      !call transfer_b_fields_ac_from_device(NGLOB_AB,b_potential_acoustic, &
+      !                      b_potential_dot_acoustic, b_potential_dot_dot_acoustic, Mesh_pointer)
+
+      ! acoustic kernels
+      call transfer_kernels_ac_to_host(Mesh_pointer,rho_ac_kl,kappa_ac_kl,NSPEC_AB)
+    endif
+
+    ! elastic domains
+    if (ELASTIC_SIMULATION) then
+      ! only in case needed...
+      !call transfer_b_fields_from_device(NDIM*NGLOB_AB,b_displ,b_veloc,b_accel,Mesh_pointer)
+
+      ! elastic kernels
+      call transfer_kernels_el_to_host(Mesh_pointer,rho_kl,mu_kl,kappa_kl,cijkl_kl,NSPEC_AB)
+    endif
+
+    ! specific noise strength kernel
+    if (NOISE_TOMOGRAPHY == 3) then
+      call transfer_kernels_noise_to_host(Mesh_pointer,Sigma_kl,NSPEC_AB)
+    endif
+
+    ! approximative hessian for preconditioning kernels
+    if (APPROXIMATE_HESS_KL) then
+      if (ELASTIC_SIMULATION) call transfer_kernels_hess_el_tohost(Mesh_pointer,hess_kl,NSPEC_AB)
+      if (ACOUSTIC_SIMULATION) call transfer_kernels_hess_ac_tohost(Mesh_pointer,hess_ac_kl,NSPEC_AB)
+    endif
+
+  endif
+
+  ! from here on, no gpu data is needed anymore
+  ! frees allocated memory on GPU
+  call prepare_cleanup_device(Mesh_pointer,ACOUSTIC_SIMULATION,ELASTIC_SIMULATION, &
+                              STACEY_ABSORBING_CONDITIONS,NOISE_TOMOGRAPHY,COMPUTE_AND_STORE_STRAIN, &
+                              ATTENUATION,ANISOTROPY,APPROXIMATE_OCEAN_LOAD, &
+                              APPROXIMATE_HESS_KL)
+
+  end subroutine it_transfer_from_GPU
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine it_update_vtkwindow()
+
+  implicit none
+
+  stop 'it_update_vtkwindow() not implemented for this code yet'
+
+  end subroutine it_update_vtkwindow
+
+!
+!-------------------------------------------------------------------------------------------------
+!
 
   subroutine it_read_forward_arrays()
 
@@ -224,6 +381,7 @@
   use specfem_par_acoustic
   use specfem_par_elastic
   use specfem_par_poroelastic
+
   implicit none
 
   integer :: ier
@@ -310,254 +468,3 @@
   endif
 
   end subroutine it_read_forward_arrays
-
-!=====================================================================
-
-  subroutine it_store_attenuation_arrays()
-
-! resetting d/v/a/R/eps for the backward reconstruction with attenuation
-
-  use specfem_par
-  use specfem_par_elastic
-  use specfem_par_acoustic
-
-  implicit none
-
-  integer :: ier
-  character(len=MAX_STRING_LEN) :: outputname
-
-  if (it > 1 .and. it < NSTEP) then
-    ! adjoint simulations
-
-! note backward/reconstructed wavefields:
-!       storing wavefield displ() at time step it, corresponds to time (it-1)*DT - t0 (see routine write_seismograms_to_file )
-!       reconstucted wavefield b_displ() at it corresponds to time (NSTEP-it-1)*DT - t0
-!       we read in the reconstructed wavefield at the end of the time iteration loop, i.e. after the Newmark scheme,
-!       thus, indexing is NSTEP-it (rather than something like NSTEP-(it-1) )
-
-    if (SIMULATION_TYPE == 3 .and. mod(NSTEP-it,NSTEP_Q_SAVE) == 0) then
-      ! reads files content
-      write(outputname,"('save_Q_arrays_',i6.6,'.bin')") NSTEP-it
-      open(unit=IIN,file=trim(prname_Q)//trim(outputname),status='old',&
-            action='read',form='unformatted',iostat=ier)
-      if (ier /= 0) then
-        print*,'error: opening save_Q_arrays'
-        print*,'path: ',trim(prname_Q)//trim(outputname)
-        call exit_mpi(myrank,'error open file save_Q_arrays_***.bin for reading')
-      endif
-
-      if (ELASTIC_SIMULATION) then
-        ! reads arrays from disk files
-        read(IIN) b_displ
-        read(IIN) b_veloc
-        read(IIN) b_accel
-
-        ! puts elastic fields onto GPU
-        if (GPU_MODE) then
-          ! wavefields
-          call transfer_b_fields_to_device(NDIM*NGLOB_AB,b_displ,b_veloc,b_accel, Mesh_pointer)
-        endif
-
-        if (FULL_ATTENUATION_SOLID) read(IIN) b_R_trace
-        read(IIN) b_R_xx
-        read(IIN) b_R_yy
-        read(IIN) b_R_xy
-        read(IIN) b_R_xz
-        read(IIN) b_R_yz
-        if (FULL_ATTENUATION_SOLID) read(IIN) b_epsilondev_trace
-        read(IIN) b_epsilondev_xx
-        read(IIN) b_epsilondev_yy
-        read(IIN) b_epsilondev_xy
-        read(IIN) b_epsilondev_xz
-        read(IIN) b_epsilondev_yz
-
-        ! puts elastic fields onto GPU
-        if (GPU_MODE) then
-          ! attenuation arrays
-          call transfer_b_fields_att_to_device(Mesh_pointer, &
-                  b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz,size(b_R_xx), &
-                  b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy,b_epsilondev_xz,b_epsilondev_yz, &
-                  size(b_epsilondev_xx))
-        endif
-      endif
-
-      if (ACOUSTIC_SIMULATION) then
-        ! reads arrays from disk files
-        read(IIN) b_potential_acoustic
-        read(IIN) b_potential_dot_acoustic
-        read(IIN) b_potential_dot_dot_acoustic
-
-        ! puts acoustic fields onto GPU
-        if (GPU_MODE) &
-          call transfer_b_fields_ac_to_device(NGLOB_AB,b_potential_acoustic, &
-                              b_potential_dot_acoustic, b_potential_dot_dot_acoustic, Mesh_pointer)
-
-      endif
-      close(IIN)
-
-    else if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD .and. mod(it,NSTEP_Q_SAVE) == 0) then
-      ! stores files content
-      write(outputname,"('save_Q_arrays_',i6.6,'.bin')") it
-      open(unit=IOUT,file=trim(prname_Q)//trim(outputname),status='unknown',&
-           action='write',form='unformatted',iostat=ier)
-      if (ier /= 0) then
-        print*,'error: opening save_Q_arrays'
-        print*,'path: ',trim(prname_Q)//trim(outputname)
-        call exit_mpi(myrank,'error open file save_Q_arrays_***.bin for writing')
-      endif
-
-      if (ELASTIC_SIMULATION) then
-        ! gets elastic fields from GPU onto CPU
-        if (GPU_MODE) then
-          call transfer_fields_el_from_device(NDIM*NGLOB_AB,displ,veloc, accel, Mesh_pointer)
-        endif
-
-        ! writes to disk file
-        write(IOUT) displ
-        write(IOUT) veloc
-        write(IOUT) accel
-
-        if (GPU_MODE) then
-          ! attenuation arrays
-          call transfer_fields_att_from_device(Mesh_pointer, &
-                     R_xx,R_yy,R_xy,R_xz,R_yz,size(R_xx), &
-                     epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
-                     size(epsilondev_xx))
-        endif
-
-        if (FULL_ATTENUATION_SOLID) write(IOUT) R_trace
-        write(IOUT) R_xx
-        write(IOUT) R_yy
-        write(IOUT) R_xy
-        write(IOUT) R_xz
-        write(IOUT) R_yz
-        if (FULL_ATTENUATION_SOLID) write(IOUT) epsilondev_trace
-        write(IOUT) epsilondev_xx
-        write(IOUT) epsilondev_yy
-        write(IOUT) epsilondev_xy
-        write(IOUT) epsilondev_xz
-        write(IOUT) epsilondev_yz
-      endif
-
-      if (ACOUSTIC_SIMULATION) then
-        ! gets acoustic fields from GPU onto CPU
-        if (GPU_MODE) then
-          call transfer_fields_ac_from_device(NGLOB_AB,potential_acoustic, &
-                                              potential_dot_acoustic, potential_dot_dot_acoustic, Mesh_pointer)
-        endif
-
-        ! writes to disk file
-        write(IOUT) potential_acoustic
-        write(IOUT) potential_dot_acoustic
-        write(IOUT) potential_dot_dot_acoustic
-      endif
-      close(IOUT)
-
-    endif ! SIMULATION_TYPE
-  endif ! it
-
-  end subroutine it_store_attenuation_arrays
-
-!=====================================================================
-
-  subroutine it_print_elapsed_time()
-
-  use specfem_par
-  use specfem_par_elastic
-  use specfem_par_acoustic
-
-  implicit none
-
-  ! local parameters
-  double precision :: tCPU
-  integer :: ihours,iminutes,iseconds,int_tCPU
-
-  if (myrank == 0) then
-    ! elapsed time since beginning of the simulation
-    tCPU = wtime() - time_start
-    int_tCPU = int(tCPU)
-    ihours = int_tCPU / 3600
-    iminutes = (int_tCPU - 3600*ihours) / 60
-    iseconds = int_tCPU - 3600*ihours - 60*iminutes
-    write(IMAIN,*) 'Time-Loop Complete. Timing info:'
-    write(IMAIN,*) 'Total elapsed time in seconds = ',tCPU
-    write(IMAIN,"(' Total elapsed time in hh:mm:ss = ',i4,' h ',i2.2,' m ',i2.2,' s')") ihours,iminutes,iseconds
-  endif
-
-  end subroutine it_print_elapsed_time
-
-!=====================================================================
-
-  subroutine it_transfer_from_GPU()
-
-! transfers fields on GPU back onto CPU
-
-  use specfem_par
-  use specfem_par_elastic
-  use specfem_par_acoustic
-
-  implicit none
-
-  ! to store forward wave fields
-  if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
-
-    ! acoustic potentials
-    if (ACOUSTIC_SIMULATION) &
-      call transfer_fields_ac_from_device(NGLOB_AB,potential_acoustic, &
-                                          potential_dot_acoustic, potential_dot_dot_acoustic, &
-                                          Mesh_pointer)
-
-    ! elastic wavefield
-    if (ELASTIC_SIMULATION) then
-      call transfer_fields_el_from_device(NDIM*NGLOB_AB,displ,veloc,accel,Mesh_pointer)
-
-      if (ATTENUATION) &
-        call transfer_fields_att_from_device(Mesh_pointer, &
-                    R_xx,R_yy,R_xy,R_xz,R_yz,size(R_xx), &
-                    epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
-                    size(epsilondev_xx))
-
-    endif
-  else if (SIMULATION_TYPE == 3) then
-
-    ! to store kernels
-    ! acoustic domains
-    if (ACOUSTIC_SIMULATION) then
-      ! only in case needed...
-      !call transfer_b_fields_ac_from_device(NGLOB_AB,b_potential_acoustic, &
-      !                      b_potential_dot_acoustic, b_potential_dot_dot_acoustic, Mesh_pointer)
-
-      ! acoustic kernels
-      call transfer_kernels_ac_to_host(Mesh_pointer,rho_ac_kl,kappa_ac_kl,NSPEC_AB)
-    endif
-
-    ! elastic domains
-    if (ELASTIC_SIMULATION) then
-      ! only in case needed...
-      !call transfer_b_fields_from_device(NDIM*NGLOB_AB,b_displ,b_veloc,b_accel, Mesh_pointer)
-
-      ! elastic kernels
-      call transfer_kernels_el_to_host(Mesh_pointer,rho_kl,mu_kl,kappa_kl,cijkl_kl,NSPEC_AB)
-    endif
-
-    ! specific noise strength kernel
-    if (NOISE_TOMOGRAPHY == 3) then
-      call transfer_kernels_noise_to_host(Mesh_pointer,Sigma_kl,NSPEC_AB)
-    endif
-
-    ! approximative hessian for preconditioning kernels
-    if (APPROXIMATE_HESS_KL) then
-      if (ELASTIC_SIMULATION) call transfer_kernels_hess_el_tohost(Mesh_pointer,hess_kl,NSPEC_AB)
-      if (ACOUSTIC_SIMULATION) call transfer_kernels_hess_ac_tohost(Mesh_pointer,hess_ac_kl,NSPEC_AB)
-    endif
-
-  endif
-
-  ! frees allocated memory on GPU
-  call prepare_cleanup_device(Mesh_pointer, &
-                              ACOUSTIC_SIMULATION,ELASTIC_SIMULATION, &
-                              STACEY_ABSORBING_CONDITIONS,NOISE_TOMOGRAPHY,COMPUTE_AND_STORE_STRAIN, &
-                              ATTENUATION,ANISOTROPY,APPROXIMATE_OCEAN_LOAD, &
-                              APPROXIMATE_HESS_KL)
-
-  end subroutine it_transfer_from_GPU

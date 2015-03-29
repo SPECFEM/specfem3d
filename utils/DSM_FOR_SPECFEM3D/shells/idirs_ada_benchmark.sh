@@ -39,11 +39,11 @@
 # @ wall_clock_limit = 3600
 # @ queue
 
-# loading setup fonctions 
+# loading setup fonctions
 SHELL_DSM=/smphome/rech/ubv/rubv002/progs/shells_specfem3D_hybrid
 source $SHELL_DSM/setup.sh
 
-case ${LOADL_STEP_NAME} in 
+case ${LOADL_STEP_NAME} in
 
   #============ Step 1 commands ============
   #======= Sequential preprocessing ========
@@ -106,7 +106,7 @@ case ${LOADL_STEP_NAME} in
 
     mfput $REP/tractymin.bin .
     mfput $REP/velymin.bin .
-  
+
     mfput $REP/tractymax.bin .
     mfput $REP/velymax.bin .
 

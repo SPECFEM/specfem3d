@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -30,7 +30,7 @@
   subroutine compute_add_sources_acoustic(NSPEC_AB,NGLOB_AB,potential_dot_dot_acoustic, &
                                   ibool,ispec_is_inner,phase_is_inner, &
                                   NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                                  hdur,hdur_gaussian,hdur_tiny,tshift_src,dt,t0, &
+                                  hdur,hdur_gaussian,tshift_src,dt,t0, &
                                   sourcearrays,kappastore,ispec_is_acoustic,&
                                   SIMULATION_TYPE,NSTEP, &
                                   nrec,islice_selected_rec,ispec_selected_rec, &
@@ -41,7 +41,8 @@
                         xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
                         station_name,network_name,adj_source_file,nrec_local,number_receiver_global, &
                         pm1_source_encoding,nsources_local,USE_FORCE_POINT_SOURCE, &
-                        USE_RICKER_TIME_FUNCTION
+                        USE_RICKER_TIME_FUNCTION,SU_FORMAT,USE_TRICK_FOR_BETTER_PRESSURE,USE_SOURCE_ENCODING
+
   implicit none
 
   integer :: NSPEC_AB,NGLOB_AB
@@ -61,12 +62,12 @@
 ! source
   integer :: NSOURCES,myrank,it
   integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
-  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,hdur_tiny,tshift_src
+  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,tshift_src
   double precision :: dt,t0
   real(kind=CUSTOM_REAL), dimension(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrays
 
-  double precision, external :: comp_source_time_function,comp_source_time_function_rickr,&
-   comp_source_time_function_gauss
+  double precision, external :: comp_source_time_function,comp_source_time_function_rickr, &
+   comp_source_time_function_d2rck,comp_source_time_function_gauss,comp_source_time_function_d2gau
 
   logical, dimension(NSPEC_AB) :: ispec_is_acoustic
 
@@ -123,13 +124,36 @@
 
             if (USE_FORCE_POINT_SOURCE) then
 
-!! DK DK note from DK DK: the statement below is very weird
-              f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing FORCESOLUTION file format
+              ! f0 has been stored in the hdur() array in the case of FORCESOLUTION, to use the same array as for CMTSOLUTION
+              f0 = hdur(isource)
 
               if (USE_RICKER_TIME_FUNCTION) then
-                stf_used = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),f0)
+! use a trick to increase accuracy of pressure seismograms in fluid (acoustic) elements:
+! use the second derivative of the source for the source time function instead of the source itself,
+! and then record -potential_acoustic() as pressure seismograms instead of -potential_dot_dot_acoustic();
+! this is mathematically equivalent, but numerically significantly more accurate because in the explicit
+! Newmark time scheme acceleration is accurate at zeroth order while displacement is accurate at second order,
+! thus in fluid elements potential_dot_dot_acoustic() is accurate at zeroth order while potential_acoustic()
+! is accurate at second order and thus contains significantly less numerical noise.
+                if(USE_TRICK_FOR_BETTER_PRESSURE) then
+                  stf_used = comp_source_time_function_d2rck(dble(it-1)*DT-t0-tshift_src(isource),f0)
+                else
+                  stf_used = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),f0)
+                endif
               else
-                stf_used = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_tiny(isource))
+                ! use a very small duration of 5*DT to mimic a Dirac in time
+! use a trick to increase accuracy of pressure seismograms in fluid (acoustic) elements:
+! use the second derivative of the source for the source time function instead of the source itself,
+! and then record -potential_acoustic() as pressure seismograms instead of -potential_dot_dot_acoustic();
+! this is mathematically equivalent, but numerically significantly more accurate because in the explicit
+! Newmark time scheme acceleration is accurate at zeroth order while displacement is accurate at second order,
+! thus in fluid elements potential_dot_dot_acoustic() is accurate at zeroth order while potential_acoustic()
+! is accurate at second order and thus contains significantly less numerical noise.
+                if(USE_TRICK_FOR_BETTER_PRESSURE) then
+                  stf_used = comp_source_time_function_d2gau(dble(it-1)*DT-t0-tshift_src(isource),5.d0*DT)
+                else
+                  stf_used = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),5.d0*DT)
+                endif
               endif
 
               ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
@@ -151,17 +175,39 @@
             else
 
               if (USE_RICKER_TIME_FUNCTION) then
-                stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+! use a trick to increase accuracy of pressure seismograms in fluid (acoustic) elements:
+! use the second derivative of the source for the source time function instead of the source itself,
+! and then record -potential_acoustic() as pressure seismograms instead of -potential_dot_dot_acoustic();
+! this is mathematically equivalent, but numerically significantly more accurate because in the explicit
+! Newmark time scheme acceleration is accurate at zeroth order while displacement is accurate at second order,
+! thus in fluid elements potential_dot_dot_acoustic() is accurate at zeroth order while potential_acoustic()
+! is accurate at second order and thus contains significantly less numerical noise.
+                if(USE_TRICK_FOR_BETTER_PRESSURE) then
+                  stf = comp_source_time_function_d2rck(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+                else
+                  stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+                endif
               else
-                ! gaussian source time
-                stf = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+                ! Gaussian source time
+! use a trick to increase accuracy of pressure seismograms in fluid (acoustic) elements:
+! use the second derivative of the source for the source time function instead of the source itself,
+! and then record -potential_acoustic() as pressure seismograms instead of -potential_dot_dot_acoustic();
+! this is mathematically equivalent, but numerically significantly more accurate because in the explicit
+! Newmark time scheme acceleration is accurate at zeroth order while displacement is accurate at second order,
+! thus in fluid elements potential_dot_dot_acoustic() is accurate at zeroth order while potential_acoustic()
+! is accurate at second order and thus contains significantly less numerical noise.
+                if(USE_TRICK_FOR_BETTER_PRESSURE) then
+                  stf = comp_source_time_function_d2gau(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+                else
+                  stf = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+                endif
               endif
 
               ! quasi-Heaviside
-              !stf = comp_source_time_function(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+              ! stf = comp_source_time_function(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
 
               ! source encoding
-              stf = stf * pm1_source_encoding(isource)
+              if(USE_SOURCE_ENCODING) stf = stf * pm1_source_encoding(isource)
 
               ! distinguishes between single and double precision for reals
               if (CUSTOM_REAL == SIZE_REAL) then
@@ -174,7 +220,7 @@
               ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
               ! to add minus the source to Chi_dot_dot to get plus the source in pressure
 
-              !     add source array
+              ! add source array
               do k=1,NGLLZ
                 do j=1,NGLLY
                   do i=1,NGLLX
@@ -256,8 +302,8 @@
             if (myrank == islice_selected_rec(irec)) then
               irec_local = irec_local + 1
 
-              ! reads in **sta**.**net**.**LH**.adj files
-              adj_source_file = trim(station_name(irec))//'.'//trim(network_name(irec))
+              ! reads in **net**.**sta**.**BH**.adj files
+              adj_source_file = trim(network_name(irec))//'.'//trim(station_name(irec))
               call compute_arrays_adjoint_source(myrank,adj_source_file, &
                                                  xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
                                                  adj_sourcearray, xigll,yigll,zigll, &
@@ -276,9 +322,9 @@
           it_end   = it_start + NTSTEP_BETWEEN_READ_ADJSRC - 1
           write(procname,"(i4)") myrank
           procname = adjustl(procname)
-          open(unit=IIN_SU1, file=trim(OUTPUT_FILES_PATH)//'../SEM/'//trim(procname)//'_dx_SU.adj', &
+          open(unit=IIN_SU1, file=trim(OUTPUT_FILES)//'../SEM/'//trim(procname)//'_dx_SU.adj', &
                             status='old',access='direct',recl=240+4*(NSTEP),iostat = ier)
-          if (ier /= 0) call exit_MPI(myrank,'file '//trim(OUTPUT_FILES_PATH) &
+          if (ier /= 0) call exit_MPI(myrank,'file '//trim(OUTPUT_FILES) &
                                     //'../SEM/'//trim(procname)//'_dx_SU.adj does not exist')
 
           do irec_local = 1,nrec_local
@@ -364,7 +410,7 @@
   subroutine compute_add_sources_acoustic_bpwf(NSPEC_AB, &
                                   ibool,ispec_is_inner,phase_is_inner, &
                                   NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                                  hdur,hdur_gaussian,hdur_tiny,tshift_src,dt,t0, &
+                                  hdur,hdur_gaussian,tshift_src,dt,t0, &
                                   sourcearrays,kappastore,ispec_is_acoustic,&
                                   SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                                   b_potential_dot_dot_acoustic)
@@ -372,7 +418,8 @@
   use constants
   use specfem_par,only: PRINT_SOURCE_TIME_FUNCTION,stf_used_total, &
                         pm1_source_encoding,nsources_local,USE_FORCE_POINT_SOURCE, &
-                        USE_RICKER_TIME_FUNCTION
+                        USE_RICKER_TIME_FUNCTION,USE_SOURCE_ENCODING
+
   implicit none
 
   integer :: NSPEC_AB
@@ -389,7 +436,7 @@
 ! source
   integer :: NSOURCES,myrank,it
   integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
-  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,hdur_tiny,tshift_src
+  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,tshift_src
   double precision :: dt,t0
   real(kind=CUSTOM_REAL), dimension(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrays
 
@@ -462,13 +509,14 @@
 
             if (USE_FORCE_POINT_SOURCE) then
 
-!! DK DK note from DK DK: the statement below is very weird
-              f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing FORCESOLUTION file format
+              ! f0 has been stored in the hdur() array in the case of FORCESOLUTION, to use the same array as for CMTSOLUTION
+              f0 = hdur(isource)
 
               if (USE_RICKER_TIME_FUNCTION) then
                 stf_used = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),f0)
               else
-                stf_used = comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_tiny(isource))
+               ! use a very small duration of 5*DT to mimic a Dirac in time
+                stf_used = comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),5.d0*DT)
               endif
 
               ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
@@ -492,7 +540,7 @@
                 stf = comp_source_time_function_rickr( &
                       dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
               else
-                ! gaussian source time
+                ! Gaussian source time
                 stf = comp_source_time_function_gauss( &
                       dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
               endif
@@ -501,7 +549,7 @@
               !stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
 
               ! source encoding
-              stf = stf * pm1_source_encoding(isource)
+              if(USE_SOURCE_ENCODING) stf = stf * pm1_source_encoding(isource)
 
               ! distinguishes between single and double precision for reals
               if (CUSTOM_REAL == SIZE_REAL) then
@@ -551,7 +599,7 @@
 ! for acoustic solver on GPU
   subroutine compute_add_sources_acoustic_GPU(NSPEC_AB,ispec_is_inner,phase_is_inner, &
                                   NSOURCES,myrank,it,&
-                                  hdur,hdur_gaussian,hdur_tiny,tshift_src,dt,t0, &
+                                  hdur,hdur_gaussian,tshift_src,dt,t0, &
                                   ispec_is_acoustic,SIMULATION_TYPE,NSTEP, &
                                   nrec,islice_selected_rec,ispec_selected_rec, &
                                   nadj_rec_local,adj_sourcearrays, &
@@ -562,7 +610,7 @@
                         xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
                         station_name,network_name,adj_source_file,nrec_local,number_receiver_global, &
                         nsources_local,USE_FORCE_POINT_SOURCE, &
-                        USE_RICKER_TIME_FUNCTION
+                        USE_RICKER_TIME_FUNCTION,SU_FORMAT
   implicit none
 
   integer :: NSPEC_AB
@@ -577,7 +625,7 @@
 
 ! source
   integer :: NSOURCES,myrank,it
-  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,hdur_tiny,tshift_src
+  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,tshift_src
   double precision :: dt,t0
 
   double precision, external :: comp_source_time_function,comp_source_time_function_rickr,&
@@ -629,19 +677,16 @@
         ! precomputes source time function factor
         if (USE_FORCE_POINT_SOURCE) then
           if (USE_RICKER_TIME_FUNCTION) then
-            stf_pre_compute(isource) = &
-                 comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+            stf_pre_compute(isource) = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
           else
-            stf_pre_compute(isource) = &
-                 comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_tiny(isource))
+            ! use a very small duration of 5*DT to mimic a Dirac in time
+            stf_pre_compute(isource) = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),5.d0*DT)
           endif
         else
           if (USE_RICKER_TIME_FUNCTION) then
-            stf_pre_compute(isource) = &
-                 comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+            stf_pre_compute(isource) = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
           else
-            stf_pre_compute(isource) = &
-                 comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+            stf_pre_compute(isource) = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
           endif
         endif
       enddo
@@ -712,8 +757,8 @@
             if (myrank == islice_selected_rec(irec)) then
               irec_local = irec_local + 1
 
-              ! reads in **sta**.**net**.**LH**.adj files
-              adj_source_file = trim(station_name(irec))//'.'//trim(network_name(irec))
+              ! reads in **net**.**sta**.**BH**.adj files
+              adj_source_file = trim(network_name(irec))//'.'//trim(station_name(irec))
               call compute_arrays_adjoint_source(myrank,adj_source_file, &
                                                  xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
                                                  adj_sourcearray, xigll,yigll,zigll, &
@@ -732,9 +777,9 @@
           it_end   = it_start + NTSTEP_BETWEEN_READ_ADJSRC - 1
           write(procname,"(i4)") myrank
           procname = adjustl(procname)
-          open(unit=IIN_SU1, file=trim(OUTPUT_FILES_PATH)//'../SEM/'//trim(procname)//'_dx_SU.adj', &
+          open(unit=IIN_SU1, file=trim(OUTPUT_FILES)//'../SEM/'//trim(procname)//'_dx_SU.adj', &
                             status='old',access='direct',recl=240+4*(NSTEP),iostat = ier)
-          if (ier /= 0) call exit_MPI(myrank,'file '//trim(OUTPUT_FILES_PATH) &
+          if (ier /= 0) call exit_MPI(myrank,'file '//trim(OUTPUT_FILES) &
                                     //'../SEM/'//trim(procname)//'_dx_SU.adj does not exist')
 
           do irec_local = 1,nrec_local
@@ -791,19 +836,17 @@
         ! precomputes source time function factors
         if (USE_FORCE_POINT_SOURCE) then
            if (USE_RICKER_TIME_FUNCTION) then
-             stf_pre_compute(isource) = &
-                  comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
+             stf_pre_compute(isource) = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
            else
-             stf_pre_compute(isource) = &
-                  comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_tiny(isource))
+             ! use a very small duration of 5*DT to mimic a Dirac in time
+             stf_pre_compute(isource) = comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),5.d0*DT)
            endif
         else
           if (USE_RICKER_TIME_FUNCTION) then
-            stf_pre_compute(isource) = &
-                 comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
+            stf_pre_compute(isource) = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
           else
             stf_pre_compute(isource) = &
-                 comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+                   comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
           endif
         endif
       enddo

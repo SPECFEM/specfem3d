@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -36,7 +36,7 @@ module constants
 
   ! create a copy of the original output file path, to which we may add a "run0001/", "run0002/", "run0003/" prefix later
   ! if NUMBER_OF_SIMULTANEOUS_RUNS > 1
-  character(len=MAX_STRING_LEN) :: OUTPUT_FILES_PATH = OUTPUT_FILES_PATH_BASE
+  character(len=MAX_STRING_LEN) :: OUTPUT_FILES = OUTPUT_FILES_BASE
 
   ! if doing simultaneous runs for the same mesh and model, see who should read the mesh and the model and broadcast it to others
   ! we put a default value here
@@ -72,7 +72,6 @@ end module constants
   double precision :: DT
 
   integer :: NGNOD
-!  character(len=MAX_STRING_LEN) :: MODEL
 
   character(len=MAX_STRING_LEN) :: SEP_MODEL_DIRECTORY
 
@@ -92,6 +91,10 @@ end module constants
 
   logical :: STACEY_ABSORBING_CONDITIONS,STACEY_INSTEAD_OF_FREE_SURFACE
 
+  ! for simultaneous runs from the same batch job
+  integer :: NUMBER_OF_SIMULTANEOUS_RUNS
+  logical :: BROADCAST_SAME_MESH_AND_MODEL
+
   ! movies
   logical :: CREATE_SHAKEMAP
   logical :: MOVIE_SURFACE,MOVIE_VOLUME,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
@@ -106,10 +109,16 @@ end module constants
   ! seismograms
   integer :: NTSTEP_BETWEEN_OUTPUT_INFO
   integer :: NTSTEP_BETWEEN_OUTPUT_SEISMOS,NTSTEP_BETWEEN_READ_ADJSRC
+  logical :: SAVE_SEISMOGRAMS_DISPLACEMENT,SAVE_SEISMOGRAMS_VELOCITY,SAVE_SEISMOGRAMS_ACCELERATION,SAVE_SEISMOGRAMS_PRESSURE
+  logical :: WRITE_SEISMOGRAMS_BY_MASTER,SAVE_ALL_SEISMOS_IN_ONE_FILE,USE_BINARY_FOR_SEISMOGRAMS,SU_FORMAT
 
   ! sources
   logical :: USE_FORCE_POINT_SOURCE
   logical :: USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
+
+  logical :: USE_TRICK_FOR_BETTER_PRESSURE,USE_SOURCE_ENCODING,OUTPUT_ENERGY
+  logical :: ANISOTROPIC_KL,SAVE_TRANSVERSE_KL,APPROXIMATE_HESS_KL,SAVE_MOHO_MESH
+  integer :: NTSTEP_BETWEEN_OUTPUT_ENERGY
 
   ! external code coupling (DSM)
   logical :: COUPLE_WITH_EXTERNAL_CODE
@@ -145,6 +154,11 @@ end module constants
   ! model
   integer :: IMODEL
 
+!! DK DK added this temporarily here to make SPECFEM3D and SPECFEM3D_GLOBE much more similar
+!! DK DK in terms of the structure of their main time iteration loop; these are future features
+!! DK DK that are missing in this code but implemented in the other and that could thus be cut and pasted one day
+  integer :: it_begin,it_end
+  integer :: seismo_offset,seismo_current
 
   end module shared_compute_parameters
 

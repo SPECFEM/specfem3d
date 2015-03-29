@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -246,16 +246,16 @@
 
   subroutine open_parameter_file_mesh
 
-  use constants, only: IIN,MF_IN_DATA_FILES_PATH
+  use constants, only: IIN,MF_IN_DATA_FILES
 
   implicit none
 
   integer :: ier
 
-  open(unit=IIN,file=MF_IN_DATA_FILES_PATH(1:len_trim(MF_IN_DATA_FILES_PATH)) &
+  open(unit=IIN,file=MF_IN_DATA_FILES(1:len_trim(MF_IN_DATA_FILES)) &
        //'Mesh_Par_file',status='old',action='read',iostat=ier)
   if (ier /= 0) then
-    print*,'error opening file: ',MF_IN_DATA_FILES_PATH(1:len_trim(MF_IN_DATA_FILES_PATH))
+    print*,'error opening file: ',MF_IN_DATA_FILES(1:len_trim(MF_IN_DATA_FILES))
     print*
     print*,'please check your file path and run-directory.'
     stop 'error opening Mesh_Par_file'

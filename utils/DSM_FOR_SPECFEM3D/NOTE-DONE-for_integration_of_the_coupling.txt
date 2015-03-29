@@ -1,0 +1,132 @@
+Mail de Vadim :
+
+
+Subject: Re: Clement Durochat will contact you tomorrow about SEM - DSM coupling
+Date: Tue, 20 May 2014 19:03:30 +0200
+From: Vadim MONTEILLER
+To: Clement Durochat, Yi Wang, Dimitri Komatitsch, Sebastien Chevrot
+
+Hi,
+
+the coupled SPECFEM code is SPECFEM3D_HYBRID_VADIM_version_non_official.
+Before running it you must run DSM code in order to create the incident
+wavefield on the box boundary. DSM consists in 4 steps. Each code is in
+Part1(2,3,4)_* directory.
+
+In the example directory, there is a benchmark to run all process (DSM+ SPECFEM) : bacchus_run_benchmark_all_process.sh.
+
+
+========================================================
+Liste des fichiers deja modifies committes dans GitHub :
+========================================================
+
+src/specfem3D/compute_add_sources_viscoelastic.f90
+==> Certains criteres d'arrets qui n'etait pas listes ==> demander a Dimitri
+
+src/generate_databases/get_absorbing_boundary.f90
+==> a priori, enlever fichier xmin_gll... (debuggage only). Cf iboun(:,:)=.true. : laisser ou pas ??  ==> demander a Dimitri
+
+src/specfem3D/compute_stacey_(visco)elastic.f90
+==> mettre commentaire routine read_dsm_file, changer OLD_TEST... en COUPLE_WI..., laisser pour ..._GPU  ==> ok a priori
+
+src/specfem3D/prepare_timerun.f90
+==> cf truc avec VM STDE ==> Ok, cf commentaire l.288
+
+
+src/generate_databases/save_arrays_solver.f90
+==> ok, on oublie le src/specfem3D/save_arrays_solver_1---to_check.f90 pour l'instant
+
+src/specfem3D/read_mesh_databases.f90
+==> cf truc avec VM STDE ==> Ok, RAS
+
+src/specfem3D/write_movie_output.f90
+==> RAS, pas de modif
+
+setup/constants.h.in
+==> RAS
+
+src/shared/read_parameter_file.f90
+==> RAS
+
+src/specfem3D/initialize_simulation.f90
+==> RAS
+
+src/specfem3D/compute_kernels.f90
+==> RAS
+
+src/specfem3D/compute_forces_viscoelastic_calling_routine.F90
+==> RAS
+
+src/specfem3D/iterate_time.f90
+==> RAS
+
+src/specfem3D/specfem3D_par.f90
+==> RAS
+
+-----------------------------------------------------------
+Ces deux la, modifies mais pour l'instant on y touche pas :
+-----------------------------------------------------------
+
+src/generate_databases/get_model.f90
+src/generate_databases/model_tomography.f90
+==> Modifies a partir des ceux de specfem existants. On les mets pas pour l'instant, il faudra peut-etre y revenir pour certains modeles, a ne pas oublier
+
+VM a dit : "Il faut reflechir a ces codes pour qu'il puissent aussi generer des modeles a partir de PREM, AK135 ou IASP91 sans modifier leur comportement habituel"
+
+==> NORMALEMENT C'EST REGLE !!
+
+==============================================================
++++++++++++++++++++ !! Attention !! 4 fichiers a voir encore :
+==============================================================
+
+-------------------------------------
+Ces deux ci, situation particuliere :
+-------------------------------------
+
+src/specfem3D/save_arrays_solver_1---to_check.f90 !! => nom modifie de src/specfem3D/save_arrays_solver_1.f90, quel difference avec src/generate_databases/save_arrays_solver.f90 a part des declarations ?
+==> A oublier pour le moment
+
+src/specfem3D/v_model_update.f90  => Attention !! => nom modifie et place dans auxiliaries (*model_update_Vadim_specific.f90* et *model_update.f90*) par Dimitri, et attention, pas de balise VM pour les modifs dedans (cf *model_update_Vadim_specific.f90* et *model_update.f90* => a remplacer dans auxiliaries ? Dans quel fichier ?)
+==> Modifies a partir des ceux de specfem existants. On les mets pas pour l'instant, il faudra surement y revenir pour  faire de l'imagerie (pb inverse).
+
+
+----------------
+Et ces deux la :
+----------------
+
+src/shared/project_tomo_grid.f90
+src/shared/project_sem.f90
+==> Modifies a partir des ceux de specfem existants. On les mets pas pour l'instant, il faudra surement y revenir pour  faire de l'imagerie (pb inverse).
+
+VM a dit : "Ce sont deux codes que j'ai ajoute qui permettent de projetter sur la grille d'inversion et vis vera. C'est utile que pour l'inversion. Je ne sais pas si il faut le mettre sous GIT. Cela demande de changer le configure, pour generer un makefile qui prenne en compte ces deux codes."
+
+
+
+==============================================================
++++++++++++++++++++ !! Attention !! Ce dossier a voir encore :
+==============================================================
+
+*Utils_for_WFI*
+==> Pour faire de l'imagerie (pb inverse). Pour l'instant, on met pas dans SPECFEM, a utiliser surement plus tard pour imagerie CMB.
+
+VM a dit : "Il y a aussi tous les utilitaires pour faire de l'inversion *Utils_for_WFI*, il faudra reflechir ou le mettre, peut-etre avec DSM?"
+
+
+============================================================================================================
+Liste initiale de Vadim avec les repertoires (certain .f90 ont ete change en .F90), 14 fichiers a modifier :
+============================================================================================================
+
+src/generate_databases/get_absorbing_boundary.f90
+src/generate_databases/save_arrays_solver.f90
+src/shared/read_parameter_file.f90
+src/specfem3D/initialize_simulation.f90
+src/specfem3D/read_mesh_databases.f90
+src/specfem3D/prepare_timerun.f90
+src/specfem3D/compute_kernels.f90
+src/specfem3D/compute_forces_elastic.f90 ==> Attention !! => cp: cannot stat 'src/specfem3D/compute_forces_elastic.f90': No such file or directory => cf ce fichier, a remplacer par : *compute_forces_viscoelastic.f90*, *compute_forces_viscoelastic_Dev.F90* ou *compute_forces_viscoelastic_noDev.f90*
+src/specfem3D/compute_stacey_elastic.f90
+src/specfem3D/save_arrays_solver_1.f90
+src/specfem3D/iterate_time.f90
+src/specfem3D/specfem3D_par.f90
+src/specfem3D/write_movie_output.f90
+src/specfem3D/v_model_update.f90

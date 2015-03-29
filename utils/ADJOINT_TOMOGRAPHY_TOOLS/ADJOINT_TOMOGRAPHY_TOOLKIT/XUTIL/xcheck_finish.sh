@@ -6,16 +6,16 @@
 
 ntot=0
 for dir in CMTSOLUTION_*
-do 
-	
-	file=$dir/job_src2.log
-	if [ -f $file ]; then 
-		ntot=`echo $ntot + 1| bc -l`
-		tag="successfully"
-		n=`wc -l $file | awk '{print $1}'`
-		text=`grep $tag $file`
-		echo $dir   $text    $n
-	fi 
+do
+
+  file=$dir/job_src2.log
+  if [ -f $file ]; then
+    ntot=`echo $ntot + 1| bc -l`
+    tag="successfully"
+    n=`wc -l $file | awk '{print $1}'`
+    text=`grep $tag $file`
+    echo $dir   $text    $n
+  fi
 
 done
 

@@ -8,13 +8,13 @@
 ** use, modify and/or redistribute the software under the terms of the
 ** CeCILL-C license as circulated by CEA, CNRS and INRIA at the following
 ** URL: "http://www.cecill.info".
-** 
+**
 ** As a counterpart to the access to the source code and rights to copy,
 ** modify and redistribute granted by the license, users are provided
 ** only with a limited warranty and the software's author, the holder of
 ** the economic rights, and the successive licensors have only limited
 ** liability.
-** 
+**
 ** In this respect, the user's attention is drawn to the risks associated
 ** with loading, using, modifying and/or developing or reproducing the
 ** software by the user in light of its specific status of free software,
@@ -25,7 +25,7 @@
 ** their requirements in conditions enabling the security of their
 ** systems and/or data to be ensured and, more generally, to use and
 ** operate it in the same conditions as regards security.
-** 
+**
 ** The fact that you are presently reading this means that you have had
 ** knowledge of the CeCILL-C license and that you accept its terms.
 */
@@ -36,7 +36,7 @@
 /**   AUTHOR     : Francois PELLEGRINI                     **/
 /**                                                        **/
 /**   FUNCTION   : This module performs the Dual Recursive **/
-/**                Bipartitioning mapping algorithm        **/ 
+/**                Bipartitioning mapping algorithm        **/
 /**                in parallel. It does so for complete    **/
 /**                graph architectures, hence performing   **/
 /**                plain graph partitioning, which         **/
@@ -325,7 +325,7 @@ KdgraphMapRbPartGraph * restrict const  fldgrafptr)
   return (o);
 }
 
-/* This routine performs the Dual Recursive 
+/* This routine performs the Dual Recursive
 ** Bipartitioning mapping in parallel.
 ** It returns:
 ** - 0   : if the mapping could be computed.
@@ -333,7 +333,7 @@ KdgraphMapRbPartGraph * restrict const  fldgrafptr)
 */
 
 static
-int 
+int
 kdgraphMapRbPart2 (
 KdgraphMapRbPartGraph * restrict const      grafptr,
 const KdgraphMapRbPartData * restrict const dataptr)
@@ -364,7 +364,7 @@ const KdgraphMapRbPartData * restrict const dataptr)
     errorPrint ("kdgraphMapRbPart2: cannot compute ghost edge array");
     return     (1);
   }
-  
+
   o = bdgraphInit (&actgrafdat, &grafptr->data.dgrfdat, NULL, &mappptr->archdat, domsubtab); /* Create active graph */
   actgrafdat.levlnum = grafptr->levlnum;          /* Initial level of bipartition graph is DRB recursion level      */
 
@@ -395,7 +395,7 @@ const KdgraphMapRbPartData * restrict const dataptr)
   return (o);
 }
 
-int 
+int
 kdgraphMapRbPart (
 Kdgraph * restrict const                  grafptr,
 Kdmapping * restrict const                mappptr,

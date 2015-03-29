@@ -1,5 +1,5 @@
 These three script files can be used to create a Windows DLL from the
-PT-Scotch library on a MinGW32 system. They are intended to be called 
+PT-Scotch library on a MinGW32 system. They are intended to be called
 directly from the src/Make.inc/mingw32 directory and produce results
 in the lib directory.
 

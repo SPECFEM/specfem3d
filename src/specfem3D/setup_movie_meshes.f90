@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -282,7 +282,7 @@
 
     ! updates number of surface elements in an include file for the movies
     if (nfaces_surface_glob_ext_mesh > 0) then
-      filename = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/surface_from_mesher.h'
+      filename = OUTPUT_FILES(1:len_trim(OUTPUT_FILES)) // '/surface_from_mesher.h'
       open(unit=IOUT,file=trim(filename),status='unknown')
       write(IOUT,*) '!'
       write(IOUT,*) '! this is the parameter file for static compilation for movie creation'

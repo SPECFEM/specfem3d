@@ -18,21 +18,11 @@ mkdir -p bin
 mkdir -p OUTPUT_FILES
 mkdir -p OUTPUT_FILES/DATABASES_MPI
 
-# compiles executables in root directory
 cd ../../
 
 rm -fr DATA/*
 cd $currentdir
 cp -fr DATA/* ../../DATA/.
-
-cd ../../
-
-# note: ./configure will default to gfortran configuration, unless you uncomment the line below
-# ./configure FC=ifort CC=icc MPIFC=mpif90
-./configure
-make clean
-make all > $currentdir/tmp.log
-cd $currentdir
 
 # links executables
 cd bin/
@@ -47,8 +37,8 @@ cp DATA/Par_file OUTPUT_FILES/
 cp DATA/CMTSOLUTION OUTPUT_FILES/
 cp DATA/STATIONS OUTPUT_FILES/
 
-# get the number of processors
-NPROC=`grep NPROC DATA/Par_file | cut -d = -f 2`
+# get the number of processors, ignoring comments in the Par_file
+NPROC=`grep ^NPROC DATA/Par_file | grep -v -E '^[[:space:]]*#' | cut -d = -f 2`
 
 # decomposes mesh using the pre-saved mesh files in MESH-default
 echo
@@ -72,6 +62,6 @@ echo
 echo "see results in directory: OUTPUT_FILES/"
 echo
 echo "done"
-echo `date`
+date
 
 

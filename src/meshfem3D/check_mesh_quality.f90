@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -287,7 +287,7 @@
   write(IMAIN,*) 'histogram of skewness (0. good - 1. bad):'
   write(IMAIN,*)
   total_percent = 0.
-  open(unit=14,file=OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))//'mesh_quality_histogram.txt',status='unknown')
+  open(unit=14,file=OUTPUT_FILES(1:len_trim(OUTPUT_FILES))//'mesh_quality_histogram.txt',status='unknown')
   do iclass = 0,NCLASS-1
      current_percent = 100.*dble(classes_skewnessMPI(iclass))/dble(NSPEC_ALL_SLICES)
      total_percent = total_percent + current_percent
@@ -298,7 +298,7 @@
   close(14)
 
   ! create script for Gnuplot histogram file
-  open(unit=14,file=OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))// &
+  open(unit=14,file=OUTPUT_FILES(1:len_trim(OUTPUT_FILES))// &
        'plot_mesh_quality_histogram.gnu',status='unknown')
   write(14,*) 'set term x11'
   write(14,*) '#set term gif'

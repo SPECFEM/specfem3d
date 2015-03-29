@@ -1,0 +1,80 @@
+
+Subject: Re: Skype call reminder
+From: Carl Tape
+Date: 12/22/2014 06:37 AM
+To: Ryan Modrak
+CC: Dimitri Komatitsch, Daniel Peter , David Luet , Ebru Bozdag , Zhinan Xie, Matthieu Lefebvre , Jeroen Tromp , Federica Magnoni , Emanuele Casarotti
+
+Hi Ryan and all,
+
+I met with Ebru, Emanuele, Frederica, Elliott, and Lion on Thursday
+night at AGU. (We scheduled at the last minute and missed Min and
+Hejun, unfortunately.) Below are some discussion points and questions.
+You already have plenty to discuss anyway, so you don't have to
+consider any of these, of course. I cced Emanuele and Frederica,
+though I don't think they'll be back by Monday.
+
++ It seems like those in our discussion were supportive of the move
+from "legacy" utilities (perl, sac, flexwin, measure_adj) to
+python-based utilities (obspy, pyflex, pyadj). Lion seemed quite
+willing to rewrite measure_adj into python (pyadj) - the multitaper
+measurement is the key piece, and there are Slepian tapers within
+python libraries, apparently.
+
++ Lion suggested that, in his opinion, the hdf5 file format would be
+optimal for seismograms and adjoint sources. I don't know the details
+about this. But clearly this is an important decision, since it
+impacts the processing scripts, adjoint sources, the moment tensor
+inversion codes, etc.
+
++ For the early part of the adjoint tomo workflow, it seems like LASIF
+(http://krischer.github.io/LASIF/) might provide some organizational
+structure. It sounded like this was complementary to the inversion
+part of the workflow that Ryan has been discussing. I plan on
+exploring LASIF in January.
+
++ The seismogram-based calculation of numerical resolution is a minor
+part of the workflow. But also something that can be done easily, once
+the two sets of simulations are performed. I do it in matlab (with the
+waveform toolbox), but this can be done faster and better in obspy,
+too. Here is my AGU presentation slides on this topic:
+
+https://drive.google.com/file/d/0Bym088u-rKlvMnVrSk1hajhBQWc/view?usp=sharing
+
++ What constitutes a need to move a variable from constants.h to
+Par_file? Is it based on how often people use these variables? We
+discussed APPROXIMATE_HESS_KL (inversion), USER_T0 (inversion), and
+NGLLX (minimum resolvable period).
+
+constants file:
+https://github.com/geodynamics/specfem3d/blob/devel/setup/constants.h.in
+
++ Are the src/tomograhy/ files different in SPECFEM3D and SPECFEM3D_GLOBE?
+
++ My impression is that for the optimization part, there are several
+efforts, including those at Princeton, those by Dimitri, as well as
+from outside the group. (Andreas Fichtner has someone organizing some
+basic capabilities for this part of the workflow.) Furthermore, there
+are libraries within petsc (http://www.mcs.anl.gov/petsc/) that are
+broadly used in parallel solvers.
+
+I write all this from the perspective of someone who has done very
+little regarding the adjoint tomography workflow since 2009. But I
+have several projects that will move forward in 2015, lead by me
+(southern California), my student Vipul Silwal (Alaska), my postdoc
+Amir Allam (fault zones up to 5-10 Hz), and Yoshihiro Kaneko (New
+Zealand). I'd like to get these folks on the right track and am open
+to trying out new things. Hopefully we can help in this effort.
+
+I'll talk to you soon. Thanks for including me in the call.
+
+Carl
+
+---------------------------------------------------------------
+Carl Tape
+Assistant Professor
+Geophysical Institute (office 413D)
+University of Alaska Fairbanks
+Web: http://www.giseis.alaska.edu/input/carl/
+---------------------------------------------------------------
+

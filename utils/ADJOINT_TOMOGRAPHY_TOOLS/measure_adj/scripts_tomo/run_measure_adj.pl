@@ -89,11 +89,11 @@ if(1==1) {
    $DLNA_MAX    = $dlna_ref + $dlna_base;
    $CC_MIN = $cc_base - $cc_fac;
    if($CC_MIN < 0) {$CC_MIN = 0}
-   
+
    $par1_old = $par1;
    $par1 = "${TSHIFT_MIN}/${TSHIFT_MAX}/${DLNA_MIN}/${DLNA_MAX}/${CC_MIN}";
    print "Updating values from PAR_FILE:\n";
-   print " old -- $par1_old --\n new -- $par1 --\n";  
+   print " old -- $par1_old --\n new -- $par1 --\n";
 }
 #----------------------------
 
@@ -131,7 +131,7 @@ if ($iplot == 1) {
 if ($iadj == 1) {
   $tfiles = "-i OUTPUT_FILES/*adj";
 } else {
-  $tfiles = "OUTPUT_FILES/*recon.cc.sac"; 
+  $tfiles = "OUTPUT_FILES/*recon.cc.sac";
 }
 $adj_dir = "ADJOINT_SOURCES";
 print CSH "\\rm -rf ${adj_dir}\n mkdir ${adj_dir}\n";

@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -161,6 +161,14 @@
   double precision, external :: get_cmt_moment_magnitude
 
   !-----------------------------------------------------------------------------------
+
+  ! clear the arrays
+  Mxx(:) = 0.d0
+  Myy(:) = 0.d0
+  Mzz(:) = 0.d0
+  Mxy(:) = 0.d0
+  Mxz(:) = 0.d0
+  Myz(:) = 0.d0
 
   ! read all the sources
   if (USE_FORCE_POINT_SOURCE) then
@@ -799,9 +807,9 @@
             write(IMAIN,*) 'Source time function is a Heaviside, convolve later'
             write(IMAIN,*)
           endif
-          write(IMAIN,*) '  half duration: ',hdur(isource),' seconds'
+          write(IMAIN,*) '  half duration: ', hdur(isource),' seconds'
 
-          if (COUPLE_WITH_EXTERNAL_CODE) then
+          if (COUPLE_WITH_EXTERNAL_CODE) then !! To verify for NOBU version
             write(IMAIN,*)
             write(IMAIN,*) 'Coupling with an external code activated, thus not including any internal source'
             write(IMAIN,*)
@@ -872,7 +880,7 @@
       endif  ! end of detailed output to locate source
 
       ! checks CMTSOLUTION format for acoustic case
-      if (idomain(isource) == IDOMAIN_ACOUSTIC) then
+      if (idomain(isource) == IDOMAIN_ACOUSTIC .and. .not. USE_FORCE_POINT_SOURCE) then
         if (Mxx(isource) /= Myy(isource) .or. Myy(isource) /= Mzz(isource) .or. &
            Mxy(isource) > TINYVAL .or. Mxz(isource) > TINYVAL .or. Myz(isource) > TINYVAL) then
           write(IMAIN,*)
@@ -941,7 +949,7 @@
     call flush_IMAIN()
 
     ! output source information to a file so that we can load it and write to SU headers later
-    open(unit=IOUT_SU,file=trim(OUTPUT_FILES_PATH)//'/output_list_sources.txt',status='unknown')
+    open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/output_list_sources.txt',status='unknown')
     do isource=1,NSOURCES
       write(IOUT_SU,*) x_found_source(isource),y_found_source(isource),z_found_source(isource)
     enddo

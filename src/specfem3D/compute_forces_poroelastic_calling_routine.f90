@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -24,7 +24,6 @@
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
 !=====================================================================
-
 
 ! poroelastic solver
 
@@ -204,7 +203,7 @@ subroutine compute_forces_poroelastic()
                         rhoarraystore,phistore,tortstore,&
                         ibool,ispec_is_inner,phase_is_inner, &
                         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                        hdur,hdur_gaussian,hdur_tiny,tshift_src,dt,t0,sourcearrays, &
+                        hdur,hdur_gaussian,tshift_src,dt,t0,sourcearrays, &
                         ispec_is_poroelastic,SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                         nrec,islice_selected_rec,ispec_selected_rec, &
                         nadj_rec_local,adj_sourcearrays,b_accels_poroelastic,b_accelw_poroelastic, &

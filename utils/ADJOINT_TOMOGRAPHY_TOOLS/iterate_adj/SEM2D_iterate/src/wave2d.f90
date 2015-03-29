@@ -150,7 +150,7 @@ program wave2d
   double precision :: joint_str_src_grad_ratio, jsw_str, jsw_src, joint_total_weight, jfac
   double precision :: fac_str, fac_ts, fac_xs, fac_ys, fac_total_m ! fac_total_g
   double precision :: ugsq_str, ugsq_ts, ugsq_xs, ugsq_ys, ugsq_src
-  double precision, dimension(:), allocatable :: cov_imetric, cov_model  ! icov_metric, icov_model 
+  double precision, dimension(:), allocatable :: cov_imetric, cov_model  ! icov_metric, icov_model
 
   ! conjugate gradient optimization (using line-search)
   double precision, dimension(:), allocatable :: pk, gk, g0, p0, m0, gt, mt, mdiff, mprior
@@ -159,7 +159,7 @@ program wave2d
   double precision :: Pa,Pb,Pc,Pd,qfac,xx1,xx2,yy1,yy2,g1,g2,xmin
 
   ! arrays describing the structure and source parameters
-  ! OBSOLETE: m_src_syn_vec_initial, m_src_syn_initial, m_src_syn_vec, m_src_dat_vec, m0_vec_initial, 
+  ! OBSOLETE: m_src_syn_vec_initial, m_src_syn_initial, m_src_syn_vec, m_src_dat_vec, m0_vec_initial,
   double precision, dimension(:), allocatable :: m0_vec, mt_vec, mtarget
   double precision, dimension(:), allocatable :: m_src_syn, m_src_dat, m_src_prior
 
@@ -328,7 +328,7 @@ program wave2d
         close(19)
 
         open(20,file='INPUT/events_xyt_pert_sigmas.dat',status='unknown')
-        read(20,*) temp1,src_pert_dist,src_pert_time 
+        read(20,*) temp1,src_pert_dist,src_pert_time
         close(20)
 
      endif
@@ -380,7 +380,7 @@ program wave2d
      !write(*,'(4f16.6)') (coast_lon(i), coast_lat(i), coast_x(i)/1000.0, coast_z(i)/1000.0, i = 1,ncoast)
 
   else
-     
+
      !----------
      ! events for data
 
@@ -553,7 +553,7 @@ program wave2d
         k = 0
         do ispec = 1,NSPEC
            do j = 1,NGLLZ
-              do i = 1,NGLLX 
+              do i = 1,NGLLX
                  k = k+1
                  iglob = ibool(i,j,ispec)
                  write(15,'(6i8,4e18.8)') k, ispec, i, j, iglob, valence(iglob), &
@@ -597,7 +597,7 @@ program wave2d
         stop 'checking the GLL indexing on the elements'
      endif
 
-     print * 
+     print *
      write(*,*)             ' PROPERTIES OF THE GRID :'
      write(*,*)             '     GLOBAL          :'
      write(*,'(a,1f20.10)') '       da_min  (m^2) : ', minval(da_global)
@@ -629,7 +629,7 @@ program wave2d
 
      !--------------------------------------
 
-     ! determine the UTM coordinates of your origin and corners  
+     ! determine the UTM coordinates of your origin and corners
      if (ISURFACE==1) then
 
         utm_xmin = 0.0 ; utm_zmin = 0.0
@@ -657,7 +657,7 @@ program wave2d
 
         ! convert global gridpoint mesh coordinates to lat-lon
         x_lon(:) = 0.0
-        z_lat(:) = 0.0 
+        z_lat(:) = 0.0
         call mesh_geo(NGLOB,x_lon,z_lat,x,z,UTM_PROJECTION_ZONE,IMESH2LONLAT)
         !write(*,'(2f16.6)') (x_lon(iglob), z_lat(iglob), iglob=1,NGLOB)
 
@@ -695,7 +695,7 @@ program wave2d
          x_plot(:) = x_lon(:)
          z_plot(:) = z_lat(:)
 
-     elseif (ISURFACE==0) then
+     else if (ISURFACE==0) then
          x_plot(:) = x(:)
          z_plot(:) = z(:)
 
@@ -706,7 +706,7 @@ program wave2d
 
      t_target = 2*hdur     ! target period for phase velocity map
 
-!!$  ! homogeneous or heterogeneous phase velocity map 
+!!$  ! homogeneous or heterogeneous phase velocity map
 !!$
 !!$  if (IMODEL_DAT == 1 .or. IMODEL_SYN == 1) then     ! read or compute a heterogeneous map
 !!$     ! This calls model_files/get_socal_map.csh, which executes wave2d_socal.f90
@@ -756,7 +756,7 @@ program wave2d
 !!$
 !!$     ! compute beta0 by finding the average of the phase velocity map
 !!$     print *, 'computing the average of the phase velocity map'
-!!$     beta0 = 0.0     
+!!$     beta0 = 0.0
 !!$     do iglob = 1,NGLOB
 !!$        beta0 = beta0 + c_glob(iglob) * da_global(iglob)
 !!$     enddo
@@ -774,7 +774,7 @@ program wave2d
         beta0 = 3500.0    ! (3500 for GJI)
         rho0 = DENSITY
 
-     elseif (ISURFACE==0) then
+     else if (ISURFACE==0) then
         !alpha0 = a_layers(2)    ! layer 2 of SoCal model (1D)
         !beta0  = b_layers(2)    ! layer 2 of SoCal model (1D)
         alpha0 = (a_layers(2)+a_layers(1))/2
@@ -795,7 +795,7 @@ program wave2d
      ! load in heterogeneous reference and target models
      ! NOTE: THESE ARE ONLY FOR A SPECIFIC MESH
      if ((IMODEL_SYN == 3).and.(IMODEL_DAT == 3)) then
-         
+
         idir = '/data1/cig/seismo/3D/ADJOINT_TOMO/iterate_adj/SEM2D_iterate_INPUT/random_fields/'
 
         ! read in structure model for synthetics
@@ -804,7 +804,7 @@ program wave2d
         open(unit=19,file=filename2,status='old')
         do ispec = 1,NSPEC
            do j = 1,NGLLZ
-              do i = 1,NGLLX 
+              do i = 1,NGLLX
                  read(19,'(6e20.10)') temp1, temp2, temp3, temp4, temp5, temp6
                  kappa_syn(i,j,ispec) = temp3
                  mu_syn(i,j,ispec) = temp4
@@ -819,7 +819,7 @@ program wave2d
         open(unit=20,file=filename2,status='old')
         do ispec = 1,NSPEC
            do j = 1,NGLLZ
-              do i = 1,NGLLX 
+              do i = 1,NGLLX
                  read(20,'(6e20.10)') temp1, temp2, temp3, temp4, temp5, temp6
                  kappa_dat(i,j,ispec) = temp3
                  mu_dat(i,j,ispec) = temp4
@@ -882,7 +882,7 @@ program wave2d
         beta0  = sqrt(    mu0 / rho0 )
         bulk0  = sqrt( kappa0 / rho0 )
         !alpha0 = sum(alpha_initial_syn * da_local) / (LENGTH * HEIGHT)
-        !beta0  = sum(beta_initial_syn * da_local)  / (LENGTH * HEIGHT) 
+        !beta0  = sum(beta_initial_syn * da_local)  / (LENGTH * HEIGHT)
      endif
 
 !!$     ! initial and reference velocity structure
@@ -915,7 +915,7 @@ program wave2d
         open(unit=19,file=filename2,status='unknown')
         do ispec = 1,NSPEC
            do j = 1,NGLLZ
-              do i = 1,NGLLX 
+              do i = 1,NGLLX
                  ! CURRENT MODEL (synthetics)
                  !read(19,*) temp1, temp2, &
                  !     kappa_syn(i,j,ispec), mu_syn(i,j,ispec), rho_syn(i,j,ispec), &
@@ -965,14 +965,14 @@ program wave2d
      open(unit=19,file=trim(out_dir2)//file_structure_syn,status='unknown')
      do ispec = 1,NSPEC
         do j = 1,NGLLZ
-           do i = 1,NGLLX 
+           do i = 1,NGLLX
               iglob = ibool(i,j,ispec)
 
               ! TARGET MODEL (data)
               write(18,'(6e20.10)') x_plot(iglob), z_plot(iglob), &
                    kappa_dat(i,j,ispec), mu_dat(i,j,ispec), rho_dat(i,j,ispec), &
-                   log( beta_dat(i,j,ispec) / beta0 )       
-   
+                   log( beta_dat(i,j,ispec) / beta0 )
+
               ! CURRENT MODEL (synthetics)
               write(19,'(6e20.10)') x_plot(iglob), z_plot(iglob), &
                    kappa_syn(i,j,ispec), mu_syn(i,j,ispec), rho_syn(i,j,ispec), &
@@ -1147,7 +1147,7 @@ program wave2d
            write(*,'(i8, 5f17.10)') i, temp1, temp2, temp3, temp4, temp5*6371.0*1000.0
         enddo
 
-     elseif (ISURFACE==0) then
+     else if (ISURFACE==0) then
         print *
         print *, 'events, km [x_eve0_syn, z_eve0_syn, x_eve_syn, x_eve_syn, dist]:'
         do i = 1,nevent
@@ -1212,19 +1212,19 @@ program wave2d
         if (ISURFACE==1) then   ! read in PERTURBED events from another file (for GJI-2007 simulations)
            ! initialize to no perturbations from synthetics
            !otime_dat(:) = otime_syn(:)
-           !x_eve_dat(:) = x_eve_syn(:) 
-           !z_eve_dat(:) = z_eve_syn(:) 
+           !x_eve_dat(:) = x_eve_syn(:)
+           !z_eve_dat(:) = z_eve_syn(:)
 
            ! initialize to prior model
            ! NOTE: these arrays have different lengths
            otime_dat(1:nevent) = otime(1:nevent)
-           x_eve_dat(1:nevent) = x_eve0_syn(1:nevent) 
-           z_eve_dat(1:nevent) = z_eve0_syn(1:nevent) 
+           x_eve_dat(1:nevent) = x_eve0_syn(1:nevent)
+           z_eve_dat(1:nevent) = z_eve0_syn(1:nevent)
 
            if (PERT_SOURCE_T == 1) then
               otime_dat(:) = otime_dat(:) + otime_eve_dat_pert(:)
            endif
- 
+
            if (PERT_SOURCE_X == 1) then
               x_eve_dat(:) = x_eve_dat(:) + x_eve_dat_pert(:)
               z_eve_dat(:) = z_eve_dat(:) + z_eve_dat_pert(:)
@@ -1245,14 +1245,14 @@ program wave2d
 !!$           enddo
 !!$           close(19)
 
-!!$           open(19,file='OUTPUT/run_2550/events_xy.dat',status='unknown') 
+!!$           open(19,file='OUTPUT/run_2550/events_xy.dat',status='unknown')
 !!$           do ievent = 1,25
 !!$              read(19,'(3f20.10,1i12)') x_eve_dat(ievent), z_eve_dat(ievent), otime_dat(ievent), itemp1
 !!$           enddo
 !!$           close(19)
 !!$          otime_dat(5) = otime_syn(5) + 0.8   ! testing for event 5 (0.8)
 
-        elseif (ISURFACE==0) then
+        else if (ISURFACE==0) then
 
            ! perturb the events to get target events for the synthetics
            ! perturbation is described as (r,theta) polar coordinates
@@ -1268,7 +1268,7 @@ program wave2d
               ! origin time perturbation
               call random_number(rand1)
               ptime = (ptmax - ptmin)*rand1 + ptmin
-              !ptime = src_pert_time   
+              !ptime = src_pert_time
 
               ! azimuthal perturbation (in radians)
               call random_number(rand1)
@@ -1278,7 +1278,7 @@ program wave2d
               ! radial perturbation (in meters)
               call random_number(rand1)
               prad = (rmax - rmin)*rand1 + rmin
-              !prad = rmax    
+              !prad = rmax
 
               ! fill vectors
               otime_dat(ievent) = otime_syn(ievent) - ptime                ! NOTE THE SIGN
@@ -1331,7 +1331,7 @@ program wave2d
         z_eve_dat(:)     = z_eve_syn(:)
         ispec_eve_dat(:) = ispec_eve_syn(:)
         xi_eve_dat(:)    = xi_eve_syn(:)
-        gamma_eve_dat(:) = gamma_eve_syn(:) 
+        gamma_eve_dat(:) = gamma_eve_syn(:)
         otime_dat(:)     = otime_syn(:)
 
      endif   ! PERT_SOURCE
@@ -1387,7 +1387,7 @@ program wave2d
 
            nrec = 3
 
-        elseif (IREC_SPACE==2) then  ! actual station locations
+        else if (IREC_SPACE==2) then  ! actual station locations
 
            ! read in (target) receivers
            recfile = trim(in_dir)//'STATION_149_full'
@@ -1399,7 +1399,7 @@ program wave2d
            read(88,*) (x_rec_lon0(i),z_rec_lat0(i),i = 1,nrec)
            close(88)
 
-        elseif (IREC_SPACE==4) then ! 'regular' mesh of receivers
+        else if (IREC_SPACE==4) then ! 'regular' mesh of receivers
 
            ! calculate mesh spacing
            dx = LENGTH/NMESH_REC
@@ -1422,13 +1422,13 @@ program wave2d
 
         endif  ! IREC_SPACE
 
-     elseif (ISURFACE==0) then   ! enter target x-z
+     else if (ISURFACE==0) then   ! enter target x-z
 
         if (IREC_SPACE==1) then  ! individual receivers
            stop ' no individual receiver listed'
 
-        elseif (IREC_SPACE==2) then  ! actual station locations
-           
+        else if (IREC_SPACE==2) then  ! actual station locations
+
            ! read in (target) receivers
            recfile = trim(in_dir)//'STATIONS_socal1D_rand15'  ! 200 km width
            !recfile = trim(in_dir)//'STATIONS_socal1D_rand30'   ! 400 km width
@@ -1437,7 +1437,7 @@ program wave2d
            read(88,*) (x_rec0(i),z_rec0(i),i = 1,nrec)
            close(88)
 
-        elseif (IREC_SPACE==4) then  ! 'regular' line of receivers (BODY waves)
+        else if (IREC_SPACE==4) then  ! 'regular' line of receivers (BODY waves)
 
            ! calculate mesh spacing
            dx = LENGTH/NMESH_REC
@@ -1825,7 +1825,7 @@ program wave2d
 
      ! create mprior
      temp_local1(:,:,:) = 0.0
-     call local2mvec(temp_local1, nmod_src, m_src_prior, nmod, mprior)     
+     call local2mvec(temp_local1, nmod_src, m_src_prior, nmod, mprior)
 
      ! create mtarget
      temp_local1(:,:,:) = log( beta_dat(:,:,:) / beta0 )
@@ -1921,18 +1921,18 @@ program wave2d
      ! NOTE: we ignore parts of the model norm that do not participate in the inversion
      if     ( INV_STRUCT_BETA == 1 .and. INV_SOURCE_T == 0 .and. INV_SOURCE_X == 0 ) then   ! structure
         fac_str = 1.00
-     elseif ( INV_STRUCT_BETA == 0 .and. INV_SOURCE_T == 1 .and. INV_SOURCE_X == 0 ) then   ! origin time
+     else if ( INV_STRUCT_BETA == 0 .and. INV_SOURCE_T == 1 .and. INV_SOURCE_X == 0 ) then   ! origin time
         fac_ts = 1.00
-     elseif ( INV_STRUCT_BETA == 0 .and. INV_SOURCE_T == 0 .and. INV_SOURCE_X == 1 ) then   ! location
+     else if ( INV_STRUCT_BETA == 0 .and. INV_SOURCE_T == 0 .and. INV_SOURCE_X == 1 ) then   ! location
         fac_xs = 0.50 ;  fac_ys = 0.50
-     elseif ( INV_STRUCT_BETA == 1 .and. INV_SOURCE_T == 1 .and. INV_SOURCE_X == 0 ) then   ! structure + origin time
+     else if ( INV_STRUCT_BETA == 1 .and. INV_SOURCE_T == 1 .and. INV_SOURCE_X == 0 ) then   ! structure + origin time
         fac_str = 0.50 ;  fac_ts = 0.50
-     elseif ( INV_STRUCT_BETA == 1 .and. INV_SOURCE_T == 0 .and. INV_SOURCE_X == 1 ) then   ! structure + location
+     else if ( INV_STRUCT_BETA == 1 .and. INV_SOURCE_T == 0 .and. INV_SOURCE_X == 1 ) then   ! structure + location
         fac_str = 0.50 ;  fac_xs = 0.25 ;  fac_ys = 0.25
-     elseif ( INV_STRUCT_BETA == 0 .and. INV_SOURCE_T == 1 .and. INV_SOURCE_X == 1 ) then   ! source
+     else if ( INV_STRUCT_BETA == 0 .and. INV_SOURCE_T == 1 .and. INV_SOURCE_X == 1 ) then   ! source
         fac_ts = 0.50 ;  fac_xs = 0.25 ;  fac_ys = 0.25
-     elseif ( INV_STRUCT_BETA == 1 .and. INV_SOURCE_T == 1 .and. INV_SOURCE_X == 1 ) then   ! joint
-        fac_str = 1.0/2.0  ;  fac_ts = 1.0/6.0 ;  fac_xs = 1.0/6.0  ;  fac_ys = 1.0/6.0 
+     else if ( INV_STRUCT_BETA == 1 .and. INV_SOURCE_T == 1 .and. INV_SOURCE_X == 1 ) then   ! joint
+        fac_str = 1.0/2.0  ;  fac_ts = 1.0/6.0 ;  fac_xs = 1.0/6.0  ;  fac_ys = 1.0/6.0
         !fac_str = 0.85  ;  fac_ts = 0.05 ;  fac_xs = 0.05  ;  fac_ys = 0.05
      else
         stop 'you must invert for something'
@@ -1988,7 +1988,7 @@ program wave2d
         !ugsq_str = 0.3352965529d6 ; ugsq_ts = 0.8068082292d3 ; ugsq_xs = 0.1209790150d4 ; ugsq_ys = 0.1391331978d4  ! Gaussians, 25 events
 
 !!$        ! ad hoc: choose balance among the four parts of the gradient
-!!$        fac_str = 1.0/2.0  ;  fac_ts = 1.0/6.0 ;  fac_xs = 1.0/6.0  ;  fac_ys = 1.0/6.0 
+!!$        fac_str = 1.0/2.0  ;  fac_ts = 1.0/6.0 ;  fac_xs = 1.0/6.0  ;  fac_ys = 1.0/6.0
 !!$        !fac_str = 1.0/4.0  ;  fac_ts = 1.0/4.0 ;  fac_xs = 1.0/4.0  ;  fac_ys = 1.0/4.0
 !!$        !fac_str = 0.7  ;  fac_ts = 0.1 ;  fac_xs = 0.1  ;  fac_ys = 0.1
 !!$        !fac_str = 0.85  ;  fac_ts = 0.05 ;  fac_xs = 0.05  ;  fac_ys = 0.05
@@ -2011,7 +2011,7 @@ program wave2d
 
      ! TESTING
      !covm_weight_parts(:) = 1.0
-     !covg_weight_parts(:) = 1.0 
+     !covg_weight_parts(:) = 1.0
 
      ! Re-set any weights that are 0.0 to 1.0; these portions of the covariance matrix
      ! should not play a role, since the corresponding gradients will always be 0.0.
@@ -2104,7 +2104,7 @@ program wave2d
      write(19,'(5e14.6)') sum(da_local(:,:,:)), sum(da_local_vec(:)), sum(da_global(:)), LENGTH*HEIGHT, AREA
      write(19,'(3e14.6)') minval(da_local_vec(:)), maxval(da_local_vec(:)), sum(da_local_vec(:))/NLOCAL
      write(19,'(3e14.6)') minval(da_global(:)), maxval(da_global(:)), sum(da_global(:))/NGLOB
-!!$     write(19,*) 
+!!$     write(19,*)
 !!$     write(19,*) 'COVERAGE WEIGHTS: '
 !!$     write(19,'(2f14.6)') coverage_str, coverage_src
 !!$     write(19,*) 'JOINT WEIGHTS (based on unbalanced gradients): '
@@ -2172,12 +2172,12 @@ program wave2d
      ! data covariance
      allocate(cov_data(nmeas))
      cov_data(:) = 0.0
-     
+
      if (IKER==0) then
         cov_data(:) = SIGMA_WAVEFORM * SIGMA_WAVEFORM * nmeas_run
-     elseif (IKER==1) then
+     else if (IKER==1) then
         cov_data(:) = SIGMA_DT * SIGMA_DT * nmeas_run
-     elseif (IKER==2) then
+     else if (IKER==2) then
         cov_data(:) = SIGMA_DLNA * SIGMA_DLNA * nmeas_run
      endif
 
@@ -2201,12 +2201,12 @@ program wave2d
      ! load measurement perturbations
      if ( ADD_DATA_ERRORS ) then
 
-        if (nmeas .ge. 10000) stop 'measurement error file only contains 10000 lines'
+        if (nmeas >= 10000) stop 'measurement error file only contains 10000 lines'
 
         allocate(measure_pert_vec(nmeas))
         measure_pert_vec(:) = 0.0
 
-        ! By reading in the same set of perturbations, rather than generating 
+        ! By reading in the same set of perturbations, rather than generating
         ! a new distrubution each time, we can be sure that the data errors will
         ! not influence the convergence.
         open(55,file=trim(in_dir)//'sigma_0p1_pert.dat',status='unknown')
@@ -2214,7 +2214,7 @@ program wave2d
            read(55,*) measure_pert_vec(i)
         enddo
         close(55)
- 
+
         ! check this by writing to file
         open(55,file=trim(out_dir2)//'data_errors_added.dat',status='unknown')
         do i = 1,nmeas
@@ -2266,7 +2266,7 @@ program wave2d
         if (itest==0) then      ! reference model (current model)
            call mvec2local(nmod, nmod_src, m0_vec, beta_syn, m_src_syn)
 
-        elseif (itest==1) then  ! test model
+        else if (itest==1) then  ! test model
            call mvec2local(nmod, nmod_src, mt_vec, beta_syn, m_src_syn)
         endif
 
@@ -2319,7 +2319,7 @@ program wave2d
            call compute_norm_sq(filename, imnorm, &
                ievent_min, ievent_max, nevent, index_source, nmod, &
                m0, mprior, cov_model, model_norm_parts, covm_weight_parts)
-        elseif (itest==1) then  ! test model
+        else if (itest==1) then  ! test model
            call compute_norm_sq(filename, imnorm, &
                ievent_min, ievent_max, nevent, index_source, nmod, &
                mt, mprior, cov_model, model_norm_parts, covm_weight_parts)
@@ -2353,7 +2353,7 @@ program wave2d
         mdiff(:) = 0.0
         if (itest==0) then
            mdiff = mtarget - m0 + mprior
-        elseif (itest==1) then
+        else if (itest==1) then
            mdiff = mtarget - mt + mprior
         endif
 
@@ -2442,7 +2442,7 @@ program wave2d
                     !z_src_lat0(1) = z_eve_lat_syn(ievent)
                     nsrc = 1
 
-                 elseif (ISRC_SPACE==2) then  ! finite source segment
+                 else if (ISRC_SPACE==2) then  ! finite source segment
 
                     ! specify the target starting point of the fault, the azimuth, and the length
                     x_src_lon_i = -119.0    ;  z_src_lat_i = 33.0   ;   flen   = 100.0d+03  ! short fault
@@ -2470,19 +2470,19 @@ program wave2d
                     ! get target fault points in lat-lon
                     call mesh_geo(MAX_SR,x_src_lon0,z_src_lat0,x_src0,z_src0,UTM_PROJECTION_ZONE,IUTM2LONGLAT)
 
-                 elseif (ISRC_SPACE==3) then  ! California continental shelf (OMS)
+                 else if (ISRC_SPACE==3) then  ! California continental shelf (OMS)
 
                     x_src_lon0(1:nshelf) = shelf_lon(1:nshelf)
                     z_src_lat0(1:nshelf) = shelf_lat(1:nshelf)
-                    nsrc = nshelf      
+                    nsrc = nshelf
 
-                 elseif (ISRC_SPACE==4) then  ! California coastline (OMS)
+                 else if (ISRC_SPACE==4) then  ! California coastline (OMS)
 
                     x_src_lon0(1:ncoast) = coast_lon(1:ncoast)
                     z_src_lat0(1:ncoast) = coast_lat(1:ncoast)
                     nsrc = ncoast
 
-                 elseif (ISRC_SPACE==5) then  ! finite circular region
+                 else if (ISRC_SPACE==5) then  ! finite circular region
 
                     ! lat-lon of the center point
                     xcen_lon = -119.0
@@ -2642,7 +2642,7 @@ program wave2d
               x_src_dat(1) = x_eve_dat(ievent)
               z_src_dat(1) = z_eve_dat(ievent)
               origin_time_dat = otime_dat(ievent)
-              if (ISURFACE==1) then 
+              if (ISURFACE==1) then
                  x_src_lon_dat(1) = x_eve_lon_dat(ievent)
                  z_src_lat_dat(1) = z_eve_lat_dat(ievent)
               endif
@@ -2722,7 +2722,7 @@ program wave2d
                     write(*,'(i8, 5f17.10)') i, temp1, temp2, temp3, temp4, temp5*6371.0*1000.0
                  enddo
 
-              elseif (ISURFACE==0) then
+              else if (ISURFACE==0) then
                  print *
                  print *, 'sources [x_src_dat, z_src_dat, x_src, z_src, dist (m)]:'
                  do i = 1,nsrc
@@ -2778,7 +2778,7 @@ program wave2d
               f0(1) = FNORM * FOR_X
               f0(2) = FNORM * FOR_Y
               f0(3) = FNORM * FOR_Z
-           elseif (ISURFACE==1) then
+           else if (ISURFACE==1) then
               f0(1) = FNORM
            else
               stop 'NCOMP must be 1 or 3'
@@ -2790,7 +2790,7 @@ program wave2d
 
            ! source function for data (includes the source magnitude f0)
            allocate(samp_dat(NSTEP,NCOMP,nsrc))
-           samp_dat = 0.0 
+           samp_dat = 0.0
            do i = 1,nsrc
               do icomp = 1,NCOMP
                  samp_dat(:, icomp, i) = stf_dat(:) * f0(icomp)
@@ -2799,11 +2799,11 @@ program wave2d
 
            ! source time function for SYNTHETICS (allows for iterative origin time perturbations)
            stf_syn(:) = 0.0
-           call get_source_time_function(origin_time_syn,stf_syn,ti) 
+           call get_source_time_function(origin_time_syn,stf_syn,ti)
 
            ! source function for synthetics (includes the source magnitude f0)
            allocate(samp(NSTEP,NCOMP,nsrc))
-           samp = 0.0 
+           samp = 0.0
            do i = 1,nsrc
               do icomp = 1,NCOMP
                  samp(:, icomp, i) = stf_syn(:) * f0(icomp)
@@ -2869,7 +2869,7 @@ program wave2d
 
            ! only write the files for the first event, since they are the same for each event
            if (ifirst_event == 1) then
-              
+
               ! write velocity structure for data and synthetics to file -- LOCAL LEVEL
               file_structure_dat = 'structure_dat.dat'
               file_structure_syn = 'structure_syn.dat'
@@ -2877,13 +2877,13 @@ program wave2d
               open(unit=19,file=trim(out_dir1)//file_structure_syn,status='unknown')
               do ispec = 1,NSPEC
                  do j = 1,NGLLZ
-                    do i = 1,NGLLX 
+                    do i = 1,NGLLX
                        iglob = ibool(i,j,ispec)
 
                        ! TARGET MODEL (data)
                        write(18,'(6e20.10)') x_plot(iglob), z_plot(iglob), &
                             kappa_dat(i,j,ispec), mu_dat(i,j,ispec), rho_dat(i,j,ispec), &
-                            log( beta_dat(i,j,ispec) / beta0 )      
+                            log( beta_dat(i,j,ispec) / beta0 )
 
                        ! CURRENT MODEL (synthetics)
                        write(19,'(6e20.10)') x_plot(iglob), z_plot(iglob), &
@@ -2939,7 +2939,7 @@ program wave2d
                       m_src_dat(itemp1) - m_src_dat(itemp1), &
                       m_src_dat(itemp2) - m_src_dat(itemp2), &
                       m_src_dat(itemp3) - m_src_dat(itemp3)
-                      
+
                  ! sources for synthetics
                  write(20,'(8e20.10)') xtemp, ztemp, &
                       m_src_syn(itemp1), m_src_syn(itemp2), m_src_syn(itemp3), &
@@ -3101,8 +3101,8 @@ program wave2d
            call mtm_adj(ievent, nrec, syn, tstart, tend, adj_syn, data, data_recon)
 
            if (WRITE_SEISMO_RECONSTRUCT) call write_seismogram(data_recon, nrec, trim(out_dir)//'dat_recon')
-           
-           ! specify which components you want to send back 
+
+           ! specify which components you want to send back
            if (ISURFACE==0) then
               if (REV_X == 0) adj_syn(:,1,:) = 0.0
               if (REV_Y == 0) adj_syn(:,2,:) = 0.0
@@ -3122,7 +3122,7 @@ program wave2d
 !!$              open(19,file=filename1,status='unknown')
 !!$              if (IKER <= 4) write(19,'(7a,f12.6)') trim(script_dir)//trim(filename2),' ', &
 !!$                   trim(out_dir),' ', trim(data_tag)  ,' ','1', tshift
-!!$              write(19,'(7a,f12.6)') trim(script_dir)//trim(filename2),' ', & 
+!!$              write(19,'(7a,f12.6)') trim(script_dir)//trim(filename2),' ', &
 !!$                   trim(out_dir),' ', trim(syn_tag)   ,' ','1', tshift
 !!$              if (WRITE_STF_A)   write(19,'(7a,f12.6)') trim(script_dir)//trim(filename2),' ', &
 !!$                   trim(out_dir),' ', trim(stfadj_tag),' ','1', tshift
@@ -3184,7 +3184,7 @@ program wave2d
                    nrec, rglob, ispec_rec, hxir_store, hgammar_store, adj_syn, &
                    trim(last_frame_name), absorb_field, &
                    atype_kernel, btype_kernel, rtype_kernel, three_source_model, stf_syn, f0)
-              
+
               !----------------------
 
               ! gradient vector for source parameters
@@ -3210,7 +3210,7 @@ program wave2d
               enddo
 
               deallocate(three_source_model)
-              !----------------------    
+              !----------------------
 
               ! smooth EACH event kernel for the data subspace method
               if (ISMOOTH_EVENT_KERNEL == 1) then
@@ -3226,13 +3226,13 @@ program wave2d
 !!$              if (ISMOOTH_EVENT_KERNEL == 1) then
 
                  ! write smoothed beta kernel to file
-                 open(unit = 13, file = trim(out_dir)//'kernel_basis_smooth', status = 'unknown',iostat=ios) 
+                 open(unit = 13, file = trim(out_dir)//'kernel_basis_smooth', status = 'unknown',iostat=ios)
                  if (ios /= 0) stop 'Error writing smoothed kernel to disk'
                  k = 1
                  ktemp(:) = 0.0
                  do ispec = 1,NSPEC
                     do j = 1,NGLLZ
-                       do i = 1,NGLLX 
+                       do i = 1,NGLLX
                           iglob = ibool(i,j,ispec)
                           write(13,'(4e16.6)') x_plot(iglob), z_plot(iglob), &
                              kbeta_smooth(i,j,ispec), btype_kernel(i,j,ispec)
@@ -3340,8 +3340,8 @@ program wave2d
               model_norm_target, model_norm_target_struct, model_norm_target_source
            write(91,'(a30,3e16.8)') ' model_norm2_diff(m) : ', &
               model_norm_diff, model_norm_diff_struct, model_norm_diff_source
-           !write(91,'(a30,1e16.8)') ' chi_model_stop(mtarget) : ', chi_model_stop 
-           write(91,'(a30,1e16.8)') ' chi_data_stop : ', chi_data_stop 
+           !write(91,'(a30,1e16.8)') ' chi_model_stop(mtarget) : ', chi_model_stop
+           write(91,'(a30,1e16.8)') ' chi_data_stop : ', chi_data_stop
            write(91,'(a30,1e16.8)') ' chi(m) : ', chi_val
         endif
 
@@ -3353,13 +3353,13 @@ program wave2d
             print *, ' data_norm <= 2(chi_data_stop) : ', data_norm, 2.0*chi_data_stop
         endif
 
-        !if ( itest==0 .and. (chi_val .ge. chi_k_val) ) then
+        !if ( itest==0 .and. (chi_val >= chi_k_val) ) then
         if ( itest==0 .and. var_red_val < VAR_RED_MIN ) then
             stop_cg = .true.
             print *, '   chi_k_val : ', chi_k_val
             print *, '     chi_val : ', chi_val
             print *, ' var_red_val : ', var_red_val
-            print *, ' VAR_RED_MIN : ', VAR_RED_MIN 
+            print *, ' VAR_RED_MIN : ', VAR_RED_MIN
             print *, ' var_red_val < VAR_RED_MIN'
         endif
 
@@ -3433,7 +3433,7 @@ program wave2d
                  if ( ISMOOTH_MISFIT_KERNEL == 1) then
                     call smooth_function(btype_kernel_sum, GAMMA_SMOOTH_KERNEL, kbeta_smooth)
                  else
-                    kbeta_smooth = btype_kernel_sum 
+                    kbeta_smooth = btype_kernel_sum
                  endif
                  !kbulk_smooth = 0.0       ! testing for S-wave only
 
@@ -3454,8 +3454,8 @@ program wave2d
                     gradient_model(:) = (m0(:) - mprior(:)) / cov_imetric(:)
                     !gradient_model(:) = (m0(:) - mprior(:)) / cov_model(:)
                  else
-                    gradient_model(:) = (mt(:) - mprior(:)) / cov_imetric(:) 
-                    !gradient_model(:) = (mt(:) - mprior(:)) / cov_model(:) 
+                    gradient_model(:) = (mt(:) - mprior(:)) / cov_imetric(:)
+                    !gradient_model(:) = (mt(:) - mprior(:)) / cov_model(:)
                  endif
               endif
 
@@ -3531,7 +3531,7 @@ program wave2d
 !!$              !scale_struct_gji = sqrt( norm_source_2 / (norm_bulk_2 + norm_beta_2) )
 !!$              scale_struct_gji = sqrt( gradient_norm_source / gradient_norm_struct )
 !!$              open(unit=19,file=trim(out_dir1)//'scaling_gji.dat',status='unknown')
-!!$              write(19,'(1e20.10)') scale_struct_gji 
+!!$              write(19,'(1e20.10)') scale_struct_gji
 !!$              close(19)
 
 !!$              ! write gradient norms to file
@@ -3565,8 +3565,8 @@ program wave2d
 !!$              call write_norm_sq(filename3,gradient_norm_model_parts)
 
               !stop 'TESTING GRADIENT NORMS'
-              
-              ! update balance using unweighted gradient norm -- see cov_imetric above 
+
+              ! update balance using unweighted gradient norm -- see cov_imetric above
               ! NOTE 1: this will only use gradient for non-test models (itest=0)
               ! NOTE 2: do you want this for the first step only (istep=0) or each step
               if ( (istep==0) .and. (0==1) ) then
@@ -3675,7 +3675,7 @@ program wave2d
               else
                  beta_val_top = sum((gk(:) - g0(:)) * (cov_imetric(:)*gk(:)) )
                  beta_val_bot = sum(g0(:) * (cov_imetric(:)*g0(:)) )
-                 beta_val = beta_val_top / beta_val_bot 
+                 beta_val = beta_val_top / beta_val_bot
               endif
               pk(:) = -cov_imetric(:) * gk(:) + beta_val * p0(:)
 
@@ -3691,7 +3691,7 @@ program wave2d
               ! KEY: test value for line-search to get test model
               ! You must be careful to define the metric for the dot product operation.
               ! Here, we use a diagonal covariance matrix; for a full covariance matrix,
-              ! the operation would be : g_k C^kl p_l 
+              ! the operation would be : g_k C^kl p_l
 
               ! The minimum of the test-model parameter should go through 0.5, which
               ! is the misfit if all the data are fit within the uncertainties specified by
@@ -3700,7 +3700,7 @@ program wave2d
               !mu_val = 0.0
 
               lam_t_val_bot = sum( gk(:) * pk(:) )    ! ghat dot p
-              lam_t_val = 2.0*(mu_val - chi_k_val) / lam_t_val_bot 
+              lam_t_val = 2.0*(mu_val - chi_k_val) / lam_t_val_bot
 
               ! alternative approach (more ad hoc)
               !lam_t_val = -2.0*(1.0 - mu_val)*chi_k_val  / sum( gk(:) * pk(:) )
@@ -3758,7 +3758,7 @@ program wave2d
               write(19,'(5e16.8)') mu_val, lam_t_val_bot, lam_t_val, beta_val, chi_k_val
               close(19)
 
-           elseif (itest==1) then  ! if present kernel is for a test model
+           else if (itest==1) then  ! if present kernel is for a test model
 
               chi_t_val = chi_val
 
@@ -3768,7 +3768,7 @@ program wave2d
               yy1 = chi_k_val
               yy2 = chi_t_val
               g1  = sum(g0(:) * pk(:))
-              !g1  = dot_product(g0, pk)              ! GJI paper 
+              !g1  = dot_product(g0, pk)              ! GJI paper
 
               if (POLY_ORDER == 3) then
                  ! use cubic polynomial: six values gives an analytical minimum
@@ -3790,7 +3790,7 @@ program wave2d
                  qfac = Pb**2.0 - 3.0*Pa*Pc
                  if (Pa /= 0.0 .and. qfac >= 0.0) then
                     xmin = (-Pb + sqrt(qfac)) / (3.0*Pa)
-                 elseif (Pa == 0.0 .and. Pb /= 0.0) then
+                 else if (Pa == 0.0 .and. Pb /= 0.0) then
                     xmin = -Pc/(2.0*Pb)
                  else
                     print *, 'Pa, Pb, Pc, Pd, qfac: ',Pa,Pb,Pc,Pd,qfac
@@ -3943,7 +3943,7 @@ program wave2d
      !deallocate(m_src_syn_vec,m_src_dat_vec)
      !deallocate(m0_vec_initial,m_src_syn_vec_initial,m_src_syn_initial)
      !deallocate(m_scale_src_all)
- 
+
      deallocate(cov_data,index_data,index_source)
      if (ADD_DATA_ERRORS) deallocate(measure_pert_vec)
 

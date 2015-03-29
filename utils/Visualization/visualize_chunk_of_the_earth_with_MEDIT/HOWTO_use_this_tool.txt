@@ -2,7 +2,7 @@
 
 This tool allows to visualize a chunk of the earth (with HEX8 or HEX27 elements) with the software Medit
 
-Reminder : to create a mesh of a earth chunk (in the case of coupling with DSM), the parameter MESH_A_CHUNK_OF_THE_EARTH 
+Reminder : to create a mesh of a earth chunk (in the case of coupling with DSM), the parameter MESH_A_CHUNK_OF_THE_EARTH
 in DATA/Par_file have to set .true., and this will be call a specific internal for that in meshfem3D.f90
 
 !======================================================================================================================!
@@ -18,17 +18,17 @@ The Medit documentation (Caution : it is in French, and the HTML links in the pa
 
 !======================================================================================================================!
 
-a/ HEX8 case (for HEX27 case, go l. 65) : 
+a/ HEX8 case (for HEX27 case, go l. 65) :
 
 !======================================================================================================================!
 
 Step 2a : Run the earth chunk mesher with NGNOD=8, for coupling with DSM
 ------------------------------------------------------------------------
 
-In the case of coupling with DSM, when you run xmeshfem3D, a subdirectory MESH is created in the directory of 
-the concerned example, and several files appears. 
+In the case of coupling with DSM, when you run xmeshfem3D, a subdirectory MESH is created in the directory of
+the concerned example, and several files appears.
 
-Among them, copy the files below in utils/Visualization/visualize_chunk_of_the_earth_with_MEDIT/HEX8 
+Among them, copy the files below in utils/Visualization/visualize_chunk_of_the_earth_with_MEDIT/HEX8
 (path from the specfem3d main directory) :
 
 - nodes_coords_file
@@ -63,17 +63,17 @@ $ medit test_out_HEX8.mesh &
 
 !======================================================================================================================!
 
-b/ HEX27 case : 
+b/ HEX27 case :
 
 !======================================================================================================================!
 
 Step 2b : Run the earth chunk mesher with NGNOD=27, for coupling with DSM
 -------------------------------------------------------------------------
 
-In the case of coupling with DSM, when you run xmeshfem3D, a subdirectory MESH is created in the directory of 
-the concerned example, and several files appears. 
+In the case of coupling with DSM, when you run xmeshfem3D, a subdirectory MESH is created in the directory of
+the concerned example, and several files appears.
 
-Among them, copy the files below in utils/Visualization/visualize_chunk_of_the_earth_with_MEDIT/HEX27 
+Among them, copy the files below in utils/Visualization/visualize_chunk_of_the_earth_with_MEDIT/HEX27
 (path from the specfem3d main directory) :
 
 - nodes_coords_file

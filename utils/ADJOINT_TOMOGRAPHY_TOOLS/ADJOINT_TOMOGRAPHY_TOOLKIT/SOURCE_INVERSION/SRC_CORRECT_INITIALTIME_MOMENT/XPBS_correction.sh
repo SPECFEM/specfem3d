@@ -12,4 +12,4 @@ cd $PBS_O_WORKDIR
 
 input=XCORRECT_INPUT_M42/CORRECT_201105192015A
 
-./xcorrect_syn_time_moment < $input  
+./xcorrect_syn_time_moment < $input

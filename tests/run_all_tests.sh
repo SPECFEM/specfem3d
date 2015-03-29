@@ -27,8 +27,18 @@ fi
 echo "main directory: $dir"
 echo "all tests starting: `date`"
 
+# sub-directories
+tests=( compilations \
+        decompose_mesh \
+        meshfem3D \
+        generate_databases \
+        specfem3D \
+        auxiliaries \
+        tomography \
+      )
+
 # loops over subdirectories
-for testdir in ./*/
+for testdir in ${tests[@]};
 do
   testdir=${testdir%*/}
 
@@ -51,10 +61,10 @@ do
     cd $dir/
 
   fi
-  
+
 done
 
 echo
 echo "all tests completed"
-echo "`date`"
+date
 echo

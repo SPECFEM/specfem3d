@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -305,7 +305,7 @@
 
     ! write time stamp file to give information about progression of simulation
     write(outputname,"('/timestamp',i6.6)") it
-    open(unit=IOUT,file=trim(OUTPUT_FILES_PATH)//outputname,status='unknown')
+    open(unit=IOUT,file=trim(OUTPUT_FILES)//outputname,status='unknown')
     write(IOUT,*) 'Time step # ',it
     write(IOUT,*) 'Time: ',sngl((it-1)*DT-t0),' seconds'
     write(IOUT,*) 'Elapsed time in seconds = ',tCPU
@@ -400,4 +400,37 @@
   endif ! myrank
 
   end subroutine check_stability
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine it_print_elapsed_time()
+
+  use specfem_par
+  use specfem_par_elastic
+  use specfem_par_acoustic
+
+  implicit none
+
+  ! local parameters
+  integer :: ihours,iminutes,iseconds,int_tCPU
+  ! timing
+  double precision :: tCPU
+
+  if (myrank == 0) then
+    ! elapsed time since beginning of the simulation
+    tCPU = wtime() - time_start
+
+    int_tCPU = int(tCPU)
+    ihours = int_tCPU / 3600
+    iminutes = (int_tCPU - 3600*ihours) / 60
+    iseconds = int_tCPU - 3600*ihours - 60*iminutes
+    write(IMAIN,*) 'Time-Loop Complete. Timing info:'
+    write(IMAIN,*) 'Total elapsed time in seconds = ',tCPU
+    write(IMAIN,"(' Total elapsed time in hh:mm:ss = ',i6,' h ',i2.2,' m ',i2.2,' s')") ihours,iminutes,iseconds
+    call flush_IMAIN()
+  endif
+
+  end subroutine it_print_elapsed_time
 

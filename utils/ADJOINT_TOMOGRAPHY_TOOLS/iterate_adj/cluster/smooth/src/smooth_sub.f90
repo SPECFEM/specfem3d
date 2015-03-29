@@ -8,11 +8,11 @@ subroutine get_all_eight_slices(ichunk,ixi,ieta,&
   implicit none
 
   integer, intent(IN) :: ichunk,ixi,ieta,nproc_xi,nproc_eta
- 
+
   integer, intent(OUT) :: ileft,iright,ibot,itop,ilb,ilt,irb,irt
   integer :: get_slice_number
 
-  
+
   integer :: ichunk_left, islice_xi_left, islice_eta_left, &
            ichunk_right, islice_xi_right, islice_eta_right, &
            ichunk_bot, islice_xi_bot, islice_eta_bot, &
@@ -37,7 +37,7 @@ subroutine get_all_eight_slices(ichunk,ixi,ieta,&
   ilt = get_slice_number(ichunk,ixi-1,ieta+1,nproc_xi,nproc_eta)
   irb = get_slice_number(ichunk,ixi+1,ieta-1,nproc_xi,nproc_eta)
   irt = get_slice_number(ichunk,ixi+1,ieta+1,nproc_xi,nproc_eta)
-  
+
   if (ixi==0) then
     call get_lrbt_slices(ichunk_left,islice_xi_left,islice_eta_left, &
                ileft0, ichunk_left0, islice_xi_left0, islice_eta_left0, &
@@ -52,7 +52,7 @@ subroutine get_all_eight_slices(ichunk,ixi,ieta,&
     else if (ichunk == 2) then
       ilb = get_slice_number(ichunk_right0,islice_xi_right0,islice_eta_right0,nproc_xi,nproc_eta)
       ilt = get_slice_number(ichunk_left0,islice_xi_left0,islice_eta_left0,nproc_xi,nproc_eta)
-    else 
+    else
       ilb = get_slice_number(ichunk_left0,islice_xi_left0,islice_eta_left0,nproc_xi,nproc_eta)
       ilt = get_slice_number(ichunk_right0,islice_xi_right0,islice_eta_right0,nproc_xi,nproc_eta)
     endif
@@ -98,7 +98,7 @@ subroutine get_all_eight_slices(ichunk,ixi,ieta,&
       irb = get_slice_number(ichunk_top0,islice_xi_top0,islice_eta_top0,nproc_xi,nproc_eta)
     endif
   endif
-  
+
   if (ieta==nproc_eta-1) then
     call get_lrbt_slices(ichunk_top,islice_xi_top,islice_eta_top, &
                ileft0, ichunk_left0, islice_xi_left0, islice_eta_left0, &
@@ -200,7 +200,7 @@ subroutine get_lrbt_slices(ichunk,ixi,ieta, &
     islice_xi_top=slice_xi_top(ichunk+1)
     islice_eta_top=slice_eta_top(ichunk+1)
   endif
-  
+
   ileft = get_slice_number(ichunk_left,islice_xi_left,islice_eta_left,nproc_xi,nproc_eta)
   iright = get_slice_number(ichunk_right,islice_xi_right,islice_eta_right,nproc_xi,nproc_eta)
   ibot = get_slice_number(ichunk_bot,islice_xi_bot,islice_eta_bot,nproc_xi,nproc_eta)

@@ -6,7 +6,7 @@
 #
 # Text here.
 #
-# 
+#
 # EXAMPLE:
 #
 # plot_seis_multi.pl -m CMTSOLUTION_3321590 -n PHL/CI -l 10/190 -a 3321590_T006_T030_m16_STATIONS_ADJOINT -d DATA -s SYN -w MEASUREMENT_WINDOWS_3321590_T006_T030_m16/MEASUREMENT_WINDOWS_3321590_T006_T030_m00 -x 3321590_T006_T030_m16_window_chi/3321590_T006_T030_m00_window_chi -i 3321590/m16/m00/6/30
@@ -206,15 +206,15 @@ $xtextpos2 = $tmin + 0.02*$trange;      # first window measurement label
 $xtextpos3 = $tmin + 0.50*$trange;      # title position
 $xtextpos4 = $tmin + 0.98*$trange;      # final window measurement label
 
-$ytextpos5 = 1.35*$Srange;	# titles
+$ytextpos5 = 1.35*$Srange;  # titles
 #$ytextpos4 = 1.03*$Srange;    # dT label
 #$ytextpos3 = 0.90*$Srange;    # dlnA label
-$ytextpos4 = 0.95*$Srange;	# dT label
-$ytextpos3 = 0.80*$Srange;	# dlnA label
-$ytextpos2 = 0.35*$Srange;	# Z, R, T label
-$ytextpos1 = 0.10*$Srange;	# ymax label
+$ytextpos4 = 0.95*$Srange;  # dT label
+$ytextpos3 = 0.80*$Srange;  # dlnA label
+$ytextpos2 = 0.35*$Srange;  # Z, R, T label
+$ytextpos1 = 0.10*$Srange;  # ymax label
 
-$ytextpos4 = 0.85*$Srange;	# lower dT label
+$ytextpos4 = 0.85*$Srange;  # lower dT label
 
 # dimension of seismograms
 $proj = "-JX${sdX}/${sdY}";
@@ -318,11 +318,11 @@ if ($ntline) {
 
       (undef,undef,undef,undef,undef,$kplotR,undef,undef,$chi2R,$chi3R,$chi4R,$chi5R,$meas2R,$meas3R,$meas4R,$meas5R,$sigma2R,$sigma3R,$sigma4R,$sigma5R) = split(" ",$mlines[$i]);
       if ($iplot_sigma==1) {
-	$stlabR_dT[$i] = sprintf("\@~D\@~T = %.2f \\261 %.2f s",$meas4R,$sigma4R);
-	$stlabR_dA[$i] = sprintf("\@~D\@~A = %.2f \\261 %.2f",$meas5R,$sigma5R);
+  $stlabR_dT[$i] = sprintf("\@~D\@~T = %.2f \\261 %.2f s",$meas4R,$sigma4R);
+  $stlabR_dA[$i] = sprintf("\@~D\@~A = %.2f \\261 %.2f",$meas5R,$sigma5R);
       } else {
-	$stlabR_dT[$i] = sprintf("\@~D\@~T = %.2f s",$meas4R);
-	$stlabR_dA[$i] = sprintf("\@~D\@~A = %.2f",$meas5R);
+  $stlabR_dT[$i] = sprintf("\@~D\@~T = %.2f s",$meas4R);
+  $stlabR_dA[$i] = sprintf("\@~D\@~A = %.2f",$meas5R);
       }
     }
   }
@@ -350,11 +350,11 @@ if ($ntline) {
 
       (undef,undef,undef,undef,undef,$kplotZ,undef,undef,$chi2Z,$chi3Z,$chi4Z,$chi5Z,$meas2Z,$meas3Z,$meas4Z,$meas5Z,$sigma2Z,$sigma3Z,$sigma4Z,$sigma5Z) = split(" ",$mlines[$i]);
       if ($iplot_sigma==1) {
-	$stlabZ_dT[$i] = sprintf("\@~D\@~T = %.2f \\261 %.2f s",$meas4Z,$sigma4Z);
-	$stlabZ_dA[$i] = sprintf("\@~D\@~A = %.2f \\261 %.2f",$meas5Z,$sigma5Z);
+  $stlabZ_dT[$i] = sprintf("\@~D\@~T = %.2f \\261 %.2f s",$meas4Z,$sigma4Z);
+  $stlabZ_dA[$i] = sprintf("\@~D\@~A = %.2f \\261 %.2f",$meas5Z,$sigma5Z);
       } else {
-	$stlabZ_dT[$i] = sprintf("\@~D\@~T = %.2f s",$meas4Z);
-	$stlabZ_dA[$i] = sprintf("\@~D\@~A = %.2f",$meas5Z);
+  $stlabZ_dT[$i] = sprintf("\@~D\@~T = %.2f s",$meas4Z);
+  $stlabZ_dA[$i] = sprintf("\@~D\@~A = %.2f",$meas5Z);
       }
     }
   }
@@ -394,7 +394,7 @@ if ($kk == 1) {
   #print "\n Overall max values: $maxD (data), $maxS (syn) $max (overall)\n";
 
   $bounds = "-R$tmin/$tmax/$Smin/$Smax";
-  $scale = 1.2;		       # KEY: scaling for plotting seismograms
+  $scale = 1.2;          # KEY: scaling for plotting seismograms
   $size = 1/$scale;
 
 }
@@ -449,10 +449,10 @@ if ($ntline) {
     for ($i=0; $i<$nT; $i++) {
       $xtext = $Twinb[$i]; $just = "LB";
       if ($i == 0) {
-	$xtext = $xtextpos2; $just = "LB";
+  $xtext = $xtextpos2; $just = "LB";
       }
       if ($i == $nT-1) {
-	$xtext = $xtextpos4; $just = "RB";
+  $xtext = $xtextpos4; $just = "RB";
       }
       if($iplot_dTlabel) {`echo \"$xtext $ytextpos4 $dTfsize 0 1 $just $stlabT_dT[$i]\" | pstext $textinfo1 $proj $bounds -N -O -K >> $ps_file`;}
       if($iplot_dAlabel) {`echo \"$xtext $ytextpos3 $dTfsize 0 1 $just $stlabT_dA[$i]\" | pstext $textinfo1 $proj $bounds -N -O -K >> $ps_file`;}
@@ -485,10 +485,10 @@ if ($nrline) {
     for ($i=0; $i<$nR; $i++) {
       $xtext = $Rwinb[$i]; $just = "LB";
       if ($i == 0) {
-	$xtext = $xtextpos2; $just = "LB";
+  $xtext = $xtextpos2; $just = "LB";
       }
       if ($i == $nR-1) {
-	$xtext = $xtextpos4; $just = "RB";
+  $xtext = $xtextpos4; $just = "RB";
       }
       if($iplot_dTlabel==1) {`echo \"$xtext $ytextpos4 $dTfsize 0 1 $just $stlabR_dT[$i]\" | pstext $textinfo1 $proj $bounds -N -O -K >> $ps_file`;}
       if($iplot_dAlabel==1) {`echo \"$xtext $ytextpos3 $dTfsize 0 1 $just $stlabR_dA[$i]\" | pstext $textinfo1 $proj $bounds -N -O -K >> $ps_file`;}
@@ -521,10 +521,10 @@ if ($nzline) {
     for ($i=0; $i<$nZ; $i++) {
       $xtext = $Zwinb[$i]; $just = "LB";
       if ($i == 0) {
-	$xtext = $xtextpos2; $just = "LB";
+  $xtext = $xtextpos2; $just = "LB";
       }
       if ($i == $nZ-1) {
-	$xtext = $xtextpos4; $just = "RB";
+  $xtext = $xtextpos4; $just = "RB";
       }
       if($iplot_dTlabel==1) {`echo \"$xtext $ytextpos4 $dTfsize 0 1 $just $stlabZ_dT[$i]\" | pstext $textinfo1 $proj $bounds -N -O -K >> $ps_file`;}
       if($iplot_dAlabel==1) {`echo \"$xtext $ytextpos3 $dTfsize 0 1 $just $stlabZ_dA[$i]\" | pstext $textinfo1 $proj $bounds -N -O -K >> $ps_file`;}
@@ -572,7 +572,7 @@ print "done with ${name}.pdf\n";
 # Input: number1, number2
 # returns greater of 2 numbers
 sub max {
-	if ($_[0]<$_[1]) {return $_[1]} else {return $_[0]};
+  if ($_[0]<$_[1]) {return $_[1]} else {return $_[0]};
 }
 
 sub get_cmt {

@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -39,32 +39,23 @@
   implicit none
 
   integer :: ier
-
-  ! read the parameter file
-  call read_parameter_file()
-
-  call read_adios_parameters()
-
-!! DK DK added this for now (March 2013)
-!! DK DK we will soon add it
-  if (PML_CONDITIONS .and. (SAVE_FORWARD .or. SIMULATION_TYPE==3)) stop 'PML_CONDITIONS is still under test for adjoint simulation'
-
-  ! GPU_MODE is in par_file
-  call read_gpu_mode(GPU_MODE,GRAVITY)
-
-  if (GPU_MODE .and. COUPLE_WITH_EXTERNAL_CODE) stop 'Coupling with DSM currently not implemented for GPUs'
+  logical :: BROADCAST_AFTER_READ
 
   ! myrank is the rank of each process, between 0 and NPROC-1.
   ! as usual in MPI, process 0 is in charge of coordinating everything
   ! and also takes care of the main output
   call world_rank(myrank)
 
+  ! read the parameter file
+  BROADCAST_AFTER_READ = .true.
+  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
+
   ! checks flags
   call initialize_simulation_check()
 
   ! open main output file, only written to by process 0
   if (myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
-    open(unit=IMAIN,file=trim(OUTPUT_FILES_PATH)//'/output_solver.txt',status='unknown')
+    open(unit=IMAIN,file=trim(OUTPUT_FILES)//'/output_solver.txt',status='unknown')
 
   ! user output
   if (myrank == 0) then
@@ -132,8 +123,8 @@
   ! reads in numbers of spectral elements and points for the part of the mesh handled by this process
   call create_name_database(prname,myrank,LOCAL_PATH)
 
-! for coupling with DSM
-  if (COUPLE_WITH_EXTERNAL_CODE) call create_name_database(dsmname,myrank,TRACTION_PATH)
+! for coupling with DSM !! To verify for NOBU version
+  if (COUPLE_WITH_EXTERNAL_CODE .and. old_DSM_coupling_from_Vadim) call create_name_database(dsmname,myrank,TRACTION_PATH)
 
 ! read the value of NSPEC_AB and NGLOB_AB because we need it to define some array sizes below
   if (ADIOS_FOR_MESH) then
@@ -263,8 +254,10 @@
 
   ! check that optimized routines from Deville et al. (2002) can be used
   if (USE_DEVILLE_PRODUCTS) then
-    if (NGLLX /= 5 .or. NGLLY /= 5 .or. NGLLZ /= 5) &
-      stop 'Deville et al. (2002) routines can only be used if NGLLX = NGLLY = NGLLZ = 5'
+    if (NGLLX /= NGLLY .and. NGLLX /= NGLLZ) &
+      stop 'Deville et al. (2002) routines can only be used if NGLLX = NGLLY = NGLLZ'
+    if (NGLLX /= 5 .and. NGLLX /= 6 .and. NGLLX /= 7) &
+      stop 'Deville et al. (2002) routines can only be used if NGLLX = NGLLY = NGLLZ = 5, 6 or 7'
   endif
 
   ! gravity only on GPU supported
@@ -318,7 +311,7 @@
 
   ! check that the code has been compiled with the right values
   if (myrank == 0) then
-    HEADER_FILE = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))//'/values_from_mesher.h'
+    HEADER_FILE = OUTPUT_FILES(1:len_trim(OUTPUT_FILES))//'/values_from_mesher.h'
 
     open(unit=IOUT,file=trim(HEADER_FILE),status='old',iostat=ier)
     if (ier /= 0) then
@@ -341,10 +334,10 @@
   if (myrank == 0) then
     ! tests if OUTPUT_FILES directory exists
     ! note: inquire behaves differently when using intel ifort or gfortran compilers
-    !INQUIRE( FILE = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))//'/.', EXIST = exists)
-    open(IOUT,file=trim(OUTPUT_FILES_PATH)//'/dummy.txt',status='unknown',iostat=ier)
+    !INQUIRE( FILE = OUTPUT_FILES(1:len_trim(OUTPUT_FILES))//'/.', EXIST = exists)
+    open(IOUT,file=trim(OUTPUT_FILES)//'/dummy.txt',status='unknown',iostat=ier)
     if (ier /= 0) then
-      print*,"OUTPUT_FILES directory does not work: ",trim(OUTPUT_FILES_PATH)
+      print*,"OUTPUT_FILES directory does not work: ",trim(OUTPUT_FILES)
       call exit_MPI(myrank,'error OUTPUT_FILES directory')
     endif
     close(IOUT,status='delete')
@@ -373,22 +366,25 @@
   use specfem_par_elastic
   use specfem_par_acoustic
   use specfem_par_poroelastic
+
   implicit none
 
   ! check simulation parameters
 
   ! checks number of sources for adjoint simulations
   ! The limit below is somewhat arbitrary. For pure adjoint simulations (SIMULATION_TYPE == 2),
-  ! the code outputs displacement (S00001.NT.BXX.semd,..) and strains (S00001.NT.SEE.semd,..)
+  ! the code outputs displacement (NT.S00001.BXX.semd,..) and strains (NT.S00001.SEE.semd,..)
   ! as well as source derivative kernels (src_frechet.00001,..) all for each point source.
   ! The naming convention for these files uses (.., i6.6,..), which limits the number of sources to 999999.
   ! If that is still too low, you can increase it further (if so, change all the occurrences of (.., i6.6,..) in the code).
   if (SIMULATION_TYPE /= 1 .and. NSOURCES > 999999) &
     call exit_MPI(myrank,'for adjoint simulations, NSOURCES <= 999999, if you need more change i6.6 in write_seismograms.f90')
 
+  if (SIMULATION_TYPE /= 1 .and. POROELASTIC_SIMULATION) stop 'poroelastic simulations for adjoint runs not supported yet'
+
   ! snapshot file names: ADJOINT attenuation
   if (ATTENUATION .and. ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3)) &
-    call create_name_database(prname_Q,myrank,OUTPUT_FILES_PATH)
+    call create_name_database(prname_Q,myrank,OUTPUT_FILES)
 
   ! number of elements and points for adjoint arrays
   if (SIMULATION_TYPE == 3) then
@@ -446,7 +442,7 @@
       stop 'GPU mode does not support N_SLS /= 3 yet'
   endif
 
-  if (POROELASTIC_SIMULATION) stop 'poroelastic simulations on GPU not supported yet'
+  if (POROELASTIC_SIMULATION) stop 'poroelastic simulations on GPUs not supported yet'
 
   ! initializes GPU and outputs info to files for all processes
   call initialize_cuda_device(myrank,ncuda_devices)

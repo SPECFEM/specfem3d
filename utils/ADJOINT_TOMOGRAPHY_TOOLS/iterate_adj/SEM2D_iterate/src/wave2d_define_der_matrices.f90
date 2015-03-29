@@ -7,7 +7,7 @@ contains
   subroutine define_derivative_matrices(xigll,zigll,wxgll,wzgll,hprime_xx,hprime_zz,wgllwgll_xz)
 
   implicit none
- 
+
 ! Gauss-Lobatto-Legendre points of integration
   double precision, dimension(NGLLX) :: xigll
   double precision, dimension(NGLLZ) :: zigll

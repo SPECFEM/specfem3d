@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -507,7 +507,7 @@
     enddo
 
     ! stores surface infos
-    if (STACEY_ABSORBING_CONDITIONS)then
+    if (STACEY_ABSORBING_CONDITIONS) then
        if (.not. STACEY_INSTEAD_OF_FREE_SURFACE) then
          ! stores free surface
          ! sets face infos
@@ -559,7 +559,7 @@
          enddo
        endif
 
-    else if (PML_CONDITIONS)then
+    else if (PML_CONDITIONS) then
        if (.not. PML_INSTEAD_OF_FREE_SURFACE) then
          ! stores free surface
          ! sets face infos

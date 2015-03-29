@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -28,7 +28,8 @@
   subroutine get_force(tshift_force,hdur,lat,long,depth,NSOURCES,min_tshift_force_original,factor_force_source, &
                       comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP)
 
-  use constants,only: IIN,IN_DATA_FILES_PATH,MAX_STRING_LEN,TINYVAL,NUMBER_OF_SIMULTANEOUS_RUNS,mygroup
+  use constants,only: IIN,IN_DATA_FILES,MAX_STRING_LEN,TINYVAL,mygroup
+  use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS
 
   implicit none
 
@@ -66,7 +67,7 @@
 !
 !---- read info
 !
-  FORCESOLUTION = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'FORCESOLUTION'
+  FORCESOLUTION = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'FORCESOLUTION'
 ! see if we are running several independent runs in parallel
 ! if so, add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
 ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
@@ -97,9 +98,9 @@
     read(IIN,"(a)") string
     read(string(12:len_trim(string)),*) t_shift(isource)
 
-    ! read half duration
+    ! read f0 (stored in hdur() array for convenience, to use the same array as for CMTSOLUTION)
     read(IIN,"(a)") string
-    read(string(6:len_trim(string)),*) hdur(isource)
+    read(string(4:len_trim(string)),*) hdur(isource)
 
     ! read latitude
     read(IIN,"(a)") string
@@ -134,7 +135,7 @@
   close(IIN)
 
   ! Sets tshift_force to zero to initiate the simulation!
-  if (NSOURCES == 1)then
+  if (NSOURCES == 1) then
     tshift_force = 0.d0
     min_tshift_force_original = t_shift(1)
   else
@@ -150,7 +151,7 @@
     ! (see constants.h: TINYVAL = 1.d-9 )
     if (hdur(isource) < TINYVAL) hdur(isource) = TINYVAL
 
-    ! check (inclined) force source's direction vector
+    ! check (tilted) force source direction vector
     length = sqrt( comp_dir_vect_source_E(isource)**2 + comp_dir_vect_source_N(isource)**2 + &
          comp_dir_vect_source_Z_UP(isource)**2)
     if (length < TINYVAL) then

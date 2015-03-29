@@ -114,15 +114,15 @@ print CSH "cp $cmtfile .\n";
 # We checked that the processing used in the Perl scripts matches what is used in
 # both the windowing code and in the measurement code.
 # NOTE: NO EXTENSION IS PUT ON THE BAND-PASSED VERSIONS
-if ($iplot == 1) { 
+if ($iplot == 1) {
   # synthetics
   $syn_dir_plot = "PLOTS/${dir_syn}";
   print CSH "\\rm -rf ${syn_dir_plot}\n";
   print CSH "cp -r ${dir_meas_syn} ${syn_dir_plot}\n";
   #print CSH "cd ${syn_dir_plot} ; mv_files.pl -x \"*sac*\" \"*sac\" ; cd -\n";  # remove extensions
   #print CSH "mkdir ${syn_dir_plot}\n";
-  #print CSH "cd ${dir_meas_syn}\n";      
-  #print CSH "process_trinet_syn_new.pl -S -t $Ts -d ../${syn_dir_plot} *sac.d\n"; 
+  #print CSH "cd ${dir_meas_syn}\n";
+  #print CSH "process_trinet_syn_new.pl -S -t $Ts -d ../${syn_dir_plot} *sac.d\n";
   #print CSH "cd -\n";
 
   # data

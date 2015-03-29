@@ -1,6 +1,6 @@
 #=====================================================================
 #
-#               S p e c f e m 3 D  V e r s i o n  2 . 1
+#               S p e c f e m 3 D  V e r s i o n  3 . 0
 #               ---------------------------------------
 #
 #     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -34,7 +34,6 @@ $(tomography_OBJECTS): S := ${S_TOP}/src/tomography
 tomography_TARGETS = \
 	$E/xadd_model_iso \
 	$E/xmodel_update \
-	$E/xsmooth_sem \
 	$E/xsum_kernels \
 	$E/xsum_preconditioned_kernels \
 	$(EMPTY_MACRO)
@@ -42,7 +41,6 @@ tomography_TARGETS = \
 tomography_OBJECTS = \
 	$(xadd_model_iso_OBJECTS) \
 	$(xmodel_update_OBJECTS) \
-	$(xsmooth_sem_OBJECTS) \
 	$(xsum_kernels_OBJECTS) \
 	$(xsum_preconditioned_kernels_OBJECTS) \
 	$(EMPTY_MACRO)
@@ -51,7 +49,6 @@ tomography_OBJECTS = \
 tomography_SHARED_OBJECTS = \
 	$(xadd_model_SHARED_OBJECTS) \
 	$(xmodel_update_SHARED_OBJECTS) \
-	$(xsmooth_sem_SHARED_OBJECTS) \
 	$(xsum_kernels_SHARED_OBJECTS) \
 	$(xsum_preconditioned_kernels_SHARED_OBJECTS) \
 	$(EMPTY_MACRO)
@@ -77,21 +74,20 @@ tomo: $(tomography_TARGETS)
 
 tomography: $(tomography_TARGETS)
 
-## single targets
+
+### single targets
 add_model_iso: xadd_model_iso
 xadd_model_iso: $E/xadd_model_iso
 
 model_update: xmodel_update
 xmodel_update: $E/xmodel_update
 
-smooth_sem: xsmooth_sem
-xsmooth_sem: $E/xsmooth_sem
-
 sum_kernels: xsum_kernels
 xsum_kernels: $E/xsum_kernels
 
 sum_preconditioned_kernels: xsum_preconditioned_kernels
 xsum_preconditioned_kernels: $E/xsum_preconditioned_kernels
+
 
 
 #######################################
@@ -108,13 +104,13 @@ xsum_preconditioned_kernels: $E/xsum_preconditioned_kernels
 xadd_model_OBJECTS = \
 	$O/tomography_par.tomo_module.o \
 	$O/compute_kernel_integral.tomo.o \
-	$O/get_gradient_cg.tomo.o \
-	$O/get_gradient_steepest.tomo.o \
+	$O/get_cg_direction.tomo.o \
+	$O/get_sd_direction.tomo.o \
 	$O/read_kernels.tomo.o \
 	$O/read_kernels_cg.tomo.o \
 	$O/read_model.tomo.o \
 	$O/read_parameters_tomo.tomo.o \
-	$O/write_gradients.tomo.o \
+	$O/write_gradient.tomo.o \
 	$O/write_new_model.tomo.o \
 	$O/write_new_model_perturbations.tomo.o \
 	$(EMPTY_MACRO)
@@ -130,7 +126,6 @@ xadd_model_SHARED_OBJECTS = \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \
-	$O/unused_mod.shared_module.o \
 	$(EMPTY_MACRO)
 
 ##
@@ -153,12 +148,12 @@ ${E}/xadd_model_iso: $(xadd_model_iso_OBJECTS) $(xadd_model_SHARED_OBJECTS) $(CO
 ##
 xmodel_update_OBJECTS = \
 	$O/tomography_par.tomo_module.o \
-	$O/get_gradient_steepest.tomo.o \
+	$O/get_sd_direction.tomo.o \
 	$O/model_update.tomo.o \
 	$O/read_kernels.tomo.o \
 	$O/read_parameters_tomo.tomo.o \
 	$O/save_external_bin_m_up.tomo.o \
-	$O/write_gradients.tomo.o \
+	$O/write_gradient.tomo.o \
 	$O/write_new_model.tomo.o \
 	$O/write_new_model_perturbations.tomo.o \
 	$(EMPTY_MACRO)
@@ -177,7 +172,6 @@ xmodel_update_SHARED_OBJECTS = \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \
-	$O/unused_mod.shared_module.o \
 	$O/write_VTK_data.shared.o \
 	$(EMPTY_MACRO)
 
@@ -220,37 +214,6 @@ ${E}/xmodel_update: $(xmodel_update_OBJECTS) $(xmodel_update_SHARED_OBJECTS) $(C
 
 
 ##
-## xsmooth_sem
-##
-xsmooth_sem_OBJECTS = \
-	$O/tomography_par.tomo_module.o \
-	$O/smooth_sem.tomo.o \
-	$(EMPTY_MACRO)
-
-xsmooth_sem_SHARED_OBJECTS = \
-	$O/specfem3D_par.spec.o \
-	$O/pml_par.spec.o \
-	$O/read_mesh_databases.spec.o \
-	$O/shared_par.shared_module.o \
-	$O/check_mesh_resolution.shared.o \
-	$O/create_name_database.shared.o \
-	$O/exit_mpi.shared.o \
-	$O/gll_library.shared.o \
-	$O/param_reader.cc.o \
-	$O/read_parameter_file.shared.o \
-	$O/read_value_parameters.shared.o \
-	$O/unused_mod.shared_module.o \
-	$O/write_VTK_data.shared.o \
-	$(EMPTY_MACRO)
-
-# extra dependencies
-$O/smooth_sem.tomo.o: $O/specfem3D_par.spec.o $O/tomography_par.tomo_module.o
-
-${E}/xsmooth_sem: $(xsmooth_sem_OBJECTS) $(xsmooth_sem_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
-	${FCLINK} -o $@ $+ $(MPILIBS)
-
-
-##
 ## xsum_kernels
 ##
 xsum_kernels_OBJECTS = \
@@ -263,7 +226,6 @@ xsum_kernels_SHARED_OBJECTS = \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \
-	$O/unused_mod.shared_module.o \
 	$(EMPTY_MACRO)
 
 ${E}/xsum_kernels: $(xsum_kernels_OBJECTS) $(xsum_kernels_SHARED_OBJECTS) $(COND_MPI_OBJECTS)

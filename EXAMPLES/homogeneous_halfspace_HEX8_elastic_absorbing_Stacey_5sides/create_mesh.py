@@ -4,10 +4,30 @@
 # i.e., a uniform mesh of 134 km x 134 km x 60 km with an element size 3.75 km.
 # It is not applicable to other examples.
 
-import cubit
 
 import os
 import sys
+
+# to run this script from command line, python must have its PATH environment set such that it
+# includes the path to CUBIT/Trelis (cubit.py).
+#
+# you can also explicitly set it here e.g. like:
+#sys.path.append('/opt/Trelis-15.0/bin/')
+
+try:
+    import cubit
+except ImportError:
+    print "Error: Importing cubit as python module failed"
+    print "could not import cubit, please check your PYTHONPATH settings..."
+    print ""
+    print "current path: "
+    print sys.path
+    print ""
+    print "try to include path to directory which includes file cubit.py, e.g. /opt/Trelis-15.0/bin/"
+    print ""
+    sys.exit("Import cubit failed")
+
+cubit.init([""])
 
 # Creating the volumes
 cubit.cmd('reset')
@@ -41,53 +61,86 @@ print "path: "
 print sys.path
 print ""
 
-from geocubitlib import boundary_definition,cubit2specfem3d
+##
+from geocubitlib import boundary_definition
 
 # bounding faces
 boundary_definition.entities=['face']
 boundary_definition.define_bc(boundary_definition.entities,parallel=True)
 
-# sets the id of the volume block
-# (volume block starts at id 4)
-id_block = 4
-print "cubit block:"
-print "  volume block id = " + str(id_block)
-print ""
-
-# Define material properties
-print "#### DEFINE MATERIAL PROPERTIES #######################"
-
-# elastic material
-cubit.cmd('block '+str(id_block)+' name "elastic 1" ')        # elastic material region
-cubit.cmd('block '+str(id_block)+' attribute count 7')
-cubit.cmd('block '+str(id_block)+' attribute index 1 1')      # flag for material: 1 for 1. material
-cubit.cmd('block '+str(id_block)+' attribute index 2 2800')   # vp
-cubit.cmd('block '+str(id_block)+' attribute index 3 1500')   # vs
-cubit.cmd('block '+str(id_block)+' attribute index 4 2300')   # rho
-cubit.cmd('block '+str(id_block)+' attribute index 5 9999.0')  # Qkappa
-cubit.cmd('block '+str(id_block)+' attribute index 6 9000.0')  # Qmu
-cubit.cmd('block '+str(id_block)+' attribute index 7 0')      # anisotropy_flag
-
-# acoustic material
-#cubit.cmd('block '+str(id_block)+' name "acoustic 1" ')       # acoustic material region
-#cubit.cmd('block '+str(id_block)+' attribute count 4')
-#cubit.cmd('block '+str(id_block)+' attribute index 1 1  ')     # material 1
-#cubit.cmd('block '+str(id_block)+' attribute index 2 1480 ')  # vp
-#cubit.cmd('block '+str(id_block)+' attribute index 3 0 ')      # vs
-#cubit.cmd('block '+str(id_block)+' attribute index 4 1028 ')  # rho (ocean salt water density:
-
 # creates MESH/ directory for file output
 os.system('mkdir -p MESH')
+
+# conversion to specfem-format
+# use_explicit will explicitly assign material properties as block attributes
+use_explicit=0
+
+if use_explicit == 1:
+    from geocubitlib import cubit2specfem3d
+    print ""
+    print "material properties: assigned as block attributes"
+    print ""
+    # sets the id of the volume block
+    # (volume block starts at id 4)
+    id_block = 4
+    print "cubit block:"
+    print "  volume block id = " + str(id_block)
+    print ""
+    # Define material properties
+    print "#### DEFINE MATERIAL PROPERTIES #######################"
+    # elastic material
+    cubit.cmd('block '+str(id_block)+' name "elastic 1" ')        # elastic material region
+    cubit.cmd('block '+str(id_block)+' attribute count 7')
+    cubit.cmd('block '+str(id_block)+' attribute index 1 1')      # flag for material: 1 for 1. material
+    cubit.cmd('block '+str(id_block)+' attribute index 2 2800')   # vp
+    cubit.cmd('block '+str(id_block)+' attribute index 3 1500')   # vs
+    cubit.cmd('block '+str(id_block)+' attribute index 4 2300')   # rho
+    cubit.cmd('block '+str(id_block)+' attribute index 5 9999.0')  # Qkappa
+    cubit.cmd('block '+str(id_block)+' attribute index 6 9000.0')  # Qmu
+    cubit.cmd('block '+str(id_block)+' attribute index 7 0')      # anisotropy_flag
+    # acoustic material
+    #cubit.cmd('block '+str(id_block)+' name "acoustic 1" ')       # acoustic material region
+    #cubit.cmd('block '+str(id_block)+' attribute count 4')
+    #cubit.cmd('block '+str(id_block)+' attribute index 1 1  ')     # material 1
+    #cubit.cmd('block '+str(id_block)+' attribute index 2 1480 ')  # vp
+    #cubit.cmd('block '+str(id_block)+' attribute index 3 0 ')      # vs
+    #cubit.cmd('block '+str(id_block)+' attribute index 4 1028 ')  # rho (ocean salt water density:
+    print ""
+    print "exporting to SPECFEM3D-format:"
+    print ""
+    # Export to SPECFEM3D format
+    cubit2specfem3d.export2SPECFEM3D('MESH/')
+else:
+    from geocubitlib import exportlib
+    print ""
+    print "exporting to SPECFEM3D-format:"
+    print ""
+    # Export to SPECFEM3D format
+    # note: exportlib-commands will overwrite material properties
+    exportlib.collect(outdir='MESH/')
+    exportlib.e2SEM('MESH/')
+    # Define material properties
+    print "#### DEFINE MATERIAL PROPERTIES #######################"
+    # elastic material
+    material_cfg=[{'material region':'2','id_block':'1','vp':'2800','vs':'1500','rho':'2300','Qkappa':'9990.0','Qmu':'9000.0','anisotropy_flag':'0'}]
+    # modifies material file
+    nummaterial_velocity_file='MESH/nummaterial_velocity_file'
+    f=open(nummaterial_velocity_file,'w')
+    for block in material_cfg:
+        print block
+        s=block['material region']+' '
+        s=s+block['id_block']+' '
+        s=s+block['rho']+' '
+        s=s+block['vp']+' '
+        s=s+block['vs']+' '
+        s=s+block['Qkappa']+' '
+        s=s+block['Qmu']+' '
+        s=s+block['anisotropy_flag']
+        f.write(s+'\n')
+    f.close()
+
+# backup cubit
 cubit.cmd('export mesh "MESH/top.e" dimension 3 overwrite')
 cubit.cmd('save as "MESH/meshing.cub" overwrite')
-
-# Export to SPECFEM3D format
-
-#note: exportlib-commands will overwrite the above material properties
-# exportlib.collect(outdir='MESH/')
-# exportlib.e2SEM(outdir='MESH/')
-
-cubit2specfem3d.export2SPECFEM3D('MESH/')
-
 
 # all files needed by xdecompose_mesh are now in directory MESH/

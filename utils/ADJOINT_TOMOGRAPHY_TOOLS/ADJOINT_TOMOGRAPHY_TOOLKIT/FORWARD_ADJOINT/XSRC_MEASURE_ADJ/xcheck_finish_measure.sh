@@ -15,24 +15,24 @@ ext="T"$ext1"_"$ext2
 
 
 
-if [ ! -f $eventfile ]; then 
-	echo WRONG! NO $eventfile 
-	exit
-fi 
-while read line 
-do 
+if [ ! -f $eventfile ]; then
+  echo WRONG! NO $eventfile
+  exit
+fi
+while read line
+do
 
-	cmtid=`echo $line | awk -F"_" '{print $NF}'`
-	mea_input="XMEASUREMENT_INPUT_"$iter"/MEASUREMENT_"$cmtid"_"$ext
-	mea_output="../SYN_"$iter"/"$line"_MT_"$ext 
-	
-	nwin=`sed -n '5p' $mea_input`
+  cmtid=`echo $line | awk -F"_" '{print $NF}'`
+  mea_input="XMEASUREMENT_INPUT_"$iter"/MEASUREMENT_"$cmtid"_"$ext
+  mea_output="../SYN_"$iter"/"$line"_MT_"$ext
 
-	nadj=`ls $mea_output/*.adj | wc -l` 
+  nwin=`sed -n '5p' $mea_input`
 
-	echo $line $nwin $nadj
-	if [ $nwin -ne $nadj ]; then 
-		echo WRONG!!!!
-	fi 
+  nadj=`ls $mea_output/*.adj | wc -l`
 
-done < $eventfile 
+  echo $line $nwin $nadj
+  if [ $nwin -ne $nadj ]; then
+    echo WRONG!!!!
+  fi
+
+done < $eventfile

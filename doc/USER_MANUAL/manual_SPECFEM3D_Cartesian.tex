@@ -101,7 +101,7 @@
 
 \author{$\copyright$ Princeton University (USA), CNRS and University of Marseille (France),\\
 and ETH Z\"urich (Switzerland)\\
-Version 2.1}
+Version 3.0}
 
 
 \date{\today}
@@ -130,16 +130,18 @@ Jean-Paul (Pablo) Ampuero,
 Kangchen Bai,
 Piero Basini,
 C\'eline Blitz,
+Alexis Bottero,
 Ebru Bozda\u{g},
 Emanuele Casarotti,
 Joseph Charles,
 Min Chen,
+Paul Cristini,
 Percy Galvez,
-Dominik Göddeke,
-Vala Hjörleifsdóttir,
+Dominik G\"oddeke,
+Vala Hj\"orleifsd\'ottir,
 Sue Kientz,
 Dimitri Komatitsch,
-Jesús Labarta,
+Jes\'us Labarta,
 Nicolas Le Goff,
 Pieyre Le Loher,
 Matthieu Lefebvre,
@@ -166,43 +168,67 @@ Carl Tape,
 Jeroen Tromp,
 Jean-Pierre Vilotte,
 Zhinan Xie,
+Chang-Hua Zhang,
 Hejun Zhu.\\
 
 
 The cover graphic of the manual was created by Santiago Lombeyda from
-Caltech's Center for Advanced Computing Research (CACR) \urlwithparentheses{http://www.cacr.caltech.edu}.
-\\
+Caltech's Center for Advanced Computing Research (CACR) \urlwithparentheses{http://www.cacr.caltech.edu}.\\
 
-\section*{Current and past main participants or main sponsors}
+The code is released open-source under the GNU version 2+ license, see the license at the end of this manual.\\
 
+\newpage{}
+\section*{Current and past main participants or main sponsors of the SPECFEM project (in no particular order)}
+%
 \begin{figure}[htbp]
 \noindent \begin{centering}
 \includegraphics[width=0.125\textwidth]{figures/logo_cnrs}\vspace*{2truemm}
 \includegraphics[width=0.125\textwidth]{figures/logo_princeton}\vspace*{2truemm}
 \includegraphics[width=0.15\textwidth]{figures/logo_aix_marseille_universite}\vspace*{0.02truemm}
-\includegraphics[width=0.12\textwidth]{figures/logo_CSC_China}\vspace*{0.02truemm}
 \includegraphics[width=0.15\textwidth]{figures/logo_ETH}\vspace*{2truemm}
+\includegraphics[width=0.12\textwidth]{figures/logo_CSC_China}\vspace*{0.02truemm}
 \includegraphics[width=0.15\textwidth]{figures/logo_inria}\vspace*{2truemm}
 \includegraphics[width=0.14\textwidth]{figures/logo_UPPA}
 \par\end{centering}
-
+%
+\vspace*{-2truemm}
+%
 \noindent \begin{centering}
 \includegraphics[width=0.15\textwidth]{figures/logo_NVIDIA}\vspace*{2truemm}
 \includegraphics[width=0.125\textwidth]{figures/logo_IUF}\vspace*{2truemm}
 \includegraphics[width=0.135\textwidth]{figures/logo_Caltech}\vspace*{2truemm}
 \includegraphics[width=0.135\textwidth]{figures/logo_Harvard}\vspace*{2truemm}
 \includegraphics[width=0.135\textwidth]{figures/logo_IPGP}\vspace*{2truemm}
+\includegraphics[width=0.112\textwidth]{figures/logo_ANR}\vspace*{2truemm}
+\includegraphics[width=0.112\textwidth]{figures/logo_NSF}\vspace*{2truemm}
 \par\end{centering}
-
+%
+\vspace*{-2truemm}
+%
 \noindent \begin{centering}
-\includegraphics[width=0.119\textwidth]{figures/logo_INGV}\vspace*{2truemm}
-\includegraphics[width=0.119\textwidth]{figures/logo_University_of_Toronto}\vspace*{2truemm}
-\includegraphics[width=0.112\textwidth]{figures/logo_Univ_Toulouse}\vspace*{2truemm}
-\includegraphics[width=0.112\textwidth]{figures/logo_TOTAL}\vspace*{2truemm}
-\includegraphics[width=0.130\textwidth]{figures/logo_Fairbanks}
+\includegraphics[width=0.190\textwidth]{figures/logo_European_Union}\vspace*{2truemm}
+\includegraphics[width=0.112\textwidth]{figures/logo_GENCI}\vspace*{2truemm}
+\includegraphics[width=0.112\textwidth]{figures/logo_PRACE}\vspace*{2truemm}
+\includegraphics[width=0.112\textwidth]{figures/logo_CINES}\vspace*{2truemm}
+\includegraphics[width=0.130\textwidth]{figures/logo_Oak_Ridge}\vspace*{2truemm}
 \hspace*{3mm}\includegraphics[width=0.130\textwidth]{figures/logo_fondation_Del_Duca}
+\includegraphics[width=0.130\textwidth]{figures/logo_CIG}\vspace*{2truemm}
+\par\end{centering}
+%
+\vspace*{-2truemm}
+%
+\noindent \begin{centering}
+\includegraphics[width=0.112\textwidth]{figures/logo_University_of_Toronto}\vspace*{2truemm}
+\includegraphics[width=0.109\textwidth]{figures/logo_INGV}\vspace*{2truemm}
+\includegraphics[width=0.102\textwidth]{figures/logo_Univ_Toulouse}\vspace*{2truemm}
+\includegraphics[width=0.112\textwidth]{figures/logo_TOTAL}\vspace*{2truemm}
+\includegraphics[width=0.130\textwidth]{figures/logo_Fairbanks}\vspace*{2truemm}
+\includegraphics[width=0.120\textwidth]{figures/logo_CINECA}\vspace*{2truemm}
+\includegraphics[width=0.140\textwidth]{figures/logo_Intel_Exascale_Labs}\vspace*{2truemm}
+\includegraphics[width=0.130\textwidth]{figures/logo_Maison_Simulation}
 \par\end{centering}
 \end{figure}
+
 
 \newpage{}
 
@@ -214,7 +240,7 @@ Caltech's Center for Advanced Computing Research (CACR) \urlwithparentheses{http
 The software package SPECFEM3D Cartesian simulates seismic wave propagation
 at the local or regional scale based upon the spectral-element method
 (SEM). The SEM is a continuous Galerkin technique \citep{TrKoLi08,PeKoLuMaLeCaLeMaLiBlNiBaTr11},
-which can easily be made discontinous \citep{BeMaPa94,Ch00,KoWoHu02,ChCaVi03,LaWaBe05,Kop06,WiStBuGh10,AcKo11};
+which can easily be made discontinuous \citep{BeMaPa94,Ch00,KoWoHu02,ChCaVi03,LaWaBe05,Kop06,WiStBuGh10,AcKo11};
 it is then close to a particular case of the discontinuous Galerkin
 technique \citep{ReHi73,LeRa74,Arn82,JoPi86,BoMaHe91,FaRi99,HuHuRa99,CoKaSh00,GiHeWa02,RiWh03,MoRi05,GrScSc06,AiMoMu06,BeLaPi06,DuKa06,DeSeWh08,PuAmKa09,WiStBuGh10,DeSe10,EtChViGl10},
 with optimized efficiency because of its tensorized basis functions
@@ -288,7 +314,7 @@ It reached the sustained one petaflop performance level for the first time in Fe
 on the Blue Waters Cray supercomputer at the National Center for Supercomputing Applications (NCSA), located at the University of Illinois at Urbana-Champaign (USA).\\
 
 
-This new release of the code (version 2.1) includes Convolution or
+This new release of the code includes Convolution or
 Auxiliary Differential Equation Perfectly Matched absorbing Layers
 (C-PML or ADE-PML) \citep{MaKoEz08,MaKoGe08,MaKo09,MaKoGeBr10,KoMa07}.
 It also includes support for GPU graphics card acceleration \citep{Kom11,MiKo10,KoMiEr09,KoErGoMi10}.\\
@@ -321,7 +347,7 @@ in \citet{CaKoLaTiMiLeSnTr08,KoLaMi08a,MaKoBlLe08,KoErGoMi10,Kom11},
  Computing on GPU graphics cards for acoustic or seismic wave propagation
 applications is described in detail in \citet{Kom11,MiKo10,KoMiEr09,KoErGoMi10}.
 \end{description}
-\noindent If you use this new version 2.1, which has non blocking
+\noindent If you use this new version, which has non blocking
 MPI for much better performance for medium or large runs, please cite
 at least one of these six articles, in which results of non blocking
 MPI runs are presented: \citet{PeKoLuMaLeCaLeMaLiBlNiBaTr11,KoErGoMi10,KoViCh10,Kom11,CaKoLaTiMiLeSnTr08,MaKoBlLe08}.\\
@@ -412,12 +438,11 @@ On SGI systems, \texttt{flags.guess} automatically informs \texttt{configure}
 to insert `\texttt{`TRAP\_FPE=OFF}'' into the generated \texttt{Makefile}
 in order to turn underflow trapping off.\\
 
-You can add -DFORCE\_VECTORIZATION to the compiler options in \texttt{flags.guess} (for all compilers, except for IBM for which the syntax is -WF,-DFORCE\_VECTORIZATION )
-to speed up the code in the fluid (acoustic) parts (only; FORCE\_VECTORIZATION support for elastic parts has been discontinued in the source code).
+You can add \texttt{--enable-vectorization} to the configuration options to speed up the code in the fluid (acoustic) and elastic parts.
 This works fine if (and only if) your computer always allocates a contiguous memory block for each allocatable array;
-this is the case for most machines and most compilers, but not all. For more details see https://github.com/geodynamics/specfem3d/issues/81 .
-To check if that option works fine on your machine, run the code with and without it for a model containing a significant fluid layer
-(or entirely fluid) and make sure the seismograms are identical.\\
+this is the case for most machines and most compilers, but not all. To disable this feature, use option \texttt{--disable-vectorization}.
+For more details see \href{https://github.com/geodynamics/specfem3d/issues/81}{github.com/geodynamics/specfem3d/issues/81} .
+To check if that option works fine on your machine, run the code with and without it for an acoustic/elastic model and make sure the seismograms are identical.\\
 
 Note that we use CUBIT (now called Trelis) to create meshes of hexahedra, but other packages
 can be used as well, for instance GiD from \url{http://gid.cimne.upc.es}
@@ -706,19 +731,19 @@ The important entries in the Doxyfile are:
 \begin{itemize}
 \item[\textbullet] a good and short summary for the basic utilisation of Doxygen:
 
-\texttt{http://www.softeng.rl.ac.uk/blog/2010/jan/30/callgraph-fortran-doxygen/} ,
+\url{http://www.softeng.rl.ac.uk/blog/2010/jan/30/callgraph-fortran-doxygen/},
 
 \item[\textbullet] to configure the diagrams :
 
-\texttt{http://www.stack.nl/~dimitri/doxygen/manual/diagrams.html} ,
+\url{http://www.stack.nl/~dimitri/doxygen/manual/diagrams.html},
 
 \item[\textbullet] the complete alphabetical index of the tags in Doxyfile:
 
-\texttt{http://www.stack.nl/~dimitri/doxygen/manual/config.html} ,
+\url{http://www.stack.nl/~dimitri/doxygen/manual/config.html},
 
 \item[\textbullet] more generally, the Doxygen manual:
 
-\texttt{http://www.stack.nl/~dimitri/doxygen/manual/index.html} .
+\url{http://www.stack.nl/~dimitri/doxygen/manual/index.html}.
 
 \end{itemize}
 
@@ -778,7 +803,7 @@ of a single volume with topography.}
 \label{fig:mount.cubit}
 \end{figure}
 
-
+\noindent
 The basic steps in creating a load-balanced, partitioned mesh with
 CUBIT are:
 \begin{description}
@@ -930,7 +955,8 @@ blocks above, e.g. 'face\_abs\_xmin'.
 
 After the block definitions are done, you export the mesh using the
 script \texttt{cubit2specfem3d.py} provided in each of the example
-directories (linked to the common script \texttt{CUBIT\_GEOCUBIT/cubit2specfem3d.py}). If the export was successful, you should find the following
+directories (linked to the common script \texttt{CUBIT\_GEOCUBIT/cubit2specfem3d.py}).
+If the export was successful, you should find the following
 files in a subdirectory \texttt{MESH/}:
 \begin{description}
 \item [{absorbing\_cpml\_file}] \textbf{(only needed in case of C-PML absorbing
@@ -1129,7 +1155,10 @@ block IDs belonging to volumes in order to check the quality of the
 hexahedral elements. You also have to determine a number of parameters
 of your mesh, such as the number of nodes and number of elements and
 modify the header of the \texttt{check\_mesh\_quality\_CUBIT\_Abaqus.f90}
-source file. Then, in the main directory, type
+source file in directory \texttt{src/check\_mesh\_quality\_CUBIT\_Abaqus/}.
+
+\noindent
+Then, in the main directory, type
 \begin{lyxcode}
 {\small make~xcheck\_mesh\_quality\_CUBIT\_Abaqus}{\small \par}
 \end{lyxcode}
@@ -1215,9 +1244,9 @@ If all paths and flags have been set correctly, the executable \texttt{bin/xdeco
 should be produced.
 
 The partitioning is done in serial for now (in the next release we
-will provide a parallel version of that code). It needs to be run in the \texttt{bin/} directory because it expects the \texttt{../DATA/Par\_file}. The synopsis is:
+will provide a parallel version of that code). It needs to be run in the main directory because it expects the \texttt{./DATA/Par\_file}. The synopsis is:
 \begin{lyxcode}
-./xdecompose\_mesh~nparts~input\_directory~output\_directory
+./bin/xdecompose\_mesh~nparts~input\_directory~output\_directory
 \end{lyxcode}
 where
 \begin{itemize}
@@ -1225,13 +1254,13 @@ where
 for the parallel simulations,
 \item \texttt{input\_directory} is the directory which holds all the files
 generated by the Python script \texttt{cubit2specfem3d.py} explained
-in the previous Section~\ref{subsec:Exporting-the-Mesh}, e.g. \texttt{MESH/},
+in the previous Section~\ref{subsec:Exporting-the-Mesh}, e.g. \texttt{./MESH/},
 and
 \item \texttt{output\_directory} is the directory for the output of this
 partitioner which stores ACII-format files named like \texttt{proc{*}{*}{*}{*}{*}{*}\_Database}
 for each partition. These files will be needed for creating the distributed
 databases, and have to reside in the directory \texttt{LOCAL\_PATH}
-specified in the main \texttt{Par\_file}, e.g. in directory \texttt{OUTPUT\_FILES/DATABASES\_MPI}.
+specified in the main \texttt{Par\_file}, e.g. in directory \texttt{./OUTPUT\_FILES/DATABASES\_MPI}.
 Please see Chapter~\ref{cha:Creating-Distributed-Databases} for
 further details.
 \end{itemize}
@@ -1244,9 +1273,7 @@ the program.
 
 In case you successfully ran the configuration script, you are also
 ready to compile the internal mesher. This is an alternative to CUBIT
-for the mesh generation of relatively simple geological models. The
-mesher is no longer dedicated to Southern California and more flexiblity
-is provided in this version of the package.
+for the mesh generation of relatively simple models.
 
 \begin{figure}[htbp]
 \noindent \begin{centering}
@@ -1259,17 +1286,19 @@ of elements. In this example we use $5^{2}=25$ processors. }
 \end{figure}
 
 
+\noindent
 In the main directory, type
 \begin{lyxcode}
 {\small make~xmeshfem3D}{\small \par}
 \end{lyxcode}
 If all paths and flags have been set correctly, the mesher should
 now compile and produce the executable \texttt{bin/xmeshfem3D}. Please
-note that \texttt{xmeshfem3D} must be called directly from the \texttt{bin/}
+note that \texttt{xmeshfem3D} must be called directly from the main
 directory, as most of the binaries of the package.
 
 Input for the mesh generation program is provided through the parameter
 file \texttt{Mesh\_Par\_file}, which resides in the subdirectory \texttt{DATA/meshfem3D\_files/}.
+(to see how to use it, see the EXAMPLES specific to the internal mesher in directory \texttt{EXAMPLES/meshfem3D\_examples/}.
 Before running the mesher, a number of parameters need to be set in
 the \texttt{Mesh\_Par\_file}. This requires a basic understanding
 of how the SEM is implemented, and we encourage you to read \citet{KoVi98,KoTr99}
@@ -1489,7 +1518,7 @@ specific model parameters.}
 \label{fig:workflow.databases}
 \end{figure}
 
-
+\noindent
 In the main directory, type
 \begin{lyxcode}
 {\small make~xgenerate\_databases}{\small \par}
@@ -1497,7 +1526,7 @@ In the main directory, type
 Input for the program is provided through the main parameter file
 \texttt{Par\_file}, which resides in the subdirectory \texttt{DATA}.
 Please note that \texttt{xgenerate\_databases} must be called directly
-from the \texttt{bin/} directory, as most of the binaries of the package.
+from the main directory, as most of the binaries of the package.
 
 
 \section{\label{cha:Main-Parameter}Main parameter file \texttt{Par\_file}}
@@ -1732,7 +1761,7 @@ using Lagrange interpolants. This can be useful e.g. for oil industry
 foothills simulations in which the source is a vertical force, normal
 force, tilted force, or an impact etc. Note that in the \texttt{FORCESOLUTION}
 file, you will need to edit the East, North and vertical components
-of an arbitrary (non-unitary) direction vector of the force vector;
+of an arbitrary (not necessarily unitary, the code will normalize it automatically) direction vector of the force vector;
 thus refer to Appendix~\ref{cha:Coordinates} for the orientation
 of the reference frame. This vector is made unitary internally in
 the solver and thus only its direction matters here; its norm is ignored
@@ -1759,6 +1788,56 @@ Any other source-time function may then be obtained by convolution.
 \item [{\texttt{PRINT\_SOURCE\_TIME\_FUNCTION}}] Turn this flag on to print
 information about the source time function in the file \texttt{OUTPUT\_FILES/plot\_source\_time\_function.txt}.
 This feature is only relevant for the solver.
+
+\item [{\texttt{NUMBER\_OF\_SIMULTANEOUS\_RUNS}}] adds the ability to run several calculations (several earthquakes)
+in an embarrassingly-parallel fashion from within the same run;
+this can be useful when using a very large supercomputer to compute
+many earthquakes in a catalog, in which case it can be better from
+a batch job submission point of view to start fewer and much larger jobs,
+each of them computing several earthquakes in parallel.
+To turn that option on, set parameter NUMBER\_OF\_SIMULTANEOUS\_RUNS to a value greater than 1.
+To implement that, we create NUMBER\_OF\_SIMULTANEOUS\_RUNS MPI sub-communicators,
+each of them being labeled "my\_local\_mpi\_comm\_world", and we use them
+in all the routines in "src/shared/parallel.f90", except in MPI\_ABORT() because in that case
+we need to kill the entire run.
+When that option is on, of course the number of processor cores used to start
+the code in the batch system must be a multiple of NUMBER\_OF\_SIMULTANEOUS\_RUNS,
+all the individual runs must use the same number of processor cores,
+which as usual is NPROC in the Par\_file,
+and thus the total number of processor cores to request from the batch system
+should be NUMBER\_OF\_SIMULTANEOUS\_RUNS * NPROC.
+All the runs to perform must be placed in directories called run0001, run0002, run0003 and so on
+(with exactly four digits).
+
+Imagine you have 10 independent calculations to do, each of them on 100 cores; you have three options:
+
+1/ submit 10 jobs to the batch system
+
+2/ submit a single job on 1000 cores to the batch, and in that script create a sub-array of jobs to start 10 jobs,
+each running on 100 cores (see e.g. http://www.schedmd.com/slurmdocs/job\_array.html )
+
+3/ submit a single job on 1000 cores to the batch, start SPECFEM3D on 1000 cores, create 10 sub-communicators,
+cd into one of 10 subdirectories (called e.g. run0001, run0002,... run0010) depending on the sub-communicator
+your MPI rank belongs to, and run normally on 100 cores using that sub-communicator.
+
+The option NUMBER\_OF\_SIMULTANEOUS\_RUNS implements 3/.
+
+\item [{\texttt{BROADCAST\_SAME\_MESH\_AND\_MODEL}}]:
+if we perform simultaneous runs in parallel, if only the source and receivers vary between these runs
+but not the mesh nor the model (velocity and density) then we can also read the mesh and model files
+from a single run in the beginning and broadcast them to all the others; for a large number of simultaneous
+runs for instance when solving inverse problems iteratively this can DRASTICALLY reduce I/Os to disk in the solver
+(by a factor equal to NUMBER\_OF\_SIMULTANEOUS\_RUNS), and reducing I/Os is crucial in the case of huge runs.
+Thus, always set this option to .true. if the mesh and the model are the same for all simultaneous runs.
+In that case there is no need to duplicate the mesh and model file database (the content of the DATABASES\_MPI
+directories) in each of the run0001, run0002,... directories, it is sufficient to have one in run0001
+and the code will broadcast it to the others).
+
+TODO / future work to do: currently the BROADCAST\_SAME\_MESH\_AND\_MODEL option assumes to have the (master) mesh files in run0001/DATABASES\_MPI or run0001/OUTPUT\_FILES/DATABASES\_MPI. However, for adjoint runs you still need a DATABASES\_MPI folder in each of the sub-runs directories, e.g. run0002/DATABASES\_MPI, etc. to store the forward wavefields, kernels etc. of each sub-run. This would not be needed for forward simulations.
+
+TODO / future work to do: the sensitivity kernel summing and smoothing tools in directory src/tomography are currently not ported to this new option to do many runs simultaneously, only the solver (src/specfem3d) is. Thus these tools should work, but in their current version will need to be run for each simulation result independently.
+More precisely, the current kernel summing and smoothing routines work fine, with the exception that you need to move out the mesh files (and also the parameters). This works because these routines consider multiple runs by design. You simply have to provide them the directories where the kernels are.
+
 \item [{\texttt{GPU\_MODE}}] Turn this flag on to use GPUs.
 
 \item [\texttt{ADIOS\_ENABLED}] Turn this flag on to enable ADIOS. If set to \texttt{.false.}, subsequent ADIOS
@@ -1770,6 +1849,34 @@ xgenerate\_database input.
 \item [\texttt{ADIOS\_FOR\_KERNELS}] Turn this flag on to produce ADIOS kernels that can later be visualized with the ADIOS version of combine\_vol\_data.
 
 \end{description}
+
+The present version of SPECFEM can handle fully saturated porous simulations, Christina Morency implemented Biot equation.
+But the code cannot calculate partially saturated cases in its state.
+Christina Morency is presently working on a dual porosity, dual permeability formulation, type Pride and Berryman, for an other project, but it will not be available for some time.\\
+
+The way we prescribe material property for porous material in SPECFEM3D is as follow:
+We use a file name nummaterial\_poroelastic\_file, which is located in the directory MESH, the format is as follow:\\
+ rhos rhof phi c kxx kxy kxz kyy kyz kzz Ks Kf Kfr etaf mufr\\
+where\\
+rho\_s = solid density\\
+rho\_f = fluid density\\
+phi = porosity\\
+tort = tortuosity\\
+kxx = xx component of permeability tensor\\
+kxy = xy,yx components of permeability tensor\\
+kyy = yy component of permeability tensor\\
+kxz = xz,zx components of permeability tensor\\
+kzz = zz component of permeability tensor\\
+kappa\_s = solid bulk modulus\\
+kappa\_f= fluid bulk modulus\\
+kappa\_fr= frame bulk modulus\\
+eta\_f = fluid viscosity\\
+mu\_fr = frame shear modulus.\\
+
+Using an external mesh (for instance coming from CUBIT/TRELIS), poroelastic materials have the ID number 3, while 1 is elastic, 2 is acoustic ? see the example in the package: examples/homogeneous\_poroelastic.
+
+
+
 If you use PML, the mesh elements that belong to the PML layers can
 be acoustic or elastic, but not viscoelastic nor poroelastic. Then,
 when defining your model, you should define these absorbing elements
@@ -1780,6 +1887,13 @@ the PML layer will not be perfectly matched any more, since the physical
 model will change from viscoelastic or poroelastic to elastic at the
 entrance of the PML, but in practice this is sufficient and produces
 only tiny / negligible spurious reflections.
+
+If you use PML and an external mesh (created using an external meshing tool
+such as CUBIT/TRELIS or similar), try to have elements inside the PML as regular as possible,
+i.e. ideally non-deformed cubes obtained by `extrusion' of regular surface mesh elements meshing the
+outer edges of the computational domain without PML; by doing so, the PMLs obtained will be far more stable
+in time (PML being weakly unstable from a mathematical point of view, very deformed mesh elements
+inside the PMLs can trigger instabilities much more quickly).
 
 If you use PML and an external tomographic velocity and density model,
 you should be careful because mathematically a PML cannot handle heterogeneities
@@ -1858,8 +1972,9 @@ to compile the solver. In the main directory, type
 {\small make~xspecfem3D}{\small \par}
 \end{lyxcode}
 Please note that \texttt{xspecfem3D} must be called directly from
-the \texttt{bin/} directory, as most of the binaries of the package.
+the main directory, as most of the binaries of the package.\\
 
+\noindent
 The solver needs three input files in the \texttt{DATA} directory
 to run:
 \begin{description}
@@ -1892,28 +2007,26 @@ Any other change to the \texttt{Par\_file} implies rerunning both
 the database generator \texttt{xgenerate\_databases} and the solver
 \texttt{xspecfem3D}.
 
+
 For any particular earthquake, the \texttt{CMTSOLUTION} file that
 represents the point source may be obtained directly from the Harvard
 Centroid-Moment Tensor (CMT) web page \urlwithparentheses{www.seismology.harvard.edu}.
-It looks like this:
-\begin{lyxcode}
-\begin{figure}[H]
-\noindent \begin{centering}
-{\small \includegraphics[width=1\textwidth]{figures/Hollywood_CMT}
+It looks like the example shown in Fig. \ref{fig:CMTSOLUTION-file}.
+%\begin{lyxcode}
+\begin{figure}[htp]
+\noindent
+\begin{centering}
+{\small \includegraphics[width=0.8\textwidth]{figures/Hollywood_CMT}
 }
-\par\end{centering}
-
-
-
-\caption{\label{fig:CMTSOLUTION-file}\texttt{CMTSOLUTION} file based on the
+\par
+\end{centering}
+\caption{\texttt{CMTSOLUTION} file based on the
 format from the Harvard CMT catalog. \textbf{M} is the moment tensor,
 $M_{0}${\small {} }is the seismic moment, and $M_{w}$ is the moment
 magnitude.}
+\label{fig:CMTSOLUTION-file}
 \end{figure}
-
-
-
-\end{lyxcode}
+%\end{lyxcode}
 The \texttt{CMTSOLUTION} file should be edited in the following way:
 \begin{itemize}
 \item Set the latitude or UTM $x$ coordinate, longitude or UTM $y$ coordinate, depth of the source (in km).
@@ -1964,9 +2077,9 @@ from the original \texttt{CMTSOLUTION} file and $t_{\mathrm{synthetic}}$
 is the time in the first column of the output seismogram.
 
 \end{itemize}
-\begin{figure}
+\begin{figure}[htp]
 \noindent \begin{centering}
-\includegraphics[width=2.5in]{figures/gauss_vs_triangle_mod}
+\includegraphics[width=3.5in]{figures/gauss_vs_triangle_mod}
 \par\end{centering}
 
 \caption{Comparison of the shape of a triangle and the Gaussian function actually
@@ -2030,12 +2143,11 @@ following way:
 will not run otherwise.) The time shift parameter would simply apply
 an overall time shift to the synthetics, something that can be done
 in the post-processing (see Section \ref{sec:Process-data-and-syn}).
-\item Set the \texttt{half duration} parameter of the Ricker source time
+\item Set the \texttt{f0} parameter (the dominant frequency) of the Ricker source time
 function when {\texttt{USE\_RICKER\_TIME\_FUNCTION}} is turned on
 in the main parameter file {\texttt{Par\_file}}. In case that the
 solver uses a (pseudo) Dirac delta source time function to represent
-a force point source, a very short \texttt{half duration} parameter
-(hdur = 5 {*} DT) is automatically set by default.
+a force point source, a very short duration of five time steps is automatically set by default.
 \item Set the latitude or UTM $x$ coordinate, longitude or UTM $y$ coordinate, depth of the source (in km).
 \item Set the magnitude of the force source.
 \item Set the components of a (non-unitary) direction vector for the force
@@ -2177,18 +2289,18 @@ this can be useful when using a very large supercomputer to compute
 many earthquakes in a catalog, in which case it can be better from
 a batch job submission point of view to start fewer and much larger jobs,
 each of them computing several earthquakes in parallel.
-To turn that option on, set parameter NUMBER\_OF\_SIMULTANEOUS\_RUNS
+To turn that option on, set parameter \texttt{NUMBER\_OF\_SIMULTANEOUS\_RUNS}
 to a value greater than 1 in file setup/constants.h.in before
 configuring and compiling the code.
 When that option is on, of course the number of processor cores used to start
-the code in the batch system must be a multiple of NUMBER\_OF\_SIMULTANEOUS\_RUNS,
+the code in the batch system must be a multiple of \texttt{NUMBER\_OF\_SIMULTANEOUS\_RUNS},
 all the individual runs must use the same number of processor cores,
-which as usual is NPROC in the input file DATA/Par\_file,
+which as usual is \texttt{NPROC} in the input file \texttt{DATA/Par\_file},
 and thus the total number of processor cores to request from the batch system
-should be NUMBER\_OF\_SIMULTANEOUS\_RUNS $\times$ NPROC.
-All the runs to perform must be placed in directories called run0001, run0002, run0003 and so on (with exactly four digits)
+should be \texttt{NUMBER\_OF\_SIMULTANEOUS\_RUNS $\times$ NPROC}.
+All the runs to perform must be placed in directories called \texttt{run0001}, \texttt{run0002}, \texttt{run0003} and so on (with exactly four digits)
 and you must create a link from the root directory of the code
-to the first copy of the executable programs by typing " ln -s run0001/bin bin ".
+to the first copy of the executable programs by typing \texttt{ln -s run0001/bin bin}.
 
 
 \chapter{\label{cha:Fault-Kinematics-Dynamics}Kinematic and dynamic fault
@@ -2209,8 +2321,8 @@ A fault surface must lie at the interface between elements (the mesh
 must honor the fault surfaces). Moreover, a fault is made of two surfaces
 in contact. Each of these two surfaces needs a separate set of nodes.
 This approach is known as \textquotedbl{}split nodes\textquotedbl{}.
-Currently faults can only be run with \texttt{xdecompose\_mesh }and\texttt{
-CUBIT. xmeshfem3D }is not yet ready to handle faults.\\
+Currently faults can only be run with \texttt{xdecompose\_mesh} and
+\texttt{CUBIT}. \texttt{xmeshfem3D} is not yet ready to handle faults.\\
 To facilitate the mesh generation with split nodes in CUBIT, we need
 to separate the two fault surfaces by a small distance, effectively
 creating a tiny opening of the fault (Figure \ref{fig:examples.splitnodes},
@@ -2275,7 +2387,7 @@ offset by a small distance on either side of the fault}
 \end{figure}
 
 
-The CUBIT scripts ({*}.jou and {*}.py) in the directory $\mathtt{EXAMPLES}$
+The CUBIT scripts ({*}.jou and {*}.py) in the directory \texttt{EXAMPLES}
 generate more complicated meshes. The {*}.py files are Python scripts
 that execute CUBIT commands and use the CUBIT-python interface for
 SPECFEM3D (see next section). The Python language allows to define
@@ -2351,7 +2463,7 @@ and
 \item Splay fault models from Wendt et al. (2009)\\
 
 \end{itemize}
-Read the documents in the directory $\mathtt{EXAMPLES/*/description}$.
+Read the documents in the directory \texttt{EXAMPLES/*/description}.
 They contain a description of the example and additional instructions
 to run it. Visualize the results with the Matlab scripts in the directory
 $\mathtt{EXAMPLES/*/post}$
@@ -2388,7 +2500,7 @@ on the foot wall).
 
 \section{Input Files}
 
-Three additional input files are required in the \texttt{DATA} directory
+Three additional input files are required in the \texttt{DATA/} directory
 for dynamic and kinematic faults. They are $\mathtt{Par\_file\_faults}$,
 $\mathtt{FAULT\_STATIONS}$ and $\mathtt{input\_file.txt}$ (optional).
 If the former does not exist, the code assumes that there are no faults.\\
@@ -2570,7 +2682,7 @@ in a purely elastic simulation. Here is how to set the time step accordingly:
 \item Run a test simulation without viscosity ($\mathtt{eta}$=0 and only
 a few time steps)
 \item Look for the \textquotedbl{}maximum suggested time step\textquotedbl{}
-in $\mathtt{OUTPUT\_FILES/output\_mesher.txt}$. This is the critical
+in \texttt{OUTPUT\_FILES/output\_mesher.txt}. This is the critical
 timestep of a purely elastic simulation, $\mathtt{dtc\_bulk}$.
 \item Reset the timestep of the simulation with a Kelvin-Voigt material
 to a value smaller than\\
@@ -2583,10 +2695,10 @@ than element faces on the fault.
 
 \section{Output Files }
 
-Several output files are saved in $\mathtt{OUTPUT\_FILES}$:\\
+Several output files are saved in \texttt{OUTPUT\_FILES/}:\\
 
 \begin{enumerate}
-\item Seismograms for each station on the fault plane given in $\mathtt{DATA/FAUL\_STATIONS}$.
+\item Seismograms for each station on the fault plane given in \texttt{DATA/FAUL\_STATIONS}.
 One output file is generated for each station, named after the station.
 The files are ascii and start with a header (22 lines long) followed
 by a data block with the following format, one line per time sample:\\
@@ -2623,7 +2735,7 @@ convention controls their sign, but not their amplitude). Slip is
 defined as displacement of the hanging wall relative to the footwall.
 
 \item Seismograms at stations in the bulk (out of the fault plane) given
-in $\mathtt{DATA/STATIONS}$.
+in \texttt{DATA/STATIONS}.
 \item Rupture time files are named $\mathtt{Rupture\_time\_FAULT}$-$\mathtt{id}$.
 One file is generated for each fault. The files are ascii and start
 with a header (12 lines long) followed by a data block with the following
@@ -2654,7 +2766,7 @@ in directory $\mathtt{utils}$. The functions are internally documented
 \texttt{FSEM3D\_snapshot} reads a fault data snapshot\\
 
 
-The directories $\mathtt{EXAMPLES/*/post}$ contain additional Matlab
+The directories \texttt{EXAMPLES/*/post} contain additional Matlab
 scripts to generate figures specific to each example.
 
 
@@ -2711,14 +2823,14 @@ as the regular \texttt{DATA/STATIONS} file.
 \item Depending on what type of misfit function is used for the source inversion,
 adjoint sources need to be computed from the original recorded seismograms
 for the selected stations and saved in a sub-directory called \texttt{SEM/}
-in the root directory of the code, with the format \texttt{STA.NT.BX?.adj}, where \texttt{STA},
-\texttt{NT} are the station name and network code given in the \texttt{DATA/STATIONS\_ADJOINT}
+in the root directory of the code, with the format \texttt{NT.STA.BX?.adj}, where \texttt{NT},
+\texttt{STA} are the network code and station name given in the \texttt{DATA/STATIONS\_ADJOINT}
 file, and \texttt{BX?} represents the component name of a particular
 adjoint seismogram. Please note that the band code can change depending
 on your sampling rate (see Appendix~\ref{cha:channel-codes} for
 further details).
 \item The adjoint seismograms are in the same format as the original seismogram
-(\texttt{STA.NT.BX?.sem?}), with the same start time, time interval
+(\texttt{NT.STA.BX?.sem?}), with the same start time, time interval
 and record length.
 \end{itemize}
 \item Notice that even if you choose to time reverse only one component
@@ -2744,10 +2856,10 @@ seismograms from \texttt{LOCAL\_PATH}.
 \begin{itemize}
 \item These adjoint seismograms are recorded at the locations of the original
 earthquake sources given by the \texttt{DATA/CMTSOLUTION} file, and
-have names of the form \texttt{S?????.NT.S??.sem} for the six-component
+have names of the form \texttt{NT.S?????.S??.sem} for the six-component
 strain tensor (\texttt{SNN,SEE,SZZ,SNE,SNZ,SEZ}) at these locations,
 and ~\\
- \texttt{S?????.NT.BX?.sem} for the three-component displacements
+ \texttt{NT.S?????.BX?.sem} for the three-component displacements
 (\texttt{BXN,BXE,BXZ}) recorded at these locations.
 \item \texttt{S?????} denotes the source number; for example, if the original
 \texttt{CMTSOLUTION} provides only a point source, then the seismograms
@@ -2900,7 +3012,20 @@ this dilemma are provided in Chapter~\ref{cha:Scheduler}. Visualization
 of the finite-frequency kernels is discussed in Section~\ref{sec:Finite-Frequency-Kernels}.
 
 
+%------------------------------------------------------------------------------------------------%
+
+\chapter{Doing tomography, i.e., updating the model based on the sensitivity kernels obtained}
+
+%------------------------------------------------------------------------------------------------%
+
+UNDER CONSTRUCTION (March 2015). Will be added around April / May 2015.
+
+
+%------------------------------------------------------------------------------------------------%
+
 \chapter{Noise Cross-correlation Simulations}
+
+%------------------------------------------------------------------------------------------------%
 
 Besides earthquake simulations, SPECFEM3D Cartesian includes functionality
 for seismic noise tomography as well. In order to proceed successfully
@@ -3196,7 +3321,26 @@ in the last section by following the commands in \texttt{pre-processing.sh},
 which should contain enough explanations for all the commands.
 
 
+%------------------------------------------------------------------------------------------------%
+
+\chapter{Gravity integral calculations for the gravity field of an Earth model}
+
+%------------------------------------------------------------------------------------------------%
+
+SPECFEM can now compute the gravity field as well as its derivatives (i.e., gravity gradiometry)
+generated by any given 3D Earth model at a given elevation, i.e., on a given observation surface.
+That feature is still experimental but should work just fine.\\
+
+To see how it is implemented and to use it, type this in the root directory of the code:\\
+
+\texttt{grep -i GRAVITY\_INTEGRALS src/*/*}
+
+
+%------------------------------------------------------------------------------------------------%
+
 \chapter{Graphics}
+
+%------------------------------------------------------------------------------------------------%
 
 
 \section{\label{sec:Mesh-graphics}Meshes}
@@ -3294,7 +3438,7 @@ This file will be created by the solver run. Then type
 \end{lyxcode}
 
 and run the executable \texttt{xcreate\_movie\_shakemap\_AVS\_DX\_GMT}
-in the \texttt{bin/} subdirectory. It will create visualization files
+in the main directory. It will create visualization files
 in your format of choice. The code will prompt the user for input
 parameters.
 
@@ -3363,8 +3507,8 @@ it in the root directory, type:
 \begin{lyxcode}
 {\footnotesize make~xcombine\_vol\_data~}{\footnotesize \par}
 \end{lyxcode}
-which will create the executable \texttt{xcombine\_vol\_data} in the
-directory \texttt{bin/}. To output the usage of this executable, type
+which will create the executable \texttt{bin/xcombine\_vol\_data}.
+To output the usage of this executable, type
 \begin{lyxcode}
 {\footnotesize ./bin/xcombine\_vol\_data~}{\footnotesize \par}
 \end{lyxcode}
@@ -3799,17 +3943,17 @@ the required relative output.
 
 \section{{\normalsize \label{sec:Using-SEP}}Using external SEP models.}
 
-Stanford Exploration Project (SEP) models consists of two files per variables, one header file (\texttt{.H}) 
-and one binary file (\texttt{.H$@$}). 
-Among other information, the header file indicates, for each dimension, 
-the offset (\texttt{o1}, \texttt{o2} and \texttt{o3} fields), 
+Stanford Exploration Project (SEP) models consists of two files per variables, one header file (\texttt{.H})
+and one binary file (\texttt{.H$@$}).
+Among other information, the header file indicates, for each dimension,
+the offset (\texttt{o1}, \texttt{o2} and \texttt{o3} fields),
 the spatial step size (\texttt{d1}, \texttt{d2} and \texttt{d3} fields)
 and the number of samples (\texttt{n1}, \texttt{n2} and \texttt{n3}) necessary to read
 the linked binary file (\texttt{in} field).
 
 SEP model reading occurs during database generation. It it the user responsibility
 to ensure that proper interfaces between acoustic and elastic domains are set up
-during the meshing phase. For more information, refer to 
+during the meshing phase. For more information, refer to
 section~\ref{cha:Running-the-Mesher-Meshfem3D}.
 
 In \texttt{DATA/Par\_file}, \texttt{\textbf{MODEL}} should be set to \texttt{\textbf{sep}},
@@ -3937,16 +4081,16 @@ while the second command rotates the processed SEM synthetics.
 
 The forward and adjoint simulations generate synthetic seismograms
 in the \texttt{OUTPUT\_FILES/} directory by default. For the forward
-simulation, the files are named like \texttt{STA.NT.BX?.semd} for
-two-column time series, or \texttt{STA.NT.BX?.semd.sac} for ASCII
-SAC format, where STA and NT are the station name and network code,
+simulation, the files are named like \texttt{NT.STA.BX?.semd} for
+two-column time series, or \texttt{NT.STA.BX?.semd.sac} for ASCII
+SAC format, where NT and STA are the network code and station name,
 and \texttt{BX?} stands for the component name. Please see the Appendix~\ref{cha:Coordinates}
 and \ref{cha:channel-codes} for further details.
 
 The adjont simulations generate synthetic seismograms with the name
-\texttt{S?????.NT.S??.sem} (refer to Section \ref{sec:Adjoint-simulation-sources}
+\texttt{NT.S?????.S??.sem} (refer to Section \ref{sec:Adjoint-simulation-sources}
 for details). The kernel simulations output the back-reconstructed
-synthetic seismogram in the name \texttt{STA.NT.BX?.semd}, mainly
+synthetic seismogram in the name \texttt{NT.STA.BX?.semd}, mainly
 for the purpose of checking the accuracy of the reconstruction. Refer
 to Section \ref{sec:Adjoint-simulation-finite} for further details.
 
@@ -4064,14 +4208,17 @@ of \citet{TaLiMaTr09,TaLiMaTr2010} used SPECFEM3D Cartesian as well
 as several additional components which are also stored on the CIG
 svn server, described next.
 
-The directory containing utilities for tomographic inversion using
+The directory containing external utilities for tomographic inversion using
 SPECFEM3D Cartesian (or other packages that evaluate misfit functions
-and gradients) is here on the CIG svn server: \begin{verbatim} /cig/seismo/3D/ADJOINTTOMO/
-flexwin/ -- FLEXWIN algorithm for automated picking of time windows
-measureadj/ -- reads FLEXWIN output file and makes measurements, with
-the option for computing adjoint sources iterateadj/ -- various tools
-for iterative inversion (requires pre-computed \textquotedbl{}event
-kernels\textquotedbl{}) \end{verbatim} This directory also contains
+and gradients) is in directory \texttt{utils/ADJOINT\_TOMOGRAPHY\_TOOLS/}:
+\begin{verbatim}
+flexwin/     -- FLEXWIN algorithm for automated picking of time windows
+measure_adj/ -- reads FLEXWIN output file and makes measurements,
+                with the option for computing adjoint sources
+iterate_adj/ -- various tools for iterative inversion
+                (requires pre-computed "event kernels")
+\end{verbatim}
+This directory also contains
 a brief \verb+README+ file indicating the role of the three subdirectories,
 \verb+flexwin+ \citep{Maggi2009}, \verb+measure_adj+, and \verb+iterate_adj+.
 The components for making the model update are there; however, there
@@ -4137,8 +4284,15 @@ by the Free Software Foundation (see Appendix \ref{cha:License}).\\
 
 \textbf{\underline{Evolution of the code:}}\\
 
+MPI v. 3.0, December 2014: many developers.
+Convolutional PML, LDDRK time scheme, bulk attenuation support, simultaneous MPI runs,
+ADIOS file I/O support, coupling with external codes, new seismogram names,
+Deville routines for additional GLL degrees, tomography tools, unit/regression test framework,
+improved CUDA GPUs performance, additonal GEOCUBIT support, better make compilation,
+git versioning system. \\
 
-MPI v 2.1, July 2012: Max Rietmann, Peter Messmer, Daniel Peter, Dimitri
+
+MPI v. 2.1, July 2012: Max Rietmann, Peter Messmer, Daniel Peter, Dimitri
 Komatitsch, Joseph Charles, Zhinan Xie: support for CUDA GPUs, better
 CFL stability for the Stacey absorbing conditions. \\
 
@@ -4373,7 +4527,7 @@ in the \texttt{DATA/} subdirectory. Depending on the resolution of
 your simulations, if you choose a sampling rate greater than $0.01$
 s and less than $1$ s, a seismogram recording displacements on the
 vertical component of a station \texttt{ASBS} (network \texttt{AZ})
-will be named \texttt{ASBS.AZ.MXZ.semd.sac}, whereas it will be \texttt{ASBS.AZ.BXZ.semd.sac},
+will be named \texttt{AZ.ASBS.MXZ.semd.sac}, whereas it will be \texttt{AZ.ASBS.BXZ.semd.sac},
 if the sampling rate is greater than 0.0125 and less equal to 0.1
 s.
 

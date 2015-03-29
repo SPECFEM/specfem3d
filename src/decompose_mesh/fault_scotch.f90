@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -27,8 +27,8 @@
 
 module fault_scotch
 
-  use constants,only: MAX_STRING_LEN
-
+  use constants,only: MAX_STRING_LEN, IN_DATA_FILES
+  use shared_parameters,only: NGNOD2D
   implicit none
 
   private
@@ -65,7 +65,7 @@ CONTAINS
   character(len=MAX_STRING_LEN), intent(in) :: localpath_name
   integer :: nbfaults, iflt, ier
 
-  open(101,file='../DATA/Par_file_faults',status='old',action='read',iostat=ier)
+  open(101,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'Par_file_faults',status='old',action='read',iostat=ier)
   if (ier==0) then
     read(101,*) nbfaults
   else
@@ -124,8 +124,8 @@ CONTAINS
   f%nspec = nspec_side1
   allocate(f%ispec1(f%nspec))
   allocate(f%ispec2(f%nspec))
-  allocate(f%inodes1(4,f%nspec))
-  allocate(f%inodes2(4,f%nspec))
+  allocate(f%inodes1(NGNOD2D,f%nspec))
+  allocate(f%inodes2(NGNOD2D,f%nspec))
   do e=1,f%nspec
     read(101,*) f%ispec1(e),f%inodes1(:,e)
   enddo
@@ -197,13 +197,13 @@ CONTAINS
   logical :: found_it
 
   do i = 1,f%nspec
-    do k2=1,4
+    do k2=1,NGNOD2D
       iglob2 = f%inodes2(k2,i)
       found_it = .false.
       xyz_2 = nodes_coords(:,iglob2)
 
       do j = 1,f%nspec
-        do k1=1,4
+        do k1=1,NGNOD2D
           iglob1 = f%inodes1(k1,j)
           xyz_1 = nodes_coords(:,iglob1)
           xyz = xyz_2-xyz_1
@@ -479,7 +479,7 @@ CONTAINS
 
   integer  :: i,j,k,iflt,e
   integer  :: nspec_fault_1,nspec_fault_2
-  integer :: loc_nodes(4),inodes(4)
+  integer :: loc_nodes(NGNOD2D),inodes(NGNOD2D)
 
   do iflt=1,size(faults)
 
@@ -504,7 +504,7 @@ CONTAINS
       e = faults(iflt)%ispec1(i)
       if (part(e-1) == iproc) then
         inodes = faults(iflt)%inodes1(:,i)
-        do k=1,4
+        do k=1,NGNOD2D
           do j = glob2loc_nodes_nparts(inodes(k)-1), glob2loc_nodes_nparts(inodes(k))-1
             if (glob2loc_nodes_parts(j) == iproc) then
               loc_nodes(k) = glob2loc_nodes(j) + 1
@@ -520,7 +520,7 @@ CONTAINS
       e = faults(iflt)%ispec2(i)
       if (part(e-1) == iproc) then
         inodes = faults(iflt)%inodes2(:,i)
-        do k=1,4
+        do k=1,NGNOD2D
           do j = glob2loc_nodes_nparts(inodes(k)-1), glob2loc_nodes_nparts(inodes(k))-1
             if (glob2loc_nodes_parts(j) == iproc) then
               loc_nodes(k) = glob2loc_nodes(j)+1

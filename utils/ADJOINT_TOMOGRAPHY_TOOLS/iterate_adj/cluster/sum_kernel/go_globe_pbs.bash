@@ -18,7 +18,7 @@ numnodes=144
 
 #(takes about 10 minutes...)
 
-echo `date`
+date
 
 cd $PBS_O_WORKDIR
 

@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -40,7 +40,7 @@ module decompose_mesh
 
   use shared_parameters
 
-  use part_decompose_mesh,only: long,MAX_STRING_LEN,ACOUSTIC_LOAD,SAVE_MOHO_MESH,nfaces,NGNOD_EIGHT_CORNERS, &
+  use part_decompose_mesh,only: long,MAX_STRING_LEN,ACOUSTIC_LOAD,nfaces,NGNOD_EIGHT_CORNERS, &
     write_interfaces_database,write_moho_surface_database,write_glob2loc_nodes_database, &
     write_material_props_database,write_boundaries_database, &
     write_partition_database,write_cpml_database, &
@@ -1096,6 +1096,7 @@ module decompose_mesh
     if (ier /= 0) stop 'Error allocating array my_nb_interfaces'
 
     if (COUPLE_WITH_EXTERNAL_CODE) open(124,file='Numglob2loc_elmn.txt')
+    !! To verify for NOBU version ==> all about 'Numglob2loc_elmn.txt' is unchanged at the moment
 
     ! writes out Database file for each partition
     do ipart = 0, nparts-1

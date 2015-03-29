@@ -21,14 +21,14 @@ datdir=DATASET_GLOBE/CMTSOLUTION_201006030432A
 syndir=SYN_S00/CMTSOLUTION_201006030432A
 cmtfile=CMTSOLUTION_CENTER/CMTSOLUTION_201006030432A
 
-if [ $opt == 1 ]; then 
-	./PERL_SRC/process_data.pl -m $cmtfile -s 1.0 -l $tstart/$tend -t $fmin/$fmax -f -i -p -x $ext $datdir/*.sac
-	./PERL_SRC/rotate.pl -l $tstart -L $tend $datdir/*.BHE.sac.$ext
-elif [ $opt == 2 ]; then 
-	./PERL_SRC/process_syn.pl -S -m $cmtfile -s 1.0 -l $tstart/$tend -t $fmin/$fmax -f -x $ext $syndir/*.sac
-	./PERL_SRC/rotate.pl -l $tstart -L $tend $syndir/*.LHE.sem.sac.$ext
-elif [ $opt == 3 ]; then 
-	./PERL_SRC/cut_data_syn.pl -d $syndir $datdir/*BH[ZRT]*.$ext
+if [ $opt == 1 ]; then
+  ./PERL_SRC/process_data.pl -m $cmtfile -s 1.0 -l $tstart/$tend -t $fmin/$fmax -f -i -p -x $ext $datdir/*.sac
+  ./PERL_SRC/rotate.pl -l $tstart -L $tend $datdir/*.BHE.sac.$ext
+elif [ $opt == 2 ]; then
+  ./PERL_SRC/process_syn.pl -S -m $cmtfile -s 1.0 -l $tstart/$tend -t $fmin/$fmax -f -x $ext $syndir/*.sac
+  ./PERL_SRC/rotate.pl -l $tstart -L $tend $syndir/*.LHE.sem.sac.$ext
+elif [ $opt == 3 ]; then
+  ./PERL_SRC/cut_data_syn.pl -d $syndir $datdir/*BH[ZRT]*.$ext
 fi
 
 echo PROCESSING DATA DONE

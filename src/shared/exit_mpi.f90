@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -47,7 +47,7 @@
 
 ! write error message to file
   write(outputname,"('/error_message',i6.6,'.txt')") myrank
-  open(unit=IERROR,file=trim(OUTPUT_FILES_PATH)//outputname,status='unknown')
+  open(unit=IERROR,file=trim(OUTPUT_FILES)//outputname,status='unknown')
   write(IERROR,*) error_msg(1:len(error_msg))
   write(IERROR,*) 'Error detected, aborting MPI... proc ',myrank
   close(IERROR)

@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -27,7 +27,7 @@
 
 module part_decompose_mesh
 
-  use constants,only: MAX_STRING_LEN,NGNOD2D_FOUR_CORNERS,NGNOD_EIGHT_CORNERS,SAVE_MOHO_MESH
+  use constants,only: MAX_STRING_LEN,NGNOD2D_FOUR_CORNERS,NGNOD_EIGHT_CORNERS
 
   implicit none
 
@@ -797,7 +797,7 @@ contains
              write(IIN_database) glob2loc_elmnts(i)+1,num_modele(1,i+1),num_modele(2,i+1),(loc_nodes(k)+1, k=0,NGNOD-1)
 
              ! writes out to file Numglob2loc_elmn.txt
-             if (COUPLE_WITH_EXTERNAL_CODE) write(124,*) i+1,glob2loc_elmnts(i)+1,iproc
+             if (COUPLE_WITH_EXTERNAL_CODE) write(124,*) i+1,glob2loc_elmnts(i)+1,iproc !! To verify for NOBU version
           endif
        enddo
     endif

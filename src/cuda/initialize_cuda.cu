@@ -1,7 +1,7 @@
 /*
  !=====================================================================
  !
- !               S p e c f e m 3 D  V e r s i o n  2 . 1
+ !               S p e c f e m 3 D  V e r s i o n  3 . 0
  !               ---------------------------------------
  !
  !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -169,12 +169,12 @@ void FC_FUNC_(initialize_cuda_device,
   do_output_info = 0;
   if (myrank == 0){
     do_output_info = 1;
-    sprintf(filename,OUTPUT_FILES_PATH"/gpu_device_info.txt");
+    sprintf(filename,OUTPUT_FILES"/gpu_device_info.txt");
   }
   // debugging
   if (DEBUG){
     do_output_info = 1;
-    sprintf(filename,OUTPUT_FILES_PATH"/gpu_device_info_proc_%06d.txt",myrank);
+    sprintf(filename,OUTPUT_FILES"/gpu_device_info_proc_%06d.txt",myrank);
   }
 
   // output to file

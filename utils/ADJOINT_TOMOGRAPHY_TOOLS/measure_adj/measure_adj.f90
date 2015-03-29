@@ -6,7 +6,7 @@ program measure_adj
   ! input parameter:
   !  1. imeas = 1, normalized waveform difference. Adjoint source is constructed from the data
   !                      only, with the form -d(t)/ || d(t) || 2
-  !  2. imeas = 2, waveform difference, s(t) − d(t).
+  !  2. imeas = 2, waveform difference, s(t) - d(t).
   !  3. imeas = 3, cross-correlation traveltime difference for a (banana-doughtnut) sensitivity ker-
   !                       nel. The measurement between data and synthetics is not used in constructing the adjoint
   !                       source.

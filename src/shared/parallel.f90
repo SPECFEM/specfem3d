@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -25,28 +25,26 @@
 !
 !=====================================================================
 
-!! DK DK July 2014, CNRS Marseille, France:
-!! DK DK added the ability to run several calculations (several earthquakes)
-!! DK DK in an embarrassingly-parallel fashion from within the same run;
-!! DK DK this can be useful when using a very large supercomputer to compute
-!! DK DK many earthquakes in a catalog, in which case it can be better from
-!! DK DK a batch job submission point of view to start fewer and much larger jobs,
-!! DK DK each of them computing several earthquakes in parallel.
-!! DK DK To turn that option on, set parameter NUMBER_OF_SIMULTANEOUS_RUNS
-!! DK DK to a value greater than 1 in file setup/constants.h.in before
-!! DK DK configuring and compiling the code.
-!! DK DK To implement that, we create NUMBER_OF_SIMULTANEOUS_RUNS MPI sub-communicators,
-!! DK DK each of them being labeled "my_local_mpi_comm_world", and we use them
-!! DK DK in all the routines in "src/shared/parallel.f90", except in MPI_ABORT() because in that case
-!! DK DK we need to kill the entire run.
-!! DK DK When that option is on, of course the number of processor cores used to start
-!! DK DK the code in the batch system must be a multiple of NUMBER_OF_SIMULTANEOUS_RUNS,
-!! DK DK all the individual runs must use the same number of processor cores,
-!! DK DK which as usual is NPROC in the input file DATA/Par_file,
-!! DK DK and thus the total number of processor cores to request from the batch system
-!! DK DK should be NUMBER_OF_SIMULTANEOUS_RUNS * NPROC.
-!! DK DK All the runs to perform must be placed in directories called run0001, run0002, run0003 and so on
-!! DK DK (with exactly four digits).
+! Dimitri Komatitsch, July 2014, CNRS Marseille, France:
+! added the ability to run several calculations (several earthquakes)
+! in an embarrassingly-parallel fashion from within the same run;
+! this can be useful when using a very large supercomputer to compute
+! many earthquakes in a catalog, in which case it can be better from
+! a batch job submission point of view to start fewer and much larger jobs,
+! each of them computing several earthquakes in parallel.
+! To turn that option on, set parameter NUMBER_OF_SIMULTANEOUS_RUNS to a value greater than 1 in the Par_file.
+! To implement that, we create NUMBER_OF_SIMULTANEOUS_RUNS MPI sub-communicators,
+! each of them being labeled "my_local_mpi_comm_world", and we use them
+! in all the routines in "src/shared/parallel.f90", except in MPI_ABORT() because in that case
+! we need to kill the entire run.
+! When that option is on, of course the number of processor cores used to start
+! the code in the batch system must be a multiple of NUMBER_OF_SIMULTANEOUS_RUNS,
+! all the individual runs must use the same number of processor cores,
+! which as usual is NPROC in the input file DATA/Par_file,
+! and thus the total number of processor cores to request from the batch system
+! should be NUMBER_OF_SIMULTANEOUS_RUNS * NPROC.
+! All the runs to perform must be placed in directories called run0001, run0002, run0003 and so on
+! (with exactly four digits).
 
 module my_mpi
 
@@ -126,6 +124,42 @@ end module my_mpi
   call MPI_BCAST(buffer,countval,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
 
   end subroutine bcast_all_i
+
+!
+!----
+!
+
+  subroutine bcast_all_singlei(buffer)
+
+  use my_mpi
+
+  implicit none
+
+  integer :: buffer
+
+  integer :: ier
+
+  call MPI_BCAST(buffer,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
+
+  end subroutine bcast_all_singlei
+
+!
+!----
+!
+
+  subroutine bcast_all_singlel(buffer)
+
+  use my_mpi
+
+  implicit none
+
+  logical :: buffer
+
+  integer :: ier
+
+  call MPI_BCAST(buffer,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
+
+  end subroutine bcast_all_singlel
 
 !
 !----
@@ -235,7 +269,7 @@ end module my_mpi
   subroutine bcast_all_i_for_database(buffer, countval)
 
   use my_mpi
-  use constants,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
+  use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
 
   implicit none
 
@@ -260,7 +294,7 @@ end module my_mpi
   subroutine bcast_all_l_for_database(buffer, countval)
 
   use my_mpi
-  use constants,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
+  use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
 
   implicit none
 
@@ -285,7 +319,8 @@ end module my_mpi
   subroutine bcast_all_cr_for_database(buffer, countval)
 
   use my_mpi
-  use constants,only: CUSTOM_REAL,NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
+  use constants,only: CUSTOM_REAL
+  use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
 
   implicit none
 
@@ -312,7 +347,7 @@ end module my_mpi
   subroutine bcast_all_dp_for_database(buffer, countval)
 
   use my_mpi
-  use constants,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
+  use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
 
   implicit none
 
@@ -337,7 +372,7 @@ end module my_mpi
   subroutine bcast_all_r_for_database(buffer, countval)
 
   use my_mpi
-  use constants,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
+  use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
 
   implicit none
 
@@ -354,6 +389,79 @@ end module my_mpi
   call MPI_BCAST(buffer,countval,MPI_REAL,0,my_local_mpi_comm_for_bcast,ier)
 
   end subroutine bcast_all_r_for_database
+
+!
+!---- broadcast using MPI_COMM_WORLD
+!
+
+  subroutine bcast_all_singlei_world(buffer)
+
+  use my_mpi
+
+  implicit none
+
+  integer :: buffer
+
+  integer :: ier
+
+  call MPI_BCAST(buffer,1,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
+
+  end subroutine bcast_all_singlei_world
+
+!
+!----
+!
+
+  subroutine bcast_all_singlel_world(buffer)
+
+  use my_mpi
+
+  implicit none
+
+  logical :: buffer
+
+  integer :: ier
+
+  call MPI_BCAST(buffer,1,MPI_LOGICAL,0,MPI_COMM_WORLD,ier)
+
+  end subroutine bcast_all_singlel_world
+
+!
+!----
+!
+
+  subroutine bcast_all_singledp_world(buffer)
+
+  use my_mpi
+
+  implicit none
+
+  double precision :: buffer
+
+  integer :: ier
+
+  call MPI_BCAST(buffer,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
+
+  end subroutine bcast_all_singledp_world
+
+!
+!----
+!
+
+  subroutine bcast_all_string_world(buffer)
+
+  use my_mpi
+  use constants,only: MAX_STRING_LEN
+
+  implicit none
+
+  character(len=MAX_STRING_LEN) :: buffer
+
+  integer :: ier
+
+  call MPI_BCAST(buffer,MAX_STRING_LEN,MPI_CHARACTER,0,MPI_COMM_WORLD,ier)
+
+  end subroutine bcast_all_string_world
 
 !
 !----
@@ -502,13 +610,34 @@ end module my_mpi
   subroutine init_mpi()
 
   use my_mpi
+  use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
 
   implicit none
 
-  integer ier
+  integer :: myrank,ier
 
 ! initialize the MPI communicator and start the NPROCTOT MPI processes.
   call MPI_INIT(ier)
+  if (ier /= 0 ) stop 'Error initializing MPI'
+
+  ! we need to make sure that NUMBER_OF_SIMULTANEOUS_RUNS and BROADCAST_SAME_MESH_AND_MODEL are read before calling world_split()
+  ! thus read the parameter file
+  call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
+  if (myrank == 0) then
+    call open_parameter_file_from_master_only(ier)
+    ! we need to make sure that NUMBER_OF_SIMULTANEOUS_RUNS and BROADCAST_SAME_MESH_AND_MODEL are read
+    call read_value_integer(NUMBER_OF_SIMULTANEOUS_RUNS, 'NUMBER_OF_SIMULTANEOUS_RUNS', ier)
+    if (ier /= 0) stop 'Error reading Par_file parameter NUMBER_OF_SIMULTANEOUS_RUNS'
+    call read_value_logical(BROADCAST_SAME_MESH_AND_MODEL, 'BROADCAST_SAME_MESH_AND_MODEL', ier)
+    if (ier /= 0) stop 'Error reading Par_file parameter BROADCAST_SAME_MESH_AND_MODEL'
+    ! close parameter file
+    call close_parameter_file()
+  endif
+
+  ! broadcast parameters read from master to all processes
+  my_local_mpi_comm_world = MPI_COMM_WORLD
+  call bcast_all_singlei(NUMBER_OF_SIMULTANEOUS_RUNS)
+  call bcast_all_singlel(BROADCAST_SAME_MESH_AND_MODEL)
 
 ! create sub-communicators if needed, if running more than one earthquake from the same job
   call world_split()
@@ -1312,13 +1441,14 @@ end module my_mpi
 !
 
 ! create sub-communicators if needed, if running more than one earthquake from the same job.
-!! DK DK create a sub-communicator for each independent run;
-!! DK DK if there is a single run to do, then just copy the default communicator to the new one
+! create a sub-communicator for each independent run;
+! if there is a single run to do, then just copy the default communicator to the new one
   subroutine world_split()
 
   use my_mpi
-  use constants,only: MAX_STRING_LEN,NUMBER_OF_SIMULTANEOUS_RUNS,OUTPUT_FILES_PATH, &
-    IMAIN,ISTANDARD_OUTPUT,mygroup,BROADCAST_SAME_MESH_AND_MODEL,I_should_read_the_database
+  use constants,only: MAX_STRING_LEN,OUTPUT_FILES, &
+    IMAIN,ISTANDARD_OUTPUT,mygroup,I_should_read_the_database
+  use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
 
   implicit none
 
@@ -1362,7 +1492,7 @@ end module my_mpi
 
 !   add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
     write(path_to_add,"('run',i4.4,'/')") mygroup + 1
-    OUTPUT_FILES_PATH = path_to_add(1:len_trim(path_to_add))//OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))
+    OUTPUT_FILES = path_to_add(1:len_trim(path_to_add))//OUTPUT_FILES(1:len_trim(OUTPUT_FILES))
 
 !--- create a subcommunicator to broadcast the identical mesh and model databases if needed
     if (BROADCAST_SAME_MESH_AND_MODEL) then
@@ -1401,7 +1531,7 @@ end module my_mpi
   subroutine world_unsplit()
 
   use my_mpi
-  use constants,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
+  use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
 
   implicit none
 

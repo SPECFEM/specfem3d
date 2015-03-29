@@ -9,7 +9,7 @@ dnl You must have recent versions of Autoconf and Automake installed.
 ############################################################
 
 AC_PREREQ(2.61)
-AC_INIT([Specfem3D], [2.1.0], [see the wiki], [Specfem3D])
+AC_INIT([Specfem3D], [3.0.0], [see the wiki], [Specfem3D])
 AC_CONFIG_SRCDIR([src/specfem3D/specfem3D.f90])
 
 AC_CONFIG_HEADER([setup/config.h])
@@ -100,6 +100,9 @@ AC_ARG_WITH([cuda],
     [want_cuda=no])
 AM_CONDITIONAL([COND_CUDA], [test "$want_cuda" != no])
 AM_CONDITIONAL([COND_CUDA5], [test "$want_cuda" = cuda5])
+AM_CONDITIONAL([COND_CUDA6], [test "$want_cuda" = cuda6])
+# cuda linking for cuda 5x and 6x
+AM_CONDITIONAL([COND_CUDA_PLUS], [test "$want_cuda" = cuda5 -o "$want_cuda" = cuda6])
 
 ###
 ### ADIOS
@@ -170,6 +173,8 @@ AC_PROG_CC
 AC_LANG_PUSH(C)
 AC_CHECK_HEADER(emmintrin.h,AC_DEFINE([HAVE_EMMINTRIN],[1],[Define if emmintrin.h]))
 AC_CHECK_HEADER(xmmintrin.h,AC_DEFINE([HAVE_XMMINTRIN],[1],[Define if xmmintrin.h]))
+# AIX doesn't have err.h so we need to check
+AC_CHECK_HEADER(err.h,      AC_DEFINE([HAVE_ERR],      [1],[Define if err.h]))
 AC_LANG_POP(C)
 
 
@@ -393,6 +398,7 @@ AC_CONFIG_FILES([
     Makefile
     setup/constants.h
     setup/constants_tomography.h
+    setup/constants_inverse_problem.h
     setup/precision.h
     setup/config.fh
 ])

@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -203,7 +203,7 @@
 
 ! open main output file, only written to by process 0
   if (myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
-    open(unit=IMAIN,file=trim(OUTPUT_FILES_PATH)//'/output_mesher.txt',status='unknown')
+    open(unit=IMAIN,file=trim(OUTPUT_FILES)//'/output_mesher.txt',status='unknown')
 
 ! get MPI starting time
   time_start = wtime()
@@ -264,12 +264,14 @@
 ! reads and checks user input parameters
 
   use generate_databases_par
+
   implicit none
 
-! reads Par_file
-  call read_parameter_file()
+  logical :: BROADCAST_AFTER_READ
 
-  call read_adios_parameters()
+! reads Par_file
+  BROADCAST_AFTER_READ = .true.
+  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
 
 ! check that the code is running with the requested nb of processes
   if (sizeprocs /= NPROC) then

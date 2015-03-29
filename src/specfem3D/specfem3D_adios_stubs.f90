@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -39,11 +39,12 @@
 !------------------------------------------------'
 
 subroutine read_mesh_for_init_ADIOS(nspec, nglob)
-  use unused_mod
   use adios_manager_mod
 
   implicit none
   integer, intent(inout) :: nspec, nglob
+
+  integer(kind=4) :: unused_i4
 
   unused_i4 = nspec
   unused_i4 = nglob
@@ -68,12 +69,15 @@ end subroutine read_mesh_databases_moho_adios
 !-----------------------------------------'
 
 subroutine define_kernel_adios_variables(handle, SAVE_WEIGHTS)
-  use unused_mod
+
   use adios_manager_mod
 
   implicit none
   integer(kind=8), intent(inout) :: handle
   logical, intent(in) :: SAVE_WEIGHTS
+
+  integer(kind=8) :: unused_i8
+  logical :: unused_l
 
   unused_i8 = handle
   unused_l  = SAVE_WEIGHTS
@@ -82,11 +86,13 @@ subroutine define_kernel_adios_variables(handle, SAVE_WEIGHTS)
 end subroutine define_kernel_adios_variables
 
 subroutine perform_write_adios_kernels(handle)
-  use unused_mod
+
   use adios_manager_mod
 
   implicit none
   integer(kind=8), intent(in) :: handle
+
+  integer(kind=8) :: unused_i8
 
   unused_i8 = handle
 
@@ -94,11 +100,13 @@ subroutine perform_write_adios_kernels(handle)
 end subroutine
 
 subroutine save_kernels_acoustic_adios(handle)
-  use unused_mod
+
   use adios_manager_mod
 
   implicit none
   integer(kind=8), intent(in) :: handle
+
+  integer(kind=8) :: unused_i8
 
   unused_i8 = handle
 
@@ -108,7 +116,7 @@ end subroutine
 subroutine save_kernels_elastic_adios(handle, alphav_kl, alphah_kl, &
                                       betav_kl, betah_kl, eta_kl,   &
                                       rhop_kl, alpha_kl, beta_kl)
-  use unused_mod
+
   use specfem_par
   use adios_manager_mod
 
@@ -117,6 +125,9 @@ subroutine save_kernels_elastic_adios(handle, alphav_kl, alphah_kl, &
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
     alphav_kl,alphah_kl,betav_kl,betah_kl, &
     eta_kl, rhop_kl, alpha_kl, beta_kl
+
+  integer(kind=8) :: unused_i8
+  real(kind=CUSTOM_REAL) :: unused_cr
 
   unused_i8 = handle
   unused_cr = alphav_kl(1,1,1,1)
@@ -132,11 +143,13 @@ subroutine save_kernels_elastic_adios(handle, alphav_kl, alphah_kl, &
 end subroutine
 
 subroutine save_kernels_poroelastic_adios(handle)
-  use unused_mod
+
   use adios_manager_mod
 
   implicit none
   integer(kind=8), intent(in) :: handle
+
+  integer(kind=8) :: unused_i8
 
   unused_i8 = handle
 
@@ -144,11 +157,13 @@ subroutine save_kernels_poroelastic_adios(handle)
 end subroutine save_kernels_poroelastic_adios
 
 subroutine save_kernels_hessian_adios(handle)
-  use unused_mod
+
   use adios_manager_mod
 
   implicit none
   integer(kind=8), intent(in) :: handle
+
+  integer(kind=8) :: unused_i8
 
   unused_i8 = handle
 

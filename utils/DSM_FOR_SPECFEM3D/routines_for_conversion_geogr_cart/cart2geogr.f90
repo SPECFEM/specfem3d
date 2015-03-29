@@ -100,7 +100,7 @@ contains
   end subroutine compute_rotation_matrix
 
 !--------------------------------------------------------------------------------------------------------------------------------------------------------
-! 3D rotation matrix with axis  "axe" and angle theta (d°)
+! 3D rotation matrix with axis  "axe" and angle theta (degrees)
 !
 subroutine rotation_matrix_axe(R,axe,theta)
   implicit none

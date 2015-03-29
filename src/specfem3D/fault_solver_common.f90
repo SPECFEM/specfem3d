@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -372,7 +372,7 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
   IIN = 251 ! WARNING: not safe, should check that unit is not aleady opened
 
  ! count the number of output points on the current fault (#iflt)
-  open(IIN,file='../DATA/FAULT_STATIONS',status='old',action='read',iostat=ier)
+  open(IIN,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'FAULT_STATIONS',status='old',action='read',iostat=ier)
   if (ier /= 0) then
     if (myrank==0) write(IMAIN,*) 'Fatal error opening FAULT_STATIONS file. Abort.'
     stop
@@ -391,7 +391,7 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
   allocate(dataT%name(dataT%npoin))
   allocate(dist_loc(dataT%npoin)) !Surendra : for parallel fault
 
-  open(IIN,file='../DATA/FAULT_STATIONS',status='old',action='read')
+  open(IIN,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'FAULT_STATIONS',status='old',action='read')
   read(IIN,*) np
   k = 0
   do i=1,np
@@ -516,7 +516,7 @@ end subroutine store_dataT
 !------------------------------------------------------------------------
 subroutine SCEC_write_dataT(dataT)
 
-  use specfem_par, only: OUTPUT_FILES_PATH
+  use specfem_par, only: OUTPUT_FILES
 !! DK DK use type() instead of class() for compatibility with some current compilers
   type(dataT_type), intent(in) :: dataT
 
@@ -532,7 +532,7 @@ subroutine SCEC_write_dataT(dataT)
   write(my_fmt,'(a,i1,a)') '(',dataT%ndat+1,'(E15.7))'
 
   do i=1,dataT%npoin
-    open(IOUT,file=trim(OUTPUT_FILES_PATH)//trim(dataT%name(i))//'.dat',status='replace')
+    open(IOUT,file=trim(OUTPUT_FILES)//trim(dataT%name(i))//'.dat',status='replace')
     write(IOUT,*) "# problem=TPV104" ! WARNING: this should be a user input
     write(IOUT,*) "# author=Surendra Nadh Somala" ! WARNING: this should be a user input
     write(IOUT,1000) time_values(2), time_values(3), time_values(1), time_values(5), time_values(6), time_values(7)

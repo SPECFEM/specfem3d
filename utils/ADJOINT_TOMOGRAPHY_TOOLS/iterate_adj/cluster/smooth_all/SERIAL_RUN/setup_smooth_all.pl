@@ -7,7 +7,7 @@
 # This script copies directories with binary files of a specified parameter
 # from one place to a local directory on pangu.
 #
-# 
+#
 # EXAMPLE:
 #    setup_smooth_all.pl m16 168 mu_kernel ; setup_smooth_all.pl m16 168 kappa_kernel
 #
@@ -36,7 +36,7 @@ $neid = @eids;
 
 print "number of event kernels : $neid\n";
 
-$imin = 1; $imax = $neid;	# default
+$imin = 1; $imax = $neid; # default
 #$imin = 1; $imax = 20;
 #$imin = 10; $imax = $imin;
 
@@ -71,37 +71,37 @@ for ($i = $imin; $i <= $imax; $i++) {
        print "nfiles_out = ${nfiles_out}\n";
 
        if ( ${nfiles_out} == $nproc ) {
-	 print "--> $nfiles_out bin files exist -- ready to go\n";
+   print "--> $nfiles_out bin files exist -- ready to go\n";
 
        } else {
 
-	 `mkdir -p $edir_smooth/$eid`;
-	 `mkdir -p $edir_copy`;
-	 `mkdir -p $eid/OUTPUT_FILES`;
-	 `mkdir -p $eid/inout_smooth`;
+   `mkdir -p $edir_smooth/$eid`;
+   `mkdir -p $edir_copy`;
+   `mkdir -p $eid/OUTPUT_FILES`;
+   `mkdir -p $eid/inout_smooth`;
 
-	 $sfiles = "${edir_out}/*${ftag}_smooth.bin";
-	 $nsfiles  = `ls -1 $sfiles | wc | awk '{print \$1}'`; chomp($nsfiles);
-	 if ( $nsfiles == $nproc ) {
-	   print "--> $nsfiles bin files already exist -- no need to run\n";
+   $sfiles = "${edir_out}/*${ftag}_smooth.bin";
+   $nsfiles  = `ls -1 $sfiles | wc | awk '{print \$1}'`; chomp($nsfiles);
+   if ( $nsfiles == $nproc ) {
+     print "--> $nsfiles bin files already exist -- no need to run\n";
 
-	 } else {
-	   # link input event kernels
-	   `ln -s $efiles_in $edir_out`;
+   } else {
+     # link input event kernels
+     `ln -s $efiles_in $edir_out`;
 
-	   # copy run scripts and link executable file
-	   `cp $masterdir/run.lsf $edir_copy`;
-	   `cp $masterdir/go.bash $edir_copy`;
-	   `ln -s $masterdir/topo $edir_copy`;
-	   `ln -s $masterdir/smooth_sem_fun $edir_copy`;
-	   `ln -s $masterdir/xcombine_vol_data $edir_copy`;
-	   `ln -s $masterdir/slice_file $edir_copy`;
-	   `ln -s $masterdir/combine.bash $edir_copy`;
+     # copy run scripts and link executable file
+     `cp $masterdir/run.lsf $edir_copy`;
+     `cp $masterdir/go.bash $edir_copy`;
+     `ln -s $masterdir/topo $edir_copy`;
+     `ln -s $masterdir/smooth_sem_fun $edir_copy`;
+     `ln -s $masterdir/xcombine_vol_data $edir_copy`;
+     `ln -s $masterdir/slice_file $edir_copy`;
+     `ln -s $masterdir/combine.bash $edir_copy`;
 
-	   # change the label for the run
-	   `sed "/smooth_model/s/smooth_model/${eid}_smooth/" ${edir_copy}/go.bash > ${edir_copy}/run.tmp`;
-	   `mv -f ${edir_copy}/run.tmp ${edir_copy}/go.bash`;
-	 }
+     # change the label for the run
+     `sed "/smooth_model/s/smooth_model/${eid}_smooth/" ${edir_copy}/go.bash > ${edir_copy}/run.tmp`;
+     `mv -f ${edir_copy}/run.tmp ${edir_copy}/go.bash`;
+   }
        }
      }
    }

@@ -1,13 +1,12 @@
-#
 ##
+
 function delete_directory_if_exist ()
 {
 if [ ! -d $1 ] ; then
  rm -fr $1
 fi
 }
-#
-##
+
 function clean_and_make_dir ()
 {
 delete_directory_if_exist $MESH
@@ -26,7 +25,6 @@ function run_create_mesh ()
 {
 # fonction to create MESH for a chunk
 # the output files for mesh are put in $MESH directory
-# 
 
 current_dir=$(pwd)
 
@@ -119,5 +117,5 @@ done;
 tar -jcvf $OUT.tar.bz2 $OUT
 
 cd ..
- 
+
 }

@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -212,14 +212,14 @@
     if (ispec_is_acoustic(ispec)) then
 
       ! backward fields: displacement vector
-      call compute_gradient(ispec,NSPEC_ADJOINT,NGLOB_ADJOINT, &
+      call compute_gradient_in_acoustic(ispec,NSPEC_ADJOINT,NGLOB_ADJOINT, &
                       b_potential_acoustic, b_displ_elm,&
                       hprime_xx,hprime_yy,hprime_zz, &
                       xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                       ibool,rhostore,GRAVITY)
       ! adjoint fields: acceleration vector
       ! new expression (\partial_t^2\bfs^\dagger=-\frac{1}{\rho}\bfnabla\phi^\dagger)
-      call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+      call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
                       potential_acoustic, accel_elm,&
                       hprime_xx,hprime_yy,hprime_zz, &
                       xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
@@ -393,14 +393,14 @@
     if (ispec_is_acoustic(ispec)) then
 
       ! adjoint fields: acceleration vector
-      call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+      call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
                       potential_dot_dot_acoustic, accel_elm,&
                       hprime_xx,hprime_yy,hprime_zz, &
                       xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                       ibool,rhostore,GRAVITY)
 
       ! adjoint fields: acceleration vector
-      call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+      call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
                       b_potential_dot_dot_acoustic, b_accel_elm,&
                       hprime_xx,hprime_yy,hprime_zz, &
                       xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &

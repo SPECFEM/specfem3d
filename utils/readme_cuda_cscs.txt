@@ -47,7 +47,7 @@ export CRAY_CHECK="-eF -em -rm"
 suggested compiler options:
 intel: -O3 -fp-model fast=2 -x SSE4.2 -ftz -funroll-loops -unroll5
 gnu: -Ofast -mfpmath=sse -funroll-loops
-pgi: 
+pgi:
 ####################################
 Notes from Jeff Poznanovic:
 
@@ -57,7 +57,7 @@ module load cuda cudatools cudasdk
 module load PrgEnv-cray
 ./configure --with-cuda --with-mpi MPIFC=ftn MPICC=cc FC=ftn CC=cc FCFLAGS="-eF -em -rm" CFLAGS="-h list=m" MPI_INC=-I/opt/cray/mpt/default/xt/gemini/mpich2-cray/73/include
 
- 
+
 make
 
 

@@ -5,7 +5,10 @@ config.log
 config.status
 config.h
 /Makefile
+setup/config.fh
 setup/constants.h
+setup/constants_inverse_problem.h
+setup/constants_tomography.h
 setup/precision.h
 
 # Build time

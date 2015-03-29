@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -104,7 +104,7 @@ module specfem_par
   double precision, dimension(:,:,:), allocatable :: nu_source
   double precision, dimension(:), allocatable :: Mxx,Myy,Mzz,Mxy,Mxz,Myz
   double precision, dimension(:), allocatable :: xi_source,eta_source,gamma_source
-  double precision, dimension(:), allocatable :: tshift_src,hdur,hdur_gaussian,hdur_tiny
+  double precision, dimension(:), allocatable :: tshift_src,hdur,hdur_gaussian
   double precision, dimension(:), allocatable :: utm_x_source,utm_y_source
   double precision, external :: comp_source_time_function
   double precision :: t0
@@ -129,7 +129,7 @@ module specfem_par
   character(len=MAX_LENGTH_NETWORK_NAME), allocatable, dimension(:) :: network_name
 
 ! seismograms
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: seismograms_d,seismograms_v,seismograms_a
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: seismograms_d,seismograms_v,seismograms_a,seismograms_p
 
 ! Gauss-Lobatto-Legendre points of integration and weights
   double precision, dimension(NGLLX) :: xigll,wxgll
@@ -245,7 +245,7 @@ module specfem_par
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: &
              normal_x_noise,normal_y_noise,normal_z_noise, mask_noise
 
-  ! for Roland_Sylvain integrals
+  ! for gravity integrals
   double precision, dimension(NTOTAL_OBSERVATION) :: x_observation,y_observation,z_observation, &
                                                 g_x,g_y,g_z,G_xx,G_yy,G_zz,G_xy,G_xz,G_yz,temporary_array_for_sum
 

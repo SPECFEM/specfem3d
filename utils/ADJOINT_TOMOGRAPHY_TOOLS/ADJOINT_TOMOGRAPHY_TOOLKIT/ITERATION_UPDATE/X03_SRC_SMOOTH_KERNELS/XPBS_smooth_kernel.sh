@@ -15,12 +15,12 @@ cd $PBS_O_WORKDIR
 iter=M18
 sigma_h=50
 sigma_v=5
-topo_path=../EUROPE_TOPOLOGY_FILE 
-kernel_path=../SUMMED_KERNEL_$iter 
+topo_path=../EUROPE_TOPOLOGY_FILE
+kernel_path=../SUMMED_KERNEL_$iter
 tag=eta_kernel_precond
 
-output_tag="XTAG_SMOOTH_"$iter"_"$tag 
+output_tag="XTAG_SMOOTH_"$iter"_"$tag
 
-echo submit smoothing $tag kernel  
-mpiexec -np 100 ./xsmooth_sem_globe $sigma_h $sigma_v $tag $kernel_path $topo_path  > $output_tag 
-echo smoothing $tag kernel done successfully 
+echo submit smoothing $tag kernel
+mpiexec -np 100 ./xsmooth_sem_globe $sigma_h $sigma_v $tag $kernel_path $topo_path  > $output_tag
+echo smoothing $tag kernel done successfully

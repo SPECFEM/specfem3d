@@ -1,0 +1,37 @@
+
+Subject: validation benchmark from our 2010 JGR paper with Lev Vinnik added
+From: Dimitri Komatitsch
+Date: 24/03/2014 13:11
+To: Yi Wang
+CC: Clement Durochat, Vadim Monteiller, Sebastien Chevrot
+
+Dear Yi,
+
+I have added our validation benchmark from our 2010 JGR paper with Lev Vinnik in this new directory:
+
+DSM_cleaned/validation_benchmark_from_our_2010_JGR_paper_with_Vinnik
+
+I have put the PDF paper inside as well.
+
+That benchmark will be very useful because it compares DSM of Takeuchi with normal modes, with GEMINI and with SPECFEM3D_GLOBE for a relatively difficult case.
+
+All the plotting scripts are in sub-directories validation_SH_IASP91_regular and validation_SV_IASP91_regular.
+
+The old DSM source code of Takeuchi that we had used for that benchmark in 2009 is in sub-directory final_source_code_used_clean_DSM_Takeuchi_CINES_July2009 .
+
+One important thing to note is that back then we did not use the real IASP91 model, we instead entirely removed the crust and also smoothed the d410 and d670 discontinuities, as explained in our PDF paper.
+Thus, you will need to do the same thing in the new cleaned Fortran90 version of the DSM code in order to run this benchmark.
+
+To see how I did that smoothing in 2009, you can type this in the old DSM code:
+
+  grep -n -i values_smoothed_model *.f
+
+Thank you,
+Best regards,
+
+Dimitri.
+
+--
+Dimitri Komatitsch
+CNRS Research Director (DR CNRS), Laboratory of Mechanics and Acoustics,
+UPR 7051, Marseille, France    http://komatitsch.free.fr

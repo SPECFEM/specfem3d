@@ -29,27 +29,33 @@ exit(1)
 if (!getopts('l:L:cdts')) {die('Check input arguments\n');}
 @ARGV > 0 or Usage();
 if (!$opt_l) {$opt_l = 0;}
-$saclst = "/opt/seismo-util/bin/saclst";
-if (not -f $saclst) {die("No such file as $saclst\n");}
+
+#$saclst = "/opt/seismo-util/bin/saclst";
+#if (not -f $saclst) {die("No such file as $saclst\n");}
+$saclst = "saclst";
+if (system("which $saclst >/dev/null") != 0) {die(" No $saclst file\n");}
+
 $undef=-12345.0;
 $eps=0.1;
-
 
 foreach $file (@ARGV) {
   print "processing $file\n";
   if (! -f $file) {die (" check to see if $file exists or not\n");}
+
   (undef,$comp)=split(" ",`$saclst kcmpnm f $file`);
   if ($comp eq "-12345") {die("No component name defined in the file\n");}
   if (not ($comp=~/E/ or $comp=~/1/)) {die("Please input only E/1 comp\n");}
+
   $ecomp = $comp; $ncomp = $ecomp; $rcomp = $ecomp; $tcomp = $ecomp;
   $ncomp=~s/E/N/; $ncomp =~s/1/2/;
   $tcomp=~s/E/T/; $tcomp =~s/1/T/;
   $rcomp=~s/E/R/; $rcomp =~s/1/R/;
   ($dir) = split(" ",`dirname $file`);$east = $file;
   if ($opt_d) {
-    (undef,undef,undef,undef,undef,undef,$network,undef)=split(/\./,`basename $file`);
-    (undef,$east1) = split(/\.$network\./,$file);
-    $east1 = "$network.$east1";
+    #(undef,undef,undef,undef,undef,undef,$network,undef)=split(/\./,`basename $file`);
+    ($network,$sta,undef,undef)=split(/\./,`basename $file`);
+    (undef,$east1) = split(/\.$sta\./,$file);
+    $east1 = "$sta.$east1";
     $north1 = $east1; $north1=~s/$ecomp/$ncomp/;
     ($north) = split(" ",`ls -1 $dir/*$north1`);
     $tang1=$east1;$radial1=$east1;

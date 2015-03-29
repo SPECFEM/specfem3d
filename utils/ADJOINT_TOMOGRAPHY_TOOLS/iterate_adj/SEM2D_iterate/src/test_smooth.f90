@@ -51,7 +51,7 @@ program test_smooth
 !!$  valence(:) = 0
 !!$  do ispec = 1,NSPEC
 !!$    do j = 1,NGLLZ
-!!$      do i = 1,NGLLX 
+!!$      do i = 1,NGLLX
 !!$        iglob = ibool(i,j,ispec)
 !!$        da_local(i,j,ispec) = wxgll(i)*wzgll(j)*jacobian(i,j,ispec)
 !!$
@@ -167,7 +167,7 @@ program test_smooth
      k_rough_local(:,:,:) = 0.
      do ispec = 1,NSPEC
         do j = 1,NGLLZ
-           do i = 1,NGLLX 
+           do i = 1,NGLLX
               itemp = ibool(i,j,ispec)
               k_rough_local(i,j,ispec) = k_rough_global(itemp)
            enddo
@@ -177,7 +177,7 @@ program test_smooth
 
   ! Smoothing function is a Gaussian whose full-width is given by gamma;
   ! all points outside d^2 (dtrsh2) are set to zero.
-  dtrsh2 = (1.5*gamma)**2 
+  dtrsh2 = (1.5*gamma)**2
 
   ! EXAMPLE gaussian smoothing function for one point
   ! (1) find the closest gridpoint to the target point
@@ -204,7 +204,7 @@ program test_smooth
 
   !------------------------------------
   ! Compute the SMOOTHED kernel by convolving a Gaussian with the UNSMOOTHED kernel.
-  ! This involves integrating NGLOB products between a Gaussian and the unsmoothed kernel.     
+  ! This involves integrating NGLOB products between a Gaussian and the unsmoothed kernel.
 
   print *, 'convolving the kernel with a Gaussian...'
 
@@ -227,7 +227,7 @@ program test_smooth
         k_gaus_local(:,:,:) = 0.
         do ispec = 1,NSPEC
            do j = 1,NGLLZ
-              do i = 1,NGLLX 
+              do i = 1,NGLLX
                  itemp = ibool(i,j,ispec)
                  dist2 = (xcen - x(itemp))**2 + (zcen - z(itemp))**2
                  if(dist2 <= dtrsh2) then
@@ -255,14 +255,14 @@ program test_smooth
      if(itype==1) then            ! local integration with local arrays
 
         k_gaus_int_global(iglob) = sum( k_gaus_local(:,:,:) * da_local(:,:,:) )
-        k_smooth_global(iglob) = sum( k_rough_local(:,:,:) * k_gaus_local(:,:,:) * da_local(:,:,:) ) / k_gaus_int_global(iglob) 
+        k_smooth_global(iglob) = sum( k_rough_local(:,:,:) * k_gaus_local(:,:,:) * da_local(:,:,:) ) / k_gaus_int_global(iglob)
 
-     elseif(itype==2) then        ! local integration with global array
+     else if(itype==2) then        ! local integration with global array
 
         k_temp(:,:,:) = 0.
         do ispec = 1,NSPEC
            do j = 1,NGLLZ
-              do i = 1,NGLLX 
+              do i = 1,NGLLX
                  itemp = ibool(i,j,ispec)
                  k_temp(i,j,ispec) = k_gaus_global(itemp) * da_local(i,j,ispec)
               enddo
@@ -273,7 +273,7 @@ program test_smooth
         k_temp(:,:,:) = 0.
         do ispec = 1,NSPEC
            do j = 1,NGLLZ
-              do i = 1,NGLLX 
+              do i = 1,NGLLX
                  itemp = ibool(i,j,ispec)
                  k_temp(i,j,ispec) = k_rough_global(itemp) * k_gaus_global(itemp) * da_local(i,j,ispec)
               enddo
@@ -281,10 +281,10 @@ program test_smooth
         enddo
         k_smooth_global(iglob) = sum( k_temp(:,:,:) ) / k_gaus_int_global(iglob)
 
-     elseif(itype==3) then       ! global integration with global arrays
+     else if(itype==3) then       ! global integration with global arrays
 
         k_gaus_int_global(iglob) = sum( k_gaus_global(:) * da_global(:) )
-        k_smooth_global(iglob) = sum( k_rough_global(:) * k_gaus_global(:) * da_global(:) ) / k_gaus_int_global(iglob)        
+        k_smooth_global(iglob) = sum( k_rough_global(:) * k_gaus_global(:) * da_global(:) ) / k_gaus_int_global(iglob)
 
      endif
 
@@ -313,4 +313,4 @@ program test_smooth
   !call system('chmod 755 get_smooth.csh ; get_smooth.csh')
 
 end program test_smooth
- 
+

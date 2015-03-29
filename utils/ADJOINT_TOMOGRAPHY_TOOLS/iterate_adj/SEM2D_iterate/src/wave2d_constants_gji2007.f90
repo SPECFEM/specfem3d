@@ -73,7 +73,7 @@ module wave2d_constants
 ! mesh specifications: membrane surface waves
   double precision, parameter :: LENGTH = 480.0d+03 ! m
   double precision, parameter :: HEIGHT = 480.0d+03 ! m
-  double precision, parameter :: AREA = LENGTH*HEIGHT  
+  double precision, parameter :: AREA = LENGTH*HEIGHT
   integer, parameter :: NEX = 40
   integer, parameter :: NEZ = 40
 !!$
@@ -98,13 +98,13 @@ module wave2d_constants
   integer, parameter :: IMODEL_SYN = 0
   integer, parameter :: IMODEL_DAT = 2
   !-----------------------------------------------------------------------------------------
-  !                               0           1                2              3          
+  !                               0           1                2              3
   !-----------------------------------------------------------------------------------------
   ! ISURFACE=1, IMODEL_SYN : homo                         checker          het
   ! ISURFACE=1, IMODEL_DAT : homo pert                    checker pert     het pert
   !-----------------------------------------------------------------------------------------
-  ! ISURFACE=0, IMODEL_SYN : homo         1D model        checker          het        
-  ! ISURFACE=0, IMODEL_DAT : homo pert    1D model        checker pert     het pert  
+  ! ISURFACE=0, IMODEL_SYN : homo         1D model        checker          het
+  ! ISURFACE=0, IMODEL_DAT : homo pert    1D model        checker pert     het pert
   !-----------------------------------------------------------------------------------------
 
   ! whether you want to smooth the structure model for computing the synthetics
@@ -146,13 +146,13 @@ module wave2d_constants
 
   logical, parameter :: WRITE_STF_A           = .false.
   logical, parameter :: WRITE_SEISMO_A        = .false.     ! source inversions
-!  logical, parameter :: WRITE_SPECTRA_A       = .false. 
+!  logical, parameter :: WRITE_SPECTRA_A       = .false.
 !  logical, parameter :: WRITE_SPECTRAL_MAP_A  = .false.
 
   logical, parameter :: WRITE_KERNELS = .true.             ! write all nine kernels
   logical, parameter :: WRITE_KERNEL_SNAPSHOTS = .false.    ! kernel snapshots
   logical, parameter :: WRITE_WAVFIELD_SNAPSHOTS = .false.  ! wavefield snapshots
-  
+
 !--------------------------------------
 ! INVERSION PARAMETERS
 
@@ -165,7 +165,7 @@ module wave2d_constants
   ! stopping criteria
   ! NITERATION  : number of iterations
   ! VAR_RED_MIN : minimum variance reduction (in percent)
-  ! SIGMA_FAC   : stop if a model value exceeds SIGMA_FAC * sigma_m 
+  ! SIGMA_FAC   : stop if a model value exceeds SIGMA_FAC * sigma_m
   ! CONV_STOP   : stop when the misfit value is this fraction of the INITIAL misfit value
   integer, parameter :: NITERATION = 16
   double precision, parameter :: VAR_RED_MIN = 0.0d0
@@ -176,8 +176,8 @@ module wave2d_constants
   double precision, parameter :: SIGMA_DLNA = 1.0d0
   double precision, parameter :: SIGMA_WAVEFORM = 1.0d0
   logical, parameter :: ADD_DATA_ERRORS = .false.
-  
-  !double precision, parameter :: SIGMA_FAC = 2.0d0 
+
+  !double precision, parameter :: SIGMA_FAC = 2.0d0
   !double precision, parameter :: CONV_STOP = 1.0d-04
 
   ! order of interpolating polynomial in conjugate gradient algorithm
@@ -197,11 +197,11 @@ module wave2d_constants
   integer, parameter ::  INV_SOURCE_X = 0
 
   ! whether to include the model norm term in the misfit function, which acts like damping
-  logical, parameter :: INCLUDE_MODEL_NORM = .false.  
-  
+  logical, parameter :: INCLUDE_MODEL_NORM = .false.
+
   ! log file showing source loactions
   logical, parameter :: ISOURCE_LOG = .true.
-  
+
   ! DO NOT CHANGE THESE
   integer, parameter :: NVAR_STRUCT = 2   ! alpha, beta (seismic velocities only)
   integer, parameter :: NVAR_SOURCE = 3   ! x position, z position, origin time
@@ -236,7 +236,7 @@ module wave2d_constants
 !---------------------------------------------------------------
 ! CHT: do not change these
 
-! UTM zone for Southern California region 
+! UTM zone for Southern California region
 !  integer, parameter :: UTM_PROJECTION_ZONE = 11
 
 ! to suppress UTM projection for SCEC benchmarks
@@ -277,7 +277,7 @@ module wave2d_constants
 ! number of nodes for 2D and 3D shape functions for hexahedra
 ! we use 8-node mesh bricks, which are more stable than 27-node elements
   integer, parameter :: NGNOD = 8, NGNOD2D = 4
-  
+
 ! number of iterations to solve the system for xi and eta
   integer, parameter :: NUM_ITER = 1
 
@@ -308,7 +308,7 @@ module wave2d_constants
 !!$  double precision, parameter :: trbdndw = 0.3, a = 30.0
 !!$  integer, parameter :: passes = 2, iord = 4
 !!$
-!!$! 
+!!$!
 !!$! MULTI-TAPER PARAMETERS
 !!$!
 !!$! Ying Zhou: The fit between the recovered data and the data can be improved

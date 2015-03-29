@@ -66,7 +66,7 @@ Mpi_tag: 2612
 ========================================================
 
 
-El 5 de marzo de 2012 05:06, Dimitri Komatitsch escribió:
+El 5 de marzo de 2012 05:06, Dimitri Komatitsch escribio:
 
     Hi Leonardo,
 

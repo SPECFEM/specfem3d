@@ -17,19 +17,18 @@ numnodes=144
 ## horizontal: sigmah (in km)
 ## vertical:     sigmav (in km)
 ## e.g. period 40 s: wavelength lambda = 40 s * 4 km/s ~ 160 km
-sigmah=160 
-sigmav=40 
+sigmah=160
+sigmav=40
 
 # kernel to smooth
-kernel=bulk_c_kernel  
+kernel=bulk_c_kernel
 
 ###########################################################
 
 # (takes about: 1h 48 min for sigmah=160/sigmav=40 ...)
 #                            25 min for sigmah=40/sigmav=40 ... )
 
-
-echo `date`
+date
 echo "kernel: $kernel"
 cd $PBS_O_WORKDIR
 
@@ -56,4 +55,4 @@ echo
 
 
 echo "done successfully"
-echo `date`
+date

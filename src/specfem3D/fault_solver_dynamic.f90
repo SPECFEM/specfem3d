@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -96,7 +96,7 @@ subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
 
   dummy_idfault = 0
 
-  open(unit=IIN_PAR,file='../DATA/Par_file_faults',status='old',iostat=ier)
+  open(unit=IIN_PAR,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'Par_file_faults',status='old',iostat=ier)
   if (ier /= 0) then
     if (myrank==0) write(IMAIN,*) 'no dynamic faults'
     close(IIN_PAR)
@@ -178,10 +178,11 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
   real(kind=CUSTOM_REAL), intent(in)  :: dt
   integer, intent(in) :: myrank
 
-  real(kind=CUSTOM_REAL) :: S1,S2,S3
+  real(kind=CUSTOM_REAL) :: S1,S2,S3,Sigma(6)
   integer :: n1,n2,n3
 
   NAMELIST / INIT_STRESS / S1,S2,S3,n1,n2,n3
+  NAMELIST /STRESS_TENSOR / Sigma
 
   call initialize_fault(bc,IIN_BIN)
 
@@ -202,6 +203,7 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
     n1=0
     n2=0
     n3=0
+    read(IIN_PAR, nml=STRESS_TENSOR)
     read(IIN_PAR, nml=INIT_STRESS)
     bc%T0(1,:) = S1
     bc%T0(2,:) = S2
@@ -209,6 +211,8 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
     call init_2d_distribution(bc%T0(1,:),bc%coord,IIN_PAR,n1)
     call init_2d_distribution(bc%T0(2,:),bc%coord,IIN_PAR,n2)
     call init_2d_distribution(bc%T0(3,:),bc%coord,IIN_PAR,n3)
+    call init_fault_traction(bc,Sigma) !added the fault traction caused by a regional stress field
+
     bc%T = bc%T0
 
     !WARNING : Quick and dirty free surface condition at z=0
@@ -231,11 +235,13 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
 
   if (RATE_AND_STATE) then
     call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt,8,iflt)
+    if (bc%dataT%npoin>0) then
     bc%dataT%longFieldNames(8) = "log10 of state variable (log-seconds)"
     if (bc%rsf%StateLaw==1) then
       bc%dataT%shortFieldNames = trim(bc%dataT%shortFieldNames)//" log-theta"
     else
       bc%dataT%shortFieldNames = trim(bc%dataT%shortFieldNames)//" psi"
+    endif
     endif
   else
     call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt,7,iflt)
@@ -264,7 +270,7 @@ subroutine TPV16_init
   integer :: relz_num,sub_relz_num, num_cell_str,num_cell_dip, hypo_cell_str,hypo_cell_dip
   integer :: i
 
-  open(unit=IIN_NUC,file='DATA/input_file.txt',status='old',iostat=ier)
+  open(unit=IIN_NUC,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'input_file.txt',status='old',iostat=ier)
   read(IIN_NUC,*) relz_num,sub_relz_num
   read(IIN_NUC,*) num_cell_str,num_cell_dip,siz_str,siz_dip
   read(IIN_NUC,*) hypo_cell_str,hypo_cell_dip,hypo_loc_str,hypo_loc_dip,rad_T_str,rad_T_dip
@@ -360,7 +366,19 @@ subroutine init_2d_distribution(a,coord,iin,n)
       tmp3 = (l/2._CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL
       b = heaviside( tmp1 ) * heaviside( tmp2 ) * heaviside( tmp3) * val
 
-    case ('cylinder')
+    case ('x-cylinder')
+      tmp1 = r - sqrt((coord(1,:)-yc)**2 + (coord(2,:)-zc)**2)
+      tmp2 = (lz/2._CUSTOM_REAL)-abs(coord(3,:)-xc)+SMALLVAL
+      b = heaviside( tmp1 ) * heaviside( tmp2 ) * val
+
+
+    case ('y-cylinder')
+      tmp1 = r - sqrt((coord(1,:)-zc)**2 + (coord(2,:)-xc)**2)
+      tmp2 = (lz/2._CUSTOM_REAL)-abs(coord(3,:)-yc)+SMALLVAL
+      b = heaviside( tmp1 ) * heaviside( tmp2 ) * val
+
+
+    case ('z-cylinder')
       tmp1 = r - sqrt((coord(1,:)-xc)**2 + (coord(2,:)-yc)**2)
       tmp2 = (lz/2._CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL
       b = heaviside( tmp1 ) * heaviside( tmp2 ) * val
@@ -387,6 +405,31 @@ subroutine init_2d_distribution(a,coord,iin,n)
   enddo
 
 end subroutine init_2d_distribution
+
+
+
+!---------------------------------------------------------------------
+!init_fault_traction subroutine computes the traction on the fault plane
+!according to a uniform regional stress field.
+subroutine init_fault_traction(bc,Sigma)
+
+  type(bc_dynandkinflt_type), intent(inout) :: bc
+  real(kind=CUSTOM_REAL),dimension(6), intent(in) :: Sigma
+  real(kind=CUSTOM_REAL),dimension(3,bc%nglob) :: Traction
+  !sigma_xx => sigma(1)
+  !sigma_yy => sigma(2)
+  !sigma_zz => sigma(3)
+  !sigma_xy => sigma(4)
+  !sigma_yz => sigma(5)
+  !sigma_xz => sigma(6) negative means compression
+  Traction(1,:) = Sigma(1)*bc%R(3,1,:)+Sigma(4)*bc%R(3,2,:)+Sigma(6)*bc%R(3,3,:)
+  Traction(2,:) = Sigma(4)*bc%R(3,1,:)+Sigma(2)*bc%R(3,2,:)+Sigma(5)*bc%R(3,3,:)
+  Traction(3,:) = Sigma(6)*bc%R(3,1,:)+Sigma(5)*bc%R(3,2,:)+Sigma(3)*bc%R(3,3,:)
+  Traction = rotate(bc,Traction,1)
+  bc%T0 = bc%T0 + Traction
+
+end subroutine init_fault_traction
+
 
 !---------------------------------------------------------------------
 elemental function heaviside(x)
@@ -519,7 +562,7 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
       theta_old = bc%rsf%theta
       call rsf_update_state(Vf_old,bc%dt,bc%rsf)
       do i=1,bc%nglob
-        Vf_new(i)=rtsafe(funcd,0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
+        Vf_new(i)=rtsafe(0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
                          bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
       enddo
 
@@ -528,7 +571,7 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
       tmp_Vf(:) = 0.5_CUSTOM_REAL*(Vf_old(:) + Vf_new(:))
       call rsf_update_state(tmp_Vf,bc%dt,bc%rsf)
       do i=1,bc%nglob
-        Vf_new(i)=rtsafe(funcd,0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
+        Vf_new(i)=rtsafe(0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
                          bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
       enddo
 
@@ -712,11 +755,11 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
 
   real(kind=CUSTOM_REAL) :: V0,f0,a,b,L,theta_init,V_init,fw,Vw, C,T
   integer :: nV0,nf0,na,nb,nL,nV_init,ntheta_init,nfw,nVw, nC,nForcedRup
-  real(kind=CUSTOM_REAL) :: W1,W2,w,hypo_z
-  real(kind=CUSTOM_REAL) :: x,z
-  logical :: c1,c2,c3,c4
-  real(kind=CUSTOM_REAL) :: b11,b12,b21,b22,B1,B2
-  integer :: i !,nglob_bulk
+!  real(kind=CUSTOM_REAL) :: W1,W2,w,hypo_z
+!  real(kind=CUSTOM_REAL) :: x,z
+!  logical :: c1,c2,c3,c4
+!  real(kind=CUSTOM_REAL) :: b11,b12,b21,b22,B1,B2
+!  integer :: i !,nglob_bulk
   real(kind=CUSTOM_REAL) :: Fload
   integer :: nFload
 !  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: init_vel
@@ -803,54 +846,55 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
 
  ! WARNING: below is an ad-hoc setting of a(x,z) for some SCEC benchmark
  !          This should be instead an option in init_2d_distribution
-  W1=15000._CUSTOM_REAL
-  W2=7500._CUSTOM_REAL
-  w=3000._CUSTOM_REAL
-  hypo_z = -7500._CUSTOM_REAL
-  do i=1,nglob
-    x=coord(1,i)
-    z=coord(3,i)
-    c1=abs(x)<W1+w
-    c2=abs(x)>W1
-    c3=abs(z-hypo_z)<W2+w
-    c4=abs(z-hypo_z)>W2
-    if ((c1 .and. c2 .and. c3) .or. (c3 .and. c4 .and. c1)) then
-
-      if (c1 .and. c2) then
-        b11 = w/(abs(x)-W1-w)
-        b12 = w/(abs(x)-W1)
-        B1 = HALF * (ONE + tanh(b11 + b12))
-      else if (abs(x)<=W1) then
-        B1 = 1._CUSTOM_REAL
-      else
-        B1 = 0._CUSTOM_REAL
-      endif
-
-      if (c3 .and. c4) then
-        b21 = w/(abs(z-hypo_z)-W2-w)
-        b22 = w/(abs(z-hypo_z)-W2)
-        B2 = HALF * (ONE + tanh(b21 + b22))
-      else if (abs(z-hypo_z)<=W2) then
-        B2 = 1._CUSTOM_REAL
-      else
-        B2 = 0._CUSTOM_REAL
-      endif
-
-      f%a(i) = 0.008 + 0.008 * (ONE - B1*B2)
-      f%Vw(i) = 0.1 + 0.9 * (ONE - B1*B2)
-
-    else if (abs(x)<=W1 .and. abs(z-hypo_z)<=W2) then
-      f%a(i) = 0.008
-      f%Vw(i) = 0.1_CUSTOM_REAL
-    else
-      f%a(i) = 0.016
-      f%Vw(i) = 1.0_CUSTOM_REAL
-    endif
-
-  enddo
+!  W1=15000._CUSTOM_REAL
+!  W2=7500._CUSTOM_REAL
+!  w=3000._CUSTOM_REAL
+!  hypo_z = -7500._CUSTOM_REAL
+!  do i=1,nglob
+!    x=coord(1,i)
+!    z=coord(3,i)
+!    c1=abs(x)<W1+w
+!    c2=abs(x)>W1
+!    c3=abs(z-hypo_z)<W2+w
+!    c4=abs(z-hypo_z)>W2
+!    if ((c1 .and. c2 .and. c3) .or. (c3 .and. c4 .and. c1)) then
+!
+!      if (c1 .and. c2) then
+!        b11 = w/(abs(x)-W1-w)
+!        b12 = w/(abs(x)-W1)
+!        B1 = HALF * (ONE + tanh(b11 + b12))
+!      else if (abs(x)<=W1) then
+!        B1 = 1._CUSTOM_REAL
+!      else
+!        B1 = 0._CUSTOM_REAL
+!      endif
+!
+!      if (c3 .and. c4) then
+!        b21 = w/(abs(z-hypo_z)-W2-w)
+!        b22 = w/(abs(z-hypo_z)-W2)
+!        B2 = HALF * (ONE + tanh(b21 + b22))
+!      else if (abs(z-hypo_z)<=W2) then
+!        B2 = 1._CUSTOM_REAL
+!      else
+!        B2 = 0._CUSTOM_REAL
+!      endif
+!
+!      f%a(i) = 0.008 + 0.008 * (ONE - B1*B2)
+!      f%Vw(i) = 0.1 + 0.9 * (ONE - B1*B2)
+!
+!    else if (abs(x)<=W1 .and. abs(z-hypo_z)<=W2) then
+!      f%a(i) = 0.008
+!      f%Vw(i) = 0.1_CUSTOM_REAL
+!    else
+!      f%a(i) = 0.016
+!      f%Vw(i) = 1.0_CUSTOM_REAL
+!    endif
+!
+!  enddo
 
   ! WARNING: The line below scratches an earlier initialization of theta through theta_init
   !          We should implement it as an option for the user
+ if(TPV16) then
   if (f%stateLaw == 1) then
     f%theta = f%L/f%V0 &
               * exp( ( f%a * log(TWO*sinh(-sqrt(T0(1,:)**2+T0(2,:)**2)/T0(3,:)/f%a)) &
@@ -859,7 +903,7 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
   else
     f%theta =  f%a * log(TWO*f%V0/f%V_init * sinh(-sqrt(T0(1,:)**2+T0(2,:)**2)/T0(3,:)/f%a))
   endif
-
+ endif
  ! WARNING : ad hoc for SCEC benchmark TPV10x
   allocate( nucFload(nglob) )
   Fload = 0.e0_CUSTOM_REAL
@@ -929,7 +973,7 @@ end subroutine rsf_update_state
 
 subroutine SCEC_Write_RuptureTime(dataXZ,iflt)
 
-  use specfem_par, only: OUTPUT_FILES_PATH
+  use specfem_par, only: OUTPUT_FILES
   type(dataXZ_type), intent(in) :: dataXZ
   integer, intent(in) :: iflt
 
@@ -940,7 +984,7 @@ subroutine SCEC_Write_RuptureTime(dataXZ,iflt)
 
   call date_and_time(VALUES=time_values)
 
-  write(filename,'(a,I0)') trim(OUTPUT_FILES_PATH)//'/RuptureTime_Fault', iflt
+  write(filename,'(a,I0)') trim(OUTPUT_FILES)//'/RuptureTime_Fault', iflt
 
   IOUT = 121 !WARNING: not very robust. Could instead look for an available ID
 
@@ -1106,13 +1150,13 @@ end subroutine store_dataXZ
 !---------------------------------------------------------------
 subroutine write_dataXZ(dataXZ,itime,iflt)
 
-  use specfem_par, only: OUTPUT_FILES_PATH
+  use specfem_par, only: OUTPUT_FILES
   type(dataXZ_type), intent(in) :: dataXZ
   integer, intent(in) :: itime,iflt
 
   character(len=MAX_STRING_LEN) :: filename
 
-  write(filename,"(a,I0,'_F',I0,'.bin')") trim(OUTPUT_FILES_PATH)//'/Snapshot',itime,iflt
+  write(filename,"(a,I0,'_F',I0,'.bin')") trim(OUTPUT_FILES)//'/Snapshot',itime,iflt
 
   open(unit=IOUT, file= trim(filename), status='replace', form='unformatted',action='write')
 
@@ -1306,11 +1350,10 @@ subroutine funcd(x,fn,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
 end subroutine funcd
 
 !---------------------------------------------------------------------
-function rtsafe(funcd,x1,x2,xacc,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
+function rtsafe(x1,x2,xacc,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
 
   integer, parameter :: MAXIT=200
   real(kind=CUSTOM_REAL) :: x1,x2,xacc
-  EXTERNAL funcd
   integer :: j
   !real(kind=CUSTOM_REAL) :: df,dx,dxold,f,fh,fl,temp,xh,xl
   double precision :: df,dx,dxold,f,fh,fl,temp,xh,xl,rtsafe
@@ -1364,6 +1407,5 @@ function rtsafe(funcd,x1,x2,xacc,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
 
 end function rtsafe
 
-
-
 end module fault_solver_dynamic
+

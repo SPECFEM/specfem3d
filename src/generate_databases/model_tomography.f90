@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -180,8 +180,8 @@
 
     !! WANGYI test for the benchmark of hybrid DSM-SPECFEM3D coupling
     if (COUPLE_WITH_EXTERNAL_CODE) then
-       write(*,*) 'iundef',iundef  ! add by WANGYI for test
-       write(*,*) 'tomo_filename',tomo_filename ! add by WANGYI for test
+       write(*,*) 'iundef', iundef  ! add by WANGYI for test
+       write(*,*) 'tomo_filename', tomo_filename ! add by WANGYI for test
     endif
 
     ! opens file for reading

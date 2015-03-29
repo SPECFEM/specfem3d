@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -25,13 +25,16 @@
 !
 !=====================================================================
 
-  subroutine read_parameter_file()
+  subroutine read_parameter_file(myrank,BROADCAST_AFTER_READ)
 
   use constants
 
   use shared_parameters
 
   implicit none
+
+  integer, intent(in) :: myrank
+  logical, intent(in) :: BROADCAST_AFTER_READ
 
 ! local variables
   integer :: icounter,isource,idummy,ier
@@ -46,20 +49,24 @@
   !logical :: sep_dir_exists
   integer :: i,irange
 
+! read from a single processor (the master) and then use MPI to broadcast to others
+! to avoid an I/O bottleneck in the case of very large runs
+  if(myrank == 0) then
+
   ! opens file Par_file
   call open_parameter_file(ier)
 
   ! total number of processors
   call read_value_integer(NPROC, 'NPROC', ier)
   if (ier /= 0) then
-    ! checks if it's using an old Par_file format
+    ! checks if it uses an old Par_file format
     call read_value_integer(nproc_eta_old, 'NPROC_ETA', ier)
     if (ier /= 0) then
       print*,'please specify the number of processes in Par_file as:'
       print*,'NPROC           =    <my_number_of_desired_processes> '
       return
     endif
-    ! checks if it's using an old Par_file format
+    ! checks if it uses an old Par_file format
     call read_value_integer(nproc_xi_old, 'NPROC_XI', ier)
     if (ier /= 0) then
       print*,'please specify the number of processes in Par_file as:'
@@ -104,8 +111,12 @@
   if (ier /= 0) stop 'Error reading Par_file parameter FULL_ATTENUATION_SOLID'
   call read_value_logical(ANISOTROPY, 'ANISOTROPY', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter ANISOTROPY'
+  call read_value_logical(GRAVITY, 'GRAVITY', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter GRAVITY'
+
   call read_value_string(TOMOGRAPHY_PATH, 'TOMOGRAPHY_PATH', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter TOMOGRAPHY_PATH'
+
   call read_value_logical(USE_OLSEN_ATTENUATION, 'USE_OLSEN_ATTENUATION', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter USE_OLSEN_ATTENUATION'
   call read_value_double_precision(OLSEN_ATTENUATION_RATIO, 'OLSEN_ATTENUATION_RATIO', ier)
@@ -150,8 +161,68 @@
   if (ier /= 0) stop 'Error reading Par_file parameter USE_FORCE_POINT_SOURCE'
   call read_value_logical(USE_RICKER_TIME_FUNCTION, 'USE_RICKER_TIME_FUNCTION', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter USE_RICKER_TIME_FUNCTION'
+
+  call read_value_logical(SAVE_SEISMOGRAMS_DISPLACEMENT, 'SAVE_SEISMOGRAMS_DISPLACEMENT', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter SAVE_SEISMOGRAMS_DISPLACEMENT'
+  call read_value_logical(SAVE_SEISMOGRAMS_VELOCITY, 'SAVE_SEISMOGRAMS_VELOCITY', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter SAVE_SEISMOGRAMS_VELOCITY'
+  call read_value_logical(SAVE_SEISMOGRAMS_ACCELERATION, 'SAVE_SEISMOGRAMS_ACCELERATION', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter SAVE_SEISMOGRAMS_ACCELERATION'
+  call read_value_logical(SAVE_SEISMOGRAMS_PRESSURE, 'SAVE_SEISMOGRAMS_PRESSURE', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter SAVE_SEISMOGRAMS_PRESSURE'
+
+  if(.not. SAVE_SEISMOGRAMS_DISPLACEMENT .and. .not. SAVE_SEISMOGRAMS_VELOCITY .and. &
+     .not. SAVE_SEISMOGRAMS_ACCELERATION .and. .not. SAVE_SEISMOGRAMS_PRESSURE) &
+   stop 'Error: at least one of SAVE_SEISMOGRAMS_DISPLACEMENT SAVE_SEISMOGRAMS_VELOCITY SAVE_SEISMOGRAMS_ACCELERATION &
+             &SAVE_SEISMOGRAMS_PRESSURE must be true'
+
+! this could be implemented in the future if needed, see comments in the source code around the USE_TRICK_FOR_BETTER_PRESSURE
+! option (use a "grep" command to find them) to see how this could/should be done
+  if(USE_TRICK_FOR_BETTER_PRESSURE .and. (SAVE_SEISMOGRAMS_DISPLACEMENT .or. SAVE_SEISMOGRAMS_VELOCITY .or. &
+        SAVE_SEISMOGRAMS_ACCELERATION)) stop 'USE_TRICK_FOR_BETTER_PRESSURE is currently incompatible with &
+        &SAVE_SEISMOGRAMS_DISPLACEMENT .or. SAVE_SEISMOGRAMS_VELOCITY .or. SAVE_SEISMOGRAMS_ACCELERATION, &
+        &only SAVE_SEISMOGRAMS_PRESSURE can be used'
+
+  call read_value_logical(USE_BINARY_FOR_SEISMOGRAMS, 'USE_BINARY_FOR_SEISMOGRAMS', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter USE_BINARY_FOR_SEISMOGRAMS'
+
+  call read_value_logical(SU_FORMAT, 'SU_FORMAT', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter SU_FORMAT'
+
+  call read_value_logical(WRITE_SEISMOGRAMS_BY_MASTER, 'WRITE_SEISMOGRAMS_BY_MASTER', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter WRITE_SEISMOGRAMS_BY_MASTER'
+
+  call read_value_logical(SAVE_ALL_SEISMOS_IN_ONE_FILE, 'SAVE_ALL_SEISMOS_IN_ONE_FILE', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter SAVE_ALL_SEISMOS_IN_ONE_FILE'
+
+  call read_value_logical(USE_TRICK_FOR_BETTER_PRESSURE, 'USE_TRICK_FOR_BETTER_PRESSURE', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter USE_TRICK_FOR_BETTER_PRESSURE'
+
+  call read_value_logical(USE_SOURCE_ENCODING, 'USE_SOURCE_ENCODING', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter USE_SOURCE_ENCODING'
+
+  call read_value_logical(OUTPUT_ENERGY, 'OUTPUT_ENERGY', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter OUTPUT_ENERGY'
+
+  call read_value_integer(NTSTEP_BETWEEN_OUTPUT_ENERGY, 'NTSTEP_BETWEEN_OUTPUT_ENERGY', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter NTSTEP_BETWEEN_OUTPUT_ENERGY'
+
+  call read_value_logical(ANISOTROPIC_KL, 'ANISOTROPIC_KL', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter ANISOTROPIC_KL'
+
+  call read_value_logical(SAVE_TRANSVERSE_KL, 'SAVE_TRANSVERSE_KL', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter SAVE_TRANSVERSE_KL'
+
+  call read_value_logical(APPROXIMATE_HESS_KL, 'APPROXIMATE_HESS_KL', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter APPROXIMATE_HESS_KL'
+
+  call read_value_logical(SAVE_MOHO_MESH, 'SAVE_MOHO_MESH', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter SAVE_MOHO_MESH'
+
   call read_value_logical(PRINT_SOURCE_TIME_FUNCTION, 'PRINT_SOURCE_TIME_FUNCTION', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter PRINT_SOURCE_TIME_FUNCTION'
+
+  ! for coupling with an external code
   call read_value_logical(COUPLE_WITH_EXTERNAL_CODE, 'COUPLE_WITH_EXTERNAL_CODE', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter COUPLE_WITH_EXTERNAL_CODE'
   call read_value_integer(EXTERNAL_CODE_TYPE, 'EXTERNAL_CODE_TYPE', ier)
@@ -161,20 +232,23 @@
   call read_value_logical(MESH_A_CHUNK_OF_THE_EARTH, 'MESH_A_CHUNK_OF_THE_EARTH', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter MESH_A_CHUNK_OF_THE_EARTH'
 
-  ! close parameter file
-  call close_parameter_file()
+  ! for simultaneous runs from the same batch job
+  call read_value_integer(NUMBER_OF_SIMULTANEOUS_RUNS, 'NUMBER_OF_SIMULTANEOUS_RUNS', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter NUMBER_OF_SIMULTANEOUS_RUNS'
+  call read_value_logical(BROADCAST_SAME_MESH_AND_MODEL, 'BROADCAST_SAME_MESH_AND_MODEL', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter BROADCAST_SAME_MESH_AND_MODEL'
 
 ! check the type of external code to couple with, if any
   if (COUPLE_WITH_EXTERNAL_CODE) then
     if (EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_DSM .and. &
        EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_AXISEM .and. &
-       EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_FK) stop 'incorrect value of EXTERNAL_CODE_TYPE read'
+       EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_FK) stop 'Error incorrect value of EXTERNAL_CODE_TYPE read'
 
     if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) &
-         stop 'coupling with AxiSEM not implemented yet, but will soon be'
+         stop 'Error coupling with AxiSEM not implemented yet, but will soon be'
 
     if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_FK) &
-         stop 'coupling with F-K not implemented yet, but see work by Ping et al. (GJI 2014, GRL 2015)'
+         stop 'Error coupling with F-K not implemented yet, but see work by Ping et al. (GJI 2014, GRL 2015)'
   endif
 
 ! see if we are running several independent runs in parallel
@@ -205,7 +279,7 @@
   ! total times steps must be dividable by adjoint source chunks/blocks
   if (mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) /= 0) then
     print*,'When NOISE_TOMOGRAPHY is not equal to zero, ACTUAL_NSTEP=2*NSTEP-1'
-    stop 'error: mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) must be zero! Please modify Par_file and recompile solver'
+    stop 'Error: mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) must be zero! Please modify Par_file and recompile solver'
   endif
 
   ! checks number of nodes for 2D and 3D shape functions for quadrilaterals and hexahedra
@@ -215,13 +289,13 @@
   else if (NGNOD == 27) then
     NGNOD2D = 9
   else if (NGNOD /= 8 .and. NGNOD /= 27) then
-    stop 'elements should have 8 or 27 control nodes, please modify NGNOD in Par_file and recompile solver'
+    stop 'Error elements should have 8 or 27 control nodes, please modify NGNOD in Par_file and recompile solver'
   endif
 
   if (USE_FORCE_POINT_SOURCE) then
     ! compute the total number of sources in the FORCESOLUTION file
     ! there are NLINES_PER_FORCESOLUTION_SOURCE lines per source in that file
-    FORCESOLUTION = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'FORCESOLUTION'
+    FORCESOLUTION = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'FORCESOLUTION'
 ! see if we are running several independent runs in parallel
 ! if so, add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
 ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
@@ -231,7 +305,7 @@
     endif
 
     open(unit=21,file=trim(FORCESOLUTION),status='old',action='read',iostat=ier)
-    if (ier /= 0) stop 'error opening FORCESOLUTION file'
+    if (ier /= 0) stop 'Error opening FORCESOLUTION file'
 
     icounter = 0
     do while (ier == 0)
@@ -241,15 +315,15 @@
     close(21)
 
     if (mod(icounter,NLINES_PER_FORCESOLUTION_SOURCE) /= 0) &
-      stop 'error: total number of lines in FORCESOLUTION file should be a multiple of NLINES_PER_FORCESOLUTION_SOURCE'
+      stop 'Error total number of lines in FORCESOLUTION file should be a multiple of NLINES_PER_FORCESOLUTION_SOURCE'
 
     NSOURCES = icounter / NLINES_PER_FORCESOLUTION_SOURCE
-    if (NSOURCES < 1) stop 'error: need at least one source in FORCESOLUTION file'
+    if (NSOURCES < 1) stop 'Error need at least one source in FORCESOLUTION file'
 
   else
     ! compute the total number of sources in the CMTSOLUTION file
     ! there are NLINES_PER_CMTSOLUTION_SOURCE lines per source in that file
-    CMTSOLUTION = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'CMTSOLUTION'
+    CMTSOLUTION = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'CMTSOLUTION'
 ! see if we are running several independent runs in parallel
 ! if so, add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
 ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
@@ -259,7 +333,7 @@
     endif
 
     open(unit=21,file=trim(CMTSOLUTION),status='old',action='read',iostat=ier)
-    if (ier /= 0) stop 'error opening CMTSOLUTION file'
+    if (ier /= 0) stop 'Error opening CMTSOLUTION file'
 
     icounter = 0
     do while (ier == 0)
@@ -269,10 +343,10 @@
     close(21)
 
     if (mod(icounter,NLINES_PER_CMTSOLUTION_SOURCE) /= 0) &
-      stop 'error: total number of lines in CMTSOLUTION file should be a multiple of NLINES_PER_CMTSOLUTION_SOURCE'
+      stop 'Error total number of lines in CMTSOLUTION file should be a multiple of NLINES_PER_CMTSOLUTION_SOURCE'
 
     NSOURCES = icounter / NLINES_PER_CMTSOLUTION_SOURCE
-    if (NSOURCES < 1) stop 'error: need at least one source in CMTSOLUTION file'
+    if (NSOURCES < 1) stop 'Error need at least one source in CMTSOLUTION file'
 
     ! compute the minimum value of hdur in CMTSOLUTION file
     open(unit=21,file=trim(CMTSOLUTION),status='old',action='read')
@@ -299,7 +373,7 @@
 
     ! one cannot use a Heaviside source for the movies
     if ((MOVIE_SURFACE .or. MOVIE_VOLUME) .and. sqrt(minval_hdur**2 + HDUR_MOVIE**2) < TINYVAL) &
-      stop 'error: hdur too small for movie creation, movies do not make sense for Heaviside source'
+      stop 'Error hdur too small for movie creation, movies do not make sense for Heaviside source'
   endif
 
   ! converts all string characters to lowercase
@@ -346,14 +420,12 @@
   case ('sep')
     IMODEL = IMODEL_SEP
     if (trim(SEP_MODEL_DIRECTORY) == '') then
-      stop 'Error: Using sep model requires defining a SEP_MODEL_DIRECTORY.'
+      stop 'Error using sep model requires defining a SEP_MODEL_DIRECTORY.'
     endif
     !inquire(directory=trim(SEP_MODEL_DIRECTORY), exists=sep_dir_exists)
     !if (.not. sep_dir_exists) then
     !  stop 'Error: SEP_MODEL_DIRECTORY should exist.'
     !endif
-
-
   case default
     print*
     print*,'********** model not recognized: ',trim(MODEL),' **************'
@@ -365,52 +437,27 @@
   ! check
   if (IMODEL == IMODEL_IPATI .or. IMODEL == IMODEL_IPATI_WATER) then
     if (USE_RICKER_TIME_FUNCTION .eqv. .false.) &
-      stop 'error: please set USE_RICKER_TIME_FUNCTION to .true. in Par_file and recompile solver'
+      stop 'Error for IPATI model, please set USE_RICKER_TIME_FUNCTION to .true. in Par_file and recompile solver'
   endif
-
 
   ! absorbing conditions
   ! stacey absorbing free surface must have also stacey turned on
   if (STACEY_INSTEAD_OF_FREE_SURFACE) STACEY_ABSORBING_CONDITIONS = .true.
 
+  ! safety check
   ! only one absorbing condition is possible
   if (PML_CONDITIONS) then
     if (STACEY_ABSORBING_CONDITIONS) &
-      stop 'error: please set STACEY_ABSORBING_CONDITIONS and STACEY_INSTEAD_OF_FREE_SURFACE to .false. in Par_file for PML'
+      stop 'Error for PML, please set STACEY_ABSORBING_CONDITIONS and STACEY_INSTEAD_OF_FREE_SURFACE to .false. in Par_file'
   endif
 
-  end subroutine read_parameter_file
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-  subroutine read_gpu_mode(GPU_MODE,GRAVITY)
-
-  implicit none
-
-  logical,intent(out) :: GPU_MODE
-  logical,intent(out) :: GRAVITY
-
-  ! local parameters
-  integer :: ier
-
-  ! initializes flags
-  GPU_MODE = .false.
-  GRAVITY = .false.
-
-  ! opens file Par_file
-  call open_parameter_file(ier)
+!! DK DK added this for now (March 2013)
+!! DK DK we will soon add it
+  if (PML_CONDITIONS .and. (SAVE_FORWARD .or. SIMULATION_TYPE==3)) stop 'PML_CONDITIONS is still under test for adjoint simulation'
 
   call read_value_logical(GPU_MODE, 'GPU_MODE', ier)
-  call read_value_logical(GRAVITY, 'GRAVITY', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter GPU_MODE'
 
-  ! close parameter file
-  call close_parameter_file()
-
-  end subroutine read_gpu_mode
-
-!===============================================================================
 !> Read ADIOS related flags from the Par_file
 !! \param ADIOS_ENABLED Main flag to decide if ADIOS is used. If setted to
 !!                      false no other parameter is taken into account.
@@ -424,39 +471,110 @@
 !!                          adios
 !! \author MPBL
 
-subroutine read_adios_parameters()
-
-  use constants,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
-
-  use shared_input_parameters
-
-  implicit none
-
-  ! local parameters
-  integer :: ier
-
-  ! initialize flags to false
-  ADIOS_ENABLED            = .false.
-  ADIOS_FOR_DATABASES      = .false.
-  ADIOS_FOR_MESH           = .false.
-  ADIOS_FOR_FORWARD_ARRAYS = .false.
-  ADIOS_FOR_KERNELS        = .false.
-
-  ! opens file Par_file
-  call open_parameter_file(ier)
   call read_value_logical(ADIOS_ENABLED, 'ADIOS_ENABLED', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter ADIOS_ENABLED'
+  call read_value_logical(ADIOS_FOR_DATABASES, 'ADIOS_FOR_DATABASES', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter ADIOS_FOR_DATABASES'
+  call read_value_logical(ADIOS_FOR_MESH, 'ADIOS_FOR_MESH', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter ADIOS_FOR_MESH'
+  call read_value_logical(ADIOS_FOR_FORWARD_ARRAYS, 'ADIOS_FOR_FORWARD_ARRAYS', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter ADIOS_FOR_FORWARD_ARRAYS'
+  call read_value_logical(ADIOS_FOR_KERNELS, 'ADIOS_FOR_KERNELS', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter ADIOS_FOR_KERNELS'
 
-  if (ier == 0 .and. ADIOS_ENABLED) then
-    call read_value_logical(ADIOS_FOR_DATABASES, 'ADIOS_FOR_DATABASES', ier)
-    call read_value_logical(ADIOS_FOR_MESH, 'ADIOS_FOR_MESH', ier)
-    call read_value_logical(ADIOS_FOR_FORWARD_ARRAYS, 'ADIOS_FOR_FORWARD_ARRAYS', ier)
-    call read_value_logical(ADIOS_FOR_KERNELS, 'ADIOS_FOR_KERNELS', ier)
-  endif
+  ! safety check
+  if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. BROADCAST_SAME_MESH_AND_MODEL .and. ADIOS_ENABLED) &
+    stop 'Error ADIOS not yet supported by option BROADCAST_SAME_MESH_AND_MODEL'
 
+  ! close parameter file
   call close_parameter_file()
 
-  if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. BROADCAST_SAME_MESH_AND_MODEL .and. ADIOS_ENABLED) &
-    stop 'ADIOS not yet supported by option BROADCAST_SAME_MESH_AND_MODEL'
+  endif ! of if(myrank == 0) then
 
-end subroutine read_adios_parameters
+! read from a single processor (the master) and then use MPI to broadcast to others
+! to avoid an I/O bottleneck in the case of very large runs
+  if(BROADCAST_AFTER_READ) then
+
+    call bcast_all_singlei_world(NPROC)
+    call bcast_all_singlei_world(SIMULATION_TYPE)
+    call bcast_all_singlei_world(NOISE_TOMOGRAPHY)
+    call bcast_all_singlel_world(SAVE_FORWARD)
+    call bcast_all_singlei_world(UTM_PROJECTION_ZONE)
+    call bcast_all_singlel_world(SUPPRESS_UTM_PROJECTION)
+    call bcast_all_singlei_world(NSTEP)
+    call bcast_all_singledp_world(DT)
+    call bcast_all_singlei_world(NGNOD)
+    call bcast_all_string_world(MODEL)
+    call bcast_all_string_world(SEP_MODEL_DIRECTORY)
+    call bcast_all_singlel_world(APPROXIMATE_OCEAN_LOAD)
+    call bcast_all_singlel_world(TOPOGRAPHY)
+    call bcast_all_singlel_world(ATTENUATION)
+    call bcast_all_singlel_world(FULL_ATTENUATION_SOLID)
+    call bcast_all_singlel_world(ANISOTROPY)
+    call bcast_all_singlel_world(GRAVITY)
+    call bcast_all_string_world(TOMOGRAPHY_PATH)
+    call bcast_all_singlel_world(USE_OLSEN_ATTENUATION)
+    call bcast_all_singledp_world(OLSEN_ATTENUATION_RATIO)
+    call bcast_all_singlel_world(PML_CONDITIONS)
+    call bcast_all_singlel_world(PML_INSTEAD_OF_FREE_SURFACE)
+    call bcast_all_singledp_world(f0_FOR_PML)
+    call bcast_all_singlel_world(STACEY_ABSORBING_CONDITIONS)
+    call bcast_all_singlel_world(STACEY_INSTEAD_OF_FREE_SURFACE)
+    call bcast_all_singlel_world(CREATE_SHAKEMAP)
+    call bcast_all_singlel_world(MOVIE_SURFACE)
+    call bcast_all_singlei_world(MOVIE_TYPE)
+    call bcast_all_singlel_world(MOVIE_VOLUME)
+    call bcast_all_singlel_world(SAVE_DISPLACEMENT)
+    call bcast_all_singlel_world(USE_HIGHRES_FOR_MOVIES)
+    call bcast_all_singlei_world(NTSTEP_BETWEEN_FRAMES)
+    call bcast_all_singledp_world(HDUR_MOVIE)
+    call bcast_all_singlel_world(SAVE_MESH_FILES)
+    call bcast_all_string_world(LOCAL_PATH)
+    call bcast_all_singlei_world(NTSTEP_BETWEEN_OUTPUT_INFO)
+    call bcast_all_singlei_world(NTSTEP_BETWEEN_OUTPUT_SEISMOS)
+    call bcast_all_singlei_world(NTSTEP_BETWEEN_READ_ADJSRC)
+    call bcast_all_singlel_world(USE_FORCE_POINT_SOURCE)
+    call bcast_all_singlel_world(USE_RICKER_TIME_FUNCTION)
+    call bcast_all_singlel_world(SAVE_SEISMOGRAMS_DISPLACEMENT)
+    call bcast_all_singlel_world(SAVE_SEISMOGRAMS_VELOCITY)
+    call bcast_all_singlel_world(SAVE_SEISMOGRAMS_ACCELERATION)
+    call bcast_all_singlel_world(SAVE_SEISMOGRAMS_PRESSURE)
+    call bcast_all_singlel_world(USE_BINARY_FOR_SEISMOGRAMS)
+    call bcast_all_singlel_world(SU_FORMAT)
+    call bcast_all_singlel_world(WRITE_SEISMOGRAMS_BY_MASTER)
+    call bcast_all_singlel_world(SAVE_ALL_SEISMOS_IN_ONE_FILE)
+    call bcast_all_singlel_world(USE_TRICK_FOR_BETTER_PRESSURE)
+    call bcast_all_singlel_world(USE_SOURCE_ENCODING)
+    call bcast_all_singlel_world(OUTPUT_ENERGY)
+    call bcast_all_singlei_world(NTSTEP_BETWEEN_OUTPUT_ENERGY)
+    call bcast_all_singlel_world(ANISOTROPIC_KL)
+    call bcast_all_singlel_world(SAVE_TRANSVERSE_KL)
+    call bcast_all_singlel_world(APPROXIMATE_HESS_KL)
+    call bcast_all_singlel_world(SAVE_MOHO_MESH)
+    call bcast_all_singlel_world(PRINT_SOURCE_TIME_FUNCTION)
+    call bcast_all_singlel_world(COUPLE_WITH_EXTERNAL_CODE)
+    call bcast_all_singlei_world(EXTERNAL_CODE_TYPE)
+    call bcast_all_string_world(TRACTION_PATH)
+    call bcast_all_singlel_world(MESH_A_CHUNK_OF_THE_EARTH)
+    call bcast_all_singlei_world(NUMBER_OF_SIMULTANEOUS_RUNS)
+    call bcast_all_singlel_world(BROADCAST_SAME_MESH_AND_MODEL)
+    call bcast_all_singlel_world(GPU_MODE)
+    call bcast_all_singlel_world(ADIOS_ENABLED)
+    call bcast_all_singlel_world(ADIOS_FOR_DATABASES)
+    call bcast_all_singlel_world(ADIOS_FOR_MESH)
+    call bcast_all_singlel_world(ADIOS_FOR_FORWARD_ARRAYS)
+    call bcast_all_singlel_world(ADIOS_FOR_KERNELS)
+
+! broadcast all parameters computed from others
+
+    call bcast_all_singlei_world(IMODEL)
+    call bcast_all_singlei_world(NGNOD2D)
+    call bcast_all_singlei_world(NSOURCES)
+    call bcast_all_singledp_world(minval_hdur)
+    call bcast_all_string_world(FORCESOLUTION)
+    call bcast_all_string_world(CMTSOLUTION)
+
+  endif ! of if(BROADCAST_AFTER_READ) then
+
+  end subroutine read_parameter_file
 

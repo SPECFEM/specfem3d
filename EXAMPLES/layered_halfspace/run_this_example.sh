@@ -33,18 +33,14 @@ mkdir -p OUTPUT_FILES/DATABASES_MPI
 rm -f OUTPUT_FILES/*
 rm -rf OUTPUT_FILES/DATABASES_MPI/*
 
-# compiles executables in root directory
-cd ../../
-make clean
-make > $currentdir/compile.log
 cd $currentdir
 
 # links executables
 cd bin/
 rm -f ./x*
-ln -s ../../../bin/xdecompose_mesh 
-ln -s ../../../bin/xgenerate_databases 
-ln -s ../../../bin/xspecfem3D 
+ln -s ../../../bin/xdecompose_mesh
+ln -s ../../../bin/xgenerate_databases
+ln -s ../../../bin/xspecfem3D
 cd ../
 
 # stores setup
@@ -74,6 +70,6 @@ echo
 echo "see results in directory: OUTPUT_FILES/"
 echo
 echo "done"
-echo `date`
+date
 
 

@@ -102,7 +102,7 @@ program subspace_update
      read(22,*) dnorm(i)
      if(myrank==0) write(*,*) dnorm(i)
   enddo
-  close(22) 
+  close(22)
 
   ! read in the number of window picks per event
   if (myrank == 0) write(*,*) 'reading in window tallies'
@@ -111,7 +111,7 @@ program subspace_update
      read(23,*) dcov_fac(i)
      if(myrank==0) write(*,*) dcov_fac(i)
   enddo
-  close(23) 
+  close(23)
 
   ! read in the model covariance normalization term
   if (myrank == 0) write(*,*) 'reading in model covariance normalization term'
@@ -187,7 +187,7 @@ program subspace_update
      !     In this manner, we should think of the operation Cm G^T as being applied FIRST.
      ! (2) The factor of 2 (in kfac) is because K_bulk = 2 K_kappa and K_beta = 2 K_mu .
      ! (3) The factor dcov_fac(isrc) is a factor from the data covariance matrix that was
-     !     left out in computing the adjoint sources, but it WAS included in computing 
+     !     left out in computing the adjoint sources, but it WAS included in computing
      !     the weight terms dnorm.
      ! (4) The MINUS sign is needed for each gradient (kfac).
      ! (5) To invert H = G^T G, we added lamda^2 to the diagonal. This is like multiplying

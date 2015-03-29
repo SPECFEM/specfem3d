@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -49,25 +49,6 @@ module tomography_par
 
   ! mpi process
   integer :: myrank,sizeprocs
-
-  ! defaults
-  ! directory which holds kernel files (alpha_kernel.bin,..)
-  character(len=MAX_STRING_LEN) :: INPUT_KERNELS_DIR = 'INPUT_GRADIENT/'
-
-  ! directory which holds model files (vp.bin,..)
-  character(len=MAX_STRING_LEN) :: INPUT_MODEL_DIR = 'INPUT_MODEL/'
-
-  ! directory which holds databases files (external_mesh.bin)
-  character(len=MAX_STRING_LEN) :: INPUT_DATABASES_DIR = 'topo/'
-
-  ! directory which holds new model files (vp_new.bin,..)
-  character(len=MAX_STRING_LEN) :: OUTPUT_MODEL_DIR = 'OUTPUT_MODEL/'
-
-  ! statistics
-  ! set to true if you want to print out log files with statistics
-  logical :: PRINT_STATISTICS_FILES = .false.
-  ! directory where the statistics output files will be written
-  character(len=MAX_STRING_LEN) :: OUTPUT_STATISTICS_DIR = 'OUTPUT_MODEL/'
 
 end module tomography_par
 

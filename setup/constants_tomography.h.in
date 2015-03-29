@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
@@ -46,6 +46,39 @@
   ! region code
   ! (local version "_", globe version "_reg1_" for crust/mantle
   character(len=8),parameter :: REG = "_"
+
+!!-----------------------------------------------------------
+!!
+!! Directory structure
+!!
+!!-----------------------------------------------------------
+
+  ! directory containing kernels from current iteration
+  character(len=MAX_STRING_LEN) :: INPUT_KERNELS_DIR = 'INPUT_GRADIENT/'
+
+  ! directory containing kernels from previous iteration
+  character(len=MAX_STRING_LEN) :: KERNEL_OLD_DIR = './KERNELS/OUTPUT_SUM.old'
+
+  ! directory containing model database files
+  character(len=MAX_STRING_LEN) :: INPUT_MODEL_DIR = 'INPUT_MODEL/'
+
+  ! directory containing external_mesh.bin database files
+  character(len=MAX_STRING_LEN) :: INPUT_DATABASES_DIR = 'topo/'
+
+  ! destination for newly updated model database files
+  character(len=MAX_STRING_LEN) :: OUTPUT_MODEL_DIR = 'OUTPUT_MODEL/'
+
+  ! destination for log files containing minimum, maximum vales
+  character(len=MAX_STRING_LEN) :: OUTPUT_STATISTICS_DIR = 'OUTPUT_MODEL/'
+
+  ! file containing absolute or relative paths to kernel directories
+  character(len=MAX_STRING_LEN) :: KERNEL_FILE_LIST = './kernels_list.txt'
+
+  ! produce logs containing minimum, maximum vales and other statistics
+  logical :: PRINT_STATISTICS_FILES = .false.
+
+  ! maximum number of kernel paths
+  integer, parameter :: MAX_KERNEL_PATHS = 10000
 
 !!-----------------------------------------------------------
 !!
@@ -106,30 +139,13 @@
   ! uses source mask to blend out source elements
   logical, parameter :: USE_SOURCE_MASK = .false.
 
-!!-----------------------------------------------------------
-!!
-!! Conjugate gradients
-!!
-!!-----------------------------------------------------------
-! conjugate gradient step lengths are calculated based on gradient norms,
-! see Polak & Ribiere (1969).
 
-  ! this uses separate scaling for each parameters bulk,betav,betah,eta
-  ! (otherwise it will calculate a single steplength to scale all gradients)
+!!-----------------------------------------------------------
+!!
+!! Deprecated
+!!
+!!-----------------------------------------------------------
+
+  ! determines separate step length for each material parameter in nonlinear conjugate gradient model update
   logical,parameter :: USE_SEPARATE_CG_STEPLENGTHS = .false.
-
-  ! directory which contains kernels/gradients from former iteration
-  character(len=MAX_STRING_LEN),parameter :: KERNEL_OLD_DIR = './KERNELS/OUTPUT_SUM.old'
-
-
-!!-----------------------------------------------------------
-!!
-!! Kernel lists
-!!
-!!-----------------------------------------------------------
-  ! maximum number of kernels listed
-  integer, parameter :: MAX_NUM_NODES = 10000
-
-  ! default list name
-  character(len=*), parameter :: KERNEL_FILE_LIST = './kernels_list.txt'
 

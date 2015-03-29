@@ -29,9 +29,9 @@
 # @ wall_clock_limit = 1200
 # @ queue
 
-source /smphome/rech/ubv/rubv002/progs/shells_specfem3D_hybrid/shells_tests.sh  
+source /smphome/rech/ubv/rubv002/progs/shells_specfem3D_hybrid/shells_tests.sh
 
-case ${LOADL_STEP_NAME} in 
+case ${LOADL_STEP_NAME} in
 
   #============ Step 1 commands ============
   #======= Sequential preprocessing ========
