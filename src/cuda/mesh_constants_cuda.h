@@ -511,7 +511,7 @@ typedef struct mesh_ {
   realw* d_cijkl_kl;
 
   // noise sensitivity kernel
-  realw* d_Sigma_kl;
+  realw* d_sigma_kl;
 
   // approximative hessian for preconditioning kernels
   realw* d_hess_el_kl;

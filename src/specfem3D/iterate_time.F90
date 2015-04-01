@@ -339,7 +339,7 @@
 
     ! specific noise strength kernel
     if (NOISE_TOMOGRAPHY == 3) then
-      call transfer_kernels_noise_to_host(Mesh_pointer,Sigma_kl,NSPEC_AB)
+      call transfer_kernels_noise_to_host(Mesh_pointer,sigma_kl,NSPEC_AB)
     endif
 
     ! approximative hessian for preconditioning kernels
