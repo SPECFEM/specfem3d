@@ -244,11 +244,15 @@
        EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_AXISEM .and. &
        EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_FK) stop 'Error incorrect value of EXTERNAL_CODE_TYPE read'
 
+    if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_FK .and. MESH_A_CHUNK_OF_THE_EARTH) &
+         stop 'Error: coupling with F-K is for models with a flat surface (Earth flattening), &
+                     &thus turn MESH_A_CHUNK_OF_THE_EARTH off'
+
     if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) &
-         stop 'Error coupling with AxiSEM not implemented yet, but will soon be'
+         stop 'Error: coupling with AxiSEM not implemented yet, but will soon be'
 
     if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_FK) &
-         stop 'Error coupling with F-K not implemented yet, but see work by Ping et al. (GJI 2014, GRL 2015)'
+         stop 'Error: coupling with F-K not implemented yet, but see work by Ping et al. (GJI 2014, GRL 2015)'
   endif
 
 ! see if we are running several independent runs in parallel
