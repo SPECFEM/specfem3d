@@ -13,7 +13,7 @@ The whole story started on April 4, 1995 when Yvon Maday (cc'ed) was kind enough
 
 Let us also thank all the developers and users who have made it a success since then, i.e., you guys :-)
 
-Best regards, Merci à tous,
+Best regards, Merci a tous,
 
 Dimitri.
 
@@ -44,7 +44,7 @@ Dimitri.
 
 Attachments: SEM_class_from_Yvon_Maday_to_Dimitri_Komatitsch_and_Jean_Pierre_Vilotte_04apr1995.pdf
 
--- 
+--
 Dimitri Komatitsch
 CNRS Research Director (DR CNRS), Laboratory of Mechanics and Acoustics,
 UPR 7051, Marseille, France    http://komatitsch.free.fr
