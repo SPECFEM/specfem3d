@@ -144,6 +144,183 @@
 
   end subroutine Read_dsm_model
 
+!
+!=======================================================================================================
+!
+! To have one and only file, who give the Spherical coordinate on ALL the GLL points
+! on the surface of the 3D chunk, for the new DSM coupling (light version using 2D chunk)
+!
+
+  subroutine cartesian_product_to_r_theta_phi_on_chunk_surface_GLL(MESH, deg2rad)
+
+  use constants, only: R_EARTH_KM
+
+  implicit none
+
+  character(len=10) :: MESH
+  double precision  :: deg2rad
+  integer           :: np_r, np_xmin, np_xmax, np_ymin, np_ymax, np_zmin, recflag1, recflag2, i, j, np_surf, ios
+  double precision  :: rec_val, xmin_val1, xmin_val2, xmax_val1, xmax_val2, ymin_val1, ymin_val2
+  double precision  :: ymax_val1, ymax_val2, zmin_val1, zmin_val2, zmin_fix, x, y ,z, R, R_m, latrad, lgrad
+
+  open(unit=10,file=trim(MESH)//'recdepth',action='read',status='unknown',iostat=ios)
+  open(unit=11,file=trim(MESH)//'stxmin',action='read',status='unknown',iostat=ios)
+  open(unit=12,file=trim(MESH)//'stxmax',action='read',status='unknown',iostat=ios)
+  open(unit=13,file=trim(MESH)//'stymin',action='read',status='unknown',iostat=ios)
+  open(unit=14,file=trim(MESH)//'stymax',action='read',status='unknown',iostat=ios)
+  open(unit=15,file=trim(MESH)//'stzmin',action='read',status='unknown',iostat=ios)
+
+  open(unit=20,file=trim(MESH)//'chunk_surface_GLL_r_theta_phi.out',status='unknown',iostat=ios)
+!  open(unit=21,file='surface_x_y_z.mesh',status='unknown',iostat=ios)
+!  open(unit=22,file='surface_x_y_z_justcoor_to_analyze',status='unknown',iostat=ios)
+
+  read(10,*) np_r
+
+  read(11,*) np_xmin
+  read(12,*) np_xmax
+  read(13,*) np_ymin
+  read(14,*) np_ymax
+  read(15,*) np_zmin
+
+  np_surf = np_r*(np_xmin + np_xmax + np_ymin + np_ymax) + np_zmin
+
+!  write(21,*) 'MeshVersionFormatted 1'
+!  write(21,*) 'Dimension 3'
+!  write(21,*) ' '
+!  write(21,*) 'Vertices'
+!  write(21,*) np_surf
+
+  write(20,*) np_surf
+
+  do i=1,np_r
+
+    rewind(11)
+    read(11,*)
+    rewind(12)
+    read(12,*)
+    rewind(13)
+    read(13,*)
+    rewind(14)
+    read(14,*)
+
+    read(10,*) rec_val, recflag1, recflag2
+
+    R = dabs(R_EARTH_KM - rec_val) !! kM
+
+    do j=1,np_xmin
+
+      read(11,*) xmin_val1, xmin_val2
+      write(20,*) R, xmin_val1, xmin_val2
+
+!      R_m    = R * 1000.d0 !! meters
+!      latrad = xmin_val1*deg2rad
+!      lgrad  = xmin_val2*deg2rad
+!      x = R_m * DCOS(latrad) * DCOS(lgrad)
+!      y = R_m * DCOS(latrad) * DSIN(lgrad)
+!      z = R_m * DSIN(latrad)
+!
+!      write(21,*) x, y, z, 1
+!
+!      write(22,'(3(f20.5,1x))') x, y, z
+
+    enddo
+
+    do j=1,np_xmax
+
+      read(12,*) xmax_val1, xmax_val2
+      write(20,*) R, xmax_val1, xmax_val2
+
+!      R_m    = R * 1000.d0 
+!      latrad = xmax_val1*deg2rad
+!      lgrad  = xmax_val2*deg2rad
+!      x = R_m * DCOS(latrad) * DCOS(lgrad)
+!      y = R_m * DCOS(latrad) * DSIN(lgrad)
+!      z = R_m * DSIN(latrad)
+!
+!      write(21,*) x, y, z, 2
+!
+!      write(22,'(3(f20.5,1x))') x, y, z
+
+    enddo
+
+    do j=1,np_ymin
+
+      read(13,*) ymin_val1, ymin_val2
+      write(20,*) R, ymin_val1, ymin_val2
+
+!      R_m     = R * 1000.d0 
+!      latrad  = ymin_val1*deg2rad
+!      lgrad   = ymin_val2*deg2rad
+!      x = R_m * DCOS(latrad) * DCOS(lgrad)
+!      y = R_m * DCOS(latrad) * DSIN(lgrad)
+!      z = R_m * DSIN(latrad)
+!
+!      write(21,*) x, y, z, 3
+!
+!      write(22,'(3(f20.5,1x))') x, y, z
+
+    enddo
+
+    do j=1,np_ymax
+
+      read(14,*) ymax_val1, ymax_val2
+      write(20,*) R, ymax_val1, ymax_val2
+
+!      R_m     = R * 1000.d0 
+!      latrad  = ymax_val1*deg2rad
+!      lgrad   = ymax_val2*deg2rad
+!      x = R_m * DCOS(latrad) * DCOS(lgrad)
+!      y = R_m * DCOS(latrad) * DSIN(lgrad)
+!      z = R_m * DSIN(latrad)
+!
+!      write(21,*) x, y, z, 4
+!
+!      write(22,'(3(f20.5,1x))') x, y, z
+
+    enddo
+
+    if (i == np_r) zmin_fix = rec_val !! maximal depth
+
+  enddo
+
+  rewind(15)
+  read(15,*)
+
+  R = dabs(R_EARTH_KM - zmin_fix) !! kM
+
+  do j=1,np_zmin
+
+    read(15,*) zmin_val1, zmin_val2
+    write(20,*) R, zmin_val1, zmin_val2
+
+!    R_m     = R * 1000.d0 
+!    latrad  = zmin_val1*deg2rad
+!    lgrad   = zmin_val2*deg2rad
+!    x = R_m * DCOS(latrad) * DCOS(lgrad)
+!    y = R_m * DCOS(latrad) * DSIN(lgrad)
+!    z = R_m * DSIN(latrad)
+!
+!    write(21,*) x, y, z, 5
+!
+!    write(22,'(3(f20.5,1x))') x, y, z
+
+  enddo
+
+!  write(21,*) ' '
+!  write(21,*) 'End'
+
+  close(10)
+  close(11)
+  close(12)
+  close(13)
+  close(14)
+  close(15)
+  close(20)
+!  close(21)
+!  close(22)
+
+  end subroutine cartesian_product_to_r_theta_phi_on_chunk_surface_GLL
+
 !=======================================================================================================
 
 ! compute the Euler angles and the associated rotation matrix

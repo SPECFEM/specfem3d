@@ -27,7 +27,7 @@
 
   subroutine earth_chunk_HEX27_Mesher(NGNOD)
 
-  use constants, only: NGLLX, NGLLY, NGLLZ, NDIM
+  use constants, only: NGLLX, NGLLY, NGLLZ, NDIM, R_EARTH, PI, old_DSM_coupling_from_Vadim
 
   implicit none
 
@@ -112,9 +112,7 @@
 !---                          We define the mesh of a chunk of the earth in the cubic sphere
 !
 
-  PI      = 3.141592653589793d0
   deg2rad = 3.141592653589793d0/180.d0
-  R_EARTH = 6371000.d0
   TINYVAL = 1.d-9
   ZERO    = 0.d0
 
@@ -811,6 +809,8 @@
   close(27)
 
   close(49)
+
+  if (.not. old_DSM_coupling_from_Vadim) call cartesian_product_to_r_theta_phi_on_chunk_surface_GLL(MESH, deg2rad)
 
   ! all processes done
   write(*,*) 'END '
