@@ -27,7 +27,7 @@
 
   subroutine earth_chunk_HEX8_Mesher(NGNOD)
 
-  use constants, only: NGLLX, NGLLY, NGLLZ, NDIM
+  use constants, only: NGLLX, NGLLY, NGLLZ, NDIM, R_EARTH, PI, ZERO, TINYVAL, old_DSM_coupling_from_Vadim
 
   implicit none
 
@@ -36,7 +36,7 @@
 !  Singular option of meshfem3D : MESH OF A GLOBE EARTH CHUNK FOR THE INTERFACE DSM-SPECFEM3D  !
 !  Case of 8 nodes per element (HEX8)                                                          !
 !                                                                                              !
-!  VM, February 2013                                                             !
+!  VM, February 2013                                                                           !
 !  Integrated in meshfem3d by CD, September 2014                                               !
 !                                                                                              !
 !  WARNING : A local convention is used for the mapping of                                     !
@@ -74,7 +74,7 @@
   double precision ratio_eta, ratio_xi
   double precision ANGULAR_WIDTH_ETA_RAD, ANGULAR_WIDTH_XI_RAD, Z_DEPTH_BLOCK, UTM_X_MIN, UTM_X_MAX
   double precision lat_center_chunk, lon_center_chunk, chunk_depth, chunk_azi
-  double precision R_EARTH, TINYVAL, PI, ZERO, deg2rad
+  double precision deg2rad
   double precision x, y, z, px, py, pz, z_bottom
 
   double precision rotation_matrix(3,3)
@@ -113,11 +113,7 @@
 !---                          We define the mesh of a chunk of the earth in the cubic sphere
 !
 
-  PI      = 3.141592653589793d0
   deg2rad = 3.141592653589793d0/180.d0
-  R_EARTH = 6371000.d0
-  TINYVAL = 1.d-9
-  ZERO    = 0.d0
 
   open(49, file=trim(MESH)//'output_mesher_chunk_HEX8.txt')
 
@@ -701,6 +697,8 @@
   close(27)
 
   close(49)
+
+  if (.not. old_DSM_coupling_from_Vadim) call cartesian_product_to_r_theta_phi_on_chunk_surface_GLL(MESH, deg2rad)
 
   ! all processes done
   write(*,*) 'END '
