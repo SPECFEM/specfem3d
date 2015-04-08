@@ -157,11 +157,14 @@
 
   implicit none
 
-  character(len=10) :: MESH
-  double precision  :: deg2rad
-  integer           :: np_r, np_xmin, np_xmax, np_ymin, np_ymax, np_zmin, recflag1, recflag2, i, j, np_surf, ios
-  double precision  :: rec_val, xmin_val1, xmin_val2, xmax_val1, xmax_val2, ymin_val1, ymin_val2
-  double precision  :: ymax_val1, ymax_val2, zmin_val1, zmin_val2, zmin_fix, x, y ,z, R, R_m, latrad, lgrad
+  character(len=10)  :: MESH
+  double precision   :: deg2rad
+  integer            :: np_r, np_xmin, np_xmax, np_ymin, np_ymax, np_zmin, recflag1, recflag2, i, j, np_surf, ios
+  double precision   :: rec_val, xmin_val1, xmin_val2, xmax_val1, xmax_val2, ymin_val1, ymin_val2
+  double precision   :: ymax_val1, ymax_val2, zmin_val1, zmin_val2, zmin_fix, x, y ,z, R, R_m, latrad, lgrad
+
+  logical, parameter :: CONVERT_to_X_Y_Z = .false. !! convert (r,theta,phi) coordinate to (X,Y,Z) in two files,
+                                                   !! to verify with Medit and use them if necessary 
 
   open(unit=10,file=trim(MESH)//'recdepth',action='read',status='unknown',iostat=ios)
   open(unit=11,file=trim(MESH)//'stxmin',action='read',status='unknown',iostat=ios)
@@ -171,8 +174,11 @@
   open(unit=15,file=trim(MESH)//'stzmin',action='read',status='unknown',iostat=ios)
 
   open(unit=20,file=trim(MESH)//'chunk_surface_GLL_r_theta_phi.out',status='unknown',iostat=ios)
-!  open(unit=21,file='surface_x_y_z.mesh',status='unknown',iostat=ios)
-!  open(unit=22,file='surface_x_y_z_justcoor_to_analyze',status='unknown',iostat=ios)
+
+  if (CONVERT_to_X_Y_Z) then 
+    open(unit=21,file='chunk_surface_GLL_x_y_z.mesh',status='unknown',iostat=ios)
+    open(unit=22,file='chunk_surface_GLL_x_y_z_justcoord.out',status='unknown',iostat=ios)
+  endif
 
   read(10,*) np_r
 
@@ -184,11 +190,15 @@
 
   np_surf = np_r*(np_xmin + np_xmax + np_ymin + np_ymax) + np_zmin
 
-!  write(21,*) 'MeshVersionFormatted 1'
-!  write(21,*) 'Dimension 3'
-!  write(21,*) ' '
-!  write(21,*) 'Vertices'
-!  write(21,*) np_surf
+  if (CONVERT_to_X_Y_Z) then 
+    write(21,*) 'MeshVersionFormatted 1'
+    write(21,*) 'Dimension 3'
+    write(21,*) ' '
+    write(21,*) 'Vertices'
+
+    write(21,*) np_surf
+    write(22,*) np_surf
+  endif
 
   write(20,*) np_surf
 
@@ -212,16 +222,17 @@
       read(11,*) xmin_val1, xmin_val2
       write(20,*) R, xmin_val1, xmin_val2
 
-!      R_m    = R * 1000.d0 !! meters
-!      latrad = xmin_val1*deg2rad
-!      lgrad  = xmin_val2*deg2rad
-!      x = R_m * DCOS(latrad) * DCOS(lgrad)
-!      y = R_m * DCOS(latrad) * DSIN(lgrad)
-!      z = R_m * DSIN(latrad)
-!
-!      write(21,*) x, y, z, 1
-!
-!      write(22,'(3(f20.5,1x))') x, y, z
+      if (CONVERT_to_X_Y_Z) then 
+        R_m    = R * 1000.d0 !! meters
+        latrad = xmin_val1*deg2rad
+        lgrad  = xmin_val2*deg2rad
+        x = R_m * DCOS(latrad) * DCOS(lgrad)
+        y = R_m * DCOS(latrad) * DSIN(lgrad)
+        z = R_m * DSIN(latrad)
+
+        write(21,*) x, y, z, 1
+        write(22,'(3(f20.5,1x))') x, y, z
+      endif
 
     enddo
 
@@ -230,16 +241,17 @@
       read(12,*) xmax_val1, xmax_val2
       write(20,*) R, xmax_val1, xmax_val2
 
-!      R_m    = R * 1000.d0 
-!      latrad = xmax_val1*deg2rad
-!      lgrad  = xmax_val2*deg2rad
-!      x = R_m * DCOS(latrad) * DCOS(lgrad)
-!      y = R_m * DCOS(latrad) * DSIN(lgrad)
-!      z = R_m * DSIN(latrad)
-!
-!      write(21,*) x, y, z, 2
-!
-!      write(22,'(3(f20.5,1x))') x, y, z
+      if (CONVERT_to_X_Y_Z) then 
+        R_m    = R * 1000.d0 
+        latrad = xmax_val1*deg2rad
+        lgrad  = xmax_val2*deg2rad
+        x = R_m * DCOS(latrad) * DCOS(lgrad)
+        y = R_m * DCOS(latrad) * DSIN(lgrad)
+        z = R_m * DSIN(latrad)
+
+        write(21,*) x, y, z, 2
+        write(22,'(3(f20.5,1x))') x, y, z
+      endif
 
     enddo
 
@@ -248,16 +260,17 @@
       read(13,*) ymin_val1, ymin_val2
       write(20,*) R, ymin_val1, ymin_val2
 
-!      R_m     = R * 1000.d0 
-!      latrad  = ymin_val1*deg2rad
-!      lgrad   = ymin_val2*deg2rad
-!      x = R_m * DCOS(latrad) * DCOS(lgrad)
-!      y = R_m * DCOS(latrad) * DSIN(lgrad)
-!      z = R_m * DSIN(latrad)
-!
-!      write(21,*) x, y, z, 3
-!
-!      write(22,'(3(f20.5,1x))') x, y, z
+      if (CONVERT_to_X_Y_Z) then 
+        R_m     = R * 1000.d0 
+        latrad  = ymin_val1*deg2rad
+        lgrad   = ymin_val2*deg2rad
+        x = R_m * DCOS(latrad) * DCOS(lgrad)
+        y = R_m * DCOS(latrad) * DSIN(lgrad)
+        z = R_m * DSIN(latrad)
+
+        write(21,*) x, y, z, 3
+        write(22,'(3(f20.5,1x))') x, y, z
+      endif
 
     enddo
 
@@ -266,16 +279,17 @@
       read(14,*) ymax_val1, ymax_val2
       write(20,*) R, ymax_val1, ymax_val2
 
-!      R_m     = R * 1000.d0 
-!      latrad  = ymax_val1*deg2rad
-!      lgrad   = ymax_val2*deg2rad
-!      x = R_m * DCOS(latrad) * DCOS(lgrad)
-!      y = R_m * DCOS(latrad) * DSIN(lgrad)
-!      z = R_m * DSIN(latrad)
-!
-!      write(21,*) x, y, z, 4
-!
-!      write(22,'(3(f20.5,1x))') x, y, z
+      if (CONVERT_to_X_Y_Z) then 
+        R_m     = R * 1000.d0 
+        latrad  = ymax_val1*deg2rad
+        lgrad   = ymax_val2*deg2rad
+        x = R_m * DCOS(latrad) * DCOS(lgrad)
+        y = R_m * DCOS(latrad) * DSIN(lgrad)
+        z = R_m * DSIN(latrad)
+
+        write(21,*) x, y, z, 4
+        write(22,'(3(f20.5,1x))') x, y, z
+      endif
 
     enddo
 
@@ -293,21 +307,19 @@
     read(15,*) zmin_val1, zmin_val2
     write(20,*) R, zmin_val1, zmin_val2
 
-!    R_m     = R * 1000.d0 
-!    latrad  = zmin_val1*deg2rad
-!    lgrad   = zmin_val2*deg2rad
-!    x = R_m * DCOS(latrad) * DCOS(lgrad)
-!    y = R_m * DCOS(latrad) * DSIN(lgrad)
-!    z = R_m * DSIN(latrad)
-!
-!    write(21,*) x, y, z, 5
-!
-!    write(22,'(3(f20.5,1x))') x, y, z
+    if (CONVERT_to_X_Y_Z) then 
+      R_m     = R * 1000.d0 
+      latrad  = zmin_val1*deg2rad
+      lgrad   = zmin_val2*deg2rad
+      x = R_m * DCOS(latrad) * DCOS(lgrad)
+      y = R_m * DCOS(latrad) * DSIN(lgrad)
+      z = R_m * DSIN(latrad)
+
+      write(21,*) x, y, z, 5
+      write(22,'(3(f20.5,1x))') x, y, z
+    endif
 
   enddo
-
-!  write(21,*) ' '
-!  write(21,*) 'End'
 
   close(10)
   close(11)
@@ -316,8 +328,15 @@
   close(14)
   close(15)
   close(20)
-!  close(21)
-!  close(22)
+
+
+  if (CONVERT_to_X_Y_Z) then 
+    write(21,*) ' '
+    write(21,*) 'End'
+
+    close(21)
+    close(22)
+  endif
 
   end subroutine cartesian_product_to_r_theta_phi_on_chunk_surface_GLL
 
