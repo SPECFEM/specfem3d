@@ -698,7 +698,9 @@
 
   close(49)
 
-  if (.not. old_DSM_coupling_from_Vadim) call cartesian_product_to_r_theta_phi_on_chunk_surface_GLL(MESH, deg2rad)
+  ! Write one file giving Spherical coordinate on ALL the GLL points on the surface of the 3D chunk
+  ! for the new DSM coupling (light version using 2D chunk)
+  if (.not. old_DSM_coupling_from_Vadim) call cartesian_product_to_r_theta_phi_on_chunk_surface_GLL(MESH,deg2rad)
 
   ! all processes done
   write(*,*) 'END '

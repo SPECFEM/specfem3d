@@ -151,7 +151,7 @@
 ! on the surface of the 3D chunk, for the new DSM coupling (light version using 2D chunk)
 !
 
-  subroutine cartesian_product_to_r_theta_phi_on_chunk_surface_GLL(MESH, deg2rad)
+  subroutine cartesian_product_to_r_theta_phi_on_chunk_surface_GLL(MESH,deg2rad)
 
   use constants, only: R_EARTH_KM
 
@@ -164,7 +164,7 @@
   double precision   :: ymax_val1, ymax_val2, zmin_val1, zmin_val2, zmin_fix, x, y ,z, R, R_m, latrad, lgrad
 
   logical, parameter :: CONVERT_to_X_Y_Z = .false. !! convert (r,theta,phi) coordinate to (X,Y,Z) in two files,
-                                                   !! to verify with Medit and use them if necessary 
+                                                   !! to verify with Medit and use them if necessary
 
   open(unit=10,file=trim(MESH)//'recdepth',action='read',status='unknown',iostat=ios)
   open(unit=11,file=trim(MESH)//'stxmin',action='read',status='unknown',iostat=ios)
@@ -175,8 +175,8 @@
 
   open(unit=20,file=trim(MESH)//'chunk_surface_GLL_r_theta_phi.out',status='unknown',iostat=ios)
 
-  if (CONVERT_to_X_Y_Z) then 
-    open(unit=21,file='chunk_surface_GLL_x_y_z.mesh',status='unknown',iostat=ios)
+  if (CONVERT_to_X_Y_Z) then
+    open(unit=21,file='chunk_surface_GLL_x_y_z.mesh',status='unknown',iostat=ios) !! for Medit
     open(unit=22,file='chunk_surface_GLL_x_y_z_justcoord.out',status='unknown',iostat=ios)
   endif
 
@@ -190,7 +190,7 @@
 
   np_surf = np_r*(np_xmin + np_xmax + np_ymin + np_ymax) + np_zmin
 
-  if (CONVERT_to_X_Y_Z) then 
+  if (CONVERT_to_X_Y_Z) then
     write(21,*) 'MeshVersionFormatted 1'
     write(21,*) 'Dimension 3'
     write(21,*) ' '
@@ -222,7 +222,7 @@
       read(11,*) xmin_val1, xmin_val2
       write(20,*) R, xmin_val1, xmin_val2
 
-      if (CONVERT_to_X_Y_Z) then 
+      if (CONVERT_to_X_Y_Z) then
         R_m    = R * 1000.d0 !! meters
         latrad = xmin_val1*deg2rad
         lgrad  = xmin_val2*deg2rad
@@ -241,8 +241,8 @@
       read(12,*) xmax_val1, xmax_val2
       write(20,*) R, xmax_val1, xmax_val2
 
-      if (CONVERT_to_X_Y_Z) then 
-        R_m    = R * 1000.d0 
+      if (CONVERT_to_X_Y_Z) then
+        R_m    = R * 1000.d0
         latrad = xmax_val1*deg2rad
         lgrad  = xmax_val2*deg2rad
         x = R_m * DCOS(latrad) * DCOS(lgrad)
@@ -260,8 +260,8 @@
       read(13,*) ymin_val1, ymin_val2
       write(20,*) R, ymin_val1, ymin_val2
 
-      if (CONVERT_to_X_Y_Z) then 
-        R_m     = R * 1000.d0 
+      if (CONVERT_to_X_Y_Z) then
+        R_m     = R * 1000.d0
         latrad  = ymin_val1*deg2rad
         lgrad   = ymin_val2*deg2rad
         x = R_m * DCOS(latrad) * DCOS(lgrad)
@@ -279,8 +279,8 @@
       read(14,*) ymax_val1, ymax_val2
       write(20,*) R, ymax_val1, ymax_val2
 
-      if (CONVERT_to_X_Y_Z) then 
-        R_m     = R * 1000.d0 
+      if (CONVERT_to_X_Y_Z) then
+        R_m     = R * 1000.d0
         latrad  = ymax_val1*deg2rad
         lgrad   = ymax_val2*deg2rad
         x = R_m * DCOS(latrad) * DCOS(lgrad)
@@ -307,8 +307,8 @@
     read(15,*) zmin_val1, zmin_val2
     write(20,*) R, zmin_val1, zmin_val2
 
-    if (CONVERT_to_X_Y_Z) then 
-      R_m     = R * 1000.d0 
+    if (CONVERT_to_X_Y_Z) then
+      R_m     = R * 1000.d0
       latrad  = zmin_val1*deg2rad
       lgrad   = zmin_val2*deg2rad
       x = R_m * DCOS(latrad) * DCOS(lgrad)
@@ -330,7 +330,7 @@
   close(20)
 
 
-  if (CONVERT_to_X_Y_Z) then 
+  if (CONVERT_to_X_Y_Z) then
     write(21,*) ' '
     write(21,*) 'End'
 
