@@ -147,6 +147,54 @@
 !
 !=======================================================================================================
 !
+! compute the Euler angles and the associated rotation matrix
+
+  subroutine euler_angles(rotation_matrix,CENTER_LONGITUDE_IN_DEGREES,CENTER_LATITUDE_IN_DEGREES,GAMMA_ROTATION_AZIMUTH)
+
+  implicit none
+
+  !include "constants.h"
+
+  double precision rotation_matrix(3,3)
+  double precision CENTER_LONGITUDE_IN_DEGREES,CENTER_LATITUDE_IN_DEGREES,GAMMA_ROTATION_AZIMUTH
+
+  double precision alpha,beta,gamma
+  double precision sina,cosa,sinb,cosb,sing,cosg
+
+  double precision DEGREES_TO_RADIANS
+
+  DEGREES_TO_RADIANS = 3.141592653589793d0/180.d0
+
+
+! compute colatitude and longitude and convert to radians
+  alpha = CENTER_LONGITUDE_IN_DEGREES * DEGREES_TO_RADIANS
+  beta = (90.0d0 - CENTER_LATITUDE_IN_DEGREES) * DEGREES_TO_RADIANS
+  gamma = GAMMA_ROTATION_AZIMUTH * DEGREES_TO_RADIANS
+
+  sina = dsin(alpha)
+  cosa = dcos(alpha)
+  sinb = dsin(beta)
+  cosb = dcos(beta)
+  sing = dsin(gamma)
+  cosg = dcos(gamma)
+
+! define rotation matrix
+  rotation_matrix(1,1) = cosg*cosb*cosa-sing*sina
+  rotation_matrix(1,2) = -sing*cosb*cosa-cosg*sina
+  rotation_matrix(1,3) = sinb*cosa
+  rotation_matrix(2,1) = cosg*cosb*sina+sing*cosa
+  rotation_matrix(2,2) = -sing*cosb*sina+cosg*cosa
+  rotation_matrix(2,3) = sinb*sina
+  rotation_matrix(3,1) = -cosg*sinb
+  rotation_matrix(3,2) = sing*sinb
+  rotation_matrix(3,3) = cosb
+
+  end subroutine euler_angles
+
+!=======================================================================================================
+!
+!=======================================================================================================
+!
 ! To have one and only file, who give the Spherical coordinate on ALL the GLL points
 ! on the surface of the 3D chunk, for the new DSM coupling (light version using 2D chunk)
 !
@@ -340,51 +388,243 @@
 
   end subroutine cartesian_product_to_r_theta_phi_on_chunk_surface_GLL
 
+!
 !=======================================================================================================
+!
+!==> ! WARNING ! TO DO : test the outputs of the 2 subroutines below 
+!
+!=======================================================================================================
+!
 
-! compute the Euler angles and the associated rotation matrix
+  subroutine write_all_chunk_surface_GLL_in_spherical_and_cartesian_coords(xstore,ystore,zstore, &
+                                                         MESH,deg2rad,ilayer,iboun,ispec,nspec,  &
+                                                         longitud,latitud,radius,rotation_matrix,updown)
 
-  subroutine euler_angles(rotation_matrix,CENTER_LONGITUDE_IN_DEGREES,CENTER_LATITUDE_IN_DEGREES,GAMMA_ROTATION_AZIMUTH)
+  use constants, only: NGLLX, NGLLY, NGLLZ
+
+  implicit none
+    
+  character(len=10)  :: MESH
+
+  integer ispec, nspec, ilayer
+  integer i, j, k, imin, imax, jmin, jmax, kmin, kmax
+  integer updown(NGLLZ)
+  logical :: iboun(6,nspec)
+
+  double precision xstore(NGLLX,NGLLY,NGLLZ), ystore(NGLLX,NGLLY,NGLLZ), zstore(NGLLX,NGLLY,NGLLZ)
+  double precision, dimension(NGLLX,NGLLY,NGLLZ) :: longitud, latitud, radius 
+  double precision rotation_matrix(3,3)
+  double precision deg2rad
+
+!
+!----
+!
+    
+1000 format(3f30.10)
+
+  open(91, file = trim(MESH)//'list_ggl_boundary_spherical.txt')
+  open(92, file = trim(MESH)//'list_ggl_boubdary_cartesian.txt')
+
+!-- all gll in geographical coordinates
+
+  call cartesian2spheric(xstore,ystore,zstore,rotation_matrix,longitud,latitud,radius,deg2rad) 
+
+!
+!-- xmin ----
+!
+
+  if (iboun(1,ispec)) then
+
+    imin = 1
+    imax = 1
+    jmin = 1
+    jmax = NGLLY
+    kmin = 1
+    kmax = NGLLZ
+
+    do k=kmin,kmax
+      do j=jmin,jmax
+        do i=imin,imax
+
+          write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k),ispec,i,j,k,1,ilayer,updown(k)
+          write(91,1000) radius(i,j,k), latitud(i,j,k), longitud(i,j,k)
+
+        enddo
+      enddo
+    enddo
+
+  endif
+
+!
+!-- xmax ----
+!
+
+  if (iboun(2,ispec)) then 
+
+    imin = NGLLX
+    imax = NGLLX
+    jmin = 1
+    jmax = NGLLY
+    kmin = 1
+    kmax = NGLLZ
+
+    do k=kmin,kmax
+      do j=jmin,jmax
+        do i=imin,imax
+
+          write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k),ispec,i,j,k,2,ilayer,updown(k)
+          write(91,1000) radius(i,j,k), latitud(i,j,k), longitud(i,j,k)
+
+        enddo
+      enddo
+    enddo
+
+  endif
+
+!
+!-- ymin ----
+!
+
+  if (iboun(3,ispec)) then
+
+    imin = 1
+    imax = NGLLX
+    jmin = 1
+    jmax = 1
+    kmin = 1
+    kmax = NGLLZ
+
+    do k=kmin,kmax
+      do j=jmin,jmax
+        do i=imin,imax
+
+          write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k),ispec,i,j,k,3,ilayer,updown(k)
+          write(91,1000) radius(i,j,k), latitud(i,j,k), longitud(i,j,k)
+
+        enddo
+      enddo
+    enddo
+
+  endif
+
+!
+!-- ymax ----
+!
+    
+  if (iboun(4,ispec)) then
+
+    imin = 1
+    imax = NGLLX
+    jmin = NGLLY
+    jmax = NGLLY
+    kmin = 1
+    kmax = NGLLZ
+
+    do k=kmin,kmax
+      do j=jmin,jmax
+        do i=imin,imax
+
+          write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k),ispec,i,j,k,4,ilayer,updown(k)
+          write(91,1000) radius(i,j,k), latitud(i,j,k), longitud(i,j,k)
+
+        enddo
+      enddo
+    enddo
+
+  endif
+
+!
+!-- zmin ----
+!
+
+  if (iboun(5,ispec)) then
+
+    imin = 1
+    imax = NGLLX
+    jmin = 1
+    jmax = NGLLY
+    kmin = 1
+    kmax = 1
+       
+    do k=kmin,kmax
+      do j=jmin,jmax
+        do i=imin,imax
+
+          write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k),ispec,i,j,k,5,ilayer,updown(k)
+          write(91,1000) radius(i,j,k), latitud(i,j,k), longitud(i,j,k)
+
+        enddo
+      enddo
+    enddo
+
+  endif
+
+  close(91)
+  close(92)
+    
+  end subroutine write_all_chunk_surface_GLL_in_spherical_and_cartesian_coords
+
+!
+!=======================================================================================================
+!
+
+  subroutine cartesian2spheric(xstore,ystore,zstore,rotation_matrix,longitud,latitud,radius,deg2rad)
+
+  use constants, only: NGLLX, NGLLY, NGLLZ, NDIM
 
   implicit none
 
-  !include "constants.h"
-
+  integer i, j, igll, jgll, kgll
+    
+  double precision xstore(NGLLX,NGLLY,NGLLZ), ystore(NGLLX,NGLLY,NGLLZ), zstore(NGLLX,NGLLY,NGLLZ)
+  double precision, dimension(NGLLX,NGLLY,NGLLZ) :: longitud, latitud, radius
   double precision rotation_matrix(3,3)
-  double precision CENTER_LONGITUDE_IN_DEGREES,CENTER_LATITUDE_IN_DEGREES,GAMMA_ROTATION_AZIMUTH
+  double precision vector_ori(3), vector_rotated(3)
+  double precision rayon, x, y, z, long, lati, deg2rad
 
-  double precision alpha,beta,gamma
-  double precision sina,cosa,sinb,cosb,sing,cosg
+!
+!----
+!
 
-  double precision DEGREES_TO_RADIANS
+  do kgll=1,NGLLZ
+    do jgll=1,NGLLY
+      do igll=1,NGLLX
 
-  DEGREES_TO_RADIANS = 3.141592653589793d0/180.d0
+        vector_ori(1) = xstore(igll,jgll,kgll)
+        vector_ori(2) = ystore(igll,jgll,kgll)
+        vector_ori(3) = zstore(igll,jgll,kgll)
+        !write(*,*)  vector_ori
+        !write(*,*) rotation_matrix
 
+        do i = 1,NDIM
 
-! compute colatitude and longitude and convert to radians
-  alpha = CENTER_LONGITUDE_IN_DEGREES * DEGREES_TO_RADIANS
-  beta = (90.0d0 - CENTER_LATITUDE_IN_DEGREES) * DEGREES_TO_RADIANS
-  gamma = GAMMA_ROTATION_AZIMUTH * DEGREES_TO_RADIANS
+          vector_rotated(i) = 0.d0
 
-  sina = dsin(alpha)
-  cosa = dcos(alpha)
-  sinb = dsin(beta)
-  cosb = dcos(beta)
-  sing = dsin(gamma)
-  cosg = dcos(gamma)
+          do j = 1,NDIM
 
-! define rotation matrix
-  rotation_matrix(1,1) = cosg*cosb*cosa-sing*sina
-  rotation_matrix(1,2) = -sing*cosb*cosa-cosg*sina
-  rotation_matrix(1,3) = sinb*cosa
-  rotation_matrix(2,1) = cosg*cosb*sina+sing*cosa
-  rotation_matrix(2,2) = -sing*cosb*sina+cosg*cosa
-  rotation_matrix(2,3) = sinb*sina
-  rotation_matrix(3,1) = -cosg*sinb
-  rotation_matrix(3,2) = sing*sinb
-  rotation_matrix(3,3) = cosb
+            !write(*,*)  vector_rotated(i),rotation_matrix(i,j),vector_ori(j)
+            vector_rotated(i) = vector_rotated(i) + rotation_matrix(i,j)*vector_ori(j)
+                   
+          enddo
+        enddo
 
-  end subroutine euler_angles
+        x     = vector_rotated(1)
+        y     = vector_rotated(2)
+        z     = vector_rotated(3)
+        rayon = dsqrt(vector_rotated(1)**2 + vector_rotated(2)**2 + vector_rotated(3)**2)
+             
+        long  = datan2(y,x)
+        lati  = dasin(z/rayon)
+             
+        longitud(igll,jgll,kgll) = long/deg2rad
+        latitud(igll,jgll,kgll)  = lati/deg2rad 
+        radius(igll,jgll,kgll)   = rayon/1000.d0
+
+      enddo
+    enddo
+  enddo
+ 
+  end subroutine cartesian2spheric
 
 !=======================================================================================================
 !
