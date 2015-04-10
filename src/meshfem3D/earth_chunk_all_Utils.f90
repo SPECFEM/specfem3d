@@ -391,7 +391,7 @@
 !
 !=======================================================================================================
 !
-!==> ! WARNING ! TO DO : test the outputs of the 2 subroutines below 
+!==> ! WARNING ! TO DO : test the outputs of the 2 subroutines below
 !
 !=======================================================================================================
 !
@@ -403,7 +403,7 @@
   use constants, only: NGLLX, NGLLY, NGLLZ
 
   implicit none
-    
+
   character(len=10)  :: MESH
 
   integer ispec, nspec, ilayer
@@ -412,14 +412,14 @@
   logical :: iboun(6,nspec)
 
   double precision xstore(NGLLX,NGLLY,NGLLZ), ystore(NGLLX,NGLLY,NGLLZ), zstore(NGLLX,NGLLY,NGLLZ)
-  double precision, dimension(NGLLX,NGLLY,NGLLZ) :: longitud, latitud, radius 
+  double precision, dimension(NGLLX,NGLLY,NGLLZ) :: longitud, latitud, radius
   double precision rotation_matrix(3,3)
   double precision deg2rad
 
 !
 !----
 !
-    
+
 1000 format(3f30.10)
 
   open(91, file = trim(MESH)//'list_ggl_boundary_spherical.txt')
@@ -427,7 +427,7 @@
 
 !-- all gll in geographical coordinates
 
-  call cartesian2spheric(xstore,ystore,zstore,rotation_matrix,longitud,latitud,radius,deg2rad) 
+  call cartesian2spheric(xstore,ystore,zstore,rotation_matrix,longitud,latitud,radius,deg2rad)
 
 !
 !-- xmin ----
@@ -459,7 +459,7 @@
 !-- xmax ----
 !
 
-  if (iboun(2,ispec)) then 
+  if (iboun(2,ispec)) then
 
     imin = NGLLX
     imax = NGLLX
@@ -510,7 +510,7 @@
 !
 !-- ymax ----
 !
-    
+
   if (iboun(4,ispec)) then
 
     imin = 1
@@ -545,7 +545,7 @@
     jmax = NGLLY
     kmin = 1
     kmax = 1
-       
+
     do k=kmin,kmax
       do j=jmin,jmax
         do i=imin,imax
@@ -561,7 +561,7 @@
 
   close(91)
   close(92)
-    
+
   end subroutine write_all_chunk_surface_GLL_in_spherical_and_cartesian_coords
 
 !
@@ -575,7 +575,7 @@
   implicit none
 
   integer i, j, igll, jgll, kgll
-    
+
   double precision xstore(NGLLX,NGLLY,NGLLZ), ystore(NGLLX,NGLLY,NGLLZ), zstore(NGLLX,NGLLY,NGLLZ)
   double precision, dimension(NGLLX,NGLLY,NGLLZ) :: longitud, latitud, radius
   double precision rotation_matrix(3,3)
@@ -604,7 +604,7 @@
 
             !write(*,*)  vector_rotated(i),rotation_matrix(i,j),vector_ori(j)
             vector_rotated(i) = vector_rotated(i) + rotation_matrix(i,j)*vector_ori(j)
-                   
+
           enddo
         enddo
 
@@ -612,18 +612,18 @@
         y     = vector_rotated(2)
         z     = vector_rotated(3)
         rayon = dsqrt(vector_rotated(1)**2 + vector_rotated(2)**2 + vector_rotated(3)**2)
-             
+
         long  = datan2(y,x)
         lati  = dasin(z/rayon)
-             
+
         longitud(igll,jgll,kgll) = long/deg2rad
-        latitud(igll,jgll,kgll)  = lati/deg2rad 
+        latitud(igll,jgll,kgll)  = lati/deg2rad
         radius(igll,jgll,kgll)   = rayon/1000.d0
 
       enddo
     enddo
   enddo
- 
+
   end subroutine cartesian2spheric
 
 !=======================================================================================================
