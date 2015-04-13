@@ -90,6 +90,8 @@
   double precision, allocatable :: lon_zmin(:,:), lat_zmin(:,:)
   double precision, dimension(:,:), allocatable :: ProfForGemini
 
+  integer ::   updown(NGLLZ)
+
   logical test
 
   logical, allocatable :: ifseg(:)
@@ -108,7 +110,7 @@
 
 !
 !--- WARNING ==> CONVENTION : (lon,lat) -> (xi,eta)
-!---                          (k = 6 with -z for the mapping of the cubic sphere, cf Chervot 2012)
+!---                          (k = 6 with -z for the mapping of the cubic sphere, cf Chevrot 2012)
 !---                          We define the mesh of a chunk of the earth in the cubic sphere
 !
 
@@ -529,7 +531,7 @@
            ! Vertical receptors
            if (ilat==0 .and. ilon==0) then
               call calc_gll_points(xelm,yelm,zelm,xstore,ystore,zstore,shape3D,NGNOD,NGLLX,NGLLY,NGLLZ)
-              call write_gllz_points(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,current_layer,nel_depth,ilayer,iz,Ndepth)
+              call write_gllz_points(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,current_layer,nel_depth,ilayer,iz,Ndepth,updown)
            endif
 
            ! Horizontal receptors
@@ -807,11 +809,6 @@
   close(27)
 
   close(49)
-
-  ! Write one file giving Spherical coordinate on ALL the GLL points on the surface of the 3D chunk
-  ! for the new DSM coupling (light version using 2D chunk)
-  if (.not. old_DSM_coupling_from_Vadim) call cartesian_product_to_r_theta_phi_on_chunk_surface_GLL(MESH,deg2rad)
-
 
   ! all processes done
   write(*,*) 'END '

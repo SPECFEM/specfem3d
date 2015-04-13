@@ -194,217 +194,187 @@
 !=======================================================================================================
 !
 !=======================================================================================================
-!
-! To have one and only file, who give the Spherical coordinate on ALL the GLL points
-! on the surface of the 3D chunk, for the new DSM coupling (light version using 2D chunk)
-!
 
-  subroutine cartesian_product_to_r_theta_phi_on_chunk_surface_GLL(MESH,deg2rad)
-
-  use constants, only: R_EARTH_KM
+  subroutine write_gllz_points(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,current_layer,nel_depth,ilayer,iz,Ndepth,updown)
 
   implicit none
 
-  character(len=10)  :: MESH
-  double precision   :: deg2rad
-  integer            :: np_r, np_xmin, np_xmax, np_ymin, np_ymax, np_zmin, recflag1, recflag2, i, j, np_surf, ios
-  double precision   :: rec_val, xmin_val1, xmin_val2, xmax_val1, xmax_val2, ymin_val1, ymin_val2
-  double precision   :: ymax_val1, ymax_val2, zmin_val1, zmin_val2, zmin_fix, x, y ,z, R, R_m, latrad, lgrad
+  integer NGLLX,NGLLY,NGLLZ,nel_depth,iz,Ndepth
+  double precision xstore(NGLLX,NGLLY,NGLLZ),ystore(NGLLX,NGLLY,NGLLZ),zstore(NGLLX,NGLLY,NGLLZ)
+  double precision profondeur
+  integer current_layer(0:nel_depth-1),ilayer,k
+  integer updown(NGLLZ) !! will be also used for VM coupling with AxiSEM
 
-  logical, parameter :: CONVERT_to_X_Y_Z = .false. !! convert (r,theta,phi) coordinate to (X,Y,Z) in two files,
-                                                   !! to verify with Medit and use them if necessary
+  updown(:) = 0
+  if (ilayer ==  current_layer(iz)) then
 
-  open(unit=10,file=trim(MESH)//'recdepth',action='read',status='unknown',iostat=ios)
-  open(unit=11,file=trim(MESH)//'stxmin',action='read',status='unknown',iostat=ios)
-  open(unit=12,file=trim(MESH)//'stxmax',action='read',status='unknown',iostat=ios)
-  open(unit=13,file=trim(MESH)//'stymin',action='read',status='unknown',iostat=ios)
-  open(unit=14,file=trim(MESH)//'stymax',action='read',status='unknown',iostat=ios)
-  open(unit=15,file=trim(MESH)//'stzmin',action='read',status='unknown',iostat=ios)
+    do k=2,NGLLZ
+      profondeur = dsqrt(xstore(1,1,k)**2 + ystore(1,1,k)**2 + (zstore(1,1,k) )**2 )
+      write(27,*) profondeur/1000., ilayer-1,1
+      Ndepth = Ndepth + 1
+      updown(k) = 0 !! for new output mesh files and VM coupling with AxiSEM
+    enddo
 
-  open(unit=20,file=trim(MESH)//'chunk_surface_GLL_r_theta_phi.out',status='unknown',iostat=ios)
+  else ! new layer
 
-  if (CONVERT_to_X_Y_Z) then
-    open(unit=21,file='chunk_surface_GLL_x_y_z.mesh',status='unknown',iostat=ios) !! for Medit
-    open(unit=22,file='chunk_surface_GLL_x_y_z_justcoord.out',status='unknown',iostat=ios)
+     k=1
+     profondeur = dsqrt(xstore(1,1,k)**2 + ystore(1,1,k)**2 + (zstore(1,1,k) )**2 )
+     if (ilayer==0) then
+        ilayer =  current_layer(iz)
+        write(27,*)  profondeur/1000., ilayer-1,1
+        Ndepth=Ndepth+1
+
+        updown(k) = 0 !! for new output mesh files and VM coupling with AxiSEM
+
+     else
+        ilayer =  current_layer(iz)
+        write(27,*)  profondeur/1000., ilayer-1,-1
+        Ndepth=Ndepth+1
+
+        updown(k) = -1 !! for new output mesh files and VM coupling with AxiSEM
+
+     endif
+     do k=2,NGLLZ ! on duplique le dernier point
+        profondeur = dsqrt(xstore(1,1,k)**2 + ystore(1,1,k)**2 + (zstore(1,1,k) )**2 )
+        write(27,*)  profondeur/1000., ilayer-1,1
+        Ndepth=Ndepth+1
+
+        updown(k) = 0 !! for new output mesh files and VM coupling with AxiSEM
+
+     enddo
+
+
   endif
 
-  read(10,*) np_r
-
-  read(11,*) np_xmin
-  read(12,*) np_xmax
-  read(13,*) np_ymin
-  read(14,*) np_ymax
-  read(15,*) np_zmin
-
-  np_surf = np_r*(np_xmin + np_xmax + np_ymin + np_ymax) + np_zmin
-
-  if (CONVERT_to_X_Y_Z) then
-    write(21,*) 'MeshVersionFormatted 1'
-    write(21,*) 'Dimension 3'
-    write(21,*) ' '
-    write(21,*) 'Vertices'
-
-    write(21,*) np_surf
-    write(22,*) np_surf
-  endif
-
-  write(20,*) np_surf
-
-  do i=1,np_r
-
-    rewind(11)
-    read(11,*)
-    rewind(12)
-    read(12,*)
-    rewind(13)
-    read(13,*)
-    rewind(14)
-    read(14,*)
-
-    read(10,*) rec_val, recflag1, recflag2
-
-    R = dabs(R_EARTH_KM - rec_val) !! kM
-
-    do j=1,np_xmin
-
-      read(11,*) xmin_val1, xmin_val2
-      write(20,*) R, xmin_val1, xmin_val2
-
-      if (CONVERT_to_X_Y_Z) then
-        R_m    = R * 1000.d0 !! meters
-        latrad = xmin_val1*deg2rad
-        lgrad  = xmin_val2*deg2rad
-        x = R_m * DCOS(latrad) * DCOS(lgrad)
-        y = R_m * DCOS(latrad) * DSIN(lgrad)
-        z = R_m * DSIN(latrad)
-
-        write(21,*) x, y, z, 1
-        write(22,'(3(f20.5,1x))') x, y, z
-      endif
-
-    enddo
-
-    do j=1,np_xmax
-
-      read(12,*) xmax_val1, xmax_val2
-      write(20,*) R, xmax_val1, xmax_val2
-
-      if (CONVERT_to_X_Y_Z) then
-        R_m    = R * 1000.d0
-        latrad = xmax_val1*deg2rad
-        lgrad  = xmax_val2*deg2rad
-        x = R_m * DCOS(latrad) * DCOS(lgrad)
-        y = R_m * DCOS(latrad) * DSIN(lgrad)
-        z = R_m * DSIN(latrad)
-
-        write(21,*) x, y, z, 2
-        write(22,'(3(f20.5,1x))') x, y, z
-      endif
-
-    enddo
-
-    do j=1,np_ymin
-
-      read(13,*) ymin_val1, ymin_val2
-      write(20,*) R, ymin_val1, ymin_val2
-
-      if (CONVERT_to_X_Y_Z) then
-        R_m     = R * 1000.d0
-        latrad  = ymin_val1*deg2rad
-        lgrad   = ymin_val2*deg2rad
-        x = R_m * DCOS(latrad) * DCOS(lgrad)
-        y = R_m * DCOS(latrad) * DSIN(lgrad)
-        z = R_m * DSIN(latrad)
-
-        write(21,*) x, y, z, 3
-        write(22,'(3(f20.5,1x))') x, y, z
-      endif
-
-    enddo
-
-    do j=1,np_ymax
-
-      read(14,*) ymax_val1, ymax_val2
-      write(20,*) R, ymax_val1, ymax_val2
-
-      if (CONVERT_to_X_Y_Z) then
-        R_m     = R * 1000.d0
-        latrad  = ymax_val1*deg2rad
-        lgrad   = ymax_val2*deg2rad
-        x = R_m * DCOS(latrad) * DCOS(lgrad)
-        y = R_m * DCOS(latrad) * DSIN(lgrad)
-        z = R_m * DSIN(latrad)
-
-        write(21,*) x, y, z, 4
-        write(22,'(3(f20.5,1x))') x, y, z
-      endif
-
-    enddo
-
-    if (i == np_r) zmin_fix = rec_val !! maximal depth
-
-  enddo
-
-  rewind(15)
-  read(15,*)
-
-  R = dabs(R_EARTH_KM - zmin_fix) !! kM
-
-  do j=1,np_zmin
-
-    read(15,*) zmin_val1, zmin_val2
-    write(20,*) R, zmin_val1, zmin_val2
-
-    if (CONVERT_to_X_Y_Z) then
-      R_m     = R * 1000.d0
-      latrad  = zmin_val1*deg2rad
-      lgrad   = zmin_val2*deg2rad
-      x = R_m * DCOS(latrad) * DCOS(lgrad)
-      y = R_m * DCOS(latrad) * DSIN(lgrad)
-      z = R_m * DSIN(latrad)
-
-      write(21,*) x, y, z, 5
-      write(22,'(3(f20.5,1x))') x, y, z
-    endif
-
-  enddo
-
-  close(10)
-  close(11)
-  close(12)
-  close(13)
-  close(14)
-  close(15)
-  close(20)
+  end subroutine write_gllz_points
 
 
-  if (CONVERT_to_X_Y_Z) then
-    write(21,*) ' '
-    write(21,*) 'End'
-
-    close(21)
-    close(22)
-  endif
-
-  end subroutine cartesian_product_to_r_theta_phi_on_chunk_surface_GLL
-
+!=======================================================================================================
 !
 !=======================================================================================================
 !
-!==> ! WARNING ! TO DO : test the outputs of the 2 subroutines below
+! Useless for the moment ==> maybe we will need it later
+!
+!!$! To have one and only file, who give the Spherical coordinate on ALL the GLL points
+!!$! on the surface of the 3D chunk, for the new DSM coupling (light version using 2D chunk)
+!!$!
+!!$
+!!$  subroutine cartesian_product_to_r_theta_phi_on_chunk_surface_GLL(MESH,deg2rad)
+!!$
+!!$  use constants, only: R_EARTH_KM
+!!$
+!!$  implicit none
+!!$
+!!$  character(len=10)  :: MESH
+!!$  double precision   :: deg2rad
+!!$  integer            :: np_r, np_xmin, np_xmax, np_ymin, np_ymax, np_zmin, recflag1, recflag2, i, j, np_surf, ios
+!!$  double precision   :: rec_val, xmin_val1, xmin_val2, xmax_val1, xmax_val2, ymin_val1, ymin_val2
+!!$  double precision   :: ymax_val1, ymax_val2, zmin_val1, zmin_val2, zmin_fix, x, y ,z, R, R_m, latrad, lgrad
+!!$
+!!$  open(unit=10,file=trim(MESH)//'recdepth',action='read',status='unknown',iostat=ios)
+!!$  open(unit=11,file=trim(MESH)//'stxmin',action='read',status='unknown',iostat=ios)
+!!$  open(unit=12,file=trim(MESH)//'stxmax',action='read',status='unknown',iostat=ios)
+!!$  open(unit=13,file=trim(MESH)//'stymin',action='read',status='unknown',iostat=ios)
+!!$  open(unit=14,file=trim(MESH)//'stymax',action='read',status='unknown',iostat=ios)
+!!$  open(unit=15,file=trim(MESH)//'stzmin',action='read',status='unknown',iostat=ios)
+!!$
+!!$  open(unit=20,file=trim(MESH)//'chunk_surface_GLL_r_theta_phi.out',status='unknown',iostat=ios)
+!!$
+!!$  read(10,*) np_r
+!!$
+!!$  read(11,*) np_xmin
+!!$  read(12,*) np_xmax
+!!$  read(13,*) np_ymin
+!!$  read(14,*) np_ymax
+!!$  read(15,*) np_zmin
+!!$
+!!$  np_surf = np_r*(np_xmin + np_xmax + np_ymin + np_ymax) + np_zmin
+!!$
+!!$  write(20,*) np_surf
+!!$
+!!$  do i=1,np_r
+!!$
+!!$    rewind(11)
+!!$    read(11,*)
+!!$    rewind(12)
+!!$    read(12,*)
+!!$    rewind(13)
+!!$    read(13,*)
+!!$    rewind(14)
+!!$    read(14,*)
+!!$
+!!$    read(10,*) rec_val, recflag1, recflag2
+!!$
+!!$    R = dabs(R_EARTH_KM - rec_val) !! kM
+
+!!$    do j=1,np_xmin
+!!$
+!!$      read(11,*) xmin_val1, xmin_val2
+!!$      write(20,*) R, xmin_val1, xmin_val2
+!!$
+!!$ enddo
+!!$
+!!$    do j=1,np_xmax
+!!$
+!!$      read(12,*) xmax_val1, xmax_val2
+!!$      write(20,*) R, xmax_val1, xmax_val2
+!!$
+!!$    enddo
+!!$
+!!$    do j=1,np_ymin
+!!$
+!!$      read(13,*) ymin_val1, ymin_val2
+!!$      write(20,*) R, ymin_val1, ymin_val2
+!!$
+!!$    enddo
+!!$
+!!$    do j=1,np_ymax
+!!$
+!!$      read(14,*) ymax_val1, ymax_val2
+!!$      write(20,*) R, ymax_val1, ymax_val2
+!!$
+!!$ enddo
+!!$
+!!$ if (i == np_r) zmin_fix = rec_val !! maximal depth
+!!$
+!!$  enddo
+!!$
+!!$  rewind(15)v
+!!$  read(15,*)
+!!$
+!!$  R = dabs(R_EARTH_KM - zmin_fix) !! kM
+!!$
+!!$  do j=1,np_zmin
+!!$
+!!$    read(15,*) zmin_val1, zmin_val2
+!!$    write(20,*) R, zmin_val1, zmin_val2
+!!$
+!!$  enddo
+!!$
+!!$  close(10)
+!!$  close(11)
+!!$  close(12)
+!!$  close(13)
+!!$  close(14)
+!!$  close(15)
+!!$  close(20)
+!!$
+!!$  end subroutine cartesian_product_to_r_theta_phi_on_chunk_surface_GLL
+!
+!=======================================================================================================
 !
 !=======================================================================================================
 !
 
   subroutine write_all_chunk_surface_GLL_in_spherical_and_cartesian_coords(xstore,ystore,zstore, &
-                                                         MESH,deg2rad,ilayer,iboun,ispec,nspec,  &
-                                                         longitud,latitud,radius,rotation_matrix,updown)
+                                                      deg2rad,ilayer,iboun,ispec,nspec,longitud, &
+                                                      latitud,radius,rotation_matrix,updown)
 
-  use constants, only: NGLLX, NGLLY, NGLLZ
+  use constants, only: NGLLX, NGLLY, NGLLZ, EXTERNAL_CODE_IS_DSM, EXTERNAL_CODE_IS_AXISEM
+
+  use shared_parameters, only: EXTERNAL_CODE_TYPE
 
   implicit none
-
-  character(len=10)  :: MESH
 
   integer ispec, nspec, ilayer
   integer i, j, k, imin, imax, jmin, jmax, kmin, kmax
@@ -417,13 +387,10 @@
   double precision deg2rad
 
 !
-!----
+!---- CF 'earth_chunk_HEX8_Mesher' and 'earth_chunk_HEX27_Mesher' to see the name of files whose units are 91 and 92
 !
 
 1000 format(3f30.10)
-
-  open(91, file = trim(MESH)//'list_ggl_boundary_spherical.txt')
-  open(92, file = trim(MESH)//'list_ggl_boubdary_cartesian.txt')
 
 !-- all gll in geographical coordinates
 
@@ -446,7 +413,16 @@
       do j=jmin,jmax
         do i=imin,imax
 
-          write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k),ispec,i,j,k,1,ilayer,updown(k)
+          ! CF 'earth_chunk_HEX8_Mesher' and 'earth_chunk_HEX27_Mesher' to see files whose units are 91 and 92
+
+          if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) then
+            write(92,1000) xstore(i,j,k), ystore(i,j,k), zstore(i,j,k)
+
+          else if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then
+            write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k),ispec,i,j,k,1,ilayer,updown(k)
+
+          endif
+
           write(91,1000) radius(i,j,k), latitud(i,j,k), longitud(i,j,k)
 
         enddo
@@ -472,7 +448,14 @@
       do j=jmin,jmax
         do i=imin,imax
 
-          write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k),ispec,i,j,k,2,ilayer,updown(k)
+          if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) then
+            write(92,1000) xstore(i,j,k), ystore(i,j,k), zstore(i,j,k)
+
+          else if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then
+            write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k),ispec,i,j,k,1,ilayer,updown(k)
+
+          endif
+
           write(91,1000) radius(i,j,k), latitud(i,j,k), longitud(i,j,k)
 
         enddo
@@ -498,7 +481,14 @@
       do j=jmin,jmax
         do i=imin,imax
 
-          write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k),ispec,i,j,k,3,ilayer,updown(k)
+          if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) then
+            write(92,1000) xstore(i,j,k), ystore(i,j,k), zstore(i,j,k)
+
+          else if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then
+            write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k),ispec,i,j,k,1,ilayer,updown(k)
+
+          endif
+
           write(91,1000) radius(i,j,k), latitud(i,j,k), longitud(i,j,k)
 
         enddo
@@ -524,7 +514,14 @@
       do j=jmin,jmax
         do i=imin,imax
 
-          write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k),ispec,i,j,k,4,ilayer,updown(k)
+          if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) then
+            write(92,1000) xstore(i,j,k), ystore(i,j,k), zstore(i,j,k)
+
+          else if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then
+            write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k),ispec,i,j,k,1,ilayer,updown(k)
+
+          endif
+
           write(91,1000) radius(i,j,k), latitud(i,j,k), longitud(i,j,k)
 
         enddo
@@ -550,7 +547,14 @@
       do j=jmin,jmax
         do i=imin,imax
 
-          write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k),ispec,i,j,k,5,ilayer,updown(k)
+          if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) then
+            write(92,1000) xstore(i,j,k), ystore(i,j,k), zstore(i,j,k)
+
+          else if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then
+            write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k),ispec,i,j,k,1,ilayer,updown(k)
+
+          endif
+
           write(91,1000) radius(i,j,k), latitud(i,j,k), longitud(i,j,k)
 
         enddo
@@ -558,9 +562,6 @@
     enddo
 
   endif
-
-  close(91)
-  close(92)
 
   end subroutine write_all_chunk_surface_GLL_in_spherical_and_cartesian_coords
 
@@ -626,50 +627,6 @@
 
   end subroutine cartesian2spheric
 
-!=======================================================================================================
-!
-!=======================================================================================================
-
-  subroutine write_gllz_points(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,current_layer,nel_depth,ilayer,iz,Ndepth)
-
-  implicit none
-
-  integer NGLLX,NGLLY,NGLLZ,nel_depth,iz,Ndepth
-  double precision xstore(NGLLX,NGLLY,NGLLZ),ystore(NGLLX,NGLLY,NGLLZ),zstore(NGLLX,NGLLY,NGLLZ)
-  double precision profondeur
-  integer current_layer(0:nel_depth-1),ilayer,k
-  !write(*,*) ilayer,  current_layer(iz)
-  !profondeur = dsqrt(xstore(1,1,k)**2 + ystore(1,1,k)**2 + (zstore(1,1,k) )**2 )
-  !write(27,*) profondeur/1000., ilayer
-  if (ilayer ==  current_layer(iz)) then
-     do k=2,NGLLZ
-        profondeur = dsqrt(xstore(1,1,k)**2 + ystore(1,1,k)**2 + (zstore(1,1,k) )**2 )
-        write(27,*) profondeur/1000., ilayer-1,1
-        Ndepth=Ndepth+1
-     enddo
-  else ! new layer
-
-     k=1
-     profondeur = dsqrt(xstore(1,1,k)**2 + ystore(1,1,k)**2 + (zstore(1,1,k) )**2 )
-     if (ilayer==0) then
-        ilayer =  current_layer(iz)
-        write(27,*)  profondeur/1000., ilayer-1,1
-        Ndepth=Ndepth+1
-     else
-        ilayer =  current_layer(iz)
-        write(27,*)  profondeur/1000., ilayer-1,-1
-        Ndepth=Ndepth+1
-     endif
-     do k=2,NGLLZ ! on duplique le dernier point
-        profondeur = dsqrt(xstore(1,1,k)**2 + ystore(1,1,k)**2 + (zstore(1,1,k) )**2 )
-        write(27,*)  profondeur/1000., ilayer-1,1
-        Ndepth=Ndepth+1
-     enddo
-
-
-  endif
-
-  end subroutine write_gllz_points
 
 !=======================================================================================================
 !
