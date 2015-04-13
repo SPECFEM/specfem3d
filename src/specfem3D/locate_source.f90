@@ -532,7 +532,7 @@
 ! *******************************************
 
     ! this tries to find best location
-    if (USE_BEST_LOCATION) then
+    if (USE_BEST_LOCATION_FOR_SOURCE) then
 
       ! uses actual location interpolators, in range [-1,1]
       xi = xigll(ix_initial_guess_source)
@@ -639,7 +639,7 @@
       eta_source(isource) = yigll(iy_initial_guess_source)
       gamma_source(isource) = zigll(iz_initial_guess_source)
 
-    endif ! USE_BEST_LOCATION
+    endif ! USE_BEST_LOCATION_FOR_SOURCE
 
   ! end of loop on all the sources
   enddo
