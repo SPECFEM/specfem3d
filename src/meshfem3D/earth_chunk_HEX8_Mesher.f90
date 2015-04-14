@@ -116,7 +116,7 @@
 
 !
 !--- WARNING ==> CONVENTION : (lon,lat) -> (xi,eta)
-!---                          (k = 6 with -z for the mapping of the cubic sphere, cf Chervot 2012)
+!---                          (k = 6 with -z for the mapping of the cubic sphere, cf Chevrot 2012)
 !---                          We define the mesh of a chunk of the earth in the cubic sphere
 !
 
@@ -479,7 +479,6 @@
               xelm(ia)=xgrid(i+1,j+1,k+1,ispec)
               yelm(ia)=ygrid(i+1,j+1,k+1,ispec)
               zelm(ia)=zgrid(i+1,j+1,k+1,ispec)
-
 
            enddo
 
