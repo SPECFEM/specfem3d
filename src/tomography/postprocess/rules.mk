@@ -26,8 +26,8 @@
 #=====================================================================
 
 ## compilation directories
-S := ${S_TOP}/src/postprocess
-$(postprocess_OBJECTS): S := ${S_TOP}/src/postprocess
+S := ${S_TOP}/src/tomography/postprocess
+$(postprocess_OBJECTS): S := ${S_TOP}/src/tomography/postprocess
 
 #######################################
 
