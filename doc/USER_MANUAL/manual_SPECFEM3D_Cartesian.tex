@@ -238,7 +238,7 @@ The code is released open-source under the GNU version 2+ license, see the licen
 \chapter{Introduction}
 
 The software package SPECFEM3D Cartesian simulates seismic wave propagation
-at the local or regional scale based upon the spectral-element method
+at the local or regional scale and performs full waveform imaging (FWI) or adjoint tomography based upon the spectral-element method
 (SEM). The SEM is a continuous Galerkin technique \citep{TrKoLi08,PeKoLuMaLeCaLeMaLiBlNiBaTr11},
 which can easily be made discontinuous \citep{BeMaPa94,Ch00,KoWoHu02,ChCaVi03,LaWaBe05,Kop06,WiStBuGh10,AcKo11};
 it is then close to a particular case of the discontinuous Galerkin
@@ -4230,6 +4230,22 @@ undoubtedly, the tomographic inversion procedure will improve with
 time. \textbf{This is a work in progress.}
 
 The best single file to read is probably: \verb+ADJOINT_TOMO/iterate_adj/cluster/README+.
+
+%============================================================
+
+\chapter{\label{cha:developers}Information for developers of the code, and for people who want to learn how the technique works}
+
+You can get a very simple 1D version of a demo code (there is one in Fortran and one in Python):\\
+
+git clone --recursive https://github.com/geodynamics/specfem1d.git\\
+
+\noindent We also have simple 3D demo source codes that implement the SEM in a single, small program, in directory\\
+utils/small\_SEM\_solvers\_in\_Fortran\_and\_C\_without\_MPI\_to\_learn of the specfem3d package.
+They are useful to learn how the spectral-element method works, and how to write or modify a code to implement it.
+Also useful to test new ideas by modifying these simple codes to run some tests.\\
+
+\noindent For information on how to contribute to the code, i.e., for how to make your modifications, additions or improvements part of the
+official package, see https://github.com/geodynamics/specfem3d/wiki .
 
 %============================================================
 
