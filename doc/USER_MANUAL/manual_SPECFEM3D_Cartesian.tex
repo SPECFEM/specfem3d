@@ -3014,11 +3014,57 @@ of the finite-frequency kernels is discussed in Section~\ref{sec:Finite-Frequenc
 
 %------------------------------------------------------------------------------------------------%
 
-\chapter{Doing tomography, i.e., updating the model based on the sensitivity kernels obtained}
+\chapter{\label{cha:tomo}Doing tomography, i.e., updating the model based on the sensitivity kernels obtained}
 
 %------------------------------------------------------------------------------------------------%
 
 UNDER CONSTRUCTION (March 2015). Will be added around April / May 2015.
+
+\section{Tomographic inversion / imaging using the sensitivity kernels obtained}
+
+OLD VERSION OF THE SECTION, WILL SOON BE IMPROVED AND ENRICHED.\\
+
+One of the fundamental reasons for computing sensitivity kernels (Section~\ref{sec:Adjoint-simulation-finite})
+is to use them within a tomographic inversion. In other words, use
+recorded seismograms, make measurements with synthetic seismograms,
+and use the misfit between the two to iteratively improve the model
+described by (at least) $V_{{\rm p}}$, $V_{{\rm s}}$, and $\rho$
+as a function of space.
+
+Whatever misfit function you use for the tomographic inversion (you can find several
+examples in \citet{TrKoLi08} and \citet{TrTaLi05}), you will weight
+the sensitivity kernels with measurements. Furthermore, you will use
+as many measurements (stations, components, time windows) as possible
+per event; hence, we call these composite kernels ``event kernels,''
+which are volumetric fields representing the gradient of the misfit
+function with respect to one of the variables (\eg $V_{{\rm s}}$).
+The basic features of an adjoint-based tomographic inversion were
+illustrated in \citet{TaLiTr07} and \citet{TrKoLi08} using a conjugate-gradient
+algorithm; there are dozens of versions of gradient-based inversion
+algorithms that could alternatively be used. The tomographic inversion
+of \citet{TaLiMaTr09,TaLiMaTr2010} used SPECFEM3D Cartesian as well
+as several additional components which are also stored on the CIG
+svn server, described next.
+
+The directory containing external utilities for tomographic inversion using
+SPECFEM3D Cartesian (or other packages that evaluate misfit functions
+and gradients) is in directory \texttt{utils/ADJOINT\_TOMOGRAPHY\_TOOLS/}:
+\begin{verbatim}
+flexwin/     -- FLEXWIN algorithm for automated picking of time windows
+measure_adj/ -- reads FLEXWIN output file and makes measurements,
+                with the option for computing adjoint sources
+iterate_adj/ -- various tools for iterative inversion
+                (requires pre-computed "event kernels")
+\end{verbatim}
+This directory also contains
+a brief \verb+README+ file indicating the role of the three subdirectories,
+\verb+flexwin+ \citep{Maggi2009}, \verb+measure_adj+, and \verb+iterate_adj+.
+The components for making the model update are there; however, there
+are no explicit rules for computing the model update, just as with
+any optimization problem. There are options for computing a conjugate
+gradient step, as well as a source subspace projection step.
+
+The best single file to read is probably: \verb+ADJOINT_TOMO/iterate_adj/cluster/README+.
 
 
 %------------------------------------------------------------------------------------------------%
@@ -4182,54 +4228,6 @@ run\_lsf.bash~-{}-gm-no-shmem~-{}-gm-copy-env~remap\_database~old\_machines~150
 \end{lyxcode}
 where \texttt{old\_machines} is the LSF machine file used in the previous
 simulation, and \texttt{150} is the number of processors in total.
-
-
-\chapter{\label{cha:tomo}Tomographic inversion using sensitivity kernels}
-
-One of the fundamental reasons for computing sensitivity kernels (Section~\ref{sec:Adjoint-simulation-finite})
-is to use them within a tomographic inversion. In other words, use
-recorded seismograms, make measurements with synthetic seismograms,
-and use the misfit between the two to iteratively improve the model
-described by (at least) $V_{{\rm p}}$, $V_{{\rm s}}$, and $\rho$
-as a function of space.
-
-Whatever misfit function you use for the tomographic inversion (several
-examples in \citet{TrTaLi05} and \citet{TrKoLi08}), you will weight
-the sensitivity kernels with measurements. Furthermore, you will use
-as many measurements (stations, components, time windows) as possible
-per event; hence, we call these composite kernels ``event kernels,''
-which are volumetric fields representing the gradient of the misfit
-function with respect to one of the variables (\eg $V_{{\rm s}}$).
-The basic features of an adjoint-based tomographic inversion were
-illustrated in \citet{TaLiTr07} and \citet{TrKoLi08} using a conjugate-gradient
-algorithm; there are dozens of versions of gradient-based inversion
-algorithms that could alternatively be used. The tomographic inversion
-of \citet{TaLiMaTr09,TaLiMaTr2010} used SPECFEM3D Cartesian as well
-as several additional components which are also stored on the CIG
-svn server, described next.
-
-The directory containing external utilities for tomographic inversion using
-SPECFEM3D Cartesian (or other packages that evaluate misfit functions
-and gradients) is in directory \texttt{utils/ADJOINT\_TOMOGRAPHY\_TOOLS/}:
-\begin{verbatim}
-flexwin/     -- FLEXWIN algorithm for automated picking of time windows
-measure_adj/ -- reads FLEXWIN output file and makes measurements,
-                with the option for computing adjoint sources
-iterate_adj/ -- various tools for iterative inversion
-                (requires pre-computed "event kernels")
-\end{verbatim}
-This directory also contains
-a brief \verb+README+ file indicating the role of the three subdirectories,
-\verb+flexwin+ \citep{Maggi2009}, \verb+measure_adj+, and \verb+iterate_adj+.
-The components for making the model update are there; however, there
-are no explicit rules for computing the model update, just as with
-any optimization problem. There are options for computing a conjugate
-gradient step, as well as a source subspace projection step. The workflow
-could use substantial ``stitching together,'' and we welcome suggestions;
-undoubtedly, the tomographic inversion procedure will improve with
-time. \textbf{This is a work in progress.}
-
-The best single file to read is probably: \verb+ADJOINT_TOMO/iterate_adj/cluster/README+.
 
 %============================================================
 
