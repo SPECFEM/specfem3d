@@ -233,7 +233,7 @@ SUBDIRS = \
 	decompose_mesh \
 	generate_databases \
 	meshfem3D \
-	tomography/postprocess \
+	tomography/postprocess_sensitivity_kernels \
 	shared \
 	specfem3D \
 	tomography \
@@ -338,7 +338,7 @@ help:
 	@echo "    xconvert_skewness_to_angle"
 	@echo "    xmultiply_CUBIT_Abaqus_mesh_by_1000"
 	@echo ""
-	@echo "- sensitivity kernel postprocessing tools: [make tomography/postprocess]"
+	@echo "- sensitivity kernel postprocessing tools: [make tomography/postprocess_sensitivity_kernels]"
 	@echo "    xclip_sem"
 	@echo "    xcombine_sem"
 	@echo "    xsmooth_sem"

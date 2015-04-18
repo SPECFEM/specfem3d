@@ -26,8 +26,8 @@
 #=====================================================================
 
 ## compilation directories
-S := ${S_TOP}/src/tomography/postprocess
-$(postprocess_OBJECTS): S := ${S_TOP}/src/tomography/postprocess
+S := ${S_TOP}/src/tomography/postprocess_sensitivity_kernels
+$(postprocess_OBJECTS): S := ${S_TOP}/src/tomography/postprocess_sensitivity_kernels
 
 #######################################
 
