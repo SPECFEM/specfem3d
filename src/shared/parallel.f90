@@ -65,14 +65,46 @@ end module my_mpi
   subroutine stop_all()
 
   use mpi
+  use constants, only: MAX_STRING_LEN
+  use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS !!!  ,USE_FAILSAFE_MECHANISM
 
   implicit none
 
-  integer ier
+  logical, parameter :: USE_FAILSAFE_MECHANISM = .true. !!!! DK DK
 
-! stop all the MPI processes, and exit
-  call MPI_ABORT(MPI_COMM_WORLD,30,ier)
-  stop 'error, program ended in exit_MPI'
+  integer :: my_local_rank,my_global_rank,ier
+
+  character(len=MAX_STRING_LEN) :: filename
+
+  ! get my local rank and my global rank (in the case of simultaneous jobs, for which we split
+  ! the MPI communicator, they will be different; otherwise they are the same)
+  call world_rank(my_local_rank)
+  call MPI_COMM_RANK(MPI_COMM_WORLD,my_global_rank,ier)
+
+  ! write a stamp file to disk to let the user know that the run failed
+  if(NUMBER_OF_SIMULTANEOUS_RUNS > 1) then
+    write(filename,"('run_with_local_rank_',i8.8,'and_global_rank_',i8.8,'_failed')") my_local_rank,my_global_rank
+    open(unit=9765,file=filename,status='unknown',action='write')
+    write(9765,*) 'run with local rank ',my_local_rank,' and global rank ',my_global_rank,' failed'
+    close(9765)
+  else
+    write(filename,"('run_with_local_rank_',i8.8,'_failed')") my_local_rank
+    open(unit=9765,file=filename,status='unknown',action='write')
+    write(9765,*) 'run with local rank ',my_local_rank,' failed'
+    close(9765)
+  endif
+
+  ! in case of a large number of simultaneous runs, if one fails we may want that one to just call MPI_FINALIZE() and wait
+  ! until all the others are finished instead of calling MPI_ABORT(), which would instead kill all the runs,
+  ! including all the successful ones
+  if(USE_FAILSAFE_MECHANISM .and. NUMBER_OF_SIMULTANEOUS_RUNS > 1) then
+    call MPI_FINALIZE(ier)
+    if (ier /= 0) stop 'Error finalizing MPI'
+  else
+    ! note: MPI_ABORT does not return, it makes the program exit with an error code of 30
+    call MPI_ABORT(MPI_COMM_WORLD,30,ier)
+    stop 'error, program ended in exit_MPI'
+  endif
 
   end subroutine stop_all
 
