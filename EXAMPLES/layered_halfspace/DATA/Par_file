@@ -238,6 +238,10 @@ NUMBER_OF_SIMULTANEOUS_RUNS     = 1
 # and the code will broadcast it to the others)
 BROADCAST_SAME_MESH_AND_MODEL   = .false.
 
+# if one or a few of these simultaneous runs fail, kill all the runs or let the others finish using a fail-safe mechanism
+# (in most cases, should be set to true)
+USE_FAILSAFE_MECHANISM          = .true.
+
 # set to true to use GPUs
 GPU_MODE                        = .false.
 

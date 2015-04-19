@@ -66,11 +66,9 @@ end module my_mpi
 
   use mpi
   use constants, only: MAX_STRING_LEN
-  use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS !!!  ,USE_FAILSAFE_MECHANISM
+  use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS,USE_FAILSAFE_MECHANISM
 
   implicit none
-
-  logical, parameter :: USE_FAILSAFE_MECHANISM = .true. !!!! DK DK
 
   integer :: my_local_rank,my_global_rank,ier
 

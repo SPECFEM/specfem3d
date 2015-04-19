@@ -93,7 +93,7 @@ end module constants
 
   ! for simultaneous runs from the same batch job
   integer :: NUMBER_OF_SIMULTANEOUS_RUNS
-  logical :: BROADCAST_SAME_MESH_AND_MODEL
+  logical :: BROADCAST_SAME_MESH_AND_MODEL,USE_FAILSAFE_MECHANISM
 
   ! movies
   logical :: CREATE_SHAKEMAP

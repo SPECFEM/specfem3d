@@ -51,6 +51,10 @@ APPROXIMATE_HESS_KL             = .false.
 # save Moho mesh and compute Moho boundary kernels
 SAVE_MOHO_MESH                  = .false.
 
+# if one or a few of these simultaneous runs fail, kill all the runs or let the others finish using a fail-safe mechanism
+# (in most cases, should be set to true)
+USE_FAILSAFE_MECHANISM          = .true.
+
 EOF
 
 echo "Your existing Par_file has been updated to the new format by adding default values for the missing parameters at the end of your file"
