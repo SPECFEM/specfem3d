@@ -82,6 +82,44 @@
  {\usepackage{color}}{}
 \newcommand{\red}[1]{\textcolor{Red}{#1}}
 
+% some of Dimitri's aliases for math symbols
+\newcommand{\Grad}{\mbox{\boldmath $\bf \nabla$}}
+\newcommand{\Div}{\Grad \cdot }
+\newcommand{\Laplacian}{\nabla^2}
+\newcommand{\pressure}{p}
+\newcommand{\Int}{\displaystyle\int}
+\newcommand{\Sum}{\displaystyle\sum}
+\renewcommand{\epsilon}{\varepsilon}
+\newcommand{\myiomega}{\mathbf{i} \, \omega}
+\newcommand{\p}{\partial}
+\newcommand{\boldu}{\mathbf{u}}
+\newcommand{\boldv}{\mathbf{v}}
+\newcommand{\boldw}{\mathbf{w}}
+\newcommand{\boldx}{\mathbf{x}}
+\newcommand{\boldy}{\mathbf{y}}
+\newcommand{\boldm}{\mathbf{m}}
+\newcommand{\boldp}{\mathbf{p}}
+\newcommand{\boldg}{\mathbf{g}}
+\newcommand{\bolds}{\mathbf{s}}
+\newcommand{\boldn}{\mathbf{\hat{n}}}
+\newcommand{\boldd}{\mathbf{d}}
+\newcommand{\boldf}{\mathbf{f}}
+\newcommand{\boldB}{\mathbf{B}}
+\newcommand{\boldc}{\mathbf{c}}
+\newcommand{\boldC}{\mathbf{C}}
+\newcommand{\boldE}{\mathbf{E}}
+\newcommand{\boldH}{\mathbf{H}}
+\newcommand{\boldI}{\mathbf{I}}
+\newcommand{\boldsigma}{\mbox{\boldmath $\bf \sigma$}}
+\newcommand{\boldxi}{\mbox{\boldmath $\bf \xi$}}
+\newcommand{\boldvarepsilon}{\mbox{\boldmath $\bf \varepsilon$}}
+\newcommand{\bolddelta}{\mbox{\boldmath $\bf \delta$}}
+\newcommand{\boldtau}{\mbox{\boldmath $\bf \tau$}}
+\newcommand{\Boxmath}{\Lambda}
+\newcommand{\rmd}{\, \mathrm{d}}
+\newcommand{\pv}{\ ,}
+\newcommand{\pp}{\ .}
+
 \usepackage{babel}
 
 \makeatother
@@ -1833,6 +1871,10 @@ In that case there is no need to duplicate the mesh and model file database (the
 directories) in each of the run0001, run0002,... directories, it is sufficient to have one in run0001
 and the code will broadcast it to the others).
 
+\item [{\texttt{USE\_FAILSAFE\_MECHANISM}}]:
+if one or a few of these simultaneous runs fail, kill all the runs or let the others finish using a fail-safe mechanism
+(in most cases, should be set to true).
+
 TODO / future work to do: currently the BROADCAST\_SAME\_MESH\_AND\_MODEL option assumes to have the (master) mesh files in run0001/DATABASES\_MPI or run0001/OUTPUT\_FILES/DATABASES\_MPI. However, for adjoint runs you still need a DATABASES\_MPI folder in each of the sub-runs directories, e.g. run0002/DATABASES\_MPI, etc. to store the forward wavefields, kernels etc. of each sub-run. This would not be needed for forward simulations.
 
 TODO / future work to do: the sensitivity kernel summing and smoothing tools in directory src/tomography are currently not ported to this new option to do many runs simultaneously, only the solver (src/specfem3d) is. Thus these tools should work, but in their current version will need to be run for each simulation result independently.
@@ -2756,7 +2798,7 @@ where \#it\# is the timestep number. These can be read in Matlab with
 the function $\mathtt{utils/FSEM3D\_snapshot.m}$
 \end{enumerate}
 
-\section{Post-processing and Visualization }
+\section{Post-processing and Visualization}
 
 Some Matlab functions for post-processing and visualization are included
 in directory $\mathtt{utils}$. The functions are internally documented
@@ -3014,33 +3056,198 @@ of the finite-frequency kernels is discussed in Section~\ref{sec:Finite-Frequenc
 
 %------------------------------------------------------------------------------------------------%
 
-\chapter{\label{cha:tomo}Doing tomography, i.e., updating the model based on the sensitivity kernels obtained}
+\chapter[Doing tomography based on the sensitivity kernels obtained]{\label{cha:tomo}Doing tomography, i.e., updating the model based on the sensitivity kernels obtained}
 
 %------------------------------------------------------------------------------------------------%
 
-UNDER CONSTRUCTION (March 2015). Will be added around April / May 2015.
+UNDER CONSTRUCTION (April 2015). Will be added around June 2015.
 
-\section{Tomographic inversion / imaging using the sensitivity kernels obtained}
-
-OLD VERSION OF THE SECTION, WILL SOON BE IMPROVED AND ENRICHED.\\
+\section{Tomographic full waveform inversion (FWI) / imaging using the sensitivity kernels obtained}
 
 One of the fundamental reasons for computing sensitivity kernels (Section~\ref{sec:Adjoint-simulation-finite})
-is to use them within a tomographic inversion. In other words, use
+is to use them within a tomographic inversion, i.e., perform imaging. In other words, use
 recorded seismograms, make measurements with synthetic seismograms,
 and use the misfit between the two to iteratively improve the model
-described by (at least) $V_{{\rm p}}$, $V_{{\rm s}}$, and $\rho$
-as a function of space.
+described by (at least) $V_{{\rm p}}$, $V_{{\rm s}}$, and $\rho$ as a function of space.
+
+As explained for instance in \cite{MoChKoWa15},
+full waveform inversion means that one considers the observed seismograms (possibly filtered) as the
+basic observables that one wants to fit. One thus searches for the model that minimizes the mean squared difference between observed
+and synthetic seismograms. In other words, the goal is to find a structural model that can explain a larger portion
+of seismological records, and not simply the phase of a few seismic arrivals.
 
 Whatever misfit function you use for the tomographic inversion (you can find several
 examples in \citet{TrKoLi08} and \citet{TrTaLi05}), you will weight
 the sensitivity kernels with measurements. Furthermore, you will use
 as many measurements (stations, components, time windows) as possible
-per event; hence, we call these composite kernels ``event kernels,''
+per event; hence, we call these composite kernels ``event kernels'',
 which are volumetric fields representing the gradient of the misfit
 function with respect to one of the variables (\eg $V_{{\rm s}}$).
 The basic features of an adjoint-based tomographic inversion were
-illustrated in \citet{TaLiTr07} and \citet{TrKoLi08} using a conjugate-gradient
-algorithm; there are dozens of versions of gradient-based inversion
+illustrated in \citet{TrKoLi08} and \citet{TaLiTr07} using a conjugate-gradient algorithm.
+Other, more powerful techniques such as the Limited-Memory Broyden-Fletcher-Goldfarb-Shanno (L-BFGS) method can now be used,
+as illustrated for instance in \cite{MoChKoWa15}.
+
+\subsection{Principle}
+
+We want to minimize the classical waveform misfit function:
+\begin{equation}
+\chi \left( \boldm \right) = \sum_{s=1}^N\sum_{r=1}^M \int_0^T \frac{1}{2} \|\boldu(\boldx_r, \boldx_s; t) - \boldd(\boldx_r, \boldx_s; t)\| ^{2} \, dt .
+\label{misfit}
+\end{equation}
+This functional quantifies the $L^2$ difference between the observed waveforms $\boldd(\boldx_r, \boldx_s; t)$ at receivers $\boldx_r$, $r = 1, ..., M$
+produced by sources at $\boldx_s$, $s=1,...,N$, and the corresponding synthetic seismograms $\boldu(\boldx_r, \boldx_s; t)$ computed in model $\boldm$.
+While this misfit function is indeed classical, it is worth mentioning that in the case of noisy real data other norms could be used,
+since in the oil industry for instance it is known that the $L^1$ norm
+(\cite{CrPiNoMcTa90,Brossier_2010_WDR}), hybrid $L^1-L^2$ norms (\cite{Bube_1997_HL1}), Hubert norm (\cite{Ha_2009_WIU}),
+Student-t distribution (\cite{ArVaHe11,Jeong_2015}) etc... can be more robust that the $L^2$ norm used here in the context of synthetic data with no noise.
+In the vicinity of $\boldm$, the misfit function can be expanded into a Taylor series:
+\begin{equation}
+\chi(\boldm+ \delta\boldm) \approx \chi(\boldm)+\boldg(\boldm)\cdot\delta\boldm
++\delta\boldm\cdot\mathbf{H}(\boldm)\cdot\delta\boldm \, ,
+\label{local_misfit}
+\end{equation}
+where $\boldg(\boldm)$ is the gradient of the waveform misfit function:
+\begin{equation}
+\boldg(\boldm) = \frac{\partial\chi(\boldm)}{\partial\boldm} \, ,
+\end{equation}
+and $\mathbf{H}(\boldm)$ the Hessian:
+\begin{equation}
+\mathbf{H}(\boldm) = \frac{\partial^2\chi(\boldm)}{\partial\boldm^2} \, .
+\end{equation}
+In the following, for simplicity the dependence of the gradient and Hessian on the model will be implicitly assumed and omitted in the notations.
+The nearest minimum of $\chi$ in (\ref{local_misfit}) with respect to the model perturbation $\delta \boldm$ is reached for
+\begin{equation}
+\delta \boldm = -\mathbf{H}^{-1} \cdot \boldg \, .
+\label{Newton}
+\end{equation}
+The local minimum of (\ref{misfit}) is thus given by perturbing the model in the direction of the gradient preconditioned
+by the inverse Hessian.
+
+\subsection{Computation of the gradient based on the adjoint method}
+
+A direct method to compute the gradient is to take the derivative of (\ref{misfit}) with respect to model parameters:
+\begin{equation}
+\frac{\partial\chi(\boldm)}{\partial\boldm} = -\sum_{s=1}^N\sum_{r=1}^M \int_0^T
+\frac{\partial \boldu(\boldx_r, \boldx_s; t)}{\partial\boldm}\cdot\left[\boldu(\boldx_r, \boldx_s; t) - \boldd(\boldx_r, \boldx_s; t)\right] \, dt \, .
+\label{calc_gradient}
+\end{equation}
+This equation can be reformulated as the matrix-vector product:
+\begin{equation}
+\boldg = -\mathbf{J}^* \cdot \delta \mathbf{d} \, ,
+\label{Jacobian}
+\end{equation}
+where $\mathbf{J}^*$ is the adjoint of the Jacobian matrix of the forward problem that contains the Fr\'echet derivatives of the
+data with respect to model parameters, and $\delta \mathbf{d}$ is the vector that contains the data residuals.
+The determination of $\mathbf{J}$ would require computing the Fr\'echet derivatives for each time step in the time
+window considered and for all the source-station pairs, which is completely prohibitive on current supercomputers
+(let us note that this situation may change one day).
+However, it is possible to obtain this gradient without computing the Jacobian matrix explicitly.
+The approach to determine the gradient without computing the Fr\'echet derivatives was introduced in nonlinear optimization
+by \cite{Cha74} working with J. L. Lions, and later applied to seismic exploration problems by
+\cite{BaChLa77}, \cite{BaChHeLa82}, \cite{Lai83} and \cite{Tar84}. The idea is to resort to the adjoint state,
+which corresponds to the wavefield emitted and back-propagated from the receivers \cite[e.g.,][]{TrTaLi05,TrKoLi08,Plessix_2006_RAS,FiBuIg06}.
+
+Let us give an outline of the theory to compute the gradient based on the adjoint method, and refer the reader to e.g. \cite{TrTaLi05}
+and \cite{TrKoLi08} for further details. The perturbation of the misfit function can be expressed as:
+\begin{equation}
+\delta \chi (\boldm) = \sum_{s=1}^N\sum_{r=1}^M \int_0^T \left[\boldu(\boldx_r, \boldx_s; t) - \boldd(\boldx_r, \boldx_s; t)\right]\cdot \delta
+\boldu(\boldx_r, \boldx_s; t) \, dt \, ,
+\label{dchi}
+\end{equation}
+where $\delta\boldu$ is the perturbation of displacement given by the first-order Born approximation \cite[e.g.,][]{Hud77}:
+\begin{eqnarray}
+\delta \boldu (\boldx_r, \boldx_s; t) & = & -\int_0^t \int_V
+\left[\delta\rho(\boldx)\mathbf{G}(\boldx_r,\boldx;t-t')\cdot\partial^2_{t'}\boldu(\boldx,\boldx_s;t') \right. \nonumber \\
+& + & \left. \nabla \mathbf{G}(\boldx_r,\boldx;t-t'):\delta \boldc(\boldx): \nabla\boldu(\boldx;t') \right] \, d^3\boldx \, dt' \, .
+\label{Born}
+\end{eqnarray}
+In this expression, $\mathbf{G}$ is the Green's tensor, $\delta\rho$ the perturbation of density, $\delta c$ the perturbation of the fourth-order elasticity
+tensor,
+and a colon denotes a double tensor contraction operation.
+Inserting (\ref{Born}) into (\ref{dchi}) we obtain
+\begin{eqnarray}
+\delta \chi (\boldm) & = & -\sum_{s=1}^N\sum_{r=1}^M \int_0^T \left[\boldu(\boldx_r, \boldx_s; t) - \boldd(\boldx_r, \boldx_s; t)\right] \int_0^t \int_V
+\left[\delta\rho(\boldx)\mathbf{G}(\boldx_r,\boldx;t-t')\cdot\partial^2_{t'}\boldu(\boldx,\boldx_s;t') \right. \nonumber \\
+& + & \left. \nabla \mathbf{G}(\boldx_r,\boldx;t-t'):\delta \boldc(\boldx):\nabla\boldu(\boldx,t') \right] \, d^3\boldx \, dt' \, dt \,.
+\end{eqnarray}
+Defining the waveform adjoint source for each source $\boldx_s$
+\begin{equation}
+\boldf^\dagger(\boldx,\boldx_s;t) = \sum_{r=1}^M  \left[\boldu(\boldx_r, \boldx_s; T-t) - \boldd(\boldx_r, \boldx_s; T-t)\right] \delta(\boldx-\boldx_r) \, ,
+\end{equation}
+and the corresponding adjoint wavefield
+\begin{equation}
+\boldu^\dagger(\boldx,\boldx_s;t) = \int_0^{t'}\int_V\mathbf{G}(\boldx,\boldx';t'-t)\cdot\boldf^\dagger(\boldx',\boldx_s;t)\, d^3\boldx' \, dt \, ,
+\end{equation}
+the perturbation of the misfit function may be expressed as:
+\begin{eqnarray}
+\delta\chi(\boldm) & = & - \sum_{s=1}^N\nonumber \int_V \int_0^T \left[\delta\rho \, \boldu^\dagger(\boldx,\boldx_s;T-t)\cdot
+\partial^2_{t}\boldu(\boldx,\boldx_s;t) \right. \nonumber \\
+& +  & \left. \nabla\boldu^\dagger(\boldx,\boldx_s;T-t):\delta \boldc: \nabla \boldu(\boldx,\boldx_s;t) \right] \, d^3\boldx \, dt \, .
+\label{dchi2}
+\end{eqnarray}
+At this point, we make some assumptions on the nature of the elasticity tensor.
+A general fourth-order elasticity tensor is described by 21 elastic parameters, a very large number that makes its complete characterization
+way beyond the reach of any tomographic approach. For the time being, let us thus consider isotropic elasticity tensors,
+described by the two Lam\'e parameters $\lambda$ and $\mu$:
+\begin{equation}
+c_{ijkl} = \lambda \delta_{ij}\delta_{kl}+\mu(\delta_{ik}\delta_{jl}+\delta_{il}\delta_{jk}) \, .
+\end{equation}
+In this case, (\ref{dchi2}) can be written as:
+\begin{eqnarray}
+\delta\chi(\boldm) & = & - \sum_{s=1}^N\nonumber \int_V \left[ K_\rho(\boldx,\boldx_s)\delta\ln\rho(\boldx)
++K_\lambda(\boldx,\boldx_s)\delta\ln\lambda(\boldx) \right. \nonumber \\
+& + & \left. K_\mu(\boldx,\boldx_s)\delta\ln\mu(\boldx)\right] \, d^3\boldx \, ,
+\label{dchi2_1}
+\end{eqnarray}
+where ln() is the natural logarithm and where the Fr\'echet derivatives with respect to the density and Lam\'e parameters are given by:
+\begin{eqnarray}
+K_\rho(\boldx,\boldx_s) & = & - \int_0^T \rho(\boldx) \boldu^\dagger(\boldx,\boldx_s;T-t)\cdot \partial^2_{t}\boldu(\boldx,\boldx_s;t) \, dt \\
+K_\lambda(\boldx,\boldx_s) & = & - \int_0^T \lambda(\boldx) \nabla\cdot\boldu^\dagger(\boldx,\boldx_s;T-t) \nabla\cdot\boldu(\boldx,\boldx_s;t) \, dt \\
+K_\mu(\boldx,\boldx_s) & = & -2 \int_0^T \mu(\boldx) (\boldx) \nabla\boldu^\dagger(\boldx,\boldx_s;T-t) :\nabla\boldu(\boldx,\boldx_s;t)\, dt \, .
+\end{eqnarray}
+Since the propagation of seismic waves mainly depends on compressional wave speed $\alpha$ and shear wave speed $\beta$,
+but also because these seismic velocities are easier to interpret, tomographic models are usually described based on these
+two parameters. With this new parametrisation, the perturbation of the misfit function may be written as:
+\begin{eqnarray}
+\delta\chi(\boldm) & = & - \sum_{s=1}^N\nonumber \int_V \left[ K'_\rho(\boldx,\boldx_s)\delta\ln\rho(\boldx)
++K'_\alpha(\boldx,\boldx_s)\delta\ln\alpha(\boldx) \right. \nonumber \\
+& + & \left. K'_\beta(\boldx,\boldx_s)\delta\ln\beta(\boldx)\right] \, d^3\boldx \, ,
+\end{eqnarray}
+where
+\begin{eqnarray}
+K'_\rho(\boldx,\boldx_s) & = &  K_\rho(\boldx,\boldx_s)+K_\lambda(\boldx,\boldx_s)+K_\mu(\boldx,\boldx_s) \\
+K'_\alpha(\boldx,\boldx_s) & = &  2 \left(\frac{\lambda+2\mu}{\lambda}\right) K_\lambda(\boldx,\boldx_s) \\
+K'_\beta(\boldx,\boldx_s) & = & 2 K_\mu -\frac{4\mu}{\lambda} K_\lambda (\boldx,\boldx_s) \, .
+\end{eqnarray}
+
+As can be seen from these expressions, the principle of the adjoint-state method is to correlate two wavefields:
+the direct (i.e. forward) field that propagates from the source to the receivers, and the adjoint field that propagates from all the
+receivers backward in time. The same approach can be followed for any type of seismic observable (phase, amplitude,
+envelope, time series...), provided the appropriate adjoint source is used \cite[]{TrTaLi05,TrKoLi08}.
+For example, for the cross-correlated traveltime of a seismic
+phase, the adjoint source is defined as the velocity of that synthetic phase weighted by the travel-time residual.
+
+Computing the gradient based on the adjoint-state method requires performing two simulations per source (forward and adjoint
+fields) regardless of the type of observable. However, to define the adjoint field one
+must know the adjoint source, and that source is computed from the results of the forward simulation. One must therefore perform
+the forward simulation before the adjoint simulation.
+A straightforward solution for time-domain methods would be to store the whole forward field to disk at
+each time step during the forward run and then read it back during the adjoint simulation to calculate the interaction of these two fields.
+In 2-D this is feasible but in the 3-D case for very short seismic periods and without lossy compression, downsampling,
+or a large amount of disk or memory checkpointing \cite[e.g.,][]{FiKeIg09,RuHaPuGu14,CyShWi15}
+the amount of disk storage required would currently be too large.
+However let us note again that this situation will change in the future.
+In the mean time, a standard possible solution is to perform three simulations per source \cite[]{TrKoLi08,PeKoLuMaLeCaLeMaLiBlNiBaTr11},
+i.e., perform the forward calculation twice, once to compute the adjoint sources and once again
+at the same time as the adjoint simulation to correlate the two fields and sum their interaction on the fly over all the time steps.
+Doing so for an elastic Earth, one only needs a small amount of disk storage to store the last time
+step of the forward run, which is then used as an initial condition to redo the forward run backwards,
+as well as the field on the outer edges of the mesh for each time steps in order to be able to undo the absorbing boundary conditions.
+
+\section{OLD VERSION OF THE SECTION, WILL SOON BE IMPROVED AND ENRICHED}
+
+There are dozens of versions of gradient-based inversion
 algorithms that could alternatively be used. The tomographic inversion
 of \citet{TaLiMaTr09,TaLiMaTr2010} used SPECFEM3D Cartesian as well
 as several additional components which are also stored on the CIG
