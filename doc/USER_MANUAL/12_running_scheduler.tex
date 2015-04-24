@@ -1,0 +1,29 @@
+\chapter{Running through a Scheduler}\label{cha:Scheduler}
+
+The code is usually run on large parallel machines, often PC clusters,
+most of which use schedulers, i.e., queuing or batch management systems
+to manage the running of jobs from a large number of users. The following
+considerations need to be taken into account when running on a system
+that uses a scheduler:
+\begin{itemize}
+\item The processors/nodes to be used for each run are assigned dynamically
+by the scheduler, based on availability. Therefore, in order for the
+\texttt{xgenerate\_databases} and the \texttt{xspecfem3D} executables
+(or between successive runs of the solver) to have access to the same
+database files (if they are stored on hard drives local to the nodes
+on which the code is run), they must be launched in sequence as a
+single job.
+\item On some systems, the nodes to which running jobs are assigned are
+not configured for compilation. It may therefore be necessary to pre-compile
+both the \texttt{xgenerate\_databases} and the \texttt{xspecfem3D}
+executables.
+\item One feature of schedulers/queuing systems is that they allow submission
+of multiple jobs in a ``launch and forget'' mode. In order to take
+advantage of this property, care needs to be taken that output and
+intermediate files from separate jobs do not overwrite each other,
+or otherwise interfere with other running jobs.
+\end{itemize}
+Examples of job scripts can be found in the \texttt{\small utils/Cluster/}{\small{}
+directory and can straightforwardly be modified and adapted to meet
+more specific running needs.}{\small \par}
+
