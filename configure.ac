@@ -2,7 +2,7 @@ dnl                                               -*- Autoconf -*-
 dnl
 dnl Process this file with autoconf to produce the 'configure' script:
 dnl
-dnl autoreconf -I m4
+dnl autoreconf -i
 dnl
 dnl You must have recent versions of Autoconf and Automake installed.
 
