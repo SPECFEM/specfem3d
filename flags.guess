@@ -24,9 +24,9 @@
 # To check if that option works fine on your machine, run the code with and without it for a model containing a significant fluid layer
 # (or entirely fluid) and make sure the seismograms are identical.
 
-
 # you can add -DUSE_SERIAL_CASCADE_FOR_IOs to the compiler options to make the mesher output mesh data
 # to the disk for one MPI slice after the other, and to make the solver do the same thing when reading the files back from disk.
+
 
 # First find the "real" compiler
 # e.g., Cray provides a Programming Environment that wraps around compilers,
@@ -61,7 +61,7 @@ case $FC in
 esac
 
 case $my_FC in
-    crayftn|*/crayftn)
+    ftn|*/ftn|crayftn|*/crayftn)
         #
         # Cray Fortran
         #
@@ -70,8 +70,6 @@ case $my_FC in
         # -Oaggress -Oipa4 would make it even more aggressive
         DEBUG_FFLAGS="-eC -eD -ec -en -eI -ea -g -G0"
         #
-        #DEF_FFLAGS="-O3 -Onoaggress -Oipa0 -hfp2 -Ovector3 -Oscalar3 -Ocache2 -Ounroll2 -Ofusion2 -p \$O -eF -em -rm" # turn on optimization; -Oaggress -Oipa4 would make it even more aggressive
-        # -eC -eD -ec -en -eI -ea -g -G0 -M 1193 -M 1438 # turn on full debugging and range checking
         ;;
     pgf95|*/pgf95|pgf90|*/pgf90|pgfortran|*/pgfortran)
         #
@@ -86,10 +84,10 @@ case $my_FC in
         # Intel ifort Fortran90 for Linux
         # check: http://software.intel.com/sites/products/documentation/hpc/compilerpro/en-us/fortran/lin/compiler_f/index.htm
         #
-# option "-assume buffered_io" is important especially on
-# parallel file systems like SFS 3.2 / Lustre 1.8. If omitted
-# I/O throughput lingers at 2.5 MB/s, with it it can increase to ~44 MB/s
-# However it does not make much of a difference on NFS mounted volumes or with SFS 3.1.1 / Lustre 1.6.7.1 
+        # option "-assume buffered_io" is important especially on
+        # parallel file systems like SFS 3.2 / Lustre 1.8. If omitted
+        # I/O throughput lingers at 2.5 MB/s, with it it can increase to ~44 MB/s
+        # However it does not make much of a difference on NFS mounted volumes or with SFS 3.1.1 / Lustre 1.6.7.1 
         DEF_FFLAGS="-xHost -fpe0 -ftz -assume buffered_io -assume byterecl -align sequence -vec-report0 -std03 -diag-disable 6477 -implicitnone -gen-interfaces -warn all" # -mcmodel=medium -shared-intel
         OPT_FFLAGS="-O3 -check nobounds"
         DEBUG_FFLAGS="-check all -debug -g -O0 -fp-stack-check -traceback -ftrapuv"
@@ -101,6 +99,7 @@ case $my_FC in
         DEF_FFLAGS="-std=f2003 -fimplicit-none -frange-check -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -ffpe-trap=invalid,zero,overflow -Wunused -Werror" # -mcmodel=medium
         OPT_FFLAGS="-O2"
         DEBUG_FFLAGS="-g -O0 -ggdb -fbacktrace -fbounds-check"
+        # useful to track loss of accuracy because of automatic double to single precision conversion:  -Wconversion  (this may generate many warnings...)
         ;;
     g95|*/g95)
         #
@@ -183,21 +182,18 @@ case $my_FC in
         # "relax" is not an option for the AIX linker and is interpreted in ways that will
         # in binaries that are not executable.
         #
-# deleted -qxflag=dvz because it requires handler function __xl_dzx and thus linking will fail.
-#
-# The -qstrict option prevents some minor differences of results between xlf and
-# other compilers. There is a small decrease in performance, but generally
-# it is small or negligible compared to other issues like slow I/O.
+        # deleted -qxflag=dvz because it requires handler function __xl_dzx and thus linking will fail.
+        #
+        # The -qstrict option prevents some minor differences of results between xlf and
+        # other compilers. There is a small decrease in performance, but generally
+        # it is small or negligible compared to other issues like slow I/O.
         DEF_FFLAGS="-qassert=contig -qhot -q64 -qtune=auto -qarch=auto -qcache=auto -qfree=f90 -qsuffix=f=f90 -qhalt=w -qlanglvl=2003std -g -qsuppress=1518-234 -qsuppress=1518-317 -qsuppress=1518-318 -qsuppress=1500-036"
         OPT_FFLAGS="-O4 -qstrict"
         # Options -qreport -qsource -qlist create a *.lst file containing detailed information about vectorization.
         DEBUG_FFLAGS="-g -O0 -C -qddim -qfullpath -qflttrap=overflow:zerodivide:invalid:enable -qfloat=nans -qinitauto=7FBFFFFF"
         #
-        # Options -qreport -qsource -qlist create a *.lst file containing detailed information about vectorization.
         # On IBM BlueGene at IDRIS (France) use:
         # -qtune=auto -qarch=450d -qsave     instead of -qtune=auto -qarch=auto
-        #
-        # to debug with IBM xlf, one can add this: -g -O0 -C -qddim -qfullpath -qflttrap=overflow:zerodivide:invalid:enable -qfloat=nans -qinitauto=7FBFFFFF
         #
         ;;
     pathf90|*/pathf90)
