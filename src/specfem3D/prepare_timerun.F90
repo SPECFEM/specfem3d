@@ -1507,7 +1507,7 @@
         memory_size = memory_size + 5.d0 * NGLL2 * num_free_surface_faces * dble(CUSTOM_REAL)
       endif
       if (NOISE_TOMOGRAPHY == 3) then
-        ! d_Sigma_kl
+        ! d_sigma_kl
         memory_size = memory_size + NGLL3 * NSPEC_AB * dble(CUSTOM_REAL)
       endif
     endif

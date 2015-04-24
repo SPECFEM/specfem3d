@@ -556,7 +556,7 @@ void FC_FUNC_(transfer_kernels_el_to_host,
 
 void FC_FUNC_(transfer_kernels_noise_to_host,
               TRANSFER_KERNELS_NOISE_TO_HOST)(long* Mesh_pointer,
-                                              realw* h_Sigma_kl,
+                                              realw* h_sigma_kl,
                                               int* NSPEC_AB) {}
 
 void FC_FUNC_(transfer_fields_ac_to_device,

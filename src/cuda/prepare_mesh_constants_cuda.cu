@@ -1255,9 +1255,9 @@ void FC_FUNC_(prepare_fields_noise_device,
 
   // prepares noise strength kernel
   if (*NOISE_TOMOGRAPHY == 3){
-    print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_Sigma_kl),NGLL3*(mp->NSPEC_AB)*sizeof(realw)),7401);
+    print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_sigma_kl),NGLL3*(mp->NSPEC_AB)*sizeof(realw)),7401);
     // initializes kernel values to zero
-    print_CUDA_error_if_any(cudaMemset(mp->d_Sigma_kl,0,NGLL3*mp->NSPEC_AB*sizeof(realw)),7403);
+    print_CUDA_error_if_any(cudaMemset(mp->d_sigma_kl,0,NGLL3*mp->NSPEC_AB*sizeof(realw)),7403);
   }
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
@@ -1599,7 +1599,7 @@ TRACE("prepare_cleanup_device");
       cudaFree(mp->d_mask_noise);
       cudaFree(mp->d_free_surface_jacobian2Dw);
     }
-    if (*NOISE_TOMOGRAPHY == 3) cudaFree(mp->d_Sigma_kl);
+    if (*NOISE_TOMOGRAPHY == 3) cudaFree(mp->d_sigma_kl);
   }
 
   // mesh pointer - not needed anymore

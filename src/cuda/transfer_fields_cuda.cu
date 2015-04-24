@@ -157,7 +157,7 @@ void FC_FUNC_(transfer_sigma_from_device,
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
 
-  print_CUDA_error_if_any(cudaMemcpy(sigma_kl,mp->d_Sigma_kl,sizeof(realw)*(*size),cudaMemcpyDeviceToHost),40046);
+  print_CUDA_error_if_any(cudaMemcpy(sigma_kl,mp->d_sigma_kl,sizeof(realw)*(*size),cudaMemcpyDeviceToHost),40046);
 
 }
 
@@ -299,14 +299,14 @@ void FC_FUNC_(transfer_kernels_el_to_host,
 extern "C"
 void FC_FUNC_(transfer_kernels_noise_to_host,
               TRANSFER_KERNELS_NOISE_TO_HOST)(long* Mesh_pointer,
-                                              realw* h_Sigma_kl,
+                                              realw* h_sigma_kl,
                                               int* NSPEC_AB) {
   TRACE("transfer_kernels_noise_to_host");
 
   //get mesh pointer out of fortran integer container
   Mesh* mp = (Mesh*)(*Mesh_pointer);
 
-  print_CUDA_error_if_any(cudaMemcpy(h_Sigma_kl,mp->d_Sigma_kl,NGLL3*(*NSPEC_AB)*sizeof(realw),
+  print_CUDA_error_if_any(cudaMemcpy(h_sigma_kl,mp->d_sigma_kl,NGLL3*(*NSPEC_AB)*sizeof(realw),
                                      cudaMemcpyDeviceToHost),40201);
 
 }
