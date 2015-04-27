@@ -9,9 +9,9 @@ else
 fi
 
 # checks if translation file exists
-if [ ! -f translate_user_manual_to_markdown.pl ]; then 
+if [ ! -f translate_user_manual_to_markdown.pl ]; then
   echo "translation script is not available, exiting..."
-  exit 1 
+  exit 1
 fi
 
 # runs translation script
