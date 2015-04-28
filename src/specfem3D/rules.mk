@@ -91,6 +91,7 @@ specfem3D_OBJECTS = \
 	$O/make_gravity.spec.o \
 	$O/multiply_arrays_source.spec.o \
 	$O/noise_tomography.spec.o \
+    $O/particular_integrals_on_domain_surface_or_volume.spec.o \
 	$O/pml_allocate_arrays.spec.o \
 	$O/pml_output_VTKs.spec.o \
 	$O/pml_compute_accel_contribution.spec.o \
