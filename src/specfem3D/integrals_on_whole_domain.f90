@@ -28,7 +28,7 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine compute_integral_on_all_domain_surface_or_volume(f_integrand, integr_boun, integr_vol)
+  subroutine surface_or_volume_integral_on_whole_domain()
 
   use constants
 
@@ -37,22 +37,22 @@
   implicit none
 
   ! local parameters
-  double precision :: integr_vol, integr_boun
-  double precision :: f_integrand(NGLOB_AB)
+  double precision :: weightpt, jacobianpt
+  double precision :: integr_volloc, integr_bounloc
 
-  double precision :: weightloc, jacobianloc
-!  double precision :: x_coord, y_coord, z_coord
+  real(kind=CUSTOM_REAL) :: xixpt,xiypt,xizpt,etaxpt,etaypt,etazpt,gammaxpt,gammaypt,gammazpt
 
-  real(kind=CUSTOM_REAL) :: xixloc,xiyloc,xizloc,etaxloc,etayloc,etazloc,gammaxloc,gammayloc,gammazloc
+  integer :: ier,i,j,k,ispec,iglob,igll,iface
 
-  integer :: i,j,k,ispec,iglob,igll,iface
-
-!  character(len=MAX_STRING_LEN) :: outputname
+  allocate(f_integrand(NGLOB_AB), stat=ier) !! Maybe to modify in the case of Surf_or_vol_integral == 1
 
 !-----------------------------------------------------------------------------
- 
-  integr_vol  = 0.d0
-  integr_boun = 0.d0
+
+  ! NOTE : 'f_integrand' have to be defined at all 'iglob' 
+  ! (all the points of the surface, or all the point of the volume)
+
+  integr_volloc  = 0.d0
+  integr_bounloc = 0.d0
 
   if ( (Surf_or_vol_integral == 2) .or. (Surf_or_vol_integral == 3) ) then
 
@@ -64,35 +64,37 @@
         do j = 1,NGLLY
           do i = 1,NGLLX
 
-            weightloc = wxgll(i)*wygll(j)*wzgll(k)
+            weightpt = wxgll(i)*wygll(j)*wzgll(k)
 
             ! compute the Jacobian
-            xixloc    = xix(i,j,k,ispec)
-            xiyloc    = xiy(i,j,k,ispec)
-            xizloc    = xiz(i,j,k,ispec)
-            etaxloc   = etax(i,j,k,ispec)
-            etayloc   = etay(i,j,k,ispec)
-            etazloc   = etaz(i,j,k,ispec)
-            gammaxloc = gammax(i,j,k,ispec)
-            gammayloc = gammay(i,j,k,ispec)
-            gammazloc = gammaz(i,j,k,ispec)
+            xixpt    = xix(i,j,k,ispec)
+            xiypt    = xiy(i,j,k,ispec)
+            xizpt    = xiz(i,j,k,ispec)
+            etaxpt   = etax(i,j,k,ispec)
+            etaypt   = etay(i,j,k,ispec)
+            etazpt   = etaz(i,j,k,ispec)
+            gammaxpt = gammax(i,j,k,ispec)
+            gammaypt = gammay(i,j,k,ispec)
+            gammazpt = gammaz(i,j,k,ispec)
 
             ! do this in double precision for accuracy
-            jacobianloc = 1.d0 / dble(xixloc*(etayloc*gammazloc-etazloc*gammayloc) &
-                                    - xiyloc*(etaxloc*gammazloc-etazloc*gammaxloc) &
-                                    + xizloc*(etaxloc*gammayloc-etayloc*gammaxloc))
+            jacobianpt = 1.d0 / dble(xixpt*(etaypt*gammazpt-etazpt*gammaypt) &
+                                    - xiypt*(etaxpt*gammazpt-etazpt*gammaxpt) &
+                                    + xizpt*(etaxpt*gammaypt-etaypt*gammaxpt))
 
-            if (CHECK_FOR_NEGATIVE_JACOBIANS .and. jacobianloc <= ZERO) stop & 
+            if (CHECK_FOR_NEGATIVE_JACOBIANS .and. jacobianpt <= ZERO) stop & 
                                              'error: negative Jacobian found in volume integral calculation'
 
             iglob = ibool(i,j,k,ispec)
 
-            integr_vol = integr_vol + ( weightloc * jacobianloc * f_integrand(iglob) )
+            integr_volloc = integr_volloc + ( weightpt * jacobianpt * f_integrand(iglob) )
   
           enddo
         enddo
       enddo
     enddo
+
+    call sum_all_dp(integr_volloc,integral_vol)
 
   endif
 
@@ -112,13 +114,14 @@
 
         do igll = 1, NGLLSQUARE
 
+          ! gets local indices for GLL point
           i = free_surface_ijk(1,igll,iface)
           j = free_surface_ijk(2,igll,iface)
           k = free_surface_ijk(3,igll,iface)
 
           iglob = ibool(i,j,k,ispec)
 
-          integr_boun = integr_boun + ( free_surface_jacobian2Dw(igll,iface) * f_integrand(iglob) )
+          integr_bounloc = integr_bounloc + ( free_surface_jacobian2Dw(igll,iface) * f_integrand(iglob) )
 
         enddo
       enddo
@@ -139,12 +142,54 @@
 
           iglob = ibool(i,j,k,ispec)
 
-          integr_boun = integr_boun + ( abs_boundary_jacobian2Dw(igll,iface) * f_integrand(iglob) )
+          integr_bounloc = integr_bounloc + ( abs_boundary_jacobian2Dw(igll,iface) * f_integrand(iglob) )
 
         enddo
       enddo
     endif
 
+    call sum_all_dp(integr_bounloc,integral_boun)
+
   endif
 
-  end subroutine compute_integral_on_all_domain_surface_or_volume
+  deallocate(f_integrand)
+
+  end subroutine surface_or_volume_integral_on_whole_domain
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine integrand_for_computing_Kirchoff_Helmholtz_integral()
+
+  use constants
+
+  use specfem_par
+
+  implicit none
+
+  ! local parameters
+  integer :: ier
+
+  allocate(f_integrand(NGLOB_AB), stat=ier) !! Could maybe be allocated just on the surface points
+
+!
+!---
+!
+
+  if (old_DSM_coupling_from_Vadim) then
+
+  else
+      !! for 2D light version
+  endif
+
+! TO COMPLETE
+
+!
+!---
+!
+
+  deallocate(f_integrand)
+
+  end subroutine integrand_for_computing_Kirchoff_Helmholtz_integral
+

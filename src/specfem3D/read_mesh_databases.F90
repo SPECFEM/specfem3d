@@ -485,7 +485,7 @@
 
   !! CD CD !! For coupling with DSM
   if (COUPLE_WITH_EXTERNAL_CODE) then
-    allocate(Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
+    allocate(Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)) !! CD CD : cf for deallocate
     allocate(Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
 
     if (old_DSM_coupling_from_Vadim) then

@@ -82,7 +82,6 @@
 
   !! CD modif. : begin (implemented by VM) !! For coupling with DSM
 
-  ! See also DSM parameters in setup/constants.h.in
   real(kind=CUSTOM_REAL) :: Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
   real(kind=CUSTOM_REAL) :: Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
 
@@ -190,6 +189,8 @@
     if (phase_is_inner .eqv. .true.) then
       it_dsm = it_dsm + 1
     endif
+
+  !! TODO: maybe call integrand_for_computing_Kirchoff_Helmholtz_integral here 
   endif
   !! CD CD
 

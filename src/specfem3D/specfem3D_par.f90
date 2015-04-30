@@ -207,6 +207,11 @@ module specfem_par
   real(kind=CUSTOM_REAL), dimension(:),allocatable :: minus_deriv_gravity,minus_g
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: wgll_cube
 
+  ! for surface or volume integral on whole domain
+  double precision :: integral_vol, integral_boun
+  double precision, dimension(:), allocatable :: f_integrand
+
+
 ! ADJOINT parameters
 
   ! time scheme

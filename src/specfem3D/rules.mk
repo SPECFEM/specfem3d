@@ -85,13 +85,13 @@ specfem3D_OBJECTS = \
 	$O/detect_mesh_surfaces.spec.o \
 	$O/finalize_simulation.spec.o \
 	$O/initialize_simulation.spec.o \
+	$O/integrals_on_whole_domain.spec.o \
 	$O/iterate_time.spec.o \
 	$O/locate_receivers.spec.o \
 	$O/locate_source.spec.o \
 	$O/make_gravity.spec.o \
 	$O/multiply_arrays_source.spec.o \
 	$O/noise_tomography.spec.o \
-    $O/particular_integrals_on_domain_surface_or_volume.spec.o \
 	$O/pml_allocate_arrays.spec.o \
 	$O/pml_output_VTKs.spec.o \
 	$O/pml_compute_accel_contribution.spec.o \
