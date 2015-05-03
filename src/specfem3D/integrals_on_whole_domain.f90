@@ -48,7 +48,7 @@
 
 !-----------------------------------------------------------------------------
 
-  ! NOTE : 'f_integrand' have to be defined at all 'iglob' 
+  ! NOTE : 'f_integrand' have to be defined at all 'iglob'
   ! (all the points of the surface, or all the point of the volume)
 
   integr_volloc  = 0.d0
@@ -82,13 +82,13 @@
                                     - xiypt*(etaxpt*gammazpt-etazpt*gammaxpt) &
                                     + xizpt*(etaxpt*gammaypt-etaypt*gammaxpt))
 
-            if (CHECK_FOR_NEGATIVE_JACOBIANS .and. jacobianpt <= ZERO) stop & 
+            if (CHECK_FOR_NEGATIVE_JACOBIANS .and. jacobianpt <= ZERO) stop &
                                              'error: negative Jacobian found in volume integral calculation'
 
             iglob = ibool(i,j,k,ispec)
 
             integr_volloc = integr_volloc + ( weightpt * jacobianpt * f_integrand(iglob) )
-  
+
           enddo
         enddo
       enddo
