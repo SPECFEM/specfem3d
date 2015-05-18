@@ -1766,7 +1766,7 @@ function pml_damping_profile_l(myrank,iglob,dist,vp,delta)
   endif
 
   ! checks coordinates of C-PML points and thickness of C-PML layer
-  if (delta < dist) then
+  if (dist > 1._CUSTOM_REAL ) then
     print*,'C-PML point ',iglob
     print*,'distance to C-PML/mesh interface ',dist
     print*,'C-PML thickness ',delta
