@@ -1365,7 +1365,8 @@
          lmxhpa,itypehpa,ihpakern,numcoe,ivarkern, &
          nconpt,iver,iconpt,conpt,xlaspl,xlospl,radspl, &
          coe,vercof,vercofd,ylmcof,wk1,wk2,wk3,kerstr,varstr,ipass,ratio_divide_central_cube, &
-         CUT_SUPERBRICK_XI,CUT_SUPERBRICK_ETA,mod(iproc_xi_slice(myrank),2),mod(iproc_eta_slice(myrank),2),NSTEP,DT,NPROCTOT,is_on_a_slice_edge)
+         CUT_SUPERBRICK_XI,CUT_SUPERBRICK_ETA,mod(iproc_xi_slice(myrank),2),mod(iproc_eta_slice(myrank),2), &
+         NSTEP,DT,NPROCTOT,is_on_a_slice_edge)
   enddo
 
 ! store number of anisotropic elements found in the mantle

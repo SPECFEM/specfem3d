@@ -1651,7 +1651,8 @@
 
   complex TEMP,FAC,DFAC
 
-  real(kind=4) WK1(1),WK2(1),WK3(1),Y(1),XLAT,XLON
+  real(kind=4) Y(1),XLAT,XLON
+  real(kind=4), dimension(LMAX+1) :: WK1,WK2,WK3
 
   integer :: LMAX
 

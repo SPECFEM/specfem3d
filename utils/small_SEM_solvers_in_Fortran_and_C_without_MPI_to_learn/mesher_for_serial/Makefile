@@ -26,14 +26,14 @@
 #=====================================================================
 
 # GNU gfortran
-#FC = gfortran
-#MPIFC = gfortran
-#FLAGS_NO_CHECK = -std=gnu -fimplicit-none -frange-check -O3 -Waliasing -Wampersand -Wsurprising -Wline-truncation -Wunderflow -fno-trapping-math
+FC = gfortran
+MPIFC = gfortran
+FLAGS_NO_CHECK = -std=gnu -fimplicit-none -frange-check -O3 -Waliasing -Wampersand -Wsurprising -Wline-truncation -Wunderflow -fno-trapping-math
 
 # Intel ifort
-FC = ifort
-MPIFC = ifort
-FLAGS_NO_CHECK = -O3 -xHost -vec-report0 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check nobounds -align sequence -fpe0 -ftz
+#FC = ifort
+#MPIFC = ifort
+#FLAGS_NO_CHECK = -O3 -xHost -vec-report0 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check nobounds -align sequence -fpe0 -ftz
 #FLAGS_NO_CHECK = -O1 -vec-report0 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check all -traceback -align sequence -fpe0 -ftz
 
 FCFLAGS =

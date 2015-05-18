@@ -127,6 +127,8 @@
   print *
   print *,'minimum and maximum valence in the mesh (the minimum should always be 1):'
   print *,minval(rmass_fictitious_inverse),maxval(rmass_fictitious_inverse)
+  if(abs(minval(rmass_fictitious_inverse) - 1._CUSTOM_REAL) > 0.000001_CUSTOM_REAL) &
+      stop 'error: the minimum valence in the mesh is not one!'
   print *
 
 ! invert that diagonal fictitious mass matrix once and for all
