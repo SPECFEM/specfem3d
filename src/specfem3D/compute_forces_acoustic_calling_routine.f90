@@ -58,7 +58,7 @@ subroutine compute_forces_acoustic()
   use specfem_par_acoustic
   use specfem_par_elastic
   use specfem_par_poroelastic
-  use pml_par,only: spec_to_CPML,is_CPML,rmemory_coupling_ac_el_displ,nglob_interface_PML_acoustic,&
+  use pml_par,only: is_CPML,nglob_interface_PML_acoustic,&
                     b_PML_potential,b_reclen_PML_potential,potential_acoustic_old ! potential_dot_dot_acoustic_old
   implicit none
 
@@ -128,9 +128,7 @@ subroutine compute_forces_acoustic()
                               coupling_ac_el_normal, &
                               coupling_ac_el_jacobian2Dw, &
                               ispec_is_inner,phase_is_inner,&
-                              PML_CONDITIONS,spec_to_CPML,is_CPML,&
-                              rmemory_coupling_ac_el_displ,&
-                              SIMULATION_TYPE,.false.)
+                              PML_CONDITIONS,SIMULATION_TYPE,.false.)
 
         else
           ! handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
@@ -142,9 +140,7 @@ subroutine compute_forces_acoustic()
                               coupling_ac_el_normal, &
                               coupling_ac_el_jacobian2Dw, &
                               ispec_is_inner,phase_is_inner,&
-                              PML_CONDITIONS,spec_to_CPML,is_CPML,&
-                              rmemory_coupling_ac_el_displ,&
-                              SIMULATION_TYPE,.false.)
+                              PML_CONDITIONS,SIMULATION_TYPE,.false.)
         endif
       endif
     endif
@@ -317,7 +313,7 @@ subroutine compute_forces_acoustic_bpwf()
   use specfem_par_acoustic
   use specfem_par_elastic
   use specfem_par_poroelastic
-  use pml_par,only: spec_to_CPML,is_CPML,rmemory_coupling_ac_el_displ
+
   implicit none
 
   ! local parameters
@@ -389,9 +385,7 @@ subroutine compute_forces_acoustic_bpwf()
                           coupling_ac_el_normal, &
                           coupling_ac_el_jacobian2Dw, &
                           ispec_is_inner,phase_is_inner,&
-                          PML_CONDITIONS,spec_to_CPML,is_CPML,&
-                          rmemory_coupling_ac_el_displ,&
-                          SIMULATION_TYPE,.true.)
+                          PML_CONDITIONS,SIMULATION_TYPE,.true.)
       endif
     endif
 

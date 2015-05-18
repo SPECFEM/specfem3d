@@ -34,15 +34,13 @@
                         coupling_ac_el_normal, &
                         coupling_ac_el_jacobian2Dw, &
                         ispec_is_inner,phase_is_inner,&
-                        PML_CONDITIONS,spec_to_CPML,is_CPML,&
-                        rmemory_coupling_ac_el_displ,&
-                        SIMULATION_TYPE,backward_simulation)
+                        PML_CONDITIONS,SIMULATION_TYPE,backward_simulation)
 
 ! returns the updated pressure array: potential_dot_dot_acoustic
 
   use constants,only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ,NGLLSQUARE
 
-  use pml_par, only: NSPEC_CPML
+  use pml_par, only: NSPEC_CPML,spec_to_CPML,is_CPML,rmemory_coupling_ac_el_displ
 
   implicit none
 
@@ -70,10 +68,6 @@
 
 ! CPML
   logical,intent(in) :: PML_CONDITIONS
-  integer,intent(in) :: spec_to_CPML(NSPEC_AB)
-  logical,intent(in) :: is_CPML(NSPEC_AB)
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ,num_coupling_ac_el_faces,2),intent(inout) :: &
-    rmemory_coupling_ac_el_displ
 
 ! local parameters
   real(kind=CUSTOM_REAL) :: displ_x,displ_y,displ_z,displ_n
