@@ -331,10 +331,14 @@
   ! write the current or final seismograms
   if ((mod(it,NTSTEP_BETWEEN_OUTPUT_SEISMOS) == 0 .or. it == NSTEP) .and. .not. SU_FORMAT) then
     if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
-      if(SAVE_SEISMOGRAMS_DISPLACEMENT) call write_seismograms_to_file(seismograms_d,1)
-      if(SAVE_SEISMOGRAMS_VELOCITY) call write_seismograms_to_file(seismograms_v,2)
-      if(SAVE_SEISMOGRAMS_ACCELERATION) call write_seismograms_to_file(seismograms_a,3)
-      if(SAVE_SEISMOGRAMS_PRESSURE) call write_seismograms_to_file(seismograms_p,4)
+      if(SAVE_SEISMOGRAMS_DISPLACEMENT) &
+        call write_seismograms_to_file(seismograms_d,1)
+      if(SAVE_SEISMOGRAMS_VELOCITY) &
+        call write_seismograms_to_file(seismograms_v,2)
+      if(SAVE_SEISMOGRAMS_ACCELERATION) &
+        call write_seismograms_to_file(seismograms_a,3)
+      if(SAVE_SEISMOGRAMS_PRESSURE) &
+        call write_seismograms_to_file(seismograms_p,4)
     else
       call write_adj_seismograms_to_file(myrank,seismograms_d,number_receiver_global, &
                                          nrec_local,it,DT,NSTEP,t0,1)

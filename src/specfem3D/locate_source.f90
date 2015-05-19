@@ -111,34 +111,38 @@
 
   ! timer MPI
   double precision, external :: wtime
-  double precision time_start,tCPU
+  double precision :: time_start,tCPU
 
-  integer ispec_selected_source(NSOURCES)
 
-  integer ngather, ns, ne, ig, is, ng
+  ! sources
+  integer :: ispec_selected_source(NSOURCES)
+  integer :: ngather, ns, ne, ig, is, ng
 
   integer, dimension(NGATHER_SOURCES,0:NPROC-1) :: ispec_selected_source_all
-  double precision, dimension(NGATHER_SOURCES,0:NPROC-1) :: xi_source_all,eta_source_all,gamma_source_all, &
-     final_distance_source_all,x_found_source_all,y_found_source_all,z_found_source_all
+  double precision, dimension(NGATHER_SOURCES,0:NPROC-1) :: xi_source_all,eta_source_all,gamma_source_all
+  double precision, dimension(NGATHER_SOURCES,0:NPROC-1) :: x_found_source_all,y_found_source_all,z_found_source_all
+  double precision, dimension(NGATHER_SOURCES,0:NPROC-1) :: final_distance_source_all
+
   double precision, dimension(3,3,NGATHER_SOURCES,0:NPROC-1) :: nu_source_all
 
   double precision, dimension(:), allocatable :: tmp_local
   double precision, dimension(:,:),allocatable :: tmp_all_local
 
-  double precision hdur(NSOURCES)
   double precision :: f0,t0_ricker
 
+  ! CMTs
+  double precision, dimension(NSOURCES) :: hdur
   double precision, dimension(NSOURCES) :: Mxx,Myy,Mzz,Mxy,Mxz,Myz
+  double precision, dimension(NSOURCES) :: lat,long,depth
+  double precision, dimension(6,NSOURCES) ::  moment_tensor
+
+  ! positioning
   double precision, dimension(NSOURCES) :: xi_source,eta_source,gamma_source
   double precision, dimension(3,3,NSOURCES) :: nu_source
 
-  double precision, dimension(NSOURCES) :: lat,long,depth
-
-  double precision, dimension(6,NSOURCES) ::  moment_tensor
-
   double precision, dimension(NSOURCES) :: x_found_source,y_found_source,z_found_source
   double precision, dimension(NSOURCES) :: elevation
-  double precision distmin
+  double precision :: distmin
 
   integer, dimension(:), allocatable :: tmp_i_local
   integer, dimension(:,:),allocatable :: tmp_i_all_local
@@ -193,6 +197,7 @@
     ! broadcasts specific moment tensor infos
     call bcast_all_dp(moment_tensor,6*NSOURCES)
   endif
+
   ! broadcasts general source information read on the master to the nodes
   call bcast_all_dp(tshift_src,NSOURCES)
   call bcast_all_dp(hdur,NSOURCES)
@@ -266,15 +271,15 @@
     elevation(isource) = altitude_source(1)
 
     ! orientation consistent with the UTM projection
-    !     East
+    ! East
     nu_source(1,1,isource) = 1.d0
     nu_source(1,2,isource) = 0.d0
     nu_source(1,3,isource) = 0.d0
-    !     North
+    ! North
     nu_source(2,1,isource) = 0.d0
     nu_source(2,2,isource) = 1.d0
     nu_source(2,3,isource) = 0.d0
-    !     Vertical
+    ! Vertical
     nu_source(3,1,isource) = 0.d0
     nu_source(3,2,isource) = 0.d0
     nu_source(3,3,isource) = 1.d0
@@ -512,15 +517,15 @@
       v_vector(3) = w_vector(1)*u_vector(2) - w_vector(2)*u_vector(1)
 
       ! build rotation matrice nu for seismograms
-      !     East (u)
+      ! East (u)
       nu_source(1,1,isource) = u_vector(1)
       nu_source(1,2,isource) = v_vector(1)
       nu_source(1,3,isource) = w_vector(1)
-      !     North (v)
+      ! North (v)
       nu_source(2,1,isource) = u_vector(2)
       nu_source(2,2,isource) = v_vector(2)
       nu_source(2,3,isource) = w_vector(2)
-      !     Vertical (w)
+      ! Vertical (w)
       nu_source(3,1,isource) = u_vector(3)
       nu_source(3,2,isource) = v_vector(3)
       nu_source(3,3,isource) = w_vector(3)
@@ -645,11 +650,21 @@
   enddo
 
   ! now gather information from all the nodes
+  !
+  ! note: gathering source information is done here for bins of NGATHER_SOURCES
+  !       to save memory for very large number of sources
+
+  ! number of gather bins
   ngather = NSOURCES/NGATHER_SOURCES
   if (mod(NSOURCES,NGATHER_SOURCES)/= 0) ngather = ngather+1
+
+  ! loops over single bin
   do ig = 1, ngather
+    ! source index start
     ns = (ig-1) * NGATHER_SOURCES + 1
+    ! source index end
     ne = min(ig*NGATHER_SOURCES, NSOURCES)
+    ! number of gathering sources
     ng = ne - ns + 1
 
     ispec_selected_source_all(:,:) = -1
@@ -716,27 +731,36 @@
 
       ! loop on all the sources
       do is = 1,ng
+        ! global source index (between 1 and NSOURCES)
         isource = ns + is - 1
 
         ! loop on all the results to determine the best slice
         distmin = HUGEVAL
         do iprocloop = 0,NPROC-1
           if (final_distance_source_all(is,iprocloop) < distmin) then
+            ! minimum distance
             distmin = final_distance_source_all(is,iprocloop)
+
+            ! stores best source information
+            ! slice and element
             islice_selected_source(isource) = iprocloop
             ispec_selected_source(isource) = ispec_selected_source_all(is,iprocloop)
+            ! source positioning (inside element)
             xi_source(isource) = xi_source_all(is,iprocloop)
             eta_source(isource) = eta_source_all(is,iprocloop)
             gamma_source(isource) = gamma_source_all(is,iprocloop)
+            ! location
             x_found_source(isource) = x_found_source_all(is,iprocloop)
             y_found_source(isource) = y_found_source_all(is,iprocloop)
             z_found_source(isource) = z_found_source_all(is,iprocloop)
-            nu_source(:,:,isource) = nu_source_all(:,:,isource,iprocloop)
+            ! orientation
+            nu_source(:,:,isource) = nu_source_all(:,:,is,iprocloop)
+            ! domain (elastic/acoustic/poroelastic)
             idomain(isource) = idomain_all(is,iprocloop)
           endif
         enddo
+        ! stores minimum distance to desired location
         final_distance_source(isource) = distmin
-
       enddo
     endif !myrank
   enddo ! ngather

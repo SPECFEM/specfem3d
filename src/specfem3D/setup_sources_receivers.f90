@@ -56,6 +56,7 @@
     write(IMAIN,*) 'found a total of ',nrec_tot_found,' receivers in all the slices'
     if (NSOURCES > 1) write(IMAIN,*) 'Using ',NSOURCES,' point sources'
     write(IMAIN,*)
+    call flush_IMAIN()
   endif
 
   ! synchronizes processes
@@ -80,7 +81,14 @@
   integer :: yr,jda,ho,mi
   integer :: isource,ispec,ier
 
-! allocate arrays for source
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*)
+    write(IMAIN,*) 'sources:'
+    call flush_IMAIN()
+  endif
+
+  ! allocate arrays for source
   allocate(islice_selected_source(NSOURCES), &
            ispec_selected_source(NSOURCES), &
            Mxx(NSOURCES), &
@@ -139,6 +147,7 @@
       write(IMAIN,*)
       write(IMAIN,*) 'Each source is being convolved with HDUR_MOVIE = ',HDUR_MOVIE
       write(IMAIN,*)
+      call flush_IMAIN()
     endif
   endif
 
@@ -188,6 +197,7 @@
       write(IMAIN,*) 'USER_T0: ',USER_T0
       write(IMAIN,*) 't0: ',t0,'min_tshift_src_original: ',min_tshift_src_original
       write(IMAIN,*)
+      call flush_IMAIN()
     endif
 
     ! checks if automatically set t0 is too small
@@ -206,6 +216,7 @@
       if (myrank == 0) then
         write(IMAIN,*) '  set new simulation start time: ', - t0
         write(IMAIN,*)
+        call flush_IMAIN()
       endif
     else
       ! start time needs to be at least t0 for numerical stability
@@ -216,12 +227,14 @@
         write(IMAIN,*) '       - increase USER_T0 to be at least: ',t0-min_tshift_src_original
         write(IMAIN,*) '       - decrease time shift in CMTSOLUTION file'
         write(IMAIN,*) '       - decrease hdur in CMTSOLUTION file'
+        call flush_IMAIN()
       endif
       call exit_mpi(myrank,'error USER_T0 is set but too small')
     endif
   else if (USER_T0 < 0.d0) then
     if (myrank == 0) then
       write(IMAIN,*) 'error: USER_T0 is negative, must be set zero or positive!'
+      call flush_IMAIN()
     endif
     call exit_mpi(myrank,'error negative USER_T0 parameter in constants.h')
   endif
@@ -314,6 +327,7 @@
       write(IMAIN,*) '*** will be zeroed                                               ***'
       write(IMAIN,*) '********************************************************************'
       write(IMAIN,*)
+      call flush_IMAIN()
     endif
 
   enddo ! num_free_surface_faces
@@ -354,14 +368,15 @@
   LATITUDE_MIN = min_all
   LATITUDE_MAX = max_all
 
-! reads in station file
+  ! reads in station file
   if (SIMULATION_TYPE == 1) then
     rec_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'STATIONS'
     filtered_rec_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'STATIONS_FILTERED'
 
-! see if we are running several independent runs in parallel
-! if so, add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
-! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
+    ! see if we are running several independent runs in parallel
+    ! if so, add the right directory for that run
+    ! (group numbers start at zero, but directory names start at run0001, thus we add one)
+    ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
     if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
       write(path_to_add,"('run',i4.4,'/')") mygroup + 1
       rec_filename = path_to_add(1:len_trim(path_to_add))//rec_filename(1:len_trim(rec_filename))
@@ -378,9 +393,10 @@
     rec_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'STATIONS_ADJOINT'
     filtered_rec_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'STATIONS_ADJOINT_FILTERED'
 
-! see if we are running several independent runs in parallel
-! if so, add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
-! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
+    ! see if we are running several independent runs in parallel
+    ! if so, add the right directory for that run
+    ! (group numbers start at zero, but directory names start at run0001, thus we add one)
+    ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
     if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
       write(path_to_add,"('run',i4.4,'/')") mygroup + 1
       rec_filename = path_to_add(1:len_trim(path_to_add))//rec_filename(1:len_trim(rec_filename))
@@ -401,6 +417,7 @@
       write(IMAIN,*) 'Total number of adjoint sources = ', nrec
     endif
     write(IMAIN,*)
+    call flush_IMAIN()
   endif
 
   if (nrec < 1) call exit_MPI(myrank,'need at least one receiver')
@@ -535,6 +552,7 @@
         write(IMAIN,*) '*** Warning: tangential component will be zero there               ***'
         write(IMAIN,*) '**********************************************************************'
         write(IMAIN,*)
+        call flush_IMAIN()
       endif
     endif
 
@@ -739,6 +757,8 @@
       if (myrank == 0) then
         write(IMAIN,*)
         write(IMAIN,*) '    ',nadj_files_found_tot,' adjoint component traces found in all slices'
+        call flush_IMAIN()
+        ! checks
         if (nadj_files_found_tot == 0) &
           call exit_MPI(myrank,'no adjoint traces found, please check adjoint sources in directory SEM/')
       endif
