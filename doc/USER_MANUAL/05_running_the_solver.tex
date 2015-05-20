@@ -279,17 +279,17 @@ Mean elapsed time per time step in seconds =     0.115328696703911
 Max norm displacement vector U in all slices (m) =     1.0789589E-02
 \end{verbatim}
 }
-The \texttt{\small timestamp{*}} files provide the 
+The \texttt{\small timestamp{*}} files provide the
 \texttt{\small Mean elapsed time per time step in seconds}, which may be used
 to assess performance on various machines (assuming you are the only
-user on a node), as well as the 
-\texttt{\small Max norm displacement vector U in all slices~(m)}. 
+user on a node), as well as the
+\texttt{\small Max norm displacement vector U in all slices~(m)}.
 If something is wrong with the
 model, the mesh, or the source, you will see the code become unstable
 through exponentially growing values of the displacement and fluid
 potential with time, and ultimately the run will be terminated by
 the program. You can control the rate at which the timestamp files
-are written based upon the parameter 
+are written based upon the parameter
 \texttt{\small NTSTEP\_BETWEEN\_OUTPUT\_INFO}
 in the \texttt{\small Par\_file}.
 

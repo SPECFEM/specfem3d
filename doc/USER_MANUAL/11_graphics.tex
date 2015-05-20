@@ -75,9 +75,9 @@ flag turned on, the code outputs \texttt{moviedata??????} files in
 the \texttt{OUTPUT\_FILES} directory. There are several flags in the
 main parameter file \texttt{Par\_file} that control the output of
 these movie data files (see section \ref{cha:Main-Parameter} for
-details): 
+details):
 \texttt{\small NTSTEP\_BETWEEN\_FRAMES} to set the
-timesteps between frames, 
+timesteps between frames,
 \texttt{\small SAVE\_DISPLACEMENT}
 to save displacement instead of velocity,
 \texttt{\small USE\_HIGHRES\_FOR\_MOVIES}
@@ -89,7 +89,7 @@ to \texttt{\small .true.}.
 The files are in a fairly complicated binary format, but there is
 a program provided to convert the output into more user friendly formats:
 \begin{description}
-\item [{\texttt{xcreate\_movie\_shakemap\_AVS\_DX\_GMT}}] 
+\item [{\texttt{xcreate\_movie\_shakemap\_AVS\_DX\_GMT}}]
 From \texttt{create\_movie\_shakemap\_AVS\_DX\_GMT.f90},
 it outputs data in ASCII, OpenDX, or AVS format (also readable in
 ParaView). Before compiling the code, make sure you have the file
@@ -131,26 +131,26 @@ see Southern California ShakeMovie\textregistered{}\urlwithparentheses{www.shake
 
 \subsection{Movie Volume}\label{sub:Movie-Volume}
 
-When running xspecfem3D with the 
+When running xspecfem3D with the
 \texttt{\small MOVIE\_VOLUME}
 flag turned on, the code outputs several files in \texttt{\small LOCAL\_PATH}
-specified in the main \texttt{\small Par\_file}, 
+specified in the main \texttt{\small Par\_file},
 e.g. in directory \texttt{\small OUTPUT\_FILES/DATABASES\_MPI}.
 The output is saved by each processor at the time interval specified
-by 
-\texttt{\small NTSTEP\_BETWEEN\_FRAMES}. 
+by
+\texttt{\small NTSTEP\_BETWEEN\_FRAMES}.
 For all domains,
-the velocity field is output to files: 
+the velocity field is output to files:
 {\small
 \begin{verbatim}
 proc??????_velocity_X_it??????.bin
 proc??????_velocity_Y_it??????.bin
-proc??????_velocity_Z_it??????.bin 
+proc??????_velocity_Z_it??????.bin
 \end{verbatim}
 }
 For elastic domains, the divergence and curl taken from the velocity field,
 i.e. $\nabla\cdot{\bf {v}}$ and $\nabla\times{\bf {v}}$, get stored
-as well: 
+as well:
 {\small
 \begin{verbatim}
 proc??????_div_it??????.bin
@@ -159,11 +159,11 @@ proc??????_curl_Y_it??????.bin
 proc??????_curl_Z_it??????.bin
 \end{verbatim}
 }
-The files denoted \texttt{\small proc??????\_div\_glob\_it??????.bin} and 
+The files denoted \texttt{\small proc??????\_div\_glob\_it??????.bin} and
 \texttt{\small proc??????\_curl\_glob\_it??????.bin}
 are stored on the global points only, all the other arrays are stored
 on all GLL points. Note that the components X/Y/Z can change to E/N/Z
-according to the 
+according to the
 \texttt{\small SUPPRESS\_UTM\_PROJECTION}
 flag (see also Appendix~\ref{cha:Coordinates} and \ref{cha:channel-codes}).
 
@@ -230,7 +230,7 @@ At the beginning of the source file \texttt{combine\_vol\_data.f90} (located in 
 \medskip
 
 If the value of this parameter is \texttt{.false.}, the output mesh file will have the name \texttt{velocity\_Z\_it000400.mesh}. Then we next have to convert the
-\texttt{.mesh} file into the VTU (Unstructured grid file) format which can be viewed in ParaView. 
+\texttt{.mesh} file into the VTU (Unstructured grid file) format which can be viewed in ParaView.
 
 \noindent
 For this task, you can use and modify the
