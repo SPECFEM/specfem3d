@@ -190,6 +190,11 @@
 !!
 !!-----------------------------------------------------------
 
+! sources
+
+! flag to exclude elements that are too far from target in source detection
+  logical, parameter :: USE_DISTANCE_CRITERION = .true.
+
 ! interpolates position to find the best possible location for the source, between GLL points if needed.
 ! note: this can be turned off to speedup location search and locate the source at the closest GLL point instead.
   logical, parameter :: USE_BEST_LOCATION_FOR_SOURCE = .true.
@@ -209,6 +214,28 @@
 ! of the manual. This source decay rate to mimic an equivalent triangle
 ! was found by trial and error
   double precision, parameter :: SOURCE_DECAY_MIMIC_TRIANGLE = 1.628d0
+
+! receivers
+
+! no Lagrange interpolation for seismograms (we then take the value at the closest NGLL point, which is less accurate but faster)
+  logical, parameter :: FASTER_RECEIVERS_POINTS_ONLY = .false.
+
+! use this t0 as earliest starting time rather than the automatically calculated one
+! (must be positive and bigger than the automatically one to be effective;
+!  simulation will start at t = - t0)
+  double precision, parameter :: USER_T0 = 0.0d0
+
+! the receivers can be located inside the model
+  logical, parameter :: RECEIVERS_CAN_BE_BURIED = .true.
+  logical, parameter :: SOURCES_CAN_BE_BURIED = .true.
+
+! sources and receivers Z coordinates given directly instead of with depth
+  logical, parameter :: USE_SOURCES_RECEIVERS_Z = .false.
+
+! the seismograms are normal to surface
+! Z record corresponds to the normal, while E and N are two tangent vectors
+! that completes an orthonormal.
+  logical, parameter :: EXTERNAL_MESH_RECEIVERS_NORMAL = .false.
 
 !!-----------------------------------------------------------
 !!
@@ -242,30 +269,6 @@
   character(len=*), parameter :: IN_DATA_FILES = './DATA/'
   character(len=*), parameter :: MF_IN_DATA_FILES = './DATA/meshfem3D_files/'
   character(len=*), parameter :: OUTPUT_FILES_BASE = './OUTPUT_FILES/'
-
-!
-!------------------------------------------------------
-!
-
-! no Lagrange interpolation for seismograms (we then take the value at the closest NGLL point, which is less accurate but faster)
-  logical, parameter :: FASTER_RECEIVERS_POINTS_ONLY = .false.
-
-! use this t0 as earliest starting time rather than the automatically calculated one
-! (must be positive and bigger than the automatically one to be effective;
-!  simulation will start at t = - t0)
-  double precision, parameter :: USER_T0 = 0.0d0
-
-! the receivers can be located inside the model
-  logical, parameter :: RECEIVERS_CAN_BE_BURIED = .true.
-  logical, parameter :: SOURCES_CAN_BE_BURIED = .true.
-
-! sources and receivers Z coordinates given directly instead of with depth
-  logical, parameter :: USE_SOURCES_RECEIVERS_Z = .false.
-
-! the seismograms are normal to surface
-! Z record corresponds to the normal, while E and N are two tangent vectors
-! that completes an orthonormal.
-  logical, parameter :: EXTERNAL_MESH_RECEIVERS_NORMAL = .false.
 
 
 !!-----------------------------------------------------------
@@ -348,6 +351,11 @@
 ! for optimized routines by Deville et al. (2002)
   integer, parameter :: m1 = NGLLX, m2 = NGLLX * NGLLY
   integer, parameter :: NGLLCUBE = NGLLX * NGLLY * NGLLZ
+
+! mid-points inside a GLL element
+  integer, parameter :: MIDX = (NGLLX+1)/2
+  integer, parameter :: MIDY = (NGLLY+1)/2
+  integer, parameter :: MIDZ = (NGLLZ+1)/2
 
 ! a few useful constants
   double precision, parameter :: ZERO = 0.d0, ONE = 1.d0, TWO = 2.d0, HALF = 0.5d0

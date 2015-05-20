@@ -30,14 +30,14 @@
 !----
 
   subroutine locate_source(ibool,NSOURCES,myrank,NSPEC_AB,NGLOB_AB,NGNOD, &
-                 xstore,ystore,zstore,xigll,yigll,zigll,NPROC, &
-                 tshift_src,min_tshift_src_original,yr,jda,ho,mi,utm_x_source,utm_y_source, &
-                 DT,hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
-                 islice_selected_source,ispec_selected_source, &
-                 xi_source,eta_source,gamma_source, &
-                 nu_source,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh, &
-                 ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic, &
-                 num_free_surface_faces,free_surface_ispec,free_surface_ijk)
+                           xstore,ystore,zstore,xigll,yigll,zigll,NPROC, &
+                           tshift_src,min_tshift_src_original,yr,jda,ho,mi,utm_x_source,utm_y_source, &
+                           DT,hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
+                           islice_selected_source,ispec_selected_source, &
+                           xi_source,eta_source,gamma_source, &
+                           nu_source,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh, &
+                           ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic, &
+                           num_free_surface_faces,free_surface_ispec,free_surface_ijk)
 
   use constants
 
@@ -47,24 +47,25 @@
 
   implicit none
 
-  integer NPROC
-  integer NSPEC_AB,NGLOB_AB,NSOURCES,NGNOD
+  integer,intent(in) :: NPROC
+  integer,intent(in) :: NSPEC_AB,NGLOB_AB,NSOURCES,NGNOD
 
-  double precision DT
+  double precision,intent(in) :: DT
 
-  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
+  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
 
-  integer myrank
+  integer,intent(in) :: myrank
 
   ! arrays containing coordinates of the points
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: xstore,ystore,zstore
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(in) :: xstore,ystore,zstore
 
-  logical, dimension(NSPEC_AB) :: ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic
+  logical, dimension(NSPEC_AB),intent(in) :: ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic
 
-  integer yr,jda,ho,mi
+  integer,intent(inout) :: yr,jda,ho,mi
 
-  double precision tshift_src(NSOURCES)
-  double precision sec,min_tshift_src_original
+  double precision,dimension(NSOURCES),intent(inout) :: tshift_src
+  double precision,intent(inout) :: min_tshift_src_original
+  double precision :: sec
 
   integer iprocloop
 
@@ -72,7 +73,7 @@
   integer imin,imax,jmin,jmax,kmin,kmax
   integer iproc(1)
 
-  double precision, dimension(NSOURCES) :: utm_x_source,utm_y_source
+  double precision, dimension(NSOURCES),intent(inout) :: utm_x_source,utm_y_source
   double precision dist
   double precision xi,eta,gamma,dx,dy,dz,dxi,deta
 
@@ -107,7 +108,7 @@
 
   real(kind=CUSTOM_REAL) :: xloc,yloc,loc_ele,loc_distmin
 
-  integer islice_selected_source(NSOURCES)
+  integer,intent(inout) :: islice_selected_source(NSOURCES)
 
   ! timer MPI
   double precision, external :: wtime
@@ -115,7 +116,7 @@
 
 
   ! sources
-  integer :: ispec_selected_source(NSOURCES)
+  integer,intent(inout) :: ispec_selected_source(NSOURCES)
   integer :: ngather, ns, ne, ig, is, ng
 
   integer, dimension(NGATHER_SOURCES,0:NPROC-1) :: ispec_selected_source_all
@@ -131,14 +132,14 @@
   double precision :: f0,t0_ricker
 
   ! CMTs
-  double precision, dimension(NSOURCES) :: hdur
-  double precision, dimension(NSOURCES) :: Mxx,Myy,Mzz,Mxy,Mxz,Myz
+  double precision, dimension(NSOURCES),intent(inout) :: hdur
+  double precision, dimension(NSOURCES),intent(inout) :: Mxx,Myy,Mzz,Mxy,Mxz,Myz
   double precision, dimension(NSOURCES) :: lat,long,depth
   double precision, dimension(6,NSOURCES) ::  moment_tensor
 
   ! positioning
-  double precision, dimension(NSOURCES) :: xi_source,eta_source,gamma_source
-  double precision, dimension(3,3,NSOURCES) :: nu_source
+  double precision, dimension(NSOURCES),intent(inout) :: xi_source,eta_source,gamma_source
+  double precision, dimension(3,3,NSOURCES),intent(inout) :: nu_source
 
   double precision, dimension(NSOURCES) :: x_found_source,y_found_source,z_found_source
   double precision, dimension(NSOURCES) :: elevation
@@ -149,12 +150,14 @@
 
   ! for surface locating and normal computing with external mesh
   integer :: pt0_ix,pt0_iy,pt0_iz,pt1_ix,pt1_iy,pt1_iz,pt2_ix,pt2_iy,pt2_iz
-  integer :: num_free_surface_faces
   real(kind=CUSTOM_REAL), dimension(3) :: u_vector,v_vector,w_vector
-  logical, dimension(NGLOB_AB) :: iglob_is_surface_external_mesh
-  logical, dimension(NSPEC_AB) :: ispec_is_surface_external_mesh
-  integer, dimension(num_free_surface_faces) :: free_surface_ispec
-  integer, dimension(3,NGLLSQUARE,num_free_surface_faces) :: free_surface_ijk
+
+  logical, dimension(NGLOB_AB),intent(in) :: iglob_is_surface_external_mesh
+  logical, dimension(NSPEC_AB),intent(in) :: ispec_is_surface_external_mesh
+
+  integer,intent(in) :: num_free_surface_faces
+  integer, dimension(num_free_surface_faces),intent(in) :: free_surface_ispec
+  integer, dimension(3,NGLLSQUARE,num_free_surface_faces),intent(in) :: free_surface_ijk
 
   integer ix_initial_guess_source,iy_initial_guess_source,iz_initial_guess_source
   integer ier
@@ -164,6 +167,15 @@
 
   double precision, external :: get_cmt_scalar_moment
   double precision, external :: get_cmt_moment_magnitude
+
+  ! location search
+  logical :: located_target
+  double precision :: typical_size
+  real(kind=CUSTOM_REAL) :: distance_min_glob,distance_max_glob
+  real(kind=CUSTOM_REAL) :: elemsize_min_glob,elemsize_max_glob
+  real(kind=CUSTOM_REAL) :: x_min_glob,x_max_glob
+  real(kind=CUSTOM_REAL) :: y_min_glob,y_max_glob
+  real(kind=CUSTOM_REAL) :: z_min_glob,z_max_glob
 
   !-----------------------------------------------------------------------------------
 
@@ -209,6 +221,21 @@
 
   ! define topology of the control element
   call usual_hex_nodes(NGNOD,iaddx,iaddy,iaddz)
+
+  ! compute typical size of elements
+  if (USE_DISTANCE_CRITERION) then
+    ! gets mesh dimensions
+    call check_mesh_distances(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
+                              x_min_glob,x_max_glob,y_min_glob,y_max_glob,z_min_glob,z_max_glob, &
+                              elemsize_min_glob,elemsize_max_glob, &
+                              distance_min_glob,distance_max_glob)
+
+    ! sets typical element size for search
+    typical_size =  elemsize_max_glob
+
+    ! use 10 times the distance as a criterion for source detection
+    typical_size = 10.0 * typical_size
+  endif
 
   ! get MPI starting time
   time_start = wtime()
@@ -300,11 +327,24 @@
     ! set distance to huge initial value
     distmin = HUGEVAL
 
+    ! flag to check that we located at least one target element
+    located_target = .false.
+
     ispec_selected_source(isource) = 0
     ix_initial_guess_source = 1
     iy_initial_guess_source = 1
     iz_initial_guess_source = 1
+
     do ispec=1,NSPEC_AB
+
+      ! exclude elements that are too far from target
+      if (USE_DISTANCE_CRITERION) then
+        iglob = ibool(MIDX,MIDY,MIDZ,ispec)
+        dist = dsqrt((x_target_source - dble(xstore(iglob)))**2 &
+                   + (y_target_source - dble(ystore(iglob)))**2 &
+                   + (z_target_source - dble(zstore(iglob)))**2)
+        if (dist > typical_size) cycle
+      endif
 
       ! define the interval in which we look for points
       if (USE_FORCE_POINT_SOURCE) then
@@ -352,12 +392,7 @@
               ix_initial_guess_source = i
               iy_initial_guess_source = j
               iz_initial_guess_source = k
-
-              ! store xi,eta,gamma and x,y,z of point found
-              ! note: here they have range [1.0d0,NGLLX/Y/Z]
-              xi_source(isource) = dble(ix_initial_guess_source)
-              eta_source(isource) = dble(iy_initial_guess_source)
-              gamma_source(isource) = dble(iz_initial_guess_source)
+              located_target = .true.
 
               x_found_source(isource) = xstore(iglob)
               y_found_source(isource) = ystore(iglob)
@@ -376,7 +411,13 @@
     ! end of loop on all the elements in current slice
     enddo
 
-    if (ispec_selected_source(isource) == 0) then
+    ! if we have not located a target element, the source is not in this slice
+    ! therefore use first element only for fictitious iterative search
+    if (.not. located_target) then
+      ispec_selected_source(isource) = 1
+      ix_initial_guess_source = 1
+      iy_initial_guess_source = 1
+      iz_initial_guess_source = 1
       final_distance_source(isource) = HUGEVAL
     endif
 
@@ -391,9 +432,14 @@
       idomain(isource) = 0
     endif
 
+    ! store xi,eta,gamma and x,y,z of point found
+    ! note: here they have range [1.0d0,NGLLX/Y/Z]
+    xi_source(isource) = dble(ix_initial_guess_source)
+    eta_source(isource) = dble(iy_initial_guess_source)
+    gamma_source(isource) = dble(iz_initial_guess_source)
+
     ! get normal to the face of the hexahedra if receiver is on the surface
-    if ((.not. SOURCES_CAN_BE_BURIED) .and. &
-       .not. (ispec_selected_source(isource) == 0)) then
+    if ((.not. SOURCES_CAN_BE_BURIED) .and. .not. (ispec_selected_source(isource) == 0)) then
 
       ! note: at this point, xi_source,.. are in range [1.0d0,NGLLX/Y/Z] for point sources only,
       !            for non-point sources the range is limited to [2.0d0,NGLLX/Y/Z - 1]
@@ -622,7 +668,7 @@
 
       ! compute final coordinates of point found
       call recompute_jacobian(xelm,yelm,zelm,xi,eta,gamma,x,y,z, &
-         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,NGNOD)
+                              xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,NGNOD)
 
       ! store xi,eta,gamma and x,y,z of point found
       ! note: xi/eta/gamma will be in range [-1,1]
