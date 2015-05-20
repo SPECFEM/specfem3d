@@ -91,6 +91,10 @@ module specfem_par
 ! time scheme
   real(kind=CUSTOM_REAL) deltat,deltatover2,deltatsqover2
 
+! LDDRK time scheme !ZNLDDRK
+  integer :: NSTAGE_TIME_SCHEME,istage
+  real(kind=CUSTOM_REAL),dimension(N_SLS) :: tau_sigma_CUSTOM_REAL
+
 ! time loop step
   integer :: it
 
@@ -353,6 +357,16 @@ module specfem_par_elastic
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: b_buffer_recv_vector_ext_mesh
   integer, dimension(:), allocatable :: b_request_send_vector_ext_mesh
   integer, dimension(:), allocatable :: b_request_recv_vector_ext_mesh
+
+  ! LDDRK time scheme  !ZNLDDRK
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: displ_lddrk,veloc_lddrk
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: &
+    R_trace_lddrk,R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk
+  ! adjoint
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: b_displ_lddrk, b_veloc_lddrk
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: &
+    b_R_trace_lddrk,b_R_xx_lddrk,b_R_yy_lddrk,b_R_xy_lddrk,b_R_xz_lddrk,b_R_yz_lddrk
+
 
 end module specfem_par_elastic
 

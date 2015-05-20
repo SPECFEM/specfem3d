@@ -71,6 +71,9 @@ end module constants
   integer :: NSTEP
   double precision :: DT
 
+  ! LDD Runge-Kutta time scheme  !ZNLDDRK
+  logical :: USE_LDDRK
+
   integer :: NGNOD
 
   character(len=MAX_STRING_LEN) :: SEP_MODEL_DIRECTORY
