@@ -822,7 +822,7 @@
   integer :: ier
   integer(kind=8) :: filesize
 
-! seismograms
+  ! seismograms
   if (nrec_local > 0 .and. SIMULATION_TYPE == 2) then
     ! allocate Frechet derivatives array
     allocate(Mxx_der(nrec_local),Myy_der(nrec_local), &
@@ -843,13 +843,13 @@
     seismograms_eps(:,:,:,:) = 0._CUSTOM_REAL
   endif
 
-! attenuation backward memories
+  ! attenuation backward memories
   if (ATTENUATION .and. SIMULATION_TYPE == 3) then
     ! precompute Runge-Kutta coefficients if attenuation
     call get_attenuation_memory_values(tau_sigma,b_deltat,b_alphaval,b_betaval,b_gammaval)
   endif
 
-! initializes adjoint kernels and reconstructed/backward wavefields
+  ! initializes adjoint kernels and reconstructed/backward wavefields
   if (SIMULATION_TYPE == 3)  then
     ! elastic domain
     if (ELASTIC_SIMULATION) then

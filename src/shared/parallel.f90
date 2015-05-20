@@ -1520,7 +1520,8 @@ end module my_mpi
     call MPI_COMM_SPLIT(MPI_COMM_WORLD, mygroup, key, my_local_mpi_comm_world, ier)
     if (ier /= 0) stop 'error while trying to create the sub-communicators'
 
-!   add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
+!   add the right directory for that run
+!   (group numbers start at zero, but directory names start at run0001, thus we add one)
     write(path_to_add,"('run',i4.4,'/')") mygroup + 1
     OUTPUT_FILES = path_to_add(1:len_trim(path_to_add))//OUTPUT_FILES(1:len_trim(OUTPUT_FILES))
 
