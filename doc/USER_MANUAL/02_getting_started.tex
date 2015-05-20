@@ -1,11 +1,10 @@
 \chapter{Getting Started}\label{cha:Getting-Started}
 
 To download the SPECFEM3D\_Cartesian software package, type this:
-\begin{lyxcode}
+\begin{verbatim}
 git clone --recursive --branch devel https://github.com/geodynamics/specfem3d.git
-\end{lyxcode}
-{\small \par}
-
+\end{verbatim}
+%
 We recommend that you add {\texttt{ulimit -S -s unlimited}} to your
 {\texttt{.bash\_profile}} file and/or {\texttt{limit stacksize
 unlimited }} to your {\texttt{.cshrc}} file to suppress any potential
@@ -18,9 +17,9 @@ values for your system. However, at a minimum, it is recommended that
 you explicitly specify the appropriate command names for your Fortran
 compiler and MPI package (another option is to define FC, CC and MPIF90
 in your .bash\_profile or your .cshrc file):
-\begin{lyxcode}
-./configure~FC=ifort~MPIFC=mpif90
-\end{lyxcode}
+\begin{verbatim}
+./configure FC=ifort MPIFC=mpif90
+\end{verbatim}
 Note that MPI must be installed with MPI-IO enabled because parts of SPECFEM3D perform I/Os through MPI-IO.
 
 
@@ -84,14 +83,14 @@ In case no SCOTCH libraries can be found on the system, the configuration
 will bundle the version provided with the source code for compilation.
 The path to an existing SCOTCH installation can to be set explicitly
 with the option \texttt{-{}-with-scotch-dir}. Just as an example:
-\begin{lyxcode}
-./configure~FC=ifort~MPIFC=mpif90~-{}-with-scotch-dir=/opt/scotch
-\end{lyxcode}
+\begin{verbatim}
+./configure FC=ifort MPIFC=mpif90 --with-scotch-dir=/opt/scotch
+\end{verbatim}
 If you use the Intel ifort compiler to compile the code, we recommend
 that you use the Intel icc C compiler to compile Scotch, i.e., use:
-\begin{lyxcode}
-./configure~CC=icc~FC=ifort~MPIFC=mpif90
-\end{lyxcode}
+\begin{verbatim}
+./configure CC=icc FC=ifort MPIFC=mpif90
+\end{verbatim}
 
 When compiling the SCOTCH source code, if you get a message such as: "ld: cannot find -lz",
 the Zlib compression development library is probably missing on your machine and you will need to install it or ask your system administrator to

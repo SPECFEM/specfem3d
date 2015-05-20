@@ -84,41 +84,31 @@ simulations are described.
 \subsection{Pre-simulation}
 \begin{itemize}
 \item As usual, we first configure the software package using:
-
-
-\texttt{./configure FC=ifort MPIFC=mpif90}
-
+\begin{verbatim}
+./configure FC=ifort MPIFC=mpif90
+\end{verbatim}
 
 Use the following if SCOTCH is needed:
-
-
-\texttt{./configure FC=ifort MPIFC=mpif90 -{}-with-scotch-dir=/opt/scotch}\\
-
+\begin{verbatim}
+./configure FC=ifort MPIFC=mpif90 --with-scotch-dir=/opt/scotch
+\end{verbatim}
 
 \item Next, we need to compile the source code using:
-
-
-\texttt{make xgenerate\_databases}
-
-
-\texttt{make xspecfem3D} \\
-
+\begin{verbatim}
+make xgenerate_databases
+make xspecfem3D
+\end{verbatim}
 
 \item Before we can run noise simulations, we have to specify the noise
 statistics, e.g., the ensemble-averaged noise spectrum. Matlab scripts
-are provided to help you to generate the necessary file.
-
-
+are provided to help you to generate the necessary file:
 \texttt{EXAMPLES/noise\_tomography/NOISE\_TOMOGRAPHY.m} (main program)\\
- \texttt{EXAMPLES/noise\_tomography/PetersonNoiseModel.m}
-
+\texttt{EXAMPLES/noise\_tomography/PetersonNoiseModel.m}
 
 In Matlab, simply run:
-
-
-\texttt{NOISE\_TOMOGRAPHY(NSTEP, DT, Tmin, Tmax, NOISE\_MODEL)}\\
-
-
+\begin{verbatim}
+NOISE_TOMOGRAPHY(NSTEP, DT, Tmin, Tmax, NOISE_MODEL)
+\end{verbatim}
 
 \texttt{DT} is given in \texttt{Par\_file}, but \texttt{NSTEP} is
 NOT the one specified in \texttt{Par\_file}. Instead, you have to
@@ -131,17 +121,13 @@ script.
 
 After running the Matlab script, you will be given the following information
 (plus a figure in Matlab):
-
-
-\texttt{{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}}\\
- \texttt{the source time function has been saved in:}\\
- \texttt{/data2/yangl/3D\_NOISE/S\_squared} (note this path must be
-different)\\
- \texttt{S\_squared should be put into directory:}\\
- \texttt{OUTPUT\_FILES/NOISE\_TOMOGRAPHY/ in the SPECFEM3D Cartesian
-package}\\
-
-
+\begin{verbatim}
+*************************************************************
+the source time function has been saved in:
+..../S_squared (note this path must be different)
+S_squared should be put into directory:
+OUTPUT_FILES/NOISE_TOMOGRAPHY/ in the SPECFEM3D Cartesian package
+\end{verbatim}
 
 In other words, the Matlab script creates a file called \texttt{S\_squared},
 which is the first `new' input file we encounter for noise simulations.
@@ -204,20 +190,27 @@ time step).
 As discussed in \citet{trompetal2010}, it takes three steps/simulations
 to obtain one contribution of the ensemble sensitivity kernels:
 \begin{itemize}
-\item Step 1: simulation for generating wavefields\\
- \texttt{SIMULATION\_TYPE=1}\\
- \texttt{NOISE\_TOMOGRAPHY=1}\\
- \texttt{SAVE\_FORWARD} not used, can be either .true. or .false.
-\item Step 2: simulation for ensemble forward wavefields\\
- \texttt{SIMULATION\_TYPE=1}\\
- \texttt{NOISE\_TOMOGRAPHY=2}\\
- \texttt{SAVE\_FORWARD=.true.}
-\item Step 3: simulation for ensemble adjoint wavefields and sensitivity
-kernels\\
- \texttt{SIMULATION\_TYPE=3}\\
- \texttt{NOISE\_TOMOGRAPHY=3}\\
- \texttt{SAVE\_FORWARD=.false.}
+\item Step 1: simulation for generating wavefields
+\begin{verbatim}
+SIMULATION_TYPE = 1
+NOISE_TOMOGRAPHY = 1
+SAVE_FORWARD (not used, can be either .true. or .false.)
+\end{verbatim}
 
+\item Step 2: simulation for ensemble forward wavefields
+\begin{verbatim}
+SIMULATION_TYPE = 1
+NOISE_TOMOGRAPHY = 2
+SAVE_FORWARD = .true.
+\end{verbatim}
+
+\item Step 3: simulation for ensemble adjoint wavefields and sensitivity
+kernels
+\begin{verbatim}
+SIMULATION_TYPE = 3
+NOISE_TOMOGRAPHY = 3
+SAVE_FORWARD = .false.
+\end{verbatim}
 
 Note Step 3 is an adjoint simulation, please refer to previous chapters
 on how to prepare adjoint sources and other necessary files, as well

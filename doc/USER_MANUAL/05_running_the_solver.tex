@@ -2,9 +2,11 @@
 
 Now that you have successfully generated the databases, you are ready
 to compile the solver. In the main directory, type
-\begin{lyxcode}
-{\small make~xspecfem3D}{\small \par}
-\end{lyxcode}
+{\small
+\begin{verbatim}
+make xspecfem3D
+\end{verbatim}
+}
 Please note that \texttt{xspecfem3D} must be called directly from
 the main directory, as most of the binaries of the package.\\
 
@@ -46,7 +48,6 @@ For any particular earthquake, the \texttt{CMTSOLUTION} file that
 represents the point source may be obtained directly from the Harvard
 Centroid-Moment Tensor (CMT) web page \urlwithparentheses{www.seismology.harvard.edu}.
 It looks like the example shown in Fig. \ref{fig:CMTSOLUTION-file}.
-%\begin{lyxcode}
 \begin{figure}[htp]
 \noindent
 \begin{centering}
@@ -60,7 +61,7 @@ $M_{0}${\small {} }is the seismic moment, and $M_{w}$ is the moment
 magnitude.}
 \label{fig:CMTSOLUTION-file}
 \end{figure}
-%\end{lyxcode}
+%
 The \texttt{CMTSOLUTION} file should be edited in the following way:
 \begin{itemize}
 \item Set the latitude or UTM $x$ coordinate, longitude or UTM $y$ coordinate, depth of the source (in km).
@@ -87,11 +88,11 @@ the serial code \texttt{convolve\_source\_timefunction.f90} and the
 script \texttt{convolve\_source\_timefunction.csh} for this purpose,
 or alternatively use signal-processing software packages such as SAC
 \urlwithparentheses{www.llnl.gov/sac}. Type
-
-\begin{lyxcode}
-{\small make~xconvolve\_source\_timefunction}{\small \par}
-\end{lyxcode}
-
+{\small
+\begin{verbatim}
+make xconvolve_source_timefunction
+\end{verbatim}
+}
 to compile the code and then set the parameter \texttt{hdur} in \texttt{convolve\_source\_timefunction.csh}
 to the desired half-duration.
 
@@ -100,7 +101,7 @@ or the centroid time of the earthquake. The start time of the simulation
 is $t=-1.5*\texttt{half duration}$ (the 1.5 is to make sure the moment
 rate function is very close to zero when starting the simulation).
 To convert to absolute time $t_{\mathrm{abs}}$, set
-
+%
 \begin{lyxcode}
 $t_{\mathrm{abs}}=t_{\mathrm{pde}}+\texttt{time shift}+t_{\mathrm{synthetic}}$
 \end{lyxcode}
@@ -243,9 +244,11 @@ in the \texttt{constants.h} file).}
 
 
 Each line represents one station in the following format:
-\begin{lyxcode}
-{\small Station~Network~Latitude~(degrees)~Longitude~(degrees)~Elevation~(m)~burial~(m)~}{\small \par}
-\end{lyxcode}
+{\small
+\begin{verbatim}
+Station Network Latitude(degrees) Longitude(degrees) Elevation(m) burial(m)
+\end{verbatim}
+}
 The solver \texttt{xspecfem3D} filters the list of stations in file
 \texttt{DATA/STATIONS} to exclude stations that are not located within
 the region given in the \texttt{Par\_file} (between \texttt{LATITUDE\_MIN}
@@ -255,43 +258,40 @@ and \texttt{LATITUDE\_MAX} and between \texttt{LONGITUDE\_MIN} and
 Solver output is provided in the \texttt{OUTPUT\_FILES} directory
 in the \texttt{output\_solver.txt} file. Output can be directed to
 the screen instead by uncommenting a line in \texttt{constants.h}:
-\begin{lyxcode}
-!~uncomment~this~to~write~messages~to~the~screen~
-
-!~integer,~parameter~::~IMAIN~=~ISTANDARD\_OUTPUT~
-\end{lyxcode}
+\begin{verbatim}
+! uncomment this to write messages to the screen
+! integer, parameter :: IMAIN = ISTANDARD_OUTPUT
+\end{verbatim}
 On PC clusters the seismogram files are generally written to the local
 disks (the path \texttt{LOCAL\_PATH} in the \texttt{Par\_file}) and
 need to be gathered at the end of the simulation.
 
 While the solver is running, its progress may be tracked by monitoring
-the `\texttt{\small timestamp{*}}{\small ' files in the ~}\\
-{\small{} }\texttt{\small OUTPUT\_FILES}{\small{} directory. These tiny
-files look something like this:}{\small \par}
-\begin{lyxcode}
-Time~step~\#~~~~~~~~~~10000~
-
-Time:~~~~~108.4890~~~~~~seconds~
-
-Elapsed~time~in~seconds~=~~~~1153.28696703911~
-
-Elapsed~time~in~hh:mm:ss~=~~~~~0~h~19~m~13~s~
-
-Mean~elapsed~time~per~time~step~in~seconds~=~~~~~0.115328696703911~
-
-Max~norm~displacement~vector~U~in~all~slices~(m)~=~~~~1.0789589E-02~
-\end{lyxcode}
-The \texttt{\small timestamp{*}}{\small{} files provide the }\texttt{\small Mean
-elapsed time per time step in seconds}{\small , which may be used
+the `\texttt{\small timestamp{*}}' files in the \texttt{\small OUTPUT\_FILES/} directory. These tiny
+files look something like this:
+{\small
+\begin{verbatim}
+Time step #          10000
+Time:     108.4890      seconds
+Elapsed time in seconds =    1153.28696703911
+Elapsed time in hh:mm:ss =     0 h 19 m 13 s
+Mean elapsed time per time step in seconds =     0.115328696703911
+Max norm displacement vector U in all slices (m) =     1.0789589E-02
+\end{verbatim}
+}
+The \texttt{\small timestamp{*}} files provide the 
+\texttt{\small Mean elapsed time per time step in seconds}, which may be used
 to assess performance on various machines (assuming you are the only
-user on a node), as well as the }\texttt{\small Max norm displacement
-vector U in all slices~(m)}{\small . If something is wrong with the
+user on a node), as well as the 
+\texttt{\small Max norm displacement vector U in all slices~(m)}. 
+If something is wrong with the
 model, the mesh, or the source, you will see the code become unstable
 through exponentially growing values of the displacement and fluid
 potential with time, and ultimately the run will be terminated by
 the program. You can control the rate at which the timestamp files
-are written based upon the parameter }\texttt{\small NTSTEP\_BETWEEN\_OUTPUT\_INFO}{\small{}
-in the }\texttt{\small Par\_file}{\small .}{\small \par}
+are written based upon the parameter 
+\texttt{\small NTSTEP\_BETWEEN\_OUTPUT\_INFO}
+in the \texttt{\small Par\_file}.
 
 Having set the \texttt{Par\_file} parameters, and having provided
 the \texttt{CMTSOLUTION} (or the \texttt{FORCESOLUTION}) and \texttt{STATIONS}
