@@ -483,22 +483,37 @@
            abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
   if (ier /= 0) stop 'Error allocating array abs_boundary_ispec etc.'
 
-  !! CD CD !! For coupling with DSM
+  !!!! VM VM & CD CD !! For coupling with external codes
   if (COUPLE_WITH_EXTERNAL_CODE) then
-    allocate(Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)) !! CD CD : cf for deallocate
-    allocate(Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
 
-    if (old_DSM_coupling_from_Vadim) then
-      open(unit=IIN_veloc_dsm,file=dsmname(1:len_trim(dsmname))//'vel.bin',status='old', &
+    if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) then 
+
+      allocate(Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)) !! CD CD : cf for deallocate
+      allocate(Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
+      if (old_DSM_coupling_from_Vadim) then
+        open(unit=IIN_veloc_dsm,file=dsmname(1:len_trim(dsmname))//'vel.bin',status='old', &
+             action='read',form='unformatted',iostat=ier)
+        open(unit=IIN_tract_dsm,file=dsmname(1:len_trim(dsmname))//'tract.bin',status='old', &
+             action='read',form='unformatted',iostat=ier)
+      else
+        !! To verify for NOBU version (normally, remains empty)
+      endif
+
+    elseif (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then 
+
+      allocate(Veloc_axisem(3,NGLLSQUARE*num_abs_boundary_faces))
+      allocate(Tract_axisem(3,NGLLSQUARE*num_abs_boundary_faces))
+      open(unit=IIN_veloc_dsm,file=dsmname(1:len_trim(dsmname))//'sol_axisem',status='old', &
            action='read',form='unformatted',iostat=ier)
-      open(unit=IIN_tract_dsm,file=dsmname(1:len_trim(dsmname))//'tract.bin',status='old', &
-           action='read',form='unformatted',iostat=ier)
-    else
-      !! To verify for NOBU version (normally, remains empty)
+      write(*,*) 'OPENING ', dsmname(1:len_trim(dsmname))//'sol_axisem'
+
     endif
+
   else
     allocate(Veloc_dsm_boundary(1,1,1,1))
     allocate(Tract_dsm_boundary(1,1,1,1))
+    allocate(Veloc_axisem(1,1))
+    allocate(Tract_axisem(1,1))
   endif
   !! CD CD
 

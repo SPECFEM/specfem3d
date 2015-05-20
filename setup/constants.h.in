@@ -176,7 +176,7 @@
   integer, parameter :: EXTERNAL_CODE_IS_FK     = 3
 
 ! Big storage version of coupling with DSM (will always set to .false. after the light storage version will be validated)
-  logical, parameter :: old_DSM_coupling_from_Vadim = .false.
+  logical, parameter :: old_DSM_coupling_from_Vadim = .true.
 
 ! for subroutine compute_vol_or_surf_integral_on_whole_domain
   integer, parameter :: Surf_or_vol_integral    = 1  !!! 1 = Surface integral, 2 = Volume, 3 = Both
