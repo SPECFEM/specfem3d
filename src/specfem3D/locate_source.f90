@@ -158,6 +158,7 @@
 
   integer ix_initial_guess_source,iy_initial_guess_source,iz_initial_guess_source
   integer ier
+
   integer, dimension(NSOURCES) :: idomain
   integer, dimension(NGATHER_SOURCES,0:NPROC-1) :: idomain_all
 
@@ -215,7 +216,7 @@
   ! user output
   if (myrank == 0) then
     if (SUPPRESS_UTM_PROJECTION) then
-      write(IMAIN,*) 'no UTM projection:'
+      write(IMAIN,*) 'no UTM projection'
     else
       write(IMAIN,*) 'UTM projection:'
       write(IMAIN,*) '  UTM zone: ',UTM_PROJECTION_ZONE
@@ -342,9 +343,9 @@
             endif
 
             ! keep this point if it is closer to the source
-            dist = dsqrt((x_target_source-dble(xstore(iglob)))**2 &
-                  +(y_target_source-dble(ystore(iglob)))**2 &
-                  +(z_target_source-dble(zstore(iglob)))**2)
+            dist = dsqrt((x_target_source - dble(xstore(iglob)))**2 &
+                        +(y_target_source - dble(ystore(iglob)))**2 &
+                        +(z_target_source - dble(zstore(iglob)))**2)
             if (dist < distmin) then
               distmin = dist
               ispec_selected_source(isource) = ispec

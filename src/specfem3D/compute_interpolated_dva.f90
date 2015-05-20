@@ -27,10 +27,10 @@
 
 
 subroutine compute_interpolated_dva(displ,veloc,accel,NGLOB_AB, &
-                        ispec,NSPEC_AB,ibool, &
-                        xi_r,eta_r,gamma_r, &
-                        hxir,hetar,hgammar, &
-                        dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
+                                    ispec,NSPEC_AB,ibool, &
+                                    xi_r,eta_r,gamma_r, &
+                                    hxir,hetar,hgammar, &
+                                    dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
 
 ! returns displacement/velocity/acceleration (dxd,..,vxd,..,axd,.. ) at receiver location
 
@@ -40,17 +40,19 @@ subroutine compute_interpolated_dva(displ,veloc,accel,NGLOB_AB, &
 
   double precision,intent(out) :: dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd
 
-  integer :: ispec
+  integer,intent(in) :: ispec
 
-  integer :: NSPEC_AB,NGLOB_AB
-  real(kind=CUSTOM_REAL),dimension(NDIM,NGLOB_AB) :: displ,veloc,accel
-  integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB):: ibool
+  integer,intent(in) :: NSPEC_AB,NGLOB_AB
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLOB_AB),intent(in) :: displ,veloc,accel
+  integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
 
   ! receiver information
-  double precision :: xi_r,eta_r,gamma_r
-  double precision,dimension(NGLLX) :: hxir
-  double precision,dimension(NGLLY) :: hetar
-  double precision,dimension(NGLLZ) :: hgammar
+  double precision,intent(in) :: xi_r,eta_r,gamma_r
+
+  ! receiver lagrange interpolators
+  double precision,dimension(NGLLX),intent(in) :: hxir
+  double precision,dimension(NGLLY),intent(in) :: hetar
+  double precision,dimension(NGLLZ),intent(in) :: hgammar
 
 ! local parameters
   double precision :: hlagrange
@@ -67,7 +69,7 @@ subroutine compute_interpolated_dva(displ,veloc,accel,NGLOB_AB, &
   ayd = ZERO
   azd = ZERO
 
-! takes closest GLL point only (no interpolation)
+  ! takes closest GLL point only (no interpolation)
   if (FASTER_RECEIVERS_POINTS_ONLY) then
 
     iglob = ibool(nint(xi_r),nint(eta_r),nint(gamma_r),ispec)
@@ -87,13 +89,13 @@ subroutine compute_interpolated_dva(displ,veloc,accel,NGLOB_AB, &
 
   else
 
-! interpolates seismograms at exact receiver locations
+    ! interpolates seismograms at exact receiver locations
     do k = 1,NGLLZ
       do j = 1,NGLLY
         do i = 1,NGLLX
           iglob = ibool(i,j,k,ispec)
 
-          hlagrange = hxir(i)*hetar(j)*hgammar(k)
+          hlagrange = hxir(i) * hetar(j) * hgammar(k)
 
           ! displacement
           dxd = dxd + dble(displ(1,iglob))*hlagrange
@@ -136,21 +138,22 @@ subroutine compute_interpolated_dva_acoust(displ_element,veloc_element,accel_ele
 
   double precision,intent(out) :: dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd
 
-  integer :: ispec
+  integer,intent(in) :: ispec
 
-  integer :: NSPEC_AB,NGLOB_AB
-  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: displ_element,veloc_element,accel_element
-  real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: potential_dot_dot_acoustic,potential_acoustic
+  integer,intent(in) :: NSPEC_AB,NGLOB_AB
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ),intent(in) :: displ_element,veloc_element,accel_element
+  real(kind=CUSTOM_REAL),dimension(NGLOB_AB),intent(in) :: potential_dot_dot_acoustic,potential_acoustic
 
-  integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
+  integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
 
-  logical :: USE_TRICK_FOR_BETTER_PRESSURE
+  logical,intent(in) :: USE_TRICK_FOR_BETTER_PRESSURE
 
   ! receiver information
-  double precision :: xi_r,eta_r,gamma_r
-  double precision,dimension(NGLLX) :: hxir
-  double precision,dimension(NGLLY) :: hetar
-  double precision,dimension(NGLLZ) :: hgammar
+  double precision,intent(in) :: xi_r,eta_r,gamma_r
+  ! lagrange interpolators
+  double precision,dimension(NGLLX),intent(in) :: hxir
+  double precision,dimension(NGLLY),intent(in) :: hetar
+  double precision,dimension(NGLLZ),intent(in) :: hgammar
 
 ! local parameters
   double precision :: hlagrange
@@ -227,7 +230,7 @@ subroutine compute_interpolated_dva_acoust(displ_element,veloc_element,accel_ele
       do j = 1,NGLLY
         do i = 1,NGLLX
 
-          hlagrange = hxir(i)*hetar(j)*hgammar(k)
+          hlagrange = hxir(i) * hetar(j) * hgammar(k)
 
           ! displacement
           dxd = dxd + hlagrange*displ_element(1,i,j,k)
