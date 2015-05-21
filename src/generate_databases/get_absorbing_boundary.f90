@@ -166,12 +166,9 @@
         normal_face(:,i,j) = lnormal(:)
 
         !! CD CD !! For coupling with DSM
-        if (COUPLE_WITH_EXTERNAL_CODE) then 
+        if ( COUPLE_WITH_EXTERNAL_CODE .and. (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) ) write(123,'(i10,3f20.10)') &
+             ispec, xstore_dummy(ibool(i,j,1,ispec)), ystore_dummy(ibool(i,j,1,ispec)), zstore_dummy(ibool(i,j,1,ispec))
 
-          if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) write(123,'(i10,3f20.10)') ispec, &
-             xstore_dummy(ibool(i,j,1,ispec)), ystore_dummy(ibool(i,j,1,ispec)), zstore_dummy(ibool(i,j,1,ispec))
-
-        endif
         !! CD CD
 
       enddo

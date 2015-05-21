@@ -77,7 +77,6 @@
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLSQUARE,b_num_abs_boundary_faces):: b_absorb_field
 
   logical:: SAVE_FORWARD
-  logical:: COUPLE_WITH_EXTERNAL_CODE
 
 ! local parameters
   real(kind=CUSTOM_REAL) vx,vy,vz,nx,ny,nz,tx,ty,tz,vn,jacobianw
@@ -146,7 +145,6 @@
               vx = vx - Veloc_dsm_boundary(1,it_dsm,igll,iface)
               vy = vy - Veloc_dsm_boundary(2,it_dsm,igll,iface)
               vz = vz - Veloc_dsm_boundary(3,it_dsm,igll,iface)
-            endif
 
             elseif (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then !! VM VM add AxiSEM
                 kaxisem = igll + NGLLSQUARE*(iface - 1)
@@ -178,13 +176,12 @@
               tx = tx - Tract_dsm_boundary(1,it_dsm,igll,iface)
               ty = ty - Tract_dsm_boundary(2,it_dsm,igll,iface)
               tz = tz - Tract_dsm_boundary(3,it_dsm,igll,iface)
-            endif
 
-            if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then
+            elseif (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then
                 tx = tx - Tract_axisem(1,kaxisem)
                 ty = ty - Tract_axisem(2,kaxisem)
                 tz = tz - Tract_axisem(3,kaxisem)
-            end if
+            endif
 
           endif
 
@@ -213,18 +210,17 @@
   ! adjoint simulations: stores absorbed wavefield part
   if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
     ! writes out absorbing boundary value only when second phase is running
-    if (phase_is_inner .eqv. .true.) then
-      call write_abs(IOABS,b_absorb_field,b_reclen_field,it)
-    endif
+    if (phase_is_inner .eqv. .true.) call write_abs(IOABS,b_absorb_field,b_reclen_field,it)
+
   endif
 
   !! CD CD !! For coupling with DSM
   if (COUPLE_WITH_EXTERNAL_CODE) then !! To verify for NOBU version
-    if (phase_is_inner .eqv. .true.) then
-      it_dsm = it_dsm + 1
-    endif
+
+    if (phase_is_inner .eqv. .true.) it_dsm = it_dsm + 1
 
   !! TODO: maybe call integrand_for_computing_Kirchoff_Helmholtz_integral here
+
   endif
   !! CD CD
 

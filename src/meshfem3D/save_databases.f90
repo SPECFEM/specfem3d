@@ -360,13 +360,11 @@
     write(IIN_database) 0,0
 
     !! VM VM add outputs as cubit
-    call save_output_mesh_files_as_cubit(prname,nspec,nglob,iproc_xi,iproc_eta, &
-                            NPROC_XI,NPROC_ETA,addressing,iMPIcut_xi,iMPIcut_eta,&
-                            ibool,nodes_coords,ispec_material_id, &
-                            nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP,&
-                            NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
-                            ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,&
-                            NMATERIALS,material_properties)
+    call save_output_mesh_files_as_cubit(nspec,nglob, ibool,nodes_coords, ispec_material_id, &
+                                     nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+                                     NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NMATERIALS,material_properties, &
+                                     ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top)
+
   endif
 
   close(IIN_database)
@@ -376,13 +374,10 @@
 !---------------------------------------------------------------------------------------------------------------
 
   !! VM VM add subroutine for saving meshes in case of 1 mpi process
-  subroutine save_output_mesh_files_as_cubit(prname,nspec,nglob,iproc_xi,iproc_eta, &
-                            NPROC_XI,NPROC_ETA,addressing,iMPIcut_xi,iMPIcut_eta,&
-                            ibool,nodes_coords,ispec_material_id, &
-                            nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP,&
-                            NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
-                            ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,&
-                            NMATERIALS,material_properties)
+  subroutine save_output_mesh_files_as_cubit(nspec,nglob, ibool,nodes_coords, ispec_material_id, &
+                                     nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+                                     NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NMATERIALS,material_properties, &
+                                     ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top)
 
     use constants,only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC
     
@@ -400,10 +395,7 @@
     ! MPI cartesian topology
     ! E for East (= XI_MIN), W for West (= XI_MAX), S for South (= ETA_MIN), N for North (= ETA_MAX)
     integer, parameter :: W=1,E=2,S=3,N=4,NW=5,NE=6,SE=7,SW=8
-    integer iproc_xi,iproc_eta
     integer NPROC_XI,NPROC_ETA
-    logical iMPIcut_xi(2,nspec),iMPIcut_eta(2,nspec)
-    integer addressing(0:NPROC_XI-1,0:NPROC_ETA-1)
     
     ! arrays with the mesh
     integer ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
@@ -424,23 +416,12 @@
     ! first dimension  : material_id
     ! second dimension : #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id #material_id
     double precision , dimension(NMATERIALS,7) ::  material_properties
-    double precision , dimension(16) :: matpropl
-    integer :: i,ispec,iglob,ier
-    ! dummy_nspec_cpml is used here to match the read instructions in generate_databases/read_partition_files.f90
-    integer :: dummy_nspec_cpml
+
+    integer :: i,ispec,iglob
     
     ! name of the database files
-    character(len=MAX_STRING_LEN) :: prname
     
-    ! for MPI interfaces
-    integer ::  nb_interfaces,nspec_interfaces_max
-    logical, dimension(8) ::  interfaces
-    integer, dimension(8) ::  nspec_interface
-    
-    integer :: ndef,nundef
     integer :: mat_id,domain_id
-    integer,dimension(2,nspec) :: material_index
-    character(len=MAX_STRING_LEN), dimension(6,1) :: undef_mat_prop
     
     open(IIN_database, file = 'MESH/nummaterial_velocity_file')
 
@@ -527,4 +508,4 @@
     enddo
     close(IIN_database)
 
-  end subroutine save_mesh_files
+  end subroutine save_output_mesh_files_as_cubit
