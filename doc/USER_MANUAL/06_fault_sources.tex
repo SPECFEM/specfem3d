@@ -28,23 +28,25 @@ by SPECFEM3D.\\
 
 Here is an example CUBIT script to generate a mesh with split nodes
 for a buried vertical strike-slip fault:
-\begin{lyxcode}
-~reset~~\\
-~brick~x~10~y~10~z~10~~\\
-~webcut~volume~all~with~plane~xplane~~\\
-~webcut~volume~all~with~plane~yplane~~\\
-~webcut~volume~all~with~plane~xplane~offset~3~~\\
-~webcut~volume~all~with~plane~zplane~offset~3~~\\
-~webcut~volume~all~with~plane~zplane~offset~-3~~\\
-~imprint~all~~\\
-~merge~all~~\\
-~unmerge~surf~160~~\\
-~mesh~vol~all~~\\
-~set~node~constraint~off~~\\
-~node~in~surf~168~move~X~0~Y~0.01~Z~0~~\\
-~node~in~surf~160~move~X~0~Y~-0.01~Z~0~\\
-
-\end{lyxcode}
+{\footnotesize
+\begin{verbatim}
+ reset
+ brick x 10 y 10 z 10
+ webcut volume all with plane xplane
+ webcut volume all with plane yplane
+ webcut volume all with plane xplane offset 3
+ webcut volume all with plane zplane offset 3
+ webcut volume all with plane zplane offset -3
+ imprint all
+ merge all
+ unmerge surf 160
+ mesh vol all
+ set node constraint off
+ node in surf 168 move X 0 Y 0.01 Z 0
+ node in surf 160 move X 0 Y -0.01 Z 0
+\end{verbatim}
+}
+%
 \begin{figure}[htbp]
 \noindent \begin{centering}
 \includegraphics[scale=0.3]{figures/faultmesh.jpg} \\
@@ -58,14 +60,9 @@ the fault (top), the fault surface 168 is shown as orange squares
 (middle) and split nodes of the fault shown as orange dots(bottom).
 Note that only interior nodes of the fault are split while those on
 the edges of the fault surface are touching each other.}
-
-
 \label{fig:examples.splitnodes}
 \end{figure}
 
-\begin{lyxcode}
-
-\end{lyxcode}
 \begin{figure}[htbp]
 \noindent \begin{centering}
 \includegraphics[scale=0.55]{figures/splitnodes_surfacetrace.pdf} \\
@@ -94,9 +91,11 @@ using the $\mathtt{APREPRO}$ language built in CUBIT.\\
 
 Note that you should avoid gaps in the list of indices of mesh objects
 with the following CUBIT command:
-\begin{lyxcode}
-$\mathtt{compress\: ids\: hex\: face\: edge\: node}$
-\end{lyxcode}
+{\footnotesize
+\begin{verbatim}
+compress ids hex face edge node
+\end{verbatim}
+}
 (otherwise you will get a segmentation fault during domain decomposition)
 
 
@@ -134,14 +133,13 @@ in Section \ref{sec:Sign-Convention-for}).\end{itemize}
 \begin{description}
 \item [{Outputs:}] file $\mathtt{fault\_file\_X.dat}$, where X is the
 fault id (id\_fault).
-\item [{Example:}] For the example in Section \ref{sec:Mesh-Generation-with}:\end{description}
-\begin{lyxcode}
-$\hphantom{}$A1~=~{[}168{]}
-
-$\hphantom{}$A2~=~{[}160{]}
-
-$\hphantom{}$fault\_input(1,A1,A2)
-\end{lyxcode}
+\item [{Example:}] For the example in Section \ref{sec:Mesh-Generation-with}:
+\begin{verbatim}
+  A1 = [168]
+  A2 = [160]
+  fault_input(1,A1,A2)
+\end{verbatim}
+\end{description}
 
 \section{Examples}
 

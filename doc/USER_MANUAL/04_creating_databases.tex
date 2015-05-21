@@ -20,9 +20,11 @@ specific model parameters.}
 
 \noindent
 In the main directory, type
-\begin{lyxcode}
-{\small make~xgenerate\_databases}{\small \par}
-\end{lyxcode}
+{\small
+\begin{verbatim}
+make xgenerate_databases
+\end{verbatim}
+}
 Input for the program is provided through the main parameter file
 \texttt{Par\_file}, which resides in the subdirectory \texttt{DATA}.
 Please note that \texttt{xgenerate\_databases} must be called directly
@@ -314,7 +316,7 @@ Imagine you have 10 independent calculations to do, each of them on 100 cores; y
 1/ submit 10 jobs to the batch system
 
 2/ submit a single job on 1000 cores to the batch, and in that script create a sub-array of jobs to start 10 jobs,
-each running on 100 cores (see e.g. http://www.schedmd.com/slurmdocs/job\_array.html )
+each running on 100 cores (see e.g. \url{http://www.schedmd.com/slurmdocs/job_array.html})
 
 3/ submit a single job on 1000 cores to the batch, start SPECFEM3D on 1000 cores, create 10 sub-communicators,
 cd into one of 10 subdirectories (called e.g. run0001, run0002,... run0010) depending on the sub-communicator
@@ -359,8 +361,10 @@ But the code cannot calculate partially saturated cases in its state.
 Christina Morency is presently working on a dual porosity, dual permeability formulation, type Pride and Berryman, for an other project, but it will not be available for some time.\\
 
 The way we prescribe material property for porous material in SPECFEM3D is as follow:
-We use a file name nummaterial\_poroelastic\_file, which is located in the directory MESH, the format is as follow:\\
- rhos rhof phi c kxx kxy kxz kyy kyz kzz Ks Kf Kfr etaf mufr\\
+We use a file name nummaterial\_poroelastic\_file, which is located in the directory MESH, the format is as follow:
+\begin{verbatim}
+ rhos rhof phi c kxx kxy kxz kyy kyz kzz Ks Kf Kfr etaf mufr
+\end{verbatim}
 where\\
 rho\_s = solid density\\
 rho\_f = fluid density\\
