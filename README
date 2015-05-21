@@ -1,9 +1,0 @@
-Instructions on how to install and use SPECFEM3D are
-available in the PDF manual located in directory doc/USER_MANUAL.
-
-Main "historical" developers: Dimitri Komatitsch and Jeroen Tromp
-  (there are currently many more!)
-
-To contribute, please follow the guidelines located on specfem3d github wiki:
-https://github.com/geodynamics/specfem3d/wiki
-
