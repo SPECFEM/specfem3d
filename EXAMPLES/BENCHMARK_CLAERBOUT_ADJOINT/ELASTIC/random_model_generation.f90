@@ -122,7 +122,7 @@ program random_model
     sigma_h2 = 2.0 * sigma_h * sigma_h
     sigma_v2 = 2.0 * sigma_v * sigma_v
     ! scalelength: approximately S ~ sigma * sqrt(8.0) for a gaussian smoothing
-    if(myrank == 0 )print*,"  scalelengths horizontal,vertical (m): ",sigma_h*sqrt(8.0),sigma_v*sqrt(8.0)
+    if(myrank == 0 )print *,"  scalelengths horizontal,vertical (m): ",sigma_h*sqrt(8.0),sigma_v*sqrt(8.0)
 
     ! theoretic normal value
     ! (see integral over -inf to +inf of exp[- x*x/(2*sigma) ] = sigma * sqrt(2*pi) )
@@ -150,7 +150,7 @@ program random_model
             ! gaussian function:  values between [0,1]
             random(i,j,k,ispec) = exp( - (dist_h*dist_h) / sigma_h2 - (dist_v*dist_v) / sigma_v2 )
 
-            !if(myrank == 0 )print*,random(i,j,k,ispec),x,y,z,dist_v,dist_h
+            !if(myrank == 0 )print *,random(i,j,k,ispec),x,y,z,dist_v,dist_h
           enddo
         enddo
       enddo

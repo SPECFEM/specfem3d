@@ -121,13 +121,13 @@
     if (mat_id < 0) nundef = nundef + 1
   enddo
   !debug
-  !print*,'materials def/undef: ',ndef,nundef
+  !print *,'materials def/undef: ',ndef,nundef
 
   ! opens database file
   open(unit=IIN_database,file=prname(1:len_trim(prname))//'Database', &
         status='unknown',action='write',form='unformatted',iostat=ier)
   if (ier /= 0) then
-    print*,'Error opening Database file: ',prname(1:len_trim(prname))//'Database'
+    print *,'Error opening Database file: ',prname(1:len_trim(prname))//'Database'
     stop 'error opening Database file'
   endif
 

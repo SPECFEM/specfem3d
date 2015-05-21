@@ -391,7 +391,7 @@
              mask_ibool(iglob5) .or. mask_ibool(iglob6) .or. mask_ibool(iglob7) .or. mask_ibool(iglob8)) then
             ! if element of this color has a common point with another element of that same color
             ! then there is a problem, the color set is not correct
-            print*,'error check color:',icolor
+            print *,'error check color:',icolor
             stop 'error detected: found a common point inside a color set'
           else
             mask_ibool(iglob1) = .true.
@@ -413,7 +413,7 @@
   enddo
   ! debug output
   !if (myrank == 0) then
-  !  print*, '     the ',maxval(color),' color sets are OK'
+  !  print *, '     the ',maxval(color),' color sets are OK'
   !endif
 
   deallocate(mask_ibool)
@@ -1080,7 +1080,7 @@
 
   ! checks
   if (counter_outer + icounter -1 /= nspec_domain) then
-    print*,'error: perm: ',nspec_domain,counter_outer,icounter,counter_outer+icounter-1
+    print *,'error: perm: ',nspec_domain,counter_outer,icounter,counter_outer+icounter-1
     stop 'error get_final_perm: counter incomplete'
   endif
 

@@ -25,48 +25,48 @@ program test_read
   call read_parameter_file(myrank,BROADCAST_AFTER_READ)
 
   ! punctual check of values for given default Par_file in SPECFEM3D/DATA/ directory
-  print*,'NPROC = ',NPROC
+  print *,'NPROC = ',NPROC
   if (NPROC /= PAR_FILE_NPROC) then
-    print*,'ERROR: NPROC value invalid'
+    print *,'ERROR: NPROC value invalid'
     stop 1
   else
-    print*,'  result is correct'
+    print *,'  result is correct'
   endif
 
-  print*,'NSTEP = ',NSTEP
+  print *,'NSTEP = ',NSTEP
   if (NSTEP /= PAR_FILE_NSTEP) then
-    print*,'ERROR: NSTEP value invalid'
+    print *,'ERROR: NSTEP value invalid'
     stop 1
   else
-    print*,'  result is correct'
+    print *,'  result is correct'
   endif
 
-  print*,'DT = ',DT
+  print *,'DT = ',DT
   if (abs(DT - PAR_FILE_DT) > 1.e-9) then
-    print*,'ERROR: DT value invalid'
+    print *,'ERROR: DT value invalid'
     stop 1
   else
-    print*,'  result is correct'
+    print *,'  result is correct'
   endif
 
-  print*,'NTSTEP_BETWEEN_OUTPUT_INFO = ',NTSTEP_BETWEEN_OUTPUT_INFO
+  print *,'NTSTEP_BETWEEN_OUTPUT_INFO = ',NTSTEP_BETWEEN_OUTPUT_INFO
   if (NTSTEP_BETWEEN_OUTPUT_INFO /= PAR_FILE_NTSTEP_BETWEEN_OUTPUT_INFO) then
-    print*,'ERROR: NPROC value invalid'
+    print *,'ERROR: NPROC value invalid'
     stop 1
   else
-    print*,'  result is correct'
+    print *,'  result is correct'
   endif
 
-  print*,'USE_RICKER_TIME_FUNCTION = ',USE_RICKER_TIME_FUNCTION
+  print *,'USE_RICKER_TIME_FUNCTION = ',USE_RICKER_TIME_FUNCTION
   if (USE_RICKER_TIME_FUNCTION .neqv. PAR_FILE_USE_RICKER_TIME_FUNCTION) then
-    print*,'ERROR: NPROC value invalid'
+    print *,'ERROR: NPROC value invalid'
     stop 1
   else
-    print*,'  result is correct'
+    print *,'  result is correct'
   endif
 
   ! done
-  print*,'test_read done successfully'
+  print *,'test_read done successfully'
 
 end program test_read
 

@@ -173,8 +173,8 @@
 
   call param_open(filename, len(filename), ier)
   if (ier /= 0) then
-    print*
-    print*,'opening file failed, please check your file path and run-directory.'
+    print *
+    print *,'opening file failed, please check your file path and run-directory.'
     stop 'error opening Par_file'
   endif
 

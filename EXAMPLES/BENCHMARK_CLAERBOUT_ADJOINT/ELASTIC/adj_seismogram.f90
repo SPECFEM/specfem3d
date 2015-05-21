@@ -35,13 +35,13 @@ program adj_seismogram
   !!!NSTEP=header2(2)
   !!!header4=r4head(30)
   !!!DT=header2(1)*1.0d-6
-  !!!print*, 'irec=',r4head(1)
-  !!!print*, 'xs=',r4head(19)
-  !!!print*, 'zs=',r4head(20)
-  !!!print*, 'xr=',r4head(21)
-  !!!print*, 'zr=',r4head(22)
-  !!!print*, 'NSTEP=',NSTEP
-  !!!print*, "DT=",DT
+  !!!print *, 'irec=',r4head(1)
+  !!!print *, 'xs=',r4head(19)
+  !!!print *, 'zs=',r4head(20)
+  !!!print *, 'xr=',r4head(21)
+  !!!print *, 'zr=',r4head(22)
+  !!!print *, 'NSTEP=',NSTEP
+  !!!print *, "DT=",DT
 
   allocate(syn(NSTEP),dat(NSTEP),adj(NSTEP))
 

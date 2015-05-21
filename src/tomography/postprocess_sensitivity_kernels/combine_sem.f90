@@ -132,10 +132,10 @@ program combine_sem
   ! checks number of MPI processes
   if (sizeprocs /= NPROC) then
     if (myrank == 0) then
-      print*,''
-      print*,'Expected number of MPI processes: ', NPROC
-      print*,'Actual number of MPI processes: ', sizeprocs
-      print*,''
+      print *,''
+      print *,'Expected number of MPI processes: ', NPROC
+      print *,'Actual number of MPI processes: ', sizeprocs
+      print *,''
     endif
     call synchronize_all()
     stop 'Error wrong number of MPI processes'
@@ -147,8 +147,8 @@ program combine_sem
   open(unit=27,file=trim(prname_lp),&
           status='old',action='read',form='unformatted',iostat=ier)
   if (ier /= 0) then
-    print*,'Error: could not open database '
-    print*,'path: ',trim(prname_lp)
+    print *,'Error: could not open database '
+    print *,'path: ',trim(prname_lp)
     stop 'Error reading external mesh file'
   endif
   read(27) NSPEC
@@ -158,9 +158,9 @@ program combine_sem
 
   ! sum kernels
   if (myrank == 0) then
-    print*,'summing kernels in: '
-    print*,kernel_paths(1:npath)
-    print*
+    print *,'summing kernels in: '
+    print *,kernel_paths(1:npath)
+    print *
   endif
 
   do iker=1,nker
@@ -220,8 +220,8 @@ subroutine combine_sem_array(kernel_name,kernel_paths,output_dir,npath)
     norm = sum( array * array )
     call sum_all_dp(norm, norm_sum)
     if (myrank == 0) then
-      print*,'  norm array: ',sqrt(norm_sum)
-      print*
+      print *,'  norm array: ',sqrt(norm_sum)
+      print *
     endif
 
     ! keep track of sum

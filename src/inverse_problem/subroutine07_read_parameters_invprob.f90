@@ -53,7 +53,7 @@ subroutine read_parameters_invprob()
 
   ! safety check
   if (abs(step_fac) < 1.e-15) then
-    print*,'Error: step factor ',step_fac,' is too small and will lead to no update...'
+    print *,'Error: step factor ',step_fac,' is too small and will lead to no update...'
     call exit_MPI(myrank,'Error step factor too small')
   endif
 
@@ -87,9 +87,9 @@ subroutine read_parameters_invprob()
   if (PRINT_STATISTICS_FILES .and. myrank == 0) then
     open(IOUT,file=trim(OUTPUT_STATISTICS_DIR)//'statistics_step_fac',status='unknown',iostat=ier)
     if (ier /= 0) then
-      print*,'Error opening file: ',trim(OUTPUT_STATISTICS_DIR)//'statistics_step_fac'
-      print*,'Please make sure that directory '//trim(OUTPUT_STATISTICS_DIR)//' exists...'
-      print*
+      print *,'Error opening file: ',trim(OUTPUT_STATISTICS_DIR)//'statistics_step_fac'
+      print *,'Please make sure that directory '//trim(OUTPUT_STATISTICS_DIR)//' exists...'
+      print *
       stop 'Error opening statistics file'
     endif
     write(IOUT,'(1e24.12)') step_fac
@@ -103,15 +103,15 @@ contains
   implicit none
 
   if (myrank == 0) then
-    print*,'Usage: add_model step_factor [INPUT-KERNELS-DIR/] [OUTPUT-MODEL-DIR/]'
-    print*
-    print*,'with'
-    print*,'  step_factor        - factor to scale gradient (e.g. 0.03 for 3 percent update)'
-    print*,'  INPUT-KERNELS-DIR/ - (optional) directory which holds summed kernels (e.g. alpha_kernel.bin,..)'
-    print*,'  OUTPUT-MODEL-DIR/  - (optional) directory which will hold new model files (e.g. vp_new.bin,..)'
-    print*
-    print*,'Please rerun e.g. like: mpirun -np ',sizeprocs,' ./bin/xadd_model 0.03'
-    print*
+    print *,'Usage: add_model step_factor [INPUT-KERNELS-DIR/] [OUTPUT-MODEL-DIR/]'
+    print *
+    print *,'with'
+    print *,'  step_factor        - factor to scale gradient (e.g. 0.03 for 3 percent update)'
+    print *,'  INPUT-KERNELS-DIR/ - (optional) directory which holds summed kernels (e.g. alpha_kernel.bin,..)'
+    print *,'  OUTPUT-MODEL-DIR/  - (optional) directory which will hold new model files (e.g. vp_new.bin,..)'
+    print *
+    print *,'Please rerun e.g. like: mpirun -np ',sizeprocs,' ./bin/xadd_model 0.03'
+    print *
   endif
   call synchronize_all()
   call exit_MPI(myrank,'Error usage: add_model step_factor')

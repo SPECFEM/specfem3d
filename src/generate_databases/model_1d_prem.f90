@@ -353,13 +353,13 @@
      vs_prem=3.6678-4.4475*x_prem**2
   endif
 
-  !    print*,'ro,vp,vs passed from routine and not multiplied',ro_prem,vp_prem,vs_prem
+  !    print *,'ro,vp,vs passed from routine and not multiplied',ro_prem,vp_prem,vs_prem
 
   ro_prem=ro_prem*1000
   vp_prem=vp_prem*1000
   vs_prem=vs_prem*1000
 
-  !   print*,'ro,vp,vs passed from PREM_ROUTINE multiplied by 1000',ro_prem,vp_prem,vs_prem
+  !   print *,'ro,vp,vs passed from PREM_ROUTINE multiplied by 1000',ro_prem,vp_prem,vs_prem
 
   !  if (param=='rho') then
   !     prem_sub=ro_prem*1000.

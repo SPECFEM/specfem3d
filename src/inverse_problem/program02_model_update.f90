@@ -116,37 +116,37 @@ program model_update
 
   ! user output
   if (myrank == 0) then
-    print*
-    print*,'***********'
-    print*,'program model_update: '
-    print*,'  NPROC: ',NPROC
-    print*,'  NSPEC: ', NSPEC
-    print*,'  NGLOB: ', NGLOB
-    print*
-    print*,'model update for vs & vp & rho'
-    print*,'  step_fac = ',step_fac
-    print*
+    print *
+    print *,'***********'
+    print *,'program model_update: '
+    print *,'  NPROC: ',NPROC
+    print *,'  NSPEC: ', NSPEC
+    print *,'  NGLOB: ', NGLOB
+    print *
+    print *,'model update for vs & vp & rho'
+    print *,'  step_fac = ',step_fac
+    print *
     if (USE_ALPHA_BETA_RHO) then
-      print*,'kernel parameterization: (alpha,beta,rho)'
+      print *,'kernel parameterization: (alpha,beta,rho)'
     else
-      print*,'kernel parameterization: (bulk,beta,rho)'
+      print *,'kernel parameterization: (bulk,beta,rho)'
     endif
-    print*
+    print *
     if (USE_RHO_SCALING) then
-      print*,'scaling rho perturbations'
-      print*
+      print *,'scaling rho perturbations'
+      print *
     endif
-    if (MINMAX_THRESHOLD_OLD) print*,'thresholding current (old) model wavespeed values'
-    if (MINMAX_THRESHOLD_NEW) print*,'thresholding new (updated) model wavespeed values'
+    if (MINMAX_THRESHOLD_OLD) print *,'thresholding current (old) model wavespeed values'
+    if (MINMAX_THRESHOLD_NEW) print *,'thresholding new (updated) model wavespeed values'
     if (MINMAX_THRESHOLD_OLD .or. MINMAX_THRESHOLD_NEW) then
       if (THRESHOLD_RHO) then
-        print*,'  thresholds for: (vs,vp,rho)'
+        print *,'  thresholds for: (vs,vp,rho)'
       else
-        print*,'  thresholds for: (vs,vp)'
+        print *,'  thresholds for: (vs,vp)'
       endif
     endif
-    print*,'***********'
-    print*
+    print *,'***********'
+    print *
   endif
   call synchronize_all()
 
@@ -173,11 +173,11 @@ program model_update
 
   if (MINMAX_THRESHOLD_OLD .or. MINMAX_THRESHOLD_NEW) then
     if (myrank == 0) then
-      print*,'threshold wavespeed values:'
-      print*,'  VS_MIN, VS_MAX  : ',VS_MIN, VS_MAX
-      print*,'  VP_MIN, VP_MAX  : ',VP_MIN, VP_MAX
-      if (THRESHOLD_RHO) print*,'  RHO_MIN, RHO_MAX: ',RHO_MIN, RHO_MAX
-      print*
+      print *,'threshold wavespeed values:'
+      print *,'  VS_MIN, VS_MAX  : ',VS_MIN, VS_MAX
+      print *,'  VP_MIN, VP_MAX  : ',VP_MIN, VP_MAX
+      if (THRESHOLD_RHO) print *,'  RHO_MIN, RHO_MAX: ',RHO_MIN, RHO_MAX
+      print *
     endif
     ! statistics output
     if (PRINT_STATISTICS_FILES .and. myrank == 0) then
@@ -222,14 +222,14 @@ program model_update
 
   if (myrank == 0) then
     if (MINMAX_THRESHOLD_OLD) then
-      print*,'current model values before thresholding:'
+      print *,'current model values before thresholding:'
     else
-      print*,'current model values:'
+      print *,'current model values:'
     endif
-    print*,'  vs min/max : ',vsmin_before, vsmax_before
-    print*,'  vp min/max : ',vpmin_before, vpmax_before
-    print*,'  rho min/max: ',rhomin_before, rhomax_before
-    print*
+    print *,'  vs min/max : ',vsmin_before, vsmax_before
+    print *,'  vp min/max : ',vpmin_before, vpmax_before
+    print *,'  rho min/max: ',rhomin_before, rhomax_before
+    print *
   endif
 
   ! statistics output
@@ -276,11 +276,11 @@ program model_update
     call max_all_cr(maxval(model_rho(:,:,:,1:nspec)), rhomax_after)
 
     if (myrank == 0) then
-      print*,'current model values after thresholding:'
-      print*,'  vs min/max: ',vsmin_after, vsmax_after
-      print*,'  vp min/max: ',vpmin_after, vpmax_after
-      print*,'  rho min/max: ',rhomin_after, rhomax_after
-      print*
+      print *,'current model values after thresholding:'
+      print *,'  vs min/max: ',vsmin_after, vsmax_after
+      print *,'  vp min/max: ',vpmin_after, vpmax_after
+      print *,'  rho min/max: ',rhomin_after, rhomax_after
+      print *
     endif
 
     ! statistics output
@@ -368,14 +368,14 @@ program model_update
 
   if (myrank == 0) then
     if (MINMAX_THRESHOLD_NEW) then
-      print*,'new model values before thresholding:'
+      print *,'new model values before thresholding:'
     else
-      print*,'new model values:'
+      print *,'new model values:'
     endif
-    print*,'  vs min/max : ',vsmin_new_before, vsmax_new_before
-    print*,'  vp min/max : ',vpmin_new_before, vpmax_new_before
-    print*,'  rho min/max: ',rhomin_new_before, rhomax_new_before
-    print*
+    print *,'  vs min/max : ',vsmin_new_before, vsmax_new_before
+    print *,'  vp min/max : ',vpmin_new_before, vpmax_new_before
+    print *,'  rho min/max: ',rhomin_new_before, rhomax_new_before
+    print *
   endif
 
   if (PRINT_STATISTICS_FILES .and. myrank == 0) then
@@ -424,11 +424,11 @@ program model_update
     call max_all_cr(maxval(model_rho_new(:,:,:,1:nspec)), rhomax_new_after)
 
     if (myrank == 0) then
-      print*,'new model values after thresholding:'
-      print*,'  vs min/max : ',vsmin_new_after, vsmax_new_after
-      print*,'  vp min/max : ',vpmin_new_after, vpmax_new_after
-      print*,'  rho min/max: ',rhomin_new_after, rhomax_new_after
-      print*
+      print *,'new model values after thresholding:'
+      print *,'  vs min/max : ',vsmin_new_after, vsmax_new_after
+      print *,'  vp min/max : ',vpmin_new_after, vpmax_new_after
+      print *,'  rho min/max: ',rhomin_new_after, rhomax_new_after
+      print *
     endif
 
     ! this should only be different if using MINMAX_THRESHOLD_NEW
@@ -584,22 +584,22 @@ subroutine initialize()
 
   ! security check
   if (ATTENUATION) then
-    print*,'Sorry using ATTENUATION, this routine has qkappa not implemented yet...'
+    print *,'Sorry using ATTENUATION, this routine has qkappa not implemented yet...'
     stop 'Error ATTENUATION flag invalid'
   endif
 
   if (USE_ALPHA_BETA_RHO .neqv. .true.) then
-    print*,'Sorry using USE_ALPHA_BETA_RHO must be set to .true. in constants_inverse_problem.h file; Please recompile...'
+    print *,'Sorry using USE_ALPHA_BETA_RHO must be set to .true. in constants_inverse_problem.h file; Please recompile...'
     stop 'Error USE_ALPHA_BETA_RHO flag invalid'
   endif
 
   ! check that the code is running with the requested nb of processes
   if (sizeprocs /= NPROC) then
     if (myrank == 0) then
-      print*, 'Error number of processors supposed to run on: ',NPROC
-      print*, 'Error number of MPI processors actually run on: ',sizeprocs
-      print*
-      print*, 'please rerun with: mpirun -np ',NPROC,' bin/xmodel_update .. '
+      print *, 'Error number of processors supposed to run on: ',NPROC
+      print *, 'Error number of MPI processors actually run on: ',sizeprocs
+      print *
+      print *, 'please rerun with: mpirun -np ',NPROC,' bin/xmodel_update .. '
     endif
     call exit_MPI(myrank,'Error wrong number of MPI processes')
   endif
@@ -686,19 +686,19 @@ subroutine get_external_mesh()
 
   ! outputs infos
   if (myrank == 0) then
-    print*,'mesh dimensions:'
-    print*,'  Xmin and Xmax of the model = ',x_min_glob,x_max_glob
-    print*,'  Ymin and Ymax of the model = ',y_min_glob,y_max_glob
-    print*,'  Zmin and Zmax of the model = ',z_min_glob,z_max_glob
-    print*
-    print*,'  Max GLL point distance = ',distance_max_glob
-    print*,'  Min GLL point distance = ',distance_min_glob
-    print*,'  Max/min ratio = ',distance_max_glob/distance_min_glob
-    print*
-    print*,'  Max element size = ',elemsize_max_glob
-    print*,'  Min element size = ',elemsize_min_glob
-    print*,'  Max/min ratio = ',elemsize_max_glob/elemsize_min_glob
-    print*
+    print *,'mesh dimensions:'
+    print *,'  Xmin and Xmax of the model = ',x_min_glob,x_max_glob
+    print *,'  Ymin and Ymax of the model = ',y_min_glob,y_max_glob
+    print *,'  Zmin and Zmax of the model = ',z_min_glob,z_max_glob
+    print *
+    print *,'  Max GLL point distance = ',distance_max_glob
+    print *,'  Min GLL point distance = ',distance_min_glob
+    print *,'  Max/min ratio = ',distance_max_glob/distance_min_glob
+    print *
+    print *,'  Max element size = ',elemsize_max_glob
+    print *,'  Min element size = ',elemsize_min_glob
+    print *,'  Max/min ratio = ',elemsize_max_glob/elemsize_min_glob
+    print *
   endif
   call synchronize_all()
 
@@ -794,7 +794,7 @@ subroutine save_new_databases()
 
   ! user output
   if (myrank == 0) then
-    print*,'saving new databases'
+    print *,'saving new databases'
   endif
 
   NGLOB_OCEAN = NGLOB_AB
@@ -844,7 +844,7 @@ subroutine save_new_databases()
 
   ! user output
   if (myrank == 0) then
-    print*, '  ...creating mass matrix '
+    print *, '  ...creating mass matrix '
   endif
   call synchronize_all()
 
@@ -862,8 +862,8 @@ subroutine save_new_databases()
 
             !debug
             !if (myrank == 0) then
-            !  print*, 'weight', weight
-            !  print*, 'jacobianl', jacobianl
+            !  print *, 'weight', weight
+            !  print *, 'jacobianl', jacobianl
             !endif
 
             if (CUSTOM_REAL == SIZE_REAL) then
@@ -922,7 +922,7 @@ subroutine save_new_databases()
     write(m_file,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',myrank,'_attenuation.vtk'
     open(12,file=trim(m_file),status='old',iostat=ier)
     if (ier /= 0) then
-      print*,'Error opening: ',trim(m_file)
+      print *,'Error opening: ',trim(m_file)
       call exit_mpi(myrank,'Error file not found')
     endif
     read(12,'(a)') string1 !text
@@ -1003,8 +1003,8 @@ subroutine save_new_databases()
 
   ! user output
   if (myrank == 0) then
-    print*,'  writing new databases to directory: ',trim(OUTPUT_MODEL_DIR)
-    print*
+    print *,'  writing new databases to directory: ',trim(OUTPUT_MODEL_DIR)
+    print *
   endif
   call synchronize_all()
 

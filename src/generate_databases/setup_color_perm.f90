@@ -226,7 +226,7 @@
   if (sum(num_of_elems_in_this_color(1:nb_colors_outer_elements)) /= nspec_outer) then
     print *,'error number of outer elements in this color:',idomain
     print *,'rank: ',myrank,' nspec_outer = ',nspec_outer
-    print*,'nb_colors_outer_elements = ',nb_colors_outer_elements
+    print *,'nb_colors_outer_elements = ',nb_colors_outer_elements
     print *,'total number of elements in all the colors of the mesh for outer elements = ', &
       sum(num_of_elems_in_this_color(1:nb_colors_outer_elements))
     call exit_MPI(myrank, 'incorrect total number of elements in all the colors of the mesh for outer elements')
@@ -345,9 +345,9 @@
 
         ! checks
         if (ispec_outer < 1 .or. ispec_outer > num_phase_ispec_d) then
-          print*,'error outer permutation:',idomain
-          print*,'rank:',myrank,'  ispec_inner = ',ispec_outer
-          print*,'num_phase_ispec_d = ',num_phase_ispec_d
+          print *,'error outer permutation:',idomain
+          print *,'rank:',myrank,'  ispec_inner = ',ispec_outer
+          print *,'num_phase_ispec_d = ',num_phase_ispec_d
           call exit_MPI(myrank,'error outer acoustic permutation')
         endif
 
@@ -359,9 +359,9 @@
 
         ! checks
         if (ispec_inner < 1 .or. ispec_inner > num_phase_ispec_d) then
-          print*,'error inner permutation:',idomain
-          print*,'rank:',myrank,'  ispec_inner = ',ispec_inner
-          print*,'num_phase_ispec_d = ',num_phase_ispec_d
+          print *,'error inner permutation:',idomain
+          print *,'rank:',myrank,'  ispec_inner = ',ispec_inner
+          print *,'num_phase_ispec_d = ',num_phase_ispec_d
           call exit_MPI(myrank,'error inner acoustic permutation')
         endif
 
@@ -516,7 +516,7 @@
 
   ! checks
   if (icounter /= nspec) then
-    print*,'error temp perm: ',icounter,nspec
+    print *,'error temp perm: ',icounter,nspec
     stop 'error temporary global permutation incomplete'
   endif
 
@@ -535,7 +535,7 @@
     if (new_ispec < 1 .or. new_ispec > nspec) call exit_MPI(myrank,'error temp_perm_global ispec bounds')
     ! checks if already set
     if (mask_global(new_ispec)) then
-      print*,'error temp_perm_global:',ispec,new_ispec,'element already set'
+      print *,'error temp_perm_global:',ispec,new_ispec,'element already set'
       call exit_MPI(myrank,'error global permutation')
     else
       mask_global(new_ispec) = .true.
@@ -546,7 +546,7 @@
 
   ! checks number of set elements
   if (count(mask_global(:)) /= nspec) then
-    print*,'error temp_perm_global:',count(mask_global(:)),nspec,'permutation incomplete'
+    print *,'error temp_perm_global:',count(mask_global(:)),nspec,'permutation incomplete'
     call exit_MPI(myrank,'error global permutation incomplete')
   endif
   deallocate(mask_global)

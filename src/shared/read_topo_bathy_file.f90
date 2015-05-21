@@ -46,7 +46,7 @@
   ! opens file
   open(unit=13,file=trim(TOPO_FILE),status='old',action='read',iostat=ier)
   if (ier /= 0) then
-    print*,'error opening topography file: ',trim(TOPO_FILE)
+    print *,'error opening topography file: ',trim(TOPO_FILE)
     stop 'error opening topography file'
   endif
 

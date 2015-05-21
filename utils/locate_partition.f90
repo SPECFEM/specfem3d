@@ -129,11 +129,11 @@
     if( ier /= 0 ) stop 'please check your compilation, use the same compiler & flags as for SPECFEM3D'
     close(27)
 
-    print*,'partition: ',iproc
-    print*,'  min/max x = ',minval(xstore),maxval(xstore)
-    print*,'  min/max y = ',minval(ystore),maxval(ystore)
-    print*,'  min/max z = ',minval(zstore),maxval(zstore)
-    print*
+    print *,'partition: ',iproc
+    print *,'  min/max x = ',minval(xstore),maxval(xstore)
+    print *,'  min/max y = ',minval(ystore),maxval(ystore)
+    print *,'  min/max z = ',minval(zstore),maxval(zstore)
+    print *
 
     write(11,'(i10,6e18.6)') iproc,minval(xstore),maxval(xstore),minval(ystore),maxval(ystore),minval(zstore),maxval(zstore)
 
@@ -159,21 +159,21 @@
 
   ! checks
   if (total_partition < 0 ) then
-    print*,'Error: partition not found among ',iproc,'partitions searched'
+    print *,'Error: partition not found among ',iproc,'partitions searched'
     stop 'Error: partition not found'
   endif
 
   ! output
-  print*,'number of partitions searched: ',iproc
-  print*
-  print*,'closest grid point location found:'
-  print*,'  x = ',total_x
-  print*,'  y = ',total_y
-  print*,'  z = ',total_z
-  print*,'  distance to search location = ',sqrt(total_distance)
-  print*,'closest partition: '
-  print*,'  partition = ',total_partition
-  print*
+  print *,'number of partitions searched: ',iproc
+  print *
+  print *,'closest grid point location found:'
+  print *,'  x = ',total_x
+  print *,'  y = ',total_y
+  print *,'  z = ',total_z
+  print *,'  distance to search location = ',sqrt(total_distance)
+  print *,'closest partition: '
+  print *,'  partition = ',total_partition
+  print *
 
   end program locate_partition
 

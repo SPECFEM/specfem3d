@@ -78,7 +78,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
 
   ! checks number of PML elements
   if (count(is_CPML(:)) /= NSPEC_CPML) then
-    print*,'Error in slice ',myrank,': number of PML elements ',NSPEC_CPML,' but only ',count(is_CPML(:)),' flags set'
+    print *,'Error in slice ',myrank,': number of PML elements ',NSPEC_CPML,' but only ',count(is_CPML(:)),' flags set'
     stop 'Error C-PML array has invalid number of PML flags set'
   endif
 
@@ -321,8 +321,8 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
 ! we set the required variable "vp" to be constant and equal to "vp_max_all"
             vp = vp_max_all
           else
-            print*,'element index',ispec
-            print*,'C-PML element index ',ispec_CPML
+            print *,'element index',ispec
+            print *,'C-PML element index ',ispec_CPML
             call exit_mpi(myrank,'C-PML error: element has an unvalid P-velocity')
           endif
 
@@ -1768,9 +1768,9 @@ function pml_damping_profile_l(myrank,iglob,dist,vp,delta)
   ! checks coordinates of C-PML points and thickness of C-PML layer
   ! the distance is a relative distance here (a ratio), thus we compare to 1 instead of comparing to the thickness of the PML
   if (dist > 1._CUSTOM_REAL ) then
-    print*,'C-PML point ',iglob
-    print*,'distance to C-PML/mesh interface ',dist
-    print*,'C-PML thickness ',delta
+    print *,'C-PML point ',iglob
+    print *,'distance to C-PML/mesh interface ',dist
+    print *,'C-PML thickness ',delta
     call exit_mpi(myrank,'C-PML error: distance to C-PML/mesh interface is bigger than thickness of C-PML layer')
   endif
 

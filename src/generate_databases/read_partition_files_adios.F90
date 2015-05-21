@@ -422,13 +422,13 @@ subroutine read_partition_files_adios()
     enddo
   endif
   ! debug
-  !if (myrank == 1) print*,myrank,'undef_matpropl: ',trim(undef_matpropl)
+  !if (myrank == 1) print *,myrank,'undef_matpropl: ',trim(undef_matpropl)
   !do icount = 0,NPROC-1
-  !  print*
+  !  print *
   !  if (myrank == icount) then
-  !    print*,myrank,'undef_mat_prop: '
+  !    print *,myrank,'undef_mat_prop: '
   !    do j = 1,6
-  !      print*,'  index ',j,': ',trim(undef_mat_prop(j,1))
+  !      print *,'  index ',j,': ',trim(undef_mat_prop(j,1))
   !    enddo
   !    call flush(6)
   !  endif

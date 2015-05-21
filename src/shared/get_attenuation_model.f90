@@ -298,7 +298,7 @@
   open(unit=27, file=prname(1:len_trim(prname))//'attenuation.bin', &
         status='unknown',action='write',form='unformatted',iostat=ier)
   if (ier /= 0) then
-    print*,'error: could not open ',prname(1:len_trim(prname))//'attenuation.bin'
+    print *,'error: could not open ',prname(1:len_trim(prname))//'attenuation.bin'
     call exit_mpi(myrank,'error opening attenuation.bin file')
   endif
   write(27) nspec

@@ -388,7 +388,7 @@
 
               !debug: outputs specific gll point location (needs to adapt kmin,kmax,..)
               !if (irec == 1 .and. ispec == 3789 .and. i == 3 .and. j == 3 .and. k == 5) then
-              !  print*,'gll point: ',i,j,k,ispec,' x/y/z = ',xstore(iglob),ystore(iglob),zstore(iglob), &
+              !  print *,'gll point: ',i,j,k,ispec,' x/y/z = ',xstore(iglob),ystore(iglob),zstore(iglob), &
               !          'target: ',x_target(1),y_target(1),z_target(1)
               !endif
 
@@ -458,7 +458,7 @@
               do j = jmin_temp,jmax_temp
                 do i = imin_temp,imax_temp
                   iglob = ibool(i,j,k,ispec)
-                  !  we compare squared distances instead of distances themselves to significantly speed up calculations 
+                  !  we compare squared distances instead of distances themselves to significantly speed up calculations
                   dist_squared = ((x_target(irec)-dble(xstore(iglob)))**2 &
                                 + (y_target(irec)-dble(ystore(iglob)))**2 &
                                 + (z_target(irec)-dble(zstore(iglob)))**2)

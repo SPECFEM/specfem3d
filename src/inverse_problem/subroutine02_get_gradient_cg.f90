@@ -92,12 +92,12 @@ subroutine get_gradient_cg_tiso()
   norm_eta_old = norm_eta_sum
 
   if (myrank == 0) then
-    print*,'norm squared old gradients:'
-    print*,'  bulk : ',norm_bulk_old
-    print*,'  betav: ',norm_betav_old
-    print*,'  betah: ',norm_betah_old
-    print*,'  eta  : ',norm_eta_old
-    print*
+    print *,'norm squared old gradients:'
+    print *,'  bulk : ',norm_bulk_old
+    print *,'  betav: ',norm_betav_old
+    print *,'  betah: ',norm_betah_old
+    print *,'  eta  : ',norm_eta_old
+    print *
 
     ! checks lengths
     if (norm_bulk_old < 1.e-22) call exit_mpi(myrank,'norm old gradient bulk is zero')
@@ -126,21 +126,21 @@ subroutine get_gradient_cg_tiso()
     ratio_eta = norm_eta_sum / norm_eta_old
 
     ! if ratio > 0.2 (empirical threshold value), then one should restart with a steepest descent
-    print*,'Powell ratio: (> 0.2 then restart with steepest descent)'
-    print*,'  bulk : ',ratio_bulk
-    print*,'  betav: ',ratio_betav
-    print*,'  betah: ',ratio_betah
-    print*,'  eta  : ',ratio_eta
-    print*
+    print *,'Powell ratio: (> 0.2 then restart with steepest descent)'
+    print *,'  bulk : ',ratio_bulk
+    print *,'  betav: ',ratio_betav
+    print *,'  betah: ',ratio_betah
+    print *,'  eta  : ',ratio_eta
+    print *
     if (ratio_bulk > 0.2 .and. ratio_betav > 0.2 .and. ratio_betah > 0.2 &
       .and. ratio_eta > 0.2) then
-      print*,'  critical ratio found!'
-      print*
-      print*,'****************'
-      print*
-      print*,'  Please consider doing a steepest descent instead cg...'
-      print*
-      print*,'****************'
+      print *,'  critical ratio found!'
+      print *
+      print *,'****************'
+      print *
+      print *,'  Please consider doing a steepest descent instead cg...'
+      print *
+      print *,'****************'
     endif
   endif
 
@@ -165,12 +165,12 @@ subroutine get_gradient_cg_tiso()
   norm_eta = norm_eta_sum
 
   if (myrank == 0) then
-    print*,'norm squared difference gradients:'
-    print*,'  bulk : ',norm_bulk
-    print*,'  betav: ',norm_betav
-    print*,'  betah: ',norm_betah
-    print*,'  eta  : ',norm_eta
-    print*
+    print *,'norm squared difference gradients:'
+    print *,'  bulk : ',norm_bulk
+    print *,'  betav: ',norm_betav
+    print *,'  betah: ',norm_betah
+    print *,'  eta  : ',norm_eta
+    print *
   endif
 
   ! calculates ratio based on Polak & Ribiere (1969)
@@ -215,12 +215,12 @@ subroutine get_gradient_cg_tiso()
       alpha_eta = alpha_all
     endif
     ! user output
-    print*,'alpha gradients:'
-    print*,'  bulk : ',alpha_bulk
-    print*,'  betav: ',alpha_betav
-    print*,'  betah: ',alpha_betah
-    print*,'  eta  : ',alpha_eta
-    print*
+    print *,'alpha gradients:'
+    print *,'  bulk : ',alpha_bulk
+    print *,'  betav: ',alpha_betav
+    print *,'  betah: ',alpha_betah
+    print *,'  eta  : ',alpha_eta
+    print *
   endif
   ! broadcast values from rank 0 to all others
   call bcast_all_singlecr(alpha_bulk)
@@ -358,12 +358,12 @@ subroutine get_gradient_cg_tiso()
   call max_all_cr(maxval(model_deta),max_eta)
 
   if (myrank == 0) then
-    print*,'initial gradient updates:'
-    print*,'  bulk min/max : ',min_bulk,max_bulk
-    print*,'  betav min/max: ',min_vsv,max_vsv
-    print*,'  betah min/max: ',min_vsh,max_vsh
-    print*,'  eta min/max  : ',min_eta,max_eta
-    print*
+    print *,'initial gradient updates:'
+    print *,'  bulk min/max : ',min_bulk,max_bulk
+    print *,'  betav min/max: ',min_vsv,max_vsv
+    print *,'  betah min/max: ',min_vsh,max_vsh
+    print *,'  eta min/max  : ',min_eta,max_eta
+    print *
   endif
 
   ! determines maximum kernel betav value within given radius
@@ -390,11 +390,11 @@ subroutine get_gradient_cg_tiso()
       maxindex = maxloc(depthmax)
       depthmax_depth = depthmax_radius(maxindex(1))
       ! maximum in given depth range
-      print*,'  using depth maximum: '
-      print*,'  between depths (top/bottom)   : ',R_TOP,R_BOTTOM
-      print*,'  maximum kernel value          : ',max
-      print*,'  depth of maximum kernel value : ',depthmax_depth
-      print*
+      print *,'  using depth maximum: '
+      print *,'  between depths (top/bottom)   : ',R_TOP,R_BOTTOM
+      print *,'  maximum kernel value          : ',max
+      print *,'  depth of maximum kernel value : ',depthmax_depth
+      print *
     else
       ! maximum gradient values
       minmax(1) = abs(min_vsv)
@@ -405,8 +405,8 @@ subroutine get_gradient_cg_tiso()
       ! maximum value of all kernel maxima
       max = maxval(minmax)
     endif
-    print*,'step length:'
-    print*,'  using kernel maximum: ',max
+    print *,'step length:'
+    print *,'  using kernel maximum: ',max
 
     ! checks maximum value
     if (max < 1.e-25) stop 'Error maximum kernel value too small for update'
@@ -414,8 +414,8 @@ subroutine get_gradient_cg_tiso()
     ! chooses step length such that it becomes the desired, given step factor as inputted
     step_length = step_fac/max
 
-    print*,'  step length : ',step_length
-    print*
+    print *,'  step length : ',step_length
+    print *
 
   endif
   call bcast_all_singlecr(step_length)
@@ -438,12 +438,12 @@ subroutine get_gradient_cg_tiso()
     norm_betah = sqrt(norm_betah_sum)
     norm_eta = sqrt(norm_eta_sum)
 
-    print*,'norm model updates:'
-    print*,'  bulk : ',norm_bulk
-    print*,'  betav: ',norm_betav
-    print*,'  betah: ',norm_betah
-    print*,'  eta  : ',norm_eta
-    print*
+    print *,'norm model updates:'
+    print *,'  bulk : ',norm_bulk
+    print *,'  betav: ',norm_betav
+    print *,'  betah: ',norm_betah
+    print *,'  eta  : ',norm_eta
+    print *
   endif
 
   ! multiply model updates by a subjective factor that will change the step
@@ -466,12 +466,12 @@ subroutine get_gradient_cg_tiso()
   call max_all_cr(maxval(model_deta),max_eta)
 
   if (myrank == 0) then
-    print*,'scaled gradients:'
-    print*,'  bulk min/max : ',min_bulk,max_bulk
-    print*,'  betav min/max: ',min_vsv,max_vsv
-    print*,'  betah min/max: ',min_vsh,max_vsh
-    print*,'  eta min/max  : ',min_eta,max_eta
-    print*
+    print *,'scaled gradients:'
+    print *,'  bulk min/max : ',min_bulk,max_bulk
+    print *,'  betav min/max: ',min_vsv,max_vsv
+    print *,'  betah min/max: ',min_vsh,max_vsh
+    print *,'  eta min/max  : ',min_eta,max_eta
+    print *
   endif
   call synchronize_all()
 

@@ -78,7 +78,7 @@ do
     endif
     inp_ext=get_string('ext',args,narg); inp_ext='.'//trim(inp_ext)
     dat_topo=get_integer('topo',args,narg)
-    !print*,narg,arg
+    !print *,narg,arg
     input_stat=0
     cycle
   endif
@@ -95,7 +95,7 @@ do
     out_vname=get_string('vname',args,narg)
     out_res=get_integer('res',args,narg)
     out_format=get_integer('form',args,narg)
-    !print*,narg,arg
+    !print *,narg,arg
     output_stat=0
     cycle
   endif

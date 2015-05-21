@@ -126,14 +126,14 @@
 !    utm_x_station(6) =  817099.3750000d0
 !    utm_y_station(6) = -24430.2871094d0
 
-!  print*,myrank,'apres store the position of the six stations'
+!  print *,myrank,'apres store the position of the six stations'
 !  call flush(6)
 
-!  print*, myrank,minval(nodes_coords_ext_mesh(1,:))
+!  print *, myrank,minval(nodes_coords_ext_mesh(1,:))
 !  call flush(6)
 
 
-! print*, myrank,maxval(nodes_coords_ext_mesh(1,:))
+! print *, myrank,maxval(nodes_coords_ext_mesh(1,:))
 !  call flush(6)
 
 

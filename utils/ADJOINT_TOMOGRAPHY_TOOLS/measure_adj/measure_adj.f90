@@ -263,10 +263,10 @@ program measure_adj
         ! reset imeas == 3 for adjoint sources without time shift and uncertainty scaling
         ! (pure cross-correlation adjoint source for banana-doughnuts)
         if(imeas == 5 .and. trim(datafile) == trim(synfile) ) then
-           print*,'cross-correlation measurement:'
-           print*,'  only synthetic file: ',trim(synfile)
-           print*,'    without traveltime difference/uncertainty'
-           print*
+           print *,'cross-correlation measurement:'
+           print *,'  only synthetic file: ',trim(synfile)
+           print *,'    without traveltime difference/uncertainty'
+           print *
            imeas = 3
         endif
 

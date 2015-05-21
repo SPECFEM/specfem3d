@@ -383,7 +383,7 @@
             endif
 
             ! keep this point if it is closer to the source
-            !  we compare squared distances instead of distances themselves to significantly speed up calculations 
+            !  we compare squared distances instead of distances themselves to significantly speed up calculations
             dist_squared = (x_target_source - dble(xstore(iglob)))**2 &
                          + (y_target_source - dble(ystore(iglob)))**2 &
                          + (z_target_source - dble(zstore(iglob)))**2
