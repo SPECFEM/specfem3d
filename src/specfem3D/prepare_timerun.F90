@@ -72,6 +72,8 @@
   ! prepares gravity arrays
   call prepare_timerun_gravity()
 
+  if (USE_LDDRK) call prepare_timerun_lddrk() !ZNLDDRK
+
   ! prepares C-PML arrays
   if (PML_CONDITIONS) call prepare_timerun_pml()
 
@@ -106,6 +108,11 @@
     write(IMAIN,*) 'Elapsed time for preparing timerun in seconds = ',tCPU
     write(IMAIN,*)
     write(IMAIN,*) 'time loop:'
+    if (USE_LDDRK) then  !ZNLDDRK
+      write(IMAIN,*) '              scheme:         LDDRK with',NSTAGE_TIME_SCHEME,'stages'
+    else
+      write(IMAIN,*) '              scheme:         Newmark'
+    endif
     write(IMAIN,*)
     write(IMAIN,*) '           time step: ',sngl(DT),' s'
     write(IMAIN,*) 'number of time steps: ',NSTEP
@@ -246,7 +253,12 @@
   if (ACOUSTIC_SIMULATION) then
     ! adds contributions
     if (STACEY_ABSORBING_CONDITIONS) then
-      rmass_acoustic(:) = rmass_acoustic(:) + rmassz_acoustic(:)
+      if (USE_LDDRK) then !ZNLDDRK
+        rmass_acoustic(:) = rmass_acoustic(:)
+      else
+        ! adds boundary contributions for newmark scheme
+        rmass_acoustic(:) = rmass_acoustic(:) + rmassz_acoustic(:)
+      endif
       ! not needed anymore
       deallocate(rmassz_acoustic)
     endif
@@ -267,10 +279,16 @@
 
     !! CD CD !!
     if (STACEY_ABSORBING_CONDITIONS) then
-      ! adds boundary contributions
-      rmassx(:) = rmass(:) + rmassx(:)
-      rmassy(:) = rmass(:) + rmassy(:)
-      rmassz(:) = rmass(:) + rmassz(:)
+      if (USE_LDDRK) then !ZNLDDRK 
+        rmassx(:) = rmass(:)
+        rmassy(:) = rmass(:)
+        rmassz(:) = rmass(:)
+      else
+        ! adds boundary contributions for newmark scheme
+        rmassx(:) = rmass(:) + rmassx(:)
+        rmassy(:) = rmass(:) + rmassy(:)
+        rmassz(:) = rmass(:) + rmassz(:)
+      endif
     else
       rmassx(:) = rmass(:)
       rmassy(:) = rmass(:)
@@ -542,7 +560,7 @@
               f_c_source,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
 
     ! determines alphaval,betaval,gammaval for runge-kutta scheme
-    if (CUSTOM_REAL == SIZE_REAL) then
+    if (CUSTOM_REAL == SIZE_REAL) then  !ZNLDDRK need to carefully check
       tau_sigma(:) = sngl(tau_sigma_dble(:))
     else
       tau_sigma(:) = tau_sigma_dble(:)
@@ -714,6 +732,69 @@
   endif
 
   end subroutine prepare_timerun_gravity
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine prepare_timerun_lddrk()  !ZNLDDRK
+
+  use specfem_par
+  use specfem_par_acoustic
+  use specfem_par_elastic
+  use specfem_par_poroelastic
+
+  implicit none
+
+  if (USE_LDDRK) then
+
+    if (ELASTIC_SIMULATION) then
+      allocate(displ_lddrk(NDIM,NGLOB_AB),stat=ier)
+      if (ier /= 0) stop 'Error allocating array displ_lddrk'
+      allocate(veloc_lddrk(NDIM,NGLOB_AB),stat=ier)
+      if (ier /= 0) stop 'Error allocating array veloc_lddrk'
+      displ_lddrk(:,:) = 0._CUSTOM_REAL
+      veloc_lddrk(:,:) = 0._CUSTOM_REAL
+      if (FIX_UNDERFLOW_PROBLEM) then
+        displ_lddrk(:,:) = VERYSMALLVAL
+        veloc_lddrk(:,:) = VERYSMALLVAL
+      endif
+
+      if (ATTENUATION) then
+        ! note: currently, they need to be defined, as they are used in the routine arguments
+        !          for compute_forces_viscoelastic_Deville()
+        allocate(R_xx_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
+                 R_yy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
+                 R_xy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
+                 R_xz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
+                 R_yz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS),stat=ier)
+        if (ier /= 0) stop 'Error allocating array R_xx etc.'
+        R_xx_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
+        R_yy_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
+        R_xy_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
+        R_xz_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
+        R_yz_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
+        if (FIX_UNDERFLOW_PROBLEM) then
+          R_xx_lddrk(:,:,:,:,:) = VERYSMALLVAL
+          R_yy_lddrk(:,:,:,:,:) = VERYSMALLVAL
+          R_xy_lddrk(:,:,:,:,:) = VERYSMALLVAL
+          R_xz_lddrk(:,:,:,:,:) = VERYSMALLVAL
+          R_yz_lddrk(:,:,:,:,:) = VERYSMALLVAL
+        endif
+      endif
+    endif  
+
+    if (ACOUSTIC_SIMULATION) then
+      
+    endif
+
+    if (POROELASTIC_SIMULATION) then
+      stop 'LDDRK do not implemented for POROELASTIC_SIMULATION'
+    endif
+  
+  endif
+
+  end subroutine prepare_timerun_lddrk
 
 !
 !-------------------------------------------------------------------------------------------------
