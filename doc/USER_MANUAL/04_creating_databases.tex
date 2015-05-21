@@ -6,15 +6,13 @@ next step in the workflow is to compile \texttt{xgenerate\_}~\\
 information needed by the SEM solver.
 
 \begin{figure}[htbp]
-\noindent \begin{centering}
-\includegraphics[width=0.6\textwidth]{figures/workflow.pdf}
-\par\end{centering}
-
+\begin{centering}
+\includegraphics[width=0.6\textwidth]{figures/workflow.jpg}
+\par
+\end{centering}
 \caption{Schematic workflow for a SPECFEM3D Cartesian simulation. The executable
 \texttt{xgenerate\_databases} creates the GLL mesh points and assigns
 specific model parameters.}
-
-
 \label{fig:workflow.databases}
 \end{figure}
 
@@ -25,6 +23,7 @@ In the main directory, type
 make xgenerate_databases
 \end{verbatim}
 }
+\noindent
 Input for the program is provided through the main parameter file
 \texttt{Par\_file}, which resides in the subdirectory \texttt{DATA}.
 Please note that \texttt{xgenerate\_databases} must be called directly
@@ -45,9 +44,8 @@ simulation with the last frame of the simulation saved, as part of
 the finite-frequency kernel calculations (see Section \ref{sec:Finite-Frequency-Kernels}).
 For a regular forward simulation, leave \texttt{SIMULATION\_TYPE}
 and \texttt{SAVE\_FORWARD} at their default values.
-\item [{\texttt{\noun{UTM\_PROJECTION\_ZONE}}}] UTM projection zone in
-which your model resides, only valid when \texttt{SUPPRESS\_UTM\_}~\\
- \texttt{PROJECTION} is \texttt{.false.}.
+\item [{\texttt{UTM\_PROJECTION\_ZONE}}] UTM projection zone in
+which your model resides, only valid when \texttt{SUPPRESS\_UTM\_PROJECTION} is \texttt{.false.}.
 \item [{\texttt{SUPPRESS\_UTM\_PROJECTION}}] set to be \texttt{.false.}
 when your model range is specified in the geographical coordinates,
 and needs to be \texttt{.true.} when your model is specified in a
@@ -71,7 +69,7 @@ elements. If you use the internal mesher, the only option is 8-node
 bricks (27-node elements are not supported). \texttt{CUBIT} does not
 support HEX27 elements either (it can generate them, but they are
 flat, i.e. identical to HEX8). To generate HEX27 elements with curvature
-properly taken into account, you can use \texttt{Gmsh} \url{http://geuz.org/gmsh/}
+properly taken into account, you can use Gmsh \url{http://geuz.org/gmsh/}
 \item [{\texttt{MODEL}}] Must be set to one of the following:
 
 \begin{description}
@@ -269,6 +267,7 @@ of the reference frame. This vector is made unitary internally in
 the solver and thus only its direction matters here; its norm is ignored
 and the norm of the force used is the factor force source times the
 source time function.
+
 When using this option, by default the code can locate the force source
 anywhere between mesh points in order to honor its exact location; this
 is more precise than using the closest GLL mesh point, but it is also a bit slower.
@@ -290,24 +289,26 @@ Any other source-time function may then be obtained by convolution.
 \item [{\texttt{PRINT\_SOURCE\_TIME\_FUNCTION}}] Turn this flag on to print
 information about the source time function in the file \texttt{OUTPUT\_FILES/plot\_source\_time\_function.txt}.
 This feature is only relevant for the solver.
-
+%
 \item [{\texttt{NUMBER\_OF\_SIMULTANEOUS\_RUNS}}] adds the ability to run several calculations (several earthquakes)
 in an embarrassingly-parallel fashion from within the same run;
 this can be useful when using a very large supercomputer to compute
 many earthquakes in a catalog, in which case it can be better from
 a batch job submission point of view to start fewer and much larger jobs,
 each of them computing several earthquakes in parallel.
-To turn that option on, set parameter NUMBER\_OF\_SIMULTANEOUS\_RUNS to a value greater than 1.
-To implement that, we create NUMBER\_OF\_SIMULTANEOUS\_RUNS MPI sub-communicators,
-each of them being labeled "my\_local\_mpi\_comm\_world", and we use them
+
+To turn that option on, set parameter \texttt{NUMBER\_OF\_SIMULTANEOUS\_RUNS} to a value greater than 1.
+To implement that, we create \texttt{NUMBER\_OF\_SIMULTANEOUS\_RUNS} MPI sub-communicators,
+each of them being labeled \texttt{my\_local\_mpi\_comm\_world}, and we use them
 in all the routines in "src/shared/parallel.f90", except in MPI\_ABORT() because in that case
 we need to kill the entire run.
+
 When that option is on, of course the number of processor cores used to start
-the code in the batch system must be a multiple of NUMBER\_OF\_SIMULTANEOUS\_RUNS,
+the code in the batch system must be a multiple of \texttt{NUMBER\_OF\_SIMULTANEOUS\_RUNS},
 all the individual runs must use the same number of processor cores,
 which as usual is NPROC in the Par\_file,
 and thus the total number of processor cores to request from the batch system
-should be NUMBER\_OF\_SIMULTANEOUS\_RUNS * NPROC.
+should be \texttt{NUMBER\_OF\_SIMULTANEOUS\_RUNS}~*~\texttt{NPROC}.
 All the runs to perform must be placed in directories called run0001, run0002, run0003 and so on
 (with exactly four digits).
 
@@ -322,26 +323,31 @@ each running on 100 cores (see e.g. \url{http://www.schedmd.com/slurmdocs/job_ar
 cd into one of 10 subdirectories (called e.g. run0001, run0002,... run0010) depending on the sub-communicator
 your MPI rank belongs to, and run normally on 100 cores using that sub-communicator.
 
-The option NUMBER\_OF\_SIMULTANEOUS\_RUNS implements 3/.
+The option \texttt{NUMBER\_OF\_SIMULTANEOUS\_RUNS} implements 3/.
 
-\item [{\texttt{BROADCAST\_SAME\_MESH\_AND\_MODEL}}]:
-if we perform simultaneous runs in parallel, if only the source and receivers vary between these runs
+\item [{\texttt{BROADCAST\_SAME\_MESH\_AND\_MODEL}}] if we perform simultaneous runs in parallel, 
+if only the source and receivers vary between these runs
 but not the mesh nor the model (velocity and density) then we can also read the mesh and model files
 from a single run in the beginning and broadcast them to all the others; for a large number of simultaneous
 runs for instance when solving inverse problems iteratively this can DRASTICALLY reduce I/Os to disk in the solver
-(by a factor equal to NUMBER\_OF\_SIMULTANEOUS\_RUNS), and reducing I/Os is crucial in the case of huge runs.
+(by a factor equal to \texttt{NUMBER\_OF\_SIMULTANEOUS\_RUNS}), and reducing I/Os is crucial in the case of huge runs.
 Thus, always set this option to .true. if the mesh and the model are the same for all simultaneous runs.
 In that case there is no need to duplicate the mesh and model file database (the content of the DATABASES\_MPI
 directories) in each of the run0001, run0002,... directories, it is sufficient to have one in run0001
 and the code will broadcast it to the others).
 
-\item [{\texttt{USE\_FAILSAFE\_MECHANISM}}]:
-if one or a few of these simultaneous runs fail, kill all the runs or let the others finish using a fail-safe mechanism
+\item [{\texttt{USE\_FAILSAFE\_MECHANISM}}] if one or a few of these simultaneous runs fail, 
+kill all the runs or let the others finish using a fail-safe mechanism
 (in most cases, should be set to true).
 
-TODO / future work to do: currently the BROADCAST\_SAME\_MESH\_AND\_MODEL option assumes to have the (master) mesh files in run0001/DATABASES\_MPI or run0001/OUTPUT\_FILES/DATABASES\_MPI. However, for adjoint runs you still need a DATABASES\_MPI folder in each of the sub-runs directories, e.g. run0002/DATABASES\_MPI, etc. to store the forward wavefields, kernels etc. of each sub-run. This would not be needed for forward simulations.
+TODO / future work to do: currently the \texttt{BROADCAST\_SAME\_MESH\_AND\_MODEL} 
+option assumes to have the (master) mesh files in run0001/DATABASES\_MPI or run0001/OUTPUT\_FILES/DATABASES\_MPI. 
+However, for adjoint runs you still need a DATABASES\_MPI folder in each of the sub-runs directories,
+e.g. run0002/DATABASES\_MPI, etc. to store the forward wavefields, kernels etc. of each sub-run.
+This would not be needed for forward simulations.
 
 TODO / future work to do: the sensitivity kernel summing and smoothing tools in directory src/tomography are currently not ported to this new option to do many runs simultaneously, only the solver (src/specfem3d) is. Thus these tools should work, but in their current version will need to be run for each simulation result independently.
+
 More precisely, the current kernel summing and smoothing routines work fine, with the exception that you need to move out the mesh files (and also the parameters). This works because these routines consider multiple runs by design. You simply have to provide them the directories where the kernels are.
 
 \item [{\texttt{GPU\_MODE}}] Turn this flag on to use GPUs.
@@ -366,20 +372,20 @@ We use a file name nummaterial\_poroelastic\_file, which is located in the direc
  rhos rhof phi c kxx kxy kxz kyy kyz kzz Ks Kf Kfr etaf mufr
 \end{verbatim}
 where\\
-rho\_s = solid density\\
-rho\_f = fluid density\\
-phi = porosity\\
-tort = tortuosity\\
-kxx = xx component of permeability tensor\\
-kxy = xy,yx components of permeability tensor\\
-kyy = yy component of permeability tensor\\
-kxz = xz,zx components of permeability tensor\\
-kzz = zz component of permeability tensor\\
-kappa\_s = solid bulk modulus\\
-kappa\_f= fluid bulk modulus\\
-kappa\_fr= frame bulk modulus\\
-eta\_f = fluid viscosity\\
-mu\_fr = frame shear modulus.\\
+\texttt{rho\_s} = solid density,\\
+\texttt{rho\_f} = fluid density,\\
+\texttt{phi} = porosity,\\
+\texttt{tort} = tortuosity,\\
+\texttt{kxx} = xx component of permeability tensor,\\
+\texttt{kxy} = xy,yx components of permeability tensor,\\
+\texttt{kyy} = yy component of permeability tensor,\\
+\texttt{kxz} = xz,zx components of permeability tensor,\\
+\texttt{kzz} = zz component of permeability tensor,\\
+\texttt{kappa\_s} = solid bulk modulus,\\
+\texttt{kappa\_f} = fluid bulk modulus,\\
+\texttt{kappa\_fr} = frame bulk modulus,\\
+\texttt{eta\_f} = fluid viscosity,\\
+\texttt{mu\_fr} = frame shear modulus.\\
 
 Using an external mesh (for instance coming from CUBIT/TRELIS), poroelastic materials have the ID number 3, while 1 is elastic, 2 is acoustic ? see the example in the package: examples/homogeneous\_poroelastic.
 

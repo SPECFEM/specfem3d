@@ -17,6 +17,8 @@ in contact. Each of these two surfaces needs a separate set of nodes.
 This approach is known as \textquotedbl{}split nodes\textquotedbl{}.
 Currently faults can only be run with \texttt{xdecompose\_mesh} and
 \texttt{CUBIT}. \texttt{xmeshfem3D} is not yet ready to handle faults.\\
+
+
 To facilitate the mesh generation with split nodes in CUBIT, we need
 to separate the two fault surfaces by a small distance, effectively
 creating a tiny opening of the fault (Figure \ref{fig:examples.splitnodes},
@@ -25,9 +27,10 @@ of the fault must be opened, its edges must remain closed (except
 the edge on the free surface). The fault is automatically closed later
 by SPECFEM3D.\\
 
-
+\noindent
 Here is an example CUBIT script to generate a mesh with split nodes
 for a buried vertical strike-slip fault:
+
 {\footnotesize
 \begin{verbatim}
  reset
@@ -46,14 +49,14 @@ for a buried vertical strike-slip fault:
  node in surf 160 move X 0 Y -0.01 Z 0
 \end{verbatim}
 }
-%
+
 \begin{figure}[htbp]
-\noindent \begin{centering}
+\begin{centering}
 \includegraphics[scale=0.3]{figures/faultmesh.jpg} \\
 \includegraphics[scale=0.3]{figures/surf168.jpg}
 \includegraphics[scale=0.3]{figures/splitnodes.jpg}
-\par\end{centering}
-
+\par
+\end{centering}
 \caption{Screenshots of the CUBIT example for the embedded fault with split
 nodes: The entire mesh is decomposed into several volumes bounding
 the fault (top), the fault surface 168 is shown as orange squares
@@ -64,21 +67,18 @@ the edges of the fault surface are touching each other.}
 \end{figure}
 
 \begin{figure}[htbp]
-\noindent \begin{centering}
-\includegraphics[scale=0.55]{figures/splitnodes_surfacetrace.pdf} \\
-
-\par\end{centering}
-
+\begin{centering}
+\includegraphics[scale=0.55]{figures/splitnodes_surfacetrace.pdf}
+\par
+\end{centering}
 \caption{Screenshots of a CUBIT example showing split nodes for a fault reaching
 the surface. Surface trace of the fault is shown in orange. Note that
 the edges of the fault are not split while the interior nodes are
 offset by a small distance on either side of the fault}
-
-
 \label{fig:examples.splitnodes-surfacetrace}
 \end{figure}
 
-
+\noindent
 The CUBIT scripts ({*}.jou and {*}.py) in the directory \texttt{EXAMPLES}
 generate more complicated meshes. The {*}.py files are Python scripts
 that execute CUBIT commands and use the CUBIT-python interface for
@@ -88,14 +88,17 @@ the Python script can call a CUBIT journal file ({*}.jou), which looks
 like the example above. Variables can be defined and manipulated there
 using the $\mathtt{APREPRO}$ language built in CUBIT.\\
 
-
+\newpage
+\noindent
 Note that you should avoid gaps in the list of indices of mesh objects
 with the following CUBIT command:
+
 {\footnotesize
 \begin{verbatim}
 compress ids hex face edge node
 \end{verbatim}
 }
+\noindent
 (otherwise you will get a segmentation fault during domain decomposition)
 
 
@@ -459,7 +462,7 @@ in directory $\mathtt{utils}$. The functions are internally documented
 
 \texttt{FSEM3D\_snapshot} reads a fault data snapshot\\
 
-
+\noindent
 The directories \texttt{EXAMPLES/*/post} contain additional Matlab
 scripts to generate figures specific to each example.
 

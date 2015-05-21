@@ -7,6 +7,7 @@ to compile the solver. In the main directory, type
 make xspecfem3D
 \end{verbatim}
 }
+\noindent
 Please note that \texttt{xspecfem3D} must be called directly from
 the main directory, as most of the binaries of the package.\\
 
@@ -33,10 +34,9 @@ on condition that the\\
 after running the databases generation.
 \item the movie control parameters \texttt{MOVIE\_SURFACE}, \texttt{MOVIE\_VOLUME},
 and \texttt{NTSTEPS\_BETWEEN\_FRAMES}
-\item the ShakeMap\textregistered{}option \texttt{CREATE\_SHAKEMAP}
-\item the output information parameters \texttt{MOVIE\_TYPE}, \texttt{NTSTEP\_BETWEEN\_OUTPUT\_INFO}
-and \texttt{NTSTEP\_BETWEEN\_OUTPUT\_}~\\
- \texttt{SEISMOS}
+\item the ShakeMap\textregistered{} option \texttt{CREATE\_SHAKEMAP}
+\item the output information parameters \texttt{MOVIE\_TYPE}, \texttt{NTSTEP\_BETWEEN\_OUTPUT\_INFO} and\\
+\texttt{NTSTEP\_BETWEEN\_OUTPUT\_SEISMOS}
 \item the \texttt{PRINT\_SOURCE\_TIME\_FUNCTION} flags
 \end{itemize}
 Any other change to the \texttt{Par\_file} implies rerunning both
@@ -49,10 +49,8 @@ represents the point source may be obtained directly from the Harvard
 Centroid-Moment Tensor (CMT) web page \urlwithparentheses{www.seismology.harvard.edu}.
 It looks like the example shown in Fig. \ref{fig:CMTSOLUTION-file}.
 \begin{figure}[htp]
-\noindent
 \begin{centering}
-{\small \includegraphics[width=0.8\textwidth]{figures/Hollywood_CMT.pdf}
-}
+\includegraphics[width=0.8\textwidth]{figures/Hollywood_CMT.jpg}
 \par
 \end{centering}
 \caption{\texttt{CMTSOLUTION} file based on the
@@ -110,17 +108,14 @@ where $t_{\mathrm{pde}}$ is the time given in the first line of the
 \texttt{CMTSOLUTION}, \texttt{time shift} is the corresponding value
 from the original \texttt{CMTSOLUTION} file and $t_{\mathrm{synthetic}}$
 is the time in the first column of the output seismogram.
-
 \end{itemize}
+%
 \begin{figure}[htp]
-\noindent \begin{centering}
-\includegraphics[width=3.5in]{figures/gauss_vs_triangle_mod.pdf}
-\par\end{centering}
-
-\caption{Comparison of the shape of a triangle and the Gaussian function actually
-used.}
-
-
+\begin{centering}
+\includegraphics[width=3.5in]{figures/gauss_vs_triangle_mod.jpg}
+\par
+\end{centering}
+\caption{Comparison of the shape of a triangle and the Gaussian function actually used.}
 \label{fig:gauss.vs.triangle}
 \end{figure}
 
@@ -199,47 +194,38 @@ shift}. Each subevent can have its own half latitude, longitude, depth,
 \texttt{half duration} and force parameters.
 
 \begin{figure}[H]
-\noindent \begin{centering}
-{\small \includegraphics[width=5in]{figures/source_timing.pdf} }
-\par\end{centering}
-
-
-
+\begin{centering}
+\includegraphics[width=4in]{figures/source_timing.jpg}
+\par
+\end{centering}
 \caption{Example of timing for three sources. The center of the first source
 triangle is defined to be time zero. Note that this is NOT in general
 the hypocentral time, or the start time of the source (marked as tstart).
 The parameter \texttt{time shift} in the \texttt{CMTSOLUTION} file
 would be t1(=0), t2, t3 in this case, and the parameter \texttt{half
 duration} would be hdur1, hdur2, hdur3 for the sources 1, 2, 3 respectively.}
-
-
 {\small \label{fig:source_timing} }
 \end{figure}
-
-
 
 
 The solver can calculate seismograms at any number of stations for
 basically the same numerical cost, so the user is encouraged to include
 as many stations as conceivably useful in the \texttt{STATIONS} file,
 which looks like this:
-
+%
 \begin{figure}[H]
-\noindent \begin{centering}
-{\small \includegraphics{figures/STATIONS_basin_explained.pdf} }
-\par\end{centering}
-
-
-
-\label{fig:Sample-STATIONS-file.}
+\begin{centering}
+\includegraphics[width=4in]{figures/STATIONS_basin_explained.jpg}
+\par
+\end{centering}
 \caption{Sample \texttt{STATIONS} file. Station latitude and longitude should
 be provided in geographical coordinates. The width of the station
 label should be no more than 32 characters (see \texttt{MAX\_LENGTH\_STATION\_NAME}
 in the \texttt{constants.h} file), and the network label should be
 no more than 8 characters (see \texttt{MAX\_LENGTH\_NETWORK\_NAME}
 in the \texttt{constants.h} file).}
+\label{fig:Sample-STATIONS-file.}
 \end{figure}
-
 
 
 

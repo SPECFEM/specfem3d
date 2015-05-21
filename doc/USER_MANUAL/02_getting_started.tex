@@ -5,6 +5,7 @@ To download the SPECFEM3D\_Cartesian software package, type this:
 git clone --recursive --branch devel https://github.com/geodynamics/specfem3d.git
 \end{verbatim}
 %
+\noindent
 We recommend that you add {\texttt{ulimit -S -s unlimited}} to your
 {\texttt{.bash\_profile}} file and/or {\texttt{limit stacksize
 unlimited }} to your {\texttt{.cshrc}} file to suppress any potential
@@ -20,6 +21,7 @@ in your .bash\_profile or your .cshrc file):
 \begin{verbatim}
 ./configure FC=ifort MPIFC=mpif90
 \end{verbatim}
+\noindent
 Note that MPI must be installed with MPI-IO enabled because parts of SPECFEM3D perform I/Os through MPI-IO.
 
 
@@ -35,13 +37,13 @@ or \texttt{-qnosave} for your machine.
 \end{description}
 When compiling on an IBM machine with the \texttt{xlf} and \texttt{xlc}
 compilers, we suggest running the \texttt{configure} script with the
-following options:\\
+following options:
 
-
-\noindent \texttt{./configure FC=xlf90\_r MPIFC=mpif90 CC=xlc\_r CFLAGS=\textquotedbl{}-O3
--q64\textquotedbl{} FCFLAGS=\textquotedbl{}-O3 -q64\textquotedbl{}
--with-scotch-dir=...}.\\
-
+{\footnotesize
+\begin{verbatim}
+./configure FC=xlf90_r MPIFC=mpif90 CC=xlc_r CFLAGS="-O3 -q64" FCFLAGS="-O3 -q64" -with-scotch-dir=...
+\end{verbatim}
+}
 
 On SGI systems, \texttt{flags.guess} automatically informs \texttt{configure}
 to insert `\texttt{`TRAP\_FPE=OFF}'' into the generated \texttt{Makefile}
@@ -86,6 +88,7 @@ with the option \texttt{-{}-with-scotch-dir}. Just as an example:
 \begin{verbatim}
 ./configure FC=ifort MPIFC=mpif90 --with-scotch-dir=/opt/scotch
 \end{verbatim}
+\noindent
 If you use the Intel ifort compiler to compile the code, we recommend
 that you use the Intel icc C compiler to compile Scotch, i.e., use:
 \begin{verbatim}
@@ -178,17 +181,17 @@ architectures.
 
 To enable OpenMP, uncomment the OpenMP compiler option in two lines
 in file \texttt{src/specfem3D/Makefile.in} (before running \texttt{configure})
-and also uncomment the \texttt{\#define USE\_OPENMP} statement in
-file\\
- \texttt{src/specfem3D/specfem3D.F90}.
+and also uncomment the 
+\texttt{\#define USE\_OPENMP} statement in file\\ 
+\texttt{src/specfem3D/specfem3D.F90}.
 
-The DO-loop using OpenMP threads has a SCHEDULE property. The OMP\_SCHEDULE
+The DO-loop using OpenMP threads has a SCHEDULE property. The \texttt{OMP\_SCHEDULE}
 environment variable can set the scheduling policy of that DO-loop.
 Tests performed by Marcin Zielinski at SARA (The Netherlands) showed
 that often the best scheduling policy is DYNAMIC with the size of
 the chunk equal to the number of OpenMP threads, but most preferably
 being twice as the number of OpenMP threads (thus chunk size = 8 for
-4 OpenMP threads etc). If OMP\_SCHEDULE is not set or is empty, the
+4 OpenMP threads etc). If \texttt{OMP\_SCHEDULE} is not set or is empty, the
 DO-loop will assume generic scheduling policy, which will slow down
 the job quite a bit.
 
@@ -198,14 +201,11 @@ the job quite a bit.
 \underline{More recent installation instruction for IBM BlueGene, from April 2013:}\\
 
 
-\noindent Edit file \texttt{flags.guess} and put this for \texttt{FLAGS\_CHECK}:\\
-
-
-\noindent \texttt{-g -qfullpath -O2 -qsave -qstrict -qtune=qp -qarch=qp
--qcache=auto -qhalt=w}\\
- \texttt{-qfree=f90 -qsuffix=f=f90 -qlanglvl=95pure -Q -Q+rank,swap\_all
--Wl,-relax}\\
-
+\noindent Edit file \texttt{flags.guess} and put this for \texttt{FLAGS\_CHECK}:
+\begin{verbatim}
+-g -qfullpath -O2 -qsave -qstrict -qtune=qp -qarch=qp -qcache=auto -qhalt=w
+-qfree=f90 -qsuffix=f=f90 -qlanglvl=95pure -Q -Q+rank,swap_all -Wl,-relax
+\end{verbatim}
 
 \noindent The most relevant are the -qarch and -qtune flags, otherwise
 if these flags are set to ``auto'' then they are wrongly assigned
@@ -226,12 +226,10 @@ load bgq-xl} (another, less efficient option is to load the GNU compilers
 using \texttt{module load bgq-gnu/4.4.6} or similar).\\
 
 
-\noindent Then, to configure the code, type this:\\
-
-
-\noindent \texttt{./configure FC=bgxlf90\_r MPIFC=mpixlf90\_r CC=bgxlc\_r
-LOCAL\_PATH\_IS\_ALSO\_GLOBAL=true}\\
-
+\noindent Then, to configure the code, type this:
+\begin{verbatim}
+./configure FC=bgxlf90_r MPIFC=mpixlf90_r CC=bgxlc_r LOCAL_PATH_IS_ALSO_GLOBAL=true
+\end{verbatim}
 
 In order for the SCOTCH domain decomposer to compile, on some (but
 not all) Blue Gene systems you may need to run \texttt{configure}
@@ -242,13 +240,14 @@ with \texttt{CC=gcc} instead of \texttt{CC=bgxlc\_r}.
 
 \noindent To compile the code on an IBM BlueGene, Laurent L\'eger from
 IDRIS, France, suggests the following: compile the code with
+\begin{verbatim}
+FLAGS_CHECK="-O3 -qsave -qstrict -qtune=auto -qarch=450d -qcache=auto \
+  -qfree=f90 -qsuffix=f=f90 -g -qlanglvl=95pure -qhalt=w -Q \
+  -Q+rank,swap_all -Wl,-relax"
+\end{verbatim}
 
-\noindent \texttt{ FLAGS\_CHECK=\textquotedbl{}-O3 -qsave -qstrict
--qtune=auto -qarch=450d -qcache=auto }~\\
- \texttt{ -qfree=f90 -qsuffix=f=f90 -g -qlanglvl=95pure -qhalt=w -Q
--Q+rank,swap\_all -Wl,-relax\textquotedbl{}}
-
-\noindent Option \textquotedbl{}-Wl,-relax\textquotedbl{} must be
+\noindent 
+Option \textquotedbl{}-Wl,-relax\textquotedbl{} must be
 added on many (but not all) BlueGene systems to be able to link the
 binaries \texttt{xmeshfem3D} and \texttt{xspecfem3D} because the final
 link step is done by the GNU \texttt{ld} linker even if one uses \texttt{FC=bgxlf90\_r,
@@ -264,12 +263,11 @@ ARFLAGS=cru} and \texttt{RANLIB=bgranlib}. Thus the easiest thing
 to do is to modify all \texttt{Makefile.in} files and the \texttt{configure}
 script to set them automatically by \texttt{configure}. One then just
 needs to pass the right commands to the \texttt{configure} script:
-
-\noindent \texttt{ ./configure -{}-prefix=/path/to/SPECFEM3DG\_SP
--{}-host=Babel -{}-build=BGP }~\\
- \texttt{ FC=bgxlf90\_r MPIFC=mpixlf90\_r CC=bgxlc\_r AR=bgar ARFLAGS=cru
-}~\\
- \texttt{ RANLIB=bgranlib LOCAL\_PATH\_IS\_ALSO\_GLOBAL=false}
+\begin{verbatim}
+./configure --prefix=/path/to/SPECFEM3DG_SP --host=Babel --build=BGP \
+  FC=bgxlf90_r MPIFC=mpixlf90_r CC=bgxlc_r AR=bgar ARFLAGS=cru \
+  RANLIB=bgranlib LOCAL_PATH_IS_ALSO_GLOBAL=false
+\end{verbatim}
 
 \noindent This trick can be useful for all hosts on which one needs
 to cross-compile.
@@ -277,7 +275,10 @@ to cross-compile.
 \noindent On BlueGene, one also needs to run the \texttt{xcreate\_header\_file}
 binary file manually rather than in the Makefile:
 
-\noindent \texttt{bgrun -np 1 -mode VN -exe ./bin/xcreate\_header\_file}
+\noindent 
+\begin{verbatim}
+bgrun -np 1 -mode VN -exe ./bin/xcreate_header_file
+\end{verbatim}
 
 
 \section{Visualizing the subroutine calling tree of the source code}
@@ -318,10 +319,12 @@ The important entries in the Doxyfile are:
 \item [{\texttt{CALLER\_GRAPH}}] Set to YES
 \item [{\texttt{DOT\_PATH}}] The path where is located the dot program graphviz (if it is not in your \$PATH)
 \item [{\texttt{RECURSIVE}}] This tag can be used to turn specify whether or not subdirectories should be searched for input files as well. In the case of SPECFEM, set to YES.
-\item [{\texttt{EXCLUDE}}] Here, you can exclude:  \\
-\texttt{"../../src/specfem3D/older\_not\_maintained\_partial\_OpenMP\_port"}\\
-\texttt{"../../src/decompose\_mesh/scotch"}\\
-\texttt{"../../src/decompose\_mesh/scotch\_5.1.12b"}
+\item [{\texttt{EXCLUDE}}] Here, you can exclude:
+\begin{verbatim}
+../../src/specfem3D/older_not_maintained_partial_OpenMP_port
+../../src/decompose_mesh/scotch
+../../src/decompose_mesh/scotch_5.1.12b
+\end{verbatim}
 \item [{\texttt{DOT\_GRAPH\_MAX\_NODES}}] to set the maximum number of nodes that will be shown in the graph. If the number of nodes in a graph becomes larger than this value, doxygen will truncate the graph, which is visualized by representing a node as a red box. Minimum value: 0, maximum value: 10000, default value: 50.
 \item [{\texttt{MAX\_DOT\_GRAPH\_DEPTH}}] to set the maximum depth of the graphs generated by dot. A depth value of 3 means that only nodes reachable from the root by following a path via at most 3 edges will be shown. Using a depth of 0 means no depth restriction. Minimum value: 0, maximum value: 1000, default value: 0.
 
