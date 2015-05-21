@@ -453,7 +453,7 @@ at \url{http://www.labri.fr/perso/pelegrin/scotch/scotch_en.html}.\\
 is colored differently. The executable \texttt{xdecompose\_mesh} can
 equally distribute the mesh on any arbitrary number of cores. Domain
 decomposition is explained in detail in \citet{MaKoBlLe08}, and excellent
-scaling up to 150,000 processor cores in shown for instance in 
+scaling up to 150,000 processor cores in shown for instance in
 \citet{CaKoLaTiMiLeSnTr08,KoLaMi08a,MaKoBlLe08,KoErGoMi10,Kom11}.}
 \label{fig:mount.partitions}
 \end{figure}
@@ -470,7 +470,7 @@ If all paths and flags have been set correctly, the executable \texttt{bin/xdeco
 should be produced.
 
 The partitioning is done in serial for now (in the next release we
-will provide a parallel version of that code). It needs to be run in the main directory because it expects the \texttt{./DATA/Par\_file}. 
+will provide a parallel version of that code). It needs to be run in the main directory because it expects the \texttt{./DATA/Par\_file}.
 The synopsis is:
 %
 \begin{verbatim}
@@ -544,7 +544,7 @@ you need to define the zone number for the UTM projection (e.g., zone
 (no minutes/seconds). These values are approximate; the mesher will
 round them off to define a square mesh in UTM coordinates. When running
 benchmarks on rectangular models, turn the UTM projection off by using
-the flag \texttt{\small SUPPRESS\_UTM\_PROJECTION}, 
+the flag \texttt{\small SUPPRESS\_UTM\_PROJECTION},
 in which case all `longitude' parameters simply refer to the $x$~axis, and
 all `latitude' parameters simply refer to the $y$~axis. To run the
 mesher for a global simulation, the following parameters need to be
@@ -559,7 +559,7 @@ for West).
 \item [{\texttt{LONGITUDE\_MAX}}] Maximum longitude in the block.
 \item [{\texttt{DEPTH\_BLOCK\_KM}}] Depth of bottom of mesh in kilometers.
 \item [{\texttt{UTM\_PROJECTION\_ZONE}}] UTM projection zone in
-which your model resides, only valid when 
+which your model resides, only valid when
 \texttt{SUPPRESS\_UTM\_PROJECTION} is \texttt{.false.}.
 Use a negative zone number for the Southern hemisphere:
 the Northern hemisphere corresponds to zones +1 to +60,

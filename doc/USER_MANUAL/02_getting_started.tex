@@ -181,8 +181,8 @@ architectures.
 
 To enable OpenMP, uncomment the OpenMP compiler option in two lines
 in file \texttt{src/specfem3D/Makefile.in} (before running \texttt{configure})
-and also uncomment the 
-\texttt{\#define USE\_OPENMP} statement in file\\ 
+and also uncomment the
+\texttt{\#define USE\_OPENMP} statement in file\\
 \texttt{src/specfem3D/specfem3D.F90}.
 
 The DO-loop using OpenMP threads has a SCHEDULE property. The \texttt{OMP\_SCHEDULE}
@@ -246,7 +246,7 @@ FLAGS_CHECK="-O3 -qsave -qstrict -qtune=auto -qarch=450d -qcache=auto \
   -Q+rank,swap_all -Wl,-relax"
 \end{verbatim}
 
-\noindent 
+\noindent
 Option \textquotedbl{}-Wl,-relax\textquotedbl{} must be
 added on many (but not all) BlueGene systems to be able to link the
 binaries \texttt{xmeshfem3D} and \texttt{xspecfem3D} because the final
@@ -275,7 +275,7 @@ to cross-compile.
 \noindent On BlueGene, one also needs to run the \texttt{xcreate\_header\_file}
 binary file manually rather than in the Makefile:
 
-\noindent 
+\noindent
 \begin{verbatim}
 bgrun -np 1 -mode VN -exe ./bin/xcreate_header_file
 \end{verbatim}
