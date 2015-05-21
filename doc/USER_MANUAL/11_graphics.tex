@@ -58,7 +58,9 @@ of each source in the \texttt{CMTSOLUTION} file is replaced by
 \[
 \sqrt{(}\mathrm{\mathtt{HALF\_DURATIO}\mathtt{N}^{2}}+\mathrm{\mathtt{HDUR\_MOVI}\mathtt{E}^{2}})
 \]
- \textbf{NOTE:} If \texttt{HDUR\_MOVIE} is set to 0.0, the code will
+\end{quote}
+
+\textbf{NOTE:} If \texttt{HDUR\_MOVIE} is set to 0.0, the code will
 select the appropriate value of 1.1 $\times$ smallest period. As
 usual, for a point source one can set \texttt{half duration} in the
 \texttt{CMTSOLUTION} file to be 0.0 and \texttt{HDUR\_MOVIE} = 0.0
@@ -66,7 +68,6 @@ in the \texttt{Par\_file} to get the highest frequencies resolved
 by the simulation, but for a finite source one would keep all the
 \texttt{half durations} as prescribed by the finite source model and
 set \texttt{HDUR\_MOVIE} = 0.0.
-\end{quote}
 
 \subsection{Movie Surface}
 
@@ -75,26 +76,32 @@ flag turned on, the code outputs \texttt{moviedata??????} files in
 the \texttt{OUTPUT\_FILES} directory. There are several flags in the
 main parameter file \texttt{Par\_file} that control the output of
 these movie data files (see section \ref{cha:Main-Parameter} for
-details): \texttt{\small NTSTEP\_BETWEEN\_FRAMES}{\small{} to set the
-timesteps between frames, }\texttt{\small SAVE\_DISPLACEMENT}{\small{}
-to save displacement instead of velocity, }\texttt{\small USE\_HIGHRES\_FOR\_MOVIES}{\small{}
+details):
+\texttt{\small NTSTEP\_BETWEEN\_FRAMES} to set the
+timesteps between frames,
+\texttt{\small SAVE\_DISPLACEMENT}
+to save displacement instead of velocity,
+\texttt{\small USE\_HIGHRES\_FOR\_MOVIES}
 to save values at all GLL point instead of element edges. In order
-to output additionally shakemaps, you would set the parameter }\texttt{\small CREATE\_SHAKEMAP}{\small{}
-to }\texttt{\small .true.}{\small .}{\small \par}
+to output additionally shakemaps, you would set the parameter
+\texttt{\small CREATE\_SHAKEMAP}
+to \texttt{\small .true.}.
 
 The files are in a fairly complicated binary format, but there is
 a program provided to convert the output into more user friendly formats:
 \begin{description}
-\item [{\texttt{xcreate\_movie\_shakemap\_AVS\_DX\_GMT}}] From \texttt{create\_movie\_shakemap\_AVS\_DX\_GMT.f90},
+\item [{\texttt{xcreate\_movie\_shakemap\_AVS\_DX\_GMT}}]
+From \texttt{create\_movie\_shakemap\_AVS\_DX\_GMT.f90},
 it outputs data in ASCII, OpenDX, or AVS format (also readable in
 ParaView). Before compiling the code, make sure you have the file
 \texttt{surface\_from\_mesher.h} in the \texttt{OUTPUT\_FILES/} directory.
 This file will be created by the solver run. Then type
 
-\begin{lyxcode}
-{\footnotesize make~xcreate\_movie\_shakemap\_AVS\_DX\_GMT}{\footnotesize \par}
-\end{lyxcode}
-
+{\footnotesize
+\begin{verbatim}
+make xcreate_movie_shakemap_AVS_DX_GMT
+\end{verbatim}
+}
 and run the executable \texttt{xcreate\_movie\_shakemap\_AVS\_DX\_GMT}
 in the main directory. It will create visualization files
 in your format of choice. The code will prompt the user for input
@@ -102,17 +109,14 @@ parameters.
 
 
 \begin{figure}[htbp]
-\noindent \begin{centering}
+\begin{centering}
 \includegraphics[width=0.32\textwidth]{figures/movie_surf_1.jpg}
 \includegraphics[width=0.32\textwidth]{figures/movie_surf_2.jpg}
 \includegraphics[width=0.32\textwidth]{figures/movie_surf_3.jpg}
-\par\end{centering}
-
+\par
+\end{centering}
 \caption{Visualization using AVS files created by \texttt{xcreate\_movie\_shakemap\_AVS\_DX\_GMT}
-showing movie snapshots of vertical velocity components at different
-times.}
-
-
+showing movie snapshots of vertical velocity components at different times.}
 \label{fig:movie.surf}
 \end{figure}
 
@@ -125,38 +129,54 @@ see Southern California ShakeMovie\textregistered{}\urlwithparentheses{www.shake
 
 \subsection{Movie Volume}\label{sub:Movie-Volume}
 
-When running xspecfem3D with the \texttt{\small MOVIE\_VOLUME}{\small{}
-flag turned on, the code outputs several files in }\texttt{\small LOCAL\_PATH}{\small{}
-specified in the main }\texttt{\small Par\_file}{\small , e.g. in
-directory }\texttt{\small OUTPUT\_FILES/DATABASES\_MPI}{\small .
+When running xspecfem3D with the
+\texttt{\small MOVIE\_VOLUME}
+flag turned on, the code outputs several files in \texttt{\small LOCAL\_PATH}
+specified in the main \texttt{\small Par\_file},
+e.g. in directory \texttt{\small OUTPUT\_FILES/DATABASES\_MPI}.
 The output is saved by each processor at the time interval specified
-by }\texttt{\small NTSTEP\_BETWEEN\_FRAMES}{\small . For all domains,
-the velocity field is output to files: }\texttt{\small proc??????\_velocity\_X\_it??????.bin}{\small ,
-}\texttt{\small proc??????\_velocity\_Y\_it??????.bin}{\small{} and
-}\texttt{\small proc??????\_velocity\_Z\_it??????.bin}{\small . For
-elastic domains, the divergence and curl taken from the velocity field,
+by
+\texttt{\small NTSTEP\_BETWEEN\_FRAMES}.
+For all domains,
+the velocity field is output to files:
+{\small
+\begin{verbatim}
+proc??????_velocity_X_it??????.bin
+proc??????_velocity_Y_it??????.bin
+proc??????_velocity_Z_it??????.bin
+\end{verbatim}
+}
+\noindent
+For elastic domains, the divergence and curl taken from the velocity field,
 i.e. $\nabla\cdot{\bf {v}}$ and $\nabla\times{\bf {v}}$, get stored
-as well: }\texttt{\small proc??????\_div\_it??????.bin}{\small , }\texttt{\small proc??????\_curl\_X\_t??????.bin}{\small ,
-}\texttt{\small proc??????\_curl\_Y\_it??????.bin}{\small{} and }\texttt{\small proc??????\_curl\_Z\_it??????.bin}{\small .
-The files denoted }\texttt{\small proc??????\_div\_}{\small ~}\\
-{\small{} }\texttt{\small glob\_it??????.bin}{\small{} and }\texttt{\small proc??????\_curl\_glob\_it??????.bin}{\small{}
+as well:
+{\small
+\begin{verbatim}
+proc??????_div_it??????.bin
+proc??????_curl_X_t??????.bin
+proc??????_curl_Y_it??????.bin
+proc??????_curl_Z_it??????.bin
+\end{verbatim}
+}
+\noindent
+The files denoted \texttt{\small proc??????\_div\_glob\_it??????.bin} and
+\texttt{\small proc??????\_curl\_glob\_it??????.bin}
 are stored on the global points only, all the other arrays are stored
 on all GLL points. Note that the components X/Y/Z can change to E/N/Z
-according to the }\texttt{\small SUPPRESS\_UTM\_PROJECTION}{\small{}
-flag (see also Appendix~\ref{cha:Coordinates} and \ref{cha:channel-codes}).}{\small \par}
+according to the
+\texttt{\small SUPPRESS\_UTM\_PROJECTION}
+flag (see also Appendix~\ref{cha:Coordinates} and \ref{cha:channel-codes}).
 
 \begin{figure}[htbp]
-\noindent \begin{centering}
+\begin{centering}
 \includegraphics[width=0.32\textwidth]{figures/movie_volume_1.jpg}
 \includegraphics[width=0.32\textwidth]{figures/movie_volume_2.jpg}
 \includegraphics[width=0.32\textwidth]{figures/movie_volume_3.jpg}
-\par\end{centering}
-
+\par
+\end{centering}
 \caption{Paraview visualization using movie volume files (converted by \texttt{xcombine\_vol\_data}
 and \texttt{mesh2vtu.pl}) and showing snapshots of vertical velocity
 components at different times.}
-
-
 \label{fig:movie.volume}
 \end{figure}
 
@@ -164,39 +184,44 @@ components at different times.}
 To visualize these files, we use an auxilliary program \texttt{combine\_vol\_data.f90}
 to combine the data from all slices into one mesh file. To compile
 it in the root directory, type:
-\begin{lyxcode}
-{\footnotesize make~xcombine\_vol\_data~}{\footnotesize \par}
-\end{lyxcode}
+
+{\footnotesize
+\begin{verbatim}
+make xcombine_vol_data
+\end{verbatim}
+}
+\noindent
 which will create the executable \texttt{bin/xcombine\_vol\_data}.
 To output the usage of this executable, type
-\begin{lyxcode}
-{\footnotesize ./bin/xcombine\_vol\_data~}{\footnotesize \par}
-\end{lyxcode}
+
+{\footnotesize
+\begin{verbatim}
+./bin/xcombine_vol_data
+\end{verbatim}
+}
+\noindent
 without arguments.
 
 \medskip
 
 \texttt{xcombine\_vol\_data} will combine the data on the different processors (located in \texttt{OUTPUT\_FILES/DATABASES\_MPI}), for a given quantity and a given iteration, to one file. For example, if you want to combine \texttt{velocity\_Z}, for the iteration 400 on 4 processors, i.e. if you want to combine these files :
-
-\medskip
-
-\texttt{proc000000\_velocity\_Z\_it000400.bin }
-
-\texttt{proc000001\_velocity\_Z\_it000400.bin }
-
-\texttt{proc000002\_velocity\_Z\_it000400.bin }
-
-\texttt{proc000003\_velocity\_Z\_it000400.bin}
-
-\medskip
+{\small
+\begin{verbatim}
+proc000000_velocity_Z_it000400.bin
+proc000001_velocity_Z_it000400.bin
+proc000002_velocity_Z_it000400.bin
+proc000003_velocity_Z_it000400.bin
+\end{verbatim}
+}
 
 You have to go in the directory of the concerned example (where are the directories \texttt{DATA}, \texttt{OUTPUT\_FILES}, etc.).
 Then, you can launch \texttt{xcombine\_vol\_data}, specifying the path where it is located. As an example, if the \texttt{DATA} and \texttt{OUTPUT\_FILES} directories of the concerned example are in the root specfem3d directory, \texttt{xcombine\_vol\_data} is in \texttt{./bin}, and you have to type:
 
-\begin{lyxcode}
-~{\footnotesize ./bin/xcombine\_vol\_data~0~3~velocity\_Z\_it000400~./OUTPUT\_FILES/DATABASES\_MPI~./OUTPUT\_FILES~0~}{\footnotesize \par}
-\end{lyxcode}
-
+{\footnotesize
+\begin{verbatim}
+./bin/xcombine_vol_data 0 3 velocity_Z_it000400 ./OUTPUT_FILES/DATABASES_MPI ./OUTPUT_FILES 0
+\end{verbatim}
+}
 Here, $0$ is the number of the first processor, $3$ the number of the last one, \texttt{velocity\_Z\_it000400} the name of the files we want to combine without the prefix \texttt{proc000000*\_}, \texttt{./OUTPUT\_FILES/DATABASES\_MPI} the directory where the files are located, \texttt{./OUTPUT\_FILES} the directory where the combined file will be stored, and $0$ is the parameter to create a low-resolution mesh file ($1$ for a high-resolution).
 
 \medskip
@@ -206,11 +231,18 @@ At the beginning of the source file \texttt{combine\_vol\_data.f90} (located in 
 \medskip
 
 If the value of this parameter is \texttt{.false.}, the output mesh file will have the name \texttt{velocity\_Z\_it000400.mesh}. Then we next have to convert the
-\texttt{.mesh} file into the VTU (Unstructured grid file) format which can be viewed in ParaView. For this task, you can use and modify the
-script \texttt{mesh2vtu.pl} located in directory \texttt{utils/Visualization/Paraview/}, for example:
-\begin{lyxcode}
-{\footnotesize mesh2vtu.pl~-i~velocity\_Z\_it000400.mesh~-o~velocity\_Z\_it000400.vtu}{\footnotesize \par}
-\end{lyxcode}
+\texttt{.mesh} file into the VTU (Unstructured grid file) format which can be viewed in ParaView.
+
+\noindent
+For this task, you can use and modify the
+script \texttt{mesh2vtu.pl} located in directory \texttt{\small utils/Visualization/Paraview/}, for example:
+
+{\footnotesize
+\begin{verbatim}
+mesh2vtu.pl -i velocity_Z_it000400.mesh -o velocity_Z_it000400.vtu
+\end{verbatim}
+}
+
 Notice that this Perl script uses a program \texttt{mesh2vtu} in the \texttt{utils/Visualization/Paraview/mesh2vtu} directory, which further
 uses the VTK \urlwithparentheses{http://www.vtk.org/} run-time library for its execution. Therefore, make sure you have them properly set
 in the script according to your system.
@@ -247,10 +279,11 @@ circle path. It applies to meshes created with the internal mesher
 \item On machines where you have access to the script, copy the \texttt{Mesh\_Par\_file},
 and \texttt{output\_solver} files, and run:
 
-\begin{lyxcode}
-{\small slice\_number.pl~Mesh\_Par\_file~output\_solver.txt~slice\_file}{\small \par}
-\end{lyxcode}
-
+{\small
+\begin{verbatim}
+slice_number.pl Mesh_Par_file output_solver.txt slice_file
+\end{verbatim}
+}
 which will generate a \texttt{slices\_file}.
 
 \item For cases with multiple sources and multiple receivers, you need to
@@ -265,10 +298,11 @@ kernel files from the given slices.
 \item You can use or modify the script \texttt{utils/copy\_basin\_database.pl}
 to accomplish this:
 
-\begin{lyxcode}
-{\small utils/copy\_database.pl~slice\_file~lsf\_machine\_file~filename~{[}jobid{]}}{\small \par}
-\end{lyxcode}
-
+{\small
+\begin{verbatim}
+utils/copy_database.pl slice_file lsf_machine_file filename [jobid]
+\end{verbatim}
+}
 where \texttt{\small lsf\_machine\_file}{\small{} is the machine file
 generated by the LSF scheduler, }\texttt{\small filename}{\small{}
 is the kernel name (e.g., }\texttt{\small rho\_kernel}{\small , }\texttt{\small alpha\_kernel}{\small{}
@@ -287,13 +321,12 @@ We use an auxilliary program \texttt{combine\_vol\_data.f90} to combine
 the kernel files from all slices into one mesh file.
 \begin{enumerate}
 \item Compile it in the root directory:
-
-\begin{lyxcode}
-{\footnotesize make~xcombine\_vol\_data~}{\footnotesize \par}
-
-{\footnotesize ./bin/xcombine\_vol\_data~slice\_list~filename~input\_dir~output\_dir~high/low-resolution~}{\footnotesize \par}
-\end{lyxcode}
-
+{\footnotesize
+\begin{verbatim}
+make xcombine_vol_data
+./bin/xcombine_vol_data slice_list filename input_dir output_dir high/low-resolution
+\end{verbatim}
+}
 where \texttt{input\_dir} is the directory where all the individual
 kernel files are stored, and \texttt{output\_dir} is where the mesh
 file will be written.
@@ -303,6 +336,7 @@ the mesh file, or use 0 for low resolution, outputting only the corner
 points of the elements to the mesh file.
 \item The output mesh file will have the name \texttt{filename\_rho(alpha,beta).mesh}
 \end{enumerate}
+
 \item \textbf{Convert mesh files into .vtu files}
 
 \begin{enumerate}
@@ -311,15 +345,19 @@ grid file) format which can be viewed in ParaView. For this task,
 you can use and modify the script \texttt{mesh2vtu.pl} located in
 directory \texttt{utils/Visualization/Paraview/}, for example:
 
-\begin{lyxcode}
-{\footnotesize mesh2vtu.pl~-i~file.mesh~-o~file.vtu~}{\footnotesize \par}
-\end{lyxcode}
+{\footnotesize
+\begin{verbatim}
+mesh2vtu.pl -i file.mesh -o file.vtu
+\end{verbatim}
+}
+
 \item Notice that this Perl script uses a program \texttt{mesh2vtu} in the
-\texttt{utils/Visualization/Paraview/mesh2vtu} directory, which further
+\texttt{\small utils/Visualization/Paraview/mesh2vtu} directory, which further
 uses the VTK \urlwithparentheses{http://www.vtk.org/} run-time library
 for its execution. Therefore, make sure you have them properly set
 in the script according to your system.
 \end{enumerate}
+
 \item \textbf{Copy over the source and receiver .vtk file}
 
 
@@ -361,11 +399,12 @@ the \textsf{Accept} button. Choose \textsf{Filter} $\rightarrow$
 \urlwithparentheses{www.paraview.org/files/v1.6/ParaViewUsersGuide.PDF}.
 \end{enumerate}
 \end{enumerate}
+%
 \begin{figure}[H]
-\noindent \begin{centering}
-\includegraphics[scale=0.6]{figures/3D-S-Kernel.pdf}
-\par\end{centering}
-
+\begin{centering}
+\includegraphics[width=6in]{figures/3D-S-Kernel.jpg}
+\par
+\end{centering}
 \caption{(a) Top Panel: Vertical source-receiver cross-section of the S-wave
 finite-frequency sensitivity kernel $K_{\beta}$ for station GSC at
 an epicentral distance of 176 km from the September 3, 2002, Yorba
@@ -373,8 +412,6 @@ Linda earthquake. Lower Panel: Vertical source-receiver cross-section
 of the 3D S-wave speed model used for the spectral-element simulations
 \citep{KoLiTrSuStSh04}. (b) The same as (a) but for station HEC at
 an epicentral distance of 165 km \citep{LiTr06}.}
-
-
 \label{figure:P-wave-speed-finite-frequency}
 \end{figure}
 

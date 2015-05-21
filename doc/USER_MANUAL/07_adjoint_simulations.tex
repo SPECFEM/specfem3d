@@ -33,10 +33,9 @@ from the adjoint seismograms recorded at the original earthquake location.
 1} and \texttt{SAVE\_FORWARD = .false.}). You can automatically set
 these two variables using the \texttt{\small utils/change\_simulation\_type.pl}{\small{}
 script:}{\small \par}
-
-\begin{lyxcode}
-utils/change\_simulation\_type.pl~-f~
-\end{lyxcode}
+\begin{verbatim}
+utils/change_simulation_type.pl -f
+\end{verbatim}
 
 and then collect the recorded seismograms at all the stations given
 in \texttt{DATA/STATIONS}.
@@ -148,10 +147,9 @@ to cut a certain portion of the original displacement seismograms
 and convert it into the proper adjoint source to compute the finite-frequency
 kernel.
 
-\begin{lyxcode}
-xcreate\_adjsrc\_traveltime~t1~t2~ifile{[}0-5{]}~E/N/Z-ascii-files~{[}baz{]}
-\end{lyxcode}
-
+\begin{verbatim}
+xcreate_adjsrc_traveltime t1 t2 ifile[0-5] E/N/Z-ascii-files [baz]
+\end{verbatim}
 where \texttt{t1} and \texttt{t2} are the start and end time of the
 portion you are interested in, \texttt{ifile} denotes the component
 of the seismograms to be used (0 for all three components, 1 for East,
@@ -164,10 +162,9 @@ when \texttt{ifile} = 4 or 5.
 \item Similarly, a sample program to compute adjoint sources for amplitude
 finite-frequency kernels may be found in \texttt{utils/adjoint\_sources/amplitude}
 and used in the same way as described for traveltime measurements
-
-\begin{lyxcode}
-xcreate\_adjsrc\_amplitude~t1~t2~ifile{[}0-5{]}~E/N/Z-ascii-files~{[}baz{]}.
-\end{lyxcode}
+\begin{verbatim}
+xcreate_adjsrc_amplitude t1 t2 ifile[0-5] E/N/Z-ascii-files [baz]
+\end{verbatim}
 \end{itemize}
 \item \textbf{Run the kernel simulation}
 

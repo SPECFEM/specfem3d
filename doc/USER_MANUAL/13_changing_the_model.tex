@@ -20,9 +20,9 @@ options:\\
 each element in the file \texttt{MESH/materials\_file} and use the
 following format in the file \texttt{MESH/nummaterial\_velocity\_file}
 when using CUBIT to construct your mesh (see also section \ref{subsec:Exporting-the-Mesh}):
-\begin{lyxcode}
-domain\_ID~material\_ID~tomography~elastic~file\_name~1
-\end{lyxcode}
+\begin{verbatim}
+domain_ID material_ID tomography elastic file_name 1
+\end{verbatim}
 where: \\
  \indent \texttt{domain\_ID} is 1 for acoustic or 2 for elastic materials,
 \\
@@ -104,18 +104,18 @@ lines each with the corresponding suitable format described above.
 
 The example in Figure~\ref{fig:tomography_file} is for an external tomography file with uniform spacing in the $x$, $y$, and $z$ directions. (Note that $\Delta x$, $\Delta y$, and $\Delta z$ need not be the same as in the example.) In that example, the  \texttt{nummaterial\_velocity\_file} is
 %
-\begin{lyxcode}
-2  -1 tomography elastic tomography\_model.xyz 1
-\end{lyxcode}
+\begin{verbatim}
+2  -1 tomography elastic tomography_model.xyz 1
+\end{verbatim}
 %
 and the file \texttt{tomography\_model.xyz} will need to reside in \texttt{DATA/}. All entries in the second column of \texttt{materials\_file} will be \texttt{-1}, which means that each element in the mesh will be interpolated accordind to the values in \texttt{tomography\_model.xyz}.
 
 In some cases it may be desirable to have an external tomography model that is described in more than one file. For example, in cases like southern California, the length scale of variation in the structure of the wave speed model is much shorter in the sedimentary basin models within the upper 15~km. Therefore one might want to use an external tomography file that is sampled with, say, $\Delta x = 1000$~m, $\Delta y = 1000$~m, and $\Delta z = 250$~m in the uppermost 15~km, and then use $\Delta x = 2000$~m, $\Delta y = 2000$~m, and $\Delta z = 1000$~m below a depth of 15~km. If these intervals are chosen appropriately, then it will result in a pair of external tomography file that is much smaller than the alternative of having a single file with the fine discretization. In this case  \texttt{nummaterial\_velocity\_file} is
 %
-\begin{lyxcode}
-2  -1 tomography elastic file\_above\_15km.xyz 1 \\
-2  -2 tomography elastic file\_below\_15km.xyz 1
-\end{lyxcode}
+\begin{verbatim}
+2  -1 tomography elastic file_above_15km.xyz 1
+2  -2 tomography elastic file_below_15km.xyz 1
+\end{verbatim}
 %
 and the files \texttt{file\_above\_15km.xyz} and \texttt{file\_below\_15km.xyz} will need to reside in \texttt{DATA/}.  All entries in the second column of \texttt{materials\_file} will need to be either \texttt{-1} or \texttt{-2}, depending on whether the element is above or below 15~km depth. In this sense, the construction of the mesh and the discretization of the external model will generally be done in tandem.
 
@@ -132,10 +132,10 @@ and/or (an)elastic (attenuation) models may then be superimposed onto
 the mesh based upon your subroutine in \texttt{model\_external\_values.f90}
 located in directory \texttt{src/generate\_databases}. The call to
 this routine would be as follows
-\begin{lyxcode}
-call~model\_external\_values(xmesh,~ymesh,~zmesh,~~\&~~\\
-~~~~~~~~~~~rho,~vp,~vs,~qmu\_atten,~iflag\_aniso,~idomain\_id)
-\end{lyxcode}
+\begin{verbatim}
+call model_external_values(xmesh, ymesh, zmesh, &
+                           rho, vp, vs, qmu_atten, iflag_aniso, idomain_id)
+\end{verbatim}
 Input to this routine consists of:
 \begin{description}
 \item [{\texttt{xmesh,ymesh,zmesh}}] location of mesh point
@@ -167,11 +167,11 @@ the model parameter \texttt{MODEL = aniso}. Three-dimensional anisotropic
 models may be superimposed on the mesh based upon the subroutine in
 file \texttt{model\_aniso.f90} located in directory \texttt{src/generate\_databases}.
 The call to this subroutine is of the form
-\begin{lyxcode}
-call~model\_aniso(iflag\_aniso,~rho,~vp,~vs,~\&~~\\
-~~~~~~~~~~~c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,~\&~~\\
-~~~~~~~~~~~c33,c34,c35,c36,c44,c45,c46,c55,c56,c66)~
-\end{lyxcode}
+\begin{verbatim}
+call model_aniso(iflag_aniso, rho, vp, vs, &
+                 c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26, &
+                 c33,c34,c35,c36,c44,c45,c46,c55,c56,c66)
+\end{verbatim}
 Input to this routine consists of:
 \begin{description}
 \item [{\texttt{iflag\_aniso}}] flag indicating the type of the anisotropic
@@ -183,7 +183,7 @@ $\rho$, $v_{p}$ and $v_{s}$.
 Output from the routine consists of the following non-dimensional
 model parameters:
 \begin{description}
-\item [{\texttt{c11},}] \textbf{$\cdots$,} \texttt{\textbf{c66}} 21~dimensionalized
+\item [{\texttt{c11,..,c66}}] 21~dimensionalized
 anisotropic elastic parameters.
 \end{description}
 You can replace the \texttt{model\_aniso.f90} file by your own version

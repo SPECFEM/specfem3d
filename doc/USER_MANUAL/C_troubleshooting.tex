@@ -14,26 +14,29 @@ CC and MPIF90 will not be correct if `./configure` fails.
 Please make sure that you have a working installation of a Fortran
 compiler, a C compiler and an MPI implementation. You should be able
 to compile this little program code:
-\begin{lyxcode}
-program~main~~~\\
-~include~'mpif.h'~~~\\
-~integer,~parameter~::~CUSTOM\_MPI\_TYPE~=~MPI\_REAL~~~\\
-~integer~ier~~~\\
-~call~MPI\_INIT(ier)~~~\\
-~call~MPI\_BARRIER(MPI\_COMM\_WORLD,ier)~~~\\
-~call~MPI\_FINALIZE(ier)~~~\\
-~end
-\end{lyxcode}
-\item [{compilation fails stating:}] ~\\
 
+{\footnotesize
+\begin{verbatim}
+ program main
+ include 'mpif.h'
+ integer, parameter :: CUSTOM_MPI_TYPE = MPI_REAL
+ integer ier
+ call MPI_INIT(ier)
+ call MPI_BARRIER(MPI_COMM_WORLD,ier)
+ call MPI_FINALIZE(ier)
+ end
+\end{verbatim}
+}
 
-\begin{lyxcode}
-...~~~\\
-~obj/program\_generate\_databases.o:~In~function~`MAIN\_\_':~~~\\
-~program\_generate\_databases.f90:(.text+0x14):~undefined~\\~~~reference~to~`\_gfortran\_set\_std'~~~\\
-~...~~~\\
-
-\end{lyxcode}
+\item [{compilation fails stating:}] ~
+{\footnotesize
+\begin{verbatim}
+...
+ obj/program_generate_databases.o: In function `MAIN__':
+ program_generate_databases.f90:(.text+0x14): undefined reference to `_gfortran_set_std'
+...
+\end{verbatim}
+}
 
 Make sure you're pointing to the right 'mpif90' wrapper command.
 
@@ -49,26 +52,29 @@ fix: e.g. specify > ./configure FC=gfortran MPIF90=/usr/local/openmpi-gfortran/b
 at the skewness table printed in the \texttt{output\_mesher.txt} file
 after executing \texttt{xmeshfem3D} for the example given in \texttt{EXAMPLES/meshfem3D\_examples/simple\_model/}:
 
-\begin{lyxcode}
-...~~\\
-~histogram~of~skewness~(0.~good~-~1.~bad):~~~\\
-~0.0000000E+00~-~5.0000001E-02~27648~81.81818~\%~~~\\
-~5.0000001E-02~-~0.1000000~0~0.0000000E+00~\%~~~\\
-~...~~~\\
-
-\end{lyxcode}
+{\footnotesize
+\begin{verbatim}
+...
+ histogram of skewness (0. good - 1. bad):
+ 0.0000000E+00 - 5.0000001E-02 27648 81.81818 %
+ 5.0000001E-02 - 0.1000000 0 0.0000000E+00 %
+...
+\end{verbatim}
+}
 
 The first line means that you have 27,648 elements with a skewness
 value between 0 and 0.05 (which means the element is basically not
 skewed, just plain regular hexahedral element). The total number of
 elements you have in this mesh is (see in the \texttt{output\_mesher.txt}
 file a bit further down):
-\begin{lyxcode}
-...~~\\
-~total~number~of~elements~in~entire~mesh:~33792~~~\\
-~...~~~\\
 
-\end{lyxcode}
+{\footnotesize
+\begin{verbatim}
+...
+ total number of elements in entire mesh: 33792
+...
+\end{verbatim}
+}
 
 which gives you that: 27,648 / 33,792 $\sim$ 81.8 \% of all elements
 are not skewed, i.e. regular elements. a fantastic value :)
@@ -76,12 +82,15 @@ are not skewed, i.e. regular elements. a fantastic value :)
 
 The histogram lists for this mesh also some stronger skewed elements,
 for example the worst ones belong to:
-\begin{lyxcode}
-...~~\\
-~0.6000000~-~0.6500000~2048~6.060606~\%~~~\\
-~...~~~\\
 
-\end{lyxcode}
+{\footnotesize
+\begin{verbatim}
+...
+ 0.6000000 - 0.6500000 2048 6.060606 %
+...
+
+\end{verbatim}
+}
 
 about 6 \% of all elements have distortions with a skewness value
 between 0.6 and 0.65. The skewness values give you a hint of how good
@@ -127,11 +136,9 @@ from latitude/longitude to x/y/z coordinates.
 
 In such cases, try to change your \texttt{DATA/Par\_file} and set
 e.g.:
-\begin{lyxcode}
-SUPPRESS\_UTM\_PROJECTION~=~.false.~~~\\
-
-\end{lyxcode}
-
+\begin{verbatim}
+SUPPRESS_UTM_PROJECTION = .false.
+\end{verbatim}
 to be the same in \texttt{Mesh\_Par\_file} and \texttt{Par\_file}.
 This flag should be identical when using the in-house mesher \texttt{xmeshfem3D},
 \texttt{xgenerate\_databases} and \texttt{xspecfem3D} together to
@@ -159,18 +166,18 @@ too big. Look at your files \texttt{output\_mesher.txt} or \texttt{output\_solve
 created in the folder \texttt{OUTPUT\_FILES}. In these output files,
 find the section:
 
-\begin{lyxcode}
-...~~~\\
-~{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}~~~\\
-~{*}{*}{*}~Verification~of~simulation~parameters~{*}{*}{*}~~~\\
-~{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}{*}~~~\\
-~...~~~\\
-~{*}{*}{*}~Minimum~period~resolved~=~4.308774~~~\\
-~{*}{*}{*}~Maximum~suggested~time~step~=~6.8863556E-02~~~\\
-~...~~~\\
-~...~~~\\
-
-\end{lyxcode}
+{\footnotesize
+\begin{verbatim}
+...
+ *********************************************
+ *** Verification of simulation parameters ***
+ *********************************************
+...
+ *** Minimum period resolved = 4.308774
+ *** Maximum suggested time step = 6.8863556E-02
+...
+\end{verbatim}
+}
 
 then change \texttt{DT} in the \texttt{DATA/Par\_file} to be somewhere
 close to the maximum suggested time step. In the example above: \\
