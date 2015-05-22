@@ -9,7 +9,7 @@ program test_partitioning
   implicit none
   integer :: i
 
-  print*,'program: test_partitioning'
+  print *,'program: test_partitioning'
 
   ! ficticious setup
   nspec = 12
@@ -20,8 +20,8 @@ program test_partitioning
   if (ier /= 0) stop 'error allocating array elmnts'
   elmnts(:,:) = 0
 
-  print*,'nspec  = ',nspec
-  print*,'NGNOD  = ',NGNOD
+  print *,'nspec  = ',nspec
+  print *,'NGNOD  = ',NGNOD
 
   ! element ids
   inode = 0
@@ -44,7 +44,7 @@ program test_partitioning
   enddo
 
   nnodes = inode
-  print*,'nnodes = ',nnodes
+  print *,'nnodes = ',nnodes
 
   ! initializes
   nsize = 0
@@ -54,12 +54,12 @@ program test_partitioning
   call check_valence()
 
   ! checks
-  print*,'nsize = ',nsize
+  print *,'nsize = ',nsize
   if (nsize /= 2) then
-    print*,'error valence: nsize =',nsize,'should be 2'
+    print *,'error valence: nsize =',nsize,'should be 2'
     stop 1
   else
-    print*,'  result is correct'
+    print *,'  result is correct'
   endif
 
   ! assigns elastic material
@@ -92,19 +92,19 @@ program test_partitioning
   nparts = 4
 
   ! partitioning routine
-  print*,'calling partitioning routine...'
+  print *,'calling partitioning routine...'
 
   call scotch_partitioning()
 
   ! check
-  print*,'partitioning results:'
+  print *,'partitioning results:'
   do i = 0,nparts-1
-    print*,'partition ',i
+    print *,'partition ',i
     do ispec = 1,nspec
-      if (part(ispec) == i) print*,'  contains element ',ispec
+      if (part(ispec) == i) print *,'  contains element ',ispec
       ! checks if element belongs to no partition
       if (part(ispec) < 0) then
-        print*,'error partitioning: element ',ispec,'has invalid partition number: ',part(ispec)
+        print *,'error partitioning: element ',ispec,'has invalid partition number: ',part(ispec)
         stop 1
       endif
     enddo
@@ -115,7 +115,7 @@ program test_partitioning
   !deallocate(mat,mat_prop,undef_mat_prop)
 
   ! done
-  print*,'test_partitioning done successfully'
+  print *,'test_partitioning done successfully'
 
 end program test_partitioning
 

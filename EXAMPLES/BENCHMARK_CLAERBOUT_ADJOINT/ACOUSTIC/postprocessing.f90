@@ -19,11 +19,11 @@ program random_model
   j=2;  call getarg(j, arg); read(arg,*,iostat=ios)    DT;   if (ios /= 0) stop 'Error reading DT'
   j=3;  call getarg(j, arg); read(arg,*,iostat=ios) NPROC;   if (ios /= 0) stop 'Error reading NPROC'
 
-  print*,'postprocessing:'
-  print*,'  NSTEP:',NSTEP
-  print*,'  DT:',DT
-  print*,'  NPROC:',NPROC
-  print*
+  print *,'postprocessing:'
+  print *,'  NSTEP:',NSTEP
+  print *,'  DT:',DT
+  print *,'  NPROC:',NPROC
+  print *
 
   MODELSPACE=0.0
   DATASPACE=0.0
@@ -36,7 +36,7 @@ program random_model
     ! processors name
     write(prname,'(a,i6.6,a)') 'proc',myrank,'_'
 
-    print*,'  ',trim(prname)
+    print *,'  ',trim(prname)
 
     ! nspec & nglob
     open(unit=IOUT,file='./OUTPUT_FILES/DATABASES_MPI/'//trim(adjustl(prname))//'external_mesh.bin',status='old',action='read',form='unformatted',iostat=ier)
@@ -101,7 +101,7 @@ program random_model
     filename=trim(adjustl(procname))//"_dx_SU"
     open(111,file="./OUTPUT_FILES/SEM/"//trim(adjustl(filename))//".adj",access='direct',recl=240+4*NSTEP,iostat = ios)
     if( ios /= 0 ) stop 'error opening adjoint trace'
-    print*,'  ',trim(adjustl(filename))//".adj"
+    print *,'  ',trim(adjustl(filename))//".adj"
 
     irec=1
     do while(ios==0)
@@ -121,7 +121,7 @@ program random_model
 !    filename=trim(adjustl(procname))//"_dy_SU"
 !    open(111,file="../OUTPUT_FILES/SEM/"//trim(adjustl(filename))//".adj",access='direct',recl=240+4*NSTEP,iostat = ios)
 !    if( ios /= 0 ) stop 'error opening adjoint trace'
-!    print*,'  ',trim(adjustl(filename))//".adj"
+!    print *,'  ',trim(adjustl(filename))//".adj"
 !
 !    irec=1
 !    do while(ios==0)
@@ -139,7 +139,7 @@ program random_model
 !    filename=trim(adjustl(procname))//"_dz_SU"
 !    open(111,file="../OUTPUT_FILES/SEM/"//trim(adjustl(filename))//".adj",access='direct',recl=240+4*NSTEP,iostat = ios)
 !    if( ios /= 0 ) stop 'error opening adjoint trace'
-!    print*,'  ',trim(adjustl(filename))//".adj"
+!    print *,'  ',trim(adjustl(filename))//".adj"
 !
 !    irec=1
 !    do while(ios==0)
@@ -156,8 +156,8 @@ program random_model
 
   enddo
 
-  print*, 'DATASPACE=',DATASPACE
-  print*, 'MODELSPACE=',MODELSPACE
-  print*, 'relative error=',(DATASPACE-MODELSPACE)/DATASPACE,irec_total
+  print *, 'DATASPACE=',DATASPACE
+  print *, 'MODELSPACE=',MODELSPACE
+  print *, 'relative error=',(DATASPACE-MODELSPACE)/DATASPACE,irec_total
 
 end program random_model

@@ -183,7 +183,7 @@
     ! checks if line is a comment line (starts with *), and reads until it finds a non-comment line
     do while (line(1:1) == "*")
       ! skips comment line and goes to next line
-      print*,'  comment:',trim(line)
+      print *,'  comment:',trim(line)
       read(10,'(a)',iostat=ier) line
       if (ier /= 0) then
         print *,'error read non-comment line:',i
@@ -197,7 +197,7 @@
     ! checks
     if (ier /= 0) then
       print *,'error point read:',iread,i
-      print*, 'line: ',trim(line)
+      print *, 'line: ',trim(line)
       stop 'error read points from current line'
     endif
     ! checks if out-of-range
@@ -212,16 +212,16 @@
     z(iread) = ztmp
 
   enddo
-  print*
-  print*,'points read: ',iread
-  print*
+  print *
+  print *,'points read: ',iread
+  print *
 
 ! skip the header
   !read(10,*)
   read(10,'(a)',iostat=ier) line
   if (line(1:1) /= "*") then
-    print*,'  new line: ',trim(line)
-    print*,'  not a header line, check the number of points NGLOB specified'
+    print *,'  new line: ',trim(line)
+    print *,'  not a header line, check the number of points NGLOB specified'
     stop 'error reading elements'
   endif
 
@@ -251,7 +251,7 @@
       ! checks if line is a comment line (starts with *), and reads until it finds a non-comment line
       do while (line(1:1) == "*")
         ! skips comment line and goes to next line
-        print*,'  comment: ',trim(line)
+        print *,'  comment: ',trim(line)
         read(10,'(a)',iostat=ier) line
         if (ier /= 0) then
           print *,'error read:',i
@@ -291,9 +291,9 @@
 
   enddo
   close(10)
-  print*
-  print*,'elements read:',iread
-  print*
+  print *
+  print *,'elements read:',iread
+  print *
 
   print *,'done reading the CUBIT file'
   print *

@@ -93,8 +93,8 @@
 
         ! checks
         if (.not. is_done) then
-          print*,'error : moho kernel not computed'
-          print*,'ispec:',ispec_top,ispec_bot,iglob_top,i,j,k
+          print *,'error : moho kernel not computed'
+          print *,'ispec:',ispec_top,ispec_bot,iglob_top,i,j,k
           call exit_mpi(myrank,'error moho kernel computation')
         endif
 

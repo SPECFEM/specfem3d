@@ -493,7 +493,7 @@
               call calc_gll_points(xelm,yelm,zelm,xstore,ystore,zstore,shape3D,NGNOD,NGLLX,NGLLY,NGLLZ)
               call write_gllz_points(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,current_layer,nel_depth,ilayer,iz,Ndepth,updown)
            endif
-          
+
           ! Write two files giving Spherical coordinate on ALL the GLL points on the surface of the 3D chunk for the new DSM
           ! coupling (light version using 2D chunk)
           !

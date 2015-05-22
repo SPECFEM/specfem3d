@@ -946,8 +946,8 @@ contains
                enddo
 
                ! outputs infos
-               !print*,'  partition MPI interface:',iproc,num_interface
-               !print*,'    element faces: ',count_faces
+               !print *,'  partition MPI interface:',iproc,num_interface
+               !print *,'    element faces: ',count_faces
 
             endif
 
@@ -1353,7 +1353,7 @@ contains
     do el=0, nspec-1
      if (is_moho(el)) counter = counter + 1
     enddo
-    print*,'  moho elements = ',counter
+    print *,'  moho elements = ',counter
 
     ! gets neighbors by 4 common nodes (face)
     ! contains number of adjacent elements (neighbours)

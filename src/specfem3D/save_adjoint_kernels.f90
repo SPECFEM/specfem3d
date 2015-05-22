@@ -963,7 +963,7 @@ subroutine save_kernels_acoustic(adios_handle)
 
     open(unit=IOUT,file=trim(outputname),status='unknown',iostat=ier)
     if (ier /= 0) then
-      print*,'error opening file: ',trim(outputname)
+      print *,'error opening file: ',trim(outputname)
       call exit_mpi(myrank,'error opening file src_frechet.**')
     endif
 

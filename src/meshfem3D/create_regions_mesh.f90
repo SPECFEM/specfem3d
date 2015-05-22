@@ -384,7 +384,7 @@ contains
     !          the total number of mesh points might have changed
     if (nglob /= NGLOB_AB) then
       ! user output
-      print*,'error nglob: sorted value ',nglob,'differs from pre-computed ',NGLOB_AB
+      print *,'error nglob: sorted value ',nglob,'differs from pre-computed ',NGLOB_AB
       if (myrank == 0) then
         write(IMAIN,*)
         write(IMAIN,*) 'error nglob: sorted value ',nglob,'differs from pre-computed ',NGLOB_AB
@@ -464,7 +464,7 @@ contains
 
     ! checks ibool range
     if (minval(ibool(:,:,:,:)) /= 1 .or. maxval(ibool(:,:,:,:)) /= nglob) then
-       print*,'error ibool: maximum value ',maxval(ibool(:,:,:,:)) ,'should be ',nglob
+       print *,'error ibool: maximum value ',maxval(ibool(:,:,:,:)) ,'should be ',nglob
        call exit_MPI(myrank,'incorrect global ibool numbering')
     endif
 

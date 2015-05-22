@@ -46,8 +46,8 @@
   open(unit=IIN,file=prname(1:len_trim(prname))//'Database', &
         status='old',action='read',form='unformatted',iostat=ier)
   if (ier /= 0) then
-    print*,'rank ',myrank,'- Error opening file: ',prname(1:len_trim(prname))//'Database'
-    print*,'please make sure file exists'
+    print *,'rank ',myrank,'- Error opening file: ',prname(1:len_trim(prname))//'Database'
+    print *,'please make sure file exists'
     call exit_mpi(myrank,'Error opening database file')
   endif
   read(IIN) nnodes_ext_mesh

@@ -340,10 +340,10 @@
     if ((ispec_is_acoustic(ispec) .eqv. .false.) &
           .and. (ispec_is_elastic(ispec) .eqv. .false.) &
           .and. (ispec_is_poroelastic(ispec) .eqv. .false.)) then
-      print*,'Error material domain not assigned to element:',ispec
-      print*,'acoustic: ',ispec_is_acoustic(ispec)
-      print*,'elastic: ',ispec_is_elastic(ispec)
-      print*,'poroelastic: ',ispec_is_poroelastic(ispec)
+      print *,'Error material domain not assigned to element:',ispec
+      print *,'acoustic: ',ispec_is_acoustic(ispec)
+      print *,'elastic: ',ispec_is_elastic(ispec)
+      print *,'poroelastic: ',ispec_is_poroelastic(ispec)
       stop 'Error material domain index element'
     endif
     ! checks if domain is unique
@@ -352,10 +352,10 @@
        ((ispec_is_poroelastic(ispec) .eqv. .true.) .and. (ispec_is_elastic(ispec) .eqv. .true.)) .or. &
        ((ispec_is_acoustic(ispec) .eqv. .true.) .and. (ispec_is_elastic(ispec) .eqv. .true.) .and. &
        (ispec_is_poroelastic(ispec) .eqv. .true.))) then
-      print*,'Error material domain assigned twice to element:',ispec
-      print*,'acoustic: ',ispec_is_acoustic(ispec)
-      print*,'elastic: ',ispec_is_elastic(ispec)
-      print*,'poroelastic: ',ispec_is_poroelastic(ispec)
+      print *,'Error material domain assigned twice to element:',ispec
+      print *,'acoustic: ',ispec_is_acoustic(ispec)
+      print *,'elastic: ',ispec_is_elastic(ispec)
+      print *,'poroelastic: ',ispec_is_poroelastic(ispec)
       stop 'Error material domain index element'
     endif
   enddo
@@ -484,8 +484,8 @@
 
     ! in case no tomography value defined for this region, fall back to defaults
     if (.not. has_tomo_value) then
-      print*,'Error: tomography value not defined for model material id ',imaterial_id
-      print*,'Please check if Par_file setting MODEL = tomo is applicable, or try using MODEL = default ...'
+      print *,'Error: tomography value not defined for model material id ',imaterial_id
+      print *,'Please check if Par_file setting MODEL = tomo is applicable, or try using MODEL = default ...'
       stop 'Error tomo model not found for material'
     endif
 
@@ -516,8 +516,8 @@
   ! checks if valid vp value
   if (idomain_id == IDOMAIN_ACOUSTIC .or. idomain_id == IDOMAIN_ELASTIC) then
     if (vp <= 0._CUSTOM_REAL) then
-      print*,'Error: encountered zero Vp velocity in element! '
-      print*,'domain id = ',idomain_id,' material id = ',imaterial_id, 'vp/vs/rho = ',vp,vs,rho
+      print *,'Error: encountered zero Vp velocity in element! '
+      print *,'domain id = ',idomain_id,' material id = ',imaterial_id, 'vp/vs/rho = ',vp,vs,rho
       stop 'Error zero Vp velocity found'
     endif
   endif

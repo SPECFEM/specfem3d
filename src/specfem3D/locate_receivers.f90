@@ -388,7 +388,7 @@
 
               !debug: outputs specific gll point location (needs to adapt kmin,kmax,..)
               !if (irec == 1 .and. ispec == 3789 .and. i == 3 .and. j == 3 .and. k == 5) then
-              !  print*,'gll point: ',i,j,k,ispec,' x/y/z = ',xstore(iglob),ystore(iglob),zstore(iglob), &
+              !  print *,'gll point: ',i,j,k,ispec,' x/y/z = ',xstore(iglob),ystore(iglob),zstore(iglob), &
               !          'target: ',x_target(1),y_target(1),z_target(1)
               !endif
 

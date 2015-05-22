@@ -954,8 +954,8 @@ subroutine crm_ext_setup_indexing(ibool, &
 
           ! checks validity
           if (is_moho_bot( ispec) .eqv. .true.) then
-            print*,'error: moho surface geometry bottom'
-            print*,'  does not allow for mulitple element faces in kernel computation'
+            print *,'error: moho surface geometry bottom'
+            print *,'  does not allow for mulitple element faces in kernel computation'
             call exit_mpi(myrank,'error moho bottom elements')
           endif
 
@@ -978,8 +978,8 @@ subroutine crm_ext_setup_indexing(ibool, &
 
           ! checks validity
           if (is_moho_top( ispec) .eqv. .true.) then
-            print*,'error: moho surface geometry top'
-            print*,'  does not allow for mulitple element faces kernel computation'
+            print *,'error: moho surface geometry top'
+            print *,'  does not allow for mulitple element faces kernel computation'
             call exit_mpi(myrank,'error moho top elements')
           endif
 
@@ -1005,8 +1005,8 @@ subroutine crm_ext_setup_indexing(ibool, &
 
     ! checks validity of top/bottom distinction
     if (is_moho_top(ispec) .and. is_moho_bot(ispec)) then
-      print*,'error: moho surface elements confusing'
-      print*,'  element:',ispec,'has top and bottom surface'
+      print *,'error: moho surface elements confusing'
+      print *,'  element:',ispec,'has top and bottom surface'
       call exit_mpi(myrank,'error moho surface element')
     endif
 

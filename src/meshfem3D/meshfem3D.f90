@@ -358,7 +358,7 @@
   if (myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) then
     open(unit=IMAIN,file=trim(OUTPUT_FILES)//'/output_meshfem3D.txt',status='unknown',iostat=ier)
     if (ier /= 0) then
-      print*,'Error could not open output file :',trim(OUTPUT_FILES)//'/output_meshfem3D.txt'
+      print *,'Error could not open output file :',trim(OUTPUT_FILES)//'/output_meshfem3D.txt'
       stop 'Error opening output file'
     endif
   endif
@@ -436,7 +436,7 @@
 
   open(unit=IIN,file=trim(MF_IN_DATA_FILES)//trim(INTERFACES_FILE),status='old',iostat=ier)
   if (ier /= 0) then
-    print*,'Error opening interface file: ',trim(MF_IN_DATA_FILES)//trim(INTERFACES_FILE)
+    print *,'Error opening interface file: ',trim(MF_IN_DATA_FILES)//trim(INTERFACES_FILE)
     stop 'Error opening interface file'
   endif
 
@@ -456,7 +456,7 @@
                                    orig_x_interface_bottom,orig_y_interface_bottom,&
                                    spacing_x_interface_bottom,spacing_y_interface_bottom,ier)
     if (ier /= 0) then
-      print*,'Error reading interface parameters: interface ',interface_current
+      print *,'Error reading interface parameters: interface ',interface_current
       stop 'Error reading interface parameters for interfaces'
     endif
 
@@ -464,7 +464,7 @@
     max_npy_interface = max(npy_interface_bottom,max_npy_interface)
 
     if ((max_npx_interface < 2) .or.(max_npy_interface < 2)) then
-      print*,'Error interface ',interface_current,': has not enough interface points (minimum is 2x2)'
+      print *,'Error interface ',interface_current,': has not enough interface points (minimum is 2x2)'
       stop 'Error not enough interface points (minimum is 2x2)'
     endif
   enddo
@@ -504,10 +504,10 @@
     if (myrank == 0) then
       write(IMAIN,*) 'Error: number of processors supposed to run on: ',NPROC
       write(IMAIN,*) 'Error: number of MPI processors actually run on: ',sizeprocs
-      print*
-      print*, 'Error meshfem3D: number of processors supposed to run on: ',NPROC
-      print*, 'Error meshfem3D: number of MPI processors actually run on: ',sizeprocs
-      print*
+      print *
+      print *, 'Error meshfem3D: number of processors supposed to run on: ',NPROC
+      print *, 'Error meshfem3D: number of MPI processors actually run on: ',sizeprocs
+      print *
     endif
     call exit_MPI(myrank,'wrong number of MPI processes')
   endif

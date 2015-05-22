@@ -79,7 +79,7 @@
 
   open(unit=IIN,file=trim(FORCESOLUTION),status='old',action='read',iostat=ier)
   if (ier /= 0) then
-    print*,'Error opening file: ',trim(FORCESOLUTION)
+    print *,'Error opening file: ',trim(FORCESOLUTION)
     stop 'Error opening FORCESOLUTION file'
   endif
 

@@ -39,9 +39,9 @@ program xcompute_direction_sd
 
 
      open(1001,file=trim(gradient_file),status='old',form='unformatted',iostat=ier)
-     if (myrank == 0) print*, 'reading gradient1:',trim(gradient_file)
+     if (myrank == 0) print *, 'reading gradient1:',trim(gradient_file)
      if (ier/=0) then
-        print*, 'error opening:',trim(gradient_file)
+        print *, 'error opening:',trim(gradient_file)
         call exit_mpi(myrank,'file not found')
      endif
      read(1001) gradient(:,:,:,1:NSPEC)
@@ -50,7 +50,7 @@ program xcompute_direction_sd
      direction=-gradient
 
      open(1001,file=trim(direction_file),form='unformatted',action='write')
-     if (myrank == 0) print*, 'writing direction1:',direction_file
+     if (myrank == 0) print *, 'writing direction1:',direction_file
      write(1001) direction
      close(1001)
 

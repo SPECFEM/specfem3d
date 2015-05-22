@@ -117,7 +117,7 @@ program smooth_sem
   call world_size(sizeprocs)
   call world_rank(myrank)
 
-  if (myrank == 0) print*,"smooth_sem:"
+  if (myrank == 0) print *,"smooth_sem:"
   call synchronize_all()
 
   ! reads arguments
@@ -177,13 +177,13 @@ program smooth_sem
 
   ! user output
   if (myrank == 0) then
-    print*,"defaults:"
-    print*,"  smoothing sigma_h , sigma_v                : ",sigma_h,sigma_v
+    print *,"defaults:"
+    print *,"  smoothing sigma_h , sigma_v                : ",sigma_h,sigma_v
     ! scalelength: approximately S ~ sigma * sqrt(8.0) for a gaussian smoothing
-    print*,"  smoothing scalelengths horizontal, vertical: ",sigma_h*sqrt(8.0),sigma_v*sqrt(8.0)
-    print*,"  input dir : ",trim(indir)
-    print*,"  output dir: ",trim(outdir)
-    print*
+    print *,"  smoothing scalelengths horizontal, vertical: ",sigma_h*sqrt(8.0),sigma_v*sqrt(8.0)
+    print *,"  input dir : ",trim(indir)
+    print *,"  output dir: ",trim(outdir)
+    print *
   endif
 
   ! reads the parameter file
@@ -195,10 +195,10 @@ program smooth_sem
   ! check that the code is running with the requested nb of processes
   if (sizeprocs /= NPROC) then
     if (myrank == 0) then
-      print*, 'Error number of processors supposed to run on: ',NPROC
-      print*, 'Error number of MPI processors actually run on: ',sizeprocs
-      print*
-      print*, 'please rerun with: mpirun -np ',NPROC,' bin/xsmooth_sem .. '
+      print *, 'Error number of processors supposed to run on: ',NPROC
+      print *, 'Error number of MPI processors actually run on: ',sizeprocs
+      print *
+      print *, 'please rerun with: mpirun -np ',NPROC,' bin/xsmooth_sem .. '
     endif
     call exit_MPI(myrank,'Error wrong number of MPI processes')
   endif
@@ -251,19 +251,19 @@ program smooth_sem
 
   ! outputs infos
   if (myrank == 0) then
-    print*,'mesh dimensions:'
-    print*,'  Xmin and Xmax of the model = ',x_min_glob,x_max_glob
-    print*,'  Ymin and Ymax of the model = ',y_min_glob,y_max_glob
-    print*,'  Zmin and Zmax of the model = ',z_min_glob,z_max_glob
-    print*
-    print*,'  Max GLL point distance = ',distance_max_glob
-    print*,'  Min GLL point distance = ',distance_min_glob
-    print*,'  Max/min ratio = ',distance_max_glob/distance_min_glob
-    print*
-    print*,'  Max element size = ',elemsize_max_glob
-    print*,'  Min element size = ',elemsize_min_glob
-    print*,'  Max/min ratio = ',elemsize_max_glob/elemsize_min_glob
-    print*
+    print *,'mesh dimensions:'
+    print *,'  Xmin and Xmax of the model = ',x_min_glob,x_max_glob
+    print *,'  Ymin and Ymax of the model = ',y_min_glob,y_max_glob
+    print *,'  Zmin and Zmax of the model = ',z_min_glob,z_max_glob
+    print *
+    print *,'  Max GLL point distance = ',distance_max_glob
+    print *,'  Min GLL point distance = ',distance_min_glob
+    print *,'  Max/min ratio = ',distance_max_glob/distance_min_glob
+    print *
+    print *,'  Max element size = ',elemsize_max_glob
+    print *,'  Min element size = ',elemsize_min_glob
+    print *,'  Max/min ratio = ',elemsize_max_glob/elemsize_min_glob
+    print *
   endif
 
   if (ELASTIC_SIMULATION) then
@@ -344,16 +344,16 @@ program smooth_sem
 
   ! user output
   if (myrank == 0) then
-  print*,'slices:'
-  print*,'  rank:',myrank,'  smoothing slices'
-  print*,node_list(1:num_interfaces_ext_mesh+1)
+  print *,'slices:'
+  print *,'  rank:',myrank,'  smoothing slices'
+  print *,node_list(1:num_interfaces_ext_mesh+1)
   endif
 
   !do i=0,sizeprocs-1
   !  if (myrank == i) then
-  !    print*,'rank:',myrank,'  smoothing slices'
-  !    print*,node_list(1:num_interfaces_ext_mesh+1)
-  !    print*
+  !    print *,'rank:',myrank,'  smoothing slices'
+  !    print *,node_list(1:num_interfaces_ext_mesh+1)
+  !    print *
   !  endif
   !enddo
 
@@ -384,7 +384,7 @@ program smooth_sem
 
     iproc = node_list(inum)
 
-    if (myrank == 0) print*,'  reading slice:',iproc
+    if (myrank == 0) print *,'  reading slice:',iproc
 
     ! neighbor database file
     call create_name_database(prname,iproc,LOCAL_PATH)
@@ -393,7 +393,7 @@ program smooth_sem
     ! gets number of elements and global points for this partition
     open(unit=IIN,file=trim(prname_lp),status='old',action='read',form='unformatted',iostat=ier)
     if (ier /= 0) then
-      print*,'Error could not open database file: ',trim(prname_lp)
+      print *,'Error could not open database file: ',trim(prname_lp)
       call exit_mpi(myrank, 'Error reading neighbors external mesh file')
     endif
     read(IIN) NSPEC_N
@@ -413,7 +413,7 @@ program smooth_sem
     ! gets number of point locations (and jacobian, but jacobian not used by default)
     open(unit=IIN,file=trim(prname_lp),status='old',action='read',form='unformatted',iostat=ier)
     if (ier /= 0) then
-      print*,'Error: could not open database file: ',trim(prname_lp)
+      print *,'Error: could not open database file: ',trim(prname_lp)
       call exit_mpi(myrank, 'Error reading neighbors external mesh file')
     endif
     read(IIN) NSPEC_N
@@ -490,7 +490,7 @@ program smooth_sem
     if (iproc == myrank)  max_old = maxval(abs(dat(:,:,:,:)))
 
     ! finds closest elements for smoothing
-    !if (myrank==0) print*, '  start looping over elements and points for smoothing ...'
+    !if (myrank==0) print *, '  start looping over elements and points for smoothing ...'
 
     ! loop over elements to be smoothed in the current slice
     do ispec = 1, nspec_AB
@@ -547,7 +547,7 @@ program smooth_sem
   if (myrank == 0) print *
 
   ! normalizes/scaling factor
-  if (myrank == 0) print*, 'Scaling values: min/max = ',minval(bk),maxval(bk)
+  if (myrank == 0) print *, 'Scaling values: min/max = ',minval(bk),maxval(bk)
 
   allocate(dat_smooth(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if (ier /= 0) stop 'Error allocating array dat_smooth'

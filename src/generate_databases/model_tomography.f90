@@ -187,8 +187,8 @@
     ! opens file for reading
     open(unit=IIN,file=trim(tomo_filename),status='old',action='read',iostat=ier)
     if (ier /= 0) then
-      print*,'Error: could not open tomography file: ',trim(tomo_filename)
-      print*,'Please check your settings in Par_file ...'
+      print *,'Error: could not open tomography file: ',trim(tomo_filename)
+      print *,'Please check your settings in Par_file ...'
       call exit_MPI(myrank_tomo,'error reading tomography file')
     endif
 
@@ -217,9 +217,9 @@
     enddo
 
     if (nlines /= nrec .and. myrank_tomo == 0) then
-       print*, 'Error: ',trim(tomo_filename),' has invalid number of records'
-       print*, '     number of grid points specified (= NX*NY*NZ):',nrec
-       print*, '     number of file lines for grid points        :',nlines
+       print *, 'Error: ',trim(tomo_filename),' has invalid number of records'
+       print *, '     number of grid points specified (= NX*NY*NZ):',nrec
+       print *, '     number of file lines for grid points        :',nlines
        stop 'Error in tomography data file for the grid points definition'
     endif
 
@@ -501,7 +501,7 @@ end subroutine init_tomography_files
 
     ! checks material
     if (imat < 1 .or. imat > nundefMat_ext_mesh) then
-      print*,'Error tomography model: unknown material id ',imaterial_id,' for ',nundefMat_ext_mesh,' undefined materials'
+      print *,'Error tomography model: unknown material id ',imaterial_id,' for ',nundefMat_ext_mesh,' undefined materials'
       stop 'Error unknown material id in tomography model'
     endif
   endif
@@ -558,11 +558,11 @@ end subroutine init_tomography_files
   p7 = ix+(iy+1)*NX(imat)+(iz+1)*(NX(imat)*NY(imat))
 
   if (p0 < 0 .or. p1 < 0 .or. p2 < 0 .or. p3 < 0 .or. p4 < 0 .or. p5 < 0 .or. p6 < 0 .or. p7 < 0) then
-     print*,'model: ',imat
-     print*,'error rank: ',myrank_tomo
-     print*,'corner index: ',p0,p1,p2,p3,p4,p5,p6,p7
-     print*,'location: ',sngl(xmesh),sngl(ymesh),sngl(zmesh)
-     print*,'origin: ',sngl(ORIG_X(imat)),sngl(ORIG_Y(imat)),sngl(ORIG_Z(imat))
+     print *,'model: ',imat
+     print *,'error rank: ',myrank_tomo
+     print *,'corner index: ',p0,p1,p2,p3,p4,p5,p6,p7
+     print *,'location: ',sngl(xmesh),sngl(ymesh),sngl(zmesh)
+     print *,'origin: ',sngl(ORIG_X(imat)),sngl(ORIG_Y(imat)),sngl(ORIG_Z(imat))
      call exit_MPI(myrank_tomo,'error corner index in tomography routine')
   endif
 

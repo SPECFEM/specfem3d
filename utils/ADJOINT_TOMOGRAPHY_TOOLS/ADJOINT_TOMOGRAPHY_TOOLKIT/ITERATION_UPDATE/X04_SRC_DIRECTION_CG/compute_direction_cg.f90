@@ -41,18 +41,18 @@ program xcompute_direction_cg
 
 
         open(1001,file=trim(gradient_0_file),status='old',form='unformatted',iostat=ier)
-        if (myrank == 0) print*, 'reading gradient0:',trim(gradient_0_file)
+        if (myrank == 0) print *, 'reading gradient0:',trim(gradient_0_file)
         if ( ier /=0) then
-                print*, 'error opening:',trim(gradient_0_file)
+                print *, 'error opening:',trim(gradient_0_file)
                 call exit_mpi(myrank,'file not found')
         endif
         read(1001) gradient_0(:,:,:,1:NSPEC)
         close(1001)
 
         open(1001,file=trim(gradient_1_file),status='old',form='unformatted',iostat=ier)
-        if (myrank == 0) print*, 'reading gradient1:',trim(gradient_1_file)
+        if (myrank == 0) print *, 'reading gradient1:',trim(gradient_1_file)
         if (ier/=0) then
-                print*, 'error opening:',trim(gradient_1_file)
+                print *, 'error opening:',trim(gradient_1_file)
                 call exit_mpi(myrank,'file not found')
         endif
         read(1001) gradient_1(:,:,:,1:NSPEC)
@@ -71,7 +71,7 @@ program xcompute_direction_cg
 
   beta=sum(beta_upper_all)/sum(beta_down_all)
   if (myrank == 0 ) then
-        print*,'before zero',myrank,beta
+        print *,'before zero',myrank,beta
   endif
   if ( beta < 0.0 ) then
         beta=0.0
@@ -79,7 +79,7 @@ program xcompute_direction_cg
 
 
   if (myrank == 0 ) then
-        print*,myrank,beta
+        print *,myrank,beta
   endif
 
 
@@ -92,27 +92,27 @@ program xcompute_direction_cg
         write(gradient_1_file,'(a,i6.6,a)') trim(gradient_1_dir)//'/proc',myrank,'_'//trim(kernel_name(iker))//'.bin'
 
         open(1001,file=trim(direction_0_file),status='old',form='unformatted',iostat=ier)
-        if ( myrank == 0) print*,'reading direction0:',trim(direction_0_file)
+        if ( myrank == 0) print *,'reading direction0:',trim(direction_0_file)
         if (ier /= 0 ) then
-                print*, 'error opening:',trim(direction_0_file)
+                print *, 'error opening:',trim(direction_0_file)
                 call exit_mpi(myrank,'file not found')
         endif
         read(1001) direction_0(:,:,:,1:NSPEC)
         close(1001)
 
         open(1001,file=trim(gradient_0_file),status='old',form='unformatted',iostat=ier)
-        if (myrank == 0) print*, 'reading gradient0:',trim(gradient_0_file)
+        if (myrank == 0) print *, 'reading gradient0:',trim(gradient_0_file)
         if ( ier /=0) then
-                print*, 'error opening:',trim(gradient_0_file)
+                print *, 'error opening:',trim(gradient_0_file)
                 call exit_mpi(myrank,'file not found')
         endif
         read(1001) gradient_0(:,:,:,1:NSPEC)
         close(1001)
 
         open(1001,file=trim(gradient_1_file),status='old',form='unformatted',iostat=ier)
-        if (myrank == 0) print*, 'reading gradient1:',trim(gradient_1_file)
+        if (myrank == 0) print *, 'reading gradient1:',trim(gradient_1_file)
         if (ier/=0) then
-                print*, 'error opening:',trim(gradient_1_file)
+                print *, 'error opening:',trim(gradient_1_file)
                 call exit_mpi(myrank,'file not found')
         endif
         read(1001) gradient_1(:,:,:,1:NSPEC)
@@ -132,7 +132,7 @@ program xcompute_direction_cg
             enddo ! k
         enddo ! ispec
         open(1001,file=trim(direction_1_file),form='unformatted',action='write')
-        if (myrank == 0) print*, 'writing direction1:',direction_1_file
+        if (myrank == 0) print *, 'writing direction1:',direction_1_file
         write(1001) direction_1
         close(1001)
 

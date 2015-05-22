@@ -42,7 +42,7 @@
   use constants
 
   use specfem_par, only: it_dsm, Veloc_dsm_boundary, Tract_dsm_boundary, Veloc_axisem, Tract_axisem
- 
+
   use shared_parameters, only: COUPLE_WITH_EXTERNAL_CODE, EXTERNAL_CODE_TYPE
 
   implicit none
@@ -88,7 +88,7 @@
 
   if (COUPLE_WITH_EXTERNAL_CODE) then
 
-    if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) then 
+    if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) then
 
       if (old_DSM_coupling_from_Vadim) then
         if (phase_is_inner .eqv. .false.) then
@@ -100,7 +100,7 @@
         !! MODIFS DE NOBU 2D
       endif
 
-    elseif (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then 
+    else if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then
 
       if (phase_is_inner .eqv. .false.) then
         call read_axisem_file(Veloc_axisem,Tract_axisem,num_abs_boundary_faces*NGLLSQUARE)
@@ -139,14 +139,14 @@
           vz=veloc(3,iglob)
 
           !! CD CD !! For coupling with EXTERNAL CODE
-          if (COUPLE_WITH_EXTERNAL_CODE) then 
+          if (COUPLE_WITH_EXTERNAL_CODE) then
 
             if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) then  !! To verify for NOBU version
               vx = vx - Veloc_dsm_boundary(1,it_dsm,igll,iface)
               vy = vy - Veloc_dsm_boundary(2,it_dsm,igll,iface)
               vz = vz - Veloc_dsm_boundary(3,it_dsm,igll,iface)
 
-            elseif (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then !! VM VM add AxiSEM
+            else if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then !! VM VM add AxiSEM
                 kaxisem = igll + NGLLSQUARE*(iface - 1)
                 vx = vx - Veloc_axisem(1,kaxisem)
                 vy = vy - Veloc_axisem(2,kaxisem)
@@ -170,14 +170,14 @@
           tz = rho_vp(i,j,k,ispec)*vn*nz + rho_vs(i,j,k,ispec)*(vz-vn*nz)
 
           !! CD CD !! For coupling with DSM
-          if (COUPLE_WITH_EXTERNAL_CODE) then 
+          if (COUPLE_WITH_EXTERNAL_CODE) then
 
             if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) then    !! To verify for NOBU version
               tx = tx - Tract_dsm_boundary(1,it_dsm,igll,iface)
               ty = ty - Tract_dsm_boundary(2,it_dsm,igll,iface)
               tz = tz - Tract_dsm_boundary(3,it_dsm,igll,iface)
 
-            elseif (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then
+            else if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then
                 tx = tx - Tract_axisem(1,kaxisem)
                 ty = ty - Tract_axisem(2,kaxisem)
                 tz = tz - Tract_axisem(3,kaxisem)
@@ -314,7 +314,7 @@
 
 !=============================================================================
 !
-  !! VM VM & CD CD !! For coupling with external code 
+  !! VM VM & CD CD !! For coupling with external code
 !
 !=============================================================================
 
@@ -351,7 +351,7 @@
 !=============================================================================
 
   subroutine read_axisem_file(Veloc_axisem,Tract_axisem,nb)
-    
+
   use constants
 
   implicit none

@@ -499,7 +499,7 @@
     if (I_should_read_the_database) then
         open(unit=27, file=prname(1:len_trim(prname))//'attenuation.bin', status='old',action='read',form='unformatted',iostat=ier)
         if (ier /= 0) then
-            print*,'error: could not open ',prname(1:len_trim(prname))//'attenuation.bin'
+            print *,'error: could not open ',prname(1:len_trim(prname))//'attenuation.bin'
             call exit_mpi(myrank,'error opening attenuation.bin file')
         endif
     endif
@@ -508,7 +508,7 @@
         read(27) ispec
         if (ispec /= NSPEC_ATTENUATION_AB) then
             close(27)
-            print*,'error: attenuation file array ',ispec,'should be ',NSPEC_ATTENUATION_AB
+            print *,'error: attenuation file array ',ispec,'should be ',NSPEC_ATTENUATION_AB
             call exit_mpi(myrank,'error attenuation array dimensions, please recompile and rerun generate_databases')
         endif
         read(27) one_minus_sum_beta
@@ -698,9 +698,9 @@
       !  radius = radius * R_EARTH ! in m
       !  vp = vp * R_EARTH*dsqrt(PI*GRAV*RHOAV)  ! in m / s
       !  rho = rho  * RHOAV  ! in kg / m^3
-      !  print*,'gravity: radius=',radius,'g=',g,'depth=',radius-R_EARTH
-      !  print*,'vp=',vp,'rho=',rho,'kappa=',(vp**2) * rho
-      !  print*,'minus_g..=',minus_g(iglob)
+      !  print *,'gravity: radius=',radius,'g=',g,'depth=',radius-R_EARTH
+      !  print *,'vp=',vp,'rho=',rho,'kappa=',(vp**2) * rho
+      !  print *,'minus_g..=',minus_g(iglob)
       !endif
     enddo
 
@@ -964,7 +964,7 @@
         if (num_abs_boundary_faces > 2147483646 / (CUSTOM_REAL * NDIM * NGLLSQUARE)) then
           print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_field
           print *,'  ',CUSTOM_REAL, NDIM, NGLLSQUARE, num_abs_boundary_faces
-          print*,'bit size fortran: ',bit_size(b_reclen_field)
+          print *,'bit size fortran: ',bit_size(b_reclen_field)
           call exit_MPI(myrank,"error b_reclen_field integer limit")
         endif
 
@@ -998,7 +998,7 @@
         if (num_abs_boundary_faces > 2147483646 / (CUSTOM_REAL * NGLLSQUARE)) then
           print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_potential
           print *,'  ',CUSTOM_REAL, NGLLSQUARE, num_abs_boundary_faces
-          print*,'bit size fortran: ',bit_size(b_reclen_potential)
+          print *,'bit size fortran: ',bit_size(b_reclen_potential)
           call exit_MPI(myrank,"error b_reclen_potential integer limit")
         endif
 
@@ -1010,8 +1010,8 @@
         !if (NSTEP > 2147483646 / b_reclen_potential) then
         !  print *,'file size needed exceeds integer 4-byte limit: ',b_reclen_potential,NSTEP
         !  print *,'  ',CUSTOM_REAL, NGLLSQUARE, num_abs_boundary_faces,NSTEP
-        !  print*,'file size fortran: ',filesize
-        !  print*,'file bit size fortran: ',bit_size(filesize)
+        !  print *,'file size fortran: ',filesize
+        !  print *,'file bit size fortran: ',bit_size(filesize)
         !endif
 
         if (SIMULATION_TYPE == 3) then
@@ -1042,7 +1042,7 @@
         if (num_abs_boundary_faces > 2147483646 / (CUSTOM_REAL * NDIM * NGLLSQUARE)) then
           print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_field_poro
           print *,'  ',CUSTOM_REAL, NDIM, NGLLSQUARE, num_abs_boundary_faces
-          print*,'bit size fortran: ',bit_size(b_reclen_field_poro)
+          print *,'bit size fortran: ',bit_size(b_reclen_field_poro)
           call exit_MPI(myrank,"error b_reclen_field_poro integer limit")
         endif
 

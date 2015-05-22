@@ -62,15 +62,15 @@
     ! checks if it uses an old Par_file format
     call read_value_integer(nproc_eta_old, 'NPROC_ETA', ier)
     if (ier /= 0) then
-      print*,'please specify the number of processes in Par_file as:'
-      print*,'NPROC           =    <my_number_of_desired_processes> '
+      print *,'please specify the number of processes in Par_file as:'
+      print *,'NPROC           =    <my_number_of_desired_processes> '
       return
     endif
     ! checks if it uses an old Par_file format
     call read_value_integer(nproc_xi_old, 'NPROC_XI', ier)
     if (ier /= 0) then
-      print*,'please specify the number of processes in Par_file as:'
-      print*,'NPROC           =    <my_number_of_desired_processes> '
+      print *,'please specify the number of processes in Par_file as:'
+      print *,'NPROC           =    <my_number_of_desired_processes> '
       return
     endif
     NPROC = nproc_eta_old * nproc_xi_old
@@ -282,7 +282,7 @@
 
   ! total times steps must be dividable by adjoint source chunks/blocks
   if (mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) /= 0) then
-    print*,'When NOISE_TOMOGRAPHY is not equal to zero, ACTUAL_NSTEP=2*NSTEP-1'
+    print *,'When NOISE_TOMOGRAPHY is not equal to zero, ACTUAL_NSTEP=2*NSTEP-1'
     stop 'Error: mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) must be zero! Please modify Par_file and recompile solver'
   endif
 
@@ -433,10 +433,10 @@
     !  stop 'Error: SEP_MODEL_DIRECTORY should exist.'
     !endif
   case default
-    print*
-    print*,'********** model not recognized: ',trim(MODEL),' **************'
-    print*,'********** using model: default',' **************'
-    print*
+    print *
+    print *,'********** model not recognized: ',trim(MODEL),' **************'
+    print *,'********** using model: default',' **************'
+    print *
     IMODEL = IMODEL_DEFAULT
   end select
 

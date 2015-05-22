@@ -122,9 +122,9 @@
   ! in file 'surface_from_mesher.h'
   open(unit=IIN,file=trim(OUTPUT_FILES)//'surface_from_mesher.h',status='old',action='read',iostat=ier)
   if (ier /= 0) then
-    print*,'error opening file: ',trim(OUTPUT_FILES)//'surface_from_mesher.h'
-    print*
-    print*,'please run xgenerate_databases or xspecfem3D first to create this file, exiting now...'
+    print *,'error opening file: ',trim(OUTPUT_FILES)//'surface_from_mesher.h'
+    print *
+    print *,'please run xgenerate_databases or xspecfem3D first to create this file, exiting now...'
     stop 'error opening moviedata header file'
   endif
   ! skips first few lines
@@ -146,8 +146,8 @@
   else
      ilocnum = NSPEC_SURFACE_EXT_MESH*NGNOD2D_FOUR_CORNERS_AVS_DX
   endif
-  print*,'  moviedata element surfaces: ',NSPEC_SURFACE_EXT_MESH
-  print*,'  moviedata total elements all: ',ilocnum
+  print *,'  moviedata element surfaces: ',NSPEC_SURFACE_EXT_MESH
+  print *,'  moviedata total elements all: ',ilocnum
   print *
 
   if (SAVE_DISPLACEMENT) then
@@ -319,7 +319,7 @@
       open(unit=IOUT,file=trim(OUTPUT_FILES)//trim(outputname),status='old', &
             action='read',form='unformatted',iostat=ier)
       if (ier /= 0) then
-        print*,'error: ',trim(OUTPUT_FILES)//trim(outputname)
+        print *,'error: ',trim(OUTPUT_FILES)//trim(outputname)
         stop 'error opening moviedata file'
       endif
 

@@ -37,7 +37,7 @@ subroutine read_model_iso()
   character(len=MAX_STRING_LEN) :: m_file, fname
 
   ! user output
-  if (myrank == 0) print*,'reading model...'
+  if (myrank == 0) print *,'reading model...'
 
   ! allocate arrays for storing the databases
   allocate(model_vp(NGLLX,NGLLY,NGLLZ,NSPEC), &
@@ -54,11 +54,11 @@ subroutine read_model_iso()
   ! vp model
   fname = 'vp'
   write(m_file,'(a,i6.6,a)') trim(INPUT_MODEL_DIR)//'proc',myrank,trim(REG)//trim(fname)//'.bin'
-  if (myrank == 0) print*,'  ',trim(INPUT_MODEL_DIR)//'proc**'//trim(REG)//trim(fname)//'.bin'
+  if (myrank == 0) print *,'  ',trim(INPUT_MODEL_DIR)//'proc**'//trim(REG)//trim(fname)//'.bin'
 
   open(IIN,file=trim(m_file),status='old',form='unformatted',iostat=ier)
   if (ier /= 0) then
-    print*,'Error opening: ',trim(m_file)
+    print *,'Error opening: ',trim(m_file)
     call exit_mpi(myrank,'file not found')
   endif
   read(IIN) model_vp(:,:,:,1:nspec)
@@ -67,11 +67,11 @@ subroutine read_model_iso()
   ! vs model
   fname = 'vs'
   write(m_file,'(a,i6.6,a)') trim(INPUT_MODEL_DIR)//'proc',myrank,trim(REG)//trim(fname)//'.bin'
-  if (myrank == 0) print*,'  ',trim(INPUT_MODEL_DIR)//'proc**'//trim(REG)//trim(fname)//'.bin'
+  if (myrank == 0) print *,'  ',trim(INPUT_MODEL_DIR)//'proc**'//trim(REG)//trim(fname)//'.bin'
 
   open(IIN,file=trim(m_file),status='old',form='unformatted',iostat=ier)
   if (ier /= 0) then
-    print*,'Error opening: ',trim(m_file)
+    print *,'Error opening: ',trim(m_file)
     call exit_mpi(myrank,'file not found')
   endif
   read(IIN) model_vs(:,:,:,1:nspec)
@@ -80,11 +80,11 @@ subroutine read_model_iso()
   ! rho model
   fname = 'rho'
   write(m_file,'(a,i6.6,a)') trim(INPUT_MODEL_DIR)//'proc',myrank,trim(REG)//trim(fname)//'.bin'
-  if (myrank == 0) print*,'  ',trim(INPUT_MODEL_DIR)//'proc**'//trim(REG)//trim(fname)//'.bin'
+  if (myrank == 0) print *,'  ',trim(INPUT_MODEL_DIR)//'proc**'//trim(REG)//trim(fname)//'.bin'
 
   open(IIN,file=trim(m_file),status='old',form='unformatted',iostat=ier)
   if (ier /= 0) then
-    print*,'Error opening: ',trim(m_file)
+    print *,'Error opening: ',trim(m_file)
     call exit_mpi(myrank,'file not found')
   endif
   read(IIN) model_rho(:,:,:,1:nspec)
@@ -101,12 +101,12 @@ subroutine read_model_iso()
   call max_all_cr(maxval(model_rho),max_rho)
 
   if (myrank == 0) then
-    print*
-    print*,'initial models:'
-    print*,'  vp min/max : ',min_vp,max_vp
-    print*,'  vs min/max : ',min_vs,max_vs
-    print*,'  rho min/max: ',min_rho,max_rho
-    print*
+    print *
+    print *,'initial models:'
+    print *,'  vp min/max : ',min_vp,max_vp
+    print *,'  vs min/max : ',min_vs,max_vs
+    print *,'  rho min/max: ',min_rho,max_rho
+    print *
   endif
   call synchronize_all()
 
@@ -139,7 +139,7 @@ subroutine read_model_tiso()
   character(len=MAX_STRING_LEN) :: m_file, fname
 
   ! user output
-  if (myrank == 0) print*,'reading model...'
+  if (myrank == 0) print *,'reading model...'
 
   ! allocate arrays for storing the databases
   allocate(model_vpv(NGLLX,NGLLY,NGLLZ,NSPEC), &
@@ -162,11 +162,11 @@ subroutine read_model_tiso()
   ! vpv model
   fname = 'vpv'
   write(m_file,'(a,i6.6,a)') trim(INPUT_MODEL_DIR)//'proc',myrank,trim(REG)//trim(fname)//'.bin'
-  if (myrank == 0) print*,'  ',trim(INPUT_MODEL_DIR)//'proc**'//trim(REG)//trim(fname)//'.bin'
+  if (myrank == 0) print *,'  ',trim(INPUT_MODEL_DIR)//'proc**'//trim(REG)//trim(fname)//'.bin'
 
   open(IIN,file=trim(m_file),status='old',form='unformatted',iostat=ier)
   if (ier /= 0) then
-    print*,'Error opening: ',trim(m_file)
+    print *,'Error opening: ',trim(m_file)
     call exit_mpi(myrank,'file not found')
   endif
   read(IIN) model_vpv(:,:,:,1:nspec)
@@ -175,11 +175,11 @@ subroutine read_model_tiso()
   ! vph model
   fname = 'vph'
   write(m_file,'(a,i6.6,a)') trim(INPUT_MODEL_DIR)//'proc',myrank,trim(REG)//trim(fname)//'.bin'
-  if (myrank == 0) print*,'  ',trim(INPUT_MODEL_DIR)//'proc**'//trim(REG)//trim(fname)//'.bin'
+  if (myrank == 0) print *,'  ',trim(INPUT_MODEL_DIR)//'proc**'//trim(REG)//trim(fname)//'.bin'
 
   open(IIN,file=trim(m_file),status='old',form='unformatted',iostat=ier)
   if (ier /= 0) then
-    print*,'Error opening: ',trim(m_file)
+    print *,'Error opening: ',trim(m_file)
     call exit_mpi(myrank,'file not found')
   endif
   read(IIN) model_vph(:,:,:,1:nspec)
@@ -188,11 +188,11 @@ subroutine read_model_tiso()
   ! vsv model
   fname = 'vsv'
   write(m_file,'(a,i6.6,a)') trim(INPUT_MODEL_DIR)//'proc',myrank,trim(REG)//trim(fname)//'.bin'
-  if (myrank == 0) print*,'  ',trim(INPUT_MODEL_DIR)//'proc**'//trim(REG)//trim(fname)//'.bin'
+  if (myrank == 0) print *,'  ',trim(INPUT_MODEL_DIR)//'proc**'//trim(REG)//trim(fname)//'.bin'
 
   open(IIN,file=trim(m_file),status='old',form='unformatted',iostat=ier)
   if (ier /= 0) then
-    print*,'Error opening: ',trim(m_file)
+    print *,'Error opening: ',trim(m_file)
     call exit_mpi(myrank,'file not found')
   endif
   read(IIN) model_vsv(:,:,:,1:nspec)
@@ -201,11 +201,11 @@ subroutine read_model_tiso()
   ! vsh model
   fname = 'vsh'
   write(m_file,'(a,i6.6,a)') trim(INPUT_MODEL_DIR)//'proc',myrank,trim(REG)//trim(fname)//'.bin'
-  if (myrank == 0) print*,'  ',trim(INPUT_MODEL_DIR)//'proc**'//trim(REG)//trim(fname)//'.bin'
+  if (myrank == 0) print *,'  ',trim(INPUT_MODEL_DIR)//'proc**'//trim(REG)//trim(fname)//'.bin'
 
   open(IIN,file=trim(m_file),status='old',form='unformatted',iostat=ier)
   if (ier /= 0) then
-    print*,'Error opening: ',trim(m_file)
+    print *,'Error opening: ',trim(m_file)
     call exit_mpi(myrank,'file not found')
   endif
   read(IIN) model_vsh(:,:,:,1:nspec)
@@ -214,11 +214,11 @@ subroutine read_model_tiso()
   ! eta model
   fname = 'eta'
   write(m_file,'(a,i6.6,a)') trim(INPUT_MODEL_DIR)//'proc',myrank,trim(REG)//trim(fname)//'.bin'
-  if (myrank == 0) print*,'  ',trim(INPUT_MODEL_DIR)//'proc**'//trim(REG)//trim(fname)//'.bin'
+  if (myrank == 0) print *,'  ',trim(INPUT_MODEL_DIR)//'proc**'//trim(REG)//trim(fname)//'.bin'
 
   open(IIN,file=trim(m_file),status='old',form='unformatted',iostat=ier)
   if (ier /= 0) then
-    print*,'Error opening: ',trim(m_file)
+    print *,'Error opening: ',trim(m_file)
     call exit_mpi(myrank,'file not found')
   endif
   read(IIN) model_eta(:,:,:,1:nspec)
@@ -227,11 +227,11 @@ subroutine read_model_tiso()
   ! rho model
   fname = 'rho'
   write(m_file,'(a,i6.6,a)') trim(INPUT_MODEL_DIR)//'proc',myrank,trim(REG)//trim(fname)//'.bin'
-  if (myrank == 0) print*,'  ',trim(INPUT_MODEL_DIR)//'proc**'//trim(REG)//trim(fname)//'.bin'
+  if (myrank == 0) print *,'  ',trim(INPUT_MODEL_DIR)//'proc**'//trim(REG)//trim(fname)//'.bin'
 
   open(IIN,file=trim(m_file),status='old',form='unformatted',iostat=ier)
   if (ier /= 0) then
-    print*,'Error opening: ',trim(m_file)
+    print *,'Error opening: ',trim(m_file)
     call exit_mpi(myrank,'file not found')
   endif
   read(IIN) model_rho(:,:,:,1:nspec)
@@ -257,15 +257,15 @@ subroutine read_model_tiso()
   call max_all_cr(maxval(model_rho),max_rho)
 
   if (myrank == 0) then
-    print*
-    print*,'initial models:'
-    print*,'  vpv min/max: ',min_vpv,max_vpv
-    print*,'  vph min/max: ',min_vph,max_vph
-    print*,'  vsv min/max: ',min_vsv,max_vsv
-    print*,'  vsh min/max: ',min_vsh,max_vsh
-    print*,'  eta min/max: ',min_eta,max_eta
-    print*,'  rho min/max: ',min_rho,max_rho
-    print*
+    print *
+    print *,'initial models:'
+    print *,'  vpv min/max: ',min_vpv,max_vpv
+    print *,'  vph min/max: ',min_vph,max_vph
+    print *,'  vsv min/max: ',min_vsv,max_vsv
+    print *,'  vsh min/max: ',min_vsh,max_vsh
+    print *,'  eta min/max: ',min_eta,max_eta
+    print *,'  rho min/max: ',min_rho,max_rho
+    print *
   endif
   call synchronize_all()
 
@@ -302,7 +302,7 @@ subroutine read_model_database()
   write(m_file,'(a,i6.6,a)') trim(INPUT_DATABASES_DIR)//'proc',myrank,trim(REG)//'external_mesh.bin'
   open(IIN,file=trim(m_file),status='old',form='unformatted',iostat=ier)
   if (ier /= 0) then
-    print*,'Error opening: ',trim(m_file)
+    print *,'Error opening: ',trim(m_file)
     call exit_mpi(myrank,'file not found')
   endif
 

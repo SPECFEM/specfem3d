@@ -388,8 +388,8 @@
   do i=1,num_points_globalindices
     iglob = points_globalindices(i)
     if (iglob <= 0 .or. iglob > nglob) then
-      print*,'error: '//prname_file(1:len_trim(prname_file))//'.vtk'
-      print*,'error global index: ',iglob,i
+      print *,'error: '//prname_file(1:len_trim(prname_file))//'.vtk'
+      print *,'error global index: ',iglob,i
       close(IOVTK)
       stop 'error vtk points file'
     endif
