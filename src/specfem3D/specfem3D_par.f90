@@ -94,6 +94,7 @@ module specfem_par
 ! LDDRK time scheme !ZNLDDRK
   integer :: NSTAGE_TIME_SCHEME,istage
   real(kind=CUSTOM_REAL),dimension(N_SLS) :: tau_sigma_CUSTOM_REAL
+  integer :: NGLOB_AB_LDDRK, NSPEC_ATTENUATION_AB_LDDRK, NSPEC_ATTENUATION_AB_kappa_LDDRK
 
 ! time loop step
   integer :: it

@@ -72,7 +72,11 @@
   ! prepares gravity arrays
   call prepare_timerun_gravity()
 
-  if (USE_LDDRK) call prepare_timerun_lddrk() !ZNLDDRK
+  ! ZN I do not use if(USE_LDDRK) call prepare_timerun_lddrk()
+  ! ZN in order to avoid the error of using unallocated array.
+  ! ZN since R_**_lddrk are dummy variables in subroutine compute_forces_viscoelastic_Dev and 
+  ! ZN in compute_forces_viscoelastic_noDev
+  call prepare_timerun_lddrk() !ZNLDDRK
 
   ! prepares C-PML arrays
   if (PML_CONDITIONS) call prepare_timerun_pml()
@@ -745,11 +749,21 @@
   use specfem_par_poroelastic
 
   implicit none
+  
+  if (USE_LDDRK) then
+    NGLOB_AB_LDDRK = NGLOB_AB
+    NSPEC_ATTENUATION_AB_LDDRK = NSPEC_ATTENUATION_AB
+    NSPEC_ATTENUATION_AB_kappa_LDDRK = NSPEC_ATTENUATION_AB_kappa
+  else
+    NGLOB_AB_LDDRK = 1
+    NSPEC_ATTENUATION_AB_LDDRK = 1
+    NSPEC_ATTENUATION_AB_kappa_LDDRK = 1
+  endif
 
   if (ELASTIC_SIMULATION) then
-    allocate(displ_lddrk(NDIM,NGLOB_AB),stat=ier)
+    allocate(displ_lddrk(NDIM,NGLOB_AB_LDDRK),stat=ier)
     if (ier /= 0) stop 'Error allocating array displ_lddrk'
-    allocate(veloc_lddrk(NDIM,NGLOB_AB),stat=ier)
+    allocate(veloc_lddrk(NDIM,NGLOB_AB_LDDRK),stat=ier)
     if (ier /= 0) stop 'Error allocating array veloc_lddrk'
     displ_lddrk(:,:) = 0._CUSTOM_REAL
     veloc_lddrk(:,:) = 0._CUSTOM_REAL
@@ -761,12 +775,13 @@
     if (ATTENUATION) then
       ! note: currently, they need to be defined, as they are used in the routine arguments
       !          for compute_forces_viscoelastic_Deville()
-      allocate(R_xx_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
-               R_yy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
-               R_xy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
-               R_xz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
-               R_yz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS),stat=ier)
-      if (ier /= 0) stop 'Error allocating array R_xx etc.'
+      allocate(R_xx_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
+               R_yy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
+               R_xy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
+               R_xz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
+               R_yz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS),stat=ier)
+      if (ier /= 0) stop 'Error allocating array R_**_lddrk etc.'
+
       R_xx_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
       R_yy_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
       R_xy_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
@@ -779,6 +794,12 @@
         R_xz_lddrk(:,:,:,:,:) = VERYSMALLVAL
         R_yz_lddrk(:,:,:,:,:) = VERYSMALLVAL
       endif
+
+      allocate(R_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa,N_SLS))
+      if (ier /= 0) stop 'Error allocating array R_**_lddrk etc.'
+      R_trace(:,:,:,:,:) = 0._CUSTOM_REAL
+      if (FIX_UNDERFLOW_PROBLEM) R_trace(:,:,:,:,:) = VERYSMALLVAL
+      
     endif
   endif  
 
