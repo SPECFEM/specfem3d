@@ -746,52 +746,48 @@
 
   implicit none
 
-  if (USE_LDDRK) then
+  if (ELASTIC_SIMULATION) then
+    allocate(displ_lddrk(NDIM,NGLOB_AB),stat=ier)
+    if (ier /= 0) stop 'Error allocating array displ_lddrk'
+    allocate(veloc_lddrk(NDIM,NGLOB_AB),stat=ier)
+    if (ier /= 0) stop 'Error allocating array veloc_lddrk'
+    displ_lddrk(:,:) = 0._CUSTOM_REAL
+    veloc_lddrk(:,:) = 0._CUSTOM_REAL
+    if (FIX_UNDERFLOW_PROBLEM) then
+      displ_lddrk(:,:) = VERYSMALLVAL
+      veloc_lddrk(:,:) = VERYSMALLVAL
+    endif
 
-    if (ELASTIC_SIMULATION) then
-      allocate(displ_lddrk(NDIM,NGLOB_AB),stat=ier)
-      if (ier /= 0) stop 'Error allocating array displ_lddrk'
-      allocate(veloc_lddrk(NDIM,NGLOB_AB),stat=ier)
-      if (ier /= 0) stop 'Error allocating array veloc_lddrk'
-      displ_lddrk(:,:) = 0._CUSTOM_REAL
-      veloc_lddrk(:,:) = 0._CUSTOM_REAL
+    if (ATTENUATION) then
+      ! note: currently, they need to be defined, as they are used in the routine arguments
+      !          for compute_forces_viscoelastic_Deville()
+      allocate(R_xx_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
+               R_yy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
+               R_xy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
+               R_xz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
+               R_yz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS),stat=ier)
+      if (ier /= 0) stop 'Error allocating array R_xx etc.'
+      R_xx_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
+      R_yy_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
+      R_xy_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
+      R_xz_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
+      R_yz_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
       if (FIX_UNDERFLOW_PROBLEM) then
-        displ_lddrk(:,:) = VERYSMALLVAL
-        veloc_lddrk(:,:) = VERYSMALLVAL
+        R_xx_lddrk(:,:,:,:,:) = VERYSMALLVAL
+        R_yy_lddrk(:,:,:,:,:) = VERYSMALLVAL
+        R_xy_lddrk(:,:,:,:,:) = VERYSMALLVAL
+        R_xz_lddrk(:,:,:,:,:) = VERYSMALLVAL
+        R_yz_lddrk(:,:,:,:,:) = VERYSMALLVAL
       endif
+    endif
+  endif  
 
-      if (ATTENUATION) then
-        ! note: currently, they need to be defined, as they are used in the routine arguments
-        !          for compute_forces_viscoelastic_Deville()
-        allocate(R_xx_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
-                 R_yy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
-                 R_xy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
-                 R_xz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
-                 R_yz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS),stat=ier)
-        if (ier /= 0) stop 'Error allocating array R_xx etc.'
-        R_xx_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
-        R_yy_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
-        R_xy_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
-        R_xz_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
-        R_yz_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
-        if (FIX_UNDERFLOW_PROBLEM) then
-          R_xx_lddrk(:,:,:,:,:) = VERYSMALLVAL
-          R_yy_lddrk(:,:,:,:,:) = VERYSMALLVAL
-          R_xy_lddrk(:,:,:,:,:) = VERYSMALLVAL
-          R_xz_lddrk(:,:,:,:,:) = VERYSMALLVAL
-          R_yz_lddrk(:,:,:,:,:) = VERYSMALLVAL
-        endif
-      endif
-    endif  
-
-    if (ACOUSTIC_SIMULATION) then
+  if (ACOUSTIC_SIMULATION) then
       
-    endif
+  endif
 
-    if (POROELASTIC_SIMULATION) then
-      stop 'LDDRK do not implemented for POROELASTIC_SIMULATION'
-    endif
-  
+  if (POROELASTIC_SIMULATION) then
+    stop 'LDDRK do not implemented for POROELASTIC_SIMULATION'
   endif
 
   end subroutine prepare_timerun_lddrk

@@ -177,7 +177,7 @@
     endif
 
     ! updates wavefields using Newmark time scheme
-    call update_displacement_scheme()
+    if(.not. USE_LDDRK) call update_displacement_scheme() !ZNLDDRK
 
     ! calculates stiffness term
     if (.not. GPU_MODE) then
@@ -211,11 +211,13 @@
 
       else
         ! forward simulations
-
-        ! 1. acoustic domain
-        if (ACOUSTIC_SIMULATION) call compute_forces_acoustic()
-        ! 2. elastic domain
-        if (ELASTIC_SIMULATION) call compute_forces_viscoelastic()
+        do istage = 1, NSTAGE_TIME_SCHEME !ZNLDDRK
+          if(USE_LDDRK) call update_displacement_lddrk() !ZNLDDRK
+          ! 1. acoustic domain
+          if (ACOUSTIC_SIMULATION) call compute_forces_acoustic()
+          ! 2. elastic domain
+          if (ELASTIC_SIMULATION) call compute_forces_viscoelastic()
+        enddo
       endif
 
       ! poroelastic solver
