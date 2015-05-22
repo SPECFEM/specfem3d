@@ -94,7 +94,7 @@
 
   double precision, allocatable, dimension(:) :: horiz_dist
   double precision, allocatable, dimension(:) :: x_found,y_found,z_found
-  double precision :: dist
+  double precision :: dist_squared
 
   double precision :: xi,eta,gamma,dx,dy,dz,dxi,deta,dgamma
   double precision :: x,y,z
@@ -124,7 +124,7 @@
 
   ! use dynamic allocation
   double precision, dimension(:), allocatable :: final_distance
-  double precision :: distmin,final_distance_max
+  double precision :: distmin_squared,final_distance_max
 
   ! receiver information
   ! station information for writing the seismograms
@@ -292,7 +292,7 @@
 
     ! compute horizontal distance between source and receiver in km
     horiz_dist(irec) = dsqrt((stutm_y(irec)-utm_y_source)**2 &
-                            + (stutm_x(irec)-utm_x_source)**2) / 1000.d0
+                           + (stutm_x(irec)-utm_x_source)**2) / 1000.d0
 
     ! print some information about stations
     if (myrank == 0) then
@@ -354,7 +354,7 @@
     endif
 
     ! reset distance to huge initial value
-    distmin=HUGEVAL
+    distmin_squared = HUGEVAL
 
     if (.not. SU_FORMAT) then
       ! determines closest GLL point
@@ -399,13 +399,14 @@
                 endif
               endif
 
-              dist = (x_target(irec)-dble(xstore(iglob)))**2 &
-                   + (y_target(irec)-dble(ystore(iglob)))**2 &
-                   + (z_target(irec)-dble(zstore(iglob)))**2
+              !  we compare squared distances instead of distances themselves to significantly speed up calculations
+              dist_squared = (x_target(irec)-dble(xstore(iglob)))**2 &
+                           + (y_target(irec)-dble(ystore(iglob)))**2 &
+                           + (z_target(irec)-dble(zstore(iglob)))**2
 
               ! keep this point if it is closer to the receiver
-              if (dist < distmin) then
-                distmin = dist
+              if (dist_squared < distmin_squared) then
+                distmin_squared = dist_squared
                 ispec_selected_rec(irec) = ispec
                 ix_initial_guess(irec) = i
                 iy_initial_guess(irec) = j
@@ -451,20 +452,18 @@
           if ((x_target(irec)>=xmin_ELE .and. x_target(irec)<=xmax_ELE) .and. &
               (y_target(irec)>=ymin_ELE .and. y_target(irec)<=ymax_ELE) .and. &
               (z_target(irec)>=zmin_ELE .and. z_target(irec)<=zmax_ELE)) then
-            ! we find the element (ispec) which "may" contain the receiver (irec)
-            ! so we only need to compute distances
-            !(which is expensive because of "dsqrt") within those elements
+            ! find the element (ispec) that may contain the receiver (irec)
             ispec_selected_rec(irec) = ispec
             do k = kmin_temp,kmax_temp
               do j = jmin_temp,jmax_temp
                 do i = imin_temp,imax_temp
                   iglob = ibool(i,j,k,ispec)
-                  ! for comparison purpose, we do not have to do "dsqrt", which is expensive
-                  dist = ((x_target(irec)-dble(xstore(iglob)))**2 &
-                        + (y_target(irec)-dble(ystore(iglob)))**2 &
-                        + (z_target(irec)-dble(zstore(iglob)))**2)
-                  if (dist < distmin) then
-                    distmin = dist
+                  !  we compare squared distances instead of distances themselves to significantly speed up calculations
+                  dist_squared = ((x_target(irec)-dble(xstore(iglob)))**2 &
+                                + (y_target(irec)-dble(ystore(iglob)))**2 &
+                                + (z_target(irec)-dble(zstore(iglob)))**2)
+                  if (dist_squared < distmin_squared) then
+                    distmin_squared = dist_squared
                     ix_initial_guess(irec) = i
                     iy_initial_guess(irec) = j
                     iz_initial_guess(irec) = k
@@ -482,7 +481,7 @@
                                        + (y_target(irec)-y_found(irec))**2 &
                                        + (z_target(irec)-z_found(irec))**2)
           endif ! if receiver "may" be within this element
-        enddo ! do ispec=1,NSPEC_AB
+        enddo ! do ispec = 1,NSPEC_AB
       endif ! if receiver "may" be within this proc
     endif !if (.not. SU_FORMAT)
 

@@ -1415,7 +1415,7 @@ Optional Features:
                           solver in double precision [default=no]
   --enable-debug          build with debugging options enabled [default=no]
   --enable-vectorization  build FORCE_VECTORIZATION enabled version
-                          [default=auto]
+                          [default=no]
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -2764,7 +2764,7 @@ export COND_DEBUG_TRUE
 if test "${enable_vectorization+set}" = set; then :
   enableval=$enable_vectorization; want_vec="$enableval"
 else
-  want_vec=auto
+  want_vec=no
 fi
 
 if test x"$want_vec" == xauto; then
