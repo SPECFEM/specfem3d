@@ -314,7 +314,7 @@ end module user_noise_distribution
 
     ! checks if surface element belongs to elastic domain
     if (ispec_is_acoustic(ispec)) then
-      print*,'error noise simulation: element',ispec,'is acoustic'
+      print *,'error noise simulation: element',ispec,'is acoustic'
       stop 'error: noise for acoustic elements not implemented yet!'
     endif
 
@@ -418,7 +418,7 @@ end module user_noise_distribution
       if (NSPEC_TOP > 2147483646 / (CUSTOM_REAL * NGLLSQUARE * NDIM)) then
         print *,'reclen of noise surface_movie needed exceeds integer 4-byte limit: ',reclen
         print *,'  ',CUSTOM_REAL, NDIM, NGLLSQUARE, NSPEC_TOP
-        print*,'bit size fortran: ',bit_size(NSPEC_TOP)
+        print *,'bit size fortran: ',bit_size(NSPEC_TOP)
         call exit_MPI(myrank,"error NSPEC_TOP integer limit")
       endif
 
@@ -566,7 +566,7 @@ end module user_noise_distribution
   integer :: i,j,k,iglob,ispec, it
 
   if (irec_master_noise <= 0) then
-    print*,'error rank',myrank,irec_master_noise
+    print *,'error rank',myrank,irec_master_noise
     stop 'error irec_master_noise'
   endif
 

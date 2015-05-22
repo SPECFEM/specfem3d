@@ -321,7 +321,7 @@
      NSPEC2DMAX_YMIN_YMAX = NSPEC2D_B_XI
 
      !debug
-     !print*,'nspec minmax:',NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_yMAX
+     !print *,'nspec minmax:',NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_yMAX
 
      ! theoretical number of Gauss-Lobatto points in radial direction
      !  NPOIN1D_RADIAL_BEDROCK = NSPEC1D_RADIAL_BEDROCK*(NGLLZ_M-1)+1

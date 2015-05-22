@@ -58,7 +58,9 @@ of each source in the \texttt{CMTSOLUTION} file is replaced by
 \[
 \sqrt{(}\mathrm{\mathtt{HALF\_DURATIO}\mathtt{N}^{2}}+\mathrm{\mathtt{HDUR\_MOVI}\mathtt{E}^{2}})
 \]
- \textbf{NOTE:} If \texttt{HDUR\_MOVIE} is set to 0.0, the code will
+\end{quote}
+
+\textbf{NOTE:} If \texttt{HDUR\_MOVIE} is set to 0.0, the code will
 select the appropriate value of 1.1 $\times$ smallest period. As
 usual, for a point source one can set \texttt{half duration} in the
 \texttt{CMTSOLUTION} file to be 0.0 and \texttt{HDUR\_MOVIE} = 0.0
@@ -66,7 +68,6 @@ in the \texttt{Par\_file} to get the highest frequencies resolved
 by the simulation, but for a finite source one would keep all the
 \texttt{half durations} as prescribed by the finite source model and
 set \texttt{HDUR\_MOVIE} = 0.0.
-\end{quote}
 
 \subsection{Movie Surface}
 
@@ -108,17 +109,14 @@ parameters.
 
 
 \begin{figure}[htbp]
-\noindent \begin{centering}
+\begin{centering}
 \includegraphics[width=0.32\textwidth]{figures/movie_surf_1.jpg}
 \includegraphics[width=0.32\textwidth]{figures/movie_surf_2.jpg}
 \includegraphics[width=0.32\textwidth]{figures/movie_surf_3.jpg}
-\par\end{centering}
-
+\par
+\end{centering}
 \caption{Visualization using AVS files created by \texttt{xcreate\_movie\_shakemap\_AVS\_DX\_GMT}
-showing movie snapshots of vertical velocity components at different
-times.}
-
-
+showing movie snapshots of vertical velocity components at different times.}
 \label{fig:movie.surf}
 \end{figure}
 
@@ -148,6 +146,7 @@ proc??????_velocity_Y_it??????.bin
 proc??????_velocity_Z_it??????.bin
 \end{verbatim}
 }
+\noindent
 For elastic domains, the divergence and curl taken from the velocity field,
 i.e. $\nabla\cdot{\bf {v}}$ and $\nabla\times{\bf {v}}$, get stored
 as well:
@@ -159,6 +158,7 @@ proc??????_curl_Y_it??????.bin
 proc??????_curl_Z_it??????.bin
 \end{verbatim}
 }
+\noindent
 The files denoted \texttt{\small proc??????\_div\_glob\_it??????.bin} and
 \texttt{\small proc??????\_curl\_glob\_it??????.bin}
 are stored on the global points only, all the other arrays are stored
@@ -168,17 +168,15 @@ according to the
 flag (see also Appendix~\ref{cha:Coordinates} and \ref{cha:channel-codes}).
 
 \begin{figure}[htbp]
-\noindent \begin{centering}
+\begin{centering}
 \includegraphics[width=0.32\textwidth]{figures/movie_volume_1.jpg}
 \includegraphics[width=0.32\textwidth]{figures/movie_volume_2.jpg}
 \includegraphics[width=0.32\textwidth]{figures/movie_volume_3.jpg}
-\par\end{centering}
-
+\par
+\end{centering}
 \caption{Paraview visualization using movie volume files (converted by \texttt{xcombine\_vol\_data}
 and \texttt{mesh2vtu.pl}) and showing snapshots of vertical velocity
 components at different times.}
-
-
 \label{fig:movie.volume}
 \end{figure}
 
@@ -192,13 +190,16 @@ it in the root directory, type:
 make xcombine_vol_data
 \end{verbatim}
 }
+\noindent
 which will create the executable \texttt{bin/xcombine\_vol\_data}.
 To output the usage of this executable, type
+
 {\footnotesize
 \begin{verbatim}
 ./bin/xcombine_vol_data
 \end{verbatim}
 }
+\noindent
 without arguments.
 
 \medskip
@@ -398,11 +399,12 @@ the \textsf{Accept} button. Choose \textsf{Filter} $\rightarrow$
 \urlwithparentheses{www.paraview.org/files/v1.6/ParaViewUsersGuide.PDF}.
 \end{enumerate}
 \end{enumerate}
+%
 \begin{figure}[H]
-\noindent \begin{centering}
-\includegraphics[scale=0.6]{figures/3D-S-Kernel.pdf}
-\par\end{centering}
-
+\begin{centering}
+\includegraphics[width=6in]{figures/3D-S-Kernel.jpg}
+\par
+\end{centering}
 \caption{(a) Top Panel: Vertical source-receiver cross-section of the S-wave
 finite-frequency sensitivity kernel $K_{\beta}$ for station GSC at
 an epicentral distance of 176 km from the September 3, 2002, Yorba
@@ -410,8 +412,6 @@ Linda earthquake. Lower Panel: Vertical source-receiver cross-section
 of the 3D S-wave speed model used for the spectral-element simulations
 \citep{KoLiTrSuStSh04}. (b) The same as (a) but for station HEC at
 an epicentral distance of 165 km \citep{LiTr06}.}
-
-
 \label{figure:P-wave-speed-finite-frequency}
 \end{figure}
 

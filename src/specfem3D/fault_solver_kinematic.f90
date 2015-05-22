@@ -243,12 +243,12 @@ subroutine BC_KINFLT_set_single(bc,MxA,V,D,iflt)
     !NOTE : it and it_kin is being used due to integers are exact numbers.
     if (it > it_kin) then
 
-      print*, 'it :', it
-      print*, 'it_kin :', it_kin
+      print *, 'it :', it
+      print *, 'it_kin :', it_kin
 
       bc%kin_it = bc%kin_it +1
       bc%v_kin_t1 = bc%v_kin_t2
-      print*, 'loading v_kin_t2'
+      print *, 'loading v_kin_t2'
       !Temporal : just for snapshots file names kin_dt=0.1 , dt=0.0001
       !snapshot(100=itime).. : itime=kin_it*(kin_dt/dt)
       itime = bc%kin_it*nint(bc%kin_dt/bc%dt)
@@ -353,7 +353,7 @@ subroutine load_vslip_snapshots(dataXZ,itime,iflt)
   IOUT = 102
 
   write(filename,"(a,I0,'_F',I0,'.bin')") trim(OUTPUT_FILES)//'/Snapshot',itime,iflt
-  print*, trim(filename)
+  print *, trim(filename)
 
   open(unit=IIN_BIN, file= trim(filename), status='old', form='formatted',&
        action='read',iostat=ier)

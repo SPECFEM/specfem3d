@@ -2165,14 +2165,14 @@ subroutine setup_weighting(chan_syn)
 
     ! debug output
     !if (DISPLAY_DETAILS) then
-    !print*,'debug: '
-    !print*,'  yr,jda,ho,mi,sec : ',yr,jda,ho,mi,sec
-    !print*,'  net,sta,chan_dat : ',net,sta,chan_dat
-    !print*,'  dist,az,baz,slat,slon : ',dist,az,baz,slat,slon
-    !print*,'  cmp          = ',cmp
-    !print*,'  dist           = ',dist
-    !print*,'  T_surfacewaves = ',T_surfacewaves
-    !print*
+    !print *,'debug: '
+    !print *,'  yr,jda,ho,mi,sec : ',yr,jda,ho,mi,sec
+    !print *,'  net,sta,chan_dat : ',net,sta,chan_dat
+    !print *,'  dist,az,baz,slat,slon : ',dist,az,baz,slat,slon
+    !print *,'  cmp          = ',cmp
+    !print *,'  dist           = ',dist
+    !print *,'  T_surfacewaves = ',T_surfacewaves
+    !print *
     !endif
 
     ! reads in window picks
@@ -2235,19 +2235,19 @@ subroutine setup_weighting(chan_syn)
   if( nint( num_SH_T + num_Love_T ) /= picks_T ) stop 'error T picks'
 
   if( DISPLAY_DETAILS ) then
-    print*
-    print*,'weighting measurements: '
-    print*,'  picks T:',picks_T
-    print*,'  picks R:',picks_R
-    print*,'  picks Z:',picks_Z
-    print*
-    print*,'  picks P_SV_R: ',nint(num_P_SV_R)
-    print*,'  picks P_SV_V: ',nint(num_P_SV_V)
-    print*,'  picks SH_T  : ',nint(num_SH_T)
-    print*,'  picks Rayleigh_R: ',nint(num_Rayleigh_R)
-    print*,'  picks Rayleigh_V: ',nint(num_Rayleigh_V)
-    print*,'  picks Love_T    : ',nint(num_Love_T)
-    print*
+    print *
+    print *,'weighting measurements: '
+    print *,'  picks T:',picks_T
+    print *,'  picks R:',picks_R
+    print *,'  picks Z:',picks_Z
+    print *
+    print *,'  picks P_SV_R: ',nint(num_P_SV_R)
+    print *,'  picks P_SV_V: ',nint(num_P_SV_V)
+    print *,'  picks SH_T  : ',nint(num_SH_T)
+    print *,'  picks Rayleigh_R: ',nint(num_Rayleigh_R)
+    print *,'  picks Rayleigh_V: ',nint(num_Rayleigh_V)
+    print *,'  picks Love_T    : ',nint(num_Love_T)
+    print *
   endif
 
 
@@ -2274,13 +2274,13 @@ subroutine setup_weighting(chan_syn)
   if( num_Rayleigh_V > 0. ) num_Rayleigh_V = 1.d0 / num_Rayleigh_V
   if( num_Love_T > 0. ) num_Love_T = 1.d0 / num_Love_T
 
-  print*,'  weight of P_SV_R:',num_P_SV_R
-  print*,'  weight of P_SV_V:',num_P_SV_V
-  print*,'  weight of SH_T  :',num_SH_T
-  print*,'  weight of Rayleigh_R:',num_Rayleigh_R
-  print*,'  weight of Rayleigh_V:',num_Rayleigh_V
-  print*,'  weight of Love_T    :',num_Love_T
-  print*
+  print *,'  weight of P_SV_R:',num_P_SV_R
+  print *,'  weight of P_SV_V:',num_P_SV_V
+  print *,'  weight of SH_T  :',num_SH_T
+  print *,'  weight of Rayleigh_R:',num_Rayleigh_R
+  print *,'  weight of Rayleigh_V:',num_Rayleigh_V
+  print *,'  weight of Love_T    :',num_Love_T
+  print *
 
 end subroutine setup_weighting
 

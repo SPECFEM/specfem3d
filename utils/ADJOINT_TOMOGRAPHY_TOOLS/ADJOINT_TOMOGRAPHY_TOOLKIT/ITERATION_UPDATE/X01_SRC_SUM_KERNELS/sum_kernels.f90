@@ -45,7 +45,7 @@ program sum_kernels
   nevent=0
   open(unit=1001,file=trim(eventid),status='old',iostat=ios)
   if ( ios /= 0 ) then
-     print*, 'ERROR OPENING', trim(eventid)
+     print *, 'ERROR OPENING', trim(eventid)
      stop
   endif
   do while ( 1 == 1)

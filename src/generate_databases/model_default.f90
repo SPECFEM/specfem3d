@@ -127,7 +127,7 @@
       kzz =  materials_ext_mesh(12,imaterial_id)
 
     case default
-      print*,'Error: domain id = ',idomain_id,'not recognized'
+      print *,'Error: domain id = ',idomain_id,'not recognized'
       stop 'Error domain id not recognized'
     end select
 
@@ -174,7 +174,7 @@
 
       ! checks if value was found
       if (.not. has_tomo_value) then
-        print*,'Error: tomography value not defined for model material id ',imaterial_id
+        print *,'Error: tomography value not defined for model material id ',imaterial_id
         stop 'Error no matching material value found'
       endif
 
@@ -194,7 +194,7 @@
       !idomain_id = IDOMAIN_ELASTIC    ! forces to be elastic domain
 
     case default
-      print*,'Error: material id ',imaterial_id,' has material definition ',imaterial_def,' which is not recognized'
+      print *,'Error: material id ',imaterial_id,' has material definition ',imaterial_def,' which is not recognized'
       stop 'Error material definition: unknown material definition'
     end select
 

@@ -18,15 +18,13 @@ and preparation of hexahedral, conforming meshes for a variety of
 geophysical models with increasing complexity.
 
 \begin{figure}[htbp]
-\noindent \begin{centering}
+\begin{centering}
 \includegraphics[width=0.6\textwidth]{figures/mount-cubit.jpg}
-\par\end{centering}
-
+\par
+\end{centering}
 \caption{Example of the graphical user interface of CUBIT. The hexahedral mesh
 shown in the main display consists of a hexahedral discretization
 of a single volume with topography.}
-
-
 \label{fig:mount.cubit}
 \end{figure}
 
@@ -67,19 +65,18 @@ material volume as in a schematic marine survey example.
 material properties will have to be read in from a tomographic model
 file during the databases creation by \texttt{xgenerate\_databases}.
 \end{description}
+%
 \begin{figure}[htbp]
-\noindent \begin{centering}
+\begin{centering}
 \includegraphics[width=0.45\textwidth]{figures/example-homogeneous.jpg}
 \includegraphics[width=0.45\textwidth]{figures/example-2layers.jpg} \\
 \includegraphics[width=0.45\textwidth]{figures/example-water.jpg}
 \includegraphics[width=0.45\textwidth]{figures/example-tomo.jpg}
-\par\end{centering}
-
+\par
+\end{centering}
 \caption{Screenshots of the CUBIT examples provided in subdirectory \texttt{EXAMPLES/}:
 homogeneous halfspace (top-left), layered halfspace (top-right), water
 layered halfspace (bottom-left) and tomographic model (bottom-right).}
-
-
 \label{fig:examples.cubit}
 \end{figure}
 
@@ -160,17 +157,16 @@ boundaries, one block for each surface with y=Ymax.
 \item [{face\_abs\_bottom}] Block definition for the faces on the absorbing
 boundaries, one block for each surface with z=bottom.
 \end{description}
+%
 \begin{figure}[htbp]
-\noindent \begin{centering}
+\begin{centering}
 \includegraphics[width=0.45\textwidth]{figures/mount-surface.jpg}
 \includegraphics[width=0.45\textwidth]{figures/mount-abs.jpg}
-\par\end{centering}
-
+\par
+\end{centering}
 \caption{Example of the block definitions for the free surface 'face\_topo'
 (left) and the absorbing boundaries, defined in a single block 'face\_abs\_xmin'
 (right) in CUBIT.}
-
-
 \label{fig:mount.abs}
 \end{figure}
 
@@ -349,18 +345,21 @@ Just edit them to indicate the path to your local installation of CUBIT and also
 that you want to export to SPECFEM3D format. These scripts will do the conversion for you automatically except assigning material properties
 to the different mesh layers. To do so, you will then need to edit the file
 called "nummaterial\_velocity\_file" that will have just been created and change it from the prototype created:
-{\small
+
+{\footnotesize
 \begin{verbatim}
-    0 1 vol1 --> syntax: #material_domain_id #material_id #rho #vp #vs #Q_kappa #Q_mu #anisotropy
-    0 2 vol2 --> syntax: #material_domain_id #material_id #rho #vp #vs #Q_kappa #Q_mu #anisotropy
+0 1 vol1 --> syntax: #material_domain_id #material_id #rho #vp #vs #Q_kappa #Q_mu #anisotropy
+0 2 vol2 --> syntax: #material_domain_id #material_id #rho #vp #vs #Q_kappa #Q_mu #anisotropy
 \end{verbatim}
 }
+
 (where "vol1" and "vol2" here represent the volume labels that you have set while creating the mesh in CUBIT)
 to for instance
-{\small
+
+{\footnotesize
 \begin{verbatim}
-    2 1 1500 2300 1800 9999.0 9999.0 0
-    2 2 1600 2500 20000 9999.0 9999.0 0
+2 1 1500 2300 1800 9999.0 9999.0 0
+2 2 1600 2500 20000 9999.0 9999.0 0
 \end{verbatim}
 }
 
@@ -424,8 +423,7 @@ resulting from the placement of adjacent elements on different processors.
 which provides efficent static mapping, graph and mesh partitioning
 routines. SCOTCH is a free software package developed by Fran\c{c}ois
 Pellegrini et al. from LaBRI and INRIA in Bordeaux, France, downloadable
-from the web page \url{https://gforge.inria.fr/projects/scotch/}.
-\\
+from the web page \url{https://gforge.inria.fr/projects/scotch/}.\\
 
 
 In most cases, the configuration with \texttt{./configure~FC=ifort}
@@ -442,23 +440,21 @@ In case you want to use a pre-existing installation, make sure you
 have correctly specified the path of the SCOTCH library when using
 the option \texttt{-{}-with-scotch-dir} with the \texttt{./configure}
 script. In the future you should be able to find more recent versions
-at \url{http://www.labri.fr/perso/pelegrin/scotch/scotch_en.html}
-. \\
+at \url{http://www.labri.fr/perso/pelegrin/scotch/scotch_en.html}.\\
 
 
 \begin{figure}[htbp]
-\noindent \begin{centering}
+\begin{centering}
 \includegraphics[width=0.45\textwidth]{figures/mount-partitions.jpg}
 \includegraphics[width=0.45\textwidth]{figures/mount-partitions2.jpg}
-\par\end{centering}
-
+\par
+\end{centering}
 \caption{Example of a mesh partitioning onto four cores. Each single core partition
 is colored differently. The executable \texttt{xdecompose\_mesh} can
 equally distribute the mesh on any arbitrary number of cores. Domain
 decomposition is explained in detail in \citet{MaKoBlLe08}, and excellent
-scaling up to 150,000 processor cores in shown for instance in \citet{CaKoLaTiMiLeSnTr08,KoLaMi08a,MaKoBlLe08,KoErGoMi10,Kom11}.}
-
-
+scaling up to 150,000 processor cores in shown for instance in
+\citet{CaKoLaTiMiLeSnTr08,KoLaMi08a,MaKoBlLe08,KoErGoMi10,Kom11}.}
 \label{fig:mount.partitions}
 \end{figure}
 
@@ -469,14 +465,19 @@ When you are ready to compile, in the main directory type
 make xdecompose_mesh
 \end{verbatim}
 }
+\noindent
 If all paths and flags have been set correctly, the executable \texttt{bin/xdecompose\_mesh}
 should be produced.
 
 The partitioning is done in serial for now (in the next release we
-will provide a parallel version of that code). It needs to be run in the main directory because it expects the \texttt{./DATA/Par\_file}. The synopsis is:
+will provide a parallel version of that code). It needs to be run in the main directory because it expects the \texttt{./DATA/Par\_file}.
+The synopsis is:
+%
 \begin{verbatim}
 ./bin/xdecompose_mesh nparts input_directory output_directory
 \end{verbatim}
+%
+\noindent
 where
 \begin{itemize}
 \item \texttt{nparts} is the number of partitions, i.e., the number of cores
@@ -503,12 +504,12 @@ the program.
 In case you successfully ran the configuration script, you are also
 ready to compile the internal mesher. This is an alternative to CUBIT
 for the mesh generation of relatively simple models.
-
+%
 \begin{figure}[htbp]
-\noindent \begin{centering}
+\begin{centering}
 \includegraphics[scale=0.5]{figures/socal_map_mpi.pdf}
-\par\end{centering}
-
+\par
+\end{centering}
 \caption{For parallel computing purposes,
 the model block is subdivided in $\nprocxi\times\nproceta$ slices
 of elements. In this example we use $5^{2}=25$ processors. }
@@ -523,6 +524,7 @@ In the main directory, type
 make xmeshfem3D
 \end{verbatim}
 }
+\noindent
 If all paths and flags have been set correctly, the mesher should
 now compile and produce the executable \texttt{bin/xmeshfem3D}. Please
 note that \texttt{xmeshfem3D} must be called directly from the main
@@ -542,11 +544,12 @@ you need to define the zone number for the UTM projection (e.g., zone
 (no minutes/seconds). These values are approximate; the mesher will
 round them off to define a square mesh in UTM coordinates. When running
 benchmarks on rectangular models, turn the UTM projection off by using
-the flag \texttt{\small SUPPRESS\_UTM\_PROJECTION}{\small , in which
-case all `longitude' parameters simply refer to the $x$~axis, and
+the flag \texttt{\small SUPPRESS\_UTM\_PROJECTION},
+in which case all `longitude' parameters simply refer to the $x$~axis, and
 all `latitude' parameters simply refer to the $y$~axis. To run the
 mesher for a global simulation, the following parameters need to be
-set in the }\texttt{\small Mesh\_Par\_file}{\small :}{\small \par}
+set in the \texttt{\small Mesh\_Par\_file}:
+%
 \begin{description}
 \item [{\texttt{LATITUDE\_MIN}}] Minimum latitude in the block (negative
 for South).
@@ -555,14 +558,17 @@ for South).
 for West).
 \item [{\texttt{LONGITUDE\_MAX}}] Maximum longitude in the block.
 \item [{\texttt{DEPTH\_BLOCK\_KM}}] Depth of bottom of mesh in kilometers.
-\item [{\texttt{\noun{UTM\_PROJECTION\_ZONE}}}] UTM projection zone in
-which your model resides, only valid when \texttt{SUPPRESS\_UTM\_}~\\
- \texttt{PROJECTION} is \texttt{.false.}.
+\item [{\texttt{UTM\_PROJECTION\_ZONE}}] UTM projection zone in
+which your model resides, only valid when
+\texttt{SUPPRESS\_UTM\_PROJECTION} is \texttt{.false.}.
 Use a negative zone number for the Southern hemisphere:
 the Northern hemisphere corresponds to zones +1 to +60,
 the Southern hemisphere to zones -1 to -60.
+
+
 We use the WGS84 (World Geodetic System 1984) reference ellipsoid for the UTM projection. If you prefer to use the Clarke 1866 ellipsoid,
 edit file \texttt{src/shared/utm\_geo.f90}, uncomment that ellipsoid and recompile the code.
+
 From \url{http://en.wikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system}:\\
 The Universal Transverse Mercator coordinate system was developed by the United States Army Corps of Engineers in the 1940s.
 The system was based on an ellipsoidal model of Earth. For areas within the contiguous United States
@@ -570,17 +576,19 @@ the Clarke Ellipsoid of 1866 was used. For the remaining areas of Earth, includi
 The WGS84 ellipsoid is now generally used to model the Earth in the UTM coordinate system,
 which means that current UTM northing at a given point can be 200+ meters different from the old one.
 For different geographic regions, other datum systems (e.g.: ED50, NAD83) can be used.
-%
+
 \item [{\texttt{SUPPRESS\_UTM\_PROJECTION}}] set to be \texttt{.false.}
 when your model range is specified in geographical coordinates, and
 needs to be \texttt{.true.} when your model is specified in Cartesian
 coordinates. \noun{UTM projection zone in which your simulation region
 resides.}
+%
 \item [{\texttt{INTERFACES\_FILE }}] File which contains the description
 of the topography and of the interfaces between the different layers
 of the model, if any. The number of spectral elements in the vertical
 direction within each layer is also defined in this file.
-\item [{$\nexxi$}] The number of spectral elements along one side of the
+%
+\item [{\texttt{NEX\_XI}}] The number of spectral elements along one side of the
 block. This number \textit{must} be 8~$\times$~a multiple of $\nprocxi$
 defined below. Based upon benchmarks against semi-analytical discrete
 wavenumber synthetic seismograms \citep{KoLiTrSuStSh04}, determined
@@ -596,21 +604,26 @@ element, i.e., the number of Gauss-Lobatto-Legendre points, is determined
 by \texttt{NGLLX} in the \texttt{constants.h} file. We generally use
 $\mbox{\texttt{NGLLX\/}}=5$, for a total of $5^{3}=125$ points per
 elements. We suggest not to change this value.
-\item [{$\nexeta$}] The number of spectral elements along the other side
+%
+\item [{\texttt{NEX\_ETA}}] The number of spectral elements along the other side
 of the block. This number \textit{must} be 8~$\times$~a multiple
 of $\nproceta$ defined below.
-\item [{$\nprocxi$}] The number of processors or slices along one side
+%
+\item [{\texttt{NPROC\_XI}}] The number of processors or slices along one side
 of the block (see Figure~\ref{fig:For-parallel-computing}); we must
 have $\nexxi=8\times c\times\nprocxi$, where $c\ge1$ is a positive
 integer.
-\item [{$\nproceta$}] The number of processors or slices along the other
+%
+\item [{\texttt{NPROC\_ETA}}] The number of processors or slices along the other
 side of the block; we must have $\nexeta=8\times c\times\nproceta$,
 where $c\ge1$ is a positive integer.
+%
 \item [{\texttt{USE\_REGULAR\_MESH}}] set to be \texttt{.true.} if you
 want a perfectly regular mesh or \texttt{.false.} if you want to add
 doubling horizontal layers to coarsen the mesh. In this case, you
 also need to provide additional information by setting up the next
 three parameters.
+%
 \item [{\texttt{NDOUBLINGS}}] The number of horizontal doubling layers.
 Must be set to \texttt{1} or \texttt{2} if \texttt{USE\_REGULAR\_MESH}
 is set to \texttt{.true.}.
@@ -632,6 +645,7 @@ by the mesher will be written. Generally one uses a directory on the
 local disk of the compute nodes, although on some machines these partitions
 are written on a parallel (global) file system (see also the earlier
 discussion of the \texttt{LOCAL\_PATH\_IS\_ALSO\_GLOBAL} flag in Chapter~\ref{cha:Getting-Started}).
+
 The mesher generates the necessary partitions in parallel, one set
 for each of the $\nprocxi\times\nproceta$ slices that constitutes
 the mesh (see Figure~\ref{fig:For-parallel-computing}). After the
@@ -642,14 +656,15 @@ distributed databases, and have to reside in the directory \texttt{LOCAL\_PATH}
 specified in the main \texttt{Par\_file}, e.g. in directory \texttt{OUTPUT\_FILES/DATABASES\_MPI}.
 Please see Chapter~\ref{cha:Creating-Distributed-Databases} for
 further details.
+%
 \item [{\texttt{NMATERIALS}}] The number of different materials in your
-model. In the following lines, each material needs to be defined as
-:
+model. In the following lines, each material needs to be defined as:
 
 \begin{verbatim}
 material_ID rho vp vs Q anisotropy_flag domain_ID
 \end{verbatim}
 
+\noindent
 where
 \begin{itemize}
 \item \texttt{Q} : quality factor (0=no attenuation)
@@ -659,12 +674,12 @@ in \texttt{aniso\_model.f90}
 \end{itemize}
 \item [{\texttt{NREGIONS}}] The number of regions in the mesh. In the following
 lines, because the mesh is regular or 'almost regular', each region
-is defined as :
-
+is defined as:
 \begin{verbatim}
 NEX_XI_BEGIN NEX_XI_END NEX_ETA_BEGIN NEX_ETA_END NZ_BEGIN NZ_END material_ID
 \end{verbatim}
 \end{description}
+%
 The \texttt{INTERFACES\_FILE} parameter of \texttt{Mesh\_Par\_File}
 defines the file which contains the settings of the topography grid
 and of the interfaces grids. Topography is defined as a set of elevation
@@ -683,9 +698,10 @@ and
 \item the name of the file which contains the elevation values (in $y$.$x$
 increasing order).
 \end{itemize}
+%
 At the end of this file, you simply need to set the number of spectral
 elements in the vertical direction for each layer. We provide a few
-models in the {\texttt{EXAMPLES/}} directory. \\
+models in the {\texttt{EXAMPLES/}} directory.\\
 
 
 Finally, depending on your system, you might need to provide a file

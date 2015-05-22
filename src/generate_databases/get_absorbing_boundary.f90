@@ -633,12 +633,12 @@
 
   ! checks counters
   if (ifree /= num_free_surface_faces) then
-    print*,'error number of free surface faces:',ifree,num_free_surface_faces
+    print *,'error number of free surface faces:',ifree,num_free_surface_faces
     stop 'error number of free surface faces'
   endif
 
   if (iabsval /= num_abs_boundary_faces) then
-    print*,'error number of absorbing faces:',iabsval,num_abs_boundary_faces
+    print *,'error number of absorbing faces:',iabsval,num_abs_boundary_faces
     stop 'error number of absorbing faces'
   endif
 

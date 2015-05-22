@@ -176,7 +176,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
     if (mat_id < 0) nundef = nundef + 1
   enddo
   !debug
-  !print*,'materials def/undef: ',ndef,nundef
+  !print *,'materials def/undef: ',ndef,nundef
 
   ! defined material properties
   ! pad dummy zeros to fill up 16 entries (poroelastic medium not allowed)
@@ -237,7 +237,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   enddo
   if (icount /= nundef) stop 'Error icount not equal to ndef'
   ! debug
-  !print*,'undef_matpropl: ',trim(undef_matpropl)
+  !print *,'undef_matpropl: ',trim(undef_matpropl)
 
   call safe_alloc(nodes_ibelm_xmin, ngnod2d, nspec2d_xmin, "nodes_ibelm_xmin")
   call safe_alloc(nodes_ibelm_xmax, ngnod2d, nspec2d_xmax, "nodes_ibelm_xmax")

@@ -278,7 +278,7 @@ contains
       endif
     enddo
     if (.not. found) then
-      print*,'Error: material id ',imaterial_number,' given in region ',ireg,' not found in materials section'
+      print *,'Error: material id ',imaterial_number,' given in region ',ireg,' not found in materials section'
       stop 'Material ID of region not matching any given material'
     endif
   enddo

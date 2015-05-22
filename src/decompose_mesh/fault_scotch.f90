@@ -359,8 +359,8 @@ CONTAINS
  ! downloading processor 0
   nproc_null = count( part == 0)
 
-  print*, 'Elements proc = 0 redistributed in [{nproc}- nproc0] :'
-  print*, nproc_null
+  print *, 'Elements proc = 0 redistributed in [{nproc}- nproc0] :'
+  print *, nproc_null
 
   if (nproc_null /= 0) then
 

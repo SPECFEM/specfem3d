@@ -49,14 +49,14 @@ program xcompute_direction_lbfgs
   call getarg(2,s_iter_current)
   read(s_iter_start,*) iter_start
   read(s_iter_current,*) iter_current
-  if (myrank ==0) print*, 'starting iteration for this period band:',iter_start
-  if (myrank ==0) print*, 'current iteration:',iter_current
+  if (myrank ==0) print *, 'starting iteration for this period band:',iter_start
+  if (myrank ==0) print *, 'current iteration:',iter_current
 
   iter_store = iter_current-m_store
   if ( iter_store <= iter_start ) then
         iter_store = iter_start
   endif
-  if (myrank==0) print*, 'stored iteration:',iter_store
+  if (myrank==0) print *, 'stored iteration:',iter_store
 
 
   kernel_name=(/"reg1_bulk_betah_kernel_precond_smooth","reg1_bulk_betav_kernel_precond_smooth","reg1_eta_kernel_precond_smooth","reg1_bulk_c_kernel_precond_smooth"/)
@@ -78,9 +78,9 @@ program xcompute_direction_lbfgs
   call get_gradient(iter_current,q_vector)
 
   if (myrank == 0) then
-     print*,'************************************************'
-     print*,'*******starting backward store *****************'
-     print*,'************************************************'
+     print *,'************************************************'
+     print *,'*******starting backward store *****************'
+     print *,'************************************************'
   endif
 
   do istore=iter_current-1,iter_store,-1
@@ -99,7 +99,7 @@ program xcompute_direction_lbfgs
      call mpi_allreduce(a_tmp,a_sum,1,CUSTOM_MPI_TYPE,MPI_SUM,MPI_COMM_WORLD,ier)
      a(istore)=p(istore)*a_sum
 
-     if (myrank == 0) print*,'a,p:',a(istore),p(istore)
+     if (myrank == 0) print *,'a,p:',a(istore),p(istore)
      q_vector=q_vector-a(istore)*gradient_diff
   enddo
 
@@ -119,14 +119,14 @@ program xcompute_direction_lbfgs
   call mpi_allreduce(p_k_down,p_k_down_sum,1,CUSTOM_MPI_TYPE,MPI_SUM,MPI_COMM_WORLD,ier)
   p_k=p_k_up_sum/p_k_down_sum
 
-  if ( myrank == 0) print*,'p_k:',p_k
+  if ( myrank == 0) print *,'p_k:',p_k
   r_vector=p_k*q_vector
   !r_vector=1.0*q_vector
 
   if (myrank == 0) then
-     print*,'******************************************'
-     print*,'********starting forward store ***********'
-     print*,'******************************************'
+     print *,'******************************************'
+     print *,'********starting forward store ***********'
+     print *,'******************************************'
   endif
 
   do istore=iter_store,iter_current-1,1
@@ -142,7 +142,7 @@ program xcompute_direction_lbfgs
      call mpi_allreduce(b_tmp,b_sum,1,CUSTOM_MPI_TYPE,MPI_SUM,MPI_COMM_WORLD,ier)
      b=p(istore)*b_sum
 
-     if (myrank==0) print*,'a,b:',a(istore),b
+     if (myrank==0) print *,'a,b:',a(istore),b
 
      r_vector=r_vector+model_diff*(a(istore)-b)
 
@@ -186,9 +186,9 @@ subroutine get_gradient(iter,gradient)
      write(dirname,'(a,i2.2)') '../SUMMED_KERNEL_M',iter
      write(filename,'(a,i6.6,a)') trim(dirname)//'/proc',myrank,'_'//trim(kernel_name(iker))//'.bin'
      open(1001,file=trim(filename),status='old',form='unformatted',iostat=ier)
-     if ( myrank == 0) print*,'reading gradient:',trim(filename)
+     if ( myrank == 0) print *,'reading gradient:',trim(filename)
      if (ier /= 0 ) then
-        print*,'error reading:',trim(filename)
+        print *,'error reading:',trim(filename)
         call exit_mpi(myrank,'file not found')
      endif
      read(1001) vector(:,:,:,1:NSPEC)
@@ -223,9 +223,9 @@ subroutine get_model(iter,model)
      write(dirname,'(a,i2.2)') '../MODEL_M',iter
      write(filename,'(a,i6.6,a)') trim(dirname)//'/proc',myrank,'_'//trim(model_name(iker))//'.bin'
      open(1001,file=trim(filename),status='old',form='unformatted',iostat=ier)
-     if ( myrank == 0) print*,'reading model:',trim(filename)
+     if ( myrank == 0) print *,'reading model:',trim(filename)
      if ( ier /=0) then
-        print*,'error reading:',trim(filename)
+        print *,'error reading:',trim(filename)
         call exit_mpi(myrank,'file not found')
      endif
      read(1001) vector(:,:,:,1:NSPEC)
@@ -277,7 +277,7 @@ subroutine write_gradient(iter,gradient)
       write(dirname,'(a,i2.2)') '../DIRECTION_LBFGS_M',iter
       write(filename,'(a,i6.6,a)') trim(dirname)//'/proc',myrank,'_'//trim(kernel_name(iker))//'.bin'
       open(1001,file=trim(filename),form='unformatted',action='write')
-      if ( myrank == 0) print*,'writing direct:',filename
+      if ( myrank == 0) print *,'writing direct:',filename
       write(1001) vector(iker,:,:,:,1:NSPEC)
       close(1001)
   enddo

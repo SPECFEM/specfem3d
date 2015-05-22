@@ -106,7 +106,7 @@
 
   ! checks flag
   if (iflag_aniso > IANISOTROPY_MODEL2) then
-    print*,'error: aniso flag',iflag_aniso,' not supported'
+    print *,'error: aniso flag',iflag_aniso,' not supported'
     call exit_mpi(0,'error anisotropy model flag')
   endif
 

@@ -121,10 +121,10 @@ program clip_sem
   ! checks number of MPI processes
   if (sizeprocs /= NPROC) then
     if (myrank == 0) then
-      print*,''
-      print*,'Expected number of MPI processes: ', NPROC
-      print*,'Actual number of MPI processes: ', sizeprocs
-      print*,''
+      print *,''
+      print *,'Expected number of MPI processes: ', NPROC
+      print *,'Actual number of MPI processes: ', sizeprocs
+      print *,''
     endif
     call synchronize_all()
     stop 'Error wrong number of MPI processes'
@@ -136,8 +136,8 @@ program clip_sem
   open(unit=27,file=trim(filename),&
           status='old',action='read',form='unformatted',iostat=ier)
   if (ier /= 0) then
-    print*,'Error: could not open external mesh file '
-    print*,'path: ',trim(filename)
+    print *,'Error: could not open external mesh file '
+    print *,'path: ',trim(filename)
     stop 'Error reading external mesh file'
   endif
 

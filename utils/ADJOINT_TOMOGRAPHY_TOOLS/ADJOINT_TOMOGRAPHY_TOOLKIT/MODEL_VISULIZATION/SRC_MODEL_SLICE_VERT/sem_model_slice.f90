@@ -141,7 +141,7 @@ do ispec=1,NSPEC_CRUST_MANTLE
 enddo  ! ispec loop
 
 call MPI_BARRIER(MPI_COMM_WORLD,ier)
-if (myrank == 0) print*,'Done looping over global points'
+if (myrank == 0) print *,'Done looping over global points'
 
 do i = 1,npts
         in(1,i)=distmin(i)

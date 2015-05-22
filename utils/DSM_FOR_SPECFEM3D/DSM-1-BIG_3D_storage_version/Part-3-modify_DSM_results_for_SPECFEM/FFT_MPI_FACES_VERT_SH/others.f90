@@ -1770,7 +1770,7 @@ end subroutine InputForTraction
            dum = bfact * y(1,npole)
            if(dabs(dum)<1.d-36)dum = 0.d0
            dat(k) = dum
-        !       print*,k,x(1),data(k)
+        !       print *,k,x(1),data(k)
         enddo
 
         return

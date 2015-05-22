@@ -74,7 +74,7 @@
   integer iproc(1)
 
   double precision, dimension(NSOURCES),intent(inout) :: utm_x_source,utm_y_source
-  double precision dist
+  double precision dist_squared
   double precision xi,eta,gamma,dx,dy,dz,dxi,deta
 
   ! Gauss-Lobatto-Legendre points of integration
@@ -143,7 +143,7 @@
 
   double precision, dimension(NSOURCES) :: x_found_source,y_found_source,z_found_source
   double precision, dimension(NSOURCES) :: elevation
-  double precision :: distmin
+  double precision :: distmin_squared,distmin_not_squared
 
   integer, dimension(:), allocatable :: tmp_i_local
   integer, dimension(:,:),allocatable :: tmp_i_all_local
@@ -170,7 +170,7 @@
 
   ! location search
   logical :: located_target
-  double precision :: typical_size
+  double precision :: typical_size_squared
   real(kind=CUSTOM_REAL) :: distance_min_glob,distance_max_glob
   real(kind=CUSTOM_REAL) :: elemsize_min_glob,elemsize_max_glob
   real(kind=CUSTOM_REAL) :: x_min_glob,x_max_glob
@@ -231,10 +231,10 @@
                               distance_min_glob,distance_max_glob)
 
     ! sets typical element size for search
-    typical_size =  elemsize_max_glob
+    typical_size_squared =  elemsize_max_glob
 
     ! use 10 times the distance as a criterion for source detection
-    typical_size = 10.0 * typical_size
+    typical_size_squared = (10. * typical_size_squared)**2
   endif
 
   ! get MPI starting time
@@ -325,7 +325,7 @@
     endif
 
     ! set distance to huge initial value
-    distmin = HUGEVAL
+    distmin_squared = HUGEVAL
 
     ! flag to check that we located at least one target element
     located_target = .false.
@@ -340,10 +340,10 @@
       ! exclude elements that are too far from target
       if (USE_DISTANCE_CRITERION) then
         iglob = ibool(MIDX,MIDY,MIDZ,ispec)
-        dist = dsqrt((x_target_source - dble(xstore(iglob)))**2 &
-                   + (y_target_source - dble(ystore(iglob)))**2 &
-                   + (z_target_source - dble(zstore(iglob)))**2)
-        if (dist > typical_size) cycle
+        dist_squared = (x_target_source - dble(xstore(iglob)))**2 &
+                     + (y_target_source - dble(ystore(iglob)))**2 &
+                     + (z_target_source - dble(zstore(iglob)))**2
+        if (dist_squared > typical_size_squared) cycle
       endif
 
       ! define the interval in which we look for points
@@ -383,11 +383,12 @@
             endif
 
             ! keep this point if it is closer to the source
-            dist = dsqrt((x_target_source - dble(xstore(iglob)))**2 &
-                        +(y_target_source - dble(ystore(iglob)))**2 &
-                        +(z_target_source - dble(zstore(iglob)))**2)
-            if (dist < distmin) then
-              distmin = dist
+            !  we compare squared distances instead of distances themselves to significantly speed up calculations
+            dist_squared = (x_target_source - dble(xstore(iglob)))**2 &
+                         + (y_target_source - dble(ystore(iglob)))**2 &
+                         + (z_target_source - dble(zstore(iglob)))**2
+            if (dist_squared < distmin_squared) then
+              distmin_squared = dist_squared
               ispec_selected_source(isource) = ispec
               ix_initial_guess_source = i
               iy_initial_guess_source = j
@@ -782,11 +783,11 @@
         isource = ns + is - 1
 
         ! loop on all the results to determine the best slice
-        distmin = HUGEVAL
+        distmin_not_squared = HUGEVAL
         do iprocloop = 0,NPROC-1
-          if (final_distance_source_all(is,iprocloop) < distmin) then
+          if (final_distance_source_all(is,iprocloop) < distmin_not_squared) then
             ! minimum distance
-            distmin = final_distance_source_all(is,iprocloop)
+            distmin_not_squared = final_distance_source_all(is,iprocloop)
 
             ! stores best source information
             ! slice and element
@@ -807,7 +808,7 @@
           endif
         enddo
         ! stores minimum distance to desired location
-        final_distance_source(isource) = distmin
+        final_distance_source(isource) = distmin_not_squared
       enddo
     endif !myrank
   enddo ! ngather

@@ -75,7 +75,7 @@ AC_ARG_ENABLE([vectorization],
     [AC_HELP_STRING([--enable-vectorization],
         [build FORCE_VECTORIZATION enabled version @<:@default=auto@:>@])],
     [want_vec="$enableval"],
-    [want_vec=auto])
+    [want_vec=no])
 if test x"$want_vec" == xauto; then
     if test x"$want_debug" != xno; then
         want_vec=no

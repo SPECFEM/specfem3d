@@ -115,6 +115,7 @@
       $line =~ s#elseif#else if#ogi;
       $line =~ s#use\s*::\s*mpi#use mpi#ogi;
       $line =~ s#enddo_LOOP_IJK#ENDDO_LOOP_IJK#ogi;
+      $line =~ s#print\*#print \*#ogi;
 
       print FILEF90 "$line\n";
 

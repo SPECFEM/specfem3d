@@ -399,8 +399,8 @@
     open(unit=IIN,file=trim(prname)//'save_forward_arrays.bin',status='old',&
           action='read',form='unformatted',iostat=ier)
     if (ier /= 0) then
-      print*,'error: opening save_forward_arrays'
-      print*,'path: ',trim(prname)//'save_forward_arrays.bin'
+      print *,'error: opening save_forward_arrays'
+      print *,'path: ',trim(prname)//'save_forward_arrays.bin'
       call exit_mpi(myrank,'error open file save_forward_arrays.bin')
     endif
 

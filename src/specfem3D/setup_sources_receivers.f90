@@ -763,7 +763,7 @@
 
               ! checks length
               if (itime /= NSTEP) then
-                print*,'adjoint source error: ',trim(filename),' has length',itime,' but should be',NSTEP
+                print *,'adjoint source error: ',trim(filename),' has length',itime,' but should be',NSTEP
                 call exit_MPI(myrank,&
                   'file '//trim(filename)//' has wrong length, please check your adjoint sources and your simulation duration')
               endif

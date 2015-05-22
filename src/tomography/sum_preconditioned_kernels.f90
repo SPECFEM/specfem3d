@@ -109,12 +109,12 @@ program sum_preconditioned_kernels
   ! checks if number of MPI process as specified
   if (sizeprocs /= NPROC) then
     if (myrank == 0) then
-      print*,''
-      print*,'Error: run xsum_kernels with the same number of MPI processes '
-      print*,'       as specified in Par_file by NPROC when slices were created'
-      print*,''
-      print*,'for example: mpirun -np ',NPROC,' ./xsum_kernels ...'
-      print*,''
+      print *,''
+      print *,'Error: run xsum_kernels with the same number of MPI processes '
+      print *,'       as specified in Par_file by NPROC when slices were created'
+      print *,''
+      print *,'for example: mpirun -np ',NPROC,' ./xsum_kernels ...'
+      print *,''
     endif
     call synchronize_all()
     stop 'Error total number of slices'
@@ -130,8 +130,8 @@ program sum_preconditioned_kernels
   open(unit=27,file=trim(prname_lp),&
           status='old',action='read',form='unformatted',iostat=ier)
   if (ier /= 0) then
-    print*,'Error: could not open database '
-    print*,'path: ',trim(prname_lp)
+    print *,'Error: could not open database '
+    print *,'path: ',trim(prname_lp)
     stop 'Error reading external mesh file'
   endif
 
@@ -143,9 +143,9 @@ program sum_preconditioned_kernels
 
   ! user output
   if (myrank == 0) then
-    print*,'summing kernels in INPUT_KERNELS/ directories:'
-    print*,kernel_list(1:nker)
-    print*
+    print *,'summing kernels in INPUT_KERNELS/ directories:'
+    print *,kernel_list(1:nker)
+    print *
   endif
 
   ! synchronizes
@@ -269,7 +269,7 @@ subroutine sum_kernel_pre(kernel_name,kernel_list,nker)
     norm = sum( kernel * kernel )
     call sum_all_dp(norm, norm_sum)
     if (myrank == 0) then
-      print*,'  norm kernel        : ',sqrt(norm_sum)
+      print *,'  norm kernel        : ',sqrt(norm_sum)
     endif
 
     ! approximate Hessian
@@ -290,7 +290,7 @@ subroutine sum_kernel_pre(kernel_name,kernel_list,nker)
     norm = sum( hess * hess )
     call sum_all_dp(norm, norm_sum)
     if (myrank == 0) then
-      print*,'  norm preconditioner: ',sqrt(norm_sum)
+      print *,'  norm preconditioner: ',sqrt(norm_sum)
     endif
 
     ! note: we take absolute values for hessian (as proposed by Yang)
@@ -333,7 +333,7 @@ subroutine sum_kernel_pre(kernel_name,kernel_list,nker)
     ! sums all kernels from each event
     total_kernel = total_kernel + kernel
 
-    if (myrank == 0) print*
+    if (myrank == 0) print *
   enddo
 
   ! preconditions summed kernels with summed hessians
@@ -410,9 +410,9 @@ subroutine invert_hess( hess_matrix )
 
   ! user output
   if (myrank == 0) then
-    print*
-    print*,'hessian maximum: ',maxh_all
-    print*
+    print *
+    print *,'hessian maximum: ',maxh_all
+    print *
   endif
 
   ! normalizes hessian
