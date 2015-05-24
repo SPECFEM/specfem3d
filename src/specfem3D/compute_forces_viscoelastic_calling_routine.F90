@@ -281,7 +281,11 @@ subroutine compute_forces_viscoelastic()
 !
 ! corrector:
 !   updates the velocity term which requires a(t+delta)
-  veloc(:,:) = veloc(:,:) + deltatover2*accel(:,:)
+  if (USE_LDDRK) then
+    call update_veloc_elastic_lddrk()
+  else
+    veloc(:,:) = veloc(:,:) + deltatover2*accel(:,:)
+  endif
 
   if (PML_CONDITIONS) then
     if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
