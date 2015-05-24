@@ -38,7 +38,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                         alphaval,betaval,gammaval, &
                         NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_Kappa, &
                         R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, &
-                        NSPEC_ATTENUATION_AB_LDDRK,NSPEC_ATTENUATION_AB_kappa,R_trace_lddrk, & !ZNLDDRK
+                        NSPEC_ATTENUATION_AB_LDDRK,NSPEC_ATTENUATION_AB_kappa_LDDRK,R_trace_lddrk, & !ZNLDDRK
                         R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk, & !ZNLDDRK
                         epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy, &
                         epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
@@ -186,7 +186,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
   real(kind=CUSTOM_REAL) :: R_trace_val1,R_xx_val1,R_yy_val1
   real(kind=CUSTOM_REAL) :: R_trace_val2,R_xx_val2,R_yy_val2
   real(kind=CUSTOM_REAL) :: R_trace_val3,R_xx_val3,R_yy_val3
-  real(kind=CUSTOM_REAL) :: factor_loc,alphaval_loc,betaval_loc,gammaval_loc,Sn,Snp1
+!ZNLDDRK  real(kind=CUSTOM_REAL) :: factor_loc,alphaval_loc,betaval_loc,gammaval_loc,Sn,Snp1
   real(kind=CUSTOM_REAL) :: templ
 
 ! local parameters
@@ -1076,101 +1076,21 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
               ! because array is_CPML() is unallocated when PML_CONDITIONS is false
               if (.not. is_CPML(ispec)) then
                 ! use Runge-Kutta scheme to march in time
-                do i_sls = 1,N_SLS
-
-                  alphaval_loc = alphaval(i_sls)
-                  betaval_loc = betaval(i_sls)
-                  gammaval_loc = gammaval(i_sls)
-
-                  if (FULL_ATTENUATION_SOLID) then
-                    ! term in trace
-                    factor_loc = kappastore(i,j,k,ispec) * factor_common_kappa(i_sls,i,j,k,ispec)
-
-                    Sn   = factor_loc * epsilondev_trace(i,j,k,ispec)
-                    Snp1   = factor_loc * epsilondev_trace_loc(i,j,k)
-                    R_trace(i,j,k,ispec,i_sls) = alphaval_loc * R_trace(i,j,k,ispec,i_sls) + &
-                                  betaval_loc * Sn + gammaval_loc * Snp1
-                  endif
-
-                  ! term in xx yy zz xy xz yz
-                  factor_loc = mustore(i,j,k,ispec) * factor_common(i_sls,i,j,k,ispec)
-
-                  ! term in xx
-                  Sn   = factor_loc * epsilondev_xx(i,j,k,ispec)
-                  Snp1   = factor_loc * epsilondev_xx_loc(i,j,k)
-                  R_xx(i,j,k,ispec,i_sls) = alphaval_loc * R_xx(i,j,k,ispec,i_sls) + &
-                             betaval_loc * Sn + gammaval_loc * Snp1
-                  ! term in yy
-                  Sn   = factor_loc * epsilondev_yy(i,j,k,ispec)
-                  Snp1   = factor_loc * epsilondev_yy_loc(i,j,k)
-                  R_yy(i,j,k,ispec,i_sls) = alphaval_loc * R_yy(i,j,k,ispec,i_sls) + &
-                             betaval_loc * Sn + gammaval_loc * Snp1
-                  ! term in zz not computed since zero trace
-                  ! term in xy
-                  Sn   = factor_loc * epsilondev_xy(i,j,k,ispec)
-                  Snp1   = factor_loc * epsilondev_xy_loc(i,j,k)
-                  R_xy(i,j,k,ispec,i_sls) = alphaval_loc * R_xy(i,j,k,ispec,i_sls) + &
-                             betaval_loc * Sn + gammaval_loc * Snp1
-                  ! term in xz
-                  Sn   = factor_loc * epsilondev_xz(i,j,k,ispec)
-                  Snp1   = factor_loc * epsilondev_xz_loc(i,j,k)
-                  R_xz(i,j,k,ispec,i_sls) = alphaval_loc * R_xz(i,j,k,ispec,i_sls) + &
-                             betaval_loc * Sn + gammaval_loc * Snp1
-                  ! term in yz
-                  Sn   = factor_loc * epsilondev_yz(i,j,k,ispec)
-                  Snp1   = factor_loc * epsilondev_yz_loc(i,j,k)
-                  R_yz(i,j,k,ispec,i_sls) = alphaval_loc * R_yz(i,j,k,ispec,i_sls) + &
-                             betaval_loc * Sn + gammaval_loc * Snp1
-                enddo   ! end of loop on memory variables
+                call compute_element_att_memory_second_order_rk(ispec,alphaval,betaval,gammaval, &
+                             NSPEC_AB,kappastore,mustore,NSPEC_ATTENUATION_AB_Kappa,factor_common_kappa,&
+                             R_trace,epsilondev_trace,epsilondev_trace_loc, &
+                             NSPEC_ATTENUATION_AB,factor_common,R_xx,R_yy,R_xy,R_xz,R_yz, &                       
+                             NSPEC_STRAIN_ONLY,epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
+                             epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc,epsilondev_xz_loc,epsilondev_yz_loc)
               endif
             else
               ! use Runge-Kutta scheme to march in time
-              do i_sls = 1,N_SLS
-
-                alphaval_loc = alphaval(i_sls)
-                betaval_loc = betaval(i_sls)
-                gammaval_loc = gammaval(i_sls)
-
-                if (FULL_ATTENUATION_SOLID) then
-                  ! term in trace
-                  factor_loc = kappastore(i,j,k,ispec) * factor_common_kappa(i_sls,i,j,k,ispec)
-
-                  Sn   = factor_loc * epsilondev_trace(i,j,k,ispec)
-                  Snp1   = factor_loc * epsilondev_trace_loc(i,j,k)
-                  R_trace(i,j,k,ispec,i_sls) = alphaval_loc * R_trace(i,j,k,ispec,i_sls) + &
-                       betaval_loc * Sn + gammaval_loc * Snp1
-                endif
-
-                ! term in xx yy zz xy xz yz
-                factor_loc = mustore(i,j,k,ispec) * factor_common(i_sls,i,j,k,ispec)
-
-                ! term in xx
-                Sn   = factor_loc * epsilondev_xx(i,j,k,ispec)
-                Snp1   = factor_loc * epsilondev_xx_loc(i,j,k)
-                R_xx(i,j,k,ispec,i_sls) = alphaval_loc * R_xx(i,j,k,ispec,i_sls) + &
-                     betaval_loc * Sn + gammaval_loc * Snp1
-                ! term in yy
-                Sn   = factor_loc * epsilondev_yy(i,j,k,ispec)
-                Snp1   = factor_loc * epsilondev_yy_loc(i,j,k)
-                R_yy(i,j,k,ispec,i_sls) = alphaval_loc * R_yy(i,j,k,ispec,i_sls) + &
-                     betaval_loc * Sn + gammaval_loc * Snp1
-                ! term in zz not computed since zero trace
-                ! term in xy
-                Sn   = factor_loc * epsilondev_xy(i,j,k,ispec)
-                Snp1   = factor_loc * epsilondev_xy_loc(i,j,k)
-                R_xy(i,j,k,ispec,i_sls) = alphaval_loc * R_xy(i,j,k,ispec,i_sls) + &
-                     betaval_loc * Sn + gammaval_loc * Snp1
-                ! term in xz
-                Sn   = factor_loc * epsilondev_xz(i,j,k,ispec)
-                Snp1   = factor_loc * epsilondev_xz_loc(i,j,k)
-                R_xz(i,j,k,ispec,i_sls) = alphaval_loc * R_xz(i,j,k,ispec,i_sls) + &
-                     betaval_loc * Sn + gammaval_loc * Snp1
-                ! term in yz
-                Sn   = factor_loc * epsilondev_yz(i,j,k,ispec)
-                Snp1   = factor_loc * epsilondev_yz_loc(i,j,k)
-                R_yz(i,j,k,ispec,i_sls) = alphaval_loc * R_yz(i,j,k,ispec,i_sls) + &
-                     betaval_loc * Sn + gammaval_loc * Snp1
-              enddo   ! end of loop on memory variables
+              call compute_element_att_memory_second_order_rk(ispec,alphaval,betaval,gammaval, &
+                           NSPEC_AB,kappastore,mustore,NSPEC_ATTENUATION_AB_Kappa,factor_common_kappa,&
+                           R_trace,epsilondev_trace,epsilondev_trace_loc, &
+                           NSPEC_ATTENUATION_AB,factor_common,R_xx,R_yy,R_xy,R_xz,R_yz, &                       
+                           NSPEC_STRAIN_ONLY,epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
+                           epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc,epsilondev_xz_loc,epsilondev_yz_loc)
             endif
 
           endif  !  end of if attenuation
@@ -1221,9 +1141,9 @@ end subroutine compute_forces_viscoelastic_noDev
 ! O.C.Zienkiewicz, R.L.Taylor & J.Z. Zhu, The finite element method its basis and fundamentals 6th ed.,
 ! Elsevier Press (2005) ! pages 141
 Subroutine compute_strain_in_parent_element(tempx1_att,tempx2_att,tempx3_att,tempx1,tempx2,tempx3,&
-                                           tempy1_att,tempy2_att,tempy3_att,tempy1,tempy2,tempy3,&
-                                           tempz1_att,tempz2_att,tempz3_att,tempz1,tempz2,tempz3,&
-                                           dummyx_loc,dummyy_loc,dummyz_loc,hprime_xx,hprime_yy,hprime_zz)
+                                            tempy1_att,tempy2_att,tempy3_att,tempy1,tempy2,tempy3,&
+                                            tempz1_att,tempz2_att,tempz3_att,tempz1,tempz2,tempz3,&
+                                            dummyx_loc,dummyy_loc,dummyz_loc,hprime_xx,hprime_yy,hprime_zz)
 
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
 

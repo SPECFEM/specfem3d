@@ -750,6 +750,8 @@
 
   implicit none
   
+  integer :: ier
+  
   if (USE_LDDRK) then
     NGLOB_AB_LDDRK = NGLOB_AB
     NSPEC_ATTENUATION_AB_LDDRK = NSPEC_ATTENUATION_AB
