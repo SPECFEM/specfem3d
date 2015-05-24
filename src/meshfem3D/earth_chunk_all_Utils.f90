@@ -365,6 +365,7 @@
 !
 !=======================================================================================================
 !
+!! Used (among other) for VM coupling with AxiSEM
 
   subroutine write_all_chunk_surface_GLL_in_spherical_and_cartesian_coords(xstore,ystore,zstore, &
                                                       deg2rad,ilayer,iboun,ispec,nspec,longitud, &

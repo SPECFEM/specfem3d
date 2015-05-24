@@ -78,8 +78,10 @@ module specfem_par
   integer, dimension(:), allocatable :: free_surface_ispec
   integer :: num_free_surface_faces
 
-! for new method
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: Veloc_dsm_boundary,Tract_dsm_boundary
+! for couple with external code : DSM and AxiSEM (add by VM) for the moment
+  integer :: it_dsm
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: Veloc_dsm_boundary, Tract_dsm_boundary
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: Veloc_axisem, Tract_axisem
 
 ! attenuation
   integer :: NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa
@@ -97,9 +99,6 @@ module specfem_par
 
 ! time loop step
   integer :: it
-
-! for coupling with DSM
-  integer :: it_dsm
 
 ! parameters for the source
   integer, dimension(:), allocatable :: islice_selected_source,ispec_selected_source

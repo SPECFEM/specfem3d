@@ -37,7 +37,9 @@
 
   use generate_databases_par, only: STACEY_INSTEAD_OF_FREE_SURFACE, PML_INSTEAD_OF_FREE_SURFACE, NGNOD2D, &
     STACEY_ABSORBING_CONDITIONS,PML_CONDITIONS,COUPLE_WITH_EXTERNAL_CODE, &
-    NGLLX,NGLLY,NGLLZ,NDIM,NGNOD2D_FOUR_CORNERS,IMAIN
+    NGLLX,NGLLY,NGLLZ,NDIM,NGNOD2D_FOUR_CORNERS,IMAIN, EXTERNAL_CODE_TYPE
+
+  use constants, only: EXTERNAL_CODE_IS_DSM
 
   use create_regions_mesh_ext_par
 
@@ -103,11 +105,13 @@
 
     iboun(:,:) = .false.
 
-    write(namefile,'(a17,i6.6,a4)') 'xmin_gll_for_dsm_',myrank,'.txt'
-    open(123,file=namefile)
-    write(123,*) nspec2D_xmin
+    if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) then
+       write(namefile,'(a17,i6.6,a4)') 'xmin_gll_for_dsm_',myrank,'.txt'
+       open(123,file=namefile)
+       write(123,*) nspec2D_xmin
+    endif
 
-   endif
+  endif
 
   !! CD CD
 
@@ -162,8 +166,9 @@
         normal_face(:,i,j) = lnormal(:)
 
         !! CD CD !! For coupling with DSM
-        if (COUPLE_WITH_EXTERNAL_CODE) write(123,'(i10,3f20.10)') ispec,xstore_dummy(ibool(i,j,1,ispec)),&
-                ystore_dummy(ibool(i,j,1,ispec)),zstore_dummy(ibool(i,j,1,ispec))
+        if ( COUPLE_WITH_EXTERNAL_CODE .and. (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) ) write(123,'(i10,3f20.10)') &
+             ispec, xstore_dummy(ibool(i,j,1,ispec)), ystore_dummy(ibool(i,j,1,ispec)), zstore_dummy(ibool(i,j,1,ispec))
+
         !! CD CD
 
       enddo
@@ -187,7 +192,7 @@
   enddo ! nspec2D_xmin
 
   !! CD CD !! For coupling with DSM
-  if (COUPLE_WITH_EXTERNAL_CODE) close(123)
+  if ( COUPLE_WITH_EXTERNAL_CODE .and. (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) ) close(123)
   !! CD CD
 
   ! xmax

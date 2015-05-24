@@ -94,6 +94,9 @@
   double precision, allocatable :: lon_zmin(:,:), lat_zmin(:,:)
   double precision, dimension(:,:), allocatable :: ProfForGemini
 
+
+  !! For new outputs (list of ggl on boundary, spherical or cartesian)
+  !! AND for coupling with AxiSEM
   integer ::  istore_for_new_outputs
   integer ::   updown(NGLLZ)
   double precision , dimension(NGLLX,NGLLY,NGLLZ) ::  longitud, latitud, radius
@@ -494,7 +497,7 @@
           ! Write two files giving Spherical coordinate on ALL the GLL points on the surface of the 3D chunk for the new DSM
           ! coupling (light version using 2D chunk)
           !
-          ! ==> CAUTION : will be also used later for the VM coupling with AxiSEM
+          ! ==> CAUTION : will be also used later as INTERFACE for the VM coupling with AxiSEM
           !
           ! (must be after write_gllz_points to know the value of ilayer)
 

@@ -321,7 +321,7 @@ $O/compute_forces_poro_solid_part.spec.o: $O/specfem3D_par.spec.o
 $O/compute_gradient_in_acoustic.spec.o: $O/specfem3D_par.spec.o
 $O/compute_interpolated_dva.spec.o: $O/specfem3D_par.spec.o
 $O/compute_kernels.spec.o: $O/specfem3D_par.spec.o
-$O/compute_stacey_viscoelastic.spec.o: $O/specfem3D_par.spec.o
+$O/compute_stacey_viscoelastic.spec.o: $O/specfem3D_par.spec.o $O/shared_par.shared_module.o
 $O/create_color_image.spec.o: $O/specfem3D_par.spec.o
 $O/detect_mesh_surfaces.spec.o: $O/specfem3D_par.spec.o
 $O/fault_solver_common.spec.o: $O/specfem3D_par.spec.o

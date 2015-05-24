@@ -119,8 +119,7 @@ subroutine compute_forces_viscoelastic()
                        veloc,rho_vp,rho_vs, &
                        ispec_is_elastic,SIMULATION_TYPE,SAVE_FORWARD, &
                        it, &
-                       b_num_abs_boundary_faces,b_reclen_field,b_absorb_field,&
-                       it_dsm,Veloc_dsm_boundary,Tract_dsm_boundary,COUPLE_WITH_EXTERNAL_CODE)
+                       b_num_abs_boundary_faces,b_reclen_field,b_absorb_field)
     endif
 
 
