@@ -126,8 +126,8 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 ! lddrk for update the memory variables
   integer :: NSPEC_ATTENUATION_AB_LDDRK,NSPEC_ATTENUATION_AB_Kappa_LDDRK
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK,N_SLS) :: &
-            R_xx,R_yy,R_xy,R_xz,R_yz
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_Kappa_LDDRK,N_SLS) :: R_trace
+            R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_Kappa_LDDRK,N_SLS) :: R_trace_lddrk
 
 ! anisotropy
   logical :: ANISOTROPY
