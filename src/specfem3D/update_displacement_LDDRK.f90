@@ -38,6 +38,8 @@
   implicit none
 
   if (ACOUSTIC_SIMULATION) then
+    potential_dot_dot_acoustic = 0._CUSTOM_REAL
+    if (FIX_UNDERFLOW_PROBLEM) potential_dot_dot_acoustic = VERYSMALLVAL    
   endif
 
   if (ELASTIC_SIMULATION) then
@@ -64,6 +66,80 @@
 !
 !-------------------------------------------------------------------------------------------------
 !
+! acoustic domains
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine update_potential_dot_acoustic_lddrk()
+
+! updates acceleration, velocity and displacement in acoustic region (outer core)
+
+  use specfem_par
+  use specfem_par_acoustic
+
+  implicit none
+  ! local parameters
+  real(kind=CUSTOM_REAL) :: alpha,beta
+
+  ! current Runge-Kutta coefficients
+  alpha = ALPHA_LDDRK(istage)
+  beta = BETA_LDDRK(istage)
+
+  ! forward wavefields
+  call update_acoustic_lddrk(NGLOB_AB,NGLOB_AB_LDDRK,&
+                             potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
+                             potential_acoustic_lddrk,potential_dot_acoustic_lddrk, &
+                             deltat,alpha,beta)
+
+  end subroutine update_potential_dot_acoustic_lddrk
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine update_acoustic_lddrk(NGLOB,NGLOB_LDDRK,&
+                                   potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
+                                   potential_acoustic_lddrk,potential_dot_acoustic_lddrk, &
+                                   deltat,alpha,beta)
+
+  use constants,only: CUSTOM_REAL,NDIM
+
+  implicit none
+
+  integer,intent(in) :: NGLOB,NGLOB_LDDRK
+
+  ! wavefields
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB),intent(inout) :: &
+            potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_LDDRK),intent(inout) :: &
+            potential_acoustic_lddrk,potential_dot_acoustic_lddrk
+
+  real(kind=CUSTOM_REAL),intent(in) :: deltat
+  ! Runge-Kutta coefficients
+  real(kind=CUSTOM_REAL),intent(in) :: alpha,beta
+
+  ! local parameters
+  integer :: i
+
+  if (NGLOB /= NGLOB_LDDRK) stop 'error in definition of NGLOB_LDDRK'
+
+  ! low-memory Runge-Kutta scheme
+
+  do i = 1,NGLOB
+    ! low-memory Runge-Kutta: intermediate storage wavefields
+    potential_dot_acoustic_lddrk(:,i) = alpha * potential_dot_acoustic_lddrk(:,i) + deltat * potential_dot_dot_acoustic(:,i)
+    potential_acoustic_lddrk(:,i) = alpha * potential_acoustic_lddrk(:,i) + deltat * potential_dot_acoustic(:,i)
+    ! updates wavefields
+    potential_dot_acoustic(:,i) = potential_dot_acoustic(:,i) + beta * potential_dot_acoustic_lddrk(:,i)
+    potential_acoustic(:,i) = potential_acoustic(:,i) + beta * potential_acoustic_lddrk(:,i)
+  enddo
+
+  end subroutine update_acoustic_lddrk
+
+!
+!-------------------------------------------------------------------------------------------------
+!
 ! elastic domains
 !
 !-------------------------------------------------------------------------------------------------
@@ -85,8 +161,8 @@
   beta = BETA_LDDRK(istage)
 
   ! forward wavefields
-  call update_elastic_lddrk(NGLOB_AB,displ,veloc,accel,deltat,&
-                            displ_lddrk,veloc_lddrk,alpha,beta)
+  call update_elastic_lddrk(NGLOB_AB,NGLOB_AB_LDDRK,displ,veloc,accel,&
+                            displ_lddrk,veloc_lddrk,deltat,alpha,beta)
 
   end subroutine update_veloc_elastic_lddrk
 
@@ -104,18 +180,18 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine update_elastic_lddrk(NGLOB,displ,veloc,accel,deltat, &
-                                  displ_lddrk,veloc_lddrk,alpha,beta)
+  subroutine update_elastic_lddrk(NGLOB,NGLOB_LDDRK,displ,veloc,accel, &
+                                  displ_lddrk,veloc_lddrk,deltat,alpha,beta)
 
   use constants,only: CUSTOM_REAL,NDIM
 
   implicit none
 
-  integer,intent(in) :: NGLOB
+  integer,intent(in) :: NGLOB,NGLOB_LDDRK
 
   ! wavefields
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB),intent(inout) :: displ,veloc,accel
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB),intent(inout) :: displ_lddrk,veloc_lddrk
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_LDDRK),intent(inout) :: displ_lddrk,veloc_lddrk
 
   real(kind=CUSTOM_REAL),intent(in) :: deltat
   ! Runge-Kutta coefficients
@@ -123,6 +199,8 @@
 
   ! local parameters
   integer :: i
+
+  if (NGLOB /= NGLOB_LDDRK) stop 'error in definition of NGLOB_LDDRK'
 
   ! low-memory Runge-Kutta scheme
 

@@ -48,7 +48,7 @@
                         nrec_local,number_receiver_global, &
                         nsources_local,USE_FORCE_POINT_SOURCE, &
                         USE_RICKER_TIME_FUNCTION,COUPLE_WITH_EXTERNAL_CODE,SU_FORMAT, &
-                        USE_LDDRK,istage
+                        USE_LDDRK,istage !ZNLDDRK
 
   implicit none
 

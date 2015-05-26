@@ -422,6 +422,12 @@
   character(len=MAX_STRING_LEN) :: plot_file
   integer :: ier
 
+  if (.not. USE_LDDRK) then !ZNLDDRK
+    NSTAGE_TIME_SCHEME = 1
+  else
+    NSTAGE_TIME_SCHEME = 6
+  endif
+
   ! distinguish between single and double precision for reals
   if (CUSTOM_REAL == SIZE_REAL) then
     deltat = sngl(DT)
@@ -762,6 +768,19 @@
     NSPEC_ATTENUATION_AB_kappa_LDDRK = 1
   endif
 
+  if (ACOUSTIC_SIMULATION) then
+    allocate(potential_acoustic_lddrk(NGLOB_AB_LDDRK),stat=ier)
+    if (ier /= 0) stop 'Error allocating array potential_acoustic_lddrk'
+    allocate(potential_dot_acoustic_lddrk(NGLOB_AB_LDDRK),stat=ier)
+    if (ier /= 0) stop 'Error allocating array potential_dot_acoustic_lddrk'
+    potential_acoustic_lddrk(:) = 0._CUSTOM_REAL
+    potential_dot_acoustic_lddrk(:) = 0._CUSTOM_REAL
+    if (FIX_UNDERFLOW_PROBLEM) then
+      potential_acoustic_lddrk(:) = VERYSMALLVAL
+      potential_dot_acoustic_lddrk(:) = VERYSMALLVAL
+    endif
+  endif
+
   if (ELASTIC_SIMULATION) then
     allocate(displ_lddrk(NDIM,NGLOB_AB_LDDRK),stat=ier)
     if (ier /= 0) stop 'Error allocating array displ_lddrk'
@@ -803,14 +822,10 @@
       if (FIX_UNDERFLOW_PROBLEM) R_trace(:,:,:,:,:) = VERYSMALLVAL
       
     endif
-  endif  
-
-  if (ACOUSTIC_SIMULATION) then
-      
   endif
 
   if (POROELASTIC_SIMULATION) then
-    stop 'LDDRK do not implemented for POROELASTIC_SIMULATION'
+    stop 'LDDRK has not been implemented for POROELASTIC_SIMULATION'
   endif
 
   end subroutine prepare_timerun_lddrk

@@ -41,7 +41,8 @@
                         xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
                         station_name,network_name,adj_source_file,nrec_local,number_receiver_global, &
                         pm1_source_encoding,nsources_local,USE_FORCE_POINT_SOURCE, &
-                        USE_RICKER_TIME_FUNCTION,SU_FORMAT,USE_TRICK_FOR_BETTER_PRESSURE,USE_SOURCE_ENCODING
+                        USE_RICKER_TIME_FUNCTION,SU_FORMAT,USE_TRICK_FOR_BETTER_PRESSURE,USE_SOURCE_ENCODING, &
+                        USE_LDDRK,istage !ZNLDDRK
 
   implicit none
 
@@ -86,6 +87,7 @@
   double precision :: stf
   real(kind=CUSTOM_REAL),dimension(:,:,:,:,:),allocatable:: adj_sourcearray
   real(kind=CUSTOM_REAL) stf_used,stf_used_total_all,time_source
+  double precision :: time_source_dble  !ZNLDDRK
   integer :: isource,iglob,ispec,i,j,k,ier
   integer :: irec_local,irec
 
@@ -122,6 +124,12 @@
 
           if (ispec_is_acoustic(ispec)) then
 
+            if (USE_LDDRK) then
+              time_source_dble = dble(it-1)*DT+dble(C_LDDRK(istage))*DT-t0-tshift_src(isource)
+            else
+              time_source_dble = dble(it-1)*DT-t0-tshift_src(isource)
+            endif
+
             if (USE_FORCE_POINT_SOURCE) then
 
               ! f0 has been stored in the hdur() array in the case of FORCESOLUTION, to use the same array as for CMTSOLUTION
@@ -136,9 +144,9 @@
 ! thus in fluid elements potential_dot_dot_acoustic() is accurate at zeroth order while potential_acoustic()
 ! is accurate at second order and thus contains significantly less numerical noise.
                 if(USE_TRICK_FOR_BETTER_PRESSURE) then
-                  stf_used = comp_source_time_function_d2rck(dble(it-1)*DT-t0-tshift_src(isource),f0)
+                  stf_used = comp_source_time_function_d2rck(time_source_dble,f0)
                 else
-                  stf_used = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),f0)
+                  stf_used = comp_source_time_function_rickr(time_source_dble,f0)
                 endif
               else
                 ! use a very small duration of 5*DT to mimic a Dirac in time
@@ -150,9 +158,9 @@
 ! thus in fluid elements potential_dot_dot_acoustic() is accurate at zeroth order while potential_acoustic()
 ! is accurate at second order and thus contains significantly less numerical noise.
                 if(USE_TRICK_FOR_BETTER_PRESSURE) then
-                  stf_used = comp_source_time_function_d2gau(dble(it-1)*DT-t0-tshift_src(isource),5.d0*DT)
+                  stf_used = comp_source_time_function_d2gau(time_source_dble,5.d0*DT)
                 else
-                  stf_used = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),5.d0*DT)
+                  stf_used = comp_source_time_function_gauss(time_source_dble,5.d0*DT)
                 endif
               endif
 
@@ -183,9 +191,9 @@
 ! thus in fluid elements potential_dot_dot_acoustic() is accurate at zeroth order while potential_acoustic()
 ! is accurate at second order and thus contains significantly less numerical noise.
                 if(USE_TRICK_FOR_BETTER_PRESSURE) then
-                  stf = comp_source_time_function_d2rck(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+                  stf = comp_source_time_function_d2rck(time_source_dble,hdur(isource))
                 else
-                  stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+                  stf = comp_source_time_function_rickr(time_source_dble,hdur(isource))
                 endif
               else
                 ! Gaussian source time
@@ -197,14 +205,14 @@
 ! thus in fluid elements potential_dot_dot_acoustic() is accurate at zeroth order while potential_acoustic()
 ! is accurate at second order and thus contains significantly less numerical noise.
                 if(USE_TRICK_FOR_BETTER_PRESSURE) then
-                  stf = comp_source_time_function_d2gau(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+                  stf = comp_source_time_function_d2gau(time_source_dble,hdur_gaussian(isource))
                 else
-                  stf = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+                  stf = comp_source_time_function_gauss(time_source_dble,hdur_gaussian(isource))
                 endif
               endif
 
               ! quasi-Heaviside
-              ! stf = comp_source_time_function(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+              ! stf = comp_source_time_function(time_source_dble,hdur_gaussian(isource))
 
               ! source encoding
               if(USE_SOURCE_ENCODING) stf = stf * pm1_source_encoding(isource)

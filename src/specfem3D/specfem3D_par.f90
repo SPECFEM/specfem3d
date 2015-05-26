@@ -435,6 +435,9 @@ module specfem_par_acoustic
   integer, dimension(:), allocatable :: b_request_send_scalar_ext_mesh
   integer, dimension(:), allocatable :: b_request_recv_scalar_ext_mesh
 
+  ! LDDRK time scheme  !ZNLDDRK
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: potential_acoustic_lddrk,potential_dot_acoustic_lddrk
+
 end module specfem_par_acoustic
 
 !=====================================================================

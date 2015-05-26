@@ -252,7 +252,11 @@ subroutine compute_forces_acoustic()
 ! corrector:
 !   updates the chi_dot term which requires chi_dot_dot(t+delta)
   ! corrector
-  potential_dot_acoustic(:) = potential_dot_acoustic(:) + deltatover2*potential_dot_dot_acoustic(:)
+  if (USE_LDDRK) then
+    call update_potential_dot_acoustic_lddrk()
+  else
+    potential_dot_acoustic(:) = potential_dot_acoustic(:) + deltatover2*potential_dot_dot_acoustic(:)
+  endif
 
 ! enforces free surface (zeroes potentials at free surface)
   call acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB,STACEY_INSTEAD_OF_FREE_SURFACE, &
