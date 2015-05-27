@@ -38,8 +38,8 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                         alphaval,betaval,gammaval, &
                         NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_Kappa, &
                         R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, &
-                        NSPEC_ATTENUATION_AB_LDDRK,NSPEC_ATTENUATION_AB_kappa_LDDRK,R_trace_lddrk, & !ZNLDDRK
-                        R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk, & !ZNLDDRK
+                        NSPEC_ATTENUATION_AB_LDDRK,NSPEC_ATTENUATION_AB_kappa_LDDRK,R_trace_lddrk, &
+                        R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk, &
                         epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy, &
                         epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
                         ANISOTROPY,NSPEC_ANISO, &
@@ -186,7 +186,6 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
   real(kind=CUSTOM_REAL) :: R_trace_val1,R_xx_val1,R_yy_val1
   real(kind=CUSTOM_REAL) :: R_trace_val2,R_xx_val2,R_yy_val2
   real(kind=CUSTOM_REAL) :: R_trace_val3,R_xx_val3,R_yy_val3
-!ZNLDDRK  real(kind=CUSTOM_REAL) :: factor_loc,alphaval_loc,betaval_loc,gammaval_loc,Sn,Snp1
   real(kind=CUSTOM_REAL) :: templ
 
 ! local parameters

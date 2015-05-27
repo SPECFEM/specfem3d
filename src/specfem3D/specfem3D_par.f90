@@ -93,7 +93,7 @@ module specfem_par
 ! time scheme
   real(kind=CUSTOM_REAL) deltat,deltatover2,deltatsqover2
 
-! LDDRK time scheme !ZNLDDRK
+! LDDRK time scheme
   integer :: NSTAGE_TIME_SCHEME,istage
   integer :: NGLOB_AB_LDDRK, NSPEC_ATTENUATION_AB_LDDRK, NSPEC_ATTENUATION_AB_kappa_LDDRK
 
@@ -357,7 +357,7 @@ module specfem_par_elastic
   integer, dimension(:), allocatable :: b_request_send_vector_ext_mesh
   integer, dimension(:), allocatable :: b_request_recv_vector_ext_mesh
 
-  ! LDDRK time scheme  !ZNLDDRK
+  ! LDDRK time scheme
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: displ_lddrk,veloc_lddrk
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: &
     R_trace_lddrk,R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk
@@ -435,7 +435,7 @@ module specfem_par_acoustic
   integer, dimension(:), allocatable :: b_request_send_scalar_ext_mesh
   integer, dimension(:), allocatable :: b_request_recv_scalar_ext_mesh
 
-  ! LDDRK time scheme  !ZNLDDRK
+  ! LDDRK time scheme
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: potential_acoustic_lddrk,potential_dot_acoustic_lddrk
 
 end module specfem_par_acoustic

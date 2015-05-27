@@ -42,7 +42,7 @@
                         station_name,network_name,adj_source_file,nrec_local,number_receiver_global, &
                         pm1_source_encoding,nsources_local,USE_FORCE_POINT_SOURCE, &
                         USE_RICKER_TIME_FUNCTION,SU_FORMAT,USE_TRICK_FOR_BETTER_PRESSURE,USE_SOURCE_ENCODING, &
-                        USE_LDDRK,istage !ZNLDDRK
+                        USE_LDDRK,istage
 
   implicit none
 
@@ -87,7 +87,7 @@
   double precision :: stf
   real(kind=CUSTOM_REAL),dimension(:,:,:,:,:),allocatable:: adj_sourcearray
   real(kind=CUSTOM_REAL) stf_used,stf_used_total_all,time_source
-  double precision :: time_source_dble  !ZNLDDRK
+  double precision :: time_source_dble
   integer :: isource,iglob,ispec,i,j,k,ier
   integer :: irec_local,irec
 

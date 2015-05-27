@@ -49,7 +49,7 @@
   !logical :: sep_dir_exists
   integer :: i,irange
 
-  !ZNLDDRK
+  !LDDRK
   logical :: INCREASE_CFL_FOR_LDDRK
   double precision :: RATIO_BY_WHICH_TO_INCREASE_IT
 
@@ -96,15 +96,15 @@
   call read_value_double_precision(DT, 'DT', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter DT'
 
-  call read_value_logical(USE_LDDRK, 'USE_LDDRK', ier)   ! low-memory Runge-Kutta time scheme !ZNLDDRK
+  call read_value_logical(USE_LDDRK, 'USE_LDDRK', ier)   ! low-memory Runge-Kutta time scheme
   if (ier /= 0) stop 'an error occurred while reading the parameter file: USE_LDDRK'
   call read_value_logical(INCREASE_CFL_FOR_LDDRK, 'INCREASE_CFL_FOR_LDDRK', ier)
   if (ier /= 0) stop 'an error occurred while reading the parameter file: INCREASE_CFL_FOR_LDDRK'
   call read_value_double_precision(RATIO_BY_WHICH_TO_INCREASE_IT, 'RATIO_BY_WHICH_TO_INCREASE_IT', ier)
   if (ier /= 0) stop 'an error occurred while reading the parameter file: RATIO_BY_WHICH_TO_INCREASE_IT'
-  if (USE_LDDRK .and. INCREASE_CFL_FOR_LDDRK) DT = DT * RATIO_BY_WHICH_TO_INCREASE_IT !ZNLDDRK
-  if (USE_LDDRK .and. SIMULATION_TYPE == 3 ) & !ZNLDDRK
-    stop 'USE_LDDRK support not implemented yet for SIMULATION_TYPE == 3' !ZNLDDRK
+  if (USE_LDDRK .and. INCREASE_CFL_FOR_LDDRK) DT = DT * RATIO_BY_WHICH_TO_INCREASE_IT
+  if (USE_LDDRK .and. SIMULATION_TYPE == 3 ) &
+    stop 'USE_LDDRK support not implemented yet for SIMULATION_TYPE == 3'
 
   call read_value_integer(NGNOD, 'NGNOD', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter NGNOD'
@@ -478,7 +478,7 @@
 
   call read_value_logical(GPU_MODE, 'GPU_MODE', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter GPU_MODE'
-  if (USE_LDDRK .and. GPU_MODE ) &  !ZNLDDRK
+  if (USE_LDDRK .and. GPU_MODE ) &
     stop 'USE_LDDRK support not implemented yet for GPU simulations'
 
 !> Read ADIOS related flags from the Par_file
@@ -526,7 +526,7 @@
     call bcast_all_singlel_world(SUPPRESS_UTM_PROJECTION)
     call bcast_all_singlei_world(NSTEP)
     call bcast_all_singledp_world(DT)
-    call bcast_all_singlel_world(USE_LDDRK) !ZNLDDRK
+    call bcast_all_singlel_world(USE_LDDRK)
     call bcast_all_singlei_world(NGNOD)
     call bcast_all_string_world(MODEL)
     call bcast_all_string_world(SEP_MODEL_DIRECTORY)

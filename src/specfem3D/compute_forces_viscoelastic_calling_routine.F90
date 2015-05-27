@@ -89,8 +89,8 @@ subroutine compute_forces_viscoelastic()
                         alphaval,betaval,gammaval,&
                         NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa, &
                         R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, &
-                        NSPEC_ATTENUATION_AB_LDDRK,NSPEC_ATTENUATION_AB_kappa,R_trace_lddrk, & !ZNLDDRK
-                        R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk, & !ZNLDDRK
+                        NSPEC_ATTENUATION_AB_LDDRK,NSPEC_ATTENUATION_AB_kappa,R_trace_lddrk, &
+                        R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk, &
                         epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy, &
                         epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
                         ANISOTROPY,NSPEC_ANISO, &
@@ -355,8 +355,8 @@ subroutine compute_forces_viscoelastic_bpwf()
                         b_alphaval,b_betaval,b_gammaval, &
                         NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa, &
                         b_R_trace,b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
-                        NSPEC_ATTENUATION_AB_LDDRK,NSPEC_ATTENUATION_AB_kappa,R_trace_lddrk, & !ZNLDDRK
-                        b_R_xx_lddrk,b_R_yy_lddrk,b_R_xy_lddrk,b_R_xz_lddrk,b_R_yz_lddrk, & !ZNLDDRK  need to added
+                        NSPEC_ATTENUATION_AB_LDDRK,NSPEC_ATTENUATION_AB_kappa,R_trace_lddrk, &
+                        b_R_xx_lddrk,b_R_yy_lddrk,b_R_xy_lddrk,b_R_xz_lddrk,b_R_yz_lddrk, &
                         b_epsilondev_trace,b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
                         b_epsilondev_xz,b_epsilondev_yz,b_epsilon_trace_over_3, &
                         ANISOTROPY,NSPEC_ANISO, &

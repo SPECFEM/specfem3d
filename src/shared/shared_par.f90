@@ -71,7 +71,7 @@ end module constants
   integer :: NSTEP
   double precision :: DT
 
-  ! LDD Runge-Kutta time scheme  !ZNLDDRK
+  ! LDD Runge-Kutta time scheme
   logical :: USE_LDDRK
 
   integer :: NGNOD

@@ -76,7 +76,7 @@
   ! ZN in order to avoid the error of using unallocated array.
   ! ZN since R_**_lddrk are dummy variables in subroutine compute_forces_viscoelastic_Dev and 
   ! ZN in compute_forces_viscoelastic_noDev
-  call prepare_timerun_lddrk() !ZNLDDRK
+  call prepare_timerun_lddrk()
 
   ! prepares C-PML arrays
   if (PML_CONDITIONS) call prepare_timerun_pml()
@@ -112,7 +112,7 @@
     write(IMAIN,*) 'Elapsed time for preparing timerun in seconds = ',tCPU
     write(IMAIN,*)
     write(IMAIN,*) 'time loop:'
-    if (USE_LDDRK) then  !ZNLDDRK
+    if (USE_LDDRK) then
       write(IMAIN,*) '              scheme:         LDDRK with',NSTAGE_TIME_SCHEME,'stages'
     else
       write(IMAIN,*) '              scheme:         Newmark'
@@ -257,7 +257,7 @@
   if (ACOUSTIC_SIMULATION) then
     ! adds contributions
     if (STACEY_ABSORBING_CONDITIONS) then
-      if (USE_LDDRK) then !ZNLDDRK
+      if (USE_LDDRK) then
         rmass_acoustic(:) = rmass_acoustic(:)
       else
         ! adds boundary contributions for newmark scheme
@@ -283,7 +283,7 @@
 
     !! CD CD !!
     if (STACEY_ABSORBING_CONDITIONS) then
-      if (USE_LDDRK) then !ZNLDDRK 
+      if (USE_LDDRK) then
         rmassx(:) = rmass(:)
         rmassy(:) = rmass(:)
         rmassz(:) = rmass(:)
@@ -422,7 +422,7 @@
   character(len=MAX_STRING_LEN) :: plot_file
   integer :: ier
 
-  if (.not. USE_LDDRK) then !ZNLDDRK
+  if (.not. USE_LDDRK) then
     NSTAGE_TIME_SCHEME = 1
   else
     NSTAGE_TIME_SCHEME = 6
@@ -570,7 +570,7 @@
               f_c_source,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
 
     ! determines alphaval,betaval,gammaval for runge-kutta scheme
-    if (CUSTOM_REAL == SIZE_REAL) then  !ZNLDDRK need to carefully check
+    if (CUSTOM_REAL == SIZE_REAL) then
       tau_sigma(:) = sngl(tau_sigma_dble(:))
     else
       tau_sigma(:) = tau_sigma_dble(:)
@@ -747,7 +747,7 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine prepare_timerun_lddrk()  !ZNLDDRK
+  subroutine prepare_timerun_lddrk()
 
   use specfem_par
   use specfem_par_acoustic

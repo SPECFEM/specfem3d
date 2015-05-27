@@ -48,7 +48,7 @@
                         nrec_local,number_receiver_global, &
                         nsources_local,USE_FORCE_POINT_SOURCE, &
                         USE_RICKER_TIME_FUNCTION,COUPLE_WITH_EXTERNAL_CODE,SU_FORMAT, &
-                        USE_LDDRK,istage !ZNLDDRK
+                        USE_LDDRK,istage
 
   implicit none
 
@@ -89,7 +89,7 @@
   double precision :: stf
   real(kind=CUSTOM_REAL),dimension(:,:,:,:,:),allocatable:: adj_sourcearray
   real(kind=CUSTOM_REAL) stf_used,stf_used_total_all,time_source
-  double precision :: time_source_dble  !ZNLDDRK
+  double precision :: time_source_dble
   integer :: isource,iglob,i,j,k,ispec
   integer :: irec_local,irec, ier
 
