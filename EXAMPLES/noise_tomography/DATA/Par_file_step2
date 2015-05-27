@@ -20,6 +20,9 @@ NPROC                           = 4
 # time step parameters
 NSTEP                           = 1500
 DT                              = 0.05d0
+USE_LDDRK                       = .false.
+INCREASE_CFL_FOR_LDDRK          = .false.
+RATIO_BY_WHICH_TO_INCREASE_IT   = 1.4
 
 # number of nodes for 2D and 3D shape functions for hexahedra
 # we use either 8-node mesh elements (bricks) or 27-node elements.
