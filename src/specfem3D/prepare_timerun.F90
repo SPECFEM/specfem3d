@@ -74,7 +74,7 @@
 
   ! ZN I do not use if(USE_LDDRK) call prepare_timerun_lddrk()
   ! ZN in order to avoid the error of using unallocated array.
-  ! ZN since R_**_lddrk are dummy variables in subroutine compute_forces_viscoelastic_Dev and 
+  ! ZN since R_**_lddrk are dummy variables in subroutine compute_forces_viscoelastic_Dev and
   ! ZN in compute_forces_viscoelastic_noDev
   call prepare_timerun_lddrk()
 
@@ -755,9 +755,9 @@
   use specfem_par_poroelastic
 
   implicit none
-  
+
   integer :: ier
-  
+
   if (USE_LDDRK) then
     NGLOB_AB_LDDRK = NGLOB_AB
     NSPEC_ATTENUATION_AB_LDDRK = NSPEC_ATTENUATION_AB
@@ -820,7 +820,7 @@
       if (ier /= 0) stop 'Error allocating array R_**_lddrk etc.'
       R_trace(:,:,:,:,:) = 0._CUSTOM_REAL
       if (FIX_UNDERFLOW_PROBLEM) R_trace(:,:,:,:,:) = VERYSMALLVAL
-      
+
     endif
   endif
 

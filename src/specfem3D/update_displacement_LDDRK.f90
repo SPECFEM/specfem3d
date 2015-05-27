@@ -39,7 +39,7 @@
 
   if (ACOUSTIC_SIMULATION) then
     potential_dot_dot_acoustic = 0._CUSTOM_REAL
-    if (FIX_UNDERFLOW_PROBLEM) potential_dot_dot_acoustic = VERYSMALLVAL    
+    if (FIX_UNDERFLOW_PROBLEM) potential_dot_dot_acoustic = VERYSMALLVAL
   endif
 
   if (ELASTIC_SIMULATION) then
