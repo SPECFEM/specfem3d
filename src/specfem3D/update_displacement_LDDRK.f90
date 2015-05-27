@@ -103,16 +103,16 @@
                                    potential_acoustic_lddrk,potential_dot_acoustic_lddrk, &
                                    deltat,alpha,beta)
 
-  use constants,only: CUSTOM_REAL,NDIM
+  use constants,only: CUSTOM_REAL
 
   implicit none
 
   integer,intent(in) :: NGLOB,NGLOB_LDDRK
 
   ! wavefields
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB),intent(inout) :: &
+  real(kind=CUSTOM_REAL), dimension(NGLOB),intent(inout) :: &
             potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_LDDRK),intent(inout) :: &
+  real(kind=CUSTOM_REAL), dimension(NGLOB_LDDRK),intent(inout) :: &
             potential_acoustic_lddrk,potential_dot_acoustic_lddrk
 
   real(kind=CUSTOM_REAL),intent(in) :: deltat
@@ -128,11 +128,11 @@
 
   do i = 1,NGLOB
     ! low-memory Runge-Kutta: intermediate storage wavefields
-    potential_dot_acoustic_lddrk(:,i) = alpha * potential_dot_acoustic_lddrk(:,i) + deltat * potential_dot_dot_acoustic(:,i)
-    potential_acoustic_lddrk(:,i) = alpha * potential_acoustic_lddrk(:,i) + deltat * potential_dot_acoustic(:,i)
+    potential_dot_acoustic_lddrk(i) = alpha * potential_dot_acoustic_lddrk(i) + deltat * potential_dot_dot_acoustic(i)
+    potential_acoustic_lddrk(i) = alpha * potential_acoustic_lddrk(i) + deltat * potential_dot_acoustic(i)
     ! updates wavefields
-    potential_dot_acoustic(:,i) = potential_dot_acoustic(:,i) + beta * potential_dot_acoustic_lddrk(:,i)
-    potential_acoustic(:,i) = potential_acoustic(:,i) + beta * potential_acoustic_lddrk(:,i)
+    potential_dot_acoustic(i) = potential_dot_acoustic(i) + beta * potential_dot_acoustic_lddrk(i)
+    potential_acoustic(i) = potential_acoustic(i) + beta * potential_acoustic_lddrk(i)
   enddo
 
   end subroutine update_acoustic_lddrk
