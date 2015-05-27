@@ -72,6 +72,13 @@ subroutine compute_forces_acoustic()
                         ibool,free_surface_ijk,free_surface_ispec, &
                         num_free_surface_faces,ispec_is_acoustic)
 
+  if (USE_LDDRK) then
+    call acoustic_enforce_free_surface_lddrk(NSPEC_AB,NGLOB_AB_LDDRK,STACEY_INSTEAD_OF_FREE_SURFACE, &
+                        potential_acoustic_lddrk,potential_dot_acoustic_lddrk, &
+                        ibool,free_surface_ijk,free_surface_ispec, &
+                        num_free_surface_faces,ispec_is_acoustic)
+  endif
+
   ! distinguishes two runs: for elements on MPI interfaces, and elements within the partitions
   do iphase=1,2
 
@@ -263,6 +270,13 @@ subroutine compute_forces_acoustic()
                         potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
                         ibool,free_surface_ijk,free_surface_ispec, &
                         num_free_surface_faces,ispec_is_acoustic)
+
+  if (USE_LDDRK) then
+    call acoustic_enforce_free_surface_lddrk(NSPEC_AB,NGLOB_AB_LDDRK,STACEY_INSTEAD_OF_FREE_SURFACE, &
+                        potential_acoustic_lddrk,potential_dot_acoustic_lddrk, &
+                        ibool,free_surface_ijk,free_surface_ispec, &
+                        num_free_surface_faces,ispec_is_acoustic)
+  endif
 
   if (SIMULATION_TYPE /= 1) then
     potential_acoustic_adj_coupling(:) = potential_acoustic(:) &
@@ -682,4 +696,62 @@ subroutine acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB,STACEY_INSTEAD_OF_FRE
   enddo
 
 end subroutine acoustic_enforce_free_surface
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+subroutine acoustic_enforce_free_surface_lddrk(NSPEC_AB,NGLOB_AB_LDDRK,STACEY_INSTEAD_OF_FREE_SURFACE, &
+                        potential_acoustic_lddrk,potential_dot_acoustic_lddrk, &
+                        ibool,free_surface_ijk,free_surface_ispec, &
+                        num_free_surface_faces,ispec_is_acoustic)
+
+  use constants
+
+  implicit none
+
+  integer :: NSPEC_AB,NGLOB_AB_LDDRK
+  logical :: STACEY_INSTEAD_OF_FREE_SURFACE
+
+! acoustic potentials
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB_LDDRK) :: &
+            potential_acoustic_lddrk,potential_dot_acoustic_lddrk
+
+  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
+
+! free surface
+  integer :: num_free_surface_faces
+  integer :: free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces)
+  integer :: free_surface_ispec(num_free_surface_faces)
+
+  logical, dimension(NSPEC_AB) :: ispec_is_acoustic
+
+! local parameters
+  integer :: iface,igll,i,j,k,ispec,iglob
+
+  ! checks if free surface became an absorbing boundary
+  if (STACEY_INSTEAD_OF_FREE_SURFACE ) return
+
+! enforce potentials to be zero at surface
+  do iface = 1, num_free_surface_faces
+
+    ispec = free_surface_ispec(iface)
+
+    if (ispec_is_acoustic(ispec)) then
+
+      do igll = 1, NGLLSQUARE
+        i = free_surface_ijk(1,igll,iface)
+        j = free_surface_ijk(2,igll,iface)
+        k = free_surface_ijk(3,igll,iface)
+        iglob = ibool(i,j,k,ispec)
+
+        ! sets potentials to zero
+        potential_acoustic_lddrk(iglob)         = 0._CUSTOM_REAL
+        potential_dot_acoustic_lddrk(iglob)     = 0._CUSTOM_REAL
+      enddo
+    endif
+
+  enddo
+
+end subroutine acoustic_enforce_free_surface_lddrk
 
