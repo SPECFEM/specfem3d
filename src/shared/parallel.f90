@@ -96,6 +96,8 @@ end module my_mpi
   ! until all the others are finished instead of calling MPI_ABORT(), which would instead kill all the runs,
   ! including all the successful ones
   if(USE_FAILSAFE_MECHANISM .and. NUMBER_OF_SIMULTANEOUS_RUNS > 1) then
+    ! do NOT remove the barrier here, it is critical in order to let other runs finish before calling MPI_FINALIZE
+    call MPI_BARRIER(MPI_COMM_WORLD,ier)
     call MPI_FINALIZE(ier)
     if (ier /= 0) stop 'Error finalizing MPI'
   else
@@ -690,6 +692,8 @@ end module my_mpi
   call world_unsplit()
 
 ! stop all the MPI processes, and exit
+  ! do NOT remove the barrier here, it is critical in order for the failsafe mechanism to work fine when it is activated
+  call MPI_BARRIER(MPI_COMM_WORLD,ier)
   call MPI_FINALIZE(ier)
 
   end subroutine finalize_mpi
