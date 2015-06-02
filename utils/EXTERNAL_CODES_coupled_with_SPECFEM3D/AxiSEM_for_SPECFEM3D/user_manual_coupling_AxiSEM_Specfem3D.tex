@@ -1,9 +1,9 @@
 % Type de document
 \documentclass[a4paper,11pt]{article}
- 
+
 % Chargement des extensions
 \usepackage[latin1]{inputenc}
- \usepackage{graphicx} 
+ \usepackage{graphicx}
 \begin{document}
 {\centerline{\bf{Coupling AxiSEM and Specfem3D}}}
 {\bf{Authors:}} V. Monteiller
@@ -47,7 +47,7 @@ copy 2 files produced by meshfem3D in the running AxisSEM directory: \newline
 input\_box.txt and input\_box\_sem\_cart.txt  \newline
 
 add one first line to indicate the number of line to be read \newline
- 
+
 running AxiSEM solver with parameters (differences with *.TEMPLATES provided
 bny AxiSEM) : \newline
 
@@ -100,7 +100,7 @@ file is created by one process for one Spefem3D partion of domain. \newline
 
 copy input\_box.txt and input\_box\_sem\_cart.txt inside the directory where
 AxiSEM did the run and add a new parameter file: \newline
- 
+
 reformat.par  \newline
 25.         \# output sampling in Hz (time step that will use in Specfem3D simu) \newline
 650. 700.   \# begin time and end time (s.) \newline

@@ -1,7 +1,7 @@
 -------------- Meshfem3D ---------------
 
 
-                     MESH/ 
+                     MESH/
 
 ParFileMeshChunk:
 
@@ -20,38 +20,38 @@ iasp91_dsm or prem_dsm : model1D_file
 
 
 
-                  DATA/ 
+                  DATA/
 
 CMTSOLUTION
-coeff_poly_deg12 
+coeff_poly_deg12
 STATIONS
 
 
 Par_file:
 
-SIMULATION_TYPE=1 
-SAVE_FORWARD = .false. 
-COUPLE_WITH_EXTERNAL_CODE = .true 
-EXTERNAL_CODE_TYPE    = 2 
+SIMULATION_TYPE=1
+SAVE_FORWARD = .false.
+COUPLE_WITH_EXTERNAL_CODE = .true
+EXTERNAL_CODE_TYPE    = 2
 
 
 --------------- AxiSEM Solver --------------
 input_box.txt and input_box_sem_cart.txt (add first line with the number of
 lines)
 
-change 
+change
 
-inparam_basic : 
+inparam_basic :
 
-ATTENUATION        false 
+ATTENUATION        false
 SAVE_SNAPSHOTS     true
 
 inparam_advanced :
 
 SOURCE_FUNCTION     gauss_0
-KERNEL_WAVEFIELDS   true 
+KERNEL_WAVEFIELDS   true
 KERNEL_IBEG         0
-KERNEL_IEND         4 
+KERNEL_IEND         4
 
 
 ---------------- Interface ---------------
@@ -59,14 +59,14 @@ KERNEL_IEND         4
 
 parameter file : expand\_2D\_3D.par (in SOLVER directory)
 
-input_box.txt 
-input_box_sem_cart.txt 
-8                           # number of AxiSEM mpi processes used in solver  
-60. 0.                      # source position (lat lon)  
-0.  60.                     # chnuk center (lat lon)    
-1                           # number of axisem simus depends on moment tensor used  
-8                                                           # number of Specfem3D MPI processes  
-../../run_synth_alps/create_mesh/MESH                       # Specfem MESH directory 
+input_box.txt
+input_box_sem_cart.txt
+8                           # number of AxiSEM mpi processes used in solver
+60. 0.                      # source position (lat lon)
+0.  60.                     # chnuk center (lat lon)
+1                           # number of axisem simus depends on moment tensor used
+8                                                           # number of Specfem3D MPI processes
+../../run_synth_alps/create_mesh/MESH                       # Specfem MESH directory
 ../../run_synth_alps/create_mesh/OUTPUT_FILES/DATABASES_MPI # Specfem DATABASE DIRECTORY
 ../../run_synth_alps/create_mesh/OUTPUT_FILES/DATABASES_MPI/tr # Specfem TRACTION DIRECTORY
 
@@ -76,16 +76,16 @@ output : stalat.txt usefull to pick the begin time of simulation
 reformat
 
 mpi run with the **SAME** number of processes that Specfem3D will use. One
-file is created by one process for one Spefem3D partition of domain. 
+file is created by one process for one Spefem3D partition of domain.
 
 copy input_box.txt and input_box_sem_cart.txt inside the directory where
-AxiSEM did the run and add a new parameter file: 
+AxiSEM did the run and add a new parameter file:
 
-reformat.par  
-25.         # output sampling in Hz (time step that will use in Specfem3D simu) 
-650. 700.  
+reformat.par
+25.         # output sampling in Hz (time step that will use in Specfem3D simu)
+650. 700.
 
 
 to do : compute the begining with STA/LTA (take the min values for all
 traces) pick and ask for beging and end with
-respect to the pick. 
+respect to the pick.
