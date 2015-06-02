@@ -7,7 +7,7 @@ neutre='\e[0;m'
 
 rm *~
 
-HOME_DSM_MAIN_DIR=/ccc/scratch/cont003/gen7165/durochtc/Codes/SPECFEM3Ds/specfem3d/utils/DSM_FOR_SPECFEM3D/
+HOME_DSM_MAIN_DIR=/ccc/scratch/cont003/gen7165/durochtc/Codes/SPECFEM3Ds/specfem3d/utils/EXTERNAL_CODES_coupled_with_SPECFEM3D/DSM_for_SPECFEM3D/
 export HOME_DSM_MAIN_DIR
 
 echo " "

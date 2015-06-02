@@ -49,7 +49,7 @@ movies with results, this step isn't executed (commented in the batch) for the m
 ./DATA/CMTSOLUTION
 
 * The script called during the 6 steps (controlling the hybrid computation) are in the directory: 
-specfem3d/utils/DSM_FOR_SPECFEM3D/shells/
+specfem3d/utils/EXTERNAL_CODES_coupled_with_SPECFEM3D/DSM_for_SPECFEM3D/shells/
 
 
 =============================================================================================================================
