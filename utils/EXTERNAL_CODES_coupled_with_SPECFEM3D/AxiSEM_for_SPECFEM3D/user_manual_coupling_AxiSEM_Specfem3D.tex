@@ -1,0 +1,115 @@
+% Type de document
+\documentclass[a4paper,11pt]{article}
+ 
+% Chargement des extensions
+\usepackage[latin1]{inputenc}
+ \usepackage{graphicx} 
+\begin{document}
+{\centerline{\bf{Coupling AxiSEM and Specfem3D}}}
+{\bf{Authors:}} V. Monteiller
+
+\section{Meshfem3D}
+
+running Meshfem3D with parameters : \newline
+
+In the directory MESH/ \newline
+
+ParFileMeshChunk  : parameters for the chunk meshing \newline
+
+iasp91\_dsm or prem\_dsm : background model used in both AxiSEM ans Specfem3D \newline
+
+
+In the Directory DATA/  \newline
+
+CMTSOLUTION  : with 0 in order to not use source inside \newline
+
+coeff\_poly\_deg12 : to generate smooth intitial solution  \newline
+
+STATIONS  : stations files  \newline
+
+Par\_file : with \newline
+
+SIMULATION\_TYPE=1 \newline
+
+SAVE\_FORWARD = .false. \newline
+
+COUPLE\_WITH\_EXTERNAL\_CODE = .true \newline
+
+EXTERNAL\_CODE\_TYPE    = 2 \newline
+
+\section{AxiSEM mesher}
+
+running AxiSEM mesher
+
+\section{AxiSEM solver}
+copy 2 files produced by meshfem3D in the running AxisSEM directory: \newline
+
+input\_box.txt and input\_box\_sem\_cart.txt  \newline
+
+add one first line to indicate the number of line to be read \newline
+ 
+running AxiSEM solver with parameters (differences with *.TEMPLATES provided
+bny AxiSEM) : \newline
+
+inparam\_basic : \newline
+
+ATTENUATION         false \newline
+SAVE\_SNAPSHOTS     true \newline
+
+inparam\_advanced : \newline
+
+KERNEL\_WAVEFIELDS   true \newline
+KERNEL\_IBEG         0 \newline
+KERNEL\_IEND         4 \newline
+
+
+\section{Specfem Partitionning}
+
+running scotch partitionning
+
+\section{Specfem Generate database}
+
+running generate database
+
+\section{Interface : expand 2D to 3D}
+
+mpi run with arbitrary number of processes  \newline
+
+parameter file : expand\_2D\_3D.par (in SOLVER directory)\newline
+
+input\_box.txt \newline
+input\_box\_sem\_cart.txt \newline
+8                          \# number of AxiSEM mpi processes used in solver  \newline
+60. 0.                     \# source position (lat lon)  \newline
+0.  60.                    \# chnuk center (lat lon)    \newline
+1                          \# number of axisem simus depends on moment tensor
+used  \newline
+8                          \# number of Specfem3D MPI processes   \newline
+../../run\_synth\_alps/create\_mesh/MESH \# Specfem MESH directory  \newline
+../../run\_synth\_alps/create\_mesh/OUTPUT\_FILES/DATABASES\_MPI \# Specfem
+
+TRACTION DIRECTORY \newline
+
+
+
+
+\section{Interface : reformat}
+
+mpi run with the **SAME** number of processes that Specfem3D will use. One
+file is created by one process for one Spefem3D partion of domain. \newline
+
+copy input\_box.txt and input\_box\_sem\_cart.txt inside the directory where
+AxiSEM did the run and add a new parameter file: \newline
+ 
+reformat.par  \newline
+25.         \# output sampling in Hz (time step that will use in Specfem3D simu) \newline
+650. 700.   \# begin time and end time (s.) \newline
+
+
+\section{Running specfem3D}
+
+
+\section{Set up scripts}
+
+
+\end{document}

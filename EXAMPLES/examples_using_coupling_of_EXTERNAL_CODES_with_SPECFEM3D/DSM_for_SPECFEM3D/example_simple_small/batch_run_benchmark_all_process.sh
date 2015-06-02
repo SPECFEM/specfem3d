@@ -3,13 +3,13 @@
 
 #             ------------ BACTH AND SPECIFIC CLUSTER DIRECTIVES  ------
 
-#MSUB -r Benchmark_SPECFEM3D_DSM_HEX27_32p        # Nom du job
+#MSUB -r Benchmark_SPECFEM3D_DSM_HEX8_32p        # Nom du job
 #MSUB -n 32
 #MSUB -N 2
-#MSUB -T 5400
+#MSUB -T 12000
 #MSUB -q standard
-#MSUB -e Benchmark_SPECFEM3D_DSM_HEX27_32p_run.e
-#MSUB -o Benchmark_SPECFEM3D_DSM_HEX27_32p_run.o
+#MSUB -e Benchmark_SPECFEM3D_DSM_HEX8_newtest_32p_run.e
+#MSUB -o Benchmark_SPECFEM3D_DSM_HEX8_newtest_32p_run.o
 #MSUB -A ra2410
 
 set -x
@@ -101,7 +101,7 @@ OUT_MOVIE=$(pwd)/movie/
 #------- input files creation
 # you must write the absolute path for : xcreate_input
 # you must edit and complete : parfile_for_benchmark
-${HOME_SPECFEM3D}/utils/DSM_FOR_SPECFEM3D/bin/xcreate_inputs_files<<EOF
+${HOME_SPECFEM3D}/utils/EXTERNAL_CODES_coupled_with_SPECFEM3D/DSM_for_SPECFEM3D/bin/xcreate_inputs_files<<EOF
 parfile_for_benchmark
 EOF
 
