@@ -38,8 +38,6 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                         alphaval,betaval,gammaval, &
                         NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_Kappa, &
                         R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, &
-                        NSPEC_ATTENUATION_AB_LDDRK,NSPEC_ATTENUATION_AB_kappa_LDDRK,R_trace_lddrk, &
-                        R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk, &
                         epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy, &
                         epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
                         ANISOTROPY,NSPEC_ANISO, &
@@ -122,12 +120,6 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
             epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_Kappa) :: epsilondev_trace
   real(kind=CUSTOM_REAL),dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT) :: epsilon_trace_over_3
-
-! lddrk for update the memory variables
-  integer :: NSPEC_ATTENUATION_AB_LDDRK,NSPEC_ATTENUATION_AB_Kappa_LDDRK
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK,N_SLS) :: &
-            R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_Kappa_LDDRK,N_SLS) :: R_trace_lddrk
 
 ! anisotropy
   logical :: ANISOTROPY
