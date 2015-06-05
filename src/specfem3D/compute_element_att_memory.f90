@@ -150,8 +150,6 @@ subroutine compute_element_att_memory_lddrk(ispec,deltat,NSPEC_AB,kappastore,mus
   integer :: i_sls,i,j,k
   real(kind=CUSTOM_REAL) :: factor_loc,Snp1
 
-  if(it == 1 .and. myrank == 1) write(*,*)tau_sigma(1),tau_sigma(2),tau_sigma(3)
-
   do i_sls = 1,N_SLS
     do k=1,NGLLZ
       do j=1,NGLLY
