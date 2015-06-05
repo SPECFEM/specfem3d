@@ -1085,7 +1085,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                    NSPEC_ATTENUATION_AB_Kappa_LDDRK,R_trace_lddrk, &
                    NSPEC_ATTENUATION_AB,factor_common,R_xx,R_yy,R_xy,R_xz,R_yz, &   
                    NSPEC_ATTENUATION_AB_LDDRK,R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk, &
-                   NSPEC_STRAIN_ONLY,epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc,&
+                   epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc,&
                    epsilondev_xz_loc,epsilondev_yz_loc)
           else
             ! use Runge-Kutta scheme to march in time
@@ -1106,7 +1106,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                  NSPEC_ATTENUATION_AB_Kappa_LDDRK,R_trace_lddrk, &
                  NSPEC_ATTENUATION_AB,factor_common,R_xx,R_yy,R_xy,R_xz,R_yz, &   
                  NSPEC_ATTENUATION_AB_LDDRK,R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk, &
-                 NSPEC_STRAIN_ONLY,epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc,&
+                 epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc,&
                  epsilondev_xz_loc,epsilondev_yz_loc)
         else
           ! use Runge-Kutta scheme to march in time
