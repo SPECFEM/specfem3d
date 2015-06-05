@@ -817,7 +817,7 @@
       endif
 
       allocate(R_trace_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa_LDDRK,N_SLS))
-      if (ier /= 0) stop 'Error allocating array R_**_lddrk etc.'
+      if (ier /= 0) stop 'Error allocating array R_trace_lddrk etc.'
       R_trace_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
       if (FIX_UNDERFLOW_PROBLEM) R_trace_lddrk(:,:,:,:,:) = VERYSMALLVAL
 

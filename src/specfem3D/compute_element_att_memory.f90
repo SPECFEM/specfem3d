@@ -126,7 +126,7 @@ subroutine compute_element_att_memory_lddrk(ispec,deltat,NSPEC_AB,kappastore,mus
                           epsilondev_xz_loc,epsilondev_yz_loc)
 
   use constants, only: CUSTOM_REAL,N_SLS,NGLLX,NGLLY,NGLLZ,ALPHA_LDDRK,BETA_LDDRK
-  use specfem_par, only: FULL_ATTENUATION_SOLID,istage,it,myrank
+  use specfem_par, only: FULL_ATTENUATION_SOLID,istage
   use specfem_par_elastic, only: tau_sigma
 
   implicit none

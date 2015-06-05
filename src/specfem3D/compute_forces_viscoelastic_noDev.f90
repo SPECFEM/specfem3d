@@ -1102,7 +1102,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
         if (USE_LDDRK) then
           call compute_element_att_memory_lddrk(ispec,deltat,NSPEC_AB,kappastore,mustore, &
                  NSPEC_ATTENUATION_AB_Kappa,factor_common_kappa,&
-                 R_trace,epsilondev_trace,epsilondev_trace_loc, &
+                 R_trace,epsilondev_trace_loc, &
                  NSPEC_ATTENUATION_AB_Kappa_LDDRK,R_trace_lddrk, &
                  NSPEC_ATTENUATION_AB,factor_common,R_xx,R_yy,R_xy,R_xz,R_yz, &   
                  NSPEC_ATTENUATION_AB_LDDRK,R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk, &
