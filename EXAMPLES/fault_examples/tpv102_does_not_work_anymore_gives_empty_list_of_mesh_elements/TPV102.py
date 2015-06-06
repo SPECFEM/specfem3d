@@ -8,22 +8,20 @@ import cubit2specfem3d
 import os
 import sys
 from save_fault_nodes_elements import *
-from absorbing_boundary import *
+#####from absorbing_boundary import *
+from boundary_definition import *
 
-cubit.cmd('playback "TPV16.jou" ') 
+cubit.cmd('playback "TPV102.jou" ') 
 
 os.system('mkdir -p MESH') 
 
-Au = [8]   # A_up
-Ad = [13]  # A_down
-faultA = fault_input(1,Au,Ad)
 
-xmin = [4]
-xmax = [6]
-ymin = [17,10]
-ymax = [12,15]
-zmax = [9,14]
-zmin = [11,16]
+xmin = [9,16]
+xmax = [11,13]
+ymin = [3]
+ymax = [5]
+zmax = [8,15]
+zmin = [10,14]
 entities=['face']
 define_boundaries(entities,xmin,xmax,ymin,ymax,zmin,zmax)
 
@@ -46,3 +44,7 @@ cubit.cmd('block 2 attribute index 5 13')
 #### Export to SPECFEM3D format using cubit2specfem3d.py of GEOCUBIT 
  
 cubit2specfem3d.export2SPECFEM3D('MESH')  
+
+Au = [8]   # A_up
+Ad = [3]  # A_down
+faultA = fault_input(1,Au,Ad)
