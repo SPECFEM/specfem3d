@@ -230,8 +230,8 @@
   write(IMAIN,*) '***'
   write(IMAIN,'(a50,f13.8)') ' *** Maximum suggested time step for simulation = ',dt_suggested_max_MPI
   write(IMAIN,*) '***'
-  write(IMAIN,*) '*** max stability = ',stability_max_MPI
-  write(IMAIN,*) '*** computed using VP_MAX = ',VP_MAX
+  write(IMAIN,*) '*** Max CFL stability condition of the time scheme (must be below about 0.55 or so) = ',stability_max_MPI
+  write(IMAIN,*) '*** computed using the maximum P wave velocity = ',VP_MAX
   write(IMAIN,*) '***'
 
   ! max stability CFL value
