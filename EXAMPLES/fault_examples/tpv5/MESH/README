@@ -1,0 +1,7 @@
+
+uncompress all the mesh files using  the:
+
+  bunzip2 *.bz2 
+
+command before using them.
+
