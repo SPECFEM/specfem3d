@@ -120,7 +120,7 @@ subroutine compute_element_att_memory_lddrk(ispec,deltat,NSPEC_AB,kappastore,mus
                           NSPEC_ATTENUATION_AB_Kappa,factor_common_kappa,&
                           R_trace,epsilondev_trace_loc, &
                           NSPEC_ATTENUATION_AB_Kappa_LDDRK,R_trace_lddrk, &
-                          NSPEC_ATTENUATION_AB,factor_common,R_xx,R_yy,R_xy,R_xz,R_yz, &   
+                          NSPEC_ATTENUATION_AB,factor_common,R_xx,R_yy,R_xy,R_xz,R_yz, &
                           NSPEC_ATTENUATION_AB_LDDRK,R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk, &
                           epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc,&
                           epsilondev_xz_loc,epsilondev_yz_loc)
@@ -137,7 +137,7 @@ subroutine compute_element_att_memory_lddrk(ispec,deltat,NSPEC_AB,kappastore,mus
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: kappastore,mustore
   real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_Kappa) :: factor_common_kappa
   real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB) :: factor_common
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_Kappa,N_SLS) :: R_trace 
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_Kappa,N_SLS) :: R_trace
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_Kappa_LDDRK,N_SLS) :: R_trace_lddrk
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS) :: R_xx,R_yy,R_xy,R_xz,R_yz
@@ -170,7 +170,7 @@ subroutine compute_element_att_memory_lddrk(ispec,deltat,NSPEC_AB,kappastore,mus
 
           ! term in xx
           Snp1   = factor_loc * epsilondev_xx_loc(i,j,k)
-          R_xx_lddrk(i,j,k,ispec,i_sls) = ALPHA_LDDRK(istage) * R_xx_lddrk(i,j,k,ispec,i_sls) + & 
+          R_xx_lddrk(i,j,k,ispec,i_sls) = ALPHA_LDDRK(istage) * R_xx_lddrk(i,j,k,ispec,i_sls) + &
               deltat * (Snp1 - R_xx(i,j,k,ispec,i_sls)*(1.0_CUSTOM_REAL/tau_sigma(i_SLS)))
 
           ! term in yy
@@ -182,17 +182,17 @@ subroutine compute_element_att_memory_lddrk(ispec,deltat,NSPEC_AB,kappastore,mus
 
           ! term in xy
           Snp1   = factor_loc * epsilondev_xy_loc(i,j,k)
-          R_xy_lddrk(i,j,k,ispec,i_sls) = ALPHA_LDDRK(istage) * R_xy_lddrk(i,j,k,ispec,i_sls) + & 
+          R_xy_lddrk(i,j,k,ispec,i_sls) = ALPHA_LDDRK(istage) * R_xy_lddrk(i,j,k,ispec,i_sls) + &
               deltat * (Snp1 - R_xy(i,j,k,ispec,i_sls)*(1.0_CUSTOM_REAL/tau_sigma(i_SLS)))
 
           ! term in xz
           Snp1   = factor_loc * epsilondev_xz_loc(i,j,k)
-          R_xz_lddrk(i,j,k,ispec,i_sls) = ALPHA_LDDRK(istage) * R_xz_lddrk(i,j,k,ispec,i_sls) + & 
+          R_xz_lddrk(i,j,k,ispec,i_sls) = ALPHA_LDDRK(istage) * R_xz_lddrk(i,j,k,ispec,i_sls) + &
               deltat * (Snp1 - R_xz(i,j,k,ispec,i_sls)*(1.0_CUSTOM_REAL/tau_sigma(i_SLS)))
 
           ! term in yz
           Snp1   = factor_loc * epsilondev_yz_loc(i,j,k)
-          R_yz_lddrk(i,j,k,ispec,i_sls) = ALPHA_LDDRK(istage) * R_yz_lddrk(i,j,k,ispec,i_sls) + & 
+          R_yz_lddrk(i,j,k,ispec,i_sls) = ALPHA_LDDRK(istage) * R_yz_lddrk(i,j,k,ispec,i_sls) + &
               deltat * (Snp1 - R_yz(i,j,k,ispec,i_sls)*(1.0_CUSTOM_REAL/tau_sigma(i_SLS)))
 
           R_xx(i,j,k,i_SLS,ispec) = R_xx(i,j,k,i_SLS,ispec) + BETA_LDDRK(istage) * R_xx_lddrk(i,j,k,i_SLS,ispec)
@@ -203,6 +203,6 @@ subroutine compute_element_att_memory_lddrk(ispec,deltat,NSPEC_AB,kappastore,mus
         enddo
       enddo
     enddo
-  enddo   ! end of loop on memory variables  
+  enddo   ! end of loop on memory variables
 
 end subroutine compute_element_att_memory_lddrk

@@ -840,13 +840,13 @@
           b_R_xy_lddrk(:,:,:,:,:) = VERYSMALLVAL
           b_R_xz_lddrk(:,:,:,:,:) = VERYSMALLVAL
           b_R_yz_lddrk(:,:,:,:,:) = VERYSMALLVAL
-        endif  
+        endif
 
         allocate(b_R_trace_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa_LDDRK,N_SLS))
         if (ier /= 0) stop 'Error allocating array R_**_lddrk etc.'
         b_R_trace_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
-        if (FIX_UNDERFLOW_PROBLEM) b_R_trace_lddrk(:,:,:,:,:) = VERYSMALLVAL  
-    
+        if (FIX_UNDERFLOW_PROBLEM) b_R_trace_lddrk(:,:,:,:,:) = VERYSMALLVAL
+
       endif
 
     endif
