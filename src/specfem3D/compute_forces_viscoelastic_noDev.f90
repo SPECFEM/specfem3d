@@ -1091,7 +1091,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
             ! use Runge-Kutta scheme to march in time
             call compute_element_att_memory_second_order_rk(ispec,alphaval,betaval,gammaval, &
                    NSPEC_AB,kappastore,mustore,NSPEC_ATTENUATION_AB_Kappa,factor_common_kappa,&
-                   R_trace,epsilondev_trace_loc, &
+                   R_trace,epsilondev_trace,epsilondev_trace_loc, &
                    NSPEC_ATTENUATION_AB,factor_common,R_xx,R_yy,R_xy,R_xz,R_yz, &
                    NSPEC_STRAIN_ONLY,epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
                    epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc,epsilondev_xz_loc,epsilondev_yz_loc)
