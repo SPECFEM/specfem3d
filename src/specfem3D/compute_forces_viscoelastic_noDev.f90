@@ -38,6 +38,8 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                         alphaval,betaval,gammaval, &
                         NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_Kappa, &
                         R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, &
+                        NSPEC_ATTENUATION_AB_LDDRK,NSPEC_ATTENUATION_AB_kappa_LDDRK,R_trace_lddrk, &
+                        R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk, &
                         epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy, &
                         epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
                         ANISOTROPY,NSPEC_ANISO, &
@@ -58,7 +60,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                        MAKE_HOOKE_LAW_WEAKLY_NONLINEAR,A,B,C,A_over_4,B_over_2
   use fault_solver_dynamic, only : Kelvin_Voigt_eta
 
-  use specfem_par, only: FULL_ATTENUATION_SOLID,SAVE_MOHO_MESH
+  use specfem_par, only: FULL_ATTENUATION_SOLID,SAVE_MOHO_MESH,USE_LDDRK
 
   use pml_par, only: is_CPML,spec_to_CPML,accel_elastic_CPML,NSPEC_CPML, &
                      PML_dux_dxl,PML_dux_dyl,PML_dux_dzl,PML_duy_dxl,PML_duy_dyl,PML_duy_dzl, &
@@ -120,6 +122,12 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
             epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_Kappa) :: epsilondev_trace
   real(kind=CUSTOM_REAL),dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT) :: epsilon_trace_over_3
+
+! lddrk for update the memory variables
+  integer :: NSPEC_ATTENUATION_AB_LDDRK,NSPEC_ATTENUATION_AB_Kappa_LDDRK
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK,N_SLS) :: &
+            R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_Kappa_LDDRK,N_SLS) :: R_trace_lddrk
 
 ! anisotropy
   logical :: ANISOTROPY
@@ -1060,35 +1068,58 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
           accel(3,iglob) = accel(3,iglob) - fac1 * newtempz1(i,j,k) - &
                                 fac2 * newtempz2(i,j,k) - fac3 * newtempz3(i,j,k)
 
-          !  update memory variables based upon the Runge-Kutta scheme
-          if (ATTENUATION) then
-            if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-              ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an ".and." statement
-              ! because array is_CPML() is unallocated when PML_CONDITIONS is false
-              if (.not. is_CPML(ispec)) then
-                ! use Runge-Kutta scheme to march in time
-                call compute_element_att_memory_second_order_rk(ispec,alphaval,betaval,gammaval, &
-                             NSPEC_AB,kappastore,mustore,NSPEC_ATTENUATION_AB_Kappa,factor_common_kappa,&
-                             R_trace,epsilondev_trace,epsilondev_trace_loc, &
-                             NSPEC_ATTENUATION_AB,factor_common,R_xx,R_yy,R_xy,R_xz,R_yz, &
-                             NSPEC_STRAIN_ONLY,epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
-                             epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc,epsilondev_xz_loc,epsilondev_yz_loc)
-              endif
-            else
-              ! use Runge-Kutta scheme to march in time
-              call compute_element_att_memory_second_order_rk(ispec,alphaval,betaval,gammaval, &
-                           NSPEC_AB,kappastore,mustore,NSPEC_ATTENUATION_AB_Kappa,factor_common_kappa,&
-                           R_trace,epsilondev_trace,epsilondev_trace_loc, &
-                           NSPEC_ATTENUATION_AB,factor_common,R_xx,R_yy,R_xy,R_xz,R_yz, &
-                           NSPEC_STRAIN_ONLY,epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
-                           epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc,epsilondev_xz_loc,epsilondev_yz_loc)
-            endif
-
-          endif  !  end of if attenuation
-
         enddo
       enddo
     enddo
+
+    !  update memory variables based upon the Runge-Kutta scheme
+    if (ATTENUATION) then
+      if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
+        ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an ".and." statement
+        ! because array is_CPML() is unallocated when PML_CONDITIONS is false
+        if (.not. is_CPML(ispec)) then
+          if (USE_LDDRK) then
+            call compute_element_att_memory_lddrk(ispec,deltat,NSPEC_AB,kappastore,mustore, &
+                   NSPEC_ATTENUATION_AB_Kappa,factor_common_kappa,&
+                   R_trace,epsilondev_trace_loc, &
+                   NSPEC_ATTENUATION_AB_Kappa_LDDRK,R_trace_lddrk, &
+                   NSPEC_ATTENUATION_AB,factor_common,R_xx,R_yy,R_xy,R_xz,R_yz, &   
+                   NSPEC_ATTENUATION_AB_LDDRK,R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk, &
+                   epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc,&
+                   epsilondev_xz_loc,epsilondev_yz_loc)
+          else
+            ! use Runge-Kutta scheme to march in time
+            call compute_element_att_memory_second_order_rk(ispec,alphaval,betaval,gammaval, &
+                   NSPEC_AB,kappastore,mustore,NSPEC_ATTENUATION_AB_Kappa,factor_common_kappa,&
+                   R_trace,epsilondev_trace_loc, &
+                   NSPEC_ATTENUATION_AB,factor_common,R_xx,R_yy,R_xy,R_xz,R_yz, &
+                   NSPEC_STRAIN_ONLY,epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
+                   epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc,epsilondev_xz_loc,epsilondev_yz_loc)
+          endif
+        endif
+      else
+        ! use Runge-Kutta scheme to march in time
+        if (USE_LDDRK) then
+          call compute_element_att_memory_lddrk(ispec,deltat,NSPEC_AB,kappastore,mustore, &
+                 NSPEC_ATTENUATION_AB_Kappa,factor_common_kappa,&
+                 R_trace,epsilondev_trace_loc, &
+                 NSPEC_ATTENUATION_AB_Kappa_LDDRK,R_trace_lddrk, &
+                 NSPEC_ATTENUATION_AB,factor_common,R_xx,R_yy,R_xy,R_xz,R_yz, &   
+                 NSPEC_ATTENUATION_AB_LDDRK,R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk, &
+                 epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc,&
+                 epsilondev_xz_loc,epsilondev_yz_loc)
+        else
+          ! use Runge-Kutta scheme to march in time
+          call compute_element_att_memory_second_order_rk(ispec,alphaval,betaval,gammaval, &
+                 NSPEC_AB,kappastore,mustore,NSPEC_ATTENUATION_AB_Kappa,factor_common_kappa,&
+                 R_trace,epsilondev_trace,epsilondev_trace_loc, &
+                 NSPEC_ATTENUATION_AB,factor_common,R_xx,R_yy,R_xy,R_xz,R_yz, &
+                 NSPEC_STRAIN_ONLY,epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
+                 epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc,epsilondev_xz_loc,epsilondev_yz_loc)
+        endif
+      endif
+
+    endif  !  end of if attenuation
 
     if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
       ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an ".and." statement
@@ -1106,7 +1137,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                 accel(2,iglob) = accel(2,iglob) - accel_elastic_CPML(2,i,j,k)
                 accel(3,iglob) = accel(3,iglob) - accel_elastic_CPML(3,i,j,k)
               enddo
-           enddo
+            enddo
           enddo
         endif
       endif
