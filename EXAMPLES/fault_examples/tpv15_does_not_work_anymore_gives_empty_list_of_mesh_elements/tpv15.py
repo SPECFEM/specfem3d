@@ -250,55 +250,64 @@ cubit.cmd('#### DEFINE MATERIAL PROPERTIES #######################')
 # Material properties in concordance with tpv14-15 benchmark. 
  
 cubit.cmd('block 1 name "elastic 1" ')        # material region  
-cubit.cmd('block 1 attribute count 5') 
+cubit.cmd('block 1 attribute count 6') 
 cubit.cmd('block 1 attribute index 1 1')      # flag for fault side 1 
 cubit.cmd('block 1 attribute index 2 6000')   # vp 
 cubit.cmd('block 1 attribute index 3 3464')    # vs 
 cubit.cmd('block 1 attribute index 4 2670')   # rho 
 cubit.cmd('block 1 attribute index 5 13')     # Q flag (see constants.h: IATTENUATION_ ... )
+cubit.cmd('block 1 attribute index 6 0')     # Aniso (see constants.h: IATTENUATION_ ... )
+
 
 cubit.cmd('block 2 name "elastic 2" ')        # material region  
-cubit.cmd('block 2 attribute count 5') 
+cubit.cmd('block 2 attribute count 6') 
 cubit.cmd('block 2 attribute index 1 1')      # flag for fault side 1 
 cubit.cmd('block 2 attribute index 2 6000')   # vp 
 cubit.cmd('block 2 attribute index 3 3464')    # vs 
 cubit.cmd('block 2 attribute index 4 2670')   # rho 
 cubit.cmd('block 2 attribute index 5 13')     # Q flag (see constants.h: IATTENUATION_ ... ) 
+cubit.cmd('block 2 attribute index 6 0')     # Aniso flag (see constants.h: IATTENUATION_ ... )
 
 # Material properties in concordance with tpv14-15 benchmark chuncks. 
  
  
 cubit.cmd('block 3 name "elastic 3" ')        # material region  
-cubit.cmd('block 3 attribute count 5') 
+cubit.cmd('block 3 attribute count 6') 
 cubit.cmd('block 3 attribute index 1 1')      # flag for fault side 1 
 cubit.cmd('block 3 attribute index 2 6000')   # vp 
 cubit.cmd('block 3 attribute index 3 3464')    # vs 
 cubit.cmd('block 3 attribute index 4 2670')   # rho 
 cubit.cmd('block 3 attribute index 5 13')     # Q flag (see constants.h: IATTENUATION_ ... ) 
+cubit.cmd('block 3 attribute index 6 0')     # Aniso flag (see constants.h: IATTENUATION_ ... )
+
 
 cubit.cmd('block 4 name "elastic 4" ')        # material region  
-cubit.cmd('block 4 attribute count 5') 
+cubit.cmd('block 4 attribute count 6') 
 cubit.cmd('block 4 attribute index 1 1')      # flag for fault side 1 
 cubit.cmd('block 4 attribute index 2 6000')   # vp 
 cubit.cmd('block 4 attribute index 3 3464')    # vs 
 cubit.cmd('block 4 attribute index 4 2670')   # rho 
 cubit.cmd('block 4 attribute index 5 13')     # Q flag (see constants.h: IATTENUATION_ ... ) 
+cubit.cmd('block 4 attribute index 6 0')     # Aniso flag (see constants.h: IATTENUATION_ ... )
+
 
 cubit.cmd('block 5 name "elastic 5" ')        # material region  
-cubit.cmd('block 5 attribute count 5') 
+cubit.cmd('block 5 attribute count 6') 
 cubit.cmd('block 5 attribute index 1 1')      # flag for fault side 1 
 cubit.cmd('block 5 attribute index 2 6000')   # vp 
 cubit.cmd('block 5 attribute index 3 3464')    # vs 
 cubit.cmd('block 5 attribute index 4 2670')   # rho 
 cubit.cmd('block 5 attribute index 5 13')     # Q flag (see constants.h: IATTENUATION_ ... ) 
+cubit.cmd('block 5 attribute index 6 0')     # Q flag (see constants.h: IATTENUATION_ ... ) 
+
 
 cubit.cmd('block 6 name "elastic 6" ')        # material region  
-cubit.cmd('block 6 attribute count 5') 
+cubit.cmd('block 6 attribute count 6') 
 cubit.cmd('block 6 attribute index 1 1')      # flag for fault side 1 
 cubit.cmd('block 6 attribute index 2 6000')   # vp 
 cubit.cmd('block 6 attribute index 3 3464')    # vs 
 cubit.cmd('block 6 attribute index 4 2670')   # rho 
-cubit.cmd('block 6 attribute index 5 13')     # Q flag (see constants.h: IATTENUATION_ ... ) 
+cubit.cmd('block 6 attribute index 6 0')     # Q flag (see constants.h: IATTENUATION_ ... ) 
 
 #### Export to SPECFEM3D format using cubit2specfem3d.py of GEOCUBIT 
  
