@@ -8,7 +8,7 @@ import cubit2specfem3d
 import os
 import sys
 from save_fault_nodes_elements import *
-#####from absorbing_boundary import *
+from absorbing_boundary import *
 from boundary_definition import *
 
 cubit.cmd('playback "TPV102.jou" ') 
