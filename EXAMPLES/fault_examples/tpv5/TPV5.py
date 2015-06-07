@@ -90,15 +90,15 @@ cubit.cmd("volume 1 size "+str(elementsize))
 cubit.cmd("surface 1 scheme pave")
 cubit.cmd("mesh surface 1")
 cubit.cmd("mesh volume 1")
-#cubit.cmd("unmerge surface 2 3")
+cubit.cmd("unmerge surface 2 3")
 
 
 ########### Fault elements and nodes ###############
 
 os.system('mkdir -p MESH') 
 
-Au = 2
-Ad = 3
+Au = [2]
+Ad = [3]
 
 faultA = fault_input(1,Au,Ad)
 
