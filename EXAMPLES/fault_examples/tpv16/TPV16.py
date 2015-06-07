@@ -49,7 +49,7 @@ cubit2specfem3d.export2SPECFEM3D('MESH')
 
 
 Au = [8]   # A_up
-Ad = [13]  # A_down
+Ad = [3]  # A_down
 faultA = fault_input(1,Au,Ad)
 
 

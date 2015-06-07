@@ -25,7 +25,7 @@ entities=['face']
 define_boundaries(entities,xmin,xmax,ymin,ymax,zmin,zmax)
 
 cubit.cmd('block 1 name "elastic 1" ')      # elastic material  
-cubit.cmd('block 1 attribute count 5')                         
+cubit.cmd('block 1 attribute count 6')                         
 cubit.cmd('block 1 attribute index 1 1')    # flag for material
 cubit.cmd('block 1 attribute index 2 6000') # vp
 cubit.cmd('block 1 attribute index 3 3464') # vs
@@ -34,12 +34,13 @@ cubit.cmd('block 1 attribute index 5 13')   # Qmu
 cubit.cmd('block 1 attribute index 6 0')     # anisotropy_flag
 
 cubit.cmd('block 2 name "elastic 2" ')    
-cubit.cmd('block 2 attribute count 5') 
+cubit.cmd('block 2 attribute count 6') 
 cubit.cmd('block 2 attribute index 1 1') 
 cubit.cmd('block 2 attribute index 2 6000')
 cubit.cmd('block 2 attribute index 3 3464')
 cubit.cmd('block 2 attribute index 4 2670')
 cubit.cmd('block 2 attribute index 5 13')  
+cubit.cmd('block 2 attribute index 6 0')  
  
 #### Export to SPECFEM3D format using cubit2specfem3d.py of GEOCUBIT 
  
