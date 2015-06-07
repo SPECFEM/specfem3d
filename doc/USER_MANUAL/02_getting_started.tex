@@ -11,19 +11,26 @@ We recommend that you add {\texttt{ulimit -S -s unlimited}} to your
 unlimited }} to your {\texttt{.cshrc}} file to suppress any potential
 limit to the size of the Unix stack.\\
 
-
-Then, to configure the software for your system, run the \texttt{configure}
-shell script. This script will attempt to guess the appropriate configuration
-values for your system. However, at a minimum, it is recommended that
-you explicitly specify the appropriate command names for your Fortran
-compiler and MPI package (another option is to define FC, CC and MPIF90
-in your .bash\_profile or your .cshrc file):
+Then, to configure the software for your system, run the
+\texttt{configure} shell script. This script will attempt to guess
+the appropriate configuration values for your system. However, at
+a minimum, it is recommended that you explicitly specify the appropriate
+command names for your Fortran compiler (another option is to define FC, CC and MPIF90 in your .bash\_profile
+or your .cshrc file):
+%
 \begin{verbatim}
-./configure FC=ifort MPIFC=mpif90
+    ./configure FC=gfortran CC=gcc
 \end{verbatim}
-\noindent
-Note that MPI must be installed with MPI-IO enabled because parts of SPECFEM3D perform I/Os through MPI-IO.
+%
+If you want to run in parallel, i.e., using more than one processor core, then you would type
+%
+\begin{verbatim}
+    ./configure FC=gfortran CC=gcc MPIFC=mpif90 --with-mpi
+\end{verbatim}
 
+You can replace the GNU compilers above (gfortran and gcc) with other compilers if you want to; for instance for Intel ifort and icc use FC=ifort CC=icc instead.
+
+Note that MPI must be installed with MPI-IO enabled because parts of SPECFEM3D perform I/Os through MPI-IO.
 
 Before running the \texttt{configure} script, you should probably
 edit file \texttt{flags.guess} to make sure that it contains the best
