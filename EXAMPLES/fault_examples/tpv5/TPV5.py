@@ -7,7 +7,7 @@ import math
 import os
 import sys
 from save_fault_nodes_elements import *
-
+from absorbing_boundary import *
 cubit.cmd('reset')
 
 km = 1000
@@ -106,21 +106,25 @@ faultA = fault_input(1,Au,Ad)
 
 ###### This is boundary_definition.py of GEOCUBIT 
 #..... which extracts the bounding faces and defines them into blocks 
-boundary_definition.entities=['face'] 
-boundary_definition.define_bc(boundary_definition.entities,parallel=True) 
+#boundary_definition.entities=['face'] # this is a deprecated boundary definition function 
+#boundary_definition.define_bc(boundary_definition.entities,parallel=True) 
+entities=['face'] 
+define_parallel_bc(entities) # in absorbing_boundary.py
  
 #### Define material properties for the 2 volumes ################ 
 cubit.cmd('#### DEFINE MATERIAL PROPERTIES #######################') 
  
 # Material properties in concordance with tpv5 benchmark. 
- 
+
 cubit.cmd('block 1 name "elastic 1" ')        # material region  
-cubit.cmd('block 1 attribute count 5') 
+cubit.cmd('block 1 attribute count 6') 
 cubit.cmd('block 1 attribute index 1 1')      # flag for fault side 1 
 cubit.cmd('block 1 attribute index 2 6000')   # vp 
 cubit.cmd('block 1 attribute index 3 3464')    # vs 
 cubit.cmd('block 1 attribute index 4 2670')   # rho 
-cubit.cmd('block 1 attribute index 5 13')     # Q flag (see constants.h: IATTENUATION_ ... ) 
+cubit.cmd('block 1 attribute index 5 13')     # q flag (see constants.h: iattenuation_ ... ) 
+cubit.cmd('block 1 attribute index 6 0')     # q flag (see constants.h: iattenuation_ ... ) 
+
 
 #### Export to SPECFEM3D format using cubit2specfem3d.py of GEOCUBIT 
  
