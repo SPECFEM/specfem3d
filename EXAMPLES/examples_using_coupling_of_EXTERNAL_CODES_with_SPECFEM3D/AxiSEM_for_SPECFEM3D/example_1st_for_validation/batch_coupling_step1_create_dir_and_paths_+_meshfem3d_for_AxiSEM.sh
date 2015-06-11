@@ -16,9 +16,6 @@ set -x
 cd ${BRIDGE_MSUB_PWD}
 
 ######################################################################################################################
-#
-#
-## ------------------ INPUTS -----------------------------
 
 # NBPROC is declared as integer (important do not change)
 declare -i NPROC NPROC_MINUS_ONE CPUS CHOICE MIDDLE
@@ -33,21 +30,16 @@ MPIRUN=ccc_mprun
 # ENTER OPTION FOR MPIRUN
 OPTION=
 
-###OPTION=" -np "${NPROC}
-###OPTION_SIMU=" -np "${CPUS}
-###OPTION=" -np "${CPUS}"  -machinefile "${OAR_NODEFILE}" -bysocket -bind-to-core"
-###OPTION_SIMU=" -np "${CPUS}"  -machinefile "${OAR_NODEFILE}" -bysocket -bind-to-core"
-
 # do not change
 NPROC_MINUS_ONE="$NPROC-1"
 
 # Define different paths and folders
-mkdir -p MESH/
 source paths_for_coupling_SPECFEM3D_AxiSEM.sh
 
 # ----------------------------------------------------
 # 1 / ------- create mesh
 # ----------------------------------------------------
-source ${HOME_SPECFEM3D}/scripts_SPECFEM3D_for_AxiSEM.sh
-run_create_mesh
+
+source ${HOME_AxiSEM}/scripts_SPECFEM3D_for_AxiSEM.sh
+run_create_dir_and_mesh
 
