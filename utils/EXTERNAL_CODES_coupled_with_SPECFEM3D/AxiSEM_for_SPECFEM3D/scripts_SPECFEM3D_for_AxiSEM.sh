@@ -7,29 +7,19 @@ if [ ! -d $1 ] ; then
 fi
 }
 
-function clean_and_make_dir ()
-{
-delete_directory_if_exist $MESH
-delete_directory_if_exist OUTPUT_FILES
-delete_directory_if_exist OUTPUT_FILES/DATABASES_MPI
-
-mkdir -p $MESH
-mkdir -p OUTPUT_FILES/
-mkdir -p OUTPUT_FILES/DATABASES_MPI/
-}
-
-
 function run_create_mesh ()
 {
 # fonction to create MESH for a chunk
 # the output files for mesh are put in $MESH directory
 
+delete_directory_if_exist MESH/
+mkdir -p MESH/
+
 current_dir=$(pwd)
 
 cp ParFileMeshChunk $MESH/.
 cp $IN_DSM/$MODELE_1D $MESH/.
-###cd $MESH
-###$BIN/xmesh_chunk_vm
+
 cd $current_dir
 $BINSEM/xmeshfem3D > Step1-create_mesh.out
 cp $MESH/model_1D.in DATA/
@@ -37,6 +27,12 @@ cp $MESH/model_1D.in DATA/
 
 function run_create_specfem_databases ()
 {
+
+delete_directory_if_exist OUTPUT_FILES/
+delete_directory_if_exist OUTPUT_FILES/DATABASES_MPI/
+
+mkdir -p OUTPUT_FILES/
+mkdir -p OUTPUT_FILES/DATABASES_MPI/
 
 $BINSEM/xdecompose_mesh $NPROC $MESH OUTPUT_FILES/DATABASES_MPI/
 mv Numglob2loc_elmn.txt $MESH/.

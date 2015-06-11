@@ -453,7 +453,7 @@
             write(92,1000) xstore(i,j,k), ystore(i,j,k), zstore(i,j,k)
 
           else if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then
-            write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k),ispec,i,j,k,1,ilayer,updown(k)
+            write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k),ispec,i,j,k,2,ilayer,updown(k)
 
           endif
 
@@ -486,7 +486,7 @@
             write(92,1000) xstore(i,j,k), ystore(i,j,k), zstore(i,j,k)
 
           else if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then
-            write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k),ispec,i,j,k,1,ilayer,updown(k)
+            write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k),ispec,i,j,k,3,ilayer,updown(k)
 
           endif
 
@@ -519,7 +519,7 @@
             write(92,1000) xstore(i,j,k), ystore(i,j,k), zstore(i,j,k)
 
           else if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then
-            write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k),ispec,i,j,k,1,ilayer,updown(k)
+            write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k),ispec,i,j,k,4,ilayer,updown(k)
 
           endif
 
@@ -552,7 +552,7 @@
             write(92,1000) xstore(i,j,k), ystore(i,j,k), zstore(i,j,k)
 
           else if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then
-            write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k),ispec,i,j,k,1,ilayer,updown(k)
+            write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k),ispec,i,j,k,5,ilayer,updown(k)
 
           endif
 
