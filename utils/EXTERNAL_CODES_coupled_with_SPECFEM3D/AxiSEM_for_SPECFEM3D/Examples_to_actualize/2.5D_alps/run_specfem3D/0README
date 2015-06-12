@@ -1,0 +1,34 @@
+
+!-----------------------------------------------------------------------------------------------
+
+je l'ai mis en HEX8 
+
+creation du chunk avec meshfem3D de Clément, copie des inputs à partir de l'example small:
+~/progs/GIT/specfem3d/EXAMPLES/DSM_FOR_SPECFEM3D/example_simple_small
+
+il faut generer un fichier dans le repertoire MESH-data:
+
+ParFileMeshChunk
+
+#(deg)
+ANGULAR_WIDTH_XI_RAD ANGULAR_WIDTH_ETA_RAD
+#(deg)
+LON_CENTER LAT_CENTER AZI_CHUNK
+# (km)
+DEPTH_CHUNK
+#
+iasp91_dsm
+
+
+iasp91_dsm se trouvant dans ./DATA
+
+
+
+Dans DATA on doit mettre aussi model_2D.txt:
+
+nx,nz
+h
+....
+x,z,vp,vs,rho
+...
+
