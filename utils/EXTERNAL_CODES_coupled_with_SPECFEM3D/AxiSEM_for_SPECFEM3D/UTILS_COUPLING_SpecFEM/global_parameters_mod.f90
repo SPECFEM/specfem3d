@@ -11,26 +11,26 @@
     integer ibeg,iend
     integer, allocatable :: nb_stored(:)
     real(kind=CUSTOM_REAL), allocatable :: scoor(:,:,:),zcoor(:,:,:)
-    real(kind=CUSTOM_REAL), allocatable :: depth_ele(:) 
-    
+    real(kind=CUSTOM_REAL), allocatable :: depth_ele(:)
+
     !! mesh specifications
     integer, parameter :: NGNOD=8,NGLLX=5,NGLLY=5,NGLLS=5,NGLLZ=5
-    
+
     !! field arrays
     real(kind=SINGLE_REAL), allocatable :: data_read(:,:,:),data_rec(:,:),stress_rec(:,:),stress_to_write(:,:)
     real(kind=SINGLE_REAL), allocatable :: strain_rec(:,:)
 
-    !! work arrays 
+    !! work arrays
     real(kind=SINGLE_REAL), allocatable :: data_reduce(:,:),stress_reduce(:,:)
-        
-    !! input box point 
+
+    !! input box point
     integer nbrec
     real(kind=CUSTOM_REAL), allocatable :: reciever_cyl(:,:),reciever_geogr(:,:),reciever_sph(:,:)
     real(kind=CUSTOM_REAL), allocatable :: reciever_interp_value(:),xi_rec(:),eta_rec(:)
     integer, allocatable :: rec2elm(:),ele_candidate(:,:),ele_seen(:)
     logical, allocatable :: up(:)
 
-    !! 
+    !!
     real(kind=CUSTOM_REAL), parameter :: pi=3.1415926535898_CUSTOM_REAL
     real(kind=CUSTOM_REAL), parameter :: pick_tresh=0.1
     integer ipick
@@ -50,7 +50,7 @@
     !! post process
     real(kind=SINGLE_REAL), allocatable ::  f1(:),f2(:),phi(:)
 
-    !! mpi 
+    !! mpi
     integer irecmin, irecmax
 
-  end module global_parameters 
+  end module global_parameters

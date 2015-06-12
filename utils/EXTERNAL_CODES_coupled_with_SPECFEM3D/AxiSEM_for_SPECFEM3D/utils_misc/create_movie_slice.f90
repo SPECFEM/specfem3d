@@ -20,24 +20,24 @@ program create_movie_slice
   integer ipoint, ielm,nelem,i,it,itsn
   !integer, parameter :: IOVTK=111
 
-  
+
   !! input files
   open(10,file='slice_movie.par')
-  read(10,'(a)') indir                 !! input dir where are the spcefem solutions 
-  read(10,'(a)') outdir                !! output dir where will be vtk file 
+  read(10,'(a)') indir                 !! input dir where are the spcefem solutions
+  read(10,'(a)') outdir                !! output dir where will be vtk file
   read(10,'(a)') filename              !! name of the field to be plotted
   read(10,*) nproc                     !! number of proc in simu specfem3D
-  read(10,*) istep,imax                !! step and end of the snapshot 
-  read(10,*) slice_code, slice_coord   !! slice_code=X or Y or Z and coord of the plane 
+  read(10,*) istep,imax                !! step and end of the snapshot
+  read(10,*) slice_code, slice_coord   !! slice_code=X or Y or Z and coord of the plane
                                        !! eg X 1000. will plot slice X=1000.
   close(10)
   !slice_code ! X Y or Z
-  !slice_coord ! cut value 
+  !slice_coord ! cut value
 
   !!
   !! 1  READ SEPCFEM3D mesh files =============================
-  
-  !! 1.1 counting the number of elements in the whole mesh 
+
+  !! 1.1 counting the number of elements in the whole mesh
   if (slice_code=='Y')  ycte = slice_coord
   if (slice_code=='X')  xcte = slice_coord
   imin = istep
@@ -46,7 +46,7 @@ program create_movie_slice
   allocate(NSPEC_AB_iproc(nproc))
   allocate(data_slice(NGLLX,NGLLZ))
   allocate(nb_index_to_run(nproc))
-  
+
   do iproc=1,nproc
      write(*,'(a,i6.6,a)') trim(indir)//'proc',iproc-1,'_'
      write(name_file,'(a,i6.6,a)') trim(indir)//'proc',iproc-1,'_'
@@ -58,11 +58,11 @@ program create_movie_slice
      NSPEC = max(NSPEC_AB,NSPEC)
      NSPEC_AB_iproc(iproc)=NSPEC_AB
 
-  end do
+  enddo
 
   allocate(index_el_to_store(NSPEC,nproc),index_to_run(NSPEC,nproc))
   index_el_to_store=0
-  
+
   iel_to_store=0
   nbpoints=0
   nelem=0
@@ -75,12 +75,12 @@ program create_movie_slice
           status='old',action='read',form='unformatted',iostat=ier)
      read(27) NSPEC_AB
      read(27) NGLOB_AB
-     
+
      ! ibool and global point arrays file
      allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
 
      if (ier /= 0) stop 'error allocating array ibool'
-     
+
      allocate(xstore(NGLOB_AB),ystore(NGLOB_AB),zstore(NGLOB_AB),stat=ier)
 
      if (ier /= 0) stop 'error allocating array xstore etc.'
@@ -90,16 +90,16 @@ program create_movie_slice
      read(27) zstore
      close(27)
 
-     
-   
-  
+
+
+
      !! 2 detect slice to plot
-     !! tableau (ipoint_to_save, iproc)  -> ispec, 
-     !! 
+     !! tableau (ipoint_to_save, iproc)  -> ispec,
+     !!
      iel_to_store=0
-    
+
      do ispec=1,NSPEC_AB
-        
+
 
         select case (slice_code)
 
@@ -107,7 +107,7 @@ program create_movie_slice
             !! CAS Y=cste
             !
             ! on regarde si ycte est dans l'element
-        
+
             iglob0=ibool(3,1,3,ispec)
             iglob1=ibool(3,5,3,ispec)
 
@@ -115,15 +115,15 @@ program create_movie_slice
 
               ! liste des elements a garder
               iel_to_store=iel_to_store+1
-              index_el_to_store(ispec,iproc)=1 !! 
+              index_el_to_store(ispec,iproc)=1 !!
               index_to_run(iel_to_store,iproc)=ispec
               nbpoints=nbpoints+NGLLX*NGLLZ
               nelem=nelem+1
-            end if
-       
+            endif
+
            case('X')
-         
-          
+
+
             iglob0=ibool(1,3,3,ispec)
             iglob1=ibool(5,3,3,ispec)
 
@@ -131,21 +131,21 @@ program create_movie_slice
 
                ! liste des elements a garder
                iel_to_store=iel_to_store+1
-               index_el_to_store(ispec,iproc)=1 !! 
+               index_el_to_store(ispec,iproc)=1 !!
                index_to_run(iel_to_store,iproc)=ispec
                nbpoints=nbpoints+NGLLY*NGLLZ
                nelem=nelem+1
-            end if
+            endif
 
          end select
 
-     end do
+     enddo
      deallocate(xstore,ystore,zstore)
      deallocate(ibool)
- 
+
      nb_index_to_run(iproc)=iel_to_store
 
-  end do
+  enddo
 
   allocate(xgrid(nbpoints),ygrid(nbpoints),zgrid(nbpoints))
   allocate(connectiv(NGLLX,NGLLY,nelem))
@@ -160,12 +160,12 @@ program create_movie_slice
           status='old',action='read',form='unformatted',iostat=ier)
      read(27) NSPEC_AB
      read(27) NGLOB_AB
-     
+
      ! ibool and global point arrays file
      allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
 
      if (ier /= 0) stop 'error allocating array ibool'
-     
+
      allocate(xstore(NGLOB_AB),ystore(NGLOB_AB),zstore(NGLOB_AB),stat=ier)
 
      if (ier /= 0) stop 'error allocating array xstore etc.'
@@ -192,10 +192,10 @@ program create_movie_slice
                    zgrid(ipoint) = zstore(iglob)
 
                    connectiv(igll, kgll,ielm) = ipoint
-                end do
-             end do
-          end do
-       end do
+                enddo
+             enddo
+          enddo
+       enddo
 
       case('X')
 
@@ -213,17 +213,17 @@ program create_movie_slice
                    zgrid(ipoint) = zstore(iglob)
 
                    connectiv(jgll, kgll,ielm) = ipoint
-                end do
-             end do
-          end do
-       end do
+                enddo
+             enddo
+          enddo
+       enddo
 
-     end select 
+     end select
 
      deallocate(xstore,ystore,zstore)
      deallocate(ibool)
-     
-  end do
+
+  enddo
 
   !! 2 read field file and write vtk slice file  ========================
 
@@ -231,11 +231,11 @@ program create_movie_slice
   do it = imin,imax,istep
 
      !! opening vtk file for the snapshot
-     write(iteration,'(a3,i6.6)')  '_it',it 
+     write(iteration,'(a3,i6.6)')  '_it',it
      write(vtk_output,'(a,a4)') trim(outdir)//'/'//trim(filename)//trim(iteration),'.vtk'
      write(*,*) 'open vtk',trim(vtk_output)
      open(IOVTK,file=trim(vtk_output))
-     
+
      !! new file
      write(IOVTK,'(a)') '# vtk DataFile Version 3.1'
      write(IOVTK,'(a)') 'material model VTK file'
@@ -246,7 +246,7 @@ program create_movie_slice
      !! write coord
      do i=1,nbpoints
         write(IOVTK,'(3e18.6)') xgrid(i),ygrid(i),zgrid(i)
-     end do
+     enddo
 
      write(IOVTK,*) ""
      write(IOVTK,'(a,i12,i12)') "CELLS ",nelem*(NGLLZ-1)*(NGLLX-1),nelem*(NGLLZ-1)*(NGLLX-1)*5
@@ -256,9 +256,9 @@ program create_movie_slice
            do igll=1,NGLLX-1
               write(IOVTK,'(5i12)') 4,connectiv(igll,kgll,ielm)-1,connectiv(igll+1,kgll,ielm)-1,&
                    connectiv(igll+1,kgll+1,ielm)-1,connectiv(igll,kgll+1,ielm)-1
-           end do
-        end do
-     end do
+           enddo
+        enddo
+     enddo
      write(IOVTK,*) ""
      !! read field to be stored in vtk file
      write(IOVTK,'(a,i12)') "CELL_TYPES ",nelem*(NGLLZ-1)*(NGLLX-1)
@@ -269,20 +269,20 @@ program create_movie_slice
      write(IOVTK,'(a)') "LOOKUP_TABLE default"
 
      kindex=0
-     do iproc=1,nproc  !! 
-        if (nb_index_to_run(iproc) >0) then 
-          !! open specfem field   
+     do iproc=1,nproc  !!
+        if (nb_index_to_run(iproc) >0) then
+          !! open specfem field
           allocate(datap(NGLLX,NGLLY,NGLLZ,NSPEC_AB_iproc(iproc)),stat=ier)
           write(prname,'(a,i6.6,a)') trim(indir)//'/'//'proc',iproc-1,'_'
           local_data_file = trim(prname)//trim(filename)//trim(iteration)//'.bin'
           write(*,*) 'reading data ',  trim(local_data_file)
           open(unit = 28,file = trim(local_data_file),status='old',&
-              action='read',form ='unformatted',iostat=ier)  
+              action='read',form ='unformatted',iostat=ier)
           read(28) datap
           close(28)
-        
 
-          ! read field in specfem3D output 
+
+          ! read field in specfem3D output
           do i=1, nb_index_to_run(iproc) !! loop over elements meeting  the slice
              ispec=index_to_run(i,iproc) !! index of the element
 
@@ -294,54 +294,54 @@ program create_movie_slice
             do kgll=1,NGLLZ
                do jgll=3,3  !! we choose the middle of the element (Y=cte)
                   do igll=1,NGLLX
-                     
+
                      kindex=kindex+1
                      data_slice(igll,kgll)=datap(igll,jgll,kgll,ispec)  !! store data in the slice
-                    
-                  end do
-               end do
-             end do
-           
-             !! write field in vtk file 
+
+                  enddo
+               enddo
+             enddo
+
+             !! write field in vtk file
              do kgll=1,NGLLZ
                 do igll=1,NGLLX
                    write(IOVTK,*) data_slice(igll,kgll)
-                end do
-             end do
-                    
+                enddo
+             enddo
+
             case('X')
               do kgll=1,NGLLZ
                do jgll=1,NGLLY  !! we choose the middle of the element (Y=cte)
                   do igll=3,3
-                     
+
                      kindex=kindex+1
                      data_slice(jgll,kgll)=datap(igll,jgll,kgll,ispec)  !! store
                                                                         !! data in the slice
-                    
-                  end do
-               end do
-              end do
 
-              !! write field in vtk file 
+                  enddo
+               enddo
+              enddo
+
+              !! write field in vtk file
               do kgll=1,NGLLZ
                  do jgll=1,NGLLY
                     write(IOVTK,*) data_slice(jgll,kgll)
-                 end do
-               end do
+                 enddo
+               enddo
 
 
-            
-           
+
+
 
            end select
 
-          end do
+          enddo
 
           deallocate(datap)
-         end if
-     end do
+         endif
+     enddo
      write(IOVTK,*) ""
      close(IOVTK)
-  end do
+  enddo
 
 end program create_movie_slice

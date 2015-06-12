@@ -8,7 +8,7 @@ module writing_mod
 !!$    write(ivy) data_rec(:,2)
 !!$    write(ivz) data_rec(:,3)
 
-    ! permutation 
+    ! permutation
     write(ivx) data_rec(:,1)
     write(ivy) data_rec(:,2)
     write(ivz) data_rec(:,3)
@@ -25,7 +25,7 @@ module writing_mod
     real(kind=SINGLE_REAL) lam,mu
 
 !!$    do irec=1,nbrec
-!!$           
+!!$
 !!$       ! stress cartesian
 !!$       st(1,1)=stress_rec(irec,1)
 !!$       st(1,2)=stress_rec(irec,4)
@@ -46,43 +46,43 @@ module writing_mod
 !!$          do i=1,3
 !!$             do k=1,3
 !!$                tmp(i,j)=tmp(i,j)+mat(i,k)*st(k,j)
-!!$             end do
-!!$          end do
-!!$       end do
-!!$       
+!!$             enddo
+!!$          enddo
+!!$       enddo
+!!$
 !!$       ! R*st*Rt
 !!$       tmp1=0.
 !!$       do j=1,3
 !!$          do i=1,3
 !!$             do k=1,3
 !!$                tmp1(i,j)=tmp1(i,j)+tmp(i,k)*tmat(k,j)
-!!$             end do
-!!$          end do
-!!$       end do
-!!$       
+!!$             enddo
+!!$          enddo
+!!$       enddo
+!!$
 !!$       ! stress in cartesian
 !!$       stress_rec(irec,1)=tmp1(1,1)
 !!$       stress_rec(irec,2)=tmp1(2,2)
 !!$       stress_rec(irec,3)=tmp1(3,3)
-!!$       stress_rec(irec,4)=tmp1(1,2) 
+!!$       stress_rec(irec,4)=tmp1(1,2)
 !!$       stress_rec(irec,5)=tmp1(1,3)
 !!$       stress_rec(irec,6)=tmp1(2,3)
-!!$       
-!!$    end do
+!!$
+!!$    enddo
 
-    !strain_rec=stress_rec   
- 
+    !strain_rec=stress_rec
+
     !lam=2.205e+11
     !mu=1.6200e+11
 
-    !stress_rec(:,1)=(lam+2.*mu)*(strain_rec(:,1) + strain_rec(:,2))-2.*mu*strain_rec(:,2)+lam*strain_rec(:,3) 
+    !stress_rec(:,1)=(lam+2.*mu)*(strain_rec(:,1) + strain_rec(:,2))-2.*mu*strain_rec(:,2)+lam*strain_rec(:,3)
     !stress_rec(:,2)=(lam+2.*mu)*(strain_rec(:,1) + strain_rec(:,2))-2.*mu*strain_rec(:,1)+lam*strain_rec(:,3)
     !stress_rec(:,3)=lam*(strain_rec(:,1) + strain_rec(:,2)) + (lam+2.*mu)*strain_rec(:,3)
     !stress_rec(:,4)=2*mu*strain_rec(:,4)
     !stress_rec(:,5)=2*mu*strain_rec(:,5)
     !stress_rec(:,6)=2*mu*strain_rec(:,6)
 
- 
+
     write(isxx) stress_rec(:,1)
     write(isyy) stress_rec(:,2)
     write(iszz) stress_rec(:,3)
@@ -91,6 +91,6 @@ module writing_mod
     write(isyz) stress_rec(:,6)
 
     !write(*,*)  stress_rec(:,1)
-    
+
   end subroutine write_stress3D
 end module writing_mod

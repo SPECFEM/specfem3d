@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -44,7 +44,7 @@ subroutine nc_open(ncid, nsim, simdir)
   character(len=100), allocatable, intent(in) :: simdir(:)
   character(len=256)                          :: fnam
   integer                                     :: isim
-    
+
 #ifdef unc
   do isim = 1, nsim
       fnam = trim(simdir(isim))//'/Data/axisem_output.nc4'
@@ -60,7 +60,7 @@ subroutine nc_open(ncid, nsim, simdir)
                                  ncid%theta_varid(isim)))
       call check( nf90_inq_varid(ncid%seis_grpid(isim), 'theta_requested', &
                                  ncid%thetar_varid(isim)))
-  end do
+  enddo
 #endif
 
 
@@ -74,10 +74,10 @@ subroutine nc_close(ncid)
 
 #ifdef unc
   integer                                     :: state, isim
-  
+
   do isim = 1,4
       state = nf90_close(ncid%id(isim))
-  end do
+  enddo
 #endif
 
 end subroutine
@@ -95,9 +95,9 @@ subroutine nc_read_recnames(ncid, nrec, recname, theta, thetar, phi)
   do irec = 1, nrec
       call check( nf90_get_var(ncid%seis_grpid(1), ncid%recnam_varid(1), &
                                start = (/irec, 1/), &
-                               count = (/1, 40/), & 
+                               count = (/1, 40/), &
                                values = recname(irec)) )
-  end do
+  enddo
   call check( nf90_get_var(ncid%seis_grpid(1), ncid%phi_varid(1), &
                            values = phi) )
   call check( nf90_get_var(ncid%seis_grpid(1), ncid%theta_varid(1), &
@@ -132,7 +132,7 @@ subroutine nc_read_seismograms(ncid, nt, nrec, nsim, seis_snglcomp)
                                 start=(/1, 1, 1/), &
                                 count = (/nt, 3, nrec/), &
                                 values = seis_snglcomp(:,:,:,isim)) )
-  end do
+  enddo
 #else
   ! To stop Ifort complaining that intent(out)-variables are not set
   seis_snglcomp = 0.0
@@ -148,13 +148,13 @@ subroutine check(status)
   integer, intent ( in) :: status
 
 #ifdef unc
-  if(status /= nf90_noerr) then 
+  if(status /= nf90_noerr) then
     print *, trim(nf90_strerror(status))
     stop 1
-  end if
+  endif
 #endif
 
-end subroutine check  
+end subroutine check
 !-----------------------------------------------------------------------------------------
 
 end module nc_postroutines

@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -20,7 +20,7 @@
 !
 
 module mesh_info
-  
+
   use data_gllmesh
   use data_mesh
   use data_spec
@@ -34,7 +34,7 @@ module mesh_info
   public :: define_regions, def_fluid_regions, def_solid_regions
   public :: define_boundaries
 
-  private 
+  private
 contains
 
 !-----------------------------------------------------------------------------------------
@@ -45,20 +45,20 @@ subroutine define_regions
   integer                        :: iel, i, ipol, jpol, count
   real(kind=dp)                  :: s1, z1, theta
   real(kind=dp)   , dimension(4) :: rtmp
-  
+
   ! define center of mass for each element
   allocate(scom(neltot))
-  scom(:) = 0.d0 
+  scom(:) = 0.d0
   allocate(zcom(neltot))
-  zcom(:) = 0.d0 
+  zcom(:) = 0.d0
   allocate(thetacom(neltot))
   thetacom(:) = 0.d0
   allocate(rcom(neltot))
-  rcom(:) = 0.d0 
+  rcom(:) = 0.d0
   allocate(rmin_el(neltot))
-  rmin_el(:) = 0.d0 
+  rmin_el(:) = 0.d0
   allocate(rmax_el(neltot))
-  rmax_el(:) = 0.d0 
+  rmax_el(:) = 0.d0
 
   do iel = 1, neltot
      count = 0
@@ -78,33 +78,33 @@ subroutine define_regions
      rcom(iel) = dsqrt(scom(iel)**2 + zcom(iel)**2)
 
      s1 = scom(iel)
-     z1 = zcom(iel) 
+     z1 = zcom(iel)
      theta = dacos(z1 / dsqrt(z1**2 + s1**2))
      if (theta < 0) then
         write(6,*) 'theta < 0', theta, s1, z1
         stop
-     elseif (theta > pi) then
+     else if (theta > pi) then
         write(6,*) 'theta > pi', theta, s1, z1
         stop
      endif
      thetacom(iel) = theta
-  end do
+  enddo
 
   allocate(region(neltot), nel_region(neltot))
   region(:) = 0
   nel_region(:) = 0
-  
+
   do iel = 1, neltot
      call assign_region(region(iel),scom(iel),zcom(iel))
-     if (region(iel) > 0 .AND. region(iel) < ndisc +2) then 
+     if (region(iel) > 0 .AND. region(iel) < ndisc +2) then
         nel_region(region(iel))=nel_region(region(iel))+1
      else
         write(6,*) ' problem with assigning region to element number ', iel
         stop
-     end if
-  end do
+     endif
+  enddo
 
-  if (dump_mesh_info_screen) then 
+  if (dump_mesh_info_screen) then
      write(6,*)''
      write(6,*)'NUMBER OF ELEMENTS IN EACH SUBREGION:'
      do i=1, ndisc-1
@@ -120,14 +120,14 @@ subroutine define_regions
      write(6,*)''
      write(6,*)'Elements summed over all regions:',sum(nel_region)
      write(6,*)'Total # Elements:',neltot
-  end if 
+  endif
 
   if (neltot/=sum(nel_region)) then
      write(6,*)'In subroutine define_regions: Sum of elements in all regions not equal to total number'
      write(6,*) neltot, sum(nel_region)
      stop
   endif
-     
+
   write(6,*)''
 
 10 format(i8,' elements between ',f6.1,' and ',f6.1)
@@ -139,16 +139,16 @@ end subroutine define_regions
 
 !-----------------------------------------------------------------------------------------
 subroutine assign_region(ireg, s, z)
-  
+
   integer, intent(out)          :: ireg
   real(kind=dp)   , intent(in)  :: s, z
-  real(kind=dp)                 :: r 
+  real(kind=dp)                 :: r
   integer                       :: idisc
 
   r = router*dsqrt(s**2+z**2) ! s and z are nondimensionalized by outer rad.
   do idisc = 2, ndisc
    if ( (r < discont(idisc-1)) .AND. (r > discont(idisc)) ) ireg = idisc - 1
-  end do
+  enddo
   if ( r < discont(ndisc) ) ireg = ndisc
 
 end subroutine assign_region
@@ -156,7 +156,7 @@ end subroutine assign_region
 
 !-----------------------------------------------------------------------------------------
 subroutine def_fluid_regions
-  
+
   integer :: ielem, ifluid
   logical :: test_fluid
 
@@ -169,14 +169,14 @@ subroutine def_fluid_regions
      if (test_fluid) then
         fluid(ielem) = .true.
         neltot_fluid = neltot_fluid + 1
-     end if
-  end do 
+     endif
+  enddo
 
-  if (dump_mesh_info_screen) then 
+  if (dump_mesh_info_screen) then
      write(6,*) ' FLUID ELEMENTS '
      write(6,*) ' NUMBER OF FLUID ELEMENTS '
      write(6,*) neltot_fluid
-  end if
+  endif
 
   allocate(ielem_fluid(neltot_fluid))
   allocate(inv_ielem_fluid(neltot)); inv_ielem_fluid(:)=0
@@ -186,8 +186,8 @@ subroutine def_fluid_regions
         ifluid = ifluid + 1
         ielem_fluid(ifluid) = ielem
         inv_ielem_fluid(ielem) = ifluid
-     end if
-  end do
+     endif
+  enddo
 end subroutine def_fluid_regions
 !-----------------------------------------------------------------------------------------
 
@@ -205,14 +205,14 @@ subroutine def_solid_regions
      if (test_solid) then
         solid(ielem) = .true.
         neltot_solid = neltot_solid + 1
-     end if
-  end do 
+     endif
+  enddo
 
-  if (dump_mesh_info_screen) then 
+  if (dump_mesh_info_screen) then
      write(6,*) ' solid ELEMENTS '
      write(6,*) ' NUMBER OF solid ELEMENTS '
      write(6,*) neltot_solid
-  end if
+  endif
   allocate(ielem_solid(neltot_solid))
   allocate(inv_ielem_solid(neltot)); inv_ielem_solid(:)=0
   ! ielem_solid: given solid el number, return global
@@ -223,8 +223,8 @@ subroutine def_solid_regions
         isolid = isolid + 1
         ielem_solid(isolid) = ielem
         inv_ielem_solid(ielem) = isolid
-     end if
-  end do
+     endif
+  enddo
 end subroutine def_solid_regions
 !-----------------------------------------------------------------------------------------
 
@@ -234,7 +234,7 @@ subroutine check_fluid(test_fluid,  iel)
   logical, intent(out)  :: test_fluid
   integer, intent(in)   :: iel
 
-  test_fluid = .false. 
+  test_fluid = .false.
   ! FOR PREM
   if (.not. solid_domain(region(iel))) test_fluid = .true.
 
@@ -246,7 +246,7 @@ subroutine check_solid(test_solid,iel)
 
   logical, intent(out) :: test_solid
   integer, intent(in) :: iel
-  test_solid = .false. 
+  test_solid = .false.
   ! FOR PREM
   if (solid_domain(region(iel))) test_solid = .true.
 
@@ -255,9 +255,9 @@ end subroutine check_solid
 
 !-----------------------------------------------------------------------------------------
 subroutine define_boundaries
-! Defines number, size (number of elements) and allocates arrays 
-! pertaining to the solid-fluid boundaries. 
-! The actual arrays needed by the solver 
+! Defines number, size (number of elements) and allocates arrays
+! pertaining to the solid-fluid boundaries.
+! The actual arrays needed by the solver
 ! are computed in define_my_boundary_neighbour.
 
   integer           :: j,ipol,ibelem
@@ -265,18 +265,18 @@ subroutine define_boundaries
   integer           :: nbelemmax
   real(kind=dp), allocatable :: bdry_radius(:)
 
-  if (neltot_fluid>0 .and. neltot_solid>0 ) then 
+  if (neltot_fluid>0 .and. neltot_solid>0 ) then
      nbcnd = 2*nfluidregions  ! 1=CMB; 2=ICB
      write(6,*) '..... the number of fluid boundaries is not general enough....'
      write(6,*) '.....should insert a test on whether the fluid is indeed completely embedded!'
   else if (neltot_solid==0) then
      nbcnd = 0
-  else if (neltot_fluid == 0 ) then 
-     nbcnd = 0 
+  else if (neltot_fluid == 0 ) then
+     nbcnd = 0
   endif
 
   ! Allocate memory for the number of boundary elements
-  allocate(nbelem(nbcnd),bdry_radius(nbcnd)) 
+  allocate(nbelem(nbcnd),bdry_radius(nbcnd))
   ! set number of boundary elements to zero
   nbelem(:) = 0 ! careful: is a global variable!!!
 
@@ -288,23 +288,23 @@ subroutine define_boundaries
 
         if (mod(j,2)/=0) then ! upper boundary of fluid region
            rbound = discont(idom_fluid(j))/router
-           if (dump_mesh_info_screen) then 
+           if (dump_mesh_info_screen) then
               write(6,*)'ABOVE SOLID-FLUID BOUNDARY:',j,idom_fluid(j), &
                                                      rbound*router/1000.
-              call flush(6) 
-           end if
+              call flush(6)
+           endif
         else  ! lower boundary of fluid region
            rbound = discont(idom_fluid(j-1)+1)/router
-           if (dump_mesh_info_screen) then 
+           if (dump_mesh_info_screen) then
               write(6,*)'BELOW SOLID-FLUID BOUNDARY:',j,idom_fluid(j-1)+1,&
                                                       rbound*router/1000.
-              call flush(6) 
-           end if
+              call flush(6)
+           endif
         endif
 
         call belem_count_new(dmax, j, rbound)
         bdry_radius(j) = rbound
-     end do
+     enddo
      nbelemmax = maxval(nbelem(:))
      allocate (belem(nbelemmax,nbcnd))
      do j = 1, nbcnd
@@ -314,9 +314,9 @@ subroutine define_boundaries
            rbound = discont(idom_fluid(j-1)+1)/router
         endif
         call belem_list_new(dmax,j,rbound)
-     end do
+     enddo
 
-     if (dump_mesh_info_files) then 
+     if (dump_mesh_info_files) then
         open(unit=6968,file=diagpath(1:lfdiag)//'/fort.6968')
         do j=1,nbcnd
            do ibelem=1,nbelem(j)
@@ -327,7 +327,7 @@ subroutine define_boundaries
            enddo
         enddo
         close(6968)
-     end if
+     endif
 
      write(6,*)'allocating boundary arrays....',nbelemmax; call flush(6)
 
@@ -354,7 +354,7 @@ subroutine define_boundaries
   endif
 
   !=======OUTPUT BOUNDARY INFO AND ARRAYS===========================
-  if (dump_mesh_info_files  .and. have_solid) then 
+  if (dump_mesh_info_files  .and. have_solid) then
      open(unit=67660,file=diagpath(1:lfdiag)//"/bdry_info.dat")
      !write(67660,*)nbcnd
      do j=1,nbcnd
@@ -418,7 +418,7 @@ subroutine define_boundaries
      close(7777)
      close(7778)
 
-     ! reference coordinates 
+     ! reference coordinates
      open(unit=67663,file=diagpath(1:lfdiag)//'/bdry_refcoord.dat')
      open(unit=67664,file=diagpath(1:lfdiag)//'/bdry_refglob.dat')
      open(unit=67665,file=diagpath(1:lfdiag)//'/bdry_refslob.dat')
@@ -449,7 +449,7 @@ subroutine define_boundaries
                     write(67665,*)sgll(ipol,npol,ibelem),zgll(ipol,npol,ibelem), &
                          iglob_solid( (inv_ielem_solid(ibelem)-1)*(npol+1)**2  &
                          + npol*(npol+1) + ipol + 1 )
-                    
+
                  else ! below, fluid
                     write(67664,*)ibelem,iglob( (ibelem-1)*(npol+1)**2 + ipol + 1 )
                  endif
@@ -493,7 +493,7 @@ subroutine define_boundaries
                       iglob_solid( (inv_ielem_solid(ibelem)-1)*&
                                     (npol+1)**2 + ipol + 1 )
               endif
-                 
+
               endif
            enddo
         endif
@@ -504,7 +504,7 @@ subroutine define_boundaries
      close(67665)
      close(67667)
      close(67668)
-  end if
+  endif
 
 
 end subroutine define_boundaries
@@ -512,18 +512,18 @@ end subroutine define_boundaries
 
 !-----------------------------------------------------------------------------------------
 subroutine define_my_boundary_neighbour
-! Defines & computes all arrays needed to identify the elements hugging 
+! Defines & computes all arrays needed to identify the elements hugging
 ! all solid-fluid boundaries, their respective cross-boundary neighbours,
 ! their respective global-global numbers, their respective flobal/slobal
 ! numbers and s,z coordinates of all GLL points on the boundaries.
-! This will be used in the database to store for the solver. 
-! Note that nbelem(j) is the total amount of ALL elements at boundary j, 
-! i.e. counting above AND below. 
+! This will be used in the database to store for the solver.
+! Note that nbelem(j) is the total amount of ALL elements at boundary j,
+! i.e. counting above AND below.
 
   integer :: ibelem,jbelem,ipol
   integer :: myel,herel
   integer :: j,abovecount,belowcount
-  real(kind=dp)    :: mytheta, hertheta 
+  real(kind=dp)    :: mytheta, hertheta
   real(kind=dp)    :: tolerance,rbound
   real(kind=dp)    :: rup,thetaup,rdown,thetadown
 
@@ -561,14 +561,14 @@ subroutine define_my_boundary_neighbour
            herel = belem(jbelem,j)
            hertheta = thetacom(herel)
            dist = dabs(hertheta-mytheta)*rbound
-           if (dist < tolerance .and. myel /= herel ) then 
+           if (dist < tolerance .and. myel /= herel ) then
                my_neighbour(ibelem,j) = jbelem
                foundone = .true.
                exit
            endif
-        end do
+        enddo
 
-        if ( .not. foundone) then 
+        if ( .not. foundone) then
            distmin = rbound
            do  jbelem = 1, nbelem(j)
               herel = belem(jbelem,j)
@@ -577,20 +577,20 @@ subroutine define_my_boundary_neighbour
               if (dist < distmin .and. myel /= herel ) then
                  jbelemmin = jbelem
                  distmin = dist
-              end if 
-           end do  
+              endif
+           enddo
            my_neighbour(ibelem,j) = jbelemmin
         endif
         call flush(6)
-     end do
-  end do
+     enddo
+  enddo
 
-  if (dump_mesh_info_files) then 
+  if (dump_mesh_info_files) then
      open(unit=131313,file=diagpath(1:lfdiag)//'/bdry_elems.dat')
      open(unit=6565,file=diagpath(1:lfdiag)//'/bdry_partners.dat')
      open(unit=6464,file=diagpath(1:lfdiag)//'/bdry_coords_elems_me.dat')
      open(unit=6465,file=diagpath(1:lfdiag)//'/bdry_coords_elems_her.dat')
-  end if
+  endif
   ! Easy check ... will that last?
   do j = 1, nbcnd
         abovecount= 0; belowcount=0
@@ -599,52 +599,52 @@ subroutine define_my_boundary_neighbour
       else  ! lower boundary of fluid region
          rbound = discont(idom_fluid(j-1)+1)/router
       endif
-   
+
       do ibelem = 1, nbelem(j)
-   
+
          ! easy check
-         if (dump_mesh_info_files) & 
+         if (dump_mesh_info_files) &
          write(6565,*)'Bdry partners:',j,ibelem,my_neighbour(ibelem,j), &
                                     my_neighbour(my_neighbour(ibelem,j),j)
-         if ( ibelem /= my_neighbour(my_neighbour(ibelem,j),j) ) then 
+         if ( ibelem /= my_neighbour(my_neighbour(ibelem,j),j) ) then
             write(6,*)'Problem in boundary-partner mapping:'
             write(6,*)'Me:',ibelem
             write(6,*)"My partner's partner:",&
                        my_neighbour(my_neighbour(ibelem,j),j)
             stop
          endif
-      
-         if (dump_mesh_info_files) & 
+
+         if (dump_mesh_info_files) &
          write(6464,16)scom(belem(ibelem,j))*router/1000., &
                        zcom(belem(ibelem,j))*router/1000.,ibelem
-                       
-         if (dump_mesh_info_files) & 
+
+         if (dump_mesh_info_files) &
          write(6465,16)scom(belem(my_neighbour(ibelem,j),j))*router/1000., &
                        zcom(belem(my_neighbour(ibelem,j),j))*router/1000., &
-                       my_neighbour(ibelem,j)         
+                       my_neighbour(ibelem,j)
 
 16       format(2(1pe12.4),i4)
-      
+
          ! determine whether element is above boundary
          if (rcom(belem(ibelem,j)) > rbound ) then
-      
+
              ! I am above
              rup=rmin_el(belem(ibelem,j))*router/1000.d0
              thetaup=thetacom(belem(ibelem,j))*180.d0/pi
              rdown=rmax_el(belem(my_neighbour(ibelem,j),j))*router/1000.d0
              thetadown=thetacom(belem(my_neighbour(ibelem,j),j))*180.d0/pi
              abovecount= abovecount+1
-      
+
              !================================================================
              ! ARRAYS NEEDED BY THE SOLVER: above_el, below_el, sbdry, zbdry
              !================================================================
-             
+
              ! global element number
              bdry_above_el(abovecount,j)=belem(ibelem,j)
              bdry_below_el(abovecount,j)=belem(my_neighbour(ibelem,j),j)
-      
-             ! solid/fluid element & jpol numbers: these arrays are the ones needed 
-             ! in the time stepping algorithm to map between boundary and 
+
+             ! solid/fluid element & jpol numbers: these arrays are the ones needed
+             ! in the time stepping algorithm to map between boundary and
              ! solid/fluid coordinate systems
              if (solid(belem(ibelem,j))) then ! Solid above
                 bdry_solid_el(abovecount,j)=inv_ielem_solid(belem(ibelem,j))
@@ -654,32 +654,32 @@ subroutine define_my_boundary_neighbour
                 if (zcom(belem(ibelem,j))<0.d0) bdry_jpol_solid(abovecount,j)=npol
                 bdry_jpol_fluid(abovecount,j)=npol
                 if (zcom(belem(ibelem,j))<0.) bdry_jpol_fluid(abovecount,j)=0
-      
+
              else !Fluid above
                 bdry_solid_el(abovecount,j)=&
                                   inv_ielem_solid(belem(my_neighbour(ibelem,j),j))
                 bdry_fluid_el(abovecount,j)=inv_ielem_fluid(belem(ibelem,j))
-      
+
                 bdry_jpol_solid(abovecount,j)=npol
                 if (zcom(belem(ibelem,j))<0.) bdry_jpol_solid(abovecount,j)=0
-      
+
                 bdry_jpol_fluid(abovecount,j)=0
                 if (zcom(belem(ibelem,j))<0.) bdry_jpol_fluid(abovecount,j)=npol
-      
+
                 ! very crude way to accomodate the case of having the buffer layer just
                 ! below the ICB. ...i.e., the jpol indices are switched for 45 < theta <
                 ! 135 deg
-                if (eltypeg(belem(my_neighbour(ibelem,j),j))/='curved') then 
+                if (eltypeg(belem(my_neighbour(ibelem,j),j))/='curved') then
                    if (dump_mesh_info_screen) write(6,*)'ELTYPE:',j,abovecount,&
                           eltypeg(belem(my_neighbour(ibelem,j),j))
                    if ( scom(belem(my_neighbour(ibelem,j),j)) > &
-                        abs(zcom(belem(my_neighbour(ibelem,j),j))) ) then 
+                        abs(zcom(belem(my_neighbour(ibelem,j),j))) ) then
                       bdry_jpol_solid(abovecount,j)=abs(bdry_jpol_solid(abovecount,j)-npol)
                    endif
                 endif
-      
-             end if    
-      
+
+             endif
+
              ! boundary coordinates
              if (zcom(belem(ibelem,j))>0.) then ! northern hemisphere
                bdry_s(0:npol,abovecount,j)=sgll(0:npol,0,belem(ibelem,j))
@@ -688,18 +688,18 @@ subroutine define_my_boundary_neighbour
                bdry_s(0:npol,abovecount,j)=sgll(0:npol,npol,belem(ibelem,j))
                bdry_z(0:npol,abovecount,j)=zgll(0:npol,npol,belem(ibelem,j))
              endif
-      
+
              ! arrays inside this loop are actually not needed elsewhere....
              ! global numbering is not invoked on the boundary!
              do ipol=0,npol
-       
+
                 ! global number above
                 ipt_glob_ab = (belem(ibelem,j)-1)*(npol+1)**2 + ipol + 1
                 if (zcom(belem(ibelem,j))<0.) then  ! south
                      ipt_glob_ab = (belem(ibelem,j)-1)* &
                                    (npol+1)**2 + npol*(npol+1) + ipol + 1
                 endif
-      
+
                 ! global number below
                 ipt_glob_be = (belem(my_neighbour(ibelem,j),j)-1)* &
                               (npol+1)**2 + npol*(npol+1) + ipol + 1
@@ -707,106 +707,106 @@ subroutine define_my_boundary_neighbour
                      ipt_glob_be = (belem(my_neighbour(ibelem,j),j)-1)* &
                                    (npol+1)**2  + ipol + 1
                 endif
-      
+
                 if (solid(belem(ibelem,j))) then ! Solid above
                   ! slobal number above
                   ipt_slob_ab=(inv_ielem_solid(belem(ibelem,j))-1)*(npol+1)**2+ipol+1
-                   
+
                    if (zcom(belem(ibelem,j))<0.) then  ! south
                         ipt_slob_ab = ( inv_ielem_solid(belem(ibelem,j)) -1 )* &
                                       (npol+1)**2 + npol*(npol+1) + ipol + 1
-                   endif     
+                   endif
                    ! flobal number below
                    ipt_flob_be=(inv_ielem_fluid(belem(my_neighbour(ibelem,j),j))-1)*&
-                                 (npol+1)**2 + npol*(npol+1) + ipol + 1 
+                                 (npol+1)**2 + npol*(npol+1) + ipol + 1
                     if (zcom(belem(ibelem,j))<0.) then  ! south
                       ipt_flob_be = &
                            (inv_ielem_fluid(belem(my_neighbour(ibelem,j),j))-1)* &
                            (npol+1)**2 + ipol + 1
                    endif
-      
+
                    ! Fluid above
                 else ! take my neighbour below
                    ! slobal number below
                    ipt_slob_be = (inv_ielem_solid(belem(my_neighbour(ibelem,j),j))-1)* &
-                        (npol+1)**2 + npol*(npol+1) + ipol+1 
+                        (npol+1)**2 + npol*(npol+1) + ipol+1
                    if (zcom(belem(ibelem,j))<0.) then  ! south
                         ipt_slob_be = (inv_ielem_solid(belem(my_neighbour(ibelem,j),j))-1) &
                         * (npol+1)**2 + ipol + 1
                    endif
                    ! flobal number above
                    ipt_flob_ab = (inv_ielem_fluid(belem(ibelem,j))-1)* &
-                        (npol+1)**2 + ipol+1 
+                        (npol+1)**2 + ipol+1
                     if (zcom(belem(ibelem,j))<0.) then  ! south
                         ipt_flob_ab = (inv_ielem_fluid(belem(ibelem,j))-1)* &
-                        (npol+1)**2 + npol*(npol+1) + ipol + 1 
+                        (npol+1)**2 + npol*(npol+1) + ipol + 1
                    endif
-                endif ! solid/fluid above       
-      
+                endif ! solid/fluid above
+
                 ! global number arrays
                 bdry_globnum_above(ipol,abovecount,j)=iglob(ipt_glob_ab)
                 bdry_globnum_below(ipol,abovecount,j)=iglob(ipt_glob_be)
-      
+
                 ! slobal/flobal number arrays
                 if (solid(belem(ibelem,j))) then ! solid above
-       
+
                   ! global numbering: solid
                    bdry_globnum_solid(ipol,abovecount,j)=iglob(ipt_glob_ab)
                    bdry_globnum_fluid(ipol,abovecount,j)=iglob(ipt_glob_be)
-      
+
                    ! local numbering (i.e., refering to fluid or solid)
                    bdry_locnum_above(ipol,abovecount,j)=iglob_solid(ipt_slob_ab)
                    bdry_locnum_below(ipol,abovecount,j)=iglob_fluid(ipt_flob_be)
-      
+
                    ! local numbering: solid (above or below)
                    bdry_locnum_solid(ipol,abovecount,j)=iglob_solid(ipt_slob_ab)
                    bdry_locnum_fluid(ipol,abovecount,j)=iglob_fluid(ipt_flob_be)
-      
+
                 else ! fluid above
-      
+
                    ! global numbering: fluid
                    bdry_globnum_fluid(ipol,abovecount,j)=iglob(ipt_glob_ab)
                    bdry_globnum_solid(ipol,abovecount,j)=iglob(ipt_glob_be)
-      
+
                    ! local numbering (i.e., refering to fluid or solid)
                    bdry_locnum_above(ipol,abovecount,j)=iglob_fluid(ipt_flob_ab)
                    bdry_locnum_below(ipol,abovecount,j)=iglob_solid(ipt_slob_be)
-      
+
                    ! local numbering: (above or below)
                    bdry_locnum_solid(ipol,abovecount,j)=iglob_solid(ipt_slob_be)
                    bdry_locnum_fluid(ipol,abovecount,j)=iglob_fluid(ipt_flob_ab)
                 endif
-      
+
              enddo ! ipol
-      
+
              !================================================================
              ! END OF ARRAYS NEEDED BY THE SOLVER
              !================================================================
-      
-         else  
+
+         else
          ! I am below (only for output check)
             rdown=rmax_el(belem(ibelem,j))*router/1000.d0
             thetadown=thetacom(belem(ibelem,j))*180.d0/pi
             rup=rmin_el(belem(my_neighbour(ibelem,j),j))*router/1000.d0
             thetaup=thetacom(belem(my_neighbour(ibelem,j),j))*180.d0/pi
          endif
-      
+
          if (dump_mesh_info_files) write(131313,30)rup,rdown,thetaup,thetadown
-      
-         if ( ibelem /= my_neighbour(my_neighbour(ibelem,j),j) ) then 
+
+         if ( ibelem /= my_neighbour(my_neighbour(ibelem,j),j) ) then
            write(6,*)'ibelem different from my neighbour)',ibelem,j,nbelem(j)
            stop
-         endif   
-   
-      end do ! ibelem (boundary elements)
-  end do ! j (# boundaries)
-  
+         endif
+
+      enddo ! ibelem (boundary elements)
+  enddo ! j (# boundaries)
+
   close(131313)
   close(6565)
   close(6464)
   close(6465)
 
-  write(6,*)'Done with boundary neighbor search.'; call flush(6) 
+  write(6,*)'Done with boundary neighbor search.'; call flush(6)
 
 30 format(12(1pe12.5,2x))
 
@@ -827,15 +827,15 @@ subroutine belem_count_new(dmax, j, rbound)
   do ielem = 1, neltot
      ibd = 0
      do jpol = 0, npol, npol
-        do ipol = 0, npol, npol 
+        do ipol = 0, npol, npol
            s=sgll(ipol,jpol,ielem)
            z=zgll(ipol,jpol,ielem)
            call check_boundary(itest,s,z,dmax,rbound)
            ibd = max(itest,ibd)
-        end do
-     end do
+        enddo
+     enddo
      if (ibd == 1) nbelem(j) = nbelem(j) + 1
-  end do
+  enddo
   if (dump_mesh_info_screen) write(6,*)nbelem(j),'boundary elements for interface',j
 
 end subroutine belem_count_new
@@ -851,23 +851,23 @@ subroutine belem_list_new(dmax, j, rbound)
   real(kind=dp)   , intent(in)  :: dmax, rbound
   integer                       :: ibd, ielem, ipol, jpol, itest, icount
   real(kind=dp)                 :: s, z
-  
-  icount = 0 
+
+  icount = 0
   do ielem = 1, neltot
      ibd = 0
      do jpol = 0, npol, npol
-        do ipol = 0, npol, npol 
+        do ipol = 0, npol, npol
            s=sgll(ipol,jpol,ielem)
            z=zgll(ipol,jpol,ielem)
            call check_boundary(itest,s,z,dmax,rbound)
            ibd = max(itest,ibd)
-        end do
-     end do
+        enddo
+     enddo
      if (ibd == 1) then
         icount = icount + 1
         belem(icount,j) = ielem
-     end if
-  end do
+     endif
+  enddo
 end subroutine belem_list_new
 !-----------------------------------------------------------------------------------------
 
@@ -878,7 +878,7 @@ subroutine check_boundary(itest, s, z, dmax, rbound)
   real(kind=dp)   , intent(in) :: s,z,dmax,rbound
 
   itest = 0
-  
+
   if (dabs(dsqrt(s**2+z**2)-rbound)<dmax) itest = 1
 
 end subroutine check_boundary

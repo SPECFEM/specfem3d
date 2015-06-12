@@ -1,11 +1,11 @@
   module reading_inputs
-    
-    
+
+
     contains
- 
+
       subroutine read_inputs(isim)
 
-      
+
         use global_parameters
         use rotation_matrix
         real(kind=CUSTOM_REAL) srclon,srclat,srccolat
@@ -13,16 +13,16 @@
         real(kind=CUSTOM_REAL) x,y,z
         integer i,isim
         integer ispec,igll,jgll,kgll,iface,ilayer,updown
-        
 
-        open(10,file='../expand_2D_3D.par') 
+
+        open(10,file='../expand_2D_3D.par')
         read(10,'(a)') input_point_file
         read(10,'(a)') input_point_file_cart
         read(10,*) nbproc
         read(10,*) lat_src,lon_src
         read(10,*) lat_mesh,lon_mesh
         close(10)
-       
+
 
         !! hardcoded the input file name
         input_veloc_name(1)='velocityfiel_us'
@@ -53,12 +53,12 @@
         read(10,*) ntime
         close(10)
 
-        srclon = lon_src * pi / 180.   
-        srccolat =  (90. - lat_src) * pi / 180. 
+        srclon = lon_src * pi / 180.
+        srccolat =  (90. - lat_src) * pi / 180.
         call def_rot_matrix(srccolat,srclon,rot_mat,trans_rot_mat)
 
-        meshlon = lon_mesh * pi / 180.   
-        meshcolat =  (90. - lat_mesh) * pi / 180. 
+        meshlon = lon_mesh * pi / 180.
+        meshcolat =  (90. - lat_mesh) * pi / 180.
         call def_rot_matrix_DG(meshcolat,meshlon,rot_mat_mesh,trans_rot_mat_mesh)
 
         !! permutation matrix
@@ -95,28 +95,28 @@
         stress_rec=0.
         data_rec=0.
         allocate(f1(nbrec),f2(nbrec),phi(nbrec))
-       
+
         do i=1,nbrec !! radius, latitude, longitude
-           read(10,*) reciever_geogr(1,i),reciever_geogr(2,i),reciever_geogr(3,i) 
+           read(10,*) reciever_geogr(1,i),reciever_geogr(2,i),reciever_geogr(3,i)
            read(11,*) x,y,z,ispec,igll,jgll,kgll,iface,ilayer,updown
            if (kgll==5) then
               up(i) = .false.
            else
-              up(i) = .true. 
-           end if
+              up(i) = .true.
+           endif
            reciever_sph(1,i) = reciever_geogr(1,i)*1000.
            reciever_sph(2,i) = (90. - reciever_geogr(2,i)) * pi / 180.  ! Read latitudes instead of colatitudes
            reciever_sph(3,i) = reciever_geogr(3,i)  * pi / 180.
-       
+
            call rotate_box(reciever_sph(1,i), reciever_sph(2,i), reciever_sph(3,i),trans_rot_mat)
 
            reciever_cyl(1,i) = reciever_sph(1,i)  * sin( reciever_sph(2,i))
            reciever_cyl(2,i) = reciever_sph(3,i)
            reciever_cyl(3,i) = reciever_sph(1,i)  * cos( reciever_sph(2,i))
 
-           phi(i) = reciever_cyl(2,i) 
-        end do
-    
+           phi(i) = reciever_cyl(2,i)
+        enddo
+
         close(10)
         close(11)
 
@@ -151,35 +151,35 @@
            read(i_param_post, fmt='(a256)', iostat=ioerr) line
            if (ioerr < 0) exit
            if (len(trim(line)) < 1 .or. line(1:1) == '#') cycle
-           
-           read(line,*) keyword, keyvalue 
+
+           read(line,*) keyword, keyvalue
            select case(trim(keyword))
            case('SIMULATION_TYPE')
               if (keyvalue == 'single') then
                  nsim = 1
                  allocate(simdir(nsim))
                  simdir(1) = "./"
-              elseif (keyvalue == 'moment') then
+              else if (keyvalue == 'moment') then
                  nsim = 4
                  allocate(simdir(nsim))
                  simdir(1) = "MZZ/"
                  simdir(2) = "MXX_P_MYY/"
                  simdir(3) = "MXZ_MYZ/"
                  simdir(4) = "MXY_MXX_M_MYY/"
-              elseif (keyvalue == 'force') then
+              else if (keyvalue == 'force') then
                  write(6,*) 'postprocessing for "force" simulation needs work!'
                  stop 2
               endif
            end select
-        end do
+        enddo
         nsim_to_send=nsim
         !open(10,file=trim(working_axisem_dir)//trim(simdir(1))//'nb_rec_to_read.par')
         !read(10,*) ntime
         !close(10)
 
         close(i_param_post)
-       
-        
+
+
         tshift = 0.
 
         allocate(bkgrndmodel(nsim), stf_type(nsim))
@@ -191,7 +191,7 @@
         allocate(ibeg(nsim), iend(nsim), srccolat_tmp(nsim), srclon_tmp(nsim), src_depth_tmp(nsim))
         allocate(shift_fact_tmp(nsim))
         allocate(ishift_deltat(nsim), ishift_seisdt(nsim), ishift_straindt(nsim))
-        
+
         do isim = 1,nsim
            open(unit=99,file=trim(simdir(isim))//'/simulation.info')
            read(99,*) bkgrndmodel(isim)
@@ -220,12 +220,12 @@
            read(99,*) ishift_deltat(isim)
            read(99,*) ishift_seisdt(isim)
            read(99,*) ishift_straindt(isim)
-           read(99,*) 
+           read(99,*)
            read(99,*)
            read(99,*) use_netcdf
            close(99)
 
-        end do
+        enddo
 
         dtt= dt_strain(1)
 

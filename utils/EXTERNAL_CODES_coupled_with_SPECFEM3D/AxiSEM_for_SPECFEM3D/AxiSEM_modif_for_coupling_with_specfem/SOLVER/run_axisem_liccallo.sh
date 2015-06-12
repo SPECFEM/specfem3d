@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 #OAR -l /nodes=2,walltime=3:00:00
 #OAR -n simu_2_nodes
 #OAR -p gpu='NO' AND ibpool='FDR'

@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -23,13 +23,13 @@
   module analytic_spheroid_mapping
 !==================================
 !
-!	08/02/2002: This module contains the 
+! 08/02/2002: This module contains the
 ! machinery necessary to describe analytically
 ! the transformation of the reference element
-! into its deformed image in the spheroidal 
-! enveloppe. 
-! 
-  use global_parameters 
+! into its deformed image in the spheroidal
+! enveloppe.
+!
+  use global_parameters
   implicit none
   public :: map_spheroid,comp_partial_deriv_spheroid
   private
@@ -39,16 +39,16 @@
 !dk map_spheroid------------------------------------------------------
 real(kind=dp)    function map_spheroid(xi,eta,crd_nodes,idir)
 !
-!	We are working in polar coordinates here: theta
-! is the latitude. 
+! We are working in polar coordinates here: theta
+! is the latitude.
 !
   real(kind=dp)    :: xi, eta
   real(kind=dp)   , dimension(8,2),intent(in) :: crd_nodes
   integer :: idir
 
   real(kind=dp)    :: abot,bbot,atop,btop
-  real(kind=dp)    :: thetabarbot,dthetabot 
-  real(kind=dp)    :: thetabartop,dthetatop 
+  real(kind=dp)    :: thetabarbot,dthetabot
+  real(kind=dp)    :: thetabartop,dthetatop
   real(kind=dp)    :: sbot,zbot,stop,ztop
   real(kind=dp)    :: sbar,ds,slope,intersect
 
@@ -65,24 +65,24 @@ real(kind=dp)    function map_spheroid(xi,eta,crd_nodes,idir)
 
 !  write(61,*)
 ! write(61,*)'ds,sbar:',ds,sbar
- 
+
   if (idir == 1) then
 !     write(61,*)'Direction 1!'
      map_spheroid = sbar+ds*eta*half
 
-  elseif (idir == 2) then
+  else if (idir == 2) then
 !     write(61,*)'Direction 2!'
      if (dabs(ds)>smallval_dble) then
 !        write(61,*)'abs > smallval... intersect and slope'
-         intersect = (zbot*stop-ztop*sbot)/ds   
+         intersect = (zbot*stop-ztop*sbot)/ds
          slope = (ztop-zbot)/ds
-         map_spheroid = slope*(sbar+half*ds*eta)+intersect 
+         map_spheroid = slope*(sbar+half*ds*eta)+intersect
      else
          map_spheroid = half*(zbot+ztop)+eta*(ztop-zbot)*half
-     end if
+     endif
 !     write(61,*)'stop,sbot:',stop,sbot
 !     write(61,*)'ztop,zbot:',ztop,zbot
-  end if
+  endif
 !  write(61,*)'map_spheroid',map_spheroid
 !write(61,*)''
 
@@ -121,9 +121,9 @@ end function map_spheroid
 
   dsbardxi = half*(dsbotdxi+dstopdxi)
   ddsdxi = (dstopdxi-dsbotdxi)
- 
+
   dzbardxi = half*(dzbotdxi+dztopdxi)
-  ddzdxi = (dztopdxi-dzbotdxi) 
+  ddzdxi = (dztopdxi-dzbotdxi)
   sxieta = sbar+ds*eta*half
 
 !--------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -140,14 +140,14 @@ end function map_spheroid
                        +zbot*dstopdxi-ztop*dsbotdxi)*ds &
                       -ddsdxi*(zbot*stop-ztop*sbot))/ds**2
      dzdxi = (dz/ds)*dsdxi+ sxieta*dslopedxi + dintersectdxi
-     dzdeta = (dz/ds)*dsdeta  
+     dzdeta = (dz/ds)*dsdeta
 !--------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>
   else
 !--------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>
      dzdxi = zero
     dzdeta = half*dz
 !--------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-  end if
+  endif
 
   end subroutine comp_partial_deriv_spheroid
 !--------------------------------------------------------------
@@ -157,7 +157,7 @@ end function map_spheroid
 
   real(kind=dp)   , intent(out) :: s,z
   real(kind=dp)   , intent(in) :: xi, a, b, thetabar,dtheta
-  
+
   s = a*dcos(thetabar+xi*half*dtheta)
   z = b*dsin(thetabar+xi*half*dtheta)
 
@@ -168,11 +168,11 @@ end function map_spheroid
   subroutine compute_dsdxi_dzdxi(dsdxi,dzdxi,xi,a,b,thetabar,dtheta)
 
   real(kind=dp)   , intent(out) :: dsdxi,dzdxi
-  real(kind=dp)   , intent(in) :: xi,a,b,thetabar,dtheta 
+  real(kind=dp)   , intent(in) :: xi,a,b,thetabar,dtheta
 
   dsdxi =-a*half*dtheta*dsin(thetabar+xi*half*dtheta)
-  dzdxi = b*half*dtheta*dcos(thetabar+xi*half*dtheta)  
- 
+  dzdxi = b*half*dtheta*dcos(thetabar+xi*half*dtheta)
+
   end subroutine compute_dsdxi_dzdxi
 !-------------------------------------------------
 !
@@ -186,7 +186,7 @@ end function map_spheroid
   real(kind=dp)   ,intent(out) :: thetabartop,dthetatop
   real(kind=dp)    :: s1,z1,s3,z3,s5,z5,s7,z7
   real(kind=dp)    :: theta1,theta3,theta5,theta7
-!  
+!
   s1 = crd_nodes(1,1) ; z1 = crd_nodes(1,2)
   s3 = crd_nodes(3,1) ; z3 = crd_nodes(3,2)
   s5 = crd_nodes(5,1) ; z5 = crd_nodes(5,2)
@@ -194,11 +194,11 @@ end function map_spheroid
 !
   call compute_ab(abot,bbot,s1,z1,s3,z3)
   call compute_theta(theta1,s1,z1,abot,bbot)
-  call compute_theta(theta3,s3,z3,abot,bbot) 
+  call compute_theta(theta3,s3,z3,abot,bbot)
 !
   call compute_ab(atop,btop,s7,z7,s5,z5)
-  call compute_theta(theta5,s5,z5,atop,btop) 
-  call compute_theta(theta7,s7,z7,atop,btop) 
+  call compute_theta(theta5,s5,z5,atop,btop)
+  call compute_theta(theta7,s7,z7,atop,btop)
 !
   thetabarbot = half*(theta1+theta3)
   dthetabot = theta3-theta1
@@ -215,7 +215,7 @@ end function map_spheroid
   real(kind=dp)   , intent(in) :: s1,z1,s2,z2
 !
   a = dsqrt(dabs((s2**2*z1**2-z2**2*s1**2)/(z1**2-z2**2)))
-  b = dsqrt(dabs((z1**2*s2**2-z2**2*s1**2)/(s2**2-s1**2))) 
+  b = dsqrt(dabs((z1**2*s2**2-z2**2*s1**2)/(s2**2-s1**2)))
   end subroutine compute_ab
 !---------------------------------------------------
 
@@ -239,7 +239,7 @@ subroutine compute_theta(theta,s,z,a,b)
   else
      if (z>zero) theta=half*pi2
      if (z<zero) theta=-half*pi2
-  end if
+  endif
 !
 end subroutine compute_theta
 

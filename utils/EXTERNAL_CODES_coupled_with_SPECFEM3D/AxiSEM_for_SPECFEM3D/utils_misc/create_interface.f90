@@ -10,29 +10,29 @@
    real xc,yc,zc
    integer i,j,k
 
-   real, parameter :: TwoPi=6.28318530718 
+   real, parameter :: TwoPi=6.28318530718
 
    write(*,*) ' Parameter file name  '
    write(*,*) ' following format :'
-   write(*,*) 
+   write(*,*)
    write(*,*) ' nx ny       !: (integer) number of nodes in x and y direction (m)'
    write(*,*) ' dx dy       !: (real) grid spacing in x and y direction (m)'
    write(*,*) ' xmin, ymin  !: (real) coordinate of the first point (m)'
    write(*,*) ' code        !: (character(len=3)) type of topo '
-   write(*,*) 
+   write(*,*)
    write(*,*) '    if code=fla  '
    write(*,*) ' z           !: (real) depth of flat topo '
-   write(*,*) 
+   write(*,*)
    write(*,*) '    if code=gau  '
    write(*,*) ' z           !: (real) depth ref of topo '
    write(*,*) ' xi, yi'
    write(*,*) '  Ampl, extx, exty'
-   write(*,*) 
+   write(*,*)
    write(*,*) '    if code=cos  '
    write(*,*) ' z           !: (real) depth ref of topo '
-   write(*,*) '  length, phase ' 
+   write(*,*) '  length, phase '
    write(*,*) '  Ampl'
-   write(*,*) 
+   write(*,*)
    write(*,*) ' give Parameter file name ? '
 
    read(*,'(a)') par_file
@@ -44,25 +44,25 @@
    read(10,'(a3)') code
 
    if (code=='fla') then
-   
+
       read(10,*) z
 
-   elseif (code=='gau') then
+   else if (code=='gau') then
       read(10,*) z
       read(10,*) xi,yi
       read(10,*) Ampl,extx,exty
-   
+
    else if (code=='cos') then
       read(10,*) z
       read(10,*) length, phase
       read(10,*) Ampl
-      
-   else 
+
+   else
 
       write(*,*) 'interf not implemented :', code
       stop
 
-   end if
+   endif
 
    close(10)
 
@@ -77,38 +77,38 @@
          yc = yc + dy
          xc = xmin - dx
          do i = 1, nx
-            k =  k + 1 
+            k =  k + 1
             xc = xc + dx
             write(10,*) xc,yc,zc
-         end do
-      end do
-      
+         enddo
+      enddo
+
    case('gau')
       yc = ymin - dy
       do j = 1, ny
          yc = yc + dy
          xc = xmin - dx
          do i = 1, nx
-            k =  k + 1 
+            k =  k + 1
             xc = xc + dx
             zc =  z + Ampl* exp( -0.5 * ((xc-xi)/extx)**2 - 0.5 * ((yc-yi)/exty)**2  )
             write(10,*) xc,yc,zc
-         end do
-      end do 
-      
+         enddo
+      enddo
+
    case ('cos')
       yc = ymin - dy
       do j = 1, ny
          yc = yc + dy
          xc = xmin - dx
          do i = 1, nx
-            k =  k + 1 
+            k =  k + 1
             xc = xc + dx
             zc = z + Ampl* cos(xc * TwoPI / length  + phase)
             write(10,*) xc,yc,zc
-         end do
-      end do
-      
+         enddo
+      enddo
+
    end select
 
    close(10)

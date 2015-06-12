@@ -8,26 +8,26 @@ def_precomp_terms.f90
 parameters.F90
 time_evol_wave.F90
 
-file added : 
+file added :
 coupling_mod.f90
 
 
-  short description of modification: 
+  short description of modification:
 
 main.f90:
  add read_boundary_coordinates calling routine and finalize_coupling. In order
- to read and write parameters for the coupling stuff. 
+ to read and write parameters for the coupling stuff.
 
  data_io.f90 :
-   add logical flag : coupling 
- 
+   add logical flag : coupling
+
  seismograms.f90 :
    add test when define dumping files, in the coupluing case we use an other way to
    dump outputs files in disk.
 
  def_precomp_terms.f90 :
    add arrays to store the physical properties of the model. Thoses arrays
-   will use when commuting stress from strain. 
+   will use when commuting stress from strain.
 
 parameters.F90 :
   hardcoded dump_type='coupling' and coupling=.true. to  be changed in next
@@ -43,5 +43,5 @@ time_evol_wave.F90 :
   a new file in AxiSEM code
 
 TO DO : for now tthe choice to run axisem in coupling mode is hardcoded, we
-must change it and leave the choice in input parameter. 
+must change it and leave the choice in input parameter.
 

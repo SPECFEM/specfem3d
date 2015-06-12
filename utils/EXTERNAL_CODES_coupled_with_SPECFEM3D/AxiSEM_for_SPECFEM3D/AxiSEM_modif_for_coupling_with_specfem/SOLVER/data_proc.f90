@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -26,12 +26,12 @@ module data_proc
 !
 
   implicit none
-  public 
+  public
 
   integer          :: nproc              !< Number of total processors
   integer          :: mynum              !< Local processor label, from 0 to nproc-1
   character(len=4) :: appnproc, appmynum !< processor-identifying file extension
-  logical          :: lpr                !< last processor logical flag, for write stdout 
+  logical          :: lpr                !< last processor logical flag, for write stdout
   character(len=8) :: procstrg           !< String containing mynum to include in writes
 
 !=======================

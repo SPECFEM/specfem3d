@@ -37,7 +37,7 @@ program re_format_outputs_files
   integer*8 iirec
   integer*8 icomp, nbproc0,ntime_interp
   integer ntime_to_store,it,iti0
-  integer nb_rec_by_proc,nb_remain_proc,irecmin,irecmax 
+  integer nb_rec_by_proc,nb_remain_proc,irecmin,irecmax
   integer itnew,ntnew, nSpecfem_proc
   integer ilayer, updown,ispec,code_face
   integer itime_decimate, ntime_decimate,decimate_time
@@ -67,11 +67,11 @@ program re_format_outputs_files
   allocate(etiquette(nbproc))
   do irank=1,nbproc
      etiquette(irank)=10+irank
-  end do
-  
+  enddo
+
   write(tmp_file,'(a18,i4.4)') 'trace_orig_new.txt',myrank
   open(399,file=trim(tmp_file))
-  
+
   write(tmp_file,'(a18,i4.4)') 'trace_inte_new.txt',myrank
   open(499,file=trim(tmp_file))
 
@@ -81,23 +81,23 @@ program re_format_outputs_files
 
 !###################################################### SERIAL PORCESSING #############################################
 
-  if (myrank.eq.0) then
+  if (myrank==0) then
 
      !-----------------------------------  GENERAL INPUT ----------------------------------
 
-     open(10,file='../expand_2D_3D.par') 
+     open(10,file='../expand_2D_3D.par')
      read(10,'(a)') input_point_file      !! meshfem3D bounday points (geographic)
      read(10,'(a)') input_point_file_cart !! meshfem3D boundary points (cartessian)
-     read(10,*) nbproc0                   !! axisem mpi processes 
-     read(10,*) lat_src,lon_src           !! axisem source position 
-     read(10,*) lat_mesh,lon_mesh         !! mesh center position 
-     read(10,*) nsim                      !! AxiSEM simus 
+     read(10,*) nbproc0                   !! axisem mpi processes
+     read(10,*) lat_src,lon_src           !! axisem source position
+     read(10,*) lat_mesh,lon_mesh         !! mesh center position
+     read(10,*) nsim                      !! AxiSEM simus
      read(10,*) nSpecfem_proc             !! number of specfem procs
      read(10,'(a)') meshdirectory         !! mesfem3D results
      read(10,'(a)') LOCAL_PATH            !! specfem DATABASE PATH
      read(10,'(a)') TRACT_PATH
      close(10)
-     
+
      open(10,file=trim(input_point_file_cart))
      read(10,*) nb_point
 
@@ -113,14 +113,14 @@ program re_format_outputs_files
              inum_glob(irec),igll_glob(irec),jgll_glob(irec),kgll_glob(irec),&
              iboun_gll(irec),ilayer,updown
         indx_rec(igll_glob(irec),jgll_glob(irec),kgll_glob(irec),inum_glob(irec),iboun_gll(irec))=irec
-     end do
+     enddo
      close(10)
 
-    
-     open(10,file='reformat.par') 
+
+     open(10,file='reformat.par')
      read(10,*) frq_min
      read(10,*) tmin,tmax
-     close(10)  
+     close(10)
      dtt=1./frq_min
      !---------------------- lecture des tables de correspondances Specfem glob and loc ---------
 
@@ -149,31 +149,31 @@ program re_format_outputs_files
 
      do
         read(90,*,end=100) ispec,ispec2D,code_face
-        if (code_face.eq.1) flag_boundary_xmin(ispec2D)=ispec
-        if (code_face.eq.2) flag_boundary_xmax(ispec2D)=ispec
-        if (code_face.eq.3) flag_boundary_ymin(ispec2D)=ispec
-        if (code_face.eq.4) flag_boundary_ymax(ispec2D)=ispec
-        if (code_face.eq.5) flag_boundary_zmin(ispec2D)=ispec
+        if (code_face==1) flag_boundary_xmin(ispec2D)=ispec
+        if (code_face==2) flag_boundary_xmax(ispec2D)=ispec
+        if (code_face==3) flag_boundary_ymin(ispec2D)=ispec
+        if (code_face==4) flag_boundary_ymax(ispec2D)=ispec
+        if (code_face==5) flag_boundary_zmin(ispec2D)=ispec
         max_spec = max(max_spec,ispec)
-     end do
+     enddo
 100  close(90)
 
      allocate(IndSpec_face(max_spec,5))
      IndSpec_face(:,:) = 0
      open(90,file=trim(meshdirectory)//'/flags_boundary.txt')  ! table de correspondance ispec2D <-> ispec
 
-     do 
+     do
         read(90,*,end=101) ispec,ispec2D,code_face
         IndSpec_face(ispec,code_face)=ispec2D
-     end do
+     enddo
 101  close(90)
 
      open(90,file=trim(meshdirectory)//'/Numglob2loc_elmn.txt')
      max_spec_local=0
-     do 
+     do
         read(90,*,end=102) ispec_glob,ispec,iproc
         max_spec_local=max(max_spec_local,ispec)
-     end do
+     enddo
 102  close(90)
 
      allocate(IndLoc2Glob(max_spec_local,nbproc))
@@ -181,12 +181,12 @@ program re_format_outputs_files
      open(90,file=trim(meshdirectory)//'/Numglob2loc_elmn.txt')
      max_spec_local=0
 
-     do 
+     do
         read(90,*,end=103) ispec_glob,ispec,iproc
         IndLoc2Glob(ispec,iproc+1) = ispec_glob
-     end do
+     enddo
 103  close(90)
-    
+
      allocate(num_boundary_by_proc(nSpecfem_proc))
      max_mun_abs_boundary_faces=0
      do iproc = 1, nSpecfem_proc
@@ -200,7 +200,7 @@ program re_format_outputs_files
         num_boundary_by_proc(iproc)=num_abs_boundary_faces
         max_mun_abs_boundary_faces=max(num_abs_boundary_faces,max_mun_abs_boundary_faces)
         close(27)
-     end do
+     enddo
 
      allocate(ind_rec2face(2,nb_point, nSpecfem_proc))
      allocate(ind_face2rec(max_mun_abs_boundary_faces,25,nSpecfem_proc))
@@ -218,7 +218,7 @@ program re_format_outputs_files
         allocate(abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces))
         allocate(abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces))
         allocate(abs_boundary_normal(3,NGLLSQUARE,num_abs_boundary_faces))
-     
+
         read(27) abs_boundary_ispec
         read(27) abs_boundary_ijk
         read(27) abs_boundary_jacobian2Dw
@@ -228,8 +228,8 @@ program re_format_outputs_files
         nrec_by_proc(iproc)=0
 
         do iface = 1, num_abs_boundary_faces
-           
-           
+
+
            ispec = abs_boundary_ispec(iface)
            ispec_glob=IndLoc2Glob(ispec,iproc)
 
@@ -243,7 +243,7 @@ program re_format_outputs_files
            if (code_face==0) then
               write(*,*) 'wrong face '
               stop
-           end if
+           endif
            do igll = 1, NGLLSQUARE
               i = abs_boundary_ijk(1,igll,iface)
               j = abs_boundary_ijk(2,igll,iface)
@@ -255,35 +255,35 @@ program re_format_outputs_files
                  write(*,*) 'ispec ', ispec
                  !irec=1
                  stop
-              end if
+              endif
 
-              !           bijection 
+              !           bijection
               !!  (irec,iproc) -> (iface,igll)
               !!  (iface,igll) -> (irec,iproc)
               !
-              
-              ind_rec2face(1,irec,iproc)=iface  !! un même irec peut appartenir a 1 , 2 ou 3 faces 
-              ind_rec2face(2,irec,iproc)=igll   !! la il peut y avoir un pb ??? on peut se tromper de iface 
+
+              ind_rec2face(1,irec,iproc)=iface  !! un meme irec peut appartenir a 1 , 2 ou 3 faces
+              ind_rec2face(2,irec,iproc)=igll   !! la il peut y avoir un pb ??? on peut se tromper de iface
               ind_face2rec(iface,igll,iproc)=irec
               nrec_by_proc(iproc) =  nrec_by_proc(iproc) + 1
- 
-           end do
-           
-           
-        end do
+
+           enddo
+
+
+        enddo
         deallocate(abs_boundary_ispec)
         deallocate(abs_boundary_ijk)
         deallocate(abs_boundary_jacobian2Dw)
         deallocate(abs_boundary_normal)
-     
-     end do
-     
-    
+
+     enddo
+
+
      ! -----  AxiSEM stuff ---------------------------------------------------------------------
 
 
      allocate(working_axisem_dir(nsim))
-     
+
      if (nsim == 1) then
         working_axisem_dir(1)="./"
      else
@@ -291,8 +291,8 @@ program re_format_outputs_files
         working_axisem_dir(2) = "MXX_P_MYY/"
         working_axisem_dir(3) = "MXZ_MYZ/"
         working_axisem_dir(4) = "MXY_MXX_M_MYY/"
-     end if
-     
+     endif
+
      !open(10,file=trim( working_axisem_dir(1))//'Data/strain_info.dat0000')
      !read(10,*) nb_dump_samples
      !read(10,*) dt,i
@@ -300,11 +300,11 @@ program re_format_outputs_files
      open(10,file='info_for_specefm.txt')
      read(10,*) dt
      close(10)
-  
+
      output_veloc_name(1)='velocityoutp_u1'
      output_veloc_name(2)='velocityoutp_u2'
      output_veloc_name(3)='velocityoutp_u3'
-     
+
      output_stress_name(1)='stress_Sg11_out'
      output_stress_name(2)='stress_Sg22_out'
      output_stress_name(3)='stress_Sg33_out'
@@ -316,7 +316,7 @@ program re_format_outputs_files
      allocate(ivx(nsim),ivy(nsim),ivz(nsim))
      allocate(isxx(nsim),isyy(nsim),iszz(nsim))
      allocate(isxy(nsim),isxz(nsim),isyz(nsim))
-     
+
 
 
      do isim=1,nsim
@@ -329,8 +329,8 @@ program re_format_outputs_files
         isxy(isim)=next_iunit(iunit)
         isxz(isim)=next_iunit(iunit)
         isyz(isim)=next_iunit(iunit)
-        
-  
+
+
         write(fichier,'(a6,a15)') '/Data/',output_veloc_name(1)
         open(ivx(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
         write(fichier,'(a6,a15)') '/Data/',output_veloc_name(2)
@@ -349,8 +349,8 @@ program re_format_outputs_files
         open(isxz(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
         write(fichier,'(a6,a15)') '/Data/',output_stress_name(6)
         open(isyz(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
-     end do
-  
+     enddo
+
      do isim=1,nsim
         read(ivx(isim))  nbrec,ntime
         read(ivy(isim))  nbrec,ntime
@@ -361,17 +361,17 @@ program re_format_outputs_files
         read(isxy(isim)) nbrec,ntime
         read(isxz(isim)) nbrec,ntime
         read(isyz(isim)) nbrec,ntime
-     end do
-     
- 
+     enddo
+
+
      write(*,*) ' time step ', dtt
      write(*,*) 'READING OK',ntime,nbrec
 
-  end if  !! if (myrank==0)
+  endif  !! if (myrank==0)
 
 !###########################################  END SERIAL PROCESS ##################
 
-  
+
 
   call mpi_bcast(ntime,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
   call mpi_bcast(nbrec,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
@@ -397,7 +397,7 @@ program re_format_outputs_files
   call mpi_bcast(LOCAL_PATH,250,MPI_CHARACTER,0,MPI_COMM_WORLD,ierr)
   call mpi_bcast(TRACT_PATH,250,MPI_CHARACTER,0,MPI_COMM_WORLD,ierr)
 
-  ! not usefull ?? 
+  ! not usefull ??
   if (myrank > 0) then
       allocate(working_axisem_dir(nsim))
 
@@ -408,28 +408,28 @@ program re_format_outputs_files
         working_axisem_dir(2) = "MXX_P_MYY/"
         working_axisem_dir(3) = "MXZ_MYZ/"
         working_axisem_dir(4) = "MXY_MXX_M_MYY/"
-     end if
-  end if
-  
-  itmin=tmin / dtt 
+     endif
+  endif
+
+  itmin=tmin / dtt
   itmax=tmax / dtt
-  
- 
-  IF (MOD(itmax - itmin + 1,2) > 0) ITMIN=ITMIN+1 
+
+
+  IF (MOD(itmax - itmin + 1,2) > 0) ITMIN=ITMIN+1
   ntime_interp = itmax - itmin + 1
 
   write(*,*) ' dt ', dt
   write(*,*) ' itmin ',itmin
-  write(*,*) ' itmax ', itmax 
+  write(*,*) ' itmax ', itmax
   write(*,*) ' nb ',itmax - itmin + 1
   write(*,*) ' ntime_interp ',ntime_interp
- 
- 
- 
+
+
+
   allocate(data_rec(9,ntime,nrec_by_proc(myrank+1)))
   allocate(data_rec0(1,nbrec,9),data_tmp(nbrec,9))
   allocate(data_tmp_to_send(9,nbrec))
- 
+
   call create_name_database(prname,myrank,LOCAL_PATH)
   write(*,*) prname(1:len_trim(prname))//'absorb_dsm'
   open(27,file=prname(1:len_trim(prname))//'absorb_dsm',status='old',&
@@ -440,21 +440,21 @@ program re_format_outputs_files
   allocate(abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces))
   allocate(abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces))
   allocate(abs_boundary_normal(3,NGLLSQUARE,num_abs_boundary_faces))
-  
+
   read(27) abs_boundary_ispec
   read(27) abs_boundary_ijk
   read(27) abs_boundary_jacobian2Dw
   read(27) abs_boundary_normal
   close(27)
-  
- 
+
+
 ! ################################ reading and scatter the data  ################################
 
   allocate(irec_glob(NGLLSQUARE*MAX_MUN_ABS_BOUNDARY_FACES,nSpecfem_proc))
   allocate(vr(3,nrec_by_proc(myrank+1)),tr(3, nrec_by_proc(myrank+1)))
 
   do itime=1,ntime
-    
+
     if (myrank==0) then
        if (mod(itime,100)==0) write(*,*) 'reading ', itime, ' / ',ntime
        data_rec0=0.
@@ -470,19 +470,19 @@ program re_format_outputs_files
          read(isxy(isim)) data_tmp(:,7)
          read(isxz(isim)) data_tmp(:,8)
          read(isyz(isim)) data_tmp(:,9)
-         
+
          data_rec0(1,:,:)= data_rec0(1,:,:)+data_tmp(:,:)
 
-       end do
+       enddo
        !write(*,*) itime,data_rec0(1,100,3)
-    end if
+    endif
 
-   
-    !!scatter the data into the rigth MPI partition  
+
+    !!scatter the data into the rigth MPI partition
     do icomp =1, 9
-          
+
         if (myrank == 0) then
-           
+
            irank=0
            kk=0
            do iface=1,num_boundary_by_proc(irank+1)
@@ -493,13 +493,13 @@ program re_format_outputs_files
                  if( irec == 0) then
                     write(*,*) ' irec ', irec,iface,igll,irank+1
                     stop
-                 end if
+                 endif
                  data_rec(icomp,itime,kk)=data_rec0(1,irec,icomp)
-              end do
-           end do
-           
-           !if (icomp==3) write(*,*) itime,data_rec(icomp,itime,100),data_rec0(1,100,icomp) 
- 
+              enddo
+           enddo
+
+           !if (icomp==3) write(*,*) itime,data_rec(icomp,itime,100),data_rec0(1,100,icomp)
+
           do irank=1,nbproc-1
              kk=0
              do iface=1,num_boundary_by_proc(irank+1)
@@ -510,20 +510,20 @@ program re_format_outputs_files
                    if( irec == 0) then
                       write(*,*) ' irec ', irec,iface,igll,irank+1
                       stop
-                   end if
-                   data_tmp_to_send(icomp,kk) = data_rec0(1,irec,icomp) 
-                end do
-             end do
+                   endif
+                   data_tmp_to_send(icomp,kk) = data_rec0(1,irec,icomp)
+                enddo
+             enddo
              call mpi_send(data_tmp_to_send(icomp,1:kk),nrec_by_proc(irank+1),MPI_REAL,irank,etq,MPI_COMM_WORLD,ierr)
-          end do
+          enddo
 
         else
            call mpi_recv(data_rec(icomp,itime,:),nrec_by_proc(myrank+1),MPI_REAL,0,etq,MPI_COMM_WORLD,statut,ierr)
-!!$           if (myrank==1) write(*,*) itime,data_rec(3,itime,100) 
-        end if
-        
-     end do  !! icomp
-  end do     !! itime
+!!$           if (myrank==1) write(*,*) itime,data_rec(3,itime,100)
+        endif
+
+     enddo  !! icomp
+  enddo     !! itime
   call mpi_bcast(irec_glob,NGLLSQUARE*MAX_MUN_ABS_BOUNDARY_FACES*nSpecfem_proc,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
 !!!
 
@@ -539,8 +539,8 @@ program re_format_outputs_files
         close(isxy(isim))
         close(isxz(isim))
         close(isyz(isim))
-     end do
-  end if
+     enddo
+  endif
 
 !################################################################# MPI INTERPOLATION ############################
 
@@ -560,8 +560,8 @@ program re_format_outputs_files
   if (nrec_to_store >= 100) then
     do i=1,ntime
        write(399,*) (i-1)*dt,data_rec(3,i,100)
-    end do
-  end if
+    enddo
+  endif
 
   close(399)
 
@@ -569,11 +569,11 @@ program re_format_outputs_files
 
   if (myrank==0) write(*,*) 'time step ', dtt,ntnew
 
-  tt=-dtt  
+  tt=-dtt
   do itnew=1,ntnew
      !write(*,*) itnew,ntnew
      tt=tt+dtt
-     current_time_step = tmin + (itnew-1)*dtt !+ 0.5*dtt 
+     current_time_step = tmin + (itnew-1)*dtt !+ 0.5*dtt
      !current_time_step_half = current_time_step - 0.5*dtt
      sinc_tab_veloc(:)=0.d0
      buffer_to_store(:,:)=0.d0
@@ -581,7 +581,7 @@ program re_format_outputs_files
      call compute_sinc(sinc_tab_veloc,current_time_step,ntime,dt)
      !call compute_sinc(sinc_tab_stress,current_time_step,ntime,dt)
      if (myrank == 0 .and. mod(itnew,100)==0) write(*,*) myrank, tt,itnew,ntnew
-    
+
      do irec0=irecmin, irecmax
         do is = 1, ntime
            buffer_to_store(1,irec0)=buffer_to_store(1,irec0) + sinc_tab_veloc(is) * dble(data_rec(1,is,irec0))
@@ -593,14 +593,14 @@ program re_format_outputs_files
            buffer_to_store(7,irec0)=buffer_to_store(7,irec0) + sinc_tab_veloc(is) * dble(data_rec(7,is,irec0))
            buffer_to_store(8,irec0)=buffer_to_store(8,irec0) + sinc_tab_veloc(is) * dble(data_rec(8,is,irec0))
            buffer_to_store(9,irec0)=buffer_to_store(9,irec0) + sinc_tab_veloc(is) * dble(data_rec(9,is,irec0))
-        end do
+        enddo
 
         !call interpol_sinc(data_rec(:,irec0,1),buffer_to_store(irec0,1),current_time_step,ntime,dt,sinc_tab_veloc)
         !call interpol_sinc(data_rec(:,irec0,2),buffer_to_store(irec0,2),current_time_step,ntime,dt,sinc_tab_veloc)
         !call interpol_sinc(data_rec(:,irec0,3),buffer_to_store(irec0,3),current_time_step,ntime,dt,sinc_tab_veloc)
 
         if (irec0==100) write(499,*)  current_time_step,buffer_to_store(3,irec0)
-        
+
         !call interpol_sinc(data_rec(:,irec0,4),buffer_to_store(irec0,4),current_time_step,ntime,dt,sinc_tab_stress!)
         !call interpol_sinc(data_rec(:,irec0,5),buffer_to_store(irec0,5),current_time_step,ntime,dt,sinc_tab_stress)
         !call interpol_sinc(data_rec(:,irec0,6),buffer_to_store(irec0,6),current_time_step,ntime,dt,sinc_tab_stress)
@@ -609,12 +609,12 @@ program re_format_outputs_files
         !call interpol_sinc(data_rec(:,irec0,9),buffer_to_store(irec0,9),current_time_step,ntime,dt,sinc_tab_stress)
 
         ! compute traction
-        
+
         irec =irec_glob(irec0,myrank+1)
         if (irec == 0 ) then
            write(*,*) myrank , irec0, irec
            stop
-        end if
+        endif
         iface=ind_rec2face(1,irec,myrank+1)
         igll =ind_rec2face(2,irec,myrank+1)
 
@@ -624,8 +624,8 @@ program re_format_outputs_files
 
         !!
         if (myrank==0) then
-           
-        end if
+
+        endif
         !!
 
         vr(1,irec0) = buffer_to_store(1,irec0)
@@ -635,18 +635,18 @@ program re_format_outputs_files
         tr(2,irec0) = buffer_to_store(7,irec0)*nvx + buffer_to_store(5,irec0) * nvy + buffer_to_store(9,irec0) * nvz
         tr(3,irec0) = buffer_to_store(8,irec0)*nvx + buffer_to_store(9,irec0) * nvy + buffer_to_store(6,irec0) * nvz
 
-     end do
+     enddo
 
-    
+
      write(27) vr,tr
 
 
-  end do
+  enddo
 
   close(27)
   close(499)
-  !####################################### ENDING ############################ 
- 
+  !####################################### ENDING ############################
+
 
   write(*,*) 'nbrec ', myrank, irecmax-irecmin+1, ntime_interp
   call MPI_Barrier(MPI_COMM_WORLD,ierr)
@@ -668,7 +668,7 @@ subroutine interpolate(padi,zero_pad,dat_int,dat,n00,n0,nt,n,dt)
   double precision dat_int(nt),value_debb
   real dt
   real, parameter :: pi=3.141592653589793
-  
+
   dat_int=0.
   zero_pad=0.
   padi=0.
@@ -685,14 +685,14 @@ subroutine interpolate(padi,zero_pad,dat_int,dat,n00,n0,nt,n,dt)
   dat_int(:)=real(zero_pad(1:nt)) /real(m)
 
    !do i=1,nt
-   !write(499,*) dat_int(i) 
-   !end  do
+   !write(499,*) dat_int(i)
+   !enddo
    !do i=1,n
    ! write(399,*) dat(i)
-   !end do
+   !enddo
   !! debug
   !dat_int(:)=value_debb
-  ! divide by m works but I don't know why. 
+  ! divide by m works but I don't know why.
   ! * 2.*pi * (dt)
   !write(*,*) pi, dt , 2.*pi / (dt)
 
@@ -780,7 +780,7 @@ end subroutine interpolate
      do i=1,n
         t_sinc = (dble(tt) - dble(i-1)*dble(dt))/dble(dt)
         sinc_tab(i) =  mysinc(t_sinc)
-     end do
+     enddo
 
   end subroutine compute_sinc
 !========================================================================================
@@ -791,15 +791,15 @@ end subroutine interpolate
      real f(n),tt,dt
      double precision fi,mysinc,t_sinc,sinc_tab(n)
 
-     fi=0.d0 
+     fi=0.d0
      !write(399,*) ' ------ '
-     
+
      do i=1,n
         !t_sinc = (dble(tt) - dble(i-1)*dble(dt))/dble(dt)
-        
+
         fi = fi + dble(f(i)) * sinc_tab(i) !* mysinc(t_sinc)
 
-     end do
+     enddo
      !write(399,*) tt,fi,f(1)
 
    end subroutine interpol_sinc
@@ -811,42 +811,42 @@ end subroutine interpolate
 !!$   ! alpha : percentage of signal to taper
 !!$   ! tuk   : tapered window
 !!$   function tuckeywin(N,alpha) result(tuk)
-!!$     
+!!$
 !!$    integer(kind=8), intent(in)   :: N
 !!$    real(kind=4), intent(in)      :: alpha
-!!$    
+!!$
 !!$    integer(kind=8) :: i
 !!$    real(kind=4), parameter :: pipi=3.141592653589793
 !!$    real(kind=4), dimension(N) :: tuk
-!!$    
+!!$
 !!$    !*** Central part
 !!$    tuk(:) = 1.
-!!$    
+!!$
 !!$    !*** Left part
 !!$    do i=0,int(0.5*alpha*(N-1))
 !!$       tuk(i+1) = 0.5*(1+cos(pipi*(2.*i/(alpha*(N-1.))-1.)))
-!!$    end do
-!!$    
+!!$    enddo
+!!$
 !!$    !*** Right part
 !!$    do i=int((N-1)*(1-alpha/2.)),N-1
 !!$       tuk(i+1) = 0.5*(1+cos(pipi*(2.*i/(alpha*(N-1.))-(2./alpha)+1.)))
-!!$    end do
-!!$    
+!!$    enddo
+!!$
 !!$  end function tuckeywin
   !--------------------------------------------------------------------------------
   !================================================================================
   ! Sinc functions
   real(kind=8) function mysinc(x)
-    
+
     real(kind=8) :: x
     real(kind=8), parameter :: pipi=3.141592653589793
-    
-    if (abs(x) >= 1d-13) then 
+
+    if (abs(x) >= 1d-13) then
        mysinc = sin(pipi*x)/(pipi*x)
     else
        mysinc = 1.d0
-    end if
-    
+    endif
+
   end function mysinc
   !-----------------------------
 !=====================================================================
@@ -856,7 +856,7 @@ subroutine create_name_database(prname,iproc,LOCAL_PATH)
 ! create the name of the database for the mesher and the solver
 
   implicit none
-  
+
   integer iproc
 
 ! name of the database file
@@ -872,4 +872,4 @@ subroutine create_name_database(prname,iproc,LOCAL_PATH)
   prname = clean_LOCAL_PATH(1:len_trim(clean_LOCAL_PATH)) // procname
 
 end subroutine create_name_database
- 
+

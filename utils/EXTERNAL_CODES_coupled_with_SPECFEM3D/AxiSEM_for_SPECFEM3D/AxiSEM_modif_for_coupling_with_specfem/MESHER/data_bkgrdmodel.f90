@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -38,7 +38,7 @@ module data_bkgrdmodel
   real(kind=dp)              :: period, courant
   real(kind=dp)              :: dt
   integer                    :: nc_init, nthetaslices, nradialslices
-  
+
   ! the sole quantities to be created in create_subregions
   ! that are needed by the rest of the mesher
   integer                    :: nz_glob, ns_glob, nc_glob

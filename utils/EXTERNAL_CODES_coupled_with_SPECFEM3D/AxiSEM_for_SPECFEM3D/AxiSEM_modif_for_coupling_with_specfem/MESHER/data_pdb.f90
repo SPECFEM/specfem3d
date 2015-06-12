@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -40,7 +40,7 @@ module data_pdb
   integer, dimension(:), allocatable        :: nbelong
   integer, dimension(:), allocatable        :: nprocb
   integer, dimension(:,:), allocatable      :: lprocb
-  integer, dimension(:), allocatable        :: el2proc 
+  integer, dimension(:), allocatable        :: el2proc
 
   ! Glocal message passing...redundant eventually!
   integer, dimension(:), allocatable        :: sizerecvp, sizesendp

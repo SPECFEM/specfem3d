@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -45,7 +45,7 @@ public
 
 ! discrete diracs
  real(kind=realkind)              :: sampling_per_a,discrete_dirac_halfwidth
- integer                          :: period_vs_discrete_halfwidth,it_src_shift 
+ integer                          :: period_vs_discrete_halfwidth,it_src_shift
  real(kind=realkind)              :: dt_src_shift,shift_fact_discrete_dirac
  character(len=6)                 :: discrete_choice
  logical                          :: discrete_dirac

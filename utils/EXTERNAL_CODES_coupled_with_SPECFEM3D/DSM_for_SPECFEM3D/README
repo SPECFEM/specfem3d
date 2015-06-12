@@ -37,4 +37,4 @@ VM VM 26.06.2013----------------------------------------------------------------
 
 1/ Fixed bugs : I merged CCRT and IDRIS version of DSM that I used for the real DATA from PYROPE 
 2/ I added a new tool in Part4 : Interf_SPECFEM3D_DSM. This is the interface that read the DSM output and create SPECFEM3D inputs for simulation run.
-3/ I added a HYBRID SPECFEM3D verion. We will (Sébastien and I) this version to develop all tools for the full wave form inversion and we will commit them in the official SPECFEM version once we checked all inversion process. 
+3/ I added a HYBRID SPECFEM3D verion. We will (Sebastien and I) this version to develop all tools for the full wave form inversion and we will commit them in the official SPECFEM version once we checked all inversion process. 

@@ -19,41 +19,41 @@ program pick_sismo
 
      ! read z component
      m=0
-     do 
+     do
         read(10,*,end=99) x,y
         m=m+1
-     end do
+     enddo
 99   continue
      close(10)
 
      allocate(sig(m),stalta(m),t(m))
 
-     open(10,file=trim(filename))     
+     open(10,file=trim(filename))
      do i=1,m
         read(10,*) t(i), sig(i)
-     end do
+     enddo
      close(10)
-     
-         
+
+
      call substalta(sig, nsta, nlta, stalta,m)
      !! TO DO new way to pick call this subroutine !call pick(stalta,ntime,ipick,thres)
      do i=1,m
         if (stalta(i) >= thres) then
            ind = i;
            exit
-        end if
-     end do
+        endif
+     enddo
      open(10,file='stalta.txt')
      do i=1,m
         write(10,*) stalta(i)
-     end do
+     enddo
      close(10)
-  
-    ! write pick 
+
+    ! write pick
      write(20,*) trim(filename), t(ind), t(ind+di), ind, ind+di
-    
+
      deallocate(sig,stalta,t)
-  end do
+  enddo
 
   199 continue
   close(20)
@@ -75,7 +75,7 @@ end program pick_sismo
 !!$    real(kind=4), dimension(:), allocatable :: sta, lta, pad_sta, pad_lta, tmp1, tmp2
 !!$
 !!$    !m = size(sig)
-!!$    
+!!$
 !!$    nsta_1 = nsta - 1
 !!$    nlta_1 = nlta - 1
 !!$    !write(*,*) m,nsta_1,nlta_1
@@ -89,21 +89,21 @@ end program pick_sismo
 !!$    lta = 0.
 !!$    pad_sta = 0.
 !!$    pad_lta = 1.
-!!$    
+!!$
 !!$    !*** compute the short time average (STA)
 !!$    do i=1,nsta
 !!$       tmp1(1:nsta_1) = pad_sta(:)
 !!$       tmp1(nsta_1+1:m) = sig(i:m - nsta_1 + i-1)**2
 !!$       sta = sta + tmp1
-!!$    end do
+!!$    enddo
 !!$    sta = sta / nsta
-!!$    
+!!$
 !!$    !*** compute the long time average (LTA)
 !!$    do i =1,nlta
 !!$       tmp2(1:nlta_1) = pad_lta(:)
 !!$       tmp2(nlta_1+1:m) = sig(i:m - nlta_1 + i-1)**2
 !!$       lta = lta + tmp2
-!!$    end do
+!!$    enddo
 !!$    lta = lta / nlta
 !!$
 !!$    sta(1:nsta_1) = 0.
@@ -113,8 +113,8 @@ end program pick_sismo
 !!$       if (lta(i) < 1e-10) then
 !!$          lta(i) = 1.
 !!$          sta(i) = 0.
-!!$       end if
-!!$    end do
+!!$       endif
+!!$    enddo
 !!$    stalta = sta / lta
 !!$
 !!$  end subroutine substalta
@@ -123,11 +123,11 @@ end program pick_sismo
     !use global_parameters
     integer i,n
     real(kind=4) stalta(n),thres
-    
+
     do i=1,n
        if (stalta(i) >= thres) exit
-    end do
-    
+    enddo
+
   end subroutine pick
 
 !================================================================================
@@ -167,14 +167,14 @@ end program pick_sismo
     !   tmp1(1:nsta_1) = pad_sta(:)
     !   tmp1(nsta_1+1:m) = sig(i:m - nsta_1 + i-1)**2
     !   sta = sta + tmp1
-    !end do
+    !enddo
 
-    
+
     do i=nsta,m
        do j=i-nsta_1,i
          sta(i) = sta(i) + sig(j)**2
-       end do
-    end do
+       enddo
+    enddo
     sta = sta / nsta
 
     !*** compute the long time average (LTA)
@@ -182,12 +182,12 @@ end program pick_sismo
     !   tmp2(1:nlta_1) = pad_lta(:)
     !   tmp2(nlta_1+1:m) = sig(i:m - nlta_1 + i-1)**2
     !   lta = lta + tmp2
-    !end do   
+    !enddo
     do i=nlta,m
       do j=i-nlta_1,i
           lta(i)=lta(i)+sig(j)**2
-      end do
-    end do
+      enddo
+    enddo
     lta = lta / nlta
 
     sta(1:nsta_1) = 0.
@@ -197,9 +197,9 @@ end program pick_sismo
        if (lta(i) < 1e-10) then
           lta(i) = 1.
           sta(i) = 0.
-       end if
-    end do
+       endif
+    enddo
     stalta = sta / lta
     !stalta = lta
   end subroutine substalta
-                             
+

@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -20,13 +20,13 @@
 !
 
 !========================
-!> Routines for general matrix-matrix and matrix-vector multiplication. Called a 
+!> Routines for general matrix-matrix and matrix-vector multiplication. Called a
 !! bazillion times, presumably fast.
 module unrolled_loops
 !========================
 
   use global_parameters, only: realkind
-  
+
   implicit none
   public
 
@@ -41,7 +41,7 @@ pure subroutine mxm(a,b,c)
 
   use data_mesh, only: npol
   use global_parameters, only: realkind
-  
+
   real(kind=realkind), intent(in)  :: a(0: ,0: ),b(0: ,0: ) !< Input matrices
   real(kind=realkind), intent(out) :: c(0: ,0: )            !< Result
   integer                          :: i, j
@@ -49,8 +49,8 @@ pure subroutine mxm(a,b,c)
   do j = 0, npol
      do i = 0, npol
         c(i,j) = sum(a(i,:) * b(:,j))
-     end do
-  end do 
+     enddo
+  enddo
 
 end subroutine mxm
 !=============================================================================
@@ -59,7 +59,7 @@ end subroutine mxm
 !> Multiplies vector a leftwise to matrix b to have vector c.
 !! Size is fixed to npol x npol
 pure subroutine vxm(a,b,c)
- 
+
   use data_mesh, only: npol
   use global_parameters, only: realkind
 
@@ -70,7 +70,7 @@ pure subroutine vxm(a,b,c)
 
   do j = 0, npol
      c(j) = sum(a * b(:,j))
-  end do 
+  enddo
 
 end subroutine vxm
 !=============================================================================
@@ -87,14 +87,14 @@ pure subroutine mxm_cg4_sparse_a(a,b,c)
    c = 0
 
    do j = 0, 4
-     c(1,j) = & 
+     c(1,j) = &
         + a(1) * b(1,j) &
-        + a(2) * b(3,j) 
+        + a(2) * b(3,j)
 
-     c(3,j) = & 
+     c(3,j) = &
         + a(3) * b(1,j) &
-        + a(4) * b(3,j) 
-   end do
+        + a(4) * b(3,j)
+   enddo
 
 end subroutine mxm_cg4_sparse_a
 !=============================================================================
@@ -111,18 +111,18 @@ pure subroutine mxm_cg4_sparse_b(a,b,c)
    c = 0
 
    do i = 0, 4
-     c(i,1) = & 
+     c(i,1) = &
         + a(i,1) * b(1) &
-        + a(i,3) * b(3) 
+        + a(i,3) * b(3)
 
-     c(i,3) = & 
+     c(i,3) = &
         + a(i,1) * b(2) &
-        + a(i,3) * b(4) 
-   end do
+        + a(i,3) * b(4)
+   enddo
 
 end subroutine mxm_cg4_sparse_b
 !=============================================================================
- 
+
 !-------------------------------------------------------------
 pure subroutine mxm_cg4_sparse_c(a,b,c)
 
@@ -130,28 +130,28 @@ pure subroutine mxm_cg4_sparse_c(a,b,c)
   real(kind=realkind), intent(in)  :: a(0:,0:), b(0:,0:)
   real(kind=realkind), intent(out) :: c(1:4)
 
-  c(1) = & 
+  c(1) = &
      + a(1,0) * b(0,1) &
      + a(1,1) * b(1,1) &
      + a(1,2) * b(2,1) &
      + a(1,3) * b(3,1) &
      + a(1,4) * b(4,1)
 
-  c(2) = & 
+  c(2) = &
      + a(1,0) * b(0,3) &
      + a(1,1) * b(1,3) &
      + a(1,2) * b(2,3) &
      + a(1,3) * b(3,3) &
      + a(1,4) * b(4,3)
 
-  c(3) = & 
+  c(3) = &
      + a(3,0) * b(0,1) &
      + a(3,1) * b(1,1) &
      + a(3,2) * b(2,1) &
      + a(3,3) * b(3,1) &
      + a(3,4) * b(4,1)
 
-  c(4) = & 
+  c(4) = &
      + a(3,0) * b(0,3) &
      + a(3,1) * b(1,3) &
      + a(3,2) * b(2,3) &
@@ -167,26 +167,26 @@ end subroutine mxm_cg4_sparse_c
 pure subroutine mxm_4(a,b,c)
 
   use global_parameters, only: realkind
- 
+
   real(kind=realkind), intent(in)  :: a(0:4,0:4),b(0:4,0:4) !< Input matrices
   real(kind=realkind), intent(out) :: c(0:4,0:4)            !< Result
   integer                          :: i, j
 
   do i = 0, 4
      c(i,0) = sum(a(i,:) * b(:,0))
-  end do
+  enddo
   do i = 0, 4
      c(i,1) = sum(a(i,:) * b(:,1))
-  end do
+  enddo
   do i = 0, 4
      c(i,2) = sum(a(i,:) * b(:,2))
-  end do
-  do i = 0, 4 
+  enddo
+  do i = 0, 4
      c(i,3) = sum(a(i,:) * b(:,3))
-  end do
+  enddo
   do i = 0, 4
      c(i,4) = sum(a(i,:) * b(:,4))
-  end do
+  enddo
 
 end subroutine mxm_4
 !=============================================================================
@@ -195,7 +195,7 @@ end subroutine mxm_4
 !> Multiplies vector a leftwise to matrix b to have vector c.
 !! Size is fixed to npol x npol
 pure subroutine vxm_4(a,b,c)
- 
+
   use global_parameters, only: realkind
 
   real(kind=realkind), intent(in)  :: a(0:4)         !< Vector a
@@ -205,7 +205,7 @@ pure subroutine vxm_4(a,b,c)
 
   do j = 0, 4
      c(j) = sum(a * b(:,j))
-  end do 
+  enddo
 
 end subroutine vxm_4
 !=============================================================================

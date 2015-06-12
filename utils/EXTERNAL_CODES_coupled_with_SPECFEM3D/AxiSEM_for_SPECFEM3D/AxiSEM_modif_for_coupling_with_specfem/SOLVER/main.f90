@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -20,7 +20,7 @@
 !
 
 !===================
-program axisem 
+program axisem
 !===================
 
   use data_proc,      only : nproc, mynum, appnproc, appmynum, lpr, procstrg
@@ -30,13 +30,13 @@ program axisem
   use data_mesh,      only : do_mesh_tests
   use parameters,     only : open_local_output_file, readin_parameters, &
                              read_inparam_basic_verbosity
-  use get_mesh,       only : read_db 
+  use get_mesh,       only : read_db
   use def_grid,       only : init_grid, mesh_tests, deallocate_preloop_arrays
   use time_evol_wave, only : prepare_waves, time_loop
   use commun,         only : pinit, pend, barrier
   use meshes_io,      only : finish_xdmf_xml
   use data_io,        only : verbose
-  
+
   !!!!! MODIFS TEST COUPLING (SB)
   use coupling_mod
   !!!!! END MODIFS
@@ -50,14 +50,14 @@ program axisem
 
   call define_io_appendix(appmynum,mynum)
   call define_io_appendix(appnproc,nproc)
-  
+
   !call get_mesh_params !Get very basic mesh params, including pol. order, needed later
-  call open_local_output_file ! parameters, open file for processor-specific screen output 
+  call open_local_output_file ! parameters, open file for processor-specific screen output
   call start_clock !clocks
 
   if (lpr .and. verbose >= 1) write(6,*) 'MAIN: Reading parameters..................................'
   call readin_parameters ! parameters
-  
+
   if (lpr .and. verbose >= 1) write(6,*) 'MAIN: Reading mesh database...............................'
   call read_db  ! get_mesh
 
@@ -67,9 +67,9 @@ program axisem
   if (do_mesh_tests) then
      if (lpr .and. verbose >= 1) write(6,*) 'MAIN: Testing the mesh....................................'
      call mesh_tests ! def_grid
-  endif 
+  endif
 
-  if (num_simul .ne. 1) then
+  if (num_simul /= 1) then
      write(6,*) 'ERROR: implementation of multiple simulations within one run'
      write(6,*) '       not finished yet.'
      write(6,*) '       For now set number of simulations in inparam to 1, splitting '
@@ -95,23 +95,23 @@ program axisem
      ! specifically those from data_mesh_preloop and data_pointwise
      if (lpr .and. verbose >= 1) write(6,*) 'MAIN: Deallocating arrays not needed in the time loop.....'
      call deallocate_preloop_arrays ! def_grid
- 
+
      if (use_netcdf) then
         if (lpr .and. verbose >= 1) write(6,*) 'MAIN: Finish preparation of NetCDF file...................'
         call nc_finish_prepare
      endif
-    
+
      call barrier ! Just making sure we're all ready to rupture...
-     
+
      if (lpr .and. verbose >= 1) write(6,*) 'MAIN: Starting wave propagation...........................'
      call time_loop ! time_evol_wave
   enddo
 
   if (use_netcdf) then
      if (lpr .and. verbose >= 1) write(6,*) 'MAIN: Flush and close all netcdf files ...................'
-     call nc_end_output ! Dump receiver seismograms to finalize netcdf output 
-  end if
-  
+     call nc_end_output ! Dump receiver seismograms to finalize netcdf output
+  endif
+
   if (dump_xdmf) then
      if (lpr .and. verbose >= 1) write(6,*)'MAIN: Finishing xdmf xml file...'
      call finish_xdmf_xml() ! meshes_io
@@ -122,7 +122,7 @@ program axisem
   call pend ! commun
 
   !! VM VM coupling
-  if (lpr) call finalize_coupling 
+  if (lpr) call finalize_coupling
   !! VM VM
 
   if(lpr) write(6,*) '=========PROGRAM axisem FINISHED============='
@@ -145,13 +145,13 @@ subroutine start_clock
   use data_proc,  only : lpr, mynum
   use clocks_mod, only : clock_id, clocks_init
   use data_io,    only : verbose
-  
+
   implicit none
-  
+
   character(len=8)  :: mydate
   character(len=10) :: mytime
 
-  call date_and_time(mydate,mytime) 
+  call date_and_time(mydate,mytime)
   if (lpr) write(6,11) mydate(5:6), mydate(7:8), mydate(1:4), mytime(1:2), mytime(3:4)
 
 11 format('     Simulation started on ', A2,'/',A2,'/',A4,' at ', A2,'h ',A2,'min',/)
@@ -179,7 +179,7 @@ end subroutine start_clock
 !=============================================================================
 
 !-----------------------------------------------------------------------------
-subroutine end_clock 
+subroutine end_clock
   !
   ! Wapper routine to end timing and display clock informations.
   !
@@ -206,15 +206,15 @@ end subroutine end_clock
 !-----------------------------------------------------------------------------
 subroutine define_io_appendix(app,iproc)
   !
-  ! Defines the 4 digit character string appended to any 
-  ! data or io file related to process myid. 
+  ! Defines the 4 digit character string appended to any
+  ! data or io file related to process myid.
   !
   !-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
   implicit none
   integer, intent(in)           :: iproc
   character(len=4), intent(out) :: app
-  
+
   write(app,"(I4.4)") iproc
 
 end subroutine define_io_appendix

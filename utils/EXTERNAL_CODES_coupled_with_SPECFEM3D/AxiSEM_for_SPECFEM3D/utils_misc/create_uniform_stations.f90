@@ -12,13 +12,13 @@ program create_uniform_sations
 
    write(*,*) ' Parameter file name  '
    write(*,*) ' following format :'
-   write(*,*) 
+   write(*,*)
    write(*,*) ' nx ny       !: (integer) number of stations in x and y direction (m)'
    write(*,*) ' dx dy       !: (real) stations spacing in x and y direction (m)'
    write(*,*) ' xmin, ymin  !: (real) coordinate of the first station (m)'
    write(*,*) ' z           !: (real) depth of all staions (m) '
    write(*,*) ' code        !: (character(len=1)) first letter for station name '
-   write(*,*) 
+   write(*,*)
    write(*,*) ' give Parameter file name ? '
 
    read(*,'(a)') par_file
@@ -40,12 +40,12 @@ program create_uniform_sations
      yc = yc + dy
      xc = xmin - dx
      do i = 1, nx
-      k =  k + 1 
+      k =  k + 1
       xc = xc + dx
        write(name_sta,'(a,i4.4)') code,k
-       write(10,'(a5,4f20.5)') name_sta,xc,yc,zc,zc        
-     end do
-   end do
+       write(10,'(a5,4f20.5)') name_sta,xc,yc,zc,zc
+     enddo
+   enddo
    close(10)
 
 end program create_uniform_sations

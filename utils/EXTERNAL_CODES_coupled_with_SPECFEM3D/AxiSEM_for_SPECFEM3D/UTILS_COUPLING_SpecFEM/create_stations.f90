@@ -8,25 +8,25 @@ program create_station
   character(len=100) line
   character(len=5) name_sta
   character(len=1) code
-  
+
   double precision x,y,z,z_bot
   double precision lat,long,radius
   integer k
 
   code='S'
-  
+
   deg2rad = 3.141592653589793d0/180.d0
   open(10, file='MESH/ParFileMeshChunk')
-  
+
   read(10,'(a)') line
   read(10,*) ANGULAR_WIDTH_XI_RAD, ANGULAR_WIDTH_ETA_RAD
   read(10,'(a)') line
   read(10,*) lon_center_chunk, lat_center_chunk, chunk_azi
   read(10,'(a)') line
   read(10,*) chunk_depth
-  
+
   close(10)
-  
+
   ANGULAR_WIDTH_XI_RAD  = deg2rad * ANGULAR_WIDTH_XI_RAD
   ANGULAR_WIDTH_ETA_RAD = deg2rad * ANGULAR_WIDTH_ETA_RAD
   chunk_depth           = chunk_depth * 1000.d0
@@ -40,48 +40,48 @@ program create_station
 !!$
 !!$  write(*,*)
 !!$
-!!$  
+!!$
 !!$  write(*,*) rotation_inv_matrix(1,:)
 !!$  write(*,*) rotation_inv_matrix(2,:)
 !!$  write(*,*) rotation_inv_matrix(3,:)
 !!$
 !!$  write(*,*)
 !!$
-!!$  lat=0.d0 
-!!$  long=60.d0 
+!!$  lat=0.d0
+!!$  long=60.d0
 !!$  radius=6371.d0
   read(*,*) z_bot  !! to be found in file MESH/model_1D.in
   open(10,file='stations_to_convert.txt')
   open(21,file='station_converted.txt')
   k=0
-  do 
+  do
      k=k+1
      write(name_sta,'(a,i4.4)') code,k
      read(10,*,end=99) radius,lat,long
      call geogr2cart(x,y,z,rotation_inv_matrix,long,lat,radius)
      write(21,'(a5,1x,a2,1x,4f20.5)') name_sta,'SY',y,x,-(z-z_bot),-(z-z_bot) !! because specfem is reading y and x actually
-  end do
+  enddo
 99 close(10)
   close(21)
-  !lat=1.d0 
-  !long=61.d0 
+  !lat=1.d0
+  !long=61.d0
   !radius=6371.d0
-  
+
   !call geogr2cart(x,y,z,rotation_inv_matrix,long,lat,radius)
   !write(*,*) x,y,z
-  
+
 
 end program create_station
 
 
 
 !=======================================================================================================
-!!! 
+!!!
 !!
   subroutine cart2geogr(xstore,ystore,zstore,rotation_matrix,longitud,latitud,radius)
 !
     implicit none
-    
+
     integer NDIM,NGLLX,NGLLY,NGLLZ
     double precision xstore,ystore,zstore
     double precision longitud,latitud,radius
@@ -91,45 +91,45 @@ end program create_station
     integer i,j,k
 
     deg2rad=3.141592653589793d0/180.d0
-   
+
     NDIM=3
-    
+
     vector_ori(1)=xstore
     vector_ori(2)=ystore
     vector_ori(3)=zstore
-           
+
     do i = 1,NDIM  !
        vector_rotated(i) = 0.d0
        do j = 1,NDIM
-        
+
           vector_rotated(i) = vector_rotated(i) + rotation_matrix(i,j)*vector_ori(j)
-          
+
        enddo
     enddo
 
     x=vector_rotated(1);y=vector_rotated(2);z=vector_rotated(3)
     rayon = dsqrt(vector_rotated(1)**2 + vector_rotated(2)**2 + vector_rotated(3)**2)
-             
+
     long=atan2(y,x)
     lati=asin(z/rayon)
-             
+
     longitud = long/deg2rad
-    latitud  = lati/deg2rad 
+    latitud  = lati/deg2rad
     radius   = rayon/1000.d0
 
-         
 
-    
+
+
   end subroutine cart2geogr
 
 
 !=======================================================================================================
-!!! 
+!!!
 !!
   subroutine geogr2cart(xstore,ystore,zstore,rotation_matrix,longitud,latitud,radius)
 !
     implicit none
-    
+
     integer NDIM
     double precision xstore,ystore,zstore
     double precision longitud,latitud,radius
@@ -144,20 +144,20 @@ end program create_station
     vector_ori(1)=1000.d0*radius*cos(deg2rad*longitud)*sin(deg2rad*(90.d0-latitud))
     vector_ori(2)=1000.d0*radius*sin(deg2rad*longitud)*sin(deg2rad*(90.d0-latitud))
     vector_ori(3)=1000.d0*radius*cos(deg2rad*(90.d0-latitud))
-            
-    do i = 1,NDIM  
+
+    do i = 1,NDIM
        vector_rotated(i) = 0.d0
        do j = 1,NDIM
-         
+
           vector_rotated(i) = vector_rotated(i) + rotation_matrix(i,j)*vector_ori(j)
-          
+
        enddo
     enddo
 
     xstore=vector_rotated(1)
     ystore=vector_rotated(2)
     zstore=vector_rotated(3)
-       
+
   end subroutine geogr2cart
 
 

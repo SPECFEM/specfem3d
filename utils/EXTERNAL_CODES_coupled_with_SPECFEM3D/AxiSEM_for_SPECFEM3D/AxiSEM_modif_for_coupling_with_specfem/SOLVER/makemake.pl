@@ -1,7 +1,7 @@
 #! /usr/bin/perl
 #
 #    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-#                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
+#                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
 #
 #    This file is part of AxiSEM.
 #    It is distributed from the webpage <http://www.axisem.info>
@@ -21,13 +21,13 @@
 #
 #    Generate a Makefile from the sources in the current directory.  The source
 #    files may be in either C, FORTRAN 77, Fortran 90 or some combination of
-#    these languages.  
+#    these languages.
 #
 #    Original version written by Michael Wester <wester@math.unm.edu> February 16, 1995
 #    Cotopaxi (Consulting), Albuquerque, New Mexico
 #
-#    Modified by Martin van Driel, ETH Zürich and Simon Stähler, 
-#    LMU München to fit the needs of Axisem. The compiler version is
+#    Modified by Martin van Driel, ETH Zurich and Simon Stahler,
+#    LMU Munchen to fit the needs of Axisem. The compiler version is
 #    now set in the file ../make_axisem.macros
 
 open(MAKEFILE, "> Makefile");
@@ -91,7 +91,7 @@ print MAKEFILE "clean:\n";
 print MAKEFILE "\trm -f \$(PROG) \$(OBJS) *.M *.mod *.d *.il core \n\n";
 #
 # make utils (postprocessing and alike)
-# 
+#
 print MAKEFILE "utils:\n";
 print MAKEFILE "\tcd UTILS; make\n\n";
 #
@@ -262,7 +262,7 @@ sub MakeDependsf90 {
          #
          }
       }
-   
+
 print MAKEFILE "kdtree2.o:  Makefile ../make_axisem.macros\n";
 system("perl -ni -e 'print unless /^kdtree2.o: kdtree2.o/' Makefile ");
 

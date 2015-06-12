@@ -1,7 +1,7 @@
-  module  post_processing 
+  module  post_processing
 
-    contains 
-      
+    contains
+
       subroutine connect_points()
         use global_parameters
         use interp_mod
@@ -23,7 +23,7 @@
         IGRIDs(6)=2
         IGRIDs(7)=0
         IGRIDs(8)=0
-        
+
         IGRIDz(1)=0
         IGRIDz(2)=0
         IGRIDz(3)=0
@@ -32,7 +32,7 @@
         IGRIDz(6)=4
         IGRIDz(7)=4
         IGRIDz(8)=2
-        
+
         allocate(xi_rec(nbrec),eta_rec(nbrec))
         allocate(rec2elm(nbrec))
         allocate(ele_candidate(4,nbrec))
@@ -45,7 +45,7 @@
            scur=reciever_cyl(1,irec)
            zcur=reciever_cyl(3,irec)
            do iel = 1, NEL
-              
+
               ! element
               smin=1d40
               smax=-1d40
@@ -59,20 +59,20 @@
                  smax=max(smax, nodes_crd(inode,1))
                  zmin=min(zmin, nodes_crd(inode,2))
                  zmax=max(zmax, nodes_crd(inode,2))
-              end do
+              enddo
               if ( scur > smin-eps .and. scur < smax + eps .and. zcur > zmin-eps .and. zcur < zmax + eps) then
                  call find_xix_eta(nodes_crd,xi,eta,scur,zcur)
                  if (xi > -1.05 .and. xi < 1.05 .and. eta > -1.05 .and. eta < 1.05) then
                     ele_seen(irec) =  ele_seen(irec) + 1
-                    ele_candidate(ele_seen(irec),irec) = iel 
+                    ele_candidate(ele_seen(irec),irec) = iel
                     !!rec2elm(irec)=iel
                     !!xi_rec(irec)=xi
                     !!eta_rec(irec)=eta
                     !exit
-                 end if
-              end if
-           end do
-        end do
+                 endif
+              endif
+           enddo
+        enddo
 
         !---------------- choice of candidate points --------------
         do irec=1,nbrec
@@ -83,14 +83,14 @@
            z_axi=1.e30
            i_axi=-1
            nmax=ele_seen(irec)
-           if (nmax == 0) then 
+           if (nmax == 0) then
               write(*,*) 'pb with ', irec,reciever_cyl(1,irec),reciever_cyl(3,irec)
-             
-           end if
+
+           endif
            do iel=1,ele_seen(irec)
               z_axi(iel) = depth_ele(ele_candidate(iel,irec))
               i_axi(iel) = ele_candidate(iel,irec)
-           end do
+           enddo
 
            call sort_real_array(z_axi,i_axi)
 
@@ -98,7 +98,7 @@
               rec2elm(irec)=i_axi(nmax)
            else ! min value
               rec2elm(irec)=i_axi(1)
-           end if
+           endif
 
            iel = rec2elm(irec)
            do inode=1,NGNOD
@@ -109,13 +109,13 @@
               smax=max(smax, nodes_crd(inode,1))
               zmin=min(zmin, nodes_crd(inode,2))
               zmax=max(zmax, nodes_crd(inode,2))
-           end do
+           enddo
 
            call find_xix_eta(nodes_crd,xi,eta,scur,zcur)
            xi_rec(irec)=xi
            eta_rec(irec)=eta
 
-        end do
+        enddo
         call check_rec2elm
         ! END CONNECTION POINT <-> MESH ------------------------------------------------------
 
@@ -128,8 +128,8 @@
         do irec=1,nbrec
            if(rec2elm(irec)==-1) then
               forgot_point= forgot_point+1
-           end if
-        end do
+           endif
+        enddo
         if (forgot_point > 0) write(*,*) 'forgot ', forgot_point,' points'
       end subroutine check_rec2elm
 
@@ -142,26 +142,26 @@
         real(kind=CUSTOM_REAL) r(4),tmp
         integer i(4)
         integer ii,jj,itmp
-        
+
         do ii = 3, 1,-1
            do jj = 1 , ii
               if (r(jj) > r(jj+1)) then
                  tmp = r(jj)
                  r(jj)=r(jj+1)
                  r(jj+1) = tmp
-                 
+
                  itmp = i(jj)
                  i(jj)=i(jj+1)
                  i(jj+1)=itmp
-                 
-              end if
-           end do
-        end do
-        
+
+              endif
+           enddo
+        enddo
+
       end subroutine sort_real_array
-      
+
       subroutine interpol_field(ifield)
-        
+
         use global_parameters
         use interp_mod
         integer irec,iel,ifield
@@ -177,7 +177,7 @@
            iel=rec2elm(irec)
            field(:,:)=data_read(:,:,iel)
 
-           call interpole_field(xi,eta,field,interp_value) 
+           call interpole_field(xi,eta,field,interp_value)
 
            data_rec(irec,ifield)=interp_value
            !data_rec_temp(irec)=interp_value
@@ -189,15 +189,15 @@
            !   write(*,*) iel,xi,eta
            !   write(*,*) data_read(:,:,iel)
            !   write(*,*) interp_value
-           !   write(*,*)  
-           !end if
+           !   write(*,*)
+           !endif
            ! prefactors depending on source type
            !call compute_prefactor(f1,f2,phi,src_type(isim,1),src_type(isim,2))
-           
-           ! expand 2D wave field in 3D axisymetric field
-           
 
-        end do
+           ! expand 2D wave field in 3D axisymetric field
+
+
+        enddo
         !data_reduce(:)=0.
         !call mpi_reduce(data_rec_temp,data_reduce,)
         !data_rec(:,ifield)=data_deduce(:)
@@ -205,13 +205,13 @@
       end subroutine interpol_field
 
       subroutine interpol_stress(ifield)
-        
+
         use global_parameters
         use interp_mod
         integer irec,iel,ifield
         real(kind=CUSTOM_REAL) xi,eta,interp_value
         real(kind=CUSTOM_REAL) field(NGLLX,NGLLY)
-        
+
         stress_rec(:,ifield)=0.
         do irec = irecmin, irecmax
 
@@ -220,21 +220,21 @@
            iel=rec2elm(irec)
            field(:,:)=data_read(:,:,iel)
 
-           call interpole_field(xi,eta,field,interp_value) 
+           call interpole_field(xi,eta,field,interp_value)
 
            stress_rec(irec,ifield)=interp_value
 
            !write(*,*) interp_value
 
            !phi=reciever_cyl(3,irec)
-           
+
            ! prefactors depending on source type
            !call compute_prefactor(f1,f2,phi,src_type(isim,1),src_type(isim,2))
-           
-           ! expand 2D wave field in 3D axisymetric field
-           
 
-        end do
+           ! expand 2D wave field in 3D axisymetric field
+
+
+        enddo
         !* call mpi_reduce()
 
       end subroutine interpol_stress
@@ -258,22 +258,22 @@
               do irec=1,nbrec
                  f1(irec)=cos(phi(irec))
                  f2(irec)=-sin(phi(irec))
-              end do
+              enddo
            case ('thetaforce')
               do irec=1,nbrec
                  f1(irec)=cos(phi(irec))
                  f2(irec)=-sin(phi(irec))
-              end do
+              enddo
            case('mpr')
               do irec=1,nbrec
                  f1(irec)=sin(phi(irec))
                  f2(irec)=cos(phi(irec))
-              end do
+              enddo
            case('phiforce')
               do irec=1,nbrec
                  f1(irec)=sin(phi(irec))
                  f2(irec)=cos(phi(irec))
-              end do
+              enddo
            end select
 
         case('quadpole')
@@ -282,12 +282,12 @@
               do irec=1,nbrec
                  f1(irec)=cos(2.*phi(irec))
                  f2(irec)=-sin(2.*phi(irec))
-              end do
+              enddo
            case('mtp')
               do irec=1,nbrec
                  f1(irec)=sin(2*phi(irec))
                  f2(irec)=cos(2*phi(irec))
-              end do
+              enddo
            end select
 
         end select
@@ -305,7 +305,7 @@
            data_rec(irec,2)=f2(irec)*data_rec(irec,2)
            data_rec(irec,3)=f1(irec)*data_rec(irec,3)
            !if (irec==10) write(*,*) data_rec(irec,3)
-        end do
+        enddo
 
       end subroutine compute_3D_cyl
 
@@ -322,7 +322,7 @@
            stress_rec(irec,5)=f1(irec)*stress_rec(irec,5)
            stress_rec(irec,6)=f2(irec)*stress_rec(irec,6)
            !write(*,*) stress_rec(irec,:)
-        end do
+        enddo
 
       end subroutine compute_stress_3D_cyl
 
@@ -331,23 +331,23 @@
         use global_parameters
 
         integer irec,i,j,k
-        real(kind=SINGLE_REAL) tmp(6,6),tmp1(3,3),B(3,3),st(3,3) 
+        real(kind=SINGLE_REAL) tmp(6,6),tmp1(3,3),B(3,3),st(3,3)
 
         ! compute B*st*Bt
         do irec=irecmin,irecmax
-          
-           ! rotation matrix 
+
+           ! rotation matrix
            B(1,1)=  cos(phi(irec))
            B(1,2)= - sin(phi(irec))
-           B(1,3)= 0. 
+           B(1,3)= 0.
 
            B(2,1)=  sin(phi(irec))
            B(2,2)=  cos(phi(irec))
            B(2,3)=  0.
 
-           B(3,1)= 0. 
-           B(3,2)= 0. 
-           B(3,3)= 1. 
+           B(3,1)= 0.
+           B(3,2)= 0.
+           B(3,3)= 1.
            !write(*,*) '1 ', stress_rec(irec,:)
            !write(*,*) ' matrix ', B
            ! stress in cylindical coordinates
@@ -364,16 +364,16 @@
            st(3,3)=stress_rec(irec,3)
 
 
-          
+
            ! st*Bt
            tmp=0.
            do j=1,3
               do i=1,3
                  do k=1,3
                     tmp(i,j)=tmp(i,j)+st(i,k)*B(j,k)
-                 end do
-              end do
-           end do
+                 enddo
+              enddo
+           enddo
 
            ! B*st*Bt
            tmp1=0.
@@ -381,20 +381,20 @@
               do i=1,3
                  do k=1,3
                     tmp1(i,j)=tmp1(i,j)+B(i,k)*tmp(k,j)
-                 end do
-              end do
-           end do
-           
-           ! stress in cartesian coordinates 
+                 enddo
+              enddo
+           enddo
+
+           ! stress in cartesian coordinates
            stress_rec(irec,1)=tmp1(1,1)
            stress_rec(irec,2)=tmp1(2,2)
            stress_rec(irec,3)=tmp1(3,3)
-           stress_rec(irec,4)=tmp1(1,2) 
+           stress_rec(irec,4)=tmp1(1,2)
            stress_rec(irec,5)=tmp1(1,3)
            stress_rec(irec,6)=tmp1(2,3)
            !write(*,*) '2 ', stress_rec(irec,:)
-        end do
-        
+        enddo
+
       end subroutine rotate2cartesian_with_source_in_pole_stress
 
 !!$      subroutine rotate_back_source()
@@ -413,7 +413,7 @@
 !!$           data_rec(irec,2) = tmp2
 !!$           data_rec(irec,3) = tmp3
 !!$
-!!$        end do
+!!$        enddo
 !!$
 !!$
 !!$      end subroutine rotate_back_source
@@ -425,34 +425,34 @@
         real(kind=SINGLE_REAL) tmp(3),veloc(3)
 
         do irec=irecmin,irecmax
-           
+
            ! veloc in cylindical coordinates
            veloc(1)=data_rec(irec,1)
            veloc(2)=data_rec(irec,2)
            veloc(3)=data_rec(irec,3)
 
-          
+
            !
            ! R*veloc
-           tmp=0.  
+           tmp=0.
            do i=1,3
               do k=1,3
                  tmp(i)=tmp(i)+veloc(k)*rot_mat(i,k)
-              end do
-           end do
-          
+              enddo
+           enddo
+
            ! valocity in cartesian
            data_rec(irec,1)=tmp(1)
            data_rec(irec,2)=tmp(2)
            data_rec(irec,3)=tmp(3)
-          
 
-        end do
+
+        enddo
 
 
       end subroutine rotate_back_source
 
-      
+
 
      subroutine rotate_back_to_local_cart()
         use global_parameters
@@ -461,29 +461,29 @@
         real(kind=SINGLE_REAL) tmp(3),veloc(3)
 
         do irec=irecmin,irecmax
-           
+
            ! veloc in global coordinates
            veloc(1)=data_rec(irec,1)
            veloc(2)=data_rec(irec,2)
            veloc(3)=data_rec(irec,3)
 
-          
+
            !
            ! Rt*veloc
-           tmp=0.  
+           tmp=0.
            do i=1,3
               do k=1,3
-                 tmp(i)=tmp(i)+veloc(k)*trans_rot_mat_mesh(i,k)  
-              end do
-           end do
-          
+                 tmp(i)=tmp(i)+veloc(k)*trans_rot_mat_mesh(i,k)
+              enddo
+           enddo
+
            ! valocity in cartesian
            data_rec(irec,1)=tmp(1)
            data_rec(irec,2)=tmp(2)
            data_rec(irec,3)=tmp(3)
-          
 
-        end do
+
+        enddo
 
 
       end subroutine rotate_back_to_local_cart
@@ -496,7 +496,7 @@
         real(kind=SINGLE_REAL) tmp(3,3),tmp1(3,3),st(3,3)
 
         do irec=irecmin,irecmax
-           
+
             ! stress in cylindical coordinates
            st(1,1)=stress_rec(irec,1)
            st(1,2)=stress_rec(irec,4)
@@ -517,9 +517,9 @@
               do i=1,3
                  do k=1,3
                     tmp(i,j)=tmp(i,j)+st(i,k)*trans_rot_mat(k,j)
-                 end do
-              end do
-           end do
+                 enddo
+              enddo
+           enddo
 
            ! R*(st*Rt) =R*tmp
            tmp1=0.
@@ -527,19 +527,19 @@
               do i=1,3
                  do k=1,3
                     tmp1(i,j)=tmp1(i,j)+tmp(k,j)*rot_mat(i,k)
-                 end do
-              end do
-           end do
-       
+                 enddo
+              enddo
+           enddo
+
            ! stress in cartesian
            stress_rec(irec,1)=tmp1(1,1)
            stress_rec(irec,2)=tmp1(2,2)
            stress_rec(irec,3)=tmp1(3,3)
-           stress_rec(irec,4)=tmp1(1,2) 
+           stress_rec(irec,4)=tmp1(1,2)
            stress_rec(irec,5)=tmp1(1,3)
            stress_rec(irec,6)=tmp1(2,3)
 
-        end do
+        enddo
 
 
       end subroutine rotate_back_source_stress
@@ -551,7 +551,7 @@
         real(kind=SINGLE_REAL) tmp(3,3),tmp1(3,3),st(3,3)
 
         do irec=irecmin,irecmax
-           
+
             ! stress in cylindical coordinates
            st(1,1)=stress_rec(irec,1)
            st(1,2)=stress_rec(irec,4)
@@ -572,29 +572,29 @@
               do i=1,3
                  do k=1,3
                     tmp(i,j)=tmp(i,j)+st(i,k)*rot_mat_mesh(k,j)
-                 end do
-              end do
-           end do
+                 enddo
+              enddo
+           enddo
 
            ! Rt*st*R
            tmp1=0.
            do j=1,3
               do i=1,3
                  do k=1,3
-                    tmp1(i,j)=tmp1(i,j)+trans_rot_mat_mesh(i,k)*tmp(k,j) 
-                 end do
-              end do
-           end do
-       
+                    tmp1(i,j)=tmp1(i,j)+trans_rot_mat_mesh(i,k)*tmp(k,j)
+                 enddo
+              enddo
+           enddo
+
            ! stress in cartesian
            stress_rec(irec,1)=tmp1(1,1)
            stress_rec(irec,2)=tmp1(2,2)
            stress_rec(irec,3)=tmp1(3,3)
-           stress_rec(irec,4)=tmp1(1,2) 
+           stress_rec(irec,4)=tmp1(1,2)
            stress_rec(irec,5)=tmp1(1,3)
            stress_rec(irec,6)=tmp1(2,3)
 
-        end do
+        enddo
 
 
       end subroutine rotate_back_to_local_cart_stress
@@ -606,43 +606,43 @@
         real(kind=SINGLE_REAL) tmp(3),B(3,3),veloc(3)
 
         do irec=irecmin,irecmax
-           
+
            ! rotation matrix
            B(1,1)=  cos(phi(irec))
            B(1,2)= - sin(phi(irec))
-           B(1,3)= 0. 
+           B(1,3)= 0.
 
            B(2,1)=  sin(phi(irec))
            B(2,2)=  cos(phi(irec))
            B(2,3)=  0.
 
-           B(3,1)= 0. 
-           B(3,2)= 0. 
-           B(3,3)= 1. 
+           B(3,1)= 0.
+           B(3,2)= 0.
+           B(3,3)= 1.
 
            ! veloc in cylindical coordinates
            veloc(1)=data_rec(irec,1)
            veloc(2)=data_rec(irec,2)
            veloc(3)=data_rec(irec,3)
 
-          
+
            !
            ! B*veloc
-           tmp=0.  
+           tmp=0.
            do i=1,3
               do k=1,3
                  tmp(i)=tmp(i)+veloc(k)*B(i,k)
-              end do
-           end do
-          
+              enddo
+           enddo
+
            ! valocity in cartesian
            data_rec(irec,1)=tmp(1)
            data_rec(irec,2)=tmp(2)
            data_rec(irec,3)=tmp(3)
 
-        end do
+        enddo
       end subroutine rotate2cartesian_with_source_in_pole
 
 
     end module post_processing
-    
+

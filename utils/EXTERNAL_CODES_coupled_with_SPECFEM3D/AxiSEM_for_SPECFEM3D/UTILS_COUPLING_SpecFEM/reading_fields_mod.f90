@@ -8,32 +8,32 @@
         character(len=4)  appmynum
         real(kind=CUSTOM_REAL), allocatable :: ssol(:,:,:),zsol(:,:,:)
         integer isim,iproc,iel,indx_stored
-       
-        
+
+
         !isim=1 !! read mesh just for the first simulation
         ! number of elements for each procs
         allocate(nb_stored(0: nbproc-1))
-    
+
         nel=0
 
-        ! count total elements 
+        ! count total elements
         do iproc=0, nbproc-1
-       
-           write(file_to_read,'(a10,i5.5,a4)')'parameters',iproc,'.par' 
+
+           write(file_to_read,'(a10,i5.5,a4)')'parameters',iproc,'.par'
            open(10,file=trim(working_axisem_dir)//trim(simdir(isim))//'/'//trim(file_to_read))
-           read(10,*) nb_stored(iproc),ibeg,iend  
+           read(10,*) nb_stored(iproc),ibeg,iend
            close(10)
            nel = nel + nb_stored(iproc)
-           write(*,*) iproc,nb_stored(iproc),ibeg,iend  
-           write(*,*) nel 
-           write(*,*) 
+           write(*,*) iproc,nb_stored(iproc),ibeg,iend
+           write(*,*) nel
+           write(*,*)
 
-        end do
+        enddo
         allocate(scoor(ibeg:iend,ibeg:iend,nel),zcoor(ibeg:iend,ibeg:iend,nel))
         allocate(data_read(ibeg:iend,ibeg:iend,nel))
         allocate(depth_ele(nel))
         ! reading mesh  !! LE PATH DE MESH DEPEND DU TYPE DE SOURCE ie adapter
-        ! working_axisem_dir: 
+        ! working_axisem_dir:
         indx_stored=1
         do iproc=0,nbproc-1
 
@@ -51,18 +51,18 @@
               zcoor(ibeg:iend,ibeg:iend,indx_stored:indx_stored+nb_stored(iproc)-1)= zsol(ibeg:iend,ibeg:iend,:)
               indx_stored=indx_stored+nb_stored(iproc)
               deallocate(ssol,zsol)
-              
-           end if
-        end do
-        
+
+           endif
+        enddo
+
         do iel=1,nel
            depth_ele(iel) = sqrt(scoor(2,2,iel)**2+zcoor(2,2,iel)**2)
-        end do
+        enddo
 
-        
+
 
       end subroutine read_mesh
-       
+
       subroutine read_veloc_field_and_interpol(isim)
         use mpi_mod
         use global_parameters
@@ -85,7 +85,7 @@
         !isim=1 !! hardcoded
 
         allocate(iunit(0:nbproc-1,3))
-        
+
 
         ! unit file
         i=150
@@ -93,8 +93,8 @@
            do iproc=0, nbproc-1
               i=i+1
               iunit(iproc,ifield)=i
-           end do
-        end do
+           enddo
+        enddo
 
         i=i+1
         ivx=i
@@ -104,7 +104,7 @@
         ivz=i
 
 
-        
+
         !write(*,*)  iunit
         write(*,*) src_type
         call compute_prefactor(src_type(isim,1),src_type(isim,2))
@@ -116,25 +116,25 @@
           open(ivy,file= trim(working_axisem_dir)//trim(simdir(isim))//trim(fichier), FORM="UNFORMATTED")
           write(fichier,'(a6,a15)') '/Data/',output_veloc_name(3)
           open(ivz,file= trim(working_axisem_dir)//trim(simdir(isim))//trim(fichier), FORM="UNFORMATTED")
-        
+
           write(*,*) 'nbrec to write', nbrec
           write(*,*) 'nbrec to read ',sum(nb_stored(:))
           write(*,*) 'nt to write ', ntime
-        
+
 
           write(ivx) nbrec,ntime
           write(ivy) nbrec,ntime
           write(ivz) nbrec,ntime
-       
+
 
          data_rec=0.
-      
-         do ifield=1,3 
+
+         do ifield=1,3
            write(*,*) ifield
            if (trim(src_type(isim,1))=='monopole' .and. ifield==2) then
               write(*,*) 'monopole => not up'
               cycle
-           end if
+           endif
 
            ! open files
            do iproc=0, nbproc-1
@@ -143,13 +143,13 @@
                open(unit=iunit(iproc,ifield), file=trim(working_axisem_dir)//trim(simdir(isim))//trim(fichier) &
                    //appmynum//'.bindat', &
                    FORM="UNFORMATTED", STATUS="UNKNOWN", POSITION="REWIND")
-           end do
-         end do
-        end if
+           enddo
+         enddo
+        endif
 
         allocate(stack_v(ntime),stalta(ntime))
 
-        !data_rec=0.       
+        !data_rec=0.
          Energy_1=0.
          Energy_0=0.
          ! read files
@@ -161,10 +161,10 @@
             indx_stored=1
             !! us
             ifield=1
-            if (myrank ==0) then 
+            if (myrank ==0) then
                do iproc=0, nbproc-1
                   if (nb_stored(iproc) > 0) then
-                     
+
                      allocate(data_to_read(ibeg:iend,ibeg:iend, nb_stored(iproc)))
                      read(iunit(iproc,ifield))  data_to_read(ibeg:iend,ibeg:iend,:)
                      data_read(ibeg:iend, ibeg:iend, indx_stored(ifield):indx_stored(ifield)+nb_stored(iproc)-1) &
@@ -172,11 +172,11 @@
                      indx_stored(ifield)=indx_stored(ifield)+nb_stored(iproc)
                      Energy_1 = Energy_1 + sum(data_to_read(ibeg:iend,ibeg:iend,:)**2)
                      deallocate(data_to_read)
-                     
-                  end if
-               end do
-            end if
-            call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr) 
+
+                  endif
+               enddo
+            endif
+            call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
             call interpol_field(ifield)
 
             !write(*,*)  data_read(1,1,1),data_rec(1,1)
@@ -185,7 +185,7 @@
                if (myrank == 0) then
                   do iproc=0, nbproc-1
                      if (nb_stored(iproc) > 0) then
-                        
+
                         allocate(data_to_read(ibeg:iend,ibeg:iend, nb_stored(iproc)))
                         read(iunit(iproc,ifield))  data_to_read(ibeg:iend,ibeg:iend,:)
                         data_read(ibeg:iend, ibeg:iend, indx_stored(ifield):indx_stored(ifield)+nb_stored(iproc)-1) &
@@ -193,19 +193,19 @@
                         indx_stored(ifield)=indx_stored(ifield)+nb_stored(iproc)
                         Energy_1 = Energy_1 + sum(data_to_read(ibeg:iend,ibeg:iend,:)**2)
                         deallocate(data_to_read)
-                        
-                     end if
-                  end do
-               end if
+
+                     endif
+                  enddo
+               endif
                call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
                call interpol_field(ifield)
-            end if
+            endif
             !! uz
             ifield=3
             if (myrank ==0) then
                do iproc=0, nbproc-1
                   if (nb_stored(iproc) > 0) then
-                     
+
                      allocate(data_to_read(ibeg:iend,ibeg:iend, nb_stored(iproc)))
                      read(iunit(iproc,ifield))  data_to_read(ibeg:iend,ibeg:iend,:)
                      data_read(ibeg:iend, ibeg:iend, indx_stored(ifield):indx_stored(ifield)+nb_stored(iproc)-1) &
@@ -213,9 +213,9 @@
                      indx_stored(ifield)=indx_stored(ifield)+nb_stored(iproc)
                      Energy_1 = Energy_1 + sum(data_to_read(ibeg:iend,ibeg:iend,:)**2)
                      deallocate(data_to_read)
-                     
-                  end if
-               end do
+
+                  endif
+               enddo
                !if (itime==1) then
                !   Energy_0=Energy_1
                !else
@@ -224,46 +224,46 @@
                !      ipick=itime
                !   else
                !      Energy_0=Energy_1
-               !   end if
-               !end if
+               !   endif
+               !endif
                stack_v(itime)=Energy_1
-            end if
+            endif
             call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
-            call interpol_field(ifield)           
-            
-          
+            call interpol_field(ifield)
+
+
 
            call  compute_3D_cyl()
            !if (irecmin < 10 .and. irecmax > 10) write(*,*) '1',data_rec(10,2)
 
            call rotate2cartesian_with_source_in_pole()
- 
+
            !if (irecmin < 10 .and. irecmax > 10) write(*,*) '2',data_rec(10,2)
 
            call rotate_back_source() ! cartesien dans le repere terrestre global
 
            !if (irecmin < 10 .and. irecmax > 10) write(*,*) '3',data_rec(10,2)
-           
+
            call rotate_back_to_local_cart() ! cartesien local
 
-           !if (irecmin < 10 .and. irecmax > 10) write(*,*) '4',data_rec(10,2) 
+           !if (irecmin < 10 .and. irecmax > 10) write(*,*) '4',data_rec(10,2)
 
            call reduce_mpi_veloc()
-           !if (myrank == 0) write(*,*) '5',data_rec(10,2)   
+           !if (myrank == 0) write(*,*) '5',data_rec(10,2)
            if (myrank == 0) call write_veloc3D(ivx,ivy,ivz)
 
-           
-          
-         end do ! pas de temps 
+
+
+         enddo ! pas de temps
 
          if (myrank ==0) then
-         ! close files 
+         ! close files
          do ifield=1,3
-         
+
             do iproc=0, nbproc-1
                close(iunit(iproc,ifield))
-            end do
-         end do
+            enddo
+         enddo
          close(ivx)
          close(ivy)
          close(ivz)
@@ -276,11 +276,11 @@
          open(ivx,file='StaLta.txt')
          do ipick=1,ntime
              write(ivx,*) ipick*dtt,stack_v(ipick),stalta(ipick)
-         end do
+         enddo
          close(ivx)
-        end if
+        endif
 
-       
+
 
 
       end subroutine read_veloc_field_and_interpol
@@ -292,7 +292,7 @@
 
         do i=1,n
           if (stalta(i) >= thres) exit
-        end do
+        enddo
 
       end subroutine pick
 
@@ -309,19 +309,19 @@
         character(len=256) fichier
         !real(kind=SINGLE_REAL) f1,f2,phi
         !isim=1 !! hardcoded
-     
+
         allocate(iunit(0:nbproc-1,6))
-     
-     
+
+
         ! unit file
         i=150
         do ifield=1,6
            do iproc=0, nbproc-1
               i=i+1
               iunit(iproc,ifield)=i
-           end do
-        end do
-        
+           enddo
+        enddo
+
         i=i+1
         isxx=i
         i=i+1
@@ -338,7 +338,7 @@
         !write(*,*)  iunit
         !write(*,*) src_type
         call compute_prefactor(src_type(isim,1),src_type(isim,2))
-        if (myrank == 0) then  
+        if (myrank == 0) then
           write(fichier,'(a6,a15)') '/Data/',output_stress_name(1)
           open(isxx,file= trim(working_axisem_dir)//trim(simdir(isim))//trim(fichier), FORM="UNFORMATTED")
           write(fichier,'(a6,a15)') '/Data/',output_stress_name(2)
@@ -360,12 +360,12 @@
           write(isyz) nbrec,ntime
 
           data_rec=0.
-          do ifield=1,6 
+          do ifield=1,6
              write(*,*) ifield
              if (trim(src_type(isim,1))=='monopole' .and. (ifield==4 .or. ifield==6)) then
                 write(*,*) 'monopole => not up'
                 cycle
-             end if
+             endif
              ! open files
              do iproc=0, nbproc-1
                 call define_io_appendix(appmynum,iproc)
@@ -373,20 +373,20 @@
                 open(unit=iunit(iproc,ifield), file=trim(working_axisem_dir)//trim(simdir(isim))//trim(fichier) &
                    //appmynum//'.bindat', &
                    FORM="UNFORMATTED", STATUS="UNKNOWN", POSITION="REWIND")
-             end do
-          end do
-        end if
-   
+             enddo
+          enddo
+        endif
+
         ! read files
         do itime=1,ntime
-           stress_rec=0. 
+           stress_rec=0.
            indx_stored=1
            !! s11
            ifield=1
            if (myrank == 0) then
              do iproc=0, nbproc-1
                 if (nb_stored(iproc) > 0) then
-              
+
                    allocate(data_to_read(ibeg:iend,ibeg:iend, nb_stored(iproc)))
                    read(iunit(iproc,ifield))  data_to_read(ibeg:iend,ibeg:iend,:)
 
@@ -399,123 +399,123 @@
 
                    indx_stored(ifield)=indx_stored(ifield)+nb_stored(iproc)
                    deallocate(data_to_read)
-              
-                end if
-             end do
-           end if
+
+                endif
+             enddo
+           endif
            call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
            call interpol_stress(ifield)
-           
-         
+
+
            !! s22
            ifield=2
            if (myrank==0) then
              do iproc=0, nbproc-1
                 if (nb_stored(iproc) > 0) then
-                 
+
                    allocate(data_to_read(ibeg:iend,ibeg:iend, nb_stored(iproc)))
                    read(iunit(iproc,ifield))  data_to_read(ibeg:iend,ibeg:iend,:)
                    data_read(ibeg:iend, ibeg:iend, indx_stored(ifield):indx_stored(ifield)+nb_stored(iproc)-1) &
                         = data_to_read(ibeg:iend,ibeg:iend,:)
                    indx_stored(ifield)=indx_stored(ifield)+nb_stored(iproc)
                    deallocate(data_to_read)
-                 
-                end if
-             end do
-           end if
+
+                endif
+             enddo
+           endif
            call  mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
            call interpol_stress(ifield)
-        
-                   
+
+
            !! s33
            ifield=3
            if (myrank==0) then
              do iproc=0, nbproc-1
                 if (nb_stored(iproc) > 0) then
-              
+
                    allocate(data_to_read(ibeg:iend,ibeg:iend, nb_stored(iproc)))
                    read(iunit(iproc,ifield))  data_to_read(ibeg:iend,ibeg:iend,:)
                    data_read(ibeg:iend, ibeg:iend, indx_stored(ifield):indx_stored(ifield)+nb_stored(iproc)-1) &
                       = data_to_read(ibeg:iend,ibeg:iend,:)
                    indx_stored(ifield)=indx_stored(ifield)+nb_stored(iproc)
                    deallocate(data_to_read)
-              
-                end if
-              
-             end do
-           end if
+
+                endif
+
+             enddo
+           endif
            call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
            call interpol_stress(ifield)
-        
+
            !! s12
            if (.not.(trim(src_type(isim,1))=='monopole')) then
               ifield=4
-              if (myrank==0) then 
+              if (myrank==0) then
                 do iproc=0, nbproc-1
                    if (nb_stored(iproc) > 0) then
-              
+
                     allocate(data_to_read(ibeg:iend,ibeg:iend, nb_stored(iproc)))
                     read(iunit(iproc,ifield))  data_to_read(ibeg:iend,ibeg:iend,:)
                     data_read(ibeg:iend, ibeg:iend, indx_stored(ifield):indx_stored(ifield)+nb_stored(iproc)-1) &
                          = data_to_read(ibeg:iend,ibeg:iend,:)
                     indx_stored(ifield)=indx_stored(ifield)+nb_stored(iproc)
                     deallocate(data_to_read)
-              
-                  end if
-                end do
-              end if
+
+                  endif
+                enddo
+              endif
               call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
               call interpol_stress(ifield)
-           end if
-          
+           endif
+
 
            !! s13
            ifield=5
            if (myrank == 0) then
              do iproc=0, nbproc-1
                 if (nb_stored(iproc) > 0) then
-                 
+
                  allocate(data_to_read(ibeg:iend,ibeg:iend, nb_stored(iproc)))
                  read(iunit(iproc,ifield))  data_to_read(ibeg:iend,ibeg:iend,:)
                  data_read(ibeg:iend, ibeg:iend, indx_stored(ifield):indx_stored(ifield)+nb_stored(iproc)-1) &
                       = data_to_read(ibeg:iend,ibeg:iend,:)
                  indx_stored(ifield)=indx_stored(ifield)+nb_stored(iproc)
                  deallocate(data_to_read)
-              
-                end if
-              
-             end do
-           end if
-           call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr) 
+
+                endif
+
+             enddo
+           endif
+           call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
            call interpol_stress(ifield)
-         
-        
+
+
            !! s23
            if (.not.(trim(src_type(isim,1))=='monopole')) then
               ifield=6
-              if (myrank ==0) then 
+              if (myrank ==0) then
                 do iproc=0, nbproc-1
                    if (nb_stored(iproc) > 0) then
-                    
+
                     allocate(data_to_read(ibeg:iend,ibeg:iend, nb_stored(iproc)))
                     read(iunit(iproc,ifield))  data_to_read(ibeg:iend,ibeg:iend,:)
                     data_read(ibeg:iend, ibeg:iend, indx_stored(ifield):indx_stored(ifield)+nb_stored(iproc)-1) &
                          = data_to_read(ibeg:iend,ibeg:iend,:)
                     indx_stored(ifield)=indx_stored(ifield)+nb_stored(iproc)
                     deallocate(data_to_read)
-                    
-                   end if
-                end do
-              end if
+
+                   endif
+                enddo
+              endif
               call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
               call interpol_stress(ifield)
-           end if
-          
-           
+           endif
+
+
            call  compute_stress_3D_cyl()
-        
+
            call rotate2cartesian_with_source_in_pole_stress()
-           
+
            call rotate_back_source_stress() ! cartesien dans le repere tereste global
 
            call rotate_back_to_local_cart_stress() ! cartesien local
@@ -524,15 +524,15 @@
 
            !write(*,*) 'appel a write_stress3D'
            if (myrank == 0) call  write_stress3D(isxx,isyy,iszz,isxy,isxz,isyz)
-           
-     end do
-     
-     ! close files 
+
+     enddo
+
+     ! close files
      do ifield=1,6
         do iproc=0, nbproc-1
            close(iunit(iproc,ifield))
-        end do
-     end do
+        enddo
+     enddo
 
      close(isxx)
      close(isyy)
@@ -542,9 +542,9 @@
      close(isyz)
 
    end subroutine read_stress_field_and_interpol
-        
-        
-        
+
+
+
 
 
 
@@ -553,17 +553,17 @@
       !-----------------------------------------------------------------------------
       subroutine define_io_appendix(app,iproc)
         !
-        ! Defines the 4 digit character string appended to any 
-        ! data or io file related to process myid. 
+        ! Defines the 4 digit character string appended to any
+        ! data or io file related to process myid.
         !
         !-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-        
+
         implicit none
         integer, intent(in)           :: iproc
         character(len=4), intent(out) :: app
-        
+
         write(app,"(I4.4)") iproc
-        
+
       end subroutine define_io_appendix
       !=============================================================================
 !================================================================================
@@ -602,14 +602,14 @@
     !   tmp1(1:nsta_1) = pad_sta(:)
     !   tmp1(nsta_1+1:m) = sig(i:m - nsta_1 + i-1)**2
     !   sta = sta + tmp1
-    !end do
+    !enddo
 
-    
+
     do i=nsta,m
        do j=i-nsta_1,i
          sta(i) = sta(i) + sig(j)
-       end do
-    end do
+       enddo
+    enddo
     sta = sta / nsta
 
     !*** compute the long time average (LTA)
@@ -617,12 +617,12 @@
     !   tmp2(1:nlta_1) = pad_lta(:)
     !   tmp2(nlta_1+1:m) = sig(i:m - nlta_1 + i-1)**2
     !   lta = lta + tmp2
-    !end do
+    !enddo
     do i=nlta,m
       do j=i-nlta_1,i
           lta(i)=lta(i)+sig(j)
-      end do
-    end do
+      enddo
+    enddo
     lta = lta / nlta
 
     sta(1:nsta_1) = 0.
@@ -632,10 +632,10 @@
        if (lta(i) < 1e-10) then
           lta(i) = 1.
           sta(i) = 0.
-       end if
-    end do
+       endif
+    enddo
     stalta = sta / lta
 
   end subroutine substalta
-                                        
+
   end module reading_field

@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -42,19 +42,19 @@ subroutine define_global_global_numbering
 
   use data_time
   use clocks_mod
-  
+
   real(kind=dp)   , dimension(:), allocatable   :: sgtmp, zgtmp
   logical, dimension(:), allocatable            :: ifseg
   integer, dimension(:), allocatable            :: loc
   integer   :: npointot
 
-  ngllcube = (npol + 1)**2 
+  ngllcube = (npol + 1)**2
   npointot = neltot * (npol+1)**2
 
   if (dump_mesh_info_screen) then
-   write(6,*) 
+   write(6,*)
    write(6,*) 'NPOINTOT GLOBAL IS ' , npointot
-  end if
+  endif
 
   allocate(sgtmp(npointot))
   sgtmp = pack(sgll, .true.)
@@ -85,10 +85,10 @@ end subroutine define_global_global_numbering
 
 !--------------------------------------------------------------------------
 subroutine define_global_flobal_numbering
-  
+
   use data_time
   use clocks_mod
-  
+
   real(kind=dp)   , dimension(:), allocatable :: sgtmp,zgtmp
   integer, dimension(:), allocatable :: loc_fluid
   logical, dimension(:), allocatable ::   ifseg
@@ -96,10 +96,10 @@ subroutine define_global_flobal_numbering
 
   npointot = neltot_fluid * (npol+1)**2
 
-  if (dump_mesh_info_screen) then 
-     write(6,*) 
+  if (dump_mesh_info_screen) then
+     write(6,*)
      write(6,*) 'NPOINTOT FLOBAL IS ' , npointot
-  end if
+  endif
 
   allocate(sgtmp(npointot))
   sgtmp = pack(sgll_fluid, .true.)
@@ -135,7 +135,7 @@ subroutine define_global_slobal_numbering
 
   use data_time
   use clocks_mod
-  
+
   real(kind=dp)   , dimension(:), allocatable   :: sgtmp, zgtmp
   integer, dimension(:), allocatable            :: loc_solid
   logical, dimension(:), allocatable            :: ifseg
@@ -144,15 +144,15 @@ subroutine define_global_slobal_numbering
 
   npointot = neltot_solid * (npol+1)**2
 
-  if (dump_mesh_info_screen) then 
-     write(6,*) 
+  if (dump_mesh_info_screen) then
+     write(6,*)
      write(6,*) 'NPOINTOT SLOBAL IS ' , npointot
-  end if
+  endif
 
   allocate(sgtmp(npointot))
   sgtmp = pack(sgll_solid, .true.)
-  deallocate(sgll_solid) ! not needed anymore 
-  
+  deallocate(sgll_solid) ! not needed anymore
+
   allocate(zgtmp(npointot))
   zgtmp = pack(zgll_solid, .true.)
   deallocate(zgll_solid) ! not needed anymore
@@ -173,7 +173,7 @@ subroutine define_global_slobal_numbering
   deallocate(zgtmp)
   deallocate(sgtmp)
 
-  if (dump_mesh_info_screen) write(6,*) 'NGLOBSLOB IS ' , NGLOBSLOB 
+  if (dump_mesh_info_screen) write(6,*) 'NGLOBSLOB IS ' , NGLOBSLOB
 
 end subroutine define_global_slobal_numbering
 !-------------------------------------------------------------------------
@@ -207,7 +207,7 @@ subroutine get_global(nspec2, xp, yp, iglob2, loc2, ifseg2, nglob2, npointot2, &
   ! leave sorting subroutines in same source file to allow for inlining
 
   use sorting,      only: mergesort_3
-  !$ use omp_lib     
+  !$ use omp_lib
 
   integer, intent(in)                :: nspec2, npointot2, NGLLCUBE2
   real(kind=dp)   , intent(inout)    :: xp(npointot2), yp(npointot2)
@@ -272,15 +272,15 @@ subroutine get_global(nspec2, xp, yp, iglob2, loc2, ifseg2, nglob2, npointot2, &
      endif
 
   enddo
-  
+
   ! sort within each segment
   ioff = 1
 
   ioffs(1) = 1
   do iseg=2, nseg
      ioffs(iseg) = ioffs(iseg-1) + ninseg(iseg-1)
-  end do
-  
+  enddo
+
   !$ nthreads = min(min(omp_get_max_threads(),8), nmax_threads)
   !$ call omp_set_num_threads(nthreads)
   !$ print *, 'Using ', nthreads, ' threads for sorting in get_global!'
@@ -291,7 +291,7 @@ subroutine get_global(nspec2, xp, yp, iglob2, loc2, ifseg2, nglob2, npointot2, &
      call rank_y(yp(ioff), ind, ninseg(iseg))
      call swapall(loc2(ioff), xp(ioff), yp(ioff), ind, ninseg(iseg))
   enddo
-  !$omp end parallel do        
+  !$omp end parallel do
 
   ! check for jumps in current coordinate
   ! compare the coordinates of the points within a small tolerance
@@ -350,23 +350,23 @@ subroutine rank_y(A,IND,N)
 
         return
      endif
-  ENDIF
+  endif
   i=l
   j=l+l
 200 CONTINUE
   IF (J <= IR) THEN
      IF (J<IR) THEN
         IF ( A(IND(j))<A(IND(j+1)) ) j=j+1
-     ENDIF
+     endif
      IF (q<A(IND(j))) THEN
         IND(I)=IND(J)
         I=J
         J=J+J
      ELSE
         J=IR+1
-     ENDIF
+     endif
      goto 200
-  ENDIF
+  endif
   IND(I)=INDX
   goto 100
 

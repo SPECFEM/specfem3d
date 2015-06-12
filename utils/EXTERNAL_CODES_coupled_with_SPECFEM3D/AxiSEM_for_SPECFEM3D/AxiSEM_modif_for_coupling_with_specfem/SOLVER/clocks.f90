@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -41,7 +41,7 @@ module clocks_mod
 !
 ! For the full text of the GNU General Public License,
 ! write to: Free Software Foundation, Inc.,
-!           675 Mass Ave, Cambridge, MA 02139, USA.  
+!           675 Mass Ave, Cambridge, MA 02139, USA.
 !-----------------------------------------------------------------------
 
     implicit none
@@ -81,7 +81,7 @@ subroutine clocks_init(flag)
 
     verbose = .FALSE.
 
-    if( PRESENT(flag) ) verbose = flag.EQ.0
+    if( PRESENT(flag) ) verbose = flag==0
 
     if( clocks_initialized ) return
     clocks_initialized = .TRUE.
@@ -94,15 +94,15 @@ subroutine clocks_init(flag)
         write(6,*) '    CLOCKS module '//trim(version)
         write(6,*) '    Realtime clock resolution=', tick_rate, '(', &
                    ticks_per_sec, ' ticks/sec)'
-    end if
+    endif
 
     !default clock name is Clock001, etc
 
     if( verbose ) then
        do i = 1,max_clocks
           write( clocks(i)%name,"(a5,i3.3)") 'Clock', i
-       end do
-    end if
+       enddo
+    endif
 
     clocks%ticks = 0
     clocks%calls = 0
@@ -120,10 +120,10 @@ function clock_id(name)
 
     if( .NOT.clocks_initialized ) call clocks_init()
     clock_id = 0
-    do while( trim(name).NE.trim(clocks(clock_id)%name) )
+    do while( trim(name)/=trim(clocks(clock_id)%name) )
        clock_id = clock_id + 1
-       if( clock_id.GT.clock_num )then
-           if( clock_num.EQ.max_clocks )then
+       if( clock_id>clock_num )then
+           if( clock_num==max_clocks )then
                print *, &
                     'CLOCKS ERROR: you are requesting too many clocks, max clocks=', max_clocks
                return
@@ -131,9 +131,9 @@ function clock_id(name)
                clock_num = clock_id
                clocks(clock_id)%name = name
                return
-           end if
-       end if
-    end do
+           endif
+       endif
+    enddo
     return
 end function clock_id
 !-----------------------------------------------------------------------
@@ -156,7 +156,7 @@ function tick( string, id, name, since )
     if( PRESENT(since) )ref_tick = since
 
     !correct ref_tick in the unlikely event of clock rollover
-    if( current_tick.LT.ref_tick )ref_tick = ref_tick - max_ticks
+    if( current_tick<ref_tick )ref_tick = ref_tick - max_ticks
 
     if( PRESENT(string) )then
         !print time since reference tick
@@ -164,22 +164,22 @@ function tick( string, id, name, since )
             'CLOCKS: '//trim(string), (current_tick-ref_tick)*tick_rate
     else if( PRESENT(id) )then
         !accumulate time on clock id
-        if( 0.LT.id .AND. id.LE.max_clocks )then
+        if( 0<id .AND. id<=max_clocks )then
             clocks(id)%ticks = clocks(id)%ticks + current_tick - ref_tick
             clocks(id)%calls = clocks(id)%calls + 1
         else
             print *, 'CLOCKS ERROR: invalid id=', id
-        end if
+        endif
     else if( PRESENT(name) )then
         nid = clock_id(name)
     !accumulate time on clock id
-        if( 0.LT.nid .AND. nid.LE.max_clocks )then
+        if( 0<nid .AND. nid<=max_clocks )then
             clocks(nid)%ticks = clocks(nid)%ticks + current_tick - ref_tick
             clocks(nid)%calls = clocks(nid)%calls + 1
         else
             print *, 'CLOCKS ERROR: invalid id=', nid
-        end if
-    end if
+        endif
+    endif
     !reset reference tick
     call system_clock(ref_tick)
     tick = ref_tick
@@ -195,7 +195,7 @@ subroutine get_clock( id, ticks, calls, total_time, time_per_call )
     integer, intent(out), optional      :: ticks, calls
     real(kind=4), intent(out), optional :: total_time, time_per_call
 
-    if( 0.LT.id .AND. id.LE.max_clocks )then
+    if( 0<id .AND. id<=max_clocks )then
         if( PRESENT(ticks) )ticks = clocks(id)%ticks
         if( PRESENT(calls) )calls = clocks(id)%calls
         if( PRESENT(total_time) )total_time = clocks(id)%ticks*tick_rate
@@ -203,7 +203,7 @@ subroutine get_clock( id, ticks, calls, total_time, time_per_call )
              clocks(id)%ticks*tick_rate/clocks(id)%calls
     else
         print *, 'CLOCKS ERROR: invalid id=', id
-    end if
+    endif
 
     return
 end subroutine get_clock
@@ -222,21 +222,21 @@ subroutine clocks_exit(flag)
     real(kind=4) :: total_time, time_per_call, cumul_time
 
     if( PRESENT(flag) )then
-        if( flag.NE.0 )return
-    end if
+        if( flag/=0 )return
+    endif
 
     call system_clock(end_tick)
     cumul_time = (end_tick-start_tick)*tick_rate
     write(6,"(32x,a)") '           calls        t_call       t_total t_frac'
     do i = 1, max_clocks
-       if( clocks(i)%calls.NE.0 )then
+       if( clocks(i)%calls/=0 )then
            total_time = clocks(i)%ticks*tick_rate
            time_per_call = total_time/clocks(i)%calls
            write(6,"(a40,i8,2f14.6,f7.3)") &
                 'CLOCKS: '//clocks(i)%name, &
                 clocks(i)%calls, time_per_call, total_time, total_time/cumul_time
-       end if
-    end do
+       endif
+    enddo
     write(6,"(a,f14.6)") 'CLOCKS: Total measured time: ', cumul_time
 
     return

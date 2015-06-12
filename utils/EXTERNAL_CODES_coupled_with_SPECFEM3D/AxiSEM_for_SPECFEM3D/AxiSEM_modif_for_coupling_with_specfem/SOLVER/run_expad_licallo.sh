@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 #OAR -l /nodes=4,walltime=2:00:00
 #OAR -n expand_24_cores
 ##OAR -p gpu='NO' AND ibpool='FDR'

@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -28,13 +28,13 @@ module seismograms
   use data_io
   use data_proc
   use data_time
-  
+
   implicit none
-  
+
   public
 
 contains
-  
+
 !-----------------------------------------------------------------------------
 subroutine prepare_seismograms
 
@@ -81,7 +81,7 @@ subroutine prepare_seismograms
   maxind=ind
   allocate(surfelem(maxind))
 
-  if (diagfiles) open(1000+mynum,file=datapath(1:lfdata)//'/surfelem_'//appmynum//'.dat') 
+  if (diagfiles) open(1000+mynum,file=datapath(1:lfdata)//'/surfelem_'//appmynum//'.dat')
   ind=0
   do iel=1,nel_solid
      ielem=ielsolid(iel)
@@ -106,24 +106,24 @@ subroutine prepare_seismograms
                  !write(6,*)'Proc ', mynum, ' found: '
                  !write(6,*)'Epicenter element:',ielepi
                  !write(6,*)'Epicenter radius [km], colat [deg]:', &
-                 !          r/1000.,theta/pi*180. 
+                 !          r/1000.,theta/pi*180.
                  !write(6,*)''
                  !call flush(6)
                  write(69,*)'Proc ', mynum, ' found: '
                  write(69,*)'Epicenter element:',ielepi
                  write(69,*)'Epicenter radius [km], colat [deg]:', &
-                            r/1000.,theta/pi*180. 
+                            r/1000.,theta/pi*180.
                  write(69,*)''
               endif
               have_epi=.true.
               epicount=epicount+1
-           end if
+           endif
         endif
 
         ! find antipode at 180deg
         if (.not. north(ielem)) then
           call compute_coordinates(s,z,r,theta,ielem,0,0)
-          if ( dabs(theta-pi) < min_distance_nondim*pi) then 
+          if ( dabs(theta-pi) < min_distance_nondim*pi) then
              ielantipode=iel
              if (verbose > 1) then
                 !write(6,*)'Proc ', mynum, ' found: '
@@ -140,13 +140,13 @@ subroutine prepare_seismograms
              endif
              have_antipode=.true.
              anticount=anticount+1
-          end if
+          endif
         endif
 
         ! find equator (take northern element)
         if (north(ielem)) then
            call compute_coordinates(s,z,r,theta,ielem,npol,npol)
-           if ( dabs(z) < smallval_sngl)  then 
+           if ( dabs(z) < smallval_sngl)  then
               ielequ=iel
               if (verbose > 1) then
                  !write(6,*)'Proc ', mynum, ' found: '
@@ -164,7 +164,7 @@ subroutine prepare_seismograms
               endif
               have_equ=.true.
               equcount=equcount+1
-           end if
+           endif
         endif
 
      endif
@@ -177,11 +177,11 @@ subroutine prepare_seismograms
      write(6,*)'  ensuring uniqueness in generic receiver locations...'
 
   iel=0
-  if ( psum_int(epicount) > 1 ) then 
+  if ( psum_int(epicount) > 1 ) then
      do while (iel <= nproc-1)
-        call barrier 
-        if (mynum==iel) then 
-           if (have_epi .and. mynum<nproc-1) then 
+        call barrier
+        if (mynum==iel) then
+           if (have_epi .and. mynum<nproc-1) then
               do iproc=iel+1,nproc-1
                  call barrier
                  if (mynum==iproc) have_epi=.false.
@@ -195,11 +195,11 @@ subroutine prepare_seismograms
      enddo
   endif
 
-  if ( psum_int(equcount) > 1 ) then 
+  if ( psum_int(equcount) > 1 ) then
      do while (iel<=nproc-1)
-        call barrier 
-        if (mynum==iel) then 
-           if (have_equ .and. mynum<nproc-1) then 
+        call barrier
+        if (mynum==iel) then
+           if (have_equ .and. mynum<nproc-1) then
               do iproc=iel+1,nproc-1
                  call barrier
                  if (mynum==iproc) have_equ=.false.
@@ -213,11 +213,11 @@ subroutine prepare_seismograms
      enddo
   endif
 
-  if ( psum_int(anticount) > 1 ) then 
+  if ( psum_int(anticount) > 1 ) then
      do while (iel<=nproc-1)
-        call barrier 
-        if (mynum==iel) then 
-           if (have_antipode .and. mynum<nproc-1) then 
+        call barrier
+        if (mynum==iel) then
+           if (have_antipode .and. mynum<nproc-1) then
               do iproc=iel+1,nproc-1
                  call barrier
                  if (mynum==iproc) have_antipode=.false.
@@ -256,7 +256,7 @@ subroutine prepare_seismograms
 
   do iproc=0,nproc-1
      call barrier
-     if (mynum==iproc) then 
+     if (mynum==iproc) then
         call barrier
         if (diagfiles) then
             open(33333,file=datapath(1:lfdata)// &
@@ -265,7 +265,7 @@ subroutine prepare_seismograms
                              '/surfelem_coords_jpol.dat',position='append')
             if (mynum==0) write(33334,*)maxind_glob
             if (mynum==0) write(33333,*)maxind_glob
-        end if
+        endif
 
         do iel=1,maxind
            if (thetacoord(npol/2,npol/2,ielsolid(surfelem(iel)))<=pi/2) then
@@ -277,16 +277,16 @@ subroutine prepare_seismograms
            surfcoord(iel) = 180. / pi * &
                             thetacoord(npol/2,jsurfel(iel),ielsolid(surfelem(iel)))
            if (diagfiles) then
-               write(33333,*) surfcoord(iel) 
+               write(33333,*) surfcoord(iel)
                write(33334,11) 180./pi* &
                     thetacoord(npol/2,jsurfel(iel),ielsolid(surfelem(iel))),&
                     (rcoord(npol/2,j,ielsolid(surfelem(iel))),j=0,npol)
-           end if
+           endif
         enddo
         if (diagfiles) then
             close(33333)
             close(33334)
-        end if
+        endif
         call barrier
      endif
      call barrier
@@ -318,8 +318,8 @@ end subroutine prepare_seismograms
 !=============================================================================
 
 !-----------------------------------------------------------------------------
-!> Read colatitudes [deg] from a file receivers.dat and locate closest grid 
-!! point for seismograms, output grid point locations in 
+!> Read colatitudes [deg] from a file receivers.dat and locate closest grid
+!! point for seismograms, output grid point locations in
 !! receiver_pts.dat<PROCID>
 subroutine prepare_from_recfile_seis
 
@@ -330,7 +330,7 @@ subroutine prepare_from_recfile_seis
   use commun
   use rotations,    only: rotate_receivers_recfile, save_google_earth_kml
   use nc_routines,  only: nc_define_outputfile
-  
+
   integer                        :: i, iel, ipol, irec, num_rec_glob
   integer                        :: count_diff_loc, count_procs
   real(kind=dp)                  :: s, z, r, theta, recdist, myrecdist
@@ -344,7 +344,7 @@ subroutine prepare_from_recfile_seis
   character(len=100)             :: junk
   character(len=40), allocatable :: receiver_name(:)
   real(kind=dp)                  :: maxreclocerr
-  
+
   ! Additional arrays within the STATIONS file
   character(len=20), allocatable, dimension(:) :: rec_name,rec_network
   real(kind=dp)   , allocatable, dimension(:) :: reclat,reclon,recelevation,recbury
@@ -371,7 +371,7 @@ subroutine prepare_from_recfile_seis
      allocate( loc2globrec_loc(1:num_rec_glob) )
      allocate( rec2proc       (1:num_rec_glob) )
      allocate( recfile_readph (1:num_rec_glob) )
-     allocate( recfile_ph_loc2(1:num_rec_glob) )   
+     allocate( recfile_ph_loc2(1:num_rec_glob) )
      allocate( receiver_name  (1:num_rec_glob) )
 
      open(unit=30,file=datapath(1:lfdata)//'/receiver_names.dat')
@@ -382,11 +382,11 @@ subroutine prepare_from_recfile_seis
         receiver_name(i) = 'recfile_'//appielem
         write(30,*) trim(receiver_name(i)), recfile_readth(i), recfile_readph(i)
      enddo
-     close(34) 
+     close(34)
      close(30)
 
 
-  case('database') 
+  case('database')
      if (lpr) write(6,*)'  generating receiver colatitudes at every element edge and midpoint...'
      if (lpr) write(6,*)'  ... which is useful for databases and sinc interpolation'
      dtheta_rec = abs( (thetacoord(npol,npol,ielsolid(surfelem(1))) &
@@ -398,7 +398,7 @@ subroutine prepare_from_recfile_seis
                       - thetacoord(0,   npol,ielsolid(surfelem(1))) ) * 180. / pi )
        write(6,*)mynum,'number of surface elements:',maxind
        write(6,*)mynum,'number of global recs (ideal,real):',(180./dtheta_rec)+1,num_rec_glob
-     end if
+     endif
      allocate(recfile_readth(num_rec_glob),recfile_readph(num_rec_glob))
      do i=1,num_rec_glob
         recfile_readth(i) = dtheta_rec*real(i-1)
@@ -408,14 +408,14 @@ subroutine prepare_from_recfile_seis
      recfile_readph = 0.
      allocate(recfile_th_loc(1:num_rec_glob),recfile_el_loc(1:num_rec_glob,3))
      allocate(loc2globrec_loc(1:num_rec_glob),rec2proc(1:num_rec_glob))
-     allocate(recfile_ph_loc2(1:num_rec_glob),recfile_th_glob(1:num_rec_glob))   
+     allocate(recfile_ph_loc2(1:num_rec_glob),recfile_th_glob(1:num_rec_glob))
      allocate(receiver_name(1:num_rec_glob))
      if (mynum==0) open(unit=30,file=datapath(1:lfdata)//'/receiver_names.dat')
      do i=1,num_rec_glob
         !call define_io_appendix(appielem,i) Does only work for nrec<9999
         !receiver_name(i) = 'recfile_'//appielem
         write(receiver_name(i),112) i
-112     format('recfile_',I6.6)          
+112     format('recfile_',I6.6)
         if (mynum==0) write(30,*)trim(receiver_name(i)),recfile_readth(i),recfile_readph(i)
      enddo
      if (mynum==0) close(30)
@@ -438,7 +438,7 @@ subroutine prepare_from_recfile_seis
      allocate(recfile_th_loc(1:num_rec_glob),recfile_el_loc(1:num_rec_glob,3))
      allocate(loc2globrec_loc(1:num_rec_glob),rec2proc(1:num_rec_glob))
      allocate(recfile_readph(1:num_rec_glob))
-     allocate(recfile_ph_loc2(1:num_rec_glob))     
+     allocate(recfile_ph_loc2(1:num_rec_glob))
      allocate(rec_name(num_rec_glob),rec_network(num_rec_glob))
      allocate(reclat(num_rec_glob),reclon(num_rec_glob),recelevation(num_rec_glob),recbury(num_rec_glob))
      allocate(receiver_name(num_rec_glob))
@@ -447,8 +447,8 @@ subroutine prepare_from_recfile_seis
 
      do i=1,num_rec_glob
         read(34,*)rec_name(i),rec_network(i),reclat(i),reclon(i),recelevation(i),recbury(i)
-        if (reclon(i)<=zero) then 
-           recfile_readph(i)=reclon(i)+360.d0 
+        if (reclon(i)<=zero) then
+           recfile_readph(i)=reclon(i)+360.d0
         else
            recfile_readph(i)= reclon(i)
         endif
@@ -458,8 +458,8 @@ subroutine prepare_from_recfile_seis
      enddo
      close(34); close(30)
 
-     
-  case default   
+
+  case default
      write(6,*)procstrg, 'Undefined receiver file format!!'
      stop
   end select !Receiver type rec_file_type
@@ -468,28 +468,28 @@ subroutine prepare_from_recfile_seis
 
   ! check on consistency of receiver coordinates
 
-  if (minval(recfile_readph) < 0.d0) then 
+  if (minval(recfile_readph) < 0.d0) then
      if (lpr) write(6,*)' ERROR: We do not allow negative receiver longitudes....'
      stop
   endif
 
-  if (maxval(recfile_readph) > 360.001) then 
+  if (maxval(recfile_readph) > 360.001) then
      if (lpr) write(6,*)' ERROR: We do not allow receiver longitudes larger than 360 degrees....'
      stop
   endif
 
-  if (maxval(recfile_readth) < 0.d0) then 
+  if (maxval(recfile_readth) < 0.d0) then
      if (lpr) write(6,*)' ERROR: We do not allow negative receiver colatitudes....'
      stop
   endif
 
-  if (maxval(recfile_readth) > 180.001) then 
+  if (maxval(recfile_readth) > 180.001) then
      if (lpr) write(6,*)' ERROR: We do not allow receiver colatitudes larger than 180 degrees....'
      stop
   endif
 
   ! rotate receiver locations if source is not located at north pole
-  if (rot_src ) then 
+  if (rot_src ) then
      call rotate_receivers_recfile(num_rec_glob, recfile_readth, recfile_readph, receiver_name)
   else
     ! Why only save the kml if the source is at the northpole?
@@ -498,7 +498,7 @@ subroutine prepare_from_recfile_seis
       call save_google_earth_kml( real(srccolat * 180.0 / pi), real(srclon * 180.d0 / pi), &
                                   real(recfile_readth), real(recfile_readph), &
                                   num_rec_glob, 'original', receiver_name  )
-    end if
+    endif
   endif
 
   recfile_th_glob(:) = zero
@@ -541,7 +541,7 @@ subroutine prepare_from_recfile_seis
               tmprecfile_el(1)=surfelem(iel) ! only in the solid domain
               tmprecfile_el(2)=ipol
               if (north(ielsolid(surfelem(iel)))) tmprecfile_el(3)=npol
-              if (.not. north(ielsolid(surfelem(iel)))) tmprecfile_el(3)=0 
+              if (.not. north(ielsolid(surfelem(iel)))) tmprecfile_el(3)=0
            endif
 
         enddo
@@ -554,7 +554,7 @@ subroutine prepare_from_recfile_seis
      if (dblreldiff_small(myrecdist,recdist)) count_procs=mynum
      !take as default the larger processor ID to take on the receiver
      count_procs=pmax_int(count_procs)
-     if (mynum==count_procs) then 
+     if (mynum==count_procs) then
         irec = irec+1
         if (verbose > 1) write(69,*)'found local grid point and processor...',irec,i
         recfile_th_loc(irec)     = tmprecfile_th
@@ -594,7 +594,7 @@ subroutine prepare_from_recfile_seis
      write(6,*)procstrg,'Number of receivers:',num_rec
      stop
   endif
-  
+
   if (verbose > 1) then
      if (lpr) write(6,*)
      do irec=0,nproc-1
@@ -614,7 +614,7 @@ subroutine prepare_from_recfile_seis
         write(99997,*)recfile_th_glob(i),recfile_readph(i),rec2proc(i)
      enddo
      close(99997)
-  end if
+  endif
 
   ! Output colatitudes locally to infopath (this file is for info purposes!)
 
@@ -622,7 +622,7 @@ subroutine prepare_from_recfile_seis
   if (diagfiles) then
       open(9998+mynum,file=infopath(1:lfinfo)//'/receiver_pts_'//appmynum//'.dat')
       write(9998+mynum,*)num_rec
-  end if
+  endif
   do i=1,num_rec ! Only over newly found local receiver locations
 
      if (diagfiles) write(9998+mynum,13) i, recfile_readth(loc2globrec(i)), &
@@ -660,14 +660,14 @@ subroutine prepare_from_recfile_seis
          if (verbose > 1) write(6,*)'  ',procstrg,'opening receiver file:',i,appielem
          open(100000+i,file=datapath(1:lfdata)//'/'//trim(receiver_name(loc2globrec(i)))//'_disp.dat')
      endif
- 
+
   enddo
   if (diagfiles) close(9998+mynum)
   if (use_netcdf) then
     call nc_define_outputfile(num_rec_glob, receiver_name, recfile_th_glob, &
                               recfile_readth, recfile_readph, rec2proc)
-  end if
-  
+  endif
+
   if (verbose > 1) then
      write(69,15)count_diff_loc,num_rec
      write(69,*)'  Maximal receiver location error [m]:',maxreclocerr
@@ -676,7 +676,7 @@ subroutine prepare_from_recfile_seis
 15 format(i4,' out of',i4,' receivers are located at wrong points.')
 
   maxreclocerr = pmax(maxreclocerr)
-  if (lpr) then 
+  if (lpr) then
      write(6,*)
      write(6,*)'  maximal receiver location error [m]:',maxreclocerr
      write(6,*)
@@ -684,16 +684,16 @@ subroutine prepare_from_recfile_seis
 
   ! define general prefactor for all cases
   allocate(recfac(num_rec,5))
-  
+
   if (lpr) write(6,*) &
            '  Calculating prefactors for cylindrical components...'
   recfac(:,:) = 1.d0
   recfac(:,2) = 0.d0
   recfac(:,4) = 0.d0
-  
+
   ! no phi component for monopole
   if (src_type(1)=='monopole')  recfac(:,3) = 0.d0
-  
+
   if (diagfiles) then
       open(300+mynum,file=infopath(1:lfinfo)//'/receiver_recfac_'//appmynum//'.dat')
       do i=1,num_rec
@@ -702,7 +702,7 @@ subroutine prepare_from_recfile_seis
          write(300+mynum,*)
       enddo
       close(300+mynum)
-  end if
+  endif
 
 13 format(i3,3(1pe12.4),i8,2(i2))
 
@@ -711,7 +711,7 @@ subroutine prepare_from_recfile_seis
   deallocate(recfile_th_glob,recfile_th,recfile_th_loc)
   deallocate(recfile_el_loc,loc2globrec_loc,rec2proc)
 
-  if (rec_file_type=='stations') then 
+  if (rec_file_type=='stations') then
     deallocate(rec_name,rec_network)
     deallocate(reclat,reclon,recelevation,recbury)
   endif
@@ -739,17 +739,17 @@ subroutine open_hyp_epi_equ_anti
     !        both open the same file. IMHO these files are pretty useless
     !        anyway, so not fixing it for now
     !if (have_src) then
-    !   open(10001,file=datapath(1:lfdata)//'/seishypocenter1.dat') 
+    !   open(10001,file=datapath(1:lfdata)//'/seishypocenter1.dat')
     !   if (src_type(1)/='monopole') &
-    !        open(10002,file=datapath(1:lfdata)//'/seishypocenter2.dat') 
-    !   open(10003,file=datapath(1:lfdata)//'/seishypocenter3.dat') 
+    !        open(10002,file=datapath(1:lfdata)//'/seishypocenter2.dat')
+    !   open(10003,file=datapath(1:lfdata)//'/seishypocenter3.dat')
     !endif
 
     if (have_epi) then
-       open(900,file=datapath(1:lfdata)//'/seisepicenter1.dat') 
+       open(900,file=datapath(1:lfdata)//'/seisepicenter1.dat')
        if (src_type(1)/='monopole') &
-            open(903,file=datapath(1:lfdata)//'/seisepicenter2.dat') 
-       open(906,file=datapath(1:lfdata)//'/seisepicenter3.dat') 
+            open(903,file=datapath(1:lfdata)//'/seisepicenter2.dat')
+       open(906,file=datapath(1:lfdata)//'/seisepicenter3.dat')
     endif
 
     if (have_equ) then
@@ -760,7 +760,7 @@ subroutine open_hyp_epi_equ_anti
     endif
 
     if (have_antipode) then
-       open(901,file=datapath(1:lfdata)//'/seisantipode1.dat') 
+       open(901,file=datapath(1:lfdata)//'/seisantipode1.dat')
        if (src_type(1)/='monopole') &
             open(905,file=datapath(1:lfdata)//'/seisantipode2.dat')
        open(908,file=datapath(1:lfdata)//'/seisantipode3.dat')
@@ -794,7 +794,7 @@ subroutine compute_hyp_epi_equ_anti(t,disp)
 
      ! hypocenter
      !if (have_src) then
-     !  if (src_type(1)=='dipole') then 
+     !  if (src_type(1)=='dipole') then
      !     write(10001,*)t,disp(ipol_src,jpol_src,iel_src,1)+&
      !                   disp(ipol_src,jpol_src,iel_src,2) ! s
      !     write(10002,*)t,disp(ipol_src,jpol_src,iel_src,1)-&
@@ -806,10 +806,10 @@ subroutine compute_hyp_epi_equ_anti(t,disp)
      !   endif
      !   write(10003,*)t,disp(ipol_src,jpol_src,iel_src,3)  ! z
      !endif
-   
+
      ! epicenter
      if (have_epi) then
-        if (src_type(1)=='dipole') then 
+        if (src_type(1)=='dipole') then
            write(900,*)t,disp(0,npol,ielepi,1)+disp(0,npol,ielepi,2) ! s
            write(903,*)t,disp(0,npol,ielepi,1)-disp(0,npol,ielepi,2) ! phi
         else
@@ -822,7 +822,7 @@ subroutine compute_hyp_epi_equ_anti(t,disp)
 
      ! antipode
      if (have_antipode) then
-        if (src_type(1)=='dipole') then 
+        if (src_type(1)=='dipole') then
            write(901,*)t,disp(0,0,ielantipode,1)+disp(0,0,ielantipode,2) ! s
            write(905,*)t,disp(0,0,ielantipode,1)-disp(0,0,ielantipode,2) ! phi
         else
@@ -835,7 +835,7 @@ subroutine compute_hyp_epi_equ_anti(t,disp)
 
      ! equator
      if (have_equ) then
-        if (src_type(1)=='dipole') then 
+        if (src_type(1)=='dipole') then
            write(902,*)t,disp(npol,npol,ielequ,1)+disp(npol,npol,ielequ,2) ! s
            write(904,*)t,disp(npol,npol,ielequ,1)-disp(npol,npol,ielequ,2) ! phi
         else
@@ -856,9 +856,9 @@ subroutine compute_recfile_seis_bare(disp)
 
   use data_source, only : src_type
   use data_mesh, only   : recfile_el, num_rec
-  
+
   real(kind=realkind), intent(in) :: disp(0:,0:,:,:)
-  
+
   integer :: i
 
    if (src_type(1)=='monopole') then
@@ -868,7 +868,7 @@ subroutine compute_recfile_seis_bare(disp)
              disp(recfile_el(i,2),recfile_el(i,3),recfile_el(i,1),1), &
              disp(recfile_el(i,2),recfile_el(i,3),recfile_el(i,1),3)
       enddo
-   elseif (src_type(1)=='dipole') then
+   else if (src_type(1)=='dipole') then
       do i=1,num_rec
          ! order: u_s, u_phi,u_z
          write(100000+i,*) &
@@ -878,9 +878,9 @@ subroutine compute_recfile_seis_bare(disp)
               - disp(recfile_el(i,2),recfile_el(i,3),recfile_el(i,1),2), &
               disp(recfile_el(i,2),recfile_el(i,3),recfile_el(i,1),3)
       enddo
-   elseif (src_type(1)=='quadpole') then
+   else if (src_type(1)=='quadpole') then
       do i=1,num_rec
-         ! order: u_s, u_phi,u_z 
+         ! order: u_s, u_phi,u_z
          write(100000+i,*) &
              disp(recfile_el(i,2),recfile_el(i,3),recfile_el(i,1),1), &
              disp(recfile_el(i,2),recfile_el(i,3),recfile_el(i,1),2), &
@@ -893,7 +893,7 @@ end subroutine compute_recfile_seis_bare
 
 !-----------------------------------------------------------------------------
 !! Calculate displacement at receiver locations and pass to nc_dump_rec
-subroutine nc_compute_recfile_seis_bare(disp) 
+subroutine nc_compute_recfile_seis_bare(disp)
 
   use data_source, only : src_type
   use nc_routines, only : nc_dump_rec
@@ -908,10 +908,10 @@ subroutine nc_compute_recfile_seis_bare(disp)
   if (src_type(1)=='monopole') then
      do i=1,num_rec
           disp_rec(1,i)=real(disp(recfile_el(i,2),recfile_el(i,3),recfile_el(i,1),1))
-          disp_rec(2,i)= 0.0 
-          disp_rec(3,i)=real(disp(recfile_el(i,2),recfile_el(i,3),recfile_el(i,1),3))  
+          disp_rec(2,i)= 0.0
+          disp_rec(3,i)=real(disp(recfile_el(i,2),recfile_el(i,3),recfile_el(i,1),3))
      enddo
-  elseif (src_type(1)=='dipole') then
+  else if (src_type(1)=='dipole') then
      do i=1,num_rec
           disp_rec(1,i)=real(disp(recfile_el(i,2),recfile_el(i,3),recfile_el(i,1),1) &
                              + disp(recfile_el(i,2),recfile_el(i,3),recfile_el(i,1),2))
@@ -919,15 +919,15 @@ subroutine nc_compute_recfile_seis_bare(disp)
                              - disp(recfile_el(i,2),recfile_el(i,3),recfile_el(i,1),2))
           disp_rec(3,i)=real(disp(recfile_el(i,2),recfile_el(i,3),recfile_el(i,1),3))
      enddo
-  elseif (src_type(1)=='quadpole') then
+  else if (src_type(1)=='quadpole') then
      do i=1,num_rec
           disp_rec(1,i)=real(disp(recfile_el(i,2),recfile_el(i,3),recfile_el(i,1),1))
           disp_rec(2,i)=real(disp(recfile_el(i,2),recfile_el(i,3),recfile_el(i,1),2))
-          disp_rec(3,i)=real(disp(recfile_el(i,2),recfile_el(i,3),recfile_el(i,1),3))  
+          disp_rec(3,i)=real(disp(recfile_el(i,2),recfile_el(i,3),recfile_el(i,1),3))
      enddo
-  end if !src_type(1)
+  endif !src_type(1)
 
-call nc_dump_rec(disp_rec) 
+call nc_dump_rec(disp_rec)
 
 !deallocate(disp_surf)
 
@@ -939,7 +939,7 @@ subroutine compute_recfile_cmb(velo,grad_sol)
 
   use data_source, only : src_type
   use data_mesh
-  
+
   real(kind=realkind), intent(in) :: velo(0:,0:,:,:)
   real(kind=realkind)             :: grad_sol(0:,0:,:,:)
   integer :: i
@@ -949,16 +949,16 @@ subroutine compute_recfile_cmb(velo,grad_sol)
      write(200000+i,*)velo(cmbfile_el(i,2),cmbfile_el(i,3),cmbfile_el(i,1),1),&
                       velo(cmbfile_el(i,2),cmbfile_el(i,3),cmbfile_el(i,1),3)
 
-     write(250000+i,*)grad_sol(cmbfile_el(i,2),cmbfile_el(i,3),cmbfile_el(i,1),1) 
+     write(250000+i,*)grad_sol(cmbfile_el(i,2),cmbfile_el(i,3),cmbfile_el(i,1),1)
   enddo
 
   else
      do i=1,num_cmb
      write(200000+i,*)velo(cmbfile_el(i,2),cmbfile_el(i,3),cmbfile_el(i,1),1),&
                       velo(cmbfile_el(i,2),cmbfile_el(i,3),cmbfile_el(i,1),2),&
-                      velo(cmbfile_el(i,2),cmbfile_el(i,3),cmbfile_el(i,1),3)  
+                      velo(cmbfile_el(i,2),cmbfile_el(i,3),cmbfile_el(i,1),3)
 
-     write(250000+i,*)grad_sol(cmbfile_el(i,2),cmbfile_el(i,3),cmbfile_el(i,1),1) 
+     write(250000+i,*)grad_sol(cmbfile_el(i,2),cmbfile_el(i,3),cmbfile_el(i,1),1)
 
      enddo
   endif
@@ -967,7 +967,7 @@ end subroutine compute_recfile_cmb
 !=============================================================================
 
 !-----------------------------------------------------------------------------
-!> Save one displacement and velocity trace for each element on the surface 
+!> Save one displacement and velocity trace for each element on the surface
 !! which are both needed for kernels (du and v0 inside the cross-correlation)
 subroutine compute_surfelem(disp,velo)
 
@@ -975,7 +975,7 @@ subroutine compute_surfelem(disp,velo)
   use data_source, only : src_type
   use nc_routines, only : nc_dump_surface
   use data_mesh,   only : npol, jsurfel, surfelem, maxind
-  
+
   real(kind=realkind), intent(in) :: disp(0:,0:,:,:)
   real(kind=realkind), intent(in) :: velo(0:,0:,:,:)
   real                            :: dumpvar(maxind, 3)
@@ -992,20 +992,20 @@ subroutine compute_surfelem(disp,velo)
       else
           do i=1,maxind
               dumpvar(i,:) = real(disp(npol/2,jsurfel(i),surfelem(i),:))
-          end do
-      end if !monopole
+          enddo
+      endif !monopole
       call nc_dump_surface(dumpvar(:,:), 'disp')
-      
+
       if (src_type(1)=='monopole') then
           do i=1,maxind
               dumpvar(i,1) = real(velo(npol/2,jsurfel(i),surfelem(i),1))
               dumpvar(i,2) = real(velo(npol/2,jsurfel(i),surfelem(i),3))
-          end do
+          enddo
       else
-          do i=1,maxind    
+          do i=1,maxind
               dumpvar(i,:) = real(velo(npol/2,jsurfel(i),surfelem(i),:))
-          end do
-      end if !monopole
+          enddo
+      endif !monopole
       call nc_dump_surface(dumpvar(:,:), 'velo')
 
   else !use_netcdf !! VM VM add coupling
@@ -1017,25 +1017,25 @@ subroutine compute_surfelem(disp,velo)
                             real(velo(npol/2,jsurfel(i),surfelem(i),3))
       enddo
 
-      else 
+      else
          if ((.not. coupling)) then
             do i=1,maxind
                write(40000000+i,*)real(disp(npol/2,jsurfel(i),surfelem(i),1)),&
                     real(disp(npol/2,jsurfel(i),surfelem(i),2)),&
-                    real(disp(npol/2,jsurfel(i),surfelem(i),3))  
+                    real(disp(npol/2,jsurfel(i),surfelem(i),3))
                write(50000000+i,*)real(velo(npol/2,jsurfel(i),surfelem(i),1)),&
                     real(velo(npol/2,jsurfel(i),surfelem(i),2)),&
                     real(velo(npol/2,jsurfel(i),surfelem(i),3))
             enddo
-         end if
-      end if !monopole
-  end if !netcdf
+         endif
+      endif !monopole
+  endif !netcdf
 
 end subroutine compute_surfelem
 !=============================================================================
 
 !-----------------------------------------------------------------------------
-!> Save one displacement and velocity trace for each element on the surface 
+!> Save one displacement and velocity trace for each element on the surface
 !! which are both needed for kernels (du and v0 inside the cross-correlation)
 !!
 !!@TODO
@@ -1053,7 +1053,7 @@ subroutine compute_surfelem_strain(u)
   use nc_routines,            only: nc_dump_surface
   use data_mesh,              only: npol, nel_solid, surfelem, maxind
   real(kind=realkind), intent(in) :: u(0:,0:,:,:)
-  
+
   real(kind=realkind)             :: grad_sol(0:npol,0:npol,nel_solid,2)
   real(kind=realkind)             :: dumpvar(maxind, 6)
   real(kind=realkind)             :: strain(0:npol,nel_solid,6)
@@ -1085,7 +1085,7 @@ subroutine compute_surfelem_strain(u)
      strain(:,:,2) = inv_s_solid(npol/2,:,:) * u(npol/2,:,:,1) ! dp up
      strain(:,:,3) = grad_sol(npol/2,:,:,2) - strain(:,:,1) ! dz uz
 
-  elseif (src_type(1)=='dipole') then 
+  else if (src_type(1)=='dipole') then
      strain(:,:,2) = real(2.,kind=realkind) * inv_s_solid(npol/2,:,:) * u(npol/2,:,:,1) ! dp up
      strain(:,:,3) = grad_sol(npol/2,:,:,2) - strain(:,:,1) ! dz uz
 
@@ -1096,7 +1096,7 @@ subroutine compute_surfelem_strain(u)
      strain(:,:,6) = real(.5,kind=realkind) * (inv_s_solid(npol/2,:,:) * u(npol/2,:,:,3)  &
                                                + grad_sol(npol/2,:,:,2) ) ! dz up
 
-  elseif (src_type(1)=='quadpole') then
+  else if (src_type(1)=='quadpole') then
      strain(:,:,2) = inv_s_solid(npol/2,:,:) & ! dp up
                           *  ( u(npol/2,:,:,1) - real(2.,kind=realkind) * u(npol/2,:,:,2))
      strain(:,:,3) = grad_sol(npol/2,:,:,2) - strain(:,:,1) ! dz uz
@@ -1121,7 +1121,7 @@ subroutine compute_surfelem_strain(u)
         dumpvar(i,1:3) = real(u(npol/2,j,surfelem(i),1:3))
       enddo
       call nc_dump_surface(dumpvar(:,1:3), 'srcd')
-  end if
+  endif
 
   if (.not. use_netcdf .and. (.not. coupling)) then
       do i=1, maxind
@@ -1133,7 +1133,7 @@ subroutine compute_surfelem_strain(u)
 
 20 format(6(1pe11.3))
 30 format(3(1pe11.3))
-  end if
+  endif
 
 end subroutine compute_surfelem_strain
 !=============================================================================
@@ -1141,4 +1141,4 @@ end subroutine compute_surfelem_strain
 !========================
 end module seismograms
 !========================
- 
+

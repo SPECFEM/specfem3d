@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -39,7 +39,7 @@
 
   logical, parameter :: ana_map = .true. ! We employ analytical mapping here.
 
-  private 
+  private
 !
   contains
 !//////////////////////////////////////////////////////////
@@ -51,14 +51,14 @@
   real(kind=dp)    :: xil,etal,nodes_crd(8,2)!,dumbdummy
 
   if (     ana_map) mapping = mapping_anal(xil,etal,nodes_crd,iaxis,ielem0)
-  if (.not.ana_map) mapping = mapping_subpar(xil,etal,nodes_crd,iaxis) 
+  if (.not.ana_map) mapping = mapping_subpar(xil,etal,nodes_crd,iaxis)
 
-!  if(ielem0==1 ) then 
+!  if(ielem0==1 ) then
 !     dumbdummy=mapping_anal(xi,eta,nodes_crd,iaxis,ielem0)
 !     write(6,*)'IELGEOM:',ana_map,xi,eta,dumbdummy
 !  endif
-  
-  if ( iaxis == 1 .and. dabs(mapping/router) < 1.d-12 ) mapping = 0.d0 
+
+  if ( iaxis == 1 .and. dabs(mapping/router) < 1.d-12 ) mapping = 0.d0
 
   end function mapping
 !
@@ -67,14 +67,14 @@
 !dk quadfunc_map--------------------------------------------
   real(kind=dp)    function quadfunc_map(p,s,z,nodes_crd,ielem0)
 !
-!        This routines computes the 
+!        This routines computes the
 !quadratic functional (s-s(xi,eta))**2 + (z-z(xi,eta))**2
 !
   integer :: ielem0
   real(kind=dp)    :: p(2), s,z, nodes_crd(8,2)
 !
   if (     ana_map) quadfunc_map = quadfunc_map_anal(p,s,z,nodes_crd,ielem0)
-  if (.not.ana_map) quadfunc_map = quadfunc_map_subpar(p,s,z,nodes_crd) 
+  if (.not.ana_map) quadfunc_map = quadfunc_map_subpar(p,s,z,nodes_crd)
 
   end function quadfunc_map
 !
@@ -98,19 +98,19 @@
 !
 !dk s_over_oneplusxi_axis--------------------------------------------
   real(kind=dp)    function s_over_oneplusxi_axis(xil,etal,nodes_crd,ielem0)
-! 
-! This routine returns the value of the quantity
-!  
-!              s/(1+xi) 
 !
-! when the associated element lies along the axis of 
-! symmetry, in the case of an analytical transformation. 
-  
+! This routine returns the value of the quantity
+!
+!              s/(1+xi)
+!
+! when the associated element lies along the axis of
+! symmetry, in the case of an analytical transformation.
+
   integer :: ielem0
   real(kind=dp)    :: xil, etal, nodes_crd(8,2)
 
   if (     ana_map)s_over_oneplusxi_axis=s_over_oneplusxi_axis_anal(xil,etal,nodes_crd,ielem0)
-  if (.not.ana_map)s_over_oneplusxi_axis=s_over_oneplusxi_axis_subpar(xil,etal,nodes_crd) 
+  if (.not.ana_map)s_over_oneplusxi_axis=s_over_oneplusxi_axis_subpar(xil,etal,nodes_crd)
 
   end function s_over_oneplusxi_axis
 !
@@ -122,18 +122,18 @@
 !=========================================================================
 !!$!dk one_over_oneplusxi_axis--------------------------------------------
 !!$  real(kind=dp)    function one_over_oneplusxi_axis(xi,eta,nodes_crd,ielem0)
-!!$! 
-!!$! This routine returns the value of the quantity
-!!$!  
-!!$!              1/(1+xi) 
 !!$!
-!!$! when the associated element lies along the axis of 
-!!$! symmetry, in the case of an analytical transformation. 
-!!$  
+!!$! This routine returns the value of the quantity
+!!$!
+!!$!              1/(1+xi)
+!!$!
+!!$! when the associated element lies along the axis of
+!!$! symmetry, in the case of an analytical transformation.
+!!$
 !!$  integer :: ielem0
 !!$  real(kind=dp)    :: xi, eta, nodes_crd(8,2)
 !!$! WRONG WRONG WRONG: STILL HAVE TO DEFINE SUBPARAM FOR ONE_OVER_....!!!!!!!!!!!!!!!!!!!!!
-!!$  if (.not.ana_map)one_over_oneplusxi_axis=one_over_oneplusxi_axis_subpar(xi,eta,nodes_crd) 
+!!$  if (.not.ana_map)one_over_oneplusxi_axis=one_over_oneplusxi_axis_subpar(xi,eta,nodes_crd)
 !!$  if (     ana_map)one_over_oneplusxi_axis=one_over_oneplusxi_axis_anal(xi,eta,nodes_crd,ielem0)
 !!$
 !!$  end function one_over_oneplusxi_axis
@@ -150,7 +150,7 @@
   integer :: ielem0
   real(kind=dp)    :: xil, etal, nodes_crd(8,2)
 
-  if (     ana_map) jacobian = jacobian_anal(xil,etal,nodes_crd,ielem0)   
+  if (     ana_map) jacobian = jacobian_anal(xil,etal,nodes_crd,ielem0)
   if (.not.ana_map) jacobian = jacobian_subpar(xil,etal,nodes_crd)
 
   end function jacobian
@@ -160,17 +160,17 @@
   real(kind=dp)    function jacobian_srf(xil,crdedge,ielem0)
 !
 !       This routine computes the Jacobian of the transformation
-!that maps [-1,+1] into a portion of the boundary of domain.  
+!that maps [-1,+1] into a portion of the boundary of domain.
 !
   integer :: ielem0
   real(kind=dp)    :: xil, crdedge(3,2)
 
   if (     ana_map) then
      if (eltype(ielem0) /= 'linear') &
-         jacobian_srf = jacobian_srf_anal(xil,crdedge)  
+         jacobian_srf = jacobian_srf_anal(xil,crdedge)
      if (eltype(ielem0) == 'linear') &
-         jacobian_srf = jacobian_srf_subpar(xil,crdedge)  
-  end if
+         jacobian_srf = jacobian_srf_subpar(xil,crdedge)
+  endif
   if (.not.ana_map) jacobian_srf = jacobian_srf_subpar(xil,crdedge)
 
 !
@@ -245,7 +245,7 @@
 
   if (     ana_map) zetak = zetak_anal(xil,etal,nodes_crd,ielem0)
   if (.not.ana_map) zetak = zetak_subpar(xil,etal,nodes_crd)
- 
+
   end function zetak
 !---------------------------------------------------------------
 !

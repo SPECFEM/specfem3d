@@ -28,14 +28,14 @@
 !  do i=2,nt
 !     read(10,*)  time(i),Radial(i)
 !     if (time(i-1) >= t0 .and. time(i) <= t0+2*dt ) i0=i
-!     if (time(i-1) >= t1 .and. time(i) <= t1+2*dt ) i1=i     
-!  end do
+!     if (time(i-1) >= t1 .and. time(i) <= t1+2*dt ) i1=i
+!  enddo
 !  close(10)
 
 !  open(10,file='/home/monteill/Work/Specfem/Synth/DATA/data_sud_butt_0.001_0.95/S20.TS.HXZ.semd')
 !  do i=1,nt
 !     read(10,*)  time(i),Vertical(i)
-!  end do
+!  enddo
 !  close(10)
 
 !  nt_rf=i1-i0+1
@@ -51,15 +51,15 @@
 !  U(:)=0.
 !  write(*,*) i0,i1
 !  U(1:nt_rf)=Radial(i0:i1)
-  
+
 !  RF(:)=dcmplx(0.d0)
 !  RF(1:nt_rf)=dcmplx(U(:))
 !  call fft(RF,nfft,1)
 !  open(10,file='four1_test.txt')
 !  do i=1,nfft
-!     write(10,*) U(i),real(RF(i)),aimag(RF(i)) 
-!  end do
-  
+!     write(10,*) U(i),real(RF(i)),aimag(RF(i))
+!  enddo
+
 
 
 !!
@@ -76,8 +76,8 @@
 !  open(10,file='RF.txt')
 !  do i=1,nt_rf
 !     write(10,*) RF(i)
-!  end do
-  
+!  enddo
+
 !end program test_deconv
 
 !###################################### PREMIER FILTRE #################################################
@@ -253,7 +253,7 @@ end subroutine bpcoeff
 
 
 
-!####################### FIN PREMEIER ###################################################################################### 
+!####################### FIN PREMEIER ######################################################################################
 
 !############################## DEUXIEME FILTRE ##############################
 subroutine convolve_src_function(dt,y_input,y_output,convole_function,nsamples,nstep_convole_function)
@@ -269,8 +269,8 @@ subroutine convolve_src_function(dt,y_input,y_output,convole_function,nsamples,n
      jmax=min(nsamples,floor(it+0.5*(nstep_convole_function-1)))
      do j=jmin,jmax
         y_output(it) = y_output(it) + y_input(j)*convole_function(1+j-jmin)*dt
-     end do
-  end do
+     enddo
+  enddo
 
 end subroutine convolve_src_function
 
@@ -284,12 +284,12 @@ subroutine define_gaussian(gauss,f0,dt,n)
  i0=n/2
  do i=1,n
    gauss(i)=const*exp(- ((i - i0)*dt*f0)**2)
- end do
+ enddo
 end subroutine define_gaussian
 !####################################### FIN DEUXIEME ####################
 
 
-!############################################## DECONVOLUTION LIGORRIA & AMMON ############### 
+!############################################## DECONVOLUTION LIGORRIA & AMMON ###############
 subroutine makeRFdecon_la(RF,rms,UIN,WIN,dt,nt,TSHIFT,f0,itnmax,minderr,gauss,U,W,P0,RW,P,nstep_convole_gauss)
 
   implicit none
@@ -301,7 +301,7 @@ subroutine makeRFdecon_la(RF,rms,UIN,WIN,dt,nt,TSHIFT,f0,itnmax,minderr,gauss,U,
   double precision powerU,tmp_var,sumsq_i,sumsq,derror,amp
   integer i,iter,ispike,find_max_abs
 
- 
+
   write(*,*) f0/dt
   write(*,*) nstep_convole_gauss,f0,dt
 
@@ -311,10 +311,10 @@ subroutine makeRFdecon_la(RF,rms,UIN,WIN,dt,nt,TSHIFT,f0,itnmax,minderr,gauss,U,
   !open(10,file='gassian.txt')
   !do i=1,nt
   !   write(10,*) UIN(i),U(i)
-  !end do
+  !enddo
   !close(10)
 
-  
+
   P0(:)=0.d0
   R(:)=U(:)
   powerU=sum(U(:)*U(:))
@@ -325,21 +325,21 @@ subroutine makeRFdecon_la(RF,rms,UIN,WIN,dt,nt,TSHIFT,f0,itnmax,minderr,gauss,U,
   iter=0
   iter=itnmax-1
   do while (iter < itnmax .and. dabs(derror) > minderr)
-    
-    
+
+
 
     call convolve_function(dt,R,W,RW,nt)
     open(10,file='conv.txt')
 
     do i=1,2*nt
        write(10,*) RW(i)
-    end do
+    enddo
     close(10)
 
     open(10,file='vec_to_conv.txt')
     do i=1,nt
        write(10,*) R(i),W(i)
-    end do
+    enddo
     close(10)
 
     tmp_var=sum(W(:)*W(:))
@@ -358,14 +358,14 @@ subroutine makeRFdecon_la(RF,rms,UIN,WIN,dt,nt,TSHIFT,f0,itnmax,minderr,gauss,U,
     sumsq=sum(R(:)*R(:))/powerU
     derror=100.d0*(sumsq_i - sumsq)
     sumsq_i=sumsq
-   
+
     iter=iter+1
 
-  end do
+  enddo
 
   call convolve_src_function(dt,P0,RF,gauss,nt,nstep_convole_gauss)
-  
-     
+
+
 
 end subroutine makeRFdecon_la
 
@@ -373,27 +373,27 @@ subroutine convolve_function(dt,A,B,AB,n)
   implicit none
   integer n,i,j,j0,j1
   double precision dt,A(n),B(n),AB(2*n)
-  
+
   AB(:)=0.d0
 
 !!$  do i=1,n
 !!$     do j=1,i
 !!$        AB(i)=AB(i)+A(j)*B(n+1-j)*dt
-!!$     end do
-!!$  end do
+!!$     enddo
+!!$  enddo
 !!$  do i=n+1,2*n
 !!$     do j=i-n+1,n
 !!$        AB(i)=AB(i)+A(j)*B(n+1-j)*dt
-!!$        !if (i.eq. 5000) write(*,*) j,n+1-j
-!!$     end do
-!!$  end do
+!!$        !if (i== 5000) write(*,*) j,n+1-j
+!!$     enddo
+!!$  enddo
   do i=1,2*n
      j0=max(1,i-n+1)
      j1=min(i,n)
      do j=j0,j1
         AB(i)=AB(i)+A(j)*B(i-j)
-     end do
-  end do
+     enddo
+  enddo
 
 end subroutine convolve_function
 
@@ -407,11 +407,11 @@ function find_max_abs(X,n)
   max_value=0.d0
 
   do i=1,n
-     if (max_value <= abs(X(i))) then 
+     if (max_value <= abs(X(i))) then
         find_max_abs=i
         max_value=X(i)
-     end if
-  end do
+     endif
+  enddo
 
 end function
 
@@ -501,14 +501,14 @@ end subroutine fft
 !!$               Y(I)=Y(I)+Y(L)
 !!$               X(L)=C*XT+S*YT
 !!$               Y(L)=C*YT-S*XT
-!!$            end DO
-!!$         end DO
-!!$      end DO
+!!$            enddo
+!!$         enddo
+!!$      enddo
 !!$      ! Digit reverse counter
 !!$100   J=1
 !!$      N1=N-1
 !!$      DO 104 I=1,N1
-!!$         IF (I.GE.J) GO TO 101
+!!$         IF (I>=J) GO TO 101
 !!$         XT=X(J)
 !!$         X(J)=X(I)
 !!$         X(I)=XT
@@ -516,12 +516,12 @@ end subroutine fft
 !!$          Y(J)=Y(I)
 !!$         Y(I)=XT
 !!$  101    K=N/2
-!!$102      IF (K.GE.J) GO TO 103
+!!$102      IF (K>=J) GO TO 103
 !!$         J=J-K
 !!$         K=K/2
 !!$         GO TO 102
 !!$103      J=J+K
-!!$      end DO
+!!$      enddo
 !!$      RETURN
 !!$    END SUBROUTINE FFT
 !  four1 -- this is the four1 routine from numerical recipes
@@ -531,24 +531,24 @@ end subroutine fft
       N=2*NN
       J=1
       DO  I=1,N,2
-        IF(J.GT.I)THEN
+        IF(J>I)THEN
           TEMPR=DATA(J)
           TEMPI=DATA(J+1)
           DATA(J)=DATA(I)
           DATA(J+1)=DATA(I+1)
           DATA(I)=TEMPR
           DATA(I+1)=TEMPI
-        ENDIF
+        endif
         M=N/2
-1       IF ((M.GE.2).AND.(J.GT.M)) THEN
+1       IF ((M>=2).AND.(J>M)) THEN
           J=J-M
           M=M/2
         GO TO 1
-        ENDIF
+        endif
         J=J+M
-     END DO
+     enddo
       MMAX=2
-2     IF (N.GT.MMAX) THEN
+2     IF (N>MMAX) THEN
         ISTEP=2*MMAX
         THETA=6.28318530717959D0/(ISIGN*MMAX)
         WPR=-2.D0*DSIN(0.5D0*THETA)**2
@@ -564,14 +564,14 @@ end subroutine fft
             DATA(J+1)=DATA(I+1)-TEMPI
             DATA(I)=DATA(I)+TEMPR
             DATA(I+1)=DATA(I+1)+TEMPI
-         END DO
+         enddo
           WTEMP=WR
           WR=WR*WPR-WI*WPI+WR
           WI=WI*WPR+WTEMP*WPI+WI
-       END DO
+       enddo
         MMAX=ISTEP
       GO TO 2
-      ENDIF
+      endif
       RETURN
     END SUBROUTINE FOUR1
 

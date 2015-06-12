@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -100,8 +100,8 @@ program field_transformation
         endif
     endif
 
-    ! open input netcdf file 
-    call check( nf90_open(path="./Data/axisem_output.nc4", & 
+    ! open input netcdf file
+    call check( nf90_open(path="./Data/axisem_output.nc4", &
                           mode=NF90_NOWRITE, ncid=ncin_id) )
 
     ! get Snapshots group id
@@ -112,7 +112,7 @@ program field_transformation
 
     if (verbose) &
         print *, sourcetype
-    
+
     if (sourcetype=='monopole')  then
         nvar = 6
         allocate(varnamelist(nvar))
@@ -124,13 +124,13 @@ program field_transformation
         varnamelist = (/'strain_dsus', 'strain_dsuz', 'strain_dpup', &
                         'strain_dsup', 'strain_dzup', 'straintrace', &
                         'velo_s     ', 'velo_p     ', 'velo_z     '/)
-    end if
+    endif
 
     ! get variable ids of the fields
     do ivar=1, nvar
         call check( nf90_inq_varid(ncin_snap_grpid, varnamelist(ivar), &
                                    varid=ncin_field_varid(ivar)) )
-    end do
+    enddo
 
     ! get dimension ids (same for all fields)
     ivar = 1
@@ -150,17 +150,17 @@ program field_transformation
     if (dofft) then
         ! compute optimal length for fft
         nextpow2 = 2
-        do while (nextpow2 < nsnap) 
+        do while (nextpow2 < nsnap)
             nextpow2 = nextpow2 * 2
-        end do
+        enddo
 
         nomega = nextpow2 + 1
         ntimes = nextpow2 * 2
         if (verbose) then
             print *, 'nomega = ', nomega
             print *, 'ntimes = ', ntimes
-        end if
-    end if
+        endif
+    endif
 
 
     !! Check for output file
@@ -169,7 +169,7 @@ program field_transformation
     if (output_exist) then
         if (verbose) &
             print *, 'Opening output file'
-        nmode = NF90_WRITE 
+        nmode = NF90_WRITE
         call check( nf90_open(path="./ordered_output.nc4", mode=nmode, ncid=ncout_id))
         call check( nf90_redef(ncid=ncout_id))
     else
@@ -178,16 +178,16 @@ program field_transformation
             print *, 'Creating output file'
         nmode = ior(NF90_CLOBBER, NF90_NETCDF4)
         call check( nf90_create(path="./ordered_output.nc4", cmode=nmode, ncid=ncout_id))
-    end if
+    endif
 
-    if (dofft) then 
+    if (dofft) then
         ! create group for freqdomain fields
         call check( nf90_def_grp(ncout_id, "freqdomain_fields", ncout_fields_grpid) )
 
         ! create dimensions
         call check( nf90_def_dim(ncid=ncout_fields_grpid, name="omega", len=nomega, &
                                  dimid=ncout_freq_dimid) )
-    
+
         call check( nf90_def_dim(ncid=ncout_fields_grpid, name="gllpoints_all", &
                                  len=ngll, dimid=ncout_gll_dimid) )
 
@@ -215,8 +215,8 @@ program field_transformation
                                                  varid=ncout_field_varid(ivar, 2), &
                                                  shuffle=1, deflate=1, &
                                                  deflate_level=deflate_level) )
-            end if
-        end do
+            endif
+        enddo
     else
         ! create group for timedomain fields
         call check( nf90_def_grp(ncout_id, "Snapshots", ncout_fields_grpid) )
@@ -245,7 +245,7 @@ program field_transformation
 
         !call check( nf90_inq_varid(ncin_snap_grpid, 'snapshot_times', &
         !                           ncin_snaptime_varid))
-                                
+
 
         ! Having problems with that...
         !call check( nf_copy_var(ncin_snap_grpid, ncin_snaptime_varid, &
@@ -272,20 +272,20 @@ program field_transformation
                                                  varid=ncout_field_varid(ivar, 1), &
                                                  shuffle=1, deflate=1, &
                                                  deflate_level=deflate_level) )
-            end if
-        end do
-    end if
+            endif
+        enddo
+    endif
 
     call check( nf90_enddef(ncout_id))
 
-    if (dofft) then 
+    if (dofft) then
         rank = 1
         istride = 1
         ostride = 1
         if (verbose) then
             print *, 'ntimes = ',  ntimes
             print *, 'nomega = ',  nomega
-        end if
+        endif
 
         ! allocate working arrays for fourier transform
         allocate(dataf(1:nomega, 1:npointsperstep))
@@ -299,8 +299,8 @@ program field_transformation
     else
         allocate(datat(1:nsnap, 1:npointsperstep))
         allocate(datat_t(1:npointsperstep, 1:nsnap))
-    end if
-   
+    endif
+
     ! loop over fields
     do ivar=1, nvar
         if (verbose) &
@@ -312,10 +312,10 @@ program field_transformation
             ngllread = min(npointsperstep, ngll - nstep)
 
             !initialize to zero for padding
-            if (dofft) then 
+            if (dofft) then
                 datat = 0.
                 dataf = 0.
-            end if
+            endif
 
             ! read a chunk of data
             call cpu_time(tick)
@@ -349,12 +349,12 @@ program field_transformation
                 call check( nf90_put_var(ncout_fields_grpid, ncout_field_varid(ivar, 1), &
                                          values=realpart(dataf), &
                                          start=(/1, nstep+1/), &
-                                         count=(/nomega, ngllread/)) ) 
+                                         count=(/nomega, ngllread/)) )
 
                 call check( nf90_put_var(ncout_fields_grpid, ncout_field_varid(ivar, 2), &
                                          values=imagpart(dataf), &
                                          start=(/1, nstep+1/), &
-                                         count=(/nomega, ngllread/)) ) 
+                                         count=(/nomega, ngllread/)) )
                 call cpu_time(tack)
                 time_o = time_o + tack - tick
                 space_o = space_o + ngllread * nsnap * 8 / 1048576.
@@ -376,7 +376,7 @@ program field_transformation
                 call check( nf90_put_var(ncout_fields_grpid, ncout_field_varid(ivar, 1), &
                                          values=datat, &
                                          start=(/1, nstep+1/), &
-                                         count=(/nsnap, ngllread/)) ) 
+                                         count=(/nsnap, ngllread/)) )
                 call cpu_time(tack)
                 time_o = time_o + tack - tick
                 space_o = space_o + ngllread * nsnap * 4 / 1048576.
@@ -384,11 +384,11 @@ program field_transformation
                     print "('wrote ', F8.2, ' MB in ', F4.1, ' s => ', F6.2, 'MB/s' )", &
                         ngllread * nsnap * 4 / 1048576., tack-tick, &
                         ngllread * nsnap * 4 / 1048576. / (tack-tick)
-            end if
+            endif
 
 
             nstep = nstep + npointsperstep
-        end do
+        enddo
     enddo
 
     if (dofft) &
@@ -407,7 +407,7 @@ program field_transformation
 
     stop 'This program can only be run with NetCDF enabled'
 #endif
-    
+
 contains
 !-----------------------------------------------------------------------------------------
 
@@ -417,12 +417,12 @@ subroutine check(status)
     integer, intent ( in) :: status !< Error code
     integer, allocatable  :: test(:)
 #ifdef unc
-    if(status /= nf90_noerr) then 
+    if(status /= nf90_noerr) then
         print *, trim(nf90_strerror(status))
         test = test - 100
         stop 0
 
-    end if
+    endif
 #endif
 end subroutine
 !-----------------------------------------------------------------------------------------
@@ -442,13 +442,13 @@ subroutine truncate(dataIO, sigdigits)
     do while (log10(2.) * bits < real(sigdigits))
         bits = bits + 1
         scaleit = real(2**bits)
-    end do
+    enddo
 
     ! trunkate the data time series wise (each gll point separately)
     do n = lbound(dataIO,2), ubound(dataIO,2)
         maxt = maxval(dataIO(:,n))
         dataIO(:,n) = real(nint(scaleit * dataIO(:,n) / maxt) / scaleit) * maxt
-    end do
+    enddo
 
 end subroutine
 !-----------------------------------------------------------------------------------------
@@ -458,9 +458,9 @@ end subroutine
 !     integer, intent(in)  :: ncid_in, varid_in
 !     character(len=*), intent(in) :: name
 !     integer, intent(in)  :: ncid_out, varid_out
-! 
+!
 !     nf90_copy_att = nf_copy_att(ncid_in, varid_in, name, ncid_out, varid_out)
-! 
+!
 ! end function
-! 
+!
 end program

@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -49,11 +49,11 @@ program gllmesh
   ! 3) bkgrdmodel & discontinuity radii
   call read_params ! input
   !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  
+
   write(6,*)'MAIN: creating subregions/discontinuity model..........'; call flush(6)
   call create_subregions ! discont_meshing
 
-  southern = .true. 
+  southern = .true.
 
   write(6,*)'MAIN: generating skeleton..............................'; call flush(6)
   iclock02 = tick()
@@ -84,7 +84,7 @@ program gllmesh
   call def_fluid_regions ! mesh_info
   call def_solid_regions ! mesh_info
   call extract_fluid_solid_submeshes ! gllmeshgen
-  
+
   write(6,*)'MAIN: glob-slob/flob numbering.........................'; call flush(6)
   iclock08 = tick()
   if (have_fluid) &
@@ -100,7 +100,7 @@ program gllmesh
   ! Parallelization
   write(6,*)'MAIN: domain decomposition.............................'; call flush(6)
   call create_domain_decomposition !parallelization
- 
+
   write(6,*)'MAIN: creating parallel database.......................'; call flush(6)
   iclock11 = tick()
   call create_pdb ! pdb
@@ -108,9 +108,9 @@ program gllmesh
 
   ! clean up
   call empty_data_mesh
-  
+
   call end_clock ! clocks
-  
+
   write(6,*)''
   write(6,*)'....DONE WITH MESHER !'
 
@@ -127,13 +127,13 @@ subroutine start_clock
 
   use data_time
   use clocks_mod, only : clock_id, clocks_init
-  
+
   implicit none
-  
+
   character(len=8)  :: mydate
   character(len=10) :: mytime
 
-  call date_and_time(mydate,mytime) 
+  call date_and_time(mydate,mytime)
   write(6,11) mydate(5:6), mydate(7:8), mydate(1:4), mytime(1:2), mytime(3:4)
 
 11 format('     Meshing started on ', A2,'/',A2,'/',A4,' at ', A2,'h ',A2,'min',/)
@@ -151,7 +151,7 @@ subroutine start_clock
   idold07 = clock_id('get_global no loop')
   idold09 = clock_id('get_global in loop')
   idold11 = clock_id('create_pdb')
-  
+
   idold12 = clock_id('define_glocal_numbering')
   idold13 = clock_id('define_sflocal_numbering')
   idold14 = clock_id('generate_serendipity_per_proc')
@@ -161,7 +161,7 @@ end subroutine start_clock
 !=============================================================================
 
 !-----------------------------------------------------------------------------
-subroutine end_clock 
+subroutine end_clock
   !
   ! Wapper routine to end timing and display clock informations.
   !

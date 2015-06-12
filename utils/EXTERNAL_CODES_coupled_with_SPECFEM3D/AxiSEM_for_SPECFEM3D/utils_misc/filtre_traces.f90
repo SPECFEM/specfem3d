@@ -28,7 +28,7 @@
     write(*,*) npts
     fichier='dat_tmp.txt'
     call write_adj(f2,trdat,fichier,npts)
-!!$    
+!!$
 !!$    call read_trace(insyn,trdat,npts,dt)
 !!$    f1(:)=trdat(2,:)
 !!$    f2(:)=trdat(2,:)
@@ -47,22 +47,22 @@
     do i=1,n
        if(mod(i,100)==0) write(*,*) i,n
        write(30,*) synth(1,i), adj(i)
-    end do
+    enddo
     close(30)
   end subroutine write_adj
 
   subroutine read_npts(fichier,nstep)
     implicit none
-    integer nstep 
+    integer nstep
     character(len=250) fichier
     real x,y
 
     nstep=0
     open(20,file=trim(fichier))
-    do 
+    do
        read(20,*,end=99) x,y
        nstep=nstep + 1
-    end do
+    enddo
 99  continue
     close(20)
 
@@ -73,21 +73,21 @@
     integer nstep,i
     double precision dt,trace(2,nstep)
     character(len=250) fichier
-    
+
     !write(*,*) trim(fichier)
-    
-    
+
+
     open(20,file=trim(fichier))
-    
+
     trace(:,:) = 0.d0
     i = 1
     do i=1,nstep
-       read(20,*,end=99) trace(1,i),trace(2,i)   
-    end do
+       read(20,*,end=99) trace(1,i),trace(2,i)
+    enddo
 99  continue
     dt = trace(1,2) - trace(1,1)
-   
+
     close(20)
   end subroutine read_trace
-  
-  
+
+

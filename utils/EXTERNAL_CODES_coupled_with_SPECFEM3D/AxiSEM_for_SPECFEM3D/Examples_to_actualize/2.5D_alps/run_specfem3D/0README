@@ -3,7 +3,7 @@
 
 je l'ai mis en HEX8 
 
-creation du chunk avec meshfem3D de Clément, copie des inputs à partir de l'example small:
+creation du chunk avec meshfem3D de Clement, copie des inputs a partir de l'example small:
 ~/progs/GIT/specfem3d/EXAMPLES/DSM_FOR_SPECFEM3D/example_simple_small
 
 il faut generer un fichier dans le repertoire MESH-data:

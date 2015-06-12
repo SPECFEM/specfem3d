@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -59,7 +59,7 @@ real(kind=dp) function map_spheroid(xi, eta, crd_nodes, idir)
      write(61,*)'Direction 1!'
      map_spheroid = sbar+ds*eta*.5
 
-  elseif (idir == 2) then
+  else if (idir == 2) then
      write(61,*)'Direction 2!'
      if (abs(ds)>1.e-7) then
         write(61,*)'abs > 1.d-10... intersect and slope'
@@ -68,12 +68,12 @@ real(kind=dp) function map_spheroid(xi, eta, crd_nodes, idir)
         map_spheroid = slope*(sbar+.5*ds*eta)+intersect
      else
         map_spheroid = .5*(zbot+ztop)+eta*(ztop-zbot)*.5
-     end if
+     endif
      write(61,*)'stop,sbot:',stop,sbot
      write(61,*)'ztop,zbot:',ztop,zbot
-  end if
+  endif
   write(61,*)'map_spheroid',map_spheroid
- 
+
   write(61,*)''
 
 end function map_spheroid
@@ -91,13 +91,13 @@ pure subroutine compute_parameters_sph(crd_nodes, abot, bbot, atop, btop, &
 
   s1 = crd_nodes(1,1)
   z1 = crd_nodes(1,2)
-  
+
   s3 = crd_nodes(3,1)
   z3 = crd_nodes(3,2)
-  
+
   s5 = crd_nodes(5,1)
   z5 = crd_nodes(5,2)
-  
+
   s7 = crd_nodes(7,1)
   z7 = crd_nodes(7,2)
 
@@ -119,7 +119,7 @@ end subroutine compute_parameters_sph
 
 !-----------------------------------------------------------------------------------------
 pure subroutine compute_ab(a, b, s1, z1, s2, z2)
-  
+
   real(kind=dp), intent(out) :: a,b
   real(kind=dp), intent(in) :: s1,z1,s2,z2
 
@@ -132,19 +132,19 @@ end subroutine compute_ab
 !-----------------------------------------------------------------------------------------
 pure subroutine compute_theta(theta,s,z,a,b)
 ! This routine returns the latitude theta, given s and z.
-  
+
   real(kind=dp), intent(out) :: theta
   real(kind=dp), intent(in) :: s, z, a, b
   real(kind=dp)    :: pi
-  
+
   pi = 2.*asin(1.)
-  
+
   if (s /= 0. ) then
      theta=atan(z*a/(s*b))
   else
      if (z>0.) theta=.5*pi
      if (z<0.) theta=-.5*pi
-  end if
+  endif
 
 end subroutine compute_theta
 !-----------------------------------------------------------------------------------------

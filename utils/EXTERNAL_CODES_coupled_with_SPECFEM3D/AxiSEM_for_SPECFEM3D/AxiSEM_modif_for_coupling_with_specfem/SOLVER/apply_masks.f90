@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -20,7 +20,7 @@
 !
 
 !=====================
-  module apply_masks 
+  module apply_masks
 !=====================
 
   use global_parameters, only: zero, realkind
@@ -33,9 +33,9 @@
 
 contains
 
-  ! These routine applies a mask by retaining in the array those components which do not 
-  ! belong to the axis of rotation. It sets to zero the axial components of the array, 
-  ! for the non-axisymmetric components of the variables have to vanish on the axis of 
+  ! These routine applies a mask by retaining in the array those components which do not
+  ! belong to the axis of rotation. It sets to zero the axial components of the array,
+  ! for the non-axisymmetric components of the variables have to vanish on the axis of
   ! rotation
 !-----------------------------------------------------------------------------------------
 pure subroutine apply_axis_mask_scal(u, nel, ax_array, nax_array)
@@ -48,7 +48,7 @@ pure subroutine apply_axis_mask_scal(u, nel, ax_array, nax_array)
 
   do ielem = 1, nax_array
      u(0,:,ax_array(ielem)) = zero
-  end do
+  enddo
 
 end subroutine apply_axis_mask_scal
 !-----------------------------------------------------------------------------------------
@@ -64,7 +64,7 @@ pure subroutine apply_axis_mask_onecomp(u, nel, ax_array, nax_array)
 
   do ielem = 1, nax_array
      u(0,:,ax_array(ielem),1) = zero
-  end do
+  enddo
 
 end subroutine apply_axis_mask_onecomp
 !-----------------------------------------------------------------------------------------
@@ -72,7 +72,7 @@ end subroutine apply_axis_mask_onecomp
 !-----------------------------------------------------------------------------------------
 pure subroutine apply_axis_mask_twocomp(u, nel, ax_array, nax_array)
   ! for the 2nd and 3rd component of the array
-  
+
   integer, intent(in)               :: nel, nax_array
   real(kind=realkind),intent(inout) :: u(0:,0:,:,:)
   integer, intent(in)               :: ax_array(nax_array)
@@ -80,7 +80,7 @@ pure subroutine apply_axis_mask_twocomp(u, nel, ax_array, nax_array)
 
   do ielem = 1, nax_array
      u(0,:,ax_array(ielem),2:3) = zero
-  end do
+  enddo
 
 end subroutine apply_axis_mask_twocomp
 !-----------------------------------------------------------------------------------------
@@ -96,10 +96,10 @@ pure subroutine apply_axis_mask_threecomp(u, nel, ax_array, nax_array)
 
   do ielem = 1, nax_array
      u(0,:,ax_array(ielem),1:3) = zero
-  end do
+  enddo
 
 end subroutine apply_axis_mask_threecomp
 
 !========================
-  end module apply_masks 
+  end module apply_masks
 !========================

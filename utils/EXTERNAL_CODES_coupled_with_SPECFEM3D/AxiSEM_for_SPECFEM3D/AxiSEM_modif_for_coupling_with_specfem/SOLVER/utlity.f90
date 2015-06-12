@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -25,7 +25,7 @@ module utlity
 
   use global_parameters
   implicit none
-  
+
   public :: compute_coordinates, scoord, zcoord, rcoord, thetacoord
   public :: dblreldiff_small, reldiff_small
   public :: dblereldiff, reldiff
@@ -41,9 +41,9 @@ logical function dblreldiff_small(x1,x2)
 
   dblreldiff_small = .false.
 
-  if (x1 /= zero) then 
+  if (x1 /= zero) then
      if (abs((x1-x2)/x1) <= smallval_dble) dblreldiff_small = .true.
-  elseif (x2 /=zero) then
+  else if (x2 /=zero) then
      if (abs((x1-x2)/x2) <= smallval_dble) dblreldiff_small = .true.
   else
      dblreldiff_small = .true.
@@ -63,9 +63,9 @@ logical function reldiff_small(x1,x2)
 
   reldiff_small = .false.
 
-  if (x1 /= zero) then 
+  if (x1 /= zero) then
      if (abs((x1-x2)/x1) <= smallval1) reldiff_small = .true.
-  elseif (x2 /=zero) then
+  else if (x2 /=zero) then
      if (abs((x1-x2)/x2) <= smallval1) reldiff_small = .true.
   else
      reldiff_small = .true.
@@ -81,7 +81,7 @@ real(kind=realkind) function reldiff(x1,x2)
 
   if (x1/=zero) then
      reldiff=(x1-x2)/x1
-  elseif (x2/=zero) then
+  else if (x2/=zero) then
      reldiff=(x1-x2)/x2
   else
      reldiff=zero
@@ -97,7 +97,7 @@ real(kind=dp)    function dblereldiff(x1,x2)
 
   if (x1/=zero) then
      dblereldiff=(x1-x2)/x1
-  elseif (x2/=zero) then 
+  else if (x2/=zero) then
      dblereldiff=(x1-x2)/x2
   else
      dblereldiff=zero
@@ -113,7 +113,7 @@ real(kind=realkind) function absreldiff(x1,x2)
 
   if (x1/=zero) then
      absreldiff=abs((x1-x2)/x1)
-  elseif (x2/=zero) then 
+  else if (x2/=zero) then
      absreldiff=abs((x1-x2)/x2)
   else
      absreldiff=zero
@@ -129,7 +129,7 @@ real(kind=dp)    function dbleabsreldiff(x1,x2)
 
   if (x1/=zero) then
      dbleabsreldiff=abs((x1-x2)/x1)
-  elseif (x2/=zero) then 
+  else if (x2/=zero) then
      dbleabsreldiff=abs((x1-x2)/x2)
   else
      dbleabsreldiff=zero
@@ -145,12 +145,12 @@ subroutine compute_coordinates(s,z,r,theta,ielem,ipol,jpol)
   ! These coordinates are by default ALWAYS global (no solid or fluid domains).
   !
   !-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-  
+
   use data_mesh,            ONLY: min_distance_dim
   use data_mesh,            ONLY: lnods, crd_nodes, axis
   use data_spec,            ONLY: xi_k, eta
   use geom_transf,          ONLY: mapping
-  
+
   real(kind=dp), intent(out)    :: s,z,r,theta
   integer, intent(in)           :: ielem,ipol,jpol
   integer                       :: ipt,inode
@@ -160,18 +160,18 @@ subroutine compute_coordinates(s,z,r,theta,ielem,ipol,jpol)
      ipt = lnods(ielem,inode)
      nodes_crd(inode,1) = crd_nodes(ipt,1)
      nodes_crd(inode,2) = crd_nodes(ipt,2)
-  end do
+  enddo
 
   ! Fill global coordinate array
-  if ( axis(ielem) ) then 
+  if ( axis(ielem) ) then
 
      s= mapping( xi_k(ipol),eta(jpol),nodes_crd,1,ielem)
      z= mapping( xi_k(ipol),eta(jpol),nodes_crd,2,ielem)
 
-  else 
+  else
      s= mapping(eta(ipol),eta(jpol),nodes_crd,1,ielem)
      z= mapping(eta(ipol),eta(jpol),nodes_crd,2,ielem)
-  end if
+  endif
 
   ! Eliminate roundoff errors
   if (abs(s) < min_distance_dim) s=zero
@@ -192,12 +192,12 @@ real(kind=dp)    function scoord(ipol,jpol,ielem)
   ! These coordinates are by default ALWAYS global (no solid or fluid domains).
   !
   !-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-  
+
   use data_mesh,            ONLY: min_distance_dim
   use data_mesh,            ONLY: lnods, crd_nodes, axis
   use data_spec,            ONLY: xi_k, eta
   use geom_transf,          ONLY: mapping
-  
+
   integer, intent(in)  :: ielem, ipol, jpol
   integer              :: ipt, inode
   real(kind=dp)        :: nodes_crd(8,2)
@@ -206,14 +206,14 @@ real(kind=dp)    function scoord(ipol,jpol,ielem)
      ipt = lnods(ielem,inode)
      nodes_crd(inode,1) = crd_nodes(ipt,1)
      nodes_crd(inode,2) = crd_nodes(ipt,2)
-  end do
+  enddo
 
   ! Fill global coordinate array
-  if ( axis(ielem) ) then 
+  if ( axis(ielem) ) then
      scoord = mapping( xi_k(ipol),eta(jpol),nodes_crd,1,ielem)
-  else 
+  else
      scoord = mapping(eta(ipol),eta(jpol),nodes_crd,1,ielem)
-  end if
+  endif
 
   ! Eliminate roundoff errors
   if (abs(scoord) < min_distance_dim) scoord=zero
@@ -228,12 +228,12 @@ real(kind=dp)    function zcoord(ipol,jpol,ielem)
   ! These coordinates are by default ALWAYS global (no solid or fluid domains).
   !
   !-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-  
+
   use data_mesh,            ONLY: min_distance_dim
   use data_mesh,            ONLY: lnods, crd_nodes, axis
   use data_spec,            ONLY: xi_k, eta
   use geom_transf,          ONLY: mapping
-  
+
   integer, intent(in)  :: ielem, ipol, jpol
   integer              :: ipt, inode
   real(kind=dp)        :: nodes_crd(8,2)
@@ -242,14 +242,14 @@ real(kind=dp)    function zcoord(ipol,jpol,ielem)
      ipt = lnods(ielem,inode)
      nodes_crd(inode,1) = crd_nodes(ipt,1)
      nodes_crd(inode,2) = crd_nodes(ipt,2)
-  end do
+  enddo
 
   ! Fill global coordinate array
-  if ( axis(ielem) ) then 
+  if ( axis(ielem) ) then
      zcoord = mapping( xi_k(ipol),eta(jpol),nodes_crd,2,ielem)
-  else 
+  else
      zcoord = mapping(eta(ipol),eta(jpol),nodes_crd,2,ielem)
-  end if
+  endif
 
   ! Eliminate roundoff errors
   if (abs(zcoord) < min_distance_dim) zcoord=zero
@@ -264,12 +264,12 @@ real(kind=dp)    function rcoord(ipol,jpol,ielem)
   ! These coordinates are by default ALWAYS global (no solid or fluid domains).
   !
   !-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-  
+
   use data_mesh,            ONLY: min_distance_dim
   use data_mesh,            ONLY: lnods, crd_nodes, axis
   use data_spec,            ONLY: xi_k, eta
   use geom_transf,          ONLY: mapping
-  
+
   integer, intent(in)  :: ielem, ipol, jpol
   integer              :: ipt, inode
   real(kind=dp)        :: nodes_crd(8,2),s,z
@@ -278,16 +278,16 @@ real(kind=dp)    function rcoord(ipol,jpol,ielem)
      ipt = lnods(ielem,inode)
      nodes_crd(inode,1) = crd_nodes(ipt,1)
      nodes_crd(inode,2) = crd_nodes(ipt,2)
-  end do
+  enddo
 
   ! Fill global coordinate array
-  if ( axis(ielem) ) then 
+  if ( axis(ielem) ) then
      s = mapping( xi_k(ipol),eta(jpol),nodes_crd,1,ielem)
      z = mapping( xi_k(ipol),eta(jpol),nodes_crd,2,ielem)
-  else 
+  else
      s = mapping(eta(ipol),eta(jpol),nodes_crd,1,ielem)
      z = mapping(eta(ipol),eta(jpol),nodes_crd,2,ielem)
-  end if
+  endif
 
   rcoord = sqrt(s**2 + z**2)
   ! Eliminate roundoff errors
@@ -303,12 +303,12 @@ real(kind=dp) function thetacoord(ipol,jpol,ielem)
   ! These coordinates are by default ALWAYS global (no solid or fluid domains).
   !
   !-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-  
+
   use data_mesh,            ONLY: min_distance_dim
   use data_mesh,            ONLY: lnods, crd_nodes,axis
   use data_spec,            ONLY: xi_k, eta
   use geom_transf,          ONLY: mapping
-  
+
   integer, intent(in)  :: ielem, ipol, jpol
   integer              :: ipt, inode
   real(kind=dp)        :: nodes_crd(8,2),s,z
@@ -317,16 +317,16 @@ real(kind=dp) function thetacoord(ipol,jpol,ielem)
      ipt = lnods(ielem,inode)
      nodes_crd(inode,1) = crd_nodes(ipt,1)
      nodes_crd(inode,2) = crd_nodes(ipt,2)
-  end do
+  enddo
 
   ! Fill global coordinate array
-  if ( axis(ielem) ) then 
+  if ( axis(ielem) ) then
      s = mapping(xi_k(ipol), eta(jpol), nodes_crd, 1, ielem)
      z = mapping(xi_k(ipol), eta(jpol), nodes_crd, 2, ielem)
-  else 
+  else
      s = mapping(eta(ipol), eta(jpol), nodes_crd, 1, ielem)
      z = mapping(eta(ipol), eta(jpol), nodes_crd, 2, ielem)
-  end if
+  endif
 
   thetacoord = datan(s/(z+epsi))
   if ( zero > thetacoord ) thetacoord = pi + thetacoord

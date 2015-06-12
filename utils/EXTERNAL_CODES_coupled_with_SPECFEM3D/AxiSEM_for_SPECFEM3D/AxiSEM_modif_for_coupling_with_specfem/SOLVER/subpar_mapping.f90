@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -20,15 +20,15 @@
 !
 
 !=======================
-module subpar_mapping  
+module subpar_mapping
 !=======================
 !
-! Module used to compute the  
-! subparametric mapping that defines the mesh. 
+! Module used to compute the
+! subparametric mapping that defines the mesh.
 
   use global_parameters
 
-  implicit none 
+  implicit none
 
   public :: jacobian_subpar, alpha_subpar, beta_subpar
   public :: gamma_subpar, delta_subpar, epsilon_subpar, zeta_subpar
@@ -59,7 +59,7 @@ real(kind=dp)    function mapping_subpar(xil,etal,nodes_crd,iaxis)
 !
 ! iaxis = 1 : along the cylindrical radius axis
 ! iaxis = 2 : along the vertical(rotation) axis
-  
+
   integer          :: iaxis
   real(kind=dp)    :: xil, etal, nodes_crd(8,2)
   integer          :: inode
@@ -69,12 +69,12 @@ real(kind=dp)    function mapping_subpar(xil,etal,nodes_crd,iaxis)
   ! functions
 
   call shp8(xil,etal,shp)
-  
+
   mapping_subpar = zero
 
   do inode = 1, 8
      mapping_subpar = mapping_subpar + shp(inode)*nodes_crd(inode,iaxis)
-  end do
+  enddo
 
 end function mapping_subpar
 !-----------------------------------------------------------------------------------------
@@ -84,7 +84,7 @@ real(kind=dp)    function quadfunc_map_subpar(p, s, z, nodes_crd)
 ! This routines computes the quadratic functional (s-s(xi,eta))**2 + (z-z(xi,eta))**2
 
   real(kind=dp)    :: p(2),xil,etal,s,z,nodes_crd(8,2)
-  
+
   xil  = p(1)
   etal = p(2)
 
@@ -118,10 +118,10 @@ subroutine grad_quadfunc_map_subpar(grd, p, s, z, nodes_crd)
         d = d + nodes_crd(inode,2)*shpder(inode,2)
         b = b + nodes_crd(inode,1)*shpder(inode,2)
         c = c + nodes_crd(inode,2)*shpder(inode,1)
-     end do
+     enddo
 
   grd(1) = -((s-mapping_subpar(xil,etal,nodes_crd,1))*a&
-            +(z-mapping_subpar(xil,etal,nodes_crd,2))*c)  
+            +(z-mapping_subpar(xil,etal,nodes_crd,2))*c)
   grd(2) = -((s-mapping_subpar(xil,etal,nodes_crd,1))*b&
             +(z-mapping_subpar(xil,etal,nodes_crd,2))*d)
 
@@ -147,7 +147,7 @@ subroutine compute_partial_d_subpar(dsdxi, dzdxi, dsdeta, dzdeta, xil, etal, nod
      dzdeta = dzdeta + nodes_crd(inode,2)*shpder(inode,2)
      dsdeta = dsdeta + nodes_crd(inode,1)*shpder(inode,2)
      dzdxi  =  dzdxi + nodes_crd(inode,2)*shpder(inode,1)
-  end do
+  enddo
 
 end subroutine compute_partial_d_subpar
 !-----------------------------------------------------------------------------------------
@@ -155,47 +155,47 @@ end subroutine compute_partial_d_subpar
 !-----------------------------------------------------------------------------------------
 real(kind=dp)    function s_over_oneplusxi_axis_subpar(xil, etal, nodes_crd)
 ! This routine returns the value of the quantity
-!  
-!              s/(1+xi) 
 !
-! when the associated element lies along the axis of 
-! symmetry. Again, in this routine, we assume that the 
+!              s/(1+xi)
+!
+! when the associated element lies along the axis of
+! symmetry. Again, in this routine, we assume that the
 ! spectral element is a 8-node Serendipity element :
-! 
+!
 ! 7 - - - 6 - - - 5
-! |       ^       |       Control points 1,8, and 7 
-! |   eta |       | belong to the axis of symmetry. 
-! |       |       |        
+! |       ^       |       Control points 1,8, and 7
+! |   eta |       | belong to the axis of symmetry.
+! |       |       |
 ! 8        --->   4
 ! |        xi     |
 ! |               |
 ! |               |
 ! 1 - - - 2 - - - 3 .
- 
-  
+
+
   real(kind=dp)    :: xil, etal, nodes_crd(8,2)
   real(kind=dp)    :: shp(2:6)
-  integer :: inode 
- 
+  integer :: inode
+
   s_over_oneplusxi_axis_subpar = zero
 
   shp(2) =  half*(one-xil)*(one-etal)
   shp(3) = quart*(one-etal)*(xil-etal-one)
   shp(4) =  half*(one-etal**2)
-  shp(5) = quart*(one+etal)*(xil+etal-one) 
+  shp(5) = quart*(one+etal)*(xil+etal-one)
   shp(6) =  half*(one-xil)*(one+etal)
 
   do inode = 2, 6
      s_over_oneplusxi_axis_subpar = s_over_oneplusxi_axis_subpar &
-                                   +nodes_crd(inode,1)*shp(inode) 
-  end do
+                                   +nodes_crd(inode,1)*shp(inode)
+  enddo
 
 end function s_over_oneplusxi_axis_subpar
 !-----------------------------------------------------------------------------------------
 
 !-----------------------------------------------------------------------------------------
 real(kind=dp)    function jacobian_subpar(xil, etal, nodes_crd)
-! This routines the value of the Jacobian (that is, 
+! This routines the value of the Jacobian (that is,
 ! the determinant of the Jacobian matrix), for any point
 ! inside a given element. IT ASSUMES 8 nodes 2D isoparametric
 ! formulation of the geometrical transformation and therefore
@@ -220,20 +220,20 @@ real(kind=dp)    function jacobian_subpar(xil, etal, nodes_crd)
   ! functions
 
   call shp8der(xil,etal,shpder)
-  
+
   a = zero
   b = zero
   c = zero
   d = zero
 
   do inode = 1, 8
-     a = a + nodes_crd(inode,1)*shpder(inode,1)          
-     d = d + nodes_crd(inode,2)*shpder(inode,2)          
-     b = b + nodes_crd(inode,1)*shpder(inode,2)          
-     c = c + nodes_crd(inode,2)*shpder(inode,1)          
-  end do 
+     a = a + nodes_crd(inode,1)*shpder(inode,1)
+     d = d + nodes_crd(inode,2)*shpder(inode,2)
+     b = b + nodes_crd(inode,1)*shpder(inode,2)
+     c = c + nodes_crd(inode,2)*shpder(inode,1)
+  enddo
 
-  jacobian_subpar = a*d - b*c 
+  jacobian_subpar = a*d - b*c
 
 
 end function jacobian_subpar
@@ -242,17 +242,17 @@ end function jacobian_subpar
 !-----------------------------------------------------------------------------------------
 real(kind=dp)    function jacobian_srf_subpar(xil, crdedge)
 ! This routine computes the Jacobian of the transformation
-! that maps [-1,+1] into a portion of the boundary of domain.  
+! that maps [-1,+1] into a portion of the boundary of domain.
 !
 !         xi
 !        ---->
 ! 1 - - - 2 - - - 3 .
 !
   real(kind=dp)    :: xil, crdedge(3,2)
-  real(kind=dp)    :: dsdxi,dzdxi,s1,s2,s3,z1,z2,z3 
+  real(kind=dp)    :: dsdxi,dzdxi,s1,s2,s3,z1,z2,z3
 
-  s1 = crdedge(1,1) ; s2 = crdedge(2,1) ; s3 = crdedge(3,1) 
-  z1 = crdedge(1,2) ; z2 = crdedge(2,2) ; z3 = crdedge(3,2) 
+  s1 = crdedge(1,1) ; s2 = crdedge(2,1) ; s3 = crdedge(3,1)
+  z1 = crdedge(1,2) ; z2 = crdedge(2,2) ; z3 = crdedge(3,2)
 
   dsdxi = s1*(xil-half) + s2*(-two*xil) + s3*(xil+half)
   dzdxi = z1*(xil-half) + z2*(-two*xil) + z3*(xil+half)
@@ -266,12 +266,12 @@ end function jacobian_srf_subpar
 !-----------------------------------------------------------------------------------------
 real(kind=dp)    function alphak_subpar(xil, etal, nodes_crd)
 !
-! This routines returns the value of 
+! This routines returns the value of
 !
 !    alphak =  ( -ds/dxi ) * ( ds/deta) / J(xi,eta),
 !
 ! a quantity that is needed in the calculation of the laplacian
-! operator. alpha is defined within an element, and s(xi,eta) is 
+! operator. alpha is defined within an element, and s(xi,eta) is
 ! defined by the isoparametric transformation involving eight control
 ! nodes.J is the determinant of the Jacobian matrix of the
 ! transformation.
@@ -295,13 +295,13 @@ real(kind=dp)    function alphak_subpar(xil, etal, nodes_crd)
      d = d + nodes_crd(inode,2)*shpder(inode,2)
      b = b + nodes_crd(inode,1)*shpder(inode,2)
      c = c + nodes_crd(inode,2)*shpder(inode,1)
-  end do
+  enddo
 
   inv_jacob  = one/(a*d - b*c)
 
   alphak_subpar  = -inv_jacob*a*b
 
-end function alphak_subpar 
+end function alphak_subpar
 !-----------------------------------------------------------------------------------------
 
 !-----------------------------------------------------------------------------------------
@@ -314,7 +314,7 @@ real(kind=dp)    function betak_subpar(xil, etal, nodes_crd)
 ! a quantity that is needed in the calculation of the laplacian
 ! operator. beta is defined within an element, and s(xi,eta) is
 ! defined by the isoparametric transformation involving eight control
-! nodes. J is the determinant of the Jacobian matrix of the 
+! nodes. J is the determinant of the Jacobian matrix of the
 ! transformation.
 
   real(kind=dp)    :: xil, etal, nodes_crd(8,2)
@@ -336,13 +336,13 @@ real(kind=dp)    function betak_subpar(xil, etal, nodes_crd)
      d = d + nodes_crd(inode,2)*shpder(inode,2)
      b = b + nodes_crd(inode,1)*shpder(inode,2)
      c = c + nodes_crd(inode,2)*shpder(inode,1)
-  end do
+  enddo
 
   inv_jacob  = one/(a*d - b*c)
 
   betak_subpar   = inv_jacob*(a**2)
 
-end function betak_subpar 
+end function betak_subpar
 !-----------------------------------------------------------------------------------------
 
 !-----------------------------------------------------------------------------------------
@@ -366,7 +366,7 @@ real(kind=dp)    function gammak_subpar(xil, etal, nodes_crd)
   ! functions
 
   call shp8der(xil,etal,shpder)
-  
+
   a = zero
   b = zero
   c = zero
@@ -377,7 +377,7 @@ real(kind=dp)    function gammak_subpar(xil, etal, nodes_crd)
      d = d + nodes_crd(inode,2)*shpder(inode,2)
      b = b + nodes_crd(inode,1)*shpder(inode,2)
      c = c + nodes_crd(inode,2)*shpder(inode,1)
-  end do
+  enddo
 
   inv_jacob  = 1./(a*d - b*c)
 
@@ -398,7 +398,7 @@ real(kind=dp)    function deltak_subpar(xil, etal, nodes_crd)
 ! defined by the isoparametric transformation involving eight control
 ! nodes. J is the determinant of the Jacobian matrix of the
 ! transformation.
-  
+
   real(kind=dp)    :: xil, etal, nodes_crd(8,2)
   integer :: inode
   real(kind=dp)    :: shpder(8,2),a,d,b,c,inv_jacob
@@ -407,7 +407,7 @@ real(kind=dp)    function deltak_subpar(xil, etal, nodes_crd)
   ! functions
 
   call shp8der(xil,etal,shpder)
-  
+
   a = zero
   b = zero
   c = zero
@@ -418,7 +418,7 @@ real(kind=dp)    function deltak_subpar(xil, etal, nodes_crd)
      d = d + nodes_crd(inode,2)*shpder(inode,2)
      b = b + nodes_crd(inode,1)*shpder(inode,2)
      c = c + nodes_crd(inode,2)*shpder(inode,1)
-  end do
+  enddo
 
   inv_jacob  = 1./(a*d - b*c)
 
@@ -459,7 +459,7 @@ real(kind=dp)    function epsilonk_subpar(xil, etal, nodes_crd)
      d = d + nodes_crd(inode,2)*shpder(inode,2)
      b = b + nodes_crd(inode,1)*shpder(inode,2)
      c = c + nodes_crd(inode,2)*shpder(inode,1)
-  end do
+  enddo
 
   inv_jacob  = 1./(a*d - b*c)
 
@@ -482,14 +482,14 @@ real(kind=dp)    function zetak_subpar(xil,etal,nodes_crd)
 ! transformation.
 
   real(kind=dp)    :: xil, etal, nodes_crd(8,2)
-  integer :: inode 
+  integer :: inode
   real(kind=dp)    :: shpder(8,2),a,d,b,c,inv_jacob
- 
+
   ! Compute the appropriate derivatives of the shape
   ! functions
 
   call shp8der(xil,etal,shpder)
- 
+
   a = zero
   b = zero
   c = zero
@@ -500,7 +500,7 @@ real(kind=dp)    function zetak_subpar(xil,etal,nodes_crd)
      d = d + nodes_crd(inode,2)*shpder(inode,2)
      b = b + nodes_crd(inode,1)*shpder(inode,2)
      c = c + nodes_crd(inode,2)*shpder(inode,1)
-  end do
+  enddo
 
   inv_jacob  = 1./(a*d - b*c)
 
@@ -512,12 +512,12 @@ end function zetak_subpar
 !-----------------------------------------------------------------------------------------
 real(kind=dp)    function alpha_subpar(xil, etal, nodes_crd)
 !
-! This routines returns the value of 
+! This routines returns the value of
 !
 !    alpha =  s(xi,eta) * ( -ds/dxi ) * ( ds/deta) / J(xi,eta),
 !
 ! a quantity that is needed in the calculation of the laplacian
-! operator. alpha is defined within an element, and s(xi,eta) is 
+! operator. alpha is defined within an element, and s(xi,eta) is
 ! defined by the isoparametric transformation involving eight control
 ! nodes.J is the determinant of the Jacobian matrix of the
 ! transformation.
@@ -530,7 +530,7 @@ real(kind=dp)    function alpha_subpar(xil, etal, nodes_crd)
   ! functions
 
   call shp8der(xil,etal,shpder)
-  
+
   a = zero
   b = zero
   c = zero
@@ -541,13 +541,13 @@ real(kind=dp)    function alpha_subpar(xil, etal, nodes_crd)
      d = d + nodes_crd(inode,2)*shpder(inode,2)
      b = b + nodes_crd(inode,1)*shpder(inode,2)
      c = c + nodes_crd(inode,2)*shpder(inode,1)
-  end do
+  enddo
 
   inv_jacob  = 1./(a*d - b*c)
 
   alpha_subpar  = -mapping_subpar(xil,etal,nodes_crd,1)*inv_jacob*a*b
 
-end function alpha_subpar 
+end function alpha_subpar
 !-----------------------------------------------------------------------------------------
 
 !-----------------------------------------------------------------------------------------
@@ -560,7 +560,7 @@ real(kind=dp)    function  beta_subpar(xil, etal, nodes_crd)
 ! a quantity that is needed in the calculation of the laplacian
 ! operator. beta is defined within an element, and s(xi,eta) is
 ! defined by the isoparametric transformation involving eight control
-! nodes. J is the determinant of the Jacobian matrix of the 
+! nodes. J is the determinant of the Jacobian matrix of the
 ! transformation.
 !
   real(kind=dp)    :: xil, etal, nodes_crd(8,2)
@@ -582,13 +582,13 @@ real(kind=dp)    function  beta_subpar(xil, etal, nodes_crd)
      d = d + nodes_crd(inode,2)*shpder(inode,2)
      b = b + nodes_crd(inode,1)*shpder(inode,2)
      c = c + nodes_crd(inode,2)*shpder(inode,1)
-  end do
+  enddo
 
   inv_jacob  = 1./(a*d - b*c)
 
   beta_subpar   = mapping_subpar(xil,etal,nodes_crd,1)*inv_jacob*(a**2)
 
-end function beta_subpar 
+end function beta_subpar
 !-----------------------------------------------------------------------------------------
 
 !-----------------------------------------------------------------------------------------
@@ -623,7 +623,7 @@ real(kind=dp)    function  gamma_subpar(xil, etal, nodes_crd)
      d = d + nodes_crd(inode,2)*shpder(inode,2)
      b = b + nodes_crd(inode,1)*shpder(inode,2)
      c = c + nodes_crd(inode,2)*shpder(inode,1)
-  end do
+  enddo
 
   inv_jacob  = 1./(a*d - b*c)
 
@@ -653,7 +653,7 @@ real(kind=dp)    function delta_subpar(xil, etal, nodes_crd)
   ! functions
 
   call shp8der(xil,etal,shpder)
-  
+
   a = zero
   b = zero
   c = zero
@@ -664,7 +664,7 @@ real(kind=dp)    function delta_subpar(xil, etal, nodes_crd)
      d = d + nodes_crd(inode,2)*shpder(inode,2)
      b = b + nodes_crd(inode,1)*shpder(inode,2)
      c = c + nodes_crd(inode,2)*shpder(inode,1)
-  end do
+  enddo
 
   inv_jacob  = 1./(a*d - b*c)
 
@@ -694,7 +694,7 @@ real(kind=dp)    function epsilon_subpar(xil, etal, nodes_crd)
   ! functions
 
   call shp8der(xil,etal,shpder)
-  
+
   a = zero
   b = zero
   c = zero
@@ -705,7 +705,7 @@ real(kind=dp)    function epsilon_subpar(xil, etal, nodes_crd)
      d = d + nodes_crd(inode,2)*shpder(inode,2)
      b = b + nodes_crd(inode,1)*shpder(inode,2)
      c = c + nodes_crd(inode,2)*shpder(inode,1)
-  end do
+  enddo
 
   inv_jacob  = 1./(a*d - b*c)
 
@@ -728,7 +728,7 @@ real(kind=dp)    function zeta_subpar(xil,etal,nodes_crd)
 ! transformation.
 
   real(kind=dp)    :: xil, etal, nodes_crd(8,2)
-  integer :: inode 
+  integer :: inode
   real(kind=dp)    :: shpder(8,2),a,d,b,c,inv_jacob
 
   ! Compute the appropriate derivatives of the shape
@@ -746,7 +746,7 @@ real(kind=dp)    function zeta_subpar(xil,etal,nodes_crd)
      d = d + nodes_crd(inode,2)*shpder(inode,2)
      b = b + nodes_crd(inode,1)*shpder(inode,2)
      c = c + nodes_crd(inode,2)*shpder(inode,1)
-  end do
+  enddo
 
   inv_jacob  = 1./(a*d - b*c)
 
@@ -786,10 +786,10 @@ subroutine mgrad_pointwise_subpar(mg, xil, etal, nodes_crd)
         d = d + nodes_crd(inode,2)*shpder(inode,2)
         b = b + nodes_crd(inode,1)*shpder(inode,2)
         c = c + nodes_crd(inode,2)*shpder(inode,1)
-     end do
+     enddo
 
   mg(1,1)  = mapping_subpar(xil,etal,nodes_crd,1)*a
-  mg(1,2)  = mapping_subpar(xil,etal,nodes_crd,1)*b 
+  mg(1,2)  = mapping_subpar(xil,etal,nodes_crd,1)*b
   mg(2,1)  = mapping_subpar(xil,etal,nodes_crd,1)*c
   mg(2,2)  = mapping_subpar(xil,etal,nodes_crd,1)*d
 
@@ -826,10 +826,10 @@ subroutine mgrad_pointwisek_subpar(mg, xil, etal, nodes_crd)
         d = d + nodes_crd(inode,2)*shpder(inode,2)
         b = b + nodes_crd(inode,1)*shpder(inode,2)
         c = c + nodes_crd(inode,2)*shpder(inode,1)
-     end do
+     enddo
 
   mg(1,1)  = a
-  mg(1,2)  = b 
+  mg(1,2)  = b
   mg(2,1)  = c
   mg(2,2)  = d
 
@@ -843,7 +843,7 @@ subroutine shp8(xil,etal,shp)
 ! shape functions axixiociated with a 8-nodes serendip
 ! element for a given point of coordinates (xi,eta).
 !
-! Topology is defined as follows 
+! Topology is defined as follows
 !
 ! 7 - - - 6 - - - 5
 ! |       ^       |
@@ -864,11 +864,11 @@ subroutine shp8(xil,etal,shp)
 
 
   xip    = one +  xil
-  xim    = one -  xil 
+  xim    = one -  xil
   etap   = one + etal
   etam   = one - etal
-  xixi   =  xil *  xil 
-  etaeta = etal * etal 
+  xixi   =  xil *  xil
+  etaeta = etal * etal
 
   ! Corners first:
   shp(1) = quart * xim * etam * (xim + etam - three)
@@ -880,7 +880,7 @@ subroutine shp8(xil,etal,shp)
   shp(2) = half  * etam * (one -   xixi)
   shp(4) = half  *  xip * (one - etaeta)
   shp(6) = half  * etap * (one -   xixi)
-  shp(8) = half  *  xim * (one - etaeta)      
+  shp(8) = half  *  xim * (one - etaeta)
 
 end subroutine shp8
 !-----------------------------------------------------------------------------------------
@@ -911,16 +911,16 @@ subroutine shp8der(xil,etal,shpder)
   real(kind=dp)    :: xil, etal
   real(kind=dp)    :: shpder(8,2)
   real(kind=dp)    :: xip,xim,etap,etam,xixi,etaeta
- 
+
   shpder(:,:) = zero
- 
+
   xip    = one +  xil
   xim    = one -  xil
   etap   = one + etal
   etam   = one - etal
   xixi   =  xil *  xil
   etaeta = etal * etal
- 
+
   ! Corners first:
   shpder(1,1) = -quart * etam * ( xim + xim + etam - three)
   shpder(1,2) = -quart *  xim * (etam + xim + etam - three)

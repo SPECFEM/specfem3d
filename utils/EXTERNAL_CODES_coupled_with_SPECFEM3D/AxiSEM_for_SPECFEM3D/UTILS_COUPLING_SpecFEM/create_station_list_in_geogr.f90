@@ -13,7 +13,7 @@ program create_station_list_in_geogr
   read(10,*) dx,dy
   read(10,*) xmin,ymin
   close(10)
- 
+
   open(10,file='stations_to_convert.txt')
   lat=ymin-dy
   do j=1,ny
@@ -22,7 +22,7 @@ program create_station_list_in_geogr
      do i=1,nx
         long = long + dx
         write(10,*) r, lat, long
-     end do
-  end do
+     enddo
+  enddo
 
 end program create_station_list_in_geogr

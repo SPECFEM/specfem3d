@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -24,12 +24,12 @@ module data_spec
   use global_parameters, only                   : sp, dp
   implicit none
 
-  public 
+  public
 
   integer :: npol
   real(kind=dp)   , dimension(:),allocatable   :: xi_k, eta
   real(kind=dp)   , dimension(:),allocatable   :: dxi
   real(kind=dp)   , dimension (:), allocatable :: wt          !Quadrature weights
-  real(kind=dp)   , dimension (:), allocatable :: wt_axial_k  !Quad. wgts for the 
+  real(kind=dp)   , dimension (:), allocatable :: wt_axial_k  !Quad. wgts for the
                                                               !nonaxisymmetric components
 end module data_spec

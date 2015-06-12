@@ -5,7 +5,7 @@ export FC=gfortran
 export INSTALL_DIR=$HOME/local
 export LDFLAGS=-L$INSTALL_DIR/lib
 export CPPFLAGS="-I$INSTALL_DIR/include -DgFortran"
-export LD_LIBRARY_PATH=$INSTALL_DIR/lib 
+export LD_LIBRARY_PATH=$INSTALL_DIR/lib
 set -e
 
 
@@ -30,14 +30,14 @@ cd hdf5-1.8.9
 
 # -j parallelizes make;  -s reduces output
 make -sj
-make check 
+make check
 make install
 cd ..
 
 
 # netcdf-4.3.0
 rm -rf netcdf-4.3.0.tar.gz netcdf-4.3.0
-wget ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.3.0.tar.gz 
+wget ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.3.0.tar.gz
 tar -xvf netcdf-4.3.0.tar.gz
 cd netcdf-4.3.0
 ./configure --enable-netcdf-4 --enable-dap --enable-shared --prefix=$INSTALL_DIR

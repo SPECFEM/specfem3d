@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -22,7 +22,7 @@
 !==========================
 module analytic_mapping
 !==========================
-  
+
   use global_parameters
   use analytic_spheroid_mapping
   use analytic_semi_mapping
@@ -42,7 +42,7 @@ module analytic_mapping
   public :: Ms_z_xi_s_eta,   Ms_z_xi_s_xi
   public :: Ms_z_eta_s_xi_k, Ms_z_eta_s_eta_k
   public :: Ms_z_xi_s_eta_k, Ms_z_xi_s_xi_k
-  
+
   public :: compute_partial_derivatives
 
   private
@@ -51,13 +51,13 @@ contains
 
 !-----------------------------------------------------------------------------------------
 real(kind=dp) function mapping_anal(xil, etal, nodes_crd, iaxis, ielem0)
-! This routine computes the coordinates along the iaxis axis 
+! This routine computes the coordinates along the iaxis axis
 ! of the image of any point in the reference domain in the physical domain
 ! using the implicit assumption that the domain is spheroidal.
 
   integer,intent(in)          :: iaxis,ielem0
   real(kind=dp)   ,intent(in) :: xil, etal, nodes_crd(8,2)
-  
+
   if (eltype(ielem0) == 'curved') &
      mapping_anal = map_spheroid(xil,etal,nodes_crd,iaxis)
   if (eltype(ielem0) == 'linear') &
@@ -72,7 +72,7 @@ end function mapping_anal
 
 !-----------------------------------------------------------------------------------------
 real(kind=dp) function quadfunc_map_anal(p, s, z, nodes_crd, ielem0)
-! This routines computes the quadratic functional 
+! This routines computes the quadratic functional
 ! (s-s(xi,eta))**2 + (z-z(xi,eta))**2
 
   integer :: ielem0
@@ -89,7 +89,7 @@ end function quadfunc_map_anal
 
 !-----------------------------------------------------------------------------------------
 subroutine grad_quadfunc_map_anal(grd, p, s, z, nodes_crd, ielem0)
-! This routine returns the gradient of the quadratic functional 
+! This routine returns the gradient of the quadratic functional
 ! associated with the mapping.
 
   integer :: ielem0
@@ -113,17 +113,17 @@ end subroutine grad_quadfunc_map_anal
 !-----------------------------------------------------------------------------------------
 real(kind=dp) function s_over_oneplusxi_axis_anal(xil, etal, nodes_crd, ielem0)
 ! This routine returns the value of the quantity
-!  
-!              s/(1+xi) 
 !
-! when the associated element lies along the axis of 
-! symmetry, in the case of an analytical transformation. 
+!              s/(1+xi)
+!
+! when the associated element lies along the axis of
+! symmetry, in the case of an analytical transformation.
 
   integer :: ielem0
   real(kind=dp)    :: xil, etal, nodes_crd(8,2)
   real(kind=dp)    :: dsdxi,dzdxi,dsdeta,dzdeta
 
-  if ( xil == -one ) then 
+  if ( xil == -one ) then
      ! Apply L'Hopital's rule
      call compute_partial_derivatives(dsdxi,dzdxi,dsdeta,dzdeta,xil,etal, &
                                       nodes_crd,ielem0)
@@ -131,7 +131,7 @@ real(kind=dp) function s_over_oneplusxi_axis_anal(xil, etal, nodes_crd, ielem0)
   else
      s_over_oneplusxi_axis_anal = mapping_anal(xil,etal,nodes_crd,1,ielem0) / &
                                   (one+xil)
-  end if
+  endif
 
 end function s_over_oneplusxi_axis_anal
 !-----------------------------------------------------------------------------------------
@@ -140,7 +140,7 @@ end function s_over_oneplusxi_axis_anal
 real(kind=dp) function jacobian_anal(xil, etal, nodes_crd, ielem0)
 ! This function returns the value of the jacobian of the
 ! analytical mapping between the reference square [-1,1]^2 and
-! the deformed element in the spheroid. 
+! the deformed element in the spheroid.
 
   integer,intent(in)          :: ielem0
   real(kind=dp)   ,intent(in) :: xil, etal, nodes_crd(8,2)
@@ -156,7 +156,7 @@ end function jacobian_anal
 !-----------------------------------------------------------------------------------------
 real(kind=dp)    function jacobian_srf_anal(xil, crdedge)
 ! This routine computes the Jacobian of the transformation
-! that maps [-1,+1] into a portion of the boundary of domain.  
+! that maps [-1,+1] into a portion of the boundary of domain.
 !
 !         xi(or eta)
 !        ---->
@@ -172,28 +172,28 @@ real(kind=dp)    function jacobian_srf_anal(xil, crdedge)
 
   call compute_parameters_srf(s1,s3,z1,z3,a,b,deltatheta,thetabar)
 
-  if (dabs(deltatheta) > 1.0d-10 ) then 
+  if (dabs(deltatheta) > 1.0d-10 ) then
      arg = xil*deltatheta + thetabar
      dsdxi = -deltatheta*a*dsin(arg)
-     dzdxi =  deltatheta*b*dcos(arg) 
-     jacobian_srf_anal = dsqrt(dsdxi**2+dzdxi**2) 
-  else 
+     dzdxi =  deltatheta*b*dcos(arg)
+     jacobian_srf_anal = dsqrt(dsdxi**2+dzdxi**2)
+  else
      dist = dsqrt((z3-z1)**2+(s3-s1)**2)
      jacobian_srf_anal = half*dist
-  end if
+  endif
 
 end function jacobian_srf_anal
 !-----------------------------------------------------------------------------------------
 
 !-----------------------------------------------------------------------------------------
 real(kind=dp)    function alphak_anal(xil, etal, nodes_crd, ielem0)
-! This routines returns the value of 
+! This routines returns the value of
 !
 !    alphak =  ( -ds/dxi ) * ( ds/deta) / J(xi,eta),
 !
 ! a quantity that is needed in the calculation of the laplacian
-! operator. alpha is defined within an element, and s(xi,eta) is 
-! defined by the analytic transformation .J is the determinant of 
+! operator. alpha is defined within an element, and s(xi,eta) is
+! defined by the analytic transformation .J is the determinant of
 ! the Jacobian matrix of the transformation.
 
   integer :: ielem0
@@ -210,20 +210,20 @@ end function alphak_anal
 
 !-----------------------------------------------------------------------------------------
 real(kind=dp)    function betak_anal(xil, etal, nodes_crd, ielem0)
-! This routines returns the value of 
+! This routines returns the value of
 !
 !    betak =  ( ds/dxi ) * ( ds/dxi) / J(xi,eta),
 !
 ! a quantity that is needed in the calculation of the laplacian
-! operator. alpha is defined within an element, and s(xi,eta) is 
-! defined by the analytic transformation .J is the determinant of 
+! operator. alpha is defined within an element, and s(xi,eta) is
+! defined by the analytic transformation .J is the determinant of
 ! the Jacobian matrix of the transformation.
 
   integer :: ielem0
   real(kind=dp)    :: xil, etal, nodes_crd(8,2)
   real(kind=dp)    :: dsdxi,dzdeta,dzdxi,dsdeta,inv_jacob
 
-  call compute_partial_derivatives(dsdxi,dzdxi,dsdeta,dzdeta,xil,etal, &     
+  call compute_partial_derivatives(dsdxi,dzdxi,dsdeta,dzdeta,xil,etal, &
                                    nodes_crd,ielem0)
   inv_jacob  = one/(dsdxi*dzdeta - dsdeta*dzdxi)
   betak_anal  = inv_jacob*dsdxi**2
@@ -233,13 +233,13 @@ real(kind=dp)    function betak_anal(xil, etal, nodes_crd, ielem0)
 
 !-----------------------------------------------------------------------------------------
 real(kind=dp)    function gammak_anal(xil, etal, nodes_crd, ielem0)
-! This routines returns the value of 
+! This routines returns the value of
 !
 !    gammak =  ( ds/deta ) * ( ds/deta) / J(xi,eta),
 !
 ! a quantity that is needed in the calculation of the laplacian
-! operator. alpha is defined within an element, and s(xi,eta) is 
-! defined by the analytic transformation .J is the determinant of 
+! operator. alpha is defined within an element, and s(xi,eta) is
+! defined by the analytic transformation .J is the determinant of
 ! the Jacobian matrix of the transformation.
 !
   integer :: ielem0
@@ -256,13 +256,13 @@ end function gammak_anal
 
 !-----------------------------------------------------------------------------------------
 real(kind=dp)    function deltak_anal(xil, etal, nodes_crd, ielem0)
-! This routines returns the value of 
+! This routines returns the value of
 !
 !    deltak = -( dz/dxi ) * ( dz/deta) / J(xi,eta),
 !
 ! a quantity that is needed in the calculation of the laplacian
-! operator. alpha is defined within an element, and s(xi,eta) is 
-! defined by the analytic transformation .J is the determinant of 
+! operator. alpha is defined within an element, and s(xi,eta) is
+! defined by the analytic transformation .J is the determinant of
 ! the Jacobian matrix of the transformation.
 !
   integer :: ielem0
@@ -279,13 +279,13 @@ end function deltak_anal
 
 !-----------------------------------------------------------------------------------------
 real(kind=dp)    function epsilonk_anal(xil, etal, nodes_crd, ielem0)
-! This routines returns the value of 
+! This routines returns the value of
 !
 !    epsilonk = ( dz/dxi ) * ( dz/dxi) / J(xi,eta),
 !
 ! a quantity that is needed in the calculation of the laplacian
-! operator. alpha is defined within an element, and s(xi,eta) is 
-! defined by the analytic transformation .J is the determinant of 
+! operator. alpha is defined within an element, and s(xi,eta) is
+! defined by the analytic transformation .J is the determinant of
 ! the Jacobian matrix of the transformation.
 !
   integer :: ielem0
@@ -302,13 +302,13 @@ end function epsilonk_anal
 
 !-----------------------------------------------------------------------------------------
 real(kind=dp)    function zetak_anal(xil, etal, nodes_crd, ielem0)
-! This routines returns the value of 
+! This routines returns the value of
 !
 !    zetak_anal = ( dz/deta ) * ( dz/deta) / J(xi,eta),
 !
 ! a quantity that is needed in the calculation of the laplacian
-! operator. alpha is defined within an element, and s(xi,eta) is 
-! defined by the analytic transformation .J is the determinant of 
+! operator. alpha is defined within an element, and s(xi,eta) is
+! defined by the analytic transformation .J is the determinant of
 ! the Jacobian matrix of the transformation.
 !
   integer :: ielem0
@@ -325,13 +325,13 @@ end function zetak_anal
 
 !-----------------------------------------------------------------------------------------
 real(kind=dp)    function alpha_anal(xil, etal, nodes_crd, ielem0)
-! This routines returns the value of 
+! This routines returns the value of
 !
 !    alpha = s(xi,eta) * ( -ds/dxi ) * ( ds/deta) / J(xi,eta),
 !
 ! a quantity that is needed in the calculation of the laplacian
-! operator. alpha is defined within an element, and s(xi,eta) is 
-! defined by the analytic transformation .J is the determinant of 
+! operator. alpha is defined within an element, and s(xi,eta) is
+! defined by the analytic transformation .J is the determinant of
 ! the Jacobian matrix of the transformation.
 !
   integer :: ielem0
@@ -348,13 +348,13 @@ real(kind=dp)    function alpha_anal(xil, etal, nodes_crd, ielem0)
 
 !-----------------------------------------------------------------------------------------
 real(kind=dp)    function beta_anal(xil, etal, nodes_crd, ielem0)
-! This routines returns the value of 
+! This routines returns the value of
 !
 !    beta =  s(xi,eta) * ( ds/dxi ) * ( ds/dxi) / J(xi,eta),
 !
 ! a quantity that is needed in the calculation of the laplacian
-! operator. alpha is defined within an element, and s(xi,eta) is 
-! defined by the analytic transformation .J is the determinant of 
+! operator. alpha is defined within an element, and s(xi,eta) is
+! defined by the analytic transformation .J is the determinant of
 ! the Jacobian matrix of the transformation.
 
   integer :: ielem0
@@ -371,13 +371,13 @@ real(kind=dp)    function beta_anal(xil, etal, nodes_crd, ielem0)
 
 !-----------------------------------------------------------------------------------------
 real(kind=dp)    function gamma_anal(xil, etal, nodes_crd, ielem0)
-! This routines returns the value of 
+! This routines returns the value of
 !
 !    gamma = s(xi,eta) * ( ds/deta ) * ( ds/deta) / J(xi,eta),
 !
 ! a quantity that is needed in the calculation of the laplacian
-! operator. alpha is defined within an element, and s(xi,eta) is 
-! defined by the analytic transformation .J is the determinant of 
+! operator. alpha is defined within an element, and s(xi,eta) is
+! defined by the analytic transformation .J is the determinant of
 ! the Jacobian matrix of the transformation.
 
   integer :: ielem0
@@ -394,13 +394,13 @@ end function gamma_anal
 
 !-----------------------------------------------------------------------------------------
 real(kind=dp)    function delta_anal(xil, etal, nodes_crd, ielem0)
-! This routines returns the value of 
+! This routines returns the value of
 !
 !    delta = -s(xi,eta) * ( dz/dxi ) * ( dz/deta) / J(xi,eta),
 !
 ! a quantity that is needed in the calculation of the laplacian
-! operator. alpha is defined within an element, and s(xi,eta) is 
-! defined by the analytic transformation .J is the determinant of 
+! operator. alpha is defined within an element, and s(xi,eta) is
+! defined by the analytic transformation .J is the determinant of
 ! the Jacobian matrix of the transformation.
 !
   integer :: ielem0
@@ -417,13 +417,13 @@ end function delta_anal
 
 !-----------------------------------------------------------------------------------------
 real(kind=dp)    function epsilon_anal(xil, etal, nodes_crd, ielem0)
-! This routines returns the value of 
+! This routines returns the value of
 !
 !    epsilon = s(xi,eta) * ( dz/dxi ) * ( dz/dxi) / J(xi,eta),
 !
 ! a quantity that is needed in the calculation of the laplacian
-! operator. alpha is defined within an element, and s(xi,eta) is 
-! defined by the analytic transformation .J is the determinant of 
+! operator. alpha is defined within an element, and s(xi,eta) is
+! defined by the analytic transformation .J is the determinant of
 ! the Jacobian matrix of the transformation.
 !
   integer :: ielem0
@@ -440,13 +440,13 @@ end function epsilon_anal
 
 !-----------------------------------------------------------------------------------------
 real(kind=dp)    function zeta_anal(xil, etal, nodes_crd, ielem0)
-! This routines returns the value of 
+! This routines returns the value of
 !
 !    zeta_anal = s(xi,eta) * ( dz/deta ) * ( dz/deta) / J(xi,eta),
 !
 ! a quantity that is needed in the calculation of the laplacian
-! operator. alpha is defined within an element, and s(xi,eta) is 
-! defined by the analytic transformation .J is the determinant of 
+! operator. alpha is defined within an element, and s(xi,eta) is
+! defined by the analytic transformation .J is the determinant of
 ! the Jacobian matrix of the transformation.
 !
   integer :: ielem0
@@ -463,15 +463,15 @@ real(kind=dp)    function zeta_anal(xil, etal, nodes_crd, ielem0)
 
 !-----------------------------------------------------------------------------------------
 real(kind=dp)    function Ms_z_eta_s_xi(xil, etal, nodes_crd, ielem0)
-! This routines returns the value of 
+! This routines returns the value of
 !
 !    Ms_z_eta_s_xi = s(xi,eta) / J(xi,eta) * ( ds/dxi ) * ( dz/deta)
 !
 ! a quantity that is needed in the calculation of the laplacian
 ! operator in the FIRST TERM OF dsdz_0
 !          in the THIRD TERM OF dzds_0
-! It is defined within an element, and s(xi,eta) is 
-! defined by the analytic transformation .J is the determinant of 
+! It is defined within an element, and s(xi,eta) is
+! defined by the analytic transformation .J is the determinant of
 ! the Jacobian matrix of the transformation.
 
   integer :: ielem0
@@ -488,7 +488,7 @@ end function Ms_z_eta_s_xi
 
 !-----------------------------------------------------------------------------------------
 real(kind=dp)    function Ms_z_eta_s_eta(xil, etal, nodes_crd, ielem0)
-! This routines returns the value of 
+! This routines returns the value of
 !
 !    Ms_z_eta_s_eta = - s(xi,eta) / J(xi,eta) * ( ds/deta ) * ( dz/deta)
 !
@@ -510,7 +510,7 @@ end function Ms_z_eta_s_eta
 
 !-----------------------------------------------------------------------------------------
 real(kind=dp)    function Ms_z_xi_s_eta(xil, etal, nodes_crd, ielem0)
-! This routines returns the value of 
+! This routines returns the value of
 !
 !    Ms_z_xi_s_eta = s(xi,eta) / J(xi,eta) * ( ds/deta ) * ( dz/xi)
 !
@@ -532,7 +532,7 @@ end function Ms_z_xi_s_eta
 
 !-----------------------------------------------------------------------------------------
 real(kind=dp)    function Ms_z_xi_s_xi(xil, etal, nodes_crd, ielem0)
-! This routines returns the value of 
+! This routines returns the value of
 !
 !    Ms_z_xi_s_xi = - s(xi,eta) / J(xi,eta) * ( ds/dxi ) * ( dz/xi)
 !
@@ -557,15 +557,15 @@ end function Ms_z_xi_s_xi
 !*******************************************************************
 !-----------------------------------------------------------------------------------------
 real(kind=dp)    function Ms_z_eta_s_xi_k(xil, etal, nodes_crd, ielem0)
-! This routines returns the value of 
+! This routines returns the value of
 !
 !    Ms_z_eta_s_xi_k = 1 / J(xi,eta) * ( ds/dxi ) * ( dz/deta)
 !
 ! a quantity that is needed in the calculation of the laplacian
 ! operator in the FIRST TERM OF dsdz_0
 !          in the THIRD TERM OF dzds_0
-! It is defined within an element, and s(xi,eta) is 
-! defined by the analytic transformation .J is the determinant of 
+! It is defined within an element, and s(xi,eta) is
+! defined by the analytic transformation .J is the determinant of
 ! the Jacobian matrix of the transformation.
 
   integer :: ielem0
@@ -581,7 +581,7 @@ end function Ms_z_eta_s_xi_k
 
 !-----------------------------------------------------------------------------------------
 real(kind=dp)    function Ms_z_eta_s_eta_k(xil, etal, nodes_crd, ielem0)
-! This routines returns the value of 
+! This routines returns the value of
 !
 !    Ms_z_eta_s_eta_k = - 1 / J(xi,eta) * ( ds/deta ) * ( dz/deta)
 !
@@ -603,7 +603,7 @@ end function Ms_z_eta_s_eta_k
 
 !-----------------------------------------------------------------------------------------
 real(kind=dp)    function Ms_z_xi_s_eta_k(xil, etal, nodes_crd, ielem0)
-! This routines returns the value of 
+! This routines returns the value of
 !
 !    Ms_z_xi_s_eta_k = 1 / J(xi,eta) * ( ds/deta ) * ( dz/xi)
 !
@@ -625,7 +625,7 @@ end function Ms_z_xi_s_eta_k
 
 !-----------------------------------------------------------------------------------------
 real(kind=dp)    function Ms_z_xi_s_xi_k(xil,etal,nodes_crd,ielem0)
-! This routines returns the value of 
+! This routines returns the value of
 !
 !    Ms_z_xi_s_xi = - 1 / J(xi,eta) * ( ds/dxi ) * ( dz/xi)
 !
@@ -644,7 +644,7 @@ real(kind=dp)    function Ms_z_xi_s_xi_k(xil,etal,nodes_crd,ielem0)
 
 end function Ms_z_xi_s_xi_k
 !-----------------------------------------------------------------------------------------
-! NOTE: M_xi e.g. does not need to be specifically defined for the axis 
+! NOTE: M_xi e.g. does not need to be specifically defined for the axis
 !       since there is no factor s(), the axis case is therefore equal to
 !       the non-axial case
 
@@ -664,7 +664,7 @@ subroutine mgrad_pointwise_anal(mg, xil, etal, nodes_crd, ielem0)
 !gradient/divergence related arrays.
 
   integer :: ielem0
-  real(kind=dp)    :: mg(2,2) 
+  real(kind=dp)    :: mg(2,2)
   real(kind=dp)    :: xil, etal, nodes_crd(8,2)
   real(kind=dp)    :: dsdxi,dsdeta,dzdxi,dzdeta
   real(kind=dp)    :: sloc
@@ -697,7 +697,7 @@ subroutine mgrad_pointwisek_anal(mg, xil, etal, nodes_crd, ielem0)
 
   integer,intent(in)           :: ielem0
   real(kind=dp)   ,intent(in)  :: xil, etal, nodes_crd(8,2)
-  real(kind=dp)   ,intent(out) :: mg(2,2) 
+  real(kind=dp)   ,intent(out) :: mg(2,2)
   real(kind=dp)                :: dsdxi,dsdeta,dzdxi,dzdeta
 
   mg(:,:) = zero
@@ -716,19 +716,19 @@ subroutine mgrad_pointwisek_anal(mg, xil, etal, nodes_crd, ielem0)
 subroutine compute_partial_derivatives(dsdxi, dzdxi, dsdeta, dzdeta, xil, etal, &
                                          nodes_crd,ielem0)
 ! This routine returns the analytical values of the partial derivatives
-! of the analytic spheroidal mapping. 
+! of the analytic spheroidal mapping.
 !
   integer,intent(in)            :: ielem0
   real(kind=dp), intent(in)     :: xil, etal, nodes_crd(8,2)
   real(kind=dp), intent(out)    :: dsdxi, dzdxi, dsdeta, dzdeta
 
-  if (eltype(ielem0) == 'curved') & 
+  if (eltype(ielem0) == 'curved') &
   call compute_partial_d_spheroid(dsdxi,dzdxi,dsdeta,dzdeta,xil,etal,nodes_crd)
-  if (eltype(ielem0) == 'linear') & 
+  if (eltype(ielem0) == 'linear') &
   call compute_partial_d_subpar(dsdxi,dzdxi,dsdeta,dzdeta,xil,etal,nodes_crd)
-  if (eltype(ielem0) == 'semino') & 
+  if (eltype(ielem0) == 'semino') &
   call compute_partial_d_semino(dsdxi,dzdxi,dsdeta,dzdeta,xil,etal,nodes_crd)
-  if (eltype(ielem0) == 'semiso') & 
+  if (eltype(ielem0) == 'semiso') &
   call compute_partial_d_semiso(dsdxi,dzdxi,dsdeta,dzdeta,xil,etal,nodes_crd)
 
 end subroutine compute_partial_derivatives
@@ -742,16 +742,16 @@ subroutine compute_parameters(nodes_crd, a1, a2, b1, b2, deltatheta, thetabar)
 
   s1 = nodes_crd(1,1)
   z1 = nodes_crd(1,2)
-  
+
   s3 = nodes_crd(3,1)
   z3 = nodes_crd(3,2)
-  
+
   s5 = nodes_crd(5,1)
   z5 = nodes_crd(5,2)
-  
+
   s7 = nodes_crd(7,1)
   z7 = nodes_crd(7,2)
- 
+
   theta1 = datan(s1/(z1+epsi))
   theta3 = datan(s3/(z3+epsi))
 
@@ -762,12 +762,12 @@ subroutine compute_parameters(nodes_crd, a1, a2, b1, b2, deltatheta, thetabar)
 
   a1 = dsqrt(((s1*z3)**2 - (s3*z1)**2)/(z3**2-z1**2))
   a2 = dsqrt(((s7*z5)**2 - (s5*z7)**2)/(z5**2-z7**2))
- 
+
   b1 = dsqrt(((s1*z3)**2 - (s3*z1)**2)/(s1**2-s3**2))
   b2 = dsqrt(((s7*z5)**2 - (s5*z7)**2)/(s7**2-s5**2))
 
   deltatheta = half*(theta3-theta1)
-  thetabar   = half*(theta3+theta1)   
+  thetabar   = half*(theta3+theta1)
 
 end subroutine compute_parameters
 !-----------------------------------------------------------------------------------------
@@ -775,24 +775,24 @@ end subroutine compute_parameters
 !-----------------------------------------------------------------------------------------
 subroutine compute_parameters_new(nodes_crd, a1, a2, b1, b2, deltatheta1, &
                                   thetabar1, deltatheta2, thetabar2)
-  
+
   real(kind=dp)    :: nodes_crd(8,2)
   real(kind=dp)    :: a1,a2,b1,b2,deltatheta1,thetabar1,deltatheta2,thetabar2
   real(kind=dp)    :: theta3,theta1,theta5,theta7
   real(kind=dp)    ::  s1,z1,s3,z3,s5,z5,s7,z7
 
-  s1 = nodes_crd(1,1) 
+  s1 = nodes_crd(1,1)
   z1 = nodes_crd(1,2)
-  
+
   s3 = nodes_crd(3,1)
   z3 = nodes_crd(3,2)
-  
+
   s5 = nodes_crd(5,1)
   z5 = nodes_crd(5,2)
-  
+
   s7 = nodes_crd(7,1)
   z7 = nodes_crd(7,2)
- 
+
   theta1 = datan(s1/(z1+epsi))
   theta3 = datan(s3/(z3+epsi))
   theta7 = datan(s7/(z7+epsi))
@@ -809,7 +809,7 @@ subroutine compute_parameters_new(nodes_crd, a1, a2, b1, b2, deltatheta1, &
 
   a1 = dsqrt(((s1*z3)**2 - (s3*z1)**2)/(z3**2-z1**2))
   a2 = dsqrt(((s7*z5)**2 - (s5*z7)**2)/(z5**2-z7**2))
- 
+
   b1 = dsqrt(((s1*z3)**2 - (s3*z1)**2)/(s1**2-s3**2))
   b2 = dsqrt(((s7*z5)**2 - (s5*z7)**2)/(s7**2-s5**2))
 
@@ -827,14 +827,14 @@ subroutine compute_parameters_srf(s1, s3, z1, z3, a, b, deltatheta, thetabar)
   real(kind=dp)   ,intent(out) :: a,b,deltatheta,thetabar
   real(kind=dp)    :: theta3,theta1
   real(kind=dp)   ,intent(in) ::  s1,z1,s3,z3
- 
+
   a= zero
   b = zero
   deltatheta = zero
   thetabar = zero
 
   if (z1/=z3) a = dsqrt(dabs(((s1*z3)**2 - (s3*z1)**2)/(z3**2-z1**2)))
-  
+
   if (s1/=s3) b = dsqrt(dabs(((s1*z3)**2 - (s3*z1)**2)/(s1**2-s3**2)))
 
   theta1 = datan(s1*b/(z1*a+epsi)) ; theta3 = datan(s3*b/(z3*a+epsi))
@@ -845,7 +845,7 @@ subroutine compute_parameters_srf(s1, s3, z1, z3, a, b, deltatheta, thetabar)
   if (theta3 == zero .and. z3 < 0) theta3 = pi
 
   deltatheta = half*(theta3-theta1)
-  thetabar   = half*(theta3+theta1)   
+  thetabar   = half*(theta3+theta1)
 
 end subroutine compute_parameters_srf
 !-----------------------------------------------------------------------------------------

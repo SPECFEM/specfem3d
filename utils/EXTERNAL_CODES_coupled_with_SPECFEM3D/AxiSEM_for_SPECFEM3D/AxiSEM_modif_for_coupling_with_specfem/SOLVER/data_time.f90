@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -26,13 +26,13 @@ module data_time
 
 use global_parameters
 implicit none
-public 
+public
 
 !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-  real(kind=dp)       :: enforced_dt        !< Enforced time step in inparam 
+  real(kind=dp)       :: enforced_dt        !< Enforced time step in inparam
   real(kind=dp)       :: enforced_period    !< Enforced source period in inparam
-  character(len=8)    :: time_scheme        !< time extrapolation scheme, better be: 
+  character(len=8)    :: time_scheme        !< time extrapolation scheme, better be:
                                             !! symplec4, sympqua4, symp_5_4, newmark2
   real(kind=dp)       :: period             !< Dominant source period,  given by mesher
   real(kind=dp)       :: courant            !< Courant number,  given by mesher
@@ -41,7 +41,7 @@ public
   real(kind=dp)       :: half_dt            !< Half of time step
   real(kind=dp)       :: half_dt_sq         !< Half of squared time step
   real(kind=dp)       :: deltat_strain      !< Time step for strain/kernel dumps
-  real(kind=dp)       :: deltat_coarse      !< Time step of slowest dump    
+  real(kind=dp)       :: deltat_coarse      !< Time step of slowest dump
   real(kind=dp)       :: seislength_t       !< seismogram length in seconds
   integer             :: niter              !< Number of iterations
   integer             :: iclockold, idold   !< tick labels for timer
