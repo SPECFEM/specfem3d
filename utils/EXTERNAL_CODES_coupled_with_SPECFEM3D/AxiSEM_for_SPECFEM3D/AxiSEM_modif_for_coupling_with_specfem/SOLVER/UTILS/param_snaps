@@ -1,0 +1,10 @@
+0.        starting phi (right cross section) [deg]
+85.       increment phi (ending,left cross section) [deg]
+6371.     top radius [km]
+3490.     bottom radius [km]
+60.       meridional colatitude [deg]
+30,30,1   snap starting number,end number, skipping factor
+.true.    consider meridional cross section?
+.true.    consider top surface?
+.true.    consider bottom surface?
+
