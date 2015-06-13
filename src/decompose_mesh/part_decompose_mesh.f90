@@ -941,13 +941,10 @@ contains
                           local_nodes(1), local_nodes(2),local_nodes(3), local_nodes(4)
 
                   case default
-                     print *, "error in write_interfaces_database!", tab_interfaces(k*7+2), iproc
+                     print *, "fatal error in write_interfaces_database:", tab_interfaces(k*7+2), iproc
+                     stop "fatal error in write_interfaces_database"
                   end select
                enddo
-
-               ! outputs infos
-               !print *,'  partition MPI interface:',iproc,num_interface
-               !print *,'    element faces: ',count_faces
 
             endif
 

@@ -25,18 +25,13 @@
 !
 !=====================================================================
 
-! read a 2D or 3D CUBIT mesh file and display statistics about mesh quality;
+! read an external mesh file and display statistics about mesh quality;
 ! and create an OpenDX file showing a given range of elements or a single element
 
-! Dimitri Komatitsch, University of Pau, France, March 2009.
+! Dimitri Komatitsch, University of Pau, France, March 2009 and CNRS, Marseille, France, June 2015.
 
 !! DK DK
 !! DK DK this routine could be improved by computing the mean in addition to min and max of ratios
-!! DK DK
-!! DK DK also, the particular treatment for sub-blocks in Gocad files, e.g.,
-!! DK DK if (IGNORE_OTHER_HEADERS .and. cubit_mesh_file == 'REGOLITE_only_no_fractures_2D_in_meters.inp' &
-!! DK DK                  .and. i == 28429)
-!! DK DK is not general at all and should be rewritten
 !! DK DK
 
   program check_mesh_quality
@@ -46,28 +41,23 @@
   implicit none
 
 !------------------------------------------------------------------------------------------------
-! EDIT YOUR PARAMETERS BELOW HERE
 
-! number of points and of hex or quad elements
-! number of points of a hex or quad element
+  integer, parameter :: NGNOD = 8                        ! number of control nodes for hexahedral elements (can only be 8 or 27)
 
-! example: layered_halfspace
-!                 Cubit -> File -> Export... Abacus (*.inp)
-!                                         ( block ids: 1 2 3) volumes only
-!                                         (optional: uncheck 'Export Using Cubit IDs' to have element IDs in increasing order)
-  character(len=*), parameter :: cubit_mesh_file = 'examples/layered_halfspace/layered_halfspace_mesh.inp'
-  integer, parameter :: NGLOB = 76819                    ! number of nodes
-  integer, parameter :: NSPEC = 70200                    ! number of elements (only volumes, i.e. block ids 1,2,3 )
-  integer, parameter :: NGNOD = 8                        ! hexahedral elements
-  logical, parameter :: IGNORE_OTHER_HEADERS = .false.
-  double precision, parameter :: delta_t = 0.005         ! arbitrary, initial guess
-  double precision, parameter :: VP_MAX = 7500.d0        ! maximum vp in volume block id 3
+  character(len=*), parameter :: nodes_coords_file = 'MESH/nodes_coords_file'
+  character(len=*), parameter :: mesh_file = 'MESH/mesh_file'
+
+  double precision, parameter :: delta_t = 1.d0          ! fictitious value used for compatibility with the subroutine call only
+  double precision, parameter :: VP_MAX  = 1.d0          ! fictitious value used for compatibility with the subroutine call only
 
 !------------------------------------------------------------------------------------------------
 
-  double precision, dimension(NGLOB) :: x,y,z
+  integer :: NGLOB                    ! number of nodes
+  integer :: NSPEC                    ! number of elements
 
-  integer, dimension(NGNOD,NSPEC) :: ibool
+  double precision, dimension(:), allocatable :: x,y,z
+
+  integer, dimension(:,:), allocatable :: ibool
 
   integer :: i,ispec,iread,iformat,ispec_min_edge_length,ispec_max_edge_length, &
              ispec_begin,ispec_end,ispec_to_output,ier
@@ -83,7 +73,7 @@
   double precision :: distmin,distmax
 
 ! for stability
-  double precision :: stability,stability_min,stability_max,max_CFL_stability_limit
+  double precision :: stability
 
 ! for histogram
   integer, parameter :: NCLASS = 20
@@ -93,8 +83,6 @@
 ! to export elements that have a certain skewness range to OpenDX
   integer :: ntotspecAVS_DX
   logical :: USE_OPENDX
-
-  character(len=MAX_STRING_LEN) :: line
 
   if (NGNOD /= 8) then
     print *,'error: check_mesh_quality only supports NGNOD == 8 for now'
@@ -145,61 +133,32 @@
 
 ! read the mesh
   print *
-  print *,'start reading the CUBIT file: ',cubit_mesh_file(1:len_trim(cubit_mesh_file))
+  print *,'start reading the node coordinate file: ',nodes_coords_file(1:len_trim(nodes_coords_file))
+
+  open(unit=10,file=nodes_coords_file,status='old',action='read')
+
+  read(10,*) NGLOB
   print *,'  number of points: ',NGLOB
-  print *,'  number of elements: ',NSPEC
-  print *
 
-  open(unit=10,file=cubit_mesh_file,status='unknown',action='read')
+  allocate(x(NGLOB))
+  allocate(y(NGLOB))
+  allocate(z(NGLOB))
 
-! skip the header:
-!     *HEADING
-!     cubit(M3D/examples/layered_halfspace/layered_halfspace_mesh.inp): 01/31/2011: 10
-!     version: 12.2
-  read(10,*)
-  read(10,*)
-  read(10,*)
-
-! read the points / nodes section:
-!   **
-!   ********************************** P A R T S **********************************
-!   *PART, NAME=Part-Default
-!   **
-!   ********************************** N O D E S **********************************
-!   *NODE, NSET=ALLNODES
-  iread = 0
   x(:) = 0.d0
   y(:) = 0.d0
   z(:) = 0.d0
+
   do i = 1,NGLOB
 
-    ! reads in text line
-    read(10,'(a)',iostat=ier) line
-    if (ier /= 0) then
-      print *,'error read line:',i
-      stop 'error read points'
-    endif
-
-    ! checks if line is a comment line (starts with *), and reads until it finds a non-comment line
-    do while (line(1:1) == "*")
-      ! skips comment line and goes to next line
-      print *,'  comment:',trim(line)
-      read(10,'(a)',iostat=ier) line
-      if (ier /= 0) then
-        print *,'error read non-comment line:',i
-        stop 'error read points'
-      endif
-    enddo
-
     ! gets node ID and position
-    read(line,*,iostat=ier) iread,xtmp,ytmp,ztmp
+    read(10,*,iostat=ier) iread,xtmp,ytmp,ztmp
 
-    ! checks
+    ! check
     if (ier /= 0) then
-      print *,'error point read:',iread,i
-      print *, 'line: ',trim(line)
-      stop 'error read points from current line'
+      print *,'error point read:',i,iread,xtmp,ytmp,ztmp
+      stop 'error while reading points'
     endif
+
     ! checks if out-of-range
     if (iread < 1 .or. iread > NGLOB) then
       print *,'error at i,iread = ',i,iread
@@ -212,70 +171,39 @@
     z(iread) = ztmp
 
   enddo
-  print *
-  print *,'points read: ',iread
+
+  close(10)
+
+  print *,'xmin, xmax of mesh read = ',minval(x),maxval(x)
+  print *,'ymin, ymax of mesh read = ',minval(y),maxval(y)
+  print *,'zmin, zmax of mesh read = ',minval(z),maxval(z)
   print *
 
-! skip the header
-  !read(10,*)
-  read(10,'(a)',iostat=ier) line
-  if (line(1:1) /= "*") then
-    print *,'  new line: ',trim(line)
-    print *,'  not a header line, check the number of points NGLOB specified'
-    stop 'error reading elements'
-  endif
+  print *,'start reading the mesh topology file: ',mesh_file(1:len_trim(mesh_file))
 
-! read the elements:
-!   **
-!   ********************************** E L E M E N T S ****************************
-!   *ELEMENT, TYPE=C3D8R, ELSET=elastic_1
-  iread = 0
+  open(unit=10,file=mesh_file,status='old',action='read')
+
+  read(10,*) NSPEC
+  print *,'  number of elements: ',NSPEC
+
+  allocate(ibool(NGNOD,NSPEC))
   ibool(:,:) = 0
+
   do i = 1,NSPEC
 
-    ! reads in element connectivity
-    if (NGNOD == 8) then
-
-      ! hexahedra
-
-      if (IGNORE_OTHER_HEADERS .and. cubit_mesh_file == 'rego3d_70_disp.inp' &
-                 .and. i == 252929) read(10,*)
-
-      ! reads in line
-      read(10,'(a)',iostat=ier) line
-      if (ier /= 0) then
-        print *,'error read:',iread
-        stop 'error read elements line'
-      endif
-
-      ! checks if line is a comment line (starts with *), and reads until it finds a non-comment line
-      do while (line(1:1) == "*")
-        ! skips comment line and goes to next line
-        print *,'  comment: ',trim(line)
-        read(10,'(a)',iostat=ier) line
-        if (ier /= 0) then
-          print *,'error read:',i
-          stop 'error read non-comment elements line'
-        endif
-      enddo
-
       ! gets element connection nodes
-      read(line,*,iostat=ier) iread,n1,n2,n3,n4,n5,n6,n7,n8
+      read(10,*,iostat=ier) iread,n1,n2,n3,n4,n5,n6,n7,n8
 
-      ! checks
+      ! check
       if (ier /= 0) then
-        print *,'error element read:',i
-        print *,'line: ',trim(line)
-        stop 'error read elements connectivity'
+        print *,'error element read:',i,iread,n1,n2,n3,n4,n5,n6,n7,n8
+        stop 'error while reading element connectivity'
       endif
+
       if (iread < 1 .or. iread > NSPEC) then
         print *,'error at i,iread = ',i,iread
         stop 'wrong input ID for an element'
       endif
-
-      ! if we analyze only the second layer of the mesh and ignore the first, shift iread
-      ! so that it conforms with i
-      if (cubit_mesh_file == 'rego3d_70_disp_bedrock_only.inp') iread = iread - 252928
 
       ! stores element nodes
       ibool(1,iread) = n1
@@ -287,17 +215,11 @@
       ibool(7,iread) = n7
       ibool(8,iread) = n8
 
-    endif
-
   enddo
+
   close(10)
-  print *
-  print *,'elements read:',iread
-  print *
 
-  print *,'done reading the CUBIT file'
   print *
-
   print *,'start computing the minimum and maximum edge size'
 
 ! ************* compute min and max of skewness and ratios ******************
@@ -306,13 +228,11 @@
   equiangle_skewness_min = + HUGEVAL
   edge_aspect_ratio_min = + HUGEVAL
   diagonal_aspect_ratio_min = + HUGEVAL
-  stability_min = + HUGEVAL
   distance_min = + HUGEVAL
 
   equiangle_skewness_max = - HUGEVAL
   edge_aspect_ratio_max = - HUGEVAL
   diagonal_aspect_ratio_max = - HUGEVAL
-  stability_max = - HUGEVAL
   distance_max = - HUGEVAL
 
   ispec_min_edge_length = -1
@@ -334,13 +254,11 @@
     equiangle_skewness_min = min(equiangle_skewness_min,equiangle_skewness)
     edge_aspect_ratio_min = min(edge_aspect_ratio_min,edge_aspect_ratio)
     diagonal_aspect_ratio_min = min(diagonal_aspect_ratio_min,diagonal_aspect_ratio)
-    stability_min = min(stability_min,stability)
     distance_min = min(distance_min,distmin)
 
     equiangle_skewness_max = max(equiangle_skewness_max,equiangle_skewness)
     edge_aspect_ratio_max = max(edge_aspect_ratio_max,edge_aspect_ratio)
     diagonal_aspect_ratio_max = max(diagonal_aspect_ratio_max,diagonal_aspect_ratio)
-    stability_max = max(stability_max,stability)
     distance_max = max(distance_max,distmax)
 
   enddo
@@ -374,25 +292,6 @@
   print *
   print *,'max diagonal aspect ratio = ',diagonal_aspect_ratio_max
 ! print *,'min diagonal aspect ratio = ',diagonal_aspect_ratio_min
-  print *
-  print *,'max stability = ',stability_max
-  print *,'computed using VP_MAX = ',VP_MAX
-! print *,'min stability = ',stability_min
-
-! max stability CFL value
-  max_CFL_stability_limit = 0.48d0
-
-  if (stability_max >= max_CFL_stability_limit) then
-    print *,'*********************************************'
-    print *,'*********************************************'
-    print *,' WARNING, that value is above the upper CFL limit of ',max_CFL_stability_limit
-    print *,'therefore the run should be unstable'
-    print *,'*********************************************'
-    print *,'*********************************************'
-  else
-    print *,'that value is below the upper CFL limit of ',max_CFL_stability_limit
-    print *,'therefore the run should be stable'
-  endif
   print *
 
 ! create statistics about mesh quality
@@ -449,13 +348,21 @@
   print *
 
 ! display warning if maximum skewness is too high
-  if (equiangle_skewness_max >= 0.75d0) then
+  if (equiangle_skewness_max > 0.85d0) then
     print *
-    print *,'*********************************************'
-    print *,'*********************************************'
-    print *,' WARNING, mesh is bad (max skewness >= 0.75)'
-    print *,'*********************************************'
-    print *,'*********************************************'
+    print *,'********************************************'
+    print *,'********************************************'
+    print *,' WARNING, mesh is bad (max skewness > 0.85)'
+    print *,'********************************************'
+    print *,'********************************************'
+    print *
+  else if (equiangle_skewness_max > 0.75d0) then
+    print *
+    print *,'******************************************************'
+    print *,'******************************************************'
+    print *,' WARNING, mesh is not very good (max skewness > 0.75)'
+    print *,'******************************************************'
+    print *,'******************************************************'
     print *
   endif
 
