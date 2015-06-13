@@ -27,8 +27,8 @@
 
 
 ## compilation directories
-S := ${S_TOP}/src/check_mesh_quality_CUBIT_Abaqus
-$(check_mesh_quality_CUBIT_Abaqus_OBJECTS): S := ${S_TOP}/src/check_mesh_quality_CUBIT_Abaqus
+S := ${S_TOP}/src/check_mesh_quality
+$(check_mesh_quality_OBJECTS): S := ${S_TOP}/src/check_mesh_quality
 
 #######################################
 
@@ -36,16 +36,14 @@ $(check_mesh_quality_CUBIT_Abaqus_OBJECTS): S := ${S_TOP}/src/check_mesh_quality
 #### targets
 ####
 
-check_mesh_quality_CUBIT_Abaqus_TARGETS = \
-	$E/xcheck_mesh_quality_CUBIT_Abaqus \
+check_mesh_quality_TARGETS = \
+	$E/xcheck_mesh_quality \
 	$E/xconvert_skewness_to_angle \
-	$E/xmultiply_CUBIT_Abaqus_mesh_by_1000 \
 	$(EMPTY_MACRO)
 
-check_mesh_quality_CUBIT_Abaqus_OBJECTS = \
-	$O/check_mesh_quality_CUBIT_Abaqus.check.o \
+check_mesh_quality_OBJECTS = \
+	$O/check_mesh_quality.check.o \
 	$O/convert_skewness_to_angle.check.o \
-	$O/multiply_CUBIT_Abaqus_mesh_by_1000.check.o \
 	$(EMPTY_MACRO)
 
 
@@ -57,30 +55,21 @@ check_mesh_quality_CUBIT_Abaqus_OBJECTS = \
 ####
 
 
-check: $(check_mesh_quality_CUBIT_Abaqus_TARGETS)
-check_mesh: $(check_mesh_quality_CUBIT_Abaqus_TARGETS)
+check: $(check_mesh_quality_TARGETS)
+check_mesh: $(check_mesh_quality_TARGETS)
 
 
-check_mesh_quality_CUBIT_Abaqus: xcheck_mesh_quality_CUBIT_Abaqus
-xcheck_mesh_quality_CUBIT_Abaqus: $E/xcheck_mesh_quality_CUBIT_Abaqus
+check_mesh_quality: xcheck_mesh_quality
+xcheck_mesh_quality: $E/xcheck_mesh_quality
 
 convert_skewness_to_angle: xconvert_skewness_to_angle
 xconvert_skewness_to_angle: $E/xconvert_skewness_to_angle
 
-multiply_CUBIT_Abaqus_mesh_by_1000: xmultiply_CUBIT_Abaqus_mesh_by_1000
-xmultiply_CUBIT_Abaqus_mesh_by_1000: $E/xmultiply_CUBIT_Abaqus_mesh_by_1000
-
-# rules for the pure Fortran version
-
-$E/xcheck_mesh_quality_CUBIT_Abaqus: $O/check_mesh_quality_CUBIT_Abaqus.check.o $O/shared_par.shared_module.o
-	${FCLINK} -o  $E/xcheck_mesh_quality_CUBIT_Abaqus $O/check_mesh_quality_CUBIT_Abaqus.check.o $O/shared_par.shared_module.o
+$E/xcheck_mesh_quality: $O/check_mesh_quality.check.o $O/shared_par.shared_module.o
+	${FCLINK} -o  $E/xcheck_mesh_quality $O/check_mesh_quality.check.o $O/shared_par.shared_module.o
 
 $E/xconvert_skewness_to_angle: $O/convert_skewness_to_angle.check.o $O/shared_par.shared_module.o
 	${FCLINK} -o  $E/xconvert_skewness_to_angle $O/convert_skewness_to_angle.check.o $O/shared_par.shared_module.o
-
-$E/xmultiply_CUBIT_Abaqus_mesh_by_1000: $O/multiply_CUBIT_Abaqus_mesh_by_1000.check.o
-	${FCLINK} -o  $E/xmultiply_CUBIT_Abaqus_mesh_by_1000 $O/multiply_CUBIT_Abaqus_mesh_by_1000.check.o
-
 
 #######################################
 

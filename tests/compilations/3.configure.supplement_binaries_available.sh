@@ -23,9 +23,8 @@ exec=( xcombine_surf_data \
        xcombine_vol_data \
        xconvolve_source_timefunction \
        xcreate_movie_shakemap_AVS_DX_GMT \
-       xcheck_mesh_quality_CUBIT_Abaqus \
+       xcheck_mesh_quality \
        xconvert_skewness_to_angle \
-       xmultiply_CUBIT_Abaqus_mesh_by_1000 \
        xmodel_update \
        xsum_kernels \
        xsum_preconditioned_kernels \

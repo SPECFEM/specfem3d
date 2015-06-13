@@ -25,7 +25,7 @@
 #
 #=====================================================================
 
-DIR = check_mesh_quality_CUBIT_Abaqus
+DIR = check_mesh_quality
 
 # The rest of this file is generic
 #######################################
