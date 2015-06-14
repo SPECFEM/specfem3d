@@ -330,7 +330,7 @@
 
 ! create script for Gnuplot histogram file
   open(unit=14,file='plot_mesh_quality_histogram.gnu',status='unknown')
-  write(14,*) 'set term x11'
+  write(14,*) 'set term wxt'
   write(14,*) '#set term gif'
   write(14,*) '#set output "mesh_quality_histogram.gif"'
   write(14,*)
