@@ -4,22 +4,20 @@ set pwd_noblank = `echo $PWD | sed 's/ //g'`
 test "$pwd_noblank" != "$PWD" && echo "ERROR: your path contains a blank, please rename" && exit
 set homedir = $PWD
 
-### Go to l. 360 to see command for Curie ###
+### Go to l. 369 to see command for Curie ###
 #
 ##### For coupling with specfem3d #####
 
-set NUMOFPOINTS = $(wc -l < list_ggl_boundary_spherical.txt)
-
-echo $NUMOFPOINTS | cat - list_ggl_boundary_spherical.txt > input_box.txt
-echo $NUMOFPOINTS | cat - list_ggl_boundary_cartesian.txt > input_box_sem_cart.txt
-
-rm -f list_ggl_boundary_spherical.txt list_ggl_boundary_cartesian.txt
+./add_line_number_in_points_lists.sh
+echo " "
+echo "Add line number in lists of points DONE"
+echo " "
 
 #######################################
 #
 
 if ( ${#argv} < 1 || "$1" == "-h" ) then
-    echo ""
+
     echo "=================================================="
     echo " Argument 1:  directory name for the simulation"
     echo ""
@@ -51,7 +49,6 @@ if ( $netcdf_requested == 'true' && $netcdf_compiled != 'true') then
   echo "ERROR: NetCDF is requested in inparam_advanced, but disabled in ../make_axisem.macros"
   exit
 endif
-
 
 set svnrevision = `svnversion`
 echo $svnrevision "SVN_VERSION      " > runinfo
@@ -294,7 +291,6 @@ foreach isrc (${num_src_arr})
 end
 
 
-
 ########################################################
 ######### submit the jobs ##############################
 ########################################################
@@ -369,7 +365,8 @@ foreach isrc (${num_src_arr})
             #ulimit -s unlimited
             #setenv OMP_NUM_THREADS 4
             #$mpiruncmd -n $nodnum ./axisem >& $outputname &
-            ccc_msub -q standard ../batch_AxiSEM_CD_Curie.sh
+
+            ccc_msub -q standard ../sub_AxiSEM_called_batch_Curie_CD.sh
         endif
 
         echo "Job running in directory $isim"

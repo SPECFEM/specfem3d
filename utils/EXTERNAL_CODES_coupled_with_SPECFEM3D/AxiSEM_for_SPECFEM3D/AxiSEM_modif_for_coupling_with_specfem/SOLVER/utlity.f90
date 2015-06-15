@@ -25,7 +25,7 @@ module utlity
 
   use global_parameters
   implicit none
-
+ 
   public :: compute_coordinates, scoord, zcoord, rcoord, thetacoord
   public :: dblreldiff_small, reldiff_small
   public :: dblereldiff, reldiff
