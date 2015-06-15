@@ -27,14 +27,14 @@ $SPECFEM3D_BINARY_PATH/xmeshfem3D > Step1-create_3D_chunk_mesh.out
 
 }
 
-function run_create_specfem_databases ()
+function run_create_partitioning_and_specfem_databases ()
 {
 
-$BINSEM/xdecompose_mesh $NPROC $MESH OUTPUT_FILES/DATABASES_MPI/
-mv Numglob2loc_elmn.txt $MESH/.
+$SPECFEM3D_BINARY_PATH/xdecompose_mesh $NPROC MESH/ OUTPUT_FILES/DATABASES_MPI/
+mv Numglob2loc_elmn.txt MESH/.
 
 pwd
-$MPIRUN $OPTION_SIMU $BINSEM/xgenerate_databases > Step3-create_specfem3d_database.out
+$MPIRUN $OPTION_SIMU $SPECFEM3D_BINARY_PATH/xgenerate_databases > Step3-create_partitioning_and_specfem3d_databases.out
 }
 
 function run_create_tractions_for_specfem ()

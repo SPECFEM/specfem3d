@@ -3,7 +3,7 @@
 
 #             ------------ BACTH AND SPECIFIC CLUSTER DIRECTIVES  ------
 
-#MSUB -r Coupling_step3_part_and_generdata_for_AxiSEM       # Nom du job
+#MSUB -r Coupling_step4_and_step5_part_and_generdata_for_AxiSEM       # Nom du job
 #MSUB -n 32
 #MSUB -N 2
 #MSUB -T 5400
