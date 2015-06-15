@@ -25,6 +25,8 @@ cp $AxiSEM_FILE_1D_MODEL MESH/.
 
 $SPECFEM3D_BINARY_PATH/xmeshfem3D > Step1-create_3D_chunk_mesh.out
 
+cp list_ggl_boundary_* ${HOME_AxiSEM}/AxiSEM_modif_for_coupling_with_specfem/SOLVER/
+
 }
 
 function run_create_partitioning_and_specfem_databases ()
