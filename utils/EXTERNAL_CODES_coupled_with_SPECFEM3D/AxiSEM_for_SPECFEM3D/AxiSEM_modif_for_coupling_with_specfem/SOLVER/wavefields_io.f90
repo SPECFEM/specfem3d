@@ -907,8 +907,8 @@ end subroutine fluid_snapshot
 !-----------------------------------------------------------------------------------------
 
 !-----------------------------------------------------------------------------------------
-subroutine dump_field_1d(f, filename, appisnap, n) 
- 
+subroutine dump_field_1d(f, filename, appisnap, n)
+
    use data_source,                only : have_src, src_dump_type
    use data_mesh,                  only : nel_solid, nel_fluid
 
