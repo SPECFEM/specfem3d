@@ -200,7 +200,7 @@
         stop 'error while reading element connectivity'
       endif
 
-      if (iread < 1 .or. iread > NSPEC) then
+      if (iread < 1 .or. iread > NSPEC .or. min(n1,n2,n3,n4,n5,n6,n7,n8) < 1 .or. max(n1,n2,n3,n4,n5,n6,n7,n8) > NGLOB) then
         print *,'error at i,iread = ',i,iread
         stop 'wrong input ID for an element'
       endif
