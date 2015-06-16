@@ -6,7 +6,7 @@ if [ -e $1 ] ; then
   NUMBOFPOINTS=$(wc -l < $1)
   echo ${NUMBOFPOINTS} | cat - $1 > $2
   rm -f $1
-else 
+else
   echo "Files ""list_ggl_boundary..."" have not been copied or are already deleted ==> Check files ""input_box..."", they may be already OK !!"
 fi
 }
