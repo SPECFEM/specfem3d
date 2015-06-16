@@ -1,0 +1,94 @@
+We have to finally choose which AxiSEM version we add and definitely use for coupling with SPECFEM3D
+
+All the paths are form specfem3d home directory
+
+Here, run is an alias for Curie defined as : run='ccc_msub -q standard'
+
+####################################################################################################################
+
+############################################
+  STEP 1 : meshfem3d
+############################################
+
+Go in 'EXAMPLES/coupling_with_EXTERNAL_CODES/with_AxiSEM/example_1st_for_validation'
+
+Type : 
+
+./clean_this_example_dir.sh
+run ./batch_coupling_step1_create_dir_and_paths_+_meshfem3d_for_AxiSEM.sh
+
+It generate mesh files (on 1 proc on Curie),
+and copy files 'list_gll_boundary_spherical.txt' and 'list_gll_boundary_cartesian.txt' in AxiSEM solver dir
+
+####################################################################################################################
+
+############################################
+  STEP 2 : AxiSEM mesher
+############################################
+
+Go in 'utils/EXTERNAL_CODES_coupled_with_SPECFEM3D/AxiSEM_for_SPECFEM3D/AxiSEM_modif_for_coupling_with_specfem/MESHER'
+
+Check the file 'inparam_mesh'
+
+Type : ./submit.csh
+
+It run the mesher in serial : check file OUTPUT (wait for "....DONE WITH MESHER" to appear in OUTPUT)
+
+Type : ./movemesh.csh NAME_OF_DESTINATION_MESH_DIR
+
+It moves mesh files to ../SOLVER/MESHES/NAME_OF_DESTINATION_MESH_DIR
+
+
+####################################################################################################################
+
+############################################
+  STEP 3 : AxiSEM solver
+############################################
+
+Go in 'utils/EXTERNAL_CODES_coupled_with_SPECFEM3D/AxiSEM_for_SPECFEM3D/AxiSEM_modif_for_coupling_with_specfem/SOLVER'
+
+Check 'inparam_basic' (set the value for MESHNAME to the meshname from above, among others)
+
+Type : ./sub_AxiSEM_launch_script_Curie_CD.csh NAME_OF_RESULTS_DIR
+
+!! CAUTION : don't forget "NAME_OF_RESULTS_DIR" !!
+
+It run, on N procs in batch on Curie, the compilation and the execution.
+Among others, this script calls :
+
+./add_line_number_in_points_lists.sh (rename files 'list_gll_boundary_spherical.txt' & 'list_gll_boundary_cartesian.txt', and add number of lines)
+
+run ./sub_AxiSEM_called_batch_Curie_CD.sh (submit the job on Curie)
+
+
+####################################################################################################################
+
+############################################
+  STEP 4 & STEP 5 : specfem3d scotch partitioning and generate databases
+############################################
+
+Go back in 'EXAMPLES/coupling_with_EXTERNAL_CODES/with_AxiSEM/example_1st_for_validation'
+
+Type : run ./batch_coupling_step4_and_step5_scotch_part_and_generdata_for_AxiSEM.sh
+
+!! CAUTION : the number of prc in DATA/Par_file, have to be the same as in the 'inparam_mesh' (cf STEP 2) of AxiSEM !!
+
+
+####################################################################################################################
+
+############################################
+  STEP 6 : Interface ==> expand 2D to 3D
+############################################
+
+Go back in 'utils/EXTERNAL_CODES_coupled_with_SPECFEM3D/AxiSEM_for_SPECFEM3D/AxiSEM_modif_for_coupling_with_specfem/SOLVER'
+
+Check the file 'expand_2D_3D.par', cf the paths in the 3 last lines !!
+
+
+
+
+####################################################################################################################
+
+############################################
+  STEP 7
+############################################
