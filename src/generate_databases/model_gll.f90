@@ -38,8 +38,12 @@
 
   subroutine model_gll(myrank,nspec,LOCAL_PATH)
 
-  use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,FOUR_THIRDS,IMAIN
-  use create_regions_mesh_ext_par
+  use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,FOUR_THIRDS,IMAIN,MAX_STRING_LEN, &
+    ATTENUATION,FULL_ATTENUATION_SOLID
+
+  use create_regions_mesh_ext_par,only: rhostore,kappastore,mustore,rho_vp,rho_vs, &
+    qkappa_attenuation_store,qmu_attenuation_store
+
   implicit none
 
   integer, intent(in) :: myrank,nspec
@@ -63,8 +67,11 @@
   !!! use lines for vp only
 
   ! density
-  allocate( rho_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  allocate(rho_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
   if (ier /= 0) stop 'error allocating array rho_read'
+
+  ! user output
+  if (myrank==0) write(IMAIN,*) '     reading in: rho.bin'
 
   filename = prname_lp(1:len_trim(prname_lp))//'rho.bin'
   open(unit=28,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
@@ -77,8 +84,11 @@
   close(28)
 
   ! vp
-  allocate( vp_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  allocate(vp_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
   if (ier /= 0) stop 'error allocating array vp_read'
+
+  ! user output
+  if (myrank==0) write(IMAIN,*) '     reading in: vp.bin'
 
   filename = prname_lp(1:len_trim(prname_lp))//'vp.bin'
   open(unit=28,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
@@ -91,8 +101,11 @@
   close(28)
 
   ! vs
-  allocate( vs_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  allocate(vs_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
   if (ier /= 0) stop 'error allocating array vs_read'
+
+  ! user output
+  if (myrank==0) write(IMAIN,*) '     reading in: vs.bin'
 
   filename = prname_lp(1:len_trim(prname_lp))//'vs.bin'
   open(unit=28,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
@@ -127,11 +140,46 @@
   !!! update arrays that will be saved and used in the solver xspecfem3D
   !!! the following part is neccessary if you uncommented something above
 
-  rhostore    = rho_read
-  kappastore  = rhostore * ( vp_read * vp_read - FOUR_THIRDS * vs_read * vs_read )
-  mustore     = rhostore * vs_read * vs_read
-  rho_vp = rhostore * vp_read
-  rho_vs = rhostore * vs_read
+  rhostore(:,:,:,:) = rho_read(:,:,:,:)
+  kappastore(:,:,:,:) = rhostore(:,:,:,:) * ( vp_read(:,:,:,:) * vp_read(:,:,:,:) &
+                                              - FOUR_THIRDS * vs_read(:,:,:,:) * vs_read(:,:,:,:) )
+  mustore(:,:,:,:) = rhostore(:,:,:,:) * vs_read(:,:,:,:) * vs_read(:,:,:,:)
+
+  rho_vp(:,:,:,:) = rhostore(:,:,:,:) * vp_read(:,:,:,:)
+  rho_vs(:,:,:,:) = rhostore(:,:,:,:) * vs_read(:,:,:,:)
+
+  ! gets attenuation arrays from files
+  if (ATTENUATION) then
+    ! shear attenuation
+    ! user output
+    if (myrank==0) write(IMAIN,*) '     reading in: qmu.bin'
+
+    filename = prname_lp(1:len_trim(prname_lp))//'qmu.bin'
+    open(unit=28,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
+    if (ier /= 0) then
+      print *,'Error opening file: ',trim(filename)
+      stop 'Error reading qmu.bin file'
+    endif
+
+    read(28) qmu_attenuation_store
+    close(28)
+
+    ! bulk attenuation
+    if (FULL_ATTENUATION_SOLID) then
+      ! user output
+      if (myrank==0) write(IMAIN,*) '     reading in: qkappa.bin'
+
+      filename = prname_lp(1:len_trim(prname_lp))//'qkappa.bin'
+      open(unit=28,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
+      if (ier /= 0) then
+        print *,'error opening file: ',trim(filename)
+        stop 'error reading qkappa.bin file'
+      endif
+
+      read(28) qkappa_attenuation_store
+      close(28)
+    endif
+  endif
 
   ! free memory
   deallocate( rho_read,vp_read,vs_read)

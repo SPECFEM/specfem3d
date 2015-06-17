@@ -38,7 +38,10 @@
 subroutine model_gll_adios(myrank,nspec,LOCAL_PATH)
 
   use adios_read_mod
-  use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,FOUR_THIRDS,IMAIN
+
+  use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,FOUR_THIRDS,IMAIN, &
+    ATTENUATION,FULL_ATTENUATION_SOLID
+
   use create_regions_mesh_ext_par
 
   implicit none
@@ -94,6 +97,8 @@ subroutine model_gll_adios(myrank,nspec,LOCAL_PATH)
   start(1) = local_dim_rho * myrank
   count_ad(1) = NGLLX * NGLLY * NGLLZ * nspec
   call adios_selection_boundingbox(sel, 1, start, count_ad)
+
+  ! wave speeds
   call adios_schedule_read(handle, sel, "rho/array", 0, 1, &
                            rho_read, ier)
   call adios_schedule_read(handle, sel, "vp/array", 0, 1, &
@@ -101,11 +106,24 @@ subroutine model_gll_adios(myrank,nspec,LOCAL_PATH)
   call adios_schedule_read(handle, sel, "vp/array", 0, 1, &
                            vp_read, ier)
 
+  ! attenuation
+  if (ATTENUATION) then
+    ! shear attenuation
+    call adios_schedule_read(handle, sel, "qmu/array", 0, 1, &
+                             qmu_attenuation_store, ier)
+    ! bulk attenuation
+    if (FULL_ATTENUATION_SOLID) then
+      call adios_schedule_read(handle, sel, "qkappa/array", 0, 1, &
+                               qkappa_attenuation_store, ier)
+    endif
+  endif
+
   !---------------------------------------.
   ! Perform read and close the adios file |
   !---------------------------------------'
   call adios_perform_reads(handle, ier)
   if (ier /= 0) call stop_all()
+
   call adios_read_close(handle,ier)
   call adios_read_finalize_method(ADIOS_READ_METHOD_BP, ier)
 
@@ -132,11 +150,12 @@ subroutine model_gll_adios(myrank,nspec,LOCAL_PATH)
   !!! update arrays that will be saved and used in the solver xspecfem3D
   !!! the following part is neccessary if you uncommented something above
 
-  rhostore    = rho_read
-  kappastore  = rhostore * ( vp_read * vp_read - FOUR_THIRDS * vs_read * vs_read )
-  mustore     = rhostore * vs_read * vs_read
-  rho_vp = rhostore * vp_read
-  rho_vs = rhostore * vs_read
+  rhostore(:,:,:,:) = rho_read(:,:,:,:)
+  kappastore(:,:,:,:) = rhostore(:,:,:,:) * ( vp_read(:,:,:,:) * vp_read(:,:,:,:) &
+                          - FOUR_THIRDS * vs_read(:,:,:,:) * vs_read(:,:,:,:) )
+  mustore(:,:,:,:) = rhostore(:,:,:,:) * vs_read(:,:,:,:) * vs_read(:,:,:,:)
+  rho_vp(:,:,:,:) = rhostore(:,:,:,:) * vp_read(:,:,:,:)
+  rho_vs(:,:,:,:) = rhostore(:,:,:,:) * vs_read(:,:,:,:)
 
   ! free memory
   deallocate( rho_read,vp_read,vs_read)

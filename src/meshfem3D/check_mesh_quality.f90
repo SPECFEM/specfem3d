@@ -96,6 +96,7 @@
      write(IMAIN,*) '**************************'
      write(IMAIN,*)
      write(IMAIN,*) 'start computing the minimum and maximum edge size'
+     call flush_IMAIN()
   endif
 
   if (NGNOD /= 8) stop 'error: check_mesh_quality only supports NGNOD == 8 for now'
@@ -189,71 +190,73 @@
 
   if (myrank == 0) then
 
-     if (skewness_max_rank /= myrank) then
-        call recv_i_t(tmp_ispec_max_skewness_MPI,1,skewness_max_rank)
-        ispec_max_skewness_MPI = tmp_ispec_max_skewness_MPI(1)
-     else
-        ispec_max_skewness_MPI = ispec_max_skewness
-     endif
+    if (skewness_max_rank /= myrank) then
+      call recv_i_t(tmp_ispec_max_skewness_MPI,1,skewness_max_rank)
+      ispec_max_skewness_MPI = tmp_ispec_max_skewness_MPI(1)
+    else
+      ispec_max_skewness_MPI = ispec_max_skewness
+    endif
 
-  write(IMAIN,*) 'done processing '
+    write(IMAIN,*) 'done processing '
 
-  write(IMAIN,*)
-  write(IMAIN,*) '------------'
-  write(IMAIN,*) 'mesh quality parameter definitions:'
-  write(IMAIN,*)
-  write(IMAIN,*) 'equiangle skewness: 0. perfect,  1. bad'
-  write(IMAIN,*) 'skewness max deviation angle: 0. perfect,  90. bad'
-  write(IMAIN,*) 'edge aspect ratio: 1. perfect,  above 1. gives stretching factor'
-  write(IMAIN,*) 'diagonal aspect ratio: 1. perfect,  above 1. gives stretching factor'
-  write(IMAIN,*) '------------'
+    write(IMAIN,*)
+    write(IMAIN,*) '------------'
+    write(IMAIN,*) 'mesh quality parameter definitions:'
+    write(IMAIN,*)
+    write(IMAIN,*) 'equiangle skewness: 0. perfect,  1. bad'
+    write(IMAIN,*) 'skewness max deviation angle: 0. perfect,  90. bad'
+    write(IMAIN,*) 'edge aspect ratio: 1. perfect,  above 1. gives stretching factor'
+    write(IMAIN,*) 'diagonal aspect ratio: 1. perfect,  above 1. gives stretching factor'
+    write(IMAIN,*) '------------'
 
-  write(IMAIN,*)
-  write(IMAIN,*) 'minimum length of an edge in the whole mesh (m) = ',distance_min_MPI!,' in element ',ispec_min_edge_length
-  write(IMAIN,*)
-  write(IMAIN,*) 'maximum length of an edge in the whole mesh (m) = ',distance_max_MPI!,' in element ',ispec_max_edge_length
-  write(IMAIN,*)
-  write(IMAIN,*) '***'
-  write(IMAIN,*) '*** max equiangle skewness = ',equiangle_skewness_max_MPI,' in element ',ispec_max_skewness_MPI, &
-       ' of slice ',skewness_max_rank
-  write(IMAIN,*) '***'
-  write(IMAIN,*)
-  write(IMAIN,*) 'max deviation angle from a right angle (90 degrees) is therefore = ',90.*equiangle_skewness_max_MPI
-  write(IMAIN,*)
-  write(IMAIN,*) 'worst angle in the mesh is therefore ',90.*(1. - equiangle_skewness_max_MPI)
-  write(IMAIN,*) 'or ',180. - 90.*(1. - equiangle_skewness_max_MPI),' degrees'
-  write(IMAIN,*)
-  write(IMAIN,*) 'max edge aspect ratio = ',edge_aspect_ratio_max_MPI
-  write(IMAIN,*)
-  write(IMAIN,*) 'max diagonal aspect ratio = ',diagonal_aspect_ratio_max_MPI
-  write(IMAIN,*)
-  write(IMAIN,*) '***'
-  write(IMAIN,'(a50,f13.8)') ' *** Maximum suggested time step for simulation = ',dt_suggested_max_MPI
-  write(IMAIN,*) '***'
-  write(IMAIN,*) '*** Max CFL stability condition of the time scheme (must be below about 0.55 or so) = ',stability_max_MPI
-  write(IMAIN,*) '*** computed using the maximum P wave velocity = ',VP_MAX
-  write(IMAIN,*) '***'
+    write(IMAIN,*)
+    write(IMAIN,*) 'minimum length of an edge in the whole mesh (m) = ',distance_min_MPI!,' in element ',ispec_min_edge_length
+    write(IMAIN,*)
+    write(IMAIN,*) 'maximum length of an edge in the whole mesh (m) = ',distance_max_MPI!,' in element ',ispec_max_edge_length
+    write(IMAIN,*)
+    write(IMAIN,*) '***'
+    write(IMAIN,*) '*** max equiangle skewness = ',equiangle_skewness_max_MPI,' in element ',ispec_max_skewness_MPI, &
+         ' of slice ',skewness_max_rank
+    write(IMAIN,*) '***'
+    write(IMAIN,*)
+    write(IMAIN,*) 'max deviation angle from a right angle (90 degrees) is therefore = ',90.*equiangle_skewness_max_MPI
+    write(IMAIN,*)
+    write(IMAIN,*) 'worst angle in the mesh is therefore ',90.*(1. - equiangle_skewness_max_MPI)
+    write(IMAIN,*) 'or ',180. - 90.*(1. - equiangle_skewness_max_MPI),' degrees'
+    write(IMAIN,*)
+    write(IMAIN,*) 'max edge aspect ratio = ',edge_aspect_ratio_max_MPI
+    write(IMAIN,*)
+    write(IMAIN,*) 'max diagonal aspect ratio = ',diagonal_aspect_ratio_max_MPI
+    write(IMAIN,*)
+    write(IMAIN,*) '***'
+    write(IMAIN,'(a50,f13.8)') ' *** Maximum suggested time step for simulation = ',dt_suggested_max_MPI
+    write(IMAIN,*) '***'
+    write(IMAIN,*) '*** Max CFL stability condition of the time scheme (must be below about 0.55 or so) = ',stability_max_MPI
+    write(IMAIN,*) '*** computed using the maximum P wave velocity = ',VP_MAX
+    write(IMAIN,*) '***'
+    call flush_IMAIN()
 
-  ! max stability CFL value
-!! DK DK we could probably increase this, now that the Stacey conditions have been fixed
-  max_CFL_stability_limit = 0.55d0 !! DK DK increased this    0.48d0
+    ! max stability CFL value
+    !! DK DK we could probably increase this, now that the Stacey conditions have been fixed
+    max_CFL_stability_limit = 0.55d0 !! DK DK increased this    0.48d0
 
-  if (stability_max_MPI >= max_CFL_stability_limit) then
-     write(IMAIN,*) '*********************************************'
-     write(IMAIN,*) '*********************************************'
-     write(IMAIN,*) ' WARNING, that value is above the upper CFL limit of ',max_CFL_stability_limit
-     write(IMAIN,*) 'therefore the run should be unstable'
-     write(IMAIN,*) 'You can try to reduce the time step'
-     write(IMAIN,*) '*********************************************'
-     write(IMAIN,*) '*********************************************'
-  else
-     write(IMAIN,*) 'that value is below the upper CFL limit of ',max_CFL_stability_limit
-     write(IMAIN,*) 'therefore the run should be stable'
-  endif
-  write(IMAIN,*)
+    if (stability_max_MPI >= max_CFL_stability_limit) then
+      write(IMAIN,*) '*********************************************'
+      write(IMAIN,*) '*********************************************'
+      write(IMAIN,*) ' WARNING, that value is above the upper CFL limit of ',max_CFL_stability_limit
+      write(IMAIN,*) 'therefore the run should be unstable'
+      write(IMAIN,*) 'You can try to reduce the time step'
+      write(IMAIN,*) '*********************************************'
+      write(IMAIN,*) '*********************************************'
+    else
+      write(IMAIN,*) 'that value is below the upper CFL limit of ',max_CFL_stability_limit
+      write(IMAIN,*) 'therefore the run should be stable'
+    endif
+    write(IMAIN,*)
 
-  ! create statistics about mesh quality
-  write(IMAIN,*) 'creating histogram and statistics of mesh quality'
+    ! create statistics about mesh quality
+    write(IMAIN,*) 'creating histogram and statistics of mesh quality'
+    call flush_IMAIN()
   endif
 
   ! erase histogram of skewness
@@ -282,53 +285,56 @@
   call sum_all_i(NSPEC,NSPEC_ALL_SLICES)
 
   if (myrank == 0) then
-  ! create histogram of skewness and save in Gnuplot file
-  write(IMAIN,*)
-  write(IMAIN,*) 'histogram of skewness (0. good - 1. bad):'
-  write(IMAIN,*)
-  total_percent = 0.
-  open(unit=14,file=OUTPUT_FILES(1:len_trim(OUTPUT_FILES))//'mesh_quality_histogram.txt',status='unknown')
-  do iclass = 0,NCLASS-1
-     current_percent = 100.*dble(classes_skewnessMPI(iclass))/dble(NSPEC_ALL_SLICES)
-     total_percent = total_percent + current_percent
-     write(IMAIN,*) real(iclass/dble(NCLASS)),' - ',real((iclass+1)/dble(NCLASS)),classes_skewnessMPI(iclass),&
-          ' ',sngl(current_percent),' %'
-     write(14,*) 0.5*(real(iclass/dble(NCLASS)) + real((iclass+1)/dble(NCLASS))),' ',sngl(current_percent)
-  enddo
-  close(14)
+    ! create histogram of skewness and save in Gnuplot file
+    write(IMAIN,*)
+    write(IMAIN,*) 'histogram of skewness (0. good - 1. bad):'
+    write(IMAIN,*)
+    call flush_IMAIN()
 
-  ! create script for Gnuplot histogram file
-  open(unit=14,file=OUTPUT_FILES(1:len_trim(OUTPUT_FILES))// &
-       'plot_mesh_quality_histogram.gnu',status='unknown')
-  write(14,*) 'set term wxt'
-  write(14,*) '#set term gif'
-  write(14,*) '#set output "mesh_quality_histogram.gif"'
-  write(14,*)
-  write(14,*) 'set xrange [0:1]'
-  write(14,*) 'set xtics 0,0.1,1'
-  write(14,*) 'set boxwidth ',1./real(NCLASS)
-  write(14,*) 'set xlabel "Skewness range"'
-  write(14,*) 'set ylabel "Percentage of elements (%)"'
-  write(14,*) 'plot "mesh_quality_histogram.txt" with boxes'
-  write(14,*) 'pause -1 "hit any key..."'
-  close(14)
+    total_percent = 0.
+    open(unit=14,file=OUTPUT_FILES(1:len_trim(OUTPUT_FILES))//'mesh_quality_histogram.txt',status='unknown')
+    do iclass = 0,NCLASS-1
+      current_percent = 100.*dble(classes_skewnessMPI(iclass))/dble(NSPEC_ALL_SLICES)
+      total_percent = total_percent + current_percent
+      write(IMAIN,*) real(iclass/dble(NCLASS)),' - ',real((iclass+1)/dble(NCLASS)),classes_skewnessMPI(iclass),&
+                     ' ',sngl(current_percent),' %'
+      write(14,*) 0.5*(real(iclass/dble(NCLASS)) + real((iclass+1)/dble(NCLASS))),' ',sngl(current_percent)
+    enddo
+    close(14)
 
-  ! display warning if maximum skewness is too high
-  if (equiangle_skewness_max >= 0.75d0) then
-     write(IMAIN,*)
-     write(IMAIN,*) '*********************************************'
-     write(IMAIN,*) '*********************************************'
-     write(IMAIN,*) ' WARNING, mesh is bad (max skewness >= 0.75)'
-     write(IMAIN,*) '*********************************************'
-     write(IMAIN,*) '*********************************************'
-     write(IMAIN,*)
-  endif
+    ! create script for Gnuplot histogram file
+    open(unit=14,file=OUTPUT_FILES(1:len_trim(OUTPUT_FILES))// &
+         'plot_mesh_quality_histogram.gnu',status='unknown')
+    write(14,*) 'set term wxt'
+    write(14,*) '#set term gif'
+    write(14,*) '#set output "mesh_quality_histogram.gif"'
+    write(14,*)
+    write(14,*) 'set xrange [0:1]'
+    write(14,*) 'set xtics 0,0.1,1'
+    write(14,*) 'set boxwidth ',1./real(NCLASS)
+    write(14,*) 'set xlabel "Skewness range"'
+    write(14,*) 'set ylabel "Percentage of elements (%)"'
+    write(14,*) 'plot "mesh_quality_histogram.txt" with boxes'
+    write(14,*) 'pause -1 "hit any key..."'
+    close(14)
 
-  if (total_percent < 99.9d0 .or. total_percent > 100.1d0) then
-     write(IMAIN,*) 'total percentage = ',total_percent,' %'
-     stop 'total percentage should be 100%'
-  endif
+    ! display warning if maximum skewness is too high
+    if (equiangle_skewness_max >= 0.75d0) then
+      write(IMAIN,*)
+      write(IMAIN,*) '*********************************************'
+      write(IMAIN,*) '*********************************************'
+      write(IMAIN,*) ' WARNING, mesh is bad (max skewness >= 0.75)'
+      write(IMAIN,*) '*********************************************'
+      write(IMAIN,*) '*********************************************'
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
 
+    if (total_percent < 99.9d0 .or. total_percent > 100.1d0) then
+       write(IMAIN,*) 'total percentage = ',total_percent,' %'
+       stop 'total percentage should be 100%'
+    endif
+    call flush_IMAIN()
   endif
 
   ! debug: for vtk output

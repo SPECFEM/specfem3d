@@ -542,7 +542,9 @@
   if (myrank == 0) then
     write(IMAIN,*) 'creating global slice addressing'
     write(IMAIN,*)
+    call flush_IMAIN()
   endif
+
   do iproc_eta=0,NPROC_ETA-1
     do iproc_xi=0,NPROC_XI-1
       iprocnum = iproc_eta * NPROC_XI + iproc_xi
@@ -560,6 +562,7 @@
       enddo
       write(IMAIN,'(a1)',advance='yes') ' '
     enddo
+    call flush_IMAIN()
   endif
 
   if (myrank == 0) then
@@ -583,6 +586,7 @@
     write(IMAIN,*) 'Surface shape functions defined by NGNOD2D = ',NGNOD2D_FOUR_CORNERS,' control nodes'
     write(IMAIN,*) 'Beware! Curvature (i.e. HEX27 elements) is not handled by our internal mesher'
     write(IMAIN,*)
+    call flush_IMAIN()
   endif
 
   ! check that the constants.h file is correct
@@ -647,6 +651,7 @@
       write(IMAIN,*) 'using UTM projection in region ',UTM_PROJECTION_ZONE
     endif
     write(IMAIN,*)
+    call flush_IMAIN()
   endif
 
 ! get addressing for this process
@@ -664,6 +669,7 @@
     write(IMAIN,*)
     write(IMAIN,*) 'Reading interface data from file ',trim(MF_IN_DATA_FILES)//trim(INTERFACES_FILE)
     write(IMAIN,*)
+    call flush_IMAIN()
   endif
 
   open(unit=IIN,file=trim(MF_IN_DATA_FILES)//trim(INTERFACES_FILE),status='old',iostat=ier)
@@ -826,6 +832,7 @@
     write(IMAIN,*) 'creating mesh in the model'
     write(IMAIN,*) '**************************'
     write(IMAIN,*)
+    call flush_IMAIN()
   endif
 
 ! assign theoretical number of elements
@@ -864,6 +871,7 @@
   if (myrank == 0) then
 ! compare to exact theoretical value (bottom is always flat)
     write(IMAIN,*) '            exact area: ',(UTM_Y_MAX-UTM_Y_MIN)*(UTM_X_MAX-UTM_X_MIN)
+    call flush_IMAIN()
   endif
 
 ! make sure everybody is synchronized
@@ -898,6 +906,7 @@
     write(IMAIN,*)
     write(IMAIN,*) 'smallest and largest possible floating-point numbers are: ',tiny(1._CUSTOM_REAL),huge(1._CUSTOM_REAL)
     write(IMAIN,*)
+    call flush_IMAIN()
   endif   ! end of section executed by main process only
 
 ! elapsed time since beginning of mesh generation
@@ -907,12 +916,11 @@
     write(IMAIN,*) 'Elapsed time for mesh generation and buffer creation in seconds = ',tCPU
     write(IMAIN,*) 'End of mesh generation'
     write(IMAIN,*)
-  endif
-
-! close main output file
-  if (myrank == 0) then
     write(IMAIN,*) 'done'
     write(IMAIN,*)
+    call flush_IMAIN()
+
+    ! close main output file
     close(IMAIN)
   endif
 

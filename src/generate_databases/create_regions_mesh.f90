@@ -343,7 +343,8 @@
   deallocate(xixstore,xiystore,xizstore,&
              etaxstore,etaystore,etazstore,&
              gammaxstore,gammaystore,gammazstore)
-  deallocate(jacobianstore,qkappa_attenuation_store,qmu_attenuation_store)
+  deallocate(jacobianstore)
+  deallocate(qkappa_attenuation_store,qmu_attenuation_store)
   deallocate(kappastore,mustore,rho_vp,rho_vs)
   deallocate(rho_vpI,rho_vpII,rho_vsI)
   deallocate(rhoarraystore,kappaarraystore,etastore,phistore,tortstore,permstore)
@@ -403,6 +404,7 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
   allocate(xelm(NGNOD),yelm(NGNOD),zelm(NGNOD),stat=ier)
   if (ier /= 0) stop 'error allocating array xelm etc.'
 
+! attenuation
   allocate(qkappa_attenuation_store(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 

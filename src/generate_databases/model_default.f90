@@ -35,14 +35,15 @@
                           undef_mat_prop,nundefMat_ext_mesh, &
                           imaterial_id,imaterial_def, &
                           xmesh,ymesh,zmesh, &
-                          rho,vp,vs,iflag_aniso,qkappa_atten,qmu_atten,idomain_id, &
+                          rho,vp,vs, &
+                          iflag_aniso,qkappa_atten,qmu_atten,idomain_id, &
                           rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
                           phi,tort,kxx,kxy,kxz,kyy,kyz,kzz)
 
 ! takes model values specified by mesh properties
 
   use generate_databases_par, only: IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC
-  use create_regions_mesh_ext_par
+  use create_regions_mesh_ext_par, only: CUSTOM_REAL,MAX_STRING_LEN
 
   implicit none
 
@@ -70,6 +71,8 @@
   logical :: has_tomo_value
   character(len=MAX_STRING_LEN) :: str_domain
   integer :: ier
+
+  !print *,'model defaults: ',imaterial_id,imaterial_def
 
   ! check if the material is known or unknown
   if (imaterial_id > 0) then

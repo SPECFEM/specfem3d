@@ -433,6 +433,12 @@
   iflag_aniso = 0
   idomain_id = IDOMAIN_ELASTIC
 
+  ! attenuation
+  ! shear attenuation: arbitrary value, see maximum in constants.h
+  qmu_atten = ATTENUATION_COMP_MAXIMUM
+  ! bulk attenuation: arbitrary (high) default value
+  qkappa_atten = 9999.0_CUSTOM_REAL
+
   ! selects chosen velocity model
   select case (IMODEL)
 
@@ -450,33 +456,27 @@
   case (IMODEL_1D_PREM )
     ! 1D model profile from PREM
     call model_1D_prem_iso(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
-    qkappa_atten = 9999.  ! undefined in this model
 
   case (IMODEL_1D_PREM_PB )
     ! 1D model profile from PREM modified by Piero
     imaterial_PB = abs(imaterial_id)
     call model_1D_PREM_routine_PB(xmesh,ymesh,zmesh,rho,vp,vs,imaterial_PB)
-    ! attenuation: arbitrary value, see maximum in constants.h
-    qmu_atten = ATTENUATION_COMP_MAXIMUM
+
     ! sets acoustic/elastic domain as given in materials properties
     iundef = - imaterial_id    ! iundef must be positive
     read(undef_mat_prop(6,iundef),*) idomain_id
-    qkappa_atten = 9999.  ! undefined in this model
 
   case (IMODEL_1D_CASCADIA )
     ! 1D model profile for Cascadia region
     call model_1D_cascadia(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
-    qkappa_atten = 9999.  ! undefined in this model
 
   case (IMODEL_1D_SOCAL )
     ! 1D model profile for Southern California
     call model_1D_socal(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
-    qkappa_atten = 9999.  ! undefined in this model
 
   case (IMODEL_SALTON_TROUGH )
     ! gets model values from tomography file
     call model_salton_trough(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
-    qkappa_atten = 9999.  ! undefined in this model
 
   case (IMODEL_TOMO )
     ! gets model values from tomography file

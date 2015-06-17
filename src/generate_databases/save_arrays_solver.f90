@@ -429,8 +429,7 @@
   write(IOUT) v_tmp
   close(IOUT)
 
-  ! VTK file output
-  ! vp values
+  ! vp values - VTK file output
   filename = prname(1:len_trim(prname))//'vp'
   call write_VTK_data_gll_cr(nspec,nglob, &
                       xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
@@ -451,8 +450,7 @@
   write(IOUT) v_tmp
   close(IOUT)
 
-  ! VTK file output
-  ! vs values
+  ! vs values - VTK file output
   filename = prname(1:len_trim(prname))//'vs'
   call write_VTK_data_gll_cr(nspec,nglob, &
                       xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
@@ -466,18 +464,37 @@
   write(IOUT) v_tmp
   close(IOUT)
 
-  ! VTK file output
-  ! saves attenuation flag assigned on each gll point into a vtk file
-  filename = prname(1:len_trim(prname))//'attenuation'
+  ! attenuation
+  ! shear attenuation Qmu
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'qmu.bin',status='unknown',form='unformatted',iostat=ier)
+  if (ier /= 0) stop 'error opening file qmu.bin'
+  write(IOUT) qmu_attenuation_store
+  close(IOUT)
+
+  ! shear attenuation - VTK file output
+  filename = prname(1:len_trim(prname))//'qmu'
   call write_VTK_data_gll_cr(nspec,nglob, &
                       xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
                       qmu_attenuation_store,filename)
 
+  ! bulk attenuation Qkappa
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'qkappa.bin',status='unknown',form='unformatted',iostat=ier)
+  if (ier /= 0) stop 'error opening file qkappa.bin'
+  write(IOUT) qkappa_attenuation_store
+  close(IOUT)
+
+  ! bulk attenuation - VTK file output
+  filename = prname(1:len_trim(prname))//'qkappa'
+  call write_VTK_data_gll_cr(nspec,nglob, &
+                      xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                      qkappa_attenuation_store,filename)
+
+  ! frees temporary array
   deallocate(v_tmp)
 
-  ! VTK file output
+  ! additional VTK file output
   if (DEBUG) then
-
+    ! user output
     call synchronize_all()
     if (myrank == 0) then
       write(IMAIN,*) '     saving debugging mesh files'

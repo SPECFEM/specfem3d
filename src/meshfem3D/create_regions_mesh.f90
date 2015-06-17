@@ -391,7 +391,9 @@ contains
         write(IMAIN,*)
         write(IMAIN,*) 'writing out problematic mesh: mesh_debug.vtk'
         write(IMAIN,*) 'please check your mesh setup...'
+        call flush_IMAIN()
       endif
+
       ! debug file output
       ! vtk file format output
       open(66,file=prname(1:len_trim(prname))//'mesh_debug.vtk',status='unknown')

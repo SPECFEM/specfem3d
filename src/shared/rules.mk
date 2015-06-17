@@ -78,6 +78,7 @@ shared_MODULES = \
 	$(FC_MODDIR)/shared_input_parameters.$(FC_MODEXT) \
 	$(FC_MODDIR)/shared_compute_parameters.$(FC_MODEXT) \
 	$(FC_MODDIR)/shared_parameters.$(FC_MODEXT) \
+	$(FC_MODDIR)/attenuation_model.$(FC_MODEXT) \
 	$(EMPTY_MACRO)
 
 

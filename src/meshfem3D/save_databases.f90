@@ -93,6 +93,15 @@
   integer,dimension(2,nspec) :: material_index
   character(len=MAX_STRING_LEN), dimension(6,1) :: undef_mat_prop
 
+  !------------------------------------------------------------------
+  ! user parameter
+
+  ! stores mesh files as cubit for single process run
+  ! todo: we could put this parameter into the Mesh_Par_file
+  logical, parameter :: SAVE_MESH_AS_CUBIT = .false.
+
+  !------------------------------------------------------------------
+
   ! assignes material index
   ! format: (1,ispec) = #material_id , (2,ispec) = #material_definition
   material_index (:,:) = 0
@@ -116,6 +125,7 @@
   ndef = 0
   nundef = 0
   do i = 1,NMATERIALS
+    ! material properties format: #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id #material_id
     mat_id = material_properties(i,7)
     if (mat_id > 0) ndef = ndef + 1
     if (mat_id < 0) nundef = nundef + 1
@@ -140,16 +150,22 @@
   ! materials
   ! format: #number of defined materials #number of undefined materials
   write(IIN_database) ndef, nundef
+
   ! writes out defined materials
   do i = 1,NMATERIALS
+    ! material properties format: #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id #material_id
     mat_id = material_properties(i,7)
     if (mat_id > 0) then
       ! pad dummy zeros to fill up 16 entries (poroelastic medium not allowed)
       matpropl(:) = 0.d0
+      ! material properties format: #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id
       matpropl(1:6) = material_properties(i,1:6)
-      write(IIN_database) matpropl
+      ! fills adds arbitrary value for Q_kappa
+      matpropl(7) = 9999.0
+      write(IIN_database) matpropl(:)
     endif
   enddo
+
   ! writes out undefined materials
   do i = 1,NMATERIALS
     domain_id = material_properties(i,6)
@@ -360,11 +376,12 @@
     write(IIN_database) 0,0
 
     !! VM VM add outputs as cubit
-    call save_output_mesh_files_as_cubit(nspec,nglob, ibool,nodes_coords, ispec_material_id, &
-                                     nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-                                     NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NMATERIALS,material_properties, &
-                                     ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top)
-
+    if (SAVE_MESH_AS_CUBIT) then
+      call save_output_mesh_files_as_cubit(nspec,nglob, ibool,nodes_coords, ispec_material_id, &
+                                           nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+                                           NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NMATERIALS,material_properties, &
+                                           ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top)
+    endif
   endif
 
   close(IIN_database)
@@ -387,28 +404,28 @@
 
     integer, parameter :: IIN_database = 15
     ! number of spectral elements in each block
-    integer nspec
+    integer :: nspec
 
     ! number of vertices in each block
-    integer nglob
+    integer :: nglob
 
     ! MPI cartesian topology
     ! E for East (= XI_MIN), W for West (= XI_MAX), S for South (= ETA_MIN), N for North (= ETA_MAX)
     integer, parameter :: W=1,E=2,S=3,N=4,NW=5,NE=6,SE=7,SW=8
 
     ! arrays with the mesh
-    integer ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
+    integer :: ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
     double precision :: nodes_coords(nglob,3)
 
-    integer ispec_material_id(nspec)
+    integer :: ispec_material_id(nspec)
 
     ! boundary parameters locator
-    integer NSPEC2D_BOTTOM,NSPEC2D_TOP,NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX
-    integer nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax
-    integer ibelm_xmin(NSPEC2DMAX_XMIN_XMAX),ibelm_xmax(NSPEC2DMAX_XMIN_XMAX)
-    integer ibelm_ymin(NSPEC2DMAX_YMIN_YMAX),ibelm_ymax(NSPEC2DMAX_YMIN_YMAX)
-    integer ibelm_bottom(NSPEC2D_BOTTOM)
-    integer ibelm_top(NSPEC2D_TOP)
+    integer :: NSPEC2D_BOTTOM,NSPEC2D_TOP,NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX
+    integer :: nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax
+    integer :: ibelm_xmin(NSPEC2DMAX_XMIN_XMAX),ibelm_xmax(NSPEC2DMAX_XMIN_XMAX)
+    integer :: ibelm_ymin(NSPEC2DMAX_YMIN_YMAX),ibelm_ymax(NSPEC2DMAX_YMIN_YMAX)
+    integer :: ibelm_bottom(NSPEC2D_BOTTOM)
+    integer :: ibelm_top(NSPEC2D_TOP)
 
     ! material properties
     integer :: NMATERIALS
@@ -416,13 +433,18 @@
     ! second dimension : #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id #material_id
     double precision , dimension(NMATERIALS,7) ::  material_properties
 
-    integer :: i,ispec,iglob
+    integer :: i,ispec,iglob,ier
 
     ! name of the database files
 
     integer :: mat_id,domain_id
 
-    open(IIN_database, file = 'MESH/nummaterial_velocity_file')
+    open(IIN_database, file = 'MESH/nummaterial_velocity_file',status='unknown',action='write',iostat=ier)
+    if (ier /= 0) then
+      print *,'Error opening file: ','MESH/nummaterial_velocity_file'
+      print *,'Please check if directory MESH/ exists for saving mesh files as cubit...'
+      stop 'Error opening mesh file'
+    endif
 
     do i = 1,NMATERIALS
        domain_id = material_properties(i,6)

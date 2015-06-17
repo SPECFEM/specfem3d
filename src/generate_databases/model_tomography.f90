@@ -55,6 +55,7 @@
 
   ! models parameter records
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: vp_tomography,vs_tomography,rho_tomography,z_tomography
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: qp_tomography,qs_tomography
 
   ! models entries
   integer, dimension(:), allocatable :: NX,NY,NZ
@@ -65,6 +66,9 @@
 
   ! process rank
   integer :: myrank_tomo
+
+  ! data format
+  logical,dimension(:),allocatable :: tomo_has_q_values
 
   end module model_tomography_par
 
@@ -138,6 +142,10 @@
   character(len=MAX_STRING_LEN) :: filename
   character(len=MAX_STRING_LEN) :: string_read
   integer :: nmaterials
+  ! data format
+  logical :: has_q_values
+  integer :: ntokens
+  logical,dimension(:),allocatable :: materials_with_q
 
   ! sets number of materials to loop over
   nmaterials = nundefMat_ext_mesh
@@ -150,6 +158,11 @@
   if (nundefMat_ext_mesh == 0 .and. IMODEL == IMODEL_TOMO) then
     nmaterials = 1
   endif
+
+  ! data format flag
+  allocate(materials_with_q(nmaterials),stat=ier)
+  if (ier /= 0) stop 'Error allocating array materials_with_q'
+  materials_with_q(:) = .false.
 
   ! loops over number of undefined materials
   do iundef = 1, nmaterials
@@ -192,13 +205,17 @@
       call exit_MPI(myrank_tomo,'error reading tomography file')
     endif
 
+    ! header infos
+    ! format: #origin_x #origin_y #origin_z #end_x #end_y #end_z
     call tomo_read_next_line(IIN,string_read)
     read(string_read,*) dummy,dummy,dummy,dummy,dummy,dummy
 
+    ! format: #dx #dy #dz
     call tomo_read_next_line(IIN,string_read)
     read(string_read,*) dummy,dummy,dummy
 
     ! reads in models entries
+    ! format: #nx #ny #nz
     call tomo_read_next_line(IIN,string_read)
     read(string_read,*) temp_x,temp_y,temp_z
 
@@ -206,11 +223,33 @@
     nrec = int(temp_x*temp_y*temp_z)
     nrecord_max = max(nrecord_max,nrec)
 
+    ! format: #vp_min #vp_max #vs_min #vs_max #density_min #density_max
     call tomo_read_next_line(IIN,string_read)
     read(string_read,*) dummy,dummy,dummy,dummy,dummy,dummy
 
+    ! data records
     ! checks the number of records for points definition
-    nlines = 0
+    ! first record
+    nlines = 1
+    call tomo_read_next_line(IIN,string_read) ! allows to skip comment lines before data section
+
+    ! checks number of entries of first data line
+    call tomo_get_number_of_tokens(string_read,ntokens)
+    !print *,'tomography file: number of tokens on first data line: ',ntokens,' line: ',trim(string_read)
+    if (ntokens /= 6 .and. ntokens /= 8) then
+      print *,'Error reading tomography file, data line has wrong number of entries: ',trim(string_read)
+      stop 'Error reading tomography file'
+    endif
+
+    ! determines data format
+    if (ntokens == 8) then
+      has_q_values = .true.
+    else
+      has_q_values = .false.
+    endif
+    materials_with_q(ifiles_tomo) = has_q_values
+
+    ! counts remaining records
     do while (ier == 0)
       read(IIN,*,iostat=ier)
       if (ier == 0) nlines = nlines + 1
@@ -269,6 +308,23 @@
            VP_MAX(NFILES_TOMO),VS_MAX(NFILES_TOMO),RHO_MAX(NFILES_TOMO),stat=ier)
   if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate tomo arrays')
 
+  ! q values
+  allocate(tomo_has_q_values(NFILES_TOMO),stat=ier)
+  if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate tomo q-flag array')
+  tomo_has_q_values(:) = .false.
+  ! stores data format flag
+  do ifiles_tomo = 1,NFILES_TOMO
+    tomo_has_q_values(ifiles_tomo) = materials_with_q(ifiles_tomo)
+  enddo
+  deallocate(materials_with_q)
+
+  ! only allocate q arrays if needed
+  if (any(tomo_has_q_values)) then
+    allocate(qp_tomography(NFILES_TOMO,nrecord_max), &
+             qs_tomography(NFILES_TOMO,nrecord_max),stat=ier)
+    if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate tomo q-value arrays')
+  endif
+
 end subroutine init_tomography_files
 
 !
@@ -289,11 +345,13 @@ end subroutine init_tomography_files
 
   ! local parameters
   real(kind=CUSTOM_REAL) :: x_tomo,y_tomo,z_tomo,vp_tomo,vs_tomo,rho_tomo
+  real(kind=CUSTOM_REAL) :: qp_tomo,qs_tomo
   integer :: irecord,ier,iundef,imat
   character(len=MAX_STRING_LEN*2) :: tomo_filename
   character(len=MAX_STRING_LEN) :: filename
   character(len=MAX_STRING_LEN) :: string_read
   integer :: nmaterials
+  logical :: has_q_values
 
   ! sets number of materials to loop over
   nmaterials = nundefMat_ext_mesh
@@ -375,7 +433,28 @@ end subroutine init_tomography_files
     ! first record
     ! format: #x #y #z #vp #vs #density
     call tomo_read_next_line(IIN,string_read)
-    read(string_read,*) x_tomo,y_tomo,z_tomo,vp_tomo,vs_tomo,rho_tomo
+
+    ! determines data format
+    has_q_values = tomo_has_q_values(imat)
+
+    ! user output
+    if (myrank_tomo == 0) then
+      if (has_q_values) then
+        write(IMAIN,*) '     data format: #x #y #z #vp #vs #density #Q_p #Q_s'
+      else
+        write(IMAIN,*) '     data format: #x #y #z #vp #vs #density'
+      endif
+      call flush_IMAIN()
+    endif
+
+    ! reads in first data values
+    if (has_q_values) then
+      ! format: #x #y #z #vp #vs #density #Q_p #Q_s
+      read(string_read,*) x_tomo,y_tomo,z_tomo,vp_tomo,vs_tomo,rho_tomo,qp_tomo,qs_tomo
+    else
+      ! format: #x #y #z #vp #vs #density
+      read(string_read,*) x_tomo,y_tomo,z_tomo,vp_tomo,vs_tomo,rho_tomo
+    endif
 
     ! stores record values
     vp_tomography(imat,1) = vp_tomo
@@ -384,22 +463,40 @@ end subroutine init_tomography_files
     z_tomography(imat,1) = z_tomo
 
     ! reads in record sections
-    do irecord = 2,nrecord(imat)
-       read(IIN,*) x_tomo,y_tomo,z_tomo,vp_tomo,vs_tomo,rho_tomo
+    if (has_q_values) then
+      do irecord = 2,nrecord(imat)
+        ! format: #x #y #z #vp #vs #density #Q_p #Q_s
+        read(IIN,*,iostat=ier) x_tomo,y_tomo,z_tomo,vp_tomo,vs_tomo,rho_tomo,qp_tomo,qs_tomo
+        if (ier /= 0) stop 'Error reading tomo file line format with q values'
 
-       ! stores record values
-       vp_tomography(imat,irecord) = vp_tomo
-       vs_tomography(imat,irecord) = vs_tomo
-       rho_tomography(imat,irecord) = rho_tomo
-       z_tomography(imat,irecord) = z_tomo
-    enddo
+        ! stores record values
+        vp_tomography(imat,irecord) = vp_tomo
+        vs_tomography(imat,irecord) = vs_tomo
+        rho_tomography(imat,irecord) = rho_tomo
+        z_tomography(imat,irecord) = z_tomo
+        qp_tomography(imat,irecord) = qp_tomo
+        qs_tomography(imat,irecord) = qs_tomo
+      enddo
+    else
+      do irecord = 2,nrecord(imat)
+        ! format: #x #y #z #vp #vs #density
+        read(IIN,*,iostat=ier) x_tomo,y_tomo,z_tomo,vp_tomo,vs_tomo,rho_tomo
+        if (ier /= 0) stop 'Error reading tomo file line format'
 
+        ! stores record values
+        vp_tomography(imat,irecord) = vp_tomo
+        vs_tomography(imat,irecord) = vs_tomo
+        rho_tomography(imat,irecord) = rho_tomo
+        z_tomography(imat,irecord) = z_tomo
+      enddo
+    endif
     close(IIN)
 
     ! user output
     if (myrank_tomo == 0) then
       write(IMAIN,*) '     number of grid points = NX*NY*NZ:',nrecord(imat)
       write(IMAIN,*)
+      call flush_IMAIN()
     endif
   enddo
 
@@ -429,8 +526,10 @@ end subroutine init_tomography_files
      ! suppress trailing carriage return (ASCII code 13) if any (e.g. if input text file coming from Windows/DOS)
      if (index(string_read,achar(13)) > 0) string_read = string_read(1:index(string_read,achar(13))-1)
 
-     ! exit loop when we find the first line that is not a comment or a white line
+     ! reads next line if empty
      if (len_trim(string_read) == 0) cycle
+
+     ! exit loop when we find the first line that is not a comment or a white line
      if (string_read(1:1) /= '#') exit
   enddo
 
@@ -450,7 +549,50 @@ end subroutine init_tomography_files
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine model_tomography(xmesh,ymesh,zmesh,rho_model,vp_model,vs_model,qkappa_atten,qmu_atten,imaterial_id, &
+  subroutine tomo_get_number_of_tokens(string_read,ntokens)
+
+  use constants, only: MAX_STRING_LEN
+  implicit none
+
+  character(len=MAX_STRING_LEN),intent(in) :: string_read
+  integer,intent(out) :: ntokens
+
+  ! local parameters
+  integer :: i
+  logical :: previous_is_delim
+  character(len=1), parameter :: delim_space = ' '
+  character(len=1), parameter :: delim_tab = achar(9) ! tab delimiter
+
+  ! initializes
+  ntokens = 0
+
+  ! checks if anything to do
+  if (len_trim(string_read) == 0) return
+
+  ! counts tokens
+  ntokens = 1
+  previous_is_delim = .true.
+  do i = 1, len_trim(string_read)
+    ! finds next delimiter (space or tabular)
+    if (string_read(i:i) == delim_space .or. string_read(i:i) == delim_tab) then
+      if (.not. previous_is_delim) then
+        ntokens = ntokens + 1
+        previous_is_delim = .true.
+      endif
+    else
+      if (previous_is_delim) previous_is_delim = .false.
+    endif
+  enddo
+
+  end subroutine tomo_get_number_of_tokens
+
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine model_tomography(xmesh,ymesh,zmesh,rho_model,vp_model,vs_model, &
+                              qkappa_atten,qmu_atten,imaterial_id, &
                               has_tomo_value)
 
   use generate_databases_par, only: undef_mat_prop,nundefMat_ext_mesh,IMODEL,ATTENUATION_COMP_MAXIMUM
@@ -477,10 +619,17 @@ end subroutine init_tomography_files
   double precision :: gamma_interp_z1,gamma_interp_z2,gamma_interp_z3, &
     gamma_interp_z4,gamma_interp_z5,gamma_interp_z6,gamma_interp_z7,gamma_interp_z8
 
-  real(kind=CUSTOM_REAL) :: vp1,vp2,vp3,vp4,vp5,vp6,vp7,vp8, &
-    vs1,vs2,vs3,vs4,vs5,vs6,vs7,vs8,rho1,rho2,rho3,rho4,rho5,rho6,rho7,rho8
+  real(kind=CUSTOM_REAL) :: vp1,vp2,vp3,vp4,vp5,vp6,vp7,vp8
+  real(kind=CUSTOM_REAL) :: vs1,vs2,vs3,vs4,vs5,vs6,vs7,vs8
+  real(kind=CUSTOM_REAL) :: rho1,rho2,rho3,rho4,rho5,rho6,rho7,rho8
 
-  real(kind=CUSTOM_REAL), dimension(NFILES_TOMO) :: vp_final,vs_final,rho_final
+  real(kind=CUSTOM_REAL) :: vp_final,vs_final,rho_final
+
+  ! attenuation
+  real(kind=CUSTOM_REAL) :: qp1,qp2,qp3,qp4,qp5,qp6,qp7,qp8
+  real(kind=CUSTOM_REAL) :: qs1,qs2,qs3,qs4,qs5,qs6,qs7,qs8
+  real(kind=CUSTOM_REAL) :: qp_final,qs_final
+  real(kind=CUSTOM_REAL) :: L_val
 
   ! initializes flag
   has_tomo_value = .false.
@@ -650,7 +799,7 @@ end subroutine init_tomography_files
   rho8 = rho_tomography(imat,p7+1)
 
   ! use trilinear interpolation in cell to define Vp Vs and rho
-  vp_final(imat) = &
+  vp_final = &
        vp1*(1.-gamma_interp_x)*(1.-gamma_interp_y)*(1.-gamma_interp_z1) + &
        vp2*gamma_interp_x*(1.-gamma_interp_y)*(1.-gamma_interp_z2) + &
        vp3*gamma_interp_x*gamma_interp_y*(1.-gamma_interp_z3) + &
@@ -660,7 +809,7 @@ end subroutine init_tomography_files
        vp7*gamma_interp_x*gamma_interp_y*gamma_interp_z3 + &
        vp8*(1.-gamma_interp_x)*gamma_interp_y*gamma_interp_z4
 
-  vs_final(imat) = &
+  vs_final = &
        vs1*(1.-gamma_interp_x)*(1.-gamma_interp_y)*(1.-gamma_interp_z1) + &
        vs2*gamma_interp_x*(1.-gamma_interp_y)*(1.-gamma_interp_z2) + &
        vs3*gamma_interp_x*gamma_interp_y*(1.-gamma_interp_z3) + &
@@ -670,7 +819,7 @@ end subroutine init_tomography_files
        vs7*gamma_interp_x*gamma_interp_y*gamma_interp_z3 + &
        vs8*(1.-gamma_interp_x)*gamma_interp_y*gamma_interp_z4
 
-  rho_final(imat) = &
+  rho_final = &
        rho1*(1.-gamma_interp_x)*(1.-gamma_interp_y)*(1.-gamma_interp_z1) + &
        rho2*gamma_interp_x*(1.-gamma_interp_y)*(1.-gamma_interp_z2) + &
        rho3*gamma_interp_x*gamma_interp_y*(1.-gamma_interp_z3) + &
@@ -681,25 +830,91 @@ end subroutine init_tomography_files
        rho8*(1.-gamma_interp_x)*gamma_interp_y*gamma_interp_z4
 
   ! impose minimum and maximum velocity and density if needed
-  if (vp_final(imat) < VP_MIN(imat)) vp_final(imat) = VP_MIN(imat)
-  if (vp_final(imat) > VP_MAX(imat)) vp_final(imat) = VP_MAX(imat)
+  if (vp_final < VP_MIN(imat)) vp_final = VP_MIN(imat)
+  if (vp_final > VP_MAX(imat)) vp_final = VP_MAX(imat)
 
-  if (vs_final(imat) < VS_MIN(imat)) vs_final(imat) = VS_MIN(imat)
-  if (vs_final(imat) > VS_MAX(imat)) vs_final(imat) = VS_MAX(imat)
+  if (vs_final < VS_MIN(imat)) vs_final = VS_MIN(imat)
+  if (vs_final > VS_MAX(imat)) vs_final = VS_MAX(imat)
 
-  if (rho_final(imat) > RHO_MAX(imat)) rho_final(imat) = RHO_MAX(imat)
-  if (rho_final(imat) < RHO_MIN(imat)) rho_final(imat) = RHO_MIN(imat)
+  if (rho_final > RHO_MAX(imat)) rho_final = RHO_MAX(imat)
+  if (rho_final < RHO_MIN(imat)) rho_final = RHO_MIN(imat)
 
   ! model parameters for the associated negative imaterial_id index in materials file
-  rho_model = rho_final(imat)
-  vp_model = vp_final(imat)
-  vs_model = vs_final(imat)
+  rho_model = rho_final
+  vp_model = vp_final
+  vs_model = vs_final
 
-  ! attenuation: arbitrary value, see maximum in constants.h
-  qmu_atten = ATTENUATION_COMP_MAXIMUM
+  ! attenuation
+  if (tomo_has_q_values(imat)) then
+    qp1 = qp_tomography(imat,p0+1)
+    qp2 = qp_tomography(imat,p1+1)
+    qp3 = qp_tomography(imat,p2+1)
+    qp4 = qp_tomography(imat,p3+1)
+    qp5 = qp_tomography(imat,p4+1)
+    qp6 = qp_tomography(imat,p5+1)
+    qp7 = qp_tomography(imat,p6+1)
+    qp8 = qp_tomography(imat,p7+1)
 
-!! DK DK Q_kappa is not implemented in this model_tomography routine yet, thus set it to dummy value
-  qkappa_atten = 9999.
+    qs1 = qs_tomography(imat,p0+1)
+    qs2 = qs_tomography(imat,p1+1)
+    qs3 = qs_tomography(imat,p2+1)
+    qs4 = qs_tomography(imat,p3+1)
+    qs5 = qs_tomography(imat,p4+1)
+    qs6 = qs_tomography(imat,p5+1)
+    qs7 = qs_tomography(imat,p6+1)
+    qs8 = qs_tomography(imat,p7+1)
+
+    ! use trilinear interpolation in cell
+    qp_final = &
+         qp1*(1.-gamma_interp_x)*(1.-gamma_interp_y)*(1.-gamma_interp_z1) + &
+         qp2*gamma_interp_x*(1.-gamma_interp_y)*(1.-gamma_interp_z2) + &
+         qp3*gamma_interp_x*gamma_interp_y*(1.-gamma_interp_z3) + &
+         qp4*(1.-gamma_interp_x)*gamma_interp_y*(1.-gamma_interp_z4) + &
+         qp5*(1.-gamma_interp_x)*(1.-gamma_interp_y)*gamma_interp_z1 + &
+         qp6*gamma_interp_x*(1.-gamma_interp_y)*gamma_interp_z2 + &
+         qp7*gamma_interp_x*gamma_interp_y*gamma_interp_z3 + &
+         qp8*(1.-gamma_interp_x)*gamma_interp_y*gamma_interp_z4
+
+    qs_final = &
+         qs1*(1.-gamma_interp_x)*(1.-gamma_interp_y)*(1.-gamma_interp_z1) + &
+         qs2*gamma_interp_x*(1.-gamma_interp_y)*(1.-gamma_interp_z2) + &
+         qs3*gamma_interp_x*gamma_interp_y*(1.-gamma_interp_z3) + &
+         qs4*(1.-gamma_interp_x)*gamma_interp_y*(1.-gamma_interp_z4) + &
+         qs5*(1.-gamma_interp_x)*(1.-gamma_interp_y)*gamma_interp_z1 + &
+         qs6*gamma_interp_x*(1.-gamma_interp_y)*gamma_interp_z2 + &
+         qs7*gamma_interp_x*gamma_interp_y*gamma_interp_z3 + &
+         qs8*(1.-gamma_interp_x)*gamma_interp_y*gamma_interp_z4
+
+    ! attenuation zero (means negligible attenuation)
+    if (qs_final <= 1.e-5) qs_final = ATTENUATION_COMP_MAXIMUM
+    if (qp_final <= 1.e-5) qp_final = ATTENUATION_COMP_MAXIMUM
+
+    ! Anderson & Hart (1978) conversion between (Qp,Qs) and (Qkappa,Qmu)
+    ! factor L
+    L_val = 4.0/3.0 * (vs_model/vp_model)**2
+
+    ! shear attenuation
+    qmu_atten = qs_final
+
+    ! converts to bulk attenuation
+    qkappa_atten = (1.0 - L_val) / (1.0/qp_final - L_val/qs_final)
+
+    ! attenuation zero (means negligible attenuation)
+    if (qmu_atten <= 1.e-5) qmu_atten = ATTENUATION_COMP_MAXIMUM
+    if (qkappa_atten <= 1.e-5) qkappa_atten = ATTENUATION_COMP_MAXIMUM
+
+    ! limits Q values
+    if (qmu_atten < 1.0d0) qmu_atten = 1.0d0
+    if (qmu_atten > ATTENUATION_COMP_MAXIMUM) qmu_atten = ATTENUATION_COMP_MAXIMUM
+    if (qkappa_atten < 1.0d0) qkappa_atten = 1.0d0
+    if (qkappa_atten > ATTENUATION_COMP_MAXIMUM) qkappa_atten = ATTENUATION_COMP_MAXIMUM
+
+  else
+    ! attenuation: arbitrary value, see maximum in constants.h
+    qmu_atten = ATTENUATION_COMP_MAXIMUM
+    ! Q_kappa is not implemented in this model_tomography routine yet, thus set it to dummy value
+    qkappa_atten = ATTENUATION_COMP_MAXIMUM
+  endif
 
   ! value found
   has_tomo_value = .true.
@@ -733,5 +948,12 @@ end subroutine init_tomography_files
     ! deallocates models min/max statistics
     deallocate(VP_MIN,VS_MIN,RHO_MIN)
     deallocate(VP_MAX,VS_MAX,RHO_MAX)
+
+    ! q values
+    if (any(tomo_has_q_values)) then
+      deallocate(qp_tomography)
+      deallocate(qs_tomography)
+    endif
+    deallocate(tomo_has_q_values)
 
   end subroutine deallocate_tomography_files

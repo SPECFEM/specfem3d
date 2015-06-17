@@ -1447,12 +1447,20 @@ subroutine save_arrays_solver_files_adios(nspec,nglob,ibool, nspec_wmax, &
   call define_adios_scalar(group, groupsize, "", STRINGIFY_VAR(nglob))
 
   local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
+
+  ! wave speeds & density
   call define_adios_global_array1D(group, groupsize, local_dim, &
                                    "", "vp", vp_tmp)
   call define_adios_global_array1D(group, groupsize, local_dim, &
                                    "", "vs", vs_tmp)
   call define_adios_global_array1D(group, groupsize, local_dim, &
                                    "", "rho", rho_tmp)
+
+  ! attenuation
+  call define_adios_global_array1D(group, groupsize, local_dim, &
+                                   "", "qmu", qmu_attenuation_store)
+  call define_adios_global_array1D(group, groupsize, local_dim, &
+                                   "", "qkappa", qkappa_attenuation_store)
 
   !------------------------------------------------------------.
   ! Open an handler to the ADIOS file and setup the group size |
@@ -1472,12 +1480,19 @@ subroutine save_arrays_solver_files_adios(nspec,nglob,ibool, nspec_wmax, &
   call adios_write(handle, STRINGIFY_VAR(nglob), ier)
 
   local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
+  ! wave speeds & density
   call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                    "vp", vp_tmp)
   call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                    "vs", vs_tmp)
   call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                    "rho", rho_tmp)
+
+  ! attenuation
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
+                                   "qmu", qmu_attenuation_store)
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
+                                   "qkappa", qkappa_attenuation_store)
 
   !----------------------------------.
   ! Perform the actual write to disk |
