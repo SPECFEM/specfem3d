@@ -366,7 +366,7 @@ foreach isrc (${num_src_arr})
             #setenv OMP_NUM_THREADS 4
             #$mpiruncmd -n $nodnum ./axisem >& $outputname &
 
-            ccc_msub -q standard ../sub_AxiSEM_called_batch_Curie_CD.sh
+            ccc_msub -q standard ../sub_called_batch_for_AxiSEM_Curie_CD.sh
         endif
 
         echo "Job running in directory $isim"

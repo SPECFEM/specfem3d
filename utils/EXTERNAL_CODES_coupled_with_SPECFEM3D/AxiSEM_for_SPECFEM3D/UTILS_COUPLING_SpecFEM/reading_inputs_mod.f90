@@ -83,10 +83,10 @@
         tmat(3,3)=mat(3,3)
         !! permutation matrix
 
-        open(10,file=trim(working_axisem_dir)//trim(simdir(isim))//'/'//trim(input_point_file))
+        open(10,file=trim(working_axisem_dir)//trim(simdir(isim))//'../'//trim(input_point_file))
         read(10,*) nbrec
 
-        open(11,file=trim(working_axisem_dir)//trim(simdir(isim))//'/'//trim(input_point_file_cart))
+        open(11,file=trim(working_axisem_dir)//trim(simdir(isim))//'../'//trim(input_point_file_cart))
         read(11,*) nbrec
 
         allocate(up(nbrec))
