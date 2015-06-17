@@ -3,7 +3,7 @@
 dir_for_run=$(pwd)/$1
 
 ####
-#### We compile expand_2D_3D and reformat for interface 
+#### We compile expand_2D_3D and reformat for interface
 ####
 
 cd ../../UTILS_COUPLING_SpecFEM/
