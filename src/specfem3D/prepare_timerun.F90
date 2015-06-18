@@ -616,6 +616,9 @@
       write(IMAIN,*) "  period band min/max (s): ",sngl(MIN_ATTENUATION_PERIOD),sngl(MAX_ATTENUATION_PERIOD)
       write(IMAIN,*) "  central period (s)     : ",sngl(1.0/f_c_source), &
                     " frequency: ",sngl(f_c_source)
+      if (FULL_ATTENUATION_SOLID) then
+        write(IMAIN,*) "  using full attenuation (Q_kappa & Q_mu)"
+      endif
       write(IMAIN,*)
       call flush_IMAIN()
     endif

@@ -616,8 +616,9 @@ end subroutine init_tomography_files
 
   double precision :: spac_x,spac_y,spac_z
   double precision :: gamma_interp_x,gamma_interp_y
-  double precision :: gamma_interp_z1,gamma_interp_z2,gamma_interp_z3, &
-    gamma_interp_z4,gamma_interp_z5,gamma_interp_z6,gamma_interp_z7,gamma_interp_z8
+  double precision :: gamma_interp_z1,gamma_interp_z2,gamma_interp_z3,gamma_interp_z4
+  ! unused
+  !double precision :: gamma_interp_z5,gamma_interp_z6,gamma_interp_z7,gamma_interp_z8
 
   real(kind=CUSTOM_REAL) :: vp1,vp2,vp3,vp4,vp5,vp6,vp7,vp8
   real(kind=CUSTOM_REAL) :: vs1,vs2,vs3,vs4,vs5,vs6,vs7,vs8
@@ -695,7 +696,6 @@ end subroutine init_tomography_files
      !  gamma_interp_z = 1.d0
   endif
 
-
   ! define 8 corners of interpolation element
   p0 = ix+iy*NX(imat)+iz*(NX(imat)*NY(imat))
   p1 = (ix+1)+iy*NX(imat)+iz*(NX(imat)*NY(imat))
@@ -715,6 +715,7 @@ end subroutine init_tomography_files
      call exit_MPI(myrank_tomo,'error corner index in tomography routine')
   endif
 
+  ! interpolation gamma factors
   if (z_tomography(imat,p4+1) == z_tomography(imat,p0+1)) then
      gamma_interp_z1 = 1.d0
   else
@@ -726,7 +727,6 @@ end subroutine init_tomography_files
   if (gamma_interp_z1 < 0.d0) then
      gamma_interp_z1 = 0.d0
   endif
-
 
   if (z_tomography(imat,p5+1) == z_tomography(imat,p1+1)) then
      gamma_interp_z2 = 1.d0
@@ -740,7 +740,6 @@ end subroutine init_tomography_files
      gamma_interp_z2 = 0.d0
   endif
 
-
   if (z_tomography(imat,p6+1) == z_tomography(imat,p2+1)) then
      gamma_interp_z3 = 1.d0
   else
@@ -752,7 +751,6 @@ end subroutine init_tomography_files
   if (gamma_interp_z3 < 0.d0) then
      gamma_interp_z3 = 0.d0
   endif
-
 
   if (z_tomography(imat,p7+1) == z_tomography(imat,p3+1)) then
      gamma_interp_z4 = 1.d0
@@ -766,11 +764,13 @@ end subroutine init_tomography_files
      gamma_interp_z4 = 0.d0
   endif
 
-  gamma_interp_z5 = 1.d0 - gamma_interp_z1
-  gamma_interp_z6 = 1.d0 - gamma_interp_z2
-  gamma_interp_z7 = 1.d0 - gamma_interp_z3
-  gamma_interp_z8 = 1.d0 - gamma_interp_z4
+  ! not used any further
+  !gamma_interp_z5 = 1.d0 - gamma_interp_z1
+  !gamma_interp_z6 = 1.d0 - gamma_interp_z2
+  !gamma_interp_z7 = 1.d0 - gamma_interp_z3
+  !gamma_interp_z8 = 1.d0 - gamma_interp_z4
 
+  ! Vp
   vp1 = vp_tomography(imat,p0+1)
   vp2 = vp_tomography(imat,p1+1)
   vp3 = vp_tomography(imat,p2+1)
@@ -779,7 +779,10 @@ end subroutine init_tomography_files
   vp6 = vp_tomography(imat,p5+1)
   vp7 = vp_tomography(imat,p6+1)
   vp8 = vp_tomography(imat,p7+1)
+  ! use trilinear interpolation in cell to define Vp
+  vp_final = interpolate_trilinear(vp1,vp2,vp3,vp4,vp5,vp6,vp7,vp8)
 
+  ! Vs
   vs1 = vs_tomography(imat,p0+1)
   vs2 = vs_tomography(imat,p1+1)
   vs3 = vs_tomography(imat,p2+1)
@@ -788,7 +791,10 @@ end subroutine init_tomography_files
   vs6 = vs_tomography(imat,p5+1)
   vs7 = vs_tomography(imat,p6+1)
   vs8 = vs_tomography(imat,p7+1)
+  ! use trilinear interpolation in cell to define Vs
+  vs_final = interpolate_trilinear(vs1,vs2,vs3,vs4,vs5,vs6,vs7,vs8)
 
+  ! density
   rho1 = rho_tomography(imat,p0+1)
   rho2 = rho_tomography(imat,p1+1)
   rho3 = rho_tomography(imat,p2+1)
@@ -797,37 +803,8 @@ end subroutine init_tomography_files
   rho6 = rho_tomography(imat,p5+1)
   rho7 = rho_tomography(imat,p6+1)
   rho8 = rho_tomography(imat,p7+1)
-
-  ! use trilinear interpolation in cell to define Vp Vs and rho
-  vp_final = &
-       vp1*(1.-gamma_interp_x)*(1.-gamma_interp_y)*(1.-gamma_interp_z1) + &
-       vp2*gamma_interp_x*(1.-gamma_interp_y)*(1.-gamma_interp_z2) + &
-       vp3*gamma_interp_x*gamma_interp_y*(1.-gamma_interp_z3) + &
-       vp4*(1.-gamma_interp_x)*gamma_interp_y*(1.-gamma_interp_z4) + &
-       vp5*(1.-gamma_interp_x)*(1.-gamma_interp_y)*gamma_interp_z1 + &
-       vp6*gamma_interp_x*(1.-gamma_interp_y)*gamma_interp_z2 + &
-       vp7*gamma_interp_x*gamma_interp_y*gamma_interp_z3 + &
-       vp8*(1.-gamma_interp_x)*gamma_interp_y*gamma_interp_z4
-
-  vs_final = &
-       vs1*(1.-gamma_interp_x)*(1.-gamma_interp_y)*(1.-gamma_interp_z1) + &
-       vs2*gamma_interp_x*(1.-gamma_interp_y)*(1.-gamma_interp_z2) + &
-       vs3*gamma_interp_x*gamma_interp_y*(1.-gamma_interp_z3) + &
-       vs4*(1.-gamma_interp_x)*gamma_interp_y*(1.-gamma_interp_z4) + &
-       vs5*(1.-gamma_interp_x)*(1.-gamma_interp_y)*gamma_interp_z1 + &
-       vs6*gamma_interp_x*(1.-gamma_interp_y)*gamma_interp_z2 + &
-       vs7*gamma_interp_x*gamma_interp_y*gamma_interp_z3 + &
-       vs8*(1.-gamma_interp_x)*gamma_interp_y*gamma_interp_z4
-
-  rho_final = &
-       rho1*(1.-gamma_interp_x)*(1.-gamma_interp_y)*(1.-gamma_interp_z1) + &
-       rho2*gamma_interp_x*(1.-gamma_interp_y)*(1.-gamma_interp_z2) + &
-       rho3*gamma_interp_x*gamma_interp_y*(1.-gamma_interp_z3) + &
-       rho4*(1.-gamma_interp_x)*gamma_interp_y*(1.-gamma_interp_z4) + &
-       rho5*(1.-gamma_interp_x)*(1.-gamma_interp_y)*gamma_interp_z1 + &
-       rho6*gamma_interp_x*(1.-gamma_interp_y)*gamma_interp_z2 + &
-       rho7*gamma_interp_x*gamma_interp_y*gamma_interp_z3 + &
-       rho8*(1.-gamma_interp_x)*gamma_interp_y*gamma_interp_z4
+  ! use trilinear interpolation in cell to define rho
+  rho_final = interpolate_trilinear(rho1,rho2,rho3,rho4,rho5,rho6,rho7,rho8)
 
   ! impose minimum and maximum velocity and density if needed
   if (vp_final < VP_MIN(imat)) vp_final = VP_MIN(imat)
@@ -854,6 +831,8 @@ end subroutine init_tomography_files
     qp6 = qp_tomography(imat,p5+1)
     qp7 = qp_tomography(imat,p6+1)
     qp8 = qp_tomography(imat,p7+1)
+    ! use trilinear interpolation in cell
+    qp_final = interpolate_trilinear(qp1,qp2,qp3,qp4,qp5,qp6,qp7,qp8)
 
     qs1 = qs_tomography(imat,p0+1)
     qs2 = qs_tomography(imat,p1+1)
@@ -863,27 +842,8 @@ end subroutine init_tomography_files
     qs6 = qs_tomography(imat,p5+1)
     qs7 = qs_tomography(imat,p6+1)
     qs8 = qs_tomography(imat,p7+1)
-
     ! use trilinear interpolation in cell
-    qp_final = &
-         qp1*(1.-gamma_interp_x)*(1.-gamma_interp_y)*(1.-gamma_interp_z1) + &
-         qp2*gamma_interp_x*(1.-gamma_interp_y)*(1.-gamma_interp_z2) + &
-         qp3*gamma_interp_x*gamma_interp_y*(1.-gamma_interp_z3) + &
-         qp4*(1.-gamma_interp_x)*gamma_interp_y*(1.-gamma_interp_z4) + &
-         qp5*(1.-gamma_interp_x)*(1.-gamma_interp_y)*gamma_interp_z1 + &
-         qp6*gamma_interp_x*(1.-gamma_interp_y)*gamma_interp_z2 + &
-         qp7*gamma_interp_x*gamma_interp_y*gamma_interp_z3 + &
-         qp8*(1.-gamma_interp_x)*gamma_interp_y*gamma_interp_z4
-
-    qs_final = &
-         qs1*(1.-gamma_interp_x)*(1.-gamma_interp_y)*(1.-gamma_interp_z1) + &
-         qs2*gamma_interp_x*(1.-gamma_interp_y)*(1.-gamma_interp_z2) + &
-         qs3*gamma_interp_x*gamma_interp_y*(1.-gamma_interp_z3) + &
-         qs4*(1.-gamma_interp_x)*gamma_interp_y*(1.-gamma_interp_z4) + &
-         qs5*(1.-gamma_interp_x)*(1.-gamma_interp_y)*gamma_interp_z1 + &
-         qs6*gamma_interp_x*(1.-gamma_interp_y)*gamma_interp_z2 + &
-         qs7*gamma_interp_x*gamma_interp_y*gamma_interp_z3 + &
-         qs8*(1.-gamma_interp_x)*gamma_interp_y*gamma_interp_z4
+    qs_final = interpolate_trilinear(qs1,qs2,qs3,qs4,qs5,qs6,qs7,qs8)
 
     ! attenuation zero (means negligible attenuation)
     if (qs_final <= 1.e-5) qs_final = ATTENUATION_COMP_MAXIMUM
@@ -897,7 +857,12 @@ end subroutine init_tomography_files
     qmu_atten = qs_final
 
     ! converts to bulk attenuation
-    qkappa_atten = (1.0 - L_val) / (1.0/qp_final - L_val/qs_final)
+    if (abs(qs_final - L_val * qp_final) <= 1.e-5) then
+      ! negligible bulk attenuation
+      qkappa_atten = ATTENUATION_COMP_MAXIMUM
+    else
+      qkappa_atten = (1.0 - L_val) * qp_final * qs_final / (qs_final - L_val * qp_final)
+    endif
 
     ! attenuation zero (means negligible attenuation)
     if (qmu_atten <= 1.e-5) qmu_atten = ATTENUATION_COMP_MAXIMUM
@@ -919,7 +884,37 @@ end subroutine init_tomography_files
   ! value found
   has_tomo_value = .true.
 
+  contains
+
+  function interpolate_trilinear(val1,val2,val3,val4,val5,val6,val7,val8)
+
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  real(kind=CUSTOM_REAL) :: interpolate_trilinear
+  real(kind=CUSTOM_REAL),intent(in) :: val1,val2,val3,val4,val5,val6,val7,val8
+
+  ! note: we use gamma factors from parent routine (with 'contains' we can still use the scope of the parent routine).
+  !       gamma parameters are global entities here, and used for briefty of the calling routine command,
+  !       just to be aware...
+
+  ! interpolation rule
+  interpolate_trilinear =  &
+         val1 * (1.d0-gamma_interp_x) * (1.d0-gamma_interp_y) * (1.d0-gamma_interp_z1) + &
+         val2 * gamma_interp_x        * (1.d0-gamma_interp_y) * (1.d0-gamma_interp_z2) + &
+         val3 * gamma_interp_x        * gamma_interp_y        * (1.d0-gamma_interp_z3) + &
+         val4 * (1.d0-gamma_interp_x) * gamma_interp_y        * (1.d0-gamma_interp_z4) + &
+         val5 * (1.d0-gamma_interp_x) * (1.d0-gamma_interp_y) * gamma_interp_z1 + &
+         val6 * gamma_interp_x        * (1.d0-gamma_interp_y) * gamma_interp_z2 + &
+         val7 * gamma_interp_x        * gamma_interp_y        * gamma_interp_z3 + &
+         val8 * (1.d0-gamma_interp_x) * gamma_interp_y        * gamma_interp_z4
+
+  end function interpolate_trilinear
+
   end subroutine model_tomography
+
+
 
 !
 !-------------------------------------------------------------------------------------------------
