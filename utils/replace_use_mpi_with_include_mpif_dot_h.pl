@@ -12,7 +12,7 @@
 # first clean trailing white spaces in all f90 files in the src/ sub-directories
 #
 
-      @objects = `ls src/*/*.f90 src/*/*.F90`;
+      @objects = `ls ../src/*/*.f90 ../src/*/*.F90`;
 
       foreach $name (@objects) {
             chop $name;
@@ -43,7 +43,7 @@
 # then perform the replacement in all f90 and F90 files in the src/ sub-directories
 #
 
-      @objects = `ls src/*/*.f90 src/*/*.F90`;
+      @objects = `ls ../src/*/*.f90 ../src/*/*.F90`;
 
       foreach $name (@objects) {
             chop $name;
