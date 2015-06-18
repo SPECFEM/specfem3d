@@ -1,5 +1,8 @@
 #!/bin/bash
 
+mkdir Tractions/
+mkdir Tractions/1/
+
 dir_for_run=$(pwd)/$1
 
 ####

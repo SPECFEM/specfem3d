@@ -7,11 +7,11 @@ program re_format_outputs_files
   INTEGER myrank,nbproc,ierr
   integer, dimension(MPI_STATUS_SIZE) :: statut
   integer, parameter :: etq=100
-  character(len=250) output_veloc_name(3),output_stress_name(6),output_name
-  character(len=250) input_field_name,output_field_name,input_point_file
-  character(len=250), allocatable :: working_axisem_dir(:)
-  character(len=250) fichier,input_point_file_cart,meshdirectory
-  character(len=250) incident_field,incident_field_tmp,tmp_file,prname,LOCAL_PATH,TRACT_PATH
+  character(len=500) output_veloc_name(3),output_stress_name(6),output_name
+  character(len=500) input_field_name,output_field_name,input_point_file
+  character(len=500), allocatable :: working_axisem_dir(:)
+  character(len=500) fichier,input_point_file_cart,meshdirectory
+  character(len=500) incident_field,incident_field_tmp,tmp_file,prname,LOCAL_PATH,TRACT_PATH
   integer iti,a,nb_dump_samples,nbrec,irec,i,ntime,itime,n0,n00
   real, allocatable :: data_time(:,:),data_rec(:,:,:),data_rec0(:,:,:),data_tmp(:,:),data_tmp_to_send(:,:)
   real, allocatable :: vr(:,:),tr(:,:)
@@ -98,7 +98,7 @@ program re_format_outputs_files
      read(10,'(a)') TRACT_PATH
      close(10)
 
-     open(10,file=trim(input_point_file_cart))
+     open(10,file='../'//trim(input_point_file_cart))
      read(10,*) nb_point
 
      allocate(xp(nb_point),yp(nb_point),zp(nb_point))
@@ -117,7 +117,7 @@ program re_format_outputs_files
      close(10)
 
 
-     open(10,file='reformat.par')
+     open(10,file='../reformat.par')
      read(10,*) frq_min
      read(10,*) tmin,tmax
      close(10)
@@ -394,8 +394,8 @@ program re_format_outputs_files
   call mpi_bcast(tmin,1,MPI_REAL,0,MPI_COMM_WORLD,ierr)
   call mpi_bcast(tmax,1,MPI_REAL,0,MPI_COMM_WORLD,ierr)
 
-  call mpi_bcast(LOCAL_PATH,250,MPI_CHARACTER,0,MPI_COMM_WORLD,ierr)
-  call mpi_bcast(TRACT_PATH,250,MPI_CHARACTER,0,MPI_COMM_WORLD,ierr)
+  call mpi_bcast(LOCAL_PATH,500,MPI_CHARACTER,0,MPI_COMM_WORLD,ierr)
+  call mpi_bcast(TRACT_PATH,500,MPI_CHARACTER,0,MPI_COMM_WORLD,ierr)
 
   ! not usefull ??
   if (myrank > 0) then
@@ -860,7 +860,7 @@ subroutine create_name_database(prname,iproc,LOCAL_PATH)
   integer iproc
 
 ! name of the database file
-  character(len=250) prname,procname,LOCAL_PATH,clean_LOCAL_PATH
+  character(len=500) prname,procname,LOCAL_PATH,clean_LOCAL_PATH
 
 ! create the name for the database of the current slide and region
   write(procname,"('/proc',i6.6,'_')") iproc
