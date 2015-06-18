@@ -909,7 +909,7 @@
     AM_S%Qmu_storage(:) = -1
 
     ! debug
-    !print*,'allocated attenuation arrays: q storage size = ',Qtmp,AM_S%Q_resolution,AM_S%Q_max
+    !print *,'allocated attenuation arrays: q storage size = ',Qtmp,AM_S%Q_resolution,AM_S%Q_max
   endif
 
   if (Qmu < 0.0d0 .OR. Qmu > AM_S%Q_max) then

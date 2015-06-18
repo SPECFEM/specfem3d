@@ -109,7 +109,7 @@ external binary files for $v_{p}$, $v_{s}$ and $\rho$. Binary files
 are given in the same format as when outputted by the \texttt{xgenerate\_databases}
 executable when using option \texttt{SAVE\_MESH\_FILES}. These binary
 files define the model parameters on all GLL points which can be used
-for iterative inversion procedures. Note that for simulation setups with attenuation, 
+for iterative inversion procedures. Note that for simulation setups with attenuation,
 it will also read in the external binary mesh files for $Q_{\kappa}$ and $Q_{\mu}$.
 
 \item [{\texttt{salton\_trough}}] A 3D $V_{p}$ model for Southern California.
@@ -346,7 +346,7 @@ kill all the runs or let the others finish using a fail-safe mechanism
 (in most cases, should be set to true).
 
 TODO / future work to do: currently the \texttt{BROADCAST\_SAME\_MESH\_AND\_MODEL}
-option assumes to have the (master) mesh files in \texttt{run0001/DATABASES\_MPI} or 
+option assumes to have the (master) mesh files in \texttt{run0001/DATABASES\_MPI} or
 \texttt{run0001/OUTPUT\_FILES/DATABASES\_MPI}.
 However, for adjoint runs you still need a \texttt{DATABASES\_MPI/} folder in each of the sub-runs directories,
 e.g. \texttt{run0002/DATABASES\_MPI}, etc. to store the forward wavefields, kernels etc. of each sub-run.
