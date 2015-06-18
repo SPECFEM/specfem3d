@@ -103,21 +103,26 @@ uses externally defined model parameters. Uses external model definitions
 set up in routines located in file \texttt{model\_external\_values.f90}
 in directory \texttt{src/generate\_databases/}. Please modify these
 generic template routines to use your own model definitions.
+
 \item [{\texttt{gll}}] For a user-specified isotropic model which uses
 external binary files for $v_{p}$, $v_{s}$ and $\rho$. Binary files
 are given in the same format as when outputted by the \texttt{xgenerate\_databases}
 executable when using option \texttt{SAVE\_MESH\_FILES}. These binary
 files define the model parameters on all GLL points which can be used
-for iterative inversion procedures.
+for iterative inversion procedures. Note that for simulation setups with attenuation, 
+it will also read in the external binary mesh files for $Q_{\kappa}$ and $Q_{\mu}$.
+
 \item [{\texttt{salton\_trough}}] A 3D $V_{p}$ model for Southern California.
 Users must provide the corresponding data file \texttt{regrid3\_vel\_p.bin}
 in directory \texttt{DATA/st\_3D\_block\_harvard/}.
+
 \item [{\texttt{tomo}}] For a user-specified 3D isotropic model which uses
 a tomographic model file \texttt{tomographic\_model.xyz} in directory
 \texttt{DATA}. See Section \ref{sec:Using-tomographic}, for a discussion
 on how to specify your own 3D tomographic model.
 \end{description}
 \end{description}
+
 \item [{\texttt{APPROXIMATE\_OCEAN\_LOAD}}] Set to \texttt{.true.} if the
 effect of the oceans on seismic wave propagation should be incorporated
 based upon the (rough) approximate treatment discussed in \citet{KoTr02b}.
@@ -341,9 +346,10 @@ kill all the runs or let the others finish using a fail-safe mechanism
 (in most cases, should be set to true).
 
 TODO / future work to do: currently the \texttt{BROADCAST\_SAME\_MESH\_AND\_MODEL}
-option assumes to have the (master) mesh files in run0001/DATABASES\_MPI or run0001/OUTPUT\_FILES/DATABASES\_MPI.
-However, for adjoint runs you still need a DATABASES\_MPI folder in each of the sub-runs directories,
-e.g. run0002/DATABASES\_MPI, etc. to store the forward wavefields, kernels etc. of each sub-run.
+option assumes to have the (master) mesh files in \texttt{run0001/DATABASES\_MPI} or 
+\texttt{run0001/OUTPUT\_FILES/DATABASES\_MPI}.
+However, for adjoint runs you still need a \texttt{DATABASES\_MPI/} folder in each of the sub-runs directories,
+e.g. \texttt{run0002/DATABASES\_MPI}, etc. to store the forward wavefields, kernels etc. of each sub-run.
 This would not be needed for forward simulations.
 
 TODO / future work to do: the sensitivity kernel summing and smoothing tools in directory src/tomography are currently not ported to this new option to do many runs simultaneously, only the solver (src/specfem3d) is. Thus these tools should work, but in their current version will need to be run for each simulation result independently.
@@ -367,7 +373,7 @@ But the code cannot calculate partially saturated cases in its state.
 Christina Morency is presently working on a dual porosity, dual permeability formulation, type Pride and Berryman, for an other project, but it will not be available for some time.\\
 
 The way we prescribe material property for porous material in SPECFEM3D is as follow:
-We use a file name nummaterial\_poroelastic\_file, which is located in the directory MESH, the format is as follow:
+We use a file name "nummaterial\_poroelastic\_file", which is located in the directory \texttt{MESH/}, the format is as follow:
 \begin{verbatim}
  rhos rhof phi c kxx kxy kxz kyy kyz kzz Ks Kf Kfr etaf mufr
 \end{verbatim}
@@ -387,7 +393,7 @@ where\\
 \texttt{eta\_f} = fluid viscosity,\\
 \texttt{mu\_fr} = frame shear modulus.\\
 
-Using an external mesh (for instance coming from CUBIT/TRELIS), poroelastic materials have the ID number 3, while 1 is elastic, 2 is acoustic ? see the example in the package: examples/homogeneous\_poroelastic.
+Using an external mesh (for instance coming from CUBIT/TRELIS), poroelastic materials have the ID number 3, while 1 is acoustic and 2 is elastic (see the example in the package: EXAMPLES/homogeneous\_poroelastic).
 
 
 

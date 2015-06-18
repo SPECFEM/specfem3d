@@ -84,7 +84,7 @@ and compile Metis version 4.0 (do {*}NOT{*} install Metis version
 and uncomment the METIS link flag in that file before running \texttt{configure}.\\
 
 
-The SCOTCH library \citep{PeRo96} provides efficent static mapping,
+The SCOTCH library \citep{PeRo96} provides efficient static mapping,
 graph and mesh partitioning routines. SCOTCH is a free software package
 developed by Fran\c{c}ois Pellegrini et al. from LaBRI and INRIA in Bordeaux,
 France, downloadable from the web page \url{https://gforge.inria.fr/projects/scotch/}.
@@ -120,7 +120,7 @@ MPI libraries.
 \item [{\texttt{FLAGS\_CHECK}}] Compiler flags.
 \end{description}
 The configuration script automatically creates for each executable
-a corresponding \texttt{Makefile} in the \texttt{src/} subdirectoy.
+a corresponding \texttt{Makefile} in the \texttt{src/} subdirectory.
 The \texttt{Makefile} contains a number of suggested entries for various
 compilers, e.g., Portland, Intel, Absoft, NAG, and Lahey. The software
 has run on a wide variety of compute platforms, e.g., various PC clusters
@@ -372,7 +372,7 @@ The important entries in the Doxyfile are:
 
 Regular POSIX I/O can be problematic when dealing with large simulations one large
 clusters (typically more than $10,000$ processes). SPECFEM3D use the ADIOS library~\cite{Liu2013}
-to deal transparently take advantage of advanced paralllel file system features. To enable
+to deal transparently take advantage of advanced parallel file system features. To enable
 ADIOS, the following steps should be done:
 \begin{enumerate}
 \item Install ADIOS (available from \url{https://www.olcf.ornl.gov/center-projects/adios/}).

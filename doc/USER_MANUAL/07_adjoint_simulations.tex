@@ -29,7 +29,7 @@ from the adjoint seismograms recorded at the original earthquake location.
 \item \textbf{Prepare the adjoint sources} \label{enu:Prepare-the-adjoint}
 
 \begin{enumerate}
-\item First, run a regular forward simlation (\texttt{SIMULATION\_TYPE =
+\item First, run a regular forward simulation (\texttt{SIMULATION\_TYPE =
 1} and \texttt{SAVE\_FORWARD = .false.}). You can automatically set
 these two variables using the \texttt{\small utils/change\_simulation\_type.pl}{\small{}
 script:}{\small \par}
@@ -217,7 +217,7 @@ Section~\ref{sec:Finite-Frequency-Kernels}).
 
 If \texttt{ANISOTROPIC\_KL} \texttt{=} \texttt{.true.} by additionally
 setting \texttt{ANISOTROPIC\_KL} \texttt{=} \texttt{.true.} in \texttt{constants.h}
-the package will save anisotropic kernels paramterized as velocities
+the package will save anisotropic kernels parameterized as velocities
 related to transverse isotropy based on the the Chen and Tromp parameters
 \citet{ChTr07}. The kernels are saved as relative perturbations for
 horizontal and vertical P and S velocities, $\alpha_{v},\alpha_{h},\beta_{v},\beta_{h}$.
