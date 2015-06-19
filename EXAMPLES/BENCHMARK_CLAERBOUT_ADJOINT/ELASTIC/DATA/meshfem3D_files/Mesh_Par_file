@@ -34,6 +34,11 @@ CREATE_ABAQUS_FILES             = .false.
 CREATE_DX_FILES                 = .false.
 CREATE_VTK_FILES                = .false.
 
+# CPML perfectly matched absorbing layers
+THICKNESS_OF_X_PML              = 12.3d0
+THICKNESS_OF_Y_PML              = 12.3d0
+THICKNESS_OF_Z_PML              = 12.3d0
+
 # path to store the databases files
 LOCAL_PATH                      = ./OUTPUT_FILES/DATABASES_MPI/
 

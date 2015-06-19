@@ -290,6 +290,9 @@
 ! Mesh files for visualization
   logical CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES
 
+! CPML
+  double precision :: THICKNESS_OF_X_PML,THICKNESS_OF_Y_PML,THICKNESS_OF_Z_PML
+
 ! doublings parameters
   integer NDOUBLINGS
   integer, dimension(2) :: ner_doublings
@@ -419,7 +422,8 @@
                                 LOCAL_PATH,SUPPRESS_UTM_PROJECTION,&
                                 INTERFACES_FILE,NSUBREGIONS,subregions,NMATERIALS,material_properties, &
                                 CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
-                                USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
+                                USE_REGULAR_MESH,NDOUBLINGS,ner_doublings, &
+                                THICKNESS_OF_X_PML,THICKNESS_OF_Y_PML,THICKNESS_OF_Z_PML)
 
   if (sizeprocs == 1 .and. (NPROC_XI /= 1 .or. NPROC_ETA /= 1)) &
     stop 'Error: must have NPROC_XI = NPROC_ETA = 1 for a serial run'
@@ -650,6 +654,12 @@
     else
       write(IMAIN,*) 'using UTM projection in region ',UTM_PROJECTION_ZONE
     endif
+     if(PML_CONDITIONS) then
+       write(IMAIN,*)
+       write(IMAIN,*) 'PML thickness in X direction = ',THICKNESS_OF_X_PML,'m'
+       write(IMAIN,*) 'PML thickness in Y direction = ',THICKNESS_OF_Y_PML,'m'
+       write(IMAIN,*) 'PML thickness in Z direction = ',THICKNESS_OF_Z_PML,'m'
+    endif
     write(IMAIN,*)
     call flush_IMAIN()
   endif
@@ -866,7 +876,8 @@
                            LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK,&
                            CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
                            USE_REGULAR_MESH,NDOUBLINGS,ner_doublings, &
-                           ADIOS_ENABLED, ADIOS_FOR_DATABASES)
+                           ADIOS_ENABLED, ADIOS_FOR_DATABASES, &
+                           THICKNESS_OF_X_PML,THICKNESS_OF_Y_PML,THICKNESS_OF_Z_PML)
 
   if (myrank == 0) then
 ! compare to exact theoretical value (bottom is always flat)

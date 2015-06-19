@@ -41,7 +41,8 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
                                 nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
                                 NSPEC2D_BOTTOM,NSPEC2D_TOP, NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
                                 ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,&
-                                NMATERIALS,material_properties)
+                                NMATERIALS,material_properties, &
+                                nspec_CPML,CPML_to_spec,CPML_regions,is_CPML)
 
   use constants
   use adios_manager_mod
@@ -67,6 +68,11 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   integer, dimension(NSPEC2D_TOP) :: ibelm_top
   integer :: NMATERIALS
   double precision, dimension(NMATERIALS,7) ::  material_properties
+
+ ! CPML
+  integer, intent(in) :: nspec_CPML
+  integer, dimension(:), intent(in) :: CPML_to_spec,CPML_regions
+  logical, dimension(nspec), intent(in) :: is_CPML
 
   integer(kind=4) :: unused_i4
   logical :: unused_l
@@ -94,6 +100,10 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   unused_i4 = ibelm_bottom(1)
   unused_i4 = ibelm_top(1)
   unused_dp = material_properties(1,1)
+  unused_i4 = nspec_CPML
+  unused_i4 = CPML_to_spec(1)
+  unused_i4 = CPML_regions(1)
+  unused_l  = is_CPML(1)
 
   call no_adios_err()
 
