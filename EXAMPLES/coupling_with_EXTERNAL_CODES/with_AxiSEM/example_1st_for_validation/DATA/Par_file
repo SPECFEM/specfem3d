@@ -191,7 +191,7 @@ PRINT_SOURCE_TIME_FUNCTION      = .false.
 # to couple with an external code (such as DSM, AxiSEM, or FK)
 COUPLE_WITH_EXTERNAL_CODE       = .true.
 EXTERNAL_CODE_TYPE              = 2   # 1 = DSM, 2 = AxiSEM, 3 = FK
-TRACTION_PATH                   = ./DATA/DSM_tractions_for_specfem3D/
+TRACTION_PATH                   = ./DATA/AxiSEM_tractions/1/
 MESH_A_CHUNK_OF_THE_EARTH       = .true.
 
 # Dimitri Komatitsch, July 2014, CNRS Marseille, France:

@@ -7,5 +7,5 @@ input_box_sem_cart.txt
 32                                                           # number of Specfem3D MPI processes  
 /ccc/scratch/cont003/gen7165/durochtc/Codes/SPECFEM3Ds/specfem3d/EXAMPLES/coupling_with_EXTERNAL_CODES/with_AxiSEM/example_1st_for_validation/MESH
 /ccc/scratch/cont003/gen7165/durochtc/Codes/SPECFEM3Ds/specfem3d/EXAMPLES/coupling_with_EXTERNAL_CODES/with_AxiSEM/example_1st_for_validation/OUTPUT_FILES/DATABASES_MPI
-/ccc/scratch/cont003/gen7165/durochtc/Codes/SPECFEM3Ds/specfem3d/utils/EXTERNAL_CODES_coupled_with_SPECFEM3D/AxiSEM_for_SPECFEM3D/AxiSEM_modif_for_coupling_with_specfem/SOLVER/Tractions/1
+/ccc/scratch/cont003/gen7165/durochtc/Codes/SPECFEM3Ds/specfem3d/EXAMPLES/coupling_with_EXTERNAL_CODES/with_AxiSEM/example_1st_for_validation/DATA/AxiSEM_tractions/1
 

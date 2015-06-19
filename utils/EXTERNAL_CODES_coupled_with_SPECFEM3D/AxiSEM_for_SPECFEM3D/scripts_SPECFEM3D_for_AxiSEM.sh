@@ -36,20 +36,13 @@ $SPECFEM3D_BINARY_PATH/xdecompose_mesh $NPROC MESH/ OUTPUT_FILES/DATABASES_MPI/
 mv Numglob2loc_elmn.txt MESH/.
 
 pwd
-$MPIRUN $OPTION_SIMU $SPECFEM3D_BINARY_PATH/xgenerate_databases > Step3-create_partitioning_and_specfem3d_databases.out
+$MPIRUN $OPTION_SIMU $SPECFEM3D_BINARY_PATH/xgenerate_databases > Step4_and_Step5-partitioning_and_specfem3d_databases.out
 }
 
-function run_create_tractions_for_specfem ()
-{
-
-pwd
-$MPIRUN $OPTION_SIMU $BIN/xread_absorbing_interfaces > Step4-create_tractions_for_specfem3D_from_AxiSEM.out
-}
-
-function run_simu ()
+function run_specfem3d_simulation ()
 {
 pwd
-$MPIRUN $OPTION_SIMU $BINSEM/xspecfem3D > Step5-run_specfem3d_simulation.out
+$MPIRUN $OPTION_SIMU $SPECFEM3D_BINARY_PATH/xspecfem3D > Step8-run_specfem3d_simu.out
 
 pwd
 }
