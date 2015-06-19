@@ -605,10 +605,8 @@ contains
           write(IMAIN,*)
        endif
 
-       !if(nspec_CPML>0) then
        allocate(CPML_to_spec(nspec_CPML))
        allocate(CPML_regions(nspec_CPML))
-       !endif
 
        ispec_CPML=0
        do ispec=1,nspec

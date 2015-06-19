@@ -42,9 +42,9 @@ meshfem3D_TARGETS = \
 
 meshfem3D_OBJECTS = \
 	$O/check_mesh_quality.mesh.o \
-    $O/earth_chunk_HEX8_Mesher.mesh.o \
-    $O/earth_chunk_HEX27_Mesher.mesh.o \
-    $O/earth_chunk_all_Utils.mesh.o \
+	$O/earth_chunk_HEX8_Mesher.mesh.o \
+	$O/earth_chunk_HEX27_Mesher.mesh.o \
+	$O/earth_chunk_all_Utils.mesh.o \
 	$O/compute_parameters.mesh.o \
 	$O/create_regions_mesh.mesh.o \
 	$O/create_visual_files.mesh.o \
@@ -74,7 +74,7 @@ meshfem3D_SHARED_OBJECTS = \
 	$O/exit_mpi.shared.o \
 	$O/get_global.shared.o \
 	$O/get_shape3D.shared.o \
-    $O/gll_library.shared.o \
+	$O/gll_library.shared.o \
 	$O/hex_nodes.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \

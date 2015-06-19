@@ -267,6 +267,20 @@
   end subroutine bcast_all_r_for_database
 
 !
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine bcast_all_singlei(buffer)
+
+  implicit none
+
+  integer :: buffer,idummy
+
+  idummy = buffer
+
+  end subroutine bcast_all_singlei
+
+!
 !----
 !
 
