@@ -71,7 +71,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
 
  ! CPML
   integer, intent(in) :: nspec_CPML
-  integer, dimension(:), intent(in) :: CPML_to_spec,CPML_regions
+  integer, dimension(nspec_CPML), intent(in) :: CPML_to_spec,CPML_regions
   logical, dimension(nspec), intent(in) :: is_CPML
 
   integer(kind=4) :: unused_i4
