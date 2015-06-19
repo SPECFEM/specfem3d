@@ -1,9 +1,9 @@
 \documentclass[11pt]{article}
 %
-%\usepackage{kmath,kerkis} 
+%\usepackage{kmath,kerkis}
 \usepackage{mathpazo}
 %\usepackage{palatino}
-\usepackage[T1]{fontenc} 
+\usepackage[T1]{fontenc}
 \usepackage{amsfonts}
 \usepackage{mathrsfs}
 \usepackage{amsthm}
@@ -39,34 +39,34 @@
 \definecolor{denim}{RGB}{21 96 189}
 \definecolor{bgreen}{RGB}{13 152 186}
 \definecolor{bdeaux}{RGB}{153 12 20}
-\definecolor{linkcol}{rgb}{0,0,0.4} 
+\definecolor{linkcol}{rgb}{0,0,0.4}
 \definecolor{citecol}{rgb}{0.5,0.01,0.02}
 \definecolor{lsb}{RGB}{120, 200, 200}
 
 \DeclareSymbolFont{calletters}{OMS}{cmsy}{m}{n}
-\DeclareSymbolFontAlphabet{\mathcal}{calletters}   
+\DeclareSymbolFontAlphabet{\mathcal}{calletters}
 
-\newcommand{\bw}{\mathbf{w}} 
-\newcommand{\be}{\mathbf{e}}  
-\newcommand{\bh}{\mathbf{h}}  
-\newcommand{\bT}{\mathbf{T}}  
-\newcommand{\bU}{\mathbf{U}} 
-\newcommand{\bV}{\mathbf{V}} 
-\newcommand{\bB}{\mathbf{B}}     
-\newcommand{\bD}{\mathbf{D}}     
-\newcommand{\bE}{\mathbf{E}}     
-\newcommand{\bH}{\mathbf{H}}     
-\newcommand{\bJ}{\mathbf{J}}     
-\newcommand{\bS}{\mathbf{S}}  
-\newcommand{\bW}{\mathbf{W}}  
-\newcommand{\bX}{\mathbf{X}}     
-\newcommand{\bY}{\mathbf{Y}}    
-\newcommand{\bn}{\mathbf{n}}     
-\newcommand{\bx}{\mathbf{x}}     
-\newcommand{\rmT}{\mathrm{T}} 
-\newcommand{\rmS}{\mathrm{S}} 
-\newcommand{\ci}{\mathbf{i}}     
-\newcommand{\ds}{\displaystyle} 
+\newcommand{\bw}{\mathbf{w}}
+\newcommand{\be}{\mathbf{e}}
+\newcommand{\bh}{\mathbf{h}}
+\newcommand{\bT}{\mathbf{T}}
+\newcommand{\bU}{\mathbf{U}}
+\newcommand{\bV}{\mathbf{V}}
+\newcommand{\bB}{\mathbf{B}}
+\newcommand{\bD}{\mathbf{D}}
+\newcommand{\bE}{\mathbf{E}}
+\newcommand{\bH}{\mathbf{H}}
+\newcommand{\bJ}{\mathbf{J}}
+\newcommand{\bS}{\mathbf{S}}
+\newcommand{\bW}{\mathbf{W}}
+\newcommand{\bX}{\mathbf{X}}
+\newcommand{\bY}{\mathbf{Y}}
+\newcommand{\bn}{\mathbf{n}}
+\newcommand{\bx}{\mathbf{x}}
+\newcommand{\rmT}{\mathrm{T}}
+\newcommand{\rmS}{\mathrm{S}}
+\newcommand{\ci}{\mathbf{i}}
+\newcommand{\ds}{\displaystyle}
 \newcommand{\tr}{^{\mathrm{T}}}
 \newcommand{\ie}{i.e.~}
 
@@ -80,7 +80,7 @@
 \usepackage[hmargin=2.44cm,vmargin=2.2cm]{geometry}
 \usepackage{graphics}
 \usepackage{graphicx}
-  
+
 %
 \def\R{\hbox{I\kern-0.2em\hbox{R}}}
 \def\expg#1#2{{\vphantom{#1}}^{#2}\!#1}
@@ -98,7 +98,7 @@
 \def\restrictionaux#1#2{{#1\,\smash{\vrule height .8\ht1 depth .85\dp1}}_{\,#2}}
 
 \date{}
- 
+
 \begin{document}
 {\huge {\sc {\centerline{Coupling AxiSEM and Specfem3D}} }}
 
@@ -143,7 +143,7 @@
 
 \medskip
 
-\noindent Also, check Meshfem3D with parameters : 
+\noindent Also, check Meshfem3D with parameters :
 
 \begin{itemize}
 
@@ -164,17 +164,17 @@
 
 \item[\textbullet] coeff\_poly\_deg12 : to generate smooth intitial solution
 
-\item[\textbullet] STATIONS  : stations files 
+\item[\textbullet] STATIONS  : stations files
 
 \item[\textbullet] Par\_file : with
 
-\item[\textbullet] SIMULATION\_TYPE=1 
+\item[\textbullet] SIMULATION\_TYPE=1
 
-\item[\textbullet] SAVE\_FORWARD = .false. 
+\item[\textbullet] SAVE\_FORWARD = .false.
 
-\item[\textbullet] COUPLE\_WITH\_EXTERNAL\_CODE = .true 
+\item[\textbullet] COUPLE\_WITH\_EXTERNAL\_CODE = .true
 
-\item[\textbullet] EXTERNAL\_CODE\_TYPE    = 2 
+\item[\textbullet] EXTERNAL\_CODE\_TYPE    = 2
 
 \end{itemize}
 
@@ -209,7 +209,7 @@
 
 \section{STEP 3 : AxiSEM solver}
 
-\noindent 2 files produced by meshfem3D (input\_box.txt and input\_box\_sem\_cart.txt) were copied (and the first line indicating the number of line to be read were add at the beginning of the files too) during the STEP 1 in the AxiSEM SOLVER dir. 
+\noindent 2 files produced by meshfem3D (input\_box.txt and input\_box\_sem\_cart.txt) were copied (and the first line indicating the number of line to be read were add at the beginning of the files too) during the STEP 1 in the AxiSEM SOLVER dir.
 
 \medskip
 
@@ -219,11 +219,11 @@
 
 \noindent Check 'inparam\_basic' (set the value for MESHNAME to the meshname from above, among others), and also (differences with *.TEMPLATES provided
 by AxiSEM) :
- 
-\begin{itemize} 
- 
-\item[\textbullet] ATTENUATION         false 
-\item[\textbullet] SAVE\_SNAPSHOTS     true 
+
+\begin{itemize}
+
+\item[\textbullet] ATTENUATION         false
+\item[\textbullet] SAVE\_SNAPSHOTS     true
 
 \end{itemize}
 
@@ -231,10 +231,10 @@ by AxiSEM) :
 
 \noindent Check 'inparam\_advanced' :
 
-\begin{itemize} 
- 
+\begin{itemize}
+
 \item[\textbullet] KERNEL\_WAVEFIELDS   true
-\item[\textbullet] KERNEL\_IBEG         0 
+\item[\textbullet] KERNEL\_IBEG         0
 \item[\textbullet] KERNEL\_IEND         4
 
 \end{itemize}
@@ -282,16 +282,16 @@ Among others, this script calls : \\
 
 \smallskip
 
-\noindent Example : 
+\noindent Example :
 \begin{verbatim}
 
-input_box.txt 
-input_box_sem_cart.txt 
-32                          # number of AxiSEM mpi processes used in solver  
-90. 0.                      # source position (lat lon)  
-0.  60.                     # chunk center (lat lon)    
-1                           # number of axisem simus depends on moment tensor used  
-32                          # number of Specfem3D MPI processes  
+input_box.txt
+input_box_sem_cart.txt
+32                          # number of AxiSEM mpi processes used in solver
+90. 0.                      # source position (lat lon)
+0.  60.                     # chunk center (lat lon)
+1                           # number of axisem simus depends on moment tensor used
+32                          # number of Specfem3D MPI processes
 /[...]/example_1st_for_validation/MESH                           # Specfem MESH dir
 /[...]/example_1st_for_validation/OUTPUT_FILES/DATABASES_MPI     # Specfem databases dir
 /[...]/AxiSEM_modif_for_coupling_with_specfem/SOLVER/Tractions/1 # AxiSEM tractions dir
@@ -302,7 +302,7 @@ input_box_sem_cart.txt
 
 \smallskip
 
-\noindent Example : 
+\noindent Example :
 \begin{verbatim}
 
 10.         # output sampling in Hz (time step that will use in Specfem3D simu) \newline
@@ -314,7 +314,7 @@ input_box_sem_cart.txt
 
 \medskip
 
-\noindent You can launch the compilation (of expand\_2D\_3D and reformat) AND the execution of this two programs with the single script : 
+\noindent You can launch the compilation (of expand\_2D\_3D and reformat) AND the execution of this two programs with the single script :
 
 \smallskip
 
@@ -330,11 +330,11 @@ input_box_sem_cart.txt
 
 \smallskip
 
-\noindent All the results will be in 'NAME\_OF\_RESULTS\_DIR'. 
+\noindent All the results will be in 'NAME\_OF\_RESULTS\_DIR'.
 
 \bigskip
 
-\noindent If you prefer you do this step by step : 
+\noindent If you prefer you do this step by step :
 
 \begin{itemize}
 
