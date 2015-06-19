@@ -88,7 +88,7 @@ subroutine read_partition_files_adios()
   call adios_read_init_method (ADIOS_READ_METHOD_BP, comm, &
                                "verbose=1", ier)
   call adios_read_open_file (handle, database_name, 0, comm, ier)
-  if (ier /= 0) call stop_all()
+  if (ier /= 0) call abort_mpi()
 
   !------------------------------------------------------------------.
   ! Get scalar values. Might be differents for different processors. |
@@ -125,7 +125,7 @@ subroutine read_partition_files_adios()
 
   ! Perform the read, so we can use the values.
   call adios_perform_reads(handle, ier)
-  if (ier /= 0) call stop_all()
+  if (ier /= 0) call abort_mpi()
 
   ! sets nspec parameters
   NSPEC_AB = nelmnts_ext_mesh
@@ -401,7 +401,7 @@ subroutine read_partition_files_adios()
   endif
 
   call adios_perform_reads(handle, ier)
-  if (ier /= 0) call stop_all()
+  if (ier /= 0) call abort_mpi()
 
   call adios_read_close(handle,ier)
   call adios_read_finalize_method(ADIOS_READ_METHOD_BP, ier)

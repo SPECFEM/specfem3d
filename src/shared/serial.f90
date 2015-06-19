@@ -29,9 +29,9 @@
 !---- Stubs for parallel routines. Used by the serial version.
 !----
 
-  subroutine stop_all()
+  subroutine abort_mpi()
   stop 'error, program ended in exit_MPI'
-  end subroutine stop_all
+  end subroutine abort_mpi
 
 !
 !----
@@ -569,20 +569,6 @@
 !
 !----
 !
-!
-!  subroutine min_all_all_dp(sendbuf, recvbuf)
-!
-!  implicit none
-!
-!  double precision :: sendbuf, recvbuf
-!
-!  recvbuf = sendbuf
-!
-!  end subroutine min_all_all_dp
-!
-!----
-!
-
 
   subroutine max_all_i(sendbuf, recvbuf)
 
@@ -771,47 +757,6 @@
   recvbuf = sendbuf
 
   end subroutine any_all_l
-
-!
-!----
-!
-
-  subroutine sendrecv_all_cr(sendbuf, sendcount, dest, sendtag, &
-                             recvbuf, recvcount, source, recvtag)
-
-  use constants,only: CUSTOM_REAL
-
-  implicit none
-
-  integer sendcount, recvcount, dest, sendtag, source, recvtag
-  real(kind=CUSTOM_REAL), dimension(sendcount) :: sendbuf
-  real(kind=CUSTOM_REAL), dimension(recvcount) :: recvbuf
-
-  integer(kind=4) :: unused_i4
-
-  real(kind=CUSTOM_REAL) :: unused_cr
-
-  stop 'sendrecv_all_cr not implemented for serial code'
-  unused_i4 = dest
-  unused_i4 = sendtag
-  unused_i4 = source
-  unused_i4 = recvtag
-  unused_cr = sendbuf(1)
-  unused_cr = recvbuf(1)
-
-  end subroutine sendrecv_all_cr
-
-!
-!----
-!
-
-  integer function proc_null()
-
-  implicit none
-
-  proc_null = 0
-
-  end function proc_null
 
 !
 !----

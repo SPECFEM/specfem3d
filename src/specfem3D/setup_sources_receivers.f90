@@ -795,6 +795,12 @@
 
       ! master process checks if any adjoint files found
       if (nadj_files_found_tot == 0) then
+        print *,'Error no adjoint traces found: ',nadj_files_found_tot
+        print *,'in directory : ',OUTPUT_FILES(1:len_trim(OUTPUT_FILES))//'/../SEM/'
+        if (.not. SU_FORMAT) then
+          print *,'with endings : ', '**.'//comp(1)//'.adj',' ','**.'//comp(2)//'.adj',' ','**.'//comp(3)//'.adj'
+        endif
+        print *,''
         call exit_MPI(myrank,'no adjoint traces found, please check adjoint sources in directory SEM/')
       endif
     endif

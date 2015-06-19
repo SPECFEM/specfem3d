@@ -150,7 +150,7 @@ subroutine check_alloc_err(ier, usr_msg)
       write(error_unit, "('Process ', i6.6, ': Allocation error. " // &
                         " No user message specified.')") myrank
     endif
-    call stop_all()
+    call abort_mpi()
   endif
 end subroutine check_alloc_err
 
@@ -173,7 +173,7 @@ subroutine check_dealloc_err(ier, usr_msg)
       write(error_unit, "('Process ', i6.6, ': Deallocation error. " // &
                         " No user message specified.')") myrank
     endif
-    call stop_all()
+    call abort_mpi()
   endif
 end subroutine check_dealloc_err
 
