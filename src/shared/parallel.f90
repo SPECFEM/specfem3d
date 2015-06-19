@@ -1615,7 +1615,7 @@ end module my_mpi
   call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
 
   if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mod(sizeval,NUMBER_OF_SIMULTANEOUS_RUNS) /= 0) then
-    if (myrank == 0) print*,'Error: the number of MPI processes ',sizeval, &
+    if (myrank == 0) print *,'Error: the number of MPI processes ',sizeval, &
                             ' is not a multiple of NUMBER_OF_SIMULTANEOUS_RUNS = ',NUMBER_OF_SIMULTANEOUS_RUNS
     stop 'the number of MPI processes is not a multiple of NUMBER_OF_SIMULTANEOUS_RUNS'
   endif
