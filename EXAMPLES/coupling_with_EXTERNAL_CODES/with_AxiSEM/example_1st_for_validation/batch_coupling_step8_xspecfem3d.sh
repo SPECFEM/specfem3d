@@ -39,7 +39,7 @@ source paths_for_coupling_SPECFEM3D_AxiSEM.sh
 ### Check AxiSEM directory for previous steps
 
 # ----------------------------------------------------
-# 8 / ------- Run simulation with specfem3D 
+# 8 / ------- Run simulation with specfem3D
 # ----------------------------------------------------
 
 source ${HOME_AxiSEM}/scripts_SPECFEM3D_for_AxiSEM.sh
