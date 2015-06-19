@@ -239,7 +239,7 @@
 
 !!-----------------------------------------------------------
 !!
-!! C-PML absorbing boundary conditions
+!! CPML perfectly matched absorbing layers
 !!
 !!-----------------------------------------------------------
 
@@ -258,6 +258,10 @@
   integer, parameter :: CPML_XZ_ONLY = 5
   integer, parameter :: CPML_YZ_ONLY = 6
   integer, parameter :: CPML_XYZ = 7
+
+  ! tolerance to automatically detect where the PMLs are in the case of the internal mesher
+  real(kind=CUSTOM_REAL), parameter :: SMALL_PERCENTAGE_TOLERANCE = 1.005_CUSTOM_REAL
+
 
 !!-----------------------------------------------------------
 !!
