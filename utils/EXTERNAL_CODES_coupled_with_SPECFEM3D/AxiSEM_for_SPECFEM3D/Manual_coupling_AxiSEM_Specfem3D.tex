@@ -1,0 +1,353 @@
+\documentclass[11pt]{article}
+%
+%\usepackage{kmath,kerkis} 
+\usepackage{mathpazo}
+%\usepackage{palatino}
+\usepackage[T1]{fontenc} 
+\usepackage{amsfonts}
+\usepackage{mathrsfs}
+\usepackage{amsthm}
+\usepackage{dsfont}
+%\usepackage{marvosym}
+\usepackage{eurosym}
+\usepackage{stmaryrd}
+%\usepackage{gensymb}
+\usepackage{hhline}
+\usepackage{pifont}
+\usepackage{fancybox}
+\usepackage{enumerate}
+%\usepackage{enumitem}
+\usepackage{multirow}
+\usepackage[table]{xcolor}
+\usepackage[normalem]{ulem}
+\usepackage{amsmath,amssymb}             % AMS Math
+\usepackage[french]{babel}
+\frenchbsetup{StandardLists=true}
+%\usepackage{esint}
+%\usepackage[latin1]{inputenc}
+
+%\usepackage[hmargin=2cm,vmargin=4cm]{geometry}
+%\usepackage[left=2.7cm,right=2cm,top=2.3cm,bottom=2.3cm,includefoot,includehead,headheight=13.6pt]{geometry}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\definecolor{goldp}{rgb}{0.99 0.92 0.8}
+\definecolor{oxblue}{RGB}{2 33 71}
+\definecolor{cobalt}{RGB}{0 71 171}
+\definecolor{impb}{RGB}{20 35 149}
+\definecolor{graylight}{gray}{0.85}
+\definecolor{denim}{RGB}{21 96 189}
+\definecolor{bgreen}{RGB}{13 152 186}
+\definecolor{bdeaux}{RGB}{153 12 20}
+\definecolor{linkcol}{rgb}{0,0,0.4} 
+\definecolor{citecol}{rgb}{0.5,0.01,0.02}
+\definecolor{lsb}{RGB}{120, 200, 200}
+
+\DeclareSymbolFont{calletters}{OMS}{cmsy}{m}{n}
+\DeclareSymbolFontAlphabet{\mathcal}{calletters}   
+
+\newcommand{\bw}{\mathbf{w}} 
+\newcommand{\be}{\mathbf{e}}  
+\newcommand{\bh}{\mathbf{h}}  
+\newcommand{\bT}{\mathbf{T}}  
+\newcommand{\bU}{\mathbf{U}} 
+\newcommand{\bV}{\mathbf{V}} 
+\newcommand{\bB}{\mathbf{B}}     
+\newcommand{\bD}{\mathbf{D}}     
+\newcommand{\bE}{\mathbf{E}}     
+\newcommand{\bH}{\mathbf{H}}     
+\newcommand{\bJ}{\mathbf{J}}     
+\newcommand{\bS}{\mathbf{S}}  
+\newcommand{\bW}{\mathbf{W}}  
+\newcommand{\bX}{\mathbf{X}}     
+\newcommand{\bY}{\mathbf{Y}}    
+\newcommand{\bn}{\mathbf{n}}     
+\newcommand{\bx}{\mathbf{x}}     
+\newcommand{\rmT}{\mathrm{T}} 
+\newcommand{\rmS}{\mathrm{S}} 
+\newcommand{\ci}{\mathbf{i}}     
+\newcommand{\ds}{\displaystyle} 
+\newcommand{\tr}{^{\mathrm{T}}}
+\newcommand{\ie}{i.e.~}
+
+\usepackage{hyperref}
+\usepackage{amsfonts}
+\usepackage{mathrsfs}
+\usepackage{amssymb}
+\usepackage{dsfont}
+\usepackage{color}
+%\usepackage[left=2.7cm,right=2cm,top=2.3cm,bottom=2.3cm,includefoot,includehead,headheight=13.6pt]{geometry}
+\usepackage[hmargin=2.44cm,vmargin=2.2cm]{geometry}
+\usepackage{graphics}
+\usepackage{graphicx}
+  
+%
+\def\R{\hbox{I\kern-0.2em\hbox{R}}}
+\def\expg#1#2{{\vphantom{#1}}^{#2}\!#1}
+\def\t#1{\expg{\!#1}{t}}
+
+\def\restriction#1#2{\mathchoice
+              {\setbox1\hbox{${\displaystyle #1}_{\scriptstyle #2}$}
+              \restrictionaux{#1}{#2}}
+              {\setbox1\hbox{${\textstyle #1}_{\scriptstyle #2}$}
+              \restrictionaux{#1}{#2}}
+              {\setbox1\hbox{${\scriptstyle #1}_{\scriptscriptstyle #2}$}
+              \restrictionaux{#1}{#2}}
+              {\setbox1\hbox{${\scriptscriptstyle #1}_{\scriptscriptstyle #2}$}
+              \restrictionaux{#1}{#2}}}
+\def\restrictionaux#1#2{{#1\,\smash{\vrule height .8\ht1 depth .85\dp1}}_{\,#2}}
+
+\date{}
+ 
+\begin{document}
+{\huge {\sc {\centerline{Coupling AxiSEM and Specfem3D}} }}
+
+\bigskip
+\bigskip
+\bigskip
+
+\noindent {\bf{Authors:}} V. Monteiller, C. Durochat
+
+\bigskip
+\bigskip
+
+\noindent NOTE : We have to finally choose which AxiSEM version we add and definitely use for coupling with SPECFEM3D.
+
+\medskip
+
+\noindent The paths present here are form specfem3d home directory.
+
+\medskip
+
+\noindent {\LARGE Here, \texttt{'run'}  is an alias for Curie defined as : \texttt{run='ccc\_msub -q standard'}.}
+
+\bigskip
+
+\section{STEP 1 : meshfem3D}
+
+\begin{itemize}
+
+\item[\textbullet] Go in 'EXAMPLES/coupling\_with\_EXTERNAL\_CODES/with\_AxiSEM/example\_1st\_for\_validation'
+
+\item[\textbullet] Type : \\
+
+\noindent ./clean\_this\_example\_dir.sh
+
+\smallskip
+
+\noindent run ./batch\_coupling\_step1\_create\_dir\_and\_paths\_+\_meshfem3d\_for\_AxiSEM.sh
+
+\end{itemize}
+
+\noindent It generate mesh files (on 1 proc on Curie), and copy files 'list\_gll\_boundary\_spherical.txt' and 'list\_gll\_boundary\_cartesian.txt' in AxiSEM solver dir
+
+\medskip
+
+\noindent Also, check Meshfem3D with parameters : 
+
+\begin{itemize}
+
+\item[\textbullet] In the directory MESH/ :
+
+\begin{itemize}
+
+\item[\textbullet] ParFileMeshChunk  : parameters for the chunk meshing
+
+\item[\textbullet] iasp91\_dsm or prem\_dsm : background model used in both AxiSEM ans Specfem3D
+
+\end{itemize}
+
+
+\item[\textbullet] In the Directory DATA/
+
+\item[\textbullet] CMTSOLUTION  : with 0 in order to not use source inside
+
+\item[\textbullet] coeff\_poly\_deg12 : to generate smooth intitial solution
+
+\item[\textbullet] STATIONS  : stations files 
+
+\item[\textbullet] Par\_file : with
+
+\item[\textbullet] SIMULATION\_TYPE=1 
+
+\item[\textbullet] SAVE\_FORWARD = .false. 
+
+\item[\textbullet] COUPLE\_WITH\_EXTERNAL\_CODE = .true 
+
+\item[\textbullet] EXTERNAL\_CODE\_TYPE    = 2 
+
+\end{itemize}
+
+
+\section{STEP 2 : AxiSEM mesher}
+
+\noindent Go in  : {\scriptsize  'utils/EXTERNAL\_CODES\_coupled\_with\_SPECFEM3D/AxiSEM\_for\_SPECFEM3D/AxiSEM\_modif\_for\_coupling\_with\_specfem/MESHER'}.
+
+\medskip
+
+\noindent Check the file 'inparam\_mesh'
+
+\medskip
+
+\noindent Type : ./submit.csh
+
+\medskip
+
+\noindent It run the mesher in serial : check file OUTPUT (wait for "....DONE WITH MESHER" to appear in OUTPUT)
+
+\medskip
+
+\noindent Type : ./movemesh.csh NAME\_OF\_DESTINATION\_MESH\_DIR
+
+\medskip
+
+\noindent It moves mesh files to ../SOLVER/MESHES/NAME\_OF\_DESTINATION\_MESH\_DIR
+
+\medskip
+
+\noindent For more details, see Axisem manual.
+
+\section{STEP 3 : AxiSEM solver}
+
+\noindent 2 files produced by meshfem3D (input\_box.txt and input\_box\_sem\_cart.txt) were copied (and the first line indicating the number of line to be read were add at the beginning of the files too) during the STEP 1 in the AxiSEM SOLVER dir. 
+
+\medskip
+
+\noindent Go in {\scriptsize 'utils/EXTERNAL\_CODES\_coupled\_with\_SPECFEM3D/AxiSEM\_for\_SPECFEM3D/AxiSEM\_modif\_for\_coupling\_with\_specfem/SOLVER'}
+
+\medskip
+
+\noindent Check 'inparam\_basic' (set the value for MESHNAME to the meshname from above, among others), and also (differences with *.TEMPLATES provided
+by AxiSEM) :
+ 
+\begin{itemize} 
+ 
+\item[\textbullet] ATTENUATION         false 
+\item[\textbullet] SAVE\_SNAPSHOTS     true 
+
+\end{itemize}
+
+\medskip
+
+\noindent Check 'inparam\_advanced' :
+
+\begin{itemize} 
+ 
+\item[\textbullet] KERNEL\_WAVEFIELDS   true
+\item[\textbullet] KERNEL\_IBEG         0 
+\item[\textbullet] KERNEL\_IEND         4
+
+\end{itemize}
+
+\medskip
+
+\noindent Type : ./sub\_launch\_script\_for\_run\_AxiSEM\_Curie\_CD.csh NAME\_OF\_RESULTS\_DIR
+
+\smallskip
+
+\noindent !! CAUTION : don't forget "NAME\_OF\_RESULTS\_DIR" (it will be your results folder, and a subfolder of SOLVER/) !!
+
+\smallskip
+
+\noindent It run, on N procs in batch on Curie, the compilation and the execution of  AxiSEM solver.
+Among others, this script calls : \\
+
+\noindent ./add\_line\_number\_in\_points\_lists.sh (rename files 'list\_gll\_boundary\_spherical.txt' \& \\ 'list\_gll\_boundary\_cartesian.txt', and add number of lines) \\
+
+\noindent run ./sub\_called\_batch\_for\_AxiSEM\_Curie\_CD.sh (submit the job on Curie)
+
+
+\section{STEP 4 : Specfem Partitionning ~ \& ~ STEP 5 : Specfem Generate database}
+
+\noindent Go back in 'EXAMPLES/coupling\_with\_EXTERNAL\_CODES/with\_AxiSEM/example\_1st\_for\_validation'
+
+\medskip
+
+\noindent Type : run ./batch\_coupling\_step4\_and\_step5\_scotch\_part\_and\_generdata\_for\_AxiSEM.sh
+
+\medskip
+
+\noindent !! CAUTION : the number of procs in DATA/Par\_file, have to be the same as in the 'inparam\_mesh' (cf STEP 2) of AxiSEM !!
+
+
+\section{Interface $\Longrightarrow$ STEP 6 : expand 2D to 3D ~ \& ~ STEP 7 : reformat}
+
+\noindent Go in {\scriptsize 'utils/EXTERNAL\_CODES\_coupled\_with\_SPECFEM3D/AxiSEM\_for\_SPECFEM3D/AxiSEM\_modif\_for\_coupling\_with\_specfem/SOLVER'}
+
+\medskip
+
+\begin{itemize}
+
+\item[\textbullet] Check the file 'expand\_2D\_3D.par', cf the paths in the 3 last lines !! ==> Caution : for the tractions path (Tractions/1/), the directory need to be created !! ==> it is created in the script 'sub\_launch\_script\_for\_make\_+\_run\_expand2D3D\_and\_reformat\_Curie\_CD.sh', but if you don't use this script, you have to create the directory yourself
+
+\smallskip
+
+\noindent Example : 
+\begin{verbatim}
+
+input_box.txt 
+input_box_sem_cart.txt 
+32                          # number of AxiSEM mpi processes used in solver  
+90. 0.                      # source position (lat lon)  
+0.  60.                     # chunk center (lat lon)    
+1                           # number of axisem simus depends on moment tensor used  
+32                          # number of Specfem3D MPI processes  
+/[...]/example_1st_for_validation/MESH                           # Specfem MESH dir
+/[...]/example_1st_for_validation/OUTPUT_FILES/DATABASES_MPI     # Specfem databases dir
+/[...]/AxiSEM_modif_for_coupling_with_specfem/SOLVER/Tractions/1 # AxiSEM tractions dir
+
+\end{verbatim}
+
+\item[\textbullet] Check the file 'reformat.par'
+
+\smallskip
+
+\noindent Example : 
+\begin{verbatim}
+
+10.         # output sampling in Hz (time step that will use in Specfem3D simu) \newline
+710. 1800.  # begin time and end time (s.) \newline
+
+\end{verbatim}
+
+\end{itemize}
+
+\medskip
+
+\noindent You can launch the compilation (of expand\_2D\_3D and reformat) AND the execution of this two programs with the single script : 
+
+\smallskip
+
+\noindent ./sub\_launch\_script\_for\_make\_+\_run\_expand2D3D\_and\_reformat\_Curie\_CD.sh NAME\_OF\_RESULTS\_DIR
+
+\medskip
+
+\noindent !! CAUTION : don't forget "NAME\_OF\_RESULTS\_DIR" !!
+
+\medskip
+
+\noindent It will do the compilation, launch ./sub\_called\_batch\_for\_expand2D3D\_Curie\_CD.sh, and at the end, launch ./sub\_called\_batch\_for\_reformat\_Curie\_CD.sh $\Longleftarrow$ IMPORTANT : for the expand\_2D\_3D part, the number processes is arbitrary, BUT for the reformat part you have to configure the batch with the **SAME** number of processes that Specfem3D will use. Onefile is created by one process for one Spefem3D partion of domain.
+
+\smallskip
+
+\noindent All the results will be in 'NAME\_OF\_RESULTS\_DIR'. 
+
+\bigskip
+
+\noindent If you prefer you do this step by step : 
+
+\begin{itemize}
+
+\item[\textbullet] Go in {\scriptsize 'utils/EXTERNAL\_CODES\_coupled\_with\_SPECFEM3D/AxiSEM\_for\_SPECFEM3D/UTILS\_COUPLING\_SpecFEM'} to make the compilation.
+\item[\textbullet] Go in NAME\_OF\_RESULTS\_DIR and type : run ../sub\_called\_batch\_for\_expand2D3D\_Curie\_CD.sh to submit expand\_2D\_3D
+\item[\textbullet] Go in NAME\_OF\_RESULTS\_DIR and type : run ../sub\_called\_batch\_for\_reformat\_Curie\_CD.sh to submit reformat
+
+\end{itemize}
+
+\section{STEP 8 : Running specfem3D}
+
+
+\section{STEP ? : Set up scripts}
+
+
+\end{document}
