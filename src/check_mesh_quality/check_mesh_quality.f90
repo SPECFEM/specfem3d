@@ -295,7 +295,7 @@
   print *
 
 ! create statistics about mesh quality
-  print *,'creating histogram and statistics of mesh quality'
+  print *,'creating histogram of mesh quality'
 
 ! erase histogram of skewness
   classes_skewness(:) = 0

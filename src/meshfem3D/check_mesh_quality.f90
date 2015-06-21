@@ -255,7 +255,7 @@
     write(IMAIN,*)
 
     ! create statistics about mesh quality
-    write(IMAIN,*) 'creating histogram and statistics of mesh quality'
+    write(IMAIN,*) 'creating histogram of mesh quality'
     call flush_IMAIN()
   endif
 
