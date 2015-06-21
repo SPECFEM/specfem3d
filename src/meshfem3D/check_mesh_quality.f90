@@ -412,7 +412,7 @@
   double precision, dimension(NGNOD_EIGHT_CORNERS) :: xelm,yelm,zelm
   double precision :: vectorA_x,vectorA_y,vectorA_z
   double precision :: vectorB_x,vectorB_y,vectorB_z
-  double precision :: norm_A,norm_B,angle_vectors
+  double precision :: norm_A,norm_B,angle_vectors,argument_of_arccos
   double precision :: dist,dist1,dist2,dist3,dist4
 
   ! maximum polynomial degree for which we can compute the stability condition
@@ -522,11 +522,17 @@
         norm_A = sqrt(vectorA_x**2 + vectorA_y**2 + vectorA_z**2)
         norm_B = sqrt(vectorB_x**2 + vectorB_y**2 + vectorB_z**2)
 
-        ! angle formed by the two vectors
-        angle_vectors = dacos((vectorA_x*vectorB_x + vectorA_y*vectorB_y + vectorA_z*vectorB_z) / (norm_A * norm_B))
+! angle formed by the two vectors
+         argument_of_arccos = (vectorA_x*vectorB_x + vectorA_y*vectorB_y + vectorA_z*vectorB_z) / (norm_A * norm_B)
 
-        ! compute equiangle skewness
-        equiangle_skewness = max(equiangle_skewness,dabs(2.d0 * angle_vectors - PI) / PI)
+! compute equiangle skewness
+         if(abs(argument_of_arccos) <= 0.9999999d0) then
+           angle_vectors = dacos(argument_of_arccos)
+           equiangle_skewness = max(equiangle_skewness,dabs(2.d0 * angle_vectors - PI) / PI)
+         else
+           angle_vectors = 0.d0
+           equiangle_skewness = 1.d0
+         endif
 
         ! compute min and max size of an edge
         dist = sqrt(vectorA_x**2 + vectorA_y**2 + vectorA_z**2)
