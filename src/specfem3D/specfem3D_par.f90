@@ -78,8 +78,10 @@ module specfem_par
   integer, dimension(:), allocatable :: free_surface_ispec
   integer :: num_free_surface_faces
 
-! for new method
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: Veloc_dsm_boundary,Tract_dsm_boundary
+! for couple with external code : DSM and AxiSEM (add by VM) for the moment
+  integer :: it_dsm
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: Veloc_dsm_boundary, Tract_dsm_boundary
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: Veloc_axisem, Tract_axisem
 
 ! attenuation
   integer :: NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa
@@ -91,11 +93,12 @@ module specfem_par
 ! time scheme
   real(kind=CUSTOM_REAL) deltat,deltatover2,deltatsqover2
 
+! LDDRK time scheme
+  integer :: NSTAGE_TIME_SCHEME,istage
+  integer :: NGLOB_AB_LDDRK, NSPEC_ATTENUATION_AB_LDDRK, NSPEC_ATTENUATION_AB_kappa_LDDRK
+
 ! time loop step
   integer :: it
-
-! for coupling with DSM
-  integer :: it_dsm
 
 ! parameters for the source
   integer, dimension(:), allocatable :: islice_selected_source,ispec_selected_source
@@ -206,6 +209,11 @@ module specfem_par
   ! gravity
   real(kind=CUSTOM_REAL), dimension(:),allocatable :: minus_deriv_gravity,minus_g
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: wgll_cube
+
+  ! for surface or volume integral on whole domain
+  double precision :: integral_vol, integral_boun
+  double precision, dimension(:), allocatable :: f_integrand
+
 
 ! ADJOINT parameters
 
@@ -349,6 +357,16 @@ module specfem_par_elastic
   integer, dimension(:), allocatable :: b_request_send_vector_ext_mesh
   integer, dimension(:), allocatable :: b_request_recv_vector_ext_mesh
 
+  ! LDDRK time scheme
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: displ_lddrk,veloc_lddrk
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: &
+    R_trace_lddrk,R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk
+  ! adjoint
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: b_displ_lddrk, b_veloc_lddrk
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: &
+    b_R_trace_lddrk,b_R_xx_lddrk,b_R_yy_lddrk,b_R_xy_lddrk,b_R_xz_lddrk,b_R_yz_lddrk
+
+
 end module specfem_par_elastic
 
 !=====================================================================
@@ -416,6 +434,9 @@ module specfem_par_acoustic
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: b_buffer_recv_scalar_ext_mesh
   integer, dimension(:), allocatable :: b_request_send_scalar_ext_mesh
   integer, dimension(:), allocatable :: b_request_recv_scalar_ext_mesh
+
+  ! LDDRK time scheme
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: potential_acoustic_lddrk,potential_dot_acoustic_lddrk
 
 end module specfem_par_acoustic
 

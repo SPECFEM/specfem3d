@@ -314,7 +314,7 @@ end module user_noise_distribution
 
     ! checks if surface element belongs to elastic domain
     if (ispec_is_acoustic(ispec)) then
-      print*,'error noise simulation: element',ispec,'is acoustic'
+      print *,'error noise simulation: element',ispec,'is acoustic'
       stop 'error: noise for acoustic elements not implemented yet!'
     endif
 
@@ -418,7 +418,7 @@ end module user_noise_distribution
       if (NSPEC_TOP > 2147483646 / (CUSTOM_REAL * NGLLSQUARE * NDIM)) then
         print *,'reclen of noise surface_movie needed exceeds integer 4-byte limit: ',reclen
         print *,'  ',CUSTOM_REAL, NDIM, NGLLSQUARE, NSPEC_TOP
-        print*,'bit size fortran: ',bit_size(NSPEC_TOP)
+        print *,'bit size fortran: ',bit_size(NSPEC_TOP)
         call exit_MPI(myrank,"error NSPEC_TOP integer limit")
       endif
 
@@ -566,7 +566,7 @@ end module user_noise_distribution
   integer :: i,j,k,iglob,ispec, it
 
   if (irec_master_noise <= 0) then
-    print*,'error rank',myrank,irec_master_noise
+    print *,'error rank',myrank,irec_master_noise
     stop 'error irec_master_noise'
   endif
 
@@ -775,7 +775,7 @@ end module user_noise_distribution
 ! step 3: constructing noise source strength kernel
 
   subroutine compute_kernels_strength_noise(nmovie_points,ibool, &
-                          Sigma_kl,displ,deltat,it, &
+                          sigma_kl,displ,deltat,it, &
                           normal_x_noise,normal_y_noise,normal_z_noise, &
                           noise_surface_movie, &
                           NSPEC_AB_VAL,NGLOB_AB_VAL, &
@@ -801,7 +801,7 @@ end module user_noise_distribution
   integer, dimension(3,NGLLSQUARE,num_free_surface_faces) :: free_surface_ijk
 
   ! output parameters
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL) :: Sigma_kl
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL) :: sigma_kl
 
   ! local parameters
   integer :: i,j,k,ispec,iglob,ipoin,iface,igll
@@ -815,7 +815,7 @@ end module user_noise_distribution
   ! updates contribution to noise strength kernel
   if (num_free_surface_faces > 0) then
 
-    ! read surface movie, needed for Sigma_kl
+    ! read surface movie, needed for sigma_kl
     call read_abs(2,noise_surface_movie,CUSTOM_REAL*NDIM*NGLLSQUARE*num_free_surface_faces,it)
 
     if (.NOT. GPU_MODE) then
@@ -840,10 +840,10 @@ end module user_noise_distribution
           iglob = ibool(i,j,k,ispec)
 
           eta = noise_surface_movie(1,igll,iface) * normal_x_noise(ipoin) + &
-               noise_surface_movie(2,igll,iface) * normal_y_noise(ipoin) + &
-               noise_surface_movie(3,igll,iface) * normal_z_noise(ipoin)
+                noise_surface_movie(2,igll,iface) * normal_y_noise(ipoin) + &
+                noise_surface_movie(3,igll,iface) * normal_z_noise(ipoin)
 
-          Sigma_kl(i,j,k,ispec) =  Sigma_kl(i,j,k,ispec) &
+          sigma_kl(i,j,k,ispec) =  sigma_kl(i,j,k,ispec) &
                + deltat * eta * ( normal_x_noise(ipoin) * displ(1,iglob) &
                + normal_y_noise(ipoin) * displ(2,iglob) &
                + normal_z_noise(ipoin) * displ(3,iglob) )
@@ -864,7 +864,7 @@ end module user_noise_distribution
 ! =============================================================================================================
 
 ! step 3: save noise source strength kernel
-  subroutine save_kernels_strength_noise(myrank,LOCAL_PATH,Sigma_kl,NSPEC_AB_VAL)
+  subroutine save_kernels_strength_noise(myrank,LOCAL_PATH,sigma_kl,NSPEC_AB_VAL)
 
   use constants
 
@@ -873,7 +873,7 @@ end module user_noise_distribution
   ! input parameters
   integer myrank
   integer :: NSPEC_AB_VAL
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL) :: Sigma_kl
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL) :: sigma_kl
   character(len=MAX_STRING_LEN) :: LOCAL_PATH
   ! local parameters
   character(len=MAX_STRING_LEN) :: prname
@@ -882,7 +882,7 @@ end module user_noise_distribution
 
   open(unit=IOUT_NOISE,file=trim(prname)//'sigma_kernel.bin',status='unknown', &
        form='unformatted',action='write')
-  write(IOUT_NOISE) Sigma_kl
+  write(IOUT_NOISE) sigma_kl
   close(IOUT_NOISE)
 
   end subroutine save_kernels_strength_noise

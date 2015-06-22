@@ -178,6 +178,9 @@
 ! Big storage version of coupling with DSM (will always set to .false. after the light storage version will be validated)
   logical, parameter :: old_DSM_coupling_from_Vadim = .true.
 
+! for subroutine compute_vol_or_surf_integral_on_whole_domain
+  integer, parameter :: Surf_or_vol_integral    = 1  !!! 1 = Surface integral, 2 = Volume, 3 = Both
+
 ! some old tests (currently unstable; do not remove them though, we might fix this one day)
   integer, parameter :: IIN_veloc_dsm = 51, IIN_tract_dsm = 52, Ntime_step_dsm = 100
 
@@ -187,9 +190,14 @@
 !!
 !!-----------------------------------------------------------
 
-! interpolates position to find best possible location closest to target position (default)
-! note: this can be turned off to speedup location search and locate the source at the closest GLL point instead
-  logical, parameter :: USE_BEST_LOCATION = .true.
+! sources
+
+! flag to exclude elements that are too far from target in source detection
+  logical, parameter :: USE_DISTANCE_CRITERION = .true.
+
+! interpolates position to find the best possible location for the source, between GLL points if needed.
+! note: this can be turned off to speedup location search and locate the source at the closest GLL point instead.
+  logical, parameter :: USE_BEST_LOCATION_FOR_SOURCE = .true.
 
 ! flag to print the details of source location
   logical, parameter :: SHOW_DETAILS_LOCATE_SOURCE = .false.
@@ -207,42 +215,7 @@
 ! was found by trial and error
   double precision, parameter :: SOURCE_DECAY_MIMIC_TRIANGLE = 1.628d0
 
-!!-----------------------------------------------------------
-!!
-!! C-PML absorbing boundary conditions
-!!
-!!-----------------------------------------------------------
-
-! power (exponent) used for the PML damping profile
-  real(kind=CUSTOM_REAL), parameter :: NPOWER = 1._CUSTOM_REAL
-
-! C-PML theoretical reflection coefficient
-! (INRIA research report section 6.1:  http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf)
-  real(kind=CUSTOM_REAL), parameter :: CPML_Rcoef = 0.001_CUSTOM_REAL
-
-! flags for the seven CPML regions
-  integer, parameter :: CPML_X_ONLY = 1
-  integer, parameter :: CPML_Y_ONLY = 2
-  integer, parameter :: CPML_Z_ONLY = 3
-  integer, parameter :: CPML_XY_ONLY = 4
-  integer, parameter :: CPML_XZ_ONLY = 5
-  integer, parameter :: CPML_YZ_ONLY = 6
-  integer, parameter :: CPML_XYZ = 7
-
-!!-----------------------------------------------------------
-!!
-!! directory structure
-!!
-!!-----------------------------------------------------------
-
-! paths for inputs and outputs files
-  character(len=*), parameter :: IN_DATA_FILES = './DATA/'
-  character(len=*), parameter :: MF_IN_DATA_FILES = './DATA/meshfem3D_files/'
-  character(len=*), parameter :: OUTPUT_FILES_BASE = './OUTPUT_FILES/'
-
-!
-!------------------------------------------------------
-!
+! receivers
 
 ! no Lagrange interpolation for seismograms (we then take the value at the closest NGLL point, which is less accurate but faster)
   logical, parameter :: FASTER_RECEIVERS_POINTS_ONLY = .false.
@@ -263,6 +236,43 @@
 ! Z record corresponds to the normal, while E and N are two tangent vectors
 ! that completes an orthonormal.
   logical, parameter :: EXTERNAL_MESH_RECEIVERS_NORMAL = .false.
+
+!!-----------------------------------------------------------
+!!
+!! CPML perfectly matched absorbing layers
+!!
+!!-----------------------------------------------------------
+
+! power (exponent) used for the PML damping profile
+  real(kind=CUSTOM_REAL), parameter :: NPOWER = 1._CUSTOM_REAL
+
+! C-PML theoretical reflection coefficient
+! (INRIA research report section 6.1:  http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf)
+  real(kind=CUSTOM_REAL), parameter :: CPML_Rcoef = 0.001_CUSTOM_REAL
+
+! flags for the seven CPML regions
+  integer, parameter :: CPML_X_ONLY = 1
+  integer, parameter :: CPML_Y_ONLY = 2
+  integer, parameter :: CPML_Z_ONLY = 3
+  integer, parameter :: CPML_XY_ONLY = 4
+  integer, parameter :: CPML_XZ_ONLY = 5
+  integer, parameter :: CPML_YZ_ONLY = 6
+  integer, parameter :: CPML_XYZ = 7
+
+  ! tolerance to automatically detect where the PMLs are in the case of the internal mesher
+  real(kind=CUSTOM_REAL), parameter :: SMALL_PERCENTAGE_TOLERANCE = 1.005_CUSTOM_REAL
+
+
+!!-----------------------------------------------------------
+!!
+!! directory structure
+!!
+!!-----------------------------------------------------------
+
+! paths for inputs and outputs files
+  character(len=*), parameter :: IN_DATA_FILES = './DATA/'
+  character(len=*), parameter :: MF_IN_DATA_FILES = './DATA/meshfem3D_files/'
+  character(len=*), parameter :: OUTPUT_FILES_BASE = './OUTPUT_FILES/'
 
 
 !!-----------------------------------------------------------
@@ -345,6 +355,11 @@
 ! for optimized routines by Deville et al. (2002)
   integer, parameter :: m1 = NGLLX, m2 = NGLLX * NGLLY
   integer, parameter :: NGLLCUBE = NGLLX * NGLLY * NGLLZ
+
+! mid-points inside a GLL element
+  integer, parameter :: MIDX = (NGLLX+1)/2
+  integer, parameter :: MIDY = (NGLLY+1)/2
+  integer, parameter :: MIDZ = (NGLLZ+1)/2
 
 ! a few useful constants
   double precision, parameter :: ZERO = 0.d0, ONE = 1.d0, TWO = 2.d0, HALF = 0.5d0
@@ -493,4 +508,23 @@
   logical, parameter :: ADD_TIME_ESTIMATE_ELSEWHERE = .false.
   integer, parameter :: HOURS_TIME_DIFFERENCE = +9
   integer, parameter :: MINUTES_TIME_DIFFERENCE = +0
+
+!!-----------------------------------------------------------
+!!
+!! for LDDRK high-order time scheme
+!!
+!!-----------------------------------------------------------
+  integer, parameter :: NSTAGE = 6
+
+  real(kind=CUSTOM_REAL), dimension(NSTAGE), parameter :: ALPHA_LDDRK = &
+    (/0.0_CUSTOM_REAL,-0.737101392796_CUSTOM_REAL, -1.634740794341_CUSTOM_REAL,&
+      -0.744739003780_CUSTOM_REAL,-1.469897351522_CUSTOM_REAL,-2.813971388035_CUSTOM_REAL/)
+
+  real(kind=CUSTOM_REAL), dimension(NSTAGE), parameter :: BETA_LDDRK = &
+    (/0.032918605146_CUSTOM_REAL,0.823256998200_CUSTOM_REAL,0.381530948900_CUSTOM_REAL,&
+      0.200092213184_CUSTOM_REAL,1.718581042715_CUSTOM_REAL,0.27_CUSTOM_REAL/)
+
+  real(kind=CUSTOM_REAL), dimension(NSTAGE), parameter :: C_LDDRK = &
+    (/0.0_CUSTOM_REAL,0.032918605146_CUSTOM_REAL,0.249351723343_CUSTOM_REAL,&
+      0.466911705055_CUSTOM_REAL,0.582030414044_CUSTOM_REAL,0.847252983783_CUSTOM_REAL/)
 

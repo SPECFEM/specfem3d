@@ -46,8 +46,8 @@
   open(unit=IIN,file=prname(1:len_trim(prname))//'Database', &
         status='old',action='read',form='unformatted',iostat=ier)
   if (ier /= 0) then
-    print*,'rank ',myrank,'- Error opening file: ',prname(1:len_trim(prname))//'Database'
-    print*,'please make sure file exists'
+    print *,'rank ',myrank,'- Error opening file: ',prname(1:len_trim(prname))//'Database'
+    print *,'please make sure file exists'
     call exit_mpi(myrank,'Error opening database file')
   endif
   read(IIN) nnodes_ext_mesh
@@ -72,6 +72,8 @@
 
   allocate(materials_ext_mesh(16,nmat_ext_mesh),stat=ier)
   if (ier /= 0) stop 'Error allocating array materials_ext_mesh'
+  materials_ext_mesh(:,:) = 0.d0
+
   do imat = 1, nmat_ext_mesh
      ! (visco)elastic or acoustic format:
      ! #(1) rho   #(2) vp  #(3) vs  #(4) Q_mu  #(5) anisotropy_flag  #(6) material_domain_id  #(7) Q_kappa

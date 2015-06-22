@@ -1,0 +1,30 @@
+AxiSEM 1.0 (2013/12/19, SVN revision 1089):
+
+Questions/contact: info@axisem.info
+Webpage/distribution: http://www.axisem.info
+
+First general release of AxiSEM.
+
+Working: 
+ - 1D models included (PREM, IASP91, AK135 with different modifications)
+ - External 1D models
+ - Models can include solid and fluid zones
+ - Axially symmetric heterogeneities
+ - Attenuation
+ - Anisotropy
+ - General moment tensor and force sources
+ - Receiver locations on the surface
+ - Benchmarked for elastic models against yspec (Al Attar & Woodhose, 2008) 
+   up to 1 Hz
+ - Newmark time integration scheme tested and benchmarked against YSPEC
+ - Symplectic time integration scheme tested, but not fully benchmarked
+ - NetCDF output 
+ - Postprocessing to produce ASCII seismogram files
+ - Mesh decomposition up to 32 processors radially and 500+ (depending on 
+   frequency) laterally
+
+Known issues:
+ - Other time integration schemes are not reliably working.
+ - Source time function 'quheavi' is not working reliably.
+ - Receivers must be on surface.
+ - Uppermost layer of model must be solid.

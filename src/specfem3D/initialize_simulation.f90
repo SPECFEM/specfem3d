@@ -237,10 +237,10 @@
     if (myrank == 0) then
       write(IMAIN,*) 'error: number of processors supposed to run on: ',NPROC
       write(IMAIN,*) 'error: number of MPI processors actually run on: ',sizeprocs
-      print*
-      print*, 'error specfem3D: number of processors supposed to run on: ',NPROC
-      print*, 'error specfem3D: number of MPI processors actually run on: ',sizeprocs
-      print*
+      print *
+      print *, 'error specfem3D: number of processors supposed to run on: ',NPROC
+      print *, 'error specfem3D: number of MPI processors actually run on: ',sizeprocs
+      print *
     endif
     call exit_MPI(myrank,'wrong number of MPI processes')
   endif
@@ -273,25 +273,25 @@
     if (NGLLX /= NGLLY .and. NGLLY /= NGLLZ) &
       stop 'STACEY_ABSORBING_CONDITIONS must have NGLLX = NGLLY = NGLLZ'
     if (PML_CONDITIONS) then
-      print*, 'please modify Par_file and recompile solver'
+      print *, 'please modify Par_file and recompile solver'
       stop 'STACEY_ABSORBING_CONDITIONS and PML_CONDITIONS are both set to .true.'
     else if (PML_INSTEAD_OF_FREE_SURFACE) then
-      print*, 'please modify Par_file and recompile solver'
+      print *, 'please modify Par_file and recompile solver'
       stop 'PML_INSTEAD_OF_FREE_SURFACE = .true. is incompatible with STACEY_ABSORBING_CONDITIONS = .true.'
     endif
   else
     if (STACEY_INSTEAD_OF_FREE_SURFACE) then
-      print*, 'please modify Par_file and recompile solver'
+      print *, 'please modify Par_file and recompile solver'
       stop 'STACEY_ABSORBING_CONDITIONS must be activated when STACEY_INSTEAD_OF_FREE_SURFACE is set to .true.'
     endif
   endif
 
   if (PML_CONDITIONS) then
     if (STACEY_INSTEAD_OF_FREE_SURFACE) then
-      print*, 'please modify Par_file and recompile solver'
+      print *, 'please modify Par_file and recompile solver'
       stop 'STACEY_INSTEAD_OF_FREE_SURFACE = .true. is incompatible with PML_CONDITIONS = .true.'
     else if (.not. SUPPRESS_UTM_PROJECTION) then
-      print*, 'please modify Par_file and recompile solver'
+      print *, 'please modify Par_file and recompile solver'
       stop 'SUPPRESS_UTM_PROJECTION must be activated when PML_CONDITIONS is set to .true.'
     endif
   else
@@ -300,7 +300,7 @@
   endif
 
   if (STACEY_INSTEAD_OF_FREE_SURFACE .and. PML_INSTEAD_OF_FREE_SURFACE) then
-    print*, 'please modify Par_file and recompile solver'
+    print *, 'please modify Par_file and recompile solver'
     stop 'error: STACEY_INSTEAD_OF_FREE_SURFACE and PML_INSTEAD_OF_FREE_SURFACE are both set to .true.'
   endif
 
@@ -315,9 +315,9 @@
 
     open(unit=IOUT,file=trim(HEADER_FILE),status='old',iostat=ier)
     if (ier /= 0) then
-      print*,'error opening file: ',trim(HEADER_FILE)
-      print*
-      print*,'please check if xgenerate_databases has been run before this solver, exiting now...'
+      print *,'error opening file: ',trim(HEADER_FILE)
+      print *
+      print *,'please check if xgenerate_databases has been run before this solver, exiting now...'
       stop 'error opening file values_from_mesher.h'
     endif
     read(IOUT,NML=MESHER)
@@ -337,7 +337,7 @@
     !INQUIRE( FILE = OUTPUT_FILES(1:len_trim(OUTPUT_FILES))//'/.', EXIST = exists)
     open(IOUT,file=trim(OUTPUT_FILES)//'/dummy.txt',status='unknown',iostat=ier)
     if (ier /= 0) then
-      print*,"OUTPUT_FILES directory does not work: ",trim(OUTPUT_FILES)
+      print *,"OUTPUT_FILES directory does not work: ",trim(OUTPUT_FILES)
       call exit_MPI(myrank,'error OUTPUT_FILES directory')
     endif
     close(IOUT,status='delete')
@@ -346,7 +346,7 @@
     !INQUIRE( FILE = LOCAL_PATH(1:len_trim(LOCAL_PATH))//'/.', EXIST = exists)
     open(IOUT,file=trim(LOCAL_PATH)//'/dummy.txt',status='unknown',iostat=ier)
     if (ier /= 0) then
-      print*,"LOCAL_PATH directory does not work: ",trim(LOCAL_PATH)
+      print *,"LOCAL_PATH directory does not work: ",trim(LOCAL_PATH)
       call exit_MPI(myrank,'error LOCAL_PATH directory')
     endif
     close(IOUT,status='delete')

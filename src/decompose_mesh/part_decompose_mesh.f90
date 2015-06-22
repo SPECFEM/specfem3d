@@ -941,13 +941,10 @@ contains
                           local_nodes(1), local_nodes(2),local_nodes(3), local_nodes(4)
 
                   case default
-                     print *, "error in write_interfaces_database!", tab_interfaces(k*7+2), iproc
+                     print *, "fatal error in write_interfaces_database:", tab_interfaces(k*7+2), iproc
+                     stop "fatal error in write_interfaces_database"
                   end select
                enddo
-
-               ! outputs infos
-               !print*,'  partition MPI interface:',iproc,num_interface
-               !print*,'    element faces: ',count_faces
 
             endif
 
@@ -1353,7 +1350,7 @@ contains
     do el=0, nspec-1
      if (is_moho(el)) counter = counter + 1
     enddo
-    print*,'  moho elements = ',counter
+    print *,'  moho elements = ',counter
 
     ! gets neighbors by 4 common nodes (face)
     ! contains number of adjacent elements (neighbours)

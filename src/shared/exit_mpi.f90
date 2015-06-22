@@ -55,7 +55,7 @@
 ! close output file
   if (myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) close(IMAIN)
 
-  call stop_all()
+  call abort_mpi()
 
   end subroutine exit_MPI
 
@@ -77,7 +77,7 @@
   write(*,*) error_msg(1:len(error_msg))
   write(*,*) 'Error detected, aborting MPI...'
 
-  call stop_all()
+  call abort_mpi()
 
   end subroutine exit_MPI_without_rank
 

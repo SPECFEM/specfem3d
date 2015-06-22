@@ -166,7 +166,7 @@ module decompose_mesh
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nodes_coords_file',&
           status='old', form='formatted', iostat = ier)
     if (ier /= 0) then
-      print*,'could not open file:',localpath_name(1:len_trim(localpath_name))//'/nodes_coords_file'
+      print *,'could not open file:',localpath_name(1:len_trim(localpath_name))//'/nodes_coords_file'
       stop 'Error opening file nodes_coords_file'
     endif
     read(98,*) nnodes
@@ -178,8 +178,8 @@ module decompose_mesh
       read(98,*) num_node, nodes_coords(1,num_node), nodes_coords(2,num_node), nodes_coords(3,num_node)
     enddo
     close(98)
-    print*, 'total number of nodes: '
-    print*, '  nnodes = ', nnodes
+    print *, 'total number of nodes: '
+    print *, '  nnodes = ', nnodes
 
     ! reads mesh elements indexing
     !(CUBIT calls this the connectivity, guess in the sense that it connects with the points index in
@@ -192,7 +192,7 @@ module decompose_mesh
     ! debug check size limit
     if (nspec_long > 2147483646) then
       print *,'size exceeds integer 4-byte limit: ',nspec_long
-      print*,'bit size fortran: ',bit_size(nspec)
+      print *,'bit size fortran: ',bit_size(nspec)
       stop 'Error number of elements too large'
     endif
 
@@ -228,8 +228,8 @@ module decompose_mesh
 
     enddo
     close(98)
-    print*, 'total number of spectral elements:'
-    print*, '  nspec = ', nspec
+    print *, 'total number of spectral elements:'
+    print *, '  nspec = ', nspec
 
   ! reads material associations
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/materials_file', &
@@ -285,7 +285,7 @@ module decompose_mesh
       read(line,*,iostat=ier) idummy,num_mat
       if (ier /= 0) exit
 
-      print*, '  num_mat = ',num_mat
+      print *, '  num_mat = ',num_mat
       ! checks non-zero material id
       if (num_mat == 0) stop 'Error in nummaterial_velocity_file: material id 0 found. Material ids must be non-zero.'
       if (num_mat > 0) then
@@ -296,14 +296,14 @@ module decompose_mesh
         count_undef_mat = count_undef_mat + 1
       endif
     enddo
-    print*, '  defined = ',count_def_mat, 'undefined = ',count_undef_mat
+    print *, '  defined = ',count_def_mat, 'undefined = ',count_undef_mat
 
     ! check with material flags
     ! defined materials
     if (count_def_mat > 0 .and. maxval(mat(1,:)) > count_def_mat) then
-      print*,'Error material definitions:'
-      print*,'  materials associated in materials_file:',maxval(mat(1,:))
-      print*,'  larger than defined materials in nummaterial_velocity_file:',count_def_mat
+      print *,'Error material definitions:'
+      print *,'  materials associated in materials_file:',maxval(mat(1,:))
+      print *,'  larger than defined materials in nummaterial_velocity_file:',count_def_mat
       stop 'Error positive material id exceeds bounds for defined materials'
     endif
     allocate(mat_prop(16,count_def_mat),stat=ier)
@@ -312,9 +312,9 @@ module decompose_mesh
 
     ! undefined materials
     if (count_undef_mat > 0 .and. minval(mat(1,:)) < -count_undef_mat) then
-      print*,'Error material definitions:'
-      print*,'  materials associated in materials_file:',minval(mat(1,:))
-      print*,'  larger than undefined materials in nummaterial_velocity_file:',count_undef_mat
+      print *,'Error material definitions:'
+      print *,'  materials associated in materials_file:',minval(mat(1,:))
+      print *,'  larger than undefined materials in nummaterial_velocity_file:',count_undef_mat
       stop 'Error negative material id exceeds bounds for undefined materials'
     endif
     allocate(undef_mat_prop(6,count_undef_mat),stat=ier)
@@ -347,7 +347,7 @@ module decompose_mesh
       !stop 'Error opening nummaterial_poroelastic_file'
     else
       use_poroelastic_file = .true.
-      print*, '  poroelastic material file found'
+      print *, '  poroelastic material file found'
     endif
     ier = 0
 
@@ -477,16 +477,16 @@ module decompose_mesh
                       undef_mat_prop(3,imat),undef_mat_prop(4,imat)
          undef_mat_prop(5,imat) = "0" ! dummy value
        else
-         print*,'Error invalid type for undefined materials: ',trim(undef_mat_prop(2,imat))
+         print *,'Error invalid type for undefined materials: ',trim(undef_mat_prop(2,imat))
          stop 'Error in nummaterial_velocity_file: invalid line in for undefined material'
        endif
 
        ! checks material_id
        if (trim(undef_mat_prop(2,imat)) == 'interface' .or. trim(undef_mat_prop(2,imat)) == 'tomography') then
           if (num_mat /= -imat) then
-            print*,'Error undefined materials: invalid material id ',num_mat,' for undefined material',imat
-            print*,'Please check line: ',trim(line)
-            print*,'Note that material ids must be ordered in increasing (negative) order.'
+            print *,'Error undefined materials: invalid material id ',num_mat,' for undefined material',imat
+            print *,'Please check line: ',trim(line)
+            print *,'Note that material ids must be ordered in increasing (negative) order.'
             stop 'Error in nummaterial_velocity_file: Invalid material id for undefined materials.'
           endif
           if (num_mat > 0) &
@@ -596,8 +596,8 @@ module decompose_mesh
       read(98,*) ibelm_xmin(ispec2D), (nodes_ibelm_xmin(inode,ispec2D), inode=1,NGNOD2D)
     enddo
     close(98)
-    print*, 'absorbing boundaries:'
-    print*, '  nspec2D_xmin = ', nspec2D_xmin
+    print *, 'absorbing boundaries:'
+    print *, '  nspec2D_xmin = ', nspec2D_xmin
 
   ! reads in absorbing boundary files
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_xmax', &
@@ -616,7 +616,7 @@ module decompose_mesh
       read(98,*) ibelm_xmax(ispec2D), (nodes_ibelm_xmax(inode,ispec2D), inode=1,NGNOD2D)
     enddo
     close(98)
-    print*, '  nspec2D_xmax = ', nspec2D_xmax
+    print *, '  nspec2D_xmax = ', nspec2D_xmax
 
   ! reads in absorbing boundary files
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_ymin', &
@@ -635,7 +635,7 @@ module decompose_mesh
       read(98,*) ibelm_ymin(ispec2D), (nodes_ibelm_ymin(inode,ispec2D), inode=1,NGNOD2D)
     enddo
     close(98)
-    print*, '  nspec2D_ymin = ', nspec2D_ymin
+    print *, '  nspec2D_ymin = ', nspec2D_ymin
 
   ! reads in absorbing boundary files
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_ymax', &
@@ -654,7 +654,7 @@ module decompose_mesh
       read(98,*) ibelm_ymax(ispec2D), (nodes_ibelm_ymax(inode,ispec2D), inode=1,NGNOD2D)
     enddo
     close(98)
-    print*, '  nspec2D_ymax = ', nspec2D_ymax
+    print *, '  nspec2D_ymax = ', nspec2D_ymax
 
   ! reads in absorbing boundary files
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_bottom', &
@@ -673,7 +673,7 @@ module decompose_mesh
       read(98,*) ibelm_bottom(ispec2D), (nodes_ibelm_bottom(inode,ispec2D), inode=1,NGNOD2D)
     enddo
     close(98)
-    print*, '  nspec2D_bottom = ', nspec2D_bottom
+    print *, '  nspec2D_bottom = ', nspec2D_bottom
 
   ! reads in free_surface boundary files
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/free_or_absorbing_surface_file_zmax', &
@@ -692,7 +692,7 @@ module decompose_mesh
       read(98,*) ibelm_top(ispec2D), (nodes_ibelm_top(inode,ispec2D), inode=1,NGNOD2D)
     enddo
     close(98)
-    print*, '  nspec2D_top = ', nspec2D_top
+    print *, '  nspec2D_top = ', nspec2D_top
 
 ! an array of size 0 is a valid object in Fortran 90, i.e. the array is then considered as allocated
 ! and can thus for instance be used as an argument in a call to a subroutine without giving any error
@@ -738,7 +738,7 @@ module decompose_mesh
        read(98,*) CPML_to_spec(ispec_CPML), CPML_regions(ispec_CPML)
     enddo
     close(98)
-    if (nspec_cpml > 0) print*, '  nspec_cpml = ', nspec_cpml
+    if (nspec_cpml > 0) print *, '  nspec_cpml = ', nspec_cpml
 
     ! sets mask of C-PML elements for all elements in this partition
     allocate(is_CPML(nspec),stat=ier)
@@ -767,7 +767,7 @@ module decompose_mesh
       read(98,*) ibelm_moho(ispec2D), (nodes_ibelm_moho(inode,ispec2D), inode=1,NGNOD2D)
     enddo
     close(98)
-    if (nspec2D_moho > 0) print*, '  nspec2D_moho = ', nspec2D_moho
+    if (nspec2D_moho > 0) print *, '  nspec2D_moho = ', nspec2D_moho
 
     call read_fault_files(localpath_name)
     if (ANY_FAULT) then
@@ -867,17 +867,17 @@ module decompose_mesh
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 #ifdef USE_TWO_CALLS_TO_mesh2dual
-    print*, 'mesh2dual first call:'
+    print *, 'mesh2dual first call:'
     ncommonnodes = NGNOD2D_FOUR_CORNERS
 #else
-    print*, 'mesh2dual:'
+    print *, 'mesh2dual:'
     ncommonnodes = 1
 #endif
     call mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbour, elmnts, xadj, adjncy, nnodes_elmnts, &
          nodes_elmnts, max_neighbour, ncommonnodes, NGNOD)
 
     ! user output
-    print*, '  max_neighbour = ',max_neighbour
+    print *, '  max_neighbour = ',max_neighbour
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!! DK DK added this in Oct 2012 to see if we first do 4 and then 1
@@ -1044,8 +1044,8 @@ module decompose_mesh
     call mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbour, elmnts, xadj, adjncy, nnodes_elmnts, &
          nodes_elmnts, max_neighbour, ncommonnodes, NGNOD)
 
-    print*, 'mesh2dual second call:'
-    print*, '  max_neighbour = ',max_neighbour
+    print *, 'mesh2dual second call:'
+    print *, '  max_neighbour = ',max_neighbour
 
 !! DK DK Oct 2012: added this safety test
     if (max_neighbour > sup_neighbour) stop 'found max_neighbour > sup_neighbour in domain decomposition'
@@ -1106,9 +1106,9 @@ module decompose_mesh
        open(unit=IIN_database,file=outputpath_name(1:len_trim(outputpath_name))//'/proc'//prname,&
             status='unknown', action='write', form='unformatted', iostat = ier)
        if (ier /= 0) then
-        print*,'Error file open:',outputpath_name(1:len_trim(outputpath_name))//'/proc'//prname
-        print*
-        print*,'check if path exists:',outputpath_name(1:len_trim(outputpath_name))
+        print *,'Error file open:',outputpath_name(1:len_trim(outputpath_name))//'/proc'//prname
+        print *
+        print *,'check if path exists:',outputpath_name(1:len_trim(outputpath_name))
         stop 'Error file open Database'
        endif
 
@@ -1122,7 +1122,7 @@ module decompose_mesh
                                   glob2loc_nodes_parts, glob2loc_nodes, part, mat, NGNOD, 1, COUPLE_WITH_EXTERNAL_CODE)
 
        !debug
-       !print*, ipart,": nspec_local=",nspec_local, " nnodes_local=", nnodes_loc
+       !print *, ipart,": nspec_local=",nspec_local, " nnodes_local=", nnodes_loc
 
        ! writes out node coordinate locations
        write(IIN_database) nnodes_loc
@@ -1161,7 +1161,7 @@ module decompose_mesh
                                   glob2loc_nodes, 1, nparts)
 
        ! writes out MPI interfaces elements
-       !print*,' my interfaces:',my_ninterface,maxval(my_nb_interfaces)
+       !print *,' my interfaces:',my_ninterface,maxval(my_nb_interfaces)
        if (my_ninterface == 0) then
         write(IIN_database) my_ninterface, 0       ! avoids problem with maxval for empty array my_nb_interfaces
        else
@@ -1188,9 +1188,9 @@ module decompose_mesh
           open(unit=16,file=outputpath_name(1:len_trim(outputpath_name))//'/proc'//prname,&
                status='replace', action='write', form='unformatted', iostat = ier)
           if (ier /= 0) then
-            print*,'Error file open:',outputpath_name(1:len_trim(outputpath_name))//'/proc'//prname
-            print*
-            print*,'check if path exists:',outputpath_name(1:len_trim(outputpath_name))
+            print *,'Error file open:',outputpath_name(1:len_trim(outputpath_name))//'/proc'//prname
+            print *
+            print *,'check if path exists:',outputpath_name(1:len_trim(outputpath_name))
             stop
           endif
           call write_fault_database(16, ipart, nspec, &
@@ -1214,12 +1214,12 @@ module decompose_mesh
 
     if (COUPLE_WITH_EXTERNAL_CODE) close(124)
 
-    print*, 'partitions: '
-    print*, '  num = ',nparts
-    print*
-    print*, 'Databases files in directory: ',outputpath_name(1:len_trim(outputpath_name))
-    print*, 'finished successfully'
-    print*
+    print *, 'partitions: '
+    print *, '  num = ',nparts
+    print *
+    print *, 'Databases files in directory: ',outputpath_name(1:len_trim(outputpath_name))
+    print *, 'finished successfully'
+    print *
 
   end subroutine write_mesh_databases
 

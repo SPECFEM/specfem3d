@@ -64,11 +64,11 @@ subroutine compute_kernel_integral_iso()
 
   ! user output
   if (myrank == 0) then
-    print*
-    print*,'***********'
-    print*,'statistics:'
-    print*,'***********'
-    print*
+    print *
+    print *,'***********'
+    print *,'statistics:'
+    print *,'***********'
+    print *
   endif
 
   ! allocates array
@@ -109,11 +109,11 @@ subroutine compute_kernel_integral_iso()
         do i = 1, NGLLX
           iglob = ibool(i,j,k,ispec)
           if (iglob == 0) then
-            print*,'iglob zero',i,j,k,ispec
-            print*
-            print*,'ibool:',ispec
-            print*,ibool(:,:,:,ispec)
-            print*
+            print *,'iglob zero',i,j,k,ispec
+            print *
+            print *,'ibool:',ispec
+            print *,ibool(:,:,:,ispec)
+            print *
             call exit_MPI(myrank,'Error ibool')
           endif
 
@@ -138,10 +138,10 @@ subroutine compute_kernel_integral_iso()
 
           ! checks number (isNaN)
           if (kernel_integral_alpha /= kernel_integral_alpha) then
-            print*,'Error NaN: ',kernel_integral_alpha
-            print*,'rank:',myrank
-            print*,'i,j,k,ispec:',i,j,k,ispec
-            print*,'volumel: ',volumel,'kernel_bulk:',kernel_bulk(i,j,k,ispec)
+            print *,'Error NaN: ',kernel_integral_alpha
+            print *,'rank:',myrank
+            print *,'i,j,k,ispec:',i,j,k,ispec
+            print *,'volumel: ',volumel,'kernel_bulk:',kernel_bulk(i,j,k,ispec)
             call exit_MPI(myrank,'Error NaN')
           endif
 
@@ -170,13 +170,13 @@ subroutine compute_kernel_integral_iso()
   call sum_all_cr(volume_glob,volume_glob_sum)
 
   if (myrank == 0) then
-    print*,'integral kernels:'
-    print*,'  a   : ',integral_alpha_sum
-    print*,'  beta: ',integral_beta_sum
-    print*,'  rho : ',integral_rho_sum
-    print*
-    print*,'  total volume:',volume_glob_sum
-    print*
+    print *,'integral kernels:'
+    print *,'  a   : ',integral_alpha_sum
+    print *,'  beta: ',integral_beta_sum
+    print *,'  rho : ',integral_rho_sum
+    print *
+    print *,'  total volume:',volume_glob_sum
+    print *
     if (volume_glob_sum < 1.e-25) stop 'Error zero total volume'
   endif
 
@@ -190,11 +190,11 @@ subroutine compute_kernel_integral_iso()
     norm_beta = sqrt(norm_beta_sum)
     norm_rho = sqrt(norm_rho_sum)
 
-    print*,'norm kernels:'
-    print*,'  a   : ',norm_bulk
-    print*,'  beta: ',norm_beta
-    print*,'  rho : ',norm_rho
-    print*
+    print *,'norm kernels:'
+    print *,'  a   : ',norm_bulk
+    print *,'  beta: ',norm_beta
+    print *,'  rho : ',norm_rho
+    print *
   endif
 
   ! root-mean square
@@ -207,11 +207,11 @@ subroutine compute_kernel_integral_iso()
     rms_vs  = sqrt( rms_vs_sum / volume_glob_sum )
     rms_rho = sqrt( rms_rho_sum / volume_glob_sum )
 
-    print*,'root-mean square of perturbations:'
-    print*,'  vp : ',rms_vp
-    print*,'  vs : ',rms_vs
-    print*,'  rho: ',rms_rho
-    print*
+    print *,'root-mean square of perturbations:'
+    print *,'  vp : ',rms_vp
+    print *,'  vs : ',rms_vs
+    print *,'  rho: ',rms_rho
+    print *
   endif
   call synchronize_all()
 
@@ -266,11 +266,11 @@ subroutine compute_kernel_integral_tiso()
 
   ! user output
   if (myrank == 0) then
-    print*
-    print*,'***********'
-    print*,'statistics:'
-    print*,'***********'
-    print*
+    print *
+    print *,'***********'
+    print *,'statistics:'
+    print *,'***********'
+    print *
   endif
 
   ! allocates array
@@ -315,11 +315,11 @@ subroutine compute_kernel_integral_tiso()
         do i = 1, NGLLX
           iglob = ibool(i,j,k,ispec)
           if (iglob == 0) then
-            print*,'iglob zero',i,j,k,ispec
-            print*
-            print*,'ibool:',ispec
-            print*,ibool(:,:,:,ispec)
-            print*
+            print *,'iglob zero',i,j,k,ispec
+            print *
+            print *,'ibool:',ispec
+            print *,ibool(:,:,:,ispec)
+            print *
             call exit_MPI(myrank,'Error ibool')
           endif
 
@@ -348,10 +348,10 @@ subroutine compute_kernel_integral_tiso()
 
           ! checks number
           if (integral_bulk /= integral_bulk) then
-            print*,'Error NaN: ',integral_bulk
-            print*,'rank:',myrank
-            print*,'i,j,k,ispec:',i,j,k,ispec
-            print*,'volumel: ',volumel,'kernel_bulk:',kernel_bulk(i,j,k,ispec)
+            print *,'Error NaN: ',integral_bulk
+            print *,'rank:',myrank
+            print *,'i,j,k,ispec:',i,j,k,ispec
+            print *,'volumel: ',volumel,'kernel_bulk:',kernel_bulk(i,j,k,ispec)
             call exit_MPI(myrank,'Error NaN')
           endif
 
@@ -390,14 +390,14 @@ subroutine compute_kernel_integral_tiso()
   call sum_all_cr(volume_glob,volume_glob_sum)
 
   if (myrank == 0) then
-    print*,'integral kernels:'
-    print*,'  bulk : ',integral_bulk_sum
-    print*,'  betav : ',integral_betav_sum
-    print*,'  betah : ',integral_betah_sum
-    print*,'  eta : ',integral_eta_sum
-    print*
-    print*,'  total volume:',volume_glob_sum
-    print*
+    print *,'integral kernels:'
+    print *,'  bulk : ',integral_bulk_sum
+    print *,'  betav : ',integral_betav_sum
+    print *,'  betah : ',integral_betah_sum
+    print *,'  eta : ',integral_eta_sum
+    print *
+    print *,'  total volume:',volume_glob_sum
+    print *
     if (volume_glob_sum < 1.e-25) stop 'Error zero total volume'
   endif
 
@@ -413,12 +413,12 @@ subroutine compute_kernel_integral_tiso()
     norm_betah = sqrt(norm_betah_sum)
     norm_eta = sqrt(norm_eta_sum)
 
-    print*,'norm kernels:'
-    print*,'  bulk : ',norm_bulk
-    print*,'  betav : ',norm_betav
-    print*,'  betah : ',norm_betah
-    print*,'  eta : ',norm_eta
-    print*
+    print *,'norm kernels:'
+    print *,'  bulk : ',norm_bulk
+    print *,'  betav : ',norm_betav
+    print *,'  betah : ',norm_betah
+    print *,'  eta : ',norm_eta
+    print *
   endif
 
   ! root-mean square
@@ -437,14 +437,14 @@ subroutine compute_kernel_integral_tiso()
     rms_eta = sqrt( rms_eta_sum / volume_glob_sum )
     rms_rho = sqrt( rms_rho_sum / volume_glob_sum )
 
-    print*,'root-mean square of perturbations:'
-    print*,'  vpv : ',rms_vpv
-    print*,'  vph : ',rms_vph
-    print*,'  vsv : ',rms_vsv
-    print*,'  vsh : ',rms_vsh
-    print*,'  eta : ',rms_eta
-    print*,'  rho : ',rms_rho
-    print*
+    print *,'root-mean square of perturbations:'
+    print *,'  vpv : ',rms_vpv
+    print *,'  vph : ',rms_vph
+    print *,'  vsv : ',rms_vsv
+    print *,'  vsh : ',rms_vsh
+    print *,'  eta : ',rms_eta
+    print *,'  rho : ',rms_rho
+    print *
   endif
   call synchronize_all()
 
@@ -496,11 +496,11 @@ subroutine compute_kernel_integral_tiso_iso()
 
   ! user output
   if (myrank == 0) then
-    print*
-    print*,'***********'
-    print*,'statistics:'
-    print*,'***********'
-    print*
+    print *
+    print *,'***********'
+    print *,'statistics:'
+    print *,'***********'
+    print *
   endif
 
   ! allocates array
@@ -544,11 +544,11 @@ subroutine compute_kernel_integral_tiso_iso()
         do i = 1, NGLLX
           iglob = ibool(i,j,k,ispec)
           if (iglob == 0) then
-            print*,'iglob zero',i,j,k,ispec
-            print*
-            print*,'ibool:',ispec
-            print*,ibool(:,:,:,ispec)
-            print*
+            print *,'iglob zero',i,j,k,ispec
+            print *
+            print *,'ibool:',ispec
+            print *,ibool(:,:,:,ispec)
+            print *
             call exit_MPI(myrank,'Error ibool')
           endif
 
@@ -573,10 +573,10 @@ subroutine compute_kernel_integral_tiso_iso()
 
           ! checks number
           if (integral_bulk /= integral_bulk) then
-            print*,'Error NaN: ',integral_bulk
-            print*,'rank:',myrank
-            print*,'i,j,k,ispec:',i,j,k,ispec
-            print*,'volumel: ',volumel,'kernel_bulk:',kernel_bulk(i,j,k,ispec)
+            print *,'Error NaN: ',integral_bulk
+            print *,'rank:',myrank
+            print *,'i,j,k,ispec:',i,j,k,ispec
+            print *,'volumel: ',volumel,'kernel_bulk:',kernel_bulk(i,j,k,ispec)
             call exit_MPI(myrank,'Error NaN')
           endif
 
@@ -614,13 +614,13 @@ subroutine compute_kernel_integral_tiso_iso()
   call sum_all_cr(volume_glob,volume_glob_sum)
 
   if (myrank == 0) then
-    print*,'integral kernels:'
-    print*,'  a   : ',integral_bulk_sum
-    print*,'  beta: ',integral_beta_sum
-    print*,'  rho : ',integral_rho_sum
-    print*
-    print*,'  total volume:',volume_glob_sum
-    print*
+    print *,'integral kernels:'
+    print *,'  a   : ',integral_bulk_sum
+    print *,'  beta: ',integral_beta_sum
+    print *,'  rho : ',integral_rho_sum
+    print *
+    print *,'  total volume:',volume_glob_sum
+    print *
     if (volume_glob_sum < 1.e-25) stop 'Error zero total volume'
   endif
 
@@ -634,11 +634,11 @@ subroutine compute_kernel_integral_tiso_iso()
     norm_beta = sqrt(norm_beta_sum)
     norm_rho = sqrt(norm_rho_sum)
 
-    print*,'norm kernels:'
-    print*,'  a : ',norm_bulk
-    print*,'  beta : ',norm_beta
-    print*,'  rho : ',norm_rho
-    print*
+    print *,'norm kernels:'
+    print *,'  a : ',norm_bulk
+    print *,'  beta : ',norm_beta
+    print *,'  rho : ',norm_rho
+    print *
   endif
 
   ! root-mean square
@@ -657,14 +657,14 @@ subroutine compute_kernel_integral_tiso_iso()
     rms_eta = sqrt( rms_eta_sum / volume_glob_sum )
     rms_rho = sqrt( rms_rho_sum / volume_glob_sum )
 
-    print*,'root-mean square of perturbations:'
-    print*,'  vpv : ',rms_vpv
-    print*,'  vph : ',rms_vph
-    print*,'  vsv : ',rms_vsv
-    print*,'  vsh : ',rms_vsh
-    print*,'  eta : ',rms_eta
-    print*,'  rho : ',rms_rho
-    print*
+    print *,'root-mean square of perturbations:'
+    print *,'  vpv : ',rms_vpv
+    print *,'  vph : ',rms_vph
+    print *,'  vsv : ',rms_vsv
+    print *,'  vsh : ',rms_vsh
+    print *,'  eta : ',rms_eta
+    print *,'  rho : ',rms_rho
+    print *
   endif
   call synchronize_all()
 
@@ -702,7 +702,7 @@ subroutine compute_jacobian(jacobian)
   write(m_file,'(a,i6.6,a)') 'topo/proc',myrank,trim(REG)//'external_mesh.bin'
   open(IIN,file=trim(m_file),status='old',form='unformatted',iostat=ier)
   if (ier /= 0) then
-    print*,'Error opening: ',trim(m_file)
+    print *,'Error opening: ',trim(m_file)
     call exit_mpi(myrank,'file not found')
   endif
 

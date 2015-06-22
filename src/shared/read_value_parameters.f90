@@ -163,7 +163,8 @@
 
   filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'Par_file'
 ! see if we are running several independent runs in parallel
-! if so, add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
+! if so, add the right directory for that run
+! (group numbers start at zero, but directory names start at run0001, thus we add one)
 ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
   if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
     write(path_to_add,"('run',i4.4,'/')") mygroup + 1
@@ -172,8 +173,8 @@
 
   call param_open(filename, len(filename), ier)
   if (ier /= 0) then
-    print*
-    print*,'opening file failed, please check your file path and run-directory.'
+    print *
+    print *,'opening file failed, please check your file path and run-directory.'
     stop 'error opening Par_file'
   endif
 

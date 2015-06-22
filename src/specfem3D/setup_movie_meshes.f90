@@ -264,7 +264,7 @@
 
     ! checks number of faces
     if (nfaces_surface_ext_mesh /= nfaces_org) then
-      print*,'error number of movie faces: ',nfaces_surface_ext_mesh,nfaces_org
+      print *,'error number of movie faces: ',nfaces_surface_ext_mesh,nfaces_org
       call exit_mpi(myrank,'error number of faces')
     endif
   endif ! MOVIE_TYPE == 2

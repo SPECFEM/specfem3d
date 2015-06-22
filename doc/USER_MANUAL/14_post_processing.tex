@@ -1,0 +1,224 @@
+\chapter{Post-Processing Scripts}
+
+Several post-processing scripts/programs are provided in the \texttt{utils/}
+directory, and most of them need to be adjusted when used on different
+systems, for example, the path of the executable programs. Here we
+only list a few of the available scripts and provide a brief description,
+and you can either refer to the related sections for detailed usage
+or, in a lot of cases, type the script/program name without arguments
+for its usage.
+
+
+\section{Process Data and Synthetics}\label{sec:Process-data-and-syn}
+
+In many cases, the SEM synthetics are calculated and compared to data
+seismograms recorded at seismic stations. Since the SEM synthetics
+are accurate for a certain frequency range, both the original data
+and the synthetics need to be processed before a comparison can be
+made.
+
+For such comparisons, the following steps are recommended:
+\begin{enumerate}
+\item Make sure that both synthetic and observed seismograms have the correct
+station/event and timing information.
+\item Convolve synthetic seismograms with a source time function with the
+half duration specified in the \texttt{CMTSOLUTION} file, provided,
+as recommended, you used a zero half duration in the SEM simulations.
+\item Resample both observed and synthetic seismograms to a common sampling
+rate.
+\item Cut the records using the same window.
+\item Remove the trend and mean from the records and taper them.
+\item Remove the instrument response from the observed seismograms (recommended)
+or convolve the synthetic seismograms with the instrument response.
+\item Make sure that you apply the same filters to both observed and synthetic
+seismograms. Preferably, avoid filtering your records more than once.
+\item Now, you are ready to compare your synthetic and observed seismograms.
+\end{enumerate}
+\noindent We generally use the following scripts provided in the \texttt{utils/seis\_process/}
+directory:
+
+
+\subsection{Data processing script \texttt{process\_data.pl}}
+
+This script cuts a given portion of the original data, filters it,
+transfers the data into a displacement record, and picks the first
+P and S arrivals. For more functionality, type `\texttt{process\_data.pl}'
+without any argument. An example of the usage of the script:
+
+{\footnotesize
+\begin{verbatim}
+process_data.pl -m CMTSOLUTION -s 1.0 -l 0/4000 -i -f -t 40/500 -p -x bp DATA/1999.330*.BH?.SAC
+\end{verbatim}
+}
+
+\noindent
+which has resampled the SAC files to a sampling rate of
+1 seconds, cut them between 0 and 4000 seconds, transfered them into
+displacement records and filtered them between 40 and 500 seconds,
+picked the first P and S arrivals, and added suffix `\texttt{bp}'
+to the file names.
+
+Note that all of the scripts in this section actually use the SAC
+and/or IASP91 to do the core operations; therefore make sure that
+the SAC and IASP91 packages are installed properly on your system,
+and that all the environment variables are set properly before running
+these scripts.
+
+
+\subsection{Synthetics processing script \texttt{process\_syn.pl}}
+
+This script converts the synthetic output from the SEM code from ASCII
+to SAC format, and performs similar operations as `\texttt{process\_data.pl}'.
+An example of the usage of the script:
+
+{\footnotesize
+\begin{verbatim}
+process_syn.pl -m CMTSOLUTION -h -a STATIONS -s 1.0 -l 0/4000 -f -t 40/500 -p -x bp SEM/*.BX?.semd
+\end{verbatim}
+}
+\noindent
+which will convolve the synthetics with a triangular source-time function
+from the \texttt{CMTSOLUTION} file, convert the synthetics into SAC
+format, add event and station information into the SAC headers, resample
+the SAC files with a sampling rate of 1 seconds, cut them between
+0 and 4000 seconds, filter them between 40 and 500 seconds with the
+same filter used for the observed data, pick the first P and S arrivals,
+and add the suffix `\texttt{bp}' to the file names.
+
+More options are available for this script, such as adding time shift
+to the origin time of the synthetics, convolving the synthetics with
+a triangular source time function with a given half duration, etc.
+Type \texttt{process\_syn.pl} without any argument for a detailed
+usage.
+
+In order to convert between SAC format and ASCII files, useful scripts
+are provided in the subdirectories ~\\
+ \texttt{utils/sac2000\_alpha\_convert/} and \texttt{utils/seis\_process/asc2sac/}.
+
+
+\subsection{Script \texttt{rotate.pl}}
+
+The original data and synthetics have three components: vertical (BHZ
+resp. BXZ), north (BHN resp. BXN) and east (BHE resp. BXE). However,
+for most seismology applications, transverse and radial components
+are also desirable. Therefore, we need to rotate the horizontal components
+of both the data and the synthetics to the transverse and radial direction,
+and \texttt{\small rotate.pl}{\small{} can be used to accomplish this:}{\small \par}
+\begin{verbatim}
+rotate.pl -l 0 -L 180 -d DATA/*.BHE.SAC.bp
+rotate.pl -l 0 -L 180 SEM/*.BXE.semd.sac.bp
+\end{verbatim}
+where the first command performs rotation on the SAC data obtained
+through Seismogram Transfer Program (STP) \urlwithparentheses{http://www.data.scec.org/STP/stp.html},
+while the second command rotates the processed SEM synthetics.
+
+
+\section{Collect Synthetic Seismograms}
+
+The forward and adjoint simulations generate synthetic seismograms
+in the \texttt{OUTPUT\_FILES/} directory by default. For the forward
+simulation, the files are named like \texttt{NT.STA.BX?.semd} for
+two-column time series, or \texttt{NT.STA.BX?.semd.sac} for ASCII
+SAC format, where NT and STA are the network code and station name,
+and \texttt{BX?} stands for the component name. Please see the Appendix~\ref{cha:Coordinates}
+and \ref{cha:channel-codes} for further details.
+
+The adjont simulations generate synthetic seismograms with the name
+\texttt{NT.S?????.S??.sem} (refer to Section \ref{sec:Adjoint-simulation-sources}
+for details). The kernel simulations output the back-reconstructed
+synthetic seismogram in the name \texttt{NT.STA.BX?.semd}, mainly
+for the purpose of checking the accuracy of the reconstruction. Refer
+to Section \ref{sec:Adjoint-simulation-finite} for further details.
+
+You do have further options to change this default output behavior,
+given in the main constants file \texttt{constants.h} located in \texttt{src/shared/}
+directory:
+\begin{description}
+\item [{\texttt{SEISMOGRAMS\_BINARY}}] set to \texttt{.true.} to have seismograms
+written out in binary format.
+\item [{\texttt{WRITE\_SEISMOGRAMS\_BY\_MASTER}}] Set to \texttt{.true.}
+to have only the master process writing out seismograms. This can
+be useful on a cluster, where only the master process node has access
+to the output directory.
+\item [{\texttt{USE\_OUTPUT\_FILES\_PATH}}] Set to \texttt{.false.} to
+have the seismograms output to \texttt{LOCAL\_PATH} directory specified
+in the main parameter file \texttt{DATA/Par\_file}. In this case,
+you could collect the synthetics onto the frontend using the \texttt{collect\_seismo\_lsf\_multi.pl}
+script located in the \texttt{utils/Cluster/lsf/} directory. The usage
+of the script would be e.g.:
+
+\begin{verbatim}
+collect_seismo.pl machines DATA/Par_file
+\end{verbatim}
+
+\end{description}
+
+where \texttt{machines} is a file containing the node names and \texttt{DATA/Par\_file}
+the parameter file used to extract the \texttt{LOCAL\_PATH} directory
+used for the simulation.
+
+
+\section{Clean Local Database}
+
+After all the simulations are done, the seismograms are collected,
+and the useful database files are copied to the frontend, you may
+need to clean the local scratch disk for the next simulation. This
+is especially important in the case of kernel simulation, where very
+large files are generated for the absorbing boundaries to help with
+the reconstruction of the regular forward wavefield. A sample script
+is provided in \texttt{utils/}:
+\begin{verbatim}
+cleanbase.pl machines
+\end{verbatim}
+where \texttt{machines} is a file containing the node names.
+
+
+\section{Plot Movie Snapshots and Synthetic Shakemaps}
+
+
+\subsection{Script \texttt{movie2gif.gmt.pl}}
+
+With the movie data saved in \texttt{OUTPUT\_FILES/} at the end of
+a movie simulation (\texttt{\small MOVIE\_SURFACE=.true.}{\small ),
+you can run the }\texttt{\small `create\_movie\_shakemap\_AVS\_DX\_GMT}{\small '
+code to convert these binary movie data into GMT xyz files for futher
+processing. A sample script }\texttt{\small movie2gif.gmt.pl}{\small{}
+is provided to do this conversion, and then plot the movie snapshots
+in GMT, for example:}{\small \par}
+\begin{verbatim}
+movie2gif.gmt.pl -m CMTSOLUTION -g -f 1/40 -n -2 -p
+\end{verbatim}
+which for the first through the 40th movie frame, converts the \texttt{moviedata}
+files into GMT xyz files, interpolates them using the 'nearneighbor'
+command in GMT, and plots them on a 2D topography map. Note that `\texttt{-2}'
+and `\texttt{-p}' are both optional.
+
+
+\subsection{Script \texttt{plot\_shakemap.gmt.pl}}
+
+With the shakemap data saved in \texttt{OUTPUT\_FILES/} at the end
+of a shakemap simulation ~\\
+ (\texttt{CREATE\_SHAKEMAP=.true.}), you can also run \texttt{`create\_movie\_shakemap\_AVS\_DX\_GMT}'
+code to convert the binary shakemap data into GMT xyz files. A sample
+script \texttt{plot\_shakemap.gmt.pl} is provided to do this conversion,
+and then plot the shakemaps in GMT, for example:
+\begin{verbatim}
+plot_shakemap.gmt.pl data _dir type(1,2,3) CMTSOLUTION
+\end{verbatim}
+where \texttt{type=1} for a displacement shakemap, \texttt{2} for
+velocity, and \texttt{3} for acceleration.
+
+
+\section{Map Local Database}
+
+A sample program \texttt{remap\_database} is provided to map the local
+database from a set of machines to another set of machines. This is
+especially useful when you want to run mesher and solver, or different
+types of solvers separately through a scheduler (refer to Chapter~\ref{cha:Scheduler}).
+\begin{verbatim}
+run_lsf.bash --gm-no-shmem --gm-copy-env remap_database old_machines 150
+\end{verbatim}
+where \texttt{old\_machines} is the LSF machine file used in the previous
+simulation, and \texttt{150} is the number of processors in total.
+
+

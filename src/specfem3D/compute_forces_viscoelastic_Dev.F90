@@ -784,6 +784,12 @@
         ! in the case of weakly nonlinear materials the stress tensor becomes non-symmetric, see for instance equation (A9) in
         ! D. L. Johnson, S. Kostek and A. N. Norris, Nonlinear tube waves, J. Acoust. Soc. Am. vol. 96, p. 1829-1843 (1994).
 
+        ! TODO: the current (explicit Newmark) time scheme will likely *NOT* work for such a nonlinear material,
+        ! the CFL in such a material will vary with time and thus the time step should be adapted while the simulation is running.
+        ! To validate this with a better time scheme the easiest or best thing to do would be to perform some tests in SPECFEM1D
+        ! and compare the results against a known solution for instance for the 1D Riemann problem
+        ! and/or the 1D shock-wave tube problem.
+
           epsilon_trace = duxdxl + duydyl + duzdzl
           epsilon_trace_squared = epsilon_trace * epsilon_trace
 

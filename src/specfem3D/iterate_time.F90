@@ -177,7 +177,7 @@
     endif
 
     ! updates wavefields using Newmark time scheme
-    call update_displacement_scheme()
+    if(.not. USE_LDDRK) call update_displacement_scheme()
 
     ! calculates stiffness term
     if (.not. GPU_MODE) then
@@ -211,11 +211,13 @@
 
       else
         ! forward simulations
-
-        ! 1. acoustic domain
-        if (ACOUSTIC_SIMULATION) call compute_forces_acoustic()
-        ! 2. elastic domain
-        if (ELASTIC_SIMULATION) call compute_forces_viscoelastic()
+        do istage = 1, NSTAGE_TIME_SCHEME
+          if(USE_LDDRK) call update_displ_lddrk()
+          ! 1. acoustic domain
+          if (ACOUSTIC_SIMULATION) call compute_forces_acoustic()
+          ! 2. elastic domain
+          if (ELASTIC_SIMULATION) call compute_forces_viscoelastic()
+        enddo
       endif
 
       ! poroelastic solver
@@ -339,7 +341,7 @@
 
     ! specific noise strength kernel
     if (NOISE_TOMOGRAPHY == 3) then
-      call transfer_kernels_noise_to_host(Mesh_pointer,Sigma_kl,NSPEC_AB)
+      call transfer_kernels_noise_to_host(Mesh_pointer,sigma_kl,NSPEC_AB)
     endif
 
     ! approximative hessian for preconditioning kernels
@@ -397,8 +399,8 @@
     open(unit=IIN,file=trim(prname)//'save_forward_arrays.bin',status='old',&
           action='read',form='unformatted',iostat=ier)
     if (ier /= 0) then
-      print*,'error: opening save_forward_arrays'
-      print*,'path: ',trim(prname)//'save_forward_arrays.bin'
+      print *,'error: opening save_forward_arrays'
+      print *,'path: ',trim(prname)//'save_forward_arrays.bin'
       call exit_mpi(myrank,'error open file save_forward_arrays.bin')
     endif
 

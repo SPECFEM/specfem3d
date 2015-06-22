@@ -39,7 +39,7 @@ subroutine read_kernels_iso()
   character(len=MAX_STRING_LEN) :: m_file, fname
 
   ! user output
-  if (myrank == 0) print*,'reading kernels...'
+  if (myrank == 0) print *,'reading kernels...'
 
   ! allocate arrays for storing kernels and perturbations
   ! isotropic arrays
@@ -62,11 +62,11 @@ subroutine read_kernels_iso()
     fname = 'bulk_c_kernel_smooth'
   endif
   write(m_file,'(a,i6.6,a)') trim(INPUT_KERNELS_DIR)//'proc',myrank,trim(REG)//trim(fname)//'.bin'
-  if (myrank == 0) print*,'  ',trim(INPUT_KERNELS_DIR)//'proc**'//trim(REG)//trim(fname)//'.bin'
+  if (myrank == 0) print *,'  ',trim(INPUT_KERNELS_DIR)//'proc**'//trim(REG)//trim(fname)//'.bin'
 
   open(IIN,file=trim(m_file),status='old',form='unformatted',iostat=ier)
   if (ier /= 0) then
-    print*,'Error opening: ',trim(m_file)
+    print *,'Error opening: ',trim(m_file)
     call exit_mpi(myrank,'file not found')
   endif
   read(IIN) kernel_bulk(:,:,:,1:nspec)
@@ -81,11 +81,11 @@ subroutine read_kernels_iso()
     fname = 'bulk_beta_kernel_smooth'
   endif
   write(m_file,'(a,i6.6,a)') trim(INPUT_KERNELS_DIR)//'proc',myrank,trim(REG)//trim(fname)//'.bin'
-  if (myrank == 0) print*,'  ',trim(INPUT_KERNELS_DIR)//'proc**'//trim(REG)//trim(fname)//'.bin'
+  if (myrank == 0) print *,'  ',trim(INPUT_KERNELS_DIR)//'proc**'//trim(REG)//trim(fname)//'.bin'
 
   open(IIN,file=trim(m_file),status='old',form='unformatted',iostat=ier)
   if (ier /= 0) then
-    print*,'Error opening: ',trim(m_file)
+    print *,'Error opening: ',trim(m_file)
     call exit_mpi(myrank,'file not found')
   endif
   read(IIN) kernel_beta(:,:,:,1:nspec)
@@ -95,16 +95,16 @@ subroutine read_kernels_iso()
   if (USE_RHO_SCALING) then
     ! uses scaling relation with shear perturbations
     kernel_rho(:,:,:,:) = RHO_SCALING * kernel_beta(:,:,:,:)
-    if (myrank == 0) print*,'  rho kernel uses scaling with shear kernel: scaling value = ',RHO_SCALING
+    if (myrank == 0) print *,'  rho kernel uses scaling with shear kernel: scaling value = ',RHO_SCALING
   else
     ! uses rho kernel
     fname = 'rho_kernel_smooth'
     write(m_file,'(a,i6.6,a)') trim(INPUT_KERNELS_DIR)//'proc',myrank,trim(REG)//trim(fname)//'.bin'
-    if (myrank == 0) print*,'  ',trim(INPUT_KERNELS_DIR)//'proc**'//trim(REG)//trim(fname)//'.bin'
+    if (myrank == 0) print *,'  ',trim(INPUT_KERNELS_DIR)//'proc**'//trim(REG)//trim(fname)//'.bin'
 
     open(IIN,file=trim(m_file),status='old',form='unformatted',iostat=ier)
     if (ier /= 0) then
-      print*,'Error opening: ',trim(m_file)
+      print *,'Error opening: ',trim(m_file)
       call exit_mpi(myrank,'file not found')
     endif
     read(IIN) kernel_rho(:,:,:,1:nspec)
@@ -122,17 +122,17 @@ subroutine read_kernels_iso()
   call max_all_cr(maxval(kernel_rho),max_rho)
 
   if (myrank == 0) then
-    print*
-    print*,'initial kernels:'
+    print *
+    print *,'initial kernels:'
     if (USE_ALPHA_BETA_RHO) then
-      print*,'  alpha min/max    : ',min_vp,max_vp
-      print*,'  beta min/max     : ',min_vs,max_vs
+      print *,'  alpha min/max    : ',min_vp,max_vp
+      print *,'  beta min/max     : ',min_vs,max_vs
     else
-      print*,'  bulk_c min/max   : ',min_vp,max_vp
-      print*,'  bulk_beta min/max: ',min_vs,max_vs
+      print *,'  bulk_c min/max   : ',min_vp,max_vp
+      print *,'  bulk_beta min/max: ',min_vs,max_vs
     endif
-    print*,'  rho min/max      : ',min_rho,max_rho
-    print*
+    print *,'  rho min/max      : ',min_rho,max_rho
+    print *
   endif
   call synchronize_all()
 
@@ -164,7 +164,7 @@ subroutine read_kernels_tiso()
   character(len=MAX_STRING_LEN) :: m_file, fname
 
   ! user output
-  if (myrank == 0) print*,'reading kernels...'
+  if (myrank == 0) print *,'reading kernels...'
 
   ! allocate arrays for storing kernels and perturbations
   ! transversely isotropic arrays
@@ -183,11 +183,11 @@ subroutine read_kernels_tiso()
   ! bulk kernel
   fname = 'bulk_c_kernel_smooth'
   write(m_file,'(a,i6.6,a)') trim(INPUT_KERNELS_DIR)//'proc',myrank,trim(REG)//trim(fname)//'.bin'
-  if (myrank == 0) print*,'  ',trim(INPUT_KERNELS_DIR)//'proc**'//trim(REG)//trim(fname)//'.bin'
+  if (myrank == 0) print *,'  ',trim(INPUT_KERNELS_DIR)//'proc**'//trim(REG)//trim(fname)//'.bin'
 
   open(IIN,file=trim(m_file),status='old',form='unformatted',iostat=ier)
   if (ier /= 0) then
-    print*,'Error opening: ',trim(m_file)
+    print *,'Error opening: ',trim(m_file)
     call exit_mpi(myrank,'file not found')
   endif
   read(IIN) kernel_bulk(:,:,:,1:nspec)
@@ -196,11 +196,11 @@ subroutine read_kernels_tiso()
   ! betav kernel
   fname = 'bulk_betav_kernel_smooth'
   write(m_file,'(a,i6.6,a)') trim(INPUT_KERNELS_DIR)//'proc',myrank,trim(REG)//trim(fname)//'.bin'
-  if (myrank == 0) print*,'  ',trim(INPUT_KERNELS_DIR)//'proc**'//trim(REG)//trim(fname)//'.bin'
+  if (myrank == 0) print *,'  ',trim(INPUT_KERNELS_DIR)//'proc**'//trim(REG)//trim(fname)//'.bin'
 
   open(IIN,file=trim(m_file),status='old',form='unformatted',iostat=ier)
   if (ier /= 0) then
-    print*,'Error opening: ',trim(m_file)
+    print *,'Error opening: ',trim(m_file)
     call exit_mpi(myrank,'file not found')
   endif
   read(IIN) kernel_betav(:,:,:,1:nspec)
@@ -209,11 +209,11 @@ subroutine read_kernels_tiso()
   ! betah kernel
   fname = 'bulk_betah_kernel_smooth'
   write(m_file,'(a,i6.6,a)') trim(INPUT_KERNELS_DIR)//'proc',myrank,trim(REG)//trim(fname)//'.bin'
-  if (myrank == 0) print*,'  ',trim(INPUT_KERNELS_DIR)//'proc**'//trim(REG)//trim(fname)//'.bin'
+  if (myrank == 0) print *,'  ',trim(INPUT_KERNELS_DIR)//'proc**'//trim(REG)//trim(fname)//'.bin'
 
   open(IIN,file=trim(m_file),status='old',form='unformatted',iostat=ier)
   if (ier /= 0) then
-    print*,'Error opening: ',trim(m_file)
+    print *,'Error opening: ',trim(m_file)
     call exit_mpi(myrank,'file not found')
   endif
   read(IIN) kernel_betah(:,:,:,1:nspec)
@@ -222,11 +222,11 @@ subroutine read_kernels_tiso()
   ! eta kernel
   fname = 'eta_kernel_smooth'
   write(m_file,'(a,i6.6,a)') trim(INPUT_KERNELS_DIR)//'proc',myrank,trim(REG)//trim(fname)//'.bin'
-  if (myrank == 0) print*,'  ',trim(INPUT_KERNELS_DIR)//'proc**'//trim(REG)//trim(fname)//'.bin'
+  if (myrank == 0) print *,'  ',trim(INPUT_KERNELS_DIR)//'proc**'//trim(REG)//trim(fname)//'.bin'
 
   open(IIN,file=trim(m_file),status='old',form='unformatted',iostat=ier)
   if (ier /= 0) then
-    print*,'Error opening: ',trim(m_file)
+    print *,'Error opening: ',trim(m_file)
     call exit_mpi(myrank,'file not found')
   endif
   read(IIN) kernel_eta(:,:,:,1:nspec)
@@ -247,13 +247,13 @@ subroutine read_kernels_tiso()
   call max_all_cr(maxval(kernel_eta),max_eta)
 
   if (myrank == 0) then
-    print*
-    print*,'initial kernels:'
-    print*,'  bulk min/max : ',min_bulk,max_bulk
-    print*,'  betav min/max: ',min_vsv,max_vsv
-    print*,'  betah min/max: ',min_vsh,max_vsh
-    print*,'  eta min/max  : ',min_eta,max_eta
-    print*
+    print *
+    print *,'initial kernels:'
+    print *,'  bulk min/max : ',min_bulk,max_bulk
+    print *,'  betav min/max: ',min_vsv,max_vsv
+    print *,'  betah min/max: ',min_vsh,max_vsh
+    print *,'  eta min/max  : ',min_eta,max_eta
+    print *
   endif
   call synchronize_all()
 

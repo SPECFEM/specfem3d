@@ -71,6 +71,9 @@ end module constants
   integer :: NSTEP
   double precision :: DT
 
+  ! LDD Runge-Kutta time scheme
+  logical :: USE_LDDRK
+
   integer :: NGNOD
 
   character(len=MAX_STRING_LEN) :: SEP_MODEL_DIRECTORY
@@ -93,7 +96,7 @@ end module constants
 
   ! for simultaneous runs from the same batch job
   integer :: NUMBER_OF_SIMULTANEOUS_RUNS
-  logical :: BROADCAST_SAME_MESH_AND_MODEL
+  logical :: BROADCAST_SAME_MESH_AND_MODEL,USE_FAILSAFE_MECHANISM
 
   ! movies
   logical :: CREATE_SHAKEMAP

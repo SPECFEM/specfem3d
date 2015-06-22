@@ -79,7 +79,7 @@
         do i = 1, NGLLX
           iglob = ibool(i,j,k,ispec)
           if (iglob < 1 .or. iglob > nglob) then
-            print*,'error valence iglob:',iglob,i,j,k,ispec
+            print *,'error valence iglob:',iglob,i,j,k,ispec
             stop 'error valence'
           endif
           valence_external_mesh(iglob) = valence_external_mesh(iglob) + 1

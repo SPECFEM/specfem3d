@@ -51,7 +51,7 @@
     open(unit=27,file=trim(database_name),status='old',&
        action='read',form='unformatted',iostat=ier)
     if (ier /= 0) then
-      print*,'Error could not open database file: ',trim(database_name)
+      print *,'Error could not open database file: ',trim(database_name)
       call exit_mpi(myrank,'Error opening database file')
     endif
   endif
@@ -474,7 +474,7 @@
 
   ! checks
   if (num_abs_boundary_faces < 0) then
-    print*,'read_mesh_databases: reading in negative num_abs_boundary_faces ',num_abs_boundary_faces,'...resetting to zero'
+    print *,'read_mesh_databases: reading in negative num_abs_boundary_faces ',num_abs_boundary_faces,'...resetting to zero'
     num_abs_boundary_faces = 0
   endif
   allocate(abs_boundary_ispec(num_abs_boundary_faces), &
@@ -483,22 +483,37 @@
            abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
   if (ier /= 0) stop 'Error allocating array abs_boundary_ispec etc.'
 
-  !! CD CD !! For coupling with DSM
+  !!!! VM VM & CD CD !! For coupling with external codes
   if (COUPLE_WITH_EXTERNAL_CODE) then
-    allocate(Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
-    allocate(Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
 
-    if (old_DSM_coupling_from_Vadim) then
-      open(unit=IIN_veloc_dsm,file=dsmname(1:len_trim(dsmname))//'vel.bin',status='old', &
+    if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) then
+
+      allocate(Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)) !! CD CD : cf for deallocate
+      allocate(Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
+      if (old_DSM_coupling_from_Vadim) then
+        open(unit=IIN_veloc_dsm,file=dsmname(1:len_trim(dsmname))//'vel.bin',status='old', &
+             action='read',form='unformatted',iostat=ier)
+        open(unit=IIN_tract_dsm,file=dsmname(1:len_trim(dsmname))//'tract.bin',status='old', &
+             action='read',form='unformatted',iostat=ier)
+      else
+        !! To verify for NOBU version (normally, remains empty)
+      endif
+
+    else if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then
+
+      allocate(Veloc_axisem(3,NGLLSQUARE*num_abs_boundary_faces))
+      allocate(Tract_axisem(3,NGLLSQUARE*num_abs_boundary_faces))
+      open(unit=IIN_veloc_dsm,file=dsmname(1:len_trim(dsmname))//'sol_axisem',status='old', &
            action='read',form='unformatted',iostat=ier)
-      open(unit=IIN_tract_dsm,file=dsmname(1:len_trim(dsmname))//'tract.bin',status='old', &
-           action='read',form='unformatted',iostat=ier)
-    else
-      !! To verify for NOBU version (normally, remains empty)
+      write(*,*) 'OPENING ', dsmname(1:len_trim(dsmname))//'sol_axisem'
+
     endif
+
   else
     allocate(Veloc_dsm_boundary(1,1,1,1))
     allocate(Tract_dsm_boundary(1,1,1,1))
+    allocate(Veloc_axisem(1,1))
+    allocate(Tract_axisem(1,1))
   endif
   !! CD CD
 
@@ -916,7 +931,7 @@
       open(unit=27,file=prname(1:len_trim(prname))//'ibelm_moho.bin',status='old',&
          action='read',form='unformatted',iostat=ier)
       if (ier /= 0) then
-        print*,'Error could not open ibelm_moho file: ',prname(1:len_trim(prname))//'ibelm_moho.bin'
+        print *,'Error could not open ibelm_moho file: ',prname(1:len_trim(prname))//'ibelm_moho.bin'
         call exit_mpi(myrank,'Error opening ibelm_moho file')
       endif
     endif
@@ -951,7 +966,7 @@
       open(unit=27,file=prname(1:len_trim(prname))//'normal_moho.bin',status='old',&
          action='read',form='unformatted',iostat=ier)
       if (ier /= 0) then
-        print*,'Error could not open normal_moho file: ',prname(1:len_trim(prname))//'normal_moho.bin'
+        print *,'Error could not open normal_moho file: ',prname(1:len_trim(prname))//'normal_moho.bin'
         call exit_mpi(myrank,'Error opening normal_moho file')
       endif
     endif
@@ -969,7 +984,7 @@
       open(unit=27,file=prname(1:len_trim(prname))//'is_moho.bin',status='old',&
          action='read',form='unformatted',iostat=ier)
       if (ier /= 0) then
-        print*,'Error could not open is_moho file: ',prname(1:len_trim(prname))//'is_moho.bin'
+        print *,'Error could not open is_moho file: ',prname(1:len_trim(prname))//'is_moho.bin'
         call exit_mpi(myrank,'Error opening is_moho file')
       endif
     endif
@@ -1340,7 +1355,7 @@
   if (I_should_read_the_database) then
     open(unit=IIN,file=trim(database_name),status='old',action='read',form='unformatted',iostat=ier)
     if (ier /= 0) then
-      print*,'Error could not open database file: ',trim(database_name)
+      print *,'Error could not open database file: ',trim(database_name)
       call exit_mpi(myrank,'Error opening database file')
     endif
   endif

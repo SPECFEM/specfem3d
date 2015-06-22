@@ -69,6 +69,7 @@ specfem3D_OBJECTS = \
 	$O/compute_forces_viscoelastic_calling_routine.spec.o \
 	$O/compute_forces_viscoelastic_Dev.spec.o \
 	$O/compute_forces_viscoelastic_noDev.spec.o \
+	$O/compute_element_att_memory.spec.o \
 	$O/compute_forces_poro_fluid_part.spec.o \
 	$O/compute_forces_poroelastic_calling_routine.spec.o \
 	$O/compute_forces_poro_solid_part.spec.o \
@@ -85,6 +86,7 @@ specfem3D_OBJECTS = \
 	$O/detect_mesh_surfaces.spec.o \
 	$O/finalize_simulation.spec.o \
 	$O/initialize_simulation.spec.o \
+	$O/integrals_on_whole_domain.spec.o \
 	$O/iterate_time.spec.o \
 	$O/locate_receivers.spec.o \
 	$O/locate_source.spec.o \
@@ -106,6 +108,7 @@ specfem3D_OBJECTS = \
 	$O/specfem3D.spec.o \
 	$O/specfem3D_par.spec.o \
 	$O/update_displacement_scheme.spec.o \
+	$O/update_displacement_LDDRK.spec.o \
 	$O/write_movie_output.spec.o \
 	$O/write_output_ASCII_or_binary.spec.o \
 	$O/write_output_SU.spec.o \
@@ -320,11 +323,12 @@ $O/compute_forces_poro_solid_part.spec.o: $O/specfem3D_par.spec.o
 $O/compute_gradient_in_acoustic.spec.o: $O/specfem3D_par.spec.o
 $O/compute_interpolated_dva.spec.o: $O/specfem3D_par.spec.o
 $O/compute_kernels.spec.o: $O/specfem3D_par.spec.o
-$O/compute_stacey_viscoelastic.spec.o: $O/specfem3D_par.spec.o
+$O/compute_stacey_viscoelastic.spec.o: $O/specfem3D_par.spec.o $O/shared_par.shared_module.o
 $O/create_color_image.spec.o: $O/specfem3D_par.spec.o
 $O/detect_mesh_surfaces.spec.o: $O/specfem3D_par.spec.o
 $O/fault_solver_common.spec.o: $O/specfem3D_par.spec.o
 $O/gravity_perturbation.spec.o: $O/specfem3D_par.spec.o
+$O/integrals_on_whole_domain.spec.o: $O/specfem3D_par.spec.o
 $O/locate_source.spec.o: $O/specfem3D_par.spec.o
 $O/locate_receivers.spec.o: $O/specfem3D_par.spec.o
 $O/pml_par.spec.o: $O/specfem3D_par.spec.o
@@ -350,10 +354,12 @@ $O/pml_compute_memory_variables.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.
 $O/pml_output_VTKs.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o
 $O/read_mesh_databases.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o
 $O/update_displacement_scheme.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o
+$O/update_displacement_LDDRK.spec.o: $O/specfem3D_par.spec.o
 $O/fault_solver_dynamic.spec.o: $O/specfem3D_par.spec.o $O/fault_solver_common.spec.o
 $O/fault_solver_kinematic.spec.o: $O/specfem3D_par.spec.o $O/fault_solver_common.spec.o
 $O/compute_forces_viscoelastic_Dev.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o $O/fault_solver_dynamic.spec.o
 $O/compute_forces_viscoelastic_noDev.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o $O/fault_solver_dynamic.spec.o
+$O/compute_element_att_memory.spec.o: $O/specfem3D_par.spec.o
 $O/compute_forces_viscoelastic_calling_routine.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o $O/fault_solver_dynamic.spec.o $O/fault_solver_kinematic.spec.o
 $O/iterate_time.spec.o: $O/specfem3D_par.spec.o $O/gravity_perturbation.spec.o
 $O/prepare_timerun.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o $O/fault_solver_dynamic.spec.o $O/fault_solver_kinematic.spec.o $O/gravity_perturbation.spec.o

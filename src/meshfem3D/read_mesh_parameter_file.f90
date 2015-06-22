@@ -35,7 +35,8 @@ contains
                                       LOCAL_PATH,SUPPRESS_UTM_PROJECTION,&
                                       INTERFACES_FILE,NSUBREGIONS,subregions,NMATERIALS,material_properties,&
                                       CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
-                                      USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
+                                      USE_REGULAR_MESH,NDOUBLINGS,ner_doublings, &
+                                      THICKNESS_OF_X_PML,THICKNESS_OF_Y_PML,THICKNESS_OF_Z_PML)
 
   use constants
 
@@ -73,6 +74,9 @@ contains
   logical,intent(out) :: USE_REGULAR_MESH
   integer,intent(out) :: NDOUBLINGS
   integer, dimension(2),intent(out) :: ner_doublings
+
+  ! CPML
+  double precision, intent(out) :: THICKNESS_OF_X_PML,THICKNESS_OF_Y_PML,THICKNESS_OF_Z_PML
 
 ! local variables
   integer :: NEX_MAX
@@ -127,6 +131,14 @@ contains
   if (ier /= 0) stop 'Error reading Mesh parameter CREATE_DX_FILES'
   call read_value_logical_mesh(IIN,IGNORE_JUNK,CREATE_VTK_FILES, 'CREATE_VTK_FILES', ier)
   if (ier /= 0) stop 'Error reading Mesh parameter CREATE_VTK_FILES'
+
+  call read_value_dble_precision_mesh(IIN,IGNORE_JUNK,THICKNESS_OF_X_PML, 'THICKNESS_OF_X_PML', ier)
+  if (ier /= 0) stop 'Error reading Mesh parameter THICKNESS_OF_X_PML'
+  call read_value_dble_precision_mesh(IIN,IGNORE_JUNK,THICKNESS_OF_Y_PML, 'THICKNESS_OF_Y_PML', ier)
+  if (ier /= 0) stop 'Error reading Mesh parameter THICKNESS_OF_Y_PML'
+  call read_value_dble_precision_mesh(IIN,IGNORE_JUNK,THICKNESS_OF_Z_PML, 'THICKNESS_OF_Z_PML', ier)
+  if (ier /= 0) stop 'Error reading Mesh parameter THICKNESS_OF_Z_PML'
+
   ! file in which we store the databases
   call read_value_string_mesh(IIN,IGNORE_JUNK,LOCAL_PATH, 'LOCAL_PATH', ier)
   if (ier /= 0) stop 'Error reading Mesh parameter LOCAL_PATH'
@@ -278,7 +290,7 @@ contains
       endif
     enddo
     if (.not. found) then
-      print*,'Error: material id ',imaterial_number,' given in region ',ireg,' not found in materials section'
+      print *,'Error: material id ',imaterial_number,' given in region ',ireg,' not found in materials section'
       stop 'Material ID of region not matching any given material'
     endif
   enddo

@@ -144,8 +144,9 @@
 
   end subroutine Read_dsm_model
 
+!
 !=======================================================================================================
-
+!
 ! compute the Euler angles and the associated rotation matrix
 
   subroutine euler_angles(rotation_matrix,CENTER_LONGITUDE_IN_DEGREES,CENTER_LATITUDE_IN_DEGREES,GAMMA_ROTATION_AZIMUTH)
@@ -194,7 +195,7 @@
 !
 !=======================================================================================================
 
-  subroutine write_gllz_points(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,current_layer,nel_depth,ilayer,iz,Ndepth)
+  subroutine write_gllz_points(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,current_layer,nel_depth,ilayer,iz,Ndepth,updown)
 
   implicit none
 
@@ -202,15 +203,18 @@
   double precision xstore(NGLLX,NGLLY,NGLLZ),ystore(NGLLX,NGLLY,NGLLZ),zstore(NGLLX,NGLLY,NGLLZ)
   double precision profondeur
   integer current_layer(0:nel_depth-1),ilayer,k
-  !write(*,*) ilayer,  current_layer(iz)
-  !profondeur = dsqrt(xstore(1,1,k)**2 + ystore(1,1,k)**2 + (zstore(1,1,k) )**2 )
-  !write(27,*) profondeur/1000., ilayer
+  integer updown(NGLLZ) !! will be also used for VM coupling with AxiSEM
+
+  updown(:) = 0
   if (ilayer ==  current_layer(iz)) then
-     do k=2,NGLLZ
-        profondeur = dsqrt(xstore(1,1,k)**2 + ystore(1,1,k)**2 + (zstore(1,1,k) )**2 )
-        write(27,*) profondeur/1000., ilayer-1,1
-        Ndepth=Ndepth+1
-     enddo
+
+    do k=2,NGLLZ
+      profondeur = dsqrt(xstore(1,1,k)**2 + ystore(1,1,k)**2 + (zstore(1,1,k) )**2 )
+      write(27,*) profondeur/1000., ilayer-1,1
+      Ndepth = Ndepth + 1
+      updown(k) = 0 !! for new output mesh files and VM coupling with AxiSEM
+    enddo
+
   else ! new layer
 
      k=1
@@ -219,21 +223,411 @@
         ilayer =  current_layer(iz)
         write(27,*)  profondeur/1000., ilayer-1,1
         Ndepth=Ndepth+1
+
+        updown(k) = 0 !! for new output mesh files and VM coupling with AxiSEM
+
      else
         ilayer =  current_layer(iz)
         write(27,*)  profondeur/1000., ilayer-1,-1
         Ndepth=Ndepth+1
+
+        updown(k) = -1 !! for new output mesh files and VM coupling with AxiSEM
+
      endif
      do k=2,NGLLZ ! on duplique le dernier point
         profondeur = dsqrt(xstore(1,1,k)**2 + ystore(1,1,k)**2 + (zstore(1,1,k) )**2 )
         write(27,*)  profondeur/1000., ilayer-1,1
         Ndepth=Ndepth+1
+
+        updown(k) = 0 !! for new output mesh files and VM coupling with AxiSEM
+
      enddo
 
 
   endif
 
   end subroutine write_gllz_points
+
+
+!=======================================================================================================
+!
+!=======================================================================================================
+!
+! Useless for the moment ==> maybe we will need it later
+!
+!!$! To have one and only file, who give the Spherical coordinate on ALL the GLL points
+!!$! on the surface of the 3D chunk, for the new DSM coupling (light version using 2D chunk)
+!!$!
+!!$
+!!$  subroutine cartesian_product_to_r_theta_phi_on_chunk_surface_GLL(MESH,deg2rad)
+!!$
+!!$  use constants, only: R_EARTH_KM
+!!$
+!!$  implicit none
+!!$
+!!$  character(len=10)  :: MESH
+!!$  double precision   :: deg2rad
+!!$  integer            :: np_r, np_xmin, np_xmax, np_ymin, np_ymax, np_zmin, recflag1, recflag2, i, j, np_surf, ios
+!!$  double precision   :: rec_val, xmin_val1, xmin_val2, xmax_val1, xmax_val2, ymin_val1, ymin_val2
+!!$  double precision   :: ymax_val1, ymax_val2, zmin_val1, zmin_val2, zmin_fix, x, y ,z, R, R_m, latrad, lgrad
+!!$
+!!$  open(unit=10,file=trim(MESH)//'recdepth',action='read',status='unknown',iostat=ios)
+!!$  open(unit=11,file=trim(MESH)//'stxmin',action='read',status='unknown',iostat=ios)
+!!$  open(unit=12,file=trim(MESH)//'stxmax',action='read',status='unknown',iostat=ios)
+!!$  open(unit=13,file=trim(MESH)//'stymin',action='read',status='unknown',iostat=ios)
+!!$  open(unit=14,file=trim(MESH)//'stymax',action='read',status='unknown',iostat=ios)
+!!$  open(unit=15,file=trim(MESH)//'stzmin',action='read',status='unknown',iostat=ios)
+!!$
+!!$  open(unit=20,file=trim(MESH)//'chunk_surface_GLL_r_theta_phi.out',status='unknown',iostat=ios)
+!!$
+!!$  read(10,*) np_r
+!!$
+!!$  read(11,*) np_xmin
+!!$  read(12,*) np_xmax
+!!$  read(13,*) np_ymin
+!!$  read(14,*) np_ymax
+!!$  read(15,*) np_zmin
+!!$
+!!$  np_surf = np_r*(np_xmin + np_xmax + np_ymin + np_ymax) + np_zmin
+!!$
+!!$  write(20,*) np_surf
+!!$
+!!$  do i=1,np_r
+!!$
+!!$    rewind(11)
+!!$    read(11,*)
+!!$    rewind(12)
+!!$    read(12,*)
+!!$    rewind(13)
+!!$    read(13,*)
+!!$    rewind(14)
+!!$    read(14,*)
+!!$
+!!$    read(10,*) rec_val, recflag1, recflag2
+!!$
+!!$    R = dabs(R_EARTH_KM - rec_val) !! kM
+
+!!$    do j=1,np_xmin
+!!$
+!!$      read(11,*) xmin_val1, xmin_val2
+!!$      write(20,*) R, xmin_val1, xmin_val2
+!!$
+!!$ enddo
+!!$
+!!$    do j=1,np_xmax
+!!$
+!!$      read(12,*) xmax_val1, xmax_val2
+!!$      write(20,*) R, xmax_val1, xmax_val2
+!!$
+!!$    enddo
+!!$
+!!$    do j=1,np_ymin
+!!$
+!!$      read(13,*) ymin_val1, ymin_val2
+!!$      write(20,*) R, ymin_val1, ymin_val2
+!!$
+!!$    enddo
+!!$
+!!$    do j=1,np_ymax
+!!$
+!!$      read(14,*) ymax_val1, ymax_val2
+!!$      write(20,*) R, ymax_val1, ymax_val2
+!!$
+!!$ enddo
+!!$
+!!$ if (i == np_r) zmin_fix = rec_val !! maximal depth
+!!$
+!!$  enddo
+!!$
+!!$  rewind(15)v
+!!$  read(15,*)
+!!$
+!!$  R = dabs(R_EARTH_KM - zmin_fix) !! kM
+!!$
+!!$  do j=1,np_zmin
+!!$
+!!$    read(15,*) zmin_val1, zmin_val2
+!!$    write(20,*) R, zmin_val1, zmin_val2
+!!$
+!!$  enddo
+!!$
+!!$  close(10)
+!!$  close(11)
+!!$  close(12)
+!!$  close(13)
+!!$  close(14)
+!!$  close(15)
+!!$  close(20)
+!!$
+!!$  end subroutine cartesian_product_to_r_theta_phi_on_chunk_surface_GLL
+!
+!=======================================================================================================
+!
+!=======================================================================================================
+!
+!! Used (among other) for VM coupling with AxiSEM
+
+  subroutine write_all_chunk_surface_GLL_in_spherical_and_cartesian_coords(xstore,ystore,zstore, &
+                                                      deg2rad,ilayer,iboun,ispec,nspec,longitud, &
+                                                      latitud,radius,rotation_matrix,updown)
+
+  use constants, only: NGLLX, NGLLY, NGLLZ, EXTERNAL_CODE_IS_DSM, EXTERNAL_CODE_IS_AXISEM
+
+  use shared_parameters, only: EXTERNAL_CODE_TYPE
+
+  implicit none
+
+  integer ispec, nspec, ilayer
+  integer i, j, k, imin, imax, jmin, jmax, kmin, kmax
+  integer updown(NGLLZ)
+  logical :: iboun(6,nspec)
+
+  double precision xstore(NGLLX,NGLLY,NGLLZ), ystore(NGLLX,NGLLY,NGLLZ), zstore(NGLLX,NGLLY,NGLLZ)
+  double precision, dimension(NGLLX,NGLLY,NGLLZ) :: longitud, latitud, radius
+  double precision rotation_matrix(3,3)
+  double precision deg2rad
+
+!
+!---- CF 'earth_chunk_HEX8_Mesher' and 'earth_chunk_HEX27_Mesher' to see the name of files whose units are 91 and 92
+!
+
+1000 format(3f30.10)
+
+!-- all gll in geographical coordinates
+
+  call cartesian2spheric(xstore,ystore,zstore,rotation_matrix,longitud,latitud,radius,deg2rad)
+
+!
+!-- xmin ----
+!
+
+  if (iboun(1,ispec)) then
+
+    imin = 1
+    imax = 1
+    jmin = 1
+    jmax = NGLLY
+    kmin = 1
+    kmax = NGLLZ
+
+    do k=kmin,kmax
+      do j=jmin,jmax
+        do i=imin,imax
+
+          ! CF 'earth_chunk_HEX8_Mesher' and 'earth_chunk_HEX27_Mesher' to see files whose units are 91 and 92
+
+          if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) then
+            write(92,1000) xstore(i,j,k), ystore(i,j,k), zstore(i,j,k)
+
+          else if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then
+            write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k),ispec,i,j,k,1,ilayer,updown(k)
+
+          endif
+
+          write(91,1000) radius(i,j,k), latitud(i,j,k), longitud(i,j,k)
+
+        enddo
+      enddo
+    enddo
+
+  endif
+
+!
+!-- xmax ----
+!
+
+  if (iboun(2,ispec)) then
+
+    imin = NGLLX
+    imax = NGLLX
+    jmin = 1
+    jmax = NGLLY
+    kmin = 1
+    kmax = NGLLZ
+
+    do k=kmin,kmax
+      do j=jmin,jmax
+        do i=imin,imax
+
+          if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) then
+            write(92,1000) xstore(i,j,k), ystore(i,j,k), zstore(i,j,k)
+
+          else if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then
+            write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k),ispec,i,j,k,2,ilayer,updown(k)
+
+          endif
+
+          write(91,1000) radius(i,j,k), latitud(i,j,k), longitud(i,j,k)
+
+        enddo
+      enddo
+    enddo
+
+  endif
+
+!
+!-- ymin ----
+!
+
+  if (iboun(3,ispec)) then
+
+    imin = 1
+    imax = NGLLX
+    jmin = 1
+    jmax = 1
+    kmin = 1
+    kmax = NGLLZ
+
+    do k=kmin,kmax
+      do j=jmin,jmax
+        do i=imin,imax
+
+          if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) then
+            write(92,1000) xstore(i,j,k), ystore(i,j,k), zstore(i,j,k)
+
+          else if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then
+            write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k),ispec,i,j,k,3,ilayer,updown(k)
+
+          endif
+
+          write(91,1000) radius(i,j,k), latitud(i,j,k), longitud(i,j,k)
+
+        enddo
+      enddo
+    enddo
+
+  endif
+
+!
+!-- ymax ----
+!
+
+  if (iboun(4,ispec)) then
+
+    imin = 1
+    imax = NGLLX
+    jmin = NGLLY
+    jmax = NGLLY
+    kmin = 1
+    kmax = NGLLZ
+
+    do k=kmin,kmax
+      do j=jmin,jmax
+        do i=imin,imax
+
+          if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) then
+            write(92,1000) xstore(i,j,k), ystore(i,j,k), zstore(i,j,k)
+
+          else if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then
+            write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k),ispec,i,j,k,4,ilayer,updown(k)
+
+          endif
+
+          write(91,1000) radius(i,j,k), latitud(i,j,k), longitud(i,j,k)
+
+        enddo
+      enddo
+    enddo
+
+  endif
+
+!
+!-- zmin ----
+!
+
+  if (iboun(5,ispec)) then
+
+    imin = 1
+    imax = NGLLX
+    jmin = 1
+    jmax = NGLLY
+    kmin = 1
+    kmax = 1
+
+    do k=kmin,kmax
+      do j=jmin,jmax
+        do i=imin,imax
+
+          if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) then
+            write(92,1000) xstore(i,j,k), ystore(i,j,k), zstore(i,j,k)
+
+          else if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then
+            write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k),ispec,i,j,k,5,ilayer,updown(k)
+
+          endif
+
+          write(91,1000) radius(i,j,k), latitud(i,j,k), longitud(i,j,k)
+
+        enddo
+      enddo
+    enddo
+
+  endif
+
+  end subroutine write_all_chunk_surface_GLL_in_spherical_and_cartesian_coords
+
+!
+!=======================================================================================================
+!
+
+  subroutine cartesian2spheric(xstore,ystore,zstore,rotation_matrix,longitud,latitud,radius,deg2rad)
+
+  use constants, only: NGLLX, NGLLY, NGLLZ, NDIM
+
+  implicit none
+
+  integer i, j, igll, jgll, kgll
+
+  double precision xstore(NGLLX,NGLLY,NGLLZ), ystore(NGLLX,NGLLY,NGLLZ), zstore(NGLLX,NGLLY,NGLLZ)
+  double precision, dimension(NGLLX,NGLLY,NGLLZ) :: longitud, latitud, radius
+  double precision rotation_matrix(3,3)
+  double precision vector_ori(3), vector_rotated(3)
+  double precision rayon, x, y, z, long, lati, deg2rad
+
+!
+!----
+!
+
+  do kgll=1,NGLLZ
+    do jgll=1,NGLLY
+      do igll=1,NGLLX
+
+        vector_ori(1) = xstore(igll,jgll,kgll)
+        vector_ori(2) = ystore(igll,jgll,kgll)
+        vector_ori(3) = zstore(igll,jgll,kgll)
+        !write(*,*)  vector_ori
+        !write(*,*) rotation_matrix
+
+        do i = 1,NDIM
+
+          vector_rotated(i) = 0.d0
+
+          do j = 1,NDIM
+
+            !write(*,*)  vector_rotated(i),rotation_matrix(i,j),vector_ori(j)
+            vector_rotated(i) = vector_rotated(i) + rotation_matrix(i,j)*vector_ori(j)
+
+          enddo
+        enddo
+
+        x     = vector_rotated(1)
+        y     = vector_rotated(2)
+        z     = vector_rotated(3)
+        rayon = dsqrt(vector_rotated(1)**2 + vector_rotated(2)**2 + vector_rotated(3)**2)
+
+        long  = datan2(y,x)
+        lati  = dasin(z/rayon)
+
+        longitud(igll,jgll,kgll) = long/deg2rad
+        latitud(igll,jgll,kgll)  = lati/deg2rad
+        radius(igll,jgll,kgll)   = rayon/1000.d0
+
+      enddo
+    enddo
+  enddo
+
+  end subroutine cartesian2spheric
+
 
 !=======================================================================================================
 !

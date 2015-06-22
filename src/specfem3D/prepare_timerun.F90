@@ -72,6 +72,12 @@
   ! prepares gravity arrays
   call prepare_timerun_gravity()
 
+  ! ZN I do not use if(USE_LDDRK) call prepare_timerun_lddrk()
+  ! ZN in order to avoid the error of using unallocated array.
+  ! ZN since R_**_lddrk are dummy variables in subroutine compute_forces_viscoelastic_Dev and
+  ! ZN in compute_forces_viscoelastic_noDev
+  call prepare_timerun_lddrk()
+
   ! prepares C-PML arrays
   if (PML_CONDITIONS) call prepare_timerun_pml()
 
@@ -106,6 +112,11 @@
     write(IMAIN,*) 'Elapsed time for preparing timerun in seconds = ',tCPU
     write(IMAIN,*)
     write(IMAIN,*) 'time loop:'
+    if (USE_LDDRK) then
+      write(IMAIN,*) '              scheme:         LDDRK with',NSTAGE_TIME_SCHEME,'stages'
+    else
+      write(IMAIN,*) '              scheme:         Newmark'
+    endif
     write(IMAIN,*)
     write(IMAIN,*) '           time step: ',sngl(DT),' s'
     write(IMAIN,*) 'number of time steps: ',NSTEP
@@ -246,7 +257,12 @@
   if (ACOUSTIC_SIMULATION) then
     ! adds contributions
     if (STACEY_ABSORBING_CONDITIONS) then
-      rmass_acoustic(:) = rmass_acoustic(:) + rmassz_acoustic(:)
+      if (USE_LDDRK) then
+        rmass_acoustic(:) = rmass_acoustic(:)
+      else
+        ! adds boundary contributions for newmark scheme
+        rmass_acoustic(:) = rmass_acoustic(:) + rmassz_acoustic(:)
+      endif
       ! not needed anymore
       deallocate(rmassz_acoustic)
     endif
@@ -267,10 +283,16 @@
 
     !! CD CD !!
     if (STACEY_ABSORBING_CONDITIONS) then
-      ! adds boundary contributions
-      rmassx(:) = rmass(:) + rmassx(:)
-      rmassy(:) = rmass(:) + rmassy(:)
-      rmassz(:) = rmass(:) + rmassz(:)
+      if (USE_LDDRK) then
+        rmassx(:) = rmass(:)
+        rmassy(:) = rmass(:)
+        rmassz(:) = rmass(:)
+      else
+        ! adds boundary contributions for newmark scheme
+        rmassx(:) = rmass(:) + rmassx(:)
+        rmassy(:) = rmass(:) + rmassy(:)
+        rmassz(:) = rmass(:) + rmassz(:)
+      endif
     else
       rmassx(:) = rmass(:)
       rmassy(:) = rmass(:)
@@ -400,6 +422,12 @@
   character(len=MAX_STRING_LEN) :: plot_file
   integer :: ier
 
+  if (.not. USE_LDDRK) then
+    NSTAGE_TIME_SCHEME = 1
+  else
+    NSTAGE_TIME_SCHEME = 6
+  endif
+
   ! distinguish between single and double precision for reals
   if (CUSTOM_REAL == SIZE_REAL) then
     deltat = sngl(DT)
@@ -499,7 +527,7 @@
     if (I_should_read_the_database) then
         open(unit=27, file=prname(1:len_trim(prname))//'attenuation.bin', status='old',action='read',form='unformatted',iostat=ier)
         if (ier /= 0) then
-            print*,'error: could not open ',prname(1:len_trim(prname))//'attenuation.bin'
+            print *,'error: could not open ',prname(1:len_trim(prname))//'attenuation.bin'
             call exit_mpi(myrank,'error opening attenuation.bin file')
         endif
     endif
@@ -508,7 +536,7 @@
         read(27) ispec
         if (ispec /= NSPEC_ATTENUATION_AB) then
             close(27)
-            print*,'error: attenuation file array ',ispec,'should be ',NSPEC_ATTENUATION_AB
+            print *,'error: attenuation file array ',ispec,'should be ',NSPEC_ATTENUATION_AB
             call exit_mpi(myrank,'error attenuation array dimensions, please recompile and rerun generate_databases')
         endif
         read(27) one_minus_sum_beta
@@ -588,6 +616,9 @@
       write(IMAIN,*) "  period band min/max (s): ",sngl(MIN_ATTENUATION_PERIOD),sngl(MAX_ATTENUATION_PERIOD)
       write(IMAIN,*) "  central period (s)     : ",sngl(1.0/f_c_source), &
                     " frequency: ",sngl(f_c_source)
+      if (FULL_ATTENUATION_SOLID) then
+        write(IMAIN,*) "  using full attenuation (Q_kappa & Q_mu)"
+      endif
       write(IMAIN,*)
       call flush_IMAIN()
     endif
@@ -698,9 +729,9 @@
       !  radius = radius * R_EARTH ! in m
       !  vp = vp * R_EARTH*dsqrt(PI*GRAV*RHOAV)  ! in m / s
       !  rho = rho  * RHOAV  ! in kg / m^3
-      !  print*,'gravity: radius=',radius,'g=',g,'depth=',radius-R_EARTH
-      !  print*,'vp=',vp,'rho=',rho,'kappa=',(vp**2) * rho
-      !  print*,'minus_g..=',minus_g(iglob)
+      !  print *,'gravity: radius=',radius,'g=',g,'depth=',radius-R_EARTH
+      !  print *,'vp=',vp,'rho=',rho,'kappa=',(vp**2) * rho
+      !  print *,'minus_g..=',minus_g(iglob)
       !endif
     enddo
 
@@ -714,6 +745,121 @@
   endif
 
   end subroutine prepare_timerun_gravity
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine prepare_timerun_lddrk()
+
+  use specfem_par
+  use specfem_par_acoustic
+  use specfem_par_elastic
+  use specfem_par_poroelastic
+
+  implicit none
+
+  integer :: ier
+
+  if (USE_LDDRK) then
+    NGLOB_AB_LDDRK = NGLOB_AB
+    NSPEC_ATTENUATION_AB_LDDRK = NSPEC_ATTENUATION_AB
+    NSPEC_ATTENUATION_AB_kappa_LDDRK = NSPEC_ATTENUATION_AB_kappa
+  else
+    NGLOB_AB_LDDRK = 1
+    NSPEC_ATTENUATION_AB_LDDRK = 1
+    NSPEC_ATTENUATION_AB_kappa_LDDRK = 1
+  endif
+
+  if (ACOUSTIC_SIMULATION) then
+    allocate(potential_acoustic_lddrk(NGLOB_AB_LDDRK),stat=ier)
+    if (ier /= 0) stop 'Error allocating array potential_acoustic_lddrk'
+    allocate(potential_dot_acoustic_lddrk(NGLOB_AB_LDDRK),stat=ier)
+    if (ier /= 0) stop 'Error allocating array potential_dot_acoustic_lddrk'
+    potential_acoustic_lddrk(:) = 0._CUSTOM_REAL
+    potential_dot_acoustic_lddrk(:) = 0._CUSTOM_REAL
+    if (FIX_UNDERFLOW_PROBLEM) then
+      potential_acoustic_lddrk(:) = VERYSMALLVAL
+      potential_dot_acoustic_lddrk(:) = VERYSMALLVAL
+    endif
+  endif
+
+  if (ELASTIC_SIMULATION) then
+    allocate(displ_lddrk(NDIM,NGLOB_AB_LDDRK),stat=ier)
+    if (ier /= 0) stop 'Error allocating array displ_lddrk'
+    allocate(veloc_lddrk(NDIM,NGLOB_AB_LDDRK),stat=ier)
+    if (ier /= 0) stop 'Error allocating array veloc_lddrk'
+    displ_lddrk(:,:) = 0._CUSTOM_REAL
+    veloc_lddrk(:,:) = 0._CUSTOM_REAL
+    if (FIX_UNDERFLOW_PROBLEM) then
+      displ_lddrk(:,:) = VERYSMALLVAL
+      veloc_lddrk(:,:) = VERYSMALLVAL
+    endif
+
+    if (ATTENUATION) then
+      ! note: currently, they need to be defined, as they are used in the routine arguments
+      !          for compute_forces_viscoelastic_Deville()
+      allocate(R_xx_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
+               R_yy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
+               R_xy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
+               R_xz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
+               R_yz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS),stat=ier)
+      if (ier /= 0) stop 'Error allocating array R_**_lddrk etc.'
+
+      R_xx_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
+      R_yy_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
+      R_xy_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
+      R_xz_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
+      R_yz_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
+      if (FIX_UNDERFLOW_PROBLEM) then
+        R_xx_lddrk(:,:,:,:,:) = VERYSMALLVAL
+        R_yy_lddrk(:,:,:,:,:) = VERYSMALLVAL
+        R_xy_lddrk(:,:,:,:,:) = VERYSMALLVAL
+        R_xz_lddrk(:,:,:,:,:) = VERYSMALLVAL
+        R_yz_lddrk(:,:,:,:,:) = VERYSMALLVAL
+      endif
+
+      allocate(R_trace_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa_LDDRK,N_SLS))
+      if (ier /= 0) stop 'Error allocating array R_trace_lddrk etc.'
+      R_trace_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
+      if (FIX_UNDERFLOW_PROBLEM) R_trace_lddrk(:,:,:,:,:) = VERYSMALLVAL
+
+      if (SIMULATION_TYPE == 3) then
+        allocate(b_R_xx_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
+                 b_R_yy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
+                 b_R_xy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
+                 b_R_xz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
+                 b_R_yz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS),stat=ier)
+        if (ier /= 0) stop 'Error allocating array R_**_lddrk etc.'
+
+        b_R_xx_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
+        b_R_yy_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
+        b_R_xy_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
+        b_R_xz_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
+        b_R_yz_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
+        if (FIX_UNDERFLOW_PROBLEM) then
+          b_R_xx_lddrk(:,:,:,:,:) = VERYSMALLVAL
+          b_R_yy_lddrk(:,:,:,:,:) = VERYSMALLVAL
+          b_R_xy_lddrk(:,:,:,:,:) = VERYSMALLVAL
+          b_R_xz_lddrk(:,:,:,:,:) = VERYSMALLVAL
+          b_R_yz_lddrk(:,:,:,:,:) = VERYSMALLVAL
+        endif
+
+        allocate(b_R_trace_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa_LDDRK,N_SLS))
+        if (ier /= 0) stop 'Error allocating array R_**_lddrk etc.'
+        b_R_trace_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
+        if (FIX_UNDERFLOW_PROBLEM) b_R_trace_lddrk(:,:,:,:,:) = VERYSMALLVAL
+
+      endif
+
+    endif
+  endif
+
+  if (POROELASTIC_SIMULATION) then
+    stop 'LDDRK has not been implemented for POROELASTIC_SIMULATION'
+  endif
+
+  end subroutine prepare_timerun_lddrk
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -822,7 +968,7 @@
   integer :: ier
   integer(kind=8) :: filesize
 
-! seismograms
+  ! seismograms
   if (nrec_local > 0 .and. SIMULATION_TYPE == 2) then
     ! allocate Frechet derivatives array
     allocate(Mxx_der(nrec_local),Myy_der(nrec_local), &
@@ -843,13 +989,13 @@
     seismograms_eps(:,:,:,:) = 0._CUSTOM_REAL
   endif
 
-! attenuation backward memories
+  ! attenuation backward memories
   if (ATTENUATION .and. SIMULATION_TYPE == 3) then
     ! precompute Runge-Kutta coefficients if attenuation
     call get_attenuation_memory_values(tau_sigma,b_deltat,b_alphaval,b_betaval,b_gammaval)
   endif
 
-! initializes adjoint kernels and reconstructed/backward wavefields
+  ! initializes adjoint kernels and reconstructed/backward wavefields
   if (SIMULATION_TYPE == 3)  then
     ! elastic domain
     if (ELASTIC_SIMULATION) then
@@ -964,7 +1110,7 @@
         if (num_abs_boundary_faces > 2147483646 / (CUSTOM_REAL * NDIM * NGLLSQUARE)) then
           print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_field
           print *,'  ',CUSTOM_REAL, NDIM, NGLLSQUARE, num_abs_boundary_faces
-          print*,'bit size fortran: ',bit_size(b_reclen_field)
+          print *,'bit size fortran: ',bit_size(b_reclen_field)
           call exit_MPI(myrank,"error b_reclen_field integer limit")
         endif
 
@@ -998,7 +1144,7 @@
         if (num_abs_boundary_faces > 2147483646 / (CUSTOM_REAL * NGLLSQUARE)) then
           print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_potential
           print *,'  ',CUSTOM_REAL, NGLLSQUARE, num_abs_boundary_faces
-          print*,'bit size fortran: ',bit_size(b_reclen_potential)
+          print *,'bit size fortran: ',bit_size(b_reclen_potential)
           call exit_MPI(myrank,"error b_reclen_potential integer limit")
         endif
 
@@ -1010,8 +1156,8 @@
         !if (NSTEP > 2147483646 / b_reclen_potential) then
         !  print *,'file size needed exceeds integer 4-byte limit: ',b_reclen_potential,NSTEP
         !  print *,'  ',CUSTOM_REAL, NGLLSQUARE, num_abs_boundary_faces,NSTEP
-        !  print*,'file size fortran: ',filesize
-        !  print*,'file bit size fortran: ',bit_size(filesize)
+        !  print *,'file size fortran: ',filesize
+        !  print *,'file bit size fortran: ',bit_size(filesize)
         !endif
 
         if (SIMULATION_TYPE == 3) then
@@ -1042,7 +1188,7 @@
         if (num_abs_boundary_faces > 2147483646 / (CUSTOM_REAL * NDIM * NGLLSQUARE)) then
           print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_field_poro
           print *,'  ',CUSTOM_REAL, NDIM, NGLLSQUARE, num_abs_boundary_faces
-          print*,'bit size fortran: ',bit_size(b_reclen_field_poro)
+          print *,'bit size fortran: ',bit_size(b_reclen_field_poro)
           call exit_MPI(myrank,"error b_reclen_field_poro integer limit")
         endif
 
@@ -1507,7 +1653,7 @@
         memory_size = memory_size + 5.d0 * NGLL2 * num_free_surface_faces * dble(CUSTOM_REAL)
       endif
       if (NOISE_TOMOGRAPHY == 3) then
-        ! d_Sigma_kl
+        ! d_sigma_kl
         memory_size = memory_size + NGLL3 * NSPEC_AB * dble(CUSTOM_REAL)
       endif
     endif

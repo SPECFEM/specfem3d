@@ -1,0 +1,103 @@
+\chapter{Reference Frame Convention}\label{cha:Coordinates}
+
+The code uses the following convention for the Cartesian reference
+frame:
+\begin{itemize}
+\item the $x$ axis points East
+\item the $y$ axis points North
+\item the $z$ axis points up
+\end{itemize}
+Note that this convention is different from both the \citet{AkRi80}
+convention and the Harvard Centroid-Moment Tensor (CMT) convention.
+The Aki \& Richards convention is
+\begin{itemize}
+\item the $x$ axis points North
+\item the $y$ axis points East
+\item the $z$ axis points down
+\end{itemize}
+and the Harvard CMT convention is
+\begin{itemize}
+\item the $x$ axis points South
+\item the $y$ axis points East
+\item the $z$ axis points up
+\end{itemize}
+
+\subsection*{Source and receiver locations}
+
+The SPECFEM3D Cartesian software code internally uses Cartesian coordinates.
+The given locations for sources and receiver locations thus may get
+converted. Sources and receiver locations are read in from the \texttt{CMTSOLUTION}
+(or \texttt{FORCESOLUTION}) and \texttt{STATIONS} files. Note that
+e.g. the \texttt{CMTSOLUTION} and \texttt{FORCESOLUTION} files denotes
+the location by \textquotedbl{}longitude/latitude/depth\textquotedbl{}.
+We read in longitude as $x$ coordinate, latitude as $y$ coordinate.
+
+In case the flag \texttt{SUPPRESS\_UTM\_PROJECTION} is set to \texttt{.false.}
+in the main parameter file (see Chapter~\ref{cha:Creating-Distributed-Databases}),
+the $x$/$y$ coordinates have to be given in degrees and are converted
+to Cartesian coordinates using a UTM conversion with the specified
+UTM zone.
+
+The value for depth (given in $km$ in \texttt{CMTSOLUTION} and \texttt{FORCESOLUTION})
+or burial depth (given in $m$ in \texttt{STATIONS}) is evaluated
+with respect to the surface of the mesh at the specified $x$/$y$
+location to find the corresponding $z$ coordinate. It is possible
+to use this depth value directly as $z$ coordinate by changing the
+flag \texttt{USE\_SOURCES\_RECVS\_Z} to \texttt{.true.} in the file
+\texttt{constants.h} located in the \texttt{src/shared/} subdirectory.
+
+
+\subsection*{Seismogram outputs}
+
+The seismogram output directions are given in Cartesian $x$/$y$/$z$
+directions and not rotated any further. Changing flags in \texttt{constants.h}
+in the \texttt{src/shared/} subdirectory only rotates the seismogram
+outputs if receivers are forced to be located at the surface (\texttt{RECVS\_CAN\_BE\_BURIED\_EXT\_MESH}
+set to \texttt{.false.}) and the normal to the surface at the receiver
+location should be used (\texttt{EXT\_MESH\_RECV\_NORMAL} set to \texttt{.true.})
+as vertical. In this case, the outputs are rotated to have the vertical
+component normal to the surface of the mesh, $x$ and $y$ directions
+are somewhat arbitrary orthogonal directions along the surface.
+
+For the labeling of the seismogram channels, see Appendix~\ref{cha:channel-codes}.
+Additionally, we add labels to the synthetics using the following
+convention: For a receiver station located in an
+\begin{description}
+\item [{elastic domain:}] ~
+\begin{itemize}
+\item \texttt{semd} for the displacement vector
+\item \texttt{semv} for the velocity vector
+\item \texttt{sema} for the acceleration vector
+\end{itemize}
+\item [{acoustic domain:}] ~\\
+ (please note that receiver stations in acoustic domains must be buried.
+This is due to the free surface condition which enforces a zero pressure
+at the surface.)
+\begin{itemize}
+\item \texttt{semd} for the displacement vector
+\item \texttt{semv} for the velocity vector
+\item \texttt{sema} for pressure which will be stored in the vertical component
+\texttt{Z}. Note that pressure in the acoustic media is isotropic
+and thus the pressure record would be the same in the other two component
+directions. We therefore use the other two seismogram components to
+store the acoustic potential in component \texttt{X} (or \texttt{N})
+and the first time derivative of the acoustic potential in component
+\texttt{Y} (or \texttt{E}).
+\end{itemize}
+\end{description}
+The seismograms are by default written out in ASCII-format to the
+\texttt{OUTPUT\_FILES/} subdirectory by each parallel process. You
+can change this behavior by changing the following flags in the \texttt{constants.h}
+file located in the \texttt{src/shared/} subdirectory:
+\begin{description}
+\item [{\texttt{SEISMOGRAMS\_BINARY}}] set to \texttt{.true.} to have seismograms
+written out in binary format.
+\item [{\texttt{WRITE\_SEISMOGRAMS\_BY\_MASTER}}] Set to \texttt{.true.}
+to have only the master process writing out seismograms. This can
+be useful on a cluster, where only the master process node has access
+to the output directory.
+\item [{\texttt{USE\_OUTPUT\_FILES\_PATH}}] Set to \texttt{.false.} to
+have the seismograms output to \texttt{LOCAL\_PATH} directory specified
+in the main parameter file \texttt{DATA/Par\_file}.
+\end{description}
+

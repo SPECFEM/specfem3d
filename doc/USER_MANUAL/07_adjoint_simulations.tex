@@ -1,0 +1,238 @@
+\chapter{Adjoint Simulations}\label{cha:Adjoint-Simulations}
+
+Adjoint simulations are generally performed for two distinct applications.
+First, they can be used in point source moment-tensor inversions, or source imaging for
+earthquakes with large ruptures such as the Lander's earthquake \citep{WaHe94}.
+Second, they can be used to generate finite-frequency sensitivity
+kernels that are a critical part of tomographic inversions based upon
+3D reference models \citep{TrTaLi05,LiTr06,TrKoLi08,LiTr08}. In either
+case, source parameter or velocity structure updates are sought to
+minimize a specific misfit function (e.g., waveform or traveltime
+differences), and the adjoint simulation provides a means of computing
+the gradient of the misfit function and further reducing it in successive
+iterations. Applications and procedures pertaining to source studies
+and finite-frequency kernels are discussed in Sections~\ref{sec:Adjoint-simulation-sources}
+and \ref{sec:Adjoint-simulation-finite}, respectively. The two related
+parameters in the \texttt{Par\_file} are \texttt{SIMULATION\_TYPE}
+(1, 2 or 3) and the \texttt{SAVE\_FORWARD} (boolean).
+
+
+\section{Adjoint Simulations for Sources Only (not for the Model)}\label{sec:Adjoint-simulation-sources}
+
+When a specific misfit function between data and synthetics is minimized to invert
+for earthquake source parameters, the gradient of the misfit function
+with respect to these source parameters can be computed by placing
+time-reversed seismograms at the receivers as virtual sources
+in an adjoint simulation. Then the value of the gradient is obtained
+from the adjoint seismograms recorded at the original earthquake location.
+\begin{enumerate}
+\item \textbf{Prepare the adjoint sources} \label{enu:Prepare-the-adjoint}
+
+\begin{enumerate}
+\item First, run a regular forward simulation (\texttt{SIMULATION\_TYPE =
+1} and \texttt{SAVE\_FORWARD = .false.}). You can automatically set
+these two variables using the \texttt{\small utils/change\_simulation\_type.pl}{\small{}
+script:}{\small \par}
+\begin{verbatim}
+utils/change_simulation_type.pl -f
+\end{verbatim}
+
+and then collect the recorded seismograms at all the stations given
+in \texttt{DATA/STATIONS}.
+
+\item Then select the stations for which you want to compute the time-reversed
+adjoint sources and run the adjoint simulation, and compile them into
+the \texttt{DATA/STATIONS\_ADJOINT} file, which has the same format
+as the regular \texttt{DATA/STATIONS} file.
+
+\begin{itemize}
+\item Depending on what type of misfit function is used for the source inversion,
+adjoint sources need to be computed from the original recorded seismograms
+for the selected stations and saved in a sub-directory called \texttt{SEM/}
+in the root directory of the code, with the format \texttt{NT.STA.BX?.adj}, where \texttt{NT},
+\texttt{STA} are the network code and station name given in the \texttt{DATA/STATIONS\_ADJOINT}
+file, and \texttt{BX?} represents the component name of a particular
+adjoint seismogram. Please note that the band code can change depending
+on your sampling rate (see Appendix~\ref{cha:channel-codes} for
+further details).
+\item The adjoint seismograms are in the same format as the original seismogram
+(\texttt{NT.STA.BX?.sem?}), with the same start time, time interval
+and record length.
+\end{itemize}
+\item Notice that even if you choose to time reverse only one component
+from one specific station, you still need to supply all three components
+because the code is expecting them (you can set the other two components
+to be zero).
+\item Also note that since time-reversal is done in the code itself, no
+explicit time-reversing is needed for the preparation of the adjoint
+sources, i.e., the adjoint sources are in the same forward time sense
+as the original recorded seismograms.
+\end{enumerate}
+\item \textbf{Set the related parameters and run the adjoint simulation}\\
+ In the \texttt{DATA/Par\_file}, set the two related parameters to
+be \texttt{SIMULATION\_TYPE = 2} and \texttt{SAVE\_FORWARD = .false.}.
+More conveniently, use the scripts \texttt{utils/change\_simulation\_type.pl}
+to modify the \texttt{Par\_file} automatically (\texttt{change\_simulation\_type.pl
+-a}). Then run the solver to launch the adjoint simulation.
+\item \textbf{Collect the seismograms at the original source location}
+
+
+After the adjoint simulation has completed successfully, collect the
+seismograms from \texttt{LOCAL\_PATH}.
+\begin{itemize}
+\item These adjoint seismograms are recorded at the locations of the original
+earthquake sources given by the \texttt{DATA/CMTSOLUTION} file, and
+have names of the form \texttt{NT.S?????.S??.sem} for the six-component
+strain tensor (\texttt{SNN,SEE,SZZ,SNE,SNZ,SEZ}) at these locations,
+and ~\\
+ \texttt{NT.S?????.BX?.sem} for the three-component displacements
+(\texttt{BXN,BXE,BXZ}) recorded at these locations.
+\item \texttt{S?????} denotes the source number; for example, if the original
+\texttt{CMTSOLUTION} provides only a point source, then the seismograms
+collected will start with \texttt{S00001}.
+\item These adjoint seismograms provide critical information for the computation
+of the gradient of the misfit function.
+\end{itemize}
+\end{enumerate}
+
+
+
+\section{Adjoint Simulations for Finite-Frequency Kernels (Kernel Simulation)}\label{sec:Adjoint-simulation-finite}
+
+Finite-frequency sensitivity kernels are computed in two successive
+simulations (please refer to \citet{LiTr06} and \citet{TrKoLi08}
+for details).
+\begin{enumerate}
+\item \textbf{Run a forward simulation with the state variables saved at
+the end of the simulation}
+
+
+Prepare the \texttt{\small CMTSOLUTION}{\small{} and }\texttt{\small STATIONS}{\small{}
+files, set the parameters }\texttt{\small SIMULATION\_TYPE}{\small {}
+}\texttt{\small =}{\small {} }\texttt{\small 1}{\small{} and }\texttt{\small SAVE\_FORWARD
+=}{\small {} }\texttt{\small .true.}{\small{} in the }\texttt{\small Par\_file}{\small{}
+(}\texttt{\small change\_simulation\_type -F}{\small ), and run the
+solver.}{\small \par}
+\begin{itemize}
+\item Notice that attenuation is not implemented yet for the computation
+of finite-frequency kernels; therefore set \texttt{ATTENUATION = .false.}
+in the \texttt{Par\_file}.
+\item We also suggest you modify the half duration of the \texttt{CMTSOLUTION}
+to be similar to the accuracy of the simulation (see Equation \ref{eq:shortest_period})
+to avoid too much high-frequency noise in the forward wavefield, although
+theoretically the high-frequency noise should be eliminated when convolved
+with an adjoint wavefield with the proper frequency content.
+\item This forward simulation differs from the regular simulations (\texttt{\small SIMULATION\_TYPE}{\small {}
+}\texttt{\small =}{\small {} }\texttt{\small 1}{\small{} and }\texttt{\small SAVE\_FORWARD}{\small {}
+}\texttt{\small =}{\small {} }\texttt{\small .false.}{\small ) described
+in the previous chapters in that the state variables for the last
+time step of the simulation, including wavefields of the displacement,
+velocity, acceleration, etc., are saved to the }\texttt{\small LOCAL\_PATH}{\small{}
+to be used for the subsequent simulation. }{\small \par}
+\item For regional simulations, the files recording the absorbing boundary
+contribution are also written to the \texttt{LOCAL\_PATH} when \texttt{SAVE\_FORWARD
+= .true.}.
+\end{itemize}
+\item \textbf{Prepare the adjoint sources}
+
+
+The adjoint sources need to be prepared the same way as described
+in the Section \ref{enu:Prepare-the-adjoint}.
+\begin{itemize}
+\item In the case of travel-time finite-frequency kernel for one source-receiver
+pair, i.e., point source from the \texttt{CMTSOLUTION}, and one station
+in the \texttt{STATIONS\_ADJOINT} list, we supply a sample program
+in \texttt{utils/adjoint\_sources/traveltime/xcreate\_adjsrc\_traveltime}
+to cut a certain portion of the original displacement seismograms
+and convert it into the proper adjoint source to compute the finite-frequency
+kernel.
+
+\begin{verbatim}
+xcreate_adjsrc_traveltime t1 t2 ifile[0-5] E/N/Z-ascii-files [baz]
+\end{verbatim}
+where \texttt{t1} and \texttt{t2} are the start and end time of the
+portion you are interested in, \texttt{ifile} denotes the component
+of the seismograms to be used (0 for all three components, 1 for East,
+2 for North, and 3 for vertical, 4 for transverse, and 5 for radial
+component), \texttt{E/N/Z-ascii-files} indicate the three-component
+displacement seismograms in the right order, and \texttt{baz} is the
+back-azimuth of the station. Note that \texttt{baz} is only supplied
+when \texttt{ifile} = 4 or 5.
+
+\item Similarly, a sample program to compute adjoint sources for amplitude
+finite-frequency kernels may be found in \texttt{utils/adjoint\_sources/amplitude}
+and used in the same way as described for traveltime measurements
+\begin{verbatim}
+xcreate_adjsrc_amplitude t1 t2 ifile[0-5] E/N/Z-ascii-files [baz]
+\end{verbatim}
+\end{itemize}
+\item \textbf{Run the kernel simulation}
+
+
+With the successful forward simulation and the adjoint source ready
+in the \texttt{SEM/} directory, set \texttt{SIMULATION\_TYPE
+= 3} and \texttt{SAVE\_FORWARD = .false.} in the \texttt{Par\_file}
+(you can use \texttt{change\_simulation\_type.pl -b}), and rerun the
+solver.
+\begin{itemize}
+\item The adjoint simulation is launched together with the back reconstruction
+of the original forward wavefield from the state variables saved from
+the previous forward simulation, and the finite-frequency kernels
+are computed by the interaction of the reconstructed forward wavefield
+and the adjoint wavefield.
+\item The back-reconstructed seismograms at the original station locations
+are saved to the \texttt{LOCAL\_PATH} at the end of the kernel simulations,
+and can be collected to the local disk.
+\item These back-constructed seismograms can be compared with the time-reversed
+original seismograms to assess the accuracy of the backward reconstruction,
+and they should match very well.
+\item The arrays for density, P-wave speed and S-wave speed kernels are
+also saved in the \texttt{LOCAL\_PATH} with the names \texttt{proc??????\_rho(alpha,beta)\_kernel.bin},
+where \texttt{proc??????} represents the processor number, \texttt{rho(alpha,beta)}
+are the different types of kernels.
+\end{itemize}
+\item \textbf{Run the anisotropic kernel simulation}
+
+
+Instead of the kernels for the isotropic wave speeds, you can also
+compute the kernels for the 21 independent components $C_{IJ},\, I,J=1,...,6$
+(using Voigt's notation) of the elastic tensor in the cartesian coordinate
+system. This is done by setting \texttt{ANISOTROPIC\_KL} \texttt{=}
+\texttt{.true.} in \texttt{constants.h} before compiling the package.
+The definition of the parameters $C_{IJ}$ in terms of the corresponding
+components $c_{ijkl},ijkl,i,j,k,l=1,2,3$ of the elastic tensor in
+cartesian coordinates follows \citet{ChTr07}. The 21 anisotropic
+kernels are saved in the \texttt{LOCAL\_PATH} in one file with the
+name of \texttt{proc??????\_cijkl\_kernel.bin} (with \texttt{proc??????}
+the processor number). The output kernels correspond to absolute perturbations
+$\delta C_{IJ}$ of the elastic parameters and their unit is in $s/GPa/km^{3}$.
+For consistency, the output density kernels with this option turned
+on are for a perturbation $\delta\rho$ (and not $\frac{\delta\rho}{\rho}$)
+and their unit is in s / (kg/m$^{3}$) / km$^{3}$. These `primary'
+anisotropic kernels can then be combined to obtain the kernels for
+different parameterizations of anisotropy. This can be done, for example,
+when combining the kernel files from slices into one mesh file (see
+Section~\ref{sec:Finite-Frequency-Kernels}).
+
+
+If \texttt{ANISOTROPIC\_KL} \texttt{=} \texttt{.true.} by additionally
+setting \texttt{ANISOTROPIC\_KL} \texttt{=} \texttt{.true.} in \texttt{constants.h}
+the package will save anisotropic kernels parameterized as velocities
+related to transverse isotropy based on the the Chen and Tromp parameters
+\citet{ChTr07}. The kernels are saved as relative perturbations for
+horizontal and vertical P and S velocities, $\alpha_{v},\alpha_{h},\beta_{v},\beta_{h}$.
+Explicit relations can be found in appendix B. of \citet{SiLiTrTr07b}
+
+
+The anisotropic kernels are only currently available for CPU mode.
+
+\end{enumerate}
+In general, the three steps need to be run sequentially to assure
+proper access to the necessary files. If the simulations are run through
+some cluster scheduling system (e.g., LSF), and the forward simulation
+and the subsequent kernel simulations cannot be assigned to the same
+set of computer nodes, the kernel simulation will not be able to access
+the database files saved by the forward simulation. Solutions for
+this dilemma are provided in Chapter~\ref{cha:Scheduler}. Visualization
+of the finite-frequency kernels is discussed in Section~\ref{sec:Finite-Frequency-Kernels}.
+

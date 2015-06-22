@@ -106,7 +106,7 @@ subroutine gravity_init()
   enddo
   close(IIN_G)
 
-  nstep_grav = floor(dble(NSTEP/ntimgap))
+  nstep_grav = floor(dble(NSTEP)/dble(ntimgap))
   allocate(accE(nstep_grav,nstat))
   allocate(accN(nstep_grav,nstat))
   allocate(accZ(nstep_grav,nstat))
@@ -321,7 +321,7 @@ subroutine gravity_timeseries()
   integer :: istat, it_grav
 
   if (mod(it,ntimgap)==0) then
-    it_grav = nint(dble(it/ntimgap))
+    it_grav = nint(dble(it)/dble(ntimgap))
     allocate(Rg(NGLOB_AB))
     allocate(dotP(NGLOB_AB))
 
@@ -358,8 +358,8 @@ subroutine gravity_output()
   integer :: isample,istat,nstep_grav
   character(len=MAX_STRING_LEN) :: sisname
 
-  nstep_grav = floor(dble(NSTEP/ntimgap))
-  nstat_local = nint(dble(nstat/NPROC))
+  nstep_grav = floor(dble(NSTEP)/dble(ntimgap))
+  nstat_local = nint(dble(nstat)/dble(NPROC))
 
   do istat=1,nstat
     if (istat < myrank*nstat_local+1 .or. istat > (myrank+1)*nstat_local) cycle

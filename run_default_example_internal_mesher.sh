@@ -11,6 +11,7 @@ NPROC=4
 
 ##################################################
 
+# setup default example
 rm -rf DATA
 ln -s examples/meshfem3D_examples/simple_model/DATA DATA
 

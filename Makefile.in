@@ -228,12 +228,12 @@ S_TOP = @top_srcdir@
 # code subdirectories
 SUBDIRS = \
 	auxiliaries \
-	check_mesh_quality_CUBIT_Abaqus \
+	check_mesh_quality \
 	cuda \
 	decompose_mesh \
 	generate_databases \
 	meshfem3D \
-	postprocess \
+	tomography/postprocess_sensitivity_kernels \
 	shared \
 	specfem3D \
 	tomography \
@@ -262,9 +262,8 @@ all: default \
 	xsmooth_sem \
 	xsum_kernels \
 	xsum_preconditioned_kernels \
-	xcheck_mesh_quality_CUBIT_Abaqus \
+	xcheck_mesh_quality \
 	xconvert_skewness_to_angle \
-	xmultiply_CUBIT_Abaqus_mesh_by_1000 \
 	xprogram01_add_model_iso \
 	xprogram02_model_update \
 	xprogram03_smooth_sem \
@@ -323,7 +322,7 @@ help:
 	@echo "    xconvolve_source_timefunction"
 	@echo "    xcreate_movie_shakemap_AVS_DX_GMT"
 	@echo ""
-	@echo "    xcheck_mesh_quality_CUBIT_Abaqus"
+	@echo "    xcheck_mesh_quality"
 	@echo "    xconvert_skewness_to_angle"
 	@echo ""
 	@echo "additional executables:"
@@ -334,11 +333,10 @@ help:
 	@echo "    xcreate_movie_shakemap_AVS_DX_GMT"
 	@echo ""
 	@echo "- check mesh executables: [make check_mesh]"
-	@echo "    xcheck_mesh_quality_CUBIT_Abaqus"
+	@echo "    xcheck_mesh_quality"
 	@echo "    xconvert_skewness_to_angle"
-	@echo "    xmultiply_CUBIT_Abaqus_mesh_by_1000"
 	@echo ""
-	@echo "- postprocessing tools: [make postprocess]"
+	@echo "- sensitivity kernel postprocessing tools: [make tomography/postprocess_sensitivity_kernels]"
 	@echo "    xclip_sem"
 	@echo "    xcombine_sem"
 	@echo "    xsmooth_sem"
@@ -370,7 +368,7 @@ help:
 	sum_kernels xsum_kernels \
 	sum_preconditioned_kernels xsum_preconditioned_kernels \
 	model_update xmodel_update \
-	check_mesh_quality_CUBIT_Abaqus xcheck_mesh_quality_CUBIT_Abaqus \
+	check_mesh_quality xcheck_mesh_quality \
 	gen generate_databases xgenerate_databases \
 	dec decompose_mesh xdecompose_mesh \
 	mesh meshfem3D xmeshfem3D \

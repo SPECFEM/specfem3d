@@ -54,10 +54,10 @@
   do while (1 == 1)
     call getarg(i,arg(i))
     if (i <= 1 .and. trim(arg(i)) == '') then
-      print*,'Usage: '
-      print*,'  ./xSU_adjoint NPROC'
-      print*,'with'
-      print*,'  NPROC: total number of partitions'
+      print *,'Usage: '
+      print *,'  ./xSU_adjoint NPROC'
+      print *,'with'
+      print *,'  NPROC: total number of partitions'
       stop
     endif
     if (trim(arg(i)) == '') exit
@@ -69,13 +69,13 @@
   enddo
 
   ! user output
-  print*, "SU adjoint "
-  print*
-  print*, "number of partitions : ",NPROC
-  print*, "data path            : ",trim(DATA_PATH)
-  print*, "synthetics path      : ",trim(SYN_PATH)
-  print*, "adjoint sources path : ",trim(ADJ_PATH)
-  print*
+  print *, "SU adjoint "
+  print *
+  print *, "number of partitions : ",NPROC
+  print *, "data path            : ",trim(DATA_PATH)
+  print *, "synthetics path      : ",trim(SYN_PATH)
+  print *, "adjoint sources path : ",trim(ADJ_PATH)
+  print *
 
   ! reads NSTEP info from seismograms
   ! only do this once
@@ -85,7 +85,7 @@
   open(11,file=trim(filename),access='direct',status='old', &
         recl=240,iostat=ios)
   if( ios /= 0 ) then
-    print*,'error opening file: ',trim(filename)
+    print *,'error opening file: ',trim(filename)
     stop 'error opening data file'
   endif
 
@@ -100,9 +100,9 @@
   DT = header2(1) * 1.0d-6
 
   ! user output
-  print*, "NSTEP = ",NSTEP
-  print*, "DT    = ",DT
-  print*
+  print *, "NSTEP = ",NSTEP
+  print *, "DT    = ",DT
+  print *
 
   ! allocates arrays
   allocate(syn(NSTEP),dat(NSTEP),adj(NSTEP))
@@ -112,12 +112,12 @@
 
     ! partition name
     write(procname,"(i4)") iproc
-    print*,"...reading partition: ",iproc
+    print *,"...reading partition: ",iproc
 
     ! loops over components
     do icomp = 1,3
       ! user output
-      print*,"  component ",compstr(icomp)
+      print *,"  component ",compstr(icomp)
 
       ! opens files
       ! data
@@ -125,7 +125,7 @@
       open(11,file=trim(filename),access='direct',status='old', &
             recl=240+4*NSTEP,iostat=ios)
       if( ios /= 0 ) then
-        print*,'error opening file: ',trim(filename)
+        print *,'error opening file: ',trim(filename)
         stop 'error opening input data file '
       endif
 
@@ -134,7 +134,7 @@
       open(22,file=trim(filename),access='direct',status='old', &
             recl=240+4*NSTEP,iostat=ios)
       if( ios /= 0 ) then
-        print*,'error opening file: ',trim(filename)
+        print *,'error opening file: ',trim(filename)
         stop 'error opening input file '
       endif
 
@@ -143,7 +143,7 @@
       open(33,file=trim(filename),access='direct',status='unknown', &
             recl=240+4*NSTEP,iostat = ios)
       if( ios /= 0 ) then
-        print*,'error opening file: ',trim(filename)
+        print *,'error opening file: ',trim(filename)
         stop 'error opening output file '
       endif
 
@@ -173,12 +173,12 @@
     enddo
 
     ! user output
-    print*, "  receivers read: ",irec
+    print *, "  receivers read: ",irec
   enddo
 
   ! user output
-  print*, "done adjoint sources"
-  print*, "please, check output files in directory: ",trim(ADJ_PATH)
+  print *, "done adjoint sources"
+  print *, "please, check output files in directory: ",trim(ADJ_PATH)
 
   end program
 

@@ -47,7 +47,8 @@
                         mask_noise,noise_surface_movie, &
                         nrec_local,number_receiver_global, &
                         nsources_local,USE_FORCE_POINT_SOURCE, &
-                        USE_RICKER_TIME_FUNCTION,COUPLE_WITH_EXTERNAL_CODE,SU_FORMAT
+                        USE_RICKER_TIME_FUNCTION,COUPLE_WITH_EXTERNAL_CODE,SU_FORMAT, &
+                        USE_LDDRK,istage
 
   implicit none
 
@@ -88,6 +89,7 @@
   double precision :: stf
   real(kind=CUSTOM_REAL),dimension(:,:,:,:,:),allocatable:: adj_sourcearray
   real(kind=CUSTOM_REAL) stf_used,stf_used_total_all,time_source
+  double precision :: time_source_dble
   integer :: isource,iglob,i,j,k,ispec
   integer :: irec_local,irec, ier
 
@@ -127,13 +129,19 @@
 
           if (ispec_is_elastic(ispec)) then
 
+            if (USE_LDDRK) then
+              time_source_dble = dble(it-1)*DT+dble(C_LDDRK(istage))*DT-t0-tshift_src(isource)
+            else
+              time_source_dble = dble(it-1)*DT-t0-tshift_src(isource)
+            endif
+
             if (USE_FORCE_POINT_SOURCE) then
 
               if (USE_RICKER_TIME_FUNCTION) then
-                stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+                stf = comp_source_time_function_rickr(time_source_dble,hdur(isource))
               else
                 ! use a very small duration of 5*DT to mimic a Dirac in time
-                stf = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),5.d0*DT)
+                stf = comp_source_time_function_gauss(time_source_dble,5.d0*DT)
               endif
 
               ! add the tilted force source array
@@ -156,9 +164,9 @@
             else
 
               if (USE_RICKER_TIME_FUNCTION) then
-                stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+                stf = comp_source_time_function_rickr(time_source_dble,hdur(isource))
               else
-                stf = comp_source_time_function(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+                stf = comp_source_time_function(time_source_dble,hdur_gaussian(isource))
               endif
 
               !     distinguish between single and double precision for reals

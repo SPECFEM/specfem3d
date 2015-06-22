@@ -26,8 +26,8 @@
 !=====================================================================
 
   subroutine write_output_ASCII_or_binary(one_seismogram, &
-              NSTEP,it,SIMULATION_TYPE,DT,t0, &
-              iorientation,sisname,final_LOCAL_PATH)
+                                          NSTEP,it,SIMULATION_TYPE,DT,t0, &
+                                          iorientation,sisname,final_LOCAL_PATH)
 
 ! save seismograms in text format with no subsampling.
 ! Because we do not subsample the output, this can result in large files

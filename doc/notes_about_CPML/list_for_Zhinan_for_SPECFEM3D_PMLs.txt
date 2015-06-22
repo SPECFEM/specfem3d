@@ -1,0 +1,358 @@
+=====================================================================================
+
+Subject: Re: PML
+Date: Thu, 22 Jan 2015 17:02:21 +0100
+From: Dimitri Komatitsch
+Organization: CNRS, Marseille, France
+To: Jeroen Tromp
+CC: Hom Nath Gharti, xiezhinan1984
+
+Hi Jeroen and Hom Nath,
+
+Sure, Zhinan is working hard on that. PML in the 2D code is now 100%
+clean, and Zhinan is about to be done with the 3D version as well; that
+was a significant amount of work because it turns out that designing a
+clean CPML for the weak form of the equation is difficult. However that
+is now done, it is just a matter of cleaning the source code (Zhinan is
+on it).
+
+As soon as he is 100% done we'll send you an email.
+
+Thanks,
+Dimitri.
+
+
+On 01/22/2015 02:48 AM, Jeroen Tromp wrote:
+> Hi Dimitri:
+>
+> Hom Nath and I would appreciate it if you guys could make PML work for the tunnel model we are working with.
+>
+> Best regards,
+>
+> Jeroen
+
+
+---------- DK DK new issues added by Dimitri on January 21, 2015, following some emails I exchanged with Zhinan:
+
+Subject:  Re:Re: PML
+Date:   Wed, 17 Dec 2014 19:41:23 +0800 (CST)
+From:   xiezhinan
+To:   Dimitri Komatitsch
+CC:   Jeroen Tromp , Matthieu Lefebvre , Ryan Modrak , Alexis Bottero , Daniel Peter , Mathilde Griveaux , Paul Cristini , Clement Durochat , Yi Wang , Vadim Monteiller
+
+Dear Dimitri, dear all,
+
+Thank you so much for understanding my delay in work of SPECFEM source development.
+I would like to summarize some previous email about the missing things
+in SPECFEM that need further some research work and things have been done but do not committed in SPECFEM:
+
+
+Missing things:
+
+(1): The PML formulation and implementation for wave simulation in Chunk of earth with SPECFEM_globe.
+
+(2): The computational part of PML code in SPECFEM2D and SPCFEM3D_Cartesian is not well documented and also not clean, in
+particular for adjoint wave simulation.
+
+(3): make the PML code work with inner_mesher in SPCFEM3D_Cartesian.
+
+(4): The LDDRK scheme implementation in SPCFEM3D_Cartesian.
+
+(5): plane wave incident with PML in case of layered infinite domain.
+
+
+Uncommitted things (or committed some unclean code):
+
+(1): PML implementation in SPECFEM2D and SPCFEM3D_Cartesian for forward and adjoint acoustic/elastic simulation with source excitation.
+
+(2): boundary kernel computation with PML.
+
+(3): plane wave incident with PML in case of uniform infinite domain.
+
+
+Also some problems have been reported and already realized by the team of developers:
+
+(1): The SPECFEM2D code is not clean due to many development.
+
+(2): some examples in SPECFEM2D are broken, such as the nice example done by LuoYang: noise_layered and noise_uniform.
+
+(3): an clean adjoint inversion example with PML.
+
+Thanks,
+Best regards,
+Zhinan
+
+------------------------------------------------
+
+Subject: Re: PML
+Date: Thu, 22 Jan 2015 01:43:52 +0100
+From: Dimitri Komatitsch
+Organization: CNRS, Marseille, France
+To: xiezhinan
+CC:   Jeroen Tromp , Matthieu Lefebvre , Ryan Modrak , Alexis Bottero , Daniel Peter , Mathilde Griveaux , Paul Cristini , Clement Durochat , Yi Wang , Vadim Monteiller
+
+Dear Zhinan, dear all,
+
+I would add one more thing to the list (we discussed it in the Skype
+call of Dec 22):  committing the fluid-solid boundary kernels that are
+currently implemented in a local version in your account of the
+Marseille supercomputer but not committed to Git yet.
+
+Thanks,
+Dimitri.
+
+------------------------------------------------
+------------------------------------------------
+
+Subject: RE: specfem3d
+Date: Fri, 23 Jan 2015 21:23:39 +0000
+From: Zhang, Chang-Hua
+To: Dimitri Komatitsch
+CC: Zhinan Xie
+
+Hi Dimitri and Zhinan,
+
+There are two more bugs:
+1)  The solver crashes for an acoustic-elastic coupling model with PML because of the reallocating an allocated arrays in  pml_allocate_arrays_dummy(). In order to fix it, I have replaced the "call  pml_allocate_arrays_dummy()" with if(.not.PML_CONDITIONS) call pml_allocate_arrays_dummy() in prepare_timerun.F90
+
+
+Best Regards,
+Chang-hua
+
+------------------------------------------------
+------------------------------------------------
+
+Subject: RE: Re:Re: specfem3d
+Date: Thu, 22 Jan 2015 23:25:35 +0000
+From: Zhang, Chang-Hua
+To: xiezhinan, Dimitri Komatitsch
+
+Hi Zhinan,
+
+If I understand correctly, the stress tensor T_ij in the CPML region is not symmetric any more, that is, Txy /= Tyx.  Therefore, in the code, pml_compute_memory_variables.f90, the duxdy (labeled by duxdy_y) for calculating Txy is not the same duxdy (labeled as duxdy_x) as for Tyx. This label convention is fine for isotropic case. However, for the anisotropic case, this is not convenient because the derivatives and the PML memory functions are the same for calculating for example for T_xx, Txy and Txz, but different for Txx, Tyx and Tzx.  If I use the the original convention as in the code, I need rmemory_duxdy_dx for calculating T_xx, rmemory_duxdy_dy for T_xy, and rmemory_duxdy_dz for Txz. After I relabel them, just rmemory_duxdy_dx is needed for all T_xx, Txy and Txz. Now this is just an example. The other stress components are dealt with the same idea. Hope this can clarity.
+
+Yes, I understand that the CPML region is treated as elastic. This is understandable again because of the asymmetric of the strain and stress in the CPML region. I actually have tried to see if I can use viscoelastic in the CPML, but get pretty messy, so I have to give up.
+
+When you said you had tested for Q not too small case, what do you mean? Isn't that true that the result is not correct when both CPML and attenuation are turned on, as shown in my slides?
+
+Of cause you can use my idea to reduce the memory cost in CPML implementation. I should thank you guys for that open source code, and I am happy to contribute to it.
+
+Best Regards,
+Chang-hua
+
+------------------------------------------------
+
+------------------------------------------------
+          dummyx_loc_att(INDEX_IJK) = PML_displ_old(1,INDEX_IJK,ispec_CPML)
+          dummyy_loc_att(INDEX_IJK) = PML_displ_old(2,INDEX_IJK,ispec_CPML)
+          dummyz_loc_att(INDEX_IJK) = PML_displ_old(3,INDEX_IJK,ispec_CPML)
+
+----------------------------------------------------------
+
+==============================================================================
+==============================================================================
+==============================================================================
+
+For SPECFEM3D PMLs:
+-------------------
+
+1/ add PML support to the internal mesher and also PML support for adjoint runs, see https://github.com/geodynamics/specfem3d/issues/312
+
+Regarding PML for SPECFEM3D, what is currently missing is:
+
+- support for the internal mesher
+
+- support for adjoint runs; the current code works fine for forward runs but cannot time-revert the field inside the PML for SIMULATION_TYPE = 3 (when done directly that is unstable because total energy is not conserved, as for viscoelasticity). That is easy to solve by storing the inner edge of the PML instead of the outer edge and thus not back-propagating anything inside the PML itself; Zhinan has already implemented that successfully in the 2D code two years ago, but it is not cut and pasted in the 3D code yet.
+
+Let us add both options.
+
+Subject: Re: adjoint and PML
+Date: Tue, 28 Oct 2014 23:52:00 +0100
+From: Dimitri Komatitsch
+Organization: CNRS, Marseille, France
+To: xiezhinan ,  Vadim MONTEILLER
+
+Hi Zhinan,
+
+OK, thank you very much for your answer. I suggest we proceed as you
+plan below, i.e. in the next few days you can start cleaning the code
+(please do a git pull because Clement and Yi as well as Vadim have
+changed many things in the code)  and you can start merging all your
+contributions from the last few months, which are not committed yet.
+Then, as soon as all of this is merged Vadim can have a look at how to
+use PML for adjoint problems
+
+(as we discussed, what is needed is to store the wave field on the inner
+edge of the PML layers)
+
+If you have a working version of that for the 2D code you can tell
+Vadim, from the 2D code Vadim could then guess how to implement that in
+the 3D code as well.
+
+Thanks again,
+Best wishes,
+
+Dimitri.
+
+On 10/28/2014 01:52 PM, xiezhinan wrote:
+> Hi Vadim,
+>
+> To be honest, in specfem3D, we do not do too much.
+> Though we have implement an initial version of PML for adjoint inverison
+> with SPECFEM3D.
+> But that part of code do not have tested seriously.
+>
+> Since we were struggling with the instability induced by PML in forward
+> simulation.
+> We have acheived to make it stable around July 2014.
+>
+> But then, due to my delay, I do not commit the recent change in SPECFEM3D.
+> I will work every day with 6 hours around on the SPECFEM3D starting from
+> this Saturday.
+> I can not promise again that when I can finish that, since I have
+> already promised twice to finish that but failed.
+>
+> If it is fine for you, you can start before my work.
+> I will work carefully that I will not erase you modification in the code.
+>
+> Thank you so much.
+> Best regards,
+> Zhinan
+>
+>
+> At 2014-10-28 02:00:43, "Vadim MONTEILLER" wrote:
+>>Hello Zhinan,
+>>
+>>I plan to use PLM in specfem3D for the adjoint and hybrid method.
+>>Dimitri told me that you began to work on it. Can you tell me what you did?
+>>Maybe I could resart before your work?
+>>
+>>Thank you
+>>
+>>Vadim
+
+-------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------
+
+2/ Bug in xgeneratedatabes with C-PML?, see https://github.com/geodynamics/specfem3d/issues/273
+
+-------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------
+
+3/ add a more flexible function for scale factor and fix one error in create_mass_matrices.f90:
+
+Date:   Tue, 24 Jun 2014 07:15:03 +0800
+From:   ??? <xiezhinan1984
+To:   Dimitri Komatitsch
+CC:   Clement Durochat, Paul Cristini, Elliott Sales de Andrade
+
+Dear Dimitri,
+
+No problem, I will add that.
+
+Thank you so much.
+Best regards,
+Zhinan
+
+
+2014-06-22 23:36 GMT+08:00 Dimitri Komatitsch:
+
+    Dear Zhinan,
+
+    Great, thanks! Yes, I think it is best if you add it as a parameter
+    to the Par_file. Could you please do it and commit the change to Git?
+    (I have already accepted your previous Git pull request from two
+    days ago)
+
+    Thanks a lot,
+    Best wishes,
+
+    Dimitri.
+
+    xiezhinan1984 wrote:
+
+        Dear Dimitri,
+
+        I am back. Thank you so much.
+        Currently we set by default K_x =1. Then we need to change
+        K_MAX_PML to set K_x >1.
+
+        Or we introduce a parameter in Par_file to change?
+        I will remove the stop statement and also commit other changes.
+
+        Best regards,
+        Zhinan
+
+
+        2014-06-18 18:21 GMT+08:00 Dimitri Komatitsch:
+
+            Dear Zhinan,
+
+            Thank you very much. I have accepted your pull request.
+
+            However, could you see this comment by Elliott about a
+            potential problem?
+
+              QuLogic commented on e879ce3
+            src/generate_databases/pml___set_local_dampingcoeff.f90
+            Line 321
+
+            "Hmm, won't K_x always be 1 here? Or should people change
+            K_MAX_PML if they want it different?"
+
+            Also, could you remove the stop statements for fluid-solid
+            PMLs, if you
+            think that the code is now ready for that? (since you have
+            used it for the
+            example you sent to Paul, it seems to be ready; otherwise if
+            you need more
+            time for that let us do it next week, no problem).
+
+            Thanks a lot,
+            Best regards,
+
+            Dimitri.
+
+            On 18/06/2014 05:02, Xie Zhinan wrote:
+
+                add a more flexible function for scale factor and fix one error in create_mass_matrices.f90
+
+                Pull request https://github.com/geodynamics/specfem3d/pull/165
+
+-------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------
+
+4/ add support for the LDDRK time scheme in addition to Newmark; that is easy to do because LDDRK is already implemented in SPECFEM3D_GLOBE (using the flag USE_LDDRK), thus it would be easy to cut and paste it from there. That would be extremely useful because for fluid/solid media (for instance in ocean acoustics) we will often need high accuracy.
+
+-------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------
+
+5/ (less urgent, optional) study the possibility to have no damping profile paramater to define the PML and just make the damping tend to exactly zero on the outer edges of the PML, as in Bermudez et al (2007); I am not sure if that could be useful or not (the only advantage I see is that then there is no need to select any damping factor d0 or d(x) apart from the thickness of the PML)
+
+Subject: Bermudez (2007)
+Date: Sat, 29 Nov 2014 17:34:46 +0100
+From: Dimitri Komatitsch
+Organization: CNRS, Marseille, France
+To: Zhinan Xie ???,  Rene Matzen, Paul Cristini
+
+Hi Zhinan and Rene,
+
+What do you think of the approach of Bermudez et al (2007) to make the
+damping profile linear and also reach zero on the outer edge of the
+domain in order to reduce the number of damping parameters to adjust in
+the PML model? (i.e. when doing so the only thing to optimize / to
+choose is the thickness of the PML, but there is no more damping profile
+to choose / to optimize for).
+
+http://dl.acm.org/citation.cfm?id=1233233
+
+Thanks,
+Best wishes,
+
+Dimitri.
+
+-------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------
+
+6/ (less urgent, optional) use weights in Scotch decomposition for C-PML elements in the code, see https://github.com/geodynamics/specfem3d/issues/18
+

@@ -65,7 +65,8 @@
 !
   CMTSOLUTION = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'CMTSOLUTION'
 ! see if we are running several independent runs in parallel
-! if so, add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
+! if so, add the right directory for that run
+! (group numbers start at zero, but directory names start at run0001, thus we add one)
 ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
   if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
     write(path_to_add,"('run',i4.4,'/')") mygroup + 1
@@ -74,7 +75,7 @@
 
   open(unit = IIN,file=trim(CMTSOLUTION),status='old',action='read',iostat=ier)
   if (ier /= 0) then
-    print*,'Error opening file: ',trim(CMTSOLUTION)
+    print *,'Error opening file: ',trim(CMTSOLUTION)
     stop 'Error opening CMTSOLUTION file'
   endif
 
@@ -91,7 +92,7 @@
     ! gets header line
     read(IIN,"(a256)",iostat=ier) string
     if (ier /= 0) then
-      print*, 'Error reading header line in source ',isource
+      print *, 'Error reading header line in source ',isource
       stop 'Error reading header line in station in CMTSOLUTION file'
     endif
 
@@ -99,13 +100,13 @@
     do while (len_trim(string) == 0)
       read(IIN,"(a256)",iostat=ier) string
       if (ier /= 0) then
-        print*, 'Error reading header line in source ',isource
+        print *, 'Error reading header line in source ',isource
         stop 'Error reading header line in station in CMTSOLUTION file'
       endif
     enddo
 
     ! debug
-    !print*,'line ----',string,'----'
+    !print *,'line ----',string,'----'
 
     ! reads header line with event information (assumes fixed format)
     ! old line: read(string,"(a4,i5,i3,i3,i3,i3,f6.2)") datasource,yr,mo,da,ho,mi,sec
@@ -153,7 +154,7 @@
       if (iend < istart) stop 'Error determining number with negative length in header line in CMTSOLUTION file'
 
       ! debug
-      !print*,itype,'line ----',string(istart:iend),'----'
+      !print *,itype,'line ----',string(istart:iend),'----'
 
       ! reads in event time information
       select case (itype)
@@ -184,27 +185,27 @@
 
     ! checks time information
     if (yr <= 0 .or. yr > 3000) then
-      print*, 'Error reading year: ',yr,' in source ',isource,'is invalid'
+      print *, 'Error reading year: ',yr,' in source ',isource,'is invalid'
       stop 'Error reading year out of header line in CMTSOLUTION file'
     endif
     if (mo < 1 .or. mo > 12) then
-      print*, 'Error reading month: ',mo,' in source ',isource,'is invalid'
+      print *, 'Error reading month: ',mo,' in source ',isource,'is invalid'
       stop 'Error reading month out of header line in CMTSOLUTION file'
     endif
     if (da < 1 .or. da > 31) then
-      print*, 'Error reading day: ',da,' in source ',isource,'is invalid'
+      print *, 'Error reading day: ',da,' in source ',isource,'is invalid'
       stop 'Error reading day of header line in CMTSOLUTION file'
     endif
     if (ho < 0 .or. ho > 24) then
-      print*, 'Error reading hour: ',ho,' in source ',isource,'is invalid'
+      print *, 'Error reading hour: ',ho,' in source ',isource,'is invalid'
       stop 'Error reading hour of header line in CMTSOLUTION file'
     endif
     if (mi < 0 .or. mi > 59) then
-      print*, 'Error reading minute: ',mi,' in source ',isource,'is invalid'
+      print *, 'Error reading minute: ',mi,' in source ',isource,'is invalid'
       stop 'Error reading minute of header line in CMTSOLUTION file'
     endif
     if (sec < 0.0 .or. sec >= 60.0) then
-      print*, 'Error reading second: ',sec,' in source ',isource,'is invalid'
+      print *, 'Error reading second: ',sec,' in source ',isource,'is invalid'
       stop 'Error reading second of header line in CMTSOLUTION file'
     endif
 
@@ -214,14 +215,14 @@
     ! ignore line with event name
     read(IIN,"(a)",iostat=ier) string
     if (ier /= 0) then
-      print*, 'Error reading event name in source ',isource
+      print *, 'Error reading event name in source ',isource
       stop 'Error reading event name in station in CMTSOLUTION file'
     endif
 
     ! read time shift
     read(IIN,"(a)",iostat=ier) string
     if (ier /= 0) then
-      print*, 'Error reading time shift in source ',isource
+      print *, 'Error reading time shift in source ',isource
       stop 'Error reading time shift in station in CMTSOLUTION file'
     endif
     !read(string(12:len_trim(string)),*) tshift_cmt(isource)
@@ -230,7 +231,7 @@
     ! read half duration
     read(IIN,"(a)",iostat=ier) string
     if (ier /= 0) then
-      print*, 'Error reading half duration in source ',isource
+      print *, 'Error reading half duration in source ',isource
       stop 'Error reading half duration in station in CMTSOLUTION file'
     endif
     read(string(15:len_trim(string)),*) hdur(isource)
@@ -238,7 +239,7 @@
     ! read latitude
     read(IIN,"(a)",iostat=ier) string
     if (ier /= 0) then
-      print*, 'Error reading latitude in source ',isource
+      print *, 'Error reading latitude in source ',isource
       stop 'Error reading latitude in station in CMTSOLUTION file'
     endif
     read(string(10:len_trim(string)),*) lat(isource)
@@ -246,7 +247,7 @@
     ! read longitude
     read(IIN,"(a)",iostat=ier) string
     if (ier /= 0) then
-      print*, 'Error reading longitude in source ',isource
+      print *, 'Error reading longitude in source ',isource
       stop 'Error reading longitude in station in CMTSOLUTION file'
     endif
     read(string(11:len_trim(string)),*) long(isource)
@@ -254,7 +255,7 @@
     ! read depth
     read(IIN,"(a)",iostat=ier) string
     if (ier /= 0) then
-      print*, 'Error reading depth in source ',isource
+      print *, 'Error reading depth in source ',isource
       stop 'Error reading depth in station in CMTSOLUTION file'
     endif
     read(string(7:len_trim(string)),*) depth(isource)
@@ -264,7 +265,7 @@
     ! read Mrr
     read(IIN,"(a)",iostat=ier) string
     if (ier /= 0) then
-      print*, 'Error reading Mrr in source ',isource
+      print *, 'Error reading Mrr in source ',isource
       stop 'Error reading Mrr in station in CMTSOLUTION file'
     endif
     read(string(5:len_trim(string)),*) moment_tensor(1,isource)
@@ -272,7 +273,7 @@
     ! read Mtt
     read(IIN,"(a)",iostat=ier) string
     if (ier /= 0) then
-      print*, 'Error reading Mtt in source ',isource
+      print *, 'Error reading Mtt in source ',isource
       stop 'Error reading Mtt in station in CMTSOLUTION file'
     endif
     read(string(5:len_trim(string)),*) moment_tensor(2,isource)
@@ -280,7 +281,7 @@
     ! read Mpp
     read(IIN,"(a)",iostat=ier) string
     if (ier /= 0) then
-      print*, 'Error reading Mpp in source ',isource
+      print *, 'Error reading Mpp in source ',isource
       stop 'Error reading Mpp in station in CMTSOLUTION file'
     endif
     read(string(5:len_trim(string)),*) moment_tensor(3,isource)
@@ -288,7 +289,7 @@
     ! read Mrt
     read(IIN,"(a)",iostat=ier) string
     if (ier /= 0) then
-      print*, 'Error reading Mrt in source ',isource
+      print *, 'Error reading Mrt in source ',isource
       stop 'Error reading Mrt in station in CMTSOLUTION file'
     endif
     read(string(5:len_trim(string)),*) moment_tensor(4,isource)
@@ -296,7 +297,7 @@
     ! read Mrp
     read(IIN,"(a)",iostat=ier) string
     if (ier /= 0) then
-      print*, 'Error reading Mrp in source ',isource
+      print *, 'Error reading Mrp in source ',isource
       stop 'Error reading Mrp in station in CMTSOLUTION file'
     endif
     read(string(5:len_trim(string)),*) moment_tensor(5,isource)
@@ -304,7 +305,7 @@
     ! read Mtp
     read(IIN,"(a)",iostat=ier) string
     if (ier /= 0) then
-      print*, 'Error reading Mtp in source ',isource
+      print *, 'Error reading Mtp in source ',isource
       stop 'Error reading Mtp in station in CMTSOLUTION file'
     endif
     read(string(5:len_trim(string)),*) moment_tensor(6,isource)

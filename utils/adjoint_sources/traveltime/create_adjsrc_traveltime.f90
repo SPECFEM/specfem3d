@@ -26,19 +26,19 @@ program create_adjsrc_traveltime
   do while (1 == 1)
     call getarg(i,arg(i))
     if (i < 6 .and. trim(arg(i)) == '') then
-      print*,'Usage: '
-      print*,'  xcreate_adjsrc_traveltime t1 t2 ifile[0-5] E/N/Z-ascii-files [baz]'
-      print*,'with'
-      print*,'  t1: window start time'
-      print*,'  t2: window end time'
-      print*,'  ifile: 0 = adjoint source calculated for each seismogram component'
-      print*,'  ifile: 1 = adjoint source given by East component only'
-      print*,'  ifile: 2 = adjoint source given by North component'
-      print*,'  ifile: 3 = adjoint source given by Z component'
-      print*,'  ifile: 4 = adjoint source given by rotated transversal component (requires baz)'
-      print*,'  ifile: 5 = adjoint source given by rotated radial component (requires baz)'
-      print*,'  E/N/Z-ascii-files : displacement traces stored as ascii files'
-      print*,'  [baz]: (optional) back-azimuth, requires ifile = 4 or ifile = 5'
+      print *,'Usage: '
+      print *,'  xcreate_adjsrc_traveltime t1 t2 ifile[0-5] E/N/Z-ascii-files [baz]'
+      print *,'with'
+      print *,'  t1: window start time'
+      print *,'  t2: window end time'
+      print *,'  ifile: 0 = adjoint source calculated for each seismogram component'
+      print *,'  ifile: 1 = adjoint source given by East component only'
+      print *,'  ifile: 2 = adjoint source given by North component'
+      print *,'  ifile: 3 = adjoint source given by Z component'
+      print *,'  ifile: 4 = adjoint source given by rotated transversal component (requires baz)'
+      print *,'  ifile: 5 = adjoint source given by rotated radial component (requires baz)'
+      print *,'  E/N/Z-ascii-files : displacement traces stored as ascii files'
+      print *,'  [baz]: (optional) back-azimuth, requires ifile = 4 or ifile = 5'
       stop 'create_adjsrc_traveltime t1 t2 ifile[0-5] E/N/Z-ascii-files [baz]'
     endif
     if (trim(arg(i)) == '') exit

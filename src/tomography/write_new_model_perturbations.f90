@@ -38,7 +38,7 @@ subroutine write_new_model_perturbations_iso()
   character(len=MAX_STRING_LEN) :: m_file
 
   ! user output
-  if (myrank == 0) print*,'writing out model perturbations...'
+  if (myrank == 0) print *,'writing out model perturbations...'
 
   ! vp relative perturbations
   ! logarithmic perturbation: log( v_new) - log( v_old) = log( v_new / v_old )
@@ -49,7 +49,7 @@ subroutine write_new_model_perturbations_iso()
   !where( model_vp /= 0.0 ) total_model = ( model_vp_new - model_vp) / model_vp
 
   write(m_file,'(a,i6.6,a)') trim(OUTPUT_MODEL_DIR)//'proc',myrank,trim(REG)//'dvpvp.bin'
-  if (myrank == 0) print*,'  ',trim(OUTPUT_MODEL_DIR)//'proc**'//trim(REG)//'dvpvp.bin'
+  if (myrank == 0) print *,'  ',trim(OUTPUT_MODEL_DIR)//'proc**'//trim(REG)//'dvpvp.bin'
 
   open(IOUT,file=trim(m_file),form='unformatted',action='write')
   write(IOUT) total_model
@@ -62,7 +62,7 @@ subroutine write_new_model_perturbations_iso()
   where( model_vs /= 0.0 ) total_model = log( model_vs_new / model_vs)
 
   write(m_file,'(a,i6.6,a)') trim(OUTPUT_MODEL_DIR)//'proc',myrank,trim(REG)//'dvsvs.bin'
-  if (myrank == 0) print*,'  ',trim(OUTPUT_MODEL_DIR)//'proc**'//trim(REG)//'dvsvs.bin'
+  if (myrank == 0) print *,'  ',trim(OUTPUT_MODEL_DIR)//'proc**'//trim(REG)//'dvsvs.bin'
 
   open(IOUT,file=trim(m_file),form='unformatted',action='write')
   write(IOUT) total_model
@@ -75,7 +75,7 @@ subroutine write_new_model_perturbations_iso()
   where( model_rho /= 0.0 ) total_model = log( model_rho_new / model_rho)
 
   write(m_file,'(a,i6.6,a)') trim(OUTPUT_MODEL_DIR)//'proc',myrank,trim(REG)//'drhorho.bin'
-  if (myrank == 0) print*,'  ',trim(OUTPUT_MODEL_DIR)//'proc**'//trim(REG)//'drhorho.bin'
+  if (myrank == 0) print *,'  ',trim(OUTPUT_MODEL_DIR)//'proc**'//trim(REG)//'drhorho.bin'
 
   open(IOUT,file=trim(m_file),form='unformatted',action='write')
   write(IOUT) total_model
@@ -84,12 +84,12 @@ subroutine write_new_model_perturbations_iso()
   call min_all_cr(minval(total_model),min_rho)
 
   if (myrank == 0) then
-    print*
-    print*,'relative update:'
-    print*,'  dvp/vp min/max  : ',min_vp,max_vp
-    print*,'  dvs/vs min/max  : ',min_vs,max_vs
-    print*,'  drho/rho min/max: ',min_rho,max_rho
-    print*
+    print *
+    print *,'relative update:'
+    print *,'  dvp/vp min/max  : ',min_vp,max_vp
+    print *,'  dvs/vs min/max  : ',min_vs,max_vs
+    print *,'  drho/rho min/max: ',min_rho,max_rho
+    print *
   endif
   call synchronize_all()
 
@@ -120,7 +120,7 @@ subroutine write_new_model_perturbations_tiso()
   character(len=MAX_STRING_LEN) :: m_file
 
   ! user output
-  if (myrank == 0) print*,'writing out model perturbations...'
+  if (myrank == 0) print *,'writing out model perturbations...'
 
   ! vpv relative perturbations
   ! logarithmic perturbation: log( v_new) - log( v_old) = log( v_new / v_old )
@@ -131,7 +131,7 @@ subroutine write_new_model_perturbations_tiso()
   !where( model_vpv /= 0.0 ) total_model = ( model_vpv_new - model_vpv) / model_vpv
 
   write(m_file,'(a,i6.6,a)') trim(OUTPUT_MODEL_DIR)//'proc',myrank,trim(REG)//'dvpvvpv.bin'
-  if (myrank == 0) print*,'  ',trim(OUTPUT_MODEL_DIR)//'proc**'//trim(REG)//'dvpvvpv.bin'
+  if (myrank == 0) print *,'  ',trim(OUTPUT_MODEL_DIR)//'proc**'//trim(REG)//'dvpvvpv.bin'
 
   open(IOUT,file=trim(m_file),form='unformatted',action='write')
   write(IOUT) total_model
@@ -144,7 +144,7 @@ subroutine write_new_model_perturbations_tiso()
   where( model_vph /= 0.0 ) total_model = log( model_vph_new / model_vph)
 
   write(m_file,'(a,i6.6,a)') trim(OUTPUT_MODEL_DIR)//'proc',myrank,trim(REG)//'dvphvph.bin'
-  if (myrank == 0) print*,'  ',trim(OUTPUT_MODEL_DIR)//'proc**'//trim(REG)//'dvphvph.bin'
+  if (myrank == 0) print *,'  ',trim(OUTPUT_MODEL_DIR)//'proc**'//trim(REG)//'dvphvph.bin'
 
   open(IOUT,file=trim(m_file),form='unformatted',action='write')
   write(IOUT) total_model
@@ -157,7 +157,7 @@ subroutine write_new_model_perturbations_tiso()
   where( model_vsv /= 0.0 ) total_model = log( model_vsv_new / model_vsv)
 
   write(m_file,'(a,i6.6,a)') trim(OUTPUT_MODEL_DIR)//'proc',myrank,trim(REG)//'dvsvvsv.bin'
-  if (myrank == 0) print*,'  ',trim(OUTPUT_MODEL_DIR)//'proc**'//trim(REG)//'dvsvvsv.bin'
+  if (myrank == 0) print *,'  ',trim(OUTPUT_MODEL_DIR)//'proc**'//trim(REG)//'dvsvvsv.bin'
 
   open(IOUT,file=trim(m_file),form='unformatted',action='write')
   write(IOUT) total_model
@@ -170,7 +170,7 @@ subroutine write_new_model_perturbations_tiso()
   where( model_vsh /= 0.0 ) total_model = log( model_vsh_new / model_vsh)
 
   write(m_file,'(a,i6.6,a)') trim(OUTPUT_MODEL_DIR)//'proc',myrank,trim(REG)//'dvshvsh.bin'
-  if (myrank == 0) print*,'  ',trim(OUTPUT_MODEL_DIR)//'proc**'//trim(REG)//'dvshvsh.bin'
+  if (myrank == 0) print *,'  ',trim(OUTPUT_MODEL_DIR)//'proc**'//trim(REG)//'dvshvsh.bin'
 
   open(IOUT,file=trim(m_file),form='unformatted',action='write')
   write(IOUT) total_model
@@ -183,7 +183,7 @@ subroutine write_new_model_perturbations_tiso()
   where( model_eta /= 0.0 ) total_model = log( model_eta_new / model_eta)
 
   write(m_file,'(a,i6.6,a)') trim(OUTPUT_MODEL_DIR)//'proc',myrank,trim(REG)//'detaeta.bin'
-  if (myrank == 0) print*,'  ',trim(OUTPUT_MODEL_DIR)//'proc**'//trim(REG)//'detaeta.bin'
+  if (myrank == 0) print *,'  ',trim(OUTPUT_MODEL_DIR)//'proc**'//trim(REG)//'detaeta.bin'
 
   open(IOUT,file=trim(m_file),form='unformatted',action='write')
   write(IOUT) total_model
@@ -196,7 +196,7 @@ subroutine write_new_model_perturbations_tiso()
   where( model_rho /= 0.0 ) total_model = log( model_rho_new / model_rho)
 
   write(m_file,'(a,i6.6,a)') trim(OUTPUT_MODEL_DIR)//'proc',myrank,trim(REG)//'drhorho.bin'
-  if (myrank == 0) print*,'  ',trim(OUTPUT_MODEL_DIR)//'proc**'//trim(REG)//'drhorho.bin'
+  if (myrank == 0) print *,'  ',trim(OUTPUT_MODEL_DIR)//'proc**'//trim(REG)//'drhorho.bin'
 
   open(IOUT,file=trim(m_file),form='unformatted',action='write')
   write(IOUT) total_model
@@ -205,15 +205,15 @@ subroutine write_new_model_perturbations_tiso()
   call min_all_cr(minval(total_model),min_rho)
 
   if (myrank == 0) then
-    print*
-    print*,'relative update:'
-    print*,'  dvpv/vpv min/max: ',min_vpv,max_vpv
-    print*,'  dvph/vph min/max: ',min_vph,max_vph
-    print*,'  dvsv/vsv min/max: ',min_vsv,max_vsv
-    print*,'  dvsh/vsh min/max: ',min_vsh,max_vsh
-    print*,'  deta/eta min/max: ',min_eta,max_eta
-    print*,'  drho/rho min/max: ',min_rho,max_rho
-    print*
+    print *
+    print *,'relative update:'
+    print *,'  dvpv/vpv min/max: ',min_vpv,max_vpv
+    print *,'  dvph/vph min/max: ',min_vph,max_vph
+    print *,'  dvsv/vsv min/max: ',min_vsv,max_vsv
+    print *,'  dvsh/vsh min/max: ',min_vsh,max_vsh
+    print *,'  deta/eta min/max: ',min_eta,max_eta
+    print *,'  drho/rho min/max: ',min_rho,max_rho
+    print *
   endif
   call synchronize_all()
 

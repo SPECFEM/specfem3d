@@ -290,6 +290,9 @@
 ! Mesh files for visualization
   logical CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES
 
+! CPML
+  double precision :: THICKNESS_OF_X_PML,THICKNESS_OF_Y_PML,THICKNESS_OF_Z_PML
+
 ! doublings parameters
   integer NDOUBLINGS
   integer, dimension(2) :: ner_doublings
@@ -358,7 +361,7 @@
   if (myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) then
     open(unit=IMAIN,file=trim(OUTPUT_FILES)//'/output_meshfem3D.txt',status='unknown',iostat=ier)
     if (ier /= 0) then
-      print*,'Error could not open output file :',trim(OUTPUT_FILES)//'/output_meshfem3D.txt'
+      print *,'Error could not open output file :',trim(OUTPUT_FILES)//'/output_meshfem3D.txt'
       stop 'Error opening output file'
     endif
   endif
@@ -419,7 +422,8 @@
                                 LOCAL_PATH,SUPPRESS_UTM_PROJECTION,&
                                 INTERFACES_FILE,NSUBREGIONS,subregions,NMATERIALS,material_properties, &
                                 CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
-                                USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
+                                USE_REGULAR_MESH,NDOUBLINGS,ner_doublings, &
+                                THICKNESS_OF_X_PML,THICKNESS_OF_Y_PML,THICKNESS_OF_Z_PML)
 
   if (sizeprocs == 1 .and. (NPROC_XI /= 1 .or. NPROC_ETA /= 1)) &
     stop 'Error: must have NPROC_XI = NPROC_ETA = 1 for a serial run'
@@ -436,7 +440,7 @@
 
   open(unit=IIN,file=trim(MF_IN_DATA_FILES)//trim(INTERFACES_FILE),status='old',iostat=ier)
   if (ier /= 0) then
-    print*,'Error opening interface file: ',trim(MF_IN_DATA_FILES)//trim(INTERFACES_FILE)
+    print *,'Error opening interface file: ',trim(MF_IN_DATA_FILES)//trim(INTERFACES_FILE)
     stop 'Error opening interface file'
   endif
 
@@ -456,7 +460,7 @@
                                    orig_x_interface_bottom,orig_y_interface_bottom,&
                                    spacing_x_interface_bottom,spacing_y_interface_bottom,ier)
     if (ier /= 0) then
-      print*,'Error reading interface parameters: interface ',interface_current
+      print *,'Error reading interface parameters: interface ',interface_current
       stop 'Error reading interface parameters for interfaces'
     endif
 
@@ -464,7 +468,7 @@
     max_npy_interface = max(npy_interface_bottom,max_npy_interface)
 
     if ((max_npx_interface < 2) .or.(max_npy_interface < 2)) then
-      print*,'Error interface ',interface_current,': has not enough interface points (minimum is 2x2)'
+      print *,'Error interface ',interface_current,': has not enough interface points (minimum is 2x2)'
       stop 'Error not enough interface points (minimum is 2x2)'
     endif
   enddo
@@ -504,10 +508,10 @@
     if (myrank == 0) then
       write(IMAIN,*) 'Error: number of processors supposed to run on: ',NPROC
       write(IMAIN,*) 'Error: number of MPI processors actually run on: ',sizeprocs
-      print*
-      print*, 'Error meshfem3D: number of processors supposed to run on: ',NPROC
-      print*, 'Error meshfem3D: number of MPI processors actually run on: ',sizeprocs
-      print*
+      print *
+      print *, 'Error meshfem3D: number of processors supposed to run on: ',NPROC
+      print *, 'Error meshfem3D: number of MPI processors actually run on: ',sizeprocs
+      print *
     endif
     call exit_MPI(myrank,'wrong number of MPI processes')
   endif
@@ -542,7 +546,9 @@
   if (myrank == 0) then
     write(IMAIN,*) 'creating global slice addressing'
     write(IMAIN,*)
+    call flush_IMAIN()
   endif
+
   do iproc_eta=0,NPROC_ETA-1
     do iproc_xi=0,NPROC_XI-1
       iprocnum = iproc_eta * NPROC_XI + iproc_xi
@@ -560,6 +566,7 @@
       enddo
       write(IMAIN,'(a1)',advance='yes') ' '
     enddo
+    call flush_IMAIN()
   endif
 
   if (myrank == 0) then
@@ -583,6 +590,7 @@
     write(IMAIN,*) 'Surface shape functions defined by NGNOD2D = ',NGNOD2D_FOUR_CORNERS,' control nodes'
     write(IMAIN,*) 'Beware! Curvature (i.e. HEX27 elements) is not handled by our internal mesher'
     write(IMAIN,*)
+    call flush_IMAIN()
   endif
 
   ! check that the constants.h file is correct
@@ -646,7 +654,14 @@
     else
       write(IMAIN,*) 'using UTM projection in region ',UTM_PROJECTION_ZONE
     endif
+     if(PML_CONDITIONS) then
+       write(IMAIN,*)
+       write(IMAIN,*) 'PML thickness in X direction = ',THICKNESS_OF_X_PML,'m'
+       write(IMAIN,*) 'PML thickness in Y direction = ',THICKNESS_OF_Y_PML,'m'
+       write(IMAIN,*) 'PML thickness in Z direction = ',THICKNESS_OF_Z_PML,'m'
+    endif
     write(IMAIN,*)
+    call flush_IMAIN()
   endif
 
 ! get addressing for this process
@@ -664,6 +679,7 @@
     write(IMAIN,*)
     write(IMAIN,*) 'Reading interface data from file ',trim(MF_IN_DATA_FILES)//trim(INTERFACES_FILE)
     write(IMAIN,*)
+    call flush_IMAIN()
   endif
 
   open(unit=IIN,file=trim(MF_IN_DATA_FILES)//trim(INTERFACES_FILE),status='old',iostat=ier)
@@ -826,6 +842,7 @@
     write(IMAIN,*) 'creating mesh in the model'
     write(IMAIN,*) '**************************'
     write(IMAIN,*)
+    call flush_IMAIN()
   endif
 
 ! assign theoretical number of elements
@@ -859,11 +876,13 @@
                            LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK,&
                            CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
                            USE_REGULAR_MESH,NDOUBLINGS,ner_doublings, &
-                           ADIOS_ENABLED, ADIOS_FOR_DATABASES)
+                           ADIOS_ENABLED, ADIOS_FOR_DATABASES, &
+                           THICKNESS_OF_X_PML,THICKNESS_OF_Y_PML,THICKNESS_OF_Z_PML)
 
   if (myrank == 0) then
 ! compare to exact theoretical value (bottom is always flat)
     write(IMAIN,*) '            exact area: ',(UTM_Y_MAX-UTM_Y_MIN)*(UTM_X_MAX-UTM_X_MIN)
+    call flush_IMAIN()
   endif
 
 ! make sure everybody is synchronized
@@ -898,6 +917,7 @@
     write(IMAIN,*)
     write(IMAIN,*) 'smallest and largest possible floating-point numbers are: ',tiny(1._CUSTOM_REAL),huge(1._CUSTOM_REAL)
     write(IMAIN,*)
+    call flush_IMAIN()
   endif   ! end of section executed by main process only
 
 ! elapsed time since beginning of mesh generation
@@ -907,12 +927,11 @@
     write(IMAIN,*) 'Elapsed time for mesh generation and buffer creation in seconds = ',tCPU
     write(IMAIN,*) 'End of mesh generation'
     write(IMAIN,*)
-  endif
-
-! close main output file
-  if (myrank == 0) then
     write(IMAIN,*) 'done'
     write(IMAIN,*)
+    call flush_IMAIN()
+
+    ! close main output file
     close(IMAIN)
   endif
 

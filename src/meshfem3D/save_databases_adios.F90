@@ -41,7 +41,8 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
                                 nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
                                 NSPEC2D_BOTTOM,NSPEC2D_TOP, NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
                                 ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,&
-                                NMATERIALS,material_properties)
+                                NMATERIALS,material_properties, &
+                                nspec_CPML,CPML_to_spec,CPML_regions,is_CPML)
 
   use constants,only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,ADIOS_TRANSPORT_METHOD, &
     NGLLX,NGLLY,NGLLZ
@@ -93,6 +94,12 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   ! first dimension  : material_id
   ! second dimension : #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id #material_id
   double precision , dimension(NMATERIALS,7) ::  material_properties
+
+  ! CPML
+  integer, intent(in) :: nspec_CPML
+  integer, dimension(nspec_CPML), intent(in) :: CPML_to_spec,CPML_regions
+  logical, dimension(nspec), intent(in) :: is_CPML
+
   integer :: i,ispec,ier
   ! dummy_nspec_cpml is used here to match the read instructions
   ! in generate_databases/read_partition_files.f90
@@ -176,7 +183,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
     if (mat_id < 0) nundef = nundef + 1
   enddo
   !debug
-  !print*,'materials def/undef: ',ndef,nundef
+  !print *,'materials def/undef: ',ndef,nundef
 
   ! defined material properties
   ! pad dummy zeros to fill up 16 entries (poroelastic medium not allowed)
@@ -237,7 +244,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   enddo
   if (icount /= nundef) stop 'Error icount not equal to ndef'
   ! debug
-  !print*,'undef_matpropl: ',trim(undef_matpropl)
+  !print *,'undef_matpropl: ',trim(undef_matpropl)
 
   call safe_alloc(nodes_ibelm_xmin, ngnod2d, nspec2d_xmin, "nodes_ibelm_xmin")
   call safe_alloc(nodes_ibelm_xmax, ngnod2d, nspec2d_xmax, "nodes_ibelm_xmax")
@@ -616,7 +623,8 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   call define_adios_scalar(group, groupsize, "", STRINGIFY_VAR(nspec2d_bottom))
   call define_adios_scalar(group, groupsize, "", STRINGIFY_VAR(nspec2d_top))
 
-  call define_adios_scalar(group, groupsize, "", "nspec_cpml",dummy_nspec_cpml)
+  call define_adios_scalar(group, groupsize, "", "nspec_cpml_total",nspec_cpml_total)
+  if(nspec_cpml_total>0) call define_adios_scalar(group, groupsize, "", "nspec_cpml",nspec_cpml)
 
   call define_adios_scalar(group, groupsize, "", STRINGIFY_VAR(nb_interfaces))
   call define_adios_scalar(group, groupsize, "", STRINGIFY_VAR(nspec_interfaces_max))
@@ -669,6 +677,14 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   local_dim = NGNOD2D * nspec2d_top_wmax
   call define_adios_global_array1D(group, groupsize, local_dim, "", STRINGIFY_VAR(nodes_ibelm_top))
 
+  if(nspec_CPML_total > 0) then
+     local_dim=nspec_CPML
+     call define_adios_global_array1D(group, groupsize, local_dim, "", STRINGIFY_VAR(CPML_to_spec))
+     call define_adios_global_array1D(group, groupsize, local_dim, "", STRINGIFY_VAR(CPML_regions))
+     local_dim=nspec
+     call define_adios_global_array1D(group, groupsize, local_dim, "", STRINGIFY_VAR(is_CPML))
+  endif
+
   if (nb_interfaces_wmax > 0) then
     local_dim = nb_interfaces_wmax
     call define_adios_global_array1D(group, groupsize, local_dim, "", STRINGIFY_VAR(neighbours_mesh))
@@ -711,7 +727,8 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   call adios_write(handle, STRINGIFY_VAR(nspec2d_bottom), ier)
   call adios_write(handle, STRINGIFY_VAR(nspec2d_top), ier)
 
-  call adios_write(handle, "nspec_cpml", dummy_nspec_cpml, ier)
+  call adios_write(handle, "nspec_cpml_total", nspec_cpml_total, ier)
+  if(nspec_CPML_total > 0) call adios_write(handle, "nspec_cpml", nspec_cpml, ier)
 
   call adios_write(handle, STRINGIFY_VAR(nb_interfaces), ier)
   call adios_write(handle, STRINGIFY_VAR(nspec_interfaces_max), ier)
@@ -802,6 +819,19 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
     local_dim = NGNOD2D * nspec2d_top_wmax
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(nodes_ibelm_top))
+  endif
+
+  ! CPML
+  if(nspec_CPML_total > 0) then
+     local_dim=nspec_CPML
+     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
+                                     STRINGIFY_VAR(CPML_to_spec))
+     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
+                                     STRINGIFY_VAR(CPML_regions))
+
+     local_dim=nspec
+     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
+                                     STRINGIFY_VAR(is_CPML))
   endif
 
   ! mpi interfaces

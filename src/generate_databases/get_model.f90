@@ -340,10 +340,10 @@
     if ((ispec_is_acoustic(ispec) .eqv. .false.) &
           .and. (ispec_is_elastic(ispec) .eqv. .false.) &
           .and. (ispec_is_poroelastic(ispec) .eqv. .false.)) then
-      print*,'Error material domain not assigned to element:',ispec
-      print*,'acoustic: ',ispec_is_acoustic(ispec)
-      print*,'elastic: ',ispec_is_elastic(ispec)
-      print*,'poroelastic: ',ispec_is_poroelastic(ispec)
+      print *,'Error material domain not assigned to element:',ispec
+      print *,'acoustic: ',ispec_is_acoustic(ispec)
+      print *,'elastic: ',ispec_is_elastic(ispec)
+      print *,'poroelastic: ',ispec_is_poroelastic(ispec)
       stop 'Error material domain index element'
     endif
     ! checks if domain is unique
@@ -352,10 +352,10 @@
        ((ispec_is_poroelastic(ispec) .eqv. .true.) .and. (ispec_is_elastic(ispec) .eqv. .true.)) .or. &
        ((ispec_is_acoustic(ispec) .eqv. .true.) .and. (ispec_is_elastic(ispec) .eqv. .true.) .and. &
        (ispec_is_poroelastic(ispec) .eqv. .true.))) then
-      print*,'Error material domain assigned twice to element:',ispec
-      print*,'acoustic: ',ispec_is_acoustic(ispec)
-      print*,'elastic: ',ispec_is_elastic(ispec)
-      print*,'poroelastic: ',ispec_is_poroelastic(ispec)
+      print *,'Error material domain assigned twice to element:',ispec
+      print *,'acoustic: ',ispec_is_acoustic(ispec)
+      print *,'elastic: ',ispec_is_elastic(ispec)
+      print *,'poroelastic: ',ispec_is_poroelastic(ispec)
       stop 'Error material domain index element'
     endif
   enddo
@@ -433,6 +433,12 @@
   iflag_aniso = 0
   idomain_id = IDOMAIN_ELASTIC
 
+  ! attenuation
+  ! shear attenuation: arbitrary value, see maximum in constants.h
+  qmu_atten = ATTENUATION_COMP_MAXIMUM
+  ! bulk attenuation: arbitrary (high) default value
+  qkappa_atten = 9999.0_CUSTOM_REAL
+
   ! selects chosen velocity model
   select case (IMODEL)
 
@@ -450,33 +456,27 @@
   case (IMODEL_1D_PREM )
     ! 1D model profile from PREM
     call model_1D_prem_iso(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
-    qkappa_atten = 9999.  ! undefined in this model
 
   case (IMODEL_1D_PREM_PB )
     ! 1D model profile from PREM modified by Piero
     imaterial_PB = abs(imaterial_id)
     call model_1D_PREM_routine_PB(xmesh,ymesh,zmesh,rho,vp,vs,imaterial_PB)
-    ! attenuation: arbitrary value, see maximum in constants.h
-    qmu_atten = ATTENUATION_COMP_MAXIMUM
+
     ! sets acoustic/elastic domain as given in materials properties
     iundef = - imaterial_id    ! iundef must be positive
     read(undef_mat_prop(6,iundef),*) idomain_id
-    qkappa_atten = 9999.  ! undefined in this model
 
   case (IMODEL_1D_CASCADIA )
     ! 1D model profile for Cascadia region
     call model_1D_cascadia(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
-    qkappa_atten = 9999.  ! undefined in this model
 
   case (IMODEL_1D_SOCAL )
     ! 1D model profile for Southern California
     call model_1D_socal(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
-    qkappa_atten = 9999.  ! undefined in this model
 
   case (IMODEL_SALTON_TROUGH )
     ! gets model values from tomography file
     call model_salton_trough(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
-    qkappa_atten = 9999.  ! undefined in this model
 
   case (IMODEL_TOMO )
     ! gets model values from tomography file
@@ -484,12 +484,27 @@
 
     ! in case no tomography value defined for this region, fall back to defaults
     if (.not. has_tomo_value) then
-      print*,'Error: tomography value not defined for model material id ',imaterial_id
-      print*,'Please check if Par_file setting MODEL = tomo is applicable, or try using MODEL = default ...'
+      print *,'Error: tomography value not defined for model material id ',imaterial_id
+      print *,'Please check if Par_file setting MODEL = tomo is applicable, or try using MODEL = default ...'
       stop 'Error tomo model not found for material'
     endif
 
   case (IMODEL_USER_EXTERNAL )
+
+    ! Florian Schumacher, Germany, June 2015
+    ! FS FS: added call to model_default here, before calling model_external_values in order to
+    !        be able to superimpose a model onto the default one:
+
+    ! material values determined by mesh properties
+    call model_default(materials_ext_mesh,nmat_ext_mesh, &
+                       undef_mat_prop,nundefMat_ext_mesh, &
+                       imaterial_id,imaterial_def, &
+                       xmesh,ymesh,zmesh, &
+                       rho,vp,vs, &
+                       iflag_aniso,qkappa_atten,qmu_atten,idomain_id, &
+                       rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
+                       phi,tort,kxx,kxy,kxz,kyy,kyz,kzz)
+
     ! user model from external routine
     ! adds/gets velocity model as specified in model_external_values.f90
     call model_external_values(xmesh,ymesh,zmesh,rho,vp,vs,qkappa_atten,qmu_atten,iflag_aniso,idomain_id)
@@ -516,8 +531,8 @@
   ! checks if valid vp value
   if (idomain_id == IDOMAIN_ACOUSTIC .or. idomain_id == IDOMAIN_ELASTIC) then
     if (vp <= 0._CUSTOM_REAL) then
-      print*,'Error: encountered zero Vp velocity in element! '
-      print*,'domain id = ',idomain_id,' material id = ',imaterial_id, 'vp/vs/rho = ',vp,vs,rho
+      print *,'Error: encountered zero Vp velocity in element! '
+      print *,'domain id = ',idomain_id,' material id = ',imaterial_id, 'vp/vs/rho = ',vp,vs,rho
       stop 'Error zero Vp velocity found'
     endif
   endif

@@ -274,7 +274,7 @@ __global__ void compute_kernels_strength_noise_cuda_kernel(realw* displ,
                                                            realw* normal_x_noise,
                                                            realw* normal_y_noise,
                                                            realw* normal_z_noise,
-                                                           realw* Sigma_kl,
+                                                           realw* sigma_kl,
                                                            realw deltat,
                                                            int num_free_surface_faces) {
   int iface = blockIdx.x + blockIdx.y*gridDim.x;
@@ -295,7 +295,7 @@ __global__ void compute_kernels_strength_noise_cuda_kernel(realw* displ,
                  noise_surface_movie[INDEX3(NDIM,NGLL2,1,igll,iface)]*normal_y_noise[ipoin]+
                  noise_surface_movie[INDEX3(NDIM,NGLL2,2,igll,iface)]*normal_z_noise[ipoin]);
 
-    Sigma_kl[INDEX4(NGLLX,NGLLX,NGLLX,i,j,k,ispec)] += deltat*eta*(normal_x_noise[ipoin]*displ[3*iglob]+
+    sigma_kl[INDEX4(NGLLX,NGLLX,NGLLX,i,j,k,ispec)] += deltat*eta*(normal_x_noise[ipoin]*displ[3*iglob]+
                                                        normal_y_noise[ipoin]*displ[1+3*iglob]+
                                                        normal_z_noise[ipoin]*displ[2+3*iglob]);
   }
@@ -334,7 +334,7 @@ TRACE("compute_kernels_strgth_noise_cu");
                                                                mp->d_normal_x_noise,
                                                                mp->d_normal_y_noise,
                                                                mp->d_normal_z_noise,
-                                                               mp->d_Sigma_kl,*deltat,
+                                                               mp->d_sigma_kl,*deltat,
                                                                mp->num_free_surface_faces);
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING

@@ -27,7 +27,10 @@
 
   subroutine earth_chunk_HEX8_Mesher(NGNOD)
 
-  use constants, only: NGLLX, NGLLY, NGLLZ, NDIM
+  use constants, only: NGLLX, NGLLY, NGLLZ, NDIM, R_EARTH, PI, ZERO, TINYVAL, &
+                       old_DSM_coupling_from_Vadim, EXTERNAL_CODE_IS_AXISEM, EXTERNAL_CODE_IS_DSM
+
+  use shared_parameters, only: EXTERNAL_CODE_TYPE
 
   implicit none
 
@@ -36,7 +39,7 @@
 !  Singular option of meshfem3D : MESH OF A GLOBE EARTH CHUNK FOR THE INTERFACE DSM-SPECFEM3D  !
 !  Case of 8 nodes per element (HEX8)                                                          !
 !                                                                                              !
-!  VM, February 2013                                                             !
+!  VM, February 2013                                                                           !
 !  Integrated in meshfem3d by CD, September 2014                                               !
 !                                                                                              !
 !  WARNING : A local convention is used for the mapping of                                     !
@@ -74,7 +77,7 @@
   double precision ratio_eta, ratio_xi
   double precision ANGULAR_WIDTH_ETA_RAD, ANGULAR_WIDTH_XI_RAD, Z_DEPTH_BLOCK, UTM_X_MIN, UTM_X_MAX
   double precision lat_center_chunk, lon_center_chunk, chunk_depth, chunk_azi
-  double precision R_EARTH, TINYVAL, PI, ZERO, deg2rad
+  double precision deg2rad
   double precision x, y, z, px, py, pz, z_bottom
 
   double precision rotation_matrix(3,3)
@@ -90,6 +93,13 @@
   double precision, allocatable :: xp(:), yp(:), zp(:), xgrid(:,:,:,:), ygrid(:,:,:,:), zgrid(:,:,:,:)
   double precision, allocatable :: lon_zmin(:,:), lat_zmin(:,:)
   double precision, dimension(:,:), allocatable :: ProfForGemini
+
+
+  !! For new outputs (list of ggl on boundary, spherical or cartesian)
+  !! AND for coupling with AxiSEM
+  integer ::  istore_for_new_outputs
+  integer ::   updown(NGLLZ)
+  double precision , dimension(NGLLX,NGLLY,NGLLZ) ::  longitud, latitud, radius
 
   logical test
 
@@ -109,15 +119,11 @@
 
 !
 !--- WARNING ==> CONVENTION : (lon,lat) -> (xi,eta)
-!---                          (k = 6 with -z for the mapping of the cubic sphere, cf Chervot 2012)
+!---                          (k = 6 with -z for the mapping of the cubic sphere, cf Chevrot 2012)
 !---                          We define the mesh of a chunk of the earth in the cubic sphere
 !
 
-  PI      = 3.141592653589793d0
   deg2rad = 3.141592653589793d0/180.d0
-  R_EARTH = 6371000.d0
-  TINYVAL = 1.d-9
-  ZERO    = 0.d0
 
   open(49, file=trim(MESH)//'output_mesher_chunk_HEX8.txt')
 
@@ -323,6 +329,13 @@
   open(89, file = trim(MESH)//'flags_boundary.txt')
   open(90, file = trim(MESH)//'Nb_ielm_faces.txt')
 
+!
+!--- for new output mesh files and VM coupling with AxiSEM
+!
+
+  open(91, file = trim(MESH)//'list_ggl_boundary_spherical.txt')
+  open(92, file = trim(MESH)//'list_ggl_boundary_cartesian.txt')
+
 ! open(32,file='gll_zmin')
 ! open(125,file='ggl_elemts')
 
@@ -359,38 +372,66 @@
            ! material file
            write(87 ,*) ispec,index_mat
 
+           istore_for_new_outputs = 0
+
            ! get boundary
+
            ! on boundary 1: x=xmin
            if (ilon == 0) then
+
               iboun(1,ispec)=.true.
               ispec2Dxmin=ispec2Dxmin+1
               write(89,*) ispec,ispec2Dxmin,1
+
+              istore_for_new_outputs = istore_for_new_outputs + 1
+
            endif
+
            ! on boundary 2: xmax
            if (ilon == nel_lon-1) then
+
               iboun(2,ispec)=.true.
               ispec2Dxmax=ispec2Dxmax+1
               !write(*,*) '------ TOZ',ispec,ilon
               write(89,*) ispec,ispec2Dxmax,2
+
+              istore_for_new_outputs = istore_for_new_outputs + 1
+
            endif
+
            ! on boundary 3: ymin
            if (ilat == 0) then
+
               iboun(3,ispec)=.true.
               ispec2Dymin=ispec2Dymin+1
               write(89,*) ispec,ispec2Dymin,3
+
+              istore_for_new_outputs = istore_for_new_outputs + 1
+
            endif
+
            ! on boundary 4: ymax
            if (ilat == nel_lat-1) then
+
               iboun(4,ispec) =.true.
               ispec2Dymax=ispec2Dymax+1
               write(89,*) ispec,ispec2Dymax,4
+
+              istore_for_new_outputs = istore_for_new_outputs + 1
+
            endif
+
            ! on boundary 5: bottom
            if (iz == 0) then
+
               iboun(5,ispec)=.true.
               ispec2Dzmin=ispec2Dzmin+1
               write(89,*) ispec,ispec2Dzmin,5
+
+              istore_for_new_outputs = istore_for_new_outputs + 1
+
            endif
+
            ! on boundary 6: top
            if (iz == nel_depth-1) then
               ispec2Dzmax= ispec2Dzmax+1
@@ -442,16 +483,35 @@
               yelm(ia)=ygrid(i+1,j+1,k+1,ispec)
               zelm(ia)=zgrid(i+1,j+1,k+1,ispec)
 
-
            enddo
 
            ! INTERFACE FOR DSM ------
 
            ! Vertical receptors
+
            if (ilat==0 .and. ilon==0) then
               call calc_gll_points(xelm,yelm,zelm,xstore,ystore,zstore,shape3D,NGNOD,NGLLX,NGLLY,NGLLZ)
-              call write_gllz_points(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,current_layer,nel_depth,ilayer,iz,Ndepth)
+              call write_gllz_points(xstore,ystore,zstore,NGLLX,NGLLY,NGLLZ,current_layer,nel_depth,ilayer,iz,Ndepth,updown)
            endif
+
+          ! Write two files giving Spherical coordinate on ALL the GLL points on the surface of the 3D chunk for the new DSM
+          ! coupling (light version using 2D chunk)
+          !
+          ! ==> CAUTION : will be also used later as INTERFACE for the VM coupling with AxiSEM
+          !
+          ! (must be after write_gllz_points to know the value of ilayer)
+
+          if ( ( ( EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM .and. (.not. old_DSM_coupling_from_Vadim) ) .or.    &
+                 ( EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM                                        ) ) .and. &
+               ( istore_for_new_outputs > 0 ) ) then
+
+
+            call calc_gll_points(xelm,yelm,zelm,xstore,ystore,zstore,shape3D,NGNOD,NGLLX,NGLLY,NGLLZ)
+            call write_all_chunk_surface_GLL_in_spherical_and_cartesian_coords(xstore,ystore,zstore, &
+                                                          deg2rad,ilayer,iboun,ispec,nspec,longitud, &
+                                                          latitud,radius,rotation_matrix,updown)
+
+          endif
 
            ! Horizontal receptors
 
@@ -631,6 +691,8 @@
   close(88)
   close(89)
   close(90)
+  close(91)
+  close(92)
   !stop
   ! -------------------------------- SAUVEGARDE DES MESH FILES -----------
 

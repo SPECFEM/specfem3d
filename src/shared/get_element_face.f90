@@ -133,7 +133,7 @@
           (   (xcoord(1)-xcoord(2))**2 &
             + (ycoord(1)-ycoord(2))**2 &
             + (zcoord(1)-zcoord(2))**2)) then
-    print*,'error element face midpoint distance:',midpoint_distances(iloc(1)), &
+    print *,'error element face midpoint distance:',midpoint_distances(iloc(1)), &
           (xcoord(1)-xcoord(2))**2+(ycoord(1)-ycoord(2))**2+(zcoord(1)-zcoord(2))**2
     ! corner locations
     do icorner=1,NGNOD2D_FOUR_CORNERS
@@ -141,12 +141,12 @@
       j = iface_all_corner_ijk(2,icorner,iloc(1))
       k = iface_all_corner_ijk(3,icorner,iloc(1))
       iglob = ibool(i,j,k,ispec)
-      print*,'error corner:',icorner,'xyz:',xstore_dummy(iglob),ystore_dummy(iglob),zstore_dummy(iglob)
+      print *,'error corner:',icorner,'xyz:',xstore_dummy(iglob),ystore_dummy(iglob),zstore_dummy(iglob)
     enddo
     ! stop
-    print*,'xcoord:', xcoord(:)
-    print*,'ycoord:', ycoord(:)
-    print*,'zcoord:', zcoord(:)
+    print *,'xcoord:', xcoord(:)
+    print *,'ycoord:', ycoord(:)
+    print *,'zcoord:', zcoord(:)
     stop 'error element face midpoint'
   else
     iface_id = iloc(1)
@@ -265,7 +265,7 @@
 
   ! checks number of gll points set on face
   if (ngll /= NGLLA*NGLLB) then
-    print*,'error element face ngll:',ngll,NGLLA,NGLLB
+    print *,'error element face ngll:',ngll,NGLLA,NGLLB
     stop 'error element face ngll'
   endif
 
@@ -319,8 +319,8 @@ end subroutine get_element_face_gll_indices
   face_n(3) =   (xcoord(2)-xcoord(1))*(ycoord(3)-ycoord(1)) - (ycoord(2)-ycoord(1))*(xcoord(3)-xcoord(1))
   tmp = sqrt( face_n(1)*face_n(1) + face_n(2)*face_n(2) + face_n(3)*face_n(3) )
   if (abs(tmp) < TINYVAL) then
-    print*,'error get face normal: length',tmp
-    print*,'normal:',face_n(:)
+    print *,'error get face normal: length',tmp
+    print *,'normal:',face_n(:)
     call exit_mpi(0,'error get element face normal')
   endif
   face_n(:) = face_n(:)/tmp
@@ -428,8 +428,8 @@ end subroutine get_element_face_gll_indices
   face_n(3) =   (xcoord(2)-xcoord(1))*(ycoord(3)-ycoord(1)) - (ycoord(2)-ycoord(1))*(xcoord(3)-xcoord(1))
   tmp = sqrt( face_n(1)**2 + face_n(2)**2 + face_n(3)**2)
   if (abs(tmp) < TINYVAL) then
-    print*,'error get face normal: length',tmp
-    print*,'normal:',face_n(:)
+    print *,'error get face normal: length',tmp
+    print *,'normal:',face_n(:)
     call exit_mpi(0,'error get element face normal')
   endif
   face_n(:) = face_n(:)/tmp
@@ -468,7 +468,7 @@ end subroutine get_element_face_gll_indices
 
   ! in case given normal has zero length, exit
   if (( normal(1)**2 + normal(2)**2 + normal(3)**2) < TINYVAL) then
-    print*,'problem: given normal is zero'
+    print *,'problem: given normal is zero'
     idirect = 0
     return
   endif

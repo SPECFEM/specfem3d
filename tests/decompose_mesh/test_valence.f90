@@ -9,11 +9,11 @@ program test_valence
   implicit none
   integer :: i
 
-  print*,'program: test_valence'
+  print *,'program: test_valence'
 
   ! ficticious setup 1
-  print*,'test 1:'
-  print*,'-------'
+  print *,'test 1:'
+  print *,'-------'
   nspec = 12
   NGNOD = 8
 
@@ -22,8 +22,8 @@ program test_valence
   if (ier /= 0) stop 'error allocating array elmnts'
   elmnts(:,:) = 0
 
-  print*,'nspec  = ',nspec
-  print*,'NGNOD  = ',NGNOD
+  print *,'nspec  = ',nspec
+  print *,'NGNOD  = ',NGNOD
 
   ! element ids
   inode = 0
@@ -35,7 +35,7 @@ program test_valence
   enddo
 
   nnodes = inode
-  print*,'nnodes = ',nnodes
+  print *,'nnodes = ',nnodes
 
   ! initializes
   nsize = -1
@@ -44,19 +44,19 @@ program test_valence
   call check_valence()
 
   ! checks
-  print*,'nsize = ',nsize
+  print *,'nsize = ',nsize
   if (nsize /= 1) then
-    print*,'error valence: nsize =',nsize,'should be 1'
+    print *,'error valence: nsize =',nsize,'should be 1'
     stop 1
   else
-    print*,'  result is correct'
+    print *,'  result is correct'
   endif
 
   deallocate(elmnts)
 
   ! ficticious setup 2
-  print*,'test 2:'
-  print*,'-------'
+  print *,'test 2:'
+  print *,'-------'
   nspec = 12
   NGNOD = 27
 
@@ -64,8 +64,8 @@ program test_valence
   allocate(elmnts(NGNOD,nspec),stat=ier)
   if (ier /= 0) stop 'error allocating array elmnts'
   elmnts(:,:) = 0
-  print*,'nspec  = ',nspec
-  print*,'NGNOD  = ',NGNOD
+  print *,'nspec  = ',nspec
+  print *,'NGNOD  = ',NGNOD
 
   ! element ids
   inode = 0
@@ -90,7 +90,7 @@ program test_valence
   enddo
 
   nnodes = inode
-  print*,'nnodes = ',nnodes
+  print *,'nnodes = ',nnodes
 
   ! initializes
   nsize = -1
@@ -99,18 +99,18 @@ program test_valence
   call check_valence()
 
   ! checks
-  print*,'nsize = ',nsize
+  print *,'nsize = ',nsize
   if (nsize /= 6) then
-    print*,'error valence: nsize =',nsize,'should be 6'
+    print *,'error valence: nsize =',nsize,'should be 6'
     stop 1
   else
-    print*,'  result is correct'
+    print *,'  result is correct'
   endif
 
   deallocate(elmnts)
 
   ! done
-  print*,'test_valence done successfully'
+  print *,'test_valence done successfully'
 
 end program test_valence
 

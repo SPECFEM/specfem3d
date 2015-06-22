@@ -255,9 +255,9 @@
   open(unit=IIN,file=MF_IN_DATA_FILES(1:len_trim(MF_IN_DATA_FILES)) &
        //'Mesh_Par_file',status='old',action='read',iostat=ier)
   if (ier /= 0) then
-    print*,'error opening file: ',MF_IN_DATA_FILES(1:len_trim(MF_IN_DATA_FILES))
-    print*
-    print*,'please check your file path and run-directory.'
+    print *,'error opening file: ',MF_IN_DATA_FILES(1:len_trim(MF_IN_DATA_FILES))
+    print *
+    print *,'please check your file path and run-directory.'
     stop 'error opening Mesh_Par_file'
   endif
 

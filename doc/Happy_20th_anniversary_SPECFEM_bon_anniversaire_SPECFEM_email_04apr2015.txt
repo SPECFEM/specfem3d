@@ -1,0 +1,51 @@
+
+Subject: Happy 20th anniversary SPECFEM / bon anniversaire SPECFEM !
+From: Dimitri Komatitsch
+Date: 04/04/2015 11:59 PM
+To: cig-seismo, SPECFEM Developers <seismo-dev>, Jean-Pierre Vilotte, Yvon Maday
+CC: Stephane Requena, Eric Boyer, Roland Martin, Sebastien Chevrot, Vadim Monteiller, Emmanuel Chaljub, Marie Cournille
+
+Dear all,
+
+Happy 20th anniversary SPECFEM / bon anniversaire SPECFEM !
+
+The whole story started on April 4, 1995 when Yvon Maday (cc'ed) was kind enough to visit and give us explanations about how to use the spectral-element method, which he had co-developed with Anthony Patera at MIT. Let me thank Yvon again for that, and let me also thank my PhD advisor Jean-Pierre Vilotte for organizing that meeting. Attached are the notes from that meeting, as a souvenir I scanned them and put them in the "doc" directory of the code.
+
+Let us also thank all the developers and users who have made it a success since then, i.e., you guys :-)
+
+Best regards, Merci a tous,
+
+Dimitri.
+
+           ~                  ~
+     *                   *                *       *
+                  *               *
+  ~       *                *         ~    *
+              *       ~        *              *   ~
+                  )         (         )              *
+    *    ~     ) (_)   (   (_)   )   (_) (  *
+           *  (_) # ) (_) ) # ( (_) ( # (_)       *
+              _#.-#(_)-#-(_)#(_)-#-(_)#-.#_
+  *         .' #  # #  #  # # #  #  # #  # `.   ~     *
+           :   #    #  #  #   #  #  #    #   :
+    ~      :.       #     #   #     #       .:      *
+        *  | `-.__                     __.-' | *
+           |      `````"""""""""""`````      |         *
+     *     |         | ||\ |~)|~)\ /         |
+           |         |~||~\|~ |~  |          |       ~
+   ~   *   |                                 | *
+           |      |~)||~)~|~| ||~\|\ \ /     |         *
+   *    _.-|      |~)||~\ | |~|| /|~\ |      |-._
+      .'   '.      ~            ~           .'   `.  *
+  jgs :      `-.__                     __.-'      :
+       `.         `````"""""""""""`````         .'
+         `-.._                             _..-'
+              `````""""-----------""""`````
+
+Attachments: SEM_class_from_Yvon_Maday_to_Dimitri_Komatitsch_and_Jean_Pierre_Vilotte_04apr1995.pdf
+
+--
+Dimitri Komatitsch
+CNRS Research Director (DR CNRS), Laboratory of Mechanics and Acoustics,
+UPR 7051, Marseille, France    http://komatitsch.free.fr
+

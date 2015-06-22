@@ -89,6 +89,8 @@ subroutine compute_forces_viscoelastic()
                         alphaval,betaval,gammaval,&
                         NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa, &
                         R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, &
+                        NSPEC_ATTENUATION_AB_LDDRK,NSPEC_ATTENUATION_AB_kappa,R_trace_lddrk, &
+                        R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk, &
                         epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy, &
                         epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
                         ANISOTROPY,NSPEC_ANISO, &
@@ -117,8 +119,7 @@ subroutine compute_forces_viscoelastic()
                        veloc,rho_vp,rho_vs, &
                        ispec_is_elastic,SIMULATION_TYPE,SAVE_FORWARD, &
                        it, &
-                       b_num_abs_boundary_faces,b_reclen_field,b_absorb_field,&
-                       it_dsm,Veloc_dsm_boundary,Tract_dsm_boundary,COUPLE_WITH_EXTERNAL_CODE)
+                       b_num_abs_boundary_faces,b_reclen_field,b_absorb_field)
     endif
 
 
@@ -280,7 +281,11 @@ subroutine compute_forces_viscoelastic()
 !
 ! corrector:
 !   updates the velocity term which requires a(t+delta)
-  veloc(:,:) = veloc(:,:) + deltatover2*accel(:,:)
+  if (USE_LDDRK) then
+    call update_veloc_elastic_lddrk()
+  else
+    veloc(:,:) = veloc(:,:) + deltatover2*accel(:,:)
+  endif
 
   if (PML_CONDITIONS) then
     if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
@@ -350,6 +355,8 @@ subroutine compute_forces_viscoelastic_bpwf()
                         b_alphaval,b_betaval,b_gammaval, &
                         NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa, &
                         b_R_trace,b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
+                        NSPEC_ATTENUATION_AB_LDDRK,NSPEC_ATTENUATION_AB_kappa,R_trace_lddrk, &
+                        b_R_xx_lddrk,b_R_yy_lddrk,b_R_xy_lddrk,b_R_xz_lddrk,b_R_yz_lddrk, &
                         b_epsilondev_trace,b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
                         b_epsilondev_xz,b_epsilondev_yz,b_epsilon_trace_over_3, &
                         ANISOTROPY,NSPEC_ANISO, &

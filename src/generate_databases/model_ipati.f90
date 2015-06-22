@@ -72,7 +72,7 @@
   filename = prname_lp(1:len_trim(prname_lp))//'rho.bin'
   open(unit=28,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
   if (ier /= 0) then
-    print*,'error opening file: ',trim(filename)
+    print *,'error opening file: ',trim(filename)
     stop 'error reading rho.bin file'
   endif
 
@@ -86,7 +86,7 @@
   filename = prname_lp(1:len_trim(prname_lp))//'vp.bin'
   open(unit=28,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
   if (ier /= 0) then
-    print*,'error opening file: ',trim(filename)
+    print *,'error opening file: ',trim(filename)
     stop 'error reading vp.bin file'
   endif
 
@@ -154,7 +154,7 @@
   filename = prname_lp(1:len_trim(prname_lp))//'rho.bin'
   open(unit=28,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
   if (ier /= 0) then
-    print*,'error opening file: ',trim(filename)
+    print *,'error opening file: ',trim(filename)
     stop 'error reading rho.bin file'
   endif
 
@@ -168,7 +168,7 @@
   filename = prname_lp(1:len_trim(prname_lp))//'vp.bin'
   open(unit=28,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
   if (ier /= 0) then
-    print*,'error opening file: ',trim(filename)
+    print *,'error opening file: ',trim(filename)
     stop 'error reading vp.bin file'
   endif
 

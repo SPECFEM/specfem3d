@@ -47,7 +47,7 @@ Note three input files (CMTSOLUTION, Par_file, STATIONS) are already in the DATA
       absorb_surface_file_bottom/xmin/xmax/ymin/ymax, free_surface_file
 
 
-   - optional: check mesh quality using check_mesh_quality_CUBIT_Abaqus.f90
+   - optional: check mesh quality using check_mesh_quality.f90
 
       using the CUBIT GUI:
         claro -> Menu "File" -> "Export...", select Abaqus (*.inp)
@@ -61,10 +61,10 @@ Note three input files (CMTSOLUTION, Par_file, STATIONS) are already in the DATA
         > export Abaqus "layered_halfspace_mesh.inp" Block 1,2,3 overwrite cubitids
 
       change directory:
-        > cd ../../src/check_mesh_quality_CUBIT_Abaqus/
+        > cd ../../src/check_mesh_quality/
 
       save number of nodes and number of elements and edit in header of
-      check_mesh_quality_CUBIT_Abaqus.f90:
+      check_mesh_quality.f90:
 
         character(len=100), parameter :: cubit_mesh_file = 'examples/layered_halfspace/layered_halfspace_mesh.inp'
         integer, parameter :: NPOIN = 76819    ! number of nodes
@@ -76,10 +76,10 @@ Note three input files (CMTSOLUTION, Par_file, STATIONS) are already in the DATA
 
       compile programs in SPECFEM3D:
         > cd ../../
-        > make xcheck_mesh_quality_CUBIT_Abaqus
+        > make xcheck_mesh_quality
 
       run program:
-        > ./bin/xcheck_mesh_quality_CUBIT_Abaqus
+        > ./bin/xcheck_mesh_quality
       at prompts, enter, for example, 1, then 0.6 to list elements with high skewness
 
       plot skewness histogram as ps file

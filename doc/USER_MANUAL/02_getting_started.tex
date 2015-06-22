@@ -1,0 +1,394 @@
+\chapter{Getting Started}\label{cha:Getting-Started}
+
+To download the SPECFEM3D\_Cartesian software package, type this:
+\begin{verbatim}
+git clone --recursive --branch devel https://github.com/geodynamics/specfem3d.git
+\end{verbatim}
+%
+\noindent
+We recommend that you add {\texttt{ulimit -S -s unlimited}} to your
+{\texttt{.bash\_profile}} file and/or {\texttt{limit stacksize
+unlimited }} to your {\texttt{.cshrc}} file to suppress any potential
+limit to the size of the Unix stack.\\
+
+Then, to configure the software for your system, run the
+\texttt{configure} shell script. This script will attempt to guess
+the appropriate configuration values for your system. However, at
+a minimum, it is recommended that you explicitly specify the appropriate
+command names for your Fortran compiler (another option is to define FC, CC and MPIF90 in your .bash\_profile
+or your .cshrc file):
+%
+\begin{verbatim}
+    ./configure FC=gfortran CC=gcc
+\end{verbatim}
+%
+If you want to run in parallel, i.e., using more than one processor core, then you would type
+%
+\begin{verbatim}
+    ./configure FC=gfortran CC=gcc MPIFC=mpif90 --with-mpi
+\end{verbatim}
+
+You can replace the GNU compilers above (gfortran and gcc) with other compilers if you want to; for instance for Intel ifort and icc use FC=ifort CC=icc instead.
+
+Note that MPI must be installed with MPI-IO enabled because parts of SPECFEM3D perform I/Os through MPI-IO.
+
+Before running the \texttt{configure} script, you should probably
+edit file \texttt{flags.guess} to make sure that it contains the best
+compiler options for your system. Known issues or things to check
+are:
+\begin{description}
+\item [{\texttt{Intel ifort compiler}}] See if you need to add \texttt{-assume byterecl} for your machine. \textbf{In the case of that compiler, we have noticed that versions dot zero sometimes have bugs or issues that can lead to wrong results when running the code, thus we \emph{strongly} recommend using versions dot one or above (for instance version 13.1 instead of 13.0, version 14.1 instead of 14.0 and so on)}.
+\item [{\texttt{IBM compiler}}] See if you need to add \texttt{-qsave}
+or \texttt{-qnosave} for your machine.
+\item [{\texttt{Mac OS}}] You will probably need to install \texttt{XCODE}.
+\end{description}
+When compiling on an IBM machine with the \texttt{xlf} and \texttt{xlc}
+compilers, we suggest running the \texttt{configure} script with the
+following options:
+
+{\footnotesize
+\begin{verbatim}
+./configure FC=xlf90_r MPIFC=mpif90 CC=xlc_r CFLAGS="-O3 -q64" FCFLAGS="-O3 -q64" -with-scotch-dir=...
+\end{verbatim}
+}
+
+On SGI systems, \texttt{flags.guess} automatically informs \texttt{configure}
+to insert `\texttt{`TRAP\_FPE=OFF}'' into the generated \texttt{Makefile}
+in order to turn underflow trapping off.\\
+
+You can add \texttt{--enable-vectorization} to the configuration options to speed up the code in the fluid (acoustic) and elastic parts.
+This works fine if (and only if) your computer always allocates a contiguous memory block for each allocatable array;
+this is the case for most machines and most compilers, but not all. To disable this feature, use option \texttt{--disable-vectorization}.
+For more details see \href{https://github.com/geodynamics/specfem3d/issues/81}{github.com/geodynamics/specfem3d/issues/81} .
+To check if that option works fine on your machine, run the code with and without it for an acoustic/elastic model and make sure the seismograms are identical.\\
+
+Note that we use CUBIT (now called Trelis) to create meshes of hexahedra, but other packages
+can be used as well, for instance GiD from \url{http://gid.cimne.upc.es}
+or Gmsh from \url{http://geuz.org/gmsh} \citep{GeRe09}. Even mesh
+creation packages that generate tetrahedra, for instance TetGen from
+\url{http://tetgen.berlios.de}, can be used because each tetrahedron
+can then easily be decomposed into four hexahedra as shown in the
+picture of the TetGen logo at \url{http://tetgen.berlios.de/figs/Delaunay-Voronoi-3D.gif};
+while this approach does not generate hexahedra of optimal quality,
+it can ease mesh creation in some situations and it has been shown
+that the spectral-element method can very accurately handle distorted
+mesh elements \citep{OlSe11}.
+
+The SPECFEM3D Cartesian software package relies on the SCOTCH library
+to partition meshes created with CUBIT. METIS \citep{KaKu98a,KaKu98c,KaKu98b}
+can also be used instead of SCOTCH if you prefer, by editing file
+src/decompose\_mesh/decompose\_mesh.F90 and uncommenting the flag
+USE\_METIS\_INSTEAD\_OF\_SCOTCH. You will also then need to install
+and compile Metis version 4.0 (do {*}NOT{*} install Metis version
+5.0, which has incompatible function calls) and edit \texttt{src/decompose\_mesh/Makefile.in}
+and uncomment the METIS link flag in that file before running \texttt{configure}.\\
+
+
+The SCOTCH library \citep{PeRo96} provides efficient static mapping,
+graph and mesh partitioning routines. SCOTCH is a free software package
+developed by Fran\c{c}ois Pellegrini et al. from LaBRI and INRIA in Bordeaux,
+France, downloadable from the web page \url{https://gforge.inria.fr/projects/scotch/}.
+In case no SCOTCH libraries can be found on the system, the configuration
+will bundle the version provided with the source code for compilation.
+The path to an existing SCOTCH installation can to be set explicitly
+with the option \texttt{-{}-with-scotch-dir}. Just as an example:
+\begin{verbatim}
+./configure FC=ifort MPIFC=mpif90 --with-scotch-dir=/opt/scotch
+\end{verbatim}
+\noindent
+If you use the Intel ifort compiler to compile the code, we recommend
+that you use the Intel icc C compiler to compile Scotch, i.e., use:
+\begin{verbatim}
+./configure CC=icc FC=ifort MPIFC=mpif90
+\end{verbatim}
+
+When compiling the SCOTCH source code, if you get a message such as: "ld: cannot find -lz",
+the Zlib compression development library is probably missing on your machine and you will need to install it or ask your system administrator to
+do so. On Linux machines the package is often called "zlib1g-dev" or similar. (thus "sudo apt-get install zlib1g-dev" would install it)
+
+To compile a serial version of the code for small meshes that fits
+on one compute node and can therefore be run serially, run \texttt{configure}
+with the \texttt{-{}-without-mpi} option to suppress all calls to
+MPI.
+
+A summary of the most important configuration variables follows.
+\begin{description}
+\item [{\texttt{F90}}] Path to the Fortran compiler.
+\item [{\texttt{MPIF90}}] Path to MPI Fortran.
+\item [{\texttt{MPI\_FLAGS}}] Some systems require this flag to link to
+MPI libraries.
+\item [{\texttt{FLAGS\_CHECK}}] Compiler flags.
+\end{description}
+The configuration script automatically creates for each executable
+a corresponding \texttt{Makefile} in the \texttt{src/} subdirectory.
+The \texttt{Makefile} contains a number of suggested entries for various
+compilers, e.g., Portland, Intel, Absoft, NAG, and Lahey. The software
+has run on a wide variety of compute platforms, e.g., various PC clusters
+and machines from Sun, SGI, IBM, Compaq, and NEC. Select the compiler
+you wish to use on your system and choose the related optimization
+flags. Note that the default flags in the \texttt{Makefile} are undoubtedly
+not optimal for your system, so we encourage you to experiment with
+these flags and to solicit advice from your systems administrator.
+Selecting the right compiler and optimization flags can make a tremendous
+difference in terms of performance. We welcome feedback on your experience
+with various compilers and flags.
+
+Now that you have set the compiler information, you need to select
+a number of flags in the \texttt{constants.h} file depending on your
+system:
+\begin{description}
+\item [{\texttt{LOCAL\_PATH\_IS\_ALSO\_GLOBAL}}] Set to \texttt{.false.}
+on most cluster applications. For reasons of speed, the (parallel)
+distributed database generator typically writes a (parallel) database
+for the solver on the local disks of the compute nodes. Some systems
+have no local disks, e.g., BlueGene or the Earth Simulator, and other
+systems have a fast parallel file system, in which case this flag
+should be set to \texttt{.true.}. Note that this flag is not used
+by the database generator or the solver; it is only used for some
+of the post-processing.
+\end{description}
+The package can run either in single or in double precision mode.
+The default is single precision because for almost all calculations
+performed using the spectral-element method using single precision
+is sufficient and gives the same results (i.e. the same seismograms);
+and the single precision code is faster and requires exactly half
+as much memory. Select your preference by selecting the appropriate
+setting in the \texttt{constants.h} file:
+\begin{description}
+\item [{\texttt{CUSTOM\_REAL}}] Set to \texttt{SIZE\_REAL} for single precision
+and \texttt{SIZE\_DOUBLE} for double precision.
+\end{description}
+In the \texttt{precision.h} file:
+\begin{description}
+\item [{\texttt{CUSTOM\_MPI\_TYPE}}] Set to \texttt{MPI\_REAL} for single
+precision and \texttt{MPI\_DOUBLE\_PRECISION} for double precision.
+\end{description}
+On many current processors (e.g., Intel, AMD, IBM Power), single precision
+calculations are significantly faster; the difference can typically
+be 10\% to 25\%. It is therefore better to use single precision. What
+you can do once for the physical problem you want to study is run
+the same calculation in single precision and in double precision on
+your system and compare the seismograms. If they are identical (and
+in most cases they will), you can select single precision for your
+future runs.\\
+
+If your compiler has problems with the \texttt{use mpi} statements that are used in the code, use the script called
+\texttt{replace\_use\_mpi\_with\_include\_mpif\_dot\_h.pl} in the root directory to replace all of them with \texttt{include 'mpif.h'} automatically.
+
+\section{Adding OpenMP support in addition to MPI}
+
+NOTE FROM JULY 2013: OpenMP support is maybe / probably not maintained any more.
+Thus the section below is maybe obsolete.
+
+OpenMP support can be enabled in addition to MPI. However, in many
+cases performance will not improve because our pure MPI implementation
+is already heavily optimized and thus the resulting code will in fact
+be slightly slower. A possible exception could be IBM BlueGene-type
+architectures.
+
+To enable OpenMP, uncomment the OpenMP compiler option in two lines
+in file \texttt{src/specfem3D/Makefile.in} (before running \texttt{configure})
+and also uncomment the
+\texttt{\#define USE\_OPENMP} statement in file\\
+\texttt{src/specfem3D/specfem3D.F90}.
+
+The DO-loop using OpenMP threads has a SCHEDULE property. The \texttt{OMP\_SCHEDULE}
+environment variable can set the scheduling policy of that DO-loop.
+Tests performed by Marcin Zielinski at SARA (The Netherlands) showed
+that often the best scheduling policy is DYNAMIC with the size of
+the chunk equal to the number of OpenMP threads, but most preferably
+being twice as the number of OpenMP threads (thus chunk size = 8 for
+4 OpenMP threads etc). If \texttt{OMP\_SCHEDULE} is not set or is empty, the
+DO-loop will assume generic scheduling policy, which will slow down
+the job quite a bit.
+
+
+\section{Compiling on an IBM BlueGene}
+
+\underline{More recent installation instruction for IBM BlueGene, from April 2013:}\\
+
+
+\noindent Edit file \texttt{flags.guess} and put this for \texttt{FLAGS\_CHECK}:
+\begin{verbatim}
+-g -qfullpath -O2 -qsave -qstrict -qtune=qp -qarch=qp -qcache=auto -qhalt=w
+-qfree=f90 -qsuffix=f=f90 -qlanglvl=95pure -Q -Q+rank,swap_all -Wl,-relax
+\end{verbatim}
+
+\noindent The most relevant are the -qarch and -qtune flags, otherwise
+if these flags are set to ``auto'' then they are wrongly assigned
+to the architecture of the frond-end node, which is different from
+that on the compute nodes. You will need to set these flags to the
+right architecture for your BlueGene compute nodes, which is not necessarily
+``qp''; ask your system administrator. On some machines if is necessary
+to use -O2 in these flags instead of -O3 due to a compiler bug of
+the XLF version installed. We thus suggest to first try -O3, and then
+if the code does not compile or does not run fine then switch back
+to -O2. The debug flags (-g, -qfullpath) do not influence performance
+but are useful to get at least some insights in case of problems.\\
+
+
+\noindent Before running \texttt{configure}, select the XL Fortran
+compiler by typing \texttt{module load bgq-xl/1.0} or \texttt{module
+load bgq-xl} (another, less efficient option is to load the GNU compilers
+using \texttt{module load bgq-gnu/4.4.6} or similar).\\
+
+
+\noindent Then, to configure the code, type this:
+\begin{verbatim}
+./configure FC=bgxlf90_r MPIFC=mpixlf90_r CC=bgxlc_r LOCAL_PATH_IS_ALSO_GLOBAL=true
+\end{verbatim}
+
+In order for the SCOTCH domain decomposer to compile, on some (but
+not all) Blue Gene systems you may need to run \texttt{configure}
+with \texttt{CC=gcc} instead of \texttt{CC=bgxlc\_r}.
+
+\noindent \underline{Older installation instruction for IBM BlueGene, from 2011:}\\
+
+
+\noindent To compile the code on an IBM BlueGene, Laurent L\'eger from
+IDRIS, France, suggests the following: compile the code with
+\begin{verbatim}
+FLAGS_CHECK="-O3 -qsave -qstrict -qtune=auto -qarch=450d -qcache=auto \
+  -qfree=f90 -qsuffix=f=f90 -g -qlanglvl=95pure -qhalt=w -Q \
+  -Q+rank,swap_all -Wl,-relax"
+\end{verbatim}
+
+\noindent
+Option \textquotedbl{}-Wl,-relax\textquotedbl{} must be
+added on many (but not all) BlueGene systems to be able to link the
+binaries \texttt{xmeshfem3D} and \texttt{xspecfem3D} because the final
+link step is done by the GNU \texttt{ld} linker even if one uses \texttt{FC=bgxlf90\_r,
+MPIFC=mpixlf90\_r} and \texttt{CC=bgxlc\_r} to create all the object
+files. On the contrary, on some BlueGene systems that use the native
+AIX linker option \textquotedbl{}-Wl,-relax\textquotedbl{} can lead
+to problems and must be suppressed from \texttt{flags.guess}.
+
+\noindent Also, \texttt{AR=ar, ARFLAGS=cru} and \texttt{RANLIB=ranlib}
+are hardwired in all \texttt{Makefile.in} files by default, but to
+cross-compile on BlueGene/P one needs to change these values to \texttt{AR=bgar,
+ARFLAGS=cru} and \texttt{RANLIB=bgranlib}. Thus the easiest thing
+to do is to modify all \texttt{Makefile.in} files and the \texttt{configure}
+script to set them automatically by \texttt{configure}. One then just
+needs to pass the right commands to the \texttt{configure} script:
+\begin{verbatim}
+./configure --prefix=/path/to/SPECFEM3DG_SP --host=Babel --build=BGP \
+  FC=bgxlf90_r MPIFC=mpixlf90_r CC=bgxlc_r AR=bgar ARFLAGS=cru \
+  RANLIB=bgranlib LOCAL_PATH_IS_ALSO_GLOBAL=false
+\end{verbatim}
+
+\noindent This trick can be useful for all hosts on which one needs
+to cross-compile.
+
+\noindent On BlueGene, one also needs to run the \texttt{xcreate\_header\_file}
+binary file manually rather than in the Makefile:
+
+\noindent
+\begin{verbatim}
+bgrun -np 1 -mode VN -exe ./bin/xcreate_header_file
+\end{verbatim}
+
+
+\section{Visualizing the subroutine calling tree of the source code}
+
+\noindent
+Packages such as \texttt{Doxywizard} can be used to visualize the calling tree of the
+subroutines of the  source code. \texttt{Doxywizard} is
+a GUI front-end for configuring and running \texttt{Doxygen}.
+
+\bigskip
+
+\noindent To do your own call graphs, you can follow these simple steps below.
+
+\begin{enumerate}
+\setcounter{enumi}{-1}
+\item Install \texttt{Doxygen} \underline{and} \texttt{graphviz} (the two are usually in the package manager of classic Linux distribution).
+\item Run in the terminal : \texttt{doxygen -g}, which creates a \texttt{Doxyfile} that tells doxygen what you want it to do.
+\item Edit the Doxyfile. Two Doxyfile-type files have been already committed in the directory \\
+\noindent \texttt{specfem3d/doc/Call\_trees}:
+
+\begin{itemize}
+\item[\textbullet] \texttt{Doxyfile\_truncated\_call\_tree} will generate call graphs with maximum 3 or 4 levels of tree structure,
+\item[\textbullet] \texttt{Doxyfile\_complete\_call\_tree} will generate call graphs with complete tree structure.
+\end{itemize}
+
+The important entries in the Doxyfile are:
+
+\begin{description}
+\item [{\texttt{PROJECT\_NAME}}]
+\item [{\texttt{OPTIMIZE\_FOR\_FORTRAN}}] Set to YES
+\item [{\texttt{EXTRACT\_ALL}}] Set to YES
+\item [{\texttt{EXTRACT\_PRIVATE}}] Set to YES
+\item [{\texttt{EXTRACT\_STATIC}}] Set to YES
+\item [{\texttt{INPUT}}] From the directory \texttt{specfem3d/doc/Call\_trees}, it is \texttt{"../../src/"}
+\item [{\texttt{FILE\_PATTERNS}}] In SPECFEM case, it is \texttt{*.f90* *.F90* *.c* *.cu* *.h*}
+\item [{\texttt{HAVE\_DOT}}] Set to YES
+\item [{\texttt{CALL\_GRAPH}}] Set to YES
+\item [{\texttt{CALLER\_GRAPH}}] Set to YES
+\item [{\texttt{DOT\_PATH}}] The path where is located the dot program graphviz (if it is not in your \$PATH)
+\item [{\texttt{RECURSIVE}}] This tag can be used to turn specify whether or not subdirectories should be searched for input files as well. In the case of SPECFEM, set to YES.
+\item [{\texttt{EXCLUDE}}] Here, you can exclude:
+\begin{verbatim}
+../../src/specfem3D/older_not_maintained_partial_OpenMP_port
+../../src/decompose_mesh/scotch
+../../src/decompose_mesh/scotch_5.1.12b
+\end{verbatim}
+\item [{\texttt{DOT\_GRAPH\_MAX\_NODES}}] to set the maximum number of nodes that will be shown in the graph. If the number of nodes in a graph becomes larger than this value, doxygen will truncate the graph, which is visualized by representing a node as a red box. Minimum value: 0, maximum value: 10000, default value: 50.
+\item [{\texttt{MAX\_DOT\_GRAPH\_DEPTH}}] to set the maximum depth of the graphs generated by dot. A depth value of 3 means that only nodes reachable from the root by following a path via at most 3 edges will be shown. Using a depth of 0 means no depth restriction. Minimum value: 0, maximum value: 1000, default value: 0.
+
+\end{description}
+
+\item Run : \texttt{doxygen Doxyfile}, HTML and LaTeX files created by default in \texttt{html} and \texttt{latex} subdirectories.
+
+\item To see the call trees, you have to open the file \texttt{html/index.html} in your \underline{browser}. You will have many informations about each subroutines of SPECFEM (not only call graphs), you can click on every boxes / subroutines. It show you the call, and, the caller graph of each subroutine : the subroutines called by the concerned subroutine, and the previous subroutines who call this subroutine (the previous path), respectively. In the case of a truncated calling tree, the boxes with a red border indicates a node that has \underline{more} arrows than are shown (in other words: the graph is truncated with respect to this node).
+
+\end{enumerate}
+
+\medskip
+
+\noindent Finally, some useful links:
+
+\begin{itemize}
+\item[\textbullet] a good and short summary for the basic utilisation of Doxygen:
+
+\url{http://www.softeng.rl.ac.uk/blog/2010/jan/30/callgraph-fortran-doxygen/},
+
+\item[\textbullet] to configure the diagrams :
+
+\url{http://www.stack.nl/~dimitri/doxygen/manual/diagrams.html},
+
+\item[\textbullet] the complete alphabetical index of the tags in Doxyfile:
+
+\url{http://www.stack.nl/~dimitri/doxygen/manual/config.html},
+
+\item[\textbullet] more generally, the Doxygen manual:
+
+\url{http://www.stack.nl/~dimitri/doxygen/manual/index.html}.
+
+\end{itemize}
+
+\medskip
+
+\section{Using the ADIOS library for I/O}
+
+Regular POSIX I/O can be problematic when dealing with large simulations one large
+clusters (typically more than $10,000$ processes). SPECFEM3D use the ADIOS library~\cite{Liu2013}
+to deal transparently take advantage of advanced parallel file system features. To enable
+ADIOS, the following steps should be done:
+\begin{enumerate}
+\item Install ADIOS (available from \url{https://www.olcf.ornl.gov/center-projects/adios/}).
+Make sure that your environment variables reference it.
+\item You may want to change ADIOS related values in the \texttt{constants.h.in} file.
+The default values probably suit most cases.
+\item Configure using the \texttt{--with-adios} flag.
+\end{enumerate}
+ADIOS is currently only usable for meshfem3D generated mesh (i.e. not for meshes generated
+with CUBTI). Additional control parameters are discussed in section~\ref{cha:Main-Parameter}.
+
+\section{Becoming a developer of the code, or making small modifications in the source code}
+
+If you want to develop new features in the code, and/or if you want to make small changes, improvements, or bug fixes, you are very welcome to contribute. To do so, i.e. to access the development branch of the source code with read/write access (in a safe way, no need to worry too much about breaking the package, there is a robot called BuildBot that is in charge of checking and validating all new contributions and changes), please visit this Web page: \url{https://github.com/geodynamics/specfem3d/wiki/Using-Hub}.
+
+To visualize the call tree (calling tree) of the source code, you can see the Doxygen tool available in directory \texttt{doc/call\_trees\_of\_the\_source\_code}.
+
+
+

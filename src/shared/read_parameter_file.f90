@@ -49,6 +49,10 @@
   !logical :: sep_dir_exists
   integer :: i,irange
 
+  !LDDRK
+  logical :: INCREASE_CFL_FOR_LDDRK
+  double precision :: RATIO_BY_WHICH_TO_INCREASE_IT
+
 ! read from a single processor (the master) and then use MPI to broadcast to others
 ! to avoid an I/O bottleneck in the case of very large runs
   if(myrank == 0) then
@@ -62,15 +66,15 @@
     ! checks if it uses an old Par_file format
     call read_value_integer(nproc_eta_old, 'NPROC_ETA', ier)
     if (ier /= 0) then
-      print*,'please specify the number of processes in Par_file as:'
-      print*,'NPROC           =    <my_number_of_desired_processes> '
+      print *,'please specify the number of processes in Par_file as:'
+      print *,'NPROC           =    <my_number_of_desired_processes> '
       return
     endif
     ! checks if it uses an old Par_file format
     call read_value_integer(nproc_xi_old, 'NPROC_XI', ier)
     if (ier /= 0) then
-      print*,'please specify the number of processes in Par_file as:'
-      print*,'NPROC           =    <my_number_of_desired_processes> '
+      print *,'please specify the number of processes in Par_file as:'
+      print *,'NPROC           =    <my_number_of_desired_processes> '
       return
     endif
     NPROC = nproc_eta_old * nproc_xi_old
@@ -91,6 +95,17 @@
   if (ier /= 0) stop 'Error reading Par_file parameter NSTEP'
   call read_value_double_precision(DT, 'DT', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter DT'
+
+  call read_value_logical(USE_LDDRK, 'USE_LDDRK', ier)   ! low-memory Runge-Kutta time scheme
+  if (ier /= 0) stop 'an error occurred while reading the parameter file: USE_LDDRK'
+  call read_value_logical(INCREASE_CFL_FOR_LDDRK, 'INCREASE_CFL_FOR_LDDRK', ier)
+  if (ier /= 0) stop 'an error occurred while reading the parameter file: INCREASE_CFL_FOR_LDDRK'
+  call read_value_double_precision(RATIO_BY_WHICH_TO_INCREASE_IT, 'RATIO_BY_WHICH_TO_INCREASE_IT', ier)
+  if (ier /= 0) stop 'an error occurred while reading the parameter file: RATIO_BY_WHICH_TO_INCREASE_IT'
+  if (USE_LDDRK .and. INCREASE_CFL_FOR_LDDRK) DT = DT * RATIO_BY_WHICH_TO_INCREASE_IT
+  if (USE_LDDRK .and. SIMULATION_TYPE == 3 ) &
+    stop 'USE_LDDRK support not implemented yet for SIMULATION_TYPE == 3'
+
   call read_value_integer(NGNOD, 'NGNOD', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter NGNOD'
   call read_value_string(MODEL, 'MODEL', ier)
@@ -237,6 +252,8 @@
   if (ier /= 0) stop 'Error reading Par_file parameter NUMBER_OF_SIMULTANEOUS_RUNS'
   call read_value_logical(BROADCAST_SAME_MESH_AND_MODEL, 'BROADCAST_SAME_MESH_AND_MODEL', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter BROADCAST_SAME_MESH_AND_MODEL'
+  call read_value_logical(USE_FAILSAFE_MECHANISM, 'USE_FAILSAFE_MECHANISM', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter USE_FAILSAFE_MECHANISM'
 
 ! check the type of external code to couple with, if any
   if (COUPLE_WITH_EXTERNAL_CODE) then
@@ -244,15 +261,17 @@
        EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_AXISEM .and. &
        EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_FK) stop 'Error incorrect value of EXTERNAL_CODE_TYPE read'
 
-    if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) &
-         stop 'Error coupling with AxiSEM not implemented yet, but will soon be'
+    if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_FK .and. MESH_A_CHUNK_OF_THE_EARTH) &
+         stop 'Error: coupling with F-K is for models with a flat surface (Earth flattening), &
+                     &thus turn MESH_A_CHUNK_OF_THE_EARTH off'
 
     if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_FK) &
-         stop 'Error coupling with F-K not implemented yet, but see work by Ping et al. (GJI 2014, GRL 2015)'
+         stop 'Error: coupling with F-K not implemented yet, but see work by Ping et al. (GJI 2014, GRL 2015)'
   endif
 
 ! see if we are running several independent runs in parallel
-! if so, add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
+! if so, add the right directory for that run
+! (group numbers start at zero, but directory names start at run0001, thus we add one)
 ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
   if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
     write(path_to_add,"('run',i4.4,'/')") mygroup + 1
@@ -278,7 +297,7 @@
 
   ! total times steps must be dividable by adjoint source chunks/blocks
   if (mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) /= 0) then
-    print*,'When NOISE_TOMOGRAPHY is not equal to zero, ACTUAL_NSTEP=2*NSTEP-1'
+    print *,'When NOISE_TOMOGRAPHY is not equal to zero, ACTUAL_NSTEP=2*NSTEP-1'
     stop 'Error: mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) must be zero! Please modify Par_file and recompile solver'
   endif
 
@@ -297,7 +316,8 @@
     ! there are NLINES_PER_FORCESOLUTION_SOURCE lines per source in that file
     FORCESOLUTION = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'FORCESOLUTION'
 ! see if we are running several independent runs in parallel
-! if so, add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
+! if so, add the right directory for that run
+! (group numbers start at zero, but directory names start at run0001, thus we add one)
 ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
     if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
       write(path_to_add,"('run',i4.4,'/')") mygroup + 1
@@ -325,7 +345,8 @@
     ! there are NLINES_PER_CMTSOLUTION_SOURCE lines per source in that file
     CMTSOLUTION = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'CMTSOLUTION'
 ! see if we are running several independent runs in parallel
-! if so, add the right directory for that run (group numbers start at zero, but directory names start at run0001, thus we add one)
+! if so, add the right directory for that run
+! (group numbers start at zero, but directory names start at run0001, thus we add one)
 ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
     if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
       write(path_to_add,"('run',i4.4,'/')") mygroup + 1
@@ -427,10 +448,10 @@
     !  stop 'Error: SEP_MODEL_DIRECTORY should exist.'
     !endif
   case default
-    print*
-    print*,'********** model not recognized: ',trim(MODEL),' **************'
-    print*,'********** using model: default',' **************'
-    print*
+    print *
+    print *,'********** model not recognized: ',trim(MODEL),' **************'
+    print *,'********** using model: default',' **************'
+    print *
     IMODEL = IMODEL_DEFAULT
   end select
 
@@ -457,6 +478,8 @@
 
   call read_value_logical(GPU_MODE, 'GPU_MODE', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter GPU_MODE'
+  if (USE_LDDRK .and. GPU_MODE ) &
+    stop 'USE_LDDRK support not implemented yet for GPU simulations'
 
 !> Read ADIOS related flags from the Par_file
 !! \param ADIOS_ENABLED Main flag to decide if ADIOS is used. If setted to
@@ -503,6 +526,7 @@
     call bcast_all_singlel_world(SUPPRESS_UTM_PROJECTION)
     call bcast_all_singlei_world(NSTEP)
     call bcast_all_singledp_world(DT)
+    call bcast_all_singlel_world(USE_LDDRK)
     call bcast_all_singlei_world(NGNOD)
     call bcast_all_string_world(MODEL)
     call bcast_all_string_world(SEP_MODEL_DIRECTORY)
@@ -558,6 +582,7 @@
     call bcast_all_singlel_world(MESH_A_CHUNK_OF_THE_EARTH)
     call bcast_all_singlei_world(NUMBER_OF_SIMULTANEOUS_RUNS)
     call bcast_all_singlel_world(BROADCAST_SAME_MESH_AND_MODEL)
+    call bcast_all_singlel_world(USE_FAILSAFE_MECHANISM)
     call bcast_all_singlel_world(GPU_MODE)
     call bcast_all_singlel_world(ADIOS_ENABLED)
     call bcast_all_singlel_world(ADIOS_FOR_DATABASES)

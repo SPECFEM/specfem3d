@@ -20,6 +20,9 @@ NPROC                           = 4
 # time step parameters
 NSTEP                           = 100
 DT                              = 0.05
+USE_LDDRK                       = .false.
+INCREASE_CFL_FOR_LDDRK          = .false.
+RATIO_BY_WHICH_TO_INCREASE_IT   = 1.4
 
 # number of nodes for 2D and 3D shape functions for hexahedra
 # we use either 8-node mesh elements (bricks) or 27-node elements.
@@ -237,6 +240,10 @@ NUMBER_OF_SIMULTANEOUS_RUNS     = 1
 # directories) in each of the run0001, run0002,... directories, it is sufficient to have one in run0001
 # and the code will broadcast it to the others)
 BROADCAST_SAME_MESH_AND_MODEL   = .false.
+
+# if one or a few of these simultaneous runs fail, kill all the runs or let the others finish using a fail-safe mechanism
+# (in most cases, should be set to false)
+USE_FAILSAFE_MECHANISM          = .false.
 
 # set to true to use GPUs
 GPU_MODE                        = .false.

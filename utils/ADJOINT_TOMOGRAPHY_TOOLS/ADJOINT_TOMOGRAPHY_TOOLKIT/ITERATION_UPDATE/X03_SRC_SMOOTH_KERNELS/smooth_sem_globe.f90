@@ -106,7 +106,7 @@ program smooth_sem_globe
   call MPI_COMM_SIZE(MPI_COMM_WORLD,sizeprocs,ier)
   call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
 
-  if (myrank == 0) print*,"smooth:"
+  if (myrank == 0) print *,"smooth:"
   call mpi_barrier(MPI_COMM_WORLD,ier)
 
   ! arguments
@@ -139,11 +139,11 @@ program smooth_sem_globe
 
   ! user output
   if (myrank == 0) then
-    print*,"defaults:"
-    print*,"  NPROC_XI , NPROC_ETA: ",NPROC_XI_VAL,NPROC_ETA_VAL
-    print*,"  NCHUNKS                         : ",NCHUNKS_VAL
-    print*,"  element size on surface(km): ",element_size
-    print*,"  smoothing sigma_h , sigma_v: ",sigma_h,sigma_v
+    print *,"defaults:"
+    print *,"  NPROC_XI , NPROC_ETA: ",NPROC_XI_VAL,NPROC_ETA_VAL
+    print *,"  NCHUNKS                         : ",NCHUNKS_VAL
+    print *,"  element size on surface(km): ",element_size
+    print *,"  smoothing sigma_h , sigma_v: ",sigma_h,sigma_v
   endif
   ! synchronizes
   call mpi_barrier(MPI_COMM_WORLD,ier)
@@ -440,12 +440,12 @@ program smooth_sem_globe
 
               ! checks number
               !if( isNaN(tk(i,j,k,ispec)) ) then
-              !  print*,'error tk NaN: ',tk(i,j,k,ispec)
-              !  print*,'rank:',myrank
-              !  print*,'i,j,k,ispec:',i,j,k,ispec
-              !  print*,'tk: ',tk(i,j,k,ispec),'bk:',bk(i,j,k,ispec)
-              !  print*,'sum exp_val: ',sum(exp_val(:,:,:)),'sum factor:',sum(factor(:,:,:))
-              !  print*,'sum kernel:',sum(kernel(:,:,:,ispec2))
+              !  print *,'error tk NaN: ',tk(i,j,k,ispec)
+              !  print *,'rank:',myrank
+              !  print *,'i,j,k,ispec:',i,j,k,ispec
+              !  print *,'tk: ',tk(i,j,k,ispec),'bk:',bk(i,j,k,ispec)
+              !  print *,'sum exp_val: ',sum(exp_val(:,:,:)),'sum factor:',sum(factor(:,:,:))
+              !  print *,'sum kernel:',sum(kernel(:,:,:,ispec2))
               !  call exit_MPI('error NaN')
               !endif
 
@@ -479,10 +479,10 @@ program smooth_sem_globe
 
           ! checks number
           if( isNaN(kernel_smooth(i,j,k,ispec)) ) then
-            print*,'error kernel_smooth NaN: ',kernel_smooth(i,j,k,ispec)
-            print*,'rank:',myrank
-            print*,'i,j,k,ispec:',i,j,k,ispec
-            print*,'tk: ',tk(i,j,k,ispec),'bk:',bk(i,j,k,ispec)
+            print *,'error kernel_smooth NaN: ',kernel_smooth(i,j,k,ispec)
+            print *,'rank:',myrank
+            print *,'i,j,k,ispec:',i,j,k,ispec
+            print *,'tk: ',tk(i,j,k,ispec),'bk:',bk(i,j,k,ispec)
             call exit_MPI('error NaN')
           endif
 
@@ -567,10 +567,10 @@ end program smooth_sem_globe
 
         ! checks number
         !if( isNaN(exp_val(ii,jj,kk)) ) then
-        !  print*,'error exp_val NaN: ',exp_val(ii,jj,kk)
-        !  print*,'i,j,k:',ii,jj,kk
-        !  print*,'dist_h: ',dist_h,'dist_v:',dist_v
-        !  print*,'sigma_h2:',sigma_h2,'sigma_v2:',sigma_v2
+        !  print *,'error exp_val NaN: ',exp_val(ii,jj,kk)
+        !  print *,'i,j,k:',ii,jj,kk
+        !  print *,'dist_h: ',dist_h,'dist_v:',dist_v
+        !  print *,'sigma_h2:',sigma_h2,'sigma_v2:',sigma_v2
         !  call exit_MPI('error NaN')
         !endif
 

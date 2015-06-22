@@ -45,7 +45,7 @@ subroutine no_adios_err()
     print *, "or reconfigure using --with-adios."
     print *, "----------------------------------------------------"
   endif
-  call stop_all()
+  call abort_mpi()
 end subroutine
 
 !==============================================================================

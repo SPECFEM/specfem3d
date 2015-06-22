@@ -104,7 +104,7 @@
   call world_size(sizeprocs)
   if (sizeprocs /= 1) then
     print *, "sequential program. Only mpirun -np 1 ..."
-    call stop_all()
+    call abort_mpi()
   endif
 
   print *
@@ -258,7 +258,7 @@
       call cvd_write_GLL_points(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,data_sp,it,npp,numpoin,np)
     endif
 
-    print*,'  points:',np,numpoin
+    print *,'  points:',np,numpoin
 
     ! stores total number of points written
     np = np + numpoin
@@ -321,8 +321,8 @@
                                 np,nelement,it,nee,numpoin)
     endif
 
-    print*,'  elements:',ne,nelement
-    print*,'  points : ',np,numpoin
+    print *,'  elements:',ne,nelement
+    print *,'  points : ',np,numpoin
 
     ne = ne + nelement
 
@@ -334,7 +334,7 @@
 
   ! checks with total number of elements
   if (ne /= nee) then
-    print*,'error: number of elements counted:',ne,'total:',nee
+    print *,'error: number of elements counted:',ne,'total:',nee
     stop 'Number of total elements are not consistent'
   endif
   print *, 'Total number of elements: ', ne

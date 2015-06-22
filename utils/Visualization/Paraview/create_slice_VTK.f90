@@ -87,7 +87,7 @@
   num_node = 0
   open(unit = 20, file = trim(arg(1)), status = 'old',iostat = ios)
   if (ios /= 0) then
-    print*,'no file: ',trim(arg(1))
+    print *,'no file: ',trim(arg(1))
     stop 'Error opening slices file'
   endif
 
