@@ -490,6 +490,21 @@
     endif
 
   case (IMODEL_USER_EXTERNAL )
+
+    ! Florian Schumacher, Germany, June 2015
+    ! FS FS: added call to model_default here, before calling model_external_values in order to
+    !        be able to superimpose a model onto the default one:
+
+    ! material values determined by mesh properties
+    call model_default(materials_ext_mesh,nmat_ext_mesh, &
+                       undef_mat_prop,nundefMat_ext_mesh, &
+                       imaterial_id,imaterial_def, &
+                       xmesh,ymesh,zmesh, &
+                       rho,vp,vs, &
+                       iflag_aniso,qkappa_atten,qmu_atten,idomain_id, &
+                       rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
+                       phi,tort,kxx,kxy,kxz,kyy,kyz,kzz)
+
     ! user model from external routine
     ! adds/gets velocity model as specified in model_external_values.f90
     call model_external_values(xmesh,ymesh,zmesh,rho,vp,vs,qkappa_atten,qmu_atten,iflag_aniso,idomain_id)
