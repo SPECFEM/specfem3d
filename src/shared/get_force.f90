@@ -101,7 +101,7 @@
 
     ! read f0 (stored in hdur() array for convenience, to use the same array as for CMTSOLUTION)
     ! Please be careful, if you meet an error in reading the file FORCESOLUTION,
-    ! such as you still write “hdur:” instead of “f0:”
+    ! such as you still write "hdur:" instead of "f0:"
     ! Please change your file or do following change in the code, such as changing 
     ! read(string(4:len_trim(string)),*) hdur(isource)
     ! to 
