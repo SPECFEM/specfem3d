@@ -292,9 +292,9 @@ input_box_sem_cart.txt
 0.  60.                     # chunk center (lat lon)
 1                           # number of axisem simus depends on moment tensor used
 32                          # number of Specfem3D MPI processes
-/[...]/example_1st_for_validation/MESH                           # Specfem MESH dir
-/[...]/example_1st_for_validation/OUTPUT_FILES/DATABASES_MPI     # Specfem databases dir
-/[...]/AxiSEM_modif_for_coupling_with_specfem/SOLVER/Tractions/1 # AxiSEM tractions dir
+/[...]/example_1st_for_validation/MESH                          # Specfem MESH dir
+/[...]/example_1st_for_validation/OUTPUT_FILES/DATABASES_MPI    # Specfem databases dir
+/[...]/example_1st_for_validation/DATA/AxiSEM_tractions/1       # AxiSEM tractions dir
 
 \end{verbatim}
 
@@ -305,8 +305,8 @@ input_box_sem_cart.txt
 \noindent Example :
 \begin{verbatim}
 
-10.         # output sampling in Hz (time step that will use in Specfem3D simu) \newline
-710. 1800.  # begin time and end time (s.) \newline
+10.         # = 1/DT, i.e. output sampling in Hz (time step that will use in Specfem3D simu) 
+710. 1800.  # begin time and end time (s.)
 
 \end{verbatim}
 
@@ -346,6 +346,44 @@ input_box_sem_cart.txt
 
 \section{STEP 8 : Running specfem3D}
 
+\noindent Go in 'EXAMPLES/coupling\_with\_EXTERNAL\_CODES/with\_AxiSEM/example\_1st\_for\_validation'
+
+\medskip 
+
+\noindent Check in 'DATA/Par\_file', the lines after the comment "\# time step parameters", these parameters must coincide with the parameters in  'reformat.par' (cf STEP 7) :
+
+\begin{itemize}
+
+\item[\textbullet] NSTEP = 10900 ~~ \# $\Longrightarrow$ cf the two values in the second line of 'reformat.par'. This value equals to : 
+$$\ds \dfrac{\hbox{second value} - \hbox{the first}}{\text{DT}} ~~ \left(= \dfrac{\hbox{duration of physical time}}{\text{DT}} \right)$$
+
+\noindent So here, it is : $\ds \dfrac{1800 - 710}{0.1} = 10900$
+
+\medskip 
+
+\item[\textbullet] DT = 0.1 ~~ \# $\Longrightarrow$ the inverse of the first line in 'reformat.par' (which is 1/DT)
+
+\end{itemize}
+
+\medskip 
+
+\noindent Also check in 'DATA/Par\_file', the lines after the comment "\# to couple with an external code (such as DSM, AxiSEM, or FK)" :
+
+\begin{itemize}
+
+\item[\textbullet] COUPLE\_WITH\_EXTERNAL\_CODE = .true. ~~ \# $\Longrightarrow$ always set it to '.true.' in this case
+
+\item[\textbullet] EXTERNAL\_CODE\_TYPE = 2  ~ \# 1 = DSM, 2 = AxiSEM, 3 = FK ~~ $\Longrightarrow$ always set it to '2' for AxiSEM
+
+\item[\textbullet] TRACTION\_PATH  = ./DATA/AxiSEM\_tractions/1/ ~~   \# $\Longrightarrow$ This is where there are the tractions from AxiSEM (from steps 6 and 7) !! CAUTION : verify that they are in this dir, in the form of files 'proc0000**\_sol\_axisem', etc. !!
+
+\item[\textbullet] MESH\_A\_CHUNK\_OF\_THE\_EARTH  = .true.  ~~  \# $\Longrightarrow$ always set it to '.true.' in this case
+
+\end{itemize}
+
+\medskip
+
+\noindent And finally, type : run ./batch\_coupling\_step8\_xspecfem3d.sh
 
 \section{STEP ? : Set up scripts}
 
