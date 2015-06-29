@@ -305,7 +305,7 @@ input_box_sem_cart.txt
 \noindent Example :
 \begin{verbatim}
 
-10.         # = 1/DT, i.e. output sampling in Hz (time step that will use in Specfem3D simu) 
+10.         # = 1/DT, i.e. output sampling in Hz (time step that will use in Specfem3D simu)
 710. 1800.  # begin time and end time (s.)
 
 \end{verbatim}
@@ -348,24 +348,24 @@ input_box_sem_cart.txt
 
 \noindent Go in 'EXAMPLES/coupling\_with\_EXTERNAL\_CODES/with\_AxiSEM/example\_1st\_for\_validation'
 
-\medskip 
+\medskip
 
 \noindent Check in 'DATA/Par\_file', the lines after the comment "\# time step parameters", these parameters must coincide with the parameters in  'reformat.par' (cf STEP 7) :
 
 \begin{itemize}
 
-\item[\textbullet] NSTEP = 10900 ~~ \# $\Longrightarrow$ cf the two values in the second line of 'reformat.par'. This value equals to : 
+\item[\textbullet] NSTEP = 10900 ~~ \# $\Longrightarrow$ cf the two values in the second line of 'reformat.par'. This value equals to :
 $$\ds \dfrac{\hbox{second value} - \hbox{the first}}{\text{DT}} ~~ \left(= \dfrac{\hbox{duration of physical time}}{\text{DT}} \right)$$
 
 \noindent So here, it is : $\ds \dfrac{1800 - 710}{0.1} = 10900$
 
-\medskip 
+\medskip
 
 \item[\textbullet] DT = 0.1 ~~ \# $\Longrightarrow$ the inverse of the first line in 'reformat.par' (which is 1/DT)
 
 \end{itemize}
 
-\medskip 
+\medskip
 
 \noindent Also check in 'DATA/Par\_file', the lines after the comment "\# to couple with an external code (such as DSM, AxiSEM, or FK)" :
 
