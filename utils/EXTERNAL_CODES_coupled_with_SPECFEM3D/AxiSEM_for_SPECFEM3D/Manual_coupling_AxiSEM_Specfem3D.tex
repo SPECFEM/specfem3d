@@ -127,7 +127,13 @@
 
 \begin{itemize}
 
-\item[\textbullet] Go in 'EXAMPLES/coupling\_with\_EXTERNAL\_CODES/with\_AxiSEM/example\_1st\_for\_validation'
+\item[\textbullet] Go in 'EXAMPLES/coupling\_with\_EXTERNAL\_CODES/with\_AxiSEM/example\_1st\_for\_validation',
+
+\smallskip
+
+(OR, create another subdirectory in '[...]/with\_AxiSEM', copy files from '[...]/example\_1st\_for\_validation' and modify them if you need)
+
+\item[\textbullet] {\color{red} CAUTION !! : Check the file 'paths\_for\_coupling\_SPECFEM3D\_AxiSEM.sh' and modify the variable 'HOME\_SPECFEM3D'} $\Longrightarrow$ this is the only path you have to modify for specfem3d
 
 \item[\textbullet] Type : \\
 
@@ -278,7 +284,9 @@ Among others, this script calls : \\
 
 \begin{itemize}
 
-\item[\textbullet] Check the file 'expand\_2D\_3D.par', cf the paths in the 3 last lines !! ==> Caution : for the tractions path (Tractions/1/), the directory need to be created !! ==> it is created in the script 'sub\_launch\_script\_for\_make\_+\_run\_expand2D3D\_and\_reformat\_Curie\_CD.sh', but if you don't use this script, you have to create the directory yourself
+\item[\textbullet] {\color{red} Check the file 'expand\_2D\_3D.par', cf THE PATHS IN THE 3 LAST LINES (normally, these are the only paths you to modify in the AxiSEM dir) !!} ==> Caution : for the tractions path (Tractions/1/), the directory need to be created !! ==> 
+
+it is created in the script 'sub\_launch\_script\_for\_make\_+\_run\_expand2D3D\_and\_reformat\_Curie\_CD.sh', but if you don't use this script, you have to create the directory yourself
 
 \smallskip
 
