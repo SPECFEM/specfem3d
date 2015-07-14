@@ -262,7 +262,6 @@
   endif
 
   ! MPI Interfaces
-
   if (NPROC_XI >= 2 .or. NPROC_ETA >= 2) then
     ! determines number of mpi interfaces for each slice
     nb_interfaces = 4
