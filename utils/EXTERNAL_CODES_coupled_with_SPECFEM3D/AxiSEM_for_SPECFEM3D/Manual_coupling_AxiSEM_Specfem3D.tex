@@ -283,9 +283,16 @@ Among others, this script calls : \\
 
 \begin{itemize}
 
-\item[\textbullet] {\color{red} Check the file 'expand\_2D\_3D.par', cf THE PATHS IN THE 3 LAST LINES (normally, these are the only paths you to modify in the AxiSEM dir) !!} ==> Caution : for the tractions path (Tractions/1/), the directory need to be created !! ==>
+\item[\textbullet] {\color{red} Check the file 'expand\_2D\_3D.par', cf THE PATHS IN THE 3 LAST LINES (normally, these are the only paths you to modify in the AxiSEM dir) !!} ==> Caution : for the tractions path (for example: /[...]/AxiSEM\_tractions/1/), the directory need to be created !!!! {\color{red} ~ ==>}
 
-it is created in the script 'sub\_launch\_script\_for\_make\_+\_run\_expand2D3D\_and\_reformat\_Curie\_CD.sh', but if you don't use this script, you have to create the directory yourself
+the script 'sub\_launch\_script\_for\_make\_+\_run\_expand2D3D\_and\_reformat\_Curie\_CD.sh' create a traction directory here: 
+
+\smallskip
+
+{\footnotesize 'EXAMPLES/coupling\_with\_EXTERNAL\_CODES/with\_AxiSEM/example\_1st\_for\_validation/DATA/AxiSEM\_tractions/1/', }
+
+
+BUT, if you don't use this script or if you want to create another tractions dir, you have to create the directory yourself.
 
 \smallskip
 
