@@ -393,7 +393,7 @@
     IMODEL_DEFAULT,IMODEL_GLL,IMODEL_1D_PREM,IMODEL_1D_CASCADIA,IMODEL_1D_SOCAL, &
     IMODEL_SALTON_TROUGH,IMODEL_TOMO,IMODEL_USER_EXTERNAL,IMODEL_IPATI,IMODEL_IPATI_WATER, &
     IMODEL_1D_PREM_PB,IMODEL_GLL, IMODEL_SEP, &
-    IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,ATTENUATION_COMP_MAXIMUM
+    IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,ATTENUATION_COMP_MAXIMUM,COUPLE_WITH_EXTERNAL_CODE
 
   use create_regions_mesh_ext_par
   implicit none
@@ -496,14 +496,13 @@
     !        be able to superimpose a model onto the default one:
 
     ! material values determined by mesh properties
-    call model_default(materials_ext_mesh,nmat_ext_mesh, &
-                       undef_mat_prop,nundefMat_ext_mesh, &
-                       imaterial_id,imaterial_def, &
-                       xmesh,ymesh,zmesh, &
-                       rho,vp,vs, &
-                       iflag_aniso,qkappa_atten,qmu_atten,idomain_id, &
-                       rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
-                       phi,tort,kxx,kxy,kxz,kyy,kyz,kzz)
+    if (.not. COUPLE_WITH_EXTERNAL_CODE) call model_default(materials_ext_mesh,nmat_ext_mesh, &
+                                                    undef_mat_prop,nundefMat_ext_mesh, &
+                                                    imaterial_id,imaterial_def, &
+                                                    xmesh,ymesh,zmesh,rho,vp,vs, &
+                                                    iflag_aniso,qkappa_atten,qmu_atten,idomain_id, &
+                                                    rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
+                                                    phi,tort,kxx,kxy,kxz,kyy,kyz,kzz)
 
     ! user model from external routine
     ! adds/gets velocity model as specified in model_external_values.f90

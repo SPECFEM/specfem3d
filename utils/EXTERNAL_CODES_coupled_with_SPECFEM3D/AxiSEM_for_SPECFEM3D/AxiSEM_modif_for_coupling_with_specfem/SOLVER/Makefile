@@ -75,6 +75,8 @@ attenuation.o: analytic_mapping.o commun.o data_io.o data_matr.o data_mesh.o \
 	geom_transf.o get_mesh.o global_parameters.o pointwise_derivatives.o \
 	utlity.o Makefile ../make_axisem.macros 
 background_models.o: global_parameters.o interpolation.o Makefile ../make_axisem.macros 
+coupling_mod.o: global_parameters.o data_heterogeneous.o data_io.o data_proc.o utlity.o \
+    data_source.o commun.o data_mesh.o data_mesh.o geom_transf.o Makefile ../make_axisem.macros 
 clocks.o:  Makefile ../make_axisem.macros 
 data_comm.o: global_parameters.o list.o Makefile ../make_axisem.macros 
 data_heterogeneous.o: global_parameters.o Makefile ../make_axisem.macros 
