@@ -1,6 +1,6 @@
 ! Proc  32: Header for mesh information to run static solver
 ! created by the mesher on 07/23/2015, at 15h 14min
- 
+
 !:::::::::::::::::::: Input parameters :::::::::::::::::::::::::::
 !   Background model     :            prem_iso
 !   Inner-core shear wave:         T
@@ -9,7 +9,7 @@
 !   Courant number       :    0.6000
 !   Coarsening levels    :         3
 !:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
- 
+
  integer, parameter ::         npol =         4  !            polynomial order
  integer, parameter ::        nelem =     11858  !                   proc. els
  integer, parameter ::       npoint =    296450  !               proc. all pts
@@ -22,7 +22,7 @@
  integer, parameter ::        ndisc =        11  !   # disconts in bkgrd model
  integer, parameter ::   nproc_mesh =        32  !        number of processors
  integer, parameter :: lfbkgrdmodel =         8  !   length of bkgrdmodel name
- 
+
 !:::::::::::::::::::: Output parameters ::::::::::::::::::::::::::
 !   Time step [s]        :    0.0389
 !   Min(h/vp),dt/courant :    0.3739    0.2596
