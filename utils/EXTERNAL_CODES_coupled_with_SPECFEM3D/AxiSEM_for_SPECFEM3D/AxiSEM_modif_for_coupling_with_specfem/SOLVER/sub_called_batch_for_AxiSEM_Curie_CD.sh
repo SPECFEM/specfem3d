@@ -35,5 +35,5 @@ OPTION=
 NPROC_MINUS_ONE="$NPROC-1"
 
 # Run AxiSEM
-$MPIRUN ./axisem > OUTPUT_iasp91
+$MPIRUN ./axisem > OUTPUT_solver
 
