@@ -11,7 +11,7 @@ SAMPLING_PERIOD     0.0
 TIME_STEP           0.0
 
 # Source period [s]. Put to 0.0 to use mesh resolution (mesh_params.h)
-SOURCE_PERIOD       0.0
+SOURCE_PERIOD       10.0
 
 # Source time function (default: dirac_0)
 # 'quheavi': Smooth Heaviside/erf function

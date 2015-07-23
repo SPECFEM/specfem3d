@@ -95,7 +95,7 @@ def_precomp_terms.o: analytic_mapping.o attenuation.o background_models.o \
 	commun.o data_io.o data_matr.o data_mesh.o data_pointwise.o \
 	data_proc.o data_source.o data_spec.o def_grid.o geom_transf.o \
 	get_mesh.o get_model.o global_parameters.o pointwise_derivatives.o \
-	splib.o utlity.o Makefile ../make_axisem.macros 
+	splib.o utlity.o coupling_mod.o Makefile ../make_axisem.macros 
 geom_transf.o: analytic_mapping.o data_mesh.o subpar_mapping.o Makefile ../make_axisem.macros 
 get_mesh.o: background_models.o commun.o data_comm.o data_io.o data_mesh.o \
 	data_proc.o data_time.o global_parameters.o Makefile ../make_axisem.macros 
@@ -123,7 +123,7 @@ unrolled_loops.o: data_mesh.o global_parameters.o Makefile ../make_axisem.macros
 utlity.o: data_mesh.o data_spec.o geom_transf.o global_parameters.o Makefile ../make_axisem.macros 
 wavefields_io.o: data_io.o data_mesh.o data_pointwise.o data_proc.o \
 	data_source.o data_time.o global_parameters.o nc_routines.o \
-	pointwise_derivatives.o Makefile ../make_axisem.macros 
+	pointwise_derivatives.o coupling_mod.o Makefile ../make_axisem.macros 
 commpi.o: clocks.o data_comm.o data_io.o data_mesh.o data_proc.o data_time.o \
 	global_parameters.o list.o Makefile ../make_axisem.macros 
 commun.o: clocks.o commpi.o data_mesh.o data_proc.o data_time.o \
@@ -145,7 +145,8 @@ time_evol_wave.o: apply_masks.o attenuation.o clocks.o commun.o data_io.o \
 	data_matr.o data_mesh.o data_pointwise.o data_proc.o data_source.o \
 	data_time.o def_precomp_terms.o global_parameters.o meshes_io.o \
 	nc_routines.o parameters.o pointwise_derivatives.o rotations.o \
-	seismograms.o source.o stiffness.o wavefields_io.o Makefile ../make_axisem.macros 
+	seismograms.o source.o stiffness.o wavefields_io.o coupling_mod.o Makefile ../make_axisem.macros 
 ftz.o:  Makefile ../make_axisem.macros 
 pthread.o:  Makefile ../make_axisem.macros 
 kdtree2.o:  Makefile ../make_axisem.macros
+

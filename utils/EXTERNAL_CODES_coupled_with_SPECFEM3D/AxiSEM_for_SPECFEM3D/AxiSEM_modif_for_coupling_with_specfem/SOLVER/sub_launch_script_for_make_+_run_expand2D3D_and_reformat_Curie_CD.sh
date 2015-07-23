@@ -1,7 +1,12 @@
 #!/bin/bash
 
-mkdir Tractions/
-mkdir Tractions/1/
+current_dir=$(pwd)
+
+cd ../../../../../EXAMPLES/coupling_with_EXTERNAL_CODES/with_AxiSEM/example_1st_for_validation/DATA/
+mkdir AxiSEM_tractions/
+mkdir AxiSEM_tractions/1/
+cd ${current_dir}
+
 
 dir_for_run=$(pwd)/$1
 

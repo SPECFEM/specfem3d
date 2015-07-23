@@ -28,7 +28,7 @@ RECFILE_TYPE      stations
 # Choose Mesh (local subdirname in SOLVER/MESHES directory)
 # N.B. The mesh controls the velocity model and the number of CPUs
 
-MESHNAME           IASP91
+MESHNAME           MESH_premiso/
 
 # Use lateral heterogeneities (aka 2.5D model).
 # The model has to be described in inparam_hetero (default: false)

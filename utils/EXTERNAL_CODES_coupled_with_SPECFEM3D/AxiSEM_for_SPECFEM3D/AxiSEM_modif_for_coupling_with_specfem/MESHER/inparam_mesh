@@ -17,7 +17,7 @@
 # external:           Layered external model, give file name in EXT_MODEL, the 
 #                     inner core needs to be big enough, check VTK output.
 
-BACKGROUND_MODEL    iasp91
+BACKGROUND_MODEL    prem_iso
 
 # EXT_MODEL           layer_solid.bm
 
