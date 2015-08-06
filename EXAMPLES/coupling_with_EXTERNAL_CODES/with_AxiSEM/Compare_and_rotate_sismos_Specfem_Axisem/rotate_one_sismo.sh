@@ -8,10 +8,10 @@ ZB=6120505.36002571
 
 # Station coordinate (to be choosen in STATIONS_Axisem)
 st_long=57.2500
-st_lat=-1.2500 
+st_lat=-1.2500
 radius=6371.
 
-echo "  " $radius  "  " $st_lat  "  " $st_long > stations_to_convert.txt 
+echo "  " $radius  "  " $st_lat  "  " $st_long > stations_to_convert.txt
 
 # specfem sismograms
 CX=Sismo_specfem/SY.S0001.BXX.semd
@@ -23,7 +23,7 @@ OUT=SY.S0001.ENZ.semd
 
 ./xrotation_specfem_solution<<EOF
 $ZB
-$CX 
+$CX
 $CY
 $CZ
 $OUT
