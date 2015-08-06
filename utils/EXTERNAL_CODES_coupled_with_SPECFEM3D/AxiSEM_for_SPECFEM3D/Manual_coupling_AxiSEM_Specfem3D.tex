@@ -106,7 +106,7 @@
 \bigskip
 \bigskip
 
-\noindent {\bf{Authors:}} V. Monteiller, C. Durochat
+\noindent {\bf{Authors:}} C. Durochat, V. Monteiller
 
 \bigskip
 \bigskip
@@ -126,6 +126,10 @@
 \noindent We show the process of the coupling, for the example:
 
 \noindent 'EXAMPLES/coupling\_with\_EXTERNAL\_CODES/with\_AxiSEM/example\_1st\_for\_validation', see the file 'README\_example\_details' for some particulars of this example.
+
+\medskip
+
+\noindent There are other examples in 'EXAMPLES/coupling\_with\_EXTERNAL\_CODES/with\_AxiSEM/' with other set of parameters.
 
 \bigskip
 
@@ -247,6 +251,7 @@ by AxiSEM) :
 \item[\textbullet] KERNEL\_WAVEFIELDS   true
 \item[\textbullet] KERNEL\_IBEG         0
 \item[\textbullet] KERNEL\_IEND         4
+\item[\textbullet] KERNEL\_DUMPTYPE     coupling\_box
 
 \end{itemize}
 
@@ -255,6 +260,10 @@ by AxiSEM) :
 \noindent Type : ./sub\_launch\_script\_for\_run\_AxiSEM\_Curie\_CD.csh NAME\_OF\_RESULTS\_DIR
 
 \smallskip
+
+\noindent (or 'sub\_launch\_script\_for\_run\_AxiSEM\_Curie\_CD\_VM.csh', it depends on examples)
+
+\medskip
 
 \noindent !! CAUTION : don't forget "NAME\_OF\_RESULTS\_DIR" (it will be your results folder, and a subfolder of SOLVER/) !!
 
@@ -265,7 +274,7 @@ Among others, this script calls : \\
 
 \noindent ./add\_line\_number\_in\_points\_lists.sh : rename files 'list\_gll\_boundary\_spherical.txt' and \\ 'list\_gll\_boundary\_cartesian.txt' to 'input\_box.txt' and 'input\_box\_sem\_cart.txt', resp. and add number of lines at the beginning of the two files too. \\
 
-\noindent run ./sub\_called\_batch\_for\_AxiSEM\_Curie\_CD.sh : submit the job on Curie.
+\noindent run ./sub\_called\_batch\_for\_AxiSEM\_Curie\_CD\textit{(\_VM)}.sh : submit the job on Curie.
 
 
 \section{STEP 4 : Specfem Partitionning ~ \& ~ STEP 5 : Specfem Generate database}
@@ -283,28 +292,22 @@ Among others, this script calls : \\
 
 \section{Interface $\Longrightarrow$ STEP 6 : expand 2D to 3D ~ \& ~ STEP 7 : reformat}
 
-\noindent Go in {\scriptsize 'utils/EXTERNAL\_CODES\_coupled\_with\_SPECFEM3D/AxiSEM\_for\_SPECFEM3D/AxiSEM\_modif\_for\_coupling\_with\_specfem/SOLVER'}
+\noindent Go in {\scriptsize 'utils/EXTERNAL\_CODES\_coupled\_with\_SPECFEM3D/AxiSEM\_for\_SPECFEM3D/UTILS\_COUPLING\_SpecFEM'} and make the compilation (make clean ; make all).
+
+\bigskip
+
+\noindent Go in {\scriptsize 'utils/EXTERNAL\_CODES\_coupled\_with\_SPECFEM3D/AxiSEM\_for\_SPECFEM3D/AxiSEM\_modif\_for\_coupling\_with\_specfem/SOLVER'} :
 
 \medskip
 
 \begin{itemize}
 
-\item[\textbullet] {\color{red} Check the file 'expand\_2D\_3D.par', cf THE PATHS IN THE 3 LAST LINES (normally, these are the only paths you to modify in the AxiSEM dir) !!} ==> Caution : for the tractions path (for example: /[...]/AxiSEM\_tractions/1/), the directory need to be created !!!! {\color{red} ~ ==>}
-
-the script 'sub\_launch\_script\_for\_make\_+\_run\_expand2D3D\_and\_reformat\_Curie\_CD.sh' create a traction directory here:
-
-\smallskip
-
-{\footnotesize 'EXAMPLES/coupling\_with\_EXTERNAL\_CODES/with\_AxiSEM/example\_1st\_for\_validation/DATA/AxiSEM\_tractions/1/', }
-
-
-BUT, if you don't use this script or if you want to create another tractions dir, you have to create the directory yourself.
+\item[\textbullet] {\color{red} Check the file 'expand\_2D\_3D.par', cf THE PATHS IN THE 3 LAST LINES (normally, these are the only paths you to modify in the AxiSEM dir) !!} ==> Caution : for the tractions path (for example: /[...]/AxiSEM\_tractions/1/), the directory need to be created !!!
 
 \smallskip
 
 \noindent Example :
 \begin{verbatim}
-
 input_box.txt
 input_box_sem_cart.txt
 32                          # number of AxiSEM mpi processes used in solver
@@ -315,28 +318,29 @@ input_box_sem_cart.txt
 /[...]/example_1st_for_validation/MESH                          # Specfem MESH dir
 /[...]/example_1st_for_validation/OUTPUT_FILES/DATABASES_MPI    # Specfem databases dir
 /[...]/example_1st_for_validation/DATA/AxiSEM_tractions/1       # AxiSEM tractions dir
-
 \end{verbatim}
 
-\item[\textbullet] Check the file 'reformat.par'
+\item[\textbullet] Go in NAME\_OF\_RESULTS\_DIR and type : run ../sub\_called\_batch\_for\_expand2D3D\_Curie\_CD.sh to submit expand\_2D\_3D (the number processes is here arbitrary)
+
+\item[\textbullet] At the end of expand\_2D\_3D, check the file 'StaLta.txt' to see at what time, the seismos begin to be non-zero. With this information, you can {\color{red} configure} begin time (corresponding to a little before the time when the values in 'StaLta.txt' begin to be non-zero) {\color{red} in the file 'reformat.par'}:
 
 \smallskip
 
 \noindent Example :
 \begin{verbatim}
-
-10.         # = 1/DT, i.e. output sampling in Hz (time step that will use in Specfem3D simu)
-710. 1800.  # begin time and end time (s.)
-
+10.         # = 1/DT, i.e. output sampling in Hz (time step that will use in specfem simu)
+710. 1800.  # begin time and end time (s.) (corresponding to the SpecFEM simulation time)
 \end{verbatim}
+
+\item[\textbullet] Stay in NAME\_OF\_RESULTS\_DIR and type : run ../sub\_called\_batch\_for\_reformat\_Curie\_CD.sh to submit reformat. IMPORTANT : you have to configure the batch with the **SAME** number of processes that Specfem3D will use. One file is created by one process for one Spefem3D partition of domain.
 
 \end{itemize}
 
+\bigskip
+
+\noindent {\color{red} NOTE:} If you already know the value of the begin time and if it is already configured in 'reformat.par', you can launch the compilation of expand\_2D\_3D and reformat, AND the execution of this two programs with the single script :
+
 \medskip
-
-\noindent You can launch the compilation (of expand\_2D\_3D and reformat) AND the execution of this two programs with the single script :
-
-\smallskip
 
 \noindent ./sub\_launch\_script\_for\_make\_+\_run\_expand2D3D\_and\_reformat\_Curie\_CD.sh NAME\_OF\_RESULTS\_DIR
 
@@ -344,25 +348,25 @@ input_box_sem_cart.txt
 
 \noindent !! CAUTION : don't forget "NAME\_OF\_RESULTS\_DIR" !!
 
-\medskip
+\bigskip
 
-\noindent It will do the compilation, launch ./sub\_called\_batch\_for\_expand2D3D\_Curie\_CD.sh, and at the end, launch ./sub\_called\_batch\_for\_reformat\_Curie\_CD.sh $\Longleftarrow$ IMPORTANT : for the expand\_2D\_3D part, the number processes is arbitrary, BUT for the reformat part you have to configure the batch with the **SAME** number of processes that Specfem3D will use. Onefile is created by one process for one Spefem3D partion of domain.
+\noindent It will do the compilation, create a traction directory here:
+
+\noindent {\footnotesize 'EXAMPLES/coupling\_with\_EXTERNAL\_CODES/with\_AxiSEM/example\_1st\_for\_validation/DATA/AxiSEM\_tractions/1/'},
 
 \smallskip
 
-\noindent All the results will be in 'NAME\_OF\_RESULTS\_DIR'.
+\noindent AND launch ./sub\_called\_batch\_for\_expand2D3D\_Curie\_CD.sh, AND at the end, launch \\
+\noindent ./sub\_called\_batch\_for\_reformat\_Curie\_CD.sh
+
+\medskip
+
+\noindent {\color{red} BUT}, if you don't use this script or if you want to create another tractions dir, you have to create the directory yourself and launch the complication and the two run separately.
 
 \bigskip
 
-\noindent If you prefer you do this step by step :
+\noindent All the results will be in 'NAME\_OF\_RESULTS\_DIR'.
 
-\begin{itemize}
-
-\item[\textbullet] Go in {\scriptsize 'utils/EXTERNAL\_CODES\_coupled\_with\_SPECFEM3D/AxiSEM\_for\_SPECFEM3D/UTILS\_COUPLING\_SpecFEM'} to make the compilation.
-\item[\textbullet] Go in NAME\_OF\_RESULTS\_DIR and type : run ../sub\_called\_batch\_for\_expand2D3D\_Curie\_CD.sh to submit expand\_2D\_3D
-\item[\textbullet] Go in NAME\_OF\_RESULTS\_DIR and type : run ../sub\_called\_batch\_for\_reformat\_Curie\_CD.sh to submit reformat
-
-\end{itemize}
 
 \section{STEP 8 : Running specfem3D}
 
