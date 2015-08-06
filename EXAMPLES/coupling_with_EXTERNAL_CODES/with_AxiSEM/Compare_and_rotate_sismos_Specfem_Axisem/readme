@@ -1,0 +1,6 @@
+1/ compile rotation_specfem_solution.f90
+2/ update rotate_one_sismo.sh 
+    station coordinate (STATIONS_Axisem)
+    must be the same number used in specfem
+3/ run rotate_one_sismo.sh
+4/ check the result with matlab Check_one_station.m
