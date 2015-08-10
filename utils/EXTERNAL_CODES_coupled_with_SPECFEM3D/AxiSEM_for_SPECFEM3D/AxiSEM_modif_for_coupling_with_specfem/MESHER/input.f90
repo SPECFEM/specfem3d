@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -19,35 +19,36 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
+!=========================================================================================
 module input
 
   use data_grid
   use data_diag
   use data_coarse
   use data_bkgrdmodel
-
+  
   implicit none
-
+  
   public :: read_params
   private
-
+  
   contains
 
-!----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine read_params
-
+  
   use global_parameters
   use data_mesh
   use data_spec
   use background_models, only: override_ext_q
-
+  
   character(len=100)    :: keyword, keyvalue, line
   integer               :: iinparam_mesh = 500, ioerr
-
+  
   keyword = ' '
   keyvalue = ' '
-  line = ' '
-
+  line = ' ' 
+ 
   ! Default values
   bkgrdmodel      = 'UNDEFINED'
   override_ext_q  = 'none'
@@ -57,7 +58,6 @@ subroutine read_params
   dump_mesh_vtk   = .true.
   dump_1dmodel    = .true.
   nc_init         = 3
-  resolve_inner_shear = .true.
   npol            = 4
   pts_wavelngth   = 1.5
   courant         = 0.6
@@ -68,24 +68,25 @@ subroutine read_params
   dump_mesh_info_screen = .false.
   only_suggest_ntheta = .false.
   diagpath        = 'Diags'
-  lfdiag          = index(diagpath,' ') - 1
+  lfdiag          = index(diagpath,' ') - 1 
 
 
   write(6, '(A)', advance='no') 'Reading inparam_mesh...'
-  open(unit=iinparam_mesh, file='./inparam_mesh', status='old', action='read',  iostat=ioerr)
-  if (ioerr/=0) stop 'Check input file ''inparam_mesh''! Is it still there?'
-
+  open(unit=iinparam_mesh, file='./inparam_mesh', status='old', action='read', &
+       iostat=ioerr)
+  if (ioerr.ne.0) stop 'Check input file ''inparam_mesh''! Is it still there?' 
+ 
   do
       read(iinparam_mesh,fmt='(a100)',iostat=ioerr) line
-      if (ioerr<0) exit
-      if (len(trim(line))<1.or.line(1:1)=='#') cycle
-
-      read(line,*) keyword, keyvalue
+      if (ioerr.lt.0) exit
+      if (len(trim(line)).lt.1.or.line(1:1).eq.'#') cycle
+     
+      read(line,*) keyword, keyvalue 
       parameter_to_read : select case(trim(keyword))
-
-      case('BACKGROUND_MODEL')
+      
+      case('BACKGROUND_MODEL') 
           bkgrdmodel = keyvalue
-          lfbkgrdmodel = index(bkgrdmodel,' ') - 1
+          lfbkgrdmodel = index(bkgrdmodel,' ') - 1 
 
       case('EXT_MODEL')
           fnam_ext_model = keyvalue
@@ -104,7 +105,7 @@ subroutine read_params
 
       case('ONLY_SUGGEST_NTHETA')
           read(keyvalue, *) only_suggest_ntheta
-
+      
       case('WRITE_VTK')
           read(keyvalue, *) dump_mesh_vtk
 
@@ -113,9 +114,6 @@ subroutine read_params
 
       case('COARSENING_LAYERS')
           read(keyvalue, *) nc_init
-
-      case('IC_SHEAR_WAVE')
-          read(keyvalue, *) resolve_inner_shear
 
       case('NPOL')
           read(keyvalue, *) npol
@@ -126,14 +124,14 @@ subroutine read_params
       case('COURANT_NR')
           read(keyvalue, *) courant
 
-      case('RADIUS')
+      case('RADIUS') 
           read(keyvalue, *) router
 
-      case('AXIS_SHRINKING_FACTOR')
-          read(keyvalue, *) axisfac
+      case('AXIS_SHRINKING_FACTOR') 
+          read(keyvalue, *) axisfac 
 
-      case('FLUID_SHRINKING_FACTOR')
-          read(keyvalue, *) fluidfac
+      case('FLUID_SHRINKING_FACTOR') 
+          read(keyvalue, *) fluidfac 
 
       case('SAVE_DEBUG_FILES')
           read(keyvalue, *) dump_mesh_info_files
@@ -142,32 +140,31 @@ subroutine read_params
           read(keyvalue, *) dump_mesh_info_screen
 
       end select parameter_to_read
-  enddo
+  end do
 
-  if (trim(bkgrdmodel)=='UNDEFINED') then
-      write(6,20) 'BACKGROUND_MODEL'
+  if (trim(bkgrdmodel).eq.'UNDEFINED') then
+      write(6,20) 'BACKGROUND_MODEL' 
       stop
-  endif
+  end if
 
   if (nthetaslices==-1) then
       write(6,20) 'NTHETA_SLICES'
       stop
-  endif
+  end if
 
   if (only_suggest_ntheta) nthetaslices = 4
 
   if (period==-1) then
       write(6,20) 'DOMINANT_PERIOD'
       stop
-  endif
+  end if
 20 format('ERROR: Parameter ', A, ' not set in inparam_mesh')
   write(6,*) 'done'
 
-
+  
   write(6,*) ''
   write(6,*) 'PREDEFINED MODEL/SIMULATION PARAMETERS'
   write(6,*) 'Background model                 : ',bkgrdmodel(1:lfbkgrdmodel)
-  write(6,*) 'Resolve inner core shear wave    : ',resolve_inner_shear
   write(6,*) 'Dominant period [s]              : ',period
   write(6,*) 'Elements per dominant wavelength : ',pts_wavelngth
   write(6,*) 'Courant number                   : ',courant
@@ -177,10 +174,11 @@ subroutine read_params
   write(6,*) 'save mesh info files?            : ',dump_mesh_info_files
   write(6,*) 'print mesh info to screen?       : ',dump_mesh_info_screen
   write(6,*) 'path to dump output files        : ',trim(diagpath)
-  write(6,*)
+  write(6,*) 
   call flush(6)
-
+  
 end subroutine read_params
-!----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 
 end module input
+!=========================================================================================

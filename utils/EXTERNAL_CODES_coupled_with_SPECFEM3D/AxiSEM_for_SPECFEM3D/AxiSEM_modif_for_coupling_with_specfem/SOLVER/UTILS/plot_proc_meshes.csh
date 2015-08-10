@@ -17,7 +17,7 @@ echo 'set noborder'>> plot_oneproc_mesh.plot
 echo 'set noxtics ; set noytics'>> plot_oneproc_mesh.plot
 echo plot \"$gridfile\" t\'\' with l lw .4 >> plot_oneproc_mesh.plot
 
-gnuplot plot_oneproc_mesh.plot
+gnuplot plot_oneproc_mesh.plot 
 echo wrote processor grid to grid_solid_proc{$procnum}.ps
 
 end

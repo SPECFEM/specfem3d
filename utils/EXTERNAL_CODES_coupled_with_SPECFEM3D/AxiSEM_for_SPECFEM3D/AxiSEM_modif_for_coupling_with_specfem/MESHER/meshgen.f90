@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -19,21 +19,22 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
+!=========================================================================================
 module meshgen
-
+   
   use global_parameters, only: sp, dp
   implicit none
-
+  
   public :: generate_skeleton
   private
-
+  
   real(kind=dp)   , dimension(:), allocatable :: aspect_ratio
 
   !REGION BY REGION PARAMETERS
   integer, dimension(:,:), allocatable          :: lnodeso   ! OUTER SHELL
   character(len=6), dimension(:), allocatable   :: eltypeo
   logical, dimension(:), allocatable            :: coarsingo
-
+  
   integer                                       :: nelo
   real(kind=dp)   , dimension(:), allocatable   :: so,zo
 
@@ -52,7 +53,7 @@ module meshgen
   character(len=6), dimension(:), allocatable   :: eltypebuf
   integer                                       :: nelbuf
   real(kind=dp)   , dimension(:), allocatable   :: sbuf,zbuf
-
+  
 contains
 
 !-----------------------------------------------------------------------------------------
@@ -68,7 +69,7 @@ subroutine generate_skeleton
   !  define reference grid
   if (dump_mesh_info_screen) then
     write(6,*)'generating reference spherical grid....';call flush(6)
-  endif
+  end if
   call def_reference_spherical_grid_discont
 
   ! Aspect ratio
@@ -94,8 +95,8 @@ subroutine generate_skeleton
    write(6,*)'generate southern hemisphere...';call flush(6)
    call generate_southern_hemisphere
   else
-   call donot_generate_southern_hemisphere
-  endif
+   call donot_generate_southern_hemisphere 
+  end if
 
   write(6,*)
   write(6,"(10x,' THE TOTAL NUMBER OF ELEMENTS IS ',i10 )") neltot
@@ -120,7 +121,7 @@ subroutine generate_serendipity(npoin, nel, sg, zg)
   real(kind=dp)   , dimension(:,:), allocatable :: sg2,zg2
   integer, dimension(:,:), allocatable          :: lnods
   integer                                       :: iel, inode, ipt,npoin2
-
+  
   ! Numbering arrays
   integer, dimension(:), allocatable :: ipt_iglob,el_iglob,inode_iglob
   integer                            :: nglob_serend
@@ -132,25 +133,29 @@ subroutine generate_serendipity(npoin, nel, sg, zg)
   if (dump_mesh_info_screen) write(6,*) ' NPOIN 2 is ', npoin2,nel*8
   allocate(sg2(8,nel),zg2(8,nel))
 
-  ! The even coordinate indices below are linearly interpolated, i.e. DO NOT
-  ! represent the correct location for any spheroidally shaped element,
-  ! only for the linear shapes at the center (the only case for which
+  ! The even coordinate indices below are linearly interpolated, i.e. DO NOT 
+  ! represent the correct location for any spheroidally shaped element, 
+  ! only for the linear shapes at the center (the only case for which 
   ! these serendipity nodes are actually needed)!
-
+  
   do iel = 1, nel
-     sg2(1,iel) = sg(1,iel) ; zg2(1,iel) = zg(1,iel)
-     sg2(3,iel) = sg(2,iel) ; zg2(3,iel) = zg(2,iel)
-     sg2(5,iel) = sg(3,iel) ; zg2(5,iel) = zg(3,iel)
-     sg2(7,iel) = sg(4,iel) ; zg2(7,iel) = zg(4,iel)
+     sg2(1,iel) = sg(1,iel)
+     zg2(1,iel) = zg(1,iel)
+     sg2(3,iel) = sg(2,iel)
+     zg2(3,iel) = zg(2,iel)
+     sg2(5,iel) = sg(3,iel)
+     zg2(5,iel) = zg(3,iel)
+     sg2(7,iel) = sg(4,iel)
+     zg2(7,iel) = zg(4,iel)
 
-     sg2(2,iel) = .5d0 * ( sg2(1,iel) + sg2(3,iel) )
-     zg2(2,iel) = .5d0 * ( zg2(1,iel) + zg2(3,iel) )
-     sg2(4,iel) = .5d0 * ( sg2(3,iel) + sg2(5,iel) )
-     zg2(4,iel) = .5d0 * ( zg2(3,iel) + zg2(5,iel) )
-     sg2(6,iel) = .5d0 * ( sg2(5,iel) + sg2(7,iel) )
-     zg2(6,iel) = .5d0 * ( zg2(5,iel) + zg2(7,iel) )
-     sg2(8,iel) = .5d0 * ( sg2(7,iel) + sg2(1,iel) )
-     zg2(8,iel) = .5d0 * ( zg2(7,iel) + zg2(1,iel) )
+     sg2(2,iel) = .5d0 * ( sg2(1,iel) + sg2(3,iel) ) 
+     zg2(2,iel) = .5d0 * ( zg2(1,iel) + zg2(3,iel) ) 
+     sg2(4,iel) = .5d0 * ( sg2(3,iel) + sg2(5,iel) ) 
+     zg2(4,iel) = .5d0 * ( zg2(3,iel) + zg2(5,iel) ) 
+     sg2(6,iel) = .5d0 * ( sg2(5,iel) + sg2(7,iel) ) 
+     zg2(6,iel) = .5d0 * ( zg2(5,iel) + zg2(7,iel) ) 
+     sg2(8,iel) = .5d0 * ( sg2(7,iel) + sg2(1,iel) ) 
+     zg2(8,iel) = .5d0 * ( zg2(7,iel) + zg2(1,iel) ) 
 
 
      ! TNM: make sure axial points are equal to zero
@@ -159,44 +164,44 @@ subroutine generate_serendipity(npoin, nel, sg, zg)
      if (sg2(7,iel) <= 0.1d0*dabs(sg2(6,iel)-sg2(7,iel))) sg2(7,iel) = 0.d0
 
      if (sg2(8,iel) <= 0.1d0*dabs(sg2(6,iel)-sg2(7,iel))) sg2(8,iel) = 0.d0
-  enddo
+  end do
 
   ! write out meshes: entire domain, central region, crust, coarsening level
-  if (dump_mesh_info_files) then
+  if (dump_mesh_info_files) then 
     call write_serendipity_meshes(nel,sg2,zg2)
-  endif
+  end if
 
   allocate(iglob_serend(npoin2))
-  iglob_serend(:) = 0
+  iglob_serend(:) = 0 
   allocate(loc_serend(npoin2))
   loc_serend(:) = 0
-  allocate(ifseg_serend(npoin2))
-
-  if (dump_mesh_info_screen) write(6,*) 'CALLING GLOBAL NUMBERING'
-
+  allocate(ifseg_serend(npoin2)) 
+  
+  if (dump_mesh_info_screen) write(6,*) 'CALLING GLOBAL NUMBERING' 
+  
   call get_global(nel, sg2, zg2, iglob_serend, loc_serend, ifseg_serend, &
                   nglob_serend, npoin2, 8)
   if (dump_mesh_info_screen) write(6,*) 'NGLOB SERENDIPITY IS ' , nglob_serend
 
 
   allocate (ipt_iglob(nglob_serend),el_iglob(nglob_serend),inode_iglob(nglob_serend))
-
+ 
   do iel = 1, nel
      do inode = 1, 8
-        ipt = (iel-1)*8 + inode
-        ipt_iglob(iglob_serend(ipt))   = ipt
+        ipt = (iel-1)*8 + inode 
+        ipt_iglob(iglob_serend(ipt))   = ipt 
         el_iglob(iglob_serend(ipt))    = iel
-        inode_iglob(iglob_serend(ipt)) = inode
-     enddo
-  enddo
+        inode_iglob(iglob_serend(ipt)) = inode 
+     end do
+  end do
 
   allocate(lnods(8,nel))
   do iel = 1, nel
      do inode = 1, 8
-        ipt = (iel-1) * 8  + inode
+        ipt = (iel-1) * 8  + inode 
         lnods(inode,iel) = iglob_serend(ipt)
-     enddo
-  enddo
+     end do
+  end do
 
   deallocate(inode_iglob,el_iglob)
   deallocate(ifseg_serend,loc_serend,iglob_serend)
@@ -210,7 +215,7 @@ subroutine write_serendipity_meshes(nel,sg2,zg2)
   use data_bkgrdmodel
   use data_diag
   use data_grid, only: ri,router
-
+  
   integer, intent(in)           :: nel
   real(kind=dp)   , intent(in)  :: sg2(8,nel),zg2(8,nel)
   integer                       :: iel
@@ -218,17 +223,17 @@ subroutine write_serendipity_meshes(nel,sg2,zg2)
   write(6,*)'writing all elements....'
   open(unit=157,file=diagpath(1:lfdiag)//'/global_skel.dat')
   do iel = 1, nel
-     write(157,*) sg2(1,iel), zg2(1,iel)
-     write(157,*) sg2(2,iel), zg2(2,iel)
-     write(157,*) sg2(3,iel), zg2(3,iel)
-     write(157,*) sg2(4,iel), zg2(4,iel)
-     write(157,*) sg2(5,iel), zg2(5,iel)
-     write(157,*) sg2(6,iel), zg2(6,iel)
-     write(157,*) sg2(7,iel), zg2(7,iel)
-     write(157,*) sg2(8,iel), zg2(8,iel)
-     write(157,*) sg2(1,iel), zg2(1,iel)
-     write(157,*)
-  enddo
+     write(157,*) sg2(1,iel), zg2(1,iel) 
+     write(157,*) sg2(2,iel), zg2(2,iel) 
+     write(157,*) sg2(3,iel), zg2(3,iel) 
+     write(157,*) sg2(4,iel), zg2(4,iel) 
+     write(157,*) sg2(5,iel), zg2(5,iel) 
+     write(157,*) sg2(6,iel), zg2(6,iel) 
+     write(157,*) sg2(7,iel), zg2(7,iel) 
+     write(157,*) sg2(8,iel), zg2(8,iel) 
+     write(157,*) sg2(1,iel), zg2(1,iel) 
+     write(157,*) 
+  end do
   close(157)
 
   write(6,*)'writing regions of elements...'; call flush(6)
@@ -242,95 +247,95 @@ subroutine write_serendipity_meshes(nel,sg2,zg2)
 
   do iel = 1, nel
 
-     ! fluid core
-     if ( sqrt(sg2(5,iel)**2+zg2(5,iel)**2) <=ri) then
-        write(2157,*) sg2(1,iel), zg2(1,iel)
-        write(2157,*) sg2(2,iel), zg2(2,iel)
-        write(2157,*) sg2(3,iel), zg2(3,iel)
-        write(2157,*) sg2(4,iel), zg2(4,iel)
-        write(2157,*) sg2(5,iel), zg2(5,iel)
-        write(2157,*) sg2(6,iel), zg2(6,iel)
-        write(2157,*) sg2(7,iel), zg2(7,iel)
-        write(2157,*) sg2(8,iel), zg2(8,iel)
-        write(2157,*) sg2(1,iel), zg2(1,iel)
-        write(2157,*)
+     ! fluid core 
+     if ( sqrt(sg2(5,iel)**2+zg2(5,iel)**2) <=ri) then 
+        write(2157,*) sg2(1,iel), zg2(1,iel) 
+        write(2157,*) sg2(2,iel), zg2(2,iel) 
+        write(2157,*) sg2(3,iel), zg2(3,iel) 
+        write(2157,*) sg2(4,iel), zg2(4,iel) 
+        write(2157,*) sg2(5,iel), zg2(5,iel) 
+        write(2157,*) sg2(6,iel), zg2(6,iel) 
+        write(2157,*) sg2(7,iel), zg2(7,iel) 
+        write(2157,*) sg2(8,iel), zg2(8,iel) 
+        write(2157,*) sg2(1,iel), zg2(1,iel) 
+        write(2157,*) 
      endif
 
      ! solid regions: mantle & inner core
      if ( sqrt(sg2(5,iel)**2+zg2(5,iel)**2) >=ri) then
-         write(3157,*) sg2(1,iel), zg2(1,iel)
-         write(3157,*) sg2(2,iel), zg2(2,iel)
-         write(3157,*) sg2(3,iel), zg2(3,iel)
-         write(3157,*) sg2(4,iel), zg2(4,iel)
-         write(3157,*) sg2(5,iel), zg2(5,iel)
-         write(3157,*) sg2(6,iel), zg2(6,iel)
-         write(3157,*) sg2(7,iel), zg2(7,iel)
-         write(3157,*) sg2(8,iel), zg2(8,iel)
-         write(3157,*) sg2(1,iel), zg2(1,iel)
-         write(3157,*)
+         write(3157,*) sg2(1,iel), zg2(1,iel) 
+         write(3157,*) sg2(2,iel), zg2(2,iel) 
+         write(3157,*) sg2(3,iel), zg2(3,iel) 
+         write(3157,*) sg2(4,iel), zg2(4,iel) 
+         write(3157,*) sg2(5,iel), zg2(5,iel) 
+         write(3157,*) sg2(6,iel), zg2(6,iel) 
+         write(3157,*) sg2(7,iel), zg2(7,iel) 
+         write(3157,*) sg2(8,iel), zg2(8,iel) 
+         write(3157,*) sg2(1,iel), zg2(1,iel) 
+         write(3157,*) 
      endif
 
      ! write only IC section
-     if ( sqrt(sg2(5,iel)**2+zg2(5,iel)**2) <=discont(ndisc)/router) then
-        write(1157,*) sg2(1,iel), zg2(1,iel)
-        write(1157,*) sg2(2,iel), zg2(2,iel)
-        write(1157,*) sg2(3,iel), zg2(3,iel)
-        write(1157,*) sg2(4,iel), zg2(4,iel)
-        write(1157,*) sg2(5,iel), zg2(5,iel)
-        write(1157,*) sg2(6,iel), zg2(6,iel)
-        write(1157,*) sg2(7,iel), zg2(7,iel)
-        write(1157,*) sg2(8,iel), zg2(8,iel)
-        write(1157,*) sg2(1,iel), zg2(1,iel)
-        write(1157,*)
+     if ( sqrt(sg2(5,iel)**2+zg2(5,iel)**2) <=discont(ndisc)/router) then 
+        write(1157,*) sg2(1,iel), zg2(1,iel) 
+        write(1157,*) sg2(2,iel), zg2(2,iel) 
+        write(1157,*) sg2(3,iel), zg2(3,iel) 
+        write(1157,*) sg2(4,iel), zg2(4,iel) 
+        write(1157,*) sg2(5,iel), zg2(5,iel) 
+        write(1157,*) sg2(6,iel), zg2(6,iel) 
+        write(1157,*) sg2(7,iel), zg2(7,iel) 
+        write(1157,*) sg2(8,iel), zg2(8,iel) 
+        write(1157,*) sg2(1,iel), zg2(1,iel) 
+        write(1157,*) 
      endif
 
      ! plot only upper mantle near antipode
      if ( sqrt(sg2(5,iel)**2+zg2(5,iel)**2) >= 0.9d0  .and. &
          sg2(5,iel)<=0.12 .and. zg2(5,iel)<0.d0 ) then
-        write(1257,*) sg2(1,iel), zg2(1,iel)
-        write(1257,*) sg2(2,iel), zg2(2,iel)
-        write(1257,*) sg2(3,iel), zg2(3,iel)
-        write(1257,*) sg2(4,iel), zg2(4,iel)
-        write(1257,*) sg2(5,iel), zg2(5,iel)
-        write(1257,*) sg2(6,iel), zg2(6,iel)
-        write(1257,*) sg2(7,iel), zg2(7,iel)
-        write(1257,*) sg2(8,iel), zg2(8,iel)
-        write(1257,*) sg2(1,iel), zg2(1,iel)
-        write(1257,*)
+        write(1257,*) sg2(1,iel), zg2(1,iel) 
+        write(1257,*) sg2(2,iel), zg2(2,iel) 
+        write(1257,*) sg2(3,iel), zg2(3,iel) 
+        write(1257,*) sg2(4,iel), zg2(4,iel) 
+        write(1257,*) sg2(5,iel), zg2(5,iel) 
+        write(1257,*) sg2(6,iel), zg2(6,iel) 
+        write(1257,*) sg2(7,iel), zg2(7,iel) 
+        write(1257,*) sg2(8,iel), zg2(8,iel) 
+        write(1257,*) sg2(1,iel), zg2(1,iel) 
+        write(1257,*) 
      endif
 
      ! plot only upper mantle
      if ( sqrt(sg2(5,iel)**2+zg2(5,iel)**2) >= 0.9d0) then
-        write(1457,*) sg2(1,iel), zg2(1,iel)
-        write(1457,*) sg2(2,iel), zg2(2,iel)
-        write(1457,*) sg2(3,iel), zg2(3,iel)
-        write(1457,*) sg2(4,iel), zg2(4,iel)
-        write(1457,*) sg2(5,iel), zg2(5,iel)
-        write(1457,*) sg2(6,iel), zg2(6,iel)
-        write(1457,*) sg2(7,iel), zg2(7,iel)
-        write(1457,*) sg2(8,iel), zg2(8,iel)
-        write(1457,*) sg2(1,iel), zg2(1,iel)
-        write(1457,*)
+        write(1457,*) sg2(1,iel), zg2(1,iel) 
+        write(1457,*) sg2(2,iel), zg2(2,iel) 
+        write(1457,*) sg2(3,iel), zg2(3,iel) 
+        write(1457,*) sg2(4,iel), zg2(4,iel) 
+        write(1457,*) sg2(5,iel), zg2(5,iel) 
+        write(1457,*) sg2(6,iel), zg2(6,iel) 
+        write(1457,*) sg2(7,iel), zg2(7,iel) 
+        write(1457,*) sg2(8,iel), zg2(8,iel) 
+        write(1457,*) sg2(1,iel), zg2(1,iel) 
+        write(1457,*) 
      endif
 
      ! plot only upper mantle in north
       if ( sqrt(sg2(5,iel)**2+zg2(5,iel)**2) >= 0.95d0 .and. &
           sg2(5,iel)<= 1000./router .and. zg2(5,iel)> 0.d0  ) then
-       write(1557,*) sg2(1,iel), zg2(1,iel)
-       write(1557,*) sg2(2,iel), zg2(2,iel)
-       write(1557,*) sg2(3,iel), zg2(3,iel)
-       write(1557,*) sg2(4,iel), zg2(4,iel)
-       write(1557,*) sg2(5,iel), zg2(5,iel)
-       write(1557,*) sg2(6,iel), zg2(6,iel)
-       write(1557,*) sg2(7,iel), zg2(7,iel)
-       write(1557,*) sg2(8,iel), zg2(8,iel)
-       write(1557,*) sg2(1,iel), zg2(1,iel)
-       write(1557,*)
+       write(1557,*) sg2(1,iel), zg2(1,iel) 
+       write(1557,*) sg2(2,iel), zg2(2,iel) 
+       write(1557,*) sg2(3,iel), zg2(3,iel) 
+       write(1557,*) sg2(4,iel), zg2(4,iel) 
+       write(1557,*) sg2(5,iel), zg2(5,iel) 
+       write(1557,*) sg2(6,iel), zg2(6,iel) 
+       write(1557,*) sg2(7,iel), zg2(7,iel) 
+       write(1557,*) sg2(8,iel), zg2(8,iel) 
+       write(1557,*) sg2(1,iel), zg2(1,iel) 
+       write(1557,*) 
       endif
 
-   enddo
+   end do
    close(1557)
-   close(1457)
+   close(1457) 
    close(1357)
    close(1257)
    close(1157)
@@ -343,10 +348,10 @@ end subroutine write_serendipity_meshes
 !-----------------------------------------------------------------------------------------
 subroutine def_reference_spherical_grid_discont
 ! ALEX 08/04/2004
-! We make the assumption of a uniform rectangular spacing
+! We make the assumption of a uniform rectangular spacing 
 ! in the associated cylindrical grid, which gets
-! mapped into a spherical shell grid of inner
-! radius ri and outer radius ro.
+! mapped into a spherical shell grid of inner 
+! radius ri and outer radius ro. 
 
   use data_bkgrdmodel
   use data_grid
@@ -361,19 +366,19 @@ subroutine def_reference_spherical_grid_discont
   ! FIRST DEFINE PARAMETERS FOR ASSOCIATED CYLINDRICAL/CARTESIAN GRID
 
   ns = ns_glob ! inherited from discont_meshing routine
-  nz = nz_glob ! inherited from discont_meshing routine
+  nz = nz_glob ! inherited from discont_meshing routine 
   ri = rmin/router
   ro = 1.
   allocate(dz(1:nz))
   do iz = 1, nz
     dz(iz) = 2.d0 * dz_glob(nz-iz+1) / (router-rmin)
-  enddo
+  end do
 
   if (dump_mesh_info_screen) then
      write(6,*)  'ns,nz,ri,ro:', ns,nz,ri,ro
      write(6,*)  'dz', dz(:)
      write(6,*)  'SUM(dz):', SUM(dz)
-  endif
+  end if
 
   ! Total number of points (soon to be corners)  in the non-coarsened shell
   npts = (ns + 1) * (nz + 1)
@@ -381,26 +386,26 @@ subroutine def_reference_spherical_grid_discont
   if (dump_mesh_info_screen) then
      write(6,*)'CHECK PARAMS 4 ri,ro,router,nz,ns:',ri,ro,router,nz,ns
      call flush(6)
-  endif
+  end if
 
   allocate(s_unif(npts),z_unif(npts))
   s_unif(:) = 0.d0
   z_unif(:) = 0.d0
-
+  
   allocate(crd_grdc(1:ns+1,1:nz+1,2),crd_grds(1:ns+1,1:nz+1,2))
   crd_grdc(:,:,:) = 0.d0
   crd_grds(:,:,:) = 0.d0
 
   ! Define coordinates in the parent square
   call def_ref_cart_coordinates_discont(ns, nz, crd_grdc, dz)
-
-  ! In order to use analytic mapping to get coordinates
+  
+  ! In order to use analytic mapping to get coordinates 
   ! 1) Define control nodes to define shell geometry (Northern H)
   call def_control_nodes(crd_control_nodes, ri, ro)
-
+  
   ! 2) Use the map_spheroid function
   call def_mapped_coordinates(ns,nz,crd_grds,crd_grdc,crd_control_nodes)
-
+  
   ! At this stage we know the coordinates in the physical domain of the
   ! 8 control points that define a spectral element which belongs to the
   ! spherical-shelly part of the mesh
@@ -413,19 +418,19 @@ end subroutine def_reference_spherical_grid_discont
 
 !-----------------------------------------------------------------------------------------
 subroutine def_global_coordinates(npts, s, z, ns1, nz1, crd)
-  integer, intent(in)                                        :: npts, ns1, nz1
-  real(kind=dp)   , dimension(1:npts), intent(out)           :: s, z
-  real(kind=dp)   , dimension(1:ns1+1,1:nz1+1,2), intent(in) :: crd
+  integer, intent(in)                                     :: npts, ns1, nz1
+  real(kind=dp), dimension(1:npts), intent(out)           :: s, z
+  real(kind=dp), dimension(1:ns1+1,1:nz1+1,2), intent(in) :: crd
 
   integer :: ipt, is, iz
 
   do iz = 1,nz1+1
-     do is = 1,ns1+1
+     do is = 1, ns1+1
         ipt = uniform_nodenumber(is,iz,ns1)
-        s(ipt) = crd(is,iz,1)
+        s(ipt) = crd(is,iz,1) 
         z(ipt) = crd(is,iz,2)
-     enddo
-  enddo
+     end do
+  end do
 
 end subroutine def_global_coordinates
 !-----------------------------------------------------------------------------------------
@@ -440,17 +445,17 @@ subroutine def_mapped_coordinates(ns1, nz1, crds, crdc, crd_cont)
   real(kind=dp)   , dimension(1:ns1+1,1:nz1+1,2), intent(in)  :: crdc
   real(kind=dp)   , dimension(8,2), intent(in)                :: crd_cont
 
-  integer           :: is, iz
+  integer           :: is, iz 
   real(kind=dp)     :: xi, eta
 
   do iz = 1,nz1+1
      do is = 1,ns1+1
         xi = crdc(is,iz,1)
         eta = crdc(is,iz,2)
-        crds(is,iz,1) = map_spheroid(xi,eta,crd_cont,1)
-        crds(is,iz,2) = map_spheroid(xi,eta,crd_cont,2)
-     enddo
-  enddo
+        crds(is,iz,1) = map_spheroid(xi, eta, crd_cont, 1)
+        crds(is,iz,2) = map_spheroid(xi, eta, crd_cont, 2)
+     end do
+  end do
 
 end subroutine def_mapped_coordinates
 !-----------------------------------------------------------------------------------------
@@ -460,8 +465,9 @@ subroutine def_control_nodes(crd, ri1, ro1)
   real(kind=dp)   , intent(in) :: ri1, ro1
   real(kind=dp)   , dimension(8,2), intent(out) :: crd
   !hemispherical case
+
   crd(1,1) = 0.d0
-  crd(1,2) = ri1
+  crd(1,2) = ri1    
   crd(2,1) = ri1*.5*dsqrt(2.d0)
   crd(2,2) = ri1*.5d0*dsqrt(2.d0)
   crd(3,1) = ri1
@@ -473,9 +479,10 @@ subroutine def_control_nodes(crd, ri1, ro1)
   crd(6,1) = ro1*.5*dsqrt(2.d0)
   crd(6,2) = ro1*.5d0*dsqrt(2.d0)
   crd(7,1) = 0.d0
-  crd(7,2) = ro1
+  crd(7,2) = ro1   
   crd(8,1) = 0.d0
-  crd(8,2) = .5d0*(ro1+ri1)
+  crd(8,2) = .5d0*(ro1+ri1) 
+
 end subroutine def_control_nodes
 !-----------------------------------------------------------------------------------------
 
@@ -490,7 +497,7 @@ subroutine estimate_aspect_ratio
   aspect_ratio(:) = 0.
 
   if (dump_mesh_info_files) open(unit=16,file=diagpath(1:lfdiag)//'/fort.16')
-
+  
   do iz=1,nz
     s1 = .5d0*(crd_grds(1,iz,1)+crd_grds(1,iz+1,1))
     s2 = .5d0*(crd_grds(2,iz,1)+crd_grds(2,iz+1,1))
@@ -504,9 +511,9 @@ subroutine estimate_aspect_ratio
     hr = hr / dsqrt( (s2-s1)**2 + (z2-z1)**2 ) ! HR = WIDTH / HEIGHT
     if (dump_mesh_info_files) write(16,*) iz, hr
     aspect_ratio(iz) = hr
-  enddo
-
-  if (dump_mesh_info_files) close(16)
+  end do
+  
+  if (dump_mesh_info_files) close(16) 
 
 end subroutine estimate_aspect_ratio
 !-----------------------------------------------------------------------------------------
@@ -529,7 +536,7 @@ subroutine define_spherical_shell
   iclev(0)=nz_glob+1
   do ic = 1, nc
      iclev(ic)=iclev_glob(ic)
-  enddo
+  end do
   iclev(nc+1)=1
 
   ! COMPATIBILITY CONDITIONS HAVE TO BE DEFINED HERE
@@ -542,7 +549,7 @@ subroutine define_spherical_shell
   allocate(lnodeso(4,nel))
   lnodeso(:,:) = 0
   ! array to characterize element geometry
-  allocate(eltypeo(nel))
+  allocate(eltypeo(nel)) 
   ! call define_lnodes
 
   allocate(coarsingo(nel))
@@ -551,7 +558,7 @@ subroutine define_spherical_shell
   call define_lnodesclean(nel, lnodeso, eltypeo, coarsingo, nc, iclev, ns, nz)
 
   nelo  = nel
-  ! Fill so and zo arrays
+  ! Fill so and zo arrays 
   allocate(so(4*nelo),zo(4*nelo))
   so(:) = 0.
   zo(:) = 0.
@@ -562,8 +569,9 @@ subroutine define_spherical_shell
         ipto = (iel-1)*4 + inode
         so(ipto) = s_unif(ipt)
         zo(ipto) = z_unif(ipt)
-     enddo
-  enddo
+     end do
+  end do
+
   ! gnuplot dump
   if (dump_mesh_info_files) then
      open(unit=3,file=diagpath(1:lfdiag)//'/testcrd.dat',STATUS="UNKNOWN",POSITION="REWIND")
@@ -572,13 +580,13 @@ subroutine define_spherical_shell
            ipt = lnodeso(inode,iel)
            ipto = (iel-1)*4 + inode
            write(3,*) so(ipto),zo(ipto)
-        enddo
+        end do
           ipt = lnodeso(1,iel)
           ipto = (iel-1)*4 + 1
           write(3,*) so(ipto),zo(ipto)
           write(3,*)
-     enddo
-  endif
+     end do
+  end if
 
 end subroutine define_spherical_shell
 !-----------------------------------------------------------------------------------------
@@ -601,7 +609,7 @@ end function uniform_nodenumber
 !-----------------------------------------------------------------------------------------
 subroutine compute_nelclean(nel, nc1, iclev1, ns1, nz1)
   use data_diag
-  !Returns the number of elements defining the new spherical shell grid.
+  !Returns the number of elements defining the new spherical shell grid. 
   integer, intent(out) :: nel
   integer, intent(in) :: nc1
   integer, dimension(0:nc1+1) :: iclev1
@@ -614,63 +622,63 @@ subroutine compute_nelclean(nel, nc1, iclev1, ns1, nz1)
 
   icold = 0
 
-  if ( nc1 == 0 ) then
+  if ( nc1 == 0 ) then 
     nel = ns1*nz1
     return
-  endif
-
+  end if
+ 
 
   icc =1
   do iz = nz1, iclev1(icc),-1
-     if ( iz >  iclev1(icc) ) nel = nel + ns1
+     if ( iz >  iclev1(icc) ) nel = nel + ns1  
      if ( iz == iclev1(icc) ) nel = nel + 3*ns1/2
-  enddo
+  end do
   icold = 1
   nelregion(1)=nel
   nelabove=nel
   do icc = 2,nc1
      ic = 2**(icc-1)
      do iz = iclev1(icc-1)-2, iclev1(icc),-1
-        if ( iz >  iclev1(icc) ) nel = nel + ns1/ic ! TEST
+        if ( iz >  iclev1(icc) ) nel = nel + ns1/ic ! TEST 
         if ( iz == iclev1(icc) ) nel = nel + 3*ns1/(2*ic)
-     enddo
+     end do
      nelregion(icc)=nel-nelabove
      nelabove=nel
      icold = ic
-  enddo
+  end do 
 
   icc = nc1+1
   ic = 2**(icc-1)
   do iz = iclev1(icc-1)-2, 1,-1
-     nel = nel + ns1/ic ! TEST
-  enddo
+     nel = nel + ns1/ic ! TEST 
+  end do
 
   nelregion(icc)=nel-nelabove
   if (dump_mesh_info_screen) write(6,*) 'nel =',nel, 'instead of', nz1*ns1
   nelregionsum=sum(nelregion)
-
-  if (dump_mesh_info_screen) then
+  
+  if (dump_mesh_info_screen) then 
      write(6,*) 'SUM # EL. ALL SPHERICAL REGIONS: ',nelregionsum
      do icc=1,nc1+1
-        write(6,*)'# EL. in REGION ',icc,' :',nelregion(icc),' (',&
+        write(6,*)'# EL. in REGION ',icc,' :',nelregion(icc),' (',& 
                    real(nelregion(icc))/real(nelregionsum)*100.,' percent)'
-     enddo
-  endif
-
+     enddo   
+  end if
+  
   if (dump_mesh_info_files) then
    open(unit=9999,file=diagpath(1:lfdiag)//'/fort.9999')
     do icc=1,nc1+1
      write(9999,*)icc,nelregion(icc)
-    enddo
+    enddo   
    close(9999)
-  endif
+  end if
 
 end subroutine compute_nelclean
 !-----------------------------------------------------------------------------------------
 
 !-----------------------------------------------------------------------------------------
 subroutine define_lnodesclean(nel, lnodes, eltype, coarsingloc, nc, iclev, ns, nz)
-
+  
   ! The topology of the spherical shell and the array characterizing
   ! the geometry of each element is defined here.
 
@@ -684,8 +692,8 @@ subroutine define_lnodesclean(nel, lnodes, eltype, coarsingloc, nc, iclev, ns, n
   integer, intent(in)                           :: ns, nz
   integer                                       :: iz, ic, icc, iel, is, icold
 
-  iel = 0
-  ! no coarsening case
+  iel = 0 
+  ! no coarsening case 
   if (nc == 0) then
      do iz = nz,1,-1
         do is = 1, ns
@@ -693,18 +701,18 @@ subroutine define_lnodesclean(nel, lnodes, eltype, coarsingloc, nc, iclev, ns, n
            lnodes(1,iel) = uniform_nodenumber(is   ,iz,ns)
            lnodes(2,iel) = uniform_nodenumber(is+1,iz,ns)
            lnodes(3,iel) = uniform_nodenumber(is+1,iz+1,ns)
-           lnodes(4,iel) = uniform_nodenumber(is   ,iz+1,ns)
+           lnodes(4,iel) = uniform_nodenumber(is   ,iz+1,ns) 
            eltype(iel) = 'curved'
-        enddo
-     enddo
+        end do
+     end do  
      return
-  endif
-
-  ! Going from top to bottom
+  end if
+  
+  ! Going from top to bottom 
   icc = 1
   ic = 1
   do iz = nz, iclev(icc),-ic
-     if ( iz >  iclev(icc) ) then
+     if ( iz >  iclev(icc) ) then 
         do is = 1, ns, ic
            iel = iel + 1
            lnodes(1,iel) = uniform_nodenumber(is   ,iz,ns)
@@ -712,18 +720,18 @@ subroutine define_lnodesclean(nel, lnodes, eltype, coarsingloc, nc, iclev, ns, n
            lnodes(3,iel) = uniform_nodenumber(is+ic,iz+ic,ns)
            lnodes(4,iel) = uniform_nodenumber(is   ,iz+ic,ns)
            eltype(iel) = 'curved'
-        enddo
-     else if ( iz == iclev(icc) ) then
+        end do
+     elseif ( iz == iclev(icc) ) then 
         !This takes care of the "conformal mortars"
         !This case here corresponds to the first remeshing/coarsening
         !when going down.
         do is = 1, ns, ic*4
-
-           iel = iel + 1
+         
+           iel = iel + 1                        
            lnodes(1,iel) = uniform_nodenumber(is   ,iz,ns   )
            lnodes(2,iel) = uniform_nodenumber(is+ic,iz,ns   )
            lnodes(3,iel) = uniform_nodenumber(is+ic,iz+1,ns)
-           lnodes(4,iel) = uniform_nodenumber(is   ,iz+1,ns)
+           lnodes(4,iel) = uniform_nodenumber(is   ,iz+1,ns)        
            eltype(iel) = 'curved'
            coarsingloc(iel)=.true.
 
@@ -767,16 +775,16 @@ subroutine define_lnodesclean(nel, lnodes, eltype, coarsingloc, nc, iclev, ns, n
            eltype(iel) = 'curved'
            coarsingloc(iel)=.true.
 
-        enddo
-     endif
-  enddo
+        end do 
+     end if
+  end do
 
   ! intermediate domains, bound by coarsening levels above & below
   icold = 1
   do icc = 2, nc
      ic = 2**(icc-1)
-       do iz = iclev(icc-1)-2, iclev(icc),-1
-          if ( iz >  iclev(icc) ) then
+       do iz = iclev(icc-1)-2, iclev(icc),-1 
+          if ( iz >  iclev(icc) ) then 
              do is = 1, ns, ic
                  iel = iel + 1
                  lnodes(1,iel) = uniform_nodenumber(is   ,iz,ns)
@@ -784,19 +792,19 @@ subroutine define_lnodesclean(nel, lnodes, eltype, coarsingloc, nc, iclev, ns, n
                  lnodes(3,iel) = uniform_nodenumber(is+ic,iz+1 ,ns)
                  lnodes(4,iel) = uniform_nodenumber(is   ,iz+1 ,ns)
                  eltype(iel) = 'curved'
-             enddo
-          else if ( iz == iclev(icc) ) then
-             ! Remeshing
+             end do
+          elseif ( iz == iclev(icc) ) then 
+             ! Remeshing 
              do is = 1, ns, ic*4
-
-                iel = iel + 1
+  
+                iel = iel + 1                       
                 lnodes(1,iel) = uniform_nodenumber(is   ,iz   ,ns)
                 lnodes(2,iel) = uniform_nodenumber(is+ic,iz   ,ns)
                 lnodes(3,iel) = uniform_nodenumber(is+ic,iz+1 ,ns)
-                lnodes(4,iel) = uniform_nodenumber(is   ,iz+1 ,ns)
+                lnodes(4,iel) = uniform_nodenumber(is   ,iz+1 ,ns)        
                 eltype(iel) = 'curved'
                 coarsingloc(iel)=.true.
-
+  
                 iel = iel + 1
                 lnodes(1,iel) = uniform_nodenumber(is     ,iz-1 ,ns)
                 lnodes(2,iel) = uniform_nodenumber(is+2*ic,iz-1 ,ns)
@@ -804,7 +812,7 @@ subroutine define_lnodesclean(nel, lnodes, eltype, coarsingloc, nc, iclev, ns, n
                 lnodes(4,iel) = uniform_nodenumber(is     ,iz   ,ns)
                 eltype(iel) = 'curved'
                 coarsingloc(iel)=.true.
-
+  
                 iel = iel + 1
                 lnodes(1,iel) = uniform_nodenumber(is  +ic,iz   ,ns)
                 lnodes(2,iel) = uniform_nodenumber(is+2*ic,iz-1 ,ns)
@@ -812,15 +820,15 @@ subroutine define_lnodesclean(nel, lnodes, eltype, coarsingloc, nc, iclev, ns, n
                 lnodes(4,iel) = uniform_nodenumber(is  +ic,iz+1 ,ns)
                 eltype(iel) = 'semino'
                 coarsingloc(iel)=.true.
-
+  
                 iel = iel + 1
                 lnodes(1,iel) = uniform_nodenumber(is+2*ic,iz-1 ,ns)
                 lnodes(2,iel) = uniform_nodenumber(is+3*ic,iz   ,ns)
                 lnodes(3,iel) = uniform_nodenumber(is+3*ic,iz+1 ,ns)
                 lnodes(4,iel) = uniform_nodenumber(is+2*ic,iz+1 ,ns)
-                eltype(iel) = 'semino'
+                eltype(iel) = 'semino'         
                 coarsingloc(iel)=.true.
-
+  
                 iel = iel + 1
                 lnodes(1,iel) = uniform_nodenumber(is+2*ic,iz-1 ,ns)
                 lnodes(2,iel) = uniform_nodenumber(is+4*ic,iz-1 ,ns)
@@ -828,20 +836,20 @@ subroutine define_lnodesclean(nel, lnodes, eltype, coarsingloc, nc, iclev, ns, n
                 lnodes(4,iel) = uniform_nodenumber(is+3*ic,iz   ,ns)
                 eltype(iel) = 'curved'
                 coarsingloc(iel)=.true.
-
+  
                 iel = iel + 1
                 lnodes(1,iel) = uniform_nodenumber(is+3*ic,iz   ,ns)
                 lnodes(2,iel) = uniform_nodenumber(is+4*ic,iz   ,ns)
                 lnodes(3,iel) = uniform_nodenumber(is+4*ic,iz+1 ,ns)
                 lnodes(4,iel) = uniform_nodenumber(is+3*ic,iz+1 ,ns)
-                eltype(iel) = 'curved'
+                eltype(iel) = 'curved'         
                 coarsingloc(iel)=.true.
-
-             enddo
-          endif
-     enddo
+  
+             end do 
+          end if
+     end do
      icold = ic
-  enddo
+  end do
   ! Last series of layer after last remeshing
   icc = nc + 1
   ic = 2**(icc-1)
@@ -853,8 +861,8 @@ subroutine define_lnodesclean(nel, lnodes, eltype, coarsingloc, nc, iclev, ns, n
        lnodes(3,iel) = uniform_nodenumber(is+ic,iz+1,ns)
        lnodes(4,iel) = uniform_nodenumber(is   ,iz+1,ns)
        eltype(iel) = 'curved'
-     enddo
-  enddo
+     end do
+  end do
 
 end subroutine define_lnodesclean
 !-----------------------------------------------------------------------------------------
@@ -882,20 +890,20 @@ subroutine define_central_region
 
   integer           :: ix, iy, maxy
   real(kind=dp)     :: rad, angle, p, x, y
-
+  
   integer :: ntheta_opt, ntheta_opt_buff, nn
 
   ! number of latitude slices at shell - central region boundary (termed ib)
-  ns_ib = ns / 2**nc
+  ns_ib = ns / 2**nc  
   if (dump_mesh_info_screen) write(6,*) 'ns_ib is ', ns_ib
 
-  ! define dimensions of central square (just one!)
+  ! define dimensions of central square (just one!) 
   lsq = lsq_fac * ri
 
   ! define number of divisions in one direction for central square
   ndivs = ns_ib/2
-
-  if (only_suggest_ntheta) then
+  
+  if (only_suggest_ntheta) then 
      ntheta_opt_buff = -1
      write(6,*)
      write(6,*) '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
@@ -904,10 +912,10 @@ subroutine define_central_region
          ntheta_opt = ndivs / (2 * nn)
          if (mod(ntheta_opt, 4) > 0) ntheta_opt = ntheta_opt + 4 - mod(ntheta_opt, 4)
          if (ntheta_opt > 4) then
-            if (ntheta_opt /= ntheta_opt_buff) write(6,*) ntheta_opt
+            if (ntheta_opt .ne. ntheta_opt_buff) write(6,*) ntheta_opt
          else
             exit
-         endif
+         end if
          ntheta_opt_buff = ntheta_opt
      enddo
      write(6,*) '   1, 2 and 4 are always decomposed optimally'
@@ -915,63 +923,63 @@ subroutine define_central_region
      write(6,*)
      write(6,*) 'ONLY_SUGGEST_NTHETA was set, hence stopping now. Set to false to actually generate a mesh!'
      call exit()
-  endif
+  end if
 
   ! compute number of necessary extra coarsenings nex
   nex = ns_ib/(2*ndivs)-1
   if (dump_mesh_info_screen) write(6,*) ' NEX IS ', nex
 
-  ! compute number of radial levels from center of the earth to
+  ! compute number of radial levels from center of the earth to 
   ! shell boundary (equidistant spacing)
   ! PREM CASE
   ! dr = radius(2) - radius(1) ; write(6,*) ' DR IS ' ,dr
-  ! nzs = int((ri-lsq)/dr)
-  ! ALEX GRE; af 2009, 4 years later, that seems sensible but I do not remember why I
+  ! nzs = int((ri-lsq)/dr) 
+  ! ALEX GRE; af 2009, 4 years later, that seems sensible but I do not remember why I 
   ! picked this value. Might be useful to keep what follows compatible with nzs=/1
   ! MvD 2013: but I think it's not
-  nzs = 1
-
-  ! check
+  nzs = 1 
+  
+  ! check 
   test = (dsqrt(2.d0)*lsq) / (.9d0 *(lsq + (ri-lsq)/dble(nzs)))
-  if ( test >= 1. ) then
+  if ( test >= 1. ) then 
      write(6,*) ' STOP: failed test for generation of central region'
      write(6,*) ' test is ',test
      stop
-  endif
+  end if
 
-  ! nzs = int(real(ndivs)*(ri-lsq)/lsq)
+  ! nzs = int(real(ndivs)*(ri-lsq)/lsq) 
   ! nzs = 2
   nr  = ndivs + nzs  ! will come from xtoto (newdiscont_meshing)
-  if (dump_mesh_info_screen) write(6,*) 'nr is ', nr
+  if (dump_mesh_info_screen) write(6,*) 'nr is ', nr   
 
   ! roc = ri ; ric = roc - real((nzs-1))*(roc-lsq)/dble(nzs)
   ! Assuming nzs = 1
   roc = ri ; ric = roc*(dble(nr-1)/dble(nr))
   if (dump_mesh_info_screen) then
      write(6,*) 'RIC = ', RIC
-     write(6,*) 'ROC = ', ROC
+     write(6,*) 'ROC = ', ROC 
      write(6,*) 'nzs = ', nzs
   endif
-
-  if ( nzs < 2 * nex + 1) then
-   write(6,*) 'incompatibility in central square between nex and nr'
+  
+  if ( nzs < 2 * nex + 1) then 
+   write(6,*) 'incompatibility in central square between nex and nr' 
    stop
-  endif
-  ! The '+1' indicates that we want the  bottommost "spherical layer" to
+  end if
+  ! The '+1' indicates that we want the  bottommost "spherical layer" to 
   ! be distinguished from the others, as it will be connected to the central square.
-
+    
   ! We define the (nzs-1) spherical layers of the central region
-  ! as for the exterior spherical shell.
-  ! we define, again, the size of the associated uniform grid.
+  ! as for the exterior spherical shell.  
+  ! we define, again, the size of the associated uniform grid. 
   ! nzss is the number of purely spherical levels
   nzss = nzs - 1
   if (dump_mesh_info_screen) write(6,*) 'nzss = ', nzss
 
   ! MvD: this is never true for nzs = 1 as hardcoded above
   !      nzs /= 1 however crashes
-  if (nzss /= 0) then
-
-     npts = (nzss+1) * (ns_ib+1)
+  if (nzss /= 0) then  
+  
+     npts = (nzss+1) * (ns_ib+1) 
 
      !!
      !! TNM JULY 2009: Old method, redundant...
@@ -980,7 +988,7 @@ subroutine define_central_region
      allocate(crd_cent(1:ns_ib+1,1:nzss+1,2)) ; crd_cent(:,:,:)=0.
 
      allocate(s_unif(1:npts), z_unif(1:npts))
-
+     
      ! define reference cylindrical coordinates
      call def_ref_cart_coordinates(ns_ib,nzss,crd_cyl,.true.)
      call def_control_nodes(crd_control_nodes,ric,roc)
@@ -991,45 +999,45 @@ subroutine define_central_region
      ! 3) Use lexicographical ordering to create 1d arrays of coordinates
       call def_global_coordinates(npts,s_unif,z_unif,ns_ib,nzss,crd_cent)
      !
-     ! Again, we define the levels at which the
+     ! Again, we define the levels at which the 
      ! potential coarsenings will take place
      allocate(iclevc(0:nex+1)) ; iclevc(:) = 0
      iclevc(0)     = nzss + 1
-     iclevc(1)     = nzss
-     iclevc(nex+1) = 1
+     iclevc(1)     = nzss 
+     iclevc(nex+1) = 1  
      ! compute new number of elements
      call compute_nelclean(nelc,nex,iclevc,ns_ib,nzss)
-     write(6,*) 'nelc ', nelc , 'npts'
+     write(6,*) 'nelc ', nelc , 'npts' 
      ! define elements topology and type
      allocate(lnodesi(4,nelc)) ; lnodesi(:,:) = 0
-     allocate(eltypei(nelc),coarsingi(nelc))
+     allocate(eltypei(nelc),coarsingi(nelc)) 
      ! call define_lnodesclean(nelc,lnodesi,eltypei,coarsingi,nex,iclevc,ns_ib,nzss)
      ! fill si and zi arrays
-     neli = nelc
-     allocate(si(4*neli),zi(4*neli)) ; si(:) = 0. ; zi(:) = 0.
+     neli = nelc 
+     allocate(si(4*neli),zi(4*neli)) ; si(:) = 0. ; zi(:) = 0. 
 
      do iel = 1, nelc
         do inode = 1, 4
            ipt = lnodesi(inode,iel)
            ipti = (iel-1)*4 + inode
            si(ipti) = s_unif(ipt)
-           zi(ipti) = z_unif(ipt)
-        enddo
-     enddo
+           zi(ipti) = z_unif(ipt) 
+        end do
+     end do  
 
-     write(6,*) 'npts = ', npts
+     write(6,*) 'npts = ', npts 
 
   else
-     npts = 0
+     npts = 0 
      nelc = 0
-  endif
+  end if
 
-  ! define grid points for central region
+  ! define grid points for central region 
   ! Points numbering and coordinates
-  nptscc = (ndivs+1)**2
+  nptscc = (ndivs+1)**2  
 
   allocate(scc(nptscc+npts),zcc(nptscc+npts))
-  scc(:) = 0.d0
+  scc(:) = 0.d0 
   zcc(:) = 0.d0
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1043,11 +1051,11 @@ subroutine define_central_region
   if (dump_mesh_info_screen) write(6,*)'CENTR: ndivs,nr',ndivs,nr
   if (dump_mesh_info_screen) write(6,*)'CENTR: ri',ri
 
-  if (dump_mesh_info_files) then
+  if (dump_mesh_info_files) then  
      open(unit=46,file=diagpath(1:lfdiag)//'/fort.46')
      open(unit=47,file=diagpath(1:lfdiag)//'/fort.47')
      open(unit=48,file=diagpath(1:lfdiag)//'/fort.48')
-  endif
+  end if
 
   do ix=1, 2*ndivs+1
      maxy=int(min(ix,ceiling(dble(ix)/2.)+1))
@@ -1060,7 +1068,7 @@ subroutine define_central_region
         if (iy > 1) then
           angle = tan( pi/2.d0 * ( 1 - dble(iy-1)/dble(ix) ) )
           y = rad / (angle**p + 1.d0)**(1.d0/p)
-        else
+        else 
           angle = 0.d0
           y = 0.d0;
         endif
@@ -1070,17 +1078,17 @@ subroutine define_central_region
         if (mod(ix,2)==0) then
 
            !   below diagonal, s>=z
-           s_arr(int(ix/2)+1,maxy-iy+1) = x + y
+           s_arr(int(ix/2)+1,maxy-iy+1) = x + y 
            z_arr(int(ix/2)+1,maxy-iy+1) = x - y
            !   above diagonal, s<z (switched indices, negative y)
            s_arr(maxy-iy+1,int(ix/2)+1) = x - y
            z_arr(maxy-iy+1,int(ix/2)+1) = x + y
 
-           if (dump_mesh_info_files) then
+           if (dump_mesh_info_files) then  
               write(46,*)y,x
               write(47,*)x+y,x-y
               write(48,*)x-y,x+y
-           endif
+           end if
 
         endif
      enddo
@@ -1089,7 +1097,7 @@ subroutine define_central_region
      close(46)
      close(47)
      close(48)
-  endif
+  end if
 
   ! earth center
   s_arr(1,1) = zero
@@ -1098,19 +1106,19 @@ subroutine define_central_region
   !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   ! TNM MAY 2007: Apply stretching for 45-deg pathological elements
   !
-  ! This is a trial-and-error fix to the triangularly deformed elements
-  ! along the 45 deg diagonal inside the central cube which lead to
-  ! grid spacing of diagonal points (is,iz) vs. (is+1,iz+1) of about
-  ! a factor of 2-4 lower than the predicted/expected value (for higher
-  ! resolution grids at least). The solver used to blow up as soon as
-  ! reaching the inner core if this is left out. One should be careful
-  ! and examine this region for each new high resolution grid before
-  ! running the solver to be sure it looks properly (i.e. now crossing
+  ! This is a trial-and-error fix to the triangularly deformed elements 
+  ! along the 45 deg diagonal inside the central cube which lead to 
+  ! grid spacing of diagonal points (is,iz) vs. (is+1,iz+1) of about 
+  ! a factor of 2-4 lower than the predicted/expected value (for higher 
+  ! resolution grids at least). The solver used to blow up as soon as 
+  ! reaching the inner core if this is left out. One should be careful 
+  ! and examine this region for each new high resolution grid before 
+  ! running the solver to be sure it looks properly (i.e. now crossing 
   ! element boundaries etc).
-  if (dump_mesh_info_files) then
-     open(unit=5559,file=diagpath(1:lfdiag)//'/fort.5559')
-  endif
-
+  if (dump_mesh_info_files) then 
+     open(unit=5559,file=diagpath(1:lfdiag)//'/fort.5559') 
+  end if
+  
   ! loop along diagonal: is==iz
   do is=2, ndivs+1
      p = 0.5d0 * (s_arr(is,is) - s_arr(is-1,is-1)) * dble(is) / dble(ndivs)
@@ -1120,10 +1128,10 @@ subroutine define_central_region
      if (dump_mesh_info_files) write(5559,*)is,is,p,s_arr(is,is)
   enddo
 
-  if (dump_mesh_info_files) then
+  if (dump_mesh_info_files) then 
      close(5559)
-  endif
-
+  end if
+  
   !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1140,10 +1148,10 @@ subroutine define_central_region
   s_arr = s_arr / maxval(abs(s_arr)) * (ri - maxh_icb/router)
   z_arr = z_arr / maxval(abs(z_arr)) * (ri - maxh_icb/router)
 
-  if (dump_mesh_info_files) then
+  if (dump_mesh_info_files) then  
      open(unit=44,file=diagpath(1:lfdiag)//'/fort.44')
      open(unit=45,file=diagpath(1:lfdiag)//'/fort.45')
-  endif
+  end if
 
   do is=1,ndivs+1
      do iz=1,ndivs+1
@@ -1154,11 +1162,11 @@ subroutine define_central_region
         if (dump_mesh_info_files) write(45,*) is,iz,s_arr(is,iz),z_arr(is,iz)
      enddo
   enddo
-
-  if (dump_mesh_info_files) then
+  
+  if (dump_mesh_info_files) then  
      close(44)
      close(45)
-  endif
+  end if
 
   ! TNM JULY 2009: Need this for gather_skeleton
   if (nelc /=0) then
@@ -1168,17 +1176,17 @@ subroutine define_central_region
            ipt = lnodesi(inode,iel)
            ipti = (iel-1)*4 + inode
            si(ipti) = scc(ipt)
-           zi(ipti) = zcc(ipt)
-        enddo
-     enddo
-  endif
+           zi(ipti) = zcc(ipt) 
+        end do
+     end do  
+  end if
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !        END NEW METHOD: |x|^p + |y|^p = r^p
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   ! total number of elements
-  nelctot = nelc + 2*ndivs + ndivs**2
+  nelctot = nelc + 2*ndivs + ndivs**2  
   if (dump_mesh_info_screen) write(6,*) 'nelctot ', nelctot
   nelsq = ndivs**2
   allocate(lnodessq(4, nelsq))
@@ -1192,8 +1200,8 @@ subroutine define_central_region
         lnodessq(3,iel) = uniform_nodenumber(is+1,iz+1,ndivs,npts)
         lnodessq(4,iel) = uniform_nodenumber(is  ,iz+1,ndivs,npts)
         eltypesq(iel) = 'linear'
-     enddo
-  enddo
+     end do
+  end do
 
   ! FILL ARRAY SSQ AND ZSQ
   allocate(ssq(4*nelsq),zsq(4*nelsq))
@@ -1205,8 +1213,8 @@ subroutine define_central_region
         iptsq = 4*(iel-1)+inode
         ssq(iptsq) = scc(ipt)
         zsq(iptsq) = zcc(ipt)
-     enddo
-  enddo
+     end do
+  end do
 
   ! gnuplot dump
   if (dump_mesh_info_files) then
@@ -1215,32 +1223,32 @@ subroutine define_central_region
         do inode = 1, 4
            ipt = lnodessq(inode,iel)
            write(3,*) scc(ipt),zcc(ipt)
-        enddo
+        end do
         ipt = lnodessq(1,iel)
         write(3,*) scc(ipt),zcc(ipt)
         write(3,*)
-     enddo
-  endif
+     end do
+  end if
 
   ! THE REST IN THIS ROUTINE IS ABOUT THE buffer layer**************************
   nelbuf = 2*ndivs
   allocate(lnodesbuf(4,nelbuf)) ; lnodesbuf(:,:) = 0
   allocate(eltypebuf(nelbuf))
-  iel = 0
+  iel = 0 
   do is = 1, ndivs
      iel = iel + 1
      lnodesbuf(1,iel) = uniform_nodenumber(is,ndivs+1,ndivs,npts)
      lnodesbuf(2,iel) = uniform_nodenumber(is+1,ndivs+1,ndivs,npts)
-     if ( neli > 0 ) then
+     if ( neli > 0 ) then 
         lnodesbuf(3,iel) = uniform_nodenumber(1+  (is)*2**nex,1,ns_ib)
         lnodesbuf(4,iel) = uniform_nodenumber(1+(is-1)*2**nex,1,ns_ib)
-     else ! CONNECT WITH OUTER SHELL
+     else ! CONNECT WITH OUTER SHELL  
         ieltest = nelo + is -2*ndivs
-        lnodesbuf(3,iel) = (ieltest-1)*4 + 2
-        lnodesbuf(4,iel) = (ieltest-1)*4 + 1
-     endif
-     eltypebuf(iel) = 'semino'
-  enddo
+        lnodesbuf(3,iel) = (ieltest-1)*4 + 2 
+        lnodesbuf(4,iel) = (ieltest-1)*4 + 1  
+     end if
+     eltypebuf(iel) = 'semino' 
+  end do
   do iz = 1, ndivs
    iel = iel + 1
    !lnodesbuf(1,iel) = uniform_nodenumber(ndivs+1,iz,ndivs,npts)
@@ -1248,61 +1256,61 @@ subroutine define_central_region
    !lnodesbuf(3,iel) = uniform_nodenumber(ns_ib+1-(iz)*2**nex,1,ns_ib)
    !lnodesbuf(4,iel) = uniform_nodenumber(ndivs+1,iz+1,ndivs,npts)
    lnodesbuf(4,iel) = uniform_nodenumber(ndivs+1,iz,ndivs,npts)
-   if ( neli > 0 ) then
+   if ( neli > 0 ) then 
       lnodesbuf(1,iel) = uniform_nodenumber(ns_ib+1-(iz-1)*2**nex,1,ns_ib)
       lnodesbuf(2,iel) = uniform_nodenumber(ns_ib+1-(iz)*2**nex,1,ns_ib)
-   else ! CONNECT WITH OUTER ELEMENT
-      ieltest = nelo -( iz - 1 )
-      lnodesbuf(1,iel) = (ieltest-1)*4 + 2
-      lnodesbuf(2,iel) = (ieltest-1)*4 + 1
-   endif
+   else ! CONNECT WITH OUTER ELEMENT 
+      ieltest = nelo -( iz - 1 )  
+      lnodesbuf(1,iel) = (ieltest-1)*4 + 2 
+      lnodesbuf(2,iel) = (ieltest-1)*4 + 1 
+   end if 
    lnodesbuf(3,iel) = uniform_nodenumber(ndivs+1,iz+1,ndivs,npts)
    eltypebuf(iel) = 'semiso'
-  enddo
+  end do
 
   ! fill array sbuf and zbuf
   allocate(sbuf(4*nelbuf),zbuf(4*nelbuf))
-  sbuf(:)=0.d0
+  sbuf(:)=0.d0 
   zbuf(:)=0.d0
   do iel = 1, nelbuf
 
-     if (neli > 0) then
+     if (neli > 0) then 
         do inode = 1, 4
            ipt = lnodesbuf(inode,iel)
            iptbuf = 4*(iel-1) + inode
            sbuf(iptbuf) = scc(ipt)
            zbuf(iptbuf) = zcc(ipt)
-        enddo
-     else ! CONNECT WITH OUTER SHELL
-        if ( iel < (nelbuf/2 + 1) ) then
+        end do
+     else ! CONNECT WITH OUTER SHELL 
+        if ( iel < (nelbuf/2 + 1) ) then 
            do inode = 1,2
               ipt = lnodesbuf(inode,iel)
               iptbuf = 4*(iel-1) + inode
               sbuf(iptbuf) = scc(ipt)
               zbuf(iptbuf) = zcc(ipt)
-           enddo
+           end do 
            do inode = 3,4
               ipt = lnodesbuf(inode,iel)
               iptbuf = 4*(iel-1) + inode
-              sbuf(iptbuf) = so(ipt)
+              sbuf(iptbuf) = so(ipt) 
               zbuf(iptbuf) = zo(ipt) !; write(6,*) zo(ipt), ipt
-           enddo
-        else
+           end do
+        else 
            do inode = 1,2
               ipt = lnodesbuf(inode,iel)
               iptbuf = 4*(iel-1) + inode
               sbuf(iptbuf) = so(ipt)
               zbuf(iptbuf) = zo(ipt) !; write(6,*) zo(ipt), ipt
-           enddo
+           end do
            do inode = 3,4
               ipt = lnodesbuf(inode,iel)
               iptbuf = 4*(iel-1) + inode
               sbuf(iptbuf) = scc(ipt)
               zbuf(iptbuf) = zcc(ipt)
-           enddo
-        endif
-     endif
-  enddo
+           end do 
+        end if
+     end if
+  end do
 
   ! gnuplot dump
   if (dump_mesh_info_files) then
@@ -1312,13 +1320,13 @@ subroutine define_central_region
            ipt = lnodesbuf(inode,iel)
            iptbuf = 4*(iel-1) + inode
            write(3,*) sbuf(iptbuf),zbuf(iptbuf)
-        enddo
+        end do
         ipt = lnodesbuf(1,iel)
         iptbuf = 4*(iel-1) + 1
         write(3,*) sbuf(iptbuf),zbuf(iptbuf)
         write(3,*)
-     enddo
-  endif
+     end do
+  end if
 
 end subroutine define_central_region
 !-----------------------------------------------------------------------------------------
@@ -1330,10 +1338,10 @@ subroutine def_ref_cart_coordinates(nst, nzt, crd, inner_shell)
   real(kind=dp)   , dimension(1:nst+1,1:nzt+1,2), intent(out) :: crd
   logical, optional     :: inner_shell
 
-  integer               :: is, iz
+  integer               :: is, iz 
   real(kind=dp)         :: ds, dz
-
-  ! uniform grid in s and z
+  
+  ! uniform grid in s and z 
   if (nst/=0 .and. nzt/=0) then
      ds = 2./dble(nst)
      dz = 2./dble(nzt)
@@ -1341,14 +1349,14 @@ subroutine def_ref_cart_coordinates(nst, nzt, crd, inner_shell)
      write(6,*)'nst and nzt are ZERO!'
      stop
   endif
-
+  
   do iz = 1, nzt+1
      do is = 1, nst+1
         crd(is,iz,1) = -1. + dble(is-1) * ds
         crd(is,iz,2) = -1. + dble(iz-1) * dz
         if (PRESENT(inner_shell)) crd(is,iz,2) = -1. + dble(iz-1) * dz
-     enddo
-  enddo
+     end do
+  end do
 end subroutine def_ref_cart_coordinates
 !-----------------------------------------------------------------------------------------
 
@@ -1366,11 +1374,10 @@ subroutine def_ref_cart_coordinates_discont(nst, nzt, crd, dz)
   integer           :: is, iz
   real(kind=dp)     :: ds1, ds2
 
-  real(kind=dp)     :: deltatheta
   real(kind=dp)     :: pi2
   integer           :: iproc
 
-
+ 
   !Make axial elements a bit smaller, to avoid artifacts from axial integration scheme
   ds1 = 2.d0 / dble(nst) * axisfac
   ds2 = (2.d0 - 2**nc_init * ds1) / dble(nst - 2**nc_init)
@@ -1382,19 +1389,19 @@ subroutine def_ref_cart_coordinates_discont(nst, nzt, crd, dz)
         else
            crd(is,iz,1) = -1.d0 + 2**nc_init * ds1 + dble(is-1 - 2**nc_init) * ds2
         endif
-     enddo
-     crd(is,1,2) = -1.d0
+     end do
+     crd(is,1,2) = -1.d0 
      do iz = 2, nzt+1
         crd(is,iz,2) = crd(is,iz-1,2) +  dz(iz-1)
-     enddo
-  enddo
-
+     end do
+  end do
+  
   ! Create colatitude bounds array for outer shell
-  ds1 = 1.d0 / dble(nst) * axisfac
+  ds1 = 1.d0 / dble(nst) * axisfac 
   ds2 = (1.d0 - 2**nc_init * ds1) / dble(nst - 2**nc_init)
 
   write(6,*) ds1, ds2, nst
-
+  
   pi2 = 2.d0 * dasin(1.d0)
   allocate(theta_min_proc(0:nthetaslices-1), theta_max_proc(0:nthetaslices-1))
   theta_min_proc(:) = 0.d0
@@ -1406,14 +1413,14 @@ subroutine def_ref_cart_coordinates_discont(nst, nzt, crd, dz)
                        + ds2 * (nst * 2 / nthetaslices * (iproc + 1) - 2**nc_init))
      theta_max_proc(iproc)   = 0.5d0 * pi2 * (ds1 * 2**nc_init &
                        + ds2 * (nst * 2 / nthetaslices * (iproc + 1) - 2**nc_init))
-  enddo
+  end do
 
 end subroutine def_ref_cart_coordinates_discont
 !-----------------------------------------------------------------------------------------
 
 !-----------------------------------------------------------------------------------------
 subroutine gather_skeleton
-! This routine defines global arrays to assemble skeleton.
+! This routine defines global arrays to assemble skeleton. 
 
   use data_mesh
   use data_grid, only: ndivs
@@ -1437,22 +1444,23 @@ subroutine gather_skeleton
   npointot = 4 * neltot
   allocate(sg(npointot),zg(npointot))
   sg(:) = 0.d0
-  zg(:) = 0.d0
+  zg(:) = 0.d0 
 
   ! outer shell
   istart = 1
-  if(allocated(sg)) sg(istart:4*nelo) = so(1:4*nelo)
-  if(allocated(zg)) zg(istart:4*nelo) = zo(1:4*nelo)
+  if(allocated(sg)) sg(istart:4*nelo) = so(1:4*nelo) 
+  if(allocated(zg)) zg(istart:4*nelo) = zo(1:4*nelo) 
 
   ! inner shell
   istart = 4*nelo + 1
   if(allocated(si)) sg(istart:istart+4*neli-1) = si(1:4*neli)
   if(allocated(zi)) zg(istart:istart+4*neli-1) = zi(1:4*neli)
-
+  
   ! buffer
   istart = 4*(nelo+neli) + 1
   if (allocated(sbuf)) sg(istart:istart+4*nelbuf-1) = sbuf(1:4*nelbuf)
   if (allocated(zbuf)) zg(istart:istart+4*nelbuf-1) = zbuf(1:4*nelbuf)
+
 
   ! central square region
   !istart = 4*(nelo+neli) + 1
@@ -1474,7 +1482,7 @@ subroutine gather_skeleton
 
   ! gather element type
   allocate(lnodesg(4,neltot))
-  lnodesg(:,:) = 0
+  lnodesg(:,:) = 0 
   allocate(eltypeg(neltot),coarsing(neltot))
   if (allocated(eltypeo)) eltypeg(1:nelo) = eltypeo(1:nelo)
   if (allocated(eltypei)) eltypeg(nelo+1:nelo+neli) = eltypei(1:neli)
@@ -1488,8 +1496,8 @@ subroutine gather_skeleton
      do inode = 1, 4
         ipt = (iel-1)*4 + inode
         lnodesg(inode,iel) = ipt
-     enddo
-  enddo
+     end do
+  end do 
 
 end subroutine gather_skeleton
 !-----------------------------------------------------------------------------------------
@@ -1499,7 +1507,7 @@ subroutine generate_southern_hemisphere
 
   use data_mesh
   use data_diag
-
+  
   integer                                     :: neltot2, npointot2, ipt, iel,inode
   real(kind=dp)   , dimension(:), allocatable :: sg2,zg2
   integer, dimension(:,:), allocatable        :: lnodesg2
@@ -1516,7 +1524,7 @@ subroutine generate_southern_hemisphere
      zg2(ipt) = zg(ipt)
      sg2(ipt+npointot) =  sg(ipt)
      zg2(ipt+npointot) = -zg(ipt)
-  enddo
+  end do
 
   do iel = 1, neltot
 
@@ -1524,7 +1532,7 @@ subroutine generate_southern_hemisphere
         ipt = 4*(iel-1) + inode
         lnodesg2(inode,iel) = ipt
         lnodesg2(5-inode,iel+neltot) = ipt + npointot
-     enddo
+     end do
 
      eltypeg2(iel) = eltypeg(iel)
      coarsing2(iel) = coarsing(iel)
@@ -1532,22 +1540,22 @@ subroutine generate_southern_hemisphere
 
      if     (eltypeg(iel) == 'semiso') then
         eltypeg2(iel+neltot) = 'semino'
-     else if (eltypeg(iel) == 'semino') then
+     elseif (eltypeg(iel) == 'semino') then
         eltypeg2(iel+neltot) = 'semiso'
      else
         eltypeg2(iel+neltot) = eltypeg(iel)
-     endif
+     end if
 
-  enddo
+  end do
   ! copy back into original arrays
   deallocate(sg,zg,lnodesg,eltypeg,coarsing)
   npointot = npointot2
   neltot = neltot2
-
+  
   allocate(sg(npointot),zg(npointot)) ; sg(:)=0.d0 ; zg(:)=0.d0
   allocate(lnodesg(4,neltot)) ; lnodesg(:,:) = 0
   allocate(eltypeg(neltot),coarsing(neltot))
-
+  
   sg(:) = sg2(:)
   zg(:) = zg2(:)
   lnodesg(:,:) = lnodesg2(:,:)
@@ -1564,7 +1572,7 @@ subroutine donot_generate_southern_hemisphere
 
   use data_mesh
   use data_diag
-
+  
   real(kind=dp)   , dimension(:), allocatable   :: sg2, zg2
   integer, dimension(:,:), allocatable          :: lnodesg2
   character(len=6), dimension(:), allocatable   :: eltypeg2
@@ -1581,24 +1589,24 @@ subroutine donot_generate_southern_hemisphere
   allocate(lnodesg2(4,neltot2))
   lnodesg2(:,:) = 0
   allocate(eltypeg2(neltot2))
-
+  
   do ipt = 1, npointot
      sg2(ipt) = sg(ipt)
      zg2(ipt) = zg(ipt)
-  enddo
+  end do
 
   do iel = 1, neltot
      do inode = 1, 4
         ipt = 4*(iel-1) + inode
         lnodesg2(inode,iel) = ipt
         eltypeg2(iel) = eltypeg(iel)
-     enddo
-  enddo
+     end do
+  end do
   ! copy back into original arrays
   deallocate(sg,zg,lnodesg,eltypeg)
   npointot = npointot2
   neltot = neltot2
-
+  
   allocate(sg(npointot),zg(npointot))
   sg(:) = 0.d0
   zg(:) = 0.d0
@@ -1616,3 +1624,4 @@ end subroutine donot_generate_southern_hemisphere
 !-----------------------------------------------------------------------------------------
 
 end module meshgen
+!=========================================================================================

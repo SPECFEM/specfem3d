@@ -55,9 +55,6 @@ WRITE_1DMODEL       true
 COARSENING_LAYERS   3
 
 ############### FOR THE INCLINED ##############################################
-# Resolve inner-core shear wave (default: true)
-# IC_SHEAR_WAVE     true
-
 # Polynomial order of basis for GLL points inside elements (default: 4)
 # NPOL                4
 

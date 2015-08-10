@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -19,21 +19,18 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
+!=========================================================================================
 !> General variables pertaining to process identification
-!===================
 module data_proc
-!===================
-!
 
   implicit none
-  public
+  public 
 
   integer          :: nproc              !< Number of total processors
   integer          :: mynum              !< Local processor label, from 0 to nproc-1
   character(len=4) :: appnproc, appmynum !< processor-identifying file extension
-  logical          :: lpr                !< last processor logical flag, for write stdout
+  logical          :: lpr                !< last processor logical flag, for write stdout 
   character(len=8) :: procstrg           !< String containing mynum to include in writes
 
-!=======================
 end module data_proc
-!=======================
+!=========================================================================================

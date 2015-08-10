@@ -34,6 +34,9 @@ OPTION=
 ### Define relative path
 UTILS_COUPLING=../../../UTILS_COUPLING_SpecFEM
 
+### Copy meshes file in result dir
+cp ../input_box* .
+
 # do not change
 NPROC_MINUS_ONE="$NPROC-1"
 

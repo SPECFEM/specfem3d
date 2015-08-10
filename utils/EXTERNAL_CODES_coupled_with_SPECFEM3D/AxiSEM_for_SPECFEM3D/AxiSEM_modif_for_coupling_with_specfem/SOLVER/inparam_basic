@@ -6,8 +6,10 @@
 # moment: Full moment tensor, needs four parallel simulations. Set the depth in
 #         inparam_source and modify the moment tensor in the file CMTSOLUTION 
 #         before postprocessing.
+# force:  Horizontal and vertical single force as two parallel simulations. Used
+#         to compute backward kernel wavefields as needed for Instaseis
 
-SIMULATION_TYPE   single
+SIMULATION_TYPE   moment
 
 ######################## SIMULATION PARAMETERS ################################
 # Choose desired seismogram length 
@@ -28,7 +30,7 @@ RECFILE_TYPE      stations
 # Choose Mesh (local subdirname in SOLVER/MESHES directory)
 # N.B. The mesh controls the velocity model and the number of CPUs
 
-MESHNAME           MESH_premiso/
+MESHNAME           MOMENT_PREM_MESH
 
 # Use lateral heterogeneities (aka 2.5D model).
 # The model has to be described in inparam_hetero (default: false)
@@ -37,7 +39,7 @@ LAT_HETEROGENEITY  false
 
 
 # Include viscoelastic attenuation (details in inparam_advanced)
-ATTENUATION         false 
+ATTENUATION         false
 
 ######################## WAVEFIELD SNAPSHOTS ##################################
 # Save wavefield snapshots for visualization (default: false)

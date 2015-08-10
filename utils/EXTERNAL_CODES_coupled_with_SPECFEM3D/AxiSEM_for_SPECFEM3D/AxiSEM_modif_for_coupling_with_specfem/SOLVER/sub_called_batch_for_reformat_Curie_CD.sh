@@ -6,7 +6,7 @@
 #MSUB -r Reformat_for_AxiSEM_32p         # Nom du job
 #MSUB -n 32
 #MSUB -N 2
-#MSUB -T 9999
+#MSUB -T 8000
 #MSUB -q standard
 #MSUB -e reformat_for_AxiSEM_32_run.e
 #MSUB -o reformat_for_AxiSEM_32_run.o

@@ -2,7 +2,7 @@
 
 current_dir=$(pwd)
 
-cd ../../../../../EXAMPLES/coupling_with_EXTERNAL_CODES/with_AxiSEM/example_1st_for_validation/DATA/
+cd ../../../../../EXAMPLES/coupling_with_EXTERNAL_CODES/with_AxiSEM/example_2nd_w_moment_option/DATA/
 mkdir AxiSEM_tractions/
 mkdir AxiSEM_tractions/1/
 cd ${current_dir}

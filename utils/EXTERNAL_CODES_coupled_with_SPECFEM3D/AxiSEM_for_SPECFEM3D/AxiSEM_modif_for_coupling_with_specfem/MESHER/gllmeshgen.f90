@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -19,12 +19,13 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
+!=========================================================================================
 module gllmeshgen
 
   use data_mesh
-  use analytic_mapping
+  use analytic_mapping 
   use data_spec
-  use data_gllmesh
+  use data_gllmesh 
   use splib
 
   implicit none
@@ -42,6 +43,8 @@ subroutine create_gllmesh
 
   real(kind=dp)    :: crd_nodes(8,2)
 
+  real(kind=dp)     :: df(0:npol)
+  integer           :: ishp
   integer           :: iel, jpol, ipol
   real(kind=dp)     :: stest
 
@@ -49,22 +52,48 @@ subroutine create_gllmesh
   allocate(sgll(0:npol,0:npol,neltot),zgll(0:npol,0:npol,neltot))
 
   ! QUADRATURE POINTS and weights
-  allocate (eta(0:npol))
-  allocate (dxi(0:npol))
-  allocate (wt(0:npol))
+  allocate(eta(0:npol))
+  allocate(dxi(0:npol))
+  allocate(wt(0:npol))
   allocate(xi_k(0:npol), wt_axial_k(0:npol))
 
-  call zemngl2(npol,xi_k)                       ! Gauss-Jacobi(0,1) quadrature
-  call get_welegl_axial(npol,xi_k,wt_axial_k,2) !
+  call zemngl2(npol, xi_k)                       ! Gauss-Jacobi(0,1) quadrature
+  call get_welegl_axial(npol, xi_k, wt_axial_k, 2) !
 
   ! In the z-direction and in the s-direction for any other element
 
-  call zelegl(npol,eta,dxi)                 ! Gauss-Lobatto Points
-  call get_welegl(npol,eta,wt)              !
+  call zelegl(npol, eta, dxi)                 ! Gauss-Lobatto Points
+  call get_welegl(npol, eta, wt)              !
+
+  allocate(G1(0:npol,0:npol))
+  allocate(G1T(0:npol,0:npol))
+  allocate(G2(0:npol,0:npol))
+  allocate(G2T(0:npol,0:npol))
+  allocate(G0(0:npol))
+
+  ! Define elemental Lagrange interpolant derivatives as needed for stiffness
+  ! Derivative in z direction: \partial_\eta (l_j(\eta_q))
+  ! non-axial elements
+  do ishp = 0, npol
+     call hn_jprime(eta, ishp, npol, df)
+     G2(ishp,:) = df
+  end do
+  G2T = transpose(G2)
+
+  ! Derivative in s-direction: \partial_\xi (\bar{l}_i(\xi_p))
+  ! axial elements
+  do ishp = 0, npol
+     call lag_interp_deriv_wgl(df,xi_k,ishp,npol)
+     G1(ishp,:) = df
+  end do
+  G1T = transpose(G1)
+
+  ! Axial vector
+  G0 = G1(:,0)
 
   !$omp parallel do shared(sgll, zgll) private(crd_nodes, jpol, ipol, stest)
   do iel = 1, neltot
-
+  
      ! define dummy coordinate arrays
      crd_nodes(:,:) = 0.d0
      crd_nodes(1,1) = sg(lnodesg(1,iel))
@@ -75,29 +104,29 @@ subroutine create_gllmesh
      crd_nodes(5,2) = zg(lnodesg(3,iel))
      crd_nodes(7,1) = sg(lnodesg(4,iel))
      crd_nodes(7,2) = zg(lnodesg(4,iel))
-
+     
      crd_nodes(2,:) = .5d0 * ( crd_nodes(1,:) + crd_nodes(3,:) )  ! midpoints are necessary
      crd_nodes(4,:) = .5d0 * ( crd_nodes(3,:) + crd_nodes(5,:) )  ! for subparametric mapping
      crd_nodes(6,:) = .5d0 * ( crd_nodes(5,:) + crd_nodes(7,:) )  ! (Serendipity elements).
-     crd_nodes(8,:) = .5d0 * ( crd_nodes(7,:) + crd_nodes(1,:) )  !
+     crd_nodes(8,:) = .5d0 * ( crd_nodes(7,:) + crd_nodes(1,:) )  !  
 
      stest = minval(sg(lnodesg(1:4,iel)))
-     if ( stest < smallval_dble ) then
+     if ( stest < smallval_dble ) then 
         do jpol = 0, npol
            do ipol = 0, npol
               sgll(ipol,jpol,iel) = mapping_anal(xi_k(ipol),eta(jpol),crd_nodes,1,iel)
               zgll(ipol,jpol,iel) = mapping_anal(xi_k(ipol),eta(jpol),crd_nodes,2,iel)
-           enddo
-        enddo
+           end do
+        end do  
      else
         do jpol = 0, npol
            do ipol = 0, npol
               sgll(ipol,jpol,iel) = mapping_anal(eta(ipol),eta(jpol),crd_nodes,1,iel)
               zgll(ipol,jpol,iel) = mapping_anal(eta(ipol),eta(jpol),crd_nodes,2,iel)
-           enddo
-        enddo
-     endif
-  enddo
+           end do
+        end do
+     end if
+  end do
   !$omp end parallel do
 end subroutine create_gllmesh
 !-----------------------------------------------------------------------------------------
@@ -106,28 +135,28 @@ end subroutine create_gllmesh
 subroutine extract_fluid_solid_submeshes
   integer :: iel_fluid,iel
   integer :: iel_solid
-
+  
   allocate(sgll_fluid(0:npol,0:npol,neltot_fluid))
-  sgll_fluid(:,:,:) = 0.d0
+  sgll_fluid(:,:,:) = 0.d0 
   allocate(zgll_fluid(0:npol,0:npol,neltot_fluid))
-  zgll_fluid(:,:,:) = 0.d0
-
+  zgll_fluid(:,:,:) = 0.d0 
+  
   do iel_fluid = 1, neltot_fluid
      iel = ielem_fluid(iel_fluid)
      sgll_fluid(:,:,iel_fluid) = sgll(:,:,iel)
      zgll_fluid(:,:,iel_fluid) = zgll(:,:,iel)
-  enddo
-
+  end do
+ 
   allocate(sgll_solid(0:npol,0:npol,neltot_solid))
-  sgll_solid(:,:,:) = 0.d0
+  sgll_solid(:,:,:) = 0.d0 
   allocate(zgll_solid(0:npol,0:npol,neltot_solid))
-  zgll_solid(:,:,:) = 0.d0
+  zgll_solid(:,:,:) = 0.d0 
   do iel_solid = 1, neltot_solid
      iel = ielem_solid(iel_solid)
      sgll_solid(:,:,iel_solid) = sgll(:,:,iel)
      zgll_solid(:,:,iel_solid) = zgll(:,:,iel)
-  enddo
-
+  end do
+ 
 end subroutine extract_fluid_solid_submeshes
 !-----------------------------------------------------------------------------------------
 
@@ -145,8 +174,8 @@ subroutine test_mapping
   npoin = neltot*(npol+1)**2
   allocate(sglltmp(0:npol,0:npol,neltot),zglltmp(0:npol,0:npol,neltot))
 
-  ! QUADRATURE POINTS
-
+  ! QUADRATURE POINTS 
+  
   call zemngl2(npol,xi_k)                       ! Gauss-Jacobi(0,1) quadrature
   call get_welegl_axial(npol,xi_k,wt_axial_k,2) !
 
@@ -154,11 +183,11 @@ subroutine test_mapping
 
   call ZELEGL(npol,eta,dxi)                 ! Gauss-Lobatto Points
   call get_welegl(npol,eta,wt)              !
-
+  
   do iel = 1, neltot
 
      ! define dummy coordinate arrays
-     crd_nodes(:,:) = 0.
+     crd_nodes(:,:) = 0. 
      crd_nodes(1,1) = sg(lnodesg(1,iel)) ; crd_nodes(1,2) = zg(lnodesg(1,iel))
      crd_nodes(3,1) = sg(lnodesg(2,iel)) ; crd_nodes(3,2) = zg(lnodesg(2,iel))
      crd_nodes(5,1) = sg(lnodesg(3,iel)) ; crd_nodes(5,2) = zg(lnodesg(3,iel))
@@ -166,25 +195,25 @@ subroutine test_mapping
      crd_nodes(2,:) = .5d0 * ( crd_nodes(1,:) + crd_nodes(3,:) )  ! midpoints are necessary
      crd_nodes(4,:) = .5d0 * ( crd_nodes(3,:) + crd_nodes(5,:) )  ! for subparametric mapping
      crd_nodes(6,:) = .5d0 * ( crd_nodes(5,:) + crd_nodes(7,:) )  ! (Serendipity elements).
-     crd_nodes(8,:) = .5d0 * ( crd_nodes(7,:) + crd_nodes(1,:) )  !
+     crd_nodes(8,:) = .5d0 * ( crd_nodes(7,:) + crd_nodes(1,:) )  !  
 
      stest = minval(sg(lnodesg(1:4,iel)))
-     if ( stest < smallval_dble ) then
+     if ( stest < smallval_dble ) then 
         do jpol = 0, npol
            do ipol = 0, npol
               sglltmp(ipol,jpol,iel) = mapping_anal(xi_k(ipol),eta(jpol),crd_nodes,1,iel)
               zglltmp(ipol,jpol,iel) = mapping_anal(xi_k(ipol),eta(jpol),crd_nodes,2,iel)
-           enddo
-        enddo
+           end do
+        end do  
      else
         do jpol = 0, npol
            do ipol = 0, npol
               sglltmp(ipol,jpol,iel) = mapping_anal(eta(ipol),eta(jpol),crd_nodes,1,iel)
               zglltmp(ipol,jpol,iel) = mapping_anal(eta(ipol),eta(jpol),crd_nodes,2,iel)
-           enddo
-        enddo
-     endif
-  enddo
+           end do
+        end do
+     end if
+  end do
 
   open(21,file='colloc_grid.dat')
   open(23,file='mesh.dat')
@@ -192,31 +221,31 @@ subroutine test_mapping
      do jpol = 0, npol
         do ipol = 0, npol
            write(21,*) sglltmp(ipol,jpol,iel),zglltmp(ipol,jpol,iel)
-        enddo
+        end do
         write(21,*)
-     enddo
-
+     end do
+                                                   
      do ipol = 0, npol
         do jpol = 0, npol
            write(21,*) sglltmp(ipol,jpol,iel),zglltmp(ipol,jpol,iel)
-        enddo
+        end do
         write(21,*)
-     enddo
+     end do
 
      do jpol = 0,npol,npol
         do ipol = 0, npol
            write(23,*) sglltmp(ipol,jpol,iel),zglltmp(ipol,jpol,iel)
-        enddo
+        end do
         write(23,*)
-     enddo
+     end do
 
      do ipol = 0,npol,npol
         do jpol = 0, npol
            write(23,*) sglltmp(ipol,jpol,iel),zglltmp(ipol,jpol,iel)
-        enddo
+        end do
         write(23,*)
-     enddo
-  enddo
+     end do
+  end do
   close(23)
   close(21)
 
@@ -226,3 +255,4 @@ end subroutine test_mapping
 !-----------------------------------------------------------------------------------------
 
 end module gllmeshgen
+!=========================================================================================
