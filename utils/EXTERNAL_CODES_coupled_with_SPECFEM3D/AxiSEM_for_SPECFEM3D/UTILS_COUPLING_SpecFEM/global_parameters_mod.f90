@@ -47,6 +47,10 @@
     character(len=100), allocatable :: simdir(:)
     character(len=10),  allocatable :: src_type(:,:)
 
+    !! moment tensor 
+    real(kind=SINGLE_REAL)  :: Mij(6)
+    real, allocatable, dimension(:)     :: magnitude
+
     !! post process
     real(kind=SINGLE_REAL), allocatable ::  f1(:),f2(:),phi(:)
 

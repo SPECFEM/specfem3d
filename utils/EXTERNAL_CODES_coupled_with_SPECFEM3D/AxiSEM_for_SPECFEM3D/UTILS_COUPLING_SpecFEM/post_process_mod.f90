@@ -41,12 +41,13 @@
         ele_candidate=-1
         rec2elm=-1
         ! CONNECTION POINT <-> MESH-----------------------------------------------------------
-        do irec=1,nbrec
+        do irec=1,nbrec  !! loop over points 
+           if (mod(irec,100) == 0 ) write(*,*) irec,nbrec,NEL, 'connect'
            scur=reciever_cyl(1,irec)
            zcur=reciever_cyl(3,irec)
-           do iel = 1, NEL
+           do iel = 1, NEL  !! loop over all selected elements 
 
-              ! element
+              ! initial bounding box element
               smin=1d40
               smax=-1d40
               zmin=smin
@@ -239,35 +240,43 @@
 
       end subroutine interpol_stress
 
-      subroutine compute_prefactor(src_type,Mcomp)
-        use global_parameters , only : SINGLE_REAL,f1,f2,phi,nbrec
+      subroutine compute_prefactor(src_type,Mcomp,isim)
+        use global_parameters , only : Mij,SINGLE_REAL,f1,f2,phi,nbrec,magnitude
         !real(kind=SINGLE_REAL) f1,f2,phi
         character(len=10) src_type,Mcomp
-        integer irec
+        integer irec,isim
+        real, dimension(6)    :: Mij_scale
 
+
+        Mij_scale = Mij / magnitude(isim)
 
         select case (trim(src_type))
         case('monopole')
-           f1=1.
-           f2=0.
+
+         select case (trim(Mcomp))
+           case ('mrr')
+             f1=Mij_scale(1)
+             f2=0.
+           case ('mtt_p_mpp')
+             f1=Mij_scale(2) + Mij_scale(3)
+             f2=0.
+           case default
+             f1=1.
+             f2=0.
+          end select
 
         case('dipole')
 
            select case (trim(Mcomp))
-           case('mtr')
+           case('mtr', 'mrt', 'mpr', 'mrp')
               do irec=1,nbrec
-                 f1(irec)=cos(phi(irec))
-                 f2(irec)=-sin(phi(irec))
+                 f1(irec)= Mij_scale(4) *cos(phi(irec)) + Mij_scale(5) *sin(phi(irec))
+                 f2(irec)=-Mij_scale(4) *sin(phi(irec)) + Mij_scale(5) *cos(phi(irec))
               enddo
            case ('thetaforce')
               do irec=1,nbrec
                  f1(irec)=cos(phi(irec))
                  f2(irec)=-sin(phi(irec))
-              enddo
-           case('mpr')
-              do irec=1,nbrec
-                 f1(irec)=sin(phi(irec))
-                 f2(irec)=cos(phi(irec))
               enddo
            case('phiforce')
               do irec=1,nbrec
@@ -278,15 +287,10 @@
 
         case('quadpole')
            select case (trim(Mcomp))
-           case ('mtt_m_mpp')
+           case ('mtp', 'mpt', 'mtt_m_mpp')
               do irec=1,nbrec
-                 f1(irec)=cos(2.*phi(irec))
-                 f2(irec)=-sin(2.*phi(irec))
-              enddo
-           case('mtp')
-              do irec=1,nbrec
-                 f1(irec)=sin(2*phi(irec))
-                 f2(irec)=cos(2*phi(irec))
+                 f1(irec)= (Mij_scale(2) - Mij_scale(3)) * cos(2.*phi(irec)) + 2.*Mij_scale(6) * sin(2.*phi(irec))
+                 f2(irec)= (Mij_scale(3) - Mij_scale(2)) * sin(2.*phi(irec)) + 2.*Mij_scale(6) * cos(2.*phi(irec))
               enddo
            end select
 

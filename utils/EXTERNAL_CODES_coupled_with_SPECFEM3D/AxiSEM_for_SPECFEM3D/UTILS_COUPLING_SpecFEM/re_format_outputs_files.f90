@@ -312,7 +312,7 @@ program re_format_outputs_files
      output_stress_name(5)='stress_Sg13_out'
      output_stress_name(6)='stress_Sg23_out'
 
-     iunit=9
+     iunit=6666
      allocate(ivx(nsim),ivy(nsim),ivz(nsim))
      allocate(isxx(nsim),isyy(nsim),iszz(nsim))
      allocate(isxy(nsim),isxz(nsim),isyz(nsim))
@@ -349,6 +349,7 @@ program re_format_outputs_files
         open(isxz(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
         write(fichier,'(a6,a15)') '/Data/',output_stress_name(6)
         open(isyz(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
+        write(*,*) 'openning ', trim(working_axisem_dir(isim))//trim(fichier)
      enddo
 
      do isim=1,nsim
@@ -554,6 +555,7 @@ program re_format_outputs_files
 
 
   call create_name_database(prname,myrank,TRACT_PATH)
+  write(*,*) TRACT_PATH,prname,myrank
   open(27,file=prname(1:len_trim(prname))//'sol_axisem',status='unknown',&
              action='write',form='unformatted',iostat=ier)
   if (ier /= 0) write(*,*) 'error opening', prname(1:len_trim(prname))//'sol_axisem'
