@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -19,6 +19,7 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
+!=========================================================================================
 module parallelization
 
   use data_grid
@@ -292,7 +293,6 @@ subroutine domain_decomposition_theta(attributed, nprocl)
 
   integer                   :: iproc, iiproc, iel
   integer                   :: mycount
-  real(kind=dp)             :: deltatheta
   integer, allocatable      :: central_count(:)
   real(kind=dp)             :: pi2
 
@@ -328,7 +328,11 @@ subroutine domain_decomposition_theta(attributed, nprocl)
 
   do iproc = 0, nprocl -1
 
-     mycount = 0
+     if (solid_domain(ndisc)) then
+        mycount = 0
+     else
+        mycount = central_count(iproc)
+     endif
 
      do iel = 1, neltot
 
@@ -344,7 +348,11 @@ subroutine domain_decomposition_theta(attributed, nprocl)
         if ( mycount == nel_fluid(iproc) ) exit
      enddo ! iel
 
-     mycount = central_count(iproc)
+     if (solid_domain(ndisc)) then
+        mycount = central_count(iproc)
+     else
+        mycount = 0
+     endif
 
      !  At this stage we have assigned nel_fluid fluid elements
      !  to each processor, stored in a procel_fluid(1:nel_fluid,iproc)
@@ -444,8 +452,8 @@ subroutine domain_decomposition_theta_r(attributed, nprocl, nthetal, nrl, &
   integer, intent(in)       :: nprocl, nthetal, nrl
   integer, intent(in)       :: nelmax, nelmax_fluid, nelmax_solid
 
-  integer                   :: itheta, iitheta, iel
-  integer                   :: irad, iproc, iradb
+  integer                   :: itheta, iitheta, iel, nel_fluid_theta
+  integer                   :: irad, iproc
   integer                   :: mycount, nicb, ncmb
   integer                   :: iprocb(2), mycountb(2), j1, j2
   real(kind=dp)             :: deltatheta
@@ -502,32 +510,17 @@ subroutine domain_decomposition_theta_r(attributed, nprocl, nthetal, nrl, &
   endif
   ! **************** END OF INNER CUBE****************
 
-  ! sort inner core elements according to radius
-  ! Using same stupid choice as in inner core decomposition (fully fluid sphere
-  ! will just not do the sorting
-  if (neltot_solid > 0 ) then
-     do itheta = 0, nthetal-1
-        allocate(inner_core_buf(central_count(itheta)))
-        allocate(inner_core_r(central_count(itheta)))
-        inner_core_buf(:) = thetaslel_solid(1:central_count(itheta),itheta)
 
-        do iel = 1, central_count(itheta)
-           inner_core_r(iel) = rcom(inner_core_buf(iel))
-        enddo
-
-        call mergesort_3(inner_core_r, il=inner_core_buf, p=4)
-
-        thetaslel_solid(1:central_count(itheta),itheta) = inner_core_buf(:)
-
-        deallocate(inner_core_buf)
-        deallocate(inner_core_r)
-     enddo
-  endif
 
   ! add the extra requirement that element iel to be in appropriate theta slice
   do itheta = 0, nthetal-1
 
-     mycount = 0
+     if (solid_domain(ndisc)) then
+        mycount = 0
+     else
+        mycount = central_count(itheta)
+     endif
+
      do iel = 1, neltot
         if (fluid(iel) .and. .not. attributed(iel) .and. &
                (thetacom(iel) >= theta_min_proc(itheta)) .and.  &
@@ -536,36 +529,52 @@ subroutine domain_decomposition_theta_r(attributed, nprocl, nthetal, nrl, &
             thetaslel_fluid(mycount,itheta) = iel
             attributed(iel) = .true.
         endif
-        if ( mycount == sum(nel_fluid(itheta:itheta+nrl-1)) ) exit
-     enddo ! iel
-
-     mycount = central_count(itheta)
-
-     do iel = 1, neltot
-
-        if ( .not. fluid(iel) .and. .not. attributed(iel) .and. &
-              (thetacom(iel) >= theta_min_proc(itheta)) .and. &
-              (thetacom(iel) <= theta_max_proc(itheta)) ) then
-           thetaslel_solid(sum(nel_solid(itheta:itheta+nrl-1)) &
-                           - mycount + central_count(itheta),itheta) = iel
-           mycount = mycount + 1
-           !thetaslel_solid(mycount,itheta) = iel
-           attributed(iel) = .true.
-        endif
-
-        if ( mycount == sum(nel_solid(itheta:itheta+nrl-1)) ) then
-           if (dump_mesh_info_screen) then
-              write(6,*) ' THETASL ', itheta ,' has everybody it needs ', mycount, &
-                         sum(nel_solid(itheta:itheta+nrl-1))
-              call flush(6)
-           endif
+        if ( mycount == sum(nel_fluid(itheta:itheta+nrl-1)) ) then
+           write(6,*) 'all fluid elements assigned'
            exit
         endif
-     enddo
+     enddo ! iel
+
+     if (neltot_solid > 0 ) then
+        if (solid_domain(ndisc)) then
+            mycount = central_count(itheta)
+        else
+            mycount = 0
+        endif
+
+        do iel = 1, neltot
+
+           if ( .not. fluid(iel) .and. .not. attributed(iel) .and. &
+                 (thetacom(iel) >= theta_min_proc(itheta)) .and. &
+                 (thetacom(iel) <= theta_max_proc(itheta)) ) then
+              if (solid_domain(ndisc)) then
+                 thetaslel_solid(sum(nel_solid(itheta:itheta+nrl-1)) &
+                                 - mycount + central_count(itheta),itheta) = iel
+              else
+                 thetaslel_solid(sum(nel_solid(itheta:itheta+nrl-1)) &
+                                 - mycount,itheta) = iel
+              endif
+
+              mycount = mycount + 1
+              attributed(iel) = .true.
+           endif
+
+           if ( mycount == sum(nel_solid(itheta:itheta+nrl-1)) ) then
+              if (dump_mesh_info_screen) then
+                 write(6,*) ' THETASL ', itheta ,' has everybody it needs ', mycount, &
+                            sum(nel_solid(itheta:itheta+nrl-1))
+                 call flush(6)
+              endif
+              exit
+           endif
+        enddo
+     else
+        mycount = 0
+     endif
 
      if (mycount < sum(nel_solid(itheta:itheta+nrl-1))) then
         write(6,*)
-        write(6,*) 'Problem: not all solid elements attributed for thteaslice', itheta, &
+        write(6,*) 'Problem: not all solid elements attributed for thetaslice', itheta, &
                     mycount, sum(nel_solid(itheta:itheta+nrl-1))
         do iitheta=0, nthetal-1
            write(6,*) 'nel_solid(itheta), centralcount:',&
@@ -574,7 +583,7 @@ subroutine domain_decomposition_theta_r(attributed, nprocl, nthetal, nrl, &
         stop
      else if (mycount > sum(nel_solid(itheta:itheta+nrl-1))) then
         write(6,*)
-        write(6,*) 'Problem: too many  solid elements attributed for thteaslice', itheta, &
+        write(6,*) 'Problem: too many solid elements attributed for thetaslice', itheta, &
                     mycount, sum(nel_solid(itheta:itheta+nrl-1))
         do iitheta=0, nthetal-1
            write(6,*) 'nel_solid(itheta), centralcount:',&
@@ -609,6 +618,48 @@ subroutine domain_decomposition_theta_r(attributed, nprocl, nthetal, nrl, &
   if (any(.not. attributed)) then
      write(6,*) 'ERROR: not all elements assigned to a theta-slice'
      stop
+  endif
+
+
+  ! sort inner core elements according to radius
+  ! Using same stupid choice as in inner core decomposition
+
+  if (solid_domain(ndisc)) then
+     do itheta = 0, nthetal-1
+        allocate(inner_core_buf(central_count(itheta)))
+        allocate(inner_core_r(central_count(itheta)))
+        inner_core_buf(:) = thetaslel_solid(1:central_count(itheta),itheta)
+
+        do iel = 1, central_count(itheta)
+           inner_core_r(iel) = rcom(inner_core_buf(iel))
+        enddo
+
+        call mergesort_3(inner_core_r, il=inner_core_buf, p=4)
+
+        thetaslel_solid(1:central_count(itheta),itheta) = inner_core_buf(:)
+
+        deallocate(inner_core_buf)
+        deallocate(inner_core_r)
+     enddo
+  else
+     do itheta = 0, nthetal-1
+        nel_fluid_theta = sum(nel_fluid(itheta:itheta+nrl-1))
+        allocate(inner_core_buf(nel_fluid_theta))
+        allocate(inner_core_r(nel_fluid_theta))
+        inner_core_buf(:) = thetaslel_fluid(1:nel_fluid_theta,itheta)
+
+        do iel = 1, nel_fluid_theta
+           ! sort by radius, if radius is the same, theta makes the difference
+           inner_core_r(iel) = rcom(inner_core_buf(iel)) + 1e-10 * thetacom(inner_core_buf(iel))
+        enddo
+
+        call mergesort_3(inner_core_r, il=inner_core_buf, p=4)
+
+        thetaslel_fluid(1:nel_fluid_theta,itheta) = inner_core_buf(:)
+
+        deallocate(inner_core_buf)
+        deallocate(inner_core_r)
+     enddo
   endif
 
   ! reset, as we have to touch each element again!
@@ -655,51 +706,84 @@ subroutine domain_decomposition_theta_r(attributed, nprocl, nthetal, nrl, &
      iprocb = -1
      mycountb = 1
 
-     ! take the lower most layer in the fluid (ICB) and account to the
-     ! processor having the solid neighbour
-     do iel = 1, nbelem(2)
-        if (fluid(belem(iel,2)) .and.  el2thetaslel(belem(iel,2)) == itheta &
-                .and. .not. attributed(belem(iel,2))) then
-            iproc = el2proc(belem(my_neighbour(iel,2),2))
-            if (iprocb(1) == iproc .or. iprocb(1) == -1) then
-               iprocb(1) = iproc
-               procel_fluid(mycountb(1), iproc) = belem(iel,2)
-               mycountb(1) = mycountb(1) + 1
-            else if (iprocb(2) == iproc .or. iprocb(2) == -1) then
-               iprocb(2) = iproc
-               procel_fluid(mycountb(2), iproc) = belem(iel,2)
-               mycountb(2) = mycountb(2) + 1
-            else
-               write(6,*) 'ERROR: more then two procs involved in s/f boundary of one theta slice'
-            endif
-            attributed(belem(iel,2)) = .true.
-        endif
-     enddo
+     if (nbcnd == 1) then
+        nicb = 0
 
-     nicb = mycountb(1) + mycountb(2) - 2
+        ! take the upper most layer in the fluid (CMB) and account to the
+        ! processor having the solid neighbour
+        do iel = 1, nbelem(1)
+           if (fluid(belem(iel,1)) .and. el2thetaslel(belem(iel,1)) == itheta &
+                   .and. .not. attributed(belem(iel,1))) then
+               iproc = el2proc(belem(my_neighbour(iel,1),1))
+               if (iprocb(1) == iproc .or. iprocb(1) == -1) then
+                  iprocb(1) = iproc
+                  procel_fluid(mycountb(1), iproc) = belem(iel,1)
+                  mycountb(1) = mycountb(1) + 1
+               else if (iprocb(2) == iproc .or. iprocb(2) == -1) then
+                  iprocb(2) = iproc
+                  procel_fluid(mycountb(2), iproc) = belem(iel,1)
+                  mycountb(2) = mycountb(2) + 1
+               else
+                  write(6,*) 'ERROR: more then two procs involved in s/f boundary of one theta slice'
+               endif
+               attributed(belem(iel,1)) = .true.
+           endif
+        enddo
+        ncmb = mycountb(1) + mycountb(2) - 2 - nicb
+     else if (nbcnd == 2) then
 
-     ! take the upper most layer in the fluid (CMB) and account to the
-     ! processor having the solid neighbour
-     do iel = 1, nbelem(1)
-        if (fluid(belem(iel,1)) .and. el2thetaslel(belem(iel,1)) == itheta &
-                .and. .not. attributed(belem(iel,1))) then
-            iproc = el2proc(belem(my_neighbour(iel,1),1))
-            if (iprocb(1) == iproc .or. iprocb(1) == -1) then
-               iprocb(1) = iproc
-               procel_fluid(mycountb(1), iproc) = belem(iel,1)
-               mycountb(1) = mycountb(1) + 1
-            else if (iprocb(2) == iproc .or. iprocb(2) == -1) then
-               iprocb(2) = iproc
-               procel_fluid(mycountb(2), iproc) = belem(iel,1)
-               mycountb(2) = mycountb(2) + 1
-            else
-               write(6,*) 'ERROR: more then two procs involved in s/f boundary of one theta slice'
-            endif
-            attributed(belem(iel,1)) = .true.
-        endif
-     enddo
+        ! take the lower most layer in the fluid (ICB) and account to the
+        ! processor having the solid neighbour
+        do iel = 1, nbelem(2)
+           if (fluid(belem(iel,2)) .and.  el2thetaslel(belem(iel,2)) == itheta &
+                   .and. .not. attributed(belem(iel,2))) then
+               iproc = el2proc(belem(my_neighbour(iel,2),2))
+               if (iprocb(1) == iproc .or. iprocb(1) == -1) then
+                  iprocb(1) = iproc
+                  procel_fluid(mycountb(1), iproc) = belem(iel,2)
+                  mycountb(1) = mycountb(1) + 1
+               else if (iprocb(2) == iproc .or. iprocb(2) == -1) then
+                  iprocb(2) = iproc
+                  procel_fluid(mycountb(2), iproc) = belem(iel,2)
+                  mycountb(2) = mycountb(2) + 1
+               else
+                  write(6,*) 'ERROR: more then two procs involved in s/f boundary of one theta slice'
+               endif
+               attributed(belem(iel,2)) = .true.
+           endif
+        enddo
 
-     ncmb = mycountb(1) + mycountb(2) - 2 - nicb
+        nicb = mycountb(1) + mycountb(2) - 2
+
+        ! take the upper most layer in the fluid (CMB) and account to the
+        ! processor having the solid neighbour
+        do iel = 1, nbelem(1)
+           if (fluid(belem(iel,1)) .and. el2thetaslel(belem(iel,1)) == itheta &
+                   .and. .not. attributed(belem(iel,1))) then
+               iproc = el2proc(belem(my_neighbour(iel,1),1))
+               if (iprocb(1) == iproc .or. iprocb(1) == -1) then
+                  iprocb(1) = iproc
+                  procel_fluid(mycountb(1), iproc) = belem(iel,1)
+                  mycountb(1) = mycountb(1) + 1
+               else if (iprocb(2) == iproc .or. iprocb(2) == -1) then
+                  iprocb(2) = iproc
+                  procel_fluid(mycountb(2), iproc) = belem(iel,1)
+                  mycountb(2) = mycountb(2) + 1
+               else
+                  write(6,*) 'ERROR: more then two procs involved in s/f boundary of one theta slice'
+               endif
+               attributed(belem(iel,1)) = .true.
+           endif
+        enddo
+        ncmb = mycountb(1) + mycountb(2) - 2 - nicb
+     else if (nbcnd == 0) then
+        nicb = 0
+        ncmb = 0
+     else
+        write(6,*) 'domain decomposition only implemented for 0 or 2 solid fluid boundaries'
+        stop
+     endif
+
 
      if (any(mycountb - 1 > nel_fluid(iproc))) then
         write(6,*) 'ERROR: more boundary elements than fluid elements. try less NRADIAL_SLICES'
@@ -786,12 +870,9 @@ subroutine decompose_inner_cube_quadratic_fcts(central_count, attributed, ntheta
   integer, intent(out)      :: procel_solidl(:,0:), procel_fluidl(:,0:)
 
   integer :: iproc, is, iz, nthetal2
-  integer :: icount, i2count, iicount, missing
-  integer :: arclngth, area, CapA, proccount, quadels
   integer,allocatable :: proc_central(:,:),num_columns(:),upper_boundary_el(:)
   integer,allocatable :: num_columns_hi(:),num_columns_lo(:),num_el(:)
   integer,allocatable :: count_assi(:)
-  real(kind=dp)    :: a,b
 
   if (dump_mesh_info_screen) then
      write(6,*)
@@ -876,9 +957,7 @@ subroutine decompose_inner_cube_quadratic_fcts(central_count, attributed, ntheta
          stop
       endif
 
-     ! MvD: what is this if statement for? Solid or Fluid inner core? Maybe not
-     !      robust then.
-     if (neltot_solid > 0) then
+     if (solid_domain(ndisc)) then
         procel_solidl(central_count(proc_central(is,iz)),proc_central(is,iz)) = &
                                                 central_is_iz_to_globiel(is,iz)
      else
@@ -888,7 +967,7 @@ subroutine decompose_inner_cube_quadratic_fcts(central_count, attributed, ntheta
 
      ! South: inverted copy
      if (nthetal > 1) then
-        if (neltot_solid > 0) then
+        if (solid_domain(ndisc)) then
            procel_solidl(central_count(proc_central(is,iz)), &
                 nthetal-1-proc_central(is,iz)) = &
                 central_is_iz_to_globiel(is,iz) + neltot / 2
@@ -913,7 +992,7 @@ subroutine decompose_inner_cube_quadratic_fcts(central_count, attributed, ntheta
     do iz = 1, ndivs
      do is = 1, ndivs
           central_count(proc_central(is,iz)) = central_count(proc_central(is,iz)) + 1
-          if (neltot_solid>0 ) then
+          if (solid_domain(ndisc)) then
              procel_solidl(central_count(proc_central(is,iz)),0) = &
                   central_is_iz_to_globiel(is,iz) + neltot / 2
           else
@@ -1301,9 +1380,7 @@ subroutine decompose_inner_cube_opt(central_count, attributed, nthetal, &
           attributed(central_is_iz_to_globiel(is,iz)) = .true.
           attributed(central_is_iz_to_globiel(is,iz) + neltot / 2) = .true.
 
-          ! @TODO is this supposed to test for fluid inner core? Actually tests
-          ! for whole fluid planets
-          if (neltot_solid > 0 ) then
+          if (solid_domain(ndisc)) then
               procel_solidl(central_count(proc(is-1,iz-1)), &
                       proc(is-1,iz-1)) = central_is_iz_to_globiel(is,iz)
           else
@@ -1313,7 +1390,7 @@ subroutine decompose_inner_cube_opt(central_count, attributed, nthetal, &
 
           ! South: inverted copy
           if (nthetal > 1) then
-              if (neltot_solid>0 ) then
+              if (solid_domain(ndisc)) then
                   procel_solidl(central_count(proc(is-1,iz-1)), &
                       nthetal - 1 - proc(is-1,iz-1)) = &
                       central_is_iz_to_globiel(is,iz) + neltot / 2
@@ -1335,10 +1412,10 @@ subroutine decompose_inner_cube_opt(central_count, attributed, nthetal, &
 
   ! check if all central-cube elements are assigned
   do is = 1, neltot
-      if (eltypeg(is)=='linear' ) then
+      if (eltypeg(is) == 'linear' ) then
           if (.not. attributed(is)) then
               write(6,*)
-              write(6,*)'Problem: Central cube element not assigned!',is
+              write(6,*) 'Problem: Central cube element not assigned!',is
               stop
           endif
       endif
@@ -1384,7 +1461,6 @@ logical function test_decomp(ndivs, proc, npart, nproc2)
                              nproc2, npart
   integer                 :: is, iz, idx, idz, ip, nelem(0:nproc2), &
                              neighbour_buff
-  logical                 :: exit_buff
 
   !test processor bounds
   do is = 0, ndivs - 1, 1
@@ -1605,3 +1681,4 @@ end subroutine ascii_print_markregion
 !-----------------------------------------------------------------------------------------
 
 end module parallelization
+!=========================================================================================

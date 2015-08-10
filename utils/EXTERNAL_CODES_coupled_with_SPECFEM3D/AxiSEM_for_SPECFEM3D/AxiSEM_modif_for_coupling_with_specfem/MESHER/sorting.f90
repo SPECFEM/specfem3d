@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -19,6 +19,7 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
+!=========================================================================================
 module sorting
   use global_parameters, only: sp, dp
   implicit none
@@ -248,7 +249,7 @@ recursive subroutine pmsort(a, ind, p)
 end subroutine
 !-----------------------------------------------------------------------------------------
 
-!-------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine mergesort_3(a, b, il, il2, p)
 
   use data_time
@@ -333,5 +334,7 @@ subroutine mergesort_3(a, b, il, il2, p)
   iclock05 = tick(id=idold05, since=iclock05)
 
 end subroutine
+!-----------------------------------------------------------------------------------------
 
 end module
+!=========================================================================================

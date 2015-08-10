@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -19,6 +19,7 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
+!=========================================================================================
 !> This is the communication module which loads/sorts data
 !! to exchange/examine over the processors.
 !!
@@ -45,7 +46,7 @@ module commun
 
 contains
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !> Wrapper routine to use the standard solid communication routine also with
 !! arrays with one rank less, i.e. skalar fields
 subroutine pdistsum_solid_1D(vec)
@@ -55,9 +56,9 @@ subroutine pdistsum_solid_1D(vec)
 
   call pdistsum_solid(vec)
 end subroutine pdistsum_solid_1D
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !> This is a driver routine to perform the assembly of field f of dimension nc
 !! defined in the solid. The assembly/direct stiffness summation is composed of
 !! the "gather" and "scatter" operations, i.e. to add up all element-edge
@@ -168,111 +169,9 @@ subroutine pdistsum_solid(vec, phase)
 #endif
 
 end subroutine pdistsum_solid
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
-! @TODO update this to the new communication pattern (see above)
-!subroutine pdistsum_solid_4(vec)
-!
-!  use data_mesh,        only: gvec_solid, nel_solid, igloc_solid
-!  use data_time,        only: idmpi, iclockmpi
-!  use clocks_mod
-!
-!  integer                            :: npol = 4
-!  integer, parameter                 :: nc = 3
-!  real(kind=realkind), intent(inout) :: vec(0:,0:,:,:)
-!  integer                            :: ic, iel, jpol, ipol, idest, ipt
-!
-!  do ic = 1, nc
-!     ! Gather element boundaries
-!     gvec_solid(:) = 0.d0
-!     ipt = 1
-!
-!     do iel = 1, nel_solid
-!
-!        jpol = 0
-!        do ipol = 0, npol
-!           idest = igloc_solid(ipt)
-!           gvec_solid(idest) = gvec_solid(idest) + vec(ipol,jpol,iel,ic)
-!           ipt = ipt + 1
-!        enddo
-!
-!        do jpol = 1, npol-1
-!           ipol = 0
-!           idest = igloc_solid(ipt)
-!           gvec_solid(idest) = gvec_solid(idest) + vec(ipol,jpol,iel,ic)
-!           ipt = ipt + npol
-!
-!           ipol = npol
-!           idest = igloc_solid(ipt)
-!           gvec_solid(idest) = gvec_solid(idest) + vec(ipol,jpol,iel,ic)
-!           ipt = ipt + 1
-!        enddo
-!
-!        jpol = npol
-!        do ipol = 0, npol
-!           idest = igloc_solid(ipt)
-!           gvec_solid(idest) = gvec_solid(idest) + vec(ipol,jpol,iel,ic)
-!           ipt = ipt + 1
-!        enddo
-!
-!     enddo
-!
-!     ! Collect processor boundaries into buffer for each component
-!     iclockmpi = tick()
-!#ifndef serial
-!     if (nproc>1) call feed_buffer(ic)
-!#endif
-!     iclockmpi = tick(id=idmpi,since=iclockmpi)
-!
-!     ! Scatter
-!     ipt = 1
-!     do iel = 1, nel_solid
-!
-!        jpol = 0
-!        do ipol = 0, npol
-!           idest = igloc_solid(ipt)
-!           vec(ipol,jpol,iel,ic) = gvec_solid(idest)
-!           ipt = ipt + 1
-!        enddo
-!
-!        do jpol = 1, npol-1
-!           ipol = 0
-!           idest = igloc_solid(ipt)
-!           vec(ipol,jpol,iel,ic) = gvec_solid(idest)
-!           ipt = ipt + npol
-!
-!           ipol = npol
-!           idest = igloc_solid(ipt)
-!           vec(ipol,jpol,iel,ic) = gvec_solid(idest)
-!           ipt = ipt + 1
-!        enddo
-!
-!        jpol = npol
-!        do ipol = 0, npol
-!           idest = igloc_solid(ipt)
-!           vec(ipol,jpol,iel,ic) = gvec_solid(idest)
-!           ipt = ipt + 1
-!        enddo
-!
-!     enddo
-!  enddo
-!
-!#ifndef serial
-!  iclockmpi = tick()
-!  if (nproc>1) then
-!     ! Do message-passing for all components at once
-!     call send_recv_buffers_solid(nc)
-!     ! Extract back into each component sequentially
-!     call extract_from_buffer(vec,nc)
-!  endif ! nproc>1
-!  iclockmpi = tick(id=idmpi,since=iclockmpi)
-!#endif
-!
-!end subroutine pdistsum_solid_4
-!=============================================================================
-
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !> This is a driver routine to perform the assembly of field f of dimension nc
 !! defined in the fluid. The assembly/direct stiffness summation is composed of
 !! the "gather" and "scatter" operations, i.e. to add up all element-edge
@@ -382,9 +281,9 @@ subroutine pdistsum_fluid(vec, phase)
 
 
 end subroutine pdistsum_fluid
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine assembmass_sum_solid(f1,res)
 
   use data_mesh,   only: igloc_solid
@@ -413,14 +312,14 @@ subroutine assembmass_sum_solid(f1,res)
 #endif
 
 end subroutine assembmass_sum_solid
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine assembmass_sum_fluid(f1,res)
 
   use data_mesh,   only: igloc_fluid
-  use data_mesh,        only: gvec_fluid
-  use data_mesh,        only: gvec_solid, npol, nel_fluid
+  use data_mesh,   only: gvec_fluid
+  use data_mesh,   only: gvec_solid, npol, nel_fluid
 
   real(kind=realkind), intent(in)   :: f1(0:,0:,:)
   real(kind=dp)   , intent(out)     :: res
@@ -446,13 +345,14 @@ subroutine assembmass_sum_fluid(f1,res)
 #endif
 
 end subroutine assembmass_sum_fluid
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine pinit
 
-  integer ioerr, nproc_mesh
-  character(len=20) dbname
+  use data_io, only: define_io_appendix
+  integer           :: ioerr, nproc_mesh
+  character(len=20) :: dbname
 
   ! Get mesh number of processors
 
@@ -484,9 +384,12 @@ subroutine pinit
 #endif
 
 #ifdef serial
-  if (nproc_mesh /= 1) &
+  if (nproc_mesh /= 1) then
         write(6,*) 'ERROR: Solver compiled with SERIAL flag, but mesh has nproc > 1: ', &
                     nproc_mesh
+        stop
+  endif
+
   nproc = 1
   mynum = 0
 #endif
@@ -505,10 +408,10 @@ subroutine pinit
   if (lpr) write(6,'(a,i5)') '    Initialized run for nproc =', nproc
 
 end subroutine pinit
-!=============================================================================
-
-!-----------------------------------------------------------------------------
 !! End message passing interface if parallel
+!-----------------------------------------------------------------------------------------
+
+!-----------------------------------------------------------------------------------------
 subroutine pend
 
 #ifndef serial
@@ -516,9 +419,9 @@ subroutine pend
 #endif
 
 end subroutine pend
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine broadcast_char(input_char,input_proc)
 
   character(*), intent(inout)   :: input_char
@@ -529,9 +432,9 @@ subroutine broadcast_char(input_char,input_proc)
 #endif
 
 end subroutine broadcast_char
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine broadcast_log(input_log,input_proc)
 
   integer, intent(in)    :: input_proc
@@ -542,9 +445,9 @@ subroutine broadcast_log(input_log,input_proc)
 #endif
 
 end subroutine broadcast_log
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine broadcast_int(input_int,input_proc)
 
   integer, intent(in)    :: input_proc
@@ -555,9 +458,9 @@ subroutine broadcast_int(input_int,input_proc)
 #endif
 
 end subroutine broadcast_int
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine broadcast_int_arr(input_int,input_proc)
 
   integer, intent(in)    :: input_proc
@@ -568,9 +471,9 @@ subroutine broadcast_int_arr(input_int,input_proc)
 #endif
 
 end subroutine broadcast_int_arr
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine broadcast_dble(input_dble,input_proc)
 
   integer, intent(in)             :: input_proc
@@ -581,9 +484,9 @@ subroutine broadcast_dble(input_dble,input_proc)
 #endif
 
 end subroutine broadcast_dble
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 real(kind=dp) function pmin(scal)
 
   real(kind=dp)    :: scal
@@ -594,9 +497,9 @@ real(kind=dp) function pmin(scal)
 #endif
 
 end function pmin
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 real(kind=dp) function pmax(scal)
 
   real(kind=dp)    :: scal
@@ -607,9 +510,9 @@ real(kind=dp) function pmax(scal)
 #endif
 
 end function pmax
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 integer function pmax_int(scal)
 
   integer :: scal
@@ -620,9 +523,9 @@ integer function pmax_int(scal)
 #endif
 
 end function pmax_int
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 real(kind=realkind) function psum(scal)
 
   real(kind=realkind) :: scal
@@ -633,9 +536,9 @@ real(kind=realkind) function psum(scal)
 #endif
 
 end function psum
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 integer function psum_int(scal)
 
   integer :: scal
@@ -646,9 +549,9 @@ integer function psum_int(scal)
 #endif
 
 end function psum_int
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 real(kind=dp) function psum_dble(scal)
 
   real(kind=dp)    :: scal
@@ -659,9 +562,9 @@ real(kind=dp) function psum_dble(scal)
 #endif
 
 end function psum_dble
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine barrier
 
 #ifndef serial
@@ -669,9 +572,9 @@ subroutine barrier
 #endif
 
 end subroutine barrier
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine pcheck(test, errmsg)
 
   logical, intent(in)            :: test
@@ -686,29 +589,62 @@ subroutine pcheck(test, errmsg)
   endif
 
 end subroutine pcheck
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
-subroutine comm_elem_number(my_elems, glob_elems, my_first, my_last)
+!-----------------------------------------------------------------------------------------
+subroutine comm_elem_number(my_elems, glob_elems, my_first, my_last, var_name)
 !< Communicates the number of elements this processor has to the others and
 !! retrieves global number of local first and last element
 
-integer, intent(in)              :: my_elems
-integer, intent(out)             :: glob_elems, my_first, my_last
-integer                          :: all_elems(0:nproc-1), iproc
+  use data_io, only                 : verbose
+  integer, intent(in)              :: my_elems
+  integer, intent(out)             :: glob_elems, my_first, my_last
+  integer                          :: all_elems(0:nproc-1), iproc
+  character(len=*), optional       :: var_name
 
   if (nproc>1) then
 #ifndef serial
-     my_first = 0
-     my_last  = 0
+     if (verbose>1.and.mynum==0) then
+       if (present(var_name)) then
+         write(*,"(A,A)") '   Communicating local element numbers of var ', trim(var_name)
+       else
+         write(*,"(A)") '   Communicating local element numbers'
+       endif
+       call flush(6)
+     endif
+
      all_elems(mynum) = my_elems
+
      do iproc = 0, nproc-1
         call pbroadcast_int(all_elems(iproc), iproc)
      enddo
-     my_first = sum(all_elems(0:mynum-1))+1
-     my_last  = sum(all_elems(0:mynum))
+
+     if (my_elems == 0) then
+         my_first = 1
+         my_last  = 1
+     else
+         my_first = sum(all_elems(0:mynum-1)) + 1
+         my_last  = sum(all_elems(0:mynum))
+     endif
+
+     if (verbose>1) then
+         do iproc = 0, nproc-1
+             if (iproc==mynum) then
+               if (my_elems == 0) then
+                   write(*,"('   Proc:', I5, ' has no elements of this type')") mynum
+               else
+                   write(*,"('   Proc:', I5, ', first elem:', I10, ', last elem:', I10)" ) &
+                         mynum, my_first, my_last
+               endif
+             endif
+             call flush(6)
+             call barrier
+         enddo
+     endif
+
      glob_elems = sum(all_elems(:))
-     print *, 'Proc: ', mynum, ', first elem: ', my_first, ', last elem: ', my_last
+     call flush(6)
+     call barrier
 #endif
   else
      my_first = 1
@@ -717,8 +653,7 @@ integer                          :: all_elems(0:nproc-1), iproc
   endif
 
 end subroutine comm_elem_number
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!====================
 end module commun
-!====================
+!=========================================================================================

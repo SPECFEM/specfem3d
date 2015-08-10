@@ -1,2 +1,0 @@
-set KERNEL_IBEG=0 and KERNEL_IEND=4 (ie npol) in inparam_advaced to use the coupling method
-npol is defined in mesh_param.h 

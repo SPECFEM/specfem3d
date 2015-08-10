@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -19,9 +19,8 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
-!================
+!=========================================================================================
 module utlity
-!================
 
   use global_parameters
   implicit none
@@ -30,14 +29,15 @@ module utlity
   public :: dblreldiff_small, reldiff_small
   public :: dblereldiff, reldiff
   public :: dbleabsreldiff, absreldiff
+  public :: to_lower
   private
 
 contains
 
-!-----------------------------------------------------------------------------
-logical function dblreldiff_small(x1,x2)
+!-----------------------------------------------------------------------------------------
+pure logical function dblreldiff_small(x1,x2)
 
-  real(kind=dp)   , intent(in) :: x1,x2
+  real(kind=dp), intent(in) :: x1,x2
 
   dblreldiff_small = .false.
 
@@ -50,10 +50,10 @@ logical function dblreldiff_small(x1,x2)
   endif
 
 end function dblreldiff_small
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
-logical function reldiff_small(x1,x2)
+!-----------------------------------------------------------------------------------------
+pure logical function reldiff_small(x1,x2)
 
   real(kind=realkind), intent(in) :: x1,x2
   real(kind=realkind)             ::  smallval1
@@ -72,10 +72,10 @@ logical function reldiff_small(x1,x2)
   endif
 
 end function reldiff_small
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
-real(kind=realkind) function reldiff(x1,x2)
+!-----------------------------------------------------------------------------------------
+pure real(kind=realkind) function reldiff(x1,x2)
 
   real(kind=realkind), intent(in) :: x1,x2
 
@@ -88,10 +88,10 @@ real(kind=realkind) function reldiff(x1,x2)
   endif
 
 end function reldiff
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
-real(kind=dp)    function dblereldiff(x1,x2)
+!-----------------------------------------------------------------------------------------
+pure real(kind=dp) function dblereldiff(x1,x2)
 
   real(kind=dp), intent(in) :: x1,x2
 
@@ -104,10 +104,10 @@ real(kind=dp)    function dblereldiff(x1,x2)
   endif
 
 end function dblereldiff
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
-real(kind=realkind) function absreldiff(x1,x2)
+!-----------------------------------------------------------------------------------------
+pure real(kind=realkind) function absreldiff(x1,x2)
 
   real(kind=realkind), intent(in) :: x1,x2
 
@@ -120,10 +120,10 @@ real(kind=realkind) function absreldiff(x1,x2)
   endif
 
 end function absreldiff
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
-real(kind=dp)    function dbleabsreldiff(x1,x2)
+!-----------------------------------------------------------------------------------------
+pure real(kind=dp) function dbleabsreldiff(x1,x2)
 
   real(kind=dp), intent(in) :: x1,x2
 
@@ -136,20 +136,17 @@ real(kind=dp)    function dbleabsreldiff(x1,x2)
   endif
 
 end function dbleabsreldiff
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
-subroutine compute_coordinates(s,z,r,theta,ielem,ipol,jpol)
-  !
-  ! Given the elemental grid point index, outputs s,z,r,theta coordinate [m,rad].
-  ! These coordinates are by default ALWAYS global (no solid or fluid domains).
-  !
-  !-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+!-----------------------------------------------------------------------------------------
+pure subroutine compute_coordinates(s,z,r,theta,ielem,ipol,jpol)
+!< Given the elemental grid point index, outputs s,z,r,theta coordinate [m,rad].
+!! These coordinates are by default ALWAYS global (no solid or fluid domains).
 
-  use data_mesh,            ONLY: min_distance_dim
-  use data_mesh,            ONLY: lnods, crd_nodes, axis
-  use data_spec,            ONLY: xi_k, eta
-  use geom_transf,          ONLY: mapping
+  use data_mesh,            only: min_distance_dim
+  use data_mesh,            only: lnods, crd_nodes, axis
+  use data_spec,            only: xi_k, eta
+  use analytic_mapping,     only: mapping
 
   real(kind=dp), intent(out)    :: s,z,r,theta
   integer, intent(in)           :: ielem,ipol,jpol
@@ -183,20 +180,17 @@ subroutine compute_coordinates(s,z,r,theta,ielem,ipol,jpol)
   if (theta == zero .and. z < 0) theta = pi
 
 end subroutine compute_coordinates
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
-real(kind=dp)    function scoord(ipol,jpol,ielem)
-  !
-  ! Given the elemental grid point index, outputs the s coordinate [m].
-  ! These coordinates are by default ALWAYS global (no solid or fluid domains).
-  !
-  !-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+!-----------------------------------------------------------------------------------------
+pure real(kind=dp) function scoord(ipol,jpol,ielem)
+!< Given the elemental grid point index, outputs the s coordinate [m].
+!! These coordinates are by default ALWAYS global (no solid or fluid domains).
 
-  use data_mesh,            ONLY: min_distance_dim
-  use data_mesh,            ONLY: lnods, crd_nodes, axis
-  use data_spec,            ONLY: xi_k, eta
-  use geom_transf,          ONLY: mapping
+  use data_mesh,            only: min_distance_dim
+  use data_mesh,            only: lnods, crd_nodes, axis
+  use data_spec,            only: xi_k, eta
+  use analytic_mapping,     only: mapping
 
   integer, intent(in)  :: ielem, ipol, jpol
   integer              :: ipt, inode
@@ -219,20 +213,17 @@ real(kind=dp)    function scoord(ipol,jpol,ielem)
   if (abs(scoord) < min_distance_dim) scoord=zero
 
 end function scoord
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
-real(kind=dp)    function zcoord(ipol,jpol,ielem)
-  !
-  ! Given the elemental grid point index, outputs the z coordinate [m].
-  ! These coordinates are by default ALWAYS global (no solid or fluid domains).
-  !
-  !-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+!-----------------------------------------------------------------------------------------
+pure real(kind=dp)    function zcoord(ipol,jpol,ielem)
+!< Given the elemental grid point index, outputs the z coordinate [m].
+!! These coordinates are by default ALWAYS global (no solid or fluid domains).
 
-  use data_mesh,            ONLY: min_distance_dim
-  use data_mesh,            ONLY: lnods, crd_nodes, axis
-  use data_spec,            ONLY: xi_k, eta
-  use geom_transf,          ONLY: mapping
+  use data_mesh,            only: min_distance_dim
+  use data_mesh,            only: lnods, crd_nodes, axis
+  use data_spec,            only: xi_k, eta
+  use analytic_mapping,     only: mapping
 
   integer, intent(in)  :: ielem, ipol, jpol
   integer              :: ipt, inode
@@ -255,20 +246,17 @@ real(kind=dp)    function zcoord(ipol,jpol,ielem)
   if (abs(zcoord) < min_distance_dim) zcoord=zero
 
 end function zcoord
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
-real(kind=dp)    function rcoord(ipol,jpol,ielem)
-  !
-  ! Given the elemental grid point index, outputs the radius coordinate [m].
-  ! These coordinates are by default ALWAYS global (no solid or fluid domains).
-  !
-  !-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+!-----------------------------------------------------------------------------------------
+pure real(kind=dp)    function rcoord(ipol,jpol,ielem)
+!< Given the elemental grid point index, outputs the radius coordinate [m].
+!! These coordinates are by default ALWAYS global (no solid or fluid domains).
 
-  use data_mesh,            ONLY: min_distance_dim
-  use data_mesh,            ONLY: lnods, crd_nodes, axis
-  use data_spec,            ONLY: xi_k, eta
-  use geom_transf,          ONLY: mapping
+  use data_mesh,            only: min_distance_dim
+  use data_mesh,            only: lnods, crd_nodes, axis
+  use data_spec,            only: xi_k, eta
+  use analytic_mapping,     only: mapping
 
   integer, intent(in)  :: ielem, ipol, jpol
   integer              :: ipt, inode
@@ -294,20 +282,17 @@ real(kind=dp)    function rcoord(ipol,jpol,ielem)
   if (abs(rcoord) < min_distance_dim) rcoord=zero
 
 end function rcoord
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
-real(kind=dp) function thetacoord(ipol,jpol,ielem)
-  !
-  ! Given the elemental grid point index, outputs the theta coordinate [rad].
-  ! These coordinates are by default ALWAYS global (no solid or fluid domains).
-  !
-  !-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+!-----------------------------------------------------------------------------------------
+pure real(kind=dp) function thetacoord(ipol,jpol,ielem)
+!< Given the elemental grid point index, outputs the theta coordinate [rad].
+!! These coordinates are by default ALWAYS global (no solid or fluid domains).
 
-  use data_mesh,            ONLY: min_distance_dim
-  use data_mesh,            ONLY: lnods, crd_nodes,axis
-  use data_spec,            ONLY: xi_k, eta
-  use geom_transf,          ONLY: mapping
+  use data_mesh,            only: min_distance_dim
+  use data_mesh,            only: lnods, crd_nodes,axis
+  use data_spec,            only: xi_k, eta
+  use analytic_mapping,     only: mapping
 
   integer, intent(in)  :: ielem, ipol, jpol
   integer              :: ipt, inode
@@ -333,8 +318,28 @@ real(kind=dp) function thetacoord(ipol,jpol,ielem)
   if (thetacoord == zero .and. z < 0) thetacoord = pi
 
 end function thetacoord
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!====================
+!-----------------------------------------------------------------------------------------
+function to_lower(strIn) result(strOut)
+!< Converts string to lowercase, adapted from http://www.star<=ac.uk/~cgp/fortran.html
+    implicit none
+
+    character(len=*), intent(in) :: strIn
+    character(len=len(strIn))    :: strOut
+    integer                      :: i,j
+
+    do i = 1, len(strIn)
+        j = iachar(strIn(i:i))
+        if (j>= iachar("A") .and. j<=iachar("Z") ) then
+            strOut(i:i) = achar(iachar(strIn(i:i))+32)
+        else
+            strOut(i:i) = strIn(i:i)
+        endif
+    enddo
+
+end function to_lower
+!-----------------------------------------------------------------------------------------
+
 end module utlity
-!====================
+!=========================================================================================

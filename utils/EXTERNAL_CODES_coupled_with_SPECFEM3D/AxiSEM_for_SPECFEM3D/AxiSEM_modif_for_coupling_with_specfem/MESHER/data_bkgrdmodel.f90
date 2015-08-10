@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -19,9 +19,8 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
-!===================
+!=========================================================================================
 module data_bkgrdmodel
-!===================
 
   use global_parameters, only : dp, sp
   implicit none
@@ -33,7 +32,7 @@ module data_bkgrdmodel
   logical, allocatable       :: solid_domain(:)
   integer                    :: lfbkgrdmodel
   character(len=100)         :: bkgrdmodel
-  logical                    :: resolve_inner_shear, have_fluid, have_solid
+  logical                    :: have_fluid, have_solid
   real(kind=dp)              :: pts_wavelngth
   real(kind=dp)              :: period, courant
   real(kind=dp)              :: dt
@@ -49,6 +48,6 @@ module data_bkgrdmodel
 
   ! The following variables are only needed by external models
   character(len=100)         :: fnam_ext_model
-!===================
+
 end module data_bkgrdmodel
-!===================
+!=========================================================================================

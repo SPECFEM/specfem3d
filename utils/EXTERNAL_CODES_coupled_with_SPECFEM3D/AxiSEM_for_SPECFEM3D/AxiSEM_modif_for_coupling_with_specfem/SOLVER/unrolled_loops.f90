@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -19,11 +19,10 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
-!========================
+!=========================================================================================
 !> Routines for general matrix-matrix and matrix-vector multiplication. Called a
 !! bazillion times, presumably fast.
 module unrolled_loops
-!========================
 
   use global_parameters, only: realkind
 
@@ -32,9 +31,7 @@ module unrolled_loops
 
   contains
 
-!=============================================================================
-
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !> Multiplies matrizes a and b to have c.
 !! Size is fixed to npol x npol
 pure subroutine mxm(a,b,c)
@@ -53,9 +50,9 @@ pure subroutine mxm(a,b,c)
   enddo
 
 end subroutine mxm
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !> Multiplies vector a leftwise to matrix b to have vector c.
 !! Size is fixed to npol x npol
 pure subroutine vxm(a,b,c)
@@ -73,9 +70,9 @@ pure subroutine vxm(a,b,c)
   enddo
 
 end subroutine vxm
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 pure subroutine mxm_cg4_sparse_a(a,b,c)
    ! mxm for sparse a as found for coarse grained memory variables cg4
 
@@ -97,9 +94,9 @@ pure subroutine mxm_cg4_sparse_a(a,b,c)
    enddo
 
 end subroutine mxm_cg4_sparse_a
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 pure subroutine mxm_cg4_sparse_b(a,b,c)
    ! mxm for sparse b as found for coarse grained memory variables cg4
 
@@ -121,9 +118,9 @@ pure subroutine mxm_cg4_sparse_b(a,b,c)
    enddo
 
 end subroutine mxm_cg4_sparse_b
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 pure subroutine mxm_cg4_sparse_c(a,b,c)
 
 
@@ -159,9 +156,9 @@ pure subroutine mxm_cg4_sparse_c(a,b,c)
      + a(3,4) * b(4,3)
 
 end subroutine mxm_cg4_sparse_c
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !> Multiplies matrizes a and b to have c.
 !! Size is fixed to 4x4
 pure subroutine mxm_4(a,b,c)
@@ -170,7 +167,7 @@ pure subroutine mxm_4(a,b,c)
 
   real(kind=realkind), intent(in)  :: a(0:4,0:4),b(0:4,0:4) !< Input matrices
   real(kind=realkind), intent(out) :: c(0:4,0:4)            !< Result
-  integer                          :: i, j
+  integer                          :: i
 
   do i = 0, 4
      c(i,0) = sum(a(i,:) * b(:,0))
@@ -189,9 +186,9 @@ pure subroutine mxm_4(a,b,c)
   enddo
 
 end subroutine mxm_4
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !> Multiplies vector a leftwise to matrix b to have vector c.
 !! Size is fixed to npol x npol
 pure subroutine vxm_4(a,b,c)
@@ -208,9 +205,30 @@ pure subroutine vxm_4(a,b,c)
   enddo
 
 end subroutine vxm_4
-!=============================================================================
+!-----------------------------------------------------------------------------------------
+
+!-----------------------------------------------------------------------------------------
+pure function outerprod(a,b)
+  ! outer product (dyadic) from numerical recipes
+
+  real(kind=realkind), dimension(:), intent(in)     :: a, b
+  real(kind=realkind), dimension(size(a),size(b))   :: outerprod
+
+  outerprod = spread(a, dim=2, ncopies=size(b)) * spread(b, dim=1, ncopies=size(a))
+end function outerprod
+!-----------------------------------------------------------------------------------------
+
+!-----------------------------------------------------------------------------------------
+pure function outerprod_4(a,b)
+  ! outer product (dyadic) from numerical recipes
+
+  real(kind=realkind), dimension(0:4), intent(in)   :: a, b
+  real(kind=realkind), dimension(0:4,0:4)           :: outerprod_4
+
+  outerprod_4 = spread(a, dim=2, ncopies=5) * spread(b, dim=1, ncopies=5)
+end function outerprod_4
+!-----------------------------------------------------------------------------------------
 
 
-!========================
 end module unrolled_loops
-!========================
+!=========================================================================================

@@ -1,0 +1,168 @@
+
+############### TIME PARAMETERS #################################################
+
+# seismogram sampling period in seconds
+# Select 0.0, for SAMPLING_PERIOD==TIME_STEP (default: 0.0)
+# important consideration: aliasing in case of dirac/heaviside sources
+SAMPLING_PERIOD     0.0 
+
+# Choose desired simulation time step
+# set to 0.0 for mesher's suggestion (default)
+TIME_STEP           0.0
+
+# Source period [s]. Put to 0.0 to use mesh resolution (mesh_params.h)
+SOURCE_PERIOD       10.0
+
+# Source time function (default: dirac_0)
+# 'quheavi': Smooth Heaviside/erf function
+# 'gauss_0': Gaussian with dominant period SOURCE_PERIOD
+# 'gauss_1': 1st derivative of gauss_0
+# 'gauss_2': 2nd derivative of gauss_0
+# 'dirac_0': Dirac delta distribution
+#            This should be used to convolve arbitrary STFs in Postprocessing
+SOURCE_FUNCTION     gauss_0
+
+# Time integration scheme, allowed:
+# newmark2:  default, tested
+# symplec4
+# ML_SO4m5
+# ML_SO6m7
+# KL_O8m17
+# SS_35o10
+
+TIME_SCHEME     newmark2
+
+
+##################### OUTPUT OPTIONS ##########################################
+# OUTPUT PATHS
+DATA_DIR        "./Data"
+INFO_DIR        "./Info"
+
+
+######################## NetCDF output ########################################
+# Use NetCDF for output  (default false)
+# Enabling this option will put all seismograms and wavefields into one file
+# axisem_output.nc4 in the $DATA directory. Postprocessing will automatically
+# read and process this file.
+USE_NETCDF          false
+
+# Do Checkpointing for the NetCDF seismogram output. Will save the seismograms 
+# every 5% of the total runtime to have at least something, should the solver
+# run crash. However, this affects performance slightly, so you might want to
+# turn it of for runs on safe systems.
+CHECKPOINTING       true
+
+# Level of compression of wavefield data (0: off, 9:highest, default: 5)
+DEFLATE_LEVEL       5
+
+####################### Wavefield output ######################################
+# Only relevant, if SAVE_SNAPSHOTS == true in inparam_basic 
+# Time interval between snapshots (default: 20)
+SNAPSHOT_DT          20.
+
+# XDMF wavefield snapshots  (default: xdmf)
+# options for values: xdmf, vtk, both
+SNAPSHOTS_FORMAT     xdmf  
+
+# limit the region to plot in the xdmf files
+# radius in km
+XDMF_RMIN        0.
+XDMF_RMAX        7000.
+
+# minimal and maximal colatitude to be plotted
+XDMF_COLAT_MIN   0.
+XDMF_COLAT_MAX   180.
+
+# GLL Points to be plotted in each element in the region
+# number (first digit) and indices of gll points in i direction in [0, npol]
+XDMF_GLL_I       '3 0 2 4'
+# number and indices of gll points in j direction in [0, npol]
+XDMF_GLL_J       '3 0 2 4'
+
+
+######################## DEBUGGING ############################################
+# Set verbosity of the code, allowed values:
+# 0: only errors
+# 1: errors plus some information (default)
+# 2: extra stories for spare time
+VERBOSITY               1
+
+# Extra diagnostic file output? (default: false)
+# Prints VTK files of the actual velocity model (including lateral heterogenei-
+# ties), several ASCII files about the Mesh and Seismograms at certain special
+# points, like the epicenter, antipode and equator. Not needed for 
+# postprocessing, takes several megabytes and produces around 10 files per CPU.
+DIAGNOSTIC_FILE_OUTPUT false
+
+# Do mesh tests? Only necessary for debugging
+MESH_TEST           false
+
+
+
+######################## SENSITIVITY KERNELS ##################################
+# Save necessary wavefields for Kernel calculation
+# N.b. Kernel calculation needs Axisem Kerner (sold separately)
+KERNEL_WAVEFIELDS   true 
+
+# Samples per period
+KERNEL_SPP          8
+
+# source vicinity in wavefields? 
+# igno
+# mask  (default)
+# anal 
+KERNEL_SOURCE       mask
+
+# GLL points to save, starting and ending GLL point index
+KERNEL_IBEG         0
+KERNEL_IEND         4
+
+######################## ATTENUATION ##########################################
+# number of standard linear solids (default: 5)
+NR_LIN_SOLIDS       5
+
+# minimum frequency in attenuation band [Hz] (default: 0.001)
+F_MIN               0.001
+# maximum frequency in attenuation band [Hz] (default: 1.0)
+# must be considered carefully for high-frequency simulations
+F_MAX               1.0
+
+# reference frequency of the background model [Hz] (default: 1.0)
+F_REFERENCE         1.0
+
+# use correction of the coefficients for small values of Q (default: true)
+SMALL_Q_CORRECTION  true
+
+# Number of frequencies at which the exact Q is sampled in the 
+# minimization (default: 100)
+NR_F_SAMPLE         100
+
+# maximum number of iteration in the simulated annealing (default: 100000)
+MAXINT_SA           100000
+# starting 'temperature' for the stress relaxation frequencies (default: 0.1)
+TSTART_SR           0.1
+# starting 'temperature' for the amplitude coefficients (default: 0.1)
+TSTART_AMP          0.1
+
+# temperature decay rate (default: 0.99995)
+T_DECAY             0.99995
+
+# fix the frequencies log spaced in the attenuation band (default: false)
+FIX_FREQ            false
+
+# dump memory vars to vtk (not optimized, only meant for testing, 
+# not with cg) (default: false)
+DUMP_VTK            false
+
+# use coarse grained memory variables (ONLY for npol = 4) (default: true)
+COARSE_GRAINED      true
+
+######################## FOR THE INCLINED #####################################
+# Save global kinetic/potential energy? generally not needed
+SAVE_ENERGY         .false.
+
+# overwrite background model with homogeneous parameters?
+HOMO_MODEL          .false.
+HOMO_VP             10.
+HOMO_VS             5.77
+HOMO_RHO            3.

@@ -26,7 +26,7 @@ BACKGROUND_MODEL    prem_iso
 # OVERRIDE_EXT_Q    prem
 
 # Dominant period [s]
-DOMINANT_PERIOD     20.0
+DOMINANT_PERIOD     50.0
 
 # Number of slices in the mesh decomposition in latitude and radius.
 # The resulting number of processors is NTHETA_SLICES * NRADIAL_SLICES
@@ -55,9 +55,6 @@ WRITE_1DMODEL       true
 COARSENING_LAYERS   3
 
 ############### FOR THE INCLINED ##############################################
-# Resolve inner-core shear wave (default: true)
-# IC_SHEAR_WAVE     true
-
 # Polynomial order of basis for GLL points inside elements (default: 4)
 # NPOL                4
 

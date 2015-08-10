@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -19,9 +19,8 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
-!==================================
+!=========================================================================================
 module analytic_semi_mapping
-!==================================
 !
 ! 10/01/2002: This module contains the
 ! machinery necessary to describe analytically
@@ -38,39 +37,39 @@ module analytic_semi_mapping
 contains
 
 !-----------------------------------------------------------------------------------------
-real(kind=dp)    function map_semino(xil, etal, nodes_crd, idir)
+pure real(kind=dp) function map_semino(xil, etal, nodes_crd, idir)
 ! We are working in polar coordinates here: theta is the latitude.
 
-  real(kind=dp)     :: xil, etal
-  real(kind=dp)   , dimension(8,2),intent(in) :: nodes_crd
-  integer           :: idir
+  real(kind=dp), intent(in) :: xil, etal
+  real(kind=dp), intent(in) :: nodes_crd(8,2)
+  integer, intent(in)       :: idir
 
-  real(kind=dp)    :: atop, btop
-  real(kind=dp)    :: thetabartop, dthetatop
-  real(kind=dp)    :: sbot, zbot, stop, ztop   ! careful: varname stop!!!
-  real(kind=dp)    :: sbar, ds, slope, intersect
+  real(kind=dp)             :: a_top, b_top
+  real(kind=dp)             :: thetabartop, dthetatop
+  real(kind=dp)             :: s_bot, z_bot, s_top, z_top
+  real(kind=dp)             :: sbar, ds, slope, intersect
 
   map_semino = zero
-  call compute_parameters_semino(nodes_crd, atop, btop, thetabartop, dthetatop)
+  call compute_parameters_semino(nodes_crd, a_top, b_top, thetabartop, dthetatop)
 
-  call compute_sz_xi_sline_no(sbot, zbot, xil, nodes_crd)
-  call compute_sz_xi(stop, ztop, xil, atop, btop, thetabartop, dthetatop)
+  call compute_sz_xi_sline_no(s_bot, z_bot, xil, nodes_crd)
+  call compute_sz_xi(s_top, z_top, xil, a_top, b_top, thetabartop, dthetatop)
 
-  sbar = half*(sbot+stop)
-  ds = stop-sbot
+  sbar = half*(s_bot+s_top)
+  ds = s_top-s_bot
 
   if (abs(ds)>1.d-10) then
-     intersect = (zbot*stop-ztop*sbot)/ds
-     slope = (ztop-zbot)/ds
+     intersect = (z_bot*s_top - z_top*s_bot)/ds
+     slope = (z_top-z_bot)/ds
   endif
 
   if (idir == 1) then
-     map_semino = sbar+ds*etal*half
+     map_semino = sbar + ds*etal*half
   else if (idir == 2) then
      if (abs(ds)>1.d-10) then
-     map_semino = slope*(sbar+half*ds*etal)+intersect
+     map_semino = slope * (sbar + half*ds*etal)+ intersect
      else
-     map_semino = half*(zbot+ztop)+etal*(ztop-zbot)*half
+     map_semino = half * (z_bot+z_top) + etal*(z_top-z_bot)*half
      endif
   endif
 
@@ -78,17 +77,17 @@ end function map_semino
 !-----------------------------------------------------------------------------------------
 
 !-----------------------------------------------------------------------------------------
-real(kind=dp)    function map_semiso(xil,etal,nodes_crd,idir)
+pure real(kind=dp) function map_semiso(xil,etal,nodes_crd,idir)
 ! We are working in polar coordinates here: theta is the latitude.
 
-  real(kind=dp)    :: xil, etal
-  real(kind=dp)   , dimension(8,2),intent(in) :: nodes_crd
-  integer           :: idir
+  real(kind=dp), intent(in) :: xil, etal
+  real(kind=dp), intent(in) :: nodes_crd(8,2)
+  integer, intent(in)       :: idir
 
-  real(kind=dp)    :: abot, bbot
-  real(kind=dp)    :: thetabarbot, dthetabot
-  real(kind=dp)    :: sbot, zbot, stop, ztop
-  real(kind=dp)    :: sbar, ds, slope, intersect
+  real(kind=dp)             :: abot, bbot
+  real(kind=dp)             :: thetabarbot, dthetabot
+  real(kind=dp)             :: sbot, zbot, stop, ztop
+  real(kind=dp)             :: sbar, ds, slope, intersect
 !
   map_semiso = zero
   call compute_parameters_semiso(nodes_crd, abot, bbot, thetabarbot, dthetabot)
@@ -118,7 +117,7 @@ end function map_semiso
 !-----------------------------------------------------------------------------------------
 
 !-----------------------------------------------------------------------------------------
-subroutine compute_partial_d_semino(dsdxi, dzdxi, dsdeta, dzdeta, xil, etal, nodes_crd)
+pure subroutine compute_partial_d_semino(dsdxi, dzdxi, dsdeta, dzdeta, xil, etal, nodes_crd)
 
   real(kind=dp)   , intent(out) :: dsdxi, dzdxi, dsdeta, dzdeta
   real(kind=dp)   , intent(in)  :: xil, etal
@@ -170,7 +169,8 @@ subroutine compute_partial_d_semino(dsdxi, dzdxi, dsdeta, dzdeta, xil, etal, nod
      dzdxi  = (dz/ds)*dsdxi+ sxieta*dslopedxi + dintersectdxi
      dzdeta = (dz/ds)*dsdeta
   else
-     write(6,*)'DS SMALL IN SEMIN ELEMENT!!!'; call flush(6)
+     ! This statement blocks purification and is of dubious use anyway
+     !write(6,*)'DS SMALL IN SEMIN ELEMENT!!!'; call flush(6)
      dzdxi = zero
      dzdeta = half*dz
   endif
@@ -179,11 +179,11 @@ end subroutine compute_partial_d_semino
 !-----------------------------------------------------------------------------------------
 
 !-----------------------------------------------------------------------------------------
-subroutine compute_partial_d_semiso(dsdxi, dzdxi, dsdeta, dzdeta, xil, etal, nodes_crd)
+pure subroutine compute_partial_d_semiso(dsdxi, dzdxi, dsdeta, dzdeta, xil, etal, nodes_crd)
 
-  real(kind=dp)   ,  intent(out) :: dsdxi, dzdxi, dsdeta, dzdeta
-  real(kind=dp)   ,  intent(in)  :: xil, etal
-  real(kind=dp)   , dimension(8,2),intent(in) :: nodes_crd
+  real(kind=dp),  intent(out) :: dsdxi, dzdxi, dsdeta, dzdeta
+  real(kind=dp),  intent(in)  :: xil, etal
+  real(kind=dp),  intent(in)  :: nodes_crd(8,2)
 
   real(kind=dp)    :: abot,bbot
   real(kind=dp)    :: thetabarbot,dthetabot
@@ -234,10 +234,10 @@ end subroutine compute_partial_d_semiso
 !-----------------------------------------------------------------------------------------
 
 !-----------------------------------------------------------------------------------------
-subroutine compute_sz_xi(s,z,xil,a,b,thetabar,dtheta)
+pure subroutine compute_sz_xi(s,z,xil,a,b,thetabar,dtheta)
 
-  real(kind=dp)   , intent(out) :: s,z
-  real(kind=dp)   , intent(in)  :: xil, a, b, thetabar, dtheta
+  real(kind=dp), intent(out) :: s,z
+  real(kind=dp), intent(in)  :: xil, a, b, thetabar, dtheta
 
   s = a*dcos(thetabar+xil*half*dtheta)
   z = b*dsin(thetabar+xil*half*dtheta)
@@ -246,11 +246,11 @@ end subroutine compute_sz_xi
 !-----------------------------------------------------------------------------------------
 
 !-----------------------------------------------------------------------------------------
-subroutine compute_sz_xi_sline_no(s, z, xil, nodes_crd)
+pure subroutine compute_sz_xi_sline_no(s, z, xil, nodes_crd)
 
-  real(kind=dp)   , intent(out) :: s,z
-  real(kind=dp)   , intent(in)  :: xil,nodes_crd(8,2)
-  real(kind=dp)    :: s1, z1, s3, z3
+  real(kind=dp), intent(out) :: s,z
+  real(kind=dp), intent(in)  :: xil,nodes_crd(8,2)
+  real(kind=dp)              :: s1, z1, s3, z3
 
   s1 = nodes_crd(1,1)
   z1 = nodes_crd(1,2)
@@ -264,11 +264,11 @@ end subroutine compute_sz_xi_sline_no
 !-----------------------------------------------------------------------------------------
 
 !-----------------------------------------------------------------------------------------
-subroutine compute_sz_xi_sline_so(s, z, xil, nodes_crd)
+pure subroutine compute_sz_xi_sline_so(s, z, xil, nodes_crd)
 
-  real(kind=dp)   , intent(out) :: s,z
-  real(kind=dp)   , intent(in)  :: xil,nodes_crd(8,2)
-  real(kind=dp)    :: s7, z7, s5, z5
+  real(kind=dp), intent(out) :: s,z
+  real(kind=dp), intent(in)  :: xil,nodes_crd(8,2)
+  real(kind=dp)              :: s7, z7, s5, z5
 
   s7 = nodes_crd(7,1) ; z7 = nodes_crd(7,2)
   s5 = nodes_crd(5,1) ; z5 = nodes_crd(5,2)
@@ -280,10 +280,10 @@ end subroutine compute_sz_xi_sline_so
 !-----------------------------------------------------------------------------------------
 
 !-----------------------------------------------------------------------------------------
-subroutine compute_dsdxi_dzdxi(dsdxi, dzdxi, xil, a, b, thetabar, dtheta)
+pure subroutine compute_dsdxi_dzdxi(dsdxi, dzdxi, xil, a, b, thetabar, dtheta)
 
-  real(kind=dp)   , intent(out) :: dsdxi, dzdxi
-  real(kind=dp)   , intent(in)  :: xil, a, b, thetabar, dtheta
+  real(kind=dp), intent(out) :: dsdxi, dzdxi
+  real(kind=dp), intent(in)  :: xil, a, b, thetabar, dtheta
 
   dsdxi =-a*half*dtheta*dsin(thetabar+xil*half*dtheta)
   dzdxi = b*half*dtheta*dcos(thetabar+xil*half*dtheta)
@@ -292,11 +292,11 @@ end subroutine compute_dsdxi_dzdxi
 !-----------------------------------------------------------------------------------------
 
 !-----------------------------------------------------------------------------------------
-subroutine compute_dsdxi_dzdxi_sline_no(dsdxi,dzdxi,nodes_crd)
+pure subroutine compute_dsdxi_dzdxi_sline_no(dsdxi,dzdxi,nodes_crd)
 
-  real(kind=dp)   , intent(out) :: dsdxi, dzdxi
-  real(kind=dp)   , intent(in)  :: nodes_crd(8,2)
-  real(kind=dp)    :: s1, z1, s3, z3
+  real(kind=dp), intent(out) :: dsdxi, dzdxi
+  real(kind=dp), intent(in)  :: nodes_crd(8,2)
+  real(kind=dp)              :: s1, z1, s3, z3
 
   s1 = nodes_crd(1,1)
   z1 = nodes_crd(1,2)
@@ -310,7 +310,7 @@ end subroutine compute_dsdxi_dzdxi_sline_no
 !-----------------------------------------------------------------------------------------
 
 !-----------------------------------------------------------------------------------------
-subroutine compute_dsdxi_dzdxi_sline_so(dsdxi, dzdxi, nodes_crd)
+pure subroutine compute_dsdxi_dzdxi_sline_so(dsdxi, dzdxi, nodes_crd)
 
   real(kind=dp)   , intent(out) :: dsdxi, dzdxi
   real(kind=dp)   , intent(in)  :: nodes_crd(8,2)
@@ -327,13 +327,13 @@ end subroutine compute_dsdxi_dzdxi_sline_so
 !-----------------------------------------------------------------------------------------
 
 !-----------------------------------------------------------------------------------------
-subroutine compute_parameters_semino(nodes_crd, atop, btop, thetabartop, dthetatop)
+pure subroutine compute_parameters_semino(nodes_crd, atop, btop, thetabartop, dthetatop)
 
-  real(kind=dp)   , dimension(8,2),intent(in) :: nodes_crd
-  real(kind=dp)   ,intent(out) :: atop,btop
-  real(kind=dp)   ,intent(out) :: thetabartop, dthetatop
-  real(kind=dp)    :: s1, z1, s3, z3, s5, z5, s7, z7
-  real(kind=dp)    :: theta5, theta7
+  real(kind=dp), intent(in)  :: nodes_crd(8,2)
+  real(kind=dp), intent(out) :: atop,btop
+  real(kind=dp), intent(out) :: thetabartop, dthetatop
+  real(kind=dp)              :: s1, z1, s3, z3, s5, z5, s7, z7
+  real(kind=dp)              :: theta5, theta7
 
   s1 = nodes_crd(1,1)
   z1 = nodes_crd(1,2)
@@ -358,11 +358,11 @@ end subroutine compute_parameters_semino
 !-----------------------------------------------------------------------------------------
 
 !-----------------------------------------------------------------------------------------
-subroutine compute_parameters_semiso(nodes_crd, abot, bbot, thetabarbot, dthetabot)
+pure subroutine compute_parameters_semiso(nodes_crd, abot, bbot, thetabarbot, dthetabot)
 
-  real(kind=dp)   , dimension(8,2),intent(in) :: nodes_crd
-  real(kind=dp)   ,intent(out) :: abot,bbot
-  real(kind=dp)   ,intent(out) :: thetabarbot, dthetabot
+  real(kind=dp), intent(in)  :: nodes_crd(8,2)
+  real(kind=dp), intent(out) :: abot,bbot
+  real(kind=dp), intent(out) :: thetabarbot, dthetabot
   real(kind=dp)    :: s1, z1, s3, z3, s5, z5, s7, z7
   real(kind=dp)    :: theta1, theta3
 
@@ -389,34 +389,32 @@ end subroutine compute_parameters_semiso
 !-----------------------------------------------------------------------------------------
 
 !-----------------------------------------------------------------------------------------
-subroutine compute_ab(a,b,s1,z1,s2,z2)
+pure subroutine compute_ab(a,b,s1,z1,s2,z2)
 
-  real(kind=dp)   , intent(out) :: a,b
-  real(kind=dp)   , intent(in) :: s1,z1,s2,z2
+  real(kind=dp), intent(out) :: a, b
+  real(kind=dp), intent(in)  :: s1, z1, s2, z2
 
-  a = dsqrt(dabs((s2**2*z1**2-z2**2*s1**2)/(z1**2-z2**2)))
-  b = dsqrt(dabs((z1**2*s2**2-z2**2*s1**2)/(s2**2-s1**2)))
+  a = dsqrt(dabs((s2**2*z1**2 - z2**2*s1**2) /(z1**2 - z2**2)))
+  b = dsqrt(dabs((z1**2*s2**2 - z2**2*s1**2) /(s2**2 - s1**2)))
 end subroutine compute_ab
 !-----------------------------------------------------------------------------------------
 
 !-----------------------------------------------------------------------------------------
-subroutine compute_theta(theta,s,z,a,b)
+pure subroutine compute_theta(theta,s,z,a,b)
 ! This routine returns the latitude theta, given s and z.
 
-  real(kind=dp)   , intent(out) :: theta
-  real(kind=dp)   , intent(in) :: s,z,a,b
+  real(kind=dp), intent(out) :: theta
+  real(kind=dp), intent(in)  :: s, z, a, b
 
   if (s /= zero) then
-     theta=datan(z*a/(s*b))
+     theta = datan(z*a/(s*b))
   else
-     if (z>0) theta=half*pi
-     if (z<0) theta=-half*pi
+     if (z>0) theta =  half * pi
+     if (z<0) theta = -half * pi
   endif
 
 end subroutine compute_theta
 !-----------------------------------------------------------------------------------------
 
-
-!=======================================
 end module analytic_semi_mapping
-!=======================================
+!=========================================================================================

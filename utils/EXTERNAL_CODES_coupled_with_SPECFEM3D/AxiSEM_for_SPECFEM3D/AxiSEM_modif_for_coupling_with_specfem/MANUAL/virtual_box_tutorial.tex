@@ -1,0 +1,147 @@
+\subsection{Virtual box: 3-hour tutorial}
+
+COMMENTS: (with permission, I (Kasra) highlight the important parts for next references)
+
+* Tarje:
+Hi Kasra, on a quick look, this seems excellent, but from my experience it’s better to have a very easy and quick first run of the tasks, e.g. on ONE page with all the important calls and major points we wish to achieve... and delegate images and details to an appendix. So, let’s keep all this in but reshuffle it to have a concise early section. Tarje
+
+I would structure it as I said in the email... pasting it here again:
+Tutorial:
+1) 10min intro
+2) 10min big run (maybe drop this, depending on progress next week)
+3) 60min virtual box: data and AxiSEM
+4) 20min big run post processing
+5) installation of AxiSEM, obspy locally
+
+(TAS÷
+1) Load data from one of the 5 events (Kasra) with Obspy, plot cross sections
+2) change AxiSEM input parameters to run this scenario, submit job
+3) check mesh, background model, source-receiver geometry (google earth)
+4) run post processing, filter, sum, movie snapshots
+5) Movie snapshots
+6) plot data vs. synthetics
+7) plot AxiSEM synthetics vs SPECFEM
+8) change input parameters (source CMT), load run with different background model
+
+The virtual box should therefore contain:
+(DONE)        - all 5 events (metadata and data), each in one directory
+(PENDING) - AxiSEM source code structure (mesher, solver, manual, testing)
+(DONE*)       - all axisem runs replicating the data for 2-3 background models and source choices
+(PENDING)  - plots of seismograms, movie
+*: for each event there are: prem\_aniso and iasp91 for 5 (PENDING),10,50,100 seconds
+
+
+
+AXISEM vs DATA:
+
+
+Start from within the SCRIPTS directory:
+1. python sta\_event\_plot.py ../EVENTS/EVENT-1: plot the event and all the stations in the selected directory (EVENT-1 in this example).
+2. run AXISEM for one of these events. The required information is located in /EVENT-1/INFO.
+3.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+% 1. Introduction
+% In this part of the tutorial, we want to compare AXISEM waveforms with real data. For this reason, three events are selected (Figure 1). Detailed information for each event can be found in APPENDIX-1.
+
+
+% Figure 1: beach ball diagrams (based on GCMT catalog) of event-1 to event-3
+
+% Figure-2 shows how these events and their meta-data are organized in the Virtual-box.
+
+% ?????????????????SHOUDL BE ADDED?????????????????????
+% Figure 2: folder structure
+
+% In SCRIPTS directory, two python scripts are provided that we will use here:
+% 1. epi_plot.py: plotting tool for comparison purposes.
+% 2. tt_plot.py: project the time shift derived by cross correlating the AXISEM waveforms and real data.
+
+% 2. Run AXISEM
+% As the first step, we want to simulate event-2 (Figure-3) with AXISEM. All the required AXISEM input files are provided in ????folder???.  APPENDIX-2 gives a quick overview on how to run AXISEM using PyAxi (Python interface for AXISEM).
+
+% Figure 3: event and station configuration for event-2
+
+% Once your simulation is done, all the AXISEM synthetic waveforms should be moved to ????folder???:
+% cp <synthetic_waveforms> <destination????>
+
+% 3. Compare the results
+% To have an idea on how the synthetic and real data look like:
+% python epi_plot.py ????address???
+
+
+% Figure 4: AXISEM and real data waveforms arranged by epicentral distance
+
+% For one specific seismic phase (Pdiff in this example), the following command plots the results of AXISEM against the real data: (to change the frequency?????)
+% python epi_plot.py ../EVENTS/EVENT-2/AXISEM_PRE_SIMULATED/PREM\_ANISO_5sec/ Pdiff
+
+% Figure 5: AXISEM and real data waveforms arranged by epicentral distance (Pdiff seismic phase)
+
+% SPECFEM3D waveforms can be also added to the comparison by: (how to retrieve SPECFEM?!?!?!?!?)
+% python epi_plot.py ../EVENTS/EVENT-2/AXISEM_PRE_SIMULATED/PREM_ANISO\_5sec/ Pdiff specfem3D
+% Figure 6: AXISEM, SPECFEM3D and real data waveforms arranged by epicentral distance (Pdiff seismic phase)
+
+
+% 4. Travel time measurements
+% The time shift between AXISEM and real data (Figure 5) can be roughly measured by cross-correlating the time series. epi_plot.py can perform this and shift the synthetics in order to match them up:
+% python epi_plot.py ../EVENTS/EVENT-2/AXISEM_PRE_SIMULATED/PREM_ANISO_5sec/ Pdiff shift_synthetics
+
+% Figure 7: AXISEM and real data waveforms arranged by epicentral distance (Pdiff seismic phase), synthetic waveforms are shifted based on cross-correlation analysis.
+
+% The calculated time shift can be mapped on the relevant station for the selected phase:
+% python tt_plot.py ../EVENTS/EVENT-2/
+
+% APPENDIX-1: Events
+% ????????
+
+% APPENDIX-2: A Quick Guide to PyAxi
+% PyAxi (Python interface for AXISEM) is a Python script to run AXISEM automatically.
+
+% python PyAxi <inpython.cfg> <STATIONS>
+
+% and the rest should be done automatically. Therefore, to run the AXISEM for the provided examples (I mean! AXISEM_pre_simulated), it is enough to run:
+
+
+% APPENDIX-3: Retrieving SPECFEM3D seismograms
+
+
+% Event-1:
+% ./obspyDMT.py --datapath EVENT-1 --min_date 2009-07-15 --max_date 2009-07-16 --min_depth 20 --list_stas /home/hosseini/Desktop/ALASKA_VBOX_LATEST/EVENTS/EVENT-1/INFO/STATIONS --specfem3D --offset 3600 --min_mag 7.0 --req_parallel --arc N
+
+% Event-2:
+% ./obspyDMT.py --datapath EVENT-2 --min_date 2009-09-30 --max_date 2009-10-01 --min_depth 70 --list_stas /home/hosseini/Desktop/ALASKA_VBOX_LATEST/EVENTS/EVENT-2/INFO/STATIONS --specfem3D --offset 3600 --min_mag 7.0 --req_parallel --arc N
+
+% Event-3:
+% ./obspyDMT.py --datapath EVENT-3 --min_date 2006-10-15 --max_date 2006-10-16 --min_depth 20 --list_stas /home/hosseini/Desktop/ALASKA_VBOX_LATEST/EVENTS/EVENT-3/INFO/STATIONS --specfem3D --offset 3600 --min_mag 6.0 --req_parallel --arc N

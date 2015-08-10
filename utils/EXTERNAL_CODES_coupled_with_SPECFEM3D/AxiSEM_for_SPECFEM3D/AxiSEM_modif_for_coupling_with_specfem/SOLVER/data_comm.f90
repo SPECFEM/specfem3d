@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -19,12 +19,11 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
-!===================
+!=========================================================================================
 !> Message-passing communication variables
 !! Note: For the easy serialization of the code (see commun.f90 and commpi.f90),
 !! one still needs this module as these quantities are read in from the mesher.
 module data_comm
-!===================
 
   use global_parameters
   use linked_list
@@ -72,6 +71,5 @@ module data_comm
 
   integer, dimension(:), allocatable   :: recv_request_fluid, send_request_fluid
 
-!=======================
 end module data_comm
-!=======================
+!=========================================================================================

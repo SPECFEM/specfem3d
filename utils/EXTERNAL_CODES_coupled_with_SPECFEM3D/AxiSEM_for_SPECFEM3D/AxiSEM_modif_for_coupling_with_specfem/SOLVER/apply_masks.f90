@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -19,9 +19,8 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
-!=====================
+!=========================================================================================
   module apply_masks
-!=====================
 
   use global_parameters, only: zero, realkind
 
@@ -33,11 +32,11 @@
 
 contains
 
-  ! These routine applies a mask by retaining in the array those components which do not
-  ! belong to the axis of rotation. It sets to zero the axial components of the array,
-  ! for the non-axisymmetric components of the variables have to vanish on the axis of
-  ! rotation
 !-----------------------------------------------------------------------------------------
+! These routine applies a mask by retaining in the array those components which do not
+! belong to the axis of rotation. It sets to zero the axial components of the array,
+! for the non-axisymmetric components of the variables have to vanish on the axis of
+! rotation
 pure subroutine apply_axis_mask_scal(u, nel, ax_array, nax_array)
   ! for a scalar array
 
@@ -99,7 +98,7 @@ pure subroutine apply_axis_mask_threecomp(u, nel, ax_array, nax_array)
   enddo
 
 end subroutine apply_axis_mask_threecomp
+!-----------------------------------------------------------------------------------------
 
-!========================
-  end module apply_masks
-!========================
+end module apply_masks
+!=========================================================================================

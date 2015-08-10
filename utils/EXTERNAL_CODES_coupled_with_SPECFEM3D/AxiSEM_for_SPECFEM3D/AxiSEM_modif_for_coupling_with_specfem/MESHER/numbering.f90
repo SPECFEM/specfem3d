@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -19,6 +19,7 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
+!=========================================================================================
 module numbering
 
   use data_gllmesh
@@ -37,7 +38,7 @@ module numbering
 
 contains
 
-!--------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine define_global_global_numbering
 
   use data_time
@@ -81,9 +82,9 @@ subroutine define_global_global_numbering
   if (dump_mesh_info_screen) write(6,*) 'NGLOBGLOB IS ' , NGLOBGLOB
 
 end subroutine define_global_global_numbering
-!--------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 
-!--------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine define_global_flobal_numbering
 
   use data_time
@@ -128,9 +129,9 @@ subroutine define_global_flobal_numbering
   if (dump_mesh_info_screen) write(6,*) 'NGLOBFLOB IS ' , NGLOBFLOB
 
 end subroutine define_global_flobal_numbering
-!-------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 
-!-------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine define_global_slobal_numbering
 
   use data_time
@@ -176,7 +177,7 @@ subroutine define_global_slobal_numbering
   if (dump_mesh_info_screen) write(6,*) 'NGLOBSLOB IS ' , NGLOBSLOB
 
 end subroutine define_global_slobal_numbering
-!-------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 
 
 !=====================================================================
@@ -311,10 +312,10 @@ subroutine get_global(nspec2, xp, yp, iglob2, loc2, ifseg2, nglob2, npointot2, &
   nglob2 = ig
 
 end subroutine get_global
-!-------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 
+!-----------------------------------------------------------------------------------------
 ! sorting routines put in same file to allow for inlining
-!-------------------------------------------------------------------------
 subroutine rank_y(A,IND,N)
   !
   ! Use Heap Sort (Numerical Recipes)
@@ -371,9 +372,9 @@ subroutine rank_y(A,IND,N)
   goto 100
 
 end subroutine rank_y
-!-------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 
-!-------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine swapall(IA,A,B,ind,n)
   !
   ! swap arrays IA, A, B and C according to addressing in array IND
@@ -399,8 +400,7 @@ subroutine swapall(IA,A,B,ind,n)
   enddo
 
 end subroutine swapall
-!-------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 
-!=========================
 end module numbering
-!=========================
+!=========================================================================================

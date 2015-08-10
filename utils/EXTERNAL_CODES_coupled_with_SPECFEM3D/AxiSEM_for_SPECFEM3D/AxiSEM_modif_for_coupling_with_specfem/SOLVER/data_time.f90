@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -19,16 +19,13 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
+!=========================================================================================
 !> Various variables around timing
-!==================
 module data_time
-!==================
 
-use global_parameters
-implicit none
-public
-
-!@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+  use global_parameters
+  implicit none
+  public
 
   real(kind=dp)       :: enforced_dt        !< Enforced time step in inparam
   real(kind=dp)       :: enforced_period    !< Enforced source period in inparam
@@ -51,7 +48,7 @@ public
   integer             :: iclockmpiwf, idmpiwf   !< tick labels for fluid mpi wait timer
   integer             :: iclockanelst, idanelst !< tick labels for anelastic stiffness timer
   integer             :: iclockanelts, idanelts !< tick labels for anelastic time step timer
-  integer             :: iclockstiff, idstiff !< tick labels for stiffness timer
+  integer             :: iclockstiff, idstiff   !< tick labels for stiffness timer
   integer             :: iclockdump, iddump !< tick labels for dump timer
   integer             :: iclocknbio, idnbio !< tick labels for non blocking IO timer
   real(kind=dp)       :: seis_dt            !< seismogram sampling rate in seconds
@@ -62,8 +59,6 @@ public
   integer             :: check_it           !< Checkpointing of seismograms in NetCDF output
   integer             :: nstages            !< number of substages in symplectic schemes
   real(kind=realkind) :: decay, shift_fact
-!@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-!======================
 end module data_time
-!======================
+!=========================================================================================

@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -19,6 +19,7 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
+!=========================================================================================
 module def_grid
 
   use global_parameters
@@ -36,7 +37,7 @@ module def_grid
 
 contains
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !> This routine defines the arrays related to the chosen spectral-element
 !! discretization. In particular, it computes the reference coordinates of
 !! the collocation points,the global coordinates of these points mapped in
@@ -49,19 +50,8 @@ subroutine init_grid
   use data_mesh, only : nelem, nel_fluid, npoint_solid
   use data_comm
   use commun
-  use splib, only: zemngl2, get_welegl_axial, zelegl, get_welegl
-
 
   integer :: iel, ipol, jpol, idest, ipt, icount, ipg, ip, imsg
-
-  ! Axial elements, s-direction: Gauss-Lobatto-Jacobi (0,1) quadrature
-  call zemngl2(npol, xi_k)
-  call get_welegl_axial(npol, xi_k, wt_axial_k, 2)
-
-  ! All elements, z-direction & s-direction non-axial elements:
-  ! Gauss-Lobatto-Legendre quadrature
-  call zelegl(npol, eta, dxi)
-  call get_welegl(npol, eta, wt)
 
   ! Define logical arrays to determine whether element is on the axis or not.
   ! We safely use "zero" here since coordinates have been "masked" to eliminate
@@ -209,9 +199,9 @@ subroutine init_grid
 
 
 end subroutine init_grid
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !> These memory-pricey arrays are not needed in the time loop and therefore
 !! dynamically allocated and dropped at this point.
 !! Any inevitable larger arrays are defined in data_matr or data_mesh.
@@ -224,13 +214,15 @@ subroutine deallocate_preloop_arrays
 
   if (lpr) write(6,*)'  deallocating large mesh arrays...'
   ! TESTING: comment next 4 lines to use with plane wave initial condition
-  deallocate(lnods)
-  deallocate(crd_nodes)
-  deallocate(eltype, coarsing, north, axis)
+  if (dump_type /= 'coupling' .and. dump_type /= 'coupling_box') then  !! SB coupling
+     deallocate(lnods)
+     deallocate(crd_nodes)
+     deallocate(eltype, coarsing, north, axis)
 
-  !if (allocated(ielsolid)) deallocate(ielsolid)
-  if (allocated(ielfluid)) deallocate(ielfluid)
-  if (allocated(spher_radii)) deallocate(spher_radii)
+     if (allocated(ielsolid)) deallocate(ielsolid)
+     if (allocated(ielfluid)) deallocate(ielfluid)
+     if (allocated(spher_radii)) deallocate(spher_radii)
+  endif
 
   ! Deallocate redundant arrays if memory-efficient dumping strategy is applied
   if (.not. need_fluid_displ) then
@@ -241,12 +233,14 @@ subroutine deallocate_preloop_arrays
      deallocate(DzDxi_over_J_flu)
 
      deallocate(inv_rho_fluid)
-     deallocate(prefac_inv_s_rho_fluid)
      deallocate(inv_s_fluid)
   endif
 
   ! These terms are needed to compute the gradient!
-  if (.not. dump_wavefields .or. dump_type/='fullfields' .or. dump_type/='coupling' ) then
+  if (.not. dump_wavefields .or. &
+        (dump_type /= 'fullfields' .and. dump_type /= 'strain_only'  &
+         .and. dump_type /= 'coupling' .and. dump_type /= 'coupling_box')) then  !!! SB coupling
+
      if (.not. anel_true .and. .not. dump_snaps_glob) then
         if (lpr) write(6,*)'  deallocating pointwise solid arrays...'
         deallocate(DsDeta_over_J_sol)
@@ -260,9 +254,9 @@ subroutine deallocate_preloop_arrays
   if (lpr) write(6,*)'  Done deallocating mesh arrays.'; call flush(6)
 
 end subroutine deallocate_preloop_arrays
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !> Computes the UNASSEMLED global mass matrix, i.e. spanning solid AND
 !! fluid domains.
 !! (as opposed to routine def_mass_matrix_k which only computes those terms
@@ -271,7 +265,7 @@ end subroutine deallocate_preloop_arrays
 !! Feb 2007: Also needed for computing discontinuity surfaces in get_model.
 subroutine massmatrix(masstmp,nel,domain)
 
-  use geom_transf
+  use analytic_mapping
   use get_mesh, only : compute_coordinates_mesh
 
 
@@ -321,13 +315,13 @@ subroutine massmatrix(masstmp,nel,domain)
   enddo
 
 end subroutine massmatrix
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !! Same as routine massmatrix above but in real(kind=dp)   .
 subroutine massmatrix_dble(masstmp,nel,domain)
 
-  use geom_transf
+  use analytic_mapping
   use get_mesh, only : compute_coordinates_mesh
 
 
@@ -374,9 +368,9 @@ subroutine massmatrix_dble(masstmp,nel,domain)
   enddo
 
 end subroutine massmatrix_dble
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !> A wrapper for a multitude of tests related to various aspects of the mesh
 !! (that is, prior to adding elastic properties) such as volume, surfaces,
 !! valence & global numbering, solid-fluid boundary indexing, axial arrays,
@@ -385,9 +379,6 @@ end subroutine massmatrix_dble
 !! routine shall find it and exit with a descriptive error message.
 !! Yet again, maybe not...
 subroutine mesh_tests
-
-  !use commun, only: mpi_asynch_messaging_test_solid
-  !use commun, only: mpi_asynch_messaging_test_fluid
 
   ! Checking coordinate conformity
   if (lpr) write(6,*)'  dumping element information...'
@@ -413,20 +404,12 @@ subroutine mesh_tests
   if (lpr) write(6,*)'  Checking out solid-fluid boundaries...'
   call check_solid_fluid_boundaries
 
-  ! Check message passing <><><><><><><><><><><><><><>><><><><><><><><><><><>
-  !if (nproc>1) then
-  !   if (lpr) write(6,*)'  Checking message-passing for solid...'
-  !   call mpi_asynch_messaging_test_solid
-  !   if (lpr) write(6,*)'  Checking message-passing for fluid...'
-  !   call mpi_asynch_messaging_test_fluid
-  !endif
-
   if (lpr) write(6,'(/,a,/)')'  >>> FINISHED mesh tests.'
 
 end subroutine mesh_tests
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !> Coarsing elements are all those that have any role in the non-spheroidal
 !! coarsening levels (i.e., contain some non-spheroidal edge), i.e. include
 !! "two entire depth levels" around the coarsening level.
@@ -516,9 +499,9 @@ subroutine dump_coarsing_element_info
 16 format('   ',a8,'has ',i6,a12,' elements')
 
 end subroutine dump_coarsing_element_info
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !> Check whether s,z,theta, and r conform. Just here as a debugging relict,
 !! but lingering well since not exactly pricey...
 subroutine check_physical_coordinates
@@ -588,9 +571,9 @@ subroutine check_physical_coordinates
   enddo
 
 end subroutine check_physical_coordinates
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !> Checks the various arrays related to the axis globally and in solid/fluid
 !! subdomains; and runs test fields through the actual routines
 !! used to mask those fields that vanish on the axis during the time loop.
@@ -999,9 +982,9 @@ subroutine check_axial_stuff
   deallocate(tmpflufield)
 
 end subroutine check_axial_stuff
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !> Compute surface area of all radii in the spherical part of the domain
 !! numerically and compare to analytical values.
 !! Constitutes an accuracy test of the GLL and GLJ(0,1) integration
@@ -1189,15 +1172,15 @@ subroutine compute_spherical_surfaces
   spher_radii(2:num_spher_radii) = radii2(1:irad,2) ! take the ones below
 
   ! sort spher_radii by inverse bubble sort
-  call BSORT2(spher_radii,num_spher_radii)
+  call bsort2(spher_radii, num_spher_radii)
 
   deallocate(radii2)
   deallocate(radsurf)
 
 end subroutine compute_spherical_surfaces
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !> A straight computation of the spherical volume of the sphere and its
 !! solid and fluid sub-shells.
 !! Accuracy for realkind=4 is typically O(1E-8) and for realkind=8 O(1E-12).
@@ -1234,9 +1217,6 @@ subroutine compute_volume
   else if (bkgrdmodel(1:4) == 'iasp') then
      router_fluid = 3482000.d0 ! CMB
      rinner_fluid = 1217000.d0 ! ICB
-  else if (bkgrdmodel(1:4)=='homo') then
-     rinner_fluid = 3000.d0
-     router_fluid = rinner_fluid
   else
      write(6,*)'  !!WARNING!! Do not know the fluid for model',bkgrdmodel
      write(6,*)'             ....setting outer/inner equal -> assuming no fluid'
@@ -1354,9 +1334,9 @@ subroutine compute_volume
   deallocate(mass_fluid)
 
 end subroutine compute_volume
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !> S/F boundary tests
 !! define field on fluid side, copy to solid, check difference
 !! This routine does not "check" as in exiting (except for counting boundary
@@ -1443,9 +1423,9 @@ subroutine check_solid_fluid_boundaries
   deallocate(tmpflufield)
 
 end subroutine check_solid_fluid_boundaries
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !> This routine returns the smallest grid-spacing
 !! between two neighbouring points in the meridional plane.
 subroutine compute_hmin_meri(hmin)
@@ -1481,9 +1461,9 @@ subroutine compute_hmin_meri(hmin)
   deallocate(dis2)
 
 end subroutine compute_hmin_meri
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !> Inverse bubble sort routine adapted from Ratzer's F90,C and Algorithms:
 !! http://www.cs.mcgill.ca/~ratzer/progs15_3.html
 subroutine bsort2(list,n)
@@ -1515,6 +1495,7 @@ subroutine bsort2(list,n)
   enddo
 
 end subroutine bsort2
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
 end module def_grid
+!=========================================================================================

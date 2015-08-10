@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -19,34 +19,24 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
+!=========================================================================================
 !> Variables concerned with elemental & spectral aspects only
 !! (e.g. GLL points, Lagrange interpolant derivatives, quadrature weights)
-!===================
- module data_spec
-!===================
+module data_spec
 
-use global_parameters
-implicit none
-public
+  use global_parameters
+  implicit none
+  public
 
-!@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-
-  real(kind=dp), allocatable, dimension(:) :: xi_k, eta   ! Allocated in splib
+  real(kind=dp), allocatable, dimension(:) :: xi_k, eta   ! Allocated in data_mesh
   real(kind=dp), allocatable, dimension(:) :: dxi         ! "
   real(kind=dp), allocatable, dimension(:) :: wt          !Quadrature weights
   real(kind=dp), allocatable, dimension(:) :: wt_axial_k  !Quad. wgts for the
-                                                     !gaus jacobi(0,1) integration
+                                                          !gaus jacobi(0,1) integration
 
-! Lagrange interpolant derivatives
-! 3rd index: 1 - non-axial, 2 - axial
-! 4th index: 1 - \partial_\xi, 2 - \partial_\eta
-  real(kind=realkind), allocatable, dimension(:,:,:,:) :: shp_deri_k
+  ! Lagrange interpolant derivatives
   real(kind=realkind), allocatable, dimension(:,:)     :: G1, G1T, G2, G2T
   real(kind=realkind), allocatable, dimension(:)       :: G0
 
-!@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-!=======================
 end module data_spec
-!=======================
+!=========================================================================================

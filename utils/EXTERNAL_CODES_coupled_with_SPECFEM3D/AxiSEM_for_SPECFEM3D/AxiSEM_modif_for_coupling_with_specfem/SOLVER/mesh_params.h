@@ -1,9 +1,8 @@
 ! Proc  32: Header for mesh information to run static solver
-! created by the mesher on 07/23/2015, at 15h 14min
+! created by the mesher on 08/07/2015, at 16h 03min
 
 !:::::::::::::::::::: Input parameters :::::::::::::::::::::::::::
 !   Background model     :            prem_iso
-!   Inner-core shear wave:         T
 !   Dominant period [s]  :    5.0000
 !   Elements/wavelength  :    1.5000
 !   Courant number       :    0.6000
@@ -31,3 +30,4 @@
 !   Max(h) r/ns(icb) [km]:    8.5657
 !   Max(h) precalc.  [km]:    8.9215
 !:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+

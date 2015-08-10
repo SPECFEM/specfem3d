@@ -4,7 +4,7 @@ Mode used : prem_iso
 
 The mesh of Axisem is made for a 5s dominant
 
-The source (explosive type) has a 10s period
+The source (moment type) has a 10s period
 
 See the Manual for the coupling here : utils/EXTERNAL_CODES_coupled_with_SPECFEM3D/AxiSEM_for_SPECFEM3D/Manual_coupling_AxiSEM_Specfem3D.pdf
 

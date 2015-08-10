@@ -7,17 +7,24 @@ if ( ${#argv} < 1 || "$1" == "-h" ) then
     exit
 endif
 
+set homepath = `echo $PWD`
+set meshpath = "../SOLVER/MESHES/$1"
+
+if ( ${#argv} == 2 ) then
+  set xmeshrundir = $2
+else
+  set xmeshrundir = "."
+endif
+echo "Moving mesh from $xmeshrundir to $meshpath"
+
 # test if mesher finished without problems:
-if (`grep 'DONE WITH MESHER' OUTPUT | wc -l` != '1') then
+if (`grep 'DONE WITH MESHER' $xmeshrundir/OUTPUT | wc -l` != '1') then
   echo "ERROR: MESHER did not finish yet or encountered a problem."
   echo "       Check 'OUTPUT' file for more details."
   exit
 else
   echo 'MESHER finished smoothly...'
 endif
-
-set homepath = `echo $PWD`
-set meshpath = "../SOLVER/MESHES/$1"
 
 if ( ! -d ../SOLVER/MESHES ) then
   mkdir ../SOLVER/MESHES
@@ -37,12 +44,11 @@ cd $homepath
 
 echo "Moving mesh to" $meshpath
 
-mv meshdb.dat* $meshpath
-mv mesh_params.h $meshpath
-mv OUTPUT $meshpath
+mv $xmeshrundir/meshdb.dat* $meshpath
+mv $xmeshrundir/mesh_params.h $meshpath
+mv $xmeshrundir/OUTPUT $meshpath
 #mv Diags $meshpath
-cp -p inparam_mesh $meshpath
-cp -p background_models.f90 $meshpath
+cp -p $xmeshrundir/inparam_mesh $meshpath
 
 set bgmodel = `grep "^BACKGROUND_MODEL" inparam_mesh | awk '{print $2}'`
 echo $bgmodel
@@ -58,7 +64,7 @@ if ( $bgmodel == 'external') then
 endif
 
 mkdir $meshpath/Code
-cp -p *.f90 $meshpath/Code
+cp -p *.[fF]90 $meshpath/Code
 cp -p Makefile $meshpath/Code
 cp -p makemake.pl $meshpath/Code
 cp -p inparam_mesh $meshpath/Code
@@ -66,7 +72,7 @@ cp -p xmesh $meshpath/Code
 cp -p submit.csh $meshpath/Code
 cp -p inparam_mesh $meshpath/Code
 
-mv Diags/* $meshpath
+mv $xmeshrundir/Diags/* $meshpath
 
 echo "Contents in" $meshpath ":"
 ls $meshpath

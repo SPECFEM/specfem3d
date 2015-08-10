@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -19,7 +19,7 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
-!-----------------------------------------------------------------------------
+!=========================================================================================
 module rotations
 
   use global_parameters
@@ -35,12 +35,8 @@ module rotations
 
 contains
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine def_rot_matrix
-
-  real(kind=realkind), dimension(3,3)  :: mom_tensor, rot_mom_tensor
-  real(kind=realkind), dimension(3)    :: single_force, rot_single_force
-  integer                              :: i, j
 
   if (lpr) then
     write(6,*)
@@ -63,13 +59,10 @@ subroutine def_rot_matrix
 
   trans_rot_mat = transpose(rot_mat)
 
-11 format(a25,1pe12.3)
-12 format(a25,3(1pe12.3))
-
 end subroutine def_rot_matrix
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine rotate_receivers_recfile(num_rec_glob, rcvcolat, rcvlon1, receiver_name)
 
   integer, intent(in)             :: num_rec_glob
@@ -141,12 +134,10 @@ subroutine rotate_receivers_recfile(num_rec_glob, rcvcolat, rcvlon1, receiver_na
      close(99991)
   endif
 
-
-
 end subroutine rotate_receivers_recfile
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine save_google_earth_kml(srccolat1, srclon1, rcvcolat, rcvlon, &
                                  num_rec_glob, fname, receiver_name)
 
@@ -260,7 +251,7 @@ subroutine save_google_earth_kml(srccolat1, srclon1, rcvcolat, rcvlon, &
 20 format(A18,f8.2,f8.2)
 
 end subroutine save_google_earth_kml
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
 end module rotations
-!-----------------------------------------------------------------------------
+!=========================================================================================

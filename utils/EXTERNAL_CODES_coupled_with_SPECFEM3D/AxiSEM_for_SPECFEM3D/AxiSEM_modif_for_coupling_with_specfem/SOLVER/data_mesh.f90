@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -19,9 +19,8 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
-!===================
+!=========================================================================================
 module data_mesh
-!===================
 
   ! Arrays here pertain to some sort of mesh peculiarities and mainly serve
   ! as information or parameters for many "if"-decisions such as
@@ -121,13 +120,11 @@ module data_mesh
   ! Background model--------------------------------------------------------
   character(len=100)          :: bkgrdmodel
   character(len=100)          :: meshname
-  logical                     :: resolve_inner_shear, have_fluid
+  logical                     :: have_fluid
   real(kind=dp), allocatable  :: discont(:)
   logical, allocatable        :: solid_domain(:)
   integer, allocatable        :: idom_fluid(:)
   real(kind=dp)               :: rmin, minh_ic, maxh_ic, maxh_icb
-  logical                     :: make_homo
-  real(kind=dp)               :: vphomo, vshomo, rhohomo
   logical                     :: anel_true ! anelastic model?
   !--------------------------------------------------------------------------
 
@@ -146,9 +143,20 @@ module data_mesh
   integer, allocatable         :: cmbfile_el(:,:), loc2globcmb(:)
   !--------------------------------------------------------------------------
 
+  ! for xdmf plotting
   integer                      :: nelem_plot, npoint_plot
   logical, allocatable         :: plotting_mask(:,:,:)
   integer, allocatable         :: mapping_ijel_iplot(:,:,:)
+
+  ! for kernel wavefields in displ_only mode
+  integer                      :: nelem_kwf_global, nelem_kwf
+  integer                      :: npoint_kwf_global, npoint_kwf
+  integer                      :: npoint_solid_kwf, npoint_fluid_kwf
+  logical, allocatable         :: kwf_mask(:,:,:)
+  integer, allocatable         :: mapping_ijel_ikwf(:,:,:)
+  integer, allocatable         :: midpoint_mesh_kwf(:), eltype_kwf(:), axis_kwf(:)
+  integer, allocatable         :: fem_mesh_kwf(:,:)
+  integer, allocatable         :: sem_mesh_kwf(:,:,:)
 
   ! Only needed before the simulation and later deallocated
   ! Global mesh informations
@@ -199,8 +207,32 @@ end subroutine
 !-----------------------------------------------------------------------------------------
 subroutine read_mesh_advanced(iounit)
    use data_io, only     : verbose
+   use data_spec
    integer, intent(in)  :: iounit
    integer              :: iptcp, iel, inode
+
+   allocate(eta(0:npol))
+   allocate(dxi(0:npol))
+   allocate(wt(0:npol))
+   allocate(xi_k(0:npol))
+   allocate(wt_axial_k(0:npol))
+   allocate(G1(0:npol,0:npol))
+   allocate(G1T(0:npol,0:npol))
+   allocate(G2(0:npol,0:npol))
+   allocate(G2T(0:npol,0:npol))
+   allocate(G0(0:npol))
+
+   ! spectral stuff
+   read(iounit) xi_k
+   read(iounit) eta
+   read(iounit) dxi
+   read(iounit) wt
+   read(iounit) wt_axial_k
+   read(iounit) G0
+   read(iounit) G1
+   read(iounit) G1T
+   read(iounit) G2
+   read(iounit) G2T
 
    read(iounit) npoin
 
@@ -281,6 +313,5 @@ subroutine read_mesh_axel(iounit)
 end subroutine
 !-----------------------------------------------------------------------------------------
 
-!=======================
 end module data_mesh
-!=======================
+!=========================================================================================
