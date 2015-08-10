@@ -23,7 +23,7 @@ subroutine dump_mesh_xdmf(filename, npoints)
   write(iinput_xdmf, 732) npoints, npoints, trim(filename_np), npoints, trim(filename_np)
   close(iinput_xdmf)
 
-732 format(&    
+732 format(&
     '<?xml version="1.0" ?>',/&
     '<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>',/&
     '<Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="2.2">',/&
@@ -54,7 +54,7 @@ subroutine dump_mesh_data_xdmf(filename, varname, npoints, nsnap)
   integer                           :: iinput_xdmf, iinput_heavy_data
   integer                           :: i
   character(len=512)                :: filename_np
-  
+
 
   ! relative filename for xdmf content
   filename_np = trim(filename(index(filename, '/', back=.true.)+1:))
@@ -78,7 +78,7 @@ subroutine dump_mesh_data_xdmf(filename, varname, npoints, nsnap)
   write(iinput_xdmf, 736)
   close(iinput_xdmf)
 
-733 format(&    
+733 format(&
     '<?xml version="1.0" ?>',/&
     '<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>',/&
     '<Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="2.2">',/&
@@ -93,7 +93,7 @@ subroutine dump_mesh_data_xdmf(filename, varname, npoints, nsnap)
     '</DataItem>',/,/&
     '<Grid Name="CellsTime" GridType="Collection" CollectionType="Temporal">',/)
 
-7341 format(&    
+7341 format(&
     '    <Grid Name="grid" GridType="Uniform">',/&
     '        <Time Value="',F8.2,'" />',/&
     '        <Topology TopologyType="Polyvertex" NumberOfElements="',i10,'">',/&
@@ -102,7 +102,7 @@ subroutine dump_mesh_data_xdmf(filename, varname, npoints, nsnap)
     '            <DataItem Reference="/Xdmf/Domain/DataItem[@Name=', A,'points', A,']" />',/&
     '        </Geometry>')
 
-7342 format(&    
+7342 format(&
     '        <Attribute Name="', A,'" AttributeType="Scalar" Center="Node">',/&
     '            <DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab">',/&
     '                <DataItem Dimensions="3 2" Format="XML">',/&
@@ -116,10 +116,10 @@ subroutine dump_mesh_data_xdmf(filename, varname, npoints, nsnap)
     '            </DataItem>',/&
     '        </Attribute>')
 
-7343 format(&    
+7343 format(&
     '    </Grid>',/)
 
-736 format(&    
+736 format(&
     '</Grid>',/,/&
     '</Domain>',/&
     '</Xdmf>')

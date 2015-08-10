@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -130,7 +130,7 @@ subroutine readin_parameters
    08x,'//                                                           //',/  &
    08x,'//  Authors : Tarje Nissen-Meyer (Oxford University)         //',/  &
    08x,'//              Martin van Driel (ETH Zurich)                //',/  &
-   08x,'//                 Simon Stähler (LMU Munich)                //',/  &
+   08x,'//                 Simon Stahler (LMU Munich)                //',/  &
    08x,'//                Kasra Hosseini (LMU Munich)                //',/  &
    08x,'//               Stefanie Hempel (University of Muenster)    //',/  &
    08x,'//            Alexandre Fournier (IPG Paris)                 //',/  &

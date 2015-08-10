@@ -5,7 +5,7 @@
 #SBATCH --nodes=20
 #SBATCH --ntasks=480
 #SBATCH --ntasks-per-node=24
-#SBATCH --cpus-per-task=1 
+#SBATCH --cpus-per-task=1
 #SBATCH --time=01:59:00
 #SBATCH --output EVAL
 module purge

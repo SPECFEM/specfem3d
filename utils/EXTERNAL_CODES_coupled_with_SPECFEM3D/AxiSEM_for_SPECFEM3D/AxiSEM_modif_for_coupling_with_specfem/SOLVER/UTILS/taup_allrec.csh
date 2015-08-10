@@ -8,13 +8,13 @@ if ( $model == 'prem' || $model == 'iasp91' ) then
 rm -f $2/taup_*_traveltime*
 set num_rec = `wc -l MZZ/Data/receiver_pts.dat`
 set epi_list = `tail -n $num_rec MZZ/Data/receiver_pts.dat | sed 's/999999/9/g' |  sed 's/000000/ /g' | awk '{print $1}'`
-set depth_short = `echo $depth |sed 's/\./ /g' |awk '{print $1}'` 
+set depth_short = `echo $depth |sed 's/\./ /g' |awk '{print $1}'`
 echo $depth_short
 set i = 0
 foreach rec (${epi_list})
 @ i++
 echo "working on receiver" $rec
-#taup_time -mod $model -h $depth -ph P,Pdiff -deg $rec 
+#taup_time -mod $model -h $depth -ph P,Pdiff -deg $rec
 #taup_time -mod $model -h $depth -ph S,P,p,s,PP,SS,ScS,PcP,PcS,PKIKP,PKIKS,Pdiff,Sdiff,PKP,PKS,pS,pP,PS,sS,SP,SSS,PPP,PSS,PSSS,P400P,P400S,P670P,P670S, -deg $rec | grep $depth_short   | awk '{print $4}' >! $2/taup_${model}_${depth}km_rec${i}_tt.dat
 
 #taup_time -mod $model -h $depth -ph S,P,p,s,PP,SS,ScS,PcP,PcS,PKIKP,PKIKS,Pdiff,Sdiff,PKP,PKS,pS,pP,PS,sS,SP,SSS,PPP,PSS,PSSS,P400P,P400S,P670P,P670S, -deg $rec |grep $depth_short | awk '{print $8}' >! $2/taup_rec${i}_phase.dat

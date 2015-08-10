@@ -1,7 +1,7 @@
 #!/bin/csh -f
 
 
-if ( $1 == '-h' ) then 
+if ( $1 == '-h' ) then
   echo "Argument options:"
   echo "   default (no argument): submit xmesh on current machine"
   echo "   lsf: submit to a lsf queue using bsub"
@@ -38,11 +38,11 @@ if ( $bgmodel == 'external') then
   cp $fnam_extmodel external_model.bm
 endif
 
-if ( $1 == 'lsf' ) then 
+if ( $1 == 'lsf' ) then
   ########## LSF SCHEDULER ######################
   bsub -R "rusage[mem=2048]" -I -n 1 ./xmesh > OUTPUT &
 
-else if ( $1 == 'torque' ) then 
+else if ( $1 == 'torque' ) then
     ######## TORQUE/MAUI SCHEDULER #######
     echo "# Sample PBS for serial jobs" > run_mesh.pbs
     echo "#PBS -l nodes=1,walltime=2:00:00" >> run_mesh.pbs
@@ -51,7 +51,7 @@ else if ( $1 == 'torque' ) then
     echo "./xmesh > OUTPUT " >> run_mesh.pbs
     qsub run_mesh.pbs
 
-else if ( $1 == 'slurm' ) then 
+else if ( $1 == 'slurm' ) then
     echo '#\!/bin/bash -l' > sbatch.sh
     echo "#SBATCH --ntasks=1" >> sbatch.sh
     echo "#SBATCH --nodes=1" >> sbatch.sh
@@ -59,16 +59,16 @@ else if ( $1 == 'slurm' ) then
     echo "export OMP_NUM_THREADS=4" >> sbatch.sh
     echo "aprun -n 1 -d 4 ./xmesh > OUTPUT" >> sbatch.sh
 
-    sbatch sbatch.sh 
+    sbatch sbatch.sh
 
-else if ( $1 == 'slurmlocal' ) then 
+else if ( $1 == 'slurmlocal' ) then
     ######## slurm #######
     aprun -n 1 ./xmesh > OUTPUT &
 
 else if ( $1 == 'SuperMUC') then
 
     mkdir $2
-    cd $2 
+    cd $2
     mkdir Diags
 
     cp ../xmesh ../inparam_mesh ../movemesh.csh .
@@ -106,10 +106,10 @@ else if ( $1 == 'SuperMUC') then
 
 else
     ######## SUBMIT LOCALLY #######
-    unlimit stacksize     
+    unlimit stacksize
 #    setenv OMP_NUM_THREADS 20
     nohup ./xmesh > OUTPUT &
-#    oarsub -S ./mysubmit.sh 
+#    oarsub -S ./mysubmit.sh
     # uncomment the following three lines to monitor memory usage of the mesher
     #cd UTILS
     #python monitor_memory.py > ../memory_output &

@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 set -e
 cd MZZ
 echo "Transforming MZZ"

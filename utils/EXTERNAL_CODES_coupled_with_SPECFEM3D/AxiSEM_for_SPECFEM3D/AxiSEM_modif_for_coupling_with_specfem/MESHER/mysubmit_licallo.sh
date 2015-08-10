@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #OAR -n axisemmesh
 #OAR -l /nodes=1/cpu=2/core=10,walltime=00:30:00
-#OAR -p ibpool=’FDR’
+#OAR -p ibpool='FDR'
 #OAR -p gpu='NO'
 
 source /softs/env_default.sh
@@ -14,7 +14,7 @@ export OMP_NUM_THREAD=20
 
 #echo $OAR_FILE_NODES
 #cat $OAR_FILE_NODES > lalala
-#uniq lalala > hostsfi 
+#uniq lalala > hostsfi
 
 #make clean
 #make
@@ -26,7 +26,7 @@ export OMP_NUM_THREAD=20
 #-envall  \
 #-perhost 1 ./lithos_fwi_time.x
 
-./xmesh > OUTPUT  
+./xmesh > OUTPUT
 
 
 #time mpiexec.hydra  \

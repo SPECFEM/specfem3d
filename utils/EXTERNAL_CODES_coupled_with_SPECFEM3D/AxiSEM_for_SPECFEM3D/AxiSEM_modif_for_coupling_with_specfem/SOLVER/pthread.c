@@ -1,6 +1,6 @@
 //
 //    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-//                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
+//                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
 //
 //    This file is part of AxiSEM.
 //    It is distributed from the webpage <http://www.axisem.info>
@@ -42,7 +42,7 @@ void *cfunc_thread(void* valp)
 
 // create IO thread, to be called from fortran
 void c_spawn_dumpthread(int* val){
-   pthread_attr_t attr; 
+   pthread_attr_t attr;
    pthread_attr_init(&attr);
    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
    pthread_create(&thread, &attr, cfunc_thread, (void *)val);
@@ -53,6 +53,6 @@ void c_spawn_dumpthread(int* val){
 void c_wait_for_io() {
    if (thread != (pthread_t) 0){
        pthread_join(thread, NULL);
-   }   
+   }
 }
 

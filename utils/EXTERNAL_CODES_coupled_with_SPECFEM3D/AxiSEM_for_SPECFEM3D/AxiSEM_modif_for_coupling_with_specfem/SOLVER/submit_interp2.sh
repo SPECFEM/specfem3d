@@ -5,7 +5,7 @@
 #SBATCH --nodes=20
 #SBATCH --ntasks=480
 #SBATCH --ntasks-per-node=24
-#SBATCH --cpus-per-task=1 
+#SBATCH --cpus-per-task=1
 #SBATCH --time=00:30:00
 #SBATCH --output INTERP
 module purge

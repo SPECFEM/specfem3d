@@ -42,7 +42,7 @@ set serial = `grep "^SERIAL" ../make_axisem.macros | awk '{print $3}'`
 #Check whether NetCDF is requested and whether the code is compiled with it
 set netcdf_compiled = `grep "^USE_NETCDF" ../make_axisem.macros | awk '{print $3}'`
 set netcdf_requested = `grep "^USE_NETCDF" inparam_advanced |awk '{print $2}'| sed 's/\"//g'`
-if ( $netcdf_requested == 'true' && $netcdf_compiled != 'true') then 
+if ( $netcdf_requested == 'true' && $netcdf_compiled != 'true') then
   echo "NetCDF compiled  (../make_axisem.macros): " $netcdf_compiled
   echo "NetCDF requested (inparam_advanced):      " $netcdf_requested
   echo "ERROR: NetCDF is requested in inparam_advanced, but disabled in ../make_axisem.macros"
@@ -56,11 +56,11 @@ echo $username "USER_NAME" >> runinfo
 set hostname = `hostname`
 echo $hostname "HOST_NAME" >> runinfo
 set FFLAGS = `grep "^FFLAGS" ../make_axisem.macros`
-echo $FFLAGS  >> runinfo 
+echo $FFLAGS  >> runinfo
 set CFLAGS = `grep "^CFLAGS" ../make_axisem.macros`
-echo $CFLAGS >> runinfo 
+echo $CFLAGS >> runinfo
 set LDFLAGS = `grep "^LDFLAGS" ../make_axisem.macros`
-echo $LDFLAGS >> runinfo 
+echo $LDFLAGS >> runinfo
 
 if ( -d $meshdir) then
   echo "Using mesh " $meshdir
@@ -94,7 +94,7 @@ set newqueue = 'false'
 if ( "$2" == '-q') then
     set queue = $3
     set newqueue = 'true'
-	echo "Submitting to queue type" $queue
+  echo "Submitting to queue type" $queue
 endif
 
 set multisrc = 'false'
@@ -107,7 +107,7 @@ else if ( $simtype == 'force') then
     set multisrc = 'true'
 else if ( $simtype == 'moment') then
     set multisrc = 'true'
-else 
+else
     echo "ERROR: unknown simulation type: " $simtype
     exit
 endif
@@ -121,7 +121,7 @@ if ! { make -j }  then
 endif
 
 
-if ( ! -f $homedir/$srcfile ) then 
+if ( ! -f $homedir/$srcfile ) then
     echo "ERROR: Source file $srcfile does not exist"
     exit
 endif
@@ -139,7 +139,7 @@ else if ( $rec_file_type == 'database' ) then
     echo "this is a dummy database receiver file" >! $homedir/$recfile
 endif
 
-if ( ! -f $homedir/$recfile ) then 
+if ( ! -f $homedir/$recfile ) then
     echo "ERROR: Receiver file $recfile does not exist"
     exit
 endif
@@ -148,14 +148,14 @@ echo "Source file:" $srcfile, "Receiver file:" $recfile
 if ( $multisrc == 'true' ) then
     # multiple simulations
     echo "setting up multiple simulations for full" $simtype "source type"
-    if ( $simtype == 'moment' ) then 
+    if ( $simtype == 'moment' ) then
         set srcapp = ( MZZ MXX_P_MYY MXZ_MYZ MXY_MXX_M_MYY )
         set srctype  = ( "mrr" "mtt_p_mpp" "mtr" "mtp" )
         set srcdepth = `grep "depth:" $homedir/CMTSOLUTION  |awk '{print $2}'`
         set srclat   = `grep "latitude:" $homedir/CMTSOLUTION  |awk '{print $2}'`
         set srclon   = `grep "longitude:" $homedir/CMTSOLUTION  |awk '{print $2}'`
 
-    else if ( $simtype == 'force' ) then 
+    else if ( $simtype == 'force' ) then
         set srcapp   = ( PZ PX )
         set srctype  = ( "vertforce" "thetaforce" )
         # TODO hardcoded for testing. need to define an input file for force sources!
@@ -173,7 +173,7 @@ else if ( $multisrc == 'false' ) then
     # one simulation
     set srctype = `grep "^SOURCE_TYPE" $srcfile  |awk '{print $2}'`
     set srcapp = ( "./"  )
-endif 
+endif
 
 echo 'source names:' $srcapp
 echo 'source components:' $srctype
@@ -207,61 +207,61 @@ foreach isim  (${srcapp})
     echo "Setting up simulation" $isim
     # construct different source file for each simulation
     if  ( $multisrc == 'true' ) then
-        echo "constructing separate source files for" $isim 
+        echo "constructing separate source files for" $isim
 
         echo 'SOURCE_TYPE'  $srctype[$i]  >  $srcfile.$isim
         echo 'SOURCE_DEPTH' $srcdepth     >> $srcfile.$isim
         echo 'SOURCE_LAT'   $srclat       >> $srcfile.$isim
         echo 'SOURCE_LON'   $srclon       >> $srcfile.$isim
         echo 'SOURCE_AMPLITUDE  1.E20'    >> $srcfile.$isim
-      echo 'SOURCE_DEPTH' $srcdepth     
-        echo 'SOURCE_LAT'   $srclat    
-        echo 'SOURCE_LON'   $srclon      
+      echo 'SOURCE_DEPTH' $srcdepth
+        echo 'SOURCE_LAT'   $srclat
+        echo 'SOURCE_LON'   $srclon
         mkdir $isim
         cd $isim
-    endif 
-    
+    endif
+
 
     if ( $datapath == './Data' ) then
         mkdir $datapath
     else
         if ( $multisrc == 'true' ) then
             set datapath_isim = $datapath/$isim
-            echo "creating $datapath_isim" 
+            echo "creating $datapath_isim"
         else
             set datapath_isim = $datapath
         endif
         mkdir -p $datapath_isim
         #ln -s $datapath_isim ./Data
-	mkdir Data
+  mkdir Data
         cp -Lpr $datapath_isim Data
     endif
-        
-    if ( -d $infopath) then 
+
+    if ( -d $infopath) then
         echo " saving info into $infopath"
     else
         echo "creating $infopath"
         mkdir $infopath
     endif
-    
+
     mkdir Code
     cp -Lp $homedir/*.c   Code
     cp -Lp $homedir/*.f90 Code
     cp -Lp $homedir/*.F90 Code
     cp -Lp $homedir/Makefile Code
-    
+
     echo "copying crucial files for the simulation..."
-    
+
     if ( $multisrc == 'true' ) then
         mv ../$srcfile.$isim $srcfile
-    else 
+    else
         cp $homedir/$srcfile $srcfile
     endif
-    
+
     cp $homedir/axisem .
     cp $homedir/mesh_params.h .
     cp $homedir/runinfo .
-    cp $homedir/$recfile . 
+    cp $homedir/$recfile .
     cp $homedir/inparam_basic .
     cp $homedir/inparam_advanced .
     cp $homedir/inparam_hetero .
@@ -280,16 +280,16 @@ foreach isim  (${srcapp})
 
     if ( $multisrc == 'false' ) then
         #ln -s ../$meshdir/ Mesh
-	mkdir Mesh
+  mkdir Mesh
         echo $meshdir
         cp -r ../$meshdir/* Mesh/.
-    else 
+    else
         #ln -s ../../$meshdir/ Mesh
-	mkdir Mesh/
-	echo $meshdir
-	cp -r ../../$meshdir/* Mesh/.
+  mkdir Mesh/
+  echo $meshdir
+  cp -r ../../$meshdir/* Mesh/.
     endif
-    
+
     if ( $bgmodel == 'external' ) then
         cp Mesh/external_model.bm .
     endif
@@ -335,46 +335,46 @@ foreach isim (${srcapp})
         set outputname = "OUTPUT_"`echo $1 |sed 's/\//_/g'`
     endif
 
-    if ( $newqueue == 'true' ) then 
-        
+    if ( $newqueue == 'true' ) then
+
         set jobname = `echo $1 |sed 's/\//_/g'`"_"`echo $isim |sed 's/\//_/g'`
 
 
         ########## LSF SCHEDULER ######################
-        if ( $queue == 'lsf' ) then 
+        if ( $queue == 'lsf' ) then
             # for Brutus: http://brutuswiki.ethz.ch/brutus/OpenMPI#Issues_when_Using_Many_Cores
             #unset OMPI_MCA_btl_openib_receive_queues
             #bsub -R "rusage[mem=2048]" -n $nodnum -W 167:59 $mpiruncmd -n $nodnum ./axisem > $outputname &
             bsub -R "rusage[mem=2048]" -I -n $nodnum $mpiruncmd -n $nodnum ./axisem 2>&1 > $outputname &
 
         ######## slurm  #######
-        else if ( $queue == 'slurmlocal' ) then 
-        	aprun -n $nodnum ./axisem >& $outputname &
-        
-        else if ( $queue == 'slurm' ) then 
+        else if ( $queue == 'slurmlocal' ) then
+          aprun -n $nodnum ./axisem >& $outputname &
+
+        else if ( $queue == 'slurm' ) then
 
             set ntaskspernode = 32
             echo "ntaskspernode = $ntaskspernode"
-            
+
             echo '#\!/bin/bash -l'                          >  sbatch.sh
             echo "#SBATCH --ntasks=$nodnum"                 >> sbatch.sh
             echo "#SBATCH --ntasks-per-node=$ntaskspernode" >> sbatch.sh
             echo "#SBATCH --time=00:59:00"                  >> sbatch.sh
-                            
+
             echo "module load slurm"                        >> sbatch.sh
-            
+
             echo 'echo "The current job ID is $SLURM_JOB_ID"'           >> sbatch.sh
             echo 'echo "Running on $SLURM_JOB_NUM_NODES nodes"'         >> sbatch.sh
             echo 'echo "Using $SLURM_NTASKS_PER_NODE tasks per node"'   >> sbatch.sh
             echo 'echo "A total of $SLURM_NTASKS tasks is used"'        >> sbatch.sh
-            
+
             echo  'aprun -n $SLURM_NTASKS ./axisem >& '$outputname      >> sbatch.sh
-                                
-            sbatch sbatch.sh 
+
+            sbatch sbatch.sh
 
         ######## TORQUE/MAUI SCHEDULER #######
-        else if ( $queue == 'torque' ) then 
-	        # this is a crazy line, but with pure integer division its hard to handle.
+        else if ( $queue == 'torque' ) then
+          # this is a crazy line, but with pure integer division its hard to handle.
             #set nodes = `echo ${nodnum} | awk '{printf "%.0f\n", $1/16+0.49}'`
 
             echo "# Sample PBS for parallel jobs" > run_solver.pbs
@@ -447,7 +447,7 @@ foreach isim (${srcapp})
         endif
 
     ######## SUBMIT LOCALLY #######
-    else 
+    else
         #ulimit -s unlimited
         #setenv OMP_NUM_THREADS 4
         unlimit stacksize
@@ -455,7 +455,7 @@ foreach isim (${srcapp})
            ./axisem >& $outputname &
         else if ( $serial == 'false' ) then
             #$mpiruncmd -n $nodnum ./axisem >& $outputname &
-		sbatch mysubmit_occigen.sh
+    sbatch mysubmit_occigen.sh
 #            oarsub -S ./mysubmit_licallo.sh
 
         else
@@ -488,7 +488,7 @@ cp -p $homedir/UTILS/plot_recs.plot .
 cp -p $homedir/UTILS/taup_allrec.csh .
 cp -p $homedir/UTILS/plot_record_section.m .
 
-echo "To convolve and sum seismograms, run ./post_processing.csh after the simulations in:" 
+echo "To convolve and sum seismograms, run ./post_processing.csh after the simulations in:"
 echo $mainrundir
 echo ".... the post-processing input file param_post_processing is generated in the solver"
 echo ".... based on guesses. Edit please."

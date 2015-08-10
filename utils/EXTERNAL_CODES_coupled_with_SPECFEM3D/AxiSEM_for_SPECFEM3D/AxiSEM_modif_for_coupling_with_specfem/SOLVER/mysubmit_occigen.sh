@@ -5,7 +5,7 @@
 #SBATCH --nodes=10
 #SBATCH --ntasks=240
 #SBATCH --ntasks-per-node=24
-#SBATCH --cpus-per-task=1 
+#SBATCH --cpus-per-task=1
 #SBATCH --time=05:00:00
 #SBATCH --output AxiSEM
 module purge

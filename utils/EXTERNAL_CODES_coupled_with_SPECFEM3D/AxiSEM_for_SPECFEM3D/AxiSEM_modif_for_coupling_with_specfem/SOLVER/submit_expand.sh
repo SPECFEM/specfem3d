@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #OAR -n expand
 #OAR -l /nodes=6/cpu=2/core=10,walltime=00:10:00
-#OAR -p ibpool=’FDR’
+#OAR -p ibpool='FDR'
 #OAR -p gpu='NO'
 
 source /softs/env_default.sh
@@ -9,7 +9,7 @@ source /softs/env_default.sh
 
 #echo $OAR_FILE_NODES
 #cat $OAR_FILE_NODES > lalala
-#uniq lalala > hostsfi 
+#uniq lalala > hostsfi
 
 #time mpiexec.hydra  \
 #-machinefile $OAR_FILE_NODES \
@@ -31,7 +31,7 @@ time mpiexec.hydra  \
 -machinefile $OAR_FILE_NODES \
 -bootstrap ssh \
 -bootstrap-exec /usr/bin/oarsh \
--envall -np 120 ./reconstruct_3D_wavefield.x 
+-envall -np 120 ./reconstruct_3D_wavefield.x
 
 
 

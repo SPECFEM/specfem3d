@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -28,7 +28,7 @@ module clocks_mod
 ! ORIGINAL AUTHOR: V. Balaji (vb@gfdl.gov)
 !                  SGI/GFDL Princeton University
 !
-! ADAPTED BY:      S. Stähler and M. v. Driel
+! ADAPTED BY:      S. Stahler and M. v. Driel
 !                  to adhere Fortran 2003 standards
 !
 !-----------------------------------------------------------------------

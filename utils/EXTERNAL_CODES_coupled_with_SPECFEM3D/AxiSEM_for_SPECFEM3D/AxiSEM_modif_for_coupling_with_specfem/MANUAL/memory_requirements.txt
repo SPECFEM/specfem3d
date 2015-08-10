@@ -14,7 +14,7 @@ prem
 380MB per CPU
 
 record length: 1000s
-CPU time: 1717.72 s 
+CPU time: 1717.72 s
 
 
 
