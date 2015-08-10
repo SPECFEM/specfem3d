@@ -41,11 +41,11 @@
         ele_candidate=-1
         rec2elm=-1
         ! CONNECTION POINT <-> MESH-----------------------------------------------------------
-        do irec=1,nbrec  !! loop over points 
+        do irec=1,nbrec  !! loop over points
            if (mod(irec,100) == 0 ) write(*,*) irec,nbrec,NEL, 'connect'
            scur=reciever_cyl(1,irec)
            zcur=reciever_cyl(3,irec)
-           do iel = 1, NEL  !! loop over all selected elements 
+           do iel = 1, NEL  !! loop over all selected elements
 
               ! initial bounding box element
               smin=1d40

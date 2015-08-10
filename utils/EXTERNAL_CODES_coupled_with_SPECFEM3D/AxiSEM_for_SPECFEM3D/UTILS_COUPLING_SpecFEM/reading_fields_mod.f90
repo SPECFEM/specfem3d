@@ -155,7 +155,7 @@
          Energy_0=0.
          ! read files
          do itime=1,ntime
-            !write(*,*) ' reading field :', itime 
+            !write(*,*) ' reading field :', itime
             data_rec=0.
             Energy_1=0.
 

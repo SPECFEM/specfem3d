@@ -167,7 +167,7 @@
                  simdir(3) = "MXZ_MYZ/"
                  simdir(4) = "MXY_MXX_M_MYY/"
 
-                 !! read CMTSOLUTION 
+                 !! read CMTSOLUTION
                  write(6,*)'  reading CMTSOLUTION file....'
                  open(unit=20000,file='CMTSOLUTION',POSITION='REWIND',status='old')
                  read(20000,*) junk
@@ -252,7 +252,7 @@
         dtt= dt_strain(1)
         open(666,file='info_for_specefm.txt')
         write(666,*) dt_strain(1)
-        close(666)   
+        close(666)
 
       end subroutine read_info_simu
   end module reading_inputs

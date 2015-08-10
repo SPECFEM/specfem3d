@@ -19,18 +19,18 @@ contains
   subroutine finalize_mpi
    call MPI_FINALIZE(ierr)
   end subroutine finalize_mpi
-  
+
   subroutine barrier_mpi()
     call MPI_BARRIER(MPI_COMM_WORLD,ierr)
   end subroutine barrier_mpi
 
   subroutine alloc_all_mpi()
- 
+
 
    if (myrank == 0 ) then
       write(*,*) 'INISDE ALLOC MPI '
       write(*,*) nsim, ntime, nbrec, nbproc, ibeg, iend, nel, rot_mat, trans_rot_mat, rot_mat_mesh, trans_rot_mat_mesh
-   end if 
+   endif
 
    call mpi_bcast(nsim,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
    call mpi_bcast(ntime,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
