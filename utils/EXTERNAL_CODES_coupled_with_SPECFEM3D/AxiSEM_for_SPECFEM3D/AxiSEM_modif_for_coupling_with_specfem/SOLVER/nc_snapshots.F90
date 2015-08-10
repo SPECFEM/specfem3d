@@ -32,7 +32,7 @@ module nc_snapshots
     use data_proc,  only : mynum, lpr
 
     implicit none
-    private 
+    private
     save
 
     !! Variables for dumping of wavefields for plotting purposes
@@ -70,7 +70,7 @@ subroutine nc_make_snapfile
         ndim_disp = 2
     else
         ndim_disp = 3
-    end if
+    endif
 
     fname = datapath(1:lfdata) // '/netcdf_snap_' // appmynum // '.nc'
     nmode = ior(NF90_CLOBBER, NF90_NETCDF4)
@@ -84,41 +84,41 @@ subroutine nc_make_snapfile
     call check(nf90_def_dim(ncid_out_snap, 'timesteps', nsnap , nc_snaptime_dimid) )
 
     call flush(6)
-    call check(nf90_def_var(ncid   = ncid_out_snap, & 
+    call check(nf90_def_var(ncid   = ncid_out_snap, &
                             name   = 'displacement',  &
                             xtype  = NF90_FLOAT,     &
                             dimids = [nc_snapdim_dimid, nc_snappoint_dimid, &
-                                      nc_snaptime_dimid], & 
+                                      nc_snaptime_dimid], &
                             chunksizes = [ndim_disp, npoint_plot, 1], &
                             deflate_level = deflate_level, &
                             varid  = nc_snap_disp_varid) )
 
-    call check(nf90_def_var(ncid   = ncid_out_snap, & 
+    call check(nf90_def_var(ncid   = ncid_out_snap, &
                             name   = 'straintrace',  &
                             xtype  = NF90_FLOAT,     &
-                            dimids = [nc_snappoint_dimid, nc_snaptime_dimid], & 
+                            dimids = [nc_snappoint_dimid, nc_snaptime_dimid], &
                             chunksizes = [npoint_plot, 1], &
                             deflate_level = deflate_level, &
                             varid  = nc_snap_pwave_varid) )
 
-    call check(nf90_def_var(ncid   = ncid_out_snap, & 
+    call check(nf90_def_var(ncid   = ncid_out_snap, &
                             name   = 'curlinplane',  &
                             xtype  = NF90_FLOAT,     &
-                            dimids = [nc_snappoint_dimid, nc_snaptime_dimid], & 
+                            dimids = [nc_snappoint_dimid, nc_snaptime_dimid], &
                             chunksizes = [npoint_plot, 1], &
                             deflate_level = deflate_level, &
                             varid  = nc_snap_swave_varid) )
 
-    call check(nf90_def_var(ncid   = ncid_out_snap, & 
+    call check(nf90_def_var(ncid   = ncid_out_snap, &
                             name   = 'points',  &
                             xtype  = NF90_FLOAT,     &
-                            dimids = [nc_coord_dimid, nc_snappoint_dimid], & 
+                            dimids = [nc_coord_dimid, nc_snappoint_dimid], &
                             varid  = nc_snap_point_varid) )
 
-    call check(nf90_def_var(ncid   = ncid_out_snap, & 
+    call check(nf90_def_var(ncid   = ncid_out_snap, &
                             name   = 'grid',  &
                             xtype  = NF90_INT,     &
-                            dimids = [nc_snapconnec_dimid, nc_snapelem_dimid], & 
+                            dimids = [nc_snapconnec_dimid, nc_snapelem_dimid], &
                             varid  = nc_snap_grid_varid) )
 
     call check(nf90_enddef(ncid    = ncid_out_snap))
@@ -150,7 +150,7 @@ end subroutine nc_dump_snap_points
 subroutine nc_dump_snap_grid(grid)
 
     use data_mesh, only: nelem_plot
-    integer, dimension(4, nelem_plot), intent(in)       :: grid 
+    integer, dimension(4, nelem_plot), intent(in)       :: grid
 
 #ifdef enable_netcdf
     call check(nf90_put_var(ncid   = ncid_out_snap, &
@@ -180,19 +180,19 @@ subroutine nc_dump_snapshot(u, straintrace, curlinplane, isnap)
                           start  = [1, 1, isnap], &
                           count  = [1, npoint_plot, 1], &
                           values = reshape(u(1,:), [1, npoint_plot,1]) )
-       
+
        call putvar_real3d(ncid   = ncid_out_snap, &
                           varid  = nc_snap_disp_varid, &
                           start  = [2, 1, isnap], &
                           count  = [1, npoint_plot, 1], &
-                          values = reshape(u(3,:), [1, npoint_plot,1]) ) 
+                          values = reshape(u(3,:), [1, npoint_plot,1]) )
     else
        call putvar_real3d(ncid   = ncid_out_snap, &
                           varid  = nc_snap_disp_varid, &
                           start  = [1, 1, isnap], &
                           count  = [1, npoint_plot, 1], &
                           values = reshape(u(1,:), [1, npoint_plot,1]) )
-       
+
        call putvar_real3d(ncid   = ncid_out_snap, &
                           varid  = nc_snap_disp_varid, &
                           start  = [2, 1, isnap], &
@@ -204,7 +204,7 @@ subroutine nc_dump_snapshot(u, straintrace, curlinplane, isnap)
                           start  = [3, 1, isnap], &
                           count  = [1, npoint_plot, 1], &
                           values = reshape(u(3,:), [1, npoint_plot,1]) )
-    end if
+    endif
 
     call check(nf90_put_var(ncid   = ncid_out_snap, &
                        varid  = nc_snap_pwave_varid, &

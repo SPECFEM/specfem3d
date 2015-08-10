@@ -7,7 +7,7 @@
 ! It is distributed from the webpage <http://www.axisem.info>
 
 module kdtree2_precision_module
-  
+
   integer, parameter :: sp = kind(0.0)
   integer, parameter :: dp = kind(0.0d0)
 
@@ -17,12 +17,12 @@ module kdtree2_precision_module
   ! You must comment out exactly one
   ! of the two lines.  If you comment
   ! out kdkind = sp then you get single precision
-  ! and if you comment out kdkind = dp 
-  ! you get double precision. 
+  ! and if you comment out kdkind = dp
+  ! you get double precision.
   !
 
-  integer, parameter :: kdkind = sp  
-  !integer, parameter :: kdkind = dp  
+  integer, parameter :: kdkind = sp
+  !integer, parameter :: kdkind = dp
   public :: kdkind
 
 end module kdtree2_precision_module
@@ -30,7 +30,7 @@ end module kdtree2_precision_module
 module kdtree2_priority_queue_module
   use kdtree2_precision_module
   !
-  ! maintain a priority queue (PQ) of data, pairs of 'priority/payload', 
+  ! maintain a priority queue (PQ) of data, pairs of 'priority/payload',
   ! implemented with a binary heap.  This is the type, and the 'dis' field
   ! is the priority.
   !
@@ -43,13 +43,13 @@ module kdtree2_priority_queue_module
   ! A heap-based priority queue lets one efficiently implement the following
   ! operations, each in log(N) time, as opposed to linear time.
   !
-  ! 1)  add a datum (push a datum onto the queue, increasing its length) 
-  ! 2)  return the priority value of the maximum priority element 
+  ! 1)  add a datum (push a datum onto the queue, increasing its length)
+  ! 2)  return the priority value of the maximum priority element
   ! 3)  pop-off (and delete) the element with the maximum priority, decreasing
-  !     the size of the queue. 
+  !     the size of the queue.
   ! 4)  replace the datum with the maximum priority with a supplied datum
   !     (of either higher or lower priority), maintaining the size of the
-  !     queue. 
+  !     queue.
   !
   !
   ! In the k-d tree case, the 'priority' is the square distance of a point in
@@ -77,11 +77,11 @@ module kdtree2_priority_queue_module
       ! The priority queue consists of elements
       ! priority(1:heap_size), with associated payload(:).
       !
-      ! There are heap_size active elements. 
+      ! There are heap_size active elements.
       ! Assumes the allocation is always sufficient.  Will NOT increase it
       ! to match.
       integer :: heap_size = 0
-      type(kdtree2_result), pointer :: elems(:) 
+      type(kdtree2_result), pointer :: elems(:)
   end type pq
 
   public :: kdtree2_result
@@ -102,23 +102,23 @@ contains
     ! add any alements to the heap, i.e. any existing
     ! data in the input arrays will NOT be used and may
     ! be overwritten.
-    ! 
+    !
     ! usage:
     !    real(kdkind), pointer :: x(:)
     !    integer, pointer :: k(:)
     !    allocate(x(1000),k(1000))
     !    pq => pq_create(x,k)
     !
-    type(kdtree2_result), target:: results_in(:) 
+    type(kdtree2_result), target:: results_in(:)
     type(pq) :: res
     !
     !
     integer :: nalloc
 
     nalloc = size(results_in,1)
-    if (nalloc .lt. 1) then
+    if (nalloc < 1) then
        write (*,*) 'PQ_CREATE: error, input arrays must be allocated.'
-    end if
+    endif
     res%elems => results_in
     res%heap_size = 0
     return
@@ -131,7 +131,7 @@ contains
 
 !
 ! These are written inline for speed.
-!    
+!
 !  integer function parent(i)
 !    integer, intent(in) :: i
 !    parent = (i/2)
@@ -153,14 +153,14 @@ contains
 !  logical function compare_priority(p1,p2)
 !    real(kdkind), intent(in) :: p1, p2
 !
-!    compare_priority = (p1 .gt. p2)
+!    compare_priority = (p1 > p2)
 !    return
 !  end function compare_priority
 
   subroutine heapify(a,i_in)
     !
     ! take a heap rooted at 'i' and force it to be in the
-    ! heap canonical form.   This is performance critical 
+    ! heap canonical form.   This is performance critical
     ! and has been tweaked a little to reflect this.
     !
     type(pq),pointer   :: a
@@ -178,7 +178,7 @@ contains
 bigloop:  do
        l = 2*i ! left(i)
        r = l+1 ! right(i)
-       ! 
+       !
        ! set 'largest' to the index of either i, l, r
        ! depending on whose priority is largest.
        !
@@ -186,14 +186,14 @@ bigloop:  do
        ! in which case they do not count.
 
 
-       ! does left child have higher priority? 
-       if (l .gt. a%heap_size) then
+       ! does left child have higher priority?
+       if (l > a%heap_size) then
           ! we know that i is the largest as both l and r are invalid.
-          exit 
+          exit
        else
           pri_i = a%elems(i)%dis
-          pri_l = a%elems(l)%dis 
-          if (pri_l .gt. pri_i) then
+          pri_l = a%elems(l)%dis
+          if (pri_l > pri_i) then
              largest = l
              pri_largest = pri_l
           else
@@ -205,57 +205,57 @@ bigloop:  do
           ! between i and l we have a winner
           ! now choose between that and r.
           !
-          if (r .le. a%heap_size) then
+          if (r <= a%heap_size) then
              pri_r = a%elems(r)%dis
-             if (pri_r .gt. pri_largest) then
+             if (pri_r > pri_largest) then
                 largest = r
              endif
           endif
        endif
 
-       if (largest .ne. i) then
+       if (largest /= i) then
           ! swap data in nodes largest and i, then heapify
 
           temp = a%elems(i)
           a%elems(i) = a%elems(largest)
-          a%elems(largest) = temp 
-          ! 
-          ! Canonical heapify() algorithm has tail-ecursive call: 
+          a%elems(largest) = temp
           !
-          !        call heapify(a,largest)   
+          ! Canonical heapify() algorithm has tail-ecursive call:
+          !
+          !        call heapify(a,largest)
           ! we will simulate with cycle
           !
           i = largest
-          cycle bigloop ! continue the loop 
+          cycle bigloop ! continue the loop
        else
           return   ! break from the loop
-       end if
+       endif
     enddo bigloop
     return
   end subroutine heapify
 
-  subroutine pq_max(a,e) 
+  subroutine pq_max(a,e)
     !
     ! return the priority and its payload of the maximum priority element
-    ! on the queue, which should be the first one, if it is 
+    ! on the queue, which should be the first one, if it is
     ! in heapified form.
     !
     type(pq),pointer :: a
     type(kdtree2_result),intent(out)  :: e
 
-    if (a%heap_size .gt. 0) then
-       e = a%elems(1) 
+    if (a%heap_size > 0) then
+       e = a%elems(1)
     else
        write (*,*) 'PQ_MAX: ERROR, heap_size < 1'
        stop
     endif
     return
   end subroutine pq_max
-  
+
   real(kdkind) function pq_maxpri(a)
     type(pq), pointer :: a
 
-    if (a%heap_size .gt. 0) then
+    if (a%heap_size > 0) then
        pq_maxpri = a%elems(1)%dis
     else
        write (*,*) 'PQ_MAX_PRI: ERROR, heapsize < 1'
@@ -272,29 +272,29 @@ bigloop:  do
     !
     type(pq),pointer :: a
     type(kdtree2_result), intent(out) :: e
-    
-    if (a%heap_size .ge. 1) then
+
+    if (a%heap_size >= 1) then
        !
        ! return max as first element
        !
-       e = a%elems(1) 
-       
+       e = a%elems(1)
+
        !
        ! move last element to first
        !
-       a%elems(1) = a%elems(a%heap_size) 
+       a%elems(1) = a%elems(a%heap_size)
        a%heap_size = a%heap_size-1
        call heapify(a,1)
        return
     else
        write (*,*) 'PQ_EXTRACT_MAX: error, attempted to pop non-positive PQ'
        stop
-    end if
-    
+    endif
+
   end subroutine pq_extract_max
 
 
-  real(kdkind) function pq_insert(a,dis,idx) 
+  real(kdkind) function pq_insert(a,dis,idx)
     !
     ! Insert a new element and return the new maximum priority,
     ! which may or may not be the same as the old maximum priority.
@@ -308,17 +308,17 @@ bigloop:  do
     real(kdkind)    :: parentdis
     !
 
-    !    if (a%heap_size .ge. a%max_elems) then
+    !    if (a%heap_size >= a%max_elems) then
     !       write (*,*) 'PQ_INSERT: error, attempt made to insert element on full PQ'
     !       stop
     !    else
     a%heap_size = a%heap_size + 1
     i = a%heap_size
 
-    do while (i .gt. 1)
+    do while (i > 1)
        isparent = int(i/2)
        parentdis = a%elems(isparent)%dis
-       if (dis .gt. parentdis) then
+       if (dis > parentdis) then
           ! move what was in i's parent into i.
           a%elems(i)%dis = parentdis
           a%elems(i)%idx = a%elems(isparent)%idx
@@ -326,15 +326,15 @@ bigloop:  do
        else
           exit
        endif
-    end do
+    enddo
 
     ! insert the element at the determined position
     a%elems(i)%dis = dis
     a%elems(i)%idx = idx
 
-    pq_insert = a%elems(1)%dis 
+    pq_insert = a%elems(1)%dis
     return
-    !    end if
+    !    endif
 
   end function pq_insert
 
@@ -352,34 +352,34 @@ bigloop:  do
 
     type(kdtree2_result) :: e
 
-    e = a%elems(i) 
+    e = a%elems(i)
 
     parent = i
     child = 2*i
     N = a%heap_size
-    
-    do while (child .le. N)
-       if (child .lt. N) then
-          if (a%elems(child)%dis .lt. a%elems(child+1)%dis) then
+
+    do while (child <= N)
+       if (child < N) then
+          if (a%elems(child)%dis < a%elems(child+1)%dis) then
              child = child+1
           endif
        endif
        prichild = a%elems(child)%dis
-       if (e%dis .ge. prichild) then
-          exit 
+       if (e%dis >= prichild) then
+          exit
        else
           ! move child into parent.
-          a%elems(parent) = a%elems(child) 
+          a%elems(parent) = a%elems(child)
           parent = child
           child = 2*parent
-       end if
-    end do
+       endif
+    enddo
     a%elems(parent) = e
     return
   end subroutine pq_adjust_heap
-    
 
-  real(kdkind) function pq_replace_max(a,dis,idx) 
+
+  real(kdkind) function pq_replace_max(a,dis,idx)
     !
     ! Replace the extant maximum priority element
     ! in the PQ with (dis,idx).  Return
@@ -396,14 +396,14 @@ bigloop:  do
     real(kdkind)    :: prichild, prichildp1
 
     type(kdtree2_result) :: etmp
-    
+
     if (.true.) then
        N=a%heap_size
-       if (N .ge. 1) then
+       if (N >= 1) then
           parent =1
           child=2
 
-          loop: do while (child .le. N)
+          loop: do while (child <= N)
              prichild = a%elems(child)%dis
 
              !
@@ -411,25 +411,25 @@ bigloop:  do
              ! so, get it, and increment child.
              !
 
-             if (child .lt. N) then
+             if (child < N) then
                 prichildp1 = a%elems(child+1)%dis
-                if (prichild .lt. prichildp1) then
+                if (prichild < prichildp1) then
                    child = child+1
                    prichild = prichildp1
                 endif
              endif
 
-             if (dis .ge. prichild) then
-                exit loop  
-                ! we have a proper place for our new element, 
+             if (dis >= prichild) then
+                exit loop
+                ! we have a proper place for our new element,
                 ! bigger than either children's priority.
              else
                 ! move child into parent.
-                a%elems(parent) = a%elems(child) 
+                a%elems(parent) = a%elems(child)
                 parent = child
                 child = 2*parent
-             end if
-          end do loop
+             endif
+          enddo loop
           a%elems(parent)%dis = dis
           a%elems(parent)%idx = idx
           pq_replace_max = a%elems(1)%dis
@@ -442,7 +442,7 @@ bigloop:  do
        !
        ! slower version using elementary pop and push operations.
        !
-       call pq_extract_max(a,etmp) 
+       call pq_extract_max(a,etmp)
        etmp%dis = dis
        etmp%idx = idx
        pq_replace_max = pq_insert(a,dis,idx)
@@ -451,20 +451,20 @@ bigloop:  do
   end function pq_replace_max
 
   subroutine pq_delete(a,i)
-    ! 
+    !
     ! delete item with index 'i'
     !
     type(pq),pointer :: a
     integer           :: i
 
-    if ((i .lt. 1) .or. (i .gt. a%heap_size)) then
+    if ((i < 1) .or. (i > a%heap_size)) then
        write (*,*) 'PQ_DELETE: error, attempt to remove out of bounds element.'
        stop
     endif
 
     ! swap the item to be deleted with the last element
     ! and shorten heap by one.
-    a%elems(i) = a%elems(a%heap_size) 
+    a%elems(i) = a%elems(a%heap_size)
     a%heap_size = a%heap_size - 1
 
     call heapify(a,i)
@@ -479,7 +479,7 @@ module kdtree2_module
   use kdtree2_priority_queue_module
   ! K-D tree routines in Fortran 90 by Matt Kennel.
   ! Original program was written in Sather by Steve Omohundro and
-  ! Matt Kennel.  Only the Euclidean metric is supported. 
+  ! Matt Kennel.  Only the Euclidean metric is supported.
   !
   !
   ! This module is identical to 'kd_tree', except that the order
@@ -489,7 +489,7 @@ module kdtree2_module
   ! because Fortran lays out columns first,
   !
   ! whereas conventionally (C-style) it is data(1:N,1:D)
-  ! as in the original kd_tree module. 
+  ! as in the original kd_tree module.
   !
   !-------------DATA TYPE, CREATION, DELETION---------------------
   public :: kdkind
@@ -498,16 +498,16 @@ module kdtree2_module
   !-------------------SEARCH ROUTINES-----------------------------
   public :: kdtree2_n_nearest,kdtree2_n_nearest_around_point
   ! Return fixed number of nearest neighbors around arbitrary vector,
-  ! or extant point in dataset, with decorrelation window. 
+  ! or extant point in dataset, with decorrelation window.
   !
   public :: kdtree2_r_nearest, kdtree2_r_nearest_around_point
-  ! Return points within a fixed ball of arb vector/extant point 
+  ! Return points within a fixed ball of arb vector/extant point
   !
   public :: kdtree2_sort_results
   ! Sort, in order of increasing distance, rseults from above.
   !
-  public :: kdtree2_r_count, kdtree2_r_count_around_point 
-  ! Count points within a fixed ball of arb vector/extant point 
+  public :: kdtree2_r_count, kdtree2_r_count_around_point
+  ! Count points within a fixed ball of arb vector/extant point
   !
   public :: kdtree2_n_nearest_brute_force, kdtree2_r_nearest_brute_force
   ! brute force of kdtree2_[n|r]_nearest
@@ -528,13 +528,13 @@ module kdtree2_module
       ! the dimension to cut
       real(kdkind) :: cut_val
       ! where to cut the dimension
-      real(kdkind) :: cut_val_left, cut_val_right  
+      real(kdkind) :: cut_val_left, cut_val_right
       ! improved cutoffs knowing the spread in child boxes.
       integer :: l, u
       type (tree_node), pointer :: left, right
       type(interval), pointer :: box(:) => null()
       ! child pointers
-      ! Points included in this node are indexes[k] with k \in [l,u] 
+      ! Points included in this node are indexes[k] with k \in [l,u]
 
 
   end type tree_node
@@ -544,8 +544,8 @@ module kdtree2_module
       integer :: dimen=0, n=0
       ! dimensionality and total # of points
       real(kdkind), pointer :: the_data(:,:) => null()
-      ! pointer to the actual data array 
-      ! 
+      ! pointer to the actual data array
+      !
       !  IMPORTANT NOTE:  IT IS DIMENSIONED   the_data(1:d,1:N)
       !  which may be opposite of what may be conventional.
       !  This is, because in Fortran, the memory layout is such that
@@ -554,8 +554,8 @@ module kdtree2_module
       !  memory locations.  The search time is dominated by the
       !  evaluation of distances in the terminal nodes.  Putting all
       !  vector components in consecutive memory location improves
-      !  memory cache locality, and hence search speed, and may enable 
-      !  vectorization on some processors and compilers. 
+      !  memory cache locality, and hence search speed, and may enable
+      !  vectorization on some processors and compilers.
 
       integer, pointer :: ind(:) => null()
       ! permuted index into the data, so that indexes[l..u] of some
@@ -563,7 +563,7 @@ module kdtree2_module
       ! bucket.
       logical       :: sort = .false.
       ! do we always sort output results?
-      logical       :: rearrange = .false. 
+      logical       :: rearrange = .false.
       real(kdkind), pointer :: rearranged_data(:,:) => null()
       ! if (rearrange .eqv. .true.) then rearranged_data has been
       ! created so that rearranged_data(:,i) = the_data(:,ind(i)),
@@ -579,17 +579,17 @@ module kdtree2_module
       ! One of these is created for each search.
       !
       private
-      ! 
+      !
       ! Many fields are copied from the tree structure, in order to
       ! speed up the search.
       !
-      integer           :: dimen   
+      integer           :: dimen
       integer           :: nn, nfound
       real(kdkind)      :: ballsize
       integer           :: centeridx=999, correltime=9999
       ! exclude points within 'correltime' of 'centeridx', iff centeridx >= 0
       integer           :: nalloc  ! how much allocated for results(:)?
-      logical           :: rearrange  ! are the data rearranged or original? 
+      logical           :: rearrange  ! are the data rearranged or original?
       ! did the # of points found overflow the storage provided?
       logical           :: overflow
       real(kdkind), pointer :: qv(:)  ! query vector
@@ -622,10 +622,10 @@ contains
     !                      if sort .eqv. .true. then output results
     !                      will be sorted by increasing distance.
     !                      default=.false., as it is faster to not sort.
-    !                      
+    !
     !                      if rearrange .eqv. .true. then an internal
     !                      copy of the data, rearranged by terminal node,
-    !                      will be made for cache friendliness. 
+    !                      will be made for cache friendliness.
     !                      default=.true., as it speeds searches, but
     !                      building takes longer, and extra memory is used.
     !
@@ -648,7 +648,7 @@ contains
        mr%dimen = dim
     else
        mr%dimen = size(input_data,1)
-    end if
+    endif
     mr%n = size(input_data,2)
 
     if (mr%dimen > mr%n) then
@@ -660,7 +660,7 @@ contains
        write (*,*) 'KD_TREE_TRANS: with usually N >> D.   If N =approx= D, then a k-d tree'
        write (*,*) 'KD_TREE_TRANS: is not an appropriate data structure.'
        stop
-    end if
+    endif
 
     call build_tree(mr)
 
@@ -717,18 +717,18 @@ contains
       logical :: recompute
       real(kdkind)    :: average
 
-!!$      If (.False.) Then 
-!!$         If ((l .Lt. 1) .Or. (l .Gt. tp%n)) Then
+!!$      If (.False.) Then
+!!$         If ((l < 1) .Or. (l > tp%n)) Then
 !!$            Stop 'illegal L value in build_tree_for_range'
-!!$         End If
-!!$         If ((u .Lt. 1) .Or. (u .Gt. tp%n)) Then
+!!$         endif
+!!$         If ((u < 1) .Or. (u > tp%n)) Then
 !!$            Stop 'illegal u value in build_tree_for_range'
-!!$         End If
-!!$         If (u .Lt. l) Then
+!!$         endif
+!!$         If (u < l) Then
 !!$            Stop 'U is less than L, thats illegal.'
-!!$         End If
-!!$      Endif
-!!$      
+!!$         endif
+!!$      endif
+!!$
       ! first compute min and max
       dimen = tp%dimen
       allocate (res)
@@ -739,7 +739,7 @@ contains
          ! no points in this box
          nullify(res)
          return
-      end if
+      endif
 
       if ((u-l)<=bucket_size) then
          !
@@ -747,17 +747,17 @@ contains
          !
          do i=1,dimen
             call spread_in_coordinate(tp,i,l,u,res%box(i))
-         end do
+         enddo
          res%cut_dim = 0
          res%cut_val = 0.0
          res%l = l
          res%u = u
          res%left =>null()
-         res%right => null() 
+         res%right => null()
       else
-         ! 
+         !
          ! modify approximate bounding box.  This will be an
-         ! overestimate of the true bounding box, as we are only recomputing 
+         ! overestimate of the true bounding box, as we are only recomputing
          ! the bounding box for the dimension that the parent split on.
          !
          ! Going to a true bounding box computation would significantly
@@ -768,23 +768,23 @@ contains
          do i=1,dimen
             recompute=.true.
             if (associated(parent)) then
-               if (i .ne. parent%cut_dim) then
+               if (i /= parent%cut_dim) then
                   recompute=.false.
-               end if
+               endif
             endif
             if (recompute) then
                call spread_in_coordinate(tp,i,l,u,res%box(i))
             else
                res%box(i) = parent%box(i)
             endif
-         end do
-         
+         enddo
+
 
          c = maxloc(res%box(1:dimen)%upper-res%box(1:dimen)%lower,1)
          !
          ! c is the identity of which coordinate has the greatest spread.
          !
-         
+
          if (.false.) then
             ! select exact median to have fully balanced tree.
             m = (l+u)/2
@@ -792,8 +792,8 @@ contains
          else
             !
             ! select point halfway between min and max, as per A. Moore,
-            ! who says this helps in some degenerate cases, or 
-            ! actual arithmetic average. 
+            ! who says this helps in some degenerate cases, or
+            ! actual arithmetic average.
             !
             if (.true.) then
                ! actually compute average
@@ -801,11 +801,11 @@ contains
             else
                average = (res%box(c)%upper + res%box(c)%lower)/2.0
             endif
-               
+
             res%cut_val = average
             m = select_on_coordinate_value(tp%the_data,tp%ind,c,average,l,u)
          endif
-            
+
          ! moves indexes around
          res%cut_dim = c
          res%l = l
@@ -819,7 +819,7 @@ contains
             res%box = res%left%box
             res%cut_val_left = res%left%box(c)%upper
             res%cut_val = res%cut_val_left
-         elseif (associated(res%left) .eqv. .false.) then
+         else if (associated(res%left) .eqv. .false.) then
             res%box = res%right%box
             res%cut_val_right = res%right%box(c)%lower
             res%cut_val = res%cut_val_right
@@ -829,24 +829,24 @@ contains
             res%cut_val = (res%cut_val_left + res%cut_val_right)/2
 
 
-            ! now remake the true bounding box for self.  
+            ! now remake the true bounding box for self.
             ! Since we are taking unions (in effect) of a tree structure,
             ! this is much faster than doing an exhaustive
             ! search over all points
             res%box%upper = max(res%left%box%upper,res%right%box%upper)
-            res%box%lower = min(res%left%box%lower,res%right%box%lower) 
+            res%box%lower = min(res%left%box%lower,res%right%box%lower)
          endif
-      end if
+      endif
     end function build_tree_for_range
 
     integer function select_on_coordinate_value(v,ind,c,alpha,li,ui) &
      result(res)
       ! Move elts of ind around between l and u, so that all points
       ! <= than alpha (in c cooordinate) are first, and then
-      ! all points > alpha are second. 
+      ! all points > alpha are second.
 
       !
-      ! Algorithm (matt kennel). 
+      ! Algorithm (matt kennel).
       !
       ! Consider the list as having three parts: on the left,
       ! the points known to be <= alpha.  On the right, the points
@@ -854,8 +854,8 @@ contains
       ! points.   The algorithm is to scan the unknown points, starting
       ! from the left, and swapping them so that they are added to
       ! the left stack or the right stack, as appropriate.
-      ! 
-      ! The algorithm finishes when the unknown stack is empty. 
+      !
+      ! The algorithm finishes when the unknown stack is empty.
       !
       ! .. Scalar Arguments ..
       integer, intent (In) :: c, li, ui
@@ -863,7 +863,7 @@ contains
       ! ..
       real(kdkind) :: v(1:,1:)
       integer :: ind(1:)
-      integer :: tmp  
+      integer :: tmp
       ! ..
       integer :: lb, rb
       !
@@ -871,13 +871,13 @@ contains
       ! [l,lb-1]
       !
       ! The points known to be > alpha are in
-      ! [rb+1,u].  
+      ! [rb+1,u].
       !
       ! Therefore we add new points into lb or
       ! rb as appropriate.  When lb=rb
       ! we are done.  We return the location of the last point <= alpha.
       !
-      ! 
+      !
       lb = li; rb = ui
 
       do while (lb < rb)
@@ -889,15 +889,15 @@ contains
             tmp = ind(lb); ind(lb) = ind(rb); ind(rb) = tmp
             rb = rb-1
          endif
-      end do
-      
-      ! now lb .eq. ub 
+      enddo
+
+      ! now lb == ub
       if (v(c,ind(lb)) <= alpha) then
          res = lb
       else
          res = lb-1
       endif
-      
+
     end function select_on_coordinate_value
 
     subroutine select_on_coordinate(v,ind,c,k,li,ui)
@@ -923,20 +923,20 @@ contains
                s = ind(m)
                ind(m) = ind(i)
                ind(i) = s
-            end if
-         end do
+            endif
+         enddo
          s = ind(l)
          ind(l) = ind(m)
          ind(m) = s
          if (m<=k) l = m + 1
          if (m>=k) u = m - 1
-      end do
+      enddo
     end subroutine select_on_coordinate
 
-   subroutine spread_in_coordinate(tp,c,l,u,interv) 
-      ! the spread in coordinate 'c', between l and u. 
+   subroutine spread_in_coordinate(tp,c,l,u,interv)
+      ! the spread in coordinate 'c', between l and u.
       !
-      ! Return lower bound in 'smin', and upper in 'smax', 
+      ! Return lower bound in 'smin', and upper in 'smax',
       ! ..
       ! .. Structure Arguments ..
       type (kdtree2), pointer :: tp
@@ -967,15 +967,15 @@ contains
             t = lmin
             lmin = lmax
             lmax = t
-         end if
+         endif
          if (smin>lmin) smin = lmin
          if (smax<lmax) smax = lmax
-      end do
+      enddo
       if (i==ulocal+1) then
          last = v(c,ind(ulocal))
          if (smin>last) smin = last
          if (smax<last) smax = last
-      end if
+      endif
 
       interv%lower = smin
       interv%upper = smax
@@ -1012,15 +1012,15 @@ contains
       if (associated(np%left)) then
          call destroy_node(np%left)
          nullify (np%left)
-      end if
+      endif
       if (associated(np%right)) then
          call destroy_node(np%right)
          nullify (np%right)
-      end if
+      endif
       if (associated(np%box)) deallocate(np%box)
       deallocate(np)
       return
-      
+
     end subroutine destroy_node
 
   end subroutine kdtree2_destroy
@@ -1041,7 +1041,7 @@ contains
     sr%nfound = 0
     sr%centeridx = -1
     sr%correltime = 0
-    sr%overflow = .false. 
+    sr%overflow = .false.
 
     sr%results => results
 
@@ -1056,7 +1056,7 @@ contains
     endif
     sr%dimen = tp%dimen
 
-    call validate_query_storage(nn) 
+    call validate_query_storage(nn)
     sr%pq = pq_create(results)
 
     call search(tp%root)
@@ -1111,15 +1111,15 @@ contains
     return
   end subroutine kdtree2_n_nearest_around_point
 
-  subroutine kdtree2_r_nearest(tp,qv,r2,nfound,nalloc,results) 
+  subroutine kdtree2_r_nearest(tp,qv,r2,nfound,nalloc,results)
     ! find the nearest neighbors to point 'idxin', within SQUARED
     ! Euclidean distance 'r2'.   Upon ENTRY, nalloc must be the
     ! size of memory allocated for results(1:nalloc).  Upon
-    ! EXIT, nfound is the number actually found within the ball. 
+    ! EXIT, nfound is the number actually found within the ball.
     !
-    !  Note that if nfound .gt. nalloc then more neighbors were found
+    !  Note that if nfound > nalloc then more neighbors were found
     !  than there were storage to store.  The resulting list is NOT
-    !  the smallest ball inside norm r^2 
+    !  the smallest ball inside norm r^2
     !
     ! Results are NOT sorted unless tree was created with sort option.
     type (kdtree2), pointer      :: tp
@@ -1141,7 +1141,7 @@ contains
 
     call validate_query_storage(nalloc)
     sr%nalloc = nalloc
-    sr%overflow = .false. 
+    sr%overflow = .false.
     sr%ind => tp%ind
     sr%rearrange= tp%rearrange
 
@@ -1177,8 +1177,8 @@ contains
    nfound,nalloc,results)
     !
     ! Like kdtree2_r_nearest, but around a point 'idxin' already existing
-    ! in the data set. 
-    ! 
+    ! in the data set.
+    !
     ! Results are NOT sorted unless tree was created with sort option.
     !
     type (kdtree2), pointer      :: tp
@@ -1242,7 +1242,7 @@ contains
   end subroutine kdtree2_r_nearest_around_point
 
   function kdtree2_r_count(tp,qv,r2) result(nfound)
-    ! Count the number of neighbors within square distance 'r2'. 
+    ! Count the number of neighbors within square distance 'r2'.
     type (kdtree2), pointer   :: tp
     real(kdkind), target, intent (In) :: qv(:)
     real(kdkind), intent(in)          :: r2
@@ -1258,7 +1258,7 @@ contains
     sr%nfound = 0
     sr%centeridx = -1
     sr%correltime = 0
-    
+
     nullify(sr%results) ! for some reason, FTN 95 chokes on '=> null()'
 
     sr%nalloc = 0            ! we do not allocate any storage but that's OK
@@ -1342,7 +1342,7 @@ contains
     !
     integer, intent(in) :: n
 
-    if (size(sr%results,1) .lt. n) then
+    if (size(sr%results,1) < n) then
        write (*,*) 'KD_TREE_TRANS:  you did not provide enough storage for results(1:n)'
        stop
        return
@@ -1352,7 +1352,7 @@ contains
   end subroutine validate_query_storage
 
   function square_distance(d, iv,qv) result (res)
-    ! distance between iv[1:n] and qv[1:n] 
+    ! distance between iv[1:n] and qv[1:n]
     ! .. Function Return Value ..
     ! re-implemented to improve vectorization.
     real(kdkind) :: res
@@ -1367,11 +1367,11 @@ contains
     ! ..
     res = sum( (iv(1:d)-qv(1:d))**2 )
   end function square_distance
-  
+
   recursive subroutine search(node)
     !
     ! This is the innermost core routine of the kd-tree search.  Along
-    ! with "process_terminal_node", it is the performance bottleneck. 
+    ! with "process_terminal_node", it is the performance bottleneck.
     !
     ! This version uses a logically complete secondary search of
     ! "box in bounds", whether the sear
@@ -1385,11 +1385,11 @@ contains
     real(kdkind)                               :: qval, dis
     real(kdkind)                               :: ballsize
     real(kdkind), pointer           :: qv(:)
-    type(interval), pointer :: box(:) 
+    type(interval), pointer :: box(:)
 
     if ((associated(node%left) .and. associated(node%right)) .eqv. .false.) then
        ! we are on a terminal node
-       if (sr%nn .eq. 0) then
+       if (sr%nn == 0) then
           call process_terminal_node_fixedball(node)
        else
           call process_terminal_node(node)
@@ -1414,7 +1414,7 @@ contains
 
        if (associated(ncloser)) call search(ncloser)
 
-       ! we may need to search the second node. 
+       ! we may need to search the second node.
        if (associated(nfarther)) then
           ballsize = sr%ballsize
 !          dis=extra**2
@@ -1423,25 +1423,25 @@ contains
              ! we do this separately as going on the first cut dimen is often
              ! a good idea.
              ! note that if extra**2 < sr%ballsize, then the next
-             ! check will also be false. 
+             ! check will also be false.
              !
              box => node%box(1:)
              do i=1,sr%dimen
-                if (i .ne. cut_dim) then
+                if (i /= cut_dim) then
                    dis = dis + dis2_from_bnd(qv(i),box(i)%lower,box(i)%upper)
                    if (dis > ballsize) then
                       return
                    endif
                 endif
-             end do
-             
+             enddo
+
              !
              ! if we are still here then we need to search mroe.
              !
              call search(nfarther)
           endif
        endif
-    end if
+    endif
   end subroutine search
 
 
@@ -1489,7 +1489,7 @@ contains
           res = .false.
           return
        endif
-    end do
+    enddo
     res = .true.
     return
   end function box_in_search_range
@@ -1509,7 +1509,7 @@ contains
     integer                :: dimen, i, indexofi, k, centeridx, correltime
     real(kdkind)                   :: ballsize, sd, newpri
     logical                :: rearrange
-    type(pq), pointer      :: pqp 
+    type(pq), pointer      :: pqp
     !
     ! copy values from sr to local variables
     !
@@ -1517,17 +1517,17 @@ contains
     ! Notice, making local pointers with an EXPLICIT lower bound
     ! seems to generate faster code.
     ! why?  I don't know.
-    qv => sr%qv(1:) 
+    qv => sr%qv(1:)
     pqp => sr%pq
     dimen = sr%dimen
-    ballsize = sr%ballsize 
+    ballsize = sr%ballsize
     rearrange = sr%rearrange
     ind => sr%ind(1:)
-    data => sr%Data(1:,1:)     
+    data => sr%Data(1:,1:)
     centeridx = sr%centeridx
     correltime = sr%correltime
 
-    !    doing_correl = (centeridx >= 0)  ! Do we have a decorrelation window? 
+    !    doing_correl = (centeridx >= 0)  ! Do we have a decorrelation window?
     !    include_point = .true.    ! by default include all points
     ! search through terminal bucket.
 
@@ -1537,7 +1537,7 @@ contains
           do k = 1,dimen
              sd = sd + (data(k,i) - qv(k))**2
              if (sd>ballsize) cycle mainloop
-          end do
+          enddo
           indexofi = ind(i)  ! only read it if we have not broken out
        else
           indexofi = ind(i)
@@ -1545,7 +1545,7 @@ contains
           do k = 1,dimen
              sd = sd + (data(k,indexofi) - qv(k))**2
              if (sd>ballsize) cycle mainloop
-          end do
+          enddo
        endif
 
        if (centeridx > 0) then ! doing correlation interval?
@@ -1553,50 +1553,50 @@ contains
        endif
 
 
-       ! 
+       !
        ! two choices for any point.  The list so far is either undersized,
        ! or it is not.
        !
        ! If it is undersized, then add the point and its distance
        ! unconditionally.  If the point added fills up the working
        ! list then set the sr%ballsize, maximum distance bound (largest distance on
-       ! list) to be that distance, instead of the initialized +infinity. 
+       ! list) to be that distance, instead of the initialized +infinity.
        !
        ! If the running list is full size, then compute the
        ! distance but break out immediately if it is larger
        ! than sr%ballsize, "best squared distance" (of the largest element),
-       ! as it cannot be a good neighbor. 
+       ! as it cannot be a good neighbor.
        !
        ! Once computed, compare to best_square distance.
        ! if it is smaller, then delete the previous largest
-       ! element and add the new one. 
+       ! element and add the new one.
 
-       if (sr%nfound .lt. sr%nn) then
+       if (sr%nfound < sr%nn) then
           !
           ! add this point unconditionally to fill list.
           !
-          sr%nfound = sr%nfound +1 
+          sr%nfound = sr%nfound +1
           newpri = pq_insert(pqp,sd,indexofi)
-          if (sr%nfound .eq. sr%nn) ballsize = newpri
+          if (sr%nfound == sr%nn) ballsize = newpri
           ! we have just filled the working list.
           ! put the best square distance to the maximum value
-          ! on the list, which is extractable from the PQ. 
+          ! on the list, which is extractable from the PQ.
 
        else
           !
           ! now, if we get here,
           ! we know that the current node has a squared
           ! distance smaller than the largest one on the list, and
-          ! belongs on the list. 
+          ! belongs on the list.
           ! Hence we replace that with the current one.
           !
           ballsize = pq_replace_max(pqp,sd,indexofi)
        endif
-    end do mainloop
+    enddo mainloop
     !
     ! Reset sr variables which may have changed during loop
     !
-    sr%ballsize = ballsize 
+    sr%ballsize = ballsize
 
   end subroutine process_terminal_node
 
@@ -1623,7 +1623,7 @@ contains
     !
     qv => sr%qv(1:)
     dimen = sr%dimen
-    ballsize = sr%ballsize 
+    ballsize = sr%ballsize
     rearrange = sr%rearrange
     ind => sr%ind(1:)
     data => sr%Data(1:,1:)
@@ -1635,32 +1635,32 @@ contains
     ! search through terminal bucket.
     mainloop: do i = node%l, node%u
 
-       ! 
+       !
        ! two choices for any point.  The list so far is either undersized,
        ! or it is not.
        !
        ! If it is undersized, then add the point and its distance
        ! unconditionally.  If the point added fills up the working
        ! list then set the sr%ballsize, maximum distance bound (largest distance on
-       ! list) to be that distance, instead of the initialized +infinity. 
+       ! list) to be that distance, instead of the initialized +infinity.
        !
        ! If the running list is full size, then compute the
        ! distance but break out immediately if it is larger
        ! than sr%ballsize, "best squared distance" (of the largest element),
-       ! as it cannot be a good neighbor. 
+       ! as it cannot be a good neighbor.
        !
        ! Once computed, compare to best_square distance.
        ! if it is smaller, then delete the previous largest
-       ! element and add the new one. 
+       ! element and add the new one.
 
-       ! which index to the point do we use? 
+       ! which index to the point do we use?
 
        if (rearrange) then
           sd = 0.0
           do k = 1,dimen
              sd = sd + (data(k,i) - qv(k))**2
              if (sd>ballsize) cycle mainloop
-          end do
+          enddo
           indexofi = ind(i)  ! only read it if we have not broken out
        else
           indexofi = ind(i)
@@ -1668,7 +1668,7 @@ contains
           do k = 1,dimen
              sd = sd + (data(k,indexofi) - qv(k))**2
              if (sd>ballsize) cycle mainloop
-          end do
+          enddo
        endif
 
        if (centeridx > 0) then ! doing correlation interval?
@@ -1676,7 +1676,7 @@ contains
        endif
 
        nfound = nfound+1
-       if (nfound .gt. sr%nalloc) then
+       if (nfound > sr%nalloc) then
           ! oh nuts, we have to add another one to the tree but
           ! there isn't enough room.
           sr%overflow = .true.
@@ -1684,14 +1684,14 @@ contains
           sr%results(nfound)%dis = sd
           sr%results(nfound)%idx = indexofi
        endif
-    end do mainloop
+    enddo mainloop
     !
     ! Reset sr variables which may have changed during loop
     !
     sr%nfound = nfound
   end subroutine process_terminal_node_fixedball
 
-  subroutine kdtree2_n_nearest_brute_force(tp,qv,nn,results) 
+  subroutine kdtree2_n_nearest_brute_force(tp,qv,nn,results)
     ! find the 'n' nearest neighbors to 'qv' by exhaustive search.
     ! only use this subroutine for testing, as it is SLOW!  The
     ! whole point of a k-d tree is to avoid doing what this subroutine
@@ -1699,7 +1699,7 @@ contains
     type (kdtree2), pointer :: tp
     real(kdkind), intent (In)       :: qv(:)
     integer, intent (In)    :: nn
-    type(kdtree2_result)    :: results(:) 
+    type(kdtree2_result)    :: results(:)
 
     integer :: i, j, k
     real(kdkind), allocatable :: all_distances(:)
@@ -1707,31 +1707,31 @@ contains
     allocate (all_distances(tp%n))
     do i = 1, tp%n
        all_distances(i) = square_distance(tp%dimen,qv,tp%the_data(:,i))
-    end do
+    enddo
     ! now find 'n' smallest distances
     do i = 1, nn
        results(i)%dis =  huge(1.0)
        results(i)%idx = -1
-    end do
+    enddo
     do i = 1, tp%n
        if (all_distances(i)<results(nn)%dis) then
           ! insert it somewhere on the list
           do j = 1, nn
              if (all_distances(i)<results(j)%dis) exit
-          end do
+          enddo
           ! now we know 'j'
           do k = nn - 1, j, -1
              results(k+1) = results(k)
-          end do
+          enddo
           results(j)%dis = all_distances(i)
           results(j)%idx = i
-       end if
-    end do
+       endif
+    enddo
     deallocate (all_distances)
   end subroutine kdtree2_n_nearest_brute_force
-  
 
-  subroutine kdtree2_r_nearest_brute_force(tp,qv,r2,nfound,results) 
+
+  subroutine kdtree2_r_nearest_brute_force(tp,qv,r2,nfound,results)
     ! find the nearest neighbors to 'qv' with distance**2 <= r2 by exhaustive search.
     ! only use this subroutine for testing, as it is SLOW!  The
     ! whole point of a k-d tree is to avoid doing what this subroutine
@@ -1740,7 +1740,7 @@ contains
     real(kdkind), intent (In)       :: qv(:)
     real(kdkind), intent (In)       :: r2
     integer, intent(out)    :: nfound
-    type(kdtree2_result)    :: results(:) 
+    type(kdtree2_result)    :: results(:)
 
     integer :: i, nalloc
     real(kdkind), allocatable :: all_distances(:)
@@ -1748,20 +1748,20 @@ contains
     allocate (all_distances(tp%n))
     do i = 1, tp%n
        all_distances(i) = square_distance(tp%dimen,qv,tp%the_data(:,i))
-    end do
-    
+    enddo
+
     nfound = 0
     nalloc = size(results,1)
 
     do i = 1, tp%n
        if (all_distances(i)< r2) then
           ! insert it somewhere on the list
-          if (nfound .lt. nalloc) then
+          if (nfound < nalloc) then
              nfound = nfound+1
              results(nfound)%dis = all_distances(i)
              results(nfound)%idx = i
           endif
-       end if
+       endif
     enddo
     deallocate (all_distances)
 
@@ -1771,17 +1771,17 @@ contains
   end subroutine kdtree2_r_nearest_brute_force
 
   subroutine kdtree2_sort_results(nfound,results)
-    !  Use after search to sort results(1:nfound) in order of increasing 
+    !  Use after search to sort results(1:nfound) in order of increasing
     !  distance.
     integer, intent(in)          :: nfound
-    type(kdtree2_result), target :: results(:) 
+    type(kdtree2_result), target :: results(:)
     !
     !
 
     !THIS IS BUGGY WITH INTEL FORTRAN
-    !    If (nfound .Gt. 1) Call heapsort(results(1:nfound)%dis,results(1:nfound)%ind,nfound)
+    !    If (nfound > 1) Call heapsort(results(1:nfound)%dis,results(1:nfound)%ind,nfound)
     !
-    if (nfound .gt. 1) call heapsort_struct(results,nfound)
+    if (nfound > 1) call heapsort_struct(results,nfound)
 
     return
   end subroutine kdtree2_sort_results
@@ -1789,11 +1789,11 @@ contains
   subroutine heapsort(a,ind,n)
     !
     ! Sort a(1:n) in ascending order, permuting ind(1:n) similarly.
-    ! 
+    !
     ! If ind(k) = k upon input, then it will give a sort index upon output.
     !
     integer,intent(in)          :: n
-    real(kdkind), intent(inout)         :: a(:) 
+    real(kdkind), intent(inout)         :: a(:)
     integer, intent(inout)      :: ind(:)
 
     !
@@ -1810,11 +1810,11 @@ contains
     !    do i=1,n
     !       ind(i)=i
     ! Generate initial idum array
-    !    end do
+    !    enddo
 
-    if(n.eq.1) return                  
+    if(n==1) return
 
-    do 
+    do
        if(ileft > 1)then
           ileft=ileft-1
           value=a(ileft); ivalue=ind(ileft)
@@ -1829,7 +1829,7 @@ contains
        endif
        i=ileft
        j=2*ileft
-       do while (j <= iright) 
+       do while (j <= iright)
           if(j < iright) then
              if(a(j) < a(j+1)) j=j+1
           endif
@@ -1840,15 +1840,15 @@ contains
           else
              j=iright+1
           endif
-       end do
+       enddo
        a(i)=value; ind(i)=ivalue
-    end do
+    enddo
   end subroutine heapsort
 
   subroutine heapsort_struct(a,n)
     !
     ! Sort a(1:n) in ascending order
-    ! 
+    !
     !
     integer,intent(in)                 :: n
     type(kdtree2_result),intent(inout) :: a(:)
@@ -1866,11 +1866,11 @@ contains
     !    do i=1,n
     !       ind(i)=i
     ! Generate initial idum array
-    !    end do
+    !    enddo
 
-    if(n.eq.1) return                  
+    if(n==1) return
 
-    do 
+    do
        if(ileft > 1)then
           ileft=ileft-1
           value=a(ileft)
@@ -1885,20 +1885,20 @@ contains
        endif
        i=ileft
        j=2*ileft
-       do while (j <= iright) 
+       do while (j <= iright)
           if(j < iright) then
              if(a(j)%dis < a(j+1)%dis) j=j+1
           endif
           if(value%dis < a(j)%dis) then
-             a(i)=a(j); 
+             a(i)=a(j);
              i=j
              j=j+j
           else
              j=iright+1
           endif
-       end do
+       enddo
        a(i)=value
-    end do
+    enddo
   end subroutine heapsort_struct
 
 end module kdtree2_module

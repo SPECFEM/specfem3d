@@ -27,9 +27,9 @@ module rotations
   use data_source
   use data_io
   use data_proc
-  
+
   implicit none
-  
+
   public :: def_rot_matrix, rotate_receivers_recfile,save_google_earth_kml
   private
 
@@ -43,7 +43,7 @@ subroutine def_rot_matrix
     write(6,*) '  Need to rotate the source to the north pole!'
     write(6,*) '  .... therefore computing rotation matrix and its transpose'
   endif
- 
+
   ! This is the rotation matrix of Nissen-Meyer, Dahlen, Fournier, GJI 2007.
   rot_mat(1,1) = dcos(srccolat) * dcos(srclon)
   rot_mat(2,2) = dcos(srclon)
@@ -81,7 +81,7 @@ subroutine rotate_receivers_recfile(num_rec_glob, rcvcolat, rcvlon1, receiver_na
   rcvcolat=rcvcolat*pi/180.d0
   rcvlon=rcvlon1*pi/180.d0
 
-  if (lpr) then 
+  if (lpr) then
      open(unit=37,file=infopath(1:lfinfo)//'/receiver_xyz_orig.dat')
      open(unit=38,file=infopath(1:lfinfo)//'/receiver_xyz_rot.dat')
      write(37,*)dsin(srccolat)*dcos(srclon),dsin(srccolat)*dsin(srclon),dcos(srccolat)
@@ -94,7 +94,7 @@ subroutine rotate_receivers_recfile(num_rec_glob, rcvcolat, rcvlon1, receiver_na
      x_vec(3)=dcos(rcvcolat(ircv))
 
      x_vec_rot=matmul(trans_rot_mat,x_vec)
-     
+
      if (lpr) then
         write(37,*)x_vec(1),x_vec(2),x_vec(3)
         write(38,*)x_vec_rot(1),x_vec_rot(2),x_vec_rot(3)
@@ -102,20 +102,20 @@ subroutine rotate_receivers_recfile(num_rec_glob, rcvcolat, rcvlon1, receiver_na
 
      r_r = dsqrt(x_vec_rot(1)**2 + x_vec_rot(2)**2 + x_vec_rot(3)**2)
      rcvcolat(ircv) = dacos(x_vec_rot(3) / (r_r +smallval_dble))
-     
+
      if (x_vec_rot(2) >= 0.) then
         rcvlon(ircv) = dacos(x_vec_rot(1) / (r_r * dsin(rcvcolat(ircv)) + smallval_dble))
      else
         rcvlon(ircv) = 2*pi - dacos(x_vec_rot(1) / (r_r * dsin(rcvcolat(ircv)) + smallval_dble))
-     end if
+     endif
 
-     if (dabs(r_r-1.d0) > smallval) then 
+     if (dabs(r_r-1.d0) > smallval) then
         write(6,*)procstrg,'  Problem with radius of receiver location!!'
         write(6,*)procstrg,',  Receiver at:',rcvcolat(ircv)*180./pi,rcvlon(ircv)
      endif
 
   enddo
-  
+
   if (lpr) close(37)
   if (lpr) close(38)
 
@@ -142,7 +142,7 @@ subroutine save_google_earth_kml(srccolat1, srclon1, rcvcolat, rcvlon, &
                                  num_rec_glob, fname, receiver_name)
 
   use data_proc, only : appmynum
-  
+
   integer, intent(in)           :: num_rec_glob
   real, intent(in)              :: srccolat1, srclon1, rcvcolat(1:num_rec_glob), &
                                    rcvlon(1:num_rec_glob)
@@ -152,28 +152,28 @@ subroutine save_google_earth_kml(srccolat1, srclon1, rcvcolat, rcvlon, &
   integer           :: i
   character(len=4)  :: app
   character(len=2)  :: comp(3)
-  
+
   slat=90.-srccolat1
   slon=srclon1
   if (slon>180.) slon=slon-360.
-  
+
   rlat=90.-rcvcolat
   rlon=rcvlon
   do i=1,num_rec_glob
      if (rlon(i)>180.) rlon(i)=rlon(i)-360.
   enddo
-  
+
   ! components
   comp(1) = 's'
   comp(2) = 'ph'
   comp(3) = 'z'
-   
+
   open(unit=88,file=infopath(1:lfinfo)//'/src_rec_'//fname//'.kml')
-  
+
   write(88,14)'<?xml version="1.0" encoding="UTF-8"?> '
   write(88,15)'<kml xmlns="http://earth.google.com/kml/2.0"> '
   write(88,16)'<Document> '
-  
+
   write(88,*)
   write(88,*)'  <name> ',trim(fname),' earthquake-receiver configuration</name>'
   write(88,*)'    <LookAt>'
@@ -201,7 +201,7 @@ subroutine save_google_earth_kml(srccolat1, srclon1, rcvcolat, rcvlon, &
   write(88,*)'    <name>',fname,' earthquake</name>'
   write(88,13)'   <Point><coordinates>',slon,',',slat,'</coordinates></Point>'
   write(88,*)'   </Placemark>'
-  
+
   do i=1,num_rec_glob
      write(88,*)
      write(88,*) ' <Placemark>'
@@ -228,17 +228,17 @@ subroutine save_google_earth_kml(srccolat1, srclon1, rcvcolat, rcvlon, &
      write(88,*) ' <img src="../Data/'//trim(receiver_name(i))//'_disp.dat_'//trim(comp(3))//'.gif"></img>'
      if (src_type(1)/='monopole') &
      write(88,*) ' <img src="../Data/'//trim(receiver_name(i))//'_disp.dat_'//trim(comp(2))//'.gif"></img>'
-  
+
      write(88,*) '  </description>'
      write(88,13) '   <Point><coordinates>',rlon(i),',',rlat(i),'</coordinates></Point>'
      write(88,*) ' </Placemark>'
   enddo
-  
+
   write(88,*)'......'
   write(88,*)
   write(88,*)'</Document>'
   write(88,*)'</kml>'
-  
+
   close(88)
 
 12 format(a16,f10.2,a23,f10.2,a12)

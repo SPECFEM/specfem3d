@@ -134,8 +134,8 @@ subroutine append(this, ldata)
      call newLink%init(ldata, null(), this%lastLink)
      call this%lastLink%setNextLink(newLink)
      this%lastLink => newLink
-  end if
-   
+  endif
+
   this%length = this%length + 1
 end subroutine append
 !-----------------------------------------------------------------------------------------
@@ -147,7 +147,7 @@ subroutine insert(this, ldata)
   type(link), pointer     :: newLink
 
   allocate(newLink)
-  
+
   if (.not. associated(this%firstLink)) then
      call newLink%init(ldata, null(), null())
      this%firstLink => newLink
@@ -156,7 +156,7 @@ subroutine insert(this, ldata)
      call newLink%init(ldata, this%firstLink, null())
      call this%firstLink%setPrevLink(newLink)
      this%firstLink => newLink
-  end if
+  endif
 
   this%length = this%length + 1
 end subroutine insert
@@ -221,12 +221,12 @@ function getNext(this)
   if (.not. associated(this%currentLink)) then
      this%currentLink => this%firstLink
      getNext => this%currentLink
-  elseif (associated(this%currentLink%getNextLink())) then
+  else if (associated(this%currentLink%getNextLink())) then
      this%currentLink => this%currentLink%getNextLink()
      getNext => this%currentLink
   else
      stop 'trying to go beyond last element in list'
-  end if 
+  endif
 end function getNext
 !-----------------------------------------------------------------------------------------
 
@@ -238,12 +238,12 @@ function getPrev(this)
   if (.not. associated(this%currentLink)) then
      this%currentLink => this%lastLink
      getPrev => this%currentLink
-  elseif (associated(this%currentLink%getPrevLink())) then
+  else if (associated(this%currentLink%getPrevLink())) then
      this%currentLink => this%currentLink%getPrevLink()
      getPrev => this%currentLink
   else
      stop 'trying to go beyond first element in list'
-  end if 
+  endif
 end function getPrev
 !-----------------------------------------------------------------------------------------
 

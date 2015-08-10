@@ -26,12 +26,12 @@ module data_spec
 
   use global_parameters
   implicit none
-  public 
+  public
 
   real(kind=dp), allocatable, dimension(:) :: xi_k, eta   ! Allocated in data_mesh
-  real(kind=dp), allocatable, dimension(:) :: dxi         ! " 
+  real(kind=dp), allocatable, dimension(:) :: dxi         ! "
   real(kind=dp), allocatable, dimension(:) :: wt          !Quadrature weights
-  real(kind=dp), allocatable, dimension(:) :: wt_axial_k  !Quad. wgts for the   
+  real(kind=dp), allocatable, dimension(:) :: wt_axial_k  !Quad. wgts for the
                                                           !gaus jacobi(0,1) integration
 
   ! Lagrange interpolant derivatives

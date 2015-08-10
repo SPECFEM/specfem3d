@@ -51,11 +51,11 @@ program gllmesh
   ! 3) bkgrdmodel & discontinuity radii
   call read_params ! input
   !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  
+
   write(6,*)'MAIN: creating subregions/discontinuity model..........'; call flush(6)
   call create_subregions ! discont_meshing
 
-  southern = .true. 
+  southern = .true.
 
   write(6,*)'MAIN: generating skeleton..............................'; call flush(6)
   iclock02 = tick()
@@ -86,7 +86,7 @@ program gllmesh
   call def_fluid_regions ! mesh_info
   call def_solid_regions ! mesh_info
   call extract_fluid_solid_submeshes ! gllmeshgen
-  
+
   write(6,*)'MAIN: glob-slob/flob numbering.........................'; call flush(6)
   iclock08 = tick()
   if (have_fluid) &
@@ -102,7 +102,7 @@ program gllmesh
   ! Parallelization
   write(6,*)'MAIN: domain decomposition.............................'; call flush(6)
   call create_domain_decomposition !parallelization
- 
+
   write(6,*)'MAIN: creating parallel database.......................'; call flush(6)
   iclock11 = tick()
   call create_pdb ! pdb
@@ -110,9 +110,9 @@ program gllmesh
 
   ! clean up
   call empty_data_mesh
-  
+
   call end_clock ! clocks
-  
+
   write(6,*)''
   write(6,*)'....DONE WITH MESHER !'
 

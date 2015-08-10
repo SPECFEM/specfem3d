@@ -23,7 +23,7 @@
 module data_gllmesh
   use global_parameters, only: sp,dp
   implicit none
-  public 
+  public
   real(kind=dp), dimension(:,:,:), allocatable :: sgll,zgll
   real(kind=dp), dimension(:,:,:), allocatable :: sgll_fluid,zgll_fluid
   real(kind=dp), dimension(:,:,:), allocatable :: sgll_solid,zgll_solid
@@ -31,7 +31,7 @@ module data_gllmesh
   real(kind=dp)    :: hmin_glob, hmax_glob ! global min/max gll spacing
   real(kind=dp)    :: min_distance_dim     ! 0.1*hmin_glob [in meters]
   real(kind=dp)    :: min_distance_nondim  ! 0.1*hmin_glob [referenced to 1]
-  
+
   real(kind=dp)    :: char_time_max
   integer          :: char_time_max_globel
   real(kind=dp)    :: char_time_max_rad, char_time_max_theta

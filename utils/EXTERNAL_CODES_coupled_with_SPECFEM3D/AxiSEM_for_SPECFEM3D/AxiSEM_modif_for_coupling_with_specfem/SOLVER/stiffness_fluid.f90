@@ -27,13 +27,13 @@ module stiffness_fluid
   use data_mesh,         only: axis_solid, axis_fluid, nsize
   use data_spec
   use data_source
-  
+
   use unrolled_loops
-  
+
   implicit none
-  
+
   public :: glob_fluid_stiffness
-  
+
   private
 
 contains
@@ -42,7 +42,7 @@ contains
 !> Wrapper routine to avoid if statements in the timeloop
 pure subroutine glob_fluid_stiffness(glob_stiffness_fl, chi)
   use data_mesh, only: npol, nel_fluid
-  
+
   real(kind=realkind), intent(in)  :: chi(0:,0:,:)
   real(kind=realkind), intent(out) :: glob_stiffness_fl(0:npol,0:npol,nel_fluid)
 
@@ -59,25 +59,25 @@ end subroutine glob_fluid_stiffness
 pure subroutine glob_fluid_stiffness_generic(glob_stiffness_fl, chi)
 
   use data_mesh, only: npol, nel_fluid
-  
+
   ! I/O for global arrays
   real(kind=realkind), intent(in)  :: chi(0:,0:,:)
   real(kind=realkind), intent(out) :: glob_stiffness_fl(0:npol,0:npol,nel_fluid)
-  
+
   ! local variables for all elements
   real(kind=realkind), dimension(0:npol,0:npol) :: chi_l, loc_stiffness
   real(kind=realkind), dimension(0:npol,0:npol) :: m_w_fl_l
   real(kind=realkind), dimension(0:npol,0:npol) :: m1chil, m2chil, m4chil
-  
+
   ! local variables for axial elements
   real(kind=realkind), dimension(0:npol) :: m0_w_fl_l
-  
+
   ! work arrays
   real(kind=realkind), dimension(0:npol,0:npol) :: X1, X2  ! MxM arrays
   real(kind=realkind), dimension(0:npol,0:npol) :: S1, S2  ! Sum
-  
+
   real(kind=realkind), dimension(0:npol) :: V1
-  
+
   integer :: ielem
 
   do ielem = 1, nel_fluid
@@ -106,22 +106,22 @@ pure subroutine glob_fluid_stiffness_generic(glob_stiffness_fl, chi)
         call mxm(G2, S1, X1)
      endif
      call mxm(S2, G2T, X2)
-     
+
      ! Final Sum
      loc_stiffness = X1 + X2
 
      ! dipole and quadrupole cases: additional 2nd order term
-     if (src_type(1) .ne. 'monopole') then
+     if (src_type(1) /= 'monopole') then
 
         m_w_fl_l(0:npol,0:npol) = M_w_fl(:,:,ielem)
 
-        loc_stiffness = loc_stiffness + m_w_fl_l * chi_l 
+        loc_stiffness = loc_stiffness + m_w_fl_l * chi_l
 
         if ( axis_fluid(ielem) ) then
            m0_w_fl_l(0:npol) = M0_w_fl(0:npol,ielem)
            call vxm(G0,chi_l,V1)
-           
-           chi_l = outerprod(G0, m0_w_fl_l * V1) !chi_l as dummy 
+
+           chi_l = outerprod(G0, m0_w_fl_l * V1) !chi_l as dummy
 
            loc_stiffness = loc_stiffness + chi_l
         endif
@@ -139,27 +139,27 @@ end subroutine glob_fluid_stiffness_generic
 pure subroutine glob_fluid_stiffness_4(glob_stiffness_fl, chi)
 
   use data_mesh, only: nel_fluid
-  
+
   integer, parameter               :: npol = 4
 
   ! I/O for global arrays
   real(kind=realkind), intent(in)  :: chi(0:,0:,:)
   real(kind=realkind), intent(out) :: glob_stiffness_fl(0:npol,0:npol,nel_fluid)
-  
+
   ! local variables for all elements
   real(kind=realkind), dimension(0:npol,0:npol) :: chi_l, loc_stiffness
   real(kind=realkind), dimension(0:npol,0:npol) :: m_w_fl_l
   real(kind=realkind), dimension(0:npol,0:npol) :: m1chil, m2chil, m4chil
-  
+
   ! local variables for axial elements
   real(kind=realkind), dimension(0:npol) :: m0_w_fl_l
-  
+
   ! work arrays
   real(kind=realkind), dimension(0:npol,0:npol) :: X1, X2  ! MxM arrays
   real(kind=realkind), dimension(0:npol,0:npol) :: S1, S2  ! Sum
-  
+
   real(kind=realkind), dimension(0:npol) :: V1
-  
+
   integer :: ielem
 
   do ielem = 1, nel_fluid
@@ -188,22 +188,22 @@ pure subroutine glob_fluid_stiffness_4(glob_stiffness_fl, chi)
         call mxm_4(G2, S1, X1)
      endif
      call mxm_4(S2, G2T, X2)
-     
+
      ! Final Sum
      loc_stiffness = X1 + X2
 
      ! dipole and quadrupole cases: additional 2nd order term
-     if (src_type(1) .ne. 'monopole') then
+     if (src_type(1) /= 'monopole') then
 
         m_w_fl_l(0:npol,0:npol) = M_w_fl(:,:,ielem)
 
-        loc_stiffness = loc_stiffness + m_w_fl_l * chi_l 
+        loc_stiffness = loc_stiffness + m_w_fl_l * chi_l
 
         if ( axis_fluid(ielem) ) then
            m0_w_fl_l(0:npol) = M0_w_fl(0:npol,ielem)
            call vxm_4(G0,chi_l,V1)
-           
-           chi_l = outerprod(G0, m0_w_fl_l * V1) !chi_l as dummy 
+
+           chi_l = outerprod(G0, m0_w_fl_l * V1) !chi_l as dummy
 
            loc_stiffness = loc_stiffness + chi_l
         endif

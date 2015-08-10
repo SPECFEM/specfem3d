@@ -36,13 +36,13 @@ subroutine start_clock
 
   use data_time
   use clocks_mod, only : clock_id, clocks_init
-  
+
   implicit none
-  
+
   character(len=8)    :: mydate
   character(len=10)   :: mytime
 
-  call date_and_time(mydate,mytime) 
+  call date_and_time(mydate,mytime)
   write(6,11) mydate(5:6), mydate(7:8), mydate(1:4), mytime(1:2), mytime(3:4)
 
 11 format('     Meshing started on ', A2,'/',A2,'/',A4,' at ', A2,'h ',A2,'min',/)
@@ -60,7 +60,7 @@ subroutine start_clock
   idold07 = clock_id('get_global no loop')
   idold09 = clock_id('get_global in loop')
   idold11 = clock_id('create_pdb')
-  
+
   idold12 = clock_id('define_glocal_numbering')
   idold13 = clock_id('define_sflocal_numbering')
   idold14 = clock_id('generate_serendipity_per_proc')
@@ -70,7 +70,7 @@ end subroutine start_clock
 
 !-----------------------------------------------------------------------------------------
 !> Wapper routine to end timing and display clock informations.
-subroutine end_clock 
+subroutine end_clock
 
   use clocks_mod, only : clocks_exit
 

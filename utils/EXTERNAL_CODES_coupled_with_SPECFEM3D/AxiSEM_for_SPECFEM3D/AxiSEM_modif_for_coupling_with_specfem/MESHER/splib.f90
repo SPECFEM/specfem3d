@@ -20,11 +20,11 @@
 !
 
 !=========================================================================================
-!> Core of the spectral method. 
+!> Core of the spectral method.
 module splib
- 
+
   use global_parameters
-  
+
   implicit none
   public :: zelegl, zemngl2,                  &
             hn_jprime, lag_interp_deriv_wgl,  &
@@ -32,7 +32,7 @@ module splib
   private
 
   contains
- 
+
 !-----------------------------------------------------------------------------------------
 !> This routine reorders array vin(n) in increasing order and
 !! outputs array vout(n).
@@ -53,12 +53,12 @@ pure subroutine order(vin,vout,n)
 
      do j = 1, n
         if((vin(i) > vin(j)) .and. (i /= j) ) rank(i) = rank(i) + 1
-     end do
+     enddo
 
      rankmax = max(rank(i),rankmax)
      vout(rank(i)) = vin(i)
 
-  end do
+  enddo
 
 end subroutine order
 !-----------------------------------------------------------------------------------------
@@ -69,13 +69,13 @@ end subroutine order
 !! defined over the weighted GLL points computed at these
 !! weighted GLL points.
 subroutine lag_interp_deriv_wgl(dl,xi,i,N)
-  
+
   integer, intent(in)   :: N, i
   real(dp), intent(in)  :: xi(0:N)
   real(dp), intent(out) :: dl(0:N)
   real(kind=dp)         :: mn_xi_i, mnprime_xi_i
   real(kind=dp)         :: mnprimeprime_xi_i
-  real(kind=dp)         :: mn_xi_j, mnprime_xi_j 
+  real(kind=dp)         :: mn_xi_j, mnprime_xi_j
   real(kind=dp)         :: mnprimeprime_xi_j
   real(kind=dp)         :: DN
   integer               :: j
@@ -90,24 +90,24 @@ subroutine lag_interp_deriv_wgl(dl,xi,i,N)
         call vamnpo(N,xi(j),mn_xi_j,mnprime_xi_j,mnprimeprime_xi_j)
 
         if (j == 0) &
-                     dl(j) = -DN*(DN+two)/6.d0 
+                     dl(j) = -DN*(DN+two)/6.d0
         if (j > 0 .and. j < N) &
                      dl(j) = two*((-one)**N)*mn_xi_j/((one+xi(j))*(DN+one))
         if (j == N) &
-                     dl(j) = ((-one)**N)/(DN+one) 
-     end do
+                     dl(j) = ((-one)**N)/(DN+one)
+     enddo
 
-  elseif (i == N) then
+  else if (i == N) then
 
      do j = 0, N
         call vamnpo(N,xi(j),mn_xi_j,mnprime_xi_j,mnprimeprime_xi_j)
         if (j == 0) &
                      dl(j) = ((-one)**(N+1))*(DN+one)/4.d0
-        if (j > 0 .and. j <  N) & 
+        if (j > 0 .and. j <  N) &
                      dl(j) = -mn_xi_j/(one-xi(j))
         if (j == N) &
-                     dl(j) = (DN*(DN+two)-one)/4.d0 
-     end do
+                     dl(j) = (DN*(DN+two)-one)/4.d0
+     enddo
 
   else
 
@@ -122,9 +122,9 @@ subroutine lag_interp_deriv_wgl(dl,xi,i,N)
                      dl(j) = - half/(one + xi(j))
         if (j == N) &
                      dl(j) = (mn_xi_i*(one-xi(i)))**(-1)
-     end do
+     enddo
 
-  end if
+  endif
 
 end subroutine lag_interp_deriv_wgl
 !-----------------------------------------------------------------------------------------
@@ -132,9 +132,9 @@ end subroutine lag_interp_deriv_wgl
 !-----------------------------------------------------------------------------------------
 !> Compute the value of the derivative of the j-th Lagrange polynomial
 !! of order N defined by the N+1 GLL points xi evaluated at these very
-!! same N+1 GLL points. 
+!! same N+1 GLL points.
 pure subroutine hn_jprime(xi,j,N,dhj)
- 
+
   integer,intent(in)    :: N
   integer,intent(in)    :: j
   integer               :: i
@@ -142,18 +142,18 @@ pure subroutine hn_jprime(xi,j,N,dhj)
   real(kind=dp)         :: DX,D2X
   real(kind=dp)         :: VN (0:N), QN(0:N)
   real(dp), intent(in)  :: xi(0:N)
- 
+
   dhj(:) = 0d0
   VN(:)= 0d0
   QN(:)= 0d0
-  
+
   do i = 0, N
      call valepo(N, xi(i), VN(i), DX, D2X)
      if (i == j) QN(i) = 1d0
-  end do
-  
+  enddo
+
   call delegl(N, xi, VN, QN, dhj)
- 
+
 end subroutine hn_jprime
 !-----------------------------------------------------------------------------------------
 
@@ -166,7 +166,7 @@ pure subroutine zelegl(n,et,vn)
   real(dp), intent(out)  :: VN(0:n) ! Values of the Legendre polynomial at the nodes
   real(kind=dp)          :: sn, x, c, etx, dy, d2y, y
   integer                :: i, n2, it
-  
+
   if (n  ==  0) return
 
   n2 = (n-1)/2
@@ -175,15 +175,15 @@ pure subroutine zelegl(n,et,vn)
   et(n) = 1.d0
   vn(0) = sn
   vn(n) = 1.d0
-  
+
   if (n  ==  1) return
 
   et(n2+1) = 0.d0
   x = 0.d0
   call valepo(n,x,y,dy,d2y)
-  
+
   vn(n2+1) = y
-  
+
   if(n  ==  2) return
 
   c  = pi/dfloat(n)
@@ -193,12 +193,12 @@ pure subroutine zelegl(n,et,vn)
      do it=1, 8
         call valepo(n,etx,y,dy,d2y)
         etx = etx-dy/d2y
-     end do
+     enddo
      et(i) = -etx
      et(n-i) = etx
      vn(i) = y*sn
      vn(n-i) = y
-  end do
+  enddo
 
 end subroutine zelegl
 !-----------------------------------------------------------------------------------------
@@ -225,7 +225,7 @@ pure subroutine zelegl2(n,et)
   x = 0.d0
   call valepo(n,x,y,dy,d2y)
 
-  if (n .gt. 2) then
+  if (n > 2) then
 
      c  = pi/dfloat(n)
      do i=1,n2
@@ -233,7 +233,7 @@ pure subroutine zelegl2(n,et)
         do it=1,8
            call valepo(n,etx,y,dy,d2y)
            etx = etx-dy/d2y
-        enddo   
+        enddo
         et(i) = -etx
         et(n-i) = etx
      enddo
@@ -247,11 +247,11 @@ end subroutine zelegl2
 !-----------------------------------------------------------------------------------------
 !>   Computes the nodes relative to the modified legendre gauss-lobatto
 !!   FORMULA along the s-axis
-!!   Relies on computing the eigenvalues of tridiagonal matrix. 
+!!   Relies on computing the eigenvalues of tridiagonal matrix.
 !!   The nodes correspond to the second quadrature formula proposed
-!!   by Azaiez et al.  
+!!   by Azaiez et al.
 pure subroutine zemngl2(n,et)
-  
+
   integer, intent(in)      :: n       !< Order of the formula
   real(dp), intent(out)    :: et(0:n) !< vector of the nodes, et(i), i=0,n.
   real(dp), dimension(n-1) :: d, e
@@ -274,12 +274,12 @@ pure subroutine zemngl2(n,et)
 
   do i = 1, n-1
      d(i) = three/(four*(dble(i)+half)*(dble(i)+three*half))
-  end do
+  enddo
 
   do i = 1, n-2
      e(i+1) =   dsqrt(dble(i)*(dble(i)+three)) &
                       /(two*(dble(i)+three*half))
-  end do
+  enddo
 
   ! Compute eigenvalues
   call tqli(d,e,n-1)
@@ -293,7 +293,7 @@ end subroutine zemngl2
 !-----------------------------------------------------------------------------------------
 
 !-----------------------------------------------------------------------------------------
-!> This routines returns the eigenvalues of the tridiagonal matrix 
+!> This routines returns the eigenvalues of the tridiagonal matrix
 !! which diagonal and subdiagonal coefficients are contained in d(1:n) and
 !! e(2:n) respectively. e(1) is free. The eigenvalues are returned in array d
 pure subroutine tqli(d,e,n)
@@ -306,16 +306,16 @@ pure subroutine tqli(d,e,n)
 
   do i = 2, n
     e(i-1) = e(i)
-  end do
+  enddo
 
-  e(n)=zero 
+  e(n)=zero
   do l=1,n
      iter=0
      iterate: do
      do m = l, n-1
        dd = abs(d(m))+abs(d(m+1))
-       if (abs(e(m))+dd.eq.dd) exit
-     end do
+       if (abs(e(m))+dd==dd) exit
+     enddo
      if( m == l ) exit iterate
      !if( iter == 30 ) stop 'too many iterations in tqli'
      iter=iter+1
@@ -332,7 +332,7 @@ pure subroutine tqli(d,e,n)
         e(i+1) = r
         if(r == zero )then
            d(i+1) = d(i+1)-p
-           e(m)   = zero 
+           e(m)   = zero
            cycle iterate
         endif
         s      = f/r
@@ -342,18 +342,18 @@ pure subroutine tqli(d,e,n)
         p      = s*r
         d(i+1) = g+p
         g      = c*r-b
-     end do
+     enddo
      d(l) = d(l)-p
      e(l) = g
      e(m) = zero
-     end do iterate
-  end do
+     enddo iterate
+  enddo
 
 end subroutine tqli
 !-----------------------------------------------------------------------------------------
 
 !-----------------------------------------------------------------------------------------
-!> L2 norm of a and b  
+!> L2 norm of a and b
 pure real(kind=dp)     function pythag(a,b)
 
   real(kind=dp)    , intent(in) :: a, b
@@ -362,12 +362,12 @@ pure real(kind=dp)     function pythag(a,b)
   absa=dabs(a)
   absb=dabs(b)
 
-  if(absa.gt.absb)then
+  if(absa>absb)then
 
      pythag=absa*sqrt(1.+(absb/absa)**2)
 
   else
-     if(absb.eq.zero)then
+     if(absb==zero)then
         pythag=zero
      else
         pythag=absb*sqrt(1.+(absa/absb)**2)
@@ -390,22 +390,22 @@ pure subroutine delegl(n,et,vn,qn,dqn)
    real(dp), intent(out) ::  dqn(0:n) !< derivatives of the polynomial at the nodes, dqz(i), i=0,n
    real(kind=dp)           ::  su, vi, ei, vj, ej, dn, c
    integer               ::  i, j
-       
+
    dqn(0) = 0.d0
-   if (n .eq. 0) return
+   if (n == 0) return
 
    do i=0,n
        su = 0.d0
        vi = vn(i)
        ei = et(i)
-       do j=0,n 
-           if (i .eq. j) cycle !goto 2
+       do j=0,n
+           if (i == j) cycle !goto 2
            vj = vn(j)
            ej = et(j)
            su = su+qn(j)/(vj*(ei-ej))
-       enddo !2  continue   
+       enddo !2  continue
        dqn(i) = vi*su
-    enddo !1  continue   
+    enddo !1  continue
 
     dn = dfloat(n)
     c  = .25d0 * dn * (dn+1.d0)
@@ -468,7 +468,7 @@ pure subroutine get_welegl(N,xi,wt)
   real(dp), intent(in)  :: xi(0:N)
   real(dp), intent(out) :: wt(0:N)
   integer               :: j
-  real(kind=dp)           :: y,dy,d2y,fact 
+  real(kind=dp)           :: y,dy,d2y,fact
 
   fact = 2.0d0/(dble(N*(N+1)))
 
@@ -477,50 +477,50 @@ pure subroutine get_welegl(N,xi,wt)
   do j = 0, N
      call valepo(N,xi(j),y,dy,d2y)
      wt(j) =  fact*y**(-2)
-  end do
+  enddo
 
 end subroutine get_welegl
 !-----------------------------------------------------------------------------------------
 
 !-----------------------------------------------------------------------------------------
 !> This routine computes the N+1 weights associated with the
-!! Gauss-Lobatto-Legendre quadrature formula of order N that one 
+!! Gauss-Lobatto-Legendre quadrature formula of order N that one
 !! to apply for elements having a non-zero intersection with the
 !! axis of symmetry of the Earth.
 pure subroutine get_welegl_axial(N,xi,wt,iflag)
 
   integer, intent(in)           :: N       !< order of GLL quadrature formula
-  integer, intent(in)           :: iflag   !< Selector for quadrature formulae proposed 
+  integer, intent(in)           :: iflag   !< Selector for quadrature formulae proposed
                                            !! by Bernardi et al.
-                                           !! iflag = 2 : Second formula 
-                                           !!             Formula : (VI.1.12), page 104             
+                                           !! iflag = 2 : Second formula
+                                           !!             Formula : (VI.1.12), page 104
                                            !! iflag = 3 : Third formula
-                                           !!             Formula : (VI.1.20), page 107            
+                                           !!             Formula : (VI.1.20), page 107
   real(kind=dp)    , intent(in)  :: xi(0:N) !< Support points
   real(kind=dp)    , intent(out) :: wt(0:N) !< Weighting factor at support points
   integer                       :: j
   real(kind=dp)                  :: y, dy, d2y, fact
 
-  wt(:) = 0.0 
+  wt(:) = 0.0
 
-  if (iflag == 2 ) then 
+  if (iflag == 2 ) then
 
      fact = 4d0 / dble(N*(N+2)) !four/(dble(N)*dble(N+2))
      do j = 0, N
         call vamnpo(N, xi(j), y, dy, d2y)
         wt(j) =  fact / (y*y)
         if (j == 0) wt(j) = 2.0 * wt(j)
-     end do
+     enddo
 
-  elseif ( iflag == 3 ) then 
+  else if ( iflag == 3 ) then
 
      fact = 1.0 / dble((N+1)*(N+1))
      do j = 0, N
         call valepo(N, xi(j), y, dy, d2y)
-        wt(j) = (fact * (1+xi(j))**2) / (y*y) 
-     end do  
+        wt(j) = (fact * (1+xi(j))**2) / (y*y)
+     enddo
 
-  end if
+  endif
 
 end subroutine get_welegl_axial
 !-----------------------------------------------------------------------------------------
@@ -532,8 +532,8 @@ end subroutine get_welegl_axial
 !!
 !!   implemented after bernardi et al., page 57, eq. (iii.1.10)
 pure subroutine vamnpo(n,x,y,dy,d2y)
-  
-  integer, intent(in)   :: n   !< degree of the polynomial 
+
+  integer, intent(in)   :: n   !< degree of the polynomial
   real(dp), intent(in)  :: x   !< point in which the computation is performed
   real(dp), intent(out) :: y   !< value of the polynomial in x
   real(dp), intent(out) :: dy  !< value of the first derivative in x
@@ -541,7 +541,7 @@ pure subroutine vamnpo(n,x,y,dy,d2y)
   real(kind=dp)         :: yp, dyp, d2yp, c1
   real(kind=dp)         :: ym, dym, d2ym
   integer               :: i
-  
+
    y   = 1.d0
    dy  = 0.d0
    d2y = 0.d0
@@ -572,8 +572,8 @@ pure subroutine vamnpo(n,x,y,dy,d2y)
            - (c1/(two*c1+one))*d2yp
     d2y  = (two*c1+three)*d2y/(c1+two)
     d2yp = d2ym
-  end do
-  
+  enddo
+
 end subroutine vamnpo
 !-----------------------------------------------------------------------------------------
 
@@ -596,14 +596,14 @@ pure subroutine polint(xa,ya,n,x,y,dy)
 
      dift=abs(x-xa(i))
      if (dift < dif) then
-       ns=i    
+       ns=i
        dif=dift
-     endif    
-     c(i)=ya(i)       
-     d(i)=ya(i)       
- 
-  end do
- 
+     endif
+     c(i)=ya(i)
+     d(i)=ya(i)
+
+  enddo
+
   y=ya(ns)
   ns=ns-1
   do m=1,n-1
@@ -616,7 +616,7 @@ pure subroutine polint(xa,ya,n,x,y,dy)
         den=w/den
         d(i)=hp*den
         c(i)=ho*den
-     end do
+     enddo
      if (2*ns < n-m)then
        dy=c(ns+1)
      else
@@ -625,7 +625,7 @@ pure subroutine polint(xa,ya,n,x,y,dy)
      endif
      y=y+dy
 
-  end do
+  enddo
 
 end subroutine polint
 !-----------------------------------------------------------------------------------------

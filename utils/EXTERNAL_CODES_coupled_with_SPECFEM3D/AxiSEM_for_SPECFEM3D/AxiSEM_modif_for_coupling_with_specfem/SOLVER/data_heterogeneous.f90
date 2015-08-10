@@ -24,8 +24,8 @@ module data_heterogeneous
 
   use global_parameters
   implicit none
-  public 
-  
+  public
+
   ! Heterogeneous region
   integer  :: num_het
   character(len=10), allocatable    :: het_format(:),het_funct_type(:)

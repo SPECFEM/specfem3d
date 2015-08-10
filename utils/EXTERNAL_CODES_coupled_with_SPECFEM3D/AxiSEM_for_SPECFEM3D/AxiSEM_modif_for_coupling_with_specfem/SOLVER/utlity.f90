@@ -24,7 +24,7 @@ module utlity
 
   use global_parameters
   implicit none
-  
+
   public :: compute_coordinates, scoord, zcoord, rcoord, thetacoord
   public :: dblreldiff_small, reldiff_small
   public :: dblereldiff, reldiff
@@ -41,9 +41,9 @@ pure logical function dblreldiff_small(x1,x2)
 
   dblreldiff_small = .false.
 
-  if (x1 /= zero) then 
+  if (x1 /= zero) then
      if (abs((x1-x2)/x1) <= smallval_dble) dblreldiff_small = .true.
-  elseif (x2 /=zero) then
+  else if (x2 /=zero) then
      if (abs((x1-x2)/x2) <= smallval_dble) dblreldiff_small = .true.
   else
      dblreldiff_small = .true.
@@ -63,9 +63,9 @@ pure logical function reldiff_small(x1,x2)
 
   reldiff_small = .false.
 
-  if (x1 /= zero) then 
+  if (x1 /= zero) then
      if (abs((x1-x2)/x1) <= smallval1) reldiff_small = .true.
-  elseif (x2 /=zero) then
+  else if (x2 /=zero) then
      if (abs((x1-x2)/x2) <= smallval1) reldiff_small = .true.
   else
      reldiff_small = .true.
@@ -81,7 +81,7 @@ pure real(kind=realkind) function reldiff(x1,x2)
 
   if (x1/=zero) then
      reldiff=(x1-x2)/x1
-  elseif (x2/=zero) then
+  else if (x2/=zero) then
      reldiff=(x1-x2)/x2
   else
      reldiff=zero
@@ -97,7 +97,7 @@ pure real(kind=dp) function dblereldiff(x1,x2)
 
   if (x1/=zero) then
      dblereldiff=(x1-x2)/x1
-  elseif (x2/=zero) then 
+  else if (x2/=zero) then
      dblereldiff=(x1-x2)/x2
   else
      dblereldiff=zero
@@ -113,7 +113,7 @@ pure real(kind=realkind) function absreldiff(x1,x2)
 
   if (x1/=zero) then
      absreldiff=abs((x1-x2)/x1)
-  elseif (x2/=zero) then 
+  else if (x2/=zero) then
      absreldiff=abs((x1-x2)/x2)
   else
      absreldiff=zero
@@ -129,7 +129,7 @@ pure real(kind=dp) function dbleabsreldiff(x1,x2)
 
   if (x1/=zero) then
      dbleabsreldiff=abs((x1-x2)/x1)
-  elseif (x2/=zero) then 
+  else if (x2/=zero) then
      dbleabsreldiff=abs((x1-x2)/x2)
   else
      dbleabsreldiff=zero
@@ -142,12 +142,12 @@ end function dbleabsreldiff
 pure subroutine compute_coordinates(s,z,r,theta,ielem,ipol,jpol)
 !< Given the elemental grid point index, outputs s,z,r,theta coordinate [m,rad].
 !! These coordinates are by default ALWAYS global (no solid or fluid domains).
-  
+
   use data_mesh,            only: min_distance_dim
   use data_mesh,            only: lnods, crd_nodes, axis
   use data_spec,            only: xi_k, eta
   use analytic_mapping,     only: mapping
-  
+
   real(kind=dp), intent(out)    :: s,z,r,theta
   integer, intent(in)           :: ielem,ipol,jpol
   integer                       :: ipt,inode
@@ -157,18 +157,18 @@ pure subroutine compute_coordinates(s,z,r,theta,ielem,ipol,jpol)
      ipt = lnods(ielem,inode)
      nodes_crd(inode,1) = crd_nodes(ipt,1)
      nodes_crd(inode,2) = crd_nodes(ipt,2)
-  end do
+  enddo
 
   ! Fill global coordinate array
-  if ( axis(ielem) ) then 
+  if ( axis(ielem) ) then
 
      s= mapping( xi_k(ipol),eta(jpol),nodes_crd,1,ielem)
      z= mapping( xi_k(ipol),eta(jpol),nodes_crd,2,ielem)
 
-  else 
+  else
      s= mapping(eta(ipol),eta(jpol),nodes_crd,1,ielem)
      z= mapping(eta(ipol),eta(jpol),nodes_crd,2,ielem)
-  end if
+  endif
 
   ! Eliminate roundoff errors
   if (abs(s) < min_distance_dim) s=zero
@@ -186,12 +186,12 @@ end subroutine compute_coordinates
 pure real(kind=dp) function scoord(ipol,jpol,ielem)
 !< Given the elemental grid point index, outputs the s coordinate [m].
 !! These coordinates are by default ALWAYS global (no solid or fluid domains).
-  
+
   use data_mesh,            only: min_distance_dim
   use data_mesh,            only: lnods, crd_nodes, axis
   use data_spec,            only: xi_k, eta
   use analytic_mapping,     only: mapping
-  
+
   integer, intent(in)  :: ielem, ipol, jpol
   integer              :: ipt, inode
   real(kind=dp)        :: nodes_crd(8,2)
@@ -200,14 +200,14 @@ pure real(kind=dp) function scoord(ipol,jpol,ielem)
      ipt = lnods(ielem,inode)
      nodes_crd(inode,1) = crd_nodes(ipt,1)
      nodes_crd(inode,2) = crd_nodes(ipt,2)
-  end do
+  enddo
 
   ! Fill global coordinate array
-  if ( axis(ielem) ) then 
+  if ( axis(ielem) ) then
      scoord = mapping( xi_k(ipol),eta(jpol),nodes_crd,1,ielem)
-  else 
+  else
      scoord = mapping(eta(ipol),eta(jpol),nodes_crd,1,ielem)
-  end if
+  endif
 
   ! Eliminate roundoff errors
   if (abs(scoord) < min_distance_dim) scoord=zero
@@ -219,12 +219,12 @@ end function scoord
 pure real(kind=dp)    function zcoord(ipol,jpol,ielem)
 !< Given the elemental grid point index, outputs the z coordinate [m].
 !! These coordinates are by default ALWAYS global (no solid or fluid domains).
-  
+
   use data_mesh,            only: min_distance_dim
   use data_mesh,            only: lnods, crd_nodes, axis
   use data_spec,            only: xi_k, eta
   use analytic_mapping,     only: mapping
-  
+
   integer, intent(in)  :: ielem, ipol, jpol
   integer              :: ipt, inode
   real(kind=dp)        :: nodes_crd(8,2)
@@ -233,14 +233,14 @@ pure real(kind=dp)    function zcoord(ipol,jpol,ielem)
      ipt = lnods(ielem,inode)
      nodes_crd(inode,1) = crd_nodes(ipt,1)
      nodes_crd(inode,2) = crd_nodes(ipt,2)
-  end do
+  enddo
 
   ! Fill global coordinate array
-  if ( axis(ielem) ) then 
+  if ( axis(ielem) ) then
      zcoord = mapping( xi_k(ipol),eta(jpol),nodes_crd,2,ielem)
-  else 
+  else
      zcoord = mapping(eta(ipol),eta(jpol),nodes_crd,2,ielem)
-  end if
+  endif
 
   ! Eliminate roundoff errors
   if (abs(zcoord) < min_distance_dim) zcoord=zero
@@ -252,12 +252,12 @@ end function zcoord
 pure real(kind=dp)    function rcoord(ipol,jpol,ielem)
 !< Given the elemental grid point index, outputs the radius coordinate [m].
 !! These coordinates are by default ALWAYS global (no solid or fluid domains).
-  
+
   use data_mesh,            only: min_distance_dim
   use data_mesh,            only: lnods, crd_nodes, axis
   use data_spec,            only: xi_k, eta
   use analytic_mapping,     only: mapping
-  
+
   integer, intent(in)  :: ielem, ipol, jpol
   integer              :: ipt, inode
   real(kind=dp)        :: nodes_crd(8,2),s,z
@@ -266,16 +266,16 @@ pure real(kind=dp)    function rcoord(ipol,jpol,ielem)
      ipt = lnods(ielem,inode)
      nodes_crd(inode,1) = crd_nodes(ipt,1)
      nodes_crd(inode,2) = crd_nodes(ipt,2)
-  end do
+  enddo
 
   ! Fill global coordinate array
-  if ( axis(ielem) ) then 
+  if ( axis(ielem) ) then
      s = mapping( xi_k(ipol),eta(jpol),nodes_crd,1,ielem)
      z = mapping( xi_k(ipol),eta(jpol),nodes_crd,2,ielem)
-  else 
+  else
      s = mapping(eta(ipol),eta(jpol),nodes_crd,1,ielem)
      z = mapping(eta(ipol),eta(jpol),nodes_crd,2,ielem)
-  end if
+  endif
 
   rcoord = sqrt(s**2 + z**2)
   ! Eliminate roundoff errors
@@ -288,12 +288,12 @@ end function rcoord
 pure real(kind=dp) function thetacoord(ipol,jpol,ielem)
 !< Given the elemental grid point index, outputs the theta coordinate [rad].
 !! These coordinates are by default ALWAYS global (no solid or fluid domains).
-  
+
   use data_mesh,            only: min_distance_dim
   use data_mesh,            only: lnods, crd_nodes,axis
   use data_spec,            only: xi_k, eta
   use analytic_mapping,     only: mapping
-  
+
   integer, intent(in)  :: ielem, ipol, jpol
   integer              :: ipt, inode
   real(kind=dp)        :: nodes_crd(8,2),s,z
@@ -302,16 +302,16 @@ pure real(kind=dp) function thetacoord(ipol,jpol,ielem)
      ipt = lnods(ielem,inode)
      nodes_crd(inode,1) = crd_nodes(ipt,1)
      nodes_crd(inode,2) = crd_nodes(ipt,2)
-  end do
+  enddo
 
   ! Fill global coordinate array
-  if ( axis(ielem) ) then 
+  if ( axis(ielem) ) then
      s = mapping(xi_k(ipol), eta(jpol), nodes_crd, 1, ielem)
      z = mapping(xi_k(ipol), eta(jpol), nodes_crd, 2, ielem)
-  else 
+  else
      s = mapping(eta(ipol), eta(jpol), nodes_crd, 1, ielem)
      z = mapping(eta(ipol), eta(jpol), nodes_crd, 2, ielem)
-  end if
+  endif
 
   thetacoord = datan(s/(z+epsi))
   if ( zero > thetacoord ) thetacoord = pi + thetacoord
@@ -322,7 +322,7 @@ end function thetacoord
 
 !-----------------------------------------------------------------------------------------
 function to_lower(strIn) result(strOut)
-!< Converts string to lowercase, adapted from http://www.star.le.ac.uk/~cgp/fortran.html
+!< Converts string to lowercase, adapted from http://www.star<=ac.uk/~cgp/fortran.html
     implicit none
 
     character(len=*), intent(in) :: strIn
@@ -335,8 +335,8 @@ function to_lower(strIn) result(strOut)
             strOut(i:i) = achar(iachar(strIn(i:i))+32)
         else
             strOut(i:i) = strIn(i:i)
-        end if
-    end do
+        endif
+    enddo
 
 end function to_lower
 !-----------------------------------------------------------------------------------------

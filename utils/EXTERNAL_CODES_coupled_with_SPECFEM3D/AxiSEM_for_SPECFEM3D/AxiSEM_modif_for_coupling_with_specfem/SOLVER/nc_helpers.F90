@@ -31,7 +31,7 @@ module nc_helpers
     use global_parameters
 
     implicit none
-    private 
+    private
 
     public :: check
     public :: putvar_real1d
@@ -51,12 +51,12 @@ contains
 subroutine check(status)
     integer, intent ( in) :: status !< Error code
 #ifdef enable_netcdf
-    if (status /= nf90_noerr) then 
+    if (status /= nf90_noerr) then
         print *, trim(nf90_strerror(status))
         call abort()
-    end if
+    endif
 #endif
-end subroutine check  
+end subroutine check
 !-----------------------------------------------------------------------------------------
 
 !-----------------------------------------------------------------------------------------
@@ -70,13 +70,13 @@ subroutine getvarid(ncid, name, varid)
     status = nf90_inq_varid( ncid  = ncid, &
                              name  = name, &
                              varid = varid )
-    if (status.ne.NF90_NOERR) then
+    if (status/=NF90_NOERR) then
         write(6,100) mynum, trim(name), ncid
         stop
-    elseif (verbose > 2) then
+    else if (verbose > 2) then
         write(6,101) trim(name), ncid, varid
         call flush(6)
-    end if
+    endif
 100 format('ERROR: CPU ', I4, ' could not find variable: ''', A, ''' in NCID', I7)
 101 format('    Variable ''', A, ''' found in NCID', I7, ', has ID:', I7)
 #else
@@ -96,13 +96,13 @@ subroutine getgrpid(ncid, name, grpid)
     status = nf90_inq_ncid( ncid     = ncid, &
                             name     = name, &
                             grp_ncid = grpid )
-    if (status.ne.NF90_NOERR) then
+    if (status/=NF90_NOERR) then
         write(6,100) mynum, trim(name), ncid
         stop
-    elseif (verbose > 2) then
+    else if (verbose > 2) then
         write(6,101) trim(name), ncid, grpid
         call flush(6)
-    end if
+    endif
 100 format('ERROR: CPU ', I4, ' could not find group: ''', A, ''' in NCID', I7)
 101 format('    Group ''', A, ''' found in NCID', I7, ', has ID:', I7)
 #else
@@ -127,16 +127,16 @@ subroutine putvar_real1d(ncid, varid, values, start, count)
                                   varid = varid,    &
                                   name  = varname )
 
-   if (status.ne.NF90_NOERR) then
+   if (status/=NF90_NOERR) then
        write(*,99) mynum, varid, ncid
        print *, trim(nf90_strerror(status))
        stop
-   end if
+   endif
 
-   if (size(values).ne.count) then
+   if (size(values)/=count) then
        write(*,100) mynum, trim(varname), varid, ncid, size(values), count
        stop
-   end if
+   endif
 
    status = nf90_put_var(ncid   = ncid,           &
                          varid  = varid,          &
@@ -144,17 +144,17 @@ subroutine putvar_real1d(ncid, varid, values, start, count)
                          start  = [start],        &
                          count  = [count] )
 
-                      
-   if (status.ne.NF90_NOERR) then
+
+   if (status/=NF90_NOERR) then
        status = nf90_inquire_variable(ncid  =  ncid,    &
                                       varid = varid,    &
                                       name  = varname,  &
                                       ndims = ndims)
-       if (ndims.ne.1) then
+       if (ndims/=1) then
            write(*,101) mynum, trim(varname), varid, ncid, ndims
            print *, trim(nf90_strerror(status))
            stop
-       end if
+       endif
        status = nf90_inquire_variable(ncid   = ncid,     &
                                       varid  = varid,    &
                                       name   = varname,  &
@@ -170,17 +170,17 @@ subroutine putvar_real1d(ncid, varid, values, start, count)
            write(*,102) mynum, trim(varname), varid, ncid, start, count, dimsize, trim(dimname)
            print *, trim(nf90_strerror(status))
            stop
-       end if
+       endif
 
        write(*,103) mynum, trim(varname), varid, ncid, start, count, dimsize, trim(dimname)
        print *, trim(nf90_strerror(status))
        stop
-   
-   elseif (verbose > 2) then
+
+   else if (verbose > 2) then
        write(*,200) mynum, real(count) * 4. / 1048576., ncid, varid
        call flush(6)
-   end if
-    
+   endif
+
 99  format('ERROR: CPU ', I4, ' could not find 1D variable: ',I7,' in NCID', I7)
 100 format('ERROR: CPU ', I4, ' could not write 1D variable: ''', A, '''(',I7,') in NCID', I7, / &
            '       was given ', I10, ' values, but ''count'' is ', I10)
@@ -216,18 +216,18 @@ subroutine putvar_real2d(ncid, varid, values, start, count)
                                   varid = varid,    &
                                   name  = varname )
 
-   if (status.ne.NF90_NOERR) then
+   if (status/=NF90_NOERR) then
        write(*,99) mynum, varid, ncid
        print *, trim(nf90_strerror(status))
        stop
-   end if
+   endif
    ! Check if variable size is consistent with values of 'count'
    do idim = 1, 2
-       if (size(values,idim).ne.count(idim)) then
+       if (size(values,idim)/=count(idim)) then
            write(*,100) mynum, trim(varname), varid, ncid, idim, size(values, idim), count(idim)
            stop
-       end if
-   end do
+       endif
+   enddo
 
    ! Write data to file
    status = nf90_put_var(ncid   = ncid,           &
@@ -236,20 +236,20 @@ subroutine putvar_real2d(ncid, varid, values, start, count)
                          start  = start,          &
                          count  = count )
 
-                      
-   ! If an error has occurred, try to find a reason                  
-   if (status.ne.NF90_NOERR) then
+
+   ! If an error has occurred, try to find a reason
+   if (status/=NF90_NOERR) then
        status = nf90_inquire_variable(ncid  =  ncid,    &
                                       varid = varid,    &
                                       name  = varname,  &
                                       ndims = ndims)
 
        ! Check whether variable in NetCDF file has more or less than three dimensions
-       if (ndims.ne.2) then
+       if (ndims/=2) then
            write(*,101) mynum, trim(varname), varid, ncid, ndims
            print *, trim(nf90_strerror(status))
            stop
-       end if
+       endif
 
        ! Check whether dimension sizes are compatible with amount of data written
        status = nf90_inquire_variable(ncid   = ncid,     &
@@ -266,26 +266,26 @@ subroutine putvar_real2d(ncid, varid, values, start, count)
                                            len   = dimsize )
            if (start(idim) + count(idim) - 1 > dimsize) then
                write(*,102) mynum, trim(varname), varid, ncid, start(idim), count(idim), &
-                            dimsize, trim(dimname), idim 
+                            dimsize, trim(dimname), idim
                print *, trim(nf90_strerror(status))
                stop
-           end if
+           endif
 
            ! Otherwise just dump as much information as possible and stop
            write(*,103) mynum, trim(varname), varid, ncid, start(idim), count(idim), &
                         dimsize, trim(dimname)
            print *, trim(nf90_strerror(status))
 
-       end do
+       enddo
 
        stop
-   
-   elseif (verbose > 2) then
+
+   else if (verbose > 2) then
        ! Everything okay
        write(*,200) mynum, real(product(count)) * 4. / 1048576., ncid, varid
        call flush(6)
-   end if
-    
+   endif
+
 99  format('ERROR: CPU ', I4, ' could not find 2D variable: ',I7,' in NCID', I7)
 100 format('ERROR: CPU ', I4, ' could not write 2D variable: ''', A, '''(',I7,') in NCID', I7, / &
            '       dimension ', I1,' was given ', I10, ' values, but ''count'' is ', I10)
@@ -321,18 +321,18 @@ subroutine putvar_real3d(ncid, varid, values, start, count)
                                   varid = varid,    &
                                   name  = varname )
 
-   if (status.ne.NF90_NOERR) then
+   if (status/=NF90_NOERR) then
        write(*,99) mynum, varid, ncid
        print *, trim(nf90_strerror(status))
        stop
-   end if
+   endif
    ! Check if variable size is consistent with values of 'count'
    do idim = 1, 3
-       if (size(values,idim).ne.count(idim)) then
+       if (size(values,idim)/=count(idim)) then
            write(*,100) mynum, trim(varname), varid, ncid, idim, size(values, idim), count(idim)
            stop
-       end if
-   end do
+       endif
+   enddo
 
    ! Write data to file
    status = nf90_put_var(ncid   = ncid,           &
@@ -341,20 +341,20 @@ subroutine putvar_real3d(ncid, varid, values, start, count)
                          start  = start,          &
                          count  = count )
 
-                      
-   ! If an error has occurred, try to find a reason                  
-   if (status.ne.NF90_NOERR) then
+
+   ! If an error has occurred, try to find a reason
+   if (status/=NF90_NOERR) then
        status = nf90_inquire_variable(ncid  =  ncid,    &
                                       varid = varid,    &
                                       name  = varname,  &
                                       ndims = ndims)
 
        ! Check whether variable in NetCDF file has more or less than three dimensions
-       if (ndims.ne.3) then
+       if (ndims/=3) then
            write(*,101) mynum, trim(varname), varid, ncid, ndims
            print *, trim(nf90_strerror(status))
            stop
-       end if
+       endif
 
        ! Check whether dimension sizes are compatible with amount of data written
        status = nf90_inquire_variable(ncid   = ncid,     &
@@ -371,26 +371,26 @@ subroutine putvar_real3d(ncid, varid, values, start, count)
                                            len   = dimsize )
            if (start(idim) + count(idim) - 1 > dimsize) then
                write(*,102) mynum, trim(varname), varid, ncid, start(idim), count(idim), &
-                            dimsize, trim(dimname), idim 
+                            dimsize, trim(dimname), idim
                print *, trim(nf90_strerror(status))
                stop
-           end if
+           endif
 
            ! Otherwise just dump as much information as possible and stop
            write(*,103) mynum, trim(varname), varid, ncid, start(idim), count(idim), &
                         dimsize, trim(dimname)
            print *, trim(nf90_strerror(status))
 
-       end do
+       enddo
 
        stop
-   
-   elseif (verbose > 2) then
+
+   else if (verbose > 2) then
        ! Everything okay
        write(6,200) mynum, real(product(count)) * 4. / 1048576., ncid, varid
        call flush(6)
-   end if
-    
+   endif
+
 99  format('ERROR: CPU ', I4, ' could not find 3D variable: ',I7,' in NCID', I7)
 100 format('ERROR: CPU ', I4, ' could not write 3D variable: ''', A, '''(',I7,') in NCID', I7, / &
            '       dimension ', I1,' was given ', I10, ' values, but ''count'' is ', I10)

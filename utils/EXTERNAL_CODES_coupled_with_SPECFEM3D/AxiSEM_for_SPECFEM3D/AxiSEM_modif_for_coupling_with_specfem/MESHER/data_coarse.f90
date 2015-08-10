@@ -22,12 +22,12 @@
 !=========================================================================================
 module data_coarse
   implicit none
-  
+
   public
   integer  nc
   integer, dimension(:),allocatable :: iclev
   integer :: ns_ib
-  
+
   ! central region :
   integer, dimension(:), allocatable :: iclevc
 

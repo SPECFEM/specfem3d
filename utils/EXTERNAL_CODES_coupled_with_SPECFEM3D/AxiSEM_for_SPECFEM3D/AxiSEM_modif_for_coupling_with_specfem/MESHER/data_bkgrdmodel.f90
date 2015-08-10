@@ -37,7 +37,7 @@ module data_bkgrdmodel
   real(kind=dp)              :: period, courant
   real(kind=dp)              :: dt
   integer                    :: nc_init, nthetaslices, nradialslices
-  
+
   ! the sole quantities to be created in create_subregions
   ! that are needed by the rest of the mesher
   integer                    :: nz_glob, ns_glob, nc_glob

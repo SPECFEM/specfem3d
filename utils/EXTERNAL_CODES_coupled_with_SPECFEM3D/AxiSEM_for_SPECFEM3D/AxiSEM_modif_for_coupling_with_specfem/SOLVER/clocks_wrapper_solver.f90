@@ -39,13 +39,13 @@ subroutine start_clock
                          idstiff, idanelts, idanelst
   use data_proc,  only : lpr, mynum
   use data_io,    only : verbose
-  
+
   implicit none
-  
+
   character(len=8)  :: mydate
   character(len=10) :: mytime
 
-  call date_and_time(mydate,mytime) 
+  call date_and_time(mydate,mytime)
   if (lpr) write(6,11) mydate(5:6), mydate(7:8), mydate(1:4), mytime(1:2), mytime(3:4)
 
 11 format('     Simulation started on ', A2,'/',A2,'/',A4,' at ', A2,'h ',A2,'min',/)
@@ -75,7 +75,7 @@ end subroutine start_clock
 
 !-----------------------------------------------------------------------------------------
 !> Wapper routine to end timing and display clock informations.
-subroutine end_clock 
+subroutine end_clock
 
   use clocks_mod, only : clocks_exit
   use data_proc,  only : mynum

@@ -22,21 +22,21 @@
 !=========================================================================================
 module data_matr
   ! Global arrays (i.e. defined on each GLL point) that are
-  ! needed for the mass, stiffness and boundary terms of the 
-  ! temporal ODE. 
-  
+  ! needed for the mass, stiffness and boundary terms of the
+  ! temporal ODE.
+
   use global_parameters
 
   implicit none
-  public 
+  public
 
   !++++++++++++++++++++++++++++++++++++++++++++++++++++
-  !	Mass matrix arrays
+  ! Mass matrix arrays
   !++++++++++++++++++++++++++++++++++++++++++++++++++++
   real(kind=realkind), protected, dimension(:,:,:), allocatable :: inv_mass_rho
   real(kind=realkind), protected, dimension(:,:,:), allocatable :: inv_mass_fluid
   real(kind=realkind), dimension(:,:,:), allocatable :: unassem_mass_rho_solid
-  real(kind=realkind), dimension(:,:,:), allocatable :: unassem_mass_lam_fluid 
+  real(kind=realkind), dimension(:,:,:), allocatable :: unassem_mass_lam_fluid
 
   !++++++++++++++++++++++++++++++++++++++++++++++++++++
   ! Precomputed stiffness matrices
@@ -48,25 +48,25 @@ module data_matr
   real(kind=realkind), dimension(:,:,:), allocatable :: M22s, M42s
   real(kind=realkind), dimension(:,:,:), allocatable :: M11z, M21z, M41z
   real(kind=realkind), dimension(:,:,:), allocatable :: M32s
-  ! for dipole: 
+  ! for dipole:
   real(kind=realkind), dimension(:,:,:), allocatable :: M13s, M33s, M43s
-  ! for quadrupole: 
+  ! for quadrupole:
   real(kind=realkind), dimension(:,:,:), allocatable :: M1phi, M2phi, M4phi
-  
-  
+
+
   ! for all source types:
   real(kind=realkind), dimension(:,:,:), allocatable :: M_1, M_2, M_3, M_4
   ! for dipole and quadpole:
-  real(kind=realkind), allocatable :: M_5(:,:,:), M_6(:,:,:), M_7(:,:,:), M_8(:,:,:) 
-  
-  
+  real(kind=realkind), allocatable :: M_5(:,:,:), M_6(:,:,:), M_7(:,:,:), M_8(:,:,:)
+
+
   ! for all source types:
   real(kind=realkind), dimension(:,:,:), allocatable :: M_w1
   ! for dipole and quadpole:
   real(kind=realkind), allocatable :: M_w2(:,:,:), M_w3(:,:,:)
-  ! for quadrupole: 
+  ! for quadrupole:
   real(kind=realkind), allocatable :: M_w4(:,:,:), M_w5(:,:,:)
-  
+
 
   ! for all source types:
   real(kind=realkind), dimension(:,:), allocatable :: M0_w1, M0_w2, M0_w3
@@ -87,9 +87,9 @@ module data_matr
   ! Solid-fluid boundary matrix
   real(kind=realkind), dimension(:,:,:), allocatable :: bdry_matr
   real(kind=dp), dimension(:)          , allocatable :: solflubdry_radius
-  
+
   !++++++++++++++++++++++++++++++++++++++++++++++++++++
-  !	Attenuation
+  ! Attenuation
   !++++++++++++++++++++++++++++++++++++++++++++++++++++
   ! Q_mu and Q_kappa, assumed to be homogeneous within an element
   real(kind=realkind), allocatable :: Q_mu(:), Q_kappa(:)
@@ -97,7 +97,7 @@ module data_matr
   real(kind=realkind), allocatable :: delta_mu(:,:,:), delta_kappa(:,:,:)
   real(kind=realkind), allocatable :: delta_mu_cg4(:,:), delta_kappa_cg4(:,:)
 
-  ! Anelastic precomputable matrices 
+  ! Anelastic precomputable matrices
   real(kind=realkind), allocatable :: Y(:,:,:)
   real(kind=realkind), allocatable :: Y_cg4(:,:)
   real(kind=realkind), allocatable :: Y0(:,:)
@@ -125,7 +125,7 @@ subroutine set_mass_matrices(npol, nel_solid, nel_fluid, inv_mass_rho_loc, &
 
   inv_mass_rho   = inv_mass_rho_loc
   inv_mass_fluid = inv_mass_fluid_loc
-  
+
 end subroutine set_mass_matrices
 !-----------------------------------------------------------------------------------------
 

@@ -25,7 +25,7 @@ module data_time
 
 use global_parameters
   implicit none
-  public 
+  public
 
   integer             :: iclock01, idold01
   integer             :: iclock02, idold02

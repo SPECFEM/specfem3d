@@ -20,29 +20,29 @@
 !
 
 !=========================================================================================
-!> Read elastic information of the background model, define precomputable 
+!> Read elastic information of the background model, define precomputable
 !! matrices for mass, stiffness, boundary terms, pointwise derivatives.
 module def_precomp_terms
-  
+
   use global_parameters
   use data_mesh
   use data_spec
   use data_source, only : src_type
   use data_io,     only : verbose, coupling
   use data_proc
-  
+
   use get_mesh,    only : compute_coordinates_mesh
   use utlity
   use analytic_mapping
-  
+
   implicit none
-  
+
   public :: read_model_compute_terms
   private
 contains
 
 !-----------------------------------------------------------------------------------------
-!> Wrapper routine to contain globally defined large matrices that are not 
+!> Wrapper routine to contain globally defined large matrices that are not
 !! used in the time loop to this module (e.g. rho, lambda, mu).
 !! Also fills up Q with values (which is used in the time loop)
 subroutine read_model_compute_terms
@@ -54,7 +54,7 @@ subroutine read_model_compute_terms
                           bdry_matr
   use coupling_mod, only : lambda_cp,mu_cp,rho_cp   !! SB coupling
 
-  
+
   real(kind=dp), dimension(:,:,:),allocatable :: rho, lambda, mu, massmat_kwts2
   real(kind=dp), dimension(:,:,:),allocatable :: xi_ani, phi_ani, eta_ani
   real(kind=dp), dimension(:,:,:),allocatable :: fa_ani_theta, fa_ani_phi
@@ -74,11 +74,11 @@ subroutine read_model_compute_terms
 
   !!! SB coupling
   if (coupling) then
-     allocate(rho_cp(0:npol,0:npol,1:nelem)) 
+     allocate(rho_cp(0:npol,0:npol,1:nelem))
      allocate(lambda_cp(0:npol,0:npol,1:nelem),mu_cp(0:npol,0:npol,1:nelem))
-  end if
+  endif
   !!! SB
-  
+
   if (anel_true) then
     allocate(Q_mu(1:nel_solid))
     allocate(Q_kappa(1:nel_solid))
@@ -96,17 +96,17 @@ subroutine read_model_compute_terms
     call read_model(rho, lambda, mu, xi_ani, phi_ani, eta_ani, fa_ani_theta, fa_ani_phi)
   endif
 
-  !!! SB 
+  !!! SB
   if (coupling) then
      rho_cp=rho
      lambda_cp=lambda
      mu_cp=mu
-  end if
+  endif
   !!! SB coupling
 
   if (lpr .and. verbose > 1) write(6,*) '   define mass matrix....'
   call def_mass_matrix_k(rho, lambda, mu, massmat_kwts2)
-   
+
   if (do_mesh_tests) then
      if (lpr .and. verbose > 1) write(6,*) '   compute mass of the earth model....'
      call compute_mass_earth(rho)
@@ -132,14 +132,14 @@ subroutine read_model_compute_terms
      call prepare_attenuation(lambda, mu)
      if (lpr .and. verbose > 1) write(6, '(/,a,/)') '    done preparing ATTENUATION model'
   endif
-     
+
   if (lpr .and. verbose > 1) write(6,*) '   define solid stiffness terms....'
   call def_solid_stiffness_terms(lambda, mu, massmat_kwts2, xi_ani, phi_ani, &
                                  eta_ani, fa_ani_theta, fa_ani_phi)
 
   deallocate(xi_ani, phi_ani, eta_ani, fa_ani_theta, fa_ani_phi)
   deallocate(lambda,mu)
-  
+
   if (have_fluid) then
      if (lpr .and. verbose > 1) write(6,*) '   define fluid stiffness terms....'
      call def_fluid_stiffness_terms(rho, massmat_kwts2)
@@ -152,7 +152,7 @@ subroutine read_model_compute_terms
   deallocate(rho, massmat_kwts2)
 
   if (lpr .and. verbose > 1) write(6,*) '   ...deallocated unnecessary elastic arrays'
-  
+
   if (lpr .and. verbose > 0) &
      write(6,*) ' :::::::DONE BACKGROUND MODEL & PRECOMPUTED MATRICES:::::'
   call flush(6)
@@ -165,7 +165,7 @@ subroutine compute_pointwisederiv_matrices
 !< The 4 necessary global matrices due to pointwise derivatives d/ds and d/dz:
 !! dzdeta/J, dzdxi/J, dsdeta/J, dsdxi/J (J: Jacobian).
 !! These are known during the time loop if the strain is computed on-the-fly.
-!! This is convenient to avoid recomputing these mapping derivatives at each 
+!! This is convenient to avoid recomputing these mapping derivatives at each
 !! dumping stage and to avoid knowing the grid itself during the time loop
 !! (hence the additional 4 global variables in exchange for at least 2 for the
 !! mesh, i.e. only slightly more memory intensive).
@@ -176,7 +176,7 @@ subroutine compute_pointwisederiv_matrices
   real(kind=dp)    :: dsdxi,dzdxi,dsdeta,dzdeta
   real(kind=dp)    :: local_crd_nodes(8,2)
 
-  ! fluid pointwise derivatives     
+  ! fluid pointwise derivatives
   allocate(DsDeta_over_J_flu(0:npol,0:npol,1:nel_fluid))
   allocate(DzDeta_over_J_flu(0:npol,0:npol,1:nel_fluid))
   allocate(DsDxi_over_J_flu(0:npol,0:npol,1:nel_fluid))
@@ -195,7 +195,7 @@ subroutine compute_pointwisederiv_matrices
     do inode = 1, 8
       call compute_coordinates_mesh(local_crd_nodes(inode,1),&
                                     local_crd_nodes(inode,2),ielsolid(iel),inode)
-    end do
+    enddo
     if (.not. axis_solid(iel)) then ! non-axial elements
     do ipol=0,npol
        do jpol=0,npol
@@ -230,7 +230,7 @@ subroutine compute_pointwisederiv_matrices
                   jacobian(xi_k(ipol),eta(jpol),local_crd_nodes,ielsolid(iel))
 
          if (ipol>0) then
-            inv_s_solid(ipol,jpol,iel) = one/scoord(ipol,jpol,ielsolid(iel)) 
+            inv_s_solid(ipol,jpol,iel) = one/scoord(ipol,jpol,ielsolid(iel))
          else
             inv_s_solid(ipol,jpol,iel) = one
          endif
@@ -239,7 +239,7 @@ subroutine compute_pointwisederiv_matrices
     enddo
     endif !axis
   enddo
-  
+
   if (verbose > 1) then
      write(69,*)'Pointwise derivative precomputed terms in solid:'
      write(69,8)'  min/max DsDeta/J [1/m]:',minval(DsDeta_over_J_sol), &
@@ -258,7 +258,7 @@ subroutine compute_pointwisederiv_matrices
     do inode = 1, 8
       call compute_coordinates_mesh(local_crd_nodes(inode,1),&
                                   local_crd_nodes(inode,2),ielfluid(iel),inode)
-    end do
+    enddo
     if (.not. axis_fluid(iel)) then ! non-axial elements
     do ipol=0,npol
        do jpol=0,npol
@@ -272,8 +272,8 @@ subroutine compute_pointwisederiv_matrices
                   jacobian(eta(ipol),eta(jpol),local_crd_nodes,ielfluid(iel))
          DzDxi_over_J_flu(ipol,jpol,iel) = -dzdxi / &
                   jacobian(eta(ipol),eta(jpol),local_crd_nodes,ielfluid(iel))
-         
-         inv_s_fluid(ipol,jpol,iel) = one/scoord(ipol,jpol,ielfluid(iel))  
+
+         inv_s_fluid(ipol,jpol,iel) = one/scoord(ipol,jpol,ielfluid(iel))
       enddo
     enddo
    else ! axial elements
@@ -301,7 +301,7 @@ subroutine compute_pointwisederiv_matrices
     enddo
     endif !axis
   enddo
-  
+
   if (verbose > 1) then
      write(69,*)'Pointwise derivative precomputed terms in fluid:'
      write(69,8)'  min/max DsDeta/J [1/m]:',minval(DsDeta_over_J_flu),&
@@ -326,8 +326,8 @@ subroutine test_pntwsdrvtvs_solid
 
   use data_io
   use pointwise_derivatives
-  
-  
+
+
   real(kind=realkind),allocatable :: tmpsolfield(:,:,:)
   real(kind=realkind),allocatable :: tmpsolfieldcomp(:,:,:,:)
   real(kind=realkind),allocatable :: tmpsolfielddiff(:,:,:,:)
@@ -341,7 +341,7 @@ subroutine test_pntwsdrvtvs_solid
   allocate(tmpsolfieldcomp(0:npol,0:npol,1:nel_solid,1:3))
   allocate(tmpsolfielddiff(0:npol,0:npol,1:nel_solid,1:3))
   allocate(elderiv(0:npol,0:npol))
-  
+
   ! Test derivatives: define scalar field inside solid
   do iel=1,nel_solid
      do jpol=0,npol
@@ -467,11 +467,11 @@ end subroutine test_pntwsdrvtvs_solid
 !-----------------------------------------------------------------------------------------
 subroutine test_pntwsdrvtvs_fluid
   !< Test pointwise derivatives & axisymmetric Laplacian in fluid
-  
+
   use data_io
   use pointwise_derivatives
-  
-  
+
+
   real(kind=realkind),allocatable :: tmpflufield(:,:,:)
   real(kind=realkind),allocatable :: tmpflufieldcomp(:,:,:,:)
   real(kind=realkind),allocatable :: tmpflufielddiff(:,:,:,:)
@@ -485,7 +485,7 @@ subroutine test_pntwsdrvtvs_fluid
   allocate(tmpflufieldcomp(0:npol,0:npol,1:nel_fluid,1:3))
   allocate(tmpflufielddiff(0:npol,0:npol,1:nel_fluid,1:3))
   allocate(elderiv(0:npol,0:npol))
-  
+
   ! Test derivatives: define scalar field inside fluid
   do iel=1,nel_fluid
      do jpol=0,npol
@@ -610,17 +610,17 @@ end subroutine test_pntwsdrvtvs_fluid
 
 !-----------------------------------------------------------------------------------------
 subroutine def_mass_matrix_k(rho,lambda,mu,massmat_kwts2)
-!< This routine computes and stores the coefficients of the diagonal 
+!< This routine computes and stores the coefficients of the diagonal
 !! mass matrix, when a weighted Gauss-Lobatto quadrature for axial elements.
 !! It is built here with a factor of volume equal to s * ds * dz, as required
 !! by our approach.  we also define in this routine the mass matrix weighted
 !! by 1/s^2, as required by some components of the Laplacian of the
 !! fields. Note the special contribution arising in the case of an
-!! axial element. 
-!! massmat_k    : The actual mass term:    \sigma_I \sigma_J J^{IJ} s^{IJ} 
+!! axial element.
+!! massmat_k    : The actual mass term:    \sigma_I \sigma_J J^{IJ} s^{IJ}
 !! massmat_kwts2: Paper 2, table 1, term A=\sigma_I \sigma_J J^{IJ} / s^{IJ}
 !! jacob: just defined locally for check on extrema further below....
-  
+
   use data_io,          only : need_fluid_displ, dump_energy
   use commun,           only : pdistsum_solid_1D, pdistsum_fluid
   use data_pointwise,   only : inv_rho_fluid
@@ -628,15 +628,15 @@ subroutine def_mass_matrix_k(rho,lambda,mu,massmat_kwts2)
                                unassem_mass_lam_fluid
 
   use data_mesh,        only : npol, nelem, nel_solid, nel_fluid
-  
+
   real(kind=dp), dimension(0:,0:,:),intent(in)  :: rho, lambda, mu
   real(kind=dp), dimension(0:npol,0:npol,nelem),intent(out) :: massmat_kwts2
-  
+
   real(kind=realkind), allocatable :: inv_mass_rho(:,:,:), inv_mass_fluid(:,:,:)
   real(kind=dp), allocatable       :: massmat_k(:,:,:)   !< Mass matrix
   real(kind=dp), allocatable       :: jacob (:,:,:)      !< jacobian array
   real(kind=realkind), allocatable :: drdxi(:,:,:,:)     !< min/max derivs
-  
+
   real(kind=dp)     :: local_crd_nodes(8,2),s,z,r,theta
   integer           :: iel,inode,iarr(3),ipol,jpol
   character(len=16) :: fmt1
@@ -655,7 +655,7 @@ subroutine def_mass_matrix_k(rho,lambda,mu,massmat_kwts2)
      do inode = 1, 8
         call compute_coordinates_mesh(local_crd_nodes(inode,1),&
              local_crd_nodes(inode,2),iel,inode)
-     end do
+     enddo
 
      ! computing global arrays for the respective coordinate mapping derivatives
      ! only needed for min/max write statements below!
@@ -691,11 +691,11 @@ subroutine def_mass_matrix_k(rho,lambda,mu,massmat_kwts2)
                    *scoord(ipol,jpol,iel)**(-1)*wt(ipol)*wt(jpol)
               jacob(ipol,jpol,iel) = jacobian(eta(ipol),eta(jpol),&
                                               local_crd_nodes,iel)
-           end do
-        end do
+           enddo
+        enddo
 
      ! ::::::::::::::::axial elements::::::::::::::::
-     elseif (axis(iel)) then
+     else if (axis(iel)) then
         do ipol  = 0, npol ! Be careful here !!!!
            do jpol = 0, npol
               massmat_k(ipol,jpol,iel) = &
@@ -704,16 +704,16 @@ subroutine def_mass_matrix_k(rho,lambda,mu,massmat_kwts2)
                     local_crd_nodes,iel)*wt_axial_k(ipol)*wt(jpol)
               jacob(ipol,jpol,iel) = jacobian(xi_k(ipol),eta(jpol),&
                                               local_crd_nodes,iel)
-           end do
-        end do
+           enddo
+        enddo
         do ipol = 1, npol
            do jpol = 0, npol
               massmat_kwts2(ipol,jpol,iel) = &
                    jacobian(xi_k(ipol),eta(jpol),local_crd_nodes,iel) / &
                    ( scoord(ipol,jpol,iel) * ( one+xi_k(ipol) ) ) * &
                    wt_axial_k(ipol)*wt(jpol)
-           end do
-        end do
+           enddo
+        enddo
         do jpol = 0, npol
            massmat_kwts2(0,jpol,iel) = &
                 jacobian(xi_k(0),eta(jpol),local_crd_nodes,iel)* &
@@ -737,15 +737,15 @@ subroutine def_mass_matrix_k(rho,lambda,mu,massmat_kwts2)
                                      s_over_oneplusxi_axis(xi_k(ipol), &
                                      eta(jpol),local_crd_nodes,iel)
                  write(6,*)procstrg,'iel,ipol,jpol:',iel,ipol,jpol
-                 write(6,*)procstrg,'s,r,theta:',scoord(ipol,jpol,iel),& 
+                 write(6,*)procstrg,'s,r,theta:',scoord(ipol,jpol,iel),&
                            rcoord(ipol,jpol,iel),thetacoord(ipol,jpol,iel)
                  stop
               endif
-           end do
-        end do
+           enddo
+        enddo
 
-     end if ! axial?
-  end do ! iel
+     endif ! axial?
+  enddo ! iel
 
   if (lpr .and. verbose > 1) write(6,*) '   solid mass matrix...'
   ! Solid inverse mass term
@@ -754,8 +754,8 @@ subroutine def_mass_matrix_k(rho,lambda,mu,massmat_kwts2)
         do jpol = 0, npol
               inv_mass_rho(ipol,jpol,iel)= rho(ipol,jpol,ielsolid(iel))*&
                                            massmat_k(ipol,jpol,ielsolid(iel))
-        end do
-     end do
+        enddo
+     enddo
   enddo
 
   ! unassembled mass matrix in solid for energy.
@@ -775,15 +775,15 @@ subroutine def_mass_matrix_k(rho,lambda,mu,massmat_kwts2)
   do iel=1,nel_solid
      do ipol = 0, npol
         do jpol = 0, npol
-           if ( inv_mass_rho(ipol,jpol,iel) /= zero) then 
+           if ( inv_mass_rho(ipol,jpol,iel) /= zero) then
               inv_mass_rho(ipol,jpol,iel) = one / inv_mass_rho(ipol,jpol,iel)
            else
               write(6,*)procstrg,'WARNING: solid mass term zero!', &
                          ipol,jpol,iel,ielsolid(iel)
               inv_mass_rho(ipol,jpol,iel) = one / rho(ipol,jpol,ielsolid(iel))
            endif
-        end do
-     end do
+        enddo
+     enddo
   enddo
 
   if (src_type(1)=='dipole') inv_mass_rho = half * inv_mass_rho
@@ -803,7 +803,7 @@ subroutine def_mass_matrix_k(rho,lambda,mu,massmat_kwts2)
         write(6,fmt1)procstrg,' Mu, Vs, location r[km], theta[deg]:', &
                   maxval(mu(:,:,ielfluid(iel))), &
                   maxval(sqrt(mu(:,:,ielfluid(iel))/rho(:,:,ielfluid(iel)))), &
-                  r/1000., theta*180./pi      
+                  r/1000., theta*180./pi
         call flush(6)
         stop
      endif
@@ -819,13 +819,13 @@ subroutine def_mass_matrix_k(rho,lambda,mu,massmat_kwts2)
            ! inverse density inside the fluid, needed to calculate displacement in fluid
            if (need_fluid_displ) &
               inv_rho_fluid(ipol,jpol,iel) = one / rho(ipol,jpol,ielfluid(iel))
-        end do
-     end do
+        enddo
+     enddo
   enddo
 
 
   ! unassembled mass matrix in fluid for the energy.
-  if (dump_energy) then 
+  if (dump_energy) then
     allocate(unassem_mass_lam_fluid(0:npol,0:npol,nel_fluid))
     unassem_mass_lam_fluid = inv_mass_fluid
   endif
@@ -845,24 +845,24 @@ subroutine def_mass_matrix_k(rho,lambda,mu,massmat_kwts2)
               write(6,*)procstrg,'WARNING: Fluid mass term zero!', &
                         ipol,jpol,iel,ielfluid(iel); call flush(6)
               inv_mass_fluid(ipol,jpol,iel)=lambda(ipol,jpol,ielfluid(iel))
-           end if
-        end do
-     end do
+           endif
+        enddo
+     enddo
   enddo
 
-  
+
   ! Call routine in data_matr to actually set the values
   call set_mass_matrices(npol, nel_solid, nel_fluid, inv_mass_rho, inv_mass_fluid)
 
-  ! In the remainder: document min/max values and locations for velocities, 
+  ! In the remainder: document min/max values and locations for velocities,
   !    density, Jacobian, mass terms, GLL points. Lagrange derivatives etc.
   if (verbose > 1) then
      fmt1 = "(a18,K(f9.4))"
      write(fmt1(6:6),'(i1.1)') npol+1
      write(69,*)
      write(69,*)'-+-+-+-+-+-+-+-+-+-+ Integration weights +-+-+-+-+-+-+-+-+-+-+-+'
-     write(69,fmt1)'GLJ sigma_I ax   :',(wt_axial_k(ipol),ipol=0,npol)  
-     write(69,fmt1)'GLL sigma_J nonax:',(wt(ipol),ipol=0,npol)  
+     write(69,fmt1)'GLJ sigma_I ax   :',(wt_axial_k(ipol),ipol=0,npol)
+     write(69,fmt1)'GLL sigma_J nonax:',(wt(ipol),ipol=0,npol)
 
      fmt1 = "(a11,K(f9.4))"
      write(fmt1(6:6),'(i1.1)') npol+1
@@ -890,7 +890,7 @@ subroutine def_mass_matrix_k(rho,lambda,mu,massmat_kwts2)
      write(69,*)' transpose G1T derivatives xi --> xi_p'
      do jpol=0,npol
         write(69,fmt1)'',(G1T(ipol,jpol),ipol=0,npol)
-     enddo  
+     enddo
 
      write(69,*)' Lagrange derivatives axial vector: \partial_\xi (l_i(\xi_0)) '
      write(69,fmt1)'',(G0(ipol),ipol=0,npol)
@@ -945,33 +945,33 @@ subroutine def_mass_matrix_k(rho,lambda,mu,massmat_kwts2)
      theta = thetacoord(iarr(1)-1,iarr(2)-1,iarr(3)); theta = theta*180./pi
      write(69,9)'Max,r,th Jacobian [m,m,deg]        :',maxval(jacob), &
                                    rcoord(iarr(1)-1,iarr(2)-1,iarr(3)),theta
-     
+
      iarr = minloc(massmat_k)
      theta = thetacoord(iarr(1)-1,iarr(2)-1,iarr(3)); theta = theta*180./pi
      write(69,9)'Min,r,th mass term [m^3,m,deg]     :',minval(massmat_k), &
-                                   rcoord(iarr(1)-1,iarr(2)-1,iarr(3)),theta 
+                                   rcoord(iarr(1)-1,iarr(2)-1,iarr(3)),theta
 
      iarr = maxloc(massmat_k)
      theta = thetacoord(iarr(1)-1,iarr(2)-1,iarr(3)); theta = theta*180./pi
      write(69,9)'Max,r,th mass term [m^3,m,deg]     :',maxval(massmat_k), &
-                                   rcoord(iarr(1)-1,iarr(2)-1,iarr(3)),theta 
+                                   rcoord(iarr(1)-1,iarr(2)-1,iarr(3)),theta
      iarr = minloc(inv_mass_rho)
      theta = thetacoord(iarr(1)-1,iarr(2)-1,iarr(3)); theta = theta*180./pi
      write(69,9)'Min,r,th sol. invmass [1/kg,m,deg] :',minval(inv_mass_rho), &
-                                   rcoord(iarr(1)-1,iarr(2)-1,iarr(3)),theta 
+                                   rcoord(iarr(1)-1,iarr(2)-1,iarr(3)),theta
      iarr = maxloc(inv_mass_rho)
      theta = thetacoord(iarr(1)-1,iarr(2)-1,iarr(3)); theta = theta*180./pi
      write(69,9)'Max,r,th sol. invmass [1/kg,m,deg] :',maxval(inv_mass_rho), &
-                                   rcoord(iarr(1)-1,iarr(2)-1,iarr(3)),theta 
+                                   rcoord(iarr(1)-1,iarr(2)-1,iarr(3)),theta
      if (have_fluid) then
         iarr = minloc(inv_mass_fluid)
         theta = thetacoord(iarr(1)-1,iarr(2)-1,iarr(3)); theta = theta*180./pi
         write(69,9)'Min,r,th flu. invmass [N/m^5,m,deg]:',minval(inv_mass_fluid), &
-             rcoord(iarr(1)-1,iarr(2)-1,iarr(3)),theta 
+             rcoord(iarr(1)-1,iarr(2)-1,iarr(3)),theta
         iarr = maxloc(inv_mass_fluid)
         theta = thetacoord(iarr(1)-1,iarr(2)-1,iarr(3)); theta = theta*180./pi
         write(69,9)'Max,r,th flu. invmass [N/m^5,m,deg]:',maxval(inv_mass_fluid), &
-                                   rcoord(iarr(1)-1,iarr(2)-1,iarr(3)),theta 
+                                   rcoord(iarr(1)-1,iarr(2)-1,iarr(3)),theta
      endif
 
 
@@ -980,10 +980,10 @@ subroutine def_mass_matrix_k(rho,lambda,mu,massmat_kwts2)
      iarr = minloc(sqrt((lambda+2*mu)/rho))
      write(69,8)'Min,r P-vel [m/s,m]   :',minval(dsqrt((lambda+2*mu)/rho)), &
                                         rcoord(iarr(1)-1,iarr(2)-1,iarr(3))
-     iarr = minloc(sqrt(mu/rho)) 
+     iarr = minloc(sqrt(mu/rho))
      write(69,8)'Min,r S-vel [m/s,m]   :',minval(dsqrt(mu/rho)), &
                                          rcoord(iarr(1)-1,iarr(2)-1,iarr(3))
-     iarr = maxloc(sqrt((lambda+2*mu)/rho)) 
+     iarr = maxloc(sqrt((lambda+2*mu)/rho))
      write(69,8)'Max,r P-vel [m/s,m]   :',maxval(dsqrt((lambda+2*mu)/rho)), &
                                          rcoord(iarr(1)-1,iarr(2)-1,iarr(3))
      iarr = maxloc(sqrt(mu/rho))
@@ -998,7 +998,7 @@ subroutine def_mass_matrix_k(rho,lambda,mu,massmat_kwts2)
      write(69,8)'Min/max mu [N/m^2]    :',minval(mu),maxval(mu)
      write(69,8)'Min/max lambda [N/m^2]:',minval(lambda),maxval(lambda)
 
-     write(69,*)'' 
+     write(69,*)''
   endif
 
 8 format(a25,2(1pe12.4))
@@ -1012,19 +1012,19 @@ end subroutine def_mass_matrix_k
 
 !-----------------------------------------------------------------------------------------
 subroutine compute_mass_earth(rho)
-!< A straight computation of the mass of the sphere and that of its 
-!! solid and fluid sub-volumes. This is the same as computing the volume 
-!! (see def_grid.f90), but with a multiplicative density factor, i.e. the 
-!! actual mass matrix. The comparison to the exact value is merely 
-!! done as an indicator and does not cause any error. One should keep an eye 
-!! on these values when generating any new kind of background model for which 
+!< A straight computation of the mass of the sphere and that of its
+!! solid and fluid sub-volumes. This is the same as computing the volume
+!! (see def_grid.f90), but with a multiplicative density factor, i.e. the
+!! actual mass matrix. The comparison to the exact value is merely
+!! done as an indicator and does not cause any error. One should keep an eye
+!! on these values when generating any new kind of background model for which
 !! one then needs to dig up the total mass...
 
   use def_grid,             only : massmatrix
   use background_models,    only : velocity
   use commun,               only : psum
   use data_io,              only : infopath,lfinfo
-  
+
   real(kind=dp)   , intent(in)     :: rho(0:npol,0:npol,nelem)
   integer                          :: iel,ipol,jpol,idom,iidom,idisc
   integer                          :: count_solid,count_fluid,count_sic
@@ -1040,7 +1040,7 @@ subroutine compute_mass_earth(rho)
   allocate(massmat(0:npol,0:npol,1:nelem))
   allocate(massmat_solid(0:npol,0:npol,1:nel_solid))
   allocate(massmat_fluid(0:npol,0:npol,1:nel_fluid))
-  
+
   mass_fluid = zero
   mass_glob = zero
   mass_solid = zero
@@ -1056,7 +1056,7 @@ subroutine compute_mass_earth(rho)
      dr = (router-(real(iel)-1.)*100.)**3 - (router-(real(iel)*100.))**3
      idom=10*ndisc
      do iidom=1,ndisc-1
-        if (r<=discont(iidom) .and. r> discont(iidom+1) ) then 
+        if (r<=discont(iidom) .and. r> discont(iidom+1) ) then
            idom=iidom
            exit
         endif
@@ -1078,7 +1078,7 @@ subroutine compute_mass_earth(rho)
   mass_fluid = 4.d0/3.d0*pi*mass_fluid
   mass_solid = 4.d0/3.d0*pi*mass_solid
   mass_sic = 4.d0/3.d0*pi*mass_sic
-  
+
   mass_glob_num=zero; mass_solid_num=zero; mass_fluid_num=zero
   mass_sic_num=zero
   mass_layer = 0
@@ -1095,7 +1095,7 @@ subroutine compute_mass_earth(rho)
                            rho(ipol,jpol,iel)*massmat(ipol,jpol,iel)
            ! solid inner core only
            if (rcoord(npol/2,npol/2,iel)< discont(ndisc)) &
-                mass_sic_num = mass_sic_num + & 
+                mass_sic_num = mass_sic_num + &
                                rho(ipol,jpol,iel)*massmat(ipol,jpol,iel)
 
            ! compute mass for each layer between discontinuities
@@ -1107,14 +1107,14 @@ subroutine compute_mass_earth(rho)
               endif
            enddo
 
-        end do
-     end do
-  end do
+        enddo
+     enddo
+  enddo
   mass_layer(ndisc) = mass_sic_num
   mass_glob_num=2.d0*pi*mass_glob_num
   mass_glob_num=psum(real(mass_glob_num,kind=realkind))
   mass_sic_num=2.d0*pi*mass_sic_num
-  mass_sic_num=psum(real(mass_sic_num,kind=realkind)) 
+  mass_sic_num=psum(real(mass_sic_num,kind=realkind))
   mass_layer=2.d0*pi*mass_layer
   do idisc = 1,ndisc-1
      mass_layer(idisc) = psum(real(mass_layer(idisc),kind=realkind))
@@ -1125,9 +1125,9 @@ subroutine compute_mass_earth(rho)
         do jpol = 0, npol
            mass_solid_num = mass_solid_num + rho(ipol,jpol,ielsolid(iel))* &
                                              massmat_solid(ipol,jpol,iel)
-        end do
-     end do
-  end do
+        enddo
+     enddo
+  enddo
   mass_solid_num=2.d0*pi*mass_solid_num
   mass_solid_num=psum(real(mass_solid_num,kind=realkind))
 
@@ -1136,9 +1136,9 @@ subroutine compute_mass_earth(rho)
         do jpol = 0, npol
            mass_fluid_num = mass_fluid_num + rho(ipol,jpol,ielfluid(iel))* &
                                              massmat_fluid(ipol,jpol,iel)
-        end do
-     end do
-  end do
+        enddo
+     enddo
+  enddo
   mass_fluid_num=2.d0*pi*mass_fluid_num
   mass_fluid_num=psum(real(mass_fluid_num,kind=realkind))
 
@@ -1148,7 +1148,7 @@ subroutine compute_mass_earth(rho)
      write(6,10)'  Total mass (real,num,diff)    :',mass_glob,mass_glob_num,&
                                          abs(mass_glob-mass_glob_num)/mass_glob
      write(6,11)'  Sum of layers (real,num,diff) :',sum(mass_layer)
-     write(6,10)'    Solid mass (real,num,diff)    :',mass_solid,& 
+     write(6,10)'    Solid mass (real,num,diff)    :',mass_solid,&
                        mass_solid_num,abs(mass_solid-mass_solid_num)/mass_solid
      if (have_fluid) then
         write(6,10)'    Fluid mass (real,num,diff)    :',mass_fluid,&
@@ -1163,7 +1163,7 @@ subroutine compute_mass_earth(rho)
   endif
 
 ! write out total masses for each layer
-  if (lpr) then 
+  if (lpr) then
      open(unit=9876,file=infopath(1:lfinfo)//'/mass_kg_per_discont_layer.dat')
      do idisc=1,ndisc
         write(9876,*)discont(idisc),mass_layer(idisc)
@@ -1181,10 +1181,10 @@ end subroutine compute_mass_earth
 !-----------------------------------------------------------------------------------------
 subroutine def_solid_stiffness_terms(lambda, mu, massmat_kwts2, xi_ani, phi_ani, &
                                      eta_ani, fa_ani_theta, fa_ani_phi)
-!< This routine is a merged version to minimize global work 
-!! array definitions. The terms alpha_wt_k etc. are now 
-!! merely elemental arrays, and defined on the fly when 
-!! computing the global, final precomputable matrices 
+!< This routine is a merged version to minimize global work
+!! array definitions. The terms alpha_wt_k etc. are now
+!! merely elemental arrays, and defined on the fly when
+!! computing the global, final precomputable matrices
 !! for the solid stiffness term. The loop is over solid elements only.
 !! Adding optional arguments for anisotropy, MvD
 
@@ -1199,23 +1199,23 @@ subroutine def_solid_stiffness_terms(lambda, mu, massmat_kwts2, xi_ani, phi_ani,
                        Y_cg4,  V_s_eta_cg4, V_s_xi_cg4, V_z_eta_cg4, V_z_xi_cg4, &
                        Y,  V_s_eta, V_s_xi, V_z_eta, V_z_xi, &
                        Y0, V0_s_eta, V0_s_xi, V0_z_eta, V0_z_xi
-  
+
   real(kind=dp), dimension(0:,0:,:), intent(in) :: lambda,mu
   real(kind=dp), dimension(0:,0:,:), intent(in) :: massmat_kwts2
   real(kind=dp), dimension(0:,0:,:), intent(in), optional :: xi_ani, phi_ani, eta_ani, &
                                                              fa_ani_theta, fa_ani_phi
-  
+
   real(kind=dp) :: local_crd_nodes(8,2)
   integer       :: ielem, ipol, jpol, inode
   real(kind=dp) :: dsdxi, dzdeta, dzdxi, dsdeta
-  
+
   real(kind=dp) :: alpha_wt_k(0:npol,0:npol)
   real(kind=dp) :: beta_wt_k(0:npol,0:npol)
   real(kind=dp) :: gamma_wt_k(0:npol,0:npol)
   real(kind=dp) :: delta_wt_k(0:npol,0:npol)
   real(kind=dp) :: epsil_wt_k(0:npol,0:npol)
   real(kind=dp) :: zeta_wt_k(0:npol,0:npol)
-  
+
   real(kind=dp) :: Ms_z_eta_s_xi_wt_k(0:npol,0:npol)
   real(kind=dp) :: Ms_z_eta_s_eta_wt_k(0:npol,0:npol)
   real(kind=dp) :: Ms_z_xi_s_eta_wt_k(0:npol,0:npol)
@@ -1224,19 +1224,19 @@ subroutine def_solid_stiffness_terms(lambda, mu, massmat_kwts2, xi_ani, phi_ani,
   real(kind=dp) :: M_z_xi_wt_k(0:npol,0:npol)
   real(kind=dp) :: M_z_eta_wt_k(0:npol,0:npol)
   real(kind=dp) :: M_s_eta_wt_k(0:npol,0:npol)
-  
+
   ! non-diagfac
   real(kind=dp), allocatable :: non_diag_fact(:,:)
-  
+
   ! Allocate Global Stiffness Arrays depending on source type:
-  allocate(M11s(0:npol, 0:npol, nel_solid)) 
+  allocate(M11s(0:npol, 0:npol, nel_solid))
   allocate(M21s(0:npol, 0:npol, nel_solid))
-  allocate(M41s(0:npol, 0:npol, nel_solid)) 
+  allocate(M41s(0:npol, 0:npol, nel_solid))
   allocate(M12s(0:npol, 0:npol, nel_solid))
-  allocate(M22s(0:npol, 0:npol, nel_solid)) 
+  allocate(M22s(0:npol, 0:npol, nel_solid))
   allocate(M42s(0:npol, 0:npol, nel_solid))
-  allocate(M11z(0:npol, 0:npol, nel_solid)) 
-  allocate(M21z(0:npol, 0:npol, nel_solid)) 
+  allocate(M11z(0:npol, 0:npol, nel_solid))
+  allocate(M21z(0:npol, 0:npol, nel_solid))
   allocate(M41z(0:npol, 0:npol, nel_solid))
   allocate(M32s(0:npol, 0:npol, nel_solid))
 
@@ -1247,28 +1247,28 @@ subroutine def_solid_stiffness_terms(lambda, mu, massmat_kwts2, xi_ani, phi_ani,
 
 
   allocate(M_w1(0:npol,0:npol,nel_solid))
-   
+
   allocate(M0_w1(0:npol,nel_solid))
   allocate(M0_w2(0:npol,nel_solid))
   allocate(M0_w3(0:npol,nel_solid))
 
 
   select case (src_type(1))
-  
+
   case ('dipole')
-  
+
       allocate(M13s(0:npol,0:npol,nel_solid))
       allocate(M33s(0:npol,0:npol,nel_solid))
       allocate(M43s(0:npol,0:npol,nel_solid))
-     
+
       allocate(M_5(0:npol,0:npol,nel_solid))
       allocate(M_6(0:npol,0:npol,nel_solid))
       allocate(M_7(0:npol,0:npol,nel_solid))
       allocate(M_8(0:npol,0:npol,nel_solid))
-      
+
       allocate(M_w2(0:npol,0:npol,nel_solid))
       allocate(M_w3(0:npol,0:npol,nel_solid))
-      
+
       allocate(M0_w4(0:npol,nel_solid))
       allocate(M0_w5(0:npol,nel_solid))
       allocate(M0_w6(0:npol,nel_solid))
@@ -1276,23 +1276,23 @@ subroutine def_solid_stiffness_terms(lambda, mu, massmat_kwts2, xi_ani, phi_ani,
       allocate(M0_w8(0:npol,nel_solid))
       allocate(M0_w9(0:npol,nel_solid))
       allocate(M0_w10(0:npol,nel_solid))
-  
+
   case ('quadpole')
 
       allocate(M1phi(0:npol,0:npol,nel_solid))
       allocate(M2phi(0:npol,0:npol,nel_solid))
       allocate(M4phi(0:npol,0:npol,nel_solid))
-      
+
       allocate(M_5(0:npol,0:npol,nel_solid))
       allocate(M_6(0:npol,0:npol,nel_solid))
       allocate(M_7(0:npol,0:npol,nel_solid))
       allocate(M_8(0:npol,0:npol,nel_solid))
-      
+
       allocate(M_w2(0:npol,0:npol,nel_solid))
       allocate(M_w3(0:npol,0:npol,nel_solid))
       allocate(M_w4(0:npol,0:npol,nel_solid))
       allocate(M_w5(0:npol,0:npol,nel_solid))
-      
+
       allocate(M0_w4(0:npol,nel_solid))
       allocate(M0_w5(0:npol,nel_solid))
       allocate(M0_w6(0:npol,nel_solid))
@@ -1306,19 +1306,19 @@ subroutine def_solid_stiffness_terms(lambda, mu, massmat_kwts2, xi_ani, phi_ani,
      allocate(V_s_xi(0:npol,0:npol,nel_solid))
      allocate(V_z_eta(0:npol,0:npol,nel_solid))
      allocate(V_z_xi(0:npol,0:npol,nel_solid))
-     
+
      allocate(Y0(0:npol,nel_solid))
      allocate(V0_s_eta(0:npol,nel_solid))
      allocate(V0_s_xi(0:npol,nel_solid))
      allocate(V0_z_eta(0:npol,nel_solid))
      allocate(V0_z_xi(0:npol,nel_solid))
-     
+
      Y = 0
      V_s_eta = 0
      V_s_xi = 0
      V_z_eta = 0
      V_z_xi = 0
-     
+
      Y0 = 0
      V0_s_eta = 0
      V0_s_xi = 0
@@ -1334,15 +1334,15 @@ subroutine def_solid_stiffness_terms(lambda, mu, massmat_kwts2, xi_ani, phi_ani,
         do inode = 1, 8
            call compute_coordinates_mesh(local_crd_nodes(inode,1),&
                 local_crd_nodes(inode,2),ielsolid(ielem),inode)
-        end do
-        do jpol = 0,npol 
+        enddo
+        do jpol = 0,npol
            non_diag_fact(jpol,ielem) = wt_axial_k(0)*wt(jpol)* &
               jacobian(xi_k(0),eta(jpol),local_crd_nodes,ielsolid(ielem))/&
               s_over_oneplusxi_axis(xi_k(0),eta(jpol),&
                                     local_crd_nodes,ielsolid(ielem))
-        end do
-     end if
-  end do
+        enddo
+     endif
+  enddo
 
   ! SOLID STIFFNESS TERMS
 
@@ -1368,7 +1368,7 @@ subroutine def_solid_stiffness_terms(lambda, mu, massmat_kwts2, xi_ani, phi_ani,
      do inode = 1, 8
         call compute_coordinates_mesh(local_crd_nodes(inode,1),&
              local_crd_nodes(inode,2),ielsolid(ielem),inode)
-     end do
+     enddo
 
      ! ::::::::::::::::non-axial elements::::::::::::::::
      if ( .not. axis_solid(ielem) ) then
@@ -1416,26 +1416,26 @@ subroutine def_solid_stiffness_terms(lambda, mu, massmat_kwts2, xi_ani, phi_ani,
               if (anel_true) then
                  Y(ipol,jpol,ielem) = wt(ipol) * wt(jpol) &
                     * jacobian(eta(ipol), eta(jpol), local_crd_nodes, ielsolid(ielem))
-                 
+
                  V_s_eta(ipol,jpol,ielem) &
                     = mapping(eta(ipol), eta(jpol), local_crd_nodes,1,ielsolid(ielem)) &
-                        * M_s_eta_wt_k(ipol,jpol) 
+                        * M_s_eta_wt_k(ipol,jpol)
                  V_s_xi(ipol,jpol,ielem) &
                     = mapping(eta(ipol), eta(jpol), local_crd_nodes,1,ielsolid(ielem)) &
-                        * M_s_xi_wt_k(ipol,jpol) 
+                        * M_s_xi_wt_k(ipol,jpol)
                  V_z_eta(ipol,jpol,ielem) &
                     = mapping(eta(ipol), eta(jpol), local_crd_nodes,1,ielsolid(ielem)) &
-                        * M_z_eta_wt_k(ipol,jpol) 
+                        * M_z_eta_wt_k(ipol,jpol)
                  V_z_xi(ipol,jpol,ielem) &
                     = mapping(eta(ipol), eta(jpol), local_crd_nodes,1,ielsolid(ielem)) &
-                        * M_z_xi_wt_k(ipol,jpol) 
+                        * M_z_xi_wt_k(ipol,jpol)
 
               endif
            enddo
         enddo
 
      ! ::::::::::::::::axial elements::::::::::::::::
-     elseif ( axis_solid(ielem) ) then
+     else if ( axis_solid(ielem) ) then
         do jpol  = 0, npol
            do ipol = 0, npol
               alpha_wt_k(ipol,jpol) = alphak(xi_k(ipol),&
@@ -1463,24 +1463,24 @@ subroutine def_solid_stiffness_terms(lambda, mu, massmat_kwts2, xi_ani, phi_ani,
                  *s_over_oneplusxi_axis(xi_k(ipol),eta(jpol), &
                  local_crd_nodes,ielsolid(ielem))*wt_axial_k(ipol)*wt(jpol)
 
-              Ms_z_eta_s_xi_wt_k(ipol,jpol) = Ms_z_eta_s_xi_k(xi_k(ipol), & 
+              Ms_z_eta_s_xi_wt_k(ipol,jpol) = Ms_z_eta_s_xi_k(xi_k(ipol), &
                  eta(jpol),local_crd_nodes,ielsolid(ielem))&
                  *s_over_oneplusxi_axis(xi_k(ipol),eta(jpol), &
-                 local_crd_nodes,ielsolid(ielem))*wt_axial_k(ipol)*wt(jpol) 
-              Ms_z_eta_s_eta_wt_k(ipol,jpol) = Ms_z_eta_s_eta_k(xi_k(ipol),& 
+                 local_crd_nodes,ielsolid(ielem))*wt_axial_k(ipol)*wt(jpol)
+              Ms_z_eta_s_eta_wt_k(ipol,jpol) = Ms_z_eta_s_eta_k(xi_k(ipol),&
                  eta(jpol),local_crd_nodes,ielsolid(ielem))&
                  *s_over_oneplusxi_axis(xi_k(ipol),eta(jpol), &
-                 local_crd_nodes,ielsolid(ielem))*wt_axial_k(ipol)*wt(jpol) 
-              Ms_z_xi_s_eta_wt_k(ipol,jpol) = Ms_z_xi_s_eta_k(xi_k(ipol), & 
+                 local_crd_nodes,ielsolid(ielem))*wt_axial_k(ipol)*wt(jpol)
+              Ms_z_xi_s_eta_wt_k(ipol,jpol) = Ms_z_xi_s_eta_k(xi_k(ipol), &
                  eta(jpol),local_crd_nodes,ielsolid(ielem))&
                  *s_over_oneplusxi_axis(xi_k(ipol),eta(jpol), &
-                 local_crd_nodes,ielsolid(ielem))*wt_axial_k(ipol)*wt(jpol) 
+                 local_crd_nodes,ielsolid(ielem))*wt_axial_k(ipol)*wt(jpol)
 
-              Ms_z_xi_s_xi_wt_k(ipol,jpol) = Ms_z_xi_s_xi_k(xi_k(ipol), &  
+              Ms_z_xi_s_xi_wt_k(ipol,jpol) = Ms_z_xi_s_xi_k(xi_k(ipol), &
                  eta(jpol),local_crd_nodes,ielsolid(ielem))&
                  *s_over_oneplusxi_axis(xi_k(ipol),eta(jpol), &
-                 local_crd_nodes,ielsolid(ielem))*wt_axial_k(ipol)*wt(jpol) 
-              
+                 local_crd_nodes,ielsolid(ielem))*wt_axial_k(ipol)*wt(jpol)
+
 
               if (ipol>0) then
                  call compute_partial_derivatives(dsdxi,dzdxi,dsdeta,dzdeta, &
@@ -1497,28 +1497,28 @@ subroutine def_solid_stiffness_terms(lambda, mu, massmat_kwts2, xi_ani, phi_ani,
                  if (anel_true) then
                     Y(ipol,jpol,ielem) = wt_axial_k(ipol) * wt(jpol) / (1 + xi_k(ipol))&
                        * jacobian(xi_k(ipol), eta(jpol), local_crd_nodes, ielsolid(ielem))
-                 
+
                     V_s_eta(ipol,jpol,ielem) &
                        = mapping(eta(ipol), eta(jpol), local_crd_nodes,1,ielsolid(ielem)) &
-                           * M_s_eta_wt_k(ipol,jpol) 
+                           * M_s_eta_wt_k(ipol,jpol)
                     V_s_xi(ipol,jpol,ielem) &
                        = mapping(eta(ipol), eta(jpol), local_crd_nodes,1,ielsolid(ielem)) &
-                           * M_s_xi_wt_k(ipol,jpol) 
+                           * M_s_xi_wt_k(ipol,jpol)
                     V_z_eta(ipol,jpol,ielem) &
                        = mapping(eta(ipol), eta(jpol), local_crd_nodes,1,ielsolid(ielem)) &
-                           * M_z_eta_wt_k(ipol,jpol) 
+                           * M_z_eta_wt_k(ipol,jpol)
                     V_z_xi(ipol,jpol,ielem) &
                        = mapping(eta(ipol), eta(jpol), local_crd_nodes,1,ielsolid(ielem)) &
-                           * M_z_xi_wt_k(ipol,jpol) 
+                           * M_z_xi_wt_k(ipol,jpol)
                  endif
               else
                  M_s_xi_wt_k(ipol,jpol) = zero
                  M_z_xi_wt_k(ipol,jpol) = zero
                  M_z_eta_wt_k(ipol,jpol) = zero
                  M_s_eta_wt_k(ipol,jpol) = zero
-                 
+
                  if (anel_true) then
-                    dsdxi = 0 
+                    dsdxi = 0
                     dsdeta = 0
                     dzdeta = 0
                     dzdxi = 0
@@ -1530,7 +1530,7 @@ subroutine def_solid_stiffness_terms(lambda, mu, massmat_kwts2, xi_ani, phi_ani,
 
                     Y0(jpol,ielem) = wt_axial_k(ipol) * wt(jpol) &
                        * jacobian(xi_k(ipol), eta(jpol), local_crd_nodes, ielsolid(ielem))
-                    
+
                     call compute_partial_derivatives(dsdxi, dzdxi, dsdeta, dzdeta, &
                          xi_k(ipol), eta(jpol), local_crd_nodes, ielsolid(ielem))
 
@@ -1571,7 +1571,7 @@ subroutine def_solid_stiffness_terms(lambda, mu, massmat_kwts2, xi_ani, phi_ani,
                                      Ms_z_eta_s_xi_wt_k,Ms_z_eta_s_eta_wt_k,&
                                      Ms_z_xi_s_eta_wt_k,Ms_z_xi_s_xi_wt_k)
 
-       case('quadpole') 
+       case('quadpole')
           call compute_quadrupole_stiff_terms(ielem,jpol,&
                                      lambda,mu,xi_ani,phi_ani,eta_ani, &
                                      fa_ani_theta, fa_ani_phi, &
@@ -1624,7 +1624,7 @@ subroutine def_solid_stiffness_terms(lambda, mu, massmat_kwts2, xi_ani, phi_ani,
      deallocate(V_s_xi)
      deallocate(V_z_eta)
      deallocate(V_z_xi)
-     
+
      deallocate(Y0)
      deallocate(V0_s_eta)
      deallocate(V0_s_xi)
@@ -1660,9 +1660,9 @@ subroutine compute_monopole_stiff_terms(ielem,jpol,local_crd_nodes, &
   use data_matr, only: M0_w1, M0_w2, M0_w3, &
                        M11s, M21s, M41s, M12s, M22s, M32s, M42s, M11z, M21z, M41z, &
                        M_1, M_2, M_3, M_4, M_w1, M0_w1
-  
+
   integer, intent(in) :: ielem, jpol
-  
+
   real(kind=dp), intent(in) :: lambda(0:npol,0:npol,nelem)
   real(kind=dp), intent(in) :: mu(0:npol,0:npol,nelem)
   real(kind=dp), intent(in) :: xi_ani(0:npol,0:npol,nelem)
@@ -1671,50 +1671,50 @@ subroutine compute_monopole_stiff_terms(ielem,jpol,local_crd_nodes, &
   real(kind=dp), intent(in) :: fa_ani_theta(0:npol,0:npol,nelem)
   real(kind=dp), intent(in) :: fa_ani_phi(0:npol,0:npol,nelem)
   real(kind=dp), intent(in) :: massmat_kwts2(0:npol,0:npol,nelem)
-  
+
   real(kind=dp), intent(in) :: non_diag_fact(0:npol,nel_solid)
   real(kind=dp), intent(in) :: local_crd_nodes(8,2)
-  
+
   real(kind=dp), intent(in) :: alpha_wt_k(0:npol,0:npol)
   real(kind=dp), intent(in) :: beta_wt_k(0:npol,0:npol)
   real(kind=dp), intent(in) :: gamma_wt_k(0:npol,0:npol)
   real(kind=dp), intent(in) :: delta_wt_k(0:npol,0:npol)
   real(kind=dp), intent(in) :: epsil_wt_k(0:npol,0:npol)
   real(kind=dp), intent(in) :: zeta_wt_k(0:npol,0:npol)
-  
+
   real(kind=dp), intent(in) :: Ms_z_eta_s_xi_wt_k(0:npol,0:npol)
   real(kind=dp), intent(in) :: Ms_z_eta_s_eta_wt_k(0:npol,0:npol)
   real(kind=dp), intent(in) :: Ms_z_xi_s_eta_wt_k(0:npol,0:npol)
   real(kind=dp), intent(in) :: Ms_z_xi_s_xi_wt_k(0:npol,0:npol)
-  
+
   real(kind=dp), intent(in) :: M_s_xi_wt_k(0:npol,0:npol)
   real(kind=dp), intent(in) :: M_z_xi_wt_k(0:npol,0:npol)
   real(kind=dp), intent(in) :: M_z_eta_wt_k(0:npol,0:npol)
   real(kind=dp), intent(in) :: M_s_eta_wt_k(0:npol,0:npol)
-  
+
   integer          :: ipol
   real(kind=dp)    :: dsdxi,dzdeta,dzdxi,dsdeta
   real(kind=dp)    :: fa_ani_thetal, fa_ani_phil
   real(kind=dp)    :: C11, C22, C33, C12, C13, C23, C15, C25, C35, C44, C46, C55, C66, Ctmp
   real(kind=dp)    :: lambdal, mul, xil, phil, etal
-  
+
   ! Clumsy to initialize inside a loop... but hey, the easiest way in this setup.
   if ( ielem==1 .and. jpol==0 ) then
      M0_w1(0:npol,1:nel_solid) = zero
      M0_w2(0:npol,1:nel_solid) = zero
      M0_w3(0:npol,1:nel_solid) = zero
   endif
-  
+
   do ipol=0, npol
      fa_ani_thetal = fa_ani_theta(ipol,jpol,ielsolid(ielem))
      fa_ani_phil = fa_ani_phi(ipol,jpol,ielsolid(ielem))
-   
+
      lambdal = lambda(ipol,jpol,ielsolid(ielem))
      mul = mu(ipol,jpol,ielsolid(ielem))
      xil = xi_ani(ipol,jpol,ielsolid(ielem))
      phil = phi_ani(ipol,jpol,ielsolid(ielem))
      etal = eta_ani(ipol,jpol,ielsolid(ielem))
-     
+
      C11 = c_ijkl_ani(lambdal, mul, xil, phil, etal, fa_ani_thetal, fa_ani_phil, 1, 1, 1, 1)
      C12 = c_ijkl_ani(lambdal, mul, xil, phil, etal, fa_ani_thetal, fa_ani_phil, 1, 1, 2, 2)
      C13 = c_ijkl_ani(lambdal, mul, xil, phil, etal, fa_ani_thetal, fa_ani_phil, 1, 1, 3, 3)
@@ -1752,14 +1752,14 @@ subroutine compute_monopole_stiff_terms(ielem,jpol,local_crd_nodes, &
                                       fa_ani_phil, 2, 3, 3, 1))
         Ctmp = Ctmp + dabs(c_ijkl_ani(lambdal, mul, xil, phil, etal, fa_ani_thetal, &
                                       fa_ani_phil, 3, 1, 1, 2))
-        
+
         if (Ctmp > smallval_sngl) then
            write(6,*) procstrg, ' ERROR: some stiffness term that should be zero '
            write(6,*) procstrg, '        is not: in compute_monopole_stiff_terms()'
            stop
         endif
      endif
-    
+
      M11s(ipol,jpol,ielem) = C11 * delta_wt_k(ipol,jpol) &
                            + C15 * Ms_z_eta_s_xi_wt_k(ipol,jpol)&
                            + C15 * Ms_z_xi_s_eta_wt_k(ipol,jpol)&
@@ -1813,11 +1813,11 @@ subroutine compute_monopole_stiff_terms(ielem,jpol,local_crd_nodes, &
      M_w1(ipol,jpol,ielem) = C22 * massmat_kwts2(ipol,jpol,ielsolid(ielem))
 
      if (axis_solid(ielem)) M_w1(0,jpol,ielem) = zero
-     
+
      if (axis_solid(ielem) .and. ipol==0) then
         call compute_partial_derivatives(dsdxi,dzdxi,dsdeta,dzdeta, &
              xi_k(0),eta(jpol),local_crd_nodes,ielsolid(ielem))
-   
+
         M0_w1(jpol,ielem) = (2 * C12 + C22) * non_diag_fact(jpol,ielem)
         M0_w2(jpol,ielem) = C25 * non_diag_fact(jpol,ielem)
         M0_w3(jpol,ielem) = C23 * dsdxi * wt_axial_k(0) * wt(jpol) &
@@ -1841,9 +1841,9 @@ subroutine compute_dipole_stiff_terms(ielem,jpol,local_crd_nodes, &
                                       Ms_z_xi_s_eta_wt_k,Ms_z_xi_s_xi_wt_k)
 
   use data_matr
-  
+
   integer, intent(in) :: ielem,jpol
-  
+
   real(kind=dp), intent(in) :: lambda(0:npol,0:npol,nelem)
   real(kind=dp), intent(in) :: mu(0:npol,0:npol,nelem)
   real(kind=dp), intent(in) :: xi_ani(0:npol,0:npol,nelem)
@@ -1852,27 +1852,27 @@ subroutine compute_dipole_stiff_terms(ielem,jpol,local_crd_nodes, &
   real(kind=dp), intent(in) :: fa_ani_theta(0:npol,0:npol,nelem)
   real(kind=dp), intent(in) :: fa_ani_phi(0:npol,0:npol,nelem)
   real(kind=dp), intent(in) :: massmat_kwts2(0:npol,0:npol,nelem)
-  
+
   real(kind=dp), intent(in) :: non_diag_fact(0:npol,nel_solid)
   real(kind=dp), intent(in) :: local_crd_nodes(8,2)
-  
+
   real(kind=dp), intent(in) :: alpha_wt_k(0:npol,0:npol)
   real(kind=dp), intent(in) :: beta_wt_k(0:npol,0:npol)
   real(kind=dp), intent(in) :: gamma_wt_k(0:npol,0:npol)
   real(kind=dp), intent(in) :: delta_wt_k(0:npol,0:npol)
   real(kind=dp), intent(in) :: epsil_wt_k(0:npol,0:npol)
   real(kind=dp), intent(in) :: zeta_wt_k(0:npol,0:npol)
-  
+
   real(kind=dp), intent(in) :: Ms_z_eta_s_xi_wt_k(0:npol,0:npol)
   real(kind=dp), intent(in) :: Ms_z_eta_s_eta_wt_k(0:npol,0:npol)
   real(kind=dp), intent(in) :: Ms_z_xi_s_eta_wt_k(0:npol,0:npol)
   real(kind=dp), intent(in) :: Ms_z_xi_s_xi_wt_k(0:npol,0:npol)
-  
+
   real(kind=dp), intent(in) :: M_s_xi_wt_k(0:npol,0:npol)
   real(kind=dp), intent(in) :: M_z_xi_wt_k(0:npol,0:npol)
   real(kind=dp), intent(in) :: M_z_eta_wt_k(0:npol,0:npol)
   real(kind=dp), intent(in) :: M_s_eta_wt_k(0:npol,0:npol)
-  
+
   integer          :: ipol
   real(kind=dp)    :: dsdxi, dzdeta, dzdxi, dsdeta
   real(kind=dp)    :: fa_ani_thetal, fa_ani_phil
@@ -1891,17 +1891,17 @@ subroutine compute_dipole_stiff_terms(ielem,jpol,local_crd_nodes, &
      M0_w9(0:npol,1:nel_solid) = zero
      M0_w10(0:npol,1:nel_solid) = zero
   endif
-  
+
   do ipol=0,npol
      fa_ani_thetal = fa_ani_theta(ipol,jpol,ielsolid(ielem))
      fa_ani_phil = fa_ani_phi(ipol,jpol,ielsolid(ielem))
-   
+
      lambdal = lambda(ipol,jpol,ielsolid(ielem))
      mul = mu(ipol,jpol,ielsolid(ielem))
      xil = xi_ani(ipol,jpol,ielsolid(ielem))
      phil = phi_ani(ipol,jpol,ielsolid(ielem))
      etal = eta_ani(ipol,jpol,ielsolid(ielem))
-     
+
      C11 = c_ijkl_ani(lambdal, mul, xil, phil, etal, fa_ani_thetal, fa_ani_phil, 1, 1, 1, 1)
      C12 = c_ijkl_ani(lambdal, mul, xil, phil, etal, fa_ani_thetal, fa_ani_phil, 1, 1, 2, 2)
      C13 = c_ijkl_ani(lambdal, mul, xil, phil, etal, fa_ani_thetal, fa_ani_phil, 1, 1, 3, 3)
@@ -1938,7 +1938,7 @@ subroutine compute_dipole_stiff_terms(ielem,jpol,local_crd_nodes, &
                                       fa_ani_phil, 2, 3, 3, 1))
         Ctmp = Ctmp + dabs(c_ijkl_ani(lambdal, mul, xil, phil, etal, fa_ani_thetal, &
                                       fa_ani_phil, 3, 1, 1, 2))
-        
+
         if (Ctmp > smallval_sngl) then
            write(6,*) procstrg, ' ERROR: some stiffness term that should be zero '
            write(6,*) procstrg, '        is not: in compute_dipole_stiff_terms()'
@@ -1960,7 +1960,7 @@ subroutine compute_dipole_stiff_terms(ielem,jpol,local_crd_nodes, &
                            + (C15 + C46) * two * Ms_z_xi_s_xi_wt_k(ipol,jpol)&
                            + (C55 + C44) * beta_wt_k(ipol,jpol)
 
-     
+
      M12s(ipol,jpol,ielem) = (C11 - C66) * delta_wt_k(ipol,jpol) &
                            + (C15 - C46) * (Ms_z_eta_s_xi_wt_k(ipol,jpol) &
                                             +  Ms_z_xi_s_eta_wt_k(ipol,jpol)) &
@@ -1973,8 +1973,8 @@ subroutine compute_dipole_stiff_terms(ielem,jpol,local_crd_nodes, &
      M42s(ipol,jpol,ielem) = (C11 - C66) * epsil_wt_k(ipol,jpol) &
                            + (C15 - C46) * two * Ms_z_xi_s_xi_wt_k(ipol,jpol)&
                            + (C55 - C44) * beta_wt_k(ipol,jpol)
-     
-     
+
+
      M13s(ipol,jpol,ielem) = C15 * delta_wt_k(ipol,jpol) &
                            + C13 * Ms_z_eta_s_xi_wt_k(ipol,jpol)&
                            + C55 * Ms_z_xi_s_eta_wt_k(ipol,jpol)&
@@ -2013,17 +2013,17 @@ subroutine compute_dipole_stiff_terms(ielem,jpol,local_crd_nodes, &
                           + (C25 + C46) * two * M_s_eta_wt_k(ipol,jpol)
      M_2(ipol,jpol,ielem) = (C12 + C66) * two * M_z_xi_wt_k(ipol,jpol)  &
                           + (C25 + C46) * two * M_s_xi_wt_k(ipol,jpol)
-     
+
      M_3(ipol,jpol,ielem) = C46 * M_z_eta_wt_k(ipol,jpol) &
                           + C44 * M_s_eta_wt_k(ipol,jpol)
      M_4(ipol,jpol,ielem) = C46 * M_z_xi_wt_k(ipol,jpol)  &
                           + C44 * M_s_xi_wt_k(ipol,jpol)
-     
+
      M_5(ipol,jpol,ielem) = (C12 - C66) * two * M_z_eta_wt_k(ipol,jpol) &
                           + (C25 - C46) * two * M_s_eta_wt_k(ipol,jpol)
      M_6(ipol,jpol,ielem) = (C12 - C66) * two * M_z_xi_wt_k(ipol,jpol)  &
                           + (C25 - C46) * two * M_s_xi_wt_k(ipol,jpol)
-     
+
      M_7(ipol,jpol,ielem) = C25 * two * M_z_eta_wt_k(ipol,jpol) &
                           + C23 * two * M_s_eta_wt_k(ipol,jpol)
      M_8(ipol,jpol,ielem) = C25 * two * M_z_xi_wt_k(ipol,jpol)  &
@@ -2035,25 +2035,25 @@ subroutine compute_dipole_stiff_terms(ielem,jpol,local_crd_nodes, &
      M_w3(ipol,jpol,ielem) = C44 * massmat_kwts2(ipol,jpol,ielsolid(ielem))
 
      if (axis_solid(ielem) .and. ipol==0) then
-     
+
         call compute_partial_derivatives(dsdxi,dzdxi,dsdeta,dzdeta, &
              xi_k(0),eta(jpol),local_crd_nodes,ielsolid(ielem))
 
         M0_w1(jpol,ielem) = (C12 + C66) * two * non_diag_fact(jpol,ielem)
         M0_w2(jpol,ielem) = (C12 + C66) * two * dzdxi * wt_axial_k(0) * wt(jpol)
-        
+
         M0_w3(jpol,ielem) = C46 * non_diag_fact(jpol,ielem)
         M0_w4(jpol,ielem) = C46 * dzdxi * wt_axial_k(0) * wt(jpol)
-        
+
         M0_w6(jpol,ielem) = (C25 + C46) * two * dsdxi * wt_axial_k(0) * wt(jpol)
 
         M0_w7(jpol,ielem) = C44 * non_diag_fact(jpol,ielem)
         M0_w8(jpol,ielem) = C44 * dsdxi * wt_axial_k(0) * wt(jpol)
-        
+
         M0_w9(jpol,ielem) = (C12 + C22) * four * non_diag_fact(jpol,ielem)
-        
+
         M0_w10(jpol,ielem) = (two * C25 + C46) * non_diag_fact(jpol,ielem)
-        
+
      endif
   enddo
 
@@ -2096,9 +2096,9 @@ subroutine compute_quadrupole_stiff_terms(ielem,jpol, &
                                       Ms_z_xi_s_eta_wt_k,Ms_z_xi_s_xi_wt_k)
 
   use data_matr
-  
+
   integer, intent(in)          :: ielem, jpol
-  
+
   real(kind=dp)   , intent(in) :: lambda(0:npol,0:npol,nelem)
   real(kind=dp)   , intent(in) :: mu(0:npol,0:npol,nelem)
   real(kind=dp)   , intent(in) :: xi_ani(0:npol,0:npol,nelem)
@@ -2107,31 +2107,31 @@ subroutine compute_quadrupole_stiff_terms(ielem,jpol, &
   real(kind=dp)   , intent(in) :: fa_ani_theta(0:npol,0:npol,nelem)
   real(kind=dp)   , intent(in) :: fa_ani_phi(0:npol,0:npol,nelem)
   real(kind=dp)   , intent(in) :: massmat_kwts2(0:npol,0:npol,nelem)
-  
+
   real(kind=dp)   , intent(in) :: non_diag_fact(0:npol,nel_solid)
-  
+
   real(kind=dp)   , intent(in) :: alpha_wt_k(0:npol,0:npol)
   real(kind=dp)   , intent(in) :: beta_wt_k(0:npol,0:npol)
   real(kind=dp)   , intent(in) :: gamma_wt_k(0:npol,0:npol)
   real(kind=dp)   , intent(in) :: delta_wt_k(0:npol,0:npol)
   real(kind=dp)   , intent(in) :: epsil_wt_k(0:npol,0:npol)
   real(kind=dp)   , intent(in) :: zeta_wt_k(0:npol,0:npol)
-  
+
   real(kind=dp)   , intent(in) :: Ms_z_eta_s_xi_wt_k(0:npol,0:npol)
   real(kind=dp)   , intent(in) :: Ms_z_eta_s_eta_wt_k(0:npol,0:npol)
   real(kind=dp)   , intent(in) :: Ms_z_xi_s_eta_wt_k(0:npol,0:npol)
   real(kind=dp)   , intent(in) :: Ms_z_xi_s_xi_wt_k(0:npol,0:npol)
-  
+
   real(kind=dp)   , intent(in) :: M_s_xi_wt_k(0:npol,0:npol)
   real(kind=dp)   , intent(in) :: M_z_xi_wt_k(0:npol,0:npol)
   real(kind=dp)   , intent(in) :: M_z_eta_wt_k(0:npol,0:npol)
   real(kind=dp)   , intent(in) :: M_s_eta_wt_k(0:npol,0:npol)
-  
+
   integer          :: ipol
   real(kind=dp)    :: fa_ani_thetal, fa_ani_phil
   real(kind=dp)    :: C11, C22, C33, C12, C13, C23, C15, C25, C35, C44, C46, C55, C66, Ctmp
   real(kind=dp)    :: lambdal, mul, xil, phil, etal
-  
+
   if ( ielem==1 .and. jpol==0 ) then
      M0_w1(0:npol,1:nel_solid) = zero
      M0_w2(0:npol,1:nel_solid) = zero
@@ -2144,13 +2144,13 @@ subroutine compute_quadrupole_stiff_terms(ielem,jpol, &
   do ipol = 0, npol
      fa_ani_thetal = fa_ani_theta(ipol,jpol,ielsolid(ielem))
      fa_ani_phil = fa_ani_phi(ipol,jpol,ielsolid(ielem))
-   
+
      lambdal = lambda(ipol,jpol,ielsolid(ielem))
      mul = mu(ipol,jpol,ielsolid(ielem))
      xil = xi_ani(ipol,jpol,ielsolid(ielem))
      phil = phi_ani(ipol,jpol,ielsolid(ielem))
      etal = eta_ani(ipol,jpol,ielsolid(ielem))
-     
+
      C11 = c_ijkl_ani(lambdal, mul, xil, phil, etal, fa_ani_thetal, fa_ani_phil, 1, 1, 1, 1)
      C12 = c_ijkl_ani(lambdal, mul, xil, phil, etal, fa_ani_thetal, fa_ani_phil, 1, 1, 2, 2)
      C13 = c_ijkl_ani(lambdal, mul, xil, phil, etal, fa_ani_thetal, fa_ani_phil, 1, 1, 3, 3)
@@ -2188,7 +2188,7 @@ subroutine compute_quadrupole_stiff_terms(ielem,jpol, &
                                       fa_ani_phil, 2, 3, 3, 1))
         Ctmp = Ctmp + dabs(c_ijkl_ani(lambdal, mul, xil, phil, etal, fa_ani_thetal, &
                                       fa_ani_phil, 3, 1, 1, 2))
-        
+
         if (Ctmp > smallval_sngl) then
            write(6,*)procstrg,' ERROR: some stiffness term that should be zero '
            write(6,*)procstrg,'        is not: in compute_quadrupole_stiff_terms()'
@@ -2284,13 +2284,13 @@ subroutine compute_quadrupole_stiff_terms(ielem,jpol, &
    enddo ! ipol
 
    if (axis_solid(ielem)) then
-      M_1(0,jpol,ielem) = zero 
+      M_1(0,jpol,ielem) = zero
       M_2(0,jpol,ielem) = zero
-      M_3(0,jpol,ielem) = zero 
+      M_3(0,jpol,ielem) = zero
       M_4(0,jpol,ielem) = zero
-      M_5(0,jpol,ielem) = zero 
+      M_5(0,jpol,ielem) = zero
       M_6(0,jpol,ielem) = zero
-      M_7(0,jpol,ielem) = zero 
+      M_7(0,jpol,ielem) = zero
       M_8(0,jpol,ielem) = zero
 
       M_w1(0,jpol,ielem) = zero
@@ -2310,43 +2310,43 @@ real(kind=dp) function c_ijkl_ani(lambda, mu, xi_ani, phi_ani, eta_ani, &
 !! i, j, k and l should be in [1,3]
 !
 ! MvD [Anisotropy Notes, p. 13.4]
-  
-  
+
+
   real(kind=dp), intent(in) :: lambda, mu, xi_ani, phi_ani, eta_ani
   real(kind=dp), intent(in) :: theta_fa, phi_fa
   integer, intent(in)       :: i, j, k, l
   real(kind=dp), dimension(1:3, 1:3) :: deltaf
   real(kind=dp), dimension(1:3) :: s
-  
+
   deltaf = zero
   deltaf(1,1) = one
   deltaf(2,2) = one
   deltaf(3,3) = one
-  
+
   s(1) = dcos(phi_fa) * dsin(theta_fa)
   s(2) = dsin(phi_fa) * dsin(theta_fa)
   s(3) = dcos(theta_fa)
-  
+
   c_ijkl_ani = zero
-  
+
   ! isotropic part:
   c_ijkl_ani = c_ijkl_ani + lambda * deltaf(i,j) * deltaf(k,l)
-  
+
   c_ijkl_ani = c_ijkl_ani + mu * (deltaf(i,k) * deltaf(j,l) + deltaf(i,l) * deltaf(j,k))
-  
-  
+
+
   ! anisotropic part:
   ! in xi, phi, eta
-  
+
   c_ijkl_ani = c_ijkl_ani &
       + ((eta_ani - one) * lambda + two * eta_ani * mu * (one - one / xi_ani)) &
           * (deltaf(i,j) * s(k) * s(l) + deltaf(k,l) * s(i) * s(j))
-      
+
   c_ijkl_ani = c_ijkl_ani &
       + mu * (one / xi_ani - one) &
           * (deltaf(i,k) * s(j) * s(l) + deltaf(i,l) * s(j) * s(k) + &
              deltaf(j,k) * s(i) * s(l) + deltaf(j,l) * s(i) * s(k))
-  
+
   c_ijkl_ani = c_ijkl_ani &
       + ((one - two * eta_ani + phi_ani) * (lambda + two * mu) &
               + (4. * eta_ani - 4.) * mu / xi_ani) &
@@ -2358,13 +2358,13 @@ end function c_ijkl_ani
 !-----------------------------------------------------------------------------------------
 subroutine def_fluid_stiffness_terms(rho,massmat_kwts2)
 !< Fluid precomputed matrices definitions for all sources.
-!! Note that in this routine terms alpha etc. are scalars 
+!! Note that in this routine terms alpha etc. are scalars
 !! (as opposed to the solid case of being elemental arrays).
-  
+
   use data_matr
   real(kind=dp)   , intent(in)  :: rho(0:npol,0:npol,nelem)
   real(kind=dp)   , intent(in)  :: massmat_kwts2(0:npol,0:npol,nelem)
-  
+
   real(kind=dp)   , allocatable :: non_diag_fact(:,:)
   real(kind=dp)                 :: local_crd_nodes(8,2)
   real(kind=dp)                 :: alpha_wt_k,beta_wt_k,gamma_wt_k
@@ -2378,13 +2378,13 @@ subroutine def_fluid_stiffness_terms(rho,massmat_kwts2)
   allocate(M0_w_fl(0:npol,nel_fluid))
 
   allocate(non_diag_fact(0:npol,1:nel_fluid))
-  
+
   do iel=1,nel_fluid
 
      do inode = 1, 8
         call compute_coordinates_mesh(local_crd_nodes(inode,1),&
              local_crd_nodes(inode,2),ielfluid(iel),inode)
-     end do
+     enddo
 
      do jpol=0,npol
         do ipol=0, npol
@@ -2411,7 +2411,7 @@ subroutine def_fluid_stiffness_terms(rho,massmat_kwts2)
                    *wt(ipol)*wt(jpol)
 
            ! ::::::::::::::::axial elements::::::::::::::::
-           elseif (axis_fluid(iel) ) then
+           else if (axis_fluid(iel) ) then
               alpha_wt_k = alphak(xi_k(ipol),&
                    eta(jpol),local_crd_nodes,ielfluid(iel)) &
                    *s_over_oneplusxi_axis(xi_k(ipol),eta(jpol), &
@@ -2462,13 +2462,13 @@ subroutine def_fluid_stiffness_terms(rho,massmat_kwts2)
            do inode = 1, 8
               call compute_coordinates_mesh(local_crd_nodes(inode,1),&
                    local_crd_nodes(inode,2),ielfluid(iel),inode)
-           end do
-           do jpol = 0,npol 
+           enddo
+           do jpol = 0,npol
               non_diag_fact(jpol,iel) = wt_axial_k(0)*wt(jpol)* &
                    jacobian(xi_k(0),eta(jpol),local_crd_nodes,ielfluid(iel))/&
                    s_over_oneplusxi_axis(xi_k(0), &
                    eta(jpol),local_crd_nodes,ielfluid(iel))
-           end do
+           enddo
 
            ! axial masking of main term
            M_w_fl(0,0:npol,iel)=zero
@@ -2477,7 +2477,7 @@ subroutine def_fluid_stiffness_terms(rho,massmat_kwts2)
            M0_w_fl(:,iel)=non_diag_fact(:,iel)/rho(0,:,ielfluid(iel))
         endif ! axis
      enddo
-     if (src_type(1)=='quadpole') then 
+     if (src_type(1)=='quadpole') then
         M_w_fl=four*M_w_fl
         M0_w_fl=four*M0_w_fl
      endif
@@ -2496,22 +2496,22 @@ end subroutine def_fluid_stiffness_terms
 !-----------------------------------------------------------------------------------------
 subroutine def_solid_fluid_boundary_terms
 !< Defines the 1-d vector-array bdry_matr which acts as the diagonal matrix
-!! to accomodate the exchange of fields across solid-fluid boundaries 
-!! in both directions. Take note of the sign conventions in accordance with 
+!! to accomodate the exchange of fields across solid-fluid boundaries
+!! in both directions. Take note of the sign conventions in accordance with
 !! those used in the time loop.
-  
+
   use commun, only : psum
   use data_io
   use data_mesh, only: npol, nel_bdry
   use data_matr
-  
+
   real(kind=dp)                :: local_crd_nodes(8,2)
   real(kind=dp)                :: s,z,r,theta,rf,thetaf
   real(kind=dp)                :: theta1,theta2,r1,r2,delta_th,bdry_sum
   integer                      :: iel,ielglob,ipol,inode,idom
   integer                      :: count_lower_disc,count_upper_disc
 
-  allocate(bdry_matr(0:npol,nel_bdry,2))   
+  allocate(bdry_matr(0:npol,nel_bdry,2))
   allocate(solflubdry_radius(nel_bdry))
 
   bdry_sum = zero
@@ -2535,7 +2535,7 @@ subroutine def_solid_fluid_boundary_terms
                                  0, bdry_jpol_fluid(iel))
 
         ! test if the mapping of solid element & jpol numbers agrees for solid & fluid
-        if (abs( (rf-r1) /r1 ) > 1.e-5 .or. abs((thetaf-theta1)) > 1.e-3) then 
+        if (abs( (rf-r1) /r1 ) > 1.e-5 .or. abs((thetaf-theta1)) > 1.e-3) then
            write(6,*)
            write(6,*)procstrg,'Problem with boundary term mapping near axis!'
            write(6,*)procstrg,'radius,theta solid index:',r1/1.d3,theta1/pi*180.
@@ -2552,7 +2552,7 @@ subroutine def_solid_fluid_boundary_terms
                                  npol, bdry_jpol_fluid(iel))
 
         ! test if the mapping of solid element & jpol numbers agrees for solid & fluid
-        if (abs( (rf-r2) /r2 ) > 1.e-5 .or. abs((thetaf-theta2)) > 1.e-3) then 
+        if (abs( (rf-r2) /r2 ) > 1.e-5 .or. abs((thetaf-theta2)) > 1.e-3) then
            write(6,*)
            write(6,*)procstrg,'Problem with boundary term mapping far axis!'
            write(6,*)procstrg,'radius,theta solid index:',r2/1.d3,theta2/pi*180.
@@ -2560,7 +2560,7 @@ subroutine def_solid_fluid_boundary_terms
            stop
         endif
 
-        if ( abs(r1-r2)>min_distance_dim) then 
+        if ( abs(r1-r2)>min_distance_dim) then
            write(6,*)
            write(6,*)procstrg,'Problem with S/F boundary element',ielglob
            write(6,*)procstrg,'radii at min./max theta are not equal!'
@@ -2591,13 +2591,13 @@ subroutine def_solid_fluid_boundary_terms
            do ipol=1, npol
               call compute_coordinates(s, z, r, theta, ielglob, ipol, &
                                        bdry_jpol_solid(iel))
-              if(abs(r - r1) > min_distance_dim) then 
+              if(abs(r - r1) > min_distance_dim) then
                  write(6,*)
                  write(6,*)procstrg,'Problem with axial S/F boundary element',&
                            ielglob
                  write(6,*)procstrg,'radius at ipol=',ipol,'different from ipol=0'
                  write(6,*)procstrg,'r,r1 [km],theta [deg]:',r/1000.,r1/1000., &
-                                                              theta*180./pi 
+                                                              theta*180./pi
                  stop
               endif
 
@@ -2612,14 +2612,14 @@ subroutine def_solid_fluid_boundary_terms
                                     (one + xi_k(ipol))
            enddo
 
-           ! I=0 axis 
+           ! I=0 axis
            bdry_sum = bdry_sum + 1/r * delta_th * wt_axial_k(0) &
                             * s_over_oneplusxi_axis(xi_k(0), &
                                                     eta(bdry_jpol_solid(iel)), &
                                                     local_crd_nodes,ielglob)
 
            ! I=0 axis itself
-           bdry_matr(0,iel,1) = zero ! note sin(0) = 0    
+           bdry_matr(0,iel,1) = zero ! note sin(0) = 0
 
            ! need factor 1/r to compensate for using s/(1+xi) rather than sin theta/(1+xi)
            ! note cos(0) = 1
@@ -2642,7 +2642,7 @@ subroutine def_solid_fluid_boundary_terms
 
            ! testing some algebra...
            if (abs(s_over_oneplusxi_axis(xi_k(0),eta(bdry_jpol_solid(iel)), &
-               local_crd_nodes,ielglob)-delta_th*r)> min_distance_dim) then 
+               local_crd_nodes,ielglob)-delta_th*r)> min_distance_dim) then
               write(6,*)
               write(6,*)procstrg,&
                         'Problem with some axialgebra/definitions, elem:',ielglob
@@ -2668,13 +2668,13 @@ subroutine def_solid_fluid_boundary_terms
                  call compute_coordinates(s, z, r, theta, ielglob, ipol, &
                                           bdry_jpol_solid(iel))
 
-                 if (abs(r - r1) > min_distance_dim) then 
+                 if (abs(r - r1) > min_distance_dim) then
                     write(6,*)
                     write(6,*)procstrg,&
                               'Problem with non-axial S/F boundary element',ielglob
                     write(6,*)procstrg,'radius at ipol=',ipol,'different from ipol=0'
                     write(6,12)procstrg,'r,r1 [km],theta [deg]:',r/1000.,r1/1000., &
-                                                                 theta*180./pi 
+                                                                 theta*180./pi
                     stop
                  endif
 
@@ -2693,7 +2693,7 @@ subroutine def_solid_fluid_boundary_terms
            if ( .not. solid_domain(idom) ) then
               ! run a check to make sure radius is either discontinuity
               if ( abs(r1-discont(idom))>min_distance_dim .and. &
-                   abs(r1-discont(idom+1))>min_distance_dim ) then 
+                   abs(r1-discont(idom+1))>min_distance_dim ) then
                  write(6,*)
                  write(6,*)procstrg, &
                            'Problem: S/F boundary radius is not one of the'
@@ -2705,7 +2705,7 @@ subroutine def_solid_fluid_boundary_terms
                  stop
               endif
               ! if current radius=bottom radius of fluid layer, set negative
-              if (abs(r1-discont(idom+1)) < min_distance_dim) then 
+              if (abs(r1-discont(idom+1)) < min_distance_dim) then
                  bdry_matr(:,iel,:) = -bdry_matr(:,iel,:)
                  count_lower_disc = count_lower_disc+1
               else ! element is in upper radius of fluid layer, keep positive
@@ -2724,7 +2724,7 @@ subroutine def_solid_fluid_boundary_terms
 
   bdry_sum = psum(real(bdry_sum,kind=realkind))
 
-  ! yet another check....see if # elements above fluid is multiple of # below 
+  ! yet another check....see if # elements above fluid is multiple of # below
   ! or the same (this is the case for no coarsening layer in the fluid)
   if ((count_upper_disc /= count_lower_disc) &
         .and. mod(count_upper_disc,2*count_lower_disc) /= 0) then
@@ -2763,9 +2763,9 @@ subroutine def_solid_fluid_boundary_terms
      ! solid/fluid boundaries
      !stop
   endif
-  
+
   if (diagfiles) then
-  
+
       if (verbose > 1) then
          write(69,*)
          write(69,*)'saving boundary matrix with solid radius/colatitude into ',&
@@ -2774,14 +2774,14 @@ subroutine def_solid_fluid_boundary_terms
                      'boundary_term_flu_'//appmynum//'.dat'
          write(69,*)
       endif
-  
+
       ! output boundary precomputable matrix with radius [k]m and colatitude [deg]
       open(unit=500+mynum,file=infopath(1:lfinfo)//'/boundary_term_sol'&
                                //appmynum//'.dat')
       open(unit=400+mynum,file=infopath(1:lfinfo)//'/boundary_term_flu'&
                                //appmynum//'.dat')
 
-      do iel=1,nel_bdry  
+      do iel=1,nel_bdry
          ielglob=ielsolid(bdry_solid_el(iel))
          do ipol=0,npol
             write(500+mynum,15)rcoord(ipol,bdry_jpol_solid(iel),ielglob)/1.d3, &
@@ -2797,7 +2797,7 @@ subroutine def_solid_fluid_boundary_terms
       enddo
       close(500+mynum)
       close(400+mynum)
-  end if
+  endif
 
 15 format(4(1pe12.4))
 

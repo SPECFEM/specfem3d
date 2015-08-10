@@ -30,11 +30,11 @@ module meshes_io
   use data_mesh
   use data_proc
   use data_io
-  
+
   use utlity, only : scoord, zcoord, rcoord, thetacoord
-  
+
   implicit none
-  
+
   private
   public :: finish_xdmf_xml
   public :: dump_wavefields_mesh_1d
@@ -50,24 +50,24 @@ module meshes_io
 contains
 
 !-----------------------------------------------------------------------------------------
-!> Dumps the mesh (s,z) [m] in ASCII format as needed to visualize global 
+!> Dumps the mesh (s,z) [m] in ASCII format as needed to visualize global
 !! snapshots, and additionally the constant factors preceding the displacement
 !! in the fluid, namely rho^{-1} and (rho s)^{-1}.
-!! When reading the fluid wavefield, one therefore needs to multiply all 
+!! When reading the fluid wavefield, one therefore needs to multiply all
 !! components with inv_rho_fluid and the phi component with one/scoord!
 !! Convention for order in the file: First the fluid, then the solid domain.
 subroutine dump_glob_grid_midpoint(ibeg,iend,jbeg,jend)
-  
+
   use data_pointwise, only : inv_rho_fluid
   use data_mesh,      only : npol, nel_fluid, nel_solid
-  
-  integer, intent(in) :: ibeg,iend,jbeg,jend 
+
+  integer, intent(in) :: ibeg,iend,jbeg,jend
   integer             :: iel,ipol,jpol
 
   open(unit=25000+mynum,file=datapath(1:lfdata)//'/glob_grid_'&
                              //appmynum//'.dat')
 
-  if (have_fluid) then 
+  if (have_fluid) then
      open(unit=26000+mynum,file=datapath(1:lfdata)// &
                                 '/inv_rho_s_fluid_globsnaps_' &
                                 //appmynum//'.dat')
@@ -117,7 +117,7 @@ subroutine dump_xdmf_grid()
   integer, allocatable  :: grid(:,:), mapping(:)
   logical, allocatable  :: check(:), mask_tp_elem(:)
   character(len=120)    :: fname
-  
+
   allocate(mask_tp_elem(nelem))
   mask_tp_elem = .false.
 
@@ -135,12 +135,12 @@ subroutine dump_xdmf_grid()
           .and. &
           max(max(thetacoord(0,0,ielfluid(iel)), thetacoord(0,npol,ielfluid(iel))), &
               max(thetacoord(npol,0,ielfluid(iel)), thetacoord(npol,npol,ielfluid(iel)))) > xdmf_thetamin) &
-          then        
+          then
           ct = ct + 1
           mask_tp_elem(iel) = .true.
       endif
   enddo
-  
+
   do iel=1, nel_solid
       if (min(min(rcoord(0,0,ielsolid(iel)), rcoord(0,npol,ielsolid(iel))), &
               min(rcoord(npol,0,ielsolid(iel)), rcoord(npol,npol,ielsolid(iel)))) < xdmf_rmax &
@@ -153,22 +153,22 @@ subroutine dump_xdmf_grid()
           .and. &
           max(max(thetacoord(0,0,ielsolid(iel)), thetacoord(0,npol,ielsolid(iel))), &
               max(thetacoord(npol,0,ielsolid(iel)), thetacoord(npol,npol,ielsolid(iel)))) > xdmf_thetamin) &
-          then        
+          then
           ct = ct + 1
           mask_tp_elem(iel + nel_fluid) = .true.
       endif
   enddo
-  
+
   nelem_plot = ct * (i_n_xdmf - 1) * (j_n_xdmf - 1)
 
   allocate(check(nglob_fluid + nglob_solid))
   allocate(mapping(nglob_fluid + nglob_solid))
   allocate(mapping_ijel_iplot(i_n_xdmf, j_n_xdmf, nelem))
   allocate(plotting_mask(i_n_xdmf, j_n_xdmf, nelem))
-  
+
   check = .false.
   plotting_mask = .false.
-  
+
   ct = 0
 
   if (lpr) write(6,*) '   construction of mapping for xdmf plotting...'
@@ -180,10 +180,10 @@ subroutine dump_xdmf_grid()
           ipol = i_arr_xdmf(i)
           do j=1, j_n_xdmf
               jpol = j_arr_xdmf(j)
-             
+
               ipt = (iel-1)*(npol+1)**2 + jpol*(npol+1) + ipol + 1
               idest = igloc_fluid(ipt)
-              
+
               if (.not. check(idest)) then
                   ct = ct + 1
                   check(idest) = .true.
@@ -194,19 +194,19 @@ subroutine dump_xdmf_grid()
           enddo
       enddo
   enddo
-  
+
   if (lpr) write(6,*) '   ...solid part...'
-  
+
   do iel=1, nel_solid
       if (.not.  mask_tp_elem(iel + nel_fluid)) cycle
       do i=1, i_n_xdmf
           ipol = i_arr_xdmf(i)
           do j=1, j_n_xdmf
               jpol = j_arr_xdmf(j)
-             
+
               ipt = (iel-1)*(npol+1)**2 + jpol*(npol+1) + ipol + 1
               idest = igloc_solid(ipt) + nglob_fluid
-              
+
               if (.not. check(idest)) then
                   ct = ct + 1
                   check(idest) = .true.
@@ -217,18 +217,18 @@ subroutine dump_xdmf_grid()
           enddo
       enddo
   enddo
-  
+
   deallocate(check, mapping)
   npoint_plot = ct
-  
+
   allocate(points(1:2,1:npoint_plot))
-  
+
   if (lpr) write(6,*) '   ...collecting coordinates...'
 
   points = 0.
-  
+
   do iel=1, nel_fluid
-  
+
       do i=1, i_n_xdmf - 1
           ipol = i_arr_xdmf(i)
           ipol1 = i_arr_xdmf(i+1)
@@ -236,25 +236,25 @@ subroutine dump_xdmf_grid()
           do j=1, j_n_xdmf - 1
               jpol = j_arr_xdmf(j)
               jpol1 = j_arr_xdmf(j+1)
-  
+
               if (plotting_mask(i,j,iel)) then
                   ct = mapping_ijel_iplot(i,j,iel)
                   points(1,ct) = scoord(ipol,jpol,ielfluid(iel))
                   points(2,ct) = zcoord(ipol,jpol,ielfluid(iel))
               endif
-              
+
               if (plotting_mask(i+1,j,iel)) then
                   ct = mapping_ijel_iplot(i+1,j,iel)
                   points(1,ct) = scoord(ipol1,jpol,ielfluid(iel))
                   points(2,ct) = zcoord(ipol1,jpol,ielfluid(iel))
               endif
-              
+
               if (plotting_mask(i+1,j+1,iel)) then
                   ct = mapping_ijel_iplot(i+1,j+1,iel)
                   points(1,ct) = scoord(ipol1,jpol1,ielfluid(iel))
                   points(2,ct) = zcoord(ipol1,jpol1,ielfluid(iel))
               endif
-              
+
               if (plotting_mask(i,j+1,iel)) then
                   ct = mapping_ijel_iplot(i,j+1,iel)
                   points(1,ct) = scoord(ipol,jpol1,ielfluid(iel))
@@ -263,9 +263,9 @@ subroutine dump_xdmf_grid()
           enddo
       enddo
   enddo
-  
+
   do iel=1, nel_solid
-  
+
       do i=1, i_n_xdmf - 1
           ipol = i_arr_xdmf(i)
           ipol1 = i_arr_xdmf(i+1)
@@ -273,25 +273,25 @@ subroutine dump_xdmf_grid()
           do j=1, j_n_xdmf - 1
               jpol = j_arr_xdmf(j)
               jpol1 = j_arr_xdmf(j+1)
-  
+
               if (plotting_mask(i,j,iel + nel_fluid)) then
                   ct = mapping_ijel_iplot(i,j,iel + nel_fluid)
                   points(1,ct) = scoord(ipol,jpol,ielsolid(iel))
                   points(2,ct) = zcoord(ipol,jpol,ielsolid(iel))
               endif
-              
+
               if (plotting_mask(i+1,j,iel + nel_fluid)) then
                   ct = mapping_ijel_iplot(i+1,j,iel + nel_fluid)
                   points(1,ct) = scoord(ipol1,jpol,ielsolid(iel))
                   points(2,ct) = zcoord(ipol1,jpol,ielsolid(iel))
               endif
-              
+
               if (plotting_mask(i+1,j+1,iel + nel_fluid)) then
                   ct = mapping_ijel_iplot(i+1,j+1,iel + nel_fluid)
                   points(1,ct) = scoord(ipol1,jpol1,ielsolid(iel))
                   points(2,ct) = zcoord(ipol1,jpol1,ielsolid(iel))
               endif
-              
+
               if (plotting_mask(i,j+1,iel + nel_fluid)) then
                   ct = mapping_ijel_iplot(i,j+1,iel + nel_fluid)
                   points(1,ct) = scoord(ipol,jpol1,ielsolid(iel))
@@ -300,7 +300,7 @@ subroutine dump_xdmf_grid()
           enddo
       enddo
   enddo
-  
+
   if (lpr) write(6,*) '   .... finished construction of mapping for xdmf plotting'
 
   if (use_netcdf) then
@@ -319,16 +319,16 @@ subroutine dump_xdmf_grid()
 
       write(110) points
       close(110)
-  end if
+  endif
 
   deallocate(points)
 
   allocate(grid(1:4, 1:nelem_plot))
-  
+
   if (lpr) write(6,*) '   .... constructing grid for xdmf plotting'
-  
+
   ct = 1
-  
+
   do iel=1, nel_fluid
       if (.not.  mask_tp_elem(iel)) cycle
       do i=1, i_n_xdmf - 1
@@ -341,7 +341,7 @@ subroutine dump_xdmf_grid()
           enddo
       enddo
   enddo
-  
+
   do iel=1, nel_solid
       if (.not.  mask_tp_elem(iel + nel_fluid)) cycle
       do i=1, i_n_xdmf - 1
@@ -354,9 +354,9 @@ subroutine dump_xdmf_grid()
           enddo
       enddo
   enddo
-  
+
   if (lpr) write(6,*) '   .... writing grid + header of xdmf to file'
-  
+
   if (use_netcdf) then
       call nc_dump_snap_grid(grid)
   else
@@ -372,8 +372,8 @@ subroutine dump_xdmf_grid()
 
       write(110) grid
       close(110)
-  end if
-  
+  endif
+
   fname = datapath(1:lfdata) // '/xdmf_meshonly_' // appmynum // '.xdmf'
   open(110, file=trim(fname))
   if (use_netcdf) then
@@ -385,7 +385,7 @@ subroutine dump_xdmf_grid()
   endif
   close(110)
 
-732 format(&    
+732 format(&
     '<?xml version="1.0" ?>',/&
     '<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>',/&
     '<Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="2.2">',/&
@@ -407,8 +407,8 @@ subroutine dump_xdmf_grid()
     '</Grid>',/&
     '</Domain>',/&
     '</Xdmf>')
-    
-    
+
+
   fname = datapath(1:lfdata) // '/xdmf_xml_' // appmynum // '.xdmf'
   open(110, file=trim(fname))
   if (use_netcdf) then
@@ -420,7 +420,7 @@ subroutine dump_xdmf_grid()
   endif
   close(110)
 
-733 format(&    
+733 format(&
     '<?xml version="1.0" ?>',/&
     '<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>',/&
     '<Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="2.2">',/&
@@ -432,7 +432,7 @@ subroutine dump_xdmf_grid()
     '  ', A,/&
     '</DataItem>',/,/&
     '<Grid Name="CellsTime" GridType="Collection" CollectionType="Temporal">',/)
-    
+
 
 end subroutine dump_xdmf_grid
 !-----------------------------------------------------------------------------------------
@@ -447,13 +447,13 @@ subroutine finish_xdmf_xml()
   fname = datapath(1:lfdata) // '/xdmf_xml_' // appmynum // '.xdmf'
   !open(110, file=trim(fname), access='append')
   open(110, file=trim(fname), position='append')
-  write(110, 736) 
+  write(110, 736)
 
-736 format(&    
+736 format(&
     '</Grid>',/&
     '</Domain>',/&
     '</Xdmf>')
-  
+
   close(110)
   close(13100)
   if (.not. src_type(1)=='monopole') close(13101)
@@ -470,7 +470,7 @@ subroutine prepare_mesh_memoryvar_vtk()
   use data_matr, only: points_solid
 
   integer :: iel, ipol,jpol
-  
+
   allocate(points_solid(0:npol,0:npol,nel_solid,2))
 
   do iel=1, nel_solid
@@ -495,7 +495,7 @@ subroutine build_kwf_grid()
   integer               :: iel, ipol, jpol, ct, ipt, idest
   integer, allocatable  :: mapping(:)
   logical, allocatable  :: check(:), mask_tp_elem(:)
-  
+
   allocate(mask_tp_elem(nelem))
   mask_tp_elem = .false.
 
@@ -513,7 +513,7 @@ subroutine build_kwf_grid()
           .and. &
           max(max(thetacoord(0,0,ielsolid(iel)), thetacoord(0,npol,ielsolid(iel))), &
               max(thetacoord(npol,0,ielsolid(iel)), thetacoord(npol,npol,ielsolid(iel)))) > kwf_thetamin) &
-          then        
+          then
           ct = ct + 1
           mask_tp_elem(iel) = .true.
       endif
@@ -531,12 +531,12 @@ subroutine build_kwf_grid()
           .and. &
           max(max(thetacoord(0,0,ielfluid(iel)), thetacoord(0,npol,ielfluid(iel))), &
               max(thetacoord(npol,0,ielfluid(iel)), thetacoord(npol,npol,ielfluid(iel)))) > kwf_thetamin) &
-          then        
+          then
           ct = ct + 1
           mask_tp_elem(iel + nel_solid) = .true.
       endif
   enddo
-  
+
   nelem_kwf = ct
 
   allocate(check(nglob_fluid + nglob_solid))
@@ -546,7 +546,7 @@ subroutine build_kwf_grid()
 
   check = .false.
   kwf_mask = .false.
-  
+
   ct = 0
 
   if (lpr) write(6,*) '   construction of mapping for kwf output...'
@@ -556,10 +556,10 @@ subroutine build_kwf_grid()
       if (.not.  mask_tp_elem(iel)) cycle
       do jpol=jbeg, jend
           do ipol=ibeg, iend
-             
+
               ipt = (iel-1)*(npol+1)**2 + jpol*(npol+1) + ipol + 1
               idest = igloc_solid(ipt) + nglob_fluid
-              
+
               if (.not. check(idest)) then
                   ct = ct + 1
                   check(idest) = .true.
@@ -575,7 +575,7 @@ subroutine build_kwf_grid()
 
               ipt = (iel-1)*(npol+1)**2 + jpol*(npol+1) + ipol + 1
               idest = igloc_solid(ipt) + nglob_fluid
-              
+
               if (.not. check(idest)) then
                   ct = ct + 1
                   check(idest) = .true.
@@ -588,17 +588,17 @@ subroutine build_kwf_grid()
   enddo
 
   npoint_solid_kwf = ct
-  
+
   if (lpr) write(6,*) '   ...fluid part...'
 
   do iel=1, nel_fluid
       if (.not.  mask_tp_elem(iel + nel_solid)) cycle
       do jpol=jbeg, jend
           do ipol=ibeg, iend
-             
+
               ipt = (iel-1)*(npol+1)**2 + jpol*(npol+1) + ipol + 1
               idest = igloc_fluid(ipt)
-              
+
               if (.not. check(idest)) then
                   ct = ct + 1
                   check(idest) = .true.
@@ -614,7 +614,7 @@ subroutine build_kwf_grid()
 
               ipt = (iel-1)*(npol+1)**2 + jpol*(npol+1) + ipol + 1
               idest = igloc_fluid(ipt)
-              
+
               if (.not. check(idest)) then
                   ct = ct + 1
                   check(idest) = .true.
@@ -625,7 +625,7 @@ subroutine build_kwf_grid()
           endif
       enddo
   enddo
-  
+
   deallocate(check, mapping)
   npoint_kwf = ct
   npoint_fluid_kwf = ct - npoint_solid_kwf
@@ -641,9 +641,9 @@ subroutine build_kwf_grid()
 
   if (trim(dump_type) == 'displ_only') then
      allocate(midpoint_mesh_kwf(1:nelem_kwf))
-     
+
      if (lpr) write(6,*) '   .... constructing midpoint grid for kwf output'
-     
+
      ct = 1
 
      do iel=1, nel_solid
@@ -651,7 +651,7 @@ subroutine build_kwf_grid()
          midpoint_mesh_kwf(ct) = mapping_ijel_ikwf(npol/2,npol/2,iel) - 1
          ct = ct + 1
      enddo
-     
+
      do iel=1, nel_fluid
          if (.not.  mask_tp_elem(iel + nel_solid)) cycle
          midpoint_mesh_kwf(ct) = mapping_ijel_ikwf(npol/2,npol/2,iel + nel_solid) - 1
@@ -661,34 +661,34 @@ subroutine build_kwf_grid()
      allocate(eltype_kwf(1:nelem_kwf))
 
      eltype_kwf(:) = -2
-     
+
      ct = 1
 
      do iel=1, nel_solid
          if (.not.  mask_tp_elem(iel)) cycle
          if (eltype(ielsolid(iel)) == 'curved') then
             eltype_kwf(ct) = 0
-         elseif (eltype(ielsolid(iel)) == 'linear') then
+         else if (eltype(ielsolid(iel)) == 'linear') then
             eltype_kwf(ct) = 1
-         elseif (eltype(ielsolid(iel)) == 'semino') then
+         else if (eltype(ielsolid(iel)) == 'semino') then
             eltype_kwf(ct) = 2
-         elseif (eltype(ielsolid(iel)) == 'semiso') then
+         else if (eltype(ielsolid(iel)) == 'semiso') then
             eltype_kwf(ct) = 3
          else
             eltype_kwf(ct) = -1
          endif
          ct = ct + 1
      enddo
-     
+
      do iel=1, nel_fluid
          if (.not.  mask_tp_elem(iel + nel_solid)) cycle
          if (eltype(ielfluid(iel)) == 'curved') then
             eltype_kwf(ct) = 0
-         elseif (eltype(ielfluid(iel)) == 'linear') then
+         else if (eltype(ielfluid(iel)) == 'linear') then
             eltype_kwf(ct) = 1
-         elseif (eltype(ielfluid(iel)) == 'semino') then
+         else if (eltype(ielfluid(iel)) == 'semino') then
             eltype_kwf(ct) = 2
-         elseif (eltype(ielfluid(iel)) == 'semiso') then
+         else if (eltype(ielfluid(iel)) == 'semiso') then
             eltype_kwf(ct) = 3
          else
             eltype_kwf(ct) = -1
@@ -699,7 +699,7 @@ subroutine build_kwf_grid()
      allocate(axis_kwf(1:nelem_kwf))
 
      axis_kwf(:) = -1
-     
+
      ct = 1
 
      do iel=1, nel_solid
@@ -711,7 +711,7 @@ subroutine build_kwf_grid()
          endif
          ct = ct + 1
      enddo
-     
+
      do iel=1, nel_fluid
          if (.not.  mask_tp_elem(iel + nel_solid)) cycle
          if (axis_fluid(iel)) then
@@ -723,9 +723,9 @@ subroutine build_kwf_grid()
      enddo
 
      allocate(fem_mesh_kwf(1:4, 1:nelem_kwf))
-     
+
      if (lpr) write(6,*) '   .... constructing finite element grid for kwf output'
-     
+
      ct = 1
 
      do iel=1, nel_solid
@@ -736,7 +736,7 @@ subroutine build_kwf_grid()
          fem_mesh_kwf(4,ct) = mapping_ijel_ikwf(   0,npol,iel) - 1
          ct = ct + 1
      enddo
-     
+
      do iel=1, nel_fluid
          if (.not.  mask_tp_elem(iel + nel_solid)) cycle
          fem_mesh_kwf(1,ct) = mapping_ijel_ikwf(   0,   0,iel + nel_solid) - 1
@@ -748,9 +748,9 @@ subroutine build_kwf_grid()
   endif
 
   allocate(sem_mesh_kwf(ibeg:iend, jbeg:jend, 1:nelem_kwf))
-  
+
   if (lpr) write(6,*) '   .... constructing spectral element grid for kwf output'
-  
+
   ct = 1
 
   do iel=1, nel_solid
@@ -762,7 +762,7 @@ subroutine build_kwf_grid()
       enddo
       ct = ct + 1
   enddo
-  
+
   do iel=1, nel_fluid
       if (.not.  mask_tp_elem(iel + nel_solid)) cycle
       do ipol=ibeg, iend
@@ -772,7 +772,7 @@ subroutine build_kwf_grid()
       enddo
       ct = ct + 1
   enddo
-  
+
   if (lpr) write(6,*) '   .... finished construction of mapping for kwf output'
 
 end subroutine build_kwf_grid
@@ -787,7 +787,7 @@ subroutine dump_kwf_grid()
   integer               :: iel, ipol, jpol, ct
   real(sp), allocatable :: points(:,:)
   real(sp), allocatable :: points_mp(:,:)
-  
+
   if (lpr) write(6,*) '   ...collecting coordinates...'
 
   allocate(points(1:npoint_kwf, 2))
@@ -857,7 +857,7 @@ subroutine dump_kwf_midpoint_xdmf(filename, npoints, nelem)
 
   integer                           :: iinput_xdmf
   character(len=512)                :: filename_np
-  
+
 
   ! relative filename for xdmf content
   filename_np = trim(filename(index(filename, '/', back=.true.)+1:))
@@ -870,7 +870,7 @@ subroutine dump_kwf_midpoint_xdmf(filename, npoints, nelem)
 
   close(iinput_xdmf)
 
-733 format(&    
+733 format(&
     '<?xml version="1.0" ?>',/&
     '<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>',/&
     '<Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="2.2">',/&
@@ -884,7 +884,7 @@ subroutine dump_kwf_midpoint_xdmf(filename, npoints, nelem)
     '    </DataItem>',/&
     '</DataItem>',/,/)
 
-734 format(&    
+734 format(&
     '<Grid Name="grid" GridType="Uniform">',/&
     '    <Topology TopologyType="Polyvertex" NumberOfElements="',i10,'">',/&
     '        <DataItem ItemType="Uniform" Name="points" DataType="Int" Dimensions="', i10, '" Format="HDF">',/&
@@ -907,7 +907,7 @@ subroutine dump_kwf_midpoint_xdmf(filename, npoints, nelem)
 
   close(iinput_xdmf)
 
-743 format(&    
+743 format(&
     '<?xml version="1.0" ?>',/&
     '<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>',/&
     '<Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="2.2">',/&
@@ -921,7 +921,7 @@ subroutine dump_kwf_midpoint_xdmf(filename, npoints, nelem)
     '    </DataItem>',/&
     '</DataItem>',/,/)
 
-744 format(&    
+744 format(&
     '<Grid Name="grid" GridType="Uniform">',/&
     '    <Topology TopologyType="Polyvertex" NumberOfElements="',i10,'">',/&
     '    </Topology>',/&
@@ -942,7 +942,7 @@ subroutine dump_kwf_fem_xdmf(filename, npoints, nelem)
 
   integer                           :: iinput_xdmf
   character(len=512)                :: filename_np
-  
+
 
   ! relative filename for xdmf content
   filename_np = trim(filename(index(filename, '/', back=.true.)+1:))
@@ -957,7 +957,7 @@ subroutine dump_kwf_fem_xdmf(filename, npoints, nelem)
 
   close(iinput_xdmf)
 
-733 format(&    
+733 format(&
     '<?xml version="1.0" ?>',/&
     '<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>',/&
     '<Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="2.2">',/&
@@ -971,7 +971,7 @@ subroutine dump_kwf_fem_xdmf(filename, npoints, nelem)
     '    </DataItem>',/&
     '</DataItem>',/,/)
 
-734 format(&    
+734 format(&
     '<Grid Name="grid" GridType="Uniform">',/&
     '    <Topology TopologyType="Quadrilateral" NumberOfElements="', i10, '">',/&
     '        <DataItem ItemType="Uniform" Name="points" DataType="Int" Dimensions="', i10, ' 4" Format="HDF">',/&
@@ -1005,7 +1005,7 @@ subroutine dump_kwf_sem_xdmf(filename, npoints, nelem)
 
   integer                           :: iinput_xdmf
   character(len=512)                :: filename_np
-  
+
 
   ! relative filename for xdmf content
   filename_np = trim(filename(index(filename, '/', back=.true.)+1:))
@@ -1019,7 +1019,7 @@ subroutine dump_kwf_sem_xdmf(filename, npoints, nelem)
 
   close(iinput_xdmf)
 
-733 format(&    
+733 format(&
     '<?xml version="1.0" ?>',/&
     '<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>',/&
     '<Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="2.2">',/&
@@ -1033,7 +1033,7 @@ subroutine dump_kwf_sem_xdmf(filename, npoints, nelem)
     '    </DataItem>',/&
     '</DataItem>',/,/)
 
-734 format(&    
+734 format(&
     '<Grid Name="grid" GridType="Uniform">',/&
     '    <Topology TopologyType="Polygon" NumberOfElements="',i10,'" NodesPerElement="', i5, '">',/&
     '        <DataItem ItemType="Uniform" Name="points" DataType="Int" Dimensions="', i10, i3, i3, '" Format="HDF">',/&
@@ -1057,7 +1057,7 @@ subroutine dump_kwf_gll_xdmf(filename, npoints)
 
   integer                           :: iinput_xdmf
   character(len=512)                :: filename_np
-  
+
 
   ! relative filename for xdmf content
   filename_np = trim(filename(index(filename, '/', back=.true.)+1:))
@@ -1070,7 +1070,7 @@ subroutine dump_kwf_gll_xdmf(filename, npoints)
 
   close(iinput_xdmf)
 
-733 format(&    
+733 format(&
     '<?xml version="1.0" ?>',/&
     '<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>',/&
     '<Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="2.2">',/&
@@ -1084,7 +1084,7 @@ subroutine dump_kwf_gll_xdmf(filename, npoints)
     '    </DataItem>',/&
     '</DataItem>',/,/)
 
-734 format(&    
+734 format(&
     '<Grid Name="grid" GridType="Uniform">',/&
     '    <Topology TopologyType="Polyvertex" NumberOfElements="',i10'">',/&
     '    </Topology>',/&
@@ -1099,16 +1099,16 @@ end subroutine
 !-----------------------------------------------------------------------------------------
 
 !-----------------------------------------------------------------------------------------
-!> Dumps the mesh (s,z) [m] and related constant fields in binary format as 
-!! needed to compute waveform kernels from the strain and velocity fields. 
-!! The distinction between different dumping methods is honored here, 
-!! and influences the amount of additional dumpsters (prefactors, derivatives). 
-!! In a nutshell, the end-member dumping methods constitute 
+!> Dumps the mesh (s,z) [m] and related constant fields in binary format as
+!! needed to compute waveform kernels from the strain and velocity fields.
+!! The distinction between different dumping methods is honored here,
+!! and influences the amount of additional dumpsters (prefactors, derivatives).
+!! In a nutshell, the end-member dumping methods constitute
 !! 1) computing strain and velocity on-the-fly, i.e. only dumping the mesh here;
 !! 2) only dumping the already-known fields (displacement, potential) on-the-fly
-!!    and dump a number of constant fields here. 
-!! The latter choice is more memory- and CPU-efficient, but requires 
-!! significant post-processing AND dumping the entire SEM mesh. 
+!!    and dump a number of constant fields here.
+!! The latter choice is more memory- and CPU-efficient, but requires
+!! significant post-processing AND dumping the entire SEM mesh.
 !! See compute_strain in time_evol_wave.f90 for more info.
 subroutine dump_wavefields_mesh_1d
 
@@ -1117,15 +1117,15 @@ subroutine dump_wavefields_mesh_1d
   use data_spec,    only: G1T, G2T, G2
   use data_pointwise
   use nc_routines,  only: nc_dump_mesh_sol, nc_dump_mesh_flu
-  
+
   real(kind=dp), dimension(:,:,:), allocatable :: ssol, zsol
   real(kind=dp), dimension(:,:,:), allocatable :: sflu, zflu
-  
+
   integer :: iel, ipol, jpol
-  
+
   ! Dump subset of GLL point grid for 'fullfields'
   if (dump_type=='fullfields') then
-     
+
      if (lpr) then
         write(6,*)'  set strain dumping GLL boundaries to:'
         write(6,*)'    ipol=', ibeg, iend
@@ -1141,7 +1141,7 @@ subroutine dump_wavefields_mesh_1d
 
   !!! SB
   if (dump_type=='coupling' .or. dump_type == 'coupling_box') then
-     
+
      ibeg = 0
      iend = 4
      jbeg = 0
@@ -1187,7 +1187,7 @@ subroutine dump_wavefields_mesh_1d
 
          write(2500+mynum)ssol(ibeg:iend,jbeg:jend,:),zsol(ibeg:iend,jbeg:jend,:)
          close(2500+mynum)
-     end if
+     endif
      deallocate(ssol,zsol)
 
      ! compute fluid grid
@@ -1210,13 +1210,13 @@ subroutine dump_wavefields_mesh_1d
                   FORM="UNFORMATTED",STATUS="REPLACE")
              write(2600+mynum)sflu(ibeg:iend,jbeg:jend,:),zflu(ibeg:iend,jbeg:jend,:)
              close(2600+mynum)
-         end if
+         endif
          deallocate(sflu,zflu)
      endif ! have_fluid
   endif
 
 
-  ! In the following: Only dumping additional arrays if displacements only 
+  ! In the following: Only dumping additional arrays if displacements only
   ! are dumped as wavefields to reconstruct the strains.
 
   select case (dump_type)
@@ -1229,7 +1229,7 @@ subroutine dump_wavefields_mesh_1d
         write(6,*)'  strain dump: only pointwise strain '
      endif
   case ('displ_velo')
-     if (lpr) then     
+     if (lpr) then
         write(6,*)'  strain dump: only displacement/velocity, potentials'
         write(6,*)'  ...now dumping global pointwise deriv. terms, etc....'
      endif
@@ -1288,7 +1288,7 @@ subroutine dump_wavefields_mesh_1d
      endif
   !!! END SB
   case default
-     if (lpr) then 
+     if (lpr) then
         write(6,*)'  wavefield dumping type',dump_type,' unknown!'
         write(6,*)'  select from 1) displ_only, 2) displ_velo, 2) fullfields'
      endif

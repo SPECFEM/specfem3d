@@ -21,7 +21,7 @@
 
 !=========================================================================================
 module analytic_mapping
-  
+
   use analytic_spheroid_mapping
   use analytic_semi_mapping
   use subpar_mapping
@@ -30,14 +30,14 @@ module analytic_mapping
   implicit none
 
   public :: mapping_anal
- 
+
   private
 
 contains
 
 !-----------------------------------------------------------------------------------------
 real(kind=dp)    function mapping_anal(xi,eta,nodes_crd,iaxis,ielem0)
-  
+
   integer           :: iaxis,ielem0
   real(kind=dp)     :: xi, eta, nodes_crd(8,2)
   if (eltypeg(ielem0) == 'curved') mapping_anal = map_spheroid(xi,eta,nodes_crd,iaxis)

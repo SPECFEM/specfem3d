@@ -47,7 +47,7 @@ module attenuation
 
   real(kind=realkind), allocatable :: src_dev_tm1_glob_cg4(:,:,:)
   real(kind=realkind), allocatable :: src_tr_tm1_glob_cg4(:,:)
-  
+
 contains
 
 !-----------------------------------------------------------------------------------------
@@ -55,21 +55,21 @@ contains
 subroutine time_step_memvars(memvar, memvar_cg, disp, cg)
   use data_mesh,            only: npol
 
-  real(kind=realkind), intent(in)                  :: disp(*) 
+  real(kind=realkind), intent(in)                  :: disp(*)
   real(kind=realkind), intent(inout), allocatable  :: memvar(:,:,:,:,:)
   real(kind=realkind), intent(inout), allocatable  :: memvar_cg(:,:,:,:)
   logical, intent(in)                              :: cg
 
   if (cg) then
      call time_step_memvars_cg4(memvar_cg, disp)
-  else 
+  else
      if (npol==4) then
         call time_step_memvars_4(memvar, disp)
      else
         call time_step_memvars_generic(memvar, disp)
      endif
   endif
-    
+
 
 end subroutine time_step_memvars
 !-----------------------------------------------------------------------------------------
@@ -88,7 +88,7 @@ subroutine time_step_memvars_cg4(memvar, disp)
 
   real(kind=realkind), intent(inout)    :: memvar(1:4,6,n_sls_attenuation,nel_solid)
   real(kind=realkind), intent(in)       :: disp(0:4,0:4,nel_solid,3)
-  
+
   integer               :: iel, j
   real(kind=dp)         :: yp_j_mu(n_sls_attenuation)
   real(kind=dp)         :: yp_j_kappa(n_sls_attenuation)
@@ -102,10 +102,10 @@ subroutine time_step_memvars_cg4(memvar, disp)
   real(kind=realkind)   :: src_tr_tm1(1:4)
   real(kind=realkind)   :: src_dev_t(1:4,6)
   real(kind=realkind)   :: src_dev_tm1(1:4,6)
-  
+
   real(kind=realkind)   :: src_tr_buf(1:4)
   real(kind=realkind)   :: src_dev_buf(1:4,6)
-  
+
   real(kind=realkind)   :: Q_mu_last, Q_kappa_last
 
   Q_mu_last = -1
@@ -150,8 +150,8 @@ subroutine time_step_memvars_cg4(memvar, disp)
      src_dev_t(:,2) = delta_mu_cg4(:,iel) * 2 * (grad_t_cg4(:,2) - trace_grad_t(:) * third)
      src_dev_t(:,3) = delta_mu_cg4(:,iel) * 2 * (grad_t_cg4(:,3) - trace_grad_t(:) * third)
      src_dev_t(:,5) = delta_mu_cg4(:,iel) * grad_t_cg4(:,5)
-     
-     if (src_type(1) .ne. 'monopole') then
+
+     if (src_type(1) /= 'monopole') then
         src_dev_t(:,4) = delta_mu_cg4(:,iel) * grad_t_cg4(:,4)
         src_dev_t(:,6) = delta_mu_cg4(:,iel) * grad_t_cg4(:,6)
      endif
@@ -171,7 +171,7 @@ subroutine time_step_memvars_cg4(memvar, disp)
         src_dev_buf(:,5) = &
                     ts_fac_t(j) * a_j_mu(j) * src_dev_t(:,5) &
                         + ts_fac_tm1(j) * a_j_mu(j) * src_dev_tm1(:,5)
-        
+
         memvar(:,1,j,iel) = exp_w_j_deltat(j) * memvar(:,1,j,iel) &
                         + src_dev_buf(:,1) + src_tr_buf(:)
         memvar(:,2,j,iel) = exp_w_j_deltat(j) * memvar(:,2,j,iel) &
@@ -180,15 +180,15 @@ subroutine time_step_memvars_cg4(memvar, disp)
                         + src_dev_buf(:,3) + src_tr_buf(:)
         memvar(:,5,j,iel) = exp_w_j_deltat(j) * memvar(:,5,j,iel) &
                         + src_dev_buf(:,5)
-        
-        if (src_type(1) .ne. 'monopole') then
+
+        if (src_type(1) /= 'monopole') then
            src_dev_buf(:,4) = &
                     ts_fac_t(j) * a_j_mu(j) * src_dev_t(:,4) &
                         + ts_fac_tm1(j) * a_j_mu(j) * src_dev_tm1(:,4)
            src_dev_buf(:,6) = &
                     ts_fac_t(j) * a_j_mu(j) * src_dev_t(:,6) &
                         + ts_fac_tm1(j) * a_j_mu(j) * src_dev_tm1(:,6)
-        
+
            memvar(:,4,j,iel) = exp_w_j_deltat(j) * memvar(:,4,j,iel) &
                         + src_dev_buf(:,4)
            memvar(:,6,j,iel) = exp_w_j_deltat(j) * memvar(:,6,j,iel) &
@@ -201,7 +201,7 @@ subroutine time_step_memvars_cg4(memvar, disp)
      src_dev_tm1_glob_cg4(:,:,iel) = src_dev_t(:,:)
 
   enddo
-  
+
 end subroutine
 !-----------------------------------------------------------------------------------------
 
@@ -220,7 +220,7 @@ subroutine time_step_memvars_4(memvar, disp)
 
   real(kind=realkind), intent(inout)    :: memvar(0:4,0:4,6,n_sls_attenuation,nel_solid)
   real(kind=realkind), intent(in)       :: disp(0:4,0:4,nel_solid,3)
-  
+
   integer               :: iel, j
   real(kind=dp)         :: yp_j_mu(n_sls_attenuation)
   real(kind=dp)         :: yp_j_kappa(n_sls_attenuation)
@@ -234,10 +234,10 @@ subroutine time_step_memvars_4(memvar, disp)
   real(kind=realkind)   :: src_tr_tm1(0:4,0:4)
   real(kind=realkind)   :: src_dev_t(0:4,0:4,6)
   real(kind=realkind)   :: src_dev_tm1(0:4,0:4,6)
-  
+
   real(kind=realkind)   :: src_tr_buf(0:4,0:4)
   real(kind=realkind)   :: src_dev_buf(0:4,0:4,6)
-  
+
   real(kind=realkind)   :: Q_mu_last, Q_kappa_last
 
   Q_mu_last = -1
@@ -278,8 +278,8 @@ subroutine time_step_memvars_4(memvar, disp)
      src_dev_t(:,:,2) = delta_mu(:,:,iel) * 2 * (grad_t(:,:,2) - trace_grad_t(:,:) * third)
      src_dev_t(:,:,3) = delta_mu(:,:,iel) * 2 * (grad_t(:,:,3) - trace_grad_t(:,:) * third)
      src_dev_t(:,:,5) = delta_mu(:,:,iel) * grad_t(:,:,5)
-  
-     if (src_type(1) .ne. 'monopole') then
+
+     if (src_type(1) /= 'monopole') then
         src_dev_t(:,:,4) = delta_mu(:,:,iel) * grad_t(:,:,4)
         src_dev_t(:,:,6) = delta_mu(:,:,iel) * grad_t(:,:,6)
      endif
@@ -287,8 +287,8 @@ subroutine time_step_memvars_4(memvar, disp)
      ! load old source terms
      src_tr_tm1(:,:) = src_tr_tm1_glob(:,:,iel)
      src_dev_tm1(:,:,:) = src_dev_tm1_glob(:,:,:,iel)
-     
-     
+
+
      do j=1, n_sls_attenuation
         ! do the timestep
         src_tr_buf(:,:) = ts_fac_t(j) * a_j_kappa(j) * src_tr_t(:,:) &
@@ -300,7 +300,7 @@ subroutine time_step_memvars_4(memvar, disp)
         src_dev_buf(:,:,5) = &
                     ts_fac_t(j) * a_j_mu(j) * src_dev_t(:,:,5) &
                         + ts_fac_tm1(j) * a_j_mu(j) * src_dev_tm1(:,:,5)
-        
+
         memvar(:,:,1,j,iel) = exp_w_j_deltat(j) * memvar(:,:,1,j,iel) &
                         + src_dev_buf(:,:,1) + src_tr_buf(:,:)
         memvar(:,:,2,j,iel) = exp_w_j_deltat(j) * memvar(:,:,2,j,iel) &
@@ -312,7 +312,7 @@ subroutine time_step_memvars_4(memvar, disp)
 
         ! maybe a bit uggly with the if inside the loop, but keeping it
         ! for now
-        if (src_type(1) .ne. 'monopole') then
+        if (src_type(1) /= 'monopole') then
 
            src_dev_buf(:,:,4) = &
                     ts_fac_t(j) * a_j_mu(j) * src_dev_t(:,:,4) &
@@ -333,7 +333,7 @@ subroutine time_step_memvars_4(memvar, disp)
      src_tr_tm1_glob(:,:,iel) = src_tr_t(:,:)
      src_dev_tm1_glob(:,:,:,iel) = src_dev_t(:,:,:)
   enddo
-  
+
 end subroutine
 !-----------------------------------------------------------------------------------------
 
@@ -351,7 +351,7 @@ subroutine time_step_memvars_generic(memvar, disp)
 
   real(kind=realkind), intent(inout)    :: memvar(0:npol,0:npol,6,n_sls_attenuation,nel_solid)
   real(kind=realkind), intent(in)       :: disp(0:npol,0:npol,nel_solid,3)
-  
+
   integer               :: iel, j
   real(kind=dp)         :: yp_j_mu(n_sls_attenuation)
   real(kind=dp)         :: yp_j_kappa(n_sls_attenuation)
@@ -365,10 +365,10 @@ subroutine time_step_memvars_generic(memvar, disp)
   real(kind=realkind)   :: src_tr_tm1(0:npol,0:npol)
   real(kind=realkind)   :: src_dev_t(0:npol,0:npol,6)
   real(kind=realkind)   :: src_dev_tm1(0:npol,0:npol,6)
-  
+
   real(kind=realkind)   :: src_tr_buf(0:npol,0:npol)
   real(kind=realkind)   :: src_dev_buf(0:npol,0:npol,6)
-  
+
   real(kind=realkind)   :: Q_mu_last, Q_kappa_last
 
   Q_mu_last = -1
@@ -409,8 +409,8 @@ subroutine time_step_memvars_generic(memvar, disp)
      src_dev_t(:,:,2) = delta_mu(:,:,iel) * 2 * (grad_t(:,:,2) - trace_grad_t(:,:) * third)
      src_dev_t(:,:,3) = delta_mu(:,:,iel) * 2 * (grad_t(:,:,3) - trace_grad_t(:,:) * third)
      src_dev_t(:,:,5) = delta_mu(:,:,iel) * grad_t(:,:,5)
-  
-     if (src_type(1) .ne. 'monopole') then
+
+     if (src_type(1) /= 'monopole') then
         src_dev_t(:,:,4) = delta_mu(:,:,iel) * grad_t(:,:,4)
         src_dev_t(:,:,6) = delta_mu(:,:,iel) * grad_t(:,:,6)
      endif
@@ -418,7 +418,7 @@ subroutine time_step_memvars_generic(memvar, disp)
      ! load old source terms
      src_tr_tm1(:,:) = src_tr_tm1_glob(:,:,iel)
      src_dev_tm1(:,:,:) = src_dev_tm1_glob(:,:,:,iel)
-     
+
      do j=1, n_sls_attenuation
         ! do the timestep
         src_tr_buf(:,:) = ts_fac_t(j) * a_j_kappa(j) * src_tr_t(:,:) &
@@ -430,7 +430,7 @@ subroutine time_step_memvars_generic(memvar, disp)
         src_dev_buf(:,:,5) = &
                     ts_fac_t(j) * a_j_mu(j) * src_dev_t(:,:,5) &
                         + ts_fac_tm1(j) * a_j_mu(j) * src_dev_tm1(:,:,5)
-        
+
         memvar(:,:,1,j,iel) = exp_w_j_deltat(j) * memvar(:,:,1,j,iel) &
                         + src_dev_buf(:,:,1) + src_tr_buf(:,:)
         memvar(:,:,2,j,iel) = exp_w_j_deltat(j) * memvar(:,:,2,j,iel) &
@@ -442,7 +442,7 @@ subroutine time_step_memvars_generic(memvar, disp)
 
         ! maybe a bit uggly with the if inside the loop, but keeping it
         ! for now
-        if (src_type(1) .ne. 'monopole') then
+        if (src_type(1) /= 'monopole') then
 
            src_dev_buf(:,:,4) = &
                     ts_fac_t(j) * a_j_mu(j) * src_dev_t(:,:,4) &
@@ -463,7 +463,7 @@ subroutine time_step_memvars_generic(memvar, disp)
      src_tr_tm1_glob(:,:,iel) = src_tr_t(:,:)
      src_dev_tm1_glob(:,:,:,iel) = src_dev_t(:,:,:)
   enddo
-  
+
 end subroutine
 !-----------------------------------------------------------------------------------------
 
@@ -472,62 +472,62 @@ end subroutine
 !! (i.e. E1 = E11, E2 = E22, E3 = E33, E4 = 2E23, E5 = 2E31, E6 = 2E12)
 !! coarse grained version, so only computed at gll points (1,1), (1,3), (3,1) and (3,3)
 subroutine compute_strain_att_el_cg4(u, grad_u, iel)
-  
+
   use data_source,              only: src_type
   use pointwise_derivatives,    only: axisym_gradient_solid_el_cg4
   use pointwise_derivatives,    only: f_over_s_solid_el_cg4
-  
-  
+
+
   real(kind=realkind), intent(in)   :: u(0:,0:,:)
   real(kind=realkind), intent(out)  :: grad_u(1:4,6)
   integer, intent(in)               :: iel
-  
+
   real(kind=realkind)               :: grad_buff1(1:4,2)
   real(kind=realkind)               :: grad_buff2(1:4,2)
-  
+
   grad_u(:,:) = 0
-  
+
   ! s,z components, identical for all source types..........................
   if (src_type(1)=='dipole') then
      call axisym_gradient_solid_el_cg4(u(:,:,1) + u(:,:,2), grad_buff1, iel)
   else
      ! 1: dsus, 2: dzus
-     call axisym_gradient_solid_el_cg4(u(:,:,1), grad_buff1, iel) 
-  endif 
+     call axisym_gradient_solid_el_cg4(u(:,:,1), grad_buff1, iel)
+  endif
 
   ! 1:dsuz, 2:dzuz
-  call axisym_gradient_solid_el_cg4(u(:,:,3), grad_buff2, iel) 
-  
+  call axisym_gradient_solid_el_cg4(u(:,:,3), grad_buff2, iel)
+
   grad_u(:,1) = grad_buff1(:,1)  ! dsus
   grad_u(:,3) = grad_buff2(:,2)  ! dzuz
 
   ! dsuz + dzus (factor of 2 from voigt notation)
-  grad_u(:,5) = grad_buff1(:,2) + grad_buff2(:,1) 
- 
+  grad_u(:,5) = grad_buff1(:,2) + grad_buff2(:,1)
+
   ! Components involving phi....................................................
 
   if (src_type(1)=='monopole') then
      ! us / s
-     grad_u(:,2) = f_over_s_solid_el_cg4(u(:,:,1), iel) 
+     grad_u(:,2) = f_over_s_solid_el_cg4(u(:,:,1), iel)
 
-  elseif (src_type(1)=='dipole') then
+  else if (src_type(1)=='dipole') then
      ! 2 u- / s
-     grad_u(:,2) = 2 * f_over_s_solid_el_cg4(u(:,:,2), iel) 
+     grad_u(:,2) = 2 * f_over_s_solid_el_cg4(u(:,:,2), iel)
 
      ! 1:dsup, 2:dzup
-     call axisym_gradient_solid_el_cg4(u(:,:,1) - u(:,:,2), grad_buff1, iel) 
-    
+     call axisym_gradient_solid_el_cg4(u(:,:,1) - u(:,:,2), grad_buff1, iel)
+
      ! -uz/s - dzup
      grad_u(:,4) = - f_over_s_solid_el_cg4(u(:,:,3), iel) - grad_buff1(:,2)
      ! -2 u-/s - dsup
      grad_u(:,6) = - grad_u(:,2) - grad_buff1(:,1)
 
-  elseif (src_type(1)=='quadpole') then
+  else if (src_type(1)=='quadpole') then
      ! (us - 2 up) / s
-     grad_u(:,2) = f_over_s_solid_el_cg4(u(:,:,1) - 2 * u(:,:,2), iel) 
-     
+     grad_u(:,2) = f_over_s_solid_el_cg4(u(:,:,1) - 2 * u(:,:,2), iel)
+
      ! 1:dsup, 2:dzup
-     call axisym_gradient_solid_el_cg4(u(:,:,2), grad_buff1, iel) 
+     call axisym_gradient_solid_el_cg4(u(:,:,2), grad_buff1, iel)
 
      ! -2 uz/s - dzup
      grad_u(:,4) = - 2 * f_over_s_solid_el_cg4(u(:,:,3), iel) - grad_buff1(:,2)
@@ -547,60 +547,60 @@ subroutine compute_strain_att_el_4(u, grad_u, iel)
   use data_source,              only: src_type
   use pointwise_derivatives,    only: axisym_gradient_solid_el_4
   use pointwise_derivatives,    only: f_over_s_solid_el_4
-  
-  
+
+
   real(kind=realkind), intent(in)   :: u(0:,0:,:)
   real(kind=realkind), intent(out)  :: grad_u(0:4,0:4,6)
   integer, intent(in)               :: iel
-  
+
   real(kind=realkind)               :: grad_buff1(0:4,0:4,2)
   real(kind=realkind)               :: grad_buff2(0:4,0:4,2)
-  
+
   grad_u(:,:,:) = 0
-  
+
   ! s,z components, identical for all source types..........................
   if (src_type(1)=='dipole') then
      call axisym_gradient_solid_el_4(u(:,:,1) + u(:,:,2), grad_buff1, iel)
   else
      ! 1: dsus, 2: dzus
      call axisym_gradient_solid_el_4(u(:,:,1), grad_buff1, iel)
-  endif 
+  endif
 
   ! 1:dsuz, 2:dzuz
-  call axisym_gradient_solid_el_4(u(:,:,3), grad_buff2, iel) 
-  
+  call axisym_gradient_solid_el_4(u(:,:,3), grad_buff2, iel)
+
   grad_u(:,:,1) = grad_buff1(:,:,1)  ! dsus
   grad_u(:,:,3) = grad_buff2(:,:,2)  ! dzuz
 
   ! dsuz + dzus (factor of 2 from voigt notation)
-  grad_u(:,:,5) = grad_buff1(:,:,2) + grad_buff2(:,:,1) 
- 
+  grad_u(:,:,5) = grad_buff1(:,:,2) + grad_buff2(:,:,1)
+
   ! Components involving phi....................................................
 
   if (src_type(1)=='monopole') then
      ! us / s
-     grad_u(:,:,2) = f_over_s_solid_el_4(u(:,:,1), iel) 
+     grad_u(:,:,2) = f_over_s_solid_el_4(u(:,:,1), iel)
 
-  elseif (src_type(1)=='dipole') then
+  else if (src_type(1)=='dipole') then
      ! 2 u- / s
-     grad_u(:,:,2) = 2 * f_over_s_solid_el_4(u(:,:,2), iel) 
-     
+     grad_u(:,:,2) = 2 * f_over_s_solid_el_4(u(:,:,2), iel)
+
      ! 1:dsup, 2:dzup
-     call axisym_gradient_solid_el_4(u(:,:,1) - u(:,:,2), grad_buff1, iel) 
+     call axisym_gradient_solid_el_4(u(:,:,1) - u(:,:,2), grad_buff1, iel)
      ! -uz/s - dzup
      grad_u(:,:,4) = - f_over_s_solid_el_4(u(:,:,3), iel) - grad_buff1(:,:,2)
      ! -2 u-/s - dsup
      grad_u(:,:,6) = - grad_u(:,:,2) - grad_buff1(:,:,1)
 
-  elseif (src_type(1)=='quadpole') then
+  else if (src_type(1)=='quadpole') then
      ! (us - 2 up) / s
-     grad_u(:,:,2) = f_over_s_solid_el_4(u(:,:,1) - 2 * u(:,:,2), iel) 
-     
+     grad_u(:,:,2) = f_over_s_solid_el_4(u(:,:,1) - 2 * u(:,:,2), iel)
+
      ! 1:dsup, 2:dzup
-     call axisym_gradient_solid_el_4(u(:,:,2), grad_buff1, iel) 
+     call axisym_gradient_solid_el_4(u(:,:,2), grad_buff1, iel)
 
      ! -2 uz/s - dzup
-     grad_u(:,:,4) = - 2 * f_over_s_solid_el_4(u(:,:,3), iel) - grad_buff1(:,:,2)  
+     grad_u(:,:,4) = - 2 * f_over_s_solid_el_4(u(:,:,3), iel) - grad_buff1(:,:,2)
      ! (up - 2 us) /s - dsup
      grad_u(:,:,6) = f_over_s_solid_el_4(u(:,:,2) - 2 * u(:,:,1), iel) - grad_buff1(:,:,1)
 
@@ -618,60 +618,60 @@ subroutine compute_strain_att_el(u, grad_u, iel)
   use pointwise_derivatives,    only: axisym_gradient_solid_el
   use pointwise_derivatives,    only: f_over_s_solid_el
   use data_mesh,                only: npol
-  
-  
+
+
   real(kind=realkind), intent(in)   :: u(0:,0:,:)
   real(kind=realkind), intent(out)  :: grad_u(0:npol,0:npol,6)
   integer, intent(in)               :: iel
-  
+
   real(kind=realkind)               :: grad_buff1(0:npol,0:npol,2)
   real(kind=realkind)               :: grad_buff2(0:npol,0:npol,2)
-  
+
   grad_u(:,:,:) = 0
-  
+
   ! s,z components, identical for all source types..........................
   if (src_type(1)=='dipole') then
      call axisym_gradient_solid_el(u(:,:,1) + u(:,:,2), grad_buff1, iel)
   else
      ! 1: dsus, 2: dzus
      call axisym_gradient_solid_el(u(:,:,1), grad_buff1, iel)
-  endif 
+  endif
 
   ! 1:dsuz, 2:dzuz
-  call axisym_gradient_solid_el(u(:,:,3), grad_buff2, iel) 
-  
+  call axisym_gradient_solid_el(u(:,:,3), grad_buff2, iel)
+
   grad_u(:,:,1) = grad_buff1(:,:,1)  ! dsus
   grad_u(:,:,3) = grad_buff2(:,:,2)  ! dzuz
 
   ! dsuz + dzus (factor of 2 from voigt notation)
-  grad_u(:,:,5) = grad_buff1(:,:,2) + grad_buff2(:,:,1) 
- 
+  grad_u(:,:,5) = grad_buff1(:,:,2) + grad_buff2(:,:,1)
+
   ! Components involving phi....................................................
 
   if (src_type(1)=='monopole') then
      ! us / s
-     grad_u(:,:,2) = f_over_s_solid_el(u(:,:,1), iel) 
+     grad_u(:,:,2) = f_over_s_solid_el(u(:,:,1), iel)
 
-  elseif (src_type(1)=='dipole') then
+  else if (src_type(1)=='dipole') then
      ! 2 u- / s
-     grad_u(:,:,2) = 2 * f_over_s_solid_el(u(:,:,2), iel) 
-     
+     grad_u(:,:,2) = 2 * f_over_s_solid_el(u(:,:,2), iel)
+
      ! 1:dsup, 2:dzup
-     call axisym_gradient_solid_el(u(:,:,1) - u(:,:,2), grad_buff1, iel) 
+     call axisym_gradient_solid_el(u(:,:,1) - u(:,:,2), grad_buff1, iel)
      ! -uz/s - dzup
      grad_u(:,:,4) = - f_over_s_solid_el(u(:,:,3), iel) - grad_buff1(:,:,2)
      ! -2 u-/s - dsup
      grad_u(:,:,6) = - grad_u(:,:,2) - grad_buff1(:,:,1)
 
-  elseif (src_type(1)=='quadpole') then
+  else if (src_type(1)=='quadpole') then
      ! (us - 2 up) / s
-     grad_u(:,:,2) = f_over_s_solid_el(u(:,:,1) - 2 * u(:,:,2), iel) 
-     
+     grad_u(:,:,2) = f_over_s_solid_el(u(:,:,1) - 2 * u(:,:,2), iel)
+
      ! 1:dsup, 2:dzup
-     call axisym_gradient_solid_el(u(:,:,2), grad_buff1, iel) 
+     call axisym_gradient_solid_el(u(:,:,2), grad_buff1, iel)
 
      ! -2 uz/s - dzup
-     grad_u(:,:,4) = - 2 * f_over_s_solid_el(u(:,:,3), iel) - grad_buff1(:,:,2)  
+     grad_u(:,:,4) = - 2 * f_over_s_solid_el(u(:,:,3), iel) - grad_buff1(:,:,2)
      ! (up - 2 us) /s - dsup
      grad_u(:,:,6) = f_over_s_solid_el(u(:,:,2) - 2 * u(:,:,1), iel) - grad_buff1(:,:,1)
 
@@ -709,7 +709,7 @@ subroutine prepare_attenuation(lambda, mu)
   real(kind=dp)                  :: delta_mu_0(0:npol,0:npol)
   real(kind=dp)                  :: kappa_w1(0:npol,0:npol)
   real(kind=dp)                  :: delta_kappa_0(0:npol,0:npol)
-  
+
   real(kind=dp)                  :: kappa_fac, mu_fac
 
   real(kind=dp)                  :: f_min, f_max, w_1, w_0
@@ -720,13 +720,13 @@ subroutine prepare_attenuation(lambda, mu)
   real(kind=dp), allocatable     :: w_samp(:), q_fit(:), chil(:)
   real(kind=dp), allocatable     :: yp_j_mu(:)
   real(kind=dp), allocatable     :: yp_j_kappa(:)
-  
+
   real(kind=dp)                  :: local_crd_nodes(8,2)
   real(kind=dp)                  :: gamma_w_l(0:npol,0:npol)
   integer                        :: inode, ipol, jpol
   real(kind=dp)                  :: dsdxi, dzdxi, dsdeta, dzdeta
   real(kind=dp)                  :: weights_cg(0:npol,0:npol)
-    
+
   integer                        :: iinparam_advanced=500, ioerr
   character(len=256)             :: line
   character(len=256)             :: keyword, keyvalue
@@ -754,26 +754,26 @@ subroutine prepare_attenuation(lambda, mu)
   if (mynum == 0) then
      keyword = ' '
      keyvalue = ' '
-  
+
      if (verbose > 1) write(6, '(A)', advance='no') &
             '   Reading attenuation parameters from inparam_advanced...'
      open(unit=iinparam_advanced, file='inparam_advanced', status='old', action='read',  iostat=ioerr)
-     if (ioerr.ne.0) stop 'Check input file ''inparam_advanced''! Is it still there?' 
+     if (ioerr/=0) stop 'Check input file ''inparam_advanced''! Is it still there?'
 
      do
         read(iinparam_advanced,fmt='(a256)',iostat=ioerr) line
-        if (ioerr.lt.0) exit
-        if (len(trim(line)).lt.1.or.line(1:1).eq.'#') cycle
-        read(line,*) keyword, keyvalue 
+        if (ioerr<0) exit
+        if (len(trim(line))<1.or.line(1:1)=='#') cycle
+        read(line,*) keyword, keyvalue
 
         select case(keyword)
         case('NR_LIN_SOLIDS')
             read(keyvalue,*) n_sls_attenuation
 
-        case('F_MIN') 
+        case('F_MIN')
             read(keyvalue,*) f_min
 
-        case('F_MAX') 
+        case('F_MAX')
             read(keyvalue,*) f_max
 
         case('F_REFERENCE')
@@ -817,7 +817,7 @@ subroutine prepare_attenuation(lambda, mu)
 
         end select
 
-     end do
+     enddo
   endif ! mynum
 
   ! broadcast values to other processors
@@ -837,12 +837,12 @@ subroutine prepare_attenuation(lambda, mu)
   call broadcast_log(fixfreq, 0)
   call broadcast_log(dump_memory_vars, 0)
   call broadcast_log(att_coarse_grained, 0)
-  
+
   if (lpr .and. verbose > 1) print *, 'done'
-  
+
   w_0 = w_0 * (2 * pi)
   if (lpr .and. verbose > 1) print '(a,f6.3)', '       w_0 = ', w_0
-  
+
   w_1 = dsqrt(f_min * f_max) * (2 * pi)
   if (lpr .and. verbose > 1) print '(a,f6.3)', '       w_1 = ', w_1
 
@@ -857,18 +857,18 @@ subroutine prepare_attenuation(lambda, mu)
   allocate(w_samp(nfsamp))
   allocate(q_fit(nfsamp))
   allocate(chil(max_it))
-  
+
   allocate(w_j_attenuation(1:n_sls_attenuation))
   allocate(exp_w_j_deltat(1:n_sls_attenuation))
   allocate(y_j_attenuation(1:n_sls_attenuation))
-  
+
   allocate(yp_j_mu(1:n_sls_attenuation))
   allocate(yp_j_kappa(1:n_sls_attenuation))
-  
+
   allocate(ts_fac_t(1:n_sls_attenuation))
   allocate(ts_fac_tm1(1:n_sls_attenuation))
-  
-  
+
+
   if (lpr .and. verbose > 1) print *, &
         '  inverting for standard linear solid parameters...'
 
@@ -880,7 +880,7 @@ subroutine prepare_attenuation(lambda, mu)
                             q_fit=q_fit, chil=chil)
 
   if (lpr .and. verbose > 1) print *, '  ...done'
-  
+
   ! prefactors for the exact time stepping (att notes p 13.3)
   do j=1, n_sls_attenuation
      exp_w_j_deltat(j) = dexp(-w_j_attenuation(j) * deltat)
@@ -895,14 +895,14 @@ subroutine prepare_attenuation(lambda, mu)
         print *, '  ...frequencies      : ', w_j_attenuation / (2. * pi)
         print *, '  ...coefficients y_j : ', y_j_attenuation
         print *, '  ...coarse grained   : ', att_coarse_grained
-        
+
      endif
      if (diagfiles) then
         print *, '  ...writing fitted Q to file...'
         open(unit=165, file=infopath(1:lfinfo)//'/attenuation_q_fitted', status='replace')
         write(165,*) (w_samp(i), q_fit(i), char(10), i=1,nfsamp)
         close(unit=165)
-        
+
         if (verbose > 1) print *, '  ...writing convergence of chi to file...'
         open(unit=166, file=infopath(1:lfinfo)//'/attenuation_convergence', status='replace')
         write(166,*) (chil(i), char(10), i=1,max_it)
@@ -933,8 +933,8 @@ subroutine prepare_attenuation(lambda, mu)
      src_dev_tm1_glob = 0
      src_tr_tm1_glob = 0
   endif
-     
-  
+
+
   do iel=1, nel_solid
 
      if (att_coarse_grained) then
@@ -943,7 +943,7 @@ subroutine prepare_attenuation(lambda, mu)
         do inode = 1, 8
            call compute_coordinates_mesh(local_crd_nodes(inode,1), &
                                          local_crd_nodes(inode,2), ielsolid(iel), inode)
-        end do
+        enddo
 
         if (.not. axis_solid(iel)) then ! non-axial elements
            do ipol=0, npol
@@ -971,7 +971,7 @@ subroutine prepare_attenuation(lambda, mu)
                        * dsdxi
            enddo
         endif
-        
+
         weights_cg(:,:) = 0
         !! cg with 4 points out of 25
         weights_cg(1,1) = (   gamma_w_l(0,0) + gamma_w_l(0,1) &
@@ -980,21 +980,21 @@ subroutine prepare_attenuation(lambda, mu)
                                      + gamma_w_l(2,0) + gamma_w_l(2,1)) &
                             + 0.25 * gamma_w_l(2,2) ) &
                           / gamma_w_l(1,1)
-        
+
         weights_cg(1,3) = (   gamma_w_l(0,3) + gamma_w_l(0,4) &
                             + gamma_w_l(1,3) + gamma_w_l(1,4) &
                             + 0.5 * (  gamma_w_l(0,2) + gamma_w_l(1,2) &
                                      + gamma_w_l(2,3) + gamma_w_l(2,4)) &
                             + 0.25 * gamma_w_l(2,2) ) &
                           / gamma_w_l(1,3)
-        
+
         weights_cg(3,1) = (   gamma_w_l(3,0) + gamma_w_l(3,1) &
                             + gamma_w_l(4,0) + gamma_w_l(4,1) &
                             + 0.5 * (  gamma_w_l(2,0) + gamma_w_l(2,1) &
                                      + gamma_w_l(3,2) + gamma_w_l(4,2)) &
                             + 0.25 * gamma_w_l(2,2) ) &
                           / gamma_w_l(3,1)
-        
+
         weights_cg(3,3) = (   gamma_w_l(3,3) + gamma_w_l(3,4) &
                             + gamma_w_l(4,3) + gamma_w_l(4,4) &
                             + 0.5 * (  gamma_w_l(2,3) + gamma_w_l(2,4) &
@@ -1003,7 +1003,7 @@ subroutine prepare_attenuation(lambda, mu)
                           / gamma_w_l(3,3)
 
      endif ! att_coarse_grained
-     
+
      if (do_corr_lowq) then
         call fast_correct(y_j_attenuation / Q_mu(iel), yp_j_mu)
         call fast_correct(y_j_attenuation / Q_kappa(iel), yp_j_kappa)
@@ -1034,14 +1034,14 @@ subroutine prepare_attenuation(lambda, mu)
      ! delta moduli
      delta_mu_0(:,:) = mu_w1(:,:) / (1.d0 / sum(yp_j_mu) + 1 - mu_fac)
      delta_kappa_0(:,:) = kappa_w1(:,:) / (1.d0 / sum(yp_j_kappa) + 1 - kappa_fac)
-     
+
      if (att_coarse_grained) then
         ! compute unrelaxed moduli
         mu(:,:,ielsolid(iel)) = mu_w1(:,:) + weights_cg(:,:) * delta_mu_0(:,:) * mu_fac
         lambda(:,:,ielsolid(iel)) = kappa_w1(:,:) &
                                        + weights_cg(:,:) * delta_kappa_0(:,:) * kappa_fac &
                                        - 2.d0 / 3.d0 * mu(:,:,ielsolid(iel))
-        
+
         ! weighted delta moduli
         delta_mu_cg4(1,iel) = weights_cg(1,1) * delta_mu_0(1,1)
         delta_mu_cg4(2,iel) = weights_cg(1,3) * delta_mu_0(1,3)
@@ -1057,7 +1057,7 @@ subroutine prepare_attenuation(lambda, mu)
         mu(:,:,ielsolid(iel)) = mu_w1(:,:) + delta_mu_0(:,:) * mu_fac
         lambda(:,:,ielsolid(iel)) = kappa_w1(:,:) + delta_kappa_0(:,:) * kappa_fac &
                                        - 2.d0 / 3.d0 * mu(:,:,ielsolid(iel))
-        
+
         ! delta moduli
         delta_mu(:,:,iel) = delta_mu_0(:,:)
         delta_kappa(:,:,iel) = delta_kappa_0(:,:)
@@ -1065,7 +1065,7 @@ subroutine prepare_attenuation(lambda, mu)
 
   enddo
 
-  
+
   if (att_coarse_grained) then
      allocate(DsDeta_over_J_sol_cg4(1:4,1:nel_solid))
      allocate(DzDeta_over_J_sol_cg4(1:4,1:nel_solid))
@@ -1092,7 +1092,7 @@ subroutine prepare_attenuation(lambda, mu)
      DsDxi_over_J_sol_cg4(3,:) = DsDxi_over_J_sol(3,1,:)
      DsDxi_over_J_sol_cg4(4,:) = DsDxi_over_J_sol(3,3,:)
   endif
-  
+
   if (lpr .and. verbose > 1) print *, '  ...DONE'
 
 end subroutine
@@ -1102,30 +1102,30 @@ end subroutine
 !> compute Q after (Emmerich & Korn, inverse of eq 21)
 !! linearized version (exact = false) is eq 22 in E&K
 pure subroutine q_linear_solid(y_j, w_j, w, exact, Qls)
-  
+
   real(kind=dp)   , intent(in)    :: y_j(:), w_j(:), w(:)
   real(kind=dp)   , intent(out)   :: Qls(size(w))
   integer                         :: j
-  
+
   logical, optional, intent(in)           :: exact
-  !f2py logical, optional, intent(in)     :: exact = 0 
+  !f2py logical, optional, intent(in)     :: exact = 0
   logical                                 :: exact_loc
-  
+
   real(kind=dp)                   :: Qls_denom(size(w))
-  
+
   if (present(exact)) then
       exact_loc = exact
   else
       exact_loc = .false.
-  end if
-  
+  endif
+
   Qls = 1
   if (exact_loc) then
      do j=1, size(y_j)
         Qls = Qls + y_j(j) *  w**2 / (w**2 + w_j(j)**2)
      enddo
   endif
-  
+
   Qls_denom = 0
   do j=1, size(y_j)
      Qls_denom = Qls_denom + y_j(j) * w * w_j(j) / (w**2 + w_j(j)**2)
@@ -1137,13 +1137,13 @@ end subroutine
 
 !-----------------------------------------------------------------------------------------
 !> computes a first order correction to the linearized coefficients:
-!! yp_j_corrected = y_j * delta_j 
+!! yp_j_corrected = y_j * delta_j
 !! MvD Attenuation Notes, p. 17.3 bottom
 pure subroutine fast_correct(y_j, yp_j)
 
   real(kind=dp), intent(in)    :: y_j(:)
   real(kind=dp), intent(out)   :: yp_j(size(y_j))
-  
+
   real(kind=dp)                :: dy_j(size(y_j))
   integer                      :: k
 
@@ -1154,26 +1154,26 @@ pure subroutine fast_correct(y_j, yp_j)
   enddo
 
   yp_j = y_j * dy_j
-  
+
 end subroutine
 !-----------------------------------------------------------------------------------------
 
 !-----------------------------------------------------------------------------------------
 !> returns l2 misfit between Q_target and fitted Q using standard linear solids
 pure subroutine l2_error(Q_target, Qls, weights, lse)
- 
+
   real(kind=dp), intent(in)       :: Q_target(:), Qls(:), weights(:)
-  
+
   real(kind=dp), intent(out)      :: lse
   integer                         :: nfsamp, i
-  
+
   lse = 0
   nfsamp = size(Qls)
 
   ! log-l2 norm
   do i=1, nfsamp
      lse = lse + (log(Q_target(i) / Qls(i)))**2 * weights(i)
-  end do
+  enddo
 
   lse = lse / float(nfsamp)
   lse = dsqrt(lse)
@@ -1235,9 +1235,9 @@ subroutine invert_linear_solids(Q, f_min, f_max, N, nfsamp, max_it, Tw, Ty, d, &
 
   real(kind=dp), intent(out)    :: w_j(N)
   real(kind=dp), intent(out)    :: y_j(N)
-  real(kind=dp), intent(out)    :: w(nfsamp) 
-  real(kind=dp), intent(out)    :: q_fit(nfsamp) 
-  real(kind=dp), intent(out)    :: chil(max_it) 
+  real(kind=dp), intent(out)    :: w(nfsamp)
+  real(kind=dp), intent(out)    :: q_fit(nfsamp)
+  real(kind=dp), intent(out)    :: chil(max_it)
 
   real(kind=dp)     :: w_j_test(N)
   real(kind=dp)     :: y_j_test(N)
@@ -1260,26 +1260,26 @@ subroutine invert_linear_solids(Q, f_min, f_max, N, nfsamp, max_it, Tw, Ty, d, &
   if (present(verbose)) verbose_loc = verbose
   if (present(exact)) exact_loc = exact
   if (present(freq_weight)) freq_weight_loc = freq_weight
-  
+
   if (.not. lpr) verbose_loc = .false.
-  
+
   ! Set the starting test frequencies equally spaced in log frequency
   if (N > 1) then
      expo = (log10(f_max) - log10(f_min)) / (N - 1.d0)
      do j=1, N
         w_j_test(j) = 2 * pi * 10**(log10(f_min) + (j - 1) * expo)
-     end do 
+     enddo
   else
      w_j_test(1) = (f_max * f_min)**.5 * 2 * pi
   endif
 
   if (verbose_loc) print *, w_j_test
-  
+
   ! Set the sampling frequencies equally spaced in log frequency
   expo = (log10(f_max) - log10(f_min)) / (nfsamp - 1.d0)
   do j=1, nfsamp
      w(j) = 2 * pi * 10**(log10(f_min) + (j - 1) * expo)
-  end do
+  enddo
 
   if (verbose_loc) print *, w
 
@@ -1292,23 +1292,23 @@ subroutine invert_linear_solids(Q, f_min, f_max, N, nfsamp, max_it, Tw, Ty, d, &
   else
      weights(:) = 1
   endif
-  
+
   ! initial weights y_j based on an empirical guess
   y_j_test = 1.d0 / Q * 1.5
   if (verbose_loc) print *, y_j_test
 
   ! initial Q(omega)
   call q_linear_solid(y_j=y_j_test, w_j=w_j_test, w=w, exact=exact_loc, Qls=q_fit)
-  
+
   if (verbose_loc) print *, q_fit
- 
+
   ! initial chi
   call l2_error(Q_target=Q_target, Qls=q_fit, weights=weights, lse=chi)
   if (verbose_loc) print *, 'initital chi: ', chi
 
   y_j(:) = y_j_test(:)
   w_j(:) = w_j_test(:)
-  
+
   last_it_print = -1
   ! actuall simulated annealing loop:
   do it=1, max_it
@@ -1320,15 +1320,15 @@ subroutine invert_linear_solids(Q, f_min, f_max, N, nfsamp, max_it, Tw, Ty, d, &
         call random_number(randnr)
         y_j_test(j) = y_j(j) * (1.0 + (0.5 - randnr) * Ty_loc)
      enddo
-  
+
      ! compute Q with test parameters
      call q_linear_solid(y_j=y_j_test, w_j=w_j_test, w=w, exact=exact_loc, Qls=q_fit)
-     
+
      ! compute new misfit and new temperature
      call l2_error(Q_target=Q_target, Qls=q_fit, weights=weights, lse=chi_test)
      Tw_loc = Tw_loc * d_loc
      Ty_loc = Ty_loc * d_loc
-                                     
+
      ! check if the tested parameters are better, if so, update
      if (chi_test < chi) then
         y_j(:) = y_j_test(:)

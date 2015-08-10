@@ -26,7 +26,7 @@ module discont_meshing
   use data_bkgrdmodel
   use data_spec
   use model_discontinuities, only : define_discont
-  use background_models 
+  use background_models
   use data_diag
 
   implicit none
@@ -65,7 +65,7 @@ subroutine create_subregions
   ! 7) coarsening levels need to be between discontinuities
   ! ==> total number of subdomains: ndisc+ncoars
   !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  
+
   ! Define background model discontinuities (e.g. PREM)
   ! & model specific boolean "solid" (fluid layers?) for each subdomain
 
@@ -75,7 +75,7 @@ subroutine create_subregions
 
    call define_discont
 
-   allocate(rdisc_top(ndisc), rdisc_bot(ndisc), solid_domain(ndisc)) 
+   allocate(rdisc_top(ndisc), rdisc_bot(ndisc), solid_domain(ndisc))
    allocate(idom_fluid(ndisc))
    idom_fluid=0
 
@@ -89,19 +89,19 @@ subroutine create_subregions
          rdisc_bot(idom) = zero
       endif
 
-      if (vs(idom,1) == 0.0d0 .and. vs(idom,2) == 0.0d0) then 
+      if (vs(idom,1) == 0.0d0 .and. vs(idom,2) == 0.0d0) then
          nfluidregions = nfluidregions + 1
          have_fluid = .true.
          solid_domain(idom) = .false.
          idom_fluid(nfluidregions) = idom
-      elseif( vs(idom,1)==0.0d0 .and. vs(idom,2)/=0.0d0 .or.  &
-              vs(idom,1)/=0.0d0 .and. vs(idom,2)==0.0d0) then 
+      else if( vs(idom,1)==0.0d0 .and. vs(idom,2)/=0.0d0 .or.  &
+              vs(idom,1)/=0.0d0 .and. vs(idom,2)==0.0d0) then
          write(6,*) 'ERROR in background model region:'
          write(6,*) 'Cannot have one region with fluid and solid parts...'
          write(6,*) 'upper radius/vs:', rdisc_top(idom), vs(idom,1)
          write(6,*) 'lower radius/vs:', rdisc_bot(idom), vs(idom,2)
       endif
-      
+
       write(6,*) '#######################################################################'
       fmtstring = '("  ", A, I12, F12.2)'
       write(6,fmtstring)'discontinuities:    ', idom,real(discont(idom))
@@ -111,18 +111,18 @@ subroutine create_subregions
       write(6,fmtstring)'upper/lower radius: ', real(rdisc_top(idom)),real(rdisc_bot(idom))
       write(6,fmtstring)'vs jump:            ', real(vs(idom,1)),real(vs(idom,2))
       write(6,*) '#######################################################################'
-      write(6,*) 
+      write(6,*)
 
-   end do
+   enddo
 
-   if (nfluidregions == ndisc) then 
+   if (nfluidregions == ndisc) then
       write(6,*) 'COMPLETELY acoustic domain!'
       have_solid = .false.
    endif
-      
+
    write(6,"(10x,'Number of discontinuities/regions:     ',i3)") ndisc
    write(6,"(10x,'Number of fluid regions:               ',i3)") nfluidregions
- 
+
    write(6,*)''
    write(6,*)'Constructing the mesh....'
    write(6,*)''
@@ -134,9 +134,9 @@ subroutine create_subregions
   ! nc expected for PREM :
   ! nc = int( log( (r_surface/min_velocity_surface (S))/ &
   !                 (r_icb/min_velocity_icb (P)) ) )
-  
+
   ! take surface/crustal values as constraint on ns resolution
-  if (solid_domain(1)) then 
+  if (solid_domain(1)) then
      ns_ref_surf = estimate_ns(pts_wavelngth, rdisc_top(1), vs(1,1), period)
   else ! top layer is a fluid
      ns_ref_surf = estimate_ns(pts_wavelngth, rdisc_top(1), vp(1,1), period)
@@ -144,9 +144,9 @@ subroutine create_subregions
 
   if (dump_mesh_info_screen) &
         write(6,*) 'ns_ref initial estimate from crust   :', ns_ref_surf
- 
-  ! take ICB value as constraint on ns resolution 
-  if (solid_domain(ndisc)) then 
+
+  ! take ICB value as constraint on ns resolution
+  if (solid_domain(ndisc)) then
      ns_ref_icb1 = estimate_ns(pts_wavelngth, rdisc_top(ndisc), vs(ndisc,1), period) &
                         * 2 ** nc_init
   else ! bottom layer is a fluid
@@ -160,7 +160,7 @@ subroutine create_subregions
   ! need to resolve the crust and icb
   ns_ref = max(ns_ref_icb1, ns_ref_surf)
 
-  ! need to make sure that ns_ref is defined such that ns is even below 
+  ! need to make sure that ns_ref is defined such that ns is even below
   ! last coarsening level (fix to make sure nel and lnodes counts are correct)
   if ( mod(ns_ref, 2 ** nc_init * nthetaslices*2) /= 0 ) &
         ns_ref = (2 ** nc_init * nthetaslices * 2) &
@@ -170,14 +170,14 @@ subroutine create_subregions
         write(6,*) 'ns_ref fixed with procs & coarsenings:', ns_ref
 
   ns_glob = ns_ref
-      
+
   ! DETERMINE rmin such that elements in central region are not too large.
-  ! Assumptions taken here: 
-  !  - velocities in lowermost layer very low such that they constrain the 
+  ! Assumptions taken here:
+  !  - velocities in lowermost layer very low such that they constrain the
   !         amount of lateral elements needed at the surface
-  !  - almost constant, non-decreasing velocities in the inner core 
-  
-  if (solid_domain(ndisc)) then 
+  !  - almost constant, non-decreasing velocities in the inner core
+
+  if (solid_domain(ndisc)) then
      maxh_icb = period * vs(ndisc,1) / (pts_wavelngth * max_spacing(npol))
   else
      maxh_icb = period * vp(ndisc,1) / (pts_wavelngth * max_spacing(npol))
@@ -189,10 +189,10 @@ subroutine create_subregions
   if (dump_mesh_info_screen) &
         write(6,*) 'actual ds at innermost discontinuity [km] :', &
                     0.5 * pi * rdisc_top(ndisc) / real(ns_ref) * real(2**nc_init) / 1000.
-  if (dump_mesh_info_screen) & 
+  if (dump_mesh_info_screen) &
         write(6,*) 'maximal dz at innermost discontinuity [km]:', maxh_icb / 1000.
 
-  if (rmin > rdisc_top(ndisc) - maxh_icb * .9) then 
+  if (rmin > rdisc_top(ndisc) - maxh_icb * .9) then
      ! at least the ICB....
      rmin = rdisc_top(ndisc) - maxh_icb * .9
   endif
@@ -204,17 +204,17 @@ subroutine create_subregions
             int(ns_ref / (2.* 2**nc_init) + 1.)
   endif
 
-  rdisc_bot(ndisc) = rmin 
+  rdisc_bot(ndisc) = rmin
 
-  ! trial loop to calculate global amount of radial layers icount_glob and 
+  ! trial loop to calculate global amount of radial layers icount_glob and
   ! coarsening levels ic
   do idom =1, ndisc
      current_radius = rdisc_top(idom)
      memorydz = .false.
-     do while (current_radius > rdisc_bot(idom) ) 
+     do while (current_radius > rdisc_bot(idom) )
         call compute_dz_nz(idom, rdisc_bot, current_radius, dz, ds, current, memorydz, &
                            icount_glob, ic, ns_ref)
-     end do
+     enddo
   enddo
 
   write(6,*)
@@ -222,13 +222,13 @@ subroutine create_subregions
   write(6,"(10x,'Total number of depth levels:        ',i6)") icount_glob
   write(6,"(10x,'Actual number of coarsening levels:     ',i3)") ic
   write(6,"(10x,'Anticipated number of coarsening levels:',i3)") nc_init
-  
+
   !TODO: MvD: can't this be automatized?
-  if (nc_init /= ic) then 
+  if (nc_init /= ic) then
      write(6,*) ' a bit of rethinking is needed for nc_init!',&
                   'Check your calculus'
      stop
-  end if
+  endif
 
   ! assign global values after counting 'em
   nz_glob = icount_glob
@@ -243,41 +243,41 @@ subroutine create_subregions
   ! dz_glob(1:nz_glob)
   ! nc_glob number of coarsening levels
   ! iclev_glob(1:nc_glob)
-  
+
   ns_ref = max(ns_ref_icb1, ns_ref_surf)
 
-  ! need to make sure that ns_ref is defined such that ns is even below 
+  ! need to make sure that ns_ref is defined such that ns is even below
   ! last coarsening level (fix to make sure nel and lnodes counts are correct)
   if (mod(ns_ref, 2**nc_init*nthetaslices*2) /= 0 ) &
         ns_ref = (2**nc_init*nthetaslices*2)* ( ns_ref/(2**nc_init*nthetaslices*2) + 1 )
 
   if (dump_mesh_info_screen) &
         write(6,*) 'ns_ref fixed with # processors/coarsenings:' , ns_ref
-  
+
   ns_glob = ns_ref
- 
+
   ndisc = ndisc
-  icount_glob = 0 
-  ic = 0 
+  icount_glob = 0
+  ic = 0
 
   do idom=1, ndisc
      current_radius = rdisc_top(idom)
-     memorydz = .false. 
-     do while (current_radius > rdisc_bot(idom)) 
+     memorydz = .false.
+     do while (current_radius > rdisc_bot(idom))
         call compute_dz_nz(idom, rdisc_bot, current_radius, dz, ds, current, memorydz, &
                            icount_glob, ic, ns_ref)
         ! Storing radial info into global arrays
         if (current) iclev_glob(ic) = nz_glob - icount_glob + 1
-        dz_glob(icount_glob) = dz 
+        dz_glob(icount_glob) = dz
         ds_glob(icount_glob) = ds
         radius_arr(icount_glob) = current_radius
         vp_arr(icount_glob) = velocity(current_radius, 'v_p', idom, bkgrdmodel, &
                                        lfbkgrdmodel)
         vs_arr(icount_glob) = velocity(current_radius, 'v_s', idom, bkgrdmodel, &
                                        lfbkgrdmodel)
-        if (vs_arr(icount_glob) < 0.1d0 * vs_arr(1)) & 
+        if (vs_arr(icount_glob) < 0.1d0 * vs_arr(1)) &
                 vs_arr(icount_glob) = vp_arr(icount_glob)
-     end do
+     enddo
   enddo
 
   ! scale for smallest grid spacing in GLL clustering
@@ -301,16 +301,16 @@ subroutine create_subregions
      open(unit=666,file=diagpath(1:lfdiag)//'/ds_dz_matlab.txt')
      do iz_glob = 1, nz_glob
         write(666,11) radius_arr(iz_glob),dz_glob(iz_glob),ds_glob(iz_glob), &
-             vs_arr(iz_glob)*period,vp_arr(iz_glob)/min(ds_glob(iz_glob), & 
+             vs_arr(iz_glob)*period,vp_arr(iz_glob)/min(ds_glob(iz_glob), &
              dz_glob(iz_glob))*dt*real(npol)/minh*aveh
-     end do
+     enddo
 11   format(40(1pe12.5,2x))
     ! %%%%%%%%%%% end MATLAB %%%%%%%%%%%%%
 
      close(666)
      close(667)
      close(668)
-  end if
+  endif
 
   if (dump_mesh_info_files) then
      open(unit=30,file=diagpath(1:lfdiag)//'/coarsening_radii.dat')
@@ -318,7 +318,7 @@ subroutine create_subregions
         write(30,*)iclev_glob(ic),radius_arr(iclev_glob(ic))
      enddo
      close(30)
-  end if
+  endif
 
   ! INNER CORE
 
@@ -326,7 +326,7 @@ subroutine create_subregions
   minh_ic = vp(ndisc,1) * min(minval(ds_glob / vp_arr), minval(dz_glob / vp_arr)) &
               * minh / aveh
 
-  if (solid_domain(ndisc)) then 
+  if (solid_domain(ndisc)) then
      ns_ref = estimate_ns(pts_wavelngth, discont(ndisc), vs(ndisc,1), period)
      maxh_ic = vs(ndisc,1) * max(maxval(ds_glob / vs_arr), maxval(dz_glob / vs_arr)) &
                     * maxh / aveh
@@ -341,7 +341,7 @@ subroutine create_subregions
      write(6,*) ' WHAT WE WANT ', ns_ref
      write(6,*)
      write(6,*) 'MESH EFFICIENCY: smallest/largest spacing etc. '
-     write(6,*) 'min (h_el/vp):   ', & 
+     write(6,*) 'min (h_el/vp):   ', &
           min(minval(ds_glob/vp_arr),minval(dz_glob/vp_arr))*minh/aveh
      write(6,*) 'dt/courant*npol: ',dt/courant*real(npol)
      write(6,*)
@@ -349,13 +349,13 @@ subroutine create_subregions
           max(maxval(ds_glob/vs_arr),maxval(dz_glob/vs_arr))*maxh/aveh
      write(6,*) 'period/pts_Wavelength: ',period/pts_wavelngth
      write(6,*)
-  end if
-  
-  if (dump_mesh_info_files) then 
+  endif
+
+  if (dump_mesh_info_files) then
      open(30,file=diagpath(1:lfdiag)//'/test_innercore_hminmax.dat')
      write(30,*) minh_ic, maxh_ic
      close(30)
-  end if
+  endif
 
   if (dump_mesh_info_screen) then
      write(6,*) 'Inner Core element sizes:'
@@ -364,7 +364,7 @@ subroutine create_subregions
      write(6,*) 'precalculated max h:', maxh_icb
      write(6,*) 'max h:', maxh_ic
      write(6,*) 'min h:', minh_ic
-  end if
+  endif
 
   ! for mesh_params.h
   minhvp = min(minval(ds_glob / vp_arr), minval(dz_glob / vp_arr)) * minh / aveh
@@ -386,14 +386,14 @@ subroutine compute_dz_nz(idom, rdisc_bot, current_radius, dz, ds, current, memor
   logical, intent(inout)        :: current, memorydz
   integer, intent(inout)        :: icount_glob, ic
   integer, intent(inout)        :: ns_ref
-  
+
   real(kind=dp)                 :: dz_trial
   real(kind=dp)                 :: velo
   integer                       :: nz_trial,ns_trial
-  
+
   current = .false.
-  
-  if (solid_domain(idom)) then 
+
+  if (solid_domain(idom)) then
      velo = velocity(current_radius,'v_s',idom,bkgrdmodel,lfbkgrdmodel)
   else
      ! add a prefactor here to make smaller elements in outer core and
@@ -402,13 +402,13 @@ subroutine compute_dz_nz(idom, rdisc_bot, current_radius, dz, ds, current, memor
      ! mantle, due to beeing on the resolution edge. But as the fluid is
      ! really cheap, we could just make the elements smaller...
      velo = fluidfac * velocity(current_radius,'v_p',idom,bkgrdmodel,lfbkgrdmodel)
-  end if
+  endif
   ns_trial = estimate_ns(pts_wavelngth,current_radius,velo,period)
   icount_glob = icount_glob+1
 
   if (ns_trial < ns_ref/2.and. (ic<nc_init) ) then
-     ! Is coarsening possible within this subregion 
-     ! (<- are there at least two elemental 
+     ! Is coarsening possible within this subregion
+     ! (<- are there at least two elemental
      ! layers between the actual layer and the bottom of the subregion?)
 
      dz_trial = .5d0* pi * current_radius / dble(ns_ref)
@@ -418,14 +418,14 @@ subroutine compute_dz_nz(idom, rdisc_bot, current_radius, dz, ds, current, memor
         ns_ref = ns_ref / 2
         ic = ic + 1
         memorydz = .true.
-        current = .true. 
-     end if 
-  end if
+        current = .true.
+     endif
+  endif
   dz_trial = .5d0* pi * current_radius / dble(ns_trial)
   if (memorydz .and. .not. current) then
      dz_trial = .5d0* pi * current_radius / dble(2*ns_trial)
      memorydz = .false.
-  end if
+  endif
   nz_trial = max(ceiling((current_radius-rdisc_bot(idom))/dz_trial),1)
   dz = (current_radius-rdisc_bot(idom))/dble(nz_trial)
   ds = .5d0* pi * current_radius / dble(ns_ref)
@@ -440,7 +440,7 @@ integer function estimate_ns(el_per_lambda,r,v,period)
   real(kind=dp) ,intent(in) :: el_per_lambda,r
   real(kind=dp)             :: v, period
   real(kind=dp)             :: minh, maxh, aveh
-  
+
   ! scaling for irregular GLL spacing
   call gll_spacing(npol, minh, maxh, aveh)
   estimate_ns=ceiling(el_per_lambda * .5d0 * pi * r / (v * period) * maxh / aveh)
@@ -450,16 +450,16 @@ end function estimate_ns
 
 !-----------------------------------------------------------------------------------------
 subroutine spacing_info(npol)
-  
+
   use splib
-  
+
   integer, intent(in) :: npol
   real(kind=dp)       :: minh, maxh, aveh
   real(kind=dp),allocatable,dimension(:) :: eta, xi_k, dxi
   real(kind=dp),allocatable,dimension(:) :: spacing_eta, spacing_xi
-  
+
   integer :: i
-  
+
   allocate(eta(0:npol), xi_k(0:npol), dxi(0:npol))
   allocate(spacing_eta(1:npol), spacing_xi(1:npol))
 
@@ -472,7 +472,7 @@ subroutine spacing_info(npol)
      spacing_xi(i+1) = dabs(xi_k(i) - xi_k(i+1)) / 2.d0
   enddo
 
-  minh = min(minval(spacing_eta), minval(spacing_xi))  
+  minh = min(minval(spacing_eta), minval(spacing_xi))
   maxh = max(maxval(spacing_eta), maxval(spacing_xi))
   aveh = 1.d0 / dble(npol)
 
@@ -489,12 +489,12 @@ subroutine spacing_info(npol)
   write(6,*) '  MAXGLL/AVE,MAXGLJ/AVE: ', maxval(spacing_eta) / aveh, &
                                           maxval(spacing_xi) / aveh
   write(6,*) '  VALUES GLL, GLJ in [0,1]:'
-  
+
   do i=0, npol
      write(6,*) i, eta(i), xi_k(i)
   enddo
   write(6,*)'============================================================'
-  
+
 end subroutine spacing_info
 !-----------------------------------------------------------------------------------------
 
@@ -502,7 +502,7 @@ end subroutine spacing_info
 subroutine gll_spacing(npol, minh, maxh, aveh)
 
   use splib
-  
+
   integer, intent(in)           :: npol
   real(kind=dp), intent(out)    :: minh, maxh, aveh
   real(kind=dp) :: spacing_eta(npol), spacing_xi(npol)
@@ -522,7 +522,7 @@ subroutine gll_spacing(npol, minh, maxh, aveh)
   minh = min(minval(spacing_eta), minval(spacing_xi))
   maxh = max(maxval(spacing_eta), maxval(spacing_xi))
   aveh = 1.d0 / dble(npol)
-  
+
 end subroutine gll_spacing
 !-----------------------------------------------------------------------------------------
 
@@ -530,12 +530,12 @@ end subroutine gll_spacing
 real(kind=dp) function max_spacing(npol)
 
   use splib
-  
+
   integer, intent(in) :: npol
   real(kind=dp) :: minh,maxh,aveh
   real(kind=dp) :: spacing_eta(npol), spacing_xi(npol)
   real(kind=dp) :: eta(0:npol), xi_k(0:npol), dxi(0:npol)
-  
+
   integer :: i
 
   call ZELEGL(npol,eta,dxi)
@@ -550,8 +550,8 @@ real(kind=dp) function max_spacing(npol)
   minh = min(minval(spacing_eta), minval(spacing_xi))
   maxh = max(maxval(spacing_eta), maxval(spacing_xi))
   aveh = 1.d0 / dble(npol)
- 
-  max_spacing = maxh / aveh 
+
+  max_spacing = maxh / aveh
 end function max_spacing
 !-----------------------------------------------------------------------------------------
 

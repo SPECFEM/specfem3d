@@ -22,20 +22,20 @@
 !=========================================================================================
 module data_mesh
 
-  ! Arrays here pertain to some sort of mesh peculiarities and mainly serve 
+  ! Arrays here pertain to some sort of mesh peculiarities and mainly serve
   ! as information or parameters for many "if"-decisions such as
   ! axis, north, element type, solid-fluid boundary mapping, coarsening,
   ! and specifically also related to the background model such as
-  ! solid-fluid boundary mapping, discontinuities, and element arrays to 
+  ! solid-fluid boundary mapping, discontinuities, and element arrays to
   ! map solid/fluid to global element domains.
   ! These quantities are in active memory throughout the simulation.
-  ! 
+  !
   ! Any global arrays containing properties inside elements are defined in data_matr.
-  
+
   use global_parameters
   implicit none
-  
-  public 
+
+  public
 
   ! Very basic mesh parameters, have been in mesh_params.h before
   integer , protected ::         npol !<            polynomial order
@@ -62,15 +62,15 @@ module data_mesh
   integer                           :: nsize
   logical                           :: do_mesh_tests
 
-  real(kind=realkind), allocatable  :: gvec_solid(:,:) 
+  real(kind=realkind), allocatable  :: gvec_solid(:,:)
   real(kind=realkind), allocatable  :: gvec_fluid(:)
 
   ! Deprecated elemental mesh (radius & colatitude of elemental midpoint)
-  ! This is used for blow up localization. Might want to remove this when 
+  ! This is used for blow up localization. Might want to remove this when
   ! everything is running smoothly in all eternities...
   real(kind=realkind), allocatable  :: mean_rad_colat_solid(:,:)
   real(kind=realkind), allocatable  :: mean_rad_colat_fluid(:,:)
-  
+
   ! Global mesh informations
   real(kind=dp)                     :: router ! Outer radius (surface)
 
@@ -104,18 +104,18 @@ module data_mesh
   ! mapping nel_bdry elements into the solid/fluid element numbers
   integer, protected, allocatable :: bdry_solid_el(:), bdry_fluid_el(:)
 
-  ! mapping the z coordinate of the boundary for each element 
+  ! mapping the z coordinate of the boundary for each element
   ! (depending on north/south, above/below)
   integer, protected, allocatable :: bdry_jpol_solid(:), bdry_jpol_fluid(:)
 
   ! Boolean to determine whether proc has solid-fluid boundary elements
-  logical :: have_bdry_elem 
+  logical :: have_bdry_elem
 
   !Not used anywhere
-  !! integer array of size nel_bdry containing the "global" element number 
-  !! for 1:nel_bdry 
+  !! integer array of size nel_bdry containing the "global" element number
+  !! for 1:nel_bdry
   !integer, dimension(nel_bdry) :: ibdryel
-  
+
 
   ! Background model--------------------------------------------------------
   character(len=100)          :: bkgrdmodel
@@ -137,7 +137,7 @@ module data_mesh
   integer, allocatable         :: recfile_el(:,:), loc2globrec(:)
   logical                      :: have_epi, have_equ, have_antipode
   real                         :: dtheta_rec
-  
+
   ! CMB receivers (same as receivers, just above CMB instead)
   integer                      :: num_cmb
   integer, allocatable         :: cmbfile_el(:,:), loc2globcmb(:)
@@ -179,7 +179,7 @@ module data_mesh
 contains
 
 !-----------------------------------------------------------------------------------------
-!> Read parameters formerly in mesh_params.h 
+!> Read parameters formerly in mesh_params.h
 !! It is slightly dirty to have this routine in a data module
 !! but it allows to define the variables as 'protected', i.e.
 !! fixed outside of this module.
@@ -206,7 +206,7 @@ end subroutine
 
 !-----------------------------------------------------------------------------------------
 subroutine read_mesh_advanced(iounit)
-   use data_io, only     : verbose 
+   use data_io, only     : verbose
    use data_spec
    integer, intent(in)  :: iounit
    integer              :: iptcp, iel, inode
@@ -223,10 +223,10 @@ subroutine read_mesh_advanced(iounit)
    allocate(G0(0:npol))
 
    ! spectral stuff
-   read(iounit) xi_k        
-   read(iounit) eta 
-   read(iounit) dxi       
-   read(iounit) wt        
+   read(iounit) xi_k
+   read(iounit) eta
+   read(iounit) dxi
+   read(iounit) wt
    read(iounit) wt_axial_k
    read(iounit) G0
    read(iounit) G1
@@ -235,55 +235,55 @@ subroutine read_mesh_advanced(iounit)
    read(iounit) G2T
 
    read(iounit) npoin
-   
+
    if (verbose > 1) then
       write(69,*) 'reading coordinates/control points...'
       write(69,*) 'global number of control points:',npoin
    endif
    allocate(crd_nodes(1:npoin,1:2))
-   
+
    read(iounit) crd_nodes(:,1)
    read(iounit) crd_nodes(:,2)
-   do iptcp = 1, npoin 
+   do iptcp = 1, npoin
       if(abs(crd_nodes(iptcp,2)) < 1.e-8) crd_nodes(iptcp,2) = zero
-   end do
+   enddo
 
    allocate(lnods(1:nelem,1:8))
    do iel = 1, nelem
       read(iounit) (lnods(iel,inode), inode=1,8)
-   end do
+   enddo
 
 
    ! Number of global distinct points (slightly differs for each processor!)
    read(iounit) nglob
    if (verbose > 1) write(69,*) '  global number:', nglob
- 
+
    ! Element type
    allocate(eltype(1:nelem), coarsing(1:nelem))
    read(iounit) eltype
    read(iounit) coarsing
- 
+
    !!!!!!!!!!! SOLID/FLUID !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- 
-   ! mapping from sol/flu (1:nel_fluid) to global element numbers (1:neltot) 
+
+   ! mapping from sol/flu (1:nel_fluid) to global element numbers (1:neltot)
    if (verbose > 1) write(69,*) 'reading solid/fluid domain info...'
    allocate(ielsolid(1:nel_solid))
    allocate(ielfluid(1:nel_fluid))
    read(iounit) ielsolid
    read(iounit) ielfluid
- 
-   ! slocal numbering 
+
+   ! slocal numbering
    allocate(igloc_solid(npoint_solid))
    read(iounit) igloc_solid(1:npoint_solid)
- 
-   ! flocal numbering 
+
+   ! flocal numbering
    allocate(igloc_fluid(npoint_fluid))
    read(iounit) igloc_fluid(1:npoint_fluid)
- 
+
    ! Solid-Fluid boundary
    if (verbose > 1) write(69,*) 'reading solid/fluid boundary info...'
    read(iounit) have_bdry_elem
- 
+
    if (have_bdry_elem) then
       allocate(bdry_solid_el(1:nel_bdry))
       allocate(bdry_fluid_el(1:nel_bdry))

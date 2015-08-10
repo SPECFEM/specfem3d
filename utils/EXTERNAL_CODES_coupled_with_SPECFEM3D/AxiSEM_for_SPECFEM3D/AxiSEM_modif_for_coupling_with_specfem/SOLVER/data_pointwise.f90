@@ -20,20 +20,20 @@
 !
 
 !=========================================================================================
-!> This module is only known during the time loop if the strain tensor 
-!! is computed on-the-fly. The fluid section is additionally known if global 
+!> This module is only known during the time loop if the strain tensor
+!! is computed on-the-fly. The fluid section is additionally known if global
 !! snapshots are dumped (to compute the displacement in the fluid).
  module data_pointwise
-  
+
   use global_parameters, only: realkind
-  
+
   implicit none
-  public 
-  
+  public
+
   !+++++++++++++++++++++++++++++++++++++++++++++++++++
   !  Precomputed matrices for pointwise derivatives
   !+++++++++++++++++++++++++++++++++++++++++++++++++++
-  
+
   !> Inverse density in fluid - only needed when computing pointwise displacement
   real(kind=realkind), allocatable :: inv_rho_fluid(:,:,:)
 

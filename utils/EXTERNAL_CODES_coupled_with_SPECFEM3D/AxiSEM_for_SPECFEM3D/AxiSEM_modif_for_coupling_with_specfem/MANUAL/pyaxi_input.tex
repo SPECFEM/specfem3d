@@ -1,7 +1,7 @@
 \subsection{PyAxi: Python interface for AXISEM}
 
 \subsection{Introduction}
-PyAxi is a Python script developed as an interface for AXISEM. 
+PyAxi is a Python script developed as an interface for AXISEM.
 All the options available in AXISEM are included in only one input file (\textit{inpython.cfg}).
 By running the script, all the necessary steps (MESHER, SOLVER and Post-Processing) will be done automatically.
 Python is the only requirement; However, some special functionalities (mseed format, plotting in Python environment) need \textit{ObsPy} to be installed. \\
@@ -11,7 +11,7 @@ Python is the only requirement; However, some special functionalities (mseed for
 
 \subsubsection{How to Run PyAxi?}
 %In this part, we show how to run PyAxi for different input files.
-First, let's check whether AXISEM can be run properly on our machine. 
+First, let's check whether AXISEM can be run properly on our machine.
 For this reason:\\
 
 Start from within the {\tt AXISEM} directory:
@@ -21,18 +21,18 @@ Start from within the {\tt AXISEM} directory:
 \item {\tt python PyAxi.py --check}
 \end{enumerate}
 \noindent This gives an overview of the installation status of all relevant compilers and tools required
-to run AXISEM on your machine (Figure~\ref{check_pyaxi}). 
+to run AXISEM on your machine (Figure~\ref{check_pyaxi}).
 Please note that \textit{--check} does not check for all the possible compilers.
-It just checks for those listed in Figure~\ref{check_pyaxi}; 
+It just checks for those listed in Figure~\ref{check_pyaxi};
 therefore, for other compilers, it should be done manually.\\
 
 \begin{figure*}[htb]
 \begin{center}
 \begin{verbatim}
- 
+
    -----------------------------------------
-		   PyAxi
-	   Python interface for Axisem
+       PyAxi
+     Python interface for Axisem
    -----------------------------------------
 
 Check the Basic, Processing and Visualization requirements:
@@ -61,7 +61,7 @@ Visualization tools...CHECK
 \end{figure*}
 
 
-\noindent After installation of all required packages, 
+\noindent After installation of all required packages,
 maybe the best way to get familiar with AXISEM is to run the code with the default input file:\\
 
 Start from within the {\tt AXISEM} directory:
@@ -107,7 +107,7 @@ Start from within the {\tt AXISEM} directory:
 %%%mpi\_netCDF options control the make flags and netCDF functionality.
 %%%\begin{itemize}
 %%% \item \textbf{make\_flag} adds required flag(s) for running the \textit{makemake.pl} in both MESHER and SOLVER.
-%%% \item \textbf{mpi\_compiler} could be set based on your local machine. 
+%%% \item \textbf{mpi\_compiler} could be set based on your local machine.
 %%% \item \textbf{netCDF} generates one netCDF file instead of having binary output.
 %%% \item \textbf{netCDF\_LIBS} and \textbf{netCDF\_INCLUDE} should be changed according to your netCDF installation.
 %%%\end{itemize}
@@ -117,7 +117,7 @@ Start from within the {\tt AXISEM} directory:
 %%%
 %%%\subsubsection{solver}
 %%%In this part, first we have three options \textbf{no\_simu}, \textbf{seis\_length} and \textbf{time\_step}
-%%%that are identical to \textbf{number of simulations}, \textbf{seismogram length} and 
+%%%that are identical to \textbf{number of simulations}, \textbf{seismogram length} and
 %%%\textbf{time step} defined in Solver input. Moreover:
 %%%\begin{itemize}
 %%% \item \textbf{source\_type} could be selected from 'sourceparams' and 'cmtsolut'.
@@ -126,7 +126,7 @@ Start from within the {\tt AXISEM} directory:
 %%% \item \textbf{force\_aniso} for anisotropic model handling.
 %%%\end{itemize}
 %%%\noindent Based on what we have selected in 'source\_type', one of the two parts for the source parameters
-%%%should be modified, e.g. if you have chosed 'cmtsolut', then go to the \textit{cmtsolut} parameters and 
+%%%should be modified, e.g. if you have chosed 'cmtsolut', then go to the \textit{cmtsolut} parameters and
 %%%change the options accordingly.
 %%%\subsubsection{post\_processing}
 %%%This section controls the required options for Post processing. All the parameters are identical to what has been explained in \textit{Post processing} section.
@@ -137,7 +137,7 @@ Start from within the {\tt AXISEM} directory:
 %%% \item \textbf{mseed} to convert all the seismograms to MSEED format (one file for each).
 %%%These files will be located in the SEISMOGRAMS/MSEED folder in each solution directory (\textit{solver\_name}).
 %%% \item \textbf{mseed\_all} to convert all the seismograms into MSEED format (one file for all).
-%%%It will generate one 'seismograms.mseed' file saved in SEISMOGRAMS folder. 
+%%%It will generate one 'seismograms.mseed' file saved in SEISMOGRAMS folder.
 %%% \item \textbf{convSTF} convolves the converted seismograms with Source Time Function (STF).
 %%% \item \textbf{halfduration} determines the halfduration of the STF.
 %%% \item \textbf{filter} applies a lowpass and a highpass filter with the minimum and maximum

@@ -34,13 +34,13 @@ module nc_routines
 
     implicit none
     save
-    private 
+    private
 
-    !> Buffer variable for recorder 
+    !> Buffer variable for recorder
     real(sp), allocatable   :: recdumpvar(:,:,:)
     !> Buffer variable for displacement at surface
     real(sp), allocatable   :: surfdumpvar_disp(:,:,:)
-    !> Buffer variable for velocity at surface 
+    !> Buffer variable for velocity at surface
     real(sp), allocatable   :: surfdumpvar_velo(:,:,:)
     !> Buffer variable for strain at surface
     real(sp), allocatable   :: surfdumpvar_strain(:,:,:)
@@ -55,12 +55,12 @@ module nc_routines
     real(sp), allocatable   :: vp1d(:), vs1d(:)
     real(sp), allocatable   :: xi1d(:), phi1d(:), eta1d(:)
     real(sp), allocatable   :: Q_mu1d(:), Q_kappa1d(:)
-    
-    !> Number of steps before kernel specific stuff is dumped 
+
+    !> Number of steps before kernel specific stuff is dumped
     integer             :: dumpstepsnap
-    !> Number of GLL points per element 
+    !> Number of GLL points per element
     integer             :: gllperelem
-    !> When is this processor supposed to dump. 
+    !> When is this processor supposed to dump.
     integer             :: outputplan
     !> How many steps since last dump?
     integer             :: stepstodump
@@ -106,11 +106,11 @@ module nc_routines
     integer             :: nvar = -1
 
     !! Buffer variables to hand over to the dumping thread
-    real(kind=sp), allocatable, dimension(:,:,:)  :: copy_oneddumpvar         
-    real(kind=sp), allocatable, dimension(:,:,:)  :: copy_surfdumpvar_disp    
-    real(kind=sp), allocatable, dimension(:,:,:)  :: copy_surfdumpvar_strain  
-    real(kind=sp), allocatable, dimension(:,:,:)  :: copy_surfdumpvar_velo    
-    real(kind=sp), allocatable, dimension(:,:,:)  :: copy_surfdumpvar_srcdisp 
+    real(kind=sp), allocatable, dimension(:,:,:)  :: copy_oneddumpvar
+    real(kind=sp), allocatable, dimension(:,:,:)  :: copy_surfdumpvar_disp
+    real(kind=sp), allocatable, dimension(:,:,:)  :: copy_surfdumpvar_strain
+    real(kind=sp), allocatable, dimension(:,:,:)  :: copy_surfdumpvar_velo
+    real(kind=sp), allocatable, dimension(:,:,:)  :: copy_surfdumpvar_srcdisp
 
 
     !! Buffer variables for the STF.
@@ -129,7 +129,7 @@ module nc_routines
     !> chunking
     logical             :: nc_chunk_time_traces
     integer, parameter  :: disk_block_size = 8192
-    
+
     public              :: nc_dump_strain, nc_dump_rec, nc_dump_surface
     public              :: nc_dump_field_solid, nc_dump_field_fluid
     public              :: nc_define_outputfile, nc_finish_prepare, nc_end_output
@@ -183,7 +183,7 @@ subroutine dump_mesh_data_xdmf(nc_filename_in, xdmf_filename_in, varname, npoint
   write(iinput_xdmf, 736)
   close(iinput_xdmf)
 
-733 format(&    
+733 format(&
     '<?xml version="1.0" ?>',/&
     '<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>',/&
     '<Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="2.2">',/&
@@ -198,7 +198,7 @@ subroutine dump_mesh_data_xdmf(nc_filename_in, xdmf_filename_in, varname, npoint
     '</DataItem>',/,/&
     '<Grid Name="CellsTime" GridType="Collection" CollectionType="Temporal">',/)
 
-7341 format(&    
+7341 format(&
     '    <Grid Name="grid" GridType="Uniform">',/&
     '        <Time Value="',F8.2,'" />',/&
     '        <Topology TopologyType="Polyvertex" NumberOfElements="',i10,'">',/&
@@ -207,7 +207,7 @@ subroutine dump_mesh_data_xdmf(nc_filename_in, xdmf_filename_in, varname, npoint
     '            <DataItem Reference="/Xdmf/Domain/DataItem[@Name=', A,'points', A,']" />',/&
     '        </Geometry>')
 
-7342 format(&    
+7342 format(&
     '        <Attribute Name="', A,'" AttributeType="Scalar" Center="Node">',/&
     '            <DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab">',/&
     '                <DataItem Dimensions="3 2" Format="XML">',/&
@@ -221,10 +221,10 @@ subroutine dump_mesh_data_xdmf(nc_filename_in, xdmf_filename_in, varname, npoint
     '            </DataItem>',/&
     '        </Attribute>')
 
-7343 format(&    
+7343 format(&
     '    </Grid>',/)
 
-736 format(&    
+736 format(&
     '</Grid>',/,/&
     '</Domain>',/&
     '</Xdmf>')
@@ -238,7 +238,7 @@ end subroutine
 subroutine nc_dump_field_solid(f, varname)
 
     real(kind=realkind), intent(in)   :: f(:)     !< Data to dump, size should be npts_sol
-    character(len=*), intent(in)      :: varname  !< Internal name of data to dump. 
+    character(len=*), intent(in)      :: varname  !< Internal name of data to dump.
     !! Is used to identify the NetCDF Variable in question
 #ifdef enable_netcdf
     integer                           :: ivar
@@ -246,13 +246,13 @@ subroutine nc_dump_field_solid(f, varname)
     do ivar=1, nvar
         !< Check whether this Variable actually exists in file ncid_out
         if (trim(varnamelist(ivar)) == trim(varname)) exit
-    end do
+    enddo
 
     if (ivar > nvar/2) then
         write(6,*) 'nc_dump_field_solid: Trying to access variable: ', trim(varname), &
             ' which is a fluid variable. Contact a developer and shout at him!'
         stop 1
-    end if
+    endif
 
     oneddumpvar(1:npts_sol,stepstodump+1,ivar) = f  !processor specific dump variable
 #endif
@@ -265,7 +265,7 @@ end subroutine nc_dump_field_solid
 subroutine nc_dump_field_fluid(f, varname)
 
     real(kind=realkind), intent(in)   :: f(:)  !< Data to dump, size should be npts_flu
-    character(len=*), intent(in)      :: varname  !< Internal name of data to dump. 
+    character(len=*), intent(in)      :: varname  !< Internal name of data to dump.
     !! Is used to identify the NetCDF Variable in question
 #ifdef enable_netcdf
     integer                           :: ivar
@@ -273,15 +273,15 @@ subroutine nc_dump_field_fluid(f, varname)
     do ivar=1, nvar
         !< Check whether this Variable actually exists in file ncid_out
         if (trim(varnamelist(ivar)) == trim(varname)) exit
-    end do
+    enddo
 
     if (ivar <= nvar/2) then
         write(6,*) 'nc_dump_field_fluid: Trying to access variable: ', trim(varname), &
             ' which is a solid variable. Contact a developer and shout at him!'
         stop 1
-    end if
+    endif
 
-    oneddumpvar(npts_sol+1:npoints,stepstodump+1,ivar-nvar/2) = f  
+    oneddumpvar(npts_sol+1:npoints,stepstodump+1,ivar-nvar/2) = f
 #endif
 end subroutine nc_dump_field_fluid
 !-----------------------------------------------------------------------------------------
@@ -300,12 +300,12 @@ subroutine nc_dump_strain(isnap_loc)
         subroutine c_spawn_dumpthread(stepstodump) bind(c, name='c_spawn_dumpthread')
             use, intrinsic      :: iso_c_binding, only : c_int
             integer (c_int)     :: stepstodump
-        end subroutine 
+        end subroutine
     end interface
-    
+
     interface
         subroutine c_wait_for_io() bind(c, name='c_wait_for_io')
-        end subroutine 
+        end subroutine
     end interface
 
     integer, intent(in) :: isnap_loc
@@ -313,7 +313,7 @@ subroutine nc_dump_strain(isnap_loc)
 #ifdef enable_netcdf
     integer             :: iproc
     real                :: tickl, tackl
-    
+
     stepstodump = stepstodump + 1
     if (isnap_loc == 0) return
 
@@ -330,31 +330,31 @@ subroutine nc_dump_strain(isnap_loc)
             if (verbose>1) then
                 write(*,"('   Proc ', I4, ': Would like to dump data and waits for his turn')") mynum
                 call flush(6)
-            end if
+            endif
             call cpu_time(tickl)
-        end if
+        endif
 
         iclocknbio = tick()
         do iproc=0, nproc-1
             if (iproc == mynum .and. (npoints > 0 .or. maxind > 0)) then
                 call c_wait_for_io()
                 call flush(6)
-            end if
+            endif
             call barrier
-        end do
+        enddo
         iclocknbio = tick(id=idnbio, since=iclocknbio)
 
         ! non blocking write
-        if (mod(isnap_loc, dumpstepsnap) == outputplan .and. (npoints > 0 .or. maxind > 0)) then 
+        if (mod(isnap_loc, dumpstepsnap) == outputplan .and. (npoints > 0 .or. maxind > 0)) then
             call cpu_time(tackl)
             if ((tackl-tickl) > 0.5 .and. verbose > 0) then
                 write(6,"('WARNING: Computation was halted for ', F7.2, ' s to wait for ',&
                          & 'dumping processor. Consider adapting netCDF output variables',&
                          & '(disable compression, increase dumpstepsnap)')") tackl-tickl
-            end if
+            endif
 #endif
 
-            isnap_global = isnap_loc 
+            isnap_global = isnap_loc
             ndumps = stepstodump
 
             allocate(copy_oneddumpvar(1:npoints,1:ndumps,1:nvar/2))
@@ -367,36 +367,36 @@ subroutine nc_dump_strain(isnap_loc)
             copy_surfdumpvar_disp     = surfdumpvar_disp(1:ndumps, 1:3, 1:maxind)
             copy_surfdumpvar_strain   = surfdumpvar_strain(1:ndumps, 1:6, 1:maxind)
             copy_surfdumpvar_velo     = surfdumpvar_velo(1:ndumps, 1:3, 1:maxind)
-            copy_surfdumpvar_srcdisp  = surfdumpvar_srcdisp(1:ndumps, 1:3, 1:maxind) 
+            copy_surfdumpvar_srcdisp  = surfdumpvar_srcdisp(1:ndumps, 1:3, 1:maxind)
 
 #ifndef enable_parallel_netcdf
 
             call c_spawn_dumpthread(stepstodump)
             stepstodump = 0
-        end if
+        endif
 #else
             call nc_dump_strain_to_disk
             stepstodump = 0
 #endif
-    end if 
+    endif
 
-    ! Final and last dump of all remaining 
+    ! Final and last dump of all remaining
     ! not done in unblocking fashion using a thread, as there is nothing to
     ! compute anymore
     ! Make sure, nobody is accessing the output file anymore
-    if (isnap_loc == nstrain) then 
+    if (isnap_loc == nstrain) then
 
 #ifndef enable_parallel_netcdf
         do iproc=0, nproc-1
             if (iproc == mynum) then
                 call c_wait_for_io()
                 call barrier
-            end if
-        end do
+            endif
+        enddo
         do iproc=0,nproc-1
             if (iproc == mynum .and. (npoints > 0 .or. maxind > 0)) then
 #endif
-                isnap_global = nstrain 
+                isnap_global = nstrain
                 ndumps = stepstodump
 
                 allocate(copy_oneddumpvar(1:npoints,1:ndumps,1:nvar/2))
@@ -409,16 +409,16 @@ subroutine nc_dump_strain(isnap_loc)
                 copy_surfdumpvar_disp     = surfdumpvar_disp(1:ndumps, 1:3, 1:maxind)
                 copy_surfdumpvar_strain   = surfdumpvar_strain(1:ndumps, 1:6, 1:maxind)
                 copy_surfdumpvar_velo     = surfdumpvar_velo(1:ndumps, 1:3, 1:maxind)
-                copy_surfdumpvar_srcdisp  = surfdumpvar_srcdisp(1:ndumps, 1:3, 1:maxind) 
+                copy_surfdumpvar_srcdisp  = surfdumpvar_srcdisp(1:ndumps, 1:3, 1:maxind)
 
                 call nc_dump_strain_to_disk()
                 if (verbose > 1) write(6,*) mynum, 'finished dumping strain'
 #ifndef enable_parallel_netcdf
-            end if
+            endif
             call barrier
-        end do
+        enddo
 #endif
-    end if
+    endif
 
 #endif
 end subroutine nc_dump_strain
@@ -441,64 +441,64 @@ subroutine nc_dump_strain_to_disk() bind(c, name="nc_dump_strain_to_disk")
     call cpu_time(tick)
 
 #ifndef enable_parallel_netcdf
-    call check( nf90_open(path=datapath(1:lfdata)//"/axisem_output.nc4", & 
+    call check( nf90_open(path=datapath(1:lfdata)//"/axisem_output.nc4", &
                           mode=NF90_WRITE, ncid=ncid_out) )
 #else
     call barrier
 #endif
-    
+
     isnap_loc = isnap_global
     if (verbose > 1) then
-        if (ndumps == 0) then 
+        if (ndumps == 0) then
             write(6,"('   Proc ', I4, ': in dump routine, isnap =', I5, &
                     & ', nothing to dump, returning...')") mynum, isnap_loc
             return
         else
             write(6,"('   Proc ', I4, ': in dump routine, isnap =', I5, &
                     & ', stepstodump = ', I4)") mynum, isnap_loc, ndumps
-        end if
-    end if
+        endif
+    endif
 
-    call getgrpid(ncid_out, "Snapshots", ncid_snapout) 
+    call getgrpid(ncid_out, "Snapshots", ncid_snapout)
     do ivar=1, nvar/2
         call putvar_real2d(ncid   = ncid_snapout,   &
                            varid  = nc_field_varid(ivar), &
                            start  = [npoints_myfirst, isnap_loc-ndumps+1], &
                            count  = [npoints, ndumps], &
-                           values = copy_oneddumpvar(1:npoints,1:ndumps,ivar)) 
+                           values = copy_oneddumpvar(1:npoints,1:ndumps,ivar))
         dumpsize = dumpsize + npoints * ndumps
-    end do
-        
-    !> Surface dumps 
+    enddo
+
+    !> Surface dumps
     call putvar_real3d(ncid_surfout, nc_surfelem_disp_varid, &
                 start = [isnap_loc-ndumps+1, 1, ind_first], &
                 count = [ndumps, 3, maxind], &
-                values = copy_surfdumpvar_disp(1:ndumps, 1:3, 1:maxind)) 
+                values = copy_surfdumpvar_disp(1:ndumps, 1:3, 1:maxind))
     dumpsize = dumpsize + 3 * maxind * ndumps
 
     call putvar_real3d(ncid_surfout, nc_surfelem_velo_varid, &
                 start = [isnap_loc-ndumps+1, 1, ind_first], &
                 count = [ndumps, 3, maxind], &
-                values = copy_surfdumpvar_velo(1:ndumps, 1:3, 1:maxind)) 
+                values = copy_surfdumpvar_velo(1:ndumps, 1:3, 1:maxind))
     dumpsize = dumpsize + 3 * maxind * ndumps
 
     call putvar_real3d(ncid_surfout, nc_surfelem_strain_varid, &
                 start = [isnap_loc-ndumps+1, 1, ind_first], &
                 count = [ndumps, 6, maxind], &
-                values = copy_surfdumpvar_strain(1:ndumps, 1:6, 1:maxind)) 
+                values = copy_surfdumpvar_strain(1:ndumps, 1:6, 1:maxind))
     dumpsize = dumpsize + 6 * maxind * ndumps
 
     call putvar_real3d(ncid_surfout, nc_surfelem_disp_src_varid, &
                 start = [isnap_loc-ndumps+1, 1, ind_first], &
                 count = [ndumps, 3, maxind], &
-                values = copy_surfdumpvar_srcdisp(1:ndumps, 1:3, 1:maxind)) 
+                values = copy_surfdumpvar_srcdisp(1:ndumps, 1:3, 1:maxind))
     dumpsize = dumpsize + 3 * maxind * ndumps
-    
+
     call check( nf90_put_att(ncid_out, NF90_GLOBAL, 'percent completed', &
                              isnap_loc*100/nstrain) )
 
 #ifndef enable_parallel_netcdf
-    call check( nf90_close(ncid_out) ) 
+    call check( nf90_close(ncid_out) )
 #endif
 
     call cpu_time(tack)
@@ -514,7 +514,7 @@ subroutine nc_dump_strain_to_disk() bind(c, name="nc_dump_strain_to_disk")
         write(6,"('   Proc', I5,': Wrote ', F8.2, ' MB in ', F6.2, 's (', F8.2, ' MB/s)')") &
             mynum, dumpsize_MB, tack-tick, dumpsize_MB / (tack - tick)
         call flush(6)
-    end if
+    endif
 
 #endif
 end subroutine nc_dump_strain_to_disk
@@ -524,7 +524,7 @@ end subroutine nc_dump_strain_to_disk
 subroutine nc_dump_stf(stf)
     use data_io,  only                       : nseismo, nstrain, dump_wavefields
     use data_time, only                      : seis_it, strain_it, niter, deltat
-    real(kind=sp), intent(in), dimension(:) :: stf   
+    real(kind=sp), intent(in), dimension(:) :: stf
 
 #ifdef enable_netcdf
     integer                                 :: it_s, it_d, i
@@ -560,19 +560,19 @@ subroutine nc_dump_stf(stf)
         ! Dumping the STF in the fine time stepping of the seismogram output
         if ( mod(i,seis_it) == 0) then
            it_s = it_s + 1
-           stf_seis_dumpvar(it_s) = stf(i) 
+           stf_seis_dumpvar(it_s) = stf(i)
            stf_d_seis_dumpvar(it_s) = stf_d_dumpvar(i)
-        end if
+        endif
 
         if (dump_wavefields) then
             ! Dumping the STF in the coarse time stepping of the strain (KERNER) output
             if ( mod(i,strain_it) == 0) then
                it_d = it_d + 1
-               stf_dump_dumpvar(it_d) = stf(i) 
+               stf_dump_dumpvar(it_d) = stf(i)
                stf_d_dump_dumpvar(it_d) = stf_d_dumpvar(i)
-            end if
-        end if
-    end do
+            endif
+        endif
+    enddo
     stf_dumpvar = stf
 
 #endif
@@ -605,12 +605,12 @@ subroutine nc_dump_rec_to_disk
     call cpu_time(tick)
 
 #ifndef enable_parallel_netcdf
-    call check( nf90_open(path=datapath(1:lfdata)//"/axisem_output.nc4", & 
+    call check( nf90_open(path=datapath(1:lfdata)//"/axisem_output.nc4", &
                           mode=NF90_WRITE, ncid=ncid_out) )
 #endif
 
     call getgrpid( ncid_out, "Seismograms", ncid_recout)
-    call getvarid( ncid_recout, "displacement", nc_disp_varid ) 
+    call getvarid( ncid_recout, "displacement", nc_disp_varid )
 
     do irec = 1, num_rec
         do icomp = 1, 3
@@ -619,21 +619,21 @@ subroutine nc_dump_rec_to_disk
                                start  = [1, icomp, loc2globrec(irec)], &
                                count  = [nseismo, 1, 1], &
                                values = reshape(recdumpvar(:,icomp,irec), [nseismo, 1, 1]) )
-        end do
-    end do
+        enddo
+    enddo
 
     dumpsize = nseismo * 3 * num_rec
 
 #ifndef enable_parallel_netcdf
     call check( nf90_close(ncid=ncid_out))
 #endif
-    
+
     call cpu_time(tack)
 
     if (verbose > 2) then
         write(6,"(I3,': Receiver data, Wrote ', F8.3, ' MB in ', F6.2, 's')") &
-            mynum, real(dumpsize) * 4. / 1048576., tack-tick 
-    end if
+            mynum, real(dumpsize) * 4. / 1048576., tack-tick
+    endif
 #endif
 end subroutine nc_dump_rec_to_disk
 !-----------------------------------------------------------------------------------------
@@ -647,29 +647,29 @@ subroutine nc_rec_checkpoint
 
     interface
         subroutine c_wait_for_io() bind(c, name='c_wait_for_io')
-        end subroutine 
+        end subroutine
     end interface
 
     integer         :: iproc
-    
+
     call c_wait_for_io()
     do iproc=0, nproc-1
         call barrier
         if (iproc == mynum) then
 #endif
-            if (num_rec > 0) then 
-                if (verbose > 2) & 
+            if (num_rec > 0) then
+                if (verbose > 2) &
                     write(6,"('   Proc ', I3, ' will dump receiver seismograms')") mynum
                 call nc_dump_rec_to_disk()
                 call flush(6)
             else
                 if (verbose > 2) &
                     write(6,"('   Proc ', I3, ' has no receivers and just waits for the others')") mynum
-            end if
+            endif
 #ifndef enable_parallel_netcdf
-        end if
-        
-    end do
+        endif
+
+    enddo
 #endif
     call barrier
 #endif
@@ -683,7 +683,7 @@ subroutine nc_dump_surface(surffield, disporvelo)
     real(kind=realkind), intent(in), dimension(:,:) :: surffield
     character(len=4), intent(in)                    :: disporvelo
 #ifdef enable_netcdf
-   
+
     select case(disporvelo)
         case('disp')
             surfdumpvar_disp(stepstodump+1,:,:) = transpose(surffield(:,:))
@@ -703,7 +703,7 @@ end subroutine nc_dump_surface
 subroutine nc_dump_mesh_sol(scoord_sol, zcoord_sol)
 
     use data_io,   only : ndumppts_el
-    use data_mesh, only : nelem 
+    use data_mesh, only : nelem
     real(sp), intent(in) :: scoord_sol(:,:,:)
     real(sp), intent(in) :: zcoord_sol(size(scoord_sol,1), size(scoord_sol,2), &
                                        size(scoord_sol,3))
@@ -818,7 +818,7 @@ subroutine nc_dump_elastic_parameters(rho, lambda, mu, xi_ani, phi_ani, eta_ani,
        if (present(Q_mu).and.present(Q_kappa)) then
            allocate(Q_mu1d(npoints))
            allocate(Q_kappa1d(npoints))
-       end if
+       endif
 
        do iel=1, nel_solid
            do ipol=0, npol
@@ -878,7 +878,7 @@ subroutine nc_dump_elastic_parameters(rho, lambda, mu, xi_ani, phi_ani, eta_ani,
        allocate(xi1d(size1d))
        allocate(phi1d(size1d))
        allocate(eta1d(size1d))
-       
+
        rho1d = real(pack(rho(ibeg:iend, jbeg:jend, :), .true.), kind=sp)
        lambda1d = real(pack(lambda(ibeg:iend, jbeg:jend, :), .true.), kind=sp)
        mu1d = real(pack(mu(ibeg:iend, jbeg:jend, :), .true.), kind=sp)
@@ -922,7 +922,7 @@ subroutine nc_define_outputfile(nrec, rec_names, rec_th, rec_th_req, rec_ph, rec
 
     integer, intent(in)                  :: nrec              !< Number of receivers
     character(len=40),intent(in)         :: rec_names(nrec)   !< Receiver names
-    real(dp), dimension(nrec),intent(in) :: rec_th            !< Receiver theta 
+    real(dp), dimension(nrec),intent(in) :: rec_th            !< Receiver theta
     real(dp), dimension(nrec),intent(in) :: rec_th_req        !< Requested receiver theta
     real(dp), dimension(nrec),intent(in) :: rec_ph            !< Receiver phi
     integer, dimension(nrec),intent(in)  :: rec_proc          !< Receiver processor
@@ -934,14 +934,14 @@ subroutine nc_define_outputfile(nrec, rec_names, rec_th, rec_th_req, rec_ph, rec
     integer                              :: ivar, i
     integer                              :: irec, iproc, nmode
     integer                              :: nc_ph_varid
-    integer                              :: nc_thr_varid, nc_th_varid 
+    integer                              :: nc_thr_varid, nc_th_varid
     integer                              :: nc_proc_varid, nc_recnam_dimid
     integer                              :: nc_recnam_varid, nc_surf_dimid
     integer                              :: nc_pt_dimid
-    integer                              :: nc_mesh_s_varid, nc_mesh_z_varid   
-    integer                              :: nc_mesh_s_mp_varid, nc_mesh_z_mp_varid   
-    integer                              :: nc_mesh_vs_varid, nc_mesh_vp_varid   
-    integer                              :: nc_mesh_mu_varid, nc_mesh_rho_varid   
+    integer                              :: nc_mesh_s_varid, nc_mesh_z_varid
+    integer                              :: nc_mesh_s_mp_varid, nc_mesh_z_mp_varid
+    integer                              :: nc_mesh_vs_varid, nc_mesh_vp_varid
+    integer                              :: nc_mesh_mu_varid, nc_mesh_rho_varid
     integer                              :: nc_mesh_lambda_varid
     integer                              :: nc_mesh_xi_varid
     integer                              :: nc_mesh_phi_varid
@@ -962,7 +962,7 @@ subroutine nc_define_outputfile(nrec, rec_names, rec_th, rec_th_req, rec_ph, rec
     integer                              :: nc_mesh_cntrlpts_dimid
 
     integer                              :: chunk_pt, chunk_time
-                                    !< Contains chunk size in GLL points. Should be system 
+                                    !< Contains chunk size in GLL points. Should be system
                                     !! int(disk_block_size / nsnap)
 
     if ((mynum == 0) .and. (verbose > 1)) then
@@ -971,7 +971,7 @@ subroutine nc_define_outputfile(nrec, rec_names, rec_th, rec_th_req, rec_ph, rec
         write(6,*) '**** Producing netcdf output file with its variables and dimensions ****'
         write(6,*) '************************************************************************'
         write(6,*)
-    end if
+    endif
 
     nc_fnam = datapath(1:lfdata)//"/axisem_output.nc4"
 
@@ -985,7 +985,7 @@ subroutine nc_define_outputfile(nrec, rec_names, rec_th, rec_th_req, rec_ph, rec
 
     dumpstepsnap = int(nc_dumpbuffersize / nproc) * nproc
         ! Will later be reduced to nstrain, if this is smaller than value given here
-    
+
     if (lpr .and. verbose > 1) write(6,*) '  Dumping NetCDF file to disk every', dumpstepsnap, ' snaps'
 
     call barrier ! for nicer output only
@@ -999,9 +999,9 @@ subroutine nc_define_outputfile(nrec, rec_names, rec_th, rec_th_req, rec_ph, rec
         if ((iproc == mynum) .and. (verbose > 1)) then
             write(6,"(' Proc ', I4, ' will dump at position ', I4)") mynum, outputplan
             call flush(6)
-        end if
+        endif
         call barrier ! for nicer output only
-    end do
+    enddo
     if (nstrain <= dumpstepsnap) dumpstepsnap = nstrain
 #else
     ! in parallel IO, always everybody dumps collectively
@@ -1022,48 +1022,48 @@ subroutine nc_define_outputfile(nrec, rec_names, rec_th, rec_th_req, rec_ph, rec
                   nvar = 4
               else
                   nvar = 6
-              end if
+              endif
               allocate(varname(nvar))
               allocate(varnamelist(nvar))
               allocate(nc_varnamelist(nvar/2))
               allocate(nc_field_varid(nvar/2))
 
-              if (src_type(1)  ==  'monopole') then 
+              if (src_type(1)  ==  'monopole') then
                   varnamelist =    ['disp_sol_s     ', 'disp_sol_z     ', &
                                     'disp_flu_s     ', 'disp_flu_z     ']
-                    
+
                   nc_varnamelist = ['disp_s     ', 'disp_z     ']
               else
                   varnamelist =    ['disp_sol_s     ', 'disp_sol_p     ', 'disp_sol_z     ', &
                                     'disp_flu_s     ', 'disp_flu_p     ', 'disp_flu_z     ']
-                    
+
                   nc_varnamelist = ['disp_s     ', 'disp_p     ', 'disp_z     ']
-              end if
+              endif
 
               npoints = npoint_kwf
 
               npts_sol = npoint_solid_kwf
               npts_flu = npoint_fluid_kwf
 
-              call comm_elem_number(nelem_kwf, nelem_kwf_global, nelem_myfirst, nelem_mylast)  
+              call comm_elem_number(nelem_kwf, nelem_kwf_global, nelem_myfirst, nelem_mylast)
 
            case ('strain_only')
               if (src_type(1) == 'monopole') then
                   nvar = 8
               else
                   nvar = 12
-              end if
+              endif
               allocate(varname(nvar))
               allocate(varnamelist(nvar))
               allocate(nc_varnamelist(nvar/2))
               allocate(nc_field_varid(nvar/2))
 
-              if (src_type(1)  ==  'monopole') then 
+              if (src_type(1)  ==  'monopole') then
                   varnamelist =    ['strain_dsus_sol', 'strain_dsuz_sol', 'strain_dpup_sol', &
                                     'straintrace_sol', &
                                     'strain_dsus_flu', 'strain_dsuz_flu', 'strain_dpup_flu', &
                                     'straintrace_flu']
-                    
+
                   nc_varnamelist = ['strain_dsus', 'strain_dsuz', 'strain_dpup', &
                                     'straintrace']
               else
@@ -1071,13 +1071,13 @@ subroutine nc_define_outputfile(nrec, rec_names, rec_th, rec_th_req, rec_ph, rec
                                     'strain_dsup_sol', 'strain_dzup_sol', 'straintrace_sol', &
                                     'strain_dsus_flu', 'strain_dsuz_flu', 'strain_dpup_flu', &
                                     'strain_dsup_flu', 'strain_dzup_flu', 'straintrace_flu']
-                    
+
                   nc_varnamelist = ['strain_dsus', 'strain_dsuz', 'strain_dpup', &
                                     'strain_dsup', 'strain_dzup', 'straintrace']
-              end if
+              endif
 
               npoints = npoint_kwf
-              
+
 
               npts_sol = npoint_solid_kwf
               npts_flu = npoint_fluid_kwf
@@ -1087,23 +1087,23 @@ subroutine nc_define_outputfile(nrec, rec_names, rec_th, rec_th_req, rec_ph, rec
               write(6,*) 'ERROR: not yet implemented with netcdf'
               stop 2
 
-           case ('fullfields') 
+           case ('fullfields')
               if (src_type(1) == 'monopole') then
                   nvar = 12
               else
                   nvar = 18
-              end if
+              endif
               allocate(varname(nvar))
               allocate(varnamelist(nvar))
               allocate(nc_varnamelist(nvar/2))
               allocate(nc_field_varid(nvar/2))
 
-              if (src_type(1)  ==  'monopole') then 
+              if (src_type(1)  ==  'monopole') then
                   varnamelist =    ['strain_dsus_sol', 'strain_dsuz_sol', 'strain_dpup_sol', &
                                     'straintrace_sol', 'velo_sol_s     ', 'velo_sol_z     ', &
                                     'strain_dsus_flu', 'strain_dsuz_flu', 'strain_dpup_flu', &
                                     'straintrace_flu', 'velo_flu_s     ', 'velo_flu_z     ']
-                    
+
                   nc_varnamelist = ['strain_dsus', 'strain_dsuz', 'strain_dpup', &
                                     'straintrace', 'velo_s     ', 'velo_z     ']
               else
@@ -1113,41 +1113,41 @@ subroutine nc_define_outputfile(nrec, rec_names, rec_th, rec_th_req, rec_ph, rec
                                     'strain_dsus_flu', 'strain_dsuz_flu', 'strain_dpup_flu', &
                                     'strain_dsup_flu', 'strain_dzup_flu', 'straintrace_flu', &
                                     'velo_flu_s     ', 'velo_flu_p     ', 'velo_flu_z     ']
-                    
+
                   nc_varnamelist = ['strain_dsus', 'strain_dsuz', 'strain_dpup', &
                                     'strain_dsup', 'strain_dzup', 'straintrace', &
                                     'velo_s     ', 'velo_p     ', 'velo_z     ']
-              end if
+              endif
 
               gllperelem = (iend - ibeg + 1) * (jend - jbeg + 1)
               npoints = nelem * gllperelem
 
               npts_sol = nel_solid * gllperelem
-              npts_flu = nel_fluid * gllperelem 
+              npts_flu = nel_fluid * gllperelem
 
         end select
 
-        call comm_elem_number(npoints, npoints_global, npoints_myfirst, npoints_mylast)  
+        call comm_elem_number(npoints, npoints_global, npoints_myfirst, npoints_mylast)
         npoint_kwf_global = npoints_global
         call comm_elem_number(npts_sol, npts_sol_global, npts_sol_myfirst, npts_sol_mylast)
         call comm_elem_number(npts_flu, npts_flu_global, npts_flu_myfirst, npts_flu_mylast)
-  
+
         if (lpr) then
           do ivar=1, nvar/2 ! The big snapshot variables for the kerner.
               call dump_mesh_data_xdmf(trim(nc_fnam), trim(nc_varnamelist(ivar))//'.xdmf', &
                                        'Snapshots/'//trim(nc_varnamelist(ivar)),  &
                                        npts_sol_global + npts_flu_global,  nstrain)
           enddo
-        end if
+        endif
 
-    end if ! dump_wavefields
+    endif ! dump_wavefields
 
     if (mynum == 0) then
         if (verbose > 1) write (6,*) ' Preparing netcdf file for ', nproc, ' processors'
         nmode = ior(NF90_CLOBBER, NF90_NETCDF4)
         call check( nf90_create(path=nc_fnam, cmode=nmode, ncid=ncid_out) )
         if (verbose > 1) write(6,*) ' Netcdf file with ID ', ncid_out, ' produced.'
-   
+
 
         if (verbose > 1) write(6,*) '  Producing groups for Seismograms and Snapshots'
 
@@ -1155,14 +1155,14 @@ subroutine nc_define_outputfile(nrec, rec_names, rec_th, rec_th_req, rec_ph, rec
         call check( nf90_def_grp(ncid_out, "Snapshots", ncid_snapout) )
         call check( nf90_def_grp(ncid_out, "Surface", ncid_surfout) )
         call check( nf90_def_grp(ncid_out, "Mesh", ncid_meshout) )
-        
+
         if (verbose > 1) write(6,*) 'Define dimensions in ''Seismograms'' group of NetCDF output file'
 
         call check( nf90_def_dim(ncid_out, "seis_timesteps", nseismo, nc_times_dimid) )
         call check( nf90_def_dim(ncid_out, "sim_timesteps", niter, nc_iter_dimid) )
         call check( nf90_def_dim(ncid_recout, "receivers", nrec, nc_rec_dimid) )
         call check( nf90_def_dim(ncid_out, "components", 3, nc_comp_dimid) )
-        call check( nf90_def_dim(ncid_recout, "recnamlength", 40, nc_recnam_dimid) ) 
+        call check( nf90_def_dim(ncid_recout, "recnamlength", 40, nc_recnam_dimid) )
 
         if (verbose > 1) write(6,*) 'Define variables in ''Seismograms'' group of NetCDF output file'
         call flush(6)
@@ -1186,7 +1186,7 @@ subroutine nc_define_outputfile(nrec, rec_names, rec_th, rec_th_req, rec_ph, rec
 
         call check( nf90_def_var(ncid=ncid_recout, name="stf_d_iter", xtype=NF90_FLOAT,&
                                  dimids=[nc_iter_dimid], varid=nc_stf_d_iter_varid) )
-        
+
         call check( nf90_def_var(ncid=ncid_recout, name="time", xtype=NF90_DOUBLE,&
                                  dimids=[nc_times_dimid], varid=nc_time_varid) )
 
@@ -1200,7 +1200,7 @@ subroutine nc_define_outputfile(nrec, rec_names, rec_th, rec_th_req, rec_ph, rec
                                  [nc_rec_dimid], nc_proc_varid) )
         call check( nf90_def_var(ncid_recout, "receiver_name", NF90_CHAR, &
                                  [nc_rec_dimid, nc_recnam_dimid], nc_recnam_varid) )
-        
+
         if (dump_wavefields) then
             ! Wavefields group of output file N.B: Snapshots for kernel calculation
             if (verbose > 1) write(6,*) 'Define variables in ''Snapshots'' group of NetCDF output file', &
@@ -1214,7 +1214,7 @@ subroutine nc_define_outputfile(nrec, rec_names, rec_th, rec_th_req, rec_ph, rec
                                       varid  = NF90_GLOBAL, &
                                       name   = 'nstrain', &
                                       values = nstrain) )
-            
+
             call check( nf90_def_dim( ncid   = ncid_out, &
                                       name   = 'gllpoints_all', &
                                       len    = npoints_global, &
@@ -1303,7 +1303,7 @@ subroutine nc_define_outputfile(nrec, rec_names, rec_th, rec_th_req, rec_ph, rec
                                       varid  = nc_mesh_eta_varid) )
 
             if (anel_true) then
-                               
+
                 call check( nf90_def_var( ncid   = ncid_meshout, &
                                           name   = 'mesh_Qmu', &
                                           xtype  = NF90_FLOAT, &
@@ -1314,7 +1314,7 @@ subroutine nc_define_outputfile(nrec, rec_names, rec_th, rec_th_req, rec_ph, rec
                                           xtype  = NF90_FLOAT, &
                                           dimids = nc_pt_dimid,&
                                           varid  = nc_mesh_Qka_varid) )
-            end if
+            endif
 
             if (trim(dump_type) == 'displ_only') then
                call check( nf90_def_var( ncid   = ncid_meshout, &
@@ -1399,7 +1399,7 @@ subroutine nc_define_outputfile(nrec, rec_names, rec_th, rec_th_req, rec_ph, rec
             endif
 
             do ivar=1, nvar/2 ! The big snapshot variables for the kerner.
-       
+
                 call check( nf90_def_var(ncid       = ncid_snapout, &
                                          name       = trim(nc_varnamelist(ivar)), &
                                          xtype      = NF90_FLOAT, &
@@ -1411,7 +1411,7 @@ subroutine nc_define_outputfile(nrec, rec_names, rec_th, rec_th_req, rec_ph, rec
                                               varid   = nc_field_varid(ivar), &
                                               no_fill = 1,                    &
                                               fill    = 0) )
-            end do
+            enddo
 
 
             ! Surface group in output file
@@ -1422,8 +1422,8 @@ subroutine nc_define_outputfile(nrec, rec_names, rec_th, rec_th_req, rec_ph, rec
                                       values = nstrain) )
             call check( nf90_def_dim( ncid_surfout, "straincomponents", len=6, &
                                       dimid=nc_strcomp_dimid) )
-            
-            call check( nf90_def_dim( ncid_surfout, "surf_elems", maxind_glob, nc_surf_dimid) )     
+
+            call check( nf90_def_dim( ncid_surfout, "surf_elems", maxind_glob, nc_surf_dimid) )
             call check( nf90_put_att( ncid   = ncid_surfout, &
                                       name   = 'nsurfelem', &
                                       varid  = NF90_GLOBAL, &
@@ -1432,18 +1432,18 @@ subroutine nc_define_outputfile(nrec, rec_names, rec_th, rec_th_req, rec_ph, rec
             call check( nf90_def_var( ncid_surfout, "elem_theta", NF90_FLOAT, &
                                       [nc_surf_dimid ], nc_surfelem_theta_varid) )
             call check( nf90_put_att(ncid_surfout, nc_surfelem_theta_varid, 'units', 'degrees'))
-           
+
             call check( nf90_def_var( ncid_surfout, "displacement", NF90_FLOAT, &
                                       [nc_snap_dimid, nc_comp_dimid, nc_surf_dimid ], &
                                       nc_surfelem_disp_varid) )
             call check( nf90_put_att(ncid_surfout, nc_surfelem_disp_varid, 'units', 'meters'))
-            
+
             call check( nf90_def_var( ncid_surfout, "velocity", NF90_FLOAT, &
                                       [nc_snap_dimid, nc_comp_dimid, nc_surf_dimid ], &
                                       nc_surfelem_velo_varid) )
             call check( nf90_put_att( ncid_surfout, nc_surfelem_velo_varid, 'units', &
                                       'meters per second') )
-            
+
             call check( nf90_def_var( ncid_surfout, "disp_src", NF90_FLOAT, &
                                       [nc_snap_dimid, nc_comp_dimid, nc_surf_dimid ], &
                                       nc_surfelem_disp_src_varid) )
@@ -1461,45 +1461,45 @@ subroutine nc_define_outputfile(nrec, rec_names, rec_th, rec_th_req, rec_ph, rec
 
             call check( nf90_def_var( ncid_surfout, "stf_d_dump", NF90_FLOAT, &
                                       [nc_snap_dimid], nc_stf_d_dump_varid) )
-        end if
-        
+        endif
+
         if (verbose > 1) write(6,'(I6,a/)') mynum, 'NetCDF variables defined'
-            
+
 
         call check( nf90_enddef(ncid_out))
 
 
 ! in case of parallel IO, only the first rank writes
 !#ifdef enable_parallel_netcdf
-!    if (mynum == 0) then    
+!    if (mynum == 0) then
 !#endif
         if (verbose > 1) then
             write(6,*) 'Writing station info into NetCDF file...'
             call flush(6)
-        end if
+        endif
         call check( nf90_put_var( ncid_recout, nc_th_varid,   values = rec_th) )
         call check( nf90_put_var( ncid_recout, nc_ph_varid,   values = rec_ph) )
         call check( nf90_put_var( ncid_recout, nc_thr_varid,  values = rec_th_req) )
-        call check( nf90_put_var( ncid_recout, nc_proc_varid, values = rec_proc) ) 
+        call check( nf90_put_var( ncid_recout, nc_proc_varid, values = rec_proc) )
 
         do irec=1,nrec
             call check( nf90_put_var( ncid_recout, nc_recnam_varid, start = [irec, 1], &
                                       count = [1, 40], values = (rec_names(irec))) )
-        end do
+        enddo
 
         ! Write out seismogram dump times
         time_seis = dble([ (i, i = 0, nseismo-1) ]) * deltat
-        call check( nf90_put_var( ncid_recout, nc_time_varid, values = time_seis ) ) 
+        call check( nf90_put_var( ncid_recout, nc_time_varid, values = time_seis ) )
         if (verbose > 1) then
             write(6,*) '...done'
             call flush(6)
-        end if
+        endif
 
         ! Write out STFs
         if (verbose > 1) then
             write(6,*) 'Writing stf into NetCDF file...'
             call flush(6)
-        end if
+        endif
 
         call check( nf90_put_var(ncid   = ncid_recout, &
                                  varid  = nc_stf_iter_varid, &
@@ -1519,18 +1519,18 @@ subroutine nc_define_outputfile(nrec, rec_names, rec_th, rec_th_req, rec_ph, rec
             if (verbose > 1) then
                 write(6,*) 'Writing strain dump times into NetCDF file...'
                 call flush(6)
-            end if
+            endif
             time_strain = dble([ (i, i = 1, nstrain) ])
             time_strain = time_strain * t_0 / strain_samp
             call check( nf90_put_var(ncid   = ncid_out, &
                                      varid  = nc_snaptime_varid, &
-                                     values = time_strain ) ) 
-            
+                                     values = time_strain ) )
+
             ! Write out STF values at kernel dump points
             if (verbose > 1) then
                 write(6,*) 'Writing STF in strain dumps'
                 call flush(6)
-            end if
+            endif
             call check( nf90_put_var(ncid   = ncid_surfout, &
                                      varid  = nc_stf_dump_varid, &
                                      values = stf_dump_dumpvar) )
@@ -1541,11 +1541,11 @@ subroutine nc_define_outputfile(nrec, rec_names, rec_th, rec_th_req, rec_ph, rec
             if (verbose > 1) then
                 write(6,*) '...done'
                 call flush(6)
-            end if
-        end if
-    
-    end if ! (mynum == 0)
-    
+            endif
+        endif
+
+    endif ! (mynum == 0)
+
 
 ! Allocation of Dump buffer variables. Done on all procs
 90  format(' Allocated ', A20, ', uses ',F10.3,'MB')
@@ -1558,12 +1558,12 @@ subroutine nc_define_outputfile(nrec, rec_names, rec_th, rec_th_req, rec_ph, rec
         allocate(surfdumpvar_velo(dumpstepsnap,3,maxind))
         allocate(surfdumpvar_strain(dumpstepsnap,6,maxind))
         allocate(surfdumpvar_srcdisp(dumpstepsnap,3,maxind))
-       
+
         if (src_type(1) == 'monopole') then
             allocate(oneddumpvar(npoints, dumpstepsnap, 6))
         else
             allocate(oneddumpvar(npoints, dumpstepsnap, 9))
-        end if
+        endif
 
         surfdumpvar_disp = 0.0
         surfdumpvar_velo = 0.0
@@ -1583,8 +1583,8 @@ subroutine nc_define_outputfile(nrec, rec_names, rec_th, rec_th_req, rec_ph, rec
             write(6,*)  '**** NetCDF output file produced, buffer variables all allocated ****'
             write(6,*)  '*********************************************************************'
             write(6,*)
-        end if
-    end if
+        endif
+    endif
 
 #ifdef enable_parallel_netcdf
     if (mynum==0) call check( nf90_close(ncid = ncid_out))
@@ -1593,7 +1593,7 @@ subroutine nc_define_outputfile(nrec, rec_names, rec_th, rec_th_req, rec_ph, rec
     if (verbose > 0 .and. mynum == 0) then
         write (6,*) ' Opening netcdf file for parallel IO'
         call flush(6)
-    end if
+    endif
     nmode = ior(NF90_WRITE, NF90_NETCDF4)
     nmode = ior(nmode, NF90_MPIIO)
     call check( nf90_open(path=nc_fnam, mode=nmode, ncid=ncid_out, &
@@ -1602,7 +1602,7 @@ subroutine nc_define_outputfile(nrec, rec_names, rec_th, rec_th_req, rec_ph, rec
     if (verbose > 0 .and. mynum == 0) then
         write(6,*) ' Netcdf file with ID ', ncid_out, ' opened on all procs.'
         call flush(6)
-    end if
+    endif
 #endif
     call barrier()
 
@@ -1623,8 +1623,8 @@ subroutine nc_finish_prepare
     integer             :: ivar, nmode, iproc
     integer             :: nc_mesh_s_varid, nc_mesh_z_varid
     integer             :: nc_mesh_s_mp_varid, nc_mesh_z_mp_varid
-    integer             :: nc_mesh_vs_varid, nc_mesh_vp_varid   
-    integer             :: nc_mesh_mu_varid, nc_mesh_rho_varid   
+    integer             :: nc_mesh_vs_varid, nc_mesh_vp_varid
+    integer             :: nc_mesh_mu_varid, nc_mesh_rho_varid
     integer             :: nc_mesh_lambda_varid
     integer             :: nc_mesh_xi_varid
     integer             :: nc_mesh_phi_varid
@@ -1652,7 +1652,7 @@ subroutine nc_finish_prepare
            write(6,*) '  arrive here and then open it to retrieve IDs'
            if (dump_wavefields) write(6,*) '  and dump mesh coordinates.'
         endif
-    end if
+    endif
     call barrier
 
     do iproc = 0, nproc
@@ -1661,65 +1661,65 @@ subroutine nc_finish_prepare
             if (verbose > 1) then
                write(6,*) '  Processor ', iproc, ' opened the output file and will dump '
                write(6,*) '  his part of the mesh.'
-            end if
+            endif
             nmode = ior(NF90_WRITE, NF90_NETCDF4)
-            call check( nf90_open( path = datapath(1:lfdata)//"/axisem_output.nc4", & 
+            call check( nf90_open( path = datapath(1:lfdata)//"/axisem_output.nc4", &
                                    mode = nmode,                                    &
                                    ncid = ncid_out) )
             print '(A,I5,A)', '   ', iproc, ': opened file'
 #endif
 
 
-            call getgrpid(ncid_out, "Seismograms", ncid_recout) 
-            call getgrpid(ncid_out, "Surface", ncid_surfout) 
-            call getgrpid(ncid_out, "Mesh", ncid_meshout) 
+            call getgrpid(ncid_out, "Seismograms", ncid_recout)
+            call getgrpid(ncid_out, "Surface", ncid_surfout)
+            call getgrpid(ncid_out, "Mesh", ncid_meshout)
             !print '(A,I5,A)', '   ', iproc, ': inquired dimension IDs'
-            call getvarid( ncid_recout, "displacement", nc_disp_varid ) 
-            
+            call getvarid( ncid_recout, "displacement", nc_disp_varid )
+
             if (dump_wavefields) then
-                
+
                 ! first get all IDs
-                call getgrpid(ncid_out, "Snapshots", ncid_snapout) 
+                call getgrpid(ncid_out, "Snapshots", ncid_snapout)
                 do ivar=1, nvar/2
-                   call getvarid(ncid_snapout, nc_varnamelist(ivar), nc_field_varid(ivar)) 
-                end do
-               
+                   call getvarid(ncid_snapout, nc_varnamelist(ivar), nc_field_varid(ivar))
+                enddo
+
                 call getvarid(ncid_surfout, "elem_theta",   nc_surfelem_theta_varid)
                 call getvarid(ncid_surfout, "displacement", nc_surfelem_disp_varid)
                 call getvarid(ncid_surfout, "velocity",     nc_surfelem_velo_varid)
                 call getvarid(ncid_surfout, "strain",       nc_surfelem_strain_varid)
                 call getvarid(ncid_surfout, "disp_src",     nc_surfelem_disp_src_varid)
 
-                call getvarid(ncid_meshout, "mesh_S",       nc_mesh_s_varid) 
-                call getvarid(ncid_meshout, "mesh_Z",       nc_mesh_z_varid) 
+                call getvarid(ncid_meshout, "mesh_S",       nc_mesh_s_varid)
+                call getvarid(ncid_meshout, "mesh_Z",       nc_mesh_z_varid)
                 call getvarid(ncid_meshout, "mesh_vp",      nc_mesh_vp_varid)
-                call getvarid(ncid_meshout, "mesh_vs",      nc_mesh_vs_varid) 
-                call getvarid(ncid_meshout, "mesh_rho",     nc_mesh_rho_varid) 
-                call getvarid(ncid_meshout, "mesh_lambda",  nc_mesh_lambda_varid) 
-                call getvarid(ncid_meshout, "mesh_mu",      nc_mesh_mu_varid) 
-                call getvarid(ncid_meshout, "mesh_phi",     nc_mesh_phi_varid) 
-                call getvarid(ncid_meshout, "mesh_xi",      nc_mesh_xi_varid) 
-                call getvarid(ncid_meshout, "mesh_eta",     nc_mesh_eta_varid) 
+                call getvarid(ncid_meshout, "mesh_vs",      nc_mesh_vs_varid)
+                call getvarid(ncid_meshout, "mesh_rho",     nc_mesh_rho_varid)
+                call getvarid(ncid_meshout, "mesh_lambda",  nc_mesh_lambda_varid)
+                call getvarid(ncid_meshout, "mesh_mu",      nc_mesh_mu_varid)
+                call getvarid(ncid_meshout, "mesh_phi",     nc_mesh_phi_varid)
+                call getvarid(ncid_meshout, "mesh_xi",      nc_mesh_xi_varid)
+                call getvarid(ncid_meshout, "mesh_eta",     nc_mesh_eta_varid)
 
                 if (allocated(Q_mu1d).and.allocated(Q_kappa1d)) then
-                    call getvarid(ncid_meshout, "mesh_Qmu", nc_mesh_Qmu_varid) 
-                    call getvarid(ncid_meshout, "mesh_Qka", nc_mesh_Qka_varid) 
-                end if
+                    call getvarid(ncid_meshout, "mesh_Qmu", nc_mesh_Qmu_varid)
+                    call getvarid(ncid_meshout, "mesh_Qka", nc_mesh_Qka_varid)
+                endif
 
                 if (trim(dump_type) == 'displ_only') then
-                   call getvarid(ncid_meshout, "midpoint_mesh", nc_mesh_midpoint_varid) 
-                   call getvarid(ncid_meshout, "eltype",        nc_mesh_eltype_varid) 
-                   call getvarid(ncid_meshout, "axis",          nc_mesh_axis_varid) 
-                   call getvarid(ncid_meshout, "fem_mesh",      nc_mesh_fem_varid) 
-                   call getvarid(ncid_meshout, "sem_mesh",      nc_mesh_sem_varid) 
-                   call getvarid(ncid_meshout, "mp_mesh_S",     nc_mesh_s_mp_varid) 
-                   call getvarid(ncid_meshout, "mp_mesh_Z",     nc_mesh_z_mp_varid) 
-                   call getvarid(ncid_meshout, "gll",           nc_mesh_gll_varid) 
-                   call getvarid(ncid_meshout, "glj",           nc_mesh_glj_varid) 
-                   call getvarid(ncid_meshout, "G0",            nc_mesh_G0_varid) 
-                   call getvarid(ncid_meshout, "G1",            nc_mesh_G1_varid) 
-                   call getvarid(ncid_meshout, "G2",            nc_mesh_G2_varid) 
-                end if
+                   call getvarid(ncid_meshout, "midpoint_mesh", nc_mesh_midpoint_varid)
+                   call getvarid(ncid_meshout, "eltype",        nc_mesh_eltype_varid)
+                   call getvarid(ncid_meshout, "axis",          nc_mesh_axis_varid)
+                   call getvarid(ncid_meshout, "fem_mesh",      nc_mesh_fem_varid)
+                   call getvarid(ncid_meshout, "sem_mesh",      nc_mesh_sem_varid)
+                   call getvarid(ncid_meshout, "mp_mesh_S",     nc_mesh_s_mp_varid)
+                   call getvarid(ncid_meshout, "mp_mesh_Z",     nc_mesh_z_mp_varid)
+                   call getvarid(ncid_meshout, "gll",           nc_mesh_gll_varid)
+                   call getvarid(ncid_meshout, "glj",           nc_mesh_glj_varid)
+                   call getvarid(ncid_meshout, "G0",            nc_mesh_G0_varid)
+                   call getvarid(ncid_meshout, "G1",            nc_mesh_G1_varid)
+                   call getvarid(ncid_meshout, "G2",            nc_mesh_G2_varid)
+                endif
 
                 !print '(A,I5,A)', '   ', iproc, ': inquired variable IDs'
 
@@ -1728,7 +1728,7 @@ subroutine nc_finish_prepare
                 do ivar=1, nvar/2
                    call check(nf90_var_par_access(ncid_snapout, nc_field_varid(ivar),    &
                                                   NF90_COLLECTIVE))
-                end do
+                enddo
                 call check(nf90_var_par_access(ncid_meshout, nc_surfelem_theta_varid,    &
                                                NF90_COLLECTIVE))
                 call check(nf90_var_par_access(ncid_meshout, nc_surfelem_disp_varid,     &
@@ -1787,7 +1787,7 @@ subroutine nc_finish_prepare
 #endif
 
                 ! start writing to file
-   
+
                 call putvar_real1d(ncid   = ncid_surfout, &
                                    varid  = nc_surfelem_theta_varid, &
                                    values = surfcoord, &
@@ -1800,7 +1800,7 @@ subroutine nc_finish_prepare
                                     values = scoord1d,         &
                                     start  = npoints_myfirst,  &
                                     count  = npoints )
-                
+
                 ! Z-Coordinate
                 call putvar_real1d( ncid   = ncid_meshout,     &
                                     varid  = nc_mesh_z_varid,  &
@@ -1822,15 +1822,15 @@ subroutine nc_finish_prepare
                                     start  = npoints_myfirst,  &
                                     count  = npoints )
 
-                ! Rho                     
-                call putvar_real1d( ncid   = ncid_meshout,     & 
+                ! Rho
+                call putvar_real1d( ncid   = ncid_meshout,     &
                                     varid  = nc_mesh_rho_varid,&
                                     values = rho1d,            &
                                     start  = npoints_myfirst,  &
                                     count  = npoints )
 
                 ! Lambda
-                call putvar_real1d( ncid   = ncid_meshout,     & 
+                call putvar_real1d( ncid   = ncid_meshout,     &
                                     varid  = nc_mesh_lambda_varid, &
                                     values = lambda1d,         &
                                     start  = npoints_myfirst,  &
@@ -1843,7 +1843,7 @@ subroutine nc_finish_prepare
                                     start  = npoints_myfirst,  &
                                     count  = npoints )
 
-                ! Anisotropic parameters            
+                ! Anisotropic parameters
                 ! Phi
                 call putvar_real1d( ncid   = ncid_meshout,      &
                                     varid  = nc_mesh_phi_varid,  &
@@ -1863,11 +1863,11 @@ subroutine nc_finish_prepare
                                     varid  = nc_mesh_eta_varid, &
                                     values = eta1d,             &
                                     start  = npoints_myfirst,   &
-                                    count  = npoints ) 
+                                    count  = npoints )
 
                 ! Anelastic parameters
                 if (allocated(Q_mu1d).and.allocated(Q_kappa1d)) then
-                        
+
                     ! Q_mu
                     call putvar_real1d( ncid   = ncid_meshout,      &
                                         varid  = nc_mesh_Qmu_varid, &
@@ -1880,7 +1880,7 @@ subroutine nc_finish_prepare
                                         values = Q_kappa1d,         &
                                         start  = npoints_myfirst,   &
                                         count  = npoints )
-                end if
+                endif
 
                 if (trim(dump_type) == 'displ_only') then
                    call check(nf90_put_var ( ncid   = ncid_meshout,     &
@@ -1919,7 +1919,7 @@ subroutine nc_finish_prepare
                                        values = scoord1d_mp,         &
                                        start  = nelem_myfirst,  &
                                        count  = nelem_kwf )
-                   
+
                    ! Z-Coordinate
                    call putvar_real1d( ncid   = ncid_meshout,     &
                                        varid  = nc_mesh_z_mp_varid,  &
@@ -1964,7 +1964,7 @@ subroutine nc_finish_prepare
 
                 !print '(A,I5,A)', '   ', iproc, ': dumped mesh'
 
-            end if !dump_wavefields
+            endif !dump_wavefields
             if (verbose > 1) &
                 write(6,"('  Proc ', I3, ' dumped its mesh and is ready to rupture')") &
                     mynum
@@ -1972,8 +1972,8 @@ subroutine nc_finish_prepare
 ! in case of parallel IO, we keep it open on all procs
 #ifndef enable_parallel_netcdf
             call check( nf90_close( ncid_out))
-        end if !mynum.eq.iproc
-    end do
+        endif !mynum==iproc
+    enddo
 #endif
 
 #endif
@@ -1981,7 +1981,7 @@ end subroutine nc_finish_prepare
 !-----------------------------------------------------------------------------------------
 
 !-----------------------------------------------------------------------------------------
-!> Final dumps to netCDF file. In the moment contains only dump of 
+!> Final dumps to netCDF file. In the moment contains only dump of
 !! receiver seismograms.
 subroutine nc_end_output
 #ifdef enable_netcdf
@@ -1994,17 +1994,17 @@ subroutine nc_end_output
     call barrier
     do iproc=0, nproc-1
         if (iproc == mynum) then
-            if (num_rec>0) then 
+            if (num_rec>0) then
                 if (verbose > 1) write(6,"('   Proc ', I3, ' will dump receiver seismograms')") mynum
                 call nc_dump_rec_to_disk()
             else
                 if (verbose > 1) write(6,"('   Proc ', I3, ' has no receivers and just waits for the others')") mynum
-            end if
-        end if
+            endif
+        endif
         call barrier
-    end do
+    enddo
 #else
-    if (num_rec > 0) then 
+    if (num_rec > 0) then
         if (verbose > 2) write(6,"('   Proc ', I3, ' will dump receiver seismograms')") mynum
         call nc_dump_rec_to_disk()
     endif
@@ -2027,7 +2027,7 @@ subroutine nc_finalize
     use data_io,      only: datapath, lfdata
 
 #ifndef enable_parallel_netcdf
-    call check( nf90_open(path=datapath(1:lfdata)//"/axisem_output.nc4", & 
+    call check( nf90_open(path=datapath(1:lfdata)//"/axisem_output.nc4", &
                           mode=NF90_WRITE, ncid=ncid_out) )
 #endif
     call check( nf90_redef(ncid_out))

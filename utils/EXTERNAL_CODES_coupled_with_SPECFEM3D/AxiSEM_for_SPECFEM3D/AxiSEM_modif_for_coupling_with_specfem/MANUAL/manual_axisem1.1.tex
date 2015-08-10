@@ -59,11 +59,11 @@
 
 \pagenumbering{gobble}
 \begin{center}
-\resizebox{\textwidth}{!}{\textcolor{dark_grey}{\fontfamily{\sfdefault}\selectfont 
+\resizebox{\textwidth}{!}{\textcolor{dark_grey}{\fontfamily{\sfdefault}\selectfont
 COMPUTATIONAL INFRASTRUCTURE FOR GEODYNAMICS (CIG)
 }}
 
-\hrule 
+\hrule
 
 %LINE 2%
 \color{dark_grey}
@@ -114,7 +114,7 @@ COMPUTATIONAL INFRASTRUCTURE FOR GEODYNAMICS (CIG)
 \null
 \vfill
 \color{dark_grey}
-\Large \hfill {\raggedleft \fontfamily{\sfdefault}\selectfont 
+\Large \hfill {\raggedleft \fontfamily{\sfdefault}\selectfont
 % FILL: author list
 % e.g. Author One\\Author Two\\Author Three\\
 % be sure to have a newline (\\) after the final author
@@ -122,9 +122,9 @@ Tarje Nissen-Meyer\\Martin van Driel\\Simon St\"{a}hler\\Kasra Hosseini\\Stefani
 }
 {\fontfamily{\sfdefault}\selectfont www.geodynamics.org}
 
-\hrule 
+\hrule
 
-%LINE% 
+%LINE%
 \color{dark_grey}
 \rule{\textwidth}{2pt}
 
@@ -150,12 +150,12 @@ Tarje Nissen-Meyer\\Martin van Driel\\Simon St\"{a}hler\\Kasra Hosseini\\Stefani
                 \title{}
                 \LARGE{ \textbf{\sc AxiSEMv1.1 Manual}}
                 \vspace*{0.6cm}\\
-                {\large 
+                {\large
                 Tarje Nissen-Meyer\textsuperscript{1},
                 Martin van Driel\textsuperscript{2},
                 Simon St\"{a}hler\textsuperscript{3},
                 Kasra Hosseini\textsuperscript{3},
-                Stefanie Hempel\textsuperscript{4}, 
+                Stefanie Hempel\textsuperscript{4},
                 Alexandre Fournier\textsuperscript{5}}
                 \vspace*{0.3cm}\\
                 {\small  \textsuperscript{1} Oxford University (UK),
@@ -168,7 +168,7 @@ Tarje Nissen-Meyer\\Martin van Driel\\Simon St\"{a}hler\\Kasra Hosseini\\Stefani
         \end{minipage}
     \end{tabularx}
 \end{center}
-  
+
 %
 %
 \noindent {AxiSEM} is a \textbf{parallel spectral-element method} to solve
@@ -191,7 +191,7 @@ visualization.
 The essential raison-d'\^{e}tre of this method is the efficient
 calculation of seismograms, wavefield movies, and those wavefields that underly
 sensitivity kernels to allow for tomographic inversions of any portion of a
-seismogram at any relevant frequency. 
+seismogram at any relevant frequency.
 
 \begin{center}
 \textbf{Portal for this code:} \href{http://www.axisem.info}{www.axisem.info}\\
@@ -205,11 +205,11 @@ Fournier, Martin van Driel, Simon St\"{a}hler, Kasra Hosseini, Stefanie Hempel.\
 \noindent \textbf{Contributions:}\\
  J.-P. Ampuero, E. Chaljub, A. Colombi, F. A. Dahlen, D. Komatitsch,
  G. Nolet, J. Tromp.\vspace*{0.3cm}\\
-\noindent \textbf{Research funding:} \\Princeton University, NSF, HP2C Petaquake, 
+\noindent \textbf{Research funding:} \\Princeton University, NSF, HP2C Petaquake,
 QUEST ITN (Marie Curie), ETH Zurich, Oxford University.\vspace*{0.3cm}\\
 %
 \noindent \textbf{Copyright}\\
-\copyright  \hspace*{0.1cm} 
+\copyright  \hspace*{0.1cm}
 2013, Tarje Nissen-Meyer,
 Alexandre Fournier, Martin van Driel, Simon St\"{a}hler, Kasra Hosseini, Stefanie Hempel.\vspace*{0.3cm}\\
 
@@ -233,7 +233,7 @@ for more details: \verb|LICENSE_GPL.txt|
 \subsection{The AxiSEM Concept}
 
 The basic idea behind AxiSEM is to take advantage of axial symmetry with respect
-to an axis going through the center of the earth and the source. In such axisymmetric 
+to an axis going through the center of the earth and the source. In such axisymmetric
 models, the response to a moment tensor or single force point source can be expanded in a
 series of multipoles (mono-, di- and quadrupole). The dependence of the 3D wavefield on
 azimuth $\phi$ can be solved analytically and the remaining 2D problems (four of them for
@@ -249,14 +249,14 @@ element approach.\\
         \begin{minipage}[c]{0.4\paperwidth}
             $\scriptsize{\vec u = \vec u (s,z)}$ \\
         \end{minipage}
-    
+
         \begin{minipage}[c]{0.1\paperwidth}
             \includegraphics[width=\textwidth]{radpat_di.pdf}
         \end{minipage}%
         \begin{minipage}[c]{0.4\paperwidth}
             $\scriptsize{\vec u = \vec u (s,z)} \cdot f(\sin\phi, \cos\phi)$ \\
         \end{minipage}
-    
+
         \begin{minipage}[c]{0.1\paperwidth}
             \includegraphics[width=\textwidth]{radpat_quad.pdf}
         \end{minipage}%
@@ -266,7 +266,7 @@ element approach.\\
     \end{minipage}%
     \begin{minipage}[t]{0.25\paperwidth}
         2D numerical problems:
-    
+
         \includegraphics[width=.7\textwidth]{mesh.png}
     \end{minipage}%
 \end{center}
@@ -281,7 +281,7 @@ element approach.\\
 
 \begin{description}
     \item[Operating system] The software should run on any UNIX-like operating system and has
-          been tested on Linux (Debian, Ubuntu, SuSe, RedHat, Mageia, Cray et al) and MacOS X. 
+          been tested on Linux (Debian, Ubuntu, SuSe, RedHat, Mageia, Cray et al) and MacOS X.
     \item[Compilers:] Fortran 90 compiler (tested on ifort, gfortran-4.6, portland, Cray)
     \item[Libraries:] MPI, NetCDF (optional), fftw (optional)
     \item[Systems:] Unix-based OS on desktop scale (tested on Linux and MacOS)\\ and HPC scale (tested on Cray XT4, XE6 and XK7, HECToR (UK National Supercomputing Service), SuperMUC (Leibniz-Rechenzentrum, Garching), Pacman (Arctic Region Supercomputing Center).
@@ -353,7 +353,7 @@ system fulfils all requirements mentioned above.\\
 
 \begin{center}
     \fbox{\parbox{0.65\textwidth}{
-    The default simulation parameters are: 
+    The default simulation parameters are:
     \begin{description}
         \item[PREM] velocity model (isotropic, anelastic, continental crust)
         \item[50 s] dominant period of the mesh
@@ -371,7 +371,7 @@ system fulfils all requirements mentioned above.\\
     \item \verb|./copytemplates.csh| $\Rightarrow$ creates various input files from templates
     \item Check file \verb|make_axisem.macros| whether the compiler settings fit your
           system.
-    \item \verb|cd MESHER| 
+    \item \verb|cd MESHER|
     \item Check file {\tt inparam\_mesh} for background model, period of simulation and
           number of CPUs \\
           Default is \textit{PREM}, \textit{50 s} and \textit{2 CPUs} to be running within a
@@ -379,7 +379,7 @@ system fulfils all requirements mentioned above.\\
     \item \verb|./submit.csh| $\Rightarrow$ Check file {\tt OUTPUT}.
     \item Wait for ``{\tt ....DONE WITH MESHER}'' to appear in {\tt OUTPUT}.
     \item move mesh files to \verb|../SOLVER/MESHES/| directory and give it a name
-          \verb|./movemesh.csh PREM_50s| 
+          \verb|./movemesh.csh PREM_50s|
     \item \verb|cd ../SOLVER|
     \item In \verb|inparam_basic| set the value for \verb|MESHNAME| to the meshname from
           above (here: \verb|PREM_50s|)
@@ -390,14 +390,14 @@ system fulfils all requirements mentioned above.\\
           \verb|OUTPUT_PREM_mrr_50s_gauss_1800s| \\
           (use \verb|tail -f OUTPUT_PREM_mrr_50s_gauss_1800s|).
     \item \verb|./post_processing.csh|
-    \item \verb|cd Data_Postprocessing| 
+    \item \verb|cd Data_Postprocessing|
     \item \verb|googleearth|, open {\tt googleearth\_src\_rec\_processed.kml}, click
             earthquake (info), receivers (seismograms).
     \item {\tt matlab}, run {\tt plot\_record\_section.m}, plotting all components
             of displacement seismograms.
 
 \end{enumerate}
-If the Solver is re-run with different parameters but the same mesh, you may start at step 9. 
+If the Solver is re-run with different parameters but the same mesh, you may start at step 9.
 To change model, frequency or number of CPUs, repeat steps 3. to 7. and select the new
 mesh in \verb|SOLVER/inparam_basic|. \\
 The solver input can be changed in \verb|inparam_basic| between 8. and 9.,
@@ -424,7 +424,7 @@ delete the old one.
     BACKGROUND_MODEL    'prem_iso'
     DOMINANT_PERIOD     50.0
     NTHETA_SLICES       2
-    NRADIAL_SLICES      1 
+    NRADIAL_SLICES      1
     WRITE_VTK           true
     COARSENING_LAYERS   3
     \end{verbatim}
@@ -441,7 +441,7 @@ delete the old one.
     $ tail -f OUTPUT
     \end{verbatim}
     %
-    The meshing should be really fast (i.e. on the order of seconds) for the chosen parameters. Wait for 
+    The meshing should be really fast (i.e. on the order of seconds) for the chosen parameters. Wait for
     \verb|....DONE WITH MESHER !| to appear.
 
     \item Take a look at the mesh with paraview
@@ -465,7 +465,7 @@ delete the old one.
     \hspace{5mm}
     \includegraphics[height=30mm]{paraview3.png}
     \end{center}
-        
+
     \item Move the mesh to the solver directory and give it a meaningful name:
     \begin{verbatim}
     $ ./movemesh.csh PREM_50s
@@ -475,7 +475,7 @@ delete the old one.
 
 \newpage
 \subsection{SOLVER - solve the elastic wave equation}
-    
+
 \begin{enumerate}
     \item Go to the \ttilde\verb|SOLVER| folder and open the
     \verb|inparam_basic| file with your favourite editor:
@@ -490,10 +490,10 @@ delete the old one.
     \begin{verbatim}
     SIMULATION_TYPE     single
     SEISMOGRAM_LENGTH   1800.
-    RECFILE_TYPE        stations 
+    RECFILE_TYPE        stations
     MESHNAME            PREM_50s
-    ATTENUATION         true 
-    SAVE_SNAPSHOTS      true  
+    ATTENUATION         true
+    SAVE_SNAPSHOTS      true
     \end{verbatim}
     %
     WARNING: Only save snapshots if the mesh is rather low resolution,
@@ -523,8 +523,8 @@ delete the old one.
     then click on play to see the wave propagate.  You can also choose
     different components of the wavefield or the absolute value.  For paraview
     experienced users: choose absolute value and a logarithmic colorscale to
-    see all wave types at once (e.g.\ 'black body radiation' looks nice). 
-   
+    see all wave types at once (e.g.\ 'black body radiation' looks nice).
+
     \begin{center}
     \includegraphics[width=110mm]{paraview2.png} \hspace{5mm}
 %    \includegraphics[width=40mm]{0600.png}
@@ -558,9 +558,9 @@ delete the old one.
     %
     Once all the jobs are done (check with \verb|htop|), you can proceed with
     postprocessing.
-    
+
 \end{enumerate}
-    
+
 
 \subsection{POSTPROCESSING - rotate and sum seismograms and wavefields}
 
@@ -587,7 +587,7 @@ can be modified without redoing the more expensive simulation.
     $ ./postprocessing.csh
     \end{verbatim}
     %
-    The resulting seismograms and plots can be found in the directory 
+    The resulting seismograms and plots can be found in the directory
     \verb|Data_Postprocessing|. Seismograms can be viewed with your favorite image viewer,
     e.g.\ \verb|eog|:
     %
@@ -601,7 +601,7 @@ can be modified without redoing the more expensive simulation.
     in the \verb|Data_Postprocessing/| directory (double check the exact path,
     google-earth might have something older from history which is quite confusing).
     You should now see the earthquake and the receivers in the places menu on the left.
-    
+
     \begin{center}
     \includegraphics[height=70mm]{google-earth.png}
     \hspace{5mm}
@@ -615,7 +615,7 @@ can be modified without redoing the more expensive simulation.
 \subsection{Computational aspects}
 
 Running in a 2D computational domain, the code is (obviously) significantly faster
-than comparable 3D methods. 
+than comparable 3D methods.
 
 \begin{center}
     %\includegraphics[height=50mm]{mesher_comp_cost.pdf}
@@ -630,7 +630,7 @@ towards very high resolution (around and above 1Hz), you will need a rather fat 
 On the right, we depict the computational cost
 associated with the solver to compute seismograms of 30 min length. The relation between
 seismic period and CPU-hours is an approximate proxy to estimate how many cores and
-wall-clock time is optimal for your infrastructure. Scaling of CPU hours is approximately 
+wall-clock time is optimal for your infrastructure. Scaling of CPU hours is approximately
 to the third power of the maximum frequency.
 
 \begin{center}
@@ -726,13 +726,13 @@ afterwards the steps from 5 have to be rerun. Supported models are
 # prem_ani:               Anisotropic continental PREM model (actual PREM)
 # prem_ani_onecrust:      like 'prem_ani' but extend lower crust to surface
 # prem_ani_light:         like 'prem_ani' but with mantle material extended to surface
-# 
+#
 # ak135                   AK135 (Isotropic, PREM attenuation)
 # ak135f                  AK135 (Isotropic, own attenuation)
 # iasp91:                 Isotropic IASP91 model with PREM density and attenuation
-# external:               Layered external model, give file name in EXT_MODEL, the 
+# external:               Layered external model, give file name in EXT_MODEL, the
 #                         inner core needs to be big enough, check VTK output.
-\end{verbatim} 
+\end{verbatim}
 
 
 \subsection{Use external 1D velocity model}
@@ -768,33 +768,33 @@ In the header, four keywords are mandatory to describe the following model:
         \item \verb|m| \textit{SI}-units: (m, m/s, kg/m$^3$)
         \item \verb|km| km, km/s, g/cm$^3$. These units are often used because the values are between 1 and 10.
        \end{itemize}
- \item \verb|COLUMNS|: Describe the column order in the file. Necessary values: 
-	\begin{itemize}
-	\item For an elastic, isotropic model: 
-		\begin{itemize}
-		\item \verb|radius|/\verb|depth| (radius or depth of the layer. Allows to define the position of the layers in radius (beginning from the center) or depth (beginning from the surface)
-		\item \verb|rho| ($\rho$, density)
-		\item \verb|vpv| ($\alpha$, vertical P-velocity)
-		\item \verb|vsv| ($\beta$, vertical S-velocity)
-		\end{itemize}
-	\item For an anelastic model additionally: 
-		\begin{itemize}
-		\item \verb|qka| ($Q_{\kappa}$)
-		\item \verb|qmu| ($Q_{\mu}$)
-		\end{itemize}
-	\item For an anisotropic model additionally: 
-		\begin{itemize}
-		\item \verb|vph| (horizontal P-velocity)
-		\item \verb|vsh| (horizontal S-velocity)
-		\item \verb|eta| (anisotropic parameter $\eta$)
-		\end{itemize}
-	\end{itemize}
+ \item \verb|COLUMNS|: Describe the column order in the file. Necessary values:
+  \begin{itemize}
+  \item For an elastic, isotropic model:
+    \begin{itemize}
+    \item \verb|radius|/\verb|depth| (radius or depth of the layer. Allows to define the position of the layers in radius (beginning from the center) or depth (beginning from the surface)
+    \item \verb|rho| ($\rho$, density)
+    \item \verb|vpv| ($\alpha$, vertical P-velocity)
+    \item \verb|vsv| ($\beta$, vertical S-velocity)
+    \end{itemize}
+  \item For an anelastic model additionally:
+    \begin{itemize}
+    \item \verb|qka| ($Q_{\kappa}$)
+    \item \verb|qmu| ($Q_{\mu}$)
+    \end{itemize}
+  \item For an anisotropic model additionally:
+    \begin{itemize}
+    \item \verb|vph| (horizontal P-velocity)
+    \item \verb|vsh| (horizontal S-velocity)
+    \item \verb|eta| (anisotropic parameter $\eta$)
+    \end{itemize}
+  \end{itemize}
 \end{itemize}
 
 This header is followed by an arbritrary number of lines with velocity layers, where \verb|#| marks comment lines. The header variables \verb|UNITS| and \verb|COLUMNS| allow to customize the structure of these lines, which should facilitate the import of external models from other programs.
 
 First order discontinuities are enforced by double layers with the same radius (see layers 2/3 and 4/5
-in the example) and are honoured by the MESHER. 
+in the example) and are honoured by the MESHER.
 
 For an example file, select one of the internal models in \verb|MESHER/inparam_mesh|, enable the option \verb|WRITE_1DMODEL| and run the MESHER. It will write a valid input file of the selected model into \verb|MESHER/Diags/1dmodel_axisem.bm|. Modify this file according to your needs.
 
@@ -814,7 +814,7 @@ then to reduce MPI communication. To ensure scaling, each processor should have 
 about 500 elements.\\
 N.B: This value is for ONE simulation. To calculate the wavefield of a full moment tensor,
 4 parallel simulations have to be run and the number of necessary CPUs is
-\verb|NTHETA_SLICES|* \verb|NRADIAL_SLICES|*4. 
+\verb|NTHETA_SLICES|* \verb|NRADIAL_SLICES|*4.
 
 
 \subsection{Change the maximum frequency of the simulation}
@@ -850,7 +850,7 @@ done with \textit{ObsPy} or another tool that supports filtering.
 
 \subsection{Include lateral heterogeneities (2.5D simulation)}
 \verb|SOLVER/inparam_basic|, change parameter \verb|LAT_HETEROGENEITY| to true:\\
-The actual heterogeneity model is set in \verb|SOLVER/inparam_hetero|. 
+The actual heterogeneity model is set in \verb|SOLVER/inparam_hetero|.
 This functionality is currently under development and not documented. See the example files \verb|SOLVER/inparam_hetero.TEMPLATE| for an idea of what to do.
 
 
@@ -862,24 +862,24 @@ This functionality is currently under development and not documented. See the ex
 When using this code, please cite one or more of these publications. \vspace*{0.2cm}\\
 
 
-(1) Tarje Nissen-Meyer, M. van Driel, S. C. Stähler, K. Hosseini, S. Hempel, L. Auer, 
+(1) Tarje Nissen-Meyer, M. van Driel, S. C. Stähler, K. Hosseini, S. Hempel, L. Auer,
 A. Colombi, and A. Fournier (2014), \textit{AxiSEM: broadband 3-D seismic wavefields
 in axisymmetric media},  Solid Earth, 5, 425-445. \\
 doi:10.5194/se-5-425-2014\\
 
 (2) Tarje Nissen-Meyer, F. A. Dahlen, A. Fournier (2007),
-\textit{Spherical-earth Fr\'{e}chet sensitivity kernels},        
+\textit{Spherical-earth Fr\'{e}chet sensitivity kernels},
 Geophysical Journal International 168(3),1051-1066. \\
 doi:10.1111/j.1365-246X.2006.03123.x                \\
-                                                        
-(3) Tarje Nissen-Meyer, A. Fournier, F. A. Dahlen (2007), 
+
+(3) Tarje Nissen-Meyer, A. Fournier, F. A. Dahlen (2007),
 \textit{A two-dimensional spectral-element method for
-spherical-earth seismograms-I. Moment-tensor source}, 
+spherical-earth seismograms-I. Moment-tensor source},
 Geophysical Journal International 168(3), 1067-1092. \\
 doi:10.1111/j.1365-246X.2006.03121.x                 \\
-                                                       
-(4) Tarje Nissen-Meyer, A. Fournier, F. A. Dahlen (2008),  
-\textit{A two-dimensional spectral-element method for   
+
+(4) Tarje Nissen-Meyer, A. Fournier, F. A. Dahlen (2008),
+\textit{A two-dimensional spectral-element method for
 spherical-earth seismograms - II. Waves in solid-fluid media},
 Geophysical Journal International, 174(3), 873-888.\\
 doi:10.1111/j.1365-246X.2008.03813.x\\
@@ -888,17 +888,17 @@ doi:10.1111/j.1365-246X.2008.03813.x\\
 \textit{Full-wave seismic sensitivity in a spherical Earth},
 Ph.D. thesis, Princeton University
 (This includes refs (2)-(4) and more details.)\\
-% 
+%
 % (5) Jean-Paul Ampuero, Tarje Nissen-Meyer (2011),
-% \textit{High-order conservative time schemes in spectral-element methods 
+% \textit{High-order conservative time schemes in spectral-element methods
 % for seismic wave propagation.}, To be submitted to Geophys. J. Int.\\
 
 %\noindent \textbf{NOTE:} Most important sections of these papers are in the Theory section below.\\
 
 \noindent \textbf{Other references:}\vspace*{0.2cm}
 
-(6) Deville, M. O., Fischer, P. F., Mund, E. H. (2002), 
-\textit{High-Order Methods for Incompressible Fluid Flow}, 
+(6) Deville, M. O., Fischer, P. F., Mund, E. H. (2002),
+\textit{High-Order Methods for Incompressible Fluid Flow},
 Vol. 2, Cambridge monographs on Sppl. \& Comp. Math., Cambridge University Press.\\
 
 (7) Tufo, H. M., Fischer, P. F. (2001), \textit{Fast Parallel Direct Solvers For Coarse
@@ -907,9 +907,9 @@ Grid Problems}, 61, 151-177, J. Par. and Dist. Comput.\\
 (8) Bernardi, C., Dauge, M., Maday, Y. (1999), \textit{Spectral Methods for Axisymmetric
 Domains}, Vol. 3, Series in Appl. Math., Gauthier-Villars, Paris.\\
 
-(9) Chaljub, E. (2000), \textit{Mod{\'{e}}lisation num{\'{e}}rique de la 
+(9) Chaljub, E. (2000), \textit{Mod{\'{e}}lisation num{\'{e}}rique de la
 propagation d'ondes sismiques en g{\'{e}}om{\'{e}}trie sph{\'{e}}rique:
-Application {\`{a}} la sismologie globale}, 
+Application {\`{a}} la sismologie globale},
 Ph.D. thesis, Universit{\'{e}} de Paris 7.\\
 
 (10) Komatitsch D., Tromp, J. (2002), \textit{Spectral-element simulations of

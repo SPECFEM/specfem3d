@@ -27,9 +27,9 @@ module data_comm
 
   use global_parameters
   use linked_list
-  
+
   implicit none
-  public 
+  public
 
   integer                              :: comm
   integer                              :: mpi_realkind

@@ -41,7 +41,7 @@ module data_source
 
   ! discrete diracs
   real(kind=realkind)              :: sampling_per_a, discrete_dirac_halfwidth
-  integer                          :: period_vs_discrete_halfwidth, it_src_shift 
+  integer                          :: period_vs_discrete_halfwidth, it_src_shift
   real(kind=realkind)              :: dt_src_shift, shift_fact_discrete_dirac
   character(len=6)                 :: discrete_choice
   logical                          :: discrete_dirac

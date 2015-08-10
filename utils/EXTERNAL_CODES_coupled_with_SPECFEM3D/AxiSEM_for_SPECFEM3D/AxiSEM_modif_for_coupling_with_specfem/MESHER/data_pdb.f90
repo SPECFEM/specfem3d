@@ -39,7 +39,7 @@ module data_pdb
   integer, dimension(:), allocatable        :: nbelong
   integer, dimension(:), allocatable        :: nprocb
   integer, dimension(:,:), allocatable      :: lprocb
-  integer, dimension(:), allocatable        :: el2proc 
+  integer, dimension(:), allocatable        :: el2proc
 
   ! Glocal message passing...redundant eventually!
   integer, dimension(:), allocatable        :: sizerecvp, sizesendp
