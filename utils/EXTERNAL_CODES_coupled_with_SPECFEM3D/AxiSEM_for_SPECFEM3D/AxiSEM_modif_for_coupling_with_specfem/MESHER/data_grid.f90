@@ -19,6 +19,7 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
+!=========================================================================================
 module data_grid
 
   use global_parameters, only: sp, dp
@@ -47,3 +48,4 @@ module data_grid
   real(kind=dp), dimension(:), allocatable :: rmax_el, rmin_el
   logical :: southern
 end module data_grid
+!=========================================================================================

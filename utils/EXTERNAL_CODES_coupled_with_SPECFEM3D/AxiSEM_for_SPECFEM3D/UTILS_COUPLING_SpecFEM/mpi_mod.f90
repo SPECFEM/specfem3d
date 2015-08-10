@@ -19,9 +19,18 @@ contains
   subroutine finalize_mpi
    call MPI_FINALIZE(ierr)
   end subroutine finalize_mpi
-
+  
+  subroutine barrier_mpi()
+    call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+  end subroutine barrier_mpi
 
   subroutine alloc_all_mpi()
+ 
+
+   if (myrank == 0 ) then
+      write(*,*) 'INISDE ALLOC MPI '
+      write(*,*) nsim, ntime, nbrec, nbproc, ibeg, iend, nel, rot_mat, trans_rot_mat, rot_mat_mesh, trans_rot_mat_mesh
+   end if 
 
    call mpi_bcast(nsim,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
    call mpi_bcast(ntime,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
@@ -43,6 +52,7 @@ contains
       allocate(scoor(ibeg:iend,ibeg:iend,nel),zcoor(ibeg:iend,ibeg:iend,nel))
       allocate(data_read(ibeg:iend,ibeg:iend,nel))
       allocate(xi_rec(nbrec),eta_rec(nbrec))
+      allocate(magnitude(nbrec))
       allocate(rec2elm(nbrec))
       allocate(src_type(nsim,2))
       allocate(depth_ele(nel))
@@ -64,6 +74,8 @@ contains
     call mpi_bcast(f1,nbrec,MPI_REAL,0,MPI_COMM_WORLD,ierr)
     call mpi_bcast(f2,nbrec,MPI_REAL,0,MPI_COMM_WORLD,ierr)
     call mpi_bcast(phi,nbrec,MPI_REAL,0,MPI_COMM_WORLD,ierr)
+    call mpi_bcast(Mij,6,MPI_REAL,0,MPI_COMM_WORLD,ierr)
+    call mpi_bcast(magnitude,nsim,MPI_REAL,0,MPI_COMM_WORLD,ierr)
 
     ! double
     call mpi_bcast(scoor,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)

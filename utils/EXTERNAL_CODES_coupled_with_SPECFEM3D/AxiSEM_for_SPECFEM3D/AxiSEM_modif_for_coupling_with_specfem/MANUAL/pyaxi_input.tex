@@ -1,0 +1,150 @@
+\subsection{PyAxi: Python interface for AXISEM}
+
+\subsection{Introduction}
+PyAxi is a Python script developed as an interface for AXISEM.
+All the options available in AXISEM are included in only one input file (\textit{inpython.cfg}).
+By running the script, all the necessary steps (MESHER, SOLVER and Post-Processing) will be done automatically.
+Python is the only requirement; However, some special functionalities (mseed format, plotting in Python environment) need \textit{ObsPy} to be installed. \\
+
+\noindent \textit{Basic requirement}: Python.\\
+\textit{Convert to MSEED (not obligatory)}: ObsPy (https://github.com/obspy/obspy/wiki).\\
+
+\subsubsection{How to Run PyAxi?}
+%In this part, we show how to run PyAxi for different input files.
+First, let's check whether AXISEM can be run properly on our machine.
+For this reason:\\
+
+Start from within the {\tt AXISEM} directory:
+\begin{enumerate}
+\itemsep0em
+\item {\tt cd TESTING}
+\item {\tt python PyAxi.py --check}
+\end{enumerate}
+\noindent This gives an overview of the installation status of all relevant compilers and tools required
+to run AXISEM on your machine (Figure~\ref{check_pyaxi}).
+Please note that \textit{--check} does not check for all the possible compilers.
+It just checks for those listed in Figure~\ref{check_pyaxi};
+therefore, for other compilers, it should be done manually.\\
+
+\begin{figure*}[htb]
+\begin{center}
+\begin{verbatim}
+
+   -----------------------------------------
+       PyAxi
+     Python interface for Axisem
+   -----------------------------------------
+
+Check the Basic, Processing and Visualization requirements:
+
+          Compiler    |    Installed
+  ------------------------------------------
+          gfortran    |        Y
+             ifort    |        Y
+    mpif90.openmpi    |        Y
+            mpif90    |        Y
+           gnuplot    |        Y
+              taup    |        Y
+          paraview    |        Y
+            matlab    |        Y
+       googleearth    |        Y
+
+Summary:
+
+Basic functionality requirement...CHECK
+Processing requirement........CHECK
+Visualization tools...CHECK
+\end{verbatim}
+\end{center}
+\caption{\textit{Checking all the relevant compilers and tools required to run AXISEM.}}
+\label{check_pyaxi}
+\end{figure*}
+
+
+\noindent After installation of all required packages,
+maybe the best way to get familiar with AXISEM is to run the code with the default input file:\\
+
+Start from within the {\tt AXISEM} directory:
+\begin{enumerate}
+\itemsep0em
+\item {\tt cd TESTING}
+\item {\tt python PyAxi.py inpython.cfg}
+\end{enumerate}
+
+All the rest will be done automatically...\\
+
+\noindent \textit{inpython.cfg} is a configuration file that contains all the AXISEM options.
+To change the input file, open \textit{inpython.cfg} with an editor:\\
+
+Start from within the {\tt AXISEM} directory:
+\begin{enumerate}
+\itemsep0em
+\item {\tt cd TESTING}
+\item {\tt (editor) inpython.cfg}
+\end{enumerate}
+
+
+%%%and it has been divided into several parts:
+%%%\subsubsection{general}
+%%%This section in \textit{inpython.cfg} is dedicated to how and where you want to run the code.
+%%%\begin{itemize}
+%%% \item \textbf{address} is the directory where you have the AXISEM code.
+%%% \item \textbf{mesh\_name} is the name of the directory in which the info of the generated mesh will be stored.
+%%% \item \textbf{solver\_name} is the name of the directory in which the final solution will be stored.
+%%% \item \textbf{verbose} produces verbose output on the screen (recommended for debugging).
+%%% \item \textbf{new\_mesh} has three possibilities.
+%%%'Y' runs all steps of AXISEM from generating the mesh up to saving the waveforms.
+%%%'N' uses the available mesh and continues the code.
+%%%'M' gives this possibility to the user to manually change the options listed at the end of the \textbf{general} section.
+%%% \item \textbf{post\_processing} perferms the post processing step automatically.
+%%%\end{itemize}
+%%%
+%%%\noindent Please note that these options make it possible for the user to change the work-flow as it is required.
+%%%For instance, if you already have done one simulation and you want to use the same mesh for another simulation,
+%%%it is enough to set $new\_mesh = N$.
+%%%
+%%%\subsubsection{mpi\_netCDF}
+%%%mpi\_netCDF options control the make flags and netCDF functionality.
+%%%\begin{itemize}
+%%% \item \textbf{make\_flag} adds required flag(s) for running the \textit{makemake.pl} in both MESHER and SOLVER.
+%%% \item \textbf{mpi\_compiler} could be set based on your local machine.
+%%% \item \textbf{netCDF} generates one netCDF file instead of having binary output.
+%%% \item \textbf{netCDF\_LIBS} and \textbf{netCDF\_INCLUDE} should be changed according to your netCDF installation.
+%%%\end{itemize}
+%%%\subsubsection{mesher}
+%%%Major options that control the MESHER part of AXISEM have been included in this part.
+%%%For more information about \textbf{model}, \textbf{period} and \textbf{no\_proc} please refer to Mesher input section.
+%%%
+%%%\subsubsection{solver}
+%%%In this part, first we have three options \textbf{no\_simu}, \textbf{seis\_length} and \textbf{time\_step}
+%%%that are identical to \textbf{number of simulations}, \textbf{seismogram length} and
+%%%\textbf{time step} defined in Solver input. Moreover:
+%%%\begin{itemize}
+%%% \item \textbf{source\_type} could be selected from 'sourceparams' and 'cmtsolut'.
+%%% \item \textbf{receiver\_type} has three 'colatlan', 'stations' and 'database' options.
+%%% \item \textbf{save\_XDMF} saves XDMF files (high resolution 2D wavefields), more options in \textit{inparam\_xdmf}.
+%%% \item \textbf{force\_aniso} for anisotropic model handling.
+%%%\end{itemize}
+%%%\noindent Based on what we have selected in 'source\_type', one of the two parts for the source parameters
+%%%should be modified, e.g. if you have chosed 'cmtsolut', then go to the \textit{cmtsolut} parameters and
+%%%change the options accordingly.
+%%%\subsubsection{post\_processing}
+%%%This section controls the required options for Post processing. All the parameters are identical to what has been explained in \textit{Post processing} section.
+%%%\subsubsection{MISC}
+%%%MISC contains the input parameters for converting the waveforms to MSEED format and convolve them with Source Time Function.
+%%%These parameters are optional and need \textit{ObsPy} to be installed.
+%%%\begin{itemize}
+%%% \item \textbf{mseed} to convert all the seismograms to MSEED format (one file for each).
+%%%These files will be located in the SEISMOGRAMS/MSEED folder in each solution directory (\textit{solver\_name}).
+%%% \item \textbf{mseed\_all} to convert all the seismograms into MSEED format (one file for all).
+%%%It will generate one 'seismograms.mseed' file saved in SEISMOGRAMS folder.
+%%% \item \textbf{convSTF} convolves the converted seismograms with Source Time Function (STF).
+%%% \item \textbf{halfduration} determines the halfduration of the STF.
+%%% \item \textbf{filter} applies a lowpass and a highpass filter with the minimum and maximum
+%%%frequencies defined in \textbf{fmin} and \textbf{fmax}.
+%%%\end{itemize}
+%%%\subsubsection{test}
+%%%This part of the input file is just for the TESTING functionality that we have in AXISEM.
+%%%In normal runs, one should keep the \textit{'test'} flag to 'N' to avoid any problem.
+%%%TESTING will be discussed in a seperated section.
+

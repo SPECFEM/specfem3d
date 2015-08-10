@@ -19,6 +19,7 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
+!=========================================================================================
 module pdb
   use data_mesh
   use data_numbering
@@ -1049,12 +1050,6 @@ subroutine partition_sflobal_index
   real(kind=dp), dimension(:), allocatable  :: sort_buf
 
 
-  ! valence test
-  integer           :: idest, iel, ipol, jpol
-  character(len=4)  :: appiproc
-  integer, dimension(:), allocatable        :: uglob2_solid
-  integer, dimension(:,:,:), allocatable    :: val_solid
-
   if (dump_mesh_info_screen) then
      write(6,*)
      write(6,*)'****************************************************************'
@@ -1128,7 +1123,8 @@ subroutine partition_sflobal_index
                  enddo
                  if (inbr > 8) then
                     write(6,*) 'ERORR: having more then 8 neighbours (+myself)'
-                    write(6,*) '       check mesh decomposition)'
+                    write(6,*) '       check mesh decomposition in the solid)'
+                    write(6,*) '       iproct = ', iproct
                     stop
                  endif
                  if (myneighbours_solid(iproct,inbr) == -1) myneighbours_solid(iproct,inbr) = ipdes
@@ -1451,7 +1447,8 @@ subroutine partition_sflobal_index
                     enddo
                     if (inbr > 8) then
                        write(6,*) 'ERORR: having more then 8 neighbours (+myself)'
-                       write(6,*) '       check mesh decomposition)'
+                       write(6,*) '       check mesh decomposition in the fluid)'
+                       write(6,*) '       iproct = ', iproct
                        stop
                     endif
                     if (myneighbours_fluid(iproct,inbr) == -1) myneighbours_fluid(iproct,inbr) = ipdes
@@ -2223,9 +2220,10 @@ subroutine write_db
 ! Writes out a database file to be read by the solver for each processor.
 
   use data_gllmesh
+  use data_spec
   use background_models, only : override_ext_q
 
-  integer           :: iproc, iptp, npointotp, ipsrc, ipdes, imsg, iel, inode, ielg, idom
+  integer           :: iproc, iptp, npointotp, ipsrc, imsg, iel, inode, ielg, idom
   character(len=4)  :: appiproc
   character(len=80) :: dbname
   integer           :: lfdbname
@@ -2256,6 +2254,17 @@ subroutine write_db
      write(10) ndisc                        ! ndisc
      write(10) lfbkgrdmodel                 ! lfbkgrdmodel
 
+     ! write spectral stuff
+     write(10) xi_k
+     write(10) eta
+     write(10) dxi
+     write(10) wt
+     write(10) wt_axial_k
+     write(10) G0
+     write(10) G1
+     write(10) G1T
+     write(10) G2
+     write(10) G2T
 
      ! Coordinates of control points
      if (dump_mesh_info_screen) &
@@ -2326,7 +2335,7 @@ subroutine write_db
         write(6,*)'PARALLEL DATABASE: writing background model info...',iproc
      write(10) bkgrdmodel(1:lfbkgrdmodel)
      write(10) override_ext_q
-     write(10) router,resolve_inner_shear,have_fluid
+     write(10) router,have_fluid
      do idom=1,ndisc
         write(10) discont(idom),solid_domain(idom),idom_fluid(idom)
      enddo
@@ -2426,7 +2435,6 @@ subroutine create_static_header
     write(97,*)''
     write(97,29)
     write(97,12)'Background model     :',bkgrdmodel(1:lfbkgrdmodel)
-    write(97,13)'Inner-core shear wave:',resolve_inner_shear
     write(97,14)'Dominant period [s]  :',period
     write(97,14)'Elements/wavelength  :',pts_wavelngth
     write(97,14)'Courant number       :',courant
@@ -2465,7 +2473,6 @@ subroutine create_static_header
             A2,'/',A2,'/',A4,', at ',A2,'h ',A2,'min')
 29 format('!:::::::::::::::::::: Input parameters :::::::::::::::::::::::::::')
 12 format('!  ',A23,A20)
-13 format('!  ',A23,L10)
 14 format('!  ',A23,1f10.4)
 16 format('!  ',A23,2(f10.4))
 15 format('!  ',A23,I10)
@@ -2492,3 +2499,4 @@ end subroutine define_io_appendix
 !-----------------------------------------------------------------------------------------
 
 end module pdb
+!=========================================================================================

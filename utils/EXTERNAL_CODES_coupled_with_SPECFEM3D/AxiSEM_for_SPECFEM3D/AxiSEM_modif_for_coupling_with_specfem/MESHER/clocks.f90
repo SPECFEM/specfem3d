@@ -18,44 +18,37 @@
 !    You should have received a copy of the GNU General Public License
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
-
-!=======================
+!=========================================================================================
 module clocks_mod
-!=======================
 
 !-----------------------------------------------------------------------
 !                  CLOCKS module (for timing code sections)
 !
-! AUTHOR: V. Balaji (vb@gfdl.gov)
-!         SGI/GFDL Princeton University
 !
-! This program is free software; you can redistribute it and/or modify
-! it under the terms of the GNU General Public License as published by
-! the Free Software Foundation; either version 2 of the License, or
-! (at your option) any later version.
+! ORIGINAL AUTHOR: V. Balaji (vb@gfdl.gov)
+!                  SGI/GFDL Princeton University
 !
-! This program is distributed in the hope that it will be useful,
-! but WITHOUT ANY WARRANTY; without even the implied warranty of
-! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-! GNU General Public License for more details.
+! ADAPTED BY:      S. Stahler and M. v. Driel
+!                  to adhere Fortran 2003 standards
 !
-! For the full text of the GNU General Public License,
-! write to: Free Software Foundation, Inc.,
-!           675 Mass Ave, Cambridge, MA 02139, USA.
 !-----------------------------------------------------------------------
 
     implicit none
 
     private
 
-    integer, private              :: ticks_per_sec, max_ticks, ref_tick, start_tick, end_tick
-    real(kind=4), private         :: tick_rate
-    integer, private, parameter   :: max_clocks = 256
-    integer, private              :: clock_num = 0
-    logical, private              :: clocks_initialized = .FALSE.
+    integer, parameter            :: sp = selected_real_kind(6, 37)
+    integer, parameter            :: dp = selected_real_kind(15, 307)
+    integer, parameter            :: qp = selected_real_kind(33, 4931)
+
+    integer                       :: ticks_per_sec, max_ticks, ref_tick, start_tick, end_tick
+    real(kind=dp)                 :: tick_rate
+    integer, parameter            :: max_clocks = 256
+    integer                       :: clock_num = 0
+    logical                       :: clocks_initialized = .false.
 
     !clocks are stored in this internal type
-    type, private                 :: clock
+    type                          :: clock
        character(len=32)          :: name
        integer                    :: ticks, calls
     end type clock
@@ -65,11 +58,12 @@ module clocks_mod
     public                        :: clocks_init, clocks_exit, get_clock, clock_id, tick
 
     character(len=256), private   :: &
-         version = '$Id: clocks.F90,v 2.2 2001/02/14 19:06:12 vb Exp $'
+         version = 'Clocks.F90,v 3.0 2014/10/19'
 
   contains
 
-!-----------------------------------------------------------------------
+
+!-----------------------------------------------------------------------------------------
 subroutine clocks_init(flag)
     !initialize clocks module
     !if flag is set, only print if flag=0
@@ -109,10 +103,9 @@ subroutine clocks_init(flag)
 
     return
 end subroutine clocks_init
-!-----------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 
-
-!-----------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 function clock_id(name)
     !return an ID for a new or existing clock
     integer                         :: clock_id
@@ -124,8 +117,8 @@ function clock_id(name)
        clock_id = clock_id + 1
        if( clock_id>clock_num )then
            if( clock_num==max_clocks )then
-               print *, &
-                    'CLOCKS ERROR: you are requesting too many clocks, max clocks=', max_clocks
+               print *, 'CLOCKS ERROR: you are requesting too many clocks, max clocks=', &
+                         max_clocks
                return
            else
                clock_num = clock_id
@@ -136,10 +129,9 @@ function clock_id(name)
     enddo
     return
 end function clock_id
-!-----------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 
-
-!-----------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 function tick( string, id, name, since )
     integer                                 :: tick
     character(len=*), intent(in), optional  :: string
@@ -186,14 +178,13 @@ function tick( string, id, name, since )
 
     return
 end function tick
-!-----------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 
-
-!-----------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine get_clock( id, ticks, calls, total_time, time_per_call )
-    integer, intent(in)                 :: id
-    integer, intent(out), optional      :: ticks, calls
-    real(kind=4), intent(out), optional :: total_time, time_per_call
+    integer, intent(in)                  :: id
+    integer, intent(out), optional       :: ticks, calls
+    real(kind=dp), intent(out), optional :: total_time, time_per_call
 
     if( 0<id .AND. id<=max_clocks )then
         if( PRESENT(ticks) )ticks = clocks(id)%ticks
@@ -207,19 +198,19 @@ subroutine get_clock( id, ticks, calls, total_time, time_per_call )
 
     return
 end subroutine get_clock
-!-----------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 
-!--------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine clocks_exit(flag)
     !print all cumulative clocks
     !if flag is set, only print if flag=0
     !for instance, flag could be set to pe number by the calling program
     !to have only PE 0 print clocks
     integer, intent(in), optional :: flag
-    integer :: i
+    integer                       :: i
     !total_time is for one clock
     !cumul_time is total measured time between clocks_init and clocks_exit
-    real(kind=4) :: total_time, time_per_call, cumul_time
+    real(kind=dp)                 :: total_time, time_per_call, cumul_time
 
     if( PRESENT(flag) )then
         if( flag/=0 )return
@@ -242,8 +233,7 @@ subroutine clocks_exit(flag)
     return
 
 end subroutine clocks_exit
-!--------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 
-!=======================
 end module clocks_mod
-!=======================
+!=========================================================================================

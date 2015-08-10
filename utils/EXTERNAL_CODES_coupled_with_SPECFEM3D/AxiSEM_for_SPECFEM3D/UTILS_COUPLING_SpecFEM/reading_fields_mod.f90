@@ -106,8 +106,9 @@
 
 
         !write(*,*)  iunit
-        write(*,*) src_type
-        call compute_prefactor(src_type(isim,1),src_type(isim,2))
+        write(*,*) ' src_type(:,1) ', myrank, src_type(:,1)
+        write(*,*) ' src_type(:,2) ', myrank, src_type(:,2)
+        call compute_prefactor(src_type(isim,1),src_type(isim,2),isim)
 
         if (myrank == 0) then
           write(fichier,'(a6,a15)') '/Data/',output_veloc_name(1)
@@ -149,12 +150,12 @@
 
         allocate(stack_v(ntime),stalta(ntime))
 
-        !data_rec=0.
+         !data_rec=0.
          Energy_1=0.
          Energy_0=0.
          ! read files
          do itime=1,ntime
-
+            !write(*,*) ' reading field :', itime 
             data_rec=0.
             Energy_1=0.
 
@@ -278,6 +279,8 @@
              write(ivx,*) ipick*dtt,stack_v(ipick),stalta(ipick)
          enddo
          close(ivx)
+         deallocate(stack_v,stalta)
+
         endif
 
 
@@ -337,7 +340,7 @@
 
         !write(*,*)  iunit
         !write(*,*) src_type
-        call compute_prefactor(src_type(isim,1),src_type(isim,2))
+        call compute_prefactor(src_type(isim,1),src_type(isim,2),isim)
         if (myrank == 0) then
           write(fichier,'(a6,a15)') '/Data/',output_stress_name(1)
           open(isxx,file= trim(working_axisem_dir)//trim(simdir(isim))//trim(fichier), FORM="UNFORMATTED")
