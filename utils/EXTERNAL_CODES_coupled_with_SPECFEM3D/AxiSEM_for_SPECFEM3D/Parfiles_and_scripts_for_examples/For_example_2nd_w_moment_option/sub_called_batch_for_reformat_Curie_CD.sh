@@ -3,13 +3,13 @@
 
 #             ------------ BACTH AND SPECIFIC CLUSTER DIRECTIVES  ------
 
-#MSUB -r Test_AxiSEM_for_SPECFEM3D_32p        # Nom du job
+#MSUB -r Reformat_for_AxiSEM_32p         # Nom du job
 #MSUB -n 32
 #MSUB -N 2
-#MSUB -T 9999
+#MSUB -T 8000
 #MSUB -q standard
-#MSUB -e AxiSEM_for_SPECFEM3D_32_run.e
-#MSUB -o AxiSEM_for_SPECFEM3D_32_run.o
+#MSUB -e reformat_for_AxiSEM_32_run.e
+#MSUB -o reformat_for_AxiSEM_32_run.o
 #MSUB -A ra2410
 
 set -x
@@ -31,8 +31,11 @@ MPIRUN=ccc_mprun
 # ENTER OPTION FOR MPIRUN
 OPTION=
 
+### Define relative path
+UTILS_COUPLING=../../../UTILS_COUPLING_SpecFEM
+
 # do not change
 NPROC_MINUS_ONE="$NPROC-1"
 
-# Run AxiSEM
+$MPIRUN ${UTILS_COUPLING}/xreformat > OUTPUT_reformat
 
