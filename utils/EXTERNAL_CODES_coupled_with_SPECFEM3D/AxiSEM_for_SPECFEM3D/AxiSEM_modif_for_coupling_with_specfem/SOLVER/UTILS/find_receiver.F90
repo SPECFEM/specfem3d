@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -144,7 +144,7 @@ if (.not. even_spaced_theta) interpolate_seis=.false.
                              appidur,th_rec_rot,ph_rec_rot,reccomp,nrec,recname)
 
 ! >>>>> prepare receiver index + neighbors <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-if (.not. even_spaced_theta) then ! brute force search based on monotonous guesses.
+if (.not. even_spaced_theta) then ! brute force search based on monotonous guesses. 
    allocate(epidist(nrec_sim),deltatheta(nrec_sim))
    open(unit=98,file=trim(dirname)//'/MZZ/Data/receiver_pts.dat')
    do irec=1,nrec_sim
@@ -153,16 +153,16 @@ if (.not. even_spaced_theta) then ! brute force search based on monotonous guess
    enddo
    deltatheta(nrec_sim)=deltatheta(nrec_sim-1)
    close(98)
-
+   
    if (nrec_sim>360) then  ! require 2 points per interval
       nr_per_deg = int(real(nrec_sim)/180.)
-   else if (nrec_sim>180) then
+   elseif (nrec_sim>180) then
       nr_per_deg = int(real(nrec_sim)/90.)
-   else if (nrec_sim>90) then
+   elseif (nrec_sim>90) then
       nr_per_deg = int(real(nrec_sim)/45.)
-   else if (nrec_sim>45) then
+   elseif (nrec_sim>45) then 
       nr_per_deg = int(real(nrec_sim)/22.5)
-   else if (nrec_sim>23) then
+   elseif (nrec_sim>23) then 
       nr_per_deg = int(real(nrec_sim)/11.5)
    endif
    write(6,*)'Min/max epidist [deg]:',minval(epidist),maxval(epidist),nr_per_deg
@@ -170,7 +170,7 @@ if (.not. even_spaced_theta) then ! brute force search based on monotonous guess
 endif
 if (interpolate_seis) allocate(mask_min(nrec_sim))
 
-if (period==0.) then
+if (period==0.) then 
    lam_deg = period_sim*5.8/111.195
 else
    lam_deg = period*5.8/111.195
@@ -192,7 +192,7 @@ do irec=1,nrec
 
 ! >>>>> find receiver index + neighbors <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
    if (.not. even_spaced_theta) then ! brute force minimization - slower
-      ind1 = floor(th_rec_rot(irec)*rad2deg)*nr_per_deg
+      ind1 = floor(th_rec_rot(irec)*rad2deg)*nr_per_deg 
       ind2 = max(min(nrec_sim,ceiling(th_rec_rot(irec)*rad2deg)*nr_per_deg),ind1+1)
       ind_rec = ind1+minloc(abs(th_rec_rot(irec)*rad2deg - epidist(ind1:ind2)),1)
 !      write(6,*)'INDICES:',ind1,ind2,ind_rec
@@ -201,7 +201,7 @@ do irec=1,nrec
 
    else  ! even-spaced theta... find via distance difference - faster (?)
       ind_rec = floor(th_rec_rot(irec)*rad2deg/dtheta_rec)+1
-      if (abs(th_rec_rot(irec)*rad2deg-real(ind_rec-1)*dtheta_rec)>dtheta_rec/2.) ind_rec = ind_rec+1
+      if (abs(th_rec_rot(irec)*rad2deg-real(ind_rec-1)*dtheta_rec)>dtheta_rec/2.) ind_rec = ind_rec+1 
       dtheta_off = th_rec_rot(irec)*rad2deg-(ind_rec-1)*dtheta_rec
       write(6,*)'desired/offered th [deg], lam-frac diff :',&
             th_rec_rot(irec)*rad2deg,ind_rec,(ind_rec-1)*dtheta_rec,abs(dtheta_off)/lam_deg
@@ -216,10 +216,10 @@ do irec=1,nrec
 ! >>>>> load seismograms <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
    if (.not. interpolate_seis) then ! choosing closest location
       if (usenetcdf) then
-        call nc_read_seis(ncid_in, nc_disp_varid, ind_rec, nt, seis_snglcomp)
-    else
+	      call nc_read_seis(ncid_in, nc_disp_varid, ind_rec, nt, seis_snglcomp)
+	  else
           call read_seis(dirname,ind_rec,nt,seis_snglcomp)
-      endif
+      end if
       call sum_individual_wavefields(seis,seis_snglcomp,nt,mij_phi)
 
    else ! interpolation using num_interp locations
@@ -227,7 +227,7 @@ do irec=1,nrec
 !      if (theta_discrete_smaller) count_neg = count_neg -1
       write(6,*)irec,'num_interp,count neg,ind_rec:',num_interp,count_neg,ind_rec
       seis=0.; seistmp=0.
-      if (trim(interp_method)=='idw') then
+      if (trim(interp_method)=='idw') then 
          do i=1,num_interp
             w(i) = 1./(th_rec_rot(irec) - real(count_neg+i-1)*dtheta_rec)**p
          enddo
@@ -239,17 +239,17 @@ do irec=1,nrec
            call nc_read_seis(ncid_in, nc_disp_varid, count_neg+i, nt, seis_snglcomp)
          else
            call read_seis(dirname,count_neg+i,nt,seis_snglcomp)
-         endif
+         end if  
          call sum_individual_wavefields(seistmp,seis_snglcomp,nt,mij_phi)
 
-         if (trim(interp_method)=='sinc') then
+         if (trim(interp_method)=='sinc') then 
             argu = pi*(theta_over_dtheta-real(count_neg+i))
             seis = seis + sin(argu)/argu*seistmp
 
-         else if (interp_method=='idw') then  ! inverse distance weighting
+         elseif (interp_method=='idw') then  ! inverse distance weighting
             seis = seis + w(i)*seistmp
 
-         else if (interp_method=='spline') then  ! linear splines
+         elseif (interp_method=='spline') then  ! linear splines
             seistmp = -(seistmp-seis)/dtheta_rec ! slope
             seis = seistmp* th_rec_rot(irec)*rad2deg + seis - seistmp*real(count_neg+i)*dtheta_rec
          endif
@@ -259,7 +259,7 @@ do irec=1,nrec
    endif
 
 ! >>>>> sum, filter, rotate <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-   if (period>0.) then
+   if (period>0.) then 
       call convolve_with_stf(period,dt,nt,'gauss_0',seis,seis_snglcomp(:,:,1))
       seis = seis_snglcomp(:,:,1)
    endif
@@ -298,16 +298,16 @@ character(len=1), intent(out) :: reccomp(3)
 
   if (rec_comp_sys=='sph') then
      reccomp(1)='th'; reccomp(2)='ph'; reccomp(3)='r'
-  else if (rec_comp_sys=='enz') then
+  elseif (rec_comp_sys=='enz') then
      reccomp(1)='N'; reccomp(2)='E'; reccomp(3)='Z'
-  else if (rec_comp_sys=='cyl') then
+  elseif (rec_comp_sys=='cyl') then
      reccomp(1)='s'; reccomp(2)='ph'; reccomp(3)='z'
-  else if (rec_comp_sys=='xyz') then
+  elseif (rec_comp_sys=='xyz') then
      reccomp(1)='x'; reccomp(2)='y'; reccomp(3)='z'
-  else if (rec_comp_sys=='src') then
+  elseif (rec_comp_sys=='src') then
      reccomp(1)='R'; reccomp(2)='T'; reccomp(3)='Z'
   endif
-
+  
 end subroutine def_rec_comp
 !--------------------------------------------------------------------
 
@@ -333,7 +333,7 @@ do it=1,nt
    read(62,*)seis_snglcomp(it,1,3),seis_snglcomp(it,2,3),seis_snglcomp(it,3,3)
    read(63,*)seis_snglcomp(it,1,4),seis_snglcomp(it,2,4),seis_snglcomp(it,3,4)
 enddo
-close(60); close(61); close(62); close(63)
+close(60); close(61); close(62); close(63)  
 end subroutine read_seis
 !--------------------------------------------------------------------
 
@@ -369,19 +369,19 @@ do ircv=1,nrec
    x_vec_rot=matmul(trans_rot_mat,x_vec)
    r = sqrt(x_vec_rot(1)**2 + x_vec_rot(2)**2 + x_vec_rot(3)**2)
    costh_rec_rot = x_vec_rot(3) / (r +smallval)
-   if (costh_rec_rot<-1.) costh_rec_rot = -1.
-   if (costh_rec_rot>1.)  costh_rec_rot = 1.
+   if (costh_rec_rot.lt.-1.) costh_rec_rot = -1.
+   if (costh_rec_rot.gt.1.)  costh_rec_rot = 1.
    th_rec_rot(ircv) = acos(costh_rec_rot)
 
    cosph_rec_rot = x_vec_rot(1) / (r * sin(th_rec_rot(ircv)) + smallval)
-   if (cosph_rec_rot<-1.) cosph_rec_rot = -1.
-   if (cosph_rec_rot>1.)  cosph_rec_rot = 1.
+   if (cosph_rec_rot.lt.-1.) cosph_rec_rot = -1.
+   if (cosph_rec_rot.gt.1.)  cosph_rec_rot = 1.
 
    if (x_vec_rot(2) >= 0.) then
       ph_rec_rot(ircv) = acos(cosph_rec_rot)
    else
       ph_rec_rot(ircv) = 2.*pi - acos(cosph_rec_rot)
-   endif
+   end if   
 enddo
 
 end subroutine rotate_src_rec
@@ -401,7 +401,7 @@ mij_prefact(:,2) = 2.*(Mij(2)+Mij(3))
 mij_prefact(2,2) = 0.
 mij_prefact(:,3) =  Mij(4)*cos(phi)+Mij(5)*sin(phi)
 mij_prefact(2,3) = -Mij(4)*sin(phi)+Mij(5)*cos(phi)
-mij_prefact(:,4) = (Mij(2)-Mij(3))*cos(2.*phi)+2.*Mij(6)*sin(2.*phi)
+mij_prefact(:,4) = (Mij(2)-Mij(3))*cos(2.*phi)+2.*Mij(6)*sin(2.*phi) 
 mij_prefact(2,4) = (Mij(3)-Mij(2))*sin(2.*phi)+2.*Mij(6)*cos(2.*phi)
 
 end subroutine compute_radiation_prefactor
@@ -447,30 +447,30 @@ real, parameter              :: pi = 3.14159265
 
 ! Need to consider *local* spherical geometry in the first place,
 ! THEN rotate the source-receiver frame to the north pole in the solver.
-! E.g., consider the difference between source-projected and spherical coordinates for a source
-! away from the north pole: they are not the same, but in the framework below would
+! E.g., consider the difference between source-projected and spherical coordinates for a source 
+! away from the north pole: they are not the same, but in the framework below would 
 ! be identified as the same.
 
 ! Source projected frame: transform to spherical without any further rotations
-if (rec_comp_sys=='src') then
+if (rec_comp_sys=='src') then  
    seis_tmp(:,1) = cos(th_rot) * seis(:,1) - sin(th_rot) * seis(:,3)
    seis_tmp(:,2) = seis(:,2)
    seis_tmp(:,3) = sin(th_rot) * seis(:,1) + cos(th_rot) * seis(:,3)
 
-! Rotate from rotated u_sphiz to rotated u_xyz (both in reference, source-at-pole system)
-else
-   seis_tmp(:,1) = cos(ph_rot) * seis(:,1) - sin(ph_rot) * seis(:,2)
+! Rotate from rotated u_sphiz to rotated u_xyz (both in reference, source-at-pole system) 
+else 
+   seis_tmp(:,1) = cos(ph_rot) * seis(:,1) - sin(ph_rot) * seis(:,2) 
    seis_tmp(:,2) = sin(ph_rot) * seis(:,1) + cos(ph_rot) * seis(:,2)
    seis_tmp(:,3) = seis(:,3)
 
    ! Rotate to the original (i.e. real src-rec coordinate-based) u_xyz
-   if (srccolat>1.E-10 .or. srclon>1.E-10) then
+   if (srccolat>1.E-10 .or. srclon>1.E-10) then 
       do i=1,nt
          seisvec = seis_tmp(i,:)
          seis_tmp(i,:) = matmul(rot,seisvec)
       enddo
    endif
-endif
+endif 
 
 ! Rotate to coordinate system of choice
 if (rec_comp_sys=='enz') then
@@ -479,30 +479,30 @@ if (rec_comp_sys=='enz') then
              & + sin(th_orig) * seis_tmp(:,3)
    seis(:,2) = - sin(ph_orig) * seis_tmp(:,1) &
              & + cos(ph_orig) * seis_tmp(:,2)
-   seis(:,3) =   sin(th_orig) * cos(ph_orig) * seis_tmp(:,1) &
+   seis(:,3) =   sin(th_orig) * cos(ph_orig) * seis_tmp(:,1) & 
              & + sin(th_orig) * sin(ph_orig) * seis_tmp(:,2) &
              & + cos(th_orig) * seis_tmp(:,3)
+   
 
-
-else if (rec_comp_sys=='sph') then
+elseif (rec_comp_sys=='sph') then 
    seis(:,1) =   cos(th_orig) * cos(ph_orig) * seis_tmp(:,1) &
              & + cos(th_orig) * sin(ph_orig) * seis_tmp(:,2) &
              & - sin(th_orig) * seis_tmp(:,3)
-   seis(:,2) = - sin(ph_orig) * seis_tmp(:,1) &
+   seis(:,2) = - sin(ph_orig) * seis_tmp(:,1) & 
              & + cos(ph_orig) * seis_tmp(:,2)
-   seis(:,3) =   sin(th_orig) * cos(ph_orig) * seis_tmp(:,1) &
+   seis(:,3) =   sin(th_orig) * cos(ph_orig) * seis_tmp(:,1) & 
              & + sin(th_orig) * sin(ph_orig) * seis_tmp(:,2) &
              & + cos(th_orig) * seis_tmp(:,3)
 
-else if (rec_comp_sys=='cyl') then
+elseif (rec_comp_sys=='cyl') then 
    seis(:,1) =   cos(ph_orig) * seis_tmp(:,1) + sin(ph_orig) * seis_tmp(:,2)
    seis(:,2) = - sin(ph_orig) * seis_tmp(:,1) + cos(ph_orig) * seis_tmp(:,2)
    seis(:,3) =   seis_tmp(:,3)
 
-else if (rec_comp_sys=='xyz') then
+elseif (rec_comp_sys=='xyz') then
    seis = seis_tmp
 
-else if (rec_comp_sys=='src') then
+elseif (rec_comp_sys=='src') then
    seis = seis_tmp ! taken from above
 
 else
@@ -514,7 +514,7 @@ end subroutine rotate_receiver_comp
 !--------------------------------------------------------------------
 
 !-----------------------------------------------------------------------------
-subroutine convolve_with_stf(t_0,dt,nt,stf,seis,seis_fil)
+subroutine convolve_with_stf(t_0,dt,nt,stf,seis,seis_fil)          
 
 implicit none
 integer, intent(in)            :: nt
@@ -543,7 +543,7 @@ real                           :: shiftfact
     seis_fil(i,:)=0.
     do j=1,N_j
        temp_expo=alpha*(real(j)*dt-shiftfact)
-       source = exp(-temp_expo**2 )*sqrt_pi_inv
+       source = exp(-temp_expo**2 )*sqrt_pi_inv 
        if(i > j .and. i-j <= nt) seis_fil(i,:) = seis_fil(i,:)+seis(i-j,:)*source
     enddo
   enddo
@@ -754,7 +754,7 @@ integer                         :: dirind,ndepths_chosen
     depth(1) = 100.; rundir(1) = '../PREM_40S_MIJ100KM_DIRAC_2000S_DB/ '
   !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-  case default
+  case default 
      write(6,*)'no simulation for model ',trim(model),' available'; stop
   end select
 

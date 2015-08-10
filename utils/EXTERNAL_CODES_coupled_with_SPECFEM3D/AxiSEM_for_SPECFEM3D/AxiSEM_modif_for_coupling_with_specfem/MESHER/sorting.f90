@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -19,6 +19,7 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
+!=========================================================================================
 module sorting
   use global_parameters, only: sp, dp
   implicit none
@@ -33,19 +34,19 @@ subroutine smerge(a, b, c, ind1, ind2, ind)
 ! merge two sorted arrays a and b into the array c, such that c is also sorted
 ! (starting with smallest elements)
 ! carry on index arrays
-
+ 
   integer                    :: na, nb
   real(kind=dp), intent(in)  :: a(:)
   real(kind=dp), intent(in)  :: b(:)
 
   real(kind=dp), intent(out) :: c(size(a)+size(b))
-
+  
   integer, dimension(size(a)), intent(in)           :: ind1
   integer, dimension(size(b)), intent(in)           :: ind2
   integer, dimension(size(b)+size(a)), intent(out)  :: ind
-
+ 
   integer                       :: i, j, k
-
+  
   na = size(a)
   nb = size(b)
 
@@ -80,7 +81,7 @@ subroutine smerge(a, b, c, ind1, ind2, ind)
      k = k + 1
   enddo
 
-end subroutine
+end subroutine 
 !-----------------------------------------------------------------------------------------
 
 !-----------------------------------------------------------------------------------------
@@ -90,25 +91,25 @@ subroutine pmerge(a, b, c, ind1, ind2, ind, p)
 ! then merge in trivially parallel fashion
 ! see S. Odeh et al (2012), Merge Path - Parallel Merging Made Simple
 ! carry on index arrays
-
-  !$ use omp_lib
-
+  
+  !$ use omp_lib     
+ 
   integer                    :: na, nb
   real(kind=dp), intent(in)  :: a(:)
   real(kind=dp), intent(in)  :: b(:)
   real(kind=dp), intent(out) :: c(size(a)+size(b))
-
+  
   integer, dimension(size(a)), intent(in)           :: ind1
   integer, dimension(size(b)), intent(in)           :: ind2
   integer, dimension(size(b)+size(a)), intent(out)  :: ind
 
   integer, intent(in)           :: p
-
+ 
   integer                       :: i, diagnum(0:p)
   integer                       :: ia(0:p), ib(0:p), iamin, iamax, sa, sb
   !$ integer                    :: nthreads
-
-
+  
+  
   na = size(a)
   nb = size(b)
 
@@ -122,7 +123,7 @@ subroutine pmerge(a, b, c, ind1, ind2, ind, p)
         ! find intersection of merge path with i'th diagonal
         if (i < p) then
            diagnum(i) = i * (na + nb) / p
-
+           
            iamin = 0
            iamax = diagnum(i)
 
@@ -141,24 +142,24 @@ subroutine pmerge(a, b, c, ind1, ind2, ind, p)
               if (iamin == iamax) exit
            enddo
 
-           ia(i) = iamax
+           ia(i) = iamax 
            ib(i) = diagnum(i) - iamax
-        else
+        else 
            ! last split is trivial
            ia(i) = na
-           ib(i) = nb
+           ib(i) = nb 
            diagnum(i) = na + nb
         endif
 
      enddo
-
+     
      !$ nthreads = min(OMP_get_max_threads(), p)
      !$ if (nthreads > 1) then
         !$ call omp_set_num_threads(nthreads)
         !$omp parallel shared (a, b, c, ia, ib, diagnum)
-
+        
         ! this loop is embarrassingly parallel
-        !$omp do
+        !$omp do 
         !$ do i=1, p
         !$    ! merge splitted arrays
         !$    call smerge(a(ia(i-1)+1:ia(i)), b(ib(i-1)+1:ib(i)), &
@@ -166,7 +167,7 @@ subroutine pmerge(a, b, c, ind1, ind2, ind, p)
         !$                ind1(ia(i-1)+1:ia(i)), ind2(ib(i-1)+1:ib(i)), &
         !$                ind(diagnum(i-1)+1:diagnum(i)))
         !$ enddo
-        !$omp enddo
+        !$omp end do
         !$omp end parallel
      !$ else
      do i=1, p
@@ -180,12 +181,12 @@ subroutine pmerge(a, b, c, ind1, ind2, ind, p)
      call smerge(a, b, c, ind1, ind2, ind)
   endif
 
-end subroutine
+end subroutine 
 !-----------------------------------------------------------------------------------------
 
 !-----------------------------------------------------------------------------------------
 recursive subroutine pmsort(a, ind, p)
-! parallel mergesort parallalizing both splitting (in the largest power of 2 smaller
+! parallel mergesort parallalizing both splitting (in the largest power of 2 smaller 
 ! or equal p) and merging (exactly p threads) using merge path
 
   real(kind=dp), intent(inout)      :: a(:)
@@ -198,12 +199,12 @@ recursive subroutine pmsort(a, ind, p)
   real(kind=dp), dimension(size(a) - (size(a)+1)/2)  :: t2
   integer, dimension((size(a)+1)/2)                  :: ind1
   integer, dimension(size(a) - (size(a)+1)/2)        :: ind2
-
+ 
   na = size(a)
 
   if (na < 2) then
      return
-  else if (na == 2) then
+  elseif (na == 2) then
      if (a(1) > a(2)) then
         buf = a(1)
         a(1) = a(2)
@@ -220,7 +221,7 @@ recursive subroutine pmsort(a, ind, p)
 
   if (p < 2) then
      call pmsort(a(1:n1), ind(1:n1), 1)
-     call pmsort(a(n1+1:), ind(n1+1:), 1)
+     call pmsort(a(n1+1:), ind(n1+1:), 1) 
      if (a(n1) > a(n1+1)) then
         ! merge needs memcopies of first inputs!
         t1 = a(1:n1)
@@ -228,13 +229,13 @@ recursive subroutine pmsort(a, ind, p)
         call smerge(t1, a(n1+1:), a, ind1, ind(n1+1:), ind)
      endif
   else
-     !$omp parallel sections shared(a, n1, n2)
+     !$omp parallel sections shared(a, n1, n2) 
      !$omp section
      call pmsort(a(1:n1), ind(1:n1), p/2)
      !$omp section
      call pmsort(a(n1+1:), ind(n1+1:), p/2)
      !$omp end parallel sections
-
+     
      if (a(n1) > a(n1+1)) then
         ! pmerge needs memcopies of both inputs!
         t1 = a(1:n1)
@@ -245,29 +246,29 @@ recursive subroutine pmsort(a, ind, p)
      endif
   endif
 
-end subroutine
+end subroutine 
 !-----------------------------------------------------------------------------------------
 
-!-------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine mergesort_3(a, b, il, il2, p)
-
+    
   use data_time
   use clocks_mod
-  !$ use omp_lib
-
+  !$ use omp_lib     
+  
   real(kind=dp), intent(inout) :: a(:)
   real(kind=dp), intent(inout), optional :: b(size(a))
   integer, intent(inout), optional       :: il(size(a))
   integer, intent(inout), optional       :: il2(size(a))
   integer, intent(in), optional          :: p
-
+  
   real(kind=dp), allocatable   :: bbuff(:)
   integer, allocatable         :: ibuff(:)
   integer, allocatable         :: i2buff(:)
   integer                      :: na, i, p_loc
   integer, allocatable         :: ind(:)
   !$ integer                   :: nthreads
-
+ 
   if (present(p)) then
      p_loc = p
   else
@@ -276,13 +277,13 @@ subroutine mergesort_3(a, b, il, il2, p)
 
   na = size(a)
   allocate(ind(na))
-
+  
   do i=1, na
      ind(i) = i
   enddo
-
+  
   iclock01 = tick()
-  call pmsort(a, ind, p_loc)
+  call pmsort(a, ind, p_loc) 
   iclock01 = tick(id=idold01, since=iclock01)
 
   iclock05 = tick()
@@ -300,38 +301,40 @@ subroutine mergesort_3(a, b, il, il2, p)
      allocate(bbuff(na))
      bbuff(:) = b(:)
   endif
-
+  
   !$ nthreads = min(OMP_get_max_threads(), p_loc)
   !$ call omp_set_num_threads(nthreads)
   !$omp parallel shared (il, ibuff, il2, i2buff, b, bbuff)
-
+  
   if (present(il)) then
      !$omp do
      do i=1, na
         il(i) = ibuff(ind(i))
      enddo
-     !$omp enddo
+     !$omp end do
   endif
-
+  
   if (present(il2)) then
      !$omp do
      do i=1, na
         il2(i) = i2buff(ind(i))
      enddo
-     !$omp enddo
+     !$omp end do
   endif
-
+  
   if (present(b)) then
      !$omp do
      do i=1, na
         b(i) = bbuff(ind(i))
      enddo
-     !$omp enddo
+     !$omp end do
   endif
   !$omp end parallel
-
+  
   iclock05 = tick(id=idold05, since=iclock05)
 
 end subroutine
+!-----------------------------------------------------------------------------------------
 
 end module
+!=========================================================================================

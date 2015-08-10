@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -19,9 +19,8 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
-!=================
+!=========================================================================================
 module linked_list
-!=================
 
   use global_parameters
   implicit none
@@ -135,8 +134,8 @@ subroutine append(this, ldata)
      call newLink%init(ldata, null(), this%lastLink)
      call this%lastLink%setNextLink(newLink)
      this%lastLink => newLink
-  endif
-
+  end if
+   
   this%length = this%length + 1
 end subroutine append
 !-----------------------------------------------------------------------------------------
@@ -148,7 +147,7 @@ subroutine insert(this, ldata)
   type(link), pointer     :: newLink
 
   allocate(newLink)
-
+  
   if (.not. associated(this%firstLink)) then
      call newLink%init(ldata, null(), null())
      this%firstLink => newLink
@@ -157,7 +156,7 @@ subroutine insert(this, ldata)
      call newLink%init(ldata, this%firstLink, null())
      call this%firstLink%setPrevLink(newLink)
      this%firstLink => newLink
-  endif
+  end if
 
   this%length = this%length + 1
 end subroutine insert
@@ -222,12 +221,12 @@ function getNext(this)
   if (.not. associated(this%currentLink)) then
      this%currentLink => this%firstLink
      getNext => this%currentLink
-  else if (associated(this%currentLink%getNextLink())) then
+  elseif (associated(this%currentLink%getNextLink())) then
      this%currentLink => this%currentLink%getNextLink()
      getNext => this%currentLink
   else
      stop 'trying to go beyond last element in list'
-  endif
+  end if 
 end function getNext
 !-----------------------------------------------------------------------------------------
 
@@ -239,12 +238,12 @@ function getPrev(this)
   if (.not. associated(this%currentLink)) then
      this%currentLink => this%lastLink
      getPrev => this%currentLink
-  else if (associated(this%currentLink%getPrevLink())) then
+  elseif (associated(this%currentLink%getPrevLink())) then
      this%currentLink => this%currentLink%getPrevLink()
      getPrev => this%currentLink
   else
      stop 'trying to go beyond first element in list'
-  endif
+  end if 
 end function getPrev
 !-----------------------------------------------------------------------------------------
 
@@ -292,50 +291,5 @@ subroutine free(this)
 end subroutine free
 !-----------------------------------------------------------------------------------------
 
-!=====================
 end module linked_list
-!=====================
-
-
-!program test_list
-!  use linked_list
-!  use global_parameters
-!  implicit none
-!
-!  type(list)            :: l
-!  class(link), pointer  :: ll
-!  real(kind=realkind)   :: a(2,2), b(1,2)
-!
-!  a = 0
-!  b = 1
-!  write(6,*) 'eol', l%eol()
-!  write(6,*) 'bol', l%bol()
-!  call l%append(a)
-!  call l%append(b)
-!
-!  write(6,*) 'first'
-!  ll => l%getFirst()
-!  write(6,*) ll%ldata
-!  a = 2
-!  call l%append(a(1:1,1:1))
-!  a = -1
-!  call l%insert(a)
-!  ll => l%getFirst()
-!
-!  write(6,*) ll%ldata
-!  ll => l%getNext()
-!  write(6,*) ll%ldata
-!
-!  call l%resetCurrent()
-!  do while(.not. l%eol())
-!    ll => l%getNext()
-!    write(6,*) 'fw loop', ll%ldata
-!    ll%ldata = 10
-!  enddo
-!
-!  call l%resetCurrent()
-!  do while(.not. l%eol())
-!    ll => l%getNext()
-!    write(6,*) 'fw loop', ll%ldata
-!  enddo
-!end program
+!=========================================================================================

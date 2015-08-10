@@ -62,11 +62,11 @@ endif
 
 mkdir $outdir/SNAPS
 
-cp -p param_* $outdir
+cp -p param_* $outdir 
 /bin/cp -p -f param_* $outdir
 cp -p post_processing.csh $outdir
 cp -p xpost_processing $outdir
-cp -p post_processing.F90 $outdir
+cp -p post_processing.F90 $outdir 
 
 cp -p plot_record_section.m $outdir
 
@@ -86,9 +86,9 @@ if ( $status != 0 ) then
     exit
 endif
 
-echo "Done with post processing, results in SEISMOGRAMS/ "
+echo "Done with post processing, results in SEISMOGRAMS/ " 
 
-if ( -f param_snaps) then
+if ( -f param_snaps) then 
     echo " .... and SNAPS/"
 endif
 
@@ -97,7 +97,7 @@ if ( $gnu_query == 1 ) then
     echo
     echo "%%%%%%%%% PLOTTING seismograms (gnuplot) %%%%%%%%%%"
     cd $outdir
-    set seistype = `grep "SEISTYPE" param_post_processing |awk '{print $2}' |sed 's/"/ /g' `
+    set seistype = "disp"
     echo "seismogram type:" $seistype
     set reclist = `cat $homedir/$simdir1/Data/receiver_names.dat |awk '{print $1}'`
     echo "1st receiver:" $reclist[1]
@@ -117,17 +117,17 @@ if ( $gnu_query == 1 ) then
     foreach  rec (${reclist})
     @ i++
     set j = 0
-    foreach comp (${reccomp})
+    foreach comp (${reccomp}) 
     @ j++
         set recname = `echo $rec"_"$seistype"_post_mij_"{$conv[$j]}`
-        echo "Plotting receiver " $recname
+        echo "Plotting receiver " $recname 
         echo 'set term png linewidth 1  ' >! plot_recs.plot
         echo 'set output "GRAPHICS/'$recname'.png"' >> plot_recs.plot
         echo 'set title "colat,lon: '$colat[$i], $lon[$i]', epidist: '$epidist[$i]'"'>> plot_recs.plot
         echo 'plot "SEISMOGRAMS/'$recname'.dat" with lines' >> plot_recs.plot
         echo "set xrange [ 0: "$t2"];set xlabel 'time [s]';set ylabel 'displacement [m]' " >> plot_recs.plot
         gnuplot plot_recs.plot
-        cd GRAPHICS;
+        cd GRAPHICS; 
         convert $recname.png $recname.gif
         convert $recname.png $recname.pdf
         rm -f $recname.png
@@ -146,62 +146,62 @@ if ( $taup_query == 1 ) then
     set model = `grep Background $simdir1/mesh_params.h |awk '{print $5}'`
 
     if ( $model == 'prem' || $model == 'iasp91' ) then
-  set num_rec = `wc -l $simdir1/Data/receiver_pts.dat |awk '{print $1}'`
-  set epi_list = `tail -n $num_rec $simdir1/Data/receiver_pts.dat | awk '{print $1}'`
-  set depth_short = `echo $depth |sed 's/\./ /g' |awk '{print $1}'`
-  echo "Earthquake depth:" $depth_short
-  set i = 0
-  cd $outdir
-  foreach rec (${epi_list})
-      @ i++
-      echo "traveltimes for epicentral distance" $rec
+	set num_rec = `wc -l $simdir1/Data/receiver_pts.dat |awk '{print $1}'`
+	set epi_list = `tail -n $num_rec $simdir1/Data/receiver_pts.dat | awk '{print $1}'`
+	set depth_short = `echo $depth |sed 's/\./ /g' |awk '{print $1}'` 
+	echo "Earthquake depth:" $depth_short
+	set i = 0
+	cd $outdir
+	foreach rec (${epi_list})
+	    @ i++
+	    echo "traveltimes for epicentral distance" $rec
 
-      set tt =  `taup_time -mod $model -h $depth -ph pP -deg $rec | grep " pP " | awk '{print $4}' |head -n 1 |grep -v "=="`
-      if ( ${#tt} == 1) then ;      echo $tt $rec >> taup_pP_traveltime2.dat ;      endif
+	    set tt =  `taup_time -mod $model -h $depth -ph pP -deg $rec | grep " pP " | awk '{print $4}' |head -n 1 |grep -v "=="` 
+	    if ( ${#tt} == 1) then ;	    echo $tt $rec >> taup_pP_traveltime2.dat ;	    endif
 
-      set tt =  `taup_time -mod $model -h $depth -ph PP -deg $rec | grep " PP " | awk '{print $4}' |head -n 1 |grep -v "=="`
-      if ( ${#tt} == 1) then ;      echo $tt $rec >> taup_PP_traveltime2.dat ;      endif
+	    set tt =  `taup_time -mod $model -h $depth -ph PP -deg $rec | grep " PP " | awk '{print $4}' |head -n 1 |grep -v "=="` 
+	    if ( ${#tt} == 1) then ;	    echo $tt $rec >> taup_PP_traveltime2.dat ;	    endif
 
-      set tt =  `taup_time -mod $model -h $depth -ph SS -deg $rec | grep " SS " | awk '{print $4}' |head -n 1 |grep -v "=="`
-      if ( ${#tt} == 1) then ;      echo $tt $rec >> taup_SS_traveltime2.dat ;      endif
+	    set tt =  `taup_time -mod $model -h $depth -ph SS -deg $rec | grep " SS " | awk '{print $4}' |head -n 1 |grep -v "=="` 
+	    if ( ${#tt} == 1) then ;	    echo $tt $rec >> taup_SS_traveltime2.dat ;	    endif
 
-      if ( $rec < 100. ) then
-      set tt =  `taup_time -mod $model -h $depth -ph P -deg $rec | grep " P " | awk '{print $4}' |head -n 1 |grep -v "=="`
-      if ( ${#tt} == 1) then ;      echo $tt $rec >> taup_P_traveltime2.dat ;     endif
+	    if ( $rec < 100. ) then
+	    set tt =  `taup_time -mod $model -h $depth -ph P -deg $rec | grep " P " | awk '{print $4}' |head -n 1 |grep -v "=="` 
+	    if ( ${#tt} == 1) then ;	    echo $tt $rec >> taup_P_traveltime2.dat ;	    endif
 
-      set tt =  `taup_time -mod $model -h $depth -ph S -deg $rec | grep " S " | awk '{print $4}' |head -n 1 |grep -v "=="`
-      if ( ${#tt} == 1) then ;      echo $tt $rec >> taup_S_traveltime2.dat ;     endif
+	    set tt =  `taup_time -mod $model -h $depth -ph S -deg $rec | grep " S " | awk '{print $4}' |head -n 1 |grep -v "=="` 
+	    if ( ${#tt} == 1) then ;	    echo $tt $rec >> taup_S_traveltime2.dat ;	    endif
 
-      set tt =  `taup_time -mod $model -h $depth -ph PcP -deg $rec | grep " PcP " | awk '{print $4}' |head -n 1 |grep -v "=="`
-      if ( ${#tt} == 1) then ;      echo $tt $rec >> taup_PcP_traveltime2.dat ;     endif
+	    set tt =  `taup_time -mod $model -h $depth -ph PcP -deg $rec | grep " PcP " | awk '{print $4}' |head -n 1 |grep -v "=="` 
+	    if ( ${#tt} == 1) then ;	    echo $tt $rec >> taup_PcP_traveltime2.dat ;	    endif
 
-      set tt =  `taup_time -mod $model -h $depth -ph ScS -deg $rec | grep " ScS " | awk '{print $4}' |head -n 1 |grep -v "=="`
-      if ( ${#tt} == 1) then ;      echo $tt $rec >> taup_ScS_traveltime2.dat ;     endif
-      endif
+	    set tt =  `taup_time -mod $model -h $depth -ph ScS -deg $rec | grep " ScS " | awk '{print $4}' |head -n 1 |grep -v "=="` 
+	    if ( ${#tt} == 1) then ;	    echo $tt $rec >> taup_ScS_traveltime2.dat ;	    endif
+	    endif
 
-      if ( $rec > 95. ) then
-      set tt =  `taup_time -mod $model -h $depth -ph Pdiff -deg $rec | grep " Pdiff " | awk '{print $4}' |head -n 1 |grep -v "=="`
-      if ( ${#tt} == 1) then ;      echo $tt $rec >> taup_Pdiff_traveltime2.dat ;     endif
+	    if ( $rec > 95. ) then
+	    set tt =  `taup_time -mod $model -h $depth -ph Pdiff -deg $rec | grep " Pdiff " | awk '{print $4}' |head -n 1 |grep -v "=="` 
+	    if ( ${#tt} == 1) then ;	    echo $tt $rec >> taup_Pdiff_traveltime2.dat ;	    endif
 
-      set tt =  `taup_time -mod $model -h $depth -ph Sdiff -deg $rec | grep " Sdiff " | awk '{print $4}' |head -n 1 |grep -v "=="`
-      if ( ${#tt} == 1) then ;      echo $tt $rec >> taup_Sdiff_traveltime2.dat ;     endif
+	    set tt =  `taup_time -mod $model -h $depth -ph Sdiff -deg $rec | grep " Sdiff " | awk '{print $4}' |head -n 1 |grep -v "=="` 
+	    if ( ${#tt} == 1) then ;	    echo $tt $rec >> taup_Sdiff_traveltime2.dat ;	    endif
 
-      endif
+	    endif
 
-  end
-  sort -n taup_P_traveltime2.dat |grep -v "==>" > taup_P_traveltime.dat
-  sort -n taup_pP_traveltime2.dat |grep -v "==>" > taup_pP_traveltime.dat
-  sort -n taup_S_traveltime2.dat |grep -v "==>" > taup_S_traveltime.dat
-  sort -n taup_PP_traveltime2.dat |grep -v "==>" > taup_PP_traveltime.dat
-  sort -n taup_SS_traveltime2.dat |grep -v "==>" > taup_SS_traveltime.dat
-  sort -n taup_PcP_traveltime2.dat |grep -v "==>" > taup_PcP_traveltime.dat
-  sort -n taup_ScS_traveltime2.dat |grep -v "==>" > taup_ScS_traveltime.dat
-  sort -n taup_Pdiff_traveltime2.dat |grep -v "==>" > taup_Pdiff_traveltime.dat
-  sort -n taup_Sdiff_traveltime2.dat |grep -v "==>" > taup_Sdiff_traveltime.dat
-  mkdir TAUP
-  rm -f taup_*2.dat
-  mv taup_*.dat TAUP
-  echo "Done with taup, results in TAUP/"
+	end
+	sort -n taup_P_traveltime2.dat |grep -v "==>" > taup_P_traveltime.dat
+	sort -n taup_pP_traveltime2.dat |grep -v "==>" > taup_pP_traveltime.dat
+	sort -n taup_S_traveltime2.dat |grep -v "==>" > taup_S_traveltime.dat
+	sort -n taup_PP_traveltime2.dat |grep -v "==>" > taup_PP_traveltime.dat
+	sort -n taup_SS_traveltime2.dat |grep -v "==>" > taup_SS_traveltime.dat
+	sort -n taup_PcP_traveltime2.dat |grep -v "==>" > taup_PcP_traveltime.dat
+	sort -n taup_ScS_traveltime2.dat |grep -v "==>" > taup_ScS_traveltime.dat
+	sort -n taup_Pdiff_traveltime2.dat |grep -v "==>" > taup_Pdiff_traveltime.dat
+	sort -n taup_Sdiff_traveltime2.dat |grep -v "==>" > taup_Sdiff_traveltime.dat
+	mkdir TAUP
+	rm -f taup_*2.dat
+	mv taup_*.dat TAUP
+	echo "Done with taup, results in TAUP/"
     endif
 endif
 

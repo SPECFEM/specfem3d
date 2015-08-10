@@ -1,7 +1,7 @@
 #! /usr/bin/perl
 #
 #    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-#                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
+#                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
 #
 #    This file is part of AxiSEM.
 #    It is distributed from the webpage <http://www.axisem.info>
@@ -21,13 +21,13 @@
 #
 #    Generate a Makefile from the sources in the current directory.  The source
 #    files may be in either C, FORTRAN 77, Fortran 90 or some combination of
-#    these languages.
+#    these languages.  
 #
 #    Original version written by Michael Wester <wester@math.unm.edu> February 16, 1995
 #    Cotopaxi (Consulting), Albuquerque, New Mexico
 #
-#    Modified by Martin van Driel, ETH Zurich and Simon Stahler,
-#    LMU Munchen to fit the needs of Axisem. The compiler version is
+#    Modified by Martin van Driel, ETH Zürich and Simon Stähler, 
+#    LMU München to fit the needs of Axisem. The compiler version is
 #    now set in the file ../make_axisem.macros
 
 open(MAKEFILE, "> Makefile");
@@ -58,18 +58,30 @@ print MAKEFILE "\n\n";
 # Define common macros
 #
 print MAKEFILE "ifeq (\$(strip \$(USE_NETCDF)),true)\n";
-print MAKEFILE "   FFLAGS += -Dunc\n";
-print MAKEFILE "   LIBS = -L \$(strip \$(NETCDF_PATH))/lib -lnetcdff -Wl,-rpath,\$(strip \$(NETCDF_PATH))/lib\n";
-print MAKEFILE "   INCLUDE = -I \$(strip \$(NETCDF_PATH))/include\n";
+print MAKEFILE "   FFLAGS += -Denable_netcdf\n";
+print MAKEFILE "   ifeq (\$(strip \$(USE_PAR_NETCDF)),true)\n";
+print MAKEFILE "   	   FFLAGS += -Denable_parallel_netcdf\n";
+print MAKEFILE "   endif\n";
+print MAKEFILE "\n";
+print MAKEFILE "   ifdef NETCDF_PATH\n";
+print MAKEFILE "       LIBS = -L \$(strip \$(NETCDF_PATH))/lib -lnetcdff -Wl,-rpath,\$(strip \$(NETCDF_PATH))/lib\n";
+print MAKEFILE "       INCLUDE = -I \$(strip \$(NETCDF_PATH))/include\n";
+print MAKEFILE "   else\n";
+print MAKEFILE "       LIBS = -lnetcdff\n";
+print MAKEFILE "       INCLUDE = -I /usr/include\n";
+print MAKEFILE "   endif\n";
 print MAKEFILE "else\n";
 print MAKEFILE "   LIBS = \n";
-print MAKEFILE "   INCLUDE =\n";
+print MAKEFILE "   INCLUDE = \n";
 print MAKEFILE "endif\n\n";
 
-
 print MAKEFILE "ifeq (\$(strip \$(SERIAL)),true)\n";
-print MAKEFILE "    FFLAGS += -Dserial\n";
-print MAKEFILE "    LDFLAGS += -pthread\n";
+print MAKEFILE "   FFLAGS += -Dserial\n";
+print MAKEFILE "   LDFLAGS += -pthread\n";
+print MAKEFILE "endif\n";
+
+print MAKEFILE "ifeq (\$(strip \$(INCLUDE_MPI)),true)\n";
+print MAKEFILE "    FFLAGS += -Dinclude_mpi\n";
 print MAKEFILE "endif\n";
 
 print MAKEFILE "\n\n";
@@ -77,11 +89,21 @@ print MAKEFILE "# cancel m2c implicit rule \n";
 print MAKEFILE "%.o : %.mod \n ";
 print MAKEFILE "\n\n";
 
+# Activate Solver specific lines
+print MAKEFILE "# SOLVER specific code\n";
+print MAKEFILE "FFLAGS += -Dsolver\n \n";
+
 #
 # make
 #
-print MAKEFILE "all: \$(PROG) utils\n\n";
+print MAKEFILE "all: \$(PROG) utils \n\n";
+
 print MAKEFILE "\$(PROG): \$(OBJS)\n";
+print MAKEFILE "    ifeq (\$(strip \$(SERIAL)),true)\n";
+print MAKEFILE "        ifeq (\$(strip \$(USE_PAR_NETCDF)),true)\n";
+print MAKEFILE "        	\$(error SERIAL and USE_PAR_NETCDF cannot be true at the same time)\n";
+print MAKEFILE "        endif\n";
+print MAKEFILE "    endif\n";
 print MAKEFILE "\t\$(", &LanguageCompiler($ARGV[1], @srcs);
 print MAKEFILE ") \$(LDFLAGS) -o \$@ \$(OBJS) \$(LIBS)\n\n";
 #
@@ -91,7 +113,7 @@ print MAKEFILE "clean:\n";
 print MAKEFILE "\trm -f \$(PROG) \$(OBJS) *.M *.mod *.d *.il core \n\n";
 #
 # make utils (postprocessing and alike)
-#
+# 
 print MAKEFILE "utils:\n";
 print MAKEFILE "\tcd UTILS; make\n\n";
 #
@@ -109,6 +131,7 @@ print MAKEFILE "\t\$(FC) \$(FFLAGS) -c \$(INCLUDE) \$<\n\n";
 # Dependency listings
 #
 &MakeDependsf90($ARGV[1]);
+
 &MakeDepends("*.f *.F", '^\s*include\s+["\']([^"\']+)["\']');
 &MakeDepends("*.c",     '^\s*#\s*include\s+["\']([^"\']+)["\']');
 
@@ -244,7 +267,7 @@ sub MakeDependsf90 {
    foreach $file (<*.f90 *.F90>) {
       open(FILE, $file);
       while (<FILE>) {
-         /^\s*include\s+["\']([^"\']+)["\']/i && push(@incs,$1);
+        #/^\s*include\s+["\']([^"\']+)["\']/i && push(@incs,$1);
          /^\s*use\s+([^\s,!]+)/i && push(@modules, &toLower($1));
          }
       ($objfile = $file) =~ s/\.(f|F)90$/.o/;
@@ -262,7 +285,7 @@ sub MakeDependsf90 {
          #
          }
       }
-
+   
 print MAKEFILE "kdtree2.o:  Makefile ../make_axisem.macros\n";
 system("perl -ni -e 'print unless /^kdtree2.o: kdtree2.o/' Makefile ");
 

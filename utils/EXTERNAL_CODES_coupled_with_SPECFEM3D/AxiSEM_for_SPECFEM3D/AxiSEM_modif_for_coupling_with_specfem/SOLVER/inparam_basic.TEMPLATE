@@ -6,6 +6,8 @@
 # moment: Full moment tensor, needs four parallel simulations. Set the depth in
 #         inparam_source and modify the moment tensor in the file CMTSOLUTION 
 #         before postprocessing.
+# force:  Horizontal and vertical single force as two parallel simulations. Used
+#         to compute backward kernel wavefields as needed for Instaseis
 
 SIMULATION_TYPE   single
 
@@ -37,7 +39,7 @@ LAT_HETEROGENEITY  false
 
 
 # Include viscoelastic attenuation (details in inparam_advanced)
-ATTENUATION         false 
+ATTENUATION         true 
 
 ######################## WAVEFIELD SNAPSHOTS ##################################
 # Save wavefield snapshots for visualization (default: false)
@@ -45,5 +47,5 @@ ATTENUATION         false
 # Be sure to set the SOURCE_FUNCTION (inparam_advanced) to gauss_0 to avoid 
 # aliasing and HF artifacts.
 
-SAVE_SNAPSHOTS         true  
+SAVE_SNAPSHOTS         false  
 

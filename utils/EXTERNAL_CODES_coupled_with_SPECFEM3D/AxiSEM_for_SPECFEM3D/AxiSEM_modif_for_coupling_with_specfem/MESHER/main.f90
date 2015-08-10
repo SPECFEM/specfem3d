@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -19,6 +19,7 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
+!=========================================================================================
 program gllmesh
 
   use data_grid
@@ -36,7 +37,8 @@ program gllmesh
   use data_mesh
 
   use data_time
-  use clocks_mod
+  use clocks_mod,            only: tick
+  use clocks_wrapper_mesher, only: start_clock, end_clock
 
   implicit none
 
@@ -49,11 +51,11 @@ program gllmesh
   ! 3) bkgrdmodel & discontinuity radii
   call read_params ! input
   !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
+  
   write(6,*)'MAIN: creating subregions/discontinuity model..........'; call flush(6)
   call create_subregions ! discont_meshing
 
-  southern = .true.
+  southern = .true. 
 
   write(6,*)'MAIN: generating skeleton..............................'; call flush(6)
   iclock02 = tick()
@@ -84,7 +86,7 @@ program gllmesh
   call def_fluid_regions ! mesh_info
   call def_solid_regions ! mesh_info
   call extract_fluid_solid_submeshes ! gllmeshgen
-
+  
   write(6,*)'MAIN: glob-slob/flob numbering.........................'; call flush(6)
   iclock08 = tick()
   if (have_fluid) &
@@ -100,7 +102,7 @@ program gllmesh
   ! Parallelization
   write(6,*)'MAIN: domain decomposition.............................'; call flush(6)
   call create_domain_decomposition !parallelization
-
+ 
   write(6,*)'MAIN: creating parallel database.......................'; call flush(6)
   iclock11 = tick()
   call create_pdb ! pdb
@@ -108,76 +110,11 @@ program gllmesh
 
   ! clean up
   call empty_data_mesh
-
+  
   call end_clock ! clocks
-
+  
   write(6,*)''
   write(6,*)'....DONE WITH MESHER !'
 
 end program gllmesh
-!-----------------------------------------------------------------------------
-
-
-!-----------------------------------------------------------------------------
-subroutine start_clock
-  !
-  ! Driver routine to start the timing, using the clocks_mod module.
-  !
-  !-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-  use data_time
-  use clocks_mod, only : clock_id, clocks_init
-
-  implicit none
-
-  character(len=8)  :: mydate
-  character(len=10) :: mytime
-
-  call date_and_time(mydate,mytime)
-  write(6,11) mydate(5:6), mydate(7:8), mydate(1:4), mytime(1:2), mytime(3:4)
-
-11 format('     Meshing started on ', A2,'/',A2,'/',A4,' at ', A2,'h ',A2,'min',/)
-
-
-  call clocks_init(0)
-
-  idold01 = clock_id('mergesort')
-  idold05 = clock_id('mergesort - ind')
-  idold02 = clock_id('generate_skeleton')
-  idold03 = clock_id('create_gllmesh')
-  idold04 = clock_id('define_global_global_numbering')
-  idold06 = clock_id('bkgrdmodel_testing')
-  idold08 = clock_id('glob-slob/flob numbering')
-  idold07 = clock_id('get_global no loop')
-  idold09 = clock_id('get_global in loop')
-  idold11 = clock_id('create_pdb')
-
-  idold12 = clock_id('define_glocal_numbering')
-  idold13 = clock_id('define_sflocal_numbering')
-  idold14 = clock_id('generate_serendipity_per_proc')
-
-
-end subroutine start_clock
-!=============================================================================
-
-!-----------------------------------------------------------------------------
-subroutine end_clock
-  !
-  ! Wapper routine to end timing and display clock informations.
-  !
-  !-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-  use clocks_mod, only : clocks_exit
-
-  implicit none
-
-  write(6,*)
-  write(6,"(10x,'Summary of timing measurements:')")
-  write(6,*)
-
-  call clocks_exit(0)
-
-  write(6,*)
-
-end subroutine end_clock
-!=============================================================================
+!=========================================================================================

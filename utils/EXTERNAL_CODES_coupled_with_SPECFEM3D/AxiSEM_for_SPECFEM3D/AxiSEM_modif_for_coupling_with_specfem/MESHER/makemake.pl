@@ -1,7 +1,7 @@
 #! /usr/bin/perl
 #
 #    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-#                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
+#                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
 #
 #    This file is part of AxiSEM.
 #    It is distributed from the webpage <http://www.axisem.info>
@@ -21,13 +21,13 @@
 #
 #    Generate a Makefile from the sources in the current directory.  The source
 #    files may be in either C, FORTRAN 77, Fortran 90 or some combination of
-#    these languages.
+#    these languages.  
 #
 #    Original version written by Michael Wester <wester@math.unm.edu> February 16, 1995
 #    Cotopaxi (Consulting), Albuquerque, New Mexico
 #
-#    Modified by Martin van Driel, ETH Zurich and Simon Stahler,
-#    LMU Munchen to fit the needs of Axisem. The compiler version is
+#    Modified by Martin van Driel, ETH Zürich and Simon Stähler, 
+#    LMU München to fit the needs of Axisem. The compiler version is
 #    now set in the file ../make_axisem.macros
 
 open(MAKEFILE, "> Makefile");
@@ -59,12 +59,17 @@ print MAKEFILE "\n\n";
 #
 print MAKEFILE "ifeq (\$(strip \$(USE_NETCDF)),true)\n";
 print MAKEFILE "   FFLAGS += -Dunc\n";
-print MAKEFILE "   LIBS = -L \$(strip \$(NETCDF_PATH))/lib -lnetcdff -Wl,-rpath,\$(strip \$(NETCDF_PATH))/lib\n";
-print MAKEFILE "   INCLUDE = -I \$(strip \$(NETCDF_PATH))/include\n";
+print MAKEFILE "   ifdef NETCDF_PATH\n";
+print MAKEFILE "       LIBS = -L \$(strip \$(NETCDF_PATH))/lib -lnetcdff -Wl,-rpath,\$(strip \$(NETCDF_PATH))/lib\n";
+print MAKEFILE "       INCLUDE = -I \$(strip \$(NETCDF_PATH))/include\n";
+print MAKEFILE "   else\n";
+print MAKEFILE "       LIBS = -lnetcdff\n";
+print MAKEFILE "       INCLUDE = -I /usr/include\n";
+print MAKEFILE "   endif\n";
 print MAKEFILE "else\n";
 print MAKEFILE "   LIBS = \n";
-print MAKEFILE "   INCLUDE =\n";
-print MAKEFILE "endif\n";
+print MAKEFILE "   INCLUDE = \n";
+print MAKEFILE "endif\n\n";
 
 
 print MAKEFILE "\n\n";
@@ -252,7 +257,7 @@ sub MakeDependsf90 {
          #
          }
       }
-
+   
 
 print "\nCheck Makefile to make sure you're happy with it.\n\n";
 system("perl -ni -e 'print unless /^kdtree2.o/' Makefile ");

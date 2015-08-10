@@ -1,6 +1,6 @@
 !
 !    Copyright 2013, Tarje Nissen-Meyer, Alexandre Fournier, Martin van Driel
-!                    Simon Stahler, Kasra Hosseini, Stefanie Hempel
+!                    Simon Stähler, Kasra Hosseini, Stefanie Hempel
 !
 !    This file is part of AxiSEM.
 !    It is distributed from the webpage <http://www.axisem.info>
@@ -19,6 +19,7 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
+!=========================================================================================
 module parallelization
 
   use data_grid
@@ -28,12 +29,12 @@ module parallelization
   use data_pdb
   use data_diag
   use data_bkgrdmodel
-
+  
   implicit none
-
+  
   public :: create_domain_decomposition
 
-  private
+  private 
 
 contains
 
@@ -42,7 +43,7 @@ subroutine create_domain_decomposition
 ! nel:    number of glocal elements, i.e. total number of a processor's elements
 ! nelmax: maximal number of glocal elements
 ! neltot: global total number of elements
-! procel:
+! procel: 
 
   integer :: iproc, iel, nelmax, nelmax_fluid, nelmax_solid
   integer :: itheta, irad
@@ -53,7 +54,7 @@ subroutine create_domain_decomposition
   write(6,*)'     creating domain decomposition....'
 
   ! check if number of elements at ICB is multiple of nthetaslices
-  call check_nproc(nthetaslices)
+  call check_nproc(nthetaslices) 
   nproc = nthetaslices * nradialslices
 
   attributed(:) = .false.
@@ -79,13 +80,13 @@ subroutine create_domain_decomposition
         write(6,*) '       - each theta slice should have same number of elements!'
         stop
      endif
-
+     
      nelsolid_per_tsl = neltot_solid / nthetaslices
      nelfluid_per_tsl = neltot_fluid / nthetaslices
-
+     
      nelsolid_per_trsl = nelsolid_per_tsl / nradialslices
      nelfluid_per_trsl = nelfluid_per_tsl / nradialslices
-
+        
      nel_solid(:) = nelsolid_per_trsl
      nel_fluid(:) = nelfluid_per_trsl
 
@@ -97,7 +98,7 @@ subroutine create_domain_decomposition
            nel_solid(iproc) = nel_solid(iproc) + 1
         enddo
      enddo
-
+     
      do itheta = 0, nthetaslices-1
         do irad = 0, nradialslices-1
            iproc = itheta * nradialslices + irad
@@ -106,16 +107,16 @@ subroutine create_domain_decomposition
            nel_fluid(iproc) = nel_fluid(iproc) + 1
         enddo
      enddo
-
+     
      nel(:) = nel_solid(:) + nel_fluid(:)
-  endif
-
+  end if
+  
 
   nelmax = maxval(nel)
   nelmax_solid = maxval(nel_solid)
   nelmax_fluid = maxval(nel_fluid)
 
-  if (dump_mesh_info_screen) then
+  if (dump_mesh_info_screen) then 
 
      write(6,*)
      write(6,*)'************** VARIOUS NUMBERS OF ELEMENTS**********************'
@@ -139,7 +140,7 @@ subroutine create_domain_decomposition
      write(6,*)'*****************************************************************'
      write(6,*)
 
-  endif
+  end if
 
   allocate(procel(nelmax,0:nproc-1))
 
@@ -154,7 +155,7 @@ subroutine create_domain_decomposition
   inv_procel   = -1
 
   ! Decompose such that each processor owns a cake piece in the theta direction,
-  ! i.e. same amount of elements in solid and fluid respectively.
+  ! i.e. same amount of elements in solid and fluid respectively. 
   ! The inner cube is done such that each processor maximally has 2 neighbors.
   if (nradialslices == 1) then
      call domain_decomposition_theta(attributed, nproc)
@@ -168,14 +169,14 @@ subroutine create_domain_decomposition
      open(unit=666,file=diagpath(1:lfdiag)//'/inv_procel.dat')
      do iproc=0, nproc-1
        do iel=1, neltot
-          if (el2proc(iel) == iproc) then
+          if (el2proc(iel) == iproc) then 
              write(666,*) iproc, iel, inv_procel(iel), &
                           procel(inv_procel(iel),iproc)
           endif
        enddo
      enddo
      close(666)
-
+     
      open(unit=666,file=diagpath(1:lfdiag)//'/procel.dat')
      do iproc=0, nproc-1
        do iel=1, nel(iproc)
@@ -183,21 +184,21 @@ subroutine create_domain_decomposition
        enddo
      enddo
      close(666)
-  endif
+  end if
 
   ! check that every element has been assigned
   if (any(.not. attributed)) then
      do iel = 1, neltot
-         if (.not. attributed(iel) ) then
+         if (.not. attributed(iel) ) then 
             write(6,*) ' NOT ATTRIBUTED '
             write(6,*) iel, thetacom(iel), solid(iel), fluid(iel)
          endif
-     enddo
+     end do
      stop
   endif
-
+ 
   if (minval(el2proc) == -1) then
-     write(6,*) ' '
+     write(6,*) ' ' 
      write(6,*) 'Element(s) not assigned to any processor:', minloc(el2proc)
      stop
   endif
@@ -207,11 +208,11 @@ subroutine create_domain_decomposition
      write(6,*) 'NUMBER OF ELEMENTS IN EACH SUBDOMAIN:'
      do iproc=0, nproc-1
         write(6,'("Proc ",i3, " has ",i8, " solid,",i6," fluid,",i9," total elements")') &
-                iproc, nel_solid(iproc), nel_fluid(iproc), nel(iproc)
+                iproc, nel_solid(iproc), nel_fluid(iproc), nel(iproc) 
      enddo
      write(6,*)
      call flush(6)
-  endif
+  end if
 
   if (dump_mesh_vtk) call plot_dd_vtk
 
@@ -267,10 +268,10 @@ subroutine plot_dd_vtk
       wel2proc(ct+2) = real(el2proc(iel))
       wel2proc(ct+3) = real(el2proc(iel))
       wel2proc(ct+4) = real(el2proc(iel))
-
+      
       ct = ct + 4
   enddo
-
+  
   call write_VTK_bin_scal(x, y, z, wel2proc, neltot, fname)
 
   deallocate(x, y, z)
@@ -285,14 +286,13 @@ subroutine domain_decomposition_theta(attributed, nprocl)
 ! nel:    number of glocal elements, i.e. total number of a processor's elements
 ! nelmax: maximal number of glocal elements
 ! neltot: global total number of elements
-! procel:
+! procel: 
 
   logical, intent(inout)    :: attributed(:)
   integer, intent(in)       :: nprocl
-
+  
   integer                   :: iproc, iiproc, iel
   integer                   :: mycount
-  real(kind=dp)             :: deltatheta
   integer, allocatable      :: central_count(:)
   real(kind=dp)             :: pi2
 
@@ -308,12 +308,12 @@ subroutine domain_decomposition_theta(attributed, nprocl)
 
   ! **************** INNER CUBE **********************
   if (nprocl == 1 .or. nprocl == 2) then
-      ! define quadratic functions to delineate processor boundaries.
+      ! define quadratic functions to delineate processor boundaries. 
       ! Works for nprocl = 1, 2
       call decompose_inner_cube_quadratic_fcts(central_count, attributed, nprocl, &
                                                procel_solid, procel_fluid)
 
-  else if (nprocl >= 4 .and. (nprocl / 4) * 4 == nprocl) then
+  elseif (nprocl >= 4 .and. (nprocl / 4) * 4 == nprocl) then
       ! newest version of inner core decomposition (nprocl needs to be multiple of 4)
       call decompose_inner_cube_opt(central_count, attributed, nprocl, &
                                     procel_solid, procel_fluid)
@@ -328,10 +328,14 @@ subroutine domain_decomposition_theta(attributed, nprocl)
 
   do iproc = 0, nprocl -1
 
-     mycount = 0
-
+     if (solid_domain(ndisc)) then 
+        mycount = 0
+     else
+        mycount = central_count(iproc)
+     endif
+  
      do iel = 1, neltot
-
+  
         ! add the extra requirement that element iel to be in appropriate theta slice
         if (fluid(iel) .and. .not. attributed(iel) .and. &
             (thetacom(iel) >= theta_min_proc(iproc)) .and.  &
@@ -339,17 +343,21 @@ subroutine domain_decomposition_theta(attributed, nprocl)
             mycount = mycount + 1
             procel_fluid(mycount,iproc) = iel
             attributed(iel) = .true.
-        endif
+        end if
 
         if ( mycount == nel_fluid(iproc) ) exit
-     enddo ! iel
-
-     mycount = central_count(iproc)
-
+     end do ! iel
+  
+     if (solid_domain(ndisc)) then 
+        mycount = central_count(iproc)
+     else
+        mycount = 0
+     endif
+  
      !  At this stage we have assigned nel_fluid fluid elements
      !  to each processor, stored in a procel_fluid(1:nel_fluid,iproc)
      !  Here we start the loop over solid elements and try to assign them to iproc
-
+     
      do iel = 1, neltot
         if ( .not. fluid(iel) .and. .not. attributed(iel) .and. &
              (thetacom(iel) >= theta_min_proc(iproc)) .and. &
@@ -357,7 +365,7 @@ subroutine domain_decomposition_theta(attributed, nprocl)
            mycount = mycount + 1
            procel_solid(mycount,iproc) = iel
            attributed(iel) = .true.
-        endif
+        end if
 
         if ( mycount == nel_solid(iproc) ) then
            if (dump_mesh_info_screen) then
@@ -366,10 +374,10 @@ subroutine domain_decomposition_theta(attributed, nprocl)
               call flush(6)
            endif
            exit
-        endif
-     enddo
-
-     if (mycount < nel_solid(iproc)) then
+        end if
+     end do
+  
+     if (mycount < nel_solid(iproc)) then 
         write(6,*)
         write(6,*) 'Problem: not all solid elements attributed for proc', iproc, &
                     mycount, nel_solid(iproc)
@@ -379,10 +387,10 @@ subroutine domain_decomposition_theta(attributed, nprocl)
         enddo
         stop
      endif
-
+  
      ! procel contains
      ! procel(1:nel_fluid) : the nel_fluid element numbers pertaining to iproc
-     ! procel(nel_fluid+1:nel(iproc)) : the nel_solid solid element numbers
+     ! procel(nel_fluid+1:nel(iproc)) : the nel_solid solid element numbers 
      ! belonging to iproc
      ! Element numbers are defined in a global sense (solid+fluid whole mesh)
      do iel = 1, nel(iproc)
@@ -396,17 +404,17 @@ subroutine domain_decomposition_theta(attributed, nprocl)
                          pi/nprocl * (iproc + 1)
               stop
            endif
-        endif
+        end if
         el2proc(procel(iel,iproc)) = iproc
         inv_procel(procel(iel,iproc)) = iel
-     enddo
+     end do
 
-  enddo !nprocl-1
+  end do !nprocl-1
 
   ! OUTPUT OF DOMAIN DECOMPOSITION
 
   if (dump_mesh_info_files) then
-
+ 
      write(6,*)'Writing out the domain decomposition...'; call flush(6)
 
      ! central dd only, but checking through whole grid
@@ -425,7 +433,7 @@ subroutine domain_decomposition_theta(attributed, nprocl)
      enddo
      close(648)
 
-  endif
+  end if
 
 end subroutine domain_decomposition_theta
 !-----------------------------------------------------------------------------------------
@@ -436,16 +444,16 @@ subroutine domain_decomposition_theta_r(attributed, nprocl, nthetal, nrl, &
 ! nel:     number of glocal elements, i.e. total number of a processor's elements
 ! nelmax: maximal number of glocal elements
 ! neltot: global total number of elements
-! procel:
-
+! procel: 
+  
   use sorting
 
   logical, intent(inout)    :: attributed(:)
   integer, intent(in)       :: nprocl, nthetal, nrl
   integer, intent(in)       :: nelmax, nelmax_fluid, nelmax_solid
-
-  integer                   :: itheta, iitheta, iel
-  integer                   :: irad, iproc, iradb
+  
+  integer                   :: itheta, iitheta, iel, nel_fluid_theta
+  integer                   :: irad, iproc
   integer                   :: mycount, nicb, ncmb
   integer                   :: iprocb(2), mycountb(2), j1, j2
   real(kind=dp)             :: deltatheta
@@ -485,12 +493,12 @@ subroutine domain_decomposition_theta_r(attributed, nprocl, nthetal, nrl, &
 
   ! **************** INNER CUBE **********************
   if (nthetal == 1 .or. nthetal == 2) then
-      ! define quadratic functions to delineate processor boundaries.
+      ! define quadratic functions to delineate processor boundaries. 
       ! Works for nthetal = 1, 2
       call decompose_inner_cube_quadratic_fcts(central_count, attributed, nthetal, &
                                                thetaslel_solid, thetaslel_fluid)
 
-  else if (nthetal >= 4 .and. (nthetal / 4) * 4 == nthetal) then
+  elseif (nthetal >= 4 .and. (nthetal / 4) * 4 == nthetal) then
       ! newest version of inner core decomposition (nthetal needs to be multiple of 4)
       call decompose_inner_cube_opt(central_count, attributed, nthetal, &
                                     thetaslel_solid, thetaslel_fluid)
@@ -502,32 +510,17 @@ subroutine domain_decomposition_theta_r(attributed, nprocl, nthetal, nrl, &
   endif
   ! **************** END OF INNER CUBE****************
 
-  ! sort inner core elements according to radius
-  ! Using same stupid choice as in inner core decomposition (fully fluid sphere
-  ! will just not do the sorting
-  if (neltot_solid > 0 ) then
-     do itheta = 0, nthetal-1
-        allocate(inner_core_buf(central_count(itheta)))
-        allocate(inner_core_r(central_count(itheta)))
-        inner_core_buf(:) = thetaslel_solid(1:central_count(itheta),itheta)
 
-        do iel = 1, central_count(itheta)
-           inner_core_r(iel) = rcom(inner_core_buf(iel))
-        enddo
-
-        call mergesort_3(inner_core_r, il=inner_core_buf, p=4)
-
-        thetaslel_solid(1:central_count(itheta),itheta) = inner_core_buf(:)
-
-        deallocate(inner_core_buf)
-        deallocate(inner_core_r)
-     enddo
-  endif
-
+  
   ! add the extra requirement that element iel to be in appropriate theta slice
   do itheta = 0, nthetal-1
+    
+     if (solid_domain(ndisc)) then 
+        mycount = 0
+     else
+        mycount = central_count(itheta)
+     endif
 
-     mycount = 0
      do iel = 1, neltot
         if (fluid(iel) .and. .not. attributed(iel) .and. &
                (thetacom(iel) >= theta_min_proc(itheta)) .and.  &
@@ -535,46 +528,62 @@ subroutine domain_decomposition_theta_r(attributed, nprocl, nthetal, nrl, &
             mycount = mycount + 1
             thetaslel_fluid(mycount,itheta) = iel
             attributed(iel) = .true.
+        end if
+        if ( mycount == sum(nel_fluid(itheta:itheta+nrl-1)) ) then
+           write(6,*) 'all fluid elements assigned'
+           exit 
         endif
-        if ( mycount == sum(nel_fluid(itheta:itheta+nrl-1)) ) exit
-     enddo ! iel
-
-     mycount = central_count(itheta)
-
-     do iel = 1, neltot
-
-        if ( .not. fluid(iel) .and. .not. attributed(iel) .and. &
-              (thetacom(iel) >= theta_min_proc(itheta)) .and. &
-              (thetacom(iel) <= theta_max_proc(itheta)) ) then
-           thetaslel_solid(sum(nel_solid(itheta:itheta+nrl-1)) &
-                           - mycount + central_count(itheta),itheta) = iel
-           mycount = mycount + 1
-           !thetaslel_solid(mycount,itheta) = iel
-           attributed(iel) = .true.
+     end do ! iel
+            
+     if (neltot_solid > 0 ) then 
+        if (solid_domain(ndisc)) then 
+            mycount = central_count(itheta)
+        else
+            mycount = 0
         endif
+  
+        do iel = 1, neltot
+        
+           if ( .not. fluid(iel) .and. .not. attributed(iel) .and. &
+                 (thetacom(iel) >= theta_min_proc(itheta)) .and. &
+                 (thetacom(iel) <= theta_max_proc(itheta)) ) then
+              if (solid_domain(ndisc)) then 
+                 thetaslel_solid(sum(nel_solid(itheta:itheta+nrl-1)) &
+                                 - mycount + central_count(itheta),itheta) = iel
+              else
+                 thetaslel_solid(sum(nel_solid(itheta:itheta+nrl-1)) &
+                                 - mycount,itheta) = iel
+              endif
 
-        if ( mycount == sum(nel_solid(itheta:itheta+nrl-1)) ) then
-           if (dump_mesh_info_screen) then
-              write(6,*) ' THETASL ', itheta ,' has everybody it needs ', mycount, &
-                         sum(nel_solid(itheta:itheta+nrl-1))
-              call flush(6)
-           endif
-           exit
-        endif
-     enddo
+              mycount = mycount + 1
+              attributed(iel) = .true.
+           end if
 
-     if (mycount < sum(nel_solid(itheta:itheta+nrl-1))) then
+           if ( mycount == sum(nel_solid(itheta:itheta+nrl-1)) ) then
+              if (dump_mesh_info_screen) then
+                 write(6,*) ' THETASL ', itheta ,' has everybody it needs ', mycount, &
+                            sum(nel_solid(itheta:itheta+nrl-1))
+                 call flush(6)
+              endif
+              exit
+           end if
+        end do
+     else
+        mycount = 0
+     endif
+  
+     if (mycount < sum(nel_solid(itheta:itheta+nrl-1))) then 
         write(6,*)
-        write(6,*) 'Problem: not all solid elements attributed for thteaslice', itheta, &
+        write(6,*) 'Problem: not all solid elements attributed for thetaslice', itheta, &
                     mycount, sum(nel_solid(itheta:itheta+nrl-1))
         do iitheta=0, nthetal-1
            write(6,*) 'nel_solid(itheta), centralcount:',&
                      iitheta, sum(nel_solid(iitheta:itheta+nrl-1)), central_count(iitheta)
         enddo
         stop
-     else if (mycount > sum(nel_solid(itheta:itheta+nrl-1))) then
+     elseif (mycount > sum(nel_solid(itheta:itheta+nrl-1))) then 
         write(6,*)
-        write(6,*) 'Problem: too many  solid elements attributed for thteaslice', itheta, &
+        write(6,*) 'Problem: too many solid elements attributed for thetaslice', itheta, &
                     mycount, sum(nel_solid(itheta:itheta+nrl-1))
         do iitheta=0, nthetal-1
            write(6,*) 'nel_solid(itheta), centralcount:',&
@@ -585,7 +594,7 @@ subroutine domain_decomposition_theta_r(attributed, nprocl, nthetal, nrl, &
 
      ! thetaslel contains
      ! thetaslel(1:nel_fluid) : the nel_fluid element numbers pertaining to itheta
-     ! thetaslel(nel_fluid+1:nel(itheta)) : the nel_solid solid element numbers
+     ! thetaslel(nel_fluid+1:nel(itheta)) : the nel_solid solid element numbers 
      ! belonging to itheta
      ! Element numbers are defined in a global sense (solid+fluid whole mesh)
      do iel = 1, sum(nel(itheta:itheta+nrl-1))
@@ -600,15 +609,57 @@ subroutine domain_decomposition_theta_r(attributed, nprocl, nthetal, nrl, &
               write(6,*) iel, sum(nel(itheta:itheta+nrl-1))
               stop
            endif
-        endif
+        end if
         el2thetaslel(thetaslel(iel,itheta)) = itheta
-     enddo
+     end do
 
-  enddo !nthetal-1
+  end do !nthetal-1
 
   if (any(.not. attributed)) then
      write(6,*) 'ERROR: not all elements assigned to a theta-slice'
      stop
+  endif
+
+
+  ! sort inner core elements according to radius
+  ! Using same stupid choice as in inner core decomposition 
+
+  if (solid_domain(ndisc)) then 
+     do itheta = 0, nthetal-1
+        allocate(inner_core_buf(central_count(itheta)))
+        allocate(inner_core_r(central_count(itheta)))
+        inner_core_buf(:) = thetaslel_solid(1:central_count(itheta),itheta)
+
+        do iel = 1, central_count(itheta)
+           inner_core_r(iel) = rcom(inner_core_buf(iel))
+        enddo
+  
+        call mergesort_3(inner_core_r, il=inner_core_buf, p=4)
+        
+        thetaslel_solid(1:central_count(itheta),itheta) = inner_core_buf(:)
+
+        deallocate(inner_core_buf)
+        deallocate(inner_core_r)
+     enddo
+  else
+     do itheta = 0, nthetal-1
+        nel_fluid_theta = sum(nel_fluid(itheta:itheta+nrl-1))
+        allocate(inner_core_buf(nel_fluid_theta))
+        allocate(inner_core_r(nel_fluid_theta))
+        inner_core_buf(:) = thetaslel_fluid(1:nel_fluid_theta,itheta)
+
+        do iel = 1, nel_fluid_theta
+           ! sort by radius, if radius is the same, theta makes the difference
+           inner_core_r(iel) = rcom(inner_core_buf(iel)) + 1e-10 * thetacom(inner_core_buf(iel))
+        enddo
+
+        call mergesort_3(inner_core_r, il=inner_core_buf, p=4)
+
+        thetaslel_fluid(1:nel_fluid_theta,itheta) = inner_core_buf(:)
+
+        deallocate(inner_core_buf)
+        deallocate(inner_core_r)
+     enddo
   endif
 
   ! reset, as we have to touch each element again!
@@ -616,7 +667,7 @@ subroutine domain_decomposition_theta_r(attributed, nprocl, nthetal, nrl, &
 
   ! Now decomposition in radius
   do itheta = 0, nthetal-1
-
+     
      ! SOLID domain first
      do irad = 0, nrl-1
         iproc = itheta * nrl + irad
@@ -628,7 +679,7 @@ subroutine domain_decomposition_theta_r(attributed, nprocl, nthetal, nrl, &
               attributed(thetaslel_solid(iel,itheta)) = .true.
               mycount = mycount + 1
            endif
-        enddo
+        end do
      enddo
 
      ! fill solid mapping arrays (used in the fluid decomposition)
@@ -646,7 +697,7 @@ subroutine domain_decomposition_theta_r(attributed, nprocl, nthetal, nrl, &
            endif
            el2proc(procel(iel,iproc)) = iproc
            inv_procel(procel(iel,iproc)) = iel
-        enddo
+        end do
      enddo
 
      ! FLUID
@@ -655,57 +706,90 @@ subroutine domain_decomposition_theta_r(attributed, nprocl, nthetal, nrl, &
      iprocb = -1
      mycountb = 1
 
-     ! take the lower most layer in the fluid (ICB) and account to the
-     ! processor having the solid neighbour
-     do iel = 1, nbelem(2)
-        if (fluid(belem(iel,2)) .and.  el2thetaslel(belem(iel,2)) == itheta &
-                .and. .not. attributed(belem(iel,2))) then
-            iproc = el2proc(belem(my_neighbour(iel,2),2))
-            if (iprocb(1) == iproc .or. iprocb(1) == -1) then
-               iprocb(1) = iproc
-               procel_fluid(mycountb(1), iproc) = belem(iel,2)
-               mycountb(1) = mycountb(1) + 1
-            else if (iprocb(2) == iproc .or. iprocb(2) == -1) then
-               iprocb(2) = iproc
-               procel_fluid(mycountb(2), iproc) = belem(iel,2)
-               mycountb(2) = mycountb(2) + 1
-            else
-               write(6,*) 'ERROR: more then two procs involved in s/f boundary of one theta slice'
-            endif
-            attributed(belem(iel,2)) = .true.
-        endif
-     enddo
+     if (nbcnd == 1) then
+        nicb = 0
+        
+        ! take the upper most layer in the fluid (CMB) and account to the
+        ! processor having the solid neighbour
+        do iel = 1, nbelem(1)
+           if (fluid(belem(iel,1)) .and. el2thetaslel(belem(iel,1)) == itheta &
+                   .and. .not. attributed(belem(iel,1))) then
+               iproc = el2proc(belem(my_neighbour(iel,1),1))
+               if (iprocb(1) == iproc .or. iprocb(1) == -1) then
+                  iprocb(1) = iproc
+                  procel_fluid(mycountb(1), iproc) = belem(iel,1)
+                  mycountb(1) = mycountb(1) + 1
+               elseif (iprocb(2) == iproc .or. iprocb(2) == -1) then
+                  iprocb(2) = iproc
+                  procel_fluid(mycountb(2), iproc) = belem(iel,1)
+                  mycountb(2) = mycountb(2) + 1
+               else
+                  write(6,*) 'ERROR: more then two procs involved in s/f boundary of one theta slice'
+               endif
+               attributed(belem(iel,1)) = .true.
+           endif
+        enddo
+        ncmb = mycountb(1) + mycountb(2) - 2 - nicb
+     elseif (nbcnd == 2) then
+        
+        ! take the lower most layer in the fluid (ICB) and account to the
+        ! processor having the solid neighbour
+        do iel = 1, nbelem(2)
+           if (fluid(belem(iel,2)) .and.  el2thetaslel(belem(iel,2)) == itheta &
+                   .and. .not. attributed(belem(iel,2))) then
+               iproc = el2proc(belem(my_neighbour(iel,2),2))
+               if (iprocb(1) == iproc .or. iprocb(1) == -1) then
+                  iprocb(1) = iproc
+                  procel_fluid(mycountb(1), iproc) = belem(iel,2)
+                  mycountb(1) = mycountb(1) + 1
+               elseif (iprocb(2) == iproc .or. iprocb(2) == -1) then
+                  iprocb(2) = iproc
+                  procel_fluid(mycountb(2), iproc) = belem(iel,2)
+                  mycountb(2) = mycountb(2) + 1
+               else
+                  write(6,*) 'ERROR: more then two procs involved in s/f boundary of one theta slice'
+               endif
+               attributed(belem(iel,2)) = .true.
+           endif
+        enddo
 
-     nicb = mycountb(1) + mycountb(2) - 2
-
-     ! take the upper most layer in the fluid (CMB) and account to the
-     ! processor having the solid neighbour
-     do iel = 1, nbelem(1)
-        if (fluid(belem(iel,1)) .and. el2thetaslel(belem(iel,1)) == itheta &
-                .and. .not. attributed(belem(iel,1))) then
-            iproc = el2proc(belem(my_neighbour(iel,1),1))
-            if (iprocb(1) == iproc .or. iprocb(1) == -1) then
-               iprocb(1) = iproc
-               procel_fluid(mycountb(1), iproc) = belem(iel,1)
-               mycountb(1) = mycountb(1) + 1
-            else if (iprocb(2) == iproc .or. iprocb(2) == -1) then
-               iprocb(2) = iproc
-               procel_fluid(mycountb(2), iproc) = belem(iel,1)
-               mycountb(2) = mycountb(2) + 1
-            else
-               write(6,*) 'ERROR: more then two procs involved in s/f boundary of one theta slice'
-            endif
-            attributed(belem(iel,1)) = .true.
-        endif
-     enddo
-
-     ncmb = mycountb(1) + mycountb(2) - 2 - nicb
+        nicb = mycountb(1) + mycountb(2) - 2
+        
+        ! take the upper most layer in the fluid (CMB) and account to the
+        ! processor having the solid neighbour
+        do iel = 1, nbelem(1)
+           if (fluid(belem(iel,1)) .and. el2thetaslel(belem(iel,1)) == itheta &
+                   .and. .not. attributed(belem(iel,1))) then
+               iproc = el2proc(belem(my_neighbour(iel,1),1))
+               if (iprocb(1) == iproc .or. iprocb(1) == -1) then
+                  iprocb(1) = iproc
+                  procel_fluid(mycountb(1), iproc) = belem(iel,1)
+                  mycountb(1) = mycountb(1) + 1
+               elseif (iprocb(2) == iproc .or. iprocb(2) == -1) then
+                  iprocb(2) = iproc
+                  procel_fluid(mycountb(2), iproc) = belem(iel,1)
+                  mycountb(2) = mycountb(2) + 1
+               else
+                  write(6,*) 'ERROR: more then two procs involved in s/f boundary of one theta slice'
+               endif
+               attributed(belem(iel,1)) = .true.
+           endif
+        enddo
+        ncmb = mycountb(1) + mycountb(2) - 2 - nicb
+     elseif (nbcnd == 0) then
+        nicb = 0
+        ncmb = 0
+     else
+        write(6,*) 'domain decomposition only implemented for 0 or 2 solid fluid boundaries'
+        stop
+     endif
+     
 
      if (any(mycountb - 1 > nel_fluid(iproc))) then
         write(6,*) 'ERROR: more boundary elements than fluid elements. try less NRADIAL_SLICES'
         stop
      endif
-
+   
      ! depending on whether a possible proc boundary on the sf boundary (on the
      ! solid side) is on CMB or ICB decide which processor should take stuff
      ! from below CMB / above ICB
@@ -729,9 +813,9 @@ subroutine domain_decomposition_theta_r(attributed, nprocl, nthetal, nrl, &
               attributed(thetaslel_fluid(iel,itheta)) = .true.
               mycountb(j1) = mycountb(j1) + 1
            endif
-        enddo
+        end do
      endif
-
+     
      ! fill up j2 with stuff from above ICB
      if (iprocb(j2) /= -1) then
         do iel = neltot_fluid / nthetal, 1, -1
@@ -741,9 +825,9 @@ subroutine domain_decomposition_theta_r(attributed, nprocl, nthetal, nrl, &
               attributed(thetaslel_fluid(iel,itheta)) = .true.
               mycountb(j2) = mycountb(j2) + 1
            endif
-        enddo
+        end do
      endif
-
+     
      ! fill up the bulk with the other processors
      do irad = 0, nrl-1
         iproc = itheta * nrl + irad
@@ -758,9 +842,9 @@ subroutine domain_decomposition_theta_r(attributed, nprocl, nthetal, nrl, &
               attributed(thetaslel_fluid(iel,itheta)) = .true.
               mycount = mycount + 1
            endif
-        enddo
+        end do
      enddo
-
+     
      ! fill up fluid part of the mapping arrays
      do irad = 0, nrl-1
         iproc = itheta * nrl + irad
@@ -768,10 +852,10 @@ subroutine domain_decomposition_theta_r(attributed, nprocl, nthetal, nrl, &
            procel(iel,iproc) = procel_fluid(iel,iproc)
            el2proc(procel(iel,iproc)) = iproc
            inv_procel(procel(iel,iproc)) = iel
-        enddo
+        end do
      enddo
 
-  enddo ! itheta
+  end do ! itheta
 
 end subroutine domain_decomposition_theta_r
 !-----------------------------------------------------------------------------------------
@@ -784,16 +868,13 @@ subroutine decompose_inner_cube_quadratic_fcts(central_count, attributed, ntheta
   integer, intent(out)      :: central_count(0:nthetal-1)
   logical, intent(inout)    :: attributed(:)
   integer, intent(out)      :: procel_solidl(:,0:), procel_fluidl(:,0:)
-
+  
   integer :: iproc, is, iz, nthetal2
-  integer :: icount, i2count, iicount, missing
-  integer :: arclngth, area, CapA, proccount, quadels
   integer,allocatable :: proc_central(:,:),num_columns(:),upper_boundary_el(:)
   integer,allocatable :: num_columns_hi(:),num_columns_lo(:),num_el(:)
   integer,allocatable :: count_assi(:)
-  real(kind=dp)    :: a,b
 
-  if (dump_mesh_info_screen) then
+  if (dump_mesh_info_screen) then 
      write(6,*)
      write(6,*)'<><><><><><><><><><><><><><><><><><><><><><><><><><>'
      write(6,*)'CENTRAL LINEAR DOMAIN: simple decomposition!'
@@ -801,7 +882,7 @@ subroutine decompose_inner_cube_quadratic_fcts(central_count, attributed, ntheta
      write(6,*)'==> each processor should have el=',ndivs**2/nthetal*2
      write(6,*)'<><><><><><><><><><><><><><><><><><><><><><><><><><>'
      write(6,*)
-  endif
+  end if
 
   if (nthetal > 2) then
      write(6,*) 'simple mesh decomposition cannot handle more than 2 processors'
@@ -811,10 +892,10 @@ subroutine decompose_inner_cube_quadratic_fcts(central_count, attributed, ntheta
 
   nthetal2 = nthetal / 2 - 1
   if (nthetal == 1) nthetal2 = 0
-
+  
   allocate(proc_central(1:ndivs,1:ndivs))
   proc_central(1:ndivs,1:ndivs)=-1
-
+  
   allocate(num_columns(1:ndivs))
   allocate(upper_boundary_el(1:ndivs))
   allocate(num_columns_hi(1:ndivs),num_columns_lo(1:ndivs))
@@ -825,13 +906,13 @@ subroutine decompose_inner_cube_quadratic_fcts(central_count, attributed, ntheta
 
   allocate(count_assi(0:nthetal2))
   count_assi = 0
-  ! count respective processors elements
+  ! count respective processors elements 
   num_el(0:nthetal2) = 0
 
   do is=1, ndivs
      do iz=1, ndivs
         do iproc=0, nthetal2
-           if (proc_central(is,iz) == iproc) then
+           if (proc_central(is,iz) == iproc) then 
               num_el(iproc) = num_el(iproc) + 1
               count_assi(iproc) = count_assi(iproc) + 1
            endif
@@ -842,9 +923,9 @@ subroutine decompose_inner_cube_quadratic_fcts(central_count, attributed, ntheta
         endif
      enddo
   enddo
-
+  
   do iproc=0, nthetal2
-    if (count_assi(iproc) /= ndivs**2/(nthetal2+1)) then
+    if (count_assi(iproc) /= ndivs**2/(nthetal2+1)) then 
        write(6,*) 'Problem: Not every element is assigned to processor', iproc
        write(6,*) 'Counted assigned els/total els:', count_assi(iproc), ndivs**2/(nthetal2+1)
        if (iproc < nthetal2) &
@@ -852,22 +933,22 @@ subroutine decompose_inner_cube_quadratic_fcts(central_count, attributed, ntheta
        stop
     endif
   enddo
-
-  if(dump_mesh_info_screen) then
+  
+  if(dump_mesh_info_screen) then 
      write(6,*)
      do iproc=0, nthetal2
         write(6,12) iproc,num_el(iproc)
      enddo
 12   format('Central cube: proc', i3, ' has', i6, ' elements')
-  endif
-
+  end if
+  
   ! connect these processor dependencies to the global element numbering scheme
   central_count(0:nthetal-1) = 0
   do iz = 1, ndivs
    do is = 1, ndivs
       if (proc_central(is,iz) /= -1) then
          central_count(proc_central(is,iz)) = central_count(proc_central(is,iz)) + 1
-
+  
          attributed(central_is_iz_to_globiel(is,iz)) = .true.
          attributed(central_is_iz_to_globiel(is,iz) + neltot / 2)=.true.
       else
@@ -875,20 +956,18 @@ subroutine decompose_inner_cube_quadratic_fcts(central_count, attributed, ntheta
          write(6,*) 'is,iz:',is,iz
          stop
       endif
-
-     ! MvD: what is this if statement for? Solid or Fluid inner core? Maybe not
-     !      robust then.
-     if (neltot_solid > 0) then
+ 
+     if (solid_domain(ndisc)) then 
         procel_solidl(central_count(proc_central(is,iz)),proc_central(is,iz)) = &
                                                 central_is_iz_to_globiel(is,iz)
      else
         procel_fluidl(central_count(proc_central(is,iz)),proc_central(is,iz)) = &
                                                 central_is_iz_to_globiel(is,iz)
      endif
-
+  
      ! South: inverted copy
-     if (nthetal > 1) then
-        if (neltot_solid > 0) then
+     if (nthetal > 1) then 
+        if (solid_domain(ndisc)) then 
            procel_solidl(central_count(proc_central(is,iz)), &
                 nthetal-1-proc_central(is,iz)) = &
                 central_is_iz_to_globiel(is,iz) + neltot / 2
@@ -900,20 +979,20 @@ subroutine decompose_inner_cube_quadratic_fcts(central_count, attributed, ntheta
      endif
     enddo
   enddo
-
-  ! South:
+  
+  ! South: 
   if (nthetal > 1) then
      do iproc=0, nthetal / 2 - 1
         central_count(nthetal-iproc-1) = central_count(iproc)
      enddo
   endif
-
+       
   ! special case one processor... still needs to count the south!
-  if (nthetal==1) then
+  if (nthetal==1) then 
     do iz = 1, ndivs
      do is = 1, ndivs
           central_count(proc_central(is,iz)) = central_count(proc_central(is,iz)) + 1
-          if (neltot_solid>0 ) then
+          if (solid_domain(ndisc)) then 
              procel_solidl(central_count(proc_central(is,iz)),0) = &
                   central_is_iz_to_globiel(is,iz) + neltot / 2
           else
@@ -923,21 +1002,21 @@ subroutine decompose_inner_cube_quadratic_fcts(central_count, attributed, ntheta
       enddo
     enddo
   endif
-
+  
   ! check if all central-cube elements are assigned
   ! MvD: this test assumes all linear elements are in the inner core!
   do is=1, neltot
-     if (eltypeg(is)=='linear' ) then
-        if (.not. attributed(is)) then
+     if (eltypeg(is)=='linear' ) then 
+        if (.not. attributed(is)) then 
            write(6,*)
            write(6,*) 'Problem: Central cube element not assigned!', is
            stop
         endif
      endif
   enddo
-
+  
   ! write out the central cube decomposition
-  if(dump_mesh_info_files) then
+  if(dump_mesh_info_files) then 
      open(unit=10008,file=diagpath(1:lfdiag)//'/central_locind_locsz_iproc.dat')
      do iz = 1, ndivs
         do is = 1, ndivs
@@ -951,14 +1030,14 @@ subroutine decompose_inner_cube_quadratic_fcts(central_count, attributed, ntheta
      enddo
      close(10008)
 13   format(2(i4),2(f9.3),i4)
-  endif
-
+  end if
+  
   if (dump_mesh_info_screen) then
      write(6,*)
      write(6,*)'<><><><> Finished the central domain decomposition!<><><><>'
      write(6,*)
      call flush(6)
-  endif
+  end if
 
 end subroutine decompose_inner_cube_quadratic_fcts
 !-----------------------------------------------------------------------------------------
@@ -968,7 +1047,7 @@ subroutine check_my_els(iproc, proc_central)
 
   integer, intent(in) :: iproc, proc_central(1:ndivs,1:ndivs)
   integer             :: procelcount, is, iz
-
+  
   ! Check if proc has right amount of elements
   procelcount=0
   do is=1,ndivs
@@ -976,17 +1055,17 @@ subroutine check_my_els(iproc, proc_central)
         if (proc_central(is,iz)==iproc) procelcount=procelcount+1
      enddo
   enddo
-  if (procelcount/=2*ndivs**2/nproc) then
+  if (procelcount/=2*ndivs**2/nproc) then 
      write(6,*)
      write(6,12)iproc,procelcount
      write(6,*)'Needed:',2*ndivs**2/nproc
      stop
-  else
-     if (dump_mesh_info_screen) then
+  else 
+     if (dump_mesh_info_screen) then 
       write(6,*)
       write(6,*)'>>>', iproc,' has right amount of elements:',2*ndivs**2/nproc
       call flush(6)
-     endif
+     end if
   endif
 
 12 format('Problem: Processor',i4,' has ',i6,' elements!')
@@ -1002,19 +1081,19 @@ subroutine check_nproc(np)
              ! generating the skeleton)
   ritest = dble(2*nb)/dble(np)
   itest = 2*nb/np
-  if (ritest /= dble(itest) ) then
+  if (ritest /= dble(itest) ) then 
      write(6,*) ritest,itest,2*nb,np
      write(6,*) 2*nb,np
      write(6,*) ' Number of processes not compliant with mesh topology '
      stop
-  endif
+  end if
 end subroutine check_nproc
 !-----------------------------------------------------------------------------------------
 
 !-----------------------------------------------------------------------------------------
 subroutine decompose_inner_cube_opt(central_count, attributed, nthetal, &
                                     procel_solidl, procel_fluidl)
-
+  
   integer, intent(in)        :: nthetal
   integer, intent(out)       :: central_count(0:nthetal-1)
   logical, intent(inout)     :: attributed(:)
@@ -1029,8 +1108,8 @@ subroutine decompose_inner_cube_opt(central_count, attributed, nthetal, &
   integer, allocatable       :: proc(:,:), nelem(:)
   logical, allocatable       :: proc_iq_min(:,:), proc_iq_max(:,:), elems(:,:)
   logical                    :: exit_buff
-
-  if (dump_mesh_info_screen) then
+  
+  if (dump_mesh_info_screen) then 
       write(6,*)
       write(6,*)'<><><><><><><><><><><><><><><><><><><><><><><><><><>'
       write(6,*)'CENTRAL LINEAR DOMAIN: decomposing using an '
@@ -1039,15 +1118,15 @@ subroutine decompose_inner_cube_opt(central_count, attributed, nthetal, &
       write(6,*)'==> each processor should have el=',ndivs**2/nthetal*2
       write(6,*)'<><><><><><><><><><><><><><><><><><><><><><><><><><>'
       write(6,*)
-  endif
+  end if
 
 
-  if (mod(2*ndivs**2,nthetal)/=0) then
+  if (mod(2*ndivs**2,nthetal)/=0) then 
      write(6,*)'Central cube area not divisible into equal areas!'
      stop
   endif
 
-  if (mod(4*ndivs,nthetal)/=0) then
+  if (mod(4*ndivs,nthetal)/=0) then 
      write(6,*)'PROBLEM with number of central-region elements and nthetal:'
      write(6,*)'ndivs,nthetal:',ndivs,nthetal
      write(6,*)'ndivs (number of northern elements in one direction)'
@@ -1056,7 +1135,7 @@ subroutine decompose_inner_cube_opt(central_count, attributed, nthetal, &
   endif
 
   ! area well defined?
-  if (mod(2*ndivs**2,nthetal)/=0) then
+  if (mod(2*ndivs**2,nthetal)/=0) then 
      write(6,*)'PROBLEM with number of central-region elements and nthetal:'
      write(6,*)'els,nthetal:',ndivs**2,nthetal
      write(6,*)'number of elements needs to be multiple of nthetal/2...'
@@ -1065,10 +1144,10 @@ subroutine decompose_inner_cube_opt(central_count, attributed, nthetal, &
 
   nthetal2 = nthetal / 2
 
-  nlinsteps = 50
+  nlinsteps = 50 
 
   ndivsppx0 = ndivs / 2 / nthetal2
-  if (ndivsppx0 < 2) then
+  if (ndivsppx0 < 2) then 
       ndivsppx0 = 2
   endif
 
@@ -1076,8 +1155,8 @@ subroutine decompose_inner_cube_opt(central_count, attributed, nthetal, &
   if (nthetal2 == 2) then
       ndivsppx0 = 2
   endif
-
-  if (dump_mesh_info_screen) then
+  
+  if (dump_mesh_info_screen) then 
       write(6,*) 'number of axis elements per processor = ', ndivsppx0
   endif
 
@@ -1108,10 +1187,10 @@ subroutine decompose_inner_cube_opt(central_count, attributed, nthetal, &
       x2(ip) = (r2 + ndivs * 0.3 * sin(2. * phi(ip))**4) * cos(phi(ip))
       z2(ip) = (r2 + ndivs * 0.3 * sin(2. * phi(ip))**4) * sin(phi(ip))
   enddo
-
+  
   z1 = z0
 
-  if (dump_mesh_info_screen) then
+  if (dump_mesh_info_screen) then 
       write(6,*) 'x0 = ', x0
       write(6,*) 'x1 = ', x1
       write(6,*) 'x2 = ', x2
@@ -1133,8 +1212,8 @@ subroutine decompose_inner_cube_opt(central_count, attributed, nthetal, &
   elems = .false.
 
   npart = ndivs**2 / nthetal2
-
-  if (dump_mesh_info_screen) then
+  
+  if (dump_mesh_info_screen) then 
       write(*,*) 'ntot  = ', ndivs**2
       write(*,*) 'npart = ', npart
   endif
@@ -1156,7 +1235,7 @@ subroutine decompose_inner_cube_opt(central_count, attributed, nthetal, &
                               if ((is + ids < 0) .or. (iz + idz < 0) .or. &
                                       (is + ids > ndivs - 1) .or. (iz + idz > ndivs - 1)) then
                                   continue
-                              else if (proc(is + ids,iz + idz) == -1) then
+                              elseif (proc(is + ids,iz + idz) == -1) then
                                   proc_iq_min(is + ids, iz + idz) = .true.
                               endif
                           enddo
@@ -1165,12 +1244,12 @@ subroutine decompose_inner_cube_opt(central_count, attributed, nthetal, &
               enddo
           enddo
       endif
-
-      stepsize = pi / 2. / 18.
+      
+      stepsize = pi / 2. / 18. 
       sign_buff = 0
 
       ! optimize number of elements per processor
-
+  
       if (ip < nthetal2 - 1) then
           do n = 1, nlinsteps, 1
               call nelem_under(ndivs, x0(ip), x1(ip), x2(ip), x3(ip), z0(ip), &
@@ -1202,11 +1281,11 @@ subroutine decompose_inner_cube_opt(central_count, attributed, nthetal, &
                   endif
               endif
           enddo
-
+          
           ! if the optimization did not converge, take or remove as many from
           ! the elements in question as needed
 
-          do while (nelem(ip) < npart)
+          do while (nelem(ip) < npart) 
               ncorrections = ncorrections + 1
               exit_buff = .false.
               do is = ndivs - 1, 0, -1
@@ -1224,7 +1303,7 @@ subroutine decompose_inner_cube_opt(central_count, attributed, nthetal, &
                       exit
                   endif
               enddo
-          enddo
+          end do
 
           do while (nelem(ip) > npart)
               ncorrections = ncorrections + 1
@@ -1244,7 +1323,7 @@ subroutine decompose_inner_cube_opt(central_count, attributed, nthetal, &
                       exit
                   endif
               enddo
-          enddo
+          end do
 
           ! fill up the array
 
@@ -1269,7 +1348,7 @@ subroutine decompose_inner_cube_opt(central_count, attributed, nthetal, &
       endif
   enddo
 
-  if (dump_mesh_info_screen) then
+  if (dump_mesh_info_screen) then 
       write(6,*) 'ncorrections = ', ncorrections
       write(6,*) 'sum   = ', sum(nelem)
       write(6,*) 'proc  = '
@@ -1281,7 +1360,7 @@ subroutine decompose_inner_cube_opt(central_count, attributed, nthetal, &
       write(6,*) 'z1 = ', z1
       write(6,*) 'z2 = ', z2
       write(6,*) 'z3 = ', z3
-
+      
       do ip = 0 , nthetal2 - 1, 1
               write(6,12)ip,nelem(ip)
       enddo
@@ -1301,19 +1380,17 @@ subroutine decompose_inner_cube_opt(central_count, attributed, nthetal, &
           attributed(central_is_iz_to_globiel(is,iz)) = .true.
           attributed(central_is_iz_to_globiel(is,iz) + neltot / 2) = .true.
 
-          ! @TODO is this supposed to test for fluid inner core? Actually tests
-          ! for whole fluid planets
-          if (neltot_solid > 0 ) then
+          if (solid_domain(ndisc)) then 
               procel_solidl(central_count(proc(is-1,iz-1)), &
                       proc(is-1,iz-1)) = central_is_iz_to_globiel(is,iz)
           else
-              procel_fluidl(central_count(proc(is-1,iz-1)), &
+              procel_fluidl(central_count(proc(is-1,iz-1)), & 
                       proc(is-1,iz-1)) = central_is_iz_to_globiel(is,iz)
           endif
 
           ! South: inverted copy
-          if (nthetal > 1) then
-              if (neltot_solid>0 ) then
+          if (nthetal > 1) then 
+              if (solid_domain(ndisc)) then 
                   procel_solidl(central_count(proc(is-1,iz-1)), &
                       nthetal - 1 - proc(is-1,iz-1)) = &
                       central_is_iz_to_globiel(is,iz) + neltot / 2
@@ -1326,19 +1403,19 @@ subroutine decompose_inner_cube_opt(central_count, attributed, nthetal, &
       enddo
   enddo
 
-  ! South:
+  ! South: 
   if (nthetal > 1) then
       do ip = 0, nthetal / 2 - 1
           central_count(nthetal - ip - 1) = central_count(ip)
       enddo
   endif
-
+   
   ! check if all central-cube elements are assigned
   do is = 1, neltot
-      if (eltypeg(is)=='linear' ) then
-          if (.not. attributed(is)) then
+      if (eltypeg(is) == 'linear' ) then 
+          if (.not. attributed(is)) then 
               write(6,*)
-              write(6,*)'Problem: Central cube element not assigned!',is
+              write(6,*) 'Problem: Central cube element not assigned!',is
               stop
           endif
       endif
@@ -1346,7 +1423,7 @@ subroutine decompose_inner_cube_opt(central_count, attributed, nthetal, &
 
   ! write out the central cube decomposition
 
-  if(dump_mesh_info_files) then
+  if(dump_mesh_info_files) then 
       open(unit=10008,file=diagpath(1:lfdiag)//'/central_locind_locsz_iproc.dat')
       do iz = 1, ndivs
           do is = 1, ndivs
@@ -1361,7 +1438,7 @@ subroutine decompose_inner_cube_opt(central_count, attributed, nthetal, &
           enddo
       enddo
       close(10008)
-  endif
+  end if
 13 format(2(i4),2(f9.3),i4)
 
   if (dump_mesh_info_screen) then
@@ -1369,7 +1446,7 @@ subroutine decompose_inner_cube_opt(central_count, attributed, nthetal, &
       write(6,*)'<><><><> Finished the central domain decomposition!<><><><>'
       write(6,*)
       call flush(6)
-  endif
+  end if
 
   deallocate(x0, x1, x2, x3, z0, z1, z2, z3, phi)
   deallocate(proc, proc_iq_min, proc_iq_max, elems, nelem)
@@ -1384,7 +1461,6 @@ logical function test_decomp(ndivs, proc, npart, nproc2)
                              nproc2, npart
   integer                 :: is, iz, idx, idz, ip, nelem(0:nproc2), &
                              neighbour_buff
-  logical                 :: exit_buff
 
   !test processor bounds
   do is = 0, ndivs - 1, 1
@@ -1396,7 +1472,7 @@ logical function test_decomp(ndivs, proc, npart, nproc2)
       enddo
   enddo
 
-  !test number of elements per processor
+  !test number of elements per processor 
   nelem = 0
   do ip = 0, nproc2-1, 1
       do is = 0, ndivs - 1, 1
@@ -1422,10 +1498,10 @@ logical function test_decomp(ndivs, proc, npart, nproc2)
                   if ((is + idx < 0) .or. (iz + idz < 0) .or. &
                           (is + idx > ndivs - 1) .or. (iz + idz > ndivs - 1)) then
                       continue
-                  else if (proc(is + idx,iz + idz) /= proc(is,iz)) then
+                  elseif (proc(is + idx,iz + idz) /= proc(is,iz)) then
                       if (neighbour_buff == -1) then
                           neighbour_buff = proc(is + idx,iz + idz)
-                      else if (neighbour_buff /= proc(is + idx,iz + idz)) then
+                      elseif (neighbour_buff /= proc(is + idx,iz + idz)) then
                           call ascii_print_markregion(ndivs, proc, is, iz)
                           write(6,*) 'Problem: element (', is, ',', iz, &
                                      ') has neighbours from two other regions!'
@@ -1447,7 +1523,7 @@ pure logical function below(x0, y0, x1, y1, xp, yp)
 
   real(kind=sp), intent(in) :: x0, y0, x1, y1, xp, yp
   real(kind=sp)             :: m, b
-
+  
   m = (y1 - y0) / (x1 - x0)
   b = (x1*y0 - x0*y1) / (x1 - x0)
 
@@ -1464,7 +1540,7 @@ pure logical function rightof(x0, y0, x1, y1, xp, yp)
 
   real(kind=sp), intent(in) :: x0, y0, x1, y1, xp, yp
   real(kind=sp)             :: m, b
-
+  
   m = (y1 - y0) / (x1 - x0)
   b = (x1*y0 - x0*y1) / (x1 - x0)
 
@@ -1509,29 +1585,29 @@ subroutine nelem_under(ndivs, x0, x1, x2, x3, z0, z1, z2, z3, proc_max, &
                   nelem = nelem + 1
                   proc(is-1,iz-1) = .true.
               ! second segment
-              else if (x2 > x1 .and. is < x2 .and. is > x1 .and. &
+              elseif (x2 > x1 .and. is < x2 .and. is > x1 .and. & 
                       below(x1, z1, x2, z2, real(is), real(iz))) then
                   nelem = nelem + 1
                   proc(is-1,iz-1) = .true.
-              else if (x2 < x1 .and. iz < z2 .and. iz > z1 .and. &
+              elseif (x2 < x1 .and. iz < z2 .and. iz > z1 .and. &
                       rightof(x1, z1, x2, z2, real(is), real(iz))) then
                   nelem = nelem + 1
                   proc(is-1,iz-1) = .true.
               ! third segment
-              else if (x3 > x2 .and. is > x2 .and. x2 > x1 .and. &
+              elseif (x3 > x2 .and. is > x2 .and. x2 > x1 .and. &
                       below(x2, z2, x3, z3, real(is), real(iz))) then
                   nelem = nelem + 1
                   proc(is-1,iz-1) = .true.
-              else if (x3 > x2 .and. is > x2 .and. x2 < x1 .and. iz > z2 .and. &
+              elseif (x3 > x2 .and. is > x2 .and. x2 < x1 .and. iz > z2 .and. &
                       below(x2, z2, x3, z3, real(is), real(iz))) then
                   nelem = nelem + 1
                   proc(is-1,iz-1) = .true.
-              else if (x3 < x2 .and. iz > z2 .and. &
+              elseif (x3 < x2 .and. iz > z2 .and. &
                       rightof(x2, z2, x3, z3, real(is), real(iz))) then
                   nelem = nelem + 1
                   proc(is-1,iz-1) = .true.
               ! lower right corner
-              else if (z3 > z2 .and. iz < z2 .and. is > x2 .and. is > x1) then
+              elseif (z3 > z2 .and. iz < z2 .and. is > x2 .and. is > x1) then
                   nelem = nelem + 1
                   proc(is-1,iz-1) = .true.
               endif
@@ -1554,7 +1630,7 @@ subroutine ascii_print(ndivs, proc, mode)
           enddo
           write(6,*) ''
       enddo
-  else if (mode == 2) then
+  elseif (mode == 2) then
       do iz = ndivs - 1, 0, - 1
           do is = 0, ndivs - 1, 1
               if (proc(is,iz) == ((proc(is,iz) / 2) * 2)) then
@@ -1565,7 +1641,7 @@ subroutine ascii_print(ndivs, proc, mode)
           enddo
           write(6,*) ''
       enddo
-  else if (mode == 3) then
+  elseif (mode == 3) then
       do iz = ndivs - 1, 0, - 1
           do is = 0, ndivs - 1, 1
               if (proc(is,iz) == ((proc(is,iz) / 2) * 2)) then
@@ -1592,7 +1668,7 @@ subroutine ascii_print_markregion(ndivs, proc, px, pz)
           if ((is == px - 2 .or. is == px + 2) &
                   .or. (iz == pz - 2 .or. iz == pz + 2)) then
               write(6,'(A)', advance='no') '#'
-          else if (proc(is,iz) == ((proc(is,iz) / 2) * 2)) then
+          elseif (proc(is,iz) == ((proc(is,iz) / 2) * 2)) then
               write(6,'(A)', advance='no') 'x'
           else
               write(6,'(A)', advance='no') '-'
@@ -1604,4 +1680,5 @@ subroutine ascii_print_markregion(ndivs, proc, px, pz)
 end subroutine ascii_print_markregion
 !-----------------------------------------------------------------------------------------
 
-end module parallelization
+end module parallelization 
+!=========================================================================================
