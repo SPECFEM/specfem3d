@@ -131,6 +131,14 @@
 
 \noindent There are other examples in 'EXAMPLES/coupling\_with\_EXTERNAL\_CODES/with\_AxiSEM/' with other set of parameters.
 
+\medskip
+
+\noindent In Axisem directory, there are all the parameter files, scripts, stations, etc., to put in Axisem mesher and solver directories, for each example, here: 
+
+\noindent {\small 'utils/EXTERNAL\_CODES\_coupled\_with\_SPECFEM3D/AxiSEM\_for\_SPECFEM3D/Parfiles\_and\_scripts\_for\_examples'}
+
+\noindent Cf 'README' in this directory for more details.
+
 \bigskip
 
 \section{STEP 1 : meshfem3D}
@@ -237,8 +245,9 @@ by AxiSEM) :
 
 \begin{itemize}
 
-\item[\textbullet] ATTENUATION         false
-\item[\textbullet] SAVE\_SNAPSHOTS     true
+\item[\textbullet] MESHNAME            ~~ NAME\_OF\_DESTINATION\_MESH\_DIR
+\item[\textbullet] ATTENUATION         ~~ false
+\item[\textbullet] SAVE\_SNAPSHOTS     ~~ true
 
 \end{itemize}
 
@@ -338,7 +347,7 @@ input_box_sem_cart.txt
 
 \bigskip
 
-\noindent {\color{red} NOTE:} If you already know the value of the begin time and if it is already configured in 'reformat.par', you can launch the compilation of expand\_2D\_3D and reformat, AND the execution of this two programs with the single script :
+\noindent {\color{red} NOTE:} If you already know the value of the begin time and if it is already configured in 'reformat.par', you can launch the compilation of expand\_2D\_3D and reformat, AND the execution of this two programs with the single script (AND uncomment the LAST LINE of the script 'sub\_called\_batch\_for\_expand2D3D\_Curie\_CD.sh' BEFORE that) :
 
 \medskip
 
@@ -347,6 +356,14 @@ input_box_sem_cart.txt
 \medskip
 
 \noindent !! CAUTION : don't forget "NAME\_OF\_RESULTS\_DIR" !!
+
+\medskip
+
+\noindent !! CAUTION : don't forget to UNCOMMENT the last line
+
+\noindent (\#\#\#\#ccc\_msub -q standard ../sub\_called\_batch\_for\_reformat\_Curie\_CD.sh) 
+
+\noindent of 'sub\_called\_batch\_for\_expand2D3D\_Curie\_CD.sh', which will launch the reformat script at the end !!
 
 \bigskip
 
@@ -409,7 +426,7 @@ $$\ds \dfrac{\hbox{second value} - \hbox{the first}}{\text{DT}} ~~ \left(= \dfra
 
 \noindent And finally, type : run ./batch\_coupling\_step8\_xspecfem3d.sh
 
-\section{STEP ? : Set up scripts}
+%%\section{STEP ? : Set up scripts}
 
 
 \end{document}
