@@ -10,7 +10,7 @@ program rotation_specfem_solution
   character(len=100) line
   character(len=5) name_sta
   character(len=1) code
-  character(len=120) sis_cx,sis_cy,sis_cz,output_file
+  character(len=120) sis_cx,sis_cy,sis_cz,output_file_E, output_file_N, output_file_Z
   double precision x,y,z,z_bot
   double precision t,lat,long,radius
   integer k
@@ -60,32 +60,40 @@ program rotation_specfem_solution
   read(*,'(a)') sis_cx
   read(*,'(a)') sis_cy
   read(*,'(a)') sis_cz
-  read(*,'(a)') output_file
+  read(*,'(a)') output_file_E
+  read(*,'(a)') output_file_N
+  read(*,'(a)') output_file_Z
   open(21,file=trim(sis_cx))
   open(22,file=trim(sis_cy))
   open(23,file=trim(sis_cz))
-  open(24,file=trim(output_file))
+  open(24,file=trim(output_file_E))
+  open(25,file=trim(output_file_N))
+  open(26,file=trim(output_file_Z))
   k=0
   !do
      k=k+1
      write(name_sta,'(a,i4.4)') code,k
      read(10,*,end=99) radius,lat,long
      call rotation_matrix(long, lat, rot, irot)
-
+     
      call product_matrix(irot,rot_chunk, rot_matrix)
-     do
+     do 
         read(21,*,end=98) t,x
         read(22,*,end=98) t,y
         read(23,*,end=98) t,z
         call multip_mv(rot_matrix, x,y,z, long, lat, radius)
         !call cart2geogr(x,y,z,rotation_matrix,long,lat,radius)
-        write(24,'(4f30.15)') t,long,lat,radius
-     enddo
+        write(24,'(2f30.15)') t + 703.80324d0, long
+        write(25,'(2f30.15)') t + 703.80324d0, lat
+        write(26,'(2f30.15)') t + 703.80324d0, radius
+     end do
      98 continue
      close(21)
      close(22)
      close(23)
      close(24)
+     close(25)
+     close(26)
      !write(21,'(a5,1x,a2,1x,4f20.5)') name_sta,'SY',y,x,-(z-z_bot),-(z-z_bot) !! because specfem is reading y and x actually
   !enddo
 99 close(10)
@@ -380,43 +388,43 @@ end subroutine compute_inv_rotation_matrix
     irot(3,1)=rot(1,3);irot(3,2)=rot(2,3)
 
   end subroutine rotation_matrix
-
+  
   subroutine  product_matrix(irot,rot_chunk, rotation_matrix)
 
     integer     :: i,j,k
-    double precision            :: irot(3,3), rotation_matrix(3,3),rot_chunk(3,3)
-
+    double precision            :: irot(3,3), rotation_matrix(3,3),rot_chunk(3,3) 
+    
     rotation_matrix(:,:)=0.d0
 
     do i=1,3
        do j=1,3
           do k=1,3
              rotation_matrix(i,j)= rotation_matrix(i,j)+irot(i,k)*rot_chunk(k,j)
-          enddo
-       enddo
-    enddo
+          end do
+       end do
+    end do
 
 
   end subroutine product_matrix
 
   subroutine multip_mv(rotation_matrix, x,y,z, long, lat, radius)
-
+    
     double precision     :: x, y, z
     double precision     :: long, lat, radius
     double precision     :: rotation_matrix(3,3)
     double precision     :: vect(3), vect1(3)
-
+    
     vect1(1)=x
     vect1(2)=y
     vect1(3)=z
-
+    
     vect(:)=0.d0
     do i=1,3
        do j=1,3
           vect(i)=vect(i)+rotation_matrix(i,j)*vect1(j)
-       enddo
-    enddo
-
+       end do
+    end do
+    
     long=vect(1)
     lat=vect(2)
     radius=vect(3)
