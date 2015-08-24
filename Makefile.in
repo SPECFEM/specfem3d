@@ -209,14 +209,14 @@ B = @top_builddir@
 E = $B/bin
 # O : objects directory
 O = $B/obj
+# S_TOP : source file root directory
+S_TOP = @top_srcdir@
 # L : libraries directory
 L = $B/lib
 # setup file directory
 SETUP = $B/setup
 # output file directory
 OUTPUT = $B/OUTPUT_FILES
-# S_TOP : source file root directory
-S_TOP = @top_srcdir@
 
 
 #######################################
@@ -233,9 +233,9 @@ SUBDIRS = \
 	decompose_mesh \
 	generate_databases \
 	meshfem3D \
-	tomography/postprocess_sensitivity_kernels \
 	shared \
 	specfem3D \
+	tomography/postprocess_sensitivity_kernels \
 	tomography \
 	inverse_problem \
 	$(EMPTY_MACRO)
@@ -251,25 +251,7 @@ DEFAULT = \
 
 default: $(DEFAULT)
 
-all: default \
-	xcombine_surf_data \
-	xcombine_vol_data \
-	xconvolve_source_timefunction \
-	xcreate_movie_shakemap_AVS_DX_GMT \
-	xmodel_update \
-	xclip_sem \
-	xcombine_sem \
-	xsmooth_sem \
-	xsum_kernels \
-	xsum_preconditioned_kernels \
-	xcheck_mesh_quality \
-	xconvert_skewness_to_angle \
-	xprogram01_add_model_iso \
-	xprogram02_model_update \
-	xprogram03_smooth_sem \
-	xprogram04_sum_kernels \
-	xprogram05_sum_preconditioned_kernels \
-	$(EMPTY_MACRO)
+all: default aux check_mesh postprocess tomography inverse_problem
 
 backup:
 	cp -rp src setup DATA/Par_file* Makefile bak
@@ -336,7 +318,7 @@ help:
 	@echo "    xcheck_mesh_quality"
 	@echo "    xconvert_skewness_to_angle"
 	@echo ""
-	@echo "- sensitivity kernel postprocessing tools: [make tomography/postprocess_sensitivity_kernels]"
+	@echo "- sensitivity kernel postprocessing tools: [make postprocess]"
 	@echo "    xclip_sem"
 	@echo "    xcombine_sem"
 	@echo "    xsmooth_sem"
@@ -347,33 +329,15 @@ help:
 	@echo "    xsum_preconditioned_kernels"
 	@echo ""
 	@echo "- inverse problem: [make inverse_problem]"
-	@echo "    xprogram1_under_construction"
-	@echo "    xprogram2_under_construction"
-	@echo "    xprogram3_under_construction"
-	@echo "    xprogram4_under_construction"
+	@echo "    xprogram01_add_model_iso"
+	@echo "    xprogram02_model_update"
+	@echo "    xprogram03_smooth_sem"
+	@echo "    xprogram04_sum_kernels"
+	@echo "    xprogram05_sum_preconditioned_kernels"
 	@echo ""
 	@echo "for unit testing:"
 	@echo "    tests"
 	@echo ""
-
-.PHONY: clean realclean \
-	help default all \
-	convolve_source_timefunction xconvolve_source_timefunction \
-	create_movie_shakemap_AVS_DX_GMT xcreate_movie_shakemap_AVS_DX_GMT \
-	combine_vol_data xcombine_vol_data \
-	combine_surf_data xcombine_surf_data \
-	clip_sem xclip_sem \
-	combine_sem xcombine_sem \
-	smooth_sem xsmooth_sem \
-	sum_kernels xsum_kernels \
-	sum_preconditioned_kernels xsum_preconditioned_kernels \
-	model_update xmodel_update \
-	check_mesh_quality xcheck_mesh_quality \
-	gen generate_databases xgenerate_databases \
-	dec decompose_mesh xdecompose_mesh \
-	mesh meshfem3D xmeshfem3D \
-	spec specfem3D xspecfem3D \
-  tests
 
 .PHONY: all default backup clean realclean help tests
 
@@ -408,7 +372,6 @@ $(foreach dir, $(SUBDIRS), $(eval $(call shortcut,$(dir))))
 
 
 # Other old shortcuts
-
 bak: backup
 mesh : $E/xmeshfem3D
 gen : $E/xgenerate_databases
