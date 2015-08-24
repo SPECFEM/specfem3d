@@ -12,7 +12,7 @@ program test_read
   integer,parameter :: PAR_FILE_NPROC = 4
   integer,parameter :: PAR_FILE_NSTEP = 5000
   integer,parameter :: PAR_FILE_NT = 5000
-  integer,parameter :: PAR_FILE_NTSTEP_BETWEEN_OUTPUT_INFO = 100
+  integer,parameter :: PAR_FILE_NTSTEP_BETWEEN_OUTPUT_INFO = 500
   double precision,parameter :: PAR_FILE_DT = 0.05
   logical,parameter :: PAR_FILE_USE_RICKER_TIME_FUNCTION = .false.
 
