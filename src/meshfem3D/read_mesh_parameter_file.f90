@@ -25,73 +25,51 @@
 !
 !=====================================================================
 
-module readParFile
+  subroutine read_mesh_parameter_file()
 
-contains
+  use meshfem3D_par, only: LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
+    UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
+    NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,UTM_PROJECTION_ZONE, &
+    LOCAL_PATH,SUPPRESS_UTM_PROJECTION,&
+    INTERFACES_FILE,NSUBREGIONS,subregions,NMATERIALS,material_properties,&
+    CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
+    USE_REGULAR_MESH,NDOUBLINGS,ner_doublings, &
+    THICKNESS_OF_X_PML,THICKNESS_OF_Y_PML,THICKNESS_OF_Z_PML, &
+    myrank,sizeprocs
 
-  subroutine read_mesh_parameter_file(LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
-                                      UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
-                                      NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,UTM_PROJECTION_ZONE, &
-                                      LOCAL_PATH,SUPPRESS_UTM_PROJECTION,&
-                                      INTERFACES_FILE,NSUBREGIONS,subregions,NMATERIALS,material_properties,&
-                                      CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
-                                      USE_REGULAR_MESH,NDOUBLINGS,ner_doublings, &
-                                      THICKNESS_OF_X_PML,THICKNESS_OF_Y_PML,THICKNESS_OF_Z_PML)
-
-  use constants
+  use constants, only: IIN,MF_IN_DATA_FILES,MAX_STRING_LEN,IMAIN, &
+    IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC, &
+    ILONGLAT2UTM,IGNORE_JUNK
 
   implicit none
-
-  double precision,intent(out) :: LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX
-  double precision,intent(out) :: UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK
-
-  integer,intent(out) :: NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA
-
-  integer,intent(out) :: UTM_PROJECTION_ZONE
-  logical,intent(out) :: SUPPRESS_UTM_PROJECTION
-
-  character(len=MAX_STRING_LEN),intent(out) :: LOCAL_PATH
-  character(len=MAX_STRING_LEN),intent(out) :: INTERFACES_FILE
-
-  ! subregions parameters
-  integer,intent(out) :: NSUBREGIONS
-  !  definition of the different regions of the model in the mesh (nx,ny,nz)
-  !  #1 #2 : nx_begining,nx_end
-  !  #3 #4 : ny_begining,ny_end
-  !  #5 #6 : nz_begining,nz_end
-  !     #7 : material number
-  integer, dimension(:,:), pointer,intent(out) :: subregions
-
-  ! material properties
-  integer,intent(out) :: NMATERIALS
-  ! first dimension  : local number of material
-  ! (note: material_id can be positive/negative for defined/undefined materials)
-  ! second dimension : #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id #material_id
-  double precision, dimension(:,:), pointer,intent(out) :: material_properties
-
-  logical,intent(out) :: CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES
-
-  logical,intent(out) :: USE_REGULAR_MESH
-  integer,intent(out) :: NDOUBLINGS
-  integer, dimension(2),intent(out) :: ner_doublings
-
-  ! CPML
-  double precision, intent(out) :: THICKNESS_OF_X_PML,THICKNESS_OF_Y_PML,THICKNESS_OF_Z_PML
 
 ! local variables
   integer :: NEX_MAX
   double precision :: UTM_MAX
   double precision :: DEPTH_BLOCK_KM
+
   integer :: ier
+
   integer :: ix_beg_region,ix_end_region,iy_beg_region,iy_end_region
   integer :: iz_beg_region,iz_end_region,imaterial_number
+
   double precision :: rho,vp,vs,Q_flag,anisotropy_flag
+
   integer :: ireg,imat,idoubl,ndef,nundef
   integer :: mat_id,domain_id
   logical :: found
+  character(len=MAX_STRING_LEN) :: filename
+
+  ! Mesh Parameter file
+  filename = MF_IN_DATA_FILES(1:len_trim(MF_IN_DATA_FILES)) // 'Mesh_Par_file'
+
+  if (myrank == 0) then
+    write(IMAIN,*) 'Reading mesh parameters from file ',trim(filename)
+    call flush_IMAIN()
+  endif
 
 ! open parameter file Mesh_Par_file
-  call open_parameter_file_mesh()
+  call open_parameter_file_mesh(filename)
 
   call read_value_dble_precision_mesh(IIN,IGNORE_JUNK,LATITUDE_MIN, 'LATITUDE_MIN', ier)
   if (ier /= 0) stop 'Error reading Mesh parameter LATITUDE_MIN'
@@ -295,6 +273,11 @@ contains
     endif
   enddo
 
-  end subroutine read_mesh_parameter_file
+  ! checks
+  if (sizeprocs == 1 .and. (NPROC_XI /= 1 .or. NPROC_ETA /= 1)) &
+    stop 'Error: must have NPROC_XI = NPROC_ETA = 1 for a serial run'
 
-end module readParFile
+  ! make sure everybody is synchronized
+  call synchronize_all()
+
+  end subroutine read_mesh_parameter_file

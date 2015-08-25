@@ -29,8 +29,8 @@
 
   call init_mpi()
 
-! run the main program
-  call meshfem3D
+  ! run the main program
+  call meshfem3D()
 
   call finalize_mpi()
 
