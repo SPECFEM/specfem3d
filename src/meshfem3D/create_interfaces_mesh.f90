@@ -142,7 +142,10 @@
 
     ! loop on all the points describing this interface
     open(unit=45,file=trim(MF_IN_DATA_FILES)//trim(interface_top_file),status='old',iostat=ier)
-    if (ier /= 0) stop 'Error opening interface_top file'
+    if (ier /= 0) then
+      print *,'Error opening file: ',trim(MF_IN_DATA_FILES)//trim(interface_top_file)
+      stop 'Error opening interface file'
+    endif
 
     ! counts number of lines, i.e. elevation point entries
     icount = 0

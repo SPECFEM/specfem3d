@@ -46,7 +46,8 @@ meshfem3D_OBJECTS = \
 	$O/earth_chunk_HEX27_Mesher.mesh.o \
 	$O/earth_chunk_all_Utils.mesh.o \
 	$O/compute_parameters.mesh.o \
-	$O/create_regions_mesh.mesh.o \
+	$O/create_meshfem_mesh.mesh.o \
+	$O/create_CPML_regions.mesh.o \
 	$O/create_interfaces_mesh.mesh.o \
 	$O/create_visual_files.mesh.o \
 	$O/define_subregions.mesh.o \
@@ -145,7 +146,8 @@ $E/xmeshfem3D: $(XMESHFEM_OBJECTS)
 
 
 $O/meshfem3D.mesh.o: $O/meshfem3D_par.mesh.o
-$O/create_regions_mesh.mesh.o: $O/meshfem3D_par.mesh.o
+$O/create_meshfem_mesh.mesh.o: $O/meshfem3D_par.mesh.o
+$O/create_CPML_regions.mesh.o: $O/meshfem3D_par.mesh.o
 $O/create_interfaces_mesh.mesh.o: $O/meshfem3D_par.mesh.o
 $O/read_mesh_parameter_file.mesh.o: $O/meshfem3D_par.mesh.o
 
@@ -153,7 +155,7 @@ $O/read_mesh_parameter_file.mesh.o: $O/meshfem3D_par.mesh.o
 $O/meshfem3D_adios_stubs.mesh_noadios.o: $O/shared_par.shared_module.o $O/adios_manager_stubs.shared_noadios.o
 
 $O/save_databases_adios.mesh_adios.o: $O/safe_alloc_mod.shared.o $(adios_meshfem3D_PREOBJECTS)
-$O/create_regions_mesh.mesh.o: $(adios_meshfem3D_PREOBJECTS)
+$O/create_meshfem_mesh.mesh.o: $(adios_meshfem3D_PREOBJECTS)
 
 $O/adios_helpers.shared_adios.o: \
 	$O/adios_helpers_definitions.shared_adios_module.o \

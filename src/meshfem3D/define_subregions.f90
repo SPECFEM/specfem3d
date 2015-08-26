@@ -58,12 +58,14 @@
 
   ix1=2*(subregions(isubregion,1) - iproc_xi*NEX_PER_PROC_XI - 1)
   if (ix1 < 0) ix1 = 0
+
   ix2=2*(subregions(isubregion,2) - iproc_xi*NEX_PER_PROC_XI - 1)
   if (ix2 > 2*(NEX_PER_PROC_XI - 1)) ix2 = 2*(NEX_PER_PROC_XI - 1)
   dix=2
 
   iy1=2*(subregions(isubregion,3) - iproc_eta*NEX_PER_PROC_ETA - 1)
   if (iy1 < 0) iy1 = 0
+
   iy2=2*(subregions(isubregion,4) - iproc_eta*NEX_PER_PROC_ETA - 1)
   if (iy2 > 2*(NEX_PER_PROC_ETA - 1)) iy2 = 2*(NEX_PER_PROC_ETA - 1)
   diy=2
@@ -85,33 +87,34 @@
 !
 
   subroutine define_mesh_regions(USE_REGULAR_MESH,isubregion,NER,NEX_PER_PROC_XI,NEX_PER_PROC_ETA,iproc_xi,iproc_eta,&
-                                 ndoublings,ner_doublings,&
+                                 NDOUBLINGS,ner_doublings,&
                                  iaddx,iaddy,iaddz,ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir,iax,iay,iar)
 
-    use constants
+  use constants
 
-    implicit none
+  implicit none
 
-    logical USE_REGULAR_MESH
+  logical :: USE_REGULAR_MESH
 
-    integer isubregion
-    integer NEX_PER_PROC_XI,NEX_PER_PROC_ETA,NER
-    integer iproc_xi,iproc_eta
+  integer :: isubregion
+  integer :: NEX_PER_PROC_XI,NEX_PER_PROC_ETA,NER
+  integer :: iproc_xi,iproc_eta
 
-    integer ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir
-    integer iax,iay,iar
-    integer ndoublings
+  integer :: ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir
+  integer :: iax,iay,iar
 
-! topology of the elements
-    integer iaddx(NGNOD_EIGHT_CORNERS)
-    integer iaddy(NGNOD_EIGHT_CORNERS)
-    integer iaddz(NGNOD_EIGHT_CORNERS)
-    integer ner_doublings(2)
+  integer :: NDOUBLINGS
+  integer,dimension(NDOUBLINGS) :: ner_doublings
 
-    ! to avoid compiler warnings
-    integer idummy
-    idummy = iproc_xi
-    idummy = iproc_eta
+  ! topology of the elements
+  integer :: iaddx(NGNOD_EIGHT_CORNERS)
+  integer :: iaddy(NGNOD_EIGHT_CORNERS)
+  integer :: iaddz(NGNOD_EIGHT_CORNERS)
+
+  ! to avoid compiler warnings
+  integer :: idummy
+  idummy = iproc_xi
+  idummy = iproc_eta
 
 ! **************
 
@@ -121,7 +124,6 @@
   if (USE_REGULAR_MESH) then
 
      call usual_hex_nodes(NGNOD_EIGHT_CORNERS,iaddx,iaddy,iaddz)
-
 
      ix1=0
      ix2=2*(NEX_PER_PROC_XI - 1)
@@ -140,7 +142,7 @@
      iar=1
 
   else
-     if (ndoublings == 1) then
+     if (NDOUBLINGS == 1) then
 
         select case (isubregion)
 
@@ -202,7 +204,7 @@
 
         end select
 
-     else if (ndoublings == 2) then
+     else if (NDOUBLINGS == 2) then
 
         select case (isubregion)
 

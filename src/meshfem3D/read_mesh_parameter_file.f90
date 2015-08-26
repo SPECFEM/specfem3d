@@ -55,8 +55,9 @@
 
   double precision :: rho,vp,vs,Q_flag,anisotropy_flag
 
-  integer :: ireg,imat,idoubl,ndef,nundef
+  integer :: ireg,imat,ndef,nundef
   integer :: mat_id,domain_id
+  integer :: ner_value
   logical :: found
   character(len=MAX_STRING_LEN) :: filename
 
@@ -95,14 +96,28 @@
   if (ier /= 0) stop 'Error reading Mesh parameter NPROC_XI'
   call read_value_integer_mesh(IIN,IGNORE_JUNK,NPROC_ETA, 'NPROC_ETA', ier)
   if (ier /= 0) stop 'Error reading Mesh parameter NPROC_ETA'
+
   call read_value_logical_mesh(IIN,IGNORE_JUNK,USE_REGULAR_MESH, 'USE_REGULAR_MESH', ier)
   if (ier /= 0) stop 'Error reading Mesh parameter USE_REGULAR_MESH'
+
   call read_value_integer_mesh(IIN,IGNORE_JUNK,NDOUBLINGS, 'NDOUBLINGS', ier)
   if (ier /= 0) stop 'Error reading Mesh parameter NDOUBLINGS'
-  call read_value_integer_mesh(IIN,IGNORE_JUNK,ner_doublings(1), 'NZ_DOUGLING_1', ier)
+
+  ! checks value
+  if (NDOUBLINGS < 0 .or. NDOUBLINGS > 2) stop 'Error parameter NDOUBLINGS is invalid! value must be less or equal to 2'
+
+  ! allocate doubling array
+  allocate(ner_doublings(NDOUBLINGS),stat=ier)
+  if (ier /= 0) stop 'Error allocating ner_doublings array'
+
+  call read_value_integer_mesh(IIN,IGNORE_JUNK, ner_value, 'NZ_DOUGLING_1', ier)
   if (ier /= 0) stop 'Error reading Mesh parameter NZ_DOUGLING_1'
-  call read_value_integer_mesh(IIN,IGNORE_JUNK,ner_doublings(2), 'NZ_DOUGLING_2', ier)
+  if (NDOUBLINGS >= 1) ner_doublings(1) = ner_value
+
+  call read_value_integer_mesh(IIN,IGNORE_JUNK, ner_value, 'NZ_DOUGLING_2', ier)
   if (ier /= 0) stop 'Error reading Mesh parameter NZ_DOUGLING_2'
+  if (NDOUBLINGS >= 2) ner_doublings(2) = ner_value
+
   call read_value_logical_mesh(IIN,IGNORE_JUNK,CREATE_ABAQUS_FILES, 'CREATE_ABAQUS_FILES', ier)
   if (ier /= 0) stop 'Error reading Mesh parameter CREATE_ABAQUS_FILES'
   call read_value_logical_mesh(IIN,IGNORE_JUNK,CREATE_DX_FILES, 'CREATE_DX_FILES', ier)
@@ -184,9 +199,9 @@
   ! (doubling counts layers from bottom to top)
   if (NDOUBLINGS == 2) then
     if (ner_doublings(1) < ner_doublings(2)) then
-      idoubl = ner_doublings(1)
+      ner_value = ner_doublings(1)
       ner_doublings(1) = ner_doublings(2)
-      ner_doublings(2) = idoubl
+      ner_doublings(2) = ner_value
     endif
   endif
 

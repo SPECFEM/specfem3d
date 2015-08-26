@@ -26,9 +26,9 @@
 !=====================================================================
 
   subroutine get_flags_boundaries(nspec,iproc_xi,iproc_eta,ispec,idoubling, &
-             xstore,ystore,zstore,iboun,iMPIcut_xi,iMPIcut_eta, &
-             NPROC_XI,NPROC_ETA, &
-             UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK)
+                                  xstore,ystore,zstore,iboun,iMPIcut_xi,iMPIcut_eta, &
+                                  NPROC_XI,NPROC_ETA, &
+                                  UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK)
 
   use constants
 

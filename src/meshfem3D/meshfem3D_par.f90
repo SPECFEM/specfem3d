@@ -84,10 +84,13 @@ module meshfem3D_par
 
 ! CPML
   double precision :: THICKNESS_OF_X_PML,THICKNESS_OF_Y_PML,THICKNESS_OF_Z_PML
+  logical, dimension(:), allocatable :: is_CPML
+  integer, dimension(:), allocatable :: CPML_to_spec,CPML_regions
+  integer :: nspec_CPML
 
 ! doublings parameters
   integer :: NDOUBLINGS
-  integer, dimension(2) :: ner_doublings
+  integer, dimension(:),allocatable :: ner_doublings
 
 ! parameters deduced from parameters read from file
   integer :: NEX_PER_PROC_XI,NEX_PER_PROC_ETA
