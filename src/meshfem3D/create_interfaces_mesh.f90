@@ -31,7 +31,8 @@
     number_of_interfaces, &
     SUPPRESS_UTM_PROJECTION, &
     UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,UTM_PROJECTION_ZONE,Z_DEPTH_BLOCK, &
-    max_npx_interface,max_npy_interface,npx,npy, &
+    max_npx_interface,max_npy_interface, &
+    npx_element_steps,npy_element_steps, &
     number_of_layers,ner_layer,iproc_xi_current,iproc_eta_current,NPROC_XI,NPROC_ETA, &
     xgrid,ygrid,zgrid
 
@@ -54,7 +55,18 @@
   double precision :: long_corner,lat_corner,ratio_xi,ratio_eta
   double precision, dimension(:,:),allocatable :: interface_bottom,interface_top
   double precision :: elevation
+
   double precision :: min_elevation,max_elevation
+  double precision :: min_long,max_long
+  double precision :: min_lat,max_lat
+  double precision :: min_x,max_x
+  double precision :: min_y,max_y
+
+  double precision :: min_elevation_all,max_elevation_all
+  double precision :: min_long_all,max_long_all
+  double precision :: min_lat_all,max_lat_all
+  double precision :: min_x_all,max_x_all
+  double precision :: min_y_all,max_y_all
 
 ! to compute the coordinate transformation
   integer :: ioffset
@@ -97,6 +109,7 @@
   ! user output
   if (myrank == 0) then
     write(IMAIN,*) 'number of interfaces: ',number_of_interfaces
+      write(IMAIN,*)
     call flush_IMAIN()
   endif
 
@@ -113,13 +126,36 @@
 
   interface_bottom(:,:) = - dabs(Z_DEPTH_BLOCK)
 
+  ! collects mesh statistics
+  call min_all_dp(UTM_X_MIN,min_x_all)
+  call max_all_dp(UTM_X_MAX,max_x_all)
+  call min_all_dp(UTM_Y_MIN,min_y_all)
+  call max_all_dp(UTM_Y_MAX,max_y_all)
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) 'mesh:'
+    ! project x and y in UTM back to long/lat since topo file is in long/lat
+    call utm_geo(long,lat,min_x_all,min_y_all, &
+                 UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)
+    write(IMAIN,*) '  origin UTM minimum x/y      = ',sngl(min_x_all),sngl(min_y_all)
+    write(IMAIN,*) '                     lat/lon  = ',sngl(lat),sngl(long)
+
+    call utm_geo(long,lat,max_x_all,max_y_all, &
+                 UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)
+    write(IMAIN,*) '  origin UTM maximum x/y      = ',sngl(max_x_all),sngl(max_y_all)
+    write(IMAIN,*) '                     lat/lon  = ',sngl(lat),sngl(long)
+    write(IMAIN,*)
+    call flush_IMAIN()
+  endif
+
   ! loop on all the layers
   ! note: number of layers and number of interfaces are equal
   do ilayer = 1,number_of_layers
 
     ! user output
     if (myrank == 0) then
-      write(IMAIN,*) '  reading interface ',ilayer
+      write(IMAIN,*) 'reading interface ',ilayer
       call flush_IMAIN()
     endif
 
@@ -137,6 +173,12 @@
       write(IMAIN,*) '  number of points x/y = ',npx_interface_top,npy_interface_top
       write(IMAIN,*) '  origin x/y           = ',sngl(orig_x_interface_top),sngl(orig_y_interface_top)
       write(IMAIN,*) '  spacing x/y          = ',sngl(spacing_x_interface_top),sngl(spacing_y_interface_top)
+      write(IMAIN,*)
+      write(IMAIN,*) '  dimension x-direction: ',sngl(orig_x_interface_top),'/', &
+                            sngl(orig_x_interface_top + npx_interface_top*spacing_x_interface_top)
+      write(IMAIN,*) '  dimension y-direction: ',sngl(orig_y_interface_top),'/', &
+                            sngl(orig_y_interface_top + npy_interface_top*spacing_y_interface_top)
+      write(IMAIN,*)
       call flush_IMAIN()
     endif
 
@@ -155,6 +197,18 @@
     enddo
     rewind(45)
 
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*) '  total number of file points = ',icount,' should be ',npx_interface_top * npy_interface_top
+      if (icount == npx_interface_top * npy_interface_top) then
+        write(IMAIN,*) '  this point total is okay'
+      else
+        write(IMAIN,*) '  this point total is incorrect'
+      endif
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
+
     ! checks number of points npoints_interface_top = npx_interface_top * npy_interface
     if (icount /= npx_interface_top * npy_interface_top) then
       print *,'Error number of interface points ',icount,' should be ',npx_interface_top * npy_interface_top
@@ -169,7 +223,10 @@
     ! reads in interface points
     do iy = 1,npy_interface_top
       do ix = 1,npx_interface_top
-        call read_value_dble_precision_mesh(45,DONT_IGNORE_JUNK,elevation,'Z_INTERFACE_TOP',ier)
+        ! reading without trailing/triming...
+        read(45,*,iostat=ier) elevation
+        !in case data file would have comment lines...
+        !call read_value_dble_precision_mesh(45,DONT_IGNORE_JUNK,elevation,'Z_INTERFACE_TOP',ier)
         if (ier /= 0) stop 'Error reading interface value'
 
         ! stores values for interpolation
@@ -184,8 +241,7 @@
 
     ! user output
     if (myrank == 0) then
-      write(IMAIN,*) '  elevation min/max    = ',sngl(min_elevation),sngl(max_elevation)
-      write(IMAIN,*)
+      write(IMAIN,*) '  original elevation min/max             = ',sngl(min_elevation),sngl(max_elevation)
       call flush_IMAIN()
     endif
 
@@ -197,15 +253,26 @@
     endif
 
     !--- definition of the mesh
+    ! statistics
+    max_elevation = - HUGEVAL
+    min_elevation = HUGEVAL
+    min_long = HUGEVAL
+    max_long = - HUGEVAL
+    min_lat = HUGEVAL
+    max_lat = - HUGEVAL
+    min_x = HUGEVAL
+    max_x = - HUGEVAL
+    min_y = HUGEVAL
+    max_y = - HUGEVAL
 
-    do iy = 0,npy
-      do ix = 0,npx
+    do iy = 0,npy_element_steps
+      do ix = 0,npx_element_steps
 
         !   define the mesh points on the top and the bottom
-        xin = dble(ix)/dble(npx)
+        xin = dble(ix)/dble(npx_element_steps)
         x_current = UTM_X_MIN + (dble(iproc_xi_current)+xin)*(UTM_X_MAX-UTM_X_MIN)/dble(NPROC_XI)
 
-        etan = dble(iy)/dble(npy)
+        etan = dble(iy)/dble(npy_element_steps)
         y_current = UTM_Y_MIN + (dble(iproc_eta_current)+etan)*(UTM_Y_MAX-UTM_Y_MIN)/dble(NPROC_ETA)
 
         ! get bottom interface value
@@ -231,21 +298,34 @@
         ratio_eta = (lat - lat_corner) / spacing_y_interface_bottom
 
         ! avoid edge effects
-        if (ratio_xi < 0.) ratio_xi = 0.
-        if (ratio_xi > 1.) ratio_xi = 1.
-        if (ratio_eta < 0.) ratio_eta = 0.
-        if (ratio_eta > 1.) ratio_eta = 1.
+        if (ratio_xi < 0.d0) ratio_xi = 0.d0
+        if (ratio_xi > 1.d0) ratio_xi = 1.d0
+        if (ratio_eta < 0.d0) ratio_eta = 0.d0
+        if (ratio_eta > 1.d0) ratio_eta = 1.d0
 
         ! interpolate elevation at current point
         z_interface_bottom = &
-              interface_bottom(icornerlong,icornerlat)*(1.-ratio_xi)*(1.-ratio_eta) + &
-              interface_bottom(icornerlong+1,icornerlat)*ratio_xi*(1.-ratio_eta) + &
+              interface_bottom(icornerlong,icornerlat)*(1.d0-ratio_xi)*(1.d0-ratio_eta) + &
+              interface_bottom(icornerlong+1,icornerlat)*ratio_xi*(1.d0-ratio_eta) + &
               interface_bottom(icornerlong+1,icornerlat+1)*ratio_xi*ratio_eta + &
-              interface_bottom(icornerlong,icornerlat+1)*(1.-ratio_xi)*ratio_eta
+              interface_bottom(icornerlong,icornerlat+1)*(1.d0-ratio_xi)*ratio_eta
 
         ! get top interface value
         ! project x and y in UTM back to long/lat since topo file is in long/lat
         call utm_geo(long,lat,x_current,y_current,UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION_TOP)
+
+        ! debug
+        !if (long < 138.d0) print *,'long:',long,lat,x_current,y_current,'rank',myrank,ix,iy,'xi/eta',xin,etan
+
+        ! statstics
+        if (long < min_long) min_long = long
+        if (long > max_long) max_long = long
+        if (lat < min_lat) min_lat = lat
+        if (lat > max_lat) max_lat = lat
+        if (x_current < min_x) min_x = x_current
+        if (x_current > max_x) max_x = x_current
+        if (y_current < min_y) min_y = y_current
+        if (y_current > max_y) max_y = y_current
 
         ! get coordinate of corner in bathy/topo model
         icornerlong = int((long - orig_x_interface_top) / spacing_x_interface_top) + 1
@@ -266,18 +346,23 @@
         ratio_eta = (lat - lat_corner) / spacing_y_interface_top
 
         ! avoid edge effects
-        if (ratio_xi < 0.) ratio_xi = 0.
-        if (ratio_xi > 1.) ratio_xi = 1.
-        if (ratio_eta < 0.) ratio_eta = 0.
-        if (ratio_eta > 1.) ratio_eta = 1.
+        if (ratio_xi < 0.d0) ratio_xi = 0.d0
+        if (ratio_xi > 1.d0) ratio_xi = 1.d0
+        if (ratio_eta < 0.d0) ratio_eta = 0.d0
+        if (ratio_eta > 1.d0) ratio_eta = 1.d0
 
         ! interpolate elevation at current point
         z_interface_top = &
-             interface_top(icornerlong,icornerlat)*(1.-ratio_xi)*(1.-ratio_eta) + &
-             interface_top(icornerlong+1,icornerlat)*ratio_xi*(1.-ratio_eta) + &
+             interface_top(icornerlong,icornerlat)*(1.d0-ratio_xi)*(1.d0-ratio_eta) + &
+             interface_top(icornerlong+1,icornerlat)*ratio_xi*(1.d0-ratio_eta) + &
              interface_top(icornerlong+1,icornerlat+1)*ratio_xi*ratio_eta + &
-             interface_top(icornerlong,icornerlat+1)*(1.-ratio_xi)*ratio_eta
+             interface_top(icornerlong,icornerlat+1)*(1.d0-ratio_xi)*ratio_eta
 
+        ! statstics
+        if (z_interface_top < min_elevation) min_elevation = z_interface_top
+        if (z_interface_top > max_elevation) max_elevation = z_interface_top
+
+        ! stores location of grid points
         do ir = 0,ner_layer(ilayer)
           ! linear interpolation between bottom and top
           gamma = dble(ir) / dble(ner_layer(ilayer))
@@ -290,6 +375,31 @@
 
       enddo
     enddo
+
+    ! collects statistics
+    call min_all_dp(min_elevation,min_elevation_all)
+    call max_all_dp(max_elevation,max_elevation_all)
+    call min_all_dp(min_long,min_long_all)
+    call max_all_dp(max_long,max_long_all)
+    call min_all_dp(min_lat,min_lat_all)
+    call max_all_dp(max_lat,max_lat_all)
+    call min_all_dp(min_x,min_x_all)
+    call max_all_dp(max_x,max_x_all)
+    call min_all_dp(min_y,min_y_all)
+    call max_all_dp(max_y,max_y_all)
+
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*) '  interpolated mesh elevation min/max    = ',sngl(min_elevation_all),sngl(max_elevation_all)
+      write(IMAIN,*)
+      write(IMAIN,*) '  interpolated mesh longitude min/max = ',sngl(min_long_all),'/',sngl(max_long_all)
+      write(IMAIN,*) '  interpolated mesh latitude  min/max = ',sngl(min_lat_all),'/',sngl(max_lat_all)
+      write(IMAIN,*)
+      write(IMAIN,*) '  interpolated mesh UTM minimum x/y = ',sngl(min_x_all),sngl(min_y_all)
+      write(IMAIN,*) '  interpolated mesh UTM maximum x/y = ',sngl(max_x_all),sngl(max_y_all)
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
 
     ! the top interface becomes the bottom interface before switching to the next layer
     SUPPRESS_UTM_PROJECTION_BOTTOM = SUPPRESS_UTM_PROJECTION_TOP
@@ -321,7 +431,8 @@
   subroutine get_interfaces_mesh_count()
 
   use meshfem3D_par, only: myrank,INTERFACES_FILE, &
-    number_of_interfaces,max_npx_interface,max_npy_interface
+    number_of_interfaces,max_npx_interface,max_npy_interface, &
+    number_of_layers,ner_layer
 
   use constants,only: IMAIN,IIN,MF_IN_DATA_FILES,DONT_IGNORE_JUNK,IUTM2LONGLAT,MAX_STRING_LEN
 
@@ -329,7 +440,7 @@
 
   ! local parameters
   integer :: npx_interface,npy_interface
-  integer :: interface_current
+  integer :: interface_current,ilayer
   integer :: ier
 
   ! dummy values
@@ -386,5 +497,28 @@
     write(IMAIN,*) 'maximum interface points x/y = ',max_npx_interface,max_npy_interface
     call flush_IMAIN()
   endif
+
+  ! define number of layers
+  number_of_layers = number_of_interfaces
+
+  allocate(ner_layer(number_of_layers),stat=ier)
+  if (ier /= 0) stop 'Error allocating array ner_layer'
+
+  ! loop on all the layers
+  do ilayer = 1,number_of_layers
+
+    ! read number of spectral elements in vertical direction in this layer
+    call read_value_integer_mesh(IIN,DONT_IGNORE_JUNK,ner_layer(ilayer),'NER_LAYER', ier)
+    if (ier /= 0) stop 'Error reading interface parameter for NER_LAYER'
+
+    ! checks
+    if (ner_layer(ilayer) < 1) then
+      print *,'Error invalid layering number ',ner_layer(ilayer),' for layer ',ilayer
+      print *,'Please use a minimum element layer number of 1 in interface file'
+      stop 'Error not enough spectral elements along Z in layer (minimum is 1)'
+    endif
+  enddo
+
+  close(IIN)
 
   end subroutine get_interfaces_mesh_count

@@ -61,7 +61,9 @@ module meshfem3D_par
 
 ! proc numbers for MPI
   integer :: myrank,sizeprocs
-  integer :: npx,npy
+
+! mesh point steps for interfaces
+  integer :: npx_element_steps,npy_element_steps
 
 ! for loop on all the slices
   integer, dimension(:,:), allocatable :: addressing

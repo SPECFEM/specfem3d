@@ -94,7 +94,7 @@
                  xgamma*(yxi*zeta-yeta*zxi)
 
 ! check that the Jacobian transform is invertible, i.e. that the Jacobian never becomes negative or null
-      if (jacobian <= ZERO) call exit_MPI(myrank,'error: negative or null 3D Jacobian found')
+      if (jacobian <= ZERO) call exit_MPI(myrank,'Error negative or null 3D Jacobian found')
 
 !     invert the relation (Fletcher p. 50 vol. 2)
       xix = (yeta*zgamma-ygamma*zeta) / jacobian

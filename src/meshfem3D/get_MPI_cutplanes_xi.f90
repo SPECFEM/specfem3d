@@ -25,6 +25,9 @@
 !
 !=====================================================================
 
+! not used, remains here for reference...
+! note: mpi setup is now done in xgenerate_databases
+
   subroutine get_MPI_cutplanes_xi(myrank,prname,nspec,iMPIcut_xi,ibool, &
                         xstore,ystore,zstore,mask_ibool,npointot, &
                         NSPEC2D_A_ETA,NSPEC2D_B_ETA)

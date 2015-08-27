@@ -318,27 +318,26 @@
   ! get interface data from external file to count the spectral elements along Z
   call get_interfaces_mesh_count()
 
-  ! define number of layers
-  number_of_layers = number_of_interfaces
-
-  allocate(ner_layer(number_of_layers),stat=ier)
-  if (ier /= 0) stop 'Error allocating array ner_layer'
-
-  ! loop on all the layers
-  do ilayer = 1,number_of_layers
-
-    ! read number of spectral elements in vertical direction in this layer
-    call read_value_integer_mesh(IIN,DONT_IGNORE_JUNK,ner_layer(ilayer),'NER_LAYER', ier)
-    if (ier /= 0) stop 'Error reading interface parameter for NER_LAYER'
-
-    if (ner_layer(ilayer) < 1) stop 'not enough spectral elements along Z in layer (minimum is 1)'
-
-  enddo
-
-  close(IIN)
-
   ! compute total number of spectral elements in vertical direction
   NER = sum(ner_layer)
+
+  ! checks if regions and vertical layers from interfaces file match
+  if (maxval(subregions(:,6)) /= NER) then
+    print *,'Error invalid total number of element layers in vertical direction!'
+    print *,'from interface file, total layers = ',NER
+    print *,'should be equal to maximum layer NZ_END specified in regions:', maxval(subregions(:,6))
+    stop 'Error invalid total number of vertical layers'
+  endif
+
+  ! checks irregular grid entries
+  if (.not. USE_REGULAR_MESH) then
+    if (maxval(ner_doublings(:)) == NER) then
+      print *,'Error invalid doubling layer NZ index too close to surface layer ',NER
+      print *,'Please decrease maximum doubling layer index NZ_DOUBLING'
+      stop 'Error invalid doubling layer index too close to surface layer'
+    endif
+  endif
+
 
   ! compute other parameters based upon values read
   call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
@@ -424,6 +423,7 @@
     write(IMAIN,*) 'There are ',NEX_XI,' elements along xi'
     write(IMAIN,*) 'There are ',NEX_ETA,' elements along eta'
     write(IMAIN,*) 'There are ',NER,' elements along Z'
+    write(IMAIN,*)
     do ilayer = 1,number_of_layers
        write(IMAIN,*) 'There are ',ner_layer(ilayer),' spectral elements along Z in layer ',ilayer
     enddo
@@ -467,6 +467,11 @@
 
     if (mod(NEX_PER_PROC_XI,8) /= 0) call exit_MPI(myrank,'NEX_PER_PROC_XI must be a multiple of 8')
     if (mod(NEX_PER_PROC_ETA,8) /= 0) call exit_MPI(myrank,'NEX_PER_PROC_ETA must be a multiple of 8')
+
+    if (mod(NEX_PER_PROC_XI, 2**NDOUBLINGS * 2) /= 0 ) &
+      call exit_MPI(myrank,'NEX_PER_PROC_XI must be a multiple of 2 * 2**NDOUBLINGS')
+    if (mod(NEX_PER_PROC_ETA, 2**NDOUBLINGS * 2) /= 0 ) &
+      call exit_MPI(myrank,'NEX_PER_PROC_ETA must be a multiple of 2 * 2**NDOUBLINGS')
   endif
 
   if (myrank == 0) then
@@ -516,8 +521,8 @@
   iproc_eta_current = iproc_eta_slice(myrank)
 
   ! number of elements in each slice
-  npx = 2*NEX_PER_PROC_XI
-  npy = 2*NEX_PER_PROC_ETA
+  npx_element_steps = 2*NEX_PER_PROC_XI
+  npy_element_steps = 2*NEX_PER_PROC_ETA
   ner_layer(:) = 2 * ner_layer(:)
 
   !min_elevation = +HUGEVAL

@@ -36,7 +36,7 @@
     NPROC_XI,NPROC_ETA, &
     nsubregions,subregions,NMATERIALS,material_properties, &
     myrank, sizeprocs, &
-    LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
+    LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK,NEX_XI,NEX_ETA, &
     CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
     USE_REGULAR_MESH,NDOUBLINGS,ner_doublings, &
     ADIOS_ENABLED, ADIOS_FOR_DATABASES, &
@@ -242,13 +242,20 @@
     call define_superbrick(x_superbrick,y_superbrick,z_superbrick,ibool_superbrick,iboun_sb)
     nspec_sb = NSPEC_DOUBLING_SUPERBRICK
 
-    if (NDOUBLINGS == 1) then
-      nmeshregions = 3
-    else if (NDOUBLINGS == 2) then
-      nmeshregions = 5
-    else
-      stop 'Wrong number of mesh regions'
-    endif
+    ! mesh subregion:
+    !   example NDOUBLINGS = 1: isubregion = 1,2,3
+    !   example NDOUBLINGS = 2: isubregion = 1,2,3,4,5
+    ! the values goes from 1 to 2 * NDOUBLINGS + 1
+    nmeshregions = 2 * NDOUBLINGS + 1
+
+    ! hard-coded way
+    !if (NDOUBLINGS == 1) then
+    !  nmeshregions = 3
+    !else if (NDOUBLINGS == 2) then
+    !  nmeshregions = 5
+    !else
+    !  stop 'Wrong number of mesh doubling regions'
+    !endif
   endif
 
   ! user output
@@ -261,25 +268,28 @@
   do isubregion = 1,nmeshregions
     ! user output
     if (myrank == 0) then
-      write(IMAIN,*) '  creating mesh region ',isubregion
+      if (modulo(isubregion,2) == 1) then
+        write(IMAIN,*) '  creating mesh region ',isubregion
+      else
+        write(IMAIN,*) '  creating mesh region ',isubregion,' with doubling layer'
+      endif
       call flush_IMAIN()
     endif
 
     ! define shape of elements
-    call define_mesh_regions(USE_REGULAR_MESH,isubregion,NER,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
+    call define_mesh_regions(myrank,USE_REGULAR_MESH,isubregion,NER,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
                              iproc_xi_current,iproc_eta_current,&
                              NDOUBLINGS,ner_doublings,&
                              iaddx,iaddy,iaddz,ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir,iax,iay,iar)
 
     ! loop on all the mesh points in current subregion
-    do ir = ir1,ir2,dir
-      do iy = iy1,iy2,diy
-        do ix = ix1,ix2,dix
+    if (modulo(isubregion,2) == 1) then
 
-          if (modulo(isubregion,2) == 1) then
+      ! Regular subregion case
 
-            ! Regular subregion case
-
+      do ir = ir1,ir2,dir
+        do iy = iy1,iy2,diy
+          do ix = ix1,ix2,dix
             ! loop over the NGNOD_EIGHT_CORNERS nodes
             do ia=1,NGNOD_EIGHT_CORNERS
               ! define topological coordinates of this mesh point
@@ -290,7 +300,6 @@
               xelm(ia) = xgrid(ioffset_z,ioffset_x,ioffset_y)
               yelm(ia) = ygrid(ioffset_z,ioffset_x,ioffset_y)
               zelm(ia) = zgrid(ioffset_z,ioffset_x,ioffset_y)
-
             enddo
 
             ! add one spectral element to the list and store its material number
@@ -302,8 +311,10 @@
 
             ! check if element is on topography
             if ((ir == ir2) .and. (isubregion == nmeshregions)) then
+              ! sets index to topography layer
               doubling_index = IFLAG_ONE_LAYER_TOPOGRAPHY
             else
+              ! sets index to deeper, basement layers
               doubling_index = IFLAG_BASEMENT_TOPO
             endif
 
@@ -317,12 +328,19 @@
                                       ispec,doubling_index, &
                                       xstore(:,:,:,ispec),ystore(:,:,:,ispec),zstore(:,:,:,ispec), &
                                       iboun,iMPIcut_xi,iMPIcut_eta,NPROC_XI,NPROC_ETA, &
-                                      UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK)
+                                      UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK,NEX_XI,NEX_ETA)
+          enddo
+        enddo
+      enddo
+      ! end of loop on all the mesh points in current subregion
 
-          else
+    else
 
-            ! Irregular subregion case
+      ! Irregular subregion case
 
+      do ir = ir1,ir2,dir
+        do iy = iy1,iy2,diy
+          do ix = ix1,ix2,dix
             ! loop on all the elements in the mesh doubling superbrick
             do ispec_superbrick = 1,nspec_sb
               ! loop on all the corner nodes of this element
@@ -344,6 +362,11 @@
                 call exit_MPI(myrank,'ispec greater than nspec in mesh creation')
               endif
 
+              ! sets index to deeper, basement layers
+              ! note: doubling layer can not be at surface,
+              !       since modulo 2 is zero for doubling layer, it will always have one layer below and one layer above
+              !       for example: 1 doubling layer -> mesh regions = 3:
+              !                    region 1 is bottom, region 2 is doubling, region 3 top
               doubling_index = IFLAG_BASEMENT_TOPO
               ispec_material_id(ispec) = material_num(ir,ix,iy)
 
@@ -355,15 +378,15 @@
                                         ispec,doubling_index, &
                                         xstore(:,:,:,ispec),ystore(:,:,:,ispec),zstore(:,:,:,ispec), &
                                         iboun,iMPIcut_xi,iMPIcut_eta,NPROC_XI,NPROC_ETA, &
-                                        UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK)
+                                        UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK,NEX_XI,NEX_ETA)
 
             enddo
-          endif
-
-        ! end of loop on all the mesh points in current subregion
+          enddo
         enddo
       enddo
-    enddo
+      ! end of loop on all the mesh points in current subregion
+
+    endif ! regular/doubling region
 
   ! end of loop on all the subregions of the current region the mesh
   enddo
@@ -508,7 +531,7 @@
 
   ! CPML initialization
   call create_CPML_regions(nspec,nglob,nodes_coords)
-  
+
   ! user output
   if (myrank == 0) then
     write(IMAIN,*) 'saving mesh files'
