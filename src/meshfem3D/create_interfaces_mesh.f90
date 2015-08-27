@@ -84,8 +84,14 @@
   double precision :: spacing_x_interface_top,spacing_y_interface_top
 
   character(len=MAX_STRING_LEN) :: interface_top_file
+  character(len=12) :: str_unit
+  character(len=12),parameter :: str_unit_m = "(m)",str_unit_deg = "(deg)"
 
   logical :: SUPPRESS_UTM_PROJECTION_BOTTOM,SUPPRESS_UTM_PROJECTION_TOP
+
+  ! conversion factor:
+  ! at equator earth circumference 40,075,161.2 divided by 360.0 degree
+  double precision, parameter :: DEGREE_TO_METERS = 111319.8922222222d0
 
   ! user output
   if (myrank == 0) then
@@ -135,16 +141,19 @@
   ! user output
   if (myrank == 0) then
     write(IMAIN,*) 'mesh:'
-    ! project x and y in UTM back to long/lat since topo file is in long/lat
-    call utm_geo(long,lat,min_x_all,min_y_all, &
-                 UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)
-    write(IMAIN,*) '  origin UTM minimum x/y      = ',sngl(min_x_all),sngl(min_y_all)
-    write(IMAIN,*) '                     lat/lon  = ',sngl(lat),sngl(long)
-
-    call utm_geo(long,lat,max_x_all,max_y_all, &
-                 UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)
-    write(IMAIN,*) '  origin UTM maximum x/y      = ',sngl(max_x_all),sngl(max_y_all)
-    write(IMAIN,*) '                     lat/lon  = ',sngl(lat),sngl(long)
+    write(IMAIN,*) '  origin UTM minimum x/y        (m) = ',sngl(min_x_all),sngl(min_y_all)
+    if (.not. SUPPRESS_UTM_PROJECTION) then
+      ! project x and y in UTM back to long/lat since topo file is in long/lat
+      call utm_geo(long,lat,min_x_all,min_y_all, &
+                  UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)
+      write(IMAIN,*) '                     lat/lon  (deg) = ',sngl(lat),sngl(long)
+    endif
+    write(IMAIN,*) '  origin UTM maximum x/y        (m) = ',sngl(max_x_all),sngl(max_y_all)
+    if (.not. SUPPRESS_UTM_PROJECTION) then
+      call utm_geo(long,lat,max_x_all,max_y_all, &
+                   UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)
+      write(IMAIN,*) '                     lat/lon  (deg) = ',sngl(lat),sngl(long)
+    endif
     write(IMAIN,*)
     call flush_IMAIN()
   endif
@@ -168,15 +177,24 @@
 
     ! user output
     if (myrank == 0) then
+      if (SUPPRESS_UTM_PROJECTION_TOP) then
+        str_unit = str_unit_m
+      else
+        str_unit = str_unit_deg
+      endif
       write(IMAIN,*) '  interface file   : ',trim(interface_top_file)
       write(IMAIN,*)
       write(IMAIN,*) '  number of points x/y = ',npx_interface_top,npy_interface_top
-      write(IMAIN,*) '  origin x/y           = ',sngl(orig_x_interface_top),sngl(orig_y_interface_top)
-      write(IMAIN,*) '  spacing x/y          = ',sngl(spacing_x_interface_top),sngl(spacing_y_interface_top)
+      write(IMAIN,*) '  origin x/y     ',trim(str_unit),' = ', sngl(orig_x_interface_top),sngl(orig_y_interface_top)
+      write(IMAIN,*) '  spacing x/y    ',trim(str_unit),' = ',sngl(spacing_x_interface_top),sngl(spacing_y_interface_top)
+      if (.not. SUPPRESS_UTM_PROJECTION_TOP) then
+        write(IMAIN,*) '                   ',trim(str_unit_m),' = ', &
+             sngl(spacing_x_interface_top*DEGREE_TO_METERS),sngl(spacing_y_interface_top*DEGREE_TO_METERS)
+      endif
       write(IMAIN,*)
-      write(IMAIN,*) '  dimension x-direction: ',sngl(orig_x_interface_top),'/', &
+      write(IMAIN,*) '  dimension x-direction ',trim(str_unit),' = ',sngl(orig_x_interface_top),'/', &
                             sngl(orig_x_interface_top + npx_interface_top*spacing_x_interface_top)
-      write(IMAIN,*) '  dimension y-direction: ',sngl(orig_y_interface_top),'/', &
+      write(IMAIN,*) '  dimension y-direction ',trim(str_unit),' = ',sngl(orig_y_interface_top),'/', &
                             sngl(orig_y_interface_top + npy_interface_top*spacing_y_interface_top)
       write(IMAIN,*)
       call flush_IMAIN()
@@ -392,11 +410,13 @@
     if (myrank == 0) then
       write(IMAIN,*) '  interpolated mesh elevation min/max    = ',sngl(min_elevation_all),sngl(max_elevation_all)
       write(IMAIN,*)
-      write(IMAIN,*) '  interpolated mesh longitude min/max = ',sngl(min_long_all),'/',sngl(max_long_all)
-      write(IMAIN,*) '  interpolated mesh latitude  min/max = ',sngl(min_lat_all),'/',sngl(max_lat_all)
-      write(IMAIN,*)
-      write(IMAIN,*) '  interpolated mesh UTM minimum x/y = ',sngl(min_x_all),sngl(min_y_all)
-      write(IMAIN,*) '  interpolated mesh UTM maximum x/y = ',sngl(max_x_all),sngl(max_y_all)
+      if (.not. SUPPRESS_UTM_PROJECTION_TOP) then
+        write(IMAIN,*) '  interpolated mesh longitude min/max ',trim(str_unit_deg),' = ',sngl(min_long_all),'/',sngl(max_long_all)
+        write(IMAIN,*) '  interpolated mesh latitude  min/max ',trim(str_unit_deg),' = ',sngl(min_lat_all),'/',sngl(max_lat_all)
+        write(IMAIN,*)
+      endif
+      write(IMAIN,*) '  interpolated mesh UTM minimum x/y ',trim(str_unit_m),' = ',sngl(min_x_all),sngl(min_y_all)
+      write(IMAIN,*) '  interpolated mesh UTM maximum x/y ',trim(str_unit_m),' = ',sngl(max_x_all),sngl(max_y_all)
       write(IMAIN,*)
       call flush_IMAIN()
     endif

@@ -271,6 +271,11 @@
       ! element layer number of doubling zone
       nz_doubling = ner_doublings(idoubling_bottom) - 2
 
+      ! user output
+      if (myrank == 0) then
+        write(IMAIN,*) '  doubling layer positioned at layer: ',ner_doublings(idoubling_bottom)
+      endif
+
       ! debug
       !if (myrank == 0) print *,'  nz_doubling = ',nz_doubling
 
