@@ -118,23 +118,23 @@
   ner_doublings(:) = 0
 
   do idoub = 1,NDOUBLINGS
-    call read_value_doubling_integer_mesh(IIN,DONT_IGNORE_JUNK, ner_value, 'NZ_DOUGLING', ier)
+    call read_value_doubling_integer_mesh(IIN,DONT_IGNORE_JUNK, ner_value, 'NZ_DOUBLING', ier)
     if (ier /= 0) then
       print *,'Error reading doubling entry for doubling layer: ',idoub
-      print *,'Please check NDOUBLINGS value and corresponding lines with NZ_DOUGLING entries'
-      stop 'Error reading Mesh parameter NZ_DOUGLING'
+      print *,'Please check NDOUBLINGS value and corresponding lines with NZ_DOUBLING entries'
+      stop 'Error reading Mesh parameter NZ_DOUBLING'
     endif
     ner_doublings(idoub) = ner_value
   enddo
   ! jump over unused doubling entries to reach lines with visualization parameters below
-  call read_value_doubling_skip_mesh(IIN,DONT_IGNORE_JUNK,'NZ_DOUGLING', ier)
+  call read_value_doubling_skip_mesh(IIN,DONT_IGNORE_JUNK,'NZ_DOUBLING', ier)
   if (ier /= 0) stop 'Error reading Mesh parameter after NDOUBLINGS'
 
   ! only fix 2 doubling layer entries
-  !call read_value_integer_mesh(IIN,IGNORE_JUNK, ner_doublings(1), 'NZ_DOUGLING_1', ier)
-  !if (ier /= 0) stop 'Error reading Mesh parameter NZ_DOUGLING_1'
-  !call read_value_integer_mesh(IIN,IGNORE_JUNK, ner_doublings(2), 'NZ_DOUGLING_2', ier)
-  !if (ier /= 0) stop 'Error reading Mesh parameter NZ_DOUGLING_2'
+  !call read_value_integer_mesh(IIN,IGNORE_JUNK, ner_doublings(1), 'NZ_DOUBLING_1', ier)
+  !if (ier /= 0) stop 'Error reading Mesh parameter NZ_DOUBLING_1'
+  !call read_value_integer_mesh(IIN,IGNORE_JUNK, ner_doublings(2), 'NZ_DOUBLING_2', ier)
+  !if (ier /= 0) stop 'Error reading Mesh parameter NZ_DOUBLING_2'
 
   ! visualization file output
   call read_value_logical_mesh(IIN,IGNORE_JUNK,CREATE_ABAQUS_FILES, 'CREATE_ABAQUS_FILES', ier)

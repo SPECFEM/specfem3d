@@ -25,7 +25,7 @@ NPROC_ETA                       = 12
 USE_REGULAR_MESH                = .false.
 # Only for irregular meshes, number of doubling layers and their position
 NDOUBLINGS                      = 2
-# NZ_DOUGLING_1 is the parameter to set up if there is only one doubling layer
+# NZ_DOUBLING_1 is the parameter to set up if there is only one doubling layer
 # (more doubling entries can be added if needed to match NDOUBLINGS value)
 NZ_DOUBLING_1                   = 6
 NZ_DOUBLING_2                   = 9
