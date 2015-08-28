@@ -456,8 +456,123 @@ def check_and_update_Par_file(my_parameters,file):
                 # replace with new comment/appendix and only keep original value
                 my_parameters[name] = (val_orig,comment,appendix)
 
+    # respect ordering
+    ordered_parameters = collections.OrderedDict()
+    iorder_new = 0
+    num_material_entries = 0
+    num_region_entries = 0
+    for name in master_parameters.keys():
+        if not is_Mesh_Par_file:
+            # regular Par_file must have a one-to-one match
+            # checks that name is available
+            if not name in my_parameters.keys():
+                print "Error ordering with current file format parameter",name
+                sys.tracebacklimit=0
+                raise Exception('parameter list invalid: %s' % file)
+            # get values
+            (val,comment,appendix) = my_parameters[name]
+
+            # put into same order of appearance
+            ordered_parameters[name] = (val,comment,appendix)
+        else:
+            # Mesh_Par_file can have different number of lines for data ranges
+            # new parameter file entry
+            if (not "MESH_PAR_FILE_DATA" in name) and (not "NZ_DOUGLING" in name):
+                # checks that name is available
+                if not name in my_parameters.keys():
+                    print "Error ordering with current file format parameter",name
+                    sys.tracebacklimit=0
+                    raise Exception('parameter list invalid: %s' % file)
+
+                # get values
+                (val,comment,appendix) = my_parameters[name]
+
+                # put into same order of appearance
+                ordered_parameters[name] = (val,comment,appendix)
+                iorder_new += 1
+
+            else:
+                if "NZ_DOUGLING" in name:
+                    # get doublig layer values
+                    for my_key in my_parameters.keys():
+                        if "NZ_DOUGLING" in my_key:
+                            # add entries
+                            if not my_key in ordered_parameters.keys():
+                                (val,comment,appendix) = my_parameters[my_key]
+                                # put into same order of appearance
+                                ordered_parameters[my_key] = (val,comment,appendix)
+                                iorder_new += 1
+
+                else:
+                    # first NMATERIALS
+                    previous = ordered_parameters.keys()[iorder_new-1]
+                    (val,comment,appendix) = ordered_parameters[previous]
+                    # number of data lines for nmaterials
+                    if "NMATERIALS" in previous:
+                        num_material_entries = int(val)
+                        for i in range(0,num_material_entries):
+                            my_key = "MESH_PAR_FILE_DATA" + str(i+1)
+                            # check availability
+                            if not my_key in my_parameters.keys():
+                                print "Error ordering key",my_key," with previous",previous
+                                sys.tracebacklimit=0
+                                raise Exception('ordering list failed: %s' % file)
+                            # add entries
+                            if not my_key in ordered_parameters.keys():
+                                (val,comment,appendix) = my_parameters[my_key]
+                                # put into same order of appearance
+                                ordered_parameters[my_key] = (val,comment,appendix)
+                                iorder_new += 1
+                    # number of data lines for nregions
+                    if "NREGIONS" in previous:
+                        # check if materials are done
+                        if num_material_entries == 0:
+                            print "Error ordering with current file format parameter",name," with previous",previous
+                            print "NREGIONS section must come after NMATERIALS section\n"
+                            sys.tracebacklimit=0
+                            raise Exception('ordering list failed: %s' % file)
+                        # adds regions
+                        num_region_entries = int(val)
+                        for i in range(0,num_region_entries):
+                            my_key = "MESH_PAR_FILE_DATA" + str(i + 1 + num_material_entries)
+                            # check availability
+                            if not my_key in my_parameters.keys():
+                                print "Error ordering key",my_key," with previous",previous
+                                sys.tracebacklimit=0
+                                raise Exception('ordering list failed: %s' % file)
+                            # add entries
+                            if not my_key in ordered_parameters.keys():
+                                (val,comment,appendix) = my_parameters[my_key]
+                                # put into same order of appearance
+                                ordered_parameters[my_key] = (val,comment,appendix)
+                                iorder_new += 1
+
+
+    # check
+    if is_Mesh_Par_file:
+        if num_material_entries == 0 or num_region_entries == 0:
+            print "Error ordering Mesh_Par_file ",file
+            sys.tracebacklimit=0
+            raise Exception('ordering list failed: %s' % file)
+
+
+    # check length
+    if len(ordered_parameters.keys()) != len(my_parameters.keys()):
+        print "Error ordering with parameters got different lengths:"
+        print "new length is ",len(ordered_parameters.keys())," instead of ",len(my_parameters.keys())
+        sys.tracebacklimit=0
+        raise Exception('parameter list invalid: %s' % file)
+
+    # checks if order changed
+    nold_order = 0
+    for i in range(0,len(my_parameters.keys())):
+        if my_parameters.keys()[i] != ordered_parameters.keys()[i]: nold_order += 1
+
+    if nold_order > 0:
+        print "  needs re-ordering...",nold_order
+
     # replace old file if necessary
-    if nold_parameters == 0 and nmissing_parameters == 0 and nold_comments == 0:
+    if nold_parameters == 0 and nmissing_parameters == 0 and nold_comments == 0 and nold_order == 0:
         # user info
         print "  file is okay and up-to-date"
     else:
@@ -466,7 +581,7 @@ def check_and_update_Par_file(my_parameters,file):
 
         # opens temporary file with master info
         tmp_file = "_____temp09_____"
-        write_template_file(my_parameters,tmp_file)
+        write_template_file(ordered_parameters,tmp_file)
 
         # notifies user if template is different than master
         # (e.g. by different indentation or white space)
@@ -475,6 +590,9 @@ def check_and_update_Par_file(my_parameters,file):
         # clean up temporary file
         command = "rm -f " + tmp_file
         os.system(command)
+
+    # frees new order
+    del ordered_parameters
 
 
 def check_parameter_file_type(file):
