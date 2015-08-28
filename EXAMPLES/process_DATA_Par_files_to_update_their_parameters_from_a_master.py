@@ -7,6 +7,38 @@ import sys
 import os
 import collections
 
+#
+#----------------------------------------------------------------------------
+#
+
+# USER PARAMETERS
+
+# deprecated parameter names which have been renamed
+DEPRECATED_RENAMED_PARAMETERS = [ \
+  ("ABSORBING_CONDITIONS", "STACEY_ABSORBING_CONDITIONS"), \
+  ("ABSORB_INSTEAD_OF_FREE_SURFACE", "STACEY_INSTEAD_OF_FREE_SURFACE"), \
+  ("OCEANS", "APPROXIMATE_OCEAN_LOAD"), \
+]
+
+# exclude other possible files with similar name, but with different format
+# (more file names can be appended in this list)
+EXCLUDE_NAME_LIST = [ \
+  "Par_file_faults" \
+]
+
+# exclude old unused directories from search directories
+# (more exclude directories can be appended in this list)
+EXCLUDE_DIR_LIST = [ \
+  "unused_routines", \
+  "small_SEM_solvers_in_Fortran_and_C_without_MPI_to_learn" \
+]
+
+#
+#----------------------------------------------------------------------------
+#
+
+# more global parameters
+
 # ordered dictionary: ordering is kept, what is filled in first, will be listed first
 #
 # each dictionary entry will have format (value,comment,appendix), use for example:
@@ -14,18 +46,23 @@ import collections
 #
 master_parameters = collections.OrderedDict()
 
-# deprecated parameter names which have been renamed
-deprecated_renamed_parameters = [ \
-  ("ABSORBING_CONDITIONS", "STACEY_ABSORBING_CONDITIONS"), \
-  ("ABSORB_INSTEAD_OF_FREE_SURFACE", "STACEY_INSTEAD_OF_FREE_SURFACE"), \
-  ("OCEANS", "APPROXIMATE_OCEAN_LOAD"), \
-  ]
+# Mesh_Par_file data lines (NMATERIALS and NREGIONS sections)
+mesh_par_file_data_counter = 0
 
+# parameter file type
+is_Mesh_Par_file = False
+
+#
+#----------------------------------------------------------------------------
+#
 
 def read_Par_file_sections(parameters,file,verbose=False):
     """
     reads a Par_file and fills in parameter sections
     """
+    global mesh_par_file_data_counter
+    global is_Mesh_Par_file
+
     # user info
     if verbose:
         print "reading in file: ",file
@@ -54,6 +91,7 @@ def read_Par_file_sections(parameters,file,verbose=False):
     # reads in dictionaries
     nsections = 0  
     comment = ''
+    mesh_par_file_data_counter = 0
 
     for line in f:
         dataline = line.strip()
@@ -91,14 +129,46 @@ def read_Par_file_sections(parameters,file,verbose=False):
 
                 # first part holds parameter
                 tokens = par_string.split('=')
+
+                # checks format
+                wrong_format = False
                 if len(tokens) != 2:
+                    wrong_format = True
+                    # check with Mesh_Par_file format for NMATERIALS and NREGIONS
+                    if is_Mesh_Par_file:
+                        dataitems = par_string.split()
+                        # check number of items
+                        # for example 7-entries:
+                        # #NEX_XI_BEGIN  #NEX_XI_END  #NEX_ETA_BEGIN  #NEX_ETA_END  #NZ_BEGIN #NZ_END  #material_id
+                        # 1              128            1               128             1          5       14
+                        # for example 8-entries:
+                        # #material_id  #rho  #vp  #vs  #Q  #anisotropy_flag #domain_id #(optional) Q_kappa
+                        # 1  2120  2325  1360 35.0  0  2 5000
+                        if len(dataitems) == 7 or len(dataitems) == 8:
+                            # this is a data format line
+                            wrong_format = False
+                if wrong_format:
                     print "Error invalid format on parameter line: \n",dataline
                     print "\nPlease use a line format: PARAMETER_NAME = value"
-                    sys.tracebacklimit=0         
+                    sys.tracebacklimit=0
                     raise Exception('Invalid parameter line: %s' % dataline)
 
-                name = tokens[0].strip()
-                value = tokens[1].strip()
+                # determines format
+                is_Par_file_format = True
+                if is_Mesh_Par_file:
+                    if par_string.find('=') < 0:
+                        is_Par_file_format = False
+                        index_app = 0
+
+                # Par_file format: PARAMETER_NAME = value #..
+                if is_Par_file_format:
+                    name = tokens[0].strip()
+                    value = tokens[1].strip()
+                else:
+                    # sets as a Mesh_Par_file data line
+                    mesh_par_file_data_counter += 1
+                    name = "MESH_PAR_FILE_DATA" + str(mesh_par_file_data_counter)
+                    value = par_string
 
                 # appended comment
                 if index_app > 0:
@@ -155,6 +225,9 @@ def read_Par_file_sections(parameters,file,verbose=False):
         #print parameters
 
 
+#
+#----------------------------------------------------------------------------
+#
 
 def get_maximum_parameter_name_length(parameters,verbose=False):
     """
@@ -188,7 +261,9 @@ def get_maximum_parameter_name_length(parameters,verbose=False):
 
     return max_name_length
 
-
+#
+#----------------------------------------------------------------------------
+#
 
 def write_template_file(parameters,tmp_file,verbose=False):
     """
@@ -221,11 +296,17 @@ def write_template_file(parameters,tmp_file,verbose=False):
         if comment:
             f.write( "%s\n" % comment )
 
-        # parameter line
-        if appendix:
-            f.write( "%s = %s   %s\n" % (name.ljust(max_name_length),value,appendix) )
+        # writes out line with values
+        if not "MESH_PAR_FILE_DATA" in name:
+            # parameter line
+            if appendix:
+                f.write( "%s = %s   %s\n" % (name.ljust(max_name_length),value,appendix) )
+            else:
+                f.write( "%s = %s\n" % (name.ljust(max_name_length),value) )
         else:
-            f.write( "%s = %s\n" % (name.ljust(max_name_length),value) )
+            # Mesh_Par_file data line
+            f.write( "%s\n" % value )
+
     f.write( "\n" )
     f.close()
 
@@ -234,10 +315,18 @@ def write_template_file(parameters,tmp_file,verbose=False):
         print "written temporary file, see: ",tmp_file
         print ""
 
-def get_files_in_subdirectories(dir,files,basename,exclude_dir,exclude_name):
+#
+#----------------------------------------------------------------------------
+#
+
+def get_files_in_subdirectories(dir,files,basename):
     """
     recursive function to list all files in subdirectories
     """
+    global EXCLUDE_NAME_LIST
+    global EXCLUDE_DIR_LIST
+
+    # loops over all files in this directory
     for subdir in os.listdir(dir):
         path = os.path.join(dir, subdir)
         if not os.path.isdir(path):
@@ -246,7 +335,7 @@ def get_files_in_subdirectories(dir,files,basename,exclude_dir,exclude_name):
             if filename.startswith(basename):
                 # checks with exclude list of name
                 do_add_me = True
-                for name in exclude_name:
+                for name in EXCLUDE_NAME_LIST:
                     if filename.startswith(name): do_add_me = False
                 # adds to list
                 if do_add_me:
@@ -254,12 +343,15 @@ def get_files_in_subdirectories(dir,files,basename,exclude_dir,exclude_name):
         else:
           do_search = True
           # checks with list of exclude directories
-          for name in exclude_dir:
+          for name in EXCLUDE_DIR_LIST:
               if subdir == name: do_search = False
           if do_search:
-              get_files_in_subdirectories(path,files,basename,exclude_dir,exclude_name)
+              get_files_in_subdirectories(path,files,basename)
 
 
+#
+#----------------------------------------------------------------------------
+#
 
 def compare_and_replace_file(master_file,temp_file,verbose=False,replace=False):
     """
@@ -294,16 +386,130 @@ def compare_and_replace_file(master_file,temp_file,verbose=False,replace=False):
             print ""
 
 
+def check_and_update_Par_file(my_parameters,file):
+    """
+    updates parameter entries
+    """
+    global DEPRECATED_RENAMED_PARAMETERS
+    global master_parameters
+    global is_Mesh_Par_file
+
+    # checks for old, deprecated parameters
+    nold_parameters = 0
+    #print "  searching deprecated parameters..."
+    for name in my_parameters.keys():
+        if not name in master_parameters.keys():
+            if (not "MESH_PAR_FILE_DATA" in name) and (not "NZ_DOUGLING" in name):
+                print "  deprecated parameter: ",name
+                nold_parameters += 1
+
+                is_found = False
+            else:
+                # ignore data line
+                is_found = True
+
+            # converts old to new parameter name
+            for old_name,new_name in DEPRECATED_RENAMED_PARAMETERS:
+                if name == old_name :
+                    print "    will be converted to ",new_name
+                    (val_orig,comment_orig,appendix_orig) = my_parameters[old_name]
+                    # stores as new section
+                    my_parameters[new_name] = (val_orig,comment_orig,appendix_orig)
+                    is_found = True
+                    # removes old section
+                    del my_parameters[old_name]
+
+            # removes old parameter
+            if not is_found:
+                # removes old section
+                del my_parameters[name]
+
+
+    # add missing master parameters and replaces comment lines to compare sections
+    nmissing_parameters = 0
+    #print "  searching missing parameters..."
+    for name in master_parameters.keys():
+        if (not "MESH_PAR_FILE_DATA" in name) and (not "NZ_DOUGLING" in name):
+            # checks if missing
+            if not name in my_parameters.keys():
+                print "  misses parameter: ",name
+                nmissing_parameters += 1
+                # adds from master template record
+                (val,comment,appendix) = master_parameters[name]
+                my_parameters[name] = (val,comment,appendix)
+
+    # updates comments
+    nold_comments = 0
+    for name in master_parameters.keys():
+        if (not "MESH_PAR_FILE_DATA" in name) and (not "NZ_DOUGLING" in name):
+            # checks we have this parameter
+            if not name in my_parameters.keys():
+                print "Error comparing master with current file format parameter",name
+                sys.tracebacklimit=0
+                raise Exception('parameter list invalid: %s' % file)
+
+            # compares and replaces comments and appendix
+            (val_orig,comment_orig,appendix_orig) = my_parameters[name]
+            (val,comment,appendix) = master_parameters[name]
+            if comment_orig != comment or appendix != appendix_orig:
+                nold_comments += 1
+                # replace with new comment/appendix and only keep original value
+                my_parameters[name] = (val_orig,comment,appendix)
+
+    # replace old file if necessary
+    if nold_parameters == 0 and nmissing_parameters == 0 and nold_comments == 0:
+        # user info
+        print "  file is okay and up-to-date"
+    else:
+        # user info
+        print "  updating parameter file..."
+
+        # opens temporary file with master info
+        tmp_file = "_____temp09_____"
+        write_template_file(my_parameters,tmp_file)
+
+        # notifies user if template is different than master
+        # (e.g. by different indentation or white space)
+        compare_and_replace_file(file,tmp_file,verbose=True,replace=replace)
+
+        # clean up temporary file
+        command = "rm -f " + tmp_file
+        os.system(command)
+
+
+def check_parameter_file_type(file):
+    """
+    determines flag for Par_file or Mesh_Par_file
+    """
+    global is_Mesh_Par_file
+
+    # determines parameter file typ
+    # (line formats may differ)
+    basename = os.path.basename(file)
+    if "Mesh_Par_file" in basename:
+        is_Mesh_Par_file = True
+    else:
+        is_Mesh_Par_file = False
+
+
+#
+#----------------------------------------------------------------------------
+#
+
 def update_Par_files(master_file,replace=False):
     """
-    uses a master to update other parameter files  
+    uses a master to update other parameter files
     """
     global master_parameters
-    global deprecated_renamed_parameters
+    global is_Mesh_Par_file
 
     # user info
+    print ""
     print "master file: ",master_file
     print ""
+
+    # determines file type
+    check_parameter_file_type(master_file)
 
     # reads in parameters
     read_Par_file_sections(master_parameters,master_file,verbose=True)
@@ -332,18 +538,9 @@ def update_Par_files(master_file,replace=False):
     print "finding all files with name: ",basename
     print "in current directory: ",current_dir
 
-    # exclude other possible files with similar name, but with different format
-    if basename == "Par_file":
-        exclude_name = [ "Par_file_faults" ]
-    else:
-        exclude_name = []
-
-    # exclude old unused directories from search directories
-    exclude_dir = [ "unused_routines", "small_SEM_solvers_in_Fortran_and_C_without_MPI_to_learn" ]
-
     # gets all files in subdirectories
     files = []
-    get_files_in_subdirectories("./",files,basename,exclude_dir,exclude_name)
+    get_files_in_subdirectories("./",files,basename)
 
     nfiles = len(files)
     print ""
@@ -352,99 +549,39 @@ def update_Par_files(master_file,replace=False):
 
     ifile = 0
     for file in files:
+        # updates counter
         ifile += 1
+
+        # determines parameter file typ
+        check_parameter_file_type(file)
+
         # user info
         print ""
         print "file ",ifile," out of ",nfiles
         print "processing file: ",file
+        if is_Mesh_Par_file:
+            print "  file type is ","Mesh_Par_file"
+        else:
+            print "  file type is ","Par_file"
 
         # read in parameters
         my_parameters = collections.OrderedDict()
         read_Par_file_sections(my_parameters,file)
 
-        # checks for old, deprecated parameters
-        nold_parameters = 0
-        #print "  searching deprecated parameters..."
-        for name in my_parameters.keys():
-            if not name in master_parameters.keys():
-                print "  deprecated parameter: ",name
-                nold_parameters += 1
-
-                # converts old to new parameter name
-                is_found = False
-                for old_name,new_name in deprecated_renamed_parameters:
-                    if name == old_name :
-                        print "    will be converted to ",new_name
-                        (val_orig,comment_orig,appendix_orig) = my_parameters[old_name]
-                        # stores as new section
-                        my_parameters[new_name] = (val_orig,comment_orig,appendix_orig)
-                        is_found = True
-                        # removes old section
-                        del my_parameters[old_name]
-
-                # removes old parameter
-                if not is_found:
-                    # removes old section
-                    del my_parameters[name]
-
-
-        # add missing master parameters and replaces comment lines to compare sections
-        nmissing_parameters = 0
-        #print "  searching missing parameters..."
-        for name in master_parameters.keys():
-            if not name in my_parameters.keys():
-                print "  misses parameter: ",name
-                nmissing_parameters += 1
-                # adds from master template record
-                (val,comment,appendix) = master_parameters[name]
-                my_parameters[name] = (val,comment,appendix)
-
-        # updates comments
-        nold_comments = 0
-        for name in master_parameters.keys():
-            # checks we have this parameter
-            if not name in my_parameters.keys():
-                print "Error comparing master with current file format parameter",name
-                sys.tracebacklimit=0
-                raise Exception('parameter list invalid: %s' % file)
-
-            # compares and replaces comments and appendix
-            (val_orig,comment_orig,appendix_orig) = my_parameters[name]
-            (val,comment,appendix) = master_parameters[name]
-            if comment_orig != comment or appendix != appendix_orig:
-                nold_comments += 1
-                # replace with new comment/appendix and only keep original value
-                my_parameters[name] = (val_orig,comment,appendix)
-
-        # replace old file if necessary
-        if nold_parameters == 0 and nmissing_parameters == 0 and nold_comments == 0:
-            # user info
-            print "  parameter file is okay and up-to-date"
-        else:
-            # user info
-            print "  updating parameter file..."
-
-            # opens temporary file with master info
-            tmp_file = "_____temp09_____"
-            write_template_file(my_parameters,tmp_file)
-
-            # notifies user if template is different than master
-            # (e.g. by different indentation or white space)
-            compare_and_replace_file(file,tmp_file,verbose=True,replace=replace)
-
-            # clean up temporary file
-            command = "rm -f " + tmp_file
-            os.system(command)
-
+        # check and update
+        check_and_update_Par_file(my_parameters,file)
         # clean up
         del my_parameters
 
-
+    # user info
     print ""
     print "done"
     os.system("date")
     print ""
 
+#
+#----------------------------------------------------------------------------
+#
 
 def usage():
     print "usage:"
@@ -453,6 +590,9 @@ def usage():
     print "    Master-Par_file - Par_file which serves as master template (e.g. DATA/Par_file)"
     print "    replace         = flag to force replacing of file [0==check-only/1==replace]"
 
+#
+#----------------------------------------------------------------------------
+#
 
 if __name__ == '__main__':
     # gets arguments
