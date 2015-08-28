@@ -18,6 +18,8 @@ DEPRECATED_RENAMED_PARAMETERS = [ \
   ("ABSORBING_CONDITIONS", "STACEY_ABSORBING_CONDITIONS"), \
   ("ABSORB_INSTEAD_OF_FREE_SURFACE", "STACEY_INSTEAD_OF_FREE_SURFACE"), \
   ("OCEANS", "APPROXIMATE_OCEAN_LOAD"), \
+  ("NZ_DOUGLING_1", "NZ_DOUBLING_1"), \
+  ("NZ_DOUGLING_2", "NZ_DOUBLING_2"), \
 ]
 
 # exclude other possible files with similar name, but with different format
@@ -399,7 +401,7 @@ def check_and_update_Par_file(my_parameters,file):
     #print "  searching deprecated parameters..."
     for name in my_parameters.keys():
         if not name in master_parameters.keys():
-            if (not "MESH_PAR_FILE_DATA" in name) and (not "NZ_DOUGLING" in name):
+            if (not "MESH_PAR_FILE_DATA" in name) and (not "NZ_DOUBLING" in name):
                 print "  deprecated parameter: ",name
                 nold_parameters += 1
 
@@ -429,7 +431,7 @@ def check_and_update_Par_file(my_parameters,file):
     nmissing_parameters = 0
     #print "  searching missing parameters..."
     for name in master_parameters.keys():
-        if (not "MESH_PAR_FILE_DATA" in name) and (not "NZ_DOUGLING" in name):
+        if (not "MESH_PAR_FILE_DATA" in name):
             # checks if missing
             if not name in my_parameters.keys():
                 print "  misses parameter: ",name
@@ -441,7 +443,7 @@ def check_and_update_Par_file(my_parameters,file):
     # updates comments
     nold_comments = 0
     for name in master_parameters.keys():
-        if (not "MESH_PAR_FILE_DATA" in name) and (not "NZ_DOUGLING" in name):
+        if (not "MESH_PAR_FILE_DATA" in name):
             # checks we have this parameter
             if not name in my_parameters.keys():
                 print "Error comparing master with current file format parameter",name
@@ -477,7 +479,7 @@ def check_and_update_Par_file(my_parameters,file):
         else:
             # Mesh_Par_file can have different number of lines for data ranges
             # new parameter file entry
-            if (not "MESH_PAR_FILE_DATA" in name) and (not "NZ_DOUGLING" in name):
+            if (not "MESH_PAR_FILE_DATA" in name) and (not "NZ_DOUBLING" in name):
                 # checks that name is available
                 if not name in my_parameters.keys():
                     print "Error ordering with current file format parameter",name
@@ -492,10 +494,10 @@ def check_and_update_Par_file(my_parameters,file):
                 iorder_new += 1
 
             else:
-                if "NZ_DOUGLING" in name:
-                    # get doublig layer values
+                if "NZ_DOUBLING" in name:
+                    # get doubling layer values
                     for my_key in my_parameters.keys():
-                        if "NZ_DOUGLING" in my_key:
+                        if "NZ_DOUBLING" in my_key:
                             # add entries
                             if not my_key in ordered_parameters.keys():
                                 (val,comment,appendix) = my_parameters[my_key]
