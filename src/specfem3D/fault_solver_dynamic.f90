@@ -92,6 +92,7 @@ subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
   integer, parameter :: IIN_PAR =151
   integer, parameter :: IIN_BIN =170
 
+  NAMELIST / RUPTURE_SWITCHES / RATE_AND_STATE , TPV16 
   NAMELIST / BEGIN_FAULT / dummy_idfault
 
   dummy_idfault = 0
@@ -140,6 +141,7 @@ subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
   read(IIN_BIN) nbfaults ! should be the same as in IIN_PAR
   allocate( faults(nbfaults) )
   dt = real(DTglobal)
+  read(IIN_PAR,nml=RUPTURE_SWITCHES,end=110)
   do iflt=1,nbfaults
     read(IIN_PAR,nml=BEGIN_FAULT,end=100)
     call init_one_fault(faults(iflt),IIN_BIN,IIN_PAR,dt,nt,iflt,myrank)
@@ -163,6 +165,9 @@ subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
   return
 
 100 if (myrank==0) write(IMAIN,*) 'Fatal error: did not find BEGIN_FAULT input block in file DATA/Par_file_faults. Abort.'
+    stop
+
+110 if (myrank==0) write(IMAIN,*) 'Fatal error: did not find RUPTURE_SWITCHES input block in file DATA/Par_file_faults. Abort.'
     stop
   ! WARNING TO DO: should be an MPI abort
 
