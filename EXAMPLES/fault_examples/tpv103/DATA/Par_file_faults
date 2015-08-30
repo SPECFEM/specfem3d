@@ -5,6 +5,9 @@
 200                                              ! NTSNAP: time interation of snapshots
 -1e0                                            ! V_HEALING (-1 : Healing off)
 1e-3                                            ! V_RUPT
+
+&RUPTURE_SWITCHES RATE_AND_STATE=.true.,TPV16=.false./
+
 &BEGIN_FAULT /
 &STRESS_TENSOR Sigma=0e0,0e0,0e0,0e0,0e0,0e0/
 &INIT_STRESS S1=40.0e6,S2=0.0e0,S3=-120.0e6,n1=0,n2=0,n3=0 /
