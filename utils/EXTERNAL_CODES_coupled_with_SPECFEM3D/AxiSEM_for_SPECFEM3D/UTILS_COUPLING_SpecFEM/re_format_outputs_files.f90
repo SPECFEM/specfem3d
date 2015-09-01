@@ -32,7 +32,7 @@ program re_format_outputs_files
   integer iunit, next_iunit
   integer itmin, itmax
   integer irank, nrec_to_store,irec0, nb_point
-  double precision lat_src,lon_src,lat_mesh,lon_mesh
+  double precision lat_src,lon_src,lat_mesh,lon_mesh,azi_rot
   integer, allocatable ::  ivx(:),ivy(:),ivz(:),isxx(:),isyy(:),iszz(:),isxy(:),isxz(:),isyz(:)
   integer*8 iirec
   integer*8 icomp, nbproc0,ntime_interp
@@ -90,7 +90,8 @@ program re_format_outputs_files
      read(10,'(a)') input_point_file_cart !! meshfem3D boundary points (cartessian)
      read(10,*) nbproc0                   !! axisem mpi processes
      read(10,*) lat_src,lon_src           !! axisem source position
-     read(10,*) lat_mesh,lon_mesh         !! mesh center position
+     read(10,*) lat_mesh,lon_mesh,azi_rot  !! mesh center position
+     !! VM VM add azimuth rotation
      read(10,*) nsim                      !! AxiSEM simus
      read(10,*) nSpecfem_proc             !! number of specfem procs
      read(10,'(a)') meshdirectory         !! mesfem3D results

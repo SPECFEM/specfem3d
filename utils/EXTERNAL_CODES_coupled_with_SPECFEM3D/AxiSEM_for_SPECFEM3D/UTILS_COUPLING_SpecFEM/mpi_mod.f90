@@ -43,6 +43,8 @@ contains
    call mpi_bcast(trans_rot_mat,9,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
    call mpi_bcast(rot_mat_mesh,9,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
    call mpi_bcast(trans_rot_mat_mesh,9,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+   call mpi_bcast(rot_azi_chunk,9,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+   call mpi_bcast(trans_rot_azi_chunk,9,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
 
 
    if (myrank >  0) then

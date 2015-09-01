@@ -247,6 +247,7 @@
 
            call rotate_back_to_local_cart() ! cartesien local
 
+           call rotate_from_chunk_azimuth() !! VM VM add rotation azimuth chunk
            !if (irecmin < 10 .and. irecmax > 10) write(*,*) '4',data_rec(10,2)
 
            call reduce_mpi_veloc()
@@ -522,6 +523,8 @@
            call rotate_back_source_stress() ! cartesien dans le repere tereste global
 
            call rotate_back_to_local_cart_stress() ! cartesien local
+
+           call rotate_from_chunk_azimuth_stress() !! VM VM add rotation azimuth chunk
 
            call reduce_mpi_stress()
 
