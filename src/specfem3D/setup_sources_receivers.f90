@@ -177,7 +177,12 @@
   call max_all_all_dp(t0_acoustic,t0)
 
   ! point force sources will start depending on the frequency given by hdur
-  !if (USE_FORCE_POINT_SOURCE .or. USE_RICKER_TIME_FUNCTION) then !! COMMENTED BY FS FS -> account for the case USE_FORCE_POINT_SOURCE but NOT using a ricker (i.e. using a gaussian), in this case the above defined t0 = - 2.0d0 * minval(tshift_src(:) - hdur(:)) is correct (analogous to using error function in case of moment tensor sources). You only need to be aware that hdur=0 then has a different behaviour for point forces (compared with moment tensor sources): then hdur is set to TINYVAL and NOT to 5*DT as in case of moment tensor source (Heaviside)
+  !if (USE_FORCE_POINT_SOURCE .or. USE_RICKER_TIME_FUNCTION) then
+!! COMMENTED BY FS FS -> account for the case USE_FORCE_POINT_SOURCE but NOT using a ricker (i.e. using a gaussian),
+! in this case the above defined t0 = - 2.0d0 * minval(tshift_src(:) - hdur(:)) is correct
+! (analogous to using error function in case of moment tensor sources). You only need to be aware that hdur=0
+! then has a different behaviour for point forces (compared with moment tensor sources):
+! then hdur is set to TINYVAL and NOT to 5*DT as in case of moment tensor source (Heaviside)
   if (USE_RICKER_TIME_FUNCTION) then !! ADDED BY FS FS
     ! note: point force sources will give the dominant frequency in hdur,
     !       thus the main period is 1/hdur.
