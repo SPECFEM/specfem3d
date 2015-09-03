@@ -58,9 +58,13 @@ module fault_solver_dynamic
 
   logical, save :: SIMULATION_TYPE_DYN = .false.
 
-  logical, save :: TPV16 = .false.
+  logical, save :: TPV16 = .false.   !TPV16 for heterogeneous in slip weakening
+  ! simulation
 
   logical, save :: RATE_AND_STATE = .false.
+
+  logical, save :: RSF_HETE = .false.  !RSF_HETE for heterogeneous in rate and
+  ! state simulation
 
   real(kind=CUSTOM_REAL), allocatable, save :: Kelvin_Voigt_eta(:)
 
@@ -92,7 +96,7 @@ subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
   integer, parameter :: IIN_PAR =151
   integer, parameter :: IIN_BIN =170
 
-  NAMELIST / RUPTURE_SWITCHES / RATE_AND_STATE , TPV16
+  NAMELIST / RUPTURE_SWITCHES / RATE_AND_STATE , TPV16 , RSF_HETE  
   NAMELIST / BEGIN_FAULT / dummy_idfault
 
   dummy_idfault = 0
@@ -771,6 +775,19 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
   integer :: nglob
   integer :: InputStateLaw = 1 ! By default using aging law
 
+  
+!##############################################################################################
+! for  RSF_HETE
+  integer :: ier, ipar
+  integer, parameter :: sIIN_NUC =271 ! WARNING: not safe, should look for an available unit
+  real(kind=CUSTOM_REAL),  allocatable :: sloc_str(:),  &
+       sloc_dip(:),ssigma0(:),stau0_str(:),stau0_dip(:),sV0(:), &
+       sf0(:),sa(:),sb(:),sL(:),sV_init(:),stheta(:),sC(:)
+  real(kind=CUSTOM_REAL) :: minX, ssiz_str,ssiz_dip
+  integer :: snum_cell_str,snum_cell_dip,snum_cell_all
+  integer :: si
+!###############################################################################################
+
   NAMELIST / RSF / V0,f0,a,b,L,V_init,theta_init,nV0,nf0,na,nb,nL,nV_init,ntheta_init,C,T,nC,nForcedRup,Vw,fw,nVw,nfw,InputStateLaw
   NAMELIST / ASP / Fload,nFload
 
@@ -923,7 +940,84 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
   ! WARNING: the line below is only valid for pure strike-slip faulting
   V(1,:) = f%V_init
 
-end subroutine rsf_init
+!write(6,*) '878 '     !Debug
+
+  if (RSF_HETE) then
+     write(6,*) 'rsf_hete call RSF_HETE_init'     !Debug 
+ !     write(6,*) 'rsf_hete_init 903'     !Debug
+ 
+       open(unit=sIIN_NUC,file='../DATA/input_file.txt',status='old',iostat=ier)
+ 
+ !      write(6,*) 'rsf_hete_init 907'     !Debug
+ 
+       read(sIIN_NUC,*) snum_cell_str,snum_cell_dip,ssiz_str,ssiz_dip
+       snum_cell_all=snum_cell_str*snum_cell_dip
+       write(6,*) 'rsf_hete_init 911 snum_cell_str,snum_cell_dip,ssiz_str,ssiz_dip '     !Debug
+       write(6,*) snum_cell_str,snum_cell_dip,ssiz_str,ssiz_dip
+ 
+   allocate( sloc_str(snum_cell_all) )
+   allocate( sloc_dip(snum_cell_all) )
+   allocate( ssigma0(snum_cell_all) )
+   allocate( stau0_str(snum_cell_all) )
+   allocate( stau0_dip(snum_cell_all) )
+   allocate( sV0(snum_cell_all) )
+   allocate( sf0(snum_cell_all) )
+   allocate( sa(snum_cell_all) )
+   allocate( sb(snum_cell_all) )
+   allocate( sL(snum_cell_all) )
+   allocate( sV_init(snum_cell_all) )
+   allocate( stheta(snum_cell_all) )
+   allocate( sC(snum_cell_all) )
+ 
+       do ipar=1,snum_cell_all
+         read(sIIN_NUC,*) sloc_str(ipar),sloc_dip(ipar),ssigma0(ipar),stau0_str(ipar),stau0_dip(ipar), &
+              sV0(ipar),sf0(ipar),sa(ipar),sb(ipar),sL(ipar), &
+              sV_init(ipar),stheta(ipar),sC(ipar) 
+ !         write(6,*) ipar
+ 
+       enddo
+       close(sIIN_NUC)
+ 
+       write(6,*) 'rsf_hete_init 923'     !Debug
+ 
+       minX = minval(coord(1,:))
+       write(6,*) 'RSF_HETE nglob= ', nglob, 'num_cell_all= ', snum_cell_all
+       write(6,*) 'minX = ', minval(coord(1,:)), 'minZ = ', minval(coord(3,:))
+       write(6,*) 'maxX = ', maxval(coord(1,:)), 'maxZ = ', maxval(coord(3,:))
+       write(6,*) 'minXall = ', minval(sloc_str(:)), 'minZall = ', minval(sloc_dip(:))
+       write(6,*) 'maxXall = ', maxval(sloc_str(:)), 'maxZall = ', maxval(sloc_dip(:))
+ 
+       do si=1,nglob
+ 
+        ! WARNING: nearest neighbor interpolation
+         ipar = minloc( (sloc_str(:)-coord(1,si))**2 + (sloc_dip(:)-coord(3,si))**2 , 1) 
+        !loc_dip is negative of Z-coord
+ 
+         T0(3,si) = -ssigma0(ipar)
+         T0(1,si) = stau0_str(ipar)
+         T0(2,si) = stau0_dip(ipar)
+ 
+         f%V0(si) = sV0(ipar)
+         f%f0(si) = sf0(ipar)
+         f%a(si) = sa(ipar)
+         f%b(si) = sb(ipar)    
+         f%L(si) = sL(ipar)
+         f%V_init(si) = sV_init(ipar) 
+         f%theta(si) = stheta(ipar)
+         f%C(si) = sC(ipar) 
+       enddo
+       write(6,*) 'rsf_hete_init end 946'     !Debug
+ 
+ 
+  endif
+
+
+
+ 
+
+  write(6,*) 'rsf_init end 877 ' !Debug
+
+ end subroutine rsf_init
 
 !---------------------------------------------------------------------
 !!$! Rate and state friction coefficient
