@@ -6,7 +6,7 @@
 -1e0                                            ! V_HEALING (-1 : Healing off)
 1e-3                                            ! V_RUPT
 
-&RUPTURE_SWITCHES RATE_AND_STATE=.true.,TPV16=.false./
+&RUPTURE_SWITCHES RATE_AND_STATE=.true.,TPV16=.false.,TPV10X=.true.,RSF_HETE=.false./
 
 &BEGIN_FAULT /
 &STRESS_TENSOR Sigma=0e0,0e0,0e0,0e0,0e0,0e0/
