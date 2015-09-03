@@ -526,7 +526,7 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
     if (RATE_AND_STATE) then
       TxExt = 0._CUSTOM_REAL
       TLoad = 1.0_CUSTOM_REAL
-      DTau0 = 25e6_CUSTOM_REAL
+      DTau0 = 1.0_CUSTOM_REAL
       timeval = it*bc%dt !time will never be zero. it starts from 1
       if (timeval <= TLoad) then
         GLoad = exp( (timeval-TLoad)*(timeval-Tload) / (timeval*(timeval-2.0_CUSTOM_REAL*TLoad)) )
@@ -769,11 +769,14 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
   integer :: nFload
 !  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: init_vel
   integer :: nglob
+  integer :: InputStateLaw = 1 ! By default using aging law
 
-  NAMELIST / RSF / V0,f0,a,b,L,V_init,theta_init,nV0,nf0,na,nb,nL,nV_init,ntheta_init,C,T,nC,nForcedRup,Vw,fw,nVw,nfw
+  NAMELIST / RSF / V0,f0,a,b,L,V_init,theta_init,nV0,nf0,na,nb,nL,nV_init,ntheta_init,C,T,nC,nForcedRup,Vw,fw,nVw,nfw,InputStateLaw
   NAMELIST / ASP / Fload,nFload
 
   nglob = size(coord,2)
+
+  f%StateLaw = InputStateLaw
 
   allocate( f%V0(nglob) )
   allocate( f%f0(nglob) )
