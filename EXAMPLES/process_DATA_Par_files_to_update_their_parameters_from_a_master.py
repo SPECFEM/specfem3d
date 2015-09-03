@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 #
-# reads in a Par_file as master (template) and updates parameters and comments in all other Par_files 
+# reads in a Par_file as master (template) and updates parameters and comments in all other Par_files
 # in current directory to have a consistent set of Par_files
-# 
+#
 import sys
 import os
 import collections
@@ -91,7 +91,7 @@ def read_Par_file_sections(parameters,file,verbose=False):
         raise Exception('file does not open: %s' % file)
 
     # reads in dictionaries
-    nsections = 0  
+    nsections = 0
     comment = ''
     mesh_par_file_data_counter = 0
 
@@ -116,7 +116,7 @@ def read_Par_file_sections(parameters,file,verbose=False):
                     # should have been a comment, notify user
                     print "Error parameter line: ",dataline
                     print "A line starting with a # sign should be a comment line"
-                    sys.tracebacklimit=0         
+                    sys.tracebacklimit=0
                     raise Exception('Invalid parameter line: %s' % dataline)
                 elif index_app > 0:
                     # separates parameter part from rest
@@ -186,7 +186,7 @@ def read_Par_file_sections(parameters,file,verbose=False):
                     print "%s" % comment
                     print "%s = %s" % (name,value)
                     print "\nPlease verify that parameter names are unique."
-                    sys.tracebacklimit=0         
+                    sys.tracebacklimit=0
                     raise Exception('Invalid parameter name: %s' % name)
 
                 # removes last newline character from comment lines
@@ -234,7 +234,7 @@ def read_Par_file_sections(parameters,file,verbose=False):
 def get_maximum_parameter_name_length(parameters,verbose=False):
     """
     determines maximum parameter name length for formatting
-    
+
     example:
         max_name_length = get_maximum_parameter_name_length(parameters)
     """
