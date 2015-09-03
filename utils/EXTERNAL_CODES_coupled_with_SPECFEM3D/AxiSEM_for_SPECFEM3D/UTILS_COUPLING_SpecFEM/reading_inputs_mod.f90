@@ -20,7 +20,7 @@
         read(10,'(a)') input_point_file_cart
         read(10,*) nbproc
         read(10,*) lat_src,lon_src
-        read(10,*) lat_mesh,lon_mesh
+        read(10,*) lat_mesh,lon_mesh,azi_rot !! VM VM add azimuth rotation
         close(10)
 
 
@@ -60,6 +60,10 @@
         meshlon = lon_mesh * pi / 180.
         meshcolat =  (90. - lat_mesh) * pi / 180.
         call def_rot_matrix_DG(meshcolat,meshlon,rot_mat_mesh,trans_rot_mat_mesh)
+
+        !! VM VM add rot azi
+        azi_rot = azi_rot * pi / 180.
+        call def_rot_azi_chunk(rot_azi_chunk,trans_rot_azi_chunk,azi_rot)
 
         !! permutation matrix
         mat(1,1)=0.

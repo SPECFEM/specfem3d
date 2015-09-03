@@ -25,10 +25,13 @@
 !
 !=====================================================================
 
+! note:
+! this routine is not used anymore, but kept for reference...
+
   subroutine define_subregions_heuristic(myrank,isubregion,iaddx,iaddy,iaddz, &
-        ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir,iax,iay,iar, &
-        itype_element,npx,npy, &
-        NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM)
+                                         ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir,iax,iay,iar, &
+                                         itype_element,npx,npy, &
+                                         NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM)
 
 ! heuristic rule to deform elements to balance angles
 ! to 120 degrees in doubling regions

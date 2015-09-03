@@ -492,6 +492,40 @@
 
       end subroutine rotate_back_to_local_cart
 
+      subroutine rotate_from_chunk_azimuth()
+        use global_parameters
+
+        integer irec,i,j,k
+        real(kind=SINGLE_REAL) tmp(3),veloc(3)
+
+        do irec=irecmin,irecmax
+
+           ! veloc in non rotated by azi coordinates
+           veloc(1)=data_rec(irec,1)
+           veloc(2)=data_rec(irec,2)
+           veloc(3)=data_rec(irec,3)
+
+
+           !
+           ! Rt*veloc
+           tmp=0.
+           do i=1,3
+              do k=1,3
+                 tmp(i)=tmp(i)+veloc(k)*rot_azi_chunk(i,k)
+              enddo
+           enddo
+
+           ! valocity in cartesian with azi rotation
+           data_rec(irec,1)=tmp(1)
+           data_rec(irec,2)=tmp(2)
+           data_rec(irec,3)=tmp(3)
+
+
+        enddo
+
+
+      end subroutine rotate_from_chunk_azimuth
+
 
       subroutine rotate_back_source_stress()
         use global_parameters
@@ -603,6 +637,60 @@
 
       end subroutine rotate_back_to_local_cart_stress
 
+      subroutine rotate_from_chunk_azimuth_stress  !! VM VM add azi rot
+        use global_parameters
+
+        integer irec,i,j,k
+        real(kind=SINGLE_REAL) tmp(3,3),tmp1(3,3),st(3,3)
+
+        do irec=irecmin,irecmax
+
+            ! stress in cylindical coordinates
+           st(1,1)=stress_rec(irec,1)
+           st(1,2)=stress_rec(irec,4)
+           st(1,3)=stress_rec(irec,5)
+
+           st(2,1)=stress_rec(irec,4)
+           st(2,2)=stress_rec(irec,2)
+           st(2,3)=stress_rec(irec,6)
+
+           st(3,1)=stress_rec(irec,5)
+           st(3,2)=stress_rec(irec,6)
+           st(3,3)=stress_rec(irec,3)
+
+           !
+           ! st*R
+           tmp=0.
+           do j=1,3
+              do i=1,3
+                 do k=1,3
+                    !tmp(i,j)=tmp(i,j)+st(i,k)*rot_azi_chunk(k,j)
+                    tmp(i,j)=tmp(i,j)+st(i,k)*trans_rot_azi_chunk(k,j)
+                 enddo
+              enddo
+           enddo
+
+           ! Rt*st*R
+           tmp1=0.
+           do j=1,3
+              do i=1,3
+                 do k=1,3
+                    !tmp1(i,j)=tmp1(i,j)+trans_rot_azi_chunk(i,k)*tmp(k,j)
+                    tmp1(i,j)=tmp1(i,j)+rot_azi_chunk(i,k)*tmp(k,j)
+                 enddo
+              enddo
+           enddo
+
+           ! stress in cartesian
+           stress_rec(irec,1)=tmp1(1,1)
+           stress_rec(irec,2)=tmp1(2,2)
+           stress_rec(irec,3)=tmp1(3,3)
+           stress_rec(irec,4)=tmp1(1,2)
+           stress_rec(irec,5)=tmp1(1,3)
+           stress_rec(irec,6)=tmp1(2,3)
+
+        enddo
+      end subroutine rotate_from_chunk_azimuth_stress
 
       subroutine rotate2cartesian_with_source_in_pole()
         use global_parameters

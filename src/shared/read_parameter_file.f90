@@ -53,8 +53,8 @@
   logical :: INCREASE_CFL_FOR_LDDRK
   double precision :: RATIO_BY_WHICH_TO_INCREASE_IT
 
-! read from a single processor (the master) and then use MPI to broadcast to others
-! to avoid an I/O bottleneck in the case of very large runs
+  ! read from a single processor (the master) and then use MPI to broadcast to others
+  ! to avoid an I/O bottleneck in the case of very large runs
   if(myrank == 0) then
 
   ! opens file Par_file

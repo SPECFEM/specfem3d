@@ -92,7 +92,7 @@ subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
   integer, parameter :: IIN_PAR =151
   integer, parameter :: IIN_BIN =170
 
-  NAMELIST / RUPTURE_SWITCHES / RATE_AND_STATE , TPV16 
+  NAMELIST / RUPTURE_SWITCHES / RATE_AND_STATE , TPV16
   NAMELIST / BEGIN_FAULT / dummy_idfault
 
   dummy_idfault = 0
