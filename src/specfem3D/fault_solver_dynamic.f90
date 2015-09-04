@@ -58,9 +58,15 @@ module fault_solver_dynamic
 
   logical, save :: SIMULATION_TYPE_DYN = .false.
 
-  logical, save :: TPV16 = .false.
+  logical, save :: TPV16 = .false.   !TPV16 for heterogeneous in slip weakening
+  ! simulation
+  logical, save :: TPV10X = .false.  !Boundary velocity strengthening layers for
+  ! TPV10X
 
   logical, save :: RATE_AND_STATE = .false.
+
+  logical, save :: RSF_HETE = .false.  !RSF_HETE for heterogeneous in rate and
+  ! state simulation
 
   real(kind=CUSTOM_REAL), allocatable, save :: Kelvin_Voigt_eta(:)
 
@@ -92,7 +98,7 @@ subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
   integer, parameter :: IIN_PAR =151
   integer, parameter :: IIN_BIN =170
 
-  NAMELIST / RUPTURE_SWITCHES / RATE_AND_STATE , TPV16
+  NAMELIST / RUPTURE_SWITCHES / RATE_AND_STATE , TPV16 , TPV10X , RSF_HETE  
   NAMELIST / BEGIN_FAULT / dummy_idfault
 
   dummy_idfault = 0
@@ -752,7 +758,7 @@ end function swf_mu
 subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
 
   type(rsf_type), intent(out) :: f
-  real(kind=CUSTOM_REAL), intent(in) :: T0(:,:)
+  real(kind=CUSTOM_REAL)  :: T0(:,:)
   real(kind=CUSTOM_REAL), intent(inout) :: V(:,:)
   real(kind=CUSTOM_REAL), intent(in) :: coord(:,:)
   real(kind=CUSTOM_REAL), pointer :: nucFload(:)
@@ -760,16 +766,13 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
 
   real(kind=CUSTOM_REAL) :: V0,f0,a,b,L,theta_init,V_init,fw,Vw, C,T
   integer :: nV0,nf0,na,nb,nL,nV_init,ntheta_init,nfw,nVw, nC,nForcedRup
-!  real(kind=CUSTOM_REAL) :: W1,W2,w,hypo_z
-!  real(kind=CUSTOM_REAL) :: x,z
-!  logical :: c1,c2,c3,c4
-!  real(kind=CUSTOM_REAL) :: b11,b12,b21,b22,B1,B2
-!  integer :: i !,nglob_bulk
   real(kind=CUSTOM_REAL) :: Fload
   integer :: nFload
 !  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: init_vel
   integer :: nglob
   integer :: InputStateLaw = 1 ! By default using aging law
+
+  
 
   NAMELIST / RSF / V0,f0,a,b,L,V_init,theta_init,nV0,nf0,na,nb,nL,nV_init,ntheta_init,C,T,nC,nForcedRup,Vw,fw,nVw,nfw,InputStateLaw
   NAMELIST / ASP / Fload,nFload
@@ -854,52 +857,6 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
 
  ! WARNING: below is an ad-hoc setting of a(x,z) for some SCEC benchmark
  !          This should be instead an option in init_2d_distribution
-!  W1=15000._CUSTOM_REAL
-!  W2=7500._CUSTOM_REAL
-!  w=3000._CUSTOM_REAL
-!  hypo_z = -7500._CUSTOM_REAL
-!  do i=1,nglob
-!    x=coord(1,i)
-!    z=coord(3,i)
-!    c1=abs(x)<W1+w
-!    c2=abs(x)>W1
-!    c3=abs(z-hypo_z)<W2+w
-!    c4=abs(z-hypo_z)>W2
-!    if ((c1 .and. c2 .and. c3) .or. (c3 .and. c4 .and. c1)) then
-!
-!      if (c1 .and. c2) then
-!        b11 = w/(abs(x)-W1-w)
-!        b12 = w/(abs(x)-W1)
-!        B1 = HALF * (ONE + tanh(b11 + b12))
-!      else if (abs(x)<=W1) then
-!        B1 = 1._CUSTOM_REAL
-!      else
-!        B1 = 0._CUSTOM_REAL
-!      endif
-!
-!      if (c3 .and. c4) then
-!        b21 = w/(abs(z-hypo_z)-W2-w)
-!        b22 = w/(abs(z-hypo_z)-W2)
-!        B2 = HALF * (ONE + tanh(b21 + b22))
-!      else if (abs(z-hypo_z)<=W2) then
-!        B2 = 1._CUSTOM_REAL
-!      else
-!        B2 = 0._CUSTOM_REAL
-!      endif
-!
-!      f%a(i) = 0.008 + 0.008 * (ONE - B1*B2)
-!      f%Vw(i) = 0.1 + 0.9 * (ONE - B1*B2)
-!
-!    else if (abs(x)<=W1 .and. abs(z-hypo_z)<=W2) then
-!      f%a(i) = 0.008
-!      f%Vw(i) = 0.1_CUSTOM_REAL
-!    else
-!      f%a(i) = 0.016
-!      f%Vw(i) = 1.0_CUSTOM_REAL
-!    endif
-!
-!  enddo
-
   ! WARNING: The line below scratches an earlier initialization of theta through theta_init
   !          We should implement it as an option for the user
  if(TPV16) then
@@ -923,7 +880,141 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
   ! WARNING: the line below is only valid for pure strike-slip faulting
   V(1,:) = f%V_init
 
-end subroutine rsf_init
+  if (TPV10X) then
+          call MakeTPV10XBoundaryRateStrengtheningLayer()
+  endif
+
+  if (RSF_HETE) then
+          call RSF_HETE_init()
+  endif
+          
+contains 
+ subroutine RSF_HETE_init()
+
+  integer :: ier, ipar
+  integer, parameter :: sIIN_NUC =271 ! WARNING: not safe, should look for an available unit
+  real(kind=CUSTOM_REAL),  allocatable :: sloc_str(:),  &
+       sloc_dip(:),ssigma0(:),stau0_str(:),stau0_dip(:),sV0(:), &
+       sf0(:),sa(:),sb(:),sL(:),sV_init(:),stheta(:),sC(:)
+  real(kind=CUSTOM_REAL) :: minX, ssiz_str,ssiz_dip
+  integer :: snum_cell_str,snum_cell_dip,snum_cell_all
+  integer :: si
+
+       open(unit=sIIN_NUC,file='../DATA/input_file.txt',status='old',iostat=ier)
+       read(sIIN_NUC,*) snum_cell_str,snum_cell_dip,ssiz_str,ssiz_dip
+       snum_cell_all=snum_cell_str*snum_cell_dip
+       write(6,*) snum_cell_str,snum_cell_dip,ssiz_str,ssiz_dip
+ 
+   allocate( sloc_str(snum_cell_all) )
+   allocate( sloc_dip(snum_cell_all) )
+   allocate( ssigma0(snum_cell_all) )
+   allocate( stau0_str(snum_cell_all) )
+   allocate( stau0_dip(snum_cell_all) )
+   allocate( sV0(snum_cell_all) )
+   allocate( sf0(snum_cell_all) )
+   allocate( sa(snum_cell_all) )
+   allocate( sb(snum_cell_all) )
+   allocate( sL(snum_cell_all) )
+   allocate( sV_init(snum_cell_all) )
+   allocate( stheta(snum_cell_all) )
+   allocate( sC(snum_cell_all) )
+ 
+       do ipar=1,snum_cell_all
+         read(sIIN_NUC,*) sloc_str(ipar),sloc_dip(ipar),ssigma0(ipar),stau0_str(ipar),stau0_dip(ipar), &
+              sV0(ipar),sf0(ipar),sa(ipar),sb(ipar),sL(ipar), &
+              sV_init(ipar),stheta(ipar),sC(ipar) 
+       enddo
+       close(sIIN_NUC)
+       minX = minval(coord(1,:))
+       write(6,*) 'RSF_HETE nglob= ', nglob, 'num_cell_all= ', snum_cell_all
+       write(6,*) 'minX = ', minval(coord(1,:)), 'minZ = ', minval(coord(3,:))
+       write(6,*) 'maxX = ', maxval(coord(1,:)), 'maxZ = ', maxval(coord(3,:))
+       write(6,*) 'minXall = ', minval(sloc_str(:)), 'minZall = ', minval(sloc_dip(:))
+       write(6,*) 'maxXall = ', maxval(sloc_str(:)), 'maxZall = ', maxval(sloc_dip(:))
+ 
+       do si=1,nglob
+ 
+        ! WARNING: nearest neighbor interpolation
+         ipar = minloc( (sloc_str(:)-coord(1,si))**2 + (sloc_dip(:)-coord(3,si))**2 , 1) 
+        !loc_dip is negative of Z-coord
+ 
+         T0(3,si) = -ssigma0(ipar)
+         T0(1,si) = stau0_str(ipar)
+         T0(2,si) = stau0_dip(ipar)
+ 
+         f%V0(si) = sV0(ipar)
+         f%f0(si) = sf0(ipar)
+         f%a(si) = sa(ipar)
+         f%b(si) = sb(ipar)    
+         f%L(si) = sL(ipar)
+         f%V_init(si) = sV_init(ipar) 
+         f%theta(si) = stheta(ipar)
+         f%C(si) = sC(ipar) 
+       enddo 
+ 
+ end subroutine RSF_HETE_init
+ 
+ subroutine MakeTPV10XBoundaryRateStrengtheningLayer()
+! adding a rate strengthening layer at the boundary of a fault for TPV10X
+! see http://scecdata.usc.edu/cvws/download/uploadTPV103.pdf for more details
+
+  real(kind=CUSTOM_REAL) :: W1,W2,w,hypo_z
+  real(kind=CUSTOM_REAL) :: x,z
+  logical :: c1,c2,c3,c4
+  real(kind=CUSTOM_REAL) :: b11,b12,b21,b22,B1,B2
+  integer :: i !,nglob_bulk
+
+
+
+   W1=15000._CUSTOM_REAL
+   W2=7500._CUSTOM_REAL
+   w=3000._CUSTOM_REAL
+   hypo_z = -7500._CUSTOM_REAL
+   do i=1,nglob
+     x=coord(1,i)
+     z=coord(3,i)
+     c1=abs(x)<W1+w
+     c2=abs(x)>W1
+     c3=abs(z-hypo_z)<W2+w
+     c4=abs(z-hypo_z)>W2
+     if ((c1 .and. c2 .and. c3) .or. (c3 .and. c4 .and. c1)) then
+ 
+       if (c1 .and. c2) then
+         b11 = w/(abs(x)-W1-w)
+         b12 = w/(abs(x)-W1)
+         B1 = HALF * (ONE + tanh(b11 + b12))
+       else if (abs(x)<=W1) then
+         B1 = 1._CUSTOM_REAL
+       else
+         B1 = 0._CUSTOM_REAL
+       endif
+ 
+       if (c3 .and. c4) then
+         b21 = w/(abs(z-hypo_z)-W2-w)
+         b22 = w/(abs(z-hypo_z)-W2)
+         B2 = HALF * (ONE + tanh(b21 + b22))
+       else if (abs(z-hypo_z)<=W2) then
+         B2 = 1._CUSTOM_REAL
+       else
+         B2 = 0._CUSTOM_REAL
+       endif
+ 
+       f%a(i) = 0.008 + 0.008 * (ONE - B1*B2)
+       f%Vw(i) = 0.1 + 0.9 * (ONE - B1*B2)
+ 
+     else if (abs(x)<=W1 .and. abs(z-hypo_z)<=W2) then
+       f%a(i) = 0.008
+       f%Vw(i) = 0.1_CUSTOM_REAL
+     else
+       f%a(i) = 0.016
+       f%Vw(i) = 1.0_CUSTOM_REAL
+     endif
+ 
+   enddo
+
+
+ end subroutine MakeTPV10XBoundaryRateStrengtheningLayer 
+ end subroutine rsf_init
 
 !---------------------------------------------------------------------
 !!$! Rate and state friction coefficient
