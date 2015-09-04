@@ -98,7 +98,7 @@ subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
   integer, parameter :: IIN_PAR =151
   integer, parameter :: IIN_BIN =170
 
-  NAMELIST / RUPTURE_SWITCHES / RATE_AND_STATE , TPV16 , TPV10X , RSF_HETE  
+  NAMELIST / RUPTURE_SWITCHES / RATE_AND_STATE , TPV16 , TPV10X , RSF_HETE
   NAMELIST / BEGIN_FAULT / dummy_idfault
 
   dummy_idfault = 0
@@ -772,7 +772,7 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
   integer :: nglob
   integer :: InputStateLaw = 1 ! By default using aging law
 
-  
+
 
   NAMELIST / RSF / V0,f0,a,b,L,V_init,theta_init,nV0,nf0,na,nb,nL,nV_init,ntheta_init,C,T,nC,nForcedRup,Vw,fw,nVw,nfw,InputStateLaw
   NAMELIST / ASP / Fload,nFload
@@ -885,8 +885,8 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
   if (RSF_HETE) then
           call RSF_HETE_init()
   endif
-          
-contains 
+
+contains
  subroutine RSF_HETE_init()
 
   integer :: ier, ipar
@@ -902,7 +902,7 @@ contains
        read(sIIN_NUC,*) snum_cell_str,snum_cell_dip,ssiz_str,ssiz_dip
        snum_cell_all=snum_cell_str*snum_cell_dip
        write(6,*) snum_cell_str,snum_cell_dip,ssiz_str,ssiz_dip
- 
+
    allocate( sloc_str(snum_cell_all) )
    allocate( sloc_dip(snum_cell_all) )
    allocate( ssigma0(snum_cell_all) )
@@ -916,11 +916,11 @@ contains
    allocate( sV_init(snum_cell_all) )
    allocate( stheta(snum_cell_all) )
    allocate( sC(snum_cell_all) )
- 
+
        do ipar=1,snum_cell_all
          read(sIIN_NUC,*) sloc_str(ipar),sloc_dip(ipar),ssigma0(ipar),stau0_str(ipar),stau0_dip(ipar), &
               sV0(ipar),sf0(ipar),sa(ipar),sb(ipar),sL(ipar), &
-              sV_init(ipar),stheta(ipar),sC(ipar) 
+              sV_init(ipar),stheta(ipar),sC(ipar)
        enddo
        close(sIIN_NUC)
        minX = minval(coord(1,:))
@@ -929,29 +929,29 @@ contains
        write(6,*) 'maxX = ', maxval(coord(1,:)), 'maxZ = ', maxval(coord(3,:))
        write(6,*) 'minXall = ', minval(sloc_str(:)), 'minZall = ', minval(sloc_dip(:))
        write(6,*) 'maxXall = ', maxval(sloc_str(:)), 'maxZall = ', maxval(sloc_dip(:))
- 
+
        do si=1,nglob
- 
+
         ! WARNING: nearest neighbor interpolation
-         ipar = minloc( (sloc_str(:)-coord(1,si))**2 + (sloc_dip(:)-coord(3,si))**2 , 1) 
+         ipar = minloc( (sloc_str(:)-coord(1,si))**2 + (sloc_dip(:)-coord(3,si))**2 , 1)
         !loc_dip is negative of Z-coord
- 
+
          T0(3,si) = -ssigma0(ipar)
          T0(1,si) = stau0_str(ipar)
          T0(2,si) = stau0_dip(ipar)
- 
+
          f%V0(si) = sV0(ipar)
          f%f0(si) = sf0(ipar)
          f%a(si) = sa(ipar)
-         f%b(si) = sb(ipar)    
+         f%b(si) = sb(ipar)
          f%L(si) = sL(ipar)
-         f%V_init(si) = sV_init(ipar) 
+         f%V_init(si) = sV_init(ipar)
          f%theta(si) = stheta(ipar)
-         f%C(si) = sC(ipar) 
-       enddo 
- 
+         f%C(si) = sC(ipar)
+       enddo
+
  end subroutine RSF_HETE_init
- 
+
  subroutine MakeTPV10XBoundaryRateStrengtheningLayer()
 ! adding a rate strengthening layer at the boundary of a fault for TPV10X
 ! see http://scecdata.usc.edu/cvws/download/uploadTPV103.pdf for more details
@@ -976,7 +976,7 @@ contains
      c3=abs(z-hypo_z)<W2+w
      c4=abs(z-hypo_z)>W2
      if ((c1 .and. c2 .and. c3) .or. (c3 .and. c4 .and. c1)) then
- 
+
        if (c1 .and. c2) then
          b11 = w/(abs(x)-W1-w)
          b12 = w/(abs(x)-W1)
@@ -986,7 +986,7 @@ contains
        else
          B1 = 0._CUSTOM_REAL
        endif
- 
+
        if (c3 .and. c4) then
          b21 = w/(abs(z-hypo_z)-W2-w)
          b22 = w/(abs(z-hypo_z)-W2)
@@ -996,10 +996,10 @@ contains
        else
          B2 = 0._CUSTOM_REAL
        endif
- 
+
        f%a(i) = 0.008 + 0.008 * (ONE - B1*B2)
        f%Vw(i) = 0.1 + 0.9 * (ONE - B1*B2)
- 
+
      else if (abs(x)<=W1 .and. abs(z-hypo_z)<=W2) then
        f%a(i) = 0.008
        f%Vw(i) = 0.1_CUSTOM_REAL
@@ -1007,11 +1007,11 @@ contains
        f%a(i) = 0.016
        f%Vw(i) = 1.0_CUSTOM_REAL
      endif
- 
+
    enddo
 
 
- end subroutine MakeTPV10XBoundaryRateStrengtheningLayer 
+ end subroutine MakeTPV10XBoundaryRateStrengtheningLayer
  end subroutine rsf_init
 
 !---------------------------------------------------------------------
