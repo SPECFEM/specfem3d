@@ -198,7 +198,7 @@ on the foot wall).
 
 Three additional input files are required in the \texttt{DATA/} directory
 for dynamic and kinematic faults. They are $\mathtt{Par\_file\_faults}$,
-$\mathtt{FAULT\_STATIONS}$ and $\mathtt{input\_file.txt}$ (optional).
+$\mathtt{FAULT\_STATIONS}$ and $\mathtt{input\_file.txt}$ or $\mathtt{rsf\_hete\_input\_file.txt}$(optional).
 If the former does not exist, the code assumes that there are no faults.\\
 
 \begin{lyxlist}{00.00.0000}
@@ -228,8 +228,13 @@ The rest of this file is made of namelist input blocks (see \textquotedbl{}namel
 in a Fortran 9x manual). The input for each fault has the following
 sequence (arguments in {[}brackets{]} are optional):
 
+\&\textbf{RUPTURE\_SWITCHES}  /
+RATE\_AND\_STATE ,TPV16 ,HETE\_RSF ,TPV10X 
 
 \&\textbf{BEGIN\_FAULT} /
+
+\&\textbf{STRESS\_TENSOR} Sigma = $\sigma_{xx}$,$\sigma_{yy}$,$\sigma_{zz}$,$\sigma_{xy}$,$\sigma_{xz}$,$\sigma_{yz}$ /
+
 
 
 \&\textbf{INIT\_STRESS} S1, S2, S3 {[},n1, n2, n3{]} /
@@ -241,9 +246,40 @@ followed by (n1+n2+n3) \&\textbf{DIST2D} blocks
 \&\textbf{SWF} mus, mud, dc {[}, nmus, nmud, ndc{]} /
 
 
-followed by (nmus+nmud+ndc) \&\textbf{DIST2D} blocks\\
+\&\textbf{RSF} V0,f0,a,b,L,V\_init,theta\_init,C,StateLaw {[} nV0,nf0,na,nb,nL,nV\_init,ntheta\_init,nC {]} /
+
+
+
+followed by (nV0+nf0+na+nb+nL+nV\_init+ntheta\_init+nC) \&\textbf{DIST2D} blocks\\
 
 \begin{lyxlist}{00.00.0000}
+\item [{\&\textbf{RUPTURE\_SWITCHES}}] input block sets some switches in the simulation process.
+  \begin{description}
+    \item [{RATE\_AND\_STATE}] 
+         = .TRUE. use rate and state friction,=.FALSE. use slip weakening friction
+    \item [{TPV16}]
+         =.TRUE turn on heterogeneity fault property input for slip weakening friction from DATA\/input\_file.txt,
+         =.FALSE. turn off such feature 
+    \item [{HETE\_RSF}]
+         =.TRUE. turn on heterogeneity fault property input for rate and state friction 
+              using input from DATA\/rsf\_hete\_input\_filr.txt, 
+	 =.FALSE. turn off such feature
+    \item[{TPV10X}]
+         =.TRUE. turn on some ad hoc features for TPV101-104 simulations, a rate strengthening 
+	 layer surrounding the rate weakening region. 
+	 =.FALSE. turn off such feature
+   \end{description}
+
+
+\item [{\&\textbf{STRESS\_TENSOR}}] input block sets the initial fault stresses 
+  by projecting a uniform regional stress field onto the fault plane.So that the 
+  tractions $\tau = \sigma : n$ while $n$ is the local norm of the fault plane.
+  Sigma =  $\sigma_{xx}$,$\sigma_{yy}$,$\sigma_{zz}$,$\sigma_{xy}$,$\sigma_{xz}$,$\sigma_{yz}$ 
+  (in Pa)
+
+
+
+
 \item [{\&\textbf{INIT\_STRESS}}] input block sets the initial fault stresses
 relative to the foot-wall side of the fault. Initial stresses are
 composed of a constant background value possibly overwritten in prescribed
@@ -279,6 +315,28 @@ of the fault:
 distance {[}default is 0{]}\\
 
 \end{description}
+
+\item [{\&\textbf{RSF}}] input block sets the rate and state friction parameters
+of the fault:
+
+\begin{description}
+  \item []
+    We refer to the well known rate and state friction formula:
+    $$\mu = f_0 + a* log(\frac{v}{v_0}) + b* log(\frac{v_0}{\theta L}))  $$
+\item [{V0}] = constant background value of $V_0$
+\item [{f0}] = constant background value of $f_0$
+\item [{a}] = constant background value of $a$
+\item [{b}] = constant background value of $b$
+\item [{L}] = constant background value of $L$
+\item [{V\_init}] = constant background value of along strike right lateral slip rate at time 0
+\item [{theta\_init}] = constant background value of state variable $\theta$ at time 0
+\item [{C}] = constant background value of cohesion (in Pa)
+\item [{StateLaw}] = 1 or 2. 1 for aging law , 2 for slip law with strong dynamic weakening.
+\item [{n**}] = number of heterogeneous items for quantity **
+\end{description}
+
+
+
 \item [{\&\textbf{DIST2D}}] input blocks modify (overwrite) the value of
 a fault parameter by a heterogeneous spatial distribution:
 
@@ -336,18 +394,60 @@ the index of appearance in the faults list after line 2 of Par\_file\_faults
 \end{lyxlist}
 
 \begin{lyxlist}{00.00.0000}
-\item [{\textbf{DATA/input\_file.txt}}] Heterogeneous stresses and friction
+\item [{\textbf{DATA/input\_file.txt}}] Heterogeneous stresses and friction for 
+linear slip weakening friction
 parameters are documented in page 10 of
 
 \begin{lyxlist}{00.00.0000}
 \item [{$\mathtt{EXAMPLES/tpv16/description/TPV16\_17\_Description\_v03.pdf}$}]~
 \end{lyxlist}
 
-To activate this feature, in fault\_solver\_dynamic.f90 set \textbf{TPV16}
-= .true. then re-compile the code.
+To activate this feature, in Par\_file\_faults name list \&\textbf{RUPTURE\_SWITCHES}, set TPV16=.TRUE..
 
 \end{lyxlist}
+\begin{lyxlist}{00.00.0000}
+\item [{\textbf{DATA/rsf\_hete\_input\_file.txt}}]  Heterogeneous stresses and friction input for 
+  rate and state friction. 
+To activate this feature, in Par\_file\_faults name list \&\textbf{RUPTURE\_SWITCHES}, set RSF\_HETE=.TRUE..
 
+  The format of  {\textbf{DATA/rsf\_hete\_input\_file.txt}} is as such, in the first line there are four integers
+
+  that are sequentially documenting the number of divisions along strike, number of divisions along 
+  
+  dip, cell size along strike , cell size along dip. Then the following N(N=NumberOfDivisionsAlongStrike
+  
+  * NumberOfDivisionsAlongDip) lines will document the stress and friction properties on the grid.
+  
+  There are a total of 13 columns.
+  \begin{enumerate}
+  \item{Column1} = Along strike distance(m) 
+  
+  \item{Column2} = Along dip distances(m) The distance should be negative for points at depth 
+
+  \item{Column3} = Normal stress(Pa) 
+
+  \item{Column4} = Horizontal right-lateral shear stress(Pa) 
+
+  \item{Column5} = Vertical up-dip shear stress(Pa) 
+
+  \item{Column6} = $V_0$ value in RSF(m/s) 
+
+  \item{Column7} = $f_0$ value in RSF 
+  
+  \item{Column8} = a value in RSF  
+
+  \item{Column9} = b value in RSF 
+  
+  \item{Column10} = L value in RSF 
+  
+  \item{Column11} = Initial slip velocity(m/s)
+  
+  \item{Column12} = State variable $\theta$ 
+  
+  \item{Column13} = Cohesion(Pa)  
+  \end{enumerate}
+  Note that the input grid file do not have to coincide with the mesh. For each fault node on the mesh, they will use the value from the nearest node on the input grid.
+\end{lyxlist}
 
 
 \section{Setting the Kelvin-Voigt Damping Parameter}\label{sec:Setting-the-Kelvin-Voigt}
