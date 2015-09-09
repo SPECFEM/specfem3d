@@ -140,8 +140,11 @@
               if (USE_RICKER_TIME_FUNCTION) then
                 stf = comp_source_time_function_rickr(time_source_dble,hdur(isource))
               else
-                !stf = comp_source_time_function_gauss(time_source_dble,5.d0*DT) ! COMMENTED BY FS FS -> do no longer use hard-coded hdur_gaussian = 5*DT, but actual value of hdur_gaussian
-                stf = comp_source_time_function_gauss(time_source_dble,hdur_gaussian(isource)) !! ADDED BY FS FS -> use actual value of hdur_gaussian as half duration
+                ! stf = comp_source_time_function_gauss(time_source_dble,5.d0*DT) 
+                !! COMMENTED BY FS FS -> do no longer use hard-coded hdur_gaussian = 5*DT, but actual value of hdur_gaussian
+
+                stf = comp_source_time_function_gauss(time_source_dble,hdur_gaussian(isource)) 
+                !! ADDED BY FS FS -> use actual value of hdur_gaussian as half duration
               endif
 
               ! add the tilted force source array
@@ -504,7 +507,8 @@
                 stf = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
               else
                 ! use a very small duration of 5*DT to mimic a Dirac in time
-                stf = comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),5.d0*DT) ! FS FS  does it also here make sense to replace 5.d0*DT by hdur_gaussian(isource) ? looks like it
+                stf = comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),5.d0*DT) 
+                !! FS FS  does it also here make sense to replace 5.d0*DT by hdur_gaussian(isource) ? looks like it
               endif
 
               ! add the tilted force source array
@@ -684,7 +688,8 @@
             stf_pre_compute(isource) = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
           else
             ! use a very small duration of 5*DT to mimic a Dirac in time
-            stf_pre_compute(isource) = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),5.d0*DT)  ! FS FS  does it also here make sense to replace 5.d0*DT by hdur_gaussian(isource) ? looks like it
+            stf_pre_compute(isource) = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),5.d0*DT)  
+            !! FS FS  does it also here make sense to replace 5.d0*DT by hdur_gaussian(isource) ? looks like it
           endif
         else
           if (USE_RICKER_TIME_FUNCTION) then
@@ -850,7 +855,8 @@
             stf_pre_compute(isource) = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
           else
             ! use a very small duration of 5*DT to mimic a Dirac in time
-            stf_pre_compute(isource) = comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),5.d0*DT) ! FS FS  does it also here make sense to replace 5.d0*DT by hdur_gaussian(isource) ? looks like it
+            stf_pre_compute(isource) = comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),5.d0*DT) 
+            !! FS FS  does it also here make sense to replace 5.d0*DT by hdur_gaussian(isource) ? looks like it
           endif
         else
           if (USE_RICKER_TIME_FUNCTION) then
