@@ -229,7 +229,7 @@ in a Fortran 9x manual). The input for each fault has the following
 sequence (arguments in {[}brackets{]} are optional):
 
 \&\textbf{RUPTURE\_SWITCHES}  /
-RATE\_AND\_STATE ,TPV16 ,HETE\_RSF ,TPV10X 
+RATE\_AND\_STATE ,TPV16 ,HETE\_RSF ,TPV10X
 
 \&\textbf{BEGIN\_FAULT} /
 
@@ -255,26 +255,26 @@ followed by (nV0+nf0+na+nb+nL+nV\_init+ntheta\_init+nC) \&\textbf{DIST2D} blocks
 \begin{lyxlist}{00.00.0000}
 \item [{\&\textbf{RUPTURE\_SWITCHES}}] input block sets some switches in the simulation process.
   \begin{description}
-    \item [{RATE\_AND\_STATE}] 
+    \item [{RATE\_AND\_STATE}]
          = .TRUE. use rate and state friction,=.FALSE. use slip weakening friction
     \item [{TPV16}]
          =.TRUE turn on heterogeneity fault property input for slip weakening friction from DATA\/input\_file.txt,
-         =.FALSE. turn off such feature 
+         =.FALSE. turn off such feature
     \item [{HETE\_RSF}]
-         =.TRUE. turn on heterogeneity fault property input for rate and state friction 
-              using input from DATA\/rsf\_hete\_input\_filr.txt, 
-	 =.FALSE. turn off such feature
+         =.TRUE. turn on heterogeneity fault property input for rate and state friction
+              using input from DATA\/rsf\_hete\_input\_filr.txt,
+   =.FALSE. turn off such feature
     \item[{TPV10X}]
-         =.TRUE. turn on some ad hoc features for TPV101-104 simulations, a rate strengthening 
-	 layer surrounding the rate weakening region. 
-	 =.FALSE. turn off such feature
+         =.TRUE. turn on some ad hoc features for TPV101-104 simulations, a rate strengthening
+   layer surrounding the rate weakening region.
+   =.FALSE. turn off such feature
    \end{description}
 
 
-\item [{\&\textbf{STRESS\_TENSOR}}] input block sets the initial fault stresses 
-  by projecting a uniform regional stress field onto the fault plane.So that the 
+\item [{\&\textbf{STRESS\_TENSOR}}] input block sets the initial fault stresses
+  by projecting a uniform regional stress field onto the fault plane.So that the
   tractions $\tau = \sigma : n$ while $n$ is the local norm of the fault plane.
-  Sigma =  $\sigma_{xx}$,$\sigma_{yy}$,$\sigma_{zz}$,$\sigma_{xy}$,$\sigma_{xz}$,$\sigma_{yz}$ 
+  Sigma =  $\sigma_{xx}$,$\sigma_{yy}$,$\sigma_{zz}$,$\sigma_{xy}$,$\sigma_{xz}$,$\sigma_{yz}$
   (in Pa)
 
 
@@ -394,7 +394,7 @@ the index of appearance in the faults list after line 2 of Par\_file\_faults
 \end{lyxlist}
 
 \begin{lyxlist}{00.00.0000}
-\item [{\textbf{DATA/input\_file.txt}}] Heterogeneous stresses and friction for 
+\item [{\textbf{DATA/input\_file.txt}}] Heterogeneous stresses and friction for
 linear slip weakening friction
 parameters are documented in page 10 of
 
@@ -406,45 +406,45 @@ To activate this feature, in Par\_file\_faults name list \&\textbf{RUPTURE\_SWIT
 
 \end{lyxlist}
 \begin{lyxlist}{00.00.0000}
-\item [{\textbf{DATA/rsf\_hete\_input\_file.txt}}]  Heterogeneous stresses and friction input for 
-  rate and state friction. 
+\item [{\textbf{DATA/rsf\_hete\_input\_file.txt}}]  Heterogeneous stresses and friction input for
+  rate and state friction.
 To activate this feature, in Par\_file\_faults name list \&\textbf{RUPTURE\_SWITCHES}, set RSF\_HETE=.TRUE..
 
   The format of  {\textbf{DATA/rsf\_hete\_input\_file.txt}} is as such, in the first line there are four integers
 
-  that are sequentially documenting the number of divisions along strike, number of divisions along 
-  
+  that are sequentially documenting the number of divisions along strike, number of divisions along
+
   dip, cell size along strike , cell size along dip. Then the following N(N=NumberOfDivisionsAlongStrike
-  
+
   * NumberOfDivisionsAlongDip) lines will document the stress and friction properties on the grid.
-  
+
   There are a total of 13 columns.
   \begin{enumerate}
-  \item{Column1} = Along strike distance(m) 
-  
-  \item{Column2} = Along dip distances(m) The distance should be negative for points at depth 
+  \item{Column1} = Along strike distance(m)
 
-  \item{Column3} = Normal stress(Pa) 
+  \item{Column2} = Along dip distances(m) The distance should be negative for points at depth
 
-  \item{Column4} = Horizontal right-lateral shear stress(Pa) 
+  \item{Column3} = Normal stress(Pa)
 
-  \item{Column5} = Vertical up-dip shear stress(Pa) 
+  \item{Column4} = Horizontal right-lateral shear stress(Pa)
 
-  \item{Column6} = $V_0$ value in RSF(m/s) 
+  \item{Column5} = Vertical up-dip shear stress(Pa)
 
-  \item{Column7} = $f_0$ value in RSF 
-  
-  \item{Column8} = a value in RSF  
+  \item{Column6} = $V_0$ value in RSF(m/s)
 
-  \item{Column9} = b value in RSF 
-  
-  \item{Column10} = L value in RSF 
-  
+  \item{Column7} = $f_0$ value in RSF
+
+  \item{Column8} = a value in RSF
+
+  \item{Column9} = b value in RSF
+
+  \item{Column10} = L value in RSF
+
   \item{Column11} = Initial slip velocity(m/s)
-  
-  \item{Column12} = State variable $\theta$ 
-  
-  \item{Column13} = Cohesion(Pa)  
+
+  \item{Column12} = State variable $\theta$
+
+  \item{Column13} = Cohesion(Pa)
   \end{enumerate}
   Note that the input grid file do not have to coincide with the mesh. For each fault node on the mesh, they will use the value from the nearest node on the input grid.
 \end{lyxlist}
