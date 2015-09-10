@@ -10,7 +10,7 @@
 #MSUB -q standard
 #MSUB -e reformat_for_AxiSEM_32_run.e
 #MSUB -o reformat_for_AxiSEM_32_run.o
-#MSUB -A ra2410
+#MSUB -A gen7165
 
 set -x
 cd ${BRIDGE_MSUB_PWD}

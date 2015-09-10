@@ -10,7 +10,7 @@
 #MSUB -q standard
 #MSUB -e AxiSEM_for_SPECFEM3D_32_run.e
 #MSUB -o AxiSEM_for_SPECFEM3D_32_run.o
-#MSUB -A ra2410
+#MSUB -A gen7165
 
 set -x
 cd ${BRIDGE_MSUB_PWD}

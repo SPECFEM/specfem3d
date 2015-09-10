@@ -10,7 +10,7 @@
 #MSUB -q standard
 #MSUB -e interface_expand_2D_3D_160_run.e
 #MSUB -o interface_expand_2D_3D_160_run.o
-#MSUB -A ra2410
+#MSUB -A gen7165
 
 set -x
 cd ${BRIDGE_MSUB_PWD}

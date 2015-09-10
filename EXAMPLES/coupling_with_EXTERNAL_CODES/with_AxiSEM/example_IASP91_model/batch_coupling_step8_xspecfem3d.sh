@@ -10,7 +10,7 @@
 #MSUB -q standard
 #MSUB -e Xspecfem3D_32p.e
 #MSUB -o Xspecfem3D_32p.o
-#MSUB -A ra2410
+#MSUB -A gen7165
 
 set -x
 cd ${BRIDGE_MSUB_PWD}

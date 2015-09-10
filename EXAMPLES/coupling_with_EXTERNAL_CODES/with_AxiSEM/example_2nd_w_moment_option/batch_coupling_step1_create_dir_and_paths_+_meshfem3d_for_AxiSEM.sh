@@ -10,7 +10,7 @@
 #MSUB -q standard
 #MSUB -e Coupling_step1_meshfem3d_for_AxiSEM_run.e
 #MSUB -o Coupling_step1_meshfem3d_for_AxiSEM_run.o
-#MSUB -A ra2410
+#MSUB -A gen7165
 
 set -x
 cd ${BRIDGE_MSUB_PWD}
