@@ -647,12 +647,12 @@
 
   ! read files
   do itime=1,ntime
- 
+
     data_rec    = 0.
     Energy_1    = 0.
 
     indx_stored = 1
-   
+
     ifield      = 1 !! ====> us
 
     if (myrank == 0) then
@@ -672,7 +672,7 @@
       enddo
 
     endif
-            
+
     call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
     call interpol_field(ifield)
 
@@ -740,7 +740,7 @@
   enddo ! pas de temps
 
   if (myrank ==0) then
-  
+
     ! close files
     do ifield=1,3
       do iproc=0, nbproc-1
