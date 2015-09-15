@@ -23,8 +23,11 @@
         read(10,*) lat_mesh,lon_mesh,azi_rot !! VM VM add azimuth rotation
         close(10)
 
-
         !! hardcoded the input file name
+        input_displ_name(1)='displacement_us' !! CD CD add this 
+        input_displ_name(2)='displacement_up'
+        input_displ_name(3)='displacement_uz'
+
         input_veloc_name(1)='velocityfiel_us'
         input_veloc_name(2)='velocityfiel_up'
         input_veloc_name(3)='velocityfiel_uz'
@@ -37,6 +40,10 @@
         input_stress_name(6)='stress_Sg23_sol'
 
         !! hardcoded the output file name
+        output_displ_name(1)='displ_out_u1' !! CD CD add this 
+        output_displ_name(2)='displ_out_u2'
+        output_displ_name(3)='displ_out_u3'
+
         output_veloc_name(1)='velocityoutp_u1'
         output_veloc_name(2)='velocityoutp_u2'
         output_veloc_name(3)='velocityoutp_u3'

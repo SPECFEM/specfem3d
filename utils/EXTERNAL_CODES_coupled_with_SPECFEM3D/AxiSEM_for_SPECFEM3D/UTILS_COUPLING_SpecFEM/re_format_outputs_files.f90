@@ -7,19 +7,20 @@ program re_format_outputs_files
   INTEGER myrank,nbproc,ierr
   integer, dimension(MPI_STATUS_SIZE) :: statut
   integer, parameter :: etq=100
-  character(len=500) output_veloc_name(3),output_stress_name(6),output_name
+  character(len=500) output_displ_name(3),output_veloc_name(3),output_stress_name(6),output_name
   character(len=500) input_field_name,output_field_name,input_point_file
   character(len=500), allocatable :: working_axisem_dir(:)
   character(len=500) fichier,input_point_file_cart,meshdirectory
   character(len=500) incident_field,incident_field_tmp,tmp_file,prname,LOCAL_PATH,TRACT_PATH
   integer iti,a,nb_dump_samples,nbrec,irec,i,ntime,itime,n0,n00
   real, allocatable :: data_time(:,:),data_rec(:,:,:),data_rec0(:,:,:),data_tmp(:,:),data_tmp_to_send(:,:)
-  real, allocatable :: vr(:,:),tr(:,:)
+  real, allocatable :: ur(:,:),vr(:,:),tr(:,:)
   real nvx,nvy,nvz
   double precision, allocatable :: field_interp(:),field_to_write(:,:,:)
-  double precision, allocatable :: field_to_write_all(:,:),buffer_to_write(:),buffer_to_send(:),buffer_to_recv(:),buffer_to_store(:,:)
+  double precision, allocatable :: field_to_write_all(:,:),buffer_to_write(:),buffer_to_send(:),buffer_to_recv(:)
+  double precision, allocatable :: buffer_to_store_d(:,:), buffer_to_store_v(:,:)
   double complex, allocatable :: zpad(:),padi(:)
-  double precision, allocatable :: sinc_tab_veloc(:),sinc_tab_stress(:)
+  double precision, allocatable :: sinc_tab_displ(:),sinc_tab_veloc(:),sinc_tab_stress(:)
   real, allocatable :: xp(:),yp(:),zp(:)
   integer, allocatable :: igll_glob(:),jgll_glob(:),kgll_glob(:), inum_glob(:),iboun_gll(:)
   integer, allocatable :: nb_received(:),shift(:),nb_received_sv(:),shift_sv(:)
@@ -302,6 +303,10 @@ program re_format_outputs_files
      read(10,*) dt
      close(10)
 
+     output_displ_name(1)='displ_out_u1'
+     output_displ_name(2)='displ_out_u2'
+     output_displ_name(3)='displ_out_u3'
+
      output_veloc_name(1)='velocityoutp_u1'
      output_veloc_name(2)='velocityoutp_u2'
      output_veloc_name(3)='velocityoutp_u3'
@@ -319,8 +324,8 @@ program re_format_outputs_files
      allocate(isxy(nsim),isxz(nsim),isyz(nsim))
 
 
-
      do isim=1,nsim
+
         ivx(isim)=next_iunit(iunit)
         ivy(isim)=next_iunit(iunit)
         ivz(isim)=next_iunit(iunit)
@@ -331,6 +336,12 @@ program re_format_outputs_files
         isxz(isim)=next_iunit(iunit)
         isyz(isim)=next_iunit(iunit)
 
+        write(fichier,'(a6,a15)') '/Data/',output_displ_name(1)
+        open(ivx(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
+        write(fichier,'(a6,a15)') '/Data/',output_displ_name(2)
+        open(ivy(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
+        write(fichier,'(a6,a15)') '/Data/',output_displ_name(3)
+        open(ivz(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
 
         write(fichier,'(a6,a15)') '/Data/',output_veloc_name(1)
         open(ivx(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
@@ -453,7 +464,7 @@ program re_format_outputs_files
 ! ################################ reading and scatter the data  ################################
 
   allocate(irec_glob(NGLLSQUARE*MAX_MUN_ABS_BOUNDARY_FACES,nSpecfem_proc))
-  allocate(vr(3,nrec_by_proc(myrank+1)),tr(3, nrec_by_proc(myrank+1)))
+  allocate(ur(3,nrec_by_proc(myrank+1)),vr(3,nrec_by_proc(myrank+1)),tr(3, nrec_by_proc(myrank+1)))
 
   do itime=1,ntime
 
@@ -548,8 +559,9 @@ program re_format_outputs_files
 
 
   nrec_to_store = nrec_by_proc(myrank+1)
-  allocate(buffer_to_store(9,nrec_to_store))
-  allocate(sinc_tab_veloc(ntime),sinc_tab_stress(ntime))
+  allocate(buffer_to_store_v(9,nrec_to_store))
+  allocate(buffer_to_store_d(9,nrec_to_store))
+  allocate(sinc_tab_displ(ntime),sinc_tab_veloc(ntime),sinc_tab_stress(ntime))
   irecmin=1
   irecmax=nrec_to_store
   ntime_to_store = (itmax - itmin + 1) / 2
@@ -557,9 +569,15 @@ program re_format_outputs_files
 
   call create_name_database(prname,myrank,TRACT_PATH)
   write(*,*) TRACT_PATH,prname,myrank
-  open(27,file=prname(1:len_trim(prname))//'sol_axisem',status='unknown',&
+
+  open(28,file=prname(1:len_trim(prname))//'sol_axisem',status='unknown',&
              action='write',form='unformatted',iostat=ier)
   if (ier /= 0) write(*,*) 'error opening', prname(1:len_trim(prname))//'sol_axisem'
+
+  open(29,file=prname(1:len_trim(prname))//'axisem_displ_for_int_KH',status='unknown',&
+             action='write',form='unformatted',iostat=ier)
+  if (ier /= 0) write(*,*) 'error opening', prname(1:len_trim(prname))//'axisem_displ_for_int_KH'
+
   if (nrec_to_store >= 100) then
     do i=1,ntime
        write(399,*) (i-1)*dt,data_rec(3,i,100)
@@ -578,31 +596,50 @@ program re_format_outputs_files
      tt=tt+dtt
      current_time_step = tmin + (itnew-1)*dtt !+ 0.5*dtt
      !current_time_step_half = current_time_step - 0.5*dtt
-     sinc_tab_veloc(:)=0.d0
-     buffer_to_store(:,:)=0.d0
+
+     sinc_tab_displ(:)      = 0.d0
+     sinc_tab_veloc(:)      = 0.d0
+     buffer_to_store_v(:,:) = 0.d0
+     buffer_to_store_d(:,:) = 0.d0
      !sinc_tab_stress(:)=0.d0
+
+     call compute_sinc(sinc_tab_displ,current_time_step,ntime,dt)
      call compute_sinc(sinc_tab_veloc,current_time_step,ntime,dt)
      !call compute_sinc(sinc_tab_stress,current_time_step,ntime,dt)
+
      if (myrank == 0 .and. mod(itnew,100)==0) write(*,*) myrank, tt,itnew,ntnew
 
      do irec0=irecmin, irecmax
+
         do is = 1, ntime
-           buffer_to_store(1,irec0)=buffer_to_store(1,irec0) + sinc_tab_veloc(is) * dble(data_rec(1,is,irec0))
-           buffer_to_store(2,irec0)=buffer_to_store(2,irec0) + sinc_tab_veloc(is) * dble(data_rec(2,is,irec0))
-           buffer_to_store(3,irec0)=buffer_to_store(3,irec0) + sinc_tab_veloc(is) * dble(data_rec(3,is,irec0))
-           buffer_to_store(4,irec0)=buffer_to_store(4,irec0) + sinc_tab_veloc(is) * dble(data_rec(4,is,irec0))
-           buffer_to_store(5,irec0)=buffer_to_store(5,irec0) + sinc_tab_veloc(is) * dble(data_rec(5,is,irec0))
-           buffer_to_store(6,irec0)=buffer_to_store(6,irec0) + sinc_tab_veloc(is) * dble(data_rec(6,is,irec0))
-           buffer_to_store(7,irec0)=buffer_to_store(7,irec0) + sinc_tab_veloc(is) * dble(data_rec(7,is,irec0))
-           buffer_to_store(8,irec0)=buffer_to_store(8,irec0) + sinc_tab_veloc(is) * dble(data_rec(8,is,irec0))
-           buffer_to_store(9,irec0)=buffer_to_store(9,irec0) + sinc_tab_veloc(is) * dble(data_rec(9,is,irec0))
+
+           buffer_to_store_d(1,irec0)=buffer_to_store_d(1,irec0) + sinc_tab_displ(is) * dble(data_rec(1,is,irec0))
+           buffer_to_store_d(2,irec0)=buffer_to_store_d(2,irec0) + sinc_tab_displ(is) * dble(data_rec(2,is,irec0))
+           buffer_to_store_d(3,irec0)=buffer_to_store_d(3,irec0) + sinc_tab_displ(is) * dble(data_rec(3,is,irec0))
+           buffer_to_store_d(4,irec0)=buffer_to_store_d(4,irec0) + sinc_tab_displ(is) * dble(data_rec(4,is,irec0))
+           buffer_to_store_d(5,irec0)=buffer_to_store_d(5,irec0) + sinc_tab_displ(is) * dble(data_rec(5,is,irec0))
+           buffer_to_store_d(6,irec0)=buffer_to_store_d(6,irec0) + sinc_tab_displ(is) * dble(data_rec(6,is,irec0))
+           buffer_to_store_d(7,irec0)=buffer_to_store_d(7,irec0) + sinc_tab_displ(is) * dble(data_rec(7,is,irec0))
+           buffer_to_store_d(8,irec0)=buffer_to_store_d(8,irec0) + sinc_tab_displ(is) * dble(data_rec(8,is,irec0))
+           buffer_to_store_d(9,irec0)=buffer_to_store_d(9,irec0) + sinc_tab_displ(is) * dble(data_rec(9,is,irec0))
+
+           buffer_to_store_v(1,irec0)=buffer_to_store_v(1,irec0) + sinc_tab_veloc(is) * dble(data_rec(1,is,irec0))
+           buffer_to_store_v(2,irec0)=buffer_to_store_v(2,irec0) + sinc_tab_veloc(is) * dble(data_rec(2,is,irec0))
+           buffer_to_store_v(3,irec0)=buffer_to_store_v(3,irec0) + sinc_tab_veloc(is) * dble(data_rec(3,is,irec0))
+           buffer_to_store_v(4,irec0)=buffer_to_store_v(4,irec0) + sinc_tab_veloc(is) * dble(data_rec(4,is,irec0))
+           buffer_to_store_v(5,irec0)=buffer_to_store_v(5,irec0) + sinc_tab_veloc(is) * dble(data_rec(5,is,irec0))
+           buffer_to_store_v(6,irec0)=buffer_to_store_v(6,irec0) + sinc_tab_veloc(is) * dble(data_rec(6,is,irec0))
+           buffer_to_store_v(7,irec0)=buffer_to_store_v(7,irec0) + sinc_tab_veloc(is) * dble(data_rec(7,is,irec0))
+           buffer_to_store_v(8,irec0)=buffer_to_store_v(8,irec0) + sinc_tab_veloc(is) * dble(data_rec(8,is,irec0))
+           buffer_to_store_v(9,irec0)=buffer_to_store_v(9,irec0) + sinc_tab_veloc(is) * dble(data_rec(9,is,irec0))
+
         enddo
 
         !call interpol_sinc(data_rec(:,irec0,1),buffer_to_store(irec0,1),current_time_step,ntime,dt,sinc_tab_veloc)
         !call interpol_sinc(data_rec(:,irec0,2),buffer_to_store(irec0,2),current_time_step,ntime,dt,sinc_tab_veloc)
         !call interpol_sinc(data_rec(:,irec0,3),buffer_to_store(irec0,3),current_time_step,ntime,dt,sinc_tab_veloc)
 
-        if (irec0==100) write(499,*)  current_time_step,buffer_to_store(3,irec0)
+        if (irec0==100) write(499,*)  current_time_step, buffer_to_store_v(3,irec0)
 
         !call interpol_sinc(data_rec(:,irec0,4),buffer_to_store(irec0,4),current_time_step,ntime,dt,sinc_tab_stress!)
         !call interpol_sinc(data_rec(:,irec0,5),buffer_to_store(irec0,5),current_time_step,ntime,dt,sinc_tab_stress)
@@ -614,10 +651,12 @@ program re_format_outputs_files
         ! compute traction
 
         irec =irec_glob(irec0,myrank+1)
+
         if (irec == 0 ) then
            write(*,*) myrank , irec0, irec
            stop
         endif
+
         iface=ind_rec2face(1,irec,myrank+1)
         igll =ind_rec2face(2,irec,myrank+1)
 
@@ -631,24 +670,29 @@ program re_format_outputs_files
         endif
         !!
 
-        vr(1,irec0) = buffer_to_store(1,irec0)
-        vr(2,irec0) = buffer_to_store(2,irec0)
-        vr(3,irec0) = buffer_to_store(3,irec0)
-        tr(1,irec0) = buffer_to_store(4,irec0)*nvx + buffer_to_store(7,irec0) * nvy + buffer_to_store(8,irec0) * nvz
-        tr(2,irec0) = buffer_to_store(7,irec0)*nvx + buffer_to_store(5,irec0) * nvy + buffer_to_store(9,irec0) * nvz
-        tr(3,irec0) = buffer_to_store(8,irec0)*nvx + buffer_to_store(9,irec0) * nvy + buffer_to_store(6,irec0) * nvz
+        ur(1,irec0) = buffer_to_store_d(1,irec0)
+        ur(2,irec0) = buffer_to_store_d(2,irec0)
+        ur(3,irec0) = buffer_to_store_d(3,irec0)
+
+        vr(1,irec0) = buffer_to_store_v(1,irec0)
+        vr(2,irec0) = buffer_to_store_v(2,irec0)
+        vr(3,irec0) = buffer_to_store_v(3,irec0)
+        tr(1,irec0) = buffer_to_store_v(4,irec0)*nvx + buffer_to_store_v(7,irec0) * nvy + buffer_to_store_v(8,irec0) * nvz
+        tr(2,irec0) = buffer_to_store_v(7,irec0)*nvx + buffer_to_store_v(5,irec0) * nvy + buffer_to_store_v(9,irec0) * nvz
+        tr(3,irec0) = buffer_to_store_v(8,irec0)*nvx + buffer_to_store_v(9,irec0) * nvy + buffer_to_store_v(6,irec0) * nvz
 
      enddo
 
-
-     write(27) vr,tr
-
+     write(29) ur
+     write(28) vr,tr
 
   enddo
 
-  close(27)
+  close(28)
+  close(29)
   close(499)
-  !####################################### ENDING ############################
+
+!####################################### ENDING ############################
 
 
   write(*,*) 'nbrec ', myrank, irecmax-irecmin+1, ntime_interp

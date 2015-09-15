@@ -2,8 +2,8 @@
 
 
     character(len=256) working_axisem_dir,input_field_name
-    character(len=256) input_veloc_name(3),input_stress_name(6)
-    character(len=256) output_veloc_name(3),output_stress_name(6)
+    character(len=256) input_displ_name(3),input_veloc_name(3),input_stress_name(6)
+    character(len=256) output_displ_name(3),output_veloc_name(3),output_stress_name(6)
     character(len=256) output_field_name,input_point_file,input_point_file_cart
     integer, parameter :: CUSTOM_REAL=8,SINGLE_REAL=4
     real(kind=CUSTOM_REAL) lat_src,lon_src,lat_mesh,lon_mesh,azi_rot,dtt
