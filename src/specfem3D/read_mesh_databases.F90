@@ -507,6 +507,13 @@
            action='read',form='unformatted',iostat=ier)
       write(*,*) 'OPENING ', dsmname(1:len_trim(dsmname))//'sol_axisem'
 
+      if (RECIPROCITY_AND_KH_INTEGRAL) then 
+        allocate(Displ_axisem(3,NGLLSQUARE*num_abs_boundary_faces))
+        open(unit=IIN_displ_axisem,file=dsmname(1:len_trim(dsmname))//'axisem_displ_for_int_KH',status='old', &
+             action='read',form='unformatted',iostat=ier)
+        write(*,*) 'OPENING ', dsmname(1:len_trim(dsmname))//'axisem_displ_for_int_KH'
+      endif
+
     endif
 
   else

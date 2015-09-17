@@ -328,7 +328,7 @@ $O/create_color_image.spec.o: $O/specfem3D_par.spec.o
 $O/detect_mesh_surfaces.spec.o: $O/specfem3D_par.spec.o
 $O/fault_solver_common.spec.o: $O/specfem3D_par.spec.o
 $O/gravity_perturbation.spec.o: $O/specfem3D_par.spec.o
-$O/integrals_on_whole_domain.spec.o: $O/specfem3D_par.spec.o
+$O/integrals_on_whole_domain.spec.o: $O/specfem3D_par.spec.o $O/shared_par.shared_module.o
 $O/locate_source.spec.o: $O/specfem3D_par.spec.o
 $O/locate_receivers.spec.o: $O/specfem3D_par.spec.o
 $O/pml_par.spec.o: $O/specfem3D_par.spec.o

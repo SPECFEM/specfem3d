@@ -34,22 +34,33 @@
 
   use specfem_par
 
+  use shared_parameters, only: COUPLE_WITH_EXTERNAL_CODE
+
   implicit none
 
   ! local parameters
   double precision :: weightpt, jacobianpt
   double precision :: integr_volloc, integr_bounloc
 
+  double precision, dimension(NGLOB_AB) :: f_integrandloc
+
   real(kind=CUSTOM_REAL) :: xixpt,xiypt,xizpt,etaxpt,etaypt,etazpt,gammaxpt,gammaypt,gammazpt
 
   integer :: ier,i,j,k,ispec,iglob,igll,iface
 
-  allocate(f_integrand(NGLOB_AB), stat=ier) !! Maybe to modify in the case of Surf_or_vol_integral == 1
-
 !-----------------------------------------------------------------------------
+
+  allocate(f_integrand_KH(3,NGLOB_AB), stat=ier) !! Maybe to modify in the case of Surf_or_vol_integral == 1
+
+!---
 
   ! NOTE : 'f_integrand' have to be defined at all 'iglob'
   ! (all the points of the surface, or all the point of the volume)
+
+  if (COUPLE_WITH_EXTERNAL_CODE) then 
+!!    call integrand_for_computing_Kirchoff_Helmholtz_integral(it)
+    f_integrandloc(:) = f_integrand_KH(1,NGLOB_AB)
+  endif 
 
   integr_volloc  = 0.d0
   integr_bounloc = 0.d0
@@ -87,7 +98,7 @@
 
             iglob = ibool(i,j,k,ispec)
 
-            integr_volloc = integr_volloc + ( weightpt * jacobianpt * f_integrand(iglob) )
+            integr_volloc = integr_volloc + ( weightpt * jacobianpt * f_integrandloc(iglob) )
 
           enddo
         enddo
@@ -121,7 +132,7 @@
 
           iglob = ibool(i,j,k,ispec)
 
-          integr_bounloc = integr_bounloc + ( free_surface_jacobian2Dw(igll,iface) * f_integrand(iglob) )
+          integr_bounloc = integr_bounloc + ( free_surface_jacobian2Dw(igll,iface) * f_integrandloc(iglob) )
 
         enddo
       enddo
@@ -142,7 +153,7 @@
 
           iglob = ibool(i,j,k,ispec)
 
-          integr_bounloc = integr_bounloc + ( abs_boundary_jacobian2Dw(igll,iface) * f_integrand(iglob) )
+          integr_bounloc = integr_bounloc + ( abs_boundary_jacobian2Dw(igll,iface) * f_integrandloc(iglob) )
 
         enddo
       enddo
@@ -152,7 +163,7 @@
 
   endif
 
-  deallocate(f_integrand)
+  deallocate(f_integrand_KH)
 
   end subroutine surface_or_volume_integral_on_whole_domain
 
@@ -160,36 +171,82 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine integrand_for_computing_Kirchoff_Helmholtz_integral()
+  subroutine integrand_for_computing_Kirchoff_Helmholtz_integral(ittmp)
 
   use constants
 
   use specfem_par
 
+  use shared_parameters
+
   implicit none
 
+  integer :: ittmp
+
   ! local parameters
-  integer :: ier
+  integer :: ier 
+!!  integer :: i, iglob
 
-  allocate(f_integrand(NGLOB_AB), stat=ier) !! Could maybe be allocated just on the surface points
+  double precision, dimension(3,NGLOB_AB) :: convol_displsem_tractaxisem
+  double precision, dimension(3,NGLOB_AB) :: convol_tractsem_displaxisem
 
-!
+  double precision, dimension(3,NGLOB_AB) :: Tract_axisem_inv
+  double precision, dimension(3,NGLOB_AB) :: Displ_axisem_inv
+
 !---
-!
 
-  if (old_DSM_coupling_from_Vadim) then
+  allocate(f_integrand_KH(3,NGLOB_AB), stat=ier) !! Could maybe be allocated just on the surface points
 
-  else
+!---
+!---
+
+  if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) then
+
+    if (old_DSM_coupling_from_Vadim) then
+
+    else
       !! for 2D light version
+    endif
+
+  elseif (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then
+
+    call read_axisem_disp_file(Displ_axisem, num_abs_boundary_faces*NGLLSQUARE)
+
+    write(*,*) 'Read OKKKKKK'
+
+!!!    Routine de convolution ??????
+
+!    Tract_axisem_inv(:,:) = Tract_axisem(:,:) !! Lire les tractions Axisem en temps inverse
+!    Displ_axisem_inv(:,:) = Displ_axisem(:,:) !! Lire le deplacement Axisem en temps inverse
+
+!    convol_displsem_tractaxisem(:,:) = convol_displsem_tractaxisem(:,:) + displ(:,:)*Tract_axisem_inv(:,:) !! *dt ou equivalent ???
+!    convol_tractsem_displaxisem(:,:) = convol_tractsem_displaxisem(:,:) + Traction(:,:)*Displ_axisem_inv(:,:) 
+    !! ==> Traction specfem ???? + *dt ou equivalent ???
+
+    !! une fois arrive au temps final : 
+!    if (ittmp == NSTEP) f_integrand_KH(:,:) = convol_displsem_tractaxisem(:,:) - convol_tractsem_displaxisem(:,:)
+
   endif
 
-! TO COMPLETE
-
-!
 !---
-!
-
-  deallocate(f_integrand)
+!---
 
   end subroutine integrand_for_computing_Kirchoff_Helmholtz_integral
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine read_axisem_disp_file(Displ_axisem, nb)
+
+  use constants
+
+  implicit none
+
+  integer nb
+  real(kind=CUSTOM_REAL) :: Displ_axisem(3,nb)
+
+  read(IIN_displ_axisem) Displ_axisem
+
+  end subroutine read_axisem_disp_file
 

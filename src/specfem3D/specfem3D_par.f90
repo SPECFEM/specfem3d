@@ -82,6 +82,7 @@ module specfem_par
   integer :: it_dsm
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: Veloc_dsm_boundary, Tract_dsm_boundary
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: Veloc_axisem, Tract_axisem
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: Displ_axisem
 
 ! attenuation
   integer :: NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa
@@ -212,7 +213,7 @@ module specfem_par
 
   ! for surface or volume integral on whole domain
   double precision :: integral_vol, integral_boun
-  double precision, dimension(:), allocatable :: f_integrand
+  double precision, dimension(:,:), allocatable :: f_integrand_KH
 
 
 ! ADJOINT parameters
