@@ -57,10 +57,10 @@
   ! NOTE : 'f_integrand' have to be defined at all 'iglob'
   ! (all the points of the surface, or all the point of the volume)
 
-  if (COUPLE_WITH_EXTERNAL_CODE) then 
+  if (COUPLE_WITH_EXTERNAL_CODE) then
 !!    call integrand_for_computing_Kirchoff_Helmholtz_integral(it)
     f_integrandloc(:) = f_integrand_KH(1,NGLOB_AB)
-  endif 
+  endif
 
   integr_volloc  = 0.d0
   integr_bounloc = 0.d0
@@ -184,7 +184,7 @@
   integer :: ittmp
 
   ! local parameters
-  integer :: ier 
+  integer :: ier
 !!  integer :: i, iglob
 
   double precision, dimension(3,NGLOB_AB) :: convol_displsem_tractaxisem
@@ -208,7 +208,7 @@
       !! for 2D light version
     endif
 
-  elseif (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then
+  else if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then
 
     call read_axisem_disp_file(Displ_axisem, num_abs_boundary_faces*NGLLSQUARE)
 
@@ -220,10 +220,10 @@
 !    Displ_axisem_inv(:,:) = Displ_axisem(:,:) !! Lire le deplacement Axisem en temps inverse
 
 !    convol_displsem_tractaxisem(:,:) = convol_displsem_tractaxisem(:,:) + displ(:,:)*Tract_axisem_inv(:,:) !! *dt ou equivalent ???
-!    convol_tractsem_displaxisem(:,:) = convol_tractsem_displaxisem(:,:) + Traction(:,:)*Displ_axisem_inv(:,:) 
+!    convol_tractsem_displaxisem(:,:) = convol_tractsem_displaxisem(:,:) + Traction(:,:)*Displ_axisem_inv(:,:)
     !! ==> Traction specfem ???? + *dt ou equivalent ???
 
-    !! une fois arrive au temps final : 
+    !! une fois arrive au temps final :
 !    if (ittmp == NSTEP) f_integrand_KH(:,:) = convol_displsem_tractaxisem(:,:) - convol_tractsem_displaxisem(:,:)
 
   endif
