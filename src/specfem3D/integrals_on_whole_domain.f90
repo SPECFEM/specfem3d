@@ -170,7 +170,9 @@
 !
 !-------------------------------------------------------------------------------------------------
 !
-
+!--- CD CD : Subroutine not validated yet
+!
+!
   subroutine integrand_for_computing_Kirchoff_Helmholtz_integral(ittmp)
 
   use constants
@@ -212,19 +214,22 @@
 
     call read_axisem_disp_file(Displ_axisem, num_abs_boundary_faces*NGLLSQUARE)
 
-    write(*,*) 'Read OKKKKKK'
+!!    write(*,*) 'Read OKKKKKK'
 
 !!!    Routine de convolution ??????
 
-!    Tract_axisem_inv(:,:) = Tract_axisem(:,:) !! Lire les tractions Axisem en temps inverse
-!    Displ_axisem_inv(:,:) = Displ_axisem(:,:) !! Lire le deplacement Axisem en temps inverse
+!!!-- ci-dessous : en cours de modification, faux pour le moment
 
-!    convol_displsem_tractaxisem(:,:) = convol_displsem_tractaxisem(:,:) + displ(:,:)*Tract_axisem_inv(:,:) !! *dt ou equivalent ???
-!    convol_tractsem_displaxisem(:,:) = convol_tractsem_displaxisem(:,:) + Traction(:,:)*Displ_axisem_inv(:,:)
-    !! ==> Traction specfem ???? + *dt ou equivalent ???
+    Tract_axisem_inv(:,:) = Tract_axisem(:,:) !! Lire les tractions Axisem en temps inverse
+    Displ_axisem_inv(:,:) = Displ_axisem(:,:) !! Lire le deplacement Axisem en temps inverse
+
+    convol_displsem_tractaxisem(:,:) = convol_displsem_tractaxisem(:,:) !!  ==> peut-etre : + displ(:,:)*Tract_axisem_inv(:,:) 
+                                                                        !! *dt ou equivalent ???
+    convol_tractsem_displaxisem(:,:) = convol_tractsem_displaxisem(:,:) !!  ==> peut-etre : + Traction(:,:)*Displ_axisem_inv(:,:)
+                                                                        !! ==> Traction specfem ???? + *dt ou equivalent ???
 
     !! une fois arrive au temps final :
-!    if (ittmp == NSTEP) f_integrand_KH(:,:) = convol_displsem_tractaxisem(:,:) - convol_tractsem_displaxisem(:,:)
+    if (ittmp == NSTEP) f_integrand_KH(:,:) = convol_displsem_tractaxisem(:,:) - convol_tractsem_displaxisem(:,:)
 
   endif
 
