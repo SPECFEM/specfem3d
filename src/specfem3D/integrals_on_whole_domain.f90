@@ -223,7 +223,7 @@
     Tract_axisem_inv(:,:) = Tract_axisem(:,:) !! Lire les tractions Axisem en temps inverse
     Displ_axisem_inv(:,:) = Displ_axisem(:,:) !! Lire le deplacement Axisem en temps inverse
 
-    convol_displsem_tractaxisem(:,:) = convol_displsem_tractaxisem(:,:) !!  ==> peut-etre : + displ(:,:)*Tract_axisem_inv(:,:) 
+    convol_displsem_tractaxisem(:,:) = convol_displsem_tractaxisem(:,:) !!  ==> peut-etre : + displ(:,:)*Tract_axisem_inv(:,:)
                                                                         !! *dt ou equivalent ???
     convol_tractsem_displaxisem(:,:) = convol_tractsem_displaxisem(:,:) !!  ==> peut-etre : + Traction(:,:)*Displ_axisem_inv(:,:)
                                                                         !! ==> Traction specfem ???? + *dt ou equivalent ???
