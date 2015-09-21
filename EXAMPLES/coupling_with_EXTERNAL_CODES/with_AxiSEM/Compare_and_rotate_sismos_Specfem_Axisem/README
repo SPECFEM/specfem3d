@@ -1,3 +1,4 @@
+0/ create directory 'Sismo_specfem' to put the specfem seismos in there ; and 'Sismo_axisem' to put the axisem seismos
 1/ compile rotation_specfem_solution.f90
 2/ update rotate_one_sismo.sh 
     station coordinate (STATIONS_Axisem)
