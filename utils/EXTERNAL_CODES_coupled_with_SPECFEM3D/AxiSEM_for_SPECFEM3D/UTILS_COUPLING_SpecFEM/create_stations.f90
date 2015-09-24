@@ -34,22 +34,6 @@ program create_station
   call compute_rotation_matrix(rotation_matrix, lon_center_chunk,lat_center_chunk, chunk_azi)
   call compute_inv_rotation_matrix(rotation_inv_matrix, lon_center_chunk,lat_center_chunk, chunk_azi)
 
-!!$  write(*,*) rotation_matrix(1,:)
-!!$  write(*,*) rotation_matrix(2,:)
-!!$  write(*,*) rotation_matrix(3,:)
-!!$
-!!$  write(*,*)
-!!$
-!!$
-!!$  write(*,*) rotation_inv_matrix(1,:)
-!!$  write(*,*) rotation_inv_matrix(2,:)
-!!$  write(*,*) rotation_inv_matrix(3,:)
-!!$
-!!$  write(*,*)
-!!$
-!!$  lat=0.d0
-!!$  long=60.d0
-!!$  radius=6371.d0
   read(*,*) z_bot  !! to be found in file MESH/model_1D.in
   open(10,file='stations_to_convert.txt')
   open(21,file='station_converted.txt')
