@@ -37,13 +37,15 @@ program create_station
   read(*,*) z_bot  !! to be found in file MESH/model_1D.in
   open(10,file='stations_to_convert.txt')
   open(21,file='station_converted.txt')
+  open(22,file='stations_axisem.txt')
   k=0
   do
      k=k+1
      write(name_sta,'(a,i4.4)') code,k
      read(10,*,end=99) radius,lat,long
      call geogr2cart(x,y,z,rotation_inv_matrix,long,lat,radius)
-     write(21,'(a5,1x,a2,1x,4f20.5)') name_sta,'SY',y,x,-(z-z_bot),-(z-z_bot) !! because specfem is reading y and x actually
+     write(22,'(a1,i5.5,3x,a2,3x,2f10.4,3x,i5,3x,i5)') 'S',k,'SY',lat,long,0,0
+     write(21,'(a5,1x,a2,1x,4f20.5)') name_sta,'SY',y,x,(z-z_bot),(z-z_bot) !! because specfem is reading y and x actually
   enddo
 99 close(10)
   close(21)
@@ -246,11 +248,11 @@ end subroutine compute_inv_rotation_matrix
   R(3,2)=(uy*uz*(1.d0-c)+ux*s)
   R(3,3)=(uz**2+(1.d0-uz**2)*c)
 
-  write(49,*) ' MATRICE ROTATION '
-  write(49,*) R(1,:)
-  write(49,*) R(2,:)
-  write(49,*) R(3,:)
-  write(49,*)
+  !write(49,*) ' MATRICE ROTATION '
+  !write(49,*) R(1,:)
+  !write(49,*) R(2,:)
+  !write(49,*) R(3,:)
+  !write(49,*)
 
   end subroutine rotation_matrix_axe
 
@@ -302,10 +304,10 @@ end subroutine compute_inv_rotation_matrix
      enddo
   enddo
 
-  write(49,*) ' MATRICE ROTATION COMPLETE '
-  write(49,*) R(1,:)
-  write(49,*) R(2,:)
-  write(49,*) R(3,:)
-  write(49,*)
+  !write(49,*) ' MATRICE ROTATION COMPLETE '
+  !write(49,*) R(1,:)
+  !write(49,*) R(2,:)
+  !write(49,*) R(3,:)
+  !write(49,*)
 
   end subroutine compose4matrix
