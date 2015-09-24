@@ -32,7 +32,8 @@
                             NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
                             ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,&
                             NMATERIALS,material_properties, &
-                            nspec_CPML,CPML_to_spec,CPML_regions,is_CPML)
+                            nspec_CPML,CPML_to_spec,CPML_regions,is_CPML,&
+                            xstore, ystore, zstore)
 
   use constants,only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC
 
@@ -57,6 +58,9 @@
   ! arrays with the mesh
   integer ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
   double precision :: nodes_coords(nglob,3)
+
+  !! VM VM add all gll points for Axisem coupling
+  double precision, dimension(NGLLX_M,NGLLY_M,NGLLZ_M,nspec) :: xstore, ystore, zstore
 
   integer ispec_material_id(nspec)
 
@@ -396,7 +400,8 @@
       call save_output_mesh_files_as_cubit(nspec,nglob, ibool,nodes_coords, ispec_material_id, &
                                            nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
                                            NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NMATERIALS,material_properties, &
-                                           ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top)
+                                           ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,&
+                                           xstore,ystore,zstore)
     endif
   endif
 
@@ -410,9 +415,12 @@
   subroutine save_output_mesh_files_as_cubit(nspec,nglob, ibool,nodes_coords, ispec_material_id, &
                                      nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
                                      NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NMATERIALS,material_properties, &
-                                     ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top)
+                                     ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,&
+                                     xgrid,ygrid,zgrid)
 
-    use constants,only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC
+    use constants,only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC, NGLLX, NGLLY, NGLLZ, NDIM, ZERO,&
+         EXTERNAL_CODE_IS_AXISEM, EXTERNAL_CODE_IS_DSM
+    use shared_parameters, only: EXTERNAL_CODE_TYPE, COUPLE_WITH_EXTERNAL_CODE, NGNOD
 
     implicit none
 
@@ -432,6 +440,9 @@
     ! arrays with the mesh
     integer :: ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
     double precision :: nodes_coords(nglob,3)
+
+    !! VM VM add all gll points for Axisem coupling
+    double precision, dimension(NGLLX_M,NGLLY_M,NGLLZ_M,nspec) :: xgrid, ygrid, zgrid
 
     integer :: ispec_material_id(nspec)
 
@@ -455,6 +466,47 @@
 
     integer :: mat_id,domain_id
 
+    ! for axisem coupling case  ( only serial case for mesher use schotch after)
+    integer, parameter :: myrank = 0
+    integer, parameter :: nlayer = 12 !! (number of layer in the model iasp91, or ak135, or prem (one more layer than the model)
+    double precision, parameter :: GAUSSALPHA = 0.d0, GAUSSBETA = 0.d0
+    double precision   :: rotation_matrix(3,3)
+    double precision   :: zlayer(nlayer), vpv(nlayer,4), vsv(nlayer,4), density(nlayer,4)
+    integer            :: ilayer, updown(NGLLZ)
+
+    !! GLL points
+    double precision, dimension(:,:,:), allocatable  ::  longitud, latitud, radius
+    double precision, dimension(:,:,:), allocatable  ::  xstore, ystore, zstore
+     !! Element control points
+    double precision, dimension(:), allocatable :: xelm, yelm, zelm
+    
+    !! 3D shape functions and their derivatives
+    double precision, dimension(:,:,:,:), allocatable    :: shape3D
+    double precision, dimension(:,:,:,:,:), allocatable  :: dershape3D
+    !! GLL points and weights of integration
+    double precision, dimension(:), allocatable  :: xigll, yigll, zigll, wxgll, wygll, wzgll
+   
+
+    double precision  :: deg2rad
+    double precision  :: ratio_eta, ratio_xi
+    double precision  :: ANGULAR_WIDTH_ETA_RAD, ANGULAR_WIDTH_XI_RAD, Z_DEPTH_BLOCK, UTM_X_MIN, UTM_X_MAX
+    double precision  :: lat_center_chunk, lon_center_chunk, chunk_depth, chunk_azi
+    double precision  :: z_bottom
+
+    integer :: ielm, j,k, imin,imax,jmin,jmax,kmin,kmax
+    integer  nel_lat, nel_lon, nel_depth
+    
+    character(len=10) line
+    character(len=250) model1D_file
+
+1000 format(3f30.10)
+
+    if (COUPLE_WITH_EXTERNAL_CODE) then
+      z_bottom=minval(zgrid(:,:,:,:))
+    else
+      z_bottom=0.
+    end if
+
     open(IIN_database, file = 'MESH/nummaterial_velocity_file',status='unknown',action='write',iostat=ier)
     if (ier /= 0) then
       print *,'Error opening file: ','MESH/nummaterial_velocity_file'
@@ -477,13 +529,12 @@
     open(IIN_database,file='MESH/materials_file')
     do ispec = 1, nspec
        write(IIN_database,*) ispec,ispec_material_id(ispec)
-    enddo
-    close(IIN_database)
+    end do
 
     open(IIN_database,file='MESH/nodes_coords_file')
     write(IIN_database,*) nglob
     do iglob=1,nglob
-       write(IIN_database,'(i14,3x,3(f20.5,1x))') iglob,nodes_coords(iglob,1),nodes_coords(iglob,2),nodes_coords(iglob,3)
+       write(IIN_database,'(i14,3x,3(f20.5,1x))') iglob,nodes_coords(iglob,1),nodes_coords(iglob,2),nodes_coords(iglob,3)-z_bottom
     enddo
     close(IIN_database)
 
@@ -545,4 +596,378 @@
     enddo
     close(IIN_database)
 
+    if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then  !! VM VM add files in case of AxiSEM coupling
+
+       allocate(longitud(NGLLX,NGLLY,NGLLZ), latitud(NGLLX,NGLLY,NGLLZ), radius(NGLLX,NGLLY,NGLLZ))
+       allocate(xstore(NGLLX,NGLLY,NGLLZ), ystore(NGLLX,NGLLY,NGLLZ), zstore(NGLLX,NGLLY,NGLLZ))
+       allocate(xelm(NGNOD), yelm(NGNOD), zelm(NGNOD))
+       allocate(xigll(NGLLX), yigll(NGLLY), zigll(NGLLZ), wxgll(NGLLX),wygll(NGLLY), wzgll(NGLLZ))
+  
+       deg2rad = 3.141592653589793d0/180.d0
+
+       !
+       !--- set up coordinates of the Gauss-Lobatto-Legendre points
+       !
+
+       call zwgljd(xigll,wxgll,NGLLX,GAUSSALPHA,GAUSSBETA)
+       call zwgljd(yigll,wygll,NGLLY,GAUSSALPHA,GAUSSBETA)
+       call zwgljd(zigll,wzgll,NGLLZ,GAUSSALPHA,GAUSSBETA)
+
+       !
+       !--- if number of points is odd, the middle abscissa is exactly zero
+       !
+       if (mod(NGLLX,2) /= 0) xigll((NGLLX - 1)/2 + 1) = ZERO
+       if (mod(NGLLY,2) /= 0) yigll((NGLLY - 1)/2 + 1) = ZERO
+       if (mod(NGLLZ,2) /= 0) zigll((NGLLZ - 1)/2 + 1) = ZERO
+
+       !
+       !--- get the 3-D shape functions
+       !
+       allocate(shape3D(NGNOD,NGLLX,NGLLY,NGLLZ),dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ))
+       call get_shape3D(myrank,shape3D,dershape3D,xigll,yigll,zigll,NGNOD)
+       !
+
+       !! reading parameters for coupling 
+    
+       open(90, file='MESH/ParFileMeshChunk',action='read')
+       read(90,'(a)') line
+       read(90,*) ANGULAR_WIDTH_XI_RAD, ANGULAR_WIDTH_ETA_RAD
+       read(90,'(a)') line
+       read(90,*) lon_center_chunk, lat_center_chunk, chunk_azi
+       read(90,'(a)') line
+       read(90,*) chunk_depth
+       read(90,'(a)') line
+       read(90,*) nel_lon,nel_lat, nel_depth
+       read(90,'(a)') line
+       read(90,'(a)') model1D_file
+       model1D_file = 'MESH/'//trim(model1D_file)
+       close(90)
+
+       ! read 1D AxiSEM model 
+       call Read_dsm_model(model1D_file,vpv,vsv,density,zlayer,nlayer)
+       
+       ! modele 1D
+       open(88,file='MESH/model_1D.in')
+       write(88,*) nlayer,4
+       do i=1,nlayer
+          write(88,*) zlayer(i)
+          write(88,'(4f20.10)') vpv(i,:)
+          write(88,'(4f20.10)') vsv(i,:)
+          write(88,'(4f20.10)') density(i,:)
+       enddo
+       z_bottom = minval(zgrid(:,:,:,:))
+       write(88,*)  6371000.+z_bottom
+       write(88,*)  lon_center_chunk,  lat_center_chunk,  chunk_azi
+       close(88)
+       
+        ! compute rotation matrix 
+       call compute_rotation_matrix(rotation_matrix,lon_center_chunk,lat_center_chunk, chunk_azi)
+ 
+       open(91, file = 'MESH/list_ggl_boundary_spherical.txt')
+       open(92, file = 'MESH/list_ggl_boundary_cartesian.txt')
+       open(89, file = 'MESH/flags_boundary.txt')
+
+       open(90, file = 'MESH/Nb_ielm_faces.txt')
+       write(90,*)  nspec2D_xmin
+       write(90,*)  nspec2D_xmax
+       write(90,*)  nspec2D_ymin
+       write(90,*)  nspec2D_ymax
+       write(90,*)  nspec2D_bottom
+       close(90)
+
+       ! xmin
+       do ielm=1,nspec2D_xmin
+
+          ispec=ibelm_xmin(ielm)
+
+          write(89,*) ispec,ielm,1
+          
+          xelm(1)=xgrid(1,1,1,ispec)
+          xelm(2)=xgrid(2,1,1,ispec)
+          xelm(3)=xgrid(2,2,1,ispec)
+          xelm(4)=xgrid(1,2,1,ispec)
+          xelm(5)=xgrid(1,1,2,ispec)
+          xelm(6)=xgrid(2,1,2,ispec)
+          xelm(7)=xgrid(2,2,2,ispec)
+          xelm(8)=xgrid(1,2,2,ispec)
+
+          yelm(1)=ygrid(1,1,1,ispec)
+          yelm(2)=ygrid(2,1,1,ispec)
+          yelm(3)=ygrid(2,2,1,ispec)
+          yelm(4)=ygrid(1,2,1,ispec)
+          yelm(5)=ygrid(1,1,2,ispec)
+          yelm(6)=ygrid(2,1,2,ispec)
+          yelm(7)=ygrid(2,2,2,ispec)
+          yelm(8)=ygrid(1,2,2,ispec)
+
+          zelm(1)=zgrid(1,1,1,ispec)
+          zelm(2)=zgrid(2,1,1,ispec)
+          zelm(3)=zgrid(2,2,1,ispec)
+          zelm(4)=zgrid(1,2,1,ispec)
+          zelm(5)=zgrid(1,1,2,ispec)
+          zelm(6)=zgrid(2,1,2,ispec)
+          zelm(7)=zgrid(2,2,2,ispec)
+          zelm(8)=zgrid(1,2,2,ispec)
+
+          call calc_gll_points(xelm,yelm,zelm,xstore,ystore,zstore,shape3D,NGNOD,NGLLX,NGLLY,NGLLZ)
+          zstore(:,:,:) = zstore(:,:,:) + 6371000.
+          call cartesian2spheric(xstore,ystore,zstore,rotation_matrix,longitud,latitud,radius,deg2rad)
+          zstore(:,:,:) = zstore(:,:,:) - 6371000.
+          call find_layer_in_axisem_model(ilayer,updown,radius(3,3,:),zlayer,nlayer)
+          
+          imin = 1
+          imax = 1
+          jmin = 1
+          jmax = NGLLY
+          kmin = 1
+          kmax = NGLLZ
+
+          do k=kmin,kmax
+             do j=jmin,jmax
+                do i=imin,imax  
+                   write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k)-z_bottom,ispec,i,j,k,1,ilayer,updown(k)
+                   write(91,1000) radius(i,j,k), latitud(i,j,k), longitud(i,j,k)
+                end do
+             end do
+          end do
+       end do
+       
+       ! xmax 
+       do ielm=1,nspec2D_xmax
+
+          ispec=ibelm_xmax(ielm)
+
+          write(89,*) ispec,ielm,2
+
+          xelm(1)=xgrid(1,1,1,ispec)
+          xelm(2)=xgrid(2,1,1,ispec)
+          xelm(3)=xgrid(2,2,1,ispec)
+          xelm(4)=xgrid(1,2,1,ispec)
+          xelm(5)=xgrid(1,1,2,ispec)
+          xelm(6)=xgrid(2,1,2,ispec)
+          xelm(7)=xgrid(2,2,2,ispec)
+          xelm(8)=xgrid(1,2,2,ispec)
+
+          yelm(1)=ygrid(1,1,1,ispec)
+          yelm(2)=ygrid(2,1,1,ispec)
+          yelm(3)=ygrid(2,2,1,ispec)
+          yelm(4)=ygrid(1,2,1,ispec)
+          yelm(5)=ygrid(1,1,2,ispec)
+          yelm(6)=ygrid(2,1,2,ispec)
+          yelm(7)=ygrid(2,2,2,ispec)
+          yelm(8)=ygrid(1,2,2,ispec)
+
+          zelm(1)=zgrid(1,1,1,ispec)
+          zelm(2)=zgrid(2,1,1,ispec)
+          zelm(3)=zgrid(2,2,1,ispec)
+          zelm(4)=zgrid(1,2,1,ispec)
+          zelm(5)=zgrid(1,1,2,ispec)
+          zelm(6)=zgrid(2,1,2,ispec)
+          zelm(7)=zgrid(2,2,2,ispec)
+          zelm(8)=zgrid(1,2,2,ispec)
+
+          call calc_gll_points(xelm,yelm,zelm,xstore,ystore,zstore,shape3D,NGNOD,NGLLX,NGLLY,NGLLZ)
+          zstore(:,:,:) = zstore(:,:,:) + 6371000. 
+          call cartesian2spheric(xstore,ystore,zstore,rotation_matrix,longitud,latitud,radius,deg2rad)
+          zstore(:,:,:) = zstore(:,:,:) - 6371000.
+          call find_layer_in_axisem_model(ilayer,updown,radius(3,3,:),zlayer,nlayer)
+
+          imin = NGLLX
+          imax = NGLLX
+          jmin = 1
+          jmax = NGLLY
+          kmin = 1
+          kmax = NGLLZ
+
+          do k=kmin,kmax
+             do j=jmin,jmax
+                do i=imin,imax  
+                   write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k)-z_bottom,ispec,i,j,k,2,ilayer,updown(k)
+                   write(91,1000) radius(i,j,k), latitud(i,j,k), longitud(i,j,k)
+                end do
+             end do
+          end do
+       end do      
+
+       ! ymin
+       do ielm=1,nspec2D_ymin
+
+          ispec=ibelm_ymin(ielm)
+
+          write(89,*) ispec,ielm,3
+
+          xelm(1)=xgrid(1,1,1,ispec)
+          xelm(2)=xgrid(2,1,1,ispec)
+          xelm(3)=xgrid(2,2,1,ispec)
+          xelm(4)=xgrid(1,2,1,ispec)
+          xelm(5)=xgrid(1,1,2,ispec)
+          xelm(6)=xgrid(2,1,2,ispec)
+          xelm(7)=xgrid(2,2,2,ispec)
+          xelm(8)=xgrid(1,2,2,ispec)
+
+          yelm(1)=ygrid(1,1,1,ispec)
+          yelm(2)=ygrid(2,1,1,ispec)
+          yelm(3)=ygrid(2,2,1,ispec)
+          yelm(4)=ygrid(1,2,1,ispec)
+          yelm(5)=ygrid(1,1,2,ispec)
+          yelm(6)=ygrid(2,1,2,ispec)
+          yelm(7)=ygrid(2,2,2,ispec)
+          yelm(8)=ygrid(1,2,2,ispec)
+
+          zelm(1)=zgrid(1,1,1,ispec)
+          zelm(2)=zgrid(2,1,1,ispec)
+          zelm(3)=zgrid(2,2,1,ispec)
+          zelm(4)=zgrid(1,2,1,ispec)
+          zelm(5)=zgrid(1,1,2,ispec)
+          zelm(6)=zgrid(2,1,2,ispec)
+          zelm(7)=zgrid(2,2,2,ispec)
+          zelm(8)=zgrid(1,2,2,ispec)
+
+          call calc_gll_points(xelm,yelm,zelm,xstore,ystore,zstore,shape3D,NGNOD,NGLLX,NGLLY,NGLLZ)
+          zstore(:,:,:) = zstore(:,:,:) + 6371000.
+          call cartesian2spheric(xstore,ystore,zstore,rotation_matrix,longitud,latitud,radius,deg2rad)
+          zstore(:,:,:) = zstore(:,:,:) - 6371000.
+          call find_layer_in_axisem_model(ilayer,updown,radius(3,3,:),zlayer,nlayer)
+
+          imin = 1
+          imax = NGLLX
+          jmin = 1
+          jmax = 1
+          kmin = 1
+          kmax = NGLLZ
+
+          do k=kmin,kmax
+             do j=jmin,jmax
+                do i=imin,imax  
+                   write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k)-z_bottom,ispec,i,j,k,3,ilayer,updown(k)
+                   write(91,1000) radius(i,j,k), latitud(i,j,k), longitud(i,j,k)
+                end do
+             end do
+          end do
+       end do
+
+
+       ! ymax
+       do ielm=1,nspec2D_ymax
+
+          ispec=ibelm_ymax(ielm)
+
+          write(89,*) ispec,ielm,4
+         
+          xelm(1)=xgrid(1,1,1,ispec)
+          xelm(2)=xgrid(2,1,1,ispec)
+          xelm(3)=xgrid(2,2,1,ispec)
+          xelm(4)=xgrid(1,2,1,ispec)
+          xelm(5)=xgrid(1,1,2,ispec)
+          xelm(6)=xgrid(2,1,2,ispec)
+          xelm(7)=xgrid(2,2,2,ispec)
+          xelm(8)=xgrid(1,2,2,ispec)
+
+          yelm(1)=ygrid(1,1,1,ispec)
+          yelm(2)=ygrid(2,1,1,ispec)
+          yelm(3)=ygrid(2,2,1,ispec)
+          yelm(4)=ygrid(1,2,1,ispec)
+          yelm(5)=ygrid(1,1,2,ispec)
+          yelm(6)=ygrid(2,1,2,ispec)
+          yelm(7)=ygrid(2,2,2,ispec)
+          yelm(8)=ygrid(1,2,2,ispec)
+
+          zelm(1)=zgrid(1,1,1,ispec)
+          zelm(2)=zgrid(2,1,1,ispec)
+          zelm(3)=zgrid(2,2,1,ispec)
+          zelm(4)=zgrid(1,2,1,ispec)
+          zelm(5)=zgrid(1,1,2,ispec)
+          zelm(6)=zgrid(2,1,2,ispec)
+          zelm(7)=zgrid(2,2,2,ispec)
+          zelm(8)=zgrid(1,2,2,ispec)
+
+          call calc_gll_points(xelm,yelm,zelm,xstore,ystore,zstore,shape3D,NGNOD,NGLLX,NGLLY,NGLLZ)
+          zstore(:,:,:) = zstore(:,:,:) + 6371000.
+          call cartesian2spheric(xstore,ystore,zstore,rotation_matrix,longitud,latitud,radius,deg2rad)
+          zstore(:,:,:) = zstore(:,:,:) - 6371000.
+          call find_layer_in_axisem_model(ilayer,updown,radius(3,3,:),zlayer,nlayer)
+
+          imin = 1
+          imax = NGLLX
+          jmin = NGLLY
+          jmax = NGLLY
+          kmin = 1
+          kmax = NGLLZ
+
+          do k=kmin,kmax
+             do j=jmin,jmax
+                do i=imin,imax  
+                   write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k)-z_bottom,ispec,i,j,k,4,ilayer,updown(k)
+                   write(91,1000) radius(i,j,k), latitud(i,j,k), longitud(i,j,k)
+                end do
+             end do
+          end do
+       end do
+       
+       
+       ! bottom
+       do ielm=1,nspec2D_BOTTOM
+
+          ispec=ibelm_bottom(ielm)
+
+          write(89,*) ispec,ielm,5   
+
+          xelm(1)=xgrid(1,1,1,ispec)
+          xelm(2)=xgrid(2,1,1,ispec)
+          xelm(3)=xgrid(2,2,1,ispec)
+          xelm(4)=xgrid(1,2,1,ispec)
+          xelm(5)=xgrid(1,1,2,ispec)
+          xelm(6)=xgrid(2,1,2,ispec)
+          xelm(7)=xgrid(2,2,2,ispec)
+          xelm(8)=xgrid(1,2,2,ispec)
+
+          yelm(1)=ygrid(1,1,1,ispec)
+          yelm(2)=ygrid(2,1,1,ispec)
+          yelm(3)=ygrid(2,2,1,ispec)
+          yelm(4)=ygrid(1,2,1,ispec)
+          yelm(5)=ygrid(1,1,2,ispec)
+          yelm(6)=ygrid(2,1,2,ispec)
+          yelm(7)=ygrid(2,2,2,ispec)
+          yelm(8)=ygrid(1,2,2,ispec)
+
+          zelm(1)=zgrid(1,1,1,ispec)
+          zelm(2)=zgrid(2,1,1,ispec)
+          zelm(3)=zgrid(2,2,1,ispec)
+          zelm(4)=zgrid(1,2,1,ispec)
+          zelm(5)=zgrid(1,1,2,ispec)
+          zelm(6)=zgrid(2,1,2,ispec)
+          zelm(7)=zgrid(2,2,2,ispec)
+          zelm(8)=zgrid(1,2,2,ispec)
+
+          call calc_gll_points(xelm,yelm,zelm,xstore,ystore,zstore,shape3D,NGNOD,NGLLX,NGLLY,NGLLZ)
+          zstore(:,:,:) = zstore(:,:,:) + 6371000.
+          call cartesian2spheric(xstore,ystore,zstore,rotation_matrix,longitud,latitud,radius,deg2rad)
+          zstore(:,:,:) = zstore(:,:,:) - 6371000.
+          call find_layer_in_axisem_model(ilayer,updown,radius(3,3,:),zlayer,nlayer)
+
+          imin = 1
+          imax = NGLLX
+          jmin = 1
+          jmax = NGLLY
+          kmin = 1
+          kmax = 1
+
+          do k=kmin,kmax
+             do j=jmin,jmax
+                do i=imin,imax  
+                   write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k)-z_bottom,ispec,i,j,k,5,ilayer,updown(k)
+                   write(91,1000) radius(i,j,k), latitud(i,j,k), longitud(i,j,k)
+                end do
+             end do
+          end do
+       end do   
+    
+       close(89)
+       close(91)
+       close(92)
+
+       deallocate(shape3D,dershape3D)
+    end if
+
   end subroutine save_output_mesh_files_as_cubit
+

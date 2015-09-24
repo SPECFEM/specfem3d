@@ -570,7 +570,7 @@
                               NMATERIALS,material_properties, &
                               nspec_CPML,CPML_to_spec,CPML_regions,is_CPML)
   else
-    ! saves mesh as databases file
+    ! saves mesh as databases file  !! VM VM added xstore, ystore, zstore used for Axisem Coupling
     call save_databases(prname,nspec,nglob,iproc_xi_current,iproc_eta_current, &
                         NPROC_XI,NPROC_ETA,addressing,iMPIcut_xi,iMPIcut_eta,&
                         ibool,nodes_coords,ispec_material_id, &
@@ -578,7 +578,8 @@
                         NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
                         ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,&
                         NMATERIALS,material_properties, &
-                        nspec_cpml,CPML_to_spec,CPML_regions,is_CPML)
+                        nspec_cpml,CPML_to_spec,CPML_regions,is_CPML,&
+                        xstore, ystore, zstore)
   endif
 
   !--- Clean ADIOS. Make sure everything is already written

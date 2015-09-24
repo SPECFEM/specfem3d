@@ -723,9 +723,9 @@ end subroutine write_recdepth_dsm
       !write(28,*) xstore(1,jgll,NGLLZ), ystore(1,jgll,NGLLZ), zstore(1,jgll,NGLLZ)!x,y !long/deg2rad,lati/deg2rad
       write(28,*) long/deg2rad,lati/deg2rad !,rayon/1000
       !write(38,'()') 1,(NGLLY-1)*jy_elm+jgll
-       write(49,*)
-       write(49,*)     vector_ori(:)
-       write(49,*)     vector_rotated(:)
+      ! write(49,*)
+      ! write(49,*)     vector_ori(:)
+      ! write(49,*)     vector_rotated(:)
 
   enddo
 
@@ -1063,11 +1063,11 @@ end subroutine write_recdepth_dsm
   R(3,2)=(uy*uz*(1.d0-c)+ux*s)
   R(3,3)=(uz**2+(1.d0-uz**2)*c)
 
-  write(49,*) ' MATRICE ROTATION '
-  write(49,*) R(1,:)
-  write(49,*) R(2,:)
-  write(49,*) R(3,:)
-  write(49,*)
+  !write(49,*) ' MATRICE ROTATION '
+  !write(49,*) R(1,:)
+  !write(49,*) R(2,:)
+  !write(49,*) R(3,:)
+  !write(49,*)
 
   end subroutine rotation_matrix_axe
 
@@ -1117,11 +1117,11 @@ end subroutine write_recdepth_dsm
      enddo
   enddo
 
-  write(49,*) ' MATRICE ROTATION COMPLETE '
-  write(49,*) R(1,:)
-  write(49,*) R(2,:)
-  write(49,*) R(3,:)
-  write(49,*)
+  !write(49,*) ' MATRICE ROTATION COMPLETE '
+  !write(49,*) R(1,:)
+  !write(49,*) R(2,:)
+  !write(49,*) R(3,:)
+  !write(49,*)
 
   end subroutine compose4matrix
 
@@ -1357,7 +1357,24 @@ end subroutine StorePointZ
  end subroutine FindLayer_for_earth_chunk_mesh
 
 
+!! VM VM add this for Axisem coupling
+subroutine  find_layer_in_axisem_model(i,u,r,z,n)
+   implicit none
+   integer i,n,u(5)
+   double precision z(n),r(5)
+  
+   if (r(3)>z(n) .or. r(3)<z(1)) then
+      write(*,*) 'STOP :: point ouside grid'
+      stop
+   endif
+   i = 1
+   do while (r(3) > z(i))
+      i = i + 1
+   enddo
 
+   u(:)=0
+
+end subroutine find_layer_in_axisem_model
 
 
 !=====================================================================
