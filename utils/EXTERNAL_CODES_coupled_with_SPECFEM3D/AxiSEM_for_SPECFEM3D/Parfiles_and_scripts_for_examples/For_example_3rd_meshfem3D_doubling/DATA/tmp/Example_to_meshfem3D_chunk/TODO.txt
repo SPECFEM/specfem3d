@@ -1,0 +1,16 @@
+add missing files in the routine 
+
+ParFileMeshChunk : define by user need to be read by meshfem3D
+
+
+missing outputs :
+list_ggl_boundary_cartesian.txt
+list_ggl_boundary_spherical.txt
+OrigRepSpecfm
+
+copy paste rotines from earth_chunk_HEX8_Mesher.f90 to save_databases.f90,
+routine : save_output_mesh_files_as_cubit 
+Don't forget to set 
+logical, parameter :: SAVE_MESH_AS_CUBIT = .true. (line 106)
+
+

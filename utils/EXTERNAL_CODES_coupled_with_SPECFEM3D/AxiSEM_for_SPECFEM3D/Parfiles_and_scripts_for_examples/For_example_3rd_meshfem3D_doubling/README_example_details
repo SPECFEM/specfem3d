@@ -1,0 +1,43 @@
+Example with meshfem3d with mesh doubling for staight chunk
+
+Mode used : prem_iso
+
+The mesh of Axisem is made for a 5s dominant
+
+The source (explosive type) has a 10s period
+
+See the Manual for the coupling here : utils/EXTERNAL_CODES_coupled_with_SPECFEM3D/AxiSEM_for_SPECFEM3D/Manual_coupling_AxiSEM_Specfem3D.pdf
+
+See the manual of AxiSEM here : utils/EXTERNAL_CODES_coupled_with_SPECFEM3D/AxiSEM_for_SPECFEM3D/AxiSEM_modif_for_coupling_with_specfem/MANUAL/manual_axisem1.1.pdf
+
+update paths_for_coupling_SPECFEM3D_AxiSEM.sh
+
+TO USE staight chunk you have to do : 
+
+compile meshfem3D with this varaible set to .true. :
+
+line 110 file : src/meshfem3D/save_databases.f90
+ logical, parameter :: SAVE_MESH_AS_CUBIT = .true.
+
+fill Par_file : 
+
+# to couple with an external code (such as DSM, AxiSEM, or FK)
+COUPLE_WITH_EXTERNAL_CODE       = .true.
+EXTERNAL_CODE_TYPE              = 2   # 1 = DSM, 2 = AxiSEM, 3 = FK
+TRACTION_PATH                   = ./DATA/AxiSEM_tractions/1/
+MESH_A_CHUNK_OF_THE_EARTH       = .false.
+RECIPROCITY_AND_KH_INTEGRAL     = .false.
+
+Define mesh : update files  
+
+DATA/meshfem3D_files/Mesh_Par_file
+DATA/meshfem3D_files/interfaces.dat
+
+MANDATORY :  choose sequential mode for creating mesh and use scotch for partitionning.
+
+fill ParFileMeshChunk
+after run the example the same way that explain in manual 
+
+if need you can define new stations with this script: convert_station_from_geographic_to_cartesian_in_mesh.sh
+
+

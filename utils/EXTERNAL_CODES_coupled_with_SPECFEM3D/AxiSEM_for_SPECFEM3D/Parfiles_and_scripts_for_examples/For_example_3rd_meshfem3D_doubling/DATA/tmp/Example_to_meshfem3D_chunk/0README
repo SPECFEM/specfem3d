@@ -1,0 +1,9 @@
+0/ in line 106 src/meshfem3D/save_databases.f90 set : 
+logical, parameter :: SAVE_MESH_AS_CUBIT = .true. 
+and compile meshfem3D
+
+1/ create interfaces or/and free surface on sphere by using: 
+create_topo_sphere.f90
+you could have to change R1,R2,R3 varaible and/or xmin, xmax, ymin,  ymax, dx, dy for your purpose.
+
+In order to use in mesfem3D, only the 3nd column of outputs files *.xyz must be considered (write it in an ptehr file and fill interfaces.dat parameter file)  
