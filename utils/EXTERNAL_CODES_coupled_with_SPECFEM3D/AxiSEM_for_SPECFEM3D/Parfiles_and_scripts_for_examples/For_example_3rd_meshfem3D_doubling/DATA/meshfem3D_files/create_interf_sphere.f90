@@ -31,7 +31,7 @@ program create_interf_files
    
   R(0)  = 6371000.d0   !! free surface (Earth radius) (m)
   R(1)  = 6356000.d0   !! 1st interface 
-  R(2)  = 6346000.d0   !! 2nd interface 
+  R(2)  = 6346600.d0   !! 2nd interface 
   R(3)  = 6151000.d0   !! 3nd interface 
   R(4)  = 5971000.d0   !! ...
   R(5)  = 5771000.d0
