@@ -13,12 +13,12 @@
 #MSUB -A gen7165
 
 
-# convetion station 
+# convetion station
 
 source  ./paths_for_coupling_SPECFEM3D_AxiSEM.sh
 
 
-# 
+#
 z_bottom=6131000.00000000 # must be take in MESH/model_1D.in
 
 ${HOME_AxiSEM}/UTILS_COUPLING_SpecFEM/create_stations.x<<EOF

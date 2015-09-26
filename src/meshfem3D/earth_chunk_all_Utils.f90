@@ -1362,7 +1362,7 @@ subroutine  find_layer_in_axisem_model(i,u,r,z,n)
    implicit none
    integer i,n,u(5)
    double precision z(n),r(5)
-  
+
    if (r(3)>z(n) .or. r(3)<z(1)) then
       write(*,*) 'STOP :: point ouside grid'
       stop

@@ -479,13 +479,13 @@
     double precision, dimension(:,:,:), allocatable  ::  xstore, ystore, zstore
      !! Element control points
     double precision, dimension(:), allocatable :: xelm, yelm, zelm
-    
+
     !! 3D shape functions and their derivatives
     double precision, dimension(:,:,:,:), allocatable    :: shape3D
     double precision, dimension(:,:,:,:,:), allocatable  :: dershape3D
     !! GLL points and weights of integration
     double precision, dimension(:), allocatable  :: xigll, yigll, zigll, wxgll, wygll, wzgll
-   
+
 
     double precision  :: deg2rad
     double precision  :: ANGULAR_WIDTH_ETA_RAD, ANGULAR_WIDTH_XI_RAD
@@ -494,7 +494,7 @@
 
     integer :: ielm, j,k, imin,imax,jmin,jmax,kmin,kmax
     integer  nel_lat, nel_lon, nel_depth
-    
+
     character(len=10) line
     character(len=250) model1D_file
 
@@ -504,7 +504,7 @@
       z_bottom=minval(zgrid(:,:,:,:))
     else
       z_bottom=0.
-    end if
+    endif
 
     open(IIN_database, file = 'MESH/nummaterial_velocity_file',status='unknown',action='write',iostat=ier)
     if (ier /= 0) then
@@ -528,7 +528,7 @@
     open(IIN_database,file='MESH/materials_file')
     do ispec = 1, nspec
        write(IIN_database,*) ispec,ispec_material_id(ispec)
-    end do
+    enddo
 
     open(IIN_database,file='MESH/nodes_coords_file')
     write(IIN_database,*) nglob
@@ -605,7 +605,7 @@
        allocate(xstore(NGLLX,NGLLY,NGLLZ), ystore(NGLLX,NGLLY,NGLLZ), zstore(NGLLX,NGLLY,NGLLZ))
        allocate(xelm(NGNOD), yelm(NGNOD), zelm(NGNOD))
        allocate(xigll(NGLLX), yigll(NGLLY), zigll(NGLLZ), wxgll(NGLLX),wygll(NGLLY), wzgll(NGLLZ))
-  
+
        deg2rad = 3.141592653589793d0/180.d0
 
        !
@@ -630,8 +630,8 @@
        call get_shape3D(myrank,shape3D,dershape3D,xigll,yigll,zigll,NGNOD)
        !
 
-       !! reading parameters for coupling 
-    
+       !! reading parameters for coupling
+
        open(90, file='MESH/ParFileMeshChunk',action='read')
        read(90,'(a)') line
        read(90,*) ANGULAR_WIDTH_XI_RAD, ANGULAR_WIDTH_ETA_RAD
@@ -646,9 +646,9 @@
        model1D_file = 'MESH/'//trim(model1D_file)
        close(90)
 
-       ! read 1D AxiSEM model 
+       ! read 1D AxiSEM model
        call Read_dsm_model(model1D_file,vpv,vsv,density,zlayer,nlayer)
-       
+
        ! modele 1D
        open(88,file='MESH/model_1D.in')
        write(88,*) nlayer,4
@@ -662,10 +662,10 @@
        write(88,*)  6371000.+z_bottom
        write(88,*)  lon_center_chunk,  lat_center_chunk,  chunk_azi
        close(88)
-       
-        ! compute rotation matrix 
+
+        ! compute rotation matrix
        call compute_rotation_matrix(rotation_matrix,lon_center_chunk,lat_center_chunk, chunk_azi)
- 
+
        open(91, file = 'MESH/list_ggl_boundary_spherical.txt')
        open(92, file = 'MESH/list_ggl_boundary_cartesian.txt')
        open(89, file = 'MESH/flags_boundary.txt')
@@ -684,7 +684,7 @@
           ispec=ibelm_xmin(ielm)
 
           write(89,*) ispec,ielm,1
-          
+
           xelm(1)=xgrid(1,1,1,ispec)
           xelm(2)=xgrid(2,1,1,ispec)
           xelm(3)=xgrid(2,2,1,ispec)
@@ -717,7 +717,7 @@
           call cartesian2spheric(xstore,ystore,zstore,rotation_matrix,longitud,latitud,radius,deg2rad)
           zstore(:,:,:) = zstore(:,:,:) - 6371000.
           call find_layer_in_axisem_model(ilayer,updown,radius(3,3,:),zlayer,nlayer)
-          
+
           imin = 1
           imax = 1
           jmin = 1
@@ -727,16 +727,16 @@
 
           do k=kmin,kmax
              do j=jmin,jmax
-                do i=imin,imax  
+                do i=imin,imax
                    write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k)-z_bottom,ispec,i,j,k,1,&
                         ilayer,updown(k)
                    write(91,1000) radius(i,j,k), latitud(i,j,k), longitud(i,j,k)
-                end do
-             end do
-          end do
-       end do
-       
-       ! xmax 
+                enddo
+             enddo
+          enddo
+       enddo
+
+       ! xmax
        do ielm=1,nspec2D_xmax
 
           ispec=ibelm_xmax(ielm)
@@ -771,7 +771,7 @@
           zelm(8)=zgrid(1,2,2,ispec)
 
           call calc_gll_points(xelm,yelm,zelm,xstore,ystore,zstore,shape3D,NGNOD,NGLLX,NGLLY,NGLLZ)
-          zstore(:,:,:) = zstore(:,:,:) + 6371000. 
+          zstore(:,:,:) = zstore(:,:,:) + 6371000.
           call cartesian2spheric(xstore,ystore,zstore,rotation_matrix,longitud,latitud,radius,deg2rad)
           zstore(:,:,:) = zstore(:,:,:) - 6371000.
           call find_layer_in_axisem_model(ilayer,updown,radius(3,3,:),zlayer,nlayer)
@@ -785,14 +785,14 @@
 
           do k=kmin,kmax
              do j=jmin,jmax
-                do i=imin,imax  
+                do i=imin,imax
                    write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k)-z_bottom,ispec,i,j,k,2,&
                         ilayer,updown(k)
                    write(91,1000) radius(i,j,k), latitud(i,j,k), longitud(i,j,k)
-                end do
-             end do
-          end do
-       end do      
+                enddo
+             enddo
+          enddo
+       enddo
 
        ! ymin
        do ielm=1,nspec2D_ymin
@@ -843,14 +843,14 @@
 
           do k=kmin,kmax
              do j=jmin,jmax
-                do i=imin,imax  
+                do i=imin,imax
                    write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k)-z_bottom,ispec,i,j,k,3,&
                         ilayer,updown(k)
                    write(91,1000) radius(i,j,k), latitud(i,j,k), longitud(i,j,k)
-                end do
-             end do
-          end do
-       end do
+                enddo
+             enddo
+          enddo
+       enddo
 
 
        ! ymax
@@ -859,7 +859,7 @@
           ispec=ibelm_ymax(ielm)
 
           write(89,*) ispec,ielm,4
-         
+
           xelm(1)=xgrid(1,1,1,ispec)
           xelm(2)=xgrid(2,1,1,ispec)
           xelm(3)=xgrid(2,2,1,ispec)
@@ -902,22 +902,22 @@
 
           do k=kmin,kmax
              do j=jmin,jmax
-                do i=imin,imax  
+                do i=imin,imax
                    write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k)-z_bottom,ispec,i,j,k,4,&
                         ilayer,updown(k)
                    write(91,1000) radius(i,j,k), latitud(i,j,k), longitud(i,j,k)
-                end do
-             end do
-          end do
-       end do
-       
-       
+                enddo
+             enddo
+          enddo
+       enddo
+
+
        ! bottom
        do ielm=1,nspec2D_BOTTOM
 
           ispec=ibelm_bottom(ielm)
 
-          write(89,*) ispec,ielm,5   
+          write(89,*) ispec,ielm,5
 
           xelm(1)=xgrid(1,1,1,ispec)
           xelm(2)=xgrid(2,1,1,ispec)
@@ -961,21 +961,21 @@
 
           do k=kmin,kmax
              do j=jmin,jmax
-                do i=imin,imax  
+                do i=imin,imax
                    write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k)-z_bottom,ispec,i,j,k,5,&
                         ilayer,updown(k)
                    write(91,1000) radius(i,j,k), latitud(i,j,k), longitud(i,j,k)
-                end do
-             end do
-          end do
-       end do   
-    
+                enddo
+             enddo
+          enddo
+       enddo
+
        close(89)
        close(91)
        close(92)
 
        deallocate(shape3D,dershape3D)
-    end if
+    endif
 
   end subroutine save_output_mesh_files_as_cubit
 
