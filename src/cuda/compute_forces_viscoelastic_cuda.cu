@@ -4304,25 +4304,25 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                                  mp->simulation_type);
             }
           }else{
-        	  if (mp->Kelvin_Voigt_damping) {
-        	               // Kelvin_Voigt_damping == true means there is fault in this partition
-        		  Kernel_2_noatt_iso_kelvinvoigt_impl<1><<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
-        		                                                                               d_ibool,
-        		                                                                               mp->d_phase_ispec_inner_elastic,mp->num_phase_ispec_elastic,
-        		                                                                               d_iphase,
-        		                                                                               mp->d_Kelvin_Voigt_eta,
-        		                                                                               mp->d_displ,
-        		                                                                               mp->d_veloc,
-        		                                                                               mp->d_accel,
-        		                                                                               d_xix, d_xiy, d_xiz,
-        		                                                                               d_etax, d_etay, d_etaz,
-        		                                                                               d_gammax, d_gammay, d_gammaz,
-        		                                                                               mp->d_hprime_xx,
-        		                                                                               mp->d_hprimewgll_xx,
-        		                                                                               mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
-        		                                                                               d_kappav, d_muv);
-        	             }
-        	  else{
+            if (mp->Kelvin_Voigt_damping) {
+                         // Kelvin_Voigt_damping == true means there is fault in this partition
+              Kernel_2_noatt_iso_kelvinvoigt_impl<1><<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
+                                                                                           d_ibool,
+                                                                                           mp->d_phase_ispec_inner_elastic,mp->num_phase_ispec_elastic,
+                                                                                           d_iphase,
+                                                                                           mp->d_Kelvin_Voigt_eta,
+                                                                                           mp->d_displ,
+                                                                                           mp->d_veloc,
+                                                                                           mp->d_accel,
+                                                                                           d_xix, d_xiy, d_xiz,
+                                                                                           d_etax, d_etay, d_etaz,
+                                                                                           d_gammax, d_gammay, d_gammaz,
+                                                                                           mp->d_hprime_xx,
+                                                                                           mp->d_hprimewgll_xx,
+                                                                                           mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
+                                                                                           d_kappav, d_muv);
+                       }
+            else{
             // without storing strains
             // forward wavefields -> FORWARD_OR_ADJOINT == 1
             Kernel_2_noatt_iso_impl<1><<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,

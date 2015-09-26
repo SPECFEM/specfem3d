@@ -1486,7 +1486,7 @@
                                 minus_deriv_gravity,minus_g,wgll_cube,&
                                 ACOUSTIC_SIMULATION,rhostore)
   endif
-  
+
   ! prepares kelvin_voigt_damping around the fault
   if (SIMULATION_TYPE_DYN) then
     call prepare_fault_device(Mesh_pointer,allocated(Kelvin_Voigt_eta),Kelvin_Voigt_eta)

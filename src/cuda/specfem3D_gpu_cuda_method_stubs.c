@@ -479,7 +479,7 @@ void FC_FUNC_(prepare_fields_gravity_device,
                                              realw* rhostore) {}
 void FC_FUNC_(prepare_fault_device,
               PREPARE_FAULT_DEVICE)(long* Mesh_pointer,
-            		            int* KELVIN_VOIGT_DAMPING,
+                            int* KELVIN_VOIGT_DAMPING,
                                     realw* Kelvin_Voigt_eta){}
 
 void FC_FUNC_(prepare_seismogram_fields,
