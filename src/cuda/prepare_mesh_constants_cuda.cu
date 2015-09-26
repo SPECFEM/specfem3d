@@ -70,7 +70,7 @@ void copy_todevice_int(void** d_array_addr_ptr,int* h_array,int size){
   // allocates memory on GPU
   //
   // note: cudaMalloc uses a double-pointer, such that it can return an error code in case it fails
-  //          we thus pass the address to the pointer above (as void double-pointer) to have it
+  //          we thus pass the address to the pointer above (as void double-pointer) to have it  
   //          pointing to the correct pointer of the array here
   print_CUDA_error_if_any(cudaMalloc((void**)d_array_addr_ptr,size*sizeof(int)),
                           12001);
@@ -1353,6 +1353,37 @@ void FC_FUNC_(prepare_seismogram_fields,
 }
 */
 
+
+
+
+
+/* ----------------------------------------------------------------------------------------------- */
+
+// FAULT simulations
+
+/* ----------------------------------------------------------------------------------------------- */
+
+extern "C"
+void FC_FUNC_(prepare_fault_device,
+              PREPARE_FAULT_DEVICE)(long* Mesh_pointer,
+            		            int* KELVIN_VOIGT_DAMPING,
+//            		            int* testtrue,
+                                realw* Kelvin_Voigt_eta)
+{
+
+  TRACE("prepare_fault_device");
+
+  Mesh* mp = (Mesh*)(*Mesh_pointer);
+  mp -> Kelvin_Voigt_damping = *KELVIN_VOIGT_DAMPING ;
+  if (mp-> Kelvin_Voigt_damping ){
+//    if(*testtrue) printf("\ntesttrue!\n");
+//    if(! (*KELVIN_VOIGT_DAMPING)) printf("\nKV test pass!\n");
+//    printf("myrank = %d , size of damping = %6d, isAllocated? = %d\n",mp->myrank,sizeof(Kelvin_Voigt_eta),mp -> Kelvin_Voigt_damping);
+    copy_todevice_realw((void**)&mp->d_Kelvin_Voigt_eta,Kelvin_Voigt_eta,mp-> NSPEC_AB);
+}
+}
+
+
 /* ----------------------------------------------------------------------------------------------- */
 
 // cleanup
@@ -1605,3 +1636,5 @@ TRACE("prepare_cleanup_device");
   // mesh pointer - not needed anymore
   free(mp);
 }
+
+

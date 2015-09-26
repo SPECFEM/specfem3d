@@ -304,6 +304,32 @@ __device__  __forceinline__ void load_shared_memory_displ(const int* tx, const i
 #endif
 }
 
+/* ----------------------------------------------------------------------------------------------- */
+
+// loads displacement + viscosity * velocity into shared memory for element
+
+template<int FORWARD_OR_ADJOINT>
+__device__  __forceinline__ void load_shared_memory_displ_visco(const int* tx, const int* iglob,
+                                                          realw_const_p d_displ,
+                                                          realw_const_p d_veloc,
+                                                          realw visco,
+                                                          realw* sh_tempx,
+                                                          realw* sh_tempy,
+                                                          realw* sh_tempz){
+
+  // copy from global memory to shared memory
+  // each thread writes one of the NGLL^3 = 125 data points
+#ifdef USE_TEXTURES_FIELDS
+  sh_tempx[(*tx)] = texfetch_displ<FORWARD_OR_ADJOINT>((*iglob)*3) + visco*texfetch_veloc<FORWARD_OR_ADJOINT>((*iglob)*3);
+  sh_tempy[(*tx)] = texfetch_displ<FORWARD_OR_ADJOINT>((*iglob)*3 + 1) + visco*texfetch_veloc<FORWARD_OR_ADJOINT>((*iglob)*3 + 1);
+  sh_tempz[(*tx)] = texfetch_displ<FORWARD_OR_ADJOINT>((*iglob)*3 + 2) + visco*texfetch_veloc<FORWARD_OR_ADJOINT>((*iglob)*3 + 2);
+#else
+  // changing iglob indexing to match fortran row changes fast style
+  sh_tempx[(*tx)] = d_displ[(*iglob)*3] + visco * d_veloc[(*iglob)*3];
+  sh_tempy[(*tx)] = d_displ[(*iglob)*3 + 1] + visco * d_veloc[(*iglob)*3 + 1];
+  sh_tempz[(*tx)] = d_displ[(*iglob)*3 + 2] + visco * d_veloc[(*iglob)*3 + 2];
+#endif
+}
 
 /* ----------------------------------------------------------------------------------------------- */
 
@@ -3585,6 +3611,335 @@ Kernel_2_att_org_impl(int nb_blocks_to_compute,
 
 /* ----------------------------------------------------------------------------------------------- */
 
+
+template<int FORWARD_OR_ADJOINT> __global__ void
+#ifdef USE_LAUNCH_BOUNDS
+// adds compiler specification
+__launch_bounds__(NGLL3_PADDED,LAUNCH_MIN_BLOCKS)
+#endif
+// main kernel
+Kernel_2_noatt_iso_kelvinvoigt_impl(const int nb_blocks_to_compute,
+                        const int* d_ibool,
+                        const int* d_phase_ispec_inner_elastic,const int num_phase_ispec_elastic,
+                        const int d_iphase,
+                        realw* d_kelvin_voigt_eta,
+                        realw_const_p d_displ,
+                        realw_const_p d_veloc,
+                        realw_p d_accel,
+                        realw* d_xix,realw* d_xiy,realw* d_xiz,
+                        realw* d_etax,realw* d_etay,realw* d_etaz,
+                        realw* d_gammax,realw* d_gammay,realw* d_gammaz,
+                        realw_const_p d_hprime_xx,
+                        realw_const_p d_hprimewgll_xx,
+                        realw_const_p d_wgllwgll_xy,realw_const_p d_wgllwgll_xz,realw_const_p d_wgllwgll_yz,
+                        realw* d_kappav,realw* d_muv){
+
+// elastic compute kernel without attenuation for isotropic elements with kelvin voigt damping aroung the fault
+//
+// holds for:
+//  ATTENUATION               = .false.
+//  ANISOTROPY                = .false.
+//  COMPUTE_AND_STORE_STRAIN  = .true. or .false. (true for kernel simulations)
+//  gravity                   = .false.
+//  use_mesh_coloring_gpu     = .false.
+//  COMPUTE_AND_STORE_STRAIN  = .false.
+//  mp -> Kelvin_Voigt_damping = .true.
+
+  // block-id == number of local element id in phase_ispec array
+  int bx = blockIdx.y*gridDim.x+blockIdx.x;
+
+  // thread-id == GLL node id
+  // note: use only NGLL^3 = 125 active threads, plus 3 inactive/ghost threads,
+  //       because we used memory padding from NGLL^3 = 125 to 128 to get coalescent memory accesses;
+  //       to avoid execution branching and the need of registers to store an active state variable,
+  //       the thread ids are put in valid range
+  int tx = threadIdx.x;
+
+  int I,J,K;
+  int iglob,offset;
+  int working_element;
+
+  realw tempx1l,tempx2l,tempx3l,tempy1l,tempy2l,tempy3l,tempz1l,tempz2l,tempz3l;
+  realw xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl;
+  realw duxdxl,duxdyl,duxdzl,duydxl,duydyl,duydzl,duzdxl,duzdyl,duzdzl;
+  realw duxdxl_plus_duydyl,duxdxl_plus_duzdzl,duydyl_plus_duzdzl;
+  realw duxdyl_plus_duydxl,duzdxl_plus_duxdzl,duzdyl_plus_duydzl;
+  realw kelvin_voigt_eta;
+  realw fac1,fac2,fac3;
+  realw lambdal,mul,lambdalplus2mul,kappal;
+  realw sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz;
+  realw sum_terms1,sum_terms2,sum_terms3;
+
+  // shared memory
+  __shared__ realw sh_tempx[NGLL3];
+  __shared__ realw sh_tempy[NGLL3];
+  __shared__ realw sh_tempz[NGLL3];
+
+  // note: using shared memory for hprime's improves performance
+  //       (but could tradeoff with occupancy)
+  __shared__ realw sh_hprime_xx[NGLL2];
+  __shared__ realw sh_hprimewgll_xx[NGLL2];
+
+// arithmetic intensity: ratio of number-of-arithmetic-operations / number-of-bytes-accessed-on-DRAM
+//
+// hand-counts on floating-point operations: counts addition/subtraction/multiplication/division
+//                                           no counts for operations on indices in for-loops (compiler will likely unrool loops)
+//
+//                                           counts accesses to global memory, but no shared memory or register loads/stores
+//                                           float has 4 bytes
+
+// counts:
+// 2 FLOP
+  // checks if anything to do
+  if (bx >= nb_blocks_to_compute) return;
+
+  // limits thread ids to range [0,125-1]
+  if (tx >= NGLL3) tx = NGLL3 - 1;
+
+// counts:
+// + 1 FLOP
+//
+// + 0 BYTE
+
+  // loads hprime's into shared memory
+  if (tx < NGLL2) {
+    // copy hprime from global memory to shared memory
+    load_shared_memory_hprime(&tx,d_hprime_xx,sh_hprime_xx);
+
+    // copy hprimewgll from global memory to shared memory
+    load_shared_memory_hprimewgll(&tx,d_hprimewgll_xx,sh_hprimewgll_xx);
+  }
+
+// counts:
+// + 0 FLOP
+//
+// 2 * 1 float * 25 threads = 200 BYTE
+
+  // spectral-element id
+  // iphase-1 and working_element-1 for Fortran->C array conventions
+  working_element = d_phase_ispec_inner_elastic[bx + num_phase_ispec_elastic*(d_iphase-1)] - 1;
+
+  // local padded index
+  offset = working_element*NGLL3_PADDED + tx;
+
+  // global index
+  iglob = d_ibool[offset] - 1 ;
+  // fetch the value of kelvin_voigt eta
+  kelvin_voigt_eta = d_kelvin_voigt_eta[bx] ;
+
+
+// counts:
+// + 7 FLOP
+//
+// + 2 float * 128 threads = 1024 BYTE
+
+  // copy from global memory to shared memory
+  // each thread writes one of the NGLL^3 = 125 data points
+  if (threadIdx.x < NGLL3 ){
+    // copy displacement from global memory to shared memory
+    load_shared_memory_displ_visco<FORWARD_OR_ADJOINT>(&tx,&iglob,d_displ,d_veloc,kelvin_voigt_eta,sh_tempx,sh_tempy,sh_tempz);
+  }
+
+// counts:
+// + 5 FLOP
+//
+// + 3 float * 125 threads = 1500 BYTE
+
+  kappal = d_kappav[offset];
+  mul = d_muv[offset];
+
+// counts:
+// + 0 FLOP
+//
+// + 2 * 1 float * 128 threads = 1024 BYTE
+
+  // loads mesh values here to give compiler possibility to overlap memory fetches with some computations
+  // note: arguments defined as realw* instead of const realw* __restrict__ to avoid that the compiler
+  //       loads all memory by texture loads
+  //       we only use the first loads explicitly by texture loads, all subsequent without. this should lead/trick
+  //       the compiler to use global memory loads for all the subsequent accesses.
+  //
+  // calculates laplacian
+  xixl = get_global_cr( &d_xix[offset] ); // first array with texture load
+  xiyl = get_global_cr( &d_xiy[offset] ); // first array with texture load
+  xizl = get_global_cr( &d_xiz[offset] ); // first array with texture load
+
+//  xixl = d_xix[offset]; // first array with texture load
+//  xiyl = d_xiy[offset]; // all subsequent without to avoid over-use of texture for coalescent access
+//  xizl = d_xiz[offset];
+
+  etaxl = d_etax[offset];
+  etayl = d_etay[offset];
+  etazl = d_etaz[offset];
+
+  gammaxl = d_gammax[offset];
+  gammayl = d_gammay[offset];
+  gammazl = d_gammaz[offset];
+
+  jacobianl = 1.f / (xixl*(etayl*gammazl-etazl*gammayl)
+                    -xiyl*(etaxl*gammazl-etazl*gammaxl)
+                    +xizl*(etaxl*gammayl-etayl*gammaxl));
+
+// counts:
+// + 15 FLOP
+//
+// + 9 float * 128 threads = 4608 BYTE
+
+
+
+  // local index
+  K = (tx/NGLL2);
+  J = ((tx-K*NGLL2)/NGLLX);
+  I = (tx-K*NGLL2-J*NGLLX);
+
+// counts:
+// + 8 FLOP
+//
+// + 0 BYTE
+
+  // synchronize all the threads (one thread for each of the NGLL grid points of the
+  // current spectral element) because we need the whole element to be ready in order
+  // to be able to compute the matrix products along cut planes of the 3D element below
+  __syncthreads();
+
+  // computes first matrix products
+  // 1. cut-plane
+  sum_hprime_xi(I,J,K,&tempx1l,&tempy1l,&tempz1l,sh_tempx,sh_tempy,sh_tempz,sh_hprime_xx);
+  // 2. cut-plane
+  sum_hprime_eta(I,J,K,&tempx2l,&tempy2l,&tempz2l,sh_tempx,sh_tempy,sh_tempz,sh_hprime_xx);
+  // 3. cut-plane
+  sum_hprime_gamma(I,J,K,&tempx3l,&tempy3l,&tempz3l,sh_tempx,sh_tempy,sh_tempz,sh_hprime_xx);
+
+// counts:
+// + 3 * 100 FLOP = 300 FLOP
+//
+// + 0 BYTE
+
+  // compute derivatives of ux, uy and uz with respect to x, y and z
+  duxdxl = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l;
+  duxdyl = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l;
+  duxdzl = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l;
+
+  duydxl = xixl*tempy1l + etaxl*tempy2l + gammaxl*tempy3l;
+  duydyl = xiyl*tempy1l + etayl*tempy2l + gammayl*tempy3l;
+  duydzl = xizl*tempy1l + etazl*tempy2l + gammazl*tempy3l;
+
+  duzdxl = xixl*tempz1l + etaxl*tempz2l + gammaxl*tempz3l;
+  duzdyl = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l;
+  duzdzl = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l;
+
+// counts:
+// + 9 * 5 FLOP = 45 FLOP
+//
+// + 0 BYTE
+
+  // precompute some sums to save CPU time
+  duxdxl_plus_duydyl = duxdxl + duydyl;
+  duxdxl_plus_duzdzl = duxdxl + duzdzl;
+  duydyl_plus_duzdzl = duydyl + duzdzl;
+  duxdyl_plus_duydxl = duxdyl + duydxl;
+  duzdxl_plus_duxdzl = duzdxl + duxdzl;
+  duzdyl_plus_duydzl = duzdyl + duydzl;
+
+  // stress calculations
+
+  // isotropic case
+  // compute elements with an elastic isotropic rheology
+
+  lambdalplus2mul = kappal + 1.33333333333333333333f * mul;  // 4./3. = 1.3333333
+  lambdal = lambdalplus2mul - 2.0f * mul;
+
+  // compute the six components of the stress tensor sigma
+  sigma_xx = lambdalplus2mul*duxdxl + lambdal*duydyl_plus_duzdzl;
+  sigma_yy = lambdalplus2mul*duydyl + lambdal*duxdxl_plus_duzdzl;
+  sigma_zz = lambdalplus2mul*duzdzl + lambdal*duxdxl_plus_duydyl;
+
+  sigma_xy = mul*duxdyl_plus_duydxl;
+  sigma_xz = mul*duzdxl_plus_duxdzl;
+  sigma_yz = mul*duzdyl_plus_duydzl;
+
+// counts:
+// + 22 FLOP
+//
+// + 0 BYTE
+
+  // form dot product with test vector, symmetric form
+  // 1. cut-plane xi
+  __syncthreads();
+  // fills shared memory arrays
+  if (threadIdx.x < NGLL3) {
+    sh_tempx[tx] = jacobianl * (sigma_xx*xixl + sigma_xy*xiyl + sigma_xz*xizl); // sh_tempx1
+    sh_tempy[tx] = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_yz*xizl); // sh_tempy1
+    sh_tempz[tx] = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl); // sh_tempz1
+  }
+  __syncthreads();
+  // 1. cut-plane xi
+  sum_hprimewgll_xi(I,J,K,&tempx1l,&tempy1l,&tempz1l,sh_tempx,sh_tempy,sh_tempz,sh_hprimewgll_xx);
+
+  // 2. cut-plane eta
+  __syncthreads();
+  // fills shared memory arrays
+  if (threadIdx.x < NGLL3) {
+    sh_tempx[tx] = jacobianl * (sigma_xx*etaxl + sigma_xy*etayl + sigma_xz*etazl); // sh_tempx2
+    sh_tempy[tx] = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_yz*etazl); // sh_tempy2
+    sh_tempz[tx] = jacobianl * (sigma_xz*etaxl + sigma_yz*etayl + sigma_zz*etazl); // sh_tempz2
+  }
+  __syncthreads();
+  // 2. cut-plane eta
+  sum_hprimewgll_eta(I,J,K,&tempx2l,&tempy2l,&tempz2l,sh_tempx,sh_tempy,sh_tempz,sh_hprimewgll_xx);
+
+  // 3. cut-plane gamma
+  __syncthreads();
+  // fills shared memory arrays
+  if (threadIdx.x < NGLL3) {
+    sh_tempx[tx] = jacobianl * (sigma_xx*gammaxl + sigma_xy*gammayl + sigma_xz*gammazl); // sh_tempx3
+    sh_tempy[tx] = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_yz*gammazl); // sh_tempy3
+    sh_tempz[tx] = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl); // sh_tempz3
+  }
+  __syncthreads();
+  // 3. cut-plane gamma
+  sum_hprimewgll_gamma(I,J,K,&tempx3l,&tempy3l,&tempz3l,sh_tempx,sh_tempy,sh_tempz,sh_hprimewgll_xx);
+
+// counts:
+// + 3 * 3 * 6 FLOP = 54 FLOP
+// + 3 * 100 FLOP = 300 FLOP
+//
+// + 0 BYTE
+
+  // gets double weights
+  fac1 = d_wgllwgll_yz[K*NGLLX+J];
+  fac2 = d_wgllwgll_xz[K*NGLLX+I];
+  fac3 = d_wgllwgll_xy[J*NGLLX+I];
+
+// counts:
+// + 3 * 2 FLOP = 6 FLOP
+//
+// + 3 float * 128 threads = 1536 BYTE
+
+  sum_terms1 = - (fac1*tempx1l + fac2*tempx2l + fac3*tempx3l);
+  sum_terms2 = - (fac1*tempy1l + fac2*tempy2l + fac3*tempy3l);
+  sum_terms3 = - (fac1*tempz1l + fac2*tempz2l + fac3*tempz3l);
+
+// counts:
+// + 3 * 6 FLOP = 18 FLOP
+//
+// + 0 BYTE
+
+  // assembles acceleration array
+  if (threadIdx.x < NGLL3) {
+    atomicAdd(&d_accel[iglob*3], sum_terms1);
+    atomicAdd(&d_accel[iglob*3+1], sum_terms2);
+    atomicAdd(&d_accel[iglob*3+2], sum_terms3);
+  }
+} // kernel_2_noatt_iso_kelvinvoigt_impl()
+
+/* ----------------------------------------------------------------------------------------------- */
+
+
+
+
+
+
 void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
               int COMPUTE_AND_STORE_STRAIN,
               int ATTENUATION,
@@ -3949,6 +4304,25 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                                  mp->simulation_type);
             }
           }else{
+        	  if (mp->Kelvin_Voigt_damping) {
+        	               // Kelvin_Voigt_damping == true means there is fault in this partition
+        		  Kernel_2_noatt_iso_kelvinvoigt_impl<1><<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
+        		                                                                               d_ibool,
+        		                                                                               mp->d_phase_ispec_inner_elastic,mp->num_phase_ispec_elastic,
+        		                                                                               d_iphase,
+        		                                                                               mp->d_Kelvin_Voigt_eta,
+        		                                                                               mp->d_displ,
+        		                                                                               mp->d_veloc,
+        		                                                                               mp->d_accel,
+        		                                                                               d_xix, d_xiy, d_xiz,
+        		                                                                               d_etax, d_etay, d_etaz,
+        		                                                                               d_gammax, d_gammay, d_gammaz,
+        		                                                                               mp->d_hprime_xx,
+        		                                                                               mp->d_hprimewgll_xx,
+        		                                                                               mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
+        		                                                                               d_kappav, d_muv);
+        	             }
+        	  else{
             // without storing strains
             // forward wavefields -> FORWARD_OR_ADJOINT == 1
             Kernel_2_noatt_iso_impl<1><<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
@@ -3981,6 +4355,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                                  mp->d_hprimewgll_xx,
                                                                                  mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
                                                                                  d_kappav, d_muv);
+            }
             }
           } // COMPUTE_AND_STORE_STRAIN
         } // use_mesh_coloring_gpu

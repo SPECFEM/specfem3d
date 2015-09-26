@@ -477,6 +477,10 @@ void FC_FUNC_(prepare_fields_gravity_device,
                                              realw* h_wgll_cube,
                                              int* ACOUSTIC_SIMULATION,
                                              realw* rhostore) {}
+void FC_FUNC_(prepare_fault_device,
+              PREPARE_FAULT_DEVICE)(long* Mesh_pointer,
+            		            int* KELVIN_VOIGT_DAMPING,
+                                    realw* Kelvin_Voigt_eta){}
 
 void FC_FUNC_(prepare_seismogram_fields,
               PREPARE_SEISMOGRAM_FIELDS)(long* Mesh_pointer,int* nrec_local, double* nu, double* hxir, double* hetar, double* hgammar) {}
