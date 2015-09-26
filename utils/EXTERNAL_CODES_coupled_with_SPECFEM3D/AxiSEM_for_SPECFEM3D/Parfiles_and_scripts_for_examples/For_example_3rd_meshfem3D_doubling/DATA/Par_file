@@ -18,8 +18,8 @@ SUPPRESS_UTM_PROJECTION         = .true.
 NPROC                           = 32
 
 # time step parameters
-NSTEP                           = 5700
-DT                              = 0.0312
+NSTEP                           = 12000
+DT                              = 0.025
 USE_LDDRK                       = .false.
 INCREASE_CFL_FOR_LDDRK          = .false.
 RATIO_BY_WHICH_TO_INCREASE_IT   = 1.4
