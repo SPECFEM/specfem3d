@@ -488,8 +488,7 @@
    
 
     double precision  :: deg2rad
-    double precision  :: ratio_eta, ratio_xi
-    double precision  :: ANGULAR_WIDTH_ETA_RAD, ANGULAR_WIDTH_XI_RAD, Z_DEPTH_BLOCK, UTM_X_MIN, UTM_X_MAX
+    double precision  :: ANGULAR_WIDTH_ETA_RAD, ANGULAR_WIDTH_XI_RAD
     double precision  :: lat_center_chunk, lon_center_chunk, chunk_depth, chunk_azi
     double precision  :: z_bottom
 
@@ -534,7 +533,8 @@
     open(IIN_database,file='MESH/nodes_coords_file')
     write(IIN_database,*) nglob
     do iglob=1,nglob
-       write(IIN_database,'(i14,3x,3(f20.5,1x))') iglob,nodes_coords(iglob,1),nodes_coords(iglob,2),nodes_coords(iglob,3)-z_bottom
+       write(IIN_database,'(i14,3x,3(f20.5,1x))') iglob,nodes_coords(iglob,1),nodes_coords(iglob,2),&
+            nodes_coords(iglob,3)-z_bottom
     enddo
     close(IIN_database)
 
@@ -559,8 +559,9 @@
     open(IIN_database,file='MESH/absorbing_surface_file_xmax')
     write(IIN_database,*) nspec2D_xmax
     do i=1,nspec2D_xmax
-       write(IIN_database,'(5(i10,1x))') ibelm_xmax(i),ibool(NGLLX_M,1,1,ibelm_xmax(i)),ibool(NGLLX_M,NGLLY_M,1,ibelm_xmax(i)), &
-            ibool(NGLLX_M,1,NGLLZ_M,ibelm_xmax(i)),ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_xmax(i))
+       write(IIN_database,'(5(i10,1x))') ibelm_xmax(i),ibool(NGLLX_M,1,1,ibelm_xmax(i)),&
+            ibool(NGLLX_M,NGLLY_M,1,ibelm_xmax(i)), ibool(NGLLX_M,1,NGLLZ_M,ibelm_xmax(i)),&
+            ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_xmax(i))
     enddo
     close(IIN_database)
 
@@ -575,8 +576,9 @@
     open(IIN_database,file='MESH/absorbing_surface_file_ymax')
     write(IIN_database,*) nspec2D_ymax
     do i=1,nspec2D_ymax
-       write(IIN_database,'(5(i10,1x))') ibelm_ymax(i),ibool(NGLLX_M,NGLLY_M,1,ibelm_ymax(i)),ibool(1,NGLLY_M,1,ibelm_ymax(i)), &
-            ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_ymax(i)),ibool(1,NGLLY_M,NGLLZ_M,ibelm_ymax(i))
+       write(IIN_database,'(5(i10,1x))') ibelm_ymax(i),ibool(NGLLX_M,NGLLY_M,1,ibelm_ymax(i)),&
+            ibool(1,NGLLY_M,1,ibelm_ymax(i)), ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_ymax(i)),&
+            ibool(1,NGLLY_M,NGLLZ_M,ibelm_ymax(i))
     enddo
 
 
@@ -591,8 +593,9 @@
     open(IIN_database,file='MESH/free_or_absorbing_surface_file_zmax')
     write(IIN_database,*) NSPEC2D_TOP
     do i=1,NSPEC2D_TOP
-       write(IIN_database,'(5(i10,1x))') ibelm_top(i),ibool(1,1,NGLLZ_M,ibelm_top(i)),ibool(NGLLX_M,1,NGLLZ_M,ibelm_top(i)), &
-            ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_top(i)),ibool(1,NGLLY_M,NGLLZ_M,ibelm_top(i))
+       write(IIN_database,'(5(i10,1x))') ibelm_top(i),ibool(1,1,NGLLZ_M,ibelm_top(i)),&
+            ibool(NGLLX_M,1,NGLLZ_M,ibelm_top(i)),ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_top(i)),&
+            ibool(1,NGLLY_M,NGLLZ_M,ibelm_top(i))
     enddo
     close(IIN_database)
 
@@ -725,7 +728,8 @@
           do k=kmin,kmax
              do j=jmin,jmax
                 do i=imin,imax  
-                   write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k)-z_bottom,ispec,i,j,k,1,ilayer,updown(k)
+                   write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k)-z_bottom,ispec,i,j,k,1,&
+                        ilayer,updown(k)
                    write(91,1000) radius(i,j,k), latitud(i,j,k), longitud(i,j,k)
                 end do
              end do
@@ -782,7 +786,8 @@
           do k=kmin,kmax
              do j=jmin,jmax
                 do i=imin,imax  
-                   write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k)-z_bottom,ispec,i,j,k,2,ilayer,updown(k)
+                   write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k)-z_bottom,ispec,i,j,k,2,&
+                        ilayer,updown(k)
                    write(91,1000) radius(i,j,k), latitud(i,j,k), longitud(i,j,k)
                 end do
              end do
@@ -839,7 +844,8 @@
           do k=kmin,kmax
              do j=jmin,jmax
                 do i=imin,imax  
-                   write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k)-z_bottom,ispec,i,j,k,3,ilayer,updown(k)
+                   write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k)-z_bottom,ispec,i,j,k,3,&
+                        ilayer,updown(k)
                    write(91,1000) radius(i,j,k), latitud(i,j,k), longitud(i,j,k)
                 end do
              end do
@@ -897,7 +903,8 @@
           do k=kmin,kmax
              do j=jmin,jmax
                 do i=imin,imax  
-                   write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k)-z_bottom,ispec,i,j,k,4,ilayer,updown(k)
+                   write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k)-z_bottom,ispec,i,j,k,4,&
+                        ilayer,updown(k)
                    write(91,1000) radius(i,j,k), latitud(i,j,k), longitud(i,j,k)
                 end do
              end do
@@ -955,7 +962,8 @@
           do k=kmin,kmax
              do j=jmin,jmax
                 do i=imin,imax  
-                   write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k)-z_bottom,ispec,i,j,k,5,ilayer,updown(k)
+                   write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k)-z_bottom,ispec,i,j,k,5,&
+                        ilayer,updown(k)
                    write(91,1000) radius(i,j,k), latitud(i,j,k), longitud(i,j,k)
                 end do
              end do
