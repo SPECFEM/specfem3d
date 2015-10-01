@@ -44,6 +44,7 @@
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: buffer_for_disk
   character(len=MAX_STRING_LEN) outputname
 
+
   !----  create a Gnuplot script to display the energy curve in log scale
   if (OUTPUT_ENERGY .and. myrank == 0) then
     open(unit=IOUT_ENERGY,file=trim(OUTPUT_FILES)//'plot_energy.gnu',status='unknown',action='write')
@@ -64,6 +65,9 @@
     write(IOUT_ENERGY,*) 'pause -1 "Hit any key..."'
     close(IOUT_ENERGY)
   endif
+
+  !! CD CD add this (temp) : 
+  if (RECIPROCITY_AND_KH_INTEGRAL) open(unit=158,file='KH_integral',status='unknown')
 
   ! open the file in which we will store the energy curve
   if (OUTPUT_ENERGY .and. myrank == 0) &
@@ -264,15 +268,33 @@
       call it_update_vtkwindow()
     endif
 
+    !! CD CD add this : under validation option
+    if (RECIPROCITY_AND_KH_INTEGRAL) then 
+      if (.not. SAVE_RUN_BOUN_FOR_KH_INTEGRAL) then
+
+        call surface_or_volume_integral_on_whole_domain()
+        write(158,*) it*DT, integral_boun(1), integral_boun(2), integral_boun(3)
+
+      endif
+    endif
+
   !
   !---- end of time iteration loop
   !
   enddo   ! end of main time loop
 
+
   ! close the huge file that contains a dump of all the time steps to disk
   if (EXACT_UNDOING_TO_DISK) close(IFILE_FOR_EXACT_UNDOING)
 
   call it_print_elapsed_time()
+
+  !! CD CD ad this :
+  if (RECIPROCITY_AND_KH_INTEGRAL) then 
+    close(158)
+    close(237)
+    close(238)
+  endif
 
   ! Transfer fields from GPU card to host for further analysis
   if (GPU_MODE) call it_transfer_from_GPU()

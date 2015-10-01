@@ -82,7 +82,9 @@ module specfem_par
   integer :: it_dsm
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: Veloc_dsm_boundary, Tract_dsm_boundary
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: Veloc_axisem, Tract_axisem
-  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: Displ_axisem
+  !! CD CD add this : for KH integral and reciprocity
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: Displ_axisem_time, Tract_axisem_time 
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: Displ_specfem_time, Tract_specfem_time
 
 ! attenuation
   integer :: NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa
@@ -212,7 +214,7 @@ module specfem_par
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: wgll_cube
 
   ! for surface or volume integral on whole domain
-  double precision :: integral_vol, integral_boun
+  double precision, dimension(:), allocatable   :: integral_vol, integral_boun
   double precision, dimension(:,:), allocatable :: f_integrand_KH
 
 

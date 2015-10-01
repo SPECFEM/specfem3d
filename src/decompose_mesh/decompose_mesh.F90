@@ -1095,7 +1095,7 @@ module decompose_mesh
     allocate(my_nb_interfaces(0:ninterfaces-1),stat=ier)
     if (ier /= 0) stop 'Error allocating array my_nb_interfaces'
 
-    if (COUPLE_WITH_EXTERNAL_CODE) open(124,file='Numglob2loc_elmn.txt')
+    if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) open(124,file='Numglob2loc_elmn.txt')
     !! To verify for NOBU version ==> all about 'Numglob2loc_elmn.txt' is unchanged at the moment
 
     ! writes out Database file for each partition

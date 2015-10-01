@@ -41,7 +41,10 @@
 
   use constants
 
-  use specfem_par, only: it_dsm, Veloc_dsm_boundary, Tract_dsm_boundary, Veloc_axisem, Tract_axisem
+  use specfem_par, only: it_dsm, Veloc_dsm_boundary, Tract_dsm_boundary, Veloc_axisem, Tract_axisem, &
+                         RECIPROCITY_AND_KH_INTEGRAL, Tract_axisem_time
+
+  use specfem_par_elastic, only: displ
 
   use shared_parameters, only: COUPLE_WITH_EXTERNAL_CODE, EXTERNAL_CODE_TYPE
 
@@ -104,6 +107,9 @@
 
       if (phase_is_inner .eqv. .false.) then
         call read_axisem_file(Veloc_axisem,Tract_axisem,num_abs_boundary_faces*NGLLSQUARE)
+
+        !! CD CD add this
+        if (RECIPROCITY_AND_KH_INTEGRAL) Tract_axisem_time(:,:,it) = Tract_axisem(:,:)
       endif
 
     endif
@@ -201,6 +207,14 @@
             b_absorb_field(2,igll,iface) = ty*jacobianw
             b_absorb_field(3,igll,iface) = tz*jacobianw
           endif !adjoint
+
+          !! CD CD add this
+          if (SAVE_RUN_BOUN_FOR_KH_INTEGRAL) then
+
+              write(237) b_absorb_field(1,igll,iface), b_absorb_field(2,igll,iface), b_absorb_field(3,igll,iface)
+              write(238) displ(1,iglob), displ(2,iglob), displ(3,iglob)
+
+          endif
 
         enddo
       endif ! ispec_is_elastic
