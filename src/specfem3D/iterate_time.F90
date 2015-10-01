@@ -66,7 +66,7 @@
     close(IOUT_ENERGY)
   endif
 
-  !! CD CD add this (temp) : 
+  !! CD CD add this (temp) :
   if (RECIPROCITY_AND_KH_INTEGRAL) open(unit=158,file='KH_integral',status='unknown')
 
   ! open the file in which we will store the energy curve
@@ -269,7 +269,7 @@
     endif
 
     !! CD CD add this : under validation option
-    if (RECIPROCITY_AND_KH_INTEGRAL) then 
+    if (RECIPROCITY_AND_KH_INTEGRAL) then
       if (.not. SAVE_RUN_BOUN_FOR_KH_INTEGRAL) then
 
         call surface_or_volume_integral_on_whole_domain()
@@ -290,7 +290,7 @@
   call it_print_elapsed_time()
 
   !! CD CD ad this :
-  if (RECIPROCITY_AND_KH_INTEGRAL) then 
+  if (RECIPROCITY_AND_KH_INTEGRAL) then
     close(158)
     close(237)
     close(238)

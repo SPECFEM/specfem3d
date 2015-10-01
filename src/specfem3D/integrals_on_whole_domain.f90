@@ -59,7 +59,7 @@
 
   if ( RECIPROCITY_AND_KH_INTEGRAL ) then
 
-    allocate(f_integrand_KH(3,NGLLSQUARE*num_abs_boundary_faces), stat=ier) 
+    allocate(f_integrand_KH(3,NGLLSQUARE*num_abs_boundary_faces), stat=ier)
 
     call integrand_for_computing_Kirchoff_Helmholtz_integral()
 
@@ -76,7 +76,7 @@
 
   if ( (Surf_or_vol_integral == 2) .or. (Surf_or_vol_integral == 3) ) then
 
-    allocate(integral_vol(3), stat=ier) 
+    allocate(integral_vol(3), stat=ier)
 
     ! calculates volume of all elements in mesh
     do ispec = 1, NSPEC_AB
@@ -126,7 +126,7 @@
 
   if ( (Surf_or_vol_integral == 1) .or. (Surf_or_vol_integral == 3) ) then
 
-    allocate(integral_boun(3), stat=ier) 
+    allocate(integral_boun(3), stat=ier)
 
     ! calculates integral on all the surface of the whole domain
 
@@ -232,13 +232,13 @@
       if ( it > itau .and. (it - itau <= NSTEP) ) then
 
         convol_displsem_tractaxisem(:,:) = convol_displsem_tractaxisem(:,:) + &
-                                           Displ_specfem_time(:,:, itau) * Tract_axisem_time(:,:, it - itau) * dt 
+                                           Displ_specfem_time(:,:, itau) * Tract_axisem_time(:,:, it - itau) * dt
 
         convol_tractsem_displaxisem(:,:) = convol_tractsem_displaxisem(:,:) + &
-                                           Tract_specfem_time(:,:, itau) * Displ_axisem_time(:,:, it - itau) * dt 
+                                           Tract_specfem_time(:,:, itau) * Displ_axisem_time(:,:, it - itau) * dt
 
       endif
-    enddo 
+    enddo
 
     f_integrand_KH(:,:) = convol_displsem_tractaxisem(:,:) - convol_tractsem_displaxisem(:,:)
 

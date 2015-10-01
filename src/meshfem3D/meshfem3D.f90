@@ -281,7 +281,7 @@
   call synchronize_all()
 
   ! if meshing a chunk of the Earth, call a specific internal mesher designed specifically for that
-  ! CD CD change this to have also the possibility to use a chunk without coupling 
+  ! CD CD change this to have also the possibility to use a chunk without coupling
   if (MESH_A_CHUNK_OF_THE_EARTH) then
     ! user output
     if (myrank == 0) then
