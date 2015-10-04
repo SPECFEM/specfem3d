@@ -208,10 +208,10 @@
         ! backward/reconstructed wavefields
         ! acoustic solver
         ! (needs to be done after elastic one)
-        if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_bpwf()
+        if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_backward()
         ! elastic solver
         ! (needs to be done first, before poroelastic one)
-        if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_bpwf()
+        if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_backward()
 
       else
         ! forward simulations

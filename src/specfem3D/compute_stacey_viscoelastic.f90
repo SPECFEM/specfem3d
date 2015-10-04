@@ -246,7 +246,7 @@
 
 ! absorbing boundary term for elastic media (Stacey conditions)
 
-  subroutine compute_stacey_viscoelastic_bpwf(NSPEC_AB, &
+  subroutine compute_stacey_viscoelastic_backward(NSPEC_AB, &
                         ibool,ispec_is_inner,phase_is_inner, &
                         abs_boundary_ijk,abs_boundary_ispec, &
                         num_abs_boundary_faces, &
@@ -287,7 +287,7 @@
 
   ! checks
   if (SIMULATION_TYPE /= 3) &
-    call exit_MPI(myrank,'error calling routine compute_stacey_viscoelastic_bpwf() with wrong SIMULATION_TYPE')
+    call exit_MPI(myrank,'error calling routine compute_stacey_viscoelastic_backward() with wrong SIMULATION_TYPE')
 
   ! checks if anything to do
   if (num_abs_boundary_faces == 0) return
@@ -324,7 +324,7 @@
     endif ! ispec_is_inner
   enddo
 
-  end subroutine compute_stacey_viscoelastic_bpwf
+  end subroutine compute_stacey_viscoelastic_backward
 
 !=============================================================================
 !
