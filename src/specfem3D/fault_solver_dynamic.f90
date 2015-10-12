@@ -194,7 +194,7 @@ subroutine transfer_faultdata_GPU()
 
     nspec = faults(ifault)%nspec
     nglob = faults(ifault)%nglob
-    
+
    call transfer_todevice_fault_data(Fault_pointer,ifault-1,nspec,nglob,faults(ifault)%D,&
    faults(ifault)%T0,faults(ifault)%T,faults(ifault)%B,faults(ifault)%R,faults(ifault)%V,&
    faults(ifault)%Z,faults(ifault)%invM1,faults(ifault)%invM2,faults(ifault)%ibulk1,faults(ifault)%ibulk2)
@@ -598,8 +598,8 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
       do i=1,bc%nglob
         Vf_new(i)=rtsafe(0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
                          bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
- 
-      enddo 
+
+      enddo
       ! second pass
       bc%rsf%theta = theta_old
       tmp_Vf(:) = 0.5_CUSTOM_REAL*(Vf_old(:) + Vf_new(:))
@@ -608,7 +608,7 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
         Vf_new(i)=rtsafe(0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
                          bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
 
-      
+
       enddo
 
       tnew = tStick - bc%Z*Vf_new
@@ -780,9 +780,9 @@ end function swf_mu
 
 !=====================================================================
 subroutine rsf_GPU_init()
-  
+
    use specfem_par, only : Fault_pointer
-   implicit none 
+   implicit none
    type(rsf_type),pointer :: f
    f => faults(1)%rsf
    if (associated(f)) then
@@ -987,7 +987,7 @@ contains
          f%theta(si) = stheta(ipar)
          f%C(si) = sC(ipar)
        enddo
-       
+
  end subroutine RSF_HETE_init
 
  subroutine MakeTPV10XBoundaryRateStrengtheningLayer()

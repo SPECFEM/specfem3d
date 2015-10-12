@@ -5,11 +5,11 @@
 #define MIN(a,b) a>b?b:a
 extern "C"
 void FC_FUNC_(initialize_fault_solver,
-	      INITIALIZE_FAULT_SOLVER)(long* Fault_solver,
-		                     int* num_of_faults,
-		                     realw* v_healing,
-		                     realw* v_rupt
-		                     )
+        INITIALIZE_FAULT_SOLVER)(long* Fault_solver,
+                         int* num_of_faults,
+                         realw* v_healing,
+                         realw* v_rupt
+                         )
 {
     Fault_solver_dynamics *Fdyn = (Fault_solver_dynamics*)malloc(sizeof(Fault_solver_dynamics));
 
@@ -70,23 +70,23 @@ void allocate_cuda_memory_test(void** d_array_addr_ptr,int size){
 extern "C"
 void FC_FUNC_(transfer_todevice_fault_data,
               TRANSFER_TODEVICE_FAULT_DATA)(long* Fault_pointer,
-		           int* fault_index,
-		           int* NSPEC_AB,
-		           int* NGLOB_AB,
-		           realw* D,
+               int* fault_index,
+               int* NSPEC_AB,
+               int* NGLOB_AB,
+               realw* D,
                            realw* T0,
                            realw* T,
-		           realw* B,
+               realw* B,
                            realw* R,
-		           realw* V0,
-		           realw* Z,
+               realw* V0,
+               realw* Z,
                            realw* invM1,
-                           realw* invM2,                            
+                           realw* invM2,
                            int* ibulk1,
                            int* ibulk2
                            )
 {
-	Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
+  Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
         Fault* Flt = Fsolver->faults;
         Flt->NSPEC_AB=*NSPEC_AB;
         Flt->NGLOB_AB=*NGLOB_AB;
@@ -94,38 +94,38 @@ void FC_FUNC_(transfer_todevice_fault_data,
         copy_todevice_realw_test((void **)&(Flt->B),B,*NGLOB_AB);
         copy_todevice_realw_test((void **)&(Flt->R),R,(*NGLOB_AB)*9);
         copy_todevice_realw_test((void **)&(Flt->Z),Z,(*NGLOB_AB));
-        copy_todevice_realw_test((void **)&(Flt->T0),T0,(*NGLOB_AB)*3);	
-        copy_todevice_int_test((void **)&(Flt->ibulk1),ibulk1,(*NGLOB_AB));	
-        copy_todevice_int_test((void **)&(Flt->ibulk2),ibulk2,(*NGLOB_AB));	
-        copy_todevice_realw_test((void **)&(Flt->V),V0,(*NGLOB_AB)*3);	
-        copy_todevice_realw_test((void **)&(Flt->D),D,(*NGLOB_AB)*3);	
+        copy_todevice_realw_test((void **)&(Flt->T0),T0,(*NGLOB_AB)*3);
+        copy_todevice_int_test((void **)&(Flt->ibulk1),ibulk1,(*NGLOB_AB));
+        copy_todevice_int_test((void **)&(Flt->ibulk2),ibulk2,(*NGLOB_AB));
+        copy_todevice_realw_test((void **)&(Flt->V),V0,(*NGLOB_AB)*3);
+        copy_todevice_realw_test((void **)&(Flt->D),D,(*NGLOB_AB)*3);
         copy_todevice_realw_test((void **)&(Flt->invM1),invM1,*NGLOB_AB);
         copy_todevice_realw_test((void **)&(Flt->invM2),invM2,*NGLOB_AB);
-        copy_todevice_realw_test((void **)&(Flt->T),T,(*NGLOB_AB)*3);	
-    
+        copy_todevice_realw_test((void **)&(Flt->T),T,(*NGLOB_AB)*3);
 
-	}
+
+  }
 
 }
 
 extern "C"
 void FC_FUNC_(transfer_tohost_fault_data,
               GET_FAULT)(long* Fault_pointer,
-		           int* fault_index,
-		           int* NSPEC_AB,
-		           int* NGLOB_AB,
-		           realw* D,
+               int* fault_index,
+               int* NSPEC_AB,
+               int* NGLOB_AB,
+               realw* D,
                            realw* V,
-		           realw* T
+               realw* T
                            )
 {
-	Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
+  Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
         Fault* Flt = Fsolver->faults;
         if(*NGLOB_AB>0){
-        copy_tohost_realw_test((void **)&(Flt->V),V,(*NGLOB_AB)*3);	
-        copy_tohost_realw_test((void **)&(Flt->D),D,(*NGLOB_AB)*3);	
-        copy_tohost_realw_test((void **)&(Flt->T),T,(*NGLOB_AB)*3);	
-	}
+        copy_tohost_realw_test((void **)&(Flt->V),V,(*NGLOB_AB)*3);
+        copy_tohost_realw_test((void **)&(Flt->D),D,(*NGLOB_AB)*3);
+        copy_tohost_realw_test((void **)&(Flt->T),T,(*NGLOB_AB)*3);
+  }
 
 }
 
@@ -134,17 +134,17 @@ extern "C"
 void FC_FUNC_(transfer_todevice_rsf_data,
               PREPARE_RSF)(long* Fault_pointer,
                           int *NGLOB_AB,
-            		  realw* V0,
-            		  realw* f0,
-            		  realw* V_init,
-            		  realw* a,
-            		  realw* b,
+                  realw* V0,
+                  realw* f0,
+                  realw* V_init,
+                  realw* a,
+                  realw* b,
                           realw* L,
-            		  realw* theta,
-            		  realw* T,
-            		  realw* C,
-            		  realw* fw,
-            		  realw* Vw)
+                  realw* theta,
+                  realw* T,
+                  realw* C,
+                  realw* fw,
+                  realw* Vw)
 {
 
         Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
@@ -168,17 +168,17 @@ extern "C"
 void FC_FUNC_(transfer_tohost_rsf_data,
               GET_RSF)(long* Fault_pointer,
                           int *NGLOB_AB,
-            		  realw* V0,
-            		  realw* f0,
-            		  realw* V_init,
-            		  realw* a,
-            		  realw* b,
+                  realw* V0,
+                  realw* f0,
+                  realw* V_init,
+                  realw* a,
+                  realw* b,
                           realw* L,
-            		  realw* theta,
-            		  realw* T,
-            		  realw* C,
-            		  realw* fw,
-            		  realw* Vw)
+                  realw* theta,
+                  realw* T,
+                  realw* C,
+                  realw* fw,
+                  realw* Vw)
 {
 
         Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
@@ -307,7 +307,7 @@ xmax = 1.E0/sqeps;
 }
 y = fabs(x);
 
-if (y <= 1.E0){ 
+if (y <= 1.E0){
 
 asinh_slatec = x;
 if (y > sqeps) asinh_slatec = x*(1.E0 )+csevl(2.E0*x*x-1.E0, asnhcs, nterms);
@@ -446,17 +446,17 @@ return theta_r;
 
 __device__ __forceinline__ void rotate(realw* R,
 
-		                               realw* vrx,
-		                               realw* vry,
-		                               realw* vrz,
-		                               int tx,
-		                               int isForward)
+                                   realw* vrx,
+                                   realw* vry,
+                                   realw* vrz,
+                                   int tx,
+                                   int isForward)
 {
 
-	realw vx,vy,vz;
-	vx = *vrx;
-	vy = *vry;
-	vz = *vrz;
+  realw vx,vy,vz;
+  vx = *vrx;
+  vy = *vry;
+  vz = *vrz;
 if(isForward)
 {
 
@@ -539,7 +539,7 @@ realw Tnew;
 
 
 tx = blockDim.x * blockIdx.x + threadIdx.x;  //calculate thread id
-if(tx>=NGLOB_AB) return;                        
+if(tx>=NGLOB_AB) return;
 
 
 
@@ -645,9 +645,9 @@ MxAccel[3*iglob2+2] = MxAccel[3*iglob2+2] - B[tx]*Tz;
 extern "C"
 void FC_FUNC_(fault_solver_gpu,
 FAULT_SOLVER_GPU)(long* Mesh_pointer,
-		long* Fault_pointer,
-		realw* dt,
-		int* myrank)
+    long* Fault_pointer,
+    realw* dt,
+    int* myrank)
 {
 Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
 Fault* Flt = Fsolver->faults;
@@ -662,7 +662,7 @@ if(Flt->NGLOB_AB>0){
 num_of_block = (int) (Flt->NGLOB_AB/128)+1;
 
    compute_dynamic_fault_cuda<<<num_of_block,128>>>(
-  
+
  mp->d_displ, //this is a mesh vector
  mp->d_veloc,
  mp->d_accel,

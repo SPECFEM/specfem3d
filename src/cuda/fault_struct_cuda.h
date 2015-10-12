@@ -39,31 +39,31 @@ typedef struct fault_ {
   // mesh resolution
   int NSPEC_AB;
   int NGLOB_AB;
-  
+
   realw *T0, *T, *B, *V, *D;
   realw *R, *invM1, *invM2, *Z ;
   int *ibulk1,*ibulk2;
 }Fault ;
 
 typedef struct swf_type_{
-	int kind;
-	int healing ;
-	realw* Dc,*mus,*mud,*theta, *T, *C;
+  int kind;
+  int healing ;
+  realw* Dc,*mus,*mud,*theta, *T, *C;
 }Swf_type;
 
 typedef struct rsf_type_{
-	int StateLaw ; // By default using aging law
-	realw *V0,*f0,*L,*V_init,*a,*b,*theta,*T,*C,*fw,*Vw;
+  int StateLaw ; // By default using aging law
+  realw *V0,*f0,*L,*V_init,*a,*b,*theta,*T,*C,*fw,*Vw;
 }Rsf_type;
- 
+
 typedef struct fault_solver_dynamics_{
-	Fault* faults;
-	realw v_healing;
-	realw v_rupt;
+  Fault* faults;
+  realw v_healing;
+  realw v_rupt;
         int NTOUT,NSNAP;
         int Nbfaults;
-        Swf_type swf; 
+        Swf_type swf;
         Rsf_type rsf;
 }Fault_solver_dynamics;
 
- 
+
