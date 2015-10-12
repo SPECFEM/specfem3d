@@ -58,6 +58,8 @@ module specfem_par
 ! CUDA mesh pointer<->integer wrapper
   integer(kind=8) :: Mesh_pointer
 
+  integer(kind=8) :: Fault_pointer
+
 ! use integer array to store topography values
   integer :: NX_TOPO,NY_TOPO
   integer, dimension(:,:), allocatable :: itopo_bathy

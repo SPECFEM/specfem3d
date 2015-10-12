@@ -56,6 +56,9 @@ module fault_solver_dynamic
   !Number of time steps defined by the user : NTOUT
   integer, save                :: NTOUT,NSNAP
 
+  !Number of faults
+  integer, save                :: Nfaults
+
   logical, save :: SIMULATION_TYPE_DYN = .false.
 
   logical, save :: TPV16 = .false.   !TPV16 for heterogeneous in slip weakening
@@ -70,7 +73,8 @@ module fault_solver_dynamic
 
   real(kind=CUSTOM_REAL), allocatable, save :: Kelvin_Voigt_eta(:)
 
-  public :: BC_DYNFLT_init, BC_DYNFLT_set3d_all, Kelvin_Voigt_eta, SIMULATION_TYPE_DYN
+  public :: BC_DYNFLT_init, BC_DYNFLT_set3d_all, Kelvin_Voigt_eta, &
+  SIMULATION_TYPE_DYN, transfer_faultdata_GPU, rsf_GPU_init, synchronize_GPU
 
 
 contains
@@ -145,6 +149,7 @@ subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
   read(IIN_PAR,*) V_RUPT
 
   read(IIN_BIN) nbfaults ! should be the same as in IIN_PAR
+  Nfaults = nbfaults
   allocate( faults(nbfaults) )
   dt = real(DTglobal)
   read(IIN_PAR,nml=RUPTURE_SWITCHES,end=110)
@@ -178,6 +183,24 @@ subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
   ! WARNING TO DO: should be an MPI abort
 
 end subroutine BC_DYNFLT_init
+
+subroutine transfer_faultdata_GPU()
+   use specfem_par ,only: Fault_pointer
+
+   integer :: ifault,nspec,nglob
+
+   call initialize_fault_solver(Fault_pointer,Nfaults,V_HEALING,V_RUPT)
+   do ifault = 1,Nfaults
+
+    nspec = faults(ifault)%nspec
+    nglob = faults(ifault)%nglob
+    
+   call transfer_todevice_fault_data(Fault_pointer,ifault-1,nspec,nglob,faults(ifault)%D,&
+   faults(ifault)%T0,faults(ifault)%T,faults(ifault)%B,faults(ifault)%R,faults(ifault)%V,&
+   faults(ifault)%Z,faults(ifault)%invM1,faults(ifault)%invM2,faults(ifault)%ibulk1,faults(ifault)%ibulk2)
+
+   enddo
+end subroutine transfer_faultdata_GPU
 
 !---------------------------------------------------------------------
 
@@ -243,7 +266,7 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
     endif
 
   endif
-
+  bc%T=bc%T0
   if (RATE_AND_STATE) then
     call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt,8,iflt)
     if (bc%dataT%npoin>0) then
@@ -575,8 +598,8 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
       do i=1,bc%nglob
         Vf_new(i)=rtsafe(0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
                          bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
-      enddo
-
+ 
+      enddo 
       ! second pass
       bc%rsf%theta = theta_old
       tmp_Vf(:) = 0.5_CUSTOM_REAL*(Vf_old(:) + Vf_new(:))
@@ -584,6 +607,8 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
       do i=1,bc%nglob
         Vf_new(i)=rtsafe(0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
                          bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
+
+      
       enddo
 
       tnew = tStick - bc%Z*Vf_new
@@ -612,12 +637,12 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
     bc%D = dD
     bc%V = dV + half_dt*dA
 
+
     ! Rotate tractions back to (x,y,z) frame
     T = rotate(bc,T,-1)
 
     ! Add boundary term B*T to M*a
     call add_BT(bc,MxA,T)
-
     !-- intermediate storage of outputs --
     Vf_new = sqrt(bc%V(1,:)*bc%V(1,:)+bc%V(2,:)*bc%V(2,:))
     if (.not. RATE_AND_STATE) then
@@ -754,6 +779,19 @@ function swf_mu(f) result(mu)
 end function swf_mu
 
 !=====================================================================
+subroutine rsf_GPU_init()
+  
+   use specfem_par, only : Fault_pointer
+   implicit none 
+   type(rsf_type),pointer :: f
+   f => faults(1)%rsf
+   if (associated(f)) then
+   call transfer_todevice_rsf_data(Fault_pointer,faults(1)%nglob,f%V0,f%f0,f%V_init,f%a,f%b,f%L,f%theta,f%T,f%C,f%fw,f%Vw)
+   endif
+
+end subroutine rsf_GPU_init
+
+
 
 subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
 
@@ -949,7 +987,7 @@ contains
          f%theta(si) = stheta(ipar)
          f%C(si) = sC(ipar)
        enddo
-
+       
  end subroutine RSF_HETE_init
 
  subroutine MakeTPV10XBoundaryRateStrengtheningLayer()
@@ -1012,7 +1050,7 @@ contains
 
 
  end subroutine MakeTPV10XBoundaryRateStrengtheningLayer
- end subroutine rsf_init
+end subroutine rsf_init
 
 !---------------------------------------------------------------------
 !!$! Rate and state friction coefficient
@@ -1503,6 +1541,19 @@ function rtsafe(x1,x2,xacc,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
   return
 
 end function rtsafe
+
+subroutine synchronize_GPU(it)
+
+use specfem_par,only: Fault_pointer,myrank
+
+integer :: it
+
+call transfer_tohost_fault_data(Fault_pointer,0,faults(1)%nspec,faults(1)%nglob,faults(1)%D,faults(1)%V,faults(1)%T)
+
+call gather_dataXZ(faults(1))
+if(myrank == 0 )call write_dataXZ(faults(1)%dataXZ_all,it,1)
+
+end subroutine synchronize_GPU
 
 end module fault_solver_dynamic
 

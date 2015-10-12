@@ -704,3 +704,61 @@ void FC_FUNC_(transfer_station_ac_from_device,
                                                 int* ispec_selected_source,
                                                 int* h_ibool) {}
 
+
+
+void FC_FUNC_(initialize_fault_solver,
+              INITIALIZE_FAULT_SOLVER)(long** Fault_solver,
+		                     int* num_of_faults,
+		                     realw* v_healing,
+		                     realw* v_rupt
+		                     ){}
+
+void FC_FUNC_(transfer_todevice_fault_data,
+              TRANSFER_TODEVICE_FAULT_DATA)(long* Fault_pointer,
+		           int* fault_index,
+		           int* NSPEC_AB,
+		           int* NGLOB_AB,
+		           realw* D,
+                           realw* T0,
+                           realw* T,
+		           realw* B,
+                           realw* R,
+		           realw* V0,
+		           realw* Z,
+                           realw* invM1,
+                           realw* invM2,                            
+                           int* ibulk1,
+                           int* ibulk2
+                           ){}
+
+void FC_FUNC_(transfer_todevice_rsf_data,
+              TRANSFER_TODEVICE_RSF_DATA)(long* Fault_pointer,
+                          int *NGLOB_AB,
+            		  realw* V0,
+            		  realw* f0,
+            		  realw* V_init,
+            		  realw* a,
+            		  realw* b,
+                          realw* L,
+            		  realw* theta,
+            		  realw* T,
+            		  realw* C,
+            		  realw* fw,
+            		  realw* Vw){}
+
+void FC_FUNC_(transfer_tohost_fault_data,
+              TRANSFER_TOHOST_FAULT_DATA)(long* Fault_pointer,
+		           int* fault_index,
+		           int* NSPEC_AB,
+		           int* NGLOB_AB,
+		           realw* D,
+                           realw* V,
+		           realw* T
+                           ){}
+
+void FC_FUNC_(fault_solver_gpu,
+              FAULT_SOLVER_GPU)(long** Mesh_pointer,
+                                long** Fault_pointer,
+                                realw* dt,
+                                int* myrank){}
+
