@@ -54,6 +54,7 @@ cuda_OBJECTS = \
 	$O/transfer_fields_cuda.cuda.o \
 	$O/update_displacement_cuda.cuda.o \
 	$O/write_seismograms_cuda.cuda.o \
+        $O/fault_solver_dynamics.cuda.o \
 	$(EMPTY_MACRO)
 
 cuda_STUBS = \
