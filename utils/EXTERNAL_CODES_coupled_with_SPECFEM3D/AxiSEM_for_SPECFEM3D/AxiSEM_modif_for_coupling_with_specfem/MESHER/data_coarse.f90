@@ -19,6 +19,7 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
+!=========================================================================================
 module data_coarse
   implicit none
 
@@ -29,4 +30,6 @@ module data_coarse
 
   ! central region :
   integer, dimension(:), allocatable :: iclevc
+
 end module data_coarse
+!=========================================================================================

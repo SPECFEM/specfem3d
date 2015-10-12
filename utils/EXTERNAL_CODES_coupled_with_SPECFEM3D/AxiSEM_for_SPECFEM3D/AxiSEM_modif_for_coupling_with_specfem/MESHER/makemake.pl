@@ -59,12 +59,17 @@ print MAKEFILE "\n\n";
 #
 print MAKEFILE "ifeq (\$(strip \$(USE_NETCDF)),true)\n";
 print MAKEFILE "   FFLAGS += -Dunc\n";
-print MAKEFILE "   LIBS = -L \$(strip \$(NETCDF_PATH))/lib -lnetcdff -Wl,-rpath,\$(strip \$(NETCDF_PATH))/lib\n";
-print MAKEFILE "   INCLUDE = -I \$(strip \$(NETCDF_PATH))/include\n";
+print MAKEFILE "   ifdef NETCDF_PATH\n";
+print MAKEFILE "       LIBS = -L \$(strip \$(NETCDF_PATH))/lib -lnetcdff -Wl,-rpath,\$(strip \$(NETCDF_PATH))/lib\n";
+print MAKEFILE "       INCLUDE = -I \$(strip \$(NETCDF_PATH))/include\n";
+print MAKEFILE "   else\n";
+print MAKEFILE "       LIBS = -lnetcdff\n";
+print MAKEFILE "       INCLUDE = -I /usr/include\n";
+print MAKEFILE "   endif\n";
 print MAKEFILE "else\n";
 print MAKEFILE "   LIBS = \n";
-print MAKEFILE "   INCLUDE =\n";
-print MAKEFILE "endif\n";
+print MAKEFILE "   INCLUDE = \n";
+print MAKEFILE "endif\n\n";
 
 
 print MAKEFILE "\n\n";

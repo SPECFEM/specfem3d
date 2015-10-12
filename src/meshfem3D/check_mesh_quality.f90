@@ -87,8 +87,10 @@
   integer,dimension(1) :: tmp_ispec_max_skewness,tmp_ispec_max_skewness_MPI
 
   ! debug: for vtk output
+  character(len=MAX_STRING_LEN) :: filename
   real(kind=CUSTOM_REAL),dimension(:),allocatable :: tmp1
   integer:: ier,ipoin
+
 
   if (myrank == 0) then
      write(IMAIN,*) '**************************'
@@ -292,7 +294,11 @@
     call flush_IMAIN()
 
     total_percent = 0.
-    open(unit=14,file=OUTPUT_FILES(1:len_trim(OUTPUT_FILES))//'mesh_quality_histogram.txt',status='unknown')
+
+    ! histogram data file
+    filename = OUTPUT_FILES(1:len_trim(OUTPUT_FILES))//'mesh_quality_histogram.txt'
+
+    open(unit=14,file=trim(filename),status='unknown')
     do iclass = 0,NCLASS-1
       current_percent = 100.*dble(classes_skewnessMPI(iclass))/dble(NSPEC_ALL_SLICES)
       total_percent = total_percent + current_percent
@@ -303,8 +309,9 @@
     close(14)
 
     ! create script for Gnuplot histogram file
-    open(unit=14,file=OUTPUT_FILES(1:len_trim(OUTPUT_FILES))// &
-         'plot_mesh_quality_histogram.gnu',status='unknown')
+    filename = OUTPUT_FILES(1:len_trim(OUTPUT_FILES))//'plot_mesh_quality_histogram.gnu'
+
+    open(unit=14,file=trim(filename),status='unknown')
     write(14,*) 'set term wxt'
     write(14,*) '#set term gif'
     write(14,*) '#set output "mesh_quality_histogram.gif"'
@@ -339,44 +346,52 @@
 
   ! debug: for vtk output
   if (CREATE_VTK_FILES) then
+    filename = prname(1:len_trim(prname))//'skewness.vtk'
+
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*) 'plotting skewness to VTK-file: ',trim(filename)
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
+
     ! vtk file output
-    open(66,file=prname(1:len_trim(prname))//'skewness.vtk',status='unknown')
-    write(66,'(a)') '# vtk DataFile Version 3.1'
-    write(66,'(a)') 'material model VTK file'
-    write(66,'(a)') 'ASCII'
-    write(66,'(a)') 'DATASET UNSTRUCTURED_GRID'
-    write(66, '(a,i12,a)') 'POINTS ', nglob, ' float'
+    open(IOVTK,file=trim(filename),status='unknown')
+    write(IOVTK,'(a)') '# vtk DataFile Version 3.1'
+    write(IOVTK,'(a)') 'material model VTK file'
+    write(IOVTK,'(a)') 'ASCII'
+    write(IOVTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
+    write(IOVTK, '(a,i12,a)') 'POINTS ', nglob, ' float'
     do ipoin = 1,nglob
-      write(66,*) sngl(x(ipoin)),sngl(y(ipoin)),sngl(z(ipoin))
+      write(IOVTK,*) sngl(x(ipoin)),sngl(y(ipoin)),sngl(z(ipoin))
     enddo
-    write(66,*) ""
+    write(IOVTK,*) ""
 
     ! note: indices for vtk start at 0
-    write(66,'(a,i12,i12)') "CELLS ",nspec,nspec*9
+    write(IOVTK,'(a,i12,i12)') "CELLS ",nspec,nspec*9
     do ispec=1,nspec
-      write(66,'(9i12)') 8, &
+      write(IOVTK,'(9i12)') 8, &
             ibool(1,ispec)-1,ibool(2,ispec)-1,ibool(4,ispec)-1,ibool(3,ispec)-1,&
             ibool(5,ispec)-1,ibool(6,ispec)-1,ibool(8,ispec)-1,ibool(7,ispec)-1
     enddo
-    write(66,*) ""
+    write(IOVTK,*) ""
 
     ! type: hexahedra
-    write(66,'(a,i12)') "CELL_TYPES ",nspec
-    write(66,'(6i12)') (12,ispec=1,nspec)
-    write(66,*) ""
+    write(IOVTK,'(a,i12)') "CELL_TYPES ",nspec
+    write(IOVTK,'(6i12)') (12,ispec=1,nspec)
+    write(IOVTK,*) ""
 
-    write(66,'(a,i12)') "CELL_DATA ",nspec
-    write(66,'(a)') "SCALARS skewness float"
-    write(66,'(a)') "LOOKUP_TABLE default"
+    write(IOVTK,'(a,i12)') "CELL_DATA ",nspec
+    write(IOVTK,'(a)') "SCALARS skewness float"
+    write(IOVTK,'(a)') "LOOKUP_TABLE default"
     do ispec = 1,nspec
-      write(66,*) tmp1(ispec)
+      write(IOVTK,*) tmp1(ispec)
     enddo
-    write(66,*) ""
-    close(66)
+    write(IOVTK,*) ""
+    close(IOVTK)
 
     deallocate(tmp1)
   endif
-
 
   end subroutine check_mesh_quality
 
@@ -522,17 +537,17 @@
         norm_A = sqrt(vectorA_x**2 + vectorA_y**2 + vectorA_z**2)
         norm_B = sqrt(vectorB_x**2 + vectorB_y**2 + vectorB_z**2)
 
-! angle formed by the two vectors
-         argument_of_arccos = (vectorA_x*vectorB_x + vectorA_y*vectorB_y + vectorA_z*vectorB_z) / (norm_A * norm_B)
+        ! angle formed by the two vectors
+        argument_of_arccos = (vectorA_x*vectorB_x + vectorA_y*vectorB_y + vectorA_z*vectorB_z) / (norm_A * norm_B)
 
-! compute equiangle skewness
-         if(abs(argument_of_arccos) <= 0.9999999d0) then
+        ! compute equiangle skewness
+        if(abs(argument_of_arccos) <= 0.9999999d0) then
            angle_vectors = dacos(argument_of_arccos)
            equiangle_skewness = max(equiangle_skewness,dabs(2.d0 * angle_vectors - PI) / PI)
-         else
+        else
            angle_vectors = 0.d0
            equiangle_skewness = 1.d0
-         endif
+        endif
 
         ! compute min and max size of an edge
         dist = sqrt(vectorA_x**2 + vectorA_y**2 + vectorA_z**2)

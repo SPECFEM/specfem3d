@@ -1,0 +1,72 @@
+\documentclass{standalone}
+
+\usepackage{amsmath}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.3}
+
+% Latex generated graphics
+\usepackage{tikz}
+
+% tikz libraries
+\usetikzlibrary{trees}
+
+%\usetikzlibrary{positioning}
+%\usetikzlibrary{shapes}
+%\usetikzlibrary{calc}
+%\usetikzlibrary{backgrounds}
+%\usetikzlibrary{fit}
+%\usetikzlibrary{patterns}
+
+%\tikzset{timed/.style=dashed}
+
+% colors
+\usepackage{color}
+\definecolor{myred}{rgb}{0.5,0.2,0.2}
+
+\begin{document}
+
+\tikzstyle{every node}=[draw=black,thick,anchor=west,inner sep=2pt,minimum size=1pt]
+
+\tikzstyle{links}=[draw=red,fill=myred!20]
+%\tikzstyle{file}=[dashed,fill=gray!50]
+\tikzstyle{file}=[draw=none]
+\tikzstyle{missing}=[draw=white]
+
+\begin{tikzpicture}[%
+  grow via three points={one child at (0.5,-0.7) and
+  two children at (0.5,-0.7) and (0.5,-1.4)},
+  edge from parent path={(\tikzparentnode.south) |- (\tikzchildnode.west)}
+  ]
+  \node {TOMO\_ROOT\_DIR}
+    child { node {bin}}
+    child { node [file] {kernels\_list.txt}}
+    child { node {INPUT\_KERNELS}
+        child { node [links] {event1\_DATABASES\_MPI}
+          child { node [file] {proc***\_alpha\_kernel.bin}}
+          child { node [file] {proc***\_beta\_kernel.bin}}
+          child { node [file] {proc***\_rho\_kernel.bin}}
+          child { node [file] {proc***\_hess\_kernel.bin}}
+      }
+     child [missing] {}
+     child [missing] {}
+     child [missing] {}
+     child [missing] {}
+     child { node [links] {event2\_DATABASES\_MPI}
+       child { node [file] {....}}
+      }
+      child [missing] {}
+      child { node [links] {....}}
+    }
+    child [missing] {}
+    child [missing] {}
+    child [missing] {}
+    child [missing] {}
+    child [missing] {}
+    child [missing] {}
+    child [missing] {}
+    child [missing] {}
+    child { node {OUTPUT\_SUM}};
+\end{tikzpicture}
+
+\end{document}
+

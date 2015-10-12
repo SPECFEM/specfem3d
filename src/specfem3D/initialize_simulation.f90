@@ -123,8 +123,8 @@
   ! reads in numbers of spectral elements and points for the part of the mesh handled by this process
   call create_name_database(prname,myrank,LOCAL_PATH)
 
-! for coupling with DSM !! To verify for NOBU version
-  if (COUPLE_WITH_EXTERNAL_CODE .and. old_DSM_coupling_from_Vadim) call create_name_database(dsmname,myrank,TRACTION_PATH)
+! for coupling with EXTERNAL CODE !! CD CD modify here
+  if (COUPLE_WITH_EXTERNAL_CODE .or. SAVE_RUN_BOUN_FOR_KH_INTEGRAL) call create_name_database(dsmname,myrank,TRACTION_PATH)
 
 ! read the value of NSPEC_AB and NGLOB_AB because we need it to define some array sizes below
   if (ADIOS_FOR_MESH) then

@@ -27,30 +27,30 @@
 
 ## compilation directories
 S := ${S_TOP}/src/tomography/postprocess_sensitivity_kernels
-$(postprocess_OBJECTS): S := ${S_TOP}/src/tomography/postprocess_sensitivity_kernels
+$(tomography/postprocess_sensitivity_kernels_OBJECTS): S := ${S_TOP}/src/tomography/postprocess_sensitivity_kernels
 
 #######################################
 
-postprocess_MODULES = \
-	$(FC_MODDIR)/postprocess_par.$(FC_MODEXT) \
-	$(EMPTY_MACRO)
-
-postprocess_TARGETS = \
+tomography/postprocess_sensitivity_kernels_TARGETS = \
 	$E/xclip_sem \
 	$E/xcombine_sem \
 	$E/xsmooth_sem \
 	$(EMPTY_MACRO)
 
-postprocess_OBJECTS = \
+tomography/postprocess_sensitivity_kernels_OBJECTS = \
 	$(xclip_sem_OBJECTS) \
 	$(xcombine_sem_OBJECTS) \
 	$(xsmooth_sem_OBJECTS) \
 	$(EMPTY_MACRO)
 
-postprocess_SHARED_OBJECTS = \
+tomography/postprocess_sensitivity_kernels_SHARED_OBJECTS = \
 	$(xclip_sem_SHARED_OBJECTS) \
 	$(xcombine_sem_SHARED_OBJECTS) \
 	$(xsmooth_sem_SHARED_OBJECTS) \
+	$(EMPTY_MACRO)
+
+tomography/postprocess_sensitivity_kernels_MODULES = \
+	$(FC_MODDIR)/postprocess_par.$(FC_MODEXT) \
 	$(EMPTY_MACRO)
 
 ####
@@ -60,8 +60,11 @@ postprocess_SHARED_OBJECTS = \
 .PHONY: postprocess
 
 
-postprocess: $(postprocess_TARGETS)
+postprocess: $(tomography/postprocess_sensitivity_kernels_TARGETS)
 
+postprocess_sensitivity_kernels: postprocess
+
+tomography/postprocess_sensitivity_kernels: postprocess
 
 ### single targets
 

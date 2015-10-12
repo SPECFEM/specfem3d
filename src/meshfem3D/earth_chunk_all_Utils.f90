@@ -723,9 +723,9 @@ end subroutine write_recdepth_dsm
       !write(28,*) xstore(1,jgll,NGLLZ), ystore(1,jgll,NGLLZ), zstore(1,jgll,NGLLZ)!x,y !long/deg2rad,lati/deg2rad
       write(28,*) long/deg2rad,lati/deg2rad !,rayon/1000
       !write(38,'()') 1,(NGLLY-1)*jy_elm+jgll
-       write(49,*)
-       write(49,*)     vector_ori(:)
-       write(49,*)     vector_rotated(:)
+      ! write(49,*)
+      ! write(49,*)     vector_ori(:)
+      ! write(49,*)     vector_rotated(:)
 
   enddo
 
@@ -1063,11 +1063,11 @@ end subroutine write_recdepth_dsm
   R(3,2)=(uy*uz*(1.d0-c)+ux*s)
   R(3,3)=(uz**2+(1.d0-uz**2)*c)
 
-  write(49,*) ' MATRICE ROTATION '
-  write(49,*) R(1,:)
-  write(49,*) R(2,:)
-  write(49,*) R(3,:)
-  write(49,*)
+  !write(49,*) ' MATRICE ROTATION '
+  !write(49,*) R(1,:)
+  !write(49,*) R(2,:)
+  !write(49,*) R(3,:)
+  !write(49,*)
 
   end subroutine rotation_matrix_axe
 
@@ -1117,11 +1117,11 @@ end subroutine write_recdepth_dsm
      enddo
   enddo
 
-  write(49,*) ' MATRICE ROTATION COMPLETE '
-  write(49,*) R(1,:)
-  write(49,*) R(2,:)
-  write(49,*) R(3,:)
-  write(49,*)
+  !write(49,*) ' MATRICE ROTATION COMPLETE '
+  !write(49,*) R(1,:)
+  !write(49,*) R(2,:)
+  !write(49,*) R(3,:)
+  !write(49,*)
 
   end subroutine compose4matrix
 
@@ -1357,235 +1357,24 @@ end subroutine StorePointZ
  end subroutine FindLayer_for_earth_chunk_mesh
 
 
+!! VM VM add this for Axisem coupling
+subroutine  find_layer_in_axisem_model(i,u,r,z,n)
+   implicit none
+   integer i,n,u(5)
+   double precision z(n),r(5)
 
-
-
-!=====================================================================
-
-  subroutine get_global1(nspec,xp,yp,zp,iglob,loc,ifseg,nglob,npointot,NGNOD,UTM_X_MIN,UTM_X_MAX)
-
-! this routine MUST be in double precision to avoid sensitivity
-! to roundoff errors in the coordinates of the points
-
-! leave sorting subroutines in same source file to allow for inlining
-
-  implicit none
-
-  integer NGNOD
-
-  integer npointot
-  integer nspec,nglob
-  integer iglob(npointot),loc(npointot)
-  logical ifseg(npointot)
-  double precision xp(npointot),yp(npointot),zp(npointot)
-  double precision UTM_X_MIN,UTM_X_MAX
-
-  integer ispec,i,j
-  integer ieoff,ilocnum,nseg,ioff,iseg,ig
-
-  integer, dimension(:), allocatable :: ind,ninseg,iwork
-  double precision, dimension(:), allocatable :: work
-
-! geometry tolerance parameter to calculate number of independent grid points
-! small value for double precision and to avoid sensitivity to roundoff
-  double precision SMALLVALTOL
-
-! define geometrical tolerance based upon typical size of the model
-  SMALLVALTOL = 1.d-10 * dabs(UTM_X_MAX - UTM_X_MIN)
-  write(*,*) dabs(UTM_X_MAX - UTM_X_MIN)
-  write(*,*) ' SMALLVALTOL  ',SMALLVALTOL
-! dynamically allocate arrays
-  allocate(ind(npointot))
-  allocate(ninseg(npointot))
-  allocate(iwork(npointot))
-  allocate(work(npointot))
-
-! establish initial pointers (!! VM changed NGLLCUBE (as in Specfem3D Basin Version 1.1) to NGNOD !!)
-  do ispec=1,nspec
-    ieoff = NGNOD * (ispec - 1)
-    do ilocnum = 1,NGNOD
-      loc(ilocnum + ieoff) = ilocnum + ieoff
-    enddo
-  enddo
-
-  ifseg(:)  = .false.
-  nseg      = 1
-  ifseg(1)  = .true.
-  ninseg(1) = npointot
-
-  do j=1,3 !,NDIM
-
-! sort within each segment
-  ioff = 1
-
-  do iseg=1,nseg
-
-    if (j == 1) then
-      call rank(xp(ioff),ind,ninseg(iseg))
-    else if (j == 2) then
-      call rank(yp(ioff),ind,ninseg(iseg))
-    else
-      call rank(zp(ioff),ind,ninseg(iseg))
-    endif
-
-    call swap_all(loc(ioff),xp(ioff),yp(ioff),zp(ioff),iwork,work,ind,ninseg(iseg))
-
-    ioff = ioff + ninseg(iseg)
-
-  enddo
-
-! check for jumps in current coordinate
-! compare the coordinates of the points within a small tolerance
-  if (j == 1) then
-
-    do i=2,npointot
-      if (dabs(xp(i)-xp(i-1)) > SMALLVALTOL) ifseg(i) = .true.
-    enddo
-
-  else if (j == 2) then
-
-    do i=2,npointot
-      if (dabs(yp(i)-yp(i-1)) > SMALLVALTOL) ifseg(i) = .true.
-    enddo
-
-  else
-
-    do i=2,npointot
-      if (dabs(zp(i)-zp(i-1)) > SMALLVALTOL) ifseg(i) = .true.
-    enddo
-
-  endif
-
-! count up number of different segments
-  nseg = 0
-
-  do i=1,npointot
-    if (ifseg(i)) then
-      nseg = nseg + 1
-      ninseg(nseg) = 1
-    else
-      ninseg(nseg) = ninseg(nseg) + 1
-    endif
-  enddo
-  enddo
-
-! assign global node numbers (now sorted lexicographically)
-  ig = 0
-
-  do i=1,npointot
-    if (ifseg(i)) ig = ig + 1
-
-    iglob(loc(i)) = ig
-  enddo
-
-  nglob = ig
-
-! deallocate arrays
-  deallocate(ind)
-  deallocate(ninseg)
-  deallocate(iwork)
-  deallocate(work)
-
-  end subroutine get_global1
-
-
-! -----------------------------------
-
-! sorting routines put in same file to allow for inlining
-
-  subroutine rank(A,IND,N)
-!
-! Use Heap Sort (Numerical Recipes)
-!
-  implicit none
-
-  integer n
-  double precision A(n)
-  integer IND(n)
-
-  integer i,j,l,ir,indx
-  double precision q
-
-  do j=1,n
-   IND(j)=j
-  enddo
-
-  if (n == 1) return
-
-  L=n/2+1
-  ir=n
-  100 CONTINUE
-   IF (l>1) THEN
-      l=l-1
-      indx=ind(l)
-      q=a(indx)
-   ELSE
-      indx=ind(ir)
-      q=a(indx)
-      ind(ir)=ind(1)
-      ir=ir-1
-      if (ir == 1) then
-         ind(1)=indx
-         return
-      endif
+   if (r(3)>z(n) .or. r(3)<z(1)) then
+      write(*,*) 'STOP :: point ouside grid'
+      stop
    endif
-   i=l
-   j=l+l
-  200    CONTINUE
-   IF (J <= IR) THEN
-      IF (J<IR) THEN
-         IF (A(IND(j))<A(IND(j+1))) j=j+1
-      endif
-      IF (q<A(IND(j))) THEN
-         IND(I)=IND(J)
-         I=J
-         J=J+J
-      ELSE
-         J=IR+1
-      endif
-   goto 200
-   endif
-   IND(I)=INDX
-  goto 100
-  end subroutine rank
+   i = 1
+   do while (r(3) > z(i))
+      i = i + 1
+   enddo
 
-! ------------------------------------------------------------------
+   u(:)=0
 
-  subroutine swap_all(IA,A,B,C,IW,W,ind,n)
-!
-! swap arrays IA, A, B and C according to addressing in array IND
-!
-  implicit none
-
-  integer n
-
-  integer IND(n)
-  integer IA(n),IW(n)
-  double precision A(n),B(n),C(n),W(n)
-
-  integer i
-
-  IW(:) = IA(:)
-  W(:) = A(:)
-
-  do i=1,n
-    IA(i)=IW(ind(i))
-    A(i)=W(ind(i))
-  enddo
-
-  W(:) = B(:)
-
-  do i=1,n
-    B(i)=W(ind(i))
-  enddo
-
-  W(:) = C(:)
-
-  do i=1,n
-    C(i)=W(ind(i))
-  enddo
-
-  end subroutine swap_all
+end subroutine find_layer_in_axisem_model
 
 
 !!$!=====================================================================

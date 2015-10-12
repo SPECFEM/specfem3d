@@ -46,7 +46,9 @@ meshfem3D_OBJECTS = \
 	$O/earth_chunk_HEX27_Mesher.mesh.o \
 	$O/earth_chunk_all_Utils.mesh.o \
 	$O/compute_parameters.mesh.o \
-	$O/create_regions_mesh.mesh.o \
+	$O/create_meshfem_mesh.mesh.o \
+	$O/create_CPML_regions.mesh.o \
+	$O/create_interfaces_mesh.mesh.o \
 	$O/create_visual_files.mesh.o \
 	$O/define_subregions.mesh.o \
 	$O/define_subregions_heuristic.mesh.o \
@@ -55,6 +57,7 @@ meshfem3D_OBJECTS = \
 	$O/get_MPI_cutplanes_eta.mesh.o \
 	$O/get_MPI_cutplanes_xi.mesh.o \
 	$O/meshfem3D.mesh.o \
+	$O/meshfem3D_par.mesh.o \
 	$O/program_meshfem3D.mesh.o \
 	$O/read_mesh_parameter_file.mesh.o \
 	$O/read_value_mesh_parameters.mesh.o \
@@ -64,8 +67,8 @@ meshfem3D_OBJECTS = \
 	$(EMPTY_MACRO)
 
 meshfem3D_MODULES = \
-	$(FC_MODDIR)/createregmesh.$(FC_MODEXT) \
-	$(FC_MODDIR)/readparfile.$(FC_MODEXT) \
+	$(FC_MODDIR)/constants_meshfem3d.$(FC_MODEXT) \
+	$(FC_MODDIR)/meshfem3d_par.$(FC_MODEXT) \
 	$(EMPTY_MACRO)
 
 meshfem3D_SHARED_OBJECTS = \
@@ -141,13 +144,18 @@ $E/xmeshfem3D: $(XMESHFEM_OBJECTS)
 ### Module dependencies
 ###
 
-$O/meshfem3D.mesh.o: $O/create_regions_mesh.mesh.o $O/read_mesh_parameter_file.mesh.o
+
+$O/meshfem3D.mesh.o: $O/meshfem3D_par.mesh.o
+$O/create_meshfem_mesh.mesh.o: $O/meshfem3D_par.mesh.o
+$O/create_CPML_regions.mesh.o: $O/meshfem3D_par.mesh.o
+$O/create_interfaces_mesh.mesh.o: $O/meshfem3D_par.mesh.o
+$O/read_mesh_parameter_file.mesh.o: $O/meshfem3D_par.mesh.o
 
 ## adios
 $O/meshfem3D_adios_stubs.mesh_noadios.o: $O/shared_par.shared_module.o $O/adios_manager_stubs.shared_noadios.o
 
 $O/save_databases_adios.mesh_adios.o: $O/safe_alloc_mod.shared.o $(adios_meshfem3D_PREOBJECTS)
-$O/create_regions_mesh.mesh.o: $(adios_meshfem3D_PREOBJECTS)
+$O/create_meshfem_mesh.mesh.o: $(adios_meshfem3D_PREOBJECTS)
 
 $O/adios_helpers.shared_adios.o: \
 	$O/adios_helpers_definitions.shared_adios_module.o \

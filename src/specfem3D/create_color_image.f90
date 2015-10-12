@@ -99,7 +99,7 @@
   subroutine write_PNM_initialize()
 
   use image_PNM_par
-  use specfem_par,only: NGLOB_AB,NSPEC_AB,ibool,xstore,ystore,zstore,&
+  use specfem_par,only: NGLOB_AB,NSPEC_AB,NPROC,ibool,xstore,ystore,zstore,&
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,my_neighbours_ext_mesh, &
                         ibool_interfaces_ext_mesh !,prname
@@ -460,7 +460,7 @@
   subroutine write_PNM_vp_background
 
   use image_PNM_par
-  use specfem_par,only:myrank
+  use specfem_par,only:myrank,NPROC
   implicit none
   ! local parameters
   real(kind=CUSTOM_REAL) :: vp
@@ -518,6 +518,7 @@
 
   use image_PNM_par
   use constants,only: NDIM
+  use specfem_par,only: NPROC
   implicit none
 
   ! local parameters

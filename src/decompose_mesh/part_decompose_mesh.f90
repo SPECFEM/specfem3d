@@ -29,6 +29,8 @@ module part_decompose_mesh
 
   use constants,only: MAX_STRING_LEN,NGNOD2D_FOUR_CORNERS,NGNOD_EIGHT_CORNERS
 
+  use shared_parameters, only: MESH_A_CHUNK_OF_THE_EARTH
+
   implicit none
 
 ! useful kind types for short integer (4 bytes) and long integers (8 bytes)
@@ -797,7 +799,8 @@ contains
              write(IIN_database) glob2loc_elmnts(i)+1,num_modele(1,i+1),num_modele(2,i+1),(loc_nodes(k)+1, k=0,NGNOD-1)
 
              ! writes out to file Numglob2loc_elmn.txt
-             if (COUPLE_WITH_EXTERNAL_CODE) write(124,*) i+1,glob2loc_elmnts(i)+1,iproc !! To verify for NOBU version
+             if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) write(124,*) i+1,glob2loc_elmnts(i)+1,iproc
+
           endif
        enddo
     endif

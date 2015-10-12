@@ -1,0 +1,4 @@
+The files in 'For_example_1st_for_validation/' or in 'For_example_2nd_w_moment_option/' contains parameters files, scripts, CMT solution, stations, etc.,
+corresponding to the concerned example.
+
+If you want to be sure to run the same concerned example, put all the files - except 'inparam_mesh' - in the directory SOLVER of Axisem, and put 'inparam_mesh' in directory MESHER.

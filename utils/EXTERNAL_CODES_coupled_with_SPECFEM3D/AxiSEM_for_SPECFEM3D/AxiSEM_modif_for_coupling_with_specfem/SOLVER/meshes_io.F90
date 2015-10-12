@@ -19,6 +19,7 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
+!=========================================================================================
 !> This module contains routines that compute and dump the respective meshes
 !! underlying the actual wavefields to be dumped in the time loop
 !! which is done in wavefields_io. This module needs pre-loop variables such
@@ -30,23 +31,25 @@ module meshes_io
   use data_proc
   use data_io
 
-  use utlity, ONLY : scoord, zcoord, rcoord, thetacoord
+  use utlity, only : scoord, zcoord, rcoord, thetacoord
 
   implicit none
 
   private
-  public :: fldout_cyl2
   public :: finish_xdmf_xml
   public :: dump_wavefields_mesh_1d
   public :: dump_glob_grid_midpoint
   public :: dump_xdmf_grid
-  public :: dump_solid_grid
-  public :: dump_fluid_grid
   public :: prepare_mesh_memoryvar_vtk
+  public :: build_kwf_grid
+  public :: dump_kwf_midpoint_xdmf
+  public :: dump_kwf_fem_xdmf
+  public :: dump_kwf_sem_xdmf
+  public :: dump_kwf_gll_xdmf
 
 contains
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !> Dumps the mesh (s,z) [m] in ASCII format as needed to visualize global
 !! snapshots, and additionally the constant factors preceding the displacement
 !! in the fluid, namely rho^{-1} and (rho s)^{-1}.
@@ -55,7 +58,7 @@ contains
 !! Convention for order in the file: First the fluid, then the solid domain.
 subroutine dump_glob_grid_midpoint(ibeg,iend,jbeg,jend)
 
-  use data_pointwise, ONLY : inv_rho_fluid
+  use data_pointwise, only : inv_rho_fluid
   use data_mesh,      only : npol, nel_fluid, nel_solid
 
   integer, intent(in) :: ibeg,iend,jbeg,jend
@@ -101,12 +104,12 @@ subroutine dump_glob_grid_midpoint(ibeg,iend,jbeg,jend)
   close(25000+mynum)
 
 end subroutine dump_glob_grid_midpoint
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine dump_xdmf_grid()
 
-  use nc_routines,      only: nc_dump_snap_points, nc_dump_snap_grid, nc_make_snapfile
+  use nc_snapshots,      only: nc_dump_snap_points, nc_dump_snap_grid, nc_make_snapfile
   use data_mesh
 
   integer               :: iel, ipol, jpol, ipol1, jpol1, i, j, ct, ipt, idest
@@ -432,12 +435,12 @@ subroutine dump_xdmf_grid()
 
 
 end subroutine dump_xdmf_grid
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine finish_xdmf_xml()
 
-  use data_source, ONLY : src_type
+  use data_source, only : src_type
 
   character(len=120) :: fname
 
@@ -459,9 +462,9 @@ subroutine finish_xdmf_xml()
   close(13104)
 
 end subroutine finish_xdmf_xml
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine prepare_mesh_memoryvar_vtk()
 
   use data_matr, only: points_solid
@@ -480,80 +483,622 @@ subroutine prepare_mesh_memoryvar_vtk()
   enddo
 
 end subroutine prepare_mesh_memoryvar_vtk
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
-!> Dumps the mesh (s,z) [m] in ASCII format as needed to visualize snapshots
-!! in the solid region only.
-!! Convention for order in the file: First the fluid, then the solid domain.
-subroutine dump_solid_grid(ibeg,iend,jbeg,jend)
+!-----------------------------------------------------------------------------------------
+subroutine build_kwf_grid()
 
+  use nc_routines, only : set_npoints
+  use data_mesh
+  use data_io,     only: ibeg, iend, jbeg, jend
 
-  integer, intent(in) :: ibeg,iend,jbeg,jend
-  integer             :: iel, ipol,jpol
+  integer               :: iel, ipol, jpol, ct, ipt, idest
+  integer, allocatable  :: mapping(:)
+  logical, allocatable  :: check(:), mask_tp_elem(:)
 
-  open(unit=2500+mynum,file=datapath(1:lfdata)//'/solid_grid_'&
-                            //appmynum//'.dat')
-  do iel=1,nel_solid
-     do jpol=jbeg,jend
-        do ipol=ibeg,iend
-           write(2500+mynum,*)scoord(ipol,jpol,ielsolid(iel)), &
-                              zcoord(ipol,jpol,ielsolid(iel))
-        enddo
-     enddo
+  allocate(mask_tp_elem(nelem))
+  mask_tp_elem = .false.
+
+  ct = 0
+
+  do iel=1, nel_solid
+      if (min(min(rcoord(0,0,ielsolid(iel)), rcoord(0,npol,ielsolid(iel))), &
+              min(rcoord(npol,0,ielsolid(iel)), rcoord(npol,npol,ielsolid(iel)))) < kwf_rmax &
+          .and. &
+          max(max(rcoord(0,0,ielsolid(iel)), rcoord(0,npol,ielsolid(iel))), &
+              max(rcoord(npol,0,ielsolid(iel)), rcoord(npol,npol,ielsolid(iel)))) > kwf_rmin &
+          .and. &
+          min(min(thetacoord(0,0,ielsolid(iel)), thetacoord(0,npol,ielsolid(iel))), &
+              min(thetacoord(npol,0,ielsolid(iel)), thetacoord(npol,npol,ielsolid(iel)))) < kwf_thetamax &
+          .and. &
+          max(max(thetacoord(0,0,ielsolid(iel)), thetacoord(0,npol,ielsolid(iel))), &
+              max(thetacoord(npol,0,ielsolid(iel)), thetacoord(npol,npol,ielsolid(iel)))) > kwf_thetamin) &
+          then
+          ct = ct + 1
+          mask_tp_elem(iel) = .true.
+      endif
   enddo
-  close(2500+mynum)
 
-end subroutine dump_solid_grid
-!=============================================================================
-
-!-----------------------------------------------------------------------------
-!> Dumps the mesh (s,z) [m] in ASCII format as needed to visualize snapshots
-!! in the fluid region only, and additionally the constant factors preceding
-!! the displacement in the fluid, namely rho^{-1} and (rho s)^{-1}.
-!! When reading the fluid wavefield, one therefore needs to multiply all
-!! components with inv_rho_fluid and the phi component with one/scoord!
-!! Convention for order in the file: First the fluid, then the solid domain.
-subroutine dump_fluid_grid(ibeg,iend,jbeg,jend)
-
-  use data_pointwise, ONLY : inv_rho_fluid
-
-
-  integer, intent(in) :: ibeg,iend,jbeg,jend
-  integer             :: iel, ipol,jpol
-
-  ! When reading the fluid wavefield, one needs to multiply all components
-  ! with inv_rho_fluid and the phi component with one/scoord!!
-
-  open(unit=2500+mynum,file=datapath(1:lfdata)//&
-                            '/fluid_grid_'//appmynum//'.dat')
-  open(unit=2600+mynum,file=datapath(1:lfdata)//&
-                            '/inv_rho_scoord_fluid_flusnaps_'&
-                            //appmynum//'.dat', STATUS="REPLACE")
-  do iel=1,nel_fluid
-     do jpol=jbeg,jend
-        do ipol=ibeg,iend
-           write(2500+mynum,*)scoord(ipol,jpol,ielfluid(iel)), &
-                              zcoord(ipol,jpol,ielfluid(iel))
-           if ( axis_fluid(iel) .and. ipol==0 ) then
-              ! Axis s=0! write 1 instead of 1/s and then multiply
-              ! with the correct factor dsdchi, obtained by L'Hospital's rule
-              ! (see routine fluid_snapshot below).
-              write(2600+mynum,*)inv_rho_fluid(ipol,jpol,iel),one
-           else
-              write(2600+mynum,*)inv_rho_fluid(ipol,jpol,iel), &
-                                 one/scoord(ipol,jpol,ielfluid(iel))
-           endif
-        enddo
-     enddo
+  do iel=1, nel_fluid
+      if (min(min(rcoord(0,0,ielfluid(iel)), rcoord(0,npol,ielfluid(iel))), &
+              min(rcoord(npol,0,ielfluid(iel)), rcoord(npol,npol,ielfluid(iel)))) < kwf_rmax &
+          .and. &
+          max(max(rcoord(0,0,ielfluid(iel)), rcoord(0,npol,ielfluid(iel))), &
+              max(rcoord(npol,0,ielfluid(iel)), rcoord(npol,npol,ielfluid(iel)))) > kwf_rmin &
+          .and. &
+          min(min(thetacoord(0,0,ielfluid(iel)), thetacoord(0,npol,ielfluid(iel))), &
+              min(thetacoord(npol,0,ielfluid(iel)), thetacoord(npol,npol,ielfluid(iel)))) < kwf_thetamax &
+          .and. &
+          max(max(thetacoord(0,0,ielfluid(iel)), thetacoord(0,npol,ielfluid(iel))), &
+              max(thetacoord(npol,0,ielfluid(iel)), thetacoord(npol,npol,ielfluid(iel)))) > kwf_thetamin) &
+          then
+          ct = ct + 1
+          mask_tp_elem(iel + nel_solid) = .true.
+      endif
   enddo
-  close(2500+mynum)
-  close(2600+mynum)
 
-end subroutine dump_fluid_grid
-!=============================================================================
+  nelem_kwf = ct
 
-!-----------------------------------------------------------------------------
+  allocate(check(nglob_fluid + nglob_solid))
+  allocate(mapping(nglob_fluid + nglob_solid))
+  allocate(mapping_ijel_ikwf(0:npol, 0:npol, nelem))
+  allocate(kwf_mask(0:npol, 0:npol, nelem))
+
+  check = .false.
+  kwf_mask = .false.
+
+  ct = 0
+
+  if (lpr) write(6,*) '   construction of mapping for kwf output...'
+  if (lpr) write(6,*) '   ...solid part...'
+
+  do iel=1, nel_solid
+      if (.not.  mask_tp_elem(iel)) cycle
+      do jpol=jbeg, jend
+          do ipol=ibeg, iend
+
+              ipt = (iel-1)*(npol+1)**2 + jpol*(npol+1) + ipol + 1
+              idest = igloc_solid(ipt) + nglob_fluid
+
+              if (.not. check(idest)) then
+                  ct = ct + 1
+                  check(idest) = .true.
+                  mapping(idest) = ct
+                  kwf_mask(ipol,jpol,iel) = .true.
+              endif
+              mapping_ijel_ikwf(ipol,jpol,iel) = mapping(idest)
+          enddo
+
+          ! add gll points on the axis
+          if (axis_solid(iel)) then
+              ipol = 0
+
+              ipt = (iel-1)*(npol+1)**2 + jpol*(npol+1) + ipol + 1
+              idest = igloc_solid(ipt) + nglob_fluid
+
+              if (.not. check(idest)) then
+                  ct = ct + 1
+                  check(idest) = .true.
+                  mapping(idest) = ct
+                  kwf_mask(ipol,jpol,iel) = .true.
+              endif
+              mapping_ijel_ikwf(ipol,jpol,iel) = mapping(idest)
+          endif
+      enddo
+  enddo
+
+  npoint_solid_kwf = ct
+
+  if (lpr) write(6,*) '   ...fluid part...'
+
+  do iel=1, nel_fluid
+      if (.not.  mask_tp_elem(iel + nel_solid)) cycle
+      do jpol=jbeg, jend
+          do ipol=ibeg, iend
+
+              ipt = (iel-1)*(npol+1)**2 + jpol*(npol+1) + ipol + 1
+              idest = igloc_fluid(ipt)
+
+              if (.not. check(idest)) then
+                  ct = ct + 1
+                  check(idest) = .true.
+                  mapping(idest) = ct
+                  kwf_mask(ipol,jpol,iel + nel_solid) = .true.
+              endif
+              mapping_ijel_ikwf(ipol,jpol,iel + nel_solid) = mapping(idest)
+          enddo
+
+          ! add gll points on the axis
+          if (axis_fluid(iel)) then
+              ipol = 0
+
+              ipt = (iel-1)*(npol+1)**2 + jpol*(npol+1) + ipol + 1
+              idest = igloc_fluid(ipt)
+
+              if (.not. check(idest)) then
+                  ct = ct + 1
+                  check(idest) = .true.
+                  mapping(idest) = ct
+                  kwf_mask(ipol,jpol,iel + nel_solid) = .true.
+              endif
+              mapping_ijel_ikwf(ipol,jpol,iel + nel_solid) = mapping(idest)
+          endif
+      enddo
+  enddo
+
+  deallocate(check, mapping)
+  npoint_kwf = ct
+  npoint_fluid_kwf = ct - npoint_solid_kwf
+
+  call set_npoints(npoint_kwf)
+
+  if (lpr) then
+     write(6,*) 'local point number:        ', nelem_kwf * (iend - ibeg + 1) * (jend - jbeg + 1)
+     write(6,*) 'after removing duplicates: ', npoint_kwf
+     write(6,*) 'compression:               ', &
+                 real(npoint_kwf) / real(nelem_kwf * (npol + 1)**2)
+  endif
+
+  if (trim(dump_type) == 'displ_only') then
+     allocate(midpoint_mesh_kwf(1:nelem_kwf))
+
+     if (lpr) write(6,*) '   .... constructing midpoint grid for kwf output'
+
+     ct = 1
+
+     do iel=1, nel_solid
+         if (.not.  mask_tp_elem(iel)) cycle
+         midpoint_mesh_kwf(ct) = mapping_ijel_ikwf(npol/2,npol/2,iel) - 1
+         ct = ct + 1
+     enddo
+
+     do iel=1, nel_fluid
+         if (.not.  mask_tp_elem(iel + nel_solid)) cycle
+         midpoint_mesh_kwf(ct) = mapping_ijel_ikwf(npol/2,npol/2,iel + nel_solid) - 1
+         ct = ct + 1
+     enddo
+
+     allocate(eltype_kwf(1:nelem_kwf))
+
+     eltype_kwf(:) = -2
+
+     ct = 1
+
+     do iel=1, nel_solid
+         if (.not.  mask_tp_elem(iel)) cycle
+         if (eltype(ielsolid(iel)) == 'curved') then
+            eltype_kwf(ct) = 0
+         else if (eltype(ielsolid(iel)) == 'linear') then
+            eltype_kwf(ct) = 1
+         else if (eltype(ielsolid(iel)) == 'semino') then
+            eltype_kwf(ct) = 2
+         else if (eltype(ielsolid(iel)) == 'semiso') then
+            eltype_kwf(ct) = 3
+         else
+            eltype_kwf(ct) = -1
+         endif
+         ct = ct + 1
+     enddo
+
+     do iel=1, nel_fluid
+         if (.not.  mask_tp_elem(iel + nel_solid)) cycle
+         if (eltype(ielfluid(iel)) == 'curved') then
+            eltype_kwf(ct) = 0
+         else if (eltype(ielfluid(iel)) == 'linear') then
+            eltype_kwf(ct) = 1
+         else if (eltype(ielfluid(iel)) == 'semino') then
+            eltype_kwf(ct) = 2
+         else if (eltype(ielfluid(iel)) == 'semiso') then
+            eltype_kwf(ct) = 3
+         else
+            eltype_kwf(ct) = -1
+         endif
+         ct = ct + 1
+     enddo
+
+     allocate(axis_kwf(1:nelem_kwf))
+
+     axis_kwf(:) = -1
+
+     ct = 1
+
+     do iel=1, nel_solid
+         if (.not.  mask_tp_elem(iel)) cycle
+         if (axis_solid(iel)) then
+            axis_kwf(ct) = 1
+         else
+            axis_kwf(ct) = 0
+         endif
+         ct = ct + 1
+     enddo
+
+     do iel=1, nel_fluid
+         if (.not.  mask_tp_elem(iel + nel_solid)) cycle
+         if (axis_fluid(iel)) then
+            axis_kwf(ct) = 1
+         else
+            axis_kwf(ct) = 0
+         endif
+         ct = ct + 1
+     enddo
+
+     allocate(fem_mesh_kwf(1:4, 1:nelem_kwf))
+
+     if (lpr) write(6,*) '   .... constructing finite element grid for kwf output'
+
+     ct = 1
+
+     do iel=1, nel_solid
+         if (.not.  mask_tp_elem(iel)) cycle
+         fem_mesh_kwf(1,ct) = mapping_ijel_ikwf(   0,   0,iel) - 1
+         fem_mesh_kwf(2,ct) = mapping_ijel_ikwf(npol,   0,iel) - 1
+         fem_mesh_kwf(3,ct) = mapping_ijel_ikwf(npol,npol,iel) - 1
+         fem_mesh_kwf(4,ct) = mapping_ijel_ikwf(   0,npol,iel) - 1
+         ct = ct + 1
+     enddo
+
+     do iel=1, nel_fluid
+         if (.not.  mask_tp_elem(iel + nel_solid)) cycle
+         fem_mesh_kwf(1,ct) = mapping_ijel_ikwf(   0,   0,iel + nel_solid) - 1
+         fem_mesh_kwf(2,ct) = mapping_ijel_ikwf(npol,   0,iel + nel_solid) - 1
+         fem_mesh_kwf(3,ct) = mapping_ijel_ikwf(npol,npol,iel + nel_solid) - 1
+         fem_mesh_kwf(4,ct) = mapping_ijel_ikwf(   0,npol,iel + nel_solid) - 1
+         ct = ct + 1
+     enddo
+  endif
+
+  allocate(sem_mesh_kwf(ibeg:iend, jbeg:jend, 1:nelem_kwf))
+
+  if (lpr) write(6,*) '   .... constructing spectral element grid for kwf output'
+
+  ct = 1
+
+  do iel=1, nel_solid
+      if (.not.  mask_tp_elem(iel)) cycle
+      do ipol=ibeg, iend
+         do jpol=jbeg, jend
+            sem_mesh_kwf(ipol,jpol,ct) = mapping_ijel_ikwf(ipol,jpol,iel) - 1
+         enddo
+      enddo
+      ct = ct + 1
+  enddo
+
+  do iel=1, nel_fluid
+      if (.not.  mask_tp_elem(iel + nel_solid)) cycle
+      do ipol=ibeg, iend
+         do jpol=jbeg, jend
+            sem_mesh_kwf(ipol,jpol,ct) = mapping_ijel_ikwf(ipol,jpol,iel + nel_solid) - 1
+         enddo
+      enddo
+      ct = ct + 1
+  enddo
+
+  if (lpr) write(6,*) '   .... finished construction of mapping for kwf output'
+
+end subroutine build_kwf_grid
+!-----------------------------------------------------------------------------------------
+
+!-----------------------------------------------------------------------------------------
+subroutine dump_kwf_grid()
+
+  use nc_routines, only : nc_dump_mesh_kwf, nc_dump_mesh_mp_kwf
+  use data_mesh
+
+  integer               :: iel, ipol, jpol, ct
+  real(sp), allocatable :: points(:,:)
+  real(sp), allocatable :: points_mp(:,:)
+
+  if (lpr) write(6,*) '   ...collecting coordinates...'
+
+  allocate(points(1:npoint_kwf, 2))
+
+  points = 0.
+
+  do iel=1, nel_solid
+      do ipol=0, npol
+          do jpol=0, npol
+              if (kwf_mask(ipol,jpol,iel)) then
+                  ct = mapping_ijel_ikwf(ipol,jpol,iel)
+                  points(ct,1) = scoord(ipol,jpol,ielsolid(iel))
+                  points(ct,2) = zcoord(ipol,jpol,ielsolid(iel))
+              endif
+          enddo
+      enddo
+  enddo
+
+  do iel=1, nel_fluid
+      do ipol=0, npol
+          do jpol=0, npol
+              if (kwf_mask(ipol,jpol,iel + nel_solid)) then
+                  ct = mapping_ijel_ikwf(ipol,jpol,iel + nel_solid)
+                  points(ct,1) = scoord(ipol,jpol,ielfluid(iel))
+                  points(ct,2) = zcoord(ipol,jpol,ielfluid(iel))
+              endif
+          enddo
+      enddo
+  enddo
+
+  allocate(points_mp(1:nelem_kwf, 2))
+
+  points_mp = 0.
+
+  ct = 1
+  do iel=1, nel_solid
+     if (kwf_mask(npol/2,jpol/2,iel)) then
+        points_mp(ct,1) = scoord(npol/2,npol/2,ielsolid(iel))
+        points_mp(ct,2) = zcoord(npol/2,npol/2,ielsolid(iel))
+        ct = ct + 1
+     endif
+  enddo
+
+  do iel=1, nel_fluid
+     if (kwf_mask(npol/2,jpol/2,iel + nel_solid)) then
+        points_mp(ct,1) = scoord(npol/2,npol/2,ielfluid(iel))
+        points_mp(ct,2) = zcoord(npol/2,npol/2,ielfluid(iel))
+        ct = ct + 1
+     endif
+  enddo
+
+  if (use_netcdf) then
+      call nc_dump_mesh_kwf(points, npoint_solid_kwf, npoint_fluid_kwf)
+      call nc_dump_mesh_mp_kwf(points_mp, nelem_kwf)
+  else
+     write(6,*) 'ERROR: binary output for non-duplicate mesh not implemented'
+     call abort()
+  endif
+
+end subroutine dump_kwf_grid
+!-----------------------------------------------------------------------------------------
+
+!-----------------------------------------------------------------------------------------
+subroutine dump_kwf_midpoint_xdmf(filename, npoints, nelem)
+  character(len=*), intent(in)      :: filename
+  integer, intent(in)               :: npoints, nelem
+
+  integer                           :: iinput_xdmf
+  character(len=512)                :: filename_np
+
+
+  ! relative filename for xdmf content
+  filename_np = trim(filename(index(filename, '/', back=.true.)+1:))
+
+  ! XML Data
+  open(newunit=iinput_xdmf, file=trim(filename)//'_mp.xdmf')
+  write(iinput_xdmf, 733) npoints, npoints, trim(filename_np), npoints, trim(filename_np)
+
+  write(iinput_xdmf, 734) nelem, nelem, trim(filename_np), "'", "'"
+
+  close(iinput_xdmf)
+
+733 format(&
+    '<?xml version="1.0" ?>',/&
+    '<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>',/&
+    '<Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="2.2">',/&
+    '<Domain>',/,/&
+    '<DataItem Name="points" ItemType="Function" Function="join($0, $1)" Dimensions="', i10, ' 2">',/&
+    '    <DataItem Name="points" DataType="Float" Precision="8" Dimensions="', i10, '" Format="HDF">',/&
+    '    ', A, ':/Mesh/mesh_S',/&
+    '    </DataItem>',/&
+    '    <DataItem Name="points" DataType="Float" Precision="8" Dimensions="', i10, '" Format="HDF">',/&
+    '    ', A, ':/Mesh/mesh_Z',/&
+    '    </DataItem>',/&
+    '</DataItem>',/,/)
+
+734 format(&
+    '<Grid Name="grid" GridType="Uniform">',/&
+    '    <Topology TopologyType="Polyvertex" NumberOfElements="',i10,'">',/&
+    '        <DataItem ItemType="Uniform" Name="points" DataType="Int" Dimensions="', i10, '" Format="HDF">',/&
+    '        ', A, ':/Mesh/midpoint_mesh',/&
+    '        </DataItem>',/&
+    '    </Topology>',/&
+    '    <Geometry GeometryType="XY">',/&
+    '        <DataItem Reference="/Xdmf/Domain/DataItem[@Name=', A,'points', A,']" />',/&
+    '    </Geometry>',/&
+    '</Grid>',/,/&
+    '</Domain>',/&
+    '</Xdmf>')
+
+
+  ! XML Data
+  open(newunit=iinput_xdmf, file=trim(filename)//'_mp_vect.xdmf')
+  write(iinput_xdmf, 743) nelem, nelem, trim(filename_np), nelem, trim(filename_np)
+
+  write(iinput_xdmf, 744) nelem, "'", "'"
+
+  close(iinput_xdmf)
+
+743 format(&
+    '<?xml version="1.0" ?>',/&
+    '<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>',/&
+    '<Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="2.2">',/&
+    '<Domain>',/,/&
+    '<DataItem Name="points" ItemType="Function" Function="join($0, $1)" Dimensions="', i10, ' 2">',/&
+    '    <DataItem Name="points" DataType="Float" Precision="8" Dimensions="', i10, '" Format="HDF">',/&
+    '    ', A, ':/Mesh/mp_mesh_S',/&
+    '    </DataItem>',/&
+    '    <DataItem Name="points" DataType="Float" Precision="8" Dimensions="', i10, '" Format="HDF">',/&
+    '    ', A, ':/Mesh/mp_mesh_Z',/&
+    '    </DataItem>',/&
+    '</DataItem>',/,/)
+
+744 format(&
+    '<Grid Name="grid" GridType="Uniform">',/&
+    '    <Topology TopologyType="Polyvertex" NumberOfElements="',i10,'">',/&
+    '    </Topology>',/&
+    '    <Geometry GeometryType="XY">',/&
+    '        <DataItem Reference="/Xdmf/Domain/DataItem[@Name=', A,'points', A,']" />',/&
+    '    </Geometry>',/&
+    '</Grid>',/,/&
+    '</Domain>',/&
+    '</Xdmf>')
+
+end subroutine
+!-----------------------------------------------------------------------------------------
+
+!-----------------------------------------------------------------------------------------
+subroutine dump_kwf_fem_xdmf(filename, npoints, nelem)
+  character(len=*), intent(in)      :: filename
+  integer, intent(in)               :: npoints, nelem
+
+  integer                           :: iinput_xdmf
+  character(len=512)                :: filename_np
+
+
+  ! relative filename for xdmf content
+  filename_np = trim(filename(index(filename, '/', back=.true.)+1:))
+
+  ! XML Data
+  open(newunit=iinput_xdmf, file=trim(filename)//'_fem.xdmf')
+  write(iinput_xdmf, 733) npoints, npoints, trim(filename_np), npoints, trim(filename_np)
+
+  write(iinput_xdmf, 734) nelem, nelem, trim(filename_np), "'", "'", &
+                          nelem, trim(filename_np), nelem, trim(filename_np)
+
+
+  close(iinput_xdmf)
+
+733 format(&
+    '<?xml version="1.0" ?>',/&
+    '<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>',/&
+    '<Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="2.2">',/&
+    '<Domain>',/,/&
+    '<DataItem Name="points" ItemType="Function" Function="join($0, $1)" Dimensions="', i10, ' 2">',/&
+    '    <DataItem Name="points" DataType="Float" Precision="8" Dimensions="', i10, '" Format="HDF">',/&
+    '    ', A, ':/Mesh/mesh_S',/&
+    '    </DataItem>',/&
+    '    <DataItem Name="points" DataType="Float" Precision="8" Dimensions="', i10, '" Format="HDF">',/&
+    '    ', A, ':/Mesh/mesh_Z',/&
+    '    </DataItem>',/&
+    '</DataItem>',/,/)
+
+734 format(&
+    '<Grid Name="grid" GridType="Uniform">',/&
+    '    <Topology TopologyType="Quadrilateral" NumberOfElements="', i10, '">',/&
+    '        <DataItem ItemType="Uniform" Name="points" DataType="Int" Dimensions="', i10, ' 4" Format="HDF">',/&
+    '        ', A, ':/Mesh/fem_mesh',/&
+    '        </DataItem>',/&
+    '    </Topology>',/&
+    '    <Geometry GeometryType="XY">',/&
+    '        <DataItem Reference="/Xdmf/Domain/DataItem[@Name=', A,'points', A,']" />',/&
+    '    </Geometry>',/&
+    '    <Attribute Name="eltype" AttributeType="Scalar" Center="Cell">',/&
+    '        <DataItem ItemType="Uniform" Name="points" DataType="Int" Dimensions="', i10, '" Format="HDF">',/&
+    '        ', A, ':/Mesh/eltype',/&
+    '        </DataItem>',/&
+    '    </Attribute>',/&
+    '    <Attribute Name="axis" AttributeType="Scalar" Center="Cell">',/&
+    '        <DataItem ItemType="Uniform" Name="points" DataType="Int" Dimensions="', i10, '" Format="HDF">',/&
+    '        ', A, ':/Mesh/axis',/&
+    '        </DataItem>',/&
+    '    </Attribute>',/&
+    '</Grid>',/,/&
+    '</Domain>',/&
+    '</Xdmf>')
+
+end subroutine
+!-----------------------------------------------------------------------------------------
+
+!-----------------------------------------------------------------------------------------
+subroutine dump_kwf_sem_xdmf(filename, npoints, nelem)
+  character(len=*), intent(in)      :: filename
+  integer, intent(in)               :: npoints, nelem
+
+  integer                           :: iinput_xdmf
+  character(len=512)                :: filename_np
+
+
+  ! relative filename for xdmf content
+  filename_np = trim(filename(index(filename, '/', back=.true.)+1:))
+
+  ! XML Data
+  open(newunit=iinput_xdmf, file=trim(filename)//'_sem.xdmf')
+  write(iinput_xdmf, 733) npoints, npoints, trim(filename_np), npoints, trim(filename_np)
+
+  write(iinput_xdmf, 734) nelem, (npol+1)**2, nelem, npol+1, npol+1, &
+                          trim(filename_np), "'", "'"
+
+  close(iinput_xdmf)
+
+733 format(&
+    '<?xml version="1.0" ?>',/&
+    '<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>',/&
+    '<Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="2.2">',/&
+    '<Domain>',/,/&
+    '<DataItem Name="points" ItemType="Function" Function="join($0, $1)" Dimensions="', i10, ' 2">',/&
+    '    <DataItem Name="points" DataType="Float" Precision="8" Dimensions="', i10, '" Format="HDF">',/&
+    '    ', A, ':/Mesh/mesh_S',/&
+    '    </DataItem>',/&
+    '    <DataItem Name="points" DataType="Float" Precision="8" Dimensions="', i10, '" Format="HDF">',/&
+    '    ', A, ':/Mesh/mesh_Z',/&
+    '    </DataItem>',/&
+    '</DataItem>',/,/)
+
+734 format(&
+    '<Grid Name="grid" GridType="Uniform">',/&
+    '    <Topology TopologyType="Polygon" NumberOfElements="',i10,'" NodesPerElement="', i5, '">',/&
+    '        <DataItem ItemType="Uniform" Name="points" DataType="Int" Dimensions="', i10, i3, i3, '" Format="HDF">',/&
+    '        ', A, ':/Mesh/sem_mesh',/&
+    '        </DataItem>',/&
+    '    </Topology>',/&
+    '    <Geometry GeometryType="XY">',/&
+    '        <DataItem Reference="/Xdmf/Domain/DataItem[@Name=', A,'points', A,']" />',/&
+    '    </Geometry>',/&
+    '</Grid>',/,/&
+    '</Domain>',/&
+    '</Xdmf>')
+
+end subroutine
+!-----------------------------------------------------------------------------------------
+
+!-----------------------------------------------------------------------------------------
+subroutine dump_kwf_gll_xdmf(filename, npoints)
+  character(len=*), intent(in)      :: filename
+  integer, intent(in)               :: npoints
+
+  integer                           :: iinput_xdmf
+  character(len=512)                :: filename_np
+
+
+  ! relative filename for xdmf content
+  filename_np = trim(filename(index(filename, '/', back=.true.)+1:))
+
+  ! XML Data
+  open(newunit=iinput_xdmf, file=trim(filename)//'_gll.xdmf')
+  write(iinput_xdmf, 733) npoints, npoints, trim(filename_np), npoints, trim(filename_np)
+
+  write(iinput_xdmf, 734) npoints, "'", "'"
+
+  close(iinput_xdmf)
+
+733 format(&
+    '<?xml version="1.0" ?>',/&
+    '<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>',/&
+    '<Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="2.2">',/&
+    '<Domain>',/,/&
+    '<DataItem Name="points" ItemType="Function" Function="join($0, $1)" Dimensions="', i10, ' 2">',/&
+    '    <DataItem Name="points" DataType="Float" Precision="8" Dimensions="', i10, '" Format="HDF">',/&
+    '    ', A, ':/Mesh/mesh_S',/&
+    '    </DataItem>',/&
+    '    <DataItem Name="points" DataType="Float" Precision="8" Dimensions="', i10, '" Format="HDF">',/&
+    '    ', A, ':/Mesh/mesh_Z',/&
+    '    </DataItem>',/&
+    '</DataItem>',/,/)
+
+734 format(&
+    '<Grid Name="grid" GridType="Uniform">',/&
+    '    <Topology TopologyType="Polyvertex" NumberOfElements="',i10'">',/&
+    '    </Topology>',/&
+    '    <Geometry GeometryType="XY">',/&
+    '        <DataItem Reference="/Xdmf/Domain/DataItem[@Name=', A,'points', A,']" />',/&
+    '    </Geometry>',/&
+    '</Grid>',/,/&
+    '</Domain>',/&
+    '</Xdmf>')
+
+end subroutine
+!-----------------------------------------------------------------------------------------
+
+!-----------------------------------------------------------------------------------------
 !> Dumps the mesh (s,z) [m] and related constant fields in binary format as
 !! needed to compute waveform kernels from the strain and velocity fields.
 !! The distinction between different dumping methods is honored here,
@@ -565,88 +1110,110 @@ end subroutine dump_fluid_grid
 !! The latter choice is more memory- and CPU-efficient, but requires
 !! significant post-processing AND dumping the entire SEM mesh.
 !! See compute_strain in time_evol_wave.f90 for more info.
-!!
-!! CURRENTLY HARDCODED TO dump_type=='fullfields'
 subroutine dump_wavefields_mesh_1d
 
   use data_mesh
-  use data_io, ONLY : ibeg,iend,ndumppts_el
-  use data_spec, ONLY : G1T,G2T,G2
+  use data_io,      only: ibeg, iend, jbeg, jend, ndumppts_el
+  use data_spec,    only: G1T, G2T, G2
   use data_pointwise
-  use nc_routines, ONLY: nc_dump_mesh_sol, nc_dump_mesh_flu
+  use nc_routines,  only: nc_dump_mesh_sol, nc_dump_mesh_flu
 
-  real(kind=dp)   , dimension(:,:,:), allocatable :: ssol, zsol
-  real(kind=dp)   , dimension(:,:,:), allocatable :: sflu, zflu
+  real(kind=dp), dimension(:,:,:), allocatable :: ssol, zsol
+  real(kind=dp), dimension(:,:,:), allocatable :: sflu, zflu
 
   integer :: iel, ipol, jpol
 
-  ! Dump entire (including duplicate) GLL point grid for displ_only
-  if (dump_type=='displ_only') then
-
-  else ! Free choice for other dumping method
+  ! Dump subset of GLL point grid for 'fullfields'
+  if (dump_type=='fullfields') then
 
      if (lpr) then
         write(6,*)'  set strain dumping GLL boundaries to:'
-        write(6,*)'    ipol=',ibeg,iend
+        write(6,*)'    ipol=', ibeg, iend
+        write(6,*)'    jpol=', jbeg, jend
      endif
 
-     allocate(ssol(ibeg:iend,ibeg:iend,nel_solid))
-     allocate(zsol(ibeg:iend,ibeg:iend,nel_solid))
-     allocate(sflu(ibeg:iend,ibeg:iend,nel_fluid))
-     allocate(zflu(ibeg:iend,ibeg:iend,nel_fluid))
+     allocate(ssol(ibeg:iend,jbeg:jend,nel_solid))
+     allocate(zsol(ibeg:iend,jbeg:jend,nel_solid))
+     allocate(sflu(ibeg:iend,jbeg:jend,nel_fluid))
+     allocate(zflu(ibeg:iend,jbeg:jend,nel_fluid))
 
   endif
 
+  !!! SB
+  if (dump_type=='coupling' .or. dump_type == 'coupling_box') then
 
-  ! compute solid grid
-  do iel=1,nel_solid
-      do jpol=ibeg,iend
-          do ipol=ibeg,iend
-              ssol(ipol,jpol,iel) = scoord(ipol,jpol,ielsolid(iel))
-              zsol(ipol,jpol,iel) = zcoord(ipol,jpol,ielsolid(iel))
-          enddo
-     enddo
-  enddo
+     ibeg = 0
+     iend = 4
+     jbeg = 0
+     jend = 4
+     if (lpr) then
+        write(6,*)'  Coupling : FORCE GLL boundaries to:'
+        write(6,*)'    ipol=', ibeg, iend
+        write(6,*)'    jpol=', jbeg, jend
+     endif
 
+     allocate(ssol(ibeg:iend,jbeg:jend,nel_solid))
+     allocate(zsol(ibeg:iend,jbeg:jend,nel_solid))
+     allocate(sflu(ibeg:iend,jbeg:jend,nel_fluid))
+     allocate(zflu(ibeg:iend,jbeg:jend,nel_fluid))
 
-  if (lpr) write(6,*)'  dumping solid submesh for kernel wavefields...'
-  if (use_netcdf) then
-      call nc_dump_mesh_sol(real(ssol(ibeg:iend,ibeg:iend,:)), &
-                            real(zsol(ibeg:iend,ibeg:iend,:)))
+!     have_fluid = .false. !!!! SB for debug...
 
+  endif
+  !!! END SB
+
+  if (dump_type == 'displ_only' .or. dump_type == 'strain_only') then
+     call dump_kwf_grid()
   else
-      open(unit=2500+mynum,file=datapath(1:lfdata)//'/strain_mesh_sol_'&
-                                //appmynum//'.dat', &
-                                FORM="UNFORMATTED",STATUS="REPLACE")
+     ! compute solid grid
+     do iel=1,nel_solid
+         do jpol=jbeg,jend
+             do ipol=ibeg,iend
+                 ssol(ipol,jpol,iel) = scoord(ipol,jpol,ielsolid(iel))
+                 zsol(ipol,jpol,iel) = zcoord(ipol,jpol,ielsolid(iel))
+             enddo
+        enddo
+     enddo
 
-      write(2500+mynum)ssol(ibeg:iend,ibeg:iend,:),zsol(ibeg:iend,ibeg:iend,:)
-      close(2500+mynum)
-  endif
-  deallocate(ssol,zsol)
+     if (lpr) write(6,*)'  dumping solid submesh for kernel wavefields...'
+     if (use_netcdf) then
+         call nc_dump_mesh_sol(real(ssol(ibeg:iend,jbeg:jend,:)), &
+                               real(zsol(ibeg:iend,jbeg:jend,:)))
 
-  ! compute fluid grid
-  if (have_fluid) then
-      do iel=1,nel_fluid
-          do jpol=ibeg,iend
-              do ipol=ibeg,iend
-                  sflu(ipol,jpol,iel) = scoord(ipol,jpol,ielfluid(iel))
-                  zflu(ipol,jpol,iel) = zcoord(ipol,jpol,ielfluid(iel))
+     else
+         open(unit=2500+mynum,file=datapath(1:lfdata)//'/strain_mesh_sol_'&
+                                   //appmynum//'.dat', &
+                                   FORM="UNFORMATTED",STATUS="REPLACE")
+
+         write(2500+mynum)ssol(ibeg:iend,jbeg:jend,:),zsol(ibeg:iend,jbeg:jend,:)
+         close(2500+mynum)
+     endif
+     deallocate(ssol,zsol)
+
+     ! compute fluid grid
+     if (have_fluid) then
+         do iel=1,nel_fluid
+             do jpol=jbeg,jend
+                 do ipol=ibeg,iend
+                     sflu(ipol,jpol,iel) = scoord(ipol,jpol,ielfluid(iel))
+                     zflu(ipol,jpol,iel) = zcoord(ipol,jpol,ielfluid(iel))
+                 enddo
               enddo
-           enddo
-      enddo
-      if (lpr) write(6,*)'  dumping fluid submesh for kernel wavefields...'
-      if (use_netcdf) then
-          call nc_dump_mesh_flu(real(sflu(ibeg:iend,ibeg:iend,:)),&
-                                real(zflu(ibeg:iend,ibeg:iend,:)))
-      else
-          open(unit=2600+mynum,file=datapath(1:lfdata)//'/strain_mesh_flu_'&
-               //appmynum//'.dat', &
-               FORM="UNFORMATTED",STATUS="REPLACE")
-          write(2600+mynum)sflu(ibeg:iend,ibeg:iend,:),zflu(ibeg:iend,ibeg:iend,:)
-          close(2600+mynum)
-      endif
-      deallocate(sflu,zflu)
-  endif ! have_fluid
+         enddo
+         if (lpr) write(6,*)'  dumping fluid submesh for kernel wavefields...'
+         if (use_netcdf) then
+             call nc_dump_mesh_flu(real(sflu(ibeg:iend,jbeg:jend,:)),&
+                                   real(zflu(ibeg:iend,jbeg:jend,:)))
+         else
+             open(unit=2600+mynum,file=datapath(1:lfdata)//'/strain_mesh_flu_'&
+                  //appmynum//'.dat', &
+                  FORM="UNFORMATTED",STATUS="REPLACE")
+             write(2600+mynum)sflu(ibeg:iend,jbeg:jend,:),zflu(ibeg:iend,jbeg:jend,:)
+             close(2600+mynum)
+         endif
+         deallocate(sflu,zflu)
+     endif ! have_fluid
+  endif
 
 
   ! In the following: Only dumping additional arrays if displacements only
@@ -654,6 +1221,14 @@ subroutine dump_wavefields_mesh_1d
 
   select case (dump_type)
   case ('displ_only')
+     if (lpr) then
+        write(6,*)'  strain dump: only elementwise displacement'
+     endif
+  case ('strain_only')
+     if (lpr) then
+        write(6,*)'  strain dump: only pointwise strain '
+     endif
+  case ('displ_velo')
      if (lpr) then
         write(6,*)'  strain dump: only displacement/velocity, potentials'
         write(6,*)'  ...now dumping global pointwise deriv. terms, etc....'
@@ -693,70 +1268,35 @@ subroutine dump_wavefields_mesh_1d
 
      write(6,*)'  ...dumped it all.'
 
- case ('fullfields') !Hardcoded choice in parameters.f90:110
+  case ('fullfields') !Hardcoded choice in parameters.f90:110
      if (lpr) then
         write(6,*)'  strain dump: Global strain tensor and velocity fields'
         write(6,*)'  ....no need to dump anything else.'
      endif
+
+  !!! SB
+  case ('coupling')
+     if (lpr) then
+        write(6,*)'  strain dump: Global strain tensor and velocity fields'
+        write(6,*)'  ....no need to dump anything else.'
+     endif
+
+  case ('coupling_box')
+     if (lpr) then
+        write(6,*)'  strain dump: Global strain tensor and velocity fields'
+        write(6,*)'  ....no need to dump anything else.'
+     endif
+  !!! END SB
   case default
      if (lpr) then
         write(6,*)'  wavefield dumping type',dump_type,' unknown!'
-        write(6,*)'  select from 1) displ_only, 2) fullfields'
+        write(6,*)'  select from 1) displ_only, 2) displ_velo, 2) fullfields'
      endif
      stop
   end select
 
 end subroutine dump_wavefields_mesh_1d
-!=============================================================================
-
-!-----------------------------------------------------------------------------
-!> Dumps the mesh (s,z) [m] along with corresponding field f in ASCII format.
-!! At this point only used in computing the valence.
-!! Note that for higher-frequency meshes these files can be very large.
-!! flag_norm is to be set to one if the output is to be normalized.
-subroutine fldout_cyl2(fname,nel,f,ibeg,iend,jbeg,jend,flag_norm,domain)
-
-  use utlity, ONLY : compute_coordinates
-
-
-  character(len=80), intent(in)   :: fname
-  character(len=5), intent(in)    :: domain
-  integer, intent(in)             :: flag_norm,ibeg,iend,jbeg,jend,nel
-  real(kind=realkind), intent(in) :: f(ibeg:,jbeg:,:)
-  integer                         :: lf,ielem, ipol,jpol,iel
-  real(kind=dp)                   :: r, theta, s, z
-  real(kind=realkind)             :: fnr,afnr
-
-  lf=index(fname,' ')-1
-  open(unit=10000+mynum,file=infopath(1:lfinfo)//'/'//fname(1:lf)//'_'&
-                             //appmynum//'.dat')
-
-  fnr = 1.
-  if (flag_norm == 1) then
-     fnr = zero
-     do ielem = 1, nel
-        do jpol = jbeg, jend
-           do ipol = ibeg, iend
-              fnr = max(fnr,abs(f(ielem,ipol,jpol)))
-           enddo
-        enddo
-     enddo
-  endif
-  afnr = one/fnr
-  do ielem = 1, nel
-     if (domain=='total') iel=ielem
-     if (domain=='solid') iel=ielsolid(ielem)
-     if (domain=='fluid') iel=ielfluid(ielem)
-     do jpol = jbeg, jend !,npol/2
-        do ipol = ibeg, iend !,npol/2
-           call compute_coordinates(s,z,r,theta,iel,ipol,jpol)
-           write(10000+mynum,*) s/router,z/router,afnr*f(ipol,jpol,ielem)
-        enddo
-     enddo
-  enddo
-  close(10000+mynum)
-
-end subroutine fldout_cyl2
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
 end module meshes_io
+!=========================================================================================

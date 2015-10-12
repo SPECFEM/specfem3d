@@ -16,7 +16,7 @@ export HOME_AxiSEM
 ### Relative path :
 ###
 
-AxiSEM_FILE_1D_MODEL=${HOME_SPECFEM3D}/EXAMPLES/coupling_with_EXTERNAL_CODES/with_AxiSEM/example_1st_for_validation/INPUT_AxiSEM/iasp91_dsm
+AxiSEM_FILE_1D_MODEL=${HOME_SPECFEM3D}/EXAMPLES/coupling_with_EXTERNAL_CODES/with_AxiSEM/example_1st_for_validation/INPUT_AxiSEM/prem_dsm
 export AxiSEM_FILE_1D_MODEL
 
 

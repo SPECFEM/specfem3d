@@ -19,6 +19,7 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
+!=========================================================================================
 module attenuation
 !< Variables and routines for viscoelastic wave propagation
 
@@ -86,9 +87,7 @@ subroutine time_step_memvars_cg4(memvar, disp)
   use data_source,          only: src_type
 
   real(kind=realkind), intent(inout)    :: memvar(1:4,6,n_sls_attenuation,nel_solid)
-  !real(kind=realkind), intent(inout)    :: memvar(:,:,:,:)
   real(kind=realkind), intent(in)       :: disp(0:4,0:4,nel_solid,3)
-  !real(kind=realkind), intent(in)       :: disp(0:,0:,:,:)
 
   integer               :: iel, j
   real(kind=dp)         :: yp_j_mu(n_sls_attenuation)
@@ -219,12 +218,10 @@ subroutine time_step_memvars_4(memvar, disp)
   use data_mesh,            only: axis_solid, nel_solid!, npol
   use data_source,          only: src_type
 
-  !real(kind=realkind), intent(inout)    :: memvar(0:,0:,:,:,:)
   real(kind=realkind), intent(inout)    :: memvar(0:4,0:4,6,n_sls_attenuation,nel_solid)
-  !real(kind=realkind), intent(in)       :: disp(0:,0:,:,:)
   real(kind=realkind), intent(in)       :: disp(0:4,0:4,nel_solid,3)
 
-  integer               :: iel, j, ipol, jpol
+  integer               :: iel, j
   real(kind=dp)         :: yp_j_mu(n_sls_attenuation)
   real(kind=dp)         :: yp_j_kappa(n_sls_attenuation)
   real(kind=dp)         :: a_j_mu(n_sls_attenuation)
@@ -352,10 +349,10 @@ subroutine time_step_memvars_generic(memvar, disp)
   use data_mesh,            only: axis_solid, nel_solid, npol
   use data_source,          only: src_type
 
-  real(kind=realkind), intent(inout)    :: memvar(0:npol,0:npol,6,n_sls_attenuation,nel_solid) !memvar(0:,0:,6,:,:)
-  real(kind=realkind), intent(in)       :: disp(0:npol,0:npol,nel_solid,3) !disp(0:,0:,:,3)
+  real(kind=realkind), intent(inout)    :: memvar(0:npol,0:npol,6,n_sls_attenuation,nel_solid)
+  real(kind=realkind), intent(in)       :: disp(0:npol,0:npol,nel_solid,3)
 
-  integer               :: iel, j, ipol, jpol
+  integer               :: iel, j
   real(kind=dp)         :: yp_j_mu(n_sls_attenuation)
   real(kind=dp)         :: yp_j_kappa(n_sls_attenuation)
   real(kind=dp)         :: a_j_mu(n_sls_attenuation)
@@ -553,7 +550,6 @@ subroutine compute_strain_att_el_4(u, grad_u, iel)
 
 
   real(kind=realkind), intent(in)   :: u(0:,0:,:)
-  !real(kind=realkind), intent(in)   :: u(0:4,0:4,3)
   real(kind=realkind), intent(out)  :: grad_u(0:4,0:4,6)
   integer, intent(in)               :: iel
 
@@ -698,15 +694,12 @@ subroutine prepare_attenuation(lambda, mu)
   use get_mesh,             only: compute_coordinates_mesh
   use data_mesh,            only: axis_solid, npol, nelem, ielsolid, nel_solid
   use data_spec,            only: eta, xi_k, wt, wt_axial_k
-  use geom_transf,          only: jacobian
   use utlity,               only: scoord
-  use analytic_mapping,     only: compute_partial_derivatives
+  use analytic_mapping,     only: compute_partial_derivatives, jacobian
   use data_source,          only: nelsrc, ielsrc
-  use data_pointwise!,       only: DsDeta_over_J_sol_cg4, DzDeta_over_J_sol_cg4, DsDxi_over_J_sol_cg4, DzDxi_over_J_sol_cg4
+  use data_pointwise
   use commun,               only: broadcast_int, broadcast_log, &
                                   broadcast_char, broadcast_dble, barrier
-
-
 
   real(kind=dp), intent(inout)   :: lambda(0:,0:,1:)
   real(kind=dp), intent(inout)   :: mu(0:,0:,1:)
@@ -720,9 +713,10 @@ subroutine prepare_attenuation(lambda, mu)
   real(kind=dp)                  :: kappa_fac, mu_fac
 
   real(kind=dp)                  :: f_min, f_max, w_1, w_0
+  real(kind=dp)                  :: qpl_w_ref, qpl_alpha
   integer                        :: nfsamp, max_it, i, iel, j
   real(kind=dp)                  :: Tw, Ty, d
-  logical                        :: fixfreq
+  logical                        :: fixfreq, freq_weight
   real(kind=dp), allocatable     :: w_samp(:), q_fit(:), chil(:)
   real(kind=dp), allocatable     :: yp_j_mu(:)
   real(kind=dp), allocatable     :: yp_j_kappa(:)
@@ -742,6 +736,8 @@ subroutine prepare_attenuation(lambda, mu)
   f_min = 0.001
   f_max = 1.0
   w_0 = 1.0
+  qpl_w_ref = 1
+  qpl_alpha = 0
   do_corr_lowq = .true.
   nfsamp = 100
   max_it = 100000
@@ -749,6 +745,7 @@ subroutine prepare_attenuation(lambda, mu)
   Ty = 0.1
   d = 0.99995
   fixfreq = .false.
+  freq_weight = .true.
   dump_memory_vars = .false.
   att_coarse_grained = .true.
 
@@ -782,11 +779,20 @@ subroutine prepare_attenuation(lambda, mu)
         case('F_REFERENCE')
             read(keyvalue,*) w_0
 
+        case('QPL_F_REFERENCE')
+            read(keyvalue,*) qpl_w_ref
+
+        case('QPL_ALPHA')
+            read(keyvalue,*) qpl_alpha
+
         case('SMALL_Q_CORRECTION')
             read(keyvalue,*) do_corr_lowq
 
         case('NR_F_SAMPLE')
             read(keyvalue,*) nfsamp
+
+        case('FREQ_WEIGHT')
+            read(keyvalue,*) freq_weight
 
         case('MAXINT_SA')
             read(keyvalue,*) max_it
@@ -819,8 +825,11 @@ subroutine prepare_attenuation(lambda, mu)
   call broadcast_dble(f_min, 0)
   call broadcast_dble(f_max, 0)
   call broadcast_dble(w_0, 0)
+  call broadcast_dble(qpl_w_ref, 0)
+  call broadcast_dble(qpl_alpha, 0)
   call broadcast_log(do_corr_lowq, 0)
   call broadcast_int(nfsamp, 0)
+  call broadcast_log(freq_weight, 0)
   call broadcast_int(max_it, 0)
   call broadcast_dble(Tw, 0)
   call broadcast_dble(Ty, 0)
@@ -843,6 +852,8 @@ subroutine prepare_attenuation(lambda, mu)
      stop 2
   endif
 
+  qpl_w_ref = qpl_w_ref * (2 * pi)
+
   allocate(w_samp(nfsamp))
   allocate(q_fit(nfsamp))
   allocate(chil(max_it))
@@ -861,9 +872,13 @@ subroutine prepare_attenuation(lambda, mu)
   if (lpr .and. verbose > 1) print *, &
         '  inverting for standard linear solid parameters...'
 
-  call invert_linear_solids(1.d0, f_min, f_max, n_sls_attenuation, nfsamp, max_it, Tw, &
-                            Ty, d, fixfreq, .false., .false., 'maxwell', w_j_attenuation, &
-                            y_j_attenuation, w_samp, q_fit, chil)
+  call invert_linear_solids(Q=1.d0, f_min=f_min, f_max=f_max, N=n_sls_attenuation, &
+                            nfsamp=nfsamp, max_it=max_it, Tw=Tw, Ty=Ty, d=d, &
+                            fixfreq=fixfreq, verbose=.false., exact=.false., &
+                            freq_weight=freq_weight, w_ref=qpl_w_ref, alpha=qpl_alpha, &
+                            w_j=w_j_attenuation, y_j=y_j_attenuation, w=w_samp, &
+                            q_fit=q_fit, chil=chil)
+
   if (lpr .and. verbose > 1) print *, '  ...done'
 
   ! prefactors for the exact time stepping (att notes p 13.3)
@@ -895,7 +910,6 @@ subroutine prepare_attenuation(lambda, mu)
      endif
   endif
 
-
   if (lpr .and. verbose > 1) print *, '  ...calculating relaxed moduli...'
 
   if (att_coarse_grained) then
@@ -920,8 +934,6 @@ subroutine prepare_attenuation(lambda, mu)
      src_tr_tm1_glob = 0
   endif
 
-
-  !if (lpr) open(unit=1717, file=infopath(1:lfinfo)//'/weights', status='new')
 
   do iel=1, nel_solid
 
@@ -989,67 +1001,6 @@ subroutine prepare_attenuation(lambda, mu)
                                      + gamma_w_l(3,2) + gamma_w_l(4,2)) &
                             + 0.25 * gamma_w_l(2,2) ) &
                           / gamma_w_l(3,3)
-        !if (lpr) write(1717,*) weights_cg(1,1), weights_cg(1,3), &
-        !                       weights_cg(3,1), weights_cg(3,3)
-
-        ! 5 points
-        !weights_cg(1,1) = (   gamma_w_l(0,0) + gamma_w_l(0,1) &
-        !                    + gamma_w_l(1,0) + gamma_w_l(1,1) &
-        !                    + 0.5 * (  gamma_w_l(0,2) + gamma_w_l(1,2) &
-        !                             + gamma_w_l(2,0) + gamma_w_l(2,1)) )&
-        !                  / gamma_w_l(1,1)
-        !
-        !weights_cg(1,3) = (   gamma_w_l(0,3) + gamma_w_l(0,4) &
-        !                    + gamma_w_l(1,3) + gamma_w_l(1,4) &
-        !                    + 0.5 * (  gamma_w_l(0,2) + gamma_w_l(1,2) &
-        !                             + gamma_w_l(2,3) + gamma_w_l(2,4)) )&
-        !                  / gamma_w_l(1,3)
-        !
-        !weights_cg(3,1) = (   gamma_w_l(3,0) + gamma_w_l(3,1) &
-        !                    + gamma_w_l(4,0) + gamma_w_l(4,1) &
-        !                    + 0.5 * (  gamma_w_l(2,0) + gamma_w_l(2,1) &
-        !                             + gamma_w_l(3,2) + gamma_w_l(4,2)) )&
-        !                  / gamma_w_l(3,1)
-        !
-        !weights_cg(3,3) = (   gamma_w_l(3,3) + gamma_w_l(3,4) &
-        !                    + gamma_w_l(4,3) + gamma_w_l(4,4) &
-        !                    + 0.5 * (  gamma_w_l(2,3) + gamma_w_l(2,4) &
-        !                             + gamma_w_l(3,2) + gamma_w_l(4,2)) )&
-        !                  / gamma_w_l(3,3)
-        !weights_cg(2,2) = 1
-        !if (lpr) write(1717,*) weights_cg(1,1), weights_cg(1,3), &
-        !                       weights_cg(3,1), weights_cg(3,3), weights_cg(2,2)
-
-        ! 9 points
-        !weights_cg(1,1) = (   gamma_w_l(0,0) + gamma_w_l(0,1) &
-        !                    + gamma_w_l(1,0) + gamma_w_l(1,1) )&
-        !                  / gamma_w_l(1,1)
-
-        !weights_cg(1,2) = (   gamma_w_l(0,2) + gamma_w_l(1,2) )&
-        !                  / gamma_w_l(1,2)
-
-        !weights_cg(1,3) = (   gamma_w_l(0,3) + gamma_w_l(0,4) &
-        !                    + gamma_w_l(1,3) + gamma_w_l(1,4) )&
-        !                  / gamma_w_l(1,3)
-
-        !weights_cg(2,1) = (   gamma_w_l(2,0) + gamma_w_l(2,1) )&
-        !                  / gamma_w_l(2,1)
-
-        !weights_cg(2,2) = 1
-
-        !weights_cg(2,3) = (   gamma_w_l(2,3) + gamma_w_l(2,4) )&
-        !                  / gamma_w_l(2,3)
-
-        !weights_cg(3,1) = (   gamma_w_l(3,0) + gamma_w_l(3,1) &
-        !                    + gamma_w_l(4,0) + gamma_w_l(4,1) )&
-        !                  / gamma_w_l(3,1)
-
-        !weights_cg(3,2) = (   gamma_w_l(3,2) + gamma_w_l(4,2) )&
-        !                  / gamma_w_l(3,2)
-
-        !weights_cg(3,3) = (   gamma_w_l(3,3) + gamma_w_l(3,4) &
-        !                    + gamma_w_l(4,3) + gamma_w_l(4,4) )&
-        !                  / gamma_w_l(3,3)
 
      endif ! att_coarse_grained
 
@@ -1112,23 +1063,8 @@ subroutine prepare_attenuation(lambda, mu)
         delta_kappa(:,:,iel) = delta_kappa_0(:,:)
      endif
 
-     !---------------------------------------------------
-     ! testing simple version: assuming background model is instantaneous velocities
-     !mu_r(:,:) =  mu(:,:,ielsolid(iel)) / (1.d0 + sum(yp_j_mu))
-     !kappa_r(:,:) =  (lambda(:,:,ielsolid(iel)) + 2.d0 / 3.d0 * mu(:,:,ielsolid(iel))) &
-     !                       / (1.d0 + sum(yp_j_kappa))
-
-     !delta_mu(:,:,iel) = mu(:,:,ielsolid(iel)) - mu_r(:,:)
-     !delta_kappa(:,:,iel) = (lambda(:,:,ielsolid(iel)) &
-     !                         + 2.d0 / 3.d0 * mu(:,:,ielsolid(iel))) - kappa_r(:,:)
-
-     !delta_mu(:,:,iel) = delta_mu(:,:,iel) * weights_cg
-     !delta_kappa(:,:,iel) = delta_kappa(:,:,iel) * weights_cg
-     !---------------------------------------------------
-
   enddo
 
-  !if (lpr) close(unit=1717)
 
   if (att_coarse_grained) then
      allocate(DsDeta_over_J_sol_cg4(1:4,1:nel_solid))
@@ -1223,40 +1159,22 @@ end subroutine
 !-----------------------------------------------------------------------------------------
 
 !-----------------------------------------------------------------------------------------
-!> returns l2 misfit between constant Q and fitted Q using standard linear solids
-pure subroutine l2_error(Q, Qls, lognorm, lse)
+!> returns l2 misfit between Q_target and fitted Q using standard linear solids
+pure subroutine l2_error(Q_target, Qls, weights, lse)
 
-  real(kind=dp)   , intent(in)    :: Q, Qls(:)
+  real(kind=dp), intent(in)       :: Q_target(:), Qls(:), weights(:)
 
-  logical, optional, intent(in)   :: lognorm
-  ! optional argument with default value (a bit nasty in f2py)
-  !f2py logical, optional, intent(in) :: lognorm = 1
-  logical                         :: lognorm_loc
-
-  real(kind=dp)   , intent(out)   :: lse
+  real(kind=dp), intent(out)      :: lse
   integer                         :: nfsamp, i
-
-  if (present(lognorm)) then
-      lognorm_loc = lognorm
-  else
-      lognorm_loc = .false.
-  endif
 
   lse = 0
   nfsamp = size(Qls)
 
-  if (lognorm_loc) then
-     !print *, 'log-l2 norm'
-     do i=1, nfsamp
-        lse = lse + (log(Q / Qls(i)))**2
-     enddo
-  else
-     !print *, 'standard l2 norm'
-     do i=1, nfsamp
-        lse = lse + (1/Q - 1/Qls(i))**2
-     enddo
-     lse = lse * Q**2
-  endif
+  ! log-l2 norm
+  do i=1, nfsamp
+     lse = lse + (log(Q_target(i) / Qls(i)))**2 * weights(i)
+  enddo
+
   lse = lse / float(nfsamp)
   lse = dsqrt(lse)
 end subroutine
@@ -1266,7 +1184,8 @@ end subroutine
 !> Inverts for constant Q, minimizing the L2 error for 1/Q using a simulated annealing
 !! approach (varying peak frequencies and amplitudes).
 subroutine invert_linear_solids(Q, f_min, f_max, N, nfsamp, max_it, Tw, Ty, d, &
-                                 fixfreq, verbose, exact, mode, w_j, y_j, w, q_fit, chil)
+                                fixfreq, verbose, exact, freq_weight, w_ref, alpha, w_j,&
+                                y_j, w, q_fit, chil)
 
   ! Parameters:
   ! Q:              clear
@@ -1274,7 +1193,6 @@ subroutine invert_linear_solids(Q, f_min, f_max, N, nfsamp, max_it, Tw, Ty, d, &
   ! N:              number of standard linear solids
   ! nfsamp:         number of sampling frequencies for computation of the misfit (log
   !                   spaced in freqeuncy band)
-
   ! max_it:         number of iterations
   ! Tw:             starting temperature for the frequencies
   ! Ty:             starting temperature for the amplitudes
@@ -1284,96 +1202,98 @@ subroutine invert_linear_solids(Q, f_min, f_max, N, nfsamp, max_it, Tw, Ty, d, &
   ! exact:          use exact relation for Q and the coefficients (Emmerich & Korn, eq
   !                   21). If false, linearized version is used (large Q approximation, eq
   !                   22).
-  ! mode:           'maxwell' (default) oder 'zener' depending on the reology
+  ! freq_weight:    use frequency weighting to ensure better fit at high frequencies
+  ! w_ref:          reference angular frequency for power law Q
+  ! alpha:          exponent for power law Q
   !
   ! Returns:
   ! w_j:            relaxation frequencies, equals 1/tau_sigma in zener
   !                   formulation
   ! y_j:            coefficients of the linear solids, (Emmerich & Korn, eq 23 and 24)
-  !                   if mode is set to 'zener', this array contains the
-  !                   tau_epsilon as defined by Blanch et al, eq 12.
   ! w:              sampling frequencies at which Q(w) is minimized
   ! q_fit:          resulting q(w) at these frequencies
   ! chil:           error as a function of iteration to check convergence,
   !                   Note that this version uses log-l2 norm!
   !
   use data_proc,            only: lpr, mynum
-  ! use ifport
 
-  real(kind=dp)   , intent(in)            :: Q, f_min, f_max
-  integer, intent(in)                     :: N, nfsamp, max_it
+  real(kind=dp), intent(in)                 :: Q, f_min, f_max
+  integer, intent(in)                       :: N, nfsamp, max_it
 
-  real(kind=dp)   , optional, intent(in)          :: Tw, Ty, d
-  !f2py real(kind=dp)   , optional, intent(in)    :: Tw=.1, Ty=.1, d=.99995
-  real(kind=dp)                                   :: Tw_loc = .1, Ty_loc = .1
-  real(kind=dp)                                   :: d_loc = .99995
+  real(kind=dp), optional, intent(in)       :: Tw, Ty, d, w_ref, alpha
+  !f2py real(kind=dp), optional, intent(in) :: Tw = .1, Ty = .1, d = .99995
+  !f2py real(kind=dp), optional, intent(in) :: w_ref = 1., alpha = 0
+  real(kind=dp)                             :: Tw_loc = .1, Ty_loc = .1
+  real(kind=dp)                             :: d_loc = .99995, w_ref_loc = 1.
+  real(kind=dp)                             :: alpha_loc = 0
 
-  logical, optional, intent(in)           :: fixfreq, verbose, exact
-  !f2py logical, optional, intent(in)     :: fixfreq = 0, verbose = 0
-  !f2py logical, optional, intent(in)     :: exact = 0
-  logical                                 :: fixfreq_loc = .false., verbose_loc = .false.
-  logical                                 :: exact_loc = .false.
+  logical, optional, intent(in)             :: fixfreq, verbose, exact, freq_weight
+  !f2py logical, optional, intent(in)       :: fixfreq = 0, verbose = 0
+  !f2py logical, optional, intent(in)       :: exact = 0, freq_weight = 0
+  logical                                   :: fixfreq_loc = .false., verbose_loc = .false.
+  logical                                   :: exact_loc = .false., freq_weight_loc = .true.
 
-  character(len=7), optional, intent(in)  :: mode
-  !f2py character(len=7), optional, intent(in) :: mode = 'maxwell'
-  character(len=7)                        :: mode_loc = 'maxwell'
+  real(kind=dp), intent(out)    :: w_j(N)
+  real(kind=dp), intent(out)    :: y_j(N)
+  real(kind=dp), intent(out)    :: w(nfsamp)
+  real(kind=dp), intent(out)    :: q_fit(nfsamp)
+  real(kind=dp), intent(out)    :: chil(max_it)
 
-  real(kind=dp), intent(out)      :: w_j(N)
-  real(kind=dp), intent(out)      :: y_j(N)
-  real(kind=dp), intent(out)      :: w(nfsamp)
-  real(kind=dp), intent(out)      :: q_fit(nfsamp)
-  real(kind=dp), intent(out)      :: chil(max_it)
+  real(kind=dp)     :: w_j_test(N)
+  real(kind=dp)     :: y_j_test(N)
+  real(kind=dp)     :: expo
+  real(kind=dp)     :: chi, chi_test
+  real(kind=dp)     :: randnr
+  real(kind=dp)     :: Q_target(nfsamp)
+  real(kind=dp)     :: weights(nfsamp)
 
-  real(kind=dp)                   :: w_j_test(N)
-  real(kind=dp)                   :: y_j_test(N)
-  real(kind=dp)                   :: expo
-  real(kind=dp)                   :: chi, chi_test
-  real(kind=dp)                   :: randnr
-
-  integer             :: j, it, last_it_print
+  integer           :: j, it, last_it_print
 
   ! set default values
   if (present(Tw)) Tw_loc = Tw
   if (present(Ty)) Ty_loc = Ty
   if (present(d)) d_loc = d
+  if (present(w_ref)) w_ref_loc = w_ref
+  if (present(alpha)) alpha_loc = alpha
 
   if (present(fixfreq)) fixfreq_loc = fixfreq
   if (present(verbose)) verbose_loc = verbose
   if (present(exact)) exact_loc = exact
-
-  if (present(mode)) mode_loc = mode
+  if (present(freq_weight)) freq_weight_loc = freq_weight
 
   if (.not. lpr) verbose_loc = .false.
-
-  if ((mode_loc /= 'maxwell') .and. (mode_loc /= 'zener')) then
-     print *, "ERROR: mode should be either 'maxwell' or 'zener'"
-     return
-  endif
-
 
   ! Set the starting test frequencies equally spaced in log frequency
   if (N > 1) then
      expo = (log10(f_max) - log10(f_min)) / (N - 1.d0)
      do j=1, N
-        ! pi = 4 * atan(1)
-        w_j_test(j) = datan(1.d0) * 8.d0 * 10**(log10(f_min) + (j - 1) * expo)
+        w_j_test(j) = 2 * pi * 10**(log10(f_min) + (j - 1) * expo)
      enddo
   else
-     w_j_test(1) = (f_max * f_min)**.5 * 8 * datan(1.d0)
+     w_j_test(1) = (f_max * f_min)**.5 * 2 * pi
   endif
-
 
   if (verbose_loc) print *, w_j_test
 
   ! Set the sampling frequencies equally spaced in log frequency
   expo = (log10(f_max) - log10(f_min)) / (nfsamp - 1.d0)
   do j=1, nfsamp
-     w(j) = datan(1.d0) * 8.d0 * 10**(log10(f_min) + (j - 1) * expo)
+     w(j) = 2 * pi * 10**(log10(f_min) + (j - 1) * expo)
   enddo
 
   if (verbose_loc) print *, w
 
-  ! initial weights
+  ! compute target Q from power law
+  Q_target(:) = Q * (w / w_ref_loc) ** alpha_loc
+
+  ! compute weights for linear frequency weighting
+  if (freq_weight_loc) then
+     weights = w / sum(w) * nfsamp
+  else
+     weights(:) = 1
+  endif
+
+  ! initial weights y_j based on an empirical guess
   y_j_test = 1.d0 / Q * 1.5
   if (verbose_loc) print *, y_j_test
 
@@ -1383,18 +1303,20 @@ subroutine invert_linear_solids(Q, f_min, f_max, N, nfsamp, max_it, Tw, Ty, d, &
   if (verbose_loc) print *, q_fit
 
   ! initial chi
-  call l2_error(Q=Q, Qls=q_fit, lognorm=.true., lse=chi)
+  call l2_error(Q_target=Q_target, Qls=q_fit, weights=weights, lse=chi)
   if (verbose_loc) print *, 'initital chi: ', chi
 
   y_j(:) = y_j_test(:)
   w_j(:) = w_j_test(:)
 
   last_it_print = -1
+  ! actuall simulated annealing loop:
   do it=1, max_it
      do j=1, N
         call random_number(randnr)
         if (.not. fixfreq_loc) &
            w_j_test(j) = w_j(j) * (1.0 + (0.5 - randnr) * Tw_loc)
+
         call random_number(randnr)
         y_j_test(j) = y_j(j) * (1.0 + (0.5 - randnr) * Ty_loc)
      enddo
@@ -1403,34 +1325,22 @@ subroutine invert_linear_solids(Q, f_min, f_max, N, nfsamp, max_it, Tw, Ty, d, &
      call q_linear_solid(y_j=y_j_test, w_j=w_j_test, w=w, exact=exact_loc, Qls=q_fit)
 
      ! compute new misfit and new temperature
-     call l2_error(Q=Q, Qls=q_fit, lognorm=.true., lse=chi_test)
+     call l2_error(Q_target=Q_target, Qls=q_fit, weights=weights, lse=chi_test)
      Tw_loc = Tw_loc * d_loc
      Ty_loc = Ty_loc * d_loc
 
-     ! check if the tested parameters are better
+     ! check if the tested parameters are better, if so, update
      if (chi_test < chi) then
         y_j(:) = y_j_test(:)
         w_j(:) = w_j_test(:)
         chi = chi_test
-
-        if (verbose_loc) then
-           print *, '---------------'
-           print *, it, chi
-           print *, w_j / (8 * tan(1.))
-           print *, y_j
-        endif
-
      endif
+
      chil(it) = chi
   enddo
-
-  if (mode_loc == 'zener') then
-     ! compare Attenuation Notes, p 18.1
-     ! easy to find from Blanch et al, eq. (12) and Emmerick & Korn, eq. (21)
-     y_j = (y_j + 1) / w_j
-  endif
 
 end subroutine
 !-----------------------------------------------------------------------------------------
 
 end module
+!=========================================================================================

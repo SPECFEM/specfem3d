@@ -628,13 +628,17 @@ also need to provide additional information by setting up the next
 three parameters.
 %
 \item [{\texttt{NDOUBLINGS}}] The number of horizontal doubling layers.
-Must be set to \texttt{1} or \texttt{2} if \texttt{USE\_REGULAR\_MESH}
-is set to \texttt{.true.}.
+Must be set at least to \texttt{1} if \texttt{USE\_REGULAR\_MESH} is set to \texttt{.true.}.
+Multiple mesh doublings can be chosen, for which each an \texttt{NZ\_DOUBLING\_**} entry must be given.
+By default, we only provide two possible entries in the \texttt{Mesh\_Par\_file}.
+For higher numbers of doubling layers, additional entries must be added.
 \item [{\texttt{NZ\_DOUBLING\_1}}] The position of the first doubling layer
 (only interpreted if \texttt{USE\_REGULAR\_MESH} is set to \texttt{.true.}).
 \item [{\texttt{NZ\_DOUBLING\_2}}] The position of the second doubling
 layer (only interpreted if \texttt{USE\_REGULAR\_MESH} is set to \texttt{.true.}
-and if \texttt{NDOUBLINGS} is set to \texttt{2}).
+and if \texttt{NDOUBLINGS} is set to \texttt{2}). Doubling layers must be at least \texttt{2} layers apart.
+The layer count starts from the bottom layer.
+More entries must be listed by the user if \texttt{NDOUBLINGS} is larger than \texttt{2}.
 \item [{\texttt{CREATE\_ABAQUS\_FILES}}] Set this flag to \texttt{.true.}
 to save Abaqus FEA \urlwithparentheses{www.simulia.com} mesh files
 for subsequent viewing. Turning the flag on generates files in the
