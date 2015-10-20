@@ -346,14 +346,14 @@ in finite-element methods (FEM) caused by the displacement formulation \cite{HaO
 This is crucial since it is the main reason for which a displacement formulation cannot be used in fluid regions in a FEM.
 \newline
 
-However, this formulation assumes that the density is spatially constant, or locally slowly varying (e.g. inside a given spectral element),
-because the use of a potential for acoustic waves is justified by the fact that acoustic displacements are irrotational.
-In the cases for which the background density has strong local variations, that formulation is not valid any more.
+However, this formulation indirectly assumes that the density is spatially constant, or locally slowly varying (e.g. inside a given spectral element),
+because acoustic displacements must be irrotational. Since we know that $\nabla \times \mathbf{u}$ must be equal to zero
+we can see that when density has strong local variations, equation (\ref{potential}) is not valid any more.
 Indeed, taking the rotational of \eqref{potential}
 \begin{eqnarray*}
-\nabla \times (\rho \mathbf{u}) &=& \nabla\times\nabla \chi
+\nabla \times (\rho \mathbf{u}) &=& \nabla\times\nabla \chi \, ,
 \end{eqnarray*}
-Since for any scalar $\chi$, $ \nabla\times\nabla \chi = 0$, this yields
+since the curl of a gradient is always zero i.e. for any scalar $\chi$, $ \nabla\times\nabla \chi = 0$, we get
 \begin{eqnarray*}
 \nabla\rho\times\mathbf{u} + \rho\nabla\times\mathbf{u} &=& \mathbf{0}\\
 \nabla\times\mathbf{u}&=&-(1/\rho)\nabla\rho\times\mathbf{u}
@@ -368,7 +368,7 @@ Another approach exists for acoustic waves, based on a displacement potential in
 \begin{equation}
 \mathbf{u} = \nabla \chi \, ,
 \end{equation}
-which gives $\nabla\times\mathbf{u} = \mathbf{0}$.
+which correctly gives $\nabla\times\mathbf{u} = \mathbf{0}$.
 But in this case the gradient of density is neglected in the Eulerian momentum equation in order to identify gradient terms.
 Indeed, from the Eulerian momentum equation for inviscid acoustic waves only
 \begin{eqnarray*}
