@@ -323,3 +323,70 @@ All the runs to perform must be placed in directories called \texttt{run0001}, \
 and you must create a link from the root directory of the code
 to the first copy of the executable programs by typing \texttt{ln -s run0001/bin bin}.
 
+%------------------------------------------------------------------------------------------------%
+
+%------------------------------------------------------------------------------------------------%
+
+\chapter{Note on the SPECFEM acoustic formulation}
+
+{\Large Note from Quentin Brissaud, Dimitri Komatitsch and Rapha\"el Garcia, October 2015}
+
+\section{About the potential formulation used in SPECFEM for pure acoustic waves (i.e. in the absence of gravity terms)}
+
+In SPECFEM, when considering purely acoustic waves (neglecting gravity acceleration and viscosity)
+in fluid regions one uses a potential formulation to represent the "density times displacement" perturbation
+\cite{ChKoViCaVaFe07}:
+\begin{equation}
+\rho \mathbf{u} = \nabla \chi
+\label{potential}
+\end{equation}
+where $\mathbf{u}$ is the displacement perturbation, $\rho$ the background density and $\chi$ is the scalar potential.\\
+This formulation has two great advantages: it reduces the number of unknowns from three to one, and it also automatically removes artefacts
+in finite-element methods (FEM) caused by the displacement formulation \cite{HaOuVe78}.
+This is crucial since it is the main reason for which a displacement formulation cannot be used in fluid regions in a FEM.
+\newline
+
+However, this formulation assumes that the density is spatially constant, or locally slowly varying (e.g. inside a given spectral element),
+because the use of a potential for acoustic waves is justified by the fact that acoustic displacements are irrotational.
+In the cases for which the background density has strong local variations, that formulation is not valid any more.
+Indeed, taking the rotational of \eqref{potential}
+\begin{eqnarray*}
+\nabla \times (\rho \mathbf{u}) &=& \nabla\times\nabla \chi
+\end{eqnarray*}
+Since for any scalar $\chi$, $ \nabla\times\nabla \chi = 0$, this yields
+\begin{eqnarray*}
+\nabla\rho\times\mathbf{u} + \rho\nabla\times\mathbf{u} &=& \mathbf{0}\\
+\nabla\times\mathbf{u}&=&-(1/\rho)\nabla\rho\times\mathbf{u}
+\end{eqnarray*}
+Then, one notices that in the case of strong density gradients the rotational of $\mathbf{u}$ is no longer zero.
+Thus, the potential formulation \eqref{potential} is no more valid. It is valid only when $(1/\rho)\nabla\rho\times\mathbf{u}$ can be considered negligible,
+i.e. when both the gradient of density and the value of displacement are small, or if the displacement is parallel or quasi-parallel to the gradient of density,
+in which case their rotational is also close to zero.
+\newline
+
+Another approach exists for acoustic waves, based on a displacement potential instead of on a potential of $\rho \mathbf{u}$:
+\begin{equation}
+\mathbf{u} = \nabla \chi \, ,
+\end{equation}
+which gives $\nabla\times\mathbf{u} = \mathbf{0}$.
+But in this case the gradient of density is neglected in the Eulerian momentum equation in order to identify gradient terms.
+Indeed, from the Eulerian momentum equation for inviscid acoustic waves only
+\begin{eqnarray*}
+\rho\partial_t^2\mathbf{u} &=& -\nabla p\\
+\nabla (\partial_t^2\chi)&=& -(1/\rho)\nabla p \, .
+\end{eqnarray*}
+When $\nabla\rho \gg \mathbf{0}$ strictly speaking one cannot identify $\partial_t^2\chi$ with $p$.
+
+The solution to this is to work with pressure as the scalar unknown (\cite{God11}, equation 23),
+or even better with the time integral (the primitive) of pressure (see e.g. \cite{Eve81});
+this was the approach that was originally implemented in SPECFEM until 10 years ago or so, but \cite{ChCaVi03} showed that switching to a displacement potential
+or to a potential of $\rho \mathbf{u}$ enables one to couple the fluid and solid regions without iterating on the coupling condition in the time scheme,
+thus resulting in much easier and cheaper implementation; since at that time SPECFEM users were not studying media with strong local variations of density (in solid Earth
+geophysics such large local variations in fluid regions never happen), the SPECFEM developers permanently switched to such a displacement-based potential formulation.
+However, for media with strong local variations of density in a fluid region we should reconsider the issue and consider trying the pressure-based formulation again.
+
+Cases in which this can be problematic may include e.g. upper atmosphere studies: the density there is very small but displacements can become very large;
+in 1D atmosphere models $\frac{\nabla \rho}{\rho}$ is approximately constant and equal to -1/H, where H is the scaling height,
+which leads to $\frac{\nabla \rho}{\rho} \simeq$ 3.42*1e-5, i.e. very small; however displacements there can be large
+and thus it is not clear if $(1/\rho)\nabla\rho\times\mathbf{u}$ can be considered negligible there.
+
