@@ -335,16 +335,28 @@ to the first copy of the executable programs by typing \texttt{ln -s run0001/bin
 
 In SPECFEM, when considering purely acoustic waves (neglecting gravity acceleration and viscosity)
 in fluid regions one uses a potential formulation to represent the "density times displacement" perturbation
-\cite{ChKoViCaVaFe07}:
+\citep{ChKoViCaVaFe07}:
 \begin{equation}
 \rho \mathbf{u} = \nabla \chi
 \label{potential}
 \end{equation}
 where $\mathbf{u}$ is the displacement perturbation, $\rho$ the background density and $\chi$ is the scalar potential.\\
-This formulation has two great advantages: it reduces the number of unknowns from three to one, and it also automatically removes artefacts
-in finite-element methods (FEM) caused by the displacement formulation \cite{HaOuVe78}.
+This formulation has several great advantages: it reduces the number of unknowns from three to one, and it also automatically removes artefacts
+in finite-element methods (FEM) caused by the displacement formulation \citep{HaOuVe78}.
 This is crucial since it is the main reason for which a displacement formulation cannot be used in fluid regions in a FEM.
-\newline
+It also permits acoustic-elastic coupling based on a non-iterative time scheme \citep{ChVa04}.
+Displacement is then: u = grad(Chi) / rho,
+velocity is then: v = grad(Chi\_dot) / rho (Chi\_dot being the time derivative of Chi)
+and pressure is: p = - Chi\_dot\_dot  (Chi\_dot\_dot being the time second derivative of Chi).
+First-order acoustic-acoustic discontinuities are also handled automatically
+because pressure is continuous at such an interface, therefore Chi\_dot\_dot
+is continuous, therefore Chi is also continuous, which is consistent with
+the spectral-element basis functions and with the assembling process.
+This is the reason why a simple displacement potential u = grad(Chi) would
+not work because it would be discontinuous at such an interface and would
+therefore not be consistent with the basis functions. And first-order acoustic-acoustic discontinuities are used
+routinely in several domains, e.g. in the oil industry when dealing with geological models as acoustic only (no S waves),
+or in ocean acoustics when considering the ocean bottom as fluid (again, no S waves).
 
 However, this formulation indirectly assumes that the density is spatially constant, or locally slowly varying (e.g. inside a given spectral element),
 because acoustic displacements must be irrotational. Since we know that $\nabla \times \mathbf{u}$ must be equal to zero
@@ -377,13 +389,16 @@ Indeed, from the Eulerian momentum equation for inviscid acoustic waves only
 \end{eqnarray*}
 When $\nabla\rho \gg \mathbf{0}$ strictly speaking one cannot identify $\partial_t^2\chi$ with $p$.
 
-The solution to this is to work with pressure as the scalar unknown (\cite{God11}, equation 23),
+A solution to this could be to work with pressure as the scalar unknown (\cite{God11}, equation 23),
 or even better with the time integral (the primitive) of pressure (see e.g. \cite{Eve81});
-this was the approach that was originally implemented in SPECFEM until 10 years ago or so, but \cite{ChCaVi03} showed that switching to a displacement potential
+this was the approach that was originally implemented in SPECFEM until 10 years ago or so, but \cite{ChVa04} showed that switching to a displacement potential
 or to a potential of $\rho \mathbf{u}$ enables one to couple the fluid and solid regions without iterating on the coupling condition in the time scheme,
 thus resulting in much easier and cheaper implementation; since at that time SPECFEM users were not studying media with strong local variations of density (in solid Earth
 geophysics such large local variations in fluid regions never happen), the SPECFEM developers permanently switched to such a displacement-based potential formulation.
-However, for media with strong local variations of density in a fluid region we should reconsider the issue and consider trying the pressure-based formulation again.
+However, for media with strong local variations of density in a fluid region we should reconsider the issue and consider trying the pressure-based formulation again
+to see if there is a way of using it without having to numerically iterate on the fluid-solid matching condition.
+
+Another possibility, suggested by Emmanuel Chaljub, would be to use two potentials instead of a single one (see Section~2.4 of \cite{ChKoViCaVaFe07}).
 
 Cases in which this can be problematic may include e.g. upper atmosphere studies: the density there is very small but displacements can become very large;
 in 1D atmosphere models $\frac{\nabla \rho}{\rho}$ is approximately constant and equal to -1/H, where H is the scaling height,
