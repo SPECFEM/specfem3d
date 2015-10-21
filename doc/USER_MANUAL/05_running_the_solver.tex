@@ -329,9 +329,9 @@ to the first copy of the executable programs by typing \texttt{ln -s run0001/bin
 
 \chapter{Note on the SPECFEM acoustic formulation}
 
-{\Large Note from Quentin Brissaud, Dimitri Komatitsch and Rapha\"el Garcia, October 2015}
+{\Large Note from Quentin Brissaud, Dimitri Komatitsch and Rapha\"el Garcia, October 2015,with feedback from Jeroen Tromp and from Emmanuel Chaljub}
 
-\section{About the potential formulation used in SPECFEM for pure acoustic waves (i.e. in the absence of gravity terms)}
+\section{About the potential formulation used in SPECFEM for purely acoustic waves (i.e. in the absence of gravity terms)}
 
 In SPECFEM, when considering purely acoustic waves (neglecting gravity acceleration and viscosity)
 in fluid regions one uses a potential formulation to represent the "density times displacement" perturbation
@@ -357,6 +357,7 @@ not work because it would be discontinuous at such an interface and would
 therefore not be consistent with the basis functions. And first-order acoustic-acoustic discontinuities are used
 routinely in several domains, e.g. in the oil industry when dealing with geological models as acoustic only (no S waves),
 or in ocean acoustics when considering the ocean bottom as fluid (again, no S waves).
+\newline
 
 However, this formulation indirectly assumes that the density is spatially constant, or locally slowly varying (e.g. inside a given spectral element),
 because acoustic displacements must be irrotational. Since we know that $\nabla \times \mathbf{u}$ must be equal to zero
@@ -388,6 +389,7 @@ Indeed, from the Eulerian momentum equation for inviscid acoustic waves only
 \nabla (\partial_t^2\chi)&=& -(1/\rho)\nabla p \, .
 \end{eqnarray*}
 When $\nabla\rho \gg \mathbf{0}$ strictly speaking one cannot identify $\partial_t^2\chi$ with $p$.
+\newline
 
 A solution to this could be to work with pressure as the scalar unknown (\cite{God11}, equation 23),
 or even better with the time integral (the primitive) of pressure (see e.g. \cite{Eve81});
@@ -397,11 +399,36 @@ thus resulting in much easier and cheaper implementation; since at that time SPE
 geophysics such large local variations in fluid regions never happen), the SPECFEM developers permanently switched to such a displacement-based potential formulation.
 However, for media with strong local variations of density in a fluid region we should reconsider the issue and consider trying the pressure-based formulation again
 to see if there is a way of using it without having to numerically iterate on the fluid-solid matching condition.
+\newline
 
 Another possibility, suggested by Emmanuel Chaljub, would be to use two potentials instead of a single one (see Section~2.4 of \cite{ChKoViCaVaFe07}).
+\newline
 
 Cases in which this can be problematic may include e.g. upper atmosphere studies: the density there is very small but displacements can become very large;
 in 1D atmosphere models $\frac{\nabla \rho}{\rho}$ is approximately constant and equal to -1/H, where H is the scaling height,
 which leads to $\frac{\nabla \rho}{\rho} \simeq$ 3.42*1e-5, i.e. very small; however displacements there can be large
 and thus it is not clear if $(1/\rho)\nabla\rho\times\mathbf{u}$ can be considered negligible there.
+\newline
+
+Note that it is only when gravity is off that there is potentially a problem.
+More details on the case with gravity can be found in \cite{ChVa04} (in particular in their Figure 2 and Section 2.1)
+and in \cite{KoTsTr05}. As summarized by Jeroen Tromp, note that in the presence of gravity and rotation we do not assume that density is constant in the fluid
+(see Section~3.3 in \cite{KoTsTr05}). Instead, we assume that the fluid is stably stratified, i.e., that the Brunt-V\"ais\"al\"a frequency vanishes.
+Only in the step leading to eqns. (35) and (36) in \cite{KoTsTr05} do we make the Cowling approximation (\cite{Cow41}) and set the Brunt-V\"ais\"al\"a frequency equal to zero.
+If we make the Cowling approximation, assume the core is stably stratified, and ignore rotation, then we obtain eqn. (41).
+In that case the displacement is the gradient of a potential (not density times the gradient of a potential).
+More generally, the displacement is given by eqn. (28). The results with and without rotation (always assuming stable stratification), are implemented in SPECFEM3D\_GLOBE.
+\newline
+
+The question for regional simulations, e.g., in an ocean layer, is whether or not we should incorporate gravity in the analysis, and whether or not we can assume that, on the time scales of seismic waves, the ocean is stably stratified.
+\newline
+
+Note that one cannot have density gradients coming out of nowhere, i.e., in principle one cannot ignore gravity. In practice, density gradients are controlled by the Brunt-V\"ais\"al\"a frequency, be it in the oceans or the outer core. If we assume stable stratification, then we are naturally led to (35) and (36) in \cite{KoTsTr05}, or (41) in the absence of rotation. Jeroen Tromp thinks we either need to assume $N^2=0$ or $N^2>0$, since when $N^2<0$ the fluid will overturn. SPECFEM3D/SPECFEM3D\_GLOBE currently implement the $N^2=0$ case, so the question is whether we need to worry about the case $N^2>0$. The latter corresponds to eqns. (33) and (34) in Komatitsch et al. (2007) (with phi=0 in the Cowling approximation).
+\newline
+
+Regarding always including the effect of gravity in order to avoid this issue,
+one (important) exception could be the oil industry case when they use P waves only, in which case they do not include gravity and their spatially-varying density is just rho taken from the elastic model... These days they mostly run fully elastic simulations instead? (although some groups still often uses the acoustic approximation for large inverse problems); that's also true in ocean acoustics because the approximation often made is to consider the solid ocean bottom as fluid (no S waves, again just taking rho and cp from the elastic model).
+\newline
+
+So, as summarized by Jeroen, the question is whether we can safely assume $N^2=0$ as we currently do, or whether we also need to consider the case $N^2>0$.
 
