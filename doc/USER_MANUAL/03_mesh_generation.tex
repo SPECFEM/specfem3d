@@ -121,6 +121,7 @@ turned on. It should be between 1 and 9000. In case no attenuation
 information is available, it can be set to zero. You can either specify a single Q value,
 in which case it will be assumed to be pure shear attenuation $Q_{\mu}$, or two
 separate values for bulk and shear attenuation, $Q_{\kappa}$ and $Q_{\mu}$ respectively.
+Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp. To convert one to the other see doc/note\_on\_Qkappa\_versus\_Qp.pdf and utils/attenuation/conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90.
 
 Please note that your Vp- and Vs-speeds are given for a reference frequency. To change
 this reference frequency, you change the value of \texttt{ATTENUATION\_f0\_REFERENCE}
@@ -288,8 +289,8 @@ with no \texttt{Qmu} attenuation, both set \texttt{ATTENUATION} to
 \texttt{.false.} in the \texttt{Par\_file} and set \texttt{Qmu} to
 9999 here. If you want a model with no \texttt{Qkappa} attenuation,
 both set \texttt{FULL\_ATTENUATION\_SOLID} to \texttt{.false.} in
-the \texttt{Par\_file} and set \texttt{Qkappa} to 9999 here. %%magnoni
-
+the \texttt{Par\_file} and set \texttt{Qkappa} to 9999 here.
+Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp. To convert one to the other see doc/note\_on\_Qkappa\_versus\_Qp.pdf and utils/attenuation/conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90.
 
 \item For tomographic velocity models, please read Chapter \ref{cha:-Changing-the}
 and Section \ref{sec:Using-tomographic} `Using external tomographic

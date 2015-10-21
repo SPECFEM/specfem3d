@@ -111,6 +111,7 @@ executable when using option \texttt{SAVE\_MESH\_FILES}. These binary
 files define the model parameters on all GLL points which can be used
 for iterative inversion procedures. Note that for simulation setups with attenuation,
 it will also read in the external binary mesh files for $Q_{\kappa}$ and $Q_{\mu}$.
+Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp. To convert one to the other see doc/note\_on\_Qkappa\_versus\_Qp.pdf and utils/attenuation/conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90.
 
 \item [{\texttt{salton\_trough}}] A 3D $V_{p}$ model for Southern California.
 Users must provide the corresponding data file \texttt{regrid3\_vel\_p.bin}
@@ -156,6 +157,7 @@ be off in almost all cases for seismic wave propagation, since $Q_{\kappa}$
 is almost always negligible in Earth models. However, this parameter
 can be useful for instance for ocean acoustics simulations, when $Q_{\kappa}$
 is not negligible in the solid layer at the sea bottom.
+Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp. To convert one to the other see doc/note\_on\_Qkappa\_versus\_Qp.pdf and utils/attenuation/conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90.
 \item [{\texttt{ANISOTROPY}}] Set to \texttt{.true.} if you want to use
 an anisotropy model. Please see the file \texttt{model\_aniso.f90}
 in subdirectory \texttt{src/generate\_databases/} for the current
