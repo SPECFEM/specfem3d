@@ -90,10 +90,10 @@ NTSTEP_BETWEEN_FRAMES           = 200
 HDUR_MOVIE                      = 0.0
 
 # save AVS or OpenDX mesh files to check the mesh
-SAVE_MESH_FILES                 = .false.
+SAVE_MESH_FILES                 = .true.
 
 # path to store the local database file on each node
-LOCAL_PATH                      = ./OUTPUT_FILES/DATABASES_MPI
+LOCAL_PATH                      = ./DATABASES_MPI
 
 # interval at which we output time step info and max of norm of displacement
 NTSTEP_BETWEEN_OUTPUT_INFO      = 100
@@ -186,7 +186,7 @@ APPROXIMATE_HESS_KL             = .false.
 SAVE_MOHO_MESH                  = .false.
 
 # print source time function
-PRINT_SOURCE_TIME_FUNCTION      = .false.
+PRINT_SOURCE_TIME_FUNCTION      = .true.
 
 # to couple with an external code (such as DSM, AxiSEM, or FK)
 COUPLE_WITH_EXTERNAL_CODE       = .false.

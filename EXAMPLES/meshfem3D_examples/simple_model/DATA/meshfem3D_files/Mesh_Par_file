@@ -41,7 +41,7 @@ THICKNESS_OF_Y_PML              = 12.3d0
 THICKNESS_OF_Z_PML              = 12.3d0
 
 # path to store the databases files
-LOCAL_PATH                      = ./OUTPUT_FILES/DATABASES_MPI
+LOCAL_PATH                      = ./DATABASES_MPI
 
 # number of materials
 NMATERIALS                      = 4
