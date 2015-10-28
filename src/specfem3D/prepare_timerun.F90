@@ -422,9 +422,12 @@
   character(len=MAX_STRING_LEN) :: plot_file
   integer :: ier
 
+  ! time scheme
   if (.not. USE_LDDRK) then
+    ! Newmark time scheme, only single update needed
     NSTAGE_TIME_SCHEME = 1
   else
+    ! LDDRK time scheme with 6-stages
     NSTAGE_TIME_SCHEME = 6
   endif
 

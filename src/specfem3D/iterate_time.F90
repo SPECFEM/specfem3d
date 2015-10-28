@@ -181,7 +181,7 @@
     endif
 
     ! updates wavefields using Newmark time scheme
-    if(.not. USE_LDDRK) call update_displacement_scheme()
+    if (.not. USE_LDDRK) call update_displacement_scheme()
 
     ! calculates stiffness term
     if (.not. GPU_MODE) then
