@@ -25,11 +25,6 @@
 !
 !=====================================================================
 
-!! DK DK Oct 2012: this can significantly reduce the time it takes to decompose the mesh in the case of very large meshes,
-!! DK DK Oct 2012: and in principle it is safe to do that; however it is not fully tested yet
-!! DK DK Oct 2012: and thus I comment it out for now
-!!!! #define USE_TWO_CALLS_TO_mesh2dual
-
 !! DK DK added support for METIS as well, in addition to SCOTCH
 !! DK DK thus uncomment the define statement below if you want to use METIS instead of SCOTCH
 !! DK DK and then also add the path to the METIS library files in Makefile.in in this directory
@@ -118,7 +113,6 @@ module decompose_mesh
 
   character(len=MAX_STRING_LEN) :: prname
 
-  logical, dimension(:), allocatable :: mask_nodes_elmnts
   integer, dimension(:), allocatable :: used_nodes_elmnts
 
 #ifdef USE_METIS_INSTEAD_OF_SCOTCH
@@ -785,51 +779,33 @@ module decompose_mesh
 
     implicit none
 
-    ! allocates temporary arrays
-    allocate(mask_nodes_elmnts(nnodes),stat=ier)
-    if (ier /= 0) stop 'Error allocating array mask_nodes_elmnts'
+    ! allocate temporary array
     allocate(used_nodes_elmnts(nnodes),stat=ier)
     if (ier /= 0) stop 'Error allocating array used_nodes_elmnts'
 
-    mask_nodes_elmnts(:) = .false.
     used_nodes_elmnts(:) = 0
 
     do ispec = 1, nspec
       do inode = 1, NGNOD
-        mask_nodes_elmnts(elmnts(inode,ispec)) = .true.
         used_nodes_elmnts(elmnts(inode,ispec)) = used_nodes_elmnts(elmnts(inode,ispec)) + 1
       enddo
     enddo
 
-    print *, 'node valence:'
-    print *, '  min = ',minval(used_nodes_elmnts(:)),' max = ', maxval(used_nodes_elmnts(:))
+    print *, 'node valence:  min = ',minval(used_nodes_elmnts(:)),' max = ', maxval(used_nodes_elmnts(:))
 
-    do inode = 1, nnodes
-      if (.not. mask_nodes_elmnts(inode)) then
+    if(minval(used_nodes_elmnts(:)) <= 0) &
         stop 'Error: found some unused nodes (weird, but not necessarily fatal; your mesher may have created extra nodes).'
-      endif
-    enddo
 
     ! max number of elements that contain the same node
     nsize = maxval(used_nodes_elmnts(:))
 
-    ! frees temporary arrays
-    deallocate(mask_nodes_elmnts)
+    ! free temporary array
     deallocate(used_nodes_elmnts)
 
 ! majoration (overestimate) of the maximum number of neighbours per element
 !! DK DK nfaces is a constant equal to 6 (number of faces of a cube).
 !! DK DK I have no idea how this formula works; it was designed by Nicolas Le Goff
     sup_neighbour = NGNOD_EIGHT_CORNERS * nsize - (NGNOD_EIGHT_CORNERS + (NGNOD_EIGHT_CORNERS/2 - 1)*nfaces)
-
-    ! debug check size limit
-!! DK DK this check will likely fail because sup_neighbour itself may become negative if going over the 4-byte integer limit;
-!! DK DK but this should never happen in practice (by far)...
-    if (sup_neighbour > 2147483646) then
-      print *,'size exceeds integer 4-byte limit: ',sup_neighbour,nsize
-      print *,'bit size fortran: ',bit_size(sup_neighbour)
-      stop 'Error: sup_neighbour is too large'
-    endif
 
     ! checks that no underestimation
     if (sup_neighbour < nsize) sup_neighbour = nsize
@@ -852,7 +828,7 @@ module decompose_mesh
     ! starts from 0
     elmnts(:,:) = elmnts(:,:) - 1
 
-    ! determines maximum neighbors based on 1 common node
+    ! determines maximum neighbors based on "ncommonnodes" common nodes
     allocate(xadj(1:nspec+1),stat=ier)
     if (ier /= 0) stop 'Error allocating array xadj'
     allocate(adjncy(1:sup_neighbour*nspec),stat=ier)
@@ -862,26 +838,13 @@ module decompose_mesh
     allocate(nodes_elmnts(1:nsize*nnodes),stat=ier)
     if (ier /= 0) stop 'Error allocating array nodes_elmnts'
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!! DK DK added this in Oct 2012 to see if we first do 4 and then 1
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-#ifdef USE_TWO_CALLS_TO_mesh2dual
-    print *, 'mesh2dual first call:'
-    ncommonnodes = NGNOD2D_FOUR_CORNERS
-#else
     print *, 'mesh2dual:'
     ncommonnodes = 1
-#endif
     call mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbour, elmnts, xadj, adjncy, nnodes_elmnts, &
          nodes_elmnts, max_neighbour, ncommonnodes, NGNOD)
 
     ! user output
     print *, '  max_neighbour = ',max_neighbour
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!! DK DK added this in Oct 2012 to see if we first do 4 and then 1
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !! DK DK Oct 2012: added this safety test
     if (max_neighbour > sup_neighbour) stop 'found max_neighbour > sup_neighbour in domain decomposition'
@@ -1033,30 +996,6 @@ module decompose_mesh
     if (SAVE_MOHO_MESH) call moho_surface_repartitioning (nspec, nnodes, elmnts, &
                                         sup_neighbour, nsize, nparts, part, &
                                         nspec2D_moho,ibelm_moho,nodes_ibelm_moho, NGNOD, NGNOD2D)
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!! DK DK added this in Oct 2012 to see if we first do 4 and then 1
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-#ifdef USE_TWO_CALLS_TO_mesh2dual
-
-    ncommonnodes = 1
-    call mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbour, elmnts, xadj, adjncy, nnodes_elmnts, &
-         nodes_elmnts, max_neighbour, ncommonnodes, NGNOD)
-
-    print *, 'mesh2dual second call:'
-    print *, '  max_neighbour = ',max_neighbour
-
-!! DK DK Oct 2012: added this safety test
-    if (max_neighbour > sup_neighbour) stop 'found max_neighbour > sup_neighbour in domain decomposition'
-
-    nb_edges = xadj(nspec+1)
-
-#endif
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!! DK DK added this in Oct 2012 to see if we first do 4 and then 1
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     ! local number of each element for each partition
     call build_glob2loc_elmnts(nspec, part, glob2loc_elmnts,nparts)
