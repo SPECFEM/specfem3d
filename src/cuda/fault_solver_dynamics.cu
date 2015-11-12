@@ -190,7 +190,7 @@ void FC_FUNC_(transfer_todevice_swf_data,
     Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
     Swf_type* Swf  = &(Fsolver-> swf);
     if(*NGLOB_AB>0)
-    {   
+    {
         copy_todevice_realw_test((void **)&(Swf->Dc),Dc,*NGLOB_AB);
         copy_todevice_realw_test((void **)&(Swf->mus),mus,*NGLOB_AB);
         copy_todevice_realw_test((void **)&(Swf->mud),mud,*NGLOB_AB);
@@ -691,7 +691,7 @@ __global__  void compute_dynamic_fault_cuda_swf(
     Tx = Tx + T0xl;
     Ty = Ty + T0yl;
     Tz = Tz + T0zl;
-    
+
     Tstick = sqrt(Tx * Tx + Ty * Ty);
 
     thetaold = thetal;
@@ -701,9 +701,9 @@ __global__  void compute_dynamic_fault_cuda_swf(
     theta[tx] = thetal;
 
     mul = swf_mu(Dcl,musl,mudl,thetal);
-    
+
     strength = -mul * (MIN(Tz,0.00)) + Cohl;
-    
+
     Tnew = MIN(Tstick,strength);
 
     Tstick = MAX(Tstick,1.0E0);
