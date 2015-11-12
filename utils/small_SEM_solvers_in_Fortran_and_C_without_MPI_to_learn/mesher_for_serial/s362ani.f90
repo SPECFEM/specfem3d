@@ -1729,7 +1729,7 @@
     XP(I)=0.
   enddo
 
-  IF(L > 1.AND.ABS(THETA) > 1.E-5) GO TO 3
+  IF(L > 1.and.ABS(THETA) > 1.E-5) GO TO 3
   X(1)=FCT
   IF(L == 0) RETURN
   X(1)=CT*FCT
@@ -1773,7 +1773,7 @@
     XM=K
     X3=-(2.D0*COT*(XM-1.D0)*X2+F2*X1)/F1
     SUM=SUM+2.D0*X3*X3
-    IF(SUM-COMPAR > SMALL.AND.I /= LP1) RETURN
+    IF(SUM-COMPAR > SMALL.and.I /= LP1) RETURN
     X(I)=X3
     XCOSEC(I)=X(I)*COSEC
     X1=X2

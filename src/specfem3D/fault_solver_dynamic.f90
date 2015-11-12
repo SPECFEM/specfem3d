@@ -283,7 +283,7 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
 
   call init_dataXZ(bc%dataXZ,bc)
  ! output a fault snapshot at t=0
-  if (.NOT. PARALLEL_FAULT) then
+  if (.not. PARALLEL_FAULT) then
     if (bc%nspec > 0) call write_dataXZ(bc%dataXZ,0,iflt)
   else
     call gather_dataXZ(bc)
@@ -673,7 +673,7 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
 
   ! write dataXZ every NSNAP time step
   if (mod(it,NSNAP) == 0) then
-    if (.NOT. PARALLEL_FAULT) then
+    if (.not. PARALLEL_FAULT) then
       if (bc%nspec > 0) call write_dataXZ(bc%dataXZ,it,iflt)
     else
       call gather_dataXZ(bc)
@@ -682,7 +682,7 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
   endif
 
   if (it == NSTEP) then
-    if (.NOT. PARALLEL_FAULT) then
+    if (.not. PARALLEL_FAULT) then
       call SCEC_Write_RuptureTime(bc%dataXZ,iflt)
     else
       if (myrank==0) call SCEC_Write_RuptureTime(bc%dataXZ_all,iflt)

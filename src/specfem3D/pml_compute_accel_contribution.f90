@@ -440,8 +440,8 @@ subroutine l_parameter_computation( &
 
   if (CPML_region_local == CPML_XYZ) then
 
-     if ( abs( alpha_x - alpha_y ) >= 1.e-5_CUSTOM_REAL .AND. &
-          abs( alpha_x - alpha_z ) >= 1.e-5_CUSTOM_REAL .AND. &
+     if ( abs( alpha_x - alpha_y ) >= 1.e-5_CUSTOM_REAL .and. &
+          abs( alpha_x - alpha_z ) >= 1.e-5_CUSTOM_REAL .and. &
           abs( alpha_y - alpha_z ) >= 1.e-5_CUSTOM_REAL) then
 
        beta_x = alpha_x + d_x / kappa_x
@@ -482,8 +482,8 @@ subroutine l_parameter_computation( &
        call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y, singularity_type_4, time_nplus1, time_n)
        call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z, singularity_type_5, time_nplus1, time_n)
 
-     else if (abs( alpha_x - alpha_y ) < 1.e-5_CUSTOM_REAL  .AND. &
-              abs( alpha_x - alpha_z ) >= 1.e-5_CUSTOM_REAL .AND. &
+     else if (abs( alpha_x - alpha_y ) < 1.e-5_CUSTOM_REAL  .and. &
+              abs( alpha_x - alpha_z ) >= 1.e-5_CUSTOM_REAL .and. &
               abs( alpha_y - alpha_z ) >= 1.e-5_CUSTOM_REAL) then
 
        alpha_0 = max(alpha_x,alpha_y)
@@ -530,8 +530,8 @@ subroutine l_parameter_computation( &
        call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y, singularity_type_4, time_nplus1, time_n)
        call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z, singularity_type_5, time_nplus1, time_n)
 
-     else if (abs( alpha_x - alpha_y ) >= 1.e-5_CUSTOM_REAL .AND. &
-              abs( alpha_x - alpha_z ) < 1.e-5_CUSTOM_REAL  .AND. &
+     else if (abs( alpha_x - alpha_y ) >= 1.e-5_CUSTOM_REAL .and. &
+              abs( alpha_x - alpha_z ) < 1.e-5_CUSTOM_REAL  .and. &
               abs( alpha_y - alpha_z ) >= 1.e-5_CUSTOM_REAL) then
 
        alpha_0 = max(alpha_x,alpha_z)
@@ -579,8 +579,8 @@ subroutine l_parameter_computation( &
        call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y, singularity_type_4, time_nplus1, time_n)
        call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z, singularity_type_5, time_nplus1, time_n)
 
-     else if (abs( alpha_x - alpha_y ) >= 1.e-5_CUSTOM_REAL .AND. &
-              abs( alpha_x - alpha_z ) >= 1.e-5_CUSTOM_REAL .AND. &
+     else if (abs( alpha_x - alpha_y ) >= 1.e-5_CUSTOM_REAL .and. &
+              abs( alpha_x - alpha_z ) >= 1.e-5_CUSTOM_REAL .and. &
               abs( alpha_y - alpha_z ) < 1.e-5_CUSTOM_REAL) then
 
        alpha_0 = max(alpha_y,alpha_z)
@@ -629,20 +629,20 @@ subroutine l_parameter_computation( &
        call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z, singularity_type_5, time_nplus1, time_n)
 
      else if (&
-             (abs( alpha_x - alpha_y ) < 1.e-5_CUSTOM_REAL .AND. &
-              abs( alpha_x - alpha_z ) < 1.e-5_CUSTOM_REAL .AND. &
+             (abs( alpha_x - alpha_y ) < 1.e-5_CUSTOM_REAL .and. &
+              abs( alpha_x - alpha_z ) < 1.e-5_CUSTOM_REAL .and. &
               abs( alpha_y - alpha_z ) < 1.e-5_CUSTOM_REAL).or.  &
 
-             (abs( alpha_x - alpha_y ) >= 1.e-5_CUSTOM_REAL .AND. &
-              abs( alpha_x - alpha_z ) < 1.e-5_CUSTOM_REAL  .AND. &
+             (abs( alpha_x - alpha_y ) >= 1.e-5_CUSTOM_REAL .and. &
+              abs( alpha_x - alpha_z ) < 1.e-5_CUSTOM_REAL  .and. &
               abs( alpha_y - alpha_z ) < 1.e-5_CUSTOM_REAL) .or.  &
 
-             (abs( alpha_x - alpha_y ) < 1.e-5_CUSTOM_REAL  .AND. &
-              abs( alpha_x - alpha_z ) >= 1.e-5_CUSTOM_REAL .AND. &
+             (abs( alpha_x - alpha_y ) < 1.e-5_CUSTOM_REAL  .and. &
+              abs( alpha_x - alpha_z ) >= 1.e-5_CUSTOM_REAL .and. &
               abs( alpha_y - alpha_z ) < 1.e-5_CUSTOM_REAL) .or.  &
 
-             (abs( alpha_x - alpha_y ) < 1.e-5_CUSTOM_REAL  .AND. &
-              abs( alpha_x - alpha_z ) < 1.e-5_CUSTOM_REAL  .AND. &
+             (abs( alpha_x - alpha_y ) < 1.e-5_CUSTOM_REAL  .and. &
+              abs( alpha_x - alpha_z ) < 1.e-5_CUSTOM_REAL  .and. &
               abs( alpha_y - alpha_z ) >= 1.e-5_CUSTOM_REAL)) then
 
        alpha_0 = max(alpha_x,alpha_y,alpha_z)

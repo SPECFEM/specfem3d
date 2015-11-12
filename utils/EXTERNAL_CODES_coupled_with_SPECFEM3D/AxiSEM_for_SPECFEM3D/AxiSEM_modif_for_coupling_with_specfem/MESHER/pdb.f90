@@ -1263,7 +1263,7 @@ subroutine partition_sflobal_index
      enddo
   enddo
 
-  if (dump_mesh_info_screen .AND. nproc>1) then
+  if (dump_mesh_info_screen .and. nproc>1) then
      do iproct = 0, nproc-1
         write(6,'("Proc", i3, " will receive ", i2, " solid messages from procs ", 20(i3,1x))') &
               iproct, sizerecvp_solid(iproct), &

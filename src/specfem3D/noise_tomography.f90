@@ -297,7 +297,7 @@ end module user_noise_distribution
   endif
 
   ! compute source arrays for "ensemble forward source", which is source of "ensemble forward wavefield"
-  if (myrank == islice_selected_rec(irec_master_noise) .OR. myrank == 0) then ! myrank == 0 is used for output only
+  if (myrank == islice_selected_rec(irec_master_noise) .or. myrank == 0) then ! myrank == 0 is used for output only
     call compute_arrays_source_noise(myrank, &
               xi_receiver(irec_master_noise),eta_receiver(irec_master_noise),gamma_receiver(irec_master_noise), &
               nu(:,:,irec_master_noise),noise_sourcearray, xigll,yigll,zigll,NSTEP)
@@ -628,7 +628,7 @@ end module user_noise_distribution
   ! writes out wavefield at surface
   if (num_free_surface_faces > 0) then
 
-    if (.NOT. GPU_MODE) then
+    if (.not. GPU_MODE) then
       ! loops over surface points
       ! get coordinates of surface mesh and surface displacement
       do iface = 1, num_free_surface_faces
@@ -818,7 +818,7 @@ end module user_noise_distribution
     ! read surface movie, needed for sigma_kl
     call read_abs(2,noise_surface_movie,CUSTOM_REAL*NDIM*NGLLSQUARE*num_free_surface_faces,it)
 
-    if (.NOT. GPU_MODE) then
+    if (.not. GPU_MODE) then
 
       ! noise source strength kernel
       ! to keep similar structure to other kernels, the source strength kernel is saved as a volumetric kernel

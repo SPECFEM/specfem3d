@@ -73,12 +73,12 @@ subroutine clocks_init(flag)
     integer :: i
     logical :: verbose
 
-    verbose = .FALSE.
+    verbose = .false.
 
     if( PRESENT(flag) ) verbose = flag==0
 
     if( clocks_initialized ) return
-    clocks_initialized = .TRUE.
+    clocks_initialized = .true.
 
     !initialize clocks and reference tick
     call system_clock( ref_tick, ticks_per_sec, max_ticks )
@@ -111,7 +111,7 @@ function clock_id(name)
     integer                         :: clock_id
     character(len=*), intent(in)    :: name
 
-    if( .NOT.clocks_initialized ) call clocks_init()
+    if( .not.clocks_initialized ) call clocks_init()
     clock_id = 0
     do while( trim(name)/=trim(clocks(clock_id)%name) )
        clock_id = clock_id + 1
@@ -141,7 +141,7 @@ function tick( string, id, name, since )
 
     !take time first, so that this routine's overhead isn't included
     call system_clock(current_tick)
-    if( .NOT.clocks_initialized )call clocks_init()
+    if( .not.clocks_initialized )call clocks_init()
 
     !ref_tick is the clock value at the last call to tick (or clocks_init)
     !unless superseded by the since argument.
@@ -156,7 +156,7 @@ function tick( string, id, name, since )
             'CLOCKS: '//trim(string), (current_tick-ref_tick)*tick_rate
     else if( PRESENT(id) )then
         !accumulate time on clock id
-        if( 0<id .AND. id<=max_clocks )then
+        if( 0<id .and. id<=max_clocks )then
             clocks(id)%ticks = clocks(id)%ticks + current_tick - ref_tick
             clocks(id)%calls = clocks(id)%calls + 1
         else
@@ -165,7 +165,7 @@ function tick( string, id, name, since )
     else if( PRESENT(name) )then
         nid = clock_id(name)
     !accumulate time on clock id
-        if( 0<nid .AND. nid<=max_clocks )then
+        if( 0<nid .and. nid<=max_clocks )then
             clocks(nid)%ticks = clocks(nid)%ticks + current_tick - ref_tick
             clocks(nid)%calls = clocks(nid)%calls + 1
         else
@@ -186,7 +186,7 @@ subroutine get_clock( id, ticks, calls, total_time, time_per_call )
     integer, intent(out), optional       :: ticks, calls
     real(kind=dp), intent(out), optional :: total_time, time_per_call
 
-    if( 0<id .AND. id<=max_clocks )then
+    if( 0<id .and. id<=max_clocks )then
         if( PRESENT(ticks) )ticks = clocks(id)%ticks
         if( PRESENT(calls) )calls = clocks(id)%calls
         if( PRESENT(total_time) )total_time = clocks(id)%ticks*tick_rate

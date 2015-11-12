@@ -97,7 +97,7 @@ subroutine define_regions
 
   do iel = 1, neltot
      call assign_region(region(iel), scom(iel), zcom(iel))
-     if (region(iel) > 0 .AND. region(iel) < ndisc + 2) then
+     if (region(iel) > 0 .and. region(iel) < ndisc + 2) then
         nel_region(region(iel)) = nel_region(region(iel)) + 1
      else
         write(6,*) ' problem with assigning region to element number ', iel
@@ -149,7 +149,7 @@ subroutine assign_region(ireg, s, z)
 
   r = router*dsqrt(s**2+z**2) ! s and z are nondimensionalized by outer rad.
   do idisc = 2, ndisc
-   if ( (r < discont(idisc-1)) .AND. (r > discont(idisc)) ) ireg = idisc - 1
+   if ( (r < discont(idisc-1)) .and. (r > discont(idisc)) ) ireg = idisc - 1
   enddo
   if ( r < discont(ndisc) ) ireg = ndisc
 

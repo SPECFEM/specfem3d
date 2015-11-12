@@ -128,7 +128,7 @@ subroutine initialize_fault (bc,IIN_BIN)
   integer :: ij,k,e
 
   read(IIN_BIN) bc%nspec,bc%nglob
-  if (.NOT.PARALLEL_FAULT .and. bc%nspec==0) return
+  if (.not.PARALLEL_FAULT .and. bc%nspec==0) return
   if (bc%nspec>0) then
 
     allocate(bc%ibulk1(bc%nglob))
