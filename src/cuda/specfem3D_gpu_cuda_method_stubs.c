@@ -479,7 +479,7 @@ void FC_FUNC_(prepare_fields_gravity_device,
                                              realw* rhostore) {}
 void FC_FUNC_(prepare_fault_device,
               PREPARE_FAULT_DEVICE)(long* Mesh_pointer,
-            		            int* KELVIN_VOIGT_DAMPING,
+                            int* KELVIN_VOIGT_DAMPING,
                                     realw* Kelvin_Voigt_eta){}
 
 void FC_FUNC_(prepare_seismogram_fields,
@@ -705,25 +705,14 @@ void FC_FUNC_(transfer_station_ac_from_device,
                                                 int* h_ibool) {}
 
 
-void FC_FUNC_(transfer_station_ac_from_device,
-              TRANSFER_STATION_AC_FROM_DEVICE)(realw* potential_acoustic,
-                                                realw* potential_dot_acoustic,
-                                                realw* potential_dot_dot_acoustic,
-                                                realw* b_potential_acoustic,
-                                                realw* b_potential_dot_acoustic,
-                                                realw* b_potential_dot_dot_acoustic,
-                                                long* Mesh_pointer_f,
-                                                int* number_receiver_global,
-                                                int* ispec_selected_rec,
-                                                int* ispec_selected_source,
-                                                int* h_ibool) {}
+
 
 //fault_solver_dynamics.cu
 void FC_FUNC_(initialize_fault_solver,
               INITIALIZE_FAULT_SOLVER)(long** Fault_solver,
                                        int* num_of_faults,
                                        realw* v_healing,
-                                       realw* v_rupt){}
+                                       realw* v_rupt) {}
 
 void FC_FUNC_(transfer_todevice_fault_data,
               TRANSFER_TODEVICE_FAULT_DATA)(long* Fault_pointer,
@@ -749,7 +738,7 @@ void FC_FUNC_(transfer_todevice_swf_data,
                            realw* mus,
                            realw* mud,
                            realw* T,
-                           realw* C
+                           realw* C,
                            realw* theta) {}
 
 void FC_FUNC_(transfer_todevice_rsf_data,
@@ -765,7 +754,7 @@ void FC_FUNC_(transfer_todevice_rsf_data,
                       realw* T,
                       realw* C,
                       realw* fw,
-                      realw* Vw){}
+                      realw* Vw) {}
 
 void FC_FUNC_(transfer_tohost_fault_data,
               TRANSFER_TOHOST_FAULT_DATA)(long* Fault_pointer,
@@ -784,7 +773,7 @@ void FC_FUNC_(transfer_tohost_swf_data,
                        realw* mud,
                        realw* T,
                        realw* C,
-                       realw* theta)
+                       realw* theta) {}
 
 
 void FC_FUNC_(transfer_tohost_rsf_data,

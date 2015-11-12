@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
-#include "cuPrintf.cu"
 #define MIN(a,b) (a)>(b)?(b):(a)
 #define MAX(a,b) (a)>(b)?(a):(b)
 extern "C"
