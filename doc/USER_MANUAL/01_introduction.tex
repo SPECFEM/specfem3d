@@ -10,6 +10,14 @@ with optimized efficiency because of its tensorized basis functions
 \citep{WiStBuGh10,AcKo11}. In particular, it can accurately handle
 very distorted mesh elements \citep{OlSe11}.\\
 
+\red{In fluids, when gravity is turned off, SPECFEM2D uses the classical
+linearized Euler equation; thus if you have sharp local variations of
+density in the fluid (highly heterogeneous fluids
+in terms of density) or if density becomes extremely small in some
+regions of your model (e.g. for upper-atmosphere studies), before using
+the code please make sure the linearized Euler equation is a valid
+approximation in the case you want to study, and/or if you should turn gravity on.
+For more details on that see e.g. \cite{COA2011}.}\\
 
 It has very good accuracy and convergence properties \citep{MaPa89,SePr94,DeFiMu02,Coh02,DeSe07,SeOl08,AiWa09,AiWa10,MeStTh12}.
 The spectral element approach admits spectral rates of convergence

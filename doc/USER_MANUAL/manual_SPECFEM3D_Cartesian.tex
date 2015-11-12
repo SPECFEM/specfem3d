@@ -78,9 +78,8 @@
 \newcommand{\eg}{e.g.,}
 
 % colors for the text
-\@ifundefined{definecolor}
- {\usepackage{color}}{}
-\newcommand{\red}[1]{\textcolor{Red}{#1}}
+\usepackage[dvipsnames,usenames]{xcolor}
+\newcommand{\red}[1]{\textbf{\textcolor{Red}{#1}}}
 
 % some of Dimitri's aliases for math symbols
 \newcommand{\Grad}{\mbox{\boldmath $\bf \nabla$}}
